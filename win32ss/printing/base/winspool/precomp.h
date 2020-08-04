@@ -24,6 +24,8 @@
 #include <spoolss.h>
 #include <marshalling/marshalling.h>
 
+#include "wspool.h"
+
 #include <wine/debug.h>
 WINE_DEFAULT_DEBUG_CHANNEL(winspool);
 
@@ -68,14 +70,6 @@ BOOL WINAPI IntUnprotectHandle(HANDLE);
 extern void RosConvertAnsiDevModeToUnicodeDevmode(PDEVMODEA pDevModeInput, PDEVMODEW *pDevModeOutput);
 
 extern void RosConvertUnicodeDevModeToAnsiDevmode(PDEVMODEW pDevModeInput, PDEVMODEA pDevModeOutput);
-
-// RC
-
-#define IDS_CAPTION       10
-#define IDS_FILE_EXISTS   11
-#define IDS_CANNOT_OPEN   12
-#define FILENAME_DIALOG  100
-#define EDITBOX 201
 
 //
 // [MS-EMF] 2.2.27 UniversalFontId Object
