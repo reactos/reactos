@@ -519,6 +519,8 @@ SetPortA(PSTR pName, PSTR pPortName, DWORD dwLevel, PBYTE pPortInfo)
     DWORD len;
     BOOL res;
 
+    pi3A = (PORT_INFO_3A*)pPortInfo;
+
     TRACE("SetPortA(%s, %s, %lu, %p)\n", pName, pPortName, dwLevel, pPortInfo);
 
     if ( dwLevel != 3 )

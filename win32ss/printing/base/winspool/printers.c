@@ -3132,7 +3132,7 @@ SetPrinterA(HANDLE hPrinter, DWORD Level, PBYTE pPrinter, DWORD Command)
             {
                 // Set the pPrinter parameter to a pointer to a DWORD value that specifies the new printer status.
                 PRINTER_INFO_6 pi6;
-                pi6.dwStatus = (DWORD)pPrinter;
+                pi6.dwStatus = (DWORD_PTR)pPrinter;
                 pPrinter = (LPBYTE)&pi6;
                 Level = 6;
                 Command = 0;
@@ -3288,7 +3288,7 @@ SetPrinterW(HANDLE hPrinter, DWORD Level, PBYTE pPrinter, DWORD Command)
             {
                 // Set the pPrinter parameter to a pointer to a DWORD value that specifies the new printer status.
                 PRINTER_INFO_6 pi6;
-                pi6.dwStatus = (DWORD)pPrinter;
+                pi6.dwStatus = (DWORD_PTR)pPrinter;
                 pPrinter = (LPBYTE)&pi6;
                 Level = 6;
                 Command = 0;
