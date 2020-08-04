@@ -28,27 +28,4 @@ WINE_DEFAULT_DEBUG_CHANNEL(spoolsv);
 // rpcserver.c
 DWORD WINAPI LrpcThreadProc(LPVOID lpParameter);
 
-// spoolfile.c
-BOOL WINAPI
-SplGetSpoolFileInfo(
-    HANDLE hPrinter,
-    HANDLE hProcessHandle,
-    DWORD Level,
-    WINSPOOL_FILE_INFO_1 *pFileInfo,
-    DWORD dwSize,
-    DWORD* dwNeeded );
-
-BOOL WINAPI
-SplCommitSpoolData(
-    HANDLE hPrinter,
-    HANDLE hProcessHandle,
-    DWORD cbCommit,
-    DWORD Level,
-    WINSPOOL_FILE_INFO_1 *pFileInfo,
-    DWORD dwSize,
-    DWORD* dwNeeded );
-
-BOOL WINAPI
-SplCloseSpoolFileHandle( HANDLE hPrinter );
-
 #endif

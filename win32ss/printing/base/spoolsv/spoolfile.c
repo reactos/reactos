@@ -19,7 +19,7 @@ _RpcGetSpoolFileInfo( WINSPOOL_PRINTER_HANDLE hPrinter, WINSPOOL_HANDLE hProcess
         return dwErrorCode;
     }
 
-    if (!SplGetSpoolFileInfo( hPrinter, hProcessHandle, Level, pFileInfo, dwSize, dwNeeded ) )
+    if (!SplGetSpoolFileInfo( hPrinter, hProcessHandle, Level, (FILE_INFO_1*)pFileInfo, dwSize, dwNeeded ) )
         dwErrorCode = GetLastError();
 
     RpcRevertToSelf();
@@ -38,7 +38,7 @@ _RpcCommitSpoolData( WINSPOOL_PRINTER_HANDLE hPrinter, WINSPOOL_HANDLE hProcessH
         return dwErrorCode;
     }
 
-    if (!SplCommitSpoolData( hPrinter, hProcessHandle, cbCommit, Level, pFileInfo, dwSize, dwNeeded ) )
+    if (!SplCommitSpoolData( hPrinter, hProcessHandle, cbCommit, Level, (FILE_INFO_1*)pFileInfo, dwSize, dwNeeded ) )
         dwErrorCode = GetLastError();
 
     RpcRevertToSelf();
@@ -61,7 +61,7 @@ _RpcGetSpoolFileInfo2( WINSPOOL_PRINTER_HANDLE hPrinter, DWORD dwProcessId, DWOR
     hProcessHandle = OpenProcess( PROCESS_DUP_HANDLE, FALSE, dwProcessId );
 
 
-    if (!SplGetSpoolFileInfo( hPrinter, hProcessHandle, Level, pFileInfoContainer->FileInfo.pFileInfo1, sizeof(WINSPOOL_FILE_INFO_1), &dwNeeded ) )
+    if (!SplGetSpoolFileInfo( hPrinter, hProcessHandle, Level, (FILE_INFO_1*)pFileInfoContainer->FileInfo.pFileInfo1, sizeof(FILE_INFO_1), &dwNeeded ) )
         dwErrorCode = GetLastError();
 
     if ( hProcessHandle )
@@ -88,7 +88,7 @@ _RpcCommitSpoolData2( WINSPOOL_PRINTER_HANDLE hPrinter, DWORD dwProcessId, DWORD
 
     hProcessHandle = OpenProcess( PROCESS_DUP_HANDLE, FALSE, dwProcessId );
 
-    if (!SplCommitSpoolData( hPrinter, hProcessHandle, cbCommit, Level, pFileInfoContainer->FileInfo.pFileInfo1, sizeof(WINSPOOL_FILE_INFO_1), &dwNeeded ) )
+    if (!SplCommitSpoolData( hPrinter, hProcessHandle, cbCommit, Level, (FILE_INFO_1*)pFileInfoContainer->FileInfo.pFileInfo1, sizeof(FILE_INFO_1), &dwNeeded ) )
         dwErrorCode = GetLastError();
 
     if ( hProcessHandle )
