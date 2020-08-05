@@ -357,7 +357,7 @@ inline VOID MessageBox_LoadString(HWND hMainWnd, INT StringID)
 // Download dialog (loaddlg.cpp)
 class CDownloadManager
 {
-    static ATL::CSimpleArray<DownloadInfo> AppsToInstallList;
+    static ATL::CSimpleArray<DownloadInfo> AppsDownloadList;
     static CDowloadingAppsListView DownloadsListView;
     static CDownloaderProgress ProgressBar;
     static BOOL bCancelled;
@@ -373,7 +373,7 @@ public:
 
 
 // CDownloadManager
-ATL::CSimpleArray<DownloadInfo>         CDownloadManager::AppsToInstallList;
+ATL::CSimpleArray<DownloadInfo>         CDownloadManager::AppsDownloadList;
 CDowloadingAppsListView                 CDownloadManager::DownloadsListView;
 CDownloaderProgress                     CDownloadManager::ProgressBar;
 BOOL                                    CDownloadManager::bCancelled = FALSE;
@@ -381,13 +381,13 @@ BOOL                                    CDownloadManager::bModal = FALSE;
 
 VOID CDownloadManager::Add(DownloadInfo info)
 {
-    AppsToInstallList.Add(info);
+    AppsDownloadList.Add(info);
 }
 
 VOID CDownloadManager::Download(const DownloadInfo &DLInfo, BOOL bIsModal)
 {
-    AppsToInstallList.RemoveAll();
-    AppsToInstallList.Add(DLInfo);
+    AppsDownloadList.RemoveAll();
+    AppsDownloadList.Add(DLInfo);
     LaunchDownloadDialog(bIsModal);
 }
 
@@ -430,7 +430,7 @@ INT_PTR CALLBACK CDownloadManager::DownloadDlgProc(HWND Dlg, UINT uMsg, WPARAM w
         {
             return FALSE;
         }
-        DownloadsListView.LoadList(AppsToInstallList);
+        DownloadsListView.LoadList(AppsDownloadList);
 
         // Get a dlg string for later use
         GetWindowTextW(Dlg, szCaption, _countof(szCaption));
@@ -443,7 +443,7 @@ INT_PTR CALLBACK CDownloadManager::DownloadDlgProc(HWND Dlg, UINT uMsg, WPARAM w
         ShowWindow(Dlg, SW_SHOW);
 
         // Start download process
-        DownloadParam *param = new DownloadParam(Dlg, AppsToInstallList, szCaption);
+        DownloadParam *param = new DownloadParam(Dlg, AppsDownloadList, szCaption);
         unsigned int ThreadId;
         HANDLE Thread = (HANDLE)_beginthreadex(NULL, 0, ThreadFunc, (void *) param, 0, &ThreadId);
 
@@ -453,7 +453,7 @@ INT_PTR CALLBACK CDownloadManager::DownloadDlgProc(HWND Dlg, UINT uMsg, WPARAM w
         }
 
         CloseHandle(Thread);
-        AppsToInstallList.RemoveAll();
+        AppsDownloadList.RemoveAll();
         return TRUE;
     }
 
