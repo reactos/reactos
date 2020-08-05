@@ -902,6 +902,7 @@ Return Value:
         goto CreateDiskDeviceObjectsExit;
     }
 
+    RtlZeroMemory(diskGeometry, sizeof(DISK_GEOMETRY_EX));
     deviceExtension->DiskGeometry = diskGeometry;
 
     //
