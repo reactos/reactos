@@ -749,6 +749,7 @@ NtGdiGetGlyphOutline(
         EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
         goto Exit;
      }
+     RtlZeroMemory(pvBuf, cjBuf);
   }
 
   Ret = ftGdiGetGlyphOutline( dc,
