@@ -509,8 +509,12 @@ INT cmd_rmdir (LPTSTR param)
 
 
 /*
- * set the exitflag to true
+ * Either exits the command interpreter, or quits the current batch context.
  */
+
+/* Enable this define for supporting EXIT /B even when extensions are disabled */
+// #define SUPPORT_EXIT_B_NO_EXTENSIONS
+
 INT CommandExit(LPTSTR param)
 {
     if (!_tcsncmp(param, _T("/?"), 2))
@@ -522,7 +526,7 @@ INT CommandExit(LPTSTR param)
         return 0;
     }
 
-    if (_tcsnicmp(param, _T("/b"), 2) == 0)
+    if (_tcsnicmp(param, _T("/B"), 2) == 0)
     {
         param += 2;
 
@@ -532,8 +536,29 @@ INT CommandExit(LPTSTR param)
          */
         if (bc)
         {
-            bc->current = NULL;
-            ExitBatch();
+            /* Windows' CMD compatibility: Use GOTO :EOF */
+            TCHAR EofLabel[] = _T(":EOF");
+
+#ifdef SUPPORT_EXIT_B_NO_EXTENSIONS
+            /*
+             * Temporarily enable extensions so as to support :EOF.
+             *
+             * Our GOTO implementation ensures that, when extensions are
+             * enabled and the label is ':EOF', no immediate change of batch
+             * context (done e.g. via ExitBatch() calls) is performed.
+             * This will therefore ensure that we do not spoil the extensions
+             * state when we restore it below.
+             */
+            BOOL bOldEnableExtensions = bEnableExtensions;
+            bEnableExtensions = TRUE;
+#endif
+
+            cmd_goto(EofLabel);
+
+#ifdef SUPPORT_EXIT_B_NO_EXTENSIONS
+            /* Restore the original state of the extensions */
+            bEnableExtensions = bOldEnableExtensions;
+#endif
         }
         else
         {
