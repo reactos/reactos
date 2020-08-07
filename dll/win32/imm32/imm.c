@@ -3161,6 +3161,8 @@ BOOL WINAPI ImmEnumInputContext(DWORD idThread, IMCENUMPROC lpfn, LPARAM lParam)
  */
 
 #ifdef __REACTOS__
+BOOL APIENTRY NtUserGetImeHotKey(DWORD, LPUINT, LPUINT, LPHKL); /* FIXME */
+
 BOOL WINAPI
 ImmGetHotKey(IN DWORD dwHotKey,
              OUT LPUINT lpuModifiers,
