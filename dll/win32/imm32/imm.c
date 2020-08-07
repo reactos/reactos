@@ -3177,10 +3177,18 @@ BOOL WINAPI ImmDisableLegacyIME(void)
 #ifdef __REACTOS__
 
 /***********************************************************************
+ *              ImmSetActiveContext(IMM32.@)
+ */
+BOOL WINAPI ImmSetActiveContext(HWND hwnd, HIMC hIMC, BOOL fFlag)
+{
+    FIXME("stub\n");
+    return FALSE;
+}
+
+/***********************************************************************
  *              ImmSetActiveContextConsoleIME(IMM32.@)
  */
-BOOL WINAPI
-ImmSetActiveContextConsoleIME(HWND hwnd, BOOL fFlag)
+BOOL WINAPI ImmSetActiveContextConsoleIME(HWND hwnd, BOOL fFlag)
 {
     HIMC hIMC = ImmGetContext(hwnd);
     if (hIMC)
