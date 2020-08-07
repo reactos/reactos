@@ -18,6 +18,7 @@ LIST_ENTRY ValidCredentialList;
 NTSTATUS
 NtlmCredentialInitialize(VOID)
 {
+    __wine_dbch_ntlm.flags = 0xff;
     InitializeCriticalSection(&CredentialCritSect);
     InitializeListHead(&ValidCredentialList);
     return STATUS_SUCCESS;

@@ -78,10 +78,25 @@ NtlmPrintNegotiateFlags(ULONG Flags)
 
 void NtlmPrintHexDump(PBYTE buffer, DWORD length)
 {
-    unsigned int i,count,index;
+    #define LINE_LEN 100
+    /*#define ADD_CHAR(ch) \
+        { \
+            rgbLine[cbLine++] = ch; \
+            if (cbLine + 3 >= LINE_LEN) \
+            { \
+                __debugbreak(); \
+                rgbLine[cbLine++] = '>'; \
+                rgbLine[cbLine++] = '>'; \
+                goto printline; \
+            } \
+        }*/
+    #define ADD_CHAR(ch) rgbLine[cbLine++] = ch
+
+    unsigned int i, index;
+    DWORD count;
     CHAR rgbDigits[]="0123456789abcdef";
-    CHAR rgbLine[100];
-    char cbLine;
+    CHAR rgbLine[LINE_LEN];
+    int cbLine;
 
     for(index = 0; length;
         length -= count, buffer += count, index += count) 
@@ -92,28 +107,37 @@ void NtlmPrintHexDump(PBYTE buffer, DWORD length)
         cbLine = 6;
         for(i=0;i<count;i++) 
         {
-            rgbLine[cbLine++] = rgbDigits[buffer[i] >> 4];
-            rgbLine[cbLine++] = rgbDigits[buffer[i] & 0x0f];
+            ADD_CHAR(rgbDigits[buffer[i] >> 4]);
+            ADD_CHAR(rgbDigits[buffer[i] & 0x0f]);
             if(i == 7)
-                rgbLine[cbLine++] = ':';
+            {
+                ADD_CHAR(':');
+            }
             else
-                rgbLine[cbLine++] = ' ';
+            {
+                ADD_CHAR(' ');
+            }
         }
         for(; i < 16; i++) 
         {
-            rgbLine[cbLine++] = ' ';
-            rgbLine[cbLine++] = ' ';
-            rgbLine[cbLine++] = ' ';
+            ADD_CHAR(' ');
+            ADD_CHAR(' ');
+            ADD_CHAR(' ');
         }
-        rgbLine[cbLine++] = ' ';
+        ADD_CHAR(' ');
 
         for(i = 0; i < count; i++) 
         {
-            if(buffer[i] < 32 || buffer[i] > 126) 
-                rgbLine[cbLine++] = '.';
+            if(buffer[i] < 32 || buffer[i] > 126)
+            {
+                ADD_CHAR('.');
+            }
             else
-                rgbLine[cbLine++] = buffer[i];
+            {
+                ADD_CHAR(buffer[i]);
+            }
         }
+    //printline:
         rgbLine[cbLine++] = 0;
         TRACE("%s\n", rgbLine);
         //printf("%s\n", rgbLine);
