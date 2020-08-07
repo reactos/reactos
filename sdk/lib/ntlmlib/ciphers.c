@@ -1,8 +1,39 @@
+/*
+ * PROJECT:     ntlmlib
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     ciphers for ntlmlib
+ * COPYRIGHT:   Copyright 2011 Samuel Serapión
+ *              Copyright 2020 Andreas Maier (staubim@quantentunnel.de)
+ *
+ */
 
+#if 1
 #include "precomp.h"
 
 #include "wine/debug.h"
 WINE_DEFAULT_DEBUG_CHANNEL(ntlm);
+#else
+#include <apitest.h>
+#include <stdio.h>
+
+#define WIN32_NO_STATUS
+#include <windef.h>
+#include <winnt.h>
+#define NTOS_MODE_USER
+#include <ndk/rtlfuncs.h>
+
+#include <sspi.h>
+#include <ntsecapi.h>
+#include <ntsecpkg.h>
+#include <ntsam.h>
+
+#include <dll/lsatest.h>
+#include <dll/ntlmlib/calculations.h>
+#include <dll/ntlmlib/util.h>
+#include <dll/ntlmlib/ntlmlib.h>
+#include <dll/ntlmlib/ciphers.h>
+#include <shared/dbgutil.h>
+#endif
 
 /* not in any header, DES HASH! */
 LONG
@@ -183,10 +214,23 @@ DES(const UCHAR k[7], const UCHAR d[8], UCHAR results[8])
     SystemFunction001(d, k, (LPBYTE)results);
 }
 
-// (K(ey) = 16 byte key, D(ata) = 8 bytes of data) returns 24 bytes in results:
-void
-DESL(UCHAR k[16], UCHAR d[8], UCHAR results[24])
+/**
+ * @brief Compute NT response
+ *        aka SystemFunction009
+ * @param PasswordHash: Password-Hash (from NTOFWv1)
+ * @param Challenge: from ChallengeFromClient
+ * @param Result: NT response
+ * @return NTSTATUS
+ */
+NTSTATUS
+DESL(
+    _In_ UCHAR PasswordHash[16],
+    _In_ UCHAR Challenge[8],
+    _Out_ UCHAR Result[24])
 {
+    #if 1
+    return SystemFunction009((PBYTE)Challenge, (PBYTE)PasswordHash, (PBYTE)Result);
+    #else
     UCHAR keys[21];
 
     /* copy the first 16 bytes */
@@ -198,6 +242,7 @@ DESL(UCHAR k[16], UCHAR d[8], UCHAR results[24])
     DES(keys,      d, results);
     DES(keys + 7,  d, results + 8);
     DES(keys + 14, d, results + 16);
+    #endif
 }
 
 void

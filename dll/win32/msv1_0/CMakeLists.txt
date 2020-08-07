@@ -1,3 +1,4 @@
+include_directories(${REACTOS_SOURCE_DIR}/sdk/lib/ntlmlib)
 
 spec2def(msv1_0.dll msv1_0.spec)
 
@@ -6,7 +7,6 @@ list(APPEND SOURCE
     msv1_0.c
     ntlm/avl.c
     ntlm/calculations.c
-    ntlm/ciphers.c
     ntlm/context.c
     ntlm/credentials.c
     ntlm/crypt.c
@@ -26,7 +26,7 @@ list(APPEND SOURCE
 
 add_library(msv1_0 MODULE ${SOURCE} msv1_0.rc)
 set_module_type(msv1_0 win32dll UNICODE ENTRYPOINT 0)
-target_link_libraries(msv1_0 wine ${PSEH_LIB})
+target_link_libraries(msv1_0 ntlmlib wine ${PSEH_LIB})
 add_delay_importlibs(msv1_0 samsrv lsasrv)
 add_importlibs(msv1_0 advapi32 netapi32 msvcrt kernel32 ntdll)
 add_dependencies(msv1_0 psdk)

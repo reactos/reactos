@@ -1,11 +1,23 @@
+/*
+ * PROJECT:     ntlmlib
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     utilities for ntlmlib (header)
+ * COPYRIGHT:   Copyright 2011 Samuel Serapión
+ *              Copyright 2020 Andreas Maier (staubim@quantentunnel.de)
+ *
+ */
+
 #ifndef _UTIL_H_
 #define _UTIL_H_
 
+#if 0
 // Maps a NTSATUS to SECURITY_STATUS
 NTSTATUS
 NtStatusToSecStatus(
     IN SECURITY_STATUS SecStatus);
+#endif
 
+#if 0
 // replacement for NtlmCreateExtWStrFromBlob
 NTSTATUS
 NtlmUStrAllocAndCopyBlob(
@@ -19,7 +31,9 @@ NtlmAStrAllocAndCopyBlob(
     IN PSecBuffer InputBuffer,
     IN PNTLM_BLOB Blob,
     IN OUT PSTRING OutputStr);
+#endif
 
+#if 0
 VOID
 NtlmInitExtStrWFromUnicodeString(
     OUT PEXT_STRING_W Dest,
@@ -125,5 +139,17 @@ NtlmFreeClientBuffer(
     IN PLSA_CLIENT_REQUEST ClientRequest,
     IN BOOL FreeClientBuffer,
     IN OUT PNTLM_CLIENT_BUFFER Buffer);
+#endif
+
+void
+PrintHexDumpMax(
+    _In_ int length,
+    _In_ PBYTE buffer,
+    _In_ int printmax);
+
+void
+PrintHexDump(
+    _In_ DWORD length,
+    _In_ PBYTE buffer);
 
 #endif

@@ -1,36 +1,14 @@
 /*
- * Copyright 2011 Samuel Serapión
+ * PROJECT:     ntlmlib
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     ciphers for ntlmlib (headers)
+ * COPYRIGHT:   Copyright 2011 Samuel Serapión
+ *              Copyright 2020 Andreas Maier (staubim@quantentunnel.de)
  *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
- *
-  */
+ */
+
 #ifndef _CYPHERS_H_
 #define _CYPHERS_H_
-
-#include <string.h>
-#include "windef.h"
-
-typedef struct _rc4_key
-{
-    unsigned char perm[256];
-    unsigned char index1;
-    unsigned char index2;
-} rc4_key, *prc4_key;
-
-void rc4_init(rc4_key *const state, const unsigned char *key, int keylen);
-void rc4_crypt(rc4_key *const state, const unsigned char *inbuf, unsigned char *outbuf, int buflen);
 
 typedef struct
 {
@@ -73,13 +51,14 @@ UINT32
 CRC32 (const char *msg, int len);
 
 void
-RC4K (const unsigned char * k, unsigned long key_len, const unsigned char * d, int len, unsigned char * result);
-
-void
 DES(const UCHAR k[7], const UCHAR d[8], UCHAR results[8]);
 
-void
-DESL(UCHAR k[16], UCHAR d[8], UCHAR results[24]);
+/* Calls SystemFuntion009; Computes a "NT response"
+ * HINT: Params 1 + 2 swapped in comparison to SystemFunction009 */
+NTSTATUS
+DESL(_In_ UCHAR PasswordHash[16],
+    _In_ UCHAR Challenge[8],
+    _Out_ UCHAR Result[24]);
 
 void
 MD4(const unsigned char * d, int len, unsigned char * result);

@@ -1,117 +1,78 @@
 /*
- * Copyright 2011 Samuel Serapion
- *
- * This library is free software; you can redistribute it and/or
- * modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 2.1 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public
- * License along with this library; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ * PROJECT:     ntlmlib
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     utilities for ntlmlib
+ * COPYRIGHT:   Copyright 2011 Samuel Serapión
+ *              Copyright 2020 Andreas Maier (staubim@quantentunnel.de)
  *
  */
 
+#if 1
 #include <precomp.h>
 
 #include "wine/debug.h"
 WINE_DEFAULT_DEBUG_CHANNEL(ntlm);
+#else
+
+#include <apitest.h>
+#include <stdio.h>
+
+#define WIN32_NO_STATUS
+#include <windef.h>
+#include <winnt.h>
+#define NTOS_MODE_USER
+#include <ndk/rtlfuncs.h>
+
+#include <sspi.h>
+#include <ntsecapi.h>
+#include <ntsecpkg.h>
+#include <ntsam.h>
+#include <dll/ntlmlib/calculations.h>
+#include <dll/ntlmlib/util.h>
+#endif
 
 #define NTLM_ALLOC_TAG "NTLM"
 #define NTLM_ALLOC_TAG_SIZE strlen(NTLM_ALLOC_TAG)
 
-/* declared in ntlmlib */
-PVOID
-NtlmAllocate(
-    _In_ SIZE_T Size,
-    _In_ BOOL UsePrivateLsaHeap)
+/* internal - does not shrink buffer * /
+BOOL
+_StrBufferReAlloc(
+    _In_ WORD NeededLength,
+    _In_ BOOL CopyBuffer,
+    _Inout_ PWORD CurrentLength,
+    _Inout_ PVOID* BufferPtr)
 {
-    PVOID buffer = NULL;
+    #define ALLOC_BLOCK = 0x10;
+    ULONG bNewAlloc;
+    PBYTE newBuffer;
 
-    if(Size == 0)
-    {
-        ERR("Allocating 0 bytes!\n");
-        return NULL;
-    }
+    if (NeededLength <= *CurrentLength)
+        return TRUE;
 
-    Size += NTLM_ALLOC_TAG_SIZE;
+    / * align to ALLOC_BLOCK byte * /
+    bNewAlloc = (((NeededLength - 1) / ALLOC_BLOCK) + 1) * ALLOC_BLOCK;
+    ASSERT(bNewAlloc >= bNeeded);
 
-    switch(NtlmMode)
-    {
-        case NtlmLsaMode:
-        {
-            if (UsePrivateLsaHeap)
-                buffer = LsaFunctions->AllocatePrivateHeap(Size);
-            else
-                buffer = LsaFunctions->AllocateLsaHeap(Size);
+    //FIXME: realloc ...
+    newBuffer = _strutil_alloc(bNewAlloc);
+    if (newBuffer == NULL)
+        return FALSE;
 
-            if (buffer != NULL)
-                RtlZeroMemory(buffer, Size);
-            break;
-        }
-        case NtlmUserMode:
-        {
-            buffer = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, Size);
-            break;
-        }
-        default:
-        {
-            ERR("NtlmState unknown!\n");
-            break;
-        }
-    }
+    if ((copyBuffer) &&
+        (dest->bUsed > 0))
+        RtlCopyMemory(newBuffer, dest->Buffer, dest->bUsed);
 
-    memcpy(buffer, NTLM_ALLOC_TAG, NTLM_ALLOC_TAG_SIZE);
-    buffer = (PBYTE)buffer + NTLM_ALLOC_TAG_SIZE;
+    / * free old buffer * /
+    if (dest->Buffer)
+        _strutil_free(dest->Buffer);
 
-    return buffer;
-}
+    dest->Buffer = newBuffer;
+    dest->bAllocated = bNewAlloc;
 
-/* declared in ntlmlib */
-VOID
-NtlmFree(
-    _In_ PVOID Buffer,
-    _In_ BOOL FromPrivateLsaHeap)
-{
-    if (Buffer)
-    {
-        Buffer = (PBYTE)Buffer - NTLM_ALLOC_TAG_SIZE;
-        ASSERT(memcmp(Buffer, NTLM_ALLOC_TAG, NTLM_ALLOC_TAG_SIZE) == 0);
-        *(char*)Buffer = 'D';
+    return TRUE;
+}*/
 
-        switch (NtlmMode)
-        {
-            case NtlmLsaMode:
-            {
-                if (FromPrivateLsaHeap)
-                    LsaFunctions->FreePrivateHeap(Buffer);
-                else
-                    LsaFunctions->FreeLsaHeap(Buffer);
-                break;
-            }
-            case NtlmUserMode:
-            {
-                HeapFree(GetProcessHeap(), HEAP_ZERO_MEMORY, Buffer);
-                break;
-            }
-            default:
-            {
-                ERR("NtlmState unknown!\n");
-                break;
-            }
-        }
-    }
-    else
-    {
-        ERR("Trying to free NULL!\n");
-    }
-}
-
+#if 0
 BOOLEAN
 NtlmHasIntervalElapsed(IN LARGE_INTEGER Start,
                        IN LONG Timeout)
@@ -421,6 +382,8 @@ NtlmUStrAllocAndCopyBlob(
 
     return STATUS_SUCCESS;
 }
+//#endif
+
 // replacement for NtlmCreateExtAStrFromBlob
 NTSTATUS
 NtlmAStrAllocAndCopyBlob(
@@ -460,7 +423,70 @@ NtlmAStrAllocAndCopyBlob(
 
     return STATUS_SUCCESS;
 }
+#endif
 
+BOOL
+NtlmAStrAlloc(
+    _Out_ PSTRING Dst,
+    _In_ USHORT SizeInBytes,
+    _In_ USHORT InitLength)
+{
+    Dst->Length = InitLength;
+    Dst->MaximumLength = SizeInBytes;
+    Dst->Buffer = NtlmAllocate(SizeInBytes, FALSE);
+    return (Dst->Buffer != NULL);
+}
+
+BOOL
+NtlmUStrAlloc(
+    _Inout_ PUNICODE_STRING Dst,
+    _In_ USHORT SizeInBytes,
+    _In_ USHORT InitLength)
+{
+    Dst->Length = InitLength;
+    Dst->MaximumLength = SizeInBytes;
+    Dst->Buffer = NtlmAllocate(SizeInBytes, FALSE);
+    return (Dst->Buffer != NULL);
+}
+
+VOID
+NtlmUStrUpper(
+    _Inout_ PUNICODE_STRING Str)
+{
+    int i1;
+    PWCHAR tmp;
+    tmp = (PWCHAR)Str->Buffer;
+    for (i1 = 0; i1 < Str->Length / sizeof(WCHAR); i1++)
+        tmp[i1] = toupper(tmp[i1]);
+}
+
+VOID
+NtlmUStrFree(
+    _In_ PUNICODE_STRING String)
+{
+    if ((String == NULL) ||
+        (String->Buffer == NULL) ||
+        (String->MaximumLength == 0))
+        return;
+    NtlmFree(String->Buffer, FALSE);
+    String->Buffer = NULL;
+    String->MaximumLength = 0;
+}
+
+VOID
+NtlmAStrFree(
+    _In_ PSTRING String)
+{
+    if ((String == NULL) ||
+        (String->Buffer == NULL) ||
+        (String->MaximumLength == 0))
+        return;
+    NtlmFree(String->Buffer, FALSE);
+    String->Buffer = NULL;
+    String->MaximumLength = 0;
+}
+
+#if 0
 VOID
 NtlmWriteToBlob(IN PVOID pOutputBuffer,
                 IN void* buffer,
@@ -731,46 +757,9 @@ NtlmInitUnicodeStringFromExtStrW(
         Src->Buffer = NULL;
     }
 }
+#endif
 
-VOID
-NtlmInit(
-    _In_ NTLM_MODE mode)
-{
-    __wine_dbch_ntlm.flags = 0xff;
-
-    if (NtlmMode != NtlmUnknownMode)
-    {
-        if (mode != NtlmMode)
-        {
-            WARN("Initializing in different mode ... skipping!");
-            return;
-        }
-    }
-    NtlmMode = mode;
-
-    init_strutil(StrUtilAlloc, StrUtilFree);
-    NtlmInitializeGlobals();
-    NtlmInitializeRNG();
-    NtlmInitializeProtectedMemory();
-    NtlmCredentialInitialize();
-    NtlmContextInitialize();
-    if (NtlmMode == NtlmUserMode)
-    {
-        NtlmUsrContextInitialize();
-    }
-
-}
-
-VOID
-NtlmFini(VOID)
-{
-    NtlmContextTerminate();
-    NtlmCredentialTerminate();
-    NtlmTerminateRNG();
-    NtlmTerminateProtectedMemory();
-    NtlmTerminateGlobals();
-}
-
+#if 0
 NTSTATUS
 NtStatusToSecStatus(
     IN SECURITY_STATUS SecStatus)
@@ -1060,4 +1049,72 @@ NtlmFreeClientBuffer(
                                            Buffer->ClientBaseAddress);
         Buffer->ClientBaseAddress == NULL;
     }
+}
+#endif
+
+void PrintHexDumpMax(
+    _In_ int length,
+    _In_ PBYTE buffer,
+    _In_ int printmax)
+{
+    DWORD i,count,index;
+    CHAR rgbDigits[]="0123456789abcdef";
+    CHAR rgbLine[1024];
+    int cbLine;
+
+    if (length > printmax)
+        length = printmax;
+
+    for (index = 0; length;
+         length -= count, buffer += count, index += count)
+    {
+        count = (length > 32) ? 32:length;
+
+        snprintf(rgbLine, 512, "%4.4x  ",index);
+        cbLine = 6;
+
+        for (i = 0; i < count; i++)
+        {
+            rgbLine[cbLine++] = rgbDigits[buffer[i] >> 4];
+            rgbLine[cbLine++] = rgbDigits[buffer[i] & 0x0f];
+            if (i == 7)
+            {
+                rgbLine[cbLine++] = ':';
+            }
+            else
+            {
+                rgbLine[cbLine++] = ' ';
+            }
+        }
+        for (; i < 16; i++)
+        {
+            rgbLine[cbLine++] = ' ';
+            rgbLine[cbLine++] = ' ';
+            rgbLine[cbLine++] = ' ';
+        }
+
+        rgbLine[cbLine++] = ' ';
+
+        for (i = 0; i < count; i++)
+        {
+            if (buffer[i] < 32 || buffer[i] > 126)
+            {
+                rgbLine[cbLine++] = '.';
+            }
+            else
+            {
+                rgbLine[cbLine++] = buffer[i];
+            }
+        }
+
+        rgbLine[cbLine++] = 0;
+        printf("%s\n", rgbLine);
+    }
+}
+
+void PrintHexDump(
+    IN DWORD length,
+    IN PBYTE buffer)
+{
+    PrintHexDumpMax(length, buffer, 32);
 }

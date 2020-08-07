@@ -346,16 +346,6 @@ NtlmUnProtectMemory(
 
 /* util.c */
 
-PVOID
-NtlmAllocate(
-    IN size_t Size,
-    IN BOOL UsePrivateLsaHeap);
-
-VOID
-NtlmFree(
-    IN PVOID Buffer,
-    IN BOOL FromPrivateLsaHeap);
-
 VOID
 NtlmInit(
     _In_ NTLM_MODE mode);
