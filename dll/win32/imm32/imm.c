@@ -22,6 +22,9 @@
 #include <stdarg.h>
 #include <stdio.h>
 
+#ifdef __REACTOS__
+#define WIN32_NO_STATUS
+#endif
 #include "windef.h"
 #include "winbase.h"
 #include "wingdi.h"
@@ -33,6 +36,11 @@
 #include "winnls.h"
 #include "winreg.h"
 #include "wine/list.h"
+#ifdef __REACTOS__
+#include <ndk/umtypes.h>
+#include <ndk/pstypes.h>
+#include "../../../win32ss/include/ntuser.h"
+#endif
 
 WINE_DEFAULT_DEBUG_CHANNEL(imm);
 
@@ -3161,8 +3169,6 @@ BOOL WINAPI ImmEnumInputContext(DWORD idThread, IMCENUMPROC lpfn, LPARAM lParam)
  */
 
 #ifdef __REACTOS__
-BOOL APIENTRY NtUserGetImeHotKey(DWORD, LPUINT, LPUINT, LPHKL); /* FIXME */
-
 BOOL WINAPI
 ImmGetHotKey(IN DWORD dwHotKey,
              OUT LPUINT lpuModifiers,
