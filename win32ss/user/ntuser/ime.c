@@ -36,18 +36,15 @@ IntImmProcessKey(PUSER_MESSAGE_QUEUE MessageQueue, PWND pWnd, UINT Msg, WPARAM w
     return 0;
 }
 
-
-DWORD
-APIENTRY
-NtUserGetImeHotKey(
-   DWORD Unknown0,
-   DWORD Unknown1,
-   DWORD Unknown2,
-   DWORD Unknown3)
+BOOL WINAPI
+NtUserGetImeHotKey(IN DWORD dwHotKey,
+                   OUT LPUINT lpuModifiers,
+                   OUT LPUINT lpuVKey,
+                   OUT LPHKL lphKL)
 {
    STUB
 
-   return 0;
+   return FALSE;
 }
 
 DWORD

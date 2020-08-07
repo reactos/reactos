@@ -2278,13 +2278,11 @@ NtUserGetIconSize(
     LONG *plcx,
     LONG *plcy);
 
-DWORD
-NTAPI
-NtUserGetImeHotKey(
-    DWORD Unknown0,
-    DWORD Unknown1,
-    DWORD Unknown2,
-    DWORD Unknown3);
+BOOL NTAPI
+NtUserGetImeHotKey(IN DWORD dwHotKey,
+                   OUT LPUINT lpuModifiers,
+                   OUT LPUINT lpuVKey,
+                   OUT LPHKL lphKL);
 
 DWORD
 NTAPI

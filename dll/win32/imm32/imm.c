@@ -3160,11 +3160,25 @@ BOOL WINAPI ImmEnumInputContext(DWORD idThread, IMCENUMPROC lpfn, LPARAM lParam)
  *              ImmGetHotKey(IMM32.@)
  */
 
+#ifdef __REACTOS__
+BOOL WINAPI
+ImmGetHotKey(IN DWORD dwHotKey,
+             OUT LPUINT lpuModifiers,
+             OUT LPUINT lpuVKey,
+             OUT LPHKL lphKL)
+{
+    TRACE("%lx, %p, %p, %p\n", dwHotKey, lpuModifiers, lpuVKey, lphKL);
+    if (lpuModifiers && lpuVKey)
+        return NtUserGetImeHotKey(dwHotKey, lpuModifiers, lpuVKey, lphKL);
+    return FALSE;
+}
+#else
 BOOL WINAPI ImmGetHotKey(DWORD hotkey, UINT *modifiers, UINT *key, HKL hkl)
 {
     FIXME("%x, %p, %p, %p: stub\n", hotkey, modifiers, key, hkl);
     return FALSE;
 }
+#endif
 
 /***********************************************************************
  *              ImmDisableLegacyIME(IMM32.@)
