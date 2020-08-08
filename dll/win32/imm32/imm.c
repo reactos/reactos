@@ -2668,9 +2668,14 @@ HWND WINAPI ImmCreateSoftKeyboard(UINT uType, UINT hOwner, int x, int y)
  */
 BOOL WINAPI ImmDestroySoftKeyboard(HWND hSoftWnd)
 {
+#ifdef __REACTOS__
+    TRACE("(%p)\n", hSoftWnd);
+    return DestroyWindow(hSoftWnd);
+#else
     FIXME("(%p): stub\n", hSoftWnd);
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return FALSE;
+#endif
 }
 
 /***********************************************************************
@@ -2678,9 +2683,17 @@ BOOL WINAPI ImmDestroySoftKeyboard(HWND hSoftWnd)
  */
 BOOL WINAPI ImmShowSoftKeyboard(HWND hSoftWnd, int nCmdShow)
 {
+#ifdef __REACTOS__
+    TRACE("(%p, %d)\n", hSoftWnd, nCmdShow);
+    if (hWnd == NULL)
+        return FALSE;
+
+    return ShowWindow(hWnd, nCmdShow);
+#else
     FIXME("(%p, %d): stub\n", hSoftWnd, nCmdShow);
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return FALSE;
+#endif
 }
 
 /***********************************************************************
@@ -3194,24 +3207,5 @@ BOOL WINAPI ImmSetActiveContextConsoleIME(HWND hwnd, BOOL fFlag)
     if (hIMC)
         return ImmSetActiveContext(hwnd, hIMC, fFlag);
     return FALSE;
-}
-
-/***********************************************************************
- *              ImmShowSoftKeyboard(IMM32.@)
- */
-BOOL WINAPI ImmShowSoftKeyboard(HWND hWnd, int nShow)
-{
-    if (hWnd == NULL)
-        return FALSE;
-
-    return ShowWindow(hWnd, nShow);
-}
-
-/***********************************************************************
- *              ImmDestroySoftKeyboard(IMM32.@)
- */
-void WINAPI ImmDestroySoftKeyboard(HWND hWnd)
-{
-    DestroyWindow(hWnd);
 }
 #endif
