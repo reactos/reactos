@@ -23,6 +23,7 @@
 #include <commoncontrols.h>
 
 HRESULT TrayWindowCtxMenuCreator(ITrayWindow * TrayWnd, IN HWND hWndOwner, IContextMenu ** ppCtxMenu);
+LRESULT appbar_message(COPYDATASTRUCT* cds);
 
 #define WM_APP_TRAYDESTROY  (WM_APP + 0x100)
 
@@ -2197,7 +2198,6 @@ ChangePos:
         return m_ContextMenu->GetCommandString(idCmd, uType, pwReserved, pszName, cchMax);
     }
 
-
     /**********************************************************
      *    ##### message handling #####
      */
@@ -2341,9 +2341,16 @@ ChangePos:
 
     LRESULT OnCopyData(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
-        if (m_TrayNotify)
-            ::SendMessageW(m_TrayNotify, uMsg, wParam, lParam);
-        return TRUE;
+        COPYDATASTRUCT *pCopyData = reinterpret_cast<COPYDATASTRUCT *>(lParam);
+        switch (pCopyData->dwData)
+        {
+            case TABDMC_APPBAR:
+                return appbar_message(pCopyData);
+            case TABDMC_NOTIFY:
+            case TABDMC_LOADINPROC:
+                return ::SendMessageW(m_TrayNotify, uMsg, wParam, lParam);
+        }
+        return FALSE;
     }
 
     LRESULT OnNcPaint(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
