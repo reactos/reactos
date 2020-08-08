@@ -2685,15 +2685,13 @@ BOOL WINAPI ImmShowSoftKeyboard(HWND hSoftWnd, int nCmdShow)
 {
 #ifdef __REACTOS__
     TRACE("(%p, %d)\n", hSoftWnd, nCmdShow);
-    if (hWnd == NULL)
-        return FALSE;
-
-    return ShowWindow(hWnd, nCmdShow);
+    if (hSoftWnd)
+        return ShowWindow(hSoftWnd, nCmdShow);
 #else
     FIXME("(%p, %d): stub\n", hSoftWnd, nCmdShow);
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
 #endif
+    return FALSE;
 }
 
 /***********************************************************************
