@@ -3192,7 +3192,7 @@ BOOL WINAPI ImmDisableLegacyIME(void)
  */
 BOOL WINAPI ImmSetActiveContext(HWND hwnd, HIMC hIMC, BOOL fFlag)
 {
-    FIXME("stub\n");
+    FIXME("(%p, %p, %d): stub\n", hwnd, hIMC, fFlag);
     return FALSE;
 }
 
@@ -3201,7 +3201,10 @@ BOOL WINAPI ImmSetActiveContext(HWND hwnd, HIMC hIMC, BOOL fFlag)
  */
 BOOL WINAPI ImmSetActiveContextConsoleIME(HWND hwnd, BOOL fFlag)
 {
-    HIMC hIMC = ImmGetContext(hwnd);
+    HIMC hIMC;
+    TRACE("(%p, %d)\n", hwnd, fFlag);
+
+    hIMC = ImmGetContext(hwnd);
     if (hIMC)
         return ImmSetActiveContext(hwnd, hIMC, fFlag);
     return FALSE;
