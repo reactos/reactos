@@ -28,9 +28,7 @@ BOOL CDirectoryList::ContainsPath(LPCWSTR pszPath) const
 BOOL CDirectoryList::AddPath(LPCWSTR pszPath)
 {
     assert(!PathIsRelativeW(pszPath));
-
-    CDirectoryItem item(pszPath);
-    return m_items.Add(item);
+    return m_items.Add(pszPath);
 }
 
 BOOL CDirectoryList::RenamePath(LPCWSTR pszPath1, LPCWSTR pszPath2)
@@ -91,14 +89,13 @@ BOOL CDirectoryList::AddPathsFromDirectory(LPCWSTR pszDirectoryPath)
         return FALSE;
     }
 
+    LPWSTR pch;
     do
     {
         // ignore "." and ".."
-        if (lstrcmpW(find.cFileName, L".") == 0 ||
-            lstrcmpW(find.cFileName, L"..") == 0)
-        {
+        pch = find.cFileName;
+        if (pch[0] == L'.' && (pch[1] == 0 || (pch[1] == L'.' && pch[2] == 0)))
             continue;
-        }
 
         // build a path
         PathRemoveFileSpecW(szPath);
