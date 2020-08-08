@@ -183,20 +183,20 @@ void CDirectoryWatcher::ProcessNotification()
                 if (!m_dir_list.AddPath(szPath) || !PathIsDirectoryW(szPath))
                     dwEvent = 0;
                 break;
-            case SHCNE_RENAMEFOLDER:
-                if (!m_dir_list.RenamePath(szTempPath, szPath) || !PathIsDirectoryW(szPath))
-                    dwEvent = 0;
-                break;
-            case SHCNE_RMDIR:
-                if (!m_dir_list.DeletePath(szPath))
-                    dwEvent = 0;
-                break;
             case SHCNE_CREATE:
                 if (!PathFileExistsW(szPath) || PathIsDirectoryW(szPath))
                     dwEvent = 0;
                 break;
+            case SHCNE_RENAMEFOLDER:
+                if (!m_dir_list.RenamePath(szTempPath, szPath) || !PathIsDirectoryW(szPath))
+                    dwEvent = 0;
+                break;
             case SHCNE_RENAMEITEM:
                 if (!PathFileExistsW(szPath) || PathIsDirectoryW(szPath))
+                    dwEvent = 0;
+                break;
+            case SHCNE_RMDIR:
+                if (!m_dir_list.DeletePath(szPath))
                     dwEvent = 0;
                 break;
             case SHCNE_DELETE:
