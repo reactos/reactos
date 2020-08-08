@@ -3200,7 +3200,7 @@ BOOL WINAPI ImmSetActiveContextConsoleIME(HWND hwnd, BOOL fFlag)
 *		ImmRegisterClient(IMM32.@)
 *       ( Undocumented, called from user32.dll )
 */
-BOOL WINAPI ImmRegisterClient(SHAREDINFO* info, HINSTANCE hMod)
+BOOL WINAPI ImmRegisterClient(PVOID ptr, HINSTANCE hMod)
 {
     FIXME("Stub\n");
     return TRUE;
