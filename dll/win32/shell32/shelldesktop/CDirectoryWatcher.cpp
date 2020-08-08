@@ -180,7 +180,7 @@ void CDirectoryWatcher::ProcessNotification()
         switch (dwEvent)
         {
             case SHCNE_MKDIR:
-                if (!m_dir_list.AddPath(szPath) || !PathIsDirectoryW(szPath))
+                if (!PathIsDirectoryW(szPath) || !m_dir_list.AddPath(szPath))
                     dwEvent = 0;
                 break;
             case SHCNE_CREATE:
@@ -188,7 +188,7 @@ void CDirectoryWatcher::ProcessNotification()
                     dwEvent = 0;
                 break;
             case SHCNE_RENAMEFOLDER:
-                if (!m_dir_list.RenamePath(szTempPath, szPath) || !PathIsDirectoryW(szPath))
+                if (!PathIsDirectoryW(szPath) || !m_dir_list.RenamePath(szTempPath, szPath))
                     dwEvent = 0;
                 break;
             case SHCNE_RENAMEITEM:
@@ -196,7 +196,7 @@ void CDirectoryWatcher::ProcessNotification()
                     dwEvent = 0;
                 break;
             case SHCNE_RMDIR:
-                if (!m_dir_list.DeletePath(szPath))
+                if (PathIsDirectoryW(szPath) || !m_dir_list.DeletePath(szPath))
                     dwEvent = 0;
                 break;
             case SHCNE_DELETE:
