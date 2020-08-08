@@ -3195,4 +3195,23 @@ BOOL WINAPI ImmSetActiveContextConsoleIME(HWND hwnd, BOOL fFlag)
         return ImmSetActiveContext(hwnd, hIMC, fFlag);
     return FALSE;
 }
+
+/***********************************************************************
+ *              ImmShowSoftKeyboard(IMM32.@)
+ */
+BOOL WINAPI ImmShowSoftKeyboard(HWND hWnd, int nShow)
+{
+    if (hWnd == NULL)
+        return FALSE;
+
+    return ShowWindow(hWnd, nShow);
+}
+
+/***********************************************************************
+ *              ImmDestroySoftKeyboard(IMM32.@)
+ */
+void WINAPI ImmDestroySoftKeyboard(HWND hWnd)
+{
+    DestroyWindow(hWnd);
+}
 #endif
