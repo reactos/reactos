@@ -338,6 +338,8 @@ public:
 
         psh.phpage = hpsp;
         psh.nPages = _countof(hpsp);
+        psh.pszbmWatermark = MAKEINTRESOURCE(IDB_WATERMARK);
+        psh.pszbmHeader = MAKEINTRESOURCE(IDB_HEADER);
 
         PropertySheetW(&psh);
     }

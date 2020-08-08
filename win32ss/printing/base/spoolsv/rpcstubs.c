@@ -106,27 +106,6 @@ _RpcSplOpenPrinter(VOID)
 }
 
 DWORD
-_RpcGetSpoolFileInfo(VOID)
-{
-    UNIMPLEMENTED;
-    return ERROR_INVALID_FUNCTION;
-}
-
-DWORD
-_RpcCommitSpoolData(VOID)
-{
-    UNIMPLEMENTED;
-    return ERROR_INVALID_FUNCTION;
-}
-
-DWORD
-_RpcCloseSpoolFileHandle(VOID)
-{
-    UNIMPLEMENTED;
-    return ERROR_INVALID_FUNCTION;
-}
-
-DWORD
 _RpcSendRecvBidiData(WINSPOOL_PRINTER_HANDLE hPrinter, const WCHAR* pAction, WINSPOOL_BIDI_REQUEST_CONTAINER* pReqData, WINSPOOL_BIDI_RESPONSE_CONTAINER** ppRespData)
 {
     UNIMPLEMENTED;

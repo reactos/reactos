@@ -143,7 +143,7 @@ NtUserBuildPropList(
     PWND Window;
     PPROPERTY Property;
     PLIST_ENTRY ListEntry;
-    PROPLISTITEM listitem, *li;
+    PROPLISTITEM listitem = { 0 }, *li;
     NTSTATUS Status;
     DWORD Cnt = 0;
 

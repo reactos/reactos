@@ -12,6 +12,7 @@ list(APPEND SOURCE
     printerdata.c
     printers.c
     printprocessors.c
+    spoolfile.c
     tools.c)
 
 list(APPEND PCH_SKIP_SOURCE

@@ -316,6 +316,11 @@ BOOL WINAPI LocalEnumPrintProcessorDatatypes(LPWSTR pName, LPWSTR pPrintProcesso
 BOOL WINAPI LocalEnumPrintProcessors(LPWSTR pName, LPWSTR pEnvironment, DWORD Level, LPBYTE pPrintProcessorInfo, DWORD cbBuf, LPDWORD pcbNeeded, LPDWORD pcReturned);
 BOOL WINAPI LocalGetPrintProcessorDirectory(LPWSTR pName, LPWSTR pEnvironment, DWORD Level, LPBYTE pPrintProcessorInfo, DWORD cbBuf, LPDWORD pcbNeeded);
 
+// spoolfile.c
+BOOL WINAPI LocalGetSpoolFileInfo(HANDLE hPrinter,LPWSTR *pSpoolDir,LPHANDLE phFile,HANDLE hSpoolerProcess,HANDLE hAppProcess);
+BOOL WINAPI LocalCommitSpoolData(HANDLE hPrinter,DWORD cbCommit);
+BOOL WINAPI LocalCloseSpoolFileHandle(HANDLE hPrinter);
+
 // tools.c
 PWSTR AllocAndRegQueryWSZ(HKEY hKey, PCWSTR pwszValueName);
 PDEVMODEW DuplicateDevMode(PDEVMODEW pInput);

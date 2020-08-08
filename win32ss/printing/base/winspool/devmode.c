@@ -234,7 +234,55 @@ Failure:
     return FALSE;
 }
 
-void RosConvertAnsiDevModeToUnicodeDevmode(PDEVMODEA pDevModeInput, PDEVMODEW pDevModeOutput)
+BOOL WINAPI
+IsValidDevmodeNoSizeW(PDEVMODEW pDevmode)
+{
+    PMINIMUM_SIZE_TABLE pTable = MinimumSizeW;
+    WORD wRequiredSize;
+
+    TRACE("IsValidDevmodeNoSizeW(%p)\n", pDevmode);
+
+    // Check if a Devmode was given at all.
+    if (!pDevmode)
+        goto Failure;
+
+    // If the structure has private members, the public structure must be 32-bit packed.
+    if (pDevmode->dmDriverExtra && pDevmode->dmSize % 4)
+        goto Failure;
+
+    // Now determine the minimum possible dmSize based on the given fields in dmFields.
+    wRequiredSize = FIELD_OFFSET(DEVMODEW, dmFields) + RTL_FIELD_SIZE(DEVMODEW, dmFields);
+
+    while (pTable->dwField)
+    {
+        if (pDevmode->dmFields & pTable->dwField)
+        {
+            wRequiredSize = pTable->wSize;
+            break;
+        }
+
+        pTable++;
+    }
+
+    // Verify that the value in dmSize is big enough for the used fields.
+    if (pDevmode->dmSize < wRequiredSize)
+        goto Failure;
+
+    // Check if dmDeviceName and (if used) dmFormName are null-terminated.
+    // Fix this if they aren't.
+    _FixStringW(pDevmode->dmDeviceName, sizeof(pDevmode->dmDeviceName));
+    if (pDevmode->dmFields & DM_FORMNAME)
+        _FixStringW(pDevmode->dmFormName, sizeof(pDevmode->dmFormName));
+
+    // Return success without setting the error code.
+    return TRUE;
+
+Failure:
+    SetLastError(ERROR_INVALID_DATA);
+    return FALSE;
+}
+
+void RosConvertAnsiDevModeToUnicodeDevmode(PDEVMODEA pDevModeInput, PDEVMODEW *pDevModeOutput)
 {
     // FIXME: This function should become ConvertAnsiDevModeToUnicodeDevmode when its parameters are known!
 
@@ -242,7 +290,7 @@ void RosConvertAnsiDevModeToUnicodeDevmode(PDEVMODEA pDevModeInput, PDEVMODEW pD
     if (!pDevModeInput || !pDevModeOutput)
         return;
 
-    pDevModeOutput = GdiConvertToDevmodeW(pDevModeInput);
+    *pDevModeOutput = GdiConvertToDevmodeW(pDevModeInput);
 }
 
 // Internal counterpart to GdiConvertToDevmodeW from gdi32
@@ -304,11 +352,15 @@ _ConvertToDevmodeA(const DEVMODEW *dmW)
 
 void RosConvertUnicodeDevModeToAnsiDevmode(PDEVMODEW pDevModeInput, PDEVMODEA pDevModeOutput)
 {
+    PDEVMODEA pTmp;
+
     // FIXME: This function should become ConvertUnicodeDevModeToAnsiDevmode when its parameters are known!
 
     // Check if a pDevModeInput and pDevModeOutput are both not NULL.
     if (!pDevModeInput || !pDevModeOutput)
         return;
 
-    pDevModeOutput = _ConvertToDevmodeA(pDevModeInput);
+    pTmp = _ConvertToDevmodeA(pDevModeInput);
+    memcpy( pDevModeOutput, pTmp, pTmp->dmSize + pTmp->dmDriverExtra); // Copy into a Wide char (Larger) buffer.
+    HeapFree(hProcessHeap, 0, pTmp);
 }

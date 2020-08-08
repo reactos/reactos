@@ -370,8 +370,9 @@ MountMgrNotifyNameChange(IN PDEVICE_EXTENSION DeviceExtension,
     if (ValidateVolume)
     {
         /* Then, ensure we can find the device */
-        NextEntry = DeviceExtension->DeviceListHead.Flink;
-        while (NextEntry != &(DeviceExtension->DeviceListHead))
+        for (NextEntry = DeviceExtension->DeviceListHead.Flink;
+             NextEntry != &DeviceExtension->DeviceListHead;
+             NextEntry = NextEntry->Flink)
         {
             DeviceInformation = CONTAINING_RECORD(NextEntry, DEVICE_INFORMATION, DeviceListEntry);
             if (RtlCompareUnicodeString(DeviceName, &(DeviceInformation->DeviceName), TRUE) == 0)

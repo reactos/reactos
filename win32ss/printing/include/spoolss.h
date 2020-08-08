@@ -57,6 +57,13 @@ typedef struct _PRINTER_INFO_STRESS
 }
 PRINTER_INFO_STRESS, *PPRINTER_INFO_STRESS;
 
+typedef struct _FILE_INFO_1
+{
+    BOOL   bInheritHandle;
+    HANDLE hSpoolFileHandle;
+    DWORD  dwOptions;
+} FILE_INFO_1, *PFILE_INFO_1;
+
 PVOID WINAPI AlignRpcPtr(PVOID pBuffer, PDWORD pcbBuffer);
 PWSTR WINAPI AllocSplStr(PCWSTR pwszInput);
 PVOID WINAPI DllAllocSplMem(DWORD dwBytes);
@@ -69,5 +76,8 @@ BOOL WINAPI ReallocSplStr(PWSTR* ppwszString, PCWSTR pwszInput);
 BOOL WINAPI SplInitializeWinSpoolDrv(PVOID* pTable);
 BOOL WINAPI SpoolerInit(VOID);
 PDWORD WINAPI UndoAlignRpcPtr(PVOID pDestinationBuffer, PVOID pSourceBuffer, DWORD cbBuffer, PDWORD pcbNeeded);
+BOOL WINAPI SplGetSpoolFileInfo(HANDLE hPrinter,HANDLE hProcessHandle,DWORD Level,FILE_INFO_1 *pFileInfo,DWORD dwSize,DWORD* dwNeeded );
+BOOL WINAPI SplCommitSpoolData(HANDLE hPrinter,HANDLE hProcessHandle,DWORD cbCommit,DWORD Level,FILE_INFO_1 *pFileInfo,DWORD dwSize,DWORD* dwNeeded);
+BOOL WINAPI SplCloseSpoolFileHandle( HANDLE hPrinter );
 
 #endif

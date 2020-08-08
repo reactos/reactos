@@ -111,6 +111,7 @@ DllAllocSplMem(DWORD dwBytes)
 BOOL WINAPI
 DllFreeSplMem(PVOID pMem)
 {
+    if ( !pMem ) return TRUE;
     return HeapFree(hProcessHeap, 0, pMem);
 }
 
@@ -128,7 +129,9 @@ DllFreeSplMem(PVOID pMem)
 BOOL WINAPI
 DllFreeSplStr(PWSTR pwszString)
 {
-    return HeapFree(hProcessHeap, 0, pwszString);
+    if ( pwszString )
+       return HeapFree(hProcessHeap, 0, pwszString);
+    return FALSE;
 }
 
 /**
