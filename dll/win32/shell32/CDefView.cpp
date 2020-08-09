@@ -396,7 +396,7 @@ CDefView::~CDefView()
 {
     TRACE(" destroying IShellView(%p)\n", this);
 
-    CallCB(SFVM_PRERELEASE, 0, 0);
+    CallCB(SFVM_VIEWRELEASE, 0, 0);
 
     if (m_viewinfo_data.hbmBack)
     {
@@ -798,7 +798,7 @@ int CDefView::LV_AddItem(PCUITEMID_CHILD pidl)
 
     TRACE("(%p)(pidl=%p)\n", this, pidl);
 
-    if (CallCB(SFVM_INSERTITEM, 0, (LPARAM)pidl) == S_FALSE)
+    if (CallCB(SFVM_ADDINGOBJECT, 0, (LPARAM)pidl) == S_FALSE)
         return -1;
 
     lvItem.mask = LVIF_TEXT | LVIF_IMAGE | LVIF_PARAM;    /*set the mask*/
