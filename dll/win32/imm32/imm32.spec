@@ -8,7 +8,7 @@
 @ stdcall ImmCreateSoftKeyboard(long long long long)
 @ stdcall ImmDestroyContext(long)
 @ stdcall ImmDestroyIMCC(long)
-@ stdcall ImmDestroySoftKeyboard(long)
+@ stdcall ImmDestroySoftKeyboard(ptr)
 @ stdcall ImmDisableIME(long)
 @ stdcall ImmDisableIme(long) ImmDisableIME
 @ stdcall ImmDisableLegacyIME()
@@ -98,7 +98,7 @@
 #@ stdcall ImmSetHotKey(long long long ptr) user32.CliImmSetHotKey
 @ stdcall ImmSetOpenStatus(long long)
 @ stdcall ImmSetStatusWindowPos(long ptr)
-@ stdcall ImmShowSoftKeyboard(long long)
+@ stdcall ImmShowSoftKeyboard(ptr long)
 @ stdcall ImmSimulateHotKey(long long)
 @ stub ImmSystemHandler
 @ stdcall ImmTranslateMessage(long long long long)

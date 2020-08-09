@@ -2676,9 +2676,14 @@ HWND WINAPI ImmCreateSoftKeyboard(UINT uType, UINT hOwner, int x, int y)
  */
 BOOL WINAPI ImmDestroySoftKeyboard(HWND hSoftWnd)
 {
+#ifdef __REACTOS__
+    TRACE("(%p)\n", hSoftWnd);
+    return DestroyWindow(hSoftWnd);
+#else
     FIXME("(%p): stub\n", hSoftWnd);
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return FALSE;
+#endif
 }
 
 /***********************************************************************
@@ -2686,8 +2691,14 @@ BOOL WINAPI ImmDestroySoftKeyboard(HWND hSoftWnd)
  */
 BOOL WINAPI ImmShowSoftKeyboard(HWND hSoftWnd, int nCmdShow)
 {
+#ifdef __REACTOS__
+    TRACE("(%p, %d)\n", hSoftWnd, nCmdShow);
+    if (hSoftWnd)
+        return ShowWindow(hSoftWnd, nCmdShow);
+#else
     FIXME("(%p, %d): stub\n", hSoftWnd, nCmdShow);
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+#endif
     return FALSE;
 }
 
@@ -3203,7 +3214,7 @@ BOOL WINAPI ImmDisableLegacyIME(void)
  */
 BOOL WINAPI ImmSetActiveContext(HWND hwnd, HIMC hIMC, BOOL fFlag)
 {
-    FIXME("stub\n");
+    FIXME("(%p, %p, %d): stub\n", hwnd, hIMC, fFlag);
     return FALSE;
 }
 
@@ -3212,7 +3223,10 @@ BOOL WINAPI ImmSetActiveContext(HWND hwnd, HIMC hIMC, BOOL fFlag)
  */
 BOOL WINAPI ImmSetActiveContextConsoleIME(HWND hwnd, BOOL fFlag)
 {
-    HIMC hIMC = ImmGetContext(hwnd);
+    HIMC hIMC;
+    TRACE("(%p, %d)\n", hwnd, fFlag);
+
+    hIMC = ImmGetContext(hwnd);
     if (hIMC)
         return ImmSetActiveContext(hwnd, hIMC, fFlag);
     return FALSE;
