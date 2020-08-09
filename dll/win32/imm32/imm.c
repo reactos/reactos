@@ -3207,8 +3207,8 @@ BOOL WINAPI ImmDisableLegacyIME(void)
     FIXME("stub\n");
     return TRUE;
 }
-#ifdef __REACTOS__
 
+#ifdef __REACTOS__
 /***********************************************************************
  *              ImmSetActiveContext(IMM32.@)
  */
@@ -3230,5 +3230,16 @@ BOOL WINAPI ImmSetActiveContextConsoleIME(HWND hwnd, BOOL fFlag)
     if (hIMC)
         return ImmSetActiveContext(hwnd, hIMC, fFlag);
     return FALSE;
+}
+
+/***********************************************************************
+*		ImmRegisterClient(IMM32.@)
+*       ( Undocumented, called from user32.dll )
+*/
+BOOL WINAPI ImmRegisterClient(PVOID ptr, /* FIXME: should point to SHAREDINFO structure */
+                              HINSTANCE hMod)
+{
+    FIXME("Stub\n");
+    return TRUE;
 }
 #endif
