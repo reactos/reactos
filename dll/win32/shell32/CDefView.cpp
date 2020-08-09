@@ -2420,7 +2420,7 @@ HRESULT WINAPI CDefView::Refresh()
 {
     TRACE("(%p)\n", this);
 
-    CallCB(SFVM_REFRESH, TRUE, 0);
+    CallCB(SFVM_LISTREFRESHED, TRUE, 0);
 
     m_ListView.DeleteAllItems();
     FillList();
@@ -2474,7 +2474,7 @@ HRESULT WINAPI CDefView::DestroyViewWindow()
     {
         HWND hwndTemp = m_hWnd;
         m_hWnd = NULL;
-        CallCB(SFVM_WINDOWDESTROY, (WPARAM)hwndTemp, 0);
+        CallCB(SFVM_WINDOWCLOSING, (WPARAM)hwndTemp, 0);
         m_hWnd = hwndTemp;
 
         DestroyWindow();
