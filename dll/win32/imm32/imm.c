@@ -22,6 +22,9 @@
 #include <stdarg.h>
 #include <stdio.h>
 
+#ifdef __REACTOS__
+#define WIN32_NO_STATUS
+#endif
 #include "windef.h"
 #include "winbase.h"
 #include "wingdi.h"
@@ -33,6 +36,11 @@
 #include "winnls.h"
 #include "winreg.h"
 #include "wine/list.h"
+#ifdef __REACTOS__
+#include <ndk/umtypes.h>
+#include <ndk/pstypes.h>
+#include "../../../win32ss/include/ntuser.h"
+#endif
 
 WINE_DEFAULT_DEBUG_CHANNEL(imm);
 
@@ -3160,11 +3168,25 @@ BOOL WINAPI ImmEnumInputContext(DWORD idThread, IMCENUMPROC lpfn, LPARAM lParam)
  *              ImmGetHotKey(IMM32.@)
  */
 
+#ifdef __REACTOS__
+BOOL WINAPI
+ImmGetHotKey(IN DWORD dwHotKey,
+             OUT LPUINT lpuModifiers,
+             OUT LPUINT lpuVKey,
+             OUT LPHKL lphKL)
+{
+    TRACE("%lx, %p, %p, %p\n", dwHotKey, lpuModifiers, lpuVKey, lphKL);
+    if (lpuModifiers && lpuVKey)
+        return NtUserGetImeHotKey(dwHotKey, lpuModifiers, lpuVKey, lphKL);
+    return FALSE;
+}
+#else
 BOOL WINAPI ImmGetHotKey(DWORD hotkey, UINT *modifiers, UINT *key, HKL hkl)
 {
     FIXME("%x, %p, %p, %p: stub\n", hotkey, modifiers, key, hkl);
     return FALSE;
 }
+#endif
 
 /***********************************************************************
  *              ImmDisableLegacyIME(IMM32.@)

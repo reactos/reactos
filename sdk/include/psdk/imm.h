@@ -27,6 +27,9 @@ extern "C" {
 
 typedef HANDLE HIMC;
 typedef HANDLE HIMCC;
+#ifdef __REACTOS__
+typedef HKL *LPHKL;
+#endif
 
 typedef struct tagREGISTERWORDA {
     LPSTR lpReading;
