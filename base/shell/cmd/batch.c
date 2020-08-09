@@ -112,55 +112,85 @@ FindArg(
 
 
 /*
- * Batch_params builds a parameter list in newly allocated memory.
- * The parameters consist of null terminated strings with a final
- * NULL character signalling the end of the parameters.
- *
+ * Builds the batch parameter list in newly allocated memory.
+ * The parameters consist of NULL terminated strings with a
+ * final NULL character signalling the end of the parameters.
  */
-static LPTSTR BatchParams(LPTSTR s1, LPTSTR s2)
+static BOOL
+BatchParams(
+    IN PCTSTR Arg0,
+    IN PCTSTR Args,
+    OUT PTSTR* RawParams,
+    OUT PTSTR* ParamList)
 {
-    LPTSTR dp = (LPTSTR)cmd_alloc((_tcslen(s1) + _tcslen(s2) + 3) * sizeof (TCHAR));
+    PTSTR dp;
+    SIZE_T len;
 
-    /* JPP 20-Jul-1998 added error checking */
-    if (dp == NULL)
+    *RawParams = NULL;
+    *ParamList = NULL;
+
+    /* Make a raw copy of the parameters, but trim any leading and trailing whitespace */
+    // Args += _tcsspn(Args, _T(" \t"));
+    while (_istspace(*Args))
+        ++Args;
+    dp = (PTSTR)Args + _tcslen(Args);
+    while ((dp > Args) && _istspace(*(dp - 1)))
+        --dp;
+    len = dp - Args;
+    *RawParams = (PTSTR)cmd_alloc((len + 1)* sizeof(TCHAR));
+    if (!*RawParams)
     {
-        WARN("Cannot allocate memory for dp!\n");
+        WARN("Cannot allocate memory for RawParams!\n");
         error_out_of_memory();
-        return NULL;
+        return FALSE;
     }
+    _tcsncpy(*RawParams, Args, len);
+    (*RawParams)[len] = _T('\0');
 
-    if (s1 && *s1)
+    /* Parse the parameters as well */
+    Args = *RawParams;
+
+    *ParamList = (PTSTR)cmd_alloc((_tcslen(Arg0) + _tcslen(Args) + 3) * sizeof(TCHAR));
+    if (!*ParamList)
     {
-        s1 = _stpcpy (dp, s1);
-        *s1++ = _T('\0');
+        WARN("Cannot allocate memory for ParamList!\n");
+        error_out_of_memory();
+        cmd_free(*RawParams);
+        *RawParams = NULL;
+        return FALSE;
     }
-    else
-        s1 = dp;
 
-    while (*s2)
+    dp = *ParamList;
+
+    if (Arg0 && *Arg0)
+    {
+        dp = _stpcpy(dp, Arg0);
+        *dp++ = _T('\0');
+    }
+
+    while (*Args)
     {
         BOOL inquotes = FALSE;
 
         /* Find next parameter */
-        while (_istspace(*s2) || (*s2 && _tcschr(STANDARD_SEPS, *s2)))
-            s2++;
-        if (!*s2)
+        while (_istspace(*Args) || (*Args && _tcschr(STANDARD_SEPS, *Args)))
+            ++Args;
+        if (!*Args)
             break;
 
         /* Copy it */
         do
         {
-            if (!inquotes && (_istspace(*s2) || _tcschr(STANDARD_SEPS, *s2)))
+            if (!inquotes && (_istspace(*Args) || _tcschr(STANDARD_SEPS, *Args)))
                 break;
-            inquotes ^= (*s2 == _T('"'));
-            *s1++ = *s2++;
-        } while (*s2);
-        *s1++ = _T('\0');
+            inquotes ^= (*Args == _T('"'));
+            *dp++ = *Args++;
+        } while (*Args);
+        *dp++ = _T('\0');
     }
+    *dp = _T('\0');
 
-    *s1 = _T('\0');
-
-    return dp;
+    return TRUE;
 }
 
 /*
@@ -368,14 +398,9 @@ INT Batch(LPTSTR fullname, LPTSTR firstword, LPTSTR param, PARSED_COMMAND *Cmd)
     for (i = 0; i < 10; i++)
         bc->shiftlevel[i] = i;
 
-    /* Parse the parameters and make a raw copy of them without modifications */
-    bc->params = BatchParams(firstword, param);
-    bc->raw_params = cmd_dup(param);
-    if (bc->raw_params == NULL)
-    {
-        error_out_of_memory();
+    /* Parse the batch parameters */
+    if (!BatchParams(firstword, param, &bc->raw_params, &bc->params))
         return 1;
-    }
 
     /* If we are calling from inside a FOR, hide the FOR variables */
     saved_fc = fc;
