@@ -85,7 +85,8 @@ DoAction7(void)
 static void
 DoAction8(void)
 {
-    ok_int(RemoveDirectoryW(s_dir1), TRUE);
+    BOOL ret = RemoveDirectoryW(s_dir1);
+    ok(ret, "RemoveDirectoryW failed. GetLastError() == %ld\n", GetLastError());
 }
 
 static const TEST_ENTRY s_TestEntriesMode0[] =
