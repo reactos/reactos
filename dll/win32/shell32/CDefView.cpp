@@ -115,7 +115,7 @@ class CDefView :
     private:
         HRESULT _MergeToolbar();
         BOOL _Sort();
-        HRESULT _DoFolderViewCB(UINT uMsg, WPARAM wParam, LPARAM lParam);
+        HRESULT CallCB(UINT uMsg, WPARAM wParam, LPARAM lParam);
         HRESULT _GetSnapToGrid();
 
     public:
@@ -130,7 +130,6 @@ class CDefView :
         BOOL CreateList();
         void UpdateListColors();
         BOOL InitList();
-        HRESULT DefMessageSFVCB(UINT uMsg, WPARAM wParam, LPARAM lParam);
         static INT CALLBACK ListViewCompareItems(LPARAM lParam1, LPARAM lParam2, LPARAM lpData);
 
         PCUITEMID_CHILD _PidlByItem(int i);
@@ -397,6 +396,8 @@ CDefView::~CDefView()
 {
     TRACE(" destroying IShellView(%p)\n", this);
 
+    CallCB(SFVM_PRERELEASE, 0, 0);
+
     if (m_viewinfo_data.hbmBack)
     {
         ::DeleteObject(m_viewinfo_data.hbmBack);
@@ -537,7 +538,7 @@ BOOL CDefView::CreateList()
         dwStyle |= LVS_ALIGNTOP | LVS_SHOWSELALWAYS;
 
     ViewMode = m_FolderSettings.ViewMode;
-    hr = _DoFolderViewCB(SFVM_DEFVIEWMODE, NULL, (LPARAM)&ViewMode);
+    hr = CallCB(SFVM_DEFVIEWMODE, 0, (LPARAM)&ViewMode);
     if (SUCCEEDED(hr))
     {
         if (ViewMode >= FVM_FIRST && ViewMode <= FVM_LAST)
@@ -797,6 +798,9 @@ int CDefView::LV_AddItem(PCUITEMID_CHILD pidl)
 
     TRACE("(%p)(pidl=%p)\n", this, pidl);
 
+    if (CallCB(SFVM_INSERTITEM, 0, (LPARAM)pidl) == S_FALSE)
+        return -1;
+
     lvItem.mask = LVIF_TEXT | LVIF_IMAGE | LVIF_PARAM;    /*set the mask*/
     lvItem.iItem = m_ListView.GetItemCount();             /*add the item to the end of the list*/
     lvItem.iSubItem = 0;
@@ -987,7 +991,7 @@ HRESULT CDefView::FillList()
 
     // load custom background image and custom text color
     m_viewinfo_data.cbSize = sizeof(m_viewinfo_data);
-    _DoFolderViewCB(SFVM_GET_CUSTOMVIEWINFO, 0, (LPARAM)&m_viewinfo_data);
+    CallCB(SFVM_GET_CUSTOMVIEWINFO, 0, (LPARAM)&m_viewinfo_data);
 
     /*turn the listview's redrawing back on and force it to draw*/
     m_ListView.SetRedraw(TRUE);
@@ -1000,7 +1004,7 @@ HRESULT CDefView::FillList()
         m_ListView.InvalidateRect(NULL, TRUE);
     }
 
-    _DoFolderViewCB(SFVM_LISTREFRESHED, NULL, NULL);
+    CallCB(SFVM_LISTREFRESHED, 0, 0);
 
     return S_OK;
 }
@@ -1196,7 +1200,7 @@ LRESULT CDefView::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
         ILFree(pidls[2]);
     }
 
-    /* _DoFolderViewCB(SFVM_GETNOTIFY, ??  ??) */
+    /* CallCB(SFVM_GETNOTIFY, ??  ??) */
 
     m_hAccel = LoadAcceleratorsW(shell32_hInstance, MAKEINTRESOURCEW(IDA_SHELLVIEW));
 
@@ -1625,7 +1629,7 @@ LRESULT CDefView::OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled
         ::MoveWindow(m_ListView, 0, 0, wWidth, wHeight, TRUE);
     }
 
-    _DoFolderViewCB(SFVM_SIZE, 0, 0);
+    CallCB(SFVM_SIZE, 0, 0);
 
     return 0;
 }
@@ -2005,7 +2009,7 @@ LRESULT CDefView::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
             TRACE("-- LVN_ITEMCHANGED %p\n", this);
             OnStateChange(CDBOSC_SELCHANGE);  /* the browser will get the IDataObject now */
             UpdateStatusbar();
-            _DoFolderViewCB(SFVM_SELECTIONCHANGED, NULL/* FIXME */, NULL/* FIXME */);
+            CallCB(SFVM_SELECTIONCHANGED, NULL/* FIXME */, NULL/* FIXME */);
             break;
 
         case LVN_BEGINDRAG:
@@ -2416,6 +2420,8 @@ HRESULT WINAPI CDefView::Refresh()
 {
     TRACE("(%p)\n", this);
 
+    CallCB(SFVM_REFRESH, TRUE, 0);
+
     m_ListView.DeleteAllItems();
     FillList();
 
@@ -2466,6 +2472,11 @@ HRESULT WINAPI CDefView::DestroyViewWindow()
 
     if (m_hWnd)
     {
+        HWND hwndTemp = m_hWnd;
+        m_hWnd = NULL;
+        CallCB(SFVM_WINDOWDESTROY, (WPARAM)hwndTemp, 0);
+        m_hWnd = hwndTemp;
+
         DestroyWindow();
     }
 
@@ -2888,7 +2899,7 @@ HRESULT STDMETHODCALLTYPE CDefView::CreateViewWindow3(IShellBrowser *psb, IShell
     if (!*hwnd)
         return E_FAIL;
 
-    _DoFolderViewCB(SFVM_WINDOWCREATED, (WPARAM)m_hWnd, NULL);
+    CallCB(SFVM_WINDOWCREATED, (WPARAM)m_hWnd, 0);
 
     SetWindowPos(HWND_TOP, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
     UpdateWindow();
@@ -3541,26 +3552,13 @@ HRESULT CDefView::_MergeToolbar()
     return S_OK;
 }
 
-// The default processing of IShellFolderView callbacks
-HRESULT CDefView::DefMessageSFVCB(UINT uMsg, WPARAM wParam, LPARAM lParam)
-{
-    // TODO: SFVM_GET_CUSTOMVIEWINFO, SFVM_WINDOWCREATED
-    TRACE("CDefView::DefMessageSFVCB uMsg=%u\n", uMsg);
-    return E_NOTIMPL;
-}
-
-HRESULT CDefView::_DoFolderViewCB(UINT uMsg, WPARAM wParam, LPARAM lParam)
+HRESULT CDefView::CallCB(UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     HRESULT hr = E_NOTIMPL;
 
     if (m_pShellFolderViewCB)
     {
         hr = m_pShellFolderViewCB->MessageSFVCB(uMsg, wParam, lParam);
-    }
-
-    if (hr == E_NOTIMPL)
-    {
-        hr = DefMessageSFVCB(uMsg, wParam, lParam);
     }
 
     return hr;
