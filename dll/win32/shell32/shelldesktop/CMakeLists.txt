@@ -13,7 +13,7 @@ list(APPEND SOURCE
     CChangeNotifyServer.cpp
     CDesktopBrowser.cpp
     CDirectoryWatcher.cpp
-    CFilePathList.cpp
+    CDirectoryList.cpp
     dde.cpp)
 
 add_library(shelldesktop ${SOURCE})

@@ -71,7 +71,7 @@ static void NTAPI _RequestAllTerminationAPC(ULONG_PTR Parameter)
 CDirectoryWatcher::CDirectoryWatcher(LPCWSTR pszDirectoryPath, BOOL fSubTree)
     : m_fDead(FALSE)
     , m_fRecursive(fSubTree)
-    , m_file_list(pszDirectoryPath, fSubTree)
+    , m_dir_list(pszDirectoryPath, fSubTree)
 {
     TRACE("CDirectoryWatcher::CDirectoryWatcher: %p, '%S'\n", this, pszDirectoryPath);
 
@@ -139,24 +139,6 @@ void CDirectoryWatcher::ProcessNotification()
     DWORD dwEvent, cbName;
     BOOL fDir;
 
-    // if the watch is recursive
-    if (m_fRecursive)
-    {
-        // get the first change
-        if (!m_file_list.GetFirstChange(szPath))
-            return;
-
-        // then, notify a SHCNE_UPDATEDIR
-        if (lstrcmpiW(m_szDirectoryPath, szPath) != 0)
-            PathRemoveFileSpecW(szPath);
-        NotifyFileSystemChange(SHCNE_UPDATEDIR, szPath, NULL);
-
-        // refresh directory list
-        m_file_list.RemoveAll();
-        m_file_list.AddPathsFromDirectory(m_szDirectoryPath, TRUE);
-        return;
-    }
-
     // for each entry in s_buffer
     szPath[0] = szTempPath[0] = 0;
     for (;;)
@@ -188,37 +170,37 @@ void CDirectoryWatcher::ProcessNotification()
         dwEvent = ConvertActionToEvent(pInfo->Action, fDir);
 
         // convert SHCNE_DELETE to SHCNE_RMDIR if the path is a directory
-        if (!fDir && (dwEvent == SHCNE_DELETE) && m_file_list.ContainsPath(szPath, TRUE))
+        if (!fDir && (dwEvent == SHCNE_DELETE) && m_dir_list.ContainsPath(szPath))
         {
             fDir = TRUE;
             dwEvent = SHCNE_RMDIR;
         }
 
-        // update m_file_list
+        // update m_dir_list
         switch (dwEvent)
         {
             case SHCNE_MKDIR:
-                if (!m_file_list.AddPath(szPath, 0, TRUE))
+                if (!PathIsDirectoryW(szPath) || !m_dir_list.AddPath(szPath))
                     dwEvent = 0;
                 break;
             case SHCNE_CREATE:
-                if (!m_file_list.AddPath(szPath, INVALID_FILE_SIZE, FALSE))
+                if (!PathFileExistsW(szPath) || PathIsDirectoryW(szPath))
                     dwEvent = 0;
                 break;
             case SHCNE_RENAMEFOLDER:
-                if (!m_file_list.RenamePath(szTempPath, szPath, TRUE))
+                if (!PathIsDirectoryW(szPath) || !m_dir_list.RenamePath(szTempPath, szPath))
                     dwEvent = 0;
                 break;
             case SHCNE_RENAMEITEM:
-                if (!m_file_list.RenamePath(szTempPath, szPath, FALSE))
+                if (!PathFileExistsW(szPath) || PathIsDirectoryW(szPath))
                     dwEvent = 0;
                 break;
             case SHCNE_RMDIR:
-                if (!m_file_list.DeletePath(szPath, TRUE))
+                if (PathIsDirectoryW(szPath) || !m_dir_list.DeletePath(szPath))
                     dwEvent = 0;
                 break;
             case SHCNE_DELETE:
-                if (!m_file_list.DeletePath(szPath, FALSE))
+                if (PathFileExistsW(szPath))
                     dwEvent = 0;
                 break;
         }

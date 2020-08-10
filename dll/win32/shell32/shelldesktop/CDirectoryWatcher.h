@@ -6,7 +6,7 @@
  */
 #pragma once
 
-#include "CFilePathList.h"
+#include "CDirectoryList.h"
 
 // NOTE: Regard to asynchronous procedure call (APC), please see:
 // https://docs.microsoft.com/en-us/windows/win32/api/synchapi/nf-synchapi-sleepex
@@ -31,7 +31,7 @@ public:
 protected:
     BOOL m_fDead;
     BOOL m_fRecursive;
-    CFilePathList m_file_list;
+    CDirectoryList m_dir_list;
     OVERLAPPED m_overlapped;
 
     BOOL CreateAPCThread();
