@@ -296,6 +296,7 @@
 
 #define IDS_NO_ICONS                                30529
 #define IDS_FILE_NOT_FOUND                          30530
+#define IDS_LINK_INVALID                            30531
 
 /* Dialogs */
 
@@ -456,6 +457,7 @@
 #define IDD_EDITTYPE     36
 #define IDD_ACTION       37
 #define IDD_FOLDER_CUSTOMIZE    38
+#define IDD_LINK_PROBLEM 39
 
 /* Control IDs for IDD_FOLDER_CUSTOMIZE dialog */
 #define IDC_FOLDERCUST_COMBOBOX             14001
@@ -465,6 +467,11 @@
 #define IDC_FOLDERCUST_PREVIEW_BITMAP       14005
 #define IDC_FOLDERCUST_ICON                 14006
 #define IDC_FOLDERCUST_CHANGE_ICON          14007
+
+/* Control IDs for IDD_LINK_PROBLEM dialog */
+#define IDC_LINK_PROBLEM_ICON               14008
+#define IDC_LINK_PROBLEM_LABEL1             14009
+#define IDC_LINK_PROBLEM_LABEL2             14010
 
 /* Not used dialogs */
 #define IDD_SHUTDOWN             29

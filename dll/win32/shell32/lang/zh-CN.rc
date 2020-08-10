@@ -717,6 +717,20 @@ BEGIN
     PUSHBUTTON "更改图标(&I)...", IDC_FOLDERCUST_CHANGE_ICON, 15, 210, 75, 15
 END
 
+IDD_LINK_PROBLEM DIALOGEX 0, 0, 205, 140
+CAPTION "Problem with Shortcut"
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON 0, IDC_LINK_PROBLEM_ICON, 5, 5, 32, 30
+    LTEXT "", IDC_LINK_PROBLEM_LABEL1, 35, 5, 165, 35
+    LTEXT "", IDC_LINK_PROBLEM_LABEL2, 35, 45, 165, 35
+    LTEXT "Do you want to fix this shortcut to point to this target or do you just want to delete it?", -1, 35, 85, 166, 30
+    DEFPUSHBUTTON "Fix it", IDOK, 10, 120, 60, 15, WS_DISABLED
+    PUSHBUTTON "Delete it", IDYES, 75, 120, 60, 15
+    PUSHBUTTON "Cancel", IDCANCEL, 140, 120, 60, 15
+END
+
 STRINGTABLE
 BEGIN
     /* columns in the shellview */
@@ -993,4 +1007,5 @@ BEGIN
     IDS_EDITING_ACTION "编辑操作类型: "
     IDS_NO_ICONS "文件 '%s' 不包含图标\n\n从列表中选择一个图标或指定其他文件。"
     IDS_FILE_NOT_FOUND "无法找到文件 '%s'。"
+    IDS_LINK_INVALID "The item '%s' that this shortcut refers to has been changed or moved, so this shortcut will no longer work properly."
 END
