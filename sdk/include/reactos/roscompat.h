@@ -1,5 +1,5 @@
 /*!
-    \brief Header shared by ntdll/ldr and spec3def
+    \brief Header shared by ntdll/ldr and spec2def
 */
 #pragma once
 
@@ -29,4 +29,3 @@ typedef struct _ROSCOMPAT_DESCRIPTOR
     ROSCOMPAT_VERMASK NumberOfExportNames;
     PIMAGE_EXPORT_DIRECTORY MagicExportDir;
 } ROSCOMPAT_DESCRIPTOR, * PROSCOMPAT_DESCRIPTOR;
-
