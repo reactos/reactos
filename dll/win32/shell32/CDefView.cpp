@@ -2472,11 +2472,7 @@ HRESULT WINAPI CDefView::DestroyViewWindow()
 
     if (m_hWnd)
     {
-        HWND hwndTemp = m_hWnd;
-        m_hWnd = NULL;
-        _DoFolderViewCB(SFVM_WINDOWCLOSING, (WPARAM)hwndTemp, 0);
-        m_hWnd = hwndTemp;
-
+        _DoFolderViewCB(SFVM_WINDOWCLOSING, (WPARAM)m_hWnd, 0);
         DestroyWindow();
     }
 
