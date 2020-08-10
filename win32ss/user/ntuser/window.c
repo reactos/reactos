@@ -3997,17 +3997,17 @@ NtUserQueryWindow(HWND hWnd, DWORD Index)
          break;
 
       case QUERY_WINDOW_DEFAULT_IME:
-         /* FIXME */
+         ERR("QUERY_WINDOW_DEFAULT_IME: FIXME\n");
          Result = 0;
          break;
 
       case QUERY_WINDOW_DEFAULT_ICONTEXT:
-         /* FIXME */
+         ERR("QUERY_WINDOW_DEFAULT_ICONTEXT: FIXME\n");
          Result = 0;
          break;
 
       case QUERY_WINDOW_ACTIVE_IME:
-         /* FIXME */
+         ERR("QUERY_WINDOW_ACTIVE_IME: FIXME\n");
          Result = 0;
          break;
 
