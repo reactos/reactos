@@ -1,0 +1,5 @@
+#ifdef WIN10_VERSION
+1 24 "versioning_win10.manifest"
+#else
+1 24 "versioning_winxp.manifest"
+#endif
