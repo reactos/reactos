@@ -46,7 +46,7 @@
 @ stdcall ImmGetIMCLockCount(long)
 @ stdcall ImmGetIMEFileNameA(long ptr long)
 @ stdcall ImmGetIMEFileNameW(long ptr long)
-@ stub ImmGetImeInfoEx
+@ stdcall ImmGetImeInfoEx(ptr long ptr)
 @ stdcall ImmGetImeMenuItemsA(long long long ptr ptr long)
 @ stdcall ImmGetImeMenuItemsW(long long long ptr ptr long)
 @ stdcall ImmGetOpenStatus(long)

@@ -1174,6 +1174,14 @@ typedef struct tagIMEINFOEX
     };
 } IMEINFOEX, *PIMEINFOEX;
 
+typedef enum IMEINFOEXCLASS
+{
+    ImeInfoExKeyboardLayout,
+    ImeInfoExImeFileName
+} IMEINFOEXCLASS;
+
+#define IS_IME_HKL(hkl) ((((ULONG_PTR)(hkl)) & 0xF0000000) == 0xE0000000)
+
 typedef struct tagIMEUI
 {
     PWND spwnd;
@@ -2284,11 +2292,11 @@ NtUserGetImeHotKey(IN DWORD dwHotKey,
                    OUT LPUINT lpuVKey,
                    OUT LPHKL lphKL);
 
-DWORD
+BOOL
 NTAPI
 NtUserGetImeInfoEx(
     PIMEINFOEX pImeInfoEx,
-    DWORD dwUnknown2);
+    IMEINFOEXCLASS SearchType);
 
 DWORD
 NTAPI
