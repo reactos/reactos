@@ -1,10 +1,11 @@
-#include <Windows.h>
+#include <windows.h>
+#include <stdio.h>
 
-static LPWSTR messageFromFunction = L"did not run";
+static char * messageFromFunction = "InitOnceFunction did not run";
 static BOOL CALLBACK InitOnceFunction(PINIT_ONCE InitOnce, PVOID Parameter, PVOID *lpContext)
 {
-    MessageBoxW(NULL, L"Hello from InitOnceFunction", L"Versioning Test", MB_OK);
-    (*(LPWSTR *)lpContext) = L"Ran successfully!";
+    printf("Inside InitOnceFunction\r\n");
+    (*(char **)lpContext) = "InitOnceFunction ran successfully";
     return TRUE;
 }
 
@@ -14,14 +15,14 @@ static void run_test(void)
     BOOL bStatus = InitOnceExecuteOnce(&s_InitOnce, InitOnceFunction, NULL, (LPVOID *)&messageFromFunction);
     if (bStatus == FALSE)
     {
-        MessageBoxW(NULL, L"InitOnceExecuteOnce() failed", L"Versioning Test", MB_OK);
+        printf("InitOnceExecuteOnce() failed\r\n");
         return;
     }
 
-    MessageBoxW(NULL, messageFromFunction, L"Versioning Test", MB_OK);
+    printf("%s\r\n", messageFromFunction);
 }
 
-int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR cmdLine, int nCmdShow)
+int main(int argc, const char *argv[])
 {
     // Run the test twice, to ensure that InitOnceFunction() is only run once.
     run_test();
