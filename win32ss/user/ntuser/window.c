@@ -3996,6 +3996,18 @@ NtUserQueryWindow(HWND hWnd, DWORD Index)
          Result = (pWnd->head.pti->MessageQueue == gpqForeground);
          break;
 
+      case QUERY_WINDOW_DEFAULT_IME:
+         /* FIXME */
+         break;
+
+      case QUERY_WINDOW_DEFAULT_ICONTEXT:
+         /* FIXME */
+         break;
+
+      case QUERY_WINDOW_ACTIVE_IME:
+         /* FIXME */
+         break;
+
       default:
          Result = 0;
          break;

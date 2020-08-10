@@ -2798,6 +2798,9 @@ NtUserQueryUserCounters(
 #define QUERY_WINDOW_ISHUNG            0x04
 #define QUERY_WINDOW_REAL_ID           0x05
 #define QUERY_WINDOW_FOREGROUND        0x06
+#define QUERY_WINDOW_DEFAULT_IME       0x07
+#define QUERY_WINDOW_DEFAULT_ICONTEXT  0x08
+#define QUERY_WINDOW_ACTIVE_IME        0x09
 
 DWORD_PTR
 NTAPI
