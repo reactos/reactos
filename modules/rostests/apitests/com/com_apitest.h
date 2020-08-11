@@ -69,8 +69,6 @@ TestClasses(
  * so its offset varies and is "far away" */
 #define FARAWY (-65535)
 
-#include "shlguid_undoc.h"
-
 // TODO: fix our headers... we really shouldn't need these here
 DEFINE_GUID(CLSID_AugmentedShellFolder,    0x91ea3f8b, 0xc99b, 0x11d0, 0x98, 0x15, 0x00, 0xc0, 0x4f, 0xd9, 0x19, 0x72);
 DEFINE_GUID(CLSID_AugmentedShellFolder2,   0x6413ba2c, 0xb461, 0x11d1, 0xa1, 0x8a, 0x08, 0x00, 0x36, 0xb1, 0x1a, 0x03);
