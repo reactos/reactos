@@ -50,6 +50,22 @@ OnCreate(HWND hwnd)
             nSources = SHCNRF_ShellLevel | SHCNRF_NewDelivery;
             break;
 
+        case 3:
+            s_entry.fRecursive = TRUE;
+            nSources = SHCNRF_ShellLevel | SHCNRF_InterruptLevel | SHCNRF_RecursiveInterrupt | SHCNRF_NewDelivery;
+            break;
+
+        case 4:
+            s_entry.fRecursive = FALSE;
+            nSources = SHCNRF_ShellLevel | SHCNRF_InterruptLevel | SHCNRF_NewDelivery;
+            break;
+
+        case 5:
+            s_entry.fRecursive = TRUE;
+            nSources = SHCNRF_InterruptLevel | SHCNRF_RecursiveInterrupt | SHCNRF_NewDelivery;
+            s_entry.pidl = NULL;
+            break;
+
         default:
             return FALSE;
     }
@@ -177,6 +193,9 @@ OnShellNotify(HWND hwnd, WPARAM wParam, LPARAM lParam)
 static LRESULT
 OnGetNotifyFlags(HWND hwnd)
 {
+    if (s_uRegID == 0)
+        return 0xFFFFFFFF;
+
     DWORD dwFlags = 0;
     for (size_t i = 0; i < _countof(s_counters); ++i)
     {
