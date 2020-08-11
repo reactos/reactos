@@ -5,6 +5,8 @@
  * COPYRIGHT:   Copyright 2020 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
+// NOTE: This test program closes the Explorer cabinets before tests.
+
 #include "shelltest.h"
 #include <shlwapi.h>
 #include <stdio.h>
