@@ -27,7 +27,6 @@ HRESULT CCopyToMenu::DoCopyToFolder(LPCMINVOKECOMMANDINFO lpici)
 
     BROWSEINFOW info = { lpici->hwnd };
     info.pidlRoot = NULL;
-    info.pszDisplayName = L"FIXME: This is a display name";
     info.lpszTitle = L"FIXME: This is a title";
     info.ulFlags = BIF_RETURNONLYFSDIRS;
     LPITEMIDLIST pidl = SHBrowseForFolder(&info);
