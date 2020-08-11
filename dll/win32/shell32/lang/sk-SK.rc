@@ -718,8 +718,8 @@ BEGIN
     LTEXT "", IDC_LINK_PROBLEM_LABEL1, 35, 5, 165, 35
     LTEXT "", IDC_LINK_PROBLEM_LABEL2, 35, 45, 165, 35
     LTEXT "Do you want to fix this shortcut to point to this target or do you just want to delete it?", -1, 35, 85, 166, 30
-    DEFPUSHBUTTON "Fix it", IDOK, 10, 120, 60, 15, WS_DISABLED
-    PUSHBUTTON "Delete it", IDYES, 75, 120, 60, 15
+    DEFPUSHBUTTON "&Fix it", IDOK, 10, 120, 60, 15, WS_DISABLED
+    PUSHBUTTON "&Delete it", IDYES, 75, 120, 60, 15
     PUSHBUTTON "Cancel", IDCANCEL, 140, 120, 60, 15
 END
 
