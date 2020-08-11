@@ -24,6 +24,7 @@
 
 HRESULT TrayWindowCtxMenuCreator(ITrayWindow * TrayWnd, IN HWND hWndOwner, IContextMenu ** ppCtxMenu);
 LRESULT appbar_message(COPYDATASTRUCT* cds);
+void appbar_notify_all(HMONITOR hMon, UINT uMsg, HWND hwndExclude, LPARAM lParam);
 
 #define WM_APP_TRAYDESTROY  (WM_APP + 0x100)
 
@@ -608,15 +609,21 @@ public:
             break;
 
         case ID_SHELL_CMD_TILE_WND_H:
+            appbar_notify_all(NULL, ABN_WINDOWARRANGE, NULL, TRUE);
             TileWindows(NULL, MDITILE_HORIZONTAL, NULL, 0, NULL);
+            appbar_notify_all(NULL, ABN_WINDOWARRANGE, NULL, FALSE);
             break;
 
         case ID_SHELL_CMD_TILE_WND_V:
+            appbar_notify_all(NULL, ABN_WINDOWARRANGE, NULL, TRUE);
             TileWindows(NULL, MDITILE_VERTICAL, NULL, 0, NULL);
+            appbar_notify_all(NULL, ABN_WINDOWARRANGE, NULL, FALSE);
             break;
 
         case ID_SHELL_CMD_CASCADE_WND:
+            appbar_notify_all(NULL, ABN_WINDOWARRANGE, NULL, TRUE);
             CascadeWindows(NULL, MDITILE_SKIPDISABLED, NULL, 0, NULL);
+            appbar_notify_all(NULL, ABN_WINDOWARRANGE, NULL, FALSE);
             break;
 
         case ID_SHELL_CMD_CUST_NOTIF:
