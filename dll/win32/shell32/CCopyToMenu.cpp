@@ -16,19 +16,33 @@ CCopyToMenu::~CCopyToMenu()
 static int CALLBACK
 BrowseCallbackProc(HWND hwnd, UINT uMsg, LPARAM lParam, LPARAM lpData)
 {
-    CCopyToMenu *this_;
+    CCopyToMenu *this_ =
+        reinterpret_cast<CCopyToMenu *>(GetWindowLongPtr(hwnd, GWLP_USERDATA));
+    LPCITEMIDLIST pidl;
+    WCHAR szPath[MAX_PATH];
 
     switch (uMsg)
     {
         case BFFM_INITIALIZED:
             SetWindowLongPtr(hwnd, GWLP_USERDATA, lpData);
             this_ = reinterpret_cast<CCopyToMenu *>(lpData);
+
+            // Select initial directory
             SendMessageW(hwnd, BFFM_SETSELECTION, FALSE,
                 reinterpret_cast<LPARAM>(static_cast<LPCITEMIDLIST>(this_->m_pidlFolder)));
             break;
 
         case BFFM_SELCHANGED:
-            // FIXME: Disable "OK" button if the location is same as the initial
+            pidl = reinterpret_cast<LPCITEMIDLIST>(lParam);
+            if (SHGetPathFromIDListW(pidl, szPath) && PathFileExistsW(szPath) &&
+                !ILIsEqual(pidl, this_->m_pidlFolder))
+            {
+                SendMessageW(hwnd, BFFM_ENABLEOK, 0, TRUE);
+            }
+            else
+            {
+                SendMessageW(hwnd, BFFM_ENABLEOK, 0, FALSE);
+            }
             break;
     }
 
