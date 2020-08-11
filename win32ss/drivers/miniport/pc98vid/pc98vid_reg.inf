@@ -1,0 +1,10 @@
+; pc98vid video miniport driver
+[AddReg]
+HKLM,"SYSTEM\CurrentControlSet\Services\vga","ErrorControl",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\vga","Group",0x00000000,"Video Save"
+HKLM,"SYSTEM\CurrentControlSet\Services\vga","ImagePath",0x00020000,"system32\drivers\vga.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\vga","Start",0x00010001,0x00000004
+HKLM,"SYSTEM\CurrentControlSet\Services\vga","Type",0x00010001,0x00000001
+
+HKLM,"SYSTEM\CurrentControlSet\Hardware Profiles\Current\System\CurrentControlSet\Services\vga\Device0","InstalledDisplayDrivers",0x00010000,"framebuf"
+HKLM,"SYSTEM\CurrentControlSet\Hardware Profiles\Current\System\CurrentControlSet\Services\vga\Device0","VgaCompatible",0x00010001,1

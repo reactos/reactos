@@ -353,6 +353,8 @@ WRITE_GDC2_COMMAND(UCHAR Command)
 
 #define GRAPH_IO_i_DPMS                   0x9A2
 #define GRAPH_IO_o_DPMS                   0x9A2
+    #define GRAPH_DPMS_HSYNC_MASK              0x40
+    #define GRAPH_DPMS_VSYNC_MASK              0x80
 
 #define GRAPH_IO_i_HORIZONTAL_SCAN_RATE   0x9A8
 #define GRAPH_IO_o_HORIZONTAL_SCAN_RATE   0x9A8
