@@ -3242,4 +3242,31 @@ BOOL WINAPI ImmRegisterClient(PVOID ptr, /* FIXME: should point to SHAREDINFO st
     FIXME("Stub\n");
     return TRUE;
 }
+
+/***********************************************************************
+ *              ImmGetImeInfoEx (IMM32.@)
+ */
+BOOL WINAPI
+ImmGetImeInfoEx(PIMEINFOEX pImeInfoEx,
+                IMEINFOEXCLASS SearchType,
+                PVOID pvSearchKey)
+{
+    switch (SearchType)
+    {
+        case ImeInfoExKeyboardLayout:
+            pImeInfoEx->hkl = *(LPHKL)pvSearchKey;
+            if (!IS_IME_HKL(pImeInfoEx->hkl))
+                return FALSE;
+            break;
+
+        case ImeInfoExImeFileName:
+            lstrcpynW(pImeInfoEx->wszImeFile, (LPWSTR)pvSearchKey,
+                      ARRAY_SIZE(pImeInfoEx->wszImeFile));
+            break;
+
+        default:
+            return FALSE;
+    }
+    return NtUserGetImeInfoEx(pImeInfoEx, SearchType);
+}
 #endif

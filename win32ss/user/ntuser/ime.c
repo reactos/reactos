@@ -103,14 +103,14 @@ NtUserGetAppImeLevel(
     return 0;
 }
 
-DWORD
+BOOL
 APIENTRY
 NtUserGetImeInfoEx(
     PIMEINFOEX pImeInfoEx,
-    DWORD dwUnknown2)
+    IMEINFOEXCLASS SearchType)
 {
     STUB;
-    return 0;
+    return FALSE;
 }
 
 
