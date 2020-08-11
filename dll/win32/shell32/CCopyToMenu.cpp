@@ -2,17 +2,17 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
-static CLIPFORMAT g_cfHIDA;
 
 static HRESULT
 _GetCidlFromDataObject(IDataObject *pDataObject, CIDA** ppcida)
 {
-    if (g_cfHIDA == NULL)
+    static CLIPFORMAT s_cfHIDA = 0;
+    if (s_cfHIDA == 0)
     {
-        g_cfHIDA = (CLIPFORMAT)RegisterClipboardFormatW(CFSTR_SHELLIDLIST);
+        s_cfHIDA = (CLIPFORMAT)RegisterClipboardFormatW(CFSTR_SHELLIDLIST);
     }
 
-    FORMATETC fmt = { g_cfHIDA, NULL, DVASPECT_CONTENT, -1, TYMED_HGLOBAL };
+    FORMATETC fmt = { s_cfHIDA, NULL, DVASPECT_CONTENT, -1, TYMED_HGLOBAL };
     STGMEDIUM medium;
 
     HRESULT hr = pDataObject->GetData(&fmt, &medium);
