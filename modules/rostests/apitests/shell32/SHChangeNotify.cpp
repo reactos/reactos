@@ -224,7 +224,7 @@ DoGetClipText(LPWSTR pszPath1, LPWSTR pszPath2)
 }
 
 static void
-DoTestEntry(const TEST_ENTRY *entry, SIZE_T nIndex)
+DoTestEntry(const TEST_ENTRY *entry)
 {
     if (entry->action)
     {
@@ -364,25 +364,25 @@ JustDoIt(INT nMode)
         case 2:
             for (size_t i = 0; i < _countof(s_TestEntriesMode0); ++i)
             {
-                DoTestEntry(&s_TestEntriesMode0[i], i);
+                DoTestEntry(&s_TestEntriesMode0[i]);
             }
             break;
         case 3:
             for (size_t i = 0; i < _countof(s_TestEntriesMode3); ++i)
             {
-                DoTestEntry(&s_TestEntriesMode3[i], i);
+                DoTestEntry(&s_TestEntriesMode3[i]);
             }
             break;
         case 4:
             for (size_t i = 0; i < _countof(s_TestEntriesMode4); ++i)
             {
-                DoTestEntry(&s_TestEntriesMode4[i], i);
+                DoTestEntry(&s_TestEntriesMode4[i]);
             }
             break;
         case 5:
             for (size_t i = 0; i < _countof(s_TestEntriesMode5); ++i)
             {
-                DoTestEntry(&s_TestEntriesMode5[i], i);
+                DoTestEntry(&s_TestEntriesMode5[i]);
             }
             break;
     }
