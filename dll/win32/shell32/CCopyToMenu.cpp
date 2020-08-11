@@ -2,6 +2,40 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
+static CLIPFORMAT g_cfHIDA;
+
+static HRESULT
+_GetCidlFromDataObject(IDataObject *pDataObject, CIDA** ppcida)
+{
+    if (g_cfHIDA == NULL)
+    {
+        g_cfHIDA = (CLIPFORMAT)RegisterClipboardFormatW(CFSTR_SHELLIDLIST);
+    }
+
+    FORMATETC fmt = { g_cfHIDA, NULL, DVASPECT_CONTENT, -1, TYMED_HGLOBAL };
+    STGMEDIUM medium;
+
+    HRESULT hr = pDataObject->GetData(&fmt, &medium);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    LPVOID lpSrc = GlobalLock(medium.hGlobal);
+    SIZE_T cbSize = GlobalSize(medium.hGlobal);
+
+    *ppcida = (CIDA *)::CoTaskMemAlloc(cbSize);
+    if (*ppcida)
+    {
+        memcpy(*ppcida, lpSrc, cbSize);
+        hr = S_OK;
+    }
+    else
+    {
+        hr = E_FAIL;
+    }
+    ReleaseStgMedium(&medium);
+    return hr;
+}
+
 CCopyToMenu::CCopyToMenu() :
     m_idCmdFirst(0),
     m_idCmdLast(0),
@@ -49,6 +83,53 @@ BrowseCallbackProc(HWND hwnd, UINT uMsg, LPARAM lParam, LPARAM lpData)
     return FALSE;
 }
 
+HRESULT CCopyToMenu::DoRealCopy(LPCMINVOKECOMMANDINFO lpici, LPCITEMIDLIST pidl)
+{
+    CComHeapPtr<CIDA> pCIDA;
+    hr = _GetCidlFromDataObject(m_pDataObject, &pCIDA);
+    if (FAILED(hr))
+        return hr;
+
+    PCUIDLIST_ABSOLUTE pidlParent = HIDA_GetPIDLFolder(pCIDA);
+    if (!pidlParent)
+        return E_FAIL;
+
+    CStringW strFiles;
+    WCHAR szPath[MAX_PATH];
+    for (UINT n = 0; n < cida->cidl; ++n)
+    {
+        PCUIDLIST_RELATIVE pidlRelative = HIDA_GetPIDLItem(pCIDA, n);
+        if (!pidlRelative)
+            continue;
+
+        PIDLIST_ABSOLUTE pidlCombine = ILCombine(pidlParent, pidlRelative);
+        if (!pidl)
+            return E_FAIL;
+
+        SHGetPathFromIDListW(pidlCombine, szPath);
+        ILFree(pidlCombine);
+
+        if (PathFileExistsW(szPath))
+        {
+            if (n > 0)
+                strFiles += L'|';
+            strFiles += szPath;
+        }
+    }
+
+    strFiles += L'|';
+    strFiles.Replace(L'|', L'\0');
+
+    SHGetPathFromIDListW(pidl, szPath);
+
+    SHFILEOPSTRUCTW op = { lpici->hwnd };
+    op.wFunc = FO_COPY;
+    op.pFrom = strFiles;
+    op.pTo = szPath;
+    op.fFlags = FOF_ALLOWUNDO;
+    return ((SHFileOperation(&op) == 0) ? S_OK : E_FAIL);
+}
+
 HRESULT CCopyToMenu::DoCopyToFolder(LPCMINVOKECOMMANDINFO lpici)
 {
     WCHAR wszPath[MAX_PATH];
@@ -69,8 +150,7 @@ HRESULT CCopyToMenu::DoCopyToFolder(LPCMINVOKECOMMANDINFO lpici)
     CComHeapPtr<ITEMIDLIST> pidl(SHBrowseForFolder(&info));
     if (pidl)
     {
-        // FIXME: Copy m_pDataObject into pidl
-        return S_OK;
+        hr = DoRealCopy(lpici, pidl);
     }
 
     return E_FAIL;

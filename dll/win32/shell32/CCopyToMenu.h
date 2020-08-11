@@ -11,6 +11,7 @@ protected:
     UINT m_idCmdFirst, m_idCmdLast, m_idCmdCopyTo;
 
     HRESULT DoCopyToFolder(LPCMINVOKECOMMANDINFO lpici);
+    HRESULT DoRealCopy(LPCMINVOKECOMMANDINFO lpici, PCUIDLIST_ABSOLUTE pidl);
 
 public:
     CComHeapPtr<ITEMIDLIST> m_pidlFolder;
