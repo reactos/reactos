@@ -4,6 +4,7 @@ class CCopyToMenu :
     public CComCoClass<CCopyToMenu, &CLSID_CopyToMenu>,
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
     public IContextMenu2,
+    public IObjectWithSite,
     public IShellExtInit
 {
 protected:
@@ -14,6 +15,7 @@ protected:
 public:
     CComHeapPtr<ITEMIDLIST> m_pidlFolder;
     CComPtr<IDataObject> m_pDataObject;
+    CComPtr<IUnknown> m_pSite;
 
     CCopyToMenu();
     ~CCopyToMenu();
@@ -27,7 +29,11 @@ public:
     virtual HRESULT WINAPI HandleMenuMsg(UINT uMsg, WPARAM wParam, LPARAM lParam);
 
     // IShellExtInit
-    virtual HRESULT STDMETHODCALLTYPE Initialize(PCIDLIST_ABSOLUTE pidlFolder, IDataObject *pdtobj, HKEY hkeyProgID);
+    virtual HRESULT WINAPI Initialize(PCIDLIST_ABSOLUTE pidlFolder, IDataObject *pdtobj, HKEY hkeyProgID);
+
+    // IObjectWithSite
+    virtual HRESULT WINAPI SetSite(IUnknown *pUnkSite);
+    virtual HRESULT WINAPI GetSite(REFIID riid, void **ppvSite);
 
     DECLARE_REGISTRY_RESOURCEID(IDR_COPYTOMENU)
     DECLARE_NOT_AGGREGATABLE(CCopyToMenu)

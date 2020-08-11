@@ -954,11 +954,27 @@ CDefaultContextMenu::DoCreateNewFolder(
     return S_OK;
 }
 
-HRESULT
-CDefaultContextMenu::DoCopyToFolder(LPCMINVOKECOMMANDINFO lpici)
+HRESULT CDefaultContextMenu::DoCopyToFolder(LPCMINVOKECOMMANDINFO lpici)
 {
-    // FIXME
-    return E_FAIL;
+    HRESULT hr = E_FAIL;
+    if (!m_pDataObj)
+        return hr;
+
+    CComPtr<IContextMenu> pContextMenu;
+    hr = SHCoCreateInstance(NULL, CLSID_CopyToMenu, NULL, IID_PPV_ARG(IContextMenu, &pContextMenu));
+    if (FAILED(hr))
+        return hr;
+
+    CComPtr<IShellExtInit> pInit;
+    hr = pContextMenu->QueryInterface(IID_PPV_ARG(IShellExtInit, &pInit));
+    if (FAILED(hr))
+        return hr;
+
+    hr = pInit->Initialize(m_pidlFolder, m_pDataObj, NULL);
+    if (FAILED(hr))
+        return hr;
+
+    return pcm->InvokeCommand(lpici);
 }
 
 PDynamicShellEntry CDefaultContextMenu::GetDynamicEntry(UINT idCmd)

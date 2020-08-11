@@ -23,7 +23,12 @@ BrowseCallbackProc(HWND hwnd, UINT uMsg, LPARAM lParam, LPARAM lpData)
         case BFFM_INITIALIZED:
             SetWindowLongPtr(hwnd, GWLP_USERDATA, lpData);
             this_ = reinterpret_cast<CCopyToMenu *>(lpData);
-            SendMessageW(hwnd, BFFM_SETSELECTION, FALSE, (LPARAM)this_->m_pidlFolder);
+            SendMessageW(hwnd, BFFM_SETSELECTION, FALSE,
+                reinterpret_cast<LPARAM>(static_cast<LPCITEMIDLIST>(this_->m_pidlFolder)));
+            break;
+
+        case BFFM_SELCHANGED:
+            // FIXME: Disable "OK" button if the location is same as the initial
             break;
     }
 
@@ -131,4 +136,18 @@ CCopyToMenu::Initialize(PCIDLIST_ABSOLUTE pidlFolder,
     m_pidlFolder.Attach(ILClone(pidlFolder));
     m_pDataObject.Attach(pdtobj);
     return S_OK;
+}
+
+HRESULT WINAPI CCopyToMenu::SetSite(IUnknown *pUnkSite)
+{
+    m_pSite = pUnkSite;
+    return S_OK;
+}
+
+HRESULT WINAPI CCopyToMenu::GetSite(REFIID riid, void **ppvSite)
+{
+    if (!m_pSite)
+        return E_FAIL;
+
+    return m_pSite->QueryInterface(riid, ppvSite);
 }
