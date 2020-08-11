@@ -86,7 +86,7 @@ BrowseCallbackProc(HWND hwnd, UINT uMsg, LPARAM lParam, LPARAM lpData)
 HRESULT CCopyToMenu::DoRealCopy(LPCMINVOKECOMMANDINFO lpici, LPCITEMIDLIST pidl)
 {
     CComHeapPtr<CIDA> pCIDA;
-    hr = _GetCidlFromDataObject(m_pDataObject, &pCIDA);
+    HRESULT hr = _GetCidlFromDataObject(m_pDataObject, &pCIDA);
     if (FAILED(hr))
         return hr;
 
@@ -96,7 +96,7 @@ HRESULT CCopyToMenu::DoRealCopy(LPCMINVOKECOMMANDINFO lpici, LPCITEMIDLIST pidl)
 
     CStringW strFiles;
     WCHAR szPath[MAX_PATH];
-    for (UINT n = 0; n < cida->cidl; ++n)
+    for (UINT n = 0; n < pCIDA->cidl; ++n)
     {
         PCUIDLIST_RELATIVE pidlRelative = HIDA_GetPIDLItem(pCIDA, n);
         if (!pidlRelative)
