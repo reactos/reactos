@@ -990,4 +990,5 @@ BEGIN
     IDS_EDITING_ACTION "Изменение действия для типа: "
     IDS_NO_ICONS "Файл '%s' не содержит значков.\n\nВыберите значок из списка или укажите другой файл."
     IDS_FILE_NOT_FOUND "Файл '%s' не найден."
+    IDS_COPYTOMENU "Copy To &Folder..."
 END

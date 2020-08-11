@@ -989,4 +989,5 @@ BEGIN
     IDS_EDITING_ACTION "Edytowanie akcji dla typu: "
     IDS_NO_ICONS "Plik '%s' nie zawiera ikon.\n\nWybierz ikonę z listy lub określ inny plik."
     IDS_FILE_NOT_FOUND "Nie odnaleziono pliku '%s'."
+    IDS_COPYTOMENU "Copy To &Folder..."
 END

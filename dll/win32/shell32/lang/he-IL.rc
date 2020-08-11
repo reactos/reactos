@@ -985,4 +985,5 @@ BEGIN
     IDS_EDITING_ACTION "Editing action for type: "
     IDS_NO_ICONS "The file '%s' contains no icons.\n\nChoose an icon from the list or specify a different file."
     IDS_FILE_NOT_FOUND "לא ניתן למצוא את הקובץ '%s'."
+    IDS_COPYTOMENU "Copy To &Folder..."
 END

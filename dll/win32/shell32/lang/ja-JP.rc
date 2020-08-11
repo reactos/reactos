@@ -980,4 +980,5 @@ BEGIN
     IDS_EDITING_ACTION "種類に対するアクションの編集: "
     IDS_NO_ICONS "ファイル '%s' にはアイコン データがありません。.\n\nリストからアイコンを選ぶか、別のファイルを指定して下さい。"
     IDS_FILE_NOT_FOUND "ファイル '%s' は見つかりませんでした。"
+    IDS_COPYTOMENU "Copy To &Folder..."
 END

@@ -990,4 +990,5 @@ BEGIN
     IDS_EDITING_ACTION "Tegevuse redigeerimine tüübile: "
     IDS_NO_ICONS "Fail '%s' ei sisalda ühtegi ikooni.\n\nVali ikoon nimekirjast või määra teine fail."
     IDS_FILE_NOT_FOUND "Faili '%s' ei leitud."
+    IDS_COPYTOMENU "Copy To &Folder..."
 END

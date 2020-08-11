@@ -992,4 +992,5 @@ BEGIN
     IDS_EDITING_ACTION "Editar acción: "
     IDS_NO_ICONS "El archivo '%s' no contiene íconos.\n\nEscoja un ícono de la lista o seleccione otro archivo."
     IDS_FILE_NOT_FOUND "El archivo '%s' no pudo ser encontrado."
+    IDS_COPYTOMENU "Copy To &Folder..."
 END

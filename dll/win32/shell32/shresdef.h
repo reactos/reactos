@@ -296,6 +296,7 @@
 
 #define IDS_NO_ICONS                                30529
 #define IDS_FILE_NOT_FOUND                          30530
+#define IDS_COPYTOMENU                              30531
 
 /* Dialogs */
 
@@ -829,3 +830,4 @@
 #define IDR_SHELL               156
 #define IDR_ACTIVEDESKTOP       157
 #define IDR_SENDTOMENU          158
+#define IDR_COPYTOMENU          159

@@ -978,4 +978,5 @@ BEGIN
     IDS_EDITING_ACTION "प्रकार के लिए संपादन कार्रवाई:"
     IDS_NO_ICONS "फ़ाइल '%s' में कोई आइकन नहीं है।\n\nसूची से एक आइकन चुनें या एक अलग फ़ाइल निर्दिष्ट करें।"
     IDS_FILE_NOT_FOUND "फ़ाइल '%s' नहीं मिली।"
+    IDS_COPYTOMENU "Copy To &Folder..."
 END

@@ -985,4 +985,5 @@ BEGIN
     IDS_EDITING_ACTION "Editează acțiune pentru tipul: "
     IDS_NO_ICONS "Fișierul „%s” nu conține pictograme.\n\nAlegeți o pictogramă din listă sau specificați un alt fișier."
     IDS_FILE_NOT_FOUND "Fișierul „%s” nu a fost găsit."
+    IDS_COPYTOMENU "Copy To &Folder..."
 END

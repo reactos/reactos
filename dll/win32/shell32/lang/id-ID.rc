@@ -979,4 +979,5 @@ BEGIN
     IDS_EDITING_ACTION "Edit tindakan untuk jenis: "
     IDS_NO_ICONS "Berkas '%s' tidak berisi ikon.\n\nPilih ikon dari daftar atau pilih berkas yang berbeda."
     IDS_FILE_NOT_FOUND "Berkas '%s' tidak ditemukan."
+    IDS_COPYTOMENU "Copy To &Folder..."
 END
