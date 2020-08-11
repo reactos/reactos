@@ -22,9 +22,11 @@ HRESULT CCopyToMenu::DoCopyToFolder(LPCMINVOKECOMMANDINFO lpici)
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
+    CStringW strTitle(MAKEINTRESOURCEW(IDS_COPYTOTITLE));
+
     BROWSEINFOW info = { lpici->hwnd };
     info.pidlRoot = NULL;
-    info.lpszTitle = L"FIXME: This is a title";
+    info.lpszTitle = strTitle;
     info.ulFlags = BIF_RETURNONLYFSDIRS;
     CComHeapPtr<ITEMIDLIST> pidl(SHBrowseForFolder(&info));
     if (pidl)

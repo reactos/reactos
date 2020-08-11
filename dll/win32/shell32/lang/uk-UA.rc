@@ -984,4 +984,5 @@ BEGIN
     IDS_NO_ICONS "Файл '%s' не містить значків.\n\nВиберіть значок зі списку або відкрийте інший файл."
     IDS_FILE_NOT_FOUND "Файд '%s' не знайдено."
     IDS_COPYTOMENU "Copy To &Folder..."
+    IDS_COPYTOTITLE "Copy the selected item(s) to the folder:"
 END

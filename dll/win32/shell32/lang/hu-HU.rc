@@ -983,4 +983,5 @@ BEGIN
     IDS_NO_ICONS "A fájl ('%s') nem tartalmaz ikonokat.\n\nVálasszon egy ikont a listából, vagy adjon meg egy másik fájlt."
     IDS_FILE_NOT_FOUND "A fájl ('%s') nem található."
     IDS_COPYTOMENU "Copy To &Folder..."
+    IDS_COPYTOTITLE "Copy the selected item(s) to the folder:"
 END
