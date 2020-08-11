@@ -961,7 +961,7 @@ HRESULT CDefaultContextMenu::DoCopyToFolder(LPCMINVOKECOMMANDINFO lpici)
         return hr;
 
     CComPtr<IContextMenu> pContextMenu;
-    hr = SHCoCreateInstance(NULL, CLSID_CopyToMenu, NULL, IID_PPV_ARG(IContextMenu, &pContextMenu));
+    hr = SHCoCreateInstance(NULL, &CLSID_CopyToMenu, NULL, IID_PPV_ARG(IContextMenu, &pContextMenu));
     if (FAILED(hr))
         return hr;
 
@@ -974,7 +974,7 @@ HRESULT CDefaultContextMenu::DoCopyToFolder(LPCMINVOKECOMMANDINFO lpici)
     if (FAILED(hr))
         return hr;
 
-    return pcm->InvokeCommand(lpici);
+    return pContextMenu->InvokeCommand(lpici);
 }
 
 PDynamicShellEntry CDefaultContextMenu::GetDynamicEntry(UINT idCmd)
