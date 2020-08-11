@@ -109,12 +109,9 @@ HRESULT CCopyToMenu::DoRealCopy(LPCMINVOKECOMMANDINFO lpici, LPCITEMIDLIST pidl)
         SHGetPathFromIDListW(pidlCombine, szPath);
         ILFree(pidlCombine);
 
-        if (PathFileExistsW(szPath))
-        {
-            if (n > 0)
-                strFiles += L'|';
-            strFiles += szPath;
-        }
+        if (n > 0)
+            strFiles += L'|';
+        strFiles += szPath;
     }
 
     strFiles += L'|'; // double null-terminated
