@@ -99,8 +99,14 @@ CCopyToMenu::InvokeCommand(LPCMINVOKECOMMANDINFO lpici)
 {
     HRESULT hr = E_FAIL;
 
-    if (HIWORD(lpici->lpVerb) == 0 &&
-        m_idCmdFirst + LOWORD(lpici->lpVerb) == m_idCmdCopyTo)
+    if (HIWORD(lpici->lpVerb) == 0)
+    {
+        if (m_idCmdFirst + LOWORD(lpici->lpVerb) == m_idCmdCopyTo)
+        {
+            hr = DoCopyToFolder(lpici);
+        }
+    }
+    else if (::lstrcmpiW(lpici->lpVerb, L"copyto") == 0)
     {
         hr = DoCopyToFolder(lpici);
     }
