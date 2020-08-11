@@ -122,8 +122,8 @@ HRESULT CCopyToMenu::DoRealCopy(LPCMINVOKECOMMANDINFO lpici, LPCITEMIDLIST pidl)
 
     SHGetPathFromIDListW(pidl, szPath);
     INT cchPath = lstrlenW(szPath);
-    if (cchPath + 2 < MAX_PATH)
-        szPath[cchPath + 2] = 0; // double null-terminated
+    if (cchPath + 1 < MAX_PATH)
+        szPath[cchPath + 1] = 0; // double null-terminated
     else
         return E_FAIL;
 
