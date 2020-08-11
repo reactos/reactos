@@ -285,6 +285,20 @@ DoInit(void)
 
     CreateDirectoryW(s_dir1, NULL);
 
+    // close Explorer before tests
+    INT i, nCount = 50;
+    for (i = 0; i < nCount; ++i)
+    {
+        HWND hwnd = FindWindowW(L"CabinetWClass", NULL);
+        if (hwnd == NULL)
+            break;
+
+        PostMessage(hwnd, WM_CLOSE, 0, 0);
+        Sleep(100);
+    }
+    if (i == nCount)
+        skip("Unable to close Explorer cabinet\n");
+
     return PathIsDirectoryW(s_dir1);
 }
 
