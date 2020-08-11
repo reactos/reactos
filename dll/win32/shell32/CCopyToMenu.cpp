@@ -120,7 +120,7 @@ CCopyToMenu::InvokeCommand(LPCMINVOKECOMMANDINFO lpici)
             hr = DoCopyToFolder(lpici);
         }
     }
-    else if (::lstrcmpiW(lpici->lpVerb, L"copyto") == 0)
+    else if (::lstrcmpiA(lpici->lpVerb, "copyto") == 0)
     {
         hr = DoCopyToFolder(lpici);
     }
