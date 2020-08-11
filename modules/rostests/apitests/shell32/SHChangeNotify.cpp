@@ -208,7 +208,7 @@ DoGetPaths(LPWSTR pszPath1, LPWSTR pszPath2)
 
     WCHAR szText[MAX_PATH * 2];
     szText[0] = 0;
-    if (FILE *fp = fopen("shell-notify-temporary.txt", "rb"))
+    if (FILE *fp = fopen(TEMP_FILE, "rb"))
     {
         fread(szText, 1, sizeof(szText), fp);
         fclose(fp);
@@ -312,7 +312,7 @@ DoEnd(HWND hwnd)
     RemoveDirectoryW(s_dir3);
     RemoveDirectoryW(s_dir2);
     RemoveDirectoryW(s_dir1);
-    DeleteFileA("shell-notify-temporary.txt");
+    DeleteFileA(TEMP_FILE);
 
     SendMessageW(s_hwnd, WM_COMMAND, IDOK, 0);
 }

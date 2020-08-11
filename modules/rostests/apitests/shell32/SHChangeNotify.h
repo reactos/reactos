@@ -1,5 +1,7 @@
 #pragma once
 
+#define TEMP_FILE "shell-notify-temporary.txt"
+
 typedef enum TYPE
 {
     TYPE_RENAMEITEM,

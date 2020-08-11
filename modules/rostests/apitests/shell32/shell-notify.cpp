@@ -212,7 +212,7 @@ DoSetPaths(HWND hwnd)
     lstrcatW(szText, L"|");
     lstrcatW(szText, s_path2);
 
-    if (FILE *fp = fopen("shell-notify-temporary.txt", "wb"))
+    if (FILE *fp = fopen(TEMP_FILE, "wb"))
     {
         fwrite(szText, (lstrlenW(szText) + 1) * sizeof(WCHAR), 1, fp);
         fflush(fp);
