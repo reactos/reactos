@@ -16,8 +16,7 @@ CCopyToMenu::~CCopyToMenu()
 static int CALLBACK
 BrowseCallbackProc(HWND hwnd, UINT uMsg, LPARAM lParam, LPARAM lpData)
 {
-    CCopyToMenu *this_ =
-        reinterpret_cast<CCopyToMenu *>(GetWindowLongPtr(hwnd, GWLP_USERDATA));
+    CCopyToMenu *this_;
 
     switch (uMsg)
     {
@@ -51,7 +50,7 @@ HRESULT CCopyToMenu::DoCopyToFolder(LPCMINVOKECOMMANDINFO lpici)
     CComHeapPtr<ITEMIDLIST> pidl(SHBrowseForFolder(&info));
     if (pidl)
     {
-        // FIXME
+        // FIXME: Copy m_pDataObject into pidl
         return S_OK;
     }
 
