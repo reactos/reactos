@@ -24,7 +24,7 @@ BrowseCallbackProc(HWND hwnd, UINT uMsg, LPARAM lParam, LPARAM lpData)
         case BFFM_INITIALIZED:
             SetWindowLongPtr(hwnd, GWLP_USERDATA, lpData);
             this_ = reinterpret_cast<CCopyToMenu *>(lpData);
-            // FIXME: Select initial directory
+            SendMessageW(hwnd, BFFM_SETSELECTION, FALSE, (LPARAM)this_->m_pidlFolder);
             break;
     }
 
