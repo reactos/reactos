@@ -108,5 +108,6 @@ CCopyToMenu::Initialize(PCIDLIST_ABSOLUTE pidlFolder,
                         IDataObject *pdtobj, HKEY hkeyProgID)
 {
     m_pidlFolder.Attach(ILClone(pidlFolder));
+    m_pDataObject.Attach(pdtobj);
     return S_OK;
 }

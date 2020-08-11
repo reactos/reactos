@@ -8,6 +8,7 @@ class CCopyToMenu :
 {
 protected:
     CComHeapPtr<ITEMIDLIST> m_pidlFolder;
+    CComPtr<IDataObject> m_pDataObject;
     UINT m_idCmdFirst, m_idCmdLast, m_idCmdCopyTo;
 
     HRESULT DoCopyToFolder(LPCMINVOKECOMMANDINFO lpici);
