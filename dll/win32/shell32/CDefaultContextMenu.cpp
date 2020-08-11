@@ -962,16 +962,16 @@ HRESULT CDefaultContextMenu::DoCopyToFolder(LPCMINVOKECOMMANDINFO lpici)
 
     CComPtr<IContextMenu> pContextMenu;
     hr = SHCoCreateInstance(NULL, &CLSID_CopyToMenu, NULL, IID_PPV_ARG(IContextMenu, &pContextMenu));
-    if (FAILED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
     CComPtr<IShellExtInit> pInit;
     hr = pContextMenu->QueryInterface(IID_PPV_ARG(IShellExtInit, &pInit));
-    if (FAILED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
     hr = pInit->Initialize(m_pidlFolder, m_pDataObj, NULL);
-    if (FAILED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
     return pContextMenu->InvokeCommand(lpici);

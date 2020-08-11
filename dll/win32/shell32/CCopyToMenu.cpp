@@ -87,7 +87,7 @@ HRESULT CCopyToMenu::DoRealCopy(LPCMINVOKECOMMANDINFO lpici, LPCITEMIDLIST pidl)
 {
     CComHeapPtr<CIDA> pCIDA;
     HRESULT hr = _GetCidlFromDataObject(m_pDataObject, &pCIDA);
-    if (FAILED(hr))
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
     PCUIDLIST_ABSOLUTE pidlParent = HIDA_GetPIDLFolder(pCIDA);
