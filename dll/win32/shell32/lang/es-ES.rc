@@ -724,8 +724,8 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON 0, IDC_LINK_PROBLEM_ICON, 5, 5, 32, 30
-    LTEXT "", IDC_LINK_PROBLEM_LABEL1, 35, 5, 165, 35
-    LTEXT "", IDC_LINK_PROBLEM_LABEL2, 35, 45, 165, 35
+    LTEXT "The item '%s' that this shortcut refers to has been changed or moved, so this shortcut will no longer work properly.", IDC_LINK_PROBLEM_LABEL1, 35, 5, 165, 35
+    LTEXT "Nearest match based on name, type, size, and date:", IDC_LINK_PROBLEM_LABEL2, 35, 45, 165, 35
     LTEXT "Do you want to fix this shortcut to point to this target or do you just want to delete it?", -1, 35, 85, 166, 30
     DEFPUSHBUTTON "&Fix it", IDOK, 10, 120, 60, 15, WS_DISABLED
     PUSHBUTTON "&Delete it", IDYES, 75, 120, 60, 15
