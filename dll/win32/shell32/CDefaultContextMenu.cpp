@@ -48,6 +48,7 @@ struct _StaticInvokeCommandMap_
     { "delete", FCIDM_SHVIEW_DELETE},
     { "properties", FCIDM_SHVIEW_PROPERTIES},
     { "rename", FCIDM_SHVIEW_RENAME},
+    { "copyto", FCIDM_SHVIEW_COPYTO },
 };
 
 
@@ -95,6 +96,7 @@ class CDefaultContextMenu :
         HRESULT DoRename(LPCMINVOKECOMMANDINFO lpcmi);
         HRESULT DoProperties(LPCMINVOKECOMMANDINFO lpcmi);
         HRESULT DoCreateNewFolder(LPCMINVOKECOMMANDINFO lpici);
+        HRESULT DoCopyToFolder(LPCMINVOKECOMMANDINFO lpici);
         HRESULT InvokeShellExt(LPCMINVOKECOMMANDINFO lpcmi);
         HRESULT InvokeRegVerb(LPCMINVOKECOMMANDINFO lpcmi);
         DWORD BrowserFlagsFromVerb(LPCMINVOKECOMMANDINFO lpcmi, PStaticShellEntry pEntry);
@@ -952,6 +954,13 @@ CDefaultContextMenu::DoCreateNewFolder(
     return S_OK;
 }
 
+HRESULT
+CDefaultContextMenu::DoCopyToFolder(LPCMINVOKECOMMANDINFO lpici)
+{
+    // FIXME
+    return E_FAIL;
+}
+
 PDynamicShellEntry CDefaultContextMenu::GetDynamicEntry(UINT idCmd)
 {
     PDynamicShellEntry pEntry = m_pDynamicEntries;
@@ -1247,6 +1256,9 @@ CDefaultContextMenu::InvokeCommand(
         break;
     case FCIDM_SHVIEW_NEWFOLDER:
         Result = DoCreateNewFolder(&LocalInvokeInfo);
+        break;
+    case FCIDM_SHVIEW_COPYTO:
+        Result = DoCopyToFolder(&LocalInvokeInfo);
         break;
     default:
         Result = E_INVALIDARG;
