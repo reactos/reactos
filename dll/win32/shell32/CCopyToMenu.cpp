@@ -13,6 +13,24 @@ CCopyToMenu::~CCopyToMenu()
 {
 }
 
+static int CALLBACK
+BrowseCallbackProc(HWND hwnd, UINT uMsg, LPARAM lParam, LPARAM lpData)
+{
+    CCopyToMenu *this_ =
+        reinterpret_cast<CCopyToMenu *>(GetWindowLongPtr(hwnd, GWLP_USERDATA));
+
+    switch (uMsg)
+    {
+        case BFFM_INITIALIZED:
+            SetWindowLongPtr(hwnd, GWLP_USERDATA, lpData);
+            this_ = reinterpret_cast<CCopyToMenu *>(lpData);
+            // FIXME: Select initial directory
+            break;
+    }
+
+    return FALSE;
+}
+
 HRESULT CCopyToMenu::DoCopyToFolder(LPCMINVOKECOMMANDINFO lpici)
 {
     WCHAR wszPath[MAX_PATH];
@@ -27,7 +45,9 @@ HRESULT CCopyToMenu::DoCopyToFolder(LPCMINVOKECOMMANDINFO lpici)
     BROWSEINFOW info = { lpici->hwnd };
     info.pidlRoot = NULL;
     info.lpszTitle = strTitle;
-    info.ulFlags = BIF_RETURNONLYFSDIRS;
+    info.ulFlags = BIF_RETURNONLYFSDIRS | BIF_USENEWUI;
+    info.lpfn = BrowseCallbackProc;
+    info.lParam = (LPARAM)this;
     CComHeapPtr<ITEMIDLIST> pidl(SHBrowseForFolder(&info));
     if (pidl)
     {
