@@ -117,10 +117,15 @@ HRESULT CCopyToMenu::DoRealCopy(LPCMINVOKECOMMANDINFO lpici, LPCITEMIDLIST pidl)
         }
     }
 
-    strFiles += L'|';
+    strFiles += L'|'; // double null-terminated
     strFiles.Replace(L'|', L'\0');
 
     SHGetPathFromIDListW(pidl, szPath);
+    INT cchPath = lstrlenW(szPath);
+    if (cchPath + 2 < MAX_PATH)
+        szPath[cchPath + 2] = 0; // double null-terminated
+    else
+        return E_FAIL;
 
     SHFILEOPSTRUCTW op = { lpici->hwnd };
     op.wFunc = FO_COPY;
