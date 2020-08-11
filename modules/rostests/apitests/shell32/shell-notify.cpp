@@ -52,12 +52,12 @@ OnCreate(HWND hwnd)
 
         case 3:
             s_entry.fRecursive = TRUE;
-            nSources = SHCNRF_ShellLevel | SHCNRF_InterruptLevel | SHCNRF_RecursiveInterrupt | SHCNRF_NewDelivery;
+            nSources = SHCNRF_InterruptLevel | SHCNRF_RecursiveInterrupt | SHCNRF_NewDelivery;
             break;
 
         case 4:
             s_entry.fRecursive = FALSE;
-            nSources = SHCNRF_ShellLevel | SHCNRF_InterruptLevel | SHCNRF_NewDelivery;
+            nSources = SHCNRF_InterruptLevel | SHCNRF_NewDelivery;
             break;
 
         case 5:
