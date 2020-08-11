@@ -29,11 +29,10 @@ HRESULT CCopyToMenu::DoCopyToFolder(LPCMINVOKECOMMANDINFO lpici)
     info.pidlRoot = NULL;
     info.lpszTitle = L"FIXME: This is a title";
     info.ulFlags = BIF_RETURNONLYFSDIRS;
-    LPITEMIDLIST pidl = SHBrowseForFolder(&info);
+    CComHeapPtr<ITEMIDLIST> pidl(SHBrowseForFolder(&info));
     if (pidl)
     {
         // FIXME
-        CoTaskMemFree(pidl);
         return S_OK;
     }
 
