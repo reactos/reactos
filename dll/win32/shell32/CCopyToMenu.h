@@ -7,7 +7,7 @@ class CCopyToMenu :
     public IShellExtInit
 {
 protected:
-    LPITEMIDLIST m_pidlFolder;
+    CComHeapPtr<ITEMIDLIST> m_pidlFolder;
     UINT m_idCmdFirst, m_idCmdLast, m_idCmdCopyTo;
 
     HRESULT DoCopyToFolder(LPCMINVOKECOMMANDINFO lpici);

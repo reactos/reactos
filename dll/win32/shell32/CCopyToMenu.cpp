@@ -3,7 +3,6 @@
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
 CCopyToMenu::CCopyToMenu() :
-    m_pidlFolder(NULL),
     m_idCmdFirst(0),
     m_idCmdLast(0),
     m_idCmdCopyTo(-1)
@@ -12,8 +11,6 @@ CCopyToMenu::CCopyToMenu() :
 
 CCopyToMenu::~CCopyToMenu()
 {
-    if (m_pidlFolder)
-        ILFree(m_pidlFolder);
 }
 
 HRESULT CCopyToMenu::DoCopyToFolder(LPCMINVOKECOMMANDINFO lpici)
@@ -110,6 +107,6 @@ HRESULT WINAPI
 CCopyToMenu::Initialize(PCIDLIST_ABSOLUTE pidlFolder,
                         IDataObject *pdtobj, HKEY hkeyProgID)
 {
-    m_pidlFolder = ILClone(pidlFolder);
+    m_pidlFolder.Attach(ILClone(pidlFolder));
     return S_OK;
 }
