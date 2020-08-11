@@ -129,6 +129,8 @@ static const TEST_ENTRY s_TestEntriesMode3[] =
     {__LINE__, DONT_SEND, s_file1, s_file2, "100000000", DoAction5, s_file1, s_file2},
     {__LINE__, DONT_SEND, s_file2, NULL, "001000000", DoAction6, s_file2, L""},
     {__LINE__, DONT_SEND, s_dir3, NULL, "000010000", DoAction7, s_dir3, L""},
+    {__LINE__, SHCNE_MKDIR, s_dir2, NULL, "000000000", NULL, NULL, NULL},
+    {__LINE__, SHCNE_INTERRUPT | SHCNE_MKDIR, s_dir2, NULL, "000000000", NULL, NULL, NULL},
 };
 
 static const TEST_ENTRY s_TestEntriesMode4[] =
@@ -141,6 +143,8 @@ static const TEST_ENTRY s_TestEntriesMode4[] =
     {__LINE__, DONT_SEND, s_file1, s_file2, "100000000", DoAction5, s_file1, s_file2},
     {__LINE__, DONT_SEND, s_file2, NULL, "001000000", DoAction6, s_file2, L""},
     {__LINE__, DONT_SEND, s_dir3, NULL, "000010000", DoAction7, s_dir3, L""},
+    {__LINE__, SHCNE_MKDIR, s_dir2, NULL, "000000000", NULL, NULL, NULL},
+    {__LINE__, SHCNE_INTERRUPT | SHCNE_MKDIR, s_dir2, NULL, "000000000", NULL, NULL, NULL},
 };
 
 static const TEST_ENTRY s_TestEntriesMode5[] =
@@ -251,7 +255,7 @@ DoTestEntry(const TEST_ENTRY *entry)
     }
 
     SendMessageW(s_hwnd, WM_SET_PATHS, 0, 0);
-    Sleep(100);
+    Sleep(200);
 
     WCHAR szPath1[MAX_PATH], szPath2[MAX_PATH];
     szPath1[0] = szPath2[0] = 0;
