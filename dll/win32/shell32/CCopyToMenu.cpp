@@ -192,7 +192,7 @@ CStringW CCopyToMenu::DoGetFileTitle()
         return E_FAIL;
 
     WCHAR szPath[MAX_PATH];
-    PCUIDLIST_RELATIVE pidlRelative = HIDA_GetPIDLItem(pCIDA, n);
+    PCUIDLIST_RELATIVE pidlRelative = HIDA_GetPIDLItem(pCIDA, 0);
     if (!pidlRelative)
         return E_FAIL;
 
