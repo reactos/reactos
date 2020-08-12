@@ -721,7 +721,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON 0, IDC_LINK_PROBLEM_ICON, 5, 5, 0, 0
-    LTEXT "Element  '%s', do którego odwołuje się ten skrót, został zmieniony lub przeniesiony i dlatego skrót ten nie będzie działał poprawnie.", IDC_LINK_PROBLEM_LABEL1, 35, 5, 210, 35
+    LTEXT "Element '%s', do którego odwołuje się ten skrót, został zmieniony lub przeniesiony i dlatego skrót ten nie będzie działał poprawnie.", IDC_LINK_PROBLEM_LABEL1, 35, 5, 210, 35
     LTEXT "Najbliższy odpowiednik pod względem rozmiaru, daty i typu:", IDC_LINK_PROBLEM_LABEL2, 35, 45, 210, 35
     LTEXT "Chcesz naprawić ten skrót, tak aby wskazywał ten element docelowy, czy chcesz go usunąć?", -1, 35, 85, 210, 30
     DEFPUSHBUTTON "&Napraw", IDOK, 55, 120, 60, 15, WS_DISABLED
