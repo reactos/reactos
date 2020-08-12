@@ -20,6 +20,7 @@ protected:
 
     HRESULT DoCopyToFolder(LPCMINVOKECOMMANDINFO lpici);
     HRESULT DoRealCopy(LPCMINVOKECOMMANDINFO lpici, PCUIDLIST_ABSOLUTE pidl);
+    CStringW DoGetFileTitle();
 
 public:
     CComHeapPtr<ITEMIDLIST> m_pidlFolder;

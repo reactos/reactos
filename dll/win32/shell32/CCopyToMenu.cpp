@@ -89,8 +89,12 @@ BrowseCallbackProc(HWND hwnd, UINT uMsg, LPARAM lParam, LPARAM lpData)
                 reinterpret_cast<LPARAM>(static_cast<LPCITEMIDLIST>(this_->m_pidlFolder)));
 
             // Set caption
-            CString strCaption(MAKEINTRESOURCEW(IDS_COPYTOCAPTION));
+            CString strCaption(MAKEINTRESOURCEW(IDS_COPYITEMS));
             SetWindowTextW(hwnd, strCaption);
+
+            // Set OK button text
+            CString strCopy(MAKEINTRESOURCEW(IDS_COPY));
+            SetWindowTextW(hwnd, strCopy);
 
             // Subclassing
             this_->m_fnOldWndProc =
@@ -176,6 +180,31 @@ HRESULT CCopyToMenu::DoRealCopy(LPCMINVOKECOMMANDINFO lpici, LPCITEMIDLIST pidl)
     return ((SHFileOperation(&op) == 0) ? S_OK : E_FAIL);
 }
 
+CStringW CCopyToMenu::DoGetFileTitle()
+{
+    CComHeapPtr<CIDA> pCIDA;
+    HRESULT hr = _GetCidlFromDataObject(m_pDataObject, &pCIDA);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    PCUIDLIST_ABSOLUTE pidlParent = HIDA_GetPIDLFolder(pCIDA);
+    if (!pidlParent)
+        return E_FAIL;
+
+    WCHAR szPath[MAX_PATH];
+    PCUIDLIST_RELATIVE pidlRelative = HIDA_GetPIDLItem(pCIDA, n);
+    if (!pidlRelative)
+        return E_FAIL;
+
+    CComHeapPtr<ITEMIDLIST> pidlCombine = ILCombine(pidlParent, pidlRelative);
+
+    if (SHGetPathFromIDListW(pidlCombine, szPath))
+        return PathFindFileNameW(szPath);
+
+    ERR("Cannot get path\n");
+    return L"(file)";
+}
+
 HRESULT CCopyToMenu::DoCopyToFolder(LPCMINVOKECOMMANDINFO lpici)
 {
     WCHAR wszPath[MAX_PATH];
@@ -189,7 +218,9 @@ HRESULT CCopyToMenu::DoCopyToFolder(LPCMINVOKECOMMANDINFO lpici)
         return hr;
     }
 
-    CStringW strTitle(MAKEINTRESOURCEW(IDS_COPYTOTITLE));
+    CStringW strFileTitle = DoGetFileTitle();
+    CStringW strTitle;
+    strTitle.Format(IDS_COPYTOTITLE, (LPCWSTR)strFileTitle);
 
     BROWSEINFOW info = { lpici->hwnd };
     info.pidlRoot = NULL;

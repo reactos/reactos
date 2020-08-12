@@ -299,7 +299,8 @@
 #define IDS_LINK_INVALID                            30531
 #define IDS_COPYTOMENU                              30532
 #define IDS_COPYTOTITLE                             30533
-#define IDS_COPYTOCAPTION                           30534
+#define IDS_COPYITEMS                               30534
+#define IDS_COPY                                    30535
 
 /* Dialogs */
 

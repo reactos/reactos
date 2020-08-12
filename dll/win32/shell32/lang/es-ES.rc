@@ -1008,6 +1008,7 @@ BEGIN
     IDS_FILE_NOT_FOUND "El archivo '%s' no pudo ser encontrado."
     IDS_LINK_INVALID "The item '%s' that this shortcut refers to has been changed or moved, so this shortcut will no longer work properly."
     IDS_COPYTOMENU "Copy To &Folder..."
-    IDS_COPYTOTITLE "Copy the selected item(s) to the folder:"
-    IDS_COPYTOCAPTION "Copy To Folder"
+    IDS_COPYTOTITLE "Select the place where you want to copy '%s'. Then click the Copy button."
+    IDS_COPYITEMS "Copy Items"
+    IDS_COPY "Copy"
 END
