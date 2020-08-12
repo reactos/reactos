@@ -36,6 +36,7 @@ _GetCidlFromDataObject(IDataObject *pDataObject, CIDA** ppcida)
     }
     else
     {
+        ERR("Out of memory\n");
         hr = E_FAIL;
     }
     ReleaseStgMedium(&medium);
@@ -158,9 +159,14 @@ HRESULT CCopyToMenu::DoRealCopy(LPCMINVOKECOMMANDINFO lpici, LPCITEMIDLIST pidl)
     SHGetPathFromIDListW(pidl, szPath);
     INT cchPath = lstrlenW(szPath);
     if (cchPath + 1 < MAX_PATH)
+    {
         szPath[cchPath + 1] = 0; // double null-terminated
+    }
     else
+    {
+        ERR("Too long path\n");
         return E_FAIL;
+    }
 
     SHFILEOPSTRUCTW op = { lpici->hwnd };
     op.wFunc = FO_COPY;
@@ -178,7 +184,10 @@ HRESULT CCopyToMenu::DoCopyToFolder(LPCMINVOKECOMMANDINFO lpici)
     TRACE("DoCopyToFolder(%p)\n", lpici);
 
     if (!SHGetPathFromIDListW(m_pidlFolder, wszPath))
+    {
+        ERR("SHGetPathFromIDListW failed\n");
         return hr;
+    }
 
     CStringW strTitle(MAKEINTRESOURCEW(IDS_COPYTOTITLE));
 
