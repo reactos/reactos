@@ -716,17 +716,17 @@ BEGIN
 END
 
 IDD_LINK_PROBLEM DIALOGEX 0, 0, 250, 140
-CAPTION "Problem with Shortcut"
+CAPTION "Problem ze skrótem"
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON 0, IDC_LINK_PROBLEM_ICON, 5, 5, 0, 0
-    LTEXT "The item '%s' that this shortcut refers to has been changed or moved, so this shortcut will no longer work properly.", IDC_LINK_PROBLEM_LABEL1, 35, 5, 210, 35
-    LTEXT "Nearest match based on name, type, size, and date:", IDC_LINK_PROBLEM_LABEL2, 35, 45, 210, 35
-    LTEXT "Do you want to fix this shortcut to point to this target or do you just want to delete it?", -1, 35, 85, 210, 30
-    DEFPUSHBUTTON "&Fix it", IDOK, 55, 120, 60, 15, WS_DISABLED
-    PUSHBUTTON "&Delete it", IDYES, 120, 120, 60, 15
-    PUSHBUTTON "Cancel", IDCANCEL, 185, 120, 60, 15
+    LTEXT "Element  '%s', do którego odwołuje się ten skrót, został zmieniony lub przeniesiony i dlatego skrót ten nie będzie działał poprawnie.", IDC_LINK_PROBLEM_LABEL1, 35, 5, 210, 35
+    LTEXT "Najbliższy odpowiednik pod względem rozmiaru, daty i typu:", IDC_LINK_PROBLEM_LABEL2, 35, 45, 210, 35
+    LTEXT "Chcesz naprawić ten skrót, tak aby wskazywał ten element docelowy, czy chcesz go usunąć?", -1, 35, 85, 210, 30
+    DEFPUSHBUTTON "&Napraw", IDOK, 55, 120, 60, 15, WS_DISABLED
+    PUSHBUTTON "&Usuń", IDYES, 120, 120, 60, 15
+    PUSHBUTTON "Anuluj", IDCANCEL, 185, 120, 60, 15
 END
 
 STRINGTABLE
@@ -1003,5 +1003,5 @@ BEGIN
     IDS_EDITING_ACTION "Edytowanie akcji dla typu: "
     IDS_NO_ICONS "Plik '%s' nie zawiera ikon.\n\nWybierz ikonę z listy lub określ inny plik."
     IDS_FILE_NOT_FOUND "Nie odnaleziono pliku '%s'."
-    IDS_LINK_INVALID "The item '%s' that this shortcut refers to has been changed or moved, so this shortcut will no longer work properly."
+    IDS_LINK_INVALID "Element '%s', , do którego odnosi się ten skrót, został zmieniony lub przesunięty, więc ten skrót nie będzie już działał poprawnie."
 END
