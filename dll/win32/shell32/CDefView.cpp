@@ -2302,6 +2302,7 @@ LRESULT CDefView::OnInitMenuPopup(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL 
         ::EnableMenuItem(hmenu, FCIDM_SHVIEW_COPY, MF_GRAYED);
         ::EnableMenuItem(hmenu, FCIDM_SHVIEW_RENAME, MF_GRAYED);
         ::EnableMenuItem(hmenu, FCIDM_SHVIEW_COPYTO, MF_GRAYED);
+        ::EnableMenuItem(hmenu, FCIDM_SHVIEW_MOVETO, MF_GRAYED);
         ::EnableMenuItem(hmenu, FCIDM_SHVIEW_DELETE, MF_GRAYED);
     }
     else
@@ -2310,6 +2311,7 @@ LRESULT CDefView::OnInitMenuPopup(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL 
         ::EnableMenuItem(hmenu, FCIDM_SHVIEW_COPY, MF_ENABLED);
         ::EnableMenuItem(hmenu, FCIDM_SHVIEW_RENAME, MF_ENABLED);
         ::EnableMenuItem(hmenu, FCIDM_SHVIEW_COPYTO, MF_ENABLED);
+        ::EnableMenuItem(hmenu, FCIDM_SHVIEW_MOVETO, MF_ENABLED);
         ::EnableMenuItem(hmenu, FCIDM_SHVIEW_DELETE, MF_ENABLED);
     }
 

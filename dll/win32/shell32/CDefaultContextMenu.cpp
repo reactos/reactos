@@ -48,6 +48,7 @@ struct _StaticInvokeCommandMap_
     { "delete", FCIDM_SHVIEW_DELETE},
     { "properties", FCIDM_SHVIEW_PROPERTIES},
     { "rename", FCIDM_SHVIEW_RENAME},
+    { "copyto", FCIDM_SHVIEW_COPYTO },
 };
 
 class CDefaultContextMenu :

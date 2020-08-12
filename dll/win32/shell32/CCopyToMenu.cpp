@@ -46,7 +46,7 @@ CCopyToMenu::~CCopyToMenu()
 {
 }
 
-#define WM_SET_ENABLEOK (WM_USER + 0x2000)
+#define WM_ENABLEOK (WM_USER + 0x2000)
 
 static LRESULT CALLBACK
 WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -56,7 +56,7 @@ WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
     switch (uMsg)
     {
-    case WM_SET_ENABLEOK:
+    case WM_ENABLEOK:
         SendMessageW(hwnd, BFFM_ENABLEOK, 0, (BOOL)lParam);
         return 0;
     }
@@ -80,7 +80,7 @@ BrowseCallbackProc(HWND hwnd, UINT uMsg, LPARAM lParam, LPARAM lpData)
             SendMessageW(hwnd, BFFM_SETSELECTION, FALSE,
                 reinterpret_cast<LPARAM>(static_cast<LPCITEMIDLIST>(this_->m_pidlFolder)));
 
-            // Set Title
+            // Set caption
             CString strCaption(MAKEINTRESOURCEW(IDS_COPYTOCAPTION));
             SetWindowTextW(hwnd, strCaption);
 
@@ -90,7 +90,7 @@ BrowseCallbackProc(HWND hwnd, UINT uMsg, LPARAM lParam, LPARAM lpData)
                     SetWindowLongPtr(hwnd, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(WindowProc)));
 
             // Disable OK
-            PostMessageW(hwnd, WM_SET_ENABLEOK, 0, FALSE);
+            PostMessageW(hwnd, WM_ENABLEOK, 0, FALSE);
             break;
         }
         case BFFM_SELCHANGED:
@@ -101,11 +101,11 @@ BrowseCallbackProc(HWND hwnd, UINT uMsg, LPARAM lParam, LPARAM lpData)
             if (SHGetPathFromIDListW(pidl, szPath) && PathFileExistsW(szPath) &&
                 !ILIsEqual(pidl, this_->m_pidlFolder))
             {
-                PostMessageW(hwnd, WM_SET_ENABLEOK, 0, TRUE);
+                PostMessageW(hwnd, WM_ENABLEOK, 0, TRUE);
             }
             else
             {
-                PostMessageW(hwnd, WM_SET_ENABLEOK, 0, FALSE);
+                PostMessageW(hwnd, WM_ENABLEOK, 0, FALSE);
             }
             break;
         }
@@ -166,12 +166,11 @@ HRESULT CCopyToMenu::DoRealCopy(LPCMINVOKECOMMANDINFO lpici, LPCITEMIDLIST pidl)
 HRESULT CCopyToMenu::DoCopyToFolder(LPCMINVOKECOMMANDINFO lpici)
 {
     WCHAR wszPath[MAX_PATH];
-    HRESULT hr;
+    HRESULT hr = E_FAIL;
 
-    ERR("DoCopyToFolder(%p)\n", lpici);
+    TRACE("DoCopyToFolder(%p)\n", lpici);
 
-    hr = SHGetPathFromIDListW(m_pidlFolder, wszPath);
-    if (FAILED_UNEXPECTEDLY(hr))
+    if (!SHGetPathFromIDListW(m_pidlFolder, wszPath))
         return hr;
 
     CStringW strTitle(MAKEINTRESOURCEW(IDS_COPYTOTITLE));
@@ -188,7 +187,7 @@ HRESULT CCopyToMenu::DoCopyToFolder(LPCMINVOKECOMMANDINFO lpici)
         hr = DoRealCopy(lpici, pidl);
     }
 
-    return E_FAIL;
+    return hr;
 }
 
 HRESULT WINAPI
@@ -202,15 +201,14 @@ CCopyToMenu::QueryContextMenu(HMENU hMenu,
     WCHAR wszBuf[200];
     UINT Pos = ::GetMenuItemCount(hMenu);
 
-    ERR("CCopyToMenu::QueryContextMenu(%p, %u, %u, %u, %u)\n",
-        hMenu, indexMenu, idCmdFirst, idCmdLast, uFlags);
+    TRACE("CCopyToMenu::QueryContextMenu(%p, %u, %u, %u, %u)\n",
+          hMenu, indexMenu, idCmdFirst, idCmdLast, uFlags);
 
     m_idCmdFirst = m_idCmdLast = idCmdFirst;
 
     if (!LoadStringW(shell32_hInstance, IDS_COPYTOMENU, wszBuf, _countof(wszBuf)))
         wszBuf[0] = 0;
 
-    // TODO: Append separator if the previous item is not separator
     ZeroMemory(&mii, sizeof(mii));
     mii.cbSize = sizeof(mii);
     mii.fMask = MIIM_ID | MIIM_TYPE;
@@ -230,11 +228,10 @@ HRESULT WINAPI
 CCopyToMenu::InvokeCommand(LPCMINVOKECOMMANDINFO lpici)
 {
     HRESULT hr = E_FAIL;
-    ERR("CCopyToMenu::InvokeCommand(%p)\n", lpici);
+    TRACE("CCopyToMenu::InvokeCommand(%p)\n", lpici);
 
     if (HIWORD(lpici->lpVerb) == 0)
     {
-        ERR("%u, %u, %u\n", m_idCmdFirst, m_idCmdCopyTo, LOWORD(lpici->lpVerb));
         if (m_idCmdFirst + LOWORD(lpici->lpVerb) == m_idCmdCopyTo)
         {
             hr = DoCopyToFolder(lpici);
@@ -242,7 +239,6 @@ CCopyToMenu::InvokeCommand(LPCMINVOKECOMMANDINFO lpici)
     }
     else
     {
-        ERR("'%s'\n", lpici->lpVerb);
         if (::lstrcmpiA(lpici->lpVerb, "copyto") == 0)
         {
             hr = DoCopyToFolder(lpici);
