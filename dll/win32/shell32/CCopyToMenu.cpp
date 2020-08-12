@@ -135,7 +135,10 @@ HRESULT CCopyToMenu::DoRealCopy(LPCMINVOKECOMMANDINFO lpici, LPCITEMIDLIST pidl)
 
     PCUIDLIST_ABSOLUTE pidlParent = HIDA_GetPIDLFolder(pCIDA);
     if (!pidlParent)
+    {
+        ERR("HIDA_GetPIDLFolder failed\n");
         return E_FAIL;
+    }
 
     CStringW strFiles;
     WCHAR szPath[MAX_PATH];
@@ -189,14 +192,20 @@ CStringW CCopyToMenu::DoGetFileTitle()
 
     PCUIDLIST_ABSOLUTE pidlParent = HIDA_GetPIDLFolder(pCIDA);
     if (!pidlParent)
+    {
+        ERR("HIDA_GetPIDLFolder failed\n");
         return E_FAIL;
+    }
 
     WCHAR szPath[MAX_PATH];
     PCUIDLIST_RELATIVE pidlRelative = HIDA_GetPIDLItem(pCIDA, 0);
     if (!pidlRelative)
+    {
+        ERR("HIDA_GetPIDLItem failed\n");
         return E_FAIL;
+    }
 
-    CComHeapPtr<ITEMIDLIST> pidlCombine = ILCombine(pidlParent, pidlRelative);
+    CComHeapPtr<ITEMIDLIST> pidlCombine(ILCombine(pidlParent, pidlRelative));
 
     if (SHGetPathFromIDListW(pidlCombine, szPath))
         return PathFindFileNameW(szPath);
