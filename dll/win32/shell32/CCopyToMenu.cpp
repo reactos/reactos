@@ -170,7 +170,7 @@ CCopyToMenu::QueryContextMenu(HMENU hMenu,
     WCHAR wszBuf[200];
     UINT Pos = ::GetMenuItemCount(hMenu);
 
-    ERR("CCopyToMenu::QueryContextMenu(%p, %u, %u, %u, %u)\n"
+    ERR("CCopyToMenu::QueryContextMenu(%p, %u, %u, %u, %u)\n",
         hMenu, indexMenu, idCmdFirst, idCmdLast, uFlags);
 
     m_idCmdFirst = m_idCmdLast = idCmdFirst;
