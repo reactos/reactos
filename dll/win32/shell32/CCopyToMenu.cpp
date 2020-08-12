@@ -180,12 +180,11 @@ CCopyToMenu::QueryContextMenu(HMENU hMenu,
 
     ZeroMemory(&mii, sizeof(mii));
     mii.cbSize = sizeof(mii);
-    mii.fMask = MIIM_ID | MIIM_TYPE | MIIM_STRING | MIIM_STATE;
+    mii.fMask = MIIM_ID | MIIM_TYPE;
     mii.fType = MFT_STRING;
     mii.dwTypeData = wszBuf;
     mii.cch = wcslen(mii.dwTypeData);
     mii.wID = idCmdLast;
-    mii.fState = MFS_ENABLED;
     if (InsertMenuItemW(hMenu, Pos++, TRUE, &mii))
     {
         m_idCmdCopyTo = m_idCmdLast++;
