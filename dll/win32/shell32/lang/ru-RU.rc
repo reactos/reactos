@@ -1008,5 +1008,5 @@ BEGIN
     IDS_COPYTOMENU "Copy To &Folder..."
     IDS_COPYTOTITLE "Select the place where you want to copy '%s'. Then click the Copy button."
     IDS_COPYITEMS "Copy Items"
-    IDS_COPY "Copy"
+    IDS_COPYBUTTON "Copy"
 END
