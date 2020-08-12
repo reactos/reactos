@@ -220,14 +220,14 @@ HRESULT CCopyToMenu::DoCopyToFolder(LPCMINVOKECOMMANDINFO lpici)
 
     CStringW strFileTitle = DoGetFileTitle();
     CStringW strTitle;
-    strTitle.Format(IDS_COPYTOTITLE, (LPCWSTR)strFileTitle);
+    strTitle.Format(IDS_COPYTOTITLE, static_cast<LPCWSTR>(strFileTitle));
 
     BROWSEINFOW info = { lpici->hwnd };
     info.pidlRoot = NULL;
     info.lpszTitle = strTitle;
     info.ulFlags = BIF_RETURNONLYFSDIRS | BIF_USENEWUI;
     info.lpfn = BrowseCallbackProc;
-    info.lParam = (LPARAM)this;
+    info.lParam = reinterpret_cast<LPARAM>(this);
     CComHeapPtr<ITEMIDLIST> pidl(SHBrowseForFolder(&info));
     if (pidl)
     {
