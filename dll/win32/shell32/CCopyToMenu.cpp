@@ -2,7 +2,6 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
-
 static HRESULT
 _GetCidlFromDataObject(IDataObject *pDataObject, CIDA** ppcida)
 {
@@ -137,6 +136,8 @@ HRESULT CCopyToMenu::DoCopyToFolder(LPCMINVOKECOMMANDINFO lpici)
     WCHAR wszPath[MAX_PATH];
     HRESULT hr;
 
+    ERR("DoCopyToFolder(%p)\n", lpici);
+
     hr = SHGetPathFromIDListW(m_pidlFolder, wszPath);
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
@@ -169,6 +170,9 @@ CCopyToMenu::QueryContextMenu(HMENU hMenu,
     WCHAR wszBuf[200];
     UINT Pos = ::GetMenuItemCount(hMenu);
 
+    ERR("CCopyToMenu::QueryContextMenu(%p, %u, %u, %u, %u)\n"
+        hMenu, indexMenu, idCmdFirst, idCmdLast, uFlags);
+
     m_idCmdFirst = m_idCmdLast = idCmdFirst;
 
     if (!LoadStringW(shell32_hInstance, IDS_COPYTOMENU, wszBuf, _countof(wszBuf)))
@@ -194,20 +198,25 @@ HRESULT WINAPI
 CCopyToMenu::InvokeCommand(LPCMINVOKECOMMANDINFO lpici)
 {
     HRESULT hr = E_FAIL;
+    ERR("CCopyToMenu::InvokeCommand(%p)\n", lpici);
 
     if (HIWORD(lpici->lpVerb) == 0)
     {
+        ERR("%u, %u, %u\n", m_idCmdFirst, m_idCmdCopyTo, LOWORD(lpici->lpVerb));
         if (m_idCmdFirst + LOWORD(lpici->lpVerb) == m_idCmdCopyTo)
         {
             hr = DoCopyToFolder(lpici);
         }
     }
-    else if (::lstrcmpiA(lpici->lpVerb, "copyto") == 0)
+    else
     {
-        hr = DoCopyToFolder(lpici);
+        ERR("'%s'\n", lpici->lpVerb);
+        if (::lstrcmpiA(lpici->lpVerb, "copyto") == 0)
+        {
+            hr = DoCopyToFolder(lpici);
+        }
     }
 
-    TRACE("CCopyToMenu::InvokeCommand %x\n", hr);
     return hr;
 }
 
