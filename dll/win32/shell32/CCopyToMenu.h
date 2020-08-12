@@ -15,14 +15,14 @@ class CCopyToMenu :
 {
 protected:
     UINT m_idCmdFirst, m_idCmdLast, m_idCmdCopyTo;
+    CComPtr<IDataObject> m_pDataObject;
+    CComPtr<IUnknown> m_pSite;
 
     HRESULT DoCopyToFolder(LPCMINVOKECOMMANDINFO lpici);
     HRESULT DoRealCopy(LPCMINVOKECOMMANDINFO lpici, PCUIDLIST_ABSOLUTE pidl);
 
 public:
     CComHeapPtr<ITEMIDLIST> m_pidlFolder;
-    CComPtr<IDataObject> m_pDataObject;
-    CComPtr<IUnknown> m_pSite;
     WNDPROC m_fnOldWndProc;
 
     CCopyToMenu();
