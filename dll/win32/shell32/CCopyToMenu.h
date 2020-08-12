@@ -1,3 +1,9 @@
+/*
+ * PROJECT:     shell32
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     CopyTo implementation
+ * COPYRIGHT:   Copyright 2020 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
+ */
 #pragma once
 
 class CCopyToMenu :
