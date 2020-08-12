@@ -46,6 +46,8 @@ CCopyToMenu::~CCopyToMenu()
 {
 }
 
+#define WM_MY_ENABLE_OK (WM_USER + 0x1000)
+
 static int CALLBACK
 BrowseCallbackProc(HWND hwnd, UINT uMsg, LPARAM lParam, LPARAM lpData)
 {
@@ -70,12 +72,16 @@ BrowseCallbackProc(HWND hwnd, UINT uMsg, LPARAM lParam, LPARAM lpData)
             if (SHGetPathFromIDListW(pidl, szPath) && PathFileExistsW(szPath) &&
                 !ILIsEqual(pidl, this_->m_pidlFolder))
             {
-                SendMessageW(hwnd, BFFM_ENABLEOK, 0, TRUE);
+                PostMessageW(hwnd, WM_MY_ENABLE_OK, 0, TRUE);
             }
             else
             {
-                SendMessageW(hwnd, BFFM_ENABLEOK, 0, FALSE);
+                PostMessageW(hwnd, WM_MY_ENABLE_OK, 0, FALSE);
             }
+            break;
+
+        case WM_MY_ENABLE_OK:
+            SendMessageW(hwnd, BFFM_ENABLEOK, 0, lParam);
             break;
     }
 

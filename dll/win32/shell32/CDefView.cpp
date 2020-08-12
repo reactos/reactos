@@ -1822,6 +1822,7 @@ LRESULT CDefView::OnCommand(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHand
         case FCIDM_SHVIEW_COPY:
         case FCIDM_SHVIEW_RENAME:
         case FCIDM_SHVIEW_PROPERTIES:
+        case FCIDM_SHVIEW_COPYTO:
             return OnExplorerCommand(dwCmdID, TRUE);
 
         case FCIDM_SHVIEW_INSERT:
@@ -2294,6 +2295,23 @@ LRESULT CDefView::OnInitMenuPopup(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL 
     OnCustomItem(uMsg, wParam, lParam, bHandled);
 
     HMENU hViewMenu = GetSubmenuByID(m_hMenu, FCIDM_MENU_VIEW);
+
+    if (GetSelections() == 0)
+    {
+        ::EnableMenuItem(hmenu, FCIDM_SHVIEW_CUT, MF_GRAYED);
+        ::EnableMenuItem(hmenu, FCIDM_SHVIEW_COPY, MF_GRAYED);
+        ::EnableMenuItem(hmenu, FCIDM_SHVIEW_RENAME, MF_GRAYED);
+        ::EnableMenuItem(hmenu, FCIDM_SHVIEW_COPYTO, MF_GRAYED);
+        ::EnableMenuItem(hmenu, FCIDM_SHVIEW_DELETE, MF_GRAYED);
+    }
+    else
+    {
+        ::EnableMenuItem(hmenu, FCIDM_SHVIEW_CUT, MF_ENABLED);
+        ::EnableMenuItem(hmenu, FCIDM_SHVIEW_COPY, MF_ENABLED);
+        ::EnableMenuItem(hmenu, FCIDM_SHVIEW_RENAME, MF_ENABLED);
+        ::EnableMenuItem(hmenu, FCIDM_SHVIEW_COPYTO, MF_ENABLED);
+        ::EnableMenuItem(hmenu, FCIDM_SHVIEW_DELETE, MF_ENABLED);
+    }
 
     /* Lets try to find out what the hell wParam is */
     if (hmenu == GetSubMenu(m_hMenu, nPos))
