@@ -46,15 +46,28 @@ CCopyToMenu::~CCopyToMenu()
 {
 }
 
-#define WM_MY_ENABLE_OK (WM_USER + 0x1000)
+#define WM_SET_ENABLEOK (WM_USER + 0x2000)
+
+static LRESULT CALLBACK
+WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    CCopyToMenu *this_ =
+        reinterpret_cast<CCopyToMenu *>(GetWindowLongPtr(hwnd, GWLP_USERDATA));
+
+    switch (uMsg)
+    {
+    case WM_SET_ENABLEOK:
+        SendMessageW(hwnd, BFFM_ENABLEOK, 0, (BOOL)lParam);
+        return 0;
+    }
+    return CallWindowProcW(this_->m_fnOldWndProc, hwnd, uMsg, wParam, lParam);
+}
 
 static int CALLBACK
 BrowseCallbackProc(HWND hwnd, UINT uMsg, LPARAM lParam, LPARAM lpData)
 {
     CCopyToMenu *this_ =
         reinterpret_cast<CCopyToMenu *>(GetWindowLongPtr(hwnd, GWLP_USERDATA));
-    LPCITEMIDLIST pidl;
-    WCHAR szPath[MAX_PATH];
 
     switch (uMsg)
     {
@@ -71,26 +84,31 @@ BrowseCallbackProc(HWND hwnd, UINT uMsg, LPARAM lParam, LPARAM lpData)
             CString strCaption(MAKEINTRESOURCEW(IDS_COPYTOCAPTION));
             SetWindowTextW(hwnd, strCaption);
 
+            // Subclassing
+            this_->m_fnOldWndProc =
+                reinterpret_cast<WNDPROC>(
+                    SetWindowLongPtr(hwnd, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(WindowProc)));
+
             // Disable OK
-            SendMessageW(hwnd, BFFM_ENABLEOK, 0, FALSE);
+            PostMessageW(hwnd, WM_SET_ENABLEOK, 0, FALSE);
             break;
         }
         case BFFM_SELCHANGED:
-            pidl = reinterpret_cast<LPCITEMIDLIST>(lParam);
+        {
+            WCHAR szPath[MAX_PATH];
+            LPCITEMIDLIST pidl = reinterpret_cast<LPCITEMIDLIST>(lParam);
+
             if (SHGetPathFromIDListW(pidl, szPath) && PathFileExistsW(szPath) &&
                 !ILIsEqual(pidl, this_->m_pidlFolder))
             {
-                PostMessageW(hwnd, WM_MY_ENABLE_OK, 0, TRUE);
+                PostMessageW(hwnd, WM_SET_ENABLEOK, 0, TRUE);
             }
             else
             {
-                PostMessageW(hwnd, WM_MY_ENABLE_OK, 0, FALSE);
+                PostMessageW(hwnd, WM_SET_ENABLEOK, 0, FALSE);
             }
             break;
-
-        case WM_MY_ENABLE_OK:
-            SendMessageW(hwnd, BFFM_ENABLEOK, 0, lParam);
-            break;
+        }
     }
 
     return FALSE;

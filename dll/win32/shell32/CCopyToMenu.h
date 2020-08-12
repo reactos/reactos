@@ -17,6 +17,7 @@ public:
     CComHeapPtr<ITEMIDLIST> m_pidlFolder;
     CComPtr<IDataObject> m_pDataObject;
     CComPtr<IUnknown> m_pSite;
+    WNDPROC m_fnOldWndProc;
 
     CCopyToMenu();
     ~CCopyToMenu();
