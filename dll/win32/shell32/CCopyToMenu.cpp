@@ -178,19 +178,20 @@ CCopyToMenu::QueryContextMenu(HMENU hMenu,
     if (!LoadStringW(shell32_hInstance, IDS_COPYTOMENU, wszBuf, _countof(wszBuf)))
         wszBuf[0] = 0;
 
+    // TODO: Append separator if the previous item is not separator
     ZeroMemory(&mii, sizeof(mii));
     mii.cbSize = sizeof(mii);
     mii.fMask = MIIM_ID | MIIM_TYPE;
     mii.fType = MFT_STRING;
     mii.dwTypeData = wszBuf;
     mii.cch = wcslen(mii.dwTypeData);
-    mii.wID = idCmdLast;
+    mii.wID = m_idCmdLast;
     if (InsertMenuItemW(hMenu, Pos++, TRUE, &mii))
     {
         m_idCmdCopyTo = m_idCmdLast++;
     }
 
-    return MAKE_HRESULT(SEVERITY_SUCCESS, 0, m_idCmdLast - m_idCmdFirst + 1);
+    return MAKE_HRESULT(SEVERITY_SUCCESS, 0, m_idCmdLast - m_idCmdFirst);
 }
 
 HRESULT WINAPI
