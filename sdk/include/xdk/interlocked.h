@@ -299,6 +299,7 @@
 #define InterlockedXor64NoFence __NF_(_InterlockedXor64)
 #endif /* _M_ARM */
 
+#if !(defined(_MSC_VER) && _MSC_VER >= 1928)
 #ifdef _M_IX86
 
 FORCEINLINE
@@ -535,4 +536,5 @@ _InterlockedBitTestAndComplement64(
 }
 
 #endif /* M_IA64 */
+#endif /* MSVC >= 1928 */
 
