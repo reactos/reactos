@@ -980,4 +980,5 @@ BEGIN
     IDS_FILE_NOT_FOUND "फ़ाइल '%s' नहीं मिली।"
     IDS_COPYTOMENU "Copy To &Folder..."
     IDS_COPYTOTITLE "Copy the selected item(s) to the folder:"
+    IDS_COPYTOCAPTION "Copy To Folder"
 END

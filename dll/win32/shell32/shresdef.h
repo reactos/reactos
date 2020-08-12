@@ -298,6 +298,7 @@
 #define IDS_FILE_NOT_FOUND                          30530
 #define IDS_COPYTOMENU                              30531
 #define IDS_COPYTOTITLE                             30532
+#define IDS_COPYTOCAPTION                           30533
 
 /* Dialogs */
 

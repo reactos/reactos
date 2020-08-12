@@ -59,14 +59,22 @@ BrowseCallbackProc(HWND hwnd, UINT uMsg, LPARAM lParam, LPARAM lpData)
     switch (uMsg)
     {
         case BFFM_INITIALIZED:
+        {
             SetWindowLongPtr(hwnd, GWLP_USERDATA, lpData);
             this_ = reinterpret_cast<CCopyToMenu *>(lpData);
 
             // Select initial directory
             SendMessageW(hwnd, BFFM_SETSELECTION, FALSE,
                 reinterpret_cast<LPARAM>(static_cast<LPCITEMIDLIST>(this_->m_pidlFolder)));
-            break;
 
+            // Set Title
+            CString strCaption(MAKEINTRESOURCEW(IDS_COPYTOCAPTION));
+            SetWindowTextW(hwnd, strCaption);
+
+            // Disable OK
+            SendMessageW(hwnd, BFFM_ENABLEOK, 0, FALSE);
+            break;
+        }
         case BFFM_SELCHANGED:
             pidl = reinterpret_cast<LPCITEMIDLIST>(lParam);
             if (SHGetPathFromIDListW(pidl, szPath) && PathFileExistsW(szPath) &&

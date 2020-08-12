@@ -984,4 +984,5 @@ BEGIN
     IDS_FILE_NOT_FOUND "A fájl ('%s') nem található."
     IDS_COPYTOMENU "Copy To &Folder..."
     IDS_COPYTOTITLE "Copy the selected item(s) to the folder:"
+    IDS_COPYTOCAPTION "Copy To Folder"
 END
