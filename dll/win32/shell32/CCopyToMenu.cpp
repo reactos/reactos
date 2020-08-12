@@ -64,9 +64,9 @@ WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
     switch (uMsg)
     {
-    case WM_ENABLEOK:
-        SendMessageW(hwnd, BFFM_ENABLEOK, 0, (BOOL)lParam);
-        return 0;
+        case WM_ENABLEOK:
+            SendMessageW(hwnd, BFFM_ENABLEOK, 0, (BOOL)lParam);
+            return 0;
     }
     return CallWindowProcW(this_->m_fnOldWndProc, hwnd, uMsg, wParam, lParam);
 }
