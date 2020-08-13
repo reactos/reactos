@@ -148,12 +148,11 @@ HRESULT CCopyToMenu::DoRealCopy(LPCMINVOKECOMMANDINFO lpici, LPCITEMIDLIST pidl)
         if (!pidlRelative)
             continue;
 
-        PIDLIST_ABSOLUTE pidlCombine = ILCombine(pidlParent, pidlRelative);
+        CComHeapPtr<ITEMIDLIST> pidlCombine(ILCombine(pidlParent, pidlRelative));
         if (!pidl)
             return E_FAIL;
 
         SHGetPathFromIDListW(pidlCombine, szPath);
-        ILFree(pidlCombine);
 
         if (n > 0)
             strFiles += L'|';
