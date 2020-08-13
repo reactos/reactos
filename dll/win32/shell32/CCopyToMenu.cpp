@@ -94,7 +94,7 @@ BrowseCallbackProc(HWND hwnd, UINT uMsg, LPARAM lParam, LPARAM lpData)
 
             // Set OK button text
             CString strCopy(MAKEINTRESOURCEW(IDS_COPYBUTTON));
-            SetWindowTextW(hwnd, strCopy);
+            SetDlgItemText(hwnd, IDOK, strCopy);
 
             // Subclassing
             this_->m_fnOldWndProc =
