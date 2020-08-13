@@ -262,16 +262,12 @@ CCopyToMenu::QueryContextMenu(HMENU hMenu,
                               UINT uFlags)
 {
     MENUITEMINFOW mii;
-    WCHAR wszBuf[200];
     UINT Count = 0;
 
     TRACE("CCopyToMenu::QueryContextMenu(%p, %u, %u, %u, %u)\n",
           hMenu, indexMenu, idCmdFirst, idCmdLast, uFlags);
 
     m_idCmdFirst = m_idCmdLast = idCmdFirst;
-
-    if (!LoadStringW(shell32_hInstance, IDS_COPYTOMENU, wszBuf, _countof(wszBuf)))
-        wszBuf[0] = 0;
 
     // insert separator if necessary
     ZeroMemory(&mii, sizeof(mii));
@@ -292,11 +288,12 @@ CCopyToMenu::QueryContextMenu(HMENU hMenu,
     }
 
     // insert "Copy to folder..."
+    CStringW strText(MAKEINTRESOURCEW(IDS_COPYTOMENU));
     ZeroMemory(&mii, sizeof(mii));
     mii.cbSize = sizeof(mii);
     mii.fMask = MIIM_ID | MIIM_TYPE;
     mii.fType = MFT_STRING;
-    mii.dwTypeData = wszBuf;
+    mii.dwTypeData = strText.GetBuffer();
     mii.cch = wcslen(mii.dwTypeData);
     mii.wID = m_idCmdLast;
     if (InsertMenuItemW(hMenu, indexMenu, TRUE, &mii))
