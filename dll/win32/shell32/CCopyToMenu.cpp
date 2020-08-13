@@ -15,7 +15,7 @@ _GetCidlFromDataObject(IDataObject *pDataObject, CIDA** ppcida)
     static CLIPFORMAT s_cfHIDA = 0;
     if (s_cfHIDA == 0)
     {
-        s_cfHIDA = (CLIPFORMAT)RegisterClipboardFormatW(CFSTR_SHELLIDLIST);
+        s_cfHIDA = static_cast<CLIPFORMAT>(RegisterClipboardFormatW(CFSTR_SHELLIDLIST));
     }
 
     FORMATETC fmt = { s_cfHIDA, NULL, DVASPECT_CONTENT, -1, TYMED_HGLOBAL };
@@ -28,7 +28,7 @@ _GetCidlFromDataObject(IDataObject *pDataObject, CIDA** ppcida)
     LPVOID lpSrc = GlobalLock(medium.hGlobal);
     SIZE_T cbSize = GlobalSize(medium.hGlobal);
 
-    *ppcida = (CIDA *)::CoTaskMemAlloc(cbSize);
+    *ppcida = reinterpret_cast<CIDA *>(::CoTaskMemAlloc(cbSize));
     if (*ppcida)
     {
         memcpy(*ppcida, lpSrc, cbSize);
