@@ -258,7 +258,7 @@ CCopyToMenu::QueryContextMenu(HMENU hMenu,
 {
     MENUITEMINFOW mii;
     WCHAR wszBuf[200];
-    UINT Pos = ::GetMenuItemCount(hMenu);
+    UINT Count = 0;
 
     TRACE("CCopyToMenu::QueryContextMenu(%p, %u, %u, %u, %u)\n",
           hMenu, indexMenu, idCmdFirst, idCmdLast, uFlags);
@@ -268,6 +268,25 @@ CCopyToMenu::QueryContextMenu(HMENU hMenu,
     if (!LoadStringW(shell32_hInstance, IDS_COPYTOMENU, wszBuf, _countof(wszBuf)))
         wszBuf[0] = 0;
 
+    // insert separator if necessary
+    ZeroMemory(&mii, sizeof(mii));
+    mii.cbSize = sizeof(mii);
+    mii.fMask = MIIM_TYPE;
+    if (GetMenuItemInfoW(hMenu, indexMenu - 1, TRUE, &mii) &&
+        mii.fType != MFT_SEPARATOR)
+    {
+        ZeroMemory(&mii, sizeof(mii));
+        mii.cbSize = sizeof(mii);
+        mii.fMask = MIIM_TYPE;
+        mii.fType = MFT_SEPARATOR;
+        if (InsertMenuItemW(hMenu, indexMenu, TRUE, &mii))
+        {
+            ++indexMenu;
+            ++Count;
+        }
+    }
+
+    // insert "Copy to folder..."
     ZeroMemory(&mii, sizeof(mii));
     mii.cbSize = sizeof(mii);
     mii.fMask = MIIM_ID | MIIM_TYPE;
@@ -275,12 +294,14 @@ CCopyToMenu::QueryContextMenu(HMENU hMenu,
     mii.dwTypeData = wszBuf;
     mii.cch = wcslen(mii.dwTypeData);
     mii.wID = m_idCmdLast;
-    if (InsertMenuItemW(hMenu, Pos++, TRUE, &mii))
+    if (InsertMenuItemW(hMenu, indexMenu, TRUE, &mii))
     {
         m_idCmdCopyTo = m_idCmdLast++;
+        ++indexMenu;
+        ++Count;
     }
 
-    return MAKE_HRESULT(SEVERITY_SUCCESS, 0, m_idCmdLast - m_idCmdFirst);
+    return MAKE_HRESULT(SEVERITY_SUCCESS, 0, Count);
 }
 
 HRESULT WINAPI

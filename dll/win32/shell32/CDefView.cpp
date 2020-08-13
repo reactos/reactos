@@ -2307,6 +2307,7 @@ LRESULT CDefView::OnInitMenuPopup(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL 
     }
     else
     {
+        // FIXME: Check copyable
         ::EnableMenuItem(hmenu, FCIDM_SHVIEW_CUT, MF_ENABLED);
         ::EnableMenuItem(hmenu, FCIDM_SHVIEW_COPY, MF_ENABLED);
         ::EnableMenuItem(hmenu, FCIDM_SHVIEW_RENAME, MF_ENABLED);
