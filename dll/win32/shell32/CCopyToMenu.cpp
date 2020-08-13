@@ -110,16 +110,15 @@ BrowseCallbackProc(HWND hwnd, UINT uMsg, LPARAM lParam, LPARAM lpData)
             WCHAR szPath[MAX_PATH];
             LPCITEMIDLIST pidl = reinterpret_cast<LPCITEMIDLIST>(lParam);
 
-            if (_ILIsDesktop(pidl) ||
-                (SHGetPathFromIDListW(pidl, szPath) && PathFileExistsW(szPath) &&
-                 !ILIsEqual(pidl, this_->m_pidlFolder)))
-            {
-                PostMessageW(hwnd, WM_ENABLEOK, 0, TRUE);
-            }
-            else
-            {
+            szPath[0] = 0;
+            SHGetPathFromIDListW(pidl, szPath);
+
+            if (ILIsEqual(pidl, this_->m_pidlFolder))
                 PostMessageW(hwnd, WM_ENABLEOK, 0, FALSE);
-            }
+            else if (PathFileExistsW(szPath) || _ILIsDesktop(pidl))
+                PostMessageW(hwnd, WM_ENABLEOK, 0, TRUE);
+            else
+                PostMessageW(hwnd, WM_ENABLEOK, 0, FALSE);
             break;
         }
     }
