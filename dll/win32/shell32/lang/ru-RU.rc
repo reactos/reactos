@@ -1005,7 +1005,7 @@ BEGIN
     IDS_NO_ICONS "Файл '%s' не содержит значков.\n\nВыберите значок из списка или укажите другой файл."
     IDS_FILE_NOT_FOUND "Файл '%s' не найден."
     IDS_LINK_INVALID "The item '%s' that this shortcut refers to has been changed or moved, so this shortcut will no longer work properly."
-    IDS_COPYTOMENU "Copy To &Folder..."
+    IDS_COPYTOMENU "Copy to &folder..."
     IDS_COPYTOTITLE "Select the place where you want to copy '%s'. Then click the Copy button."
     IDS_COPYITEMS "Copy Items"
     IDS_COPYBUTTON "Copy"
