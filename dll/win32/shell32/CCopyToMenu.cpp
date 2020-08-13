@@ -110,8 +110,9 @@ BrowseCallbackProc(HWND hwnd, UINT uMsg, LPARAM lParam, LPARAM lpData)
             WCHAR szPath[MAX_PATH];
             LPCITEMIDLIST pidl = reinterpret_cast<LPCITEMIDLIST>(lParam);
 
-            if (SHGetPathFromIDListW(pidl, szPath) && PathFileExistsW(szPath) &&
-                !ILIsEqual(pidl, this_->m_pidlFolder))
+            if (_ILIsDesktop(pidl) ||
+                (SHGetPathFromIDListW(pidl, szPath) && PathFileExistsW(szPath) &&
+                 !ILIsEqual(pidl, this_->m_pidlFolder)))
             {
                 PostMessageW(hwnd, WM_ENABLEOK, 0, TRUE);
             }
@@ -163,7 +164,10 @@ HRESULT CCopyToMenu::DoRealCopy(LPCMINVOKECOMMANDINFO lpici, LPCITEMIDLIST pidl)
     strFiles += L'|'; // double null-terminated
     strFiles.Replace(L'|', L'\0');
 
-    SHGetPathFromIDListW(pidl, szPath);
+    if (_ILIsDesktop(pidl))
+        SHGetSpecialFolderPathW(NULL, szPath, CSIDL_DESKTOPDIRECTORY, FALSE);
+    else
+        SHGetPathFromIDListW(pidl, szPath);
     INT cchPath = lstrlenW(szPath);
     if (cchPath + 1 < MAX_PATH)
     {
