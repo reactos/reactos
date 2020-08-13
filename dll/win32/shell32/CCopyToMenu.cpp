@@ -217,6 +217,9 @@ CStringW CCopyToMenu::DoGetFileTitle()
     else
         ERR("Cannot get path\n");
 
+    if (pCIDA->cidl > 1)
+        ret += L" ...";
+
     return ret;
 }
 
