@@ -390,6 +390,8 @@ BOOL CChangeNotifyServer::DeliverNotification(HANDLE hTicket, DWORD dwOwnerPID)
             TRACE("Notifying: %p, 0x%x, %p, %lu\n",
                   pRegEntry->hwnd, pRegEntry->uMsg, hTicket, dwOwnerPID);
             SendMessageW(pRegEntry->hwnd, pRegEntry->uMsg, (WPARAM)hTicket, dwOwnerPID);
+            if (::GetLastError() != 0)
+                ERR("GetLastError(): %ld\n", ::GetLastError());
         }
 
         // unlock the registration entry
