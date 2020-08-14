@@ -35,7 +35,7 @@ HINSTANCE g_hInstance;
 INT g_FontIndex = 0;
 INT g_NumFonts = 0;
 LOGFONTW g_LogFonts[64];
-LPCWSTR g_fileName;
+LPCWSTR g_fileName = L"";
 WCHAR g_FontTitle[1024] = L"";
 BOOL g_FontPrint = FALSE;
 BOOL g_DisableInstall = FALSE;
@@ -102,7 +102,6 @@ wWinMain(HINSTANCE hThisInstance,
 	int argc;
 	INT i;
 	WCHAR** argv;
-	WCHAR szFileName[MAX_PATH] = L"";
 	DWORD dwSize;
 	HWND hMainWnd;
 	MSG msg;
@@ -125,6 +124,8 @@ wWinMain(HINSTANCE hThisInstance,
 	argv = CommandLineToArgvW(GetCommandLineW(), &argc);
 	if (argc < 2)
 	{
+#if 0
+		WCHAR szFileName[MAX_PATH] = L"";
 		OPENFILENAMEW fontOpen;
         WCHAR filter[MAX_PATH*2] = {0}, dialogTitle[MAX_PATH];
 
@@ -154,6 +155,7 @@ wWinMain(HINSTANCE hThisInstance,
 			exiting the program altogether */
 			return 0;
 		}
+#endif
 	}
 	else
 	{
@@ -190,9 +192,9 @@ wWinMain(HINSTANCE hThisInstance,
 		g_fileName = fileName;
 	}
 
-	if (!AddFontResourceW(fileName))
+	if (!AddFontResourceW(g_fileName))
 	{
-		ErrorMsgBox(0, IDS_ERROR_NOFONT, fileName);
+		ErrorMsgBox(0, IDS_ERROR_NOFONT, g_fileName);
 		return -1;
 	}
 
