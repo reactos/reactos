@@ -28,6 +28,16 @@ BOOL CDirectoryList::ContainsPath(LPCWSTR pszPath) const
 BOOL CDirectoryList::AddPath(LPCWSTR pszPath)
 {
     assert(!PathIsRelativeW(pszPath));
+    if (ContainsPath(pszPath))
+        return FALSE;
+    for (INT i = 0; i < m_items.GetSize(); ++i)
+    {
+        if (m_items[i].IsEmpty())
+        {
+            m_items[i].SetPath(pszPath);
+            return TRUE;
+        }
+    }
     return m_items.Add(pszPath);
 }
 
