@@ -11,7 +11,10 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(shcn);
 
-// TODO: SHCNRF_RecursiveInterrupt
+#if 1
+    #undef TRACE
+    #define TRACE ERR
+#endif
 
 //////////////////////////////////////////////////////////////////////////////
 
@@ -251,6 +254,7 @@ LRESULT CChangeNotifyServer::OnRegister(UINT uMsg, WPARAM wParam, LPARAM lParam,
         pDirWatch = CreateDirectoryWatcherFromRegEntry(pRegEntry);
         if (pDirWatch && !pDirWatch->RequestAddWatcher())
         {
+            ERR("RequestAddWatcher failed: %u\n", pRegEntry->nRegID);
             pRegEntry->nRegID = INVALID_REG_ID;
             SHUnlockShared(pRegEntry);
             delete pDirWatch;
@@ -400,46 +404,64 @@ BOOL CChangeNotifyServer::DeliverNotification(HANDLE hTicket, DWORD dwOwnerPID)
 
 BOOL CChangeNotifyServer::ShouldNotify(LPDELITICKET pTicket, LPREGENTRY pRegEntry)
 {
-    LPITEMIDLIST pidl, pidl1 = NULL, pidl2 = NULL;
+    LPITEMIDLIST pidl = NULL, pidl1 = NULL, pidl2 = NULL;
     WCHAR szPath[MAX_PATH], szPath1[MAX_PATH], szPath2[MAX_PATH];
     INT cch, cch1, cch2;
+
+    if (pRegEntry->ibPidl)
+        pidl = (LPITEMIDLIST)((LPBYTE)pRegEntry + pRegEntry->ibPidl);
+    if (pTicket->ibOffset1)
+        pidl1 = (LPITEMIDLIST)((LPBYTE)pTicket + pTicket->ibOffset1);
+    if (pTicket->ibOffset2)
+        pidl2 = (LPITEMIDLIST)((LPBYTE)pTicket + pTicket->ibOffset2);
+
+    SHGetPathFromIDListW(pidl, szPath);
+    SHGetPathFromIDListW(pidl1, szPath1);
+    SHGetPathFromIDListW(pidl2, szPath2);
+
+#undef RETURN
+#define RETURN(x) do { \
+    if (x) { \
+        TRACE("ShouldNotify (%lX): '%ls', '%ls', '%ls'\n", pTicket->wEventId, szPath, szPath1, szPath2); \
+    } else { \
+        TRACE("Don't Notify (%lX): '%ls', '%ls', '%ls'\n", pTicket->wEventId, szPath, szPath1, szPath2); \
+    } \
+    return (x); \
+} while (0) \
 
     // check fSources
     if (pTicket->wEventId & SHCNE_INTERRUPT)
     {
         if (!(pRegEntry->fSources & SHCNRF_InterruptLevel))
-            return FALSE;
+            RETURN(FALSE);
     }
     else
     {
         if (!(pRegEntry->fSources & SHCNRF_ShellLevel))
-            return FALSE;
+            RETURN(FALSE);
     }
 
     if (pRegEntry->ibPidl == 0)
     {
-        return !(pTicket->wEventId & SHCNE_INTERRUPT);
+        RETURN(!(pTicket->wEventId & SHCNE_INTERRUPT));
     }
 
     // get the stored pidl
-    pidl = (LPITEMIDLIST)((LPBYTE)pRegEntry + pRegEntry->ibPidl);
     if (pidl->mkid.cb == 0 && pRegEntry->fRecursive)
-        return TRUE;    // desktop is the root
+        RETURN(TRUE);    // desktop is the root
 
     // check pidl1
     if (pTicket->ibOffset1)
     {
-        pidl1 = (LPITEMIDLIST)((LPBYTE)pTicket + pTicket->ibOffset1);
         if (ILIsEqual(pidl, pidl1) || ILIsParent(pidl, pidl1, !pRegEntry->fRecursive))
-            return TRUE;
+            RETURN(TRUE);
     }
 
     // check pidl2
     if (pTicket->ibOffset2)
     {
-        pidl2 = (LPITEMIDLIST)((LPBYTE)pTicket + pTicket->ibOffset2);
         if (ILIsEqual(pidl, pidl2) || ILIsParent(pidl, pidl2, !pRegEntry->fRecursive))
-            return TRUE;
+            RETURN(TRUE);
     }
 
     // The paths:
@@ -448,12 +470,12 @@ BOOL CChangeNotifyServer::ShouldNotify(LPDELITICKET pTicket, LPREGENTRY pRegEntr
     // should be distinguished in comparison, so we add backslash at last as follows:
     //   "C:\\Path\\To\\File1\\"
     //   "C:\\Path\\To\\File1Test\\"
-    if (SHGetPathFromIDListW(pidl, szPath))
+    if (pidl && PathIsDirectoryW(szPath))
     {
         PathAddBackslashW(szPath);
         cch = lstrlenW(szPath);
 
-        if (pidl1 && SHGetPathFromIDListW(pidl1, szPath1))
+        if (pidl1)
         {
             PathAddBackslashW(szPath1);
             cch1 = lstrlenW(szPath1);
@@ -465,11 +487,11 @@ BOOL CChangeNotifyServer::ShouldNotify(LPDELITICKET pTicket, LPREGENTRY pRegEntr
             {
                 szPath1[cch] = 0;
                 if (lstrcmpiW(szPath, szPath1) == 0)
-                    return TRUE;
+                    RETURN(TRUE);
             }
         }
 
-        if (pidl2 && SHGetPathFromIDListW(pidl2, szPath2))
+        if (pidl2)
         {
             PathAddBackslashW(szPath2);
             cch2 = lstrlenW(szPath2);
@@ -481,12 +503,13 @@ BOOL CChangeNotifyServer::ShouldNotify(LPDELITICKET pTicket, LPREGENTRY pRegEntr
             {
                 szPath2[cch] = 0;
                 if (lstrcmpiW(szPath, szPath2) == 0)
-                    return TRUE;
+                    RETURN(TRUE);
             }
         }
     }
 
-    return FALSE;
+    RETURN(FALSE);
+#undef RETURN
 }
 
 HRESULT WINAPI CChangeNotifyServer::GetWindow(HWND* phwnd)

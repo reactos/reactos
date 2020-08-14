@@ -395,11 +395,15 @@ SHChangeNotifyRegister(HWND hwnd, INT fSources, LONG wEventMask, UINT uMsg,
             SHFreeShared(hRegEntry, dwOwnerPID);
         }
 
-        // if failed, then destroy the broker
-        if (nRegID == INVALID_REG_ID && (fSources & SHCNRF_NewDelivery) == 0)
+        if (nRegID == INVALID_REG_ID)
         {
             ERR("Delivery failed\n");
-            DestroyWindow(hwndBroker);
+
+            if (hwndBroker)
+            {
+                // destroy the broker
+                DestroyWindow(hwndBroker);
+            }
             break;
         }
     }
