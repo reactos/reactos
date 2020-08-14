@@ -349,11 +349,10 @@ SHChangeNotifyRegister(HWND hwnd, INT fSources, LONG wEventMask, UINT uMsg,
     if (hwndServer == NULL)
         return INVALID_REG_ID;
 
-    // disable new delivery method in specific condition
-    if ((fSources & SHCNRF_RecursiveInterrupt) != 0 &&
-        (fSources & SHCNRF_InterruptLevel) == 0)
+    // disable recursive interrupt in specific condition
+    if ((fSources & SHCNRF_RecursiveInterrupt) && !(fSources & SHCNRF_InterruptLevel))
     {
-        fSources &= ~SHCNRF_NewDelivery;
+        fSources &= ~SHCNRF_RecursiveInterrupt;
     }
 
     // if it is old delivery method, then create a broker window
