@@ -256,7 +256,6 @@ LRESULT CChangeNotifyServer::OnRegister(UINT uMsg, WPARAM wParam, LPARAM lParam,
             delete pDirWatch;
             return FALSE;
         }
-        ERR("AddWatcher\n");
     }
 
     // unlock the registry entry
