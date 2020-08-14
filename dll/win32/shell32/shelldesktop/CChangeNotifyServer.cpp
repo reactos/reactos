@@ -188,10 +188,6 @@ CreateDirectoryWatcherFromRegEntry(LPREGENTRY pRegEntry)
     if (pRegEntry->ibPidl == 0)
         return NULL;
 
-    // it must be interrupt level if pRegEntry is a filesystem watch
-    if (!(pRegEntry->fSources & SHCNRF_InterruptLevel))
-        return NULL;
-
     // get the path
     WCHAR szPath[MAX_PATH];
     LPITEMIDLIST pidl = (LPITEMIDLIST)((LPBYTE)pRegEntry + pRegEntry->ibPidl);
@@ -249,13 +245,17 @@ LRESULT CChangeNotifyServer::OnRegister(UINT uMsg, WPARAM wParam, LPARAM lParam,
     }
 
     // create a directory watch if necessary
-    CDirectoryWatcher *pDirWatch = CreateDirectoryWatcherFromRegEntry(pRegEntry);
-    if (pDirWatch && !pDirWatch->RequestAddWatcher())
+    CDirectoryWatcher *pDirWatch = NULL;
+    if (pRegEntry->fSources & SHCNRF_InterruptLevel)
     {
-        pRegEntry->nRegID = INVALID_REG_ID;
-        SHUnlockShared(pRegEntry);
-        delete pDirWatch;
-        return FALSE;
+        pDirWatch = CreateDirectoryWatcherFromRegEntry(pRegEntry);
+        if (pDirWatch && !pDirWatch->RequestAddWatcher())
+        {
+            pRegEntry->nRegID = INVALID_REG_ID;
+            SHUnlockShared(pRegEntry);
+            delete pDirWatch;
+            return FALSE;
+        }
     }
 
     // unlock the registry entry
