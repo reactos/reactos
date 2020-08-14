@@ -410,6 +410,12 @@ BOOL CChangeNotifyServer::ShouldNotify(LPDELITICKET pTicket, LPREGENTRY pRegEntr
     WCHAR szPath[MAX_PATH], szPath1[MAX_PATH], szPath2[MAX_PATH];
     INT cch, cch1, cch2;
 
+    if (pTicket->wEventId == 0)
+    {
+        TRACE("wEventId is zero\n");
+        return FALSE;
+    }
+
     if (pRegEntry->ibPidl)
         pidl = (LPITEMIDLIST)((LPBYTE)pRegEntry + pRegEntry->ibPidl);
     if (pTicket->ibOffset1)
