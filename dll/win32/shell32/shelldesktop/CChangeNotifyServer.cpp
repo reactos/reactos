@@ -406,7 +406,7 @@ BOOL CChangeNotifyServer::ShouldNotify(LPDELITICKET pTicket, LPREGENTRY pRegEntr
     INT cch, cch1, cch2;
 
     // check fSources
-    if (pTicket->uFlags & SHCNE_INTERRUPT)
+    if (pTicket->wEventId & SHCNE_INTERRUPT)
     {
         if (!(pRegEntry->fSources & SHCNRF_InterruptLevel))
             return FALSE;
@@ -418,7 +418,9 @@ BOOL CChangeNotifyServer::ShouldNotify(LPDELITICKET pTicket, LPREGENTRY pRegEntr
     }
 
     if (pRegEntry->ibPidl == 0)
-        return TRUE; // there is no PIDL
+    {
+        return !(pTicket->wEventId & SHCNE_INTERRUPT);
+    }
 
     // get the stored pidl
     pidl = (LPITEMIDLIST)((LPBYTE)pRegEntry + pRegEntry->ibPidl);
