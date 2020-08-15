@@ -57,14 +57,14 @@
 @ stdcall -arch=i386 _chkesp() msvcrt._chkesp
 @ stdcall -arch=i386 _except_handler2() msvcrt._except_handler2
 @ stdcall -arch=i386 _except_handler3() msvcrt._except_handler3
-@ stdcall -version=0x600+ _except_handler4_common()  msvcrt._except_handler4_common
+@ stdcall -arch=i386 -version=0x600+ _except_handler4_common()  msvcrt._except_handler4_common
 @ stub _get_purecall_handler
 @ stub _get_unexpected
 @ stdcall -arch=i386 _global_unwind2() msvcrt._global_unwind2
 @ stub _is_exception_typeof
 @ stdcall -arch=x86_64 _local_unwind() kernel32._local_unwind
 @ stdcall -arch=i386 _local_unwind2() msvcrt._local_unwind2
-@ stdcall -version=0x600+ _local_unwind4() msvcrt._local_unwind4
+@ stdcall -arch=i386 -version=0x600+ _local_unwind4() msvcrt._local_unwind4
 @ stdcall -arch=i386 _longjmpex() msvcrt._longjmpex
 @ stub _o__CIacos
 @ stub _o__CIasin
