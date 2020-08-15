@@ -51,7 +51,12 @@ endif()
 # HACK: for VS 11+ we need to explicitly disable SSE, which is off by
 # default for older compilers. See CORE-6507
 if(ARCH STREQUAL "i386")
-    add_compile_flags("/arch:IA32")
+    # Clang's IA32 means i386, which doesn't have cmpxchg8b
+    if(USE_CLANG_CL)
+        add_compile_flags("-march=${OARCH}")
+    else()
+        add_compile_flags("/arch:IA32")
+    endif()
 endif()
 
 # VS 12+ requires /FS when used in parallel compilations
