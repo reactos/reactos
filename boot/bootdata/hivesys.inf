@@ -2246,6 +2246,9 @@ AUDIO_SERVICE_DESCRIPTION="Provides audio facilities to applications"
 BITS_SERVICE="Background Intelligent Transfer Service"
 BITS_SERVICE_DESCRIPTION="Transfers files in the background using idle network bandwidth."
 
+BROWSER_SERVICE="Computer Browser"
+BROWSER_SERVICE_DESCRIPTION="Maintains an updated list of computers on the network and supplies this list to computers designated as browsers."
+
 DCOMLAUNCH_SERVICE="DcomLaunch service"
 DCOMLAUNCH_SERVICE_DESCRIPTION="DcomLaunch service stub."
 
@@ -2695,6 +2698,9 @@ AUDIO_SERVICE_DESCRIPTION="Обеспечивает звуковыми устр�
 
 BITS_SERVICE="Фоновая интеллектуальная служба передачи (BITS)"
 BITS_SERVICE_DESCRIPTION="Обеспечивает передачу данных между клиентами и серверами в фоновом режиме с использованием пропускной способности простаивающей сети."
+
+BROWSER_SERVICE="Обозреватель компьютеров"
+BROWSER_SERVICE_DESCRIPTION="Обслуживает список компьютеров в сети и выдает его программам по запросу."
 
 DCOMLAUNCH_SERVICE="DcomLaunch service"
 DCOMLAUNCH_SERVICE_DESCRIPTION="DcomLaunch service stub."
