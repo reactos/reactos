@@ -446,6 +446,8 @@ HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\MyComputer\DefragPath",
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\MyComputer\DefragPath","",0x00020000,"%SystemRoot%\system32\dfrg.msc %c:"
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\MyComputer\BackupPath",,0x00000012
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\MyComputer\BackupPath","",0x00020000,"%SystemRoot%\system32\ntbackup.exe"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\MyComputer\CleanupPath",,0x00000012
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\MyComputer\CleanupPath","",0x00020000,"%SystemRoot%\system32\cleanmgr.exe /D %c"
 
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Run",,0x00000012
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\RunOnce",,0x00000012

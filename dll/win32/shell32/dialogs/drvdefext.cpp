@@ -528,6 +528,12 @@ CDrvDefExt::GeneralPageProc(
                 CDrvDefExt *pDrvDefExt = reinterpret_cast<CDrvDefExt *>(GetWindowLongPtr(hwndDlg, DWLP_USER));
                 WCHAR wszBuf[256];
                 DWORD cbBuf = sizeof(wszBuf);
+				STARTUPINFOW si;
+				ZeroMemory(&si, sizeof(si));
+				si.cb = sizeof(si);
+
+				PROCESS_INFORMATION pi;
+				ZeroMemory(&pi, sizeof(pi));
 
                 if (RegGetValueW(HKEY_LOCAL_MACHINE,
                                  L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\MyComputer\\CleanupPath",
@@ -541,8 +547,13 @@ CDrvDefExt::GeneralPageProc(
 
                     StringCbPrintfW(wszCmd, sizeof(wszCmd), wszBuf, pDrvDefExt->m_wszDrive[0]);
 
-                    if (ShellExecuteW(hwndDlg, NULL, wszCmd, NULL, NULL, SW_SHOW) <= (HINSTANCE)32)
+                    /* Using CreateProcess instead of ShellExecute because ShellExecute doesn't seem to take arguments */
+					
+					if (!CreateProcessW(NULL, wszCmd, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
                         ERR("Failed to create cleanup process %ls\n", wszCmd);
+
+					CloseHandle(pi.hProcess);
+					CloseHandle(pi.hThread);
                 }
             }
             else if (LOWORD(wParam) == 14000) /* Label */
