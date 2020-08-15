@@ -48,8 +48,8 @@ struct _StaticInvokeCommandMap_
     { "delete", FCIDM_SHVIEW_DELETE},
     { "properties", FCIDM_SHVIEW_PROPERTIES},
     { "rename", FCIDM_SHVIEW_RENAME},
+    { "copyto", FCIDM_SHVIEW_COPYTO },
 };
-
 
 class CDefaultContextMenu :
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
@@ -95,6 +95,7 @@ class CDefaultContextMenu :
         HRESULT DoRename(LPCMINVOKECOMMANDINFO lpcmi);
         HRESULT DoProperties(LPCMINVOKECOMMANDINFO lpcmi);
         HRESULT DoCreateNewFolder(LPCMINVOKECOMMANDINFO lpici);
+        HRESULT DoCopyToFolder(LPCMINVOKECOMMANDINFO lpici);
         HRESULT InvokeShellExt(LPCMINVOKECOMMANDINFO lpcmi);
         HRESULT InvokeRegVerb(LPCMINVOKECOMMANDINFO lpcmi);
         DWORD BrowserFlagsFromVerb(LPCMINVOKECOMMANDINFO lpcmi, PStaticShellEntry pEntry);
@@ -893,6 +894,35 @@ CDefaultContextMenu::DoProperties(
     return S_OK;
 }
 
+HRESULT
+CDefaultContextMenu::DoCopyToFolder(LPCMINVOKECOMMANDINFO lpici)
+{
+    HRESULT hr = E_FAIL;
+    if (!m_pDataObj)
+    {
+        ERR("m_pDataObj is NULL\n");
+        return hr;
+    }
+
+    CComPtr<IContextMenu> pContextMenu;
+    hr = SHCoCreateInstance(NULL, &CLSID_CopyToMenu, NULL, IID_PPV_ARG(IContextMenu, &pContextMenu));
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    CComPtr<IShellExtInit> pInit;
+    hr = pContextMenu->QueryInterface(IID_PPV_ARG(IShellExtInit, &pInit));
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    hr = pInit->Initialize(m_pidlFolder, m_pDataObj, NULL);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    lpici->lpVerb = "copyto";
+
+    return pContextMenu->InvokeCommand(lpici);
+}
+
 // This code is taken from CNewMenu and should be shared between the 2 classes
 HRESULT
 CDefaultContextMenu::DoCreateNewFolder(
@@ -1247,6 +1277,9 @@ CDefaultContextMenu::InvokeCommand(
         break;
     case FCIDM_SHVIEW_NEWFOLDER:
         Result = DoCreateNewFolder(&LocalInvokeInfo);
+        break;
+    case FCIDM_SHVIEW_COPYTO:
+        Result = DoCopyToFolder(&LocalInvokeInfo);
         break;
     default:
         Result = E_INVALIDARG;

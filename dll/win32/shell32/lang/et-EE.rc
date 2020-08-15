@@ -1005,4 +1005,7 @@ BEGIN
     IDS_NO_ICONS "Fail '%s' ei sisalda ühtegi ikooni.\n\nVali ikoon nimekirjast või määra teine fail."
     IDS_FILE_NOT_FOUND "Faili '%s' ei leitud."
     IDS_LINK_INVALID "The item '%s' that this shortcut refers to has been changed or moved, so this shortcut will no longer work properly."
+    IDS_COPYTOMENU "Copy To &Folder..."
+    IDS_COPYTOTITLE "Copy the selected item(s) to the folder:"
+    IDS_COPYTOCAPTION "Copy To Folder"
 END

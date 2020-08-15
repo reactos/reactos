@@ -997,4 +997,7 @@ BEGIN
     IDS_NO_ICONS "A fájl ('%s') nem tartalmaz ikonokat.\n\nVálasszon egy ikont a listából, vagy adjon meg egy másik fájlt."
     IDS_FILE_NOT_FOUND "A fájl ('%s') nem található."
     IDS_LINK_INVALID "The item '%s' that this shortcut refers to has been changed or moved, so this shortcut will no longer work properly."
+    IDS_COPYTOMENU "Copy To &Folder..."
+    IDS_COPYTOTITLE "Copy the selected item(s) to the folder:"
+    IDS_COPYTOCAPTION "Copy To Folder"
 END

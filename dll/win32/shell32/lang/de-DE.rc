@@ -999,4 +999,7 @@ BEGIN
     IDS_NO_ICONS "Die Datei '%s' enthält keine Symbole.\n\nWählen Sie ein Symbol aus der Liste oder wählen Sie eine andere Datei."
     IDS_FILE_NOT_FOUND "Die Datei '%s' wurde nicht gefunden."
     IDS_LINK_INVALID "The item '%s' that this shortcut refers to has been changed or moved, so this shortcut will no longer work properly."
+    IDS_COPYTOMENU "Copy To &Folder..."
+    IDS_COPYTOTITLE "Copy the selected item(s) to the folder:"
+    IDS_COPYTOCAPTION "Copy To Folder"
 END

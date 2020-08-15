@@ -1008,4 +1008,7 @@ BEGIN
     IDS_NO_ICONS "文件 '%s' 不包含图标\n\n从列表中选择一个图标或指定其他文件。"
     IDS_FILE_NOT_FOUND "无法找到文件 '%s'。"
     IDS_LINK_INVALID "The item '%s' that this shortcut refers to has been changed or moved, so this shortcut will no longer work properly."
+    IDS_COPYTOMENU "Copy To &Folder..."
+    IDS_COPYTOTITLE "Copy the selected item(s) to the folder:"
+    IDS_COPYTOCAPTION "Copy To Folder"
 END

@@ -1004,4 +1004,7 @@ BEGIN
     IDS_NO_ICONS "Plik '%s' nie zawiera ikon.\n\nWybierz ikonę z listy lub określ inny plik."
     IDS_FILE_NOT_FOUND "Nie odnaleziono pliku '%s'."
     IDS_LINK_INVALID "Element '%s', do którego odwołuje się ten skrót, został zmieniony lub przeniesiony i dlatego skrót ten nie będzie działał poprawnie."
+    IDS_COPYTOMENU "Copy To &Folder..."
+    IDS_COPYTOTITLE "Copy the selected item(s) to the folder:"
+    IDS_COPYTOCAPTION "Copy To Folder"
 END
