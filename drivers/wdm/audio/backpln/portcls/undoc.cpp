@@ -313,7 +313,7 @@ PcAddToPropertyTable(
     //UNICODE_STRING GuidBuffer;
 
 ASSERT(PropertyItem->Set);
-	//	RtlStringFromGUID(*PropertyItem->Set, &GuidBuffer);
+        //      RtlStringFromGUID(*PropertyItem->Set, &GuidBuffer);
    // DPRINT1("PcAddToPropertyTable Adding Item Set %S Id %lu Flags %lx\n", GuidBuffer.Buffer, PropertyItem->Id, PropertyItem->Flags);
 
 
@@ -323,7 +323,7 @@ ASSERT(PropertyItem->Set);
     for(Index = 0; Index < SubDeviceDescriptor->FilterPropertySetCount; Index++)
     {
 
-		//RtlStringFromGUID(*SubDeviceDescriptor->FilterPropertySet[Index].Set, &GuidBuffer);
+                //RtlStringFromGUID(*SubDeviceDescriptor->FilterPropertySet[Index].Set, &GuidBuffer);
         //DPRINT1("FilterProperty Set %S PropertyCount %lu\n", GuidBuffer.Buffer, SubDeviceDescriptor->FilterPropertySet[Index].PropertiesCount);
         if (IsEqualGUIDAligned(*SubDeviceDescriptor->FilterPropertySet[Index].Set, *PropertyItem->Set))
         {
@@ -383,7 +383,7 @@ ASSERT(PropertyItem->Set);
         SubDeviceDescriptor->FilterPropertySet[PropertySetIndex].PropertiesCount = 0;
     }
 
-    // as the property set has been indentified, now search for duplicate property set item entries
+    // as the property set has been identified, now search for duplicate property set item entries
     FilterPropertyItem = (PKSPROPERTY_ITEM)SubDeviceDescriptor->FilterPropertySet[PropertySetIndex].PropertyItem;
     bFound = FALSE;
 
@@ -605,7 +605,6 @@ DumpFilterDescriptor(
         }
         DPRINT("------ End of Nodes Connections----------------\n");
     }
-
     DPRINT1("======================\n");
 }
 

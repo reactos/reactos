@@ -279,7 +279,7 @@ CPortDMus::Init(
 
     if (!NT_SUCCESS(Status))
     {
-        DPRINT("Failed to create descriptior\n");
+        DPRINT("Failed to create descriptor\n");
 
         if (Miniport)
             Miniport->Release();
