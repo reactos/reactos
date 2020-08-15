@@ -784,7 +784,7 @@ USBCCGP_PDOSelectConfiguration(
             //
             DPRINT1("InterfaceInformation InterfaceNumber %x Alternative %x NumberOfPipes %x not found\n", InterfaceInformation->InterfaceNumber, InterfaceInformation->AlternateSetting, InterfaceInformation->NumberOfPipes);
             DbgBreakPoint();
-			return STATUS_INVALID_PARAMETER;
+            return STATUS_INVALID_PARAMETER;
         }
 
         //

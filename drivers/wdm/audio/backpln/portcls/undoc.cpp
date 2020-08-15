@@ -280,7 +280,7 @@ PropertyItemDispatch(
         //        PropertyRequest->PropertyItem->Handler, PropertyRequest, PropertyRequest->PropertyItem->Flags, PropertyRequest->PropertyItem->Id);
 
         Status = PropertyRequest->PropertyItem->Handler(PropertyRequest);
-        //DPRINT("Status %lx ValueSize %lu Information %lu\n", Status, PropertyRequest->ValueSize, Irp->IoStatus.Information);
+        DPRINT("Status %lx ValueSize %lu Information %lu\n", Status, PropertyRequest->ValueSize, Irp->IoStatus.Information);
         Irp->IoStatus.Information = PropertyRequest->ValueSize;
 
         if (Status != STATUS_PENDING)
@@ -383,7 +383,7 @@ ASSERT(PropertyItem->Set);
         SubDeviceDescriptor->FilterPropertySet[PropertySetIndex].PropertiesCount = 0;
     }
 
-    // as the property set has been indentified, now search for duplicate property set item entries
+    // as the property set has been identified, now search for duplicate property set item entries
     FilterPropertyItem = (PKSPROPERTY_ITEM)SubDeviceDescriptor->FilterPropertySet[PropertySetIndex].PropertyItem;
     bFound = FALSE;
 
@@ -605,7 +605,6 @@ DumpFilterDescriptor(
         }
         DPRINT("------ End of Nodes Connections----------------\n");
     }
-
     DPRINT1("======================\n");
 }
 

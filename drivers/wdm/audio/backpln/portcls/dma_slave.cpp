@@ -199,7 +199,7 @@ NTAPI
 CDmaChannelInit::PhysicalAddress(
     PPHYSICAL_ADDRESS Address)
 {
-    DPRINT("CDmaChannelInit_PhysicalAdress: this %p Virtuell %p Physical High %x Low %x%\n", this, m_Buffer, m_Address.HighPart, m_Address.LowPart);
+    DPRINT("CDmaChannelInit_PhysicalAddress: this %p Virtual %p Physical High %x Low %x%\n", this, m_Buffer, m_Address.HighPart, m_Address.LowPart);
 
     PHYSICAL_ADDRESS Result;
 
@@ -349,7 +349,7 @@ CDmaChannelInit::Stop()
     if (!m_DmaStarted)
         return STATUS_SUCCESS;
 
-    m_pAdapter->DmaOperations->FlushAdapterBuffers(m_pAdapter, 
+    m_pAdapter->DmaOperations->FlushAdapterBuffers(m_pAdapter,
                                                        m_Mdl,
                                                        m_MapRegisterBase,
                                                        (PVOID)((ULONG_PTR)m_Mdl->StartVa + m_Mdl->ByteOffset),
