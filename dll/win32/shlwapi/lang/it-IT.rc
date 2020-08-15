@@ -27,12 +27,12 @@ STRINGTABLE
     IDS_TIME_INTERVAL_MINUTES  " min"
     IDS_TIME_INTERVAL_SECONDS  " sec"
 #ifdef __REACTOS__
-    IDS_KB_FORMAT " KB"
-    IDS_MB_FORMAT " MB"
-    IDS_GB_FORMAT " GB"
-    IDS_TB_FORMAT " TB"
-    IDS_PB_FORMAT " PB"
-    IDS_EB_FORMAT " EB"
+    IDS_KB_FORMAT "%s KB"
+    IDS_MB_FORMAT "%s MB"
+    IDS_GB_FORMAT "%s GB"
+    IDS_TB_FORMAT "%s TB"
+    IDS_PB_FORMAT "%s PB"
+    IDS_EB_FORMAT "%s EB"
 #endif
 }
 

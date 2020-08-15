@@ -2424,7 +2424,7 @@ LPWSTR WINAPI StrFormatByteSizeW(LONGLONG llBytes, LPWSTR lpszDest, UINT cchMax)
 #endif
   };
 #ifdef __REACTOS__
-  WCHAR wszAdd[16];
+  WCHAR szBuff[64], wszFormat[64];
 #else
   WCHAR wszAdd[] = {' ','?','B',0};
 #endif
@@ -2466,14 +2466,17 @@ LPWSTR WINAPI StrFormatByteSizeW(LONGLONG llBytes, LPWSTR lpszDest, UINT cchMax)
 
   dBytes = floor(dBytes / bfFormats[i].dDivisor) / bfFormats[i].dNormaliser;
 
+#ifdef __REACTOS__
+  if (!FormatDouble(dBytes, bfFormats[i].nDecimals, szBuff, ARRAYSIZE(szBuff)))
+    return NULL;
+  LoadStringW(shlwapi_hInstance, bfFormats[i].nFormatID, wszFormat, ARRAYSIZE(wszFormat));
+  snprintfW(lpszDest, cchMax, wszFormat, szBuff);
+#else
   if (!FormatDouble(dBytes, bfFormats[i].nDecimals, lpszDest, cchMax))
     return NULL;
-#ifdef __REACTOS__
-  LoadStringW(shlwapi_hInstance, bfFormats[i].nFormatID, wszAdd, ARRAYSIZE(wszAdd));
-#else
   wszAdd[1] = bfFormats[i].wPrefix;
-#endif
   StrCatBuffW(lpszDest, wszAdd, cchMax);
+#endif
   return lpszDest;
 }
 
