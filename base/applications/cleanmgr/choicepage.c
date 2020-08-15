@@ -1,3 +1,10 @@
+/*
+ * PROJECT:         ReactOS Disk Cleanup
+ * LICENSE:         GPL - See COPYING in the top level directory
+ * PURPOSE:         Child dialog proc
+ * COPYRIGHT:       Copyright 2020 Arnav Bhatt (arnavbhatt288 at gmail dot com)
+ */
+
 #include "resource.h"
 #include "precomp.h"
 

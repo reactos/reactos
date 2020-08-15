@@ -1,3 +1,9 @@
+/*
+ * PROJECT:         ReactOS Disk Cleanup
+ * LICENSE:         GPL - See COPYING in the top level directory
+ * PURPOSE:         Disk Cleanup (American Resources)
+ * COPYRIGHT:       DCopyright 2020 Arnav Bhatt (arnavbhatt288 at gmail dot com)
+ */
 
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
 

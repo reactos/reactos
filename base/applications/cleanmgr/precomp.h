@@ -1,4 +1,10 @@
-
+/*
+ * PROJECT:         ReactOS Disk Cleanup
+ * LICENSE:         GPL - See COPYING in the top level directory
+ * PURPOSE:         Precompiled header file
+ * COPYRIGHT:       Copyright 2020 Arnav Bhatt (arnavbhatt288 at gmail dot com)
+ */
+ 
 #define COBJMACROS
 
 #include <windows.h>
