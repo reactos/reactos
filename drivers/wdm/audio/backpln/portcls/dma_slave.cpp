@@ -349,7 +349,7 @@ CDmaChannelInit::Stop()
     if (!m_DmaStarted)
         return STATUS_SUCCESS;
 
-    m_pAdapter->DmaOperations->FlushAdapterBuffers(m_pAdapter, 
+    m_pAdapter->DmaOperations->FlushAdapterBuffers(m_pAdapter,
                                                        m_Mdl,
                                                        m_MapRegisterBase,
                                                        (PVOID)((ULONG_PTR)m_Mdl->StartVa + m_Mdl->ByteOffset),

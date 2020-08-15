@@ -936,3 +936,4 @@ USBCCGP_EnumerateFunctions(
     //
     return USBCCGP_LegacyEnum(DeviceObject);
 }
+

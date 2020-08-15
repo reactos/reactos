@@ -280,7 +280,7 @@ PropertyItemDispatch(
         //        PropertyRequest->PropertyItem->Handler, PropertyRequest, PropertyRequest->PropertyItem->Flags, PropertyRequest->PropertyItem->Id);
 
         Status = PropertyRequest->PropertyItem->Handler(PropertyRequest);
-        //DPRINT("Status %lx ValueSize %lu Information %lu\n", Status, PropertyRequest->ValueSize, Irp->IoStatus.Information);
+        DPRINT("Status %lx ValueSize %lu Information %lu\n", Status, PropertyRequest->ValueSize, Irp->IoStatus.Information);
         Irp->IoStatus.Information = PropertyRequest->ValueSize;
 
         if (Status != STATUS_PENDING)
@@ -313,7 +313,7 @@ PcAddToPropertyTable(
     //UNICODE_STRING GuidBuffer;
 
 ASSERT(PropertyItem->Set);
-        //      RtlStringFromGUID(*PropertyItem->Set, &GuidBuffer);
+	//	RtlStringFromGUID(*PropertyItem->Set, &GuidBuffer);
    // DPRINT1("PcAddToPropertyTable Adding Item Set %S Id %lu Flags %lx\n", GuidBuffer.Buffer, PropertyItem->Id, PropertyItem->Flags);
 
 
@@ -323,7 +323,7 @@ ASSERT(PropertyItem->Set);
     for(Index = 0; Index < SubDeviceDescriptor->FilterPropertySetCount; Index++)
     {
 
-                //RtlStringFromGUID(*SubDeviceDescriptor->FilterPropertySet[Index].Set, &GuidBuffer);
+		//RtlStringFromGUID(*SubDeviceDescriptor->FilterPropertySet[Index].Set, &GuidBuffer);
         //DPRINT1("FilterProperty Set %S PropertyCount %lu\n", GuidBuffer.Buffer, SubDeviceDescriptor->FilterPropertySet[Index].PropertiesCount);
         if (IsEqualGUIDAligned(*SubDeviceDescriptor->FilterPropertySet[Index].Set, *PropertyItem->Set))
         {

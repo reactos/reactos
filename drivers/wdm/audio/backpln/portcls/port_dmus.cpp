@@ -162,7 +162,7 @@ CPortDMus::GetDeviceProperty(
 
     if (!m_bInitialized)
     {
-        DPRINT("IPortDMus_fnNewRegistryKey called w/o initiazed\n");
+        DPRINT("IPortDMus_fnNewRegistryKey called w/o initialized\n");
         return STATUS_UNSUCCESSFUL;
     }
 
