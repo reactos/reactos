@@ -102,7 +102,7 @@ START_TEST(CHeapPtrList)
         ok(g_OpenAllocations == 1, "Expected there to be 1 allocations, was: %ld\n", g_OpenAllocations);
         Ptr = test_Alloc(0x22222222);
         ok(g_OpenAllocations == 2, "Expected there to be 1 allocations, was: %ld\n", g_OpenAllocations);
-#ifdef _MSC_VER
+#if defined(_MSC_VER) && !defined(__clang__)
         heapPtr1.AddTail(CComHeapPtr<DWORD>(Ptr));
 #else
         CComHeapPtr<DWORD> xxx(Ptr);
