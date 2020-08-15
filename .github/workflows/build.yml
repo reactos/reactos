@@ -55,6 +55,41 @@ jobs:
           name: reactos-gcc-i386-${{github.sha}}
           path: build/livecd.iso
 
+  build-clang-cl-i386:
+    name: Clang-CL (i386)
+    runs-on: windows-latest
+    steps:
+    - name: Install packages
+      run: choco install ninja -y
+    - name: Install Flex and Bison
+      run: |
+        curl -O https://svn.reactos.org/storage/vperevertkin/flexbison.7z
+        7z x flexbison.7z -O${{github.workspace}}\bin
+        echo "::add-path::${{github.workspace}}\bin"
+        echo "::set-env name=BISON_PKGDATADIR::${{github.workspace}}\bin\share\bison"
+        echo "::set-env name=M4::${{github.workspace}}\bin\m4.exe"
+    - name: Add CL to PATH
+      uses: ilammy/msvc-dev-cmd@v1
+      with:
+        arch: amd64_x86
+    - uses: actions/checkout@v2
+      with:
+        path: src
+    - name: Configure
+      run: |
+        mkdir build
+        cd build
+        $env:PATH = "$env:PATH;$env:VCToolsInstallDir\..\..\Llvm\bin"
+        cmake -G Ninja -DCMAKE_TOOLCHAIN_FILE:FILEPATH=toolchain-msvc.cmake -DARCH:STRING=i386 -DENABLE_ROSTESTS=1 -DENABLE_ROSAPPS=1 -DUSE_CLANG_CL:BOOL=1 ${{github.workspace}}\src
+    - name: Build
+      working-directory: ${{github.workspace}}\build
+      run: cmake --build .
+    - name: Generate ISOs
+      working-directory: ${{github.workspace}}\build
+      run: |
+        cmake --build . --target bootcd
+        cmake --build . --target livecd
+
   build-msvc-i386:
     name: MSVC (i386)
     runs-on: windows-latest
