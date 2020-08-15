@@ -950,7 +950,11 @@ void ApplicationPage_OnGotoProcess(void)
         /*
          * Switch to the process tab
          */
-        TabCtrl_SetCurFocus(hTabWnd, 1);
+        TabCtrl_SetCurSel(hTabWnd, 1);
+        {
+            NMHDR nmhdr = { hTabWnd, IDC_TAB, TCN_SELCHANGE };
+            SendMessageW(hTabWnd, WM_NOTIFY, IDC_TAB, (LPARAM)&nmhdr);
+        }
         /*
          * Select the process item in the list
          */
