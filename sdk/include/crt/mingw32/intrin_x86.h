@@ -686,12 +686,14 @@ __INTRIN_INLINE long _InterlockedAddLargeStatistic(volatile long long * Addend, 
 }
 #endif /* __i386__ */
 
+#if !HAS_BUILTIN(_interlockedbittestandreset)
 __INTRIN_INLINE unsigned char _interlockedbittestandreset(volatile long * a, long b)
 {
 	unsigned char retval;
 	__asm__("lock; btrl %[b], %[a]; setb %b[retval]" : [retval] "=q" (retval), [a] "+m" (*a) : [b] "Ir" (b) : "memory");
 	return retval;
 }
+#endif
 
 #if defined(__x86_64__)
 __INTRIN_INLINE unsigned char _interlockedbittestandreset64(volatile long long * a, long long b)
@@ -1008,6 +1010,7 @@ __INTRIN_INLINE unsigned char _BitScanReverse(unsigned long * Index, unsigned lo
 }
 #endif
 
+#if !HAS_BUILTIN(_bittest)
 /* NOTE: again, the bizarre implementation follows Visual C++ */
 __INTRIN_INLINE unsigned char _bittest(const long * a, long b)
 {
@@ -1020,6 +1023,7 @@ __INTRIN_INLINE unsigned char _bittest(const long * a, long b)
 
 	return retval;
 }
+#endif
 
 #ifdef __x86_64__
 __INTRIN_INLINE unsigned char _BitScanForward64(unsigned long * Index, unsigned long long Mask)
@@ -1051,6 +1055,7 @@ __INTRIN_INLINE unsigned char _bittest64(const long long * a, long long b)
 }
 #endif
 
+#if !HAS_BUILTIN(_bittestandcomplement)
 __INTRIN_INLINE unsigned char _bittestandcomplement(long * a, long b)
 {
 	unsigned char retval;
@@ -1062,7 +1067,9 @@ __INTRIN_INLINE unsigned char _bittestandcomplement(long * a, long b)
 
 	return retval;
 }
+#endif
 
+#if !HAS_BUILTIN(_bittestandreset)
 __INTRIN_INLINE unsigned char _bittestandreset(long * a, long b)
 {
 	unsigned char retval;
@@ -1074,7 +1081,9 @@ __INTRIN_INLINE unsigned char _bittestandreset(long * a, long b)
 
 	return retval;
 }
+#endif
 
+#if !HAS_BUILTIN(_bittestandset)
 __INTRIN_INLINE unsigned char _bittestandset(long * a, long b)
 {
 	unsigned char retval;
@@ -1086,6 +1095,7 @@ __INTRIN_INLINE unsigned char _bittestandset(long * a, long b)
 
 	return retval;
 }
+#endif
 
 #ifdef __x86_64__
 
@@ -1321,15 +1331,19 @@ __INTRIN_INLINE unsigned long long __cdecl _byteswap_uint64(unsigned long long v
 }
 #endif
 
+#if !HAS_BUILTIN(__lzcnt)
 __INTRIN_INLINE unsigned int __lzcnt(unsigned int value)
 {
 	return __builtin_clz(value);
 }
+#endif
 
+#if !HAS_BUILTIN(__lzcnt16)
 __INTRIN_INLINE unsigned short __lzcnt16(unsigned short value)
 {
 	return __builtin_clz(value);
 }
+#endif
 
 #if !HAS_BUILTIN(__popcnt)
 __INTRIN_INLINE unsigned int __popcnt(unsigned int value)
