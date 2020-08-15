@@ -33,9 +33,9 @@ STRINGTABLE
     IDS_KB_FORMAT "%s КБ"
     IDS_MB_FORMAT "%s МБ"
     IDS_GB_FORMAT "%s ГB"
-    IDS_TB_FORMAT "%s TB"
-    IDS_PB_FORMAT "%s PB"
-    IDS_EB_FORMAT "%s EB"
+    IDS_TB_FORMAT "%s ТБ"
+    IDS_PB_FORMAT "%s ПБ"
+    IDS_EB_FORMAT "%s ЭБ"
 #endif
 }
 
