@@ -993,4 +993,8 @@ BEGIN
     IDS_NO_ICONS "फ़ाइल '%s' में कोई आइकन नहीं है।\n\nसूची से एक आइकन चुनें या एक अलग फ़ाइल निर्दिष्ट करें।"
     IDS_FILE_NOT_FOUND "फ़ाइल '%s' नहीं मिली।"
     IDS_LINK_INVALID "The item '%s' that this shortcut refers to has been changed or moved, so this shortcut will no longer work properly."
+    IDS_COPYTOMENU "Copy to &folder..."
+    IDS_COPYTOTITLE "Select the place where you want to copy '%s'. Then click the Copy button."
+    IDS_COPYITEMS "Copy Items"
+    IDS_COPYBUTTON "Copy"
 END

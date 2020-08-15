@@ -998,4 +998,8 @@ BEGIN
     IDS_NO_ICONS "Файл '%s' не містить значків.\n\nВиберіть значок зі списку або відкрийте інший файл."
     IDS_FILE_NOT_FOUND "Файд '%s' не знайдено."
     IDS_LINK_INVALID "The item '%s' that this shortcut refers to has been changed or moved, so this shortcut will no longer work properly."
+    IDS_COPYTOMENU "Copy to &folder..."
+    IDS_COPYTOTITLE "Select the place where you want to copy '%s'. Then click the Copy button."
+    IDS_COPYITEMS "Copy Items"
+    IDS_COPYBUTTON "Copy"
 END

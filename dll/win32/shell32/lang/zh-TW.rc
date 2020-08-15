@@ -1009,4 +1009,8 @@ BEGIN
     IDS_NO_ICONS "The file '%s' contains no icons.\n\nChoose an icon from the list or specify a different file."
     IDS_FILE_NOT_FOUND "The file '%s' was not found."
     IDS_LINK_INVALID "The item '%s' that this shortcut refers to has been changed or moved, so this shortcut will no longer work properly."
+    IDS_COPYTOMENU "Copy to &folder..."
+    IDS_COPYTOTITLE "Select the place where you want to copy '%s'. Then click the Copy button."
+    IDS_COPYITEMS "Copy Items"
+    IDS_COPYBUTTON "Copy"
 END

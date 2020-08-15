@@ -297,6 +297,10 @@
 #define IDS_NO_ICONS                                30529
 #define IDS_FILE_NOT_FOUND                          30530
 #define IDS_LINK_INVALID                            30531
+#define IDS_COPYTOMENU                              30532
+#define IDS_COPYTOTITLE                             30533
+#define IDS_COPYITEMS                               30534
+#define IDS_COPYBUTTON                              30535
 
 /* Dialogs */
 
@@ -796,6 +800,7 @@
 #define IDM_DELETE (FCIDM_SHVIEW_DELETE - 0x7000)
 #define IDM_RENAME (FCIDM_SHVIEW_RENAME - 0x7000)
 #define IDM_PROPERTIES (FCIDM_SHVIEW_PROPERTIES - 0x7000)
+#define IDM_COPYTO (FCIDM_SHVIEW_COPYTO - 0x7000)
 
 #define IDM_DRAGFILE 0xce
 #define IDM_COPYHERE 0x7
@@ -836,3 +841,4 @@
 #define IDR_SHELL               156
 #define IDR_ACTIVEDESKTOP       157
 #define IDR_SENDTOMENU          158
+#define IDR_COPYTOMENU          159
