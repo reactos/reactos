@@ -1,5 +1,5 @@
-#ifndef __WDMAUD_H__
-#define __WDMAUD_H__
+#ifndef WDMAUD_H__
+#define WDMAUD_H__
 
 #include <stdarg.h>
 
@@ -33,6 +33,9 @@ ULONG
 WdmAudGetMixerCount(VOID);
 
 MMRESULT
+WdmAudOpenSoundDeviceByLegacy();
+
+MMRESULT
 WdmAudGetNumWdmDevsByMMixer(
     IN  MMDEVICE_TYPE DeviceType,
     OUT DWORD* DeviceCount);
@@ -61,9 +64,7 @@ WdmAudGetCapabilitiesByMMixer(
     IN  DWORD CapabilitiesSize);
 
 MMRESULT
-WdmAudOpenSoundDeviceByMMixer(
-    IN  struct _SOUND_DEVICE* SoundDevice,
-    OUT PVOID* Handle);
+WdmAudOpenSoundDeviceByMMixer();
 
 MMRESULT
 WdmAudCloseSoundDeviceByMMixer(
@@ -123,7 +124,7 @@ WdmAudSetMixerDeviceFormatByMMixer(
 MMRESULT
 WdmAudQueryMixerInfoByMMixer(
     IN  struct _SOUND_DEVICE_INSTANCE* SoundDeviceInstance,
-    IN DWORD DeviceId,
+    IN DWORD MixerId,
     IN UINT uMsg,
     IN LPVOID Parameter,
     IN DWORD Flags);

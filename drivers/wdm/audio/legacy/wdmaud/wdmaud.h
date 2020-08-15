@@ -46,6 +46,8 @@ typedef struct
 {
     LIST_ENTRY Entry;
     UNICODE_STRING SymbolicLink;
+    HANDLE hSysAudio;
+    PFILE_OBJECT FileObject;
 }SYSAUDIO_ENTRY, *PSYSAUDIO_ENTRY;
 
 typedef struct
@@ -58,8 +60,6 @@ typedef struct
     KSPIN_LOCK Lock;
     ULONG NumSysAudioDevices;
     LIST_ENTRY SysAudioDeviceList;
-    HANDLE hSysAudio;
-    PFILE_OBJECT FileObject;
     LIST_ENTRY WdmAudClientList;
 
     ULONG SysAudioDeviceCount;
@@ -168,7 +168,7 @@ SetIrpIoStatus(
 
 NTSTATUS
 WdmAudOpenSysAudioDevice(
-    IN LPWSTR DeviceName,
+    IN PUNICODE_STRING DeviceName,
     OUT PHANDLE Handle);
 
 NTSTATUS
@@ -245,6 +245,14 @@ WdmAudGetControlDetails(
     IN  PIRP Irp,
     IN  PWDMAUD_DEVICE_INFO DeviceInfo,
     IN  PWDMAUD_CLIENT ClientInfo);
+
+NTSTATUS
+NTAPI
+WdmAudGetPosition(
+    IN  PDEVICE_OBJECT DeviceObject,
+    IN  PIRP Irp,
+    IN  PWDMAUD_DEVICE_INFO DeviceInfo);
+
 
 NTSTATUS
 WdmAudMixerInitialize(

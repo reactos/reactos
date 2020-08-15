@@ -8,11 +8,6 @@
 
 #include "private.hpp"
 
-#ifndef YDEBUG
-#define NDEBUG
-#endif
-
-#include <debug.h>
 
 class CIrpQueue : public IIrpQueue
 {
@@ -48,21 +43,19 @@ protected:
     LIST_ENTRY m_IrpList;
     LIST_ENTRY m_FreeIrpList;
 
-    BOOLEAN m_OutOfMapping;
+    ULONG m_OutOfMapping;
     ULONG m_MaxFrameSize;
     ULONG m_Alignment;
     ULONG m_TagSupportEnabled;
-    volatile ULONG m_NumDataAvailable;
+    ULONG m_NumDataAvailable;
     volatile ULONG m_CurrentOffset;
-    volatile PIRP m_Irp;
-    volatile LONG m_Ref;
-};
 
-typedef struct
-{
-    PVOID Tag;
-    UCHAR Used;
-}KSSTREAM_TAG, *PKSSTREAM_TAG;
+    PIRP m_Irp;
+
+
+    LONG m_Ref;
+
+};
 
 typedef struct
 {
@@ -72,7 +65,7 @@ typedef struct
 
     PKSSTREAM_HEADER CurStreamHeader;
     PVOID * Data;
-    PKSSTREAM_TAG Tags;
+    PVOID * Tags;
 }KSSTREAM_DATA, *PKSSTREAM_DATA;
 
 #define STREAM_DATA_OFFSET   (0)
@@ -215,7 +208,7 @@ CIrpQueue::AddMapping(
     if (m_TagSupportEnabled)
     {
         // allocate array for storing the pointers of the data */
-        StreamData->Tags = (PKSSTREAM_TAG)AllocateItem(NonPagedPool, sizeof(KSSTREAM_TAG) * StreamData->StreamHeaderCount, TAG_PORTCLASS);
+        StreamData->Tags = (PVOID*)AllocateItem(NonPagedPool, sizeof(PVOID) * StreamData->StreamHeaderCount, TAG_PORTCLASS);
         if (!StreamData->Data)
         {
             // out of memory
@@ -368,8 +361,6 @@ CIrpQueue::UpdateMapping(
     PKSSTREAM_DATA StreamData;
     ULONG Size;
     PIO_STACK_LOCATION IoStack;
-    ULONG Index;
-    PMDL Mdl;
 
     // sanity check
     ASSERT(m_Irp);
@@ -381,7 +372,7 @@ CIrpQueue::UpdateMapping(
     ASSERT(StreamData);
 
     // add to current offset
-    InterlockedExchangeAdd((PLONG)&m_CurrentOffset, (LONG)BytesWritten);
+    InterlockedExchangeAdd((volatile PLONG)&m_CurrentOffset, (LONG)BytesWritten);
 
     if (m_Descriptor->DataFlow == KSPIN_DATAFLOW_OUT)
     {
@@ -450,13 +441,6 @@ CIrpQueue::UpdateMapping(
 
             // done
             return;
-        }
-
-        Mdl = m_Irp->MdlAddress;
-        for(Index = 0; Index < StreamData->StreamHeaderCount; Index++)
-        {
-            MmUnmapLockedPages(StreamData->Data[Index], Mdl);
-            Mdl = Mdl->Next;
         }
 
         // free stream data array
@@ -536,6 +520,7 @@ CIrpQueue::GetMappingWithTag(
     PKSSTREAM_DATA StreamData;
 
     /* sanity checks */
+    PC_ASSERT(Tag != NULL);
     PC_ASSERT(PhysicalAddress);
     PC_ASSERT(VirtualAddress);
     PC_ASSERT(ByteCount);
@@ -552,7 +537,6 @@ CIrpQueue::GetMappingWithTag(
     {
         // no irp available
         m_OutOfMapping = TRUE;
-        DPRINT("GetMappingWithTag no mapping available\n");
         return STATUS_NOT_FOUND;
     }
 
@@ -567,11 +551,7 @@ CIrpQueue::GetMappingWithTag(
     *VirtualAddress = StreamData->Data[StreamData->StreamHeaderIndex];
 
     // store tag in irp
-    StreamData->Tags[StreamData->StreamHeaderIndex].Tag = Tag;
-    StreamData->Tags[StreamData->StreamHeaderIndex].Used = TRUE;
-
-    // increment header index
-    StreamData->StreamHeaderIndex++;
+    StreamData->Tags[StreamData->StreamHeaderIndex] = Tag;
 
     // mapping size
     if (m_Descriptor->DataFlow == KSPIN_DATAFLOW_IN)
@@ -591,7 +571,7 @@ CIrpQueue::GetMappingWithTag(
         m_NumDataAvailable -= StreamData->CurStreamHeader->FrameExtent;
     }
 
-    if (StreamData->StreamHeaderIndex == StreamData->StreamHeaderCount)
+    if (StreamData->StreamHeaderIndex + 1 == StreamData->StreamHeaderCount)
     {
         // last mapping
         *Flags = 1;
@@ -608,11 +588,13 @@ CIrpQueue::GetMappingWithTag(
         // one more mapping in the irp
         *Flags = 0;
 
+        // increment header index
+        StreamData->StreamHeaderIndex++;
+
         // move to next header
         StreamData->CurStreamHeader = (PKSSTREAM_HEADER)((ULONG_PTR)StreamData->CurStreamHeader + StreamData->CurStreamHeader->Size);
     }
 
-    DPRINT("GetMappingWithTag Tag %p Buffer %p Flags %lu ByteCount %lx\n", Tag, VirtualAddress, *Flags, *ByteCount);
     // done
     return STATUS_SUCCESS;
 }
@@ -640,12 +622,10 @@ CIrpQueue::ReleaseMappingWithTag(
             for(Index = 0; Index < StreamData->StreamHeaderIndex; Index++)
             {
                 // check if it is the same tag
-                if ((StreamData->Tags[Index].Tag == Tag) && 
-                    (StreamData->Tags[Index].Used != FALSE))
+                if (StreamData->Tags[Index] == Tag)
                 {
                     // mark mapping as released
-                    StreamData->Tags[Index].Tag = NULL;
-                    StreamData->Tags[Index].Used = FALSE;
+                    StreamData->Tags[Index] = NULL;
 
                     // done
                     return STATUS_SUCCESS;
@@ -657,12 +637,6 @@ CIrpQueue::ReleaseMappingWithTag(
 
     // remove irp from used list
     CurEntry = ExInterlockedRemoveHeadList(&m_FreeIrpList, &m_IrpListLock);
-    if (CurEntry == NULL)
-    {
-        // this should not happen
-        DPRINT("ReleaseMappingWithTag Tag %p not found\n", Tag);
-        return STATUS_NOT_FOUND;
-    }
 
     // sanity check
     PC_ASSERT(CurEntry);
@@ -674,17 +648,15 @@ CIrpQueue::ReleaseMappingWithTag(
     StreamData = (PKSSTREAM_DATA)Irp->Tail.Overlay.DriverContext[STREAM_DATA_OFFSET];
 
     // sanity check
-    PC_ASSERT(StreamData->StreamHeaderIndex == StreamData->StreamHeaderCount);
+    PC_ASSERT(StreamData->StreamHeaderIndex + 1 == StreamData->StreamHeaderCount);
 
     // check if the released mapping is one of these
     for(Index = 0; Index < StreamData->StreamHeaderCount; Index++)
     {
-        if ((StreamData->Tags[Index].Tag == Tag) &&
-            (StreamData->Tags[Index].Used != FALSE))
+        if (StreamData->Tags[Index] == Tag)
         {
             // mark mapping as released
-            StreamData->Tags[Index].Tag = NULL;
-            StreamData->Tags[Index].Used = FALSE;
+            StreamData->Tags[Index] = NULL;
 
             // done
             break;
@@ -696,8 +668,7 @@ CIrpQueue::ReleaseMappingWithTag(
             // therefore if the current mapping is not the searched one, it must have been already
             // released
             //
-            ASSERT(StreamData->Tags[Index].Tag == NULL);
-            ASSERT(StreamData->Tags[Index].Used == FALSE);
+            PC_ASSERT(StreamData->Tags[Index] == NULL);
         }
     }
 
@@ -751,11 +722,6 @@ CIrpQueue::ReleaseMappingWithTag(
 
         // complete the request
         IoCompleteRequest(Irp, IO_SOUND_INCREMENT);
-    }
-    else
-    {
-        // there are still some headers not consumed
-        ExInterlockedInsertHeadList(&m_FreeIrpList, &Irp->Tail.Overlay.ListEntry, &m_IrpListLock);
     }
 
     return STATUS_SUCCESS;

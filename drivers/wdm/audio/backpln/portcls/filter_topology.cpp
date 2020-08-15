@@ -8,12 +8,6 @@
 
 #include "private.hpp"
 
-#ifndef YDEBUG
-#define NDEBUG
-#endif
-
-#include <debug.h>
-
 class CPortFilterTopology : public IPortFilterTopology
 {
 public:

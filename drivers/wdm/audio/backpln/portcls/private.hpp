@@ -7,8 +7,6 @@
 #ifndef PORTCLS_PRIVATE_H
 #define PORTCLS_PRIVATE_H
 
-#include <stdio.h>
-
 //#define _KS_NO_ANONYMOUS_STRUCTURES_
 #define PC_IMPLEMENTATION
 #define COM_STDMETHOD_CAN_THROW
@@ -16,10 +14,17 @@
 
 #include <ntddk.h>
 #include <portcls.h>
+#define NDEBUG
+#include <debug.h>
+
 #include <dmusicks.h>
 #include <kcom.h>
-
 #include "interfaces.hpp"
+#include <ks.h>
+#include <ksmedia.h>
+#include <stdio.h>
+
+//#include <intrin.h>
 
 #define TAG_PORTCLASS 'SLCP'
 
@@ -439,4 +444,4 @@ typedef struct
     PKSOBJECT_CREATE_ITEM CreateItem;
 }DISPATCH_CONTEXT, *PDISPATCH_CONTEXT;
 
-#endif /* PORTCLS_PRIVATE_H */
+#endif

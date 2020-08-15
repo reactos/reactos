@@ -8,12 +8,6 @@
 
 #include "private.hpp"
 
-#ifndef YDEBUG
-#define NDEBUG
-#endif
-
-#include <debug.h>
-
 class CPortWavePci : public IPortWavePci,
                      public IPortEvents,
                      public ISubdevice,
@@ -228,7 +222,7 @@ CPortWavePci::Init(
     IN PRESOURCELIST  ResourceList)
 {
     IMiniportWavePci * Miniport;
-    PSERVICEGROUP ServiceGroup = 0;
+    PSERVICEGROUP ServiceGroup;
     NTSTATUS Status;
     PPINCOUNT PinCount;
     PPOWERNOTIFY PowerNotify;
@@ -329,7 +323,7 @@ CPortWavePci::Init(
         m_pPowerNotify = PowerNotify;
     }
 
-    DPRINT("IPortWavePci_Init successfully initialized\n");
+    DPRINT("IPortWavePci_Init sucessfully initialized\n");
     return STATUS_SUCCESS;
 }
 

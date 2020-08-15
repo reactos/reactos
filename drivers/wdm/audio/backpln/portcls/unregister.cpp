@@ -8,12 +8,6 @@
 
 #include "private.hpp"
 
-#ifndef YDEBUG
-#define NDEBUG
-#endif
-
-#include <debug.h>
-
 class CUnregisterSubdevice : public IUnregisterSubdevice
 {
 public:
@@ -53,20 +47,12 @@ CUnregisterSubdevice::QueryInterface(
     IN  REFIID refiid,
     OUT PVOID* Output)
 {
-    UNICODE_STRING GuidString;
-
     if (IsEqualGUIDAligned(refiid, IID_IUnregisterSubdevice) || 
         IsEqualGUIDAligned(refiid, IID_IUnknown))
     {
         *Output = PVOID(PUNREGISTERSUBDEVICE(this));
         PUNKNOWN(*Output)->AddRef();
         return STATUS_SUCCESS;
-    }
-
-    if (RtlStringFromGUID(refiid, &GuidString) == STATUS_SUCCESS)
-    {
-        DPRINT1("IPortWaveCyclic_fnQueryInterface no interface!!! iface %S\n", GuidString.Buffer);
-        RtlFreeUnicodeString(&GuidString);
     }
 
     return STATUS_UNSUCCESSFUL;

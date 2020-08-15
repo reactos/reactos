@@ -7,13 +7,8 @@
  *
  */
 
+
 #include "private.hpp"
-
-#ifndef YDEBUG
-#define NDEBUG
-#endif
-
-#include <debug.h>
 
 //  + for absolute / - for relative
 
@@ -186,9 +181,9 @@ public:
      * Friends 
      */
     friend class CMiniportDMusUARTStream;
-    friend NTSTATUS NTAPI
+    friend NTSTATUS 
         DMusMPUInterruptServiceRoutine(PINTERRUPTSYNC InterruptSync,PVOID DynamicContext);
-    friend NTSTATUS NTAPI
+    friend NTSTATUS 
         SynchronizedDMusMPUWrite(PINTERRUPTSYNC InterruptSync,PVOID syncWriteContext);
     friend VOID NTAPI 
         DMusUARTTimerDPC(PKDPC Dpc,PVOID DeferredContext,PVOID SystemArgument1,PVOID SystemArgument2);
@@ -283,7 +278,7 @@ public:
         IN      PVOID   SystemArgument1,
         IN      PVOID   SystemArgument2
     );
-    friend NTSTATUS NTAPI PropertyHandler_Synth(IN PPCPROPERTY_REQUEST);
+    friend NTSTATUS PropertyHandler_Synth(IN PPCPROPERTY_REQUEST);
     friend STDMETHODIMP_(NTSTATUS) SnapTimeStamp(PINTERRUPTSYNC InterruptSync,PVOID pStream);
 };
 
@@ -697,7 +692,6 @@ NTSTATUS CMiniportDMusUART::InitializeHardware(PINTERRUPTSYNC interruptSync,PUCH
  * Synchronized routine to initialize the MPU401.
  */
 NTSTATUS
-NTAPI
 InitMPU
 (
     IN      PINTERRUPTSYNC  InterruptSync,
@@ -867,7 +861,6 @@ Write
  * Writes outgoing MIDI data.
  */
 NTSTATUS
-NTAPI
 SynchronizedDMusMPUWrite
 (
     IN      PINTERRUPTSYNC  InterruptSync,
@@ -883,13 +876,13 @@ SynchronizedDMusMPUWrite
     ASSERT(context->BytesRead);
 
     PUCHAR  pChar = PUCHAR(context->BufferAddress);
-    NTSTATUS ntStatus; // , readStatus
+    NTSTATUS ntStatus,readStatus;
     ntStatus = STATUS_SUCCESS;
     //
     // while we're not there yet, and
     // while we don't have to wait on an aligned byte (including 0)
     // (we never wait on a byte.  Better to come back later)
-    /*readStatus = */ DMusMPUInterruptServiceRoutine(InterruptSync,PVOID(context->Miniport));
+    readStatus = DMusMPUInterruptServiceRoutine(InterruptSync,PVOID(context->Miniport));
     while (  (*(context->BytesRead) < context->Length)
           && (  TryMPU(context->PortBase) 
              || (*(context->BytesRead)%3)
@@ -908,8 +901,8 @@ SynchronizedDMusMPUWrite
             break;
         }
     }
-    /*readStatus = */ DMusMPUInterruptServiceRoutine(InterruptSync,PVOID(context->Miniport));
-    return ntStatus;
+    readStatus = DMusMPUInterruptServiceRoutine(InterruptSync,PVOID(context->Miniport));
+    return readStatus;
 }
 
 #define kMPUPollTimeout 2
@@ -1139,7 +1132,6 @@ CMiniportDMusUARTStream::SourceEvtsToPort()
  * ISR.
  */
 NTSTATUS
-NTAPI
 DMusMPUInterruptServiceRoutine
 (
     IN      PINTERRUPTSYNC  InterruptSync,
@@ -1317,7 +1309,7 @@ ProcessResources
     ULONG   countDMA    = ResourceList->NumberOfDmas();
     ULONG   lengthIO    = ResourceList->FindTranslatedPort(0)->u.Port.Length;
 
-#if DBG
+#ifdef DBG
     DPRINT("Starting MPU401 Port 0x%lx", ResourceList->FindTranslatedPort(0)->u.Port.Start.LowPart);
 #endif
 
@@ -1332,7 +1324,7 @@ ProcessResources
         ||  (lengthIO == 0)
         )
     {
-        DPRINT("Unknown ResourceList configuration");
+        DPRINT("Unknown ResourceList configuraton");
         ntStatus = STATUS_DEVICE_CONFIGURATION_ERROR;
     }
 
@@ -1708,7 +1700,7 @@ NewStream
         )
     {
         CMiniportDMusUARTStream *pStream =
-            new(PoolType, 'wNcP') CMiniportDMusUARTStream();
+            new(PoolType, TAG_PORTCLASS) CMiniportDMusUARTStream();
 
         if (pStream)
         {
@@ -2466,9 +2458,7 @@ DMusUARTTimerDPC
 const WCHAR wszDescOut[] = L"DMusic MPU-401 Out ";
 const WCHAR wszDescIn[] = L"DMusic MPU-401 In ";
 
-NTSTATUS
-NTAPI
-PropertyHandler_Synth
+NTSTATUS PropertyHandler_Synth
 (
     IN      PPCPROPERTY_REQUEST     pRequest
 )

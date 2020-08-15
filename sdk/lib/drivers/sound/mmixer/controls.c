@@ -280,7 +280,7 @@ MMixerCreateDestinationLine(
     DestinationLine->Line.Target.wPid = MixerInfo->MixCaps.wPid;
     DestinationLine->Line.Target.vDriverVersion = MixerInfo->MixCaps.vDriverVersion;
 
-    ASSERT(MixerInfo->MixCaps.szPname[MAXPNAMELEN-1] == 0);
+    MixerInfo->MixCaps.szPname[MAXPNAMELEN-1] = 0;
     wcscpy(DestinationLine->Line.Target.szPname, MixerInfo->MixCaps.szPname);
 
     /* initialize extra line */
@@ -1319,10 +1319,11 @@ MMixerHandleTopologyFilter(
         MMixerApplyOutputFilterHack(MixerContext, MixerData, MixerData->hDevice, &PinsCount, Pins);
 
         /* sanity checks */
-        ASSERT(PinsCount != 0);
         if (PinsCount != 1)
         {
-            DPRINT1("MMixerHandlePhysicalConnection Expected 1 pin but got %lu\n", PinsCount);
+            /* HACK */
+            DPRINT1("MMixerHandleTopologyFilter Expected 1 pin but got %lu\n", PinsCount);
+            return MM_STATUS_SUCCESS;
         }
 
         /* create destination line */

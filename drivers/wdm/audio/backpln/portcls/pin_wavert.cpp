@@ -8,12 +8,6 @@
 
 #include "private.hpp"
 
-#ifndef YDEBUG
-#define NDEBUG
-#endif
-
-#include <debug.h>
-
 class CPortPinWaveRT : public IPortPinWaveRT
 {
 public:
@@ -275,7 +269,7 @@ CPortPinWaveRT::HandleKsProperty(
 
     }
     RtlStringFromGUID(Property->Set, &GuidString);
-    DPRINT("Unhandled property Set |%S| Id %u Flags %x\n", GuidString.Buffer, Property->Id, Property->Flags);
+    DPRINT("Unhandeled property Set |%S| Id %u Flags %x\n", GuidString.Buffer, Property->Id, Property->Flags);
     RtlFreeUnicodeString(&GuidString);
 
     Irp->IoStatus.Status = STATUS_NOT_IMPLEMENTED;
@@ -307,9 +301,9 @@ CPortPinWaveRT::DeviceIoControl(
 
     switch (IoStack->Parameters.DeviceIoControl.IoControlCode)
     {
-        case IOCTL_KS_PROPERTY:
+       case IOCTL_KS_PROPERTY:
             return HandleKsProperty(Irp);
-		
+
         case IOCTL_KS_ENABLE_EVENT:
             /* FIXME UNIMPLEMENTED */
             UNIMPLEMENTED_ONCE;
@@ -334,14 +328,15 @@ CPortPinWaveRT::DeviceIoControl(
             /* FIXME UNIMPLEMENTED */
             UNIMPLEMENTED_ONCE;
             break;
-			
+
         case IOCTL_KS_WRITE_STREAM:
         case IOCTL_KS_READ_STREAM:
             return HandleKsStream(Irp);
-			
+
         default:
             return KsDefaultDeviceIoCompletion(DeviceObject, Irp);
     }
+    
 
     Irp->IoStatus.Information = 0;
     Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;
@@ -635,7 +630,7 @@ CPortPinWaveRT::Init(
         goto cleanup;
 
     m_Stream->GetHWLatency(&Latency);
-    // delay of 10 millisec
+    // delay of 10 milisec
     m_Delay = Int32x32To64(10, -10000);
 
     Status = m_Stream->AllocateAudioBuffer(16384 * 11, &m_Mdl, &m_CommonBufferSize, &m_CommonBufferOffset, &m_CacheType);
@@ -646,7 +641,7 @@ CPortPinWaveRT::Init(
     }
 
     m_CommonBuffer = MmGetSystemAddressForMdlSafe(m_Mdl, NormalPagePriority);
-    if (!m_CommonBuffer)
+    if (!NT_SUCCESS(Status))
     {
         DPRINT("Failed to get system address %x\n", Status);
         IoFreeMdl(m_Mdl);

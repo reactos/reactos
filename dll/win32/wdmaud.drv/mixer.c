@@ -50,7 +50,7 @@ PerformSampleRateConversion(
         return ERROR_NOT_ENOUGH_MEMORY;
     }
 
-    NewSamples = ((((ULONG64)NumSamples * NewRate) + (OldRate / 2)) / OldRate) + 2;
+    NewSamples = lrintf(((FLOAT)NumSamples * ((FLOAT)NewRate / (FLOAT)OldRate))) + 2;
 
     FloatOut = HeapAlloc(GetProcessHeap(), 0, NewSamples * NumChannels * sizeof(FLOAT));
     if (!FloatOut)
@@ -416,9 +416,9 @@ MixerCompletionRoutine(
     PSOUND_OVERLAPPED Overlap = (PSOUND_OVERLAPPED)lpOverlapped;
 
     /* Call mmebuddy overlap routine */
-    Overlap->OriginalCompletionRoutine(dwErrorCode, PtrToUlong(Overlap->CompletionContext), lpOverlapped);
+    Overlap->OriginalCompletionRoutine(dwErrorCode, Overlap->OriginalBufferSize, lpOverlapped);
 }
-
+#if 0
 MMRESULT
 WriteFileEx_Remixer(
     IN  PSOUND_DEVICE_INSTANCE SoundDeviceInstance,
@@ -522,7 +522,7 @@ WriteFileEx_Remixer(
     DeviceInfo.Header.PresentationTime.Numerator = 1;
     DeviceInfo.Header.PresentationTime.Denominator = 1;
 
-    Overlap->CompletionContext = UlongToPtr(Length);
+    Overlap->OriginalBufferSize = Length;
     Overlap->OriginalCompletionRoutine = CompletionRoutine;
 
     Overlap->Standard.hEvent = CreateEventW(NULL, FALSE, FALSE, NULL);
@@ -551,4 +551,4 @@ WriteFileEx_Remixer(
 
     return MMSYSERR_NOERROR;
 }
-
+#endif

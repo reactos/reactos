@@ -46,7 +46,7 @@ PopulateWdmDeviceList(
 
     VALIDATE_MMSYS_PARAMETER( IS_VALID_SOUND_DEVICE_TYPE(DeviceType) );
 
-    Result = FUNC_NAME(WdmAudGetNumWdmDevs)(DeviceType, &DeviceCount);
+    Result = WdmAudGetNumWdmDevsByMMixer(DeviceType, &DeviceCount);
 
     if ( ! MMSUCCESS(Result) )
     {
@@ -54,7 +54,7 @@ PopulateWdmDeviceList(
         return TranslateInternalMmResult(Result);
     }
 
-    SND_TRACE(L"%d devices of type %d found\n", DeviceCount, DeviceType);
+    //SND_TRACE(L"%d devices of type %d found\n", DeviceCount, DeviceType);
 
 
     for ( i = 0; i < DeviceCount; ++ i )
@@ -69,35 +69,35 @@ PopulateWdmDeviceList(
 
         /* Set up our function table */
         ZeroMemory(&FuncTable, sizeof(MMFUNCTION_TABLE));
-        FuncTable.GetCapabilities = FUNC_NAME(WdmAudGetCapabilities);
+        FuncTable.GetCapabilities = WdmAudGetCapabilitiesByMMixer;
         FuncTable.QueryWaveFormatSupport = QueryWdmWaveDeviceFormatSupport; //FIXME
-        FuncTable.Open = FUNC_NAME(WdmAudOpenSoundDevice);
-        FuncTable.Close = FUNC_NAME(WdmAudCloseSoundDevice);
-        FuncTable.GetDeviceInterfaceString = FUNC_NAME(WdmAudGetDeviceInterfaceString);
+        FuncTable.Open = WdmAudOpenSoundDeviceByMMixer;
+        FuncTable.Close = WdmAudCloseSoundDeviceByMMixer;
+        FuncTable.GetDeviceInterfaceString = WdmAudGetDeviceInterfaceStringByMMixer;
 
         if (DeviceType == MIXER_DEVICE_TYPE)
         {
-            FuncTable.SetWaveFormat = FUNC_NAME(WdmAudSetMixerDeviceFormat);
-            FuncTable.QueryMixerInfo = FUNC_NAME(WdmAudQueryMixerInfo);
+            FuncTable.SetWaveFormat = WdmAudSetMixerDeviceFormatByMMixer;
+            FuncTable.QueryMixerInfo = WdmAudQueryMixerInfoByMMixer;
         }
         else if (DeviceType == WAVE_IN_DEVICE_TYPE || DeviceType == WAVE_OUT_DEVICE_TYPE)
         {
-            FuncTable.SetWaveFormat = FUNC_NAME(WdmAudSetWaveDeviceFormat);
-            FuncTable.SetState = FUNC_NAME(WdmAudSetWaveState);
-            FuncTable.ResetStream = FUNC_NAME(WdmAudResetStream);
-            FuncTable.GetPos = FUNC_NAME(WdmAudGetWavePosition);
+            FuncTable.SetWaveFormat = WdmAudSetWaveDeviceFormatByMMixer;
+            FuncTable.SetState = WdmAudSetWaveStateByMMixer;
+            FuncTable.ResetStream = WdmAudResetStreamByMMixer;
+            FuncTable.GetPos = WdmAudGetWavePositionByMMixer;
 
 #ifndef USERMODE_MIXER
-            FuncTable.CommitWaveBuffer = FUNC_NAME(WdmAudCommitWaveBuffer);
+            FuncTable.CommitWaveBuffer = WdmAudCommitWaveBufferByMMixer;
 #else
             FuncTable.CommitWaveBuffer = WriteFileEx_Remixer;
 #endif
         }
         else if (DeviceType == MIDI_IN_DEVICE_TYPE || DeviceType == MIDI_OUT_DEVICE_TYPE)
         {
-            FuncTable.SetWaveFormat = FUNC_NAME(WdmAudSetMixerDeviceFormat);
-            FuncTable.SetState = FUNC_NAME(WdmAudSetWaveState);
-            FuncTable.GetPos = FUNC_NAME(WdmAudGetWavePosition);
+            FuncTable.SetWaveFormat = WdmAudSetWaveDeviceFormatByMMixer;
+            FuncTable.SetState = WdmAudSetWaveStateByMMixer;
+            FuncTable.GetPos = WdmAudGetWavePositionByMMixer;
         }
 
         SetSoundDeviceFunctionTable(SoundDevice, &FuncTable);
@@ -121,27 +121,26 @@ DriverProc(
     {
         case DRV_LOAD :
         {
-            HANDLE Handle;
             MMRESULT Result;
-            SND_TRACE(L"DRV_LOAD\n");
+            //SND_TRACE(L"DRV_LOAD\n");
 
             Result = InitEntrypointMutexes();
 
             if ( ! MMSUCCESS(Result) )
                 return 0L;
 
-            Result = FUNC_NAME(WdmAudOpenSoundDevice)(NULL, &Handle);
+            Result = WdmAudOpenSoundDeviceByMMixer();
 
             if ( Result != MMSYSERR_NOERROR )
             {
-                SND_ERR(L"Failed to open \\\\.\\wdmaud\n");
+                SND_ERR(L"Failed to initialize MMixer Library");
                 //UnlistAllSoundDevices();
 
                 return 0L;
             }
 
             /* Populate the device lists */
-            SND_TRACE(L"Populating device lists\n");
+            //SND_TRACE(L"Populating device lists\n");
             PopulateWdmDeviceList(WAVE_OUT_DEVICE_TYPE);
             PopulateWdmDeviceList(WAVE_IN_DEVICE_TYPE);
             PopulateWdmDeviceList(MIDI_OUT_DEVICE_TYPE);
@@ -149,7 +148,7 @@ DriverProc(
             PopulateWdmDeviceList(AUX_DEVICE_TYPE);
             PopulateWdmDeviceList(MIXER_DEVICE_TYPE);
 
-            SND_TRACE(L"Initialisation complete\n");
+            //SND_TRACE(L"Initialisation complete\n");
 
             return 1L;
         }
@@ -158,7 +157,7 @@ DriverProc(
         {
             SND_TRACE(L"DRV_FREE\n");
 
-            FUNC_NAME(WdmAudCleanup)();
+            WdmAudCleanupByMMixer();
 
             /* TODO: Clean up the path names! */
             UnlistAllSoundDevices();
@@ -174,14 +173,14 @@ DriverProc(
         case DRV_ENABLE :
         case DRV_DISABLE :
         {
-            SND_TRACE(L"DRV_ENABLE / DRV_DISABLE\n");
+            //SND_TRACE(L"DRV_ENABLE / DRV_DISABLE\n");
             return 1L;
         }
 
         case DRV_OPEN :
         case DRV_CLOSE :
         {
-            SND_TRACE(L"DRV_OPEN / DRV_CLOSE\n");
+            //SND_TRACE(L"DRV_OPEN / DRV_CLOSE\n");
             return 1L;
         }
 
@@ -218,10 +217,10 @@ BOOL WINAPI DllMain(
             SND_TRACE(L"WDMAUD.DRV - Process detached\n");
             break;
         case DLL_THREAD_ATTACH :
-            SND_TRACE(L"WDMAUD.DRV - Thread attached\n");
+            //SND_TRACE(L"WDMAUD.DRV - Thread attached\n");
             break;
         case DLL_THREAD_DETACH :
-            SND_TRACE(L"WDMAUD.DRV - Thread detached\n");
+            //SND_TRACE(L"WDMAUD.DRV - Thread detached\n");
             break;
     }
 

@@ -8,12 +8,6 @@
 
 #include "private.hpp"
 
-#ifndef YDEBUG
-#define NDEBUG
-#endif
-
-#include <debug.h>
-
 class CPortDMus : public IPortDMus,
                   public ISubdevice
 {
@@ -168,7 +162,7 @@ CPortDMus::GetDeviceProperty(
 
     if (!m_bInitialized)
     {
-        DPRINT("IPortDMus_fnNewRegistryKey called w/o initialized\n");
+        DPRINT("IPortDMus_fnNewRegistryKey called w/o initiazed\n");
         return STATUS_UNSUCCESSFUL;
     }
 
@@ -285,7 +279,7 @@ CPortDMus::Init(
 
     if (!NT_SUCCESS(Status))
     {
-        DPRINT("Failed to create descriptor\n");
+        DPRINT("Failed to create descriptior\n");
 
         if (Miniport)
             Miniport->Release();

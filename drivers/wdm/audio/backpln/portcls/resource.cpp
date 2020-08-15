@@ -11,12 +11,6 @@
 
 #include "private.hpp"
 
-#ifndef YDEBUG
-#define NDEBUG
-#endif
-
-#include <debug.h>
-
 class CResourceList : public IResourceList
 {
 public:
@@ -40,9 +34,11 @@ public:
     }
 
     IMP_IResourceList;
-
-    CResourceList(IUnknown * OuterUnknown) : m_OuterUnknown(OuterUnknown), m_PoolType(NonPagedPool), m_TranslatedResourceList(0), m_UntranslatedResourceList(0), m_NumberOfEntries(0), m_MaxEntries(0), m_Ref(0) {}
-    virtual ~CResourceList();
+#ifdef BUILD_WDK
+    ULONG NTAPI NumberOfEntries();
+#endif
+    CResourceList(IUnknown * OuterUnknown) : m_OuterUnknown(OuterUnknown), m_PoolType(NonPagedPool), m_TranslatedResourceList(0), m_UntranslatedResourceList(0), m_NumberOfEntries(0) {}
+    virtual ~CResourceList() {}
 
 public:
     PUNKNOWN m_OuterUnknown;
@@ -50,24 +46,10 @@ public:
     PCM_RESOURCE_LIST m_TranslatedResourceList;
     PCM_RESOURCE_LIST m_UntranslatedResourceList;
     ULONG m_NumberOfEntries;
-    ULONG m_MaxEntries;
+
     LONG m_Ref;
 };
 
-CResourceList::~CResourceList() 
-{
-    if (m_TranslatedResourceList)
-    {
-        /* Free resource list */
-        FreeItem(m_TranslatedResourceList, TAG_PORTCLASS);
-    }
-
-    if (m_UntranslatedResourceList)
-    {
-        /* Free resource list */
-        FreeItem(m_UntranslatedResourceList, TAG_PORTCLASS);
-    }
-}
 
 NTSTATUS
 NTAPI
@@ -87,13 +69,13 @@ CResourceList::QueryInterface(
 
     if (RtlStringFromGUID(refiid, &GuidString) == STATUS_SUCCESS)
     {
-        DPRINT1("IResourceList_QueryInterface no interface!!! iface %S\n", GuidString.Buffer);
+        DPRINT("IResourceList_QueryInterface no interface!!! iface %S\n", GuidString.Buffer);
         RtlFreeUnicodeString(&GuidString);
     }
 
     return STATUS_UNSUCCESSFUL;
 }
-
+#if 1
 ULONG
 NTAPI
 CResourceList::NumberOfEntries()
@@ -102,6 +84,7 @@ CResourceList::NumberOfEntries()
 
     return m_NumberOfEntries;
 }
+#endif
 
 ULONG
 NTAPI
@@ -109,26 +92,38 @@ CResourceList::NumberOfEntriesOfType(
     IN  CM_RESOURCE_TYPE Type)
 {
     ULONG Index, Count = 0;
-    PCM_PARTIAL_RESOURCE_DESCRIPTOR PartialDescriptor;
+    PCM_PARTIAL_RESOURCE_DESCRIPTOR PartialDescriptor, UnPartialDescriptor;
 
     PC_ASSERT_IRQL_EQUAL(PASSIVE_LEVEL);
 
-    /* Is there a resource list? */
-    if (!m_UntranslatedResourceList)
+    if (!m_TranslatedResourceList)
     {
-        /* No resource list provided */
+        // no resource list
         return 0;
     }
-
-    for (Index = 0; Index < m_NumberOfEntries; Index ++ )
+     PC_ASSERT(m_TranslatedResourceList->List[0].PartialResourceList.Count == m_UntranslatedResourceList->List[0].PartialResourceList.Count);
+    // I guess the translated and untranslated lists will be same length?
+    for (Index = 0; Index < m_TranslatedResourceList->List[0].PartialResourceList.Count; Index ++ )
     {
-
-        /* Get descriptor */
-        PartialDescriptor = &m_UntranslatedResourceList->List[0].PartialResourceList.PartialDescriptors[Index];
+        PartialDescriptor = &m_TranslatedResourceList->List[0].PartialResourceList.PartialDescriptors[Index];
+        UnPartialDescriptor = &m_UntranslatedResourceList->List[0].PartialResourceList.PartialDescriptors[Index];
+        DPRINT("Descriptor Type %u\n", PartialDescriptor->Type);
         if (PartialDescriptor->Type == Type)
         {
-            /* Yay! Finally found one that matches! */
+            // Yay! Finally found one that matches!
             Count++;
+        }
+
+        if (PartialDescriptor->Type == CmResourceTypeInterrupt)
+        {
+            DPRINT("Index %u TRANS   Interrupt Number Affinity %x Level %u Vector %u Flags %x Share %x\n", Index, PartialDescriptor->u.Interrupt.Affinity, PartialDescriptor->u.Interrupt.Level, PartialDescriptor->u.Interrupt.Vector, PartialDescriptor->Flags, PartialDescriptor->ShareDisposition);
+            DPRINT("Index %u UNTRANS Interrupt Number Affinity %x Level %u Vector %u Flags %x Share %x\\n", Index, UnPartialDescriptor->u.Interrupt.Affinity, UnPartialDescriptor->u.Interrupt.Level, UnPartialDescriptor->u.Interrupt.Vector, UnPartialDescriptor->Flags, UnPartialDescriptor->ShareDisposition);
+
+        }
+        else if (PartialDescriptor->Type == CmResourceTypePort)
+        {
+            DPRINT("Index %u TRANS    Port Length %u Start %u %u Flags %x Share %x\n", Index, PartialDescriptor->u.Port.Length, PartialDescriptor->u.Port.Start.HighPart, PartialDescriptor->u.Port.Start.LowPart, PartialDescriptor->Flags, PartialDescriptor->ShareDisposition);
+            DPRINT("Index %u UNTRANS  Port Length %u Start %u %u Flags %x Share %x\n", Index, UnPartialDescriptor->u.Port.Length, UnPartialDescriptor->u.Port.Start.HighPart, UnPartialDescriptor->u.Port.Start.LowPart, UnPartialDescriptor->Flags, UnPartialDescriptor->ShareDisposition);
         }
     }
 
@@ -147,33 +142,27 @@ CResourceList::FindTranslatedEntry(
 
     PC_ASSERT_IRQL_EQUAL(PASSIVE_LEVEL);
 
-    /* Is there a resource list? */
     if (!m_TranslatedResourceList)
     {
-        /* No resource list */
+        // no resource list
         return NULL;
     }
 
-    for (DescIndex = 0; DescIndex < m_NumberOfEntries; DescIndex ++ )
+    for (DescIndex = 0; DescIndex < m_TranslatedResourceList->List[0].PartialResourceList.Count; DescIndex ++ )
     {
-        /* Get descriptor */
         PartialDescriptor = &m_TranslatedResourceList->List[0].PartialResourceList.PartialDescriptors[DescIndex];
 
         if (PartialDescriptor->Type == Type)
         {
-            /* Found type, is it the requested index? */
+            // Yay! Finally found one that matches!
             if (Index == Count)
             {
-                /* Found */
                 return PartialDescriptor;
             }
-
-            /* Need to continue search */
             Count++;
         }
     }
 
-    /* No such descriptor */
     return NULL;
 }
 
@@ -188,34 +177,26 @@ CResourceList::FindUntranslatedEntry(
 
     PC_ASSERT_IRQL_EQUAL(PASSIVE_LEVEL);
 
-    /* Is there a resource list? */
     if (!m_UntranslatedResourceList)
     {
-        /* Empty resource list */
+        // no resource list
         return NULL;
     }
 
-    /* Search descriptors */
-    for (DescIndex = 0; DescIndex < m_NumberOfEntries; DescIndex ++ )
+    for (DescIndex = 0; DescIndex < m_UntranslatedResourceList->List[0].PartialResourceList.Count; DescIndex ++ )
     {
-        /* Get descriptor */
         PartialDescriptor = &m_UntranslatedResourceList->List[0].PartialResourceList.PartialDescriptors[DescIndex];
 
         if (PartialDescriptor->Type == Type)
         {
-            /* Found type, is it the requested index? */
+            // Yay! Finally found one that matches!
             if (Index == Count)
             {
-                /* Found */
                 return PartialDescriptor;
             }
-
-            /* Need to continue search */
             Count++;
         }
     }
-
-    /* No such descriptor */
     return NULL;
 }
 
@@ -225,37 +206,68 @@ CResourceList::AddEntry(
     IN  PCM_PARTIAL_RESOURCE_DESCRIPTOR Translated,
     IN  PCM_PARTIAL_RESOURCE_DESCRIPTOR Untranslated)
 {
-    PCM_PARTIAL_RESOURCE_DESCRIPTOR PartialDescriptor;
+    PCM_RESOURCE_LIST NewUntranslatedResources, NewTranslatedResources;
+    ULONG NewTranslatedSize, NewUntranslatedSize, TranslatedSize, UntranslatedSize, ResourceCount;
 
-    /* Sanity check */
     PC_ASSERT_IRQL_EQUAL(PASSIVE_LEVEL);
 
+    // calculate translated resource list size
+    ResourceCount = m_TranslatedResourceList->List[0].PartialResourceList.Count;
+#ifdef _MSC_VER
+    NewTranslatedSize = FIELD_OFFSET(CM_RESOURCE_LIST, List[0].PartialResourceList.PartialDescriptors[ResourceCount+1]);
+    TranslatedSize = FIELD_OFFSET(CM_RESOURCE_LIST, List[0].PartialResourceList.PartialDescriptors[ResourceCount]);
+#else
+    NewTranslatedSize = sizeof(CM_RESOURCE_LIST) - sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR) + (ResourceCount+1) * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
+    TranslatedSize = sizeof(CM_RESOURCE_LIST) - sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR) + (ResourceCount) * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
+#endif
+    NewTranslatedResources = (PCM_RESOURCE_LIST)AllocateItem(m_PoolType, NewTranslatedSize, TAG_PORTCLASS);
+    if (!NewTranslatedResources)
+        return STATUS_INSUFFICIENT_RESOURCES;
 
-    /* Is there still room for another entry */
-    if (m_NumberOfEntries >= m_MaxEntries)
+
+    // calculate untranslated resouce list size
+    ResourceCount = m_UntranslatedResourceList->List[0].PartialResourceList.Count;
+
+#ifdef _MSC_VER
+    NewUntranslatedSize = FIELD_OFFSET(CM_RESOURCE_LIST, List[0].PartialResourceList.PartialDescriptors[ResourceCount+1]);
+    UntranslatedSize = FIELD_OFFSET(CM_RESOURCE_LIST, List[0].PartialResourceList.PartialDescriptors[ResourceCount]);
+#else
+    NewUntranslatedSize = sizeof(CM_RESOURCE_LIST) - sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR) + (ResourceCount+1) * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
+    UntranslatedSize = sizeof(CM_RESOURCE_LIST) - sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR) + (ResourceCount) * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
+#endif
+
+
+    // allocate untranslated resource list size
+    NewUntranslatedResources = (PCM_RESOURCE_LIST)AllocateItem(m_PoolType, NewUntranslatedSize, TAG_PORTCLASS);
+    if (!NewUntranslatedResources)
     {
-        /* No more space */
+        FreeItem(NewTranslatedResources, TAG_PORTCLASS);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    /* Get free descriptor */
-    PartialDescriptor = &m_UntranslatedResourceList->List[0].PartialResourceList.PartialDescriptors[m_NumberOfEntries];
+    // now copy translated resource list
+    RtlMoveMemory(NewTranslatedResources, m_TranslatedResourceList, TranslatedSize);
+    RtlMoveMemory((PUCHAR)NewTranslatedResources + TranslatedSize, Translated, sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR));
 
-    /* Copy descriptor */
-    RtlCopyMemory(PartialDescriptor, Untranslated, sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR));
+    // now copy untranslated resource list
+    RtlMoveMemory(NewUntranslatedResources, m_UntranslatedResourceList, UntranslatedSize);
+    RtlMoveMemory((PUCHAR)NewUntranslatedResources + UntranslatedSize, Untranslated, sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR));
 
-    /* Get free descriptor */
-    PartialDescriptor = &m_TranslatedResourceList->List[0].PartialResourceList.PartialDescriptors[m_NumberOfEntries];
+    // free old lists
+    FreeItem(m_TranslatedResourceList, TAG_PORTCLASS);
+    FreeItem(m_UntranslatedResourceList, TAG_PORTCLASS);
 
-    /* Copy descriptor */
-    RtlCopyMemory(PartialDescriptor, Translated, sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR));
+    // store new lists
+    m_UntranslatedResourceList = NewUntranslatedResources;
+    m_TranslatedResourceList = NewTranslatedResources;
 
-    /* Add entry count */
+    // increment descriptor count
+    NewUntranslatedResources->List[0].PartialResourceList.Count++;
+    NewTranslatedResources->List[0].PartialResourceList.Count++;
+
+    // add entry count
     m_NumberOfEntries++;
-    m_UntranslatedResourceList->List[0].PartialResourceList.Count++;
-    m_TranslatedResourceList->List[0].PartialResourceList.Count++;
 
-    /* Done */
     return STATUS_SUCCESS;
 }
 
@@ -270,18 +282,16 @@ CResourceList::AddEntryFromParent(
 
     PC_ASSERT_IRQL_EQUAL(PASSIVE_LEVEL);
 
-    /* Get entries from parent */
     Translated = Parent->FindTranslatedEntry(Type, Index);
     Untranslated = Parent->FindUntranslatedEntry(Type, Index);
 
-    /* Are both found? */
     if (Translated && Untranslated)
     {
-        /* Add entry from parent */
+        // add entry from parent
         return AddEntry(Translated, Untranslated);
     }
 
-    /* Entry not found */
+    // entry not found
     return STATUS_INVALID_PARAMETER;
 }
 
@@ -315,92 +325,99 @@ PcNewResourceList(
     IN  PCM_RESOURCE_LIST UntranslatedResourceList)
 {
     PCM_RESOURCE_LIST NewUntranslatedResources, NewTranslatedResources;
-    ULONG ResourceSize, ResourceCount;
+    ULONG NewTranslatedSize, NewUntranslatedSize, ResourceCount;
     CResourceList* NewList;
     NTSTATUS Status;
 
     if (!TranslatedResourceList)
     {
-        /* If the untranslated resource list is also not provided, it becomes an empty resource list */
+        //
+        // if the untranslated resource list is also not provided, it becomes an empty resource list
+        //
         if (UntranslatedResourceList)
         {
-            /* Invalid parameter mix */
+            // invalid parameter mix
             return STATUS_INVALID_PARAMETER;
         }
     }
     else
     {
-        /* If the translated resource list is also not provided, it becomes an empty resource list */
+        //
+        // if the translated resource list is also not provided, it becomes an empty resource list
+        //
         if (!UntranslatedResourceList)
         {
-            /* Invalid parameter mix */
+            // invalid parameter mix
             return STATUS_INVALID_PARAMETER;
         }
     }
 
-    /* Allocate resource list */
     NewList = new(PoolType, TAG_PORTCLASS)CResourceList(OuterUnknown);
     if (!NewList)
         return STATUS_INSUFFICIENT_RESOURCES;
 
-    /* Query resource list */
     Status = NewList->QueryInterface(IID_IResourceList, (PVOID*)OutResourceList);
+
     if (!NT_SUCCESS(Status))
     {
-        /* Ouch, FIX ME */
+        //
+        // Ouch, FIX ME
+        //
         delete NewList;
         return STATUS_INVALID_PARAMETER;
     }
 
-    /* Is there a resource list */
     if (!TranslatedResourceList)
     {
-        /* Empty resource list */
+        //
+        // empty resource list
+        //
         return STATUS_SUCCESS;
     }
 
-    /* Sanity check */
-    ASSERT(UntranslatedResourceList->List[0].PartialResourceList.Count == TranslatedResourceList->List[0].PartialResourceList.Count);
-
-    /* Get resource count */
-    ResourceCount = UntranslatedResourceList->List[0].PartialResourceList.Count;
+    // calculate translated resource list size
+    ResourceCount = TranslatedResourceList->List[0].PartialResourceList.Count;
 #ifdef _MSC_VER
-    ResourceSize = FIELD_OFFSET(CM_RESOURCE_LIST, List[0].PartialResourceList.PartialDescriptors[ResourceCount]);
+    NewTranslatedSize = FIELD_OFFSET(CM_RESOURCE_LIST, List[0].PartialResourceList.PartialDescriptors[ResourceCount]);
 #else
-    ResourceSize = sizeof(CM_RESOURCE_LIST) - sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR) + (ResourceCount) * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
+    NewTranslatedSize = sizeof(CM_RESOURCE_LIST) - sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR) + (ResourceCount) * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
 #endif
 
-    /* Allocate translated resource list */
-    NewTranslatedResources = (PCM_RESOURCE_LIST)AllocateItem(PoolType, ResourceSize, TAG_PORTCLASS);
+    // store resource count
+    NewList->m_NumberOfEntries = ResourceCount;
+
+    // calculate untranslated resouce list size
+    ResourceCount = UntranslatedResourceList->List[0].PartialResourceList.Count;
+#ifdef _MSC_VER
+    NewUntranslatedSize = FIELD_OFFSET(CM_RESOURCE_LIST, List[0].PartialResourceList.PartialDescriptors[ResourceCount]);
+#else
+    NewUntranslatedSize = sizeof(CM_RESOURCE_LIST) - sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR) + (ResourceCount) * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
+#endif
+
+    // allocate translated resource list
+    NewTranslatedResources = (PCM_RESOURCE_LIST)AllocateItem(PoolType, NewTranslatedSize, TAG_PORTCLASS);
     if (!NewTranslatedResources)
     {
-        /* No memory */
         delete NewList;
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    /* Allocate untranslated resource list */
-    NewUntranslatedResources = (PCM_RESOURCE_LIST)AllocateItem(PoolType, ResourceSize, TAG_PORTCLASS);
+    // allocate untranslated resource list
+    NewUntranslatedResources = (PCM_RESOURCE_LIST)AllocateItem(PoolType, NewUntranslatedSize, TAG_PORTCLASS);
     if (!NewUntranslatedResources)
     {
-        /* No memory */
         delete NewList;
-        FreeItem(NewTranslatedResources, TAG_PORTCLASS);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    /* Copy resource lists */
-    RtlCopyMemory(NewTranslatedResources, TranslatedResourceList, ResourceSize);
-    RtlCopyMemory(NewUntranslatedResources, UntranslatedResourceList, ResourceSize);
+    // copy resource lists
+    RtlCopyMemory(NewTranslatedResources, TranslatedResourceList, NewTranslatedSize);
+    RtlCopyMemory(NewUntranslatedResources, UntranslatedResourceList, NewUntranslatedSize);
 
-    /* Init resource list */
+    // store resource lists
     NewList->m_TranslatedResourceList= NewTranslatedResources;
     NewList->m_UntranslatedResourceList = NewUntranslatedResources;
-    NewList->m_NumberOfEntries = ResourceCount;
-    NewList->m_MaxEntries = ResourceCount;    
-    NewList->m_PoolType = PoolType;
- 
-    /* Done */
+
     return STATUS_SUCCESS;
 }
 
@@ -414,60 +431,53 @@ PcNewResourceSublist(
     IN  PRESOURCELIST ParentList,
     IN  ULONG MaximumEntries)
 {
-    CResourceList* NewList;
-    ULONG ResourceSize;
+    CResourceList* NewList, *Parent;
 
     if (!OutResourceList || !ParentList || !MaximumEntries)
         return STATUS_INVALID_PARAMETER;
 
-    /* Allocate new list */
+    Parent = (CResourceList*)ParentList;
+
+    if (!Parent->m_TranslatedResourceList->List[0].PartialResourceList.Count ||
+        !Parent->m_UntranslatedResourceList->List[0].PartialResourceList.Count)
+    {
+        // parent list can't be empty
+        return STATUS_INVALID_PARAMETER;
+    }
+
     NewList = new(PoolType, TAG_PORTCLASS) CResourceList(OuterUnknown);
     if (!NewList)
         return STATUS_INSUFFICIENT_RESOURCES;
 
-    /* Get resource size */
-#ifdef _MSC_VER
-    ResourceSize = FIELD_OFFSET(CM_RESOURCE_LIST, List[0].PartialResourceList.PartialDescriptors[MaximumEntries]);
-#else
-    ResourceSize = sizeof(CM_RESOURCE_LIST) - sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR) + (MaximumEntries) * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
-#endif
-
-    /* Allocate resource list */
-    NewList->m_TranslatedResourceList = (PCM_RESOURCE_LIST)AllocateItem(PoolType, ResourceSize, TAG_PORTCLASS);
+    NewList->m_TranslatedResourceList = (PCM_RESOURCE_LIST)AllocateItem(PoolType, sizeof(CM_RESOURCE_LIST), TAG_PORTCLASS);
     if (!NewList->m_TranslatedResourceList)
     {
-        /* No memory */
         delete NewList;
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    /* Allocate resource list */
-    NewList->m_UntranslatedResourceList = (PCM_RESOURCE_LIST)AllocateItem(PoolType, ResourceSize, TAG_PORTCLASS);
+    NewList->m_UntranslatedResourceList = (PCM_RESOURCE_LIST)AllocateItem(PoolType, sizeof(CM_RESOURCE_LIST), TAG_PORTCLASS);
     if (!NewList->m_UntranslatedResourceList)
     {
-        /* No memory */
         delete NewList;
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    /* Copy resource lists */
-    RtlCopyMemory(NewList->m_TranslatedResourceList, ParentList->TranslatedList(), sizeof(CM_RESOURCE_LIST));
-    RtlCopyMemory(NewList->m_UntranslatedResourceList, ParentList->UntranslatedList(), sizeof(CM_RESOURCE_LIST));
+    RtlCopyMemory(NewList->m_TranslatedResourceList, Parent->m_TranslatedResourceList, sizeof(CM_RESOURCE_LIST));
+    RtlCopyMemory(NewList->m_UntranslatedResourceList, Parent->m_UntranslatedResourceList, sizeof(CM_RESOURCE_LIST));
 
-    /* Resource list is empty */
-    NewList->m_UntranslatedResourceList->List[0].PartialResourceList.Count = 0;
+    // mark list as empty
     NewList->m_TranslatedResourceList->List[0].PartialResourceList.Count = 0;
-
-    /* Store members */
+    NewList->m_UntranslatedResourceList->List[0].PartialResourceList.Count = 0;
+    // store members
     NewList->m_OuterUnknown = OuterUnknown;
     NewList->m_PoolType = PoolType;
     NewList->m_Ref = 1;
     NewList->m_NumberOfEntries = 0;
-    NewList->m_MaxEntries = MaximumEntries;
 
-    /* Store result */
     *OutResourceList = (IResourceList*)NewList;
 
-    /* Done */
+    DPRINT("PcNewResourceSublist OutResourceList %p OuterUnknown %p ParentList %p\n", *OutResourceList, OuterUnknown, ParentList);
     return STATUS_SUCCESS;
 }
+

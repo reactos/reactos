@@ -1,5 +1,5 @@
-@ stdcall -private DllInitialize(long)
-@ stdcall -private DllUnload()
+@ stdcall DllInitialize(long)
+@ stdcall DllUnload()
 
 ; Adapters (adapter.c)
 @ stdcall PcAddAdapterDevice(ptr ptr ptr long long)
@@ -41,7 +41,6 @@
 ; Power Management
 @ stdcall PcRegisterAdapterPowerManagement(ptr ptr)
 @ stdcall PcRequestNewPowerState(ptr long)
-@ stdcall PcUnregisterAdapterPowerManagement(ptr)
 
 ; Properties
 @ stdcall PcCompletePendingPropertyRequest(ptr long)

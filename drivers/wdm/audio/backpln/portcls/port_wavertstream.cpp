@@ -8,12 +8,6 @@
 
 #include "private.hpp"
 
-#ifndef YDEBUG
-#define NDEBUG
-#endif
-
-#include <debug.h>
-
 class CPortWaveRTStreamInit : public IPortWaveRTStreamInit
 {
 public:
@@ -167,11 +161,11 @@ CPortWaveRTStreamInit::GetPhysicalPageAddress(
         return RtlConvertUlongToLargeInteger(0);
     }
 
-    Buffer = (PUCHAR)MmGetSystemAddressForMdlSafe(MemoryDescriptorList, LowPagePriority) + (Index * PAGE_SIZE);
+    Buffer = (PVOID)UlongToPtr(PtrToUlong(MmGetSystemAddressForMdlSafe(MemoryDescriptorList, LowPagePriority)) + Index * PAGE_SIZE);
 
     Addr = MmGetPhysicalAddress(Buffer);
     Address->QuadPart = Addr.QuadPart;
-    Result.QuadPart = (ULONG_PTR)Address;
+    Result.QuadPart = (PtrToUlong(Address));
 
     return Result;
 }

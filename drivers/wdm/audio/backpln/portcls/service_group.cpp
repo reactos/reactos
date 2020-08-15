@@ -6,13 +6,8 @@
  * PROGRAMMER:      Johannes Anderwald
  */
 
+
 #include "private.hpp"
-
-#ifndef YDEBUG
-#define NDEBUG
-#endif
-
-#include <debug.h>
 
 VOID
 NTAPI
@@ -96,7 +91,7 @@ CServiceGroup::QueryInterface(
 
     if (RtlStringFromGUID(refiid, &GuidString) == STATUS_SUCCESS)
     {
-        DPRINT1("CServiceGroup::QueryInterface no interface!!! iface %S\n", GuidString.Buffer);
+        DPRINT("CServiceGroup::QueryInterface no interface!!! iface %S\n", GuidString.Buffer);
         RtlFreeUnicodeString(&GuidString);
     }
 
@@ -141,7 +136,7 @@ CServiceGroup::RequestService()
     }
     else
     {
-        // check current irql
+        // check curent irql
         if (KeGetCurrentIrql() > DISPATCH_LEVEL)
         {
             //insert dpc to queue

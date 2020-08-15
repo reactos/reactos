@@ -391,7 +391,7 @@ WdmAudCleanupByMMixer()
 }
 
 MMRESULT
-WdmAudGetMixerCapabilities(
+WdmAudGetMixerCapabilties(
     IN ULONG DeviceId,
     LPMIXERCAPSW Capabilities)
 {
@@ -530,7 +530,7 @@ WdmAudGetCapabilitiesByMMixer(
 
     if (DeviceType == MIXER_DEVICE_TYPE)
     {
-        return WdmAudGetMixerCapabilities(DeviceId, (LPMIXERCAPSW)Capabilities);
+        return WdmAudGetMixerCapabilties(DeviceId, (LPMIXERCAPSW)Capabilities);
     }
     else if (DeviceType == WAVE_OUT_DEVICE_TYPE)
     {
@@ -791,10 +791,10 @@ IoStreamingThread(
     LPVOID lpParameter)
 {
     DWORD Length;
-    //MMRESULT Result;
+    MMRESULT Result;
     LPIO_PACKET Packet = (LPIO_PACKET)lpParameter;
 
-    /*Result = */ SyncOverlappedDeviceIoControl(Packet->hDevice,
+    Result =  SyncOverlappedDeviceIoControl(Packet->hDevice,
                     Packet->IoCtl,
                     NULL,
                     0,
@@ -804,6 +804,7 @@ IoStreamingThread(
 
     Packet->CompletionRoutine(ERROR_SUCCESS, Packet->Header.DataUsed, (LPOVERLAPPED)Packet->Overlap);
 
+    (VOID)Result;
     HeapFree(GetProcessHeap(), 0, Packet);
     return 0;
 }

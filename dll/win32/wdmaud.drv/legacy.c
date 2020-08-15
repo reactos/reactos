@@ -19,7 +19,6 @@
 #include <debug.h>
 #include <mmebuddy_debug.h>
 
-#define KERNEL_DEVICE_NAME      L"\\\\.\\wdmaud"
 
 HANDLE KernelHandle = INVALID_HANDLE_VALUE;
 DWORD OpenCount = 0;
@@ -600,15 +599,11 @@ LegacyCompletionRoutine(
     IN  LPOVERLAPPED lpOverlapped)
 {
     PSOUND_OVERLAPPED Overlap;
-    PWDMAUD_DEVICE_INFO DeviceInfo;
 
     Overlap = (PSOUND_OVERLAPPED)lpOverlapped;
-    DeviceInfo = (PWDMAUD_DEVICE_INFO)Overlap->CompletionContext;
 
     /* Call mmebuddy overlap routine */
-    Overlap->OriginalCompletionRoutine(dwErrorCode, DeviceInfo->Header.DataUsed, lpOverlapped);
-
-    HeapFree(GetProcessHeap(), 0, DeviceInfo);
+    Overlap->OriginalCompletionRoutine(dwErrorCode, Overlap->OriginalBufferSize, lpOverlapped);
 }
 
 MMRESULT
@@ -674,7 +669,7 @@ WdmAudCommitWaveBufferByLegacy(
     }
 
     Overlap->OriginalCompletionRoutine = CompletionRoutine;
-    Overlap->CompletionContext = (PVOID)DeviceInfo;
+    Overlap->OriginalBufferSize = Length;
 
     if (DeviceType == WAVE_OUT_DEVICE_TYPE)
     {
@@ -832,7 +827,7 @@ WdmAudGetWavePositionByLegacy(
     DeviceInfo.DeviceType = DeviceType;
 
     Result = SyncOverlappedDeviceIoControl(KernelHandle,
-                                           IOCTL_OPEN_WDMAUD,
+                                           IOCTL_GETPOS,
                                            (LPVOID) &DeviceInfo,
                                            sizeof(WDMAUD_DEVICE_INFO),
                                            (LPVOID) &DeviceInfo,

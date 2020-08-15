@@ -6,13 +6,8 @@
  * PROGRAMMER:      Johannes Anderwald
  */
 
+
 #include "private.hpp"
-
-#ifndef YDEBUG
-#define NDEBUG
-#endif
-
-#include <debug.h>
 
 extern
 "C"
@@ -63,8 +58,6 @@ CUnregisterPhysicalConnection::QueryInterface(
     IN  REFIID refiid,
     OUT PVOID* Output)
 {
-    UNICODE_STRING GuidString;
-
     if (IsEqualGUIDAligned(refiid, IID_IUnregisterPhysicalConnection) ||
         IsEqualGUIDAligned(refiid, IID_IUnknown))
     {
@@ -72,12 +65,6 @@ CUnregisterPhysicalConnection::QueryInterface(
 
         PUNKNOWN(*Output)->AddRef();
         return STATUS_SUCCESS;
-    }
-
-    if (RtlStringFromGUID(refiid, &GuidString) == STATUS_SUCCESS)
-    {
-        DPRINT1("CUnregisterPhysicalConnection::QueryInterface no interface!!! iface %S\n", GuidString.Buffer);
-        RtlFreeUnicodeString(&GuidString);
     }
 
     return STATUS_UNSUCCESSFUL;

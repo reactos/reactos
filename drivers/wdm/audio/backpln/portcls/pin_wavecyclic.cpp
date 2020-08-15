@@ -8,29 +8,10 @@
 
 #include "private.hpp"
 
-#ifndef YDEBUG
-#define NDEBUG
-#endif
-
-#include <debug.h>
-
 class CPortPinWaveCyclic : public IPortPinWaveCyclic,
                            public IServiceSink
 {
 public:
-    inline
-    PVOID
-    operator new(
-        size_t Size,
-        POOL_TYPE PoolType,
-        ULONG Tag)
-    {
-        PVOID P = ExAllocatePoolWithTag(PoolType, Size, Tag);
-        if (P)
-            RtlZeroMemory(P, Size);
-        return P;
-    }
-
     STDMETHODIMP QueryInterface( REFIID InterfaceId, PVOID* Interface);
 
     STDMETHODIMP_(ULONG) AddRef()
@@ -67,6 +48,7 @@ protected:
     friend NTSTATUS NTAPI PinWaveCyclicAddEndOfStreamEvent(IN PIRP Irp, IN PKSEVENTDATA EventData, IN PKSEVENT_ENTRY EventEntry);
     friend NTSTATUS NTAPI PinWaveCyclicAddLoopedStreamEvent(IN PIRP Irp, IN PKSEVENTDATA  EventData, IN PKSEVENT_ENTRY EventEntry);
     friend VOID CALLBACK PinSetStateWorkerRoutine(IN PDEVICE_OBJECT  DeviceObject, IN PVOID  Context);
+    friend VOID NTAPI PinWaveCyclicIoTimerRoutine(IN PDEVICE_OBJECT DeviceObject, IN PVOID Context);
 
     IPortWaveCyclic * m_Port;
     IPortFilterWaveCyclic * m_Filter;
@@ -88,8 +70,7 @@ protected:
     ULONG m_FrameSize;
     BOOL m_Capture;
 
-    ULONG m_TotalPackets;
-    ULONG m_StopCount;
+    ULONGLONG m_TotalPackets;
     KSAUDIO_POSITION m_Position;
     KSALLOCATOR_FRAMING m_AllocatorFraming;
     PSUBDEVICE_DESCRIPTOR m_Descriptor;
@@ -100,6 +81,12 @@ protected:
     KSRESET m_ResetState;
 
     ULONG m_Delay;
+
+    ULONGLONG m_GlitchCount;
+    ULONGLONG m_GlitchLength;
+
+    LARGE_INTEGER m_LastPacketTime;
+    BOOLEAN m_Started;
 
     LONG m_Ref;
 };
@@ -125,7 +112,7 @@ NTSTATUS NTAPI PinWaveCyclicAllocatorFraming(IN PIRP Irp, IN PKSIDENTIFIER Reque
 NTSTATUS NTAPI PinWaveCyclicAddEndOfStreamEvent(IN PIRP Irp, IN PKSEVENTDATA  EventData, IN PKSEVENT_ENTRY  EventEntry);
 NTSTATUS NTAPI PinWaveCyclicAddLoopedStreamEvent(IN PIRP Irp, IN PKSEVENTDATA  EventData, IN PKSEVENT_ENTRY EventEntry);
 NTSTATUS NTAPI PinWaveCyclicDRMHandler(IN PIRP Irp, IN PKSIDENTIFIER Request, IN OUT PVOID Data);
-
+VOID NTAPI PinWaveCyclicIoTimerRoutine(IN PDEVICE_OBJECT DeviceObject, IN PVOID Context);
 
 DEFINE_KSPROPERTY_CONNECTIONSET(PinWaveCyclicConnectionSet, PinWaveCyclicState, PinWaveCyclicDataFormat, PinWaveCyclicAllocatorFraming);
 DEFINE_KSPROPERTY_AUDIOSET(PinWaveCyclicAudioSet, PinWaveCyclicAudioPosition);
@@ -194,6 +181,7 @@ KSEVENT_SET PinWaveCyclicEventSet[] =
 
 //==================================================================================================================================
 
+
 NTSTATUS
 NTAPI
 CPortPinWaveCyclic::QueryInterface(
@@ -219,6 +207,144 @@ CPortPinWaveCyclic::QueryInterface(
 
     return STATUS_UNSUCCESSFUL;
 }
+
+typedef struct
+{
+    CPortPinWaveCyclic *Pin;
+    KSSTATE NewState;
+    PIO_WORKITEM WorkItem;
+    PIRP Irp;
+
+}SETPIN_CONTEXT, *PSETPIN_CONTEXT;
+
+VOID
+CALLBACK
+PinSetStateWorkerRoutine(
+    IN PDEVICE_OBJECT  DeviceObject,
+    IN PVOID  Context)
+{
+    PSETPIN_CONTEXT PinWorkContext = (PSETPIN_CONTEXT)Context;
+    NTSTATUS Status;
+
+    // try set stream
+    Status = PinWorkContext->Pin->m_Stream->SetState(PinWorkContext->NewState);
+
+    DPRINT1("Setting state %u %x\n", PinWorkContext->NewState, Status);
+    if (NT_SUCCESS(Status))
+    {
+        // store new state
+        PinWorkContext->Pin->m_State = PinWorkContext->NewState;
+
+        if (PinWorkContext->Pin->m_ConnectDetails->Interface.Id == KSINTERFACE_STANDARD_LOOPED_STREAMING && PinWorkContext->Pin->m_State == KSSTATE_STOP)
+        {
+            /* FIXME complete pending irps with successfull state */
+            PinWorkContext->Pin->m_IrpQueue->CancelBuffers();
+            PinWorkContext->Pin->m_Stream->Silence(PinWorkContext->Pin->m_CommonBuffer, PinWorkContext->Pin->m_CommonBufferSize);
+            PinWorkContext->Pin->m_IrpQueue->CancelBuffers();
+            PinWorkContext->Pin->m_Position.PlayOffset = 0;
+            PinWorkContext->Pin->m_Position.WriteOffset = 0;
+            PinWorkContext->Pin->m_GlitchCount = 0;
+            PinWorkContext->Pin->m_GlitchLength = 0;
+
+            // unregister the time out
+            PcUnregisterIoTimeout(GetDeviceObject(PinWorkContext->Pin->m_Port), PinWaveCyclicIoTimerRoutine, (PVOID)PinWorkContext->Pin);
+        }
+        else if (PinWorkContext->Pin->m_ConnectDetails->Interface.Id == KSINTERFACE_STANDARD_STREAMING && PinWorkContext->Pin->m_State == KSSTATE_STOP)
+        {
+            /* FIXME complete pending irps with successfull state */
+            PinWorkContext->Pin->m_IrpQueue->CancelBuffers();
+            PinWorkContext->Pin->m_Stream->Silence(PinWorkContext->Pin->m_CommonBuffer, PinWorkContext->Pin->m_CommonBufferSize);
+            PinWorkContext->Pin->m_IrpQueue->CancelBuffers();
+            PinWorkContext->Pin->m_Position.PlayOffset = 0;
+            PinWorkContext->Pin->m_Position.WriteOffset = 0;
+            PinWorkContext->Pin->m_GlitchCount = 0;
+            PinWorkContext->Pin->m_GlitchLength = 0;
+
+            // unregister the time out
+            PcUnregisterIoTimeout(GetDeviceObject(PinWorkContext->Pin->m_Port), PinWaveCyclicIoTimerRoutine, (PVOID)PinWorkContext->Pin);
+        }
+    }
+
+    // store result
+    if (PinWorkContext->Irp)
+    {
+        PinWorkContext->Irp->IoStatus.Information = sizeof(KSSTATE);
+        PinWorkContext->Irp->IoStatus.Status = Status;
+
+        // complete irp
+        IoCompleteRequest(PinWorkContext->Irp, IO_NO_INCREMENT);
+    }
+
+    // free work item
+    IoFreeWorkItem(PinWorkContext->WorkItem);
+
+    // free work context
+    FreeItem(PinWorkContext, TAG_PORTCLASS);
+
+}
+
+VOID
+NTAPI
+PinWaveCyclicIoTimerRoutine(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PVOID Context)
+{
+    CPortPinWaveCyclic *Pin;
+    //PSETPIN_CONTEXT Ctx;
+    LARGE_INTEGER CurrentTime;
+
+    // cast to pin impl
+    Pin = (CPortPinWaveCyclic*)Context;
+
+    /* query system time */
+    KeQuerySystemTime(&CurrentTime);
+
+    /* check if the connection matches */
+    if (Pin->m_ConnectDetails->Interface.Id == KSINTERFACE_STANDARD_STREAMING && Pin->m_ResetState == KSRESET_END && Pin->m_State != KSSTATE_STOP && Pin->m_Started)
+    {
+        LARGE_INTEGER Diff; 
+
+        Diff.QuadPart = CurrentTime.QuadPart - Pin->m_LastPacketTime.QuadPart;
+
+        if (Diff.QuadPart >= Int32x32To64(3000, 10000))
+        {
+            DPRINT1("AudioThread Hang detected: Last Packet %I64u CurrentTime %I64u Diff %I64u\n", Pin->m_LastPacketTime.QuadPart, CurrentTime.QuadPart, Diff.QuadPart);
+#if 0
+            /* allocate pin context */
+            Ctx = (PSETPIN_CONTEXT)AllocateItem(NonPagedPool, sizeof(SETPIN_CONTEXT), TAG_PORTCLASS);
+
+            if (!Ctx)
+            {
+                /* no memory */
+                return;
+            }
+
+            /* initialize ctx */
+            Ctx->Pin = Pin;
+            if (Pin->m_State == KSSTATE_RUN)
+                Ctx->NewState = KSSTATE_PAUSE;
+            else if (Pin->m_State == KSSTATE_PAUSE)
+                Ctx->NewState = KSSTATE_ACQUIRE;
+            else if (Pin->m_State == KSSTATE_ACQUIRE)
+                Ctx->NewState = KSSTATE_STOP;
+
+            Ctx->WorkItem = IoAllocateWorkItem(DeviceObject);
+            Ctx->Irp = NULL;
+
+            if (!Ctx->WorkItem)
+            {
+                /* no memory */
+                FreeItem(Ctx, TAG_PORTCLASS);
+                return;
+            }
+
+            /* queue the work item */
+            IoQueueWorkItem(Ctx->WorkItem, PinSetStateWorkerRoutine, DelayedWorkQueue, (PVOID)Ctx);
+#endif
+        }
+    }
+}
+
 
 NTSTATUS
 NTAPI
@@ -379,13 +505,13 @@ PinWaveCyclicAudioPosition(
         if (Pin->m_ConnectDetails->Interface.Id == KSINTERFACE_STANDARD_STREAMING)
         {
             RtlMoveMemory(Data, &Pin->m_Position, sizeof(KSAUDIO_POSITION));
-            DPRINT("Play %lu Record %lu\n", Pin->m_Position.PlayOffset, Pin->m_Position.WriteOffset);
+            DPRINT("Play %I64u Record %I64u\n", Pin->m_Position.PlayOffset, Pin->m_Position.WriteOffset);
         }
         else if (Pin->m_ConnectDetails->Interface.Id == KSINTERFACE_STANDARD_LOOPED_STREAMING)
         {
             Position->PlayOffset = Pin->m_Position.PlayOffset;
             Position->WriteOffset = (ULONGLONG)Pin->m_IrpQueue->GetCurrentIrpOffset();
-            DPRINT("Play %lu Write %lu\n", Position->PlayOffset, Position->WriteOffset);
+            DPRINT("Play %I64u Write %I64u\n", Position->PlayOffset, Position->WriteOffset);
         }
 
         Irp->IoStatus.Information = sizeof(KSAUDIO_POSITION);
@@ -395,58 +521,6 @@ PinWaveCyclicAudioPosition(
     // not supported
     return STATUS_NOT_SUPPORTED;
 }
-
-typedef struct
-{
-    CPortPinWaveCyclic *Pin;
-    KSSTATE NewState;
-    PIO_WORKITEM WorkItem;
-    PIRP Irp;
-
-}SETPIN_CONTEXT, *PSETPIN_CONTEXT;
-
-VOID
-CALLBACK
-PinSetStateWorkerRoutine(
-    IN PDEVICE_OBJECT  DeviceObject,
-    IN PVOID  Context)
-{
-    PSETPIN_CONTEXT PinWorkContext = (PSETPIN_CONTEXT)Context;
-    NTSTATUS Status;
-
-    // try set stream
-    Status = PinWorkContext->Pin->m_Stream->SetState(PinWorkContext->NewState);
-
-    DPRINT1("Setting state %u %x\n", PinWorkContext->NewState, Status);
-    if (NT_SUCCESS(Status))
-    {
-        // store new state
-        PinWorkContext->Pin->m_State = PinWorkContext->NewState;
-
-        if (PinWorkContext->Pin->m_ConnectDetails->Interface.Id == KSINTERFACE_STANDARD_LOOPED_STREAMING && PinWorkContext->Pin->m_State == KSSTATE_STOP)
-        {
-            /* FIXME complete pending irps with successful state */
-            PinWorkContext->Pin->m_IrpQueue->CancelBuffers();
-        }
-        //HACK
-        //PinWorkContext->Pin->m_IrpQueue->CancelBuffers();
-    }
-
-    // store result
-    PinWorkContext->Irp->IoStatus.Information = sizeof(KSSTATE);
-    PinWorkContext->Irp->IoStatus.Status = Status;
-
-    // complete irp
-    IoCompleteRequest(PinWorkContext->Irp, IO_NO_INCREMENT);
-
-    // free work item
-    IoFreeWorkItem(PinWorkContext->WorkItem);
-
-    // free work context
-    FreeItem(PinWorkContext, TAG_PORTCLASS);
-
-}
-
 
 NTSTATUS
 NTAPI
@@ -489,20 +563,46 @@ PinWaveCyclicState(
             {
                 // FIXME
                 // complete with successful state
+                DPRINT1("BytesPlayed %I64u, GlitchCount %I64u GlitchLength %I64u\n", Pin->m_Position.PlayOffset, Pin->m_GlitchCount, Pin->m_GlitchLength);
                 Pin->m_Stream->Silence(Pin->m_CommonBuffer, Pin->m_CommonBufferSize);
                 Pin->m_IrpQueue->CancelBuffers();
                 Pin->m_Position.PlayOffset = 0;
                 Pin->m_Position.WriteOffset = 0;
+                Pin->m_GlitchCount = 0;
+                Pin->m_GlitchLength = 0;
+
+
+                // unregister the time out
+                PcUnregisterIoTimeout(GetDeviceObject(Pin->m_Port), PinWaveCyclicIoTimerRoutine, (PVOID)Pin);
             }
             else if (Pin->m_State == KSSTATE_STOP)
             {
+                DPRINT1("BytesPlayed %I64u, GlitchCount %I64u GlitchLength %I64u\n", Pin->m_Position.PlayOffset, Pin->m_GlitchCount, Pin->m_GlitchLength);
                 Pin->m_Stream->Silence(Pin->m_CommonBuffer, Pin->m_CommonBufferSize);
                 Pin->m_IrpQueue->CancelBuffers();
                 Pin->m_Position.PlayOffset = 0;
                 Pin->m_Position.WriteOffset = 0;
+                Pin->m_GlitchCount = 0;
+                Pin->m_GlitchLength = 0;
+
+                // unregister the time out
+                PcUnregisterIoTimeout(GetDeviceObject(Pin->m_Port), PinWaveCyclicIoTimerRoutine, (PVOID)Pin);
             }
             // store result
             Irp->IoStatus.Information = sizeof(KSSTATE);
+
+           if (*State == KSSTATE_RUN)
+           {
+               // register wave hung routine
+               NTSTATUS PcStatus = PcRegisterIoTimeout(GetDeviceObject(Pin->m_Port), PinWaveCyclicIoTimerRoutine, (PVOID)Pin);
+               if (!NT_SUCCESS(PcStatus))
+               {
+                   DPRINT1("Failed to register timer routine with %x\n", PcStatus);
+               }
+
+               // set flag that stream has started for the wave hung routine
+               Pin->m_Started = TRUE;
+           }
         }
         return Status;
     }
@@ -659,7 +759,7 @@ CPortPinWaveCyclic::GeneratePositionEvents(
         // get event entry context
         Context = (PLOOPEDSTREAMING_EVENT_CONTEXT)(EventEntry + 1);
 
-        if (Context->bLoopedStreaming != FALSE)
+        if (Context->bLoopedStreaming == TRUE)
         {
             if (NewOffset > OldOffset)
             {
@@ -720,8 +820,10 @@ CPortPinWaveCyclic::UpdateCommonBuffer(
             Gap = Position - m_CommonBufferOffset;
             if (Gap > BufferLength)
             {
+                // increment glitchcount
+                m_GlitchCount++;
+                m_GlitchLength += BufferLength;
                 // insert silence samples
-                DPRINT("Inserting Silence Buffer Offset %lu GapLength %lu\n", m_CommonBufferOffset, BufferLength);
                 m_Stream->Silence((PUCHAR)m_CommonBuffer + m_CommonBufferOffset, BufferLength);
 
                 m_CommonBufferOffset += BufferLength;
@@ -779,8 +881,11 @@ CPortPinWaveCyclic::UpdateCommonBufferOverlap(
             Gap = m_CommonBufferSize - m_CommonBufferOffset + Position;
             if (Gap > BufferLength)
             {
+                // increment glitchcount
+                m_GlitchCount++;
+                m_GlitchLength += BufferLength;
+
                 // insert silence samples
-                DPRINT("Overlap Inserting Silence Buffer Size %lu Offset %lu Gap %lu Position %lu\n", m_CommonBufferSize, m_CommonBufferOffset, Gap, Position);
                 m_Stream->Silence((PUCHAR)m_CommonBuffer + m_CommonBufferOffset, BufferLength);
 
                 m_CommonBufferOffset += BufferLength;
@@ -841,7 +946,7 @@ CPortPinWaveCyclic::RequestService()
 
     PC_ASSERT_IRQL(DISPATCH_LEVEL);
 
-    if (m_State == KSSTATE_RUN && m_ResetState == KSRESET_END)
+    if (m_State == KSSTATE_RUN)
     {
         m_Stream->GetPosition(&Position);
 
@@ -903,7 +1008,7 @@ CPortPinWaveCyclic::DeviceIoControl(
             Property = (PKSPROPERTY)IoStack->Parameters.DeviceIoControl.Type3InputBuffer;
 
             RtlStringFromGUID(Property->Set, &GuidString);
-            DPRINT("Unhandled property Set |%S| Id %u Flags %x\n", GuidString.Buffer, Property->Id, Property->Flags);
+            DPRINT("Unhandeled property Set |%S| Id %u Flags %x\n", GuidString.Buffer, Property->Id, Property->Flags);
             RtlFreeUnicodeString(&GuidString);
         }
     }
@@ -922,19 +1027,13 @@ CPortPinWaveCyclic::DeviceIoControl(
         /* check for success */
         if (NT_SUCCESS(Status))
         {
-            //determine state of reset request
             if (ResetValue == KSRESET_BEGIN)
             {
-                // start reset process
-                // incoming read/write requests will be rejected
-                m_ResetState = KSRESET_BEGIN;
-
-                // cancel existing buffers
                 m_IrpQueue->CancelBuffers();
+                m_ResetState = KSRESET_BEGIN;
             }
             else if (ResetValue == KSRESET_END)
             {
-                // end of reset process
                 m_ResetState = KSRESET_END;
             }
         }
@@ -957,6 +1056,8 @@ CPortPinWaveCyclic::DeviceIoControl(
              {
                 m_Position.WriteOffset += Data;
                 Status = STATUS_PENDING;
+                /* time stamp last packet */
+                KeQuerySystemTime(&m_LastPacketTime);
              }
          }
          else
@@ -1058,6 +1159,9 @@ CPortPinWaveCyclic::Close(
                 DPRINT("Warning: failed to stop stream with %x\n", Status);
                 PC_ASSERT(0);
             }
+
+            // unregister the time out
+            PcUnregisterIoTimeout(GetDeviceObject(m_Port), PinWaveCyclicIoTimerRoutine, (PVOID)this);
         }
         // set state to stop
         m_State = KSSTATE_STOP;
@@ -1213,7 +1317,7 @@ CPortPinWaveCyclic::Init(
         while(TRUE);
     }
 
-
+/* FIXME: AC'97 on Vbox: Returns code C0000272 (STATUS_NO_MATCH) */
     Status = m_Miniport->NewStream(&m_Stream,
                                    NULL,
                                    NonPagedPool,
@@ -1293,7 +1397,7 @@ CPortPinWaveCyclic::Init(
     Status = m_ServiceGroup->AddMember(PSERVICESINK(this));
     if (!NT_SUCCESS(Status))
     {
-        DPRINT("Failed to add pin to service group\n");
+        DPRINT1("Failed to add pin to service group\n");
         return Status;
     }
 
@@ -1303,7 +1407,7 @@ CPortPinWaveCyclic::Init(
     m_CommonBufferSize = m_DmaChannel->AllocatedBufferSize();
     m_CommonBuffer = m_DmaChannel->SystemAddress();
     m_Capture = Capture;
-    // delay of 10 millisec
+    // delay of 10 milisec
     m_Delay = Int32x32To64(10, -10000);
 
     // sanity checks

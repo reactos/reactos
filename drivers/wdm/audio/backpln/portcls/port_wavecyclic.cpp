@@ -8,12 +8,6 @@
 
 #include "private.hpp"
 
-#ifndef YDEBUG
-#define NDEBUG
-#endif
-
-#include <debug.h>
-
 GUID IID_IDmaChannelSlave;
 
 class CPortWaveCyclic : public IPortWaveCyclic,
@@ -185,7 +179,7 @@ CPortWaveCyclic::QueryInterface(
 
     if (RtlStringFromGUID(refiid, &GuidString) == STATUS_SUCCESS)
     {
-        DPRINT1("IPortWaveCyclic_fnQueryInterface no interface!!! iface %S\n", GuidString.Buffer);
+        DPRINT("IPortWaveCyclic_fnQueryInterface no interface!!! iface %S\n", GuidString.Buffer);
         RtlFreeUnicodeString(&GuidString);
     }
 

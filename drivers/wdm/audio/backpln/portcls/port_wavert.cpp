@@ -8,12 +8,6 @@
 
 #include "private.hpp"
 
-#ifndef YDEBUG
-#define NDEBUG
-#endif
-
-#include <debug.h>
-
 class CPortWaveRT : public IPortWaveRT,
                     public IPortEvents,
                     public ISubdevice
@@ -202,7 +196,7 @@ CPortWaveRT::GetDeviceProperty(
 
     if (!m_bInitialized)
     {
-        DPRINT("IPortWaveRT_fnNewRegistryKey called w/o initialized\n");
+        DPRINT("IPortWaveRT_fnNewRegistryKey called w/o initiazed\n");
         return STATUS_UNSUCCESSFUL;
     }
 

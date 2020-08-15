@@ -6,31 +6,23 @@
  * PROGRAMMER:      Andrew Greenwood
  */
 
+
 #include "private.hpp"
 
-#ifndef YDEBUG
-#define NDEBUG
-#endif
-
-#include <debug.h>
-
-extern
-"C"
-ULONG
-NTAPI
-DllInitialize(ULONG Unknown)
-{
-    return 0;
-}
-
-
 extern
 "C"
 {
-ULONG
-NTAPI
-DllUnload()
-{
-    return 0;
-}
+    ULONG
+        NTAPI
+        DllInitialize(ULONG Unknown)
+    {
+        return 0;
+    }
+
+    ULONG
+        NTAPI
+        DllUnload()
+    {
+        return 0;
+    }
 }

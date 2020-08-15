@@ -6,13 +6,8 @@
  * PROGRAMMER:      Johannes Anderwald
  */
 
+
 #include "private.hpp"
-
-#ifndef YDEBUG
-#define NDEBUG
-#endif
-
-#include <debug.h>
 
 typedef struct
 {
@@ -78,8 +73,6 @@ CInterruptSync::QueryInterface(
     IN  REFIID refiid,
     OUT PVOID* Output)
 {
-    UNICODE_STRING GuidString;
-
     DPRINT("CInterruptSync::QueryInterface: this %p\n", this);
 
     if (IsEqualGUIDAligned(refiid, IID_IInterruptSync) ||
@@ -90,13 +83,7 @@ CInterruptSync::QueryInterface(
         return STATUS_SUCCESS;
     }
 
-
-    if (RtlStringFromGUID(refiid, &GuidString) == STATUS_SUCCESS)
-    {
-        DPRINT1("CInterruptSync::QueryInterface: no interface!!! iface %S\n", GuidString.Buffer);
-        RtlFreeUnicodeString(&GuidString);
-    }
-
+    DPRINT("CInterruptSync::QueryInterface: this %p UNKNOWN interface requested\n", this);
     return STATUS_UNSUCCESSFUL;
 }
 
@@ -169,13 +156,12 @@ IInterruptServiceRoutine(
     PLIST_ENTRY CurEntry;
     PSYNC_ENTRY Entry;
     NTSTATUS Status;
-    BOOL Success, Ret;
+    BOOL Success;
 
     CInterruptSync * This = (CInterruptSync*)ServiceContext;
 
     DPRINT("IInterruptServiceRoutine Mode %u\n", This->m_Mode);
 
-    Ret = FALSE;
     if (This->m_Mode == InterruptSyncModeNormal)
     {
         CurEntry = This->m_ServiceRoutines.Flink;
@@ -183,15 +169,13 @@ IInterruptServiceRoutine(
         {
             Entry = CONTAINING_RECORD(CurEntry, SYNC_ENTRY, ListEntry);
             Status = Entry->SyncRoutine((CInterruptSync*)This, Entry->DynamicContext);
-            if (Status == STATUS_SUCCESS)
+            if (NT_SUCCESS(Status))
             {
-                /* Mark as handled and break on the first success */
-                Ret = TRUE;
-                break;
+                return TRUE;
             }
             CurEntry = CurEntry->Flink;
         }
-        return Ret;
+        return FALSE;
     }
     else if (This->m_Mode == InterruptSyncModeAll)
     {
@@ -199,15 +183,11 @@ IInterruptServiceRoutine(
         while (CurEntry != &This->m_ServiceRoutines)
         {
             Entry = CONTAINING_RECORD(CurEntry, SYNC_ENTRY, ListEntry);
-            Status = Entry->SyncRoutine((CInterruptSync*)This, Entry->DynamicContext);
-            if (Status == STATUS_SUCCESS)
-            {
-                /* Mark as handled but don't break */
-                Ret = TRUE;
-            }
+            Entry->SyncRoutine((CInterruptSync*)This, Entry->DynamicContext);
             CurEntry = CurEntry->Flink;
         }
-        return Ret;
+        DPRINT("Returning TRUE with mode InterruptSyncModeAll\n");
+        return TRUE; //FIXME
     }
     else if (This->m_Mode == InterruptSyncModeRepeat)
     {
@@ -219,21 +199,18 @@ IInterruptServiceRoutine(
             {
                 Entry = CONTAINING_RECORD(CurEntry, SYNC_ENTRY, ListEntry);
                 Status = Entry->SyncRoutine((CInterruptSync*)This, Entry->DynamicContext);
-                if (Status == STATUS_SUCCESS)
-                {
-                    /* Mark as handled if it works at least once */
+                if (NT_SUCCESS(Status))
                     Success = TRUE;
-                    Ret = TRUE;
-                }
                 CurEntry = CurEntry->Flink;
             }
-        } while(Success);
-        return Ret;
+        }while(Success);
+        DPRINT("Returning TRUE with mode InterruptSyncModeRepeat\n");
+        return TRUE; //FIXME
     }
     else
     {
         DPRINT("Unknown mode %u\n", This->m_Mode);
-        return Ret;
+        return FALSE; //FIXME
     }
 }
 

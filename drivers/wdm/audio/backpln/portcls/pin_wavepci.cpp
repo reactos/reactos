@@ -8,12 +8,6 @@
 
 #include "private.hpp"
 
-#ifndef YDEBUG
-#define NDEBUG
-#endif
-
-#include <debug.h>
-
 class CPortPinWavePci : public IPortPinWavePci,
                         public IServiceSink,
                         public IPortWavePciStream
@@ -66,7 +60,6 @@ protected:
 
     ULONG m_TotalPackets;
     KSAUDIO_POSITION m_Position;
-    ULONG m_StopCount;
 
     BOOL m_bUsePrefetch;
     ULONG m_PrefetchOffset;
@@ -507,6 +500,8 @@ CPortPinWavePci::HandleKsProperty(
     //UNICODE_STRING GuidString;
     PIO_STACK_LOCATION IoStack;
 
+    IoStack = IoGetCurrentIrpStackLocation(Irp);
+
     //DPRINT("IPortPinWave_HandleKsProperty entered\n");
 
     IoStack = IoGetCurrentIrpStackLocation(Irp);
@@ -528,7 +523,7 @@ CPortPinWavePci::HandleKsProperty(
         //Property = (PKSPROPERTY)IoStack->Parameters.DeviceIoControl.Type3InputBuffer;
 #if 0
         RtlStringFromGUID(Property->Set, &GuidString);
-        //DPRINT("Unhandled property Set |%S| Id %u Flags %x\n", GuidString.Buffer, Property->Id, Property->Flags);
+        //DPRINT("Unhandeled property Set |%S| Id %u Flags %x\n", GuidString.Buffer, Property->Id, Property->Flags);
         RtlFreeUnicodeString(&GuidString);
 #endif
     }
@@ -563,7 +558,7 @@ CPortPinWavePci::HandleKsStream(
         if (m_Capture)
             m_Position.WriteOffset += Data;
         else
-            m_Position.PlayOffset += Data;
+            m_Position.WriteOffset += Data;
 
         if (bFailed)
         {

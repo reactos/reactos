@@ -8,28 +8,9 @@
 
 #include "private.hpp"
 
-#ifndef YDEBUG
-#define NDEBUG
-#endif
-
-#include <debug.h>
-
 class CDmaChannelInit : public IDmaChannelInit
 {
 public:
-    inline
-    PVOID
-    operator new(
-        size_t Size,
-        POOL_TYPE PoolType,
-        ULONG Tag)
-    {
-        PVOID P = ExAllocatePoolWithTag(PoolType, Size, Tag);
-        if (P)
-            RtlZeroMemory(P, Size);
-        return P;
-    }
-
     STDMETHODIMP QueryInterface( REFIID InterfaceId, PVOID* Interface);
 
     STDMETHODIMP_(ULONG) AddRef()
@@ -170,7 +151,7 @@ CDmaChannelInit::CopyTo(
     DPRINT("CDmaChannelInit_CopyTo: this %p Destination %p Source %p ByteCount %u\n", this, Destination, Source, ByteCount);
     RtlCopyMemory(Destination, Source, ByteCount);
 }
-
+  
 VOID
 NTAPI
 CDmaChannelInit::FreeBuffer()
@@ -213,35 +194,19 @@ CDmaChannelInit::MaximumBufferSize()
     return m_MaximumBufferSize;
 }
 
-#ifdef _MSC_VER
-
-PHYSICAL_ADDRESS
-NTAPI
-CDmaChannelInit::PhysicalAddress()
-{
-    DPRINT("CDmaChannelInit_PhysicalAddress: this %p Virtual %p Physical High %x Low %x%\n", this, m_Buffer, m_Address.HighPart, m_Address.LowPart);
-
-    return m_Address;
-}
-
-#else
-
 PHYSICAL_ADDRESS
 NTAPI
 CDmaChannelInit::PhysicalAddress(
     PPHYSICAL_ADDRESS Address)
 {
-    DPRINT("CDmaChannelInit_PhysicalAddress: this %p Virtual %p Physical High %x Low %x%\n", this, m_Buffer, m_Address.HighPart, m_Address.LowPart);
+    DPRINT("CDmaChannelInit_PhysicalAdress: this %p Virtuell %p Physical High %x Low %x%\n", this, m_Buffer, m_Address.HighPart, m_Address.LowPart);
 
     PHYSICAL_ADDRESS Result;
 
     Address->QuadPart = m_Address.QuadPart;
-    Result.QuadPart = (ULONG_PTR)Address;
+    Result.QuadPart = (PtrToUlong(Address));
     return Result;
 }
-
-
-#endif
 
 VOID
 NTAPI
@@ -384,7 +349,7 @@ CDmaChannelInit::Stop()
     if (!m_DmaStarted)
         return STATUS_SUCCESS;
 
-    m_pAdapter->DmaOperations->FlushAdapterBuffers(m_pAdapter,
+    m_pAdapter->DmaOperations->FlushAdapterBuffers(m_pAdapter, 
                                                        m_Mdl,
                                                        m_MapRegisterBase,
                                                        (PVOID)((ULONG_PTR)m_Mdl->StartVa + m_Mdl->ByteOffset),

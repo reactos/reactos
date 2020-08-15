@@ -182,7 +182,10 @@ Open(
     IN LPWSTR DevicePath,
     OUT PHANDLE hDevice)
 {
-    if (WdmAudOpenSysAudioDevice(DevicePath, hDevice) == STATUS_SUCCESS)
+    UNICODE_STRING Device;
+
+    RtlInitUnicodeString(&Device, DevicePath);
+    if (WdmAudOpenSysAudioDevice(&Device, hDevice) == STATUS_SUCCESS)
         return MM_STATUS_SUCCESS;
     else
         return MM_STATUS_UNSUCCESSFUL;
@@ -785,6 +788,7 @@ CreatePinCallback(
     NTSTATUS Status;
     ULONG FreeIndex;
     PPIN_CREATE_CONTEXT Context = (PPIN_CREATE_CONTEXT)Ctx;
+    PSYSAUDIO_ENTRY DeviceEntry;
 
     /* setup property request */
     InstanceInfo.Property.Set = KSPROPSETID_Sysaudio;
@@ -793,8 +797,11 @@ CreatePinCallback(
     InstanceInfo.Flags = 0;
     InstanceInfo.DeviceNumber = VirtualDeviceId;
 
+    // FIXME currently sysaudio contains all ks devices
+    DeviceEntry = (PSYSAUDIO_ENTRY)CONTAINING_RECORD(Context->DeviceExtension->SysAudioDeviceList.Flink, SYSAUDIO_ENTRY, Entry);
+
     /* attach to virtual device */
-    Status = KsSynchronousIoControlDevice(Context->DeviceExtension->FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&InstanceInfo, sizeof(SYSAUDIO_INSTANCE_INFO), NULL, 0, &BytesReturned);
+    Status = KsSynchronousIoControlDevice(DeviceEntry->FileObject, KernelMode, IOCTL_KS_PROPERTY, (PVOID)&InstanceInfo, sizeof(SYSAUDIO_INSTANCE_INFO), NULL, 0, &BytesReturned);
 
     if (!NT_SUCCESS(Status))
         return MM_STATUS_UNSUCCESSFUL;
@@ -803,7 +810,7 @@ CreatePinCallback(
     FreeIndex = ClosePin(Context->ClientInfo, VirtualDeviceId, PinId, Context->DeviceType);
 
     /* now create the pin */
-    Status = KsCreatePin(Context->DeviceExtension->hSysAudio, PinConnect, DesiredAccess, PinHandle);
+    Status = KsCreatePin(DeviceEntry->hSysAudio, PinConnect, DesiredAccess, PinHandle);
 
     /* check for success */
     if (!NT_SUCCESS(Status))
@@ -817,7 +824,6 @@ CreatePinCallback(
         ZwClose(*PinHandle);
         return MM_STATUS_UNSUCCESSFUL;
     }
-
     return MM_STATUS_SUCCESS;
 }
 

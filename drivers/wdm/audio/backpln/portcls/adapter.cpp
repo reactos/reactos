@@ -11,12 +11,6 @@
 
 #include "private.hpp"
 
-#ifndef YDEBUG
-#define NDEBUG
-#endif
-
-#include <debug.h>
-
 //
 //  This is called from DriverEntry so that PortCls can take care of some
 //  IRPs and map some others to the main KS driver. In most cases this will
