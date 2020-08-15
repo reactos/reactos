@@ -2424,7 +2424,7 @@ LPWSTR WINAPI StrFormatByteSizeW(LONGLONG llBytes, LPWSTR lpszDest, UINT cchMax)
 #endif
   };
 #ifdef __REACTOS__
-  WCHAR szBuff[64], wszFormat[64];
+  WCHAR szBuff[40], wszFormat[40];
 #else
   WCHAR wszAdd[] = {' ','?','B',0};
 #endif
