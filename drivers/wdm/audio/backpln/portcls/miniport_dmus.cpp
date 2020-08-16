@@ -875,7 +875,7 @@ SynchronizedDMusMPUWrite
     ASSERT(context->BytesRead);
 
     PUCHAR  pChar = PUCHAR(context->BufferAddress);
-    NTSTATUS ntStatus,readStatus;
+    NTSTATUS ntStatus, readStatus;
     ntStatus = STATUS_SUCCESS;
     //
     // while we're not there yet, and
