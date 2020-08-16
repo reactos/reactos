@@ -377,20 +377,23 @@ function(spec2def _dllname _spec_file)
         set(__with_relay_arg "--with-tracing")
     endif()
 
-    if(__spec2def_VERSION)
+    if(ENABLE_DLL_EXPORT_VERSIONING)
+        set(__version_arg "--version=0xA00")
+    elseif(__spec2def_VERSION)
         set(__version_arg "--version=0x${__spec2def_VERSION}")
+        set(__roscompat_arg "--no-roscompat")
     endif()
 
     # Generate exports def and C stubs file for the DLL
     add_custom_command(
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${_file}.def ${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c
-        COMMAND native-spec2def -n=${_dllname} -a=${ARCH2} -d=${CMAKE_CURRENT_BINARY_DIR}/${_file}.def -s=${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c ${__with_relay_arg} ${__version_arg} ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file}
+        COMMAND native-spec2def -n=${_dllname} -a=${ARCH2} -d=${CMAKE_CURRENT_BINARY_DIR}/${_file}.def -s=${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c ${__with_relay_arg} ${__roscompat_arg} ${__version_arg} ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file}
         DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file} native-spec2def)
 
     if(__spec2def_ADD_IMPORTLIB)
-        set(_extraflags)
+        set(_extraflags ${__version_arg} ${__roscompat_arg})
         if(__spec2def_NO_PRIVATE_WARNINGS)
-            set(_extraflags --no-private-warnings)
+            set(_extraflags ${_extraflags} --no-private-warnings)
         endif()
 
         generate_import_lib(lib${_file} ${_dllname} ${_spec_file} ${_extraflags})

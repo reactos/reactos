@@ -306,7 +306,7 @@ function(generate_import_lib _libname _dllname _spec_file)
     # Generate the asm stub file and the def file for import library
     add_custom_command(
         OUTPUT ${_asm_stubs_file} ${_def_file}
-        COMMAND native-spec2def --ms -a=${SPEC2DEF_ARCH} --implib -n=${_dllname} -d=${_def_file} -l=${_asm_stubs_file} ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file}
+        COMMAND native-spec2def --ms ${ARGN} -a=${SPEC2DEF_ARCH} --implib -n=${_dllname} -d=${_def_file} -l=${_asm_stubs_file} ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file}
         DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file} native-spec2def)
 
     if(MSVC_IDE)
@@ -367,18 +367,22 @@ function(spec2def _dllname _spec_file)
         set(__with_relay_arg "--with-tracing")
     endif()
 
-    if(__spec2def_VERSION)
+    if(ENABLE_DLL_EXPORT_VERSIONING)
+        set(__version_arg "--version=0xA00")
+    elseif(__spec2def_VERSION)
+        set(__roscompat_arg "--no-roscompat")
         set(__version_arg "--version=0x${__spec2def_VERSION}")
     endif()
 
     # Generate exports def and C stubs file for the DLL
     add_custom_command(
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${_file}.def ${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c
-        COMMAND native-spec2def --ms -a=${SPEC2DEF_ARCH} -n=${_dllname} -d=${CMAKE_CURRENT_BINARY_DIR}/${_file}.def -s=${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c ${__with_relay_arg} ${__version_arg} ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file}
+        COMMAND native-spec2def --ms -a=${SPEC2DEF_ARCH} -n=${_dllname} -d=${CMAKE_CURRENT_BINARY_DIR}/${_file}.def -s=${CMAKE_CURRENT_BINARY_DIR}/${_file}_stubs.c ${__with_relay_arg} ${__roscompat_arg} ${__version_arg} ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file}
         DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file} native-spec2def)
 
     if(__spec2def_ADD_IMPORTLIB)
-        generate_import_lib(lib${_file} ${_dllname} ${_spec_file})
+        set(_extraflags ${__version_arg} ${__roscompat_arg})
+        generate_import_lib(lib${_file} ${_dllname} ${_spec_file} ${_extraflags})
         if(__spec2def_NO_PRIVATE_WARNINGS)
             add_target_property(lib${_file} STATIC_LIBRARY_FLAGS "/ignore:4104")
         endif()
