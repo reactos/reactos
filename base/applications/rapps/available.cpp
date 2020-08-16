@@ -530,7 +530,7 @@ int CAvailableApps::GetSelectedCount()
     return m_SelectedList.GetCount();
 }
 
-CAvailableApplicationInfo* CAvailableApps::FindInfo(const ATL::CStringW& szAppName) const
+CAvailableApplicationInfo* CAvailableApps::FindAppByPkgName(const ATL::CStringW& szPkgName) const
 {
     if (m_InfoList.IsEmpty())
     {
@@ -543,7 +543,7 @@ CAvailableApplicationInfo* CAvailableApps::FindInfo(const ATL::CStringW& szAppNa
     while (CurrentListPosition != NULL)
     {
         info = m_InfoList.GetNext(CurrentListPosition);
-        if (info->m_szName.CompareNoCase(szAppName) == 0)
+        if (info->m_szPkgName.CompareNoCase(szPkgName) == 0)
         {
             return info;
         }
@@ -551,12 +551,12 @@ CAvailableApplicationInfo* CAvailableApps::FindInfo(const ATL::CStringW& szAppNa
     return NULL;
 }
 
-ATL::CSimpleArray<CAvailableApplicationInfo> CAvailableApps::FindInfoList(const ATL::CSimpleArray<ATL::CStringW> &arrAppsNames) const
+ATL::CSimpleArray<CAvailableApplicationInfo> CAvailableApps::FindAppsByPkgNameList(const ATL::CSimpleArray<ATL::CStringW> &PkgNameList) const
 {
     ATL::CSimpleArray<CAvailableApplicationInfo> result;
-    for (INT i = 0; i < arrAppsNames.GetSize(); ++i)
+    for (INT i = 0; i < PkgNameList.GetSize(); ++i)
     {
-        CAvailableApplicationInfo* Info = FindInfo(arrAppsNames[i]);
+        CAvailableApplicationInfo* Info = FindAppByPkgName(PkgNameList[i]);
         if (Info)
         {
             result.Add(*Info);
