@@ -336,7 +336,6 @@ CPortPinWaveRT::DeviceIoControl(
         default:
             return KsDefaultDeviceIoCompletion(DeviceObject, Irp);
     }
-    
 
     Irp->IoStatus.Information = 0;
     Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;

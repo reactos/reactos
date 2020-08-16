@@ -39,6 +39,7 @@ WdmAudInitWorkerRoutine(
         return;
     }
 
+    
     /* get device count */
     DeviceCount = GetSysAudioDeviceCount(DeviceObject);
 

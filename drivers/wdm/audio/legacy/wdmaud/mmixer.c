@@ -824,6 +824,7 @@ CreatePinCallback(
         ZwClose(*PinHandle);
         return MM_STATUS_UNSUCCESSFUL;
     }
+    
     return MM_STATUS_SUCCESS;
 }
 
