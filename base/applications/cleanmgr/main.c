@@ -34,12 +34,12 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	InitControls.dwICC = ICC_TAB_CLASSES | ICC_LISTVIEW_CLASSES;
 	if (!InitCommonControlsEx(&InitControls))
 	{
-		MessageBoxW(NULL, L"InitCommonControlsEx() failed!", L"Ok", MB_OK | MB_ICONSTOP);
+		MessageBoxW(NULL, L"InitCommonControlsEx() failed!", L"Error", MB_OK | MB_ICONSTOP);
 		return FALSE;
 	}	
 	dv.hInst = hInstance;
 	
-	obj = CreateMutexW(NULL, FALSE, L"pMutex");
+	obj = CreateMutexW(NULL, FALSE, L"cleanmgr.exe");
 
 	if (obj)
 	{
