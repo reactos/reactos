@@ -1423,7 +1423,7 @@ UserPostMessage( HWND Wnd,
         if ( Window->state & WNDS_DESTROYED )
         {
             ERR("Attempted to post message to window %p that is being destroyed!\n", Wnd);
-            /* FIXME: Last error code? */
+            EngSetLastError(ERROR_INVALID_WINDOW_HANDLE);
             return FALSE;
         }
 
