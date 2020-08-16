@@ -1005,8 +1005,8 @@ BEGIN
     IDS_NO_ICONS "Файл '%s' не содержит значков.\n\nВыберите значок из списка или укажите другой файл."
     IDS_FILE_NOT_FOUND "Файл '%s' не найден."
     IDS_LINK_INVALID "Элемент '%s', на который ссылается этот ярлык, был изменён или перемещён, поэтому ярлык не будет работать правильно."
-    IDS_COPYTOMENU "Copy to &folder..."
-    IDS_COPYTOTITLE "Select the place where you want to copy '%s'. Then click the Copy button."
-    IDS_COPYITEMS "Copy Items"
-    IDS_COPYBUTTON "Copy"
+    IDS_COPYTOMENU "Копировать в &папку..."
+    IDS_COPYTOTITLE "Выберите расположение, куда вы хотите скопировать '%s', затем нажмите кнопку 'Копировать'."
+    IDS_COPYITEMS "Копирование элементов"
+    IDS_COPYBUTTON "Копировать"
 END
