@@ -43,7 +43,7 @@ public:
     INT m_Category;
     //BOOL m_IsSelected;
     LicenseType m_LicenseType;
-    ATL::CStringW m_szName;
+    ATL::CStringW m_szName; // software's display name.
     ATL::CStringW m_szRegName;
     ATL::CStringW m_szVersion;
     ATL::CStringW m_szLicense;
@@ -54,6 +54,7 @@ public:
     ATL::CSimpleArray<LCID> m_LanguageLCIDs;
     ATL::CSimpleArray<ATL::CStringW> m_szScrnshotLocation;
     ATL::CStringW m_szIconLocation;
+    ATL::CStringW m_szPkgName; // software's package name. 
 
     ULONG m_SizeBytes;
 
