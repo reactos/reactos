@@ -125,8 +125,8 @@ public:
     VOID RemoveAllSelected();
     int GetSelectedCount();
 
-    CAvailableApplicationInfo* FindInfo(const ATL::CStringW& szAppName) const;
-    ATL::CSimpleArray<CAvailableApplicationInfo> FindInfoList(const ATL::CSimpleArray<ATL::CStringW> &arrAppsNames) const;
+    CAvailableApplicationInfo* FindAppByPkgName(const ATL::CStringW& szPkgName) const;
+    ATL::CSimpleArray<CAvailableApplicationInfo> FindAppsByPkgNameList(const ATL::CSimpleArray<ATL::CStringW> &arrAppsNames) const;
     //ATL::CSimpleArray<CAvailableApplicationInfo> GetSelected() const;
 
     const ATL::CStringW& GetFolderPath() const;
