@@ -6,7 +6,6 @@
  * PROGRAMMER:      Johannes Anderwald
  */
 
-
 #include "private.hpp"
 
 extern

@@ -9,7 +9,6 @@
  *                  27 Jan 07   Created
  */
 
-
 #include "private.hpp"
 
 typedef struct

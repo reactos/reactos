@@ -2116,15 +2116,15 @@ KsServiceBusEnumPnpRequest(
             /* complete pending irps */
             KspCompletePendingIrps(DeviceEntry, STATUS_DEVICE_REMOVED);
             
-			/* free device extension */
+            /* free device extension */
             FreeItem(ChildDeviceExtension);
-			
+                        
             /* FIXME this should only be done while installing the drivers */
             /* lets recreate the PDO */
             Status = KspCreatePDO(BusDeviceExtension, DeviceEntry, &DeviceEntry->PDO);
             /* restart enumeration */
             IoInvalidateDeviceRelations(BusDeviceExtension->PhysicalDeviceObject, BusRelations);
-			
+                        
             /* done */
             Status = STATUS_SUCCESS;
         }

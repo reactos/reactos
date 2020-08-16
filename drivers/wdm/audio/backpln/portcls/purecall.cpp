@@ -6,13 +6,12 @@
  * PROGRAMMER:      Johannes Anderwald
  */
 
-
 #include "private.hpp"
 
 
 extern "C" {
   void 
-	  __cxa_pure_virtual()
+          __cxa_pure_virtual()
   {
     // put error handling here
 

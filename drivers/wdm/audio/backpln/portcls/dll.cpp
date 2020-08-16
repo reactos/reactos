@@ -6,7 +6,6 @@
  * PROGRAMMER:      Andrew Greenwood
  */
 
-
 #include "private.hpp"
 
 extern

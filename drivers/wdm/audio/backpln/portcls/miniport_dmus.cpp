@@ -7,7 +7,6 @@
  *
  */
 
-
 #include "private.hpp"
 
 //  + for absolute / - for relative
