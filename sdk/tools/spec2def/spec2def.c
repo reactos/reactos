@@ -67,6 +67,7 @@ int gbMSComp = 0;
 int gbImportLib = 0;
 int gbNotPrivateNoWarn = 0;
 int gbTracing = 0;
+int enableRosCompat = 1;
 int giArch = ARCH_X86;
 char *pszArchString = "i386";
 char *pszArchString2;
@@ -504,7 +505,7 @@ OutputLine_asmstub(FILE *fileDest, EXPORT *pexp)
     {
         /* Does the string already have stdcall decoration? */
         const char *pcAt = ScanToken(pexp->strName.buf, '@');
-        if (pcAt && (pcAt < (pexp->strName.buf + pexp->strName.len)) && 
+        if (pcAt && (pcAt < (pexp->strName.buf + pexp->strName.len)) &&
             (pexp->strName.buf[0] == '_'))
         {
             /* Skip leading underscore and remove trailing decoration */
@@ -737,7 +738,7 @@ OutputLine_def_GCC(FILE *fileDest, EXPORT *pexp)
         {
             /* Is the name in the spec file decorated? */
             const char* pcDeco = ScanToken(pexp->strName.buf, '@');
-            if (pcDeco && 
+            if (pcDeco &&
                 (pexp->strName.len > 1) &&
                 (pcDeco < pexp->strName.buf + pexp->strName.len))
             {
@@ -1430,7 +1431,7 @@ Output_RosCompatDescriptor(FILE *file, EXPORT *pexports, unsigned int cExports)
     qsort(pexports, cExports, sizeof(EXPORT), CompareExports);
 
     fprintf(file, "ULONG __roscompat_export_masks__[] =\n{\n");
-    
+
     for (i = 0; i < cExports; i++)
     {
         if ((pexports[i].uFlags & FL_NONAME) == 0)
@@ -1529,6 +1530,10 @@ int main(int argc, char *argv[])
                 return -1;
             }
             gbTracing = 1;
+        }
+        else if (strcasecmp(argv[i], "--no-roscompat") == 0)
+        {
+            enableRosCompat = 0;
         }
         else if (argv[i][1] == 'a' && argv[i][2] == '=')
         {
@@ -1641,8 +1646,8 @@ int main(int argc, char *argv[])
 
         for (i = 0; i < cExports; i++)
         {
-            //if (pexports[i].bVersionIncluded)
-                 OutputLine_def(file, &pexports[i]);
+            if (pexports[i].bVersionIncluded)
+                OutputLine_def(file, &pexports[i]);
         }
 
         fclose(file);
@@ -1662,11 +1667,12 @@ int main(int argc, char *argv[])
 
         for (i = 0; i < cExports; i++)
         {
-            //if (pexports[i].bVersionIncluded)
+            if (pexports[i].bVersionIncluded)
                 OutputLine_stub(file, &pexports[i]);
         }
 
-        Output_RosCompatDescriptor(file, pexports, cExports);
+        if (enableRosCompat)
+            Output_RosCompatDescriptor(file, pexports, cExports);
 
         fclose(file);
     }
@@ -1685,7 +1691,7 @@ int main(int argc, char *argv[])
 
         for (i = 0; i < cExports; i++)
         {
-            //if (pexports[i].bVersionIncluded)
+            if (pexports[i].bVersionIncluded)
                 OutputLine_asmstub(file, &pexports[i]);
         }
 
