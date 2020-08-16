@@ -9,6 +9,14 @@
 
 #include "wdmaud.h"
 
+#include <winreg.h>
+#include <setupapi.h>
+#include <mmixer.h>
+
+#define NDEBUG
+#include <debug.h>
+#include <mmebuddy_debug.h>
+
 typedef struct
 {
     KSSTREAM_HEADER Header;
@@ -796,6 +804,7 @@ IoStreamingThread(
 
     Packet->CompletionRoutine(ERROR_SUCCESS, Packet->Header.DataUsed, (LPOVERLAPPED)Packet->Overlap);
 
+    (VOID)Result;
     HeapFree(GetProcessHeap(), 0, Packet);
     return 0;
 }

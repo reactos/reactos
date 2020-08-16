@@ -7,19 +7,14 @@
  * PROGRAMMERS: Johannes Anderwald
  */
 
-#include <windows.h>
-#include <ntddsnd.h>
-#include <sndtypes.h>
-#include <mmddk.h>
-#include <mmebuddy.h>
+#include "wdmaud.h"
 
-#include <ks.h>
-#include <ksmedia.h>
 #include <samplerate.h>
 #include <float_cast.h>
+
+#define NDEBUG
 #include <debug.h>
-
-
+#include <mmebuddy_debug.h>
 
 extern HANDLE KernelHandle;
 
