@@ -11,7 +11,6 @@ list(APPEND SOURCE
     wdmaud.c
     mixer.c
     mmixer.c
-    legacy.c
     wdmaud.h)
 
 add_library(wdmaud.drv MODULE
