@@ -1002,7 +1002,7 @@ BEGIN
     IDS_COPYTOTITLE "Select the place where you want to copy '%s'. Then click the Copy button."
     IDS_COPYITEMS "Copy Items"
     IDS_COPYBUTTON "Copy"
-    IDS_MOVETOMENU "Move to &folder..."
+    IDS_MOVETOMENU "Mo&ve to folder..."
     IDS_MOVETOTITLE "Select the place where you want to move '%s' to. Then click the Move button."
     IDS_MOVEITEMS "Move Items"
     IDS_MOVEBUTTON "Move"
