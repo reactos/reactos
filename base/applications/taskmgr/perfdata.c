@@ -572,6 +572,33 @@ BOOL PerfDataGetCommandLine(ULONG Index, LPWSTR lpCommandLine, ULONG nMaxCount)
     /* [A] Search for a string already in cache? If so, use it. If not, check if invalid and free it if so. */
     while (cache && cache->pnext != NULL)
     {
+        EnterCriticalSection(&PerfDataCriticalSection);
+
+        /* Because threading *might* free the cache we're reading from, check if we still exist. */
+        if (cache == NULL)
+        {
+            if (old_cache != NULL)
+            {
+                /* Use the previous cache that wasnt deallocated. */
+                cache = old_cache;
+            }
+            else if (global_cache != NULL)
+            {
+                /* Start at the beginning, because we have no idea where we are. */
+                cache = global_cache;
+            }
+            else
+            {
+                /* Everything is screwed, lets pretend that this never happened. */
+                LeaveCriticalSection(&PerfDataCriticalSection);
+                break;
+            }
+            /* And then loop, but dont cause a dead lock. */
+            LeaveCriticalSection(&PerfDataCriticalSection);
+            continue;
+        }
+
+        /* Now lets actually conduct the cache search. */
         if (cache->idx == Index && cache->pid == PerfDataGetProcessId(cache->idx) && cache->str != NULL)
         {
             /* Found it. Use it, and add some ellipsis at the very end to make it cute */
@@ -579,14 +606,15 @@ BOOL PerfDataGetCommandLine(ULONG Index, LPWSTR lpCommandLine, ULONG nMaxCount)
             wcscpy(lpCommandLine + CMD_LINE_MIN(nMaxCount, cache->len) - wcslen(ellipsis), ellipsis);
             return TRUE;
         }
-        else if (cache->pid != PerfDataGetProcessId(cache->idx)) 
+        else if (cache->pid != PerfDataGetProcessId(cache->idx))
         {
             /* There has been a shift, and this node is no longer valid. Free it and recache it later. */
-            if (old_cache == NULL) 
+            if (old_cache == NULL)
             {
                 /* Unless, of course, its the global_cache. In that case, just shift global_cache to the next node and then free it. */
                 old_cache = global_cache;
-                if (global_cache->pnext == NULL) 
+
+                if (global_cache->pnext == NULL)
                 {
                     /* And we are out of cache. Whoops. */
                     HeapFree(GetProcessHeap(), 0, old_cache);
@@ -596,21 +624,23 @@ BOOL PerfDataGetCommandLine(ULONG Index, LPWSTR lpCommandLine, ULONG nMaxCount)
                 global_cache = global_cache->pnext;
                 cache = global_cache;
                 HeapFree(GetProcessHeap(), 0, old_cache);
-            } 
-            else 
+            }
+            else
             {
                 /* We're in the middle of the cache, so we can safely shift nodes around. */
                 old_cache->pnext = cache->pnext;
                 HeapFree(GetProcessHeap(), 0, cache);
                 cache = old_cache->pnext;
             }
-        } 
-        else 
+        }
+        else
         {
             /* This is not the cache you're looking for. */
             old_cache = cache;
             cache = cache->pnext;
         }
+
+        LeaveCriticalSection(&PerfDataCriticalSection);
     }
 
     /* [B] We don't; let's allocate and load a value from the process mem... and cache it */
