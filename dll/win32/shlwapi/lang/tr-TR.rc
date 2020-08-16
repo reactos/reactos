@@ -26,6 +26,14 @@ STRINGTABLE
     IDS_TIME_INTERVAL_HOURS    " saat"
     IDS_TIME_INTERVAL_MINUTES  " dakîka"
     IDS_TIME_INTERVAL_SECONDS  " sâniye"
+#ifdef __REACTOS__
+    IDS_KB_FORMAT "%s KB"
+    IDS_MB_FORMAT "%s MB"
+    IDS_GB_FORMAT "%s GB"
+    IDS_TB_FORMAT "%s TB"
+    IDS_PB_FORMAT "%s PB"
+    IDS_EB_FORMAT "%s EB"
+#endif
 }
 
 IDD_ERR_DIALOG DIALOGEX 0, 0, 220, 60
