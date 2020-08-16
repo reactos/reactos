@@ -49,7 +49,7 @@ CAPTION "Disk Cleanup"
 STYLE DS_CENTER | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 FONT 8, "MS Sans Serif", 0, 0, 0
 {
-    LTEXT "The Disk Cleanup utility is cleaning up unnecessary files on your Drive kek.", IDC_STATIC_REMOVAL, 30, 9, 176, 25
+    LTEXT "The Disk Cleanup utility is cleaning up unnecessary files on your Drive null.", IDC_STATIC_REMOVAL, 30, 9, 176, 25
     CONTROL "", IDC_PROGRESS_2, "msctls_progress32", WS_BORDER, 7, 46, 141, 7
     LTEXT "", IDC_STATIC_INFO, 42, 65, 92, 9
     LTEXT "Removing:", -1, 8, 65, 33, 9
@@ -61,7 +61,7 @@ IDD_CHOICE_PAGE DIALOGEX 0, 0, 230, 227
 STYLE DS_CONTROL | DS_SHELLFONT | WS_CHILD | WS_CLIPCHILDREN | NOT WS_CAPTION
 FONT 8, "MS Sans Serif", 0, 0, 0
 {
-    LTEXT "You can free up to idkbytes of disk space on whatever_drive:", IDC_STATIC_DLG, 37, 9, 177, 20
+    LTEXT "You can free up to idkbytes of disk space on null:", IDC_STATIC_DLG, 37, 9, 177, 20
     LTEXT "Total amount of disk space you gain:", -1, 7, 104, 129, 9
     CONTROL "", IDC_CHOICE_LIST, "SysListView32", LVS_NOCOLUMNHEADER | LVS_ALIGNLEFT | LVS_AUTOARRANGE | LVS_SINGLESEL | LVS_REPORT | WS_BORDER | WS_TABSTOP, 8, 35, 214, 64
     RTEXT "", IDC_STATIC_SIZE, 174, 105, 48, 8

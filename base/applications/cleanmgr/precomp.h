@@ -95,7 +95,7 @@ BOOL OnCreate(HWND hWnd);
 void MsConfig_OnTabWndSelChange(void);
 LRESULT APIENTRY ThemeHandler(HWND hDlg, NMCUSTOMDRAW* pNmDraw);
 void createImageLists(HWND hList);
-void selItem(int index, HWND hwnd);
+void selItem(HWND hwnd, int index);
 long long checkedItem(int index, HWND hwnd, HWND hList, long long size);
 BOOL EnableDialogTheme(HWND hwnd);
 DWORD WINAPI folderRemoval(LPVOID lpParam);

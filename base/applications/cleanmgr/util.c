@@ -493,7 +493,7 @@ void MsConfig_OnTabWndSelChange(void)
     }
 }
 
-void selItem(int index, HWND hwnd)
+void selItem(HWND hwnd, int index)
 {
 	DIRECTORIES Dir = index;
 	switch (Dir)
@@ -534,17 +534,14 @@ long long checkedItem(int index, HWND hwnd, HWND hList, long long size)
 	switch (Dir)
 	{
 	case TEMPORARY_FILE:
-		switch (ListView_GetCheckState(hList, index))
-		{
-		case TRUE:
+		if (ListView_GetCheckState(hList, index))
 		{
 			bv.tempClean = TRUE;
 			size += tempSize;
 			setTotalSize(size, IDC_STATIC_SIZE, hwnd);
 		}
-		return size;
 
-		case FALSE:
+		else
 		{
 			bv.tempClean = FALSE;
 			size -= tempSize;
@@ -556,20 +553,16 @@ long long checkedItem(int index, HWND hwnd, HWND hList, long long size)
 			setTotalSize(size, IDC_STATIC_SIZE, hwnd);
 		}
 		return size;
-		}
 
 	case RECYCLE_BIN:
-		switch (ListView_GetCheckState(hList, index))
-		{
-		case TRUE:
+		if (ListView_GetCheckState(hList, index))
 		{
 			bv.recycleClean = TRUE;
 			size += recycleSize;
 			setTotalSize(size, IDC_STATIC_SIZE, hwnd);
 		}
-		return size;
 
-		case FALSE:
+		else
 		{
 			bv.recycleClean = FALSE;
 			size -= recycleSize;
@@ -581,20 +574,16 @@ long long checkedItem(int index, HWND hwnd, HWND hList, long long size)
 			setTotalSize(size, IDC_STATIC_SIZE, hwnd);
 		}
 		return size;
-		}
 
 	case DOWNLOADED_FILES:
-		switch (ListView_GetCheckState(hList, index))
-		{
-		case TRUE:
+		if (ListView_GetCheckState(hList, index))
 		{
 			bv.downloadClean = TRUE;
 			size += downloadSize;
 			setTotalSize(size, IDC_STATIC_SIZE, hwnd);
 		}
-		return size;
 
-		case FALSE:
+		else
 		{
 			bv.downloadClean = FALSE;
 			size -= downloadSize;
@@ -606,20 +595,16 @@ long long checkedItem(int index, HWND hwnd, HWND hList, long long size)
 			setTotalSize(size, IDC_STATIC_SIZE, hwnd);
 		}
 		return size;
-		}
 
 	case RAPPS_FILES:
-		switch (ListView_GetCheckState(hList, index))
-		{
-		case TRUE:
+		if (ListView_GetCheckState(hList, index))
 		{
 			bv.rappsClean = TRUE;
 			size += rappsSize;
 			setTotalSize(size, IDC_STATIC_SIZE, hwnd);
 		}
-		return size;
 
-		case FALSE:
+		else
 		{
 			bv.rappsClean = FALSE;
 			size -= rappsSize;
@@ -631,7 +616,6 @@ long long checkedItem(int index, HWND hwnd, HWND hList, long long size)
 			setTotalSize(size, IDC_STATIC_SIZE, hwnd);
 		}
 		return size;
-		}
 
 	default:
 		return 0;

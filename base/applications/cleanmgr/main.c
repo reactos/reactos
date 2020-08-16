@@ -20,8 +20,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
 	UNREFERENCED_PARAMETER(hPrevInstance);
 	UNREFERENCED_PARAMETER(nCmdShow);
-
-	WCHAR err[256] = { 0 };
+	
 	HANDLE obj;
 
 	INT_PTR dialogbuttonSelect;
@@ -35,8 +34,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	InitControls.dwICC = ICC_TAB_CLASSES | ICC_LISTVIEW_CLASSES;
 	if (!InitCommonControlsEx(&InitControls))
 	{
-		FormatMessageW(FORMAT_MESSAGE_FROM_SYSTEM, NULL, GetLastError(), MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), err, 255, NULL);
-		MessageBoxW(NULL, err, L"Ok", MB_OK);
+		MessageBoxW(NULL, L"InitCommonControlsEx() failed!", L"Ok", MB_OK | MB_ICONSTOP);
 		return FALSE;
 	}	
 	dv.hInst = hInstance;

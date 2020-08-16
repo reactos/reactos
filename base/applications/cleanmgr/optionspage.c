@@ -23,6 +23,7 @@ INT_PTR CALLBACK OptionsPageDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPAR
 			ShellExecute(hwnd, NULL, L"control.exe", L"appwiz.cpl", NULL, SW_SHOW);
 			break;
 		}
+		break;
 
 	default:
 		return FALSE;

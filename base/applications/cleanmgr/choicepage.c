@@ -26,18 +26,8 @@ INT_PTR CALLBACK ChoicePageDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARA
 	static HWND hList = 0;
 	
 	LVCOLUMNW lvC;
-	ZeroMemory(&lvC, sizeof(lvC));
-
-	lvC.mask = LVCF_WIDTH | LVCF_SUBITEM | LVCF_FMT;
-	lvC.cx = 158;
-	lvC.cchTextMax = 256;
-	lvC.fmt = LVCFMT_RIGHT;
 	
 	SHELLEXECUTEINFOW seI;
-	ZeroMemory(&seI, sizeof(seI));
-	seI.cbSize = sizeof seI;
-	seI.lpVerb = L"open";
-	seI.nShow = SW_SHOW;
 	
 	viewFolder = wcv.downloadDir;
 
@@ -48,6 +38,12 @@ INT_PTR CALLBACK ChoicePageDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARA
 		hList = GetDlgItem(hwnd, IDC_CHOICE_LIST);
 		SendMessageW(hList, LVM_SETEXTENDEDLISTVIEWSTYLE, 0, LVS_EX_CHECKBOXES | LVS_EX_FULLROWSELECT);
 		
+		ZeroMemory(&lvC, sizeof(lvC));
+		lvC.mask = LVCF_WIDTH | LVCF_SUBITEM | LVCF_FMT;
+		lvC.cx = 158;
+		lvC.cchTextMax = 256;
+		lvC.fmt = LVCFMT_RIGHT;
+		
 		ListView_InsertColumn(hList, 0, &lvC);
 		ListView_InsertColumn(hList, 1, &lvC);
 
@@ -55,11 +51,11 @@ INT_PTR CALLBACK ChoicePageDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARA
 
 		StringCchPrintfW(tempList, _countof(tempList), L"%.02lf %s", setOptimalSize(downloadSize), setOptimalUnit(downloadSize));
 		addItem(hList, L"Downloaded Files", tempList, 1);
-		memset(tempList, 0, sizeof tempList);
+		ZeroMemory(&tempList, sizeof(tempList));
 
 		StringCchPrintfW(tempList, _countof(tempList), L"%.02lf %s", setOptimalSize(rappsSize), setOptimalUnit(rappsSize));
 		addItem(hList, L"Downloaded RAPPS Files", tempList, 0);
-		memset(tempList, 0, sizeof tempList);
+		ZeroMemory(&tempList, sizeof(tempList));
 		
 		if (bv.sysDrive == TRUE)
 		{
@@ -69,11 +65,16 @@ INT_PTR CALLBACK ChoicePageDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARA
 		
 		StringCchPrintfW(tempList, _countof(tempList), L"%.02lf %s", setOptimalSize(recycleSize), setOptimalUnit(recycleSize));
 		addItem(hList, L"Recycle Bin", tempList, 2);
-		memset(tempList, 0, sizeof tempList);
+		ZeroMemory(&tempList, sizeof(tempList));
 
 		LoadStringW(GetModuleHandleW(NULL), IDS_CLEANUP, stringText, _countof(stringText));
 		StringCchPrintfW(totalAmount, _countof(totalAmount), L"%.02lf %s", setOptimalSize(tempSize + recycleSize + downloadSize + rappsSize), setOptimalUnit(tempSize + recycleSize + downloadSize + rappsSize));
 		StringCchPrintfW(fullText, _countof(fullText), stringText, totalAmount, wcv.driveLetter);
+
+		ZeroMemory(&seI, sizeof(seI));
+		seI.cbSize = sizeof seI;
+		seI.lpVerb = L"open";
+		seI.nShow = SW_SHOW;
 
 		SetDlgItemTextW(hwnd, IDC_STATIC_DLG, fullText);
 		ListView_SetCheckState(hList, 1, 1);
@@ -84,7 +85,7 @@ INT_PTR CALLBACK ChoicePageDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARA
 		switch (LOWORD(wParam))
 		{
 		case IDC_VIEW_FILES:
-			if(!PathIsDirectoryW(viewFolder))
+			if (!PathIsDirectoryW(viewFolder))
 			{
 				MessageBoxW(hwnd, L"Folder doesn't exist!", L"Warning", MB_OK | MB_ICONWARNING);
 				break;
@@ -93,9 +94,7 @@ INT_PTR CALLBACK ChoicePageDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARA
 			seI.lpFile = viewFolder;
 			if (!ShellExecuteExW(&seI))
 			{
-				wchar_t err[256] = { 0 };
-				FormatMessageW(FORMAT_MESSAGE_FROM_SYSTEM, NULL, GetLastError(), MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), err, 255, NULL);
-				MessageBoxW(NULL, err, L"Ok", MB_OK);
+				MessageBoxW(NULL, L"ShellExecuteExW() failed!", L"Ok", MB_OK | MB_ICONSTOP);
 			}
 			break;
 		}
@@ -116,7 +115,7 @@ INT_PTR CALLBACK ChoicePageDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARA
 			{
 				if (nmlist->uNewState & LVIS_SELECTED)
 				{
-					selItem(nmlist->iItem, hwnd);
+					selItem(hwnd, nmlist->iItem);
 				}
 
 				else if (nmlist->uNewState & LVIS_STATEIMAGEMASK)

@@ -8,8 +8,8 @@
 #include "resource.h"
 #include "precomp.h"
 
-#define CX_BITMAP 18
-#define CY_BITMAP 18
+#define CX_BITMAP 20
+#define CY_BITMAP 20
 
 DIRSIZE sz;
 DLG_VAR dv;
@@ -26,19 +26,19 @@ BOOL CALLBACK StartDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam
 
 	bv.sysDrive = FALSE;
 	
-	DWORD drives = GetLogicalDriveStringsW(MAX_PATH, LogicalDrives);
-	if (drives == 0)
-	{
-		MessageBoxW(NULL, L"GetLogicalDriveStringsW() failed!", L"Error", MB_OK | MB_ICONERROR);
-		return FALSE;
-	}
-	
+	DWORD drives = 0;
+
 	switch(Message)
     {
 		case WM_INITDIALOG:
-
+			drives = GetLogicalDriveStringsW(MAX_PATH, LogicalDrives);
+			if (drives == 0)
+			{
+				MessageBoxW(NULL, L"GetLogicalDriveStringsW() failed!", L"Error", MB_OK | MB_ICONERROR);
+				return FALSE;
+			}
 			hbmDrive = LoadBitmapW(dv.hInst, MAKEINTRESOURCE(IDB_DRIVE));
-			hbmMask = LoadBitmapW(dv.hInst, MAKEINTRESOURCE(IDB_DRIVE));
+			hbmMask = LoadBitmapW(dv.hInst, MAKEINTRESOURCE(IDB_MASK));
 
 			if (drives <= MAX_PATH)
 			{
@@ -82,11 +82,9 @@ BOOL CALLBACK StartDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam
 
 		case WM_DRAWITEM:
 		{
-			COLORREF clrBackground;
-			COLORREF clrForeground;
+			COLORREF clrBackground, clrForeground;
 			TEXTMETRIC tm;
-			int x;
-			int y;
+			int x, y;
 			size_t cch;
 			HBITMAP hbmIcon;
 			WCHAR achTemp[256] = { 0 };
@@ -168,9 +166,7 @@ BOOL CALLBACK StartDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam
 					EndDialog(hwnd, IDOK);
 					break;
 				case IDCANCEL:
-					DeleteObject(hbmDrive);
-					DeleteObject(hbmMask);
-					EndDialog(hwnd, IDCANCEL);
+					PostMessage(hwnd, WM_CLOSE, 0, 0);
 					break;
             }
 			break;
@@ -212,10 +208,11 @@ BOOL CALLBACK ProgressDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPa
 			switch (LOWORD(wParam))
 			{
 				case IDCANCEL:
-					CloseHandle(threadOBJ);
-					EndDialog(hwnd, IDCANCEL);
+					PostMessage(hwnd, WM_CLOSE, 0, 0);
 					break;
 			}
+			break;
+
 		case WM_CLOSE:
 			CloseHandle(threadOBJ);
 			EndDialog(hwnd, IDCANCEL);
@@ -283,13 +280,7 @@ BOOL CALLBACK ChoiceDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
 					break;
 
 				case IDCANCEL:
-					if(dv.hChoicePage)
-						DestroyWindow(dv.hChoicePage);
-
-					if (dv.hOptionsPage)
-						DestroyWindow(dv.hOptionsPage);
-					
-					EndDialog(hwnd, IDCANCEL);
+					PostMessage(hwnd, WM_CLOSE, 0, 0);
 					break;
 			}
 			break;
@@ -337,8 +328,7 @@ BOOL CALLBACK ProgressEndDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM 
 		switch (LOWORD(wParam))
 		{
 			case IDCANCEL:
-				CloseHandle(threadOBJ);
-				EndDialog(hwnd, 0);
+				PostMessage(hwnd, WM_CLOSE, 0, 0);
 				break;
 		}
 		break;
