@@ -38,6 +38,13 @@ VOID CAvailableApplicationInfo::RetrieveGeneralInfo(AvailableStrings& AvlbString
 {
     m_Parser = new CConfigParser(m_sFileName);
 
+    // TODO: I temporarily use the file name (without suffix) as package name.
+    // It should be better to put this in a field of ini file.
+    // consider write a converter to do this and write a github action for rapps-db to ensure package_name is unique.
+    m_szPkgName = m_sFileName;
+    PathRemoveExtensionW(m_szPkgName.GetBuffer(MAX_PATH));
+    m_szPkgName.ReleaseBuffer();
+
     m_Parser->GetInt(L"Category", m_Category);
 
     if (!GetString(L"Name", m_szName)
