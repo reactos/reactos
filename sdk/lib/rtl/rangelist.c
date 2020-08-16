@@ -499,6 +499,12 @@ RtlGetNextRange(IN OUT PRTL_RANGE_LIST_ITERATOR Iterator,
     if (Iterator->Stamp != RangeList->Stamp)
         return STATUS_INVALID_PARAMETER;
 
+    if (Iterator->Current == NULL)
+    {
+        *Range = NULL;
+        return STATUS_NO_MORE_ENTRIES;
+    }
+
     if (MoveForwards)
     {
         Next = ((PRTL_RANGE_ENTRY)Iterator->Current)->Entry.Flink;
@@ -509,7 +515,11 @@ RtlGetNextRange(IN OUT PRTL_RANGE_LIST_ITERATOR Iterator,
     }
 
     if (Next == Iterator->RangeListHead)
+    {
+        Iterator->Current = NULL;
+        *Range = NULL;
         return STATUS_NO_MORE_ENTRIES;
+    }
 
     Iterator->Current = Next;
     *Range = &((PRTL_RANGE_ENTRY)Next)->Range;
