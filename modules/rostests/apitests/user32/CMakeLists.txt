@@ -46,6 +46,7 @@ list(APPEND SOURCE
     SystemParametersInfo.c
     TrackMouseEvent.c
     WndProc.c
+    WM_GETTEXT.c
     wsprintf.c)
 
 list(APPEND PCH_SKIP_SOURCE
