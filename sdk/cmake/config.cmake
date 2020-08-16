@@ -93,3 +93,6 @@ endif()
 
 set(USE_DUMMY_PSEH FALSE CACHE BOOL
 "Whether to disable PSEH support.")
+
+set(ENABLE_DLL_EXPORT_VERSIONING TRUE CACHE BOOL
+"If false, only NT5.2 APIs will be available, and DLL export versioning will be disabled")
