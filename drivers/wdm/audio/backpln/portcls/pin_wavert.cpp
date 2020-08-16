@@ -301,7 +301,7 @@ CPortPinWaveRT::DeviceIoControl(
 
     switch (IoStack->Parameters.DeviceIoControl.IoControlCode)
     {
-       case IOCTL_KS_PROPERTY:
+        case IOCTL_KS_PROPERTY:
             return HandleKsProperty(Irp);
 
         case IOCTL_KS_ENABLE_EVENT:
@@ -336,7 +336,6 @@ CPortPinWaveRT::DeviceIoControl(
         default:
             return KsDefaultDeviceIoCompletion(DeviceObject, Irp);
     }
-    
 
     Irp->IoStatus.Information = 0;
     Irp->IoStatus.Status = STATUS_UNSUCCESSFUL;

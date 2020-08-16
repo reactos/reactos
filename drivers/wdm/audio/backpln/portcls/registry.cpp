@@ -76,6 +76,7 @@ CRegistryKey::DeleteKey()
 
     if (m_Deleted)
     {
+        // key already deleted
         return STATUS_INVALID_HANDLE;
     }
 

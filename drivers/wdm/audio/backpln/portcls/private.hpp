@@ -442,4 +442,4 @@ typedef struct
     PKSOBJECT_CREATE_ITEM CreateItem;
 }DISPATCH_CONTEXT, *PDISPATCH_CONTEXT;
 
-#endif
+#endif /* PORTCLS_PRIVATE_H */

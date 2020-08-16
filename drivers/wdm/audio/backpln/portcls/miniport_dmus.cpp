@@ -7,7 +7,6 @@
  *
  */
 
-
 #include "private.hpp"
 
 //  + for absolute / - for relative
@@ -876,7 +875,7 @@ SynchronizedDMusMPUWrite
     ASSERT(context->BytesRead);
 
     PUCHAR  pChar = PUCHAR(context->BufferAddress);
-    NTSTATUS ntStatus,readStatus;
+    NTSTATUS ntStatus, readStatus;
     ntStatus = STATUS_SUCCESS;
     //
     // while we're not there yet, and
@@ -1324,7 +1323,7 @@ ProcessResources
         ||  (lengthIO == 0)
         )
     {
-        DPRINT("Unknown ResourceList configuraton");
+        DPRINT("Unknown ResourceList configuration");
         ntStatus = STATUS_DEVICE_CONFIGURATION_ERROR;
     }
 

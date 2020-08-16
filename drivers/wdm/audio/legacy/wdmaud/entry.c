@@ -38,7 +38,7 @@ WdmAudInitWorkerRoutine(
         DPRINT1("WdmAudOpenSysAudioDevices failed with %x\n", Status);
         return;
     }
-
+    
     /* get device count */
     DeviceCount = GetSysAudioDeviceCount(DeviceObject);
 

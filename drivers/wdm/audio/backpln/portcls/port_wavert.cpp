@@ -139,7 +139,7 @@ CPortWaveRT::QueryInterface(
         IsEqualGUIDAligned(refiid, IID_IUnknown))
     {
         *Output = PVOID(PPORTWAVERT(this));
-                PUNKNOWN(*Output)->AddRef();
+		PUNKNOWN(*Output)->AddRef();
         return STATUS_SUCCESS;
     }
     else if (IsEqualGUIDAligned(refiid, IID_IPortEvents))

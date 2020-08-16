@@ -273,11 +273,12 @@ PropertyItemDispatch(
     if (PropertyRequest->PropertyItem && PropertyRequest->PropertyItem->Handler)
     {
         // now call the handler
-        //UNICODE_STRING GuidBuffer;
-        //RtlStringFromGUID(Property->Set, &GuidBuffer);
-        //DPRINT("Calling Node %lu MajorTarget %p MinorTarget %p PropertySet %S PropertyId %lu PropertyFlags %lx InstanceSize %lu ValueSize %lu Handler %p PropertyRequest %p PropertyItemFlags %lx PropertyItemId %lu\n",
-        //        PropertyRequest->Node, PropertyRequest->MajorTarget, PropertyRequest->MinorTarget, GuidBuffer.Buffer, Property->Id, Property->Flags, PropertyRequest->InstanceSize, PropertyRequest->ValueSize,
-        //        PropertyRequest->PropertyItem->Handler, PropertyRequest, PropertyRequest->PropertyItem->Flags, PropertyRequest->PropertyItem->Id);
+        UNICODE_STRING GuidBuffer;
+        RtlStringFromGUID(Property->Set, &GuidBuffer);
+        DPRINT("Calling Node %lu MajorTarget %p MinorTarget %p PropertySet %S PropertyId %lu PropertyFlags %lx InstanceSize %lu ValueSize %lu Handler %p PropertyRequest %p PropertyItemFlags %lx PropertyItemId %lu\n",
+                PropertyRequest->Node, PropertyRequest->MajorTarget, PropertyRequest->MinorTarget, GuidBuffer.Buffer, Property->Id, Property->Flags, PropertyRequest->InstanceSize, PropertyRequest->ValueSize,
+                PropertyRequest->PropertyItem->Handler, PropertyRequest, PropertyRequest->PropertyItem->Flags, PropertyRequest->PropertyItem->Id);
+        RtlFreeUnicodeString(&GuidBuffer);
 
         Status = PropertyRequest->PropertyItem->Handler(PropertyRequest);
         DPRINT("Status %lx ValueSize %lu Information %lu\n", Status, PropertyRequest->ValueSize, Irp->IoStatus.Information);
@@ -313,7 +314,7 @@ PcAddToPropertyTable(
     //UNICODE_STRING GuidBuffer;
 
 ASSERT(PropertyItem->Set);
-	//	RtlStringFromGUID(*PropertyItem->Set, &GuidBuffer);
+        //      RtlStringFromGUID(*PropertyItem->Set, &GuidBuffer);
    // DPRINT1("PcAddToPropertyTable Adding Item Set %S Id %lu Flags %lx\n", GuidBuffer.Buffer, PropertyItem->Id, PropertyItem->Flags);
 
 
@@ -323,7 +324,7 @@ ASSERT(PropertyItem->Set);
     for(Index = 0; Index < SubDeviceDescriptor->FilterPropertySetCount; Index++)
     {
 
-		//RtlStringFromGUID(*SubDeviceDescriptor->FilterPropertySet[Index].Set, &GuidBuffer);
+                //RtlStringFromGUID(*SubDeviceDescriptor->FilterPropertySet[Index].Set, &GuidBuffer);
         //DPRINT1("FilterProperty Set %S PropertyCount %lu\n", GuidBuffer.Buffer, SubDeviceDescriptor->FilterPropertySet[Index].PropertiesCount);
         if (IsEqualGUIDAligned(*SubDeviceDescriptor->FilterPropertySet[Index].Set, *PropertyItem->Set))
         {

@@ -150,7 +150,6 @@ CloseKey(
         return MM_STATUS_UNSUCCESSFUL;
 }
 
-
 PVOID Alloc(ULONG NumBytes)
 {
     return AllocateItem(NonPagedPool, NumBytes);
@@ -824,6 +823,7 @@ CreatePinCallback(
         ZwClose(*PinHandle);
         return MM_STATUS_UNSUCCESSFUL;
     }
+        
     return MM_STATUS_SUCCESS;
 }
 

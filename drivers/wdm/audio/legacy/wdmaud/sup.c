@@ -69,7 +69,7 @@ GetSysAudioDeviceCount(
             return 0;
         }
         Count += DeviceCount;
-		Entry = Entry->Flink;
+                Entry = Entry->Flink;
     }
     return Count;
 }
@@ -413,6 +413,7 @@ GetSysAudioDevicePnpName(
         FreeItem(*Device);
         return Status;
     }
+    
     return Status;
 }
 
