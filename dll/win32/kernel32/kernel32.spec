@@ -32,7 +32,7 @@
 @ stub -version=0x600+ BaseGenerateAppCompatData
 @ stdcall BaseInitAppcompatCacheSupport()
 @ stdcall BaseIsAppcompatInfrastructureDisabled() IsShimInfrastructureDisabled
-@ stdcall -version=0x501-0x502 BaseProcessInitPostImport()
+@ stdcall BaseProcessInitPostImport()
 ;@ stdcall -version=0x502 -arch=x86_64 BaseProcessStart()
 @ stdcall BaseQueryModuleData(str str ptr ptr ptr) ;check
 @ stub -version=0x600+ BaseThreadInitThunk
