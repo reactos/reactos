@@ -22,13 +22,12 @@ BOOL UseCmdParameters(LPWSTR lpCmdLine)
         return FALSE;
     }
 
-    // TODO: use DB filenames as names because they're shorter
-    ATL::CSimpleArray<ATL::CStringW> arrNames;
+    ATL::CSimpleArray<ATL::CStringW> PkgNameList;
     if (!StrCmpIW(argv[1], CMD_KEY_INSTALL))
     {
         for (INT i = 2; i < argc; ++i)
         {
-            arrNames.Add(argv[i]);
+            PkgNameList.Add(argv[i]);
         }
     }
     else
@@ -43,12 +42,12 @@ BOOL UseCmdParameters(LPWSTR lpCmdLine)
         INFCONTEXT Context;
         if (SetupFindFirstLineW(InfHandle, L"RAPPS", L"Install", &Context))
         {
-            WCHAR szName[MAX_PATH];
+            WCHAR szPkgName[MAX_PATH];
             do
             {
-                if (SetupGetStringFieldW(&Context, 1, szName, _countof(szName), NULL))
+                if (SetupGetStringFieldW(&Context, 1, szPkgName, _countof(szPkgName), NULL))
                 {
-                    arrNames.Add(szName);
+                    PkgNameList.Add(szPkgName);
                 }
             } while (SetupFindNextLine(&Context, &Context));
         }
@@ -63,7 +62,7 @@ BOOL UseCmdParameters(LPWSTR lpCmdLine)
     apps.UpdateAppsDB();
     apps.Enum(ENUM_ALL_AVAILABLE, NULL, NULL);
 
-    ATL::CSimpleArray<CAvailableApplicationInfo> arrAppInfo = apps.FindInfoList(arrNames);
+    ATL::CSimpleArray<CAvailableApplicationInfo> arrAppInfo = apps.FindAppsByPkgNameList(PkgNameList);
     if (arrAppInfo.GetSize() > 0)
     {
         DownloadListOfApplications(arrAppInfo, TRUE);
