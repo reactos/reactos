@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS API tests
  * LICENSE:     LGPL-2.1+ (https://spdx.org/licenses/LGPL-2.1+)
  * PURPOSE:     Test for WM_GETTEXT and WM_GETTEXTLENGTH
- * COPYRIGHT:   Copyright 2020 Thomas Faber <katayama.hirofumi.mz@gmail.com>
+ * COPYRIGHT:   Copyright 2020 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
 #include "precomp.h"
