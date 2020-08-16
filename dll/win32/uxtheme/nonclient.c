@@ -277,6 +277,8 @@ ThemeDrawCaptionButton(PDRAW_CONTEXT pcontext,
                        INT iStateId)
 {
     INT iPartId;
+    HMENU SysMenu;
+    UINT MenuState;
     PWND_DATA pwndData = ThemeGetWndData(pcontext->hWnd);
     if (!pwndData)
         return;
@@ -284,6 +286,13 @@ ThemeDrawCaptionButton(PDRAW_CONTEXT pcontext,
     switch(buttonId)
     {
     case CLOSEBUTTON:
+        SysMenu = GetSystemMenu(pcontext->hWnd, FALSE);
+        MenuState = GetMenuState(SysMenu, SC_CLOSE, MF_BYCOMMAND);
+        if (!(pcontext->wi.dwStyle & WS_SYSMENU) || (MenuState & (MF_GRAYED | MF_DISABLED)) || pcontext->wi.dwStyle & CS_NOCLOSE)
+        {
+            iStateId = (pcontext->Active ? BUTTON_DISABLED : BUTTON_INACTIVE_DISABLED);
+        }
+
         iPartId = pcontext->wi.dwExStyle & WS_EX_TOOLWINDOW ? WP_SMALLCLOSEBUTTON : WP_CLOSEBUTTON;
         break;
 
