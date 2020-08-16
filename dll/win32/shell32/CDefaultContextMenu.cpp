@@ -49,6 +49,7 @@ struct _StaticInvokeCommandMap_
     { "properties", FCIDM_SHVIEW_PROPERTIES},
     { "rename", FCIDM_SHVIEW_RENAME},
     { "copyto", FCIDM_SHVIEW_COPYTO },
+    { "moveto", FCIDM_SHVIEW_MOVETO },
 };
 
 class CDefaultContextMenu :
@@ -95,7 +96,7 @@ class CDefaultContextMenu :
         HRESULT DoRename(LPCMINVOKECOMMANDINFO lpcmi);
         HRESULT DoProperties(LPCMINVOKECOMMANDINFO lpcmi);
         HRESULT DoCreateNewFolder(LPCMINVOKECOMMANDINFO lpici);
-        HRESULT DoCopyToFolder(LPCMINVOKECOMMANDINFO lpici);
+        HRESULT DoCopyToMoveToFolder(LPCMINVOKECOMMANDINFO lpici, BOOL bCopy);
         HRESULT InvokeShellExt(LPCMINVOKECOMMANDINFO lpcmi);
         HRESULT InvokeRegVerb(LPCMINVOKECOMMANDINFO lpcmi);
         DWORD BrowserFlagsFromVerb(LPCMINVOKECOMMANDINFO lpcmi, PStaticShellEntry pEntry);
@@ -895,7 +896,7 @@ CDefaultContextMenu::DoProperties(
 }
 
 HRESULT
-CDefaultContextMenu::DoCopyToFolder(LPCMINVOKECOMMANDINFO lpici)
+CDefaultContextMenu::DoCopyToMoveToFolder(LPCMINVOKECOMMANDINFO lpici, BOOL bCopy)
 {
     HRESULT hr = E_FAIL;
     if (!m_pDataObj)
@@ -905,7 +906,12 @@ CDefaultContextMenu::DoCopyToFolder(LPCMINVOKECOMMANDINFO lpici)
     }
 
     CComPtr<IContextMenu> pContextMenu;
-    hr = SHCoCreateInstance(NULL, &CLSID_CopyToMenu, NULL, IID_PPV_ARG(IContextMenu, &pContextMenu));
+    if (bCopy)
+        hr = SHCoCreateInstance(NULL, &CLSID_CopyToMenu, NULL,
+                                IID_PPV_ARG(IContextMenu, &pContextMenu));
+    else
+        hr = SHCoCreateInstance(NULL, &CLSID_MoveToMenu, NULL,
+                                IID_PPV_ARG(IContextMenu, &pContextMenu));
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
@@ -918,7 +924,10 @@ CDefaultContextMenu::DoCopyToFolder(LPCMINVOKECOMMANDINFO lpici)
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
-    lpici->lpVerb = "copyto";
+    if (bCopy)
+        lpici->lpVerb = "copyto";
+    else
+        lpici->lpVerb = "moveto";
 
     return pContextMenu->InvokeCommand(lpici);
 }
@@ -1279,7 +1288,10 @@ CDefaultContextMenu::InvokeCommand(
         Result = DoCreateNewFolder(&LocalInvokeInfo);
         break;
     case FCIDM_SHVIEW_COPYTO:
-        Result = DoCopyToFolder(&LocalInvokeInfo);
+        Result = DoCopyToMoveToFolder(&LocalInvokeInfo, TRUE);
+        break;
+    case FCIDM_SHVIEW_MOVETO:
+        Result = DoCopyToMoveToFolder(&LocalInvokeInfo, FALSE);
         break;
     default:
         Result = E_INVALIDARG;

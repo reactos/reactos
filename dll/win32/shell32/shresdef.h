@@ -301,6 +301,10 @@
 #define IDS_COPYTOTITLE                             30533
 #define IDS_COPYITEMS                               30534
 #define IDS_COPYBUTTON                              30535
+#define IDS_MOVETOMENU                              30536
+#define IDS_MOVETOTITLE                             30537
+#define IDS_MOVEITEMS                               30538
+#define IDS_MOVEBUTTON                              30539
 
 /* Dialogs */
 
@@ -801,6 +805,7 @@
 #define IDM_RENAME (FCIDM_SHVIEW_RENAME - 0x7000)
 #define IDM_PROPERTIES (FCIDM_SHVIEW_PROPERTIES - 0x7000)
 #define IDM_COPYTO (FCIDM_SHVIEW_COPYTO - 0x7000)
+#define IDM_MOVETO (FCIDM_SHVIEW_MOVETO - 0x7000)
 
 #define IDM_DRAGFILE 0xce
 #define IDM_COPYHERE 0x7
@@ -842,3 +847,4 @@
 #define IDR_ACTIVEDESKTOP       157
 #define IDR_SENDTOMENU          158
 #define IDR_COPYTOMENU          159
+#define IDR_MOVETOMENU          160
