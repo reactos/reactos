@@ -92,7 +92,6 @@ PcHandlePropertyWithTable(
     // store device descriptor
     KSPROPERTY_ITEM_IRP_STORAGE(Irp) = (PKSPROPERTY_ITEM)SubDeviceDescriptor;
 
-
     // then try KsPropertyHandler 
     return KsPropertyHandler(Irp, PropertySetCount, PropertySet);
 }
@@ -280,6 +279,7 @@ PropertyItemDispatch(
                 PropertyRequest->Node, PropertyRequest->MajorTarget, PropertyRequest->MinorTarget, GuidBuffer.Buffer, Property->Id, Property->Flags, PropertyRequest->InstanceSize, PropertyRequest->ValueSize,
                 PropertyRequest->PropertyItem->Handler, PropertyRequest, PropertyRequest->PropertyItem->Flags, PropertyRequest->PropertyItem->Id);
         RtlFreeUnicodeString(&GuidBuffer);
+
         Status = PropertyRequest->PropertyItem->Handler(PropertyRequest);
         DPRINT("Status %lx ValueSize %lu Information %lu\n", Status, PropertyRequest->ValueSize, Irp->IoStatus.Information);
         Irp->IoStatus.Information = PropertyRequest->ValueSize;
