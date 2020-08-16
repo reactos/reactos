@@ -32,6 +32,7 @@ typedef struct
     unsigned int uFlags;
     int nNumber;
     unsigned uVersionMask;
+    int bVersionIncluded;
 } EXPORT;
 
 #if 0 // Debug helper function
@@ -48,6 +49,7 @@ PrintExport(EXPORT *pexp)
     fprintf(stderr, "nNumber=%u\n", pexp->nNumber);
     fprintf(stderr, "nStartVersion=%u\n", pexp->nStartVersion);
     fprintf(stderr, "nEndVersion=%u\n", pexp->nEndVersion);
+    fprintf(stderr, "bVersionIncluded=%u\n", pexp->bVersionIncluded);
 }
 #endif
 
@@ -72,6 +74,7 @@ char *pszSourceFileName = NULL;
 char *pszDllName = NULL;
 char *gpszUnderscore = "";
 int gbDebug;
+unsigned guOsVersion = 0x502;
 #define DbgPrint(...) (!gbDebug || fprintf(stderr, __VA_ARGS__))
 
 enum
@@ -501,7 +504,7 @@ OutputLine_asmstub(FILE *fileDest, EXPORT *pexp)
     {
         /* Does the string already have stdcall decoration? */
         const char *pcAt = ScanToken(pexp->strName.buf, '@');
-        if (pcAt && (pcAt < (pexp->strName.buf + pexp->strName.len)) &&
+        if (pcAt && (pcAt < (pexp->strName.buf + pexp->strName.len)) && 
             (pexp->strName.buf[0] == '_'))
         {
             /* Skip leading underscore and remove trailing decoration */
@@ -734,7 +737,7 @@ OutputLine_def_GCC(FILE *fileDest, EXPORT *pexp)
         {
             /* Is the name in the spec file decorated? */
             const char* pcDeco = ScanToken(pexp->strName.buf, '@');
-            if (pcDeco &&
+            if (pcDeco && 
                 (pexp->strName.len > 1) &&
                 (pcDeco < pexp->strName.buf + pexp->strName.len))
             {
@@ -898,6 +901,7 @@ ParseFile(char* pcStart, FILE *fileDest, unsigned *cExports)
         exp.uFlags = 0;
         exp.nNumber++;
         exp.uVersionMask = 0xFFF;
+        exp.bVersionIncluded = 1;
 
         /* Skip white spaces */
         while (*pc == ' ' || *pc == '\t') pc++;
@@ -1023,6 +1027,7 @@ ParseFile(char* pcStart, FILE *fileDest, unsigned *cExports)
                 const char *pcVersionStart = pc + 9;
 
                 /* Default to not included */
+                exp.bVersionIncluded = 0;
                 exp.uVersionMask = 0;
                 pc += 8;
 
@@ -1064,6 +1069,13 @@ ParseFile(char* pcStart, FILE *fileDest, unsigned *cExports)
                     }
 
                     exp.uVersionMask |= GetVersionMask(version, endversion);
+
+                    /* Now compare the range with our version */
+                    if ((guOsVersion >= version) &&
+                        (guOsVersion <= endversion))
+                    {
+                        exp.bVersionIncluded = 1;
+                    }
 
                     /* Skip to next arch or end */
                     while (*pc > ',') pc++;
@@ -1418,7 +1430,7 @@ Output_RosCompatDescriptor(FILE *file, EXPORT *pexports, unsigned int cExports)
     qsort(pexports, cExports, sizeof(EXPORT), CompareExports);
 
     fprintf(file, "ULONG __roscompat_export_masks__[] =\n{\n");
-
+    
     for (i = 0; i < cExports; i++)
     {
         if ((pexports[i].uFlags & FL_NONAME) == 0)
@@ -1492,6 +1504,10 @@ int main(int argc, char *argv[])
         else if (argv[i][1] == 'n' && argv[i][2] == '=')
         {
             pszDllName = argv[i] + 3;
+        }
+        else if (strncasecmp(argv[i], pszVersionOption, strlen(pszVersionOption)) == 0)
+        {
+            guOsVersion = strtoul(argv[i] + strlen(pszVersionOption), NULL, 16);
         }
         else if (strcasecmp(argv[i], "--implib") == 0)
         {
@@ -1625,7 +1641,8 @@ int main(int argc, char *argv[])
 
         for (i = 0; i < cExports; i++)
         {
-             OutputLine_def(file, &pexports[i]);
+            //if (pexports[i].bVersionIncluded)
+                 OutputLine_def(file, &pexports[i]);
         }
 
         fclose(file);
@@ -1645,7 +1662,8 @@ int main(int argc, char *argv[])
 
         for (i = 0; i < cExports; i++)
         {
-            OutputLine_stub(file, &pexports[i]);
+            //if (pexports[i].bVersionIncluded)
+                OutputLine_stub(file, &pexports[i]);
         }
 
         Output_RosCompatDescriptor(file, pexports, cExports);
@@ -1667,7 +1685,8 @@ int main(int argc, char *argv[])
 
         for (i = 0; i < cExports; i++)
         {
-            OutputLine_asmstub(file, &pexports[i]);
+            //if (pexports[i].bVersionIncluded)
+                OutputLine_asmstub(file, &pexports[i]);
         }
 
         fprintf(file, "\n    END\n");
