@@ -999,8 +999,8 @@ BEGIN
     IDS_NO_ICONS "Die Datei '%s' enthält keine Symbole.\n\nWählen Sie ein Symbol aus der Liste oder wählen Sie eine andere Datei."
     IDS_FILE_NOT_FOUND "Die Datei '%s' wurde nicht gefunden."
     IDS_LINK_INVALID "The item '%s' that this shortcut refers to has been changed or moved, so this shortcut will no longer work properly."
-    IDS_COPYTOMENU "Copy to &folder..."
-    IDS_COPYTOTITLE "Select the place where you want to copy '%s'. Then click the Copy button."
-    IDS_COPYITEMS "Copy Items"
-    IDS_COPYBUTTON "Copy"
+    IDS_COPYTOMENU "In &Ordner kopieren..."
+    IDS_COPYTOTITLE "Wählen Sie den Ort, in den '%s' kopiert werden soll. Klicken Sie anschließend auf Kopieren."
+    IDS_COPYITEMS "Elemente kopieren"
+    IDS_COPYBUTTON "Kopieren"
 END
