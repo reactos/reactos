@@ -14,7 +14,7 @@ static const LPCSTR s_szNameA[] =
 };
 static const LPCWSTR s_szNameW[] =
 {
-    L"The WM_GETTEXT ",
+    L"The WM_GETTEXT testcase (Ansi)",
     L"The WM_GETTEXT testcase (Unicode)"
 };
 
@@ -51,7 +51,7 @@ WindowProcA(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         }
         default:
         {
-            return DefWindowProcW(hwnd, uMsg, wParam, lParam);
+            return DefWindowProcA(hwnd, uMsg, wParam, lParam);
         }
     }
     return 0;
@@ -157,10 +157,10 @@ START_TEST(WM_GETTEXT)
         DispatchMessageW(&msg);
     }
 
-    ok_int(s_nLengthA[0], 15);
-    ok_int(s_nLengthA[1], 15);
-    ok_int(s_nLengthA[2], 15);
-    ok_int(s_nLengthA[3], 15);
+    ok_int(s_nLengthA[0], 30);
+    ok_int(s_nLengthA[1], 30);
+    ok_int(s_nLengthA[2], 30);
+    ok_int(s_nLengthA[3], 30);
 
     ok_int(s_nLengthW[0], 33);
     ok_int(s_nLengthW[1], 33);
