@@ -16,7 +16,7 @@ STRINGTABLE
 BEGIN
     //Power related strings
     IDS_PWR_PROPERTIES        "&Energieverwaltungseigenschaften einstellen"
-    IDS_PWR_METER             "Batterieanzeige ö&ffnen"
+    IDS_PWR_METER             "Batterieanzeige öffnen"
     IDS_PWR_RUN               "shell32.dll,Control_RunDLL PowerCfg.cpl"
     IDS_PWR_PERCENT_REMAINING "%u%% verbleibend"
     IDS_PWR_CHARGING          "%u%% und wird geladen"
