@@ -1434,7 +1434,7 @@ Output_RosCompatDescriptor(FILE *file, EXPORT *pexports, unsigned int cExports)
 
     for (i = 0; i < cExports; i++)
     {
-        if ((pexports[i].uFlags & FL_NONAME) == 0)
+        if ((pexports[i].uFlags & FL_NONAME) == 0 && pexports[i].bVersionIncluded)
         {
             fprintf(file,
                     "    0x%08x, // %.*s\n",
