@@ -1005,7 +1005,7 @@ BEGIN
     IDS_FILE_NOT_FOUND "Nie odnaleziono pliku '%s'."
     IDS_LINK_INVALID "Element '%s', do którego odwołuje się ten skrót, został zmieniony lub przeniesiony i dlatego skrót ten nie będzie działał poprawnie."
     IDS_COPYTOMENU "Kopiuj &do folderu..."
-    IDS_COPYTOTITLE "Zaznacz miejsce, w które chcesz skopiować wybrany element: '%s', a następnie kliknij przycisk Kopiuj."
+    IDS_COPYTOTITLE "Zaznacz miejsce, w które chcesz skopiować '%s', a następnie kliknij przycisk Kopiuj."
     IDS_COPYITEMS "Kopiowanie elementów"
     IDS_COPYBUTTON "Kopiuj"
 END
