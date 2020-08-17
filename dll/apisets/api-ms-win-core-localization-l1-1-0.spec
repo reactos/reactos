@@ -5,7 +5,7 @@
 @ stdcall -version=0x601+ FindNLSString() kernel32.FindNLSString
 @ stdcall -version=0x601+ FindNLSStringEx() kernel32.FindNLSStringEx
 @ stdcall -version=0x601+ GetACP() kernel32.GetACP
-@ stdcall -version=0x601+ GetCPFileNameFromRegistry() kernel32.GetCPFileNameFromRegistry
+@ stdcall -version=0x501-0x600 GetCPFileNameFromRegistry() kernel32.GetCPFileNameFromRegistry
 @ stdcall -version=0x601+ GetCPInfo() kernel32.GetCPInfo
 @ stdcall -version=0x601+ GetCPInfoExW() kernel32.GetCPInfoExW
 @ stdcall -version=0x601+ GetCalendarInfoEx() kernel32.GetCalendarInfoEx
