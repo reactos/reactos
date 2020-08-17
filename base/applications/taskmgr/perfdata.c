@@ -568,7 +568,7 @@ BOOL PerfDataGetCommandLine(ULONG Index, LPWSTR lpCommandLine, ULONG nMaxCount)
     /* [A] Search for a string already in cache? If so, use it */
     while (cache && cache->pnext != NULL)
     {
-        if (cache->idx == Index && cache->str != NULL)
+        if (cache->idx == Index)
         {
             /* Found it. Use it, and add some ellipsis at the very end to make it cute */
             wcsncpy(lpCommandLine, cache->str, CMD_LINE_MIN(nMaxCount, cache->len));
