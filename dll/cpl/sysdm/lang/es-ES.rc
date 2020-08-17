@@ -237,9 +237,9 @@ BEGIN
     LISTBOX IDC_PAGEFILELIST, 10, 20, 204, 52, LBS_NOTIFY | LBS_USETABSTOPS
     GROUPBOX "Tamaño del archivo de paginación para la unidad ", IDC_DRIVEGROUP, 10, 70, 204, 104
     LTEXT "Unidad:", IDC_STATIC, 20, 80, 25, 8
-    LTEXT "", IDC_DRIVE, 88, 81, 100, 9
+    LTEXT "%s", IDC_DRIVE, 88, 81, 100, 9
     LTEXT "Espacio disponible:", IDC_STATIC, 20, 92, 80, 9
-    LTEXT "", IDC_SPACEAVAIL, 88, 92, 104, 9
+    LTEXT "%s", IDC_SPACEAVAIL, 88, 92, 104, 9
     LTEXT "&Tamaño inicial (MB):", -1, 22, 118, 72, 9
     LTEXT "Tamaño ma&ximo (MB):", -1, 22, 131, 76, 9
     AUTORADIOBUTTON "T&amaño personalizado", IDC_CUSTOM, 20, 105, 85, 9, WS_GROUP
@@ -250,11 +250,11 @@ BEGIN
     PUSHBUTTON "&Establecer", IDC_SET, 158, 154, 50, 15
     GROUPBOX "Tamaño total del archivo de paginación ", IDC_TOTALGROUP, 10, 177, 204, 46
     LTEXT "Mínimo permitido:", IDC_STATIC, 18, 188, 58, 9
-    LTEXT "", IDC_MINIMUM, 100, 188, 100, 9
+    LTEXT "%s", IDC_MINIMUM, 100, 188, 100, 9
     LTEXT "Recomendado:", IDC_STATIC, 18, 199, 52, 9
-    LTEXT "", IDC_RECOMMENDED, 100, 199, 100, 9
+    LTEXT "%s", IDC_RECOMMENDED, 100, 199, 100, 9
     LTEXT "Asignado actualmente:", IDC_STATIC, 18, 210, 75, 9
-    LTEXT "", IDC_CURRENT, 100, 210, 100, 9
+    LTEXT "%s", IDC_CURRENT, 100, 210, 100, 9
     DEFPUSHBUTTON "Aceptar", IDOK, 114, 230, 48, 15
     PUSHBUTTON "Cancelar", IDCANCEL, 168, 230, 48, 15
 END
