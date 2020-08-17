@@ -923,9 +923,25 @@ ProtocolPnPEvent(
          DbgPrint("Device removal cancelled\n");
          return NDIS_STATUS_SUCCESS;
 
+      case NetEventReconfigure:
+         DbgPrint("NetPnPEvent: Reconfigure\n");
+         return NDIS_STATUS_SUCCESS;
+
+      case NetEventBindList:
+         DbgPrint("Event BindList\n");
+         return NDIS_STATUS_SUCCESS;   
+
+      case NetEventBindsComplete:
+         DbgPrint("Device Bind is complete\n");
+         return NDIS_STATUS_SUCCESS;
+
+      case NetEventPnPCapabilities:
+         DbgPrint("Event PnPCapabilities\n");
+         return NDIS_STATUS_SUCCESS;
+            
       default:
          DbgPrint("Unhandled event type: %ld\n", PnPEvent->NetEvent);
-         return NDIS_STATUS_SUCCESS;
+         return NDIS_STATUS_FAILURE;
     }
 }
 
