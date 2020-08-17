@@ -155,6 +155,26 @@ SaferComputeTokenFromLevel(
     _Inout_opt_ PVOID pReserved)
 {
     FIXME("(%p, %p, %p, 0x%lx, %p) stub\n", LevelHandle, InAccessToken, OutAccessToken, dwFlags, pReserved);
+
+    if (!InAccessToken)
+    {
+        FIXME("(In=NULL): Get thread/process token\n");
+    }
+
+    if (dwFlags == SAFER_TOKEN_NULL_IF_EQUAL)
+    // TODO: if (dwFlags & SAFER_TOKEN_NULL_IF_EQUAL != 0)
+    {
+        // TODO: Compare should eventually be done in other cases too.
+        FIXME("(F=SAFER_TOKEN_NULL_IF_EQUAL): Compare tokens\n");
+
+        // Default to 'not more restrictive' result.
+        *OutAccessToken = NULL;
+        TRACE("(F=SAFER_TOKEN_NULL_IF_EQUAL) returns TRUE\n");
+        return TRUE;
+    }
+
+    *OutAccessToken = (HANDLE)(ULONG_PTR)0xdeadbeefdeadbeefULL; // Extra-safety.
+    TRACE("(...) returns FALSE (Unimplemented)\n");
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return FALSE;
 }
