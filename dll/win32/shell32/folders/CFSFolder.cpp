@@ -968,7 +968,12 @@ HRESULT WINAPI CFSFolder::CompareIDs(LPARAM lParam,
             result = wcsicmp(pExtension1, pExtension2); 
             break;
         case 3: /* Size */
-            result = pData1->u.file.dwFileSize - pData2->u.file.dwFileSize;
+            if (pData1->u.file.dwFileSize > pData2->u.file.dwFileSize)
+                result = 1;
+            else if (pData1->u.file.dwFileSize < pData2->u.file.dwFileSize)
+                result = -1;
+            else
+                result = 0;
             break;
         case 4: /* Modified */
             result = pData1->u.file.uFileDate - pData2->u.file.uFileDate;
