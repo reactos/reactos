@@ -335,6 +335,7 @@ BEGIN
     IDS_WARNMAXIMUMSIZE "Futni një vlerë numerike për madhësinë maksimale e faqeve të dokumentave."
     IDS_WARNINITIALRANGE "Madhësia fillestare e faqes së dokumentit nuk duhet të jetë më e vogël se 2 MB dhe nuk duhet të kalojë hapësirën në dispozicion në driver-in e përzgjedhur."
     IDS_WARNMAXIMUMRANGE "Madhësia maksimale e faqes së dokumenit nuk duhet të jetë më e vogël se madhësia e saj fillestare dhe nuk duhet të kalojë hapësirën në dispozicion në driver-in e përzgjedhur."
+    IDS_PAGEFILE_MB "%u MB"
     IDS_PAGEFILE_NONE "Asnjë"
     IDS_PAGEFILE_SYSTEM "System Managed"
     IDS_INFOREBOOT "You have to reboot the computer in order to apply the changes."

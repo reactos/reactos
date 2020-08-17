@@ -335,6 +335,7 @@ BEGIN
     IDS_WARNMAXIMUMSIZE "Immettere la dimensione massima del file di paging."
     IDS_WARNINITIALRANGE "La dimensione iniziale del file di paging non può essere inferiore a 2 MB e non può superare lo spazio disponibile nell'unità selezionata."
     IDS_WARNMAXIMUMRANGE "La dimensione massima del file di paging non può essere inferiore a quella iniziale e non può superare lo spazio disponibile nell'unità selezionata."
+    IDS_PAGEFILE_MB "%u MB"
     IDS_PAGEFILE_NONE "None"
     IDS_PAGEFILE_SYSTEM "System Managed"
     IDS_INFOREBOOT "You have to reboot the computer in order to apply the changes."

@@ -335,6 +335,7 @@ BEGIN
     IDS_WARNMAXIMUMSIZE "Entrez une valeur numérique pour la taille maximale du fichier d'échange."
     IDS_WARNINITIALRANGE "La taille initiale du fichier d'échange doit être comprise entre 2 Mo et 4096 Mo, et ne peut pas excéder la quantité d'espace libre sur le lecteur que vous avez sélectionné."
     IDS_WARNMAXIMUMRANGE "Entrez une valeur pour la taille maximale du fichier d'échange qui soit supérieure ou égale à la taille initiale du fichier d'échange, et inférieure à 4096 Mo."
+    IDS_PAGEFILE_MB "%u Mo"
     IDS_PAGEFILE_NONE "Aucun"
     IDS_PAGEFILE_SYSTEM "Géré par le système"
     IDS_INFOREBOOT "Vous devez redémarrer le système pour appliquer les changements."
