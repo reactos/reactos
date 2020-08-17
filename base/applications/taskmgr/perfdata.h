@@ -57,10 +57,10 @@ typedef struct _PERFDATA
 
 typedef struct _CMD_LINE_CACHE
 {
-     DWORD idx;
+    DWORD  idx;
     LPWSTR str;
-     ULONG len;
-    struct _CMD_LINE_CACHE* pnext;
+    USHORT cchStr;
+    struct _CMD_LINE_CACHE *pnext;
 } CMD_LINE_CACHE, *PCMD_LINE_CACHE;
 
 BOOL	PerfDataInitialize(void);
@@ -73,11 +73,11 @@ ULONG	PerfDataGetProcessCount(void);
 ULONG	PerfDataGetProcessorUsage(void);
 ULONG	PerfDataGetProcessorSystemUsage(void);
 
-BOOL	PerfDataGetImageName(ULONG Index, LPWSTR lpImageName, ULONG nMaxCount);
+BOOL	PerfDataGetImageName(ULONG Index, LPWSTR lpImageName, size_t nMaxCount);
 ULONG	PerfDataGetProcessId(ULONG Index);
-BOOL	PerfDataGetUserName(ULONG Index, LPWSTR lpUserName, ULONG nMaxCount);
+BOOL	PerfDataGetUserName(ULONG Index, LPWSTR lpUserName, size_t nMaxCount);
 
-BOOL	PerfDataGetCommandLine(ULONG Index, LPWSTR lpCommandLine, ULONG nMaxCount);
+BOOL	PerfDataGetCommandLine(ULONG Index, LPWSTR lpCommandLine, size_t nMaxCount);
 void	PerfDataDeallocCommandLineCache();
 
 ULONG	PerfDataGetSessionId(ULONG Index);

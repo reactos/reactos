@@ -50,8 +50,6 @@ PSID                                       SystemUserSid = NULL;
 
 PCMD_LINE_CACHE global_cache = NULL;
 
-#define CMD_LINE_MIN(a, b) (a < b ? a - sizeof(WCHAR) : b)
-
 typedef struct _SIDTOUSERNAME
 {
     LIST_ENTRY List;
@@ -496,7 +494,7 @@ ULONG PerfDataGetProcessorSystemUsage(void)
     return Result;
 }
 
-BOOL PerfDataGetImageName(ULONG Index, LPWSTR lpImageName, ULONG nMaxCount)
+BOOL PerfDataGetImageName(ULONG Index, LPWSTR lpImageName, size_t nMaxCount)
 {
     BOOL  bSuccessful;
 
@@ -528,7 +526,7 @@ ULONG PerfDataGetProcessId(ULONG Index)
     return ProcessId;
 }
 
-BOOL PerfDataGetUserName(ULONG Index, LPWSTR lpUserName, ULONG nMaxCount)
+BOOL PerfDataGetUserName(ULONG Index, LPWSTR lpUserName, size_t nMaxCount)
 {
     BOOL  bSuccessful;
 
@@ -546,15 +544,16 @@ BOOL PerfDataGetUserName(ULONG Index, LPWSTR lpUserName, ULONG nMaxCount)
     return bSuccessful;
 }
 
-BOOL PerfDataGetCommandLine(ULONG Index, LPWSTR lpCommandLine, ULONG nMaxCount)
+BOOL PerfDataGetCommandLine(ULONG Index, LPWSTR lpCommandLine, size_t nMaxCount)
 {
     static const LPWSTR ellipsis = L"...";
+    static const size_t cchEllipsisP1 = 3 + 1;
 
     PROCESS_BASIC_INFORMATION pbi = {0};
     UNICODE_STRING CommandLineStr = {0};
 
     PVOID ProcessParams = NULL;
-    HANDLE hProcess;
+    HANDLE hProcess = NULL;
     ULONG ProcessId;
 
     NTSTATUS Status;
@@ -570,10 +569,8 @@ BOOL PerfDataGetCommandLine(ULONG Index, LPWSTR lpCommandLine, ULONG nMaxCount)
     {
         if (cache->idx == Index && cache->str != NULL)
         {
-            /* Found it. Use it, and add some ellipsis at the very end to make it cute */
-            wcsncpy(lpCommandLine, cache->str, CMD_LINE_MIN(nMaxCount, cache->len));
-            wcscpy(lpCommandLine + CMD_LINE_MIN(nMaxCount, cache->len) - wcslen(ellipsis), ellipsis);
-            return TRUE;
+            /* Found it. */
+            goto found;
         }
 
         cache = cache->pnext;
@@ -583,7 +580,7 @@ BOOL PerfDataGetCommandLine(ULONG Index, LPWSTR lpCommandLine, ULONG nMaxCount)
     ProcessId = PerfDataGetProcessId(Index);
 
     /* Default blank command line in case things don't work out */
-    wcsncpy(lpCommandLine, L"", nMaxCount);
+    lpCommandLine[0] = UNICODE_NULL;
 
     /* Ask for a handle to the target process so that we can read its memory and query stuff */
     hProcess = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, FALSE, ProcessId);
@@ -638,18 +635,31 @@ BOOL PerfDataGetCommandLine(ULONG Index, LPWSTR lpCommandLine, ULONG nMaxCount)
         goto cleanup;
     }
 
-    /* Add our pointer to the cache... */
+    /* Fill new entry */
     new_entry->idx = Index;
     new_entry->str = new_string;
-    new_entry->len = CommandLineStr.Length;
+    new_entry->cchStr = CommandLineStr.Length / sizeof(WCHAR);
 
+    /* Add it to the cache */
     if (!global_cache)
         global_cache = new_entry;
     else
         cache->pnext = new_entry;
 
-    /* ... and print the buffer for the first time */
-    wcsncpy(lpCommandLine, new_string, CMD_LINE_MIN(nMaxCount, CommandLineStr.Length));
+    cache = new_entry;
+
+found:
+    /* Set command line */
+    if (nMaxCount <= cache->cchStr)
+    {
+        wcsncpy(lpCommandLine, cache->str, nMaxCount - cchEllipsisP1);
+        /* Add an ellipsis, to make it cute */
+        wcscpy(lpCommandLine + nMaxCount - cchEllipsisP1, ellipsis);
+    }
+    else
+    {
+        wcscpy(lpCommandLine, cache->str);
+    }
 
 cleanup:
     if (hProcess) CloseHandle(hProcess);
