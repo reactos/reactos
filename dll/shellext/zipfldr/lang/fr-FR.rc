@@ -27,7 +27,7 @@ CAPTION "Extraction complète"
 FONT 8, "MS Shell Dlg", 400, 0, 0x0
 BEGIN
     LTEXT           "Les fichiers ont été extraits dans le répertoire :",IDC_STATIC,86,12,157,18
-    LTEXT           "Répertoire cible",IDC_DESTDIR,86,36,157,8
+    LTEXT           "%s",IDC_DESTDIR,86,36,157,8
     CONTROL         "Montrer les fichiers extraits",IDC_SHOW_EXTRACTED,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,86,66,154,10
     LTEXT           "Cliquer sur Terminer pour continuer.",IDC_STATIC,86,84,154,8
     CONTROL         IDB_ZIPFLDR,-1,"STATIC",SS_BITMAP | WS_CHILD | WS_VISIBLE,0,0,78,138

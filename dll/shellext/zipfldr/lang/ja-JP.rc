@@ -27,7 +27,7 @@ CAPTION "展開完了"
 FONT 9, "MS UI Gothic", 400, 0, 0x0
 BEGIN
     LTEXT           "ファイルは次のディレクトリに展開されました:",IDC_STATIC,86,12,157,18
-    LTEXT           "ターゲット",IDC_DESTDIR,86,36,157,8
+    LTEXT           "%s",IDC_DESTDIR,86,36,157,8
     CONTROL         "展開したファイルを表示",IDC_SHOW_EXTRACTED,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,86,66,81,10
     LTEXT           "完了をクリックして下さい。",IDC_STATIC,86,84,84,8
     CONTROL         IDB_ZIPFLDR,-1,"STATIC",SS_BITMAP | WS_CHILD | WS_VISIBLE,0,0,78,138
