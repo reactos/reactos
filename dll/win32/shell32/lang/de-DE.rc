@@ -1003,4 +1003,8 @@ BEGIN
     IDS_COPYTOTITLE "Wählen Sie den Ort, in den '%s' kopiert werden soll. Klicken Sie anschließend auf Kopieren."
     IDS_COPYITEMS "Elemente kopieren"
     IDS_COPYBUTTON "Kopieren"
+    IDS_MOVETOMENU "In Ordner &verschieben..."
+    IDS_MOVETOTITLE "Wählen Sie den Ort, in den '%s' verschoben werden soll. Klicken Sie anschließend auf Verschieben."
+    IDS_MOVEITEMS "Elemente verschieben"
+    IDS_MOVEBUTTON "Verschieben"
 END

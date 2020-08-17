@@ -81,7 +81,7 @@
 #include "COpenWithMenu.h"
 #include "CNewMenu.h"
 #include "CSendToMenu.h"
-#include "CCopyToMenu.h"
+#include "CCopyToMoveToMenu.h"
 #include "dialogs/filedefext.h"
 #include "dialogs/drvdefext.h"
 #include "CQueryAssociations.h"

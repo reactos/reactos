@@ -84,6 +84,7 @@ list(APPEND SOURCE
     CNewMenu.cpp
     CSendToMenu.cpp
     CCopyToMenu.cpp
+    CMoveToMenu.cpp
     CShellDispatch.cpp
     CFolder.cpp
     CFolderItems.cpp
