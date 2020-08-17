@@ -335,6 +335,7 @@ QueryPointsFromMemory(IN PDEVICE_EXTENSION DeviceExtension,
     /* Now, ensure output buffer can hold everything */
     Stack = IoGetCurrentIrpStackLocation(Irp);
     MountPoints = (PMOUNTMGR_MOUNT_POINTS)Irp->AssociatedIrp.SystemBuffer;
+    RtlZeroMemory(MountPoints, Stack->Parameters.DeviceIoControl.OutputBufferLength);
 
     /* Ensure we set output to let user reallocate! */
     MountPoints->Size = sizeof(MOUNTMGR_MOUNT_POINTS) + TotalSymLinks * sizeof(MOUNTMGR_MOUNT_POINT) + TotalSize;
