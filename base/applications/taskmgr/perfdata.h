@@ -78,7 +78,7 @@ ULONG	PerfDataGetProcessId(ULONG Index);
 BOOL	PerfDataGetUserName(ULONG Index, LPWSTR lpUserName, ULONG nMaxCount);
 
 BOOL	PerfDataGetCommandLine(ULONG Index, LPWSTR lpCommandLine, ULONG nMaxCount);
-void	PerfDataDeallocCommandLineCache();
+void	PerfDataDeallocCommandLineCache(void);
 
 ULONG	PerfDataGetSessionId(ULONG Index);
 ULONG	PerfDataGetCPUUsage(ULONG Index);

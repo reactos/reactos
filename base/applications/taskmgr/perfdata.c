@@ -566,7 +566,7 @@ BOOL PerfDataGetCommandLine(ULONG Index, LPWSTR lpCommandLine, ULONG nMaxCount)
     PCMD_LINE_CACHE cache = global_cache;
 
     /* [A] Search for a string already in cache? If so, use it */
-    while (cache && cache->pnext != NULL)
+    while (cache)
     {
         if (cache->idx == Index && cache->str != NULL)
         {
@@ -575,6 +575,10 @@ BOOL PerfDataGetCommandLine(ULONG Index, LPWSTR lpCommandLine, ULONG nMaxCount)
             wcscpy(lpCommandLine + CMD_LINE_MIN(nMaxCount, cache->len) - wcslen(ellipsis), ellipsis);
             return TRUE;
         }
+
+        // Keep 'cache' pointing to the last entry, to add after it.
+        if (!cache->pnext)
+            break;
 
         cache = cache->pnext;
     }
@@ -656,17 +660,15 @@ cleanup:
     return TRUE;
 }
 
-void PerfDataDeallocCommandLineCache()
+void PerfDataDeallocCommandLineCache(void)
 {
-    PCMD_LINE_CACHE cache = global_cache;
-    PCMD_LINE_CACHE cache_old;
+    PCMD_LINE_CACHE cache_entry;
 
-    while (cache && cache->pnext != NULL)
+    while (global_cache)
     {
-        cache_old = cache;
-        cache = cache->pnext;
-
-        HeapFree(GetProcessHeap(), 0, cache_old);
+        cache_entry = global_cache;
+        global_cache = global_cache->pnext;
+        HeapFree(GetProcessHeap(), 0, cache_entry);
     }
 }
 
