@@ -1,7 +1,7 @@
 /*
  *      Updated by Saibamen (July, 2015)
  *      Updated by BlackDragonDv (January, 2018)
- *      Updated by Piotr Hetnarowicz <piotrhwz@gmail.com> (May, 2020)
+ *      Updated by Piotr Hetnarowicz <piotrhwz@gmail.com> (August, 2020)
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
@@ -1004,8 +1004,8 @@ BEGIN
     IDS_NO_ICONS "Plik '%s' nie zawiera ikon.\n\nWybierz ikonę z listy lub określ inny plik."
     IDS_FILE_NOT_FOUND "Nie odnaleziono pliku '%s'."
     IDS_LINK_INVALID "Element '%s', do którego odwołuje się ten skrót, został zmieniony lub przeniesiony i dlatego skrót ten nie będzie działał poprawnie."
-    IDS_COPYTOMENU "Copy To &Folder..."
-    IDS_COPYTOTITLE "Select the place where you want to copy '%s'. Then click the Copy button."
-    IDS_COPYITEMS "Copy Items"
-    IDS_COPYBUTTON "Copy"
+    IDS_COPYTOMENU "Kopiuj &do folderu..."
+    IDS_COPYTOTITLE "Zaznacz miejsce, w które chcesz skopiować '%s', a następnie kliknij przycisk Kopiuj."
+    IDS_COPYITEMS "Kopiowanie elementów"
+    IDS_COPYBUTTON "Kopiuj"
 END
