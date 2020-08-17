@@ -238,12 +238,12 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS
 CAPTION "Virtuálna pamäť"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "Jednotka [menovka zväzku]", IDC_STATIC, 10, 5, 96, 9
-    LTEXT "Veľkosť stránkovacieho súboru (v MB)", IDC_STATIC, 112, 5, 96, 9
+    LTEXT "Jednotka [menovka zväzku]", IDC_STATIC, 10, 5, 90, 9
+    LTEXT "Veľkosť stránkovacieho súboru (v MB)", IDC_STATIC, 102, 5, 122, 9
     LISTBOX IDC_PAGEFILELIST, 10, 16, 204, 52, LBS_NOTIFY | LBS_USETABSTOPS
     GROUPBOX "Veľkosť stránkovacieho súboru pre vybranú jednotku", IDC_DRIVEGROUP, 10, 70, 204, 104
     LTEXT "Jednotka:", IDC_STATIC, 20, 80, 30, 8
-    LTEXT "%s", IDC_DRIVE, 88, 81, 100, 9
+    LTEXT "%s", IDC_DRIVE, 88, 80, 100, 9
     LTEXT "Dostupné miesto:", IDC_STATIC, 20, 92, 56, 9
     LTEXT "%s", IDC_SPACEAVAIL, 88, 92, 104, 9
     LTEXT "&Počiatočná veľkosť (v MB):", -1, 22, 118, 88, 9

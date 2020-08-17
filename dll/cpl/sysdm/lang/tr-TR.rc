@@ -232,21 +232,21 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS
 CAPTION "Farazî Bellek"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "Sürücü [Birim Etiketi]", IDC_STATIC, 12, 5, 96, 9
-    LTEXT "Sayfalama Kütüğü Büyüklüğü (MB)", IDC_STATIC, 115, 5, 96, 9
+    LTEXT "Sürücü [Birim Etiketi]", IDC_STATIC, 12, 5, 90, 9
+    LTEXT "Sayfalama Kütüğü Büyüklüğü (MB)", IDC_STATIC, 105, 5, 112, 9
     LISTBOX IDC_PAGEFILELIST, 10, 16, 204, 52, LBS_NOTIFY | LBS_USETABSTOPS
     GROUPBOX "Seçili Sürücü İçin Sayfalama Kütüğü Büyüklüğü", IDC_DRIVEGROUP, 10, 70, 204, 104
     LTEXT "Sürücü:", IDC_STATIC, 20, 80, 20, 8
-    LTEXT "%s", IDC_DRIVE, 88, 81, 100, 9
+    LTEXT "%s", IDC_DRIVE, 88, 80, 100, 9
     LTEXT "Var Olan Boşluk:", IDC_STATIC, 20, 92, 56, 9
     LTEXT "%s", IDC_SPACEAVAIL, 88, 92, 104, 9
-    LTEXT "&Başlangıç Büyüklüğü (MB):", -1, 22, 118, 75, 9
+    LTEXT "&Başlangıç Büyüklüğü (MB):", -1, 22, 118, 88, 9
     LTEXT "&En Çok Büyüklük (MB):", -1, 22, 131, 75, 9
-    AUTORADIOBUTTON "&Husûsî Büyüklük", IDC_CUSTOM, 20, 105, 54, 9, WS_GROUP
+    AUTORADIOBUTTON "&Husûsî Büyüklük", IDC_CUSTOM, 20, 105, 64, 9, WS_GROUP
     AUTORADIOBUTTON "&Dizge Yönetimli Büyüklük", IDC_SYSMANSIZE, 20, 145, 88, 9
-    AUTORADIOBUTTON "&Sayfalama Kütüğü Yok", IDC_NOPAGEFILE, 20, 158, 78, 9
-    EDITTEXT IDC_INITIALSIZE, 100, 114, 44, 13, NOT WS_BORDER, WS_EX_CLIENTEDGE
-    EDITTEXT IDC_MAXSIZE, 100, 129, 44, 13, NOT WS_BORDER, WS_EX_CLIENTEDGE
+    AUTORADIOBUTTON "&Sayfalama Kütüğü Yok", IDC_NOPAGEFILE, 20, 158, 84, 9
+    EDITTEXT IDC_INITIALSIZE, 110, 114, 44, 13, NOT WS_BORDER, WS_EX_CLIENTEDGE
+    EDITTEXT IDC_MAXSIZE, 110, 129, 44, 13, NOT WS_BORDER, WS_EX_CLIENTEDGE
     PUSHBUTTON "&Ayarla", IDC_SET, 158, 154, 50, 15
     GROUPBOX "Tüm Sürücüler İçin Toplam Sayfalama Kütüğü Büyüklüğü", IDC_TOTALGROUP, 10, 177, 204, 46
     LTEXT "En Az İzin Verilen:", IDC_STATIC, 18, 188, 58, 9

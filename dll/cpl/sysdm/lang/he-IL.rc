@@ -237,7 +237,7 @@ BEGIN
     LISTBOX IDC_PAGEFILELIST, 10, 16, 204, 52, LBS_NOTIFY | LBS_USETABSTOPS
     GROUPBOX "גודל קובץ ההחלפה עבור הכנן הנבחר", IDC_DRIVEGROUP, 10, 70, 204, 104
     LTEXT "כונן:", IDC_STATIC, 20, 80, 20, 8
-    LTEXT "%s", IDC_DRIVE, 88, 81, 100, 9
+    LTEXT "%s", IDC_DRIVE, 88, 80, 100, 9
     LTEXT "שטח פנוי:", IDC_STATIC, 20, 92, 56, 9
     LTEXT "%s", IDC_SPACEAVAIL, 88, 92, 104, 9
     LTEXT "גודל התחלתי (MB):", -1, 22, 118, 75, 9

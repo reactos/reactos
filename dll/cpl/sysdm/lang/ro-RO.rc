@@ -244,7 +244,7 @@ BEGIN
     LISTBOX IDC_PAGEFILELIST, 10, 16, 204, 52, LBS_NOTIFY | LBS_USETABSTOPS
     GROUPBOX "Dimensiune fișier de paginare (din selecție)", IDC_DRIVEGROUP, 10, 70, 204, 104
     LTEXT "Unitate:", IDC_STATIC, 20, 80, 50, 8
-    LTEXT "%s", IDC_DRIVE, 88, 81, 100, 9
+    LTEXT "%s", IDC_DRIVE, 88, 80, 100, 9
     LTEXT "Spațiu disponibil:", IDC_STATIC, 20, 92, 56, 9
     LTEXT "%s", IDC_SPACEAVAIL, 88, 92, 104, 9
     LTEXT "Di&mensiunea inițială (Mo):", -1, 32, 118, 87, 9
