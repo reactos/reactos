@@ -508,11 +508,11 @@ OnSelChange(HWND hwndDlg, PVIRTMEM pVirtMem)
     ULARGE_INTEGER FreeDiskSpace;
     UINT i, FreeMemMb, RecoMemMb, PageFileSizeMb;
     INT Index;
-    TCHAR szText[MAX_PATH];    
+    TCHAR szText[MAX_PATH];
     WIN32_FIND_DATAW fdata = {0};
     HANDLE hFind;
     ULARGE_INTEGER pfSize;
-            
+
     Index = (INT)SendDlgItemMessage(hwndDlg,
                                     IDC_PAGEFILELIST,
                                     LB_GETCURSEL,
@@ -593,27 +593,27 @@ OnSelChange(HWND hwndDlg, PVIRTMEM pVirtMem)
 
         /* Set current pagefile size */
         PageFileSizeMb = 0;
-                
+
         for (i = 0; i < pVirtMem->Count; i++)
         {
             _stprintf(szText,
                       _T("%c:\\pagefile.sys"),
                       pVirtMem->Pagefile[i].szDrive[0]);
-        
+
             hFind = FindFirstFileW(szText, &fdata);
-            if (hFind == INVALID_HANDLE_VALUE) 
+            if (hFind == INVALID_HANDLE_VALUE)
             {
-                DPRINT1("Unable to read PageFile size : %ls due to error %d\n", szText,GetLastError());                
+                DPRINT1("Unable to read PageFile size : %ls due to error %d\n", szText,GetLastError());
             }
             else
             {
                 pfSize.LowPart = fdata.nFileSizeLow;
-                pfSize.HighPart = fdata.nFileSizeHigh;                
+                pfSize.HighPart = fdata.nFileSizeHigh;
                 PageFileSizeMb += pfSize.QuadPart / (1024*1024);
                 FindClose(hFind);
             }
         }
-        
+
         _stprintf(szBuffer, _T("%u MB"), PageFileSizeMb);
         SetDlgItemText(hwndDlg, IDC_CURRENT, szBuffer);
     }
