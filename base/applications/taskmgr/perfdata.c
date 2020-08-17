@@ -553,6 +553,8 @@ BOOL PerfDataGetCommandLine(ULONG Index, LPWSTR lpCommandLine, ULONG nMaxCount)
 {
     static const LPWSTR ellipsis = L"...";
 
+    BOOL bSuccessful = FALSE;
+
     PROCESS_BASIC_INFORMATION pbi = {0};
     UNICODE_STRING CommandLineStr = {0};
 
@@ -686,9 +688,11 @@ BOOL PerfDataGetCommandLine(ULONG Index, LPWSTR lpCommandLine, ULONG nMaxCount)
     /* ... and print the buffer for the first time */
     wcsncpy(lpCommandLine, new_string, CMD_LINE_MIN(nMaxCount, CommandLineStr.Length));
 
+    bSuccessful = TRUE;
+
 cleanup:
     if (hProcess) CloseHandle(hProcess);
-    return TRUE;
+    return bSuccessful;
 }
 
 void PerfDataDeallocCommandLineCache()
