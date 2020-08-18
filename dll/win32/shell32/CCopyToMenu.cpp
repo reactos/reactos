@@ -84,7 +84,7 @@ WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                             GetDlgItemTextW(hwnd, IDC_BROWSE_FOR_FOLDER_FOLDER_TEXT, szPath, _countof(szPath));
                             StrTrimW(szPath, L" \t");
 
-                            // update selection if valid
+                            // update OK button if valid
                             this_->m_bInSettingText = TRUE;
                             if (!PathIsRelative(szPath) && PathIsDirectoryW(szPath))
                             {
@@ -99,6 +99,7 @@ WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                             return 0;
                         }
 
+                        // reset flag
                         this_->m_bInSettingText = FALSE;
                     }
                     break;
