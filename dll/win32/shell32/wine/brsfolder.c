@@ -1031,6 +1031,14 @@ static BOOL BrsFolder_OnSetExpanded(browse_info *info, LPVOID selection,
         if (FAILED(hr)) 
             goto done;
     }
+#ifdef __REACTOS__
+    if (_ILIsDesktop(pidlSelection))
+    {
+        item.hItem = TVI_ROOT;
+        bResult = TRUE;
+        goto done;
+    }
+#endif
 
     /* Move pidlCurrent behind the SHITEMIDs in pidlSelection, which are the root of
      * the sub-tree currently displayed. */
