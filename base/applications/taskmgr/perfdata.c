@@ -5,7 +5,6 @@
  *
  *  Copyright (C) 1999 - 2001  Brian Palmer                <brianp@reactos.org>
  *  Copyright (C)        2014  Ismael Ferreras Morezuelas  <swyterzone+ros@gmail.com>
- *  Copyright (C)        2020  Aidan Case                  <aidanzcase@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -23,8 +22,6 @@
  */
 
 #include "precomp.h"
-#include "perfdata.h"
-#include "winbase.h"
 
 #define WIN32_LEAN_AND_MEAN
 #include <aclapi.h>
@@ -567,50 +564,19 @@ BOOL PerfDataGetCommandLine(ULONG Index, LPWSTR lpCommandLine, ULONG nMaxCount)
     LPWSTR new_string;
 
     PCMD_LINE_CACHE cache = global_cache;
-    PCMD_LINE_CACHE old_cache = NULL;
 
-    /* [A] Search for a string already in cache? If so, use it. If not, check if invalid and free it if so. */
+    /* [A] Search for a string already in cache? If so, use it */
     while (cache && cache->pnext != NULL)
     {
-        if (cache->idx == Index && cache->pid == PerfDataGetProcessId(cache->idx) && cache->str != NULL)
+        if (cache->idx == Index && cache->str != NULL)
         {
             /* Found it. Use it, and add some ellipsis at the very end to make it cute */
             wcsncpy(lpCommandLine, cache->str, CMD_LINE_MIN(nMaxCount, cache->len));
             wcscpy(lpCommandLine + CMD_LINE_MIN(nMaxCount, cache->len) - wcslen(ellipsis), ellipsis);
             return TRUE;
         }
-        else if (cache->pid != PerfDataGetProcessId(cache->idx)) 
-        {
-            /* There has been a shift, and this node is no longer valid. Free it and recache it later. */
-            if (old_cache == NULL) 
-            {
-                /* Unless, of course, its the global_cache. In that case, just shift global_cache to the next node and then free it. */
-                old_cache = global_cache;
-                if (global_cache->pnext == NULL) 
-                {
-                    /* And we are out of cache. Whoops. */
-                    HeapFree(GetProcessHeap(), 0, old_cache);
-                    global_cache = NULL;
-                    break;
-                }
-                global_cache = global_cache->pnext;
-                cache = global_cache;
-                HeapFree(GetProcessHeap(), 0, old_cache);
-            } 
-            else 
-            {
-                /* We're in the middle of the cache, so we can safely shift nodes around. */
-                old_cache->pnext = cache->pnext;
-                HeapFree(GetProcessHeap(), 0, cache);
-                cache = old_cache->pnext;
-            }
-        } 
-        else 
-        {
-            /* This is not the cache you're looking for. */
-            old_cache = cache;
-            cache = cache->pnext;
-        }
+
+        cache = cache->pnext;
     }
 
     /* [B] We don't; let's allocate and load a value from the process mem... and cache it */
@@ -676,7 +642,6 @@ BOOL PerfDataGetCommandLine(ULONG Index, LPWSTR lpCommandLine, ULONG nMaxCount)
     new_entry->idx = Index;
     new_entry->str = new_string;
     new_entry->len = CommandLineStr.Length;
-    new_entry->pid = ProcessId;
 
     if (!global_cache)
         global_cache = new_entry;
