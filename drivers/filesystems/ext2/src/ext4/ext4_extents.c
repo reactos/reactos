@@ -2178,7 +2178,7 @@ fix_extent_len:
 #ifndef __REACTOS__
 static int inline
 #else
-inline int
+static inline int
 #endif
 ext4_ext_more_to_rm(struct ext4_ext_path *path)
 {

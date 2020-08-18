@@ -120,6 +120,9 @@ DECLARE_CONST_ANSI_STRING(NfsV3Attributes, "NfsV3Attributes");
 DECLARE_CONST_ANSI_STRING(NfsSymlinkTargetName, "NfsSymlinkTargetName");
 DECLARE_CONST_ANSI_STRING(NfsActOnLink, "NfsActOnLink");
 
+#ifdef __REACTOS__
+static
+#endif
 INLINE BOOL AnsiStrEq(
     IN const ANSI_STRING *lhs,
     IN const CHAR *rhs,
@@ -507,6 +510,9 @@ void print_debug_header(
 
 /* convert strings from unicode -> ansi during marshalling to
  * save space in the upcall buffers and avoid extra copies */
+#ifdef __REACTOS__
+static
+#endif
 INLINE ULONG length_as_utf8(
     PCUNICODE_STRING str)
 {
@@ -6446,6 +6452,9 @@ void print_unlock_args(
     }
 }
 
+#ifdef __REACTOS__
+static
+#endif
 __inline ULONG unlock_list_count(
     PLOWIO_LOCK_LIST lock)
 {

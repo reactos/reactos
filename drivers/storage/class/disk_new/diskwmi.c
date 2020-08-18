@@ -289,6 +289,9 @@ ULONG DiskDummyData[4] = { 1, 2, 3, 4};
 //
 // Enable SMART
 //
+#ifdef __REACTOS__
+static
+#endif
 __inline NTSTATUS
 DiskEnableSmart(
     PFUNCTIONAL_DEVICE_EXTENSION FdoExtension
@@ -310,6 +313,9 @@ DiskEnableSmart(
 //
 // Disable SMART
 //
+#ifdef __REACTOS__
+static
+#endif
 __inline NTSTATUS
 DiskDisableSmart(
     PFUNCTIONAL_DEVICE_EXTENSION FdoExtension
@@ -370,6 +376,9 @@ DiskDisableSmartAttributeAutosave(
 //
 // Initialize execution of SMART online diagnostics
 //
+#ifdef __REACTOS__
+static
+#endif
 __inline NTSTATUS
 DiskExecuteSmartDiagnostics(
     PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,

@@ -253,6 +253,9 @@ Arguments:
 }
 
 
+#ifdef __REACTOS__
+static
+#endif
 __inline
 TRACK_MODE_TYPE
 CdFileTrackMode (
