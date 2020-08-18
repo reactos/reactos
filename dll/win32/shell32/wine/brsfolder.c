@@ -972,16 +972,18 @@ static BOOL BrsFolder_OnCommand( browse_info *info, UINT id )
     {
     case IDOK:
 #ifdef __REACTOS__
+        /* Get the text */
         GetDlgItemTextW(info->hWnd, IDC_BROWSE_FOR_FOLDER_FOLDER_TEXT, szPath, _countof(szPath));
         StrTrimW(szPath, L" \t");
+
+        /* The original pidl is owned by the treeview and will be free'd. */
         if (!PathIsRelativeW(szPath) && PathIsDirectoryW(szPath))
         {
-            ILFree(info->pidlRet);
+            /* It's valid path */
             info->pidlRet = ILCreateFromPathW(szPath);
         }
         else
         {
-            /* The original pidl is owned by the treeview and will be free'd. */
             info->pidlRet = ILClone(info->pidlRet);
         }
 #endif

@@ -84,7 +84,7 @@ WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                             GetDlgItemTextW(hwnd, IDC_BROWSE_FOR_FOLDER_FOLDER_TEXT, szPath, _countof(szPath));
                             StrTrimW(szPath, L" \t");
 
-                            // update OK button if valid
+                            // update OK button
                             this_->m_bInSettingText = TRUE;
                             BOOL bValid = !PathIsRelative(szPath) && PathIsDirectoryW(szPath);
                             SendMessageW(hwnd, BFFM_ENABLEOK, 0, bValid);
