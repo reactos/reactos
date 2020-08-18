@@ -113,6 +113,7 @@ BrowseCallbackProc(HWND hwnd, UINT uMsg, LPARAM lParam, LPARAM lpData)
             else
                 PostMessageW(hwnd, BFFM_ENABLEOK, 0, FALSE);
 
+            // the text box will be updated later soon, ignore it
             this_->m_bIgnoreTextBoxChange = TRUE;
             break;
         }
