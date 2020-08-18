@@ -47,7 +47,7 @@ CCopyToMenu::CCopyToMenu() :
     m_idCmdLast(0),
     m_idCmdCopyTo(-1),
     m_fnOldWndProc(NULL),
-    m_bInSettingText(FALSE)
+    m_bIgnoreTextBoxChange(FALSE)
 {
 }
 
@@ -78,23 +78,21 @@ WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 {
                     if (HIWORD(wParam) == EN_CHANGE)
                     {
-                        if (!this_->m_bInSettingText)
+                        if (!this_->m_bIgnoreTextBoxChange)
                         {
                             // get the text
                             GetDlgItemTextW(hwnd, IDC_BROWSE_FOR_FOLDER_FOLDER_TEXT, szPath, _countof(szPath));
                             StrTrimW(szPath, L" \t");
 
                             // update OK button
-                            this_->m_bInSettingText = TRUE;
                             BOOL bValid = !PathIsRelative(szPath) && PathIsDirectoryW(szPath);
                             SendMessageW(hwnd, BFFM_ENABLEOK, 0, bValid);
-                            this_->m_bInSettingText = FALSE;
 
                             return 0;
                         }
 
                         // reset flag
-                        this_->m_bInSettingText = FALSE;
+                        this_->m_bIgnoreTextBoxChange = FALSE;
                     }
                     break;
                 }
@@ -154,7 +152,7 @@ BrowseCallbackProc(HWND hwnd, UINT uMsg, LPARAM lParam, LPARAM lpData)
             else
                 PostMessageW(hwnd, WM_ENABLEOK, 0, FALSE);
 
-            this_->m_bInSettingText = TRUE;
+            this_->m_bIgnoreTextBoxChange = TRUE;
             break;
         }
     }
