@@ -27,6 +27,7 @@ protected:
 public:
     CComHeapPtr<ITEMIDLIST> m_pidlFolder;
     WNDPROC m_fnOldWndProc;
+    BOOL m_bInSettingText;
 
     CCopyToMenu();
     ~CCopyToMenu();
@@ -78,6 +79,7 @@ protected:
 public:
     CComHeapPtr<ITEMIDLIST> m_pidlFolder;
     WNDPROC m_fnOldWndProc;
+    BOOL m_bInSettingText;
 
     CMoveToMenu();
     ~CMoveToMenu();

@@ -12,7 +12,9 @@ WINE_DEFAULT_DEBUG_CHANNEL(shell);
 CMoveToMenu::CMoveToMenu() :
     m_idCmdFirst(0),
     m_idCmdLast(0),
-    m_idCmdMoveTo(-1)
+    m_idCmdMoveTo(-1),
+    m_fnOldWndProc(NULL),
+    m_bInSettingText(FALSE)
 {
 }
 
@@ -25,6 +27,7 @@ CMoveToMenu::~CMoveToMenu()
 static LRESULT CALLBACK
 WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+    WCHAR szPath[MAX_PATH];
     CMoveToMenu *this_ =
         reinterpret_cast<CMoveToMenu *>(GetWindowLongPtr(hwnd, GWLP_USERDATA));
 
@@ -33,6 +36,43 @@ WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         case WM_ENABLEOK:
             SendMessageW(hwnd, BFFM_ENABLEOK, 0, (BOOL)lParam);
             return 0;
+
+        case WM_COMMAND:
+        {
+            switch (LOWORD(wParam))
+            {
+                case IDC_BROWSE_FOR_FOLDER_FOLDER_TEXT:
+                {
+                    if (HIWORD(wParam) == EN_CHANGE)
+                    {
+                        if (!this_->m_bInSettingText)
+                        {
+                            // get the text
+                            GetDlgItemTextW(hwnd, IDC_BROWSE_FOR_FOLDER_FOLDER_TEXT, szPath, _countof(szPath));
+                            StrTrimW(szPath, L" \t");
+
+                            // update selection if valid
+                            this_->m_bInSettingText = TRUE;
+                            if (!PathIsRelative(szPath) && PathIsDirectoryW(szPath))
+                            {
+                                SendMessageW(hwnd, BFFM_ENABLEOK, 0, TRUE);
+                            }
+                            else
+                            {
+                                SendMessageW(hwnd, BFFM_ENABLEOK, 0, FALSE);
+                            }
+                            this_->m_bInSettingText = FALSE;
+
+                            return 0;
+                        }
+
+                        this_->m_bInSettingText = FALSE;
+                    }
+                    break;
+                }
+            }
+            break;
+        }
     }
     return CallWindowProcW(this_->m_fnOldWndProc, hwnd, uMsg, wParam, lParam);
 }
@@ -85,6 +125,8 @@ BrowseCallbackProc(HWND hwnd, UINT uMsg, LPARAM lParam, LPARAM lpData)
                 PostMessageW(hwnd, WM_ENABLEOK, 0, TRUE);
             else
                 PostMessageW(hwnd, WM_ENABLEOK, 0, FALSE);
+
+            this_->m_bInSettingText = TRUE;
             break;
         }
     }
