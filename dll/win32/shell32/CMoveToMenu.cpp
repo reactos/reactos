@@ -53,14 +53,8 @@ WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
                             // update OK button if valid
                             this_->m_bInSettingText = TRUE;
-                            if (!PathIsRelative(szPath) && PathIsDirectoryW(szPath))
-                            {
-                                SendMessageW(hwnd, BFFM_ENABLEOK, 0, TRUE);
-                            }
-                            else
-                            {
-                                SendMessageW(hwnd, BFFM_ENABLEOK, 0, FALSE);
-                            }
+                            BOOL bValid = !PathIsRelative(szPath) && PathIsDirectoryW(szPath);
+                            SendMessageW(hwnd, BFFM_ENABLEOK, 0, bValid);
                             this_->m_bInSettingText = FALSE;
 
                             return 0;
