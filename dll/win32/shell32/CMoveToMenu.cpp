@@ -22,8 +22,6 @@ CMoveToMenu::~CMoveToMenu()
 {
 }
 
-#define WM_ENABLEOK (WM_USER + 0x2000)
-
 static LRESULT CALLBACK
 WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -33,10 +31,6 @@ WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
     switch (uMsg)
     {
-        case WM_ENABLEOK:
-            SendMessageW(hwnd, BFFM_ENABLEOK, 0, (BOOL)lParam);
-            return 0;
-
         case WM_COMMAND:
         {
             switch (LOWORD(wParam))
@@ -101,7 +95,7 @@ BrowseCallbackProc(HWND hwnd, UINT uMsg, LPARAM lParam, LPARAM lpData)
                     SetWindowLongPtr(hwnd, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(WindowProc)));
 
             // Disable OK
-            PostMessageW(hwnd, WM_ENABLEOK, 0, FALSE);
+            PostMessageW(hwnd, BFFM_ENABLEOK, 0, FALSE);
             break;
         }
         case BFFM_SELCHANGED:
@@ -113,11 +107,11 @@ BrowseCallbackProc(HWND hwnd, UINT uMsg, LPARAM lParam, LPARAM lpData)
             SHGetPathFromIDListW(pidl, szPath);
 
             if (ILIsEqual(pidl, this_->m_pidlFolder))
-                PostMessageW(hwnd, WM_ENABLEOK, 0, FALSE);
+                PostMessageW(hwnd, BFFM_ENABLEOK, 0, FALSE);
             else if (PathFileExistsW(szPath) || _ILIsDesktop(pidl))
-                PostMessageW(hwnd, WM_ENABLEOK, 0, TRUE);
+                PostMessageW(hwnd, BFFM_ENABLEOK, 0, TRUE);
             else
-                PostMessageW(hwnd, WM_ENABLEOK, 0, FALSE);
+                PostMessageW(hwnd, BFFM_ENABLEOK, 0, FALSE);
 
             this_->m_bIgnoreTextBoxChange = TRUE;
             break;
