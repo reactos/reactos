@@ -6,6 +6,7 @@
  *    Updated by niski - Maciej Bialas (bjauy@o2.pl), July 2009
  *    UTF-8 conversion by Caemyr (May, 2011) 
  *    Updated by Marcin Mikołajczak <me@m4sk.in> (September, 2017)
+ *    Updated by Piotr Hetnarowicz <piotrhwz@gmail.com> (August, 2020)
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
@@ -203,6 +204,6 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_TASKBAR_STARTMENU_PROP_CAPTION "Właściwości paska zadań i menu Start"
+    IDS_TASKBAR_STARTMENU_PROP_CAPTION "Paska zadań i menu Start"
     IDS_RESTORE_ALL "&Pokaż otwarte okna"
 END
