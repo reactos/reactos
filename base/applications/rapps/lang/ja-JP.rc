@@ -141,6 +141,7 @@ BEGIN
     IDS_INFO_UNINSTALLSTR   "\nアンインストールに使用する文字列: "
     IDS_INFO_MODIFYPATH     "\n変更に使用するパス: "
     IDS_INFO_INSTALLDATE    "\nインストールした日付: "
+    IDS_AINFO_PACKAGE_NAME "\nPackage Name: "
 END
 
 STRINGTABLE

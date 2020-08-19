@@ -169,6 +169,7 @@
 #define IDS_AINFO_KILOBYTE_EXT       358
 #define IDS_AINFO_MEGABYTE_EXT       359
 #define IDS_AINFO_GIGABYTE_EXT       360
+#define IDS_AINFO_PACKAGE_NAME       361
 
 
 /* Names of categories */

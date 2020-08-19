@@ -143,6 +143,7 @@ BEGIN
     IDS_INFO_UNINSTALLSTR "\nKaldırma Sözcesi: "
     IDS_INFO_MODIFYPATH "\nDeğiştirme Yolu: "
     IDS_INFO_INSTALLDATE "\nKurulum Zamanı: "
+    IDS_AINFO_PACKAGE_NAME "\nPackage Name: "
 END
 
 STRINGTABLE
