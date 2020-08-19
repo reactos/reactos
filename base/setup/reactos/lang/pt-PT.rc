@@ -153,7 +153,7 @@ BEGIN
     IDS_RESTARTSUBTITLE "A primeira etapada da instalação foi completada, reinicie o computador para prosseguir com a segunda estapa"
     IDS_SUMMARYTITLE "Sumário de Instalação"
     IDS_SUMMARYSUBTITLE "Listar propriedades da instalação para verificação antes de aplicá-las na instalação dos despositivos"
-    IDS_ABORTSETUP "ReactOS não está totalmente instalado no seu computador. Se sair da Instalação agora, para instalar o ReactOS precisará executar o Instalador novamente . Tem certeza que deseja sair?"
+    IDS_ABORTSETUP "ReactOS não está totalmente instalado no seu computador. Se sair da Instalação agora, para instalar o ReactOS precisará executar o Instalador novamente. Tem certeza que deseja sair?"
     IDS_ABORTSETUP2 "Abortar instalação?"
     IDS_NO_TXTSETUP_SIF " 'txtsetup.sif' não foi encontrado.\n o programa de instalação não pode continuar."
     IDS_CAPTION "Instalação do ReactOS"
