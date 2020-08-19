@@ -145,6 +145,7 @@ BEGIN
     IDS_INFO_UNINSTALLSTR "\nНиз за премахване: "
     IDS_INFO_MODIFYPATH "\nПът за изменения: "
     IDS_INFO_INSTALLDATE "\nДата на слагане: "
+    IDS_AINFO_PACKAGE_NAME "\nPackage Name: "
 END
 
 STRINGTABLE

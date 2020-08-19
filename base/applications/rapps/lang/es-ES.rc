@@ -144,6 +144,7 @@ BEGIN
     IDS_INFO_UNINSTALLSTR "\nComando de desinstalación: "
     IDS_INFO_MODIFYPATH "\nRuta de modificación: "
     IDS_INFO_INSTALLDATE "\nFecha de instalación: "
+    IDS_AINFO_PACKAGE_NAME "\nPackage Name: "
 END
 
 STRINGTABLE

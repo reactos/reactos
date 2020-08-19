@@ -146,6 +146,7 @@ BEGIN
     IDS_INFO_UNINSTALLSTR "\nOdinstalační řetězec: "
     IDS_INFO_MODIFYPATH "\nCesta úpravy: "
     IDS_INFO_INSTALLDATE "\nDatum instalace: "
+    IDS_AINFO_PACKAGE_NAME "\nPackage Name: "
 END
 
 STRINGTABLE
