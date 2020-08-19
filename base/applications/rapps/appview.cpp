@@ -372,6 +372,7 @@ BOOL CAppRichEdit::ShowAvailableAppInfo(CAvailableApplicationInfo *Info)
     LoadAndInsertText(IDS_AINFO_URLSITE, Info->m_szUrlSite, CFE_BOLD, CFE_LINK);
     LoadAndInsertText(IDS_AINFO_DESCRIPTION, Info->m_szDesc, CFE_BOLD, 0);
     LoadAndInsertText(IDS_AINFO_URLDOWNLOAD, Info->m_szUrlDownload, CFE_BOLD, CFE_LINK);
+    LoadAndInsertText(IDS_AINFO_PACKAGE_NAME, Info->m_szPkgName, CFE_BOLD, 0);
 
     return TRUE;
 }

@@ -141,6 +141,7 @@ BEGIN
     IDS_INFO_UNINSTALLSTR "\nString Pembongkaran: "
     IDS_INFO_MODIFYPATH "\nJalur Pengubahan: "
     IDS_INFO_INSTALLDATE "\nTanggal Pemasangan: "
+    IDS_AINFO_PACKAGE_NAME "\nPackage Name: "
 END
 
 STRINGTABLE

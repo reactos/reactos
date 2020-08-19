@@ -149,6 +149,7 @@ BEGIN
     IDS_INFO_UNINSTALLSTR "\nВидалити рядок: "
     IDS_INFO_MODIFYPATH "\nЗмінити шлях: "
     IDS_INFO_INSTALLDATE "\nВстановити дату: "
+    IDS_AINFO_PACKAGE_NAME "\nPackage Name: "
 END
 
 STRINGTABLE

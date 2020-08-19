@@ -141,6 +141,7 @@ BEGIN
     IDS_INFO_UNINSTALLSTR "\nUninstall String: "
     IDS_INFO_MODIFYPATH "\nModify Path: "
     IDS_INFO_INSTALLDATE "\nInstall Date: "
+    IDS_AINFO_PACKAGE_NAME "\nPackage Name: "
 END
 
 STRINGTABLE
