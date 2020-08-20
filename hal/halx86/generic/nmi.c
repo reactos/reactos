@@ -27,10 +27,13 @@ NTAPI
 HalHandleNMI(
     IN PVOID NmiInfo)
 {
-    UNREFERENCED_PARAMETER(NmiInfo);
 #ifndef _MINIHAL_
     SYSTEM_CONTROL_PORT_B_REGISTER SystemControl;
+#endif
 
+    UNREFERENCED_PARAMETER(NmiInfo);
+
+#ifndef _MINIHAL_
     /* Don't recurse */
     if (HalpNMIInProgress++)
         ERROR_DBGBREAK();
