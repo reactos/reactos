@@ -2404,6 +2404,8 @@ PipDeviceActionWorker(
     PLIST_ENTRY ListEntry;
     PDEVICE_ACTION_REQUEST Request;
     KIRQL OldIrql;
+    PDEVICE_NODE deviceNode;
+    NTSTATUS status;
 
     KeAcquireSpinLock(&IopDeviceActionLock, &OldIrql);
     while (!IsListEmpty(&IopDeviceActionRequestList))
@@ -2414,10 +2416,10 @@ PipDeviceActionWorker(
 
         ASSERT(Request->DeviceObject);
 
-        PDEVICE_NODE deviceNode = IopGetDeviceNode(Request->DeviceObject);
+        deviceNode = IopGetDeviceNode(Request->DeviceObject);
         ASSERT(deviceNode);
 
-        NTSTATUS status = STATUS_SUCCESS;
+        status = STATUS_SUCCESS;
 
         DPRINT("Processing PnP request %p: DeviceObject - %p, Action - %s\n",
                Request, Request->DeviceObject, ActionToStr(Request->Action));
