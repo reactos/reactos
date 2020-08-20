@@ -258,6 +258,8 @@ typedef struct _CONTEXT {
   BYTE ExtendedRegisters[MAXIMUM_SUPPORTED_EXTENSION];
 } CONTEXT;
 
+C_ASSERT(sizeof(CONTEXT) == 716);
+
 #elif defined TARGET_amd64
 
 typedef struct _M128A {
@@ -370,6 +372,8 @@ typedef struct _CONTEXT {
     DWORD64 LastExceptionToRip;
     DWORD64 LastExceptionFromRip;
 } CONTEXT;
+
+C_ASSERT(sizeof(CONTEXT) == 1232);
 
 #elif defined TARGET_arm /* ARM? */
 
