@@ -1048,27 +1048,33 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
 
         case SPI_SETWORKAREA:
         {
-            /* FIXME: We should set the work area of the monitor
-                      that contains the specified rectangle */
-            PMONITOR pmonitor = UserGetPrimaryMonitor();
-            RECT rcWorkArea;
+            PMONITOR pmonitor;
+            RECTL rcWorkArea, rcIntersect;
 
-            if(!pmonitor)
+            if (!pvParam)
                 return 0;
 
-            if (!SpiSet(&rcWorkArea, pvParam, sizeof(RECTL), fl))
+            RtlCopyMemory(&rcWorkArea, pvParam, sizeof(rcWorkArea));
+
+            /* fail if empty */
+            if (RECTL_bIsEmptyRect(&rcWorkArea))
                 return 0;
 
-            /* Verify the new values */
-            if (rcWorkArea.left < 0 ||
-                rcWorkArea.top < 0 ||
-                rcWorkArea.right > gpsi->aiSysMet[SM_CXSCREEN] ||
-                rcWorkArea.bottom > gpsi->aiSysMet[SM_CYSCREEN] ||
-                rcWorkArea.right <= rcWorkArea.left ||
-                rcWorkArea.bottom <= rcWorkArea.top)
+            /* get the nearest monitor */
+            pmonitor = UserMonitorFromRect(&rcWorkArea, MONITOR_DEFAULTTONEAREST);
+            if (!pmonitor)
                 return 0;
 
-            pmonitor->rcWork = rcWorkArea;
+            /* fail unless work area is completely in monitor */
+            if (!RECTL_bIntersectRect(&rcIntersect, &pmonitor->rcMonitor, &rcWorkArea) ||
+                !RtlEqualMemory(&rcIntersect, &rcWorkArea, sizeof(rcIntersect)))
+            {
+                return 0;
+            }
+
+            if (!SpiSet(&pmonitor->rcWork, pvParam, sizeof(RECTL), fl))
+                return 0;
+
             if (fl & SPIF_UPDATEINIFILE)
             {
                 // FIXME: What to do?
