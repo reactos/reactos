@@ -15,7 +15,7 @@ static MUI_ENTRY ptPTSetupInitPageEntries[] =
     {
         0,
         20,
-        "Por favor aguarde enquanto o ReactOS Setup inicializa",
+        "Por favor aguarde enquanto o Instalador do ReactOS inicializa",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER,
         TEXT_ID_STATIC
     },
@@ -112,7 +112,7 @@ static MUI_ENTRY ptPTWelcomePageEntries[] =
     {
         6,
         11,
-        "Esta parte da instala\207\306o prepara o ReactOS para ser",
+        "Esta fase da instala\207\306o prepara o ReactOS para ser",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -213,21 +213,21 @@ static MUI_ENTRY ptPTIntroPageEntries[] =
     {
         6,
         13,
-        "de avalia\207\306o e teste e n\306o como seu sistema operacional de uso di\240rio.",
+        "de avalia\207\306o e teste e n\306o como seu sistema operativo de uso di\240rio.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         6,
         15,
-        "Fa\207a backup dos seus dados ou teste num computador secund\240rio se pretende",
+        "Fa\207a c\242pia de segur\306n\207 dos seus dados ou teste num computador",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         6,
         16,
-        "executar o ReactOS em hardware real.",
+        "secund\240rio se pretende executar o ReactOS em hardware real.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -300,14 +300,14 @@ static MUI_ENTRY ptPTLicensePageEntries[] =
     {
         8,
         11,
-        "Todo o software que faz parte do ReactOS \202 portanto, livre",
+        "Todo o software que faz parte do sistema ReactOS \202 portanto,",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         12,
-        "sob a licen\207a GNU GPL, bem como a manuten\207\306o da licen\207a",
+        "livre sob a licen\207a GNU GPL, bem como mantendo sua licen\207a",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -328,21 +328,21 @@ static MUI_ENTRY ptPTLicensePageEntries[] =
     {
         8,
         16,
-        "excepto onde leis locais e internacionais s\306o aplicaveis. A licen\207a",
+        "excepto as leis locais e internacionais aplicaveis.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         17,
-        "do ReactOS abrange apenas a distribui\207\306o a terceiros.",
+        "A licen\207a do ReactOS abrange apenas a distribui\207\306o a terceiros.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         18,
-        "Se por alguma raz\306o  n\306o recebeu uma c\242pia da licen\207a",
+        "Se por alguma raz\306o n\306o recebeu uma c\242pia da licen\207a",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -415,7 +415,7 @@ static MUI_ENTRY ptPTDevicePageEntries[] =
     {
         6,
         8,
-        "A lista a seguir mostra a configura\207\344o de dispositivos actual.",
+        "A lista seguinte mostra a configura\207\306o de dispositivos actual.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -456,7 +456,7 @@ static MUI_ENTRY ptPTDevicePageEntries[] =
     },
     {
         25,
-        16, "Aceitar esta configura\207\344o de dispositivos",
+        16, "Aceitar esta configura\207\306o de dispositivos",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -588,7 +588,7 @@ static MUI_ENTRY ptPTUpgradePageEntries[] =
     {
         6,
         8,
-        "Com o instalador do ReactOS pode actualizar uma das instala\207\344es",
+        "Com o Instalador do ReactOS pode actualizar uma das instala\207\344es",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1219,35 +1219,35 @@ static MUI_ENTRY ptPTConfirmDeleteSystemPartitionEntries[] =
     {
         6,
         10,
-        "As parti\207\344es do sistema podem conter programas de diagn242stico, configura\207\306o de hardware",
+        "As parti\207\344es do sistema podem conter programas de diagn\242stico,",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         6,
         11,
-        "programas, programas para iniciar um sistema operacional (como o ReactOS) ou outro",
+        "configura\207\344es de hardware, programas para iniciar um sistema operativo",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         6,
         12,
-        "programas fornecidos pelo fabricante do hardware.",
+        "(ReactOS) ou outro e programas fornecidos pelo fabricante do hardware.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         6,
         14,
-        "Exclua uma parti\207\306o do sistema apenas quando tiver certeza de que n\306o cont\202m",
+        "Exclua uma parti\207\306o apenas quando tiver certeza de que n\306o cont\202m",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         6,
         15,
-        "programas ou quando tiver certeza de que deseja excluí-los.",
+        "programas ou quando desejar exclui-los definitivamente.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1261,21 +1261,21 @@ static MUI_ENTRY ptPTConfirmDeleteSystemPartitionEntries[] =
     {
         6,
         17,
-        "computador pelo disco rígido at\202 concluir a instala\207\306o do ReactOS.",
+        "computador pelo disco r\241gido at\202 concluir a instala\207\306o do ReactOS.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         20,
-        "\x07  Pressione ENTER para excluir a parti\207\306o do sistema. Voc\210 ser\240 solicitado",
+        "\x07  Pressione ENTER para excluir a parti\207\306o do sistema. Ser\240 solicitado",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         21,
-        "   para confirmar a exclus\306o da parti\207\306o novamente mais tarde.",
+        "   a confirmar a exclus\306o da parti\207\306o novamente mais tarde.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1289,7 +1289,7 @@ static MUI_ENTRY ptPTConfirmDeleteSystemPartitionEntries[] =
     {
         8,
         25,
-        "   n\306o ser\240 excluída.",
+        "   n\306o ser\240 excluida.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1734,7 +1734,7 @@ static MUI_ENTRY ptPTDeletePartitionEntries[] =
     {
         6,
         8,
-        "Voc\210 solicitou a exclus\306o da parti\207\306o",
+        "Solicitou a exclus\306o da parti\207\306o",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1851,7 +1851,7 @@ MUI_ERROR ptPTErrorEntries[] =
     },
     {
         // ERROR_SIGNATURE_TXTSETUPSIF,
-        "O arquivo TXTSETUP.SIF est\240 com a assinatura incorreta.\n",
+        "O arquivo TXTSETUP.SIF est\240 com a assinatura incorrecta.\n",
         "ENTER=Reiniciar"
     },
     {
@@ -1881,13 +1881,13 @@ MUI_ERROR ptPTErrorEntries[] =
     },
     {
         // ERROR_LOAD_KBLAYOUT,
-        "N\306o foi poss\241vel carregar a lista de leiautes de teclado.\n",
+        "N\306o foi poss\241vel carregar a lista de estilos de teclado.\n",
         "ENTER=Reiniciar"
     },
     {
         // ERROR_WARN_PARTITION,
         "O instalador encontrou uma tabela de parti\207\306o incompat\241vel\n"
-        "que n\306o pode ser utilizada corretamente!\n"
+        "que n\306o pode ser utilizada correctamente!\n"
         "\n"
         "Criar ou excluir parti\207\344es pode destruir a tabela de parti\207\306o.\n"
         "\n"
@@ -1897,7 +1897,7 @@ MUI_ERROR ptPTErrorEntries[] =
     },
     {
         // ERROR_NEW_PARTITION,
-        "Voc\210 n\306o pode criar uma parti\207\306o dentro de\n"
+        "Pode criar uma parti\207\306o dentro de\n"
         "outra parti\207\306o j\240 existente!\n"
         "\n"
         "  * Pressione qualquer tecla para continuar.",
@@ -1905,7 +1905,7 @@ MUI_ERROR ptPTErrorEntries[] =
     },
     {
         // ERROR_DELETE_SPACE,
-        "Voc\210 n\306o pode excluir um espa\207o n\306o-particionado!\n"
+        "Pode excluir um espa\207o n\306o particionado!\n"
         "\n"
         "  * Pressione qualquer tecla para continuar.",
         NULL
@@ -1922,12 +1922,12 @@ MUI_ERROR ptPTErrorEntries[] =
     },
     {
         // ERROR_UPDATE_KBSETTINGS,
-        "N\306o foi poss\241vel atualizar a configura\207\306o de leiaute de teclado.",
+        "N\306o foi poss\241vel actualizar a configura\207\306o de estilo de teclado.",
         "ENTER=Reiniciar"
     },
     {
         // ERROR_UPDATE_DISPLAY_SETTINGS,
-        "N\306o foi poss\241vel atualizar a configura\207\306o de v\241deo.",
+        "N\306o foi poss\241vel actualizar a configura\207\306o de v\241deo.",
         "ENTER=Reiniciar"
     },
     {
@@ -1977,13 +1977,13 @@ MUI_ERROR ptPTErrorEntries[] =
     },
     {
         // ERROR_TXTSETUP_SECTION,
-        "N\306o foi poss\241vel encontrar a se\207\306o '%S' no\n"
+        "N\306o foi poss\241vel encontrar a sec\207\306o '%S' no\n"
         "arquivo TXTSETUP.SIF.\n",
         "ENTER=Reiniciar"
     },
     {
         // ERROR_CABINET_SECTION,
-        "N\306o foi poss\241vel encontrar a se\207\306o '%S' no\n"
+        "N\306o foi poss\241vel encontrar a sec\207\306o '%S' no\n"
         "arquivo cab.\n",
         "ENTER=Reiniciar"
     },
@@ -2034,7 +2034,7 @@ MUI_ERROR ptPTErrorEntries[] =
     {
         // ERROR_PARTITION_TABLE_FULL,
         "N\306o pode criar uma nova parti\207\306o prim\240ria ou estendida\n"
-        "neste disco, porque a tabela de parti\207\306o est\240 cheia.\n"
+        "neste disco, porque a tabela de parti\207\344es est\240 cheia.\n"
         "\n"
         "  * Pressione qualquer tecla para continuar."
     },
@@ -2178,7 +2178,7 @@ MUI_STRING ptPTStrings[] =
     {STRING_PLEASEWAIT,
     "   Por favor, aguarde..."},
     {STRING_INSTALLCREATEPARTITION,
-    "   ENTER = Instalar  P = Criar Prim\240ria E = Criar Estendida  F3 = Sair"},
+    "   ENTER=Instalar  P=Criar Part. Prim\240ria E=Criar Part. Estendida  F3=Sair"},
     {STRING_INSTALLCREATELOGICAL,
     "   ENTER = Instalar   L = Criar Parti\207\306o L\242gica   F3 = Sair"},
     {STRING_INSTALLDELETEPARTITION,
@@ -2289,7 +2289,7 @@ MUI_STRING ptPTStrings[] =
     {STRING_MAXSIZE,
     "MB (max. %lu MB)"},
     {STRING_EXTENDED_PARTITION,
-    "Parti\207\306 Extendida"},
+    "Parti\207\306 Estendida"},
     {STRING_UNFORMATTED,
     "Novo (sem formato)"},
     {STRING_FORMATUNUSED,
