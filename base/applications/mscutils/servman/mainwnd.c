@@ -380,11 +380,11 @@ MainWndCommand(PMAIN_WND_INFO Info,
                WORD CmdId,
                HWND hControl)
 {
-    UNREFERENCED_PARAMETER(hControl);
-
     WCHAR szAppName[256];
     WCHAR szAppAuthors[256];
     HICON hIcon;
+
+    UNREFERENCED_PARAMETER(hControl);
 
     switch (CmdId)
     {
