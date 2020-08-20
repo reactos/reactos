@@ -519,7 +519,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUPWINDOW | WS_VISIBLE | WS_CLIPSIBLIN
 CAPTION "自動播放"
 FONT 9, "新細明體"
 BEGIN
-    LTEXT "選擇內容類型，然後選擇 ReactOS 在此装置中使用該類型時自動執行的動作(&S):", 1000, 7, 7, 215, 20
+    LTEXT "選擇內容類型，然後選擇 ReactOS 在此裝置中使用該類型時自動執行的動作(&S):", 1000, 7, 7, 215, 20
     CONTROL "", 1001, "COMBOBOXEX32", WS_TABSTOP | 0x00000043, 7, 27, 212, 200
     GROUPBOX "動作", -1, 7, 45, 212, 146
     AUTORADIOBUTTON "選擇要執行的動作(&P):", 1005, 14, 54, 202, 10, WS_GROUP
@@ -534,7 +534,7 @@ CAPTION "混合内容"
 FONT 9, "新細明體"
 BEGIN
     ICON "", 1000, 5, 7, 21, 20
-    LTEXT "此磁碟或装置包含多種類型的內容。", 1001, 32, 7, 191, 20
+    LTEXT "此磁碟或裝置包含多種類型的內容。", 1001, 32, 7, 191, 20
     LTEXT "您希望 ReactOS 做什麼?", 1002, 32, 31, 188, 8
     CONTROL "", 1003, "SYSLISTVIEW32", WS_BORDER | WS_TABSTOP | 0x0000C04D, 32, 43, 188, 139
     DEFPUSHBUTTON "確定", IDOK, 96, 186, 60, 14
