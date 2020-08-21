@@ -450,8 +450,10 @@ ExUuidCreate(OUT UUID *Uuid)
     Time.QuadPart -= AllocatedCount;
     Uuid->Data1 = Time.LowPart;
     Uuid->Data2 = Time.HighPart;
-    /* We also set the bit for GUIDv1 */
+    /* Also set version: 1 */
     Uuid->Data3 = ((Time.HighPart >> 16) & 0x0FFF) | 0x1000;
+    /* Set variant: 1 (0b10nn) */
+    Uuid->Data4[0] = (Uuid->Data4[0] & 0x3F) | 0x80;
 
     return Status;
 }
