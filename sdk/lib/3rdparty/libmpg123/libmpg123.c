@@ -468,10 +468,17 @@ int attribute_align_arg mpg123_open(mpg123_handle *mh, const char *path)
 // in open_fixed_pre() and open_fixed_post(), wich are only defined here.
 int open_fixed_pre(mpg123_handle *mh, int channels, int encoding)
 {
+#ifdef __REACTOS__
+	int err;
+#endif
 	if(!mh)
 		return MPG123_BAD_HANDLE;
 	mh->p.flags |= MPG123_NO_FRANKENSTEIN;
+#ifdef __REACTOS__
+	err = mpg123_format_none(mh);
+#else
 	int err = mpg123_format_none(mh);
+#endif
 	if(err == MPG123_OK)
 		err = mpg123_format2(mh, 0, channels, encoding);
 	return err;
@@ -479,10 +486,18 @@ int open_fixed_pre(mpg123_handle *mh, int channels, int encoding)
 
 int open_fixed_post(mpg123_handle *mh, int channels, int encoding)
 {
+#ifdef __REACTOS__
+	long rate;
+	int err;
+#endif
 	if(!mh)
 		return MPG123_BAD_HANDLE;
+#ifdef __REACTOS__
+	err = mpg123_getformat(mh, &rate, &channels, &encoding);
+#else
 	long rate;
 	int err = mpg123_getformat(mh, &rate, &channels, &encoding);
+#endif
 	if(err == MPG123_OK)
 		err = mpg123_format_none(mh);
 	if(err == MPG123_OK)

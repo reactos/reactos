@@ -214,6 +214,9 @@ static void free_id3_picture(mpg123_picture **list, size_t *size)
 static mpg123_text *add_id3_text( mpg123_text **list, size_t *size
 ,	char id[4], char lang[3], mpg123_string *description )
 {
+#ifdef __REACTOS__
+	mpg123_text *x;
+#endif
 	mdebug( "add_id3_text id=%s lang=%s, desc=%s"
 	,	id ? (char[5]) { id[0], id[1], id[2], id[3], 0 } : "(nil)"
 	,	lang ? (char[4]) { lang[0], lang[1], lang[2], 0 }  : "(nil)"
@@ -224,7 +227,12 @@ static mpg123_text *add_id3_text( mpg123_text **list, size_t *size
 	{
 		// Look through list of existing texts and return an existing entry
 		// if it should be overwritten.
+#ifdef __REACTOS__
+		size_t i;
+		for(i=0; i<*size; ++i)
+#else
 		for(size_t i=0; i<*size; ++i)
+#endif
 		{
 			mpg123_text *entry = *list+i;
 			if(description)
@@ -241,7 +249,11 @@ static mpg123_text *add_id3_text( mpg123_text **list, size_t *size
 	}
 	mdebug("add_id3_text: append to list of %zu", *size);
 	// Nothing found, add new one.
+#ifdef __REACTOS__
+	x = safe_realloc(*list, sizeof(mpg123_text)*(*size+1));
+#else
 	mpg123_text *x = safe_realloc(*list, sizeof(mpg123_text)*(*size+1));
+#endif
 	if(x == NULL) return NULL; /* bad */
 
 	*list  = x;
@@ -254,11 +266,20 @@ static mpg123_text *add_id3_text( mpg123_text **list, size_t *size
 
 static mpg123_picture *add_id3_picture(mpg123_picture **list, size_t *size, char type, mpg123_string *description)
 {
+#ifdef __REACTOS__
+	size_t i;
+	mpg123_picture *x;
+#endif
+
 	if(!description)
 		return NULL;
 
 	// Return entry to overwrite, if appropriate.
+#ifdef __REACTOS__
+	for(i=0; i<*size; ++i)
+#else
 	for(size_t i=0; i<*size; ++i)
+#endif
 	{
 		mpg123_picture *entry = *list+i;
 		if(  type == entry->type
@@ -269,7 +290,11 @@ static mpg123_picture *add_id3_picture(mpg123_picture **list, size_t *size, char
 			return entry;
 	}
 	// Append a new one.
+#ifdef __REACTOS__
+	x = safe_realloc(*list, sizeof(mpg123_picture)*(*size+1));
+#else
 	mpg123_picture *x = safe_realloc(*list, sizeof(mpg123_picture)*(*size+1));
+#endif
 	if(x == NULL) return NULL; /* bad */
 
 	*list  = x;
@@ -467,10 +492,22 @@ static void process_picture(mpg123_handle *fr, unsigned char *realdata, size_t r
 	unsigned char encoding;
 	mpg123_picture *i = NULL;
 	unsigned char* workpoint = NULL;
+#ifdef __REACTOS__
+	mpg123_string mime;
+#else
 	mpg123_string mime; mpg123_init_string(&mime);
+#endif
 	unsigned char image_type = 0;
+#ifdef __REACTOS__
+	mpg123_string description;
+#else
 	mpg123_string description;	mpg123_init_string(&description);
+#endif
 	unsigned char *image_data = NULL;
+#ifdef __REATOS__
+	mpg123_init_string(&mime);
+	mpg123_init_string(&description);
+#endif
 	if(realsize < 1)
 	{
 		debug("Empty id3 data!");

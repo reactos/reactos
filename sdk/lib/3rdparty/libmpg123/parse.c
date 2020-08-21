@@ -879,8 +879,8 @@ static int decode_header(mpg123_handle *fr,unsigned long newhead, int *freeforma
 			fr->do_layer = do_layer2;
 			if(!fr->freeformat)
 			{
-				debug2("bitrate index: %i (%i)", fr->bitrate_index, tabsel_123[fr->lsf][1][fr->bitrate_index] );
 				long fs = (long) tabsel_123[fr->lsf][1][fr->bitrate_index] * 144000;
+				debug2("bitrate index: %i (%i)", fr->bitrate_index, tabsel_123[fr->lsf][1][fr->bitrate_index] );
 				fs /= freqs[fr->sampling_frequency];
 				fs += fr->padding - 4;
 				fr->framesize = (int)fs;
