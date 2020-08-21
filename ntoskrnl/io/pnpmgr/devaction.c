@@ -2478,12 +2478,7 @@ PiQueueDeviceAction(
     PDEVICE_ACTION_REQUEST Request;
     KIRQL OldIrql;
 
-    Request = ExAllocatePoolWithTag(NonPagedPool, sizeof(*Request), TAG_IO);
-    if (!Request)
-    {
-        KeBugCheckEx(PNP_DETECTED_FATAL_ERROR, 0x3, 0, 0, 0);
-        return;
-    }
+    Request = ExAllocatePoolWithTag(NonPagedPoolMustSucceed, sizeof(*Request), TAG_IO);
 
     DPRINT("PiQueueDeviceAction: DeviceObject - %p, Request - %p, Action - %s\n",
         DeviceObject, Request, ActionToStr(Action));
