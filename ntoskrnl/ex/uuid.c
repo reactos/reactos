@@ -400,9 +400,10 @@ ExUuidCreate(OUT UUID *Uuid)
         {
             Time.QuadPart = ExpUuidCachedValues.Time;
 
+            C_ASSERT(sizeof(UUID_CACHED_VALUES_STRUCT) - FIELD_OFFSET(UUID_CACHED_VALUES_STRUCT, ClockSeqHiAndReserved) == sizeof(Uuid->Data4));
             RtlCopyMemory(&Uuid->Data4[0],
-                          &ExpUuidCachedValues.NodeId[0],
-                          SEED_BUFFER_SIZE);
+                          &ExpUuidCachedValues.ClockSeqHiAndReserved,
+                          sizeof(Uuid->Data4));
             Valid = ExpUuidCacheValid;
             AllocatedCount = InterlockedDecrement(&ExpUuidCachedValues.AllocatedCount);
         }
