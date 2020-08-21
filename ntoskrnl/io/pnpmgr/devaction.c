@@ -2324,6 +2324,57 @@ cleanup:
                               &DeviceNode->InstancePath);
 }
 
+static
+NTSTATUS
+PipResetDevice(
+    _In_ PDEVICE_NODE DeviceNode)
+{
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    ASSERT(DeviceNode->Flags & DNF_ENUMERATED);
+    ASSERT(DeviceNode->Flags & DNF_PROCESSED);
+
+    /* Check if there's already a driver loaded for this device */
+    if (DeviceNode->Flags & DNF_ADDED)
+    {
+        /* FIXME: our drivers do not handle device removal well enough */
+#if 0
+        /* Remove the device node */
+        Status = IopRemoveDevice(DeviceNode);
+        if (NT_SUCCESS(Status))
+        {
+            /* Invalidate device relations for the parent to reenumerate the device */
+            DPRINT1("A new driver will be loaded for '%wZ' (FDO above removed)\n", &DeviceNode->InstancePath);
+            Status = IoInvalidateDeviceRelations(DeviceNode->Parent->PhysicalDeviceObject, BusRelations);
+        }
+        else
+#endif
+        {
+            /* A driver has already been loaded for this device */
+            DPRINT("A reboot is required for the current driver for '%wZ' to be replaced\n", &DeviceNode->InstancePath);
+            DeviceNode->Problem = CM_PROB_NEED_RESTART;
+        }
+    }
+    else
+    {
+        /* FIXME: What if the device really is disabled? */
+        DeviceNode->Flags &= ~DNF_DISABLED;
+        DeviceNode->Problem = 0;
+
+        /* Load service data from the registry */
+        Status = IopActionConfigureChildServices(DeviceNode, DeviceNode->Parent);
+
+        if (NT_SUCCESS(Status))
+        {
+            /* Start the service and begin PnP initialization of the device again */
+            DPRINT("A new driver will be loaded for '%wZ' (no FDO above)\n", &DeviceNode->InstancePath);
+            Status = IopActionInitChildServices(DeviceNode, DeviceNode->Parent);
+        }
+    }
+
+    return Status;
+}
+
 #ifdef DBG
 static
 PCSTR
@@ -2336,6 +2387,8 @@ ActionToStr(
             return "PiActionEnumDeviceTree";
         case PiActionEnumRootDevices:
             return "PiActionEnumRootDevices";
+        case PiActionResetDevice:
+            return "PiActionResetDevice";
         default:
             return "(request unknown)";
     }
@@ -2374,6 +2427,10 @@ PipDeviceActionWorker(
             case PiActionEnumRootDevices:
             case PiActionEnumDeviceTree:
                 status = PipEnumerateDevice(deviceNode);
+                break;
+
+            case PiActionResetDevice:
+                status = PipResetDevice(deviceNode);
                 break;
 
             default:

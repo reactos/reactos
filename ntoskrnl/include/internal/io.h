@@ -544,7 +544,8 @@ typedef enum _SECURITY_DESCRIPTOR_TYPE
 typedef enum _DEVICE_ACTION
 {
     PiActionEnumDeviceTree,
-    PiActionEnumRootDevices
+    PiActionEnumRootDevices,
+    PiActionResetDevice
 } DEVICE_ACTION;
 
 //
