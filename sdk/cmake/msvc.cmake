@@ -40,6 +40,10 @@ if(NOT USE_CLANG_CL)
     add_compile_flags("/X /Zl")
 endif()
 
+# Only VS 15+ knows binary literals. For older versions, use specific macros.
+# For newer versions, these macros default to the regular syntax.
+add_compile_flags("/FI binconst.h")
+
 # Disable RTTI, exception handling and buffer security checks by default.
 # These require run-time support that may not always be available.
 add_compile_flags("/GR- /EHs-c- /GS-")

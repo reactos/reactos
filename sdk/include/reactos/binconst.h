@@ -1,0 +1,590 @@
+/*
+ * Binary constant generator macro.
+ * By Tom Torfs - donated to the public domain.
+ *
+ * All macros evaluate to compile-time constants.
+ * Adapted from http://cprog.tomsweb.net/binconst.txt
+ *
+ * See also https://stackoverflow.com/questions/537303/binary-literals
+ */
+
+#ifndef __BINCONST_MSVC_H__
+#define __BINCONST_MSVC_H__
+
+#ifndef __ASM__
+
+#pragma once
+
+// #if defined(__GNUC__) || defined(__clang__) || (defined(_MSC_VER) && _MSC_VER >= 1900)
+#if !defined(_MSC_VER) || (_MSC_VER >= 1900)
+
+/* User macros */
+#define B8(d)                   ((unsigned  char)0b##d##LU)
+#define B16(dmsb,dlsb)          ((unsigned short)0b##dmsb##dlsb##LU)
+#define B32(dmsb,db3,db2,dlsb)  ((unsigned  long)0b##dmsb##db3##db2##dlsb##LU)
+
+#else /* !defined(_MSC_VER) || (_MSC_VER >= 1900) */
+
+// #include <endian.h>
+
+// #if (__BYTE_ORDER != __LITTLE_ENDIAN) || !defined(LITTLE_ENDIAN)
+// #error Unsupported endianness!
+// #endif
+
+/* User macros */
+#define B8(d)                    ((unsigned  char)B8__(HEX__(BIT_CHECK(d))))
+#define B16(dmsb,dlsb)          (((unsigned short)B8(dmsb) << 8) | B8(dlsb))
+#define B32(dmsb,db3,db2,dlsb)  (((unsigned  long)B8(dmsb) << 24) \
+                               | ((unsigned  long)B8(db3)  << 16) \
+                               | ((unsigned  long)B8(db2)  <<  8) \
+                               |                  B8(dlsb))
+
+
+/* Helper macros */
+
+/* Turn a numeric literal into a hex constant (avoids problems with
+ * leading zeroes, that would be understood as octal).
+ * 8-bit constants max value 0x11111111, always fits in unsigned long.
+ */
+#define HEX__(n) HEX___(n)
+#define HEX___(n) 0x##n##LU
+
+/* 8-bit conversion function - Unspecified leading digits correspond to zeroes */
+#define B8__(x) \
+      ((x & 0x0000000FLU) ?   1 : 0) \
+    | ((x & 0x000000F0LU) ?   2 : 0) \
+    | ((x & 0x00000F00LU) ?   4 : 0) \
+    | ((x & 0x0000F000LU) ?   8 : 0) \
+    | ((x & 0x000F0000LU) ?  16 : 0) \
+    | ((x & 0x00F00000LU) ?  32 : 0) \
+    | ((x & 0x0F000000LU) ?  64 : 0) \
+    | ((x & 0xF0000000LU) ? 128 : 0)
+
+
+/* Bit-checker */
+#define  BIT_CHECK(bits)    _BIT_CHECK(bits)
+#define _BIT_CHECK(bits)    BIT_ ## bits
+
+#define BIT_0   0
+#define BIT_1   1
+
+#define BIT_00   00
+#define BIT_01   01
+#define BIT_10   10
+#define BIT_11   11
+
+#define BIT_000   000
+#define BIT_001   001
+#define BIT_010   010
+#define BIT_011   011
+#define BIT_100   100
+#define BIT_101   101
+#define BIT_110   110
+#define BIT_111   111
+
+#define BIT_0000   0000
+#define BIT_0001   0001
+#define BIT_0010   0010
+#define BIT_0011   0011
+#define BIT_0100   0100
+#define BIT_0101   0101
+#define BIT_0110   0110
+#define BIT_0111   0111
+#define BIT_1000   1000
+#define BIT_1001   1001
+#define BIT_1010   1010
+#define BIT_1011   1011
+#define BIT_1100   1100
+#define BIT_1101   1101
+#define BIT_1110   1110
+#define BIT_1111   1111
+
+#define BIT_00000   00000
+#define BIT_00001   00001
+#define BIT_00010   00010
+#define BIT_00011   00011
+#define BIT_00100   00100
+#define BIT_00101   00101
+#define BIT_00110   00110
+#define BIT_00111   00111
+#define BIT_01000   01000
+#define BIT_01001   01001
+#define BIT_01010   01010
+#define BIT_01011   01011
+#define BIT_01100   01100
+#define BIT_01101   01101
+#define BIT_01110   01110
+#define BIT_01111   01111
+#define BIT_10000   10000
+#define BIT_10001   10001
+#define BIT_10010   10010
+#define BIT_10011   10011
+#define BIT_10100   10100
+#define BIT_10101   10101
+#define BIT_10110   10110
+#define BIT_10111   10111
+#define BIT_11000   11000
+#define BIT_11001   11001
+#define BIT_11010   11010
+#define BIT_11011   11011
+#define BIT_11100   11100
+#define BIT_11101   11101
+#define BIT_11110   11110
+#define BIT_11111   11111
+
+#define BIT_000000   000000
+#define BIT_000001   000001
+#define BIT_000010   000010
+#define BIT_000011   000011
+#define BIT_000100   000100
+#define BIT_000101   000101
+#define BIT_000110   000110
+#define BIT_000111   000111
+#define BIT_001000   001000
+#define BIT_001001   001001
+#define BIT_001010   001010
+#define BIT_001011   001011
+#define BIT_001100   001100
+#define BIT_001101   001101
+#define BIT_001110   001110
+#define BIT_001111   001111
+#define BIT_010000   010000
+#define BIT_010001   010001
+#define BIT_010010   010010
+#define BIT_010011   010011
+#define BIT_010100   010100
+#define BIT_010101   010101
+#define BIT_010110   010110
+#define BIT_010111   010111
+#define BIT_011000   011000
+#define BIT_011001   011001
+#define BIT_011010   011010
+#define BIT_011011   011011
+#define BIT_011100   011100
+#define BIT_011101   011101
+#define BIT_011110   011110
+#define BIT_011111   011111
+#define BIT_100000   100000
+#define BIT_100001   100001
+#define BIT_100010   100010
+#define BIT_100011   100011
+#define BIT_100100   100100
+#define BIT_100101   100101
+#define BIT_100110   100110
+#define BIT_100111   100111
+#define BIT_101000   101000
+#define BIT_101001   101001
+#define BIT_101010   101010
+#define BIT_101011   101011
+#define BIT_101100   101100
+#define BIT_101101   101101
+#define BIT_101110   101110
+#define BIT_101111   101111
+#define BIT_110000   110000
+#define BIT_110001   110001
+#define BIT_110010   110010
+#define BIT_110011   110011
+#define BIT_110100   110100
+#define BIT_110101   110101
+#define BIT_110110   110110
+#define BIT_110111   110111
+#define BIT_111000   111000
+#define BIT_111001   111001
+#define BIT_111010   111010
+#define BIT_111011   111011
+#define BIT_111100   111100
+#define BIT_111101   111101
+#define BIT_111110   111110
+#define BIT_111111   111111
+
+#define BIT_0000000   0000000
+#define BIT_0000001   0000001
+#define BIT_0000010   0000010
+#define BIT_0000011   0000011
+#define BIT_0000100   0000100
+#define BIT_0000101   0000101
+#define BIT_0000110   0000110
+#define BIT_0000111   0000111
+#define BIT_0001000   0001000
+#define BIT_0001001   0001001
+#define BIT_0001010   0001010
+#define BIT_0001011   0001011
+#define BIT_0001100   0001100
+#define BIT_0001101   0001101
+#define BIT_0001110   0001110
+#define BIT_0001111   0001111
+#define BIT_0010000   0010000
+#define BIT_0010001   0010001
+#define BIT_0010010   0010010
+#define BIT_0010011   0010011
+#define BIT_0010100   0010100
+#define BIT_0010101   0010101
+#define BIT_0010110   0010110
+#define BIT_0010111   0010111
+#define BIT_0011000   0011000
+#define BIT_0011001   0011001
+#define BIT_0011010   0011010
+#define BIT_0011011   0011011
+#define BIT_0011100   0011100
+#define BIT_0011101   0011101
+#define BIT_0011110   0011110
+#define BIT_0011111   0011111
+#define BIT_0100000   0100000
+#define BIT_0100001   0100001
+#define BIT_0100010   0100010
+#define BIT_0100011   0100011
+#define BIT_0100100   0100100
+#define BIT_0100101   0100101
+#define BIT_0100110   0100110
+#define BIT_0100111   0100111
+#define BIT_0101000   0101000
+#define BIT_0101001   0101001
+#define BIT_0101010   0101010
+#define BIT_0101011   0101011
+#define BIT_0101100   0101100
+#define BIT_0101101   0101101
+#define BIT_0101110   0101110
+#define BIT_0101111   0101111
+#define BIT_0110000   0110000
+#define BIT_0110001   0110001
+#define BIT_0110010   0110010
+#define BIT_0110011   0110011
+#define BIT_0110100   0110100
+#define BIT_0110101   0110101
+#define BIT_0110110   0110110
+#define BIT_0110111   0110111
+#define BIT_0111000   0111000
+#define BIT_0111001   0111001
+#define BIT_0111010   0111010
+#define BIT_0111011   0111011
+#define BIT_0111100   0111100
+#define BIT_0111101   0111101
+#define BIT_0111110   0111110
+#define BIT_0111111   0111111
+#define BIT_1000000   1000000
+#define BIT_1000001   1000001
+#define BIT_1000010   1000010
+#define BIT_1000011   1000011
+#define BIT_1000100   1000100
+#define BIT_1000101   1000101
+#define BIT_1000110   1000110
+#define BIT_1000111   1000111
+#define BIT_1001000   1001000
+#define BIT_1001001   1001001
+#define BIT_1001010   1001010
+#define BIT_1001011   1001011
+#define BIT_1001100   1001100
+#define BIT_1001101   1001101
+#define BIT_1001110   1001110
+#define BIT_1001111   1001111
+#define BIT_1010000   1010000
+#define BIT_1010001   1010001
+#define BIT_1010010   1010010
+#define BIT_1010011   1010011
+#define BIT_1010100   1010100
+#define BIT_1010101   1010101
+#define BIT_1010110   1010110
+#define BIT_1010111   1010111
+#define BIT_1011000   1011000
+#define BIT_1011001   1011001
+#define BIT_1011010   1011010
+#define BIT_1011011   1011011
+#define BIT_1011100   1011100
+#define BIT_1011101   1011101
+#define BIT_1011110   1011110
+#define BIT_1011111   1011111
+#define BIT_1100000   1100000
+#define BIT_1100001   1100001
+#define BIT_1100010   1100010
+#define BIT_1100011   1100011
+#define BIT_1100100   1100100
+#define BIT_1100101   1100101
+#define BIT_1100110   1100110
+#define BIT_1100111   1100111
+#define BIT_1101000   1101000
+#define BIT_1101001   1101001
+#define BIT_1101010   1101010
+#define BIT_1101011   1101011
+#define BIT_1101100   1101100
+#define BIT_1101101   1101101
+#define BIT_1101110   1101110
+#define BIT_1101111   1101111
+#define BIT_1110000   1110000
+#define BIT_1110001   1110001
+#define BIT_1110010   1110010
+#define BIT_1110011   1110011
+#define BIT_1110100   1110100
+#define BIT_1110101   1110101
+#define BIT_1110110   1110110
+#define BIT_1110111   1110111
+#define BIT_1111000   1111000
+#define BIT_1111001   1111001
+#define BIT_1111010   1111010
+#define BIT_1111011   1111011
+#define BIT_1111100   1111100
+#define BIT_1111101   1111101
+#define BIT_1111110   1111110
+#define BIT_1111111   1111111
+
+#define BIT_00000000   00000000
+#define BIT_00000001   00000001
+#define BIT_00000010   00000010
+#define BIT_00000011   00000011
+#define BIT_00000100   00000100
+#define BIT_00000101   00000101
+#define BIT_00000110   00000110
+#define BIT_00000111   00000111
+#define BIT_00001000   00001000
+#define BIT_00001001   00001001
+#define BIT_00001010   00001010
+#define BIT_00001011   00001011
+#define BIT_00001100   00001100
+#define BIT_00001101   00001101
+#define BIT_00001110   00001110
+#define BIT_00001111   00001111
+#define BIT_00010000   00010000
+#define BIT_00010001   00010001
+#define BIT_00010010   00010010
+#define BIT_00010011   00010011
+#define BIT_00010100   00010100
+#define BIT_00010101   00010101
+#define BIT_00010110   00010110
+#define BIT_00010111   00010111
+#define BIT_00011000   00011000
+#define BIT_00011001   00011001
+#define BIT_00011010   00011010
+#define BIT_00011011   00011011
+#define BIT_00011100   00011100
+#define BIT_00011101   00011101
+#define BIT_00011110   00011110
+#define BIT_00011111   00011111
+#define BIT_00100000   00100000
+#define BIT_00100001   00100001
+#define BIT_00100010   00100010
+#define BIT_00100011   00100011
+#define BIT_00100100   00100100
+#define BIT_00100101   00100101
+#define BIT_00100110   00100110
+#define BIT_00100111   00100111
+#define BIT_00101000   00101000
+#define BIT_00101001   00101001
+#define BIT_00101010   00101010
+#define BIT_00101011   00101011
+#define BIT_00101100   00101100
+#define BIT_00101101   00101101
+#define BIT_00101110   00101110
+#define BIT_00101111   00101111
+#define BIT_00110000   00110000
+#define BIT_00110001   00110001
+#define BIT_00110010   00110010
+#define BIT_00110011   00110011
+#define BIT_00110100   00110100
+#define BIT_00110101   00110101
+#define BIT_00110110   00110110
+#define BIT_00110111   00110111
+#define BIT_00111000   00111000
+#define BIT_00111001   00111001
+#define BIT_00111010   00111010
+#define BIT_00111011   00111011
+#define BIT_00111100   00111100
+#define BIT_00111101   00111101
+#define BIT_00111110   00111110
+#define BIT_00111111   00111111
+#define BIT_01000000   01000000
+#define BIT_01000001   01000001
+#define BIT_01000010   01000010
+#define BIT_01000011   01000011
+#define BIT_01000100   01000100
+#define BIT_01000101   01000101
+#define BIT_01000110   01000110
+#define BIT_01000111   01000111
+#define BIT_01001000   01001000
+#define BIT_01001001   01001001
+#define BIT_01001010   01001010
+#define BIT_01001011   01001011
+#define BIT_01001100   01001100
+#define BIT_01001101   01001101
+#define BIT_01001110   01001110
+#define BIT_01001111   01001111
+#define BIT_01010000   01010000
+#define BIT_01010001   01010001
+#define BIT_01010010   01010010
+#define BIT_01010011   01010011
+#define BIT_01010100   01010100
+#define BIT_01010101   01010101
+#define BIT_01010110   01010110
+#define BIT_01010111   01010111
+#define BIT_01011000   01011000
+#define BIT_01011001   01011001
+#define BIT_01011010   01011010
+#define BIT_01011011   01011011
+#define BIT_01011100   01011100
+#define BIT_01011101   01011101
+#define BIT_01011110   01011110
+#define BIT_01011111   01011111
+#define BIT_01100000   01100000
+#define BIT_01100001   01100001
+#define BIT_01100010   01100010
+#define BIT_01100011   01100011
+#define BIT_01100100   01100100
+#define BIT_01100101   01100101
+#define BIT_01100110   01100110
+#define BIT_01100111   01100111
+#define BIT_01101000   01101000
+#define BIT_01101001   01101001
+#define BIT_01101010   01101010
+#define BIT_01101011   01101011
+#define BIT_01101100   01101100
+#define BIT_01101101   01101101
+#define BIT_01101110   01101110
+#define BIT_01101111   01101111
+#define BIT_01110000   01110000
+#define BIT_01110001   01110001
+#define BIT_01110010   01110010
+#define BIT_01110011   01110011
+#define BIT_01110100   01110100
+#define BIT_01110101   01110101
+#define BIT_01110110   01110110
+#define BIT_01110111   01110111
+#define BIT_01111000   01111000
+#define BIT_01111001   01111001
+#define BIT_01111010   01111010
+#define BIT_01111011   01111011
+#define BIT_01111100   01111100
+#define BIT_01111101   01111101
+#define BIT_01111110   01111110
+#define BIT_01111111   01111111
+#define BIT_10000000   10000000
+#define BIT_10000001   10000001
+#define BIT_10000010   10000010
+#define BIT_10000011   10000011
+#define BIT_10000100   10000100
+#define BIT_10000101   10000101
+#define BIT_10000110   10000110
+#define BIT_10000111   10000111
+#define BIT_10001000   10001000
+#define BIT_10001001   10001001
+#define BIT_10001010   10001010
+#define BIT_10001011   10001011
+#define BIT_10001100   10001100
+#define BIT_10001101   10001101
+#define BIT_10001110   10001110
+#define BIT_10001111   10001111
+#define BIT_10010000   10010000
+#define BIT_10010001   10010001
+#define BIT_10010010   10010010
+#define BIT_10010011   10010011
+#define BIT_10010100   10010100
+#define BIT_10010101   10010101
+#define BIT_10010110   10010110
+#define BIT_10010111   10010111
+#define BIT_10011000   10011000
+#define BIT_10011001   10011001
+#define BIT_10011010   10011010
+#define BIT_10011011   10011011
+#define BIT_10011100   10011100
+#define BIT_10011101   10011101
+#define BIT_10011110   10011110
+#define BIT_10011111   10011111
+#define BIT_10100000   10100000
+#define BIT_10100001   10100001
+#define BIT_10100010   10100010
+#define BIT_10100011   10100011
+#define BIT_10100100   10100100
+#define BIT_10100101   10100101
+#define BIT_10100110   10100110
+#define BIT_10100111   10100111
+#define BIT_10101000   10101000
+#define BIT_10101001   10101001
+#define BIT_10101010   10101010
+#define BIT_10101011   10101011
+#define BIT_10101100   10101100
+#define BIT_10101101   10101101
+#define BIT_10101110   10101110
+#define BIT_10101111   10101111
+#define BIT_10110000   10110000
+#define BIT_10110001   10110001
+#define BIT_10110010   10110010
+#define BIT_10110011   10110011
+#define BIT_10110100   10110100
+#define BIT_10110101   10110101
+#define BIT_10110110   10110110
+#define BIT_10110111   10110111
+#define BIT_10111000   10111000
+#define BIT_10111001   10111001
+#define BIT_10111010   10111010
+#define BIT_10111011   10111011
+#define BIT_10111100   10111100
+#define BIT_10111101   10111101
+#define BIT_10111110   10111110
+#define BIT_10111111   10111111
+#define BIT_11000000   11000000
+#define BIT_11000001   11000001
+#define BIT_11000010   11000010
+#define BIT_11000011   11000011
+#define BIT_11000100   11000100
+#define BIT_11000101   11000101
+#define BIT_11000110   11000110
+#define BIT_11000111   11000111
+#define BIT_11001000   11001000
+#define BIT_11001001   11001001
+#define BIT_11001010   11001010
+#define BIT_11001011   11001011
+#define BIT_11001100   11001100
+#define BIT_11001101   11001101
+#define BIT_11001110   11001110
+#define BIT_11001111   11001111
+#define BIT_11010000   11010000
+#define BIT_11010001   11010001
+#define BIT_11010010   11010010
+#define BIT_11010011   11010011
+#define BIT_11010100   11010100
+#define BIT_11010101   11010101
+#define BIT_11010110   11010110
+#define BIT_11010111   11010111
+#define BIT_11011000   11011000
+#define BIT_11011001   11011001
+#define BIT_11011010   11011010
+#define BIT_11011011   11011011
+#define BIT_11011100   11011100
+#define BIT_11011101   11011101
+#define BIT_11011110   11011110
+#define BIT_11011111   11011111
+#define BIT_11100000   11100000
+#define BIT_11100001   11100001
+#define BIT_11100010   11100010
+#define BIT_11100011   11100011
+#define BIT_11100100   11100100
+#define BIT_11100101   11100101
+#define BIT_11100110   11100110
+#define BIT_11100111   11100111
+#define BIT_11101000   11101000
+#define BIT_11101001   11101001
+#define BIT_11101010   11101010
+#define BIT_11101011   11101011
+#define BIT_11101100   11101100
+#define BIT_11101101   11101101
+#define BIT_11101110   11101110
+#define BIT_11101111   11101111
+#define BIT_11110000   11110000
+#define BIT_11110001   11110001
+#define BIT_11110010   11110010
+#define BIT_11110011   11110011
+#define BIT_11110100   11110100
+#define BIT_11110101   11110101
+#define BIT_11110110   11110110
+#define BIT_11110111   11110111
+#define BIT_11111000   11111000
+#define BIT_11111001   11111001
+#define BIT_11111010   11111010
+#define BIT_11111011   11111011
+#define BIT_11111100   11111100
+#define BIT_11111101   11111101
+#define BIT_11111110   11111110
+#define BIT_11111111   11111111
+
+#endif /* !defined(_MSC_VER) || (_MSC_VER >= 1900) */
+
+#endif /* __ASM__ */
+
+#endif /* __BINCONST_MSVC_H__ */

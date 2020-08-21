@@ -44,6 +44,9 @@ add_compile_flags("-pipe -fms-extensions -fno-strict-aliasing")
 # Prevent GCC from searching any of the default directories
 add_compile_flags("-nostdinc")
 
+# Define dummy macros for binary literals.
+add_compile_flags("-include binconst.h")
+
 add_compile_flags("-mstackrealign")
 add_compile_flags("-fno-aggressive-loop-optimizations")
 
