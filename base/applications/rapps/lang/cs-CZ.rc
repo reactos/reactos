@@ -262,4 +262,5 @@ BEGIN
     IDS_CMD_USAGE "Usage: "
     IDS_CMD_NEED_PACKAGE_NAME "Error: option %1 expects one or more package name."
     IDS_CMD_NEED_FILE_NAME "Error: option %1 expects a file name."
+    IDS_CMD_INVALID_OPTION "Error: Unknown or invalid command line option specified."
 END

@@ -138,7 +138,7 @@ BOOL ParseCmdAndExecute(LPWSTR lpCmdLine, BOOL bIsFirstLaunch, int nCmdShow)
         return FALSE;
     }
 
-    if (argc == 1)
+    if (argc == 1) // RAPPS is launched without options
     {
         // Close the console, and open MainWindow
         FreeConsole();
@@ -148,21 +148,26 @@ BOOL ParseCmdAndExecute(LPWSTR lpCmdLine, BOOL bIsFirstLaunch, int nCmdShow)
 
         MainWindowLoop(nCmdShow);
     }
+    else if (MatchCmdOption(argv[1], CMD_KEY_INSTALL))
+    {
+        return HandleInstallCommand(argv[1], argc - 2, argv + 2);
+    }
+    else if (MatchCmdOption(argv[1], CMD_KEY_SETUP))
+    {
+        return HandleSetupCommand(argv[1], argc - 2, argv + 2);
+    }
+    else if (MatchCmdOption(argv[1], CMD_KEY_HELP))
+    {
+        return HandleHelpCommand(argv[1], argc - 2, argv + 2);
+    }
     else
     {
-        if (MatchCmdOption(argv[1], CMD_KEY_INSTALL))
-        {
-            return HandleInstallCommand(argv[1], argc - 2, argv + 2);
-        }
-        else if (MatchCmdOption(argv[1], CMD_KEY_SETUP))
-        {
-            return HandleSetupCommand(argv[1], argc - 2, argv + 2);
-        }
-        else if (MatchCmdOption(argv[1], CMD_KEY_HELP))
-        {
-            return HandleHelpCommand(argv[1], argc - 2, argv + 2);
-        }
+        // unrecognized/invalid options
+        ConResPuts(StdOut, IDS_CMD_INVALID_OPTION);
+        ConPrintf(StdOut, (LPWSTR)L"\n");
+        return FALSE;
     }
+
 
     return TRUE;
 }
