@@ -254,3 +254,10 @@ BEGIN
     IDS_DL_DIALOG_DB_DOWNLOAD_DISP "正在更新数据库…"
     IDS_DL_DIALOG_DB_UNOFFICIAL_DOWNLOAD_DISP "正在更新数据库… (非官方源)"
 END
+
+STRINGTABLE
+BEGIN
+    IDS_CMD_USAGE "Usage: "
+    IDS_CMD_NEED_PACKAGE_NAME "Error: option %1 expects one or more package name."
+    IDS_CMD_NEED_FILE_NAME "Error: option %1 expects a file name."
+END

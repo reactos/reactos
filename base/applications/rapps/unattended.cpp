@@ -10,52 +10,24 @@
 
 #include <setupapi.h>
 
-#define MIN_ARGS 3
+#include <conutils.h>
 
-BOOL UseCmdParameters(LPWSTR lpCmdLine)
+
+BOOL HandleInstallCommand(LPWSTR szCommand, int argcLeft, LPWSTR * argvLeft)
 {
-    INT argc;
-    LPWSTR* argv = CommandLineToArgvW(lpCmdLine, &argc);
-
-    if (!argv || argc < MIN_ARGS)
+    if (argcLeft == 0)
     {
+        ConResMsgPrintf(StdOut, NULL, IDS_CMD_NEED_PACKAGE_NAME, szCommand);
+        ConPrintf(StdOut, L"\n");
         return FALSE;
     }
+    FreeConsole();
 
     ATL::CSimpleArray<ATL::CStringW> PkgNameList;
-    if (!StrCmpIW(argv[1], CMD_KEY_INSTALL))
-    {
-        for (INT i = 2; i < argc; ++i)
-        {
-            PkgNameList.Add(argv[i]);
-        }
-    }
-    else
-    if (!StrCmpIW(argv[1], CMD_KEY_SETUP))
-    {
-        HINF InfHandle = SetupOpenInfFileW(argv[2], NULL, INF_STYLE_WIN4, NULL);
-        if (InfHandle == INVALID_HANDLE_VALUE)
-        {
-            return FALSE;
-        }
 
-        INFCONTEXT Context;
-        if (SetupFindFirstLineW(InfHandle, L"RAPPS", L"Install", &Context))
-        {
-            WCHAR szPkgName[MAX_PATH];
-            do
-            {
-                if (SetupGetStringFieldW(&Context, 1, szPkgName, _countof(szPkgName), NULL))
-                {
-                    PkgNameList.Add(szPkgName);
-                }
-            } while (SetupFindNextLine(&Context, &Context));
-        }
-        SetupCloseInfFile(InfHandle);
-    }
-    else
+    for (int i = 0; i < argcLeft; i++)
     {
-        return FALSE;
+        PkgNameList.Add(argvLeft[i]);
     }
 
     CAvailableApps apps;
@@ -68,6 +40,109 @@ BOOL UseCmdParameters(LPWSTR lpCmdLine)
         DownloadListOfApplications(arrAppInfo, TRUE);
         return TRUE;
     }
+    else
+    {
+        return FALSE;
+    }
+}
 
-    return FALSE;
+BOOL HandleSetupCommand(LPWSTR szCommand, int argcLeft, LPWSTR * argvLeft)
+{
+    if (argcLeft != 1)
+    {
+        ConResMsgPrintf(StdOut, NULL, IDS_CMD_NEED_FILE_NAME, szCommand);
+        ConPrintf(StdOut, L"\n");
+        return FALSE;
+    }
+
+    ATL::CSimpleArray<ATL::CStringW> PkgNameList;
+    HINF InfHandle = SetupOpenInfFileW(argvLeft[0], NULL, INF_STYLE_WIN4, NULL);
+    if (InfHandle == INVALID_HANDLE_VALUE)
+    {
+        return FALSE;
+    }
+
+    INFCONTEXT Context;
+    if (SetupFindFirstLineW(InfHandle, L"RAPPS", L"Install", &Context))
+    {
+        WCHAR szPkgName[MAX_PATH];
+        do
+        {
+            if (SetupGetStringFieldW(&Context, 1, szPkgName, _countof(szPkgName), NULL))
+            {
+                PkgNameList.Add(szPkgName);
+            }
+        } while (SetupFindNextLine(&Context, &Context));
+    }
+    SetupCloseInfFile(InfHandle);
+
+    CAvailableApps apps;
+    apps.UpdateAppsDB();
+    apps.Enum(ENUM_ALL_AVAILABLE, NULL, NULL);
+
+    ATL::CSimpleArray<CAvailableApplicationInfo> arrAppInfo = apps.FindAppsByPkgNameList(PkgNameList);
+    if (arrAppInfo.GetSize() > 0)
+    {
+        DownloadListOfApplications(arrAppInfo, TRUE);
+        return TRUE;
+    }
+    else
+    {
+        return FALSE;
+    }
+}
+
+BOOL HandleHelpCommand(LPWSTR szCommand, int argcLeft, LPWSTR * argvLeft)
+{
+    if (argcLeft != 0)
+    {
+        return FALSE;
+    }
+
+    ConPrintf(StdOut, L"\n");
+    ConResPuts(StdOut, IDS_APPTITLE);
+    ConPrintf(StdOut, L"\n\n");
+
+    ConResPuts(StdOut, IDS_CMD_USAGE);
+    ConPrintf(StdOut, L"%ls\n", UsageString);
+    return TRUE;
+}
+
+BOOL ParseCmdAndExecute(LPWSTR lpCmdLine, BOOL bIsFirstLaunch, int nCmdShow)
+{
+    INT argc;
+    LPWSTR* argv = CommandLineToArgvW(lpCmdLine, &argc);
+
+    if (!argv)
+    {
+        return FALSE;
+    }
+
+    if (argc == 1)
+    {
+        // Close the console, and open MainWindow
+        FreeConsole();
+
+        if (SettingsInfo.bUpdateAtStart || bIsFirstLaunch)
+            CAvailableApps::ForceUpdateAppsDB();
+
+        MainWindowLoop(nCmdShow);
+    }
+    else
+    {
+        if (StrCmpIW(argv[1], CMD_KEY_INSTALL) == 0)
+        {
+            return HandleInstallCommand(argv[1], argc - 2, argv + 2);
+        }
+        else if (StrCmpIW(argv[1], CMD_KEY_SETUP) == 0)
+        {
+            return HandleSetupCommand(argv[1], argc - 2, argv + 2);
+        }
+        else if (StrCmpIW(argv[1], CMD_KEY_HELP) == 0)
+        {
+            return HandleHelpCommand(argv[1], argc - 2, argv + 2);
+        }
+    }
+
+    return TRUE;
 }

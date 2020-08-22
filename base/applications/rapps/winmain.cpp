@@ -14,6 +14,8 @@
 
 #include <gdiplus.h>
 
+#include <conutils.h>
+
 HWND hMainWnd;
 HINSTANCE hInst;
 SETTINGS_INFO SettingsInfo;
@@ -139,13 +141,16 @@ VOID SaveSettings(HWND hwnd)
     }
 }
 
-INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, INT nShowCmd)
+int wmain(int argc, wchar_t *argv[])
 {
+    MessageBoxW(0, L"", L"", 0);
+    ConInitStdStreams(); // Initialize the Console Standard Streams
+
     LPCWSTR szWindowClass = L"ROSAPPMGR";
     HANDLE hMutex;
     BOOL bIsFirstLaunch;
-
-    InitializeAtlModule(hInstance, TRUE);
+    
+    InitializeAtlModule(GetModuleHandle(NULL), TRUE);
     InitializeGDIPlus(TRUE);
 
     if (GetUserDefaultUILanguage() == MAKELANGID(LANG_HEBREW, SUBLANG_DEFAULT))
@@ -153,7 +158,7 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
         SetProcessDefaultLayout(LAYOUT_RTL);
     }
 
-    hInst = hInstance;
+    hInst = GetModuleHandle(NULL);
 
     hMutex = CreateMutexW(NULL, FALSE, szWindowClass);
     if ((!hMutex) || (GetLastError() == ERROR_ALREADY_EXISTS))
@@ -175,20 +180,14 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
     InitLogs();
     InitCommonControls();
 
-    // skip window creation if there were some keys
-    if (!UseCmdParameters(GetCommandLineW()))
-    {
-        if (SettingsInfo.bUpdateAtStart || bIsFirstLaunch)
-            CAvailableApps::ForceUpdateAppsDB();
-
-        ShowMainWindow(nShowCmd);
-    }
-
+    // parse cmd-line and perform the corresponding operation
+    BOOL bSuccess = ParseCmdAndExecute(GetCommandLineW(), bIsFirstLaunch, SW_SHOWNORMAL);
+    
     if (hMutex)
         CloseHandle(hMutex);
 
     InitializeGDIPlus(FALSE);
-    InitializeAtlModule(hInstance, FALSE);
+    InitializeAtlModule(GetModuleHandle(NULL), FALSE);
 
-    return 0;
+    return bSuccess ? 0 : 1;
 }

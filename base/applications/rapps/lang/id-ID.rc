@@ -251,3 +251,10 @@ BEGIN
     IDS_DL_DIALOG_DB_DOWNLOAD_DISP "Memperbarui database…"
     IDS_DL_DIALOG_DB_UNOFFICIAL_DOWNLOAD_DISP "Updating Database… (Unofficial source)"
 END
+
+STRINGTABLE
+BEGIN
+    IDS_CMD_USAGE "Usage: "
+    IDS_CMD_NEED_PACKAGE_NAME "Error: option %1 expects one or more package name."
+    IDS_CMD_NEED_FILE_NAME "Error: option %1 expects a file name."
+END

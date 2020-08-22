@@ -51,7 +51,7 @@ HTREEITEM CSideTreeView::AddItem(HTREEITEM hParent, ATL::CStringW &Text, INT Ima
 HTREEITEM CSideTreeView::AddCategory(HTREEITEM hRootItem, UINT TextIndex, UINT IconIndex)
 {
     ATL::CStringW szText;
-    INT Index;
+    INT Index = 0;
     HICON hIcon;
 
     hIcon = (HICON)LoadImageW(hInst,
@@ -861,7 +861,7 @@ void CMainWindow::HandleTabOrder(int direction)
 
 
 
-VOID ShowMainWindow(INT nShowCmd)
+VOID MainWindowLoop(INT nShowCmd)
 {
     HACCEL KeyBrd;
     MSG Msg;

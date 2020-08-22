@@ -134,4 +134,4 @@ public:
 };
 
 
-VOID ShowMainWindow(INT nShowCmd);
+VOID MainWindowLoop(INT nShowCmd);
