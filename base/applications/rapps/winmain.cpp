@@ -143,7 +143,6 @@ VOID SaveSettings(HWND hwnd)
 
 int wmain(int argc, wchar_t *argv[])
 {
-    MessageBoxW(0, L"", L"", 0);
     ConInitStdStreams(); // Initialize the Console Standard Streams
 
     LPCWSTR szWindowClass = L"ROSAPPMGR";
