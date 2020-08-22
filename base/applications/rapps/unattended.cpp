@@ -12,6 +12,26 @@
 
 #include <conutils.h>
 
+BOOL MatchCmdOption(LPWSTR argvOption, LPCWSTR szOptToMacth)
+{
+    WCHAR FirstCharList[] = { L'-', L'/' };
+
+    for (int i = 0; i < _countof(FirstCharList); i++)
+    {
+        if (argvOption[0] == FirstCharList[i])
+        {
+            if (StrCmpIW(argvOption + 1, szOptToMacth) == 0)
+            {
+                return TRUE;
+            }
+            else
+            {
+                return FALSE;
+            }
+        }
+    }
+    return FALSE;
+}
 
 BOOL HandleInstallCommand(LPWSTR szCommand, int argcLeft, LPWSTR * argvLeft)
 {
@@ -130,15 +150,15 @@ BOOL ParseCmdAndExecute(LPWSTR lpCmdLine, BOOL bIsFirstLaunch, int nCmdShow)
     }
     else
     {
-        if (StrCmpIW(argv[1], CMD_KEY_INSTALL) == 0)
+        if (MatchCmdOption(argv[1], CMD_KEY_INSTALL))
         {
             return HandleInstallCommand(argv[1], argc - 2, argv + 2);
         }
-        else if (StrCmpIW(argv[1], CMD_KEY_SETUP) == 0)
+        else if (MatchCmdOption(argv[1], CMD_KEY_SETUP))
         {
             return HandleSetupCommand(argv[1], argc - 2, argv + 2);
         }
-        else if (StrCmpIW(argv[1], CMD_KEY_HELP) == 0)
+        else if (MatchCmdOption(argv[1], CMD_KEY_HELP))
         {
             return HandleHelpCommand(argv[1], argc - 2, argv + 2);
         }
