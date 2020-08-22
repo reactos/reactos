@@ -645,14 +645,14 @@ HRESULT SHELL32_GetFSItemAttributes(IShellFolder * psf, LPCITEMIDLIST pidl, LPDW
                     Status = SHRegGetValueW(hkey, NULL, L"Attributes", RRF_RT_REG_DWORD, NULL, &dwAttributes, &dwSize);
                     if (Status == STATUS_SUCCESS)
                     {
-                        ERR("Augmenting '%S' with dwAttributes=0x%x\n", szFileName, dwAttributes);
+                        TRACE("Augmenting '%S' with dwAttributes=0x%x\n", szFileName, dwAttributes);
                         dwShellAttributes |= dwAttributes;
                     }
                     ::RegCloseKey(hkey);
 
                     // This should be presented as directory!
                     bDirectory = TRUE;
-                    ERR("Treating '%S' as directory!\n", szFileName);
+                    TRACE("Treating '%S' as directory!\n", szFileName);
                 }
             }
         }
