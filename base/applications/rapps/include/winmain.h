@@ -2,6 +2,8 @@
 #include <windef.h>
 #include <wininet.h>
 
+extern LPCWSTR szWindowClass;
+
 //TODO: Separate main and settings related definitions
 struct SETTINGS_INFO
 {

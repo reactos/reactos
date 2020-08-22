@@ -15,6 +15,7 @@
 #include "misc.h"
 #include "gui.h"
 #include "appview.h"
+#include "winmain.h"
 #include <shlobj_undoc.h>
 #include <shlguid_undoc.h>
 
@@ -723,7 +724,7 @@ ATL::CWndClassInfo &CMainWindow::GetWndClassInfo()
             LoadCursorW(NULL, IDC_ARROW),
             (HBRUSH)(COLOR_BTNFACE + 1),
             MAKEINTRESOURCEW(IDR_MAINMENU),
-            L"RAppsWnd",
+            szWindowClass,
             NULL
         },
         NULL, NULL, IDC_ARROW, TRUE, 0, _T("")

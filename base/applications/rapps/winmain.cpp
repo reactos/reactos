@@ -16,6 +16,8 @@
 
 #include <conutils.h>
 
+LPCWSTR szWindowClass = L"ROSAPPMGR";
+
 HWND hMainWnd;
 HINSTANCE hInst;
 SETTINGS_INFO SettingsInfo;
@@ -145,8 +147,6 @@ int wmain(int argc, wchar_t *argv[])
 {
     ConInitStdStreams(); // Initialize the Console Standard Streams
 
-    LPCWSTR szWindowClass = L"ROSAPPMGR";
-    HANDLE hMutex;
     BOOL bIsFirstLaunch;
     
     InitializeAtlModule(GetModuleHandle(NULL), TRUE);
@@ -159,17 +159,6 @@ int wmain(int argc, wchar_t *argv[])
 
     hInst = GetModuleHandle(NULL);
 
-    hMutex = CreateMutexW(NULL, FALSE, szWindowClass);
-    if ((!hMutex) || (GetLastError() == ERROR_ALREADY_EXISTS))
-    {
-        /* If already started, it is found its window */
-        HWND hWindow = FindWindowW(szWindowClass, NULL);
-
-        /* Activate window */
-        ShowWindow(hWindow, SW_SHOWNORMAL);
-        SetForegroundWindow(hWindow);
-        return 1;
-    }
     bIsFirstLaunch = !LoadSettings();
     if (bIsFirstLaunch)
     {
@@ -182,9 +171,6 @@ int wmain(int argc, wchar_t *argv[])
     // parse cmd-line and perform the corresponding operation
     BOOL bSuccess = ParseCmdAndExecute(GetCommandLineW(), bIsFirstLaunch, SW_SHOWNORMAL);
     
-    if (hMutex)
-        CloseHandle(hMutex);
-
     InitializeGDIPlus(FALSE);
     InitializeAtlModule(GetModuleHandle(NULL), FALSE);
 

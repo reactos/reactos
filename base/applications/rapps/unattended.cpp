@@ -8,6 +8,8 @@
 
 #include "unattended.h"
 
+#include "winmain.h"
+
 #include <setupapi.h>
 
 #include <conutils.h>
@@ -143,10 +145,29 @@ BOOL ParseCmdAndExecute(LPWSTR lpCmdLine, BOOL bIsFirstLaunch, int nCmdShow)
         // Close the console, and open MainWindow
         FreeConsole();
 
+
+        // Check for if rapps MainWindow is already launched in another process
+        HANDLE hMutex;
+
+        hMutex = CreateMutexW(NULL, FALSE, szWindowClass);
+        if ((!hMutex) || (GetLastError() == ERROR_ALREADY_EXISTS))
+        {
+            /* If already started, it is found its window */
+            HWND hWindow = FindWindowW(szWindowClass, NULL);
+
+            /* Activate window */
+            ShowWindow(hWindow, SW_SHOWNORMAL);
+            SetForegroundWindow(hWindow);
+            return FALSE;
+        }
+
         if (SettingsInfo.bUpdateAtStart || bIsFirstLaunch)
             CAvailableApps::ForceUpdateAppsDB();
 
         MainWindowLoop(nCmdShow);
+
+        if (hMutex)
+            CloseHandle(hMutex);
     }
     else if (MatchCmdOption(argv[1], CMD_KEY_INSTALL))
     {
