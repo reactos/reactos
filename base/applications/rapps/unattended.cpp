@@ -38,7 +38,7 @@ BOOL HandleInstallCommand(LPWSTR szCommand, int argcLeft, LPWSTR * argvLeft)
     if (argcLeft == 0)
     {
         ConResMsgPrintf(StdOut, NULL, IDS_CMD_NEED_PACKAGE_NAME, szCommand);
-        ConPrintf(StdOut, L"\n");
+        ConPrintf(StdOut, (LPWSTR)L"\n");
         return FALSE;
     }
     FreeConsole();
@@ -71,7 +71,7 @@ BOOL HandleSetupCommand(LPWSTR szCommand, int argcLeft, LPWSTR * argvLeft)
     if (argcLeft != 1)
     {
         ConResMsgPrintf(StdOut, NULL, IDS_CMD_NEED_FILE_NAME, szCommand);
-        ConPrintf(StdOut, L"\n");
+        ConPrintf(StdOut, (LPWSTR)L"\n");
         return FALSE;
     }
 
@@ -119,12 +119,12 @@ BOOL HandleHelpCommand(LPWSTR szCommand, int argcLeft, LPWSTR * argvLeft)
         return FALSE;
     }
 
-    ConPrintf(StdOut, L"\n");
+    ConPrintf(StdOut, (LPWSTR)L"\n");
     ConResPuts(StdOut, IDS_APPTITLE);
-    ConPrintf(StdOut, L"\n\n");
+    ConPrintf(StdOut, (LPWSTR)L"\n\n");
 
     ConResPuts(StdOut, IDS_CMD_USAGE);
-    ConPrintf(StdOut, L"%ls\n", UsageString);
+    ConPrintf(StdOut, (LPWSTR)L"%ls\n", UsageString);
     return TRUE;
 }
 
