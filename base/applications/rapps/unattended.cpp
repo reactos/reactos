@@ -16,7 +16,7 @@ BOOL MatchCmdOption(LPWSTR argvOption, LPCWSTR szOptToMacth)
 {
     WCHAR FirstCharList[] = { L'-', L'/' };
 
-    for (int i = 0; i < _countof(FirstCharList); i++)
+    for (UINT i = 0; i < _countof(FirstCharList); i++)
     {
         if (argvOption[0] == FirstCharList[i])
         {
