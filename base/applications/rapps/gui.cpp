@@ -614,14 +614,6 @@ VOID CMainWindow::OnCommand(WPARAM wParam, LPARAM lParam)
     }
 }
 
-BOOL CMainWindow::SearchPatternMatch(LPCWSTR szHaystack, LPCWSTR szNeedle)
-{
-    if (!*szNeedle)
-        return TRUE;
-    /* TODO: Improve pattern search beyond a simple case-insensitive substring search. */
-    return StrStrIW(szHaystack, szNeedle) != NULL;
-}
-
 BOOL CALLBACK CMainWindow::EnumInstalledAppProc(CInstalledApplicationInfo *Info)
 {
     if (!SearchPatternMatch(Info->szDisplayName.GetString(), szSearchPattern))

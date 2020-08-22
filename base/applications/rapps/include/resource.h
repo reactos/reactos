@@ -222,7 +222,9 @@
 #define IDS_CMD_USAGE                           953
 #define IDS_CMD_NEED_PACKAGE_NAME               954
 #define IDS_CMD_NEED_FILE_NAME                  955
-#define IDS_CMD_INVALID_OPTION                  956
+#define IDS_CMD_NEED_PARAMS                     956
+#define IDS_CMD_INVALID_OPTION                  957
+#define IDS_CMD_FIND_RESULT_FOR                 958
 
 /* Accelerators */
 #define HOTKEYS                  715

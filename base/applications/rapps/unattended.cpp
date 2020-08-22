@@ -114,6 +114,42 @@ BOOL HandleSetupCommand(LPWSTR szCommand, int argcLeft, LPWSTR * argvLeft)
     }
 }
 
+BOOL CALLBACK CmdFindAppEnum(CAvailableApplicationInfo *Info, BOOL bInitialCheckState, PVOID param)
+{
+    LPCWSTR lpszSearch = (LPCWSTR)param;
+    if (!SearchPatternMatch(Info->m_szName.GetString(), lpszSearch) &&
+        !SearchPatternMatch(Info->m_szDesc.GetString(), lpszSearch))
+    {
+        return TRUE;
+    }
+
+    ConPrintf(StdOut, L"%s (%s)\n", (LPCWSTR)(Info->m_szName), (LPCWSTR)(Info->m_szPkgName));
+    return TRUE;
+}
+
+BOOL HandleFindCommand(LPWSTR szCommand, int argcLeft, LPWSTR *argvLeft)
+{
+    if (argcLeft < 1)
+    {
+        ConResMsgPrintf(StdOut, NULL, IDS_CMD_NEED_PARAMS, szCommand);
+        ConPrintf(StdOut, (LPWSTR)L"\n");
+        return FALSE;
+    }
+
+    CAvailableApps apps;
+    apps.UpdateAppsDB();
+
+    for (int i = 0; i < argcLeft; i++)
+    {
+        ConResMsgPrintf(StdOut, NULL, IDS_CMD_FIND_RESULT_FOR, argvLeft[i]);
+        ConPrintf(StdOut, (LPWSTR)L"\n");
+        apps.Enum(ENUM_ALL_AVAILABLE, CmdFindAppEnum, argvLeft[i]);
+        ConPrintf(StdOut, (LPWSTR)L"\n");
+    }
+
+    return TRUE;
+}
+
 BOOL HandleHelpCommand(LPWSTR szCommand, int argcLeft, LPWSTR * argvLeft)
 {
     if (argcLeft != 0)
@@ -133,7 +169,7 @@ BOOL HandleHelpCommand(LPWSTR szCommand, int argcLeft, LPWSTR * argvLeft)
 BOOL ParseCmdAndExecute(LPWSTR lpCmdLine, BOOL bIsFirstLaunch, int nCmdShow)
 {
     INT argc;
-    LPWSTR* argv = CommandLineToArgvW(lpCmdLine, &argc);
+    LPWSTR *argv = CommandLineToArgvW(lpCmdLine, &argc);
 
     if (!argv)
     {
@@ -176,6 +212,10 @@ BOOL ParseCmdAndExecute(LPWSTR lpCmdLine, BOOL bIsFirstLaunch, int nCmdShow)
     else if (MatchCmdOption(argv[1], CMD_KEY_SETUP))
     {
         return HandleSetupCommand(argv[1], argc - 2, argv + 2);
+    }
+    else if (MatchCmdOption(argv[1], CMD_KEY_FIND))
+    {
+        return HandleFindCommand(argv[1], argc - 2, argv + 2);
     }
     else if (MatchCmdOption(argv[1], CMD_KEY_HELP))
     {
