@@ -5,6 +5,9 @@
  * COPYRIGHT:       Copyright 2020 Arnav Bhatt (arnavbhatt288 at gmail dot com)
  */
  
+#ifndef _CLEANMGR_PRECOMP_H
+#define _CLEANMGR_PRECOMP_H
+ 
 #define COBJMACROS 
 
 #include <windows.h>
@@ -142,3 +145,5 @@ PWCHAR RealStageFlag(int nArgs, PWCHAR ArgReal, LPWSTR* argList);
 INT_PTR CALLBACK ChoicePageDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam);
 INT_PTR CALLBACK OptionsPageDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam);
 INT_PTR CALLBACK SagesetPageDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam);
+
+#endif /* !_CLEANMGR_PRECOMP_H */
