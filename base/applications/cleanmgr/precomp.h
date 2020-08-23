@@ -1,11 +1,11 @@
 /*
  * PROJECT:         ReactOS Disk Cleanup
- * LICENSE:         GPL - See COPYING in the top level directory
+ * LICENSE:         GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:         Precompiled header file
  * COPYRIGHT:       Copyright 2020 Arnav Bhatt (arnavbhatt288 at gmail dot com)
  */
  
-#define COBJMACROS
+#define COBJMACROS 
 
 #include <windows.h>
 #include <windowsx.h>
@@ -26,13 +26,17 @@
 #include <vsstyle.h>
 #include <cpl.h>
 
+#undef _WIN32_WINNT
+#define _WIN32_WINNT 0x0600
+#include <winreg.h>
+
 typedef struct
 {
-	uint64_t tempASize;
-	uint64_t tempBSize;
-	uint64_t recyclebinSize;
-	uint64_t downloadedSize;
-	uint64_t rappsSize;
+	uint64_t TempASize;
+	uint64_t TempBSize;
+	uint64_t RecycleBinSize;
+	uint64_t ChkDskSize;
+	uint64_t RappsSize;
 } DIRSIZE;
 
 typedef struct
@@ -40,35 +44,33 @@ typedef struct
 	HWND hwndDlg;
 	HWND hChoicePage;
 	HWND hOptionsPage;
+	HWND hSagesetPage;
 	HWND hTab;
-	HWND hTestCtrl;
 	HINSTANCE hInst;
 } DLG_VAR;
 
 typedef struct
 {
-	WCHAR* unit;
-	WCHAR tempDir[MAX_PATH];
-	WCHAR alttempDir[MAX_PATH];
-	WCHAR recyclebinDir[MAX_PATH];
-	WCHAR downloadDir[MAX_PATH];
-	WCHAR rappsDir[MAX_PATH];
-	WCHAR recycleBin[MAX_PATH];
-	WCHAR driveLetter[MAX_PATH];
+	WCHAR TempDir[MAX_PATH];
+	WCHAR AltTempDir[MAX_PATH];
+	WCHAR RecycleBinDir[MAX_PATH];
+	WCHAR RappsDir[MAX_PATH];
+	WCHAR RecycleBin[MAX_PATH];
+	WCHAR DriveLetter[MAX_PATH];
 } WCHAR_VAR;
 
 typedef struct
 {
-	BOOL tempClean;
-	BOOL recycleClean;
-	BOOL downloadClean;
-	BOOL rappsClean;
-	BOOL sysDrive;
+	BOOL TempClean;
+	BOOL RecycleClean;
+	BOOL ChkDskClean;
+	BOOL RappsClean;
+	BOOL SysDrive;
 } BOOL_VAR;
 
 typedef enum
 {
-	DOWNLOADED_FILES = 0,
+	OLD_CHKDSK_FILES = 0,
 	RAPPS_FILES = 1,
 	TEMPORARY_FILE = 2,
 	RECYCLE_BIN = 3
@@ -80,28 +82,37 @@ BOOL CALLBACK StartDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam
 BOOL CALLBACK ProgressDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam);
 BOOL CALLBACK ChoiceDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam);
 BOOL CALLBACK ProgressEndDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam);
-
+BOOL CALLBACK SagesetDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam);
 
 // For util.c
-uint64_t dirSizeFunc(PWCHAR targetDir);
-double setOptimalSize(uint64_t size);
-BOOL findRecycleBin(PWCHAR drive);
-void addItem(HWND hList, PWCHAR string, PWCHAR subString, int iIndex);
+uint64_t DirSizeFunc(PWCHAR targetDir);
+double SetOptimalSize(uint64_t size);
+BOOL FindRecycleBin(PWCHAR drive);
+void AddItem(HWND hList, PWCHAR string, PWCHAR subString, int iIndex);
 HRESULT GetFolderCLSID(LPCWSTR path, SHDESCRIPTIONID* pdid);
-PWCHAR setOptimalUnit(uint64_t size);
-void setDetails(UINT stringID, UINT resourceID, HWND hwnd);
-void setTotalSize(long long size, UINT resourceID, HWND hwnd);
-BOOL OnCreate(HWND hWnd);
-void MsConfig_OnTabWndSelChange(void);
+PWCHAR SetOptimalUnit(uint64_t size);
+void SetDetails(UINT stringID, UINT resourceID, HWND hwnd);
+void SetTotalSize(long long size, UINT resourceID, HWND hwnd);
+BOOL OnCreate(HWND hwnd);
+BOOL OnCreateSageset(HWND hwnd);
+void OnTabWndSelChange(void);
 LRESULT APIENTRY ThemeHandler(HWND hDlg, NMCUSTOMDRAW* pNmDraw);
-void createImageLists(HWND hList);
-void selItem(HWND hwnd, int index);
-long long checkedItem(int index, HWND hwnd, HWND hList, long long size);
+BOOL CreateImageLists(HWND hList);
+void SelItem(HWND hwnd, int index);
+long long CheckedItem(int index, HWND hwnd, HWND hList, long long size);
+void SagesetCheckedItem(int index, HWND hwnd, HWND hList);
 BOOL EnableDialogTheme(HWND hwnd);
-DWORD WINAPI folderRemoval(LPVOID lpParam);
-DWORD WINAPI sizeCheck(LPVOID lpParam);
-BOOL argCheck(LPWSTR* argList, int nArgs);
+DWORD WINAPI FolderRemoval(LPVOID lpParam);
+DWORD WINAPI SizeCheck(LPVOID lpParam);
+BOOL ArgCheck(LPWSTR* argList, int nArgs);
+BOOL DriverunProc(LPWSTR* argList, PWCHAR LogicalDrives);
+void SagesetProc(int nArgs, PWCHAR ArgReal, LPWSTR* argList);
+void SagerunProc(int nArgs, PWCHAR ArgReal, LPWSTR* argList, PWCHAR LogicalDrives);
+BOOL RegValSet(PWCHAR RegArg, PWCHAR SubKey, BOOL ArgBool);
+DWORD RegQuery(PWCHAR RegArg, PWCHAR SubKey);
+PWCHAR RealStageFlag(int nArgs, PWCHAR ArgReal, LPWSTR* argList);
 
 // Dlg pages
 INT_PTR CALLBACK ChoicePageDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam);
 INT_PTR CALLBACK OptionsPageDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam);
+INT_PTR CALLBACK SagesetPageDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam);

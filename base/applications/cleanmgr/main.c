@@ -1,6 +1,6 @@
 /*
  * PROJECT:         ReactOS Disk Cleanup
- * LICENSE:         GPL - See COPYING in the top level directory
+ * LICENSE:         GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:         Main file
  * COPYRIGHT:       Copyright 2020 Arnav Bhatt (arnavbhatt288 at gmail dot com)
  */
@@ -21,13 +21,13 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	UNREFERENCED_PARAMETER(hPrevInstance);
 	UNREFERENCED_PARAMETER(nCmdShow);
 	
-	HANDLE obj;
+	HANDLE Obj;
 
-	INT_PTR dialogbuttonSelect;
+	INT_PTR DialogButtonSelect;
+	
+	WCHAR TempText[MAX_PATH] = { 0 };
 
-	WCHAR sysDrive[MAX_PATH] = { 0 };
-
-	LPWSTR* argList = NULL;
+	LPWSTR* ArgList = NULL;
 	int nArgs = 0;
 
 	InitControls.dwSize = sizeof(INITCOMMONCONTROLSEX);
@@ -39,30 +39,31 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 	}	
 	dv.hInst = hInstance;
 	
-	obj = CreateMutexW(NULL, FALSE, L"cleanmgr.exe");
+	Obj = CreateMutexW(NULL, FALSE, L"cleanmgr.exe");
 
-	if (obj)
+	if (Obj)
 	{
 		DWORD err = GetLastError();
 
 		if (err == ERROR_ALREADY_EXISTS)
 		{
-			MessageBoxW(NULL, L"Program is already running!", L"Error", MB_OK | MB_ICONSTOP);
-			CloseHandle(obj);
+			LoadStringW(hInstance, IDS_ERROR_RUNNING, TempText, _countof(TempText));
+			MessageBoxW(NULL, TempText, L"Error", MB_OK | MB_ICONSTOP);
+			CloseHandle(Obj);
 			return TRUE;
 		}
 	}
 
-	argList = CommandLineToArgvW(GetCommandLineW(), &nArgs);
+	ArgList = CommandLineToArgvW(GetCommandLineW(), &nArgs);
 
-	if (argList == NULL)
+	if (ArgList == NULL)
 	{
 		return FALSE;
 	}
 
 	else if (nArgs > 1)
 	{
-		if(!argCheck(argList, nArgs))
+		if(!ArgCheck(ArgList, nArgs))
 		{
 			return FALSE;
 		}
@@ -70,42 +71,35 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
 	else
 	{
-		dialogbuttonSelect = DialogBoxParamW(hInstance, MAKEINTRESOURCEW(IDD_START), NULL, StartDlgProc, 0);
+		DialogButtonSelect = DialogBoxParamW(hInstance, MAKEINTRESOURCEW(IDD_START), NULL, StartDlgProc, 0);
 
-		if (dialogbuttonSelect == IDCANCEL)
+		if (DialogButtonSelect == IDCANCEL)
 		{
 			return TRUE;
 		}
 	}
-
-	GetEnvironmentVariableW(L"SystemDrive", sysDrive, _countof(sysDrive));
-	
-	if(wcscmp(sysDrive, wcv.driveLetter) == 0)
-	{
-		bv.sysDrive = TRUE;
-	}
 	
 	Sleep(150);
 	
-	dialogbuttonSelect = DialogBoxParamW(hInstance, MAKEINTRESOURCEW(IDD_PROGRESS), NULL, ProgressDlgProc, 0);
+	DialogButtonSelect = DialogBoxParamW(hInstance, MAKEINTRESOURCEW(IDD_PROGRESS), NULL, ProgressDlgProc, 0);
 
-	if(dialogbuttonSelect == IDCANCEL)
+	if(DialogButtonSelect == IDCANCEL)
 	{
 		return TRUE;
 	}
 
-	dialogbuttonSelect = DialogBoxParamW(hInstance, MAKEINTRESOURCEW(IDD_CHOICE), NULL, ChoiceDlgProc, 0);
+	DialogButtonSelect = DialogBoxParamW(hInstance, MAKEINTRESOURCEW(IDD_CHOICE), NULL, ChoiceDlgProc, 0);
 
-	if(dialogbuttonSelect == IDCANCEL)
+	if(DialogButtonSelect == IDCANCEL)
 	{
 		return TRUE;
 	}
 
 	DialogBoxParamW(hInstance, MAKEINTRESOURCEW(IDD_PROGRESS_END), NULL, ProgressEndDlgProc, 0);
 	
-	if(obj)
+	if(Obj)
 	{
-		CloseHandle(obj);
+		CloseHandle(Obj);
 	}
 
 	return TRUE;

@@ -1,6 +1,6 @@
 /*
  * PROJECT:         ReactOS Disk Cleanup
- * LICENSE:         GPL - See COPYING in the top level directory
+ * LICENSE:         GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:         Dialog Procs
  * COPYRIGHT:       Copyright 2020 Arnav Bhatt (arnavbhatt288 at gmail dot com)
  */
@@ -19,28 +19,26 @@ BOOL_VAR bv;
 BOOL CALLBACK StartDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 {
 	WCHAR LogicalDrives[MAX_PATH] = { 0 };
+	WCHAR TempText[MAX_PATH] = { 0 };
 	int ItemIndex = 0;
-	static HBITMAP hbmDrive;
-	static HBITMAP hbmMask;
-	DWORD dwIndex = 0;
-
-	bv.sysDrive = FALSE;
-	
-	DWORD drives = 0;
+	static HBITMAP HbmDrive;
+	static HBITMAP HbmMask;
+	DWORD DwIndex = 0;
+	DWORD NumOfDrives = 0;
 
 	switch(Message)
     {
 		case WM_INITDIALOG:
-			drives = GetLogicalDriveStringsW(MAX_PATH, LogicalDrives);
-			if (drives == 0)
+			NumOfDrives = GetLogicalDriveStringsW(MAX_PATH, LogicalDrives);
+			if (NumOfDrives == 0)
 			{
 				MessageBoxW(NULL, L"GetLogicalDriveStringsW() failed!", L"Error", MB_OK | MB_ICONERROR);
 				return FALSE;
 			}
-			hbmDrive = LoadBitmapW(dv.hInst, MAKEINTRESOURCE(IDB_DRIVE));
-			hbmMask = LoadBitmapW(dv.hInst, MAKEINTRESOURCE(IDB_MASK));
+			HbmDrive = LoadBitmapW(dv.hInst, MAKEINTRESOURCE(IDB_DRIVE));
+			HbmMask = LoadBitmapW(dv.hInst, MAKEINTRESOURCE(IDB_MASK));
 
-			if (drives <= MAX_PATH)
+			if (NumOfDrives <= MAX_PATH)
 			{
 				WCHAR* SingleDrive = LogicalDrives;
 				WCHAR RealDrive[MAX_PATH] = { 0 };
@@ -50,8 +48,8 @@ BOOL CALLBACK StartDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam
 					{
 						StringCchCopyW(RealDrive, MAX_PATH, SingleDrive);
 						RealDrive[wcslen(RealDrive) - 1] = '\0';
-						dwIndex = SendMessageW(GetDlgItem(hwnd, IDC_DRIVE), CB_ADDSTRING, 0, (LPARAM)RealDrive);
-						if (SendMessageW(GetDlgItem(hwnd, IDC_DRIVE), CB_SETITEMDATA, dwIndex, (LPARAM)hbmDrive) == CB_ERR)
+						DwIndex = SendMessageW(GetDlgItem(hwnd, IDC_DRIVE), CB_ADDSTRING, 0, (LPARAM)RealDrive);
+						if (SendMessageW(GetDlgItem(hwnd, IDC_DRIVE), CB_SETITEMDATA, DwIndex, (LPARAM)HbmDrive) == CB_ERR)
 						{
 							return FALSE;
 						}
@@ -82,11 +80,11 @@ BOOL CALLBACK StartDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam
 
 		case WM_DRAWITEM:
 		{
-			COLORREF clrBackground, clrForeground;
+			COLORREF ClrBackground, ClrForeground;
 			TEXTMETRIC tm;
 			int x, y;
 			size_t cch;
-			HBITMAP hbmIcon;
+			HBITMAP HbmIcon;
 			WCHAR achTemp[256] = { 0 };
 
 			LPDRAWITEMSTRUCT lpdis = (LPDRAWITEMSTRUCT)lParam;
@@ -94,13 +92,19 @@ BOOL CALLBACK StartDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam
 			if (lpdis->itemID == -1)
 				break;
 
-			hbmIcon = (HBITMAP)lpdis->itemData;
+			HbmIcon = (HBITMAP)lpdis->itemData;
 
-			clrForeground = SetTextColor(lpdis->hDC,
+			if (HbmIcon == NULL)
+			{
+				MessageBoxW(NULL, L"WM_DRAWITEM failed!", L"Error", MB_OK | MB_ICONERROR);
+				return FALSE;
+			}
+			
+			ClrForeground = SetTextColor(lpdis->hDC,
 				GetSysColor(lpdis->itemState & ODS_SELECTED ?
 					COLOR_HIGHLIGHTTEXT : COLOR_WINDOWTEXT));
 
-			clrBackground = SetBkColor(lpdis->hDC,
+			ClrBackground = SetBkColor(lpdis->hDC,
 				GetSysColor(lpdis->itemState & ODS_SELECTED ?
 					COLOR_HIGHLIGHT : COLOR_WINDOW));
 
@@ -118,18 +122,18 @@ BOOL CALLBACK StartDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam
 				ETO_CLIPPED | ETO_OPAQUE, &lpdis->rcItem,
 				achTemp, (UINT)cch, NULL);
 
-			SetTextColor(lpdis->hDC, clrForeground);
-			SetBkColor(lpdis->hDC, clrBackground);
+			SetTextColor(lpdis->hDC, ClrForeground);
+			SetBkColor(lpdis->hDC, ClrBackground);
 
 			HDC hdc = CreateCompatibleDC(lpdis->hDC);
 			if (hdc == NULL)
 				break;
 
-			SelectObject(hdc, hbmMask);
+			SelectObject(hdc, HbmMask);
 			BitBlt(lpdis->hDC, x, lpdis->rcItem.top + 1,
 				CX_BITMAP, CY_BITMAP, hdc, 0, 0, SRCAND);
 
-			SelectObject(hdc, hbmIcon);
+			SelectObject(hdc, HbmIcon);
 			BitBlt(lpdis->hDC, x, lpdis->rcItem.top + 1,
 				CX_BITMAP, CY_BITMAP, hdc, 0, 0, SRCPAINT);
 
@@ -150,19 +154,21 @@ BOOL CALLBACK StartDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam
 					MessageBoxW(NULL, L"SendMessageW failed!", L"Error", MB_OK | MB_ICONERROR);
 					return FALSE;
 				}
-				SendMessageW(GetDlgItem(hwnd, IDC_DRIVE), CB_GETLBTEXT, (WPARAM)ItemIndex, (LPARAM)wcv.driveLetter);
+				SendMessageW(GetDlgItem(hwnd, IDC_DRIVE), CB_GETLBTEXT, (WPARAM)ItemIndex, (LPARAM)wcv.DriveLetter);
 			}
 
 			switch(LOWORD(wParam))
 			{
 				case IDOK:
-					if (wcslen(wcv.driveLetter) == 0)
+					if (wcslen(wcv.DriveLetter) == 0)
 					{
-						MessageBoxW(hwnd, L"Select a drive!", L"Warning", MB_OK | MB_ICONWARNING);
+						ZeroMemory(&TempText, sizeof(TempText));
+						LoadStringW(GetModuleHandleW(NULL), IDS_WARNING_DRIVE, TempText, _countof(TempText));
+						MessageBoxW(hwnd, TempText, L"Warning", MB_OK | MB_ICONWARNING);
 						break;
 					}
-					DeleteObject(hbmDrive);
-					DeleteObject(hbmMask);
+					DeleteObject(HbmDrive);
+					DeleteObject(HbmMask);
 					EndDialog(hwnd, IDOK);
 					break;
 				case IDCANCEL:
@@ -183,18 +189,25 @@ BOOL CALLBACK StartDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam
 
 BOOL CALLBACK ProgressDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 {
-	static HANDLE threadOBJ = NULL;
-	WCHAR tempText[MAX_PATH] = { 0 };
-	WCHAR fullText[MAX_PATH] = { 0 };
-
+	static HANDLE ThreadOBJ = NULL;
+	WCHAR TempText[MAX_PATH] = { 0 };
+	WCHAR FullText[MAX_PATH] = { 0 };
+	WCHAR SysDrive[MAX_PATH] = { 0 };
+	
 	switch(Message)
     {
         case WM_INITDIALOG:
-			LoadStringW(GetModuleHandleW(NULL), IDS_SCAN, tempText, _countof(tempText));
-			StringCchPrintfW(fullText, _countof(fullText), tempText, wcv.driveLetter);
+			bv.SysDrive = FALSE;
+			LoadStringW(GetModuleHandleW(NULL), IDS_SCAN, TempText, _countof(TempText));
+			StringCchPrintfW(FullText, _countof(FullText), TempText, wcv.DriveLetter);
 			dv.hwndDlg = hwnd;
-			SetDlgItemTextW(hwnd, IDC_STATIC_SCAN, fullText);
-			threadOBJ = CreateThread(NULL, 0, &sizeCheck, NULL, 0, NULL);
+			SetDlgItemTextW(hwnd, IDC_STATIC_SCAN, FullText);
+			GetEnvironmentVariableW(L"SystemDrive", SysDrive, _countof(SysDrive));
+			if(wcscmp(SysDrive, wcv.DriveLetter) == 0)
+			{
+				bv.SysDrive = TRUE;
+			}
+			ThreadOBJ = CreateThread(NULL, 0, &SizeCheck, NULL, 0, NULL);
 			return TRUE;
 		
 		case WM_NOTIFY:
@@ -214,11 +227,11 @@ BOOL CALLBACK ProgressDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPa
 			break;
 
 		case WM_CLOSE:
-			CloseHandle(threadOBJ);
+			CloseHandle(ThreadOBJ);
 			EndDialog(hwnd, IDCANCEL);
 			break;
         case WM_DESTROY:
-			CloseHandle(threadOBJ);
+			CloseHandle(ThreadOBJ);
 			EndDialog(hwnd, 0);
 			break;
 		default:
@@ -230,17 +243,17 @@ BOOL CALLBACK ProgressDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPa
 BOOL CALLBACK ChoiceDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 {
 	LPNMHDR pnmh;
-	int mesgBox;
+	int MesgBox;
 	
-	WCHAR tempText[MAX_PATH] = { 0 };
-	WCHAR fullText[MAX_PATH] = { 0 };
+	WCHAR TempText[MAX_PATH] = { 0 };
+	WCHAR FullText[MAX_PATH] = { 0 };
 
 	switch (Message)
 	{
 		case WM_INITDIALOG:
-			LoadStringW(GetModuleHandleW(NULL), IDS_TITLE, tempText, _countof(tempText));
-			StringCchPrintfW(fullText, _countof(fullText), tempText, wcv.driveLetter);
-			SetWindowTextW(hwnd, fullText);
+			LoadStringW(GetModuleHandleW(NULL), IDS_TITLE, TempText, _countof(TempText));
+			StringCchPrintfW(FullText, _countof(FullText), TempText, wcv.DriveLetter);
+			SetWindowTextW(hwnd, FullText);
 			return OnCreate(hwnd);
 
 		case WM_NOTIFY:
@@ -249,7 +262,7 @@ BOOL CALLBACK ChoiceDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
 				(pnmh->idFrom == IDC_TAB) &&
 				(pnmh->code == TCN_SELCHANGE))
 			{
-				MsConfig_OnTabWndSelChange();
+				OnTabWndSelChange();
 			}
 			return ThemeHandler(hwnd, (LPNMCUSTOMDRAW)lParam);
 
@@ -261,14 +274,18 @@ BOOL CALLBACK ChoiceDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
 			switch (LOWORD(wParam))
 			{
 				case IDOK:
-					if (bv.downloadClean == FALSE && bv.recycleClean == FALSE && bv.downloadClean == FALSE && bv.rappsClean == FALSE && bv.tempClean == FALSE)
+					if (bv.ChkDskClean == FALSE && bv.RecycleClean == FALSE && bv.ChkDskClean == FALSE && bv.RappsClean == FALSE && bv.TempClean == FALSE)
 					{
-						MessageBoxW(hwnd, L"Select an option!", L"Warning", MB_OK | MB_ICONWARNING);
+						ZeroMemory(&TempText, sizeof(TempText));
+						LoadStringW(GetModuleHandleW(NULL), IDS_WARNING_OPTION, TempText, _countof(TempText));
+						MessageBoxW(hwnd, TempText, L"Warning", MB_OK | MB_ICONWARNING);
 						break;
 					}
 			
-					mesgBox = MessageBoxW(hwnd, L"Are you sure to delete these files?", L"Warning", MB_YESNO | MB_ICONWARNING | MB_DEFBUTTON2);
-					switch (mesgBox)
+					ZeroMemory(&TempText, sizeof(TempText));
+					LoadStringW(GetModuleHandleW(NULL), IDS_CONFIRM_DELETION, TempText, _countof(TempText));
+					MesgBox = MessageBoxW(hwnd, TempText, L"Warning", MB_YESNO | MB_ICONWARNING | MB_DEFBUTTON2);
+					switch (MesgBox)
 					{
 						case IDYES:
 							EndDialog(hwnd, IDOK);
@@ -303,18 +320,18 @@ BOOL CALLBACK ChoiceDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
 
 BOOL CALLBACK ProgressEndDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 {
-	static HANDLE threadOBJ = NULL;
-	WCHAR tempText[MAX_PATH] = { 0 };
-	WCHAR fullText[MAX_PATH] = { 0 };
+	static HANDLE ThreadOBJ = NULL;
+	WCHAR TempText[MAX_PATH] = { 0 };
+	WCHAR FullText[MAX_PATH] = { 0 };
 
 	switch (Message)
 	{
 	case WM_INITDIALOG:
-		LoadStringW(GetModuleHandleW(NULL), IDS_REMOVAL, tempText, _countof(tempText));
-		StringCchPrintfW(fullText, _countof(fullText), tempText, wcv.driveLetter);
+		LoadStringW(GetModuleHandleW(NULL), IDS_REMOVAL, TempText, _countof(TempText));
+		StringCchPrintfW(FullText, _countof(FullText), TempText, wcv.DriveLetter);
 		dv.hwndDlg = hwnd;
-		SetDlgItemTextW(hwnd, IDC_STATIC_REMOVAL, fullText);
-		threadOBJ = CreateThread(NULL, 0, &folderRemoval, NULL, 0, NULL);
+		SetDlgItemTextW(hwnd, IDC_STATIC_REMOVAL, FullText);
+		ThreadOBJ = CreateThread(NULL, 0, &FolderRemoval, NULL, 0, NULL);
 		return TRUE;
 
 	case WM_NOTIFY:
@@ -334,17 +351,82 @@ BOOL CALLBACK ProgressEndDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM 
 		break;
 
 	case WM_CLOSE:
-		CloseHandle(threadOBJ);
+		CloseHandle(ThreadOBJ);
 		EndDialog(hwnd, 0);
 		break;
 
 	case WM_DESTROY:
-		CloseHandle(threadOBJ);
+		CloseHandle(ThreadOBJ);
 		EndDialog(hwnd, 0);
 		break;
 
 	default:
 		return FALSE;
+	}
+	return TRUE;
+}
+
+BOOL CALLBACK SagesetDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
+{
+	int MesgBox;
+	WCHAR TempText[MAX_PATH] = { 0 };
+
+	switch (Message)
+	{
+		case WM_INITDIALOG:
+			return OnCreateSageset(hwnd);
+
+		case WM_NOTIFY:
+			return ThemeHandler(hwnd, (LPNMCUSTOMDRAW)lParam);
+
+		case WM_THEMECHANGED:
+			InvalidateRect(hwnd, NULL, FALSE);
+			break;
+
+		case WM_COMMAND:
+			switch (LOWORD(wParam))
+			{
+				case IDOK:
+					if (bv.ChkDskClean == FALSE && bv.RecycleClean == FALSE && bv.ChkDskClean == FALSE && bv.RappsClean == FALSE && bv.TempClean == FALSE)
+					{
+						ZeroMemory(&TempText, sizeof(TempText));
+						LoadStringW(GetModuleHandleW(NULL), IDS_WARNING_OPTION, TempText, _countof(TempText));
+						MessageBoxW(hwnd, TempText, L"Warning", MB_OK | MB_ICONWARNING);
+						break;
+					}
+			
+					ZeroMemory(&TempText, sizeof(TempText));
+					LoadStringW(GetModuleHandleW(NULL), IDS_CONFIRM_CONFIG, TempText, _countof(TempText));
+					MesgBox = MessageBoxW(hwnd, TempText, L"Warning", MB_YESNO | MB_ICONWARNING | MB_DEFBUTTON2);
+					switch (MesgBox)
+					{
+						case IDYES:
+							EndDialog(hwnd, IDOK);
+							break;
+
+						case IDNO:
+							break;
+					}
+					break;
+
+				case IDCANCEL:
+					PostMessage(hwnd, WM_CLOSE, 0, 0);
+					break;
+			}
+			break;
+	
+		case WM_CLOSE:
+			if(dv.hChoicePage)
+				DestroyWindow(dv.hChoicePage);
+
+			if (dv.hOptionsPage)
+				DestroyWindow(dv.hOptionsPage);
+
+			EndDialog(hwnd, IDCANCEL);
+			break;
+		
+		default:
+			return FALSE;
 	}
 	return TRUE;
 }

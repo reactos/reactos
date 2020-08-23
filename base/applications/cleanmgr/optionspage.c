@@ -1,6 +1,6 @@
 /*
  * PROJECT:         ReactOS Disk Cleanup
- * LICENSE:         GPL - See COPYING in the top level directory
+ * LICENSE:         GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:         Child dialog proc
  * COPYRIGHT:       Copyright 2020 Arnav Bhatt (arnavbhatt288 at gmail dot com)
  */

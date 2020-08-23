@@ -469,6 +469,13 @@ HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\HideDesktopIcons\Classi
 HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\BitBucket",,0x00000012
 HKCU,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\BitBucket\Volume",,0x00000012
 
+; For cleanmgr.exe
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VolumeCaches",,0x00000012
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VolumeCaches\Old ChkDsk Files",,0x00000012
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VolumeCaches\Temporary Files",,0x00000012
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VolumeCaches\RAPPS Files",,0x00000012
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VolumeCaches\Recycle Bin",,0x00000012
+
 ; CMD Settings
 HKLM,"SOFTWARE\Microsoft\Command Processor","AutoRun",0x00020000,""
 
