@@ -123,7 +123,7 @@ BOOL CALLBACK CmdFindAppEnum(CAvailableApplicationInfo *Info, BOOL bInitialCheck
         return TRUE;
     }
 
-    ConPrintf(StdOut, L"%s (%s)\n", (LPCWSTR)(Info->m_szName), (LPCWSTR)(Info->m_szPkgName));
+    ConPrintf(StdOut, (LPWSTR)L"%s (%s)\n", (LPCWSTR)(Info->m_szName), (LPCWSTR)(Info->m_szPkgName));
     return TRUE;
 }
 
