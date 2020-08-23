@@ -39,40 +39,46 @@ extern "C" {
 // Shadow type, implementation-specific
 typedef struct _CON_STREAM CON_STREAM, *PCON_STREAM;
 
-// typedef INT (__stdcall *CON_READ_FUNC)(IN PCON_STREAM, IN PTCHAR, IN DWORD);
-                                        // Stream,         szStr,     len
-typedef INT (__stdcall *CON_WRITE_FUNC)(IN PCON_STREAM, IN PTCHAR, IN DWORD);
+// typedef INT (__stdcall *CON_READ_FUNC)(
+    // IN PCON_STREAM Stream,
+    // OUT PTCHAR szStr,
+    // IN OUT PDWORD len);
+
+typedef INT (__stdcall *CON_WRITE_FUNC)(
+    IN PCON_STREAM Stream,
+    IN PCTCH szStr,
+    IN DWORD len);
 
 
 INT
 __stdcall
 ConWrite(
     IN PCON_STREAM Stream,
-    IN PTCHAR szStr,
-    IN DWORD  len);
+    IN PCTCH szStr,
+    IN DWORD len);
 
 INT
 ConStreamWrite(
     IN PCON_STREAM Stream,
-    IN PTCHAR szStr,
-    IN DWORD  len);
+    IN PCTCH szStr,
+    IN DWORD len);
 
 INT
 ConPuts(
     IN PCON_STREAM Stream,
-    IN LPWSTR szStr);
+    IN PCWSTR szStr);
 
 INT
 ConPrintfV(
     IN PCON_STREAM Stream,
-    IN LPWSTR  szStr,
+    IN PCWSTR  szStr,
     IN va_list args);
 
 INT
 __cdecl
 ConPrintf(
     IN PCON_STREAM Stream,
-    IN LPWSTR szStr,
+    IN PCWSTR szStr,
     ...);
 
 INT

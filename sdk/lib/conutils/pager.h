@@ -50,15 +50,17 @@ do { \
 } while (0)
 
 
-                                      // Pager,         Done,     Total
-typedef BOOL (__stdcall *PAGE_PROMPT)(IN PCON_PAGER, IN DWORD, IN DWORD);
+typedef BOOL (__stdcall *PAGE_PROMPT)(
+    IN PCON_PAGER Pager,
+    IN DWORD Done,
+    IN DWORD Total);
 
 BOOL
 ConWritePaging(
     IN PCON_PAGER Pager,
     IN PAGE_PROMPT PagePrompt,
     IN BOOL StartPaging,
-    IN PTCHAR szStr,
+    IN PCTCH szStr,
     IN DWORD len);
 
 BOOL
@@ -66,7 +68,7 @@ ConPutsPaging(
     IN PCON_PAGER Pager,
     IN PAGE_PROMPT PagePrompt,
     IN BOOL StartPaging,
-    IN LPTSTR szStr);
+    IN PCTSTR szStr);
 
 BOOL
 ConResPagingEx(

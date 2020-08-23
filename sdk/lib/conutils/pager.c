@@ -39,7 +39,7 @@ ConWritePaging(
     IN PCON_PAGER Pager,
     IN PAGE_PROMPT PagePrompt,
     IN BOOL StartPaging,
-    IN PTCHAR szStr,
+    IN PCTCH szStr,
     IN DWORD len)
 {
     CONSOLE_SCREEN_BUFFER_INFO csbi;
@@ -121,7 +121,7 @@ ConPutsPaging(
     IN PCON_PAGER Pager,
     IN PAGE_PROMPT PagePrompt,
     IN BOOL StartPaging,
-    IN LPTSTR szStr)
+    IN PCTSTR szStr)
 {
     DWORD len;
 
@@ -142,7 +142,7 @@ ConResPagingEx(
     IN UINT uID)
 {
     INT Len;
-    PWCHAR szStr = NULL;
+    PCWSTR szStr = NULL;
 
     Len = K32LoadStringW(hInstance, uID, (PWSTR)&szStr, 0);
     if (szStr && Len)
