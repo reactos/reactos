@@ -19,6 +19,7 @@
 #include <string.h>
 #include <guiddef.h>
 #include <inttypes.h>
+#include <debug.h>
 #include <shlobj.h>
 #include <shobjidl.h>
 #include <shlguid.h>
