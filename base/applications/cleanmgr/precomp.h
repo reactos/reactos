@@ -10,8 +10,8 @@
 #include <windows.h>
 #include <windowsx.h>
 #include <wchar.h>
-#include <Shlwapi.h>
-#include <Commctrl.h>
+#include <shlwapi.h>
+#include <commctrl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
