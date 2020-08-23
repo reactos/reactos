@@ -150,6 +150,77 @@ BOOL HandleFindCommand(LPWSTR szCommand, int argcLeft, LPWSTR *argvLeft)
     return TRUE;
 }
 
+BOOL HandleInfoCommand(LPWSTR szCommand, int argcLeft, LPWSTR *argvLeft)
+{
+    if (argcLeft < 1)
+    {
+        ConResMsgPrintf(StdOut, NULL, IDS_CMD_NEED_PARAMS, szCommand);
+        ConPrintf(StdOut, (LPWSTR)L"\n");
+        return FALSE;
+    }
+
+    CAvailableApps apps;
+    apps.UpdateAppsDB();
+    apps.Enum(ENUM_ALL_AVAILABLE, NULL, NULL);
+
+    for (int i = 0; i < argcLeft; i++)
+    {
+        CAvailableApplicationInfo *AppInfo = apps.FindAppByPkgName(argvLeft[i]);
+        if (!AppInfo)
+        {
+            ConResMsgPrintf(StdOut, NULL, IDS_CMD_PACKAGE_NOT_FOUND, argvLeft[i]);
+        }
+        else
+        {
+            ConResMsgPrintf(StdOut, NULL, IDS_CMD_PACKAGE_INFO, argvLeft[i]);
+            ConPrintf(StdOut, (LPWSTR)L"\n");
+            // TODO: code about extracting information from CAvailableApplicationInfo (in appview.cpp, class CAppRichEdit)
+            // is in a mess. It should be refactored, and should not placed in class CAppRichEdit.
+            // and the code here should reused that code after refactor.
+
+            ConPuts(StdOut, (LPWSTR)(LPCWSTR)AppInfo->m_szName);
+
+            if (AppInfo->m_szVersion)
+            {
+                ConResPrintf(StdOut, IDS_AINFO_VERSION);
+                ConPuts(StdOut, (LPWSTR)(LPCWSTR)AppInfo->m_szVersion);
+            }
+
+            if (AppInfo->m_szLicense)
+            {
+                ConResPrintf(StdOut, IDS_AINFO_LICENSE);
+                ConPuts(StdOut, (LPWSTR)(LPCWSTR)AppInfo->m_szLicense);
+            }
+
+            if (AppInfo->m_szSize)
+            {
+                ConResPrintf(StdOut, IDS_AINFO_SIZE);
+                ConPuts(StdOut, (LPWSTR)(LPCWSTR)AppInfo->m_szSize);
+            }
+
+            if (AppInfo->m_szUrlSite)
+            {
+                ConResPrintf(StdOut, IDS_AINFO_URLSITE);
+                ConPuts(StdOut, (LPWSTR)(LPCWSTR)AppInfo->m_szUrlSite);
+            }
+
+            if (AppInfo->m_szDesc)
+            {
+                ConResPrintf(StdOut, IDS_AINFO_DESCRIPTION);
+                ConPuts(StdOut, (LPWSTR)(LPCWSTR)AppInfo->m_szDesc);
+            }
+
+            if (AppInfo->m_szUrlDownload)
+            {
+                ConResPrintf(StdOut, IDS_AINFO_URLDOWNLOAD);
+                ConPuts(StdOut, (LPWSTR)(LPCWSTR)AppInfo->m_szUrlDownload);
+            }
+        }
+        ConPrintf(StdOut, (LPWSTR)L"\n\n");
+    }
+    return TRUE;
+}
+
 BOOL HandleHelpCommand(LPWSTR szCommand, int argcLeft, LPWSTR * argvLeft)
 {
     if (argcLeft != 0)
@@ -216,6 +287,10 @@ BOOL ParseCmdAndExecute(LPWSTR lpCmdLine, BOOL bIsFirstLaunch, int nCmdShow)
     else if (MatchCmdOption(argv[1], CMD_KEY_FIND))
     {
         return HandleFindCommand(argv[1], argc - 2, argv + 2);
+    }
+    else if (MatchCmdOption(argv[1], CMD_KEY_INFO))
+    {
+        return HandleInfoCommand(argv[1], argc - 2, argv + 2);
     }
     else if (MatchCmdOption(argv[1], CMD_KEY_HELP))
     {

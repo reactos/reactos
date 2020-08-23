@@ -269,4 +269,6 @@ BEGIN
     IDS_CMD_NEED_PARAMS "Error: option %1 expects one or more parameters"
     IDS_CMD_INVALID_OPTION "Error: Unknown or invalid command line option specified."
     IDS_CMD_FIND_RESULT_FOR "Find result for %1:"
+    IDS_CMD_PACKAGE_NOT_FOUND "Failed to find package %1."
+    IDS_CMD_PACKAGE_INFO "Information about package %1:"
 END
