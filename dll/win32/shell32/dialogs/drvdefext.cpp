@@ -532,8 +532,8 @@ CDrvDefExt::GeneralPageProc(
 				ZeroMemory(&si, sizeof(si));
 				si.cb = sizeof(si);
 
-				PROCESS_INFORMATION pi;
-				ZeroMemory(&pi, sizeof(pi));
+                PROCESS_INFORMATION pi;
+                ZeroMemory(&pi, sizeof(pi));
 
                 if (RegGetValueW(HKEY_LOCAL_MACHINE,
                                  L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\MyComputer\\CleanupPath",
@@ -549,11 +549,11 @@ CDrvDefExt::GeneralPageProc(
 
                     /* Using CreateProcess instead of ShellExecute because ShellExecute doesn't seem to take arguments */
 					
-					if (!CreateProcessW(NULL, wszCmd, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
+                    if (!CreateProcessW(NULL, wszCmd, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
                         ERR("Failed to create cleanup process %ls\n", wszCmd);
 
-					CloseHandle(pi.hProcess);
-					CloseHandle(pi.hThread);
+                    CloseHandle(pi.hProcess);
+                    CloseHandle(pi.hThread);
                 }
             }
             else if (LOWORD(wParam) == 14000) /* Label */
