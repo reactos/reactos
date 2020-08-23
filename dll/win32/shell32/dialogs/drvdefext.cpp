@@ -528,9 +528,9 @@ CDrvDefExt::GeneralPageProc(
                 CDrvDefExt *pDrvDefExt = reinterpret_cast<CDrvDefExt *>(GetWindowLongPtr(hwndDlg, DWLP_USER));
                 WCHAR wszBuf[256];
                 DWORD cbBuf = sizeof(wszBuf);
-				STARTUPINFOW si;
-				ZeroMemory(&si, sizeof(si));
-				si.cb = sizeof(si);
+                STARTUPINFOW si;
+                ZeroMemory(&si, sizeof(si));
+                si.cb = sizeof(si);
 
                 PROCESS_INFORMATION pi;
                 ZeroMemory(&pi, sizeof(pi));

@@ -24,6 +24,7 @@
 #include <shlguid.h>
 #include <uxtheme.h>
 #include <vsstyle.h>
+#include <wininet.h>
 #include <cpl.h>
 
 #undef _WIN32_WINNT
@@ -75,6 +76,30 @@ typedef enum
 	TEMPORARY_FILE = 2,
 	RECYCLE_BIN = 3
 } DIRECTORIES;
+
+typedef struct
+{
+    BOOL bSaveWndPos;
+    BOOL bUpdateAtStart;
+    BOOL bLogEnabled;
+    WCHAR szDownloadDir[MAX_PATH];
+    BOOL bDelInstaller;
+    /* Window Pos */
+    BOOL Maximized;
+    INT Left;
+    INT Top;
+    INT Width;
+    INT Height;
+    /* Proxy settings */
+    INT Proxy;
+    WCHAR szProxyServer[MAX_PATH];
+    WCHAR szNoProxyFor[MAX_PATH];
+    /* Software source settings */
+    BOOL bUseSource;
+    WCHAR szSourceURL[INTERNET_MAX_URL_LENGTH];
+} SETTINGS_INFO;
+
+#define ONLY_DRIVE 3
 
 // For dialog.c
 

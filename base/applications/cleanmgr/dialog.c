@@ -21,14 +21,23 @@ BOOL CALLBACK StartDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam
 	WCHAR LogicalDrives[MAX_PATH] = { 0 };
 	WCHAR TempText[MAX_PATH] = { 0 };
 	int ItemIndex = 0;
-	static HBITMAP HbmDrive;
-	static HBITMAP HbmMask;
+	static HBITMAP HbmDrive = NULL;
+	static HBITMAP HbmMask = NULL;
 	DWORD DwIndex = 0;
 	DWORD NumOfDrives = 0;
+	static HWND HComboCtrl = NULL;
 
 	switch(Message)
     {
 		case WM_INITDIALOG:
+			HComboCtrl = GetDlgItem(hwnd, IDC_DRIVE);
+			
+			if(HComboCtrl == NULL)
+			{
+				MessageBoxW(NULL, L"GetDlgItem() failed!", L"Error", MB_OK | MB_ICONERROR);
+				return FALSE;
+			}
+			
 			NumOfDrives = GetLogicalDriveStringsW(MAX_PATH, LogicalDrives);
 			if (NumOfDrives == 0)
 			{
@@ -37,6 +46,12 @@ BOOL CALLBACK StartDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam
 			}
 			HbmDrive = LoadBitmapW(dv.hInst, MAKEINTRESOURCE(IDB_DRIVE));
 			HbmMask = LoadBitmapW(dv.hInst, MAKEINTRESOURCE(IDB_MASK));
+			
+			if(HbmDrive == NULL || HbmMask == NULL)
+			{
+				MessageBoxW(NULL, L"LoadBitmapW() failed!", L"Error", MB_OK | MB_ICONERROR);
+				return FALSE;
+			}
 
 			if (NumOfDrives <= MAX_PATH)
 			{
@@ -48,8 +63,8 @@ BOOL CALLBACK StartDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam
 					{
 						StringCchCopyW(RealDrive, MAX_PATH, SingleDrive);
 						RealDrive[wcslen(RealDrive) - 1] = '\0';
-						DwIndex = SendMessageW(GetDlgItem(hwnd, IDC_DRIVE), CB_ADDSTRING, 0, (LPARAM)RealDrive);
-						if (SendMessageW(GetDlgItem(hwnd, IDC_DRIVE), CB_SETITEMDATA, DwIndex, (LPARAM)HbmDrive) == CB_ERR)
+						DwIndex = SendMessageW(HComboCtrl, CB_ADDSTRING, 0, (LPARAM)RealDrive);
+						if (SendMessageW(HComboCtrl, CB_SETITEMDATA, DwIndex, (LPARAM)HbmDrive) == CB_ERR)
 						{
 							return FALSE;
 						}
@@ -58,6 +73,9 @@ BOOL CALLBACK StartDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam
 					SingleDrive += wcslen(SingleDrive) + 1;
 				}
 			}
+			
+			ComboBox_SetCurSel(HComboCtrl, 0);
+			SendMessageW(GetDlgItem(hwnd, IDC_DRIVE), CB_GETLBTEXT, (WPARAM)0, (LPARAM)wcv.DriveLetter);
 			return TRUE;
 
 		case WM_NOTIFY:

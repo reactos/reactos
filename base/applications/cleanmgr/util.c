@@ -27,6 +27,20 @@ typedef HRESULT (WINAPI * ETDTProc) (HWND, DWORD);
 
 DWORD WINAPI SizeCheck(LPVOID lpParam)
 {
+	HKEY hRegKey = NULL;
+	SETTINGS_INFO SettingsInfo;
+	ZeroMemory(&SettingsInfo, sizeof(SETTINGS_INFO));
+	DWORD dwSize = sizeof(SettingsInfo);
+	
+	if (RegOpenKeyExW(HKEY_CURRENT_USER,
+						L"Software\\ReactOS\\rapps",
+						0,
+						KEY_QUERY_VALUE,
+						&hRegKey) != ERROR_SUCCESS)
+	{
+		DPRINT("RegOpenKeyExW(): Failed to open a registry key!\n");
+	}
+	
 	HWND HProgressBar = NULL;
 	WCHAR TargetedDir[MAX_PATH] = { 0 };
 	
@@ -99,12 +113,18 @@ DWORD WINAPI SizeCheck(LPVOID lpParam)
 			break;
 	}
 	
-	/* Default path of RAPPS to store downloaded files */
-	
-	SHGetFolderPathW(NULL, CSIDL_PROFILE, NULL, SHGFP_TYPE_CURRENT, TargetedDir);
-	StringCbCatW(TargetedDir, _countof(TargetedDir), L"\\My Documents\\RAPPS Downloads");
+	/* Checking if there is a custom path for RAPPS */
+	if(RegQueryValueExW(hRegKey, L"Settings", 0, NULL, (LPBYTE)&SettingsInfo, &dwSize) == ERROR_SUCCESS)
+		StringCbCopyW(TargetedDir, _countof(TargetedDir), SettingsInfo.szDownloadDir);
 
-	OutputDebugStringW(TargetedDir);
+	
+	/* Default path of RAPPS to store downloaded files */
+	else
+	{
+		DPRINT("RegQueryValueExW(): Failed to query a registry key!\n");
+		SHGetFolderPathW(NULL, CSIDL_PROFILE, NULL, SHGFP_TYPE_CURRENT, TargetedDir);
+		StringCbCatW(TargetedDir, _countof(TargetedDir), L"\\My Documents\\RAPPS Downloads");
+	}
 
 	if (PathIsDirectoryW(TargetedDir))
 	{
@@ -959,7 +979,7 @@ BOOL DriverunProc(LPWSTR* ArgList, PWCHAR LogicalDrives)
 		WCHAR RealDrive[MAX_PATH] = { 0 };
 		while (*SingleDrive)
 		{
-			if (GetDriveTypeW(SingleDrive) == 3)
+			if (GetDriveTypeW(SingleDrive) == ONLY_DRIVE)
 			{
 				StringCchCopyW(RealDrive, MAX_PATH, SingleDrive);
 				RealDrive[wcslen(RealDrive) - 1] = '\0';
@@ -1035,7 +1055,7 @@ void SagerunProc(int nArgs, PWCHAR ArgReal, LPWSTR* ArgList, PWCHAR LogicalDrive
 		
 	while (*SingleDrive)
 	{
-		if (GetDriveTypeW(SingleDrive) == 3)
+		if (GetDriveTypeW(SingleDrive) == ONLY_DRIVE)
 		{
 			StringCchCopyW(wcv.DriveLetter, MAX_PATH, SingleDrive);
 			wcv.DriveLetter[wcslen(wcv.DriveLetter) - 1] = '\0';
