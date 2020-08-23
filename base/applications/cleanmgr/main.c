@@ -79,8 +79,6 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 		}
 	}
 	
-	Sleep(150);
-	
 	DialogButtonSelect = DialogBoxParamW(hInstance, MAKEINTRESOURCEW(IDD_PROGRESS), NULL, ProgressDlgProc, 0);
 
 	if(DialogButtonSelect == IDCANCEL)

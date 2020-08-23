@@ -20,7 +20,7 @@ INT_PTR CALLBACK OptionsPageDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPAR
 		switch (LOWORD(wParam))
 		{
 		case IDC_CLEAN_PROGRAMS:
-			ShellExecute(hwnd, NULL, L"control.exe", L"appwiz.cpl", NULL, SW_SHOW);
+			ShellExecuteW(hwnd, NULL, L"control.exe", L"appwiz.cpl", NULL, SW_SHOW);
 			break;
 		}
 		break;
