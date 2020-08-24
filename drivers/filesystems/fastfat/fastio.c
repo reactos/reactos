@@ -1,5 +1,4 @@
 /*
- * FILE:             drivers/filesystems/fastfat/fastio.c
  * PURPOSE:          Fast IO routines.
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel

@@ -1,7 +1,6 @@
 /*
  * PROJECT:    ReactOS Configuration of network devices
  * COPYRIGHT:  GPL - See COPYING in the top level directory
- * FILE:       dll/win32/netcfgx/lang/zh-TW.rc
  * PURPOSE:    Chinese (Traditional) Language Resources
  * TRANSLATOR: Henry Tang Ih <2016> <henrytang2@hotmail.com>
  *             Aobi Chan CL <2020> <eason066@gmail.com>

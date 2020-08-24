@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS VGA Miniport Driver
  * LICENSE:         Microsoft NT4 DDK Sample Code License
- * FILE:            win32ss/drivers/miniport/vga_new/vgadata.c
  * PURPOSE:         Handles switching to VGA Modes and holds VGA Built-in Modes
  * PROGRAMMERS:     Copyright (c) 1992  Microsoft Corporation
  *                  ReactOS Portable Systems Group

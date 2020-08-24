@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
- * FILE:            include/reactos/debug.h
  * PURPOSE:         Useful debugging macros
  * PROGRAMMERS:     David Welch (welch@mcmail.com)
  *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)

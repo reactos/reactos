@@ -1,7 +1,6 @@
 /*
 * PROJECT:         ReactOS Kernel
 * LICENSE:         GPL - See COPYING in the top level directory
-* FILE:            ntoskrnl/io/iomgr/rawfs.c
 * PURPOSE:         Raw File System Driver
 * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
 */

@@ -1,7 +1,6 @@
 /*
  * PROJECT:     ReactOS Services
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        base/applications/sc/config.c
  * PURPOSE:     Query/Set the service configuration
  * COPYRIGHT:   Copyright 2016 Eric Kohl
  *

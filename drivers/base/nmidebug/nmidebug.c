@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS NMI Debug Driver
  * LICENSE:         BSD - See COPYING.ARM in the top level directory
- * FILE:            drivers/base/nmidebug/nmidebug.c
  * PURPOSE:         Driver Code
  * PROGRAMMERS:     ReactOS Portable Systems Group
  */

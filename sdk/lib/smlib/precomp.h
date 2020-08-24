@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS System Libraries
- * FILE:            lib/smlib/precomp.h
  * PURPOSE:         SMLIB Library Header
  * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)
  */

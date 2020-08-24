@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Kernel Streaming
- * FILE:            drivers/wdm/audio/backpln/portcls/filter_wavecyclic.c
  * PURPOSE:         portcls wave cyclic filter
  * PROGRAMMER:      Johannes Anderwald
  */

@@ -19,7 +19,6 @@
 /*
  *
  * PROJECT:         ReactOS user32.dll
- * FILE:            win32ss/user/user32/windows/hook.c
  * PURPOSE:         Hooks
  * PROGRAMMER:      Casper S. Hornstrup (chorns@users.sourceforge.net)
  * UPDATE HISTORY:

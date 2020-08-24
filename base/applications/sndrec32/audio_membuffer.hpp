@@ -1,6 +1,5 @@
 /* PROJECT:         ReactOS sndrec32
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            base/applications/sndrec32/audio_membuffer.hpp
  * PURPOSE:         Allocs audio buffer
  * PROGRAMMERS:     Marco Pagliaricci (irc: rendar)
  */

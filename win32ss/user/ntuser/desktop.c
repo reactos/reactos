@@ -2,7 +2,6 @@
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS Win32k subsystem
  *  PURPOSE:          Desktops
- *  FILE:             subsystems/win32/win32k/ntuser/desktop.c
  *  PROGRAMMER:       Casper S. Hornstrup (chorns@users.sourceforge.net)
  */
 

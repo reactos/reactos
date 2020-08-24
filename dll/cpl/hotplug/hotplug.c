@@ -1,7 +1,6 @@
 /*
 * PROJECT:     Safely Remove Hardware Applet
 * LICENSE:     GPL - See COPYING in the top level directory
-* FILE:        dll/cpl/hotplug/hotplug.c
 * PURPOSE:     applet initialization
 * PROGRAMMERS: Johannes Anderwald (johannes.anderwald@reactos.org)
 */

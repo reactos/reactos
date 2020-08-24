@@ -1,7 +1,6 @@
 /*
  * PROJECT:     ReactOS System Control Panel Applet
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        dll/cpl/sysdm/hardware.c
  * PURPOSE:     Hardware devices
  * COPYRIGHT:   Copyright Thomas Weidenmueller <w3seek@reactos.org>
  *              Copyright 2006 Ged Murphy <gedmurphy@gmail.com>

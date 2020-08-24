@@ -1,7 +1,6 @@
 /*
  * PROJECT:     ReactOS Sound System
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        dll/win32/wdmaud.drv/mixer.c
  *
  * PURPOSE:     WDM Audio Driver (User-mode part)
  * PROGRAMMERS: Johannes Anderwald

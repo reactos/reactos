@@ -19,7 +19,6 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
- * FILE:             sdk/lib/drivers/rdbsslib/rdbss.c
  * PURPOSE:          RDBSS library
  * PROGRAMMER:       Pierre Schweitzer (pierre@reactos.org)
  */

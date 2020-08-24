@@ -1,7 +1,6 @@
 /*
 * PROJECT:     ReactOS Applications Manager
 * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
-* FILE:        base/applications/rapps/cabinet.cpp
 * PURPOSE:     Cabinet extraction using FDI API
 * COPYRIGHT:   Copyright 2018 Alexander Shaposhnikov     (sanchaez@reactos.org)            
 */

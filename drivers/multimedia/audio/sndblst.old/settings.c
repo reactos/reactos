@@ -2,7 +2,6 @@
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
- * FILE:                 drivers/dd/sndblst/settings.c
  * PURPOSE:              MPU-401 MIDI device driver setting management
  * PROGRAMMER:           Andrew Greenwood
  * UPDATE HISTORY:

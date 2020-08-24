@@ -1,7 +1,6 @@
 /*
  * PROJECT:     PAINT for ReactOS
  * LICENSE:     LGPL
- * FILE:        base/applications/mspaint/main.cpp
  * PURPOSE:     Initializing everything
  * PROGRAMMERS: Benedikt Freisen
  */

@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:     See COPYING in the top level directory
  * PROJECT:       ReactOS kernel
- * FILE:          hal/halx86/up/halinit_mini.c
  * PURPOSE:       Initialize the x86 hal
  * PROGRAMMER:    David Welch (welch@cwcom.net)
  * UPDATE HISTORY:

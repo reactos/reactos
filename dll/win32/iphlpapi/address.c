@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
- * FILE:            dll/win32/iphlpapi/address.c
  * PURPOSE:         iphlpapi implementation - Adapter Address APIs
  * PROGRAMMERS:     Jérôme Gardou (jerome.gardou@reactos.org)
  */

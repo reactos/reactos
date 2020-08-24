@@ -1,7 +1,6 @@
 /*
  * PROJECT:     Local Security Authority Server DLL
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        dll/win32/samsrv/database.c
  * PURPOSE:     SAM object database
  * COPYRIGHT:   Copyright 2012 Eric Kohl
  */

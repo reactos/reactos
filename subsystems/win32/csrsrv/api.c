@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Client/Server Runtime SubSystem
- * FILE:            subsystems/win32/csrsrv/api.c
  * PURPOSE:         CSR Server DLL API LPC Implementation
  *                  "\Windows\ApiPort" port process management functions
  * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)

@@ -1,7 +1,6 @@
 /*
  * PROJECT:         EFI Windows Loader
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            boot/freeldr/freeldr/windows/conversion.c
  * PURPOSE:         Physical <-> Virtual addressing mode conversions
  * PROGRAMMERS:     Aleksey Bragin (aleksey@reactos.org)
  */

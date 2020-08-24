@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS win32 kernel mode subsystem
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            win32ss/gdi/ntgdi/stockobj.c
  * PURPOSE:         Stock objects functions
  * PROGRAMMERS:     Colin Finck <colin@reactos.org>
  *                  Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>

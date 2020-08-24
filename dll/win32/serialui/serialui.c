@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS SerialUI DLL
- * FILE:        serialui.c
  * PUROPSE:     A dialog box to configure COM port.
  *              Functions to set (and get too) default configuration.
  * PROGRAMMERS: Saveliy Tretiakov (saveliyt@mail.ru)

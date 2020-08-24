@@ -1,7 +1,6 @@
 /*
  * PROJECT:     ReactOS HID Parser Library
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        lib/drivers/hidparser/parser.c
  * PURPOSE:     HID Parser
  * PROGRAMMERS:
  *              Michael Martin (michael.martin@reactos.org)

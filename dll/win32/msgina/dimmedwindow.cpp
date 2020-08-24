@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS msgina.dll
- * FILE:            dll/win32/msgina/dimmedwindow.cpp
  * PURPOSE:         Implementation of ShellDimScreen
  * PROGRAMMER:      Mark Jansen
  */

@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS TCP/IP protocol driver
- * FILE:        tcpip/address.c
  * PURPOSE:     Routines for handling addresses
  * PROGRAMMERS: Casper S. Hornstrup (chorns@users.sourceforge.net)
  * REVISIONS:

@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       GNU GPL, see COPYING in the top level directory
  * PROJECT:         ReactOS crt library
- * FILE:            lib/sdk/crt/printf/printf.c
  * PURPOSE:         Implementation of printf
  * PROGRAMMER:      Timo Kreuzer
  *                  Samuel Serapión

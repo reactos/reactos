@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Kernel Streaming
- * FILE:            lib/drivers/sound/mmixer/midi.c
  * PURPOSE:         Midi Support Functions
  * PROGRAMMER:      Johannes Anderwald
  */

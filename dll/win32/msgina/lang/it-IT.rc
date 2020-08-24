@@ -1,7 +1,6 @@
 /*
  * PROJECT:     ReactOS Console Configuration DLL
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        dll/win32/msgina/lang/it-IT.rc
  * PURPOSE:     Italian resource file
  * TRANSLATORS: Paolo Devoti, devotip at tiscali.it, 2007-11-02
                 Marco Maria Emanuele Bartucci, 2014-04-19

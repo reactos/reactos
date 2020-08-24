@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Network Provider for MPEG2 based networks
- * FILE:            dll/directx/msdvbnp/networkprovider.cpp
  * PURPOSE:         IBDA_NetworkProvider interface
  *
  * PROGRAMMERS:     Johannes Anderwald (johannes.anderwald@reactos.org)

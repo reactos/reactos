@@ -1,5 +1,4 @@
 /*
-* FILE:             drivers/filesystems/fastfat/fcb.c
 * PURPOSE:          Routines to manipulate FCBs.
 * COPYRIGHT:        See COPYING in the top level directory
 * PROJECT:          ReactOS kernel

@@ -1,6 +1,5 @@
 /* PROJECT:         ReactOS sndrec32
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            base/applications/sndrec32/audio_resampler_acm.hpp
  * PURPOSE:         Windows ACM wrapper
  * PROGRAMMERS:     Marco Pagliaricci (irc: rendar)
  */

@@ -2,7 +2,6 @@
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Session stuff
- * FILE:             win32ss/user/ntuser/session.c
  * PROGRAMER:        Gunnar
  */
 

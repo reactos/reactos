@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/ke/powerpc/cpu.c
  * PURPOSE:         Routines for CPU-level support
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */

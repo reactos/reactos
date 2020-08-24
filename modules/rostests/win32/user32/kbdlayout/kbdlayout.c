@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            base/applications/testset/user32/kbdlayout/kbdlayout.c
  * PURPOSE:         Keyboard layout testapp
  * COPYRIGHT:       Copyright 2007 Saveliy Tretiakov
  */

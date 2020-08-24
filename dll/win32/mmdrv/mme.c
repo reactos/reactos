@@ -2,7 +2,6 @@
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS Multimedia
- * FILE:                 dll/win32/mmdrv/mme.c
  * PURPOSE:              Multimedia User Mode Driver (MME Interface)
  * PROGRAMMER:           Andrew Greenwood
  *                       Aleksey Bragin

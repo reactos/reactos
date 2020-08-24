@@ -18,7 +18,6 @@
  */
 /*
  * PROJECT:         ReactOS devmgr.dll
- * FILE:            lib/devmgr/misc.c
  * PURPOSE:         ReactOS Device Manager
  * PROGRAMMER:      Thomas Weidenmueller <w3seek@reactos.com>
  * UPDATE HISTORY:

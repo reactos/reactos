@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS FFS filesystem library
- * FILE:        include/reactos/libs/fslib/ffslib.h
  * PURPOSE:     Public definitions for FFS filesystem library
  */
 #ifndef __FFSLIB_H

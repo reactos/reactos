@@ -2,7 +2,6 @@
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS Win32k subsystem
  * PURPOSE:           Various Polygon Filling routines for Polygon()
- * FILE:              win32ss/gdi/ntgdi/polyfill.c
  * PROGRAMER:         Mark Tempel
  */
 
@@ -628,38 +627,4 @@ IntFillPolygon(
         while (NULL != pRight)
         {
             int x1 = pLeft->XIntercept[0];
-            int x2 = pRight->XIntercept[1];
-
-            if (x2 > x1)
-            {
-                RECTL LineRect;
-                LineRect.top = ScanLine;
-                LineRect.bottom = ScanLine + 1;
-                LineRect.left = x1;
-                LineRect.right = x2;
-
-                IntEngBitBlt(&psurf->SurfObj,
-                             NULL,
-                             NULL,
-                             (CLIPOBJ *)&dc->co,
-                             NULL,
-                             &LineRect,
-                             NULL,
-                             NULL,
-                             BrushObj,
-                             BrushOrigin,
-                             ROP4_FROM_INDEX(R3_OPINDEX_PATCOPY));
-            }
-
-            pLeft = pRight->pNext;
-            pRight = pLeft ? pLeft->pNext : NULL;
-        }
-    }
-
-    /* Free Edge List. If any are left. */
-    POLYGONFILL_DestroyEdgeList(list);
-
-    return TRUE;
-}
-
-/* EOF */
+            int x2 

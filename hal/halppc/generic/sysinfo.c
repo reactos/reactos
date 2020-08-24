@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS HA:
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            hal/halppc/generic/sysinfo.c
  * PURPOSE:         HAL Information Routines
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */

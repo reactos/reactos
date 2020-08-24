@@ -2,7 +2,6 @@
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * PURPOSE:          GDI alpha blending functions
- * FILE:             win32ss/gdi/eng/alphablend.c
  * PROGRAMER:        Jason Filby
  */
 

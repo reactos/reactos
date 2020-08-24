@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
- * FILE:             base/services/umpnpmgr/install.c
  * PURPOSE:          Device installer
  * PROGRAMMER:       Eric Kohl (eric.kohl@reactos.org)
  *                   Hervé Poussineau (hpoussin@reactos.org)

@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS HTTP Daemon
- * FILE:        config.cpp
  * PURPOSE:     Daemon configuration
  * PROGRAMMERS: Casper S. Hornstrup (chorns@users.sourceforge.net)
  * REVISIONS:

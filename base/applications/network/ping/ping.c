@@ -22,7 +22,6 @@
 /*
  * PROJECT:     ReactOS Ping Command
  * LICENSE:     MIT
- * FILE:        base/applications/network/ping/ping.c
  * PURPOSE:     Network test utility
  * PROGRAMMERS: Tim Crawford <crawfxrd@gmail.com>
  */

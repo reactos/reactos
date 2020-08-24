@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/se/access.c
  * PURPOSE:         Access state functions
  *
  * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net) -

@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/kd/wrappers/bochs.c
  * PURPOSE:         BOCHS Wrapper for Kd
  *
  * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)

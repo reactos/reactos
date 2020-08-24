@@ -18,7 +18,6 @@
  */
 /* COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS winlogon
- * FILE:            base/system/winlogon/winlogon.h
  * PURPOSE:         Winlogon
  * PROGRAMMER:
  */

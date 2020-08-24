@@ -18,7 +18,6 @@
  */
 /*
  * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/kdbg/kdb_cli.c
  * PURPOSE:         Kernel debugger command line interface
  * PROGRAMMER:      Gregor Anich (blight@blight.eu.org)
  *                  Hervé Poussineau

@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS Windows-Compatible Session Manager
  * LICENSE:         BSD 2-Clause License
- * FILE:            base/system/smss/smss.h
  * PURPOSE:         Main SMSS Header
  * PROGRAMMERS:     Alex Ionescu
  */

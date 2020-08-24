@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS BDA Proxy
- * FILE:            dll/directx/msdvbnp/ethernetfilter.cpp
  * PURPOSE:         IBDA_EthernetFilter interface
  *
  * PROGRAMMERS:     Johannes Anderwald (johannes.anderwald@reactos.org)

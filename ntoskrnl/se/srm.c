@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/se/srm.c
  * PURPOSE:         Security Reference Monitor Server
  *
  * PROGRAMMERS:     Timo Kreuzer (timo.kreuzer@reactos.org)

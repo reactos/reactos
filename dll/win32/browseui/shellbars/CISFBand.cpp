@@ -1,7 +1,6 @@
 /*
  * PROJECT:     ReactOS shell extensions
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        dll/shellext/qcklnch/CISFBand.cpp
  * PURPOSE:     Quick Launch Toolbar (Taskbar Shell Extension)
  * PROGRAMMERS: Shriraj Sawant a.k.a SR13 <sr.official@hotmail.com>
  */

@@ -1,7 +1,6 @@
 /*
  * PROJECT:        ReactOS Floppy Disk Controller Driver
  * LICENSE:        GNU GPLv2 only as published by the Free Software Foundation
- * FILE:           drivers/storage/fdc/fdc/fdc.c
  * PURPOSE:        Main Driver Routines
  * PROGRAMMERS:    Eric Kohl
  */

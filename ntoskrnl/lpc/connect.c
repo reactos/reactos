@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/lpc/connect.c
  * PURPOSE:         Local Procedure Call: Connection Management
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */

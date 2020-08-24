@@ -2,7 +2,6 @@
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS Run-Time Library
  * PURPOSE:           Memory functions for amd64
- * FILE:              lib/rtl/amd64/rtlmem.S
  * PROGRAMER:         Timo Kreuzer (timo.kreuzer@reactos.org)
  */
 

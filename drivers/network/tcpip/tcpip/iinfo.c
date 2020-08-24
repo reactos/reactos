@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS TCP/IP protocol driver
- * FILE:        tcpip/iinfo.c
  * PURPOSE:     Per-interface information.
  * PROGRAMMERS: Art Yerkes
  * REVISIONS:

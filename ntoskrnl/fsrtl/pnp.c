@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/fsrtl/pnp.c
  * PURPOSE:         Manages PnP support routines for file system drivers.
  * PROGRAMMERS:     Pierre Schweitzer
  */

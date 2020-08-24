@@ -19,7 +19,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
- * FILE:            base/setup/usetup/partlist.c
  * PURPOSE:         Partition list functions
  * PROGRAMMER:      Casper S. Hornstrup (chorns@users.sourceforge.net)
  */

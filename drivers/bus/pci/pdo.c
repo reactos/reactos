@@ -1,6 +1,5 @@
 /*
  * PROJECT:         ReactOS PCI bus driver
- * FILE:            pdo.c
  * PURPOSE:         Child device object dispatch routines
  * PROGRAMMERS:     Casper S. Hornstrup (chorns@users.sourceforge.net)
  * UPDATE HISTORY:

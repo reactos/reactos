@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top directory
  * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/mm/rmap.c
  * PURPOSE:         Kernel memory managment functions
  *
  * PROGRAMMERS:     David Welch (welch@cwcom.net)

@@ -1,7 +1,6 @@
 /*
  * PROJECT:         EFI Windows Loader
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            boot/freeldr/freeldr/windows/wlregistry.c
  * PURPOSE:         Registry support functions
  * PROGRAMMERS:     Aleksey Bragin (aleksey@reactos.org)
  */

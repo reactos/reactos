@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/ex/handle.c
  * PURPOSE:         Generic Executive Handle Tables
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  *                  Thomas Weidenmueller <w3seek@reactos.com>

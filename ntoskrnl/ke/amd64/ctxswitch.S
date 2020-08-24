@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/ke/amd64/ctxswitch.S
  * PURPOSE:         Thread Context Switching
  *
  * PROGRAMMER:      Timo kreuzer (timo.kreuzer@reactos.org)

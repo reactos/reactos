@@ -18,7 +18,6 @@
 *
 * COPYRIGHT:        See COPYING in the top level directory
 * PROJECT:          ReactOS kernel
-* FILE:             drivers/filesystem/ntfs/btree.c
 * PURPOSE:          NTFS filesystem driver
 * PROGRAMMERS:      Trevor Thompson
 */

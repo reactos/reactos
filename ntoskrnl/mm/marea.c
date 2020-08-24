@@ -17,7 +17,6 @@
  *
  *
  * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/mm/marea.c
  * PURPOSE:         Implements memory areas
  *
  * PROGRAMMERS:     Rex Jolliff

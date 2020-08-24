@@ -17,7 +17,6 @@
  *
  *
  * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/cache/section/reqtools.c
  * PURPOSE:         Implements section objects
  *
  * PROGRAMMERS:     Rex Jolliff

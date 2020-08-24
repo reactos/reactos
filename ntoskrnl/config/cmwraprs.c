@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/config/cmwraprs.c
  * PURPOSE:         Configuration Manager - Wrappers for Hive Operations
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */

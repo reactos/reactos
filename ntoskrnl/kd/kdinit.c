@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Kernel
- * FILE:            ntoskrnl/kd/kdinit.c
  * PURPOSE:         Kernel Debugger Initializtion
  *
  * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)

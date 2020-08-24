@@ -2,7 +2,6 @@
  * PROJECT:         ReactOS system libraries
  * LICENSE:         GNU GPL - See COPYING in the top level directory
  *                  BSD - See COPYING.ARM in the top level directory
- * FILE:            lib/rtl/bitmap.c
  * PURPOSE:         Bitmap functions
  * PROGRAMMER:      Timo Kreuzer (timo.kreuzer@reactos.org)
  */

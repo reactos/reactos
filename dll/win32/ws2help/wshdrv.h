@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS WinSock 2 DLL
- * FILE:        include/drivers/ws2ifsl/wshdrv.h
  * PURPOSE:     WinSock 2 Helper Driver header
  */
 

@@ -18,7 +18,6 @@
  */
 /*
  * PROJECT:         ReactOS International Control Panel
- * FILE:            dll/cpl/intl/intl.c
  * PURPOSE:         Property sheet code
  * PROGRAMMER:      Eric Kohl
  */

@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            include/psdk/ntverp.h
  * PURPOSE:         Master Version File.
  *                  This file should be modified only by the official builder
  *                  to update VERSION, VER_PRODUCTVERSION, VER_PRODUCTVERSION_

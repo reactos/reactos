@@ -2,7 +2,6 @@
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS Win32k subsystem
  * PURPOSE:           ENG misc Functions
- * FILE:              win32ss/gdi/eng/engmisc.c
  * PROGRAMER:         ReactOS Team
  */
 

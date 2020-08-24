@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         BtrFS File System Management
- * FILE:            dll/win32/ubtrfs/ubtrfs.c
  * PURPOSE:         ubtrfs DLL initialisation
  * PROGRAMMERS:     Pierre Schweitzer
  */

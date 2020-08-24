@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
- * FILE:        lib/sdk/crt/mbstring/mbslwr.c
  * PURPOSE:     Multibyte lowercase functions
  * PROGRAMER:   Eric Kohl
  *              Samuel Serapion, adapted from PROJECT C Library

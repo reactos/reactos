@@ -1,6 +1,5 @@
 /*
  * PROJECT:         ReactOS devmgr.dll
- * FILE:            dll/win32/devmgr/hwresource.c
  * PURPOSE:         ReactOS Device Manager
  * PROGRAMMER:      Johannes Anderwald <johannes.anderwald@reactos.org>
  * UPDATE HISTORY:

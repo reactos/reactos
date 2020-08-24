@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         BSD - See COPYING.ARM in the top level directory
- * FILE:            ntoskrnl/mm/ARM3/vadnode.c
  * PURPOSE:         ARM Memory Manager VAD Node Algorithms
  * PROGRAMMERS:     ReactOS Portable Systems Group
  *                  Timo Kreuzer (timo.kreuzer@reactos.org)

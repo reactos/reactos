@@ -1,7 +1,6 @@
 /*
  * PROJECT:     Authentication Package DLL
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        dll/win32/msv1_0/lsa.h
  * PURPOSE:     header for lsa.c
  * COPYRIGHT:   Copyright 2019-2020 Andreas Maier <staubim@quantentunnel.de>
  */

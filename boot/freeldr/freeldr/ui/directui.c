@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS Boot Loader
  * LICENSE:         BSD - See COPYING.ARM in the top level directory
- * FILE:            boot/freeldr/freeldr/ui/directui.c
  * PURPOSE:         FreeLDR UI Routines
  * PROGRAMMERS:     ReactOS Portable Systems Group
  */

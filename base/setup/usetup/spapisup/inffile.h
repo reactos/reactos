@@ -19,7 +19,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
- * FILE:            base/setup/usetup/inffile.h
  * PURPOSE:         Interfacing with Setup* API .INF Files support functions
  * PROGRAMMERS:     Hervé Poussineau
  *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)

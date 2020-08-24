@@ -2,7 +2,6 @@
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
- * FILE:                 services/dd/sndblst/sndblst.c
  * PURPOSE:              Sound Blaster / SB Pro / SB 16 driver
  * PROGRAMMER:           Andrew Greenwood
  * UPDATE HISTORY:

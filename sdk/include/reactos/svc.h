@@ -1,7 +1,6 @@
 /*
  * PROJECT:     ReactOS Service Host
  * LICENSE:     BSD - See COPYING.ARM in the top level directory
- * FILE:        sdk/include/reactos/svc.h
  * PURPOSE:     Global Header for Service Host
  * PROGRAMMERS: ReactOS Portable Systems Group
  */

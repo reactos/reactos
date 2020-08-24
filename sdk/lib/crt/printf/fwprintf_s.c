@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       GNU GPL, see COPYING in the top level directory
  * PROJECT:         ReactOS crt library
- * FILE:            lib/sdk/crt/printf/fwprintf_s.c
  * PURPOSE:         Implementation of fwprintf_s
  * PROGRAMMER:      Samuel Serapión
  */

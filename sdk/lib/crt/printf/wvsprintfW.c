@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       GNU GPL, see COPYING in the top level directory
  * PROJECT:         ReactOS crt library
- * FILE:            lib/sdk/crt/printf/wvsprintfW.c
  * PURPOSE:         Implementation of wvsprintfW
  * PROGRAMMER:      Timo Kreuzer
  */

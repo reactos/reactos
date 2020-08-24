@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/lpc/close.c
  * PURPOSE:         Local Procedure Call: Rundown, Cleanup, Deletion
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */

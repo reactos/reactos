@@ -18,7 +18,6 @@
  */
 /*
  * PROJECT:         ReactOS Main Control Panel
- * FILE:            dll/cpl/main/keyboard.c
  * PURPOSE:         Keyboard Control Panel
  * PROGRAMMER:      Eric Kohl
  */

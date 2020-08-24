@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS WinSock Helper DLL for TCP/IP
- * FILE:        include/wshtcpip.h
  * PURPOSE:     WinSock Helper DLL for TCP/IP header
  */
 #ifndef __WSHTCPIP_H

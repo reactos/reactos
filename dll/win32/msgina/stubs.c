@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS msgina.dll
- * FILE:            lib/msgina/stubs.c
  * PURPOSE:         msgina.dll stubs
  * PROGRAMMER:      Thomas Weidenmueller (w3seek@users.sourceforge.net)
  * NOTES:           If you implement a function, remove it from this file

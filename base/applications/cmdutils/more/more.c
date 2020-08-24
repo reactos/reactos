@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS More Command
- * FILE:            base/applications/cmdutils/more/more.c
  * PURPOSE:         Displays text stream from STDIN or from an arbitrary number
  *                  of files to STDOUT, with screen capabilities (more than CAT,
  *                  but less than LESS ^^).

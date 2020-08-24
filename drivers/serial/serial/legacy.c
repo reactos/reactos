@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         Serial port driver
- * FILE:            drivers/bus/serial/legacy.c
  * PURPOSE:         Legacy serial port enumeration
  *
  * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.org)

@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
- * FILE:        lib/dnsapi/dnsapi/query.c
  * PURPOSE:     DNSAPI functions built on the ADNS library.
  * PROGRAMER:   Art Yerkes
  * UPDATE HISTORY:

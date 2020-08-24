@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS Win32k Subsystem
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            win32ss/gdi/ntgdi/line.c
  * PURPOSE:         Line functions
  * PROGRAMMERS:     ...
  */

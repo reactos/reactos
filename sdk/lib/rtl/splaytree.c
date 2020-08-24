@@ -2,7 +2,6 @@
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS system libraries
  * PURPOSE:           Splay-Tree implementation
- * FILE:              lib/rtl/splaytree.c
  * PROGRAMMER:        Alex Ionescu (alex@relsoft.net)
  */
 

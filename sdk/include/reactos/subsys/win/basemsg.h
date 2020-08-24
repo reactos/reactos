@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Base API Server DLL
- * FILE:            include/reactos/subsys/win/basemsg.h
  * PURPOSE:         Public definitions for communication
  *                  between Base API Clients and Servers
  * PROGRAMMERS:     Hermes Belusca-Maito (hermes.belusca@sfr.fr)

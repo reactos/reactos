@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/ke/amd64/krnlinit.c
  * PURPOSE:         Portable part of kernel initialization
  * PROGRAMMERS:     Timo Kreuzer (timo.kreuzer@reactos.org)
  *                  Alex Ionescu (alex.ionescu@reactos.org)

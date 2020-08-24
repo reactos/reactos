@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS HAL
  * LICENSE:         BSD - See COPYING.ARM in the top level directory
- * FILE:            hal/halx86/legacy/bussupp.c
  * PURPOSE:         HAL Legacy Bus Support Code
  * PROGRAMMERS:     ReactOS Portable Systems Group
  */

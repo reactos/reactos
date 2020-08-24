@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Console Server DLL
- * FILE:            win32ss/user/winsrv/consrv/settings.c
  * PURPOSE:         Console settings management
  * PROGRAMMERS:     Johannes Anderwald
  *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)

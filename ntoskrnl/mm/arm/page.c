@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         BSD - See COPYING.ARM in the top level directory
- * FILE:            ntoskrnl/mm/arm/page.c
  * PURPOSE:         Old-school Page Management
  * PROGRAMMERS:     ReactOS Portable Systems Group
  */

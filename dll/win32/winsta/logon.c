@@ -1,6 +1,5 @@
 /*
  * PROJECT:         ReactOS winsta.dll
- * FILE:            lib/winsta/logon.c
  * PURPOSE:         WinStation
  * PROGRAMMER:      Samuel Serapi?n
  * NOTES:           This file contains exported functions relevant to

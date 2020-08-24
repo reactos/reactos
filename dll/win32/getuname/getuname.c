@@ -1,6 +1,5 @@
 /*
  * PROJECT:         Unicode name dll
- * FILE:            dll\win32\getuname\getuname.c
  * PURPOSE:         Main file
  * PROGRAMMERS:     Dmitry Chapyshev (dmitry@reactos.org)
  *                  Baruch Rutman (peterooch at gmail dot com)

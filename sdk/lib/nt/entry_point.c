@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS
- * FILE:            lib/nt/entry_point.c
  * PURPOSE:         Native NT Runtime Library
  * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
  */

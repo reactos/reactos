@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         NTFS File System Management
- * FILE:            dll/win32/untfs/untfs.c
  * PURPOSE:         untfs DLL initialisation
  * PROGRAMMERS:     Pierre Schweitzer
  */

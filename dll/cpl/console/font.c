@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS Console Configuration DLL
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            dll/cpl/console/font.c
  * PURPOSE:         Font dialog
  * PROGRAMMERS:     Johannes Anderwald (johannes.anderwald@reactos.org)
  *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)

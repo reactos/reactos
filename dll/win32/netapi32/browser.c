@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         NetAPI DLL
- * FILE:            dll/win32/netapi32/browser.c
  * PURPOSE:         Computer Browser service interface code
  * PROGRAMMERS:     Eric Kohl (eric.kohl@reactos.org)
  */

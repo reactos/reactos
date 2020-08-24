@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/kd64/kdinit.c
  * PURPOSE:         KD64 Initialization Code
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  *                  Stefan Ginsberg (stefan.ginsberg@reactos.org)

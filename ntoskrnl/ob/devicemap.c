@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/ob/devicemap.c
  * PURPOSE:         Device map implementation
  * PROGRAMMERS:     Eric Kohl (eric.kohl@reactos.org)
  *                  Alex Ionescu (alex.ionescu@reactos.org)

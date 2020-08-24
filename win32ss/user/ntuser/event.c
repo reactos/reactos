@@ -2,7 +2,6 @@
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
  * PURPOSE:           Window event handlers
- * FILE:              win32ss/user/ntuser/event.c
  * PROGRAMER:         James Tabor (james.tabor@rectos.org)
  */
 

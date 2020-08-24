@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING.ARM in the top level directory
  * PROJECT:         ReactOS UEFI Boot Library
- * FILE:            boot/environ/lib/firmware/efi/firmware.c
  * PURPOSE:         Boot Library Firmware Initialization for EFI
  * PROGRAMMER:      Alex Ionescu (alex.ionescu@reactos.org)
  */

@@ -19,7 +19,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS hive maker
- * FILE:            tools/mkhive/binhive.c
  * PURPOSE:         Binary hive export code
  * PROGRAMMER:      Hervé Poussineau
  */

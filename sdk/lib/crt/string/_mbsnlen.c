@@ -2,7 +2,6 @@
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS CRT
  * PURPOSE:           Implementation of _mbsnlen
- * FILE:              lib/sdk/crt/string/_mbsnlen.c
  * PROGRAMMER:        Timo Kreuzer
  */
 

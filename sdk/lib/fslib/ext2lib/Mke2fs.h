@@ -1,6 +1,5 @@
 /*
  * PROJECT:          Mke2fs
- * FILE:             Mke2fs.h
  * PROGRAMMER:       Matt Wu <mattwu@163.com>
  * HOMEPAGE:         http://ext2.yeah.net
  */

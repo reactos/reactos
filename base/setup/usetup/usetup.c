@@ -19,7 +19,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
- * FILE:            base/setup/usetup/usetup.c
  * PURPOSE:         Text-mode setup
  * PROGRAMMERS:     Casper S. Hornstrup (chorns@users.sourceforge.net)
  *                  Hervé Poussineau (hpoussin@reactos.org)

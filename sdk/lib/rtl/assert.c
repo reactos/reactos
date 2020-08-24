@@ -3,7 +3,6 @@
  * PROJECT:           ReactOS Run-Time Library
  * PURPOSE:           Implements RtlAssert used by the ASSERT
  *                    and ASSERTMSG debugging macros
- * FILE:              lib/rtl/assert.c
  * PROGRAMERS:        Stefan Ginsberg (stefan.ginsberg@reactos.org)
  */
 

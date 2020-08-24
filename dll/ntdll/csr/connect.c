@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
- * FILE:            dll/ntdll/csr/connect.c
  * PURPOSE:         Routines for connecting and calling CSR
  * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)
  */

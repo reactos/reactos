@@ -1,7 +1,6 @@
 /*
  * PROJECT:     ReactOS UI Layout Engine
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
- * FILE:        base/applications/rapps/include/rosui.h
  * PURPOSE:     ATL Layout engine for RAPPS
  * COPYRIGHT:   Copyright 2015 David Quintana           (gigaherz@gmail.com)
  */

@@ -1,7 +1,6 @@
 /*
  *
  * PROJECT:         ReactOS Software Control Panel
- * FILE:            dll/cpl/telephon/telephon.c
  * PURPOSE:         ReactOS Software Control Panel
  * PROGRAMMER:      Dmitry Chapyshev (dmitry@reactos.org)
  * UPDATE HISTORY:

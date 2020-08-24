@@ -18,7 +18,6 @@
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
- * FILE:             drivers/filesystem/mountmgr/point.c
  * PURPOSE:          Mount Manager - Mount points
  * PROGRAMMER:       Pierre Schweitzer (pierre.schweitzer@reactos.org)
  */

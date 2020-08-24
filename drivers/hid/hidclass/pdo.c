@@ -1,7 +1,6 @@
 /*
  * PROJECT:     ReactOS Universal Serial Bus Human Interface Device Driver
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        drivers/hid/hidclass/fdo.c
  * PURPOSE:     HID Class Driver
  * PROGRAMMERS:
  *              Michael Martin (michael.martin@reactos.org)

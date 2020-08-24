@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/mm/balance.c
  * PURPOSE:         kernel memory managment functions
  *
  * PROGRAMMERS:     David Welch (welch@cwcom.net)

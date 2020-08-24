@@ -6,7 +6,6 @@
  * Copyright 2006 Robert Reif
  *
  * PROJECT:         ReactOS system libraries
- * FILE:            dll/win32/advapi32/sec/misc.c
  * PURPOSE:         Miscellaneous security functions (some ported from Wine)
  */
 

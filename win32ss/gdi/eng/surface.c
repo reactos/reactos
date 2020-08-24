@@ -2,7 +2,6 @@
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
  * PURPOSE:           GDI Driver Surace Functions
- * FILE:              win32ss/gdi/eng/surface.c
  * PROGRAMERS:        Jason Filby
  *                    Timo Kreuzer
  * TESTING TO BE DONE:

@@ -1,7 +1,6 @@
 /*
  * PROJECT:     ReactOS Applications
  * LICENSE:     LGPL - See COPYING in the top level directory
- * FILE:        base/applications/msconfig_new/freeldrpage.c
  * PURPOSE:     Freeloader configuration page message handler
  * COPYRIGHT:   Copyright 2005-2006 Christoph von Wittich <Christoph@ApiViewer.de>
  *                        2011      Gregor Schneider <Gregor.Schneider@reactos.org>

@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS HTTP Daemon
- * FILE:        include/config.h
  */
 #ifndef __CONFIG_H
 #define __CONFIG_H

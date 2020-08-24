@@ -1,7 +1,6 @@
 /*
  * PROJECT:     ReactOS System Control Panel Applet
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        dll/cpl/sysdm/startrec.c
  * PURPOSE:     Computer settings for startup and recovery
  * COPYRIGHT:   Copyright 2006 Ged Murphy <gedmurphy@gmail.com>
  *              Copyright 2006 Christoph von Wittich <Christoph@ApiViewer.de>

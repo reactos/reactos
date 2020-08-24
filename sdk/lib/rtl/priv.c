@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS system libraries
- * FILE:              lib/rtl/priv.c
  * PURPOSE:           Security related functions and Security Objects
  * PROGRAMMER:        Eric Kohl
  *                    Pierre Schweitzer (pierre@reactos.org)

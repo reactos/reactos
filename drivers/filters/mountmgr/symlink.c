@@ -18,7 +18,6 @@
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
- * FILE:             drivers/filesystem/mountmgr/symlink.c
  * PURPOSE:          Mount Manager - Symbolic links functions
  * PROGRAMMER:       Pierre Schweitzer (pierre.schweitzer@reactos.org)
  */

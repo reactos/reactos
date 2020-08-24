@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS NT User Mode Library
- * FILE:            dll/ntdll/ldr/ldrapi.c
  * PURPOSE:         PE Loader Public APIs
  * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
  *                  Aleksey Bragin (aleksey@reactos.org)

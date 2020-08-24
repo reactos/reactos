@@ -1,6 +1,5 @@
 /*
  * PROJECT:         ReactOS winsta.dll
- * FILE:            dll/win32/winsta/winsta.h
  * PURPOSE:         WinStation
  * PROGRAMMER:      Aleksey Bragin
  * NOTES:           This file contains exported functions relevant to

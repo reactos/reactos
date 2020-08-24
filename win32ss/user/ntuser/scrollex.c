@@ -2,7 +2,6 @@
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS Win32k subsystem
  *  PURPOSE:          Window scrolling function
- *  FILE:             win32ss/user/ntuser/scrollex.c
  *  PROGRAMER:        Filip Navara (xnavara@volny.cz)
  */
 

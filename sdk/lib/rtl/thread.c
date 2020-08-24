@@ -2,7 +2,6 @@
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS system libraries
  * PURPOSE:           Rtl user thread functions
- * FILE:              lib/rtl/thread.c
  * PROGRAMERS:
  *                    Alex Ionescu (alex@relsoft.net)
  *                    Eric Kohl

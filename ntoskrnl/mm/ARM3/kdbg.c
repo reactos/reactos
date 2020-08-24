@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         BSD - See COPYING.ARM in the top level directory
- * FILE:            ntoskrnl/mm/ARM3/kdbg.c
  * PURPOSE:         ARM Memory Manager Kernel Debugger routines
  * PROGRAMMERS:     ReactOS Portable Systems Group
  *                  Pierre Schweitzer

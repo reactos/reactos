@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS TDI test driver
- * FILE:        tditest.c
  * PURPOSE:     Testing TDI drivers
  * PROGRAMMERS: Casper S. Hornstrup (chorns@users.sourceforge.net)
  *              Vizzini (vizzini@plasmic.com)

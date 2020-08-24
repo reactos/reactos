@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/cc/lazywrite.c
  * PURPOSE:         Cache manager
  *
  * PROGRAMMERS:     Pierre Schweitzer (pierre@reactos.org)

@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Winlogon
- * FILE:            base/system/winlogon/sas.c
  * PURPOSE:         Secure Attention Sequence
  * PROGRAMMERS:     Thomas Weidenmueller (w3seek@users.sourceforge.net)
  *                  Hervé Poussineau (hpoussin@reactos.org)

@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS PCI Bus Driver
  * LICENSE:         BSD - See COPYING.ARM in the top level directory
- * FILE:            drivers/bus/pci/init.c
  * PURPOSE:         Driver Initialization
  * PROGRAMMERS:     ReactOS Portable Systems Group
  */

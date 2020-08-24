@@ -1,7 +1,6 @@
 /*
  * PROJECT:     shell32
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        dll/win32/shell32/CDefViewBckgrndMenu.cpp
  * PURPOSE:     background context menu of the CDefView
  * PROGRAMMERS: Giannis Adamopoulos
  */

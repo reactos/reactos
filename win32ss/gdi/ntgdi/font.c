@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS win32 kernel mode subsystem
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            win32ss/gdi/ntgdi/font.c
  * PURPOSE:         Font
  * PROGRAMMERS:     James Tabor <james.tabor@reactos.org>
  *                  Timo Kreuzer <timo.kreuzer@reactos.org>

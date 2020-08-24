@@ -18,7 +18,6 @@
  */
 /*
  * PROJECT:         ReactOS Hid User Library
- * FILE:            lib/hid/hid.c
  * PURPOSE:         ReactOS Hid User Library
  * PROGRAMMER:      Thomas Weidenmueller <w3seek@reactos.com>
  *

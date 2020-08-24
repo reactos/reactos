@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS ACPI-Compliant Control Method Battery
  * LICENSE:         BSD - See COPYING.ARM in the top level directory
- * FILE:            boot/drivers/bus/acpi/cmbatt/cmbwmi.c
  * PURPOSE:         WMI Interface
  * PROGRAMMERS:     ReactOS Portable Systems Group
  */

@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS NT User-Mode Library
- * FILE:            dll/ntdll/ldr/ldrinit.c
  * PURPOSE:         User-Mode Process/Thread Startup
  * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
  *                  Aleksey Bragin (aleksey@reactos.org)

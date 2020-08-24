@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         Security Account Manager (SAM) Server
- * FILE:            reactos/dll/win32/lsasrv/utils.c
  * PURPOSE:         Utility functions
  *
  * PROGRAMMERS:     Eric Kohl

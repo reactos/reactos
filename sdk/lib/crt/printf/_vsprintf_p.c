@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       GNU GPL, see COPYING in the top level directory
  * PROJECT:         ReactOS crt library
- * FILE:            lib/sdk/crt/printf/_vsprintf_p.c
  * PURPOSE:         Implementation of _vsprintf_p
  * PROGRAMMER:      Samuel Serapión
  */

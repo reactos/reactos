@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       GPL - See COPYING in the top level directory
  * PROJECT:         ReactOS Virtual DOS Machine
- * FILE:            subsystems/mvdm/ntvdm/hardware/video/console.c
  * PURPOSE:         Console driver for the video subsystem
  * PROGRAMMERS:     Aleksandar Andrejevic <theflash AT sdf DOT lonestar DOT org>
  *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)

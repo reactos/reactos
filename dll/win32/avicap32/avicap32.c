@@ -1,6 +1,5 @@
 /*
  * PROJECT:         avicap32
- * FILE:            dll\win32\avicap32\avicap32.c
  * PURPOSE:         Main file
  * PROGRAMMERS:     Dmitry Chapyshev (dmitry@reactos.org)
  */

@@ -1,7 +1,6 @@
 /*
  * PROJECT:     ReactOS system libraries
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        dll/shellext/stobject/power.cpp
  * PURPOSE:     Power notification icon handler
  * PROGRAMMERS: Eric Kohl <eric.kohl@reactos.org>
                 Shriraj Sawant a.k.a SR13 <sr.official@hotmail.com>

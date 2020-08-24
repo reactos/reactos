@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS TCP/IP protocol driver
- * FILE:        include/tcpip.h
  * PURPOSE:     TCP/IP protocol driver definitions
  * NOTES:       Spin lock acquire order:
  *                - Net table list lock

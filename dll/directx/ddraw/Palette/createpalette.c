@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS DirectX
- * FILE:                 dll/directx/ddraw/Palette/createpalette.c
  * PURPOSE:              IDirectDrawPalette Creation
  * PROGRAMMER:           Jérôme Gardou
  *

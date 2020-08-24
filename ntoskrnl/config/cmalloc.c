@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/config/cmalloc.c
  * PURPOSE:         Routines for allocating and freeing registry structures
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */

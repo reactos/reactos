@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/fsrtl/mcb.c
  * PURPOSE:         Mapped Control Block (MCB) support for File System Drivers
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */

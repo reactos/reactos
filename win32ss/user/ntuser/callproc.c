@@ -2,7 +2,6 @@
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Callproc support
- * FILE:             win32ss/user/ntuser/callproc.c
  * PROGRAMER:        Thomas Weidenmueller <w3seek@reactos.com>
  */
 

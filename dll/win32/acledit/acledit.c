@@ -18,7 +18,6 @@
  */
 /*
  * PROJECT:         ReactOS Access Control List Editor
- * FILE:            lib/acledit/acledit.c
  * PURPOSE:         Access Control List Editor
  * PROGRAMMER:      Thomas Weidenmueller (w3seek@users.sourceforge.net)
  *

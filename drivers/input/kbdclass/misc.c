@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Keyboard class driver
- * FILE:            drivers/input/kbdclass/misc.c
  * PURPOSE:         Miscellaneous operations
  *
  * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.org)

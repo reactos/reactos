@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Kernel Streaming
- * FILE:            drivers/wdm/audio/backpln/portcls/filter_topology.c
  * PURPOSE:         portcls topology filter
  * PROGRAMMER:      Johannes Anderwald
  */

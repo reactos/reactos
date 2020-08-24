@@ -1,7 +1,6 @@
 /*
  * PROJECT:    ReactOS Netshell
  * LICENSE:    GPL - See COPYING in the top level directory
- * FILE:       dll/shellext/netshell/lang/zh-CN.rc
  * PURPOSE:    Chinese (Simplified) Language File
  * TRANSLATOR: 2011 Elton Chung aka MfldElton <elton328@gmail.com>
  *             2018 Luo Yufan <njlyf2011@hotmail.com>

@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            boot/freeldr/freeldr/arch/i386/ntoskrnl.c
  * PURPOSE:         NTOS glue routines for the MINIHAL library
  * PROGRAMMERS:     Hervé Poussineau  <hpoussin@reactos.org>
  */

@@ -18,7 +18,6 @@
  */
 /*
  * PROJECT:         ReactOS FAX API Support
- * FILE:            lib/winfax/winfax.c
  * PURPOSE:         ReactOS FAX API Support
  * PROGRAMMER:      Thomas Weidenmueller <w3seek@reactos.com>
  *

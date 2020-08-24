@@ -1,7 +1,6 @@
 /*
  * PROJECT:     ReactOS Services
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        base/applications/mscutils/servman/delete.c
  * PURPOSE:     Delete an existing service
  * COPYRIGHT:   Copyright 2006-2007 Ged Murphy <gedmurphy@reactos.org>
  *

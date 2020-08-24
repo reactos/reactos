@@ -2,7 +2,6 @@
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
  * PURPOSE:         Boot Data implementation
- * FILE:            lib/rtl/bootdata.c
  * PROGRAMMERS:
  */
 

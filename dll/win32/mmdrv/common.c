@@ -2,7 +2,6 @@
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS Multimedia
- * FILE:                 dll/win32/mmdrv/common.c
  * PURPOSE:              Multimedia User Mode Driver (Common functions)
  * PROGRAMMER:           Andrew Greenwood
  * UPDATE HISTORY:

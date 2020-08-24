@@ -2,7 +2,6 @@
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Runtime Library
  * PURPOSE:         Activation Context Support
- * FILE:            lib/rtl/actctx.c
  * PROGRAMERS:
  *                  Jon Griffiths
  *                  Eric Pouech

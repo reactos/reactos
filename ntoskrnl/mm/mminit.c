@@ -1,7 +1,6 @@
 ﻿/*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/mm/mminit.c
  * PURPOSE:         Memory Manager Initialization
  * PROGRAMMERS:
  */

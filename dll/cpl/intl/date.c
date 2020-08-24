@@ -18,7 +18,6 @@
  */
 /*
  * PROJECT:         ReactOS International Control Panel
- * FILE:            dll/cpl/intl/date.c
  * PURPOSE:         Date property page
  * PROGRAMMERS:     Eric Kohl
  *                  Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)

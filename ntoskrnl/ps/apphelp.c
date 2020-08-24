@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         BSD - See COPYING.ARM in the top level directory
- * FILE:            ntoskrnl/ps/apphelp.c
  * PURPOSE:         SHIM engine caching.
  *                  This caching speeds up checks for the apphelp compatibility layer.
  * PROGRAMMERS:     Mark Jansen

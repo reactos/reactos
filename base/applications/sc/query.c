@@ -1,7 +1,6 @@
 /*
  * PROJECT:     ReactOS Services
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        base/applications/sc/query.c
  * PURPOSE:     queries service info
  * COPYRIGHT:   Copyright 2005 - 2006 Ged Murphy <gedmurphy@gmail.com>
  *              Copyright 2018 Eric Kohl <eric.kohl@reactos.org>

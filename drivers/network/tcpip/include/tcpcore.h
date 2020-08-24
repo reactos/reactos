@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS TCP/IP protocol driver
- * FILE:        include/tcpcore.h
  * PURPOSE:     Transmission Control Protocol definitions
  * REVISIONS:
  *   CSH 01/01-2003 Ported from linux kernel 2.4.20

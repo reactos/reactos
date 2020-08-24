@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     Local Security Authority Server DLL
- * FILE:        dll/win32/lsasrv/srm.c
  * PURPOSE:     Security Reference Monitor Server
  *
  * PROGRAMMERS: Timo Kreuzer (timo.kreuzer@reactos.org)

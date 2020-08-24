@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Winlogon
- * FILE:            base/system/winlogon/setup.c
  * PURPOSE:         Setup support functions
  * PROGRAMMERS:     Eric Kohl
  */

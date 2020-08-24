@@ -18,7 +18,6 @@
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
- * FILE:             drivers/filesystem/mountmgr/mountmgr.c
  * PURPOSE:          Mount Manager - remote/local database handler
  * PROGRAMMER:       Pierre Schweitzer (pierre.schweitzer@reactos.org)
  */

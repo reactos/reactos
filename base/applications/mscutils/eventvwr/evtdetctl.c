@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS Event Log Viewer
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            base/applications/mscutils/eventvwr/evtdetctl.c
  * PURPOSE:         Event Details Control
  * PROGRAMMERS:     Marc Piulachs (marc.piulachs at codexchange [dot] net)
  *                  Eric Kohl

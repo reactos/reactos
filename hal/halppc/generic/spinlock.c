@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS HAL
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            hal/halppc/generic/spinlock.c
  * PURPOSE:         Spinlock and Queued Spinlock Support
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */

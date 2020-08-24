@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/dbgk/dbgkobj.c
  * PURPOSE:         User-Mode Debugging Support, Debug Object Management.
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */

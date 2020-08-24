@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/ps/query.c
  * PURPOSE:         Process Manager: Thread/Process Query/Set Information
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  *                  Thomas Weidenmueller (w3seek@reactos.org)

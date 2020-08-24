@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS TCP/IP protocol driver
- * FILE:        transport/tcp/tcp.c
  * PURPOSE:     Transmission Control Protocol
  * PROGRAMMERS: Casper S. Hornstrup (chorns@users.sourceforge.net)
  *              Art Yerkes (arty@users.sf.net)

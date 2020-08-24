@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         Local Security Authority (LSA) Server
- * FILE:            reactos/dll/win32/lsasrv/dssetup.c
  * PURPOSE:         Directory Service setup functions
  *
  * PROGRAMMERS:     Eric Kohl

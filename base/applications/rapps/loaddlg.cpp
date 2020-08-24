@@ -1,7 +1,6 @@
 /*
  * PROJECT:     ReactOS Applications Manager
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
- * FILE:        base/applications/rapps/loaddlg.cpp
  * PURPOSE:     Displaying a download dialog
  * COPYRIGHT:   Copyright 2001 John R. Sheets             (for CodeWeavers)
  *              Copyright 2004 Mike McCormack             (for CodeWeavers)

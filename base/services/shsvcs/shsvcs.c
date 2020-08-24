@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS Shell
- * FILE:             base/services/shsvcs/shsvcs.c
  * PURPOSE:          ReactOS Shell Services
  * PROGRAMMER:       Giannis Adamopoulos
  */

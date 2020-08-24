@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         Security Account Manager (LSA) Server
- * FILE:            reactos/dll/win32/samsrv/samsrv.h
  * PURPOSE:         Common header file
  *
  * PROGRAMMERS:     Eric Kohl

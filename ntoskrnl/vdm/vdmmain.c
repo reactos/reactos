@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/vdm/vdmmain.c
  * PURPOSE:         VDM Support Services
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  *                  Aleksey Bragin (aleksey@reactos.org)

@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS DirectX
- * FILE:                 dll/directx/ddraw/Surface/callbacks_surf_hel.c
  * PURPOSE:              HEL Callbacks For Surface APIs
  * PROGRAMMER:           Magnus Olsen
  *

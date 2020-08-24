@@ -18,7 +18,6 @@
  */
 /*
  * PROJECT:         ReactOS Sample Control Panel
- * FILE:            dll/cpl/main/main.c
  * PURPOSE:         ReactOS Main Control Panel
  * PROGRAMMER:      Eric Kohl
  * UPDATE HISTORY:

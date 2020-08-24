@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/rtl/libsupp.c
  * PURPOSE:         RTL Support Routines
  * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
  *                  Gunnar Dalsnes

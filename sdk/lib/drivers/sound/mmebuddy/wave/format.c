@@ -1,7 +1,6 @@
 /*
  * PROJECT:     ReactOS Sound System "MME Buddy" Library
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        lib/drivers/sound/mmebuddy/wave/format.c
  *
  * PURPOSE:     Queries and sets wave device format (sample rate, etc.)
  *

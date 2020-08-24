@@ -4,7 +4,6 @@
  *
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS arp utility
- * FILE:        apps/utils/gettype/gettype.c
  * PURPOSE:
  * PROGRAMMERS: Brandon Turner (turnerb7@msu.edu)
  * REVISIONS:

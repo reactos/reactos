@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS ReiserFS library
- * FILE:        lib/fslib/reiserfslib/reiserfslib.c
  * PURPOSE:     ReiserFS lib
  * PROGRAMMERS: Pierre Schweitzer
  */

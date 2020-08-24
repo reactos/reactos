@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Base API Server DLL
- * FILE:            subsystems/win/basesrv/init.c
  * PURPOSE:         Initialization
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)

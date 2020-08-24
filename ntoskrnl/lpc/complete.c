@@ -1,7 +1,6 @@
 /*
 * PROJECT:         ReactOS Kernel
 * LICENSE:         GPL - See COPYING in the top level directory
-* FILE:            ntoskrnl/lpc/complete.c
 * PURPOSE:         Local Procedure Call: Connection Completion
 * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
 */

@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       GPL - See COPYING in the top level directory
  * PROJECT:         ReactOS Virtual DOS Machine
- * FILE:            subsystems/mvdm/ntvdm/bios/bios.h
  * PURPOSE:         VDM BIOS Support Library
  * PROGRAMMERS:     Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  */

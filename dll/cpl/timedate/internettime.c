@@ -1,7 +1,6 @@
 /*
  * PROJECT:     ReactOS Timedate Control Panel
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        dll/cpl/timedate/internettime.c
  * PURPOSE:     Internet Time property page
  * COPYRIGHT:   Copyright 2006 Ged Murphy <gedmurphy@gmail.com>
  *

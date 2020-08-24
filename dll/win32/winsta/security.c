@@ -1,6 +1,5 @@
 /*
  * PROJECT:         ReactOS winsta.dll
- * FILE:            lib/winsta/security.c
  * PURPOSE:         WinStation
  * PROGRAMMER:      Samuel Serapi?n
  * NOTE:            Not needed, just here for the show.

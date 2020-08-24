@@ -1,5 +1,4 @@
 /*
- * FILE:            hal/halx86/generic/systimer.S
  * COPYRIGHT:       See COPYING in the top level directory
  * PURPOSE:         System Timer Interrupt and Management
  * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)

@@ -1,7 +1,6 @@
 /*
  * PROJECT:          ReactOS
  * LICENSE:          GPL - See COPYING in the top level directory
- * FILE:             base/services/audiosrv/pnp.c
  * PURPOSE:          Audio Service Plug and Play
  * COPYRIGHT:        Copyright 2007 Andrew Greenwood
  */

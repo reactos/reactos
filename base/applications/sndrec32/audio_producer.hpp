@@ -1,6 +1,5 @@
 /* PROJECT:         ReactOS sndrec32
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            base/applications/sndrec32/audio_producer.hpp
  * PURPOSE:         Audio producer
  * PROGRAMMERS:     Marco Pagliaricci (irc: rendar)
  */

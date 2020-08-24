@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            base/system/bootok/bootok.c
  * PURPOSE:         Boot Acceptance Application
  * PROGRAMMERS:     Eric Kohl
  */

@@ -22,7 +22,6 @@
 /*
  * PROJECT:         ReactOS Program Manager
  * COPYRIGHT:       GPL - See COPYING in the top level directory
- * FILE:            base/shell/progman/resource.h
  * PURPOSE:         ProgMan resource header
  * PROGRAMMERS:     Ulrich Schmid
  *                  Sylvain Petreolle

@@ -2,7 +2,6 @@
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           FreeType implementation for ReactOS
  * PURPOSE:           Glue functions between FreeType
- * FILE:              win32ss/drivers/font/ftfd/rosglue.c
  * PROGRAMMER:        Ge van Geldorp (ge@gse.nl)
  * NOTES:
  */

@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         Serial driver
- * FILE:            drivers/dd/serial/serial.h
  * PURPOSE:         Serial driver header
  *
  * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.org)

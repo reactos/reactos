@@ -1,7 +1,6 @@
 /*
  * PROJECT:     ReactOS WLAN command-line configuration utility
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        base/applications/network/wlanconf/wlanconf.c
  * PURPOSE:     Allows WLAN configuration via the command prompt
  * COPYRIGHT:   Copyright 2012 Cameron Gutman (cameron.gutman@reactos.org)
  */

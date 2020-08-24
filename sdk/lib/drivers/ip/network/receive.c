@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS TCP/IP protocol driver
- * FILE:        network/receive.c
  * PURPOSE:     Internet Protocol receive routines
  * PROGRAMMERS: Casper S. Hornstrup (chorns@users.sourceforge.net)
  * NOTES:       The IP datagram reassembly algorithm is taken from

@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/fsrtl/faulttol.c
  * PURPOSE:         Provides Fault Tolerance support for File System Drivers
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */

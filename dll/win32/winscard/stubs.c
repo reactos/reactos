@@ -1,6 +1,5 @@
 /*
  * PROJECT:         ReactOS SmartCard API
- * FILE:            dll/win32/winscard/stubs.c
  * PURPOSE:         ReactOS SmartCard API
  * PROGRAMMER:      Thomas Weidenmueller <w3seek@reactos.com>
  *

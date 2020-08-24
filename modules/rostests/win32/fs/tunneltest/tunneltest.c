@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS Tests
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            tunneltest.c
  * PURPOSE:         Usermode tunnel cache testing
  * PROGRAMMERS:     Pierre Schweitzer (pierre@reactos.org)
  * NOTES:           Based on indications from: http://support.microsoft.com/?kbid=172190

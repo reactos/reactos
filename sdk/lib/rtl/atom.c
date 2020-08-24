@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
- * FILE:            lib/rtl/atom.c
  * PURPOSE:         Atom managment
  * PROGRAMMER:      Thomas Weidenmueller
  */

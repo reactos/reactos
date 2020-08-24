@@ -18,7 +18,6 @@
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
- * FILE:             drivers/filesystem/ntfs/fastio.c
  * PURPOSE:          NTFS filesystem driver
  * PROGRAMMER:       Pierre Schweitzer
  */

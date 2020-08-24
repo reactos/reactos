@@ -17,7 +17,6 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  *
  * PROJECT:         ReactOS Floppy Driver
- * FILE:            ioctl.c
  * PURPOSE:         IOCTL Routines
  * PROGRAMMER:      Vizzini (vizzini@plasmic.com)
  * REVISIONS:

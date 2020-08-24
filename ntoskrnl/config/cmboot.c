@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         BSD - See COPYING.ARM in the top level directory
- * FILE:            ntoskrnl/config/cmboot.c
  * PURPOSE:         Configuration Manager - Boot Initialization
  * PROGRAMMERS:     ReactOS Portable Systems Group
  *                  Alex Ionescu (alex.ionescu@reactos.org)

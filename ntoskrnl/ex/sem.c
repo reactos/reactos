@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Kernel
- * FILE:            ntoskrnl/ex/sem.c
  * PURPOSE:         Semaphore Implementation
  * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
  *                  Thomas Weidenmueller

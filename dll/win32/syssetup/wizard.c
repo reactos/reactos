@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         System setup
- * FILE:            dll/win32/syssetup/wizard.c
  * PURPOSE:         GUI controls
  * PROGRAMMERS:     Eric Kohl
  *                  Pierre Schweitzer <heis_spiter@hotmail.com>

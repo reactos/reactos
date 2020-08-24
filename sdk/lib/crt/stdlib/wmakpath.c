@@ -1,7 +1,6 @@
 /*
  * PROJECT:     ReactOS CRT library
  * LICENSE:     See COPYING in the top level directory
- * FILE:        lib/sdk/crt/stdlib/wmakpath.c
  * PURPOSE:     Creates a unicode path
  * PROGRAMMERS: Wine team
  *              Copyright 1996,1998 Marcus Meissner

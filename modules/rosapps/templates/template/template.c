@@ -19,7 +19,6 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
- * FILE:             services/fs/template/template.c
  * PURPOSE:          Bare filesystem template
  * PROGRAMMER:       David Welch (welch@mcmail.com)
  * UPDATE HISTORY:

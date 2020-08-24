@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Win32 Graphical Subsystem (WIN32K)
- * FILE:            win32ss/include/ntgdityp.h
  * PURPOSE:         Win32 Shared GDI Types for NtGdi*
  * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)
  */

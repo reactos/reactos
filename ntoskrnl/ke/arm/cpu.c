@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         BSD - See COPYING.ARM in the top level directory
- * FILE:            ntoskrnl/ke/arm/cpu.c
  * PURPOSE:         Implements routines for ARM CPU support
  * PROGRAMMERS:     ReactOS Portable Systems Group
  */

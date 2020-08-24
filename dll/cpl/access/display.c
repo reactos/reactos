@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS Accessibility Control Panel
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            dll/cpl/access/display.c
  * PURPOSE:         Display-related accessibility settings
  * COPYRIGHT:       Copyright 2004 Johannes Anderwald (johannes.anderwald@reactos.org)
  *                  Copyright 2007 Eric Kohl

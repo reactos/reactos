@@ -22,7 +22,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Mode Utility
- * FILE:            base/applications/cmdutils/mode/mode.c
  * PURPOSE:         Provides fast mode setup for DOS devices.
  * PROGRAMMERS:     Robert Dickenson
  *                  Hermes Belusca-Maito

@@ -1,7 +1,6 @@
 ::
 :: PROJECT:     ReactOS CMD Testing Suite
 :: LICENSE:     GPL v2 or any later version
-:: FILE:        run.cmd
 :: PURPOSE:     Runs the testing scripts
 :: COPYRIGHT:   Copyright 2008 Colin Finck <mail@colinfinck.de>
 ::

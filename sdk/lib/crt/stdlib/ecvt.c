@@ -2,7 +2,6 @@
  * PROJECT:         ReactOS CRT
  * LICENSE:         See COPYING in the top level directory
  * PURPOSE:         CRT's ecvt
- * FILE:            lib/sdk/crt/stdlib/ecvt.c
  * PROGRAMERS:      Gregor Schneider (parts based on ecvtbuf.c by DJ Delorie)
  */
 

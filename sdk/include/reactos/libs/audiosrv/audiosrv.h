@@ -1,7 +1,6 @@
 /*
  * PROJECT:          ReactOS
  * LICENSE:          GPL - See COPYING in the top level directory
- * FILE:             include/reactos/libs/audiosrv/audiosrv.h
  * PURPOSE:          Audio Service Plug and Play list
  * COPYRIGHT:        Copyright 2007 Andrew Greenwood
  */

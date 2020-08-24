@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS WinSock 2 API
- * FILE:        dll/win32/ws2_32_new/src/dupsock.c
  * PURPOSE:     Socket Duplication
  * PROGRAMMER:  Alex Ionescu (alex@relsoft.net)
  */

@@ -1,7 +1,6 @@
 /*
  * PROJECT:     ReactOS Serial mouse driver
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        drivers/input/sermouse/fdo.c
  * PURPOSE:     Read mouse moves and send them to mouclass
  * PROGRAMMERS: Copyright Jason Filby (jasonfilby@yahoo.com)
                 Copyright Filip Navara (xnavara@volny.cz)

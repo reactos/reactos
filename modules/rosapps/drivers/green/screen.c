@@ -1,7 +1,6 @@
 /*
  * PROJECT:     ReactOS VT100 emulator
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        drivers/base/green/screen.c
  * PURPOSE:     IRP_MJ_PNP operations
  * PROGRAMMERS: Copyright 2005 Eric Kohl (ekohl@abo.rhein-zeitung.de)
  *              Copyright 2005 Art Yerkes

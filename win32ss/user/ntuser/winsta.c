@@ -2,7 +2,6 @@
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS Win32k subsystem
  *  PURPOSE:          Window stations
- *  FILE:             win32ss/user/ntuser/winsta.c
  *  PROGRAMER:        Casper S. Hornstrup (chorns@users.sourceforge.net)
  *  TODO:             The process window station is created on
  *                    the first USER32/GDI32 call not related

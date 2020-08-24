@@ -18,7 +18,6 @@
  */
 /*
  * PROJECT:         ReactOS user32.dll
- * FILE:            win32ss/user/user32/windows/dialog.c
  * PURPOSE:         Dialog Manager
  * PROGRAMMER:      Casper S. Hornstrup (chorns@users.sourceforge.net)
  *                  Thomas Weidenmueller (w3seek@users.sourceforge.net)

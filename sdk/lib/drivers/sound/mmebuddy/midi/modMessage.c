@@ -1,7 +1,6 @@
 /*
  * PROJECT:     ReactOS Sound System "MME Buddy" Library
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        lib/sound/mmebuddy/midi/modMessage.c
  *
  * PURPOSE:     Provides the modMessage exported function, as required by
  *              the MME API, for MIDI output device support.

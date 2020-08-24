@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         Serial driver
- * FILE:            drivers/dd/serial/serial.c
  * PURPOSE:         Serial driver loading/unloading
  *
  * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.org)

@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS TCP/IP protocol driver
- * FILE:        tcpip/lock.c
  * PURPOSE:     Waiting and signalling
  * PROGRAMMERS: Art Yerkes
  * REVISIONS:

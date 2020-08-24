@@ -17,7 +17,6 @@
  *
  *
  * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/cache/section/sptab.c
  * PURPOSE:         Section object page tables
  *
  * PROGRAMMERS:     arty

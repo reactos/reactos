@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/ke/procobj.c
  * PURPOSE:         Kernel Process Management and System Call Tables
  * PROGRAMMERS:     Alex Ionescu
  *                  Gregor Anich

@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/config/cmcheck.c
  * PURPOSE:         Configuration Manager - Hive and Key Validation
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */

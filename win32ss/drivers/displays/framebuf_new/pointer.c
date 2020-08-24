@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS Framebuffer Display Driver
  * LICENSE:         Microsoft NT4 DDK Sample Code License
- * FILE:            win32ss/drivers/displays/framebuf_new/pointer.c
  * PURPOSE:         Hardware Pointer Support
  * PROGRAMMERS:     Copyright (c) 1992-1995 Microsoft Corporation
  */

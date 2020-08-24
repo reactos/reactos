@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS win32 kernel mode subsystem
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            win32ss/gdi/ntgdi/rect.c
  * PURPOSE:         Rect functions
  * PROGRAMMER:      Timo Kreuzer
  */

@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Network Provider for MPEG2 based networks
- * FILE:            dll/directx/ksproxy/enum_mediatypes.cpp
  * PURPOSE:         IEnumMediaTypes interface
  *
  * PROGRAMMERS:     Johannes Anderwald (johannes.anderwald@reactos.org)

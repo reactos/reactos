@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       GNU GPL, see COPYING in the top level directory
  * PROJECT:         ReactOS crt library
- * FILE:            lib/sdk/crt/string/_wsplitpath.c
  * PURPOSE:         Implementation of _wsplitpath
  * PROGRAMMER:      Timo Kreuzer
  */

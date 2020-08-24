@@ -18,7 +18,6 @@
  */
 /*
  * PROJECT:         ReactOS user32.dll
- * FILE:            win32ss/user/user32/windows/accel.c
  * PURPOSE:         Accelerator tables
  * PROGRAMMER:      KJK::Hyperion <noog@libero.it>
  * UPDATE HISTORY:

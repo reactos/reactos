@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS File System Recognizer
- * FILE:             drivers/filesystems/fs_rec/udfs.c
  * PURPOSE:          USFS Recognizer
  * PROGRAMMER:       Alex Ionescu (alex.ionescu@reactos.org)
  *                   Eric Kohl

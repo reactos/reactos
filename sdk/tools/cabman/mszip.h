@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS cabinet manager
- * FILE:        tools/cabman/mszip.h
  * PURPOSE:     CAB codec for MSZIP compressed data
  */
 

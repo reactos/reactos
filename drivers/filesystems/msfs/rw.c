@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:  See COPYING in the top level directory
  * PROJECT:    ReactOS kernel
- * FILE:       drivers/filesystems/msfs/rw.c
  * PURPOSE:    Mailslot filesystem
  * PROGRAMMER: Eric Kohl
  *             Nikita Pechenkin (n.pechenkin@mail.ru)

@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS FFS library
- * FILE:        lib/fslib/ffslib/ffslib.c
  * PURPOSE:     FFS lib
  * PROGRAMMERS: Pierre Schweitzer
  */

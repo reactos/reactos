@@ -18,7 +18,6 @@
  */
 /*
  * PROJECT:         ReactOS International Control Panel
- * FILE:            dll/cpl/intl/generalp.c
  * PURPOSE:         General property page
  * PROGRAMMER:      Eric Kohl
  *                  Klemens Friedl

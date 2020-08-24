@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/lpc/port.c
  * PURPOSE:         Local Procedure Call: Port Management
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */

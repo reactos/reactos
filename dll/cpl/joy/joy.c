@@ -19,7 +19,6 @@
 /*
  *
  * PROJECT:         ReactOS Software Control Panel
- * FILE:            dll/cpl/joy/joy.c
  * PURPOSE:         ReactOS Software Control Panel
  * PROGRAMMER:      Dmitry Chapyshev (lentind@yandex.ru)
  * UPDATE HISTORY:

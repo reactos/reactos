@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS HAL
  * LICENSE:         BSD - See COPYING.ARM in the top level directory
- * FILE:            hal/halx86/generic/beep.c
  * PURPOSE:         Speaker support (beeping)
  * PROGRAMMERS:     ReactOS Portable Systems Group
  */

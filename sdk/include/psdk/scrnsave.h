@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS Screen Saver Library
  * LICENSE:         GPL v2 or any later version
- * FILE:            include/psdk/scrnsave.h
  * PURPOSE:         Header file for the library
  * PROGRAMMERS:     Anders Norlander <anorland@hem2.passagen.se>
  *                  Colin Finck <mail@colinfinck.de>

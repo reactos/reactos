@@ -19,7 +19,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
- * FILE:            dll/win32/userenv/environment.c
  * PURPOSE:         User environment functions
  * PROGRAMMER:      Eric Kohl
  */

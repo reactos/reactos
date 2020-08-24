@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS Power Configuration Applet
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            dll/cpl/powercfg/powershemes.c
  * PURPOSE:         powerschemes tab of applet
  * PROGRAMMERS:     Alexander Wurzinger (Lohnegrim at gmx dot net)
  *                  Johannes Anderwald (johannes.anderwald@reactos.org)

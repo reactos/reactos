@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS CRT
- * FILE:            lib/sdk/crt/except/powerpc/seh.s
  * PURPOSE:         SEH Support for the CRT
  * PROGRAMMERS:     arty
  */

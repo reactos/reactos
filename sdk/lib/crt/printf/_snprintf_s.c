@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       GNU GPL, see COPYING in the top level directory
  * PROJECT:         ReactOS crt library
- * FILE:            lib/sdk/crt/printf/_snprintf_s.c
  * PURPOSE:         Implementation of _snprintf_s
  * PROGRAMMER:      Timo Kreuzer
  */

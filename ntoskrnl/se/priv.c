@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/se/priv.c
  * PURPOSE:         Security manager
  *
  * PROGRAMMERS:     No programmer listed.

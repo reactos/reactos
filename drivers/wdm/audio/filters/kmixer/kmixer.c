@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS Kernel Streaming Mixer
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            drivers/wdm/audio/filters/kmixer/kmixer.c
  * PURPOSE:         main entry point
  * PROGRAMMERS:     Johannes Anderwald (johannes.anderwald@reactos.org)
  */

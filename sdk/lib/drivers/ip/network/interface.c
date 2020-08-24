@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS TCP/IP protocol driver
- * FILE:        tcpip/interface.c
  * PURPOSE:     Convenient abstraction for getting and setting information
  *              in IP_INTERFACE.
  * PROGRAMMERS: Art Yerkes

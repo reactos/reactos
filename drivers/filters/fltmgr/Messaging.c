@@ -1,7 +1,6 @@
 /*
 * PROJECT:         Filesystem Filter Manager
 * LICENSE:         GPL - See COPYING in the top level directory
-* FILE:            drivers/filters/fltmgr/Messaging.c
 * PURPOSE:         Contains the routines to handle the comms layer
 * PROGRAMMERS:     Ged Murphy (gedmurphy@reactos.org)
 */

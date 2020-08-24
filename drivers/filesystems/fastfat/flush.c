@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
- * FILE:             drivers/fs/vfat/flush.c
  * PURPOSE:          VFAT Filesystem
  * PROGRAMMER:
  */

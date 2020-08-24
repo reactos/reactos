@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/lpc/send.c
  * PURPOSE:         Local Procedure Call: Sending (Requests)
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */

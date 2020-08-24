@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/io/iomgr/iotimer.c
  * PURPOSE:         I/O Wrappers for Executive Timers
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */

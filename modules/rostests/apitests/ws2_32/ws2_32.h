@@ -1,7 +1,6 @@
 /*
  * PROJECT:     ws2_32.dll API tests
  * LICENSE:     GPLv2 or any later version
- * FILE:        apitests/ws2_32/ws2_32.h
  * PURPOSE:     Main header file
  * COPYRIGHT:   Copyright 2008 Colin Finck <mail@colinfinck.de>
  */

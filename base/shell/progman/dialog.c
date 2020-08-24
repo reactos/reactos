@@ -23,7 +23,6 @@
 /*
  * PROJECT:         ReactOS Program Manager
  * COPYRIGHT:       GPL - See COPYING in the top level directory
- * FILE:            base/shell/progman/dialog.c
  * PURPOSE:         ProgMan dialog boxes
  * PROGRAMMERS:     Ulrich Schmid
  *                  Sylvain Petreolle

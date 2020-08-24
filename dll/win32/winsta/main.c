@@ -18,7 +18,6 @@
  */
 /*
  * PROJECT:         ReactOS winsta.dll
- * FILE:            lib/winsta/main.c
  * PURPOSE:         WinStation
  * PROGRAMMER:      Emanuele Aliberti <ea@reactos.com>
  *                  Samuel Serapi?n

@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS Boot Loader
  * LICENSE:         BSD - See COPYING.ARM in the top level directory
- * FILE:            boot/armllb/main.c
  * PURPOSE:         Main LLB Code
  * PROGRAMMERS:     ReactOS Portable Systems Group
  */

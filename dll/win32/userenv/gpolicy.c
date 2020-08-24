@@ -19,7 +19,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
- * FILE:            dll/win32/userenv/gpolicy.c
  * PURPOSE:         Group policy functions
  * PROGRAMMER:      Thomas Weidenmueller <w3seek@reactos.com>
  */

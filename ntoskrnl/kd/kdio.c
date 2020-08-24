@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/kd/kdio.c
  * PURPOSE:         NT Kernel Debugger Input/Output Functions
  *
  * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)

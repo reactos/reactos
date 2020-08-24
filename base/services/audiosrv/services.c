@@ -1,7 +1,6 @@
 /*
  * PROJECT:          ReactOS
  * LICENSE:          GPL - See COPYING in the top level directory
- * FILE:             base/services/audiosrv/services.c
  * PURPOSE:          Audio Service Plug and Play
  * COPYRIGHT:        Copyright 2009 Johannes Anderwald
  */

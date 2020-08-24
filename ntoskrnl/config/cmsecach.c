@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/config/cmsecach.c
  * PURPOSE:         Configuration Manager - Security Cache
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */

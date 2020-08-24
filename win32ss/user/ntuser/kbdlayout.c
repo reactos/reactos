@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS Win32k subsystem
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            win32ss/user/ntuser/kbdlayout.c
  * PURPOSE:         Keyboard layout management
  * COPYRIGHT:       Copyright 2007 Saveliy Tretiakov
  *                  Copyright 2008 Colin Finck

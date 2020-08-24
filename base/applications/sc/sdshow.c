@@ -1,7 +1,6 @@
 /*
  * PROJECT:     ReactOS Services
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        base/applications/sc/sdshow.c
  * PURPOSE:     Show a service security descriptor
  * COPYRIGHT:   Copyright 2016 Eric Kohl
  *

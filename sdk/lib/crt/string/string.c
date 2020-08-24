@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS CRT library
  * LICENSE:         LGPL - See COPYING in the top level directory
- * FILE:            lib/sdk/crt/string/string.c
  * PURPOSE:         string CRT functions
  * PROGRAMMERS:     Wine team
  *                  Ported to ReactOS by Christoph von Wittich (christoph_vw@reactos.org)

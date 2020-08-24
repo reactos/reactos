@@ -1,7 +1,6 @@
 ::
 :: PROJECT:     ReactOS CMD Testing Suite
 :: LICENSE:     GPL v2 or any later version
-:: FILE:        lib/testlib.cmd
 :: PURPOSE:     Library with functions available for all tests
 :: COPYRIGHT:   Copyright 2008 Colin Finck <mail@colinfinck.de>
 ::

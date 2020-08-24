@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/mm/powerpc/page.c
  * PURPOSE:         Low level memory managment manipulation
  *
  * PROGRAMMERS:     David Welch (welch@cwcom.net)

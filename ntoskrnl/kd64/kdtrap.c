@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/kd64/kdtrap.c
  * PURPOSE:         KD64 Trap Handlers
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  *                  Stefan Ginsberg (stefan.ginsberg@reactos.org)

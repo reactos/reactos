@@ -1,7 +1,6 @@
 /*
  * PROJECT:     Local Security Authority Server DLL
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        dll/win32/samsrv/domain.c
  * PURPOSE:     Domain specific helper functions
  * COPYRIGHT:   Copyright 2013 Eric Kohl
  */

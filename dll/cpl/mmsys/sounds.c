@@ -1,6 +1,5 @@
 /*
  * PROJECT:         ReactOS Multimedia Control Panel
- * FILE:            dll/cpl/mmsys/sounds.c
  * PURPOSE:         ReactOS Multimedia Control Panel
  * PROGRAMMER:      Thomas Weidenmueller <w3seek@reactos.com>
  *                  Johannes Anderwald <janderwald@reactos.com>

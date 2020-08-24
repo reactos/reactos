@@ -1,7 +1,6 @@
 /*
  * PROJECT:     ReactOS ipconfig utility
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        base/applications/network/ipconfig/ipconfig.c
  * PURPOSE:     Display IP info for net adapters
  * PROGRAMMERS: Copyright 2005 - 2006 Ged Murphy (gedmurphy@gmail.com)
  */

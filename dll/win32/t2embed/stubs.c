@@ -1,6 +1,5 @@
 /*
  * PROJECT:         Font Embedding Dll
- * FILE:            dll\win32\t2embed\stubs.c
  * PURPOSE:         Stubs file
  * PROGRAMMERS:     Dmitry Chapyshev (dmitry@reactos.org)
  */

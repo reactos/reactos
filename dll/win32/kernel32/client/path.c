@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS Win32 Base API
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            dll/win32/kernel32/client/path.c
  * PURPOSE:         Handles path APIs
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */

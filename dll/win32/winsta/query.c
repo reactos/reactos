@@ -1,6 +1,5 @@
 /*
  * PROJECT:         ReactOS winsta.dll
- * FILE:            lib/winsta/query.c
  * PURPOSE:         WinStation
  * PROGRAMMER:      Samuel Serapi?n
  * NOTE:            Get, query and enum functions.

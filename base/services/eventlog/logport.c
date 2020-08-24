@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS EventLog Service
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            base/services/eventlog/logport.c
  * PURPOSE:         LPC Port Interface support
  * COPYRIGHT:       Copyright 2002 Eric Kohl
  *                  Copyright 2005 Saveliy Tretiakov

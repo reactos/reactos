@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         Serial port driver
- * FILE:            drivers/dd/serial/circularbuffer.c
  * PURPOSE:         Operations on a circular buffer
  *
  * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.org)

@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS cabinet manager
- * FILE:        tools/cabman/raw.cxx
  * PURPOSE:     CAB codec for uncompressed "raw" data
  * PROGRAMMERS: Casper S. Hornstrup (chorns@users.sourceforge.net)
  *              Colin Finck <mail@colinfinck.de>

@@ -2,7 +2,6 @@
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * PURPOSE:          User handle manager
- * FILE:             win32ss/user/ntuser/object.c
  * PROGRAMER:        Copyright (C) 2001 Alexandre Julliard
  */
 

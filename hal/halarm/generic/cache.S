@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS HAL
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            hal/halarm/generic/cache.S
  * PURPOSE:         Implements cache clean, invalidate routines for ARM machines
  * PROGRAMMERS:     Copyright (C) 2005 ARM Ltd.
  */

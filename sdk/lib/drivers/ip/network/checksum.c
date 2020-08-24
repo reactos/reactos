@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS TCP/IP protocol driver
- * FILE:        tcpip/checksum.c
  * PURPOSE:     Checksum routines
  * NOTES:       The checksum routine is from RFC 1071
  * PROGRAMMERS: Casper S. Hornstrup (chorns@users.sourceforge.net)

@@ -19,7 +19,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS hive maker
- * FILE:            tools/mkhive/cmi.c
  * PURPOSE:         Registry file manipulation routines
  * PROGRAMMERS:     Hervé Poussineau
  *                  Hermès Bélusca-Maïto

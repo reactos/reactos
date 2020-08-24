@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/ps/job.c
  * PURPOSE:         Job Native Functions
  * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net) (stubs)
  *                  Thomas Weidenmueller <w3seek@reactos.com>

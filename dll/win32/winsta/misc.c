@@ -1,6 +1,5 @@
 /*
  * PROJECT:         ReactOS winsta.dll
- * FILE:            lib/winsta/misc.c
  * PURPOSE:         WinStation
  * PROGRAMMER:      Samuel Serapi?n
  * NOTES:           Misc functions.

@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS WDM Streaming ActiveMovie Proxy
- * FILE:            dll/directx/ksproxy/clockforward.cpp
  * PURPOSE:         IKsClockForwarder interface
  *
  * PROGRAMMERS:     Johannes Anderwald (johannes.anderwald@reactos.org)

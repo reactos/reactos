@@ -1,5 +1,4 @@
 /*
- * FILE:            notificationtest.c
  * PURPOSE:         Files notifications testing
  * NOTES:           MSDN code from: http://msdn.microsoft.com/en-us/library/windows/desktop/aa365261%28v=vs.85%29.aspx
  */

@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/ps/psmgr.c
  * PURPOSE:         Process Manager: Initialization Code
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */

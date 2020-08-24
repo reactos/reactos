@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS TDI test driver
- * FILE:        include/tditest.h
  * PURPOSE:     Testing TDI drivers
  */
 #ifndef __TDITEST_H

@@ -19,7 +19,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Setup Library
- * FILE:            base/setup/lib/bootsup.h
  * PURPOSE:         Bootloader support functions
  * PROGRAMMER:
  */

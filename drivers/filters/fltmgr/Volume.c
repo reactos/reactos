@@ -1,7 +1,6 @@
 /*
 * PROJECT:         Filesystem Filter Manager
 * LICENSE:         GPL - See COPYING in the top level directory
-* FILE:            drivers/filters/fltmgr/Context.c
 * PURPOSE:         Contains routines for the volume
 * PROGRAMMERS:     Ged Murphy (gedmurphy@reactos.org)
 */

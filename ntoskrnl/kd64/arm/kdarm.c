@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         BSD - See COPYING.ARM in the top level directory
- * FILE:            ntoskrnl/kd64/arm/kdarm.c
  * PURPOSE:         KD support routines for ARM
  * PROGRAMMERS:     ReactOS Portable Systems Group
  */

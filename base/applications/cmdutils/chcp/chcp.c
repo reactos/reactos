@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Change CodePage Command
- * FILE:            base/applications/cmdutils/chcp/chcp.c
  * PURPOSE:         Displays or changes the active console input and output codepages.
  * PROGRAMMERS:     Eric Kohl
  *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)

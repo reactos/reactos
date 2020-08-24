@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS NT Library
- * FILE:            dll/ntdll/dispatch/amd64/stubs.c
  * PURPOSE:         AMD64 stubs
  * PROGRAMMERS:      Stefan Ginsberg (stefan.ginsberg@reactos.org)
  */

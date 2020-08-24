@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
- * FILE:             mkernel/modules/sound/sound.c
  * PURPOSE:          SoundBlaster 16 Driver
  * PROGRAMMER:       Snatched from David Welch (welch@mcmail.com)
  *		     Modified for Soundblaster by Robert Bergkvist (fragdance@hotmail.com)

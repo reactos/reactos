@@ -16,7 +16,6 @@
  *  Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  *
  * PROJECT:         INF Helper
- * FILE:            infinst.c
  * PURPOSE:         Pass INF files to setupapi.dll for execution
  * PROGRAMMER:      Michael Biggins
  * UPDATE HISTORY:

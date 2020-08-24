@@ -2,7 +2,6 @@
  * COPYRIGHT:        GNU GPL, See COPYING in the top level directory
  * PROJECT:          ReactOS Win32k subsystem
  * PURPOSE:          Clip region functions
- * FILE:             win32ss/gdi/ntgdi/cliprgn.c
  * PROGRAMER:        Unknown
  */
 

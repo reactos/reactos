@@ -1,7 +1,6 @@
 /*
  * PROJECT:     ReactOS Services
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        base/applications/mscutils/servman/control.c
  * PURPOSE:     Pauses and resumes a service
  * COPYRIGHT:   Copyright 2006-2015 Ged Murphy <gedmurphy@reactos.org>
  *

@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         File Management IFS Utility functions
- * FILE:            reactos/dll/win32/fmifs/query.c
  * PURPOSE:         Query volume information
  *
  * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.org)

@@ -1,7 +1,6 @@
 /*
 * PROJECT:         ReactOS Kernel
 * LICENSE:         GPL - See COPYING in the top level directory
-* FILE:            ntoskrnl/ob/obsecure.c
 * PURPOSE:         SRM Interface of the Object Manager
 * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
 *                  Eric Kohl

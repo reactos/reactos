@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         BSD - See COPYING.ARM in the top level directory
- * FILE:            ntoskrnl/io/iomgr/ramdisk.c
  * PURPOSE:         Allows booting from RAM disk
  * PROGRAMMERS:     ReactOS Portable Systems Group
  */

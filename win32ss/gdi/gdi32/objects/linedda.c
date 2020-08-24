@@ -23,7 +23,6 @@
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS GDI32
  * PURPOSE:          LineDDA Function
- * FILE:             win32ss/gdi/gdi32/objects/linedda.c
  * PROGRAMER:        Steven Edwards
  * REVISION HISTORY: 2003/11/15 sedwards Created, 2009/04 gschneider Updated
  * NOTES:            Adapted from Wine

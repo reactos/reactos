@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         Parallel Port Function Driver
- * FILE:            drivers/parallel/parport/hardware.h
  * PURPOSE:         Hardware definitions
  */
 

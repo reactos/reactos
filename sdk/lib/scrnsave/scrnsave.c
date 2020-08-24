@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS Screen Saver Library
  * LICENSE:         GPL v2 or any later version
- * FILE:            lib/sdk/scrnsave/scrnsave.c
  * PURPOSE:         Library for writing screen savers, compatible with
  *                  MS' scrnsave.lib without Win9x support.
  * PROGRAMMERS:     Anders Norlander <anorland@hem2.passagen.se>

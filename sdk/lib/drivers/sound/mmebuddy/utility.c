@@ -1,7 +1,6 @@
 /*
  * PROJECT:     ReactOS Sound System "MME Buddy" Library
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        lib/sound/mmebuddy/utility.c
  *
  * PURPOSE:     Provides utility functions used by the library.
  *

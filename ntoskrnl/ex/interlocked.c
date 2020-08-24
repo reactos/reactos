@@ -1,7 +1,6 @@
 /*
 * PROJECT:         ReactOS Kernel
 * LICENSE:         GPL - See COPYING in the top level directory
-* FILE:            ntoskrnl/ex/interlocked.c
 * PURPOSE:         Interlocked functions
 * PROGRAMMERS:     Timo Kreuzer (timo.kreuzer@reactos.org)
 */

@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS Sound Volume Control
- * FILE:        base/applications/sndvol32/advanced.c
  * PROGRAMMERS: Eric Kohl <eric.kohl@reactos.org>
  */
 

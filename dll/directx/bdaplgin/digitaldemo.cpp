@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS BDA Proxy
- * FILE:            dll/directx/bdaplgin/digitaldemo.cpp
  * PURPOSE:         IBDA_DigitalDemodulator interface
  *
  * PROGRAMMERS:     Johannes Anderwald (johannes.anderwald@reactos.org)

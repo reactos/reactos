@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS Subst Command
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            base/system/subst/subst.c
  * PURPOSE:         Maps a path with a drive letter
  * PROGRAMMERS:     Sam Arun Raj
  *                  Peter Hater

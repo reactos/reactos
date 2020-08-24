@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING.ARM in the top level directory
  * PROJECT:         ReactOS UEFI OS Loader
- * FILE:            boot/environ/app/rosload/roslogo.c
  * PURPOSE:         OS Loader Logo Drawing
  * PROGRAMMER:      Alex Ionescu (alex.ionescu@reactos.org)
  */

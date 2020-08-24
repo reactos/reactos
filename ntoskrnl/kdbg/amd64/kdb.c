@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/kdbg/amd64/kdb.c
  * PURPOSE:         Kernel Debugger
  * PROGRAMMERS:
  */

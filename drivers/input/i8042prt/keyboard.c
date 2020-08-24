@@ -1,7 +1,6 @@
 /*
  * PROJECT:     ReactOS i8042 (ps/2 keyboard-mouse controller) driver
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        drivers/input/i8042prt/keyboard.c
  * PURPOSE:     Keyboard specific functions
  * PROGRAMMERS: Copyright Victor Kirhenshtein (sauros@iname.com)
                 Copyright Jason Filby (jasonfilby@yahoo.com)

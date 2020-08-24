@@ -19,7 +19,6 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
- * FILE:             sdk/lib/drivers/rxce/rxce.c
  * PURPOSE:          RXCE library
  * PROGRAMMER:       Pierre Schweitzer (pierre@reactos.org)
  */

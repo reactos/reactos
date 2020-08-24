@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Console Server DLL
- * FILE:            win32ss/user/winsrv/consrv/include/rect.h
  * PURPOSE:         Rectangle helper functions
  * PROGRAMMERS:     Gé van Geldorp
  *                  Jeffrey Morlan

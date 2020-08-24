@@ -1,7 +1,6 @@
 /*
  * PROJECT:      Spider Solitaire
  * LICENSE:      See COPYING in top level directory
- * FILE:         base/applications/games/spider/spider.cpp
  * PURPOSE:      Window and message queue for Spider Solitaire
  * PROGRAMMER:   Gregor Schneider
  */

@@ -1,7 +1,6 @@
 /*
  * PROJECT:     ReactX Diagnosis Application
  * LICENSE:     LGPL - See COPYING in the top level directory
- * FILE:        base/applications/dxdiag/music.c
  * PURPOSE:     ReactX diagnosis music page
  * COPYRIGHT:   Copyright 2008 Johannes Anderwald
  *

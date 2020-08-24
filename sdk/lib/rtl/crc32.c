@@ -2,7 +2,6 @@
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
  * PURPOSE:         crc32 functions
- * FILE:            lib/rtl/crc32.c
  * PROGRAMER:       Steven Edwards
  */
 

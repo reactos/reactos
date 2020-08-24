@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS NDIS User I/O driver
- * FILE:        ioctl.c
  * PURPOSE:     IOCTL handling
  * PROGRAMMERS: Cameron Gutman (cameron.gutman@reactos.org)
  */

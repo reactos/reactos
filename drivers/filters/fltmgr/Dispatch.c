@@ -1,7 +1,6 @@
 /*
 * PROJECT:         Filesystem Filter Manager
 * LICENSE:         GPL - See COPYING in the top level directory
-* FILE:            drivers/filters/fltmgr/Dispatch.c
 * PURPOSE:         Contains dispatch handler routines
 * PROGRAMMERS:     Ged Murphy (gedmurphy@reactos.org)
 */

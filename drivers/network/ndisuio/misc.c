@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS NDIS User I/O driver
- * FILE:        misc.c
  * PURPOSE:     Helper functions
  * PROGRAMMERS: Cameron Gutman (cameron.gutman@reactos.org)
  */

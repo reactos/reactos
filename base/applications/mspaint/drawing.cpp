@@ -1,7 +1,6 @@
 /*
  * PROJECT:     PAINT for ReactOS
  * LICENSE:     LGPL
- * FILE:        base/applications/mspaint/drawing.cpp
  * PURPOSE:     The drawing functions used by the tools
  * PROGRAMMERS: Benedikt Freisen
  */

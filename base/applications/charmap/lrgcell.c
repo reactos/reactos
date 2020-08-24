@@ -1,7 +1,6 @@
 /*
  * PROJECT:     ReactOS Character Map
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        base/applications/charmap/lrgcell.c
  * PURPOSE:     large cell window implementation
  * COPYRIGHT:   Copyright 2007 Ged Murphy <gedmurphy@reactos.org>
  *

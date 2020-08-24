@@ -1,7 +1,6 @@
 /*
  * PROJECT:     PAINT for ReactOS
  * LICENSE:     LGPL
- * FILE:        base/applications/mspaint/selection.h
  * PURPOSE:     Window procedure of the selection window
  * PROGRAMMERS: Benedikt Freisen
  *              Katayama Hirofumi MZ

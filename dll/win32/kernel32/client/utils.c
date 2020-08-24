@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
- * FILE:            dll/win32/kernel32/client/utils.c
  * PURPOSE:         Utility and Support Functions
  * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)
  *                  Pierre Schweitzer (pierre.schweitzer@reactos.org)

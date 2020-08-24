@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS user32.dll
  * COPYRIGHT:       GPL - See COPYING in the top level directory
- * FILE:            win32ss/user/user32/windows/class.c
  * PURPOSE:         Window classes
  * PROGRAMMER:      Casper S. Hornstrup (chorns@users.sourceforge.net)
  * UPDATE HISTORY:

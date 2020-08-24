@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS IP Route Priority API DLL
- * FILE:        iprtprio.c
  * PURPOSE:     DLL entry
  * PROGRAMMERS: Robert Dickenson (robd@reactos.org)
  * REVISIONS:

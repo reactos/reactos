@@ -19,7 +19,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS hive maker
- * FILE:            tools/mkhive/mkhive.h
  * PURPOSE:         Hive maker
  * PROGRAMMERS:     Eric Kohl
  *                  Hervé Poussineau

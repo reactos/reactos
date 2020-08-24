@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS Windows-Compatible Session Manager
  * LICENSE:         BSD 2-Clause License
- * FILE:            include/reactos/subsys/sm/smmsg.h
  * PURPOSE:         SMSS (SB and SM) Message Format
  * PROGRAMMERS:     Alex Ionescu
  */

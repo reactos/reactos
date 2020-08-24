@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS HAL
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            hal/halx86/generic/display.c
  * PURPOSE:         Screen Display Routines, now useless since NT 5.1+
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */

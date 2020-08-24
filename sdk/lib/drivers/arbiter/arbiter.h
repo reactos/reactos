@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS Kernel
  * COPYRIGHT:       GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
- * FILE:            lib/drivers/arbiter/arbiter.h
  * PURPOSE:         Hardware Resources Arbiter Library
  * PROGRAMMERS:     Copyright 2020 Vadim Galyant <vgal@rambler.ru>
  */

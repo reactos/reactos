@@ -2,7 +2,6 @@
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Runtime Library
  * PURPOSE:         RTL Interlocked Routines
- * FILE:            lib/rtl/interlck.c
  * PROGRAMERS:      Stefan Ginsberg (stefan.ginsberg@reactos.org)
  */
 

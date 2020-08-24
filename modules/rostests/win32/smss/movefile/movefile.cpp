@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS Test applications
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            base/applications/testsets/smss/movefile.cpp
  * PURPOSE:         Provides testing for the "move file after reboot"
  *                  function of smss.exe/kernel32.dll
  * PROGRAMMERS:     Dmitriy Philippov (shedon@mail.ru)

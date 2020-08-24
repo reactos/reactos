@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS win32 kernel mode subsystem
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            win32ss/gdi/ntgdi/path.c
  * PURPOSE:         Graphics paths (BeginPath, EndPath etc.)
  * PROGRAMMER:      Copyright 1997, 1998 Martin Boehme
  *                            1999 Huw D M Davies

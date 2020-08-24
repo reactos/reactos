@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Display Control Panel
- * FILE:            dll/cpl/desk/background.c
  * PURPOSE:         Background property page
  *
  * PROGRAMMERS:     Trevor McCort (lycan359@gmail.com)

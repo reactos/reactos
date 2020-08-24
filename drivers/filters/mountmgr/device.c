@@ -18,7 +18,6 @@
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
- * FILE:             drivers/filesystem/mountmgr/device.c
  * PURPOSE:          Mount Manager - Device Control
  * PROGRAMMER:       Pierre Schweitzer (pierre.schweitzer@reactos.org)
  */

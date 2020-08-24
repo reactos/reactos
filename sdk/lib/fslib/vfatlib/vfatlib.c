@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS VFAT filesystem library
- * FILE:        lib\fslib\vfatlib\vfatlib.c
  * PURPOSE:     Main API
  * PROGRAMMERS: Casper S. Hornstrup (chorns@users.sourceforge.net)
  *              Aleksey Bragin (aleksey@reactos.org)

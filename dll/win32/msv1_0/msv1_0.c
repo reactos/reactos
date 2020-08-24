@@ -1,7 +1,6 @@
 /*
  * PROJECT:     Authentication Package DLL
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        dll/win32/msv1_0/msv1_0.c
  * PURPOSE:     Main file
  * COPYRIGHT:   Copyright 2013 Eric Kohl
  */

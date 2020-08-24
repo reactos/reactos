@@ -2,7 +2,6 @@
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
  * PURPOSE:           GDI Driver Memory Management Functions
- * FILE:              win32ss/gdi/eng/mem.c
  * PROGRAMER:         Jason Filby
  */
 

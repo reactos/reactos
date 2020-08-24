@@ -1,6 +1,5 @@
 /* PROJECT:         ReactOS sndrec32
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            base/applications/sndrec32/sndrec32.cpp
  * PURPOSE:         Sound recording
  * PROGRAMMERS:     Marco Pagliaricci (irc: rendar)
  *                  Robert Naumann (gonzoMD)

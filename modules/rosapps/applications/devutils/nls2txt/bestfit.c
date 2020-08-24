@@ -1,7 +1,6 @@
 /*
  * PROJECT:     ReactOS NLS to TXT Converter
  * LICENSE:     GNU General Public License Version 2.0 or any later version
- * FILE:        devutils/nls2txt/bestfit.c
  * COPYRIGHT:   Copyright 2016 Dmitry Chapyshev <dmitry@reactos.org>
  */
 

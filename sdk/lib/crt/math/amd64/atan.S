@@ -2,7 +2,6 @@
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS system libraries
  * PURPOSE:           Implementation of atan
- * FILE:              lib/sdk/crt/math/amd64/atan.S
  * PROGRAMMER:        Timo Kreuzer (timo.kreuzer@reactos.org)
  */
 

@@ -1,7 +1,6 @@
 /*
  * PROJECT:     ReactX Diagnosis Application
  * LICENSE:     LGPL - See COPYING in the top level directory
- * FILE:        base/applications/dxdiag/dxdiag.c
  * PURPOSE:     ReactX diagnosis application entry
  * COPYRIGHT:   Copyright 2008 Johannes Anderwald
  *

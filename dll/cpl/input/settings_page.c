@@ -1,6 +1,5 @@
 /*
  * PROJECT:         input.dll
- * FILE:            dll/cpl/input/settings_page.c
  * PURPOSE:         input.dll
  * PROGRAMMERS:     Dmitry Chapyshev (dmitry@reactos.org)
  *                  Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)

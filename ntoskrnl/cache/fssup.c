@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Kernel
- * FILE:            ntoskrnl/cache/fssup.c
  * PURPOSE:         Logging and configuration routines
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  *                  Art Yerkes

@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Display Control Panel
- * FILE:            dll/cpl/desk/effappdlg.c
  * PURPOSE:         Effects appearance dialog
  *
  * PROGRAMMERS:     Jan Roeloffzen (jroeloffzen[at]hotmail[dot]com)

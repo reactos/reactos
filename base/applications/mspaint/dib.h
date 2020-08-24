@@ -1,7 +1,6 @@
 /*
  * PROJECT:     PAINT for ReactOS
  * LICENSE:     LGPL
- * FILE:        base/applications/mspaint/dib.h
  * PURPOSE:     Some DIB related functions
  * PROGRAMMERS: Benedikt Freisen
  */

@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS NDIS library
- * FILE:        ndis/time.c
  * PURPOSE:     Time related routines
  * PROGRAMMERS: Casper S. Hornstrup (chorns@users.sourceforge.net)
  *              Vizzini (vizzini@plasmic.com)

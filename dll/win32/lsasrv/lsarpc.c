@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         Local Security Authority (LSA) Server
- * FILE:            reactos/dll/win32/lsasrv/lsarpc.h
  * PURPOSE:         RPC interface functions
  *
  * PROGRAMMERS:     Eric Kohl

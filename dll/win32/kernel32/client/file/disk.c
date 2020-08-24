@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
- * FILE:            dll/win32/kernel32/client/file/disk.c
  * PURPOSE:         Disk and Drive functions
  * PROGRAMMER:      Ariadne ( ariadne@xs4all.nl)
  *                  Erik Bos, Alexandre Julliard :

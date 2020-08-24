@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS TDI interface
- * FILE:        enum.c
  * PURPOSE:     TDI entity enumeration
  */
 

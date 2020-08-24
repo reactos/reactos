@@ -4,7 +4,6 @@
 /*
  * PROJECT:     ReactOS Setup
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        base/setup/usetup/lang/lt-LT.h
  * PURPOSE:     Lithuanian Language File
  * TRANSLATOR:  Vytis "CMan" Girdÿijauskas (cman@cman.us)
  * DATE:        2008-01-06

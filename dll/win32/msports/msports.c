@@ -1,7 +1,6 @@
 /*
  * PROJECT:     Ports installer library
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        dll\win32\msports\msports.c
  * PURPOSE:     Library main function
  * COPYRIGHT:   Copyright 2011 Eric Kohl
  */

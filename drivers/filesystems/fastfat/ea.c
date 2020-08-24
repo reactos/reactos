@@ -18,7 +18,6 @@
  */
 /*
  * PROJECT:          ReactOS kernel
- * FILE:             drivers/fs/vfat/ea.c
  * PURPOSE:          VFAT Filesystem
  * PROGRAMMER:       Jason Filby (jasonfilby@yahoo.com)
  */

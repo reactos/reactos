@@ -1,7 +1,6 @@
 /*
 * PROJECT:         ReactOS Kernel
 * LICENSE:         GPL - See COPYING in the top level directory
-* FILE:            ntoskrnl/ke/balmgr.c
 * PURPOSE:         Balance Set Manager
 * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
 */

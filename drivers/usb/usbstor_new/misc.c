@@ -1,7 +1,6 @@
 /*
  * PROJECT:     ReactOS Universal Serial Bus Bulk Storage Driver
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        drivers/usb/usbstor/misc.c
  * PURPOSE:     USB block storage device driver.
  * PROGRAMMERS:
  *              James Tabor

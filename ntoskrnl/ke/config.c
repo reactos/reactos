@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/ke/config.c
  * PURPOSE:         Configuration Tree Routines
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */

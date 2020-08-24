@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/fsrtl/fsrtlpc.c
  * PURPOSE:         Contains initialization and support code for the FsRtl
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */

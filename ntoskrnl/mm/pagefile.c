@@ -18,7 +18,6 @@
  */
 /*
  * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/mm/pagefile.c
  * PURPOSE:         Paging file functions
  * PROGRAMMER:      David Welch (welch@mcmail.com)
  *                  Pierre Schweitzer

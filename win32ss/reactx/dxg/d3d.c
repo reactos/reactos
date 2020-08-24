@@ -2,7 +2,6 @@
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Native driver for dxg implementation
- * FILE:             win32ss/reactx/dxg/d3d.c
  * PROGRAMER:        Sebastian Gasiorek (sebastian.gasiorek@reactos.org)
  */
 

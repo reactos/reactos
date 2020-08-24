@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS TDI interface
- * FILE:        tdilib.h
  * PURPOSE:     Shared TDI library header
  */
 

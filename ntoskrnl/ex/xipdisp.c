@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/ex/xipdisp.c
  * PURPOSE:         eXecute In Place (XIP) Support.
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */

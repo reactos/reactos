@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:  See COPYING in the top level directory
  * PROJECT:    ReactOS system libraries
- * FILE:       reactos/lib/smlib/connect.c
  * PURPOSE:    Connect to the API LPC port exposed by the SM
  */
 

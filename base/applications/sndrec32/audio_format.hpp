@@ -1,6 +1,5 @@
 /* PROJECT:         ReactOS sndrec32
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            base/applications/sndrec32/audio_format.hpp
  * PURPOSE:         Audio format abstraction
  * PROGRAMMERS:     Marco Pagliaricci (irc: rendar)
  */

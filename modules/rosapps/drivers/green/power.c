@@ -1,7 +1,6 @@
 /*
  * PROJECT:     ReactOS VT100 emulator
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        drivers/base/green/power.c
  * PURPOSE:     IRP_MJ_POWER operations
  * PROGRAMMERS: Copyright 2006 Hervé Poussineau (hpoussin@reactos.org)
  */

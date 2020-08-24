@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS
- * FILE:                 dll/opengl/opengl32/dllmain.c
  * PURPOSE:              OpenGL32 DLL
  */
 

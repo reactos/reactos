@@ -20,7 +20,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS arp utility
- * FILE:        base/applications/network/arp/arp.c
  * PURPOSE:     view and manipulate the ARP cache
  * PROGRAMMERS: Ged Murphy (gedmurphy@gmail.com)
  * REVISIONS:

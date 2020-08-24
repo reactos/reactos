@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/fsrtl/fastio.c
  * PURPOSE:         Provides Fast I/O entrypoints to the Cache Manager
  * PROGRAMMERS:     Dominique Cote (buzdelabuz2@gmail.com)
  *                  Alex Ionescu (alex.ionescu@reactos.org)

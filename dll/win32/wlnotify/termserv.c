@@ -1,7 +1,6 @@
 /*
  * PROJECT:     ReactOS system libraries
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        dll/win32/wlnotify/termserv.c
  * PURPOSE:     Winlogon notifications
  * PROGRAMMER:  Eric Kohl
  */

@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS TCP/IP protocol driver
- * FILE:        tcpip/ainfo.c
  * PURPOSE:     Per-socket information.
  * PROGRAMMER:  Cameron Gutman
  */

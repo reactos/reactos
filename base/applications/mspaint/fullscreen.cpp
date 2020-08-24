@@ -1,7 +1,6 @@
 /*
  * PROJECT:     PAINT for ReactOS
  * LICENSE:     LGPL
- * FILE:        base/applications/mspaint/fullscreen.cpp
  * PURPOSE:     Window for fullscreen view
  * PROGRAMMERS: Benedikt Freisen
  */

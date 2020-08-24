@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
- * FILE:            hal/halppc/generic/dma.c
  * PURPOSE:         DMA functions
  * PROGRAMMERS:     David Welch (welch@mcmail.com)
  *                  Filip Navara (navaraf@reactos.com)

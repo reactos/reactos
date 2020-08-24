@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS VGA display driver
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            win32ss/drivers/displays/vga/objects/offscreen.c
  * PURPOSE:         Manages off-screen video memory
  * PROGRAMMERS:     Copyright (C) 1998-2001 ReactOS Team
  */

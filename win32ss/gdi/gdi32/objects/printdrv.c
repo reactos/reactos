@@ -2,7 +2,6 @@
  *  COPYRIGHT:        See COPYING in the top level directory
  *  PROJECT:          ReactOS Kernel
  *  PURPOSE:          GDI Printing Support
- *  FILE:             dll/win32/gdi32/objects/printdrv.c
  *  PROGRAMER:
  *
  */

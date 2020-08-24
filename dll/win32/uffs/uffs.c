@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         FFS File System Management
- * FILE:            dll/win32/uffs/uffs.c
  * PURPOSE:         uffs DLL initialisation
  * PROGRAMMERS:     Pierre Schweitzer
  */

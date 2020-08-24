@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/wmi/wmi.c
  * PURPOSE:         I/O Windows Management Instrumentation (WMI) Support
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */

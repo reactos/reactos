@@ -1,7 +1,6 @@
 /*
 * PROJECT:         ReactOS Kernel
 * LICENSE:         GPL - See COPYING in the top level directory
-* FILE:            ntoskrnl/include/internal/spinlock.h
 * PURPOSE:         Internal Inlined Functions for spinlocks, shared with HAL
 * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
 */

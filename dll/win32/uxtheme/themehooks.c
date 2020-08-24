@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS uxtheme.dll
- * FILE:            dll/win32/uxtheme/themehooks.c
  * PURPOSE:         uxtheme user api hook functions
  * PROGRAMMER:      Giannis Adamopoulos
  */

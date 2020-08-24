@@ -1,5 +1,4 @@
 /*
- * FILE:            win32ss/napi.h
  * COPYRIGHT:       GNU GPL, see COPYING in the top level directory
  * PURPOSE:         System Call Table for Native API
  * PROGRAMMER:      Timo Kreuzer

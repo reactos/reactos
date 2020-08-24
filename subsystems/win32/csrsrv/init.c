@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Client/Server Runtime SubSystem
- * FILE:            subsystems/win32/csrsrv/init.c
  * PURPOSE:         CSR Server DLL Initialization
  * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
  *                  ReactOS Portable Systems Group
@@ -700,8 +699,7 @@ CsrParseServerCommandLine(IN ULONG ArgumentCount,
             // Check whether we want to start in pure GUI or pure CLI.
         }
         else
-        {
-            /* Invalid parameter on the command line */
+        ine */
             Status = STATUS_INVALID_PARAMETER;
         }
     }

@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS Tests
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            rostests/win32/user32/paintdesktop/PaintDesktop.c
  *
  * PURPOSE:         Demonstrates how the user32!PaintDesktop() API visually works.
  *                  This API paints the desktop inside the given HDC with its

@@ -18,7 +18,6 @@
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
- * FILE:             drivers/filesystem/mountmgr/uniqueid.c
  * PURPOSE:          Mount Manager - Unique ID
  * PROGRAMMER:       Pierre Schweitzer (pierre.schweitzer@reactos.org)
  */

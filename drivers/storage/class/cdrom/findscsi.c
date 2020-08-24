@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS Storage Stack
  * LICENSE:         DDK - see license.txt in the root dir
- * FILE:            drivers/storage/cdrom/cdrom.c
  * PURPOSE:         CDROM driver
  * PROGRAMMERS:     Based on a source code sample from Microsoft NT4 DDK
  */

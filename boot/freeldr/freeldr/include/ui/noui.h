@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         FreeLoader
- * FILE:            boot/freeldr/freeldr/include/ui/noui.h
  * PURPOSE:         No UI interface header
  * PROGRAMMERS:     Hervé Poussineau
  */

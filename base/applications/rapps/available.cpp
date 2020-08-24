@@ -1,7 +1,6 @@
 /*
  * PROJECT:     ReactOS Applications Manager
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
- * FILE:        base/applications/rapps/available.cpp
  * PURPOSE:     Classes for working with available applications
  * COPYRIGHT:   Copyright 2009 Dmitry Chapyshev           (dmitry@reactos.org)
  *              Copyright 2015 Ismael Ferreras Morezuelas (swyterzone+ros@gmail.com)

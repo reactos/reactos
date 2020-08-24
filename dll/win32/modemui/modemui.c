@@ -1,7 +1,6 @@
 /*
  * PROJECT:     	ReactOS Modem Properties
  * LICENSE:     	GPL - See COPYING in the top level directory
- * FILE:        	dll/win32/modemui/modemui.c
  * PURPOSE:     	Modem Properties
  * COPYRIGHT:   	Copyright Dmitry Chapyshev <lentind@yandex.ru>
  *

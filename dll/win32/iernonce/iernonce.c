@@ -1,7 +1,6 @@
 /*
  * PROJECT:     ReactOS system libraries
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        dll\win32\iernonce\iernonce.c
  * PURPOSE:     ReactOS Extended RunOnce processing with UI
  * PROGRAMMERS: Copyright 2013-2016 Robert Naumann
  */

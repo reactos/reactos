@@ -2,7 +2,6 @@
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS Multimedia
- * FILE:                 dll/win32/mmdrv/kernel.c
  * PURPOSE:              Multimedia User Mode Driver (kernel interface)
  * PROGRAMMER:           Andrew Greenwood
  * UPDATE HISTORY:

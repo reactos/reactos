@@ -12,7 +12,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS CD-ROM Maker
- * FILE:            tools/cdmake/cdmake.c
  * PURPOSE:         CD-ROM Premastering Utility
  * PROGRAMMERS:     Eric Kohl
  *                  Casper S. Hornstrup

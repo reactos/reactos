@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/config/cmdata.c
  * PURPOSE:         Configuration Manager - Global Configuration Data
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */

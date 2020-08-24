@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
- * FILE:            dll/win32/userenv/profile.c
  * PURPOSE:         User profile code
  * PROGRAMMERS:     Eric Kohl
  *                  Hervé Poussineau

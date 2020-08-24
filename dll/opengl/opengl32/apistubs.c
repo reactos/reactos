@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS kernel
- * FILE:                 lib/opengl32/apistubs.c
  * PURPOSE:              OpenGL32 lib, glXXX functions
  */
 

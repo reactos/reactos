@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
- * FILE:            lib/sdk/crt/mem/i386/memchr_asm.s
  */
 
 #include <asm.inc>

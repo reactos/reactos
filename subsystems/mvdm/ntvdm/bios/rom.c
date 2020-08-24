@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       GPL - See COPYING in the top level directory
  * PROJECT:         ReactOS Virtual DOS Machine
- * FILE:            subsystems/mvdm/ntvdm/bios/rom.c
  * PURPOSE:         ROM Support Functions
  * PROGRAMMERS:     Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  */

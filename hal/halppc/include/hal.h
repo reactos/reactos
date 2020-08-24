@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Hardware Abstraction Layer
- * FILE:            hal/halppc/include/hal.h
  * PURPOSE:         HAL Header
  * PROGRAMMER:      Alex Ionescu (alex@relsoft.net)
  */

@@ -20,7 +20,6 @@
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS system libraries
  * PURPOSE:           Main file
- * FILE:              lib/syssetup/dllmain.c
  * PROGRAMER:         Eric Kohl
  */
 

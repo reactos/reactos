@@ -1,7 +1,6 @@
 /*
  * PROJECT:         Win32 subsystem
  * LICENSE:         See COPYING in the top level directory
- * FILE:            win32ss/gdi/dib/dib8bpp.c
  * PURPOSE:         Device Independant Bitmap functions, 8bpp
  * PROGRAMMERS:     Jason Filby
  *                  Thomas Bluemel

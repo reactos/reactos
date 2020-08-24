@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         BSD - See COPYING.ARM in the top level directory
- * FILE:            ntoskrnl/vf/driver.c
  * PURPOSE:         Driver Verifier Device Driver Interface
  * PROGRAMMERS:     ReactOS Portable Systems Group
  */

@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/ke/apc.c
  * PURPOSE:         Implements the Asynchronous Procedure Call mechanism
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */

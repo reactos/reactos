@@ -18,7 +18,6 @@
  */
 /*
  * PROJECT:         ReactOS msgina.dll
- * FILE:            dll/win32/msgina/msgina.c
  * PURPOSE:         ReactOS Logon GINA DLL
  * PROGRAMMER:      Thomas Weidenmueller (w3seek@users.sourceforge.net)
  *                  Hervé Poussineau (hpoussin@reactos.org)

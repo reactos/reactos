@@ -18,7 +18,6 @@
  */
 /*
  * PROJECT:          ReactOS kernel
- * FILE:             drivers/fs/vfat/iface.c
  * PURPOSE:          VFAT Filesystem
  * PROGRAMMER:       Jason Filby (jasonfilby@yahoo.com)
  *                   Pierre Schweitzer (pierre@reactos.org)

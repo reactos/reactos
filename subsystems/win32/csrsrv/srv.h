@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Client/Server Runtime SubSystem
- * FILE:            subsystems/win32/csrsrv/srv.h
  * PURPOSE:         Main header - Definitions
  * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
  *                  ReactOS Portable Systems Group

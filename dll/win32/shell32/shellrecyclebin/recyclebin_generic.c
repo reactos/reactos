@@ -1,7 +1,6 @@
 /*
  * PROJECT:     Recycle bin management
  * LICENSE:     GPL v2 - See COPYING in the top level directory
- * FILE:        lib/recyclebin/recyclebin_generic.c
  * PURPOSE:     Deals with a system-wide recycle bin
  * PROGRAMMERS: Copyright 2007 Hervé Poussineau (hpoussin@reactos.org)
  */

@@ -18,7 +18,6 @@
  *
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
- * FILE:             drivers/filesystem/ntfs/dirctl.c
  * PURPOSE:          NTFS filesystem driver
  * PROGRAMMERS:      Eric Kohl
  *                   Hervé Poussineau (hpoussin@reactos.org)

@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/ex/harderr.c
  * PURPOSE:         Error Functions and Status/Exception Dispatching/Raising
  * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
  */

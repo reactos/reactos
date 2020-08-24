@@ -1,7 +1,6 @@
 /*
  * PROJECT:     ReactOS Sound System "MME Buddy" Library
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        lib/drivers/sound/mmebuddy/functiontable.c
  *
  * PURPOSE:     Routes function calls through a function table, calling
  *              implementation-defined routines or a default function, depending

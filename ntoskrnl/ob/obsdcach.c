@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/ob/obsdcach.c
  * PURPOSE:         Security Descriptor Caching
  * PROGRAMMERS:     Aleksey Bragin (aleksey@reactos.org)
  */

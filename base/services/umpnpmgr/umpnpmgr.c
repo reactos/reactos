@@ -19,7 +19,6 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
- * FILE:             base/services/umpnpmgr/umpnpmgr.c
  * PURPOSE:          User-mode Plug and Play manager
  * PROGRAMMER:       Eric Kohl (eric.kohl@reactos.org)
  *                   Hervé Poussineau (hpoussin@reactos.org)

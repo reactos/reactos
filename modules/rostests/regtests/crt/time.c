@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS CRT regression tests
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            rostests/regtests/crt/time.c
  * PURPOSE:         Tests for time functions of the CRT
  * PROGRAMMERS:     Gregor Schneider
  */

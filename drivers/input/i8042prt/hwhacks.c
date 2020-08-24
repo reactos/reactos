@@ -1,7 +1,6 @@
 /*
  * PROJECT:     ReactOS i8042 (ps/2 keyboard-mouse controller) driver
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        drivers/input/i8042prt/hwhacks.c
  * PURPOSE:     Mouse specific functions
  * PROGRAMMERS: Timo Kreuzer (timo.kreuzer@reactos.org)
  * REFERENCES:  - http://www.dmtf.org/sites/default/files/standards/documents/DSP0134_3.0.0.pdf

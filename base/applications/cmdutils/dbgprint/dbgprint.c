@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS DbgPrint Utility
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            base/applications/cmdutils/dbgprint/dbgprint.c
  * PURPOSE:         outputs a text via DbgPrint API
  * PROGRAMMERS:     Johannes Anderwald (johannes.anderwald@reactos.org)
  *                  Christoph von Wittich (Christoph_vW@ReactOS.org)

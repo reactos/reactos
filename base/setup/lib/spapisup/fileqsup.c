@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Setup Library
- * FILE:            base/setup/lib/fileqsup.c
  * PURPOSE:         Interfacing with Setup* API File Queue support functions
  * PROGRAMMERS:     Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  */

@@ -19,7 +19,6 @@
 /*
  * PROJECT:         ReactOS Event Log Viewer
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            base/applications/mscutils/eventvwr/eventvwr.c
  * PURPOSE:         Event Log Viewer main file
  * PROGRAMMERS:     Marc Piulachs (marc.piulachs at codexchange [dot] net)
  *                  Eric Kohl

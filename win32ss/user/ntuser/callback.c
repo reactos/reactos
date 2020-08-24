@@ -2,7 +2,6 @@
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS Win32k subsystem
  * PURPOSE:          Callback to usermode support
- * FILE:             win32ss/user/ntuser/callback.c
  * PROGRAMER:        Casper S. Hornstrup (chorns@users.sourceforge.net)
  *                   Thomas Weidenmueller (w3seek@users.sourceforge.net)
  * NOTES:            Please use the Callback Memory Management functions for

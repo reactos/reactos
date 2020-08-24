@@ -2,7 +2,6 @@
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
  * PURPOSE:           Run-Time Library
- * FILE:              lib/sdk/crt/math/i386/ftol2_asm.s
  * PROGRAMER:         
  *
  */

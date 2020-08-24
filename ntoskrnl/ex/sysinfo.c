@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/ex/sysinfo.c
  * PURPOSE:         System information functions
  *
  * PROGRAMMERS:     David Welch (welch@mcmail.com)

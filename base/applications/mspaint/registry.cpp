@@ -1,7 +1,6 @@
 /*
  * PROJECT:     PAINT for ReactOS
  * LICENSE:     LGPL
- * FILE:        base/applications/mspaint/registry.cpp
  * PURPOSE:     Offering functions dealing with registry values
  * PROGRAMMERS: Benedikt Freisen
  *              Katayama Hirofumi MZ

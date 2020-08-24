@@ -18,7 +18,6 @@
  */
 /*
  * PROJECT:         ReactOS Authorization Framework
- * FILE:            lib/authz/resman.c
  * PURPOSE:         Authorization Framework
  * PROGRAMMER:      Thomas Weidenmueller <w3seek@reactos.com>
  *

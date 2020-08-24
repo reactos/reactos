@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS EventCreate Command
- * FILE:            base/applications/cmdutils/eventcreate/eventcreate.c
  * PURPOSE:         Allows reporting custom user events in event logs,
  *                  by using the old-school NT <= 2k3 logging API.
  * PROGRAMMER:      Hermes Belusca-Maito

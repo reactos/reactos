@@ -19,7 +19,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS hive maker
- * FILE:            tools/mkhive/registry.c
  * PURPOSE:         Registry code
  * PROGRAMMERS:     Hervé Poussineau
  *                  Hermès Bélusca-Maïto

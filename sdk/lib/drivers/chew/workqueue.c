@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
- * FILE:            lib/drivers/chew/workqueue.c
  * PURPOSE:         Common Highlevel Executive Worker
  *
  * PROGRAMMERS:     arty (ayerkes@speakeasy.net)

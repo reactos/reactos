@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Configuration of network devices
- * FILE:            dll/directx/dsound_new/capture.c
  * PURPOSE:         Implement IDirectSoundCapture
  *
  * PROGRAMMERS:     Johannes Anderwald (johannes.anderwald@reactos.org)

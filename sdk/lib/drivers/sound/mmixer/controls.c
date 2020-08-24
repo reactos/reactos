@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Kernel Streaming
- * FILE:            lib/drivers/sound/mmixer/controls.c
  * PURPOSE:         Mixer Control Iteration Functions
  * PROGRAMMER:      Johannes Anderwald
  */

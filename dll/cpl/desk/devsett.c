@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Display Control Panel
- * FILE:            dll/cpl/desk/devsett.c
  * PURPOSE:         ReactOS Display Control Panel Shell Extension Support
  */
 

@@ -1,7 +1,6 @@
 /*
  * PROJECT:     ReactOS Named Pipe FileSystem
  * LICENSE:     BSD - See COPYING.ARM in the top level directory
- * FILE:        drivers/filesystems/npfs/close.c
  * PURPOSE:     Pipes Closing
  * PROGRAMMERS: ReactOS Portable Systems Group
  */

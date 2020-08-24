@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/ex/dbgctrl.c
  * PURPOSE:         System debug control
  * PROGRAMMERS:     Alex Ionescu
  */

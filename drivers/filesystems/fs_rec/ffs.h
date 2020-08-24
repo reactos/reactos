@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS File System Recognizer
- * FILE:             drivers/filesystems/fs_rec/ffs.h
  * PURPOSE:          FFS Header File
  * PROGRAMMER:       Peter Hater
  *                   Pierre Schweitzer (pierre@reactos.org)

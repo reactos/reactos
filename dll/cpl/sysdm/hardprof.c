@@ -1,7 +1,6 @@
 /*
  * PROJECT:     ReactOS System Control Panel Applet
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        dll/cpl/sysdm/hardprof.c
  * PURPOSE:     Modify hardware profiles
  * COPYRIGHT:   Copyright 2006 Ged Murphy <gedmurphy@gmail.com>
  *

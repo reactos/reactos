@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:        See COPYRIGHT.TXT
  * PROJECT:          Ext2 File System Driver for WinNT/2K/XP
- * FILE:             fsctl.c
  * PROGRAMMER:       Matt Wu <mattwu@163.com>
  * HOMEPAGE:         http://www.ext2fsd.com
  * UPDATE HISTORY:

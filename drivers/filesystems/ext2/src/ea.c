@@ -1,7 +1,6 @@
 /*
 * COPYRIGHT:        See COPYRIGHT.TXT
 * PROJECT:          Ext2 File System Driver for Windows >= NT
-* FILE:             ea.c
 * PROGRAMMER:       Matt Wu <mattwu@163.com>  Kaho Ng <ngkaho1234@gmail.com>
 * HOMEPAGE:         http://www.ext2fsd.com
 * UPDATE HISTORY:

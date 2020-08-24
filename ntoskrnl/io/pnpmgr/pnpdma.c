@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS Kernel
  * COPYRIGHT:       GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/io/pnpmgr/pnpdma.c
  * PURPOSE:         PnP manager DMA routines
  * PROGRAMMERS:     Filip Navara (xnavara@volny.cz)
  */

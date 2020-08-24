@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS Boot Loader
  * LICENSE:         BSD - See COPYING.ARM in the top level directory
- * FILE:            boot/armllb/hw/versatile/hwkmi.c
  * PURPOSE:         LLB KMI Support for Versatile
  * PROGRAMMERS:     ReactOS Portable Systems Group
  */

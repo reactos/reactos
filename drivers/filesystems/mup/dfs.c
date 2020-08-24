@@ -19,7 +19,6 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
- * FILE:             drivers/filesystems/mup/dfs.c
  * PURPOSE:          Multi UNC Provider
  * PROGRAMMER:       Pierre Schweitzer (pierre@reactos.org)
  */

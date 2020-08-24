@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Winlogon
- * FILE:            base/system/winlogon/notify.c
  * PURPOSE:         Logon notifications
  * PROGRAMMERS:     Eric Kohl
  */

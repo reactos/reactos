@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         FreeLoader
- * FILE:            boot/freeldr/freeldr/ui/tuimenu.c
  * PURPOSE:         UI Menu Functions
  * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
  *                  Brian Palmer (brianp@sginet.com)

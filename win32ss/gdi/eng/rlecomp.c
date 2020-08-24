@@ -2,7 +2,6 @@
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
  * PURPOSE:           RLE compression
- * FILE:              win32ss/gdi/eng/rlecomp.c
  * PROGRAMER:         Jason Filby
  */
 

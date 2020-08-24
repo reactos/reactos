@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/kd64/kdlock.c
  * PURPOSE:         KD64 Port Lock and Breakin Support
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */

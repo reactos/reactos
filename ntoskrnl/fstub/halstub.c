@@ -1,7 +1,6 @@
 /*
 * PROJECT:         ReactOS Kernel
 * LICENSE:         GPL - See COPYING in the top level directory
-* FILE:            ntoskrnl/fstub/halstub.c
 * PURPOSE:         I/O Stub HAL Routines
 * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
                    Pierre Schweitzer (pierre.schweitzer@reactos.org)

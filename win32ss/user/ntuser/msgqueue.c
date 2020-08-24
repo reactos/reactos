@@ -2,7 +2,6 @@
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS Win32k subsystem
  * PURPOSE:          Message queues
- * FILE:             win32ss/user/ntuser/msgqueue.c
  * PROGRAMER:        Casper S. Hornstrup (chorns@users.sourceforge.net)
                      Alexandre Julliard
                      Maarten Lankhorst

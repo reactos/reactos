@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS NTFS filesystem library
- * FILE:        include/reactos/libs/fslib/ntfslib.h
  * PURPOSE:     Public definitions for NTFS filesystem library
  */
 #ifndef __NTFSLIB_H

@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS TCP/IP protocol driver
- * FILE:        tcpip/ninfo.c
  * PURPOSE:     Network information
  * PROGRAMMERS: Art Yerkes
  * REVISIONS:

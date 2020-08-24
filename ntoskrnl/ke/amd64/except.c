@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/ke/amd64/except.c
  * PURPOSE:         Exception Dispatching for amd64
  * PROGRAMMER:      Timo Kreuzer (timo.kreuzer@reactos.org)
  *                  Alex Ionescu (alex.ionescu@reactos.org)

@@ -1,7 +1,6 @@
 /*
  * PROJECT:     Local Security Authority Server DLL
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        dll/win32/lsasrv/database.c
  * PURPOSE:     LSA object database
  * COPYRIGHT:   Copyright 2011 Eric Kohl
  */

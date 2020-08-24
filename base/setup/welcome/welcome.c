@@ -19,7 +19,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS "Welcome"/AutoRun application
- * FILE:        base/setup/welcome/welcome.c
  * PROGRAMMERS: Eric Kohl
  *              Casper S. Hornstrup (chorns@users.sourceforge.net)
  *              Hermes Belusca-Maito

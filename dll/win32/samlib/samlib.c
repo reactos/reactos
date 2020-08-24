@@ -20,7 +20,6 @@
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS system libraries
  * PURPOSE:           SAM interface library
- * FILE:              lib/samlib/samlib.c
  * PROGRAMER:         Eric Kohl
  */
 

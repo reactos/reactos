@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS Power Configuration Applet
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            dll/cpl/powercfg/advanced.c
  * PURPOSE:         advanced tab of applet
  * PROGRAMMERS:     Alexander Wurzinger (Lohnegrim at gmx dot net)
  *                  Johannes Anderwald (johannes.anderwald@reactos.org)

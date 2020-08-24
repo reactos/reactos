@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS HTTP Daemon
- * FILE:        include/error.h
  */
 #ifndef __ERROR_H
 #define __ERROR_H

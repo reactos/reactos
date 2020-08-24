@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS FS utility tool
- * FILE:            base/applications/cmdutils/fsinfo.c
  * PURPOSE:         FSutil file systems information
  * PROGRAMMERS:     Pierre Schweitzer <pierre@reactos.org>
  */

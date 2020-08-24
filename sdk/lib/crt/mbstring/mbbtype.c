@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
- * FILE:        lib/sdk/crt/mbstring/mbbtype.c
  * PURPOSE:     Determines the type of a multibyte character
  * PROGRAMERS:   
  *              Copyright 1999 Ariadne

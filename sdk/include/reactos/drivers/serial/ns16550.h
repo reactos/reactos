@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS ComPort Library
  * LICENSE:         BSD - See COPYING.ARM in the top level directory
- * FILE:            include/reactos/drivers/serial/ns16550.h
  * PURPOSE:         Header for National Semiconductor 16550 UART
  * PROGRAMMERS:     ReactOS Portable Systems Group
  */

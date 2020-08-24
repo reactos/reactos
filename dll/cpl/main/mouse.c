@@ -18,7 +18,6 @@
  */
 /*
  * PROJECT:         ReactOS Main Control Panel
- * FILE:            dll/cpl/main/mouse.c
  * PURPOSE:         Mouse Control Panel
  * PROGRAMMER:      Eric Kohl
  *                  Johannes Anderwald

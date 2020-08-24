@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:        GNU GENERAL PUBLIC LICENSE VERSION 2
  * PROJECT:          ReiserFs file system driver for Windows NT/2000/XP/Vista.
- * FILE:             module.h
  * PURPOSE:          Header file: nls structures & linux kernel ...
  * PROGRAMMER:       Mark Piper, Matt Wu, Bo Brantén.
  * HOMEPAGE:         

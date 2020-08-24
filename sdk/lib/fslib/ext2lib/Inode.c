@@ -1,6 +1,5 @@
 /*
  * PROJECT:          Mke2fs
- * FILE:             Inode.c
  * PROGRAMMER:       Matt Wu <mattwu@163.com>
  * HOMEPAGE:         http://ext2.yeah.net
  */

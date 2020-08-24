@@ -1,7 +1,6 @@
 /*
  * PROJECT:     ReactOS Sound System "MME Buddy" Library (NT4 Helpers)
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        include/reactos/libs/sound/mment4.h
  *
  * PURPOSE:     Header for the NT4 part of the "MME Buddy" helper library
  *              (located in lib/drivers/sound/mment4)

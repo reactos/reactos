@@ -1,7 +1,6 @@
 /*
  * PROJECT:     ReactOS Whoami
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        base/applications/cmdutils/whoami/whoami.c
  * PURPOSE:     Displays information about the current local user, groups and privileges.
  * PROGRAMMERS: Ismael Ferreras Morezuelas (swyterzone+ros@gmail.com)
  */

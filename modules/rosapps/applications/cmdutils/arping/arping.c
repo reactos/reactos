@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS ping utility
- * FILE:        applications/cmdutils/arping/arping.c
  * PURPOSE:     Network test utility
  * PROGRAMMERS: Pierre Schweitzer <pierre@reactos.org>
  */

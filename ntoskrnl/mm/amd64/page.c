@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       GPL, See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/mm/amd64/page.c
  * PURPOSE:         Low level memory managment manipulation
  *
  * PROGRAMMER:      Timo Kreuzer (timo.kreuzer@reactos.org)

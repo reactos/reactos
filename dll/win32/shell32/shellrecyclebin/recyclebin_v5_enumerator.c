@@ -1,7 +1,6 @@
 /*
  * PROJECT:     Recycle bin management
  * LICENSE:     GPL v2 - See COPYING in the top level directory
- * FILE:        lib/recyclebin/recyclebin_v5_enumerator.c
  * PURPOSE:     Enumerates contents of a MS Windows 2000/XP/2003 recyclebin
  * PROGRAMMERS: Copyright 2006-2007 Hervé Poussineau (hpoussin@reactos.org)
  */

@@ -19,7 +19,6 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS Services
- * FILE:             base/services/srvsvc/srvsvc.c
  * PURPOSE:          Server service
  * PROGRAMMER:       Eric Kohl
  */

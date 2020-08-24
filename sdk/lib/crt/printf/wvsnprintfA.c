@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       GNU GPL, see COPYING in the top level directory
  * PROJECT:         ReactOS crt library
- * FILE:            lib/sdk/crt/printf/wvsnprintfA.c
  * PURPOSE:         Implementation of wvsnprintfA
  * PROGRAMMER:      Timo Kreuzer
  */

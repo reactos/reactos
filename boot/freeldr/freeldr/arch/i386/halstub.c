@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            boot/freeldr/freeldr/arch/i386/halstub.c
  * PURPOSE:         I/O Stub HAL Routines
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */

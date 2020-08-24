@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS Runtime Library
  * LICENSE:         BSD - See COPYING.ARM in the top level directory
- * FILE:            lib/rtl/avltable.c
  * PURPOSE:         AVL Tree Generic Table Implementation
  * PROGRAMMERS:     ReactOS Portable Systems Group
  */

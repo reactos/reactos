@@ -2,7 +2,6 @@
  *
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS Multimedia
- * FILE:                 dll/win32/mmdrv/mmdrv.h
  * PURPOSE:              Multimedia User Mode Driver (header)
  * PROGRAMMER:           Andrew Greenwood
  *                       Aleksey Bragin

@@ -2,7 +2,6 @@
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS Win32k subsystem
  * PURPOSE:          Caret functions
- * FILE:             win32ss/user/ntuser/caret.c
  * PROGRAMERS:       Thomas Weidenmueller (w3seek@users.sourceforge.net)
  *                   Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */

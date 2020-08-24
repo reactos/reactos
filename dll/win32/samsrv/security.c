@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         Security Account Manager (SAM) Server
- * FILE:            reactos/dll/win32/samsrv/security.c
  * PURPOSE:         Security descriptor functions
  *
  * PROGRAMMERS:     Eric Kohl

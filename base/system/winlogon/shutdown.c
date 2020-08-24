@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Winlogon
- * FILE:            base/system/winlogon/shutdown.c
  * PURPOSE:         System shutdown dialog
  * PROGRAMMERS:     alpha5056 <alpha5056@users.noreply.github.com>
  */

@@ -1,7 +1,6 @@
 /*
  * PROJECT:     ReactOS Services
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        base/applications/mscutils/servman/propsheet_depends.c
  * PURPOSE:     Property dialog box message handler
  * COPYRIGHT:   Copyright 2006-2009 Ged Murphy <gedmurphy@reactos.org>
  *

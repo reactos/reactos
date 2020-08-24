@@ -19,7 +19,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
- * FILE:            dll/win32/userenv/userenv.c
  * PURPOSE:         DLL initialization code
  * PROGRAMMER:      Eric Kohl
  */

@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         PCI IDE bus driver extension
- * FILE:            drivers/storage/pciidex/fdo.c
  * PURPOSE:         IRP_MJ_PNP operations for FDOs
  * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.org)
  */

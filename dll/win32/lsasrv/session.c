@@ -1,7 +1,6 @@
 /*
  * PROJECT:     Local Security Authority Server DLL
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        dll/win32/lsasrv/session.c
  * PURPOSE:     Logon session management routines
  * COPYRIGHT:   Copyright 2013 Eric Kohl
  */

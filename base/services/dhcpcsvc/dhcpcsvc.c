@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
- * FILE:            lib/dhcpcapi/dhcpcapi.c
  * PURPOSE:         Client API for DHCP
  * COPYRIGHT:       Copyright 2005 Art Yerkes <ayerkes@speakeasy.net>
  */

@@ -1,7 +1,6 @@
 /*
  * PROJECT:     ReactOS Service Control Manager
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        base/system/services/database.c
  * PURPOSE:     Database control interface
  * COPYRIGHT:   Copyright 2002-2006 Eric Kohl
  *              Copyright 2006 Hervé Poussineau <hpoussin@reactos.org>

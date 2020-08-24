@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS User Manager Control Panel
- * FILE:            dll/cpl/usrmgr/groups.c
  * PURPOSE:         Groups property page
  *
  * PROGRAMMERS:     Eric Kohl

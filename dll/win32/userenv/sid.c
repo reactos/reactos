@@ -19,7 +19,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
- * FILE:            dll/win32/userenv/sid.c
  * PURPOSE:         User profile code
  * PROGRAMMER:      Eric Kohl
  */

@@ -2,7 +2,6 @@
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Runtime Library
  * PURPOSE:         User-Mode Exception Support
- * FILE:            lib/rtl/exception.c
  * PROGRAMERS:      Alex Ionescu (alex@relsoft.net)
  *                  David Welch <welch@cwcom.net>
  *                  Skywing <skywing@valhallalegends.com>

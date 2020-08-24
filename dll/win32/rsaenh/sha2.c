@@ -1,5 +1,4 @@
 /*
- * FILE:	sha2.c
  * AUTHOR:	Aaron D. Gifford - http://www.aarongifford.com/
  *
  * Copyright (c) 2000-2001, Aaron D. Gifford

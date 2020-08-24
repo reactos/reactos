@@ -3,7 +3,6 @@
  *
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS diskspeed.exe
- * FILE:            apps/tests/diskspeed/diskspeed.c
  * PURPOSE:         Determines disk transfer rates
  * PROGRAMMER:
  */

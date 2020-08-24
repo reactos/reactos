@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS HTTP Daemon
- * FILE:        include/socket.h
  */
 #ifndef __SOCKET_H
 #define __SOCKET_H

@@ -2,7 +2,6 @@
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS system libraries
  * PURPOSE:           Random number generator functions
- * FILE:              lib/rtl/random.c
  * PROGRAMMER:        Wine
  *                    Pierre Schweitzer (pierre@reactos.org)
  */

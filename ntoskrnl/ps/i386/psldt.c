@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/ps/i386/psldt.c
  * PURPOSE:         LDT support for x86
  * PROGRAMMERS:     Stefan Ginsberg (stefan.ginsberg@reactos.org)
  */

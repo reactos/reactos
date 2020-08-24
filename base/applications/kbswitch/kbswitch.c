@@ -1,6 +1,5 @@
 /*
  * PROJECT:         Keyboard Layout Switcher
- * FILE:            base/applications/kbswitch/kbswitch.c
  * PURPOSE:         Switching Keyboard Layouts
  * PROGRAMMERS:     Dmitry Chapyshev (dmitry@reactos.org)
  *                  Colin Finck (mail@colinfinck.de)

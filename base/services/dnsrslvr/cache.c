@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS system libraries
- * FILE:        base/services/dnsrslvr/cache.c
  * PURPOSE:     DNS cache functions
  * PROGRAMMER:  Peter Hater
  */

@@ -1,7 +1,6 @@
 /*
  * PROJECT:     ReactOS System Control Panel Applet
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        dll/win32/netid/netid.c
  * PURPOSE:     Network ID Page
  * COPYRIGHT:   Thomas Weidenmueller <w3seek@reactos.org>
  *              Dmitry Chapyshev <dmitry@reactos.org>

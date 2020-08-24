@@ -1,7 +1,6 @@
 /*
  * PROJECT:     ReactOS Timedate Control Panel
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        dll/cpl/timedate/timezone.c
  * PURPOSE:     Time Zone property page
  * COPYRIGHT:   Copyright 2004-2005 Eric Kohl
  *              Copyright 2006 Ged Murphy <gedmurphy@gmail.com>

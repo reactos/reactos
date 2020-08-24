@@ -2,7 +2,6 @@
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS system libraries
  * PURPOSE:           Work Item implementation
- * FILE:              lib/rtl/workitem.c
  * PROGRAMMER:
  */
 

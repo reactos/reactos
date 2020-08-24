@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/ps/thread.c
  * PURPOSE:         Process Manager: Thread Management
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  *                  Thomas Weidenmueller (w3seek@reactos.org)

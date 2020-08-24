@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/config/cmkcbncb.c
  * PURPOSE:         Routines for handling KCBs, NCBs, as well as key hashes.
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */

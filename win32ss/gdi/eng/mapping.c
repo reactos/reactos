@@ -2,7 +2,6 @@
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS kernel
  * PURPOSE:           Functions for mapping files and sections
- * FILE:              win32ss/gdi/eng/mapping.c
  * PROGRAMER:         Timo Kreuzer (timo.kreuzer@reactos.org)
  */
 

@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS HAL
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            hal/halppc/generic/pci.c
  * PURPOSE:         PCI Bus Support (Configuration Space, Resource Allocation)
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */

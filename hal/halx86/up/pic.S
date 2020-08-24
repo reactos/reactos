@@ -1,5 +1,4 @@
 /*
- * FILE:            hal/halx86/up/pic.S
  * COPYRIGHT:       See COPYING in the top level directory
  * PURPOSE:         HAL PIC Management and Control Code
  * PROGRAMMER:      Thomas Faber (thomas.faber@reactos.org)

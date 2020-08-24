@@ -9,7 +9,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Kernel
- * FILE:            ntoskrnl/kd/i386/kdmemsup.c
  * PURPOSE:         Kernel Debugger Safe Memory Support
  *
  * PROGRAMMERS:     arty

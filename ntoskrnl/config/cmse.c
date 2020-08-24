@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/config/cmse.c
  * PURPOSE:         Configuration Manager - Security Subsystem Interface
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */

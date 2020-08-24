@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Kernel
- * FILE:            ntoskrnl/include/internal/i386/asmmacro.S
  * PURPOSE:         Assembly Macros for Spinlocks and common Trap Code
  * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
  *                  Timo Kreuzer (timo.kreuzer@reactos.org)

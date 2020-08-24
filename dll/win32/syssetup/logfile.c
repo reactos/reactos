@@ -20,7 +20,6 @@
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS system libraries
  * PURPOSE:           Log file functions
- * FILE:              lib/syssetup/logfile.c
  * PROGRAMER:         Eric Kohl
  */
 

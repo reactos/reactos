@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/config/cmhook.c
  * PURPOSE:         Configuration Manager - Registry Notifications/Callbacks
  * PROGRAMMERS:     Thomas Weidenmueller (w3seek@reactos.org)
  */

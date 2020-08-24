@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS File System Recognizer
- * FILE:             drivers/filesystems/fs_rec/ext2.h
  * PURPOSE:          EXT2 Header File
  * PROGRAMMER:       Pierre Schweitzer (pierre@reactos.org)
  */

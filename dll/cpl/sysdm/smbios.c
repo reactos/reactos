@@ -1,7 +1,6 @@
 /*
  * PROJECT:     ReactOS System Control Panel Applet
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        dll/cpl/sysdm/smbios.c
  * PURPOSE:     Retrieve device or motherboard name identifier from DMI/SMBIOS
  * COPYRIGHT:   Copyright 2018-2020 Stanislav Motylkov <x86corez@gmail.com>
  *

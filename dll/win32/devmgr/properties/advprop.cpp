@@ -19,7 +19,6 @@
 /*
  *
  * PROJECT:         ReactOS devmgr.dll
- * FILE:            lib/devmgr/advprop.c
  * PURPOSE:         ReactOS Device Manager
  * PROGRAMMER:      Thomas Weidenmueller <w3seek@reactos.com>
  *                  Ged Murphy <gedmurphy@reactos.org>

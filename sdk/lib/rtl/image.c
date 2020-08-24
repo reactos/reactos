@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
- * FILE:            lib/rtl/image.c
  * PURPOSE:         Image handling functions
  *                  Relocate functions were previously located in
  *                  ntoskrnl/ldr/loader.c and

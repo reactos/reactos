@@ -1,6 +1,5 @@
 /*
  * PROJECT:                 ReactOS Software Control Panel
- * FILE:                    dll/cpl/appwiz/appwiz.c
  * PURPOSE:                 ReactOS Software Control Panel
  * PROGRAMMERS:             Gero Kuehn (reactos.filter@gkware.com)
  *                          Dmitry Chapyshev (dmitry@reactos.org)

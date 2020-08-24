@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/config/cmparse.c
  * PURPOSE:         Configuration Manager - Object Manager Parse Interface
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */

@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/mm/powerpc/pfault.c
  * PURPOSE:         Paging file functions
  *
  * PROGRAMMERS:     David Welch (welch@mcmail.com)

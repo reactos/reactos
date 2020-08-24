@@ -19,7 +19,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS Sound Volume Control
- * FILE:        base/applications/sndvol32/sndvol32.c
  * PROGRAMMERS: Thomas Weidenmueller <w3seek@reactos.com>
  */
 

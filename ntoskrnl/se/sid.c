@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/se/sid.c
  * PURPOSE:         Security manager
  *
  * PROGRAMMERS:     David Welch <welch@cwcom.net>

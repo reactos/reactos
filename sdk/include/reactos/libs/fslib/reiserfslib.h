@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS ReiserFS filesystem library
- * FILE:        include/reactos/libs/fslib/reiserfslib.h
  * PURPOSE:     Public definitions for ReiserFS filesystem library
  */
 #ifndef __REISERFSLIB_H

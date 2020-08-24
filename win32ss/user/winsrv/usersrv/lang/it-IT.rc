@@ -1,7 +1,6 @@
 /*
 * PROJECT:    ReactOS Client/Server Runtime subsystem
 * LICENSE:    GPL - See COPYING in the top level directory
-* FILE:       win32ss/user/winsrv/usersrv/lang/it-IT.rc
 * PURPOSE:    Italian Translation of subsystems/win32/csrss/win32csr/lang/en-US.rc
 * TRANSLATOR: Daniele Forsi (dforsi at gmail.com)
 */

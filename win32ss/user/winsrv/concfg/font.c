@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Console Server DLL
- * FILE:            win32ss/user/winsrv/concfg/font.c
  * PURPOSE:         Console Fonts Management
  * PROGRAMMERS:     Hermes Belusca-Maito (hermes.belusca@sfr.fr)
  *                  Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)

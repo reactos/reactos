@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
- * FILE:            lib/rossym/find.c
  * PURPOSE:         Find symbol info for an address
  *
  * PROGRAMMERS:     Ge van Geldorp (gvg@reactos.com)

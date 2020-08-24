@@ -1,7 +1,6 @@
 /*
  * PROJECT:      Spider Solitaire
  * LICENSE:      See COPYING in top level directory
- * FILE:         base/applications/games/spider/spigame.cpp
  * PURPOSE:      Spider Solitaire game functions
  * PROGRAMMER:   Gregor Schneider
  */

@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS DirectX
- * FILE:                 dll/directx/ddraw/Palette/palette_stubs.c
  * PURPOSE:              IDirectDrawPalette Implementation
  * PROGRAMMER:           Maarten Bosma
  *

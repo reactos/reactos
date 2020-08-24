@@ -1,7 +1,6 @@
 /*
 * PROJECT:         Filesystem Filter Manager library
 * LICENSE:         GPL - See COPYING in the top level directory
-* FILE:            dll/win32/fltlib/message.c
 * PURPOSE:         Handles messaging to and from the filter manager
 * PROGRAMMERS:     Ged Murphy (ged.murphy@reactos.org)
 */

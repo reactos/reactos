@@ -1,7 +1,6 @@
 /*
 * PROJECT:         Filesystem Filter Manager library
 * LICENSE:         GPL - See COPYING in the top level directory
-* FILE:            dll/win32/fltlib/fltlib.c
 * PURPOSE:         
 * PROGRAMMERS:     Ged Murphy (ged.murphy@reactos.org)
 */

@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         PCI IDE bus driver extension
- * FILE:            drivers/storage/pciidex/misc.c
  * PURPOSE:         Miscellaneous operations
  * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.org)
  */

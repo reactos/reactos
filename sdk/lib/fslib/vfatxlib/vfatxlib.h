@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS VFAT filesystem library
- * FILE:        vfatxlib.h
  */
 
 #ifndef _VFATXLIB_H_

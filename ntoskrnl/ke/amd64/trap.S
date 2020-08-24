@@ -1,5 +1,4 @@
 /*
- * FILE:            ntoskrnl/ke/amd64/trap.S
  * COPYRIGHT:       See COPYING in the top level directory
  * PURPOSE:         System Traps, Entrypoints and Exitpoints
  * PROGRAMMER:      Timo Kreuzer (timo.kreuzer@reactos.org)

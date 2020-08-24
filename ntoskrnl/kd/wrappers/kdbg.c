@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/kd/wrappers/kdbg.c
  * PURPOSE:         KDBG Wrapper for Kd
  *
  * PROGRAMMERS:     Aleksey Bragin (aleksey@reactos.org)

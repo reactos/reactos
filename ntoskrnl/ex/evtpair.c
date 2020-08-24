@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Kernel
- * FILE:            ntoskrnl/ex/evtpair.c
  * PURPOSE:         Support for event pairs
  * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
  *                  Thomas Weidenmueller

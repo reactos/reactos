@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/dbgk/dbgkutil.c
  * PURPOSE:         User-Mode Debugging Support, Internal Debug Functions.
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */

@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
- * FILE:            dll/win32/kernel32/client/except.c
  * PURPOSE:         Exception functions
  * PROGRAMMER:      Ariadne (ariadne@xs4all.nl)
  *                  Modified from WINE [ Onno Hovers, (onno@stack.urc.tue.nl) ]

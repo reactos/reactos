@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/tests/tests/VirtualMemory.c
  * PURPOSE:         No purpose listed.
  *
  * PROGRAMMERS:     Casper S. Hornstrup (chorns@users.sourceforge.net)

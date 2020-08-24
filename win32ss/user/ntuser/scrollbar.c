@@ -2,7 +2,6 @@
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS kernel
  * PURPOSE:          Scrollbars
- * FILE:             win32ss/user/ntuser/scrollbar.c
  * PROGRAMER:        Thomas Weidenmueller (w3seek@users.sourceforge.net)
  *                   Jason Filby (jasonfilby@yahoo.com)
  */

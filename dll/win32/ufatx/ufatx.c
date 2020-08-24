@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         FATX File System Management
- * FILE:            dll/win32/ufatx/ufatx.c
  * PURPOSE:         ufatx DLL initialisation
  * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.org)
  */

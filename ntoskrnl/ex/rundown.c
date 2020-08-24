@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Kernel
- * FILE:            ntoskrnl/ex/rundown.c
  * PURPOSE:         Rundown and Cache-Aware Rundown Protection
  * PROGRAMMERS:     Alex Ionescu (alex@relsoft.net)
  *                  Thomas Weidenmueller

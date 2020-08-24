@@ -18,7 +18,6 @@
  */
 /*
  * PROJECT:         ReactOS Add hardware control panel
- * FILE:            dll/cpl/hdwwiz/hdwwiz.c
  * PURPOSE:         ReactOS Add hardware control panel
  * PROGRAMMER:      Hervé Poussineau (hpoussin@reactos.org)
  *                  Dmitry Chapyshev (dmitry@reactos.org)

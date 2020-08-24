@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS
- * FILE:            drivers/wdm/audio/backpln/portcls/resource.cpp
  * PURPOSE:         Port Class driver / ResourceList implementation
  * PROGRAMMER:      Andrew Greenwood
  *                  Johannes Anderwald

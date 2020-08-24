@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Setup Library
- * FILE:            base/setup/lib/setuplib.c
  * PURPOSE:         Setup Library - Main initialization helpers
  * PROGRAMMERS:     Casper S. Hornstrup (chorns@users.sourceforge.net)
  *                  Hermes Belusca-Maito (hermes.belusca@sfr.fr)

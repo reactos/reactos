@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS VFATx filesystem library
- * FILE:        vfatxlib.c
  * PURPOSE:     Main API
  * PROGRAMMERS: 
  * REVISIONS:

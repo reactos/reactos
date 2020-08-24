@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/kd/amd64/kd.c
  * PURPOSE:         Routines for CPU-level support
  * PROGRAMMERS:     Timo Kreuzer (timo.kreuzer@reactos.org)
  */

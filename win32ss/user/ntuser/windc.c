@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS Win32k subsystem
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            win32ss/user/ntuser/windc.c
  * PURPOSE:         Window DC management
  * COPYRIGHT:       Copyright 2007 ReactOS Team
  */

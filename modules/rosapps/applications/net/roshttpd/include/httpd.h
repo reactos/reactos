@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS HTTP Daemon
- * FILE:        include/httpd.h
  */
 #ifndef __HTTPD_H
 #define __HTTPD_H

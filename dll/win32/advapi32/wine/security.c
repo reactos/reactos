@@ -7,7 +7,6 @@
  * Copyright 2006 Hervé Poussineau
  *
  * PROJECT:         ReactOS system libraries
- * FILE:            dll/win32/advapi32/wine/security.c
  */
 
 #include <advapi32.h>

@@ -1,7 +1,6 @@
 /*
  * PROJECT:     Ports installer library
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        dll\win32\msports\parallel.c
  * PURPOSE:     Parallel Port property functions
  * COPYRIGHT:   Copyright 2013 Eric Kohl
  */

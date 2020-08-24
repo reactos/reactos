@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS kernel
- * FILE:            hal/halppc/generic/processor.c
  * PURPOSE:         Intel MultiProcessor specification support
  * PROGRAMMER:      David Welch (welch@cwcom.net)
  *                  Casper S. Hornstrup (chorns@users.sourceforge.net)

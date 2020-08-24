@@ -1,7 +1,6 @@
 /*
 * PROJECT:         ReactOS Kernel
 * LICENSE:         GPL - See COPYING in the top level directory
-* FILE:            ntoskrnl/include/internal/ob.h
 * PURPOSE:         Internal header for the Object Manager
 * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
 */

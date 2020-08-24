@@ -2,7 +2,6 @@
  * COPYRIGHT:         See COPYING in the top level directory
  * PROJECT:           ReactOS system libraries
  * PURPOSE:           Rtl user wait functions
- * FILE:              lib/rtl/wait.c
  * PROGRAMERS:
  *                    Alex Ionescu (alex@relsoft.net)
  *                    Eric Kohl

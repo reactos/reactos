@@ -19,7 +19,6 @@
 /*
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS Services
- * FILE:             base/services/wmisvc/wmisvc.c
  * PURPOSE:          WMI service
  * PROGRAMMER:       Pierre Schweitzer
  */

@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS HAL
  * LICENSE:         BSD - See COPYING.ARM in the top level directory
- * FILE:            hal/halarm/generic/dma.c
  * PURPOSE:         DMA Support
  * PROGRAMMERS:     ReactOS Portable Systems Group
  */

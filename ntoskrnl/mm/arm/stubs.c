@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         BSD - See COPYING.ARM in the top level directory
- * FILE:            ntoskrnl/mm/arm/stubs.c
  * PURPOSE:         ARM Memory Manager
  * PROGRAMMERS:     ReactOS Portable Systems Group
  */

@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS Build Tools [Keyboard Layout Compiler]
  * LICENSE:         BSD - See COPYING.BSD in the top level directory
- * FILE:            tools/kbdtool/output.c
  * PURPOSE:         Output Logic (Source Builder)
  * PROGRAMMERS:     ReactOS Foundation
  */

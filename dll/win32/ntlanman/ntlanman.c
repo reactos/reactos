@@ -1,6 +1,5 @@
 /*
  * PROJECT:         LAN Manager
- * FILE:            dll\win32\ntlanman\ntlanman.c
  * PURPOSE:         Main file
  * PROGRAMMERS:     Dmitry Chapyshev (dmitry@reactos.org)
  */

@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         Security Account Manager (SAM) Server
- * FILE:            reactos/dll/win32/samsrv/setup.c
  * PURPOSE:         Registry setup routines
  *
  * PROGRAMMERS:     Eric Kohl

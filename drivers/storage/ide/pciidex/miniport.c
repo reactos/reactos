@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         PCI IDE bus driver extension
- * FILE:            drivers/storage/pciidex/miniport.c
  * PURPOSE:         Miniport functions
  * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.org)
  */

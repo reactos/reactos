@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         BSD - See COPYING.ARM in the top level directory
- * FILE:            ntoskrnl/po/povolume.c
  * PURPOSE:         Power Manager DOPE and Volume Management
  * PROGRAMMERS:     ReactOS Portable Systems Group
  */

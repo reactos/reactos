@@ -2,7 +2,6 @@
  * COPYRIGHT:        See COPYING in the top level directory
  * PROJECT:          ReactOS Win32k subsystem
  * PURPOSE:          Miscellaneous User functions
- * FILE:             win32ss/user/ntuser/nonclient.c
  * PROGRAMER:
  */
 

@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS Kernel - Vista+ APIs
  * LICENSE:         GPL v2 - See COPYING in the top level directory
- * FILE:            lib/drivers/ntoskrnl_vista/ke.c
  * PURPOSE:         Ke functions of Vista+
  * PROGRAMMERS:     Pierre Schweitzer <pierre@reactos.org>
  */

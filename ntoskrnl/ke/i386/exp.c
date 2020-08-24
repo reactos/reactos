@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/ke/i386/exp.c
  * PURPOSE:         Exception Dispatching and Context<->Trap Frame Conversion
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  *                  Gregor Anich

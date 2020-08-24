@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            ntoskrnl/config/powerpc/cmhardwr.c
  * PURPOSE:         Configuration Manager - Hardware-Specific Code
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  */

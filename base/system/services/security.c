@@ -1,7 +1,6 @@
 /*
  * PROJECT:     ReactOS Service Control Manager
  * LICENSE:     GPL - See COPYING in the top level directory
- * FILE:        base/system/services/security.c
  * PURPOSE:     Security functions
  * COPYRIGHT:   Eric Kohl
  */

@@ -1,7 +1,6 @@
 /*
 * PROJECT:         Filesystem Filter Manager
 * LICENSE:         GPL - See COPYING in the top level directory
-* FILE:            drivers/filters/fltmgr/interface.c
 * PURPOSE:         Implements the driver interface
 * PROGRAMMERS:     Ged Murphy (gedmurphy@reactos.org)
 */

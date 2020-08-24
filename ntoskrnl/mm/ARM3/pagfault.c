@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         BSD - See COPYING.ARM in the top level directory
- * FILE:            ntoskrnl/mm/ARM3/pagfault.c
  * PURPOSE:         ARM Memory Manager Page Fault Handling
  * PROGRAMMERS:     ReactOS Portable Systems Group
  */

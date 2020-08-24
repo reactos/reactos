@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS system libraries
- * FILE:            lib/advapi32/misc/msi.c
  * PURPOSE:         advapi32.dll MSI interface funcs
  * NOTES:           Copied from Wine
  *                  Copyright 1995 Sven Verdoolaege

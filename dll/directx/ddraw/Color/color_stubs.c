@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:            See COPYING in the top level directory
  * PROJECT:              ReactOS DirectX
- * FILE:                 dll/directx/ddraw/Color/color_stubs.c
  * PURPOSE:              IDirectDrawColorControl Implementation
  * PROGRAMMER:           Maarten Bosma
  *

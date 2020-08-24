@@ -18,7 +18,6 @@
  */
 /*
  * PROJECT:         ReactOS MARTA provider
- * FILE:            lib/ntmarta/ntmarta.c
  * PURPOSE:         ReactOS MARTA provider
  * PROGRAMMER:      Thomas Weidenmueller <w3seek@reactos.com>
  *

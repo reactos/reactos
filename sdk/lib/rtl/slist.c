@@ -2,7 +2,6 @@
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Runtime Library
  * PURPOSE:         Slist Routines
- * FILE:            lib/rtl/slist.c
  * PROGRAMERS:      Stefan Ginsberg (stefan.ginsberg@reactos.org)
  *                  Timo Kreuzer (timo.kreuzer@reactos.org)
  */

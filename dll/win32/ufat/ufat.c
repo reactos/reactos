@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         FAT File System Management
- * FILE:            dll/win32/ufat/ufat.c
  * PURPOSE:         ufat DLL initialisation
  * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.org)
  */

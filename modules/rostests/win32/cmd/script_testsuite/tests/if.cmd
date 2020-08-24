@@ -1,7 +1,6 @@
 ::
 :: PROJECT:     ReactOS CMD Testing Suite
 :: LICENSE:     GPL v2 or any later version
-:: FILE:        tests/if.cmd
 :: PURPOSE:     Tests for the "if" command
 :: COPYRIGHT:   Copyright 2005 Royce Mitchell III
 ::              Copyright 2008 Colin Finck <mail@colinfinck.de>

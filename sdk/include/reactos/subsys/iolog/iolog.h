@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS EventLog Service
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            include/reactos/subsys/iolog/iolog.h
  * PURPOSE:         EventLog LPC API definitions
  */
 

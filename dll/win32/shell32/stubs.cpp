@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         shell32.dll
- * FILE:            dll/win32/shell32/stubs.c
  * PURPOSE:         shell32.dll stubs
  * PROGRAMMER:      Dmitry Chapyshev (dmitry@reactos.org)
  * NOTES:           If you implement a function, remove it from this file

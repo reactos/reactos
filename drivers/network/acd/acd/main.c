@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS RAS Automatic Connection Driver
- * FILE:        acd/main.c
  * PURPOSE:     Driver entry point
  * PROGRAMMERS: Dmitry Chapyshev(dmitry@reactos.org)
  * REVISIONS:

@@ -1,7 +1,6 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         Serial port driver
- * FILE:            drivers/dd/serial/devctrl.c
  * PURPOSE:         Serial IRP_MJ_DEVICE_CONTROL operations
  *
  * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.org)
