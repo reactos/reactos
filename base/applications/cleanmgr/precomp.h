@@ -8,7 +8,8 @@
 #ifndef _CLEANMGR_PRECOMP_H
 #define _CLEANMGR_PRECOMP_H
  
-#define COBJMACROS 
+#define COBJMACROS
+#define ONLY_DRIVE 3
 
 #include <windows.h>
 #include <windowsx.h>
@@ -37,49 +38,51 @@
 
 typedef struct
 {
-	uint64_t TempASize;
-	uint64_t TempBSize;
-	uint64_t RecycleBinSize;
-	uint64_t ChkDskSize;
-	uint64_t RappsSize;
+    uint64_t TempASize;
+    uint64_t TempBSize;
+    uint64_t RecycleBinSize;
+    uint64_t ChkDskSize;
+    uint64_t RappsSize;
 } DIRSIZE;
 
 typedef struct
 {
-	HWND hwndDlg;
-	HWND hChoicePage;
-	HWND hOptionsPage;
-	HWND hSagesetPage;
-	HWND hTab;
-	HINSTANCE hInst;
+    HWND hwndDlg;
+    HWND hChoicePage;
+    HWND hOptionsPage;
+    HWND hSagesetPage;
+    HWND hTab;
+    HINSTANCE hInst;
 } DLG_VAR;
 
 typedef struct
 {
-	WCHAR TempDir[MAX_PATH];
-	WCHAR AltTempDir[MAX_PATH];
-	WCHAR RecycleBinDir[MAX_PATH];
-	WCHAR RappsDir[MAX_PATH];
-	WCHAR RecycleBin[MAX_PATH];
-	WCHAR DriveLetter[MAX_PATH];
+    WCHAR TempDir[MAX_PATH];
+    WCHAR AltTempDir[MAX_PATH];
+    WCHAR RecycleBinDir[MAX_PATH];
+    WCHAR RappsDir[MAX_PATH];
+    WCHAR RecycleBin[MAX_PATH];
+    WCHAR DriveLetter[MAX_PATH];
 } WCHAR_VAR;
 
 typedef struct
 {
-	BOOL TempClean;
-	BOOL RecycleClean;
-	BOOL ChkDskClean;
-	BOOL RappsClean;
-	BOOL SysDrive;
+    BOOL TempClean;
+    BOOL RecycleClean;
+    BOOL ChkDskClean;
+    BOOL RappsClean;
+    BOOL SysDrive;
 } BOOL_VAR;
 
 typedef enum
 {
-	OLD_CHKDSK_FILES = 0,
-	RAPPS_FILES = 1,
-	TEMPORARY_FILE = 2,
-	RECYCLE_BIN = 3
+    OLD_CHKDSK_FILES = 0,
+    RAPPS_FILES = 1,
+    TEMPORARY_FILE = 2,
+    RECYCLE_BIN = 3
 } DIRECTORIES;
+
+/* HACK: struct for gathering data from registry key */
 
 typedef struct
 {
@@ -103,7 +106,6 @@ typedef struct
     WCHAR szSourceURL[INTERNET_MAX_URL_LENGTH];
 } SETTINGS_INFO;
 
-#define ONLY_DRIVE 3
 
 // For dialog.c
 

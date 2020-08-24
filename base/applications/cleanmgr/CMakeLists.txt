@@ -7,7 +7,7 @@ list(APPEND SOURCE
     main.c
     optionspage.c
     util.c
-	sagesetpage.c
+    sagesetpage.c
     precomp.h)
 
 file(GLOB cleanmgr_rc_deps res/*.*)
