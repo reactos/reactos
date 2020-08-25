@@ -609,20 +609,6 @@ IopInitDriverImplementation(
     VOID
 );
 
-VOID
-IopInitPnpNotificationImplementation(
-    VOID
-);
-
-VOID
-IopNotifyPlugPlayNotification(
-    IN PDEVICE_OBJECT DeviceObject,
-    IN IO_NOTIFICATION_EVENT_CATEGORY EventCategory,
-    IN LPCGUID Event,
-    IN PVOID EventCategoryData1,
-    IN PVOID EventCategoryData2
-);
-
 NTSTATUS
 IopGetSystemPowerDeviceObject(
     IN PDEVICE_OBJECT *DeviceObject
@@ -827,6 +813,9 @@ NTAPI
 IoInitializeCrashDump(
     IN HANDLE PageFileHandle
 );
+
+VOID
+PipInitializeNotifications();
 
 //
 // Device/Volume Routines
@@ -1411,6 +1400,25 @@ NTSTATUS
 PiPerformSyncDeviceAction(
     _In_ PDEVICE_OBJECT DeviceObject,
     _In_ DEVICE_ACTION Action);
+
+//
+// PnP notifications
+//
+VOID
+PiNotifyDeviceInterfaceChange(
+    _In_ LPCGUID Event,
+    _In_ LPCGUID InterfaceClassGuid,
+    _In_ PUNICODE_STRING SymbolicLinkName);
+
+VOID
+PiNotifyHardwareProfileChange(
+    _In_ LPCGUID Event);
+
+VOID
+PiNotifyTargetDeviceChange(
+    _In_ LPCGUID Event,
+    _In_ PDEVICE_OBJECT DeviceObject,
+    _In_opt_ PTARGET_DEVICE_CUSTOM_NOTIFICATION CustomNotification);
 
 //
 // Global I/O Data

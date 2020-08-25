@@ -1463,12 +1463,8 @@ IoSetDeviceInterfaceState(IN PUNICODE_STRING SymbolicLinkName,
     ExFreePoolWithTag(DeviceInstance.Buffer, TAG_IO);
 
     EventGuid = Enable ? &GUID_DEVICE_INTERFACE_ARRIVAL : &GUID_DEVICE_INTERFACE_REMOVAL;
-    IopNotifyPlugPlayNotification(
-        PhysicalDeviceObject,
-        EventCategoryDeviceInterfaceChange,
-        EventGuid,
-        &DeviceGuid,
-        (PVOID)SymbolicLinkName);
+
+    PiNotifyDeviceInterfaceChange(EventGuid, &DeviceGuid, SymbolicLinkName);
 
     ObDereferenceObject(PhysicalDeviceObject);
     DPRINT("Status %x\n", Status);
