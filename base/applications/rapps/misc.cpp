@@ -522,3 +522,11 @@ void UnixTimeToFileTime(DWORD dwUnixTime, LPFILETIME pFileTime)
     pFileTime->dwLowDateTime = (DWORD)ll;
     pFileTime->dwHighDateTime = ll >> 32;
 }
+
+BOOL SearchPatternMatch(LPCWSTR szHaystack, LPCWSTR szNeedle)
+{
+    if (!*szNeedle)
+        return TRUE;
+    /* TODO: Improve pattern search beyond a simple case-insensitive substring search. */
+    return StrStrIW(szHaystack, szNeedle) != NULL;
+}

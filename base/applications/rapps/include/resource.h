@@ -218,6 +218,16 @@
 #define IDS_DL_DIALOG_DB_DOWNLOAD_DISP          951
 #define IDS_DL_DIALOG_DB_UNOFFICIAL_DOWNLOAD_DISP 952
 
+/* Command-line related strings */
+#define IDS_CMD_USAGE                           953
+#define IDS_CMD_NEED_PACKAGE_NAME               954
+#define IDS_CMD_NEED_FILE_NAME                  955
+#define IDS_CMD_NEED_PARAMS                     956
+#define IDS_CMD_INVALID_OPTION                  957
+#define IDS_CMD_FIND_RESULT_FOR                 958
+#define IDS_CMD_PACKAGE_NOT_FOUND               959
+#define IDS_CMD_PACKAGE_INFO                    960
+
 /* Accelerators */
 #define HOTKEYS                  715
 

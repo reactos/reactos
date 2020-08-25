@@ -56,3 +56,5 @@ BOOL IsSystem64Bit();
 INT GetSystemColorDepth();
 
 void UnixTimeToFileTime(DWORD dwUnixTime, LPFILETIME pFileTime);
+
+BOOL SearchPatternMatch(LPCWSTR szHaystack, LPCWSTR szNeedle);
