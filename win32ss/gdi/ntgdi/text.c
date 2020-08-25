@@ -549,7 +549,7 @@ NtGdiGetTextMetricsW(
     OUT TMW_INTERNAL * pUnsafeTmwi,
     IN ULONG cj)
 {
-    TMW_INTERNAL Tmwi = { 0 };
+    TMW_INTERNAL Tmwi;
 
     if ( cj <= sizeof(TMW_INTERNAL) )
     {

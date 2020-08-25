@@ -4560,6 +4560,7 @@ ftGdiGetTextMetricsW(
         EngSetLastError(STATUS_INVALID_PARAMETER);
         return FALSE;
     }
+    RtlZeroMemory(ptmwi, sizeof(TMW_INTERNAL));
 
     if (!(dc = DC_LockDc(hDC)))
     {
