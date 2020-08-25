@@ -7,28 +7,30 @@
 
 LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
 
-IDD_PROPPAGEDESTINATION DIALOGEX 0, 0, 235, 156
+IDD_PROPPAGEDESTINATION DIALOGEX 0, 0, 260, 156
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Seleziona una Destinazione"
 FONT 8, "MS Shell Dlg", 400, 0, 0x0
 BEGIN
-    LTEXT           "Seleziona la cartella di destinazione",IDC_STATIC,6,12,174,8
-    EDITTEXT        IDC_DIRECTORY,6,24,222,12,ES_AUTOHSCROLL
-    PUSHBUTTON      "Sfoglia...",IDC_BROWSE,174,42,54,14
-    PUSHBUTTON      "Password",IDC_PASSWORD,174,66,54,14
-    LTEXT           "Click 'Next' to extract",IDC_STATUSTEXT,6,114,100,8
-    CONTROL         "",IDC_PROGRESS,"msctls_progress32",WS_BORDER,6,126,222,6
+    LTEXT           "Seleziona la cartella di destinazione",IDC_STATIC,86,12,154,8
+    EDITTEXT        IDC_DIRECTORY,86,24,157,12,ES_AUTOHSCROLL
+    PUSHBUTTON      "Sfoglia...",IDC_BROWSE,189,42,54,14
+    PUSHBUTTON      "Password",IDC_PASSWORD,189,66,54,14
+    LTEXT           "Click 'Next' to extract",IDC_STATUSTEXT,86,114,80,8
+    CONTROL         "",IDC_PROGRESS,"msctls_progress32",WS_BORDER,86,126,157,6
+    CONTROL         IDB_ZIPFLDR,-1,"STATIC",SS_BITMAP | WS_CHILD | WS_VISIBLE,0,0,78,138
 END
 
-IDD_PROPPAGECOMPLETE DIALOGEX 0, 0, 235, 156
+IDD_PROPPAGECOMPLETE DIALOGEX 0, 0, 260, 156
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Estrazione Completa"
 FONT 8, "MS Shell Dlg", 400, 0, 0x0
 BEGIN
-    LTEXT           "I file sono stati estratti nella seguente cartella:",IDC_STATIC,6,12,222,18
-    LTEXT           "Cartella destinazione",IDC_DESTDIR,6,36,222,8
-    CONTROL         "Mostra i file estratti",IDC_SHOW_EXTRACTED,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,66,81,10
-    LTEXT           "Premi Fine per continuare.",IDC_STATIC,6,84,174,8
+    LTEXT           "I file sono stati estratti nella seguente cartella:",IDC_STATIC,86,12,157,18
+    LTEXT           "%s",IDC_DESTDIR,86,36,157,8
+    CONTROL         "Mostra i file estratti",IDC_SHOW_EXTRACTED,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,86,66,81,10
+    LTEXT           "Premi Fine per continuare.",IDC_STATIC,86,84,84,8
+    CONTROL         IDB_ZIPFLDR,-1,"STATIC",SS_BITMAP | WS_CHILD | WS_VISIBLE,0,0,78,138
 END
 
 IDD_CONFIRM_FILE_REPLACE DIALOGEX 0, 0, 273, 56

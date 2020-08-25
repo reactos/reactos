@@ -14,6 +14,7 @@ list(APPEND SOURCE
     printers.c
     printingthread.c
     printprocessors.c
+    spoolfile.c
     tools.c)
 
 add_library(localspl MODULE

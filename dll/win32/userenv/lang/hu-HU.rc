@@ -10,7 +10,7 @@ BEGIN
     IDS_MYDOCUMENTS "Dokumentumok"
     IDS_NETHOOD "NetHood"
     IDS_PRINTHOOD "PrintHood"
-    IDS_RECENT "Recent"
+    IDS_RECENT "Legutóbbi dokumentumok"
     IDS_SENDTO "SendTo"
     IDS_TEMPLATES "Sablonok"
     IDS_STARTMENU "Start menü"

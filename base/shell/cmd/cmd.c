@@ -154,6 +154,7 @@ BOOL bCanExit = TRUE;     /* Indicates if this shell is exitable */
 BOOL bCtrlBreak = FALSE;  /* Ctrl-Break or Ctrl-C hit */
 BOOL bIgnoreEcho = FALSE; /* Set this to TRUE to prevent a newline, when executing a command */
 static BOOL fSingleCommand = 0; /* When we are executing something passed on the command line after /C or /K */
+static BOOL bAlwaysStrip = FALSE;
 INT  nErrorLevel = 0;     /* Errorlevel of last launched external program */
 CRITICAL_SECTION ChildProcessRunningLock;
 BOOL bDisableBatchEcho = FALSE;
@@ -541,8 +542,8 @@ Execute(LPTSTR Full, LPTSTR First, LPTSTR Rest, PARSED_COMMAND *Cmd)
 
 
 /*
- * look through the internal commands and determine whether or not this
- * command is one of them.  If it is, call the command.  If not, call
+ * Look through the internal commands and determine whether or not this
+ * command is one of them. If it is, call the command. If not, call
  * execute to run it as an external program.
  *
  * first - first word on command line
@@ -553,7 +554,7 @@ DoCommand(LPTSTR first, LPTSTR rest, PARSED_COMMAND *Cmd)
 {
     TCHAR *com;
     TCHAR *cp;
-    LPTSTR param;   /* pointer to command's parameters */
+    LPTSTR param;   /* Pointer to command's parameters */
     INT cl;
     LPCOMMAND cmdptr;
     BOOL nointernal = FALSE;
@@ -561,7 +562,7 @@ DoCommand(LPTSTR first, LPTSTR rest, PARSED_COMMAND *Cmd)
 
     TRACE ("DoCommand: (\'%s\' \'%s\')\n", debugstr_aw(first), debugstr_aw(rest));
 
-    /* full command line */
+    /* Full command line */
     com = cmd_alloc((_tcslen(first) + _tcslen(rest) + 2) * sizeof(TCHAR));
     if (com == NULL)
     {
@@ -631,12 +632,17 @@ DoCommand(LPTSTR first, LPTSTR rest, PARSED_COMMAND *Cmd)
 INT ParseCommandLine(LPTSTR cmd)
 {
     INT Ret = 0;
-    PARSED_COMMAND *Cmd = ParseCommand(cmd);
-    if (Cmd)
+    PARSED_COMMAND *Cmd;
+
+    Cmd = ParseCommand(cmd);
+    if (!Cmd)
     {
-        Ret = ExecuteCommand(Cmd);
-        FreeCommand(Cmd);
+        /* Return an adequate error code */
+        return (!bParseError ? 0 : 1);
     }
+
+    Ret = ExecuteCommand(Cmd);
+    FreeCommand(Cmd);
     return Ret;
 }
 
@@ -772,9 +778,21 @@ INT
 ExecuteCommand(
     IN PARSED_COMMAND *Cmd)
 {
+#define SeenGoto() \
+    (bc && bc->current == NULL)
+
     PARSED_COMMAND *Sub;
     LPTSTR First, Rest;
     INT Ret = 0;
+
+    /*
+     * Do not execute any command if we are about to exit CMD, or about to
+     * change batch execution context, e.g. in case of a CALL / GOTO / EXIT.
+     */
+    if (!Cmd)
+        return 0;
+    if (bExit || SeenGoto())
+        return 0;
 
     if (!PerformRedirection(Cmd->Redirections))
         return 1;
@@ -795,33 +813,39 @@ ExecuteCommand(
             cmd_free(First);
         }
         break;
+
     case C_QUIET:
     case C_BLOCK:
     case C_MULTI:
-        for (Sub = Cmd->Subcommands; Sub; Sub = Sub->Next)
+        for (Sub = Cmd->Subcommands; Sub && !SeenGoto(); Sub = Sub->Next)
             Ret = ExecuteCommand(Sub);
         break;
-    case C_IFFAILURE:
+
+    case C_OR:
         Sub = Cmd->Subcommands;
         Ret = ExecuteCommand(Sub);
-        if (Ret != 0)
+        if ((Ret != 0) && !SeenGoto())
         {
             nErrorLevel = Ret;
             Ret = ExecuteCommand(Sub->Next);
         }
         break;
-    case C_IFSUCCESS:
+
+    case C_AND:
         Sub = Cmd->Subcommands;
         Ret = ExecuteCommand(Sub);
-        if (Ret == 0)
+        if ((Ret == 0) && !SeenGoto())
             Ret = ExecuteCommand(Sub->Next);
         break;
+
     case C_PIPE:
         Ret = ExecutePipeline(Cmd);
         break;
+
     case C_IF:
         Ret = ExecuteIf(Cmd);
         break;
+
     case C_FOR:
         Ret = ExecuteFor(Cmd);
         break;
@@ -829,6 +853,8 @@ ExecuteCommand(
 
     UndoRedirection(Cmd->Redirections, NULL);
     return Ret;
+
+#undef SeenGoto
 }
 
 INT
@@ -836,7 +862,7 @@ ExecuteCommandWithEcho(
     IN PARSED_COMMAND *Cmd)
 {
     /* Echo the reconstructed command line */
-    if (bEcho && !bDisableBatchEcho && Cmd->Type != C_QUIET)
+    if (bEcho && !bDisableBatchEcho && Cmd && (Cmd->Type != C_QUIET))
     {
         if (!bIgnoreEcho)
             ConOutChar(_T('\n'));
@@ -876,52 +902,63 @@ GetEnvVarOrSpecial(LPCTSTR varName)
     if (var)
         return var;
 
-    /* env var doesn't exist, look for a "special" one */
+    /* The environment variable doesn't exist, look for
+     * a "special" one only if extensions are enabled. */
+    if (!bEnableExtensions)
+        return NULL;
+
     /* %CD% */
-    if (_tcsicmp(varName,_T("cd")) ==0)
+    if (_tcsicmp(varName, _T("CD")) == 0)
     {
-        GetCurrentDirectory(MAX_PATH, ret);
+        GetCurrentDirectory(ARRAYSIZE(ret), ret);
         return ret;
     }
-    /* %TIME% */
-    else if (_tcsicmp(varName,_T("time")) ==0)
-    {
-        return GetTimeString();
-    }
     /* %DATE% */
-    else if (_tcsicmp(varName,_T("date")) ==0)
+    else if (_tcsicmp(varName, _T("DATE")) == 0)
     {
         return GetDateString();
     }
-
+    /* %TIME% */
+    else if (_tcsicmp(varName, _T("TIME")) == 0)
+    {
+        return GetTimeString();
+    }
     /* %RANDOM% */
-    else if (_tcsicmp(varName,_T("random")) ==0)
+    else if (_tcsicmp(varName, _T("RANDOM")) == 0)
     {
         /* Get random number */
-        _itot(rand(),ret,10);
+        _itot(rand(), ret, 10);
         return ret;
     }
-
     /* %CMDCMDLINE% */
-    else if (_tcsicmp(varName,_T("cmdcmdline")) ==0)
+    else if (_tcsicmp(varName, _T("CMDCMDLINE")) == 0)
     {
         return GetCommandLine();
     }
-
     /* %CMDEXTVERSION% */
-    else if (_tcsicmp(varName,_T("cmdextversion")) ==0)
+    else if (_tcsicmp(varName, _T("CMDEXTVERSION")) == 0)
     {
-        /* Set version number to 2 */
-        _itot(2,ret,10);
+        /* Set version number to CMDEXTVERSION */
+        _itot(CMDEXTVERSION, ret, 10);
         return ret;
     }
-
     /* %ERRORLEVEL% */
-    else if (_tcsicmp(varName,_T("errorlevel")) ==0)
+    else if (_tcsicmp(varName, _T("ERRORLEVEL")) == 0)
     {
-        _itot(nErrorLevel,ret,10);
+        _itot(nErrorLevel, ret, 10);
         return ret;
     }
+#if (NTDDI_VERSION >= NTDDI_WIN7)
+    /* Available in Win7+, even if the underlying API is available in Win2003+ */
+    /* %HIGHESTNUMANODENUMBER% */
+    else if (_tcsicmp(varName, _T("HIGHESTNUMANODENUMBER")) == 0)
+    {
+        ULONG NumaNodeNumber = 0;
+        GetNumaHighestNodeNumber(&NumaNodeNumber);
+        _itot(NumaNodeNumber, ret, 10);
+        return ret;
+    }
+#endif
 
     return NULL;
 }
@@ -1018,7 +1055,7 @@ GetEnhancedVar(TCHAR **pFormat, LPTSTR (*GetVar)(TCHAR, BOOL *))
         PathVar = GetEnvVar(PathVarName);
         FormatEnd[-1] = _T(':');
         if (!PathVar ||
-            !SearchPath(PathVar, Result, NULL, MAX_PATH, FullPath, NULL))
+            !SearchPath(PathVar, Result, NULL, ARRAYSIZE(FullPath), FullPath, NULL))
         {
             return _T("");
         }
@@ -1038,7 +1075,7 @@ GetEnhancedVar(TCHAR **pFormat, LPTSTR (*GetVar)(TCHAR, BOOL *))
     else
     {
         /* Convert the variable, now without quotes, to a full path */
-        if (!GetFullPathName(Result, MAX_PATH, FullPath, NULL))
+        if (!GetFullPathName(Result, ARRAYSIZE(FullPath), FullPath, NULL))
             return _T("");
     }
 
@@ -1059,7 +1096,7 @@ GetEnhancedVar(TCHAR **pFormat, LPTSTR (*GetVar)(TCHAR, BOOL *))
         if (Next)
             *Next++ = _T('\0');
         /* Use FindFirstFile to get the correct name */
-        if (Out + _tcslen(In) + 1 >= &FixedPath[MAX_PATH])
+        if (Out + _tcslen(In) + 1 >= &FixedPath[ARRAYSIZE(FixedPath)])
             return _T("");
         _tcscpy(Out, In);
         hFind = FindFirstFile(FixedPath, &w32fd);
@@ -1074,7 +1111,7 @@ GetEnhancedVar(TCHAR **pFormat, LPTSTR (*GetVar)(TCHAR, BOOL *))
             }
             FindClose(hFind);
 
-            if (Out + _tcslen(FixedComponent) + 1 >= &FixedPath[MAX_PATH])
+            if (Out + _tcslen(FixedComponent) + 1 >= &FixedPath[ARRAYSIZE(FixedPath)])
                 return _T("");
             _tcscpy(Out, FixedComponent);
         }
@@ -1107,7 +1144,7 @@ GetEnhancedVar(TCHAR **pFormat, LPTSTR (*GetVar)(TCHAR, BOOL *))
                 { _T('t'), FILE_ATTRIBUTE_TEMPORARY },
                 { _T('l'), FILE_ATTRIBUTE_REPARSE_POINT },
             };
-            for (Attrib = Table; Attrib != &Table[9]; Attrib++)
+            for (Attrib = Table; Attrib != &Table[ARRAYSIZE(Table)]; Attrib++)
             {
                 *Out++ = w32fd.dwFileAttributes & Attrib->Value
                          ? Attrib->Character
@@ -1176,7 +1213,7 @@ GetEnhancedVar(TCHAR **pFormat, LPTSTR (*GetVar)(TCHAR, BOOL *))
     return Result;
 }
 
-LPCTSTR
+static LPCTSTR
 GetBatchVar(TCHAR *varName, UINT *varNameLen)
 {
     LPCTSTR ret;
@@ -1192,11 +1229,12 @@ GetBatchVar(TCHAR *varName, UINT *varNameLen)
         ret = GetEnhancedVar(&varNameEnd, FindArg);
         if (!ret)
         {
-            error_syntax(varName);
+            ParseErrorEx(varName);
             return NULL;
         }
         *varNameLen = varNameEnd - varName;
         return ret;
+
     case _T('0'):
     case _T('1'):
     case _T('2'):
@@ -1210,9 +1248,7 @@ GetBatchVar(TCHAR *varName, UINT *varNameLen)
         return FindArg(*varName, &dummy);
 
     case _T('*'):
-        //
-        // Copy over the raw params(not including the batch file name
-        //
+        /* Copy over the raw params (not including the batch file name) */
         return bc->raw_params;
 
     case _T('%'):
@@ -1252,6 +1288,14 @@ SubstituteVars(TCHAR *Src, TCHAR *Dest, TCHAR Delim)
         {
             UINT NameLen;
             Var = GetBatchVar(Src, &NameLen);
+            if (!Var && bParseError)
+            {
+                /* Return the partially-parsed command to be
+                 * echoed for error diagnostics purposes. */
+                APPEND1(Delim);
+                APPEND(Src, DestEnd-Dest);
+                return FALSE;
+            }
             if (Var != NULL)
             {
                 VarLength = _tcslen(Var);
@@ -1375,9 +1419,11 @@ too_long:
 }
 
 /* Search the list of FOR contexts for a variable */
-static LPTSTR FindForVar(TCHAR Var, BOOL *IsParam0)
+static LPTSTR
+FindForVar(TCHAR Var, BOOL *IsParam0)
 {
-    FOR_CONTEXT *Ctx;
+    PFOR_CONTEXT Ctx;
+
     *IsParam0 = FALSE;
     for (Ctx = fc; Ctx != NULL; Ctx = Ctx->prev)
     {
@@ -1446,10 +1492,8 @@ DoDelayedExpansion(LPTSTR Line)
 
 
 /*
- * do the prompt/input/process loop
- *
+ * Do the prompt/input/process loop.
  */
-
 BOOL
 ReadLine(TCHAR *commandline, BOOL bMore)
 {
@@ -1501,9 +1545,10 @@ ReadLine(TCHAR *commandline, BOOL bMore)
     return SubstituteVars(ip, commandline, _T('%'));
 }
 
-static VOID
+static INT
 ProcessInput(VOID)
 {
+    INT Ret = 0;
     PARSED_COMMAND *Cmd;
 
     while (!bCanExit || !bExit)
@@ -1515,19 +1560,23 @@ ProcessInput(VOID)
         if (!Cmd)
             continue;
 
-        ExecuteCommand(Cmd);
+        Ret = ExecuteCommand(Cmd);
         FreeCommand(Cmd);
     }
+
+    return Ret;
 }
 
 
 /*
- * control-break handler.
+ * Control-break handler.
  */
-BOOL WINAPI BreakHandler(DWORD dwCtrlType)
+static BOOL
+WINAPI
+BreakHandler(IN DWORD dwCtrlType)
 {
-    DWORD           dwWritten;
-    INPUT_RECORD    rec;
+    DWORD dwWritten;
+    INPUT_RECORD rec;
 
     if ((dwCtrlType != CTRL_C_EVENT) &&
         (dwCtrlType != CTRL_BREAK_EVENT))
@@ -1582,8 +1631,7 @@ VOID RemoveBreakHandler(VOID)
 
 
 /*
- * show commands and options that are available.
- *
+ * Show commands and options that are available.
  */
 #if 0
 static VOID
@@ -1799,18 +1847,21 @@ ExecuteAutoRunFile(HKEY hKeyRoot)
 
 /* Get the command that comes after a /C or /K switch */
 static VOID
-GetCmdLineCommand(TCHAR *commandline, TCHAR *ptr, BOOL AlwaysStrip)
+GetCmdLineCommand(
+    OUT LPTSTR commandline,
+    IN LPCTSTR ptr,
+    IN BOOL AlwaysStrip)
 {
-    TCHAR *LastQuote;
+    TCHAR* LastQuote;
 
     while (_istspace(*ptr))
-        ptr++;
+        ++ptr;
 
     /* Remove leading quote, find final quote */
     if (*ptr == _T('"') &&
         (LastQuote = _tcsrchr(++ptr, _T('"'))) != NULL)
     {
-        TCHAR *Space;
+        const TCHAR* Space;
         /* Under certain circumstances, all quotes are preserved.
          * CMD /? documents these conditions as follows:
          *  1. No /S switch
@@ -1822,7 +1873,7 @@ GetCmdLineCommand(TCHAR *commandline, TCHAR *ptr, BOOL AlwaysStrip)
          *  5. Enclosed string is an executable filename
          */
         *LastQuote = _T('\0');
-        for (Space = ptr + 1; Space < LastQuote; Space++)
+        for (Space = ptr + 1; Space < LastQuote; ++Space)
         {
             if (_istspace(*Space))                         /* Rule 4 */
             {
@@ -1852,21 +1903,18 @@ GetCmdLineCommand(TCHAR *commandline, TCHAR *ptr, BOOL AlwaysStrip)
 
 
 /*
- * Set up global initializations and process parameters
+ * Set up global initializations and process parameters.
+ * Return a pointer to the command line if present.
  */
-static VOID
+static LPCTSTR
 Initialize(VOID)
 {
     HMODULE NtDllModule;
-    TCHAR commandline[CMDLINE_LENGTH];
-    TCHAR ModuleName[_MAX_PATH + 1];
-    // INT nExitCode;
-
     HANDLE hIn, hOut;
-
-    TCHAR *ptr, *cmdLine, option = 0;
-    BOOL AlwaysStrip = FALSE;
+    LPTSTR ptr, cmdLine;
+    TCHAR option = 0;
     BOOL AutoRun = TRUE;
+    TCHAR ModuleName[MAX_PATH + 1];
 
     /* Get version information */
     InitOSVersion();
@@ -1904,7 +1952,7 @@ Initialize(VOID)
     /* Set COMSPEC environment variable */
     if (GetModuleFileName(NULL, ModuleName, ARRAYSIZE(ModuleName)) != 0)
     {
-        ModuleName[_MAX_PATH] = _T('\0');
+        ModuleName[MAX_PATH] = _T('\0');
         SetEnvironmentVariable (_T("COMSPEC"), ModuleName);
     }
 
@@ -1921,32 +1969,32 @@ Initialize(VOID)
     cmdLine = GetCommandLine();
     TRACE ("[command args: %s]\n", debugstr_aw(cmdLine));
 
-    for (ptr = cmdLine; *ptr; ptr++)
+    for (ptr = cmdLine; *ptr; ++ptr)
     {
         if (*ptr == _T('/'))
         {
             option = _totupper(ptr[1]);
             if (option == _T('?'))
             {
-                ConOutResPaging(TRUE,STRING_CMD_HELP8);
+                ConOutResPaging(TRUE, STRING_CMD_HELP8);
                 nErrorLevel = 1;
                 bExit = TRUE;
-                return;
+                return NULL;
             }
             else if (option == _T('P'))
             {
-                if (!IsExistingFile (_T("\\autoexec.bat")))
+                if (!IsExistingFile(_T("\\autoexec.bat")))
                 {
 #ifdef INCLUDE_CMD_DATE
-                    cmd_date (_T(""));
+                    cmd_date(_T(""));
 #endif
 #ifdef INCLUDE_CMD_TIME
-                    cmd_time (_T(""));
+                    cmd_time(_T(""));
 #endif
                 }
                 else
                 {
-                    ParseCommandLine (_T("\\autoexec.bat"));
+                    ParseCommandLine(_T("\\autoexec.bat"));
                 }
                 bCanExit = FALSE;
             }
@@ -1970,7 +2018,7 @@ Initialize(VOID)
             }
             else if (option == _T('S'))
             {
-                AlwaysStrip = TRUE;
+                bAlwaysStrip = TRUE;
             }
 #ifdef INCLUDE_CMD_COLOR
             else if (!_tcsnicmp(ptr, _T("/T:"), 3))
@@ -2041,18 +2089,8 @@ Initialize(VOID)
         ExecuteAutoRunFile(HKEY_CURRENT_USER);
     }
 
-    if (*ptr)
-    {
-        /* Do the /C or /K command */
-        GetCmdLineCommand(commandline, &ptr[2], AlwaysStrip);
-        /* nExitCode = */ ParseCommandLine(commandline);
-        if (fSingleCommand == 1)
-        {
-            // nErrorLevel = nExitCode;
-            bExit = TRUE;
-        }
-        fSingleCommand = 0;
-    }
+    /* Returns the rest of the command line */
+    return ptr;
 }
 
 
@@ -2099,6 +2137,8 @@ static VOID Cleanup(VOID)
  */
 int _tmain(int argc, const TCHAR *argv[])
 {
+    INT nExitCode;
+    LPCTSTR pCmdLine;
     TCHAR startPath[MAX_PATH];
 
     InitializeCriticalSection(&ChildProcessRunningLock);
@@ -2118,19 +2158,39 @@ int _tmain(int argc, const TCHAR *argv[])
 
     CMD_ModuleHandle = GetModuleHandle(NULL);
 
-    /* Perform general initialization, parse switches on command-line */
-    Initialize();
+    /*
+     * Perform general initialization, parse switches on command-line.
+     * Initialize the exit code with the errorlevel as Initialize() can set it.
+     */
+    pCmdLine = Initialize();
+    nExitCode = nErrorLevel;
 
-    /* Call prompt routine */
-    ProcessInput();
+    if (pCmdLine && *pCmdLine)
+    {
+        TCHAR commandline[CMDLINE_LENGTH];
+
+        /* Do the /C or /K command */
+        GetCmdLineCommand(commandline, &pCmdLine[2], bAlwaysStrip);
+        nExitCode = ParseCommandLine(commandline);
+        if (fSingleCommand == 1)
+        {
+            // nErrorLevel = nExitCode;
+            bExit = TRUE;
+        }
+        fSingleCommand = 0;
+    }
+    if (!bExit)
+    {
+        /* Call prompt routine */
+        nExitCode = ProcessInput();
+    }
 
     /* Do the cleanup */
     Cleanup();
-
     cmd_free(lpOriginalEnvironment);
 
-    cmd_exit(nErrorLevel);
-    return nErrorLevel;
+    cmd_exit(nExitCode);
+    return nExitCode;
 }
 
 /* EOF */

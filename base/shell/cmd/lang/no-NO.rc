@@ -23,7 +23,7 @@ For å fjerne et alias fra alias-liste:\n\
     STRING_CALL_HELP "Kaller et satsvis program fra et annet.\n\n\
 CALL [stasjon:][mappe]filnavn [satsvis-parameter]\n\n\
   satsvis-parameter  Spesifisere noen kommando-linje informasjon trengs av\n\
-                   satsvis program."
+                   satsvis program.\n"
     STRING_CD_HELP "Viser navnet på, eller endrer gjeldende mappe\n\n\
 CHDIR [/D][stasjon:][mappe]\n\
 CHDIR[..|.]\n\
@@ -193,7 +193,7 @@ PUSHD [mappe | ..]\n\n\
   ECHO [melding]\n\
   ECHO.             skriv en tom linje\n\n\
 Skriv ECHO uten parameter for å vise gjeldende ECHO innstillinger."
-    STRING_ECHO_HELP5 "ECHO er %s\n"
+    STRING_ECHO_HELP5 "ECHO er %s.\n"
     STRING_EXIT_HELP "Avslutt kommando linje interpreter.\n\nAVSLUTT [/b] [ExitCode]\n\n\
   /B            Avslutt bare en batch fil.\n\
                 Hvis det kjøres en batch fil på utsiden vil den avslutte cmd.exe\n\
@@ -228,7 +228,7 @@ For å bruke FOR kommando i en satsvis fil, spesifisere %%variabel isteden for\n
     STRING_GOTO_HELP1 "Leder CMD til en merket linje i et satsvis skript.\n\n\
 GOTO merke\n\n\
   merke     angir en tekst streng brukt i en satsvis skript.\n\n\
-Et merke opprettes på egen linje ved å skrive kolon fulgt av navn på merke."
+Et merke opprettes på egen linje ved å skrive kolon fulgt av navn på merke.\n"
     STRING_IF_HELP1 "Utføre betinget behandling i satsvise programmer.\n\n\
   IF [NOT] ERRORLEVEL nummer kommando\n\
   IF [NOT] streng1==streng2 kommando\n\
@@ -264,9 +264,9 @@ If neither /H or /J is specified, a symbolic link is created."
     STRING_MOVE_HELP1 "Overskrive %s (Ja/Nei/Alle)? "
     STRING_MOVE_HELP2 "Flytt filer, og gi nytt navn på filer og mapper.\n\n\
 For å flytte en eller flere filer:\n\
-MOVE [/N][stasjon:][mappe]filnavn1[,...] destinasjon\n\n\
+MOVE [/N][/Y|/-Y][stasjon:][mappe]filnavn1[,...] destinasjon\n\n\
 For å endre navn på en mappe:\n\
-MOVE [/N][stasjon:][mappe]mappenavn1 mappenavn2\n\n\
+MOVE [/N][/Y|/-Y][stasjon:][mappe]mappenavn1 mappenavn2\n\n\
   [stasjon:][mappe]filnavn1  Spesifisere plassering og navn av fil\n\
                            eller filer du ønsker å flytte.\n\
   /N                    Ingenting. Gjør alt unntatt å flytte filer eller mapper.\n\n\
@@ -287,6 +287,9 @@ PATH [[stasjon:]mappe[;...]]\nPATH ;\n\n\
 Skriv PATH; for å tømme alle søkemapper innstillinger og angi at kommandoskallet\n\
 kun skal søke gjeldende mappe.\n\
 Skriv PATH uten parameter for å vise gjeldende søkesti.\n"
+    STRING_PAUSE_HELP1 "Stopp eksekvering av satsvis fil og vis følgende melding:\n\
+'Trykk en tast for å fortsette...' eller en bruker definert melding.\n\n\
+PAUSE [melding]"
     STRING_PROMPT_HELP1 "Endre kommandoledetekst.\n\n\
 PROMPT [tekst]\n\n\
   tekst    Spesifisere en nytt kommandoledetekst.\n\n\
@@ -309,16 +312,13 @@ Ledeteksten kan bli satt sammen av normale tegn og følgende spesielle koder:\n\
   $V   Versjonsnummer for ReactOS\n\
   $_   Retur og linjeskift\n\
   $$   $ (dollar tegn)\n"
-    STRING_PAUSE_HELP1 "Stopp eksekvering av satsvis fil og vis følgende melding:\n\
-'Trykk en tast for å fortsette...' eller en bruker definert melding.\n\n\
-PAUSE [melding]"
     STRING_PROMPT_HELP2 "  $+   Vis gjeldende dybde av mappestakken"
     STRING_PROMPT_HELP3 "\nSkriv PROMPT uten parameter for å resette ledeteksten."
     STRING_REM_HELP "Start en kommentarlinje i en satsvis fil.\n\nREM [Kommentar]"
     STRING_RMDIR_HELP "Flytter en mappe.\n\n\
-RMDIR [stasjon:]mappe\nRD [stasjon:]mappe\n\
-/S          Sletter alle filer og mapper innenfor målet\n\
-/Q          Ikke spør før sletting.\n"
+RMDIR [/S] [/Q] [stasjon:]mappe\nRD [/S] [/Q] [stasjon:]mappe\n\
+  /S    Sletter alle filer og mapper innenfor målet.\n\
+  /Q    Ikke spør før sletting.\n"
     STRING_RMDIR_HELP2 "Mappen er ikke tom!\n"
     STRING_REN_HELP1 "Endre navn på fil/mappe eller filer/mapper.\n\n\
 ENDRE NAVN [/E /N /P /Q /S /T] gammelt_navn ... nytt_navn\n\
@@ -466,9 +466,9 @@ tittel        ny tittel\n"
     STRING_ALIAS_ERROR "Kommando linje for lang etter alias utvidelse!\n"
     STRING_ASSOC_ERROR "Fil association ble ikke funnet for utvidelsen %s\n"
     STRING_BATCH_ERROR "Feil ved åpning av satsvis fil\n"
-    STRING_CHOICE_ERROR "Ugyldig  valg. Forventet format: /C[:]valg"
-    STRING_CHOICE_ERROR_TXT "Ugyldig  valg. Forventet format: /T[:]c,nn"
-    STRING_CHOICE_ERROR_OPTION "Ulovlig operasjon: %s"
+    STRING_CHOICE_ERROR "Ugyldig  valg. Forventet format: /C[:]valg\n"
+    STRING_CHOICE_ERROR_TXT "Ugyldig  valg. Forventet format: /T[:]c,nn\n"
+    STRING_CHOICE_ERROR_OPTION "Ulovlig operasjon: %s\n"
     STRING_CMD_ERROR1 "Kan ikke videreføre inndata fra fil %s\n"
     STRING_CMD_ERROR2 "Feil under oppretting av temporær fil for datakanal\n"
     STRING_CMD_ERROR3 "Kan ikke videreføre til fil %s\n"
@@ -493,9 +493,9 @@ tittel        ny tittel\n"
     STRING_FOR_ERROR4 "ingen kommando etter 'gjøre'."
     STRING_FREE_ERROR1 "Ugyldig driver"
     STRING_FREE_ERROR2 "utmerket"
-    STRING_GOTO_ERROR1 "Ingen merke spesifisert for GOTO"
-    STRING_GOTO_ERROR2 "merke '%s' ikke funnet\n"
-    STRING_MD_ERROR "En undermappe eller fil finnes allerede.\n"
+    STRING_GOTO_ERROR1 "Ingen merke spesifisert for GOTO\n"
+    STRING_GOTO_ERROR2 "Merke '%s' ikke funnet\n"
+    STRING_MD_ERROR "En undermappe eller fil %s finnes allerede.\n"
     STRING_MD_ERROR2 "Stien til den nye mappen eksisterer ikke.\n"
     STRING_MOVE_ERROR1 "[OK]\n"
     STRING_MOVE_ERROR2 "[Feil]\n"
@@ -514,9 +514,9 @@ tittel        ny tittel\n"
     STRING_ERROR_BADCOMMAND "Feil kommando eller filnavn - %s\n"
     STRING_ERROR_OUT_OF_MEMORY "Feil: Minne fullt.\n"
     STRING_ERROR_CANNOTPIPE "Feil! Kan ikke bruke datakanal! Kan ikke åpne midlertidig fil!\n"
-    STRING_ERROR_D_PAUSEMSG "Trykk en tast for å fortsette . . ."
+    STRING_ERROR_D_PAUSEMSG "Trykk en tast for å fortsette . . . "
     STRING_ERROR_DRIVER_NOT_READY "Stasjonen er ikke klar"
-    STRING_PATH_ERROR "CMD: Ikke i miljøet '%s'\n"
+    STRING_SET_ENV_ERROR "Environment variable '%s' is not defined\n"
     STRING_REPLACE_ERROR1 "Invalid switch - %s\n"
     STRING_REPLACE_ERROR2 "Mappen ble ikke funnet - %s\n"
     STRING_REPLACE_ERROR3 "The filename, directory name, or volume label syntax is incorrect.\n"
@@ -540,8 +540,8 @@ tittel        ny tittel\n"
     STRING_MKLINK_CREATED_JUNCTION "Junction created for %s <<===>> %s\n"
     STRING_MORE "More? "
     STRING_CANCEL_BATCH_FILE "\r\nCtrl-Break trykket.  Avbryt batch filen? (Ja/Nei/Alt) "
-    STRING_INVALID_OPERAND "Ugyldig operand."
-    STRING_EXPECTED_CLOSE_PAREN "Forventet ')'."
-    STRING_EXPECTED_NUMBER_OR_VARIABLE "Forventet nummer eller variabel navn."
-    STRING_SYNTAX_COMMAND_INCORRECT "Syntaks for kommandoen er feil."
+    STRING_INVALID_OPERAND "Ugyldig operand.\n"
+    STRING_EXPECTED_CLOSE_PAREN "Forventet ')'.\n"
+    STRING_EXPECTED_NUMBER_OR_VARIABLE "Forventet nummer eller variabel navn.\n"
+    STRING_SYNTAX_COMMAND_INCORRECT "Syntaks for kommandoen er feil.\n"
 END

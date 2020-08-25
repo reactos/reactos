@@ -1,0 +1,62 @@
+; pc98disp.inf
+;
+; Installation file for the display adapter on PC-9821
+;
+[Version]
+Signature  = "$Windows NT$"
+;Signature  = "$ReactOS$"
+LayoutFile = layout.inf
+Class      = Display
+ClassGUID  = {4D36E968-E325-11CE-BFC1-08002BE10318}
+Provider   = %ReactOS%
+DriverVer  = 08/11/2020,5.2
+
+[DestinationDirs]
+DefaultDestDir = 12
+
+[Manufacturer]
+%NecMfg% = NecMfg
+
+[NecMfg]
+%pc98vid.DeviceDesc% = Pc98Vid_Inst
+%PCI\VEN_1033&DEV_0009.DeviceDesc% = Pc98Vid_Inst,PCI\VEN_1033&DEV_0009
+
+;---------------------------- PC98VID DRIVER ----------------------------
+
+[Pc98Vid_Inst.NT]
+CopyFiles = pc98vid_CopyFiles.NT
+
+[pc98vid_CopyFiles.NT]
+vga.sys
+
+[Pc98Vid_Inst.NT.Services]
+AddService = vga, 0x00000002, vga_Service_Inst
+
+[vga_Service_Inst]
+ServiceType   = 1
+StartType     = 1
+ErrorControl  = 0
+ServiceBinary = %12%\vga.sys
+LoadOrderGroup = Video
+
+[vga.SoftwareSettings]
+AddReg = vga_SoftwareDeviceSettings
+
+[vga_SoftwareDeviceSettings]
+HKR,, InstalledDisplayDrivers, 0x00010000, framebuf
+HKR,, VgaCompatible,           0x00010001, 1
+HKR,, VideoDebugLevel,         0x00010001, 0
+
+;-------------------------------- STRINGS -------------------------------
+
+[Strings]
+ReactOS = "ReactOS Team"
+
+NecMfg = "NEC"
+PCI\VEN_1033&DEV_0009.DeviceDesc = "NEC PCI to Core-Graph Bridge"
+pc98vid.DeviceDesc = "Graphic controller for PC-9821"
+
+[Strings.0419]
+ReactOS = "Команда ReactOS"
+
+pc98vid.DeviceDesc = "Графический контроллер для PC-9821"

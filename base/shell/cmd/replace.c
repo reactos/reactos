@@ -437,6 +437,7 @@ INT cmd_replace (LPTSTR param)
                     break;
                 default:
                     invalid_switch(arg[i]);
+                    freep(arg);
                     return 0;
                 }
             }

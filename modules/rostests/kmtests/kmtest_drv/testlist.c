@@ -69,6 +69,7 @@ KMT_TESTFUNC Test_RtlException;
 KMT_TESTFUNC Test_RtlIntSafe;
 KMT_TESTFUNC Test_RtlIsValidOemCharacter;
 KMT_TESTFUNC Test_RtlMemory;
+KMT_TESTFUNC Test_RtlRangeList;
 KMT_TESTFUNC Test_RtlRegistry;
 KMT_TESTFUNC Test_RtlSplayTree;
 KMT_TESTFUNC Test_RtlStack;
@@ -142,6 +143,7 @@ const KMT_TEST TestList[] =
     { "RtlIntSafeKM",                       Test_RtlIntSafe },
     { "RtlIsValidOemCharacter",             Test_RtlIsValidOemCharacter },
     { "RtlMemoryKM",                        Test_RtlMemory },
+    { "RtlRangeList",                       Test_RtlRangeList },
     { "RtlRegistryKM",                      Test_RtlRegistry },
     { "RtlSplayTreeKM",                     Test_RtlSplayTree },
     { "RtlStackKM",                         Test_RtlStack },

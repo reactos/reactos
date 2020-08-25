@@ -25,7 +25,7 @@ Untuk menghapus alias dari daftar alias:\n\
     STRING_CALL_HELP "Memanggil satu program batch dari yang lainnya.\n\n\
 CALL [drive:][path]filename [batch-parameter]\n\n\
   batch-parameter  Specifies any command-line information required by the\n\
-                   batch program."
+                   batch program.\n"
     STRING_CD_HELP "Mengubah direktori saat ini atau menampilkan namanya\n\n\
 CHDIR [/D][drive:][path]\n\
 CHDIR[..|.]\n\
@@ -195,7 +195,7 @@ PUSHD [path | ..]\n\n\
   ECHO [pesan]\n\
   ECHO.             Menampilkan baris kosong\n\n\
 Ketik ECHO tanpa parameter untuk menampilkan setelan ECHO saat ini."
-    STRING_ECHO_HELP5 "ECHO adalah %s\n"
+    STRING_ECHO_HELP5 "ECHO adalah %s.\n"
     STRING_EXIT_HELP "Keluar dari interpreter baris perintah.\n\nEXIT [/b] [ExitCode]\n\n\
   /B            Keluar dari hanya file batch.\n\
                 Jika dijalankan di luar file batch ia akan keluar dari cmd.exe\n\
@@ -230,7 +230,7 @@ Untuk menggunakan perintah FOR dalam program batch, tetapkan %%variable daripada
     STRING_GOTO_HELP1 "Mengarahkan CMD ke baris berlabel dalam naskah batch.\n\n\
 GOTO label\n\n\
   label  Menetapkan string teks yang digunakan dalam naskah batch sebagai label.\n\n\
-Anda mengetik label pada sebuah baris, dimulai dengan titik dua."
+Anda mengetik label pada sebuah baris, dimulai dengan titik dua.\n"
     STRING_IF_HELP1 "Melakukan pemrosesan kondisional dalam program batch.\n\n\
   IF [NOT] ERRORLEVEL nomor perintah\n\
   IF [NOT] string1==string2 perintah\n\
@@ -266,9 +266,9 @@ If neither /H or /J is specified, a symbolic link is created."
     STRING_MOVE_HELP1 "Timpa %s (Ya/Tidak/Semua)? "
     STRING_MOVE_HELP2 "Memindahkan file dan mengganti nama file dan direktori.\n\n\
 Untuk memindahkan satu atau lebih file:\n\
-MOVE [/N][drive:][path]filename1[,...] tujuan\n\n\
+MOVE [/N][/Y|/-Y][drive:][path]filename1[,...] tujuan\n\n\
 Untuk mengganti nama direktori:\n\
-MOVE [/N][drive:][path]dirname1 dirname2\n\n\
+MOVE [/N][/Y|/-Y][drive:][path]dirname1 dirname2\n\n\
   [drive:][path]filename1  Menetapkan lokasi dan nama file\n\
                            yang ingin anda pindahkan.\n\
   /N                    Tidak apapun. Lakukan apapun kecuali memindahkan file dan direktori.\n\n\
@@ -289,6 +289,9 @@ PATH [[drive:]path[;...]]\nPATH ;\n\n\
 Ketik PATH ; untuk membersihkan semua setelan path-pencarian dan shell\n\
 perintah langsung untuk mencari hanya dalam direktori saat ini.\n\
 Ketik PATH tanpa parameter untuk menampilkan path saat ini.\n"
+    STRING_PAUSE_HELP1 "Menunda eksekusi file batch dan menampilkan pesan berikut:\n\
+'Tekan tombol untuk melanjutkan...' atau pesan yang dibuat pengguna.\n\n\
+PAUSE [pesan]"
     STRING_PROMPT_HELP1 "Mengubah prompt perintah.\n\n\
 PROMPT [teks]\n\n\
   teks    Menetapkan prompt perintah baru.\n\n\
@@ -311,16 +314,13 @@ Prompt bisa dibuat dari karakter normal dan kode spesial berikut:\n\n\
   $V   Nomor versi OS\n\
   $_   Carriage return dan linefeed\n\
   $$   $ (tanda dolar)\n"
-    STRING_PAUSE_HELP1 "Menunda eksekusi file batch dan menampilkan pesan berikut:\n\
-'Tekan tombol untuk melanjutkan...' atau pesan yang dibuat pengguna.\n\n\
-PAUSE [pesan]"
     STRING_PROMPT_HELP2 "  $+   Menampilkan kedalaman tumpukan direktori saat ini"
     STRING_PROMPT_HELP3 "\nKetik PROMPT tanpa parameter untuk mereset prompt ke setelan standar."
     STRING_REM_HELP "Memulai baris komentar dalam file batch.\n\nREM [Komentar]"
     STRING_RMDIR_HELP "Menghapus direktori.\n\n\
-RMDIR [drive:]path\nRD [drive:]path\n\
-/S          Menghapus semua file dan folder di dalam target\n\
-/Q          Tidak bertanya pada pengguna\n"
+RMDIR [/S] [/Q] [drive:]path\nRD [/S] [/Q] [drive:]path\n\
+  /S    Menghapus semua file dan folder di dalam target.\n\
+  /Q    Tidak bertanya pada pengguna.\n"
     STRING_RMDIR_HELP2 "Direktori tidak kosong!\n"
     STRING_REN_HELP1 "Mengganti nama file/direktori.\n\n\
 RENAME [/E /N /P /Q /S /T] nama_lama ... nama_baru\n\
@@ -467,9 +467,9 @@ title         judul baru\n"
     STRING_ALIAS_ERROR "Baris perintah terlalu panjang setelah ekspansi alias!\n"
     STRING_ASSOC_ERROR "File association not found for extension %s\n"
     STRING_BATCH_ERROR "Kesalaham membuka file batch\n"
-    STRING_CHOICE_ERROR "Opsi tidak benar. Format diharapkan: /C[:]options"
-    STRING_CHOICE_ERROR_TXT "Opsi tidak benar. Format diharapkan: /T[:]c,nn"
-    STRING_CHOICE_ERROR_OPTION "Opsi tidak benar: %s"
+    STRING_CHOICE_ERROR "Opsi tidak benar. Format diharapkan: /C[:]options\n"
+    STRING_CHOICE_ERROR_TXT "Opsi tidak benar. Format diharapkan: /T[:]c,nn\n"
+    STRING_CHOICE_ERROR_OPTION "Opsi tidak benar: %s\n"
     STRING_CMD_ERROR1 "Tidak bisa mengalihkan input dari file %s\n"
     STRING_CMD_ERROR2 "Kesalahan membuat file termporal untuk pipe data\n"
     STRING_CMD_ERROR3 "Tidak bisa mengalihkan ke file %s\n"
@@ -494,9 +494,9 @@ title         judul baru\n"
     STRING_FOR_ERROR4 "tidak ada perintah setelah 'do'."
     STRING_FREE_ERROR1 "Drive tidak benar"
     STRING_FREE_ERROR2 "tak berlabel"
-    STRING_GOTO_ERROR1 "Tidak ada label ditetapkan untuk GOTO"
+    STRING_GOTO_ERROR1 "Tidak ada label ditetapkan untuk GOTO\n"
     STRING_GOTO_ERROR2 "Label '%s' tidak ditemukan\n"
-    STRING_MD_ERROR "Subdirektori atau file sudah ada.\n"
+    STRING_MD_ERROR "Subdirektori atau file %s sudah ada.\n"
     STRING_MD_ERROR2 "Path ke folder baru tidak ada.\n"
     STRING_MOVE_ERROR1 "[OK]\n"
     STRING_MOVE_ERROR2 "[Salah]\n"
@@ -515,9 +515,9 @@ title         judul baru\n"
     STRING_ERROR_BADCOMMAND "Perintah atau nama file salah - %s\n"
     STRING_ERROR_OUT_OF_MEMORY "Kesalahan kekurangan memori.\n"
     STRING_ERROR_CANNOTPIPE "Salah!  Tidak bisa melakukan pipe!  Tidak bisa membuka file temporal!\n"
-    STRING_ERROR_D_PAUSEMSG "Tekan tombol untuk melanjutkan . . ."
+    STRING_ERROR_D_PAUSEMSG "Tekan tombol untuk melanjutkan . . . "
     STRING_ERROR_DRIVER_NOT_READY "Drive tidak siap"
-    STRING_PATH_ERROR "CMD: Tidak dalam lingkungan '%s'\n"
+    STRING_SET_ENV_ERROR "Environment variable '%s' is not defined\n"
     STRING_REPLACE_ERROR1 "Invalid switch - %s\n"
     STRING_REPLACE_ERROR2 "Path not found - %s\n"
     STRING_REPLACE_ERROR3 "The filename, directory name, or volume label syntax is incorrect.\n"
@@ -541,8 +541,8 @@ title         judul baru\n"
     STRING_MKLINK_CREATED_JUNCTION "Junction created for %s <<===>> %s\n"
     STRING_MORE "More? "
     STRING_CANCEL_BATCH_FILE "\r\nCtrl-Break pressed.  Cancel batch file? (Ya/Tidak/Semua) "
-    STRING_INVALID_OPERAND "Operand tidak benar."
-    STRING_EXPECTED_CLOSE_PAREN "Diharapkan ')'."
-    STRING_EXPECTED_NUMBER_OR_VARIABLE "Nomor  atau nama variabel diharapkan."
-    STRING_SYNTAX_COMMAND_INCORRECT "Sintaks perintah tidak benar."
+    STRING_INVALID_OPERAND "Operand tidak benar.\n"
+    STRING_EXPECTED_CLOSE_PAREN "Diharapkan ')'.\n"
+    STRING_EXPECTED_NUMBER_OR_VARIABLE "Nomor  atau nama variabel diharapkan.\n"
+    STRING_SYNTAX_COMMAND_INCORRECT "Sintaks perintah tidak benar.\n"
 END

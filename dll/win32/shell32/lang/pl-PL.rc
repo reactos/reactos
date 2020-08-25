@@ -1,7 +1,7 @@
 /*
  *      Updated by Saibamen (July, 2015)
  *      Updated by BlackDragonDv (January, 2018)
- *      Updated by Piotr Hetnarowicz <piotrhwz@gmail.com> (May, 2020)
+ *      Updated by Piotr Hetnarowicz <piotrhwz@gmail.com> (August, 2020)
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
@@ -115,7 +115,7 @@ BEGIN
     LTEXT "", IDC_BROWSE_FOR_FOLDER_STATUS, 10, 25, 198, 12
     LTEXT "Katalog:", IDC_BROWSE_FOR_FOLDER_FOLDER, 10, 152, 40, 12
     CONTROL "", IDC_BROWSE_FOR_FOLDER_TREEVIEW, "SysTreeView32", TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_EDITLABELS | WS_BORDER | WS_TABSTOP, 12, 38, 194, 105
-    EDITTEXT IDC_BROWSE_FOR_FOLDER_FOLDER_TEXT, 46, 150, 160, 14, WS_BORDER | WS_GROUP | WS_TABSTOP
+    EDITTEXT IDC_BROWSE_FOR_FOLDER_FOLDER_TEXT, 46, 150, 160, 14, ES_AUTOHSCROLL | WS_BORDER | WS_GROUP | WS_TABSTOP
     PUSHBUTTON "&Utwórz katalog", IDC_BROWSE_FOR_FOLDER_NEW_FOLDER, 12, 174, 77, 14, WS_GROUP | WS_TABSTOP
     DEFPUSHBUTTON "OK", IDOK, 102, 174, 50, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
     PUSHBUTTON "Anuluj", IDCANCEL, 156, 174, 50, 14, WS_GROUP | WS_TABSTOP
@@ -715,6 +715,20 @@ BEGIN
     PUSHBUTTON "Z&mień ikonę...", IDC_FOLDERCUST_CHANGE_ICON, 15, 210, 75, 15
 END
 
+IDD_LINK_PROBLEM DIALOGEX 0, 0, 250, 140
+CAPTION "Problem ze skrótem"
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON 0, IDC_LINK_PROBLEM_ICON, 5, 5, 0, 0
+    LTEXT "Element '%s', do którego odwołuje się ten skrót, został zmieniony lub przeniesiony i dlatego skrót ten nie będzie działał poprawnie.", IDC_LINK_PROBLEM_LABEL1, 35, 5, 210, 35
+    LTEXT "Najbliższy odpowiednik pod względem nazwy, typu, rozmiaru i daty:", IDC_LINK_PROBLEM_LABEL2, 35, 45, 210, 35
+    LTEXT "Chcesz naprawić ten skrót, tak aby wskazywał ten element docelowy, czy chcesz go usunąć?", -1, 35, 85, 210, 30
+    DEFPUSHBUTTON "&Napraw", IDOK, 55, 120, 60, 15, WS_DISABLED
+    PUSHBUTTON "&Usuń", IDYES, 120, 120, 60, 15
+    PUSHBUTTON "Anuluj", IDCANCEL, 185, 120, 60, 15
+END
+
 STRINGTABLE
 BEGIN
     /* columns in the shellview */
@@ -989,4 +1003,13 @@ BEGIN
     IDS_EDITING_ACTION "Edytowanie akcji dla typu: "
     IDS_NO_ICONS "Plik '%s' nie zawiera ikon.\n\nWybierz ikonę z listy lub określ inny plik."
     IDS_FILE_NOT_FOUND "Nie odnaleziono pliku '%s'."
+    IDS_LINK_INVALID "Element '%s', do którego odwołuje się ten skrót, został zmieniony lub przeniesiony i dlatego skrót ten nie będzie działał poprawnie."
+    IDS_COPYTOMENU "Kopiuj &do folderu..."
+    IDS_COPYTOTITLE "Zaznacz miejsce, w które chcesz skopiować '%s', a następnie kliknij przycisk Kopiuj."
+    IDS_COPYITEMS "Kopiowanie elementów"
+    IDS_COPYBUTTON "Kopiuj"
+    IDS_MOVETOMENU "P&rzenieś do folderu..."
+    IDS_MOVETOTITLE "Zaznacz miejsce, w które chcesz przenieść '%s', a następnie kliknij przycisk Przenieś."
+    IDS_MOVEITEMS "Przenoszenie elementów"
+    IDS_MOVEBUTTON "Przenieś"
 END

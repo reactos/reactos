@@ -25,7 +25,7 @@ Pour effacer un alias de la liste des alias :\n\
     STRING_CALL_HELP "Appelle un programme batch depuis un autre.\n\n\
 CALL [lecteur:][chemin]fichier [paramètre-batch]\n\n\
   paramètre-batch  Spécifie les paramètres nécessaires au\n\
-                   programme batch."
+                   programme batch.\n"
     STRING_CD_HELP "Change ou affiche le répertoire courant\n\n\
   CHDIR [lecteur:][chemin]\n\
   CHDIR[..|-]\n\
@@ -207,7 +207,7 @@ ni passage à la ligne.\n\n\
   ECHO [message]\n\
   ECHO.             Affiche une ligne vide.\n\n\
 Taper ECHO sans paramètre pour afficher le réglage ECHO courant."
-    STRING_ECHO_HELP5 "ECHO est %s\n"
+    STRING_ECHO_HELP5 "ECHO est %s.\n"
     STRING_EXIT_HELP "Sort de l'interpréteur de commandes.\n\nEXIT [/b] [CodeDeFin]\n\n\
   /B            Quitte seulement un fichier batch.\n\
                 En cas de lancement en dehors d'un fichier batch, cmd.exe sera quittée\n\
@@ -279,9 +279,9 @@ If neither /H or /J is specified, a symbolic link is created."
     STRING_MOVE_HELP1 "Ecraser %s (Oui/Non/Tous) ? "
     STRING_MOVE_HELP2 "Déplace des fichiers ou renomme des fichiers et des répertoires.\n\n\
 Pouur déplacer un ou plusieurs fichiers:\n\
-MOVE [/N][lecteur:][nomfich1[,...] destination\n\n\
+MOVE [/N][/Y|/-Y][lecteur:][nomfich1[,...] destination\n\n\
 Pour renommer un répertoire:\n\
-MOVE [/N][lecteur:][chemin]nomrep1 nomrep2\n\n\
+MOVE [/N][/Y|/-Y][lecteur:][chemin]nomrep1 nomrep2\n\n\
   [lecteur:][chemin]nomfich1  Indique l'endroit et le nom du ou des fichiers\n\
                               que vous voulez déplacer.\n\
   /N                          Nothing. Do everything but move files or directories.\n\n\
@@ -303,6 +303,10 @@ Taper PATH ; pour effacer tous les réglages courants\n\
 et indiquer à l'interpréteur de commandes\n\
 de chercher seulement dans le répertoire courant.\n\
 Taper PATH sans paramètres pour afficher le chemin courant.\n"
+    STRING_PAUSE_HELP1 "Stoppe l'exécution d'un fichier batch et affiche le message suivant:\n\
+'Appuyer sur une touche pour continuer...' ou un message défini\n\
+par l'utilisateur.\n\n\
+PAUSE [message]"
     STRING_PROMPT_HELP1 "Change l'invite de commandes.\n\n\
 PROMPT [texte]\n\n\
   texte   Indique le nouvel invite de commandes.\n\n\
@@ -326,17 +330,13 @@ des caractères spéciaux suivants:\n\n\
   $V   Numéro de version de ReactOS\n\
   $_   Retour chariot/saut de ligne\n\
   $$   $ (signe dollar)"
-    STRING_PAUSE_HELP1 "Stoppe l'exécution d'un fichier batch et affiche le message suivant:\n\
-'Appuyer sur une touche pour continuer...' ou un message défini\n\
-par l'utilisateur.\n\n\
-PAUSE [message]"
     STRING_PROMPT_HELP2 "  $+   Affiche la hauteur de la pile de répertoires"
     STRING_PROMPT_HELP3 "\nTaper PROMPT sans paramètres pour changer l'invite à celui défini par défaut."
     STRING_REM_HELP "Démarrer une ligne de commentaire dans un fichier batch.\n\nREM [Commentaire]"
     STRING_RMDIR_HELP "Supprime un répertoire.\n\n\
-RMDIR [lecteur:]chemin\nRD [lecteur:]chemin\n\
-/S          Supprime tous les fichiers et dossiers dans le répertoire cible\n\
-/Q          N'interroge pas l'utilisateur\n"
+RMDIR [/S] [/Q] [lecteur:]chemin\nRD [/S] [/Q] [lecteur:]chemin\n\
+  /S    Supprime tous les fichiers et dossiers dans le répertoire cible.\n\
+  /Q    N'interroge pas l'utilisateur.\n"
     STRING_RMDIR_HELP2 "Le répertoire n'est pas vide!\n"
     STRING_REN_HELP1 "Renomme un(des) fichier(s)/répertoire(s)\n\
 RENAME [/E /N /P /Q /S /T] ancien_nom ... nouveau_nom\n\
@@ -484,9 +484,9 @@ titre         titre de la fenêtre"
     STRING_ALIAS_ERROR "Ligne de commande trop longue après remplacement de l'alias!\n"
     STRING_ASSOC_ERROR "Association de fichier introuvable pour l'extension %s\n"
     STRING_BATCH_ERROR "Erreur à l'ouverture du fichier batch\n"
-    STRING_CHOICE_ERROR "Option invalide. Format attendu : /C[:]options"
-    STRING_CHOICE_ERROR_TXT "Option invalide. Format attendu : /T[:]c,nn"
-    STRING_CHOICE_ERROR_OPTION "Option invalide : %s"
+    STRING_CHOICE_ERROR "Option invalide. Format attendu : /C[:]options\n"
+    STRING_CHOICE_ERROR_TXT "Option invalide. Format attendu : /T[:]c,nn\n"
+    STRING_CHOICE_ERROR_OPTION "Option invalide : %s\n"
     STRING_CMD_ERROR1 "Ne peut rediriger l'entrée depuis le fichier %s\n"
     STRING_CMD_ERROR2 "Erreur à la création du fichier temporaire pour les données du pipe\n"
     STRING_CMD_ERROR3 "Ne peut rediriger vers le fichier %s\n"
@@ -511,9 +511,9 @@ titre         titre de la fenêtre"
     STRING_FOR_ERROR4 "pas de commande après 'do'."
     STRING_FREE_ERROR1 "Lecteur invalide"
     STRING_FREE_ERROR2 "sans nom"
-    STRING_GOTO_ERROR1 "Pas de label indiqué pour GOTO"
+    STRING_GOTO_ERROR1 "Pas de label indiqué pour GOTO\n"
     STRING_GOTO_ERROR2 "Label '%s' introuvable\n"
-    STRING_MD_ERROR "Un sous répertoire ou un fichier existe déjà.\n"
+    STRING_MD_ERROR "Un sous-répertoire ou un fichier %s existe déjà.\n"
     STRING_MD_ERROR2 "Le chemin vers le nouveau répertoire n'existe pas.\n"
     STRING_MOVE_ERROR1 "[OK]\n"
     STRING_MOVE_ERROR2 "[Erreur]\n"
@@ -532,9 +532,9 @@ titre         titre de la fenêtre"
     STRING_ERROR_BADCOMMAND "Commande ou nom de fichier inconnu - %s\n"
     STRING_ERROR_OUT_OF_MEMORY "Pas assez de mémoire.\n"
     STRING_ERROR_CANNOTPIPE "Erreur ! Impossible de chaîner ! Échec à l'ouverture du fichier temporaire!\n"
-    STRING_ERROR_D_PAUSEMSG "Appuyez sur une touche pour continuer . . ."
+    STRING_ERROR_D_PAUSEMSG "Appuyez sur une touche pour continuer . . . "
     STRING_ERROR_DRIVER_NOT_READY "Lecteur non prêt"
-    STRING_PATH_ERROR "CMD : Pas dans l'environnement '%s'\n"
+    STRING_SET_ENV_ERROR "Variable d'environnement '%s' non définie\n"
     STRING_REPLACE_ERROR1 "Commutateur invalide - %s\n"
     STRING_REPLACE_ERROR2 "Chemin introuvable - %s\n"
     STRING_REPLACE_ERROR3 "La syntaxe du nom de fichier, du répertoire, ou du nom de volume est incorrecte.\n"
@@ -558,8 +558,8 @@ titre         titre de la fenêtre"
     STRING_MKLINK_CREATED_JUNCTION "Jonction créée pour %s <<===>> %s\n"
     STRING_MORE "Plus ? "
     STRING_CANCEL_BATCH_FILE "\r\nAppui sur Ctrl-Break. Terminer le programme batch ? (Oui/Non/Tous) "
-    STRING_INVALID_OPERAND "Opérande invalide."
-    STRING_EXPECTED_CLOSE_PAREN "Attendu ')'."
-    STRING_EXPECTED_NUMBER_OR_VARIABLE "Attendu nombre ou nom de variable."
-    STRING_SYNTAX_COMMAND_INCORRECT "La syntaxe de la commande est incorrecte."
+    STRING_INVALID_OPERAND "Opérande invalide.\n"
+    STRING_EXPECTED_CLOSE_PAREN "Attendu ')'.\n"
+    STRING_EXPECTED_NUMBER_OR_VARIABLE "Attendu nombre ou nom de variable.\n"
+    STRING_SYNTAX_COMMAND_INCORRECT "La syntaxe de la commande est incorrecte.\n"
 END

@@ -27,6 +27,14 @@
 #define IDS_TIME_INTERVAL_HOURS 65
 #define IDS_TIME_INTERVAL_MINUTES 66
 #define IDS_TIME_INTERVAL_SECONDS 67
+#ifdef __REACTOS__
+#define IDS_KB_FORMAT 68
+#define IDS_MB_FORMAT 69
+#define IDS_GB_FORMAT 70
+#define IDS_TB_FORMAT 71
+#define IDS_PB_FORMAT 72
+#define IDS_EB_FORMAT 73
+#endif
 
 /* These numbers match native IDs and shouldn't be arbitrarily changed */
 #define IDD_ERR_DIALOG    0x1200

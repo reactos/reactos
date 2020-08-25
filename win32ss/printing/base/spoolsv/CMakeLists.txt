@@ -18,6 +18,7 @@ list(APPEND SOURCE
     printproviders.c
     rpcserver.c
     rpcstubs.c
+    spoolfile.c
     xcv.c
     ${CMAKE_CURRENT_BINARY_DIR}/winspool_s.c)
 

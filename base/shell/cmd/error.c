@@ -36,8 +36,6 @@ ErrorMessage(
     if (dwErrorCode == ERROR_SUCCESS)
         return;
 
-    nErrorLevel = 1;
-
     *szMessage = 0;
     if (szFormat)
     {
@@ -46,11 +44,11 @@ ErrorMessage(
         va_end(arg_ptr);
     }
 
-    if (FormatMessage (FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER,
-                       NULL, dwErrorCode, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-                       (LPTSTR)&szError, 0, NULL))
+    if (FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER,
+                      NULL, dwErrorCode, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+                      (LPTSTR)&szError, 0, NULL))
     {
-        ConErrPrintf(_T("%s %s\n"), szError, szMessage);
+        ConErrPrintf(_T("%s%s%s"), szError, szMessage, (*szMessage ? _T("\n") : _T("")));
         if (szError)
             LocalFree(szError);
         return;

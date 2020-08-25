@@ -75,17 +75,26 @@ static struct appbar_data* get_appbar(HWND hwnd)
     return NULL;
 }
 
+void appbar_notify_all(HMONITOR hMon, UINT uMsg, HWND hwndExclude, LPARAM lParam)
+{
+    struct appbar_data* data;
+
+    LIST_FOR_EACH_ENTRY(data, &appbars, struct appbar_data, entry)
+    {
+        if (data->hwnd == hwndExclude)
+            continue;
+
+        if (hMon && hMon != MonitorFromWindow(data->hwnd, MONITOR_DEFAULTTONULL))
+            continue;
+
+        SendMessageW(data->hwnd, data->callback_msg, uMsg, lParam);
+    }
+}
+
 /* send_poschanged: send ABN_POSCHANGED to every appbar except one */
 static void send_poschanged(HWND hwnd)
 {
-    struct appbar_data* data;
-    LIST_FOR_EACH_ENTRY(data, &appbars, struct appbar_data, entry)
-    {
-        if (data->hwnd != hwnd)
-        {
-            PostMessageW(data->hwnd, data->callback_msg, ABN_POSCHANGED, 0);
-        }
-    }
+    appbar_notify_all(NULL, ABN_POSCHANGED, hwnd, 0);
 }
 
 /* appbar_cliprect: cut out parts of the rectangle that interfere with existing appbars */

@@ -32,7 +32,7 @@
 
 #include "precomp.h"
 
-static INT GenericCmp(INT (*StringCmp)(LPCTSTR, LPCTSTR),
+static INT GenericCmp(INT (WINAPI *StringCmp)(LPCTSTR, LPCTSTR),
                       LPCTSTR Left, LPCTSTR Right)
 {
     TCHAR *end;
@@ -49,17 +49,17 @@ static INT GenericCmp(INT (*StringCmp)(LPCTSTR, LPCTSTR),
     return StringCmp(Left, Right);
 }
 
-INT cmd_if (LPTSTR param)
+INT cmd_if(LPTSTR param)
 {
-    TRACE ("cmd_if: (\'%s\')\n", debugstr_aw(param));
+    TRACE("cmd_if(\'%s\')\n", debugstr_aw(param));
 
     if (!_tcsncmp (param, _T("/?"), 2))
     {
-        ConOutResPaging(TRUE,STRING_IF_HELP1);
+        ConOutResPaging(TRUE, STRING_IF_HELP1);
         return 0;
     }
 
-    error_syntax(param);
+    ParseErrorEx(param);
     return 1;
 }
 
@@ -82,7 +82,7 @@ INT ExecuteIf(PARSED_COMMAND *Cmd)
         return 1;
     }
 
-    if (Cmd->If.Operator == IF_CMDEXTVERSION)
+    if (bEnableExtensions && (Cmd->If.Operator == IF_CMDEXTVERSION))
     {
         /* IF CMDEXTVERSION n: check if Command Extensions version
          * is greater or equal to n */
@@ -93,9 +93,9 @@ INT ExecuteIf(PARSED_COMMAND *Cmd)
             cmd_free(Right);
             return 1;
         }
-        result = (2 >= n);
+        result = (CMDEXTVERSION >= n);
     }
-    else if (Cmd->If.Operator == IF_DEFINED)
+    else if (bEnableExtensions && (Cmd->If.Operator == IF_DEFINED))
     {
         /* IF DEFINED var: check if environment variable exists */
         result = (GetEnvVarOrSpecial(Right) != NULL);
@@ -152,25 +152,31 @@ INT ExecuteIf(PARSED_COMMAND *Cmd)
     }
     else
     {
-        /* Do case-insensitive string comparisons if /I specified */
-        INT (*StringCmp)(LPCTSTR, LPCTSTR) =
-            (Cmd->If.Flags & IFFLAG_IGNORECASE) ? _tcsicmp : _tcscmp;
+        /*
+         * Do case-insensitive string comparisons if /I specified.
+         *
+         * Since both strings are user-specific, use kernel32!lstrcmp(i)
+         * instead of CRT!_tcs(i)cmp, so as to use the correct
+         * current thread locale information.
+         */
+        INT (WINAPI *StringCmp)(LPCTSTR, LPCTSTR) =
+            (Cmd->If.Flags & IFFLAG_IGNORECASE) ? lstrcmpi : lstrcmp;
 
         if (Cmd->If.Operator == IF_STRINGEQ)
         {
             /* IF str1 == str2 */
-            result = StringCmp(Left, Right) == 0;
+            result = (StringCmp(Left, Right) == 0);
         }
-        else
+        else if (bEnableExtensions)
         {
             result = GenericCmp(StringCmp, Left, Right);
             switch (Cmd->If.Operator)
             {
             case IF_EQU: result = (result == 0); break;
             case IF_NEQ: result = (result != 0); break;
-            case IF_LSS: result = (result < 0); break;
+            case IF_LSS: result = (result <  0); break;
             case IF_LEQ: result = (result <= 0); break;
-            case IF_GTR: result = (result > 0); break;
+            case IF_GTR: result = (result >  0); break;
             case IF_GEQ: result = (result >= 0); break;
             }
         }
@@ -181,15 +187,13 @@ INT ExecuteIf(PARSED_COMMAND *Cmd)
 
     if (result ^ ((Cmd->If.Flags & IFFLAG_NEGATE) != 0))
     {
-        /* full condition was true, do the command */
+        /* Full condition was true, do the command */
         return ExecuteCommand(Cmd->Subcommands);
     }
     else
     {
-        /* full condition was false, do the "else" command if there is one */
-        if (Cmd->Subcommands->Next)
-            return ExecuteCommand(Cmd->Subcommands->Next);
-        return 0;
+        /* Full condition was false, do the "else" command if there is one */
+        return ExecuteCommand(Cmd->Subcommands->Next);
     }
 }
 

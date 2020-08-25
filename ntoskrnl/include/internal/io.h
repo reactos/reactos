@@ -539,27 +539,14 @@ typedef enum _SECURITY_DESCRIPTOR_TYPE
 } SECURITY_DESCRIPTOR_TYPE, *PSECURITY_DESCRIPTOR_TYPE;
 
 //
-// Action types and data for IopQueueDeviceAction()
+// Action types and data for PiQueueDeviceAction()
 //
 typedef enum _DEVICE_ACTION
 {
-    DeviceActionInvalidateDeviceRelations,
-    MaxDeviceAction
+    PiActionEnumDeviceTree,
+    PiActionEnumRootDevices,
+    PiActionResetDevice
 } DEVICE_ACTION;
-
-typedef struct _DEVICE_ACTION_DATA
-{
-    LIST_ENTRY RequestListEntry;
-    PDEVICE_OBJECT DeviceObject;
-    DEVICE_ACTION Action;
-    union
-    {
-        struct
-        {
-            DEVICE_RELATION_TYPE Type;
-        } InvalidateDeviceRelations;
-    };
-} DEVICE_ACTION_DATA, *PDEVICE_ACTION_DATA;
 
 //
 // Resource code
@@ -699,11 +686,6 @@ NTSTATUS
 IopActionInitChildServices(
     IN PDEVICE_NODE DeviceNode,
     IN PVOID Context
-);
-
-NTSTATUS
-IopEnumerateDevice(
-    IN PDEVICE_OBJECT DeviceObject
 );
 
 NTSTATUS
@@ -1432,9 +1414,16 @@ IopStoreSystemPartitionInformation(IN PUNICODE_STRING NtSystemPartitionDeviceNam
 // Device action
 //
 VOID
-IopQueueDeviceAction(
-    _In_ PDEVICE_ACTION_DATA ActionData
-);
+PiQueueDeviceAction(
+    _In_ PDEVICE_OBJECT DeviceObject,
+    _In_ DEVICE_ACTION Action,
+    _In_opt_ PKEVENT CompletionEvent,
+    _Out_opt_ NTSTATUS *CompletionStatus);
+
+NTSTATUS
+PiPerformSyncDeviceAction(
+    _In_ PDEVICE_OBJECT DeviceObject,
+    _In_ DEVICE_ACTION Action);
 
 //
 // Global I/O Data

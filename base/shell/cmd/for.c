@@ -34,23 +34,23 @@
 
 
 /* FOR is a special command, so this function is only used for showing help now */
-INT cmd_for (LPTSTR param)
+INT cmd_for(LPTSTR param)
 {
-    TRACE ("cmd_for (\'%s\')\n", debugstr_aw(param));
+    TRACE("cmd_for(\'%s\')\n", debugstr_aw(param));
 
-    if (!_tcsncmp (param, _T("/?"), 2))
+    if (!_tcsncmp(param, _T("/?"), 2))
     {
-        ConOutResPaging(TRUE,STRING_FOR_HELP1);
+        ConOutResPaging(TRUE, STRING_FOR_HELP1);
         return 0;
     }
 
-    error_syntax(param);
+    ParseErrorEx(param);
     return 1;
 }
 
 /* The stack of current FOR contexts.
  * NULL when no FOR command is active */
-LPFOR_CONTEXT fc = NULL;
+PFOR_CONTEXT fc = NULL;
 
 /* Get the next element of the FOR's list */
 static BOOL GetNextElement(TCHAR **pStart, TCHAR **pEnd)
@@ -74,11 +74,12 @@ static BOOL GetNextElement(TCHAR **pStart, TCHAR **pEnd)
     ExecuteCommandWithEcho((Cmd)->Subcommands)
 
 /* Check if this FOR should be terminated early */
-static BOOL Exiting(PARSED_COMMAND *Cmd)
-{
-    /* Someone might have removed our context */
-    return bCtrlBreak || fc != Cmd->For.Context;
-}
+#define Exiting(Cmd) \
+    /* Someone might have removed our context */ \
+    (bCtrlBreak || (fc != (Cmd)->For.Context))
+/* Take also GOTO jumps into account */
+#define ExitingOrGoto(Cmd) \
+    (Exiting(Cmd) || (bc && bc->current == NULL))
 
 /* Read the contents of a text file into memory,
  * dynamically allocating enough space to hold it all */
@@ -116,6 +117,7 @@ static LPTSTR ReadFileContents(FILE *InputFile, TCHAR *Buffer)
     return Contents;
 }
 
+/* FOR /F: Parse the contents of each file */
 static INT ForF(PARSED_COMMAND *Cmd, LPTSTR List, TCHAR *Buffer)
 {
     LPTSTR Delims = _T(" \t");
@@ -248,8 +250,9 @@ static INT ForF(PARSED_COMMAND *Cmd, LPTSTR List, TCHAR *Buffer)
         goto single_element;
     }
 
+    /* Loop over each file */
     End = List;
-    while (GetNextElement(&Start, &End))
+    while (!ExitingOrGoto(Cmd) && GetNextElement(&Start, &End))
     {
         FILE *InputFile;
         LPTSTR FullInput, In, NextLine;
@@ -299,9 +302,9 @@ static INT ForF(PARSED_COMMAND *Cmd, LPTSTR List, TCHAR *Buffer)
         }
 
         /* Loop over the input line by line */
-        In = FullInput;
-        Skip = SkipLines;
-        do
+        for (In = FullInput, Skip = SkipLines;
+             !ExitingOrGoto(Cmd) && (In != NULL);
+             In = NextLine)
         {
             DWORD RemainingTokens = Tokens;
             LPTSTR *CurVar = Variables;
@@ -325,7 +328,7 @@ static INT ForF(PARSED_COMMAND *Cmd, LPTSTR List, TCHAR *Buffer)
                     *CurVar++ = In;
                 /* Find end of token */
                 In += _tcscspn(In, Delims);
-                /* Nul-terminate it and advance to next token */
+                /* NULL-terminate it and advance to next token */
                 if (*In)
                 {
                     *In++ = _T('\0');
@@ -338,7 +341,8 @@ static INT ForF(PARSED_COMMAND *Cmd, LPTSTR List, TCHAR *Buffer)
             /* Don't run unless the line had enough tokens to fill at least one variable */
             if (*Variables[0])
                 Ret = RunInstance(Cmd);
-        } while (!Exiting(Cmd) && (In = NextLine) != NULL);
+        }
+
         cmd_free(FullInput);
     }
 
@@ -352,12 +356,17 @@ static INT ForLoop(PARSED_COMMAND *Cmd, LPTSTR List, TCHAR *Buffer)
     INT params[3] = { 0, 0, 0 };
     INT i;
     INT Ret = 0;
-
     TCHAR *Start, *End = List;
-    for (i = 0; i < 3 && GetNextElement(&Start, &End); i++)
+
+    for (i = 0; i < 3 && GetNextElement(&Start, &End); ++i)
         params[i] = _tcstol(Start, NULL, 0);
 
     i = params[START];
+    /*
+     * Windows' CMD compatibility:
+     * Contrary to the other FOR-loops, FOR /L does not check
+     * whether a GOTO has been done, and will continue to loop.
+     */
     while (!Exiting(Cmd) &&
            (params[STEP] >= 0 ? (i <= params[END]) : (i >= params[END])))
     {
@@ -365,6 +374,7 @@ static INT ForLoop(PARSED_COMMAND *Cmd, LPTSTR List, TCHAR *Buffer)
         Ret = RunInstance(Cmd);
         i += params[STEP];
     }
+
     return Ret;
 }
 
@@ -373,9 +383,10 @@ static INT ForLoop(PARSED_COMMAND *Cmd, LPTSTR List, TCHAR *Buffer)
  * it will be empty, but in FOR /R it will be the directory name. */
 static INT ForDir(PARSED_COMMAND *Cmd, LPTSTR List, TCHAR *Buffer, TCHAR *BufPos)
 {
-    TCHAR *Start, *End = List;
     INT Ret = 0;
-    while (!Exiting(Cmd) && GetNextElement(&Start, &End))
+    TCHAR *Start, *End = List;
+
+    while (!ExitingOrGoto(Cmd) && GetNextElement(&Start, &End))
     {
         if (BufPos + (End - Start) > &Buffer[CMDLINE_LENGTH])
             continue;
@@ -406,7 +417,7 @@ static INT ForDir(PARSED_COMMAND *Cmd, LPTSTR List, TCHAR *Buffer, TCHAR *BufPos
                     continue;
                 _tcscpy(FilePart, w32fd.cFileName);
                 Ret = RunInstance(Cmd);
-            } while (!Exiting(Cmd) && FindNextFile(hFind, &w32fd));
+            } while (!ExitingOrGoto(Cmd) && FindNextFile(hFind, &w32fd));
             FindClose(hFind);
         }
         else
@@ -417,12 +428,12 @@ static INT ForDir(PARSED_COMMAND *Cmd, LPTSTR List, TCHAR *Buffer, TCHAR *BufPos
     return Ret;
 }
 
-/* FOR /R: Process a FOR in each directory of a tree, recursively. */
+/* FOR /R: Process a FOR in each directory of a tree, recursively */
 static INT ForRecursive(PARSED_COMMAND *Cmd, LPTSTR List, TCHAR *Buffer, TCHAR *BufPos)
 {
+    INT Ret = 0;
     HANDLE hFind;
     WIN32_FIND_DATA w32fd;
-    INT Ret = 0;
 
     if (BufPos[-1] != _T('\\'))
     {
@@ -431,6 +442,12 @@ static INT ForRecursive(PARSED_COMMAND *Cmd, LPTSTR List, TCHAR *Buffer, TCHAR *
     }
 
     Ret = ForDir(Cmd, List, Buffer, BufPos);
+
+    /* NOTE (We don't apply Windows' CMD compatibility here):
+     * Windows' CMD does not check whether a GOTO has been done,
+     * and will continue to loop. */
+    if (ExitingOrGoto(Cmd))
+        return Ret;
 
     _tcscpy(BufPos, _T("*"));
     hFind = FindFirstFile(Buffer, &w32fd);
@@ -444,20 +461,26 @@ static INT ForRecursive(PARSED_COMMAND *Cmd, LPTSTR List, TCHAR *Buffer, TCHAR *
             _tcscmp(w32fd.cFileName, _T("..")) == 0)
             continue;
         Ret = ForRecursive(Cmd, List, Buffer, _stpcpy(BufPos, w32fd.cFileName));
-    } while (!Exiting(Cmd) && FindNextFile(hFind, &w32fd));
+
+    /* NOTE (We don't apply Windows' CMD compatibility here):
+     * Windows' CMD does not check whether a GOTO has been done,
+     * and will continue to loop. */
+    } while (!ExitingOrGoto(Cmd) && FindNextFile(hFind, &w32fd));
     FindClose(hFind);
+
     return Ret;
 }
 
 INT
 ExecuteFor(PARSED_COMMAND *Cmd)
 {
+    INT Ret;
+    LPTSTR List;
+    PFOR_CONTEXT lpNew;
     TCHAR Buffer[CMDLINE_LENGTH]; /* Buffer to hold the variable value */
     LPTSTR BufferPtr = Buffer;
-    LPFOR_CONTEXT lpNew;
-    INT Ret;
-    LPTSTR List = DoDelayedExpansion(Cmd->For.List);
 
+    List = DoDelayedExpansion(Cmd->For.List);
     if (!List)
         return 1;
 
@@ -477,19 +500,27 @@ ExecuteFor(PARSED_COMMAND *Cmd)
     Cmd->For.Context = lpNew;
     fc = lpNew;
 
-    if (Cmd->For.Switches & FOR_F)
+    /* Run the extended FOR syntax only if extensions are enabled */
+    if (bEnableExtensions)
     {
-        Ret = ForF(Cmd, List, Buffer);
-    }
-    else if (Cmd->For.Switches & FOR_LOOP)
-    {
-        Ret = ForLoop(Cmd, List, Buffer);
-    }
-    else if (Cmd->For.Switches & FOR_RECURSIVE)
-    {
-        DWORD Len = GetFullPathName(Cmd->For.Params ? Cmd->For.Params : _T("."),
-                                    MAX_PATH, Buffer, NULL);
-        Ret = ForRecursive(Cmd, List, Buffer, &Buffer[Len]);
+        if (Cmd->For.Switches & FOR_F)
+        {
+            Ret = ForF(Cmd, List, Buffer);
+        }
+        else if (Cmd->For.Switches & FOR_LOOP)
+        {
+            Ret = ForLoop(Cmd, List, Buffer);
+        }
+        else if (Cmd->For.Switches & FOR_RECURSIVE)
+        {
+            DWORD Len = GetFullPathName(Cmd->For.Params ? Cmd->For.Params : _T("."),
+                                        MAX_PATH, Buffer, NULL);
+            Ret = ForRecursive(Cmd, List, Buffer, &Buffer[Len]);
+        }
+        else
+        {
+            Ret = ForDir(Cmd, List, Buffer, Buffer);
+        }
     }
     else
     {

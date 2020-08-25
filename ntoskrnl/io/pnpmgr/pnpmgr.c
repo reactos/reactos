@@ -18,6 +18,7 @@
 ERESOURCE PpRegistryDeviceResource;
 KGUARDED_MUTEX PpDeviceReferenceTableLock;
 RTL_AVL_TABLE PpDeviceReferenceTable;
+BOOLEAN PnPBootDriversLoaded;
 
 extern ULONG ExpInitializationPhase;
 
@@ -2474,13 +2475,21 @@ IoInvalidateDeviceRelations(
     IN PDEVICE_OBJECT DeviceObject,
     IN DEVICE_RELATION_TYPE Type)
 {
-    DEVICE_ACTION_DATA ActionData;
+    if (!IopIsValidPhysicalDeviceObject(DeviceObject))
+    {
+        KeBugCheckEx(PNP_DETECTED_FATAL_ERROR, 0x2, (ULONG_PTR)DeviceObject, 0, 0);
+    }
 
-    ActionData.DeviceObject = DeviceObject;
-    ActionData.Action = DeviceActionInvalidateDeviceRelations;
-    ActionData.InvalidateDeviceRelations.Type = Type;
-
-    IopQueueDeviceAction(&ActionData);
+    switch (Type)
+    {
+        case BusRelations:
+            /* Enumerate the device */
+            PiQueueDeviceAction(DeviceObject, PiActionEnumDeviceTree, NULL, NULL);
+            break;
+        default:
+            /* Everything else is not implemented */
+            break;
+    }
 }
 
 /*
@@ -2494,11 +2503,16 @@ IoSynchronousInvalidateDeviceRelations(
 {
     PAGED_CODE();
 
+    if (!IopIsValidPhysicalDeviceObject(DeviceObject))
+    {
+        KeBugCheckEx(PNP_DETECTED_FATAL_ERROR, 0x2, (ULONG_PTR)DeviceObject, 0, 0);
+    }
+
     switch (Type)
     {
         case BusRelations:
             /* Enumerate the device */
-            return IopEnumerateDevice(DeviceObject);
+            return PiPerformSyncDeviceAction(DeviceObject, PiActionEnumDeviceTree);
         case PowerRelations:
              /* Not handled yet */
              return STATUS_NOT_IMPLEMENTED;

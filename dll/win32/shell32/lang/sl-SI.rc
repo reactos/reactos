@@ -109,7 +109,7 @@ BEGIN
     LTEXT "", IDC_BROWSE_FOR_FOLDER_STATUS, 10, 25, 198, 12
     LTEXT "Folder:", IDC_BROWSE_FOR_FOLDER_FOLDER, 10, 152, 40, 12
     CONTROL "", IDC_BROWSE_FOR_FOLDER_TREEVIEW, "SysTreeView32", TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | WS_BORDER | WS_TABSTOP, 12, 38, 194, 105
-    EDITTEXT IDC_BROWSE_FOR_FOLDER_FOLDER_TEXT, 46, 150, 160, 14, WS_BORDER | WS_GROUP | WS_TABSTOP
+    EDITTEXT IDC_BROWSE_FOR_FOLDER_FOLDER_TEXT, 46, 150, 160, 14, ES_AUTOHSCROLL | WS_BORDER | WS_GROUP | WS_TABSTOP
     PUSHBUTTON "&Make New Folder", IDC_BROWSE_FOR_FOLDER_NEW_FOLDER, 12, 174, 77, 14, WS_GROUP | WS_TABSTOP
     DEFPUSHBUTTON "OK", IDOK, 102, 174, 50, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
     PUSHBUTTON "Cancel", IDCANCEL, 156, 174, 50, 14, WS_GROUP | WS_TABSTOP
@@ -709,6 +709,20 @@ BEGIN
     PUSHBUTTON "Change &Icon...", IDC_FOLDERCUST_CHANGE_ICON, 15, 210, 75, 15
 END
 
+IDD_LINK_PROBLEM DIALOGEX 0, 0, 250, 140
+CAPTION "Problem with Shortcut"
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON 0, IDC_LINK_PROBLEM_ICON, 5, 5, 0, 0
+    LTEXT "The item '%s' that this shortcut refers to has been changed or moved, so this shortcut will no longer work properly.", IDC_LINK_PROBLEM_LABEL1, 35, 5, 210, 35
+    LTEXT "Nearest match based on name, type, size, and date:", IDC_LINK_PROBLEM_LABEL2, 35, 45, 210, 35
+    LTEXT "Do you want to fix this shortcut to point to this target or do you just want to delete it?", -1, 35, 85, 210, 30
+    DEFPUSHBUTTON "&Fix it", IDOK, 55, 120, 60, 15, WS_DISABLED
+    PUSHBUTTON "&Delete it", IDYES, 120, 120, 60, 15
+    PUSHBUTTON "Cancel", IDCANCEL, 185, 120, 60, 15
+END
+
 STRINGTABLE
 BEGIN
     /* columns in the shellview */
@@ -983,4 +997,13 @@ BEGIN
     IDS_EDITING_ACTION "Editing action for type: "
     IDS_NO_ICONS "The file '%s' contains no icons.\n\nChoose an icon from the list or specify a different file."
     IDS_FILE_NOT_FOUND "The file '%s' was not found."
+    IDS_LINK_INVALID "The item '%s' that this shortcut refers to has been changed or moved, so this shortcut will no longer work properly."
+    IDS_COPYTOMENU "Copy to &folder..."
+    IDS_COPYTOTITLE "Select the place where you want to copy '%s'. Then click the Copy button."
+    IDS_COPYITEMS "Copy Items"
+    IDS_COPYBUTTON "Copy"
+    IDS_MOVETOMENU "Mo&ve to folder..."
+    IDS_MOVETOTITLE "Select the place where you want to move '%s' to. Then click the Move button."
+    IDS_MOVEITEMS "Move Items"
+    IDS_MOVEBUTTON "Move"
 END

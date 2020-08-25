@@ -28,10 +28,13 @@
 #include "cmdver.h"
 #include "cmddbg.h"
 
-#define BREAK_BATCHFILE 1
-#define BREAK_OUTOFBATCH 2
-#define BREAK_INPUT 3
-#define BREAK_IGNORE 4
+/* Version of the Command Extensions */
+#define CMDEXTVERSION   2
+
+#define BREAK_BATCHFILE     1
+#define BREAK_OUTOFBATCH    2 /* aka. BREAK_ENDOFBATCHFILES */
+#define BREAK_INPUT         3
+#define BREAK_IGNORE        4
 
 /* define some error messages */
 #define D_ON         _T("on")
@@ -232,11 +235,21 @@ INT CommandHistory(LPTSTR param);
 #endif
 
 /* Prototypes for IF.C */
-#define IFFLAG_NEGATE 1     /* NOT */
-#define IFFLAG_IGNORECASE 2 /* /I  */
-enum { IF_CMDEXTVERSION, IF_DEFINED, IF_ERRORLEVEL, IF_EXIST,
-       IF_STRINGEQ,         /* == */
-       IF_EQU, IF_GTR, IF_GEQ, IF_LSS, IF_LEQ, IF_NEQ };
+#define IFFLAG_NEGATE     1 /* NOT */
+#define IFFLAG_IGNORECASE 2 /* /I - Extended */
+enum {
+    /** Unary operators **/
+    /* Standard */
+    IF_ERRORLEVEL, IF_EXIST,
+    /* Extended */
+    IF_CMDEXTVERSION, IF_DEFINED,
+
+    /** Binary operators **/
+    /* Standard */
+    IF_STRINGEQ,    /* == */
+    /* Extended */
+    IF_EQU, IF_NEQ, IF_LSS, IF_LEQ, IF_GTR, IF_GEQ
+};
 INT ExecuteIf(struct _PARSED_COMMAND *Cmd);
 
 /* Prototypes for INTERNAL.C */
@@ -269,7 +282,12 @@ INT CommandMemory (LPTSTR);
 INT cmd_mklink(LPTSTR);
 
 /* Prototypes for MISC.C */
-INT GetRootPath(TCHAR *InPath,TCHAR *OutPath,INT size);
+INT
+GetRootPath(
+    IN LPCTSTR InPath,
+    OUT LPTSTR OutPath,
+    IN INT size);
+
 BOOL SetRootPath(TCHAR *oldpath,TCHAR *InPath);
 TCHAR  cgetchar (VOID);
 BOOL   CheckCtrlBreak (INT);
@@ -282,7 +300,6 @@ VOID   StripQuotes(LPTSTR);
 BOOL   IsValidPathName (LPCTSTR);
 BOOL   IsExistingFile (LPCTSTR);
 BOOL   IsExistingDirectory (LPCTSTR);
-BOOL   FileGetString (HANDLE, LPTSTR, INT);
 VOID   GetPathCase(TCHAR *, TCHAR *);
 
 #define PROMPT_NO    0
@@ -301,7 +318,11 @@ INT cmd_move (LPTSTR);
 INT CommandMsgbox (LPTSTR);
 
 /* Prototypes from PARSER.C */
-enum { C_COMMAND, C_QUIET, C_BLOCK, C_MULTI, C_IFFAILURE, C_IFSUCCESS, C_PIPE, C_IF, C_FOR };
+
+/* These three characters act like spaces to the parser in most contexts */
+#define STANDARD_SEPS _T(",;=")
+
+enum { C_COMMAND, C_QUIET, C_BLOCK, C_MULTI, C_OR, C_AND, C_PIPE, C_IF, C_FOR };
 typedef struct _PARSED_COMMAND
 {
     struct _PARSED_COMMAND *Subcommands;
@@ -328,14 +349,19 @@ typedef struct _PARSED_COMMAND
             TCHAR Variable;
             LPTSTR Params;
             LPTSTR List;
-            struct tagFORCONTEXT *Context;
+            struct _FOR_CONTEXT *Context;
         } For;
     };
 } PARSED_COMMAND;
+
 PARSED_COMMAND *ParseCommand(LPTSTR Line);
 VOID EchoCommand(PARSED_COMMAND *Cmd);
 TCHAR *Unparse(PARSED_COMMAND *Cmd, TCHAR *Out, TCHAR *OutEnd);
 VOID FreeCommand(PARSED_COMMAND *Cmd);
+
+void ParseErrorEx(LPTSTR s);
+extern BOOL bParseError;
+extern TCHAR ParseLine[CMDLINE_LENGTH];
 
 /* Prototypes from PATH.C */
 INT cmd_path (LPTSTR);

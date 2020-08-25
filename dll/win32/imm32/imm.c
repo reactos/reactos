@@ -22,6 +22,9 @@
 #include <stdarg.h>
 #include <stdio.h>
 
+#ifdef __REACTOS__
+#define WIN32_NO_STATUS
+#endif
 #include "windef.h"
 #include "winbase.h"
 #include "wingdi.h"
@@ -33,6 +36,11 @@
 #include "winnls.h"
 #include "winreg.h"
 #include "wine/list.h"
+#ifdef __REACTOS__
+#include <ndk/umtypes.h>
+#include <ndk/pstypes.h>
+#include "../../../win32ss/include/ntuser.h"
+#endif
 
 WINE_DEFAULT_DEBUG_CHANNEL(imm);
 
@@ -2668,9 +2676,14 @@ HWND WINAPI ImmCreateSoftKeyboard(UINT uType, UINT hOwner, int x, int y)
  */
 BOOL WINAPI ImmDestroySoftKeyboard(HWND hSoftWnd)
 {
+#ifdef __REACTOS__
+    TRACE("(%p)\n", hSoftWnd);
+    return DestroyWindow(hSoftWnd);
+#else
     FIXME("(%p): stub\n", hSoftWnd);
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return FALSE;
+#endif
 }
 
 /***********************************************************************
@@ -2678,8 +2691,14 @@ BOOL WINAPI ImmDestroySoftKeyboard(HWND hSoftWnd)
  */
 BOOL WINAPI ImmShowSoftKeyboard(HWND hSoftWnd, int nCmdShow)
 {
+#ifdef __REACTOS__
+    TRACE("(%p, %d)\n", hSoftWnd, nCmdShow);
+    if (hSoftWnd)
+        return ShowWindow(hSoftWnd, nCmdShow);
+#else
     FIXME("(%p, %d): stub\n", hSoftWnd, nCmdShow);
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
+#endif
     return FALSE;
 }
 
@@ -3160,11 +3179,25 @@ BOOL WINAPI ImmEnumInputContext(DWORD idThread, IMCENUMPROC lpfn, LPARAM lParam)
  *              ImmGetHotKey(IMM32.@)
  */
 
+#ifdef __REACTOS__
+BOOL WINAPI
+ImmGetHotKey(IN DWORD dwHotKey,
+             OUT LPUINT lpuModifiers,
+             OUT LPUINT lpuVKey,
+             OUT LPHKL lphKL)
+{
+    TRACE("%lx, %p, %p, %p\n", dwHotKey, lpuModifiers, lpuVKey, lphKL);
+    if (lpuModifiers && lpuVKey)
+        return NtUserGetImeHotKey(dwHotKey, lpuModifiers, lpuVKey, lphKL);
+    return FALSE;
+}
+#else
 BOOL WINAPI ImmGetHotKey(DWORD hotkey, UINT *modifiers, UINT *key, HKL hkl)
 {
     FIXME("%x, %p, %p, %p: stub\n", hotkey, modifiers, key, hkl);
     return FALSE;
 }
+#endif
 
 /***********************************************************************
  *              ImmDisableLegacyIME(IMM32.@)
@@ -3174,3 +3207,66 @@ BOOL WINAPI ImmDisableLegacyIME(void)
     FIXME("stub\n");
     return TRUE;
 }
+
+#ifdef __REACTOS__
+/***********************************************************************
+ *              ImmSetActiveContext(IMM32.@)
+ */
+BOOL WINAPI ImmSetActiveContext(HWND hwnd, HIMC hIMC, BOOL fFlag)
+{
+    FIXME("(%p, %p, %d): stub\n", hwnd, hIMC, fFlag);
+    return FALSE;
+}
+
+/***********************************************************************
+ *              ImmSetActiveContextConsoleIME(IMM32.@)
+ */
+BOOL WINAPI ImmSetActiveContextConsoleIME(HWND hwnd, BOOL fFlag)
+{
+    HIMC hIMC;
+    TRACE("(%p, %d)\n", hwnd, fFlag);
+
+    hIMC = ImmGetContext(hwnd);
+    if (hIMC)
+        return ImmSetActiveContext(hwnd, hIMC, fFlag);
+    return FALSE;
+}
+
+/***********************************************************************
+*		ImmRegisterClient(IMM32.@)
+*       ( Undocumented, called from user32.dll )
+*/
+BOOL WINAPI ImmRegisterClient(PVOID ptr, /* FIXME: should point to SHAREDINFO structure */
+                              HINSTANCE hMod)
+{
+    FIXME("Stub\n");
+    return TRUE;
+}
+
+/***********************************************************************
+ *              ImmGetImeInfoEx (IMM32.@)
+ */
+BOOL WINAPI
+ImmGetImeInfoEx(PIMEINFOEX pImeInfoEx,
+                IMEINFOEXCLASS SearchType,
+                PVOID pvSearchKey)
+{
+    switch (SearchType)
+    {
+        case ImeInfoExKeyboardLayout:
+            pImeInfoEx->hkl = *(LPHKL)pvSearchKey;
+            if (!IS_IME_HKL(pImeInfoEx->hkl))
+                return FALSE;
+            break;
+
+        case ImeInfoExImeFileName:
+            lstrcpynW(pImeInfoEx->wszImeFile, (LPWSTR)pvSearchKey,
+                      ARRAY_SIZE(pImeInfoEx->wszImeFile));
+            break;
+
+        default:
+            return FALSE;
+    }
+    return NtUserGetImeInfoEx(pImeInfoEx, SearchType);
+}
+#endif

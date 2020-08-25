@@ -38,6 +38,9 @@
 #include "pidl.h"
 #include "shell32_main.h"
 #include "shresdef.h"
+#ifdef __REACTOS__
+    #include <shlwapi.h>
+#endif
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
@@ -961,13 +964,28 @@ cleanup:
 static BOOL BrsFolder_OnCommand( browse_info *info, UINT id )
 {
     LPBROWSEINFOW lpBrowseInfo = info->lpBrowseInfo;
+#ifdef __REACTOS__
+    WCHAR szPath[MAX_PATH];
+#endif
 
     switch (id)
     {
     case IDOK:
 #ifdef __REACTOS__
+        /* Get the text */
+        GetDlgItemTextW(info->hWnd, IDC_BROWSE_FOR_FOLDER_FOLDER_TEXT, szPath, _countof(szPath));
+        StrTrimW(szPath, L" \t");
+
         /* The original pidl is owned by the treeview and will be free'd. */
-        info->pidlRet = ILClone(info->pidlRet);
+        if (!PathIsRelativeW(szPath) && PathIsDirectoryW(szPath))
+        {
+            /* It's valid path */
+            info->pidlRet = ILCreateFromPathW(szPath);
+        }
+        else
+        {
+            info->pidlRet = ILClone(info->pidlRet);
+        }
 #endif
         if (info->pidlRet == NULL) /* A null pidl would mean a cancel */
             info->pidlRet = _ILCreateDesktop();
@@ -1013,6 +1031,14 @@ static BOOL BrsFolder_OnSetExpanded(browse_info *info, LPVOID selection,
         if (FAILED(hr)) 
             goto done;
     }
+#ifdef __REACTOS__
+    if (_ILIsDesktop(pidlSelection))
+    {
+        item.hItem = TVI_ROOT;
+        bResult = TRUE;
+        goto done;
+    }
+#endif
 
     /* Move pidlCurrent behind the SHITEMIDs in pidlSelection, which are the root of
      * the sub-tree currently displayed. */

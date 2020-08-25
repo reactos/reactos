@@ -7,28 +7,30 @@
 
 LANGUAGE LANG_GERMAN, SUBLANG_NEUTRAL
 
-IDD_PROPPAGEDESTINATION DIALOGEX 0, 0, 235, 156
+IDD_PROPPAGEDESTINATION DIALOGEX 0, 0, 260, 156
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Ziel auswählen"
 FONT 8, "MS Shell Dlg", 400, 0, 0x0
 BEGIN
-    LTEXT           "Wählen Sie ein Ziel zum Extahieren der Dateien.",IDC_STATIC,6,12,174,8
-    EDITTEXT        IDC_DIRECTORY,6,24,222,12,ES_AUTOHSCROLL
-    PUSHBUTTON      "Durchsuchen...",IDC_BROWSE,174,42,54,14
-    PUSHBUTTON      "Kennwort",IDC_PASSWORD,174,66,54,14
-    LTEXT           "Klicken Sie auf 'Weiter' um zu extrahieren",IDC_STATUSTEXT,6,114,150,8
-    CONTROL         "",IDC_PROGRESS,"msctls_progress32",WS_BORDER,6,126,222,6
+    LTEXT           "Wählen Sie ein Ziel zum Extahieren der Dateien",IDC_STATIC,86,12,157,8
+    EDITTEXT        IDC_DIRECTORY,86,24,157,12,ES_AUTOHSCROLL
+    PUSHBUTTON      "Durchsuchen...",IDC_BROWSE,186,42,57,14
+    PUSHBUTTON      "Kennwort",IDC_PASSWORD,186,66,57,14
+    LTEXT           "Klicken Sie auf 'Weiter' um zu extrahieren",IDC_STATUSTEXT,86,114,150,8
+    CONTROL         "",IDC_PROGRESS,"msctls_progress32",WS_BORDER,86,126,157,6
+    CONTROL         IDB_ZIPFLDR,-1,"STATIC",SS_BITMAP | WS_CHILD | WS_VISIBLE,0,0,78,138
 END
 
-IDD_PROPPAGECOMPLETE DIALOGEX 0, 0, 235, 156
+IDD_PROPPAGECOMPLETE DIALOGEX 0, 0, 260, 156
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Extrahieren abgeschlossen"
 FONT 8, "MS Shell Dlg", 400, 0, 0x0
 BEGIN
-    LTEXT           "Die Dateien wurden in das folgende Verzeichnis extrahiert:",IDC_STATIC,6,12,222,18
-    LTEXT           "Zielverzeichnis",IDC_DESTDIR,6,36,222,8
-    CONTROL         "Extrahierte Dateien anzeigen",IDC_SHOW_EXTRACTED,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,66,105,10
-    LTEXT           "Klicken Sie auf 'Fertig' um fortzufahren.",IDC_STATIC,6,84,174,8
+    LTEXT           "Die Dateien wurden in das folgende Verzeichnis extrahiert:",IDC_STATIC,86,12,157,18
+    LTEXT           "%s",IDC_DESTDIR,86,36,157,8
+    CONTROL         "Extrahierte Dateien anzeigen",IDC_SHOW_EXTRACTED,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,86,66,105,10
+    LTEXT           "Klicken Sie auf 'Fertig' um fortzufahren.",IDC_STATIC,86,84,134,8
+    CONTROL         IDB_ZIPFLDR,-1,"STATIC",SS_BITMAP | WS_CHILD | WS_VISIBLE,0,0,78,138
 END
 
 IDD_CONFIRM_FILE_REPLACE DIALOGEX 0, 0, 273, 56

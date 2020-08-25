@@ -31,7 +31,7 @@ BEGIN
         MENUITEM "S&ymbolleisten fixieren", IDM_TOOLBARS_LOCKTOOLBARS, MFT_STRING, MFS_ENABLED
         MENUITEM "&Anpassen...", IDM_TOOLBARS_CUSTOMIZE, MFT_STRING, MFS_ENABLED
         MENUITEM "Symboltitel", IDM_TOOLBARS_TEXTLABELS, MFT_STRING, MFS_ENABLED
-        MENUITEM "Schaltfläche Wechseln zu", IDM_TOOLBARS_GOBUTTON, MFT_STRING, MFS_ENABLED
+        MENUITEM "Schaltfläche ""Wechseln zu""", IDM_TOOLBARS_GOBUTTON, MFT_STRING, MFS_ENABLED
     END
 END
 
@@ -263,9 +263,9 @@ STRINGTABLE
 BEGIN
     9505 "Zeigt oder versteckt Symbolleisten."
     9506 "Zeigt oder versteckt die Statusleiste."
-    9508 "Zeigt oder versteckt die Standardschaltfächensymbole."
+    9508 "Zeigt oder versteckt die Standardschaltflächensymbole."
     9509 "Zeigt die Adressleiste."
-    9510 "Zeigt die Quick Links Leiste."
+    9510 "Zeigt die Quick-Links-Leiste."
     9516 "Fixiert Größe und Position der Symbolleisten."
 END
 

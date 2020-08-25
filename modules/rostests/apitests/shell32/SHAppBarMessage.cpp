@@ -962,16 +962,22 @@ protected:
         m_fMoving = FALSE;
     }
 
+    void GetWorkArea(LPRECT prc) const
+    {
+        SystemParametersInfoW(SPI_GETWORKAREA, 0, prc, 0);
+    }
+
 public:
     void DoAction()
     {
 #define INTERVAL 250
         POINT pt;
-        RECT rc1, rc2;
+        RECT rc1, rc2, rcWork;
         DWORD dwTID = GetWindowThreadProcessId(s_hwnd1, NULL);
 
         GetWindowRect(s_hwnd1, &rc1);
         GetWindowRect(s_hwnd2, &rc2);
+        GetWorkArea(&rcWork);
         ok_long(rc1.left, s_rcWorkArea.left);
         ok_long(rc1.top, s_rcWorkArea.top);
         ok_long(rc1.right, s_rcWorkArea.right);
@@ -980,36 +986,60 @@ public:
         ok_long(rc2.top, s_rcWorkArea.top + 80);
         ok_long(rc2.right, s_rcWorkArea.right);
         ok_long(rc2.bottom, s_rcWorkArea.top + 110);
+        ok_long(rcWork.left, s_rcWorkArea.left);
+        ok_long(rcWork.top, s_rcWorkArea.top + 110);
+        ok_long(rcWork.right, s_rcWorkArea.right);
+        ok_long(rcWork.bottom, s_rcWorkArea.bottom);
         PostMessage(s_hwnd1, WM_CLOSE, 0, 0);
         Sleep(INTERVAL);
 
         GetWindowRect(s_hwnd2, &rc2);
+        GetWorkArea(&rcWork);
         ok_long(rc2.left, s_rcWorkArea.left);
         ok_long(rc2.top, s_rcWorkArea.top);
         ok_long(rc2.right, s_rcWorkArea.right);
         ok_long(rc2.bottom, s_rcWorkArea.top + 30);
+        ok_long(rcWork.left, s_rcWorkArea.left);
+        ok_long(rcWork.top, s_rcWorkArea.top + 30);
+        ok_long(rcWork.right, s_rcWorkArea.right);
+        ok_long(rcWork.bottom, s_rcWorkArea.bottom);
         AppBar_SetSide(s_hwnd2, ABE_LEFT);
         Sleep(INTERVAL);
 
         GetWindowRect(s_hwnd2, &rc2);
+        GetWorkArea(&rcWork);
         ok_long(rc2.left, s_rcWorkArea.left);
         ok_long(rc2.top, s_rcWorkArea.top);
         ok_long(rc2.right, s_rcWorkArea.left + 30);
+        ok_long(rcWork.left, s_rcWorkArea.left + 30);
+        ok_long(rcWork.top, s_rcWorkArea.top);
+        ok_long(rcWork.right, s_rcWorkArea.right);
+        ok_long(rcWork.bottom, s_rcWorkArea.bottom);
         AppBar_SetSide(s_hwnd2, ABE_TOP);
         Sleep(INTERVAL);
 
         GetWindowRect(s_hwnd2, &rc2);
+        GetWorkArea(&rcWork);
         ok_long(rc2.left, s_rcWorkArea.left);
         ok_long(rc2.top, s_rcWorkArea.top);
         ok_long(rc2.right, s_rcWorkArea.right);
         ok_long(rc2.bottom, s_rcWorkArea.top + 30);
+        ok_long(rcWork.left, s_rcWorkArea.left);
+        ok_long(rcWork.top, s_rcWorkArea.top + 30);
+        ok_long(rcWork.right, s_rcWorkArea.right);
+        ok_long(rcWork.bottom, s_rcWorkArea.bottom);
         AppBar_SetSide(s_hwnd2, ABE_RIGHT);
         Sleep(INTERVAL);
 
         GetWindowRect(s_hwnd2, &rc2);
+        GetWorkArea(&rcWork);
         ok_long(rc2.left, s_rcWorkArea.right - 30);
         ok_long(rc2.top, s_rcWorkArea.top);
         ok_long(rc2.right, s_rcWorkArea.right);
+        ok_long(rcWork.left, s_rcWorkArea.left);
+        ok_long(rcWork.top, s_rcWorkArea.top);
+        ok_long(rcWork.right, s_rcWorkArea.right - 30);
+        ok_long(rcWork.bottom, s_rcWorkArea.bottom);
         Sleep(INTERVAL);
 
         GetWindowRect(s_hwnd2, &rc2);
@@ -1027,9 +1057,14 @@ public:
         Sleep(INTERVAL);
 
         GetWindowRect(s_hwnd2, &rc2);
+        GetWorkArea(&rcWork);
         ok_long(rc2.left, s_rcWorkArea.left);
         ok_long(rc2.top, s_rcWorkArea.top);
         ok_long(rc2.right, s_rcWorkArea.left + 30);
+        ok_long(rcWork.left, s_rcWorkArea.left + 30);
+        ok_long(rcWork.top, s_rcWorkArea.top);
+        ok_long(rcWork.right, s_rcWorkArea.right);
+        ok_long(rcWork.bottom, s_rcWorkArea.bottom);
         Sleep(INTERVAL);
 
         GetWindowRect(s_hwnd2, &rc2);
@@ -1047,12 +1082,25 @@ public:
         Sleep(INTERVAL);
 
         GetWindowRect(s_hwnd2, &rc2);
+        GetWorkArea(&rcWork);
         ok_long(rc2.left, s_rcWorkArea.right - 30);
         ok_long(rc2.top, s_rcWorkArea.top);
         ok_long(rc2.right, s_rcWorkArea.right);
+        ok_long(rcWork.left, s_rcWorkArea.left);
+        ok_long(rcWork.top, s_rcWorkArea.top);
+        ok_long(rcWork.right, s_rcWorkArea.right - 30);
+        ok_long(rcWork.bottom, s_rcWorkArea.bottom);
         Sleep(INTERVAL);
 
-        PostMessage(s_hwnd2, WM_CLOSE, 0, 0);
+        SendMessage(s_hwnd2, WM_CLOSE, 0, 0);
+        Sleep(INTERVAL);
+
+        GetWorkArea(&rcWork);
+        ok_long(rcWork.left, s_rcWorkArea.left);
+        ok_long(rcWork.top, s_rcWorkArea.top);
+        ok_long(rcWork.right, s_rcWorkArea.right);
+        ok_long(rcWork.bottom, s_rcWorkArea.bottom);
+
         PostMessage(s_hwnd2, WM_QUIT, 0, 0);
         PostThreadMessage(dwTID, WM_QUIT, 0, 0);
 #undef INTERVAL

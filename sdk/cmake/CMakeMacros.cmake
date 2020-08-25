@@ -863,6 +863,9 @@ function(create_registry_hives)
     if(SARCH STREQUAL "xbox")
         list(APPEND _livecd_inf_files
             ${CMAKE_SOURCE_DIR}/boot/bootdata/hiveinst_xbox.inf)
+    elseif(SARCH STREQUAL "pc98")
+        list(APPEND _livecd_inf_files
+            ${CMAKE_SOURCE_DIR}/boot/bootdata/hiveinst_pc98.inf)
     else()
         list(APPEND _livecd_inf_files
             ${CMAKE_SOURCE_DIR}/boot/bootdata/hiveinst.inf)

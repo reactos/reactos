@@ -14,9 +14,11 @@ $if (_WDMDDK_)
 #define CONNECT_FULLY_SPECIFIED_GROUP   0x4
 #define CONNECT_CURRENT_VERSION         0x4
 
-#define POOL_COLD_ALLOCATION                256
-#define POOL_QUOTA_FAIL_INSTEAD_OF_RAISE    8
-#define POOL_RAISE_IF_ALLOCATION_FAILURE    16
+#define POOL_QUOTA_FAIL_INSTEAD_OF_RAISE    0x8
+#define POOL_RAISE_IF_ALLOCATION_FAILURE    0x10
+#define POOL_COLD_ALLOCATION                0x100
+#define POOL_NX_ALLOCATION                  0x200
+#define POOL_ZERO_ALLOCATION                0x400
 
 #define IO_TYPE_ADAPTER                 1
 #define IO_TYPE_CONTROLLER              2

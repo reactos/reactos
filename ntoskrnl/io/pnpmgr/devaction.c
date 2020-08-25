@@ -5,6 +5,22 @@
  * COPYRIGHT:   Casper S. Hornstrup (chorns@users.sourceforge.net)
  *              2007 Hervé Poussineau (hpoussin@reactos.org)
  *              2014-2017 Thomas Faber (thomas.faber@reactos.org)
+ *              2020 Victor Perevertkin (victor.perevertkin@reactos.org)
+ */
+
+/* Device tree is a resource shared among all system services: hal, kernel, drivers etc.
+ * Thus all code which interacts with the tree needs to be synchronized.
+ * Here it's done via a list of DEVICE_ACTION_REQUEST structures, which represents
+ * the device action queue. It is being processed exclusively by the PipDeviceActionWorker.
+ *
+ * Operation queuing can be done with the PiQueueDeviceAction function or with
+ * the PiPerfomSyncDeviceAction for synchronous operations.
+ * All device manipulation like starting, removing, enumeration (see DEVICE_ACTION enum)
+ * have to be done with the PiQueueDeviceAction in order to avoid race conditions.
+ *
+ * Note: there is one special operation here - PiActionEnumRootDevices. It is meant to be done
+ * during initialization process (and be the first device tree operation executed) and
+ * is always executed synchronously.
  */
 
 /* INCLUDES ******************************************************************/
@@ -18,6 +34,7 @@
 extern ERESOURCE IopDriverLoadResource;
 extern BOOLEAN PnpSystemInit;
 extern PDEVICE_NODE IopRootDeviceNode;
+extern BOOLEAN PnPBootDriversLoaded;
 
 #define MAX_DEVICE_ID_LEN          200
 #define MAX_SEPARATORS_INSTANCEID  0
@@ -29,6 +46,18 @@ LIST_ENTRY IopDeviceActionRequestList;
 WORK_QUEUE_ITEM IopDeviceActionWorkItem;
 BOOLEAN IopDeviceActionInProgress;
 KSPIN_LOCK IopDeviceActionLock;
+KEVENT PiEnumerationFinished;
+
+/* TYPES *********************************************************************/
+
+typedef struct _DEVICE_ACTION_REQUEST
+{
+    LIST_ENTRY RequestListEntry;
+    PDEVICE_OBJECT DeviceObject;
+    PKEVENT CompletionEvent;
+    NTSTATUS *CompletionStatus;
+    DEVICE_ACTION Action;
+} DEVICE_ACTION_REQUEST, *PDEVICE_ACTION_REQUEST;
 
 /* FUNCTIONS *****************************************************************/
 
@@ -1338,7 +1367,7 @@ IopStartAndEnumerateDevice(IN PDEVICE_NODE DeviceNode)
         (DeviceNode->Flags & DNF_NEED_ENUMERATION_ONLY))
     {
         /* Enumerate us */
-        IoSynchronousInvalidateDeviceRelations(DeviceObject, BusRelations);
+        IoInvalidateDeviceRelations(DeviceObject, BusRelations);
         Status = STATUS_SUCCESS;
     }
     else
@@ -2049,12 +2078,11 @@ IopInitializePnpServices(IN PDEVICE_NODE DeviceNode)
     return IopTraverseDeviceTree(&Context);
 }
 
-
+static
 NTSTATUS
-IopEnumerateDevice(
-    IN PDEVICE_OBJECT DeviceObject)
+PipEnumerateDevice(
+    _In_ PDEVICE_NODE DeviceNode)
 {
-    PDEVICE_NODE DeviceNode = IopGetDeviceNode(DeviceObject);
     DEVICETREE_TRAVERSE_CONTEXT Context;
     PDEVICE_RELATIONS DeviceRelations;
     PDEVICE_OBJECT ChildDeviceObject;
@@ -2064,13 +2092,11 @@ IopEnumerateDevice(
     NTSTATUS Status;
     ULONG i;
 
-    DPRINT("DeviceObject 0x%p\n", DeviceObject);
-
     if (DeviceNode->Flags & DNF_NEED_ENUMERATION_ONLY)
     {
         DeviceNode->Flags &= ~DNF_NEED_ENUMERATION_ONLY;
 
-        DPRINT("Sending GUID_DEVICE_ARRIVAL\n");
+        DPRINT("Sending GUID_DEVICE_ARRIVAL %wZ\n", &DeviceNode->InstancePath);
         IopQueueTargetDeviceEvent(&GUID_DEVICE_ARRIVAL,
                                   &DeviceNode->InstancePath);
     }
@@ -2080,11 +2106,11 @@ IopEnumerateDevice(
     Stack.Parameters.QueryDeviceRelations.Type = BusRelations;
 
     Status = IopInitiatePnpIrp(
-        DeviceObject,
+        DeviceNode->PhysicalDeviceObject,
         &IoStatusBlock,
         IRP_MN_QUERY_DEVICE_RELATIONS,
         &Stack);
-    if (!NT_SUCCESS(Status) || Status == STATUS_PENDING)
+    if (!NT_SUCCESS(Status))
     {
         DPRINT("IopInitiatePnpIrp() failed with status 0x%08lx\n", Status);
         return Status;
@@ -2299,13 +2325,84 @@ cleanup:
 }
 
 static
+NTSTATUS
+PipResetDevice(
+    _In_ PDEVICE_NODE DeviceNode)
+{
+    NTSTATUS Status = STATUS_SUCCESS;
+
+    ASSERT(DeviceNode->Flags & DNF_ENUMERATED);
+    ASSERT(DeviceNode->Flags & DNF_PROCESSED);
+
+    /* Check if there's already a driver loaded for this device */
+    if (DeviceNode->Flags & DNF_ADDED)
+    {
+        /* FIXME: our drivers do not handle device removal well enough */
+#if 0
+        /* Remove the device node */
+        Status = IopRemoveDevice(DeviceNode);
+        if (NT_SUCCESS(Status))
+        {
+            /* Invalidate device relations for the parent to reenumerate the device */
+            DPRINT1("A new driver will be loaded for '%wZ' (FDO above removed)\n", &DeviceNode->InstancePath);
+            Status = IoInvalidateDeviceRelations(DeviceNode->Parent->PhysicalDeviceObject, BusRelations);
+        }
+        else
+#endif
+        {
+            /* A driver has already been loaded for this device */
+            DPRINT("A reboot is required for the current driver for '%wZ' to be replaced\n", &DeviceNode->InstancePath);
+            DeviceNode->Problem = CM_PROB_NEED_RESTART;
+        }
+    }
+    else
+    {
+        /* FIXME: What if the device really is disabled? */
+        DeviceNode->Flags &= ~DNF_DISABLED;
+        DeviceNode->Problem = 0;
+
+        /* Load service data from the registry */
+        Status = IopActionConfigureChildServices(DeviceNode, DeviceNode->Parent);
+
+        if (NT_SUCCESS(Status))
+        {
+            /* Start the service and begin PnP initialization of the device again */
+            DPRINT("A new driver will be loaded for '%wZ' (no FDO above)\n", &DeviceNode->InstancePath);
+            Status = IopActionInitChildServices(DeviceNode, DeviceNode->Parent);
+        }
+    }
+
+    return Status;
+}
+
+#ifdef DBG
+static
+PCSTR
+ActionToStr(
+    _In_ DEVICE_ACTION Action)
+{
+    switch (Action)
+    {
+        case PiActionEnumDeviceTree:
+            return "PiActionEnumDeviceTree";
+        case PiActionEnumRootDevices:
+            return "PiActionEnumRootDevices";
+        case PiActionResetDevice:
+            return "PiActionResetDevice";
+        default:
+            return "(request unknown)";
+    }
+}
+#endif
+
+static
 VOID
 NTAPI
-IopDeviceActionWorker(
-    _In_ PVOID Context)
+PipDeviceActionWorker(
+    _In_opt_ PVOID Context)
 {
     PLIST_ENTRY ListEntry;
-    PDEVICE_ACTION_DATA Data;
+    PDEVICE_ACTION_REQUEST Request;
     KIRQL OldIrql;
 
     KeAcquireSpinLock(&IopDeviceActionLock, &OldIrql);
@@ -2313,63 +2410,134 @@ IopDeviceActionWorker(
     {
         ListEntry = RemoveHeadList(&IopDeviceActionRequestList);
         KeReleaseSpinLock(&IopDeviceActionLock, OldIrql);
-        Data = CONTAINING_RECORD(ListEntry,
-                                 DEVICE_ACTION_DATA,
-                                 RequestListEntry);
+        Request = CONTAINING_RECORD(ListEntry, DEVICE_ACTION_REQUEST, RequestListEntry);
 
-        switch (Data->Action)
+        ASSERT(Request->DeviceObject);
+
+        PDEVICE_NODE deviceNode = IopGetDeviceNode(Request->DeviceObject);
+        ASSERT(deviceNode);
+
+        NTSTATUS status = STATUS_SUCCESS;
+
+        DPRINT("Processing PnP request %p: DeviceObject - %p, Action - %s\n",
+               Request, Request->DeviceObject, ActionToStr(Request->Action));
+
+        switch (Request->Action)
         {
-            case DeviceActionInvalidateDeviceRelations:
-                IoSynchronousInvalidateDeviceRelations(Data->DeviceObject,
-                                                       Data->InvalidateDeviceRelations.Type);
+            case PiActionEnumRootDevices:
+            case PiActionEnumDeviceTree:
+                status = PipEnumerateDevice(deviceNode);
+                break;
+
+            case PiActionResetDevice:
+                status = PipResetDevice(deviceNode);
                 break;
 
             default:
-                DPRINT1("Unimplemented device action %u\n", Data->Action);
+                DPRINT1("Unimplemented device action %u\n", Request->Action);
+                status = STATUS_NOT_IMPLEMENTED;
                 break;
         }
 
-        ObDereferenceObject(Data->DeviceObject);
-        ExFreePoolWithTag(Data, TAG_IO);
+        if (Request->CompletionStatus)
+        {
+            *Request->CompletionStatus = status;
+        }
+
+        if (Request->CompletionEvent)
+        {
+            KeSetEvent(Request->CompletionEvent, IO_NO_INCREMENT, FALSE);
+        }
+
+        DPRINT("Finished processing PnP request %p\n", Request);
+        ObDereferenceObject(Request->DeviceObject);
+        ExFreePoolWithTag(Request, TAG_IO);
         KeAcquireSpinLock(&IopDeviceActionLock, &OldIrql);
     }
     IopDeviceActionInProgress = FALSE;
+    KeSetEvent(&PiEnumerationFinished, IO_NO_INCREMENT, FALSE);
     KeReleaseSpinLock(&IopDeviceActionLock, OldIrql);
 }
 
+/**
+ * @brief      Queue a device operation to a worker thread.
+ *
+ * @param[in]  DeviceObject      The device object
+ * @param[in]  Action            The action
+ * @param[in]  CompletionEvent   The completion event object (optional)
+ * @param[out] CompletionStatus  Status returned be the action will be written here
+ */
+
 VOID
-IopQueueDeviceAction(
-    _In_ PDEVICE_ACTION_DATA ActionData)
+PiQueueDeviceAction(
+    _In_ PDEVICE_OBJECT DeviceObject,
+    _In_ DEVICE_ACTION Action,
+    _In_opt_ PKEVENT CompletionEvent,
+    _Out_opt_ NTSTATUS *CompletionStatus)
 {
-    PDEVICE_ACTION_DATA Data;
+    PDEVICE_ACTION_REQUEST Request;
     KIRQL OldIrql;
 
-    DPRINT("IopQueueDeviceAction(%p)\n", ActionData);
+    Request = ExAllocatePoolWithTag(NonPagedPoolMustSucceed, sizeof(*Request), TAG_IO);
 
-    Data = ExAllocatePoolWithTag(NonPagedPool,
-                                 sizeof(DEVICE_ACTION_DATA),
-                                 TAG_IO);
-    if (!Data)
-        return;
+    DPRINT("PiQueueDeviceAction: DeviceObject - %p, Request - %p, Action - %s\n",
+        DeviceObject, Request, ActionToStr(Action));
 
-    ObReferenceObject(ActionData->DeviceObject);
-    RtlCopyMemory(Data, ActionData, sizeof(DEVICE_ACTION_DATA));
+    ObReferenceObject(DeviceObject);
 
-    DPRINT("Action %u\n", Data->Action);
+    Request->DeviceObject = DeviceObject;
+    Request->Action = Action;
+    Request->CompletionEvent = CompletionEvent;
+    Request->CompletionStatus = CompletionStatus;
 
     KeAcquireSpinLock(&IopDeviceActionLock, &OldIrql);
-    InsertTailList(&IopDeviceActionRequestList, &Data->RequestListEntry);
-    if (IopDeviceActionInProgress)
+    InsertTailList(&IopDeviceActionRequestList, &Request->RequestListEntry);
+
+    if (Action == PiActionEnumRootDevices)
+    {
+        ASSERT(!IopDeviceActionInProgress);
+
+        IopDeviceActionInProgress = TRUE;
+        KeClearEvent(&PiEnumerationFinished);
+        KeReleaseSpinLock(&IopDeviceActionLock, OldIrql);
+
+        PipDeviceActionWorker(NULL);
+        return;
+    }
+
+    if (IopDeviceActionInProgress || !PnPBootDriversLoaded)
     {
         KeReleaseSpinLock(&IopDeviceActionLock, OldIrql);
         return;
     }
     IopDeviceActionInProgress = TRUE;
+    KeClearEvent(&PiEnumerationFinished);
     KeReleaseSpinLock(&IopDeviceActionLock, OldIrql);
 
-    ExInitializeWorkItem(&IopDeviceActionWorkItem,
-                         IopDeviceActionWorker,
-                         NULL);
-    ExQueueWorkItem(&IopDeviceActionWorkItem,
-                    DelayedWorkQueue);
+    ExInitializeWorkItem(&IopDeviceActionWorkItem, PipDeviceActionWorker, NULL);
+    ExQueueWorkItem(&IopDeviceActionWorkItem, DelayedWorkQueue);
+}
+
+/**
+ * @brief      Perfom a device operation synchronously via PiQueueDeviceAction
+ *
+ * @param[in]  DeviceObject  The device object
+ * @param[in]  Action        The action
+ *
+ * @return     Status of the operation
+ */
+
+NTSTATUS
+PiPerformSyncDeviceAction(
+    _In_ PDEVICE_OBJECT DeviceObject,
+    _In_ DEVICE_ACTION Action)
+{
+    KEVENT opFinished;
+    NTSTATUS status;
+
+    KeInitializeEvent(&opFinished, SynchronizationEvent, FALSE);
+    PiQueueDeviceAction(DeviceObject, Action, &opFinished, &status);
+    KeWaitForSingleObject(&opFinished, Executive, KernelMode, FALSE, NULL);
+
+    return status;
 }

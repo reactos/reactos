@@ -227,36 +227,36 @@ BEGIN
     PUSHBUTTON "Cancelar", IDCANCEL, 195, 258, 50, 15
 END
 
-IDD_VIRTMEM DIALOGEX 6, 6, 223, 248
+IDD_VIRTMEM DIALOGEX 6, 6, 248, 248
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Memoria virtual"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "Unidad  [etiqueta de volumen]", IDC_STATIC, 12, 3, 96, 16
-    LTEXT "Tamaño del archivo de paginación (MB)", IDC_STATIC, 115, 3, 96, 16
-    LISTBOX IDC_PAGEFILELIST, 10, 20, 204, 52, LBS_NOTIFY | LBS_USETABSTOPS
-    GROUPBOX "Tamaño del archivo de paginación para la unidad ", IDC_DRIVEGROUP, 10, 70, 204, 104
+    LTEXT "Unidad  [etiqueta de volumen]", IDC_STATIC, 12, 5, 100, 9
+    LTEXT "Tamaño del archivo de paginación (MB)", IDC_STATIC, 115, 5, 126, 9
+    LISTBOX IDC_PAGEFILELIST, 10, 16, 229, 52, LBS_NOTIFY | LBS_USETABSTOPS
+    GROUPBOX "Tamaño del archivo de paginación para la unidad ", IDC_DRIVEGROUP, 10, 70, 229, 104
     LTEXT "Unidad:", IDC_STATIC, 20, 80, 25, 8
-    LTEXT "", IDC_DRIVE, 88, 81, 100, 9
+    LTEXT "%s", IDC_DRIVE, 88, 80, 100, 9
     LTEXT "Espacio disponible:", IDC_STATIC, 20, 92, 80, 9
-    LTEXT "", IDC_SPACEAVAIL, 88, 92, 104, 9
+    LTEXT "%s", IDC_SPACEAVAIL, 88, 92, 104, 9
     LTEXT "&Tamaño inicial (MB):", -1, 22, 118, 72, 9
     LTEXT "Tamaño ma&ximo (MB):", -1, 22, 131, 76, 9
     AUTORADIOBUTTON "T&amaño personalizado", IDC_CUSTOM, 20, 105, 85, 9, WS_GROUP
     AUTORADIOBUTTON "Ta&maño administrado por el sistema", IDC_SYSMANSIZE, 20, 145, 150, 9
-    AUTORADIOBUTTON "&Sin archivo de paginación", IDC_NOPAGEFILE, 20, 158, 100,9
+    AUTORADIOBUTTON "&Sin archivo de paginación", IDC_NOPAGEFILE, 20, 158, 100, 9
     EDITTEXT IDC_INITIALSIZE, 100, 114, 50, 13, NOT WS_BORDER, WS_EX_CLIENTEDGE
     EDITTEXT IDC_MAXSIZE, 100, 129, 50, 13, NOT WS_BORDER, WS_EX_CLIENTEDGE
-    PUSHBUTTON "&Establecer", IDC_SET, 158, 154, 50, 15
-    GROUPBOX "Tamaño total del archivo de paginación ", IDC_TOTALGROUP, 10, 177, 204, 46
+    PUSHBUTTON "&Establecer", IDC_SET, 183, 154, 50, 15
+    GROUPBOX "Tamaño total del archivo de paginación ", IDC_TOTALGROUP, 10, 177, 229, 46
     LTEXT "Mínimo permitido:", IDC_STATIC, 18, 188, 58, 9
-    LTEXT "", IDC_MINIMUM, 100, 188, 100, 9
+    LTEXT "%s", IDC_MINIMUM, 100, 188, 100, 9
     LTEXT "Recomendado:", IDC_STATIC, 18, 199, 52, 9
-    LTEXT "", IDC_RECOMMENDED, 100, 199, 100, 9
+    LTEXT "%s", IDC_RECOMMENDED, 100, 199, 100, 9
     LTEXT "Asignado actualmente:", IDC_STATIC, 18, 210, 75, 9
-    LTEXT "", IDC_CURRENT, 100, 210, 100, 9
-    DEFPUSHBUTTON "Aceptar", IDOK, 114, 230, 48, 15
-    PUSHBUTTON "Cancelar", IDCANCEL, 168, 230, 48, 15
+    LTEXT "%s", IDC_CURRENT, 100, 210, 100, 9
+    DEFPUSHBUTTON "Aceptar", IDOK, 139, 230, 48, 15
+    PUSHBUTTON "Cancelar", IDCANCEL, 193, 230, 48, 15
 END
 
 IDD_ENVIRONMENT_VARIABLES DIALOGEX 6, 18, 252, 245
@@ -337,6 +337,7 @@ BEGIN
     IDS_WARNMAXIMUMSIZE "Introduzca el tamaño máximo del archivo de paginación."
     IDS_WARNINITIALRANGE "El tamaño inicial del archivo de paginación no puede ser inferior a 2 MB y no puede exceder el espacio disponible en la unidad seleccionada."
     IDS_WARNMAXIMUMRANGE "El tamaño máximo del archivo de paginación no puede ser inferior al tamaño inicial y no puede exceder el espacio disponible en la unidad seleccionada."
+    IDS_PAGEFILE_MB "%u MB"
     IDS_PAGEFILE_NONE "Ninguno"
     IDS_PAGEFILE_SYSTEM "Administrado por el sistema"
     IDS_INFOREBOOT "Es necesario reiniciar el equipo para que se apliquen los cambios."

@@ -210,5 +210,5 @@ BEGIN
     IDS_ERROR_NLS_KEY_REG "Erro ao abrir a chave: HKLM\\SYSTEM\\CurrentControlSet\\Control\\NLS\\Language"
     IDS_ERROR_NLS_CODE_REG "Erro ao abrir a chave: HKLM\\SYSTEM\\CurrentControlSet\\Control\\NLS\\CodePage"
     IDS_ERROR_INPUT_DLL "Não foi possível iniciar input.dll"
-    IDS_ERROR_UNICODE "Unable to install a new language for programs that don't support Unicode!"
+    IDS_ERROR_UNICODE "Não foi possível instalar um novo idioma para programas que não suportam Unicode!"
 END

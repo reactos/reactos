@@ -2354,7 +2354,11 @@ typedef struct tagSHLWAPI_BYTEFORMATS
   double   dDivisor;
   double   dNormaliser;
   int      nDecimals;
+#ifdef __REACTOS__
+  UINT     nFormatID;
+#else
   WCHAR     wPrefix;
+#endif
 } SHLWAPI_BYTEFORMATS;
 
 /*************************************************************************
@@ -2383,6 +2387,24 @@ LPWSTR WINAPI StrFormatByteSizeW(LONGLONG llBytes, LPWSTR lpszDest, UINT cchMax)
 
   static const SHLWAPI_BYTEFORMATS bfFormats[] =
   {
+#ifdef __REACTOS__
+    { 10*KB, 10.24, 100.0, 2, IDS_KB_FORMAT }, /* 10 KB */
+    { 100*KB, 102.4, 10.0, 1, IDS_KB_FORMAT }, /* 100 KB */
+    { 1000*KB, 1024.0, 1.0, 0, IDS_KB_FORMAT }, /* 1000 KB */
+    { 10*MB, 10485.76, 100.0, 2, IDS_MB_FORMAT }, /* 10 MB */
+    { 100*MB, 104857.6, 10.0, 1, IDS_MB_FORMAT }, /* 100 MB */
+    { 1000*MB, 1048576.0, 1.0, 0, IDS_MB_FORMAT }, /* 1000 MB */
+    { 10*GB, 10737418.24, 100.0, 2, IDS_GB_FORMAT }, /* 10 GB */
+    { 100*GB, 107374182.4, 10.0, 1, IDS_GB_FORMAT }, /* 100 GB */
+    { 1000*GB, 1073741824.0, 1.0, 0, IDS_GB_FORMAT }, /* 1000 GB */
+    { 10*TB, 10485.76, 100.0, 2, IDS_TB_FORMAT }, /* 10 TB */
+    { 100*TB, 104857.6, 10.0, 1, IDS_TB_FORMAT }, /* 100 TB */
+    { 1000*TB, 1048576.0, 1.0, 0, IDS_TB_FORMAT }, /* 1000 TB */
+    { 10*PB, 10737418.24, 100.00, 2, IDS_PB_FORMAT }, /* 10 PB */
+    { 100*PB, 107374182.4, 10.00, 1, IDS_PB_FORMAT }, /* 100 PB */
+    { 1000*PB, 1073741824.0, 1.00, 0, IDS_PB_FORMAT }, /* 1000 PB */
+    { 0, 10995116277.76, 100.00, 2, IDS_EB_FORMAT } /* EB's, catch all */
+#else
     { 10*KB, 10.24, 100.0, 2, 'K' }, /* 10 KB */
     { 100*KB, 102.4, 10.0, 1, 'K' }, /* 100 KB */
     { 1000*KB, 1024.0, 1.0, 0, 'K' }, /* 1000 KB */
@@ -2399,8 +2421,13 @@ LPWSTR WINAPI StrFormatByteSizeW(LONGLONG llBytes, LPWSTR lpszDest, UINT cchMax)
     { 100*PB, 107374182.4, 10.00, 1, 'P' }, /* 100 PB */
     { 1000*PB, 1073741824.0, 1.00, 0, 'P' }, /* 1000 PB */
     { 0, 10995116277.76, 100.00, 2, 'E' } /* EB's, catch all */
+#endif
   };
+#ifdef __REACTOS__
+  WCHAR szBuff[40], wszFormat[40];
+#else
   WCHAR wszAdd[] = {' ','?','B',0};
+#endif
   double dBytes;
   UINT i = 0;
 
@@ -2439,10 +2466,17 @@ LPWSTR WINAPI StrFormatByteSizeW(LONGLONG llBytes, LPWSTR lpszDest, UINT cchMax)
 
   dBytes = floor(dBytes / bfFormats[i].dDivisor) / bfFormats[i].dNormaliser;
 
+#ifdef __REACTOS__
+  if (!FormatDouble(dBytes, bfFormats[i].nDecimals, szBuff, ARRAYSIZE(szBuff)))
+    return NULL;
+  LoadStringW(shlwapi_hInstance, bfFormats[i].nFormatID, wszFormat, ARRAYSIZE(wszFormat));
+  snprintfW(lpszDest, cchMax, wszFormat, szBuff);
+#else
   if (!FormatDouble(dBytes, bfFormats[i].nDecimals, lpszDest, cchMax))
     return NULL;
   wszAdd[1] = bfFormats[i].wPrefix;
   StrCatBuffW(lpszDest, wszAdd, cchMax);
+#endif
   return lpszDest;
 }
 

@@ -81,7 +81,6 @@ HidParser_CalculateContextSize(
 
 ULONG
 HidParser_StoreCollection(
-    IN PHID_PARSER Parser,
     IN PHID_COLLECTION Collection,
     IN PHID_COLLECTION_CONTEXT CollectionContext,
     IN ULONG CurrentOffset)
@@ -105,7 +104,7 @@ HidParser_StoreCollection(
     //
     // first copy the collection details
     //
-    Parser->Copy(TargetCollection, Collection, sizeof(HID_COLLECTION));
+    CopyFunction(TargetCollection, Collection, sizeof(HID_COLLECTION));
 
     //
     // calulcate collection size
@@ -140,7 +139,7 @@ HidParser_StoreCollection(
         //
         // copy report item
         //
-        Parser->Copy(&CollectionContext->RawData[CurrentOffset], Collection->Reports[Index], ReportSize);
+        CopyFunction(&CollectionContext->RawData[CurrentOffset], Collection->Reports[Index], ReportSize);
 
         //
         // store offset to report item
@@ -168,7 +167,7 @@ HidParser_StoreCollection(
         //
         // store sub collections
         //
-        CurrentOffset += HidParser_StoreCollection(Parser, Collection->Nodes[Index], CollectionContext, CurrentOffset);
+        CurrentOffset += HidParser_StoreCollection(Collection->Nodes[Index], CollectionContext, CurrentOffset);
 
         //
         // sanity check
@@ -182,9 +181,8 @@ HidParser_StoreCollection(
     return CurrentOffset - InitialOffset;
 }
 
-HIDPARSER_STATUS
+NTSTATUS
 HidParser_BuildCollectionContext(
-    IN PHID_PARSER Parser,
     IN PHID_COLLECTION RootCollection,
     IN PVOID Context,
     IN ULONG ContextSize)
@@ -201,7 +199,7 @@ HidParser_BuildCollectionContext(
     //
     // store collections
     //
-    CollectionSize = HidParser_StoreCollection(Parser, RootCollection, CollectionContext, 0);
+    CollectionSize = HidParser_StoreCollection(RootCollection, CollectionContext, 0);
 
     //
     // sanity check
@@ -215,7 +213,7 @@ HidParser_BuildCollectionContext(
     //
     // done
     //
-    return HIDPARSER_STATUS_SUCCESS;
+    return HIDP_STATUS_SUCCESS;
 }
 
 PHID_REPORT

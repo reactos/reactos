@@ -207,7 +207,7 @@ KiInitializeUserApc(IN PKEXCEPTION_FRAME ExceptionFrame,
                     IN PVOID SystemArgument1,
                     IN PVOID SystemArgument2)
 {
-    CONTEXT Context;
+    CONTEXT Context = { 0 };
     ULONG64 AlignedRsp, Stack;
     EXCEPTION_RECORD SehExceptRecord;
 

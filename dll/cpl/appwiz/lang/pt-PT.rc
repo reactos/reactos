@@ -87,5 +87,5 @@ BEGIN
     IDS_NO_MEMORY "A memória não pode ser alocada!"
     IDS_NO_DIRECTORY "Sem directoria!"
     IDS_INVALID_PATH "O caminho é invalido!"
-    IDS_INVALID_NAME "The shortcut name you entered either contained characters that are invalid for file names or was too long."
+    IDS_INVALID_NAME "O nome do atalho contém caracteres inválidos para nomes de arquivo ou é muito longo."
 END

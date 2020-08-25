@@ -29,6 +29,14 @@ STRINGTABLE
     IDS_TIME_INTERVAL_HOURS    " час"
     IDS_TIME_INTERVAL_MINUTES  " мин"
     IDS_TIME_INTERVAL_SECONDS  " сек"
+#ifdef __REACTOS__
+    IDS_KB_FORMAT "%s КБ"
+    IDS_MB_FORMAT "%s МБ"
+    IDS_GB_FORMAT "%s ГБ"
+    IDS_TB_FORMAT "%s ТБ"
+    IDS_PB_FORMAT "%s ПБ"
+    IDS_EB_FORMAT "%s ЭБ"
+#endif
 }
 
 IDD_ERR_DIALOG DIALOGEX 0, 0, 220, 60

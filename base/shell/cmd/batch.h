@@ -4,9 +4,9 @@
 
 #pragma once
 
-typedef struct tagBATCHCONTEXT
+typedef struct _BATCH_CONTEXT
 {
-    struct tagBATCHCONTEXT *prev;
+    struct _BATCH_CONTEXT *prev;
     char    *mem;       /* batchfile content in memory */
     DWORD   memsize;    /* size of batchfile */
     DWORD   mempos;     /* current position to read from */
@@ -19,24 +19,23 @@ typedef struct tagBATCHCONTEXT
     REDIRECTION *RedirList;
     PARSED_COMMAND *current;
     struct _SETLOCAL *setlocal;
-} BATCH_CONTEXT, *LPBATCH_CONTEXT;
+} BATCH_CONTEXT, *PBATCH_CONTEXT;
 
-typedef struct tagFORCONTEXT
+typedef struct _FOR_CONTEXT
 {
-    struct tagFORCONTEXT *prev;
+    struct _FOR_CONTEXT *prev;
     TCHAR firstvar;
     UINT   varcount;
     LPTSTR *values;
-} FOR_CONTEXT, *LPFOR_CONTEXT;
+} FOR_CONTEXT, *PFOR_CONTEXT;
 
 
 /*
  * The stack of current batch contexts.
- * NULL when no batch is active
+ * NULL when no batch is active.
  */
-extern LPBATCH_CONTEXT bc;
-
-extern LPFOR_CONTEXT fc;
+extern PBATCH_CONTEXT bc;
+extern PFOR_CONTEXT fc;
 
 extern BOOL bEcho;       /* The echo flag */
 
@@ -46,8 +45,8 @@ extern TCHAR textline[BATCH_BUFFSIZE]; /* Buffer for reading Batch file lines */
 
 
 LPTSTR FindArg(TCHAR, BOOL *);
-LPTSTR BatchParams(LPTSTR, LPTSTR);
 VOID   ExitBatch(VOID);
+VOID   ExitAllBatches(VOID);
 INT    Batch(LPTSTR, LPTSTR, LPTSTR, PARSED_COMMAND *);
 BOOL   BatchGetString(LPTSTR lpBuffer, INT nBufferLength);
 LPTSTR ReadBatchLine(VOID);

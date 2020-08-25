@@ -239,12 +239,12 @@ BEGIN
     LISTBOX IDC_PAGEFILELIST, 10, 16, 214, 52, LBS_NOTIFY | LBS_USETABSTOPS
     GROUPBOX "Tamanho do ficheiro de paginação para a unidade seleccionada", IDC_DRIVEGROUP, 10, 70, 214, 104
     LTEXT "Unidade:", IDC_STATIC, 20, 80, 30, 8
-    LTEXT "", IDC_DRIVE, 88, 81, 100, 9
+    LTEXT "%s", IDC_DRIVE, 88, 80, 100, 9
     LTEXT "Espaço disponível:", IDC_STATIC, 20, 92, 60, 9
-    LTEXT "", IDC_SPACEAVAIL, 88, 92, 104, 9
+    LTEXT "%s", IDC_SPACEAVAIL, 88, 92, 104, 9
     LTEXT "Tamanho inicial (MB):", -1, 22, 118, 75, 9
     LTEXT "Tamanho máximo (MB):", -1, 22, 131, 75, 9
-    AUTORADIOBUTTON "Tamanho &personalizado", IDC_CUSTOM, 20, 105, 84, 9, WS_GROUP
+    AUTORADIOBUTTON "Tamanho &personalizado", IDC_CUSTOM, 20, 105, 88, 9, WS_GROUP
     AUTORADIOBUTTON "Tamanho gerido pelo &sistema", IDC_SYSMANSIZE, 20, 145, 110, 9
     AUTORADIOBUTTON "Sem &ficheiro de paginação", IDC_NOPAGEFILE, 20, 158, 100, 9
     EDITTEXT IDC_INITIALSIZE, 100, 114, 44, 13, NOT WS_BORDER, WS_EX_CLIENTEDGE
@@ -252,11 +252,11 @@ BEGIN
     PUSHBUTTON "&Definir", IDC_SET, 158, 154, 50, 15
     GROUPBOX "Tamanho total do ficheiro de paginação para todas as unidades", IDC_TOTALGROUP, 10, 177, 214, 46
     LTEXT "Mínimo permitido:", IDC_STATIC, 18, 188, 58, 9
-    LTEXT "", IDC_MINIMUM, 88, 188, 100, 9
+    LTEXT "%s", IDC_MINIMUM, 88, 188, 100, 9
     LTEXT "Recomendado:", IDC_STATIC, 18, 199, 52, 9
-    LTEXT "", IDC_RECOMMENDED, 88, 199, 100, 9
+    LTEXT "%s", IDC_RECOMMENDED, 88, 199, 100, 9
     LTEXT "Actualmente:", IDC_STATIC, 18, 210, 66, 9
-    LTEXT "", IDC_CURRENT, 88, 210, 100, 9
+    LTEXT "%s", IDC_CURRENT, 88, 210, 100, 9
     DEFPUSHBUTTON "&OK", IDOK, 114, 230, 48, 15
     PUSHBUTTON "&Cancelar", IDCANCEL, 168, 230, 48, 15
 END
@@ -339,6 +339,7 @@ BEGIN
     IDS_WARNMAXIMUMSIZE "Digite um valor numérico para o tamanho máximo do arquivo de paginação."
     IDS_WARNINITIALRANGE "O tamanho inicial do arquivo de paginação não deve ser menor que 2 MB e não deve exceder o espaço disponível na unidade seleccionada."
     IDS_WARNMAXIMUMRANGE "O tamanho máximo do arquivo de paginação não deve ser menor que o tamanho inicial, não deve ser maior que 4095 MB e não deve exceder o espaço disponível na unidade seleccionada."
+    IDS_PAGEFILE_MB "%u MB"
     IDS_PAGEFILE_NONE "Nenhum"
     IDS_PAGEFILE_SYSTEM "Sistema gerenciado"
     IDS_INFOREBOOT "Precisa reiniciar o computador para aplicar as alterações."

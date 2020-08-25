@@ -1,0 +1,138 @@
+--------- Testing CMD echoer ---------
+
+@pwd@>if 1 == 1 echo j1  | (echo j2 )  else echo j3@space@
+j2@space@
+
+@pwd@>(echo a  1>&2  | echo a  1>&2 ) 2>&1@space@
+a@space@
+a@space@
+
+@pwd@>echo 1@space@
+1
+2
+3
+4
+
+@pwd@>foobar
+
+@pwd@>echo
+ECHO is on.
+
+@pwd@>foobar parameter@space@
+
+@pwd@>echo parameter@space@
+parameter
+
+@pwd@>toto1>NUL@space@
+
+@pwd@>toto1>NUL@space@
+
+@pwd@>toto  1>NUL@space@
+
+@pwd@>toto  1>NUL@space@
+
+@pwd@>toto1>NUL 2>&1@space@
+
+@pwd@>toto1>NUL 2>&1@space@
+
+@pwd@>toto  1>NUL 2>&1@space@
+
+@pwd@>toto  1>NUL 2>&1@space@
+
+@pwd@>a & b
+
+@pwd@>a & b
+
+@pwd@>a   & b
+
+@pwd@>a   & b
+
+@pwd@>a || b
+
+@pwd@>a || b
+
+@pwd@>a   || b
+
+@pwd@>a   || b
+
+@pwd@>a && b
+
+@pwd@>a && b
+
+@pwd@>a   && b
+
+@pwd@>a   && b
+
+@pwd@>if 1 == 1 (echo lol )  else (echo boom )@space@
+lol
+
+@pwd@>if 1 == 1 (echo lol )  else (echo boom )@space@
+lol
+
+@pwd@>for /L %l in (1 1 5) do (echo %l )@space@
+
+@pwd@>(echo 1 )@space@
+1
+
+@pwd@>(echo 2 )@space@
+2
+
+@pwd@>(echo 3 )@space@
+3
+
+@pwd@>(echo 4 )@space@
+4
+
+@pwd@>(echo 5 )@space@
+5
+
+@pwd@>for /L %l in (1 1 5) do (echo %l )@space@
+
+@pwd@>(echo 1 )@space@
+1
+
+@pwd@>(echo 2 )@space@
+2
+
+@pwd@>(echo 3 )@space@
+3
+
+@pwd@>(echo 4 )@space@
+4
+
+@pwd@>(echo 5 )@space@
+5
+
+@pwd@>for /L %l in (1 1 5) do ()@space@
+
+@pwd@>()@space@
+1
+
+@pwd@>()@space@
+2
+
+@pwd@>()@space@
+3
+
+@pwd@>()@space@
+4
+
+@pwd@>()@space@
+5
+
+@pwd@>if 1 == 1@space@
+hi
+
+@pwd@>if 1 == 1 ()@space@
+heh
+
+@pwd@>if 1 == 0 ()  else@space@
+better
+
+@pwd@>if 1 == 0 ()  else ()@space@
+better2
+
+@pwd@>(a)@space@
+
+@pwd@>(a b )@space@
+--------- Finished  --------------

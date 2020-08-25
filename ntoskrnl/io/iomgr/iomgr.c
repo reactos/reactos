@@ -581,9 +581,6 @@ IoInitSystem(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         return FALSE;
     }
 
-    /* Initialize PnP root relations */
-    IopEnumerateDevice(IopRootDeviceNode->PhysicalDeviceObject);
-
 #if !defined(_WINKD_) && defined(KDBG)
     /* Read KDB Data */
     KdbInit();

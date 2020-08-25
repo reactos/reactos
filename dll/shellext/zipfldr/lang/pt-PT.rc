@@ -7,28 +7,30 @@
 
 LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
 
-IDD_PROPPAGEDESTINATION DIALOGEX 0, 0, 235, 156
+IDD_PROPPAGEDESTINATION DIALOGEX 0, 0, 260, 156
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Seleccione um destino"
 FONT 8, "MS Shell Dlg", 400, 0, 0x0
 BEGIN
-    LTEXT           "Seleccione o directório de destino",IDC_STATIC,6,12,174,8
-    EDITTEXT        IDC_DIRECTORY,6,24,222,12,ES_AUTOHSCROLL
-    PUSHBUTTON      "&Procurar...",IDC_BROWSE,174,42,54,14
-    PUSHBUTTON      "Palavra-passe",IDC_PASSWORD,174,66,54,14
-    LTEXT           "Clique em ""Seguinte"" para extrair",IDC_STATUSTEXT,6,114,100,8
-    CONTROL         "",IDC_PROGRESS,"msctls_progress32",WS_BORDER,6,126,222,6
+    LTEXT           "Seleccione o directório de destino",IDC_STATIC,86,12,174,8
+    EDITTEXT        IDC_DIRECTORY,86,24,157,12,ES_AUTOHSCROLL
+    PUSHBUTTON      "&Procurar...",IDC_BROWSE,189,42,54,14
+    PUSHBUTTON      "Palavra-passe",IDC_PASSWORD,189,66,54,14
+    LTEXT           "Clique em ""Seguinte"" para extrair",IDC_STATUSTEXT,86,114,100,8
+    CONTROL         "",IDC_PROGRESS,"msctls_progress32",WS_BORDER,86,126,157,6
+    CONTROL         IDB_ZIPFLDR,-1,"STATIC",SS_BITMAP | WS_CHILD | WS_VISIBLE,0,0,78,138
 END
 
-IDD_PROPPAGECOMPLETE DIALOGEX 0, 0, 235, 156
+IDD_PROPPAGECOMPLETE DIALOGEX 0, 0, 260, 156
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Extracção Completa"
 FONT 8, "MS Shell Dlg", 400, 0, 0x0
 BEGIN
-    LTEXT           "Os arquivos foram extraídos para o seguinte diretório:",IDC_STATIC,6,12,222,18
-    LTEXT           "Directório de destino",IDC_DESTDIR,6,36,222,8
-    CONTROL         "Mostrar ficheiros extraidos",IDC_SHOW_EXTRACTED,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,66,81,10
-    LTEXT           "Clique em ""Concluir"" para continuar.",IDC_STATIC,6,84,174,8
+    LTEXT           "Os arquivos foram extraídos para o seguinte diretório:",IDC_STATIC,86,12,157,18
+    LTEXT           "%s",IDC_DESTDIR,86,36,157,8
+    CONTROL         "Mostrar ficheiros extraidos",IDC_SHOW_EXTRACTED,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,86,66,98,10
+    LTEXT           "Clique em ""Concluir"" para continuar.",IDC_STATIC,86,84,116,8
+    CONTROL         IDB_ZIPFLDR,-1,"STATIC",SS_BITMAP | WS_CHILD | WS_VISIBLE,0,0,78,138
 END
 
 IDD_CONFIRM_FILE_REPLACE DIALOGEX 0, 0, 273, 56
@@ -44,17 +46,17 @@ BEGIN
     LTEXT           "",IDC_MESSAGE,36,6,228,24
 END
 
-IDD_PASSWORD DIALOGEX 0, 0, 243, 62
+IDD_PASSWORD DIALOGEX 0, 0, 247, 62
 STYLE DS_SETFONT | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Palavra-passe"
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    EDITTEXT        IDC_PASSWORD,72,42,108,13,ES_PASSWORD | ES_AUTOHSCROLL
-    DEFPUSHBUTTON   "OK",IDOK,186,6,50,14
-    PUSHBUTTON      "Saltar Ficheiro",IDSKIP,186,24,50,14
-    PUSHBUTTON      "Cancelar",IDCANCEL,186,42,50,14
+    EDITTEXT        IDC_PASSWORD,74,42,106,13,ES_PASSWORD | ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,186,6,54,14
+    PUSHBUTTON      "Saltar Ficheiro",IDSKIP,186,24,54,14
+    PUSHBUTTON      "Cancelar",IDCANCEL,186,42,54,14
     LTEXT           "Estático",IDC_MESSAGE,24,6,156,30
-    LTEXT           "Palavra-passe:",IDC_STATIC,24,44,44,8
+    LTEXT           "Palavra-passe:",IDC_STATIC,24,44,50,8
 END
 
 STRINGTABLE

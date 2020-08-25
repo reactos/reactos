@@ -234,25 +234,25 @@ BEGIN
     LTEXT "Madhësia faqes dokumentit(MB)", IDC_STATIC, 115, 5, 96, 9
     LISTBOX IDC_PAGEFILELIST, 10, 16, 204, 52, LBS_NOTIFY | LBS_USETABSTOPS
     GROUPBOX "Madhësia faqes dokumentit për driverin e zgjedhur", IDC_DRIVEGROUP, 10, 70, 204, 104
-    LTEXT "Driveri:", IDC_STATIC, 20, 80, 20, 8
-    LTEXT "", IDC_DRIVE, 88, 81, 100, 9
-    LTEXT "Hapësirë ​​në dispozicion:", IDC_STATIC, 20, 92, 56, 9
-    LTEXT "", IDC_SPACEAVAIL, 88, 92, 104, 9
-    LTEXT "&Madhësia fillestare (MB):", -1, 22, 118, 75, 9
-    LTEXT "Madhësia maksimale (MB):", -1, 22, 131, 75, 9
-    AUTORADIOBUTTON "&Masa Personalizuar", IDC_CUSTOM, 20, 105, 54, 9, WS_GROUP
-    AUTORADIOBUTTON "Menaxhues Mase S&istemi", IDC_SYSMANSIZE, 20, 145, 88, 9
+    LTEXT "Driveri:", IDC_STATIC, 20, 80, 26, 8
+    LTEXT "%s", IDC_DRIVE, 106, 81, 100, 9
+    LTEXT "Hapësirë ​​në dispozicion:", IDC_STATIC, 20, 92, 86, 9
+    LTEXT "%s", IDC_SPACEAVAIL, 106, 92, 100, 9
+    LTEXT "&Madhësia fillestare (MB):", -1, 22, 118, 82, 9
+    LTEXT "Madhësia maksimale (MB):", -1, 22, 131, 86, 9
+    AUTORADIOBUTTON "&Masa Personalizuar", IDC_CUSTOM, 20, 105, 74, 9, WS_GROUP
+    AUTORADIOBUTTON "Menaxhues Mase S&istemi", IDC_SYSMANSIZE, 20, 145, 92, 9
     AUTORADIOBUTTON "&Ska faqe dokumenti", IDC_NOPAGEFILE, 20, 158, 78, 9
-    EDITTEXT IDC_INITIALSIZE, 100, 114, 44, 13, NOT WS_BORDER, WS_EX_CLIENTEDGE
-    EDITTEXT IDC_MAXSIZE, 100, 129, 44, 13, NOT WS_BORDER, WS_EX_CLIENTEDGE
+    EDITTEXT IDC_INITIALSIZE, 108, 114, 44, 13, NOT WS_BORDER, WS_EX_CLIENTEDGE
+    EDITTEXT IDC_MAXSIZE, 108, 129, 44, 13, NOT WS_BORDER, WS_EX_CLIENTEDGE
     PUSHBUTTON "Vendos", IDC_SET, 158, 154, 50, 15
     GROUPBOX "Masa dokumentin komplete për të gjithë drive-at", IDC_TOTALGROUP, 10, 177, 204, 46
     LTEXT "Minimumi lejuar:", IDC_STATIC, 18, 188, 58, 9
-    LTEXT "", IDC_MINIMUM, 88, 188, 100, 9
+    LTEXT "%s", IDC_MINIMUM, 88, 188, 100, 9
     LTEXT "Rekomanduar:", IDC_STATIC, 18, 199, 52, 9
-    LTEXT "", IDC_RECOMMENDED, 88, 199, 100, 9
+    LTEXT "%s", IDC_RECOMMENDED, 88, 199, 100, 9
     LTEXT "Aktualisht ndarë:", IDC_STATIC, 18, 210, 66, 9
-    LTEXT "", IDC_CURRENT, 88, 210, 100, 9
+    LTEXT "%s", IDC_CURRENT, 88, 210, 100, 9
     DEFPUSHBUTTON "OK", IDOK, 114, 230, 48, 15
     PUSHBUTTON "Anulo", IDCANCEL, 168, 230, 48, 15
 END
@@ -335,6 +335,7 @@ BEGIN
     IDS_WARNMAXIMUMSIZE "Futni një vlerë numerike për madhësinë maksimale e faqeve të dokumentave."
     IDS_WARNINITIALRANGE "Madhësia fillestare e faqes së dokumentit nuk duhet të jetë më e vogël se 2 MB dhe nuk duhet të kalojë hapësirën në dispozicion në driver-in e përzgjedhur."
     IDS_WARNMAXIMUMRANGE "Madhësia maksimale e faqes së dokumenit nuk duhet të jetë më e vogël se madhësia e saj fillestare dhe nuk duhet të kalojë hapësirën në dispozicion në driver-in e përzgjedhur."
+    IDS_PAGEFILE_MB "%u MB"
     IDS_PAGEFILE_NONE "Asnjë"
     IDS_PAGEFILE_SYSTEM "System Managed"
     IDS_INFOREBOOT "You have to reboot the computer in order to apply the changes."

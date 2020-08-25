@@ -28,32 +28,30 @@
 
 #include "precomp.h"
 
-
 /*
  * Perform GOTO command.
  *
- * Only valid if batch file current.
- *
+ * Only valid when a batch context is active.
  */
-
-INT cmd_goto (LPTSTR param)
+INT cmd_goto(LPTSTR param)
 {
-    LPTSTR tmp, tmp2;
+    LPTSTR label, tmp;
+    DWORD dwCurrPos;
+    BOOL bRetry;
 
-    TRACE ("cmd_goto (\'%s\')\n", debugstr_aw(param));
+    TRACE("cmd_goto(\'%s\')\n", debugstr_aw(param));
 
-    if (!_tcsncmp (param, _T("/?"), 2))
+    if (!_tcsncmp(param, _T("/?"), 2))
     {
-        ConOutResPaging(TRUE,STRING_GOTO_HELP1);
+        ConOutResPaging(TRUE, STRING_GOTO_HELP1);
         return 0;
     }
 
-    /* if not in batch -- error!! */
+    /* If not in batch, fail */
     if (bc == NULL)
-    {
         return 1;
-    }
 
+    /* Fail if no label has been provided */
     if (*param == _T('\0'))
     {
         ConErrResPrintf(STRING_GOTO_ERROR1);
@@ -61,56 +59,118 @@ INT cmd_goto (LPTSTR param)
         return 1;
     }
 
-    /* terminate label at first space char */
-    tmp = param+1;
-    while (!_istcntrl (*tmp) && !_istspace (*tmp) &&  (*tmp != _T(':')))
-        tmp++;
-    *(tmp) = _T('\0');
+    /* Strip leading whitespace */
+    while (_istspace(*param))
+        ++param;
 
-    /* jump to end of the file */
-    if ( _tcsicmp( param, _T(":eof"))==0)
+    /* Support jumping to the end of the file, only if extensions are enabled */
+    if (bEnableExtensions &&
+        (_tcsnicmp(param, _T(":EOF"), 4) == 0) &&
+        (!param[4] || _istspace(param[4])))
     {
-        bc->mempos=bc->memsize;		/* position at the end of the batchfile */
+        /* Position at the end of the batch file */
+        bc->mempos = bc->memsize;
+
+        /* Do not process any more parts of a compound command */
+        bc->current = NULL;
         return 0;
     }
 
-    /* jump to begin of the file */
-    bc->mempos=0;
-
-    while (BatchGetString (textline, sizeof(textline) / sizeof(textline[0])))
+    /* Skip the first colon or plus sign */
+    if (*param == _T(':') || *param == _T('+'))
+        ++param;
+    /* Terminate the label at the first delimiter character */
+    tmp = param;
+    while (!_istcntrl(*tmp) && !_istspace(*tmp) &&
+           !_tcschr(_T(":+"), *tmp) && !_tcschr(STANDARD_SEPS, *tmp) /* &&
+           !_tcschr(_T("&|<>"), *tmp) */)
     {
-        int pos;
-        INT_PTR size;
+        ++tmp;
+    }
+    *tmp = _T('\0');
 
-        /* Strip out any trailing spaces or control chars */
-        tmp = textline + _tcslen (textline) - 1;
+    /* If we don't have any label, bail out */
+    if (!*param)
+        goto NotFound;
 
-        while (tmp > textline && (_istcntrl (*tmp) || _istspace (*tmp) ||  (*tmp == _T(':'))))
-            tmp--;
-        *(tmp + 1) = _T('\0');
+    /*
+     * Search the next label starting our position, until the end of the file.
+     * If none has been found, restart at the beginning of the file, and continue
+     * until reaching back our old current position.
+     */
+    bRetry = FALSE;
+    dwCurrPos = bc->mempos;
 
-        /* Then leading spaces... */
-        tmp = textline;
-        while (_istspace (*tmp))
-            tmp++;
+retry:
+    while (BatchGetString(textline, ARRAYSIZE(textline)))
+    {
+        if (bRetry && (bc->mempos >= dwCurrPos))
+            break;
 
-        /* All space after leading space terminate the string */
-        size = _tcslen(tmp) -1;
-        pos=0;
-        while (tmp+pos < tmp+size)
+#if 0
+        /* If this is not a label, continue searching */
+        if (!_tcschr(textline, _T(':')))
+            continue;
+#endif
+
+        label = textline;
+
+        /* A bug in Windows' CMD makes it always ignore the
+         * first character of the line, unless it's a colon. */
+        if (*label != _T(':'))
+            ++label;
+
+        /* Strip any leading whitespace */
+        while (_istspace(*label))
+            ++label;
+
+        /* If this is not a label, continue searching */
+        if (*label != _T(':'))
+            continue;
+
+        /* Skip the first colon or plus sign */
+#if 0
+        if (*label == _T(':') || *label == _T('+'))
+            ++label;
+#endif
+        ++label;
+        /* Strip any whitespace between the colon and the label */
+        while (_istspace(*label))
+            ++label;
+        /* Terminate the label at the first delimiter character */
+        tmp = label;
+        while (!_istcntrl(*tmp) && !_istspace(*tmp) &&
+               !_tcschr(_T(":+"), *tmp) && !_tcschr(STANDARD_SEPS, *tmp) &&
+               !_tcschr(_T("&|<>"), *tmp))
         {
-            if (_istspace(tmp[pos]))
-                tmp[pos]=_T('\0');
-            pos++;
+            /* Support the escape caret */
+            if (*tmp == _T('^'))
+            {
+                /* Move the buffer back one character */
+                memmove(tmp, tmp + 1, (_tcslen(tmp + 1) + 1) * sizeof(TCHAR));
+                /* We will ignore the new character */
+            }
+
+            ++tmp;
         }
+        *tmp = _T('\0');
 
-        tmp2 = param;
-        /* use whole label name */
-        if ((*tmp == _T(':')) && ((_tcsicmp (++tmp, param) == 0) || (_tcsicmp (tmp, ++tmp2) == 0)))
+        /* Jump if the labels are identical */
+        if (_tcsicmp(label, param) == 0)
+        {
+            /* Do not process any more parts of a compound command */
+            bc->current = NULL;
             return 0;
-
+        }
+    }
+    if (!bRetry && (bc->mempos >= bc->memsize))
+    {
+        bRetry = TRUE;
+        bc->mempos = 0;
+        goto retry;
     }
 
+NotFound:
     ConErrResPrintf(STRING_GOTO_ERROR2, param);
     ExitBatch();
     return 1;

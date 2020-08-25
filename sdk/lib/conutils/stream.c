@@ -232,8 +232,8 @@ ConStreamSetCacheCodePage(
      */
     Mode = Stream->Mode;
     CON_STREAM_SET_MODE(Stream, Mode, CacheCodePage);
-    return TRUE;
 #endif
+    return TRUE;
 }
 
 HANDLE
@@ -277,7 +277,7 @@ ConStreamSetOSHandle(
     if (!Stream->fStream)
         return FALSE;
 
-    int fdOut = _open_osfhandle(Handle, _O_TEXT /* FIXME! */);
+    int fdOut = _open_osfhandle((intptr_t)Handle, _O_TEXT /* FIXME! */);
     FILE* fpOut = _fdopen(fdOut, "w");
     *Stream->fStream = *fpOut;
     /// setvbuf(Stream->fStream, NULL, _IONBF, 0); 

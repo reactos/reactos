@@ -116,7 +116,7 @@ BEGIN
     LTEXT "", IDC_BROWSE_FOR_FOLDER_STATUS, 10, 25, 198, 12
     LTEXT "Папка:", IDC_BROWSE_FOR_FOLDER_FOLDER, 10, 152, 40, 12
     CONTROL "", IDC_BROWSE_FOR_FOLDER_TREEVIEW, "SysTreeView32", TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | WS_BORDER | WS_TABSTOP, 12, 38, 194, 105
-    EDITTEXT IDC_BROWSE_FOR_FOLDER_FOLDER_TEXT, 46, 150, 160, 14, WS_BORDER | WS_GROUP | WS_TABSTOP
+    EDITTEXT IDC_BROWSE_FOR_FOLDER_FOLDER_TEXT, 46, 150, 160, 14, ES_AUTOHSCROLL | WS_BORDER | WS_GROUP | WS_TABSTOP
     PUSHBUTTON "&Создать папку", IDC_BROWSE_FOR_FOLDER_NEW_FOLDER, 12, 174, 77, 14, WS_GROUP | WS_TABSTOP
     DEFPUSHBUTTON "OK", IDOK, 102, 174, 50, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
     PUSHBUTTON "Отмена", IDCANCEL, 156, 174, 50, 14, WS_GROUP | WS_TABSTOP
@@ -716,6 +716,20 @@ BEGIN
     PUSHBUTTON "Сменить &значок...", IDC_FOLDERCUST_CHANGE_ICON, 15, 210, 75, 15
 END
 
+IDD_LINK_PROBLEM DIALOGEX 0, 0, 250, 140
+CAPTION "Проблема с ярлыком"
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON 0, IDC_LINK_PROBLEM_ICON, 5, 5, 0, 0
+    LTEXT "Элемент '%s', на который ссылается этот ярлык, был изменён или перемещён, поэтому ярлык не будет работать правильно.", IDC_LINK_PROBLEM_LABEL1, 35, 5, 210, 35
+    LTEXT "Ближайшее совпадение по имени, типу, размеру, и дате:", IDC_LINK_PROBLEM_LABEL2, 35, 45, 210, 35
+    LTEXT "Вы хотите исправить назначение этого ярлыка или просто удалить его?", -1, 35, 85, 210, 30
+    DEFPUSHBUTTON "&Исправить", IDOK, 55, 120, 60, 15, WS_DISABLED
+    PUSHBUTTON "&Удалить", IDYES, 120, 120, 60, 15
+    PUSHBUTTON "Отмена", IDCANCEL, 185, 120, 60, 15
+END
+
 STRINGTABLE
 BEGIN
     /* columns in the shellview */
@@ -985,9 +999,18 @@ BEGIN
     IDS_SPECIFY_ACTION "Необходимо задать действие."
     IDS_INVALID_PROGRAM "Указанная программа не найдена. Убедитесь, что имя и путь к файлу указаны правильно."
     IDS_REMOVE_ACTION "Вы действительно хотите удалить это действие?"
-    IDS_ACTION_EXISTS "Действие '%s' уже зарегистрирован для этого типа файла. Введите другое имя и повторите попытку."
-    IDS_EXE_FILTER "Programs\0*.exe\0All Files\0*.*\0"
+    IDS_ACTION_EXISTS "Действие '%s' уже зарегистрировано для этого типа файла. Введите другое имя и повторите попытку."
+    IDS_EXE_FILTER "Программы\0*.exe\0Все файлы\0*.*\0"
     IDS_EDITING_ACTION "Изменение действия для типа: "
     IDS_NO_ICONS "Файл '%s' не содержит значков.\n\nВыберите значок из списка или укажите другой файл."
     IDS_FILE_NOT_FOUND "Файл '%s' не найден."
+    IDS_LINK_INVALID "Элемент '%s', на который ссылается этот ярлык, был изменён или перемещён, поэтому ярлык не будет работать правильно."
+    IDS_COPYTOMENU "Ко&пировать в папку..."
+    IDS_COPYTOTITLE "Выберите расположение, куда вы хотите скопировать '%s', затем нажмите кнопку 'Копировать'."
+    IDS_COPYITEMS "Копирование элементов"
+    IDS_COPYBUTTON "Копировать"
+    IDS_MOVETOMENU "П&ереместить в папку..."
+    IDS_MOVETOTITLE "Выберите расположение, куда вы хотите переместить '%s', затем нажмите кнопку 'Переместить'."
+    IDS_MOVEITEMS "Перемещение элементов"
+    IDS_MOVEBUTTON "Переместить"
 END

@@ -238,9 +238,9 @@ BEGIN
     LISTBOX IDC_PAGEFILELIST, 10, 16, 204, 52, LBS_NOTIFY | LBS_USETABSTOPS
     GROUPBOX "所選磁碟機的分頁檔大小", IDC_DRIVEGROUP, 10, 70, 204, 104
     LTEXT "磁碟:", IDC_STATIC, 20, 80, 20, 8
-    LTEXT "", IDC_DRIVE, 88, 81, 100, 9
+    LTEXT "%s", IDC_DRIVE, 88, 80, 100, 9
     LTEXT "可用空間:", IDC_STATIC, 20, 92, 56, 9
-    LTEXT "", IDC_SPACEAVAIL, 88, 92, 104, 9
+    LTEXT "%s", IDC_SPACEAVAIL, 88, 92, 104, 9
     LTEXT "初始大小(MB)(&I):", -1, 22, 118, 75, 9
     LTEXT "最大值(MB)(&X):", -1, 22, 131, 75, 9
     AUTORADIOBUTTON "自訂大小(&C):", IDC_CUSTOM, 20, 105, 54, 9, WS_GROUP
@@ -251,11 +251,11 @@ BEGIN
     PUSHBUTTON "設定(&S)", IDC_SET, 158, 154, 50, 15
     GROUPBOX "所有磁碟機頁面文件大小的總數", IDC_TOTALGROUP, 10, 177, 204, 46
     LTEXT "允許的最小值:", IDC_STATIC, 18, 188, 58, 9
-    LTEXT "", IDC_MINIMUM, 88, 188, 100, 9
+    LTEXT "%s", IDC_MINIMUM, 88, 188, 100, 9
     LTEXT "推薦:", IDC_STATIC, 18, 199, 52, 9
-    LTEXT "", IDC_RECOMMENDED, 88, 199, 100, 9
+    LTEXT "%s", IDC_RECOMMENDED, 88, 199, 100, 9
     LTEXT "當前已分配:", IDC_STATIC, 18, 210, 66, 9
-    LTEXT "", IDC_CURRENT, 88, 210, 100, 9
+    LTEXT "%s", IDC_CURRENT, 88, 210, 100, 9
     DEFPUSHBUTTON "確定", IDOK, 114, 230, 48, 15
     PUSHBUTTON "取消", IDCANCEL, 168, 230, 48, 15
 END
@@ -338,6 +338,7 @@ BEGIN
     IDS_WARNMAXIMUMSIZE "爲分頁文件的最大大小輸入一個數字值。"
     IDS_WARNINITIALRANGE "分頁文件的初始大小不得小於 2 MB，並且不得超過所選磁碟上的可用空間。"
     IDS_WARNMAXIMUMRANGE "分頁文件的最大大小不能小於其初始大小和不能超過所選磁碟上的可用空間。"
+    IDS_PAGEFILE_MB "%u MB"
     IDS_PAGEFILE_NONE "無"
     IDS_PAGEFILE_SYSTEM "系統已管理"
     IDS_INFOREBOOT "您必須重新啓動電腦，才能套用更改。"

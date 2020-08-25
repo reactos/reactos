@@ -238,14 +238,14 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS
 CAPTION "Virtuálna pamäť"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "Jednotka [menovka zväzku]", IDC_STATIC, 10, 5, 96, 9
-    LTEXT "Veľkosť stránkovacieho súboru (v MB)", IDC_STATIC, 112, 5, 96, 9
+    LTEXT "Jednotka [menovka zväzku]", IDC_STATIC, 10, 5, 90, 9
+    LTEXT "Veľkosť stránkovacieho súboru (v MB)", IDC_STATIC, 102, 5, 122, 9
     LISTBOX IDC_PAGEFILELIST, 10, 16, 204, 52, LBS_NOTIFY | LBS_USETABSTOPS
     GROUPBOX "Veľkosť stránkovacieho súboru pre vybranú jednotku", IDC_DRIVEGROUP, 10, 70, 204, 104
     LTEXT "Jednotka:", IDC_STATIC, 20, 80, 30, 8
-    LTEXT "", IDC_DRIVE, 88, 81, 100, 9
+    LTEXT "%s", IDC_DRIVE, 88, 80, 100, 9
     LTEXT "Dostupné miesto:", IDC_STATIC, 20, 92, 56, 9
-    LTEXT "", IDC_SPACEAVAIL, 88, 92, 104, 9
+    LTEXT "%s", IDC_SPACEAVAIL, 88, 92, 104, 9
     LTEXT "&Počiatočná veľkosť (v MB):", -1, 22, 118, 88, 9
     LTEXT "Ma&ximálna veľkosť (v MB):", -1, 22, 131, 85, 9
     AUTORADIOBUTTON "&Vlastná veľkosť:", IDC_CUSTOM, 20, 105, 74, 9, WS_GROUP
@@ -256,11 +256,11 @@ BEGIN
     PUSHBUTTON "&Nastaviť", IDC_SET, 158, 154, 50, 15
     GROUPBOX "Celková veľkosť stránkovacieho súboru pre všetky jednotky", IDC_TOTALGROUP, 10, 177, 204, 46
     LTEXT "Najmenšia povolená:", IDC_STATIC, 18, 188, 78, 9
-    LTEXT "", IDC_MINIMUM, 88, 188, 100, 9
+    LTEXT "%s", IDC_MINIMUM, 88, 188, 100, 9
     LTEXT "Odporúčaná:", IDC_STATIC, 18, 199, 52, 9
-    LTEXT "", IDC_RECOMMENDED, 88, 199, 100, 9
+    LTEXT "%s", IDC_RECOMMENDED, 88, 199, 100, 9
     LTEXT "Aktuálne vyhradená:", IDC_STATIC, 18, 210, 76, 9
-    LTEXT "", IDC_CURRENT, 88, 210, 100, 9
+    LTEXT "%s", IDC_CURRENT, 88, 210, 100, 9
     DEFPUSHBUTTON "OK", IDOK, 114, 230, 48, 15
     PUSHBUTTON "Zrušiť", IDCANCEL, 168, 230, 48, 15
 END
@@ -343,6 +343,7 @@ BEGIN
     IDS_WARNMAXIMUMSIZE "Enter a numeric value for the maximum size of the paging file."
     IDS_WARNINITIALRANGE "The initial size of the paging file must not be smaller than 2 MB,  must not be larger than 4095 MB and must not exceed the available space on the selected drive."
     IDS_WARNMAXIMUMRANGE "The maximum size of the paging file must not be smaller than its initial size, must not be larger than 4095 MB and must not exceed the available space on the selected drive."
+    IDS_PAGEFILE_MB "%u MB"
     IDS_PAGEFILE_NONE "Žiadne"
     IDS_PAGEFILE_SYSTEM "System Managed"
     IDS_INFOREBOOT "You have to reboot the computer in order to apply the changes."

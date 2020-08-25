@@ -51,7 +51,12 @@ endif()
 # HACK: for VS 11+ we need to explicitly disable SSE, which is off by
 # default for older compilers. See CORE-6507
 if(ARCH STREQUAL "i386")
-    add_compile_flags("/arch:IA32")
+    # Clang's IA32 means i386, which doesn't have cmpxchg8b
+    if(USE_CLANG_CL)
+        add_compile_flags("-march=${OARCH}")
+    else()
+        add_compile_flags("/arch:IA32")
+    endif()
 endif()
 
 # VS 12+ requires /FS when used in parallel compilations
@@ -177,7 +182,7 @@ if(MSVC_IDE)
     # For VS builds we'll only have en-US in resource files
     add_definitions(/DLANGUAGE_EN_US)
 else()
-    set(CMAKE_RC_COMPILE_OBJECT "<CMAKE_RC_COMPILER> /nologo <INCLUDES> <FLAGS> <DEFINES> ${I18N_DEFS} /fo<OBJECT> <SOURCE>")
+    set(CMAKE_RC_COMPILE_OBJECT "<CMAKE_RC_COMPILER> /nologo <INCLUDES> <FLAGS> <DEFINES> ${I18N_DEFS} /fo <OBJECT> <SOURCE>")
     if(ARCH STREQUAL "arm")
         set(CMAKE_ASM_COMPILE_OBJECT
             "cl ${cl_includes_flag} /nologo /X /I${REACTOS_SOURCE_DIR}/sdk/include/asm /I${REACTOS_BINARY_DIR}/sdk/include/asm <INCLUDES> <FLAGS> <DEFINES> /D__ASM__ /D_USE_ML /EP /c <SOURCE> > <OBJECT>.tmp"

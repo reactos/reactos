@@ -11,7 +11,7 @@ BEGIN
     BEGIN
         MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "アイコンの自動整列(&A)", FCIDM_SHVIEW_AUTOARRANGE
-        MENUITEM "Align to &Grid", FCIDM_SHVIEW_ALIGNTOGRID
+        MENUITEM "アイコンを等間隔に整列(&G)", FCIDM_SHVIEW_ALIGNTOGRID
     END
 END
 
@@ -32,7 +32,7 @@ BEGIN
         BEGIN
             MENUITEM "", -1, MFT_SEPARATOR
             MENUITEM "アイコンの自動整列(&A)", FCIDM_SHVIEW_AUTOARRANGE
-            MENUITEM "Align to &Grid", FCIDM_SHVIEW_ALIGNTOGRID
+            MENUITEM "アイコンを等間隔に整列(&G)", FCIDM_SHVIEW_ALIGNTOGRID
         END
         MENUITEM "最新の情報に更新", FCIDM_SHVIEW_REFRESH
         MENUITEM "", -1, MFT_SEPARATOR
@@ -109,7 +109,7 @@ BEGIN
     LTEXT "", IDC_BROWSE_FOR_FOLDER_STATUS, 10, 25, 198, 12
     LTEXT "フォルダ:", IDC_BROWSE_FOR_FOLDER_FOLDER, 10, 152, 40, 12
     CONTROL "", IDC_BROWSE_FOR_FOLDER_TREEVIEW, "SysTreeView32", TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_EDITLABELS | WS_BORDER | WS_TABSTOP, 12, 38, 194, 105
-    EDITTEXT IDC_BROWSE_FOR_FOLDER_FOLDER_TEXT, 46, 150, 160, 14, WS_BORDER | WS_GROUP | WS_TABSTOP
+    EDITTEXT IDC_BROWSE_FOR_FOLDER_FOLDER_TEXT, 46, 150, 160, 14, ES_AUTOHSCROLL | WS_BORDER | WS_GROUP | WS_TABSTOP
     PUSHBUTTON "新しいフォルダの作成(&M)", IDC_BROWSE_FOR_FOLDER_NEW_FOLDER, 12, 188, 85, 14, WS_GROUP | WS_TABSTOP
     DEFPUSHBUTTON "OK", IDOK, 102, 174, 50, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
     PUSHBUTTON "キャンセル", IDCANCEL, 156, 174, 50, 14, WS_GROUP | WS_TABSTOP
@@ -706,6 +706,20 @@ BEGIN
     PUSHBUTTON "アイコン変更(&I)...", IDC_FOLDERCUST_CHANGE_ICON, 15, 210, 75, 15
 END
 
+IDD_LINK_PROBLEM DIALOGEX 0, 0, 250, 140
+CAPTION "ショートカットに問題があります"
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+FONT 9, "MS UI Gothic"
+BEGIN
+    ICON 0, IDC_LINK_PROBLEM_ICON, 5, 5, 0, 0
+    LTEXT "このショートカットが参照する項目 '%s' は、変更されたか移動したので、このショートカットはもう正常に動作しません。", IDC_LINK_PROBLEM_LABEL1, 35, 5, 210, 35
+    LTEXT "名前、種類、サイズ、日時から最も近いのは:", IDC_LINK_PROBLEM_LABEL2, 35, 45, 210, 35
+    LTEXT "このターゲットへショートカットを修正しますか、それとも削除しますか？", -1, 35, 85, 210, 30
+    DEFPUSHBUTTON "修正(&F)", IDOK, 55, 120, 60, 15, WS_DISABLED
+    PUSHBUTTON "削除(&D)", IDYES, 120, 120, 60, 15
+    PUSHBUTTON "キャンセル", IDCANCEL, 185, 120, 60, 15
+END
+
 STRINGTABLE
 BEGIN
     /* columns in the shellview */
@@ -980,4 +994,13 @@ BEGIN
     IDS_EDITING_ACTION "種類に対するアクションの編集: "
     IDS_NO_ICONS "ファイル '%s' にはアイコン データがありません。.\n\nリストからアイコンを選ぶか、別のファイルを指定して下さい。"
     IDS_FILE_NOT_FOUND "ファイル '%s' は見つかりませんでした。"
+    IDS_LINK_INVALID "このショートカットが参照する項目 '%s' は、変更されたか移動したので、このショートカットはもう正常に動作しません。"
+    IDS_COPYTOMENU "フォルダにコピー(&F)..."
+    IDS_COPYTOTITLE "'%s' のコピー先を選択して「コピー」ボタンをクリックして下さい。"
+    IDS_COPYITEMS "項目のコピー先"
+    IDS_COPYBUTTON "コピー"
+    IDS_MOVETOMENU "フォルダに移動(&V)..."
+    IDS_MOVETOTITLE "'%s' の移動先を選択して「移動」ボタンをクリックして下さい。"
+    IDS_MOVEITEMS "項目の移動先"
+    IDS_MOVEBUTTON "移動"
 END

@@ -1,14 +1,14 @@
 @ stub ImmActivateLayout
-@ stdcall ImmAssociateContext(long long)
-@ stdcall ImmAssociateContextEx(long long long)
-@ stdcall ImmConfigureIMEA(long long long ptr)
-@ stdcall ImmConfigureIMEW(long long long ptr)
+@ stdcall ImmAssociateContext(ptr ptr)
+@ stdcall ImmAssociateContextEx(ptr ptr long)
+@ stdcall ImmConfigureIMEA(ptr ptr long ptr)
+@ stdcall ImmConfigureIMEW(ptr ptr long ptr)
 @ stdcall ImmCreateContext()
 @ stdcall ImmCreateIMCC(long)
 @ stdcall ImmCreateSoftKeyboard(long long long long)
-@ stdcall ImmDestroyContext(long)
-@ stdcall ImmDestroyIMCC(long)
-@ stdcall ImmDestroySoftKeyboard(long)
+@ stdcall ImmDestroyContext(ptr)
+@ stdcall ImmDestroyIMCC(ptr)
+@ stdcall ImmDestroySoftKeyboard(ptr)
 @ stdcall ImmDisableIME(long)
 @ stdcall ImmDisableIme(long) ImmDisableIME
 @ stdcall ImmDisableLegacyIME()
@@ -46,7 +46,7 @@
 @ stdcall ImmGetIMCLockCount(long)
 @ stdcall ImmGetIMEFileNameA(long ptr long)
 @ stdcall ImmGetIMEFileNameW(long ptr long)
-@ stub ImmGetImeInfoEx
+@ stdcall ImmGetImeInfoEx(ptr long ptr)
 @ stdcall ImmGetImeMenuItemsA(long long long ptr ptr long)
 @ stdcall ImmGetImeMenuItemsW(long long long ptr ptr long)
 @ stdcall ImmGetOpenStatus(long)
@@ -77,7 +77,7 @@
 @ stdcall ImmProcessKey(long long long long long)
 @ stub ImmPutImeMenuItemsIntoMappedFile
 @ stdcall ImmReSizeIMCC(long long)
-@ stub ImmRegisterClient
+@ stdcall ImmRegisterClient(ptr ptr)
 @ stdcall ImmRegisterWordA(long str long str)
 @ stdcall ImmRegisterWordW(long wstr long wstr)
 @ stdcall ImmReleaseContext(long long)
@@ -86,8 +86,8 @@
 @ stub ImmSendIMEMessageExA
 @ stub ImmSendIMEMessageExW
 @ stub ImmSendMessageToActiveDefImeWndW
-@ stub ImmSetActiveContext
-@ stub ImmSetActiveContextConsoleIME
+@ stdcall ImmSetActiveContext(ptr ptr long)
+@ stdcall ImmSetActiveContextConsoleIME(ptr long)
 @ stdcall ImmSetCandidateWindow(long ptr)
 @ stdcall ImmSetCompositionFontA(long ptr)
 @ stdcall ImmSetCompositionFontW(long ptr)
@@ -98,7 +98,7 @@
 #@ stdcall ImmSetHotKey(long long long ptr) user32.CliImmSetHotKey
 @ stdcall ImmSetOpenStatus(long long)
 @ stdcall ImmSetStatusWindowPos(long ptr)
-@ stdcall ImmShowSoftKeyboard(long long)
+@ stdcall ImmShowSoftKeyboard(ptr long)
 @ stdcall ImmSimulateHotKey(long long)
 @ stub ImmSystemHandler
 @ stdcall ImmTranslateMessage(long long long long)

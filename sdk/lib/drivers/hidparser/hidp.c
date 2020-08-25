@@ -13,17 +13,10 @@ NTAPI
 HidP_FreeCollectionDescription(
     IN PHIDP_DEVICE_DESC   DeviceDescription)
 {
-    HID_PARSER Parser;
-
-    //
-    // init parser
-    //
-    HidParser_InitParser(AllocFunction, FreeFunction, ZeroFunction, CopyFunction, DebugFunction, &Parser);
-
     //
     // free collection
     //
-    HidParser_FreeCollectionDescription(&Parser, DeviceDescription);
+    HidParser_FreeCollectionDescription(DeviceDescription);
 }
 
 
@@ -34,22 +27,15 @@ HidP_GetCaps(
     IN PHIDP_PREPARSED_DATA  PreparsedData,
     OUT PHIDP_CAPS  Capabilities)
 {
-    HID_PARSER Parser;
-
-    //
-    // init parser
-    //
-    HidParser_InitParser(AllocFunction, FreeFunction, ZeroFunction, CopyFunction, DebugFunction, &Parser);
-
     //
     // get caps
     //
-    return HidParser_GetCaps(&Parser, PreparsedData, Capabilities);
+    return HidParser_GetCaps(PreparsedData, Capabilities);
 }
 
 NTSTATUS
 TranslateStatusForUpperLayer(
-    IN HIDPARSER_STATUS Status)
+    IN NTSTATUS Status)
 {
     //
     // now we are handling only this values, for others just return
@@ -57,13 +43,13 @@ TranslateStatusForUpperLayer(
     //
     switch (Status)
     {
-    case HIDPARSER_STATUS_INSUFFICIENT_RESOURCES:
+    case HIDP_STATUS_INTERNAL_ERROR:
         return STATUS_INSUFFICIENT_RESOURCES;
-    case HIDPARSER_STATUS_INVALID_REPORT_TYPE:
+    case HIDP_STATUS_INVALID_REPORT_TYPE:
         return HIDP_STATUS_INVALID_REPORT_TYPE;
-    case HIDPARSER_STATUS_BUFFER_TOO_SMALL:
+    case HIDP_STATUS_BUFFER_TOO_SMALL:
         return STATUS_BUFFER_TOO_SMALL;
-    case HIDPARSER_STATUS_COLLECTION_NOT_FOUND:
+    case HIDP_STATUS_USAGE_NOT_FOUND:
         return STATUS_NO_DATA_DETECTED;
     default:
         return Status;
@@ -78,18 +64,12 @@ HidP_GetCollectionDescription(
     IN POOL_TYPE PoolType,
     OUT PHIDP_DEVICE_DESC DeviceDescription)
 {
-    HID_PARSER Parser;
     NTSTATUS Status;
-
-    //
-    // init parser
-    //
-    HidParser_InitParser(AllocFunction, FreeFunction, ZeroFunction, CopyFunction, DebugFunction, &Parser);
 
     //
     // get description;
     //
-    Status = HidParser_GetCollectionDescription(&Parser, ReportDesc, DescLength, PoolType, DeviceDescription);
+    Status = HidParser_GetCollectionDescription(ReportDesc, DescLength, PoolType, DeviceDescription);
     return TranslateStatusForUpperLayer(Status);
 }
 
@@ -101,23 +81,15 @@ HidP_MaxUsageListLength(
     IN USAGE  UsagePage  OPTIONAL,
     IN PHIDP_PREPARSED_DATA  PreparsedData)
 {
-    HID_PARSER Parser;
-
     //
     // sanity check
     //
     ASSERT(ReportType == HidP_Input || ReportType == HidP_Output || ReportType == HidP_Feature);
 
     //
-    // init parser
-    //
-    HidParser_InitParser(AllocFunction, FreeFunction, ZeroFunction, CopyFunction, DebugFunction, &Parser);
-
-
-    //
     // get usage length
     //
-    return HidParser_MaxUsageListLength(&Parser, PreparsedData, ReportType, UsagePage);
+    return HidParser_MaxUsageListLength(PreparsedData, ReportType, UsagePage);
 }
 
 HIDAPI
@@ -132,22 +104,15 @@ HidP_GetSpecificValueCaps(
     IN OUT PUSHORT  ValueCapsLength,
     IN PHIDP_PREPARSED_DATA  PreparsedData)
 {
-    HID_PARSER Parser;
-
     //
     // sanity check
     //
     ASSERT(ReportType == HidP_Input || ReportType == HidP_Output || ReportType == HidP_Feature);
 
     //
-    // init parser
-    //
-    HidParser_InitParser(AllocFunction, FreeFunction, ZeroFunction, CopyFunction, DebugFunction, &Parser);
-
-    //
     // get value caps
     //
-    return HidParser_GetSpecificValueCaps(&Parser, PreparsedData, ReportType, UsagePage, LinkCollection, Usage, ValueCaps, ValueCapsLength);
+    return HidParser_GetSpecificValueCaps(PreparsedData, ReportType, UsagePage, LinkCollection, Usage, ValueCaps, ValueCapsLength);
 }
 
 HIDAPI
@@ -163,22 +128,15 @@ HidP_GetUsages(
     IN PCHAR Report,
     IN ULONG ReportLength)
 {
-    HID_PARSER Parser;
-
     //
     // sanity check
     //
     ASSERT(ReportType == HidP_Input || ReportType == HidP_Output || ReportType == HidP_Feature);
 
     //
-    // init parser
-    //
-    HidParser_InitParser(AllocFunction, FreeFunction, ZeroFunction, CopyFunction, DebugFunction, &Parser);
-
-    //
     // get usages
     //
-    return HidParser_GetUsages(&Parser, PreparsedData, ReportType, UsagePage, LinkCollection, UsageList, UsageLength, Report, ReportLength);
+    return HidParser_GetUsages(PreparsedData, ReportType, UsagePage, LinkCollection, UsageList, UsageLength, Report, ReportLength);
 }
 
 
@@ -238,22 +196,15 @@ HidP_GetScaledUsageValue(
     IN PCHAR  Report,
     IN ULONG  ReportLength)
 {
-    HID_PARSER Parser;
-
     //
     // sanity check
     //
     ASSERT(ReportType == HidP_Input || ReportType == HidP_Output || ReportType == HidP_Feature);
 
     //
-    // init parser
-    //
-    HidParser_InitParser(AllocFunction, FreeFunction, ZeroFunction, CopyFunction, DebugFunction, &Parser);
-
-    //
     // get scaled usage value
     //
-    return HidParser_GetScaledUsageValue(&Parser, PreparsedData, ReportType, UsagePage, LinkCollection, Usage, UsageValue, Report, ReportLength);
+    return HidParser_GetScaledUsageValue(PreparsedData, ReportType, UsagePage, LinkCollection, Usage, UsageValue, Report, ReportLength);
 }
 
 HIDAPI
@@ -269,22 +220,15 @@ HidP_GetUsageValue(
     IN PCHAR  Report,
     IN ULONG  ReportLength)
 {
-    HID_PARSER Parser;
-
     //
     // sanity check
     //
     ASSERT(ReportType == HidP_Input || ReportType == HidP_Output || ReportType == HidP_Feature);
 
     //
-    // init parser
-    //
-    HidParser_InitParser(AllocFunction, FreeFunction, ZeroFunction, CopyFunction, DebugFunction, &Parser);
-
-    //
     // get scaled usage value
     //
-    return HidParser_GetUsageValue(&Parser, PreparsedData, ReportType, UsagePage, LinkCollection, Usage, UsageValue, Report, ReportLength);
+    return HidParser_GetUsageValue(PreparsedData, ReportType, UsagePage, LinkCollection, Usage, UsageValue, Report, ReportLength);
 }
 
 
@@ -299,17 +243,10 @@ HidP_TranslateUsageAndPagesToI8042ScanCodes(
     IN PHIDP_INSERT_SCANCODES  InsertCodesProcedure,
     IN PVOID  InsertCodesContext)
 {
-    HID_PARSER Parser;
-
-    //
-    // init parser
-    //
-    HidParser_InitParser(AllocFunction, FreeFunction, ZeroFunction, CopyFunction, DebugFunction, &Parser);
-
     //
     // translate usage pages
     //
-    return HidParser_TranslateUsageAndPagesToI8042ScanCodes(&Parser, ChangedUsageList, UsageListLength, KeyAction, ModifierState, InsertCodesProcedure, InsertCodesContext);
+    return HidParser_TranslateUsageAndPagesToI8042ScanCodes(ChangedUsageList, UsageListLength, KeyAction, ModifierState, InsertCodesProcedure, InsertCodesContext);
 }
 
 HIDAPI

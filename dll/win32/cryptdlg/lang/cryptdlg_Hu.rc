@@ -25,7 +25,7 @@ LANGUAGE LANG_HUNGARIAN, SUBLANG_DEFAULT
 
 STRINGTABLE
 {
-    IDS_CERT_POLICY "Tanusítvány szabályok"
+    IDS_CERT_POLICY "Tanúsítvány szabályok"
     IDS_POLICY_ID "Szabály azonosító: "
     IDS_POLICY_QUALIFIER_INFO "Szabály minősítő információ"
     IDS_POLICY_QUALIFIER_ID "Szabály minősítő Id="

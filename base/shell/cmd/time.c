@@ -129,32 +129,32 @@ static BOOL ParseTime (LPTSTR s)
 }
 
 
-INT cmd_time (LPTSTR param)
+INT cmd_time(LPTSTR param)
 {
-    LPTSTR *arg;
-    INT    argc;
-    INT    i;
-    INT    nTimeString = -1;
+    LPTSTR* arg;
+    INT argc;
+    INT i;
+    INT nTimeString = -1;
+    TCHAR szTime[40];
 
-    if (!_tcsncmp (param, _T("/?"), 2))
+    if (!_tcsncmp(param, _T("/?"), 2))
     {
-        ConOutResPaging(TRUE,STRING_TIME_HELP1);
+        ConOutResPaging(TRUE, STRING_TIME_HELP1);
         return 0;
     }
 
     nErrorLevel = 0;
 
-    /* build parameter array */
-    arg = split (param, &argc, FALSE, FALSE);
+    /* Build the parameter array */
+    arg = split(param, &argc, FALSE, FALSE);
 
-    /* check for options */
+    /* Check for options */
     for (i = 0; i < argc; i++)
     {
-        if (_tcsicmp (arg[i], _T("/t")) == 0)
+        if (bEnableExtensions && (_tcsicmp(arg[i], _T("/T")) == 0))
         {
             /* Display current time in short format */
             SYSTEMTIME st;
-            TCHAR szTime[20];
             GetLocalTime(&st);
             FormatTime(szTime, &st);
             ConOutPuts(szTime);
@@ -172,45 +172,41 @@ INT cmd_time (LPTSTR param)
         ConOutPrintf(_T(": %s\n"), GetTimeString());
     }
 
-    while (1)
+    while (TRUE)
     {
         if (nTimeString == -1)
         {
-            TCHAR  s[40];
-
             ConOutResPuts(STRING_TIME_HELP2);
+            ConInString(szTime, ARRAYSIZE(szTime));
 
-            ConInString (s, 40);
+            TRACE("\'%s\'\n", debugstr_aw(szTime));
 
-            TRACE ("\'%s\'\n", debugstr_aw(s));
+            while (*szTime && szTime[_tcslen(szTime) - 1] < _T(' '))
+                szTime[_tcslen(szTime) - 1] = _T('\0');
 
-            while (*s && s[_tcslen (s) - 1] < _T(' '))
-                s[_tcslen(s) - 1] = _T('\0');
-
-            if (ParseTime (s))
+            if (ParseTime(szTime))
             {
-                freep (arg);
+                freep(arg);
                 return 0;
             }
         }
         else
         {
-            if (ParseTime (arg[nTimeString]))
+            if (ParseTime(arg[nTimeString]))
             {
-                freep (arg);
+                freep(arg);
                 return 0;
             }
 
-            /* force input the next time around. */
+            /* Force input the next time around */
             nTimeString = -1;
         }
 
         ConErrResPuts(STRING_TIME_ERROR1);
-    nErrorLevel = 1;
+        nErrorLevel = 1;
     }
 
-    freep (arg);
-
+    freep(arg);
     return 0;
 }
 

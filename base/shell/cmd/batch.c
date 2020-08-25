@@ -61,13 +61,11 @@
 #include "precomp.h"
 
 /* The stack of current batch contexts.
- * NULL when no batch is active
+ * NULL when no batch is active.
  */
-LPBATCH_CONTEXT bc = NULL;
+PBATCH_CONTEXT bc = NULL;
 
 BOOL bEcho = TRUE;  /* The echo flag */
-
-
 
 /* Buffer for reading Batch file lines */
 TCHAR textline[BATCH_BUFFSIZE];
@@ -79,7 +77,6 @@ TCHAR textline[BATCH_BUFFSIZE];
  * If no batch file is current, returns NULL
  *
  */
-
 LPTSTR FindArg(TCHAR Char, BOOL *IsParam0)
 {
     LPTSTR pp;
@@ -109,10 +106,9 @@ LPTSTR FindArg(TCHAR Char, BOOL *IsParam0)
  * NULL character signalling the end of the parameters.
  *
  */
-
-LPTSTR BatchParams(LPTSTR s1, LPTSTR s2)
+static LPTSTR BatchParams(LPTSTR s1, LPTSTR s2)
 {
-    LPTSTR dp = (LPTSTR)cmd_alloc ((_tcslen(s1) + _tcslen(s2) + 3) * sizeof (TCHAR));
+    LPTSTR dp = (LPTSTR)cmd_alloc((_tcslen(s1) + _tcslen(s2) + 3) * sizeof (TCHAR));
 
     /* JPP 20-Jul-1998 added error checking */
     if (dp == NULL)
@@ -135,7 +131,7 @@ LPTSTR BatchParams(LPTSTR s1, LPTSTR s2)
         BOOL inquotes = FALSE;
 
         /* Find next parameter */
-        while (_istspace(*s2) || (*s2 && _tcschr(_T(",;="), *s2)))
+        while (_istspace(*s2) || (*s2 && _tcschr(STANDARD_SEPS, *s2)))
             s2++;
         if (!*s2)
             break;
@@ -143,7 +139,7 @@ LPTSTR BatchParams(LPTSTR s1, LPTSTR s2)
         /* Copy it */
         do
         {
-            if (!inquotes && (_istspace(*s2) || _tcschr(_T(",;="), *s2)))
+            if (!inquotes && (_istspace(*s2) || _tcschr(STANDARD_SEPS, *s2)))
                 break;
             inquotes ^= (*s2 == _T('"'));
             *s1++ = *s2++;
@@ -157,11 +153,11 @@ LPTSTR BatchParams(LPTSTR s1, LPTSTR s2)
 }
 
 /*
- * free the allocated memory of a batch file
+ * Free the allocated memory of a batch file.
  */
-VOID ClearBatch(VOID)
+static VOID ClearBatch(VOID)
 {
-    TRACE ("ClearBatch  mem = %08x    free = %d\n", bc->mem, bc->memfree);
+    TRACE("ClearBatch  mem = %08x ; free = %d\n", bc->mem, bc->memfree);
 
     if (bc->mem && bc->memfree)
         cmd_free(bc->mem);
@@ -187,7 +183,7 @@ VOID ExitBatch(VOID)
 {
     ClearBatch();
 
-    TRACE ("ExitBatch\n");
+    TRACE("ExitBatch\n");
 
     UndoRedirection(bc->RedirList, NULL);
     FreeRedirection(bc->RedirList);
@@ -199,18 +195,35 @@ VOID ExitBatch(VOID)
         cmd_endlocal(_T(""));
 
     bc = bc->prev;
+
+#if 0
+    /* Do not process any more parts of a compound command */
+    bc->current = NULL;
+#endif
+
+    /* If there is no more batch contexts, notify the signal handler */
+    if (!bc)
+        CheckCtrlBreak(BREAK_OUTOFBATCH);
 }
 
 /*
- * Load batch file into memory
- *
+ * Exit all the nested batch calls.
  */
-void BatchFile2Mem(HANDLE hBatchFile)
+VOID ExitAllBatches(VOID)
 {
-    TRACE ("BatchFile2Mem ()\n");
+    while (bc)
+        ExitBatch();
+}
+
+/*
+ * Load batch file into memory.
+ */
+static void BatchFile2Mem(HANDLE hBatchFile)
+{
+    TRACE("BatchFile2Mem()\n");
 
     bc->memsize = GetFileSize(hBatchFile, NULL);
-    bc->mem     = (char *)cmd_alloc(bc->memsize+1);		/* 1 extra for '\0' */
+    bc->mem     = (char *)cmd_alloc(bc->memsize+1);     /* 1 extra for '\0' */
 
     /* if memory is available, read it in and close the file */
     if (bc->mem != NULL)
@@ -230,32 +243,31 @@ void BatchFile2Mem(HANDLE hBatchFile)
 }
 
 /*
- * Start batch file execution
+ * Start batch file execution.
  *
  * The firstword parameter is the full filename of the batch file.
- *
  */
 INT Batch(LPTSTR fullname, LPTSTR firstword, LPTSTR param, PARSED_COMMAND *Cmd)
 {
-    BATCH_CONTEXT new;
-    LPFOR_CONTEXT saved_fc;
-    INT i;
     INT ret = 0;
-    BOOL same_fn = FALSE;
+    INT i;
+    HANDLE hFile = NULL;
+    BOOL bSameFn = FALSE;
+    BATCH_CONTEXT new;
+    PFOR_CONTEXT saved_fc;
 
-    HANDLE hFile = 0;
     SetLastError(0);
     if (bc && bc->mem)
     {
         TCHAR fpname[MAX_PATH];
-        GetFullPathName(fullname, sizeof(fpname) / sizeof(TCHAR), fpname, NULL);
-        if (_tcsicmp(bc->BatchFilePath,fpname)==0)
-            same_fn=TRUE;
+        GetFullPathName(fullname, ARRAYSIZE(fpname), fpname, NULL);
+        if (_tcsicmp(bc->BatchFilePath, fpname) == 0)
+            bSameFn = TRUE;
     }
-    TRACE ("Batch: (\'%s\', \'%s\', \'%s\')  same_fn = %d\n",
-        debugstr_aw(fullname), debugstr_aw(firstword), debugstr_aw(param), same_fn);
+    TRACE("Batch(\'%s\', \'%s\', \'%s\')  bSameFn = %d\n",
+        debugstr_aw(fullname), debugstr_aw(firstword), debugstr_aw(param), bSameFn);
 
-    if (!same_fn)
+    if (!bSameFn)
     {
         hFile = CreateFile(fullname, GENERIC_READ, FILE_SHARE_WRITE | FILE_SHARE_READ | FILE_SHARE_DELETE, NULL,
                            OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL |
@@ -300,7 +312,7 @@ INT Batch(LPTSTR fullname, LPTSTR firstword, LPTSTR param, PARSED_COMMAND *Cmd)
          * return until this context has been exited */
         new.prev = bc;
         /* copy some fields in the new structure if it is the same file */
-        if (same_fn)
+        if (bSameFn)
         {
             new.mem     = bc->mem;
             new.memsize = bc->memsize;
@@ -312,23 +324,22 @@ INT Batch(LPTSTR fullname, LPTSTR firstword, LPTSTR param, PARSED_COMMAND *Cmd)
         bc->setlocal = setlocal;
     }
 
-    GetFullPathName(fullname, sizeof(bc->BatchFilePath) / sizeof(TCHAR), bc->BatchFilePath, NULL);
-    /*  if a new batch file, load it into memory and close the file */
-    if (!same_fn)
+    GetFullPathName(fullname, ARRAYSIZE(bc->BatchFilePath), bc->BatchFilePath, NULL);
+
+    /* If a new batch file, load it into memory and close the file */
+    if (!bSameFn)
     {
         BatchFile2Mem(hFile);
         CloseHandle(hFile);
     }
 
-    bc->mempos = 0;    /* goto begin of batch file */
+    bc->mempos = 0;    /* Go to the beginning of the batch file */
     bc->bEcho = bEcho; /* Preserve echo across batch calls */
     for (i = 0; i < 10; i++)
         bc->shiftlevel[i] = i;
 
-    bc->params = BatchParams (firstword, param);
-    //
-    // Allocate enough memory to hold the params and copy them over without modifications
-    //
+    /* Parse the parameters and make a raw copy of them without modifications */
+    bc->params = BatchParams(firstword, param);
     bc->raw_params = cmd_dup(param);
     if (bc->raw_params == NULL)
     {
@@ -338,7 +349,7 @@ INT Batch(LPTSTR fullname, LPTSTR firstword, LPTSTR param, PARSED_COMMAND *Cmd)
 
     /* Check if this is a "CALL :label" */
     if (*firstword == _T(':'))
-        cmd_goto(firstword);
+        ret = cmd_goto(firstword);
 
     /* If we are calling from inside a FOR, hide the FOR variables */
     saved_fc = fc;
@@ -350,7 +361,24 @@ INT Batch(LPTSTR fullname, LPTSTR firstword, LPTSTR param, PARSED_COMMAND *Cmd)
     {
         Cmd = ParseCommand(NULL);
         if (!Cmd)
-            continue;
+        {
+            if (!bParseError)
+                continue;
+
+            /* Echo the pre-parsed batch file line on error */
+            if (bEcho && !bDisableBatchEcho)
+            {
+                if (!bIgnoreEcho)
+                    ConOutChar(_T('\n'));
+                PrintPrompt();
+                ConOutPuts(ParseLine);
+                ConOutChar(_T('\n'));
+            }
+            /* Stop all execution */
+            ExitAllBatches();
+            ret = 1;
+            break;
+        }
 
         /* JPP 19980807 */
         /* Echo the command and execute it */
@@ -359,12 +387,11 @@ INT Batch(LPTSTR fullname, LPTSTR firstword, LPTSTR param, PARSED_COMMAND *Cmd)
         FreeCommand(Cmd);
     }
 
-    /* Always return the current errorlevel */
-    ret = nErrorLevel;
-
-    TRACE ("Batch: returns TRUE\n");
-
+    /* Restore the FOR variables */
     fc = saved_fc;
+
+    /* Always return the last command's return code */
+    TRACE("Batch: returns %d\n", ret);
     return ret;
 }
 
@@ -443,25 +470,24 @@ BOOL BatchGetString(LPTSTR lpBuffer, INT nBufferLength)
  */
 LPTSTR ReadBatchLine(VOID)
 {
-    TRACE ("ReadBatchLine ()\n");
+    TRACE("ReadBatchLine()\n");
 
     /* User halt */
-    if (CheckCtrlBreak (BREAK_BATCHFILE))
+    if (CheckCtrlBreak(BREAK_BATCHFILE))
     {
-        while (bc)
-            ExitBatch();
+        ExitAllBatches();
         return NULL;
     }
 
-    if (!BatchGetString (textline, sizeof (textline) / sizeof (textline[0]) - 1))
+    if (!BatchGetString(textline, ARRAYSIZE(textline) - 1))
     {
-        TRACE ("ReadBatchLine(): Reached EOF!\n");
-        /* End of file.... */
+        TRACE("ReadBatchLine(): Reached EOF!\n");
+        /* End of file */
         ExitBatch();
         return NULL;
     }
 
-    TRACE ("ReadBatchLine(): textline: \'%s\'\n", debugstr_aw(textline));
+    TRACE("ReadBatchLine(): textline: \'%s\'\n", debugstr_aw(textline));
 
     if (textline[_tcslen(textline) - 1] != _T('\n'))
         _tcscat(textline, _T("\n"));

@@ -30,7 +30,7 @@ VidSetTextColor(
 VOID
 NTAPI
 VidDisplayStringXY(
-    _In_ PUCHAR String,
+    _In_z_ PUCHAR String,
     _In_ ULONG Left,
     _In_ ULONG Top,
     _In_ BOOLEAN Transparent);
@@ -50,7 +50,7 @@ VidCleanUp(VOID);
 VOID
 NTAPI
 VidBufferToScreenBlt(
-    _In_ PUCHAR Buffer,
+    _In_reads_bytes_(Delta * Height) PUCHAR Buffer,
     _In_ ULONG Left,
     _In_ ULONG Top,
     _In_ ULONG Width,
@@ -60,7 +60,7 @@ VidBufferToScreenBlt(
 VOID
 NTAPI
 VidDisplayString(
-    _In_ PUCHAR String);
+    _In_z_ PUCHAR String);
 
 VOID
 NTAPI
@@ -72,7 +72,7 @@ VidBitBlt(
 VOID
 NTAPI
 VidScreenToBufferBlt(
-    _Out_ PUCHAR Buffer,
+    _Out_writes_bytes_(Delta * Height) PUCHAR Buffer,
     _In_ ULONG Left,
     _In_ ULONG Top,
     _In_ ULONG Width,

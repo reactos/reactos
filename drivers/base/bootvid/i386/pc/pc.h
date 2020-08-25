@@ -43,8 +43,11 @@ SetPixel(
     /* Select the bitmask register and write the mask */
     __outpw(VGA_BASE_IO_PORT + GRAPH_ADDRESS_PORT, (PixelMask[Left & 7] << 8) | IND_BIT_MASK);
 
-    /* Read the current pixel value and add our color */
-    WRITE_REGISTER_UCHAR(PixelPosition, READ_REGISTER_UCHAR(PixelPosition) & Color);
+    /* Dummy read to load latch registers */
+    (VOID)READ_REGISTER_UCHAR(PixelPosition);
+
+    /* Set the new color */
+    WRITE_REGISTER_UCHAR(PixelPosition, Color);
 }
 
 VOID

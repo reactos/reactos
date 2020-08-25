@@ -235,9 +235,9 @@ BEGIN
     LISTBOX IDC_PAGEFILELIST, 10, 16, 204, 52, LBS_NOTIFY | LBS_USETABSTOPS
     GROUPBOX "Размер на обменния файл за избраното устройство", IDC_DRIVEGROUP, 10, 70, 204, 104
     LTEXT "Устройство:", IDC_STATIC, 20, 80, 60, 8
-    LTEXT "", IDC_DRIVE, 88, 81, 100, 9
+    LTEXT "%s", IDC_DRIVE, 88, 80, 100, 9
     LTEXT "Свободно място:", IDC_STATIC, 20, 92, 60, 9
-    LTEXT "", IDC_SPACEAVAIL, 88, 92, 104, 9
+    LTEXT "%s", IDC_SPACEAVAIL, 88, 92, 104, 9
     LTEXT "&Начален размер (МБ):", -1, 22, 118, 77, 9
     LTEXT "Размер до (МБ):", -1, 22, 131, 64, 9
     AUTORADIOBUTTON "За&даден размер", IDC_CUSTOM, 20, 105, 80, 9, WS_GROUP
@@ -248,11 +248,11 @@ BEGIN
     PUSHBUTTON "Задаване", IDC_SET, 158, 154, 50, 15
     GROUPBOX "Пълен размер на обменния файл за всички устройства", IDC_TOTALGROUP, 10, 177, 204, 46
     LTEXT "Задължително поне:", IDC_STATIC, 18, 188, 73, 9
-    LTEXT "", IDC_MINIMUM, 98, 188, 100, 9
+    LTEXT "%s", IDC_MINIMUM, 98, 188, 100, 9
     LTEXT "Препоръчително:", IDC_STATIC, 18, 199, 73, 9
-    LTEXT "", IDC_RECOMMENDED, 98, 197, 100, 9
+    LTEXT "%s", IDC_RECOMMENDED, 98, 199, 100, 9
     LTEXT "Текущо заделени:", IDC_STATIC, 18, 210, 73, 9
-    LTEXT "", IDC_CURRENT, 98, 208, 100, 9
+    LTEXT "%s", IDC_CURRENT, 98, 210, 100, 9
     DEFPUSHBUTTON "Добре", IDOK, 114, 230, 48, 15
     PUSHBUTTON "Отказ", IDCANCEL, 168, 230, 48, 15
 END
@@ -335,6 +335,7 @@ BEGIN
     IDS_WARNMAXIMUMSIZE "Въведете числена стойност за върховия размер на страниращия файл."
     IDS_WARNINITIALRANGE "Началният размер на страниращия файл не трябва да е по-малък от 2 МБ и не трябва да надхвърля свободното пространство на избраното устройство."
     IDS_WARNMAXIMUMRANGE "Върховият размер на страниращия файл не трябва да е по-малък от началния и не трябва да надвишава свободното пространство на избраното устройство"
+    IDS_PAGEFILE_MB "%u МБ"
     IDS_PAGEFILE_NONE "Няма"
     IDS_PAGEFILE_SYSTEM "System Managed"
     IDS_INFOREBOOT "You have to reboot the computer in order to apply the changes."

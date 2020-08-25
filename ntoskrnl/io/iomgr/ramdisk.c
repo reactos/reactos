@@ -14,6 +14,10 @@
 #define NDEBUG
 #include <debug.h>
 
+/* GLOBALS *******************************************************************/
+
+extern KEVENT PiEnumerationFinished;
+
 /* DATA ***********************************************************************/
 
 #if defined (ALLOC_PRAGMA)
@@ -267,6 +271,12 @@ IopStartRamdisk(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         RtlAnsiStringToUnicodeString(&NtSystemRoot, &AnsiPath, FALSE);
         IoCreateSymbolicLink(&DriveLetter, &DeviceString);
     }
+
+    //
+    // Wait for ramdisk relations being initialized
+    //
+
+    KeWaitForSingleObject(&PiEnumerationFinished, Executive, KernelMode, FALSE, NULL);
 
     //
     // We made it

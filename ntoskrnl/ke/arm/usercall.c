@@ -270,7 +270,7 @@ KiInitializeUserApc(IN PKEXCEPTION_FRAME ExceptionFrame,
                     IN PVOID SystemArgument1,
                     IN PVOID SystemArgument2)
 {
-    CONTEXT Context;
+    CONTEXT Context = { 0 };
     ULONG_PTR Stack;
     ULONG ContextLength;
     DPRINT1("User APC: %p %p %p\n", NormalContext, SystemArgument1, SystemArgument2);

@@ -35,6 +35,8 @@ POBJECT_TYPE IoDriverObjectType = NULL;
 
 extern BOOLEAN ExpInTextModeSetup;
 extern BOOLEAN PnpSystemInit;
+extern BOOLEAN PnPBootDriversLoaded;
+extern KEVENT PiEnumerationFinished;
 
 USHORT IopGroupIndex;
 PLIST_ENTRY IopGroupTable;
@@ -1125,6 +1127,13 @@ IopInitializeBootDrivers(VOID)
         }
     }
 
+    /* HAL Root Bus is being initialized before loading the boot drivers so this may cause issues
+     * when some devices are not being initialized with their drivers. This flag is used to delay
+     * all actions with devices (except PnP root device) until boot drivers are loaded.
+     * See PiQueueDeviceAction function
+     */
+    PnPBootDriversLoaded = TRUE;
+
     /* In old ROS, the loader list became empty after this point. Simulate. */
     InitializeListHead(&KeLoaderBlock->LoadOrderListHead);
 }
@@ -1478,6 +1487,9 @@ IopReinitializeBootDrivers(VOID)
         Entry = ExInterlockedRemoveHeadList(&DriverBootReinitListHead,
                                             &DriverBootReinitListLock);
     }
+
+    /* Wait for all device actions being finished*/
+    KeWaitForSingleObject(&PiEnumerationFinished, Executive, KernelMode, FALSE, NULL);
 }
 
 NTSTATUS

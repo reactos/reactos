@@ -15,7 +15,7 @@ static MUI_ENTRY ptPTSetupInitPageEntries[] =
     {
         0,
         20,
-        "Por favor aguarde enquanto o ReactOS Setup inicializa",
+        "Por favor aguarde enquanto o Instalador do ReactOS inicializa",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER,
         TEXT_ID_STATIC
     },
@@ -112,7 +112,7 @@ static MUI_ENTRY ptPTWelcomePageEntries[] =
     {
         6,
         11,
-        "Esta parte da instala\207\306o prepara o ReactOS para ser",
+        "Esta fase da instala\207\306o prepara o ReactOS para ser",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -192,49 +192,49 @@ static MUI_ENTRY ptPTIntroPageEntries[] =
     {
         6,
         8,
-        "ReactOS Version Status",
+        "ReactOS Vers\306o Status",
         TEXT_STYLE_HIGHLIGHT,
         TEXT_ID_STATIC
     },
     {
         6,
         11,
-        "ReactOS is in Alpha stage, meaning it is not feature-complete",
+        "O ReactOS est\240 em est\240gio Alpha, o que significa que n\306o est\240 completo",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         6,
         12,
-        "and is under heavy development. It is recommended to use it only for",
+        "e est\240 em forte desenvolvimento. Recomenda-se o seu uso apenas para fins",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         6,
         13,
-        "evaluation and testing purposes and not as your daily-usage OS.",
+        "de avalia\207\306o e teste e n\306o como seu sistema operativo de uso di\240rio.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         6,
         15,
-        "Backup your data or test on a secondary computer if you attempt",
+        "Fa\207a c\242pia de segur\306n\207 dos seus dados ou teste num computador",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         6,
         16,
-        "to run ReactOS on real hardware.",
+        "secund\240rio se pretende executar o ReactOS em hardware real.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         19,
-        "\x07  Pressione ENTER para continuar o ReactOS Setup.",
+        "\x07  Pressione ENTER para continuar a instala\207\306o do ReactOS.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -248,7 +248,7 @@ static MUI_ENTRY ptPTIntroPageEntries[] =
     {
         0,
         0,
-        "ENTER = Continue   F3 = Quit",
+        "ENTER = Continuar   F3 = Sair",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
         TEXT_ID_STATIC
     },
@@ -300,14 +300,14 @@ static MUI_ENTRY ptPTLicensePageEntries[] =
     {
         8,
         11,
-        "Todo o software que faz parte do ReactOS \202 portanto, livre",
+        "Todo o software que faz parte do sistema ReactOS \202 portanto,",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         12,
-        "sob a licen\207a GNU GPL, bem como a manuten\207\306o da licen\207a",
+        "livre sob a licen\207a GNU GPL, bem como mantendo sua licen\207a",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -328,21 +328,21 @@ static MUI_ENTRY ptPTLicensePageEntries[] =
     {
         8,
         16,
-        "excepto onde leis locais e internacionais s\306o aplicaveis. A licen\207a",
+        "excepto as leis locais e internacionais aplicaveis.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         17,
-        "do ReactOS abrange apenas a distribui\207\306o a terceiros.",
+        "A licen\207a do ReactOS abrange apenas a distribui\207\306o a terceiros.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         18,
-        "Se por alguma raz\306o  n\306o recebeu uma c\242pia da licen\207a",
+        "Se por alguma raz\306o n\306o recebeu uma c\242pia da licen\207a",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -415,7 +415,7 @@ static MUI_ENTRY ptPTDevicePageEntries[] =
     {
         6,
         8,
-        "A lista a seguir mostra a configura\207\344o de dispositivos actual.",
+        "A lista seguinte mostra a configura\207\306o de dispositivos actual.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -456,7 +456,7 @@ static MUI_ENTRY ptPTDevicePageEntries[] =
     },
     {
         25,
-        16, "Aceitar esta configura\207\344o de dispositivos",
+        16, "Aceitar esta configura\207\306o de dispositivos",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -477,14 +477,14 @@ static MUI_ENTRY ptPTDevicePageEntries[] =
     {
         6,
         22,
-        "Quanto finalizar os ajustes, seleccione \"Aceitar essas configura\207\344es",
+        "Quando finalizar os ajustes, seleccione \"Aceitar esta configura\207\306o",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         6,
         23,
-        "de dispositivo\" e pressione ENTER.",
+        "de dispositivos\" e pressione ENTER.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -529,7 +529,7 @@ static MUI_ENTRY ptPTRepairPageEntries[] =
     {
         6,
         12,
-        "As fun\207\344es repara\207\306o ainda n\306o foram implementadas.",
+        "As fun\207\344es de repara\207\306o ainda n\306o foram implementadas.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -564,7 +564,7 @@ static MUI_ENTRY ptPTRepairPageEntries[] =
     {
         0,
         0,
-        "ESC=P\240gina principal  U=Atualizar  R=Recuperar  ENTER=Reiniciar",
+        "ESC=P\240gina principal  U=Actualizar  R=Recuperar  ENTER=Reiniciar",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
         TEXT_ID_STATIC
     },
@@ -588,35 +588,35 @@ static MUI_ENTRY ptPTUpgradePageEntries[] =
     {
         6,
         8,
-        "Com o ReactOS Setup pode actualizar uma das instala\207\344es dispon\241veis",
+        "Com o Instalador do ReactOS pode actualizar uma das instala\207\344es",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         6,
         9,
-        "listadas abaixo, ou, se tem uma instala\207\306o do ReactOS  corrompida, ",
+        "dispon\241veis listadas abaixo, ou, se tem uma instala\207\306o do ReactOS",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         6,
         10,
-        "pode tentar a sua recupera\207\306o.",
+        "corrompida, pode tentar a sua recupera\207\306o.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         6,
         12,
-        "The repair functions are not all implemented yet.",
+        "As fun\207\344es de repara\207\306o ainda n\306o foram implementadas.",
         TEXT_STYLE_HIGHLIGHT,
         TEXT_ID_STATIC
     },
     {
         8,
         15,
-        "\x07  Pressione UP or DOWN para seleccionar uma das instala\207\344es.",
+        "\x07  Use SETA A CIMA ou SETA A BAIXO para seleccionar uma instala\207\306o.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1045,14 +1045,14 @@ static MUI_ENTRY ptPTSelectPartitionEntries[] =
     {
         8,
         17,
-        "\x07 Para criar uma parti\207\306o extendida, pressione E.",
+        "\x07  Para criar uma parti\207\306o estendida, pressione E.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         19,
-        "\x07 Para criar uma parti\207\3060 l\242gica, pressione L.",
+        "\x07  Para criar uma parti\207\3060 l\242gica, pressione L.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1083,105 +1083,105 @@ static MUI_ENTRY ptPTChangeSystemPartition[] =
     {
         4,
         3,
-        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        " Instala\207\306o do ReactOS " KERNEL_VERSION_STR " ",
         TEXT_STYLE_UNDERLINE,
         TEXT_ID_STATIC
     },
     {
         6,
         8,
-        "The current system partition of your computer",
+        "A actual parti\207\306o do sistema no disco do seu",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         6,
         12,
-        "on the system disk",
+        "computador usa um",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         6,
         16,
-        "uses a format not supported by ReactOS.",
+        "formato não suportado pelo ReactOS.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         6,
         18,
-        "In order to successfully install ReactOS, the Setup program must change",
+        "Para instalar o ReactOS com sucesso, o instalador deve alterar",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         6,
         19,
-        "the current system partition to a new one.",
+        "a actual parti\207\306o para um novo tipo.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         6,
         21,
-        "The new candidate system partition is:",
+        "O formato de parti\207\306o sugerido \202:",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         25,
-        "\x07  To accept this choice, press ENTER.",
+        "\x07  Para aceitar esta op\207\306o, pressione ENTER.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         27,
-        "\x07  To manually change the system partition, press ESC to go back to",
+        "\x07  Para alterar manualmente o tipo de parti\207\306o, pressione ESC. para retornar",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         28,
-        "   the partition selection list, then select or create a new system",
+        "   à lista de selec\207\306o de parti\207\306o e, em seguida, seleccione ou crie um novo tipo",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         29,
-        "   partition on the system disk.",
+        "   de parti\207\306o no disco de sistema.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         6,
         32,
-        "In case there are other operating systems that depend on the original",
+        "No caso de haver outro sistema operativo que dependa da parti\207\306o",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         6,
         33,
-        "system partition, you may need to either reconfigure them for the new",
+        "original, provavelmente precisar\240 de reconfigura-lo para a nova",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         6,
         34,
-        "system partition, or you may need to change the system partition back",
+        "parti\207\306o ou reverter para o tipo de parti\207\306o original",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         6,
         35,
-        "to the original one after finishing the installation of ReactOS.",
+        "ap\242s a instala\207\306o do ReactOS ser concluida.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1212,84 +1212,84 @@ static MUI_ENTRY ptPTConfirmDeleteSystemPartitionEntries[] =
     {
         6,
         8,
-        "You have chosen to delete the system partition.",
+        "Optou por excluir a parti\207\306o do sistema.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         6,
         10,
-        "System partitions can contain diagnostic programs, hardware configuration",
+        "As parti\207\344es do sistema podem conter programas de diagn\242stico,",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         6,
         11,
-        "programs, programs to start an operating system (like ReactOS) or other",
+        "configura\207\344es de hardware, programas para iniciar um sistema operativo",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         6,
         12,
-        "programs provided by the hardware manufacturer.",
+        "(ReactOS) ou outro e programas fornecidos pelo fabricante do hardware.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         6,
         14,
-        "Delete a system partition only when you are sure that there are no such",
+        "Exclua uma parti\207\306o apenas quando tiver certeza de que n\306o cont\202m",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         6,
         15,
-        "programs on the partition, or when you are sure you want to delete them.",
+        "programas ou quando desejar exclui-los definitivamente.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         6,
         16,
-        "When you delete the partition, you might not be able to boot the",
+        "Quando exclui uma parti\207\306o, pode n\306o ser capaz de inicializar o",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         6,
         17,
-        "computer from the harddisk until you finished the ReactOS Setup.",
+        "computador pelo disco r\241gido at\202 concluir a instala\207\306o do ReactOS.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         20,
-        "\x07  Press ENTER to delete the system partition. You will be asked",
+        "\x07  Pressione ENTER para excluir a parti\207\306o do sistema. Ser\240 solicitado",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         21,
-        "   to confirm the deletion of the partition again later.",
+        "   a confirmar a exclus\306o da parti\207\306o novamente mais tarde.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         24,
-        "\x07  Press ESC to return to the previous page. The partition will",
+        "\x07  Pressione ESC para retornar a p\240gina anterior. A parti\207\306o",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         25,
-        "   not be deleted.",
+        "   n\306o ser\240 excluida.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1320,7 +1320,7 @@ static MUI_ENTRY ptPTFormatPartitionEntries[] =
     {
         6,
         8,
-        "Formatar parti\207\306o",
+        "Formatar a parti\207\306o",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1365,21 +1365,21 @@ static MUI_ENTRY ptPTInstallDirectoryEntries[] =
     {
         6,
         9,
-        "Seleccione o diret\242rio onde deseja que o ReactOS seja instalado:",
+        "Seleccione o direct\242rio onde deseja que o ReactOS seja instalado:",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         6,
         14,
-        "Para mudar o diret\242rio sugerido, pressione a tecla BACKSPACE para apagar",
+        "Para mudar o direct\242rio sugerido, pressione a tecla BACKSPACE para apagar",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         6,
         15,
-        "o texto e escreva o nome do diret\242rio onde deseja que o ReactOS",
+        "o texto e escreva o nome do direct\242rio onde deseja que o ReactOS",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1431,7 +1431,7 @@ static MUI_ENTRY ptPTFileCopyEntries[] =
     {
         0,
         14,
-        "Esta opera\207\306o pode demorar alguns minutos.",
+        "Esta opera\207\306o pode demorar um minuto.",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER,
         TEXT_ID_STATIC
     },
@@ -1580,7 +1580,7 @@ static MUI_ENTRY ptPTLayoutSettingsEntries[] =
     {
         6,
         8,
-        "A lista a seguir mostra os tipos de leiautes de teclado dispon\241veis",
+        "A lista a seguir mostra os estilos de teclado dispon\241veis",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1647,7 +1647,7 @@ static MUI_ENTRY ptPTPrepareCopyEntries[] =
     {
         6,
         8,
-        "O instalador est\240 preparando o computador para copiar os arquivos",
+        "O instalador est\240 a preparar o computador para copiar os arquivos",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1661,7 +1661,7 @@ static MUI_ENTRY ptPTPrepareCopyEntries[] =
     {
         0,
         0,
-        "Montando a lista de arquivos a serem copiados...",
+        "A montar a lista de arquivos a serem copiados...",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
         TEXT_ID_STATIC
     },
@@ -1734,7 +1734,7 @@ static MUI_ENTRY ptPTDeletePartitionEntries[] =
     {
         6,
         8,
-        "Voc\210 solicitou a exclus\306o da parti\207\306o",
+        "Solicitou a exclus\306o da parti\207\306o",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1793,14 +1793,14 @@ static MUI_ENTRY ptPTRegistryEntries[] =
     {
         6,
         8,
-        "O instalador est\240 atualizando a configura\207\306o do sistema.",
+        "O instalador est\240 a actualizar a configura\207\306o do sistema.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         0,
         0,
-        "Criando a estrutura de registo...",
+        "A criar a estrutura de registo...",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
         TEXT_ID_STATIC
     },
@@ -1817,12 +1817,12 @@ MUI_ERROR ptPTErrorEntries[] =
 {
     {
         // NOT_AN_ERROR
-        "Success\n"
+        "Sucesso\n"
     },
     {
         // ERROR_NOT_INSTALLED
         "O ReactOS n\306o est\240 completamente instalado no computador.\n"
-        "Se voc\210 sair da instala\207\306o agora, precisar\240 executa-la\n"
+        "Se sair da instala\207\306o agora, precisar\240 executa-la\n"
         "novamente para instalar o ReactOS.\n"
         "\n"
         "  \x07  Para continuar a instala\207\306o, pressione ENTER.\n"
@@ -1851,7 +1851,7 @@ MUI_ERROR ptPTErrorEntries[] =
     },
     {
         // ERROR_SIGNATURE_TXTSETUPSIF,
-        "O arquivo TXTSETUP.SIF est\240 com a assinatura incorreta.\n",
+        "O arquivo TXTSETUP.SIF est\240 com a assinatura incorrecta.\n",
         "ENTER=Reiniciar"
     },
     {
@@ -1881,13 +1881,13 @@ MUI_ERROR ptPTErrorEntries[] =
     },
     {
         // ERROR_LOAD_KBLAYOUT,
-        "N\306o foi poss\241vel carregar a lista de leiautes de teclado.\n",
+        "N\306o foi poss\241vel carregar a lista de estilos de teclado.\n",
         "ENTER=Reiniciar"
     },
     {
         // ERROR_WARN_PARTITION,
         "O instalador encontrou uma tabela de parti\207\306o incompat\241vel\n"
-        "que n\306o pode ser utilizada corretamente!\n"
+        "que n\306o pode ser utilizada correctamente!\n"
         "\n"
         "Criar ou excluir parti\207\344es pode destruir a tabela de parti\207\306o.\n"
         "\n"
@@ -1897,7 +1897,7 @@ MUI_ERROR ptPTErrorEntries[] =
     },
     {
         // ERROR_NEW_PARTITION,
-        "Voc\210 n\306o pode criar uma parti\207\306o dentro de\n"
+        "Pode criar uma parti\207\306o dentro de\n"
         "outra parti\207\306o j\240 existente!\n"
         "\n"
         "  * Pressione qualquer tecla para continuar.",
@@ -1905,7 +1905,7 @@ MUI_ERROR ptPTErrorEntries[] =
     },
     {
         // ERROR_DELETE_SPACE,
-        "Voc\210 n\306o pode excluir um espa\207o n\306o-particionado!\n"
+        "Pode excluir um espa\207o n\306o particionado!\n"
         "\n"
         "  * Pressione qualquer tecla para continuar.",
         NULL
@@ -1922,12 +1922,12 @@ MUI_ERROR ptPTErrorEntries[] =
     },
     {
         // ERROR_UPDATE_KBSETTINGS,
-        "N\306o foi poss\241vel atualizar a configura\207\306o de leiaute de teclado.",
+        "N\306o foi poss\241vel actualizar a configura\207\306o de estilo de teclado.",
         "ENTER=Reiniciar"
     },
     {
         // ERROR_UPDATE_DISPLAY_SETTINGS,
-        "N\306o foi poss\241vel atualizar a configura\207\306o de v\241deo.",
+        "N\306o foi poss\241vel actualizar a configura\207\306o de v\241deo.",
         "ENTER=Reiniciar"
     },
     {
@@ -1977,19 +1977,19 @@ MUI_ERROR ptPTErrorEntries[] =
     },
     {
         // ERROR_TXTSETUP_SECTION,
-        "N\306o foi poss\241vel encontrar a se\207\306o '%S' no\n"
+        "N\306o foi poss\241vel encontrar a sec\207\306o '%S' no\n"
         "arquivo TXTSETUP.SIF.\n",
         "ENTER=Reiniciar"
     },
     {
         // ERROR_CABINET_SECTION,
-        "N\306o foi poss\241vel encontrar a se\207\306o '%S' no\n"
+        "N\306o foi poss\241vel encontrar a sec\207\306o '%S' no\n"
         "arquivo cab.\n",
         "ENTER=Reiniciar"
     },
     {
         // ERROR_CREATE_INSTALL_DIR
-        "N\306o foi poss\241vel criar o diret\242rio de instala\207\306o.",
+        "N\306o foi poss\241vel criar o direct\242rio de instala\207\306o.",
         "ENTER=Reiniciar"
     },
     {
@@ -2019,37 +2019,37 @@ MUI_ERROR ptPTErrorEntries[] =
     },
     {
         // ERROR_DIRECTORY_NAME,
-        "Invalid directory name.\n"
+        "Nome de direct\242rio inv\240lido.\n"
         "\n"
-        "  * Press any key to continue."
+        "  * Pressione qualquer tecla para continuar."
     },
     {
         // ERROR_INSUFFICIENT_PARTITION_SIZE,
-        "The selected partition is not large enough to install ReactOS.\n"
-        "The install partition must have a size of at least %lu MB.\n"
+        "A parti\207\306o selecionada n\306o \202 grande o suficiente para instalar o ReactOS.\n"
+        "A parti\207\306o de instala\207\306o deve ter um tamanho de pelo menos %lu MB.\n"
         "\n"
         "  * Pressione qualquer tecla para continuar.",
         NULL
     },
     {
         // ERROR_PARTITION_TABLE_FULL,
-        "You cannot create a new primary or extended partition in the\n"
-        "partition table of this disk because the partition table is full.\n"
+        "N\306o pode criar uma nova parti\207\306o prim\240ria ou estendida\n"
+        "neste disco, porque a tabela de parti\207\344es est\240 cheia.\n"
         "\n"
-        "  * Press any key to continue."
+        "  * Pressione qualquer tecla para continuar."
     },
     {
         // ERROR_ONLY_ONE_EXTENDED,
-        "You cannot create more than one extended partition per disk.\n"
+        "N\306o pode criar mais de uma parti\207\306o estendida por disco.\n"
         "\n"
-        "  * Press any key to continue."
+        "  * Pressione qualquer tecla para continuar."
     },
     {
         // ERROR_FORMATTING_PARTITION,
-        "Setup is unable to format the partition:\n"
+        "A instalação n\306o consegue formatar a parti\207\306o:\n"
         " %S\n"
         "\n"
-        "ENTER = Reboot computer"
+        "ENTER = Reiniciar o computador"
     },
     {
         NULL,
@@ -2178,21 +2178,20 @@ MUI_STRING ptPTStrings[] =
     {STRING_PLEASEWAIT,
     "   Por favor, aguarde..."},
     {STRING_INSTALLCREATEPARTITION,
-     "   ENTER = Install   P = Create Primary   E = Create Extended   F3 = Quit"},
-//    "   ENTER=Instalar  C=Criar parti\207\306o  F3=Sair"},
+    "   ENTER=Instalar  P=Criar Part. Prim\240ria E=Criar Part. Estendida  F3=Sair"},
     {STRING_INSTALLCREATELOGICAL,
-     "   ENTER = Install   L = Create Logical Partition   F3 = Quit"},
+    "   ENTER = Instalar   L = Criar Parti\207\306o L\242gica   F3 = Sair"},
     {STRING_INSTALLDELETEPARTITION,
-    "   ENTER=Instalar  D=Apagar parti\207\306o  F3=Sair"},
+    "   ENTER=Instalar  D=Apagar parti\207\306o  F3 = Sair"},
     {STRING_DELETEPARTITION,
-     "   D = Delete Partition   F3 = Quit"},
+     "   D = Apagar Parti\207\306o   F3 = Sair"},
     {STRING_PARTITIONSIZE,
     "Tamanho da nova parti\207\306o:"},
     {STRING_CHOOSENEWPARTITION,
      "Seleccionou criar uma parti\207\306o prim\240ria"},
 //    "Voc\210 solicitou a cria\207\306o de uma nova parti\207\306o em"},
     {STRING_CHOOSE_NEW_EXTENDED_PARTITION,
-     "Seleccionou criar uma parti\207\306o extendida"},
+     "Seleccionou criar uma parti\207\306o estendida"},
     {STRING_CHOOSE_NEW_LOGICAL_PARTITION,
      "Seleccionou criar uma parti\207\306o l\242gica"},
     {STRING_HDDSIZE,
@@ -2218,13 +2217,13 @@ MUI_STRING ptPTStrings[] =
     {STRING_REBOOTCOMPUTER,
     "ENTER=Reiniciar"},
     {STRING_DELETING,
-     "   Deleting file: %S"},
+     "   A apagar arquivo: %S"},
     {STRING_MOVING,
-     "   Moving file: %S to: %S"},
+     "   A mover arquivo: %S to: %S"},
     {STRING_RENAMING,
-     "   Renaming file: %S to: %S"},
+     "   A renomear arquivo: %S to: %S"},
     {STRING_COPYING,
-    "   Copiando arquivo: %S"},
+    "   A Copiar arquivo: %S"},
     {STRING_SETUPCOPYINGFILES,
     "O instalador est\240 a copiar os arquivos..."},
     {STRING_REGHIVEUPDATE,
@@ -2290,7 +2289,7 @@ MUI_STRING ptPTStrings[] =
     {STRING_MAXSIZE,
     "MB (max. %lu MB)"},
     {STRING_EXTENDED_PARTITION,
-    "Extended Partition"},
+    "Parti\207\306 Estendida"},
     {STRING_UNFORMATTED,
     "Novo (sem formato)"},
     {STRING_FORMATUNUSED,

@@ -14,7 +14,7 @@ static HWND s_hwnd = NULL;
 static const WCHAR s_szName[] = L"SHChangeNotify testcase";
 static INT s_nMode;
 
-static BYTE s_counters[TYPE_FREESPACE + 1];
+static BYTE s_counters[TYPE_RENAMEFOLDER + 1];
 static UINT s_uRegID = 0;
 
 static WCHAR s_path1[MAX_PATH], s_path2[MAX_PATH];
@@ -48,6 +48,22 @@ OnCreate(HWND hwnd)
         case 2:
             s_entry.fRecursive = FALSE;
             nSources = SHCNRF_ShellLevel | SHCNRF_NewDelivery;
+            break;
+
+        case 3:
+            s_entry.fRecursive = TRUE;
+            nSources = SHCNRF_InterruptLevel | SHCNRF_RecursiveInterrupt | SHCNRF_NewDelivery;
+            break;
+
+        case 4:
+            s_entry.fRecursive = FALSE;
+            nSources = SHCNRF_InterruptLevel | SHCNRF_NewDelivery;
+            break;
+
+        case 5:
+            s_entry.fRecursive = TRUE;
+            nSources = SHCNRF_InterruptLevel | SHCNRF_RecursiveInterrupt | SHCNRF_NewDelivery;
+            s_entry.pidl = NULL;
             break;
 
         default:
@@ -144,7 +160,6 @@ DoShellNotify(HWND hwnd, PIDLIST_ABSOLUTE pidl1, PIDLIST_ABSOLUTE pidl2, LONG lE
             s_counters[TYPE_RENAMEFOLDER] = 1;
             break;
         case SHCNE_FREESPACE:
-            s_counters[TYPE_FREESPACE] = 1;
             break;
         case SHCNE_EXTENDED_EVENT:
             break;
@@ -177,6 +192,9 @@ OnShellNotify(HWND hwnd, WPARAM wParam, LPARAM lParam)
 static LRESULT
 OnGetNotifyFlags(HWND hwnd)
 {
+    if (s_uRegID == 0)
+        return 0xFFFFFFFF;
+
     DWORD dwFlags = 0;
     for (size_t i = 0; i < _countof(s_counters); ++i)
     {
@@ -187,34 +205,19 @@ OnGetNotifyFlags(HWND hwnd)
 }
 
 static void
-DoSetClipText(HWND hwnd)
+DoSetPaths(HWND hwnd)
 {
-    if (!OpenClipboard(hwnd))
-        return;
-
-    EmptyClipboard();
-
     WCHAR szText[MAX_PATH * 2];
     lstrcpyW(szText, s_path1);
     lstrcatW(szText, L"|");
     lstrcatW(szText, s_path2);
 
-    DWORD cbText = (lstrlenW(szText) + 1) * sizeof(WCHAR);
-    HGLOBAL hGlobal = GlobalAlloc(GHND | GMEM_SHARE, cbText);
-    if (hGlobal)
+    if (FILE *fp = fopen(TEMP_FILE, "wb"))
     {
-        LPWSTR psz = (LPWSTR)GlobalLock(hGlobal);
-        if (psz)
-        {
-            CopyMemory(psz, szText, cbText);
-            GlobalUnlock(hGlobal);
-
-            SetClipboardData(CF_UNICODETEXT, hGlobal);
-        }
+        fwrite(szText, (lstrlenW(szText) + 1) * sizeof(WCHAR), 1, fp);
+        fflush(fp);
+        fclose(fp);
     }
-
-    CloseClipboard();
-    Sleep(60);
 }
 
 static LRESULT CALLBACK
@@ -244,7 +247,7 @@ WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             break;
 
         case WM_SET_PATHS:
-            DoSetClipText(hwnd);
+            DoSetPaths(hwnd);
             break;
 
         default:

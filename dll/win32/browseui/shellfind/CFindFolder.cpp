@@ -538,7 +538,20 @@ STDMETHODIMP CFindFolder::BindToStorage(PCUIDLIST_RELATIVE pidl, LPBC pbcReserve
 
 STDMETHODIMP CFindFolder::CompareIDs(LPARAM lParam, PCUIDLIST_RELATIVE pidl1, PCUIDLIST_RELATIVE pidl2)
 {
-    return m_pisfInner->CompareIDs(lParam, _ILGetFSPidl(pidl1), _ILGetFSPidl(pidl2));
+    WORD wColumn = LOWORD(lParam);
+    switch (wColumn)
+    {
+    case 0: // Name
+        break;
+    case 1: // Path
+        return MAKE_COMPARE_HRESULT(StrCmpW(_ILGetPath(pidl1), _ILGetPath(pidl2)));
+    case 2: // Relevance
+        return E_NOTIMPL;
+    default: // Default columns
+        wColumn -= _countof(g_ColumnDefs) - 1;
+        break;
+    }
+    return m_pisfInner->CompareIDs(HIWORD(lParam) | wColumn, _ILGetFSPidl(pidl1), _ILGetFSPidl(pidl2));
 }
 
 STDMETHODIMP CFindFolder::CreateViewObject(HWND hwndOwner, REFIID riid, LPVOID *ppvOut)

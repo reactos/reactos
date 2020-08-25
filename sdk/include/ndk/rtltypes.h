@@ -697,7 +697,6 @@ typedef NTSTATUS
 //
 // RTL Range List callbacks
 //
-#ifdef NTOS_MODE_USER
 typedef BOOLEAN
 (NTAPI *PRTL_CONFLICT_RANGE_CALLBACK)(
     PVOID Context,
@@ -707,6 +706,7 @@ typedef BOOLEAN
 //
 // Custom Heap Commit Routine for RtlCreateHeap
 //
+#ifdef NTOS_MODE_USER
 typedef NTSTATUS
 (NTAPI * PRTL_HEAP_COMMIT_ROUTINE)(
     _In_ PVOID Base,
@@ -1479,6 +1479,29 @@ typedef struct _RANGE_LIST_ITERATOR
     PVOID Current;
     ULONG Stamp;
 } RTL_RANGE_LIST_ITERATOR, *PRTL_RANGE_LIST_ITERATOR;
+
+typedef struct _RTLP_RANGE_LIST_ENTRY
+{
+    ULONGLONG Start;
+    ULONGLONG End;
+    union
+    {
+        struct
+        {
+            PVOID UserData;
+            PVOID Owner;
+        } Allocated;
+        struct
+        {
+            LIST_ENTRY ListHead;
+        } Merged;
+    };
+    UCHAR Attributes;
+    UCHAR PublicFlags;
+    USHORT PrivateFlags;
+    LIST_ENTRY ListEntry;
+} RTLP_RANGE_LIST_ENTRY, *PRTLP_RANGE_LIST_ENTRY;
+C_ASSERT(RTL_SIZEOF_THROUGH_FIELD(RTL_RANGE, Flags) == RTL_SIZEOF_THROUGH_FIELD(RTLP_RANGE_LIST_ENTRY, PublicFlags));
 
 //
 // RTL Resource

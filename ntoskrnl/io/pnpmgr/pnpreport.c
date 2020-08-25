@@ -395,6 +395,8 @@ IoReportDetectedDevice(IN PDRIVER_OBJECT DriverObject,
 
     DPRINT("Reported device: %S (%wZ)\n", HardwareId, &DeviceNode->InstancePath);
 
+    PiQueueDeviceAction(Pdo, PiActionEnumDeviceTree, NULL, NULL);
+
     /* Return the PDO */
     if (DeviceObject) *DeviceObject = Pdo;
 

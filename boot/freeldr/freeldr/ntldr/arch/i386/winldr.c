@@ -676,7 +676,7 @@ WinLdrSetProcessorContext(void)
     __lidt(&IdtDesc);
 
     /* Jump to proper CS and clear prefetch queue */
-#if defined(__GNUC__)
+#if defined(__GNUC__) || defined(__clang__)
     asm("ljmp    $0x08, $1f\n"
         "1:\n");
 #elif defined(_MSC_VER)
