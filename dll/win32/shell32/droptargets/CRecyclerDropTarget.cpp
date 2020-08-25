@@ -56,7 +56,7 @@ class CRecyclerDropTarget :
             FileOp.pFrom = (LPWSTR) (((byte*) lpdf) + lpdf->pFiles);;
             if ((fMask & CMIC_MASK_SHIFT_DOWN) == 0)
                 FileOp.fFlags = FOF_ALLOWUNDO;
-            ERR("Deleting file (just the first) = %s, allowundo: %d\n", debugstr_w(FileOp.pFrom), (FileOp.fFlags == FOF_ALLOWUNDO));
+            TRACE("Deleting file (just the first) = %s, allowundo: %d\n", debugstr_w(FileOp.pFrom), (FileOp.fFlags == FOF_ALLOWUNDO));
 
             if (SHFileOperationW(&FileOp) != 0)
             {
