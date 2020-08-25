@@ -2110,7 +2110,7 @@ IoGetBootDiskInformation(IN OUT PBOOTDISK_INFORMATION BootDiskInformation,
                             else
                             {
                                 ((PBOOTDISK_INFORMATION_EX)BootDiskInformation)->SystemDeviceIsGpt = FALSE;
-                           }
+                            }
                         }
 
                         /* Dereference FileObject */
@@ -2278,18 +2278,18 @@ IoReadPartitionTableEx(IN PDEVICE_OBJECT DeviceObject,
             break;
 
         case PARTITION_STYLE_GPT:
-             /* Read primary table */
-             Status = FstubReadPartitionTableEFI(Disk, FALSE, DriveLayout);
-             /* If it failed, try reading backup table */
-             if (!NT_SUCCESS(Status))
-             {
-                 Status = FstubReadPartitionTableEFI(Disk, TRUE, DriveLayout);
-             }
-             break;
+            /* Read primary table */
+            Status = FstubReadPartitionTableEFI(Disk, FALSE, DriveLayout);
+            /* If it failed, try reading backup table */
+            if (!NT_SUCCESS(Status))
+            {
+                Status = FstubReadPartitionTableEFI(Disk, TRUE, DriveLayout);
+            }
+            break;
 
         default:
-             DPRINT("Unknown partition type\n");
-             Status = STATUS_UNSUCCESSFUL;
+            DPRINT("Unknown partition type\n");
+            Status = STATUS_UNSUCCESSFUL;
     }
 
     /* It's over, internal structure not needed anymore */
