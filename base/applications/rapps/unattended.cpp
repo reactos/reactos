@@ -40,7 +40,6 @@ BOOL HandleInstallCommand(LPWSTR szCommand, int argcLeft, LPWSTR * argvLeft)
     if (argcLeft == 0)
     {
         ConResMsgPrintf(StdOut, NULL, IDS_CMD_NEED_PACKAGE_NAME, szCommand);
-        ConPrintf(StdOut, (LPWSTR)L"\n");
         return FALSE;
     }
     FreeConsole();
@@ -73,7 +72,6 @@ BOOL HandleSetupCommand(LPWSTR szCommand, int argcLeft, LPWSTR * argvLeft)
     if (argcLeft != 1)
     {
         ConResMsgPrintf(StdOut, NULL, IDS_CMD_NEED_FILE_NAME, szCommand);
-        ConPrintf(StdOut, (LPWSTR)L"\n");
         return FALSE;
     }
 
@@ -132,7 +130,6 @@ BOOL HandleFindCommand(LPWSTR szCommand, int argcLeft, LPWSTR *argvLeft)
     if (argcLeft < 1)
     {
         ConResMsgPrintf(StdOut, NULL, IDS_CMD_NEED_PARAMS, szCommand);
-        ConPrintf(StdOut, (LPWSTR)L"\n");
         return FALSE;
     }
 
@@ -142,7 +139,6 @@ BOOL HandleFindCommand(LPWSTR szCommand, int argcLeft, LPWSTR *argvLeft)
     for (int i = 0; i < argcLeft; i++)
     {
         ConResMsgPrintf(StdOut, NULL, IDS_CMD_FIND_RESULT_FOR, argvLeft[i]);
-        ConPrintf(StdOut, (LPWSTR)L"\n");
         apps.Enum(ENUM_ALL_AVAILABLE, CmdFindAppEnum, argvLeft[i]);
         ConPrintf(StdOut, (LPWSTR)L"\n");
     }
@@ -155,7 +151,6 @@ BOOL HandleInfoCommand(LPWSTR szCommand, int argcLeft, LPWSTR *argvLeft)
     if (argcLeft < 1)
     {
         ConResMsgPrintf(StdOut, NULL, IDS_CMD_NEED_PARAMS, szCommand);
-        ConPrintf(StdOut, (LPWSTR)L"\n");
         return FALSE;
     }
 
@@ -173,7 +168,6 @@ BOOL HandleInfoCommand(LPWSTR szCommand, int argcLeft, LPWSTR *argvLeft)
         else
         {
             ConResMsgPrintf(StdOut, NULL, IDS_CMD_PACKAGE_INFO, argvLeft[i]);
-            ConPrintf(StdOut, (LPWSTR)L"\n");
             // TODO: code about extracting information from CAvailableApplicationInfo (in appview.cpp, class CAppRichEdit)
             // is in a mess. It should be refactored, and should not placed in class CAppRichEdit.
             // and the code here should reused that code after refactor.
@@ -215,8 +209,10 @@ BOOL HandleInfoCommand(LPWSTR szCommand, int argcLeft, LPWSTR *argvLeft)
                 ConResPrintf(StdOut, IDS_AINFO_URLDOWNLOAD);
                 ConPuts(StdOut, (LPWSTR)(LPCWSTR)AppInfo->m_szUrlDownload);
             }
+
+            ConPrintf(StdOut, (LPWSTR)L"\n");
         }
-        ConPrintf(StdOut, (LPWSTR)L"\n\n");
+        ConPrintf(StdOut, (LPWSTR)L"\n");
     }
     return TRUE;
 }
@@ -300,7 +296,6 @@ BOOL ParseCmdAndExecute(LPWSTR lpCmdLine, BOOL bIsFirstLaunch, int nCmdShow)
     {
         // unrecognized/invalid options
         ConResPuts(StdOut, IDS_CMD_INVALID_OPTION);
-        ConPrintf(StdOut, (LPWSTR)L"\n");
         return FALSE;
     }
 
