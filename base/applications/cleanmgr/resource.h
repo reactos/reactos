@@ -35,7 +35,7 @@
 #define IDS_CLEANUP                         7001
 #define IDS_DETAILS_TEMP                    7002
 #define IDS_DETAILS_RECYCLE                 7003
-#define IDS_DETAILS_DOWNLOAD                7004
+#define IDS_DETAILS_CHKDSK                  7004
 #define IDS_DETAILS_RAPPS                   7005
 #define IDS_TITLE                           7006
 #define IDS_SCAN                            7007

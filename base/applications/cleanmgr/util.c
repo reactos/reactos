@@ -30,7 +30,7 @@ DWORD WINAPI SizeCheck(LPVOID lpParam)
     HKEY hRegKey = NULL;
     SETTINGS_INFO SettingsInfo;
     ZeroMemory(&SettingsInfo, sizeof(SETTINGS_INFO));
-    DWORD dwSize = sizeof(SettingsInfo);
+    //DWORD dwSize = sizeof(SettingsInfo);
     
     if (RegOpenKeyExW(HKEY_CURRENT_USER,
                       L"Software\\ReactOS\\rapps",
@@ -112,20 +112,20 @@ DWORD WINAPI SizeCheck(LPVOID lpParam)
         else
             break;
     }
-    
-    /* HACK: Checking if there is a custom path for RAPPS (It will break with an update of RAPPS */
-    if(RegQueryValueExW(hRegKey, L"Settings", 0, NULL, (LPBYTE)&SettingsInfo, &dwSize) == ERROR_SUCCESS)
+
+    /*if(RegQueryValueExW(hRegKey, L"Settings", 0, NULL, (LPBYTE)&SettingsInfo, &dwSize) == ERROR_SUCCESS)
         StringCbCopyW(TargetedDir, _countof(TargetedDir), SettingsInfo.szDownloadDir);
 
-    
-    /* Default path of RAPPS to store downloaded files */
+
     else
     {
         DPRINT("RegQueryValueExW(): Failed to query a registry key!\n");
-        SHGetFolderPathW(NULL, CSIDL_PROFILE, NULL, SHGFP_TYPE_CURRENT, TargetedDir);
-        StringCbCatW(TargetedDir, _countof(TargetedDir), L"\\My Documents\\RAPPS Downloads");
-    }
+        SHGetFolderPathW(NULL, CSIDL_PERSONAL, NULL, SHGFP_TYPE_CURRENT, TargetedDir);
+        StringCbCatW(TargetedDir, _countof(TargetedDir), L"\\RAPPS Downloads");
+    }*/
 
+    SHGetFolderPathW(NULL, CSIDL_PERSONAL, NULL, SHGFP_TYPE_CURRENT, TargetedDir);
+    StringCbCatW(TargetedDir, _countof(TargetedDir), L"\\RAPPS Downloads");
     if (PathIsDirectoryW(TargetedDir))
     {
         sz.RappsSize = DirSizeFunc(TargetedDir);
@@ -139,8 +139,6 @@ DWORD WINAPI SizeCheck(LPVOID lpParam)
         SetDlgItemTextW(dv.hwndDlg, IDC_STATIC_INFO, L"Temporary RAPPS Files");
     }
     
-    Sleep(2500);
-    
     SendMessageW(dv.hwndDlg, WM_DESTROY, 0, 0);
     return TRUE;
 }
@@ -150,26 +148,12 @@ DWORD WINAPI FolderRemoval(LPVOID lpParam)
     HWND HProgressBar = NULL;
     WCHAR TargetedDir[MAX_PATH] = { 0 };
 
-    SHFILEOPSTRUCTW FileStruct;
-    ZeroMemory(&FileStruct, sizeof(FileStruct));
-
-    FileStruct.wFunc = FO_DELETE;
-    FileStruct.fFlags = FOF_SILENT | FOF_NOCONFIRMATION | FOF_NOERRORUI | FOF_NOCONFIRMMKDIR;
-    FileStruct.fAnyOperationsAborted = FALSE;
-
     HProgressBar = GetDlgItem(dv.hwndDlg, IDC_PROGRESS_2);
 
     if (bv.TempClean == TRUE && bv.SysDrive == TRUE)
     {
-        FileStruct.pFrom = NULL;
-        FileStruct.pFrom = wcv.TempDir;
-
-        SHFileOperationW(&FileStruct);
-
-        FileStruct.pFrom = NULL;
-        FileStruct.pFrom = wcv.AltTempDir;
-
-        SHFileOperationW(&FileStruct);
+        CleanRequiredPath(wcv.TempDir);
+        CleanRequiredPath(wcv.AltTempDir);
         
         SendMessageW(HProgressBar, PBM_SETPOS, 25, 0);
         SetDlgItemTextW(dv.hwndDlg, IDC_STATIC_INFO, L"Temporary files");
@@ -177,11 +161,11 @@ DWORD WINAPI FolderRemoval(LPVOID lpParam)
     }
     
     if (bv.RecycleClean == TRUE)
-    {
-        FileStruct.pFrom = NULL;
-        FileStruct.pFrom = wcv.RecycleBinDir;
-
-        SHFileOperationW(&FileStruct);
+    {   
+        StringCbCopyW(TargetedDir, _countof(TargetedDir), wcv.DriveLetter);
+        StringCbCatW(TargetedDir, _countof(TargetedDir), L"\\");
+        
+        SHEmptyRecycleBinW(NULL, TargetedDir, SHERB_NOCONFIRMATION | SHERB_NOPROGRESSUI | SHERB_NOSOUND);
         
         SendMessageW(HProgressBar, PBM_SETPOS, 50, 0);
         SetDlgItemTextW(dv.hwndDlg, IDC_STATIC_INFO, L"Recycled files");
@@ -195,11 +179,7 @@ DWORD WINAPI FolderRemoval(LPVOID lpParam)
             StringCchPrintfW(TargetedDir, _countof(TargetedDir), L"%s\\FOUND.%.3i", wcv.DriveLetter, i);
             if (PathIsDirectoryW(TargetedDir))
             {
-                FileStruct.pFrom = NULL;
-                FileStruct.pFrom = TargetedDir;
-
-                SHFileOperationW(&FileStruct);
-                Sleep(150);
+                CleanRequiredPath(TargetedDir);
             }
         
             else
@@ -211,10 +191,8 @@ DWORD WINAPI FolderRemoval(LPVOID lpParam)
 
     if (bv.RappsClean == TRUE)
     {
-        FileStruct.pFrom = NULL;
-        FileStruct.pFrom = wcv.RappsDir;
+        CleanRequiredPath(wcv.RappsDir);
 
-        SHFileOperationW(&FileStruct);
         SendMessageW(HProgressBar, PBM_SETPOS, 100, 0);
         SetDlgItemTextW(dv.hwndDlg, IDC_STATIC_INFO, L"Temporary RAPPS Files");
     }
@@ -222,6 +200,25 @@ DWORD WINAPI FolderRemoval(LPVOID lpParam)
     SendMessageW(dv.hwndDlg, WM_DESTROY, 0, 0);
 
     return TRUE;
+}
+
+void CleanRequiredPath(PWCHAR TempPath)
+{
+    SHFILEOPSTRUCTW FileStruct;
+    ZeroMemory(&FileStruct, sizeof(FileStruct));
+
+    int Len = wcslen(TempPath) + 2; // required to set 2 nulls at end of argument to SHFileOperation.
+    WCHAR* Path = (WCHAR*) malloc(Len);
+    memset(Path, 0, Len);
+    StringCbCopyW(Path, Len, TempPath);
+    
+    FileStruct.wFunc = FO_DELETE;
+    FileStruct.fFlags = FOF_SILENT | FOF_NOCONFIRMATION | FOF_NOERRORUI | FOF_NOCONFIRMMKDIR;
+    FileStruct.fAnyOperationsAborted = FALSE;
+    FileStruct.pFrom = TempPath;
+
+    SHFileOperationW(&FileStruct);
+    free(Path);
 }
 
 uint64_t DirSizeFunc(PWCHAR TargetDir)
@@ -234,15 +231,15 @@ uint64_t DirSizeFunc(PWCHAR TargetDir)
     uint64_t Size = 0;
     WCHAR TargetedDir[2048] = { 0 };
     WCHAR ReTargetDir[2048] = { 0 };
-    DWORD DwError = 0;
+    DWORD dwError = 0;
     
     StringCchPrintfW(TargetedDir, _countof(TargetedDir), L"%s%s", TargetDir, L"\\*");
     HandleDir = FindFirstFileW(TargetedDir, &DataStruct);
-    DwError = GetLastError();
+    dwError = GetLastError();
     
-    if (DwError != ERROR_NO_MORE_FILES && HandleDir == INVALID_HANDLE_VALUE)
+    if (dwError != ERROR_NO_MORE_FILES && HandleDir == INVALID_HANDLE_VALUE)
     {
-        if (DwError == ERROR_PATH_NOT_FOUND)
+        if (dwError == ERROR_PATH_NOT_FOUND)
         {
             return 0;
         }
@@ -468,20 +465,20 @@ PWCHAR SetOptimalUnit(uint64_t Size)
 
 void SetDetails(UINT StringID, UINT ResourceID, HWND hwnd)
 {
-    WCHAR loadedString[MAX_PATH] = { 0 };
+    WCHAR LoadedString[MAX_PATH] = { 0 };
 
-    LoadStringW(GetModuleHandleW(NULL), StringID, loadedString, _countof(loadedString));
-    SetDlgItemTextW(hwnd, ResourceID, loadedString);
-    memset(loadedString, 0, sizeof loadedString);
+    LoadStringW(GetModuleHandleW(NULL), StringID, LoadedString, _countof(LoadedString));
+    SetDlgItemTextW(hwnd, ResourceID, LoadedString);
+    memset(LoadedString, 0, sizeof LoadedString);
 }
 
 void SetTotalSize(long long Size, UINT ResourceID, HWND hwnd)
 {
-    WCHAR loadedString[MAX_PATH] = { 0 };
+    WCHAR LoadedString[MAX_PATH] = { 0 };
 
-    StringCchPrintfW(loadedString, _countof(loadedString), L"%.02lf %s", SetOptimalSize(Size), SetOptimalUnit(Size));
-    SetDlgItemTextW(hwnd, ResourceID, loadedString);
-    memset(loadedString, 0, sizeof loadedString);
+    StringCchPrintfW(LoadedString, _countof(LoadedString), L"%.02lf %s", SetOptimalSize(Size), SetOptimalUnit(Size));
+    SetDlgItemTextW(hwnd, ResourceID, LoadedString);
+    memset(LoadedString, 0, sizeof LoadedString);
 }
 
 BOOL OnCreate(HWND hwnd)
@@ -561,7 +558,7 @@ void SelItem(HWND hwnd, int index)
 
     case OLD_CHKDSK_FILES:
         ShowWindow(GetDlgItem(hwnd, IDC_VIEW_FILES), SW_HIDE);
-        SetDetails(IDS_DETAILS_DOWNLOAD, IDC_STATIC_DETAILS, hwnd);
+        SetDetails(IDS_DETAILS_CHKDSK, IDC_STATIC_DETAILS, hwnd);
         break;
 
     case RAPPS_FILES:

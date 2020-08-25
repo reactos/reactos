@@ -66,15 +66,15 @@ INT_PTR CALLBACK ChoicePageDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARA
         AddItem(hList, L"RAPPS Files", TempList, 0);
         ZeroMemory(&TempList, sizeof(TempList));
         
+        StringCchPrintfW(TempList, _countof(TempList), L"%.02lf %s", SetOptimalSize(RecycleSize), SetOptimalUnit(RecycleSize));
+        AddItem(hList, L"Recycle Bin", TempList, 2);
+        ZeroMemory(&TempList, sizeof(TempList));
+        
         if (bv.SysDrive == TRUE)
         {
             StringCchPrintfW(TempList, _countof(TempList), L"%.02lf %s", SetOptimalSize(TempSize), SetOptimalUnit(TempSize));
             AddItem(hList, L"Temporary Files", TempList, 0);
         }
-        
-        StringCchPrintfW(TempList, _countof(TempList), L"%.02lf %s", SetOptimalSize(RecycleSize), SetOptimalUnit(RecycleSize));
-        AddItem(hList, L"Recycle Bin", TempList, 2);
-        ZeroMemory(&TempList, sizeof(TempList));
 
         LoadStringW(GetModuleHandleW(NULL), IDS_CLEANUP, StringText, _countof(StringText));
         StringCchPrintfW(totalAmount, _countof(totalAmount), L"%.02lf %s", SetOptimalSize(TempSize + RecycleSize + ChkDskSize + RappsSize), SetOptimalUnit(TempSize + RecycleSize + ChkDskSize + RappsSize));

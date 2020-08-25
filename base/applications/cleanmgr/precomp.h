@@ -78,8 +78,8 @@ typedef enum
 {
     OLD_CHKDSK_FILES = 0,
     RAPPS_FILES = 1,
-    TEMPORARY_FILE = 2,
-    RECYCLE_BIN = 3
+    RECYCLE_BIN = 2,
+    TEMPORARY_FILE = 3
 } DIRECTORIES;
 
 /* HACK: struct for gathering data from registry key */
@@ -116,32 +116,43 @@ BOOL CALLBACK ProgressEndDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM 
 BOOL CALLBACK SagesetDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam);
 
 // For util.c
-uint64_t DirSizeFunc(PWCHAR targetDir);
-double SetOptimalSize(uint64_t size);
+
+BOOL ArgCheck(LPWSTR* argList, int nArgs);
+BOOL CreateImageLists(HWND hList);
+BOOL DriverunProc(LPWSTR* argList, PWCHAR LogicalDrives);
+BOOL EnableDialogTheme(HWND hwnd);
 BOOL FindRecycleBin(PWCHAR drive);
-void AddItem(HWND hList, PWCHAR string, PWCHAR subString, int iIndex);
-HRESULT GetFolderCLSID(LPCWSTR path, SHDESCRIPTIONID* pdid);
-PWCHAR SetOptimalUnit(uint64_t size);
-void SetDetails(UINT stringID, UINT resourceID, HWND hwnd);
-void SetTotalSize(long long size, UINT resourceID, HWND hwnd);
 BOOL OnCreate(HWND hwnd);
 BOOL OnCreateSageset(HWND hwnd);
-void OnTabWndSelChange(void);
-LRESULT APIENTRY ThemeHandler(HWND hDlg, NMCUSTOMDRAW* pNmDraw);
-BOOL CreateImageLists(HWND hList);
-void SelItem(HWND hwnd, int index);
-long long CheckedItem(int index, HWND hwnd, HWND hList, long long size);
-void SagesetCheckedItem(int index, HWND hwnd, HWND hList);
-BOOL EnableDialogTheme(HWND hwnd);
+BOOL RegValSet(PWCHAR RegArg, PWCHAR SubKey, BOOL ArgBool);
+
+double SetOptimalSize(uint64_t size);
+
 DWORD WINAPI FolderRemoval(LPVOID lpParam);
 DWORD WINAPI SizeCheck(LPVOID lpParam);
-BOOL ArgCheck(LPWSTR* argList, int nArgs);
-BOOL DriverunProc(LPWSTR* argList, PWCHAR LogicalDrives);
+DWORD RegQuery(PWCHAR RegArg, PWCHAR SubKey);
+
+HRESULT GetFolderCLSID(LPCWSTR path, SHDESCRIPTIONID* pdid);
+
+long long CheckedItem(int index, HWND hwnd, HWND hList, long long size);
+
+LRESULT APIENTRY ThemeHandler(HWND hDlg, NMCUSTOMDRAW* pNmDraw);
+
+PWCHAR RealStageFlag(int nArgs, PWCHAR ArgReal, LPWSTR* argList);
+PWCHAR SetOptimalUnit(uint64_t size);
+
+uint64_t DirSizeFunc(PWCHAR targetDir);
+
+void AddItem(HWND hList, PWCHAR string, PWCHAR subString, int iIndex);
+void CleanRequiredPath(PWCHAR Path);
+void OnTabWndSelChange(void);
+void SagesetCheckedItem(int index, HWND hwnd, HWND hList);
 void SagesetProc(int nArgs, PWCHAR ArgReal, LPWSTR* argList);
 void SagerunProc(int nArgs, PWCHAR ArgReal, LPWSTR* argList, PWCHAR LogicalDrives);
-BOOL RegValSet(PWCHAR RegArg, PWCHAR SubKey, BOOL ArgBool);
-DWORD RegQuery(PWCHAR RegArg, PWCHAR SubKey);
-PWCHAR RealStageFlag(int nArgs, PWCHAR ArgReal, LPWSTR* argList);
+void SelItem(HWND hwnd, int index);
+void SetDetails(UINT stringID, UINT resourceID, HWND hwnd);
+void SetTotalSize(long long size, UINT resourceID, HWND hwnd);
+
 
 // Dlg pages
 INT_PTR CALLBACK ChoicePageDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam);
