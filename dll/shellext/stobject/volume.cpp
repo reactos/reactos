@@ -221,7 +221,7 @@ static void _RunVolume(BOOL bTray)
 
 static void _RunMMCpl()
 {
-    ShellExecuteW(NULL, NULL, L"mmsys.cpl", NULL, NULL, SW_NORMAL);
+    SHRunControlPanel(L"mmsys.cpl", NULL);
 }
 
 static void _ShowContextMenu(CSysTray * pSysTray)

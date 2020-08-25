@@ -1386,10 +1386,22 @@ HRESULT WINAPI SHWinHelp(HWND hwnd, LPCWSTR pszHelp, UINT uCommand, ULONG_PTR dw
  *  SHRunControlPanel [SHELL32.161]
  *
  */
-BOOL WINAPI SHRunControlPanel (LPCWSTR commandLine, HWND parent)
+BOOL WINAPI SHRunControlPanel (_In_opt_ LPCWSTR commandLine, _In_opt_ HWND parent)
 {
+#ifdef __REACTOS__
+    //TODO: Run in-process when possible, (HKLM\Software\Microsoft\Windows\CurrentVersion\Explorer\ControlPanel\InProcCPLs), and possibly some extra rules,
+    //TODO: 'If the specified Control Panel item is already running, SHRunControlPanel attempts to switch to that instance rather than opening a new instance.'
+    //TODO: This function is not supported as of Windows Vista and as of Windows Vista, this function always returns FALSE (https://docs.microsoft.com/en-us/windows/win32/api/shlobj/nf-shlobj-shruncontrolpanel )
+    //but we need to keep it "live" even when reactOS is compliled as NT6+ in order to keep control panel elements launch commands.
+    TRACE("(%s, %p)n", debugstr_w(commandLine), parent);
+    WCHAR parameters[MAX_PATH] = L"shell32.dll,Control_RunDLL ";
+    wcscat(parameters, commandLine);
+
+    return ((INT_PTR)ShellExecuteW(parent, L"open", L"rundll32.exe", parameters, NULL, SW_SHOWNORMAL) > 32);
+#else
 	FIXME("(%s, %p): stub\n", debugstr_w(commandLine), parent);
 	return FALSE;
+#endif
 }
 
 static LPUNKNOWN SHELL32_IExplorerInterface=0;

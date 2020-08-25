@@ -784,7 +784,7 @@ OnNotify(
     
     if (nmhdr->idFrom == IDC_USERACCOUNT_LINK && nmhdr->code == NM_CLICK)
     {
-        ShellExecuteW(hwndDlg, NULL, L"usrmgr.cpl", NULL, NULL, 0);
+        SHRunControlPanel(L"usrmgr.cpl", hwndDlg);
     }
     else if (nmhdr->idFrom == IDC_USERPROFILE_LIST)
     {

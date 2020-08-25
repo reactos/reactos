@@ -631,8 +631,7 @@ public:
             break;
 
         case ID_SHELL_CMD_ADJUST_DAT:
-            //FIXME: Use SHRunControlPanel
-            ShellExecuteW(m_hWnd, NULL, L"timedate.cpl", NULL, NULL, SW_NORMAL);
+            SHRunControlPanel(L"timedate.cpl", m_hWnd);
             break;
 
         case ID_SHELL_CMD_RESTORE_ALL:
@@ -660,7 +659,7 @@ public:
         case IDHK_EXPLORE:
             //FIXME: We don't support this yet:
             //ShellExecuteW(0, L"explore", NULL, NULL, NULL, 1);
-            ShellExecuteW(0, NULL, L"explorer.exe", L"/e ,", NULL, 1);
+            ShellExecuteW(NULL, NULL, L"explorer.exe", L"/e ,", NULL, SW_SHOWNORMAL);
             break;
         case IDHK_FIND:
             SHFindFiles(NULL, NULL);
@@ -669,8 +668,7 @@ public:
             SHFindComputer(NULL, NULL);
             break;
         case IDHK_SYS_PROPERTIES:
-            //FIXME: Use SHRunControlPanel
-            ShellExecuteW(m_hWnd, NULL, L"sysdm.cpl", NULL, NULL, SW_NORMAL);
+            SHRunControlPanel(L"sysdm.cpl", m_hWnd);
             break;
         case IDHK_NEXT_TASK:
             break;
@@ -718,7 +716,7 @@ public:
                 ToggleDesktop();
                 break;
             case TRAYCMD_DATE_AND_TIME:
-                ShellExecuteW(m_hWnd, NULL, L"timedate.cpl", NULL, NULL, SW_NORMAL);
+                SHRunControlPanel(L"timedate.cpl", m_hWnd);
                 break;
             case TRAYCMD_TASKBAR_PROPERTIES:
                 DisplayProperties();
@@ -747,7 +745,7 @@ public:
                 ExecResourceCmd(IDS_HELP_COMMAND);
                 break;
             case TRAYCMD_CONTROL_PANEL:
-                // TODO:
+                ShellExecuteW(NULL, NULL, L"control.exe", L"", NULL, SW_SHOWNORMAL);
                 break;
             case TRAYCMD_SHUTDOWN_DIALOG:
                 DoExitWindows();

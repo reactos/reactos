@@ -254,9 +254,6 @@ extern BOOL launch_fileA(HWND hwnd, LPSTR cmd, UINT nCmdShow=SW_SHOWNORMAL, LPCS
  // call an DLL export like rundll32
 extern BOOL RunDLL(HWND hwnd, LPCTSTR dllname, LPCSTR procname, LPCTSTR cmdline, UINT nCmdShow);
 
- // launch control panel applet
-extern BOOL launch_cpanel(HWND hwnd, LPCTSTR applet);
-
 
  /// initialization of windows common controls
 struct CommonControlInit

@@ -468,7 +468,7 @@ int DesktopBar::Command(int id, int code)
 		break;
 
 	  case ID_VOLUME_PROPERTIES:
-		launch_cpanel(_hwnd, TEXT("mmsys.cpl"));
+		SHRunControlPanel(L"mmsys.cpl", _hwnd);
 		break;
 #endif
 
