@@ -22,21 +22,6 @@
 #include "mm.h"
 #endif
 
-#define MAX_XBOX_COM_PORTS    2
-
-#define LPC_IO_BASE             0x2E
-#define LPC_ENTER_CONFIG_KEY    0x55
-#define LPC_EXIT_CONFIG_KEY     0xAA
-
-#define LPC_DEVICE_SERIAL_PORT_1    0x4
-#define LPC_DEVICE_SERIAL_PORT_2    0x5
-
-#define LPC_CONFIG_DEVICE_NUMBER                0x07
-#define LPC_CONFIG_DEVICE_ACTIVATE              0x30
-#define LPC_CONFIG_DEVICE_BASE_ADDRESS_HIGH     0x60
-#define LPC_CONFIG_DEVICE_BASE_ADDRESS_LOW      0x61
-#define LPC_CONFIG_DEVICE_INTERRUPT             0x70
-
 #define NV2A_CONTROL_OFFSET            0xFD000000
 #define   NV2A_FB_OFFSET                (0x100000 + NV2A_CONTROL_OFFSET)
 #define     NV2A_FB_CFG0                   (0x200 + NV2A_FB_OFFSET)
