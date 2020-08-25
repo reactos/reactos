@@ -15,6 +15,7 @@
 #include "misc.h"
 #include "gui.h"
 #include "appview.h"
+#include "winmain.h"
 #include <shlobj_undoc.h>
 #include <shlguid_undoc.h>
 
@@ -51,7 +52,7 @@ HTREEITEM CSideTreeView::AddItem(HTREEITEM hParent, ATL::CStringW &Text, INT Ima
 HTREEITEM CSideTreeView::AddCategory(HTREEITEM hRootItem, UINT TextIndex, UINT IconIndex)
 {
     ATL::CStringW szText;
-    INT Index;
+    INT Index = 0;
     HICON hIcon;
 
     hIcon = (HICON)LoadImageW(hInst,
@@ -613,14 +614,6 @@ VOID CMainWindow::OnCommand(WPARAM wParam, LPARAM lParam)
     }
 }
 
-BOOL CMainWindow::SearchPatternMatch(LPCWSTR szHaystack, LPCWSTR szNeedle)
-{
-    if (!*szNeedle)
-        return TRUE;
-    /* TODO: Improve pattern search beyond a simple case-insensitive substring search. */
-    return StrStrIW(szHaystack, szNeedle) != NULL;
-}
-
 BOOL CALLBACK CMainWindow::EnumInstalledAppProc(CInstalledApplicationInfo *Info)
 {
     if (!SearchPatternMatch(Info->szDisplayName.GetString(), szSearchPattern))
@@ -723,7 +716,7 @@ ATL::CWndClassInfo &CMainWindow::GetWndClassInfo()
             LoadCursorW(NULL, IDC_ARROW),
             (HBRUSH)(COLOR_BTNFACE + 1),
             MAKEINTRESOURCEW(IDR_MAINMENU),
-            L"RAppsWnd",
+            szWindowClass,
             NULL
         },
         NULL, NULL, IDC_ARROW, TRUE, 0, _T("")
@@ -861,7 +854,7 @@ void CMainWindow::HandleTabOrder(int direction)
 
 
 
-VOID ShowMainWindow(INT nShowCmd)
+VOID MainWindowLoop(INT nShowCmd)
 {
     HACCEL KeyBrd;
     MSG Msg;

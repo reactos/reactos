@@ -14,6 +14,10 @@
 
 #include <gdiplus.h>
 
+#include <conutils.h>
+
+LPCWSTR szWindowClass = L"ROSAPPMGR";
+
 HWND hMainWnd;
 HINSTANCE hInst;
 SETTINGS_INFO SettingsInfo;
@@ -139,13 +143,13 @@ VOID SaveSettings(HWND hwnd)
     }
 }
 
-INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, INT nShowCmd)
+int wmain(int argc, wchar_t *argv[])
 {
-    LPCWSTR szWindowClass = L"ROSAPPMGR";
-    HANDLE hMutex;
-    BOOL bIsFirstLaunch;
+    ConInitStdStreams(); // Initialize the Console Standard Streams
 
-    InitializeAtlModule(hInstance, TRUE);
+    BOOL bIsFirstLaunch;
+    
+    InitializeAtlModule(GetModuleHandle(NULL), TRUE);
     InitializeGDIPlus(TRUE);
 
     if (GetUserDefaultUILanguage() == MAKELANGID(LANG_HEBREW, SUBLANG_DEFAULT))
@@ -153,19 +157,8 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
         SetProcessDefaultLayout(LAYOUT_RTL);
     }
 
-    hInst = hInstance;
+    hInst = GetModuleHandle(NULL);
 
-    hMutex = CreateMutexW(NULL, FALSE, szWindowClass);
-    if ((!hMutex) || (GetLastError() == ERROR_ALREADY_EXISTS))
-    {
-        /* If already started, it is found its window */
-        HWND hWindow = FindWindowW(szWindowClass, NULL);
-
-        /* Activate window */
-        ShowWindow(hWindow, SW_SHOWNORMAL);
-        SetForegroundWindow(hWindow);
-        return 1;
-    }
     bIsFirstLaunch = !LoadSettings();
     if (bIsFirstLaunch)
     {
@@ -175,20 +168,11 @@ INT WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLi
     InitLogs();
     InitCommonControls();
 
-    // skip window creation if there were some keys
-    if (!UseCmdParameters(GetCommandLineW()))
-    {
-        if (SettingsInfo.bUpdateAtStart || bIsFirstLaunch)
-            CAvailableApps::ForceUpdateAppsDB();
-
-        ShowMainWindow(nShowCmd);
-    }
-
-    if (hMutex)
-        CloseHandle(hMutex);
-
+    // parse cmd-line and perform the corresponding operation
+    BOOL bSuccess = ParseCmdAndExecute(GetCommandLineW(), bIsFirstLaunch, SW_SHOWNORMAL);
+    
     InitializeGDIPlus(FALSE);
-    InitializeAtlModule(hInstance, FALSE);
+    InitializeAtlModule(GetModuleHandle(NULL), FALSE);
 
-    return 0;
+    return bSuccess ? 0 : 1;
 }

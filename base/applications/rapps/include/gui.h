@@ -98,8 +98,6 @@ private:
 
     VOID OnCommand(WPARAM wParam, LPARAM lParam);
 
-    static BOOL SearchPatternMatch(LPCWSTR szHaystack, LPCWSTR szNeedle);
-
     BOOL CALLBACK EnumInstalledAppProc(CInstalledApplicationInfo *Info);
 
     BOOL CALLBACK EnumAvailableAppProc(CAvailableApplicationInfo *Info, BOOL bInitialCheckState);
@@ -134,4 +132,4 @@ public:
 };
 
 
-VOID ShowMainWindow(INT nShowCmd);
+VOID MainWindowLoop(INT nShowCmd);
