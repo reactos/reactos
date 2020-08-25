@@ -74,8 +74,6 @@ DWORD WINAPI SizeCheck(LPVOID lpParam)
             StringCbCopyW(wcv.AltTempDir, _countof(wcv.AltTempDir), TargetedDir);
             ZeroMemory(&TargetedDir, sizeof(TargetedDir));
         }
-
-        Sleep(150);
     }
 
     if(FindRecycleBin(wcv.DriveLetter))
@@ -90,7 +88,6 @@ DWORD WINAPI SizeCheck(LPVOID lpParam)
         ZeroMemory(&TargetedDir, sizeof(TargetedDir));
         SendMessageW(HProgressBar, PBM_SETPOS, 50, 0);
         SetDlgItemTextW(dv.hwndDlg, IDC_STATIC_INFO, L"Recycled Files");
-        Sleep(150);
     }
 
     
@@ -157,7 +154,6 @@ DWORD WINAPI FolderRemoval(LPVOID lpParam)
         
         SendMessageW(HProgressBar, PBM_SETPOS, 25, 0);
         SetDlgItemTextW(dv.hwndDlg, IDC_STATIC_INFO, L"Temporary files");
-        Sleep(150);
     }
     
     if (bv.RecycleClean == TRUE)
@@ -169,7 +165,6 @@ DWORD WINAPI FolderRemoval(LPVOID lpParam)
         
         SendMessageW(HProgressBar, PBM_SETPOS, 50, 0);
         SetDlgItemTextW(dv.hwndDlg, IDC_STATIC_INFO, L"Recycled files");
-        Sleep(150);
     }
     
     if (bv.ChkDskClean == TRUE)
