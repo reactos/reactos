@@ -744,7 +744,6 @@ BOOL WINAPI wglMakeCurrent(HDC hdc, HGLRC hglrc)
         /* Winetest conformance */
         if (GetObjectType( hdc ) != OBJ_DC && GetObjectType( hdc ) != OBJ_MEMDC)
         {
-            ERR( "Error: hdc is not a DC handle!\n");
             SetLastError( ERROR_INVALID_HANDLE );
             return FALSE;
         }
