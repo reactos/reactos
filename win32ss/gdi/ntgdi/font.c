@@ -743,7 +743,7 @@ NtGdiGetGlyphOutline(
 
   if (UnsafeBuf && cjBuf)
   {
-     pvBuf = ExAllocatePoolWithTag(PagedPool, cjBuf, GDITAG_TEXT);
+     pvBuf = ExAllocatePoolZero(PagedPool, cjBuf, GDITAG_TEXT);
      if (!pvBuf)
      {
         EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
