@@ -1661,13 +1661,12 @@ xHalExamineMBR(IN PDEVICE_OBJECT DeviceObject,
     *MbrBuffer = NULL;
 
     /* Normalize the buffer size */
-    BufferSize = max(SectorSize, 512);
+    BufferSize = max(512, SectorSize);
 
     /* Allocate the buffer */
     Buffer = ExAllocatePoolWithTag(NonPagedPool,
-                                       PAGE_SIZE > BufferSize ?
-                                       PAGE_SIZE : BufferSize,
-                                       TAG_FILE_SYSTEM);
+                                   max(PAGE_SIZE, BufferSize),
+                                   TAG_FILE_SYSTEM);
     if (!Buffer) return;
 
     /* Initialize the Event */
@@ -1724,22 +1723,23 @@ xHalExamineMBR(IN PDEVICE_OBJECT DeviceObject,
         }
         else
         {
-            /* Check if this is a secondary entry */
-            if (PartitionDescriptor->PartitionType == 0x54)
+            /* Check for OnTrack Disk Manager 6.0 / EZ-Drive partitions */
+
+            if (PartitionDescriptor->PartitionType == PARTITION_DM)
             {
                 /* Return our buffer, but at sector 63 */
                 *(PULONG)Buffer = 63;
                 *MbrBuffer = Buffer;
             }
-            else if (PartitionDescriptor->PartitionType == 0x55)
+            else if (PartitionDescriptor->PartitionType == PARTITION_EZDRIVE)
             {
-                /* EZ Drive, return the buffer directly */
+                /* EZ-Drive, return the buffer directly */
                 *MbrBuffer = Buffer;
             }
             else
             {
                 /* Otherwise crash on debug builds */
-                ASSERT(PartitionDescriptor->PartitionType == 0x55);
+                ASSERT(PartitionDescriptor->PartitionType == PARTITION_EZDRIVE);
             }
         }
     }
@@ -1805,11 +1805,11 @@ xHalIoReadPartitionTable(IN PDEVICE_OBJECT DeviceObject,
     /* Normalize the buffer size */
     InputSize = max(512, SectorSize);
 
-    /* Check for EZ Drive */
-    HalExamineMBR(DeviceObject, InputSize, 0x55, &MbrBuffer);
+    /* Check for EZ-Drive */
+    HalExamineMBR(DeviceObject, InputSize, PARTITION_EZDRIVE, &MbrBuffer);
     if (MbrBuffer)
     {
-        /* EZ Drive found, bias the offset */
+        /* EZ-Drive found, bias the offset */
         IsEzDrive = TRUE;
         ExFreePoolWithTag(MbrBuffer, TAG_FILE_SYSTEM);
         Offset.QuadPart = 512;
@@ -1911,7 +1911,7 @@ xHalIoReadPartitionTable(IN PDEVICE_OBJECT DeviceObject,
         /* Start looping partitions */
         j++;
         DPRINT("FSTUB: Partition Table %d:\n", j);
-        for (Entry = 1, k = 0; Entry <= 4; Entry++, PartitionDescriptor++)
+        for (Entry = 1, k = 0; Entry <= NUM_PARTITION_TABLE_ENTRIES; Entry++, PartitionDescriptor++)
         {
             /* Get the partition type */
             PartitionType = PartitionDescriptor->PartitionType;
@@ -1993,7 +1993,7 @@ xHalIoReadPartitionTable(IN PDEVICE_OBJECT DeviceObject,
                                                         TAG_FILE_SYSTEM);
                 if (!DriveLayoutInfo)
                 {
-                    /* Out of memory, unto this extra structure */
+                    /* Out of memory, undo this extra structure */
                     --i;
                     Status = STATUS_INSUFFICIENT_RESOURCES;
                     break;
@@ -2058,6 +2058,7 @@ xHalIoReadPartitionTable(IN PDEVICE_OBJECT DeviceObject,
                                   SectorSize);
 
                 /* Get the partition number */
+                /* FIXME: REACTOS HACK -- Needed for xHalIoAssignDriveLetters() */
                 PartitionInfo->PartitionNumber = (!IsContainerPartition(PartitionType)) ? i + 1 : 0;
             }
             else
@@ -2069,6 +2070,7 @@ xHalIoReadPartitionTable(IN PDEVICE_OBJECT DeviceObject,
                 PartitionInfo->PartitionLength.QuadPart = 0;
                 PartitionInfo->HiddenSectors = 0;
 
+                /* FIXME: REACTOS HACK -- Needed for xHalIoAssignDriveLetters() */
                 PartitionInfo->PartitionNumber = 0;
             }
         }
@@ -2091,7 +2093,7 @@ xHalIoReadPartitionTable(IN PDEVICE_OBJECT DeviceObject,
         /* Go back to the descriptor array and loop it */
         PartitionDescriptor = (PPARTITION_DESCRIPTOR)
                                &(((PUSHORT)Buffer)[PARTITION_TABLE_OFFSET]);
-        for (Entry = 1; Entry <= 4; Entry++, PartitionDescriptor++)
+        for (Entry = 1; Entry <= NUM_PARTITION_TABLE_ENTRIES; Entry++, PartitionDescriptor++)
         {
             /* Check if this is a container partition, since we skipped them */
             if (IsContainerPartition(PartitionDescriptor->PartitionType))
@@ -2163,7 +2165,7 @@ xHalIoReadPartitionTable(IN PDEVICE_OBJECT DeviceObject,
                 PartitionInfo->StartingOffset.QuadPart = 0;
                 PartitionInfo->PartitionLength = DiskGeometryEx.DiskSize;
 
-                /* FIXME: REACTOS HACK */
+                /* FIXME: REACTOS HACK -- Needed for xHalIoAssignDriveLetters() */
                 PartitionInfo->PartitionNumber = 0;
 
                 /* Set the signature and set the count back to 0 */
@@ -2224,11 +2226,11 @@ xHalIoSetPartitionInformation(IN PDEVICE_OBJECT DeviceObject,
     /* Normalize the buffer size */
     BufferSize = max(512, SectorSize);
 
-    /* Check for EZ Drive */
-    HalExamineMBR(DeviceObject, BufferSize, 0x55, &MbrBuffer);
+    /* Check for EZ-Drive */
+    HalExamineMBR(DeviceObject, BufferSize, PARTITION_EZDRIVE, &MbrBuffer);
     if (MbrBuffer)
     {
-        /* EZ Drive found, bias the offset */
+        /* EZ-Drive found, bias the offset */
         IsEzDrive = TRUE;
         ExFreePoolWithTag(MbrBuffer, TAG_FILE_SYSTEM);
         Offset.QuadPart = 512;
@@ -2290,7 +2292,7 @@ xHalIoSetPartitionInformation(IN PDEVICE_OBJECT DeviceObject,
         /* Get the partition descriptors and loop them */
         PartitionDescriptor = (PPARTITION_DESCRIPTOR)
                               &(((PUSHORT)Buffer)[PARTITION_TABLE_OFFSET]);
-        for (Entry = 1; Entry <= 4; Entry++, PartitionDescriptor++)
+        for (Entry = 1; Entry <= NUM_PARTITION_TABLE_ENTRIES; Entry++, PartitionDescriptor++)
         {
             /* Check if it's unused or a container partition */
             if ((PartitionDescriptor->PartitionType == PARTITION_ENTRY_UNUSED) ||
@@ -2352,7 +2354,7 @@ xHalIoSetPartitionInformation(IN PDEVICE_OBJECT DeviceObject,
         /* Nothing found yet, get the partition array again */
         PartitionDescriptor = (PPARTITION_DESCRIPTOR)
                                &(((PUSHORT)Buffer)[PARTITION_TABLE_OFFSET]);
-        for (Entry = 1; Entry <= 4; Entry++, PartitionDescriptor++)
+        for (Entry = 1; Entry <= NUM_PARTITION_TABLE_ENTRIES; Entry++, PartitionDescriptor++)
         {
             /* Check if this was a container partition (we skipped these) */
             if (IsContainerPartition(PartitionDescriptor->PartitionType))
@@ -2425,11 +2427,11 @@ xHalIoWritePartitionTable(IN PDEVICE_OBJECT DeviceObject,
     /* Get the partial drive geometry */
     xHalGetPartialGeometry(DeviceObject, &ConventionalCylinders, &DiskSize);
 
-    /* Check for EZ Drive */
-    HalExamineMBR(DeviceObject, BufferSize, 0x55, &MbrBuffer);
+    /* Check for EZ-Drive */
+    HalExamineMBR(DeviceObject, BufferSize, PARTITION_EZDRIVE, &MbrBuffer);
     if (MbrBuffer)
     {
-        /* EZ Drive found, bias the offset */
+        /* EZ-Drive found, bias the offset */
         IsEzDrive = TRUE;
         ExFreePoolWithTag(MbrBuffer, TAG_FILE_SYSTEM);
         Offset.QuadPart = 512;
@@ -2457,14 +2459,14 @@ xHalIoWritePartitionTable(IN PDEVICE_OBJECT DeviceObject,
                 return STATUS_INVALID_PARAMETER;
             }
 
-            /* Check if it needs a rewrite, and disable EZ drive for sure */
+            /* Check if it needs a rewrite, and disable EZ-Drive for sure */
             if (PartitionInfo->RewritePartition) DoRewrite = TRUE;
             IsEzDrive = FALSE;
         }
     }
 
     /* Count the number of partition tables */
-    DiskLayout->TableCount = (PartitionBuffer->PartitionCount + 4 - 1) / 4;
+    DiskLayout->TableCount = (PartitionBuffer->PartitionCount + NUM_PARTITION_TABLE_ENTRIES - 1) / NUM_PARTITION_TABLE_ENTRIES;
 
     /* Allocate our partition buffer */
     Buffer = ExAllocatePoolWithTag(NonPagedPool, PAGE_SIZE, TAG_FILE_SYSTEM);
@@ -2539,7 +2541,7 @@ xHalIoWritePartitionTable(IN PDEVICE_OBJECT DeviceObject,
 
             /* Loop the partition table entries */
             PartitionTable = &DiskLayout->PartitionTable[i];
-            for (j = 0; j < 4; j++)
+            for (j = 0; j < NUM_PARTITION_TABLE_ENTRIES; j++)
             {
                 /* Get the current entry and type */
                 TableEntry = &PartitionTable->PartitionEntry[j];
