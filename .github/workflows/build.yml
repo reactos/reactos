@@ -89,6 +89,16 @@ jobs:
       run: |
         cmake --build . --target bootcd
         cmake --build . --target livecd
+    # - name: Upload bootcd
+    #   uses: actions/upload-artifact@v1
+    #   with:
+    #     name: reactos-clang-cl-i386-${{github.sha}}
+    #     path: build/bootcd.iso
+    # - name: Upload livecd
+    #   uses: actions/upload-artifact@v1
+    #   with:
+    #     name: reactos-clang-cl-i386-${{github.sha}}
+    #     path: build/livecd.iso
 
   build-msvc-i386:
     name: MSVC (i386)
