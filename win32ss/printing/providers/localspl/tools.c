@@ -120,7 +120,7 @@ LONG copy_servername_from_name(LPCWSTR name, LPWSTR target)
     len = ARRAYSIZE(buffer);
     if (GetComputerNameW(buffer, &len))
     {
-        if ((serverlen == len) && (wcsnicmp(server, buffer, len) == 0))
+        if ((serverlen == len) && (_wcsnicmp(server, buffer, len) == 0))
         {
             /* The requested Servername is our computername */
             return 0;
