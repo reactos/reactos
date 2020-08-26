@@ -38,7 +38,7 @@ typedef struct _SettingsRegEntry
     size_t Offset;  // Offset of the field in SETTINGS_INFO struct
     SETTINGS_FIELDTYPE FieldType;    // Type of the field.
     ULONG cchStrlen; // string length. only used when FieldType == SettingsFieldString
-    WCHAR *RegKeyName; // The key name of this field in registery.
+    const WCHAR *RegKeyName; // The key name of this field in registery.
 }SETTINGS_REG_ENTRY;
 
 BOOL LoadSettings();
