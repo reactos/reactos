@@ -274,6 +274,8 @@ BOOL ParseCmdAndExecute(LPWSTR lpCmdLine, BOOL bIsFirstLaunch, int nCmdShow)
 
         if (hMutex)
             CloseHandle(hMutex);
+
+        return TRUE;
     }
     else if (MatchCmdOption(argv[1], CMD_KEY_INSTALL))
     {
@@ -283,29 +285,26 @@ BOOL ParseCmdAndExecute(LPWSTR lpCmdLine, BOOL bIsFirstLaunch, int nCmdShow)
     {
         return HandleSetupCommand(argv[1], argc - 2, argv + 2);
     }
-    else if (MatchCmdOption(argv[1], CMD_KEY_FIND))
+    
+
+    ConInitStdStreams(); // Initialize the Console Standard Streams
+
+    if (MatchCmdOption(argv[1], CMD_KEY_FIND))
     {
-        ConInitStdStreams(); // Initialize the Console Standard Streams
         return HandleFindCommand(argv[1], argc - 2, argv + 2);
     }
     else if (MatchCmdOption(argv[1], CMD_KEY_INFO))
     {
-        ConInitStdStreams(); // Initialize the Console Standard Streams
         return HandleInfoCommand(argv[1], argc - 2, argv + 2);
     }
     else if (MatchCmdOption(argv[1], CMD_KEY_HELP))
     {
-        ConInitStdStreams(); // Initialize the Console Standard Streams
         return HandleHelpCommand(argv[1], argc - 2, argv + 2);
     }
     else
     {
-        ConInitStdStreams(); // Initialize the Console Standard Streams
         // unrecognized/invalid options
         ConResPuts(StdOut, IDS_CMD_INVALID_OPTION);
         return FALSE;
     }
-
-
-    return TRUE;
 }
