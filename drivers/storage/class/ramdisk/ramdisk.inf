@@ -1,0 +1,69 @@
+; RAMDISK.INF
+
+; Installation of RAMDISK DRIVES
+
+[Version]
+Signature  = "$Windows NT$"
+LayoutFile = layout.inf
+Class      = Ramdisk
+ClassGUID  = {9D6D66A6-0B0C-4563-9077-A0E9A7955AE4}
+Provider   = %ReactOS%
+DriverVer  = 06/29/2008,1.00
+
+[DestinationDirs]
+RamdiskBus_CopyFiles.NT = 12
+
+[ClassInstall32.NT]
+AddReg = RamdiskClass.NT.AddReg
+
+[RamdiskClass.NT.AddReg]
+HKR, , ,               0, %RamdiskClassName%
+HKR, , Icon,           0, "-5"
+
+[Manufacturer]
+%ReactOS% = RamdiskDevice
+
+[RamdiskDevice]
+%RamdiskBus.Desc% = RamdiskBus_Inst, Ramdisk, DetectedInternal\Ramdisk, Detected\Ramdisk
+%RamdiskVolume.Desc% = RamdiskVolume_Inst, Ramdisk\RamVolume
+
+;----------------------------- RAMDISK BUS -----------------------------
+
+[RamdiskBus_Inst.NT]
+CopyFiles = RamdiskBus_CopyFiles.NT
+
+[RamdiskBus_Inst.NT.Services]
+AddService = ramdisk, 2, RamdiskBus_Service_Inst
+
+[RamdiskBus_Service_Inst]
+DisplayName    = %Ramdisk.ServiceDesc%
+ServiceType    = 1
+StartType      = 0
+ErrorControl   = 1
+ServiceBinary  = %12%\ramdisk.sys
+
+[RamdiskBus_CopyFiles.NT]
+ramdisk.sys
+
+;----------------------------- RAMDISK VOLUME -----------------------------
+
+[RamdiskVolume_Inst.NT]
+
+[RamdiskVolume_Inst.NT.Services]
+AddService = , 2
+
+;-------------------------------- STRINGS -------------------------------
+
+[Strings]
+ReactOS = "ReactOS Team"
+RamdiskClassName = "Ramdisk"
+RamdiskBus.Desc = "RAM disk controller"
+RamdiskVolume.Desc = "RAM disk device (volume)"
+Ramdisk.ServiceDesc = "ReactOS RAM Disk Driver"
+
+[Strings.0415]
+ReactOS = "Zespół ReactOS"
+RamdiskClassName = "Ramdisk"
+RamdiskBus.Desc = "Kontroler dysku RAM"
+RamdiskVolume.Desc = "Urządzenie dysku RAM (wolumin)"
+Ramdisk.ServiceDesc = "Sterownik dysku RAM systemu ReactOS"
