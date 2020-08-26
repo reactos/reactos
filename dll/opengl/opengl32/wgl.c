@@ -742,7 +742,6 @@ BOOL WINAPI wglMakeCurrent(HDC hdc, HGLRC hglrc)
     else
     {
         /* Winetest conformance */
-        
         DWORD objType = GetObjectType(hdc);
         if (objType != OBJ_DC && objType != OBJ_MEMDC)
         {
