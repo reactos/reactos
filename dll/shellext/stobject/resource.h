@@ -4,7 +4,6 @@
 
 #define IDS_PWR_PROPERTIES        152
 #define IDS_PWR_METER             153
-#define IDS_PWR_RUN               157
 #define IDS_PWR_PERCENT_REMAINING 158
 #define IDS_PWR_CHARGING          159
 #define IDS_PWR_UNKNOWN_REMAINING 160
@@ -18,7 +17,6 @@
 #define IDS_HOTPLUG_REMOVE_1      211
 #define IDS_HOTPLUG_REMOVE_2      215
 #define IDS_HOTPLUG_REMOVE_3      216
-#define IDS_HOTPLUG_RUN           217
 #define IDS_HOTPLUG_COMMA         218
 #define IDS_HOTPLUG_DRIVE         219
 #define IDS_HOTPLUG_DRIVES        220
@@ -32,7 +30,6 @@
 #define IDS_VOL_VOLUME            252
 #define IDS_VOL_ADJUST            255
 #define IDS_VOL_OPEN              256
-#define IDS_VOL_RUN               257
 #define IDS_VOL_MUTED             258
 
 #define IDS_KEYS_STICKY           330
