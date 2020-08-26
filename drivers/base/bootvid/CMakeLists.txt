@@ -8,7 +8,7 @@ if((ARCH STREQUAL "i386") OR (ARCH STREQUAL "amd64"))
             i386/pc98/bootvid.c)
     elseif(SARCH STREQUAL "xbox")
         list(APPEND SOURCE
-            i386/xbox/nv2a.h
+            i386/xbox/xbox.h
             i386/xbox/bootvid.c)
     else()
         list(APPEND SOURCE

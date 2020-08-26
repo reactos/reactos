@@ -22,16 +22,7 @@
 #include "mm.h"
 #endif
 
-#define NV2A_CONTROL_OFFSET            0xFD000000
-#define   NV2A_FB_OFFSET                (0x100000 + NV2A_CONTROL_OFFSET)
-#define     NV2A_FB_CFG0                   (0x200 + NV2A_FB_OFFSET)
-#define   NV2A_CRTC_OFFSET              (0x600000 + NV2A_CONTROL_OFFSET)
-#define     NV2A_CRTC_FRAMEBUFFER_START    (0x800 + NV2A_CRTC_OFFSET)
-#define     NV2A_CRTC_REGISTER_INDEX      (0x13D4 + NV2A_CRTC_OFFSET)
-#define     NV2A_CRTC_REGISTER_VALUE      (0x13D5 + NV2A_CRTC_OFFSET)
-#define   NV2A_RAMDAC_OFFSET            (0x680000 + NV2A_CONTROL_OFFSET)
-#define     NV2A_RAMDAC_FP_HVALID_END      (0x838 + NV2A_RAMDAC_OFFSET)
-#define     NV2A_RAMDAC_FP_VVALID_END      (0x818 + NV2A_RAMDAC_OFFSET)
+#include <drivers/xbox/xgpu.h>
 
 extern UCHAR BitmapFont8x16[256 * 16];
 

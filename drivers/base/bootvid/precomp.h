@@ -10,7 +10,7 @@
 #if defined(SARCH_PC98)
 #include "i386/pc98/pc98.h"
 #elif defined(SARCH_XBOX)
-#include "i386/xbox/nv2a.h"
+#include "i386/xbox/xbox.h"
 #else
 #include "i386/pc/vga.h"
 #include "i386/pc/pc.h"

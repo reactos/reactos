@@ -7,19 +7,10 @@
  *              Copyright 2020 Stanislav Motylkov (x86corez@gmail.com)
  */
 
-#ifndef _BOOTVID_NV2A_H_
-#define _BOOTVID_NV2A_H_
+#ifndef _BOOTVID_XBOX_H_
+#define _BOOTVID_XBOX_H_
 
 #pragma once
-
-/* FIXME: obtain fb size from firmware somehow (Cromwell reserves high 4 MB of RAM) */
-#define NV2A_VIDEO_MEMORY_SIZE    (4 * 1024 * 1024)
-
-#define NV2A_CONTROL_FRAMEBUFFER_ADDRESS_OFFSET 0x600800
-#define NV2A_CRTC_REGISTER_INDEX                0x6013D4
-#define NV2A_CRTC_REGISTER_VALUE                0x6013D5
-#define NV2A_RAMDAC_FP_HVALID_END               0x680838
-#define NV2A_RAMDAC_FP_VVALID_END               0x680818
 
 #define BB_OFFSET(x, y)    ((y) * SCREEN_WIDTH + (x))
 #define FB_OFFSET(x, y)    (((PanV + (y)) * FrameBufferWidth + PanH + (x)) * BytesPerPixel)
@@ -60,4 +51,4 @@ DisplayCharacter(
     _In_ ULONG TextColor,
     _In_ ULONG BackColor);
 
-#endif /* _BOOTVID_NV2A_H_ */
+#endif /* _BOOTVID_XBOX_H_ */
