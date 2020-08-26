@@ -679,7 +679,7 @@ Cleanup:
 }
 
 BOOL WINAPI
-localSetForm(HANDLE hPrinter, PWSTR pFormName, DWORD Level, PBYTE pForm)
+LocalSetForm(HANDLE hPrinter, PWSTR pFormName, DWORD Level, PBYTE pForm)
 {
     DWORD dwErrorCode, cbNeeded;
     PFORM_INFO_LIST pfil;

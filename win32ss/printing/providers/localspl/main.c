@@ -67,7 +67,7 @@ static const PRINTPROVIDOR _PrintProviderFunctions = {
     LocalAddForm,                               // fpAddForm
     LocalDeleteForm,                            // fpDeleteForm
     LocalGetForm,                               // fpGetForm
-    localSetForm,                               // fpSetForm
+    LocalSetForm,                               // fpSetForm
     LocalEnumForms,                             // fpEnumForms
     LocalEnumMonitors,                          // fpEnumMonitors
     LocalEnumPorts,                             // fpEnumPorts

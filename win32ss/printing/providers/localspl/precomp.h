@@ -251,7 +251,7 @@ BOOL WINAPI LocalAddForm(HANDLE hPrinter, DWORD Level, PBYTE pForm);
 BOOL WINAPI LocalDeleteForm(HANDLE hPrinter, PWSTR pFormName);
 BOOL WINAPI LocalEnumForms(HANDLE hPrinter, DWORD Level, PBYTE pForm, DWORD cbBuf, PDWORD pcbNeeded, PDWORD pcReturned);
 BOOL WINAPI LocalGetForm(HANDLE hPrinter, PWSTR pFormName, DWORD Level, PBYTE pForm, DWORD cbBuf, PDWORD pcbNeeded);
-BOOL WINAPI localSetForm(HANDLE hPrinter, PWSTR pFormName, DWORD Level, PBYTE pForm);
+BOOL WINAPI LocalSetForm(HANDLE hPrinter, PWSTR pFormName, DWORD Level, PBYTE pForm);
 
 // jobs.c
 extern SKIPLIST GlobalJobList;
