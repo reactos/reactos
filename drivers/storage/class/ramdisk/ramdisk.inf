@@ -67,3 +67,10 @@ RamdiskClassName = "Ramdisk"
 RamdiskBus.Desc = "Kontroler dysku RAM"
 RamdiskVolume.Desc = "Urządzenie dysku RAM (wolumin)"
 Ramdisk.ServiceDesc = "Sterownik dysku RAM systemu ReactOS"
+
+[Strings.0419]
+ReactOS = "Команда ReactOS"
+RamdiskClassName = "RAM-диски"
+RamdiskBus.Desc = "Контроллер RAM-диска"
+RamdiskVolume.Desc = "Устройство RAM-диска (том)"
+Ramdisk.ServiceDesc = "Драйвер RAM-диска ReactOS"
