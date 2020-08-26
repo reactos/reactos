@@ -41,7 +41,6 @@ extern "C" {
   /* CRT stuff */
 #if 1
   extern pthreadmbcinfo __ptmbcinfo;
-  extern int __globallocalestatus;
   extern int __locale_changed;
   extern struct threadmbcinfostruct __initialmbcinfo;
   pthreadmbcinfo __cdecl __updatetmbcinfo(void);

@@ -54,7 +54,6 @@ extern "C" {
   extern const unsigned char __newcumap[];
   extern pthreadlocinfo __ptlocinfo;
   extern pthreadmbcinfo __ptmbcinfo;
-  extern int __globallocalestatus;
   extern int __locale_changed;
   extern struct threadlocaleinfostruct __initiallocinfo;
   extern _locale_tstruct __initiallocalestructinfo;
