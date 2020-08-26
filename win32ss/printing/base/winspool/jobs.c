@@ -65,10 +65,12 @@ AddJobW(HANDLE hPrinter, DWORD Level, PBYTE pData, DWORD cbBuf, PDWORD pcbNeeded
 
     if (dwErrorCode == ERROR_SUCCESS)
     {
+        JOB_INFO_1W* pji1w = (JOB_INFO_1W*)pData;
+
         // Replace relative offset addresses in the output by absolute pointers.
         MarshallUpStructure(cbBuf, pData, AddJobInfo1Marshalling.pInfo, AddJobInfo1Marshalling.cbStructureSize, TRUE);
         pHandle->bJob = TRUE;
-        FIXME("Notify Tray Icon\n");
+        UpdateTrayIcon( hPrinter, pji1w->JobId );
     }
 
 Cleanup:
@@ -489,23 +491,23 @@ SetJobA(HANDLE hPrinter, DWORD JobId, DWORD Level, PBYTE pJobInfo, DWORD Command
     case 1:
       {
         JOB_INFO_1W *info1W = (JOB_INFO_1W*)JobW;
-        HeapFree(GetProcessHeap(), 0, info1W->pUserName);
-        HeapFree(GetProcessHeap(), 0, info1W->pDocument);
-        HeapFree(GetProcessHeap(), 0, info1W->pDatatype);
-        HeapFree(GetProcessHeap(), 0, info1W->pStatus);
+        if (info1W->pUserName) HeapFree(GetProcessHeap(), 0, info1W->pUserName);
+        if (info1W->pDocument) HeapFree(GetProcessHeap(), 0, info1W->pDocument);
+        if (info1W->pDatatype) HeapFree(GetProcessHeap(), 0, info1W->pDatatype);
+        if (info1W->pStatus) HeapFree(GetProcessHeap(), 0, info1W->pStatus);
         break;
       }
     case 2:
       {
         JOB_INFO_2W *info2W = (JOB_INFO_2W*)JobW;
-        HeapFree(GetProcessHeap(), 0, info2W->pUserName);
-        HeapFree(GetProcessHeap(), 0, info2W->pDocument);
-        HeapFree(GetProcessHeap(), 0, info2W->pNotifyName);
-        HeapFree(GetProcessHeap(), 0, info2W->pDatatype);
-        HeapFree(GetProcessHeap(), 0, info2W->pPrintProcessor);
-        HeapFree(GetProcessHeap(), 0, info2W->pParameters);
-        HeapFree(GetProcessHeap(), 0, info2W->pDevMode);
-        HeapFree(GetProcessHeap(), 0, info2W->pStatus);
+        if (info2W->pUserName) HeapFree(GetProcessHeap(), 0, info2W->pUserName);
+        if (info2W->pDocument) HeapFree(GetProcessHeap(), 0, info2W->pDocument);
+        if (info2W->pNotifyName) HeapFree(GetProcessHeap(), 0, info2W->pNotifyName);
+        if (info2W->pDatatype) HeapFree(GetProcessHeap(), 0, info2W->pDatatype);
+        if (info2W->pPrintProcessor) HeapFree(GetProcessHeap(), 0, info2W->pPrintProcessor);
+        if (info2W->pParameters) HeapFree(GetProcessHeap(), 0, info2W->pParameters);
+        if (info2W->pDevMode) HeapFree(GetProcessHeap(), 0, info2W->pDevMode);
+        if (info2W->pStatus) HeapFree(GetProcessHeap(), 0, info2W->pStatus);
         break;
       }
     }

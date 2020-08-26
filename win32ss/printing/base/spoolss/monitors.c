@@ -8,12 +8,79 @@
 #include "precomp.h"
 
 BOOL WINAPI
+AddMonitorW(PWSTR pName, DWORD Level, PBYTE pMonitors)
+{
+    BOOL bReturnValue = TRUE;
+    DWORD dwErrorCode = MAXDWORD;
+    PSPOOLSS_PRINT_PROVIDER pPrintProvider;
+    PLIST_ENTRY pEntry;
+
+    // Loop through all Print Provider.
+    for (pEntry = PrintProviderList.Flink; pEntry != &PrintProviderList; pEntry = pEntry->Flink)
+    {
+        pPrintProvider = CONTAINING_RECORD(pEntry, SPOOLSS_PRINT_PROVIDER, Entry);
+
+        // Check if this Print Provider provides the function.
+        if (!pPrintProvider->PrintProvider.fpAddMonitor)
+            continue;
+
+        bReturnValue = pPrintProvider->PrintProvider.fpAddMonitor(pName, Level, pMonitors);
+
+        if ( !bReturnValue )
+        {
+            dwErrorCode = GetLastError();
+        }
+
+        // dwErrorCode shall not be overwritten if a previous call already succeeded.
+        if (dwErrorCode != ERROR_SUCCESS)
+            dwErrorCode = GetLastError();
+    }
+
+    SetLastError(dwErrorCode);
+    return (dwErrorCode == ERROR_SUCCESS);
+}
+
+BOOL WINAPI
+DeleteMonitorW(PWSTR pName, PWSTR pEnvironment, PWSTR pMonitorName)
+{
+    BOOL bReturnValue = TRUE;
+    DWORD dwErrorCode = MAXDWORD;
+    PSPOOLSS_PRINT_PROVIDER pPrintProvider;
+    PLIST_ENTRY pEntry;
+
+    // Loop through all Print Provider.
+    for (pEntry = PrintProviderList.Flink; pEntry != &PrintProviderList; pEntry = pEntry->Flink)
+    {
+        pPrintProvider = CONTAINING_RECORD(pEntry, SPOOLSS_PRINT_PROVIDER, Entry);
+
+        // Check if this Print Provider provides the function.
+        if (!pPrintProvider->PrintProvider.fpDeleteMonitor)
+            continue;
+
+        bReturnValue = pPrintProvider->PrintProvider.fpDeleteMonitor(pName, pEnvironment, pMonitorName);
+
+        if ( !bReturnValue )
+        {
+            dwErrorCode = GetLastError();
+        }
+
+        // dwErrorCode shall not be overwritten if a previous call already succeeded.
+        if (dwErrorCode != ERROR_SUCCESS)
+            dwErrorCode = GetLastError();
+    }
+
+    SetLastError(dwErrorCode);
+    return (dwErrorCode == ERROR_SUCCESS);
+}
+
+BOOL WINAPI
 EnumMonitorsW(PWSTR pName, DWORD Level, PBYTE pMonitors, DWORD cbBuf, PDWORD pcbNeeded, PDWORD pcReturned)
 {
     BOOL bReturnValue = TRUE;
     DWORD cbCallBuffer;
     DWORD cbNeeded;
     DWORD dwReturned;
+    DWORD dwErrorCode = MAXDWORD;
     PBYTE pCallBuffer;
     PSPOOLSS_PRINT_PROVIDER pPrintProvider;
     PLIST_ENTRY pEntry;
@@ -47,6 +114,11 @@ EnumMonitorsW(PWSTR pName, DWORD Level, PBYTE pMonitors, DWORD cbBuf, PDWORD pcb
         dwReturned = 0;
         bReturnValue = pPrintProvider->PrintProvider.fpEnumMonitors(pName, Level, pCallBuffer, cbCallBuffer, &cbNeeded, &dwReturned);
 
+        if ( !bReturnValue )
+        {
+            dwErrorCode = GetLastError();
+        }
+
         // Add the returned counts to the total values.
         *pcbNeeded += cbNeeded;
         *pcReturned += dwReturned;
@@ -61,10 +133,11 @@ EnumMonitorsW(PWSTR pName, DWORD Level, PBYTE pMonitors, DWORD cbBuf, PDWORD pcb
         if (pCallBuffer)
             pCallBuffer += cbNeeded;
 
-        // Check if we shall not ask other Print Providers.
-        if (bReturnValue == ROUTER_STOP_ROUTING)
-            break;
+        // dwErrorCode shall not be overwritten if a previous EnumPrinters call already succeeded.
+        if (dwErrorCode != ERROR_SUCCESS)
+            dwErrorCode = GetLastError();
     }
 
-    return bReturnValue;
+    SetLastError(dwErrorCode);
+    return (dwErrorCode == ERROR_SUCCESS);
 }

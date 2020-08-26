@@ -6,6 +6,14 @@
 */
 
 #include "precomp.h"
+#include <shlobj.h>
+#include <undocshell.h>
+
+#define MAX_GETPRINTER_SIZE 4096 - MAX_PATH
+typedef void (WINAPI *PPfpSHChangeNotify)(LONG wEventId, UINT uFlags, LPCVOID dwItem1, LPCVOID dwItem2);
+
+static HMODULE hShell32 = (HMODULE)-1;
+
 
 /*
  * Converts an incoming Unicode string to an ANSI string.
@@ -330,3 +338,41 @@ SECURITY_DESCRIPTOR * get_sd( SECURITY_DESCRIPTOR *sd, DWORD *size )
     return retsd;
 }
 
+VOID
+UpdateTrayIcon( HANDLE hPrinter, DWORD JobId )
+{
+    PSPOOLER_HANDLE pHandle = (PSPOOLER_HANDLE)hPrinter;
+    SHCNF_PRINTJOB_INFO spji;
+    PRINTER_INFO_1W pi1w[MAX_GETPRINTER_SIZE] = {0};
+    DWORD cbNeeded;
+    PPfpSHChangeNotify fpFunction;
+
+    pHandle->bTrayIcon = TRUE;
+
+    spji.JobId = JobId;
+
+    if (!GetPrinterW( hPrinter, 1, (PBYTE)&pi1w, MAX_GETPRINTER_SIZE, &cbNeeded) )
+    {
+        ERR("UpdateTrayIcon : GetPrinterW cbNeeded %d\n");
+        return;
+    }
+
+    if ( hShell32 == (HMODULE)-1 )
+    {
+        hShell32 = LoadLibraryW(L"shell32.dll");
+    }
+
+    if ( hShell32 )
+    {
+        fpFunction = (PPfpSHChangeNotify)GetProcAddress( hShell32, "SHChangeNotify" );
+
+        if ( fpFunction )
+        {
+            fpFunction( SHCNE_CREATE, (SHCNF_FLUSHNOWAIT|SHCNF_FLUSH|SHCNF_PRINTJOBW), pi1w->pName , &spji );
+        }
+    }
+    else
+    {
+        ERR("UpdateTrayIcon : No Shell32!\n");
+    }
+}

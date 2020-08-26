@@ -246,9 +246,9 @@ epp_cleanup:
     if (pcbNeeded)  *pcbNeeded = needed;
     if (pcReturned) *pcReturned = (res) ? numentries : 0;
 
-    HeapFree(GetProcessHeap(), 0, nameW);
-    HeapFree(GetProcessHeap(), 0, envW);
-    HeapFree(GetProcessHeap(), 0, bufferW);
+    if (nameW) HeapFree(GetProcessHeap(), 0, nameW);
+    if (envW) HeapFree(GetProcessHeap(), 0, envW);
+    if (bufferW) HeapFree(GetProcessHeap(), 0, bufferW);
 
     TRACE("returning %d with %d (%d byte for %d entries)\n", (res), GetLastError(), needed, numentries);
 

@@ -177,6 +177,7 @@ BOOL WINAPI
 EnumFormsA(HANDLE hPrinter, DWORD Level, PBYTE pForm, DWORD cbBuf, PDWORD pcbNeeded, PDWORD pcReturned)
 {
     DWORD dwErrorCode, i;
+    PFORM_INFO_1W pfi1w = (PFORM_INFO_1W)pForm;
     PFORM_INFO_2W pfi2w = (PFORM_INFO_2W)pForm;
 
     TRACE("EnumFormsA(%p, %lu, %p, %lu, %p, %p)\n", hPrinter, Level, pForm, cbBuf, pcbNeeded, pcReturned);
@@ -203,9 +204,14 @@ EnumFormsA(HANDLE hPrinter, DWORD Level, PBYTE pForm, DWORD cbBuf, PDWORD pcbNee
                     {
                         goto Cleanup;
                     }
-                    // Fall through...
-                case 1:
                     dwErrorCode = UnicodeToAnsiInPlace(pfi2w[i].pName);
+                    if (dwErrorCode != ERROR_SUCCESS)
+                    {
+                        goto Cleanup;
+                    }
+                    break;
+                case 1:
+                    dwErrorCode = UnicodeToAnsiInPlace(pfi1w[i].pName);
                     if (dwErrorCode != ERROR_SUCCESS)
                     {
                         goto Cleanup;
@@ -269,7 +275,8 @@ GetFormA(HANDLE hPrinter, PSTR pFormName, DWORD Level, PBYTE pForm, DWORD cbBuf,
 {
     DWORD dwErrorCode, len;
     LPWSTR FormNameW = NULL;
-    FORM_INFO_2W* pfi2w = (FORM_INFO_2W*)pForm;
+    PFORM_INFO_1W pfi1w = (PFORM_INFO_1W)pForm;
+    PFORM_INFO_2W pfi2w = (PFORM_INFO_2W)pForm;
 
     TRACE("GetFormA(%p, %s, %lu, %p, %lu, %p)\n", hPrinter, pFormName, Level, pForm, cbBuf, pcbNeeded);
 
@@ -300,20 +307,18 @@ GetFormA(HANDLE hPrinter, PSTR pFormName, DWORD Level, PBYTE pForm, DWORD cbBuf,
                 {
                     goto Cleanup;
                 }
-            // Fall through...
-            case 1:
                 dwErrorCode = UnicodeToAnsiInPlace(pfi2w->pName);
                 if (dwErrorCode != ERROR_SUCCESS)
                 {
                     goto Cleanup;
                 }
                 break;
-
-            default:
-                ERR("Level = %d, unsupported!\n", Level);
-                dwErrorCode = ERROR_INVALID_HANDLE;
-                SetLastError(dwErrorCode);
-                break;
+            case 1:
+                dwErrorCode = UnicodeToAnsiInPlace(pfi1w->pName);
+                if (dwErrorCode != ERROR_SUCCESS)
+                {
+                    goto Cleanup;
+                }
         }
     }
 Cleanup:

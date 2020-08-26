@@ -10,7 +10,77 @@
 static DWORD
 _HandleAddPort(PLOCALMON_XCV pXcv, PBYTE pInputData, PDWORD pcbOutputNeeded)
 {
-    return ERROR_CALL_NOT_IMPLEMENTED;
+    DWORD res, cbPortName;
+    HKEY hroot;
+    HKEY hToken = NULL;
+    PLOCALMON_PORT pPort;
+    PLOCALMON_HANDLE pLocalmon = pXcv->pLocalmon;
+    PWSTR PortName = (PWSTR)pInputData;
+
+    FIXME("LcmXcvAddPort : %s\n", debugstr_w( (LPWSTR) PortName ) );
+
+    if (!pLocalmon )
+    {
+        res = ERROR_INVALID_PARAMETER;
+        goto Cleanup;
+    }
+
+    // This action can only happen at SERVER_ACCESS_ADMINISTER access level.
+    if (!(pXcv->GrantedAccess & SERVER_ACCESS_ADMINISTER))
+    {
+        res = ERROR_ACCESS_DENIED;
+        goto Cleanup;
+    }
+
+    // Switch to the SYSTEM context for modifying the registry.
+    hToken = RevertToPrinterSelf();
+    if (!hToken)
+    {
+        res = GetLastError();
+        ERR("RevertToPrinterSelf failed with error %lu!\n", res);
+        goto Cleanup;
+    }
+
+    res = RegOpenKeyW(HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows NT\\CurrentVersion\\Ports", &hroot);
+    if (res == ERROR_SUCCESS)
+    {
+        if ( DoesPortExist( PortName ) )
+        {
+            RegCloseKey(hroot);
+            FIXME("=> %u\n", ERROR_ALREADY_EXISTS);
+            res = ERROR_ALREADY_EXISTS;
+            goto Cleanup;
+        }
+
+        cbPortName = (wcslen( PortName ) + 1) * sizeof(WCHAR);
+
+        // Create a new LOCALMON_PORT structure for it.
+        pPort = DllAllocSplMem(sizeof(LOCALMON_PORT) + cbPortName);
+        if (!pPort)
+        {
+            res = ERROR_NOT_ENOUGH_MEMORY;
+            RegCloseKey( hroot );
+            goto Cleanup;
+        }
+        memset( pPort, 0, sizeof(LOCALMON_PORT) + cbPortName );
+
+        pPort->hFile = INVALID_HANDLE_VALUE;
+        pPort->pLocalmon = pLocalmon;
+        pPort->pwszPortName = wcscpy( (PWSTR)(pPort+1), PortName );
+
+        // Insert it into the Registry list.
+        InsertTailList(&pLocalmon->RegistryPorts, &pPort->Entry);
+
+        res = RegSetValueExW(hroot, PortName, 0, REG_SZ, (const BYTE *) L"", sizeof(L""));
+        RegCloseKey(hroot);
+    }
+
+    FIXME("=> %u\n", res);
+
+Cleanup:
+    if (hToken) ImpersonatePrinterClient(hToken);
+    SetLastError(res);
+    return res;
 }
 
 /**
@@ -96,7 +166,79 @@ Cleanup:
 static DWORD
 _HandleDeletePort(PLOCALMON_XCV pXcv, PBYTE pInputData, PDWORD pcbOutputNeeded)
 {
-    return ERROR_CALL_NOT_IMPLEMENTED;
+    DWORD res;
+    HKEY hroot;
+    HKEY hToken = NULL;
+    PLOCALMON_HANDLE pLocalmon = pXcv->pLocalmon;
+    PLOCALMON_PORT pPort = NULL;
+    PLIST_ENTRY pEntry;
+    PWSTR pPortName = (PWSTR)pInputData;
+
+    FIXME("LcmXcvDeletePort : %s\n", debugstr_w( pPortName ) );
+
+    if (!pLocalmon )
+    {
+        res = ERROR_INVALID_PARAMETER;
+        goto Cleanup;
+    }
+
+    // This action can only happen at SERVER_ACCESS_ADMINISTER access level.
+    if (!(pXcv->GrantedAccess & SERVER_ACCESS_ADMINISTER))
+    {
+        res = ERROR_ACCESS_DENIED;
+        goto Cleanup;
+    }
+
+    // Switch to the SYSTEM context for modifying the registry.
+    hToken = RevertToPrinterSelf();
+    if (!hToken)
+    {
+        res = GetLastError();
+        ERR("RevertToPrinterSelf failed with error %lu!\n", res);
+        goto Cleanup;
+    }
+
+    res = RegOpenKeyW(HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows NT\\CurrentVersion\\Ports", &hroot);
+    if ( res == ERROR_SUCCESS )
+    {
+        res = RegDeleteValueW(hroot, pPortName );
+
+        RegCloseKey(hroot);
+
+        if ( res == ERROR_SUCCESS )
+        {
+            EnterCriticalSection(&pLocalmon->Section);
+
+            if (!IsListEmpty(&pLocalmon->RegistryPorts) )
+            {
+                for (pEntry = pLocalmon->RegistryPorts.Flink; pEntry != &pLocalmon->RegistryPorts; pEntry = pEntry->Flink)
+                {
+                    pPort = CONTAINING_RECORD(pEntry, LOCALMON_PORT, Entry);
+
+                    if (wcscmp(pPort->pwszPortName, pPortName) == 0)
+                        break;
+                }
+            }
+
+            LeaveCriticalSection(&pLocalmon->Section);
+
+            if ( pPort )
+            {
+                FIXME("LcmXcvDeletePort removed Port Entry\n");
+                EnterCriticalSection(&pPort->pLocalmon->Section);
+                RemoveEntryList(&pPort->Entry);
+                LeaveCriticalSection(&pPort->pLocalmon->Section);
+
+                DllFreeSplMem(pPort);
+            }
+        }
+        FIXME("LcmXcvDeletePort => %u with %u\n", res, GetLastError() );
+    }
+
+Cleanup:
+    if (hToken) ImpersonatePrinterClient(hToken);
+    SetLastError(res);
+    return res;
 }
 
 /**
@@ -202,7 +344,7 @@ _HandleMonitorUI(PBYTE pOutputData, DWORD cbOutputData, PDWORD pcbOutputNeeded)
     const WCHAR wszMonitorUI[] = L"LocalUI.dll";
 
     // Sanity checks
-    if (!pOutputData || !pcbOutputNeeded)
+    if (!pcbOutputNeeded)
         return ERROR_INVALID_PARAMETER;
 
     *pcbOutputNeeded = sizeof(wszMonitorUI);
@@ -210,6 +352,9 @@ _HandleMonitorUI(PBYTE pOutputData, DWORD cbOutputData, PDWORD pcbOutputNeeded)
     // Check if the supplied buffer is large enough.
     if (cbOutputData < *pcbOutputNeeded)
         return ERROR_INSUFFICIENT_BUFFER;
+
+    if (!pOutputData)
+        return ERROR_INVALID_PARAMETER;
 
     // Copy the string.
     CopyMemory(pOutputData, wszMonitorUI, sizeof(wszMonitorUI));
@@ -257,7 +402,21 @@ _HandlePortExists(PBYTE pInputData, PBYTE pOutputData, DWORD cbOutputData, PDWOR
 static DWORD
 _HandlePortIsValid(PBYTE pInputData, PBYTE pOutputData, DWORD cbOutputData, PDWORD pcbOutputNeeded)
 {
-    return ERROR_CALL_NOT_IMPLEMENTED;
+    DWORD res;
+
+    TRACE("HandlePortIsValid : pInputData %s\n", debugstr_w( (LPWSTR) pInputData));
+
+    res = GetTypeFromName((LPCWSTR) pInputData);
+
+    TRACE("HandlePortIsValid : detected as %u\n",  res);
+
+    /* names, that we have recognized, are valid */
+    if (res) return ERROR_SUCCESS;
+
+    TRACE("=> %u\n", GetLastError());
+
+    /* ERROR_ACCESS_DENIED, ERROR_PATH_NOT_FOUND or something else */
+    return GetLastError();
 }
 
 /**
@@ -354,7 +513,9 @@ LocalmonXcvClosePort(HANDLE hXcv)
     }
 
     // Remove it from the list and free the memory.
+    LeaveCriticalSection(&pXcv->pLocalmon->Section);
     RemoveEntryList(&pXcv->Entry);
+    LeaveCriticalSection(&pXcv->pLocalmon->Section);
     DllFreeSplMem(pXcv);
 
     SetLastError(ERROR_SUCCESS);
@@ -364,7 +525,7 @@ LocalmonXcvClosePort(HANDLE hXcv)
 DWORD WINAPI
 LocalmonXcvDataPort(HANDLE hXcv, PCWSTR pszDataName, PBYTE pInputData, DWORD cbInputData, PBYTE pOutputData, DWORD cbOutputData, PDWORD pcbOutputNeeded)
 {
-    TRACE("LocalmonXcvDataPort(%p, %S, %p, %lu, %p, %lu, %p)\n", hXcv, pszDataName, pInputData, cbInputData, pOutputData, cbOutputData, pcbOutputNeeded);
+    FIXME("LocalmonXcvDataPort(%p, %S, %p, %lu, %p, %lu, %p)\n", hXcv, pszDataName, pInputData, cbInputData, pOutputData, cbOutputData, pcbOutputNeeded);
 
     // Sanity checks
     if (!pszDataName)

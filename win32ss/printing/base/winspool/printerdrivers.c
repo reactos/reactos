@@ -7,6 +7,7 @@
 
 #include "precomp.h"
 #include <marshalling/printerdrivers.h>
+
 extern const WCHAR wszCurrentEnvironment[];
 
 static int multi_sz_lenA(const char *str)
@@ -231,26 +232,26 @@ AddPrinterDriverExA(PSTR pName, DWORD Level, PBYTE pDriverInfo, DWORD dwFileCopy
     res = AddPrinterDriverExW(nameW, Level, (LPBYTE) &diW, dwFileCopyFlags);
 
     TRACE("got %u with %u\n", res, GetLastError());
-    HeapFree(GetProcessHeap(), 0, nameW);
-    HeapFree(GetProcessHeap(), 0, diW.pName);
-    HeapFree(GetProcessHeap(), 0, diW.pEnvironment);
-    HeapFree(GetProcessHeap(), 0, diW.pDriverPath);
-    HeapFree(GetProcessHeap(), 0, diW.pDataFile);
-    HeapFree(GetProcessHeap(), 0, diW.pConfigFile);
-    HeapFree(GetProcessHeap(), 0, diW.pHelpFile);
-    HeapFree(GetProcessHeap(), 0, diW.pDependentFiles);
-    HeapFree(GetProcessHeap(), 0, diW.pMonitorName);
-    HeapFree(GetProcessHeap(), 0, diW.pDefaultDataType);
-    HeapFree(GetProcessHeap(), 0, diW.pszzPreviousNames);
-    HeapFree(GetProcessHeap(), 0, diW.pszMfgName);
-    HeapFree(GetProcessHeap(), 0, diW.pszOEMUrl);
-    HeapFree(GetProcessHeap(), 0, diW.pszHardwareID);
-    HeapFree(GetProcessHeap(), 0, diW.pszProvider);
-    HeapFree(GetProcessHeap(), 0, diW.pszPrintProcessor);
-    HeapFree(GetProcessHeap(), 0, diW.pszVendorSetup);
-    HeapFree(GetProcessHeap(), 0, diW.pszzColorProfiles);
-    HeapFree(GetProcessHeap(), 0, diW.pszInfPath);
-    HeapFree(GetProcessHeap(), 0, diW.pszzCoreDriverDependencies);
+    if (nameW) HeapFree(GetProcessHeap(), 0, nameW);
+    if (diW.pName) HeapFree(GetProcessHeap(), 0, diW.pName);
+    if (diW.pEnvironment) HeapFree(GetProcessHeap(), 0, diW.pEnvironment);
+    if (diW.pDriverPath) HeapFree(GetProcessHeap(), 0, diW.pDriverPath);
+    if (diW.pDataFile) HeapFree(GetProcessHeap(), 0, diW.pDataFile);
+    if (diW.pConfigFile) HeapFree(GetProcessHeap(), 0, diW.pConfigFile);
+    if (diW.pHelpFile) HeapFree(GetProcessHeap(), 0, diW.pHelpFile);
+    if (diW.pDependentFiles) HeapFree(GetProcessHeap(), 0, diW.pDependentFiles);
+    if (diW.pMonitorName) HeapFree(GetProcessHeap(), 0, diW.pMonitorName);
+    if (diW.pDefaultDataType) HeapFree(GetProcessHeap(), 0, diW.pDefaultDataType);
+    if (diW.pszzPreviousNames) HeapFree(GetProcessHeap(), 0, diW.pszzPreviousNames);
+    if (diW.pszMfgName) HeapFree(GetProcessHeap(), 0, diW.pszMfgName);
+    if (diW.pszOEMUrl) HeapFree(GetProcessHeap(), 0, diW.pszOEMUrl);
+    if (diW.pszHardwareID) HeapFree(GetProcessHeap(), 0, diW.pszHardwareID);
+    if (diW.pszProvider) HeapFree(GetProcessHeap(), 0, diW.pszProvider);
+    if (diW.pszPrintProcessor) HeapFree(GetProcessHeap(), 0, diW.pszPrintProcessor);
+    if (diW.pszVendorSetup) HeapFree(GetProcessHeap(), 0, diW.pszVendorSetup);
+    if (diW.pszzColorProfiles) HeapFree(GetProcessHeap(), 0, diW.pszzColorProfiles);
+    if (diW.pszInfPath) HeapFree(GetProcessHeap(), 0, diW.pszInfPath);
+    if (diW.pszzCoreDriverDependencies) HeapFree(GetProcessHeap(), 0, diW.pszzCoreDriverDependencies);
 
     TRACE("=> %u with %u\n", res, GetLastError());
     return res;
@@ -259,7 +260,7 @@ AddPrinterDriverExA(PSTR pName, DWORD Level, PBYTE pDriverInfo, DWORD dwFileCopy
 BOOL WINAPI
 AddPrinterDriverExW(PWSTR pName, DWORD Level, PBYTE pDriverInfo, DWORD dwFileCopyFlags)
 {
-    DWORD dwErrorCode;
+    DWORD dwErrorCode = ERROR_SUCCESS;
     WINSPOOL_DRIVER_INFO_8 * pdi = NULL;
     WINSPOOL_DRIVER_CONTAINER pDriverContainer;
 
@@ -310,7 +311,6 @@ AddPrinterDriverExW(PWSTR pName, DWORD Level, PBYTE pDriverInfo, DWORD dwFileCop
         }
         case 4:
         {
-
             PDRIVER_INFO_4W pdi4w = (PDRIVER_INFO_4W)pDriverInfo;
             if ( pdi == NULL )  pdi = HeapAlloc(hProcessHeap, 0, sizeof(WINSPOOL_DRIVER_INFO_4));
 
@@ -398,6 +398,7 @@ DeletePrinterDriverA(PSTR pName, PSTR pEnvironment, PSTR pDriverName)
 BOOL WINAPI
 DeletePrinterDriverExA(PSTR pName, PSTR pEnvironment, PSTR pDriverName, DWORD dwDeleteFlag, DWORD dwVersionFlag)
 {
+    DWORD dwErrorCode;
     UNICODE_STRING NameW, EnvW, DriverW;
     BOOL ret;
 
@@ -409,10 +410,13 @@ DeletePrinterDriverExA(PSTR pName, PSTR pEnvironment, PSTR pDriverName, DWORD dw
 
     ret = DeletePrinterDriverExW(NameW.Buffer, EnvW.Buffer, DriverW.Buffer, dwDeleteFlag, dwVersionFlag);
 
+    dwErrorCode = GetLastError();
+
     RtlFreeUnicodeString(&DriverW);
     RtlFreeUnicodeString(&EnvW);
     RtlFreeUnicodeString(&NameW);
 
+    SetLastError(dwErrorCode);
     return ret;
 }
 
@@ -461,19 +465,21 @@ DeletePrinterDriverW(PWSTR pName, PWSTR pEnvironment, PWSTR pDriverName)
 BOOL WINAPI
 EnumPrinterDriversA(PSTR pName, PSTR pEnvironment, DWORD Level, PBYTE pDriverInfo, DWORD cbBuf, PDWORD pcbNeeded, PDWORD pcReturned)
 {
-    BOOL ret;
+    BOOL ret = FALSE;
     DWORD dwErrorCode, i;
     UNICODE_STRING pNameW, pEnvironmentW;
     PWSTR pwstrNameW, pwstrEnvironmentW;
     PDRIVER_INFO_1W pdi1w = (PDRIVER_INFO_1W)pDriverInfo;
     PDRIVER_INFO_8W pdi8w = (PDRIVER_INFO_8W)pDriverInfo;
 
-    TRACE("EnumPrinterDriversA(%s, %s, %lu, %p, %lu, %p, %p)\n", pName, pEnvironment, Level, pDriverInfo, cbBuf, pcbNeeded, pcReturned);
+    FIXME("EnumPrinterDriversA(%s, %s, %lu, %p, %lu, %p, %p)\n", pName, pEnvironment, Level, pDriverInfo, cbBuf, pcbNeeded, pcReturned);
 
     pwstrNameW = AsciiToUnicode(&pNameW, pName);
     pwstrEnvironmentW = AsciiToUnicode(&pEnvironmentW, pEnvironment);
 
     ret = EnumPrinterDriversW( pwstrNameW, pwstrEnvironmentW, Level, pDriverInfo, cbBuf, pcbNeeded, pcReturned );
+
+    dwErrorCode = GetLastError();
 
     if (ret)
     {
@@ -613,11 +619,13 @@ EnumPrinterDriversA(PSTR pName, PSTR pEnvironment, DWORD Level, PBYTE pDriverInf
                 }
             }
         }
+        dwErrorCode = ERROR_SUCCESS;
     }
 Cleanup:
     RtlFreeUnicodeString(&pNameW);
     RtlFreeUnicodeString(&pEnvironmentW);
-
+    SetLastError(dwErrorCode);
+    FIXME("EnumPrinterDriversA Exit %d Err %d\n",ret,GetLastError());
     return ret;
 }
 
@@ -626,10 +634,10 @@ EnumPrinterDriversW(PWSTR pName, PWSTR pEnvironment, DWORD Level, PBYTE pDriverI
 {
     DWORD dwErrorCode;
 
-    TRACE("EnumPrinterDriversW(%S, %S, %lu, %p, %lu, %p, %p)\n", pName, pEnvironment, Level, pDriverInfo, cbBuf, pcbNeeded, pcReturned);
+    FIXME("EnumPrinterDriversW(%S, %S, %lu, %p, %lu, %p, %p)\n", pName, pEnvironment, Level, pDriverInfo, cbBuf, pcbNeeded, pcReturned);
 
     // Dismiss invalid levels already at this point.
-    if (Level > 8 || Level == 7 || Level < 1)
+    if (Level < 1 || Level == 7 || Level > 8)
     {
         dwErrorCode = ERROR_INVALID_LEVEL;
         goto Cleanup;
@@ -663,7 +671,7 @@ EnumPrinterDriversW(PWSTR pName, PWSTR pEnvironment, DWORD Level, PBYTE pDriverI
     }
 
 Cleanup:
-    SetLastError(dwErrorCode);
+    SetLastError(dwErrorCode); FIXME("EnumPrinterDriversW Exit Err %d\n",dwErrorCode);
     return (dwErrorCode == ERROR_SUCCESS);
 
 }
@@ -688,7 +696,7 @@ GetPrinterDriverA(HANDLE hPrinter, LPSTR pEnvironment, DWORD Level, LPBYTE pDriv
     if (Level <  1 || Level == 7 || Level > 8)
     {
         dwErrorCode = ERROR_INVALID_LEVEL;
-        ERR("Invalid Level!\n");
+        ERR("Invalid Level! %d\n",Level);
         goto Cleanup;
     }
 
@@ -817,13 +825,13 @@ GetPrinterDriverA(HANDLE hPrinter, LPSTR pEnvironment, DWORD Level, LPBYTE pDriv
         case 2:
         case 5:
         {
-            dwErrorCode = UnicodeToAnsiInPlace(pdi8w->pName);
+            dwErrorCode = UnicodeToAnsiInPlace(pdi8w->pConfigFile);
             if (dwErrorCode != ERROR_SUCCESS)
             {
                 goto Cleanup;
             }
+            dwErrorCode = UnicodeToAnsiInPlace(pdi8w->pDataFile);
 
-            dwErrorCode = UnicodeToAnsiInPlace(pdi8w->pEnvironment);
             if (dwErrorCode != ERROR_SUCCESS)
             {
                 goto Cleanup;
@@ -835,13 +843,13 @@ GetPrinterDriverA(HANDLE hPrinter, LPSTR pEnvironment, DWORD Level, LPBYTE pDriv
                 goto Cleanup;
             }
 
-            dwErrorCode = UnicodeToAnsiInPlace(pdi8w->pDataFile);
+            dwErrorCode = UnicodeToAnsiInPlace(pdi8w->pEnvironment);
             if (dwErrorCode != ERROR_SUCCESS)
             {
                 goto Cleanup;
             }
 
-            dwErrorCode = UnicodeToAnsiInPlace(pdi8w->pConfigFile);
+            dwErrorCode = UnicodeToAnsiInPlace(pdi8w->pName);
             if (dwErrorCode != ERROR_SUCCESS)
             {
                 goto Cleanup;
@@ -977,6 +985,12 @@ GetPrinterDriverDirectoryW(PWSTR pName, PWSTR pEnvironment, DWORD Level, PBYTE p
 
     TRACE("GetPrinterDriverDirectoryW(%S, %S, %lu, %p, %lu, %p)\n", pName, pEnvironment, Level, pDriverDirectory, cbBuf, pcbNeeded);
 
+    if (Level != 1)
+    {
+        dwErrorCode = ERROR_INVALID_LEVEL;
+        goto Cleanup;
+    }
+
     if ( !pEnvironment || !*pEnvironment )
     {
         pEnvironment = (PWSTR)wszCurrentEnvironment;
@@ -994,6 +1008,7 @@ GetPrinterDriverDirectoryW(PWSTR pName, PWSTR pEnvironment, DWORD Level, PBYTE p
     }
     RpcEndExcept;
 
+Cleanup:
     SetLastError(dwErrorCode);
     return (dwErrorCode == ERROR_SUCCESS);
 }

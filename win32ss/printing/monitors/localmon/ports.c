@@ -139,7 +139,6 @@ _ClosePortHandles(PLOCALMON_PORT pPort)
             DefineDosDeviceW(DDD_REMOVE_DEFINITION, pwszNonspooledPortName, NULL);
             DllFreeSplMem(pwszNonspooledPortName);
         }
-
         DllFreeSplMem(pwszPortNameWithoutColon);
     }
 }
@@ -1049,4 +1048,181 @@ Cleanup:
 
     SetLastError(dwErrorCode);
     return (dwErrorCode == ERROR_SUCCESS);
+}
+
+BOOL WINAPI
+LocalmonAddPortEx( HANDLE hMonitor, LPWSTR pName, DWORD Level, LPBYTE lpBuffer, LPWSTR lpMonitorName )
+{
+    PLOCALMON_HANDLE pLocalmon = (PLOCALMON_HANDLE)hMonitor;
+    PLOCALMON_PORT pPort;
+    HKEY hKey;
+    DWORD dwErrorCode, cbPortName;
+    PORT_INFO_1W * pi = (PORT_INFO_1W *) lpBuffer;
+
+    FIXME("LocalmonAddPortEx(%p, %lu, %p, %s) => %s\n", hMonitor, Level, lpBuffer, debugstr_w(lpMonitorName), debugstr_w(pi ? pi->pName : NULL));
+
+    // Sanity checks
+    if ( !pLocalmon )
+    {
+        dwErrorCode = ERROR_INVALID_PARAMETER;
+        goto Cleanup;
+    }
+
+    if ( ( lpMonitorName == NULL )                          ||
+         ( lstrcmpiW( lpMonitorName, L"Local Port" ) != 0 ) ||
+         ( pi == NULL )                                     ||
+         ( pi->pName == NULL )                              ||
+         ( pi->pName[0] == '\0' ) )
+    {
+        ERR("Fail Monitor Port Name\n");
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    if ( Level != 1 )
+    {
+        SetLastError(ERROR_INVALID_LEVEL);
+        return FALSE;
+    }
+
+    dwErrorCode = RegOpenKeyW( HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows NT\\CurrentVersion\\Ports", &hKey );
+    if ( dwErrorCode == ERROR_SUCCESS )
+    {
+        if ( DoesPortExist( pi->pName ) )
+        {
+            RegCloseKey( hKey) ;
+            FIXME("Port Exist => FALSE with %u\n", ERROR_INVALID_PARAMETER);
+            SetLastError(ERROR_INVALID_PARAMETER);
+            return FALSE;
+        }
+
+        cbPortName = (wcslen( pi->pName ) + 1) * sizeof(WCHAR);
+
+        // Create a new LOCALMON_PORT structure for it.
+        pPort = DllAllocSplMem(sizeof(LOCALMON_PORT) + cbPortName);
+        if (!pPort)
+        {
+            dwErrorCode = ERROR_NOT_ENOUGH_MEMORY;
+            RegCloseKey( hKey );
+            goto Cleanup;
+        }
+
+        pPort->Sig = SIGLCMPORT;
+        pPort->hFile = INVALID_HANDLE_VALUE;
+        pPort->pLocalmon = pLocalmon;
+        pPort->pwszPortName = wcscpy( (PWSTR)(pPort+1), pi->pName );
+
+        // Insert it into the Registry list.
+        InsertTailList(&pLocalmon->RegistryPorts, &pPort->Entry);
+
+        dwErrorCode = RegSetValueExW( hKey, pi->pName, 0, REG_SZ, (const BYTE *) L"", sizeof(L"") );
+        RegCloseKey( hKey );
+    }
+
+Cleanup:
+    if (dwErrorCode != ERROR_SUCCESS) SetLastError(ERROR_INVALID_PARAMETER);
+
+    FIXME("LocalmonAddPortEx => %u with %u\n", (dwErrorCode == ERROR_SUCCESS), GetLastError());
+
+    return (dwErrorCode == ERROR_SUCCESS);
+}
+
+// Fallback Throw Back code....
+//
+// This is pre-w2k support, seems to be moved into LocalUI.
+//
+//
+
+BOOL WINAPI
+LocalmonAddPort( HANDLE hMonitor, LPWSTR pName, HWND hWnd, LPWSTR pMonitorName )
+{
+    DWORD res, cbPortName;
+    HKEY hroot;
+    PLOCALMON_HANDLE pLocalmon = (PLOCALMON_HANDLE)hMonitor;
+    PLOCALMON_PORT pPort;
+    WCHAR PortName[MAX_PATH] = {0}; // Need to use a Dialog to get name.
+
+    FIXME("LocalmonAddPort : %s\n", debugstr_w( (LPWSTR) pMonitorName ) );
+
+    res = RegOpenKeyW(HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows NT\\CurrentVersion\\Ports", &hroot);
+    if (res == ERROR_SUCCESS)
+    {
+        if ( DoesPortExist( PortName ) )
+        {
+            RegCloseKey(hroot);
+            FIXME("=> %u\n", ERROR_ALREADY_EXISTS);
+            res = ERROR_ALREADY_EXISTS;
+            goto Cleanup;
+        }
+
+        cbPortName = (wcslen( PortName ) + 1) * sizeof(WCHAR);
+
+        // Create a new LOCALMON_PORT structure for it.
+        pPort = DllAllocSplMem(sizeof(LOCALMON_PORT) + cbPortName);
+        if (!pPort)
+        {
+            res = ERROR_NOT_ENOUGH_MEMORY;
+            RegCloseKey( hroot );
+            goto Cleanup;
+        }
+
+        pPort->Sig = SIGLCMPORT;
+        pPort->hFile = INVALID_HANDLE_VALUE;
+        pPort->pLocalmon = pLocalmon;
+        pPort->pwszPortName = wcscpy( (PWSTR)(pPort+1), PortName );
+
+        // Insert it into the Registry list.
+        InsertTailList(&pLocalmon->RegistryPorts, &pPort->Entry);
+
+        res = RegSetValueExW(hroot, PortName, 0, REG_SZ, (const BYTE *) L"", sizeof(L""));
+        RegCloseKey(hroot);
+    }
+
+    FIXME("=> %u\n", res);
+
+Cleanup:
+    SetLastError(res);
+    return (res == ERROR_SUCCESS);
+}
+
+BOOL WINAPI
+LocalmonConfigurePort( HANDLE hMonitor, LPWSTR pName, HWND hWnd, LPWSTR pPortName )
+{
+    //// See ConfigurePortUI
+    FIXME("LocalmonConfigurePort : %s\n", debugstr_w( pPortName ) );
+    return FALSE;
+}
+
+BOOL WINAPI
+LocalmonDeletePort( HANDLE hMonitor, LPWSTR pName, HWND hWnd, LPWSTR pPortName )
+{
+    DWORD res;
+    HKEY hroot;
+    PLOCALMON_HANDLE pLocalmon = (PLOCALMON_HANDLE)hMonitor;
+    PLOCALMON_PORT pPort;
+
+    FIXME("LocalmonDeletePort : %s\n", debugstr_w( pPortName ) );
+
+    res = RegOpenKeyW(HKEY_LOCAL_MACHINE, L"Software\\Microsoft\\Windows NT\\CurrentVersion\\Ports", &hroot);
+    if ( res == ERROR_SUCCESS )
+    {
+        res = RegDeleteValueW(hroot, pPortName );
+
+        RegCloseKey(hroot);
+
+        pPort = _FindPort( pLocalmon, pPortName );
+        if ( pPort )
+        {
+            EnterCriticalSection(&pPort->pLocalmon->Section);
+            RemoveEntryList(&pPort->Entry);
+            LeaveCriticalSection(&pPort->pLocalmon->Section);
+
+            DllFreeSplMem(pPort);
+        }
+
+        FIXME("=> %u with %u\n", res, GetLastError() );
+    }
+
+    SetLastError(res);
+    return (res == ERROR_SUCCESS);
 }

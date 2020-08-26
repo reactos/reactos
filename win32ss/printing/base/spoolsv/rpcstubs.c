@@ -42,11 +42,26 @@ _RpcDeletePrinterConnection(WINSPOOL_HANDLE pName)
     return ERROR_INVALID_FUNCTION;
 }
 
+//
+// Forward Dead API....
+//
 DWORD
 _RpcPrinterMessageBox(WINSPOOL_PRINTER_HANDLE hPrinter, DWORD Error, ULONG_PTR hWnd, WCHAR* pText, WCHAR* pCaption, DWORD dwType)
 {
-    UNIMPLEMENTED;
-    return ERROR_INVALID_FUNCTION;
+    DWORD dwErrorCode;
+
+    dwErrorCode = RpcImpersonateClient(NULL);
+    if (dwErrorCode != ERROR_SUCCESS)
+    {
+        ERR("RpcImpersonateClient failed with error %lu!\n", dwErrorCode);
+        return dwErrorCode;
+    }
+
+    PrinterMessageBoxW(hPrinter, Error, (HWND)hWnd, pText, pCaption, dwType);
+    dwErrorCode = GetLastError();
+
+    RpcRevertToSelf();
+    return dwErrorCode;
 }
 
 DWORD

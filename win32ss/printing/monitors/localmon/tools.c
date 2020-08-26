@@ -164,3 +164,97 @@ GetPortNameWithoutColon(PCWSTR pwszPortName, PWSTR* ppwszPortNameWithoutColon)
 
     return ERROR_SUCCESS;
 }
+
+/**
+ * @name _IsNEPort
+ *
+ * Checks if the given port name is a virtual Ne port.
+ * A virtual Ne port may appear in HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Ports and can have the formats
+ * Ne00:, Ne01:, Ne-02:, Ne456:
+ * This check is extra picky to not cause false positives (like file name ports starting with "Ne").
+ *
+ * @param pwszPortName
+ * The port name to check.
+ *
+ * @return
+ * TRUE if this is definitely a virtual Ne port, FALSE if not.
+ */
+static __inline BOOL
+_IsNEPort(PCWSTR pwszPortName)
+{
+    PCWSTR p = pwszPortName;
+
+    // First character needs to be 'N' (uppercase or lowercase)
+    if (*p != L'N' && *p != L'n')
+        return FALSE;
+
+    // Next character needs to be 'E' (uppercase or lowercase)
+    p++;
+    if (*p != L'E' && *p != L'e')
+        return FALSE;
+
+    // An optional hyphen may follow now.
+    p++;
+    if (*p == L'-')
+        p++;
+
+    // Now an arbitrary number of digits may follow.
+    while (*p >= L'0' && *p <= L'9')
+        p++;
+
+    // Finally, the virtual Ne port must be terminated by a colon.
+    if (*p != ':')
+        return FALSE;
+
+    // If this is the end of the string, we have a virtual Ne port.
+    p++;
+    return (*p == L'\0');
+}
+
+DWORD
+GetTypeFromName(LPCWSTR name)
+{
+    HANDLE  hfile;
+
+    if (!wcsncmp(name, L"LPT", ARRAYSIZE(L"LPT") - 1) )
+        return PORT_IS_LPT;
+
+    if (!wcsncmp(name, L"COM", ARRAYSIZE(L"COM") - 1) )
+        return PORT_IS_COM;
+
+    if (!lstrcmpW(name, L"FILE:") )
+        return PORT_IS_FILE;
+
+//    if (name[0] == '/')
+//        return PORT_IS_UNIXNAME;
+
+//    if (name[0] == '|')
+//        return PORT_IS_PIPE;
+
+    if ( _IsNEPort( name ) )
+        return PORT_IS_VNET;
+
+    if (!wcsncmp(name, L"XPS", ARRAYSIZE(L"XPS") - 1))
+        return PORT_IS_XPS;
+
+    /* Must be a file or a directory. Does the file exist ? */
+    hfile = CreateFileW(name, GENERIC_WRITE, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+
+    FIXME("%p for OPEN_EXISTING on %s\n", hfile, debugstr_w(name));
+
+    if (hfile == INVALID_HANDLE_VALUE)
+    {
+        /* Can we create the file? */
+        hfile = CreateFileW(name, GENERIC_WRITE, 0, NULL, OPEN_ALWAYS, FILE_FLAG_DELETE_ON_CLOSE, NULL);
+        FIXME("%p for OPEN_ALWAYS\n", hfile);
+    }
+
+    if (hfile != INVALID_HANDLE_VALUE)
+    {
+        CloseHandle(hfile); FIXME("PORT_IS_FILENAME %d\n",PORT_IS_FILENAME);
+        return PORT_IS_FILENAME;
+    }
+    FIXME("PORT_IS_UNKNOWN %d\n",PORT_IS_UNKNOWN);
+    /* We can't use the name. use GetLastError() for the reason */
+    return PORT_IS_UNKNOWN;
+}
