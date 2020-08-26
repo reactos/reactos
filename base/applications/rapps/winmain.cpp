@@ -77,7 +77,7 @@ int wmain(int argc, wchar_t *argv[])
 
     hInst = GetModuleHandle(NULL);
 
-    bIsFirstLaunch = !LoadSettings();
+    bIsFirstLaunch = !LoadSettings(&SettingsInfo);
     if (bIsFirstLaunch)
     {
         FillDefaultSettings(&SettingsInfo);

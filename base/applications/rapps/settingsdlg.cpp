@@ -260,7 +260,7 @@ namespace
                 }
 
                 SettingsInfo = NewSettingsInfo;
-                SaveSettings(GetParent(hDlg));
+                SaveSettings(GetParent(hDlg), &SettingsInfo);
                 EndDialog(hDlg, LOWORD(wParam));
             }
             break;

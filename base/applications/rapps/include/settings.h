@@ -41,8 +41,8 @@ typedef struct _SettingsRegEntry
     const WCHAR *RegKeyName; // The key name of this field in registery.
 }SETTINGS_REG_ENTRY;
 
-BOOL LoadSettings();
-VOID SaveSettings(HWND hwnd);
+BOOL LoadSettings(PSETTINGS_INFO pSettingsInfo);
+VOID SaveSettings(HWND hwnd, PSETTINGS_INFO pSettingsInfo);
 VOID FillDefaultSettings(PSETTINGS_INFO pSettingsInfo);
 
 extern SETTINGS_INFO SettingsInfo;

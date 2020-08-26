@@ -67,7 +67,7 @@ VOID FillDefaultSettings(PSETTINGS_INFO pSettingsInfo)
     pSettingsInfo->Height = 450;
 }
 
-BOOL LoadSettings()
+BOOL LoadSettings(PSETTINGS_INFO pSettingsInfo)
 {
     ATL::CRegKey RegKey;
     if (RegKey.Open(HKEY_CURRENT_USER, L"Software\\ReactOS\\rapps", KEY_READ) != ERROR_SUCCESS)
@@ -77,7 +77,7 @@ BOOL LoadSettings()
 
     for (UINT i = 0; i < _countof(SettingsList); i++)
     {
-        void *pField = (((BYTE *)(&SettingsInfo)) + SettingsList[i].Offset);
+        void *pField = (((BYTE *)(pSettingsInfo)) + SettingsList[i].Offset);
         switch (SettingsList[i].FieldType)
         {
         case SettingsFieldBool:
@@ -121,21 +121,21 @@ BOOL LoadSettings()
     return TRUE;
 }
 
-VOID SaveSettings(HWND hwnd)
+VOID SaveSettings(HWND hwnd, PSETTINGS_INFO pSettingsInfo)
 {
     WINDOWPLACEMENT wp;
     ATL::CRegKey RegKey;
 
-    if (SettingsInfo.bSaveWndPos)
+    if (pSettingsInfo->bSaveWndPos)
     {
         wp.length = sizeof(wp);
         GetWindowPlacement(hwnd, &wp);
 
-        SettingsInfo.Left = wp.rcNormalPosition.left;
-        SettingsInfo.Top = wp.rcNormalPosition.top;
-        SettingsInfo.Width = wp.rcNormalPosition.right - wp.rcNormalPosition.left;
-        SettingsInfo.Height = wp.rcNormalPosition.bottom - wp.rcNormalPosition.top;
-        SettingsInfo.Maximized = (wp.showCmd == SW_MAXIMIZE
+        pSettingsInfo->Left = wp.rcNormalPosition.left;
+        pSettingsInfo->Top = wp.rcNormalPosition.top;
+        pSettingsInfo->Width = wp.rcNormalPosition.right - wp.rcNormalPosition.left;
+        pSettingsInfo->Height = wp.rcNormalPosition.bottom - wp.rcNormalPosition.top;
+        pSettingsInfo->Maximized = (wp.showCmd == SW_MAXIMIZE
             || (wp.showCmd == SW_SHOWMINIMIZED
                 && (wp.flags & WPF_RESTORETOMAXIMIZED)));
     }
@@ -145,7 +145,7 @@ VOID SaveSettings(HWND hwnd)
     {
         for (UINT i = 0; i < _countof(SettingsList); i++)
         {
-            void *pField = (((BYTE *)(&SettingsInfo)) + SettingsList[i].Offset);
+            void *pField = (((BYTE *)(pSettingsInfo)) + SettingsList[i].Offset);
             switch (SettingsList[i].FieldType)
             {
             case SettingsFieldBool:
