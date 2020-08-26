@@ -145,8 +145,6 @@ VOID SaveSettings(HWND hwnd)
 
 int wmain(int argc, wchar_t *argv[])
 {
-    ConInitStdStreams(); // Initialize the Console Standard Streams
-
     BOOL bIsFirstLaunch;
     
     InitializeAtlModule(GetModuleHandle(NULL), TRUE);

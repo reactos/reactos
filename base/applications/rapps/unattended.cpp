@@ -40,6 +40,7 @@ BOOL HandleInstallCommand(LPWSTR szCommand, int argcLeft, LPWSTR * argvLeft)
 {
     if (argcLeft == 0)
     {
+        ConInitStdStreams(); // Initialize the Console Standard Streams
         ConResMsgPrintf(StdOut, NULL, IDS_CMD_NEED_PACKAGE_NAME, szCommand);
         return FALSE;
     }
@@ -72,9 +73,11 @@ BOOL HandleSetupCommand(LPWSTR szCommand, int argcLeft, LPWSTR * argvLeft)
 {
     if (argcLeft != 1)
     {
+        ConInitStdStreams(); // Initialize the Console Standard Streams
         ConResMsgPrintf(StdOut, NULL, IDS_CMD_NEED_FILE_NAME, szCommand);
         return FALSE;
     }
+    FreeConsole();
 
     ATL::CSimpleArray<ATL::CStringW> PkgNameList;
     HINF InfHandle = SetupOpenInfFileW(argvLeft[0], NULL, INF_STYLE_WIN4, NULL);
@@ -272,6 +275,8 @@ BOOL ParseCmdAndExecute(LPWSTR lpCmdLine, BOOL bIsFirstLaunch, int nCmdShow)
 
         if (hMutex)
             CloseHandle(hMutex);
+
+        return TRUE;
     }
     else if (MatchCmdOption(argv[1], CMD_KEY_INSTALL))
     {
@@ -281,7 +286,11 @@ BOOL ParseCmdAndExecute(LPWSTR lpCmdLine, BOOL bIsFirstLaunch, int nCmdShow)
     {
         return HandleSetupCommand(argv[1], argc - 2, argv + 2);
     }
-    else if (MatchCmdOption(argv[1], CMD_KEY_FIND))
+    
+
+    ConInitStdStreams(); // Initialize the Console Standard Streams
+
+    if (MatchCmdOption(argv[1], CMD_KEY_FIND))
     {
         return HandleFindCommand(argv[1], argc - 2, argv + 2);
     }
@@ -299,7 +308,4 @@ BOOL ParseCmdAndExecute(LPWSTR lpCmdLine, BOOL bIsFirstLaunch, int nCmdShow)
         ConResPuts(StdOut, IDS_CMD_INVALID_OPTION);
         return FALSE;
     }
-
-
-    return TRUE;
 }
