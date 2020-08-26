@@ -17,6 +17,7 @@ list(APPEND SOURCE
     integrity.cpp
     loaddlg.cpp
     misc.cpp
+    settings.cpp
     settingsdlg.cpp
     winmain.cpp
     unattended.cpp
@@ -30,6 +31,7 @@ list(APPEND SOURCE
     include/crichedit.h
     include/defines.h
     include/misc.h
+    include/settings.h
     include/resource.h
     include/rosui.h
     include/winmain.h
