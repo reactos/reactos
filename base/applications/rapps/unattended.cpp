@@ -40,6 +40,7 @@ BOOL HandleInstallCommand(LPWSTR szCommand, int argcLeft, LPWSTR * argvLeft)
 {
     if (argcLeft == 0)
     {
+        ConInitStdStreams(); // Initialize the Console Standard Streams
         ConResMsgPrintf(StdOut, NULL, IDS_CMD_NEED_PACKAGE_NAME, szCommand);
         return FALSE;
     }
@@ -72,6 +73,7 @@ BOOL HandleSetupCommand(LPWSTR szCommand, int argcLeft, LPWSTR * argvLeft)
 {
     if (argcLeft != 1)
     {
+        ConInitStdStreams(); // Initialize the Console Standard Streams
         ConResMsgPrintf(StdOut, NULL, IDS_CMD_NEED_FILE_NAME, szCommand);
         return FALSE;
     }
