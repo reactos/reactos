@@ -77,6 +77,7 @@ BOOL HandleSetupCommand(LPWSTR szCommand, int argcLeft, LPWSTR * argvLeft)
         ConResMsgPrintf(StdOut, NULL, IDS_CMD_NEED_FILE_NAME, szCommand);
         return FALSE;
     }
+    FreeConsole();
 
     ATL::CSimpleArray<ATL::CStringW> PkgNameList;
     HINF InfHandle = SetupOpenInfFileW(argvLeft[0], NULL, INF_STYLE_WIN4, NULL);
