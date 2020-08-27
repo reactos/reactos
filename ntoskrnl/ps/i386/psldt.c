@@ -22,22 +22,6 @@ PspDeleteLdt(PEPROCESS Process)
     ASSERT(Process->LdtInformation == NULL);
 }
 
-VOID
-NTAPI
-PspDeleteVdmObjects(PEPROCESS Process)
-{
-    /* If there are no VDM objects, just exit */
-    if (Process->VdmObjects == NULL)
-        return;
-
-    /* FIXME: Need to do more than just freeing the main VdmObjects member! */
-    UNIMPLEMENTED;
-
-    /* Free VDM objects */
-    ExFreePoolWithTag(Process->VdmObjects, '  eK');
-    Process->VdmObjects = NULL;
-}
-
 NTSTATUS
 NTAPI
 PspQueryDescriptorThread(IN PETHREAD Thread,

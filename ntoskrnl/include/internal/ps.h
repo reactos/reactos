@@ -329,6 +329,12 @@ PspDeleteVdmObjects(
 
 NTSTATUS
 NTAPI
+PspVdmInitialize(
+    VOID
+);
+
+NTSTATUS
+NTAPI
 PspQueryDescriptorThread(
     IN PETHREAD Thread,
     IN PVOID ThreadInformation,

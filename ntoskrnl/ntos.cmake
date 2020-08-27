@@ -308,6 +308,7 @@ if(ARCH STREQUAL "i386")
         ${REACTOS_SOURCE_DIR}/ntoskrnl/mm/ARM3/i386/init.c
         ${REACTOS_SOURCE_DIR}/ntoskrnl/ps/i386/psctx.c
         ${REACTOS_SOURCE_DIR}/ntoskrnl/ps/i386/psldt.c
+        ${REACTOS_SOURCE_DIR}/ntoskrnl/ps/i386/psvdm.c
         ${REACTOS_SOURCE_DIR}/ntoskrnl/vdm/vdmmain.c
         ${REACTOS_SOURCE_DIR}/ntoskrnl/vdm/vdmexec.c)
 elseif(ARCH STREQUAL "amd64")

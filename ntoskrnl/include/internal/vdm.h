@@ -190,5 +190,4 @@ VdmpStartExecution(
 //
 // Global data inside the VDM
 //
-
-
+extern ERESOURCE VdmIoListCreationResource;

@@ -540,7 +540,10 @@ PspInitPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     PspCidTable = ExCreateHandleTable(NULL);
     if (!PspCidTable) return FALSE;
 
-    /* FIXME: Initialize LDT/VDM support */
+#if defined(_X86_)
+    /* FIXME: Initialize LDT support */
+    PspVdmInitialize();
+#endif
 
     /* Setup the reaper */
     ExInitializeWorkItem(&PspReaperWorkItem, PspReapRoutine, NULL);
