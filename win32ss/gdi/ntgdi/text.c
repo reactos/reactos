@@ -17,30 +17,30 @@
 /*
    This is a hack. See CORE-1091.
 
-   It is needed because ReactOS does not support raster fonts now
-   After Raster Font support is added, then it can be removed
-   Find the current font's logfont for testing its lf.lfFaceName
+   It is needed because ReactOS does not support raster fonts now.
+   After Raster Font support is added, then it can be removed.
+   Find the current font's logfont for testing its lf.lfFaceName.
 
    The ftGdiGetTextMetricsW function currently in ReactOS will always return a Truetype font
    because we cannot yet handle raster fonts. So it will return flags
-   TMPF_VECTOR and TMPF_TRUETYPE, which can cause problems in edit boxes
+   TMPF_VECTOR and TMPF_TRUETYPE, which can cause problems in edit boxes.
  */
 
 VOID FASTCALL
 IntTMWFixUp(
    HDC hDC,
-   TMW_INTERNAL *ptm )
+   TMW_INTERNAL *ptm)
 {
     LOGFONTW lf;
     HFONT hCurrentFont;
 
-    hCurrentFont = NtGdiGetDCObject( hDC, GDI_OBJECT_TYPE_FONT );
-    GreGetObject(hCurrentFont, sizeof(LOGFONTW), &lf );
+    hCurrentFont = NtGdiGetDCObject(hDC, GDI_OBJECT_TYPE_FONT);
+    GreGetObject(hCurrentFont, sizeof(LOGFONTW), &lf);
 
-    /* To compensate for the GetTextMetricsW call changing the PitchAndFamily */
-    /* to a Truetype one when we have a 'helv' font as our input we and (&)   */
-    /* our current PitchAndFamily with 0xF9 to remove the two problem bits    */
-    /* Out list below checks for Raster Font Facenames                        */
+    /* To compensate for the GetTextMetricsW call changing the PitchAndFamily
+     * to a TrueType one when we have a 'Raster' font as our input we filter
+     * out the problematic TrueType and Vector bits.
+     * Our list below checks for Raster Font Facenames. */
     DPRINT1("Font Facename is '%S'.\n", lf.lfFaceName);
     if ((wcsicmp(lf.lfFaceName, L"Helv") == 0) ||
         (wcsicmp(lf.lfFaceName, L"Courier") == 0) ||
@@ -51,7 +51,7 @@ IntTMWFixUp(
         (wcsicmp(lf.lfFaceName, L"System") == 0) ||
         (wcsicmp(lf.lfFaceName, L"Terminal") == 0))
     {
-        ptm->TextMetric.tmPitchAndFamily = ptm->TextMetric.tmPitchAndFamily & 0xF9;
+        ptm->TextMetric.tmPitchAndFamily = ptm->TextMetric.tmPitchAndFamily & ~(TMPF_TRUETYPE | TMPF_VECTOR);
     }
 }
 
@@ -196,7 +196,7 @@ GreGetTextMetricsW(
 {
    TMW_INTERNAL tmwi;
    if (!ftGdiGetTextMetricsW(hdc, &tmwi)) return FALSE;
-   IntTMWFixUp( hdc, &tmwi );
+   IntTMWFixUp(hdc, &tmwi);
    *lptm = tmwi.TextMetric;
    return TRUE;
 }
@@ -598,7 +598,7 @@ NtGdiGetTextMetricsW(
     {
         if (ftGdiGetTextMetricsW(hDC, &Tmwi))
         {
-            IntTMWFixUp( hDC, &Tmwi );
+            IntTMWFixUp(hDC, &Tmwi);
             _SEH2_TRY
             {
                 ProbeForWrite(pUnsafeTmwi, cj, 1);
