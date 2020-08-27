@@ -1,7 +1,7 @@
 //
 // Completion.h - declaration for completion related functions
 
-#if !defined(COMLPETION_H__INCLUDED_)
+#if !defined(COMPLETION_H__INCLUDED_)
 #define COMPLETION_H__INCLUDED_
 
 typedef const TCHAR * (*ReplaceCompletionCallback)(unsigned __int64& rnIndex, const BOOL *pblnForward,
