@@ -68,8 +68,8 @@ Disk.ServiceDesc = "Disk Driver"
 
 [Strings.040C]
 ReactOS = "Equipe ReactOS"
-GenericMfg = "(Pilotes de disque generiques)"
-DiskClassName = "Disk Drives"
+GenericMfg = "(Pilotes de disque génériques)"
+DiskClassName = "Lecteurs de disques"
 Disk.DeviceDesc = "Lecteurs de disques"
 OpticalDisk.DeviceDesc = "Lecteurs de disques optiques"
 Disk.ServiceDesc = "Pilotes de disques"
