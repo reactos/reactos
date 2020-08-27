@@ -66,6 +66,14 @@ Disk.DeviceDesc = "Disk Drive"
 OpticalDisk.DeviceDesc = "Optical Disk Drive"
 Disk.ServiceDesc = "Disk Driver"
 
+[Strings.040C]
+ReactOS = "Equipe ReactOS"
+GenericMfg = "(Pilotes de disque generiques)"
+DiskClassName = "Disk Drives"
+Disk.DeviceDesc = "Lecteurs de disques"
+OpticalDisk.DeviceDesc = "Lecteurs de disques optiques"
+Disk.ServiceDesc = "Pilotes de disques"
+
 [Strings.0405]
 GenericMfg = "(Obecné diskové jednotky)"
 DiskClassName = "Diskové jednotky"
