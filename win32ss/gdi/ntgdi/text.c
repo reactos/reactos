@@ -51,7 +51,7 @@ IntTMWFixUp(
         (wcsicmp(lf.lfFaceName, L"System") == 0) ||
         (wcsicmp(lf.lfFaceName, L"Terminal") == 0))
     {
-        ptm->TextMetric.tmPitchAndFamily = ptm->TextMetric.tmPitchAndFamily & ~(TMPF_TRUETYPE | TMPF_VECTOR);
+        ptm->TextMetric.tmPitchAndFamily &= ~(TMPF_TRUETYPE | TMPF_VECTOR);
     }
 }
 
