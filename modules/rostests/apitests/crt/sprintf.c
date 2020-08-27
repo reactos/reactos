@@ -21,9 +21,7 @@
 #pragma GCC diagnostic ignored "-Wformat"
 #pragma GCC diagnostic ignored "-Wformat-zero-length"
 #pragma GCC diagnostic ignored "-Wnonnull"
-#if __GNUC__ >= 7
 #pragma GCC diagnostic ignored "-Wformat-overflow"
-#endif
 #endif
 
 /* NOTE: This test is not only used for all the CRT apitests, but also for
