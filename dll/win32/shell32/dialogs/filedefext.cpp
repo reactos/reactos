@@ -562,6 +562,7 @@ CFileDefExt::InitFileAttr(HWND hwndDlg)
                 // Calculate size on disc
                 // Calculate size on disc
                 // if disk usage is not aligned on a complete disk geometry block (sector/cluster), align on the next block size, depending on disk geometry data
+                // This could be improved as per : https://docs.microsoft.com/en-us/previous-versions/technet-magazine/hh148159(v=msdn.10)
                 if (GetVolumePathName(m_wszPath, szVolumePathName, _countof(szVolumePathName)))
                 {
                     if (GetDiskFreeSpace(szVolumePathName, &ulSectorsPerCluster, &ulBytesPerSector, NULL, NULL))
@@ -1386,6 +1387,7 @@ CFileDefExt::CountFolderAndFiles(HWND hwndDlg, LPWSTR pwszBuf, UINT cchBufMax, D
             m_DirSize.QuadPart += FileSize.QuadPart;
             // Calculate size on disc
             // if disk usage is not aligned on a complete disk geometry block (sector/cluster), align on the next block size, depending on disk geometry data
+            // This could be improved as per : https://docs.microsoft.com/en-us/previous-versions/technet-magazine/hh148159(v=msdn.10)
             if (GetVolumePathName(pwszBuf, szVolumePathName, _countof(szVolumePathName)))
             {
                 if (GetDiskFreeSpace(szVolumePathName, &ulSectorsPerCluster, &ulBytesPerSector, NULL, NULL))
