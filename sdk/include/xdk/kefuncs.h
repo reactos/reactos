@@ -1249,12 +1249,12 @@ NTAPI
 KeQueryNodeMaximumProcessorCount(
   _In_ USHORT NodeNumber);
 
-NTKERNELAPI
+// NTKERNELAPI // HACK: ntoskrnl_vista functions are statically linked thus don't need DECLSPEC_IMPORT
 USHORT
 NTAPI
 KeQueryHighestNodeNumber(VOID);
 
-NTKERNELAPI
+// NTKERNELAPI // HACK: ntoskrnl_vista functions are statically linked thus don't need DECLSPEC_IMPORT
 USHORT
 NTAPI
 KeGetCurrentNodeNumber(VOID);
@@ -1316,7 +1316,7 @@ KeRevertToUserGroupAffinityThread(
   _In_ PGROUP_AFFINITY PreviousAffinity);
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
-NTKERNELAPI
+// NTKERNELAPI // HACK: ntoskrnl_vista functions are statically linked thus don't need DECLSPEC_IMPORT
 BOOLEAN
 NTAPI
 KeSetCoalescableTimer(

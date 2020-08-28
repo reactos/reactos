@@ -112,7 +112,7 @@ PoGetSystemWake(
   _In_ struct _IRP *Irp);
 
 _IRQL_requires_max_(APC_LEVEL)
-NTKERNELAPI
+// NTKERNELAPI // HACK: ntoskrnl_vista functions are statically linked thus don't need DECLSPEC_IMPORT
 NTSTATUS
 NTAPI
 PoRegisterPowerSettingCallback(
@@ -123,7 +123,7 @@ PoRegisterPowerSettingCallback(
   _Outptr_opt_ PVOID *Handle);
 
 _IRQL_requires_max_(APC_LEVEL)
-NTKERNELAPI
+// NTKERNELAPI // HACK: ntoskrnl_vista functions are statically linked thus don't need DECLSPEC_IMPORT
 NTSTATUS
 NTAPI
 PoUnregisterPowerSettingCallback(
@@ -154,7 +154,7 @@ PoEndDeviceBusy(
   _Inout_ PULONG IdlePointer);
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
-NTKERNELAPI
+// NTKERNELAPI // HACK: ntoskrnl_vista functions are statically linked thus don't need DECLSPEC_IMPORT
 BOOLEAN
 NTAPI
 PoQueryWatchdogTime(
