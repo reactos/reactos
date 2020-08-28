@@ -37,6 +37,7 @@
  *
  */
 
+#ifndef __REACTOS_USE_PCH__
 //#include "glimports.h"
 //#include "mystdio.h"
 //#include "myassert.h"
@@ -46,6 +47,7 @@
 #include "flist.h"
 #include "patchlist.h"
 #include "simplemath.h" //min()
+#endif
 
 /* local preprocessor definitions */
 #define DEF_PATCH_STEPSIZE	.4
@@ -56,7 +58,7 @@ Quilt::Quilt( Mapdesc *_mapdesc )
 {
     mapdesc = _mapdesc;
 }
- 
+
 void
 Quilt::deleteMe( Pool& p )
 {
@@ -66,13 +68,13 @@ Quilt::deleteMe( Pool& p )
     q->breakpoints = 0;
 #else
 	if( q->breakpoints) {
-	   delete[] q->breakpoints;  
+	   delete[] q->breakpoints;
 	   q->breakpoints = 0;
 printf("in here\n");
         }
 #endif
     }
-    if( cpts ) delete[] cpts;  
+    if( cpts ) delete[] cpts;
     cpts = 0;
     PooledObj::deleteMe( p );
 }
@@ -82,7 +84,7 @@ Quilt::show( void )
 {
 #ifndef NDEBUG
     int nc = mapdesc->getNcoords();
-    REAL *ps  = cpts; 
+    REAL *ps  = cpts;
     ps += qspec[0].offset;
     ps += qspec[1].offset;
     for( int i=0; i!= qspec[0].order * qspec[0].width; i++ ) {
@@ -106,28 +108,28 @@ Quilt::show( void )
 void
 Quilt::select( REAL *pta, REAL *ptb )
 {
-    int dim = eqspec - qspec; 
+    int dim = eqspec - qspec;
     int i, j;
     for( i=0; i<dim; i++) {
 	for( j=qspec[i].width-1; j>=0; j-- )
 	    if( (qspec[i].breakpoints[j] <= pta[i]   ) &&
-	    	(ptb[i] <= qspec[i].breakpoints[j+1] ) ) 
+	    	(ptb[i] <= qspec[i].breakpoints[j+1] ) )
 		 break;
-	assert( j != -1 ); 
+	assert( j != -1 );
 	qspec[i].index = j;
     }
 }
 
-void 
+void
 Quilt::download( Backend &backend )
 {
     if( getDimension() == 2 ) {
-	REAL *ps  = cpts; 
+	REAL *ps  = cpts;
 	ps += qspec[0].offset;
 	ps += qspec[1].offset;
 	ps += qspec[0].index * qspec[0].order * qspec[0].stride;
 	ps += qspec[1].index * qspec[1].order * qspec[1].stride;
-	backend.surfpts( mapdesc->getType(), ps, 
+	backend.surfpts( mapdesc->getType(), ps,
 		  qspec[0].stride,
 		  qspec[1].stride,
 		  qspec[0].order,
@@ -137,10 +139,10 @@ Quilt::download( Backend &backend )
 		  qspec[1].breakpoints[qspec[1].index],
 		  qspec[1].breakpoints[qspec[1].index+1] );
     } else {
-	REAL *ps  = cpts; 
+	REAL *ps  = cpts;
 	ps += qspec[0].offset;
 	ps += qspec[0].index * qspec[0].order * qspec[0].stride;
-	backend.curvpts( mapdesc->getType(), ps, 
+	backend.curvpts( mapdesc->getType(), ps,
 		      qspec[0].stride,
 		      qspec[0].order,
 		      qspec[0].breakpoints[qspec[0].index],
@@ -172,7 +174,7 @@ Quilt::isCulled( void )
 {
     if( mapdesc->isCulling() )
 	return mapdesc->xformAndCullCheck( cpts + qspec[0].offset + qspec[1].offset,
-			qspec[0].order * qspec[0].width, qspec[0].stride, 
+			qspec[0].order * qspec[0].width, qspec[0].stride,
 			qspec[1].order * qspec[1].width, qspec[1].stride );
     else
 	return CULL_ACCEPT;
@@ -200,12 +202,12 @@ Quilt::getRange( REAL *from, REAL *to, int i, Flist &list )
     from[i] = maps->qspec[i].breakpoints[0];
     to[i]   = maps->qspec[i].breakpoints[maps->qspec[i].width];
     int maxpts = 0;
-    Quilt_ptr m;    
+    Quilt_ptr m;
     for( m=maps; m; m=m->next ) {
-	if( m->qspec[i].breakpoints[0] > from[i] ) 
-	    from[i] = m->qspec[i].breakpoints[0]; 
-	if( m->qspec[i].breakpoints[m->qspec[i].width] < to[i] ) 
-	    to[i] = m->qspec[i].breakpoints[m->qspec[i].width]; 
+	if( m->qspec[i].breakpoints[0] > from[i] )
+	    from[i] = m->qspec[i].breakpoints[0];
+	if( m->qspec[i].breakpoints[m->qspec[i].width] < to[i] )
+	    to[i] = m->qspec[i].breakpoints[m->qspec[i].width];
 	maxpts += m->qspec[i].width + 1;
     }
 
@@ -235,9 +237,9 @@ Quilt::findRates( Flist& slist, Flist& tlist, REAL rate[2] )
 
     for( Quilt *q = next; q; q = q->next ) {
 	q->findSampleRates( slist, tlist );
-	if( q->qspec[0].step_size < rate[0] ) 
+	if( q->qspec[0].step_size < rate[0] )
 	    rate[0] = q->qspec[0].step_size;
-	if( q->qspec[1].step_size < rate[1] ) 
+	if( q->qspec[1].step_size < rate[1] )
 	    rate[1] = q->qspec[1].step_size;
     }
 }
@@ -245,11 +247,11 @@ Quilt::findRates( Flist& slist, Flist& tlist, REAL rate[2] )
 void
 Quilt::findSampleRates( Flist& slist, Flist& tlist )
 {
-    qspec[0].step_size = DEF_PATCH_STEPSIZE * 
-	    (qspec[0].breakpoints[qspec[0].width] - qspec[0].breakpoints[0]); 
-    qspec[1].step_size = DEF_PATCH_STEPSIZE * 
-	    (qspec[1].breakpoints[qspec[1].width] - qspec[1].breakpoints[0]); 
- 
+    qspec[0].step_size = DEF_PATCH_STEPSIZE *
+	    (qspec[0].breakpoints[qspec[0].width] - qspec[0].breakpoints[0]);
+    qspec[1].step_size = DEF_PATCH_STEPSIZE *
+	    (qspec[1].breakpoints[qspec[1].width] - qspec[1].breakpoints[0]);
+
     for( int i = slist.start; i < slist.end-1; i++ ) {
 	for( int j = tlist.start; j < tlist.end-1; j++ ) {
 
@@ -260,14 +262,14 @@ Quilt::findSampleRates( Flist& slist, Flist& tlist )
 	    ptb[1] = tlist.pts[j+1];
 	    Patchlist patchlist( this, pta, ptb );
 	    patchlist.getstepsize();
-	    
+
 	    {
 	    float edge_len_s = min(glu_abs(ptb[0]-pta[0]),1.0);
 	    float edge_len_t = min(glu_abs(ptb[1]-pta[1]),1.0);
 
-	    if( patchlist.getStepsize(0)/edge_len_s < qspec[0].step_size ) 
+	    if( patchlist.getStepsize(0)/edge_len_s < qspec[0].step_size )
 	       qspec[0].step_size = patchlist.getStepsize(0)/edge_len_s;
-	    if( patchlist.getStepsize(1)/edge_len_t < qspec[1].step_size ) 
+	    if( patchlist.getStepsize(1)/edge_len_t < qspec[1].step_size )
 	      qspec[1].step_size = patchlist.getStepsize(1)/edge_len_t;
 	    }
 	}

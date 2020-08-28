@@ -6,21 +6,21 @@
 ** this file except in compliance with the License. You may obtain a copy
 ** of the License at Silicon Graphics, Inc., attn: Legal Services, 1600
 ** Amphitheatre Parkway, Mountain View, CA 94043-1351, or at:
-** 
+**
 ** http://oss.sgi.com/projects/FreeB
-** 
+**
 ** Note that, as provided in the License, the Software is distributed on an
 ** "AS IS" basis, with ALL EXPRESS AND IMPLIED WARRANTIES AND CONDITIONS
 ** DISCLAIMED, INCLUDING, WITHOUT LIMITATION, ANY IMPLIED WARRANTIES AND
 ** CONDITIONS OF MERCHANTABILITY, SATISFACTORY QUALITY, FITNESS FOR A
 ** PARTICULAR PURPOSE, AND NON-INFRINGEMENT.
-** 
+**
 ** Original Code. The Original Code is: OpenGL Sample Implementation,
 ** Version 1.2.1, released January 26, 2000, developed by Silicon Graphics,
 ** Inc. The Original Code is Copyright (c) 1991-2000 Silicon Graphics, Inc.
 ** Copyright in any portions created by third parties is as indicated
 ** elsewhere herein. All Rights Reserved.
-** 
+**
 ** Additional Notice Provisions: The application programming interfaces
 ** established by SGI in conjunction with the Original Code are The
 ** OpenGL(R) Graphics System: A Specification (Version 1.2.1), released
@@ -35,10 +35,12 @@
 /*
 */
 
+#ifndef __REACTOS_USE_PCH__
 #include "monoTriangulation.h"
 #include "polyUtil.h"
 #include "backend.h"
 //#include "arc.h"
+#endif
 
 void reflexChain::outputFan(Real v[2], Backend* backend)
 {
@@ -91,16 +93,16 @@ void reflexChain::processNewVertex(Real v[2], Backend* backend)
     insert(v);
     return;
   }
-  
+
   /*there are at least two vertices in the queue*/
   j=index_queue-1;
-  
+
   for(i=j; i>=1; i--) {
     if(isIncreasing) {
       isReflex = (area(queue[i-1], queue[i], v) <= 0.0);
     }
     else /*decreasing*/{
-      isReflex = (area(v, queue[i], queue[i-1]) <= 0.0);	  
+      isReflex = (area(v, queue[i], queue[i-1]) <= 0.0);
     }
     if(isReflex) {
       break;
@@ -109,10 +111,10 @@ void reflexChain::processNewVertex(Real v[2], Backend* backend)
 
   /*
    *if i<j then vertices: i+1--j are convex
-   * output triangle fan: 
+   * output triangle fan:
    *  v, and queue[i], i+1, ..., j
    */
-  if(i<j) 
+  if(i<j)
     {
       backend->bgntfan();
       /*
@@ -144,7 +146,7 @@ void reflexChain::processNewVertex(Real v[2], Backend* backend)
 	    backend->tmeshvert(queue[k][0], queue[k][1]);
 	  }
       }
-      
+
       backend->endtfan();
     }
 
@@ -156,7 +158,7 @@ void reflexChain::processNewVertex(Real v[2], Backend* backend)
 }
 
 
-void monoTriangulationRec(Real* topVertex, Real* botVertex, 
+void monoTriangulationRec(Real* topVertex, Real* botVertex,
 			  vertexArray* inc_chain, Int inc_current,
 			  vertexArray* dec_chain, Int dec_current,
 			  Backend* backend)
@@ -175,7 +177,7 @@ void monoTriangulationRec(Real* topVertex, Real* botVertex,
     {
 
       dec_array = dec_chain->getArray();
-      dec_nVertices = dec_chain->getNumElements();      
+      dec_nVertices = dec_chain->getNumElements();
       reflexChain rChain(20,0);
       /*put the top vertex into the reflex chain*/
       rChain.processNewVertex(topVertex, backend);
@@ -207,7 +209,7 @@ void monoTriangulationRec(Real* topVertex, Real* botVertex,
       dec_array = dec_chain -> getArray();
       inc_nVertices= inc_chain->getNumElements();
       dec_nVertices= dec_chain->getNumElements();
-      /*if top of inc_chain is 'lower' than top of dec_chain, process all the 
+      /*if top of inc_chain is 'lower' than top of dec_chain, process all the
        *vertices on the dec_chain which are higher than top of inc_chain
        */
       if(compV2InY(inc_array[inc_current], dec_array[dec_current]) <= 0)
@@ -219,11 +221,11 @@ void monoTriangulationRec(Real* topVertex, Real* botVertex,
 	    {
 	      if(compV2InY(inc_array[inc_current], dec_array[i]) <= 0)
 		rChain.processNewVertex(dec_array[i], backend);
-	      else 
+	      else
 		break;
 	    }
 	  rChain.outputFan(inc_array[inc_current], backend);
-	  monoTriangulationRec(dec_array[i-1], botVertex, 
+	  monoTriangulationRec(dec_array[i-1], botVertex,
 			       inc_chain, inc_current,
 			       dec_chain, i,
 			       backend);
@@ -235,13 +237,13 @@ void monoTriangulationRec(Real* topVertex, Real* botVertex,
 	  rChain.processNewVertex(topVertex, backend);
 	  for(i=inc_current; i<inc_nVertices; i++)
 	    {
-	      if(compV2InY(inc_array[i], dec_array[dec_current]) >0)		
-		rChain.processNewVertex(inc_array[i], backend);	      
+	      if(compV2InY(inc_array[i], dec_array[dec_current]) >0)
+		rChain.processNewVertex(inc_array[i], backend);
 	      else
 		break;
 	    }
 	  rChain.outputFan(dec_array[dec_current], backend);
-	  monoTriangulationRec(inc_array[i-1], botVertex, 
+	  monoTriangulationRec(inc_array[i-1], botVertex,
 			       inc_chain, i,
 			       dec_chain, dec_current,
 			       backend);
@@ -281,7 +283,7 @@ void monoTriangulationFunBackend(Arc_ptr loop, Int (*compFun)(Real*, Real*), Bac
 	inc_chain.appendVertex(tempV->pwlArc->pts[i].param);
       }
     }
-  
+
   vertexArray dec_chain(20);
   for(tempV = topV->prev; tempV != botV; tempV = tempV->prev)
     {
@@ -289,18 +291,18 @@ void monoTriangulationFunBackend(Arc_ptr loop, Int (*compFun)(Real*, Real*), Bac
 	dec_chain.appendVertex(tempV->pwlArc->pts[i].param);
       }
     }
-  for(i=botV->pwlArc->npts-2; i>=1; i--){ 
+  for(i=botV->pwlArc->npts-2; i>=1; i--){
     dec_chain.appendVertex(tempV->pwlArc->pts[i].param);
   }
-  
+
   monoTriangulationRecFunBackend(topV->tail(), botV->tail(), &inc_chain, 0, &dec_chain, 0, compFun, backend);
 
-}  
+}
 
 /*if compFun == compV2InY, top to bottom: V-monotone
  *if compFun == compV2InX, right to left: U-monotone
  */
-void monoTriangulationRecFunBackend(Real* topVertex, Real* botVertex, 
+void monoTriangulationRecFunBackend(Real* topVertex, Real* botVertex,
 			  vertexArray* inc_chain, Int inc_current,
 			  vertexArray* dec_chain, Int dec_current,
 			  Int  (*compFun)(Real*, Real*),
@@ -320,7 +322,7 @@ void monoTriangulationRecFunBackend(Real* topVertex, Real* botVertex,
     {
 
       dec_array = dec_chain->getArray();
-      dec_nVertices = dec_chain->getNumElements();      
+      dec_nVertices = dec_chain->getNumElements();
       reflexChain rChain(20,0);
       /*put the top vertex into the reflex chain*/
       rChain.processNewVertex(topVertex, backend);
@@ -352,7 +354,7 @@ void monoTriangulationRecFunBackend(Real* topVertex, Real* botVertex,
       dec_array = dec_chain -> getArray();
       inc_nVertices= inc_chain->getNumElements();
       dec_nVertices= dec_chain->getNumElements();
-      /*if top of inc_chain is 'lower' than top of dec_chain, process all the 
+      /*if top of inc_chain is 'lower' than top of dec_chain, process all the
        *vertices on the dec_chain which are higher than top of inc_chain
        */
       if(compFun(inc_array[inc_current], dec_array[dec_current]) <= 0)
@@ -364,11 +366,11 @@ void monoTriangulationRecFunBackend(Real* topVertex, Real* botVertex,
 	    {
 	      if(compFun(inc_array[inc_current], dec_array[i]) <= 0)
 		rChain.processNewVertex(dec_array[i], backend);
-	      else 
+	      else
 		break;
 	    }
 	  rChain.outputFan(inc_array[inc_current], backend);
-	  monoTriangulationRecFunBackend(dec_array[i-1], botVertex, 
+	  monoTriangulationRecFunBackend(dec_array[i-1], botVertex,
 			       inc_chain, inc_current,
 			       dec_chain, i,
 			       compFun,
@@ -381,13 +383,13 @@ void monoTriangulationRecFunBackend(Real* topVertex, Real* botVertex,
 	  rChain.processNewVertex(topVertex, backend);
 	  for(i=inc_current; i<inc_nVertices; i++)
 	    {
-	      if(compFun(inc_array[i], dec_array[dec_current]) >0)		
-		rChain.processNewVertex(inc_array[i], backend);	      
+	      if(compFun(inc_array[i], dec_array[dec_current]) >0)
+		rChain.processNewVertex(inc_array[i], backend);
 	      else
 		break;
 	    }
 	  rChain.outputFan(dec_array[dec_current], backend);
-	  monoTriangulationRecFunBackend(inc_array[i-1], botVertex, 
+	  monoTriangulationRecFunBackend(inc_array[i-1], botVertex,
 			       inc_chain, i,
 			       dec_chain, dec_current,
 			       compFun,

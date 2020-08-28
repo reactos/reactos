@@ -6,21 +6,21 @@
 ** this file except in compliance with the License. You may obtain a copy
 ** of the License at Silicon Graphics, Inc., attn: Legal Services, 1600
 ** Amphitheatre Parkway, Mountain View, CA 94043-1351, or at:
-** 
+**
 ** http://oss.sgi.com/projects/FreeB
-** 
+**
 ** Note that, as provided in the License, the Software is distributed on an
 ** "AS IS" basis, with ALL EXPRESS AND IMPLIED WARRANTIES AND CONDITIONS
 ** DISCLAIMED, INCLUDING, WITHOUT LIMITATION, ANY IMPLIED WARRANTIES AND
 ** CONDITIONS OF MERCHANTABILITY, SATISFACTORY QUALITY, FITNESS FOR A
 ** PARTICULAR PURPOSE, AND NON-INFRINGEMENT.
-** 
+**
 ** Original Code. The Original Code is: OpenGL Sample Implementation,
 ** Version 1.2.1, released January 26, 2000, developed by Silicon Graphics,
 ** Inc. The Original Code is Copyright (c) 1991-2000 Silicon Graphics, Inc.
 ** Copyright in any portions created by third parties is as indicated
 ** elsewhere herein. All Rights Reserved.
-** 
+**
 ** Additional Notice Provisions: The application programming interfaces
 ** established by SGI in conjunction with the Original Code are The
 ** OpenGL(R) Graphics System: A Specification (Version 1.2.1), released
@@ -35,14 +35,16 @@
 /*
 */
 
+#ifndef __REACTOS_USE_PCH__
 #include <stdlib.h>
 //#include <stdio.h>
 
 #include "partitionX.h"
+#endif
 
-#define CONCAVITY_ZERO 1.0e-6 //this number is used to test whether a vertex is concave (refelx) 
-                              //or not. The test needs to compute the area of the three adjacent 
-                              //vertices to see if the are is positive or negative. 
+#define CONCAVITY_ZERO 1.0e-6 //this number is used to test whether a vertex is concave (refelx)
+                              //or not. The test needs to compute the area of the three adjacent
+                              //vertices to see if the are is positive or negative.
 
 Int isCuspX(directedLine *v)
 {
@@ -52,10 +54,10 @@ Int isCuspX(directedLine *v)
   Real* P = v->getPrev()->head();
   Real* N = v->getNext()->head();
   if(
-     (compV2InX(T,P) != -1 && 
+     (compV2InX(T,P) != -1 &&
       compV2InX(T,N) != -1
       ) ||
-     (compV2InX(T,P) != 1 && 
+     (compV2InX(T,P) != 1 &&
       compV2InX(T,N) != 1
       )
      )
@@ -81,7 +83,7 @@ Int isReflexX(directedLine* v)
 }
 
 
-/*return 
+/*return
  *0: not-cusp
  *1: interior cusp
  *2: exterior cusp
@@ -89,10 +91,10 @@ Int isReflexX(directedLine* v)
 Int cuspTypeX(directedLine *v)
 {
   if(! isCuspX(v)) return 0;
-  else 
+  else
     {
 //printf("isCusp,%f,%f\n", v->head()[0], v->head()[1]);
-      if(isReflexX(v)) 
+      if(isReflexX(v))
 	{
 //	  printf("isReflex\n");
 	  return 1;
@@ -116,7 +118,7 @@ Int numInteriorCuspsX(directedLine *polygon)
       ret++;
   return ret;
 }
-  
+
 
 void findInteriorCuspsX(directedLine *polygon, Int& ret_n_interior_cusps,
 			directedLine** ret_interior_cusps)
@@ -127,10 +129,10 @@ void findInteriorCuspsX(directedLine *polygon, Int& ret_n_interior_cusps,
     {
       ret_interior_cusps[ret_n_interior_cusps++] = polygon;
     }
-  for(temp = polygon->getNext(); temp != polygon; temp = temp->getNext())    
+  for(temp = polygon->getNext(); temp != polygon; temp = temp->getNext())
     if(cuspTypeX(temp) == 1)
       {
-	ret_interior_cusps[ret_n_interior_cusps++] = temp;    
+	ret_interior_cusps[ret_n_interior_cusps++] = temp;
       }
 }
 
@@ -143,20 +145,20 @@ directedLine* findDiagonal_singleCuspX(directedLine* cusp)
     for(temp = cusp->getNext(); temp != cusp; temp = temp->getNext())
       {
 	if(compV2InX(cusp->head(), temp->head()) == 1)
-	  {	   
+	  {
 	    return temp;
 	  }
       }
-  else //is maxmal 
+  else //is maxmal
     for(temp = cusp->getNext(); temp != cusp; temp = temp->getNext())
       {
 	if(compV2InX(cusp->head(), temp->head()) == -1)
-	  {	   
+	  {
 	    return temp;
 	  }
       }
   return NULL;
 }
-      
 
-     
+
+

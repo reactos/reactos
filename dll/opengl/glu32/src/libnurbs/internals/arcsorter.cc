@@ -40,10 +40,12 @@
 #ifndef __gluarcsorter_c_
 #define __gluarcsorter_c_
 
+#ifndef __REACTOS_USE_PCH__
 //#include "glimports.h"
 //#include "arc.h"
 #include "arcsorter.h"
 #include "subdivider.h"
+#endif
 
 ArcSorter::ArcSorter(Subdivider &s) : Sorter( sizeof( Arc ** ) ), subdivider(s)
 {
@@ -62,17 +64,17 @@ ArcSorter::qsort( Arc **a, int n )
     Sorter::qsort( (void *) a, n );
 }
 
-void		
-ArcSorter::qsexc( char *i, char *j )// i<-j, j<-i 
+void
+ArcSorter::qsexc( char *i, char *j )// i<-j, j<-i
 {
     Arc **jarc1 = (Arc **) i;
     Arc **jarc2 = (Arc **) j;
     Arc *tmp = *jarc1;
     *jarc1 = *jarc2;
     *jarc2 = tmp;
-}	
+}
 
-void		
+void
 ArcSorter::qstexc( char *i, char *j, char *k )// i<-k, k<-j, j<-i
 {
     Arc **jarc1 = (Arc **) i;
@@ -83,7 +85,7 @@ ArcSorter::qstexc( char *i, char *j, char *k )// i<-k, k<-j, j<-i
     *jarc3 = *jarc2;
     *jarc2 = tmp;
 }
-  
+
 
 ArcSdirSorter::ArcSdirSorter( Subdivider &s ) : ArcSorter(s)
 {
@@ -119,7 +121,7 @@ ArcSdirSorter::qscmp( char *i, char *j )
 	        return subdivider.ccwTurn_sr( jarc1, jarc2 ) ? 1 : -1;
 	    }
 	}
-    }    
+    }
 }
 
 ArcTdirSorter::ArcTdirSorter( Subdivider &s ) : ArcSorter(s)
@@ -127,11 +129,11 @@ ArcTdirSorter::ArcTdirSorter( Subdivider &s ) : ArcSorter(s)
 }
 
 /*----------------------------------------------------------------------------
- * ArcTdirSorter::qscmp - 
-  *		   compare two axis monotone arcs that are incident 
+ * ArcTdirSorter::qscmp -
+  *		   compare two axis monotone arcs that are incident
  *		   to the line T == compare_value. Determine which of the
  *		   two intersects that line with a LESSER S value.  If
- *		   jarc1 does, return 1.  If jarc2 does, return -1. 
+ *		   jarc1 does, return 1.  If jarc2 does, return -1.
  *----------------------------------------------------------------------------
  */
 int
@@ -145,7 +147,7 @@ ArcTdirSorter::qscmp( char *i, char *j )
 
     REAL diff =  jarc1->pwlArc->pts[v1].param[0] -
 	         jarc2->pwlArc->pts[v2].param[0];
- 
+
     if( diff < 0.0)
 	return 1;
     else if( diff > 0.0)

@@ -6,21 +6,21 @@
 ** this file except in compliance with the License. You may obtain a copy
 ** of the License at Silicon Graphics, Inc., attn: Legal Services, 1600
 ** Amphitheatre Parkway, Mountain View, CA 94043-1351, or at:
-** 
+**
 ** http://oss.sgi.com/projects/FreeB
-** 
+**
 ** Note that, as provided in the License, the Software is distributed on an
 ** "AS IS" basis, with ALL EXPRESS AND IMPLIED WARRANTIES AND CONDITIONS
 ** DISCLAIMED, INCLUDING, WITHOUT LIMITATION, ANY IMPLIED WARRANTIES AND
 ** CONDITIONS OF MERCHANTABILITY, SATISFACTORY QUALITY, FITNESS FOR A
 ** PARTICULAR PURPOSE, AND NON-INFRINGEMENT.
-** 
+**
 ** Original Code. The Original Code is: OpenGL Sample Implementation,
 ** Version 1.2.1, released January 26, 2000, developed by Silicon Graphics,
 ** Inc. The Original Code is Copyright (c) 1991-2000 Silicon Graphics, Inc.
 ** Copyright in any portions created by third parties is as indicated
 ** elsewhere herein. All Rights Reserved.
-** 
+**
 ** Additional Notice Provisions: The application programming interfaces
 ** established by SGI in conjunction with the Original Code are The
 ** OpenGL(R) Graphics System: A Specification (Version 1.2.1), released
@@ -35,11 +35,13 @@
 /*
 */
 
+#ifndef __REACTOS_USE_PCH__
 //#include <stdlib.h>
 //#include <stdio.h>
 //#include "zlassert.h"
 #include "sampleCompBot.h"
 #include "sampleCompRight.h"
+#endif
 
 #define max(a,b) ((a>b)? a:b)
 
@@ -49,7 +51,7 @@
 // vertex[pass][0] >= u
 //if everybost is <u, then pass = end+1.
 //otherwise both mono and pass are meanng full and we have corner<=pass<=mono<=end
-void findBotLeftSegment(vertexArray* leftChain, 
+void findBotLeftSegment(vertexArray* leftChain,
 			Int leftEnd,
 			Int leftCorner,
 			Real u,
@@ -75,7 +77,7 @@ void findBotLeftSegment(vertexArray* leftChain,
 
 }
 
-void findBotRightSegment(vertexArray* rightChain, 
+void findBotRightSegment(vertexArray* rightChain,
 			 Int rightEnd,
 			 Int rightCorner,
 			 Real u,
@@ -123,11 +125,11 @@ void sampleBotRightWithGridLinePost(Real* botVertex,
       if(segIndexPass <= rightEnd) //there is a point to the left of u
 	tempBot = rightChain->getVertex(segIndexPass);
       else   //nothing is to the left of u.
-	tempBot = botVertex; 
+	tempBot = botVertex;
       Real tempTop[2];
       tempTop[0] = grid->get_u_value(rightU);
       tempTop[1] = grid->get_v_value(gridV);
-      
+
       monoTriangulation2(tempTop, tempBot,
 			 rightChain,
 			 rightCorner,
@@ -171,7 +173,7 @@ void sampleBotRightWithGridLinePost(Real* botVertex,
 	  midU--;
 
 	  grid->outputFanWithPoint(gridV, leftU, midU, botVertex, pStream);
-	  stripOfFanRight(rightChain, segIndexMono, segIndexPass, grid, gridV, midU, rightU, pStream, 1);	  
+	  stripOfFanRight(rightChain, segIndexMono, segIndexPass, grid, gridV, midU, rightU, pStream, 1);
 	  Real tempTop[2];
 	  tempTop[0] = grid->get_u_value(midU);
 	  tempTop[1] = grid->get_v_value(gridV);
@@ -189,8 +191,8 @@ void sampleBotRightWithGridLinePost(Real* botVertex,
   else //the botVertex forms a fan witht eh grid points
     grid->outputFanWithPoint(gridV, leftU, rightU, botVertex, pStream);
 }
-      
-void sampleBotRightWithGridLine(Real* botVertex, 
+
+void sampleBotRightWithGridLine(Real* botVertex,
 				vertexArray* rightChain,
 				Int rightEnd,
 				Int rightCorner,
@@ -215,7 +217,7 @@ void sampleBotRightWithGridLine(Real* botVertex,
 		      segIndexMono,
 		      segIndexPass);
 
-  sampleBotRightWithGridLinePost(botVertex, 
+  sampleBotRightWithGridLinePost(botVertex,
 				 rightChain,
 				 rightEnd,
 				 segIndexMono,
@@ -227,8 +229,8 @@ void sampleBotRightWithGridLine(Real* botVertex,
 				 rightU,
 				 pStream);
 }
-  
- 
+
+
 void sampleBotLeftWithGridLinePost(Real* botVertex,
 				   vertexArray* leftChain,
 				   Int leftEnd,
@@ -237,7 +239,7 @@ void sampleBotLeftWithGridLinePost(Real* botVertex,
 				   Int leftCorner,
 				   gridWrap* grid,
 				   Int gridV,
-				   Int leftU, 
+				   Int leftU,
 				   Int rightU,
 				   primStream* pStream)
 {
@@ -245,7 +247,7 @@ void sampleBotLeftWithGridLinePost(Real* botVertex,
   //the possible section which is to the left of leftU
   if(segIndexPass > leftCorner) //at least leftCorner is to the left of leftU
     {
-      Real *tempBot; 
+      Real *tempBot;
       if(segIndexPass <= leftEnd) //from corner to pass-1 is <u
 	tempBot = leftChain->getVertex(segIndexPass);
       else //nothing is to the rigth of u
@@ -265,7 +267,7 @@ void sampleBotLeftWithGridLinePost(Real* botVertex,
       tempTop[0] = grid->get_u_value(rightU);
       tempTop[1] = grid->get_v_value(gridV);
 
-      monoTriangulation2(tempTop, botVertex, leftChain, segIndexMono, leftEnd, 
+      monoTriangulation2(tempTop, botVertex, leftChain, segIndexMono, leftEnd,
 			 1,  //increase chain
 			 pStream);
     }
@@ -326,7 +328,7 @@ Int findBotSeparator(vertexArray* leftChain,
       oldLeftI = leftCorner-1;
       oldRightI = rightCorner;
       leftMax = leftChain->getVertex(leftCorner)[0] - Real(1.0) ; //initilize to be left of leftCorner
-      rightMin = rightChain->getVertex(rightCorner)[0]; 
+      rightMin = rightChain->getVertex(rightCorner)[0];
     }
   else //rightlower
     {
@@ -437,8 +439,8 @@ Int findBotSeparator(vertexArray* leftChain,
 	    }
 	}
     }//end of while loop
-  //now oldLeftI and oldRight I are the desired separator index notice that they are not 
-  //necessarily valid 
+  //now oldLeftI and oldRight I are the desired separator index notice that they are not
+  //necessarily valid
   if(oldLeftI < leftCorner || oldRightI < rightCorner)
     return 0; //no separator
   else
@@ -490,7 +492,7 @@ void sampleCompBot(Real* botVertex,
 	}
 
       sampleBotRightWithGridLine(tempBot,
-				 rightChain, 
+				 rightChain,
 				 tempRightEnd,
 				 down_rightCornerIndex,
 				 rightGridChain->getGrid(),
@@ -511,11 +513,11 @@ void sampleCompBot(Real* botVertex,
       else //right corner is on left chain
 	{
 	  tempLeftEnd = down_rightCornerIndex-1;
-	  tempBot = leftChain->getVertex(down_rightCornerIndex);	  
+	  tempBot = leftChain->getVertex(down_rightCornerIndex);
 	}
 
 
-      sampleBotLeftWithGridLine(tempBot, leftChain, tempLeftEnd, down_leftCornerIndex, 
+      sampleBotLeftWithGridLine(tempBot, leftChain, tempLeftEnd, down_leftCornerIndex,
 				leftGridChain->getGrid(),
 				leftGridChain->getVlineIndex(gridIndex),
 				leftGridChain->getUlineIndex(gridIndex),
@@ -525,7 +527,7 @@ void sampleCompBot(Real* botVertex,
     }
   else //down_leftCornereWhere == 0, down_rightCornerwhere == 2
     {
-      sampleCompBotSimple(botVertex, 
+      sampleCompBotSimple(botVertex,
 			  leftChain,
 			  leftEnd,
 			  rightChain,
@@ -538,7 +540,7 @@ void sampleCompBot(Real* botVertex,
 			  down_rightCornerWhere,
 			  down_rightCornerIndex,
 			  pStream);
-      
+
       return;
 
 #ifdef NOT_REACHABLE
@@ -573,7 +575,7 @@ void sampleCompBot(Real* botVertex,
 		  while(leftGridChain->getGrid()->get_u_value(gridSep) > leftChain->getVertex(segLeftMono)[0])
 		    gridSep--;
 		}
-	      else 
+	      else
 		{
 		  gridSep = leftGridChain->getUlineIndex(gridIndex);
 		  while(leftGridChain->getGrid()->get_u_value(gridSep) < rightChain->getVertex(segRightMono)[0])
@@ -611,7 +613,7 @@ void sampleCompBot(Real* botVertex,
 				      pStream);
 	    }//end if both sides have vertices inside the gridboundary points
 	  else if(leftChain->getVertex(sep_left)[0] >= leftGridChain->get_u_value(gridIndex)) //left n right out
-	    
+
 	    {
 	      Int segLeftMono, segLeftPass;
 	      findBotLeftSegment(leftChain,
@@ -619,7 +621,7 @@ void sampleCompBot(Real* botVertex,
 				 down_leftCornerIndex,
 				 leftGridChain->get_u_value(gridIndex),
 				 segLeftMono,
-				 segLeftPass);				 
+				 segLeftPass);
               assert(segLeftPass <= sep_left); //make sure there is a point to the right of u.
               monoTriangulation2(leftGridChain->get_vertex(gridIndex),
 				 leftChain->getVertex(segLeftPass),
@@ -628,7 +630,7 @@ void sampleCompBot(Real* botVertex,
 				 segLeftPass-1,
 				 1, //a increase chain
 				 pStream);
-              stripOfFanLeft(leftChain, segLeftMono, segLeftPass, 
+              stripOfFanLeft(leftChain, segLeftMono, segLeftPass,
 			     leftGridChain->getGrid(),
 			     leftGridChain->getVlineIndex(gridIndex),
 			     leftGridChain->getUlineIndex(gridIndex),
@@ -645,9 +647,9 @@ void sampleCompBot(Real* botVertex,
 					    leftGridChain->getVlineIndex(gridIndex),
 					    leftGridChain->getUlineIndex(gridIndex),
 					    rightGridChain->getUlineIndex(gridIndex),
-					    pStream);					    
+					    pStream);
 */
-	      
+
 	      monoTriangulationRecGen(rightGridChain->get_vertex(gridIndex),
 				      botVertex,
 				      leftChain, segLeftMono, leftEnd,
@@ -655,7 +657,7 @@ void sampleCompBot(Real* botVertex,
 				      pStream);
 	    }//end left in right out
 	  else if(rightChain->getVertex(sep_right)[0] <= rightGridChain->get_u_value(gridIndex))//left out right in
-	    {	      
+	    {
 	      Int segRightMono, segRightPass;
 	      findBotRightSegment(rightChain, sep_right, down_rightCornerIndex,
 				  rightGridChain->get_u_value(gridIndex),
@@ -671,11 +673,11 @@ void sampleCompBot(Real* botVertex,
 				 0, // a decrease chain
 				 pStream);
 
-              stripOfFanRight(rightChain, segRightMono, segRightPass, 
+              stripOfFanRight(rightChain, segRightMono, segRightPass,
 			      rightGridChain->getGrid(),
 			      rightGridChain->getVlineIndex(gridIndex),
 			      leftGridChain->getUlineIndex(gridIndex),
-			      rightGridChain->getUlineIndex(gridIndex),     
+			      rightGridChain->getUlineIndex(gridIndex),
 			      pStream, 1);
 
 
@@ -683,12 +685,12 @@ void sampleCompBot(Real* botVertex,
 				      botVertex,
 				      leftChain, down_leftCornerIndex, leftEnd,
 				      rightChain, segRightMono, rightEnd,
-				      pStream);	    	
+				      pStream);
 
 	    }//end left out right in
 	  else //left out, right out
 	    {
-	      sampleCompBotSimple(botVertex, 
+	      sampleCompBotSimple(botVertex,
 				 leftChain,
 				 leftEnd,
 				 rightChain,
@@ -701,13 +703,13 @@ void sampleCompBot(Real* botVertex,
 				 down_rightCornerWhere,
 				 down_rightCornerIndex,
 				 pStream);
-	    
+
 	    }//end leftout right out
 	}//end if separator exists
       else //no separator
 	{
 
-	  sampleCompBotSimple(botVertex, 
+	  sampleCompBotSimple(botVertex,
 			     leftChain,
 			     leftEnd,
 			     rightChain,
@@ -725,7 +727,7 @@ void sampleCompBot(Real* botVertex,
     }//end id 0 2
 }//end if the functin
 
-				 
+
 void sampleCompBotSimple(Real* botVertex,
 		   vertexArray* leftChain,
 		   Int leftEnd,
@@ -738,7 +740,7 @@ void sampleCompBotSimple(Real* botVertex,
 		   Int down_leftCornerIndex,
 		   Int down_rightCornerWhere,
 		   Int down_rightCornerIndex,
-		   primStream* pStream)  
+		   primStream* pStream)
 {
   //the plan is to use monotriangulation algorithm.
   Int i,k;
@@ -746,7 +748,7 @@ void sampleCompBotSimple(Real* botVertex,
   Real* ActualBot;
   Int ActualLeftStart, ActualLeftEnd;
   Int ActualRightStart, ActualRightEnd;
-  
+
   //creat an array to store the points on the grid line
   gridWrap* grid = leftGridChain->getGrid();
   Int gridV = leftGridChain->getVlineIndex(gridIndex);
@@ -765,39 +767,39 @@ void sampleCompBotSimple(Real* botVertex,
     ActualLeftEnd = leftEnd;
   else
     ActualLeftEnd = down_rightCornerIndex-1; //down_rightCornerIndex will be th actualBot
-  
+
   if(down_leftCornerWhere != 0) //left corner is not on let chian
     ActualLeftStart = leftEnd+1; //meaning that there is no actual left section
   else
     ActualLeftStart = down_leftCornerIndex;
-  
+
   vertexArray ActualLeftChain(max(0, ActualLeftEnd - ActualLeftStart +1) + gridRightU - gridLeftU +1);
-  
+
   for(i=0; i<gridRightU - gridLeftU +1 ; i++)
     ActualLeftChain.appendVertex(gridPoints[i]);
   for(i=ActualLeftStart; i<= ActualLeftEnd; i++)
     ActualLeftChain.appendVertex(leftChain->getVertex(i));
-  
+
   //determine ActualRightStart
   if(down_rightCornerWhere != 2) //right is not on right
     ActualRightStart = rightEnd +1; //meaning no section on right
   else
     ActualRightStart = down_rightCornerIndex;
-  
+
   //determine actualrightEnd
   if(down_leftCornerWhere != 2) //left is not on right
     {
 
       ActualRightEnd = rightEnd;
     }
-  else //left corner is on right 
+  else //left corner is on right
     {
       ActualRightEnd = down_leftCornerIndex-1; //down_leftCornerIndex will be the bot
 
     }
 
   //actual bot
-  if(down_rightCornerWhere == 2) 
+  if(down_rightCornerWhere == 2)
     {
       if(down_leftCornerWhere == 2)
 	ActualBot = rightChain->getVertex(down_leftCornerIndex);
@@ -808,7 +810,7 @@ void sampleCompBotSimple(Real* botVertex,
     ActualBot = botVertex;
   else //down_rightCornerWhere == 0
     ActualBot = leftChain->getVertex(down_rightCornerIndex);
-  
+
   ActualTop = gridPoints[0];
 /*
 printf("in bot simple, actual leftChain is \n");
@@ -821,14 +823,14 @@ printf("Actual right start = %i, end=%i\n",ActualRightStart,   ActualRightEnd);
     monoTriangulationRecGenOpt(rightChain->getVertex(ActualRightStart),
 			    ActualBot,
 			    &ActualLeftChain,
-			    0, 
+			    0,
 			    ActualLeftChain.getNumElements()-1,
 			    rightChain,
 			    ActualRightStart+1,
 			    ActualRightEnd,
 			    pStream);
   else
-    monoTriangulationRecGenOpt(ActualTop, ActualBot, 
+    monoTriangulationRecGenOpt(ActualTop, ActualBot,
 			  &ActualLeftChain,
 			  1, //the first one is the top vertex
 			  ActualLeftChain.getNumElements()-1,
@@ -838,7 +840,7 @@ printf("Actual right start = %i, end=%i\n",ActualRightStart,   ActualRightEnd);
 			  pStream);
   free(gridPoints);
 }
-  
-  
-				 
+
+
+
 

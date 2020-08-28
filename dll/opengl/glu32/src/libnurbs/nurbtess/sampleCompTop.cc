@@ -6,21 +6,21 @@
 ** this file except in compliance with the License. You may obtain a copy
 ** of the License at Silicon Graphics, Inc., attn: Legal Services, 1600
 ** Amphitheatre Parkway, Mountain View, CA 94043-1351, or at:
-** 
+**
 ** http://oss.sgi.com/projects/FreeB
-** 
+**
 ** Note that, as provided in the License, the Software is distributed on an
 ** "AS IS" basis, with ALL EXPRESS AND IMPLIED WARRANTIES AND CONDITIONS
 ** DISCLAIMED, INCLUDING, WITHOUT LIMITATION, ANY IMPLIED WARRANTIES AND
 ** CONDITIONS OF MERCHANTABILITY, SATISFACTORY QUALITY, FITNESS FOR A
 ** PARTICULAR PURPOSE, AND NON-INFRINGEMENT.
-** 
+**
 ** Original Code. The Original Code is: OpenGL Sample Implementation,
 ** Version 1.2.1, released January 26, 2000, developed by Silicon Graphics,
 ** Inc. The Original Code is Copyright (c) 1991-2000 Silicon Graphics, Inc.
 ** Copyright in any portions created by third parties is as indicated
 ** elsewhere herein. All Rights Reserved.
-** 
+**
 ** Additional Notice Provisions: The application programming interfaces
 ** established by SGI in conjunction with the Original Code are The
 ** OpenGL(R) Graphics System: A Specification (Version 1.2.1), released
@@ -35,12 +35,14 @@
 /*
 */
 
+#ifndef __REACTOS_USE_PCH__
 //#include <stdlib.h>
 //#include <stdio.h>
 #include <math.h>
 //#include "zlassert.h"
 #include "sampleCompTop.h"
 #include "sampleCompRight.h"
+#endif
 
 #define max(a,b) ((a>b)? a:b)
 
@@ -96,7 +98,7 @@ void findTopRightSegment(vertexArray* rightChain,
     {
       for(i=ret_index_large; i>rightStart;i--)
         {
-          if(rightChain->getVertex(i-1)[0] >= rightChain->getVertex(i)[0])           
+          if(rightChain->getVertex(i-1)[0] >= rightChain->getVertex(i)[0])
 	    break;
         }
       ret_index_small = i;
@@ -141,7 +143,7 @@ monoTriangulationRecGenOpt(tempTop, tempBot,
 */
 
     }
-  
+
   //the possible section which is strictly Umonotone
   if(segIndexLarge >= rightStart)
     {
@@ -266,7 +268,7 @@ void sampleTopLeftWithGridLinePost(Real* topVertex,
 	  Real tempBot[2];
 	  tempBot[0] = grid->get_u_value(midU);
 	  tempBot[1] = grid->get_v_value(gridV);
-	  monoTriangulation2(topVertex, tempBot, leftChain, leftStart, segIndexSmall, 1, pStream);      
+	  monoTriangulation2(topVertex, tempBot, leftChain, leftStart, segIndexSmall, 1, pStream);
 	}
       else //not optimize
 	{
@@ -279,9 +281,9 @@ void sampleTopLeftWithGridLinePost(Real* topVertex,
 	}
     }
   else //the topVertex forms a fan with the grid points
-    grid->outputFanWithPoint(gridV, leftU, rightU, topVertex, pStream);  
-}				   
-				   
+    grid->outputFanWithPoint(gridV, leftU, rightU, topVertex, pStream);
+}
+
 
 void sampleTopLeftWithGridLine(Real* topVertex,
                                 vertexArray* leftChain,
@@ -295,7 +297,7 @@ void sampleTopLeftWithGridLine(Real* topVertex,
                                 )
 {
   Int segIndexSmall = 0, segIndexLarge;
-  //if left chain is empty, then there is only one top vertex with one grid 
+  //if left chain is empty, then there is only one top vertex with one grid
   //  line
   if(leftEnd < leftStart) {
     grid->outputFanWithPoint(gridV, leftU, rightU, topVertex, pStream);
@@ -318,10 +320,10 @@ void sampleTopLeftWithGridLine(Real* topVertex,
 				gridV,
 			        leftU,
 				rightU,
-				pStream);   
+				pStream);
 }
- 
-                
+
+
 //return 1 if saprator exits, 0 otherwise
 Int findTopSeparator(vertexArray* leftChain,
 		     Int leftStartIndex,
@@ -332,7 +334,7 @@ Int findTopSeparator(vertexArray* leftChain,
 		     Int& ret_sep_left,
 		     Int& ret_sep_right)
 {
-  
+
   Int oldLeftI, oldRightI, newLeftI, newRightI;
   Int i,j,k;
   Real leftMax /*= leftChain->getVertex(leftEndIndex)[0]*/;
@@ -348,15 +350,15 @@ Int findTopSeparator(vertexArray* leftChain,
     {
       oldLeftI = leftEndIndex;
       oldRightI = rightEndIndex+1;
-      leftMax =  leftChain->getVertex(leftEndIndex)[0]; 
-      rightMin = rightChain->getVertex(rightEndIndex)[0] + Real(1.0);      
+      leftMax =  leftChain->getVertex(leftEndIndex)[0];
+      rightMin = rightChain->getVertex(rightEndIndex)[0] + Real(1.0);
     }
-  
-  //i: the current working leftChain index, 
+
+  //i: the current working leftChain index,
   //j: the current working rightChain index,
   //if left(i) is higher than right(j), then the two chains beloew right(j) are separated.
   //else the two chains below left(i) are separeated.
-  i=leftEndIndex; 
+  i=leftEndIndex;
   j=rightEndIndex;
   while(1)
     {
@@ -403,7 +405,7 @@ Int findTopSeparator(vertexArray* leftChain,
 	{
 	  if(leftChain->getVertex(i)[0] > leftMax) //update leftMax and newLeftI.
 	    {
-	      leftMax = leftChain->getVertex(i)[0];	     
+	      leftMax = leftChain->getVertex(i)[0];
 	      newLeftI = i;
 	    }
 	  for(k=j-1; k>= rightStartIndex; k--) //update rightMin and newRightI.
@@ -443,7 +445,7 @@ Int findTopSeparator(vertexArray* leftChain,
 		}
 	    }
 	  i = k; //next working i, since i will be higher than j next loop
-	  
+
 	  if(leftMax >= rightMin) //there is a conflict
 	    break;
 	  else //still no conflict
@@ -464,7 +466,7 @@ Int findTopSeparator(vertexArray* leftChain,
     }
 }
 
-        
+
 void sampleCompTop(Real* topVertex,
                    vertexArray* leftChain,
                    Int leftStartIndex,
@@ -543,7 +545,7 @@ void sampleCompTop(Real* topVertex,
 			  up_leftCornerIndex,
 			  up_rightCornerWhere,
 			  up_rightCornerIndex,
-			  pStream);	      	      
+			  pStream);
     }
   else //up_leftCornerWhere == 0, up_rightCornerWhere == 2.
     {
@@ -559,7 +561,7 @@ void sampleCompTop(Real* topVertex,
 			  up_leftCornerIndex,
 			  up_rightCornerWhere,
 			  up_rightCornerIndex,
-			  pStream);	      	      
+			  pStream);
       return;
 #ifdef NOT_REACHABLE //code is not reachable, for test purpose only
       //the following code is trying to do some optimization, but not quite working, also see sampleCompBot.C:
@@ -614,8 +616,8 @@ void sampleCompTop(Real* topVertex,
 		      {
 			valid = 0;
 		      }
-		}		
-		  
+		}
+
 	      if(! valid)
 		{
 		  sampleCompTopSimple(topVertex,
@@ -630,7 +632,7 @@ void sampleCompTop(Real* topVertex,
 				      up_leftCornerIndex,
 				      up_rightCornerWhere,
 				      up_rightCornerIndex,
-				      pStream);	      	      
+				      pStream);
 		}
 	      else
 		{
@@ -674,8 +676,8 @@ void sampleCompTop(Real* topVertex,
 				 up_leftCornerIndex,
 				 leftGridChain->get_u_value(gridIndex1),
 				 segLeftSmall,
-				 segLeftLarge);	      
-	      assert(segLeftLarge >= sep_left); 
+				 segLeftLarge);
+	      assert(segLeftLarge >= sep_left);
               monoTriangulation2(leftChain->getVertex(segLeftLarge),
 				 leftGridChain->get_vertex(gridIndex1),
 				 leftChain,
@@ -684,7 +686,7 @@ void sampleCompTop(Real* topVertex,
 				 1, //a increase chain,
 				 pStream);
 
-	      stripOfFanLeft(leftChain, segLeftLarge, segLeftSmall, 
+	      stripOfFanLeft(leftChain, segLeftLarge, segLeftSmall,
 			     leftGridChain->getGrid(),
 			     leftGridChain->getVlineIndex(gridIndex1),
 			     leftGridChain->getUlineIndex(gridIndex1),
@@ -695,7 +697,7 @@ void sampleCompTop(Real* topVertex,
 	      monoTriangulationRecGen(topVertex, rightGridChain->get_vertex(gridIndex1),
 				      leftChain, leftStartIndex, segLeftSmall,
 				      rightChain, rightStartIndex, up_rightCornerIndex,
-				      pStream);	    
+				      pStream);
 	    }//end left in right out
 	  else if(rightChain->getVertex(sep_right)[0] <= rightGridChain->get_u_value(gridIndex1))
 	    {
@@ -743,7 +745,7 @@ void sampleCompTop(Real* topVertex,
 				  up_leftCornerIndex,
 				  up_rightCornerWhere,
 				  up_rightCornerIndex,
-				  pStream);	      	      
+				  pStream);
 	    }//end leftout, right out
 	}//end if separator exixts.
       else //no separator
@@ -767,7 +769,7 @@ void sampleCompTop(Real* topVertex,
     }//end if 0,2
 }//end if the function
 
-		   
+
 static void sampleCompTopSimpleOpt(gridWrap* grid,
 				   Int gridV,
 				   Real* topVertex, Real* botVertex,
@@ -790,15 +792,15 @@ static void sampleCompTopSimpleOpt(gridWrap* grid,
 				 dec_chain, dec_current, dec_end,
 				 pStream);
       return;
-    }      
+    }
  Int i,j,k;
   Real currentV = grid->get_v_value(gridV+1);
   if(inc_chain->getVertex(inc_end)[1] <= currentV &&
      dec_chain->getVertex(dec_end)[1] < currentV)
     {
-      //find i bottom up so that inc_chain[i]<= curentV and inc_chain[i-1] > currentV, 
+      //find i bottom up so that inc_chain[i]<= curentV and inc_chain[i-1] > currentV,
       //find j botom up so that dec_chain[j] < currentV and dec_chain[j-1] >= currentV
-      for(i=inc_end; i >= inc_current; i--) 
+      for(i=inc_end; i >= inc_current; i--)
 	{
 	  if(inc_chain->getVertex(i)[1] > currentV)
 	    break;
@@ -860,7 +862,7 @@ static void sampleCompTopSimpleOpt(gridWrap* grid,
 	  //we know that inc_chain[i] > dec_chain[j]
 	  //we know that inc_chain[k-1][1] > dec_chain[j][1]
 	  //we know that inc_chain[k][1] <= dec_chain[j][1]
-	  //so we find l between [i,k-1] so that 
+	  //so we find l between [i,k-1] so that
 	  //inc_chain[l][0] is the closet to dec_chain[j][0]
 	  int tempI = i;
 	  int l;
@@ -872,7 +874,7 @@ static void sampleCompTopSimpleOpt(gridWrap* grid,
 		  tempMin = (Real)fabs(inc_chain->getVertex(l)[0] - dec_chain->getVertex(j)[0]);
 		  tempI = l;
 		}
-	    }				 	      
+	    }
 
 	  //inc_chain[tempI] and dec_chain[j] are connected
 
@@ -888,7 +890,7 @@ static void sampleCompTopSimpleOpt(gridWrap* grid,
 				 inc_chain, inc_current, tempI,
 				 dec_chain, dec_current, j-1,
 				 pStream);
-	}	    				   	       
+	}
     }
   else //go to the next higher gridV
     {
@@ -900,7 +902,7 @@ static void sampleCompTopSimpleOpt(gridWrap* grid,
 			     pStream);
     }
 }
-			  
+
 void sampleCompTopSimple(Real* topVertex,
                    vertexArray* leftChain,
                    Int leftStartIndex,
@@ -921,7 +923,7 @@ void sampleCompTopSimple(Real* topVertex,
   Real* ActualBot;
   Int ActualLeftStart, ActualLeftEnd;
   Int ActualRightStart, ActualRightEnd;
-  
+
   //creat an array to store the points on the grid line
   gridWrap* grid = leftGridChain->getGrid();
   Int gridV = leftGridChain->getVlineIndex(gridIndex1);
@@ -930,7 +932,7 @@ void sampleCompTopSimple(Real* topVertex,
 
   Real2* gridPoints = (Real2*) malloc(sizeof(Real2) * (gridRightU - gridLeftU +1));
   assert(gridPoints);
-  
+
   for(k=0, i=gridRightU; i>= gridLeftU; i--, k++)
     {
       gridPoints[k][0] = grid->get_u_value(i);
@@ -941,44 +943,44 @@ void sampleCompTopSimple(Real* topVertex,
     ActualRightStart = rightStartIndex;
   else
     ActualRightStart = up_leftCornerIndex+1; //up_leftCornerIndex will be the ActualTop
-  
+
   if(up_rightCornerWhere != 2) //right corner is not on right chain
     ActualRightEnd = rightStartIndex-1; //meaning that there is no actual rigth section
   else
     ActualRightEnd = up_rightCornerIndex;
-  
+
   vertexArray ActualRightChain(max(0, ActualRightEnd-ActualRightStart+1) + gridRightU-gridLeftU+1);
 
   for(i=ActualRightStart; i<= ActualRightEnd; i++)
     ActualRightChain.appendVertex(rightChain->getVertex(i));
   for(i=0; i<gridRightU-gridLeftU+1; i++)
-    ActualRightChain.appendVertex(gridPoints[i]);    
+    ActualRightChain.appendVertex(gridPoints[i]);
 
   //determine ActualLeftEnd
   if(up_leftCornerWhere != 0)
     ActualLeftEnd = leftStartIndex-1;
   else
     ActualLeftEnd = up_leftCornerIndex;
-  
+
   if(up_rightCornerWhere != 0)
     ActualLeftStart = leftStartIndex;
   else
     ActualLeftStart = up_rightCornerIndex+1; //up_rightCornerIndex will be the actual top
-  
-  if(up_leftCornerWhere == 0) 
+
+  if(up_leftCornerWhere == 0)
     {
       if(up_rightCornerWhere == 0)
 	ActualTop = leftChain->getVertex(up_rightCornerIndex);
       else
 	ActualTop = topVertex;
     }
-  else if(up_leftCornerWhere == 1) 
+  else if(up_leftCornerWhere == 1)
     ActualTop = topVertex;
   else  //up_leftCornerWhere == 2
     ActualTop = rightChain->getVertex(up_leftCornerIndex);
-  
+
   ActualBot = gridPoints[gridRightU - gridLeftU];
-  
+
 
 
 
@@ -993,7 +995,7 @@ void sampleCompTopSimple(Real* topVertex,
 			    ActualRightChain.getNumElements()-1,
 			    pStream);
 */
-   
+
     sampleCompTopSimpleOpt(grid, gridV,
 			   ActualTop, leftChain->getVertex(ActualLeftEnd),
 			    leftChain,
@@ -1002,7 +1004,7 @@ void sampleCompTopSimple(Real* topVertex,
 			    0,
 			    ActualRightChain.getNumElements()-1,
 			    pStream);
-    
+
   }
   else
     {
@@ -1013,7 +1015,7 @@ void sampleCompTopSimple(Real* topVertex,
 			  0, ActualRightChain.getNumElements()-2, //the last is the bot.
 			  pStream);
 */
-   	  
+
     sampleCompTopSimpleOpt(grid, gridV,
 			   ActualTop, ActualBot, leftChain,
 			  ActualLeftStart, ActualLeftEnd,
@@ -1021,10 +1023,10 @@ void sampleCompTopSimple(Real* topVertex,
 			  0, ActualRightChain.getNumElements()-2, //the last is the bot.
 			  pStream);
 
-   
+
   }
 
   free(gridPoints);
-      
-}		  
-						   
+
+}
+

@@ -37,11 +37,13 @@
  *
  */
 
+#ifndef __REACTOS_USE_PCH__
 //#include "glimports.h"
 //#include "mystdio.h"
 #include "myassert.h"
 #include "knotvector.h"
 #include "defines.h"
+#endif
 
 #ifdef __WATCOMC__
 #pragma warning 726 10
@@ -98,7 +100,7 @@ int Knotvector::validate( void )
 	    // decreasing knot sequence
 	    return( 4 );
 	}
-        
+
     /* check for valid multiplicity */
 
     /*	kindex is currently the index of the last knot.

@@ -37,9 +37,11 @@
  *
  */
 
+#ifndef __REACTOS_USE_PCH__
 //#include "mystdio.h"
 //#include "types.h"
 #include "basicsurfeval.h"
+#endif
 
 #ifdef __WATCOMC__
 #pragma warning 726 10

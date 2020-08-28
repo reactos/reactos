@@ -37,6 +37,7 @@
  *
  */
 
+#ifndef __REACTOS_USE_PCH__
 //#include "glimports.h"
 //#include "mystdio.h"
 //#include "nurbsconsts.h"
@@ -46,6 +47,7 @@
 #include "displaylist.h"
 #include "knotvector.h"
 #include "mapdesc.h"
+#endif
 
 #define THREAD( work, arg, cleanup ) \
 	if( dl ) {\
@@ -63,7 +65,7 @@
 	    work( );\
 	}
 
-NurbsTessellator::NurbsTessellator( BasicCurveEvaluator &c, BasicSurfaceEvaluator& e) 
+NurbsTessellator::NurbsTessellator( BasicCurveEvaluator &c, BasicSurfaceEvaluator& e)
 	: maplist( backend ),
 	  backend( c, e ),
           subdivider( renderhints, backend ),
@@ -85,7 +87,7 @@ NurbsTessellator::NurbsTessellator( BasicCurveEvaluator &c, BasicSurfaceEvaluato
     subdivider.setJumpbuffer( jumpbuffer );
 }
 
-NurbsTessellator::~NurbsTessellator( void ) 
+NurbsTessellator::~NurbsTessellator( void )
 {
     if( inTrim ) {
 	do_nurbserror( 12 );
@@ -100,7 +102,7 @@ NurbsTessellator::~NurbsTessellator( void )
     if (jumpbuffer) {
         deleteJumpbuffer(jumpbuffer);
 	jumpbuffer= 0;
-    }	
+    }
 }
 
 /*-----------------------------------------------------------------------------
@@ -119,7 +121,7 @@ NurbsTessellator::bgnsurface( long nuid )
 
 /*-----------------------------------------------------------------------------
  * bgncurve - allocate an initialize an o_curve structure
- * 
+ *
  * Client: GL user
  *-----------------------------------------------------------------------------
  */
@@ -132,7 +134,7 @@ NurbsTessellator::bgncurve( long nuid )
 }
 /*-----------------------------------------------------------------------------
  * endcurve -
- * 
+ *
  * Client:
  *-----------------------------------------------------------------------------
  */
@@ -299,11 +301,11 @@ NurbsTessellator::nurbscurve(
 
     knots.init( nknots, byte_stride, order, knot );
     if( do_check_knots( &knots, "curve" ) ) return;
-    
+
     O_nurbscurve *o_nurbscurve = new(o_nurbscurvePool) O_nurbscurve(type);
     o_nurbscurve->bezier_curves = new(quiltPool) Quilt(mapdesc);
     o_nurbscurve->bezier_curves->toBezier( knots,ctlarray, mapdesc->getNcoords() );
- 
+
     THREAD( do_nurbscurve, o_nurbscurve, do_freenurbscurve );
 }
 
@@ -326,7 +328,7 @@ NurbsTessellator::nurbssurface(
     long sorder,		/* order of the spline in s parameter */
     long torder,		/* order of the spline in t parameter */
     long type)			/* description of range space */
-{ 
+{
     Mapdesc *mapdesc = maplist.locate( type );
 
     if( mapdesc == 0 ) {
@@ -359,14 +361,14 @@ NurbsTessellator::nurbssurface(
     o_nurbssurface->bezier_patches = new(quiltPool) Quilt(mapdesc);
 
     o_nurbssurface->bezier_patches->toBezier( sknotvector, tknotvector,
-	ctlarray, mapdesc->getNcoords() ); 
+	ctlarray, mapdesc->getNcoords() );
     THREAD( do_nurbssurface, o_nurbssurface, do_freenurbssurface );
 }
 
 
 /*-----------------------------------------------------------------------------
  * setnurbsproperty -
- * 
+ *
  *-----------------------------------------------------------------------------
  */
 void
@@ -382,7 +384,7 @@ NurbsTessellator::setnurbsproperty( long tag, INREAL value )
 
 /*-----------------------------------------------------------------------------
  * setnurbsproperty -
- * 
+ *
  *-----------------------------------------------------------------------------
  */
 void
@@ -406,8 +408,8 @@ NurbsTessellator::setnurbsproperty( long type, long tag, INREAL value )
 
 
 /*-----------------------------------------------------------------------------
- * getnurbsproperty - 
- * 
+ * getnurbsproperty -
+ *
  *-----------------------------------------------------------------------------
  */
 
@@ -422,8 +424,8 @@ NurbsTessellator::getnurbsproperty( long tag, INREAL *value )
 }
 
 /*-----------------------------------------------------------------------------
- * getnurbsproperty - 
- * 
+ * getnurbsproperty -
+ *
  *-----------------------------------------------------------------------------
  */
 
@@ -432,7 +434,7 @@ NurbsTessellator::getnurbsproperty( long type, long tag, INREAL *value )
 {
     Mapdesc *mapdesc = maplist.locate( type );
 
-    if( mapdesc == 0 ) 
+    if( mapdesc == 0 )
 	do_nurbserror( 35 );
 
     if( mapdesc->isProperty( tag  ) ) {
@@ -447,7 +449,7 @@ NurbsTessellator::getnurbsproperty( long type, long tag, INREAL *value )
  *--------------------------------------------------------------------------
  */
 
-void 
+void
 NurbsTessellator::setnurbsproperty( long type, long purpose, INREAL *mat )
 {
     // XXX - cannot be put in display list
@@ -470,8 +472,8 @@ NurbsTessellator::setnurbsproperty( long type, long purpose, INREAL *mat )
  *--------------------------------------------------------------------------
  */
 
-void 
-NurbsTessellator::setnurbsproperty( long type, long purpose, INREAL *mat, 
+void
+NurbsTessellator::setnurbsproperty( long type, long purpose, INREAL *mat,
     long rstride, long cstride )
 {
     // XXX - cannot be put in display list
@@ -493,39 +495,39 @@ NurbsTessellator::setnurbsproperty( long type, long purpose, INREAL *mat,
     }
 }
 
-void	
+void
 NurbsTessellator::redefineMaps( void )
 {
     maplist.initialize();
 }
 
-void 	
+void
 NurbsTessellator::defineMap( long type, long rational, long ncoords )
 {
     maplist.define( type, (int) rational, (int) ncoords );
 }
 
-void 
+void
 NurbsTessellator::discardRecording( void *_dl )
 {
     delete (DisplayList *) _dl;
 }
 
-void * 
+void *
 NurbsTessellator::beginRecording( void )
 {
     dl = new DisplayList( this );
     return (void *) dl;
 }
 
-void 
+void
 NurbsTessellator::endRecording( void )
 {
     dl->endList();
     dl = 0;
 }
 
-void 
+void
 NurbsTessellator::playRecording( void *_dl )
 {
     playBack = 1;

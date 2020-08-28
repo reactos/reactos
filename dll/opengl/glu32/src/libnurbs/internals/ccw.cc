@@ -37,6 +37,7 @@
  *
  */
 
+#ifndef __REACTOS_USE_PCH__
 //#include "glimports.h"
 //#include "mystdio.h"
 //#include "myassert.h"
@@ -45,12 +46,13 @@
 //#include "arc.h"
 //#include "trimvertex.h"
 #include "simplemath.h"
+#endif
 
-inline int 
+inline int
 Subdivider::bbox( TrimVertex *a, TrimVertex *b, TrimVertex *c, int p )
 {
-    return bbox( a->param[p], b->param[p], c->param[p], 
-	         a->param[1-p], b->param[1-p], c->param[1-p] ); 
+    return bbox( a->param[p], b->param[p], c->param[p],
+	         a->param[1-p], b->param[1-p], c->param[1-p] );
 }
 
 int
@@ -124,7 +126,7 @@ Subdivider::ccwTurn_sr( Arc_ptr j1, Arc_ptr j2 ) // dir = 1
 		    return 1;
 		case 0:
 		   sgn = ccw( v1next, v1, v2next );
-		   if( sgn != -1 ) { 
+		   if( sgn != -1 ) {
 			return sgn;
 		   } else {
 #ifdef DEBUG
@@ -188,7 +190,7 @@ Subdivider::ccwTurn_sl( Arc_ptr j1, Arc_ptr j2 ) // dir = 0
     if( v1->param[0] == v1next->param[0] && v2->param[0] == v2next->param[0] )
 	return 0;
 
-    if( v2next->param[0] > v2->param[0] || v1next->param[0] > v1->param[0] ) 
+    if( v2next->param[0] > v2->param[0] || v1next->param[0] > v1->param[0] )
 	::mylongjmp( jumpbuffer, 28 );
 
     if( v1->param[1] < v2->param[1] )
@@ -208,7 +210,7 @@ Subdivider::ccwTurn_sl( Arc_ptr j1, Arc_ptr j2 ) // dir = 0
 		    return 1;
 		case 0:
 		    sgn = ccw( v1next, v2, v2next );
-		    if( sgn != -1 ) 
+		    if( sgn != -1 )
 			return sgn;
 		    else {
 			v1 = v1next--;
@@ -237,7 +239,7 @@ Subdivider::ccwTurn_sl( Arc_ptr j1, Arc_ptr j2 ) // dir = 0
 		    return 0;
 		case 0:
 		    sgn = ccw( v1next, v1, v2next );
-		    if( sgn != -1 ) 
+		    if( sgn != -1 )
 			return sgn;
 		    else {
 			v2 = v2next++;
@@ -350,7 +352,7 @@ Subdivider::ccwTurn_tr( Arc_ptr j1, Arc_ptr j2 ) // dir = 1
 		    return 0;
 		case 0:
 		   sgn = ccw( v1next, v1, v2next );
-		   if( sgn != -1 ) { 
+		   if( sgn != -1 ) {
 			return sgn;
 		   } else {
 #ifdef DEBUG
@@ -414,7 +416,7 @@ Subdivider::ccwTurn_tl( Arc_ptr j1, Arc_ptr j2 )
     if( v1->param[1] == v1next->param[1] && v2->param[1] == v2next->param[1] )
 	return 0;
 
-    if( v2next->param[1] > v2->param[1] || v1next->param[1] > v1->param[1] ) 
+    if( v2next->param[1] > v2->param[1] || v1next->param[1] > v1->param[1] )
 	::mylongjmp( jumpbuffer, 28 );
 
     if( v1->param[0] < v2->param[0] )
@@ -434,7 +436,7 @@ Subdivider::ccwTurn_tl( Arc_ptr j1, Arc_ptr j2 )
 		    return 0;
 		case 0:
 		    sgn = ccw( v1next, v2, v2next );
-		    if( sgn != -1 ) 
+		    if( sgn != -1 )
 			return sgn;
 		    else {
 			v1 = v1next--;
@@ -463,7 +465,7 @@ Subdivider::ccwTurn_tl( Arc_ptr j1, Arc_ptr j2 )
 		    return 1;
 		case 0:
 		    sgn = ccw( v1next, v1, v2next );
-		    if( sgn != -1 ) 
+		    if( sgn != -1 )
 			return sgn;
 		    else {
 			v2 = v2next++;
@@ -548,9 +550,9 @@ Subdivider::bbox( REAL sa, REAL sb, REAL sc, REAL   , REAL   , REAL    )
 
 /*----------------------------------------------------------------------------
  * ccw - determine how three points are oriented by computing their
- *	 determinant.  
- *	 Return 1 if the vertices are ccw oriented, 
- *		0 if they are cw oriented, or 
+ *	 determinant.
+ *	 Return 1 if the vertices are ccw oriented,
+ *		0 if they are cw oriented, or
  *		-1 if the computation is ill-conditioned.
  *----------------------------------------------------------------------------
  */

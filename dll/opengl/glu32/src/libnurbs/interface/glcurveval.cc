@@ -39,13 +39,15 @@
 
 /* Polynomial Evaluator Interface */
 
+#ifndef __REACTOS_USE_PCH__
 #include "gluos.h"
 //#include "glimports.h"
 #include "glrenderer.h"
 //#include "glcurveval.h"
 //#include "nurbsconsts.h"
- 
-OpenGLCurveEvaluator::OpenGLCurveEvaluator(void) 
+#endif
+
+OpenGLCurveEvaluator::OpenGLCurveEvaluator(void)
 {
   //no default callback functions
   beginCallBackN = NULL;
@@ -62,7 +64,7 @@ OpenGLCurveEvaluator::OpenGLCurveEvaluator(void)
   texcoordCallBackData = NULL;
 
   userData = NULL;
-  
+
   vertex_flag = 0;
   normal_flag = 0;
   color_flag = 0;
@@ -75,8 +77,8 @@ OpenGLCurveEvaluator::OpenGLCurveEvaluator(void)
   output_triangles = 0; // don't output triangles by default
 }
 
-OpenGLCurveEvaluator::~OpenGLCurveEvaluator(void) 
-{ 
+OpenGLCurveEvaluator::~OpenGLCurveEvaluator(void)
+{
 }
 
 /* added nonsense to avoid the warning messages at compile time */
@@ -143,7 +145,7 @@ OpenGLCurveEvaluator::enable(long type)
  * mapgrid1f - define a lattice of points with origin and offset
  *-------------------------------------------------------------------------
  */
-void 
+void
 OpenGLCurveEvaluator::mapgrid1f(long nu, REAL u0, REAL u1)
 {
   if(output_triangles)
@@ -185,7 +187,7 @@ OpenGLCurveEvaluator::endmap1f(void)
 {
   if(output_triangles)
     {
-      
+
     }
   else
     glPopAttrib();
@@ -238,7 +240,7 @@ OpenGLCurveEvaluator::map1f(
 	which=3;
 	dimension = 2;
 	break;
-	
+
       case GL_MAP1_TEXTURE_COORD_3:
 	which=3;
 	dimension = 3;
@@ -246,12 +248,12 @@ OpenGLCurveEvaluator::map1f(
       case GL_MAP1_TEXTURE_COORD_4:
 	which=3;
 	dimension = 4;
-	break;	
+	break;
       }
-      inMap1f(which, dimension, ulo, uhi, stride, order, pts); 	      
-    }       
+      inMap1f(which, dimension, ulo, uhi, stride, order, pts);
+    }
   else
-    glMap1f((GLenum) type, (GLfloat) ulo, (GLfloat) uhi, (GLint) stride, 
+    glMap1f((GLenum) type, (GLfloat) ulo, (GLfloat) uhi, (GLint) stride,
 	    (GLint) order, (const GLfloat *) pts);
 }
 
@@ -263,7 +265,7 @@ void OpenGLCurveEvaluator::mapmesh1f(long style, long from, long to)
 {
   if(output_triangles)
     {
-      inMapMesh1f((int) from, (int) to);      
+      inMapMesh1f((int) from, (int) to);
     }
   else
     {

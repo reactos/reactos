@@ -6,21 +6,21 @@
 ** this file except in compliance with the License. You may obtain a copy
 ** of the License at Silicon Graphics, Inc., attn: Legal Services, 1600
 ** Amphitheatre Parkway, Mountain View, CA 94043-1351, or at:
-** 
+**
 ** http://oss.sgi.com/projects/FreeB
-** 
+**
 ** Note that, as provided in the License, the Software is distributed on an
 ** "AS IS" basis, with ALL EXPRESS AND IMPLIED WARRANTIES AND CONDITIONS
 ** DISCLAIMED, INCLUDING, WITHOUT LIMITATION, ANY IMPLIED WARRANTIES AND
 ** CONDITIONS OF MERCHANTABILITY, SATISFACTORY QUALITY, FITNESS FOR A
 ** PARTICULAR PURPOSE, AND NON-INFRINGEMENT.
-** 
+**
 ** Original Code. The Original Code is: OpenGL Sample Implementation,
 ** Version 1.2.1, released January 26, 2000, developed by Silicon Graphics,
 ** Inc. The Original Code is Copyright (c) 1991-2000 Silicon Graphics, Inc.
 ** Copyright in any portions created by third parties is as indicated
 ** elsewhere herein. All Rights Reserved.
-** 
+**
 ** Additional Notice Provisions: The application programming interfaces
 ** established by SGI in conjunction with the Original Code are The
 ** OpenGL(R) Graphics System: A Specification (Version 1.2.1), released
@@ -35,11 +35,13 @@
 /*
 */
 
+#ifndef __REACTOS_USE_PCH__
 #include <stdlib.h>
 //#include <stdio.h>
 #include "zlassert.h"
 
 #include "searchTree.h"
+#endif
 
 #define max(a,b) ((a>b)? a:b)
 
@@ -67,13 +69,13 @@ void TreeNodeDeleteWholeTree(treeNode* node)
   TreeNodeDeleteSingleNode(node);
 }
 
-void TreeNodePrint(treeNode* node, 
+void TreeNodePrint(treeNode* node,
 		   void (*keyPrint) (void*))
 {
   if(node ==NULL) return;
   TreeNodePrint(node->left, keyPrint);
   keyPrint(node->key);
-  TreeNodePrint(node->right, keyPrint);  
+  TreeNodePrint(node->right, keyPrint);
 }
 
 int TreeNodeDepth(treeNode* root)
@@ -81,7 +83,7 @@ int TreeNodeDepth(treeNode* root)
   if(root == NULL) return 0;
   else{
     int leftdepth = TreeNodeDepth(root->left);
-    int rightdepth = TreeNodeDepth(root->right);  
+    int rightdepth = TreeNodeDepth(root->right);
     return 1 + max(leftdepth, rightdepth);
   }
 }
@@ -90,16 +92,16 @@ int TreeNodeDepth(treeNode* root)
  *NULL is returned if not found
  */
 treeNode* TreeNodeFind(treeNode* tree, void* key,
-		       int (*compkey) (void*, void*)) 	       
+		       int (*compkey) (void*, void*))
 {
-  if(tree == NULL) 
+  if(tree == NULL)
     return NULL;
   if(key == tree->key)
     return tree;
   else if(compkey(key, tree->key) < 0)
     return TreeNodeFind(tree->left, key, compkey);
-  else 
-    return TreeNodeFind(tree->right, key, compkey);    
+  else
+    return TreeNodeFind(tree->right, key, compkey);
 }
 
 
@@ -115,17 +117,17 @@ treeNode* TreeNodeInsert(treeNode* root, treeNode* newnode,
     y = x;
     if(compkey(newnode->key,x->key) < 0) /*if newnode < x*/
       x = x->left;
-    else 
+    else
       x = x->right;
   }
 
-  /*now y has the property that 
+  /*now y has the property that
    * if newnode < y, then y->left is NULL
    * if newnode > y, then y->right is NULL.
    *So we want to isnert newnode to be the child of y
    */
   newnode->parent = y;
-  if(y == NULL) 
+  if(y == NULL)
     return newnode;
   else if( compkey(newnode->key, y->key) <0)
     {
@@ -138,7 +140,7 @@ treeNode* TreeNodeInsert(treeNode* root, treeNode* newnode,
 
   return root;
 }
-    
+
 treeNode* TreeNodeDeleteSingleNode(treeNode* tree, treeNode* node)
 {
   treeNode* y;
@@ -149,7 +151,7 @@ treeNode* TreeNodeDeleteSingleNode(treeNode* tree, treeNode* node)
   if(node->left == NULL || node->right == NULL) {
 
     y = node;
-    if(y->left != NULL) 
+    if(y->left != NULL)
       x = y->left;
     else
       x = y->right;
@@ -161,7 +163,7 @@ treeNode* TreeNodeDeleteSingleNode(treeNode* tree, treeNode* node)
       ret = x;
     else /*y is not the root*/
       {
-	if(y == y->parent->left) 
+	if(y == y->parent->left)
 	  y->parent->left = x;
 	else
 	  y->parent->right = x;
@@ -178,7 +180,7 @@ treeNode* TreeNodeDeleteSingleNode(treeNode* tree, treeNode* node)
 	 y->parent = node->parent;
 	 y->left = node->left;
 	 node->left->parent = y;
-	 
+
        }
      else  /*y != node->right*/
        {
@@ -187,7 +189,7 @@ treeNode* TreeNodeDeleteSingleNode(treeNode* tree, treeNode* node)
 	   x->parent = y->parent;
 
 	 assert(y->parent != NULL);
-	 if(y == y->parent->left) 
+	 if(y == y->parent->left)
 	   y->parent->left = x;
 	 else
 	   y->parent->right = x;
@@ -206,14 +208,14 @@ treeNode* TreeNodeDeleteSingleNode(treeNode* tree, treeNode* node)
       ret = tree; /*the root if the tree doesn't change*/
     }
     else /*node->parent is NULL: node is the root*/
-      ret = y;    
+      ret = y;
   }
 
   /*finally free the node, and return the new root*/
   TreeNodeDeleteSingleNode(node);
   return ret;
 }
-     
+
 
 /*the minimum node in the tree rooted by node
  */

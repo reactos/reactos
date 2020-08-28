@@ -37,6 +37,7 @@
  *
  */
 
+#ifndef __REACTOS_USE_PCH__
 //#include <stdio.h>
 //#include "glimports.h"
 //#include "myassert.h"
@@ -44,16 +45,17 @@
 #include "quilt.h"
 #include "patchlist.h"
 //#include "patch.h"
+#endif
 
 Patchlist::Patchlist( Quilt *quilts, REAL *pta, REAL *ptb )
 {
     patch = 0;
-    for( Quilt *q = quilts; q; q = q->next ) 
+    for( Quilt *q = quilts; q; q = q->next )
 	patch = new Patch( q, pta, ptb, patch );
     pspec[0].range[0] = pta[0];
     pspec[0].range[1] = ptb[0];
     pspec[0].range[2] = ptb[0] - pta[0];
- 
+
     pspec[1].range[0] = pta[1];
     pspec[1].range[1] = ptb[1];
     pspec[1].range[2] = ptb[1] - pta[1];

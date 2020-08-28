@@ -6,21 +6,21 @@
 ** this file except in compliance with the License. You may obtain a copy
 ** of the License at Silicon Graphics, Inc., attn: Legal Services, 1600
 ** Amphitheatre Parkway, Mountain View, CA 94043-1351, or at:
-** 
+**
 ** http://oss.sgi.com/projects/FreeB
-** 
+**
 ** Note that, as provided in the License, the Software is distributed on an
 ** "AS IS" basis, with ALL EXPRESS AND IMPLIED WARRANTIES AND CONDITIONS
 ** DISCLAIMED, INCLUDING, WITHOUT LIMITATION, ANY IMPLIED WARRANTIES AND
 ** CONDITIONS OF MERCHANTABILITY, SATISFACTORY QUALITY, FITNESS FOR A
 ** PARTICULAR PURPOSE, AND NON-INFRINGEMENT.
-** 
+**
 ** Original Code. The Original Code is: OpenGL Sample Implementation,
 ** Version 1.2.1, released January 26, 2000, developed by Silicon Graphics,
 ** Inc. The Original Code is Copyright (c) 1991-2000 Silicon Graphics, Inc.
 ** Copyright in any portions created by third parties is as indicated
 ** elsewhere herein. All Rights Reserved.
-** 
+**
 ** Additional Notice Provisions: The application programming interfaces
 ** established by SGI in conjunction with the Original Code are The
 ** OpenGL(R) Graphics System: A Specification (Version 1.2.1), released
@@ -35,16 +35,18 @@
 /*
 */
 
+#ifndef __REACTOS_USE_PCH__
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h> //for fabs()
 //#include "glimports.h"
 #include "zlassert.h"
 #include "sampledLine.h"
+#endif
 
-void sampledLine::setPoint(Int i, Real p[2]) 
+void sampledLine::setPoint(Int i, Real p[2])
 {
-  points[i][0]=p[0];  
+  points[i][0]=p[0];
   points[i][1]=p[1];
 }
 
@@ -65,7 +67,7 @@ void sampledLine::deleteList()
       delete temp;
     }
 }
- 
+
 
 /*space of points[][2] is allocated*/
 sampledLine::sampledLine(Int n_points)
@@ -76,7 +78,7 @@ sampledLine::sampledLine(Int n_points)
   next = NULL;
 }
 
-/*space of points[][2] is allocated and 
+/*space of points[][2] is allocated and
  *points are copied
  */
 sampledLine::sampledLine(Int n_points, Real2 pts[])
@@ -146,11 +148,11 @@ void sampledLine::tessellate(Real u_reso, Real v_reso)
   nv = 1+(Int) (fabs((points[npoints-1][1] - points[0][1])) * v_reso);
 
   if(nu > nv) n = nu;
-  else 
+  else
     n = nv;
   if(n<1)
     n = 1;
-  //du dv could be negative  
+  //du dv could be negative
   Real du = (points[npoints-1][0] - points[0][0])/n;
   Real dv = (points[npoints-1][1] - points[0][1])/n;
   Real2 *temp = (Real2*) malloc(sizeof(Real2) * (n+1));

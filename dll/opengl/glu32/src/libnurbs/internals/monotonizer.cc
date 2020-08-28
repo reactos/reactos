@@ -37,6 +37,7 @@
  *
  */
 
+#ifndef __REACTOS_USE_PCH__
 //#include "glimports.h"
 //#include "mystdio.h"
 //#include "myassert.h"
@@ -47,6 +48,7 @@
 #include "mapdesc.h"
 //#include "nurbsconsts.h"
 #include "subdivider.h"
+#endif
 
 /*-----------------------------------------------------------------------------
  * Subdivider::decompose - break all curves into monotone arcs
@@ -61,7 +63,7 @@ Subdivider::decompose( Bin& bin, REAL geo_stepsize )
 	    /* points have not been transformed, therefore they may be either
 	       homogeneous or inhomogeneous */
 	    tessellate( jarc, geo_stepsize );
-	    if( jarc->isDisconnected() || jarc->next->isDisconnected() ) 
+	    if( jarc->isDisconnected() || jarc->next->isDisconnected() )
 		return 1;
 	}
     }
@@ -87,15 +89,15 @@ Subdivider::tessellate( Arc_ptr jarc, REAL geo_stepsize )
 
     if( mapdesc->isRational() ) {
 	REAL max = mapdesc->calcVelocityRational( b->cpts, b->stride, b->order );
-	REAL arc_stepsize = (max > 1.0) ? (1.0/max) : 1.0; 
+	REAL arc_stepsize = (max > 1.0) ? (1.0/max) : 1.0;
 	if( jarc->bezierArc->order != 2 )
 	    arctessellator.tessellateNonlinear( jarc, geo_stepsize, arc_stepsize, 1 );
 	else {
 	    arctessellator.tessellateLinear( jarc, geo_stepsize, arc_stepsize, 1 );
 	}
-    } else { 
+    } else {
 	REAL max = mapdesc->calcVelocityNonrational( b->cpts, b->stride, b->order );
-	REAL arc_stepsize = (max > 1.0) ? (1.0/max) : 1.0; 
+	REAL arc_stepsize = (max > 1.0) ? (1.0/max) : 1.0;
 	if( jarc->bezierArc->order != 2 )
 	    arctessellator.tessellateNonlinear( jarc, geo_stepsize, arc_stepsize, 0 );
 	else {
@@ -131,7 +133,7 @@ Subdivider::monotonize( Arc_ptr jarc, Bin& bin )
         change = 0;
 
 	/* check change relative to s axis, clear degenerate bit if needed */
-        REAL sdiff = vert[1].param[0] - vert[0].param[0]; 
+        REAL sdiff = vert[1].param[0] - vert[0].param[0];
         if( sdiff == 0 ) {
 	    if( sdir != same ) {
 	        sdir = same;
@@ -150,10 +152,10 @@ Subdivider::monotonize( Arc_ptr jarc, Bin& bin )
 	    }
 	    nudegenerate = 0;
         }
-    
+
 	/* check change relative to t axis, clear degenerate bit if needed */
-        REAL tdiff = vert[1].param[1] - vert[0].param[1]; 
-        if( tdiff == 0 ) { 
+        REAL tdiff = vert[1].param[1] - vert[0].param[1];
+        if( tdiff == 0 ) {
 	    if( tdir != same ) {
 	        tdir = same;
 	 	change = 1;
@@ -171,7 +173,7 @@ Subdivider::monotonize( Arc_ptr jarc, Bin& bin )
 	    }
 	    nudegenerate = 0;
         }
-    
+
 	if( change ) {
 	    if( ! degenerate ) {
 	        /* make last segment into separate pwl curve */
@@ -182,7 +184,7 @@ Subdivider::monotonize( Arc_ptr jarc, Bin& bin )
 	    }
 	    firstvert = jarc->pwlArc->pts = vert;
 	    degenerate = nudegenerate;
-	} 
+	}
     }
     jarc->pwlArc->npts = vert - firstvert + 1;
 
@@ -199,7 +201,7 @@ Subdivider::monotonize( Arc_ptr jarc, Bin& bin )
 
 	jarc->pwlArc->deleteMe( pwlarcpool ); jarc->pwlArc = 0;
 	jarc->deleteMe( arcpool );
-    } 
+    }
 }
 
 /*-------------------------------------------------------------------------
@@ -218,16 +220,16 @@ Subdivider::isMonotone( Arc_ptr jarc )
     enum dir	sdir;
     enum dir	tdir;
 
-    REAL diff = vert[1].param[0] - vert[0].param[0]; 
-    if( diff == 0.0 ) 
+    REAL diff = vert[1].param[0] - vert[0].param[0];
+    if( diff == 0.0 )
         sdir = same;
     else if( diff < 0.0 )
         sdir = down;
     else
         sdir = up;
 
-    diff = vert[1].param[1] - vert[0].param[1]; 
-    if( diff == 0.0 ) 
+    diff = vert[1].param[1] - vert[0].param[1];
+    if( diff == 0.0 )
         tdir = same;
     else if( diff < 0.0 )
         tdir = down;
@@ -235,9 +237,9 @@ Subdivider::isMonotone( Arc_ptr jarc )
         tdir = up;
 
     if( (sdir == same) && (tdir == same) ) return 0;
-    
+
     for( ++vert ; vert != lastvert; vert++ ) {
-        diff = vert[1].param[0] - vert[0].param[0]; 
+        diff = vert[1].param[0] - vert[0].param[0];
         if( diff == 0.0 ) {
 	    if( sdir != same ) return 0;
         } else if( diff < 0.0 ) {
@@ -246,7 +248,7 @@ Subdivider::isMonotone( Arc_ptr jarc )
 	    if( sdir != up ) return 0;
         }
 
-        diff = vert[1].param[1] - vert[0].param[1]; 
+        diff = vert[1].param[1] - vert[0].param[1];
         if( diff == 0.0 ) {
 	    if( tdir != same ) return 0;
         } else if( diff < 0.0 ) {

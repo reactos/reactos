@@ -37,6 +37,7 @@
  *
  */
 
+#ifndef __REACTOS_USE_PCH__
 //#include "glimports.h"
 //#include "myassert.h"
 //#include "mystdio.h"
@@ -45,7 +46,7 @@
 //#include "gridtrimvertex.h"
 //#include "uarray.h"
 #include "backend.h"
-
+#endif
 
 const int CoveAndTiler::MAXSTRIPSIZE = 1000;
 
@@ -384,7 +385,7 @@ CoveAndTiler::coveLowerRight( void )
     GridVertex gv( bot.uend, top.vindex );
 
     right.last();
-    backend.bgntmesh( "coveLowerRight" );       
+    backend.bgntmesh( "coveLowerRight" );
     output( bgv );
     output( right.prev() );
     output( gv );

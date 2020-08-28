@@ -6,21 +6,21 @@
 ** this file except in compliance with the License. You may obtain a copy
 ** of the License at Silicon Graphics, Inc., attn: Legal Services, 1600
 ** Amphitheatre Parkway, Mountain View, CA 94043-1351, or at:
-** 
+**
 ** http://oss.sgi.com/projects/FreeB
-** 
+**
 ** Note that, as provided in the License, the Software is distributed on an
 ** "AS IS" basis, with ALL EXPRESS AND IMPLIED WARRANTIES AND CONDITIONS
 ** DISCLAIMED, INCLUDING, WITHOUT LIMITATION, ANY IMPLIED WARRANTIES AND
 ** CONDITIONS OF MERCHANTABILITY, SATISFACTORY QUALITY, FITNESS FOR A
 ** PARTICULAR PURPOSE, AND NON-INFRINGEMENT.
-** 
+**
 ** Original Code. The Original Code is: OpenGL Sample Implementation,
 ** Version 1.2.1, released January 26, 2000, developed by Silicon Graphics,
 ** Inc. The Original Code is Copyright (c) 1991-2000 Silicon Graphics, Inc.
 ** Copyright in any portions created by third parties is as indicated
 ** elsewhere herein. All Rights Reserved.
-** 
+**
 ** Additional Notice Provisions: The application programming interfaces
 ** established by SGI in conjunction with the Original Code are The
 ** OpenGL(R) Graphics System: A Specification (Version 1.2.1), released
@@ -35,15 +35,16 @@
 /*
 */
 
+#ifndef __REACTOS_USE_PCH__
 //#include <stdlib.h>
 //#include <stdio.h>
 
 #include "glcurveval.h"
-
+#endif
 
 /*
- *compute the Bezier polynomials C[n,j](v) for all j at v with 
- *return values stored in coeff[], where 
+ *compute the Bezier polynomials C[n,j](v) for all j at v with
+ *return values stored in coeff[], where
  *  C[n,j](v) = (n,j) * v^j * (1-v)^(n-j),
  *  j=0,1,2,...,n.
  *order : n+1
@@ -59,7 +60,7 @@ void OpenGLCurveEvaluator::inPreEvaluate(int order, REAL vprime, REAL *coeff)
   int i, j;
   REAL oldval, temp;
   REAL oneMinusvprime;
-  
+
   /*
    * Minor optimization
    * Compute orders 1 and 2 outright, and set coeff[0], coeff[1] to
@@ -69,12 +70,12 @@ void OpenGLCurveEvaluator::inPreEvaluate(int order, REAL vprime, REAL *coeff)
     coeff[0] = 1.0;
     return;
   }
-  
+
   oneMinusvprime = 1-vprime;
   coeff[0] = oneMinusvprime;
   coeff[1] = vprime;
   if (order == 2) return;
-  
+
   for (i = 2; i < order; i++) {
     oldval = coeff[0] * vprime;
     coeff[0] = oneMinusvprime * coeff[0];
@@ -115,7 +116,7 @@ void OpenGLCurveEvaluator::inMap1f(int which, //0: vert, 1: norm, 2: color, 3: t
     temp_em = &em_texcoord;
     break;
   }
-  
+
   REAL *data = temp_em->ctlpoints;
   temp_em->uprime = -1; //initialized
   temp_em->k = k;
@@ -130,7 +131,7 @@ void OpenGLCurveEvaluator::inMap1f(int which, //0: vert, 1: norm, 2: color, 3: t
     }
     ctlpoints += ustride;
     data += k;
-  }     
+  }
 }
 
 void OpenGLCurveEvaluator::inDoDomain1(curveEvalMachine *em, REAL u, REAL *retPoint)
@@ -138,7 +139,7 @@ void OpenGLCurveEvaluator::inDoDomain1(curveEvalMachine *em, REAL u, REAL *retPo
   int j, row;
   REAL the_uprime;
   REAL *data;
-  
+
   if(em->u2 == em->u1)
     return;
   the_uprime = (u-em->u1) / (em->u2-em->u1);
@@ -147,7 +148,7 @@ void OpenGLCurveEvaluator::inDoDomain1(curveEvalMachine *em, REAL u, REAL *retPo
     inPreEvaluate(em->uorder, the_uprime, em->ucoeff);
     em->uprime = the_uprime;
   }
-  
+
   for(j=0; j<em->k; j++){
     data = em->ctlpoints+j;
     retPoint[j] = 0.0;
@@ -156,7 +157,7 @@ void OpenGLCurveEvaluator::inDoDomain1(curveEvalMachine *em, REAL u, REAL *retPo
 	retPoint[j] += em->ucoeff[row] * (*data);
 	data += em->k;
       }
-  } 
+  }
 }
 
 void  OpenGLCurveEvaluator::inDoEvalCoord1(REAL u)

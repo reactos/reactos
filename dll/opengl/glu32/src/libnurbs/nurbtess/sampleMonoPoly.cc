@@ -6,21 +6,21 @@
 ** this file except in compliance with the License. You may obtain a copy
 ** of the License at Silicon Graphics, Inc., attn: Legal Services, 1600
 ** Amphitheatre Parkway, Mountain View, CA 94043-1351, or at:
-** 
+**
 ** http://oss.sgi.com/projects/FreeB
-** 
+**
 ** Note that, as provided in the License, the Software is distributed on an
 ** "AS IS" basis, with ALL EXPRESS AND IMPLIED WARRANTIES AND CONDITIONS
 ** DISCLAIMED, INCLUDING, WITHOUT LIMITATION, ANY IMPLIED WARRANTIES AND
 ** CONDITIONS OF MERCHANTABILITY, SATISFACTORY QUALITY, FITNESS FOR A
 ** PARTICULAR PURPOSE, AND NON-INFRINGEMENT.
-** 
+**
 ** Original Code. The Original Code is: OpenGL Sample Implementation,
 ** Version 1.2.1, released January 26, 2000, developed by Silicon Graphics,
 ** Inc. The Original Code is Copyright (c) 1991-2000 Silicon Graphics, Inc.
 ** Copyright in any portions created by third parties is as indicated
 ** elsewhere herein. All Rights Reserved.
-** 
+**
 ** Additional Notice Provisions: The application programming interfaces
 ** established by SGI in conjunction with the Original Code are The
 ** OpenGL(R) Graphics System: A Specification (Version 1.2.1), released
@@ -35,10 +35,12 @@
 /*
 */
 
+#ifndef __REACTOS_USE_PCH__
 #include "gluos.h"
 //#include <stdlib.h>
 //#include <stdio.h>
 #include <math.h>
+#endif
 
 #ifndef max
 #define max(a,b) ((a>b)? a:b)
@@ -159,7 +161,7 @@ void triangulateConvexPolyVertical(directedLine* topV, directedLine* botV, primS
   free(rightVerts);
   free(temp_leftVerts);
   free(temp_rightVerts);
-}  
+}
 
 void triangulateConvexPolyHoriz(directedLine* leftV, directedLine* rightV, primStream *pStream)
 {
@@ -206,7 +208,7 @@ void triangulateConvexPolyHoriz(directedLine* leftV, directedLine* rightV, primS
   triangulateXYMono(n_upperVerts, upperVerts, n_lowerVerts, lowerVerts, pStream);
   free(lowerVerts);
   free(upperVerts);
-}  
+}
 void triangulateConvexPoly(directedLine* polygon, Int ulinear, Int vlinear, primStream* pStream)
 {
   /*find left, right, top , bot
@@ -260,11 +262,11 @@ void triangulateConvexPoly(directedLine* polygon, Int ulinear, Int vlinear, prim
       else
 	triangulateConvexPolyVertical(topV, botV, pStream);
     }
-}	      
+}
 
 /*for debug purpose*/
 void drawCorners(
-		 Real* topV, Real* botV,		 
+		 Real* topV, Real* botV,
 		 vertexArray* leftChain,
 		 vertexArray* rightChain,
 		 gridBoundaryChain* leftGridChain,
@@ -319,7 +321,7 @@ void drawCorners(
   Real botGridV = leftGridChain->get_v_value(gridIndex2);
   Real botGridU1 = leftGridChain->get_u_value(gridIndex2);
   Real botGridU2 = rightGridChain->get_u_value(gridIndex2);
-  
+
   glBegin(GL_LINE_STRIP);
   glVertex2fv(leftCornerV);
   glVertex2f(topGridU1, topGridV);
@@ -342,9 +344,9 @@ void drawCorners(
 
 
 }
-		 
+
 void toVertexArrays(directedLine* topV, directedLine* botV, vertexArray& leftChain, vertexArray& rightChain)
-{  
+{
   Int i;
   directedLine* tempV;
   for(i=1; i<=topV->get_npoints()-2; i++) { /*the first vertex is the top vertex which doesn't belong to inc_chain*/
@@ -355,7 +357,7 @@ void toVertexArrays(directedLine* topV, directedLine* botV, vertexArray& leftCha
       for(i=0; i<=tempV->get_npoints()-2; i++){
 	leftChain.appendVertex(tempV->getVertex(i));
       }
-    }  
+    }
 
   for(tempV = topV->getPrev(); tempV != botV; tempV = tempV->getPrev())
     {
@@ -363,7 +365,7 @@ void toVertexArrays(directedLine* topV, directedLine* botV, vertexArray& leftCha
 	rightChain.appendVertex(tempV->getVertex(i));
       }
     }
-  for(i=botV->get_npoints()-2; i>=1; i--){ 
+  for(i=botV->get_npoints()-2; i>=1; i--){
     rightChain.appendVertex(tempV->getVertex(i));
   }
 }
@@ -384,8 +386,8 @@ void findTopAndBot(directedLine* polygon, directedLine*& topV, directedLine*& bo
       }
     }
 }
-   
-void findGridChains(directedLine* topV, directedLine* botV, 
+
+void findGridChains(directedLine* topV, directedLine* botV,
 		    gridWrap* grid,
 		    gridBoundaryChain*& leftGridChain,
 		    gridBoundaryChain*& rightGridChain)
@@ -427,7 +429,7 @@ void findGridChains(directedLine* topV, directedLine* botV,
   free(rightGridInnerIndices);
 }
 
-void findDownCorners(Real *botVertex, 
+void findDownCorners(Real *botVertex,
 		   vertexArray *leftChain, Int leftChainStartIndex, Int leftChainEndIndex,
 		   vertexArray *rightChain, Int rightChainStartIndex, Int rightChainEndIndex,
 		   Real v,
@@ -442,7 +444,7 @@ void findDownCorners(Real *botVertex,
 #ifdef MYDEBUG
 printf("*************enter find donw corner\n");
 printf("finddownCorner: v=%f, uleft=%f, uright=%f\n", v, uleft, uright);
-printf("(%i,%i,%i,%i)\n", leftChainStartIndex, leftChainEndIndex,rightChainStartIndex, rightChainEndIndex); 
+printf("(%i,%i,%i,%i)\n", leftChainStartIndex, leftChainEndIndex,rightChainStartIndex, rightChainEndIndex);
 printf("left chain is\n");
 leftChain->print();
 printf("right chain is\n");
@@ -490,7 +492,7 @@ rightChain->print();
 	  }
 
 
-      //we consider whether we can use botVertex as left corner. First check 
+      //we consider whether we can use botVertex as left corner. First check
       //if (leftGirdPoint, botVertex) interesects right chian or not.
      if(DBG_intersectChain(rightChain, rightChainStartIndex,rightChainEndIndex,
 				    leftGridPoint, botVertex))
@@ -510,7 +512,7 @@ rightChain->print();
     {
       ret_leftCornerWhere = 0; /*left chain*/
       ret_leftCornerIndex = index1;
-      
+
       /*find the vertex on the left chain with the maximum u,
        *either this vertex or the botvertex can be used as the right corner
        */
@@ -518,7 +520,7 @@ rightChain->print();
       Int tempI;
       //skip those points which are equal to v. (avoid degeneratcy)
       for(tempI = index1; tempI <= leftChainEndIndex; tempI++)
-	if(leftChain->getVertex(tempI)[1] < v) 
+	if(leftChain->getVertex(tempI)[1] < v)
 	  break;
       if(tempI > leftChainEndIndex)
 	ret_rightCornerWhere = 1;
@@ -534,7 +536,7 @@ rightChain->print();
 
 
 
-	  //we consider whether we can use botVertex as a corner. So first we check 
+	  //we consider whether we can use botVertex as a corner. So first we check
 	  //whether (rightGridPoint, botVertex) interescts the left chain or not.
 	  if(DBG_intersectChain(leftChain, leftChainStartIndex,leftChainEndIndex,
 				    rightGridPoint, botVertex))
@@ -544,7 +546,7 @@ rightChain->print();
 	    }
 	  else if(botVertex[0] > tempMax)
 	    {
-		      
+
               ret_rightCornerWhere = 1;
 	    }
 	  else
@@ -553,7 +555,7 @@ rightChain->print();
 	      ret_rightCornerIndex = tempI;
 	    }
 	}
-      
+
     }
   else /*index1<=leftChainEndIndex and index2 <=rightChainEndIndex*/
     {
@@ -605,13 +607,13 @@ rightChain->print();
 	{
 	  ret_rightCornerWhere = 2; /*on the right*/
 	  ret_rightCornerIndex = index2;
-	  
+
 	  Real tempMin;
 	  Int tempI;
-	  
+
 	  tempI = index2;
 	  tempMin = rightChain->getVertex(index2)[0];
-	  
+
 	  /*find the minimum u for all the points on the right above the left poitn index1*/
 	  for(i=index2+1; i<= rightChainEndIndex; i++)
 	    {
@@ -624,7 +626,7 @@ rightChain->print();
 		}
 	    }
 
-	  //we consider if we can use leftchain(index1) as left corner. 
+	  //we consider if we can use leftchain(index1) as left corner.
 	  //we check if (leftChain(index1) intersects right chian or not
 	  if(DBG_intersectChain(rightChain, rightChainStartIndex, rightChainEndIndex, leftGridPoint, leftChain->getVertex(index1)))
 	    {
@@ -632,7 +634,7 @@ rightChain->print();
 	      ret_leftCornerIndex = index2; //should use tempI???
 	      }
 	  else if(tempMin <= leftChain->getVertex(index1)[0] ||
-	     tempMin <= uleft)				
+	     tempMin <= uleft)
 	    {
 	      ret_leftCornerWhere = 2; /* on right chain*/
 	      ret_leftCornerIndex = tempI;
@@ -648,7 +650,7 @@ rightChain->print();
 }
 
 
-void findUpCorners(Real *topVertex, 
+void findUpCorners(Real *topVertex,
 		   vertexArray *leftChain, Int leftChainStartIndex, Int leftChainEndIndex,
 		   vertexArray *rightChain, Int rightChainStartIndex, Int rightChainEndIndex,
 		   Real v,
@@ -680,7 +682,7 @@ printf("***********enter findUpCorners\n");
 
   index2 = rightChain->findIndexFirstAboveEqualGen(v, rightChainStartIndex, rightChainEndIndex);
 
-  if(index2>= leftChainStartIndex)  //index2 was found above  
+  if(index2>= leftChainStartIndex)  //index2 was found above
     index2 = rightChain->skipEqualityFromStart(v, index2, rightChainEndIndex);
 
   if(index1<leftChainStartIndex && index2 <rightChainStartIndex) /*no point above v on left chain or right chain*/
@@ -710,7 +712,7 @@ printf("***********enter findUpCorners\n");
 			leftGridPoint, topVertex))
 	{
 	  ret_leftCornerWhere = 2; //rightChain
-	  ret_leftCornerIndex = index2; 
+	  ret_leftCornerIndex = index2;
 	}
       else if(topVertex[0] < tempMin)
 	ret_leftCornerWhere = 1; /*topvertex*/
@@ -719,13 +721,13 @@ printf("***********enter findUpCorners\n");
 	  ret_leftCornerWhere = 2; //right chain
 	  ret_leftCornerIndex = tempI;
 	}
-	      
+
     }
   else if(index2< rightChainStartIndex) /*index1>=leftChainStartIndex*/
     {
       ret_leftCornerWhere = 0; /*left chain*/
       ret_leftCornerIndex = index1;
-       
+
       //find the maximum u on the left top section. either that or topvertex, or left[index1]  is the right corner
       Real tempMax = leftChain->getVertex(index1)[0];
       Int tempI = index1;
@@ -803,13 +805,13 @@ printf("***********enter findUpCorners\n");
 	{
 	  ret_rightCornerWhere = 2; /*on the right*/
 	  ret_rightCornerIndex = index2;
-	  
+
 	  Real tempMin;
 	  Int tempI;
-	  
+
 	  tempI = index2;
 	  tempMin = rightChain->getVertex(index2)[0];
-	  
+
 	  /*find the minimum u for all the points on the right below the left poitn index1*/
 	  for(i=index2-1; i>= rightChainStartIndex; i--)
 	    {
@@ -821,7 +823,7 @@ printf("***********enter findUpCorners\n");
 		  tempMin = rightChain->getVertex(i)[0];
 		}
 	    }
-          //check whether (leftGRidPoint,left(index1)) interesect right chain 
+          //check whether (leftGRidPoint,left(index1)) interesect right chain
 	  if(DBG_intersectChain(rightChain, rightChainStartIndex, rightChainEndIndex,
 				leftGridPoint, leftChain->getVertex(index1)))
 	    {
@@ -852,7 +854,7 @@ Int findNeckF(vertexArray *leftChain, Int botLeftIndex,
 	      gridBoundaryChain* leftGridChain,
 	      gridBoundaryChain* rightGridChain,
 	      Int gridStartIndex,
-	      Int& neckLeft, 
+	      Int& neckLeft,
 	      Int& neckRight)
 {
 /*
@@ -870,26 +872,26 @@ rightChain->print();
   if(botLeftIndex >= leftChain->getNumElements() ||
      botRightIndex >= rightChain->getNumElements())
     return 0; //no neck exists
-     
-  v=min(leftChain->getVertex(botLeftIndex)[1], rightChain->getVertex(botRightIndex)[1]);  
 
- 
+  v=min(leftChain->getVertex(botLeftIndex)[1], rightChain->getVertex(botRightIndex)[1]);
+
+
 
 
   for(i=gridStartIndex; i<n_vlines; i++)
-    if(leftGridChain->get_v_value(i) <= v && 
+    if(leftGridChain->get_v_value(i) <= v &&
        leftGridChain->getUlineIndex(i)<= rightGridChain->getUlineIndex(i))
       break;
-  
+
   lowerGridIndex = i;
 
   if(lowerGridIndex == n_vlines) //the two trm vertex are higher than all gridlines
     return 0;
-  else 
+  else
     {
       Int botLeft2, botRight2;
 /*
-printf("leftGridChain->get_v_)value=%f\n",leftGridChain->get_v_value(lowerGridIndex), botLeftIndex); 
+printf("leftGridChain->get_v_)value=%f\n",leftGridChain->get_v_value(lowerGridIndex), botLeftIndex);
 printf("leftChain->get_vertex(0)=(%f,%f)\n", leftChain->getVertex(0)[0],leftChain->getVertex(0)[1]);
 printf("leftChain->get_vertex(1)=(%f,%f)\n", leftChain->getVertex(1)[0],leftChain->getVertex(1)[1]);
 printf("leftChain->get_vertex(2)=(%f,%f)\n", leftChain->getVertex(2)[0],leftChain->getVertex(2)[1]);
@@ -932,44 +934,44 @@ printf("leftChain->getNumElements=%i\n", leftChain->getNumElements());
       return 1;
     }
 }
-							
-  
-	          
+
+
+
 /*find i>=botLeftIndex,j>=botRightIndex so that
  *(leftChain[i], rightChain[j]) is a neck.
  */
-void findNeck(vertexArray *leftChain, Int botLeftIndex, 
-	      vertexArray *rightChain, Int botRightIndex, 
+void findNeck(vertexArray *leftChain, Int botLeftIndex,
+	      vertexArray *rightChain, Int botRightIndex,
 	      Int& leftLastIndex, /*left point of the neck*/
 	      Int& rightLastIndex /*right point of the neck*/
 	      )
 {
   assert(botLeftIndex < leftChain->getNumElements() &&
      botRightIndex < rightChain->getNumElements());
-     
+
   /*now the neck exists for sure*/
 
   if(leftChain->getVertex(botLeftIndex)[1] <= rightChain->getVertex(botRightIndex)[1]) //left below right
     {
 
       leftLastIndex = botLeftIndex;
-      
+
       /*find i so that rightChain[i][1] >= leftchainbotverte[1], and i+1<
        */
-      rightLastIndex=rightChain->findIndexAboveGen(leftChain->getVertex(botLeftIndex)[1], botRightIndex+1, rightChain->getNumElements()-1);    
+      rightLastIndex=rightChain->findIndexAboveGen(leftChain->getVertex(botLeftIndex)[1], botRightIndex+1, rightChain->getNumElements()-1);
     }
   else  //left above right
     {
 
       rightLastIndex = botRightIndex;
-     
-      leftLastIndex = leftChain->findIndexAboveGen(rightChain->getVertex(botRightIndex)[1], 
+
+      leftLastIndex = leftChain->findIndexAboveGen(rightChain->getVertex(botRightIndex)[1],
 						  botLeftIndex+1,
 						  leftChain->getNumElements()-1);
     }
 }
-      
-      
+
+
 
 void findLeftGridIndices(directedLine* topEdge, Int firstGridIndex, Int lastGridIndex, gridWrap* grid,  Int* ret_indices, Int* ret_innerIndices)
 {
@@ -993,7 +995,7 @@ void findLeftGridIndices(directedLine* topEdge, Int firstGridIndex, Int lastGrid
 
   /*initialization to make vtail bigger than grid->...*/
   directedLine* dLine = topEdge;
-  Real vtail = grid->get_v_value(firstGridIndex) + 1.0; 
+  Real vtail = grid->get_v_value(firstGridIndex) + 1.0;
   Real tempMaxU = grid->get_u_min();
 
 
@@ -1006,7 +1008,7 @@ void findLeftGridIndices(directedLine* topEdge, Int firstGridIndex, Int lastGrid
       /*check whether this grid line is below the current trim edge.*/
       if(vtail > grid_v_value)
 	{
-	  /*since the grid line is below the trim edge, we 
+	  /*since the grid line is below the trim edge, we
 	   *find the trim edge which will contain the trim line
 	   */
 	  while( (vtail=dLine->tail()[1]) > grid_v_value){
@@ -1032,7 +1034,7 @@ void findLeftGridIndices(directedLine* topEdge, Int firstGridIndex, Int lastGrid
 	{
 	  uinterc = slop * (grid_v_value - vtail) + dLine->tail()[0];
 	}
-      
+
       tempMaxU = max(tempMaxU, uinterc);
 
       if(uinterc < uMin && uinterc >= uMin - ZERO)
@@ -1059,7 +1061,7 @@ void findLeftGridIndices(directedLine* topEdge, Int firstGridIndex, Int lastGrid
       tempMaxU = uinterc;
     }
 #ifdef SHORTEN_GRID_LINE
-  //for each grid line, compare the left grid point with the 
+  //for each grid line, compare the left grid point with the
   //intersection point. If the two points are too close, then
   //we should move the grid point one grid to the right
   //and accordingly we should update the inner index.
@@ -1124,7 +1126,7 @@ void findRightGridIndices(directedLine* topEdge, Int firstGridIndex, Int lastGri
       /*check whether this grid line is below the current trim edge.*/
       if(vhead >= grid_v_value)
 	{
-	  /*since the grid line is below the tail of the trim edge, we 
+	  /*since the grid line is below the tail of the trim edge, we
 	   *find the trim edge which will contain the trim line
 	   */
 	  while( (vhead=dLine->head()[1]) > grid_v_value){
@@ -1135,7 +1137,7 @@ void findRightGridIndices(directedLine* topEdge, Int firstGridIndex, Int lastGri
 	  /*skip the equality in the case of degenerat case: horizontal */
 	  while(dLine->head()[1] == grid_v_value)
 	    dLine = dLine->getPrev();
-	    
+
 	  assert( dLine->tail()[1] != dLine->head()[1]);
 	  slop = (dLine->tail()[0] - dLine->head()[0]) / (dLine->tail()[1]-dLine->head()[1]);
 	  /*
@@ -1158,11 +1160,11 @@ void findRightGridIndices(directedLine* topEdge, Int firstGridIndex, Int lastGri
 
 #ifdef SHORTEN_GRID_LINE
       uintercBuf[k] = uinterc;
-#endif      
+#endif
 
       tempMinU = min(tempMinU, uinterc);
 
-      assert(uinterc >= uMin && uinterc <= uMax);      
+      assert(uinterc >= uMin && uinterc <= uMax);
 
       if(uinterc == uMin)
 	ret_indices[k] = 0;
@@ -1174,7 +1176,7 @@ if(ret_indices[k] >= grid->get_n_ulines())
   printf("ERROR3\n");
   exit(0);
 }
-if(ret_indices[k] < 0)    
+if(ret_indices[k] < 0)
   {
   printf("ERROR4\n");
   exit(0);
@@ -1185,7 +1187,7 @@ if(ret_indices[k] < 0)
       tempMinU = uinterc;
     }
 #ifdef SHORTEN_GRID_LINE
-  //for each grid line, compare the left grid point with the 
+  //for each grid line, compare the left grid point with the
   //intersection point. If the two points are too close, then
   //we should move the grid point one grid to the right
   //and accordingly we should update the inner index.
@@ -1228,10 +1230,10 @@ exit(0);
 
 if(grid->get_n_ulines() == 2 ||
    grid->get_n_vlines() == 2)
-{ 
+{
   if(ulinear && grid->get_n_ulines() == 2)
     {
-      monoTriangulationFun(polygon, compV2InY, pStream);   
+      monoTriangulationFun(polygon, compV2InY, pStream);
       return;
     }
   else if(DBG_isConvex(polygon) && polygon->numEdges() >=4)
@@ -1253,7 +1255,7 @@ if(grid->get_n_ulines() == 2 ||
 	  monoTriangulationFun(polygon, compV2InX, pStream);
 
           free(cusps);
-          return;          
+          return;
 	}
       else if(n_cusps == 1) //one interior cusp
 	{
@@ -1277,7 +1279,7 @@ if(grid->get_n_ulines() == 2 ||
 	  directedLine* ret_p1;
 	  directedLine* ret_p2;
 
-	  new_polygon->connectDiagonal_2slines(new_polygon, other, 
+	  new_polygon->connectDiagonal_2slines(new_polygon, other,
 					   &ret_p1,
 					   &ret_p2,
 					   new_polygon);
@@ -1285,8 +1287,8 @@ if(grid->get_n_ulines() == 2 ||
 	  monoTriangulationFun(ret_p1, compV2InX, pStream);
 	  monoTriangulationFun(ret_p2, compV2InX, pStream);
 
-	  ret_p1->deleteSinglePolygonWithSline();	      
-	  ret_p2->deleteSinglePolygonWithSline();	  
+	  ret_p1->deleteSinglePolygonWithSline();
+	  ret_p2->deleteSinglePolygonWithSline();
 
           free(cusps);
           return;
@@ -1315,7 +1317,7 @@ if(grid->get_n_ulines() == 2 ||
 	botV = tempV;
       }
     }
-  
+
   /*find the first(top) and the last (bottom) grid line which intersect the
    *this polygon
    */
@@ -1366,7 +1368,7 @@ if(grid->get_n_ulines() == 2 ||
 	leftChain.appendVertex(tempV->getVertex(i));
       }
     }
-  
+
   vertexArray rightChain(20);
   for(tempV = topV->getPrev(); tempV != botV; tempV = tempV->getPrev())
     {
@@ -1374,7 +1376,7 @@ if(grid->get_n_ulines() == 2 ||
 	rightChain.appendVertex(tempV->getVertex(i));
       }
     }
-  for(i=botV->get_npoints()-2; i>=1; i--){ 
+  for(i=botV->get_npoints()-2; i>=1; i--){
     rightChain.appendVertex(tempV->getVertex(i));
   }
 
@@ -1401,12 +1403,12 @@ if(grid->get_n_ulines() == 2 ||
 void sampleMonoPolyRec(
 		       Real* topVertex,
 		       Real* botVertex,
-		       vertexArray* leftChain, 
+		       vertexArray* leftChain,
 		       Int leftStartIndex,
 		       vertexArray* rightChain,
 		       Int rightStartIndex,
-		       gridBoundaryChain* leftGridChain, 
-		       gridBoundaryChain* rightGridChain, 
+		       gridBoundaryChain* leftGridChain,
+		       gridBoundaryChain* rightGridChain,
 		       Int gridStartIndex,
 		       primStream* pStream,
 		       rectBlockArray* rbArray)
@@ -1418,7 +1420,7 @@ void sampleMonoPolyRec(
 
   if(topVertex[1] <= botVertex[1])
     return;
-    
+
   /*find i so that the grid line is below the top vertex*/
   Int i=gridStartIndex;
   while (i < leftGridChain->get_nVlines())
@@ -1448,7 +1450,7 @@ void sampleMonoPolyRec(
     {
       /*stop recursion, ...*/
       /*monotone triangulate it...*/
-//      printf("no grid line exists\n");      
+//      printf("no grid line exists\n");
 /*
       monoTriangulationRecOpt(topVertex, botVertex, leftChain, leftStartIndex,
 			   rightChain, rightStartIndex, pStream);
@@ -1458,7 +1460,7 @@ if(num_skipped_grid_lines <2)
   {
     monoTriangulationRecGenOpt(topVertex, botVertex, leftChain, leftStartIndex,
 			       leftChain->getNumElements()-1,
-			       rightChain, rightStartIndex, 
+			       rightChain, rightStartIndex,
 			       rightChain->getNumElements()-1,
 			       pStream);
   }
@@ -1475,11 +1477,11 @@ else
 			   rightChain, rightStartIndex, pStream);
 */
 
-/*      monoTriangulationRecGenTBOpt(topVertex, botVertex, 
+/*      monoTriangulationRecGenTBOpt(topVertex, botVertex,
 				   leftChain, leftStartIndex, leftChain->getNumElements()-1,
-				   rightChain, rightStartIndex, rightChain->getNumElements()-1, 
+				   rightChain, rightStartIndex, rightChain->getNumElements()-1,
 				   pStream);*/
-      
+
 
 
     }
@@ -1495,11 +1497,11 @@ else
 	    if(index2 >= leftGridChain->get_nVlines())
 	      break;
 	  }
-      
-      index2--;
-      
 
-      
+      index2--;
+
+
+
       /*the neck*/
       Int neckLeftIndex;
       Int neckRightIndex;
@@ -1530,7 +1532,7 @@ else
 							rightChain->getNumElements()-1);
       /*if either botLeftIndex>= numelements,
        *        or botRightIndex >= numelemnet,
-       *then there is no neck exists. the bottom vertex is botVertex, 
+       *then there is no neck exists. the bottom vertex is botVertex,
        */
       if(! findNeckF(leftChain, botLeftIndex, rightChain, botRightIndex,
 		   leftGridChain, rightGridChain, index2, neckLeftIndex, neckRightIndex))
@@ -1581,7 +1583,7 @@ glEnd();
 	    {
 	      tempBotVertex = rightChain->getVertex(neckRightIndex);
 	      botLeftIndex = neckLeftIndex;
-	      botRightIndex = neckRightIndex-1;		  
+	      botRightIndex = neckRightIndex-1;
 	      nextTopVertex = leftChain->getVertex(neckLeftIndex);
 	      nextLeftStartIndex = neckLeftIndex+1;
 	      nextRightStartIndex = neckRightIndex;
@@ -1612,7 +1614,7 @@ glEnd();
 		      down_leftCornerWhere,
 		      down_leftCornerIndex,
 		      down_rightCornerWhere,
-		      down_rightCornerIndex);	      
+		      down_rightCornerIndex);
 #ifdef MYDEBUG
       printf("find corners done, down_leftwhere=%i, down_righwhere=%i,\n",down_leftCornerWhere, down_rightCornerWhere );
       printf("find corners done, up_leftwhere=%i, up_righwhere=%i,\n",up_leftCornerWhere, up_rightCornerWhere );
@@ -1641,7 +1643,7 @@ glEnd();
 
 
       sampleConnectedComp(topVertex, tempBotVertex,
-			  leftChain, 
+			  leftChain,
 			  leftStartIndex, botLeftIndex,
 			  rightChain,
 			  rightStartIndex, botRightIndex,
@@ -1665,15 +1667,15 @@ glEnd();
       sampleMonoPolyRec(
 			nextTopVertex,
 			botVertex,
-			leftChain, 
+			leftChain,
 			nextLeftStartIndex,
 			rightChain,
 			nextRightStartIndex,
-			leftGridChain, 
-			rightGridChain, 
+			leftGridChain,
+			rightGridChain,
 			index2+1,
 			pStream, rbArray);
-			
+
 
     }
 
@@ -1695,21 +1697,21 @@ void sampleLeftStrip(vertexArray* leftChain,
 
   /*
    *(1)find the last grid line which doesn'; pass below
-   * this first edge, sample this region: one trim edge and 
+   * this first edge, sample this region: one trim edge and
    * possily multiple grid lines.
    */
   Real *upperVert, *lowerVert; /*the end points of the first trim edge*/
   upperVert = leftChain->getVertex(topLeftIndex);
   lowerVert = leftChain->getVertex(topLeftIndex+1);
-  
+
   Int index = leftGridChainStartIndex;
   while(leftGridChain->get_v_value(index) >= lowerVert[1]){
     index++;
-    if(index > leftGridChainEndIndex) 
+    if(index > leftGridChainEndIndex)
       break;
   }
   index--;
-  
+
   sampleLeftSingleTrimEdgeRegion(upperVert, lowerVert,
 				 leftGridChain,
 				 leftGridChainStartIndex,
@@ -1734,7 +1736,7 @@ void sampleLeftStripRec(vertexArray* leftChain,
    */
   /*stop condition: if topLeftIndex >= botLeftIndex, then stop.
    */
-  if(topLeftIndex >= botLeftIndex) 
+  if(topLeftIndex >= botLeftIndex)
     return;
 
   /*find the last trim vertex which is above the second top grid line:
@@ -1749,15 +1751,15 @@ void sampleLeftStripRec(vertexArray* leftChain,
   while(leftChain->getVertex(index1)[1] > secondGridChainV)
     index1++;
   index1--;
-  
+
   sampleLeftOneGridStep(leftChain, topLeftIndex, index1, leftGridChain, leftGridChainStartIndex, pStream);
 
 
-  /* 
-   * Let the next trim vertex be nextTrimVertIndex (which should be  
+  /*
+   * Let the next trim vertex be nextTrimVertIndex (which should be
    *  below the second grid line).
    * Find the last grid line index2 which is above nextTrimVert.
-   * sampleLeftSingleTrimEdgeRegion(uppervert[2], lowervert[2], 
+   * sampleLeftSingleTrimEdgeRegion(uppervert[2], lowervert[2],
    *                      leftGridChain, leftGridChainStartIndex+1, index2).
    */
   Real *uppervert, *lowervert;
@@ -1774,7 +1776,7 @@ void sampleLeftStripRec(vertexArray* leftChain,
   index2--;
   sampleLeftSingleTrimEdgeRegion(uppervert, lowervert, leftGridChain, leftGridChainStartIndex+1, index2,  pStream);
 
-   /* sampleLeftStripRec(leftChain, 
+   /* sampleLeftStripRec(leftChain,
                         nextTrimVertIndex,
                         botLeftIndex,
                         leftGridChain,
@@ -1784,12 +1786,12 @@ void sampleLeftStripRec(vertexArray* leftChain,
    *
    */
   sampleLeftStripRec(leftChain, index1+1, botLeftIndex, leftGridChain, index2, leftGridChainEndIndex, pStream);
-  
+
 }
 
 
 /***************begin RecF***********************/
-/* the gridlines from leftGridChainStartIndex to 
+/* the gridlines from leftGridChainStartIndex to
  * leftGridChainEndIndex are assumed to form a
  * connected component.
  * the trim vertex of topLeftIndex is assumed to
@@ -1813,7 +1815,7 @@ void sampleLeftStripRecF(vertexArray* leftChain,
    */
   /*stop condition: if topLeftIndex > botLeftIndex, then stop.
    */
-  if(topLeftIndex > botLeftIndex) 
+  if(topLeftIndex > botLeftIndex)
     return;
 
   /*if there is only one grid Line, return.*/
@@ -1844,12 +1846,12 @@ void sampleLeftStripRecF(vertexArray* leftChain,
    *If equality holds, then we should include the vertex index1, otherwise we include only index1-1, to
    *perform sampleOneGridStep.
    */
-  if(index1>botLeftIndex) 
+  if(index1>botLeftIndex)
     index1--;
   else if(leftChain->getVertex(index1)[1] < secondGridChainV)
     index1--;
 
-  /*now we have leftChain->getVertex(index1)[1] >= secondGridChainV, and 
+  /*now we have leftChain->getVertex(index1)[1] >= secondGridChainV, and
    *  leftChain->getVertex(index1+1)[1] <= secondGridChainV
    */
 
@@ -1871,7 +1873,7 @@ void sampleLeftStripRecF(vertexArray* leftChain,
        * let the next trim vertex be nextTrimVertIndex (which should be  strictly
        *  below the second grid line).
        * Find the last grid line index2 which is above nextTrimVert.
-       * sampleLeftSingleTrimEdgeRegion(uppervert[2], lowervert[2], 
+       * sampleLeftSingleTrimEdgeRegion(uppervert[2], lowervert[2],
        *                      leftGridChain, leftGridChainStartIndex+1, index2).
        */
       Real *uppervert, *lowervert;
@@ -1879,7 +1881,7 @@ void sampleLeftStripRecF(vertexArray* leftChain,
       lowervert = leftChain->getVertex(index1+1); //okay since index1<botLeftIndex
       Int index2 = leftGridChainStartIndex+1;
 
-      
+
       while(leftGridChain->get_v_value(index2) >= lowervert[1])
 	{
 	  index2++;
@@ -1888,14 +1890,14 @@ void sampleLeftStripRecF(vertexArray* leftChain,
 	}
       index2--;
 
-      
+
       sampleLeftSingleTrimEdgeRegion(uppervert, lowervert, leftGridChain, leftGridChainStartIndex+1, index2,  pStream);
-      
+
       /*recursion*/
 
       sampleLeftStripRecF(leftChain, index1+1, botLeftIndex, leftGridChain, index2, leftGridChainEndIndex, pStream);
     }
-  
+
 }
 
 /***************End RecF***********************/
@@ -1912,7 +1914,7 @@ void sampleLeftSingleTrimEdgeRegion(Real upperVert[2], Real lowerVert[2],
 {
   Int i,j,k;
 
-  vertexArray vArray(endIndex-beginIndex+1);  
+  vertexArray vArray(endIndex-beginIndex+1);
   vArray.appendVertex(gridChain->get_vertex(beginIndex));
 
   for(k=1, i=beginIndex+1; i<=endIndex; i++, k++)
@@ -1923,7 +1925,7 @@ void sampleLeftSingleTrimEdgeRegion(Real upperVert[2], Real lowerVert[2],
        */
       if(gridChain->getUlineIndex(i) < gridChain->getUlineIndex(i-1))
 	{
-	  pStream->begin();	  
+	  pStream->begin();
 	  pStream->insert(gridChain->get_vertex(i-1));
 	  for(j=gridChain->getUlineIndex(i); j<= gridChain->getUlineIndex(i-1); j++)
 	    pStream->insert(gridChain->getGrid()->get_u_value(j), gridChain->get_v_value(i));
@@ -1937,16 +1939,16 @@ void sampleLeftSingleTrimEdgeRegion(Real upperVert[2], Real lowerVert[2],
 	    pStream->insert(gridChain->getGrid()->get_u_value(j), gridChain->get_v_value(i-1));
 	  pStream->end(PRIMITIVE_STREAM_FAN);
 	}
-      /*otherwisem, the two are equal, so there is no fan to outout*/	  
+      /*otherwisem, the two are equal, so there is no fan to outout*/
     }
-  
-  monoTriangulation2(upperVert, lowerVert, &vArray, 0, endIndex-beginIndex, 
+
+  monoTriangulation2(upperVert, lowerVert, &vArray, 0, endIndex-beginIndex,
 		     0, /*decreasing chain*/
 		     pStream);
 }
-  
-/*return i, such that from begin to i-1 the chain is strictly u-monotone. 
- */				 
+
+/*return i, such that from begin to i-1 the chain is strictly u-monotone.
+ */
 Int findIncreaseChainFromBegin(vertexArray* chain, Int begin ,Int end)
 {
   Int i=begin;
@@ -1963,12 +1965,12 @@ Int findIncreaseChainFromBegin(vertexArray* chain, Int begin ,Int end)
   }
   return i;
 }
-  
-/*check whether there is a vertex whose v value is strictly 
+
+/*check whether there is a vertex whose v value is strictly
  *inbetween vup vbelow
  *if no middle exists return -1, else return the idnex.
  */
-Int checkMiddle(vertexArray* chain, Int begin, Int end, 
+Int checkMiddle(vertexArray* chain, Int begin, Int end,
 		Real vup, Real vbelow)
 {
   Int i;
@@ -1979,7 +1981,7 @@ Int checkMiddle(vertexArray* chain, Int begin, Int end,
     }
   return -1;
 }
-  
+
 /*the degenerat case of sampleLeftOneGridStep*/
 void sampleLeftOneGridStepNoMiddle(vertexArray* leftChain,
 				   Int beginLeftIndex,
@@ -1988,7 +1990,7 @@ void sampleLeftOneGridStepNoMiddle(vertexArray* leftChain,
 				   Int leftGridChainStartIndex,
 				   primStream* pStream)
 {
-  /*since there is no middle, there is at most one point which is on the 
+  /*since there is no middle, there is at most one point which is on the
    *second grid line, there could be multiple points on the first (top)
    *grid line.
    */
@@ -2016,16 +2018,16 @@ void sampleLeftOneGridStep(vertexArray* leftChain,
 		  primStream* pStream
 		  )
 {
-  if(checkMiddle(leftChain, beginLeftIndex, endLeftIndex, 
+  if(checkMiddle(leftChain, beginLeftIndex, endLeftIndex,
 		 leftGridChain->get_v_value(leftGridChainStartIndex),
 		 leftGridChain->get_v_value(leftGridChainStartIndex+1))<0)
-    
+
     {
-      
+
       sampleLeftOneGridStepNoMiddle(leftChain, beginLeftIndex, endLeftIndex, leftGridChain, leftGridChainStartIndex, pStream);
       return;
     }
-  
+
   //copy into a polygon
   {
     directedLine* poly = NULL;
@@ -2035,7 +2037,7 @@ void sampleLeftOneGridStep(vertexArray* leftChain,
     Real vert1[2];
     Real vert2[2];
     Int i;
-    
+
     Int innerInd = leftGridChain->getInnerIndex(leftGridChainStartIndex+1);
     Int upperInd = leftGridChain->getUlineIndex(leftGridChainStartIndex);
     Int lowerInd = leftGridChain->getUlineIndex(leftGridChainStartIndex+1);
@@ -2064,8 +2066,8 @@ void sampleLeftOneGridStep(vertexArray* leftChain,
     if(poly == NULL)
       poly = dline;
     else
-      poly->insert(dline);    
- 
+      poly->insert(dline);
+
     //the left chain
     for(i=beginLeftIndex; i<endLeftIndex; i++)
       {
@@ -2089,7 +2091,7 @@ void sampleLeftOneGridStep(vertexArray* leftChain,
 	vert2[0] = grid->get_u_value(i+1);
 	sline = new sampledLine(vert1, vert2);
 	dline = new directedLine(INCREASING, sline);
-	poly->insert(dline);       
+	poly->insert(dline);
       }
 
     //the vertical grid line segement
@@ -2104,18 +2106,18 @@ void sampleLeftOneGridStep(vertexArray* leftChain,
     poly->deleteSinglePolygonWithSline();
     return;
   }
- 
 
 
- 
+
+
 
   Int i;
-  if(1/*leftGridChain->getUlineIndex(leftGridChainStartIndex) >= 
+  if(1/*leftGridChain->getUlineIndex(leftGridChainStartIndex) >=
      leftGridChain->getUlineIndex(leftGridChainStartIndex+1)*/
      ) /*the second grid line is beyond the first one to the left*/
     {
-      /*find the maximal U-monotone chain 
-       * of endLeftIndex, endLeftIndex-1, ..., 
+      /*find the maximal U-monotone chain
+       * of endLeftIndex, endLeftIndex-1, ...,
        */
       i=endLeftIndex;
       Real prevU = leftChain->getVertex(i)[0];
@@ -2124,7 +2126,7 @@ void sampleLeftOneGridStep(vertexArray* leftChain,
 	if( prevU < thisU){
 	  prevU = thisU;
 	}
-	else 
+	else
 	  break;
       }
       /*from endLeftIndex to i+1 is strictly U- monotone */
@@ -2150,7 +2152,7 @@ void sampleLeftOneGridStep(vertexArray* leftChain,
 	  if(j-1 == beginLeftIndex)
 	    {
 	      while(leftChain->getVertex(j-1)[1] == leftGridChain->get_v_value(leftGridChainStartIndex))
-		j++;	        
+		j++;
 
 	      Real vert[2];
 	      vert[0] = leftGridChain->get_u_value(leftGridChainStartIndex);
@@ -2165,10 +2167,10 @@ void sampleLeftOneGridStep(vertexArray* leftChain,
 				 1,
 				 pStream //increase chain
 				 );
-				 
+
 	      temp = j-1;
 	    }
-				 
+
 	  stripOfFanLeft(leftChain, j-1, temp/*beginLeftIndex*/, leftGridChain->getGrid(),
 			 leftGridChain->getVlineIndex(leftGridChainStartIndex),
 			 leftGridChain->getUlineIndex(leftGridChainStartIndex),
@@ -2177,21 +2179,21 @@ void sampleLeftOneGridStep(vertexArray* leftChain,
 			 1 /*the grid line is above the trim line*/
 			 );
 	}
-      
-      stripOfFanLeft(leftChain, endLeftIndex, i+1, leftGridChain->getGrid(), 
+
+      stripOfFanLeft(leftChain, endLeftIndex, i+1, leftGridChain->getGrid(),
 		     leftGridChain->getVlineIndex(leftGridChainStartIndex+1),
 		     leftGridChain->getUlineIndex(leftGridChainStartIndex+1),
 		     leftGridChain->getInnerIndex(leftGridChainStartIndex+1),
 		     pStream,
 		     0 /*the grid line is below the trim lines*/
 		     );
-      
+
       /*monotone triangulate the remaining left chain togther with the
        *two vertices on the two grid v-lines.
        */
       Real vert[2][2];
       vert[0][0]=vert[1][0] = leftGridChain->getInner_u_value(leftGridChainStartIndex+1);
-      vert[0][1] = leftGridChain->get_v_value(leftGridChainStartIndex);      
+      vert[0][1] = leftGridChain->get_v_value(leftGridChainStartIndex);
       vert[1][1] = leftGridChain->get_v_value(leftGridChainStartIndex+1);
 
 //      vertexArray right(vert, 2);
@@ -2199,7 +2201,7 @@ void sampleLeftOneGridStep(vertexArray* leftChain,
       monoTriangulation2(
 			 &vert[0][0], /*top vertex */
 			 &vert[1][0], /*bottom vertex*/
-			 leftChain, 
+			 leftChain,
 			 /*beginLeftIndex*/j-1,
 			 i+1,
 			 1, /*an increasing chain*/
@@ -2230,20 +2232,20 @@ void sampleLeftOneGridStep(vertexArray* leftChain,
 			 pStream,
 		         1 /*the grid line is above the trim lines*/
 			 );
-      /*monotone triangulate the remaining left chain together with the 
+      /*monotone triangulate the remaining left chain together with the
        *two vertices on the two grid v-lines.
        */
       Real vert[2][2];
       vert[0][0]=vert[1][0] = leftGridChain->get_u_value(leftGridChainStartIndex+1);
-      vert[0][1] = leftGridChain->get_v_value(leftGridChainStartIndex);      
+      vert[0][1] = leftGridChain->get_v_value(leftGridChainStartIndex);
       vert[1][1] = leftGridChain->get_v_value(leftGridChainStartIndex+1);
 
       vertexArray right(vert, 2);
 
       monoTriangulation2(
-			 &vert[0][0], //top vertex 
+			 &vert[0][0], //top vertex
 			 &vert[1][0], //bottom vertex
-			 leftChain, 
+			 leftChain,
 			 i-1,
 			 endLeftIndex,
 			 1, /*an increase chain*/
@@ -2251,7 +2253,7 @@ void sampleLeftOneGridStep(vertexArray* leftChain,
 
     }
 }
-  
+
 /*n_upper>=1
  *n_lower>=1
  */
@@ -2275,7 +2277,7 @@ void triangulateXYMono(Int n_upper, Real upperVerts[][2],
       j=1;
       leftMostV = lowerVerts[0];
     }
-  
+
   while(1)
     {
       if(i >= n_upper) /*case1: no more in upper*/
@@ -2292,7 +2294,7 @@ void triangulateXYMono(Int n_upper, Real upperVerts[][2],
 	      pStream->end(PRIMITIVE_STREAM_FAN);
 	    }
 
-	  break;	
+	  break;
 	}
       else if(j>= n_lower) /*case2: no more in lower*/
 	{
@@ -2318,7 +2320,7 @@ void triangulateXYMono(Int n_upper, Real upperVerts[][2],
 	      pStream->begin();
 	      pStream->insert(lowerVerts[j]); /*the origin of this fan*/
 
-	      /*find the last k>=i such that 
+	      /*find the last k>=i such that
 	       *upperverts[k][0] <= lowerverts[j][0]
 	       */
 	      k=i;
@@ -2359,13 +2361,13 @@ void triangulateXYMono(Int n_upper, Real upperVerts[][2],
 	      pStream->end(PRIMITIVE_STREAM_FAN);
 	      j=k;
 	      leftMostV = lowerVerts[j-1];
-	    }	  
+	    }
 	}
     }
 }
-		       
 
-void stripOfFanLeft(vertexArray* leftChain, 
+
+void stripOfFanLeft(vertexArray* leftChain,
 		    Int largeIndex,
 		    Int smallIndex,
 		    gridWrap* grid,
@@ -2421,7 +2423,7 @@ void stripOfFanLeft(vertexArray* leftChain,
   free(gridVerts);
 }
 
-  
+
 
 
 

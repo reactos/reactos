@@ -37,6 +37,7 @@
  *
  */
 
+#ifndef __REACTOS_USE_PCH__
 //#include "glimports.h"
 //#include "myassert.h"
 //#include "mystdio.h"
@@ -45,6 +46,7 @@
 //#include "bin.h"
 #include "backend.h"
 //#include "trimvertpool.h"
+#endif
 
 /*#define NOTDEF*/
 
@@ -58,7 +60,7 @@ static enum i_result	pwlarc_intersect( PwlArc *, int, REAL, int, int[3] );
 
 
 void
-Subdivider::partition( Bin & bin, Bin & left, Bin & intersections, 
+Subdivider::partition( Bin & bin, Bin & left, Bin & intersections,
 	        Bin & right, Bin & unknown, int param, REAL value )
 {
     Bin	headonleft, headonright, tailonleft, tailonright;
@@ -153,7 +155,7 @@ Subdivider::partition( Bin & bin, Bin & left, Bin & intersections,
     }
 }
 
-inline static void 
+inline static void
 vert_interp( TrimVertex *n, TrimVertex *l, TrimVertex *r, int p, REAL val )
 {
     assert( val > l->param[p]);
@@ -164,13 +166,13 @@ vert_interp( TrimVertex *n, TrimVertex *l, TrimVertex *r, int p, REAL val )
     n->param[p] = val;
     if( l->param[1-p] != r->param[1-p]  ) {
 	REAL ratio = (val - l->param[p]) / (r->param[p] - l->param[p]);
-	n->param[1-p] = l->param[1-p] + 
+	n->param[1-p] = l->param[1-p] +
 		        ratio * (r->param[1-p] - l->param[1-p]);
     } else {
 	n->param[1-p] = l->param[1-p];
     }
 }
-	
+
 int
 Subdivider::arc_split( Arc_ptr jarc, int param, REAL value, int dir )
 {
@@ -210,13 +212,13 @@ Subdivider::arc_split( Arc_ptr jarc, int param, REAL value, int dir )
 #ifndef NOTDEF
 	    // The split is between vertices at index j and i, in that
 	    // order (j < i)
-	    
+
 	    // JEB:  This code is my idea of how to do the split without
 	    // increasing the number of links.  I'm doing this so that
 	    // the is_rect routine can recognize rectangles created by
 	    // subdivision.  In exchange for simplifying the curve list,
       	    // however, it costs in allocated space and vertex copies.
-	    
+
 	    TrimVertex *newjunk = trimvertexpool.get(maxvertex -i+1 /*-j*/);
 	    int k;
 	    for(k=0; k<maxvertex-i; k++)
@@ -224,7 +226,7 @@ Subdivider::arc_split( Arc_ptr jarc, int param, REAL value, int dir )
 		newjunk[k+1] = v[i+k];
 		newjunk[k+1].nuid = jarc->nuid;
 	      }
-	    
+
 	    TrimVertex *vcopy = trimvertexpool.get(maxvertex);
 	    for(k=0; k<maxvertex; k++)
 	      {
@@ -259,7 +261,7 @@ Subdivider::arc_split( Arc_ptr jarc, int param, REAL value, int dir )
 		// JEB: This is the original version:
 #ifdef NOTDEF
             Arc_ptr    jarc2, jarc3;
-	    
+
 	    TrimVertex *newjunk = trimvertexpool.get(3);
 	    v[i].nuid = jarc->nuid;
 	    v[j].nuid = jarc->nuid;
@@ -300,7 +302,7 @@ Subdivider::arc_split( Arc_ptr jarc, int param, REAL value, int dir )
 		// New vertex adjacent to starting point of arc
 	    } else if (i == 1) {
 		jarc1 = new(arcpool) Arc( jarc, new(pwlarcpool) PwlArc( 2, newjunk+1 ) );
-		jarc2 = new(arcpool) Arc( jarc, 
+		jarc2 = new(arcpool) Arc( jarc,
 			new(pwlarcpool) PwlArc( maxvertex-1, &jarc->pwlArc->pts[1] ) );
 		jarc->pwlArc->npts = 2;
 		jarc->pwlArc->pts = newjunk;
@@ -354,10 +356,10 @@ pwlarc_intersect(
 
     if( dir ) {
 	TrimVertex *v = pwlArc->pts;
-	int imin = 0; 
+	int imin = 0;
 	int imax = pwlArc->npts - 1;
 	assert( value > v[imin].param[param] );
-	assert( value < v[imax].param[param] );	
+	assert( value < v[imax].param[param] );
 	while( (imax - imin) > 1 ) {
 	    int imid = (imax + imin)/2;
 	    if( v[imid].param[param] > value )
@@ -374,10 +376,10 @@ pwlarc_intersect(
 	return INTERSECT_EDGE;
     } else {
 	TrimVertex *v = pwlArc->pts;
-	int imax = 0; 
+	int imax = 0;
 	int imin = pwlArc->npts - 1;
 	assert( value > v[imin].param[param] );
-	assert( value < v[imax].param[param] );	
+	assert( value < v[imax].param[param] );
 	while( (imin - imax) > 1 ) {
 	    int imid = (imax + imin)/2;
 	    if( v[imid].param[param] > value )
@@ -396,7 +398,7 @@ pwlarc_intersect(
 }
 
 /*----------------------------------------------------------------------------
- * arc_classify - determine which side of a line a jarc lies 
+ * arc_classify - determine which side of a line a jarc lies
  *----------------------------------------------------------------------------
  */
 
@@ -460,7 +462,7 @@ Subdivider::classify_tailonleft_s( Bin& bin, Bin& in, Bin& out, REAL val )
 	    else
 		in.addarc( j );
 	} else {
-	    if( j->next->tail()[1] > j->next->head()[1] ) 
+	    if( j->next->tail()[1] > j->next->head()[1] )
 		in.addarc(j);
 	    else
 		out.addarc(j);
@@ -559,7 +561,7 @@ Subdivider::classify_tailonright_s( Bin& bin, Bin& in, Bin& out, REAL val )
 
     while( (j = bin.removearc()) != NULL ) {
 	assert( arc_classify( j, 0, val ) == 0x12);
-	
+
 	j->clearitail();
 
         REAL diff = j->next->head()[0] - val;
@@ -571,7 +573,7 @@ Subdivider::classify_tailonright_s( Bin& bin, Bin& in, Bin& out, REAL val )
 	} else if( diff < 0.0 ) {
 	    in.addarc( j );
 	} else {
-	    if( j->next->tail()[1] > j->next->head()[1] ) 
+	    if( j->next->tail()[1] > j->next->head()[1] )
 		out.addarc( j );
 	    else
 		in.addarc( j );
@@ -587,7 +589,7 @@ Subdivider::classify_tailonright_t( Bin& bin, Bin& in, Bin& out, REAL val )
 
     while( (j = bin.removearc()) != NULL ) {
 	assert( arc_classify( j, 1, val ) == 0x12);
-	
+
 	j->clearitail();
 
 	REAL diff =  j->next->head()[1] - val;
@@ -596,10 +598,10 @@ Subdivider::classify_tailonright_t( Bin& bin, Bin& in, Bin& out, REAL val )
 		out.addarc( j );
 	    else
 		in.addarc( j );
-	} else if( diff < 0.0 ) { 
+	} else if( diff < 0.0 ) {
 	    in.addarc( j );
 	} else {
-	    if( j->next->tail()[0] > j->next->head()[0] ) 
+	    if( j->next->tail()[0] > j->next->head()[0] )
 		in.addarc( j );
 	    else
 		out.addarc( j );
@@ -615,11 +617,11 @@ Subdivider::classify_headonright_s( Bin& bin, Bin& in, Bin& out, REAL val )
 
     while( (j = bin.removearc()) != NULL ) {
 	assert( arc_classify( j, 0, val ) == 0x21 );
-    
+
 	j->setitail();
 
         REAL diff = j->prev->tail()[0] - val;
-	if( diff > 0.0 ) { 
+	if( diff > 0.0 ) {
 	    if( ccwTurn_sr( j->prev, j ) )
 		out.addarc( j );
 	    else
@@ -643,11 +645,11 @@ Subdivider::classify_headonright_t( Bin& bin, Bin& in, Bin& out, REAL val )
 
     while( (j = bin.removearc()) != NULL ) {
 	assert( arc_classify( j, 1, val ) == 0x21 );
-    
+
 	j->setitail();
 
         REAL diff = j->prev->tail()[1] - val;
-	if( diff > 0.0 ) { 
+	if( diff > 0.0 ) {
 	    if( ccwTurn_tr( j->prev, j ) )
 		out.addarc( j );
 	    else

@@ -6,21 +6,21 @@
 ** this file except in compliance with the License. You may obtain a copy
 ** of the License at Silicon Graphics, Inc., attn: Legal Services, 1600
 ** Amphitheatre Parkway, Mountain View, CA 94043-1351, or at:
-** 
+**
 ** http://oss.sgi.com/projects/FreeB
-** 
+**
 ** Note that, as provided in the License, the Software is distributed on an
 ** "AS IS" basis, with ALL EXPRESS AND IMPLIED WARRANTIES AND CONDITIONS
 ** DISCLAIMED, INCLUDING, WITHOUT LIMITATION, ANY IMPLIED WARRANTIES AND
 ** CONDITIONS OF MERCHANTABILITY, SATISFACTORY QUALITY, FITNESS FOR A
 ** PARTICULAR PURPOSE, AND NON-INFRINGEMENT.
-** 
+**
 ** Original Code. The Original Code is: OpenGL Sample Implementation,
 ** Version 1.2.1, released January 26, 2000, developed by Silicon Graphics,
 ** Inc. The Original Code is Copyright (c) 1991-2000 Silicon Graphics, Inc.
 ** Copyright in any portions created by third parties is as indicated
 ** elsewhere herein. All Rights Reserved.
-** 
+**
 ** Additional Notice Provisions: The application programming interfaces
 ** established by SGI in conjunction with the Original Code are The
 ** OpenGL(R) Graphics System: A Specification (Version 1.2.1), released
@@ -35,6 +35,7 @@
 /*
 */
 
+#ifndef __REACTOS_USE_PCH__
 //#include <stdlib.h>
 //#include <stdio.h>
 //#include "gluos.h"
@@ -45,7 +46,7 @@
 #include "polyUtil.h" /*for area*/
 #include "partitionX.h"
 #include "monoPolyPart.h"
-
+#endif
 
 
 extern  directedLine*  polygonConvert(directedLine* polygon);
@@ -78,30 +79,30 @@ void monoTriangulationOpt(directedLine* poly, primStream* pStream)
 	{
 	  directedLine* ret_p1;
 	  directedLine* ret_p2;
-	  
-	  new_polygon->connectDiagonal_2slines(new_polygon, other, 
+
+	  new_polygon->connectDiagonal_2slines(new_polygon, other,
 					       &ret_p1,
 					       &ret_p2,
 					       new_polygon);
-	  
+
 	  monoTriangulationFun(ret_p1, compV2InX, pStream);
 	  monoTriangulationFun(ret_p2, compV2InX, pStream);
-	  
-	  ret_p1->deleteSinglePolygonWithSline();	      
-	  ret_p2->deleteSinglePolygonWithSline();	  
+
+	  ret_p1->deleteSinglePolygonWithSline();
+	  ret_p2->deleteSinglePolygonWithSline();
 	}
     }
   else
     {
       //we need a general partitionX funtion (supposed to be in partitionX.C,
       //not implemented yet. XXX
-      monoTriangulationFun(poly, compV2InY, pStream);    
+      monoTriangulationFun(poly, compV2InY, pStream);
     }
-  
+
   free(cusps);
 }
 
-void monoTriangulationRecOpt(Real* topVertex, Real* botVertex, 
+void monoTriangulationRecOpt(Real* topVertex, Real* botVertex,
 			     vertexArray* left_chain, Int left_current,
 			     vertexArray* right_chain, Int right_current,
 			     primStream* pStream)
@@ -119,7 +120,7 @@ void monoTriangulationRecOpt(Real* topVertex, Real* botVertex,
   //now both left and right  have at least two vertices each.
   Real left_v = left_chain->getVertex(left_current)[1];
   Real right_v = right_chain->getVertex(right_current)[1];
- 
+
   if(left_v <= right_v) //first left vertex is below right
     {
       //find the last vertex of right which is above or equal to left
@@ -159,19 +160,19 @@ void monoTriangulationRecOpt(Real* topVertex, Real* botVertex,
 }
 
 
-void monoTriangulationRecGenTBOpt(Real* topVertex, Real* botVertex, 
+void monoTriangulationRecGenTBOpt(Real* topVertex, Real* botVertex,
 			  vertexArray* inc_chain, Int inc_current, Int inc_end,
 			  vertexArray* dec_chain, Int dec_current, Int dec_end,
 			  primStream* pStream)
 {
   pStream->triangle(topVertex, inc_chain->getVertex(inc_current), dec_chain->getVertex(dec_current));
-  
+
 /*printf("**(%f,%f)\n", inc_chain->getArray()[0][0],inc_chain->getArray()[0][1]);*/
   triangulateXYMonoTB(inc_end-inc_current+1, inc_chain->getArray()+inc_current,  dec_end-dec_current+1,  dec_chain->getArray()+dec_current, pStream);
 
   pStream->triangle(botVertex, dec_chain->getVertex(dec_end), inc_chain->getVertex(inc_end));
 }
-  
+
 
 /*n_left>=1
  *n_right>=1
@@ -200,7 +201,7 @@ void triangulateXYMonoTB(Int n_left, Real** leftVerts,
       j=1;
       topMostV = rightVerts[0];
     }
-  
+
   while(1)
     {
       if(i >= n_left) /*case1: no more in left*/
@@ -210,14 +211,14 @@ void triangulateXYMonoTB(Int n_left, Real** leftVerts,
 	    {
 	      pStream->begin();
 	      pStream->insert(topMostV);
-	      for(k=n_right-1; k>=j; k--)		
+	      for(k=n_right-1; k>=j; k--)
 		pStream->insert(rightVerts[j]);
 
 	      pStream->end(PRIMITIVE_STREAM_FAN);
-	      
+
 	    }
 
-	  break;	
+	  break;
 	}
       else if(j>= n_right) /*case2: no more in right*/
 	{
@@ -230,7 +231,7 @@ void triangulateXYMonoTB(Int n_left, Real** leftVerts,
 	      for(k=i; k<n_left; k++)
 		pStream->insert(leftVerts[k]);
 
-	      pStream->end(PRIMITIVE_STREAM_FAN);	      
+	      pStream->end(PRIMITIVE_STREAM_FAN);
 	    }
 
 	  break;
@@ -245,7 +246,7 @@ void triangulateXYMonoTB(Int n_left, Real** leftVerts,
 
 	      pStream->insert(topMostV);
 
-	      /*find the last k>=i such that 
+	      /*find the last k>=i such that
 	       *leftverts[k][1] >= rightverts[j][1]
 	       */
 	      k=i;
@@ -290,7 +291,7 @@ void triangulateXYMonoTB(Int n_left, Real** leftVerts,
 	      pStream->end(PRIMITIVE_STREAM_FAN);
 	      j=k+1;
 	      topMostV = rightVerts[j-1];
-	    }	  
+	    }
 	}
     }
 }
@@ -320,13 +321,13 @@ static int chainConcave(vertexArray* dec_chain, Int dec_current, Int dec_end)
     }
   return 1;
 }
- 
+
 void monoTriangulationRecGenInU(Real* topVertex, Real* botVertex,
 				vertexArray* inc_chain, Int inc_current, Int inc_end,
 				vertexArray* dec_chain, Int dec_current, Int dec_end,
 				primStream* pStream)
 {
-  
+
 }
 
 void  monoTriangulationRecGenOpt(Real* topVertex, Real* botVertex,
@@ -341,7 +342,7 @@ void  monoTriangulationRecGenOpt(Real* topVertex, Real* botVertex,
   directedLine* poly;
 
   if(inc_current <= inc_end) //at least one vertex in inc_chain
-    {      
+    {
       sline = new sampledLine(topVertex, inc_chain->getVertex(inc_current));
       poly = new directedLine(INCREASING, sline);
       for(i=inc_current; i<=inc_end-1; i++)
@@ -360,7 +361,7 @@ void  monoTriangulationRecGenOpt(Real* topVertex, Real* botVertex,
       dline = new directedLine(INCREASING, sline);
       poly = dline;
     }
-  
+
   assert(poly != NULL);
 
   if(dec_current <= dec_end) //at least on vertex in dec_Chain
@@ -376,7 +377,7 @@ void  monoTriangulationRecGenOpt(Real* topVertex, Real* botVertex,
 	}
       sline = new sampledLine(dec_chain->getVertex(dec_current), topVertex);
       dline = new directedLine(INCREASING, sline);
-      poly->insert(dline);      
+      poly->insert(dline);
     }
   else //dec_chain  is empty
     {
@@ -411,34 +412,34 @@ void  monoTriangulationRecGenOpt(Real* topVertex, Real* botVertex,
 	    {
 	      directedLine* ret_p1;
 	      directedLine* ret_p2;
-	      
-	      new_polygon->connectDiagonal_2slines(new_polygon, other, 
+
+	      new_polygon->connectDiagonal_2slines(new_polygon, other,
 						   &ret_p1,
 						   &ret_p2,
 						   new_polygon);
-	      
+
 	      monoTriangulationFun(ret_p1, compV2InX, pStream);
 	      monoTriangulationFun(ret_p2, compV2InX, pStream);
 
-	      ret_p1->deleteSinglePolygonWithSline();	      
-	      ret_p2->deleteSinglePolygonWithSline();	  
+	      ret_p1->deleteSinglePolygonWithSline();
+	      ret_p2->deleteSinglePolygonWithSline();
 	    }
       }
     else
       {
 	//we need a general partitionX funtion (supposed to be in partitionX.C,
 	//not implemented yet. XXX
-	//monoTriangulationFun(poly, compV2InY, pStream);    
-	
+	//monoTriangulationFun(poly, compV2InY, pStream);
+
 	directedLine* new_polygon = polygonConvert(poly);
 	directedLine* list = monoPolyPart(new_polygon);
 	for(directedLine* temp = list; temp != NULL; temp = temp->getNextPolygon())
-	  { 
+	  {
 	    monoTriangulationFun(temp, compV2InX, pStream);
 	  }
 	//clean up
 	list->deletePolygonListWithSline();
-        
+
       }
 
     free(cusps);
@@ -446,23 +447,23 @@ void  monoTriangulationRecGenOpt(Real* topVertex, Real* botVertex,
       if(numInteriorCuspsX(poly) == 0) //is u monotone
 	monoTriangulationFun(poly, compV2InX, pStream);
       else //it is not u motone
-	monoTriangulationFun(poly, compV2InY, pStream);    
+	monoTriangulationFun(poly, compV2InY, pStream);
 	*/
     //clean up space
     poly->deleteSinglePolygonWithSline();
     return;
   }
-      
-  //apparently the following code is not reachable, 
+
+  //apparently the following code is not reachable,
   //it is for test purpose
   if(inc_current > inc_end || dec_current>dec_end)
     {
     monoTriangulationRecGen(topVertex, botVertex, inc_chain, inc_current, inc_end,
 			    dec_chain, dec_current, dec_end,
-			    pStream);    
+			    pStream);
     return;
   }
-  
+
 
   if(
      area(dec_chain->getVertex(dec_current),
@@ -473,9 +474,9 @@ void  monoTriangulationRecGenOpt(Real* topVertex, Real* botVertex,
      && area(inc_chain->getVertex(inc_end), botVertex, dec_chain->getVertex(dec_end)) >=0
      )
     {
-      monoTriangulationRecFunGen(topVertex, botVertex, 
+      monoTriangulationRecFunGen(topVertex, botVertex,
 				 inc_chain, inc_current, inc_end,
-				 dec_chain, dec_current, dec_end, 
+				 dec_chain, dec_current, dec_end,
 				 compV2InX, pStream);
     }
   else
@@ -489,7 +490,7 @@ void  monoTriangulationRecGenOpt(Real* topVertex, Real* botVertex,
 /*if inc_current>inc_end, then inc_chain has no points to be considered
  *same for dec_chain
  */
-void monoTriangulationRecGen(Real* topVertex, Real* botVertex, 
+void monoTriangulationRecGen(Real* topVertex, Real* botVertex,
 			  vertexArray* inc_chain, Int inc_current, Int inc_end,
 			  vertexArray* dec_chain, Int dec_current, Int dec_end,
 			  primStream* pStream)
@@ -532,7 +533,7 @@ void monoTriangulationRecGen(Real* topVertex, Real* botVertex,
       inc_array = inc_chain -> getArray();
       dec_array = dec_chain -> getArray();
 
-      /*if top of inc_chain is 'lower' than top of dec_chain, process all the 
+      /*if top of inc_chain is 'lower' than top of dec_chain, process all the
        *vertices on the dec_chain which are higher than top of inc_chain
        */
       if(compV2InY(inc_array[inc_current], dec_array[dec_current]) <= 0)
@@ -544,11 +545,11 @@ void monoTriangulationRecGen(Real* topVertex, Real* botVertex,
 	    {
 	      if(compV2InY(inc_array[inc_current], dec_array[i]) <= 0)
 		rChain.processNewVertex(dec_array[i], pStream);
-	      else 
+	      else
 		break;
 	    }
 	  rChain.outputFan(inc_array[inc_current], pStream);
-	  monoTriangulationRecGen(dec_array[i-1], botVertex, 
+	  monoTriangulationRecGen(dec_array[i-1], botVertex,
 			       inc_chain, inc_current, inc_end,
 			       dec_chain, i, dec_end,
 			       pStream);
@@ -560,13 +561,13 @@ void monoTriangulationRecGen(Real* topVertex, Real* botVertex,
 	  rChain.processNewVertex(topVertex, pStream);
 	  for(i=inc_current; i<=inc_end; i++)
 	    {
-	      if(compV2InY(inc_array[i], dec_array[dec_current]) >0)		
-		rChain.processNewVertex(inc_array[i], pStream);	      
+	      if(compV2InY(inc_array[i], dec_array[dec_current]) >0)
+		rChain.processNewVertex(inc_array[i], pStream);
 	      else
 		break;
 	    }
 	  rChain.outputFan(dec_array[dec_current], pStream);
-	  monoTriangulationRecGen(inc_array[i-1], botVertex, 
+	  monoTriangulationRecGen(inc_array[i-1], botVertex,
 			       inc_chain, i, inc_end,
 			       dec_chain, dec_current,dec_end,
 			       pStream);
@@ -605,7 +606,7 @@ void monoTriangulationFun(directedLine* monoPolygon, Int (*compFun)(Real*, Real*
 	inc_chain.appendVertex(tempV->getVertex(i));
       }
     }
-  
+
   vertexArray dec_chain(20);
   for(tempV = topV->getPrev(); tempV != botV; tempV = tempV->getPrev())
     {
@@ -613,15 +614,15 @@ void monoTriangulationFun(directedLine* monoPolygon, Int (*compFun)(Real*, Real*
 	dec_chain.appendVertex(tempV->getVertex(i));
       }
     }
-  for(i=botV->get_npoints()-2; i>=1; i--){ 
+  for(i=botV->get_npoints()-2; i>=1; i--){
     dec_chain.appendVertex(tempV->getVertex(i));
   }
-  
+
   if (!(0 == inc_chain.getNumElements() && 0 == dec_chain.getNumElements())) {
      monoTriangulationRecFun(topV->head(), botV->head(), &inc_chain, 0,
                              &dec_chain, 0, compFun, pStream);
   }
-}  
+}
 
 void monoTriangulation(directedLine* monoPolygon, primStream* pStream)
 {
@@ -653,7 +654,7 @@ void monoTriangulation(directedLine* monoPolygon, primStream* pStream)
 	inc_chain.appendVertex(tempV->getVertex(i));
       }
     }
-  
+
   vertexArray dec_chain(20);
   for(tempV = topV->getPrev(); tempV != botV; tempV = tempV->getPrev())
     {
@@ -661,10 +662,10 @@ void monoTriangulation(directedLine* monoPolygon, primStream* pStream)
 	dec_chain.appendVertex(tempV->getVertex(i));
       }
     }
-  for(i=botV->get_npoints()-2; i>=1; i--){ 
+  for(i=botV->get_npoints()-2; i>=1; i--){
     dec_chain.appendVertex(tempV->getVertex(i));
   }
-  
+
   monoTriangulationRec(topV->head(), botV->head(), &inc_chain, 0, &dec_chain, 0, pStream);
 
 }
@@ -675,7 +676,7 @@ void monoTriangulation(directedLine* monoPolygon, primStream* pStream)
  *is increasing (left chain in V-monotone case) or decreaing (right chain
  *in V-monotone case).
  */
-void monoTriangulation2(Real* topVertex, Real* botVertex, 
+void monoTriangulation2(Real* topVertex, Real* botVertex,
 			vertexArray* inc_chain, Int inc_smallIndex,
 			Int inc_largeIndex,
 			Int is_increase_chain,
@@ -685,13 +686,13 @@ void monoTriangulation2(Real* topVertex, Real* botVertex,
   Real** inc_array ;
 
   if(inc_smallIndex > inc_largeIndex)
-    return; //no triangles 
+    return; //no triangles
   if(inc_smallIndex == inc_largeIndex)
     {
       if(is_increase_chain)
 	pStream->triangle(inc_chain->getVertex(inc_smallIndex), botVertex, topVertex);
       else
-	pStream->triangle(inc_chain->getVertex(inc_smallIndex), topVertex, botVertex);	
+	pStream->triangle(inc_chain->getVertex(inc_smallIndex), topVertex, botVertex);
       return;
     }
   Int i;
@@ -713,7 +714,7 @@ void monoTriangulation2(Real* topVertex, Real* botVertex,
       monoTriangulation2(topVertex, botVertex, inc_chain, inc_smallIndex+1,
 			 inc_largeIndex, is_increase_chain, pStream);
       return ;
-    }		           
+    }
 
   inc_array = inc_chain->getArray();
 
@@ -727,11 +728,11 @@ void monoTriangulation2(Real* topVertex, Real* botVertex,
   rChain.processNewVertex(botVertex, pStream);
 
 }
- 
+
 /*if compFun == compV2InY, top to bottom: V-monotone
  *if compFun == compV2InX, right to left: U-monotone
  */
-void monoTriangulationRecFunGen(Real* topVertex, Real* botVertex, 
+void monoTriangulationRecFunGen(Real* topVertex, Real* botVertex,
 			  vertexArray* inc_chain, Int inc_current, Int inc_end,
 			  vertexArray* dec_chain, Int dec_current, Int dec_end,
 			  Int  (*compFun)(Real*, Real*),
@@ -782,7 +783,7 @@ void monoTriangulationRecFunGen(Real* topVertex, Real* botVertex,
       inc_array = inc_chain -> getArray();
       dec_array = dec_chain -> getArray();
 
-      /*if top of inc_chain is 'lower' than top of dec_chain, process all the 
+      /*if top of inc_chain is 'lower' than top of dec_chain, process all the
        *vertices on the dec_chain which are higher than top of inc_chain
        */
       if(compFun(inc_array[inc_current], dec_array[dec_current]) <= 0)
@@ -794,11 +795,11 @@ void monoTriangulationRecFunGen(Real* topVertex, Real* botVertex,
 	    {
 	      if(compFun(inc_array[inc_current], dec_array[i]) <= 0)
 		rChain.processNewVertex(dec_array[i], pStream);
-	      else 
+	      else
 		break;
 	    }
 	  rChain.outputFan(inc_array[inc_current], pStream);
-	  monoTriangulationRecFunGen(dec_array[i-1], botVertex, 
+	  monoTriangulationRecFunGen(dec_array[i-1], botVertex,
 			       inc_chain, inc_current, inc_end,
 			       dec_chain, i, dec_end,
 			       compFun,
@@ -811,13 +812,13 @@ void monoTriangulationRecFunGen(Real* topVertex, Real* botVertex,
 	  rChain.processNewVertex(topVertex, pStream);
 	  for(i=inc_current; i<=inc_end; i++)
 	    {
-	      if(compFun(inc_array[i], dec_array[dec_current]) >0)		
-		rChain.processNewVertex(inc_array[i], pStream);	      
+	      if(compFun(inc_array[i], dec_array[dec_current]) >0)
+		rChain.processNewVertex(inc_array[i], pStream);
 	      else
 		break;
 	    }
 	  rChain.outputFan(dec_array[dec_current], pStream);
-	  monoTriangulationRecFunGen(inc_array[i-1], botVertex, 
+	  monoTriangulationRecFunGen(inc_array[i-1], botVertex,
 			       inc_chain, i,inc_end,
 			       dec_chain, dec_current,dec_end,
 			       compFun,
@@ -825,11 +826,11 @@ void monoTriangulationRecFunGen(Real* topVertex, Real* botVertex,
 	}
     }/*end case neither is empty*/
 }
-   
+
 /*if compFun == compV2InY, top to bottom: V-monotone
  *if compFun == compV2InX, right to left: U-monotone
  */
-void monoTriangulationRecFun(Real* topVertex, Real* botVertex, 
+void monoTriangulationRecFun(Real* topVertex, Real* botVertex,
 			  vertexArray* inc_chain, Int inc_current,
 			  vertexArray* dec_chain, Int dec_current,
 			  Int  (*compFun)(Real*, Real*),
@@ -849,7 +850,7 @@ void monoTriangulationRecFun(Real* topVertex, Real* botVertex,
     {
 
       dec_array = dec_chain->getArray();
-      dec_nVertices = dec_chain->getNumElements();      
+      dec_nVertices = dec_chain->getNumElements();
       reflexChain rChain(20,0);
       /*put the top vertex into the reflex chain*/
       rChain.processNewVertex(topVertex, pStream);
@@ -881,7 +882,7 @@ void monoTriangulationRecFun(Real* topVertex, Real* botVertex,
       dec_array = dec_chain -> getArray();
       inc_nVertices= inc_chain->getNumElements();
       dec_nVertices= dec_chain->getNumElements();
-      /*if top of inc_chain is 'lower' than top of dec_chain, process all the 
+      /*if top of inc_chain is 'lower' than top of dec_chain, process all the
        *vertices on the dec_chain which are higher than top of inc_chain
        */
       if(compFun(inc_array[inc_current], dec_array[dec_current]) <= 0)
@@ -893,11 +894,11 @@ void monoTriangulationRecFun(Real* topVertex, Real* botVertex,
 	    {
 	      if(compFun(inc_array[inc_current], dec_array[i]) <= 0)
 		rChain.processNewVertex(dec_array[i], pStream);
-	      else 
+	      else
 		break;
 	    }
 	  rChain.outputFan(inc_array[inc_current], pStream);
-	  monoTriangulationRecFun(dec_array[i-1], botVertex, 
+	  monoTriangulationRecFun(dec_array[i-1], botVertex,
 			       inc_chain, inc_current,
 			       dec_chain, i,
 			       compFun,
@@ -910,13 +911,13 @@ void monoTriangulationRecFun(Real* topVertex, Real* botVertex,
 	  rChain.processNewVertex(topVertex, pStream);
 	  for(i=inc_current; i<inc_nVertices; i++)
 	    {
-	      if(compFun(inc_array[i], dec_array[dec_current]) >0)		
-		rChain.processNewVertex(inc_array[i], pStream);	      
+	      if(compFun(inc_array[i], dec_array[dec_current]) >0)
+		rChain.processNewVertex(inc_array[i], pStream);
 	      else
 		break;
 	    }
 	  rChain.outputFan(dec_array[dec_current], pStream);
-	  monoTriangulationRecFun(inc_array[i-1], botVertex, 
+	  monoTriangulationRecFun(inc_array[i-1], botVertex,
 			       inc_chain, i,
 			       dec_chain, dec_current,
 			       compFun,
@@ -926,7 +927,7 @@ void monoTriangulationRecFun(Real* topVertex, Real* botVertex,
 }
 
 
-void monoTriangulationRec(Real* topVertex, Real* botVertex, 
+void monoTriangulationRec(Real* topVertex, Real* botVertex,
 			  vertexArray* inc_chain, Int inc_current,
 			  vertexArray* dec_chain, Int dec_current,
 			  primStream* pStream)
@@ -945,7 +946,7 @@ void monoTriangulationRec(Real* topVertex, Real* botVertex,
     {
 
       dec_array = dec_chain->getArray();
-      dec_nVertices = dec_chain->getNumElements();      
+      dec_nVertices = dec_chain->getNumElements();
       reflexChain rChain(20,0);
       /*put the top vertex into the reflex chain*/
       rChain.processNewVertex(topVertex, pStream);
@@ -977,7 +978,7 @@ void monoTriangulationRec(Real* topVertex, Real* botVertex,
       dec_array = dec_chain -> getArray();
       inc_nVertices= inc_chain->getNumElements();
       dec_nVertices= dec_chain->getNumElements();
-      /*if top of inc_chain is 'lower' than top of dec_chain, process all the 
+      /*if top of inc_chain is 'lower' than top of dec_chain, process all the
        *vertices on the dec_chain which are higher than top of inc_chain
        */
       if(compV2InY(inc_array[inc_current], dec_array[dec_current]) <= 0)
@@ -989,11 +990,11 @@ void monoTriangulationRec(Real* topVertex, Real* botVertex,
 	    {
 	      if(compV2InY(inc_array[inc_current], dec_array[i]) <= 0)
 		rChain.processNewVertex(dec_array[i], pStream);
-	      else 
+	      else
 		break;
 	    }
 	  rChain.outputFan(inc_array[inc_current], pStream);
-	  monoTriangulationRec(dec_array[i-1], botVertex, 
+	  monoTriangulationRec(dec_array[i-1], botVertex,
 			       inc_chain, inc_current,
 			       dec_chain, i,
 			       pStream);
@@ -1005,23 +1006,23 @@ void monoTriangulationRec(Real* topVertex, Real* botVertex,
 	  rChain.processNewVertex(topVertex, pStream);
 	  for(i=inc_current; i<inc_nVertices; i++)
 	    {
-	      if(compV2InY(inc_array[i], dec_array[dec_current]) >0)		
-		rChain.processNewVertex(inc_array[i], pStream);	      
+	      if(compV2InY(inc_array[i], dec_array[dec_current]) >0)
+		rChain.processNewVertex(inc_array[i], pStream);
 	      else
 		break;
 	    }
 	  rChain.outputFan(dec_array[dec_current], pStream);
-	  monoTriangulationRec(inc_array[i-1], botVertex, 
+	  monoTriangulationRec(inc_array[i-1], botVertex,
 			       inc_chain, i,
 			       dec_chain, dec_current,
 			       pStream);
 	}
     }/*end case neither is empty*/
 }
-    
 
 
-/* the name here assumes that the polygon is Y-monotone, but 
+
+/* the name here assumes that the polygon is Y-monotone, but
  *this function also works for X-monotone polygons.
  * a monotne polygon consists of two extrem verteices: topVertex and botVertex, and
  *two monotone chains: inc_chain, and dec_chain. The edges of the increasing chain (inc_chain)
@@ -1030,8 +1031,8 @@ void monoTriangulationRec(Real* topVertex, Real* botVertex,
  * inc_index index the vertex which is the toppest of the inc_chain which we are handling currently.
  * dec_index index the vertex which is the toppest of the dec_chain which we are handling currently.
  */
-void monoTriangulationRec(directedLine* inc_chain, Int inc_index, 
-			  directedLine* dec_chain, Int dec_index, 
+void monoTriangulationRec(directedLine* inc_chain, Int inc_index,
+			  directedLine* dec_chain, Int dec_index,
 			  directedLine* topVertex, Int top_index,
 			  directedLine* botVertex,
 			  primStream* pStream)
@@ -1039,9 +1040,9 @@ void monoTriangulationRec(directedLine* inc_chain, Int inc_index,
   Int i;
   directedLine *temp, *oldtemp = NULL;
   Int tempIndex, oldtempIndex = 0;
-  
+
   assert(inc_chain != NULL && dec_chain != NULL);
-  
+
   if(inc_chain == botVertex) {
     reflexChain rChain(20, 0);
     rChain.processNewVertex(topVertex->getVertex(top_index), pStream);
@@ -1078,7 +1079,7 @@ void monoTriangulationRec(directedLine* inc_chain, Int inc_index,
 	oldtemp = temp;
 	oldtempIndex = tempIndex;
 	rChain.processNewVertex(temp->getVertex(tempIndex), pStream);
-	
+
 	if(tempIndex == temp->get_npoints()-1){
 	  tempIndex = 0;
 	  temp = temp->getPrev();
@@ -1099,7 +1100,7 @@ void monoTriangulationRec(directedLine* inc_chain, Int inc_index,
 	oldtemp = temp;
 	oldtempIndex = tempIndex;
 	rChain.processNewVertex(temp->getVertex(tempIndex), pStream);
-	
+
 	if(tempIndex == temp->get_npoints()-1){
 	  tempIndex = 0;
 	  temp = temp->getNext();
@@ -1109,7 +1110,7 @@ void monoTriangulationRec(directedLine* inc_chain, Int inc_index,
 	}
       }
       rChain.outputFan(dec_chain->getVertex(dec_index), pStream);
-      monoTriangulationRec(temp, tempIndex, dec_chain, dec_index, oldtemp, oldtempIndex, botVertex, pStream); 
+      monoTriangulationRec(temp, tempIndex, dec_chain, dec_index, oldtemp, oldtempIndex, botVertex, pStream);
     }
   } /*end case neither reached the bottom*/
 }
@@ -1175,7 +1176,7 @@ void vertexArray::print()
 Int vertexArray::findIndexAbove(Real v)
 {
   Int i;
-  if(index == 0) 
+  if(index == 0)
     return -1;
   else if(array[0][1] < v)
     return -1;
@@ -1201,7 +1202,7 @@ Int vertexArray::findIndexAbove(Real v)
 Int vertexArray::findIndexBelowGen(Real v, Int startIndex, Int endIndex)
 {
   Int i;
-  if(startIndex > endIndex) 
+  if(startIndex > endIndex)
     return endIndex+1;
   else if(array[endIndex][1] >  v)
     return endIndex+1;
@@ -1227,7 +1228,7 @@ Int vertexArray::findIndexBelowGen(Real v, Int startIndex, Int endIndex)
 Int vertexArray::findIndexStrictBelowGen(Real v, Int startIndex, Int endIndex)
 {
   Int i;
-  if(startIndex > endIndex) 
+  if(startIndex > endIndex)
     return endIndex+1;
   else if(array[endIndex][1] >=  v)
     return endIndex+1;
@@ -1254,7 +1255,7 @@ Int vertexArray::findIndexFirstAboveEqualGen(Real v, Int startIndex, Int endInde
 {
 
   Int i;
-  if(startIndex > endIndex) 
+  if(startIndex > endIndex)
     return startIndex-1;
   else if(array[startIndex][1] < v)
     return startIndex-1;
@@ -1288,7 +1289,7 @@ Int vertexArray::findIndexFirstAboveEqualGen(Real v, Int startIndex, Int endInde
 Int vertexArray::findIndexAboveGen(Real v, Int startIndex, Int endIndex)
 {
   Int i;
-  if(startIndex > endIndex) 
+  if(startIndex > endIndex)
     return startIndex-1;
   else if(array[startIndex][1] < v)
     return startIndex-1;
@@ -1327,11 +1328,11 @@ Int vertexArray::skipEqualityFromStart(Real v, Int start, Int end)
     return start;
   //now array[start][1] == v
   for(i=start+1; i<= end; i++)
-    if(array[i][1] != v) 
+    if(array[i][1] != v)
       break;
   return i-1;
 }
-  
+
 
 /***************************vertexArray end****************************************/
 
@@ -1368,7 +1369,7 @@ void reflexChain::insert(Real u, Real v)
       temp[i][0] = queue[i][0];
       temp[i][1] = queue[i][1];
     }
-    
+
     free(queue);
     queue = temp;
     size_queue = 2*size_queue + 1;
@@ -1412,7 +1413,7 @@ void reflexChain::outputFan(Real v[2], primStream* pStream)
   }
   else {
     for(i=index_queue-1; i>=0; i--)
-      pStream->insert(queue[i]);    
+      pStream->insert(queue[i]);
   }
   pStream->end(PRIMITIVE_STREAM_FAN);
 }
@@ -1427,16 +1428,16 @@ void reflexChain::processNewVertex(Real v[2], primStream* pStream)
     insert(v);
     return;
   }
-  
+
   /*there are at least two vertices in the queue*/
   j=index_queue-1;
-  
+
   for(i=j; i>=1; i--) {
     if(isIncreasing) {
       isReflex = (area(queue[i-1], queue[i], v) <= 0.0);
     }
     else /*decreasing*/{
-      isReflex = (area(v, queue[i], queue[i-1]) <= 0.0);	  
+      isReflex = (area(v, queue[i], queue[i-1]) <= 0.0);
     }
     if(isReflex) {
       break;
@@ -1445,10 +1446,10 @@ void reflexChain::processNewVertex(Real v[2], primStream* pStream)
 
   /*
    *if i<j then vertices: i+1--j are convex
-   * output triangle fan: 
+   * output triangle fan:
    *  v, and queue[i], i+1, ..., j
    */
-  if(i<j) 
+  if(i<j)
     {
       pStream->begin();
       pStream->insert(v);
@@ -1460,7 +1461,7 @@ void reflexChain::processNewVertex(Real v[2], primStream* pStream)
 	for(k=j; k>=i; k--)
 	  pStream->insert(queue[k]);
       }
-      
+
       pStream->end(PRIMITIVE_STREAM_FAN);
     }
 

@@ -37,6 +37,7 @@
  *
  */
 
+#ifndef __REACTOS_USE_PCH__
 //#include "glimports.h"
 //#include "myassert.h"
 //#include "mystdio.h"
@@ -48,12 +49,12 @@
 //#include "uarray.h"
 #include "backend.h"
 #include "mesher.h"
-
+#endif
 
 const float Mesher::ZERO = 0.0;
 
-Mesher::Mesher( Backend& b ) 
-	: backend( b ), 
+Mesher::Mesher( Backend& b )
+	: backend( b ),
 	p( sizeof( GridTrimVertex ), 100, "GridTrimVertexPool" )
 {
     stacksize = 0;
@@ -61,7 +62,7 @@ Mesher::Mesher( Backend& b )
     last[0] = 0;
     last[1] = 0;
     itop = 0;
-    lastedge = 0; //needed to prevent purify UMR 
+    lastedge = 0; //needed to prevent purify UMR
 }
 
 Mesher::~Mesher( void )
@@ -69,15 +70,15 @@ Mesher::~Mesher( void )
     if( vdata ) delete[] vdata;
 }
 
-void 
+void
 Mesher::init( unsigned int npts )
 {
     p.clear();
     if( stacksize < npts ) {
 	stacksize = 2 * npts;
-	if( vdata ) delete[] vdata;		
+	if( vdata ) delete[] vdata;
 	vdata = new GridTrimVertex_p[stacksize];
-    } 
+    }
 }
 
 inline void
@@ -120,9 +121,9 @@ Mesher::clearStack()
 void
 Mesher::finishLower( GridTrimVertex *gtlower )
 {
-    for( push(gtlower); 
-	 nextlower( gtlower=new(p) GridTrimVertex ); 
-	 push(gtlower) ) 
+    for( push(gtlower);
+	 nextlower( gtlower=new(p) GridTrimVertex );
+	 push(gtlower) )
 	    addLower();
     addLast();
 }
@@ -130,9 +131,9 @@ Mesher::finishLower( GridTrimVertex *gtlower )
 void
 Mesher::finishUpper( GridTrimVertex *gtupper )
 {
-    for( push(gtupper); 
-	 nextupper( gtupper=new(p) GridTrimVertex ); 
-	 push(gtupper) ) 
+    for( push(gtupper);
+	 nextupper( gtupper=new(p) GridTrimVertex );
+	 push(gtupper) )
 	    addUpper();
     addLast();
 }
@@ -154,7 +155,7 @@ Mesher::mesh( void )
     nextlower( gtlower );
 
     assert( gtupper->t && gtlower->t );
-    
+
     if( gtupper->t->param[0] < gtlower->t->param[0] ) {
 	push(gtupper);
 	lastedge = 1;
@@ -247,9 +248,9 @@ Mesher::copy( int x, int y )
 {
     last[0] = vdata[x]; last[1] = vdata[y];
 }
- 
+
 inline void
-Mesher::move( int x, int y ) 
+Mesher::move( int x, int y )
 {
     vdata[x] = vdata[y];
 }
@@ -403,7 +404,7 @@ Mesher::addUpper( )
 	    for( int i=ilast-2; i>=itop-1; i-- ) {
 		swapMesh();
 		output( i );
-	    } 
+	    }
 	    copy( ilast, itop-1 );
 	}
         //for( int k=itop; k<ilast; k++ ) pop( k );

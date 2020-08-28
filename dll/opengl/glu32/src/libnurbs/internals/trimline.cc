@@ -37,24 +37,26 @@
  *
  */
 
+#ifndef __REACTOS_USE_PCH__
 //#include "glimports.h"
 //#include "myassert.h"
 //#include "mystdio.h"
 #include "trimline.h"
 #include "backend.h"
+#endif
 
 Trimline::Trimline()
 {
     size = 0; pts = 0; numverts = 0;
-    tinterp = &t; binterp = &b; 
+    tinterp = &t; binterp = &b;
 }
 
 Trimline::~Trimline()
 {
-    if( pts ) delete[] pts; 
+    if( pts ) delete[] pts;
 }
 
-void 
+void
 Trimline::init( TrimVertex *v )
 {
     reset();
@@ -67,7 +69,7 @@ Trimline::grow( long npts )
 {
     if( size < npts ) {
 	size = 2 * npts;
-	if( pts ) delete[] pts; 
+	if( pts ) delete[] pts;
         pts = new TrimVertex_p[size];
     }
 }
@@ -75,7 +77,7 @@ Trimline::grow( long npts )
 inline void
 Trimline::append( TrimVertex *v )
 {
-    assert( numverts != size ); 
+    assert( numverts != size );
     pts[numverts++] = v;
 }
 
@@ -89,18 +91,18 @@ Trimline::init( long npts, Arc_ptr jarc, long last )
 inline void
 Trimline::swap()
 {
-    TrimVertex *tmp=tinterp; 
-    tinterp=binterp; 
+    TrimVertex *tmp=tinterp;
+    tinterp=binterp;
     binterp=tmp;
 }
 
 void
 Trimline::getNextPt()
 {
-    *binterp = *jarcl.getnextpt();    
+    *binterp = *jarcl.getnextpt();
 }
 
-void 
+void
 Trimline::getPrevPt()
 {
     *binterp = *jarcl.getprevpt();
@@ -119,7 +121,7 @@ Trimline::getNextPts( REAL vval, Backend& backend )
 
     TrimVertex *p;
     for( p=jarcl.getnextpt() ; p->param[1] >= vval; p=jarcl.getnextpt() ) {
-	append( p ); 
+	append( p );
     }
 
     /* compute and copy pointer to final point on left hull */
@@ -133,7 +135,7 @@ Trimline::getNextPts( REAL vval, Backend& backend )
     jarcl.reverse();
 }
 
-void 
+void
 Trimline::getPrevPts( REAL vval, Backend& backend )
 {
     reset(); swap(); append( tinterp );
@@ -198,12 +200,12 @@ Trimline::interpvert( TrimVertex *a, TrimVertex *b, TrimVertex *c, REAL vval )
 
     if(denom != 0) {
 	if( vval == a->param[1] ) {
-	    c->param[0] = a->param[0]; 
+	    c->param[0] = a->param[0];
 	    c->param[1] = a->param[1];
 	    c->nuid = a->nuid;
 	    return 0;
 	} else if( vval == b->param[1] ) {
-	    c->param[0] = b->param[0]; 
+	    c->param[0] = b->param[0];
 	    c->param[1] = b->param[1];
 	    c->nuid = b->nuid;
 	    return 0;
@@ -214,7 +216,7 @@ Trimline::interpvert( TrimVertex *a, TrimVertex *b, TrimVertex *c, REAL vval )
 	    return 1;
 	}
     } else {
-        c->param[0] = a->param[0]; 
+        c->param[0] = a->param[0];
         c->param[1] = a->param[1];
 	c->nuid = a->nuid;
 	return 0;

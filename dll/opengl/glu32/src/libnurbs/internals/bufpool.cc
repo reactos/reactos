@@ -37,10 +37,11 @@
  *
  */
 
+#ifndef __REACTOS_USE_PCH__
 //#include "glimports.h"
 //#include "myassert.h"
 #include "bufpool.h"
-
+#endif
 
 /*-----------------------------------------------------------------------------
  * Pool - allocate a new pool of buffers
@@ -92,11 +93,11 @@ void Pool::grow( void )
 }
 
 /*-----------------------------------------------------------------------------
- * Pool::clear - free buffers associated with pool but keep pool 
+ * Pool::clear - free buffers associated with pool but keep pool
  *-----------------------------------------------------------------------------
  */
 
-void 
+void
 Pool::clear( void )
 {
     assert( (this != 0) && (magic == is_allocated) );

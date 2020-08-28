@@ -37,6 +37,7 @@
  *
  */
 
+#ifndef __REACTOS_USE_PCH__
 //#include <stdio.h>
 //#include "glimports.h"
 //#include "mystdio.h"
@@ -46,8 +47,9 @@
 #include "backend.h"
 //#include "nurbsconsts.h"
 #include "mapdesc.h"
+#endif
 
-Mapdesc::Mapdesc( long _type, int _israt, int _ncoords, Backend& b ) 
+Mapdesc::Mapdesc( long _type, int _israt, int _ncoords, Backend& b )
     : backend( b )
 {
     type 		= _type;
@@ -64,7 +66,7 @@ Mapdesc::Mapdesc( long _type, int _israt, int _ncoords, Backend& b )
     pixel_tolerance 	= 1.0;
     error_tolerance	= 1.0;
     bbox_subdividing	= N_NOBBOXSUBDIVISION;
-    culling_method 	= N_NOCULLING;		
+    culling_method 	= N_NOCULLING;
     sampling_method 	= N_NOSAMPLING;
     clampfactor 	= N_NOCLAMPING;
     minsavings 		= N_NOSAVINGSSUBDIVISION;
@@ -101,7 +103,7 @@ Mapdesc::surfbbox( REAL bb[2][MAXCOORDS] )
     backend.surfbbox( type, bb[0], bb[1] );
 }
 
-void 
+void
 Mapdesc::copy( REAL dest[MAXCOORDS][MAXCOORDS], long n, INREAL *src,
 	long rstride, long cstride )
 {
@@ -120,25 +122,25 @@ Mapdesc::copyPt( REAL *d, REAL *s )
 {
     assert( hcoords > 0 );
     switch( hcoords  ) {
-	case 4: 
+	case 4:
 	    d[3] = s[3];
 	    d[2] = s[2];
 	    d[1] = s[1];
 	    d[0] = s[0];
 	    break;
-	case 3: 
+	case 3:
 	    d[2] = s[2];
 	    d[1] = s[1];
 	    d[0] = s[0];
 	    break;
-	case 2: 
+	case 2:
 	    d[1] = s[1];
 	    d[0] = s[0];
 	    break;
-	case 1: 
+	case 1:
 	    d[0] = s[0];
 	    break;
-	case 5: 
+	case 5:
 	    d[4] = s[4];
 	    d[3] = s[3];
 	    d[2] = s[2];
@@ -160,25 +162,25 @@ Mapdesc::sumPt( REAL *dst, REAL *src1, REAL *src2, REAL alpha, REAL beta )
 {
     assert( hcoords > 0 );
     switch( hcoords  ) {
-	case 4: 
+	case 4:
 	    dst[3] = src1[3] * alpha + src2[3] * beta;
 	    dst[2] = src1[2] * alpha + src2[2] * beta;
 	    dst[1] = src1[1] * alpha + src2[1] * beta;
 	    dst[0] = src1[0] * alpha + src2[0] * beta;
 	    break;
-	case 3: 
+	case 3:
 	    dst[2] = src1[2] * alpha + src2[2] * beta;
 	    dst[1] = src1[1] * alpha + src2[1] * beta;
 	    dst[0] = src1[0] * alpha + src2[0] * beta;
 	    break;
-	case 2: 
+	case 2:
 	    dst[1] = src1[1] * alpha + src2[1] * beta;
 	    dst[0] = src1[0] * alpha + src2[0] * beta;
 	    break;
-	case 1: 
+	case 1:
 	    dst[0] = src1[0] * alpha + src2[0] * beta;
 	    break;
-	case 5: 
+	case 5:
 	    dst[4] = src1[4] * alpha + src2[4] * beta;
 	    dst[3] = src1[3] * alpha + src2[3] * beta;
 	    dst[2] = src1[2] * alpha + src2[2] * beta;
@@ -234,16 +236,16 @@ Mapdesc::clipbits( REAL *p )
 	default: {
 		int bit = 1;
 		for( int i=0; i<nc; i++ ) {
-		    if( p[i] >= nw ) bits |= bit; 
+		    if( p[i] >= nw ) bits |= bit;
 		    bit <<= 1;
-		    if( p[i] <= pw ) bits |= bit; 
+		    if( p[i] <= pw ) bits |= bit;
 		    bit <<= 1;
 		}
 		abort();
 		break;
 	    }
 	}
-    } else { 
+    } else {
 	switch( nc ) {
 	case 3:
 	    if( p[2] <= nw ) bits |= (1<<5);
@@ -264,11 +266,11 @@ Mapdesc::clipbits( REAL *p )
 	    if( p[0] >= pw ) bits |= (1<<0);
             return bits;
 	default: {
-		int bit = 1; 
+		int bit = 1;
 		for( int i=0; i<nc; i++ ) {
-		    if( p[i] >= pw ) bits |= bit; 
+		    if( p[i] >= pw ) bits |= bit;
 		    bit <<= 1;
-		    if( p[i] <= nw ) bits |= bit; 
+		    if( p[i] <= nw ) bits |= bit;
 		    bit <<= 1;
 		}
 		abort();
@@ -345,14 +347,14 @@ Mapdesc::xformNonrational( Maxmatrix mat, REAL *d, REAL *s )
 }
 
 /*--------------------------------------------------------------------------
- * xformAndCullCheck - transform a set of points that may be EITHER 
+ * xformAndCullCheck - transform a set of points that may be EITHER
  *	homogeneous or inhomogeneous depending on the map description and
- *	check if they are either completely inside, completely outside, 
+ *	check if they are either completely inside, completely outside,
  *	or intersecting the viewing frustrum.
  *--------------------------------------------------------------------------
  */
 int
-Mapdesc::xformAndCullCheck( 
+Mapdesc::xformAndCullCheck(
     REAL *pts, int uorder, int ustride, int vorder, int vstride )
 {
     assert( uorder > 0 );
@@ -371,7 +373,7 @@ Mapdesc::xformAndCullCheck(
 	    outbits |= bits;
 	    inbits &= bits;
 	    if( ( outbits == (unsigned int)mask ) && ( inbits != (unsigned int)mask ) ) return CULL_ACCEPT;
-	} 
+	}
     }
 
     if( outbits != (unsigned int)mask ) {
@@ -384,8 +386,8 @@ Mapdesc::xformAndCullCheck(
 }
 
 /*--------------------------------------------------------------------------
- * cullCheck - check if a set of homogeneous transformed points are 
- *	either completely inside, completely outside, 
+ * cullCheck - check if a set of homogeneous transformed points are
+ *	either completely inside, completely outside,
  *	or intersecting the viewing frustrum.
  *--------------------------------------------------------------------------
  */
@@ -403,7 +405,7 @@ Mapdesc::cullCheck( REAL *pts, int uorder, int ustride, int vorder, int vstride 
 	    outbits |= bits;
 	    inbits &= bits;
 	    if( ( outbits == (unsigned int)mask ) && ( inbits != (unsigned int)mask ) ) return CULL_ACCEPT;
-	} 
+	}
     }
 
     if( outbits != (unsigned int)mask ) {
@@ -416,8 +418,8 @@ Mapdesc::cullCheck( REAL *pts, int uorder, int ustride, int vorder, int vstride 
 }
 
 /*--------------------------------------------------------------------------
- * cullCheck - check if a set of homogeneous transformed points are 
- *	either completely inside, completely outside, 
+ * cullCheck - check if a set of homogeneous transformed points are
+ *	either completely inside, completely outside,
  *	or intersecting the viewing frustrum.
  *--------------------------------------------------------------------------
  */
@@ -445,9 +447,9 @@ Mapdesc::cullCheck( REAL *pts, int order, int stride )
 }
 
 /*--------------------------------------------------------------------------
- * xformSampling - transform a set of points that may be EITHER 
- *	homogeneous or inhomogeneous depending on the map description 
- *	into sampling space 
+ * xformSampling - transform a set of points that may be EITHER
+ *	homogeneous or inhomogeneous depending on the map description
+ *	into sampling space
  *--------------------------------------------------------------------------
  */
 void
@@ -463,9 +465,9 @@ Mapdesc::xformBounding( REAL *pts, int order, int stride, REAL *sp, int outstrid
 }
 
 /*--------------------------------------------------------------------------
- * xformCulling - transform a set of points that may be EITHER 
- *	homogeneous or inhomogeneous depending on the map description 
- *	into culling space 
+ * xformCulling - transform a set of points that may be EITHER
+ *	homogeneous or inhomogeneous depending on the map description
+ *	into culling space
  *--------------------------------------------------------------------------
  */
 void
@@ -475,51 +477,51 @@ Mapdesc::xformCulling( REAL *pts, int order, int stride, REAL *cp, int outstride
 }
 
 /*--------------------------------------------------------------------------
- * xformCulling - transform a set of points that may be EITHER 
- *	homogeneous or inhomogeneous depending on the map description 
- *	into culling space 
+ * xformCulling - transform a set of points that may be EITHER
+ *	homogeneous or inhomogeneous depending on the map description
+ *	into culling space
  *--------------------------------------------------------------------------
  */
 void
-Mapdesc::xformCulling( REAL *pts, 
+Mapdesc::xformCulling( REAL *pts,
     int uorder, int ustride,
-    int vorder, int vstride, 
+    int vorder, int vstride,
     REAL *cp, int outustride, int outvstride )
 {
     xformMat( cmat, pts, uorder, ustride, vorder, vstride, cp, outustride, outvstride );
 }
 
 /*--------------------------------------------------------------------------
- * xformSampling - transform a set of points that may be EITHER 
- *	homogeneous or inhomogeneous depending on the map description 
- *	into sampling space 
+ * xformSampling - transform a set of points that may be EITHER
+ *	homogeneous or inhomogeneous depending on the map description
+ *	into sampling space
  *--------------------------------------------------------------------------
  */
 void
-Mapdesc::xformSampling( REAL *pts, 
-    int uorder, int ustride, 
-    int vorder, int vstride, 
+Mapdesc::xformSampling( REAL *pts,
+    int uorder, int ustride,
+    int vorder, int vstride,
     REAL *sp, int outustride, int outvstride )
 {
     xformMat( smat, pts, uorder, ustride, vorder, vstride, sp, outustride, outvstride );
 }
 
 void
-Mapdesc::xformBounding( REAL *pts, 
-    int uorder, int ustride, 
-    int vorder, int vstride, 
+Mapdesc::xformBounding( REAL *pts,
+    int uorder, int ustride,
+    int vorder, int vstride,
     REAL *sp, int outustride, int outvstride )
 {
     xformMat( bmat, pts, uorder, ustride, vorder, vstride, sp, outustride, outvstride );
 }
 
 void
-Mapdesc::xformMat( 
-    Maxmatrix	mat, 
-    REAL *	pts, 
-    int 	order, 
+Mapdesc::xformMat(
+    Maxmatrix	mat,
+    REAL *	pts,
+    int 	order,
     int 	stride,
-    REAL *	cp, 
+    REAL *	cp,
     int 	outstride )
 {
     if( isrational ) {
@@ -527,20 +529,20 @@ Mapdesc::xformMat(
 	for( REAL *p = pts ; p != pend; p += stride ) {
 	    xformRational( mat, cp, p );
 	    cp += outstride;
-	}       
+	}
     } else {
 	REAL *pend = pts + order * stride;
 	for( REAL *p = pts ; p != pend; p += stride ) {
 	    xformNonrational( mat, cp, p );
 	    cp += outstride;
-	}	
+	}
     }
 }
 
 void
-Mapdesc::xformMat( Maxmatrix mat, REAL *pts, 
-    int uorder, int ustride, 
-    int vorder, int vstride, 
+Mapdesc::xformMat( Maxmatrix mat, REAL *pts,
+    int uorder, int ustride,
+    int vorder, int vstride,
     REAL *cp, int outustride, int outvstride )
 {
     if( isrational ) {
@@ -551,7 +553,7 @@ Mapdesc::xformMat( Maxmatrix mat, REAL *pts,
 	    for( REAL *q = p; q != qend; q += vstride ) {
 		xformRational( mat, cpts2, q );
 		cpts2 += outvstride;
-	    } 
+	    }
 	    cp += outustride;
 	}
     } else {
@@ -562,7 +564,7 @@ Mapdesc::xformMat( Maxmatrix mat, REAL *pts,
 	    for( REAL *q = p; q != qend; q += vstride ) {
 		xformNonrational( mat, cpts2, q );
 		cpts2 += outvstride;
-	    } 
+	    }
 	    cp += outustride;
 	}
     }
@@ -592,7 +594,7 @@ Mapdesc::subdivide( REAL *src, REAL *dst, REAL v, int stride, int order )
  */
 
 void
-Mapdesc::subdivide( REAL *src, REAL *dst, REAL v, 
+Mapdesc::subdivide( REAL *src, REAL *dst, REAL v,
     int so, int ss, int to, int ts  )
 {
     REAL mv = 1.0 - v;
@@ -617,7 +619,7 @@ Mapdesc::subdivide( REAL *src, REAL *dst, REAL v,
  *--------------------------------------------------------------------------
  */
 int
-Mapdesc::project( REAL *src, int rstride, int cstride, 
+Mapdesc::project( REAL *src, int rstride, int cstride,
 	          REAL *dest, int trstride, int tcstride,
 		  int nrows, int ncols )
 {
@@ -652,7 +654,7 @@ Mapdesc::project( REAL *src, int stride, REAL *dest, int tstride, int ncols )
     for( REAL *cptr = src, *tcptr = dest; cptr != clast; cptr+=stride, tcptr+=tstride ) {
 	REAL *coordlast = cptr + inhcoords;
 	if( sign( *coordlast ) != s ) return 0;
-	for( REAL *coord = cptr, *tcoord = tcptr; coord != coordlast; coord++, tcoord++ ) 
+	for( REAL *coord = cptr, *tcoord = tcptr; coord != coordlast; coord++, tcoord++ )
 	    *tcoord = *coord / *coordlast;
     }
 
@@ -660,8 +662,8 @@ Mapdesc::project( REAL *src, int stride, REAL *dest, int tstride, int ncols )
 }
 
 int
-Mapdesc::bboxTooBig( 
-    REAL *p, 
+Mapdesc::bboxTooBig(
+    REAL *p,
     int	 rstride,
     int	 cstride,
     int	 nrows,
@@ -670,11 +672,11 @@ Mapdesc::bboxTooBig(
 {
     REAL bbpts[MAXORDER][MAXORDER][MAXCOORDS];
     const int trstride = sizeof(bbpts[0]) / sizeof(REAL);
-    const int tcstride = sizeof(bbpts[0][0]) / sizeof(REAL); 
+    const int tcstride = sizeof(bbpts[0][0]) / sizeof(REAL);
 
     // points have been transformed, therefore they are homogeneous
     // project points
-    int val = project( p, rstride, cstride, 
+    int val = project( p, rstride, cstride,
 	     &bbpts[0][0][0], trstride, tcstride, nrows, ncols );
     if( val == 0 ) return -1;
 
@@ -689,13 +691,13 @@ Mapdesc::bboxTooBig(
 	for( int k=0; k != inhcoords; k++ )
 	    if( bb[1][k] - bb[0][k] > bboxsize[k] ) return 1;
     }
-    return 0;  
+    return 0;
 }
 
 void
-Mapdesc::bbox( 
-    REAL bb[2][MAXCOORDS], 
-    REAL *p, 
+Mapdesc::bbox(
+    REAL bb[2][MAXCOORDS],
+    REAL *p,
     int	 rstride,
     int	 cstride,
     int	 nrows,
@@ -705,8 +707,8 @@ Mapdesc::bbox(
     for( k=0; k != inhcoords; k++ )
 	 bb[0][k] = bb[1][k] = p[k];
 
-    for( int i=0; i != nrows; i++ ) 
-	for( int j=0; j != ncols; j++ ) 
+    for( int i=0; i != nrows; i++ )
+	for( int j=0; j != ncols; j++ )
 	    for( k=0; k != inhcoords; k++ ) {
 		REAL x = p[i*rstride + j*cstride + k];
 		if(  x < bb[0][k] ) bb[0][k] = x;
@@ -715,7 +717,7 @@ Mapdesc::bbox(
 }
 
 /*--------------------------------------------------------------------------
- * calcVelocityRational - calculate upper bound on first partial derivative 
+ * calcVelocityRational - calculate upper bound on first partial derivative
  *	of a homogeneous set of points and bounds on each row of points.
  *--------------------------------------------------------------------------
  */
@@ -726,7 +728,7 @@ Mapdesc::calcVelocityRational( REAL *p, int stride, int ncols )
 
     assert( ncols <= MAXORDER );
 
-    const int tstride = sizeof(tmp[0]) / sizeof(REAL); 
+    const int tstride = sizeof(tmp[0]) / sizeof(REAL);
 
     if( project( p, stride, &tmp[0][0], tstride, ncols ) ) {
 	return calcPartialVelocity( &tmp[0][0], tstride, ncols, 1, 1.0 );
@@ -736,7 +738,7 @@ Mapdesc::calcVelocityRational( REAL *p, int stride, int ncols )
 }
 
 /*--------------------------------------------------------------------------
- * calcVelocityNonrational - calculate upper bound on  first partial 
+ * calcVelocityNonrational - calculate upper bound on  first partial
  *	derivative of a inhomogeneous set of points.
  *--------------------------------------------------------------------------
  */

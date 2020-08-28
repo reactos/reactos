@@ -37,6 +37,7 @@
  *
  */
 
+#ifndef __REACTOS_USE_PCH__
 //#include "glimports.h"
 //#include "mystdio.h"
 //#include "myassert.h"
@@ -46,6 +47,7 @@
 #include "bezierarc.h"
 //#include "trimvertex.h"
 #include "trimvertpool.h"
+#endif
 
 #define NOELIMINATION
 
@@ -56,7 +58,7 @@
  *-----------------------------------------------------------------------------
  */
 
-ArcTessellator::ArcTessellator( TrimVertexPool& t, Pool& p ) 
+ArcTessellator::ArcTessellator( TrimVertexPool& t, Pool& p )
 	: pwlarcpool(p), trimvertexpool(t)
 {
 }
@@ -104,7 +106,7 @@ ArcTessellator::bezier( Arc *arc, REAL s1, REAL s2, REAL t1, REAL t2 )
 	    break;
     }
 #endif
-    
+
     TrimVertex *p = trimvertexpool.get(2);
     arc->pwlArc = new(pwlarcpool) PwlArc( 2, p );
     p[0].param[0] = s1;
@@ -283,7 +285,7 @@ ArcTessellator::tessellateLinear( Arc *arc, REAL geo_stepsize, REAL arc_stepsize
 
     //we don't need to scale by arc_stepsize if the trim curve
     //is piecewise linear. Reason: In pwl_right, pwl_left, pwl_top, pwl_left,
-    //and pwl, the nsteps is computed by deltaU (or V) /stepsize. 
+    //and pwl, the nsteps is computed by deltaU (or V) /stepsize.
     //The quantity deltaU/arc_stepsize doesn't have any meaning. And
     //it causes problems: see bug 517641
     REAL stepsize = geo_stepsize; /* * arc_stepsize*/;
@@ -307,7 +309,7 @@ ArcTessellator::tessellateLinear( Arc *arc, REAL geo_stepsize, REAL arc_stepsize
 	else
 	    pwl_left( arc, s1, t1, t2, stepsize );
     else if( t1 == t2 )
-	if( s1 < s2 ) 
+	if( s1 < s2 )
 	    pwl_bottom( arc, t1, s1, s2, stepsize );
 	else
 	    pwl_top( arc, t1, s1, s2, stepsize );
@@ -329,7 +331,7 @@ ArcTessellator::tessellateNonlinear( Arc *arc, REAL geo_stepsize, REAL arc_steps
 
     BezierArc *bezierArc = arc->bezierArc;
 
-    REAL size; //bounding box size of the curve in UV 
+    REAL size; //bounding box size of the curve in UV
     {
       int i,j;
       REAL min_u, min_v, max_u,max_v;
@@ -342,16 +344,16 @@ ArcTessellator::tessellateNonlinear( Arc *arc, REAL geo_stepsize, REAL arc_steps
 	  if(bezierArc->cpts[j] > max_u)
 	    max_u = bezierArc->cpts[j];
 	  if(bezierArc->cpts[j+1] < min_v)
-	    min_v = bezierArc->cpts[j+1];	  
+	    min_v = bezierArc->cpts[j+1];
 	  if(bezierArc->cpts[j+1] > max_v)
-	    max_v = bezierArc->cpts[j+1]; 
+	    max_v = bezierArc->cpts[j+1];
 	}
 
       size = max_u - min_u;
       if(size < max_v - min_v)
 	size = max_v - min_v;
     }
-      
+
     /*int	nsteps 		= 1 + (int) (1.0/stepsize);*/
 
     int nsteps = (int) (size/stepsize);
@@ -421,7 +423,7 @@ ArcTessellator::tessellateNonlinear( Arc *arc, REAL geo_stepsize, REAL arc_steps
 		ods = ds;
 		odt = dt;
 	    }
-#endif	
+#endif
 	}
 
 	/* compute last point exactly */
@@ -482,7 +484,7 @@ ArcTessellator::tessellateNonlinear( Arc *arc, REAL geo_stepsize, REAL arc_steps
 		ods = ds;
 		odt = dt;
 	    }
-#endif	
+#endif
 	}
 
 	/* compute last point exactly */
@@ -604,7 +606,7 @@ ArcTessellator::trim_power_coeffs( BezierArc *bez_arc, REAL *p, int coord )
 	REAL s = 0.0;
 	REAL *point = base;
 	REAL const *mlast = *row + order;
-	for( REAL const *m = *row; m != mlast; m++, point += stride ) 
+	for( REAL const *m = *row; m != mlast; m++, point += stride )
 	    s += *(m) * (*point);
 	*(p++) = s;
     }

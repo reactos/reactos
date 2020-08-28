@@ -37,10 +37,12 @@
  *
  */
 
+#ifndef __REACTOS_USE_PCH__
 #include "glimports.h"
 //#include "mystdio.h"
 #include "renderhints.h"
 #include "nurbsconsts.h"
+#endif
 
 
 /*--------------------------------------------------------------------------
@@ -95,7 +97,7 @@ Renderhints::isProperty( long property )
     }
 }
 
-REAL 
+REAL
 Renderhints::getProperty( long property )
 {
     switch ( property ) {
@@ -113,7 +115,7 @@ Renderhints::getProperty( long property )
     }
 }
 
-void 
+void
 Renderhints::setProperty( long property, REAL value )
 {
     switch ( property ) {

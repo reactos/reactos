@@ -37,11 +37,13 @@
  *
  */
 
+#ifndef __REACTOS_USE_PCH__
 //#include "glimports.h"
 //#include "myassert.h"
 //#include "mystdio.h"
 #include "uarray.h"
 #include "arc.h"
+#endif
 
 Uarray::Uarray( void )
 {
@@ -52,7 +54,7 @@ Uarray::Uarray( void )
 
 Uarray::~Uarray( void )
 {
-    if( uarray ) delete[] uarray;		
+    if( uarray ) delete[] uarray;
 }
 
 long
@@ -61,7 +63,7 @@ Uarray::init( REAL delta, Arc_ptr lo, Arc_ptr hi )
     ulines = (long) ((hi->tail()[0] - lo->tail()[0])/delta) + 3;
     if( size < ulines ) {
 	size = ulines * 2;
-	if( uarray ) delete[] uarray;		
+	if( uarray ) delete[] uarray;
 	uarray = new REAL[size];
 	assert( uarray != 0);
     }

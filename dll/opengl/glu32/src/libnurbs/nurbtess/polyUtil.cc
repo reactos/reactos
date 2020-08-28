@@ -6,21 +6,21 @@
 ** this file except in compliance with the License. You may obtain a copy
 ** of the License at Silicon Graphics, Inc., attn: Legal Services, 1600
 ** Amphitheatre Parkway, Mountain View, CA 94043-1351, or at:
-** 
+**
 ** http://oss.sgi.com/projects/FreeB
-** 
+**
 ** Note that, as provided in the License, the Software is distributed on an
 ** "AS IS" basis, with ALL EXPRESS AND IMPLIED WARRANTIES AND CONDITIONS
 ** DISCLAIMED, INCLUDING, WITHOUT LIMITATION, ANY IMPLIED WARRANTIES AND
 ** CONDITIONS OF MERCHANTABILITY, SATISFACTORY QUALITY, FITNESS FOR A
 ** PARTICULAR PURPOSE, AND NON-INFRINGEMENT.
-** 
+**
 ** Original Code. The Original Code is: OpenGL Sample Implementation,
 ** Version 1.2.1, released January 26, 2000, developed by Silicon Graphics,
 ** Inc. The Original Code is Copyright (c) 1991-2000 Silicon Graphics, Inc.
 ** Copyright in any portions created by third parties is as indicated
 ** elsewhere herein. All Rights Reserved.
-** 
+**
 ** Additional Notice Provisions: The application programming interfaces
 ** established by SGI in conjunction with the Original Code are The
 ** OpenGL(R) Graphics System: A Specification (Version 1.2.1), released
@@ -35,10 +35,12 @@
 /*
 */
 
+#ifndef __REACTOS_USE_PCH__
 //#include <stdlib.h>
 //#include <stdio.h>
 
 #include "polyUtil.h"
+#endif
 
 Real area(Real A[2], Real B[2], Real C[2])
 {
@@ -52,10 +54,10 @@ Real area(Real A[2], Real B[2], Real C[2])
 /*  return (B[0]-A[0])*(C[1]-A[1]) - (C[0]-A[0])*(B[1]-A[1]);*/
 }
 
-/*given a directed line A->B, and a point P, 
+/*given a directed line A->B, and a point P,
  *determine whether P is to the left of AB.
- *the line A->B (imagine it has beedn extended both 
- *end to the infinity) divides the plan into two 
+ *the line A->B (imagine it has beedn extended both
+ *end to the infinity) divides the plan into two
  *half planes. When we walk from A to B, one
  *half is to the left and the other half is to the right.
  *return 1 if P is to the left.
@@ -70,10 +72,10 @@ Int pointLeftLine(Real A[2], Real B[2],  Real P[2])
 /*given two directed line: A -> B -> C, and another point P.
  *determine whether P is to the left hand side of A->B->C.
  *Think of BA and BC extended as two rays. So that the plane is
- * divided into two parts. One part is to the left we  walk from A 
+ * divided into two parts. One part is to the left we  walk from A
  *to B and to C, the other part is to the right.
- * In order for P to be the left, P must be either to the left 
- *of 
+ * In order for P to be the left, P must be either to the left
+ *of
  */
 Int pointLeft2Lines(Real A[2], Real B[2], Real C[2], Real P[2])
 {

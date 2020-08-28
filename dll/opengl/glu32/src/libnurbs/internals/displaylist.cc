@@ -37,10 +37,12 @@
  *
  */
 
+#ifndef __REACTOS_USE_PCH__
 //#include "glimports.h"
 //#include "mystdio.h"
 //#include "nurbstess.h"
 #include "displaylist.h"
+#endif
 
 
 DisplayList::DisplayList( NurbsTessellator  *_nt ) :
@@ -50,7 +52,7 @@ DisplayList::DisplayList( NurbsTessellator  *_nt ) :
     nt = _nt;
 }
 
-DisplayList::~DisplayList( void ) 
+DisplayList::~DisplayList( void )
 {
     for( Dlnode *nextNode; nodes; nodes = nextNode ) {
 	nextNode = nodes->next;
@@ -59,20 +61,20 @@ DisplayList::~DisplayList( void )
     }
 }
 
-void 
+void
 DisplayList::play( void )
 {
-    for( Dlnode *node = nodes; node; node = node->next ) 
+    for( Dlnode *node = nodes; node; node = node->next )
 	if( node->work != 0 ) (nt->*node->work)( node->arg );
 }
 
-void 
+void
 DisplayList::endList( void )
 {
     *lastNode = 0;
 }
 
-void 
+void
 DisplayList::append( PFVS work, void *arg, PFVS cleanup )
 {
     Dlnode *node = new(dlnodePool) Dlnode( work, arg, cleanup );

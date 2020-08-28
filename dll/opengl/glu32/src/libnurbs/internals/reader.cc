@@ -37,26 +37,28 @@
  *
  */
 
+#ifndef __REACTOS_USE_PCH__
 //#include <stdio.h>
 //#include "glimports.h"
 #include "nurbsconsts.h"
 #include "reader.h"
 #include "trimvertex.h"
 #include "simplemath.h"
+#endif
 
-//when read a pwlCurve, if two consecutive points are the same, then 
+//when read a pwlCurve, if two consecutive points are the same, then
 //eliminate one of them. This makes the tessellator more robust. The spec
-//assumes the application makes sure there are no redundant points. 
+//assumes the application makes sure there are no redundant points.
 //but in Inspector, the trim curves seem to have redundant points a lot.
 //I guess other similar users may have the same problem.
 
-#define ELIMINATE_REDUNDANT_POINTS 
+#define ELIMINATE_REDUNDANT_POINTS
 
-#ifdef  ELIMINATE_REDUNDANT_POINTS 
+#ifdef  ELIMINATE_REDUNDANT_POINTS
 #define equal(x,y) ( glu_abs(x-y) <= 0.00001)
 #endif
 
-#ifdef ELIMINATE_REDUNDANT_POINTS 
+#ifdef ELIMINATE_REDUNDANT_POINTS
 O_pwlcurve::O_pwlcurve( long _type, long count, INREAL *array, long byte_stride, TrimVertex *trimpts )
 {
     next = 0;
@@ -83,7 +85,7 @@ O_pwlcurve::O_pwlcurve( long _type, long count, INREAL *array, long byte_stride,
 			doit = 0;
 		      }
 		  }
-		
+
 		if(doit)
 		  {
 		    v->param[0] = (REAL) array[0];
@@ -140,7 +142,7 @@ O_pwlcurve::O_pwlcurve( long _type, long count, INREAL *array, long byte_stride,
 	}
     }
 }
-#endif 
+#endif
 
 
 

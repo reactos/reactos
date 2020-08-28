@@ -6,21 +6,21 @@
 ** this file except in compliance with the License. You may obtain a copy
 ** of the License at Silicon Graphics, Inc., attn: Legal Services, 1600
 ** Amphitheatre Parkway, Mountain View, CA 94043-1351, or at:
-** 
+**
 ** http://oss.sgi.com/projects/FreeB
-** 
+**
 ** Note that, as provided in the License, the Software is distributed on an
 ** "AS IS" basis, with ALL EXPRESS AND IMPLIED WARRANTIES AND CONDITIONS
 ** DISCLAIMED, INCLUDING, WITHOUT LIMITATION, ANY IMPLIED WARRANTIES AND
 ** CONDITIONS OF MERCHANTABILITY, SATISFACTORY QUALITY, FITNESS FOR A
 ** PARTICULAR PURPOSE, AND NON-INFRINGEMENT.
-** 
+**
 ** Original Code. The Original Code is: OpenGL Sample Implementation,
 ** Version 1.2.1, released January 26, 2000, developed by Silicon Graphics,
 ** Inc. The Original Code is Copyright (c) 1991-2000 Silicon Graphics, Inc.
 ** Copyright in any portions created by third parties is as indicated
 ** elsewhere herein. All Rights Reserved.
-** 
+**
 ** Additional Notice Provisions: The application programming interfaces
 ** established by SGI in conjunction with the Original Code are The
 ** OpenGL(R) Graphics System: A Specification (Version 1.2.1), released
@@ -45,12 +45,14 @@
  * "Quality-Oriented Linear Time Tessellation".
  */
 
+#ifndef __REACTOS_USE_PCH__
 #include <stdlib.h>
 //#include <stdio.h>
 #include "directedLine.h"
 //#include "monoPolyPart.h"
+#endif
 
-/*a vertex is u_maximal if both of its two neightbors are to the left of this 
+/*a vertex is u_maximal if both of its two neightbors are to the left of this
  *vertex
  */
 static Int is_u_maximal(directedLine* v)
@@ -62,7 +64,7 @@ static Int is_u_maximal(directedLine* v)
     return 0;
 }
 
-/*a vertex is u_minimal if both of its two neightbors are to the right of this 
+/*a vertex is u_minimal if both of its two neightbors are to the right of this
  *vertex
  */
 static Int is_u_minimal(directedLine* v)
@@ -125,7 +127,7 @@ directedLine* monoPolyPart(directedLine* polygon)
       if(A->head()[0] < C->head()[0])
 	C = A;
     }
-      
+
   //find B: the first u_minimal vertex on the right chain
   //and  D: the right most vertex between top and B
   B = NULL;
@@ -157,13 +159,13 @@ directedLine* monoPolyPart(directedLine* polygon)
   //find H on the right chain that is right above A
   for(tempV=topV; compV2InY(tempV->head(), A->head()) == 1; tempV = tempV->getPrev());
   H = tempV->getNext();
-  
+
   //Main Loop
   directedLine* ret = NULL;
   directedLine* currentPolygon = polygon;
   while(1)
     {
-      //if both B and D are equal to botV, then this polygon is already 
+      //if both B and D are equal to botV, then this polygon is already
       //u-monotone
       if(A == botV && B == botV)
 	{
@@ -253,7 +255,7 @@ directedLine* monoPolyPart(directedLine* polygon)
 		F = G;
 
 	      //connect FB
-	      polygon->connectDiagonal_2slines(F, B, 
+	      polygon->connectDiagonal_2slines(F, B,
 					       &ret_p1,
 					       &ret_p2,
 					       NULL);
@@ -284,14 +286,14 @@ directedLine* monoPolyPart(directedLine* polygon)
 		}
 	      //update G
               if(B == botV)
-		G = botV; 
+		G = botV;
               else
 		{
 		  for(tempV = G; compV2InY(tempV->head(), B->head()) == 1;  tempV = tempV->getNext());
 		  G = tempV->getPrev();
 		}
 	    } //end of A is below B
-	} //end not u-monotone	
+	} //end not u-monotone
     } //end of main loop
 }
 

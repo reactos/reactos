@@ -37,9 +37,11 @@
  *
  */
 
+#ifndef __REACTOS_USE_PCH__
 #include "glimports.h"
 #include "sorter.h"
 //#include "mystdio.h"
+#endif
 
 Sorter::Sorter( int _es )
 {

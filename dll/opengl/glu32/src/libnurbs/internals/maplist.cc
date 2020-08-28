@@ -37,6 +37,7 @@
  *
  */
 
+#ifndef __REACTOS_USE_PCH__
 //#include "glimports.h"
 //#include "mystdio.h"
 //#include "myassert.h"
@@ -44,7 +45,8 @@
 //#include "nurbsconsts.h"
 #include "maplist.h"
 #include "mapdesc.h"
- 
+#endif
+
 Maplist::Maplist( Backend& b )
     : mapdescPool( sizeof( Mapdesc ), 10, "mapdesc pool" ),
       backend( b )
@@ -52,7 +54,7 @@ Maplist::Maplist( Backend& b )
     maps = 0; lastmap = &maps;
 }
 
-void 
+void
 Maplist::initialize( void )
 {
     freeMaps();
@@ -60,14 +62,14 @@ Maplist::initialize( void )
     define( N_P2DR, 1, 3 );
 }
 
-void 
+void
 Maplist::add( long type, int israt, int ncoords )
 {
     *lastmap = new(mapdescPool) Mapdesc( type, israt, ncoords, backend );
     lastmap = &((*lastmap)->next);
 }
 
-void 
+void
 Maplist::define( long type, int israt, int ncoords )
 {
 #ifndef NDEBUG // to avoid warning
@@ -77,7 +79,7 @@ Maplist::define( long type, int israt, int ncoords )
     add( type, israt, ncoords );
 }
 
-void 
+void
 Maplist::remove( Mapdesc *m )
 {
     for( Mapdesc **curmap = &maps; *curmap; curmap = &((*curmap)->next) ) {
@@ -98,7 +100,7 @@ Maplist::freeMaps( void )
     lastmap = &maps;
 }
 
-Mapdesc * 
+Mapdesc *
 Maplist::find( long type )
 {
     Mapdesc *val = locate( type );
@@ -106,7 +108,7 @@ Maplist::find( long type )
     return val;
 }
 
-Mapdesc * 
+Mapdesc *
 Maplist::locate( long type )
 {
     Mapdesc *m;

@@ -6,21 +6,21 @@
 ** this file except in compliance with the License. You may obtain a copy
 ** of the License at Silicon Graphics, Inc., attn: Legal Services, 1600
 ** Amphitheatre Parkway, Mountain View, CA 94043-1351, or at:
-** 
+**
 ** http://oss.sgi.com/projects/FreeB
-** 
+**
 ** Note that, as provided in the License, the Software is distributed on an
 ** "AS IS" basis, with ALL EXPRESS AND IMPLIED WARRANTIES AND CONDITIONS
 ** DISCLAIMED, INCLUDING, WITHOUT LIMITATION, ANY IMPLIED WARRANTIES AND
 ** CONDITIONS OF MERCHANTABILITY, SATISFACTORY QUALITY, FITNESS FOR A
 ** PARTICULAR PURPOSE, AND NON-INFRINGEMENT.
-** 
+**
 ** Original Code. The Original Code is: OpenGL Sample Implementation,
 ** Version 1.2.1, released January 26, 2000, developed by Silicon Graphics,
 ** Inc. The Original Code is Copyright (c) 1991-2000 Silicon Graphics, Inc.
 ** Copyright in any portions created by third parties is as indicated
 ** elsewhere herein. All Rights Reserved.
-** 
+**
 ** Additional Notice Provisions: The application programming interfaces
 ** established by SGI in conjunction with the Original Code are The
 ** OpenGL(R) Graphics System: A Specification (Version 1.2.1), released
@@ -35,6 +35,7 @@
 /*
 */
 
+#ifndef __REACTOS_USE_PCH__
 #include "gluos.h"
 //#include <stdlib.h>
 //#include <stdio.h>
@@ -43,6 +44,7 @@
 #include <assert.h>
 
 #include "glsurfeval.h"
+#endif
 
 //extern int surfcount;
 
@@ -89,8 +91,8 @@ static void LOD_interpolate(REAL A[2], REAL B[2], REAL C[2], int j, int k, int p
   v = x*A[1] + y*B[1] + z*C[1];
 }
 
-void OpenGLSurfaceEvaluator::LOD_triangle(REAL A[2], REAL B[2], REAL C[2], 
-			 int level)     
+void OpenGLSurfaceEvaluator::LOD_triangle(REAL A[2], REAL B[2], REAL C[2],
+			 int level)
 {
   int k,j;
   int pow2_level;
@@ -132,7 +134,7 @@ glBegin(GL_TRIANGLE_STRIP);
 	  inDoEvalCoord2EM(u,v);
 #endif
 	}
-//      endCallBack();	
+//      endCallBack();
 glEnd();
     }
 }
@@ -154,13 +156,13 @@ void OpenGLSurfaceEvaluator::LOD_eval(int num_vert, REAL* verts, int type,
 		     level
 		     );
       }
-    if(num_vert % 2 ==1) 
+    if(num_vert % 2 ==1)
       {
 	LOD_triangle(verts+2*(num_vert-3), verts+2*(num_vert-2), verts+2*(num_vert-1),
 		     level
 		     );
       }
-    break;      
+    break;
   case GL_TRIANGLE_FAN:
     for(i=1, k=2; i<=num_vert-2; i++, k+=2)
       {
@@ -169,12 +171,12 @@ void OpenGLSurfaceEvaluator::LOD_eval(int num_vert, REAL* verts, int type,
 		     );
       }
     break;
-  
+
   default:
     fprintf(stderr, "typy not supported in LOD_\n");
   }
 }
-	
+
 
 #endif //USE_LOD
 
@@ -227,7 +229,7 @@ static void gTessVertexCyl(float u, float v, float temp_normal[3], float temp_ve
   temp_vertex[1] = y;
   temp_vertex[2] = z;
 
-/*  
+/*
   glNormal3f(nx,ny,nz);
   glVertex3f(x,y,z);
 */
@@ -251,7 +253,7 @@ void OpenGLSurfaceEvaluator::inBPMEval(bezierPatchMesh* bpm)
 
   int ustride = bpm->bpatch->dimension * bpm->bpatch->vorder;
   int vstride = bpm->bpatch->dimension;
-  inMap2f( 
+  inMap2f(
 	  (bpm->bpatch->dimension == 3)? GL_MAP2_VERTEX_3 : GL_MAP2_VERTEX_4,
 	  bpm->bpatch->umin,
 	  bpm->bpatch->umax,
@@ -262,7 +264,7 @@ void OpenGLSurfaceEvaluator::inBPMEval(bezierPatchMesh* bpm)
 	  vstride,
 	  bpm->bpatch->vorder,
 	  bpm->bpatch->ctlpoints);
-  
+
   bpm->vertex_array = (float*) malloc(sizeof(float)* (bpm->index_UVarray/2) * 3+1); /*in case the origional dimenion is 4, then we need 4 space to pass to evaluator.*/
   assert(bpm->vertex_array);
   bpm->normal_array = (float*) malloc(sizeof(float)* (bpm->index_UVarray/2) * 3);
@@ -406,39 +408,39 @@ void OpenGLSurfaceEvaluator::inEvalMesh2(int lowU, int lowV, int highU, int high
   if(global_grid_nu == 0 || global_grid_nv == 0)
     return; /*no points need to be output*/
   du = (global_grid_u1 - global_grid_u0) / (REAL)global_grid_nu;
-  dv = (global_grid_v1 - global_grid_v0) / (REAL)global_grid_nv;  
-  
+  dv = (global_grid_v1 - global_grid_v0) / (REAL)global_grid_nv;
+
   if(global_grid_nu >= global_grid_nv){
     for(i=lowU; i<highU; i++){
       REAL u1 = (i==global_grid_nu)? global_grid_u1:(global_grid_u0 + i*du);
       REAL u2 = ((i+1) == global_grid_nu)? global_grid_u1: (global_grid_u0+(i+1)*du);
-      
+
       bgnqstrip();
       for(j=highV; j>=lowV; j--){
 	REAL v1 = (j == global_grid_nv)? global_grid_v1: (global_grid_v0 +j*dv);
-	
+
 	inDoEvalCoord2(u1, v1, point, normal);
 	inDoEvalCoord2(u2, v1, point, normal);
       }
       endqstrip();
     }
   }
-  
+
   else{
     for(i=lowV; i<highV; i++){
       REAL v1 = (i==global_grid_nv)? global_grid_v1:(global_grid_v0 + i*dv);
       REAL v2 = ((i+1) == global_grid_nv)? global_grid_v1: (global_grid_v0+(i+1)*dv);
-      
+
       bgnqstrip();
       for(j=highU; j>=lowU; j--){
-	REAL u1 = (j == global_grid_nu)? global_grid_u1: (global_grid_u0 +j*du);	
+	REAL u1 = (j == global_grid_nu)? global_grid_u1: (global_grid_u0 +j*du);
 	inDoEvalCoord2(u1, v2, point, normal);
 	inDoEvalCoord2(u1, v1, point, normal);
       }
       endqstrip();
     }
   }
-    
+
 }
 
 void OpenGLSurfaceEvaluator::inMap2f(int k,
@@ -454,7 +456,7 @@ void OpenGLSurfaceEvaluator::inMap2f(int k,
 {
   int i,j,x;
   REAL *data = global_ev_ctlPoints;
-  
+
 
 
   if(k == GL_MAP2_VERTEX_3) k=3;
@@ -463,7 +465,7 @@ void OpenGLSurfaceEvaluator::inMap2f(int k,
     printf("error in inMap2f, maptype=%i is wrong, k,map is not updated\n", k);
     return;
   }
-  
+
   global_ev_k = k;
   global_ev_u1 = ulower;
   global_ev_u2 = uupper;
@@ -490,12 +492,12 @@ void OpenGLSurfaceEvaluator::inMap2f(int k,
 
 
 /*
- *given a point p with homegeneous coordiante (x,y,z,w), 
+ *given a point p with homegeneous coordiante (x,y,z,w),
  *let pu(x,y,z,w) be its partial derivative vector with
  *respect to u
  *and pv(x,y,z,w) be its partial derivative vector with repect to v.
  *This function returns the partial derivative vectors of the
- *inhomegensous coordinates, i.e., 
+ *inhomegensous coordinates, i.e.,
  * (x/w, y/w, z/w) with respect to u and v.
  */
 void OpenGLSurfaceEvaluator::inComputeFirstPartials(REAL *p, REAL *pu, REAL *pv)
@@ -517,21 +519,21 @@ void OpenGLSurfaceEvaluator::inComputeFirstPartials(REAL *p, REAL *pu, REAL *pv)
  */
 void OpenGLSurfaceEvaluator::inComputeNormal2(REAL *pu, REAL *pv, REAL *n)
 {
-  REAL mag; 
+  REAL mag;
 
   n[0] = pu[1]*pv[2] - pu[2]*pv[1];
   n[1] = pu[2]*pv[0] - pu[0]*pv[2];
-  n[2] = pu[0]*pv[1] - pu[1]*pv[0];  
+  n[2] = pu[0]*pv[1] - pu[1]*pv[0];
 
   mag = sqrt(n[0]*n[0] + n[1]*n[1] + n[2]*n[2]);
 
   if (mag > 0.0) {
-     n[0] /= mag; 
+     n[0] /= mag;
      n[1] /= mag;
      n[2] /= mag;
   }
 }
- 
+
 
 
 /*Compute point and normal
@@ -545,7 +547,7 @@ void OpenGLSurfaceEvaluator::inDoEvalCoord2(REAL u, REAL v,
   REAL du[4];
   REAL dv[4];
 
- 
+
   assert(global_ev_k>=3 && global_ev_k <= 4);
   /*compute homegeneous point and partial derivatives*/
   inDoDomain2WithDerivs(global_ev_k, u, v, global_ev_u1, global_ev_u2, global_ev_uorder, global_ev_v1, global_ev_v2, global_ev_vorder, global_ev_ctlPoints, retPoint, du, dv);
@@ -609,7 +611,7 @@ void OpenGLSurfaceEvaluator::inDoEvalCoord2(REAL u, REAL v,
   #ifdef DEBUG
   printf("vertex(%f,%f,%f)\n", retPoint[0],retPoint[1],retPoint[2]);
   #endif
-  
+
 
 
 }
@@ -625,7 +627,7 @@ void OpenGLSurfaceEvaluator::inDoEvalCoord2NOGE_BU(REAL u, REAL v,
   REAL du[4];
   REAL dv[4];
 
- 
+
   assert(global_ev_k>=3 && global_ev_k <= 4);
   /*compute homegeneous point and partial derivatives*/
 //   inPreEvaluateBU(global_ev_k, global_ev_uorder, global_ev_vorder, (u-global_ev_u1)/(global_ev_u2-global_ev_u1), global_ev_ctlPoints);
@@ -688,7 +690,7 @@ void OpenGLSurfaceEvaluator::inDoEvalCoord2NOGE_BV(REAL u, REAL v,
   REAL du[4];
   REAL dv[4];
 
- 
+
   assert(global_ev_k>=3 && global_ev_k <= 4);
   /*compute homegeneous point and partial derivatives*/
 //   inPreEvaluateBV(global_ev_k, global_ev_uorder, global_ev_vorder, (v-global_ev_v1)/(global_ev_v2-global_ev_v1), global_ev_ctlPoints);
@@ -740,7 +742,7 @@ void OpenGLSurfaceEvaluator::inDoEvalCoord2NOGE_BV(REAL u, REAL v,
     break;
   }
 }
- 
+
 
 /*Compute point and normal
  *see the head of inDoDomain2WithDerivs
@@ -753,7 +755,7 @@ void OpenGLSurfaceEvaluator::inDoEvalCoord2NOGE(REAL u, REAL v,
   REAL du[4];
   REAL dv[4];
 
- 
+
   assert(global_ev_k>=3 && global_ev_k <= 4);
   /*compute homegeneous point and partial derivatives*/
   inDoDomain2WithDerivs(global_ev_k, u, v, global_ev_u1, global_ev_u2, global_ev_uorder, global_ev_v1, global_ev_v2, global_ev_vorder, global_ev_ctlPoints, retPoint, du, dv);
@@ -805,14 +807,14 @@ void OpenGLSurfaceEvaluator::inDoEvalCoord2NOGE(REAL u, REAL v,
 //  glNormal3fv(retNormal);
 //  glVertex3fv(retPoint);
 }
- 
+
 void OpenGLSurfaceEvaluator::inPreEvaluateBV(int k, int uorder, int vorder, REAL vprime, REAL *baseData)
 {
   int j,row,col;
   REAL p, pdv;
   REAL *data;
 
-  if(global_vprime != vprime || global_vorder != vorder) {      
+  if(global_vprime != vprime || global_vorder != vorder) {
     inPreEvaluateWithDeriv(vorder, vprime, global_vcoeff, global_vcoeffDeriv);
     global_vprime = vprime;
     global_vorder = vorder;
@@ -841,7 +843,7 @@ void OpenGLSurfaceEvaluator::inPreEvaluateBU(int k, int uorder, int vorder, REAL
   REAL p, pdu;
   REAL *data;
 
-  if(global_uprime != uprime || global_uorder != uorder) {      
+  if(global_uprime != uprime || global_uorder != uorder) {
     inPreEvaluateWithDeriv(uorder, uprime, global_ucoeff, global_ucoeffDeriv);
     global_uprime = uprime;
     global_uorder = uorder;
@@ -864,7 +866,7 @@ void OpenGLSurfaceEvaluator::inPreEvaluateBU(int k, int uorder, int vorder, REAL
     }
   }
 }
- 
+
 void OpenGLSurfaceEvaluator::inDoDomain2WithDerivsBU(int k, REAL u, REAL v,
 						      REAL u1, REAL u2, int uorder,
 						      REAL v1, REAL v2, int vorder,
@@ -898,8 +900,8 @@ void OpenGLSurfaceEvaluator::inDoDomain2WithDerivsBU(int k, REAL u, REAL v,
 	retdv[j] += global_BU[col][j] * global_vcoeffDeriv[col];
       }
     }
-}    
-   
+}
+
 void OpenGLSurfaceEvaluator::inDoDomain2WithDerivsBV(int k, REAL u, REAL v,
 						      REAL u1, REAL u2, int uorder,
 						      REAL v1, REAL v2, int vorder,
@@ -932,7 +934,7 @@ void OpenGLSurfaceEvaluator::inDoDomain2WithDerivsBV(int k, REAL u, REAL v,
       }
     }
 }
-  
+
 
 /*
  *given a Bezier surface, and parameter (u,v), compute the point in the object space,
@@ -946,9 +948,9 @@ void OpenGLSurfaceEvaluator::inDoDomain2WithDerivsBV(int k, REAL u, REAL v,
  *retdu: the computed partial derivative with respect to u.
  *retdv: the computed partial derivative with respect to v.
  */
-void OpenGLSurfaceEvaluator::inDoDomain2WithDerivs(int k, REAL u, REAL v, 
-				REAL u1, REAL u2, int uorder, 
-				REAL v1,  REAL v2, int vorder, 
+void OpenGLSurfaceEvaluator::inDoDomain2WithDerivs(int k, REAL u, REAL v,
+				REAL u1, REAL u2, int uorder,
+				REAL v1,  REAL v2, int vorder,
 				REAL *baseData,
 				REAL *retPoint, REAL *retdu, REAL *retdv)
 {
@@ -963,7 +965,7 @@ void OpenGLSurfaceEvaluator::inDoDomain2WithDerivs(int k, REAL u, REAL v,
 	return;
     uprime = (u - u1) / (u2 - u1);
     vprime = (v - v1) / (v2 - v1);
-    
+
     /* Compute coefficients for values and derivs */
 
     /* Use already cached values if possible */
@@ -972,7 +974,7 @@ void OpenGLSurfaceEvaluator::inDoDomain2WithDerivs(int k, REAL u, REAL v,
 	global_uorder = uorder;
 	global_uprime = uprime;
     }
-    if (global_vprime != vprime || 
+    if (global_vprime != vprime ||
 	  global_vorder != vorder) {
 	inPreEvaluateWithDeriv(vorder, vprime, global_vcoeff, global_vcoeffDeriv);
 	global_vorder = vorder;
@@ -983,7 +985,7 @@ void OpenGLSurfaceEvaluator::inDoDomain2WithDerivs(int k, REAL u, REAL v,
 	data=baseData+j;
 	retPoint[j] = retdu[j] = retdv[j] = 0.0;
 	for (row = 0; row < uorder; row++)  {
-	    /* 
+	    /*
 	    ** Minor optimization.
 	    ** The col == 0 part of the loop is extracted so we don't
 	    ** have to initialize p and pdv to 0.
@@ -1002,13 +1004,13 @@ void OpenGLSurfaceEvaluator::inDoDomain2WithDerivs(int k, REAL u, REAL v,
 	    retdu[j] += global_ucoeffDeriv[row] * p;
 	    retdv[j] += global_ucoeff[row] * pdv;
 	}
-    }  
+    }
 }
 
 
 /*
- *compute the Bezier polynomials C[n,j](v) for all j at v with 
- *return values stored in coeff[], where 
+ *compute the Bezier polynomials C[n,j](v) for all j at v with
+ *return values stored in coeff[], where
  *  C[n,j](v) = (n,j) * v^j * (1-v)^(n-j),
  *  j=0,1,2,...,n.
  *order : n+1
@@ -1024,7 +1026,7 @@ void OpenGLSurfaceEvaluator::inPreEvaluate(int order, REAL vprime, REAL *coeff)
   int i, j;
   REAL oldval, temp;
   REAL oneMinusvprime;
-  
+
   /*
    * Minor optimization
    * Compute orders 1 and 2 outright, and set coeff[0], coeff[1] to
@@ -1034,12 +1036,12 @@ void OpenGLSurfaceEvaluator::inPreEvaluate(int order, REAL vprime, REAL *coeff)
     coeff[0] = 1.0;
     return;
   }
-  
+
   oneMinusvprime = 1-vprime;
   coeff[0] = oneMinusvprime;
   coeff[1] = vprime;
   if (order == 2) return;
-  
+
   for (i = 2; i < order; i++) {
     oldval = coeff[0] * vprime;
     coeff[0] = oneMinusvprime * coeff[0];
@@ -1053,27 +1055,27 @@ void OpenGLSurfaceEvaluator::inPreEvaluate(int order, REAL vprime, REAL *coeff)
 }
 
 /*
- *compute the Bezier polynomials C[n,j](v) and derivatives for all j at v with 
+ *compute the Bezier polynomials C[n,j](v) and derivatives for all j at v with
  *return values stored in coeff[] and coeffDeriv[].
  *see the head of function inPreEvaluate for the definition of C[n,j](v)
- *and how to compute the values. 
+ *and how to compute the values.
  *The algorithm to compute the derivative is:
  *   dC[0,0](v) = 0.
  *   dC[n,j](v) = n*(dC[n-1,j-1](v) - dC[n-1,j](v)).
  *
  *This code is copied from opengl/soft/so_eval.c:PreEvaluateWidthDeriv
  */
-void OpenGLSurfaceEvaluator::inPreEvaluateWithDeriv(int order, REAL vprime, 
+void OpenGLSurfaceEvaluator::inPreEvaluateWithDeriv(int order, REAL vprime,
     REAL *coeff, REAL *coeffDeriv)
 {
   int i, j;
   REAL oldval, temp;
   REAL oneMinusvprime;
-  
+
   oneMinusvprime = 1-vprime;
   /*
    * Minor optimization
-   * Compute orders 1 and 2 outright, and set coeff[0], coeff[1] to 
+   * Compute orders 1 and 2 outright, and set coeff[0], coeff[1] to
    * their i==1 loop values to avoid the initialization and the i==1 loop.
    */
   if (order == 1) {
@@ -1111,7 +1113,7 @@ void OpenGLSurfaceEvaluator::inPreEvaluateWithDeriv(int order, REAL vprime,
     j++;
   } while (j < order - 1);
   coeffDeriv[j] = coeff[j-1];
-  
+
   oldval = coeff[0] * vprime;
   coeff[0] = oneMinusvprime * coeff[0];
   for (j = 1; j < i; j++) {
@@ -1122,7 +1124,7 @@ void OpenGLSurfaceEvaluator::inPreEvaluateWithDeriv(int order, REAL vprime,
   coeff[j] = oldval;
 }
 
-void OpenGLSurfaceEvaluator::inEvalULine(int n_points, REAL v, REAL* u_vals, 
+void OpenGLSurfaceEvaluator::inEvalULine(int n_points, REAL v, REAL* u_vals,
 	int stride, REAL ret_points[][3], REAL ret_normals[][3])
 {
   int i,k;
@@ -1141,7 +1143,7 @@ inPreEvaluateBV_intfac(v);
 
 }
 
-void OpenGLSurfaceEvaluator::inEvalVLine(int n_points, REAL u, REAL* v_vals, 
+void OpenGLSurfaceEvaluator::inEvalVLine(int n_points, REAL u, REAL* v_vals,
 	int stride, REAL ret_points[][3], REAL ret_normals[][3])
 {
   int i,k;
@@ -1155,7 +1157,7 @@ inPreEvaluateBU_intfac(u);
       ret_points[i][2] = temp[2];
     }
 }
-      
+
 
 /*triangulate a strip bounded by two lines which are parallel  to U-axis
  *upperVerts: the verteces on the upper line
@@ -1177,7 +1179,7 @@ void OpenGLSurfaceEvaluator::inEvalUStrip(int n_upper, REAL v_upper, REAL* upper
   assert(lowerXYZ);
   REAL3* lowerNormal = (REAL3*) malloc(sizeof(REAL3) * n_lower);
   assert(lowerNormal);
-  
+
   inEvalULine(n_upper, v_upper, upper_val,  1, upperXYZ, upperNormal);
   inEvalULine(n_lower, v_lower, lower_val,  1, lowerXYZ, lowerNormal);
 
@@ -1215,10 +1217,10 @@ void OpenGLSurfaceEvaluator::inEvalUStrip(int n_upper, REAL v_upper, REAL* upper
       leftMostXYZ = lowerXYZ[0];
       leftMostNormal = lowerNormal[0];
     }
-  
+
   /*the main loop.
-   *the invariance is that: 
-   *at the beginning of each loop, the meaning of i,j,and leftMostV are 
+   *the invariance is that:
+   *at the beginning of each loop, the meaning of i,j,and leftMostV are
    *maintained
    */
   while(1)
@@ -1248,7 +1250,7 @@ void OpenGLSurfaceEvaluator::inEvalUStrip(int n_upper, REAL v_upper, REAL* upper
               bgntfan();
 	      glNormal3fv(leftMostNormal);
 	      glVertex3fv(leftMostXYZ);
-	      
+
               for(k=n_upper-1; k>=i; k--) /*reverse order for two-side lighting*/
 		{
 		  glNormal3fv(upperNormal[k]);
@@ -1268,7 +1270,7 @@ void OpenGLSurfaceEvaluator::inEvalUStrip(int n_upper, REAL v_upper, REAL* upper
 	      glNormal3fv(lowerNormal[j]);
 	      glVertex3fv(lowerXYZ[j]);
 
-              /*find the last k>=i such that 
+              /*find the last k>=i such that
                *upperverts[k][0] <= lowerverts[j][0]
                */
               k=i;
@@ -1308,10 +1310,10 @@ void OpenGLSurfaceEvaluator::inEvalUStrip(int n_upper, REAL v_upper, REAL* upper
 	      bgntfan();
 	      glNormal3fv(upperNormal[i]);
 	      glVertex3fv(upperXYZ[i]);
-	      
+
               glNormal3fv(leftMostNormal);
 	      glVertex3fv(leftMostXYZ);
-	      
+
 
               /*find the last k>=j such that
                *lowerverts[k][0] < upperverts[i][0]
@@ -1336,10 +1338,10 @@ void OpenGLSurfaceEvaluator::inEvalUStrip(int n_upper, REAL v_upper, REAL* upper
 
 	      leftMostNormal = lowerNormal[j-1];
 	      leftMostXYZ = lowerXYZ[j-1];
-            }     
+            }
         }
     }
-  //clean up 
+  //clean up
   free(upperXYZ);
   free(lowerXYZ);
   free(upperNormal);
@@ -1366,7 +1368,7 @@ void OpenGLSurfaceEvaluator::inEvalVStrip(int n_left, REAL u_left, REAL* left_va
   assert(rightXYZ);
   REAL3* rightNormal = (REAL3*) malloc(sizeof(REAL3) * n_right);
   assert(rightNormal);
-  
+
   inEvalVLine(n_left, u_left, left_val,  1, leftXYZ, leftNormal);
   inEvalVLine(n_right, u_right, right_val,  1, rightXYZ, rightNormal);
 
@@ -1379,7 +1381,7 @@ void OpenGLSurfaceEvaluator::inEvalVStrip(int n_left, REAL u_left, REAL* left_va
    *the algorithm works by scanning from bot to top.
    *botMostV: the bot most of the remaining verteces (on both left and right).
    *           it could an element of leftVerts or rightVerts.
-   *i: leftVerts[i] is the first vertex to the top of botMostV on left line   
+   *i: leftVerts[i] is the first vertex to the top of botMostV on left line
    *j: rightVerts[j] is the first vertex to the top of botMostV on rightline   */
 
   /*initialize i,j,and botMostV
@@ -1405,10 +1407,10 @@ void OpenGLSurfaceEvaluator::inEvalVStrip(int n_left, REAL u_left, REAL* left_va
       botMostXYZ = rightXYZ[0];
       botMostNormal = rightNormal[0];
     }
-  
+
   /*the main loop.
-   *the invariance is that: 
-   *at the beginning of each loop, the meaning of i,j,and botMostV are 
+   *the invariance is that:
+   *at the beginning of each loop, the meaning of i,j,and botMostV are
    *maintained
    */
   while(1)
@@ -1438,7 +1440,7 @@ void OpenGLSurfaceEvaluator::inEvalVStrip(int n_left, REAL u_left, REAL* left_va
               bgntfan();
 	      glNormal3fv(botMostNormal);
 	      glVertex3fv(botMostXYZ);
-	      
+
               for(k=n_left-1; k>=i; k--) /*reverse order for two-side lighting*/
 		{
 		  glNormal3fv(leftNormal[k]);
@@ -1458,7 +1460,7 @@ void OpenGLSurfaceEvaluator::inEvalVStrip(int n_left, REAL u_left, REAL* left_va
 	      glNormal3fv(rightNormal[j]);
 	      glVertex3fv(rightXYZ[j]);
 
-              /*find the last k>=i such that 
+              /*find the last k>=i such that
                *leftverts[k][0] <= rightverts[j][0]
                */
               k=i;
@@ -1498,10 +1500,10 @@ void OpenGLSurfaceEvaluator::inEvalVStrip(int n_left, REAL u_left, REAL* left_va
 	      bgntfan();
 	      glNormal3fv(leftNormal[i]);
 	      glVertex3fv(leftXYZ[i]);
-	      
+
               glNormal3fv(botMostNormal);
 	      glVertex3fv(botMostXYZ);
-	      
+
 
               /*find the last k>=j such that
                *rightverts[k][0] < leftverts[i][0]
@@ -1526,10 +1528,10 @@ void OpenGLSurfaceEvaluator::inEvalVStrip(int n_left, REAL u_left, REAL* left_va
 
 	      botMostNormal = rightNormal[j-1];
 	      botMostXYZ = rightXYZ[j-1];
-            }     
+            }
         }
     }
-  //clean up 
+  //clean up
   free(leftXYZ);
   free(rightXYZ);
   free(leftNormal);
@@ -1570,7 +1572,7 @@ void OpenGLSurfaceEvaluator::inMap2fEM(int which, int k,
   }
 
   REAL *data = temp_em->ctlPoints;
-  
+
   temp_em->uprime = -1;//initilized
   temp_em->vprime = -1;
 
@@ -1597,7 +1599,7 @@ void OpenGLSurfaceEvaluator::inMap2fEM(int which, int k,
   }
 }
 
-void OpenGLSurfaceEvaluator::inDoDomain2WithDerivsEM(surfEvalMachine *em, REAL u, REAL v, 
+void OpenGLSurfaceEvaluator::inDoDomain2WithDerivsEM(surfEvalMachine *em, REAL u, REAL v,
 				REAL *retPoint, REAL *retdu, REAL *retdv)
 {
     int j, row, col;
@@ -1611,7 +1613,7 @@ void OpenGLSurfaceEvaluator::inDoDomain2WithDerivsEM(surfEvalMachine *em, REAL u
 	return;
     the_uprime = (u - em->u1) / (em->u2 - em->u1);
     the_vprime = (v - em->v1) / (em->v2 - em->v1);
-    
+
     /* Compute coefficients for values and derivs */
 
     /* Use already cached values if possible */
@@ -1628,7 +1630,7 @@ void OpenGLSurfaceEvaluator::inDoDomain2WithDerivsEM(surfEvalMachine *em, REAL u
 	data=em->ctlPoints+j;
 	retPoint[j] = retdu[j] = retdv[j] = 0.0;
 	for (row = 0; row < em->uorder; row++)  {
-	    /* 
+	    /*
 	    ** Minor optimization.
 	    ** The col == 0 part of the loop is extracted so we don't
 	    ** have to initialize p and pdv to 0.
@@ -1647,10 +1649,10 @@ void OpenGLSurfaceEvaluator::inDoDomain2WithDerivsEM(surfEvalMachine *em, REAL u
 	    retdu[j] += em->ucoeffDeriv[row] * p;
 	    retdv[j] += em->ucoeff[row] * pdv;
 	}
-    }  
-}  
+    }
+}
 
-void OpenGLSurfaceEvaluator::inDoDomain2EM(surfEvalMachine *em, REAL u, REAL v, 
+void OpenGLSurfaceEvaluator::inDoDomain2EM(surfEvalMachine *em, REAL u, REAL v,
 				REAL *retPoint)
 {
     int j, row, col;
@@ -1663,7 +1665,7 @@ void OpenGLSurfaceEvaluator::inDoDomain2EM(surfEvalMachine *em, REAL u, REAL v,
 	return;
     the_uprime = (u - em->u1) / (em->u2 - em->u1);
     the_vprime = (v - em->v1) / (em->v2 - em->v1);
-    
+
     /* Compute coefficients for values and derivs */
 
     /* Use already cached values if possible */
@@ -1680,7 +1682,7 @@ void OpenGLSurfaceEvaluator::inDoDomain2EM(surfEvalMachine *em, REAL u, REAL v,
 	data=em->ctlPoints+j;
 	retPoint[j] = 0.0;
 	for (row = 0; row < em->uorder; row++)  {
-	    /* 
+	    /*
 	    ** Minor optimization.
 	    ** The col == 0 part of the loop is extracted so we don't
 	    ** have to initialize p and pdv to 0.
@@ -1695,8 +1697,8 @@ void OpenGLSurfaceEvaluator::inDoDomain2EM(surfEvalMachine *em, REAL u, REAL v,
 	    /* Use p, pdv value to incrementally add up r, du, dv */
 	    retPoint[j] += em->ucoeff[row] * p;
 	}
-    }  
-}  
+    }
+}
 
 
 void OpenGLSurfaceEvaluator::inDoEvalCoord2EM(REAL u, REAL v)
@@ -1721,7 +1723,7 @@ void OpenGLSurfaceEvaluator::inDoEvalCoord2EM(REAL u, REAL v)
     {
       inDoDomain2EM(&em_normal, u,v, temp_normal);
       normalCallBack(temp_normal, userData);
-    
+
       if(vertex_flag)
 	{
 	  inDoDomain2EM(&em_vertex, u,v,temp_vertex);
@@ -1729,10 +1731,10 @@ void OpenGLSurfaceEvaluator::inDoEvalCoord2EM(REAL u, REAL v)
 	    {
 	      temp_vertex[0] /= temp_vertex[3];
 	      temp_vertex[1] /= temp_vertex[3];
-	      temp_vertex[2] /= temp_vertex[3];	      
+	      temp_vertex[2] /= temp_vertex[3];
 	    }
           temp_vertex[3]=u;
-          temp_vertex[4]=v;	  
+          temp_vertex[4]=v;
 	  vertexCallBack(temp_vertex, userData);
 	}
     }
@@ -1740,7 +1742,7 @@ void OpenGLSurfaceEvaluator::inDoEvalCoord2EM(REAL u, REAL v)
     {
       REAL du[4];
       REAL dv[4];
-      
+
       /*compute homegeneous point and partial derivatives*/
       inDoDomain2WithDerivsEM(&em_vertex, u,v,temp_vertex,du,dv);
 
@@ -1750,7 +1752,7 @@ void OpenGLSurfaceEvaluator::inDoEvalCoord2EM(REAL u, REAL v)
 #ifdef AVOID_ZERO_NORMAL
       if(myabs(dv[0]) <= MYZERO && myabs(dv[1]) <= MYZERO && myabs(dv[2]) <= MYZERO)
 	{
-	  
+
 	  REAL tempdu[4];
 	  REAL tempdata[4];
 	  REAL u1 = em_vertex.u1;
@@ -1762,7 +1764,7 @@ void OpenGLSurfaceEvaluator::inDoEvalCoord2EM(REAL u, REAL v)
 	  inDoDomain2WithDerivsEM(&em_vertex,u,v, tempdata, tempdu, dv);
 
 	  if(em_vertex.k ==4)
-	    inComputeFirstPartials(temp_vertex, du, dv);	  
+	    inComputeFirstPartials(temp_vertex, du, dv);
 	}
       else if(myabs(du[0]) <= MYZERO && myabs(du[1]) <= MYZERO && myabs(du[2]) <= MYZERO)
 	{
@@ -1802,7 +1804,7 @@ void OpenGLSurfaceEvaluator::inDoEvalCoord2EM(REAL u, REAL v)
       temp_vertex[3] = u;
       temp_vertex[4] = v;
       vertexCallBack(temp_vertex, userData);
-      
+
     }/*end if auto_normal*/
   else //no normal map, and no normal callback function
     {
@@ -1813,7 +1815,7 @@ void OpenGLSurfaceEvaluator::inDoEvalCoord2EM(REAL u, REAL v)
 	    {
 	      temp_vertex[0] /= temp_vertex[3];
 	      temp_vertex[1] /= temp_vertex[3];
-	      temp_vertex[2] /= temp_vertex[3];	      
+	      temp_vertex[2] /= temp_vertex[3];
 	    }
           temp_vertex[3] = u;
           temp_vertex[4] = v;
@@ -1955,8 +1957,8 @@ void OpenGLSurfaceEvaluator::inBPMEvalEM(bezierPatchMesh* bpm)
 		   0
 		   );
 	}
-	  k+= 2*bpm->length_array[i];       
-    
+	  k+= 2*bpm->length_array[i];
+
 #else //undef  USE_LOD
 
 #ifdef CRACK_TEST
@@ -2042,7 +2044,7 @@ return;
 #endif //GENERIC_TEST
 
 	    inDoEvalCoord2EM(u,v);
-     
+
 #endif //USE_LOD
 
 	  k += 2;

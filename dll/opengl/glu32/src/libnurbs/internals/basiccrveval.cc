@@ -37,9 +37,11 @@
  *
  */
 
+#ifndef __REACTOS_USE_PCH__
 //#include "mystdio.h"
 //#include "types.h"
 #include "basiccrveval.h"
+#endif
 
 void
 BasicCurveEvaluator::domain1f( REAL, REAL )

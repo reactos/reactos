@@ -37,6 +37,7 @@
  *
  */
 
+#ifndef __REACTOS_USE_PCH__
 //#include "glimports.h"
 //#include "mystdio.h"
 //#include "myassert.h"
@@ -44,6 +45,7 @@
 #include "mymath.h"
 //#include "nurbsconsts.h"
 #include "mapdesc.h"
+#endif
 
 /*--------------------------------------------------------------------------
  * calcPartialVelocity - calculate maximum magnitude of a given partial
@@ -65,13 +67,13 @@ Mapdesc::calcPartialVelocity (
 
     int j, k, t;
     // copy inhomogeneous control points into temporary array
-    for( j=0; j != ncols; j++ ) 
+    for( j=0; j != ncols; j++ )
 	for( k=0; k != inhcoords; k++ )
 	    tmp[j][k] = p[j*stride + k];
 
-    for( t=0; t != partial; t++ ) 
-	for( j=0; j != ncols-t-1; j++ ) 
-	    for( k=0; k != inhcoords; k++ ) 
+    for( t=0; t != partial; t++ )
+	for( j=0; j != ncols-t-1; j++ )
+	    for( k=0; k != inhcoords; k++ )
 		tmp[j][k] = tmp[j+1][k] - tmp[j][k];
 
     // compute magnitude and store in mag array
@@ -84,7 +86,7 @@ Mapdesc::calcPartialVelocity (
     // compute scale factor
     REAL fac = 1;
     REAL invt = 1.0 / range;
-    for( t = ncols-1; t != ncols-1-partial; t-- ) 
+    for( t = ncols-1; t != ncols-1-partial; t-- )
 	fac *= t * invt;
 
     // compute max magnitude of all entries in array
@@ -111,7 +113,7 @@ Mapdesc::calcPartialVelocity (
     int	 ncols,
     int  spartial,
     int  tpartial,
-    REAL srange, 
+    REAL srange,
     REAL trange,
     int  side )
 {
@@ -155,7 +157,7 @@ Mapdesc::calcPartialVelocity (
 		qj += cstride;
 	    }
 	    ti += istride;
-	    qi += rstride; 
+	    qi += rstride;
 	}
     }
 
@@ -177,7 +179,7 @@ Mapdesc::calcPartialVelocity (
 	for( ; tjl != tjll; tjl -= jstride )
 	    for( REAL *tj = tp; tj != tjl; tj += jstride )
 		for( REAL *ti = tj, *til = ti + id; ti != til; ti += istride )
-		    for( int k=0; k != inhcoords; k++ ) 
+		    for( int k=0; k != inhcoords; k++ )
 			ti[k] = ti[k+jstride] - ti[k];
 
     }
@@ -202,9 +204,9 @@ Mapdesc::calcPartialVelocity (
     {
 	REAL invs = 1.0 / srange;
 	REAL invt = 1.0 / trange;
-	for( int s = nrows-1, slast = s-spartial; s != slast; s-- ) 
+	for( int s = nrows-1, slast = s-spartial; s != slast; s-- )
 	    fac *= s * invs;
-	for( int t = ncols-1, tlast = t-tpartial; t != tlast; t-- ) 
+	for( int t = ncols-1, tlast = t-tpartial; t != tlast; t-- )
 	    fac *= t * invt;
     }
 
@@ -215,7 +217,7 @@ Mapdesc::calcPartialVelocity (
 	for( i=0; i != nrows-spartial; i++ ) {
 	    j = 0;
 	    if( mag[i][j] > dist[0] ) dist[0] = mag[i][j];
-    
+
 	    j = ncols-tpartial-1;
 	    if( mag[i][j] > dist[1] ) dist[1] = mag[i][j];
 	}
@@ -228,7 +230,7 @@ Mapdesc::calcPartialVelocity (
 	for( j=0; j != ncols-tpartial; j++ ) {
 	    i = 0;
 	    if( mag[i][j] > dist[0] ) dist[0] = mag[i][j];
-    
+
 	    i = nrows-spartial-1;
 	    if( mag[i][j] > dist[1] ) dist[1] = mag[i][j];
 	}

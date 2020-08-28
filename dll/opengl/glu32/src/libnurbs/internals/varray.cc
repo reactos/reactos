@@ -37,15 +37,17 @@
  *
  */
 
+#ifndef __REACTOS_USE_PCH__
 //#include "glimports.h"
 //#include "myassert.h"
 //#include "mystdio.h"
 #include "varray.h"
 #include "arc.h"
 #include "simplemath.h"         // glu_abs()
+#endif
 
 #define TINY 0.0001
-inline long sgn( REAL x ) 
+inline long sgn( REAL x )
 {
     return (x < -TINY) ? -1 :  ((x > TINY) ? 1 : 0 );
 }
@@ -67,7 +69,7 @@ Varray::Varray( void )
 
 Varray::~Varray( void )
 {
-    if( varray ) delete[] varray; 
+    if( varray ) delete[] varray;
 }
 
 inline void
@@ -88,7 +90,7 @@ Varray::grow( long guess )
 {
     if( size < guess ) {
 	size = guess * 2;
-	if( varray ) delete[] varray; 
+	if( varray ) delete[] varray;
 	varray = new REAL[size];
 	assert( varray != 0 );
     }
@@ -100,7 +102,7 @@ Varray::init( REAL delta, Arc_ptr toparc, Arc_ptr botarc )
     Arc_ptr left = toparc->next;
     Arc_ptr right = toparc;
     long ldir[2], rdir[2];
-    
+
     ldir[0] = sgn( left->tail()[0] - left->prev->tail()[0] );
     ldir[1] = sgn( left->tail()[1] - left->prev->tail()[1] );
     rdir[0] = sgn( right->tail()[0] - right->prev->tail()[0] );
@@ -115,7 +117,7 @@ Varray::init( REAL delta, Arc_ptr toparc, Arc_ptr botarc )
 	    left = left->next;
 	    update( left, ldir, left->prev->tail()[1] );
 	    break;
-	case -1: 
+	case -1:
 	    right = right->prev;
 	    update( right, rdir, right->tail()[1] );
 	    break;
@@ -141,8 +143,8 @@ end:
 	if( dist > delta ) {
 	    long steps = ((long) (dist/delta)) +1;
 	    float deltav = - dist / (REAL) steps;
-	    for( long j=1; j<steps; j++ ) 
-		varray[index++] = vval[i] + j * deltav; 
+	    for( long j=1; j<steps; j++ )
+		varray[index++] = vval[i] + j * deltav;
 	}
     }
     voffset[i] = index;

@@ -37,6 +37,7 @@
  *
  */
 
+#ifndef __REACTOS_USE_PCH__
 //#include "glimports.h"
 //#include "myassert.h"
 //#include "mystdio.h"
@@ -55,6 +56,7 @@
 #include "simplemath.h"
 
 #include "polyUtil.h" //for function area()
+#endif
 
 //#define  PARTITION_TEST
 #ifdef PARTITION_TEST
@@ -71,7 +73,7 @@
 
 Bin*
 Subdivider::makePatchBoundary( const REAL *from, const REAL *to )
-{ 
+{
     Bin* ret = new Bin();
     REAL smin = from[0];
     REAL smax = to[0];
@@ -109,9 +111,9 @@ Subdivider::makePatchBoundary( const REAL *from, const REAL *to )
  *---------------------------------------------------------------------------
  */
 
-Subdivider::Subdivider( Renderhints& r, Backend& b ) 
+Subdivider::Subdivider( Renderhints& r, Backend& b )
 	: slicer( b ),
-	  arctessellator( trimvertexpool, pwlarcpool ), 
+	  arctessellator( trimvertexpool, pwlarcpool ),
 	  arcpool( sizeof( Arc), 1, "arcpool" ),
  	  bezierarcpool( sizeof( BezierArc ), 1, "Bezarcpool" ),
 	  pwlarcpool( sizeof( PwlArc ), 1, "Pwlarcpool" ),
@@ -131,10 +133,10 @@ Subdivider::setJumpbuffer( JumpBuffer *j )
  *---------------------------------------------------------------------------
  */
 
-void		
+void
 Subdivider::clear( void )
 {
-    trimvertexpool.clear();     
+    trimvertexpool.clear();
     arcpool.clear();
     pwlarcpool.clear();
     bezierarcpool.clear();
@@ -174,10 +176,10 @@ Subdivider::addArc( REAL *cpts, Quilt *quilt, long _nuid )
  */
 
 void
-Subdivider::addArc( int npts, TrimVertex *pts, long _nuid ) 
+Subdivider::addArc( int npts, TrimVertex *pts, long _nuid )
 {
     Arc *jarc 		= new(arcpool) Arc( arc_none, _nuid );
-    jarc->pwlArc	= new(pwlarcpool) PwlArc( npts, pts );        
+    jarc->pwlArc	= new(pwlarcpool) PwlArc( npts, pts );
     initialbin.addarc( jarc  );
     pjarc		= jarc->append( pjarc );
 }
@@ -205,7 +207,7 @@ Subdivider::drawSurfaces( long nuid )
 {
     renderhints.init( );
 
-    if (qlist == NULL) 
+    if (qlist == NULL)
       {
 	//initialbin could be nonempty due to some errors
 	freejarcs(initialbin);
@@ -223,8 +225,8 @@ Subdivider::drawSurfaces( long nuid )
     REAL from[2], to[2];
     qlist->getRange( from, to, spbrkpts, tpbrkpts );
 #ifdef OPTIMIZE_UNTRIMED_CASE
-    //perform optimization only when the samplng method is 
-    //DOMAIN_DISTANCE and the display methdo is either 
+    //perform optimization only when the samplng method is
+    //DOMAIN_DISTANCE and the display methdo is either
     //fill or outline_polygon.
     int optimize = (is_domain_distance_sampling && (renderhints.display_method != N_OUTLINE_PATCH));
 #endif
@@ -232,7 +234,7 @@ Subdivider::drawSurfaces( long nuid )
     if( ! initialbin.isnonempty() ) {
 #ifdef OPTIMIZE_UNTRIMED_CASE
         if(! optimize )
-	  {	
+	  {
 
 	  makeBorderTrim( from, to );
 	  }
@@ -243,14 +245,14 @@ Subdivider::drawSurfaces( long nuid )
 	REAL rate[2];
 	qlist->findRates( spbrkpts, tpbrkpts, rate );
 
-    	if( decompose( initialbin, min(rate[0], rate[1]) ) ) 
+    	if( decompose( initialbin, min(rate[0], rate[1]) ) )
 	    mylongjmp( jumpbuffer, 31 );
     }
 
     backend.bgnsurf( renderhints.wiretris, renderhints.wirequads, nuid );
 
 #ifdef PARTITION_TEST
- if(    initialbin.isnonempty() && spbrkpts.end-2 == spbrkpts.start && 
+ if(    initialbin.isnonempty() && spbrkpts.end-2 == spbrkpts.start &&
 	tpbrkpts.end-2 == tpbrkpts.start)
 {
     for(int i=spbrkpts.start; i<spbrkpts.end-1; i++){
@@ -267,13 +269,13 @@ Subdivider::drawSurfaces( long nuid )
 	  {
 
 	    poly = bin_to_DLineLoops(initialbin);
-	    
-	    poly=poly->deleteDegenerateLinesAllPolygons();	    	
+
+	    poly=poly->deleteDegenerateLinesAllPolygons();
 
     sampledLine* retSampledLines;
-//printf("before MC_partition\n");	    
+//printf("before MC_partition\n");
 	    poly = MC_partitionY(poly, &retSampledLines);
-//printf("after MC_partition\n");	    
+//printf("after MC_partition\n");
 
 	  }
 
@@ -326,23 +328,23 @@ Subdivider::drawSurfaces( long nuid )
 	    pta[1] = tpbrkpts.pts[j];
 	    ptb[1] = tpbrkpts.pts[j+1];
 	    qlist->downloadAll(pta, ptb, backend);
-	   
+
             num_u_steps = (int) (domain_distance_u_rate * (ptb[0]-pta[0]));
             num_v_steps = (int) (domain_distance_v_rate * (ptb[1]-pta[1]));
 
             if(num_u_steps <= 0) num_u_steps = 1;
             if(num_v_steps <= 0) num_v_steps = 1;
 
-	    backend.surfgrid(pta[0], ptb[0], num_u_steps, 
+	    backend.surfgrid(pta[0], ptb[0], num_u_steps,
 			     ptb[1], pta[1], num_v_steps);
 	    backend.surfmesh(0,0,num_u_steps,num_v_steps);
 
-        
+
 
 	    continue;
 	    /* the following is left for reference purpose, don't delete
 	    {
-	    Bin* tempSource;	
+	    Bin* tempSource;
 	      Patchlist patchlist(qlist, pta, ptb);
 	      patchlist.getstepsize();
 
@@ -410,7 +412,7 @@ Subdivider::splitInS( Bin& source, int start, int end )
 		splitInT( source, tpbrkpts.start, tpbrkpts.end );
 	    }
         }
-    } 
+    }
 }
 
 /*---------------------------------------------------------------------------
@@ -446,7 +448,7 @@ Subdivider::splitInT( Bin& source, int start, int end )
 		ptb[0] = spbrkpts.pts[s_index];
 		ptb[1] = tpbrkpts.pts[t_index];
 		qlist->downloadAll( pta, ptb, backend );
-	    
+
 		Patchlist patchlist( qlist, pta, ptb );
 /*
 printf("-------samplingSplit-----\n");
@@ -457,19 +459,19 @@ source.show("samplingSplit source");
 		setArcTypeBezier();
 	    }
         }
-    } 
+    }
 }
 
 /*--------------------------------------------------------------------------
- * samplingSplit - recursively subdivide patch, cull check each subpatch  
+ * samplingSplit - recursively subdivide patch, cull check each subpatch
  *--------------------------------------------------------------------------
  */
 
 void
-Subdivider::samplingSplit( 
-    Bin& source, 
-    Patchlist& patchlist, 
-    int subdivisions, 
+Subdivider::samplingSplit(
+    Bin& source,
+    Patchlist& patchlist,
+    int subdivisions,
     int param )
 {
     if( ! source.isnonempty() ) return;
@@ -486,7 +488,7 @@ Subdivider::samplingSplit(
 	outline( source );
 	freejarcs( source );
 	return;
-    } 
+    }
 
     //patchlist.clamp();
 
@@ -517,10 +519,10 @@ Subdivider::samplingSplit(
 }
 
 void
-Subdivider::nonSamplingSplit( 
-    Bin& source, 
-    Patchlist& patchlist, 
-    int subdivisions, 
+Subdivider::nonSamplingSplit(
+    Bin& source,
+    Patchlist& patchlist,
+    int subdivisions,
     int param )
 {
     if( patchlist.needsNonSamplingSubdivision() && (subdivisions > 0) ) {
@@ -532,13 +534,13 @@ Subdivider::nonSamplingSplit(
 	split( source, left, right, param, mid );
 	Patchlist subpatchlist( patchlist, param, mid );
 	if( left.isnonempty() ) {
-	    if( subpatchlist.cullCheck() == CULL_TRIVIAL_REJECT ) 
+	    if( subpatchlist.cullCheck() == CULL_TRIVIAL_REJECT )
 		freejarcs( left );
 	    else
 	        nonSamplingSplit( left, subpatchlist, subdivisions-1, param );
 	}
 	if( right.isnonempty() ) {
-	    if( patchlist.cullCheck() == CULL_TRIVIAL_REJECT ) 
+	    if( patchlist.cullCheck() == CULL_TRIVIAL_REJECT )
 		freejarcs( right );
 	    else
 	        nonSamplingSplit( right, patchlist, subdivisions-1, param );
@@ -549,7 +551,7 @@ Subdivider::nonSamplingSplit(
 	patchlist.bbox();
 	backend.patch( patchlist.pspec[0].range[0], patchlist.pspec[0].range[1],
 		       patchlist.pspec[1].range[0], patchlist.pspec[1].range[1] );
-    
+
 	if( renderhints.display_method == N_OUTLINE_SUBDIV ) {
 	    outline( source );
 	    freejarcs( source );
@@ -614,7 +616,7 @@ Subdivider::monosplitInS( Bin& source, int start, int end )
 		monosplitInT( source, tmbrkpts.start, tmbrkpts.end );
 	    }
         }
-    } 
+    }
 }
 
 /*---------------------------------------------------------------------------
@@ -645,7 +647,7 @@ source.show("source\n");
 		freejarcs( source );
 	    }
         }
-    } 
+    }
 }
 
 
@@ -672,7 +674,7 @@ Subdivider::findIrregularS( Bin& bin )
 	if((b[1]<=a[1] && b[1] <= c[1]) ||
 	   (b[1]>=a[1] && b[1] >= c[1]))
 	  {
-	    //each arc (jarc, jarc->prev, jarc->next) is a 
+	    //each arc (jarc, jarc->prev, jarc->next) is a
 	    //monotone arc consisting of multiple line segements.
 	    //it may happen that jarc->prev and jarc->next are the same,
 	    //that is, jarc->prev and jarc form a closed loop.
@@ -688,7 +690,7 @@ Subdivider::findIrregularS( Bin& bin )
 		    assert(jarc->prev->pwlArc->npts>2);
 		    a = jarc->prev->pwlArc->pts[jarc->prev->pwlArc->npts-2].param;
 		  }
-		    
+
 	      }
 	    if(area(a,b,c) < 0)
 	      {
@@ -697,7 +699,7 @@ Subdivider::findIrregularS( Bin& bin )
 
 	  }
 
-	/* old code, 
+	/* old code,
 	if( b[1] <= a[1] && b[1] <= c[1] ) {
 	    if( ! ccwTurn_tr( jarc->prev, jarc ) )
                 smbrkpts.add( b[0] );
@@ -710,7 +712,7 @@ Subdivider::findIrregularS( Bin& bin )
     }
 
     smbrkpts.filter();
-} 
+}
 
 /*----------------------------------------------------------------------------
  * findIrregularT - determine points of non-monotonicity in t direction
@@ -733,11 +735,11 @@ Subdivider::findIrregularT( Bin& bin )
 	if( b[0] == a[0] && b[0] == c[0] ) continue;
 
 	if( b[0] <= a[0] && b[0] <= c[0] ) {
-	    if( a[1] != b[1] && b[1] != c[1] ) continue; 
+	    if( a[1] != b[1] && b[1] != c[1] ) continue;
 	    if( ! ccwTurn_sr( jarc->prev, jarc ) )
                 tmbrkpts.add( b[1] );
 	} else if ( b[0] >= a[0] && b[0] >= c[0] ) {
-	    if( a[1] != b[1] && b[1] != c[1] ) continue; 
+	    if( a[1] != b[1] && b[1] != c[1] ) continue;
 	    if( ! ccwTurn_sl( jarc->prev, jarc ) )
                 tmbrkpts.add( b[1] );
 	}
@@ -746,16 +748,16 @@ Subdivider::findIrregularT( Bin& bin )
 }
 
 /*-----------------------------------------------------------------------------
- * makeBorderTrim - if no user input trimming data then create 
+ * makeBorderTrim - if no user input trimming data then create
  * a trimming curve around the boundaries of the Quilt.  The curve consists of
  * four Jordan arcs, one for each side of the Quilt, connected, of course,
- * head to tail. 
+ * head to tail.
  *-----------------------------------------------------------------------------
  */
 
 void
 Subdivider::makeBorderTrim( const REAL *from, const REAL *to )
-{ 
+{
     REAL smin = from[0];
     REAL smax = to[0];
     REAL tmin = from[1];
@@ -816,7 +818,7 @@ Subdivider::render( Bin& bin )
 }
 
 /*---------------------------------------------------------------------------
- * outline - render the trimmed patch by outlining the boundary 
+ * outline - render the trimmed patch by outlining the boundary
  *---------------------------------------------------------------------------
  */
 
@@ -859,10 +861,10 @@ Subdivider::freejarcs( Bin& bin )
 
 /*----------------------------------------------------------------------------
  * tessellate - tessellate all Bezier arcs in a bin
- * 		   1) only accepts linear Bezier arcs as input 
+ * 		   1) only accepts linear Bezier arcs as input
  * 		   2) the Bezier arcs are stored in the pwlArc structure
  * 		   3) only vertical or horizontal lines work
- * 		-- should 
+ * 		-- should
  * 		   1) represent Bezier arcs in BezierArc structure
  * 		      (this requires a multitude of changes to the code)
  * 		   2) accept high degree Bezier arcs (hard)
@@ -877,15 +879,15 @@ Subdivider::tessellate( Bin& bin, REAL rrate, REAL trate, REAL lrate, REAL brate
 {
     for( Arc_ptr jarc=bin.firstarc(); jarc; jarc=bin.nextarc() ) {
 	if( jarc->isbezier( ) ) {
-    	    assert( jarc->pwlArc->npts == 2 );	
+    	    assert( jarc->pwlArc->npts == 2 );
 	    TrimVertex  *pts = jarc->pwlArc->pts;
     	    REAL s1 = pts[0].param[0];
     	    REAL t1 = pts[0].param[1];
     	    REAL s2 = pts[1].param[0];
     	    REAL t2 = pts[1].param[1];
-	    
+
     	    jarc->pwlArc->deleteMe( pwlarcpool ); jarc->pwlArc = 0;
-	    
+
 	    switch( jarc->getside() ) {
 		case arc_left:
 		    assert( s1 == s2 );

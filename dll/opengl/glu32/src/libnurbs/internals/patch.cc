@@ -37,6 +37,7 @@
  *
  */
 
+#ifndef __REACTOS_USE_PCH__
 //#include <stdio.h>
 //#include "glimports.h"
 //#include "mystdio.h"
@@ -48,7 +49,7 @@
 #include "quilt.h"
 //#include "nurbsconsts.h"
 #include "simplemath.h" //for glu_abs function in ::singleStep();
-
+#endif
 
 /*--------------------------------------------------------------------------
  * Patch - copy patch from quilt and transform control points
@@ -76,23 +77,23 @@ Patch::Patch( Quilt_ptr geo, REAL *pta, REAL *ptb, Patch *n )
     ps += geo->qspec[1].index * geo->qspec[1].order * geo->qspec[1].stride;
 
     if( needsSampling ) {
-	mapdesc->xformSampling( ps, geo->qspec[0].order, geo->qspec[0].stride, 
+	mapdesc->xformSampling( ps, geo->qspec[0].order, geo->qspec[0].stride,
 				geo->qspec[1].order, geo->qspec[1].stride,
 			        spts, pspec[0].stride, pspec[1].stride );
     }
 
     if( cullval == CULL_ACCEPT  ) {
-	mapdesc->xformCulling( ps, geo->qspec[0].order, geo->qspec[0].stride, 
+	mapdesc->xformCulling( ps, geo->qspec[0].order, geo->qspec[0].stride,
 			       geo->qspec[1].order, geo->qspec[1].stride,
-			       cpts, pspec[0].stride, pspec[1].stride ); 
+			       cpts, pspec[0].stride, pspec[1].stride );
     }
-    
+
     if( notInBbox ) {
-	mapdesc->xformBounding( ps, geo->qspec[0].order, geo->qspec[0].stride, 
+	mapdesc->xformBounding( ps, geo->qspec[0].order, geo->qspec[0].stride,
 			       geo->qspec[1].order, geo->qspec[1].stride,
-			       bpts, pspec[0].stride, pspec[1].stride ); 
+			       bpts, pspec[0].stride, pspec[1].stride );
     }
-    
+
     /* set scale range */
     pspec[0].range[0] = geo->qspec[0].breakpoints[geo->qspec[0].index];
     pspec[0].range[1] = geo->qspec[0].breakpoints[geo->qspec[0].index+1];
@@ -155,14 +156,14 @@ Patch::Patch( Patch& upper, int param, REAL value, Patch *n )
                 mapdesc->subdivide( upper.spts, lower.spts, d, pspec[1].order,
                         pspec[1].stride, pspec[0].order, pspec[0].stride );
 
-    	    if( cullval == CULL_ACCEPT ) 
+    	    if( cullval == CULL_ACCEPT )
 	        mapdesc->subdivide( upper.cpts, lower.cpts, d, pspec[1].order,
                         pspec[1].stride, pspec[0].order, pspec[0].stride );
 
-    	    if( notInBbox ) 
+    	    if( notInBbox )
 	        mapdesc->subdivide( upper.bpts, lower.bpts, d, pspec[1].order,
                         pspec[1].stride, pspec[0].order, pspec[0].stride );
-	    
+
             lower.pspec[0].range[0] = upper.pspec[0].range[0];
             lower.pspec[0].range[1] = value;
     	    lower.pspec[0].range[2] = value - upper.pspec[0].range[0];
@@ -179,10 +180,10 @@ Patch::Patch( Patch& upper, int param, REAL value, Patch *n )
 	    if( needsSampling )
 	        mapdesc->subdivide( upper.spts, lower.spts, d, pspec[0].order,
                         pspec[0].stride, pspec[1].order, pspec[1].stride );
-    	    if( cullval == CULL_ACCEPT ) 
+    	    if( cullval == CULL_ACCEPT )
 	        mapdesc->subdivide( upper.cpts, lower.cpts, d, pspec[0].order,
                         pspec[0].stride, pspec[1].order, pspec[1].stride );
-    	    if( notInBbox ) 
+    	    if( notInBbox )
 	        mapdesc->subdivide( upper.bpts, lower.bpts, d, pspec[0].order,
                         pspec[0].stride, pspec[1].order, pspec[1].stride );
             lower.pspec[0].range[0] = upper.pspec[0].range[0];
@@ -201,7 +202,7 @@ Patch::Patch( Patch& upper, int param, REAL value, Patch *n )
     // inherit bounding box
     if( mapdesc->isBboxSubdividing() && ! notInBbox )
 	memcpy( lower.bb, upper.bb, sizeof( bb ) );
-	    
+
     lower.checkBboxConstraint();
     upper.checkBboxConstraint();
 }
@@ -220,7 +221,7 @@ Patch::clamp( void )
     }
 }
 
-void 
+void
 Patchspec::clamp( REAL clampfactor )
 {
     if( sidestep[0] < minstepsize )
@@ -231,10 +232,10 @@ Patchspec::clamp( REAL clampfactor )
         stepsize = clampfactor * minstepsize;
 }
 
-void 
+void
 Patch::checkBboxConstraint( void )
 {
-    if( notInBbox && 
+    if( notInBbox &&
 	mapdesc->bboxTooBig( bpts, pspec[0].stride, pspec[1].stride,
 				   pspec[0].order, pspec[1].order, bb ) != 1 ) {
 	notInBbox = 0;
@@ -280,15 +281,15 @@ Patch::getstepsize( void )
 	// upper bound on path length between sample points
         REAL tmp[MAXORDER][MAXORDER][MAXCOORDS];
 	const int trstride = sizeof(tmp[0]) / sizeof(REAL);
-	const int tcstride = sizeof(tmp[0][0]) / sizeof(REAL); 
+	const int tcstride = sizeof(tmp[0][0]) / sizeof(REAL);
 
 	assert( pspec[0].order <= MAXORDER );
-    
+
 	/* points have been transformed, therefore they are homogeneous */
 
-	int val = mapdesc->project( spts, pspec[0].stride, pspec[1].stride, 
-		 &tmp[0][0][0], trstride, tcstride, 
-		 pspec[0].order, pspec[1].order ); 
+	int val = mapdesc->project( spts, pspec[0].stride, pspec[1].stride,
+		 &tmp[0][0][0], trstride, tcstride,
+		 pspec[0].order, pspec[1].order );
         if( val == 0 ) {
 	    // control points cross infinity, therefore partials are undefined
             pspec[0].getstepsize( mapdesc->maxsrate );
@@ -296,17 +297,17 @@ Patch::getstepsize( void )
         } else {
             REAL t1 = mapdesc->getProperty( N_PIXEL_TOLERANCE );
 //	    REAL t2 = mapdesc->getProperty( N_ERROR_TOLERANCE );
-	    pspec[0].minstepsize = ( mapdesc->maxsrate > 0.0 ) ? 
+	    pspec[0].minstepsize = ( mapdesc->maxsrate > 0.0 ) ?
 			(pspec[0].range[2] / mapdesc->maxsrate) : 0.0;
-	    pspec[1].minstepsize = ( mapdesc->maxtrate > 0.0 ) ? 
+	    pspec[1].minstepsize = ( mapdesc->maxtrate > 0.0 ) ?
 			(pspec[1].range[2] / mapdesc->maxtrate) : 0.0;
 	    if( mapdesc->isParametricDistanceSampling() ||
-                mapdesc->isObjectSpaceParaSampling() ) {       
+                mapdesc->isObjectSpaceParaSampling() ) {
 
                 REAL t2;
                 t2 = mapdesc->getProperty( N_ERROR_TOLERANCE );
-		
-		// t2 is upper bound on the distance between surface and tessellant 
+
+		// t2 is upper bound on the distance between surface and tessellant
 		REAL ssv[2], ttv[2];
 		REAL ss = mapdesc->calcPartialVelocity( ssv, &tmp[0][0][0], trstride, tcstride, pspec[0].order, pspec[1].order, 2, 0, pspec[0].range[2], pspec[1].range[2], 0 );
 		REAL st = mapdesc->calcPartialVelocity(   0, &tmp[0][0][0], trstride, tcstride, pspec[0].order, pspec[1].order, 1, 1, pspec[0].range[2], pspec[1].range[2], -1 );
@@ -317,7 +318,7 @@ Patch::getstepsize( void )
                 if(tt <0) tt = -tt;
 
 		if( ss != 0.0 && tt != 0.0 ) {
-		    /* printf( "ssv[0] %g ssv[1] %g ttv[0] %g ttv[1] %g\n", 
+		    /* printf( "ssv[0] %g ssv[1] %g ttv[0] %g ttv[1] %g\n",
 			ssv[0], ssv[1], ttv[0], ttv[1] ); */
 		    REAL ttq = sqrtf( (float) ss );
 		    REAL ssq = sqrtf( (float) tt );
@@ -327,7 +328,7 @@ Patch::getstepsize( void )
 		    REAL scutoff = 2.0 * t2 / ( pspec[0].range[2] * pspec[0].range[2]);
 		    pspec[0].sidestep[0] = (ssv[0] > scutoff) ? sqrtf( 2.0 * t2 / ssv[0] ) : pspec[0].range[2];
 		    pspec[0].sidestep[1] = (ssv[1] > scutoff) ? sqrtf( 2.0 * t2 / ssv[1] ) : pspec[0].range[2];
-    
+
 		    pspec[1].stepsize = ( dt < pspec[1].range[2] ) ? dt : pspec[1].range[2];
 		    REAL tcutoff = 2.0 * t2 / ( pspec[1].range[2] * pspec[1].range[2]);
 		    pspec[1].sidestep[0] = (ttv[0] > tcutoff) ? sqrtf( 2.0 * t2 / ttv[0] ) : pspec[1].range[2];
@@ -359,12 +360,12 @@ Patch::getstepsize( void )
 			pspec[0].stepsize = ( ds < pspec[0].range[2] ) ? ds : pspec[0].range[2];
 			pspec[0].sidestep[0] = pspec[0].range[2];
 			pspec[0].sidestep[1] = pspec[0].range[2];
-	
+
 			pspec[1].stepsize = ( dt < pspec[1].range[2] ) ? dt : pspec[1].range[2];
 			pspec[1].sidestep[0] = pspec[1].range[2];
 			pspec[1].sidestep[1] = pspec[1].range[2];
 		    }
-		}	
+		}
 	    } else if( mapdesc->isPathLengthSampling() ||
 		      mapdesc->isObjectSpacePathSampling()) {
 		// t1 is upper bound on path length
@@ -379,11 +380,11 @@ Patch::getstepsize( void )
 /*		    REAL ds = mt * d;*/
 		    REAL ds = t1 / (2.0*ms);
 /*		    REAL dt = ms * d;*/
-		    REAL dt = t1 / (2.0*mt); 
+		    REAL dt = t1 / (2.0*mt);
 			pspec[0].stepsize = ( ds < pspec[0].range[2] ) ? ds : pspec[0].range[2];
 			pspec[0].sidestep[0] = ( msv[0] * pspec[0].range[2] > t1 ) ? (side_scale* t1 / msv[0]) : pspec[0].range[2];
 			pspec[0].sidestep[1] = ( msv[1] * pspec[0].range[2] > t1 ) ? (side_scale* t1 / msv[1]) : pspec[0].range[2];
-	
+
 			pspec[1].stepsize = ( dt < pspec[1].range[2] ) ? dt : pspec[1].range[2];
 			pspec[1].sidestep[0] = ( mtv[0] * pspec[1].range[2] > t1 ) ? (side_scale*t1 / mtv[0]) : pspec[1].range[2];
 			pspec[1].sidestep[1] = ( mtv[1] * pspec[1].range[2] > t1 ) ? (side_scale*t1 / mtv[1]) : pspec[1].range[2];
@@ -391,7 +392,7 @@ Patch::getstepsize( void )
 			pspec[0].stepsize = ( t1 < ms * pspec[0].range[2] ) ? (t1 / ms) : pspec[0].range[2];
 			pspec[0].sidestep[0] = ( msv[0] * pspec[0].range[2] > t1 ) ? (t1 / msv[0]) : pspec[0].range[2];
 			pspec[0].sidestep[1] = ( msv[1] * pspec[0].range[2] > t1 ) ? (t1 / msv[1]) : pspec[0].range[2];
-	
+
 			pspec[1].singleStep();
 		    }
 		} else {
@@ -420,7 +421,7 @@ Patch::getstepsize( void )
 			pspec[0].stepsize = ( ds < pspec[0].range[2] ) ? ds : pspec[0].range[2];
 			pspec[0].sidestep[0] = ( msv[0] * pspec[0].range[2] > t ) ? (t / msv[0]) : pspec[0].range[2];
 			pspec[0].sidestep[1] = ( msv[1] * pspec[0].range[2] > t ) ? (t / msv[1]) : pspec[0].range[2];
-	
+
 			pspec[1].stepsize = ( dt < pspec[1].range[2] ) ? dt : pspec[1].range[2];
 			pspec[1].sidestep[0] = ( mtv[0] * pspec[1].range[2] > t ) ? (t / mtv[0]) : pspec[1].range[2];
 			pspec[1].sidestep[1] = ( mtv[1] * pspec[1].range[2] > t ) ? (t / mtv[1]) : pspec[1].range[2];
@@ -445,9 +446,9 @@ Patch::getstepsize( void )
 
     if( mapdesc->minsavings != N_NOSAVINGSSUBDIVISION ) {
 	REAL savings = 1./(pspec[0].stepsize * pspec[1].stepsize) ;
-	savings-= (2./( pspec[0].sidestep[0] + pspec[0].sidestep[1] )) * 
+	savings-= (2./( pspec[0].sidestep[0] + pspec[0].sidestep[1] )) *
 		  (2./( pspec[1].sidestep[0] + pspec[1].sidestep[1] ));
-    
+
 	savings *= pspec[0].range[2] * pspec[1].range[2];
 	if( savings > mapdesc->minsavings ) {
 	    pspec[0].needsSubdivision = pspec[1].needsSubdivision = 1;
@@ -465,7 +466,7 @@ Patchspec::singleStep()
     stepsize =  sidestep[0] =  sidestep[1] = glu_abs(range[2]);
 }
 
-void 
+void
 Patchspec::getstepsize( REAL max ) // max is number of samples for entire patch
 {
     stepsize = ( max >= 1.0 ) ? range[2] / max : range[2];
@@ -496,7 +497,7 @@ Patch::needsSubdivision( int param )
 int
 Patch::cullCheck( void )
 {
-    if( cullval == CULL_ACCEPT ) 
+    if( cullval == CULL_ACCEPT )
 	cullval = mapdesc->cullCheck( cpts, pspec[0].order,  pspec[0].stride,
 					    pspec[1].order,  pspec[1].stride );
     return cullval;

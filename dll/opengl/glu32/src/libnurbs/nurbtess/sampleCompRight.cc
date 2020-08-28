@@ -6,21 +6,21 @@
 ** this file except in compliance with the License. You may obtain a copy
 ** of the License at Silicon Graphics, Inc., attn: Legal Services, 1600
 ** Amphitheatre Parkway, Mountain View, CA 94043-1351, or at:
-** 
+**
 ** http://oss.sgi.com/projects/FreeB
-** 
+**
 ** Note that, as provided in the License, the Software is distributed on an
 ** "AS IS" basis, with ALL EXPRESS AND IMPLIED WARRANTIES AND CONDITIONS
 ** DISCLAIMED, INCLUDING, WITHOUT LIMITATION, ANY IMPLIED WARRANTIES AND
 ** CONDITIONS OF MERCHANTABILITY, SATISFACTORY QUALITY, FITNESS FOR A
 ** PARTICULAR PURPOSE, AND NON-INFRINGEMENT.
-** 
+**
 ** Original Code. The Original Code is: OpenGL Sample Implementation,
 ** Version 1.2.1, released January 26, 2000, developed by Silicon Graphics,
 ** Inc. The Original Code is Copyright (c) 1991-2000 Silicon Graphics, Inc.
 ** Copyright in any portions created by third parties is as indicated
 ** elsewhere herein. All Rights Reserved.
-** 
+**
 ** Additional Notice Provisions: The application programming interfaces
 ** established by SGI in conjunction with the Original Code are The
 ** OpenGL(R) Graphics System: A Specification (Version 1.2.1), released
@@ -35,12 +35,14 @@
 /*
 */
 
+#ifndef __REACTOS_USE_PCH__
 //#include <stdlib.h>
 //#include <stdio.h>
 //#include "gluos.h"
 //#include "glimports.h"
 //#include "zlassert.h"
 #include "sampleCompRight.h"
+#endif
 
 #define max(a,b) ((a>b)? a:b)
 #define min(a,b) ((a>b)? b:a)
@@ -49,7 +51,7 @@
 
 #ifdef NOT_TAKEOUT
 
-/*notice that we need leftChain because the 
+/*notice that we need leftChain because the
  *corners could be on the leftChain.
  */
 void sampleCompRight(Real* topVertex, Real* botVertex,
@@ -84,8 +86,8 @@ void sampleCompRight(Real* topVertex, Real* botVertex,
 	midIndex2 = rightChain->findIndexAboveGen(rightGridChain->get_v_value(gridIndex2),
 						  midIndex1, //midIndex1<=midIndex2
 						  rightEndIndex);
-	//find gridMidIndex1 so that either it=gridIndex1 when the gridline is 
-	// at the same height as trim vertex midIndex1, or it is the last one 
+	//find gridMidIndex1 so that either it=gridIndex1 when the gridline is
+	// at the same height as trim vertex midIndex1, or it is the last one
 	//which is strictly above midIndex1.
 	{
 	  Real temp = rightChain->getVertex(midIndex1)[1];
@@ -99,7 +101,7 @@ void sampleCompRight(Real* topVertex, Real* botVertex,
 	    gridMidIndex1--;
 	    }
 	}//end of find gridMindIndex1
-	//find gridMidIndex2 so that it is the (first one below or equal 
+	//find gridMidIndex2 so that it is the (first one below or equal
 	//midIndex) last one above or equal midIndex2
 	{
 	  Real temp = rightChain->getVertex(midIndex2)[1];
@@ -112,7 +114,7 @@ void sampleCompRight(Real* topVertex, Real* botVertex,
       }
 
 
-  
+
   //to interprete the corner information
   Real* cornerTop;
   Real* cornerBot;
@@ -138,7 +140,7 @@ void sampleCompRight(Real* topVertex, Real* botVertex,
       cornerRightStart = rightStartIndex;
       cornerLeftUpEnd = up_rightCornerIndex;
     }
-  
+
   if(down_rightCornerWhere == 2) //right corner is on right chan
     {
       cornerBot = rightChain->getVertex(down_rightCornerIndex);
@@ -149,7 +151,7 @@ void sampleCompRight(Real* topVertex, Real* botVertex,
     {
       cornerBot = botVertex;
       cornerRightEnd = rightEndIndex;
-      cornerLeftDownStart = leftEndIndex+1; //no left     
+      cornerLeftDownStart = leftEndIndex+1; //no left
     }
   else //right corner is on the left chain
     {
@@ -245,19 +247,19 @@ void sampleRightSingleTrimEdgeRegionGen(Real topVertex[2], Real botVertex[2],
   //append the vertices on the up section of the left chain
   for(i=leftUpBegin; i<= leftUpEnd; i++)
     vArray.appendVertex(leftChain->getVertex(i));
-  
+
   //append the vertices of the right extremal grid points,
   //and at the same time, perform triangulation for the stair cases
   vArray.appendVertex(gridChain->get_vertex(gridBeginIndex));
-  
+
   for(k=1, i=gridBeginIndex+1; i<= gridEndIndex; i++, k++)
     {
       vArray.appendVertex(gridChain->get_vertex(i));
-      
+
       //output the fan of the grid points of the (i)th and (i-1)th grid line.
       gridChain->rightEndFan(i, pStream);
     }
-  
+
   //append all the vertices on the down section of the left chain
   for(i=leftDownBegin; i<= leftDownEnd; i++)
     vArray.appendVertex(leftChain->getVertex(i));
@@ -266,7 +268,7 @@ void sampleRightSingleTrimEdgeRegionGen(Real topVertex[2], Real botVertex[2],
 			  rightChain, rightStart, rightEnd,
 			  pStream);
 }
-  
+
 void sampleRightSingleTrimEdgeRegion(Real upperVert[2], Real lowerVert[2],
 				     gridBoundaryChain* gridChain,
 				     Int beginIndex,
@@ -282,14 +284,14 @@ void sampleRightSingleTrimEdgeRegion(Real upperVert[2], Real lowerVert[2],
       //output the fan of the grid points of the (i)_th and i-1th gridLine
       gridChain->rightEndFan(i, pStream);
     }
-  monoTriangulation2(upperVert, lowerVert, &vArray, 0, endIndex-beginIndex, 
+  monoTriangulation2(upperVert, lowerVert, &vArray, 0, endIndex-beginIndex,
 		     1, //increase chain (to the left)
 		     pStream);
 }
-		      
 
-/*the gridlines from rightGridChainStartIndex to 
- *rightGridChainEndIndex are assumed to form a 
+
+/*the gridlines from rightGridChainStartIndex to
+ *rightGridChainEndIndex are assumed to form a
  *connected componenet
  *the trm vertex of topRightIndex is assumed to be below
  *or equal the first gridLine, and the trm vertex of
@@ -297,9 +299,9 @@ void sampleRightSingleTrimEdgeRegion(Real upperVert[2], Real lowerVert[2],
  **there could be multipe trm vertices equal to the last gridline, but
  **only one could be equal to top gridline. shape: ____| (recall that
  **for left chain recF, we allow shape: |----
- *if botRightIndex<topRightIndex, then no connected componenet exists, and 
+ *if botRightIndex<topRightIndex, then no connected componenet exists, and
  *no triangles are generated.
- *Othewise, botRightIndex>= topRightIndex, there is at least one triangles to 
+ *Othewise, botRightIndex>= topRightIndex, there is at least one triangles to
  *output
  */
 void sampleRightStripRecF(vertexArray* rightChain,
@@ -307,7 +309,7 @@ void sampleRightStripRecF(vertexArray* rightChain,
 		     Int botRightIndex,
 		     gridBoundaryChain* rightGridChain,
 		     Int rightGridChainStartIndex,
-		     Int rightGridChainEndIndex,	
+		     Int rightGridChainEndIndex,
 		     primStream* pStream
 		     )
 {
@@ -315,7 +317,7 @@ void sampleRightStripRecF(vertexArray* rightChain,
   //sstop conditionL: if topRightIndex > botRightIndex, then stop
   if(topRightIndex > botRightIndex)
     return;
-  
+
   //if there is only one grid line, return
   if(rightGridChainStartIndex >= rightGridChainEndIndex)
     return;
@@ -325,7 +327,7 @@ void sampleRightStripRecF(vertexArray* rightChain,
 	 rightChain->getVertex(botRightIndex)[1] >= rightGridChain->get_v_value(rightGridChainEndIndex));
 
   //firstfind the first trim vertex which is strictly below the second top
-  //grid line: index1. 
+  //grid line: index1.
   Real secondGridChainV = rightGridChain->get_v_value(rightGridChainStartIndex+1);
   Int index1 = topRightIndex;
   while(rightChain->getVertex(index1)[1] >= secondGridChainV){
@@ -342,12 +344,12 @@ void sampleRightStripRecF(vertexArray* rightChain,
   //rightChain->getVertex(index1+1)[1] < secondGridChainV
   sampleRightOneGridStep(rightChain, topRightIndex, index1, rightGridChain, rightGridChainStartIndex, pStream);
 
-  //if rightChain->getVertex(index1)[1] ==secondGridChainV then we can 
+  //if rightChain->getVertex(index1)[1] ==secondGridChainV then we can
   //recurvesively to the rest
   if(rightChain->getVertex(index1)[1] == secondGridChainV)
     {
 
-      
+
       sampleRightStripRecF(rightChain, index1, botRightIndex, rightGridChain, rightGridChainStartIndex+1, rightGridChainEndIndex, pStream);
     }
   else if(index1 < botRightIndex)
@@ -368,9 +370,9 @@ void sampleRightStripRecF(vertexArray* rightChain,
 	    break;
 	}
       index2--;
-      
+
       sampleRightSingleTrimEdgeRegion(uppervert, lowervert, rightGridChain, rightGridChainStartIndex+1, index2, pStream);
-      
+
       //recursion
       sampleRightStripRecF(rightChain, index1+1, botRightIndex, rightGridChain, index2, rightGridChainEndIndex, pStream);
     }
@@ -384,7 +386,7 @@ void sampleRightOneGridStepNoMiddle(vertexArray* rightChain,
 				    Int rightGridChainStartIndex,
 				    primStream* pStream)
 {
-  /*since there is no middle, there is at most one point which is on the 
+  /*since there is no middle, there is at most one point which is on the
    *second grid line, there could be multiple points on the first (top)
    *grid line.
    */
@@ -400,7 +402,7 @@ void sampleRightOneGridStepNoMiddle(vertexArray* rightChain,
 
 //sampling the right area in between two grid lines
 //shape: _________|
-void sampleRightOneGridStep(vertexArray* rightChain, 
+void sampleRightOneGridStep(vertexArray* rightChain,
 			    Int beginRightIndex,
 			    Int endRightIndex,
 			    gridBoundaryChain* rightGridChain,
@@ -424,13 +426,13 @@ void sampleRightOneGridStep(vertexArray* rightChain,
     float vert1[2];
     float vert2[2];
     Int i;
-    
+
     Int innerInd = rightGridChain->getInnerIndex(rightGridChainStartIndex+1);
     Int upperInd = rightGridChain->getUlineIndex(rightGridChainStartIndex);
     Int lowerInd = rightGridChain->getUlineIndex(rightGridChainStartIndex+1);
     Real upperV = rightGridChain->get_v_value(rightGridChainStartIndex);
     Real lowerV = rightGridChain->get_v_value(rightGridChainStartIndex+1);
-    
+
     //the upper gridline
     vert1[1]=vert2[1]=upperV;
     for(i=upperInd;
@@ -446,7 +448,7 @@ void sampleRightOneGridStep(vertexArray* rightChain,
 	else
 	  poly->insert(dline);
       }
-    
+
     //the vertical grid line segment
     vert1[0]=vert2[0] = grid->get_u_value(innerInd);
     vert1[1]=upperV;
@@ -457,7 +459,7 @@ void sampleRightOneGridStep(vertexArray* rightChain,
       poly = dline;
     else
       poly->insert(dline);
-    
+
     //the lower grid line
     vert1[1]=vert2[1]=lowerV;
     for(i=innerInd; i<lowerInd; i++)
@@ -466,7 +468,7 @@ void sampleRightOneGridStep(vertexArray* rightChain,
 	vert2[0] = grid->get_u_value(i+1);
 	sline = new sampledLine(vert1, vert2);
 	dline = new directedLine(INCREASING, sline);
-	poly->insert(dline);       
+	poly->insert(dline);
       }
 
     //the edge connecting lower grid to right chain
@@ -474,8 +476,8 @@ void sampleRightOneGridStep(vertexArray* rightChain,
     sline = new sampledLine(vert1, rightChain->getVertex(endRightIndex));
     dline = new directedLine(INCREASING, sline);
     poly->insert(dline);
-    
-    
+
+
     //the right Chain
     for(i=endRightIndex; i>beginRightIndex; i--)
       {
@@ -489,14 +491,14 @@ void sampleRightOneGridStep(vertexArray* rightChain,
     vert2[0]=grid->get_u_value(upperInd);
     sline = new sampledLine(rightChain->getVertex(beginRightIndex), vert2);
     dline = new directedLine(INCREASING, sline);
-    poly->insert(dline);    
+    poly->insert(dline);
     monoTriangulationOpt(poly, pStream);
     //clean up
     poly->deleteSinglePolygonWithSline();
 
     return;
   }
-	   
+
   //this following code cannot be reached, but leave it for debuggig purpose.
   Int i;
   //find the maximal U-monotone chain of beginRightIndex, beginRightIndex+1,...
@@ -510,20 +512,20 @@ void sampleRightOneGridStep(vertexArray* rightChain,
       break;
   }
   //from beginRightIndex to i-1 is strictly U-monotne
-  //if(i-1==beginRightIndex and the vertex of rightchain is on the first 
-  //gridline, then we should use 2 vertices  on the right chain. Of we only 
+  //if(i-1==beginRightIndex and the vertex of rightchain is on the first
+  //gridline, then we should use 2 vertices  on the right chain. Of we only
   //use one (begin), we would output degenrate triangles.
   if(i-1 == beginRightIndex && rightChain->getVertex(beginRightIndex)[1] == rightGridChain->get_v_value(rightGridChainStartIndex))
     i++;
-  
+
   Int j = endRightIndex -1;
   if(rightGridChain->getInnerIndex(rightGridChainStartIndex+1) < rightGridChain->getUlineIndex(rightGridChainStartIndex+1))
     {
       j = rightChain->findDecreaseChainFromEnd(i-1/*beginRightIndex*/, endRightIndex);
       Int temp = endRightIndex;
       //now from j+1 to end is strictly U-monotone.
-      //if j+1 is on the last grid line, then we wat to skip to the vertex   
-      //whcih is strictly above the second grid line. This vertex must exist 
+      //if j+1 is on the last grid line, then we wat to skip to the vertex
+      //whcih is strictly above the second grid line. This vertex must exist
       //since there is a middle vertex
       if(j+1 == endRightIndex)
 	{
@@ -567,7 +569,7 @@ void sampleRightOneGridStep(vertexArray* rightChain,
   vert[0][1] = rightGridChain->get_v_value(rightGridChainStartIndex);
   vert[1][1] = rightGridChain->get_v_value(rightGridChainStartIndex+1);
 
-  monoTriangulation2(&vert[0][0], 
+  monoTriangulation2(&vert[0][0],
 		     &vert[1][0],
 		     rightChain,
 		     i-1,
@@ -575,10 +577,10 @@ void sampleRightOneGridStep(vertexArray* rightChain,
 		     0, ///a decreae chain
 		     pStream);
 }
-		  
-#endif    
 
-void stripOfFanRight(vertexArray* rightChain, 
+#endif
+
+void stripOfFanRight(vertexArray* rightChain,
 		    Int largeIndex,
 		    Int smallIndex,
 		    gridWrap* grid,

@@ -6,21 +6,21 @@
 ** this file except in compliance with the License. You may obtain a copy
 ** of the License at Silicon Graphics, Inc., attn: Legal Services, 1600
 ** Amphitheatre Parkway, Mountain View, CA 94043-1351, or at:
-** 
+**
 ** http://oss.sgi.com/projects/FreeB
-** 
+**
 ** Note that, as provided in the License, the Software is distributed on an
 ** "AS IS" basis, with ALL EXPRESS AND IMPLIED WARRANTIES AND CONDITIONS
 ** DISCLAIMED, INCLUDING, WITHOUT LIMITATION, ANY IMPLIED WARRANTIES AND
 ** CONDITIONS OF MERCHANTABILITY, SATISFACTORY QUALITY, FITNESS FOR A
 ** PARTICULAR PURPOSE, AND NON-INFRINGEMENT.
-** 
+**
 ** Original Code. The Original Code is: OpenGL Sample Implementation,
 ** Version 1.2.1, released January 26, 2000, developed by Silicon Graphics,
 ** Inc. The Original Code is Copyright (c) 1991-2000 Silicon Graphics, Inc.
 ** Copyright in any portions created by third parties is as indicated
 ** elsewhere herein. All Rights Reserved.
-** 
+**
 ** Additional Notice Provisions: The application programming interfaces
 ** established by SGI in conjunction with the Original Code are The
 ** OpenGL(R) Graphics System: A Specification (Version 1.2.1), released
@@ -35,6 +35,7 @@
 /*
 */
 
+#ifndef __REACTOS_USE_PCH__
 #include "gluos.h"
 //#include <GL/gl.h>
 //#include <GL/glu.h>
@@ -42,6 +43,7 @@
 //#include "glimports.h"
 #include "glrenderer.h"
 //#include "nurbsconsts.h"
+#endif
 
 //#define DOWN_LOAD_NURBS
 #ifdef DOWN_LOAD_NURBS
@@ -66,7 +68,7 @@ GLUnurbs * GLAPIENTRY
 gluNewNurbsRenderer(void)
 {
   GLUnurbs *t;
-  
+
   t = new GLUnurbs();
   return t;
 }
@@ -92,19 +94,19 @@ gluBeginSurface(GLUnurbs *r)
 surfcount++;
 tempTrim = OTL_make(10,10);
 #endif
-    r->bgnsurface(0); 
+    r->bgnsurface(0);
 }
 
 void GLAPIENTRY
 gluBeginCurve(GLUnurbs *r)
 {
-    r->bgncurve(0); 
+    r->bgncurve(0);
 }
 
 void GLAPIENTRY
 gluEndCurve(GLUnurbs *r)
 {
-    r->endcurve(); 
+    r->endcurve();
 }
 
 void GLAPIENTRY
@@ -124,7 +126,7 @@ OTN_write(otn, "out.otn");
 }
 #endif
 
-    r->endsurface(); 
+    r->endsurface();
 }
 
 void GLAPIENTRY
@@ -134,7 +136,7 @@ gluBeginTrim(GLUnurbs *r)
 OTL_bgnTrim(tempTrim);
 #endif
 
-    r->bgntrim(); 
+    r->bgntrim();
 }
 
 void GLAPIENTRY
@@ -143,11 +145,11 @@ gluEndTrim(GLUnurbs *r)
 #ifdef DOWN_LOAD_NURBS
 OTL_endTrim(tempTrim);
 #endif
-    r->endtrim(); 
+    r->endtrim();
 }
 
 void GLAPIENTRY
-gluPwlCurve(GLUnurbs *r, GLint count, INREAL array[], 
+gluPwlCurve(GLUnurbs *r, GLint count, INREAL array[],
 		GLint stride, GLenum type)
 {
 #ifdef DOWN_LOAD_NURBS
@@ -170,7 +172,7 @@ OTL_pwlCurve(tempTrim, count, array, stride, type);
 }
 
 void GLAPIENTRY
-gluNurbsCurve(GLUnurbs *r, GLint nknots, INREAL knot[], GLint stride, 
+gluNurbsCurve(GLUnurbs *r, GLint nknots, INREAL knot[], GLint stride,
 		  INREAL ctlarray[], GLint order, GLenum type)
 {
 #ifdef DOWN_LOAD_NURBS
@@ -191,15 +193,15 @@ OTL_nurbsCurve(tempTrim, nknots, knot, stride, ctlarray, order, type);
 	break;
     }
 
-    r->nurbscurve(nknots, knot, sizeof(INREAL) * stride, ctlarray, order, 
+    r->nurbscurve(nknots, knot, sizeof(INREAL) * stride, ctlarray, order,
 	    realType);
 }
 
 void GLAPIENTRY
-gluNurbsSurface(GLUnurbs *r, GLint sknot_count, GLfloat *sknot, 
-			    GLint tknot_count, GLfloat *tknot, 
-			    GLint s_stride, GLint t_stride, 
-			    GLfloat *ctlarray, GLint sorder, GLint torder, 
+gluNurbsSurface(GLUnurbs *r, GLint sknot_count, GLfloat *sknot,
+			    GLint tknot_count, GLfloat *tknot,
+			    GLint s_stride, GLint t_stride,
+			    GLfloat *ctlarray, GLint sorder, GLint torder,
 			    GLenum type)
 {
 #ifdef DOWN_LOAD_NURBS
@@ -222,18 +224,18 @@ tempNurb = nurbSurfMake(sknot_count, sknot,
 			dimension,
 			ctlarray,
 			s_stride, t_stride);
-			
+
   }
 #endif
 
-    r->nurbssurface(sknot_count, sknot, tknot_count, tknot, 
-	    sizeof(INREAL) * s_stride, sizeof(INREAL) * t_stride, 
+    r->nurbssurface(sknot_count, sknot, tknot_count, tknot,
+	    sizeof(INREAL) * s_stride, sizeof(INREAL) * t_stride,
 	    ctlarray, sorder, torder, type);
 }
 
 void GLAPIENTRY
 gluLoadSamplingMatrices(GLUnurbs *r, const GLfloat modelMatrix[16],
-			    const GLfloat projMatrix[16], 
+			    const GLfloat projMatrix[16],
 			    const GLint viewport[4])
 {
     r->useGLMatrices(modelMatrix, projMatrix, viewport);
@@ -243,9 +245,9 @@ void GLAPIENTRY
 gluNurbsProperty(GLUnurbs *r, GLenum property, GLfloat value)
 {
     GLfloat nurbsValue;
-    
+
     switch (property) {
-      case GLU_AUTO_LOAD_MATRIX:      
+      case GLU_AUTO_LOAD_MATRIX:
         r->setautoloadmode(value);
 	return;
 
@@ -272,11 +274,11 @@ gluNurbsProperty(GLUnurbs *r, GLenum property, GLfloat value)
 
 	} else if (value == GLU_OBJECT_PARAMETRIC_ERROR) {
 	    nurbsValue = N_OBJECTSPACE_PARA;
-	    r->setautoloadmode( 0.0 ); 
+	    r->setautoloadmode( 0.0 );
 	    r->setSamplingMatrixIdentity();
 	} else if (value == GLU_OBJECT_PATH_LENGTH) {
 	    nurbsValue = N_OBJECTSPACE_PATH;
-	    r->setautoloadmode( 0.0 ); 
+	    r->setautoloadmode( 0.0 );
 	    r->setSamplingMatrixIdentity();
 	} else {
             r->postError(GLU_INVALID_VALUE);
@@ -302,10 +304,10 @@ gluNurbsProperty(GLUnurbs *r, GLenum property, GLfloat value)
         r->setnurbsproperty(GL_MAP1_VERTEX_3, N_ERROR_TOLERANCE, value);
         r->setnurbsproperty(GL_MAP1_VERTEX_4, N_ERROR_TOLERANCE, value);
         return;
-	
+
 
       case GLU_DISPLAY_MODE:
-	
+
 	if (value == GLU_FILL) {
 	  nurbsValue = N_FILL;
 	} else if (value == GLU_OUTLINE_POLYGON) {
@@ -317,7 +319,7 @@ gluNurbsProperty(GLUnurbs *r, GLenum property, GLfloat value)
 	  return;
 	}
 	r->setnurbsproperty(N_DISPLAY, nurbsValue);
-	
+
 	break;
 
       case GLU_U_STEP:
@@ -325,7 +327,7 @@ gluNurbsProperty(GLUnurbs *r, GLenum property, GLfloat value)
     	r->setnurbsproperty(GL_MAP1_VERTEX_4, N_S_STEPS, value);
     	r->setnurbsproperty(GL_MAP2_VERTEX_3, N_S_STEPS, value);
     	r->setnurbsproperty(GL_MAP2_VERTEX_4, N_S_STEPS, value);
-	
+
 	//added for optimizing untrimmed case
         r->set_domain_distance_u_rate(value);
 	break;
@@ -339,7 +341,7 @@ gluNurbsProperty(GLUnurbs *r, GLenum property, GLfloat value)
 	//added for optimizing untrimmed case
         r->set_domain_distance_v_rate(value);
 	break;
-	
+
       case GLU_NURBS_MODE:
 	if(value == GLU_NURBS_RENDERER)
 	  r->put_callbackFlag(0);
@@ -351,7 +353,7 @@ gluNurbsProperty(GLUnurbs *r, GLenum property, GLfloat value)
 
       default:
 	r->postError(GLU_INVALID_ENUM);
-	return;	
+	return;
     }
 }
 
@@ -387,7 +389,7 @@ gluGetNurbsProperty(GLUnurbs *r, GLenum property, GLfloat *value)
 	else if(*value == N_OBJECTSPACE_PATH)
 	  *value = GLU_OBJECT_PATH_LENGTH;
 	else if(*value == N_OBJECTSPACE_PARA)
-	  *value = GLU_OBJECT_PARAMETRIC_ERROR;	
+	  *value = GLU_OBJECT_PARAMETRIC_ERROR;
 	break;
       case GLU_SAMPLING_TOLERANCE:
 	r->getnurbsproperty(GL_MAP2_VERTEX_3, N_PIXEL_TOLERANCE, value);
@@ -419,7 +421,7 @@ gluGetNurbsProperty(GLUnurbs *r, GLenum property, GLfloat *value)
 	else
 	  *value = GLU_NURBS_RENDERER;
 	break;
-	
+
       default:
 	r->postError(GLU_INVALID_ENUM);
 	return;
@@ -441,7 +443,7 @@ gluNurbsCallback(GLUnurbs *r, GLenum which, _GLUfuncptr fn )
     case GLU_NURBS_VERTEX_DATA:
     case GLU_NURBS_NORMAL_DATA:
     case GLU_NURBS_TEXTURE_COORD_DATA:
-    case GLU_NURBS_COLOR_DATA: 
+    case GLU_NURBS_COLOR_DATA:
 	r->putSurfCallBack(which, fn);
 	break;
 

@@ -37,7 +37,9 @@
  *
  */
 
+#ifndef __REACTOS_USE_PCH__
 #include "cachingeval.h"
+#endif
 
 int
 CachingEvaluator::canRecord( void )
@@ -65,7 +67,7 @@ CachingEvaluator::beginOutput( ServiceMode, int )
 void
 CachingEvaluator::endOutput( void )
 {
-} 
+}
 
 void
 CachingEvaluator::discardRecording( int )

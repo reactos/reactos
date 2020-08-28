@@ -37,6 +37,7 @@
  *
  */
 
+#ifndef __REACTOS_USE_PCH__
 //#include <stdio.h>
 //#include "glimports.h"
 //#include "mystdio.h"
@@ -45,6 +46,7 @@
 //#include "bin.h"
 //#include "pwlarc.h"
 #include "simplemath.h"
+#endif
 
 /* local preprocessor definitions */
 #define ZERO		0.00001/*0.000001*/
@@ -97,7 +99,7 @@ void
 Arc::markverts( void )
 {
     Arc_ptr jarc = this;
-        
+
     do {
 	TrimVertex *p = jarc->pwlArc->pts;
 	for( int i=0; i<jarc->pwlArc->npts; i++ )
@@ -277,7 +279,7 @@ Arc::check( void )
 		    return 0;
 		}
 		if( jarc->tail()[0] != jarc->prev->rhead()[0] ) {
-	        
+
 #ifndef NDEBUG
 		    _glu_dprintf( "checkjarc: geometric linkage screwed up 2\n");
 		    jarc->prev->show();

@@ -37,6 +37,7 @@
  *
  */
 
+#ifndef __REACTOS_USE_PCH__
 //#include "glimports.h"
 //#include "myassert.h"
 //#include "mystdio.h"
@@ -46,6 +47,7 @@
 //#include "types.h"
 #include "quilt.h"
 //#include "nurbsconsts.h"
+#endif
 
 /*--------------------------------------------------------------------------
  * Curve::Curve - copy curve from quilt and transform control points
@@ -67,14 +69,14 @@ Curve::Curve( Quilt_ptr geo, REAL pta, REAL ptb, Curve *c )
     stepsize = 0;
     minstepsize = 0;
 
-    REAL *ps  = geo->cpts; 
+    REAL *ps  = geo->cpts;
     Quiltspec_ptr qs = geo->qspec;
     ps += qs->offset;
     ps += qs->index * qs->order * qs->stride;
 
     if( needsSampling )
 	mapdesc->xformSampling( ps, qs->order, qs->stride, spts, stride );
-	
+
     if( cullval == CULL_ACCEPT )
 	mapdesc->xformCulling(  ps, qs->order, qs->stride, cpts, stride );
 
@@ -114,7 +116,7 @@ Curve::Curve( Curve& upper, REAL value, Curve *c )
     if( needsSampling )
         mapdesc->subdivide( upper.spts, lower.spts, d, upper.stride, upper.order );
 
-    if( cullval == CULL_ACCEPT ) 
+    if( cullval == CULL_ACCEPT )
         mapdesc->subdivide( upper.cpts, lower.cpts, d, upper.stride, upper.order );
 
     lower.range[0] = upper.range[0];
@@ -160,11 +162,11 @@ Curve::getstepsize( void )
 	// upper bound on path length between sample points
 
 	assert( order <= MAXORDER );
-    
+
 	/* points have been transformed, therefore they are homogeneous */
         REAL tmp[MAXORDER][MAXCOORDS];
 	const int tstride = sizeof(tmp[0]) / sizeof(REAL);
-	int val = mapdesc->project( spts, stride, &tmp[0][0], tstride,  order ); 
+	int val = mapdesc->project( spts, stride, &tmp[0][0], tstride,  order );
 
         if( val == 0 ) {
 	    // control points cross infinity, therefore derivatives are undefined
@@ -197,7 +199,7 @@ Curve::needsSamplingSubdivision( void )
 int
 Curve::cullCheck( void )
 {
-    if( cullval == CULL_ACCEPT ) 
+    if( cullval == CULL_ACCEPT )
 	cullval = mapdesc->cullCheck( cpts, order, stride );
     return cullval;
 }

@@ -6,21 +6,21 @@
 ** this file except in compliance with the License. You may obtain a copy
 ** of the License at Silicon Graphics, Inc., attn: Legal Services, 1600
 ** Amphitheatre Parkway, Mountain View, CA 94043-1351, or at:
-** 
+**
 ** http://oss.sgi.com/projects/FreeB
-** 
+**
 ** Note that, as provided in the License, the Software is distributed on an
 ** "AS IS" basis, with ALL EXPRESS AND IMPLIED WARRANTIES AND CONDITIONS
 ** DISCLAIMED, INCLUDING, WITHOUT LIMITATION, ANY IMPLIED WARRANTIES AND
 ** CONDITIONS OF MERCHANTABILITY, SATISFACTORY QUALITY, FITNESS FOR A
 ** PARTICULAR PURPOSE, AND NON-INFRINGEMENT.
-** 
+**
 ** Original Code. The Original Code is: OpenGL Sample Implementation,
 ** Version 1.2.1, released January 26, 2000, developed by Silicon Graphics,
 ** Inc. The Original Code is Copyright (c) 1991-2000 Silicon Graphics, Inc.
 ** Copyright in any portions created by third parties is as indicated
 ** elsewhere herein. All Rights Reserved.
-** 
+**
 ** Additional Notice Provisions: The application programming interfaces
 ** established by SGI in conjunction with the Original Code are The
 ** OpenGL(R) Graphics System: A Specification (Version 1.2.1), released
@@ -35,12 +35,14 @@
 /*
 */
 
+#ifndef __REACTOS_USE_PCH__
 #include "gluos.h"
 //#include <stdlib.h>
 //#include <stdio.h>
 #include <GL/gl.h>
 #include "zlassert.h"
 #include "gridWrap.h"
+#endif
 
 
 /*******************grid structure****************************/
@@ -67,15 +69,15 @@ gridWrap::gridWrap(Int nUlines, Real* uvals,
   u_values = (Real*) malloc(sizeof(Real) * n_ulines);
   assert(u_values);
   v_values = (Real*) malloc(sizeof(Real) * n_vlines);
-  assert(v_values);  
-  
+  assert(v_values);
+
   Int i;
   for(i=0; i<n_ulines; i++)
     u_values[i] = uvals[i];
   for(i=0; i<n_vlines; i++)
     v_values[i] = vvals[i];
 }
-  
+
 gridWrap::gridWrap(Int nUlines, Int nVlines,
 		   Real uMin, Real uMax,
 		   Real vMin, Real vMax
@@ -92,7 +94,7 @@ gridWrap::gridWrap(Int nUlines, Int nVlines,
   assert(u_values);
   v_values = (Real*) malloc(sizeof(Real) * n_vlines);
   assert(v_values);
-  
+
   Int i;
   assert(nUlines>=2);
   assert(nVlines>=2);
@@ -137,9 +139,9 @@ void gridWrap::draw()
 void gridWrap::outputFanWithPoint(Int v, Int uleft, Int uright, Real vert[2], primStream* pStream)
 {
   Int i;
-  if(uleft >= uright) 
+  if(uleft >= uright)
     return; //no triangles to output.
-    
+
   pStream->begin();
   pStream->insert(vert);
 
@@ -154,30 +156,30 @@ void gridWrap::outputFanWithPoint(Int v, Int uleft, Int uright, Real vert[2], pr
     {
       for(i=uright; i>= uleft; i--)
 	pStream->insert(u_values[i], v_values[v]);
-    }	
-  
+    }
+
   pStream->end(PRIMITIVE_STREAM_FAN);
 }
 
 
 
-/*each chain stores a number of consecutive 
- *V-lines within a grid. 
+/*each chain stores a number of consecutive
+ *V-lines within a grid.
  *There is one grid vertex on each V-line.
  * The total number of V-lines is:
  *   nVlines.
- * with respect to the grid, the index of the first V-line is 
+ * with respect to the grid, the index of the first V-line is
  *   firstVlineIndex.
- * So with respect to the grid, the index of the ith V-line is 
+ * So with respect to the grid, the index of the ith V-line is
  *   firstVlineIndex-i.
  * the grid-index of the uline at the ith vline (recall that each vline has one grid point)
  * is ulineIndices[i]. The u_value is cached in ulineValues[i], that is,
- *   ulineValues[i] = grid->get_u_value(ulineIndices[i]) 
+ *   ulineValues[i] = grid->get_u_value(ulineIndices[i])
  */
 gridBoundaryChain::gridBoundaryChain(
-				     gridWrap* gr, 
-				     Int first_vline_index, 
-				     Int n_vlines, 
+				     gridWrap* gr,
+				     Int first_vline_index,
+				     Int n_vlines,
 				     Int* uline_indices,
 				     Int* inner_indices
 				     )
@@ -191,7 +193,7 @@ gridBoundaryChain::gridBoundaryChain(
 
   vertices = (Real2*) malloc(sizeof(Real2) * n_vlines);
   assert(vertices);
-  
+
 
 
   Int i;
@@ -199,13 +201,13 @@ gridBoundaryChain::gridBoundaryChain(
     ulineIndices[i] = uline_indices[i];
     innerIndices[i] = inner_indices[i];
   }
-  
+
   for(i=0; i<n_vlines; i++){
     vertices[i][0] = gr->get_u_value(ulineIndices[i]);
     vertices[i][1] = gr->get_v_value(first_vline_index-i);
   }
 }
-  
+
 void gridBoundaryChain::draw()
 {
   Int i;
@@ -228,7 +230,7 @@ void gridBoundaryChain::drawInner()
       glEnd();
     }
 }
-  
+
 Int gridBoundaryChain::lookfor(Real v, Int i1, Int i2)
 {
   Int mid;
@@ -267,7 +269,7 @@ void gridBoundaryChain::rightEndFan(Int i, primStream* pStream)
     }
   //otherside, the two are equal, so there is no fan to output
 }
-		      
+
 
 /*output the fan of the left end between grid line i-1 and grid line i*/
 void gridBoundaryChain::leftEndFan(Int i, primStream* pStream)
@@ -289,5 +291,5 @@ void gridBoundaryChain::leftEndFan(Int i, primStream* pStream)
 	pStream->insert(grid->get_u_value(j), get_v_value(i-1));
       pStream->end(PRIMITIVE_STREAM_FAN);
     }
-  /*otherwisem, the two are equal, so there is no fan to outout*/	  
+  /*otherwisem, the two are equal, so there is no fan to outout*/
 }

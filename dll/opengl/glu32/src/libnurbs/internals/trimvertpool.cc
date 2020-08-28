@@ -37,6 +37,7 @@
  *
  */
 
+#ifndef __REACTOS_USE_PCH__
 //#include "glimports.h"
 //#include "myassert.h"
 //#include "mystdio.h"
@@ -44,9 +45,10 @@
 #include "trimvertex.h"
 #include "trimvertpool.h"
 //#include "bufpool.h"
+#endif
 
 /*----------------------------------------------------------------------------
- * TrimVertexPool::TrimVertexPool 
+ * TrimVertexPool::TrimVertexPool
  *----------------------------------------------------------------------------
  */
 TrimVertexPool::TrimVertexPool( void )
@@ -59,7 +61,7 @@ TrimVertexPool::TrimVertexPool( void )
 }
 
 /*----------------------------------------------------------------------------
- * TrimVertexPool::~TrimVertexPool 
+ * TrimVertexPool::~TrimVertexPool
  *----------------------------------------------------------------------------
  */
 TrimVertexPool::~TrimVertexPool( void )
@@ -74,13 +76,13 @@ TrimVertexPool::~TrimVertexPool( void )
 }
 
 /*----------------------------------------------------------------------------
- * TrimVertexPool::clear 
+ * TrimVertexPool::clear
  *----------------------------------------------------------------------------
  */
 void
 TrimVertexPool::clear( void )
 {
-    // reinitialize pool of 3 vertex arrays    
+    // reinitialize pool of 3 vertex arrays
     pool.clear();
 
     // free all arrays of TrimVertices vertices

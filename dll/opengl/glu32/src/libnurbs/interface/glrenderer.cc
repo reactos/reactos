@@ -35,9 +35,11 @@
 /*
 */
 
+#ifndef __REACTOS_USE_PCH__
 #include "gluos.h"
 //#include "glimports.h"
 #include "glrenderer.h"
+#endif
 
 GLUnurbs::GLUnurbs()
 	: NurbsTessellator(curveEvaluator, surfaceEvaluator)

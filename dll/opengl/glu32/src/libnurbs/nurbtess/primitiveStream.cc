@@ -6,21 +6,21 @@
 ** this file except in compliance with the License. You may obtain a copy
 ** of the License at Silicon Graphics, Inc., attn: Legal Services, 1600
 ** Amphitheatre Parkway, Mountain View, CA 94043-1351, or at:
-** 
+**
 ** http://oss.sgi.com/projects/FreeB
-** 
+**
 ** Note that, as provided in the License, the Software is distributed on an
 ** "AS IS" basis, with ALL EXPRESS AND IMPLIED WARRANTIES AND CONDITIONS
 ** DISCLAIMED, INCLUDING, WITHOUT LIMITATION, ANY IMPLIED WARRANTIES AND
 ** CONDITIONS OF MERCHANTABILITY, SATISFACTORY QUALITY, FITNESS FOR A
 ** PARTICULAR PURPOSE, AND NON-INFRINGEMENT.
-** 
+**
 ** Original Code. The Original Code is: OpenGL Sample Implementation,
 ** Version 1.2.1, released January 26, 2000, developed by Silicon Graphics,
 ** Inc. The Original Code is Copyright (c) 1991-2000 Silicon Graphics, Inc.
 ** Copyright in any portions created by third parties is as indicated
 ** elsewhere herein. All Rights Reserved.
-** 
+**
 ** Additional Notice Provisions: The application programming interfaces
 ** established by SGI in conjunction with the Original Code are The
 ** OpenGL(R) Graphics System: A Specification (Version 1.2.1), released
@@ -35,13 +35,15 @@
 /*
 */
 
+#ifndef __REACTOS_USE_PCH__
 #include "gluos.h"
 //#include <stdlib.h>
 //#include <stdio.h>
 #include <assert.h>
-#include <GL/gl.h> 
+#include <GL/gl.h>
 
 #include "primitiveStream.h"
+#endif
 
 Int primStream::num_triangles()
 {
@@ -54,9 +56,9 @@ Int primStream::num_triangles()
   return ret;
 }
 
-	  
 
-/*the begining of inserting a new primitive. 
+
+/*the begining of inserting a new primitive.
  *reset counter to be 0.
  */
 void primStream::begin()
@@ -72,11 +74,11 @@ void primStream::insert(Real u, Real v)
   if(index_vertices+1 >= size_vertices) {
     Real* temp = (Real*) malloc (sizeof(Real) * (2*size_vertices + 2));
     assert(temp);
-    
+
     /*copy*/
     for(Int i=0; i<index_vertices; i++)
       temp[i] = vertices[i];
-    
+
     free(vertices);
     vertices = temp;
     size_vertices = 2*size_vertices + 2;
@@ -88,12 +90,12 @@ void primStream::insert(Real u, Real v)
 }
 
 /*the end of a primitive.
- *increase index_lengths 
+ *increase index_lengths
  */
 void primStream::end(Int type)
 {
   Int i;
-  /*if there is no vertex in this primitive, 
+  /*if there is no vertex in this primitive,
    *nothing needs to be done
    */
   if(counter == 0) return ;
@@ -103,13 +105,13 @@ void primStream::end(Int type)
     assert(temp);
     Int* tempTypes = (Int*) malloc(sizeof(Int) * (2*size_lengths + 2));
     assert(tempTypes);
-    
+
     /*copy*/
     for(i=0; i<index_lengths; i++){
       temp[i] = lengths[i];
       tempTypes[i] = types[i];
     }
-    
+
     free(lengths);
     free(types);
     lengths = temp;
@@ -131,12 +133,12 @@ void primStream::print()
     {
       if(types[i] == PRIMITIVE_STREAM_FAN)
 	printf("primitive-FAN:\n");
-      else 
+      else
 	printf("primitive-STRIP:\n");
       for(j=0; j<lengths[i]; j++)
 	{
 	  printf("(%f,%f) ", vertices[k], vertices[k+1]);
-	  k += 2;	  
+	  k += 2;
 	}
       printf("\n");
     }
@@ -148,16 +150,16 @@ primStream::primStream(Int sizeLengths, Int sizeVertices)
   assert(lengths);
   types = (Int*)malloc (sizeof(Int) * sizeLengths);
   assert(types);
-  
+
   vertices = (Real*) malloc(sizeof(Real) * sizeVertices);
   assert(vertices);
-  
+
   index_lengths = 0;
   index_vertices = 0;
   size_lengths = sizeLengths;
-  size_vertices = sizeVertices; 
+  size_vertices = sizeVertices;
 
-  counter = 0; 
+  counter = 0;
 }
 
 primStream::~primStream()
@@ -181,7 +183,7 @@ void primStream::draw()
 	glBegin(GL_TRIANGLE_STRIP);
 	break;
       }
-      
+
       for(j=0; j<lengths[i]; j++){
 	glVertex2fv(vertices+k);
 	k += 2;

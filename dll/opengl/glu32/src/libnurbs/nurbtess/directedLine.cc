@@ -35,6 +35,7 @@
 /*
 */
 
+#ifndef __REACTOS_USE_PCH__
 //#include <stdlib.h>
 //#include <stdio.h>
 #include <math.h>
@@ -44,6 +45,7 @@
 #include "quicksort.h"
 //#include "directedLine.h"
 #include "polyDBG.h"
+#endif
 
 #ifdef __WATCOMC__
 #pragma warning 726 10
@@ -151,7 +153,7 @@ directedLine* directedLine::deleteDegenerateLines()
 	      first = temp;
 	      break;
 	    }
-        
+
 	}
     }
 
@@ -169,11 +171,11 @@ directedLine* directedLine::deleteDegenerateLines()
 /*
       if(temp->head()[0] == temp->tail()[0] &&
 	 temp->head()[1] == temp->tail()[1])
-*/      
+*/
 
       if(myequal(temp->head(), temp->tail()))
 	deleteSingleLine(temp);
-    }   
+    }
   return first;
 }
 
@@ -190,7 +192,7 @@ directedLine* directedLine::deleteDegenerateLinesAllPolygons()
       if(ret == NULL)
 	{
 	  ret = retEnd = temp->deleteDegenerateLines();
-        
+
 	}
       else
 	{

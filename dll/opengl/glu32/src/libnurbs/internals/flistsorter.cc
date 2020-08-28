@@ -37,8 +37,10 @@
  *
  */
 
+#ifndef __REACTOS_USE_PCH__
 //#include "glimports.h"
 #include "flistsorter.h"
+#endif
 
 FlistSorter::FlistSorter( void ) : Sorter( sizeof( REAL ) )
 {

@@ -37,6 +37,7 @@
  *
  */
 
+#ifndef __REACTOS_USE_PCH__
 /* Polynomial Evaluator Interface */
 #include "gluos.h"
 //#include <stdio.h>
@@ -45,7 +46,7 @@
 //#include "glsurfeval.h"
 //#include "nurbsconsts.h"
 //#include "bezierPatchMesh.h"
-
+#endif
 
 //extern int surfcount;
 //int surfcount=0;
@@ -118,7 +119,7 @@ OpenGLSurfaceEvaluator::OpenGLSurfaceEvaluator()
     global_uorder_BV = 0;
     global_vorder_BV = 0;
     global_baseData = NULL;
-        
+
     global_bpm = NULL;
     output_triangles = 0; //don't output triangles by default
 
@@ -199,7 +200,7 @@ OpenGLSurfaceEvaluator::mapgrid2f(long nu, REAL u0, REAL u1, long nv, REAL v0, R
 	      (REAL) v0, (REAL) v1);
 #else
 
-  if(output_triangles)  
+  if(output_triangles)
     {
       global_grid_u0 = u0;
       global_grid_u1 = u1;
@@ -223,7 +224,7 @@ OpenGLSurfaceEvaluator::polymode(long style)
       switch(style) {
       default:
       case N_MESHFILL:
-        
+
 	glPolygonMode((GLenum) GL_FRONT_AND_BACK, (GLenum) GL_FILL);
 	break;
       case N_MESHLINE:
@@ -419,7 +420,7 @@ OpenGLSurfaceEvaluator::evalUStrip(int n_upper, REAL v_upper, REAL* upper_val, i
 	      coord2f(leftMostV[0], leftMostV[1]);
 //	      glNormal3fv(leftMostNormal);
 //	      glVertex3fv(leftMostXYZ);
-        
+
 	      for(k=n_upper-1; k>=i; k--) /*reverse order for two-side lighting*/
 		{
 		  coord2f(upper_val[k], v_upper);
@@ -483,11 +484,11 @@ OpenGLSurfaceEvaluator::evalUStrip(int n_upper, REAL v_upper, REAL* upper_val, i
 	      coord2f(upper_val[i], v_upper);
 //	      glNormal3fv(upperNormal[i]);
 //	      glVertex3fv(upperXYZ[i]);
-        
+
 	      coord2f(leftMostV[0], leftMostV[1]);
 //		glNormal3fv(leftMostNormal);
 //	      glVertex3fv(leftMostXYZ);
-        
+
 
 	      /*find the last k>=j such that
 	       *lowerverts[k][0] < upperverts[i][0]
@@ -602,7 +603,7 @@ OpenGLSurfaceEvaluator::evalVStrip(int n_left, REAL u_left, REAL* left_val, int 
 	      coord2f(botMostV[0], botMostV[1]);
 //	      glNormal3fv(botMostNormal);
 //	      glVertex3fv(botMostXYZ);
-        
+
 	      for(k=n_left-1; k>=i; k--) /*reverse order for two-side lighting*/
 		{
 		  coord2f(u_left, left_val[k]);
@@ -666,11 +667,11 @@ OpenGLSurfaceEvaluator::evalVStrip(int n_left, REAL u_left, REAL* left_val, int 
 	      coord2f(u_left, left_val[i]);
 //	      glNormal3fv(leftNormal[i]);
 //	      glVertex3fv(leftXYZ[i]);
-        
+
 	      coord2f(botMostV[0], botMostV[1]);
 //	      glNormal3fv(botMostNormal);
 //	      glVertex3fv(botMostXYZ);
-        
+
 
 	      /*find the last k>=j such that
 	       *rightverts[k][0] < leftverts[i][0]
@@ -787,7 +788,7 @@ OpenGLSurfaceEvaluator::bgnmap2f(long)
       glPushAttrib((GLbitfield) GL_EVAL_BIT);
 
       /*to avoid side effect, we restor the opengl state for GL_POLYGON_MODE
-       */       
+       */
       glGetIntegerv(GL_POLYGON_MODE, gl_polygon_mode);
     }
 
@@ -984,7 +985,7 @@ if(output_triangles)
       bgnqstrip();
       for(j=vmax; j>=vmin; j--){
 	REAL v1 = (j == global_grid_nv)? global_grid_v1: (global_grid_v0 +j*dv);
-        
+
 	coord2f(u1, v1);
 	coord2f(u2, v1);
       }
@@ -999,7 +1000,7 @@ if(output_triangles)
 
       bgnqstrip();
       for(j=umax; j>=umin; j--){
-	REAL u1 = (j == global_grid_nu)? global_grid_u1: (global_grid_u0 +j*du);        
+	REAL u1 = (j == global_grid_nu)? global_grid_u1: (global_grid_u0 +j*du);
 	coord2f(u1, v2);
 	coord2f(u1, v1);
       }

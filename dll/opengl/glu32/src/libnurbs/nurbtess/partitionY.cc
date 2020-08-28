@@ -6,21 +6,21 @@
 ** this file except in compliance with the License. You may obtain a copy
 ** of the License at Silicon Graphics, Inc., attn: Legal Services, 1600
 ** Amphitheatre Parkway, Mountain View, CA 94043-1351, or at:
-** 
+**
 ** http://oss.sgi.com/projects/FreeB
-** 
+**
 ** Note that, as provided in the License, the Software is distributed on an
 ** "AS IS" basis, with ALL EXPRESS AND IMPLIED WARRANTIES AND CONDITIONS
 ** DISCLAIMED, INCLUDING, WITHOUT LIMITATION, ANY IMPLIED WARRANTIES AND
 ** CONDITIONS OF MERCHANTABILITY, SATISFACTORY QUALITY, FITNESS FOR A
 ** PARTICULAR PURPOSE, AND NON-INFRINGEMENT.
-** 
+**
 ** Original Code. The Original Code is: OpenGL Sample Implementation,
 ** Version 1.2.1, released January 26, 2000, developed by Silicon Graphics,
 ** Inc. The Original Code is Copyright (c) 1991-2000 Silicon Graphics, Inc.
 ** Copyright in any portions created by third parties is as indicated
 ** elsewhere herein. All Rights Reserved.
-** 
+**
 ** Additional Notice Provisions: The application programming interfaces
 ** established by SGI in conjunction with the Original Code are The
 ** OpenGL(R) Graphics System: A Specification (Version 1.2.1), released
@@ -35,6 +35,7 @@
 /*
 */
 
+#ifndef __REACTOS_USE_PCH__
 #include <stdlib.h>
 #include <stdio.h>
 //#include <time.h>
@@ -44,20 +45,21 @@
 #include "searchTree.h"
 #include "quicksort.h"
 #include "polyUtil.h"
+#endif
 
 
 #define max(a,b) ((a>b)? a:b)
 #define min(a,b) ((a>b)? b:a)
 
 
-/*retrurn 
+/*retrurn
  *-1: if A < B (Ya<Yb) || (Ya==Yb)
  * 0: if A == B
  * 1: if A>B
  */
 static Int compVertInY(Real A[2], Real B[2])
 {
-  if( (A[1] < B[1]) || (A[1]==B[1] && A[0]<B[0])) 
+  if( (A[1] < B[1]) || (A[1]==B[1] && A[0]<B[0]))
     return -1;
   else if
     ( A[1] == B[1] && A[0] == B[0]) return 0;
@@ -73,7 +75,7 @@ static Int compVertInY(Real A[2], Real B[2])
 Int isBelow(directedLine *v, directedLine *e)
 {
   Real* vert = v->head();
-  if(   compVertInY(e->head(), vert) != 1 
+  if(   compVertInY(e->head(), vert) != 1
      && compVertInY(e->tail(), vert) != 1
      )
     return 1;
@@ -89,7 +91,7 @@ Int isBelow(directedLine *v, directedLine *e)
 Int isAbove(directedLine *v, directedLine *e)
 {
   Real* vert = v->head();
-  if(   compVertInY(e->head(), vert) != -1 
+  if(   compVertInY(e->head(), vert) != -1
      && compVertInY(e->tail(), vert) != -1
      )
     return 1;
@@ -134,7 +136,7 @@ Int isReflex(directedLine *v)
   else return 0;
 }
 
- /*return 
+ /*return
  *0: not-cusp
  *1: interior cusp
  *2: exterior cusp
@@ -168,10 +170,10 @@ Int sweepRangeEqual(sweepRange* src1, sweepRange* src2)
 {
   Int leftEqual;
   Int rightEqual;
-  
-  
+
+
   /*The case when both are vertices should not happen*/
-  assert(! (src1->leftType == 0 && src2->leftType == 0));    
+  assert(! (src1->leftType == 0 && src2->leftType == 0));
   if(src1->leftType == 0 && src2->leftType == 1){
     if(src1->left == src2->left ||
        src1->left->getPrev() == src2->left
@@ -191,13 +193,13 @@ Int sweepRangeEqual(sweepRange* src1, sweepRange* src2)
        src1->left == src2->left->getPrev()
        )
       leftEqual = 1;
-    else 
+    else
       leftEqual = 0;
   }
 
   /*the same thing for right*/
   /*The case when both are vertices should not happen*/
-  assert(! (src1->rightType == 0 && src2->rightType == 0));    
+  assert(! (src1->rightType == 0 && src2->rightType == 0));
   if(src1->rightType == 0 && src2->rightType == 1){
     if(src1->right == src2->right ||
        src1->right->getPrev() == src2->right
@@ -217,10 +219,10 @@ Int sweepRangeEqual(sweepRange* src1, sweepRange* src2)
        src1->right == src2->right->getPrev()
        )
       rightEqual = 1;
-    else 
+    else
       rightEqual = 0;
   }
-  
+
   return (leftEqual == 1 || rightEqual == 1);
 }
 
@@ -279,7 +281,7 @@ static Int compEdges(directedLine *e1, directedLine *e2)
     e2_Ymin = h21;
   }
 */
- 
+
   if(head1[1]>tail1[1]) {
     e1_Ymax= head1[1];
     e1_Ymin= tail1[1];
@@ -298,7 +300,7 @@ static Int compEdges(directedLine *e1, directedLine *e2)
     e2_Ymin = head2[1];
   }
 
-  
+
   /*Real e1_Ymax = max(head1[1], tail1[1]);*/ /*max(e1->head()[1], e1->tail()[1]);*/
   /*Real e1_Ymin = min(head1[1], tail1[1]);*/ /*min(e1->head()[1], e1->tail()[1]);*/
   /*Real e2_Ymax = max(head2[1], tail2[1]);*/ /*max(e2->head()[1], e2->tail()[1]);*/
@@ -306,7 +308,7 @@ static Int compEdges(directedLine *e1, directedLine *e2)
 
   Real Ymax = min(e1_Ymax, e2_Ymax);
   Real Ymin = max(e1_Ymin, e2_Ymin);
-    
+
   Real y = Real(0.5)*(Ymax + Ymin);
 
 /*  Real x1 = intersectHoriz(e1->head()[0], e1->head()[1], e1->tail()[0], e1->tail()[1], y);
@@ -322,7 +324,7 @@ static Int compEdges(directedLine *e1, directedLine *e2)
   if(x1<= x2) return -1;
   else return 1;
 }
-  
+
 /*used by sort precedures
  */
 static Int compInY(directedLine* v1, directedLine* v2)
@@ -342,7 +344,7 @@ void findDiagonals(Int total_num_edges, directedLine** sortedVertices, sweepRang
       directedLine* thisEdge = vert;
       directedLine* prevEdge = vert->getPrev();
 /*
-printf("find i=%i\n", i);            
+printf("find i=%i\n", i);
 printf("the vertex is\n");
 vert->printSingle();
 */
@@ -398,12 +400,12 @@ Int deleteRepeatDiagonals(Int num_diagonals, directedLine** diagonal_vertices, d
       for(j=0,l=0; j<index; j++, l+=2)
 	{
 	  if(
-	     (diagonal_vertices[k] == new_vertices[l] && 
+	     (diagonal_vertices[k] == new_vertices[l] &&
 	      diagonal_vertices[k+1] == new_vertices[l+1]
 	      )
 	     ||
 	     (
-	      diagonal_vertices[k] == new_vertices[l+1] && 
+	      diagonal_vertices[k] == new_vertices[l+1] &&
 	      diagonal_vertices[k+1] == new_vertices[l]
 	      )
 	     )
@@ -415,14 +417,14 @@ Int deleteRepeatDiagonals(Int num_diagonals, directedLine** diagonal_vertices, d
       if(! isRepeated)
 	{
 	  new_vertices[index+index] = diagonal_vertices[k];
-	  new_vertices[index+index+1] = diagonal_vertices[k+1];	  
+	  new_vertices[index+index+1] = diagonal_vertices[k+1];
 	  index++;
 	}
     }
   return index;
 }
 
-/*for debug only*/	  
+/*for debug only*/
 directedLine** DBGfindDiagonals(directedLine *polygons, Int& num_diagonals)
 {
   Int total_num_edges = 0;
@@ -503,14 +505,14 @@ num_diagonals=deleteRepeatDiagonals(num_diagonals, diagonal_vertices, diagonal_v
       directedLine* v2=diagonal_vertices[k+1];
       directedLine* ret_p1;
       directedLine* ret_p2;
-      
+
       /*we ahve to determine whether v1 and v2 belong to the same polygon before
        *their structure are modified by connectDiagonal().
        */
 /*
       directedLine *root1 = v1->findRoot();
       directedLine *root2 = v2->findRoot();
-      assert(root1);      
+      assert(root1);
       assert(root2);
 */
 
@@ -548,14 +550,14 @@ root2->rootLinkSet(root1);
 ret_p1->rootLinkSet(root1);
 ret_p2->rootLinkSet(root1);
 
-       /*now that we have connected the diagonal v1 and v2, 
-        *we have to check those unprocessed diagonals which 
+       /*now that we have connected the diagonal v1 and v2,
+        *we have to check those unprocessed diagonals which
         *have v1 or v2 as an end point. Notice that the head of v1
         *has the same coodinates as the head of v2->prev, and the head of
-        *v2 has the same coordinate as the head of v1->prev. 
+        *v2 has the same coordinate as the head of v1->prev.
         *Suppose these is a diagonal (v1, x). If (v1,x) is still a valid
-        *diagonal, then x should be on the left hand side of the directed line:        *v1->prev->head -- v1->head -- v1->tail. Otherwise, (v1,x) should be  
-        *replaced by (v2->prev, x), that is, x is on the left of 
+        *diagonal, then x should be on the left hand side of the directed line:        *v1->prev->head -- v1->head -- v1->tail. Otherwise, (v1,x) should be
+        *replaced by (v2->prev, x), that is, x is on the left of
         * v2->prev->prev->head, v2->prev->head, v2->prev->tail.
         */
         Int ii, kk;
@@ -567,12 +569,12 @@ ret_p2->rootLinkSet(root1);
 	      /*check d1, and replace diagonal_vertices[kk] if necessary*/
 	      if(d1 == v1) {
 		/*check if d2 is to left of v1->prev->head:v1->head:v1->tail*/
-		if(! pointLeft2Lines(v1->getPrev()->head(), 
+		if(! pointLeft2Lines(v1->getPrev()->head(),
 				     v1->head(), v1->tail(), d2->head()))
 		  {
 /*
 		    assert(pointLeft2Lines(v2->getPrev()->getPrev()->head(),
-					   v2->getPrev()->head(), 
+					   v2->getPrev()->head(),
 					   v2->getPrev()->tail(), d2->head()));
 */
 		    diagonal_vertices[kk] = v2->getPrev();
@@ -594,11 +596,11 @@ ret_p2->rootLinkSet(root1);
 	      /*check d2 and replace diagonal_vertices[k+1] if necessary*/
 	      if(d2 == v1) {
 		/*check if d1 is to left of v1->prev->head:v1->head:v1->tail*/
-		if(! pointLeft2Lines(v1->getPrev()->head(), 
+		if(! pointLeft2Lines(v1->getPrev()->head(),
 				     v1->head(), v1->tail(), d1->head()))
 		  {
 /*		    assert(pointLeft2Lines(v2->getPrev()->getPrev()->head(),
-					   v2->getPrev()->head(), 
+					   v2->getPrev()->head(),
 					   v2->getPrev()->tail(), d1->head()));
 */
 		    diagonal_vertices[kk+1] = v2->getPrev();
@@ -616,7 +618,7 @@ ret_p2->rootLinkSet(root1);
 		    diagonal_vertices[kk+1] = v1->getPrev();
 		  }
 	      }
-	    }					    	       
+	    }
 }/*end if (root1 not equal to root 2)*/
 }
 
@@ -625,7 +627,7 @@ ret_p2->rootLinkSet(root1);
 
 
   for(i=0,k=0; i<num_diagonals; i++, k += 2)
-    if(removedDiagonals[i] == 0) 
+    if(removedDiagonals[i] == 0)
       {
 
 
@@ -646,10 +648,10 @@ ret_p2->rootLinkSet(root1);
 
 
 
-	assert(root1);      
-	assert(root2);      
+	assert(root1);
+	assert(root2);
 	assert(root1 == root2);
-  */    
+  */
 	sampledLine* generatedLine;
 
 
@@ -665,7 +667,7 @@ ret_p2->rootLinkSet(root1);
 
 
 
-	for(Int j=i+1; j<num_diagonals; j++) 
+	for(Int j=i+1; j<num_diagonals; j++)
 	  {
 	    if(removedDiagonals[j] ==0)
 	      {
@@ -675,14 +677,14 @@ ret_p2->rootLinkSet(root1);
                if(temp1==v1 || temp1==v2 || temp2==v1 || temp2==v2)
 		if(! temp1->samePolygon(temp1, temp2))
 		  {
-		    /*if temp1 and temp2 are in different polygons, 
+		    /*if temp1 and temp2 are in different polygons,
 		     *then one of them must be v1 or v2.
 		     */
 
 
 
 		    assert(temp1==v1 || temp1 == v2 || temp2==v1 || temp2 ==v2);
-		    if(temp1==v1) 
+		    if(temp1==v1)
 		      {
 			diagonal_vertices[2*j] = v2->getPrev();
 		      }
@@ -692,7 +694,7 @@ ret_p2->rootLinkSet(root1);
 		      }
 		    if(temp1==v2)
 		      {
-			diagonal_vertices[2*j] = v1->getPrev();		      
+			diagonal_vertices[2*j] = v1->getPrev();
 		      }
 		    if(temp2==v2)
 		      {
@@ -700,7 +702,7 @@ ret_p2->rootLinkSet(root1);
 		      }
 		  }
 	      }
-	  }      
+	  }
 
       }
 
@@ -713,12 +715,12 @@ ret_p2->rootLinkSet(root1);
   *retSampledLines = newSampledLines;
   return ret_polygons;
 }
-	
-/*given a set of simple polygons where the interior 
+
+/*given a set of simple polygons where the interior
  *is decided by left-hand principle,
  *return a range (sight) for each vertex. This is called
  *Trapezoidalization.
- */ 
+ */
 void sweepY(Int nVertices, directedLine** sortedVertices, sweepRange** ret_ranges)
 {
   Int i;
@@ -733,12 +735,12 @@ void sweepY(Int nVertices, directedLine** sortedVertices, sweepRange** ret_range
 
       directedLine* thisEdge = vert;
       directedLine* prevEdge = vert->getPrev();
-      
+
       if(isBelow(vert, thisEdge) && isAbove(vert, prevEdge))
 	{
 
 	  /*case 1: this < v < prev
-	   *the polygon is going down at v, the interior is to 
+	   *the polygon is going down at v, the interior is to
 	   *the right hand side.
 	   * find the edge to the right of thisEdge for right range.
            * delete thisEdge
@@ -760,12 +762,12 @@ void sweepY(Int nVertices, directedLine** sortedVertices, sweepRange** ret_range
 	{
 
 	  /*case 2: this > v > prev
-	   *the polygon is going up at v, the interior is to 
+	   *the polygon is going up at v, the interior is to
 	   *the left hand side.
 	   * find the edge to the left of thisEdge for left range.
            * delete prevEdge
            * insert thisEdge
-	   */	  
+	   */
 	  treeNode* prevNode = TreeNodeFind(searchTree, prevEdge, ( Int (*) (void *, void *))compEdges);
 	  assert(prevNode);
 	  treeNode* pred = TreeNodePredecessor(prevNode);
@@ -778,15 +780,15 @@ void sweepY(Int nVertices, directedLine** sortedVertices, sweepRange** ret_range
 
 	  /*case 3: insert both edges*/
 	  treeNode* thisNode = TreeNodeMake(thisEdge);
-	  treeNode* prevNode = TreeNodeMake(prevEdge);	  
+	  treeNode* prevNode = TreeNodeMake(prevEdge);
 	  searchTree = TreeNodeInsert(searchTree, thisNode, ( Int (*) (void *, void *))compEdges);
-	  searchTree = TreeNodeInsert(searchTree, prevNode, ( Int (*) (void *, void *))compEdges);	  
+	  searchTree = TreeNodeInsert(searchTree, prevNode, ( Int (*) (void *, void *))compEdges);
 	  if(compEdges(thisEdge, prevEdge)<0)  /*interior cusp*/
 	    {
 
 	      treeNode* leftEdge = TreeNodePredecessor(thisNode);
 	      treeNode* rightEdge = TreeNodeSuccessor(prevNode);
-	      ret_ranges[i] = sweepRangeMake( (directedLine*) leftEdge->key, 1, 
+	      ret_ranges[i] = sweepRangeMake( (directedLine*) leftEdge->key, 1,
 					     (directedLine*) rightEdge->key, 1
 					     );
 	    }
@@ -806,7 +808,7 @@ void sweepY(Int nVertices, directedLine** sortedVertices, sweepRange** ret_range
 	    {
 	      treeNode* leftEdge = TreeNodePredecessor(prevNode);
 	      treeNode* rightEdge = TreeNodeSuccessor(thisNode);
-	      ret_ranges[i] = sweepRangeMake( (directedLine*) leftEdge->key, 1, 
+	      ret_ranges[i] = sweepRangeMake( (directedLine*) leftEdge->key, 1,
 					     (directedLine*) rightEdge->key, 1
 					     );
 	    }
@@ -826,7 +828,7 @@ void sweepY(Int nVertices, directedLine** sortedVertices, sweepRange** ret_range
 	  thisEdge->printSingle();
 	  printf("prevEdge is\n");
 	  prevEdge->printSingle();
-	  
+
 	  exit(1);
 	}
     }

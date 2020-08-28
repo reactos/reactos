@@ -6,21 +6,21 @@
 ** this file except in compliance with the License. You may obtain a copy
 ** of the License at Silicon Graphics, Inc., attn: Legal Services, 1600
 ** Amphitheatre Parkway, Mountain View, CA 94043-1351, or at:
-** 
+**
 ** http://oss.sgi.com/projects/FreeB
-** 
+**
 ** Note that, as provided in the License, the Software is distributed on an
 ** "AS IS" basis, with ALL EXPRESS AND IMPLIED WARRANTIES AND CONDITIONS
 ** DISCLAIMED, INCLUDING, WITHOUT LIMITATION, ANY IMPLIED WARRANTIES AND
 ** CONDITIONS OF MERCHANTABILITY, SATISFACTORY QUALITY, FITNESS FOR A
 ** PARTICULAR PURPOSE, AND NON-INFRINGEMENT.
-** 
+**
 ** Original Code. The Original Code is: OpenGL Sample Implementation,
 ** Version 1.2.1, released January 26, 2000, developed by Silicon Graphics,
 ** Inc. The Original Code is Copyright (c) 1991-2000 Silicon Graphics, Inc.
 ** Copyright in any portions created by third parties is as indicated
 ** elsewhere herein. All Rights Reserved.
-** 
+**
 ** Additional Notice Provisions: The application programming interfaces
 ** established by SGI in conjunction with the Original Code are The
 ** OpenGL(R) Graphics System: A Specification (Version 1.2.1), released
@@ -35,6 +35,7 @@
 /*
 */
 
+#ifndef __REACTOS_USE_PCH__
 #include "gluos.h"
 //#include <stdlib.h>
 //#include <stdio.h>
@@ -42,6 +43,7 @@
 //#include <GL/gl.h>
 #include "bezierEval.h"
 #include "bezierPatchMesh.h"
+#endif
 
 static int isDegenerate(float A[2], float B[2], float C[2]);
 
@@ -76,7 +78,7 @@ void bezierPatchMeshListDelete(bezierPatchMesh *list)
 {
   if(list == NULL) return;
   bezierPatchMeshListDelete(list->next);
-  bezierPatchMeshDelete(list);  
+  bezierPatchMeshDelete(list);
 }
 
 
@@ -126,7 +128,7 @@ bezierPatchMesh *bezierPatchMeshMake(int maptype, float umin, float umax, int us
     for(j=0; j<vorder; j++)
       for(k=0; k<dimension; k++)
 	ret->bpatch->ctlpoints[i * the_ustride + j*the_vstride+k] = ctlpoints[i*ustride+j*vstride+k];
-  
+
 
   ret->size_UVarray = size_UVarray;
   ret->size_length_array = size_length_array;
@@ -203,18 +205,18 @@ void bezierPatchMeshPutPatch(bezierPatchMesh *bpm, int maptype, float umin, floa
     break;
   case GL_MAP2_TEXTURE_COORD_2:
     bpm->bpatch_texcoord = bezierPatchMake2(umin, vmin, umax, vmax, uorder, vorder, 2, ustride, vstride, ctlpoints);
-    break;    
+    break;
   case GL_MAP2_TEXTURE_COORD_3:
     bpm->bpatch_texcoord = bezierPatchMake2(umin, vmin, umax, vmax, uorder, vorder, 3, ustride, vstride, ctlpoints);
-    break;    
+    break;
   case GL_MAP2_TEXTURE_COORD_4:
     bpm->bpatch_texcoord = bezierPatchMake2(umin, vmin, umax, vmax, uorder, vorder, 4, ustride, vstride, ctlpoints);
-    break;    
+    break;
   default:
     fprintf(stderr, "error in bezierPatchMeshPutPatch, maptype=%i is wrong, maptype,map is invalid\n", maptype);
   }
 }
-  
+
 
 /*delete everything including the arrays. So if you want to output the
  *pointers of the arrays, you should not use this function to deallocate space.
@@ -230,7 +232,7 @@ void bezierPatchMeshDelete(bezierPatchMesh *bpm)
     bezierPatchDelete(bpm->bpatch_color);
   if(bpm->bpatch_texcoord != NULL)
     bezierPatchDelete(bpm->bpatch_texcoord);
-  
+
   free(bpm->UVarray);
   free(bpm->length_array);
   free(bpm->vertex_array);
@@ -238,7 +240,7 @@ void bezierPatchMeshDelete(bezierPatchMesh *bpm)
   free(bpm->type_array);
   free(bpm);
 }
- 
+
 /*begin a strip
  *type is the primitive type:
  */
@@ -252,10 +254,10 @@ void bezierPatchMeshBeginStrip(bezierPatchMesh *bpm, GLenum type)
 void bezierPatchMeshEndStrip(bezierPatchMesh *bpm)
 {
   int i;
-  
+
   /*if there are no vertices in this strip, then nothing needs to be done*/
   if(bpm->counter == 0) return;
-  
+
   /*if the length_array is full, it should be expanded*/
   if(bpm->index_length_array >= bpm->size_length_array)
     {
@@ -265,18 +267,18 @@ void bezierPatchMeshEndStrip(bezierPatchMesh *bpm)
       assert(temp_type);
       /*update the size*/
       bpm->size_length_array = bpm->size_length_array*2 + 1;
-      
+
       /*copy*/
       for(i=0; i<bpm->index_length_array; i++)
 	{
 	  temp[i] = bpm->length_array[i];
 	  temp_type[i] = bpm->type_array[i];
 	}
-      
+
       /*deallocate old array*/
       free(bpm->length_array);
       free(bpm->type_array);
-      
+
       /*point to the new array which is twice as bigger*/
       bpm->length_array = temp;
       bpm->type_array = temp_type;
@@ -295,19 +297,19 @@ void bezierPatchMeshInsertUV(bezierPatchMesh *bpm, float u, float v)
     {
       float *temp = (float*) malloc(sizeof(float) * (bpm->size_UVarray * 2 + 2));
       assert(temp);
-      
+
       /*update the size*/
       bpm->size_UVarray = bpm->size_UVarray*2 + 2;
-      
+
       /*copy*/
       for(i=0; i<bpm->index_UVarray; i++)
 	{
 	  temp[i] = bpm->UVarray[i];
 	}
-      
+
       /*deallocate old array*/
       free(bpm->UVarray);
-      
+
       /*pointing to the new arrays*/
       bpm->UVarray = temp;
     }
@@ -445,7 +447,7 @@ void bezierPatchMeshDelDeg(bezierPatchMesh* bpm)
   index_new_UVarray=0;
   k=0;
   for(i=0; i<bpm->index_length_array; i++){
-    
+
     /*(if not degenerate, we have to copy*/
     if( (bpm->length_array[i] != 3) || (!isDegenerate(bpm->UVarray+k, bpm->UVarray+k+2, bpm->UVarray+k+4)))
 	  {
@@ -460,7 +462,7 @@ void bezierPatchMeshDelDeg(bezierPatchMesh* bpm)
       {
 	k += 6;
       }
-  }  
+  }
   free(bpm->UVarray);
   free(bpm->length_array);
   free(bpm->type_array);
@@ -469,11 +471,11 @@ void bezierPatchMeshDelDeg(bezierPatchMesh* bpm)
   bpm->type_array=new_type_array;
   bpm->index_UVarray = index_new_UVarray;
   bpm->index_length_array = index_new_length_array;
-  
+
 }
 
 /*(u,v) to XYZ
- *the xyz and normals are stored in vertex_array, 
+ *the xyz and normals are stored in vertex_array,
  *and normal_array. the spaces of both are allocated here
  */
 void bezierPatchMeshEval(bezierPatchMesh* bpm)
@@ -490,7 +492,7 @@ void bezierPatchMeshEval(bezierPatchMesh* bpm)
   int ustride = dimension * vorder;
   int vstride = dimension;
   float *ctlpoints = bpm->bpatch->ctlpoints;
-  
+
   bpm->vertex_array = (float*) malloc(sizeof(float)* (bpm->index_UVarray/2) * 3);
   assert(bpm->vertex_array);
   bpm->normal_array = (float*) malloc(sizeof(float)* (bpm->index_UVarray/2) * 3);
@@ -511,7 +513,7 @@ void bezierPatchMeshEval(bezierPatchMesh* bpm)
 	}
     }
 }
-    
+
 void bezierPatchMeshListEval(bezierPatchMesh* list)
 {
   bezierPatchMesh* temp;
@@ -559,13 +561,13 @@ void bezierPatchMeshListCollect(bezierPatchMesh* list, float **vertex_array, flo
   assert(*normal_array);
 
   *num_strips = bezierPatchMeshListTotalStrips(list);
-   
+
   *length_array = (int*) malloc(sizeof(int) * (*num_strips));
   assert(*length_array);
 
   *type_array = (GLenum*) malloc(sizeof(GLenum) * (*num_strips));
   assert(*type_array);
-  
+
   k=0;
   l=0;
   for(temp = list; temp != NULL; temp = temp->next)

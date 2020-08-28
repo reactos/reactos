@@ -32,17 +32,19 @@
 ** compliant with the OpenGL(R) version 1.2.1 Specification.
 */
 
-/* 
+/*
  * tobezier.c++
  *
  */
 
+#ifndef __REACTOS_USE_PCH__
 #include "glimports.h"
 //#include "myassert.h"
 //#include "mystdio.h"
 //#include "mystring.h"
 #include "quilt.h"
 #include "knotvector.h"
+#endif
 
 /* local type definitions */
 struct Breakpt {		/* breakpoints	*/
@@ -86,7 +88,7 @@ struct Knotspec {		/* knotvector format */
     void		knots( void );
     void		transform( REAL * );
     void		showpts( REAL * );
-    
+
     void		pt_io_copy( REAL *, INREAL * );
     void		pt_oo_copy( REAL *, REAL * );
     void		pt_oo_sum( REAL*, REAL*, REAL*, Knot, Knot );
@@ -109,12 +111,12 @@ struct Splinespec {		/* a non-uniform tensor element */
 };
 
 /*-----------------------------------------------------------------------------
- * Quilt::toBezier - convert from NURBS to rational Bezier 
+ * Quilt::toBezier - convert from NURBS to rational Bezier
  *-----------------------------------------------------------------------------
  */
 
 void
-Quilt::toBezier( 
+Quilt::toBezier(
     Knotvector& knotvector,	/* a knot vector */
     INREAL *ctlpts,		/* input contol points */
     long ncoords )		/* number of coordinates per control point */
@@ -129,7 +131,7 @@ Quilt::toBezier(
 }
 
 void
-Quilt::toBezier( 
+Quilt::toBezier(
     Knotvector& sknotvector,	/* a knot vector */
     Knotvector& tknotvector,	/* a knot vector */
     INREAL *ctlpts,		/* input contol points */
@@ -154,13 +156,13 @@ Splinespec::~Splinespec( void )
      * is copied in 'cpts' in this file in function Splinespec::setupquilt().
      * This block of memory will eventually be deleted in file quilt.c++ in
      * function Quilt::deleteMe() through 'cpts' so do NOT delete it here!
-     */	
-    Knotspec *ktrav= kspec;         //start at beginning of list 
-    while (ktrav != 0) {            //any items to delete? 
-       Knotspec *deleteThis= ktrav; //remember to delete this 
+     */
+    Knotspec *ktrav= kspec;         //start at beginning of list
+    while (ktrav != 0) {            //any items to delete?
+       Knotspec *deleteThis= ktrav; //remember to delete this
        ktrav= ktrav->next;          //go to next item if any
        delete deleteThis;           //delete it
-    }	
+    }
 } /* ~Splinespec() */
 
 /*-----------------------------------------------------------------------------
@@ -176,7 +178,7 @@ Splinespec::kspecinit( Knotvector& knotvector )
     kspec = new Knotspec;
     kspec->inkbegin = knotvector.knotlist;
     kspec->inkend = knotvector.knotlist + knotvector.knotcount;
-    kspec->prestride = (int) knotvector.stride; 
+    kspec->prestride = (int) knotvector.stride;
     kspec->order = knotvector.order;
     kspec->next = NULL;
 }
@@ -189,13 +191,13 @@ Splinespec::kspecinit( Knotvector& sknotvector, Knotvector& tknotvector )
 
     kspec->inkbegin = sknotvector.knotlist;
     kspec->inkend = sknotvector.knotlist + sknotvector.knotcount;
-    kspec->prestride = (int) sknotvector.stride; 
+    kspec->prestride = (int) sknotvector.stride;
     kspec->order = sknotvector.order;
     kspec->next = tkspec;
 
     tkspec->inkbegin = tknotvector.knotlist;
     tkspec->inkend = tknotvector.knotlist + tknotvector.knotcount;
-    tkspec->prestride = (int) tknotvector.stride; 
+    tkspec->prestride = (int) tknotvector.stride;
     tkspec->order = tknotvector.order;
     tkspec->next = NULL;
 }
@@ -204,7 +206,7 @@ Splinespec::kspecinit( Knotvector& sknotvector, Knotvector& tknotvector )
 /*-----------------------------------------------------------------------------
  * Splinespec::select - select the subsegments to copy
  *
- * Client: gl_quilt_to_bezier	
+ * Client: gl_quilt_to_bezier
  *-----------------------------------------------------------------------------
  */
 
@@ -218,9 +220,9 @@ Splinespec::select( )
 }
 
 /*-----------------------------------------------------------------------------
- * Splinespec::layout - 
+ * Splinespec::layout -
  *
- * Client: gl_quilt_to_bezier	
+ * Client: gl_quilt_to_bezier
  *-----------------------------------------------------------------------------
  */
 
@@ -239,7 +241,7 @@ Splinespec::layout( long ncoords )
         knotspec->ncoords = (int) ncoords;
     }
     outcpts = new REAL[stride];
-    assert( outcpts != 0 );  
+    assert( outcpts != 0 );
 }
 
 /*-----------------------------------------------------------------------------
@@ -256,7 +258,7 @@ Splinespec::copy( INREAL *incpts )
 }
 
 /*-----------------------------------------------------------------------------
- * Splinespec::setupquilt - assign all quilt variables from knotspec 
+ * Splinespec::setupquilt - assign all quilt variables from knotspec
  *
  * Client: gl_quilt_to_bezier
  *-----------------------------------------------------------------------------
@@ -308,7 +310,7 @@ Splinespec::transform( void )
 
 
 /*-----------------------------------------------------------------------------
- * Knotspec::Knotspec -  constuct a knot spec 
+ * Knotspec::Knotspec -  constuct a knot spec
  *-----------------------------------------------------------------------------
  */
 
@@ -320,7 +322,7 @@ Knotspec::Knotspec( void )
 }
 
 /*-----------------------------------------------------------------------------
- * Knotspec::copy -  copy the control points along minor direction 
+ * Knotspec::copy -  copy the control points along minor direction
  *
  * Client: Splinespec::copy
  *-----------------------------------------------------------------------------
@@ -363,7 +365,7 @@ Knotspec::showpts( REAL *outpt )
 }
 
 /*-----------------------------------------------------------------------------
- * Knotspec::factors - precompute scale factors 	
+ * Knotspec::factors - precompute scale factors
  *	   - overwrites knot vector, actual new knot vector is NOT produced
  *
  * Client: Knotspec::select
@@ -385,7 +387,7 @@ Knotspec::factors( void )
 	Knot *kf = (mid-def) + (order-1);
 	for( Knot *kl = kf + def; kl != kf; kl-- ) {
 	    Knot *kh, *kt;
-	    for( kt=kl, kh=mid; kt != kf; kh--, kt-- ) 
+	    for( kt=kl, kh=mid; kt != kf; kh--, kt-- )
 		*(fptr++) = (kv - *kh) / (*kt - *kh);
 	    *kl = kv;
 	}
@@ -420,9 +422,9 @@ Knotspec::insert( REAL *p )
 	for( int multi = bpt->multi; multi > 0; multi-- ) {
 	    pt_oo_copy( dstpt, srcpt );
 	    dstpt -= poststride;
-	    srcpt -= poststride;	
+	    srcpt -= poststride;
 	}
-    
+
 	for( REAL *pend = srcpt - poststride*bpt->def; srcpt != pend; pend +=poststride, dstpt-=poststride ) {
 	    pt_oo_copy( dstpt, srcpt );
 	    REAL *p1 = srcpt;
@@ -445,10 +447,10 @@ Knotspec::insert( REAL *p )
 void
 Knotspec::preselect( void )
 {
-    Knot kval; 
+    Knot kval;
 
     /* position klast after last knot of "last" breakpoint */
-    for( klast = inkend - order, kval = *klast; klast != inkend; klast++ ) 
+    for( klast = inkend - order, kval = *klast; klast != inkend; klast++ )
 	if( ! identical( *klast, kval ) ) break;
 
     /* position kfirst after last knot of "first" breakpoint */
@@ -457,8 +459,8 @@ Knotspec::preselect( void )
 
     /* compute multiplicity of first breakpoint */
     Knot_ptr k;
-    for( k  = kfirst - 1; k >= inkbegin; k-- ) 
-	if( ! identical( kval, *k ) ) break;    
+    for( k  = kfirst - 1; k >= inkbegin; k-- )
+	if( ! identical( kval, *k ) ) break;
     k++;
 
     /* allocate space for breakpoints -
@@ -487,13 +489,13 @@ Knotspec::select( void )
     breakpoints();
     knots();
     factors();
-    
+
     preoffset	= kleft - (inkbegin + order);
     postwidth	= (int)((bend - bbegin) * order);
     prewidth 	= (int)((outkend - outkbegin) - order);
     postoffset  = (bbegin->def > 1) ? (bbegin->def-1) : 0;
 }
- 
+
 /*-----------------------------------------------------------------------------
  * Knotspec::breakpoints - compute breakpoints for knotspec
  *
@@ -528,7 +530,7 @@ Knotspec::breakpoints( void )
 
     bend = ubpt;
 
-    if( nfactors ) {	    
+    if( nfactors ) {
         sbegin = new Knot[nfactors];
     } else {
 	sbegin = NULL;
@@ -552,7 +554,7 @@ Knotspec::knots( void )
     /* allocate space for knots and factors */
     outkbegin = new Knot[inkend-inkpt];
     Knot_ptr outkpt;
-    for( outkpt = outkbegin; inkpt != inkend; inkpt++, outkpt++ ) 
+    for( outkpt = outkbegin; inkpt != inkend; inkpt++, outkpt++ )
 	*outkpt = *inkpt;
 
     outkend = outkpt;
@@ -560,7 +562,7 @@ Knotspec::knots( void )
 
 
 /*-----------------------------------------------------------------------------
- * Knotspec::transform -	convert a spline along a given direction 
+ * Knotspec::transform -	convert a spline along a given direction
  *
  * Client: Splienspec::transform
  *-----------------------------------------------------------------------------

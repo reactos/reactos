@@ -6,21 +6,21 @@
 ** this file except in compliance with the License. You may obtain a copy
 ** of the License at Silicon Graphics, Inc., attn: Legal Services, 1600
 ** Amphitheatre Parkway, Mountain View, CA 94043-1351, or at:
-** 
+**
 ** http://oss.sgi.com/projects/FreeB
-** 
+**
 ** Note that, as provided in the License, the Software is distributed on an
 ** "AS IS" basis, with ALL EXPRESS AND IMPLIED WARRANTIES AND CONDITIONS
 ** DISCLAIMED, INCLUDING, WITHOUT LIMITATION, ANY IMPLIED WARRANTIES AND
 ** CONDITIONS OF MERCHANTABILITY, SATISFACTORY QUALITY, FITNESS FOR A
 ** PARTICULAR PURPOSE, AND NON-INFRINGEMENT.
-** 
+**
 ** Original Code. The Original Code is: OpenGL Sample Implementation,
 ** Version 1.2.1, released January 26, 2000, developed by Silicon Graphics,
 ** Inc. The Original Code is Copyright (c) 1991-2000 Silicon Graphics, Inc.
 ** Copyright in any portions created by third parties is as indicated
 ** elsewhere herein. All Rights Reserved.
-** 
+**
 ** Additional Notice Provisions: The application programming interfaces
 ** established by SGI in conjunction with the Original Code are The
 ** OpenGL(R) Graphics System: A Specification (Version 1.2.1), released
@@ -35,6 +35,7 @@
 /*
 */
 
+#ifndef __REACTOS_USE_PCH__
 //#include <stdlib.h>
 //#include <stdio.h>
 //#include "glimports.h"
@@ -42,14 +43,14 @@
 #include "sampleCompTop.h"
 #include "sampleCompBot.h"
 #include "sampleCompRight.h"
-
+#endif
 
 
 #define max(a,b) ((a>b)? a:b)
 #define min(a,b) ((a>b)? b:a)
 
 void sampleConnectedComp(Real* topVertex, Real* botVertex,
-		    vertexArray* leftChain, 
+		    vertexArray* leftChain,
 		    Int leftStartIndex, Int leftEndIndex,
 		    vertexArray* rightChain,
 		    Int rightStartIndex, Int rightEndIndex,
@@ -97,7 +98,7 @@ void sampleConnectedComp(Real* topVertex, Real* botVertex,
 		 down_rightCornerWhere,
 		 down_rightCornerIndex,
 		 pStream);
-		 
+
 
  sampleCompTop(topVertex,
 		     leftChain,
@@ -132,10 +133,10 @@ void sampleConnectedComp(Real* topVertex, Real* botVertex,
 
  rbArray->insert(new rectBlock(leftGridChain, rightGridChain, gridIndex1, gridIndex2));
 
-	
+
 }
 
-/*notice that we need rightChain because the 
+/*notice that we need rightChain because the
  *corners could be on the rightChain.
  *here comp means component.
  */
@@ -178,7 +179,7 @@ void sampleCompLeft(Real* topVertex, Real* botVertex,
 	gridMidIndex1  = leftGridChain->lookfor(leftChain->getVertex(midIndex1)[1],
 						gridIndex1, gridIndex2);
 	gridMidIndex2 = 1+leftGridChain->lookfor(leftChain->getVertex(midIndex2)[1],
-					       gridMidIndex1, gridIndex2);	
+					       gridMidIndex1, gridIndex2);
       }
 
 
@@ -207,7 +208,7 @@ void sampleCompLeft(Real* topVertex, Real* botVertex,
       cornerLeftStart = leftStartIndex;
       cornerRightUpEnd = up_leftCornerIndex;
     }
-  
+
   if(down_leftCornerWhere == 0) /*left corner is on left chain*/
     {
       cornerBot = leftChain->getVertex(down_leftCornerIndex);
@@ -226,7 +227,7 @@ void sampleCompLeft(Real* topVertex, Real* botVertex,
       cornerLeftEnd = leftEndIndex;
       cornerRightDownStart = down_leftCornerIndex;
     }
-      
+
 
 
 
@@ -287,9 +288,9 @@ void sampleCompLeft(Real* topVertex, Real* botVertex,
 					cornerRightDownStart,
 					rightEndIndex,
 					pStream);
-    }					 
+    }
 }
-		    
+
 void sampleLeftSingleTrimEdgeRegionGen(Real topVert[2], Real botVert[2],
 				       vertexArray* leftChain,
 				       Int leftStart,
@@ -315,11 +316,11 @@ void sampleLeftSingleTrimEdgeRegionGen(Real topVert[2], Real botVert[2],
   vertexArray vArray(gridEndIndex-gridBeginIndex+1 +
 		     max(0,rightUpEnd - rightUpBegin+1)+
 		     max(0,rightDownEnd - rightDownBegin+1));
-  
+
   /*append the vertices on the up section of thr right chain*/
   for(i=rightUpBegin; i<= rightUpEnd; i++)
     vArray.appendVertex(rightChain->getVertex(i));
-  
+
   /*append the vertices of the left extremal grid points,
    *and at the same time, perform triangulation for the stair cases
    */
@@ -333,7 +334,7 @@ void sampleLeftSingleTrimEdgeRegionGen(Real topVert[2], Real botVert[2],
        */
       if(gridChain->getUlineIndex(i) < gridChain->getUlineIndex(i-1))
 	{
-	  pStream->begin();	  
+	  pStream->begin();
 	  pStream->insert(gridChain->get_vertex(i-1));
 	  for(j=gridChain->getUlineIndex(i); j<= gridChain->getUlineIndex(i-1); j++)
 	    pStream->insert(gridChain->getGrid()->get_u_value(j), gridChain->get_v_value(i));
@@ -347,18 +348,18 @@ void sampleLeftSingleTrimEdgeRegionGen(Real topVert[2], Real botVert[2],
 	    pStream->insert(gridChain->getGrid()->get_u_value(j), gridChain->get_v_value(i-1));
 	  pStream->end(PRIMITIVE_STREAM_FAN);
 	}
-      /*otherwisem, the two are equal, so there is no fan to outout*/	  
+      /*otherwisem, the two are equal, so there is no fan to outout*/
     }
 
   /*then append all the vertices on the down section of the right chain*/
   for(i=rightDownBegin; i<= rightDownEnd; i++)
-    vArray.appendVertex(rightChain->getVertex(i));  
+    vArray.appendVertex(rightChain->getVertex(i));
 
   monoTriangulationRecGen(topVert, botVert,
 			  leftChain, leftStart, leftEnd,
 			  &vArray, 0, vArray.getNumElements()-1,
 			  pStream);
-		     
+
 }
 
 

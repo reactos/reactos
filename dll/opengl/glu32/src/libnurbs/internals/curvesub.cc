@@ -37,6 +37,7 @@
  *
  */
 
+#ifndef __REACTOS_USE_PCH__
 #include "glimports.h"
 #include "myassert.h"
 #include "mystdio.h"
@@ -46,6 +47,7 @@
 #include "quilt.h"
 #include "curvelist.h"
 //#include "nurbsconsts.h"
+#endif
 
 /*--------------------------------------------------------------------------
  * drawCurves - main curve rendering entry point
@@ -77,7 +79,7 @@ Subdivider::drawCurves( void )
 
 
 /*--------------------------------------------------------------------------
- * samplingSplit - recursively subdivide patch, cull check each subpatch  
+ * samplingSplit - recursively subdivide patch, cull check each subpatch
  *--------------------------------------------------------------------------
  */
 

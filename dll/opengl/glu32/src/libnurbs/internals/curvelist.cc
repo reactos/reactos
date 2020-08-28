@@ -37,6 +37,7 @@
  *
  */
 
+#ifndef __REACTOS_USE_PCH__
 //#include "glimports.h"
 //#include "myassert.h"
 //#include "mystdio.h"
@@ -44,11 +45,12 @@
 #include "curvelist.h"
 #include "curve.h"
 //#include "types.h"
+#endif
 
 Curvelist::Curvelist( Quilt *quilts, REAL pta, REAL ptb )
 {
     curve = 0;
-    for( Quilt *q = quilts; q; q = q->next ) 
+    for( Quilt *q = quilts; q; q = q->next )
 	curve = new Curve( q, pta, ptb, curve );
     range[0] = pta;
     range[1] = ptb;

@@ -110,6 +110,7 @@ list(APPEND LIBNURBS_SOURCE
     src/libnurbs/nurbtess/searchTree.cc)
 
 list(APPEND PCH_SKIP_SOURCE
+    src/libnurbs/interface/bezierEval.cc
     src/libnurbs/nurbtess/polyDBG.cc
     ${SOURCE})
 
@@ -131,5 +132,5 @@ elseif(USE_CLANG_CL)
 endif()
 
 add_importlibs(glu32 opengl32 gdi32 msvcrt kernel32 ntdll)
-add_pch(glu32 precomp.h "${PCH_SKIP_SOURCE}")
+add_pch(glu32 precomp.h ${PCH_SKIP_SOURCE})
 add_cd_file(TARGET glu32 DESTINATION reactos/system32 FOR all)
