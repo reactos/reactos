@@ -567,7 +567,7 @@ CFileDefExt::InitFileAttr(HWND hwndDlg)
                 {
                     if (GetDiskFreeSpace(szVolumePathName, &ulSectorsPerCluster, &ulBytesPerSector, NULL, NULL))
                     {
-                        ulBlockSize = ulBytesPerSector*ulSectorsPerCluster;
+                        ulBlockSize = ulBytesPerSector * ulSectorsPerCluster;
                         if(FileSize.QuadPart % (ulBlockSize))
                         {
                             FileSize.QuadPart = ((FileSize.QuadPart / (ulBlockSize))+1)*ulBlockSize;
