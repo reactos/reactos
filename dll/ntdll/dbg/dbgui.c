@@ -8,7 +8,9 @@
 
 /* INCLUDES *****************************************************************/
 
+#ifndef __REACTOS_USE_PCH__
 #include <ntdll.h>
+#endif
 
 #include <ndk/dbgkfuncs.h>
 
@@ -64,7 +66,7 @@ DbgUiConvertStateChangeStructure(IN PDBGUI_WAIT_STATE_CHANGE WaitStateChange,
     NTSTATUS Status;
     THREAD_BASIC_INFORMATION ThreadBasicInfo;
     LPDEBUG_EVENT DebugEvent = Win32DebugEvent;
-    
+
     /* Write common data */
     DebugEvent->dwProcessId = PtrToUlong(WaitStateChange->AppClientId.UniqueProcess);
     DebugEvent->dwThreadId = PtrToUlong(WaitStateChange->AppClientId.UniqueThread);

@@ -9,7 +9,10 @@
 
 /* INCLUDES *****************************************************************/
 
+#ifndef __REACTOS_USE_PCH__
 #include <ntdll.h>
+#endif
+
 #include <compat_undoc.h>
 #include <compatguid_undoc.h>
 

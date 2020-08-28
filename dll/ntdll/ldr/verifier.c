@@ -7,7 +7,10 @@
  */
 
 
+#ifndef __REACTOS_USE_PCH__
 #include <ntdll.h>
+#endif
+
 #include <reactos/verifier.h>
 
 #define NDEBUG
@@ -173,7 +176,7 @@ AVrfpSnapDllImports(IN PLDR_DATA_TABLE_ENTRY LdrEntry)
                             PVOID Ptr = &FirstThunk->u1.Function;
                             SIZE_T Size = sizeof(FirstThunk->u1.Function) * AVrfpCountThunks(FirstThunk);
                             NTSTATUS Status;
-                                
+
                             UnprotectedPtr = Ptr;
                             UnprotectedSize = Size;
 

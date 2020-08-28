@@ -8,7 +8,9 @@
 
 /* INCLUDES *******************************************************************/
 
+#ifndef __REACTOS_USE_PCH__
 #include <ntdll.h>
+#endif
 
 #define NDEBUG
 #include <debug.h>

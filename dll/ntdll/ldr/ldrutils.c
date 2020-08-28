@@ -9,7 +9,9 @@
 
 /* INCLUDES *****************************************************************/
 
+#ifndef __REACTOS_USE_PCH__
 #include <ntdll.h>
+#endif
 
 #define NDEBUG
 #include <debug.h>
@@ -452,7 +454,7 @@ LdrpUpdateLoadCount3(IN PLDR_DATA_TABLE_ENTRY LdrEntry,
 
 done:
     /* Release the context */
-    RtlDeactivateActivationContextUnsafeFast(&ActCtx);    
+    RtlDeactivateActivationContextUnsafeFast(&ActCtx);
 }
 
 VOID

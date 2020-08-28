@@ -2,7 +2,9 @@
  * ntdll.dll Event Tracing Functions
  */
 
+#ifndef __REACTOS_USE_PCH__
 #include <ntdll.h>
+#endif
 
 #include <wmistr.h>
 #include <evntrace.h>

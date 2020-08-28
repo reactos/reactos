@@ -58,6 +58,6 @@ if(MSVC)
 endif()
 
 target_link_libraries(ntdll rtl ntdllsys libcntpr uuid ${PSEH_LIB})
-add_pch(ntdll include/ntdll.h "${PCH_SKIP_SOURCE}")
+add_pch(ntdll include/ntdll.h ${PCH_SKIP_SOURCE})
 add_dependencies(ntdll ntstatus asm)
 add_cd_file(TARGET ntdll DESTINATION reactos/system32 NO_CAB FOR all)
