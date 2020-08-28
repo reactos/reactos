@@ -487,6 +487,7 @@ CFileDefExt::InitFileAttr(HWND hwndDlg)
 
     ULONG ulBytesPerSector;
     ULONG ulSectorsPerCluster;
+    ULONG ulBlockSize;
     TCHAR szVolumePathName[MAX_PATH];
 
     TRACE("InitFileAttr %ls\n", m_wszPath);
@@ -559,13 +560,16 @@ CFileDefExt::InitFileAttr(HWND hwndDlg)
             {    
                 SetDlgItemTextW(hwndDlg, 14011, wszBuf);
                 // Calculate size on disc
+                // Calculate size on disc
+                //if disk usage is not aligned on a complete disk geometry block (sector/cluster), align on the next block size, depending on disk geometry data
                 if (GetVolumePathName(m_wszPath, szVolumePathName, _countof(szVolumePathName)))
                 {
                     if (GetDiskFreeSpace(szVolumePathName, &ulSectorsPerCluster, &ulBytesPerSector, NULL, NULL))
                     {
-                        if(FileSize.QuadPart % (ulBytesPerSector*ulSectorsPerCluster))
+                        ulBlockSize = ulBytesPerSector*ulSectorsPerCluster;
+                        if(FileSize.QuadPart % (ulBlockSize))
                         {
-                            FileSize.QuadPart = ((FileSize.QuadPart / (ulBytesPerSector*ulSectorsPerCluster))+1)*ulBytesPerSector*ulSectorsPerCluster;
+                            FileSize.QuadPart = ((FileSize.QuadPart / (ulBlockSize))+1)*ulBlockSize;
                             SH_FormatFileSizeWithBytes(&FileSize, wszBuf, _countof(wszBuf));
                         }
                    }
@@ -1332,8 +1336,9 @@ CFileDefExt::CountFolderAndFiles(HWND hwndDlg, LPWSTR pwszBuf, UINT cchBufMax, D
     /* Find filename position */
     UINT cchBuf = wcslen(pwszBuf);
     WCHAR *pwszFilename = pwszBuf + cchBuf;
-    ULONG lpBytesPerSector;
+    ULONG ulBytesPerSector;
     ULONG ulSectorsPerCluster;
+    ULONG ulBlockSize;
     TCHAR szVolumePathName[MAX_PATH];
     size_t cchFilenameMax = cchBufMax - cchBuf;
     if (!cchFilenameMax)
@@ -1380,10 +1385,14 @@ CFileDefExt::CountFolderAndFiles(HWND hwndDlg, LPWSTR pwszBuf, UINT cchBufMax, D
             FileSize.u.HighPart = wfd.nFileSizeHigh;
             m_DirSize.QuadPart += FileSize.QuadPart;
             // Calculate size on disc
+            //if disk usage is not aligned on a complete disk geometry block (sector/cluster), align on the next block size, depending on disk geometry data
             if (GetVolumePathName(pwszBuf, szVolumePathName, _countof(szVolumePathName)))
             {
-                if (GetDiskFreeSpace(szVolumePathName, &ulSectorsPerCluster, &lpBytesPerSector, NULL, NULL))
-                    m_DirSizeOnDisc.QuadPart += FileSize.QuadPart % (lpBytesPerSector*ulSectorsPerCluster) ? ((FileSize.QuadPart/(lpBytesPerSector*ulSectorsPerCluster))+1)*lpBytesPerSector*ulSectorsPerCluster : FileSize.QuadPart;
+                if (GetDiskFreeSpace(szVolumePathName, &ulSectorsPerCluster, &ulBytesPerSector, NULL, NULL))
+                {
+                    ulBlockSize = ulBytesPerSector*ulSectorsPerCluster;
+                    m_DirSizeOnDisc.QuadPart += FileSize.QuadPart % (ulBlockSize) ? ((FileSize.QuadPart/(ulBlockSize))+1)*ulBlockSize : FileSize.QuadPart;
+                }
                 else
                     m_DirSizeOnDisc.QuadPart += FileSize.QuadPart;
             } else {
