@@ -67,32 +67,39 @@ extern "C" {
   Target = (UCHAR) ((((Value) >> 8) & ~(0x20 - 1)) | ((Value) & (0x20 - 1))))
 
 /* SCSI_REQUEST_BLOCK.Function constants */
-#define SRB_FUNCTION_EXECUTE_SCSI         0x00
-#define SRB_FUNCTION_CLAIM_DEVICE         0x01
-#define SRB_FUNCTION_IO_CONTROL           0x02
-#define SRB_FUNCTION_RECEIVE_EVENT        0x03
-#define SRB_FUNCTION_RELEASE_QUEUE        0x04
-#define SRB_FUNCTION_ATTACH_DEVICE        0x05
-#define SRB_FUNCTION_RELEASE_DEVICE       0x06
-#define SRB_FUNCTION_SHUTDOWN             0x07
-#define SRB_FUNCTION_FLUSH                0x08
-#define SRB_FUNCTION_ABORT_COMMAND        0x10
-#define SRB_FUNCTION_RELEASE_RECOVERY     0x11
-#define SRB_FUNCTION_RESET_BUS            0x12
-#define SRB_FUNCTION_RESET_DEVICE         0x13
-#define SRB_FUNCTION_TERMINATE_IO         0x14
-#define SRB_FUNCTION_FLUSH_QUEUE          0x15
-#define SRB_FUNCTION_REMOVE_DEVICE        0x16
-#define SRB_FUNCTION_WMI                  0x17
-#define SRB_FUNCTION_LOCK_QUEUE           0x18
-#define SRB_FUNCTION_UNLOCK_QUEUE         0x19
-#define SRB_FUNCTION_RESET_LOGICAL_UNIT   0x20
-#define SRB_FUNCTION_SET_LINK_TIMEOUT     0x21
-#define SRB_FUNCTION_LINK_TIMEOUT_OCCURRED 0x22
-#define SRB_FUNCTION_LINK_TIMEOUT_COMPLETE 0x23
-#define SRB_FUNCTION_POWER                0x24
-#define SRB_FUNCTION_PNP                  0x25
-#define SRB_FUNCTION_DUMP_POINTERS        0x26
+#define SRB_FUNCTION_EXECUTE_SCSI           0x00
+#define SRB_FUNCTION_CLAIM_DEVICE           0x01
+#define SRB_FUNCTION_IO_CONTROL             0x02
+#define SRB_FUNCTION_RECEIVE_EVENT          0x03
+#define SRB_FUNCTION_RELEASE_QUEUE          0x04
+#define SRB_FUNCTION_ATTACH_DEVICE          0x05
+#define SRB_FUNCTION_RELEASE_DEVICE         0x06
+#define SRB_FUNCTION_SHUTDOWN               0x07
+#define SRB_FUNCTION_FLUSH                  0x08
+#define SRB_FUNCTION_PROTOCOL_COMMAND       0x09
+#define SRB_FUNCTION_ABORT_COMMAND          0x10
+#define SRB_FUNCTION_RELEASE_RECOVERY       0x11
+#define SRB_FUNCTION_RESET_BUS              0x12
+#define SRB_FUNCTION_RESET_DEVICE           0x13
+#define SRB_FUNCTION_TERMINATE_IO           0x14
+#define SRB_FUNCTION_FLUSH_QUEUE            0x15
+#define SRB_FUNCTION_REMOVE_DEVICE          0x16
+#define SRB_FUNCTION_WMI                    0x17
+#define SRB_FUNCTION_LOCK_QUEUE             0x18
+#define SRB_FUNCTION_UNLOCK_QUEUE           0x19
+#define SRB_FUNCTION_QUIESCE_DEVICE         0x1a
+#define SRB_FUNCTION_RESET_LOGICAL_UNIT     0x20
+#define SRB_FUNCTION_SET_LINK_TIMEOUT       0x21
+#define SRB_FUNCTION_LINK_TIMEOUT_OCCURRED  0x22
+#define SRB_FUNCTION_LINK_TIMEOUT_COMPLETE  0x23
+#define SRB_FUNCTION_POWER                  0x24
+#define SRB_FUNCTION_PNP                    0x25
+#define SRB_FUNCTION_DUMP_POINTERS          0x26
+#define SRB_FUNCTION_FREE_DUMP_POINTERS     0x27
+#define SRB_FUNCTION_STORAGE_REQUEST_BLOCK  0x28 // special value
+#define SRB_FUNCTION_CRYPTO_OPERATION       0x29
+#define SRB_FUNCTION_GET_DUMP_INFO          0x2a
+#define SRB_FUNCTION_FREE_DUMP_INFO         0x2b
 
 /* SCSI_REQUEST_BLOCK.SrbStatus constants */
 #define SRB_STATUS_PENDING                0x00
@@ -123,6 +130,8 @@ extern "C" {
 #define SRB_STATUS_ERROR_RECOVERY         0x23
 #define SRB_STATUS_NOT_POWERED            0x24
 #define SRB_STATUS_LINK_DOWN              0x25
+#define SRB_STATUS_INSUFFICIENT_RESOURCES 0x26
+#define SRB_STATUS_THROTTLED_REQUEST      0x27
 #define SRB_STATUS_INTERNAL_ERROR         0x30
 
 #define SRB_STATUS_QUEUE_FROZEN           0x40
@@ -144,6 +153,8 @@ extern "C" {
 #define SRB_FLAGS_NO_QUEUE_FREEZE           0x00000100
 #define SRB_FLAGS_ADAPTER_CACHE_ENABLE      0x00000200
 #define SRB_FLAGS_FREE_SENSE_BUFFER         0x00000400
+#define SRB_FLAGS_D3_PROCESSING             0x00000800
+#define SRB_FLAGS_SEQUENTIAL_REQUIRED       0x00001000
 #define SRB_FLAGS_IS_ACTIVE                 0x00010000
 #define SRB_FLAGS_ALLOCATED_FROM_ZONE       0x00020000
 #define SRB_FLAGS_SGLIST_FROM_POOL          0x00040000
@@ -424,6 +435,228 @@ typedef struct _SCSI_PNP_REQUEST_BLOCK {
   UCHAR Reserved4[16];
 } SCSI_PNP_REQUEST_BLOCK, *PSCSI_PNP_REQUEST_BLOCK;
 
+#if (NTDDI_VERSION >= NTDDI_WIN8)
+#if defined(_WIN64)
+#define SRB_ALIGN           DECLSPEC_ALIGN(8)
+#define POINTER_ALIGN       DECLSPEC_ALIGN(8)
+#else
+#define SRB_ALIGN
+#define POINTER_ALIGN
+#endif
+
+typedef enum _SRBEXDATATYPE {
+  SrbExDataTypeUnknown = 0,
+  SrbExDataTypeBidirectional,
+  SrbExDataTypeScsiCdb16 = 0x40,
+  SrbExDataTypeScsiCdb32,
+  SrbExDataTypeScsiCdbVar,
+  SrbExDataTypeWmi = 0x60,
+  SrbExDataTypePower,
+  SrbExDataTypePnP,
+  SrbExDataTypeIoInfo = 0x80,
+  SrbExDataTypeMSReservedStart = 0xf0000000,
+  SrbExDataTypeReserved = 0xffffffff
+} SRBEXDATATYPE, *PSRBEXDATATYPE;
+
+typedef struct SRB_ALIGN _SRBEX_DATA {
+  SRBEXDATATYPE Type;
+  ULONG Length;
+  _Field_size_bytes_(Length) UCHAR Data[ANYSIZE_ARRAY];
+} SRBEX_DATA, *PSRBEX_DATA;
+
+#define SRBEX_DATA_BIDIRECTIONAL_LENGTH ((2 * sizeof(ULONG)) + sizeof(PVOID))
+
+typedef struct SRB_ALIGN _SRBEX_DATA_BIDIRECTIONAL {
+  _Field_range_(SrbExDataTypeBidirectional, SrbExDataTypeBidirectional)
+  SRBEXDATATYPE Type;
+  _Field_range_(SRBEX_DATA_BIDIRECTIONAL_LENGTH, SRBEX_DATA_BIDIRECTIONAL_LENGTH)
+  ULONG Length;
+  ULONG DataInTransferLength;
+  ULONG Reserved1;
+  _Field_size_bytes_full_(DataInTransferLength)
+  PVOID POINTER_ALIGN DataInBuffer;
+} SRBEX_DATA_BIDIRECTIONAL, *PSRBEX_DATA_BIDIRECTIONAL;
+
+#define SRBEX_DATA_SCSI_CDB16_LENGTH ((20 * sizeof(UCHAR)) + sizeof(ULONG) + sizeof(PVOID))
+
+typedef struct SRB_ALIGN _SRBEX_DATA_SCSI_CDB16 {
+  _Field_range_(SrbExDataTypeScsiCdb16, SrbExDataTypeScsiCdb16)
+  SRBEXDATATYPE Type;
+  _Field_range_(SRBEX_DATA_SCSI_CDB16_LENGTH, SRBEX_DATA_SCSI_CDB16_LENGTH)
+  ULONG Length;
+  UCHAR ScsiStatus;
+  UCHAR SenseInfoBufferLength;
+  UCHAR CdbLength;
+  UCHAR Reserved;
+  ULONG Reserved1;
+  _Field_size_bytes_full_(SenseInfoBufferLength)
+  PVOID POINTER_ALIGN SenseInfoBuffer;
+  UCHAR POINTER_ALIGN Cdb[16];
+} SRBEX_DATA_SCSI_CDB16, *PSRBEX_DATA_SCSI_CDB16;
+
+#define SRBEX_DATA_SCSI_CDB32_LENGTH ((36 * sizeof(UCHAR)) + sizeof(ULONG) + sizeof(PVOID))
+
+typedef struct SRB_ALIGN _SRBEX_DATA_SCSI_CDB32 {
+  _Field_range_(SrbExDataTypeScsiCdb32, SrbExDataTypeScsiCdb32)
+  SRBEXDATATYPE Type;
+  _Field_range_(SRBEX_DATA_SCSI_CDB32_LENGTH, SRBEX_DATA_SCSI_CDB32_LENGTH)
+  ULONG Length;
+  UCHAR ScsiStatus;
+  UCHAR SenseInfoBufferLength;
+  UCHAR CdbLength;
+  UCHAR Reserved;
+  ULONG Reserved1;
+  _Field_size_bytes_full_(SenseInfoBufferLength)
+  PVOID POINTER_ALIGN SenseInfoBuffer;
+  UCHAR POINTER_ALIGN Cdb[32];
+} SRBEX_DATA_SCSI_CDB32, *PSRBEX_DATA_SCSI_CDB32;
+
+#define SRBEX_DATA_SCSI_CDB_VAR_LENGTH_MIN ((4 * sizeof(UCHAR)) + (3 * sizeof(ULONG)) + sizeof(PVOID))
+#define SRBEX_DATA_SCSI_CDB_VAR_LENGTH_MAX 0xffffffffUL
+
+typedef struct SRB_ALIGN _SRBEX_DATA_SCSI_CDB_VAR {
+  _Field_range_(SrbExDataTypeScsiCdbVar, SrbExDataTypeScsiCdbVar)
+  SRBEXDATATYPE Type;
+  _Field_range_(SRBEX_DATA_SCSI_CDB_VAR_LENGTH_MIN, SRBEX_DATA_SCSI_CDB_VAR_LENGTH_MAX)
+  ULONG Length;
+  UCHAR ScsiStatus;
+  UCHAR SenseInfoBufferLength;
+  UCHAR Reserved[2];
+  ULONG CdbLength;
+  ULONG Reserved1[2];
+  _Field_size_bytes_full_(SenseInfoBufferLength)
+  PVOID POINTER_ALIGN SenseInfoBuffer;
+  _Field_size_bytes_full_(CdbLength)
+  UCHAR POINTER_ALIGN Cdb[ANYSIZE_ARRAY];
+} SRBEX_DATA_SCSI_CDB_VAR, *PSRBEX_DATA_SCSI_CDB_VAR;
+
+#define SRBEX_DATA_WMI_LENGTH ((4 * sizeof(UCHAR)) + sizeof(ULONG) + sizeof(PVOID))
+
+typedef struct SRB_ALIGN _SRBEX_DATA_WMI {
+  _Field_range_(SrbExDataTypeWmi, SrbExDataTypeWmi)
+  SRBEXDATATYPE Type;
+  _Field_range_(SRBEX_DATA_WMI_LENGTH, SRBEX_DATA_WMI_LENGTH)
+  ULONG Length;
+  UCHAR WMISubFunction;
+  UCHAR WMIFlags;
+  UCHAR Reserved[2];
+  ULONG Reserved1;
+  PVOID POINTER_ALIGN DataPath;
+} SRBEX_DATA_WMI, *PSRBEX_DATA_WMI;
+
+#define SRBEX_DATA_POWER_LENGTH ((4 * sizeof(UCHAR)) + sizeof(STOR_DEVICE_POWER_STATE) + sizeof(STOR_POWER_ACTION))
+
+typedef struct SRB_ALIGN _SRBEX_DATA_POWER {
+  _Field_range_(SrbExDataTypePower, SrbExDataTypePower)
+  SRBEXDATATYPE Type;
+  _Field_range_(SRBEX_DATA_POWER_LENGTH, SRBEX_DATA_POWER_LENGTH)
+  ULONG Length;
+  UCHAR SrbPowerFlags;
+  UCHAR Reserved[3];
+  STOR_DEVICE_POWER_STATE DevicePowerState;
+  STOR_POWER_ACTION PowerAction;
+} SRBEX_DATA_POWER, *PSRBEX_DATA_POWER;
+
+#define SRBEX_DATA_PNP_LENGTH ((4 * sizeof(UCHAR)) + sizeof(STOR_PNP_ACTION) + (2 * sizeof(ULONG)))
+
+typedef struct SRB_ALIGN _SRBEX_DATA_PNP {
+  _Field_range_(SrbExDataTypePnP, SrbExDataTypePnP)
+  SRBEXDATATYPE Type;
+  _Field_range_(SRBEX_DATA_PNP_LENGTH, SRBEX_DATA_PNP_LENGTH)
+  ULONG Length;
+  UCHAR PnPSubFunction;
+  UCHAR Reserved[3];
+  STOR_PNP_ACTION PnPAction;
+  ULONG SrbPnPFlags;
+  ULONG Reserved1;
+} SRBEX_DATA_PNP, *PSRBEX_DATA_PNP;
+
+#define SRBEX_DATA_IO_INFO_LENGTH ((5 * sizeof(ULONG)) + (4 * sizeof(UCHAR)))
+
+#define REQUEST_INFO_NO_CACHE_FLAG                  0x00000001
+#define REQUEST_INFO_PAGING_IO_FLAG                 0x00000002
+#define REQUEST_INFO_SEQUENTIAL_IO_FLAG             0x00000004
+#define REQUEST_INFO_TEMPORARY_FLAG                 0x00000008
+#define REQUEST_INFO_WRITE_THROUGH_FLAG             0x00000010
+#define REQUEST_INFO_HYBRID_WRITE_THROUGH_FLAG      0x00000020
+
+#if (NTDDI_VERSION >= NTDDI_WINTHRESHOLD)
+
+#define REQUEST_INFO_NO_FILE_OBJECT_FLAG            0x00000040
+#define REQUEST_INFO_VOLSNAP_IO_FLAG                0x00000080
+#define REQUEST_INFO_STREAM_FLAG                    0x00000100
+
+#endif /* (NTDDI_VERSION >= NTDDI_WINTHRESHOLD) */
+
+#define REQUEST_INFO_VALID_CACHEPRIORITY_FLAG       0x80000000
+
+typedef struct SRB_ALIGN _SRBEX_DATA_IO_INFO {
+  _Field_range_(SrbExDataTypeIoInfo, SrbExDataTypeIoInfo)
+  SRBEXDATATYPE Type;
+  _Field_range_(SRBEX_DATA_IO_INFO_LENGTH, SRBEX_DATA_IO_INFO_LENGTH)
+  ULONG Length;
+  ULONG Flags;
+  ULONG Key;
+  ULONG RWLength;
+  BOOLEAN IsWriteRequest;
+  UCHAR CachePriority;
+  UCHAR Reserved[2];
+  ULONG Reserved1[2];
+} SRBEX_DATA_IO_INFO, *PSRBEX_DATA_IO_INFO;
+
+#define SRB_SIGNATURE 0x53524258
+#define STORAGE_REQUEST_BLOCK_VERSION_1    0x1
+
+typedef struct SRB_ALIGN _STORAGE_REQUEST_BLOCK_HEADER {
+  USHORT Length;
+  _Field_range_(SRB_FUNCTION_STORAGE_REQUEST_BLOCK, SRB_FUNCTION_STORAGE_REQUEST_BLOCK)
+  UCHAR Function;
+  UCHAR SrbStatus;
+} STORAGE_REQUEST_BLOCK_HEADER, *PSTORAGE_REQUEST_BLOCK_HEADER;
+
+typedef _Struct_size_bytes_(SrbLength) struct SRB_ALIGN _STORAGE_REQUEST_BLOCK {
+  USHORT Length;
+  _Field_range_(SRB_FUNCTION_STORAGE_REQUEST_BLOCK, SRB_FUNCTION_STORAGE_REQUEST_BLOCK)
+  UCHAR Function;
+  UCHAR SrbStatus;
+  UCHAR ReservedUchar[4];
+  _Field_range_(SRB_SIGNATURE, SRB_SIGNATURE)
+  ULONG Signature;
+  _Field_range_(STORAGE_REQUEST_BLOCK_VERSION_1, STORAGE_REQUEST_BLOCK_VERSION_1)
+  ULONG Version;
+  ULONG SrbLength;
+  ULONG SrbFunction;
+  ULONG SrbFlags;
+  ULONG ReservedUlong;
+  ULONG RequestTag;
+  USHORT RequestPriority;
+  USHORT RequestAttribute;
+  ULONG TimeOutValue;
+  ULONG SystemStatus;
+  ULONG ZeroGuard1;
+  _Field_range_(sizeof(STORAGE_REQUEST_BLOCK), SrbLength - sizeof(STOR_ADDRESS))
+  ULONG AddressOffset;
+  ULONG NumSrbExData;
+  ULONG DataTransferLength;
+  _Field_size_bytes_full_(DataTransferLength)
+  PVOID POINTER_ALIGN DataBuffer;
+  PVOID POINTER_ALIGN ZeroGuard2;
+  PVOID POINTER_ALIGN OriginalRequest;
+  PVOID POINTER_ALIGN ClassContext;
+  PVOID POINTER_ALIGN PortContext;
+  PVOID POINTER_ALIGN MiniportContext;
+  struct _STORAGE_REQUEST_BLOCK POINTER_ALIGN *NextSrb;
+  _At_buffer_(SrbExDataOffset, _Iter_, NumSrbExData, _Field_range_(0, SrbLength - sizeof(SRBEX_DATA)))
+  _Field_size_(NumSrbExData)
+  ULONG SrbExDataOffset[ANYSIZE_ARRAY];
+} STORAGE_REQUEST_BLOCK, *PSTORAGE_REQUEST_BLOCK;
+
+#define SRB_TYPE_SCSI_REQUEST_BLOCK         0
+#define SRB_TYPE_STORAGE_REQUEST_BLOCK      1
+
+#define STORAGE_ADDRESS_TYPE_BTL8        0
+#endif /* (NTDDI_VERSION >= NTDDI_WIN8) */
+
 typedef
 _Must_inspect_result_
 BOOLEAN
@@ -536,12 +769,12 @@ typedef struct _HW_INITIALIZATION_DATA {
 } HW_INITIALIZATION_DATA, *PHW_INITIALIZATION_DATA;
 
 #if defined(_NTDDK_)
-#define SCSIPORTAPI
+#define SCSIPORT_API
 #else
-#define SCSIPORTAPI DECLSPEC_IMPORT
+#define SCSIPORT_API DECLSPEC_IMPORT
 #endif
 
-SCSIPORTAPI
+SCSIPORT_API
 VOID
 NTAPI
 ScsiPortCompleteRequest(
@@ -552,7 +785,7 @@ ScsiPortCompleteRequest(
   _In_ UCHAR SrbStatus);
 
 _Must_inspect_result_
-SCSIPORTAPI
+SCSIPORT_API
 ULONG
 NTAPI
 ScsiPortConvertPhysicalAddressToUlong(
@@ -562,19 +795,19 @@ ScsiPortConvertPhysicalAddressToUlong(
 #define ScsiPortConvertPhysicalAddressToULongPtr(Address) ((ULONG_PTR)((Address).QuadPart))
 
 _Must_inspect_result_
-SCSIPORTAPI
+SCSIPORT_API
 SCSI_PHYSICAL_ADDRESS
 NTAPI
 ScsiPortConvertUlongToPhysicalAddress(
   _In_ ULONG_PTR UlongAddress);
 
-SCSIPORTAPI
+SCSIPORT_API
 VOID
 NTAPI
 ScsiPortFlushDma(
   _In_ PVOID DeviceExtension);
 
-SCSIPORTAPI
+SCSIPORT_API
 VOID
 NTAPI
 ScsiPortFreeDeviceBase(
@@ -582,7 +815,7 @@ ScsiPortFreeDeviceBase(
   _In_ PVOID MappedAddress);
 
 _Must_inspect_result_
-SCSIPORTAPI
+SCSIPORT_API
 ULONG
 NTAPI
 ScsiPortGetBusData(
@@ -594,7 +827,7 @@ ScsiPortGetBusData(
   _In_ ULONG Length);
 
 _Must_inspect_result_
-SCSIPORTAPI
+SCSIPORT_API
 PVOID
 NTAPI
 ScsiPortGetDeviceBase(
@@ -606,7 +839,7 @@ ScsiPortGetDeviceBase(
   _In_ BOOLEAN InIoSpace);
 
 _Must_inspect_result_
-SCSIPORTAPI
+SCSIPORT_API
 PVOID
 NTAPI
 ScsiPortGetLogicalUnit(
@@ -616,7 +849,7 @@ ScsiPortGetLogicalUnit(
   _In_ UCHAR Lun);
 
 _Must_inspect_result_
-SCSIPORTAPI
+SCSIPORT_API
 SCSI_PHYSICAL_ADDRESS
 NTAPI
 ScsiPortGetPhysicalAddress(
@@ -626,7 +859,7 @@ ScsiPortGetPhysicalAddress(
   _Out_ ULONG *Length);
 
 _Must_inspect_result_
-SCSIPORTAPI
+SCSIPORT_API
 PSCSI_REQUEST_BLOCK
 NTAPI
 ScsiPortGetSrb(
@@ -637,7 +870,7 @@ ScsiPortGetSrb(
   _In_ LONG QueueTag);
 
 _Must_inspect_result_
-SCSIPORTAPI
+SCSIPORT_API
 PVOID
 NTAPI
 ScsiPortGetUncachedExtension(
@@ -646,7 +879,7 @@ ScsiPortGetUncachedExtension(
   _In_ ULONG NumberOfBytes);
 
 _Must_inspect_result_
-SCSIPORTAPI
+SCSIPORT_API
 PVOID
 NTAPI
 ScsiPortGetVirtualAddress(
@@ -655,7 +888,7 @@ ScsiPortGetVirtualAddress(
 
 _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
-SCSIPORTAPI
+SCSIPORT_API
 ULONG
 NTAPI
 ScsiPortInitialize(
@@ -664,7 +897,7 @@ ScsiPortInitialize(
   _In_ struct _HW_INITIALIZATION_DATA *HwInitializationData,
   _In_ PVOID HwContext);
 
-SCSIPORTAPI
+SCSIPORT_API
 VOID
 NTAPI
 ScsiPortIoMapTransfer(
@@ -673,7 +906,7 @@ ScsiPortIoMapTransfer(
   _In_ PVOID LogicalAddress,
   _In_ ULONG Length);
 
-SCSIPORTAPI
+SCSIPORT_API
 VOID
 NTAPI
 ScsiPortLogError(
@@ -685,7 +918,7 @@ ScsiPortLogError(
   _In_ ULONG ErrorCode,
   _In_ ULONG UniqueId);
 
-SCSIPORTAPI
+SCSIPORT_API
 VOID
 __cdecl
 ScsiPortNotification(
@@ -693,14 +926,14 @@ ScsiPortNotification(
   _In_ PVOID HwDeviceExtension,
   ...);
 
-SCSIPORTAPI
+SCSIPORT_API
 VOID
 NTAPI
 ScsiPortQuerySystemTime(
   _Out_ PLARGE_INTEGER CurrentTime);
 
 _Must_inspect_result_
-SCSIPORTAPI
+SCSIPORT_API
 ULONG
 NTAPI
 ScsiPortSetBusDataByOffset(
@@ -712,14 +945,14 @@ ScsiPortSetBusDataByOffset(
   _In_ ULONG Offset,
   _In_ ULONG Length);
 
-SCSIPORTAPI
+SCSIPORT_API
 VOID
 NTAPI
 ScsiPortStallExecution(
   _In_ ULONG Delay);
 
 _Must_inspect_result_
-SCSIPORTAPI
+SCSIPORT_API
 BOOLEAN
 NTAPI
 ScsiPortValidateRange(
@@ -730,7 +963,7 @@ ScsiPortValidateRange(
   _In_ ULONG NumberOfBytes,
   _In_ BOOLEAN InIoSpace);
 
-SCSIPORTAPI
+SCSIPORT_API
 VOID
 __cdecl
 ScsiDebugPrint(
@@ -777,27 +1010,27 @@ ScsiDebugPrint(
 #else
 
 _Must_inspect_result_
-SCSIPORTAPI
+SCSIPORT_API
 UCHAR
 NTAPI
 ScsiPortReadPortUchar(
   _In_ PUCHAR Port);
 
 _Must_inspect_result_
-SCSIPORTAPI
+SCSIPORT_API
 ULONG
 NTAPI
 ScsiPortReadPortUlong(
   _In_ PULONG Port);
 
 _Must_inspect_result_
-SCSIPORTAPI
+SCSIPORT_API
 USHORT
 NTAPI
 ScsiPortReadPortUshort(
   _In_ PUSHORT Port);
 
-SCSIPORTAPI
+SCSIPORT_API
 VOID
 NTAPI
 ScsiPortReadPortBufferUchar(
@@ -805,7 +1038,7 @@ ScsiPortReadPortBufferUchar(
   _In_ PUCHAR Buffer,
   _In_ ULONG Count);
 
-SCSIPORTAPI
+SCSIPORT_API
 VOID
 NTAPI
 ScsiPortReadPortBufferUlong(
@@ -813,7 +1046,7 @@ ScsiPortReadPortBufferUlong(
   _In_ PULONG Buffer,
   _In_ ULONG Count);
 
-SCSIPORTAPI
+SCSIPORT_API
 VOID
 NTAPI
 ScsiPortReadPortBufferUshort(
@@ -822,27 +1055,27 @@ ScsiPortReadPortBufferUshort(
   _In_ ULONG Count);
 
 _Must_inspect_result_
-SCSIPORTAPI
+SCSIPORT_API
 UCHAR
 NTAPI
 ScsiPortReadRegisterUchar(
   _In_ PUCHAR Register);
 
 _Must_inspect_result_
-SCSIPORTAPI
+SCSIPORT_API
 ULONG
 NTAPI
 ScsiPortReadRegisterUlong(
   _In_ PULONG Register);
 
 _Must_inspect_result_
-SCSIPORTAPI
+SCSIPORT_API
 USHORT
 NTAPI
 ScsiPortReadRegisterUshort(
   _In_ PUSHORT Register);
 
-SCSIPORTAPI
+SCSIPORT_API
 VOID
 NTAPI
 ScsiPortReadRegisterBufferUchar(
@@ -850,7 +1083,7 @@ ScsiPortReadRegisterBufferUchar(
   _In_ PUCHAR Buffer,
   _In_ ULONG Count);
 
-SCSIPORTAPI
+SCSIPORT_API
 VOID
 NTAPI
 ScsiPortReadRegisterBufferUlong(
@@ -858,7 +1091,7 @@ ScsiPortReadRegisterBufferUlong(
   _In_ PULONG Buffer,
   _In_ ULONG Count);
 
-SCSIPORTAPI
+SCSIPORT_API
 VOID
 NTAPI
 ScsiPortReadRegisterBufferUshort(
@@ -866,28 +1099,28 @@ ScsiPortReadRegisterBufferUshort(
   _In_ PUSHORT Buffer,
   _In_ ULONG Count);
 
-SCSIPORTAPI
+SCSIPORT_API
 VOID
 NTAPI
 ScsiPortWritePortUchar(
   _In_ PUCHAR Port,
   _In_ UCHAR Value);
 
-SCSIPORTAPI
+SCSIPORT_API
 VOID
 NTAPI
 ScsiPortWritePortUlong(
   _In_ PULONG Port,
   _In_ ULONG Value);
 
-SCSIPORTAPI
+SCSIPORT_API
 VOID
 NTAPI
 ScsiPortWritePortUshort(
   _In_ PUSHORT Port,
   _In_ USHORT Value);
 
-SCSIPORTAPI
+SCSIPORT_API
 VOID
 NTAPI
 ScsiPortWritePortBufferUchar(
@@ -895,7 +1128,7 @@ ScsiPortWritePortBufferUchar(
   _In_ PUCHAR Buffer,
   _In_ ULONG Count);
 
-SCSIPORTAPI
+SCSIPORT_API
 VOID
 NTAPI
 ScsiPortWritePortBufferUlong(
@@ -903,7 +1136,7 @@ ScsiPortWritePortBufferUlong(
   _In_ PULONG Buffer,
   _In_ ULONG Count);
 
-SCSIPORTAPI
+SCSIPORT_API
 VOID
 NTAPI
 ScsiPortWritePortBufferUshort(
@@ -911,28 +1144,28 @@ ScsiPortWritePortBufferUshort(
   _In_ PUSHORT Buffer,
   _In_ ULONG Count);
 
-SCSIPORTAPI
+SCSIPORT_API
 VOID
 NTAPI
 ScsiPortWriteRegisterUchar(
   _In_ PUCHAR Register,
   _In_ UCHAR Value);
 
-SCSIPORTAPI
+SCSIPORT_API
 VOID
 NTAPI
 ScsiPortWriteRegisterUlong(
   _In_ PULONG Register,
   _In_ ULONG Value);
 
-SCSIPORTAPI
+SCSIPORT_API
 VOID
 NTAPI
 ScsiPortWriteRegisterUshort(
   _In_ PUSHORT Register,
   _In_ USHORT Value);
 
-SCSIPORTAPI
+SCSIPORT_API
 VOID
 NTAPI
 ScsiPortWriteRegisterBufferUchar(
@@ -940,7 +1173,7 @@ ScsiPortWriteRegisterBufferUchar(
   _In_ PUCHAR Buffer,
   _In_ ULONG Count);
 
-SCSIPORTAPI
+SCSIPORT_API
 VOID
 NTAPI
 ScsiPortWriteRegisterBufferUlong(
@@ -948,7 +1181,7 @@ ScsiPortWriteRegisterBufferUlong(
   _In_ PULONG Buffer,
   _In_ ULONG Count);
 
-SCSIPORTAPI
+SCSIPORT_API
 VOID
 NTAPI
 ScsiPortWriteRegisterBufferUshort(
@@ -956,7 +1189,7 @@ ScsiPortWriteRegisterBufferUshort(
   _In_ PUSHORT Buffer,
   _In_ ULONG Count);
 
-SCSIPORTAPI
+SCSIPORT_API
 VOID
 NTAPI
 ScsiPortMoveMemory(

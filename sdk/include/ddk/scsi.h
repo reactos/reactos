@@ -292,6 +292,7 @@ extern "C" {
 #define SCSIOP_CHANGE_DEFINITION        0x40
 #define SCSIOP_WRITE_SAME               0x41
 #define SCSIOP_READ_SUB_CHANNEL         0x42
+#define SCSIOP_UNMAP                    0x42
 #define SCSIOP_READ_TOC                 0x43
 #define SCSIOP_READ_HEADER              0x44
 #define SCSIOP_REPORT_DENSITY_SUPPORT   0x44
@@ -299,6 +300,7 @@ extern "C" {
 #define SCSIOP_GET_CONFIGURATION        0x46
 #define SCSIOP_PLAY_AUDIO_MSF           0x47
 #define SCSIOP_PLAY_TRACK_INDEX         0x48
+#define SCSIOP_SANITIZE                 0x48
 #define SCSIOP_PLAY_TRACK_RELATIVE      0x49
 #define SCSIOP_GET_EVENT_STATUS         0x4A
 #define SCSIOP_PAUSE_RESUME             0x4B
@@ -326,10 +328,50 @@ extern "C" {
 #define SCSIOP_PERSISTENT_RESERVE_IN    0x5E
 #define SCSIOP_PERSISTENT_RESERVE_OUT   0x5F
 
+#define SCSIOP_OPERATION32              0x7F
+
+#define SCSIOP_XDWRITE_EXTENDED16       0x80
+#define SCSIOP_WRITE_FILEMARKS16        0x80
+#define SCSIOP_REBUILD16                0x81
+#define SCSIOP_READ_REVERSE16           0x81
+#define SCSIOP_REGENERATE16             0x82
+#define SCSIOP_EXTENDED_COPY            0x83
+#define SCSIOP_POPULATE_TOKEN           0x83
+#define SCSIOP_WRITE_USING_TOKEN        0x83
+#define SCSIOP_RECEIVE_COPY_RESULTS     0x84
+#define SCSIOP_RECEIVE_ROD_TOKEN_INFORMATION 0x84
+#define SCSIOP_ATA_PASSTHROUGH16        0x85
+#define SCSIOP_ACCESS_CONTROL_IN        0x86
+#define SCSIOP_ACCESS_CONTROL_OUT       0x87
+#define SCSIOP_READ16                   0x88
+#define SCSIOP_COMPARE_AND_WRITE        0x89
+#define SCSIOP_WRITE16                  0x8A
+#define SCSIOP_READ_ATTRIBUTES          0x8C
+#define SCSIOP_WRITE_ATTRIBUTES         0x8D
+#define SCSIOP_WRITE_VERIFY16           0x8E
+#define SCSIOP_VERIFY16                 0x8F
+#define SCSIOP_PREFETCH16               0x90
+#define SCSIOP_SYNCHRONIZE_CACHE16      0x91
+#define SCSIOP_SPACE16                  0x91
+#define SCSIOP_LOCK_UNLOCK_CACHE16      0x92
+#define SCSIOP_LOCATE16                 0x92
+#define SCSIOP_WRITE_SAME16             0x93
+#define SCSIOP_ERASE16                  0x93
+#define SCSIOP_ZBC_OUT                  0x94
+#define SCSIOP_ZBC_IN                   0x95
+#define SCSIOP_READ_DATA_BUFF16         0x9B
+#define SCSIOP_READ_CAPACITY16          0x9E
+#define SCSIOP_GET_LBA_STATUS           0x9E
+#define SCSIOP_GET_PHYSICAL_ELEMENT_STATUS 0x9E
+#define SCSIOP_REMOVE_ELEMENT_AND_TRUNCATE 0x9E
+#define SCSIOP_SERVICE_ACTION_IN16      0x9E
+#define SCSIOP_SERVICE_ACTION_OUT16     0x9F
+
 #define SCSIOP_REPORT_LUNS              0xA0
 #define SCSIOP_BLANK                    0xA1
 #define SCSIOP_ATA_PASSTHROUGH12        0xA1
 #define SCSIOP_SEND_EVENT               0xA2
+#define SCSIOP_SECURITY_PROTOCOL_IN     0xA2
 #define SCSIOP_SEND_KEY                 0xA3
 #define SCSIOP_MAINTENANCE_IN           0xA3
 #define SCSIOP_REPORT_KEY               0xA4
@@ -355,6 +397,7 @@ extern "C" {
 #define SCSIOP_SET_LIMITS12             0xB3
 #define SCSIOP_READ_ELEMENT_STATUS_ATTACHED 0xB4
 #define SCSIOP_REQUEST_VOL_ELEMENT      0xB5
+#define SCSIOP_SECURITY_PROTOCOL_OUT    0xB5
 #define SCSIOP_SEND_VOLUME_TAG          0xB6
 #define SCSIOP_SET_STREAMING            0xB6
 #define SCSIOP_READ_DEFECT_DATA         0xB7
@@ -374,32 +417,71 @@ extern "C" {
 #define SCSIOP_VOLUME_SET_OUT           0xBF
 #define SCSIOP_INIT_ELEMENT_RANGE       0xE7
 
-#define SCSIOP_XDWRITE_EXTENDED16       0x80
-#define SCSIOP_WRITE_FILEMARKS16        0x80
-#define SCSIOP_REBUILD16                0x81
-#define SCSIOP_READ_REVERSE16           0x81
-#define SCSIOP_REGENERATE16             0x82
-#define SCSIOP_EXTENDED_COPY            0x83
-#define SCSIOP_RECEIVE_COPY_RESULTS     0x84
-#define SCSIOP_ATA_PASSTHROUGH16        0x85
-#define SCSIOP_ACCESS_CONTROL_IN        0x86
-#define SCSIOP_ACCESS_CONTROL_OUT       0x87
-#define SCSIOP_READ16                   0x88
-#define SCSIOP_WRITE16                  0x8A
-#define SCSIOP_READ_ATTRIBUTES          0x8C
-#define SCSIOP_WRITE_ATTRIBUTES         0x8D
-#define SCSIOP_WRITE_VERIFY16           0x8E
-#define SCSIOP_VERIFY16                 0x8F
-#define SCSIOP_PREFETCH16               0x90
-#define SCSIOP_SYNCHRONIZE_CACHE16      0x91
-#define SCSIOP_SPACE16                  0x91
-#define SCSIOP_LOCK_UNLOCK_CACHE16      0x92
-#define SCSIOP_LOCATE16                 0x92
-#define SCSIOP_WRITE_SAME16             0x93
-#define SCSIOP_ERASE16                  0x93
-#define SCSIOP_READ_CAPACITY16          0x9E
-#define SCSIOP_SERVICE_ACTION_IN16      0x9E
-#define SCSIOP_SERVICE_ACTION_OUT16     0x9F
+// SCSI operation parameters
+
+// SCSIOP_SANITIZE (0x48)
+
+#define SERVICE_ACTION_OVERWRITE                                                0x01
+#define SERVICE_ACTION_BLOCK_ERASE                                              0x02
+#define SERVICE_ACTION_CRYPTO_ERASE                                             0x03
+#define SERVICE_ACTION_EXIT_FAILURE                                             0x1f
+
+// SCSIOP_OPERATION32 (0x7F)
+
+#define SERVICE_ACTION_XDWRITE                                                  0x0004
+#define SERVICE_ACTION_XPWRITE                                                  0x0006
+#define SERVICE_ACTION_XDWRITEREAD                                              0x0007
+#define SERVICE_ACTION_WRITE                                                    0x000B
+#define SERVICE_ACTION_WRITE_VERIFY                                             0x000C
+#define SERVICE_ACTION_WRITE_SAME                                               0x000D
+#define SERVICE_ACTION_ORWRITE                                                  0x000E
+
+// SCSIOP_POPULATE_TOKEN, SCSIOP_WRITE_USING_TOKEN (0x83)
+
+#define SERVICE_ACTION_POPULATE_TOKEN                                           0x10
+#define SERVICE_ACTION_WRITE_USING_TOKEN                                        0x11
+
+// SCSIOP_RECEIVE_ROD_TOKEN_INFORMATION (0x84)
+
+#define SERVICE_ACTION_RECEIVE_TOKEN_INFORMATION                                0x07
+
+// SCSIOP_ZBC_OUT (0x94)
+
+#define SERVICE_ACTION_CLOSE_ZONE                                               0x01
+#define SERVICE_ACTION_FINISH_ZONE                                              0x02
+#define SERVICE_ACTION_OPEN_ZONE                                                0x03
+#define SERVICE_ACTION_RESET_WRITE_POINTER                                      0x04
+
+// SCSIOP_ZBC_IN (0x95)
+
+#define SERVICE_ACTION_REPORT_ZONES                                             0x00
+
+#define REPORT_ZONES_OPTION_LIST_ALL_ZONES                                      0x00
+#define REPORT_ZONES_OPTION_LIST_EMPTY_ZONES                                    0x01
+#define REPORT_ZONES_OPTION_LIST_IMPLICITLY_OPENED_ZONES                        0x02
+#define REPORT_ZONES_OPTION_LIST_EXPLICITLY_OPENED_ZONES                        0x03
+#define REPORT_ZONES_OPTION_LIST_CLOSED_ZONES                                   0x04
+#define REPORT_ZONES_OPTION_LIST_FULL_ZONES                                     0x05
+#define REPORT_ZONES_OPTION_LIST_READ_ONLY_ZONES                                0x06
+#define REPORT_ZONES_OPTION_LIST_OFFLINE_ZONES                                  0x07
+#define REPORT_ZONES_OPTION_LIST_RWP_ZONES                                      0x10
+#define REPORT_ZONES_OPTION_LIST_NON_SEQUENTIAL_WRITE_RESOURCES_ACTIVE_ZONES    0x11
+#define REPORT_ZONES_OPTION_LIST_NOT_WRITE_POINTER_ZONES                        0x3F
+
+// SCSIOP_SERVICE_ACTION_IN16 (0x9E)
+
+#define SERVICE_ACTION_READ_CAPACITY16                                          0x10
+#define SERVICE_ACTION_GET_LBA_STATUS                                           0x12
+#define SERVICE_ACTION_GET_PHYSICAL_ELEMENT_STATUS                              0x17
+#define SERVICE_ACTION_REMOVE_ELEMENT_AND_TRUNCATE                              0x18
+
+// SCSIOP_MAINTENANCE_IN (0xA3)
+
+#define SERVICE_ACTION_REPORT_TIMESTAMP                                         0x0F
+
+// SCSIOP_MAINTENANCE_OUT (0xA4)
+
+#define SERVICE_ACTION_SET_TIMESTAMP                                            0x0F
 
 #define CDB_RETURN_ON_COMPLETION   0
 #define CDB_RETURN_IMMEDIATE       1
@@ -490,18 +572,6 @@ extern "C" {
 #define SCSISTAT_COMMAND_TERMINATED       0x22
 #define SCSISTAT_QUEUE_FULL               0x28
 
-#define VPD_MAX_BUFFER_SIZE                 0xff
-
-#define VPD_SUPPORTED_PAGES                 0x00
-#define VPD_SERIAL_NUMBER                   0x80
-#define VPD_DEVICE_IDENTIFIERS              0x83
-#define VPD_MEDIA_SERIAL_NUMBER             0x84
-#define VPD_SOFTWARE_INTERFACE_IDENTIFIERS  0x84
-#define VPD_NETWORK_MANAGEMENT_ADDRESSES    0x85
-#define VPD_EXTENDED_INQUIRY_DATA           0x86
-#define VPD_MODE_PAGE_POLICY                0x87
-#define VPD_SCSI_PORTS                      0x88
-
 #define RESERVATION_ACTION_READ_KEYS                    0x00
 #define RESERVATION_ACTION_READ_RESERVATIONS            0x01
 
@@ -521,11 +591,13 @@ extern "C" {
 #define RESERVATION_TYPE_WRITE_EXCLUSIVE_REGISTRANTS    0x05
 #define RESERVATION_TYPE_EXCLUSIVE_REGISTRANTS          0x06
 
-#define SENSE_BUFFER_SIZE              18
+#define SENSE_BUFFER_SIZE sizeof(SENSE_DATA)
+#define SENSE_BUFFER_SIZE_EX sizeof(SENSE_DATA_EX)
 
 #define MAX_SENSE_BUFFER_SIZE          255
 
 #define MAX_ADDITIONAL_SENSE_BYTES (MAX_SENSE_BUFFER_SIZE - SENSE_BUFFER_SIZE)
+#define MAX_ADDITIONAL_SENSE_BYTES_EX (MAX_SENSE_BUFFER_SIZE - SENSE_BUFFER_SIZE_EX)
 
 /* Sense codes */
 #define SCSI_SENSE_NO_SENSE               0x00
@@ -545,6 +617,28 @@ extern "C" {
 #define SCSI_SENSE_MISCOMPARE             0x0E
 #define SCSI_SENSE_RESERVED               0x0F
 
+// Sense Error Codes
+
+#define SCSI_SENSE_ERRORCODE_FIXED_CURRENT        0x70
+#define SCSI_SENSE_ERRORCODE_FIXED_DEFERRED       0x71
+#define SCSI_SENSE_ERRORCODE_DESCRIPTOR_CURRENT   0x72
+#define SCSI_SENSE_ERRORCODE_DESCRIPTOR_DEFERRED  0x73
+
+// Sense Descriptor Types
+
+#define SCSI_SENSE_DESCRIPTOR_TYPE_INFORMATION                  0x00
+#define SCSI_SENSE_DESCRIPTOR_TYPE_COMMAND_SPECIFIC             0x01
+#define SCSI_SENSE_DESCRIPTOR_TYPE_SENSE_KEY_SPECIFIC           0x02
+#define SCSI_SENSE_DESCRIPTOR_TYPE_FIELD_REPLACEABLE_UNIT       0x03
+#define SCSI_SENSE_DESCRIPTOR_TYPE_STREAM_COMMAND               0x04
+#define SCSI_SENSE_DESCRIPTOR_TYPE_BLOCK_COMMAND                0x05
+#define SCSI_SENSE_DESCRIPTOR_TYPE_OSD_OBJECT_IDENTIFICATION    0x06
+#define SCSI_SENSE_DESCRIPTOR_TYPE_OSD_RESPONSE_INTEGRITY_CHECK 0x07
+#define SCSI_SENSE_DESCRIPTOR_TYPE_OSD_ATTRIBUTE_IDENTIFICATION 0x08
+#define SCSI_SENSE_DESCRIPTOR_TYPE_ATA_STATUS_RETURN            0x09
+#define SCSI_SENSE_DESCRIPTOR_TYPE_PROGRESS_INDICATION          0x0A
+#define SCSI_SENSE_DESCRIPTOR_TYPE_USER_DATA_SEGMENT_REFERRAL   0x0B
+
 /* Additional tape bit */
 #define SCSI_ILLEGAL_LENGTH               0x20
 #define SCSI_EOM                          0x40
@@ -553,16 +647,25 @@ extern "C" {
 /* Additional Sense codes */
 #define SCSI_ADSENSE_NO_SENSE                              0x00
 #define SCSI_ADSENSE_NO_SEEK_COMPLETE                      0x02
+#define SCSI_ADSENSE_WRITE                                 0x03
 #define SCSI_ADSENSE_LUN_NOT_READY                         0x04
 #define SCSI_ADSENSE_LUN_COMMUNICATION                     0x08
+#define SCSI_ADSENSE_SERVO_ERROR                           0x09
+#define SCSI_ADSENSE_WARNING                               0x0B
 #define SCSI_ADSENSE_WRITE_ERROR                           0x0C
+#define SCSI_ADSENSE_COPY_TARGET_DEVICE_ERROR              0x0D
+#define SCSI_ADSENSE_UNRECOVERED_ERROR                     0x11
 #define SCSI_ADSENSE_TRACK_ERROR                           0x14
 #define SCSI_ADSENSE_SEEK_ERROR                            0x15
 #define SCSI_ADSENSE_REC_DATA_NOECC                        0x17
 #define SCSI_ADSENSE_REC_DATA_ECC                          0x18
+#define SCSI_ADSENSE_DEFECT_LIST_ERROR                     0x19
 #define SCSI_ADSENSE_PARAMETER_LIST_LENGTH                 0x1A
+#define SCSI_ADSENSE_MISCOMPARE_DURING_VERIFY_OPERATION    0x1D
 #define SCSI_ADSENSE_ILLEGAL_COMMAND                       0x20
+#define SCSI_ADSENSE_ACCESS_DENIED                         0x20
 #define SCSI_ADSENSE_ILLEGAL_BLOCK                         0x21
+#define SCSI_ADSENSE_INVALID_TOKEN                         0x23
 #define SCSI_ADSENSE_INVALID_CDB                           0x24
 #define SCSI_ADSENSE_INVALID_LUN                           0x25
 #define SCSI_ADSENSE_INVALID_FIELD_PARAMETER_LIST          0x26
@@ -572,9 +675,18 @@ extern "C" {
 #define SCSI_ADSENSE_PARAMETERS_CHANGED                    0x2A
 #define SCSI_ADSENSE_INSUFFICIENT_TIME_FOR_OPERATION       0x2E
 #define SCSI_ADSENSE_INVALID_MEDIA                         0x30
+#define SCSI_ADSENSE_DEFECT_LIST                           0x32
+#define SCSI_ADSENSE_LB_PROVISIONING                       0x38
 #define SCSI_ADSENSE_NO_MEDIA_IN_DEVICE                    0x3a
 #define SCSI_ADSENSE_POSITION_ERROR                        0x3b
+#define SCSI_ADSENSE_LOGICAL_UNIT_ERROR                    0x3e
 #define SCSI_ADSENSE_OPERATING_CONDITIONS_CHANGED          0x3f
+#define SCSI_ADSENSE_DATA_PATH_FAILURE                     0x41
+#define SCSI_ADSENSE_POWER_ON_SELF_TEST_FAILURE            0x42
+#define SCSI_ADSENSE_INTERNAL_TARGET_FAILURE               0x44
+#define SCSI_ADSENSE_DATA_TRANSFER_ERROR                   0x4b
+#define SCSI_ADSENSE_LUN_FAILED_SELF_CONFIGURATION         0x4c
+#define SCSI_ADSENSE_RESOURCE_FAILURE                      0x55
 #define SCSI_ADSENSE_OPERATOR_REQUEST                      0x5a
 #define SCSI_ADSENSE_FAILURE_PREDICTION_THRESHOLD_EXCEEDED 0x5d
 #define SCSI_ADSENSE_ILLEGAL_MODE_FOR_THIS_TRACK           0x64
@@ -588,17 +700,36 @@ extern "C" {
 #define SCSI_ADWRITE_PROTECT                        SCSI_ADSENSE_WRITE_PROTECT
 #define SCSI_FAILURE_PREDICTION_THRESHOLD_EXCEEDED  SCSI_ADSENSE_FAILURE_PREDICTION_THRESHOLD_EXCEEDED
 
-#define SCSI_SENSEQ_CAUSE_NOT_REPORTABLE                   0x00
-#define SCSI_SENSEQ_BECOMING_READY                         0x01
-#define SCSI_SENSEQ_INIT_COMMAND_REQUIRED                  0x02
-#define SCSI_SENSEQ_MANUAL_INTERVENTION_REQUIRED           0x03
-#define SCSI_SENSEQ_FORMAT_IN_PROGRESS                     0x04
-#define SCSI_SENSEQ_REBUILD_IN_PROGRESS                    0x05
-#define SCSI_SENSEQ_RECALCULATION_IN_PROGRESS              0x06
-#define SCSI_SENSEQ_OPERATION_IN_PROGRESS                  0x07
-#define SCSI_SENSEQ_LONG_WRITE_IN_PROGRESS                 0x08
-#define SCSI_SENSEQ_LOSS_OF_STREAMING                      0x09
-#define SCSI_SENSEQ_PADDING_BLOCKS_ADDED                   0x0A
+// ADSENSE additional qualifiers
+
+// SCSI_ADSENSE_NO_SENSE (0x00)
+
+#define SCSI_SENSEQ_FILEMARK_DETECTED            0x01
+#define SCSI_SENSEQ_END_OF_MEDIA_DETECTED        0x02
+#define SCSI_SENSEQ_SETMARK_DETECTED             0x03
+#define SCSI_SENSEQ_BEGINNING_OF_MEDIA_DETECTED  0x04
+#define SCSI_SENSEQ_OPERATION_IS_IN_PROGRESS     0x16
+
+// SCSI_ADSENSE_WRITE (0x03)
+
+#define SCSI_SENSEQ_PERIPHERAL_DEVICE_WRITE_FAULT   0x00
+#define SCSI_SENSEQ_NO_WRITE_CURRENT                0x01
+#define SCSI_SENSEQ_EXCESSIVE_WRITE_ERRORS          0x02
+
+// SCSI_ADSENSE_LUN_NOT_READY (0x04)
+
+#define SCSI_SENSEQ_CAUSE_NOT_REPORTABLE         0x00
+#define SCSI_SENSEQ_BECOMING_READY               0x01
+#define SCSI_SENSEQ_INIT_COMMAND_REQUIRED        0x02
+#define SCSI_SENSEQ_MANUAL_INTERVENTION_REQUIRED 0x03
+#define SCSI_SENSEQ_FORMAT_IN_PROGRESS           0x04
+#define SCSI_SENSEQ_REBUILD_IN_PROGRESS          0x05
+#define SCSI_SENSEQ_RECALCULATION_IN_PROGRESS    0x06
+#define SCSI_SENSEQ_OPERATION_IN_PROGRESS        0x07
+#define SCSI_SENSEQ_LONG_WRITE_IN_PROGRESS       0x08
+#define SCSI_SENSEQ_SPACE_ALLOC_IN_PROGRESS      0x14
+
+// SCSI_ADSENSE_LUN_COMMUNICATION (0x08)
 
 #define SCSI_SENSEQ_COMM_FAILURE                 0x00
 #define SCSI_SENSEQ_COMM_TIMEOUT                 0x01
@@ -606,20 +737,104 @@ extern "C" {
 #define SCSI_SESNEQ_COMM_CRC_ERROR               0x03
 #define SCSI_SENSEQ_UNREACHABLE_TARGET           0x04
 
-#define SCSI_SENSEQ_FILEMARK_DETECTED 0x01
-#define SCSI_SENSEQ_END_OF_MEDIA_DETECTED 0x02
-#define SCSI_SENSEQ_SETMARK_DETECTED 0x03
-#define SCSI_SENSEQ_BEGINNING_OF_MEDIA_DETECTED 0x04
+// SCSI_ADSENSE_SERVO_ERROR (0x09)
 
-#define SCSI_SENSEQ_ILLEGAL_ELEMENT_ADDR 0x01
+#define SCSI_SENSEQ_TRACK_FOLLOWING_ERROR   0x00
+#define SCSI_SENSEQ_TRACKING_SERVO_FAILURE  0x01
+#define SCSI_SENSEQ_FOCUS_SERVO_FAILURE     0x02
+#define SCSI_SENSEQ_SPINDLE_SERVO_FAILURE   0x03
+#define SCSI_SENSEQ_HEAD_SELECT_FAULT       0x04
 
-#define SCSI_SENSEQ_DESTINATION_FULL 0x0d
-#define SCSI_SENSEQ_SOURCE_EMPTY     0x0e
+// SCSI_ADSENSE_WARNING (0x0B)
+
+#define SCSI_SENSEQ_POWER_LOSS_EXPECTED          0x08
+
+// SCSI_ADSENSE_WRITE_ERROR (0x0C)
+
+#define SCSI_SENSEQ_LOSS_OF_STREAMING            0x09
+#define SCSI_SENSEQ_PADDING_BLOCKS_ADDED         0x0A
+
+// SCSI_ADSENSE_COPY_TARGET_DEVICE_ERROR (0x0D)
+
+#define SCSI_SENSEQ_NOT_REACHABLE                0x02
+#define SCSI_SENSEQ_DATA_UNDERRUN                0x04
+
+// SCSI_ADSENSE_UNRECOVERED_ERROR (0x11)
+
+#define SCSI_SENSEQ_UNRECOVERED_READ_ERROR       0x00
+
+// SCSI_ADSENSE_SEEK_ERROR (0x15)
+
+#define SCSI_SENSEQ_RANDOM_POSITIONING_ERROR                        0x00
+#define SCSI_SENSEQ_MECHANICAL_POSITIONING_ERROR                    0x01
+#define SCSI_SENSEQ_POSITIONING_ERROR_DETECTED_BY_READ_OF_MEDIUM    0x02
+
+// SCSI_ADSENSE_DEFECT_LIST_ERROR (0x19)
+
+#define SCSI_SENSEQ_DEFECT_LIST_ERROR                  0x00
+#define SCSI_SENSEQ_DEFECT_LIST_NOT_AVAILABLE          0x01
+#define SCSI_SENSEQ_DEFECT_LIST_ERROR_IN_PRIMARY_LIST  0x02
+#define SCSI_SENSEQ_DEFECT_LIST_ERROR_IN_GROWN_LIST    0x03
+
+// SCSI_ADSENSE_ACCESS_DENIED (0x20)
+
+#define SCSI_SENSEQ_NO_ACCESS_RIGHTS             0x02
+
+// SCSI_ADSENSE_ILLEGAL_BLOCK (0x21)
+
+#define SCSI_SENSEQ_LOGICAL_ADDRESS_OUT_OF_RANGE 0x00
+#define SCSI_SENSEQ_ILLEGAL_ELEMENT_ADDR         0x01
+#define SCSI_SENSEQ_INVALID_WRITE_ADDRESS        0x02
+#define SCSI_SENSEQ_INVALID_WRITE_CROSSING_LAYER_JUMP 0x03
+#define SCSI_SENSEQ_UNALIGNED_WRITE              0x04
+#define SCSI_SENSEQ_WRITE_BOUNDARY_VIOLATION     0x05
+#define SCSI_SENSEQ_READ_INVALID_DATA            0x06
+#define SCSI_SENSEQ_READ_BOUNDARY_VIOLATION      0x07
+#define SCSI_SENSEQ_MISALIGNED_WRITE             0x08
+
+// SCSI_ADSENSE_INVALID_FIELD_PARAMETER_LIST (0x26)
+
+#define SCSI_SENSEQ_INVALID_RELEASE_OF_PERSISTENT_RESERVATION 0x04
+#define SCSI_SENSEQ_TOO_MANY_SEGMENT_DESCRIPTORS 0x08
+
+// SCSI_ADSENSE_WRITE_PROTECT (0x27)
+
+#define SCSI_SENSEQ_SPACE_ALLOC_FAILED_WRITE_PROTECT 0x07
+
+// SCSI_ADSENSE_PARAMETERS_CHANGED (0x2A)
+
+#define SCSI_SENSEQ_CAPACITY_DATA_CHANGED        0x09
+
+// SCSI_ADSENSE_POSITION_ERROR (0x3b)
+
+#define SCSI_SENSEQ_DESTINATION_FULL             0x0d
+#define SCSI_SENSEQ_SOURCE_EMPTY                 0x0e
+
+// SCSI_ADSENSE_INVALID_MEDIA (0x30)
 
 #define SCSI_SENSEQ_INCOMPATIBLE_MEDIA_INSTALLED 0x00
 #define SCSI_SENSEQ_UNKNOWN_FORMAT 0x01
 #define SCSI_SENSEQ_INCOMPATIBLE_FORMAT 0x02
 #define SCSI_SENSEQ_CLEANING_CARTRIDGE_INSTALLED 0x03
+
+// SCSI_ADSENSE_DEFECT_LIST (0x32)
+
+#define SCSI_SENSEQ_NO_DEFECT_SPARE_LOCATION_AVAILABLE  0x00
+#define SCSI_SENSEQ_DEFECT_LIST_UPDATE_FAILURE          0x01
+
+// SCSI_ADSENSE_LB_PROVISIONING (0x38)
+
+#define SCSI_SENSEQ_SOFT_THRESHOLD_REACHED 0x07
+
+// SCSI_ADSENSE_LOGICAL_UNIT_ERROR (0x3e)
+
+#define SCSI_SENSEQ_LOGICAL_UNIT_HAS_NOT_SELF_CONFIGURED_YET    0x00
+#define SCSI_SENSEQ_LOGICAL_UNIT_FAILURE                        0x01
+#define SCSI_SENSEQ_TIMEOUT_ON_LOGICAL_UNIT                     0x02
+#define SCSI_SENSEQ_LOGICAL_UNIT_FAILED_SELF_TEST               0x03
+#define SCSI_SENSEQ_LOGICAL_UNIT_FAILED_TO_UPDATE_SELF_TEST_LOG 0x04
+
+// SCSI_ADSENSE_OPERATING_CONDITIONS_CHANGED (0x3f)
 
 #define SCSI_SENSEQ_TARGET_OPERATING_CONDITIONS_CHANGED 0x00
 #define SCSI_SENSEQ_MICROCODE_CHANGED                   0x01
@@ -640,10 +855,55 @@ extern "C" {
 #define SCSI_SENSEQ_MEDIUM_LOADABLE                     0x10
 #define SCSI_SENSEQ_MEDIUM_AUXILIARY_MEMORY_ACCESSIBLE  0x11
 
-#define SCSI_SENSEQ_STATE_CHANGE_INPUT     0x00
-#define SCSI_SENSEQ_MEDIUM_REMOVAL         0x01
-#define SCSI_SENSEQ_WRITE_PROTECT_ENABLE   0x02
-#define SCSI_SENSEQ_WRITE_PROTECT_DISABLE  0x03
+// SCSI_ADSENSE_INTERNAL_TARGET_FAILURE (0x44)
+
+#define SCSI_SENSEQ_INTERNAL_TARGET_FAILURE                 0x00
+#define SCSI_SENSEQ_PRESISTENT_RESERVATION_INFORMATION_LOST 0x01
+#define SCSI_SENSEQ_ATA_DEVICE_FAILED_SET_FEATURES          0x71
+
+// SCSI_ADSENSE_DATA_TRANSFER_ERROR (0x4b)
+
+#define SCSI_SENSEQ_INITIATOR_RESPONSE_TIMEOUT          0x06
+
+// SCSI_ADSENSE_RESOURCE_FAILURE (0x55)
+
+#define SCSI_SENSEQ_SYSTEM_RESOURCE_FAILURE             0x00
+#define SCSI_SENSEQ_SYSTEM_BUFFER_FULL                  0x01
+#define SCSI_SENSEQ_INSUFFICIENT_RESERVATION_RESOURCES  0x02
+#define SCSI_SENSEQ_INSUFFICIENT_RESOURCES              0x03
+
+// SCSI_ADSENSE_OPERATOR_REQUEST (0x5a)
+
+#define SCSI_SENSEQ_STATE_CHANGE_INPUT                  0x00
+#define SCSI_SENSEQ_MEDIUM_REMOVAL                      0x01
+#define SCSI_SENSEQ_WRITE_PROTECT_ENABLE                0x02
+#define SCSI_SENSEQ_WRITE_PROTECT_DISABLE               0x03
+
+// SCSI_ADSENSE_FAILURE_PREDICTION_THRESHOLD_EXCEEDED (0x5d)
+
+#define SCSI_SENSEQ_FAILURE_PREDICTION_THRESHOLD_EXCEEDED               0x00
+#define SCSI_SENSEQ_MEDIA_FAILURE_PREDICTION_THRESHOLD_EXCEEDED         0x01
+#define SCSI_SENSEQ_LUN_FAILURE_PREDICTION_THRESHOLD_EXCEEDED           0x02
+#define SCSI_SENSEQ_SPARE_AREA_EXHAUSTION_PREDICTION_THRESHOLD_EXCEEDED 0x03
+#define SCSI_SENSEQ_GENERAL_HARD_DRIVE_FAILURE                          0x10
+#define SCSI_SENSEQ_DRIVE_ERROR_RATE_TOO_HIGH                           0x11
+#define SCSI_SENSEQ_DATA_ERROR_RATE_TOO_HIGH                            0x12
+#define SCSI_SENSEQ_SEEK_ERROR_RATE_TOO_HIGH                            0x13
+#define SCSI_SENSEQ_TOO_MANY_BLOCK_REASSIGNS                            0x14
+#define SCSI_SENSEQ_ACCESS_TIMES_TOO_HIGH                               0x15
+#define SCSI_SENSEQ_START_UNIT_TIMES_TOO_HIGH                           0x16
+#define SCSI_SENSEQ_CHANNEL_PARAMETRICS                                 0x17
+#define SCSI_SENSEQ_CONTROLLER_DETECTED                                 0x18
+#define SCSI_SENSEQ_THROUGHPUT_PERFORMANCE                              0x19
+#define SCSI_SENSEQ_SEEK_TIME_PERFORMANCE                               0x1A
+#define SCSI_SENSEQ_SPIN_UP_RETRY_COUNT                                 0x1B
+#define SCSI_SENSEQ_DRIVE_CALIBRATION_RETRY_COUNT                       0x1C
+#define SCSI_SENSEQ_DATA_CHANNEL_DATA_ERROR_RATE_TOO_HIGH               0x32
+#define SCSI_SENSEQ_SERVO_DATA_ERROR_RATE_TOO_HIGH                      0x42
+#define SCSI_SENSEQ_SERVER_SEEK_ERROR_RATE_TOO_HIGH                     0x43
+#define SCSI_SENSEQ_FAILURE_PREDICTION_THRESHOLD_EXCEEDED_FALSE         0xFF
+
+// SCSI_ADSENSE_COPY_PROTECTION_FAILURE (0x6f)
 
 #define SCSI_SENSEQ_AUTHENTICATION_FAILURE                          0x00
 #define SCSI_SENSEQ_KEY_NOT_PRESENT                                 0x01
@@ -652,12 +912,14 @@ extern "C" {
 #define SCSI_SENSEQ_MEDIA_CODE_MISMATCHED_TO_LOGICAL_UNIT           0x04
 #define SCSI_SENSEQ_LOGICAL_UNIT_RESET_COUNT_ERROR                  0x05
 
-#define SCSI_SENSEQ_POWER_CALIBRATION_AREA_ALMOST_FULL 0x01
-#define SCSI_SENSEQ_POWER_CALIBRATION_AREA_FULL        0x02
-#define SCSI_SENSEQ_POWER_CALIBRATION_AREA_ERROR       0x03
-#define SCSI_SENSEQ_PMA_RMA_UPDATE_FAILURE             0x04
-#define SCSI_SENSEQ_PMA_RMA_IS_FULL                    0x05
-#define SCSI_SENSEQ_PMA_RMA_ALMOST_FULL                0x06
+// SCSI_ADSENSE_POWER_CALIBRATION_ERROR (0x73)
+
+#define SCSI_SENSEQ_POWER_CALIBRATION_AREA_ALMOST_FULL  0x01
+#define SCSI_SENSEQ_POWER_CALIBRATION_AREA_FULL         0x02
+#define SCSI_SENSEQ_POWER_CALIBRATION_AREA_ERROR        0x03
+#define SCSI_SENSEQ_PMA_RMA_UPDATE_FAILURE              0x04
+#define SCSI_SENSEQ_PMA_RMA_IS_FULL                     0x05
+#define SCSI_SENSEQ_PMA_RMA_ALMOST_FULL                 0x06
 
 #define FILE_DEVICE_SCSI 0x0000001b
 
@@ -1103,6 +1365,32 @@ typedef union _CDB {
     UCHAR TransferBlockByte1;
     UCHAR Control;
   } NEC_READ_CDDA, *PNEC_READ_CDDA;
+#if (NTDDI_VERSION >= NTDDI_WIN8)
+  struct _MODE_SENSE {
+    UCHAR OperationCode;
+    UCHAR Reserved1:3;
+    UCHAR Dbd:1;
+    UCHAR Reserved2:4;
+    UCHAR PageCode:6;
+    UCHAR Pc:2;
+    UCHAR SubPageCode;
+    UCHAR AllocationLength;
+    UCHAR Control;
+  } MODE_SENSE;
+  struct _MODE_SENSE10 {
+    UCHAR OperationCode;
+    UCHAR Reserved1:3;
+    UCHAR Dbd:1;
+    UCHAR LongLBAAccepted:1;
+    UCHAR Reserved2:3;
+    UCHAR PageCode:6;
+    UCHAR Pc:2;
+    UCHAR SubPageCode;
+    UCHAR Reserved3[3];
+    UCHAR AllocationLength[2];
+    UCHAR Control;
+  } MODE_SENSE10;
+#else
   struct _MODE_SENSE {
     UCHAR OperationCode;
     UCHAR Reserved1:3;
@@ -1127,6 +1415,7 @@ typedef union _CDB {
     UCHAR AllocationLength[2];
     UCHAR Control;
   } MODE_SENSE10, *PMODE_SENSE10;
+#endif
   struct _MODE_SELECT {
     UCHAR OperationCode;
     UCHAR SPBit:1;
@@ -1649,11 +1938,51 @@ typedef union _CDB {
     UCHAR ServiceAction:5;
     UCHAR Reserved1:3;
     UCHAR LogicalBlock[8];
-    UCHAR BlockCount[4];
+    UCHAR AllocationLength[4];
     UCHAR PMI:1;
     UCHAR Reserved2:7;
     UCHAR Control;
   } READ_CAPACITY16;
+  struct _TOKEN_OPERATION {
+    UCHAR OperationCode;
+    UCHAR ServiceAction:5;
+    UCHAR Reserved1:3;
+    UCHAR Reserved2[4];
+    UCHAR ListIdentifier[4];
+    UCHAR ParameterListLength[4];
+    UCHAR GroupNumber:5;
+    UCHAR Reserved3:3;
+    UCHAR Control;
+  } TOKEN_OPERATION;
+  struct _RECEIVE_TOKEN_INFORMATION {
+    UCHAR OperationCode;
+    UCHAR ServiceAction:5;
+    UCHAR Reserved1:3;
+    UCHAR ListIdentifier[4];
+    UCHAR Reserved2[4];
+    UCHAR AllocationLength[4];
+    UCHAR Reserved3;
+    UCHAR Control;
+  } RECEIVE_TOKEN_INFORMATION;
+  struct _UNMAP {
+    UCHAR OperationCode;
+    UCHAR Anchor:1;
+    UCHAR Reserved1:7;
+    UCHAR Reserved2[4];
+    UCHAR GroupNumber:5;
+    UCHAR Reserved3:3;
+    UCHAR AllocationLength[2];
+    UCHAR Control;
+  } UNMAP;
+  struct _GET_LBA_STATUS {
+    UCHAR OperationCode;
+    UCHAR ServiceAction:5;
+    UCHAR Reserved1:3;
+    UCHAR StartingLBA[8];
+    UCHAR AllocationLength[4];
+    UCHAR Reserved2;
+    UCHAR Control;
+  } GET_LBA_STATUS;
   ULONG AsUlong[4];
   UCHAR AsByte[16];
 } CDB, *PCDB;
@@ -2069,6 +2398,25 @@ typedef struct _INQUIRYDATA {
 
 #endif /* _INQUIRYDATA_DEFINED */
 
+#define VPD_MAX_BUFFER_SIZE                0xff
+
+#define VPD_SUPPORTED_PAGES                0x00
+#define VPD_SERIAL_NUMBER                  0x80
+#define VPD_DEVICE_IDENTIFIERS             0x83
+#define VPD_MEDIA_SERIAL_NUMBER            0x84
+#define VPD_SOFTWARE_INTERFACE_IDENTIFIERS 0x84
+#define VPD_NETWORK_MANAGEMENT_ADDRESSES   0x85
+#define VPD_EXTENDED_INQUIRY_DATA          0x86
+#define VPD_MODE_PAGE_POLICY               0x87
+#define VPD_SCSI_PORTS                     0x88
+#define VPD_ATA_INFORMATION                0x89
+
+#define VPD_THIRD_PARTY_COPY               0x8F
+#define VPD_BLOCK_LIMITS                   0xB0
+#define VPD_BLOCK_DEVICE_CHARACTERISTICS   0xB1
+#define VPD_LOGICAL_BLOCK_PROVISIONING     0xB2
+#define VPD_ZONED_BLOCK_DEVICE_CHARACTERISTICS  0xB6
+
 typedef struct _VPD_MEDIA_SERIAL_NUMBER_PAGE {
   UCHAR DeviceType:5;
   UCHAR DeviceTypeQualifier:3;
@@ -2134,6 +2482,147 @@ typedef struct _VPD_IDENTIFICATION_PAGE {
   UCHAR Descriptors[0];
 } VPD_IDENTIFICATION_PAGE, *PVPD_IDENTIFICATION_PAGE;
 
+typedef struct _VPD_ATA_INFORMATION_PAGE {
+  UCHAR DeviceType:5;
+  UCHAR DeviceTypeQualifier:3;
+  UCHAR PageCode;
+  UCHAR PageLength[2];
+  UCHAR Reserved0[4];
+  UCHAR VendorId[8];
+  UCHAR ProductId[16];
+  UCHAR ProductRevisionLevel[4];
+  UCHAR DeviceSignature[20];
+  UCHAR CommandCode;
+  UCHAR Reserved1[3];
+  UCHAR IdentifyDeviceData[512];
+} VPD_ATA_INFORMATION_PAGE, *PVPD_ATA_INFORMATION_PAGE;
+
+#if (NTDDI_VERSION >= NTDDI_WIN8)
+typedef struct _VPD_THIRD_PARTY_COPY_PAGE {
+  UCHAR DeviceType:5;
+  UCHAR DeviceTypeQualifier:3;
+  UCHAR PageCode;
+  UCHAR PageLength[2];
+#if !defined(__midl)
+  UCHAR ThirdPartyCopyDescriptors[ANYSIZE_ARRAY];
+#endif
+} VPD_THIRD_PARTY_COPY_PAGE, *PVPD_THIRD_PARTY_COPY_PAGE;
+
+typedef struct _WINDOWS_BLOCK_DEVICE_TOKEN_LIMITS_DESCRIPTOR {
+  UCHAR DescriptorType[2];
+  UCHAR DescriptorLength[2];
+  UCHAR VendorSpecific[6];
+  UCHAR MaximumRangeDescriptors[2];
+  UCHAR MaximumInactivityTimer[4];
+  UCHAR DefaultInactivityTimer[4];
+  UCHAR MaximumTokenTransferSize[8];
+  UCHAR OptimalTransferCount[8];
+} WINDOWS_BLOCK_DEVICE_TOKEN_LIMITS_DESCRIPTOR, *PWINDOWS_BLOCK_DEVICE_TOKEN_LIMITS_DESCRIPTOR;
+
+#define BLOCK_DEVICE_TOKEN_LIMITS_DESCRIPTOR_TYPE_WINDOWS       0x00
+
+#endif /* (NTDDI_VERSION >= NTDDI_WIN8) */
+
+typedef struct _VPD_BLOCK_LIMITS_PAGE {
+  UCHAR DeviceType:5;
+  UCHAR DeviceTypeQualifier:3;
+  UCHAR PageCode;
+  UCHAR PageLength[2];
+  union {
+    struct {
+      UCHAR Reserved0;
+      UCHAR MaximumCompareAndWriteLength;
+      UCHAR OptimalTransferLengthGranularity[2];
+      UCHAR MaximumTransferLength[4];
+      UCHAR OptimalTransferLength[4];
+      UCHAR MaxPrefetchXDReadXDWriteTransferLength[4];
+      UCHAR MaximumUnmapLBACount[4];
+      UCHAR MaximumUnmapBlockDescriptorCount[4];
+      UCHAR OptimalUnmapGranularity[4];
+      union {
+        struct {
+          UCHAR UnmapGranularityAlignmentByte3:7;
+          UCHAR UGAValid:1;
+          UCHAR UnmapGranularityAlignmentByte2;
+          UCHAR UnmapGranularityAlignmentByte1;
+          UCHAR UnmapGranularityAlignmentByte0;
+        };
+        UCHAR UnmapGranularityAlignment[4];
+      };
+      UCHAR Reserved1[28];
+    };
+#if !defined(__midl)
+  UCHAR Descriptors[0];
+#endif
+  };
+} VPD_BLOCK_LIMITS_PAGE, *PVPD_BLOCK_LIMITS_PAGE;
+
+#define ZONED_CAPABILITIES_NOT_REPORTED       0x0
+#define ZONED_CAPABILITIES_HOST_AWARE         0x1
+#define ZONED_CAPABILITIES_DEVICE_MANAGED     0x2
+
+typedef struct _VPD_BLOCK_DEVICE_CHARACTERISTICS_PAGE {
+  UCHAR DeviceType:5;
+  UCHAR DeviceTypeQualifier:3;
+  UCHAR PageCode;
+  UCHAR Reserved0;
+  UCHAR PageLength;
+  UCHAR MediumRotationRateMsb;
+  UCHAR MediumRotationRateLsb;
+  UCHAR MediumProductType;
+  UCHAR NominalFormFactor:4;
+  UCHAR WACEREQ:2;
+  UCHAR WABEREQ:2;
+  UCHAR VBULS:1;
+  UCHAR FUAB:1;
+  UCHAR BOCS:1;
+  UCHAR Reserved1:1;
+  UCHAR ZONED:2;
+  UCHAR Reserved2:2;
+  UCHAR Reserved3[3];
+  UCHAR DepopulationTime[4];
+  UCHAR Reserved4[48];
+} VPD_BLOCK_DEVICE_CHARACTERISTICS_PAGE, *PVPD_BLOCK_DEVICE_CHARACTERISTICS_PAGE;
+
+#define PROVISIONING_TYPE_UNKNOWN       0x0
+#define PROVISIONING_TYPE_RESOURCE      0x1
+#define PROVISIONING_TYPE_THIN          0x2
+
+typedef struct _VPD_LOGICAL_BLOCK_PROVISIONING_PAGE {
+  UCHAR DeviceType:5;
+  UCHAR DeviceTypeQualifier:3;
+  UCHAR PageCode;
+  UCHAR PageLength[2];
+  UCHAR ThresholdExponent;
+  UCHAR DP:1;
+  UCHAR ANC_SUP:1;
+  UCHAR LBPRZ:1;
+  UCHAR Reserved0:2;
+  UCHAR LBPWS10:1;
+  UCHAR LBPWS:1;
+  UCHAR LBPU:1;
+  UCHAR ProvisioningType:3;
+  UCHAR Reserved1:5;
+  UCHAR Reserved2;
+#if !defined(__midl)
+  UCHAR ProvisioningGroupDescr[0];
+#endif
+} VPD_LOGICAL_BLOCK_PROVISIONING_PAGE, *PVPD_LOGICAL_BLOCK_PROVISIONING_PAGE;
+
+typedef struct _VPD_ZONED_BLOCK_DEVICE_CHARACTERISTICS_PAGE {
+  UCHAR DeviceType:5;
+  UCHAR DeviceTypeQualifier:3;
+  UCHAR PageCode;
+  UCHAR PageLength[2];
+  UCHAR URSWRZ:1;
+  UCHAR Reserved1:7;
+  UCHAR Reserved2[3];
+  UCHAR OptimalNumberOfOpenSequentialWritePreferredZone[4];
+  UCHAR OptimalNumberOfNonSequentiallyWrittenSequentialWritePreferredZone[4];
+  UCHAR MaxNumberOfOpenSequentialWriteRequiredZone[4];
+  UCHAR Reserved3[44];
+} VPD_ZONED_BLOCK_DEVICE_CHARACTERISTICS_PAGE, *PVPD_ZONED_BLOCK_DEVICE_CHARACTERISTICS_PAGE;
+
 typedef struct _VPD_SUPPORTED_PAGES_PAGE {
   UCHAR DeviceType:5;
   UCHAR DeviceTypeQualifier:3;
@@ -2192,6 +2681,63 @@ typedef struct _SENSE_DATA {
   UCHAR SenseKeySpecific[3];
 } SENSE_DATA, *PSENSE_DATA;
 
+typedef struct _SCSI_SENSE_DESCRIPTOR_HEADER {
+  UCHAR DescriptorType;
+  UCHAR AdditionalLength;
+} SCSI_SENSE_DESCRIPTOR_HEADER, *PSCSI_SENSE_DESCRIPTOR_HEADER;
+
+typedef struct _SCSI_SENSE_DESCRIPTOR_INFORMATION {
+  SCSI_SENSE_DESCRIPTOR_HEADER Header;
+  UCHAR Valid:1;
+  UCHAR Reserved1:7;
+  UCHAR Reserved2;
+  UCHAR Information[8];
+} SCSI_SENSE_DESCRIPTOR_INFORMATION, *PSCSI_SENSE_DESCRIPTOR_INFORMATION;
+
+typedef struct _SCSI_SENSE_DESCRIPTOR_BLOCK_COMMAND {
+  SCSI_SENSE_DESCRIPTOR_HEADER Header;
+  UCHAR Reserved1;
+  UCHAR Reserved2:5;
+  UCHAR IncorrectLength:1;
+  UCHAR Reserved3:2;
+} SCSI_SENSE_DESCRIPTOR_BLOCK_COMMAND, *PSCSI_SENSE_DESCRIPTOR_BLOCK_COMMAND;
+
+typedef struct _SCSI_SENSE_DESCRIPTOR_ATA_STATUS_RETURN {
+  SCSI_SENSE_DESCRIPTOR_HEADER Header;
+  UCHAR Extend:1;
+  UCHAR Reserved1:7;
+  UCHAR Error;
+  UCHAR SectorCount15_8;
+  UCHAR SectorCount7_0;
+  UCHAR LbaLow15_8;
+  UCHAR LbaLow7_0;
+  UCHAR LbaMid15_8;
+  UCHAR LbaMid7_0;
+  UCHAR LbaHigh15_8;
+  UCHAR LbaHigh7_0;
+  UCHAR Device;
+  UCHAR Status;
+} SCSI_SENSE_DESCRIPTOR_ATA_STATUS_RETURN, *PSCSI_SENSE_DESCRIPTOR_ATA_STATUS_RETURN;
+
+typedef struct _SENSE_DATA FIXED_SENSE_DATA, *PFIXED_SENSE_DATA;
+
+typedef struct _DESCRIPTOR_SENSE_DATA {
+  UCHAR ErrorCode:7;
+  UCHAR Reserved1:1;
+  UCHAR SenseKey:4;
+  UCHAR Reserved2:4;
+  UCHAR AdditionalSenseCode;
+  UCHAR AdditionalSenseCodeQualifier;
+  UCHAR Reserved3[3];
+  UCHAR AdditionalSenseLength;
+  UCHAR DescriptorBuffer[ANYSIZE_ARRAY];
+} DESCRIPTOR_SENSE_DATA, *PDESCRIPTOR_SENSE_DATA;
+
+typedef union _SENSE_DATA_EX {
+  FIXED_SENSE_DATA FixedData;
+  DESCRIPTOR_SENSE_DATA DescriptorData;
+} SENSE_DATA_EX, *PSENSE_DATA_EX;
+
 /* Read Capacity Data. Returned in Big Endian format */
 typedef struct _READ_CAPACITY_DATA {
   ULONG LogicalBlockAddress;
@@ -2202,6 +2748,43 @@ typedef struct _READ_CAPACITY_DATA_EX {
   LARGE_INTEGER LogicalBlockAddress;
   ULONG BytesPerBlock;
 } READ_CAPACITY_DATA_EX, *PREAD_CAPACITY_DATA_EX;
+
+#define RC_BASIS_LAST_LBA_NOT_SEQUENTIAL_WRITE_REQUIRED_ZONES       0x0
+#define RC_BASIS_LAST_LBA_ON_LOGICAL_UNIT                           0x1
+
+typedef struct _READ_CAPACITY16_DATA {
+  LARGE_INTEGER LogicalBlockAddress;
+  ULONG BytesPerBlock;
+  UCHAR ProtectionEnable:1;
+  UCHAR ProtectionType:3;
+  UCHAR RcBasis:2;
+  UCHAR Reserved:2;
+  UCHAR LogicalPerPhysicalExponent:4;
+  UCHAR ProtectionInfoExponent:4;
+  UCHAR LowestAlignedBlock_MSB:6;
+  UCHAR LBPRZ:1;
+  UCHAR LBPME:1;
+  UCHAR LowestAlignedBlock_LSB;
+  UCHAR Reserved3[16];
+} READ_CAPACITY16_DATA, *PREAD_CAPACITY16_DATA;
+
+typedef struct _LBA_STATUS_DESCRIPTOR {
+  ULONGLONG StartingLBA;
+  ULONG LogicalBlockCount;
+  UCHAR ProvisioningStatus:4;
+  UCHAR Reserved1:4;
+  UCHAR Reserved2[3];
+} LBA_STATUS_DESCRIPTOR, *PLBA_STATUS_DESCRIPTOR;
+
+typedef struct _LBA_STATUS_LIST_HEADER {
+  ULONG ParameterLength;
+  ULONG Reserved;
+  LBA_STATUS_DESCRIPTOR Descriptors[0];
+} LBA_STATUS_LIST_HEADER, *PLBA_STATUS_LIST_HEADER;
+
+#define LBA_STATUS_MAPPED      0x0
+#define LBA_STATUS_DEALLOCATED 0x1
+#define LBA_STATUS_ANCHORED    0x2
 
 /* Read Block Limits Data. Returned in Big Endian format */
 typedef struct _READ_BLOCK_LIMITS {
@@ -2655,6 +3238,180 @@ typedef struct _TAPE_POSITION_DATA {
   UCHAR NumberOfBytes[4];
 } TAPE_POSITION_DATA, *PTAPE_POSITION_DATA;
 
+#include <pshpack1.h>
+typedef struct _UNMAP_BLOCK_DESCRIPTOR {
+  UCHAR StartingLba[8];
+  UCHAR LbaCount[4];
+  UCHAR Reserved[4];
+} UNMAP_BLOCK_DESCRIPTOR, *PUNMAP_BLOCK_DESCRIPTOR;
+
+typedef struct _UNMAP_LIST_HEADER {
+  UCHAR DataLength[2];
+  UCHAR BlockDescrDataLength[2];
+  UCHAR Reserved[4];
+#if !defined(__midl)
+  UNMAP_BLOCK_DESCRIPTOR Descriptors[0];
+#endif
+} UNMAP_LIST_HEADER, *PUNMAP_LIST_HEADER;
+#include <poppack.h>
+
+#define LOG_PAGE_CODE_SUPPORTED_LOG_PAGES           0x00
+#define LOG_PAGE_CODE_WRITE_ERROR_COUNTERS          0x02
+#define LOG_PAGE_CODE_READ_ERROR_COUNTERS           0x03
+#define LOG_PAGE_CODE_LOGICAL_BLOCK_PROVISIONING    0x0C
+#define LOG_PAGE_CODE_TEMPERATURE                   0x0D
+#define LOG_PAGE_CODE_STARTSTOP_CYCLE_COUNTERS      0x0E
+#define LOG_PAGE_CODE_SELFTEST_RESULTS              0x10
+#define LOG_PAGE_CODE_SOLID_STATE_MEDIA             0x11
+#define LOG_PAGE_CODE_BACKGROUND_SCAN_RESULTS       0x15
+#define LOG_PAGE_CODE_INFORMATIONAL_EXCEPTIONS      0x2F
+
+
+#include <pshpack1.h>
+typedef struct _LOG_PARAMETER_HEADER {
+  UCHAR ParameterCode[2];
+  union {
+    UCHAR ControlByte;
+    struct {
+      UCHAR FormatAndLinking:2;
+      UCHAR TMC:2;
+      UCHAR ETC:1;
+      UCHAR TSD:1;
+      UCHAR Obsolete:1;
+      UCHAR DU:1;
+    };
+  };
+  UCHAR ParameterLength;
+} LOG_PARAMETER_HEADER, *PLOG_PARAMETER_HEADER;
+
+typedef struct _LOG_PARAMETER {
+  LOG_PARAMETER_HEADER Header;
+  union {
+#if !defined(__midl)
+    UCHAR AsByte[0];
+#endif
+    struct _THRESHOLD_RESOURCE_COUNT {
+      UCHAR ResourceCount[4];
+      UCHAR Scope : 2;
+      UCHAR Reserved1 : 6;
+      UCHAR Reserved2[3];
+    } THRESHOLD_RESOURCE_COUNT;
+    struct _TEMPERATURE {
+      UCHAR Reserved;
+      UCHAR Temperature;
+    } TEMPERATURE;
+    struct _DATE_OF_MANUFACTURE {
+      UCHAR Year[4];
+      UCHAR Week[2];
+    } DATE_OF_MANUFACTURE;
+    struct _SELF_TEST_RESULTS {
+      UCHAR SelfTestResults : 4;
+      UCHAR Reserved1 : 1;
+      UCHAR SelfTestCode : 3;
+      UCHAR SelfTestNumber;
+      UCHAR PowerOnHours[2];
+      UCHAR AddressOfFirstFailure[8];
+      UCHAR SenseKey : 4;
+      UCHAR Reserved2 : 4;
+      UCHAR AdditionalSenseCode;
+      UCHAR AdditionalSenseCodeQualifier;
+      UCHAR VendorSpecific;
+    } SELF_TEST_RESULTS;
+
+    struct _SOLID_STATE_MEDIA {
+      UCHAR Reserved[3];
+      UCHAR PercentageUsed;
+    } SOLID_STATE_MEDIA;
+
+    struct _BACKGROUND_SCAN_STATUS {
+      UCHAR PowerOnMinutes[4];
+      UCHAR Reserved;
+      UCHAR ScanStatus;
+      UCHAR ScansPerformed[2];
+      UCHAR ScanProgress[2];
+      UCHAR MediumScansPerformed[2];
+    } BACKGROUND_SCAN_STATUS;
+
+    struct _INFORMATIONAL_EXCEPTIONS {
+      UCHAR ASC;
+      UCHAR ASCQ;
+      UCHAR MostRecentTemperature;
+      UCHAR VendorSpecific[ANYSIZE_ARRAY];
+    } INFORMATIONAL_EXCEPTIONS;
+  };
+} LOG_PARAMETER, *PLOG_PARAMETER;
+
+typedef struct _LOG_PAGE {
+  UCHAR PageCode:6;
+  UCHAR SPF:1;
+  UCHAR DS:1;
+  UCHAR SubPageCode;
+  UCHAR PageLength[2];
+#if !defined(__midl)
+  LOG_PARAMETER Parameters[0];
+#endif
+
+} LOG_PAGE, *PLOG_PAGE;
+
+#include <poppack.h>
+
+#define LOG_PAGE_LBP_PARAMETER_CODE_AVAILABLE   0x1
+#define LOG_PAGE_LBP_PARAMETER_CODE_USED        0x2
+
+#define LOG_PAGE_LBP_RESOURCE_SCOPE_NOT_REPORTED            0x0
+#define LOG_PAGE_LBP_RESOURCE_SCOPE_DEDICATED_TO_LUN        0x1
+#define LOG_PAGE_LBP_RESOURCE_SCOPE_NOT_DEDICATED_TO_LUN    0x2
+
+typedef struct _LOG_PARAMETER_THRESHOLD_RESOURCE_COUNT {
+  LOG_PARAMETER_HEADER Header;
+  UCHAR ResourceCount[4];
+  UCHAR Scope:2;
+  UCHAR Reserved0:6;
+  UCHAR Reserved1[3];
+} LOG_PARAMETER_THRESHOLD_RESOURCE_COUNT, *PLOG_PARAMETER_THRESHOLD_RESOURCE_COUNT;
+
+typedef struct _LOG_PAGE_LOGICAL_BLOCK_PROVISIONING {
+  UCHAR PageCode:6;
+  UCHAR SPF:1;
+  UCHAR DS:1;
+  UCHAR SubPageCode;
+  UCHAR PageLength[2];
+#if !defined(__midl)
+  LOG_PARAMETER_HEADER Parameters[0];
+#endif
+} LOG_PAGE_LOGICAL_BLOCK_PROVISIONING, *PLOG_PAGE_LOGICAL_BLOCK_PROVISIONING;
+
+typedef struct _MODE_CONTROL_PAGE {
+  UCHAR PageCode:6;
+  UCHAR Reserved1:1;
+  UCHAR PageSavable:1;
+  UCHAR PageLength;
+  UCHAR RLEC:1;
+  UCHAR GLTSD:1;
+  UCHAR D_SENSE:1;
+  UCHAR DPICZ:1;
+  UCHAR TMF_ONLY:1;
+  UCHAR TST:3;
+  UCHAR Obsolete1:1;
+  UCHAR QERR:2;
+  UCHAR NUAR:1;
+  UCHAR QueueAlgorithmModifier:4;
+  UCHAR Obsolete2:3;
+  UCHAR SWP:1;
+  UCHAR UA_INTLCK_CTRL:2;
+  UCHAR RAC:1;
+  UCHAR VS:1;
+  UCHAR AutoloadMode:3;
+  UCHAR Reserved2:1;
+  UCHAR RWWP:1;
+  UCHAR ATMPE:1;
+  UCHAR TAS:1;
+  UCHAR ATO:1;
+  UCHAR Obsolete3[2];
+  UCHAR BusyTimeoutPeriod[2];
+  UCHAR ExtendeSelfTestCompletionTime[2];
+} MODE_CONTROL_PAGE, *PMODE_CONTROL_PAGE;
+
 /* This structure is used to convert little endian ULONGs
    to SCSI CDB big endians values. */
 typedef union _EIGHT_BYTE {
@@ -2750,6 +3507,37 @@ typedef union _TWO_BYTE {
   (Bit) = _val; \
 }
 
+#if defined(_WIN64)
+#define STOR_ADDRESS_ALIGN           DECLSPEC_ALIGN(8)
+#else
+#define STOR_ADDRESS_ALIGN
+#endif
+
+typedef struct STOR_ADDRESS_ALIGN _STOR_ADDRESS {
+  USHORT Type;
+  USHORT Port;
+  ULONG AddressLength;
+  _Field_size_bytes_(AddressLength) UCHAR AddressData[ANYSIZE_ARRAY];
+} STOR_ADDRESS, *PSTOR_ADDRESS;
+
+#define STOR_ADDRESS_TYPE_UNKNOWN   0x0
+#define STOR_ADDRESS_TYPE_BTL8      0x1
+#define STOR_ADDRESS_TYPE_MAX       0xffff
+
+#define STOR_ADDR_BTL8_ADDRESS_LENGTH    4
+
+typedef struct STOR_ADDRESS_ALIGN _STOR_ADDR_BTL8 {
+  _Field_range_(STOR_ADDRESS_TYPE_BTL8, STOR_ADDRESS_TYPE_BTL8)
+  USHORT Type;
+  USHORT Port;
+  _Field_range_(STOR_ADDR_BTL8_ADDRESS_LENGTH, STOR_ADDR_BTL8_ADDRESS_LENGTH)
+  ULONG AddressLength;
+  UCHAR Path;
+  UCHAR Target;
+  UCHAR Lun;
+  UCHAR Reserved;
+} STOR_ADDR_BTL8, *PSTOR_ADDR_BTL8;
+
 /* FIXME : This structure doesn't exist in the official header */
 typedef struct _MODE_CDROM_WRITE_PARAMETERS_PAGE {
   UCHAR PageLength;
@@ -2788,6 +3576,549 @@ typedef struct _MODE_CDROM_WRITE_PARAMETERS_PAGE {
   UCHAR ISRCReserved;
   UCHAR SubHeaderData[4];
 } MODE_CDROM_WRITE_PARAMETERS_PAGE, *PMODE_CDROM_WRITE_PARAMETERS_PAGE;
+
+#if (NTDDI_VERSION >= NTDDI_WIN8)
+#include <pshpack1.h>
+
+#define BLOCK_DEVICE_TOKEN_SIZE         512
+
+typedef struct {
+  UCHAR LogicalBlockAddress[8];
+  UCHAR TransferLength[4];
+  UCHAR Reserved[4];
+} BLOCK_DEVICE_RANGE_DESCRIPTOR, *PBLOCK_DEVICE_RANGE_DESCRIPTOR;
+
+typedef struct {
+  UCHAR PopulateTokenDataLength[2];
+  UCHAR Immediate:1;
+  UCHAR Reserved1:7;
+  UCHAR Reserved2;
+  UCHAR InactivityTimeout[4];
+  UCHAR Reserved3[6];
+  UCHAR BlockDeviceRangeDescriptorListLength[2];
+#if !defined(__midl)
+  UCHAR BlockDeviceRangeDescriptor[ANYSIZE_ARRAY];
+#endif
+} POPULATE_TOKEN_HEADER, *PPOPULATE_TOKEN_HEADER;
+
+typedef struct {
+  UCHAR WriteUsingTokenDataLength[2];
+  UCHAR Immediate:1;
+  UCHAR Reserved1:7;
+  UCHAR Reserved2[5];
+  UCHAR BlockOffsetIntoToken[8];
+  UCHAR Token[BLOCK_DEVICE_TOKEN_SIZE];
+  UCHAR Reserved3[6];
+  UCHAR BlockDeviceRangeDescriptorListLength[2];
+#if !defined(__midl)
+  UCHAR BlockDeviceRangeDescriptor[ANYSIZE_ARRAY];
+#endif
+} WRITE_USING_TOKEN_HEADER, *PWRITE_USING_TOKEN_HEADER;
+
+typedef struct {
+  UCHAR AvailableData[4];
+  UCHAR ResponseToServiceAction:5;
+  UCHAR Reserved1:3;
+  UCHAR OperationStatus:7;
+  UCHAR Reserved2:1;
+  UCHAR OperationCounter[2];
+  UCHAR EstimatedStatusUpdateDelay[4];
+  UCHAR CompletionStatus;
+  UCHAR SenseDataFieldLength;
+  UCHAR SenseDataLength;
+  UCHAR TransferCountUnits;
+  UCHAR TransferCount[8];
+  UCHAR SegmentsProcessed[2];
+  UCHAR Reserved3[6];
+#if !defined(__midl)
+  UCHAR SenseData[ANYSIZE_ARRAY];
+#endif
+} RECEIVE_TOKEN_INFORMATION_HEADER, *PRECEIVE_TOKEN_INFORMATION_HEADER;
+
+typedef struct {
+  UCHAR TokenDescriptorsLength[4];
+#if !defined(__midl)
+  UCHAR TokenDescriptor[ANYSIZE_ARRAY];
+#endif
+} RECEIVE_TOKEN_INFORMATION_RESPONSE_HEADER, *PRECEIVE_TOKEN_INFORMATION_RESPONSE_HEADER;
+
+typedef struct {
+  UCHAR TokenIdentifier[2];
+  UCHAR Token[BLOCK_DEVICE_TOKEN_SIZE];
+} BLOCK_DEVICE_TOKEN_DESCRIPTOR, *PBLOCK_DEVICE_TOKEN_DESCRIPTOR;
+
+typedef enum _OPERATION_STATUS {
+  OPERATION_COMPLETED_WITH_SUCCESS = 0x01,
+  OPERATION_COMPLETED_WITH_ERROR = 0x02,
+  OPERATION_COMPLETED_WITH_RESIDUAL_DATA = 0x03,
+  OPERATION_IN_PROGRESS_IN_FOREGROUND = 0x11,
+  OPERATION_IN_PROGRESS_IN_BACKGROUND = 0x12,
+  OPERATION_TERMINATED = 0x60
+} OPERATION_STATUS, *POPERATION_STATUS;
+
+typedef enum _TRANSFER_COUNT_UNITS {
+  TRANSFER_COUNT_UNITS_BYTES = 0,
+  TRANSFER_COUNT_UNITS_KIBIBYTES = 1,
+  TRANSFER_COUNT_UNITS_MEBIBYTES = 2,
+  TRANSFER_COUNT_UNITS_GIBIBYTES = 3,
+  TRANSFER_COUNT_UNITS_TEBIBYTES = 4,
+  TRANSFER_COUNT_UNITS_PEBIBYTES = 5,
+  TRANSFER_COUNT_UNITS_EXBIBYTES = 6,
+  TRANSFER_COUNT_UNITS_NUMBER_BLOCKS = 0xF1
+} TRANSFER_COUNT_UNITS, *PTRANSFER_COUNT_UNITS;
+
+#include <poppack.h>
+#endif /* (NTDDI_VERSION >= NTDDI_WIN8) */
+
+// SCSI utility functions
+
+#define ScsiGetSenseErrorCode(SenseInfoBuffer) (((PUCHAR)(SenseInfoBuffer))[0] & 0x7f)
+
+#define ScsiGetSenseDescriptorLength(DescriptorBuffer) \
+            (sizeof(SCSI_SENSE_DESCRIPTOR_HEADER) + ((PSCSI_SENSE_DESCRIPTOR_HEADER)(DescriptorBuffer))->AdditionalLength)
+
+#define IsFixedSenseDataFormat(SenseInfoBuffer) \
+            ((ScsiGetSenseErrorCode(SenseInfoBuffer)) == SCSI_SENSE_ERRORCODE_FIXED_CURRENT || \
+             (ScsiGetSenseErrorCode(SenseInfoBuffer)) == SCSI_SENSE_ERRORCODE_FIXED_DEFERRED)
+
+#define IsDescriptorSenseDataFormat(SenseInfoBuffer) \
+            ((ScsiGetSenseErrorCode(SenseInfoBuffer)) == SCSI_SENSE_ERRORCODE_DESCRIPTOR_CURRENT || \
+             (ScsiGetSenseErrorCode(SenseInfoBuffer)) == SCSI_SENSE_ERRORCODE_DESCRIPTOR_DEFERRED)
+
+#define IsSenseDataCurrentError(SenseInfoBuffer) \
+            ((ScsiGetSenseErrorCode(SenseInfoBuffer)) == SCSI_SENSE_ERRORCODE_FIXED_CURRENT || \
+             (ScsiGetSenseErrorCode(SenseInfoBuffer)) == SCSI_SENSE_ERRORCODE_DESCRIPTOR_CURRENT)
+
+#define IsSenseDataDeferredError(SenseInfoBuffer) \
+            ((ScsiGetSenseErrorCode(SenseInfoBuffer)) == SCSI_SENSE_ERRORCODE_FIXED_DEFERRED || \
+             (ScsiGetSenseErrorCode(SenseInfoBuffer)) == SCSI_SENSE_ERRORCODE_DESCRIPTOR_DEFERRED)
+
+#define IsSenseDataFormatValueValid(SenseInfoBuffer) \
+            (IsFixedSenseDataFormat(SenseInfoBuffer) || IsDescriptorSenseDataFormat(SenseInfoBuffer))
+
+_Success_(return != FALSE)
+FORCEINLINE
+BOOLEAN
+ScsiGetTotalSenseByteCountIndicated(
+  _In_reads_bytes_(SenseInfoBufferLength) PVOID SenseInfoBuffer,
+  _In_ UCHAR SenseInfoBufferLength,
+  _Out_ UCHAR *TotalByteCountIndicated)
+{
+  BOOLEAN succeed = FALSE;
+  UCHAR byteCount = 0;
+  PFIXED_SENSE_DATA senseInfoBuffer = NULL;
+
+  if (SenseInfoBuffer == NULL || SenseInfoBufferLength == 0 || TotalByteCountIndicated == NULL)
+  {
+
+    return FALSE;
+  }
+
+  senseInfoBuffer = (PFIXED_SENSE_DATA)SenseInfoBuffer;
+
+  if (RTL_CONTAINS_FIELD(senseInfoBuffer, SenseInfoBufferLength, AdditionalSenseLength))
+  {
+
+    if (senseInfoBuffer->AdditionalSenseLength <=
+        (MAX_SENSE_BUFFER_SIZE - RTL_SIZEOF_THROUGH_FIELD(FIXED_SENSE_DATA, AdditionalSenseLength)))
+    {
+
+      byteCount = senseInfoBuffer->AdditionalSenseLength +
+                  RTL_SIZEOF_THROUGH_FIELD(FIXED_SENSE_DATA, AdditionalSenseLength);
+
+      *TotalByteCountIndicated = byteCount;
+
+      succeed = TRUE;
+    }
+  }
+
+  return succeed;
+}
+
+_Success_(return != FALSE)
+FORCEINLINE
+BOOLEAN
+ScsiGetFixedSenseKeyAndCodes(
+  _In_reads_bytes_(SenseInfoBufferLength) PVOID SenseInfoBuffer,
+  _In_ UCHAR SenseInfoBufferLength,
+  _Out_opt_ PUCHAR SenseKey,
+  _Out_opt_ PUCHAR AdditionalSenseCode,
+  _Out_opt_ PUCHAR AdditionalSenseCodeQualifier)
+{
+  PFIXED_SENSE_DATA fixedSenseData = (PFIXED_SENSE_DATA)SenseInfoBuffer;
+  BOOLEAN succeed = FALSE;
+  ULONG dataLength = 0;
+
+  if (SenseInfoBuffer == NULL || SenseInfoBufferLength == 0)
+  {
+    return FALSE;
+  }
+
+  if (RTL_CONTAINS_FIELD(fixedSenseData, SenseInfoBufferLength, AdditionalSenseLength))
+  {
+
+    dataLength = fixedSenseData->AdditionalSenseLength +
+                 RTL_SIZEOF_THROUGH_FIELD(FIXED_SENSE_DATA, AdditionalSenseLength);
+
+    if (dataLength > SenseInfoBufferLength)
+    {
+      dataLength = SenseInfoBufferLength;
+    }
+
+    if (SenseKey != NULL)
+    {
+      *SenseKey = fixedSenseData->SenseKey;
+    }
+
+    if (AdditionalSenseCode != NULL)
+    {
+      *AdditionalSenseCode = RTL_CONTAINS_FIELD(fixedSenseData, dataLength, AdditionalSenseCode)
+                                 ? fixedSenseData->AdditionalSenseCode
+                                 : 0;
+    }
+
+    if (AdditionalSenseCodeQualifier != NULL)
+    {
+      *AdditionalSenseCodeQualifier =
+          RTL_CONTAINS_FIELD(fixedSenseData, dataLength, AdditionalSenseCodeQualifier)
+              ? fixedSenseData->AdditionalSenseCodeQualifier
+              : 0;
+    }
+
+    succeed = TRUE;
+  }
+
+  return succeed;
+}
+
+_Success_(return != FALSE)
+FORCEINLINE
+BOOLEAN
+ScsiGetDescriptorSenseKeyAndCodes(
+  _In_reads_bytes_(SenseInfoBufferLength) PVOID SenseInfoBuffer,
+  _In_ UCHAR SenseInfoBufferLength,
+  _Out_opt_ PUCHAR SenseKey,
+  _Out_opt_ PUCHAR AdditionalSenseCode,
+  _Out_opt_ PUCHAR AdditionalSenseCodeQualifier)
+{
+  PDESCRIPTOR_SENSE_DATA descriptorSenseData = (PDESCRIPTOR_SENSE_DATA)SenseInfoBuffer;
+  BOOLEAN succeed = FALSE;
+
+  if (SenseInfoBuffer == NULL || SenseInfoBufferLength == 0)
+  {
+    return FALSE;
+  }
+  if (RTL_CONTAINS_FIELD(descriptorSenseData, SenseInfoBufferLength, AdditionalSenseLength))
+  {
+
+    if (SenseKey)
+    {
+      *SenseKey = descriptorSenseData->SenseKey;
+    }
+
+    if (AdditionalSenseCode != NULL)
+    {
+      *AdditionalSenseCode = descriptorSenseData->AdditionalSenseCode;
+    }
+
+    if (AdditionalSenseCodeQualifier != NULL)
+    {
+      *AdditionalSenseCodeQualifier = descriptorSenseData->AdditionalSenseCodeQualifier;
+    }
+
+    succeed = TRUE;
+  }
+
+  return succeed;
+}
+
+typedef ULONG SCSI_SENSE_OPTIONS;
+
+#define SCSI_SENSE_OPTIONS_NONE ((SCSI_SENSE_OPTIONS)0x00000000)
+#define SCSI_SENSE_OPTIONS_FIXED_FORMAT_IF_UNKNOWN_FORMAT_INDICATED ((SCSI_SENSE_OPTIONS)0x00000001)
+
+_Success_(return != FALSE)
+FORCEINLINE
+BOOLEAN
+ScsiGetSenseKeyAndCodes(
+  _In_reads_bytes_(SenseInfoBufferLength) PVOID SenseInfoBuffer,
+  _In_ UCHAR SenseInfoBufferLength,
+  _In_ SCSI_SENSE_OPTIONS Options,
+  _Out_opt_ PUCHAR SenseKey,
+  _Out_opt_ PUCHAR AdditionalSenseCode,
+  _Out_opt_ PUCHAR AdditionalSenseCodeQualifier)
+{
+  BOOLEAN succeed = FALSE;
+
+  if (SenseInfoBuffer == NULL || SenseInfoBufferLength == 0)
+  {
+    return FALSE;
+  }
+
+  if (IsDescriptorSenseDataFormat(SenseInfoBuffer))
+  {
+    succeed = ScsiGetDescriptorSenseKeyAndCodes(SenseInfoBuffer, SenseInfoBufferLength, SenseKey,
+                                                AdditionalSenseCode, AdditionalSenseCodeQualifier);
+  }
+  else
+  {
+    if ((Options & SCSI_SENSE_OPTIONS_FIXED_FORMAT_IF_UNKNOWN_FORMAT_INDICATED) ||
+        IsFixedSenseDataFormat(SenseInfoBuffer))
+    {
+
+      succeed = ScsiGetFixedSenseKeyAndCodes(SenseInfoBuffer, SenseInfoBufferLength, SenseKey,
+                                             AdditionalSenseCode, AdditionalSenseCodeQualifier);
+    }
+  }
+
+  return succeed;
+}
+
+_Success_(return != FALSE)
+FORCEINLINE
+BOOLEAN
+ScsiGetSenseDescriptor(
+  _In_reads_bytes_(SenseInfoBufferLength) PVOID SenseInfoBuffer,
+  _In_ UCHAR SenseInfoBufferLength,
+  _Outptr_result_bytebuffer_(*DescriptorBufferLength) PVOID *DescriptorBuffer,
+  _Out_ UCHAR *DescriptorBufferLength)
+{
+  PDESCRIPTOR_SENSE_DATA descriptorSenseData;
+  BOOLEAN succeed = FALSE;
+  UCHAR dataLength = 0;
+
+  if (SenseInfoBuffer == NULL || SenseInfoBufferLength == 0 || DescriptorBuffer == NULL ||
+      DescriptorBufferLength == NULL)
+  {
+    return FALSE;
+  }
+
+  *DescriptorBuffer = NULL;
+  *DescriptorBufferLength = 0;
+
+  if (!IsDescriptorSenseDataFormat(SenseInfoBuffer))
+  {
+    return FALSE;
+  }
+
+  descriptorSenseData = (PDESCRIPTOR_SENSE_DATA)SenseInfoBuffer;
+
+  if (RTL_CONTAINS_FIELD(descriptorSenseData, SenseInfoBufferLength, AdditionalSenseLength))
+  {
+    if (descriptorSenseData->AdditionalSenseLength <=
+        (MAX_SENSE_BUFFER_SIZE -
+         RTL_SIZEOF_THROUGH_FIELD(DESCRIPTOR_SENSE_DATA, AdditionalSenseLength)))
+    {
+      dataLength = descriptorSenseData->AdditionalSenseLength +
+                   RTL_SIZEOF_THROUGH_FIELD(DESCRIPTOR_SENSE_DATA, AdditionalSenseLength);
+
+      if (dataLength > SenseInfoBufferLength)
+      {
+        dataLength = SenseInfoBufferLength;
+      }
+
+      *DescriptorBufferLength =
+          dataLength - RTL_SIZEOF_THROUGH_FIELD(DESCRIPTOR_SENSE_DATA, AdditionalSenseLength);
+
+      if (*DescriptorBufferLength > 0)
+      {
+        *DescriptorBuffer = (PVOID)(descriptorSenseData->DescriptorBuffer);
+        succeed = TRUE;
+      }
+    }
+  }
+
+  return succeed;
+}
+
+_Success_(return != FALSE)
+FORCEINLINE
+BOOLEAN
+ScsiValidateInformationSenseDescriptor(
+  _In_reads_bytes_(DescriptorBufferLength) PVOID DescriptorBuffer,
+  _In_ UCHAR DescriptorBufferLength)
+{
+  PSCSI_SENSE_DESCRIPTOR_INFORMATION descriptor;
+  UCHAR additionalLength;
+
+  if (DescriptorBuffer == NULL ||
+      DescriptorBufferLength < sizeof(SCSI_SENSE_DESCRIPTOR_INFORMATION))
+  {
+    return FALSE;
+  }
+
+  descriptor = (PSCSI_SENSE_DESCRIPTOR_INFORMATION)DescriptorBuffer;
+
+  if (descriptor->Header.DescriptorType != SCSI_SENSE_DESCRIPTOR_TYPE_INFORMATION)
+  {
+    return FALSE;
+  }
+
+  additionalLength = sizeof(SCSI_SENSE_DESCRIPTOR_INFORMATION) -
+                     RTL_SIZEOF_THROUGH_FIELD(SCSI_SENSE_DESCRIPTOR_INFORMATION, Header);
+
+  if (descriptor->Header.AdditionalLength != additionalLength)
+  {
+    return FALSE;
+  }
+
+  if (descriptor->Valid == 0)
+  {
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
+_Success_(return != FALSE)
+FORCEINLINE
+BOOLEAN
+ScsiValidateBlockCommandSenseDescriptor(
+  _In_reads_bytes_(DescriptorBufferLength) PVOID DescriptorBuffer,
+  _In_ UCHAR DescriptorBufferLength)
+{
+  PSCSI_SENSE_DESCRIPTOR_BLOCK_COMMAND descriptor;
+  UCHAR additionalLength;
+
+  if (DescriptorBuffer == NULL ||
+      DescriptorBufferLength < sizeof(SCSI_SENSE_DESCRIPTOR_BLOCK_COMMAND))
+  {
+    return FALSE;
+  }
+
+  descriptor = (PSCSI_SENSE_DESCRIPTOR_BLOCK_COMMAND)DescriptorBuffer;
+
+  if (descriptor->Header.DescriptorType != SCSI_SENSE_DESCRIPTOR_TYPE_BLOCK_COMMAND)
+  {
+    return FALSE;
+  }
+
+  additionalLength = sizeof(SCSI_SENSE_DESCRIPTOR_BLOCK_COMMAND) -
+                     RTL_SIZEOF_THROUGH_FIELD(SCSI_SENSE_DESCRIPTOR_BLOCK_COMMAND, Header);
+
+  if (descriptor->Header.AdditionalLength != additionalLength)
+  {
+    return FALSE;
+  }
+
+  return TRUE;
+}
+
+_Success_(return != FALSE)
+FORCEINLINE
+BOOLEAN
+ScsiConvertToFixedSenseFormat(
+  _In_reads_bytes_(SenseInfoBufferLength) PVOID SenseInfoBuffer,
+  _In_ UCHAR SenseInfoBufferLength,
+  _Out_writes_bytes_(OutBufferLength) PVOID OutBuffer,
+  _In_ UCHAR OutBufferLength)
+{
+  BOOLEAN succeed = FALSE;
+  BOOLEAN validSense = FALSE;
+  UCHAR senseKey = 0;
+  UCHAR additionalSenseCode = 0;
+  UCHAR additionalSenseCodeQualifier = 0;
+  PFIXED_SENSE_DATA outBuffer = (PFIXED_SENSE_DATA)OutBuffer;
+
+  if (SenseInfoBuffer == NULL || SenseInfoBufferLength == 0 || OutBuffer == NULL ||
+      OutBufferLength < sizeof(FIXED_SENSE_DATA))
+  {
+    return FALSE;
+  }
+
+  if (IsDescriptorSenseDataFormat(SenseInfoBuffer))
+  {
+    RtlZeroMemory(OutBuffer, OutBufferLength);
+
+    validSense =
+        ScsiGetSenseKeyAndCodes(SenseInfoBuffer, SenseInfoBufferLength, SCSI_SENSE_OPTIONS_NONE,
+                                &senseKey, &additionalSenseCode, &additionalSenseCodeQualifier);
+    if (validSense)
+    {
+
+      if (IsSenseDataCurrentError(SenseInfoBuffer))
+      {
+        outBuffer->ErrorCode = SCSI_SENSE_ERRORCODE_FIXED_CURRENT;
+      }
+      else
+      {
+        outBuffer->ErrorCode = SCSI_SENSE_ERRORCODE_FIXED_DEFERRED;
+      }
+      outBuffer->AdditionalSenseLength =
+          sizeof(FIXED_SENSE_DATA) -
+          RTL_SIZEOF_THROUGH_FIELD(FIXED_SENSE_DATA, AdditionalSenseLength);
+      outBuffer->SenseKey = senseKey;
+      outBuffer->AdditionalSenseCode = additionalSenseCode;
+      outBuffer->AdditionalSenseCodeQualifier = additionalSenseCodeQualifier;
+
+      succeed = TRUE;
+    }
+  }
+
+  return succeed;
+}
+
+_Success_(return != FALSE)
+FORCEINLINE
+BOOLEAN
+ScsiGetNextSenseDescriptorByType(
+    _In_reads_bytes_(BufferLength) PVOID Buffer,
+    _In_ UCHAR BufferLength,
+    _In_reads_(TypeListCount) PUCHAR TypeList,
+    _In_ ULONG TypeListCount,
+    _Out_ PUCHAR OutType,
+    _Outptr_result_bytebuffer_(*OutBufferLength) PVOID *OutBuffer,
+    _Out_ UCHAR *OutBufferLength)
+{
+  PUCHAR remainingBuffer;
+  UCHAR remainingBufferLength;
+  UCHAR type;
+  ULONG i;
+  UCHAR descriptorLength;
+
+  if (Buffer == NULL || BufferLength == 0 || TypeList == NULL || TypeListCount == 0 ||
+      OutType == NULL || OutBuffer == NULL || OutBufferLength == NULL)
+  {
+    return FALSE;
+  }
+
+  *OutBuffer = NULL;
+  *OutBufferLength = 0;
+  *OutType = 0;
+
+  remainingBuffer = (PUCHAR)Buffer;
+  remainingBufferLength = BufferLength;
+
+  while (remainingBufferLength >= sizeof(SCSI_SENSE_DESCRIPTOR_HEADER))
+  {
+    for (i = 0; i < TypeListCount; i++)
+    {
+      type = TypeList[i];
+
+      if (((PSCSI_SENSE_DESCRIPTOR_HEADER)remainingBuffer)->DescriptorType == type)
+      {
+        *OutBuffer = (PVOID)remainingBuffer;
+        *OutBufferLength = remainingBufferLength;
+        *OutType = type;
+        return TRUE;
+      }
+    }
+
+    descriptorLength = ScsiGetSenseDescriptorLength(remainingBuffer);
+
+    if (remainingBufferLength > descriptorLength)
+    {
+      remainingBuffer += descriptorLength;
+      remainingBufferLength -= descriptorLength;
+    }
+    else
+    {
+      break;
+    }
+  }
+
+  return FALSE;
+}
 
 #ifdef __cplusplus
 }
