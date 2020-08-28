@@ -561,7 +561,7 @@ CFileDefExt::InitFileAttr(HWND hwndDlg)
                 SetDlgItemTextW(hwndDlg, 14011, wszBuf);
                 // Calculate size on disc
                 // Calculate size on disc
-                //if disk usage is not aligned on a complete disk geometry block (sector/cluster), align on the next block size, depending on disk geometry data
+                // if disk usage is not aligned on a complete disk geometry block (sector/cluster), align on the next block size, depending on disk geometry data
                 if (GetVolumePathName(m_wszPath, szVolumePathName, _countof(szVolumePathName)))
                 {
                     if (GetDiskFreeSpace(szVolumePathName, &ulSectorsPerCluster, &ulBytesPerSector, NULL, NULL))
@@ -1385,7 +1385,7 @@ CFileDefExt::CountFolderAndFiles(HWND hwndDlg, LPWSTR pwszBuf, UINT cchBufMax, D
             FileSize.u.HighPart = wfd.nFileSizeHigh;
             m_DirSize.QuadPart += FileSize.QuadPart;
             // Calculate size on disc
-            //if disk usage is not aligned on a complete disk geometry block (sector/cluster), align on the next block size, depending on disk geometry data
+            // if disk usage is not aligned on a complete disk geometry block (sector/cluster), align on the next block size, depending on disk geometry data
             if (GetVolumePathName(pwszBuf, szVolumePathName, _countof(szVolumePathName)))
             {
                 if (GetDiskFreeSpace(szVolumePathName, &ulSectorsPerCluster, &ulBytesPerSector, NULL, NULL))
@@ -1395,7 +1395,9 @@ CFileDefExt::CountFolderAndFiles(HWND hwndDlg, LPWSTR pwszBuf, UINT cchBufMax, D
                 }
                 else
                     m_DirSizeOnDisc.QuadPart += FileSize.QuadPart;
-            } else {
+            }
+            else
+            {
                 m_DirSizeOnDisc.QuadPart += FileSize.QuadPart;
             }
         }
