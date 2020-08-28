@@ -558,8 +558,7 @@ CFileDefExt::InitFileAttr(HWND hwndDlg)
             FileSize.u.HighPart = FileInfo.nFileSizeHigh;
             if (SH_FormatFileSizeWithBytes(&FileSize, wszBuf, _countof(wszBuf)))
             {    
-                SetDlgItemTextW(hwndDlg, 14011, wszBuf);
-                // Calculate size on disc
+                SetDlgItemTextW(hwndDlg, 14011, wszBuf);                
                 // Calculate size on disc
                 // if disk usage is not aligned on a complete disk geometry block (sector/cluster), align on the next block size, depending on disk geometry data
                 // This could be improved as per : https://docs.microsoft.com/en-us/previous-versions/technet-magazine/hh148159(v=msdn.10)
@@ -570,7 +569,7 @@ CFileDefExt::InitFileAttr(HWND hwndDlg)
                         ulBlockSize = ulBytesPerSector * ulSectorsPerCluster;
                         if (FileSize.QuadPart % ulBlockSize)
                         {
-                            FileSize.QuadPart = ((FileSize.QuadPart / (ulBlockSize))+1)*ulBlockSize;
+                            FileSize.QuadPart = ((FileSize.QuadPart / (ulBlockSize)) + 1) * ulBlockSize;
                             SH_FormatFileSizeWithBytes(&FileSize, wszBuf, _countof(wszBuf));
                         }
                    }
@@ -1392,8 +1391,8 @@ CFileDefExt::CountFolderAndFiles(HWND hwndDlg, LPWSTR pwszBuf, UINT cchBufMax, D
             {
                 if (GetDiskFreeSpace(szVolumePathName, &ulSectorsPerCluster, &ulBytesPerSector, NULL, NULL))
                 {
-                    ulBlockSize = ulBytesPerSector*ulSectorsPerCluster;
-                    m_DirSizeOnDisc.QuadPart += FileSize.QuadPart % (ulBlockSize) ? ((FileSize.QuadPart/(ulBlockSize))+1)*ulBlockSize : FileSize.QuadPart;
+                    ulBlockSize = ulBytesPerSector * ulSectorsPerCluster;
+                    m_DirSizeOnDisc.QuadPart += FileSize.QuadPart % (ulBlockSize) ? ((FileSize.QuadPart/(ulBlockSize)) + 1) * ulBlockSize : FileSize.QuadPart;
                 }
                 else
                     m_DirSizeOnDisc.QuadPart += FileSize.QuadPart;
