@@ -126,7 +126,6 @@ storport.sys = 1,,,,,,x,4,,,,1,4
 fastfat.sys  = 1,,,,,,x,4,,,,1,4
 btrfs.sys    = 1,,,,,,x,4,,,,1,4
 ramdisk.sys  = 1,,,,,,x,4,,,,1,4
-classpnp.sys = 1,,,,,,,4,,,,1,4
 pciide.sys   = 1,,,,,,,4,,,,1,4
 pciidex.sys  = 1,,,,,,,4,,,,1,4
 pcix.sys     = 1,,,,,,,4,,,,1,4
