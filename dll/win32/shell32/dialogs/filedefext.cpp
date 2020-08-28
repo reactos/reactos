@@ -485,6 +485,10 @@ CFileDefExt::InitFileAttr(HWND hwndDlg)
     WIN32_FIND_DATAW FileInfo; // WIN32_FILE_ATTRIBUTE_DATA
     WCHAR wszBuf[MAX_PATH];
 
+    ULONG lpBytesPerSector;
+    ULONG lpSectorsPerCluster;
+    TCHAR lpszVolumePathName[MAX_PATH];
+
     TRACE("InitFileAttr %ls\n", m_wszPath);
 
     /*
@@ -552,7 +556,20 @@ CFileDefExt::InitFileAttr(HWND hwndDlg)
             FileSize.u.LowPart = FileInfo.nFileSizeLow;
             FileSize.u.HighPart = FileInfo.nFileSizeHigh;
             if (SH_FormatFileSizeWithBytes(&FileSize, wszBuf, _countof(wszBuf)))
+            {    
                 SetDlgItemTextW(hwndDlg, 14011, wszBuf);
+                // Calculate size on disc
+                if( GetVolumePathName(m_wszPath, lpszVolumePathName, sizeof(lpszVolumePathName) / sizeof(TCHAR)) ) {
+                    if( GetDiskFreeSpace(lpszVolumePathName, &lpSectorsPerCluster, &lpBytesPerSector, NULL, NULL) ) {
+                        if(FileSize.QuadPart % (lpBytesPerSector*lpSectorsPerCluster))
+                        {
+                            FileSize.QuadPart = ((FileSize.QuadPart / (lpBytesPerSector*lpSectorsPerCluster))+1)*lpBytesPerSector*lpSectorsPerCluster;
+                            SH_FormatFileSizeWithBytes(&FileSize, wszBuf, _countof(wszBuf));
+                        }
+                   }
+               }
+               SetDlgItemTextW(hwndDlg, 14012, wszBuf);
+            }
         }
     }
 
@@ -573,6 +590,9 @@ CFileDefExt::InitFileAttr(HWND hwndDlg)
         /* Update size field */
         if (SH_FormatFileSizeWithBytes(&m_DirSize, wszBuf, _countof(wszBuf)))
             SetDlgItemTextW(hwndDlg, 14011, wszBuf);
+
+        if (SH_FormatFileSizeWithBytes(&m_DirSizeOnDisc, wszBuf, _countof(wszBuf)))
+            SetDlgItemTextW(hwndDlg, 14012, wszBuf);
 
         /* Display files and folders count */
         WCHAR wszFormat[256];
@@ -1159,6 +1179,7 @@ CFileDefExt::CFileDefExt():
 {
     m_wszPath[0] = L'\0';
     m_DirSize.QuadPart = 0ull;
+    m_DirSizeOnDisc.QuadPart = 0ull;
 
     m_szFolderIconPath[0] = 0;
     m_nFolderIconIndex = 0;
@@ -1309,6 +1330,9 @@ CFileDefExt::CountFolderAndFiles(HWND hwndDlg, LPWSTR pwszBuf, UINT cchBufMax, D
     /* Find filename position */
     UINT cchBuf = wcslen(pwszBuf);
     WCHAR *pwszFilename = pwszBuf + cchBuf;
+    ULONG lpBytesPerSector;
+    ULONG lpSectorsPerCluster;
+    TCHAR lpszVolumePathName[MAX_PATH];
     size_t cchFilenameMax = cchBufMax - cchBuf;
     if (!cchFilenameMax)
         return FALSE;
@@ -1353,6 +1377,15 @@ CFileDefExt::CountFolderAndFiles(HWND hwndDlg, LPWSTR pwszBuf, UINT cchBufMax, D
             FileSize.u.LowPart  = wfd.nFileSizeLow;
             FileSize.u.HighPart = wfd.nFileSizeHigh;
             m_DirSize.QuadPart += FileSize.QuadPart;
+            // Calculate size on disc
+            if( GetVolumePathName(pwszBuf, lpszVolumePathName, sizeof(lpszVolumePathName) / sizeof(TCHAR)) ) {
+                if( GetDiskFreeSpace(lpszVolumePathName, &lpSectorsPerCluster, &lpBytesPerSector, NULL, NULL) )
+                    m_DirSizeOnDisc.QuadPart += FileSize.QuadPart % (lpBytesPerSector*lpSectorsPerCluster) ? ((FileSize.QuadPart/(lpBytesPerSector*lpSectorsPerCluster))+1)*lpBytesPerSector*lpSectorsPerCluster : FileSize.QuadPart;
+                else
+                    m_DirSizeOnDisc.QuadPart += FileSize.QuadPart;
+            } else {
+                m_DirSizeOnDisc.QuadPart += FileSize.QuadPart;
+            }
         }
         if (GetTickCount() - *ticks > (DWORD) 300)
         {
@@ -1363,6 +1396,9 @@ CFileDefExt::CountFolderAndFiles(HWND hwndDlg, LPWSTR pwszBuf, UINT cchBufMax, D
 
                 if (SH_FormatFileSizeWithBytes(&m_DirSize, wszBuf, _countof(wszBuf)))
                     SetDlgItemTextW(hwndDlg, 14011, wszBuf);
+
+                if (SH_FormatFileSizeWithBytes(&m_DirSizeOnDisc, wszBuf, _countof(wszBuf)))
+                    SetDlgItemTextW(hwndDlg, 14012, wszBuf);
 
                 /* Display files and folders count */
                 WCHAR wszFormat[256];
@@ -1382,6 +1418,9 @@ CFileDefExt::CountFolderAndFiles(HWND hwndDlg, LPWSTR pwszBuf, UINT cchBufMax, D
 
         if (SH_FormatFileSizeWithBytes(&m_DirSize, wszBuf, _countof(wszBuf)))
             SetDlgItemTextW(hwndDlg, 14011, wszBuf);
+
+        if (SH_FormatFileSizeWithBytes(&m_DirSizeOnDisc, wszBuf, _countof(wszBuf)))
+            SetDlgItemTextW(hwndDlg, 14012, wszBuf);
 
         /* Display files and folders count */
         WCHAR wszFormat[256];
