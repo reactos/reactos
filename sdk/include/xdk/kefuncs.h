@@ -1200,67 +1200,6 @@ KeDeregisterProcessorChangeCallback(
 $endif (_WDMDDK_)
 $if (_WDMDDK_ || _NTDDK_)
 #if (NTDDI_VERSION >= NTDDI_WIN7)
-$endif (_WDMDDK_ || _NTDDK_)
-
-$if (_WDMDDK_)
-_IRQL_requires_max_(DISPATCH_LEVEL)
-_IRQL_requires_min_(PASSIVE_LEVEL)
-_IRQL_requires_same_
-ULONG64
-NTAPI
-KeQueryTotalCycleTimeProcess(
-  _Inout_ PKPROCESS Process,
-  _Out_ PULONG64 CycleTimeStamp);
-
-_IRQL_requires_max_(APC_LEVEL)
-_IRQL_requires_min_(PASSIVE_LEVEL)
-_IRQL_requires_same_
-ULONG64
-NTAPI
-KeQueryTotalCycleTimeThread(
-  _Inout_ PKTHREAD Thread,
-  _Out_ PULONG64 CycleTimeStamp);
-
-_Must_inspect_result_
-NTKERNELAPI
-NTSTATUS
-NTAPI
-KeSetTargetProcessorDpcEx(
-  _Inout_ PKDPC Dpc,
-  _In_ PPROCESSOR_NUMBER ProcNumber);
-
-_IRQL_requires_min_(PASSIVE_LEVEL)
-_IRQL_requires_max_(APC_LEVEL)
-NTKERNELAPI
-VOID
-NTAPI
-KeSetSystemGroupAffinityThread(
-  _In_ PGROUP_AFFINITY Affinity,
-  _Out_opt_ PGROUP_AFFINITY PreviousAffinity);
-
-_IRQL_requires_min_(PASSIVE_LEVEL)
-_IRQL_requires_max_(APC_LEVEL)
-NTKERNELAPI
-VOID
-NTAPI
-KeRevertToUserGroupAffinityThread(
-  _In_ PGROUP_AFFINITY PreviousAffinity);
-
-_IRQL_requires_max_(DISPATCH_LEVEL)
-NTKERNELAPI
-BOOLEAN
-NTAPI
-KeSetCoalescableTimer(
-  _Inout_ PKTIMER Timer,
-  _In_ LARGE_INTEGER DueTime,
-  _In_ ULONG Period,
-  _In_ ULONG TolerableDelay,
-  _In_opt_ PKDPC Dpc);
-
-NTKERNELAPI
-ULONGLONG
-NTAPI
-KeQueryUnbiasedInterruptTime(VOID);
 
 NTKERNELAPI
 ULONG
@@ -1330,6 +1269,68 @@ KeQueryLogicalProcessorRelationship(
   _Out_writes_bytes_opt_(*Length) PSYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX Information,
   _Inout_ PULONG Length);
 
+$endif (_WDMDDK_ || _NTDDK_)
+
+$if (_WDMDDK_)
+_IRQL_requires_max_(DISPATCH_LEVEL)
+_IRQL_requires_min_(PASSIVE_LEVEL)
+_IRQL_requires_same_
+ULONG64
+NTAPI
+KeQueryTotalCycleTimeProcess(
+  _Inout_ PKPROCESS Process,
+  _Out_ PULONG64 CycleTimeStamp);
+
+_IRQL_requires_max_(APC_LEVEL)
+_IRQL_requires_min_(PASSIVE_LEVEL)
+_IRQL_requires_same_
+ULONG64
+NTAPI
+KeQueryTotalCycleTimeThread(
+  _Inout_ PKTHREAD Thread,
+  _Out_ PULONG64 CycleTimeStamp);
+
+_Must_inspect_result_
+NTKERNELAPI
+NTSTATUS
+NTAPI
+KeSetTargetProcessorDpcEx(
+  _Inout_ PKDPC Dpc,
+  _In_ PPROCESSOR_NUMBER ProcNumber);
+
+_IRQL_requires_min_(PASSIVE_LEVEL)
+_IRQL_requires_max_(APC_LEVEL)
+NTKERNELAPI
+VOID
+NTAPI
+KeSetSystemGroupAffinityThread(
+  _In_ PGROUP_AFFINITY Affinity,
+  _Out_opt_ PGROUP_AFFINITY PreviousAffinity);
+
+_IRQL_requires_min_(PASSIVE_LEVEL)
+_IRQL_requires_max_(APC_LEVEL)
+NTKERNELAPI
+VOID
+NTAPI
+KeRevertToUserGroupAffinityThread(
+  _In_ PGROUP_AFFINITY PreviousAffinity);
+
+_IRQL_requires_max_(DISPATCH_LEVEL)
+NTKERNELAPI
+BOOLEAN
+NTAPI
+KeSetCoalescableTimer(
+  _Inout_ PKTIMER Timer,
+  _In_ LARGE_INTEGER DueTime,
+  _In_ ULONG Period,
+  _In_ ULONG TolerableDelay,
+  _In_opt_ PKDPC Dpc);
+
+NTKERNELAPI
+ULONGLONG
+NTAPI
+KeQueryUnbiasedInterruptTime(VOID);
+
 _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
 _Ret_range_(<=, 0)
@@ -1363,74 +1364,6 @@ KeGetProcessorIndexFromNumber(
   _In_ PPROCESSOR_NUMBER ProcNumber);
 $endif (_WDMDDK_)
 $if (_NTDDK_)
-NTKERNELAPI
-ULONG
-NTAPI
-KeQueryActiveProcessorCountEx(
-  _In_ USHORT GroupNumber);
-
-NTKERNELAPI
-ULONG
-NTAPI
-KeQueryMaximumProcessorCountEx(
-  _In_ USHORT GroupNumber);
-
-NTKERNELAPI
-USHORT
-NTAPI
-KeQueryActiveGroupCount(VOID);
-
-NTKERNELAPI
-USHORT
-NTAPI
-KeQueryMaximumGroupCount(VOID);
-
-NTKERNELAPI
-KAFFINITY
-NTAPI
-KeQueryGroupAffinity(
-  _In_ USHORT GroupNumber);
-
-NTKERNELAPI
-ULONG
-NTAPI
-KeGetCurrentProcessorNumberEx(
-  _Out_opt_ PPROCESSOR_NUMBER ProcNumber);
-
-NTKERNELAPI
-VOID
-NTAPI
-KeQueryNodeActiveAffinity(
-  _In_ USHORT NodeNumber,
-  _Out_opt_ PGROUP_AFFINITY Affinity,
-  _Out_opt_ PUSHORT Count);
-
-NTKERNELAPI
-USHORT
-NTAPI
-KeQueryNodeMaximumProcessorCount(
-  _In_ USHORT NodeNumber);
-
-NTKERNELAPI
-USHORT
-NTAPI
-KeQueryHighestNodeNumber(VOID);
-
-NTKERNELAPI
-USHORT
-NTAPI
-KeGetCurrentNodeNumber(VOID);
-
-_IRQL_requires_max_(DISPATCH_LEVEL)
-NTKERNELAPI
-NTSTATUS
-NTAPI
-KeQueryLogicalProcessorRelationship(
-  _In_opt_ PPROCESSOR_NUMBER ProcessorNumber,
-  _In_ LOGICAL_PROCESSOR_RELATIONSHIP RelationshipType,
-  _Out_writes_bytes_opt_(*Length) PSYSTEM_LOGICAL_PROCESSOR_INFORMATION_EX Information,
-  _Inout_ PULONG Length);
-
 _IRQL_requires_max_(APC_LEVEL)
 NTKERNELAPI
 NTSTATUS
