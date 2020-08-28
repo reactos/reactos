@@ -211,9 +211,7 @@ BOOL LoadSettings(PSETTINGS_INFO pSettingsInfo)
         return FALSE;
     }
 
-    BOOL bRet = LoadAllSettings(RegKey, *pSettingsInfo);
-    RegKey.Close();
-    return bRet;
+    return LoadAllSettings(RegKey, *pSettingsInfo);
 }
 
 BOOL SaveSettings(HWND hwnd, PSETTINGS_INFO pSettingsInfo)
@@ -241,7 +239,5 @@ BOOL SaveSettings(HWND hwnd, PSETTINGS_INFO pSettingsInfo)
         return FALSE;
     }
 
-    BOOL bRet = SaveAllSettings(RegKey, *pSettingsInfo);
-    RegKey.Close();
-    return bRet;
+    return SaveAllSettings(RegKey, *pSettingsInfo);
 }
