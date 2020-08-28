@@ -54,12 +54,12 @@ class CFileVersionInfo
 };
 
 class CFileDefExt :
-    public CComCoClass<CFileDefExt, &CLSID_ShellFileDefExt>,
-    public CComObjectRootEx<CComMultiThreadModelNoCS>,
-    public IShellExtInit,
-    public IContextMenu,
-    public IShellPropSheetExt,
-    public IObjectWithSite
+	public CComCoClass<CFileDefExt, &CLSID_ShellFileDefExt>,
+	public CComObjectRootEx<CComMultiThreadModelNoCS>,
+	public IShellExtInit,
+	public IContextMenu,
+	public IShellPropSheetExt,
+	public IObjectWithSite
 {
 private:
     VOID InitOpensWithField(HWND hwndDlg);
@@ -73,15 +73,15 @@ private:
     BOOL InitVersionPage(HWND hwndDlg);
     BOOL InitFolderCustomizePage(HWND hwndDlg);
     static INT_PTR CALLBACK GeneralPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
-    static INT_PTR CALLBACK VersionPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
-    static INT_PTR CALLBACK FolderCustomizePageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
-    BOOL CountFolderAndFiles(HWND hwndDlg, LPWSTR pwszBuf, UINT cchBufMax, LPDWORD ticks);
+	static INT_PTR CALLBACK VersionPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+	static INT_PTR CALLBACK FolderCustomizePageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+	BOOL CountFolderAndFiles(HWND hwndDlg, LPWSTR pwszBuf, UINT cchBufMax, LPDWORD ticks);
 
-    WCHAR m_wszPath[MAX_PATH];
-    CFileVersionInfo m_VerInfo;
-    BOOL m_bDir;
+	WCHAR m_wszPath[MAX_PATH];
+	CFileVersionInfo m_VerInfo;
+	BOOL m_bDir;
 
-    DWORD m_cFiles;
+	DWORD m_cFiles;
     DWORD m_cFolders;
     ULARGE_INTEGER m_DirSize;
     ULARGE_INTEGER m_DirSizeOnDisc;
@@ -95,8 +95,8 @@ private:
     BOOL    m_bFolderIconIsSet;
 
 public:
-    CFileDefExt();
-    ~CFileDefExt();
+	CFileDefExt();
+	~CFileDefExt();
 
     // FolderCustomize
     BOOL OnFolderCustApply(HWND hwndDlg);
@@ -104,21 +104,21 @@ public:
     void OnFolderCustDestroy(HWND hwndDlg);
     void UpdateFolderIcon(HWND hwndDlg);
 
-    // IShellExtInit
-    virtual HRESULT STDMETHODCALLTYPE Initialize(PCIDLIST_ABSOLUTE pidlFolder, IDataObject *pdtobj, HKEY hkeyProgID);
+	// IShellExtInit
+	virtual HRESULT STDMETHODCALLTYPE Initialize(PCIDLIST_ABSOLUTE pidlFolder, IDataObject *pdtobj, HKEY hkeyProgID);
 
     // IContextMenu
-    virtual HRESULT WINAPI QueryContextMenu(HMENU hmenu, UINT indexMenu, UINT idCmdFirst, UINT idCmdLast, UINT uFlags);
-    virtual HRESULT WINAPI InvokeCommand(LPCMINVOKECOMMANDINFO lpici);
-    virtual HRESULT WINAPI GetCommandString(UINT_PTR idCmd, UINT uType, UINT *pwReserved, LPSTR pszName, UINT cchMax);
+	virtual HRESULT WINAPI QueryContextMenu(HMENU hmenu, UINT indexMenu, UINT idCmdFirst, UINT idCmdLast, UINT uFlags);
+	virtual HRESULT WINAPI InvokeCommand(LPCMINVOKECOMMANDINFO lpici);
+	virtual HRESULT WINAPI GetCommandString(UINT_PTR idCmd, UINT uType, UINT *pwReserved, LPSTR pszName, UINT cchMax);
 
-    // IShellPropSheetExt
-    virtual HRESULT WINAPI AddPages(LPFNADDPROPSHEETPAGE pfnAddPage, LPARAM lParam);
-    virtual HRESULT WINAPI ReplacePage(UINT uPageID, LPFNADDPROPSHEETPAGE pfnReplacePage, LPARAM lParam);
+	// IShellPropSheetExt
+	virtual HRESULT WINAPI AddPages(LPFNADDPROPSHEETPAGE pfnAddPage, LPARAM lParam);
+	virtual HRESULT WINAPI ReplacePage(UINT uPageID, LPFNADDPROPSHEETPAGE pfnReplacePage, LPARAM lParam);
 
     // IObjectWithSite
-    virtual HRESULT WINAPI SetSite(IUnknown *punk);
-    virtual HRESULT WINAPI GetSite(REFIID iid, void **ppvSite);
+	virtual HRESULT WINAPI SetSite(IUnknown *punk);
+	virtual HRESULT WINAPI GetSite(REFIID iid, void **ppvSite);
 
 DECLARE_REGISTRY_RESOURCEID(IDR_FILEDEFEXT)
 DECLARE_NOT_AGGREGATABLE(CFileDefExt)
@@ -126,10 +126,10 @@ DECLARE_NOT_AGGREGATABLE(CFileDefExt)
 DECLARE_PROTECT_FINAL_CONSTRUCT()
 
 BEGIN_COM_MAP(CFileDefExt)
-    COM_INTERFACE_ENTRY_IID(IID_IShellExtInit, IShellExtInit)
-    COM_INTERFACE_ENTRY_IID(IID_IContextMenu, IContextMenu)
-    COM_INTERFACE_ENTRY_IID(IID_IShellPropSheetExt, IShellPropSheetExt)
-    COM_INTERFACE_ENTRY_IID(IID_IObjectWithSite, IObjectWithSite)
+	COM_INTERFACE_ENTRY_IID(IID_IShellExtInit, IShellExtInit)
+	COM_INTERFACE_ENTRY_IID(IID_IContextMenu, IContextMenu)
+	COM_INTERFACE_ENTRY_IID(IID_IShellPropSheetExt, IShellPropSheetExt)
+	COM_INTERFACE_ENTRY_IID(IID_IObjectWithSite, IObjectWithSite)
 END_COM_MAP()
 };
 

@@ -485,9 +485,9 @@ CFileDefExt::InitFileAttr(HWND hwndDlg)
     WIN32_FIND_DATAW FileInfo; // WIN32_FILE_ATTRIBUTE_DATA
     WCHAR wszBuf[MAX_PATH];
 
-    ULONG lpBytesPerSector;
-    ULONG lpSectorsPerCluster;
-    TCHAR lpszVolumePathName[MAX_PATH];
+    ULONG ulBytesPerSector;
+    ULONG ulSectorsPerCluster;
+    TCHAR szVolumePathName[MAX_PATH];
 
     TRACE("InitFileAttr %ls\n", m_wszPath);
 
@@ -559,11 +559,13 @@ CFileDefExt::InitFileAttr(HWND hwndDlg)
             {    
                 SetDlgItemTextW(hwndDlg, 14011, wszBuf);
                 // Calculate size on disc
-                if( GetVolumePathName(m_wszPath, lpszVolumePathName, sizeof(lpszVolumePathName) / sizeof(TCHAR)) ) {
-                    if( GetDiskFreeSpace(lpszVolumePathName, &lpSectorsPerCluster, &lpBytesPerSector, NULL, NULL) ) {
-                        if(FileSize.QuadPart % (lpBytesPerSector*lpSectorsPerCluster))
+                if (GetVolumePathName(m_wszPath, szVolumePathName, _countof(szVolumePathName)))
+                {
+                    if (GetDiskFreeSpace(szVolumePathName, &ulSectorsPerCluster, &ulBytesPerSector, NULL, NULL))
+                    {
+                        if(FileSize.QuadPart % (ulBytesPerSector*ulSectorsPerCluster))
                         {
-                            FileSize.QuadPart = ((FileSize.QuadPart / (lpBytesPerSector*lpSectorsPerCluster))+1)*lpBytesPerSector*lpSectorsPerCluster;
+                            FileSize.QuadPart = ((FileSize.QuadPart / (ulBytesPerSector*ulSectorsPerCluster))+1)*ulBytesPerSector*ulSectorsPerCluster;
                             SH_FormatFileSizeWithBytes(&FileSize, wszBuf, _countof(wszBuf));
                         }
                    }
@@ -1331,8 +1333,8 @@ CFileDefExt::CountFolderAndFiles(HWND hwndDlg, LPWSTR pwszBuf, UINT cchBufMax, D
     UINT cchBuf = wcslen(pwszBuf);
     WCHAR *pwszFilename = pwszBuf + cchBuf;
     ULONG lpBytesPerSector;
-    ULONG lpSectorsPerCluster;
-    TCHAR lpszVolumePathName[MAX_PATH];
+    ULONG ulSectorsPerCluster;
+    TCHAR szVolumePathName[MAX_PATH];
     size_t cchFilenameMax = cchBufMax - cchBuf;
     if (!cchFilenameMax)
         return FALSE;
@@ -1378,9 +1380,10 @@ CFileDefExt::CountFolderAndFiles(HWND hwndDlg, LPWSTR pwszBuf, UINT cchBufMax, D
             FileSize.u.HighPart = wfd.nFileSizeHigh;
             m_DirSize.QuadPart += FileSize.QuadPart;
             // Calculate size on disc
-            if( GetVolumePathName(pwszBuf, lpszVolumePathName, sizeof(lpszVolumePathName) / sizeof(TCHAR)) ) {
-                if( GetDiskFreeSpace(lpszVolumePathName, &lpSectorsPerCluster, &lpBytesPerSector, NULL, NULL) )
-                    m_DirSizeOnDisc.QuadPart += FileSize.QuadPart % (lpBytesPerSector*lpSectorsPerCluster) ? ((FileSize.QuadPart/(lpBytesPerSector*lpSectorsPerCluster))+1)*lpBytesPerSector*lpSectorsPerCluster : FileSize.QuadPart;
+            if (GetVolumePathName(pwszBuf, szVolumePathName, _countof(szVolumePathName)))
+            {
+                if (GetDiskFreeSpace(szVolumePathName, &ulSectorsPerCluster, &lpBytesPerSector, NULL, NULL))
+                    m_DirSizeOnDisc.QuadPart += FileSize.QuadPart % (lpBytesPerSector*ulSectorsPerCluster) ? ((FileSize.QuadPart/(lpBytesPerSector*ulSectorsPerCluster))+1)*lpBytesPerSector*ulSectorsPerCluster : FileSize.QuadPart;
                 else
                     m_DirSizeOnDisc.QuadPart += FileSize.QuadPart;
             } else {
