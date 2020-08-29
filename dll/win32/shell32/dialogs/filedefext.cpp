@@ -611,8 +611,8 @@ CFileDefExt::InitFileAttr(HWND hwndDlg)
                 // Compute file on disk. If fails, use logical size
                 if (GetPhysicalFileSize(m_wszPath, &FileSize))
                     SH_FormatFileSizeWithBytes(&FileSize, wszBuf, _countof(wszBuf));
-                    else
-                    ERR("Unreliable size on disl");
+                else
+                    ERR("Unreliable size on disk");
 
                SetDlgItemTextW(hwndDlg, 14012, wszBuf);
             }
