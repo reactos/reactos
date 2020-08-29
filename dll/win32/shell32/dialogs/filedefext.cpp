@@ -1419,7 +1419,6 @@ CFileDefExt::CountFolderAndFiles(HWND hwndDlg, LPWSTR pwszBuf, UINT cchBufMax, D
 
             ++m_cFolders;
 
-            StringCchCopyW(pwszFilename, cchFilenameMax, wfd.cFileName);
             CountFolderAndFiles(hwndDlg, WorkBuffer, cchBufMax, ticks);
         }
         else
