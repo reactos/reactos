@@ -45,5 +45,5 @@ target_link_libraries(opengl32
 
 set_module_type(opengl32 win32dll)
 add_importlibs(opengl32 gdi32 user32 advapi32 msvcrt kernel32 ntdll)
-add_pch(opengl32 opengl32.h SOURCE)
+add_pch(opengl32 opengl32.h ${CMAKE_CURRENT_BINARY_DIR}/opengl32_stubs.c)
 add_cd_file(TARGET opengl32 DESTINATION reactos/system32 FOR all)

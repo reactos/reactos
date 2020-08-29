@@ -5,9 +5,9 @@
  * PURPOSE:              OpenGL32 lib, glXXX functions
  */
 
+#ifndef __REACTOS_USE_PCH__
 #include "opengl32.h"
-
-
+#endif
 
 #ifndef __i386__
 

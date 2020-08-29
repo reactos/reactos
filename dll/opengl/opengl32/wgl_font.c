@@ -18,7 +18,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#ifndef __REACTOS_USE_PCH__
 #include "opengl32.h"
+#endif
 
 #include <math.h>
 
@@ -193,8 +195,8 @@ static HMODULE load_libglu(void)
 
 static void fixed_to_double(POINTFX fixed, UINT em_size, GLdouble vertex[3])
 {
-    vertex[0] = (fixed.x.value + (GLdouble)fixed.x.fract / (1 << 16)) / em_size;  
-    vertex[1] = (fixed.y.value + (GLdouble)fixed.y.fract / (1 << 16)) / em_size;  
+    vertex[0] = (fixed.x.value + (GLdouble)fixed.x.fract / (1 << 16)) / em_size;
+    vertex[1] = (fixed.y.value + (GLdouble)fixed.y.fract / (1 << 16)) / em_size;
     vertex[2] = 0.0;
 }
 
@@ -380,7 +382,7 @@ static BOOL wglUseFontOutlines_common(HDC hdc,
             lpgmf->gmfCellIncY = (float)gm.gmCellIncY / em_size;
 
             TRACE("%fx%f at %f,%f inc %f,%f\n", lpgmf->gmfBlackBoxX, lpgmf->gmfBlackBoxY,
-                  lpgmf->gmfptGlyphOrigin.x, lpgmf->gmfptGlyphOrigin.y, lpgmf->gmfCellIncX, lpgmf->gmfCellIncY); 
+                  lpgmf->gmfptGlyphOrigin.x, lpgmf->gmfptGlyphOrigin.y, lpgmf->gmfCellIncX, lpgmf->gmfCellIncY);
             lpgmf++;
         }
 

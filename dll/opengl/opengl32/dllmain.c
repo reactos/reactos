@@ -5,7 +5,9 @@
  * PURPOSE:              OpenGL32 DLL
  */
 
+#ifndef __REACTOS_USE_PCH__
 #include "opengl32.h"
+#endif
 
 BOOL WINAPI
 DllMain(HINSTANCE hInstance, DWORD Reason, LPVOID Reserved)
