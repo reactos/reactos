@@ -297,15 +297,15 @@ OutputLine_stub(FILE *file, EXPORT *pexp)
             if (i != 0) fprintf(file, ", ");
             switch (pexp->anArgs[i])
             {
-                case ARG_LONG: fprintf(file, "long"); break;
-                case ARG_PTR:  fprintf(file, "void*"); break;
-                case ARG_STR:  fprintf(file, "char*"); break;
-                case ARG_WSTR: fprintf(file, "wchar_t*"); break;
-                case ARG_DBL:  fprintf(file, "double"); break;
-                case ARG_INT64 :  fprintf(file, "__int64"); break;
+                case ARG_LONG:   fprintf(file, "long");     break;
+                case ARG_PTR:    fprintf(file, "void*");    break;
+                case ARG_STR:    fprintf(file, "char*");    break;
+                case ARG_WSTR:   fprintf(file, "wchar_t*"); break;
+                case ARG_DBL:    fprintf(file, "double");   break;
+                case ARG_INT64:  fprintf(file, "__int64");  break;
                 /* __int128 is not supported on x86, and int128 in spec files most often represents a GUID */
-                case ARG_INT128 :  fprintf(file, "GUID"); break;
-                case ARG_FLOAT: fprintf(file, "float"); break;
+                case ARG_INT128: fprintf(file, "GUID");     break;
+                case ARG_FLOAT:  fprintf(file, "float");    break;
             }
             fprintf(file, " a%d", i);
         }
@@ -345,14 +345,14 @@ OutputLine_stub(FILE *file, EXPORT *pexp)
         if (i != 0) fprintf(file, ",");
         switch (pexp->anArgs[i])
         {
-            case ARG_LONG: fprintf(file, "0x%%lx"); break;
-            case ARG_PTR:  fprintf(file, "0x%%p"); break;
-            case ARG_STR:  fprintf(file, "'%%s'"); break;
-            case ARG_WSTR: fprintf(file, "'%%ws'"); break;
-            case ARG_DBL:  fprintf(file, "%%f"); break;
-            case ARG_INT64: fprintf(file, "%%\"PRIx64\""); break;
-            case ARG_INT128: fprintf(file, "'%%s'"); break;
-            case ARG_FLOAT: fprintf(file, "%%f"); break;
+            case ARG_LONG:   fprintf(file, "0x%%lx"); break;
+            case ARG_PTR:    fprintf(file, "0x%%p");  break;
+            case ARG_STR:    fprintf(file, "'%%s'");  break;
+            case ARG_WSTR:   fprintf(file, "'%%ws'"); break;
+            case ARG_DBL:    fprintf(file, "%%f");    break;
+            case ARG_INT64:  fprintf(file, "%%\"PRIx64\""); break;
+            case ARG_INT128: fprintf(file, "'%%s'");  break;
+            case ARG_FLOAT:  fprintf(file, "%%f");    break;
         }
     }
     fprintf(file, ")\\n\"");
