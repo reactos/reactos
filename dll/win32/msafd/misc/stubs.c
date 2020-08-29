@@ -8,7 +8,9 @@
  *   CSH 01/09-2000 Created
  */
 
+#ifndef __REACTOS_USE_PCH__
 #include <msafd.h>
+#endif
 
 INT
 WSPAPI

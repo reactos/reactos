@@ -11,7 +11,9 @@
  *              Alex 16/07/2004 - Complete Rewrite
  */
 
+#ifndef __REACTOS_USE_PCH__
 #include <msafd.h>
+#endif
 
 #include <winuser.h>
 #include <wchar.h>
@@ -3181,7 +3183,7 @@ WSPStringToAddress(IN LPWSTR AddressString,
                 /* move over the dot to next ip part */
                 (*bp)++;
             }
-            
+
             /* check dots count */
             if (numdots != 3)
             {

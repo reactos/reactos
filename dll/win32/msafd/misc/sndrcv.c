@@ -10,7 +10,9 @@
  *              Alex 16/07/2004 - Complete Rewrite
  */
 
+#ifndef __REACTOS_USE_PCH__
 #include <msafd.h>
+#endif
 
 INT
 WSPAPI
