@@ -39,7 +39,7 @@ extern "C" {
 
 #define _INTSIZEOF(n) ((sizeof(n) + sizeof(int) - 1) & ~(sizeof(int) - 1))
 
-#if defined(__GNUC__)
+#if defined(__GNUC__) || defined(__clang__)
 #define _crt_va_start(v,l)	__builtin_va_start(v,l)
 #define _crt_va_arg(v,l)	__builtin_va_arg(v,l)
 #define _crt_va_end(v)	__builtin_va_end(v)
