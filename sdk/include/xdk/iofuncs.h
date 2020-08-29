@@ -2332,19 +2332,16 @@ IoSetShareAccessEx(
   _Out_ PSHARE_ACCESS ShareAccess,
   _In_ PBOOLEAN WritePermission);
 
-NTKERNELAPI
 ULONG
 NTAPI
 IoSizeofWorkItem(VOID);
 
-NTKERNELAPI
 VOID
 NTAPI
 IoInitializeWorkItem(
   _In_ PVOID IoObject,
   _Out_ PIO_WORKITEM IoWorkItem);
 
-NTKERNELAPI
 VOID
 NTAPI
 IoUninitializeWorkItem(
@@ -2360,20 +2357,18 @@ IoQueueWorkItemEx(
   _In_ WORK_QUEUE_TYPE QueueType,
   _In_opt_ __drv_aliasesMem PVOID Context);
 
-NTKERNELAPI
+// NTKERNELAPI // HACK: ntoskrnl_vista functions are statically linked thus don't need DECLSPEC_IMPORT
 IO_PRIORITY_HINT
 NTAPI
 IoGetIoPriorityHint(
   _In_ PIRP Irp);
 
-// NTKERNELAPI // HACK: ntoskrnl_vista functions are statically linked thus don't need DECLSPEC_IMPORT
 NTSTATUS
 NTAPI
 IoSetIoPriorityHint(
   _In_ PIRP Irp,
   _In_ IO_PRIORITY_HINT PriorityHint);
 
-NTKERNELAPI
 NTSTATUS
 NTAPI
 IoAllocateSfioStreamIdentifier(
@@ -2388,7 +2383,6 @@ IoGetSfioStreamIdentifier(
   _In_ PFILE_OBJECT FileObject,
   _In_ PVOID Signature);
 
-NTKERNELAPI
 NTSTATUS
 NTAPI
 IoFreeSfioStreamIdentifier(
@@ -2445,7 +2439,6 @@ IoUpdateDiskGeometry(
   _In_ struct _DISK_GEOMETRY_EX* OldDiskGeometry,
   _In_ struct _DISK_GEOMETRY_EX* NewDiskGeometry);
 
-NTKERNELAPI
 PTXN_PARAMETER_BLOCK
 NTAPI
 IoGetTransactionParameterBlock(
@@ -2471,14 +2464,12 @@ IoCreateFileEx(
   _In_ ULONG Options,
   _In_opt_ PIO_DRIVER_CREATE_CONTEXT DriverContext);
 
-NTKERNELAPI
 NTSTATUS
 NTAPI
 IoSetIrpExtraCreateParameter(
   _Inout_ PIRP Irp,
   _In_ struct _ECP_LIST *ExtraCreateParameter);
 
-NTKERNELAPI
 VOID
 NTAPI
 IoClearIrpExtraCreateParameter(
@@ -2491,7 +2482,6 @@ IoGetIrpExtraCreateParameter(
   _In_ PIRP Irp,
   _Outptr_result_maybenull_ struct _ECP_LIST **ExtraCreateParameter);
 
-NTKERNELAPI
 BOOLEAN
 NTAPI
 IoIsFileObjectIgnoringSharing(
@@ -2608,6 +2598,8 @@ $endif (_NTIFS_)
 #endif /* (NTDDI_VERSION >= NTDDI_WIN7) */
 
 #if (NTDDI_VERSION >= NTDDI_WIN8)
+
+$if (_WDMDDK_)
 _IRQL_requires_max_(PASSIVE_LEVEL)
 _Must_inspect_result_
 // NTKERNELAPI // HACK: ntoskrnl_vista functions are statically linked thus don't need DECLSPEC_IMPORT
@@ -2634,6 +2626,16 @@ IoGetDeviceInterfacePropertyData (
   _Out_writes_bytes_to_(Size, *RequiredSize) PVOID Data,
   _Out_ PULONG RequiredSize,
   _Out_ PDEVPROPTYPE Type);
+$endif (_WDMDDK_)
+$if (_NTDDK_)
+
+// NTKERNELAPI // HACK: ntoskrnl_vista functions are statically linked thus don't need DECLSPEC_IMPORT
+VOID
+IoSetMasterIrpStatus(
+  _Inout_ PIRP MasterIrp,
+  _In_ NTSTATUS Status);
+$endif (_NTDDK_)
+
 #endif /* (NTDDI_VERSION >= NTDDI_WIN8) */
 
 $if (_WDMDDK_)

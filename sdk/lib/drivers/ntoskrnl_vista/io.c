@@ -108,3 +108,24 @@ IoGetIoPriorityHint(
 {
     return IoPriorityNormal;
 }
+
+NTKERNELAPI
+VOID
+IoSetMasterIrpStatus(
+    _Inout_ PIRP MasterIrp,
+    _In_ NTSTATUS Status)
+{
+    NTSTATUS MasterStatus = MasterIrp->IoStatus.Status;
+
+    if (Status == STATUS_FT_READ_FROM_COPY)
+    {
+        return;
+    }
+
+    if ((Status == STATUS_VERIFY_REQUIRED) ||
+        (MasterStatus == STATUS_SUCCESS && !NT_SUCCESS(Status)) ||
+        (!NT_SUCCESS(MasterStatus) && !NT_SUCCESS(Status) && Status > MasterStatus))
+    {
+        MasterIrp->IoStatus.Status = Status;
+    }
+}
