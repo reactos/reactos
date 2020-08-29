@@ -316,7 +316,7 @@ BOOL CMainWindow::ProcessWindowMessage(HWND hwnd, UINT Msg, WPARAM wParam, LPARA
     case WM_DESTROY:
     {
         ShowWindow(SW_HIDE);
-        SaveSettings(hwnd);
+        SaveSettings(hwnd, &SettingsInfo);
 
         FreeLogs();
         m_AvailableApps.FreeCachedEntries();
