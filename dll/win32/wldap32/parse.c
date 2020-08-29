@@ -18,6 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#ifndef __REACTOS_USE_PCH__
 #include "config.h"
 #include "wine/port.h"
 
@@ -33,6 +34,7 @@
 #include "winldap_private.h"
 #include "wldap32.h"
 #include "wine/debug.h"
+#endif /* __REACTOS_USE_PCH__ */
 
 WINE_DEFAULT_DEBUG_CHANNEL(wldap32);
 
@@ -68,7 +70,7 @@ ULONG CDECL ldap_parse_extended_resultA( WLDAP32_LDAP *ld, WLDAP32_LDAPMessage *
 /***********************************************************************
  *      ldap_parse_extended_resultW     (WLDAP32.@)
  *
- * Parse the result of an extended operation. 
+ * Parse the result of an extended operation.
  *
  * PARAMS
  *  ld      [I] Pointer to an LDAP context.
@@ -130,7 +132,7 @@ ULONG CDECL ldap_parse_referenceA( WLDAP32_LDAP *ld, WLDAP32_LDAPMessage *messag
     *referrals = strarrayWtoA( referralsW );
     ldap_value_freeW( referralsW );
 
-#endif 
+#endif
     return ret;
 }
 
@@ -161,7 +163,7 @@ ULONG CDECL ldap_parse_referenceW( WLDAP32_LDAP *ld, WLDAP32_LDAPMessage *messag
     TRACE( "(%p, %p, %p)\n", ld, message, referrals );
 
     if (!ld) return ~0u;
-    
+
     ret = map_error( ldap_parse_reference( ld, message, &referralsU, NULL, 0 ));
 
     *referrals = strarrayUtoW( referralsU );
@@ -211,7 +213,7 @@ ULONG CDECL ldap_parse_resultA( WLDAP32_LDAP *ld, WLDAP32_LDAPMessage *result,
 /***********************************************************************
  *      ldap_parse_resultW     (WLDAP32.@)
  *
- * Parse a result message. 
+ * Parse a result message.
  *
  * PARAMS
  *  ld           [I] Pointer to an LDAP context.

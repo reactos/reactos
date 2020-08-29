@@ -18,6 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#ifndef __REACTOS_USE_PCH__
 #include "config.h"
 #include "wine/port.h"
 
@@ -33,6 +34,7 @@
 #include "winldap_private.h"
 #include "wldap32.h"
 #include "wine/debug.h"
+#endif /* __REACTOS_USE_PCH__ */
 
 WINE_DEFAULT_DEBUG_CHANNEL(wldap32);
 
@@ -186,9 +188,9 @@ static char **bv2str_array( struct berval **bv )
             while (i > 0) heap_free( str[--i] );
             heap_free( str );
             return NULL;
-        } 
+        }
         i++;
-        p++; 
+        p++;
     }
     str[i] = NULL;
     return str;

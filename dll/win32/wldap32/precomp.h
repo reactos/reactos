@@ -5,6 +5,7 @@
 #include <wine/config.h>
 
 #include <stdarg.h>
+#include <stdio.h>
 
 #ifdef HAVE_LDAP_H
 #include <ldap.h>
@@ -16,6 +17,7 @@
 
 #include <windef.h>
 #include <winbase.h>
+#include <winuser.h>
 
 #include <wine/debug.h>
 

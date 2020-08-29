@@ -18,6 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#ifndef __REACTOS_USE_PCH__
 #include "config.h"
 #include "wine/port.h"
 
@@ -33,6 +34,7 @@
 #include "winldap_private.h"
 #include "wldap32.h"
 #include "wine/debug.h"
+#endif /* __REACTOS_USE_PCH__ */
 
 WINE_DEFAULT_DEBUG_CHANNEL(wldap32);
 
@@ -412,7 +414,7 @@ ULONG CDECL ldap_set_optionA( WLDAP32_LDAP *ld, int option, void *value )
  *
  * NOTES
  *  Set value to LDAP_OPT_ON or LDAP_OPT_OFF for on/off options.
- */ 
+ */
 ULONG CDECL ldap_set_optionW( WLDAP32_LDAP *ld, int option, void *value )
 {
     ULONG ret = WLDAP32_LDAP_NOT_SUPPORTED;

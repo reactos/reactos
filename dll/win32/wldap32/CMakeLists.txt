@@ -25,7 +25,8 @@ list(APPEND SOURCE
     value.c)
 
 list(APPEND PCH_SKIP_SOURCE
-    ber.c)
+    ber.c
+    ${CMAKE_CURRENT_BINARY_DIR}/wldap32_stubs.c)
 
 add_library(wldap32 MODULE
     ${SOURCE}
@@ -37,5 +38,5 @@ add_library(wldap32 MODULE
 set_module_type(wldap32 win32dll)
 target_link_libraries(wldap32 wine)
 add_importlibs(wldap32 user32 msvcrt kernel32 ntdll)
-add_pch(wldap32 precomp.h "${PCH_SKIP_SOURCE}")
+add_pch(wldap32 precomp.h ${PCH_SKIP_SOURCE})
 add_cd_file(TARGET wldap32 DESTINATION reactos/system32 FOR all)

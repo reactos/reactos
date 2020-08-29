@@ -18,6 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#ifndef __REACTOS_USE_PCH__
 #include "config.h"
 #include "wine/port.h"
 
@@ -33,6 +34,7 @@
 #include "winldap_private.h"
 #include "wldap32.h"
 #include "wine/debug.h"
+#endif /* __REACTOS_USE_PCH__ */
 
 WINE_DEFAULT_DEBUG_CHANNEL(wldap32);
 
@@ -242,7 +244,7 @@ exit:
  * RETURNS
  *  Success: LDAP_SUCCESS
  *  Failure: An LDAP error code.
- */ 
+ */
 ULONG CDECL ldap_rename_ext_sW( WLDAP32_LDAP *ld, PWCHAR dn, PWCHAR newrdn,
     PWCHAR newparent, INT delete, PLDAPControlW *serverctrls,
     PLDAPControlW *clientctrls )

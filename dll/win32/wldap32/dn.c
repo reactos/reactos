@@ -18,6 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#ifndef __REACTOS_USE_PCH__
 #include "config.h"
 #include "wine/port.h"
 
@@ -33,6 +34,7 @@
 #include "winldap_private.h"
 #include "wldap32.h"
 #include "wine/debug.h"
+#endif /* __REACTOS_USE_PCH__ */
 
 WINE_DEFAULT_DEBUG_CHANNEL(wldap32);
 
@@ -71,7 +73,7 @@ PCHAR CDECL ldap_dn2ufnA( PCHAR dn )
  *  dn  [I] DN to convert.
  *
  * RETURNS
- *  Success: Pointer to a string containing the user-friendly name. 
+ *  Success: Pointer to a string containing the user-friendly name.
  *  Failure: NULL
  *
  * NOTES
@@ -135,7 +137,7 @@ PCHAR * CDECL ldap_explode_dnA( PCHAR dn, ULONG notypes )
  *
  * RETURNS
  *  Success: Pointer to a NULL-terminated array that contains the DN
- *           components. 
+ *           components.
  *  Failure: NULL
  *
  * NOTES
@@ -264,7 +266,7 @@ ULONG CDECL ldap_ufn2dnA( PCHAR ufn, PCHAR *dn )
  *
  * PARAMS
  *  ufn  [I] User-friendly name to convert.
- *  dn   [O] Receives a pointer to a string containing the DN. 
+ *  dn   [O] Receives a pointer to a string containing the DN.
  *
  * RETURNS
  *  Success: LDAP_SUCCESS

@@ -18,6 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#ifndef __REACTOS_USE_PCH__
 #include "config.h"
 #include "wine/port.h"
 
@@ -33,6 +34,7 @@
 #include "winldap_private.h"
 #include "wldap32.h"
 #include "wine/debug.h"
+#endif /* __REACTOS_USE_PCH__ */
 
 WINE_DEFAULT_DEBUG_CHANNEL(wldap32);
 
@@ -280,7 +282,7 @@ exit:
  *  cred        [I] Credentials.
  *  serverctrls [I] Array of LDAP server controls.
  *  clientctrls [I] Array of LDAP client controls.
- *  message     [O] Message ID of the bind operation. 
+ *  message     [O] Message ID of the bind operation.
  *
  * RETURNS
  *  Success: LDAP_SUCCESS
@@ -510,7 +512,7 @@ exit:
  *  Failure: An LDAP error code.
  *
  * NOTES
- *  Set dn and passwd to NULL to bind as an anonymous user. 
+ *  Set dn and passwd to NULL to bind as an anonymous user.
  */
 ULONG CDECL ldap_simple_bindW( WLDAP32_LDAP *ld, PWCHAR dn, PWCHAR passwd )
 {
@@ -604,7 +606,7 @@ exit:
  *  Failure: An LDAP error code.
  *
  * NOTES
- *  Set dn and passwd to NULL to bind as an anonymous user. 
+ *  Set dn and passwd to NULL to bind as an anonymous user.
  */
 ULONG CDECL ldap_simple_bind_sW( WLDAP32_LDAP *ld, PWCHAR dn, PWCHAR passwd )
 {

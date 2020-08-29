@@ -18,6 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#ifndef __REACTOS_USE_PCH__
 #include "config.h"
 #include "wine/port.h"
 
@@ -34,6 +35,7 @@
 #include "winldap_private.h"
 #include "wldap32.h"
 #include "wine/debug.h"
+#endif /* __REACTOS_USE_PCH__ */
 
 WINE_DEFAULT_DEBUG_CHANNEL(wldap32);
 
@@ -309,7 +311,7 @@ PCHAR CDECL ldap_first_attributeA( WLDAP32_LDAP *ld, WLDAP32_LDAPMessage *entry,
 /***********************************************************************
  *      ldap_first_attributeW     (WLDAP32.@)
  *
- * Get the first attribute for a given entry. 
+ * Get the first attribute for a given entry.
  *
  * PARAMS
  *  ld    [I] Pointer to an LDAP context.
@@ -356,7 +358,7 @@ PWCHAR CDECL ldap_first_attributeW( WLDAP32_LDAP *ld, WLDAP32_LDAPMessage *entry
  *  Failure: NULL
  *
  * NOTES
- *  The returned entry will be freed when the message is freed. 
+ *  The returned entry will be freed when the message is freed.
  */
 WLDAP32_LDAPMessage * CDECL WLDAP32_ldap_first_entry( WLDAP32_LDAP *ld, WLDAP32_LDAPMessage *res )
 {
@@ -625,7 +627,7 @@ ULONG CDECL WLDAP32_ldap_result( WLDAP32_LDAP *ld, ULONG msgid, ULONG all,
  *  src    [I] Wide character string to convert.
  *  srclen [I] Size of string to convert, in characters.
  *  dst    [O] Pointer to a buffer that receives the converted string.
- *  dstlen [I] Size of the destination buffer in characters. 
+ *  dstlen [I] Size of the destination buffer in characters.
  *
  * RETURNS
  *  The number of characters written into the destination buffer.
@@ -647,7 +649,7 @@ int CDECL LdapUnicodeToUTF8( LPCWSTR src, int srclen, LPSTR dst, int dstlen )
  *  src    [I] UTF8 string to convert.
  *  srclen [I] Size of string to convert, in characters.
  *  dst    [O] Pointer to a buffer that receives the converted string.
- *  dstlen [I] Size of the destination buffer in characters. 
+ *  dstlen [I] Size of the destination buffer in characters.
  *
  * RETURNS
  *  The number of characters written into the destination buffer.

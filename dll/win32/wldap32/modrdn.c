@@ -18,6 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#ifndef __REACTOS_USE_PCH__
 #include "config.h"
 #include "wine/port.h"
 
@@ -33,6 +34,7 @@
 #include "winldap_private.h"
 #include "wldap32.h"
 #include "wine/debug.h"
+#endif /* __REACTOS_USE_PCH__ */
 
 WINE_DEFAULT_DEBUG_CHANNEL(wldap32);
 
@@ -79,7 +81,7 @@ exit:
  * PARAMS
  *  ld      [I] Pointer to an LDAP context.
  *  dn      [I] DN of the entry to change.
- *  newdn   [I] New DN for the entry. 
+ *  newdn   [I] New DN for the entry.
  *
  * RETURNS
  *  Success: Message ID of the modrdn operation.
@@ -169,7 +171,7 @@ exit:
  * PARAMS
  *  ld      [I] Pointer to an LDAP context.
  *  dn      [I] DN of the entry to change.
- *  newdn   [I] New DN for the entry. 
+ *  newdn   [I] New DN for the entry.
  *  delete  [I] Delete old DN?
  *
  * RETURNS
@@ -260,7 +262,7 @@ exit:
  * PARAMS
  *  ld      [I] Pointer to an LDAP context.
  *  dn      [I] DN of the entry to change.
- *  newdn   [I] New DN for the entry. 
+ *  newdn   [I] New DN for the entry.
  *  delete  [I] Delete old DN?
  *
  * RETURNS
@@ -340,7 +342,7 @@ exit:
  * PARAMS
  *  ld      [I] Pointer to an LDAP context.
  *  dn      [I] DN of the entry to change.
- *  newdn   [I] New DN for the entry. 
+ *  newdn   [I] New DN for the entry.
  *
  * RETURNS
  *  Success: LDAP_SUCCESS

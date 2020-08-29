@@ -18,6 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#ifndef __REACTOS_USE_PCH__
 #include "config.h"
 #include "wine/port.h"
 
@@ -35,6 +36,7 @@
 #include "winldap_private.h"
 #include "wldap32.h"
 #include "wine/debug.h"
+#endif /* __REACTOS_USE_PCH__ */
 
 #ifdef HAVE_LDAP
 /* Should eventually be determined by the algorithm documented on MSDN. */
@@ -128,11 +130,11 @@ static BOOL has_ldap_scheme( char *url )
 static char *join_hostnames( const char *scheme, char **hostnames, ULONG portnumber )
 {
     char *res, *p, *q, **v;
-    unsigned int i = 0, size = 0; 
+    unsigned int i = 0, size = 0;
     static const char sep[] = " ", fmt[] = ":%d";
     char port[7];
 
-    sprintf( port, fmt, portnumber ); 
+    sprintf( port, fmt, portnumber );
 
     for (v = hostnames; *v; v++)
     {
@@ -147,7 +149,7 @@ static char *join_hostnames( const char *scheme, char **hostnames, ULONG portnum
 
         size += strlen( *v );
 
-        if (!strchr( q, ':' )) 
+        if (!strchr( q, ':' ))
             size += strlen( port );
 
         i++;
@@ -300,7 +302,7 @@ exit:
 /***********************************************************************
  *      ldap_connect     (WLDAP32.@)
  *
- * Connect to an LDAP server. 
+ * Connect to an LDAP server.
  *
  * PARAMS
  *  ld      [I] Pointer to an LDAP context.
