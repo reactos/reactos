@@ -20,10 +20,63 @@
  */
 
 #include "precomp.h"
+#include "iofuncs.h"
+#include "obfuncs.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
 EXTERN_C BOOL PathIsExeW(LPCWSTR lpszPath);
+
+BOOL GetPhysicalFileSize(LPCWSTR PathBuffer, PULARGE_INTEGER Size)
+{
+    UNICODE_STRING FileName;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    IO_STATUS_BLOCK IoStatusBlock;
+    HANDLE FileHandle;
+    FILE_STANDARD_INFORMATION FileInfo;
+    NTSTATUS Status;
+    WCHAR StdPathBuffer[MAX_PATH] = L"";
+        
+    wcscpy(StdPathBuffer,L"\\??\\");
+    wcscat(StdPathBuffer,PathBuffer);
+    
+    //wcscpy(StdPathBuffer,PathBuffer);
+    RtlInitUnicodeString(&FileName, StdPathBuffer);
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &FileName,
+                               OBJ_CASE_INSENSITIVE,
+                               NULL,
+                               NULL);
+    Status = NtOpenFile(&FileHandle,
+                        FILE_READ_ATTRIBUTES | SYNCHRONIZE,
+                        &ObjectAttributes,
+                        &IoStatusBlock,
+                        FILE_SHARE_READ,
+                        FILE_SYNCHRONOUS_IO_NONALERT);
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("NtOpenFile failed for %S (Status 0x%08lx)\n", StdPathBuffer, Status);
+        return FALSE;
+    }
+
+    /* Query the file size */
+    Status = NtQueryInformationFile(FileHandle,
+                                    &IoStatusBlock,
+                                    &FileInfo,
+                                    sizeof(FileInfo),
+                                    FileStandardInformation);
+                                    
+    if (!NT_SUCCESS(Status))
+    {
+        ERR("NtQueryInformationFile failed for %S\n", StdPathBuffer);
+        NtClose(FileHandle);
+        return FALSE;
+    }
+    
+    Size->QuadPart = FileInfo.AllocationSize.QuadPart;
+    NtClose(FileHandle);
+    return TRUE;
+}
 
 BOOL CFileVersionInfo::Load(LPCWSTR pwszPath)
 {
@@ -485,11 +538,6 @@ CFileDefExt::InitFileAttr(HWND hwndDlg)
     WIN32_FIND_DATAW FileInfo; // WIN32_FILE_ATTRIBUTE_DATA
     WCHAR wszBuf[MAX_PATH];
 
-    ULONG ulBytesPerSector;
-    ULONG ulSectorsPerCluster;
-    ULONG ulBlockSize;
-    TCHAR szVolumePathName[MAX_PATH];
-
     TRACE("InitFileAttr %ls\n", m_wszPath);
 
     /*
@@ -557,23 +605,15 @@ CFileDefExt::InitFileAttr(HWND hwndDlg)
             FileSize.u.LowPart = FileInfo.nFileSizeLow;
             FileSize.u.HighPart = FileInfo.nFileSizeHigh;
             if (SH_FormatFileSizeWithBytes(&FileSize, wszBuf, _countof(wszBuf)))
-            {    
-                SetDlgItemTextW(hwndDlg, 14011, wszBuf);                
-                // Calculate size on disc
-                // if disk usage is not aligned on a complete disk geometry block (sector/cluster), align on the next block size, depending on disk geometry data
-                // This could be improved as per : https://docs.microsoft.com/en-us/previous-versions/technet-magazine/hh148159(v=msdn.10)
-                if (GetVolumePathName(m_wszPath, szVolumePathName, _countof(szVolumePathName)))
-                {
-                    if (GetDiskFreeSpace(szVolumePathName, &ulSectorsPerCluster, &ulBytesPerSector, NULL, NULL))
-                    {
-                        ulBlockSize = ulBytesPerSector * ulSectorsPerCluster;
-                        if (FileSize.QuadPart % ulBlockSize)
-                        {
-                            FileSize.QuadPart = ((FileSize.QuadPart / (ulBlockSize)) + 1) * ulBlockSize;
-                            SH_FormatFileSizeWithBytes(&FileSize, wszBuf, _countof(wszBuf));
-                        }
-                   }
-               }
+            {
+                SetDlgItemTextW(hwndDlg, 14011, wszBuf);
+                
+                // Compute file on disk. If fails, use logical size
+                if (GetPhysicalFileSize(m_wszPath, &FileSize))
+                    SH_FormatFileSizeWithBytes(&FileSize, wszBuf, _countof(wszBuf));
+                    else
+                    ERR("Unreliable size on disl");
+
                SetDlgItemTextW(hwndDlg, 14012, wszBuf);
             }
         }
@@ -1336,15 +1376,18 @@ CFileDefExt::CountFolderAndFiles(HWND hwndDlg, LPWSTR pwszBuf, UINT cchBufMax, D
     /* Find filename position */
     UINT cchBuf = wcslen(pwszBuf);
     WCHAR *pwszFilename = pwszBuf + cchBuf;
-    ULONG ulBytesPerSector;
-    ULONG ulSectorsPerCluster;
-    ULONG ulBlockSize;
-    TCHAR szVolumePathName[MAX_PATH];
+    WCHAR PathBuffer[MAX_PATH]=L"";
+    WCHAR WorkBuffer[MAX_PATH]=L"";
+
     size_t cchFilenameMax = cchBufMax - cchBuf;
     if (!cchFilenameMax)
         return FALSE;
     *(pwszFilename++) = '\\';
     --cchFilenameMax;
+
+    // Store path without wildcard
+    ZeroMemory(PathBuffer,sizeof(PathBuffer));
+    wcscpy(PathBuffer,pwszBuf);
 
     /* Find all files, FIXME: shouldn't be "*"? */
     StringCchCopyW(pwszFilename, cchFilenameMax, L"*");
@@ -1365,6 +1408,9 @@ CFileDefExt::CountFolderAndFiles(HWND hwndDlg, LPWSTR pwszBuf, UINT cchBufMax, D
 
     do
     {
+        ZeroMemory(WorkBuffer,sizeof(WorkBuffer));
+        wcscpy(WorkBuffer,PathBuffer);
+        wcscat(WorkBuffer,wfd.cFileName);
         if (wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
         {
             /* Don't process "." and ".." items */
@@ -1374,33 +1420,23 @@ CFileDefExt::CountFolderAndFiles(HWND hwndDlg, LPWSTR pwszBuf, UINT cchBufMax, D
             ++m_cFolders;
 
             StringCchCopyW(pwszFilename, cchFilenameMax, wfd.cFileName);
-            CountFolderAndFiles(hwndDlg, pwszBuf, cchBufMax, ticks);
+            CountFolderAndFiles(hwndDlg, WorkBuffer, cchBufMax, ticks);
         }
         else
         {
             m_cFiles++;
 
             ULARGE_INTEGER FileSize;
+
             FileSize.u.LowPart  = wfd.nFileSizeLow;
             FileSize.u.HighPart = wfd.nFileSizeHigh;
             m_DirSize.QuadPart += FileSize.QuadPart;
             // Calculate size on disc
-            // if disk usage is not aligned on a complete disk geometry block (sector/cluster), align on the next block size, depending on disk geometry data
-            // This could be improved as per : https://docs.microsoft.com/en-us/previous-versions/technet-magazine/hh148159(v=msdn.10)
-            if (GetVolumePathName(pwszBuf, szVolumePathName, _countof(szVolumePathName)))
-            {
-                if (GetDiskFreeSpace(szVolumePathName, &ulSectorsPerCluster, &ulBytesPerSector, NULL, NULL))
-                {
-                    ulBlockSize = ulBytesPerSector * ulSectorsPerCluster;
-                    m_DirSizeOnDisc.QuadPart += FileSize.QuadPart % (ulBlockSize) ? ((FileSize.QuadPart/(ulBlockSize)) + 1) * ulBlockSize : FileSize.QuadPart;
-                }
-                else
-                    m_DirSizeOnDisc.QuadPart += FileSize.QuadPart;
-            }
-            else
-            {
-                m_DirSizeOnDisc.QuadPart += FileSize.QuadPart;
-            }
+            if(!GetPhysicalFileSize(WorkBuffer, &FileSize))
+                ERR("GetPhysicalFileSize failed for %ls",WorkBuffer);
+            
+            m_DirSizeOnDisc.QuadPart += FileSize.QuadPart;
+            
         }
         if (GetTickCount() - *ticks > (DWORD) 300)
         {
