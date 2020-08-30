@@ -1,10 +1,17 @@
 
+#add_definitions(-DDBG)
+
 list(APPEND SOURCE
     cabinet.cxx
+    cabinet.h
     dfp.cxx
-    main.cxx
+    dfp.h
+    cabman.cxx
+    cabman.h
     mszip.cxx
+    mszip.h
     raw.cxx
+    raw.h
     CCFDATAStorage.cxx)
 
 add_host_tool(cabman ${SOURCE})

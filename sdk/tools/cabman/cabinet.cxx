@@ -77,8 +77,6 @@ CCabinet::CCabinet()
     *DiskPrev = '\0';
     *CabinetNext = '\0';
     *DiskNext = '\0';
-    *DestPath = '\0';
-    *CabinetReservedFile = '\0';
 
     FileOpen = false;
     CabinetReservedFileBuffer = NULL;
@@ -139,7 +137,7 @@ bool CCabinet::IsSeparator(char Char)
         return false;
 }
 
-char* CCabinet::ConvertPath(char* Path, bool Allocate)
+void CCabinet::ConvertPath(std::string& Path)
 /*
  * FUNCTION: Replaces \ or / with the one used by the host environment
  * ARGUMENTS:
@@ -150,37 +148,20 @@ char* CCabinet::ConvertPath(char* Path, bool Allocate)
  *     Pointer to new path
  */
 {
-    char *newpath;
-    int i;
-
-    if (Allocate)
-        newpath = strdup(Path);
-    else
-        newpath = Path;
-
-    i = 0;
-    while (Path[i] != 0)
+    for (size_t i = 0; i < Path.size(); ++i)
     {
 #if defined(_WIN32)
         if (Path[i] == '/')
-            newpath[i] = '\\';
-        else
+            Path[i] = '\\';
 #else
         if (Path[i] == '\\')
-            newpath[i] = '/';
-        else
+            Path[i] = '/';
 #endif
-            newpath[i] = Path[i];
-
-        i++;
     }
-    newpath[i] = 0;
-
-    return(newpath);
 }
 
 
-char* CCabinet::GetFileName(char* Path)
+const char* CCabinet::GetFileName(const char* Path)
 /*
  * FUNCTION: Returns a pointer to file name
  * ARGUMENTS:
@@ -201,49 +182,18 @@ char* CCabinet::GetFileName(char* Path)
 }
 
 
-void CCabinet::RemoveFileName(char* Path)
-/*
- * FUNCTION: Removes a file name from a path
- * ARGUMENTS:
- *     Path = Pointer to string with path
- */
-{
-    char* FileName;
-    ULONG i;
-
-    i = (Path [0] ? (Path[1] == ':' ? 2 : 0) : 0);
-    FileName = GetFileName(Path + i);
-
-    if ((FileName != (Path + i)) && (IsSeparator(FileName [-1])))
-        FileName--;
-    if ((FileName == (Path + i)) && (IsSeparator(FileName [0])))
-        FileName++;
-    FileName[0] = 0;
-}
-
-
-bool CCabinet::NormalizePath(char* Path,
-                             ULONG Length)
+void CCabinet::NormalizePath(std::string& Path)
 /*
  * FUNCTION: Normalizes a path
  * ARGUMENTS:
- *     Path   = Pointer to string with pathname
- *     Length = Number of bytes in Path
- * RETURNS:
- *     true if there was enough room in Path, or false
+ *     Path   = string with pathname
  */
 {
-    ULONG n;
-    bool OK = true;
-
-    if ((n = (ULONG)strlen(Path)) &&
-        (!IsSeparator(Path[n - 1])) &&
-        (OK = ((n + 1) < Length)))
+    if (Path.length() > 0)
     {
-        Path[n]     = DIR_SEPARATOR_CHAR;
-        Path[n + 1] = 0;
+        if (!IsSeparator(Path[Path.length() - 1]))
+            Path += DIR_SEPARATOR_CHAR;
     }
-    return OK;
 }
 
 
@@ -258,7 +208,7 @@ char* CCabinet::GetCabinetName()
 }
 
 
-void CCabinet::SetCabinetName(char* FileName)
+void CCabinet::SetCabinetName(const char* FileName)
 /*
  * FUNCTION: Sets cabinet file name
  * ARGUMENTS:
@@ -269,20 +219,19 @@ void CCabinet::SetCabinetName(char* FileName)
 }
 
 
-void CCabinet::SetDestinationPath(char* DestinationPath)
+void CCabinet::SetDestinationPath(const char* DestinationPath)
 /*
  * FUNCTION: Sets destination path
  * ARGUMENTS:
  *    DestinationPath = Pointer to string with name of destination path
  */
 {
-    strcpy(DestPath, DestinationPath);
-    ConvertPath(DestPath, false);
-    if (strlen(DestPath) > 0)
-        NormalizePath(DestPath, PATH_MAX);
+    DestPath = DestinationPath;
+    ConvertPath(DestPath);
+    NormalizePath(DestPath);
 }
 
-ULONG CCabinet::AddSearchCriteria(char* SearchCriteria)
+ULONG CCabinet::AddSearchCriteria(const char* SearchCriteria)
 /*
  * FUNCTION: Adds a criteria to the search criteria list
  * ARGUMENTS:
@@ -294,7 +243,7 @@ ULONG CCabinet::AddSearchCriteria(char* SearchCriteria)
     PSEARCH_CRITERIA Criteria;
 
     // Add the criteria to the list of search criteria
-    Criteria = (PSEARCH_CRITERIA)malloc(sizeof(SEARCH_CRITERIA));
+    Criteria = new SEARCH_CRITERIA;
     if(!Criteria)
     {
         DPRINT(MIN_TRACE, ("Insufficient memory.\n"));
@@ -312,14 +261,7 @@ ULONG CCabinet::AddSearchCriteria(char* SearchCriteria)
     CriteriaListTail = Criteria;
 
     // Set the actual criteria string
-    Criteria->Search = (char*)malloc(strlen(SearchCriteria) + 1);
-    if (!Criteria->Search)
-    {
-        DPRINT(MIN_TRACE, ("Insufficient memory.\n"));
-        return CAB_STATUS_NOMEMORY;
-    }
-
-    strcpy(Criteria->Search, SearchCriteria);
+    Criteria->Search = SearchCriteria;
 
     return CAB_STATUS_SUCCESS;
 }
@@ -338,8 +280,7 @@ void CCabinet::DestroySearchCriteria()
     {
         NextCriteria = Criteria->Next;
 
-        free(Criteria->Search);
-        free(Criteria);
+        delete Criteria;
 
         Criteria = NextCriteria;
     }
@@ -358,7 +299,7 @@ bool CCabinet::HasSearchCriteria()
     return (CriteriaListHead != NULL);
 }
 
-bool CCabinet::SetCompressionCodec(char* CodecName)
+bool CCabinet::SetCompressionCodec(const char* CodecName)
 /*
  * FUNCTION: Selects the codec to use for compression
  * ARGUMENTS:
@@ -378,18 +319,18 @@ bool CCabinet::SetCompressionCodec(char* CodecName)
     return true;
 }
 
-char* CCabinet::GetDestinationPath()
+const char* CCabinet::GetDestinationPath()
 /*
  * FUNCTION: Returns destination path
  * RETURNS:
  *    Pointer to string with name of destination path
  */
 {
-    return DestPath;
+    return DestPath.c_str();
 }
 
 
-bool CCabinet::SetCabinetReservedFile(char* FileName)
+bool CCabinet::SetCabinetReservedFile(const char* FileName)
 /*
  * FUNCTION: Sets cabinet reserved file
  * ARGUMENTS:
@@ -398,12 +339,12 @@ bool CCabinet::SetCabinetReservedFile(char* FileName)
 {
     FILE* FileHandle;
     ULONG BytesRead;
-    char* ConvertedFileName;
+    std::string ConvertedFileName;
 
-    ConvertedFileName = ConvertPath(FileName, true);
+    ConvertedFileName = FileName;
+    ConvertPath(ConvertedFileName);
 
-    FileHandle = fopen(ConvertedFileName, "rb");
-    free(ConvertedFileName);
+    FileHandle = fopen(ConvertedFileName.c_str(), "rb");
     if (FileHandle == NULL)
     {
         DPRINT(MID_TRACE, ("Cannot open cabinet reserved file.\n"));
@@ -440,20 +381,9 @@ bool CCabinet::SetCabinetReservedFile(char* FileName)
 
     fclose(FileHandle);
 
-    strcpy(CabinetReservedFile, FileName);
+    CabinetReservedFile = FileName;
 
     return true;
-}
-
-
-char* CCabinet::GetCabinetReservedFile()
-/*
- * FUNCTION: Returns cabionet reserved file
- * RETURNS:
- *    Pointer to string with name of cabinet reserved file
- */
-{
-    return CabinetReservedFile;
 }
 
 
@@ -673,7 +603,7 @@ ULONG CCabinet::FindNext(PCAB_SEARCH Search)
             (Search->Next->File.FileOffset <= LastFileOffset))
         {
             DPRINT(MAX_TRACE, ("Skipping file (%s)  FileOffset (0x%X)  LastFileOffset (0x%X).\n",
-                Search->Next->FileName, (UINT)Search->Next->File.FileOffset, (UINT)LastFileOffset));
+                Search->Next->FileName.c_str(), (UINT)Search->Next->File.FileOffset, (UINT)LastFileOffset));
             Search->Next = Search->Next->Next;
         }
 
@@ -692,7 +622,7 @@ ULONG CCabinet::FindNext(PCAB_SEARCH Search)
 
         while(Criteria)
         {
-            if(MatchFileNamePattern(Search->Next->FileName, Criteria->Search))
+            if(MatchFileNamePattern(Search->Next->FileName.c_str(), Criteria->Search.c_str()))
             {
                 bFound = true;
                 break;
@@ -736,7 +666,7 @@ ULONG CCabinet::FindNext(PCAB_SEARCH Search)
 }
 
 
-ULONG CCabinet::ExtractFile(char* FileName)
+ULONG CCabinet::ExtractFile(const char* FileName)
 /*
  * FUNCTION: Extracts a file from the cabinet
  * ARGUMENTS:
@@ -796,7 +726,7 @@ ULONG CCabinet::ExtractFile(char* FileName)
         (UINT)File->DataBlock->AbsoluteOffset,
         (UINT)File->DataBlock->UncompOffset));
 
-    strcpy(DestName, DestPath);
+    strcpy(DestName, DestPath.c_str());
     strcat(DestName, FileName);
 
     /* Create destination file, fail if it already exists */
@@ -1302,10 +1232,10 @@ ULONG CCabinet::WriteFileToScratchStorage(PCFFILE_NODE FileNode)
     if (!ContinueFile)
     {
         /* Try to open file */
-        SourceFile = fopen(FileNode->FileName, "rb");
+        SourceFile = fopen(FileNode->FileName.c_str(), "rb");
         if (SourceFile == NULL)
         {
-            DPRINT(MID_TRACE, ("File not found (%s).\n", FileNode->FileName));
+            DPRINT(MID_TRACE, ("File not found (%s).\n", FileNode->FileName.c_str()));
             return CAB_STATUS_NOFILE;
         }
 
@@ -1320,7 +1250,7 @@ ULONG CCabinet::WriteFileToScratchStorage(PCFFILE_NODE FileNode)
         }
 
         /* Call OnAdd event handler */
-        OnAdd(&FileNode->File, FileNode->FileName);
+        OnAdd(&FileNode->File, FileNode->FileName.c_str());
 
         TotalBytesLeft = FileNode->File.FileSize;
 
@@ -1330,7 +1260,7 @@ ULONG CCabinet::WriteFileToScratchStorage(PCFFILE_NODE FileNode)
         CurrentFolderNode->Commit        = true;
         PrevCabinetNumber                = CurrentDiskNumber;
 
-        Size = sizeof(CFFILE) + (ULONG)strlen(GetFileName(FileNode->FileName)) + 1;
+        Size = sizeof(CFFILE) + (ULONG)strlen(GetFileName(FileNode->FileName.c_str())) + 1;
         CABHeader.FileTableOffset += Size;
         TotalFileSize += Size;
         DiskSize += Size;
@@ -1621,23 +1551,16 @@ ULONG CCabinet::AddFile(char* FileName)
 {
     FILE* SrcFile;
     PCFFILE_NODE FileNode;
-    char* NewFileName;
+    std::string NewFileName;
 
-    NewFileName = (char*)malloc(strlen(FileName) + 1);
-    if (!NewFileName)
-    {
-        DPRINT(MIN_TRACE, ("Insufficient memory.\n"));
-        return CAB_STATUS_NOMEMORY;
-    }
-    strcpy(NewFileName, FileName);
-    ConvertPath(NewFileName, false);
+    NewFileName = FileName;
+    ConvertPath(NewFileName);
 
     /* Try to open file */
-    SrcFile = fopen(NewFileName, "rb");
+    SrcFile = fopen(NewFileName.c_str(), "rb");
     if (SrcFile == NULL)
     {
-        DPRINT(MID_TRACE, ("File not found (%s).\n", NewFileName));
-        free(NewFileName);
+        DPRINT(MID_TRACE, ("File not found (%s).\n", NewFileName.c_str()));
         return CAB_STATUS_CANNOT_OPEN;
     }
 
@@ -1645,7 +1568,6 @@ ULONG CCabinet::AddFile(char* FileName)
     if (!FileNode)
     {
         DPRINT(MIN_TRACE, ("Insufficient memory.\n"));
-        free(NewFileName);
         fclose(SrcFile);
         return CAB_STATUS_NOMEMORY;
     }
@@ -1687,7 +1609,7 @@ bool CCabinet::CreateSimpleCabinet()
  */
 {
     bool bRet = false;
-    char* pszFile;
+    const char* pszFile;
     char szFilePath[PATH_MAX];
     char szFile[PATH_MAX];
     PSEARCH_CRITERIA Criteria;
@@ -1716,20 +1638,20 @@ bool CCabinet::CreateSimpleCabinet()
     while(Criteria)
     {
         // Store the file path with a trailing slash in szFilePath
-        ConvertPath(Criteria->Search, false);
-        pszFile = strrchr(Criteria->Search, DIR_SEPARATOR_CHAR);
+        ConvertPath(Criteria->Search);
+        pszFile = strrchr(Criteria->Search.c_str(), DIR_SEPARATOR_CHAR);
 
         if(pszFile)
         {
             // Set the pointer to the start of the file name, not the slash
             pszFile++;
 
-            strncpy(szFilePath, Criteria->Search, pszFile - Criteria->Search);
-            szFilePath[pszFile - Criteria->Search] = 0;
+            strncpy(szFilePath, Criteria->Search.c_str(), pszFile - Criteria->Search.c_str());
+            szFilePath[pszFile - Criteria->Search.c_str()] = 0;
         }
         else
         {
-            pszFile = Criteria->Search;
+            pszFile = Criteria->Search.c_str();
 
 #if defined(_WIN32)
             szFilePath[0] = 0;
@@ -1741,12 +1663,12 @@ bool CCabinet::CreateSimpleCabinet()
 
 #if defined(_WIN32)
         // Windows: Use the easy FindFirstFile/FindNextFile API for getting all files and checking them against the pattern
-        hFind = FindFirstFile(Criteria->Search, &FindFileData);
+        hFind = FindFirstFile(Criteria->Search.c_str(), &FindFileData);
 
         // Don't stop if a search criteria is not found
         if(hFind == INVALID_HANDLE_VALUE && GetLastError() != ERROR_FILE_NOT_FOUND)
         {
-            DPRINT(MIN_TRACE, ("FindFirstFile failed, Criteria: %s, error code is %u\n", Criteria->Search, (UINT)GetLastError()));
+            DPRINT(MIN_TRACE, ("FindFirstFile failed, Criteria: %s, error code is %u\n", Criteria->Search.c_str(), (UINT)GetLastError()));
             goto cleanup;
         }
 
@@ -1845,7 +1767,7 @@ void CCabinet::SetMaxDiskSize(ULONG Size)
 /* Default event handlers */
 
 bool CCabinet::OnOverwrite(PCFFILE File,
-                           char* FileName)
+                           const char* FileName)
 /*
  * FUNCTION: Called when extracting a file and it already exists
  * ARGUMENTS:
@@ -1860,7 +1782,7 @@ bool CCabinet::OnOverwrite(PCFFILE File,
 
 
 void CCabinet::OnExtract(PCFFILE File,
-                         char* FileName)
+                         const char* FileName)
 /*
  * FUNCTION: Called just before extracting a file
  * ARGUMENTS:
@@ -1871,8 +1793,8 @@ void CCabinet::OnExtract(PCFFILE File,
 }
 
 
-void CCabinet::OnDiskChange(char* CabinetName,
-                            char* DiskLabel)
+void CCabinet::OnDiskChange(const char* CabinetName,
+                            const char* DiskLabel)
 /*
  * FUNCTION: Called when a new disk is to be processed
  * ARGUMENTS:
@@ -1882,11 +1804,15 @@ void CCabinet::OnDiskChange(char* CabinetName,
 {
 }
 
+void CCabinet::OnVerboseMessage(const char* Message)
+{
+
+}
 
 #ifndef CAB_READ_ONLY
 
 void CCabinet::OnAdd(PCFFILE File,
-                     char* FileName)
+                     const char* FileName)
 /*
  * FUNCTION: Called just before adding a file to a cabinet
  * ARGUMENTS:
@@ -1970,7 +1896,7 @@ ULONG CCabinet::GetAbsoluteOffset(PCFFILE_NODE File)
     PCFDATA_NODE Node;
 
     DPRINT(MAX_TRACE, ("FileName '%s'  FileOffset (0x%X)  FileSize (%u).\n",
-        File->FileName,
+        File->FileName.c_str(),
         (UINT)File->File.FileOffset,
         (UINT)File->File.FileSize));
 
@@ -1999,7 +1925,7 @@ ULONG CCabinet::GetAbsoluteOffset(PCFFILE_NODE File)
 }
 
 
-ULONG CCabinet::LocateFile(char* FileName,
+ULONG CCabinet::LocateFile(const char* FileName,
                            PCFFILE_NODE *File)
 /*
  * FUNCTION: Locates a file in the cabinet
@@ -2020,7 +1946,7 @@ ULONG CCabinet::LocateFile(char* FileName,
     Node = FileListHead;
     while (Node != NULL)
     {
-        if (strcasecmp(FileName, Node->FileName) == 0)
+        if (strcasecmp(FileName, Node->FileName.c_str()) == 0)
         {
             CurrentFolderNode = LocateFolderNode(Node->File.FileControlID);
             if (!CurrentFolderNode)
@@ -2137,20 +2063,15 @@ ULONG CCabinet::ReadFileTable()
             return CAB_STATUS_INVALID_CAB;
         }
 
-        File->FileName = (char*)malloc(PATH_MAX);
-        if (!File->FileName)
-        {
-            DPRINT(MIN_TRACE, ("Insufficient memory.\n"));
-            return CAB_STATUS_NOMEMORY;
-        }
-
         /* Read file name */
-        Status = ReadString(File->FileName, PATH_MAX);
+        char Buf[PATH_MAX];
+        Status = ReadString(Buf, PATH_MAX);
         if (Status != CAB_STATUS_SUCCESS)
             return Status;
+        File->FileName = Buf;
 
         DPRINT(MAX_TRACE, ("Found file '%s' at uncompressed offset (0x%X).  Size (%u bytes)  ControlId (0x%X).\n",
-            File->FileName,
+            File->FileName.c_str(),
             (UINT)File->File.FileOffset,
             (UINT)File->File.FileSize,
             File->File.FileControlID));
@@ -2234,11 +2155,9 @@ PCFFOLDER_NODE CCabinet::NewFolderNode()
 {
     PCFFOLDER_NODE Node;
 
-    Node = (PCFFOLDER_NODE)malloc(sizeof(CFFOLDER_NODE));
+    Node = new CFFOLDER_NODE;
     if (!Node)
         return NULL;
-
-    memset(Node, 0, sizeof(CFFOLDER_NODE));
 
     Node->Folder.CompressionType = CAB_COMP_NONE;
 
@@ -2266,11 +2185,9 @@ PCFFILE_NODE CCabinet::NewFileNode()
 {
     PCFFILE_NODE Node;
 
-    Node = (PCFFILE_NODE)malloc(sizeof(CFFILE_NODE));
+    Node = new CFFILE_NODE;
     if (!Node)
         return NULL;
-
-    memset(Node, 0, sizeof(CFFILE_NODE));
 
     Node->Prev = FileListTail;
 
@@ -2296,11 +2213,9 @@ PCFDATA_NODE CCabinet::NewDataNode(PCFFOLDER_NODE FolderNode)
 {
     PCFDATA_NODE Node;
 
-    Node = (PCFDATA_NODE)malloc(sizeof(CFDATA_NODE));
+    Node = new CFDATA_NODE;
     if (!Node)
         return NULL;
-
-    memset(Node, 0, sizeof(CFDATA_NODE));
 
     Node->Prev = FolderNode->DataListTail;
 
@@ -2329,7 +2244,7 @@ void CCabinet::DestroyDataNodes(PCFFOLDER_NODE FolderNode)
     while (NextNode != NULL)
     {
         PrevNode = NextNode->Next;
-        free(NextNode);
+        delete NextNode;
         NextNode = PrevNode;
     }
     FolderNode->DataListHead = NULL;
@@ -2349,9 +2264,7 @@ void CCabinet::DestroyFileNodes()
     while (NextNode != NULL)
     {
         PrevNode = NextNode->Next;
-        if (NextNode->FileName)
-            free(NextNode->FileName);
-        free(NextNode);
+        delete NextNode;
         NextNode = PrevNode;
     }
     FileListHead = NULL;
@@ -2392,13 +2305,11 @@ void CCabinet::DestroyDeletedFileNodes()
                     FileListTail->Next = NULL;
             }
 
-            DPRINT(MAX_TRACE, ("Deleting file: '%s'\n", CurNode->FileName));
+            DPRINT(MAX_TRACE, ("Deleting file node: '%s'\n", CurNode->FileName.c_str()));
 
-            TotalFileSize -= (sizeof(CFFILE) + (ULONG)strlen(GetFileName(CurNode->FileName)) + 1);
+            TotalFileSize -= (sizeof(CFFILE) + (ULONG)strlen(GetFileName(CurNode->FileName.c_str())) + 1);
 
-            if (CurNode->FileName)
-                free(CurNode->FileName);
-            free(CurNode);
+            delete CurNode;
         }
         CurNode = NextNode;
     }
@@ -2418,7 +2329,7 @@ void CCabinet::DestroyFolderNodes()
     {
         PrevNode = NextNode->Next;
         DestroyDataNodes(NextNode);
-        free(NextNode);
+        delete NextNode;
         NextNode = PrevNode;
     }
     FolderListHead = NULL;
@@ -2460,7 +2371,7 @@ void CCabinet::DestroyDeletedFolderNodes()
             }
 
             DestroyDataNodes(CurNode);
-            free(CurNode);
+            delete CurNode;
 
             TotalFolderSize -= sizeof(CFFOLDER);
         }
@@ -2548,7 +2459,7 @@ ULONG CCabinet::ReadBlock(void* Buffer,
     return CAB_STATUS_SUCCESS;
 }
 
-bool CCabinet::MatchFileNamePattern(char* FileName, char* Pattern)
+bool CCabinet::MatchFileNamePattern(const char* FileName, const char* Pattern)
 /*
  * FUNCTION: Matches a wildcard character pattern against a file
  * ARGUMENTS:
@@ -2563,8 +2474,8 @@ bool CCabinet::MatchFileNamePattern(char* FileName, char* Pattern)
  *     Original location: http://www.busybox.net/cgi-bin/viewcvs.cgi/trunk/busybox/utility.c?rev=5&view=markup
  */
 {
-    char* retryPattern = NULL;
-    char* retryFileName = NULL;
+    const char* retryPattern = NULL;
+    const char* retryFileName = NULL;
     char  ch;
 
     while (*FileName || *Pattern)
@@ -2896,7 +2807,7 @@ ULONG CCabinet::WriteFileEntries()
             }
 
             DPRINT(MAX_TRACE, ("Writing file entry. FileControlID (0x%X)  FileOffset (0x%X)  FileSize (%u)  FileName (%s).\n",
-                File->File.FileControlID, (UINT)File->File.FileOffset, (UINT)File->File.FileSize, File->FileName));
+                File->File.FileControlID, (UINT)File->File.FileOffset, (UINT)File->File.FileSize, File->FileName.c_str()));
 
             if (fwrite(&File->File, sizeof(CFFILE), 1, FileHandle) < 1)
             {
@@ -2904,7 +2815,8 @@ ULONG CCabinet::WriteFileEntries()
                 return CAB_STATUS_CANNOT_WRITE;
             }
 
-            if (fwrite(GetFileName(File->FileName), strlen(GetFileName(File->FileName)) + 1, 1, FileHandle) < 1)
+            std::string fname = GetFileName(File->FileName.c_str());
+            if (fwrite(fname.c_str(), fname.length() + 1, 1, FileHandle) < 1)
             {
                 DPRINT(MIN_TRACE, ("Cannot write to file.\n"));
                 return CAB_STATUS_CANNOT_WRITE;
@@ -3119,14 +3031,14 @@ ULONG CCabinet::GetFileTimes(FILE* FileHandle, PCFFILE_NODE File)
     char buf[PATH_MAX];
 
     // Check for an absolute path
-    if (IsSeparator(File->FileName[0]))
-        strcpy(buf, File->FileName);
+    if (File->FileName.length() > 0 && IsSeparator(File->FileName[0]))
+        strcpy(buf, File->FileName.c_str());
     else
     {
         if (!getcwd(buf, sizeof(buf)))
             return CAB_STATUS_CANNOT_READ;
         strcat(buf, DIR_SEPARATOR_STRING);
-        strcat(buf, File->FileName);
+        strcat(buf, File->FileName.c_str());
     }
 
     if (stat(buf, &stbuf) == -1)
@@ -3150,7 +3062,7 @@ ULONG CCabinet::GetAttributesOnFile(PCFFILE_NODE File)
 #if defined(_WIN32)
     LONG Attributes;
 
-    Attributes = GetFileAttributes(File->FileName);
+    Attributes = GetFileAttributes(File->FileName.c_str());
     if (Attributes == -1)
         return CAB_STATUS_CANNOT_READ;
 
@@ -3163,14 +3075,14 @@ ULONG CCabinet::GetAttributesOnFile(PCFFILE_NODE File)
     char buf[PATH_MAX];
 
     // Check for an absolute path
-    if (IsSeparator(File->FileName[0]))
-        strcpy(buf, File->FileName);
+    if (File->FileName.length() > 0 && IsSeparator(File->FileName[0]))
+        strcpy(buf, File->FileName.c_str());
     else
     {
         if (!getcwd(buf, sizeof(buf)))
             return CAB_STATUS_CANNOT_READ;
         strcat(buf, DIR_SEPARATOR_STRING);
-        strcat(buf, File->FileName);
+        strcat(buf, File->FileName.c_str());
     }
 
     if (stat(buf, &stbuf) == -1)

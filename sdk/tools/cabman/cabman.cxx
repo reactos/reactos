@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS cabinet manager
- * FILE:        tools/cabman/main.cxx
+ * FILE:        tools/cabman/cabman.cxx
  * PURPOSE:     Main program
  * PROGRAMMERS: Casper S. Hornstrup (chorns@users.sourceforge.net)
  *              Colin Finck <mail@colinfinck.de>
@@ -452,7 +452,7 @@ bool CCABManager::DisplayCabinet()
                     printf("%s ", Attr2Str(Str, Search.File->Attributes));
                     sprintf(Str, "%u", (UINT)Search.File->FileSize);
                     printf("%s ", Pad(Str, ' ', 13));
-                    printf("%s\n", Search.FileName);
+                    printf("%s\n", Search.FileName.c_str());
 
                     FileCount++;
                     ByteCount += Search.File->FileSize;
@@ -513,7 +513,7 @@ bool CCABManager::ExtractFromCabinet()
         {
             do
             {
-                switch (Status = ExtractFile(Search.FileName))
+                switch (Status = ExtractFile(Search.FileName.c_str()))
                 {
                     case CAB_STATUS_SUCCESS:
                         break;
@@ -589,7 +589,7 @@ bool CCABManager::Run()
 /* Event handlers */
 
 bool CCABManager::OnOverwrite(PCFFILE File,
-                              char* FileName)
+                              const char* FileName)
 /*
  * FUNCTION: Called when extracting a file and it already exists
  * ARGUMENTS:
@@ -608,7 +608,7 @@ bool CCABManager::OnOverwrite(PCFFILE File,
 
 
 void CCABManager::OnExtract(PCFFILE File,
-                            char* FileName)
+                            const char* FileName)
 /*
  * FUNCTION: Called just before extracting a file
  * ARGUMENTS:
@@ -624,8 +624,8 @@ void CCABManager::OnExtract(PCFFILE File,
 
 
 
-void CCABManager::OnDiskChange(char* CabinetName,
-    char* DiskLabel)
+void CCABManager::OnDiskChange(const char* CabinetName,
+    const char* DiskLabel)
     /*
      * FUNCTION: Called when a new disk is to be processed
      * ARGUMENTS:
@@ -641,7 +641,7 @@ void CCABManager::OnDiskChange(char* CabinetName,
 
 
 void CCABManager::OnAdd(PCFFILE File,
-                        char* FileName)
+                        const char* FileName)
 /*
  * FUNCTION: Called just before adding a file to a cabinet
  * ARGUMENTS:
@@ -655,7 +655,13 @@ void CCABManager::OnAdd(PCFFILE File,
     }
 }
 
-CCABManager CABMgr;
+void CCABManager::OnVerboseMessage(const char* Message)
+{
+    if (Verbose)
+    {
+        printf("%s", Message);
+    }
+}
 
 int main(int argc, char * argv[])
 /*
@@ -665,11 +671,12 @@ int main(int argc, char * argv[])
  *     argv = Pointer to list of command line arguments
  */
 {
-    bool status = false;
+    CCABManager CABMgr;
 
-    if (CABMgr.ParseCmdline(argc, argv))        status = CABMgr.Run();
+    if (!CABMgr.ParseCmdline(argc, argv))
+        return false;
 
-    return (status ? 0 : 1);
+    return CABMgr.Run() ? 0 : 1;
 }
 
 /* EOF */
