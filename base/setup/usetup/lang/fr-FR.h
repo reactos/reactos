@@ -328,7 +328,7 @@ static MUI_ENTRY frFRLicensePageEntries[] =
     {
         8,
         16,
-        "sous lois lois locales ou intenationales applicables.",
+        "sous lois locales ou intenationales applicables.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
