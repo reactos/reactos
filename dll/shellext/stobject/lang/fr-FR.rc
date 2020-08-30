@@ -35,7 +35,7 @@ BEGIN
     IDS_HOTPLUG_DRIVES " - Lecteurs(%s)"
     IDS_HOTPLUG_A "A:"
     IDS_HOTPLUG_REQUIRES "Ce périphérique nécessite un ""retrait en sécurité"""
-    IDS_HOTPLUG_CLICK "Avant de retirer ce matériel, cliquez sur cet icone et sélectionnez le matériel à retirer."
+    IDS_HOTPLUG_CLICK "Avant de retirer ce périphérique, cliquez sur cette icône et sélectionnez le périphérique à retirer."
 
     //Volume related strings
     IDS_VOL_VOLUME "Volume"
