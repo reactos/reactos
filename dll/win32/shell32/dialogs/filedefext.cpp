@@ -20,8 +20,10 @@
  */
 
 #include "precomp.h"
-#include "iofuncs.h"
-#include "obfuncs.h"
+
+#define NTOS_MODE_USER
+#include <ndk/iofuncs.h>
+#include <ndk/obfuncs.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
