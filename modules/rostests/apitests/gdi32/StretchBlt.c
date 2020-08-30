@@ -59,7 +59,7 @@ static void test_StretchBlt(void)
     biDst.bmiHeader.biWidth = 2;
     biDst.bmiHeader.biHeight = 2;    // Set our Height to positive so we are bottom-up
     biDst.bmiHeader.biPlanes = 1;
-    biDst.bmiHeader.biBitCount = 32; // Set out BitCount to 32 which is Full Color
+    biDst.bmiHeader.biBitCount = 32; // Set our BitCount to 32 which is Full Color
     biDst.bmiHeader.biCompression = BI_RGB;
 
     memcpy(&biSrc, &biDst, sizeof(BITMAPINFO)); // Put same Destination params into the Source
