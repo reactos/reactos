@@ -43,12 +43,70 @@ WNDPROC PrevProc = NULL;
 HWND hDispWnd, hToolBar;
 
 /* zooming */
-#define MIN_ZOOM 10
-#define MAX_ZOOM 1600
+#define MIN_ZOOM ZoomSteps[0]
+#define MAX_ZOOM ZoomSteps[_countof(ZoomSteps)-1]
+
 UINT ZoomPercents = 100;
+
 static const UINT ZoomSteps[] =
 {
     10, 25, 50, 100, 200, 400, 800, 1600
+};
+
+/* ToolBar Buttons */
+typedef struct {
+    DWORD idb;  /* Index to bitmap */
+    DWORD ids;  /* Index to tooltip */
+} TB_BUTTON_CONFIG;
+
+    /* iBitmap,       idCommand,   fsState,         fsStyle,     bReserved[2], dwData, iString */ \
+#define DECLARE_BTN_INFO(_name) \
+    { TBICON_##_name, IDC_##_name, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0 }
+
+#define DECLARE_BTN_SEPARATOR \
+    { 15,             0,           TBSTATE_ENABLED, BTNS_SEP,    {0}, 0, 0 }
+
+/* ToolBar Buttons */
+static const TBBUTTON Buttons [] =
+{
+    DECLARE_BTN_INFO(PREV),
+    DECLARE_BTN_INFO(NEXT),
+    DECLARE_BTN_SEPARATOR,
+    DECLARE_BTN_INFO(BEST_FIT),
+    DECLARE_BTN_INFO(REAL_SIZE),
+    DECLARE_BTN_INFO(SLIDE_SHOW),
+    DECLARE_BTN_SEPARATOR,
+    DECLARE_BTN_INFO(ZOOMP),
+    DECLARE_BTN_INFO(ZOOMM),
+    DECLARE_BTN_SEPARATOR,
+    DECLARE_BTN_INFO(ROT1),
+    DECLARE_BTN_INFO(ROT2),
+    DECLARE_BTN_SEPARATOR,
+    DECLARE_BTN_INFO(DELETE),
+    DECLARE_BTN_INFO(PRINT),
+    DECLARE_BTN_INFO(SAVEAS),
+    DECLARE_BTN_INFO(MODIFY),
+    DECLARE_BTN_SEPARATOR,
+    DECLARE_BTN_INFO(HELP_TOC)
+};
+ 
+#define DECLARE_BTN_CONFIG(_name) { IDB_##_name, IDS_TOOLTIP_##_name }
+
+static const TB_BUTTON_CONFIG BtnConfig[] = {
+    DECLARE_BTN_CONFIG(PREV),
+    DECLARE_BTN_CONFIG(NEXT),
+    DECLARE_BTN_CONFIG(BEST_FIT),
+    DECLARE_BTN_CONFIG(REAL_SIZE),
+    DECLARE_BTN_CONFIG(SLIDE_SHOW),
+    DECLARE_BTN_CONFIG(ZOOMP),
+    DECLARE_BTN_CONFIG(ZOOMM),
+    DECLARE_BTN_CONFIG(ROT1),
+    DECLARE_BTN_CONFIG(ROT2),
+    DECLARE_BTN_CONFIG(DELETE),
+    DECLARE_BTN_CONFIG(PRINT),
+    DECLARE_BTN_CONFIG(SAVEAS),
+    DECLARE_BTN_CONFIG(MODIFY),
+    DECLARE_BTN_CONFIG(HELP_TOC)
 };
 
 /* animation */
@@ -278,22 +336,6 @@ static void ResetZoom(void)
     }
 }
 
-/* ToolBar Buttons */
-static const TBBUTTON Buttons [] =
-{   /* iBitmap,     idCommand,   fsState,         fsStyle,     bReserved[2], dwData, iString */
-    {TBICON_PREV,   IDC_PREV,    TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},
-    {TBICON_NEXT,   IDC_NEXT,    TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},
-    {15,            0,           TBSTATE_ENABLED, BTNS_SEP,    {0}, 0, 0},
-    {TBICON_ZOOMP,  IDC_ZOOMP,   TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},
-    {TBICON_ZOOMM,  IDC_ZOOMM,   TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},
-    {15,            0,           TBSTATE_ENABLED, BTNS_SEP,    {0}, 0, 0},
-    {TBICON_ROT1,   IDC_ROT1,    TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},
-    {TBICON_ROT2,   IDC_ROT2,    TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},
-    {15,            0,           TBSTATE_ENABLED, BTNS_SEP,    {0}, 0, 0},
-    {TBICON_SAVE,   IDC_SAVE,    TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},
-    {TBICON_PRINT,  IDC_PRINT,   TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0},
-};
-
 static void pLoadImage(LPWSTR szOpenFileName)
 {
     /* check file presence */
@@ -439,7 +481,7 @@ pPrintImage(HWND hwnd)
 static VOID
 EnableToolBarButtons(BOOL bEnable)
 {
-    SendMessage(hToolBar, TB_ENABLEBUTTON, IDC_SAVE, bEnable);
+    SendMessage(hToolBar, TB_ENABLEBUTTON, IDC_SAVEAS, bEnable);
     SendMessage(hToolBar, TB_ENABLEBUTTON, IDC_PRINT, bEnable);
 }
 
@@ -597,6 +639,9 @@ static VOID
 pFreeFileList(SHIMGVW_FILENODE *root)
 {
     SHIMGVW_FILENODE *conductor;
+
+    if (!root)
+        return;
 
     root->Prev->Next = NULL;
     root->Prev = NULL;
@@ -799,7 +844,7 @@ ImageView_SaveSettings(HWND hwnd)
 static BOOL
 ImageView_CreateToolBar(HWND hwnd)
 {
-    INT numButtons = sizeof(Buttons) / sizeof(Buttons[0]);
+    int n;
 
     hToolBar = CreateWindowEx(0, TOOLBARCLASSNAME, NULL,
                               WS_CHILD | WS_VISIBLE | TBSTYLE_FLAT | CCS_BOTTOM | TBSTYLE_TOOLTIPS,
@@ -816,38 +861,18 @@ ImageView_CreateToolBar(HWND hwnd)
                     sizeof(Buttons[0]), 0);
 
         hImageList = ImageList_Create(TB_IMAGE_WIDTH, TB_IMAGE_HEIGHT, ILC_MASK | ILC_COLOR24, 1, 1);
-
-        ImageList_AddMasked(hImageList, LoadImage(hInstance, MAKEINTRESOURCE(IDB_PREVICON), IMAGE_BITMAP,
-                      TB_IMAGE_WIDTH, TB_IMAGE_HEIGHT, LR_DEFAULTCOLOR), RGB(255, 255, 255));
-
-        ImageList_AddMasked(hImageList, LoadImage(hInstance, MAKEINTRESOURCE(IDB_NEXTICON), IMAGE_BITMAP,
-                      TB_IMAGE_WIDTH, TB_IMAGE_HEIGHT, LR_DEFAULTCOLOR), RGB(255, 255, 255));
-
-        ImageList_AddMasked(hImageList, LoadImage(hInstance, MAKEINTRESOURCE(IDB_ZOOMPICON), IMAGE_BITMAP,
-                      TB_IMAGE_WIDTH, TB_IMAGE_HEIGHT, LR_DEFAULTCOLOR), RGB(255, 255, 255));
-
-        ImageList_AddMasked(hImageList, LoadImage(hInstance, MAKEINTRESOURCE(IDB_ZOOMMICON), IMAGE_BITMAP,
-                      TB_IMAGE_WIDTH, TB_IMAGE_HEIGHT, LR_DEFAULTCOLOR), RGB(255, 255, 255));
-
-        ImageList_AddMasked(hImageList, LoadImage(hInstance, MAKEINTRESOURCE(IDB_SAVEICON), IMAGE_BITMAP,
-                      TB_IMAGE_WIDTH, TB_IMAGE_HEIGHT, LR_DEFAULTCOLOR), RGB(255, 255, 255));
-
-        ImageList_AddMasked(hImageList, LoadImage(hInstance, MAKEINTRESOURCE(IDB_PRINTICON), IMAGE_BITMAP,
-                      TB_IMAGE_WIDTH, TB_IMAGE_HEIGHT, LR_DEFAULTCOLOR), RGB(255, 255, 255));
-
-        ImageList_AddMasked(hImageList, LoadImage(hInstance, MAKEINTRESOURCE(IDB_ROT1ICON), IMAGE_BITMAP,
-                      TB_IMAGE_WIDTH, TB_IMAGE_HEIGHT, LR_DEFAULTCOLOR), RGB(255, 255, 255));
-
-        ImageList_AddMasked(hImageList, LoadImage(hInstance, MAKEINTRESOURCE(IDB_ROT2ICON), IMAGE_BITMAP,
-                      TB_IMAGE_WIDTH, TB_IMAGE_HEIGHT, LR_DEFAULTCOLOR), RGB(255, 255, 255));
-
         if (hImageList == NULL) return FALSE;
+
+        for (n = 0; n < _countof(BtnConfig); n++)
+        {
+            ImageList_AddMasked(hImageList, LoadImage(hInstance, MAKEINTRESOURCE(BtnConfig[n].idb), IMAGE_BITMAP,
+                    TB_IMAGE_WIDTH, TB_IMAGE_HEIGHT, LR_DEFAULTCOLOR), RGB(255, 255, 255));
+        }
 
         ImageList_Destroy((HIMAGELIST)SendMessage(hToolBar, TB_SETIMAGELIST,
                                                   0, (LPARAM)hImageList));
 
-        SendMessage(hToolBar, TB_ADDBUTTONS,
-                    numButtons, (LPARAM)Buttons);
+        SendMessage(hToolBar, TB_ADDBUTTONS, _countof(Buttons), (LPARAM)Buttons);
 
         return TRUE;
     }
@@ -949,36 +974,28 @@ ImageView_WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
             return 0L;
         }
 
-        case WM_KEYDOWN:
-            switch (LOWORD(wParam))
-            {
-                case VK_LEFT:
-                    PostMessage(hwnd, WM_COMMAND, MAKEWPARAM(IDC_PREV, BN_CLICKED), (LPARAM)NULL);
-                    break;
-
-                case VK_RIGHT:
-                    PostMessage(hwnd, WM_COMMAND, MAKEWPARAM(IDC_NEXT, BN_CLICKED), (LPARAM)NULL);
-                    break;
-            }
-            break;
-
         case WM_COMMAND:
         {
-            switch (wParam)
+            switch (LOWORD(wParam))
             {
                 case IDC_PREV:
-                {
                     currentFile = currentFile->Prev;
                     pLoadImageFromNode(currentFile, hwnd);
-                }
-                break;
+                    break;
 
                 case IDC_NEXT:
-                {
                     currentFile = currentFile->Next;
                     pLoadImageFromNode(currentFile, hwnd);
-                }
-                break;
+                    break;
+
+                case IDC_BEST_FIT:
+                    break;
+
+                case IDC_REAL_SIZE:
+                    break;
+
+                case IDC_SLIDE_SHOW:
+                    break;
 
                 case IDC_ZOOMP:
                     ZoomInOrOut(TRUE);
@@ -988,7 +1005,7 @@ ImageView_WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
                     ZoomInOrOut(FALSE);
                     break;
 
-                case IDC_SAVE:
+                case IDC_SAVEAS:
                     pSaveImageAs(hwnd);
                     break;
 
@@ -997,24 +1014,20 @@ ImageView_WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
                     break;
 
                 case IDC_ROT1:
-                {
                     if (image)
                     {
                         GdipImageRotateFlip(image, Rotate270FlipNone);
                         ImageView_UpdateWindow(hwnd);
                     }
                     break;
-                }
-
+    
                 case IDC_ROT2:
-                {
                     if (image)
                     {
                         GdipImageRotateFlip(image, Rotate90FlipNone);
                         ImageView_UpdateWindow(hwnd);
                     }
                     break;
-                }
             }
         }
         break;
@@ -1034,39 +1047,11 @@ ImageView_WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
                 case TTN_GETDISPINFO:
                 {
                     LPTOOLTIPTEXT lpttt;
-                    UINT idButton;
 
                     lpttt = (LPTOOLTIPTEXT)lParam;
-                    idButton = (UINT)lpttt->hdr.idFrom;
                     lpttt->hinst = hInstance;
 
-                    switch (idButton)
-                    {
-                        case IDC_PREV:
-                            lpttt->lpszText = MAKEINTRESOURCE(IDS_TOOLTIP_PREV_PIC);
-                        break;
-                        case IDC_NEXT:
-                            lpttt->lpszText = MAKEINTRESOURCE(IDS_TOOLTIP_NEXT_PIC);
-                        break;
-                        case IDC_ZOOMP:
-                            lpttt->lpszText = MAKEINTRESOURCE(IDS_TOOLTIP_ZOOM_IN);
-                        break;
-                        case IDC_ZOOMM:
-                            lpttt->lpszText = MAKEINTRESOURCE(IDS_TOOLTIP_ZOOM_OUT);
-                        break;
-                        case IDC_SAVE:
-                            lpttt->lpszText = MAKEINTRESOURCE(IDS_TOOLTIP_SAVEAS);
-                        break;
-                        case IDC_PRINT:
-                            lpttt->lpszText = MAKEINTRESOURCE(IDS_TOOLTIP_PRINT);
-                        break;
-                        case IDC_ROT1:
-                            lpttt->lpszText = MAKEINTRESOURCE(IDS_TOOLTIP_ROT_COUNCW);
-                        break;
-                        case IDC_ROT2:
-                            lpttt->lpszText = MAKEINTRESOURCE(IDS_TOOLTIP_ROT_CLOCKW);
-                        break;
-                    }
+                    lpttt->lpszText = MAKEINTRESOURCE(BtnConfig[lpttt->hdr.idFrom - IDC_TOOL_BASE].ids);
                     return TRUE;
                 }
             }
@@ -1109,6 +1094,12 @@ ImageView_CreateWindow(HWND hwnd, LPWSTR szFileName)
     WCHAR szInitialFile[MAX_PATH];
     HWND hMainWnd;
     MSG msg;
+    HACCEL hKbdAccel;
+    INITCOMMONCONTROLSEX Icc;
+
+    Icc.dwSize = sizeof(INITCOMMONCONTROLSEX);
+    Icc.dwICC = ICC_WIN95_CLASSES;
+    InitCommonControlsEx(&Icc);
 
     if (!ImageView_LoadSettings())
     {
@@ -1133,7 +1124,7 @@ ImageView_CreateWindow(HWND hwnd, LPWSTR szFileName)
     WndClass.lpfnWndProc    = ImageView_WndProc;
     WndClass.hInstance      = hInstance;
     WndClass.style          = CS_HREDRAW | CS_VREDRAW;
-    WndClass.hIcon          = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_APPICON));
+    WndClass.hIcon          = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_APP_ICON));
     WndClass.hCursor        = LoadCursor(NULL, IDC_ARROW);
     WndClass.hbrBackground  = NULL;   /* less flicker */
 
@@ -1146,7 +1137,7 @@ ImageView_CreateWindow(HWND hwnd, LPWSTR szFileName)
                             0, 0, NULL, NULL, hInstance, NULL);
 
     // make sure the path has no quotes on it
-    wcscpy(szInitialFile, szFileName);
+    StringCbCopyW(szInitialFile, sizeof(szInitialFile), szFileName);
     PathUnquoteSpacesW(szInitialFile);
 
     currentFile = pBuildFileList(szInitialFile);
@@ -1155,16 +1146,28 @@ ImageView_CreateWindow(HWND hwnd, LPWSTR szFileName)
         pLoadImageFromNode(currentFile, hMainWnd);
     }
 
+    /* Create accelerator table for keystrokes */
+    hKbdAccel = LoadAcceleratorsW(hInstance, MAKEINTRESOURCEW(IDR_ACCELERATOR));
+
     // Show it
     ShowWindow(hMainWnd, SW_SHOW);
     UpdateWindow(hMainWnd);
 
     // Message Loop
-    while(GetMessage(&msg,NULL,0,0))
+    for (;;)
     {
-        TranslateMessage(&msg);
-        DispatchMessageW(&msg);
+        if (GetMessage(&msg,NULL,0,0) <= 0)
+            break;
+
+        if (!TranslateAccelerator(hMainWnd, hKbdAccel, &msg))
+        {
+            TranslateMessage(&msg);
+            DispatchMessageW(&msg);
+        }
     }
+
+    /* Destroy accelerator table */
+    DestroyAcceleratorTable(hKbdAccel);
 
     pFreeFileList(currentFile);
 
