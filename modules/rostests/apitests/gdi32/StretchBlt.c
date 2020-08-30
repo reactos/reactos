@@ -16,8 +16,6 @@
 #include "winerror.h"
 #include "wingdi.h"
 #include "winuser.h"
-#include "mmsystem.h"
-#include "wine/winternl.h"
 #include "wine/test.h"
 
 static void test_StretchBlt(void)
@@ -113,7 +111,7 @@ static void test_StretchBlt(void)
         expected[1], dstBuffer[1]);
 
     /* Flip Left to Right and Top to Bottom on both Source and Destination */
-    StretchBlt(hdcDst, 1, 1, -2, -2, hdcSrc, 1, 1, -2, -2, SRCCOPY );
+    StretchBlt(hdcDst, 1, 1, -2, -2, hdcSrc, 1, 1, -2, -2, SRCCOPY);
     expected[0] = 0xFF000000;
     expected[1] = 0x00FF0000;
     expected[2] = 0x00FF0000;
