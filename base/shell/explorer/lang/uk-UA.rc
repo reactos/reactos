@@ -204,3 +204,15 @@ BEGIN
     IDS_TASKBAR_STARTMENU_PROP_CAPTION "Властивості меню Пуск та Панелі завдань"
     IDS_RESTORE_ALL "&Показати відкриті вікна"
 END
+
+// CustomizeNotifyIcons
+
+STRINGTABLE
+BEGIN
+    IDS_NOTIFY_SHOWALL "Show icons and notifications"
+    IDS_NOTIFY_HIDEALL "Hide icons and notifications"
+    IDS_NOTIFY_SHOWNOTIFY "Show notifications only"
+
+    IDS_NOTIFY_COLUMN1 "Icon"
+    IDS_NOTIFY_COLUMN2 "Behavior"
+END

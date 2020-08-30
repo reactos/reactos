@@ -103,6 +103,12 @@
 #define IDS_TASKBAR_STARTMENU_PROP_CAPTION 810
 #define IDS_RESTORE_ALL                    811
 
+#define IDS_NOTIFY_SHOWALL       900
+#define IDS_NOTIFY_HIDEALL       901
+#define IDS_NOTIFY_SHOWNOTIFY    902
+#define IDS_NOTIFY_COLUMN1       903
+#define IDS_NOTIFY_COLUMN2       904
+
 /*******************************************************************************\
 |*                              Control Resources                              *|
 \*******************************************************************************/

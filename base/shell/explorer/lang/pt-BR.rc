@@ -198,3 +198,15 @@ BEGIN
     IDS_TASKBAR_STARTMENU_PROP_CAPTION "Propriedades do Barra de Tarefas e Menu Iniciar"
     IDS_RESTORE_ALL "&Show Open Windows"
 END
+
+// CustomizeNotifyIcons
+
+STRINGTABLE 
+BEGIN
+    IDS_NOTIFY_SHOWALL "Mostrar icones e notificações"
+    IDS_NOTIFY_HIDEALL "Ocultar icones e notificações"
+    IDS_NOTIFY_SHOWNOTIFY "Mostrar apenas notificações"
+
+    IDS_NOTIFY_COLUMN1 "Icone"
+    IDS_NOTIFY_COLUMN2 "Comportamento"
+END
