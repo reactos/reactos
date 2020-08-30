@@ -328,14 +328,14 @@ static MUI_ENTRY frFRLicensePageEntries[] =
     {
         8,
         16,
-        "save applicable local and international law. La licence de",
+        "sous lois lois locales ou intenationales applicables.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         17,
-        "ReactOS ne couvre que la distribution à des tierces parties.",
+        "La licence de ReactOS ne couvre que la distribution à des tierces parties.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
