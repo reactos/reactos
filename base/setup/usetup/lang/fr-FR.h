@@ -279,7 +279,7 @@ static MUI_ENTRY frFRLicensePageEntries[] =
     {
         8,
         8,
-        "La licence du syst\212me ReactOS System est sous les termes de",
+        "La licence du syst\212me ReactOS est sous les termes de",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
