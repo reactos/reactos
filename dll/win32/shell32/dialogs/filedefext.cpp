@@ -1410,8 +1410,8 @@ CFileDefExt::CountFolderAndFiles(HWND hwndDlg, LPWSTR pwszBuf, UINT cchBufMax, D
     do
     {
         ZeroMemory(WorkBuffer, sizeof(WorkBuffer));
-        wcscpy(WorkBuffer,PathBuffer);
-        wcscat(WorkBuffer,wfd.cFileName);
+        wcscpy(WorkBuffer, PathBuffer);
+        wcscat(WorkBuffer, wfd.cFileName);
         if (wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
         {
             /* Don't process "." and ".." items */
