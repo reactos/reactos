@@ -39,8 +39,8 @@ BOOL GetPhysicalFileSize(LPCWSTR PathBuffer, PULARGE_INTEGER Size)
     NTSTATUS Status;
     WCHAR StdPathBuffer[MAX_PATH] = L"";
         
-    wcscpy(StdPathBuffer,L"\\??\\");
-    wcscat(StdPathBuffer,PathBuffer);
+    wcscpy(StdPathBuffer, L"\\??\\");
+    wcscat(StdPathBuffer, PathBuffer);
     
     //wcscpy(StdPathBuffer,PathBuffer);
     RtlInitUnicodeString(&FileName, StdPathBuffer);
