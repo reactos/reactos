@@ -1436,7 +1436,6 @@ CFileDefExt::CountFolderAndFiles(HWND hwndDlg, LPWSTR pwszBuf, UINT cchBufMax, D
                 ERR("GetPhysicalFileSize failed for %ls",WorkBuffer);
             
             m_DirSizeOnDisc.QuadPart += FileSize.QuadPart;
-            
         }
         if (GetTickCount() - *ticks > (DWORD) 300)
         {
