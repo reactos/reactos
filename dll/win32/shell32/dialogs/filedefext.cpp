@@ -76,7 +76,6 @@ BOOL GetPhysicalFileSize(LPCWSTR PathBuffer, PULARGE_INTEGER Size)
     }
     
     Size->QuadPart = FileInfo.AllocationSize.QuadPart;
-    NtClose(FileHandle);
     return TRUE;
 }
 
