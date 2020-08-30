@@ -59,7 +59,7 @@ static void test_StretchBlt(void)
 
     biDst.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);  // Set our Size to the header size
     biDst.bmiHeader.biWidth = 2;                        // Set our Width to 2
-    biDst.bmiHeader.biHeight = 2;  // bottom-up         // Set our Height to 2 that's positive (bottom-up)
+    biDst.bmiHeader.biHeight = 2;                       // Set our Height to 2 that's positive (bottom-up)
     biDst.bmiHeader.biPlanes = 1;                       // Set out planes to 1 (1 required by Windows)
     biDst.bmiHeader.biBitCount = 32;                    // Set out BitCount to 32 (Full Color)
     biDst.bmiHeader.biCompression = BI_RGB;             // Set our Compression to BI_RBG (uncompressed)
