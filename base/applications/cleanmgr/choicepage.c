@@ -8,30 +8,24 @@
 #include "resource.h"
 #include "precomp.h"
 
-DIRSIZE sz;
-WCHAR_VAR wcv;
-BOOL_VAR bv;
-
-INT_PTR CALLBACK ChoicePageDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK ChoicePageDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    WCHAR TempList[MAX_PATH] = { 0 };
     WCHAR StringText[MAX_PATH] = { 0 };
     WCHAR FullText[MAX_PATH] = { 0 };
-    WCHAR totalAmount[MAX_PATH] = { 0 };
+    WCHAR TotalAmount[MAX_PATH] = { 0 };
     static WCHAR* ViewFolder = NULL;
-    uint64_t TempSize = sz.TempASize + sz.TempBSize;
-    uint64_t RecycleSize = sz.RecycleBinSize;
-    uint64_t ChkDskSize = sz.ChkDskSize;
-    uint64_t RappsSize = sz.RappsSize;
     static HWND hList = 0;
-    
-    LVCOLUMNW lvC;
+    uint64_t TotalSize = sz.TempASize + sz.TempBSize + sz.RecycleBinSize + sz.ChkDskSize + sz.RappsSize;
     
     SHELLEXECUTEINFOW seI;
+    ZeroMemory(&seI, sizeof(seI));
+    seI.cbSize = sizeof seI;
+    seI.lpVerb = L"open";
+    seI.nShow = SW_SHOW;
     
     ViewFolder = wcv.RappsDir;
 
-    switch (Message)
+    switch (message)
     {
     case WM_INITDIALOG:
         SetWindowPos(hwnd, NULL, 10, 32, 0, 0, SWP_NOACTIVATE | SWP_NOOWNERZORDER | SWP_NOSIZE | SWP_NOZORDER);
@@ -40,54 +34,15 @@ INT_PTR CALLBACK ChoicePageDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARA
         if(hList == NULL)
         {
             MessageBoxW(NULL, L"GetDlgItem() failed!", L"Error", MB_OK | MB_ICONERROR);
+            return FALSE;
         }
         
-        SendMessageW(hList, LVM_SETEXTENDEDLISTVIEWSTYLE, 0, LVS_EX_CHECKBOXES | LVS_EX_FULLROWSELECT);
+        InitListViewControl(hList);
         
-        ZeroMemory(&lvC, sizeof(lvC));
-        lvC.mask = LVCF_WIDTH | LVCF_SUBITEM | LVCF_FMT;
-        lvC.cx = 158;
-        lvC.cchTextMax = 256;
-        lvC.fmt = LVCFMT_RIGHT;
-        
-        ListView_InsertColumn(hList, 0, &lvC);
-        ListView_InsertColumn(hList, 1, &lvC);
-
-        if (!CreateImageLists(hList))
-        {
-            MessageBoxW(NULL, L"CreateImageLists() failed!", L"Error", MB_OK | MB_ICONERROR);
-        }
-
-        StringCchPrintfW(TempList, _countof(TempList), L"%.02lf %s", SetOptimalSize(ChkDskSize), SetOptimalUnit(ChkDskSize));
-        AddItem(hList, L"Old ChkDsk Files", TempList, 0);
-        ZeroMemory(&TempList, sizeof(TempList));
-
-        StringCchPrintfW(TempList, _countof(TempList), L"%.02lf %s", SetOptimalSize(RappsSize), SetOptimalUnit(RappsSize));
-        AddItem(hList, L"RAPPS Files", TempList, 0);
-        ZeroMemory(&TempList, sizeof(TempList));
-        
-        StringCchPrintfW(TempList, _countof(TempList), L"%.02lf %s", SetOptimalSize(RecycleSize), SetOptimalUnit(RecycleSize));
-        AddItem(hList, L"Recycle Bin", TempList, 2);
-        ZeroMemory(&TempList, sizeof(TempList));
-        
-        if (bv.SysDrive == TRUE)
-        {
-            StringCchPrintfW(TempList, _countof(TempList), L"%.02lf %s", SetOptimalSize(TempSize), SetOptimalUnit(TempSize));
-            AddItem(hList, L"Temporary Files", TempList, 0);
-        }
-
         LoadStringW(GetModuleHandleW(NULL), IDS_CLEANUP, StringText, _countof(StringText));
-        StringCchPrintfW(totalAmount, _countof(totalAmount), L"%.02lf %s", SetOptimalSize(TempSize + RecycleSize + ChkDskSize + RappsSize), SetOptimalUnit(TempSize + RecycleSize + ChkDskSize + RappsSize));
-        StringCchPrintfW(FullText, _countof(FullText), StringText, totalAmount, wcv.DriveLetter);
-
-        ZeroMemory(&seI, sizeof(seI));
-        seI.cbSize = sizeof seI;
-        seI.lpVerb = L"open";
-        seI.nShow = SW_SHOW;
-
+        StringCchPrintfW(TotalAmount, _countof(TotalAmount), L"%.02lf %s", SetOptimalSize(TotalSize), SetOptimalUnit(TotalSize));
+        StringCchPrintfW(FullText, _countof(FullText), StringText, TotalAmount, wcv.DriveLetter);
         SetDlgItemTextW(hwnd, IDC_STATIC_DLG, FullText);
-        ListView_SetCheckState(hList, 1, 1);
-        ListView_SetItemState(hList, 1, LVIS_SELECTED, LVIS_SELECTED);
         return TRUE;
 
     case WM_COMMAND:
@@ -106,6 +61,7 @@ INT_PTR CALLBACK ChoicePageDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARA
             if (!ShellExecuteExW(&seI))
             {
                 MessageBoxW(NULL, L"ShellExecuteExW() failed!", L"Ok", MB_OK | MB_ICONSTOP);
+                return FALSE;
             }
             break;
         }

@@ -13,10 +13,21 @@
 #define GB 1024 * MB
 #define TB 1024 * GB
 
+#define ALLOW_FILE_REMOVAL 2
+#define DISALLOW_FILE_REMOVAL 3
+
 DLG_VAR dv;
 WCHAR_VAR wcv;
 DIRSIZE sz;
 BOOL_VAR bv;
+
+typedef enum
+{
+    OLD_CHKDSK_FILES = 0,
+    RAPPS_FILES = 1,
+    RECYCLE_BIN = 2,
+    TEMPORARY_FILE = 3
+} DIRECTORIES;
 
 #define ETDT_DISABLE        0x00000001
 #define ETDT_ENABLE         0x00000002
@@ -28,8 +39,8 @@ typedef HRESULT (WINAPI * ETDTProc) (HWND, DWORD);
 DWORD WINAPI SizeCheck(LPVOID lpParam)
 {
     HKEY hRegKey = NULL;
-    SETTINGS_INFO SettingsInfo;
-    ZeroMemory(&SettingsInfo, sizeof(SETTINGS_INFO));
+    //SETTINGS_INFO SettingsInfo;
+    //eroMemory(&SettingsInfo, sizeof(SETTINGS_INFO));
     //DWORD dwSize = sizeof(SettingsInfo);
     
     if (RegOpenKeyExW(HKEY_CURRENT_USER,
@@ -41,10 +52,13 @@ DWORD WINAPI SizeCheck(LPVOID lpParam)
         DPRINT("RegOpenKeyExW(): Failed to open a registry key!\n");
     }
     
-    HWND HProgressBar = NULL;
-    WCHAR TargetedDir[MAX_PATH] = { 0 };
+    HWND hwnd = (HWND)lpParam;
     
-    HProgressBar = GetDlgItem(dv.hwndDlg, IDC_PROGRESS_1);
+    HWND hProgressBar = NULL;
+    WCHAR TargetedDir[MAX_PATH] = { 0 };
+    WCHAR *RecycleBinFolder = NULL;
+    
+    hProgressBar = GetDlgItem(hwnd, IDC_PROGRESS_1);
     
     if(bv.SysDrive == TRUE)
     {
@@ -57,8 +71,6 @@ DWORD WINAPI SizeCheck(LPVOID lpParam)
             {
                 return FALSE;
             }
-            StringCbCopyW(wcv.TempDir, _countof(wcv.TempDir), TargetedDir);
-            ZeroMemory(&TargetedDir, sizeof(TargetedDir));
         }
         SHGetFolderPathW(NULL, CSIDL_PROFILE, NULL, SHGFP_TYPE_CURRENT, TargetedDir);
         StringCbCatW(TargetedDir, _countof(TargetedDir), L"\\Local Settings\\Temp");
@@ -69,25 +81,24 @@ DWORD WINAPI SizeCheck(LPVOID lpParam)
             {
                 return FALSE;
             }
-            SendMessageW(HProgressBar, PBM_SETPOS, 25, 0);
-            SetDlgItemTextW(dv.hwndDlg, IDC_STATIC_INFO, L"Temporary Files");
-            StringCbCopyW(wcv.AltTempDir, _countof(wcv.AltTempDir), TargetedDir);
-            ZeroMemory(&TargetedDir, sizeof(TargetedDir));
+            SendMessageW(hProgressBar, PBM_SETPOS, 25, 0);
+            SetDlgItemTextW(hwnd, IDC_STATIC_INFO, L"Temporary Files");
         }
     }
 
-    if(FindRecycleBin(wcv.DriveLetter))
+    RecycleBinFolder = FindRecycleBin(wcv.DriveLetter);
+    
+    if(RecycleBinFolder != NULL)
     {
-        StringCchPrintfW(TargetedDir, _countof(TargetedDir), L"%s\\%s", wcv.DriveLetter, wcv.RecycleBin);
+        StringCchPrintfW(TargetedDir, _countof(TargetedDir), L"%s\\%s", wcv.DriveLetter, RecycleBinFolder);
         sz.RecycleBinSize = DirSizeFunc(TargetedDir);
         if (sz.RecycleBinSize == 1)
         {
             return FALSE;
         }
-        StringCbCopyW(wcv.RecycleBinDir, _countof(wcv.RecycleBinDir), TargetedDir);
         ZeroMemory(&TargetedDir, sizeof(TargetedDir));
-        SendMessageW(HProgressBar, PBM_SETPOS, 50, 0);
-        SetDlgItemTextW(dv.hwndDlg, IDC_STATIC_INFO, L"Recycled Files");
+        SendMessageW(hProgressBar, PBM_SETPOS, 50, 0);
+        SetDlgItemTextW(hwnd, IDC_STATIC_INFO, L"Recycled Files");
     }
 
     
@@ -102,8 +113,8 @@ DWORD WINAPI SizeCheck(LPVOID lpParam)
                 return FALSE;
             }
             ZeroMemory(&TargetedDir, sizeof(TargetedDir));
-            SendMessageW(HProgressBar, PBM_SETPOS, 75, 0);
-            SetDlgItemTextW(dv.hwndDlg, IDC_STATIC_INFO, L"Old ChkDsk Files");
+            SendMessageW(hProgressBar, PBM_SETPOS, 75, 0);
+            SetDlgItemTextW(hwnd, IDC_STATIC_INFO, L"Old ChkDsk Files");
         }
         
         else
@@ -132,28 +143,35 @@ DWORD WINAPI SizeCheck(LPVOID lpParam)
         }
         StringCbCopyW(wcv.RappsDir, _countof(wcv.RappsDir), TargetedDir);
         ZeroMemory(&TargetedDir, sizeof(TargetedDir));
-        SendMessageW(HProgressBar, PBM_SETPOS, 100, 0);
-        SetDlgItemTextW(dv.hwndDlg, IDC_STATIC_INFO, L"Temporary RAPPS Files");
+        SendMessageW(hProgressBar, PBM_SETPOS, 100, 0);
+        SetDlgItemTextW(hwnd, IDC_STATIC_INFO, L"Temporary RAPPS Files");
     }
     
-    SendMessageW(dv.hwndDlg, WM_DESTROY, 0, 0);
+    SendMessageW(hwnd, WM_DESTROY, 0, 0);
     return TRUE;
 }
 
 DWORD WINAPI FolderRemoval(LPVOID lpParam)
 {
-    HWND HProgressBar = NULL;
+    HWND hProgressBar = NULL;
     WCHAR TargetedDir[MAX_PATH] = { 0 };
+    
+    HWND hwnd = (HWND)lpParam;
 
-    HProgressBar = GetDlgItem(dv.hwndDlg, IDC_PROGRESS_2);
+    hProgressBar = GetDlgItem(hwnd, IDC_PROGRESS_2);
 
     if (bv.TempClean == TRUE && bv.SysDrive == TRUE)
     {
-        CleanRequiredPath(wcv.TempDir);
-        CleanRequiredPath(wcv.AltTempDir);
+        SHGetFolderPathW(NULL, CSIDL_WINDOWS, NULL, SHGFP_TYPE_CURRENT, TargetedDir);
+        StringCbCatW(TargetedDir, _countof(TargetedDir), L"\\Temp");
+        CleanRequiredPath(TargetedDir);
         
-        SendMessageW(HProgressBar, PBM_SETPOS, 25, 0);
-        SetDlgItemTextW(dv.hwndDlg, IDC_STATIC_INFO, L"Temporary files");
+        SHGetFolderPathW(NULL, CSIDL_PROFILE, NULL, SHGFP_TYPE_CURRENT, TargetedDir);
+        StringCbCatW(TargetedDir, _countof(TargetedDir), L"\\Local Settings\\Temp");
+        CleanRequiredPath(TargetedDir);
+        
+        SendMessageW(hProgressBar, PBM_SETPOS, 25, 0);
+        SetDlgItemTextW(hwnd, IDC_STATIC_INFO, L"Temporary files");
     }
     
     if (bv.RecycleClean == TRUE)
@@ -163,8 +181,8 @@ DWORD WINAPI FolderRemoval(LPVOID lpParam)
         
         SHEmptyRecycleBinW(NULL, TargetedDir, SHERB_NOCONFIRMATION | SHERB_NOPROGRESSUI | SHERB_NOSOUND);
         
-        SendMessageW(HProgressBar, PBM_SETPOS, 50, 0);
-        SetDlgItemTextW(dv.hwndDlg, IDC_STATIC_INFO, L"Recycled files");
+        SendMessageW(hProgressBar, PBM_SETPOS, 50, 0);
+        SetDlgItemTextW(hwnd, IDC_STATIC_INFO, L"Recycled files");
     }
     
     if (bv.ChkDskClean == TRUE)
@@ -180,19 +198,19 @@ DWORD WINAPI FolderRemoval(LPVOID lpParam)
             else
                 break;
         }
-        SendMessageW(HProgressBar, PBM_SETPOS, 75, 0);
-        SetDlgItemTextW(dv.hwndDlg, IDC_STATIC_INFO, L"Old ChkDsk files");
+        SendMessageW(hProgressBar, PBM_SETPOS, 75, 0);
+        SetDlgItemTextW(hwnd, IDC_STATIC_INFO, L"Old ChkDsk files");
     }
 
     if (bv.RappsClean == TRUE)
     {
         CleanRequiredPath(wcv.RappsDir);
 
-        SendMessageW(HProgressBar, PBM_SETPOS, 100, 0);
-        SetDlgItemTextW(dv.hwndDlg, IDC_STATIC_INFO, L"Temporary RAPPS Files");
+        SendMessageW(hProgressBar, PBM_SETPOS, 100, 0);
+        SetDlgItemTextW(hwnd, IDC_STATIC_INFO, L"Temporary RAPPS Files");
     }
     
-    SendMessageW(dv.hwndDlg, WM_DESTROY, 0, 0);
+    SendMessageW(hwnd, WM_DESTROY, 0, 0);
 
     return TRUE;
 }
@@ -202,10 +220,10 @@ void CleanRequiredPath(PWCHAR TempPath)
     SHFILEOPSTRUCTW FileStruct;
     ZeroMemory(&FileStruct, sizeof(FileStruct));
 
-    int Len = wcslen(TempPath) + 2; // required to set 2 nulls at end of argument to SHFileOperation.
-    WCHAR* Path = (WCHAR*) malloc(Len);
-    memset(Path, 0, Len);
-    StringCbCopyW(Path, Len, TempPath);
+    int ArrLen = wcslen(TempPath) + 2; // required to set 2 nulls at end of argument to SHFileOperation.
+    WCHAR* Path = (WCHAR*) malloc(ArrLen);
+    memset(Path, 0, ArrLen);
+    StringCbCopyW(Path, ArrLen, TempPath);
     
     FileStruct.wFunc = FO_DELETE;
     FileStruct.fFlags = FOF_SILENT | FOF_NOCONFIRMATION | FOF_NOERRORUI | FOF_NOCONFIRMMKDIR;
@@ -226,15 +244,15 @@ uint64_t DirSizeFunc(PWCHAR TargetDir)
     uint64_t Size = 0;
     WCHAR TargetedDir[2048] = { 0 };
     WCHAR ReTargetDir[2048] = { 0 };
-    DWORD dwError = 0;
+    DWORD RetError = 0;
     
     StringCchPrintfW(TargetedDir, _countof(TargetedDir), L"%s%s", TargetDir, L"\\*");
     HandleDir = FindFirstFileW(TargetedDir, &DataStruct);
-    dwError = GetLastError();
+    RetError = GetLastError();
     
-    if (dwError != ERROR_NO_MORE_FILES && HandleDir == INVALID_HANDLE_VALUE)
+    if (RetError != ERROR_NO_MORE_FILES && HandleDir == INVALID_HANDLE_VALUE)
     {
-        if (dwError == ERROR_PATH_NOT_FOUND)
+        if (RetError == ERROR_PATH_NOT_FOUND)
         {
             return 0;
         }
@@ -272,7 +290,7 @@ uint64_t DirSizeFunc(PWCHAR TargetDir)
     return Size;
 }
 
-BOOL FindRecycleBin(PWCHAR TargetDrive)
+PWCHAR FindRecycleBin(PWCHAR TargetDrive)
 {
     WIN32_FIND_DATAW DataStruct;
     ZeroMemory(&DataStruct, sizeof(DataStruct));
@@ -293,7 +311,6 @@ BOOL FindRecycleBin(PWCHAR TargetDrive)
             {
                 WCHAR childSearch[512] = { 0 };
                 StringCchPrintfW(childSearch, _countof(childSearch), L"%s\\%s\\*", TargetDrive, DataStruct.cFileName);
-                printf("%S\n", childSearch);
 
                 WIN32_FIND_DATAW childData;
 
@@ -314,13 +331,11 @@ BOOL FindRecycleBin(PWCHAR TargetDrive)
 
                             if (SUCCEEDED(hr) && IsEqualCLSID(&CLSID_RecycleBin, &did.clsid))
                             {
-                                StringCchCopyW(wcv.RecycleBin, _countof(wcv.RecycleBin), DataStruct.cFileName);
-                                printf("%S\n", wcv.RecycleBin);
-
+                                WCHAR *RetVal = DataStruct.cFileName;
                                 FindClose(HandleDir);
                                 FindClose(childHandle);
 
-                                return TRUE;
+                                return RetVal;
                             }
                         }
                     }
@@ -337,13 +352,7 @@ BOOL FindRecycleBin(PWCHAR TargetDrive)
 
     FindClose(HandleDir);
 
-    if (wcslen(wcv.RecycleBin) == 0)
-    {
-        DPRINT("FindRecycleBin couldn't find the folder, ignoring....\n");
-        return FALSE;
-    }
-
-    return TRUE;
+    return NULL;
 }
 
 /* FIX ME: This function doesn't work in ReactOS because SHGDFIL_DESCRIPTIONID isn't implemented yet. */
@@ -354,11 +363,11 @@ HRESULT GetFolderCLSID(LPCWSTR pszPath, SHDESCRIPTIONID* pdid)
 
     LPITEMIDLIST pidl;
 
-    WCHAR logError[MAX_PATH] = { 0 };
+    WCHAR LogError[MAX_PATH] = { 0 };
 
     hr = SHParseDisplayName(pszPath, NULL, &pidl, 0, NULL);
-    StringCchPrintfW(logError, _countof(logError), L"\nSHParseDisplayName HANDLE hr returned 0x%08x\n", hr);
-    OutputDebugStringW(logError);
+    StringCchPrintfW(LogError, _countof(LogError), L"\nSHParseDisplayName HANDLE hr returned 0x%08x\n", hr);
+    OutputDebugStringW(LogError);
     if (SUCCEEDED(hr))
     {
         IShellFolder* psf;
@@ -369,8 +378,8 @@ HRESULT GetFolderCLSID(LPCWSTR pszPath, SHDESCRIPTIONID* pdid)
         if (SUCCEEDED(hr))
         {
             hr = SHGetDataFromIDList(psf, pidlChild, SHGDFIL_DESCRIPTIONID, pdid, sizeof(*pdid));
-            StringCchPrintfW(logError, _countof(logError), L"\nSHGetDataFromIDList HANDLE hr returned 0x%08x\n", hr);
-            OutputDebugStringW(logError);
+            StringCchPrintfW(LogError, _countof(LogError), L"\nSHGetDataFromIDList HANDLE hr returned 0x%08x\n", hr);
+            OutputDebugStringW(LogError);
             IShellFolder_Release(psf);
         }
 
@@ -420,21 +429,21 @@ void AddItem(HWND hList, PWCHAR String, PWCHAR SubString, int iIndex)
 
 BOOL CreateImageLists(HWND hList)
 {
-    HICON HbmIcon;
-    HIMAGELIST HSmall;
-    HSmall = ImageList_Create(16, 16, ILC_COLOR16 | ILC_MASK, 3, 3);
+    HICON hbmIcon;
+    HIMAGELIST hSmall;
+    hSmall = ImageList_Create(16, 16, ILC_COLOR16 | ILC_MASK, 3, 3);
 
-    if(HSmall == NULL)
+    if(hSmall == NULL)
         return FALSE;
     
     for (int index = 0; index < 3; index++)
     {
-        HbmIcon = LoadIconW(dv.hInst, MAKEINTRESOURCE(IDI_BLANK + index));
-        ImageList_AddIcon(HSmall, HbmIcon);
-        DestroyIcon(HbmIcon);
+        hbmIcon = LoadIconW(dv.hInst, MAKEINTRESOURCE(IDI_BLANK + index));
+        ImageList_AddIcon(hSmall, hbmIcon);
+        DestroyIcon(hbmIcon);
     }
 
-    ListView_SetImageList(hList, HSmall, LVSIL_SMALL);
+    ListView_SetImageList(hList, hSmall, LVSIL_SMALL);
     return TRUE;
 }
 
@@ -723,7 +732,7 @@ LRESULT APIENTRY ThemeHandler(HWND hDlg, NMCUSTOMDRAW* pNmDraw)
 {
     HTHEME hTheme;
     HWND hDlgButtonCtrl;
-    LRESULT Ret;
+    LRESULT RetValue;
     INT iState = PBS_NORMAL;
 
     hDlgButtonCtrl = pNmDraw->hdr.hwndFrom;
@@ -755,44 +764,44 @@ LRESULT APIENTRY ThemeHandler(HWND hDlg, NMCUSTOMDRAW* pNmDraw)
 
             DrawThemeBackground(hTheme, pNmDraw->hdc, BP_PUSHBUTTON, iState, &pNmDraw->rc, NULL);
 
-            Ret = CDRF_SKIPDEFAULT;
+            RetValue = CDRF_SKIPDEFAULT;
             break;
         }
 
         case CDDS_PREERASE:
         {
-            Ret = CDRF_DODEFAULT;
+            RetValue = CDRF_DODEFAULT;
             break;
         }
 
         default:
-            Ret = CDRF_SKIPDEFAULT;
+            RetValue = CDRF_SKIPDEFAULT;
             break;
         }
     }
     else
     {
-        Ret = CDRF_DODEFAULT;
+        RetValue = CDRF_DODEFAULT;
     }
 
-    return Ret;
+    return RetValue;
 }
 
 BOOL EnableDialogTheme(HWND hwnd)
 {
     HMODULE hUXTheme;
-    ETDTProc FnnEnableThemeDialogTexture;
+    ETDTProc EnableThemeDialogTexture;
 
     hUXTheme = LoadLibraryW(L"uxtheme.dll");
 
     if(hUXTheme)
     {
-        FnnEnableThemeDialogTexture = 
+        EnableThemeDialogTexture = 
             (ETDTProc)GetProcAddress(hUXTheme, "EnableThemeDialogTexture");
 
-        if(FnnEnableThemeDialogTexture)
+        if(EnableThemeDialogTexture)
         {
-            FnnEnableThemeDialogTexture(hwnd, ETDT_ENABLETAB);
+            EnableThemeDialogTexture(hwnd, ETDT_ENABLETAB);
 
             FreeLibrary(hUXTheme);
             return TRUE;
@@ -869,8 +878,8 @@ BOOL ArgCheck(LPWSTR* ArgList, int nArgs)
 BOOL RegValSet(PWCHAR RegArg, PWCHAR SubKey, BOOL ArgBool)
 {
     HKEY hRegKey = NULL;
-    DWORD cbSize = sizeof(DWORD);
-    DWORD RegValue = 0;
+    DWORD DwordSize = sizeof(DWORD);
+    DWORD RegValue = DISALLOW_FILE_REMOVAL;
     
     if (RegOpenKeyExW(HKEY_LOCAL_MACHINE,
                       SubKey,
@@ -878,12 +887,13 @@ BOOL RegValSet(PWCHAR RegArg, PWCHAR SubKey, BOOL ArgBool)
                       KEY_SET_VALUE,
                       &hRegKey) != ERROR_SUCCESS)
     {
-        MessageBoxW(NULL, L"RegValSet() failed!", L"Warning", MB_OK | MB_ICONWARNING);
+        DPRINT("RegValSet(): Failed to open the key!\n");
+        return FALSE;
     }
     
     if(ArgBool == TRUE)
     {
-        RegValue = 2;
+        RegValue = ALLOW_FILE_REMOVAL;
     }
     
     if (RegSetValueExW(hRegKey,
@@ -891,7 +901,7 @@ BOOL RegValSet(PWCHAR RegArg, PWCHAR SubKey, BOOL ArgBool)
                        0,
                        REG_DWORD,
                        (BYTE*)&RegValue,
-                       cbSize) != ERROR_SUCCESS)
+                       DwordSize) != ERROR_SUCCESS)
     {
         DPRINT("RegValSet(): Failed to set value!\n");
         return FALSE;
@@ -903,14 +913,14 @@ BOOL RegValSet(PWCHAR RegArg, PWCHAR SubKey, BOOL ArgBool)
 DWORD RegQuery(PWCHAR RegArg, PWCHAR SubKey)
 {
     DWORD RetValue = 0;
-    DWORD cbSize = sizeof(DWORD);
+    DWORD DwordSize = sizeof(DWORD);
     if (RegGetValueW(HKEY_LOCAL_MACHINE,
                      SubKey,
                      RegArg,
                      RRF_RT_DWORD,
                      NULL,
                      (PVOID)&RetValue,
-                     &cbSize) != ERROR_SUCCESS)
+                     &DwordSize) != ERROR_SUCCESS)
     {
         DPRINT("RegQuery(): Failed to gather value!\n");
         return 0;               
@@ -967,7 +977,7 @@ BOOL DriverunProc(LPWSTR* ArgList, PWCHAR LogicalDrives)
         WCHAR RealDrive[MAX_PATH] = { 0 };
         while (*SingleDrive)
         {
-            if (GetDriveTypeW(SingleDrive) == ONLY_DRIVE)
+            if (GetDriveTypeW(SingleDrive) == ONLY_PHYSICAL_DRIVE)
             {
                 StringCchCopyW(RealDrive, MAX_PATH, SingleDrive);
                 RealDrive[wcslen(RealDrive) - 1] = '\0';
@@ -1025,21 +1035,21 @@ void SagerunProc(int nArgs, PWCHAR ArgReal, LPWSTR* ArgList, PWCHAR LogicalDrive
         
     ValStr = RealStageFlag(nArgs, ArgReal, ArgList);
         
-    if (RegQuery(ValStr, L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\VolumeCaches\\Old ChkDsk Files") == 2)
+    if (RegQuery(ValStr, L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\VolumeCaches\\Old ChkDsk Files") == ALLOW_FILE_REMOVAL)
         bv.ChkDskClean = TRUE;
         
-    if (RegQuery(ValStr, L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\VolumeCaches\\Temporary Files") == 2)
+    if (RegQuery(ValStr, L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\VolumeCaches\\Temporary Files") == ALLOW_FILE_REMOVAL)
         bv.TempClean = TRUE;
 
-    if (RegQuery(ValStr, L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\VolumeCaches\\RAPPS Files") == 2)
+    if (RegQuery(ValStr, L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\VolumeCaches\\RAPPS Files") == ALLOW_FILE_REMOVAL)
         bv.RappsClean = TRUE;
         
-    if (RegQuery(ValStr, L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\VolumeCaches\\Recycle Bin") == 2)
+    if (RegQuery(ValStr, L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\VolumeCaches\\Recycle Bin") == ALLOW_FILE_REMOVAL)
         bv.RecycleClean = TRUE;
         
     while (*SingleDrive)
     {
-        if (GetDriveTypeW(SingleDrive) == ONLY_DRIVE)
+        if (GetDriveTypeW(SingleDrive) == ONLY_PHYSICAL_DRIVE)
         {
             StringCchCopyW(wcv.DriveLetter, MAX_PATH, SingleDrive);
             wcv.DriveLetter[wcslen(wcv.DriveLetter) - 1] = '\0';
@@ -1055,4 +1065,73 @@ void SagerunProc(int nArgs, PWCHAR ArgReal, LPWSTR* ArgList, PWCHAR LogicalDrive
         }
         SingleDrive += wcslen(SingleDrive) + 1;
     }
+}
+
+void InitListViewControl(HWND hList)
+{
+    WCHAR TempList[MAX_PATH] = { 0 };
+
+    LVCOLUMNW lvC;
+    ZeroMemory(&lvC, sizeof(lvC));
+    lvC.mask = LVCF_WIDTH | LVCF_SUBITEM | LVCF_FMT;
+    lvC.cx = 158;
+    lvC.cchTextMax = 256;
+    lvC.fmt = LVCFMT_RIGHT;
+
+    SendMessageW(hList, LVM_SETEXTENDEDLISTVIEWSTYLE, 0, LVS_EX_CHECKBOXES | LVS_EX_FULLROWSELECT);
+
+    ListView_InsertColumn(hList, 0, &lvC);
+    ListView_InsertColumn(hList, 1, &lvC);
+
+    if (!CreateImageLists(hList))
+    {
+        MessageBoxW(NULL, L"CreateImageLists() failed!", L"Error", MB_OK | MB_ICONERROR);
+    }
+
+    StringCchPrintfW(TempList, _countof(TempList), L"%.02lf %s", SetOptimalSize(sz.ChkDskSize), SetOptimalUnit(sz.ChkDskSize));
+    AddItem(hList, L"Old ChkDsk Files", TempList, 0);
+
+    StringCchPrintfW(TempList, _countof(TempList), L"%.02lf %s", SetOptimalSize(sz.RappsSize), SetOptimalUnit(sz.RappsSize));
+    AddItem(hList, L"RAPPS Files", TempList, 0);
+ 
+    StringCchPrintfW(TempList, _countof(TempList), L"%.02lf %s", SetOptimalSize(sz.RecycleBinSize), SetOptimalUnit(sz.RecycleBinSize));
+    AddItem(hList, L"Recycle Bin", TempList, 2);
+ 
+    if (bv.SysDrive == TRUE)
+    {
+        StringCchPrintfW(TempList, _countof(TempList), L"%.02lf %s", SetOptimalSize(sz.TempASize + sz.TempBSize), SetOptimalUnit(sz.TempASize + sz.TempBSize));
+        AddItem(hList, L"Temporary Files", TempList, 0);
+    }
+
+    ListView_SetCheckState(hList, 1, 1);
+    ListView_SetItemState(hList, 1, LVIS_SELECTED, LVIS_SELECTED);
+}
+
+void InitSagesetListViewControl(HWND hList)
+{
+    LVCOLUMNW lvC;
+        
+    ZeroMemory(&lvC, sizeof(lvC));
+    lvC.mask = LVCF_WIDTH | LVCF_SUBITEM | LVCF_FMT;
+    lvC.cx = 158;
+    lvC.cchTextMax = 256;
+    lvC.fmt = LVCFMT_RIGHT;
+    
+    SendMessageW(hList, LVM_SETEXTENDEDLISTVIEWSTYLE, 0, LVS_EX_CHECKBOXES | LVS_EX_FULLROWSELECT);
+    
+    ListView_InsertColumn(hList, 0, &lvC);
+    ListView_InsertColumn(hList, 1, &lvC);
+
+    CreateImageLists(hList);
+
+    AddItem(hList, L"Old ChkDsk Files", L"", 0);
+
+    AddItem(hList, L"RAPPS Files", L"", 0);
+        
+    AddItem(hList, L"Temporary Files", L"", 0);
+        
+    AddItem(hList, L"Recycle Bin", L"", 2);
+
+    ListView_SetCheckState(hList, 1, 1);
+    ListView_SetItemState(hList, 1, LVIS_SELECTED, LVIS_SELECTED);
 }

@@ -11,23 +11,17 @@
 #define CX_BITMAP 20
 #define CY_BITMAP 20
 
-DIRSIZE sz;
-DLG_VAR dv;
-WCHAR_VAR wcv;
-BOOL_VAR bv;
-
-BOOL CALLBACK StartDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK StartDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     WCHAR LogicalDrives[MAX_PATH] = { 0 };
     WCHAR TempText[MAX_PATH] = { 0 };
     int ItemIndex = 0;
-    static HBITMAP HbmDrive = NULL;
-    static HBITMAP HbmMask = NULL;
+    HBITMAP BitmapDrive = NULL;
     DWORD DwIndex = 0;
     DWORD NumOfDrives = 0;
     static HWND HComboCtrl = NULL;
 
-    switch(Message)
+    switch(message)
     {
         case WM_INITDIALOG:
             HComboCtrl = GetDlgItem(hwnd, IDC_DRIVE);
@@ -35,22 +29,21 @@ BOOL CALLBACK StartDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam
             if(HComboCtrl == NULL)
             {
                 MessageBoxW(NULL, L"GetDlgItem() failed!", L"Error", MB_OK | MB_ICONERROR);
-                return FALSE;
+                PostMessage(hwnd, WM_CLOSE, 0, 0);
             }
             
             NumOfDrives = GetLogicalDriveStringsW(MAX_PATH, LogicalDrives);
             if (NumOfDrives == 0)
             {
                 MessageBoxW(NULL, L"GetLogicalDriveStringsW() failed!", L"Error", MB_OK | MB_ICONERROR);
-                return FALSE;
+                PostMessage(hwnd, WM_CLOSE, 0, 0);
             }
-            HbmDrive = LoadBitmapW(dv.hInst, MAKEINTRESOURCE(IDB_DRIVE));
-            HbmMask = LoadBitmapW(dv.hInst, MAKEINTRESOURCE(IDB_MASK));
+            BitmapDrive = LoadBitmapW(dv.hInst, MAKEINTRESOURCE(IDB_DRIVE));
             
-            if(HbmDrive == NULL || HbmMask == NULL)
+            if(BitmapDrive == NULL)
             {
                 MessageBoxW(NULL, L"LoadBitmapW() failed!", L"Error", MB_OK | MB_ICONERROR);
-                return FALSE;
+                PostMessage(hwnd, WM_CLOSE, 0, 0);
             }
 
             if (NumOfDrives <= MAX_PATH)
@@ -59,12 +52,12 @@ BOOL CALLBACK StartDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam
                 WCHAR RealDrive[MAX_PATH] = { 0 };
                 while (*SingleDrive)
                 {
-                    if (GetDriveTypeW(SingleDrive) == 3)
+                    if (GetDriveTypeW(SingleDrive) == ONLY_PHYSICAL_DRIVE)
                     {
                         StringCchCopyW(RealDrive, MAX_PATH, SingleDrive);
                         RealDrive[wcslen(RealDrive) - 1] = '\0';
                         DwIndex = SendMessageW(HComboCtrl, CB_ADDSTRING, 0, (LPARAM)RealDrive);
-                        if (SendMessageW(HComboCtrl, CB_SETITEMDATA, DwIndex, (LPARAM)HbmDrive) == CB_ERR)
+                        if (SendMessageW(HComboCtrl, CB_SETITEMDATA, DwIndex, (LPARAM)BitmapDrive) == CB_ERR)
                         {
                             return FALSE;
                         }
@@ -98,68 +91,11 @@ BOOL CALLBACK StartDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam
 
         case WM_DRAWITEM:
         {
-            COLORREF ClrBackground, ClrForeground;
-            TEXTMETRIC tm;
-            int x, y;
-            size_t cch;
-            HBITMAP HbmIcon;
-            WCHAR achTemp[256] = { 0 };
-
-            LPDRAWITEMSTRUCT lpdis = (LPDRAWITEMSTRUCT)lParam;
-
-            if (lpdis->itemID == -1)
-                break;
-
-            HbmIcon = (HBITMAP)lpdis->itemData;
-
-            if (HbmIcon == NULL)
+            if(!DrawItemCombobox(lParam))
             {
-                MessageBoxW(NULL, L"WM_DRAWITEM failed!", L"Error", MB_OK | MB_ICONERROR);
-                return FALSE;
+                MessageBoxW(NULL, L"DrawItemCombobox() failed!", L"Error", MB_OK | MB_ICONERROR);
+                PostMessage(hwnd, WM_CLOSE, 0, 0);
             }
-            
-            ClrForeground = SetTextColor(lpdis->hDC,
-                GetSysColor(lpdis->itemState & ODS_SELECTED ?
-                    COLOR_HIGHLIGHTTEXT : COLOR_WINDOWTEXT));
-
-            ClrBackground = SetBkColor(lpdis->hDC,
-                GetSysColor(lpdis->itemState & ODS_SELECTED ?
-                    COLOR_HIGHLIGHT : COLOR_WINDOW));
-
-            GetTextMetrics(lpdis->hDC, &tm);
-            y = (lpdis->rcItem.bottom + lpdis->rcItem.top - tm.tmHeight) / 2;
-            x = LOWORD(GetDialogBaseUnits()) / 4;
-
-            SendMessage(lpdis->hwndItem, CB_GETLBTEXT,
-                lpdis->itemID, (LPARAM)achTemp);
-
-
-            StringCchLength(achTemp, _countof(achTemp), &cch);
-
-            ExtTextOut(lpdis->hDC, CX_BITMAP + 2 * x, y,
-                ETO_CLIPPED | ETO_OPAQUE, &lpdis->rcItem,
-                achTemp, (UINT)cch, NULL);
-
-            SetTextColor(lpdis->hDC, ClrForeground);
-            SetBkColor(lpdis->hDC, ClrBackground);
-
-            HDC hdc = CreateCompatibleDC(lpdis->hDC);
-            if (hdc == NULL)
-                break;
-
-            SelectObject(hdc, HbmMask);
-            BitBlt(lpdis->hDC, x, lpdis->rcItem.top + 1,
-                CX_BITMAP, CY_BITMAP, hdc, 0, 0, SRCAND);
-
-            SelectObject(hdc, HbmIcon);
-            BitBlt(lpdis->hDC, x, lpdis->rcItem.top + 1,
-                CX_BITMAP, CY_BITMAP, hdc, 0, 0, SRCPAINT);
-
-            DeleteDC(hdc);
-
-            if (lpdis->itemState & ODS_FOCUS)
-                DrawFocusRect(lpdis->hDC, &lpdis->rcItem);
-
             break;
         }
 
@@ -170,7 +106,7 @@ BOOL CALLBACK StartDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam
                 if (ItemIndex == CB_ERR)
                 {
                     MessageBoxW(NULL, L"SendMessageW failed!", L"Error", MB_OK | MB_ICONERROR);
-                    return FALSE;
+                    PostMessage(hwnd, WM_CLOSE, 0, 0);
                 }
                 SendMessageW(GetDlgItem(hwnd, IDC_DRIVE), CB_GETLBTEXT, (WPARAM)ItemIndex, (LPARAM)wcv.DriveLetter);
             }
@@ -185,8 +121,7 @@ BOOL CALLBACK StartDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam
                         MessageBoxW(hwnd, TempText, L"Warning", MB_OK | MB_ICONWARNING);
                         break;
                     }
-                    DeleteObject(HbmDrive);
-                    DeleteObject(HbmMask);
+                    DeleteObject(BitmapDrive);
                     EndDialog(hwnd, IDOK);
                     break;
                 case IDCANCEL:
@@ -205,27 +140,104 @@ BOOL CALLBACK StartDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam
     return TRUE;
 }
 
-BOOL CALLBACK ProgressDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
+BOOL DrawItemCombobox(LPARAM lParam)
+{
+    COLORREF ClrBackground, ClrForeground;
+    TEXTMETRIC tm;
+    int x, y;
+    size_t cch;
+    HBITMAP BitmapIcon = NULL;
+    WCHAR achTemp[256] = { 0 };
+    HBITMAP BitmapMask = NULL;
+
+    LPDRAWITEMSTRUCT lpdis = (LPDRAWITEMSTRUCT)lParam;
+
+    if (lpdis->itemID == -1)
+        return FALSE;
+
+    BitmapMask = LoadBitmapW(dv.hInst, MAKEINTRESOURCE(IDB_MASK));
+ 
+   if(BitmapMask == NULL)
+    {
+        DPRINT("LoadBitmapW(): Failed to load the mask bitmap!\n");
+        return FALSE;
+    }
+    
+    BitmapIcon = (HBITMAP)lpdis->itemData;
+
+    if (BitmapIcon == NULL)
+    {
+        DPRINT("LoadBitmapW(): Failed to load BitmapIcon bitmap!\n");
+        return FALSE;
+    }
+            
+    ClrForeground = SetTextColor(lpdis->hDC,
+        GetSysColor(lpdis->itemState & ODS_SELECTED ?
+            COLOR_HIGHLIGHTTEXT : COLOR_WINDOWTEXT));
+
+    ClrBackground = SetBkColor(lpdis->hDC,
+        GetSysColor(lpdis->itemState & ODS_SELECTED ?
+            COLOR_HIGHLIGHT : COLOR_WINDOW));
+
+    GetTextMetrics(lpdis->hDC, &tm);
+    y = (lpdis->rcItem.bottom + lpdis->rcItem.top - tm.tmHeight) / 2;
+    x = LOWORD(GetDialogBaseUnits()) / 4;
+
+    SendMessage(lpdis->hwndItem, CB_GETLBTEXT,
+                lpdis->itemID, (LPARAM)achTemp);
+
+    StringCchLength(achTemp, _countof(achTemp), &cch);
+
+    ExtTextOut(lpdis->hDC, CX_BITMAP + 2 * x, y,
+        ETO_CLIPPED | ETO_OPAQUE, &lpdis->rcItem,
+        achTemp, (UINT)cch, NULL);
+
+    SetTextColor(lpdis->hDC, ClrForeground);
+    SetBkColor(lpdis->hDC, ClrBackground);
+
+    HDC hdc = CreateCompatibleDC(lpdis->hDC);
+    if (hdc == NULL)
+    {
+        DPRINT("CreateCompatibleDC(): Failed to create a valid handle!\n");
+        return FALSE;
+    }
+
+    SelectObject(hdc, BitmapMask);
+    BitBlt(lpdis->hDC, x, lpdis->rcItem.top + 1,
+           CX_BITMAP, CY_BITMAP, hdc, 0, 0, SRCAND);
+
+    SelectObject(hdc, BitmapIcon);
+    BitBlt(lpdis->hDC, x, lpdis->rcItem.top + 1,
+           CX_BITMAP, CY_BITMAP, hdc, 0, 0, SRCPAINT);
+
+    DeleteDC(hdc);
+
+    if (lpdis->itemState & ODS_FOCUS)
+        DrawFocusRect(lpdis->hDC, &lpdis->rcItem);
+
+    return TRUE;
+}
+
+INT_PTR CALLBACK ProgressDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     static HANDLE ThreadOBJ = NULL;
     WCHAR TempText[MAX_PATH] = { 0 };
     WCHAR FullText[MAX_PATH] = { 0 };
     WCHAR SysDrive[MAX_PATH] = { 0 };
     
-    switch(Message)
+    switch(message)
     {
         case WM_INITDIALOG:
             bv.SysDrive = FALSE;
             LoadStringW(GetModuleHandleW(NULL), IDS_SCAN, TempText, _countof(TempText));
             StringCchPrintfW(FullText, _countof(FullText), TempText, wcv.DriveLetter);
-            dv.hwndDlg = hwnd;
             SetDlgItemTextW(hwnd, IDC_STATIC_SCAN, FullText);
             GetEnvironmentVariableW(L"SystemDrive", SysDrive, _countof(SysDrive));
             if(wcscmp(SysDrive, wcv.DriveLetter) == 0)
             {
                 bv.SysDrive = TRUE;
             }
-            ThreadOBJ = CreateThread(NULL, 0, &SizeCheck, NULL, 0, NULL);
+            ThreadOBJ = CreateThread(NULL, 0, &SizeCheck, (LPVOID)hwnd, 0, NULL);
             return TRUE;
         
         case WM_NOTIFY:
@@ -258,7 +270,7 @@ BOOL CALLBACK ProgressDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPa
     return TRUE;
 }
 
-BOOL CALLBACK ChoiceDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK ChoiceDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     LPNMHDR pnmh;
     int MesgBox;
@@ -266,7 +278,7 @@ BOOL CALLBACK ChoiceDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
     WCHAR TempText[MAX_PATH] = { 0 };
     WCHAR FullText[MAX_PATH] = { 0 };
 
-    switch (Message)
+    switch (message)
     {
         case WM_INITDIALOG:
             LoadStringW(GetModuleHandleW(NULL), IDS_TITLE, TempText, _countof(TempText));
@@ -292,20 +304,37 @@ BOOL CALLBACK ChoiceDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
             switch (LOWORD(wParam))
             {
                 case IDOK:
-                    if (bv.ChkDskClean == FALSE && bv.RecycleClean == FALSE && bv.ChkDskClean == FALSE && bv.RappsClean == FALSE && bv.TempClean == FALSE)
+                {
+                    HWND hList = GetDlgItem(dv.hChoicePage, IDC_CHOICE_LIST);
+                    int NumOfItems = ListView_GetItemCount(hList);
+                    BOOL ItemChecked = FALSE;
+                    for (int i = 0; i < NumOfItems; i++)
                     {
-                        ZeroMemory(&TempText, sizeof(TempText));
+                        if (ListView_GetCheckState(hList, i))
+                        {
+                            ItemChecked = TRUE;
+                            break;
+                        }
+                    }
+                    
+                    if (ItemChecked == FALSE)
+                    {
                         LoadStringW(GetModuleHandleW(NULL), IDS_WARNING_OPTION, TempText, _countof(TempText));
                         MessageBoxW(hwnd, TempText, L"Warning", MB_OK | MB_ICONWARNING);
                         break;
                     }
-            
-                    ZeroMemory(&TempText, sizeof(TempText));
+
                     LoadStringW(GetModuleHandleW(NULL), IDS_CONFIRM_DELETION, TempText, _countof(TempText));
                     MesgBox = MessageBoxW(hwnd, TempText, L"Warning", MB_YESNO | MB_ICONWARNING | MB_DEFBUTTON2);
                     switch (MesgBox)
                     {
                         case IDYES:
+                            if(dv.hChoicePage)
+                                DestroyWindow(dv.hChoicePage);
+
+                            if (dv.hOptionsPage)
+                                DestroyWindow(dv.hOptionsPage);
+
                             EndDialog(hwnd, IDOK);
                             break;
 
@@ -313,7 +342,7 @@ BOOL CALLBACK ChoiceDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
                             break;
                     }
                     break;
-
+                }
                 case IDCANCEL:
                     PostMessage(hwnd, WM_CLOSE, 0, 0);
                     break;
@@ -336,20 +365,19 @@ BOOL CALLBACK ChoiceDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPara
     return TRUE;
 }
 
-BOOL CALLBACK ProgressEndDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK ProgressEndDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     static HANDLE ThreadOBJ = NULL;
     WCHAR TempText[MAX_PATH] = { 0 };
     WCHAR FullText[MAX_PATH] = { 0 };
 
-    switch (Message)
+    switch (message)
     {
     case WM_INITDIALOG:
         LoadStringW(GetModuleHandleW(NULL), IDS_REMOVAL, TempText, _countof(TempText));
         StringCchPrintfW(FullText, _countof(FullText), TempText, wcv.DriveLetter);
-        dv.hwndDlg = hwnd;
         SetDlgItemTextW(hwnd, IDC_STATIC_REMOVAL, FullText);
-        ThreadOBJ = CreateThread(NULL, 0, &FolderRemoval, NULL, 0, NULL);
+        ThreadOBJ = CreateThread(NULL, 0, &FolderRemoval, (LPVOID)hwnd, 0, NULL);
         return TRUE;
 
     case WM_NOTIFY:
@@ -384,12 +412,12 @@ BOOL CALLBACK ProgressEndDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM 
     return TRUE;
 }
 
-BOOL CALLBACK SagesetDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK SagesetDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     int MesgBox;
     WCHAR TempText[MAX_PATH] = { 0 };
 
-    switch (Message)
+    switch (message)
     {
         case WM_INITDIALOG:
             return OnCreateSageset(hwnd);
@@ -405,20 +433,32 @@ BOOL CALLBACK SagesetDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPar
             switch (LOWORD(wParam))
             {
                 case IDOK:
-                    if (bv.ChkDskClean == FALSE && bv.RecycleClean == FALSE && bv.ChkDskClean == FALSE && bv.RappsClean == FALSE && bv.TempClean == FALSE)
+                {
+                    HWND hList = GetDlgItem(dv.hSagesetPage, IDC_SAGESET_LIST);
+                    int NumOfItems = ListView_GetItemCount(hList);
+                    BOOL ItemChecked = FALSE;
+                    for (int i = 0; i < NumOfItems; i++)
                     {
-                        ZeroMemory(&TempText, sizeof(TempText));
+                        if (ListView_GetCheckState(hList, i))
+                        {
+                            ItemChecked = TRUE;
+                            break;
+                        }
+                    }
+
+                    if (ItemChecked == FALSE)
+                    {
                         LoadStringW(GetModuleHandleW(NULL), IDS_WARNING_OPTION, TempText, _countof(TempText));
                         MessageBoxW(hwnd, TempText, L"Warning", MB_OK | MB_ICONWARNING);
                         break;
                     }
-            
-                    ZeroMemory(&TempText, sizeof(TempText));
+
                     LoadStringW(GetModuleHandleW(NULL), IDS_CONFIRM_CONFIG, TempText, _countof(TempText));
                     MesgBox = MessageBoxW(hwnd, TempText, L"Warning", MB_YESNO | MB_ICONWARNING | MB_DEFBUTTON2);
                     switch (MesgBox)
                     {
                         case IDYES:
+                            DestroyWindow(dv.hSagesetPage);
                             EndDialog(hwnd, IDOK);
                             break;
 
@@ -426,7 +466,7 @@ BOOL CALLBACK SagesetDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPar
                             break;
                     }
                     break;
-
+                }
                 case IDCANCEL:
                     PostMessage(hwnd, WM_CLOSE, 0, 0);
                     break;
@@ -434,12 +474,7 @@ BOOL CALLBACK SagesetDlgProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lPar
             break;
     
         case WM_CLOSE:
-            if(dv.hChoicePage)
-                DestroyWindow(dv.hChoicePage);
-
-            if (dv.hOptionsPage)
-                DestroyWindow(dv.hOptionsPage);
-
+            DestroyWindow(dv.hSagesetPage);
             EndDialog(hwnd, IDCANCEL);
             break;
         

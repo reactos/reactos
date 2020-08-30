@@ -30,7 +30,7 @@
 #define IDI_COMPUTER                        5005
 
 #define IDC_CHOICE_LIST                     6001
-#define IDC_SAGERUN_LIST                    6002
+#define IDC_SAGESET_LIST                    6002
 
 #define IDS_CLEANUP                         7001
 #define IDS_DETAILS_TEMP                    7002

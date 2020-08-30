@@ -8,11 +8,6 @@
 #include "resource.h"
 #include "precomp.h"
 
-DIRSIZE sz;
-DLG_VAR dv;
-WCHAR_VAR wcv;
-BOOL_VAR bv;
-
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
     LPWSTR lpCmdLine, int nCmdShow)
 {
