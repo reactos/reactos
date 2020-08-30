@@ -335,55 +335,69 @@ static MUI_ENTRY frFRLicensePageEntries[] =
     {
         8,
         17,
-        "La licence de ReactOS ne couvre que la distribution aux tierces parties.",
+        "La licence de ReactOS ne couvre que la distribution",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         18,
-        "Si vous n'avez pas obtenu une copie de la",
+        "aux tierces parties.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         19,
-        "GNU General Public License avec ReactOS veuillez visiter",
+        "Si vous n'avez pas obtenu une copie de la",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         20,
+        "GNU General Public License avec ReactOS veuillez visiter",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        8,
+        21,
         "http://www.gnu.org/licenses/licenses.html",
         TEXT_STYLE_HIGHLIGHT,
         TEXT_ID_STATIC
     },
     {
         8,
-        22,
+        23,
         "Garantie :",
         TEXT_STYLE_HIGHLIGHT,
         TEXT_ID_STATIC
     },
     {
         8,
-        24,
-        "Ce logiciel est gratuit. Voir les sources pour les conditions de copie.",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        8,
         25,
-        "Il n'y a AUCUNE garantie; pas même sur la QUALITE ou",
+        "Ce logiciel est gratuit. Voir les sources pour les",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         26,
+        "conditions de copie.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        8,
+        27,
+        "Il n'y a AUCUNE garantie; pas m\202me sur la QUALITE ou",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        8,
+        28,
         "l'ADEQUATION POUR UN USAGE EN PARTICULIER",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
