@@ -37,13 +37,13 @@ BOOL GetPhysicalFileSize(LPCWSTR PathBuffer, PULARGE_INTEGER Size)
     HANDLE FileHandle;
     FILE_STANDARD_INFORMATION FileInfo;
     NTSTATUS Status;
-    WCHAR StdPathBuffer[MAX_PATH] = L"";
-        
-    wcscpy(StdPathBuffer, L"\\??\\");
-    wcscat(StdPathBuffer, PathBuffer);
     
-    //wcscpy(StdPathBuffer,PathBuffer);
-    RtlInitUnicodeString(&FileName, StdPathBuffer);
+    if (!RtlDosPathNameToNtPathName_U(PathBuffer, &FileName, NULL, NULL))
+    {
+        ERR("RtlDosPathNameToNtPathName_U failed\n");
+        return FALSE;
+    }
+
     InitializeObjectAttributes(&ObjectAttributes,
                                &FileName,
                                OBJ_CASE_INSENSITIVE,
@@ -57,7 +57,7 @@ BOOL GetPhysicalFileSize(LPCWSTR PathBuffer, PULARGE_INTEGER Size)
                         FILE_SYNCHRONOUS_IO_NONALERT);
     if (!NT_SUCCESS(Status))
     {
-        ERR("NtOpenFile failed for %S (Status 0x%08lx)\n", StdPathBuffer, Status);
+        ERR("NtOpenFile failed for %S (Status 0x%08lx)\n", PathBuffer, Status);
         return FALSE;
     }
 
@@ -70,7 +70,7 @@ BOOL GetPhysicalFileSize(LPCWSTR PathBuffer, PULARGE_INTEGER Size)
     NtClose(FileHandle);
     if (!NT_SUCCESS(Status))
     {
-        ERR("NtQueryInformationFile failed for %S\n", StdPathBuffer);
+        ERR("NtQueryInformationFile failed for %S\n", PathBuffer);
         return FALSE;
     }
     
@@ -1387,7 +1387,7 @@ CFileDefExt::CountFolderAndFiles(HWND hwndDlg, LPWSTR pwszBuf, UINT cchBufMax, D
 
     // Store path without wildcard
     ZeroMemory(PathBuffer, sizeof(PathBuffer));
-    wcscpy(PathBuffer,pwszBuf);
+    StringCchCopyW(PathBuffer, sizeof(PathBuffer), pwszBuf);
 
     /* Find all files, FIXME: shouldn't be "*"? */
     StringCchCopyW(pwszFilename, cchFilenameMax, L"*");
@@ -1409,8 +1409,9 @@ CFileDefExt::CountFolderAndFiles(HWND hwndDlg, LPWSTR pwszBuf, UINT cchBufMax, D
     do
     {
         ZeroMemory(WorkBuffer, sizeof(WorkBuffer));
-        wcscpy(WorkBuffer, PathBuffer);
-        wcscat(WorkBuffer, wfd.cFileName);
+        StringCchCopyW(WorkBuffer, sizeof(WorkBuffer), PathBuffer);
+        StringCchCatW(WorkBuffer, sizeof(WorkBuffer), wfd.cFileName);
+
         if (wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
         {
             /* Don't process "." and ".." items */
