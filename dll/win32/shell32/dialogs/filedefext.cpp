@@ -1386,7 +1386,7 @@ CFileDefExt::CountFolderAndFiles(HWND hwndDlg, LPWSTR pwszBuf, UINT cchBufMax, D
     --cchFilenameMax;
 
     // Store path without wildcard
-    ZeroMemory(PathBuffer,sizeof(PathBuffer));
+    ZeroMemory(PathBuffer, sizeof(PathBuffer));
     wcscpy(PathBuffer,pwszBuf);
 
     /* Find all files, FIXME: shouldn't be "*"? */
