@@ -66,14 +66,6 @@ Disk.DeviceDesc = "Disk Drive"
 OpticalDisk.DeviceDesc = "Optical Disk Drive"
 Disk.ServiceDesc = "Disk Driver"
 
-[Strings.040C]
-ReactOS = "Equipe ReactOS"
-GenericMfg = "(Pilotes de disque génériques)"
-DiskClassName = "Lecteurs de disques"
-Disk.DeviceDesc = "Lecteurs de disques"
-OpticalDisk.DeviceDesc = "Lecteurs de disques optiques"
-Disk.ServiceDesc = "Pilotes de disques"
-
 [Strings.0405]
 GenericMfg = "(Obecné diskové jednotky)"
 DiskClassName = "Diskové jednotky"
@@ -88,6 +80,14 @@ DiskClassName = "Unidades de disco"
 Disk.DeviceDesc = "Unidad de disco"
 OpticalDisk.DeviceDesc = "Unidad de disco óptico"
 Disk.ServiceDesc = "Controlador de disco"
+
+[Strings.040C]
+ReactOS = "Equipe ReactOS"
+GenericMfg = "(Pilotes de disque génériques)"
+DiskClassName = "Lecteurs de disques"
+Disk.DeviceDesc = "Lecteurs de disques"
+OpticalDisk.DeviceDesc = "Lecteurs de disques optiques"
+Disk.ServiceDesc = "Pilotes de disques"
 
 [Strings.0415]
 ReactOS = "Zespół ReactOS"

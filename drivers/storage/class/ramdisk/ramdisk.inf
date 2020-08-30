@@ -61,6 +61,13 @@ RamdiskBus.Desc = "RAM disk controller"
 RamdiskVolume.Desc = "RAM disk device (volume)"
 Ramdisk.ServiceDesc = "ReactOS RAM Disk Driver"
 
+[Strings.040C]
+ReactOS = "Equipe ReactOS"
+RamdiskClassName = "Ramdisk"
+RamdiskBus.Desc = "Controleur de disque virtuel"
+RamdiskVolume.Desc = "Disque virtuel (volume)"
+Ramdisk.ServiceDesc = "Pilote de disque virtuel ReactOS"
+
 [Strings.0415]
 ReactOS = "Zespół ReactOS"
 RamdiskClassName = "Ramdisk"
@@ -74,10 +81,3 @@ RamdiskClassName = "RAM-диски"
 RamdiskBus.Desc = "Контроллер RAM-диска"
 RamdiskVolume.Desc = "Устройство RAM-диска (том)"
 Ramdisk.ServiceDesc = "Драйвер RAM-диска ReactOS"
-
-[Strings.040C]
-ReactOS = "Equipe ReactOS"
-RamdiskClassName = "Ramdisk"
-RamdiskBus.Desc = "Controleur de disque virtuel"
-RamdiskVolume.Desc = "Disque virtuel (volume)"
-Ramdisk.ServiceDesc = "Pilote de disque virtuel ReactOS"

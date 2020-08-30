@@ -57,12 +57,6 @@ CDROMClassName = "DVD/CD-ROM drives"
 GenCdRom.DeviceDesc = "CD-ROM Drive"
 GenericMfg = "(Generic DVD/CD-ROM Drives)"
 
-[Strings.040C]
-ReactOS = "Equipe ReactOS"
-CDROMClassName = "Lecteurs DVD/CD-ROM"
-GenCdRom.DeviceDesc = "Lecteur CD-ROM"
-GenericMfg = "(Lecteurs DVD/CD-ROM génériques)"
-
 [Strings.0405]
 CDROMClassName = "Jednotky DVD/CD-ROM"
 GenCdRom.DeviceDesc = "Jednotka CD-ROM"
@@ -81,7 +75,10 @@ GenCdRom.DeviceDesc = "Unidad CD-ROM"
 GenericMfg = "(Unidades de DVD/CD-ROM genéricas)"
 
 [Strings.040C]
-CDROMClassName = "Lecteurs de DVD/CD-ROM"
+ReactOS = "Equipe ReactOS"
+CDROMClassName = "Lecteurs DVD/CD-ROM"
+GenCdRom.DeviceDesc = "Lecteur CD-ROM"
+GenericMfg = "(Lecteurs DVD/CD-ROM génériques)"
 
 [Strings.041B]
 CDROMClassName = "DVD/CD-ROM mechaniky"
