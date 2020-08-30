@@ -1433,7 +1433,7 @@ CFileDefExt::CountFolderAndFiles(HWND hwndDlg, LPWSTR pwszBuf, UINT cchBufMax, D
             m_DirSize.QuadPart += FileSize.QuadPart;
             // Calculate size on disc
             if (!GetPhysicalFileSize(WorkBuffer, &FileSize))
-                ERR("GetPhysicalFileSize failed for %ls",WorkBuffer);
+                ERR("GetPhysicalFileSize failed for %ls", WorkBuffer);
             
             m_DirSizeOnDisc.QuadPart += FileSize.QuadPart;
         }
