@@ -24,6 +24,7 @@
 # include <sys/types.h>
 #endif
 #include "cabinet.h"
+#include "CCFDATAStorage.h"
 #include "raw.h"
 #include "mszip.h"
 

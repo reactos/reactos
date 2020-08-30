@@ -12,7 +12,8 @@ list(APPEND SOURCE
     mszip.h
     raw.cxx
     raw.h
-    CCFDATAStorage.cxx)
+    CCFDATAStorage.cxx
+    CCFDATAStorage.h)
 
 add_host_tool(cabman ${SOURCE})
 target_link_libraries(cabman PRIVATE host_includes zlibhost)
