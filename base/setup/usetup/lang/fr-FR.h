@@ -220,7 +220,7 @@ static MUI_ENTRY frFRIntroPageEntries[] =
     {
         6,
         15,
-        "Sauvez vos donn\202es ou testez sur un ordinateur secondaire",
+        "Sauvegardez vos donn\202es ou testez sur un ordinateur secondaire",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
