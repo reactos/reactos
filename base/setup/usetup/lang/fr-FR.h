@@ -377,7 +377,7 @@ static MUI_ENTRY frFRLicensePageEntries[] =
     {
         8,
         25,
-        "Il n'y a AUCUNE garantie; pas même sur la QUALITE ou ",
+        "Il n'y a AUCUNE garantie; pas même sur la QUALITE ou",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
