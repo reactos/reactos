@@ -1376,8 +1376,8 @@ CFileDefExt::CountFolderAndFiles(HWND hwndDlg, LPWSTR pwszBuf, UINT cchBufMax, D
     /* Find filename position */
     UINT cchBuf = wcslen(pwszBuf);
     WCHAR *pwszFilename = pwszBuf + cchBuf;
-    WCHAR PathBuffer[MAX_PATH]=L"";
-    WCHAR WorkBuffer[MAX_PATH]=L"";
+    WCHAR PathBuffer[MAX_PATH] = L"";
+    WCHAR WorkBuffer[MAX_PATH] = L"";
 
     size_t cchFilenameMax = cchBufMax - cchBuf;
     if (!cchFilenameMax)
