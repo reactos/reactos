@@ -1003,7 +1003,7 @@ BEGIN
     IDS_COPYITEMS "Copier les éléments"
     IDS_COPYBUTTON "Copier"
     IDS_MOVETOMENU "&Déplacer vers le dossier..."
-    IDS_MOVETOTITLE "Selectionnez l'emplacement où vous souhaitez déplacer '%s' puis appuyez sur le bouton Déplacer."
+    IDS_MOVETOTITLE "Sélectionnez l'emplacement où vous souhaitez déplacer '%s', puis appuyez sur le bouton Déplacer."
     IDS_MOVEITEMS "Déplacer les éléments"
     IDS_MOVEBUTTON "Déplacer"
 END
