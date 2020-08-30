@@ -192,7 +192,7 @@ static MUI_ENTRY frFRIntroPageEntries[] =
     {
         6,
         8,
-        "Status de version de ReactOS",
+        "Statut de version de ReactOS",
         TEXT_STYLE_HIGHLIGHT,
         TEXT_ID_STATIC
     },
