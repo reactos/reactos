@@ -20,7 +20,7 @@ BEGIN
     IDS_PWR_RUN               "shell32.dll,Control_RunDLL PowerCfg.cpl"
     IDS_PWR_PERCENT_REMAINING "%u%% restants"
     IDS_PWR_CHARGING          "%u%% en charge"
-    IDS_PWR_UNKNOWN_REMAINING "Reste inconnu"
+    IDS_PWR_UNKNOWN_REMAINING "Restant inconnu"
     IDS_PWR_AC "Sur secteur"
     IDS_PWR_HOURS_REMAINING "%1!u!:%2!02u! heures (%3!u!%%) restantes"
     IDS_PWR_MINUTES_REMAINING "%1!u! mins (%2!u!%%) restantes"
