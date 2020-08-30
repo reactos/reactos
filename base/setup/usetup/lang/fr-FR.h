@@ -335,7 +335,7 @@ static MUI_ENTRY frFRLicensePageEntries[] =
     {
         8,
         17,
-        "La licence de ReactOS ne couvre que la distribution à des tierces parties.",
+        "La licence de ReactOS ne couvre que la distribution aux tierces parties.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
