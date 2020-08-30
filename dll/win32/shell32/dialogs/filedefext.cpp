@@ -615,7 +615,7 @@ CFileDefExt::InitFileAttr(HWND hwndDlg)
                 else
                     ERR("Unreliable size on disk");
 
-               SetDlgItemTextW(hwndDlg, 14012, wszBuf);
+                SetDlgItemTextW(hwndDlg, 14012, wszBuf);
             }
         }
     }
