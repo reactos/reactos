@@ -999,7 +999,7 @@ BEGIN
     IDS_FILE_NOT_FOUND "Le fichier '%s' ne peut être trouvé."
     IDS_LINK_INVALID "L'élément '%s' auquel ce raccourci fait référence a été modifié ou déplacé et ce raccourci ne fonctionne plus correctement."
     IDS_COPYTOMENU "Copier vers le &dossier..."
-    IDS_COPYTOTITLE "Selectionnez l'emplacement où vous souhaitez copier '%s' puis appuyez sur le bouton Copier."
+    IDS_COPYTOTITLE "Sélectionnez l'emplacement où vous souhaitez copier '%s', puis appuyez sur le bouton Copier."
     IDS_COPYITEMS "Copier les éléments"
     IDS_COPYBUTTON "Copier"
     IDS_MOVETOMENU "&Déplacer vers le dossier..."
