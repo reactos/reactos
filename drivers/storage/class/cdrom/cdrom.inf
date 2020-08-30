@@ -63,7 +63,6 @@ CDROMClassName = "Lecteurs DVD/CD-ROM"
 GenCdRom.DeviceDesc = "Lecteur CD-ROM"
 GenericMfg = "(Lecteurs DVD/CD-ROM génériques)"
 
-
 [Strings.0405]
 CDROMClassName = "Jednotky DVD/CD-ROM"
 GenCdRom.DeviceDesc = "Jednotka CD-ROM"
