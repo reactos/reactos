@@ -17,6 +17,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#ifndef __REACTOS_USE_PCH__
 #define COBJMACROS
 
 #include "wine/atlbase.h"
@@ -28,6 +29,7 @@
 #ifdef __REACTOS__
 #include <wingdi.h>
 #endif
+#endif /* __REACTOS_USE_PCH__ */
 
 WINE_DEFAULT_DEBUG_CHANNEL(atl);
 
