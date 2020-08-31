@@ -3,10 +3,12 @@
  * LICENSE:     GPL v2 - See COPYING in the top level directory
  * FILE:        lib/recyclebin/recyclebin_v5_enumerator.c
  * PURPOSE:     Enumerates contents of a MS Windows 2000/XP/2003 recyclebin
- * PROGRAMMERS: Copyright 2006-2007 Hervé Poussineau (hpoussin@reactos.org)
+ * PROGRAMMERS: Copyright 2006-2007 HervÃ© Poussineau (hpoussin@reactos.org)
  */
 
+#ifndef __REACTOS_USE_PCH__
 #include "recyclebin_private.h"
+#endif /* __REACTOS_USE_PCH__ */
 
 struct RecycleBin5File
 {
