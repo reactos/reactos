@@ -53,6 +53,10 @@ add_executable(explorer_old
     ${PCH_SKIP_SOURCE}
     explorer.rc)
 
+if(USE_CLANG_CL)
+    target_compile_options(explorer_old PRIVATE "-Wno-deprecated-increment-bool")
+endif()
+
 target_link_libraries(explorer_old comsupp wine uuid)
 set_module_type(explorer_old win32gui UNICODE)
 add_importlibs(explorer_old advapi32 gdi32 user32 ws2_32 msimg32 comctl32 ole32 oleaut32 shell32 shlwapi notifyhook msvcrt kernel32 ntdll)
