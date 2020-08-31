@@ -13,5 +13,5 @@ add_library(acledit MODULE
 
 set_module_type(acledit win32dll UNICODE)
 add_importlibs(acledit msvcrt kernel32 ntdll)
-add_pch(acledit acleditint.h SOURCE)
+add_pch(acledit acleditint.h)
 add_cd_file(TARGET acledit DESTINATION reactos/system32 FOR all)

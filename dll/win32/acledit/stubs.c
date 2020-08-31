@@ -13,7 +13,9 @@
  *      07/09/2004  Created
  */
 
+#ifndef __REACTOS_USE_PCH__
 #include "acleditint.h"
+#endif
 
 ULONG DbgPrint(PCH Format,...);
 
