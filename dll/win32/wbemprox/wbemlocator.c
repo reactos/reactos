@@ -16,6 +16,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#ifndef __REACTOS_USE_PCH__
 #define COBJMACROS
 
 #include <stdarg.h>
@@ -27,6 +28,7 @@
 
 #include "wine/debug.h"
 #include "wbemprox_private.h"
+#endif /* __REACTOS_USE_PCH__ */
 
 WINE_DEFAULT_DEBUG_CHANNEL(wbemprox);
 
