@@ -47,10 +47,7 @@ BOOL AddListViewColumn(HWND hWndListView, LPWSTR label, INT iCol, int w)
     lvc.cx = w;
     lvc.fmt = LVCFMT_CENTER;
 
-    if (ListView_InsertColumn(hWndListView, iCol, &lvc) == -1)
-        return FALSE;
-    else
-        return TRUE;
+    return (ListView_InsertColumn(hWndListView, iCol, &lvc) != -1);
 }
 
 // Returns TRUE if successful, and FALSE otherwise. 
