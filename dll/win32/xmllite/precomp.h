@@ -5,6 +5,8 @@
 #include <wine/config.h>
 
 #include <stdarg.h>
+#include <assert.h>
+#include <wchar.h>
 
 #define WIN32_NO_STATUS
 #define _INC_WINDOWS
@@ -14,10 +16,12 @@
 
 #include <windef.h>
 #include <winbase.h>
+#include <winnls.h>
 #include <objbase.h>
 #include <xmllite.h>
 
 #include <wine/debug.h>
+#include <wine/list.h>
 
 #include "xmllite_private.h"
 

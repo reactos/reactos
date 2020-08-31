@@ -15,8 +15,12 @@ add_library(xmllite MODULE
     guid.c
     ${CMAKE_CURRENT_BINARY_DIR}/xmllite.def)
 
+list(APPEND SOURCE_NO_PCH
+    guid.c
+    ${CMAKE_CURRENT_BINARY_DIR}/xmllite_stubs.c)
+
 set_module_type(xmllite win32dll)
 target_link_libraries(xmllite uuid wine)
 add_importlibs(xmllite msvcrt kernel32 ntdll)
-add_pch(xmllite precomp.h SOURCE)
+add_pch(xmllite precomp.h ${SOURCE_NO_PCH})
 add_cd_file(TARGET xmllite DESTINATION reactos/system32 FOR all)
