@@ -18,9 +18,7 @@
  * Software Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#ifdef PC_HEADER
-#include "all.h"
-#else
+#ifndef __REACTOS_USE_PCH__
 #include <stdio.h>
 #include <stdlib.h>
 #include "api.h"

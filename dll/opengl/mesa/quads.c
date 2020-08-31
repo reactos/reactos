@@ -45,10 +45,7 @@
  * Quadrilateral rendering functions.
  */
 
-
-#ifdef PC_HEADER
-#include "all.h"
-#else
+#ifndef __REACTOS_USE_PCH__
 #include "types.h"
 #include "quads.h"
 #endif
@@ -95,7 +92,7 @@ void gl_set_quad_function( GLcontext *ctx )
    else {
       /* if in feedback or selection mode we can fall back to triangle code */
       ctx->Driver.QuadFunc = quad;
-   }      
+   }
 }
 
 

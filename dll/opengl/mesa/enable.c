@@ -94,10 +94,7 @@
  *
  */
 
-
-#ifdef PC_HEADER
-#include "all.h"
-#else
+#ifndef __REACTOS_USE_PCH__
 #include <string.h>
 #include "context.h"
 #include "depth.h"
@@ -288,7 +285,7 @@ static void gl_enable( GLcontext* ctx, GLenum cap, GLboolean state )
       case GL_MAP2_NORMAL:
 	 ctx->Eval.Map2Normal = state;
 	 break;
-      case GL_MAP2_TEXTURE_COORD_1: 
+      case GL_MAP2_TEXTURE_COORD_1:
 	 ctx->Eval.Map2TextureCoord1 = state;
 	 break;
       case GL_MAP2_TEXTURE_COORD_2:
@@ -542,7 +539,7 @@ GLboolean gl_IsEnabled( GLcontext* ctx, GLenum cap )
 	 return ctx->Eval.Map2Index;
       case GL_MAP2_NORMAL:
 	 return ctx->Eval.Map2Normal;
-      case GL_MAP2_TEXTURE_COORD_1: 
+      case GL_MAP2_TEXTURE_COORD_1:
 	 return ctx->Eval.Map2TextureCoord1;
       case GL_MAP2_TEXTURE_COORD_2:
 	 return ctx->Eval.Map2TextureCoord2;

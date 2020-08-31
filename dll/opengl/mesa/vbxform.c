@@ -103,9 +103,7 @@
  */
 
 
-#ifdef PC_HEADER
-#include "all.h"
-#else
+#ifndef __REACTOS_USE_PCH__
 #include <stdlib.h>
 #include "asm-386.h"
 #include "context.h"
@@ -720,14 +718,14 @@ static void project_and_cliptest( GLcontext *ctx,
 #else
    switch (ctx->ProjectionMatrixType) {
       case MATRIX_GENERAL:
-         asm_project_and_cliptest_general( n, vClip, ctx->ProjectionMatrix, vEye, 
+         asm_project_and_cliptest_general( n, vClip, ctx->ProjectionMatrix, vEye,
                                            clipMask, orMask, andMask );
          break;
       case MATRIX_IDENTITY:
          asm_project_and_cliptest_identity( n, vClip, vEye, clipMask, orMask, andMask );
          break;
       case MATRIX_ORTHO:
-         asm_project_and_cliptest_ortho( n, vClip, ctx->ProjectionMatrix, vEye, 
+         asm_project_and_cliptest_ortho( n, vClip, ctx->ProjectionMatrix, vEye,
                                          clipMask, orMask, andMask );
          break;
       case MATRIX_PERSPECTIVE:
@@ -817,7 +815,7 @@ static void viewport_map_vertices( GLcontext *ctx,
    GLfloat sz = ctx->Viewport.Sz;
    GLfloat tz = ctx->Viewport.Tz;
 
-   if ((ctx->ProjectionMatrixType==MATRIX_ORTHO || 
+   if ((ctx->ProjectionMatrixType==MATRIX_ORTHO ||
         ctx->ProjectionMatrixType==MATRIX_IDENTITY)
        && ctx->ModelViewMatrixType!=MATRIX_GENERAL
        && (ctx->VB->VertexSizeMask & VERTEX4_BIT)==0) {

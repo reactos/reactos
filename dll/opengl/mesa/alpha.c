@@ -40,10 +40,7 @@
  *
  */
 
-
-#ifdef PC_HEADER
-#include "all.h"
-#else
+#ifndef __REACTOS_USE_PCH__
 #include "alpha.h"
 #include "context.h"
 #include "types.h"

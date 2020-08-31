@@ -95,10 +95,7 @@
  *
  */
 
-
-#ifdef PC_HEADER
-#include "all.h"
-#else
+#ifndef __REACTOS_USE_PCH__
 #include <stdlib.h>
 #include <string.h>
 #include "accum.h"

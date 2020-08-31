@@ -106,10 +106,7 @@
  *
  */
 
-
-#ifdef PC_HEADER
-#include "all.h"
-#else
+#ifndef __REACTOS_USE_PCH__
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -149,7 +146,7 @@ static void print_matrix( const GLfloat m[16] )
  * Input:  a, b - matrices to multiply
  * Output:  product - product of a and b
  * WARNING: (product != b) assumed
- * NOTE:    (product == a) allowed    
+ * NOTE:    (product == a) allowed
  */
 static void matmul( GLfloat *product, const GLfloat *a, const GLfloat *b )
 {
@@ -186,7 +183,7 @@ static void matmul( GLfloat *product, const GLfloat *a, const GLfloat *b )
  *
  * This implementation by Scott McCaskill
  */
- 
+
 typedef GLfloat Mat2[2][2];
 
 enum {
@@ -423,13 +420,13 @@ void gl_analyze_modelview_matrix( GLcontext *ctx )
    if (is_identity(m)) {
       ctx->ModelViewMatrixType = MATRIX_IDENTITY;
    }
-   else if (                 m[4]==0.0F && m[ 8]==0.0F               
+   else if (                 m[4]==0.0F && m[ 8]==0.0F
             && m[1]==0.0F               && m[ 9]==0.0F
             && m[2]==0.0F && m[6]==0.0F && m[10]==1.0F && m[14]==0.0F
             && m[3]==0.0F && m[7]==0.0F && m[11]==0.0F && m[15]==1.0F) {
       ctx->ModelViewMatrixType = MATRIX_2D_NO_ROT;
    }
-   else if (                               m[ 8]==0.0F               
+   else if (                               m[ 8]==0.0F
             &&                             m[ 9]==0.0F
             && m[2]==0.0F && m[6]==0.0F && m[10]==1.0F && m[14]==0.0F
             && m[3]==0.0F && m[7]==0.0F && m[11]==0.0F && m[15]==1.0F) {
@@ -490,7 +487,7 @@ void gl_analyze_texture_matrix( GLcontext *ctx )
    if (is_identity(m)) {
       ctx->TextureMatrixType = MATRIX_IDENTITY;
    }
-   else if (                               m[ 8]==0.0F               
+   else if (                               m[ 8]==0.0F
             &&                             m[ 9]==0.0F
             && m[2]==0.0F && m[6]==0.0F && m[10]==1.0F && m[14]==0.0F
             && m[3]==0.0F && m[7]==0.0F && m[11]==0.0F && m[15]==1.0F) {

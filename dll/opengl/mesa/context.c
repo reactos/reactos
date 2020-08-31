@@ -226,10 +226,7 @@
  * the address space.
  */
 
-
-#ifdef PC_HEADER
-#include "all.h"
-#else
+#ifndef __REACTOS_USE_PCH__
 #include <assert.h>
 #include <math.h>
 #include <stdio.h>
@@ -824,7 +821,7 @@ static void initialize_context( GLcontext *ctx )
       ctx->Viewport.X = 0;
       ctx->Viewport.Y = 0;
       ctx->Viewport.Width = 0;
-      ctx->Viewport.Height = 0;   
+      ctx->Viewport.Height = 0;
       ctx->Viewport.Near = 0.0;
       ctx->Viewport.Far = 1.0;
       ctx->Viewport.Sx = 0.0;  /* Sx, Tx, Sy, Ty are computed later */
@@ -1498,7 +1495,7 @@ void gl_ResizeBuffersMESA( GLcontext *ctx )
 {
    GLint newsize;
    GLuint buf_width, buf_height;
-   
+
    ctx->NewState |= NEW_ALL;   /* just to be safe */
 
    /* ask device driver for size of output buffer */
@@ -1717,7 +1714,7 @@ static void update_clipmask(GLcontext *ctx)
 	 }
       }
    }
- 
+
    switch(ctx->ClipMask) {
       case CLIP_FCOLOR_BIT|CLIP_TEXTURE_BIT:
          if(ctx->VB->TexCoordSize==2)

@@ -61,10 +61,7 @@
  *
  */
 
-
-#ifdef PC_HEADER
-#include "all.h"
-#else
+#ifndef __REACTOS_USE_PCH__
 #include <assert.h>
 #include <stdio.h>
 #include "context.h"

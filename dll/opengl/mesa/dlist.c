@@ -137,10 +137,7 @@
  *
  */
 
-
-#ifdef PC_HEADER
-#include "all.h"
-#else
+#ifndef __REACTOS_USE_PCH__
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -1338,7 +1335,7 @@ void gl_save_EvalMesh1( GLcontext *ctx,
 }
 
 
-void gl_save_EvalMesh2( GLcontext *ctx, 
+void gl_save_EvalMesh2( GLcontext *ctx,
                         GLenum mode, GLint i1, GLint i2, GLint j1, GLint j2 )
 {
    Node *n = alloc_instruction( ctx, OPCODE_EVALMESH2, 5 );
@@ -1664,7 +1661,7 @@ void gl_save_MapGrid1f( GLcontext *ctx, GLint un, GLfloat u1, GLfloat u2 )
 }
 
 
-void gl_save_MapGrid2f( GLcontext *ctx, 
+void gl_save_MapGrid2f( GLcontext *ctx,
                         GLint un, GLfloat u1, GLfloat u2,
 		        GLint vn, GLfloat v1, GLfloat v2 )
 {

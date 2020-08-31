@@ -88,9 +88,7 @@
  */
 
 
-#ifdef PC_HEADER
-#include "all.h"
-#else
+#ifndef __REACTOS_USE_PCH__
 #include <stdlib.h>
 #include <string.h>
 #include "context.h"
@@ -360,7 +358,7 @@ void gl_ArrayElement( GLcontext *ctx, GLint i )
       VB->Normal[count][0] = ctx->Current.Normal[0];
       VB->Normal[count][1] = ctx->Current.Normal[1];
       VB->Normal[count][2] = ctx->Current.Normal[2];
-   } 
+   }
 
    /* TODO: directly set VB->Fcolor instead of calling a glColor command */
    if (ctx->Array.ColorEnabled) {
@@ -1040,7 +1038,7 @@ void gl_DrawElements( GLcontext *ctx,
                       GLenum mode, GLsizei count,
                       GLenum type, const GLvoid *indices )
 {
-   
+
    if (INSIDE_BEGIN_END(ctx)) {
       gl_error( ctx, GL_INVALID_OPERATION, "glDrawElements" );
       return;

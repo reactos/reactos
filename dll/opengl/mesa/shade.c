@@ -55,10 +55,7 @@
  *
  */
 
-
-#ifdef PC_HEADER
-#include "all.h"
-#else
+#ifndef __REACTOS_USE_PCH__
 #include <math.h>
 #include "macros.h"
 #include "mmath.h"
@@ -222,7 +219,7 @@ void gl_color_shade_vertices( GLcontext *ctx,
             GLfloat diffuseR, diffuseG, diffuseB;
             GLfloat specularR, specularG, specularB;
             GLfloat h_x, h_y, h_z, n_dot_h, t;
-                  
+
             /* diffuse term */
             diffuseR = n_dot_VP * mat->Diffuse[0] * light->Diffuse[0];
             diffuseG = n_dot_VP * mat->Diffuse[1] * light->Diffuse[1];

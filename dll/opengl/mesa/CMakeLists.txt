@@ -66,6 +66,9 @@ list(APPEND SOURCE
 )
 
 add_library(mesa STATIC ${SOURCE} ${mesa_asm})
+add_pch(mesa precomp.h)
+target_compile_definitions(mesa PRIVATE FAST_MATH THREADS)
+
 add_dependencies(mesa psdk)
 
-    
+

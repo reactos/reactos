@@ -63,10 +63,7 @@
  * Depth buffer functions
  */
 
-
-#ifdef PC_HEADER
-#include "all.h"
-#else
+#ifndef __REACTOS_USE_PCH__
 #include <stdlib.h>
 #include <string.h>
 #include "context.h"
@@ -182,7 +179,7 @@ void gl_DepthRange( GLcontext* ctx, GLclampd nearval, GLclampd farval )
  * Input:  n - number of pixels in the span
  *         x, y - location of leftmost pixel in span in window coords
  *         z - array [n] of integer depth values
- * In/Out:  mask - array [n] of flags (1=draw pixel, 0=don't draw) 
+ * In/Out:  mask - array [n] of flags (1=draw pixel, 0=don't draw)
  * Return:  number of pixels which passed depth test
  */
 

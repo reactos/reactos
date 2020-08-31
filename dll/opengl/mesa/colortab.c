@@ -43,10 +43,7 @@
  *
  */
 
-
-#ifdef PC_HEADER
-#include "all.h"
-#else
+#ifndef __REACTOS_USE_PCH__
 #include "colortab.h"
 #include "context.h"
 #include "macros.h"

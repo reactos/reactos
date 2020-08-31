@@ -67,10 +67,7 @@
  * These functions simulate the rasterization pipeline.
  */
 
-
-#ifdef PC_HEADER
-#include "all.h"
-#else
+#ifndef __REACTOS_USE_PCH__
 #include <string.h>
 #include "alpha.h"
 #include "alphabuf.h"

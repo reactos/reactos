@@ -45,10 +45,7 @@
  * Implement the effect of glColorMask and glIndexMask in software.
  */
 
-
-#ifdef PC_HEADER
-#include "all.h"
-#else
+#ifndef __REACTOS_USE_PCH__
 #include <string.h>
 #include "alphabuf.h"
 #include "context.h"

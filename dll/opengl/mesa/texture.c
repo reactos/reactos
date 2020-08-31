@@ -136,9 +136,7 @@
  */
 
 
-#ifdef PC_HEADER
-#include "all.h"
-#else
+#ifndef __REACTOS_USE_PCH__
 #include <math.h>
 #include <stdlib.h>
 #include "context.h"

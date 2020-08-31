@@ -49,10 +49,7 @@
  *
  */
 
-
-#ifdef PC_HEADER
-#include "all.h"
-#else
+#ifndef __REACTOS_USE_PCH__
 #include <stdlib.h>
 #include <string.h>
 #include "context.h"
@@ -509,7 +506,7 @@ GLint gl_stencil_span( GLcontext *ctx,
  *         x, y - location of leftmost pixel in span
  *         z - array [n] of z values
  * Input:  mask - array [n] of flags  (1=test this pixel, 0=skip the pixel)
- * Output:  mask - array [n] of flags (1=depth test passed, 0=failed) 
+ * Output:  mask - array [n] of flags (1=depth test passed, 0=failed)
  */
 void gl_depth_stencil_span( GLcontext *ctx,
                             GLuint n, GLint x, GLint y, const GLdepth z[],
@@ -877,7 +874,7 @@ GLint gl_stencil_pixels( GLcontext *ctx,
  *         x, y - array of [n] pixels to stencil
  *         z - array [n] of z values
  * Input:  mask - array [n] of flags  (1=test this pixel, 0=skip the pixel)
- * Output:  mask - array [n] of flags (1=depth test passed, 0=failed) 
+ * Output:  mask - array [n] of flags (1=depth test passed, 0=failed)
  */
 void gl_depth_stencil_pixels( GLcontext *ctx,
                               GLuint n, const GLint x[], const GLint y[],

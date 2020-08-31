@@ -65,10 +65,7 @@
  * Thanks guys!
  */
 
-
-#ifdef PC_HEADER
-#include "all.h"
-#else
+#ifndef __REACTOS_USE_PCH__
 #include <math.h>
 #include <stdlib.h>
 #include <string.h>
@@ -94,8 +91,8 @@ void gl_init_eval( void )
    * Bernstein polynomial generator.
    */
 
-  if (init_flag==0) 
-  { /* no initialization needed */ 
+  if (init_flag==0)
+  { /* no initialization needed */
   }
 
   init_flag = 1;
@@ -105,22 +102,22 @@ void gl_init_eval( void )
 
 /*
  * Horner scheme for Bezier curves
- * 
+ *
  * Bezier curves can be computed via a Horner scheme.
  * Horner is numerically less stable than the de Casteljau
- * algorithm, but it is faster. For curves of degree n 
+ * algorithm, but it is faster. For curves of degree n
  * the complexity of Horner is O(n) and de Casteljau is O(n^2).
- * Since stability is not important for displaying curve 
+ * Since stability is not important for displaying curve
  * points I decided to use the Horner scheme.
  *
- * A cubic Bezier curve with control points b0, b1, b2, b3 can be 
+ * A cubic Bezier curve with control points b0, b1, b2, b3 can be
  * written as
  *
  *        (([3]        [3]     )     [3]       )     [3]
  * c(t) = (([0]*s*b0 + [1]*t*b1)*s + [2]*t^2*b2)*s + [3]*t^2*b3
  *
  *                                           [n]
- * where s=1-t and the binomial coefficients [i]. These can 
+ * where s=1-t and the binomial coefficients [i]. These can
  * be computed iteratively using the identity:
  *
  * [n]               [n  ]             [n]
@@ -135,7 +132,7 @@ horner_bezier_curve(GLfloat *cp, GLfloat *out, GLfloat t,
   GLuint i, k, bincoeff;
 
   if(order >= 2)
-  { 
+  {
     bincoeff = order-1;
     s = 1.0-t;
 
@@ -152,23 +149,23 @@ horner_bezier_curve(GLfloat *cp, GLfloat *out, GLfloat t,
     }
   }
   else /* order=1 -> constant curve */
-  { 
+  {
     for(k=0; k<dim; k++)
       out[k] = cp[k];
-  } 
+  }
 }
 
 /*
  * Tensor product Bezier surfaces
  *
- * Again the Horner scheme is used to compute a point on a 
+ * Again the Horner scheme is used to compute a point on a
  * TP Bezier surface. First a control polygon for a curve
  * on the surface in one parameter direction is computed,
- * then the point on the curve for the other parameter 
+ * then the point on the curve for the other parameter
  * direction is evaluated.
  *
  * To store the curve control polygon additional storage
- * for max(uorder,vorder) points is needed in the 
+ * for max(uorder,vorder) points is needed in the
  * control net cn.
  */
 
@@ -182,7 +179,7 @@ horner_bezier_surf(GLfloat *cn, GLfloat *out, GLfloat u, GLfloat v,
   if(vorder > uorder)
   {
     if(uorder >= 2)
-    { 
+    {
       GLfloat s, poweru;
       GLuint j, k, bincoeff;
 
@@ -191,7 +188,7 @@ horner_bezier_surf(GLfloat *cn, GLfloat *out, GLfloat u, GLfloat v,
       {
         GLfloat *ucp = &cn[j*dim];
 
-        /* Each control point is the point for parameter u on a */ 
+        /* Each control point is the point for parameter u on a */
         /* curve defined by the control polygons in u-direction */
 	bincoeff = uorder-1;
 	s = 1.0-u;
@@ -199,8 +196,8 @@ horner_bezier_surf(GLfloat *cn, GLfloat *out, GLfloat u, GLfloat v,
 	for(k=0; k<dim; k++)
 	  cp[j*dim+k] = s*ucp[k] + bincoeff*u*ucp[uinc+k];
 
-	for(i=2, ucp+=2*uinc, poweru=u*u; i<uorder; 
-            i++, poweru*=u, ucp +=uinc)
+    for(i=2, ucp+=2*uinc, poweru=u*u; i<uorder;
+        i++, poweru*=u, ucp +=uinc)
 	{
 	  bincoeff *= uorder-i;
           bincoeff /= i;
@@ -209,7 +206,7 @@ horner_bezier_surf(GLfloat *cn, GLfloat *out, GLfloat u, GLfloat v,
 	    cp[j*dim+k] = s*cp[j*dim+k] + bincoeff*poweru*ucp[k];
 	}
       }
-        
+
       /* Evaluate curve point in v */
       horner_bezier_curve(cp, out, v, dim, vorder);
     }
@@ -245,9 +242,9 @@ horner_bezier_surf(GLfloat *cn, GLfloat *out, GLfloat u, GLfloat v,
  * surface and the tangent directions spanning the tangent plane
  * should be computed (this is needed to compute normals to the
  * surface). In this case the de Casteljau algorithm approach is
- * nicer because a point and the partial derivatives can be computed 
+ * nicer because a point and the partial derivatives can be computed
  * at the same time. To get the correct tangent length du and dv
- * must be multiplied with the (u2-u1)/uorder-1 and (v2-v1)/vorder-1. 
+ * must be multiplied with the (u2-u1)/uorder-1 and (v2-v1)/vorder-1.
  * Since only the directions are needed, this scaling step is omitted.
  *
  * De Casteljau needs additional storage for uorder*vorder
@@ -256,7 +253,7 @@ horner_bezier_surf(GLfloat *cn, GLfloat *out, GLfloat u, GLfloat v,
 
 static void
 de_casteljau_surf(GLfloat *cn, GLfloat *out, GLfloat *du, GLfloat *dv,
-                  GLfloat u, GLfloat v, GLuint dim, 
+                  GLfloat u, GLfloat v, GLuint dim,
                   GLuint uorder, GLuint vorder)
 {
   GLfloat *dcn = cn + uorder*vorder*dim;
@@ -265,14 +262,14 @@ de_casteljau_surf(GLfloat *cn, GLfloat *out, GLfloat *du, GLfloat *dv,
   GLuint minorder = uorder < vorder ? uorder : vorder;
   GLuint uinc = vorder*dim;
   GLuint dcuinc = vorder;
- 
+
   /* Each component is evaluated separately to save buffer space  */
   /* This does not drasticaly decrease the performance of the     */
   /* algorithm. If additional storage for (uorder-1)*(vorder-1)   */
   /* points would be available, the components could be accessed  */
   /* in the innermost loop which could lead to less cache misses. */
 
-#define CN(I,J,K) cn[(I)*uinc+(J)*dim+(K)] 
+#define CN(I,J,K) cn[(I)*uinc+(J)*dim+(K)]
 #define DCN(I, J) dcn[(I)*dcuinc+(J)]
   if(minorder < 3)
   {
@@ -285,7 +282,7 @@ de_casteljau_surf(GLfloat *cn, GLfloat *out, GLfloat *du, GLfloat *dv,
 	         v*(CN(1,1,k) - CN(0,1,k));
 
 	/* Derivative direction in v */
-	dv[k] = us*(CN(0,1,k) - CN(0,0,k)) + 
+    dv[k] = us*(CN(0,1,k) - CN(0,0,k)) +
 	         u*(CN(1,1,k) - CN(1,0,k));
 
 	/* bilinear de Casteljau step */
@@ -311,7 +308,7 @@ de_casteljau_surf(GLfloat *cn, GLfloat *out, GLfloat *du, GLfloat *dv,
 	  DCN(0,j+1) = us*CN(0,j+1,k) + u*CN(1,j+1,k);
 	  DCN(0,j)   = vs*DCN(0,j)    + v*DCN(0,j+1);
 	}
-        
+
 	/* remaining linear de Casteljau steps until the second last step */
 	for(h=minorder; h<vorder-1; h++)
 	  for(j=0; j<vorder-h; j++)
@@ -350,7 +347,7 @@ de_casteljau_surf(GLfloat *cn, GLfloat *out, GLfloat *du, GLfloat *dv,
 	  DCN(i+1,0) = vs*CN(i+1,0,k) + v*CN(i+1,1,k);
 	  DCN(i,0)   = us*DCN(i,0)    + u*DCN(i+1,0);
 	}
-        
+
 	/* remaining linear de Casteljau steps until the second last step */
 	for(h=minorder; h<uorder-1; h++)
 	  for(i=0; i<uorder-h; i++)
@@ -405,7 +402,7 @@ de_casteljau_surf(GLfloat *cn, GLfloat *out, GLfloat *du, GLfloat *dv,
 	       v*(DCN(1,1) - DCN(0,1));
 
       /* derivative direction in v */
-      dv[k] = us*(DCN(0,1) - DCN(0,0)) + 
+      dv[k] = us*(DCN(0,1) - DCN(0,0)) +
 	       u*(DCN(1,1) - DCN(1,0));
 
       /* last bilinear de Casteljau step */
@@ -448,29 +445,29 @@ de_casteljau_surf(GLfloat *cn, GLfloat *out, GLfloat *du, GLfloat *dv,
 	/* for the derivative in u */
 	DCN(2,j+1) =    DCN(1,j+1) -    DCN(0,j+1);
 	DCN(2,j)   = vs*DCN(2,j)    + v*DCN(2,j+1);
-	
+
 	/* for the `point' */
 	DCN(0,j+1) = us*DCN(0,j+1 ) + u*DCN(1,j+1);
 	DCN(0,j)   = vs*DCN(0,j)    + v*DCN(0,j+1);
       }
-        
+
       /* remaining linear de Casteljau steps until the second last step */
       for(h=minorder; h<vorder-1; h++)
 	for(j=0; j<vorder-h; j++)
 	{
 	  /* for the derivative in u */
 	  DCN(2,j) = vs*DCN(2,j) + v*DCN(2,j+1);
-	  
+
 	  /* for the `point' */
 	  DCN(0,j) = vs*DCN(0,j) + v*DCN(0,j+1);
 	}
-      
+
       /* derivative direction in v */
       dv[k] = DCN(0,1) - DCN(0,0);
-      
+
       /* derivative direction in u */
       du[k] =   vs*DCN(2,0) + v*DCN(2,1);
-      
+
       /* last linear de Casteljau step */
       out[k] =  vs*DCN(0,0) + v*DCN(0,1);
     }
@@ -510,29 +507,29 @@ de_casteljau_surf(GLfloat *cn, GLfloat *out, GLfloat *du, GLfloat *dv,
 	/* for the derivative in v */
 	DCN(i+1,2) =    DCN(i+1,1)  -   DCN(i+1,0);
 	DCN(i,2)   = us*DCN(i,2)    + u*DCN(i+1,2);
-	
+
 	/* for the `point' */
 	DCN(i+1,0) = vs*DCN(i+1,0)  + v*DCN(i+1,1);
 	DCN(i,0)   = us*DCN(i,0)    + u*DCN(i+1,0);
       }
-      
+
       /* remaining linear de Casteljau steps until the second last step */
       for(h=minorder; h<uorder-1; h++)
 	for(i=0; i<uorder-h; i++)
 	{
 	  /* for the derivative in v */
 	  DCN(i,2) = us*DCN(i,2) + u*DCN(i+1,2);
-	  
+
 	  /* for the `point' */
 	  DCN(i,0) = us*DCN(i,0) + u*DCN(i+1,0);
 	}
-      
+
       /* derivative direction in u */
       du[k] = DCN(1,0) - DCN(0,0);
-      
+
       /* derivative direction in v */
       dv[k] =   us*DCN(0,2) + u*DCN(1,2);
-      
+
       /* last linear de Casteljau step */
       out[k] =  us*DCN(0,0) + u*DCN(1,0);
     }
@@ -578,7 +575,7 @@ static GLint components( GLenum target )
 
 
 /*
- * Copy 1-parametric evaluator control points from user-specified 
+ * Copy 1-parametric evaluator control points from user-specified
  * memory space to a buffer of contiguous control points.
  * Input:  see glMap1f for details
  * Return:  pointer to buffer of contiguous control points or NULL if out
@@ -597,7 +594,7 @@ GLfloat *gl_copy_map_points1f( GLenum target,
 
    buffer = (GLfloat *) malloc(uorder * size * sizeof(GLfloat));
 
-   if(buffer) 
+   if(buffer)
       for(i=0, p=buffer; i<uorder; i++, points+=ustride)
 	for(k=0; k<size; k++)
 	  *p++ = points[k];
@@ -634,7 +631,7 @@ GLfloat *gl_copy_map_points1d( GLenum target,
 
 
 /*
- * Copy 2-parametric evaluator control points from user-specified 
+ * Copy 2-parametric evaluator control points from user-specified
  * memory space to a buffer of contiguous control points.
  * Additional memory is allocated to be used by the horner and
  * de Casteljau evaluation schemes.
@@ -672,7 +669,7 @@ GLfloat *gl_copy_map_points2f( GLenum target,
    /* compute the increment value for the u-loop */
    uinc = ustride - vorder*vstride;
 
-   if (buffer) 
+   if (buffer)
       for (i=0, p=buffer; i<uorder; i++, points += uinc)
 	 for (j=0; j<vorder; j++, points += vstride)
 	    for (k=0; k<size; k++)
@@ -715,7 +712,7 @@ GLfloat *gl_copy_map_points2d(GLenum target,
    /* compute the increment value for the u-loop */
    uinc = ustride - vorder*vstride;
 
-   if (buffer) 
+   if (buffer)
       for (i=0, p=buffer; i<uorder; i++, points += uinc)
 	 for (j=0; j<vorder; j++, points += vstride)
 	    for (k=0; k<size; k++)
@@ -1164,7 +1161,7 @@ void gl_Map2f( GLcontext* ctx, GLenum target,
 }
 
 
-   
+
 
 
 void gl_GetMapdv( GLcontext* ctx, GLenum target, GLenum query, GLdouble *v )
@@ -1987,13 +1984,13 @@ void gl_EvalCoord1f(GLcontext* ctx, GLfloat u)
   register GLfloat uu;
 
   /** Vertex **/
-  if (ctx->Eval.Map1Vertex4) 
+  if (ctx->Eval.Map1Vertex4)
   {
      struct gl_1d_map *map = &ctx->EvalMap.Map1Vertex4;
      uu = (u - map->u1) / (map->u2 - map->u1);
      horner_bezier_curve(map->Points, vertex, uu, 4, map->Order);
   }
-  else if (ctx->Eval.Map1Vertex3) 
+  else if (ctx->Eval.Map1Vertex3)
   {
      struct gl_1d_map *map = &ctx->EvalMap.Map1Vertex3;
      uu = (u - map->u1) / (map->u2 - map->u1);
@@ -2002,7 +1999,7 @@ void gl_EvalCoord1f(GLcontext* ctx, GLfloat u)
   }
 
   /** Color Index **/
-  if (ctx->Eval.Map1Index) 
+  if (ctx->Eval.Map1Index)
   {
      struct gl_1d_map *map = &ctx->EvalMap.Map1Index;
      GLfloat findex;
@@ -2076,7 +2073,7 @@ void gl_EvalCoord1f(GLcontext* ctx, GLfloat u)
      texcoord[2] = ctx->Current.TexCoord[2];
      texcoord[3] = ctx->Current.TexCoord[3];
   }
-  
+
   gl_eval_vertex( ctx, vertex, normal, colorptr, index, texcoord );
 }
 
@@ -2135,7 +2132,7 @@ void gl_EvalCoord2f( GLcontext* ctx, GLfloat u, GLfloat v )
       vertex[3] = 1.0;
    }
 #undef CROSS_PROD
-   
+
    /** Color Index **/
    if (ctx->Eval.Map2Index) {
       GLfloat findex;
@@ -2221,7 +2218,7 @@ void gl_EvalCoord2f( GLcontext* ctx, GLfloat u, GLfloat v )
      texcoord[2] = 0.0;
      texcoord[3] = 1.0;
    }
-   else 
+   else
    {
      texcoord[0] = ctx->Current.TexCoord[0];
      texcoord[1] = ctx->Current.TexCoord[1];

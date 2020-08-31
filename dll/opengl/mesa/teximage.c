@@ -130,10 +130,7 @@
  *
  */
 
-
-#ifdef PC_HEADER
-#include "all.h"
-#else
+#ifndef __REACTOS_USE_PCH__
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -557,7 +554,7 @@ image_to_texture( GLcontext *ctx, const struct gl_image *image,
                   blue  = 0;
                   alpha = ((GLubyte*) image->Data)[pixel];
                   break;
-               case GL_LUMINANCE: 
+               case GL_LUMINANCE:
                   red   = ((GLubyte*) image->Data)[pixel];
                   green = red;
                   blue  = red;
@@ -573,7 +570,7 @@ image_to_texture( GLcontext *ctx, const struct gl_image *image,
                  gl_problem(ctx,"Bad format (2) in image_to_texture");
                  return NULL;
             }
-            
+
             if (scaleOrBias || ctx->Pixel.MapColorFlag) {
                /* Apply RGBA scale and bias */
                GLfloat r = red   * (1.0F/255.0F);
@@ -715,7 +712,7 @@ image_to_texture( GLcontext *ctx, const struct gl_image *image,
                   blue  = 0.0;
                   alpha = ((GLfloat*) image->Data)[pixel];
                   break;
-               case GL_LUMINANCE: 
+               case GL_LUMINANCE:
                   red   = ((GLfloat*) image->Data)[pixel];
                   green = red;
                   blue  = red;
@@ -731,7 +728,7 @@ image_to_texture( GLcontext *ctx, const struct gl_image *image,
                   gl_problem(ctx,"Bad format (4) in image_to_texture");
                   return NULL;
             }
-            
+
             if (image->Format!=GL_COLOR_INDEX) {
                /* Apply RGBA scale and bias */
                if (scaleOrBias) {
@@ -1401,7 +1398,7 @@ void gl_TexSubImage2D( GLcontext *ctx,
       if (image->Type==GL_UNSIGNED_BYTE && texcomponents==image->Components) {
          /* Simple case, just byte copy image data into texture image */
          /* row by row. */
-         GLubyte *dst = destTex->Data 
+         GLubyte *dst = destTex->Data
                       + (yoffset * destTex->Width + xoffset) * texcomponents;
          GLubyte *src = (GLubyte *) image->Data;
          GLint  j;
@@ -1585,7 +1582,7 @@ static struct gl_image *read_color_image( GLcontext *ctx, GLint x, GLint y,
             break;
       } /*switch*/
 
-   } /*for*/         
+   } /*for*/
 
    /* Restore drawing buffer */
    (void) (*ctx->Driver.SetBuffer)( ctx, ctx->Color.DrawBuffer );
@@ -1774,7 +1771,7 @@ static void copy_tex_sub_image( GLcontext *ctx, struct gl_texture_image *dest,
             }
             break;
       } /*switch*/
-   } /*for*/         
+   } /*for*/
 }
 
 

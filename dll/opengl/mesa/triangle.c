@@ -122,9 +122,7 @@
  */
 
 
-#ifdef PC_HEADER
-#include "all.h"
-#else
+#ifndef __REACTOS_USE_PCH__
 #include <assert.h>
 #include <math.h>
 #include <stdio.h>
@@ -243,7 +241,7 @@ static void flat_ci_triangle( GLcontext *ctx,
 	   }							\
 	}
 
-#include "tritemp.h"	      
+#include "tritemp.h"
 }
 
 
@@ -554,7 +552,7 @@ static GLfloat compute_lambda( GLfloat s, GLfloat t,
                                GLfloat dsdx, GLfloat dsdy,
                                GLfloat dtdx, GLfloat dtdy,
                                GLfloat w, GLfloat dwdx, GLfloat dwdy,
-                               GLfloat width, GLfloat height ) 
+                               GLfloat width, GLfloat height )
 {
    /* TODO: this function can probably be optimized a bit */
    GLfloat invw = 1.0 / w;

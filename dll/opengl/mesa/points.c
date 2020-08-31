@@ -70,10 +70,7 @@
  *
  */
 
-
-#ifdef PC_HEADER
-#include "all.h"
-#else
+#ifndef __REACTOS_USE_PCH__
 #include "context.h"
 #include "feedback.h"
 #include "dlist.h"

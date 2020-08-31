@@ -43,10 +43,7 @@
  *
  */
 
-
-#ifdef PC_HEADER
-#include "all.h"
-#else
+#ifndef __REACTOS_USE_PCH__
 #include "context.h"
 #include "macros.h"
 #include "dlist.h"
@@ -67,7 +64,7 @@ void gl_Scissor( GLcontext *ctx,
       return;
    }
 
-   if (x!=ctx->Scissor.X || y!=ctx->Scissor.Y || 
+   if (x!=ctx->Scissor.X || y!=ctx->Scissor.Y ||
        width!=ctx->Scissor.Width || height!=ctx->Scissor.Height) {
       ctx->Scissor.X = x;
       ctx->Scissor.Y = y;

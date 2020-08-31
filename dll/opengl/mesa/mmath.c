@@ -34,10 +34,7 @@
  *
  */
 
-
-#ifdef PC_HEADER
-#include "all.h"
-#else
+#ifndef __REACTOS_USE_PCH__
 #include "GL/gl.h"
 #include "mmath.h"
 #endif
@@ -51,7 +48,7 @@
  */
 
 /*
- * SPARC implementation of a fast square root by table 
+ * SPARC implementation of a fast square root by table
  * lookup.
  * SPARC floating point format is as follows:
  *
@@ -107,7 +104,7 @@ float gl_sqrt( float x )
    unsigned int *num = (unsigned int *)&x;
                                 /* to access the bits of a float in C
                                  * we must misuse pointers */
-                                                        
+
    short e;                     /* the exponent */
    if (x == 0.0F) return 0.0F;  /* check for square root of 0 */
    e = (*num >> 23) - 127;      /* get the exponent - on a SPARC the */

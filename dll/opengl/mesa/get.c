@@ -84,10 +84,7 @@
  *
  */
 
-
-#ifdef PC_HEADER
-#include "all.h"
-#else
+#ifndef __REACTOS_USE_PCH__
 #include <string.h>
 #include "context.h"
 #include "get.h"

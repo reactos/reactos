@@ -98,9 +98,7 @@
  */
 
 
-#ifdef PC_HEADER
-#include "all.h"
-#else
+#ifndef __REACTOS_USE_PCH__
 #include <assert.h>
 #include "context.h"
 #include "light.h"
@@ -1301,7 +1299,7 @@ void gl_eval_vertex( GLcontext *ctx,
    COPY_4V( VB->Obj[count], vertex );
    COPY_3V( VB->Normal[count], normal );
    COPY_4UBV( VB->Fcolor[count], color );
-   
+
 #ifdef GL_VERSION_1_1
    if (ctx->Light.ColorMaterialEnabled
        && (ctx->Eval.Map1Color4 || ctx->Eval.Map2Color4)) {

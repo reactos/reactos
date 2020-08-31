@@ -68,10 +68,7 @@
  *
  */
 
-
-#ifdef PC_HEADER
-#include "all.h"
-#else
+#ifndef __REACTOS_USE_PCH__
 #include <assert.h>
 #include <float.h>
 #include <math.h>
@@ -690,7 +687,7 @@ void gl_GetMaterialiv( GLcontext *ctx,
  *       // light at infinity
  *       IF local_viewer THEN
  *           VP_inf_norm = unit vector from V to P      // Precompute
- *       ELSE 
+ *       ELSE
  *           // eye at infinity
  *           h_inf_norm = Normalize( VP + <0,0,1> )     // Precompute
  *       ENDIF

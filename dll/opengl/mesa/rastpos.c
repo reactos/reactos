@@ -40,10 +40,7 @@
  *
  */
 
-
-#ifdef PC_HEADER
-#include "all.h"
-#else
+#ifndef __REACTOS_USE_PCH__
 #include "clip.h"
 #include "feedback.h"
 #include "light.h"
@@ -188,7 +185,7 @@ void gl_windowpos( GLcontext *ctx, GLfloat x, GLfloat y, GLfloat z, GLfloat w )
       if (ctx->Visual->RGBAflag) {
          GLubyte color[4];
          gl_color_shade_vertices( ctx, 0, 1, &eye, &eyenorm, &color );
-         ASSIGN_4V( ctx->Current.RasterColor, 
+         ASSIGN_4V( ctx->Current.RasterColor,
                     (GLfloat) color[0] * ctx->Visual->InvRedScale,
                     (GLfloat) color[1] * ctx->Visual->InvGreenScale,
                     (GLfloat) color[2] * ctx->Visual->InvBlueScale,

@@ -79,11 +79,7 @@
  * the number of function calls.
  */
 
-
-
-#ifdef PC_HEADER
-#include "all.h"
-#else
+#ifndef __REACTOS_USE_PCH__
 #include <stdlib.h>
 #include <string.h>
 #include "alpha.h"
@@ -418,7 +414,7 @@ void gl_flush_pb( GLcontext *ctx )
 	    /* regular depth testing */
 	    (*ctx->Driver.DepthTestPixels)( ctx, PB->count, PB->x, PB->y, PB->z, mask );
 	 }
-         
+
          if (ctx->RasterMask & NO_DRAW_BIT) {
             goto CleanUp;
          }

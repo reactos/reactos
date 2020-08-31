@@ -102,9 +102,7 @@
  */
 
 
-#ifdef PC_HEADER
-#include "all.h"
-#else
+#ifndef __REACTOS_USE_PCH__
 #include "clip.h"
 #include "context.h"
 #include "light.h"
@@ -513,9 +511,9 @@ static void render_clipped_polygon( GLcontext *ctx, GLuint n, GLuint vlist[] )
                /* Uh oh!  There should be no clip bits set in final polygon! */
                int k, l;
                printf("CLIPMASK %d %d %02x\n", i, j, VB->ClipMask[j]);
-               printf("%f %f %f %f\n", VB->Eye[j][0], VB->Eye[j][1], 
+               printf("%f %f %f %f\n", VB->Eye[j][0], VB->Eye[j][1],
                       VB->Eye[j][2], VB->Eye[j][3]);
-               printf("%f %f %f %f\n", VB->Clip[j][0], VB->Clip[j][1], 
+               printf("%f %f %f %f\n", VB->Clip[j][0], VB->Clip[j][1],
                       VB->Clip[j][2], VB->Clip[j][3]);
                for (k=0;k<n;k++) {
                   l = vlist[k];

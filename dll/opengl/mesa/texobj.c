@@ -88,10 +88,7 @@
  *
  */
 
-
-#ifdef PC_HEADER
-#include "all.h"
-#else
+#ifndef __REACTOS_USE_PCH__
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -481,7 +478,7 @@ void gl_BindTexture( GLcontext *ctx, GLenum target, GLuint texName )
        || oldTexObj->WrapR != newTexObj->WrapR
        || oldTexObj->MinFilter != newTexObj->MinFilter
        || oldTexObj->MagFilter != newTexObj->MagFilter
-       || (oldTexObj->Image[0] && newTexObj->Image[0] && 
+       || (oldTexObj->Image[0] && newTexObj->Image[0] &&
 	  (oldTexObj->Image[0]->Format!=newTexObj->Image[0]->Format))
        || !newTexObj->Complete) {
       ctx->NewState |= NEW_RASTER_OPS;
@@ -496,7 +493,7 @@ void gl_BindTexture( GLcontext *ctx, GLenum target, GLuint texName )
 
    /* The current n-D texture object can never be NULL! */
    assert(*targetPointer);
- 
+
    /* Pass BindTexture call to device driver */
    if (ctx->Driver.BindTexture) {
       (*ctx->Driver.BindTexture)( ctx, target, newTexObj );

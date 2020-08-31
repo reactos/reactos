@@ -56,9 +56,7 @@
  */
 
 
-#ifdef PC_HEADER
-#include "all.h"
-#else
+#ifndef __REACTOS_USE_PCH__
 #include "context.h"
 #include "macros.h"
 #include "matrix.h"
@@ -267,7 +265,7 @@ void gl_TexParameterfv( GLcontext *ctx,
 
    texObj->Dirty = GL_TRUE;
    ctx->Texture.AnyDirty = GL_TRUE;
-   
+
    if (ctx->Driver.TexParameter) {
       (*ctx->Driver.TexParameter)( ctx, target, texObj, pname, params );
    }
@@ -417,7 +415,7 @@ void gl_GetTexLevelParameteriv( GLcontext *ctx, GLenum target, GLint level,
 	 break;
      default:
 	 gl_error(ctx, GL_INVALID_ENUM, "glGetTexLevelParameter[if]v(target)");
-   }	 
+   }
 }
 
 
