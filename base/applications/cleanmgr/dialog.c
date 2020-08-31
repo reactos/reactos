@@ -38,7 +38,7 @@ INT_PTR CALLBACK StartDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPa
                 MessageBoxW(NULL, L"GetLogicalDriveStringsW() failed!", L"Error", MB_OK | MB_ICONERROR);
                 PostMessage(hwnd, WM_CLOSE, 0, 0);
             }
-            BitmapDrive = LoadBitmapW(dv.hInst, MAKEINTRESOURCE(IDB_DRIVE));
+            BitmapDrive = LoadBitmapW(GetModuleHandleW(NULL), MAKEINTRESOURCEW(IDB_DRIVE));
             
             if(BitmapDrive == NULL)
             {
@@ -155,7 +155,7 @@ BOOL DrawItemCombobox(LPARAM lParam)
     if (lpdis->itemID == -1)
         return FALSE;
 
-    BitmapMask = LoadBitmapW(dv.hInst, MAKEINTRESOURCE(IDB_MASK));
+    BitmapMask = LoadBitmapW(GetModuleHandleW(NULL), MAKEINTRESOURCEW(IDB_MASK));
  
    if(BitmapMask == NULL)
     {

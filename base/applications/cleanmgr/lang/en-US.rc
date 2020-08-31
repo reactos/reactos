@@ -97,7 +97,7 @@ FONT 8, "MS Sans Serif", 0, 0, 0
 {
     LTEXT "Check the items that you would like Disk Cleanup to automatically clean up during its scheduled run times.", -1, 37, 9, 177, 20
     LTEXT "Files to delete:", -1, 10, 36, 65, 9
-    CONTROL "", IDC_SAGERUN_LIST, "SysListView32", LVS_NOCOLUMNHEADER | LVS_ALIGNLEFT | LVS_AUTOARRANGE | LVS_SINGLESEL | LVS_REPORT | WS_BORDER | WS_TABSTOP, 8, 51, 214, 64
+    CONTROL "", IDC_SAGESET_LIST, "SysListView32", LVS_NOCOLUMNHEADER | LVS_ALIGNLEFT | LVS_AUTOARRANGE | LVS_SINGLESEL | LVS_REPORT | WS_BORDER | WS_TABSTOP, 8, 51, 214, 64
     LTEXT "", IDC_STATIC_DETAILS, 14, 134, 202, 45
     GROUPBOX "Description", -1, 8, 123, 214, 91, BS_LEFTTEXT, WS_EX_TRANSPARENT
     ICON IDI_DRIVE, -1, 9, 8, 0, 0

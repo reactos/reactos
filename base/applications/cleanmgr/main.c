@@ -31,8 +31,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
     {
         MessageBoxW(NULL, L"InitCommonControlsEx() failed!", L"Error", MB_OK | MB_ICONSTOP);
         return FALSE;
-    }   
-    dv.hInst = hInstance;
+    }
     
     Obj = CreateMutexW(NULL, FALSE, L"cleanmgr.exe");
 

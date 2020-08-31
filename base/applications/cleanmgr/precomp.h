@@ -51,7 +51,6 @@ typedef struct
     HWND hOptionsPage;
     HWND hSagesetPage;
     HWND hTab;
-    HINSTANCE hInst;
 } DLG_VAR;
 
 typedef struct

@@ -30,15 +30,7 @@ INT_PTR CALLBACK ChoicePageDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
     case WM_INITDIALOG:
         SetWindowPos(hwnd, NULL, 10, 32, 0, 0, SWP_NOACTIVATE | SWP_NOOWNERZORDER | SWP_NOSIZE | SWP_NOZORDER);
         hList = GetDlgItem(hwnd, IDC_CHOICE_LIST);
-        
-        if(hList == NULL)
-        {
-            MessageBoxW(NULL, L"GetDlgItem() failed!", L"Error", MB_OK | MB_ICONERROR);
-            return FALSE;
-        }
-        
         InitListViewControl(hList);
-        
         LoadStringW(GetModuleHandleW(NULL), IDS_CLEANUP, StringText, _countof(StringText));
         StringCchPrintfW(TotalAmount, _countof(TotalAmount), L"%.02lf %s", SetOptimalSize(TotalSize), SetOptimalUnit(TotalSize));
         StringCchPrintfW(FullText, _countof(FullText), StringText, TotalAmount, wcv.DriveLetter);

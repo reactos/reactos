@@ -16,11 +16,6 @@
 #define ALLOW_FILE_REMOVAL 2
 #define DISALLOW_FILE_REMOVAL 3
 
-DLG_VAR dv;
-WCHAR_VAR wcv;
-DIRSIZE sz;
-BOOL_VAR bv;
-
 typedef enum
 {
     OLD_CHKDSK_FILES = 0,
@@ -438,7 +433,7 @@ BOOL CreateImageLists(HWND hList)
     
     for (int index = 0; index < 3; index++)
     {
-        hbmIcon = LoadIconW(dv.hInst, MAKEINTRESOURCE(IDI_BLANK + index));
+        hbmIcon = LoadIconW(GetModuleHandleW(NULL), MAKEINTRESOURCE(IDI_BLANK + index));
         ImageList_AddIcon(hSmall, hbmIcon);
         DestroyIcon(hbmIcon);
     }
@@ -490,9 +485,9 @@ BOOL OnCreate(HWND hwnd)
     TCITEMW item;
 
     dv.hTab = GetDlgItem(hwnd, IDC_TAB);
-    dv.hChoicePage = CreateDialogW(dv.hInst, MAKEINTRESOURCE(IDD_CHOICE_PAGE), hwnd, ChoicePageDlgProc);
+    dv.hChoicePage = CreateDialogW(GetModuleHandleW(NULL), MAKEINTRESOURCE(IDD_CHOICE_PAGE), hwnd, ChoicePageDlgProc);
     EnableDialogTheme(dv.hChoicePage);
-    dv.hOptionsPage = CreateDialogW(dv.hInst, MAKEINTRESOURCE(IDD_OPTIONS_PAGE), hwnd, OptionsPageDlgProc);
+    dv.hOptionsPage = CreateDialogW(GetModuleHandleW(NULL), MAKEINTRESOURCE(IDD_OPTIONS_PAGE), hwnd, OptionsPageDlgProc);
     EnableDialogTheme(dv.hOptionsPage);
 
     memset(&item, 0, sizeof(item));
@@ -513,7 +508,7 @@ BOOL OnCreateSageset(HWND hwnd)
     TCITEMW item;
 
     dv.hTab = GetDlgItem(hwnd, IDC_TAB_SAGESET);
-    dv.hSagesetPage = CreateDialogW(dv.hInst, MAKEINTRESOURCE(IDD_SAGESET_PAGE), hwnd, SagesetPageDlgProc);
+    dv.hSagesetPage = CreateDialogW(GetModuleHandleW(NULL), MAKEINTRESOURCE(IDD_SAGESET_PAGE), hwnd, SagesetPageDlgProc);
     EnableDialogTheme(dv.hSagesetPage);
 
     memset(&item, 0, sizeof(item));
@@ -1009,7 +1004,7 @@ void SagesetProc(int nArgs, PWCHAR ArgReal, LPWSTR* ArgList)
         
     ValStr = RealStageFlag(nArgs, ArgReal, ArgList);
         
-    DialogButtonSelect = DialogBoxParamW(dv.hInst, MAKEINTRESOURCEW(IDD_SAGERUN), NULL, SagesetDlgProc, 0);
+    DialogButtonSelect = DialogBoxParamW(NULL, MAKEINTRESOURCEW(IDD_SAGERUN), NULL, SagesetDlgProc, 0);
         
     if (DialogButtonSelect == IDCANCEL)
         return;
@@ -1054,12 +1049,12 @@ void SagerunProc(int nArgs, PWCHAR ArgReal, LPWSTR* ArgList, PWCHAR LogicalDrive
             StringCchCopyW(wcv.DriveLetter, MAX_PATH, SingleDrive);
             wcv.DriveLetter[wcslen(wcv.DriveLetter) - 1] = '\0';
 
-            DialogButtonSelect = DialogBoxParamW(dv.hInst, MAKEINTRESOURCEW(IDD_PROGRESS), NULL, ProgressDlgProc, 0);
+            DialogButtonSelect = DialogBoxParamW(NULL, MAKEINTRESOURCEW(IDD_PROGRESS), NULL, ProgressDlgProc, 0);
 
             if(DialogButtonSelect == IDCANCEL)
                 return;
         
-            DialogBoxParamW(dv.hInst, MAKEINTRESOURCEW(IDD_PROGRESS_END), NULL, ProgressEndDlgProc, 0);
+            DialogBoxParamW(NULL, MAKEINTRESOURCEW(IDD_PROGRESS_END), NULL, ProgressEndDlgProc, 0);
                 
             ZeroMemory(&wcv.DriveLetter, sizeof(wcv.DriveLetter));
         }
