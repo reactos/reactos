@@ -18,12 +18,15 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#ifndef __REACTOS_USE_PCH__
 #include <assert.h>
 
 #include "dbghelp_private.h"
 #include "image_private.h"
 
 #include <wine/debug.h>
+#endif /* __REACTOS_USE_PCH__ */
+
 WINE_DEFAULT_DEBUG_CHANNEL(dbghelp);
 
 #define PDBGHELP_CREATE_USER_DUMP_CALLBACK PVOID
@@ -164,9 +167,9 @@ SymEnumSymbolsForAddrW(HANDLE hProcess,
 }
 
 BOOL WINAPI
-SymEnumerateSymbolsW64(HANDLE hProcess,  
-             DWORD64 ModBase,  
-             PSYM_ENUMSYMBOLS_CALLBACK64W Callback,  
+SymEnumerateSymbolsW64(HANDLE hProcess,
+             DWORD64 ModBase,
+             PSYM_ENUMSYMBOLS_CALLBACK64W Callback,
              PVOID pUserContext)
 {
     UNIMPLEMENTED;

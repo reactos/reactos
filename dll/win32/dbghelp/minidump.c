@@ -20,6 +20,7 @@
 
 #include <time.h>
 
+#ifndef __REACTOS_USE_PCH__
 #define NONAMELESSUNION
 #define NONAMELESSSTRUCT
 
@@ -29,6 +30,7 @@
 #include "winternl.h"
 #include "psapi.h"
 #include "wine/debug.h"
+#endif /* __REACTOS_USE_PCH__ */
 
 WINE_DEFAULT_DEBUG_CHANNEL(dbghelp);
 
@@ -143,7 +145,7 @@ static BOOL fetch_thread_info(struct dump_context* dc, int thd_idx,
         FIXME("Couldn't open thread %u (%u)\n", tid, GetLastError());
         return FALSE;
     }
-    
+
     if (NtQueryInformationThread(hThread, ThreadBasicInformation,
                                  &tbi, sizeof(tbi), NULL) == STATUS_SUCCESS)
     {
@@ -402,11 +404,11 @@ static  unsigned        dump_exception_info(struct dump_context* dc,
     {
         EXCEPTION_POINTERS      ep;
 
-        ReadProcessMemory(dc->hProcess, 
+        ReadProcessMemory(dc->hProcess,
                           except->ExceptionPointers, &ep, sizeof(ep), NULL);
-        ReadProcessMemory(dc->hProcess, 
+        ReadProcessMemory(dc->hProcess,
                           ep.ExceptionRecord, &rec, sizeof(rec), NULL);
-        ReadProcessMemory(dc->hProcess, 
+        ReadProcessMemory(dc->hProcess,
                           ep.ContextRecord, &ctx, sizeof(ctx), NULL);
         prec = &rec;
         pctx = &ctx;
@@ -531,12 +533,12 @@ static  unsigned        dump_modules(struct dump_context* dc, BOOL dump_elf)
             mdModule.Reserved0 = 0; /* FIXME */
             mdModule.Reserved1 = 0; /* FIXME */
             writeat(dc,
-                    rva_base + sizeof(mdModuleList.NumberOfModules) + 
-                        mdModuleList.NumberOfModules++ * sizeof(mdModule), 
+                    rva_base + sizeof(mdModuleList.NumberOfModules) +
+                        mdModuleList.NumberOfModules++ * sizeof(mdModule),
                     &mdModule, sizeof(mdModule));
         }
     }
-    writeat(dc, rva_base, &mdModuleList.NumberOfModules, 
+    writeat(dc, rva_base, &mdModuleList.NumberOfModules,
             sizeof(mdModuleList.NumberOfModules));
 
     return sz;
@@ -767,7 +769,7 @@ static  unsigned        dump_threads(struct dump_context* dc,
                                           mdThdList.NumberOfThreads * sizeof(mdThd) +
                                           FIELD_OFFSET(MINIDUMP_THREAD, Stack.Memory.Rva));
             }
-            writeat(dc, 
+            writeat(dc,
                     rva_base + sizeof(mdThdList.NumberOfThreads) +
                         mdThdList.NumberOfThreads * sizeof(mdThd),
                     &mdThd, sizeof(mdThd));
@@ -813,7 +815,7 @@ static unsigned         dump_memory_info(struct dump_context* dc)
         for (pos = 0; pos < dc->mem[i].size; pos += sizeof(tmp))
         {
             len = min(dc->mem[i].size - pos, sizeof(tmp));
-            if (ReadProcessMemory(dc->hProcess, 
+            if (ReadProcessMemory(dc->hProcess,
                                   (void*)(DWORD_PTR)(dc->mem[i].base + pos),
                                   tmp, len, NULL))
                 WriteFile(dc->hFile, tmp, len, &written, NULL);
@@ -923,7 +925,7 @@ BOOL WINAPI MiniDumpWriteDump(HANDLE hProcess, DWORD pid, HANDLE hFile,
     mdDir.StreamType = ThreadListStream;
     mdDir.Location.Rva = dc.rva;
     mdDir.Location.DataSize = dump_threads(&dc, ExceptionParam);
-    writeat(&dc, mdHead.StreamDirectoryRva + idx_stream++ * sizeof(mdDir), 
+    writeat(&dc, mdHead.StreamDirectoryRva + idx_stream++ * sizeof(mdDir),
             &mdDir, sizeof(mdDir));
 
     mdDir.StreamType = ModuleListStream;
@@ -970,7 +972,7 @@ BOOL WINAPI MiniDumpWriteDump(HANDLE hProcess, DWORD pid, HANDLE hFile,
             mdDir.Location.Rva = dc.rva;
             writeat(&dc, mdHead.StreamDirectoryRva + idx_stream++ * sizeof(mdDir),
                     &mdDir, sizeof(mdDir));
-            append(&dc, UserStreamParam->UserStreamArray[i].Buffer, 
+            append(&dc, UserStreamParam->UserStreamArray[i].Buffer,
                    UserStreamParam->UserStreamArray[i].BufferSize);
         }
     }

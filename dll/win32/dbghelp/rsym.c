@@ -5,10 +5,15 @@
  * PROGRAMMER:      Mark Jansen
  */
 
+#ifndef __REACTOS_USE_PCH__
 #include "dbghelp_private.h"
 #include <reactos/rossym.h>
 
 #include <wine/debug.h>
+#else
+#include <reactos/rossym.h>
+#endif /* __REACTOS_USE_PCH__*/
+
 WINE_DEFAULT_DEBUG_CHANNEL(dbghelp_rsym);
 
 
@@ -49,7 +54,7 @@ static void rsym_finalize_function(struct module* module, struct symt_function* 
     {
         loc.kind = loc_absolute;
         loc.offset = il.Address - func->address;
-        symt_add_function_point(module, func, SymTagFuncDebugStart, 
+        symt_add_function_point(module, func, SymTagFuncDebugStart,
                                 &loc, NULL);
     }
 }

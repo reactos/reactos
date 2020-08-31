@@ -32,6 +32,7 @@
  *	Add symbol size to internal symbol table.
  */
 
+#ifndef __REACTOS_USE_PCH__
 #define NONAMELESSUNION
 
 #include "config.h"
@@ -55,6 +56,9 @@
 #include "wine/debug.h"
 #include "dbghelp_private.h"
 #include "wine/mscvpdb.h"
+#else
+#include "wine/exception.h"
+#endif /* __REACTOS_USE_PCH__ */
 
 WINE_DEFAULT_DEBUG_CHANNEL(dbghelp_msc);
 
@@ -539,7 +543,7 @@ static struct symt*  codeview_get_type(unsigned int typeno, BOOL quiet)
 
         mod = (mod_index == 0) ? cv_current_module : &cv_zmodules[mod_index];
 
-        if (mod_index >= CV_MAX_MODULES || !mod->allowed) 
+        if (mod_index >= CV_MAX_MODULES || !mod->allowed)
             FIXME("Module of index %d isn't loaded yet (%x)\n", mod_index, typeno);
         else
         {
@@ -563,7 +567,7 @@ static inline const void* codeview_jump_to_type(const struct codeview_type_parse
 {
     if (idx < FIRST_DEFINABLE_TYPE) return NULL;
     idx -= FIRST_DEFINABLE_TYPE;
-    return (idx >= ctp->num) ? NULL : (ctp->table + ctp->offset[idx]); 
+    return (idx >= ctp->num) ? NULL : (ctp->table + ctp->offset[idx]);
 }
 
 static int codeview_add_type(unsigned int typeno, struct symt* dt)
@@ -631,7 +635,7 @@ static void* codeview_cast_symt(struct symt* symt, enum SymTagEnum tag)
     {
         FIXME("Bad tag. Expected %d, but got %d\n", tag, symt->tag);
         return NULL;
-    }   
+    }
     return symt;
 }
 
@@ -670,7 +674,7 @@ static struct symt* codeview_add_type_pointer(struct codeview_type_parse* ctp,
     return &symt_new_pointer(ctp->module, pointee, sizeof(void *))->symt;
 }
 
-static struct symt* codeview_add_type_array(struct codeview_type_parse* ctp, 
+static struct symt* codeview_add_type_array(struct codeview_type_parse* ctp,
                                             const char* name,
                                             unsigned int elemtype,
                                             unsigned int indextype,
@@ -844,7 +848,7 @@ static int codeview_add_type_struct_field_list(struct codeview_type_parse* ctp,
             leaf_len = numeric_leaf(&value, &type->member_v1.offset);
             p_name = (const struct p_string*)((const char*)&type->member_v1.offset + leaf_len);
 
-            codeview_add_udt_element(ctp, symt, terminate_string(p_name), value, 
+            codeview_add_udt_element(ctp, symt, terminate_string(p_name), value,
                                      type->member_v1.type);
 
             ptr += 2 + 2 + 2 + leaf_len + (1 + p_name->namelen);
@@ -854,7 +858,7 @@ static int codeview_add_type_struct_field_list(struct codeview_type_parse* ctp,
             leaf_len = numeric_leaf(&value, &type->member_v2.offset);
             p_name = (const struct p_string*)((const unsigned char*)&type->member_v2.offset + leaf_len);
 
-            codeview_add_udt_element(ctp, symt, terminate_string(p_name), value, 
+            codeview_add_udt_element(ctp, symt, terminate_string(p_name), value,
                                      type->member_v2.type);
 
             ptr += 2 + 2 + 4 + leaf_len + (1 + p_name->namelen);
@@ -1060,7 +1064,7 @@ static struct symt* codeview_add_type_struct(struct codeview_type_parse* ctp,
     return &symt->symt;
 }
 
-static struct symt* codeview_new_func_signature(struct codeview_type_parse* ctp, 
+static struct symt* codeview_new_func_signature(struct codeview_type_parse* ctp,
                                                 struct symt* existing,
                                                 enum CV_call_e call_conv)
 {
@@ -1741,8 +1745,8 @@ static BOOL codeview_snarf(const struct msc_debug_info* msc_dbg, const BYTE* roo
             /* Yes, it's i386 dependent, but that's the symbol purpose. S_REGREL is used on other CPUs */
             loc.reg = CV_REG_EBP;
             loc.offset = sym->stack_v1.offset;
-            symt_add_func_local(msc_dbg->module, curr_func, 
-                                sym->stack_v1.offset > 0 ? DataIsParam : DataIsLocal, 
+            symt_add_func_local(msc_dbg->module, curr_func,
+                                sym->stack_v1.offset > 0 ? DataIsParam : DataIsLocal,
                                 &loc, block,
                                 codeview_get_type(sym->stack_v1.symtype, FALSE),
                                 terminate_string(&sym->stack_v1.p_name));
@@ -1752,8 +1756,8 @@ static BOOL codeview_snarf(const struct msc_debug_info* msc_dbg, const BYTE* roo
             /* Yes, it's i386 dependent, but that's the symbol purpose. S_REGREL is used on other CPUs */
             loc.reg = CV_REG_EBP;
             loc.offset = sym->stack_v2.offset;
-            symt_add_func_local(msc_dbg->module, curr_func, 
-                                sym->stack_v2.offset > 0 ? DataIsParam : DataIsLocal, 
+            symt_add_func_local(msc_dbg->module, curr_func,
+                                sym->stack_v2.offset > 0 ? DataIsParam : DataIsLocal,
                                 &loc, block,
                                 codeview_get_type(sym->stack_v2.symtype, FALSE),
                                 terminate_string(&sym->stack_v2.p_name));
@@ -1763,8 +1767,8 @@ static BOOL codeview_snarf(const struct msc_debug_info* msc_dbg, const BYTE* roo
             /* Yes, it's i386 dependent, but that's the symbol purpose. S_REGREL is used on other CPUs */
             loc.reg = CV_REG_EBP;
             loc.offset = sym->stack_v3.offset;
-            symt_add_func_local(msc_dbg->module, curr_func, 
-                                sym->stack_v3.offset > 0 ? DataIsParam : DataIsLocal, 
+            symt_add_func_local(msc_dbg->module, curr_func,
+                                sym->stack_v3.offset > 0 ? DataIsParam : DataIsLocal,
                                 &loc, block,
                                 codeview_get_type(sym->stack_v3.symtype, FALSE),
                                 sym->stack_v3.name);
@@ -1785,7 +1789,7 @@ static BOOL codeview_snarf(const struct msc_debug_info* msc_dbg, const BYTE* roo
             loc.kind = loc_register;
             loc.reg = sym->register_v1.reg;
             loc.offset = 0;
-            symt_add_func_local(msc_dbg->module, curr_func, 
+            symt_add_func_local(msc_dbg->module, curr_func,
                                 DataIsLocal, &loc,
                                 block, codeview_get_type(sym->register_v1.type, FALSE),
                                 terminate_string(&sym->register_v1.p_name));
@@ -1794,7 +1798,7 @@ static BOOL codeview_snarf(const struct msc_debug_info* msc_dbg, const BYTE* roo
             loc.kind = loc_register;
             loc.reg = sym->register_v2.reg;
             loc.offset = 0;
-            symt_add_func_local(msc_dbg->module, curr_func, 
+            symt_add_func_local(msc_dbg->module, curr_func,
                                 DataIsLocal, &loc,
                                 block, codeview_get_type(sym->register_v2.type, FALSE),
                                 terminate_string(&sym->register_v2.p_name));
@@ -1810,12 +1814,12 @@ static BOOL codeview_snarf(const struct msc_debug_info* msc_dbg, const BYTE* roo
             break;
 
         case S_BLOCK_V1:
-            block = symt_open_func_block(msc_dbg->module, curr_func, block, 
+            block = symt_open_func_block(msc_dbg->module, curr_func, block,
                                          codeview_get_address(msc_dbg, sym->block_v1.segment, sym->block_v1.offset),
                                          sym->block_v1.length);
             break;
         case S_BLOCK_V3:
-            block = symt_open_func_block(msc_dbg->module, curr_func, block, 
+            block = symt_open_func_block(msc_dbg->module, curr_func, block,
                                          codeview_get_address(msc_dbg, sym->block_v3.segment, sym->block_v3.offset),
                                          sym->block_v3.length);
             break;
@@ -1890,7 +1894,7 @@ static BOOL codeview_snarf(const struct msc_debug_info* msc_dbg, const BYTE* roo
             {
                 loc.kind = loc_absolute;
                 loc.offset = codeview_get_address(msc_dbg, sym->label_v3.segment, sym->label_v3.offset) - curr_func->address;
-                symt_add_function_point(msc_dbg->module, curr_func, SymTagLabel, 
+                symt_add_function_point(msc_dbg->module, curr_func, SymTagLabel,
                                         &loc, sym->label_v3.name);
             }
             else symt_new_label(msc_dbg->module, compiland, sym->label_v3.name,
@@ -1953,10 +1957,10 @@ static BOOL codeview_snarf(const struct msc_debug_info* msc_dbg, const BYTE* roo
             if (sym->udt_v1.type)
             {
                 if ((symt = codeview_get_type(sym->udt_v1.type, FALSE)))
-                    symt_new_typedef(msc_dbg->module, symt, 
+                    symt_new_typedef(msc_dbg->module, symt,
                                      terminate_string(&sym->udt_v1.p_name));
                 else
-                    FIXME("S-Udt %s: couldn't find type 0x%x\n", 
+                    FIXME("S-Udt %s: couldn't find type 0x%x\n",
                           terminate_string(&sym->udt_v1.p_name), sym->udt_v1.type);
             }
             break;
@@ -1964,10 +1968,10 @@ static BOOL codeview_snarf(const struct msc_debug_info* msc_dbg, const BYTE* roo
             if (sym->udt_v2.type)
             {
                 if ((symt = codeview_get_type(sym->udt_v2.type, FALSE)))
-                    symt_new_typedef(msc_dbg->module, symt, 
+                    symt_new_typedef(msc_dbg->module, symt,
                                      terminate_string(&sym->udt_v2.p_name));
                 else
-                    FIXME("S-Udt %s: couldn't find type 0x%x\n", 
+                    FIXME("S-Udt %s: couldn't find type 0x%x\n",
                           terminate_string(&sym->udt_v2.p_name), sym->udt_v2.type);
             }
             break;
@@ -1977,7 +1981,7 @@ static BOOL codeview_snarf(const struct msc_debug_info* msc_dbg, const BYTE* roo
                 if ((symt = codeview_get_type(sym->udt_v3.type, FALSE)))
                     symt_new_typedef(msc_dbg->module, symt, sym->udt_v3.name);
                 else
-                    FIXME("S-Udt %s: couldn't find type 0x%x\n", 
+                    FIXME("S-Udt %s: couldn't find type 0x%x\n",
                           sym->udt_v3.name, sym->udt_v3.type);
             }
             break;
@@ -2420,8 +2424,8 @@ static void pdb_convert_symbols_header(PDB_SYMBOLS* symbols,
     }
 }
 
-static void pdb_convert_symbol_file(const PDB_SYMBOLS* symbols, 
-                                    PDB_SYMBOL_FILE_EX* sfile, 
+static void pdb_convert_symbol_file(const PDB_SYMBOLS* symbols,
+                                    PDB_SYMBOL_FILE_EX* sfile,
                                     unsigned* size, const void* image)
 
 {
@@ -2596,8 +2600,8 @@ static BOOL pdb_init(const struct pdb_lookup* pdb_lookup, struct pdb_file_info* 
         struct PDB_DS_ROOT*         root;
 
         pdb_file->u.ds.toc =
-            pdb_ds_read(pdb, 
-                        (const DWORD*)((const char*)pdb + pdb->toc_page * pdb->block_size), 
+            pdb_ds_read(pdb,
+                        (const DWORD*)((const char*)pdb + pdb->toc_page * pdb->block_size),
                         pdb->toc_size);
         root = pdb_read_ds_file(pdb, pdb_file->u.ds.toc, 1);
         if (!root)
@@ -2632,7 +2636,7 @@ static BOOL pdb_init(const struct pdb_lookup* pdb_lookup, struct pdb_file_info* 
     if (0) /* some tool to dump the internal files from a PDB file */
     {
         int     i, num_files;
-        
+
         switch (pdb_file->kind)
         {
         case PDB_JG: num_files = pdb_file->u.jg.toc->num_files; break;
@@ -2651,13 +2655,13 @@ static BOOL pdb_init(const struct pdb_lookup* pdb_lookup, struct pdb_file_info* 
     return ret;
 }
 
-static BOOL pdb_process_internal(const struct process* pcs, 
+static BOOL pdb_process_internal(const struct process* pcs,
                                  const struct msc_debug_info* msc_dbg,
                                  const struct pdb_lookup* pdb_lookup,
                                  struct pdb_module_info* pdb_module_info,
                                  unsigned module_index);
 
-static void pdb_process_symbol_imports(const struct process* pcs, 
+static void pdb_process_symbol_imports(const struct process* pcs,
                                        const struct msc_debug_info* msc_dbg,
                                        const PDB_SYMBOLS* symbols,
                                        const void* symbols_image,
@@ -2675,8 +2679,8 @@ static void pdb_process_symbol_imports(const struct process* pcs,
         int                     i = 0;
         struct pdb_file_info    sf0 = pdb_module_info->pdb_files[0];
 
-        imp = (const PDB_SYMBOL_IMPORT*)((const char*)symbols_image + sizeof(PDB_SYMBOLS) + 
-                                         symbols->module_size + symbols->offset_size + 
+        imp = (const PDB_SYMBOL_IMPORT*)((const char*)symbols_image + sizeof(PDB_SYMBOLS) +
+                                         symbols->module_size + symbols->offset_size +
                                          symbols->hash_size + symbols->srcmodule_size);
         first = imp;
         last = (const char*)imp + symbols->pdbimport_size;
@@ -2720,7 +2724,7 @@ static void pdb_process_symbol_imports(const struct process* pcs,
     cv_current_module->allowed = TRUE;
 }
 
-static BOOL pdb_process_internal(const struct process* pcs, 
+static BOOL pdb_process_internal(const struct process* pcs,
                                  const struct msc_debug_info* msc_dbg,
                                  const struct pdb_lookup* pdb_lookup,
                                  struct pdb_module_info* pdb_module_info,
@@ -2861,7 +2865,7 @@ static BOOL pdb_process_internal(const struct process* pcs,
     return TRUE;
 }
 
-static BOOL pdb_process_file(const struct process* pcs, 
+static BOOL pdb_process_file(const struct process* pcs,
                              const struct msc_debug_info* msc_dbg,
                              struct pdb_lookup* pdb_lookup)
 {
@@ -3261,7 +3265,7 @@ BOOL         pdb_virtual_unwind(struct cpu_stack_walk* csw, DWORD_PTR ip,
 #define CODEVIEW_NB11_SIG       MAKESIG('N','B','1','1')
 #define CODEVIEW_RSDS_SIG       MAKESIG('R','S','D','S')
 
-static BOOL codeview_process_info(const struct process* pcs, 
+static BOOL codeview_process_info(const struct process* pcs,
                                   const struct msc_debug_info* msc_dbg)
 {
     const DWORD*                signature = (const DWORD*)msc_dbg->root;
@@ -3390,7 +3394,7 @@ static BOOL codeview_process_info(const struct process* pcs,
 /*========================================================================
  * Process debug directory.
  */
-BOOL pe_load_debug_directory(const struct process* pcs, struct module* module, 
+BOOL pe_load_debug_directory(const struct process* pcs, struct module* module,
                              const BYTE* mapping,
                              const IMAGE_SECTION_HEADER* sectp, DWORD nsect,
                              const IMAGE_DEBUG_DIRECTORY* dbg, int nDbg)
@@ -3419,7 +3423,7 @@ BOOL pe_load_debug_directory(const struct process* pcs, struct module* module,
                 break;
             }
         }
-  
+
         /* Now, try to parse CodeView debug info */
         for (i = 0; i < nDbg; i++)
         {
@@ -3429,7 +3433,7 @@ BOOL pe_load_debug_directory(const struct process* pcs, struct module* module,
                 if ((ret = codeview_process_info(pcs, &msc_dbg))) goto done;
             }
         }
-    
+
         /* If not found, try to parse COFF debug info */
         for (i = 0; i < nDbg; i++)
         {
@@ -3453,7 +3457,7 @@ BOOL pe_load_debug_directory(const struct process* pcs, struct module* module,
 #define FRAME_TRAP  1
 #define FRAME_TSS   2
 
-typedef struct _FPO_DATA 
+typedef struct _FPO_DATA
 {
 	DWORD       ulOffStart;            /* offset 1st byte of function code */
 	DWORD       cbProcSize;            /* # bytes in function */

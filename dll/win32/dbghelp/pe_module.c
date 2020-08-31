@@ -21,6 +21,7 @@
  *
  */
 
+#ifndef __REACTOS_USE_PCH__
 #include "config.h"
 #include "wine/port.h"
 
@@ -35,6 +36,7 @@
 #include "winternl.h"
 #include "wine/debug.h"
 #endif
+#endif /* __REACTOS_USE_PCH__ */
 
 WINE_DEFAULT_DEBUG_CHANNEL(dbghelp);
 
@@ -465,7 +467,7 @@ static BOOL pe_load_coff_symbol_table(struct module* module)
 /******************************************************************
  *		pe_load_stabs
  *
- * look for stabs information in PE header (it's how the mingw compiler provides 
+ * look for stabs information in PE header (it's how the mingw compiler provides
  * its debugging information)
  */
 static BOOL pe_load_stabs(const struct process* pcs, struct module* module)
@@ -676,18 +678,18 @@ static BOOL pe_load_export_debug_info(const struct process* pcs, struct module* 
     /* FIXME: module.ModuleName isn't correctly set yet if it's passed in SymLoadModule */
     symt_new_public(module, NULL, module->module.ModuleName, FALSE, base, 1);
 #endif
-    
+
     /* Add entry point */
     symt_new_public(module, NULL, "EntryPoint", FALSE,
                     base + nth->OptionalHeader.AddressOfEntryPoint, 1);
 #if 0
-    /* FIXME: we'd better store addresses linked to sections rather than 
+    /* FIXME: we'd better store addresses linked to sections rather than
        absolute values */
     IMAGE_SECTION_HEADER*       section;
     /* Add start of sections */
     section = (IMAGE_SECTION_HEADER*)
         ((char*)&nth->OptionalHeader + nth->FileHeader.SizeOfOptionalHeader);
-    for (i = 0; i < nth->FileHeader.NumberOfSections; i++, section++) 
+    for (i = 0; i < nth->FileHeader.NumberOfSections; i++, section++)
     {
 	symt_new_public(module, NULL, section->Name, FALSE,
                         RtlImageRvaToVa(nth, mapping, section->VirtualAddress, NULL), 1);

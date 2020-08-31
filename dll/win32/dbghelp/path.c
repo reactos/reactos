@@ -18,6 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#ifndef __REACTOS_USE_PCH__
 #include "config.h"
 #include <stdlib.h>
 #include <stdio.h>
@@ -27,6 +28,7 @@
 #include "winnls.h"
 #include "winternl.h"
 #include "wine/debug.h"
+#endif /* __REACTOS_USE_PCH__ */
 
 WINE_DEFAULT_DEBUG_CHANNEL(dbghelp);
 
@@ -79,13 +81,13 @@ HANDLE WINAPI FindDebugInfoFile(PCSTR FileName, PCSTR SymbolPath, PSTR DebugFile
     }
     return (h == INVALID_HANDLE_VALUE) ? NULL : h;
 }
- 
+
 /******************************************************************
  *		FindDebugInfoFileEx (DBGHELP.@)
  *
  */
 HANDLE WINAPI FindDebugInfoFileEx(PCSTR FileName, PCSTR SymbolPath,
-                                  PSTR DebugFilePath, 
+                                  PSTR DebugFilePath,
                                   PFIND_DEBUG_FILE_CALLBACK Callback,
                                   PVOID CallerData)
 {
@@ -655,22 +657,22 @@ BOOL path_find_symbol_file(const struct process* pcs, const struct module* modul
     }
 
     /* FIXME: Use Environment-Variables (see MS docs)
-                 _NT_SYMBOL_PATH and _NT_ALT_SYMBOL_PATH    
-       FIXME: Implement "Standard Path Elements" (Path) ... (see MS docs) 
+                 _NT_SYMBOL_PATH and _NT_ALT_SYMBOL_PATH
+       FIXME: Implement "Standard Path Elements" (Path) ... (see MS docs)
               do a search for (every?) path-element like this ...
               <path>
               <path>\dll
               <path>\symbols\dll
               (dll may be exe, or sys depending on the file extension)   */
-    
+
     /* 2. check module-path */
     file_pathW(module->module.LoadedImageName, tmp);
     if (do_searchW(filename, tmp, FALSE, module_find_cb, &mf))
-    { 
+    {
         WideCharToMultiByte(CP_ACP, 0, tmp, -1, buffer, MAX_PATH, NULL, NULL);
         return TRUE;
     }
-    
+
     /* 3. check search-path */
     while (searchPath)
     {

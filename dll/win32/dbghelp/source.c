@@ -18,6 +18,8 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  *
  */
+
+#ifndef __REACTOS_USE_PCH__
 #include "config.h"
 #include <stdlib.h>
 #include <stdio.h>
@@ -28,6 +30,7 @@
 #ifndef DBGHELP_STATIC_LIB
 #include "wine/debug.h"
 #endif
+#endif /* __REACTOS_USE_PCH__*/
 
 WINE_DEFAULT_DEBUG_CHANNEL(dbghelp);
 
@@ -152,7 +155,7 @@ BOOL WINAPI SymEnumSourceFilesW(HANDLE hProcess, ULONG64 ModBase, PCWSTR Mask,
     if (!cbSrcFiles) return FALSE;
     pair.pcs = process_find_by_handle(hProcess);
     if (!pair.pcs) return FALSE;
-         
+
     if (ModBase)
     {
         pair.requested = module_find_by_addr(pair.pcs, ModBase, DMT_UNKNOWN);

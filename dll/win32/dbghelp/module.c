@@ -19,6 +19,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#ifndef __REACTOS_USE_PCH__
 #include "config.h"
 #include <stdlib.h>
 #include <stdio.h>
@@ -31,6 +32,7 @@
 #include "winternl.h"
 #include "wine/debug.h"
 #endif
+#endif /* __REACTOS_USE_PCH__ */
 
 WINE_DEFAULT_DEBUG_CHANNEL(dbghelp);
 
@@ -295,7 +297,7 @@ static struct module* module_get_container(const struct process* pcs,
                                     const struct module* inner)
 {
     struct module*      module;
-     
+
     for (module = pcs->lmodules; module; module = module->next)
     {
         if (module != inner &&
@@ -311,11 +313,11 @@ static struct module* module_get_container(const struct process* pcs,
  *           module_get_containee
  *
  */
-struct module* module_get_containee(const struct process* pcs, 
+struct module* module_get_containee(const struct process* pcs,
                                     const struct module* outter)
 {
     struct module*      module;
-     
+
     for (module = pcs->lmodules; module; module = module->next)
     {
         if (module != outter &&
@@ -349,7 +351,7 @@ BOOL module_get_debug(struct module_pair* pair)
     if (pair->effective->module.SymType == SymDeferred)
     {
         BOOL ret;
-        
+
         if (pair->effective->is_virtual) ret = FALSE;
         else switch (pair->effective->type)
         {
@@ -393,14 +395,14 @@ BOOL module_get_debug(struct module_pair* pair)
 /***********************************************************************
  *	module_find_by_addr
  *
- * either the addr where module is loaded, or any address inside the 
+ * either the addr where module is loaded, or any address inside the
  * module
  */
 struct module* module_find_by_addr(const struct process* pcs, DWORD64 addr,
                                    enum module_type type)
 {
     struct module*      module;
-    
+
     if (type == DMT_UNKNOWN)
     {
         if ((module = module_find_by_addr(pcs, addr, DMT_PE)) ||
@@ -413,7 +415,7 @@ struct module* module_find_by_addr(const struct process* pcs, DWORD64 addr,
         for (module = pcs->lmodules; module; module = module->next)
         {
             if (type == module->type && addr >= module->module.BaseOfImage &&
-                addr < module->module.BaseOfImage + module->module.ImageSize) 
+                addr < module->module.BaseOfImage + module->module.ImageSize)
                 return module;
         }
     }
@@ -768,7 +770,7 @@ static BOOL CALLBACK enum_modW64_32(PCWSTR name, DWORD64 base, PVOID user)
 }
 
 BOOL  WINAPI SymEnumerateModules(HANDLE hProcess,
-                                 PSYM_ENUMMODULES_CALLBACK EnumModulesCallback,  
+                                 PSYM_ENUMMODULES_CALLBACK EnumModulesCallback,
                                  PVOID UserContext)
 {
     struct enum_modW64_32       x;
@@ -799,7 +801,7 @@ static BOOL CALLBACK enum_modW64_64(PCWSTR name, DWORD64 base, PVOID user)
 }
 
 BOOL  WINAPI SymEnumerateModules64(HANDLE hProcess,
-                                   PSYM_ENUMMODULES_CALLBACK64 EnumModulesCallback,  
+                                   PSYM_ENUMMODULES_CALLBACK64 EnumModulesCallback,
                                    PVOID UserContext)
 {
     struct enum_modW64_64       x;
@@ -822,7 +824,7 @@ BOOL  WINAPI SymEnumerateModulesW64(HANDLE hProcess,
     struct module*      module;
 
     if (!pcs) return FALSE;
-    
+
     for (module = pcs->lmodules; module; module = module->next)
     {
         if (!(dbghelp_options & SYMOPT_WINE_WITH_NATIVE_MODULES) &&

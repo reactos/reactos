@@ -32,6 +32,7 @@
  *	Add symbol size to internal symbol table.
  */
 
+#ifndef __REACTOS_USE_PCH__
 #include "config.h"
 #include "wine/port.h"
 
@@ -52,6 +53,7 @@
 #include "wine/debug.h"
 #include "dbghelp_private.h"
 #include "wine/mscvpdb.h"
+#endif /* __REACTOS_USE_PCH__ */
 
 WINE_DEFAULT_DEBUG_CHANNEL(dbghelp_coff);
 
@@ -78,7 +80,7 @@ struct CoffFileSet
     int		        nfiles_alloc;
 };
 
-static const char*	coff_get_name(const IMAGE_SYMBOL* coff_sym, 
+static const char*	coff_get_name(const IMAGE_SYMBOL* coff_sym,
                                       const char* coff_strtab)
 {
     static	char	namebuff[9];
@@ -196,7 +198,7 @@ DECLSPEC_HIDDEN BOOL coff_process_info(const struct msc_debug_info* msc_dbg)
 
         if (coff_sym->StorageClass == IMAGE_SYM_CLASS_FILE)
 	{
-            curr_file_idx = coff_add_file(&coff_files, msc_dbg->module, 
+            curr_file_idx = coff_add_file(&coff_files, msc_dbg->module,
                                           (const char*)(coff_sym + 1));
             TRACE("New file %s\n", (const char*)(coff_sym + 1));
             i += naux;
@@ -275,7 +277,7 @@ DECLSPEC_HIDDEN BOOL coff_process_info(const struct msc_debug_info* msc_dbg)
             continue;
 	}
 
-        if (coff_sym->StorageClass == IMAGE_SYM_CLASS_STATIC && naux == 0 && 
+        if (coff_sym->StorageClass == IMAGE_SYM_CLASS_STATIC && naux == 0 &&
             coff_sym->SectionNumber == 1)
 	{
             DWORD base = msc_dbg->sectp[coff_sym->SectionNumber - 1].VirtualAddress;
@@ -290,8 +292,8 @@ DECLSPEC_HIDDEN BOOL coff_process_info(const struct msc_debug_info* msc_dbg)
 
             /* FIXME: was adding symbol to this_file ??? */
             coff_add_symbol(&coff_files.files[curr_file_idx],
-                            &symt_new_function(msc_dbg->module, 
-                                               coff_files.files[curr_file_idx].compiland, 
+                            &symt_new_function(msc_dbg->module,
+                                               coff_files.files[curr_file_idx].compiland,
                                                nampnt,
                                                msc_dbg->module->module.BaseOfImage + base + coff_sym->Value,
                                                0 /* FIXME */,
@@ -327,13 +329,13 @@ DECLSPEC_HIDDEN BOOL coff_process_info(const struct msc_debug_info* msc_dbg)
             if (j < coff_files.nfiles)
             {
                 coff_add_symbol(&coff_files.files[j],
-                                &symt_new_function(msc_dbg->module, compiland, nampnt, 
+                                &symt_new_function(msc_dbg->module, compiland, nampnt,
                                                    msc_dbg->module->module.BaseOfImage + base + coff_sym->Value,
                                                    0 /* FIXME */, NULL /* FIXME */)->symt);
-            } 
-            else 
+            }
+            else
             {
-                symt_new_function(msc_dbg->module, NULL, nampnt, 
+                symt_new_function(msc_dbg->module, NULL, nampnt,
                                   msc_dbg->module->module.BaseOfImage + base + coff_sym->Value,
                                   0 /* FIXME */, NULL /* FIXME */);
             }
@@ -382,7 +384,7 @@ DECLSPEC_HIDDEN BOOL coff_process_info(const struct msc_debug_info* msc_dbg)
         TRACE("Skipping unknown entry '%s' %d %d %d\n",
               coff_get_name(coff_sym, coff_strtab),
               coff_sym->StorageClass, coff_sym->SectionNumber, naux);
-        
+
         /*
          * For now, skip past the aux entries.
          */

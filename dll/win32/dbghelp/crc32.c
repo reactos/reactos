@@ -19,12 +19,14 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#ifndef __REACTOS_USE_PCH__
 #include "config.h"
 #include "wine/port.h"
 
 #include <stdio.h>
 
 #include "dbghelp_private.h"
+#endif /* __REACTOS_USE_PCH__ */
 
 /* Copyright (C) 1986 Gary S. Brown
  * Modified by Robert Shearman. You may use the following calc_crc32 code or

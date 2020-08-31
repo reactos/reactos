@@ -22,6 +22,7 @@
  * upon which full support for datatype handling will eventually be built.
  */
 
+#ifndef __REACTOS_USE_PCH__
 #define NONAMELESSUNION
 
 #include "config.h"
@@ -36,6 +37,7 @@
 #include "wine/debug.h"
 #endif
 #include "dbghelp_private.h"
+#endif /* __REACTOS_USE_PCH__ */
 
 WINE_DEFAULT_DEBUG_CHANNEL(dbghelp);
 WINE_DECLARE_DEBUG_CHANNEL(dbghelp_symt);
@@ -159,7 +161,7 @@ BOOL symt_get_address(const struct symt* type, ULONG64* addr)
 }
 
 static struct symt* symt_find_type_by_name(const struct module* module,
-                                           enum SymTagEnum sym_tag, 
+                                           enum SymTagEnum sym_tag,
                                            const char* typename)
 {
     void*                       ptr;
@@ -190,7 +192,7 @@ static void symt_add_type(struct module* module, struct symt* symt)
     *p = symt;
 }
 
-struct symt_basic* symt_new_basic(struct module* module, enum BasicType bt, 
+struct symt_basic* symt_new_basic(struct module* module, enum BasicType bt,
                                   const char* typename, unsigned size)
 {
     struct symt_basic*          sym;
@@ -217,7 +219,7 @@ struct symt_basic* symt_new_basic(struct module* module, enum BasicType bt,
     return sym;
 }
 
-struct symt_udt* symt_new_udt(struct module* module, const char* typename, 
+struct symt_udt* symt_new_udt(struct module* module, const char* typename,
                               unsigned size, enum UdtKind kind)
 {
     struct symt_udt*            sym;
@@ -246,7 +248,7 @@ BOOL symt_set_udt_size(struct module* module, struct symt_udt* udt, unsigned siz
     if (vector_length(&udt->vchildren) != 0)
     {
         if (udt->size != size)
-            FIXME_(dbghelp_symt)("Changing size for %s from %u to %u\n", 
+            FIXME_(dbghelp_symt)("Changing size for %s from %u to %u\n",
                                  udt->hash_elt.name, udt->size, size);
         return TRUE;
     }
@@ -343,7 +345,7 @@ BOOL symt_add_enum_element(struct module* module, struct symt_enum* enum_type,
     return TRUE;
 }
 
-struct symt_array* symt_new_array(struct module* module, int min, int max, 
+struct symt_array* symt_new_array(struct module* module, int min, int max,
                                   struct symt* base, struct symt* index)
 {
     struct symt_array*  sym;
@@ -375,7 +377,7 @@ static inline DWORD symt_array_count(struct module* module, const struct symt_ar
     return array->end - array->start + 1;
 }
 
-struct symt_function_signature* symt_new_function_signature(struct module* module, 
+struct symt_function_signature* symt_new_function_signature(struct module* module,
                                                             struct symt* ret_type,
                                                             enum CV_call_e call_conv)
 {
@@ -426,7 +428,7 @@ struct symt_pointer* symt_new_pointer(struct module* module, struct symt* ref_ty
     return sym;
 }
 
-struct symt_typedef* symt_new_typedef(struct module* module, struct symt* ref, 
+struct symt_typedef* symt_new_typedef(struct module* module, struct symt* ref,
                                       const char* name)
 {
     struct symt_typedef* sym;
@@ -560,7 +562,7 @@ BOOL symt_get_info(struct module* module, const struct symt* type,
             case SymTagFunctionType: v = &((const struct symt_function_signature*)type)->vchildren; break;
             case SymTagFunction:     v = &((const struct symt_function*)type)->vchildren; break;
             default:
-                FIXME("Unsupported sym-tag %s for find-children\n", 
+                FIXME("Unsupported sym-tag %s for find-children\n",
                       symt_get_tag_str(type->tag));
                 return FALSE;
             }
@@ -618,7 +620,7 @@ BOOL symt_get_info(struct module* module, const struct symt* type,
             X(DWORD) = 0;
             break;
         default:
-            FIXME("Unsupported sym-tag %s for get-children-count\n", 
+            FIXME("Unsupported sym-tag %s for get-children-count\n",
                   symt_get_tag_str(type->tag));
             /* fall through */
         case SymTagData:
@@ -691,7 +693,7 @@ BOOL symt_get_info(struct module* module, const struct symt* type,
             X(DWORD64) = 0;
             break;
         default:
-            FIXME("Unsupported sym-tag %s for get-length\n", 
+            FIXME("Unsupported sym-tag %s for get-length\n",
                   symt_get_tag_str(type->tag));
             /* fall through */
         case SymTagFunctionType:
@@ -718,7 +720,7 @@ BOOL symt_get_info(struct module* module, const struct symt* type,
             X(DWORD) = symt_ptr2index(module, ((const struct symt_function_arg_type*)type)->container);
             break;
         default:
-            FIXME("Unsupported sym-tag %s for get-lexical-parent\n", 
+            FIXME("Unsupported sym-tag %s for get-lexical-parent\n",
                   symt_get_tag_str(type->tag));
             return FALSE;
         }
@@ -744,19 +746,19 @@ BOOL symt_get_info(struct module* module, const struct symt* type,
             {
             case DataIsParam:
             case DataIsLocal:
-                X(ULONG) = ((const struct symt_data*)type)->u.var.offset; 
+                X(ULONG) = ((const struct symt_data*)type)->u.var.offset;
                 break;
             case DataIsMember:
-                X(ULONG) = ((const struct symt_data*)type)->u.member.offset >> 3; 
+                X(ULONG) = ((const struct symt_data*)type)->u.member.offset >> 3;
                 break;
             default:
-                FIXME("Unknown kind (%u) for get-offset\n",     
+                FIXME("Unknown kind (%u) for get-offset\n",
                       ((const struct symt_data*)type)->kind);
                 return FALSE;
             }
             break;
         default:
-            FIXME("Unsupported sym-tag %s for get-offset\n", 
+            FIXME("Unsupported sym-tag %s for get-offset\n",
                   symt_get_tag_str(type->tag));
             return FALSE;
         }
@@ -808,7 +810,7 @@ BOOL symt_get_info(struct module* module, const struct symt* type,
             X(DWORD) = symt_ptr2index(module, ((const struct symt_function_arg_type*)type)->arg_type);
             break;
         default:
-            FIXME("Unsupported sym-tag %s for get-type\n", 
+            FIXME("Unsupported sym-tag %s for get-type\n",
                   symt_get_tag_str(type->tag));
         /* fall through */
         case SymTagPublicSymbol:

@@ -19,6 +19,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#ifndef __REACTOS_USE_PCH__
 #include "config.h"
 #include "wine/port.h"
 
@@ -50,6 +51,7 @@
 
 #include "wine/library.h"
 #include "wine/debug.h"
+#endif /* __REACTOS_USE_PCH__ */
 
 #ifdef __ELF__
 
@@ -590,7 +592,7 @@ static const Elf_Sym* elf_lookup_symtab(const struct module* module,
     const char*                 compiland_basename;
     const char*                 base;
 
-    /* we need weak match up (at least) when symbols of same name, 
+    /* we need weak match up (at least) when symbols of same name,
      * defined several times in different compilation units,
      * are merged in a single one (hence a different filename for c.u.)
      */
@@ -602,7 +604,7 @@ static const Elf_Sym* elf_lookup_symtab(const struct module* module,
         if (!compiland_basename++) compiland_basename = compiland_name;
     }
     else compiland_name = compiland_basename = NULL;
-    
+
     hash_table_iter_init(ht_symtab, &hti, name);
     while ((ste = hash_table_iter_up(&hti)))
     {
@@ -669,7 +671,7 @@ static void elf_finish_stabs_info(struct module* module, const struct hash_table
             {
                 break;
             }
-            symp = elf_lookup_symtab(module, symtab, sym->hash_elt.name, 
+            symp = elf_lookup_symtab(module, symtab, sym->hash_elt.name,
                                      ((struct symt_function*)sym)->container);
             if (symp)
             {
@@ -697,7 +699,7 @@ static void elf_finish_stabs_info(struct module* module, const struct hash_table
                 if (((struct symt_data*)sym)->u.var.kind != loc_absolute ||
                     ((struct symt_data*)sym)->u.var.offset != elf_info->elf_addr)
                     break;
-                symp = elf_lookup_symtab(module, symtab, sym->hash_elt.name, 
+                symp = elf_lookup_symtab(module, symtab, sym->hash_elt.name,
                                          ((struct symt_data*)sym)->container);
                 if (symp)
                 {
@@ -1072,7 +1074,7 @@ static BOOL elf_load_debug_info_from_map(struct module* module,
                                          struct hash_table* ht_symtab)
 {
     BOOL                ret = FALSE, lret;
-    struct elf_thunk_area thunks[] = 
+    struct elf_thunk_area thunks[] =
     {
         {"__wine_spec_import_thunks",           THUNK_ORDINAL_NOTYPE, 0, 0},    /* inter DLL calls */
         {"__wine_spec_delayed_import_loaders",  THUNK_ORDINAL_LOAD,   0, 0},    /* delayed inter DLL calls */
