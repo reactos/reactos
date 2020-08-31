@@ -27,6 +27,7 @@
  * The installer for the Zuma Deluxe Popcap game is good for testing.
  */
 
+#ifndef __REACTOS_USE_PCH__
 #include <stdio.h>
 
 #define NONAMELESSUNION
@@ -42,6 +43,7 @@
 #include "shlguid.h"
 
 #include "wine/debug.h"
+#endif /* __REACTOS_USE_PCH__ */
 
 WINE_DEFAULT_DEBUG_CHANNEL(ieframe);
 

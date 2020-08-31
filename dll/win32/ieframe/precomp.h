@@ -2,6 +2,7 @@
 #ifndef _IEFRAME_PRECOMP_H_
 #define _IEFRAME_PRECOMP_H_
 
+#include <assert.h>
 #include <stdio.h>
 
 #define WIN32_NO_STATUS
@@ -21,8 +22,13 @@
 #include <idispids.h>
 #include <intshcut.h>
 #include <perhist.h>
+#include <rpcproxy.h>
 #include <shellapi.h>
 #include <shlwapi.h>
+#include <mshtmcid.h>
+#include <ddeml.h>
+#include <urlhist.h>
+#include <wininet.h>
 
 #include <wine/debug.h>
 
