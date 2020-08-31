@@ -29,6 +29,7 @@
  * Up to date as of SHELL32 v5.00 (W2K)
  */
 
+#ifndef __REACTOS_USE_PCH__
 #include <stdarg.h>
 #include <stdlib.h>
 #include <string.h>
@@ -42,6 +43,7 @@
 #include <wine/debug.h>
 
 #include "shell32_main.h"
+#endif /* __REACTOS_USE_PCH__ */
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 

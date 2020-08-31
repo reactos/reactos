@@ -13,6 +13,6 @@ list(APPEND SOURCE
     recyclebin_v5_enumerator.c
     recyclebin_private.h)
 
-add_library(recyclebin ${SOURCE} guid.c)
+add_library(recyclebin OBJECT ${SOURCE} guid.c)
 add_pch(recyclebin recyclebin_private.h guid.c)
 add_dependencies(recyclebin psdk)

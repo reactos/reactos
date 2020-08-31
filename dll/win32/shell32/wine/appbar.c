@@ -21,7 +21,7 @@
 //
 // Adapted from Wine appbar.c .
 //
-
+#ifndef __REACTOS_USE_PCH__
 #include <wine/config.h>
 
 #include <stdlib.h>
@@ -41,6 +41,7 @@
 
 #include <wine/debug.h>
 #include <wine/unicode.h>
+#endif /* __REACTOS_USE_PCH__ */
 
 WINE_DEFAULT_DEBUG_CHANNEL(appbar);
 

@@ -18,6 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#ifndef __REACTOS_USE_PCH__
 #include <assert.h>
 
 #define WIN32_NO_STATUS
@@ -34,6 +35,7 @@
 
 #include "cpanel.h"
 #include "wine/unicode.h"
+#endif /* __REACTOS_USE_PCH__ */
 
 WINE_DEFAULT_DEBUG_CHANNEL(shlctrl);
 
@@ -944,7 +946,7 @@ void WINAPI RunDll_CallEntry16( DWORD proc, HWND hwnd, HINSTANCE inst,
  * hMod("DeskCp16.Dll"), pFunc("CplApplet"), 0, 1, 0xc, 0
  *
  */
-DWORD WINAPI CallCPLEntry16(HMODULE hMod, FARPROC pFunc, DWORD dw3, DWORD dw4, DWORD dw5, DWORD dw6)
+LRESULT WINAPI CallCPLEntry16(HINSTANCE hMod, FARPROC pFunc, HWND dw3, UINT dw4, LPARAM dw5, LPARAM dw6)
 {
     FIXME("(%p, %p, %08x, %08x, %08x, %08x): stub.\n", hMod, pFunc, dw3, dw4, dw5, dw6);
     return 0x0deadbee;

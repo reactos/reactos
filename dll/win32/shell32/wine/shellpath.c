@@ -25,6 +25,7 @@
  *
  */
 
+#ifndef __REACTOS_USE_PCH__
 #define WIN32_NO_STATUS
 #define _INC_WINDOWS
 #define COBJMACROS
@@ -48,7 +49,8 @@
 
 #include "pidl.h"
 #include "shell32_main.h"
-#include "shresdef.h"
+#include "../shresdef.h"
+#endif /* __REACTOS_USE_PCH__ */
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
@@ -2188,7 +2190,7 @@ end:
 /*************************************************************************
  * SHGetFolderPathW			[SHELL32.@]
  *
- * Convert nFolder to path.  
+ * Convert nFolder to path.
  *
  * RETURNS
  *  Success: S_OK
@@ -2283,7 +2285,7 @@ HRESULT WINAPI SHGetFolderPathAndSubDirW(
     DWORD      folder = nFolder & CSIDL_FOLDER_MASK;
     CSIDL_Type type;
     int        ret;
-    
+
     TRACE("%p,%#x,%p,%#x,%s,%p\n", hwndOwner, nFolder, hToken, dwFlags, debugstr_w(pszSubPath), pszPath);
 
     /* Windows always NULL-terminates the resulting path regardless of success
@@ -2749,7 +2751,7 @@ HRESULT WINAPI SHGetFolderLocation(
 
     TRACE("%p 0x%08x %p 0x%08x %p\n",
      hwndOwner, nFolder, hToken, dwReserved, ppidl);
-    
+
     if (!ppidl)
         return E_INVALIDARG;
     if (dwReserved)

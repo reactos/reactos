@@ -19,6 +19,6 @@ list(APPEND SOURCE
     CStartMenu.cpp
     shellmenu.h)
 
-add_library(shellmenu ${SOURCE})
+add_library(shellmenu OBJECT ${SOURCE})
 add_pch(shellmenu shellmenu.h)
 add_dependencies(shellmenu xdk psdk)

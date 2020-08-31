@@ -17,6 +17,6 @@ list(APPEND SOURCE
     dde.cpp
     shelldesktop.h)
 
-add_library(shelldesktop ${SOURCE})
+add_library(shelldesktop OBJECT ${SOURCE})
 add_pch(shelldesktop shelldesktop.h)
 add_dependencies(shelldesktop xdk psdk)

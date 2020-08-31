@@ -19,6 +19,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#ifndef __REACTOS_USE_PCH__
 #include <wine/config.h>
 
 #include <stdarg.h>
@@ -35,12 +36,13 @@
 #include <shellapi.h>
 #include <shlobj.h>
 #include <shlwapi.h>
-#include <debughlp.h>
+#include "../debughlp.h"
 
 #include <wine/debug.h>
 #include <wine/unicode.h>
 
 #include "shell32_main.h"
+#endif /* __REACTOS_USE_PCH__ */
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
@@ -275,7 +277,7 @@ DWORD WINAPI SHCLSIDFromStringAW (LPCVOID clsid, CLSID *id)
  *
  * Equivalent to CoGetMalloc(MEMCTX_TASK, ...). Under Windows 9x this function
  * could use the shell32 built-in "mini-COM" without the need to load ole32.dll -
- * see SHLoadOLE for details. 
+ * see SHLoadOLE for details.
  *
  * PARAMS
  *  lpmal [O] Destination for IMalloc interface.
@@ -298,7 +300,7 @@ HRESULT WINAPI SHGetMalloc(LPMALLOC *lpmal)
  *
  * Equivalent to CoTaskMemAlloc. Under Windows 9x this function could use
  * the shell32 built-in "mini-COM" without the need to load ole32.dll -
- * see SHLoadOLE for details. 
+ * see SHLoadOLE for details.
  *
  * NOTES
  *     exported by ordinal
@@ -320,7 +322,7 @@ LPVOID WINAPI SHAlloc(SIZE_T len)
  *
  * Equivalent to CoTaskMemFree. Under Windows 9x this function could use
  * the shell32 built-in "mini-COM" without the need to load ole32.dll -
- * see SHLoadOLE for details. 
+ * see SHLoadOLE for details.
  *
  * NOTES
  *     exported by ordinal

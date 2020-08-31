@@ -35,6 +35,7 @@
  *
  */
 
+#ifndef __REACTOS_USE_PCH__
 #define WIN32_NO_STATUS
 #define _INC_WINDOWS
 
@@ -43,6 +44,7 @@
 #include <shlobj.h>
 #include <wine/debug.h>
 #include <wine/unicode.h>
+#endif /* __REACTOS_USE_PCH__ */
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 

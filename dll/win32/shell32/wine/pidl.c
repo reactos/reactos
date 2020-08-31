@@ -22,6 +22,7 @@
  *
  */
 
+#ifndef __REACTOS_USE_PCH__
 #include <wine/config.h>
 
 #define WIN32_NO_STATUS
@@ -42,7 +43,8 @@
 
 #include "pidl.h"
 #include "shell32_main.h"
-#include "shresdef.h"
+#include "../shresdef.h"
+#endif /* __REACTOS_USE_PCH__ */
 
 WINE_DEFAULT_DEBUG_CHANNEL(pidl);
 WINE_DECLARE_DEBUG_CHANNEL(shell);
@@ -1314,7 +1316,7 @@ BOOL WINAPI SHGetPathFromIDListW(LPCITEMIDLIST pidl, LPWSTR pszPath)
         IShellFolder_Release(psfFolder);
         return FALSE;
     }
-                
+
     hr = IShellFolder_GetDisplayNameOf(psfFolder, pidlLast, SHGDN_FORPARSING, &strret);
     IShellFolder_Release(psfFolder);
     if (FAILED(hr)) return FALSE;
@@ -1335,10 +1337,10 @@ HRESULT WINAPI SHBindToParent(LPCITEMIDLIST pidl, REFIID riid, LPVOID *ppv, LPCI
 
     TRACE_(shell)("pidl=%p\n", pidl);
     pdump(pidl);
-    
+
     if (!pidl || !ppv)
         return E_INVALIDARG;
-    
+
     *ppv = NULL;
     if (ppidlLast)
         *ppidlLast = NULL;
@@ -2344,7 +2346,7 @@ IID* _ILGetGUIDPointer(LPCITEMIDLIST pidl)
 FileStructW* _ILGetFileStructW(LPCITEMIDLIST pidl) {
     FileStructW *pFileStructW;
     WORD cbOffset;
-    
+
     if (!(_ILIsValue(pidl) || _ILIsFolder(pidl)))
         return NULL;
 
@@ -2414,7 +2416,7 @@ BOOL _ILGetFileDate (LPCITEMIDLIST pidl, LPSTR pOut, UINT uOutSize)
         FileTimeToSystemTime (&lft, &time);
 
         ret = GetDateFormatA(LOCALE_USER_DEFAULT,DATE_SHORTDATE,&time, NULL,  pOut, uOutSize);
-        if (ret) 
+        if (ret)
         {
             /* Append space + time without seconds */
             pOut[ret-1] = ' ';

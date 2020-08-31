@@ -18,6 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#ifndef __REACTOS_USE_PCH__
 #define WIN32_NO_STATUS
 #define _INC_WINDOWS
 #define COBJMACROS
@@ -32,6 +33,7 @@
 
 #include "pidl.h"
 #include "shell32_main.h"
+#endif /* __REACTOS_USE_PCH__ */
 
 #ifdef FM_SEPARATOR
 #undef FM_SEPARATOR

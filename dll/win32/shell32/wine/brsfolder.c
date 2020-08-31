@@ -21,6 +21,7 @@
  *    - implement editbox
  */
 
+#ifndef __REACTOS_USE_PCH__
 #define WIN32_NO_STATUS
 #define _INC_WINDOWS
 #define COBJMACROS
@@ -37,10 +38,11 @@
 
 #include "pidl.h"
 #include "shell32_main.h"
-#include "shresdef.h"
+#include "../shresdef.h"
 #ifdef __REACTOS__
     #include <shlwapi.h>
 #endif
+#endif /* __REACTOS_USE_PCH__ */
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
@@ -69,7 +71,7 @@ typedef struct tagTV_ITEMDATA
    LPSHELLFOLDER lpsfParent; /* IShellFolder of the parent */
    LPITEMIDLIST  lpi;        /* PIDL relative to parent */
    LPITEMIDLIST  lpifq;      /* Fully qualified PIDL */
-   IEnumIDList*  pEnumIL;    /* Children iterator */ 
+   IEnumIDList*  pEnumIL;    /* Children iterator */
 } TV_ITEMDATA, *LPTV_ITEMDATA;
 
 typedef struct tagLAYOUT_INFO
@@ -191,7 +193,7 @@ static void LayoutUpdate(HWND hwnd, LAYOUT_DATA *data, const LAYOUT_INFO *layout
  * InitializeTreeView [Internal]
  *
  * Called from WM_INITDIALOG handler.
- * 
+ *
  * PARAMS
  *  hwndParent [I] The BrowseForFolder dialog
  *  root       [I] ITEMIDLIST of the root shell folder
@@ -208,18 +210,18 @@ static void InitializeTreeView( browse_info *info )
     LPCITEMIDLIST root = info->lpBrowseInfo->pidlRoot;
 
     TRACE("%p\n", info );
-    
+
     Shell_GetImageLists(NULL, &hImageList);
 
     if (hImageList)
         SendMessageW( info->hwndTreeView, TVM_SETIMAGELIST, 0, (LPARAM)hImageList );
 
     /* We want to call InsertTreeViewItem down the code, in order to insert
-     * the root item of the treeview. Due to InsertTreeViewItem's signature, 
+     * the root item of the treeview. Due to InsertTreeViewItem's signature,
      * we need the following to do this:
      *
-     * + An ITEMIDLIST corresponding to _the parent_ of root. 
-     * + An ITEMIDLIST, which is a relative path from root's parent to root 
+     * + An ITEMIDLIST corresponding to _the parent_ of root.
+     * + An ITEMIDLIST, which is a relative path from root's parent to root
      *   (containing a single SHITEMID).
      * + An IShellFolder interface pointer of root's parent folder.
      *
@@ -229,7 +231,7 @@ static void InitializeTreeView( browse_info *info )
     pidlParent = ILClone(root);
     ILRemoveLastID(pidlParent);
     pidlChild = ILClone(ILFindLastID(root));
-    
+
     if (_ILIsDesktop(pidlParent)) {
         hr = SHGetDesktopFolder(&lpsfParent);
     } else {
@@ -354,7 +356,7 @@ static BOOL GetName(LPSHELLFOLDER lpsf, LPCITEMIDLIST lpi, DWORD dwFlags, LPWSTR
  *
  * PARAMS
  *  info       [I] data for the dialog
- *  lpsf       [I] IShellFolder interface of the item's parent shell folder 
+ *  lpsf       [I] IShellFolder interface of the item's parent shell folder
  *  pidl       [I] ITEMIDLIST of the child to insert, relative to parent
  *  pidlParent [I] ITEMIDLIST of the parent shell folder
  *  pEnumIL    [I] Iterator for the children of the item to be inserted
@@ -406,7 +408,7 @@ static HTREEITEM InsertTreeViewItem( browse_info *info, IShellFolder * lpsf,
 /******************************************************************************
  * FillTreeView [Internal]
  *
- * For each child (given by lpe) of the parent shell folder, which is given by 
+ * For each child (given by lpe) of the parent shell folder, which is given by
  * lpsf and whose PIDL is pidl, insert a treeview-item right under hParent
  *
  * PARAMS
@@ -428,7 +430,7 @@ static void FillTreeView( browse_info *info, IShellFolder * lpsf,
 
 	/* No IEnumIDList -> No children */
 	if (!lpe) return;
-	
+
 	SetCapture( hwnd );
 	SetCursor( LoadCursorA( 0, (LPSTR)IDC_WAIT ) );
 
@@ -735,7 +737,7 @@ static LRESULT BrsFolder_OnNotify( browse_info *info, UINT CtlID, LPNMHDR lpnmh 
     case TVN_ENDLABELEDITA:
     case TVN_ENDLABELEDITW:
         return BrsFolder_Treeview_Rename( info, (LPNMTVDISPINFOW)pnmtv );
-    
+
     case TVN_KEYDOWN:
         return BrsFolder_Treeview_Keydown( info, (LPNMTVKEYDOWN)pnmtv );
 
@@ -1006,7 +1008,7 @@ static BOOL BrsFolder_OnCommand( browse_info *info, UINT id )
     return FALSE;
 }
 
-static BOOL BrsFolder_OnSetExpanded(browse_info *info, LPVOID selection, 
+static BOOL BrsFolder_OnSetExpanded(browse_info *info, LPVOID selection,
     BOOL is_str, HTREEITEM *pItem)
 {
     LPITEMIDLIST pidlSelection = selection;
@@ -1016,7 +1018,7 @@ static BOOL BrsFolder_OnSetExpanded(browse_info *info, LPVOID selection,
 
     memset(&item, 0, sizeof(item));
 
-    /* If 'selection' is a string, convert to a Shell ID List. */ 
+    /* If 'selection' is a string, convert to a Shell ID List. */
     if (is_str) {
         IShellFolder *psfDesktop;
         HRESULT hr;
@@ -1025,10 +1027,10 @@ static BOOL BrsFolder_OnSetExpanded(browse_info *info, LPVOID selection,
         if (FAILED(hr))
             goto done;
 
-        hr = IShellFolder_ParseDisplayName(psfDesktop, NULL, NULL, 
+        hr = IShellFolder_ParseDisplayName(psfDesktop, NULL, NULL,
                      selection, NULL, &pidlSelection, NULL);
         IShellFolder_Release(psfDesktop);
-        if (FAILED(hr)) 
+        if (FAILED(hr))
             goto done;
     }
 #ifdef __REACTOS__
@@ -1083,16 +1085,16 @@ static BOOL BrsFolder_OnSetExpanded(browse_info *info, LPVOID selection,
         }
     }
 
-    if (_ILIsEmpty(pidlCurrent) && item.hItem) 
+    if (_ILIsEmpty(pidlCurrent) && item.hItem)
         bResult = TRUE;
 
 done:
     if (pidlSelection && pidlSelection != selection)
         ILFree(pidlSelection);
 
-    if (pItem) 
+    if (pItem)
         *pItem = item.hItem;
-    
+
     return bResult;
 }
 
@@ -1112,7 +1114,7 @@ static BOOL BrsFolder_OnSetSelectionA(browse_info *info, LPVOID selection, BOOL 
     LPWSTR selectionW = NULL;
     BOOL result = FALSE;
     int length;
-    
+
     if (!is_str)
         return BrsFolder_OnSetSelectionW(info, selection, is_str);
 
@@ -1363,7 +1365,7 @@ LPITEMIDLIST WINAPI SHBrowseForFolderW (LPBROWSEINFOW lpbi)
         wDlgId = IDD_BROWSE_FOR_FOLDER;
     r = DialogBoxParamW( shell32_hInstance, MAKEINTRESOURCEW(wDlgId), lpbi->hwndOwner,
 	                 BrsFolderDlgProc, (LPARAM)&info );
-    if (SUCCEEDED(hr)) 
+    if (SUCCEEDED(hr))
         OleUninitialize();
     if (!r)
     {
