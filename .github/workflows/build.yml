@@ -139,10 +139,7 @@ jobs:
     runs-on: windows-latest
     steps:
     - name: Install packages
-      # HACK: remove all packages which contain gcc binary
-      run: |
-         choco install ninja -y
-         choco uninstall mingw strawberryperl -y
+      run: choco install ninja -y
     - name: Install Flex and Bison
       run: |
         curl -O https://svn.reactos.org/storage/vperevertkin/flexbison.7z
@@ -171,13 +168,13 @@ jobs:
       run: |
         cmake --build . --target bootcd
         cmake --build . --target livecd
-    - name: Upload bootcd
-      uses: actions/upload-artifact@v1
-      with:
-        name: reactos-msvc-amd64-${{github.sha}}
-        path: build/bootcd.iso
-    - name: Upload livecd
-      uses: actions/upload-artifact@v1
-      with:
-        name: reactos-msvc-amd64-${{github.sha}}
-        path: build/livecd.iso
+    # - name: Upload bootcd
+    #   uses: actions/upload-artifact@v1
+    #   with:
+    #     name: reactos-msvc-amd64-${{github.sha}}
+    #     path: build/bootcd.iso
+    # - name: Upload livecd
+    #   uses: actions/upload-artifact@v1
+    #   with:
+    #     name: reactos-msvc-amd64-${{github.sha}}
+    #     path: build/livecd.iso
