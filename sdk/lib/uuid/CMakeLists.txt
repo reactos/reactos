@@ -223,5 +223,5 @@ list(APPEND SOURCE
     precomp.h)
 
 add_library(uuid ${SOURCE})
-add_pch(uuid precomp.h SOURCE)
+add_pch(uuid precomp.h)
 add_dependencies(uuid psdk)
