@@ -17,6 +17,7 @@
  *
  */
 
+#ifndef __REACTOS_USE_PCH__
 #include <stdarg.h>
 #include <math.h>
 
@@ -30,6 +31,7 @@
 #include "gdiplus.h"
 #include "gdiplus_private.h"
 #include "wine/debug.h"
+#endif /* __REACTOS_USE_PCH__ */
 
 WINE_DEFAULT_DEBUG_CHANNEL(gdiplus);
 

@@ -16,6 +16,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#ifndef __REACTOS_USE_PCH__
 #include <stdarg.h>
 #include <math.h>
 #include <limits.h>
@@ -39,6 +40,7 @@
 #include "gdiplus_private.h"
 #include "wine/debug.h"
 #include "wine/list.h"
+#endif /* __REACTOS_USE_PCH__ */
 
 WINE_DEFAULT_DEBUG_CHANNEL(gdiplus);
 
@@ -49,7 +51,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(gdiplus);
  * This have the following implications. It:
  * 1. fails the current gdiplus test case.
  * 2. is not what Windows does.
- * 
+ *
  * We therefore "obfuscate" the 'contid' a little to more match Windows'
  * behaviour. The observable behviour should still remain the same,
  * except for handing out more "unique" id's.

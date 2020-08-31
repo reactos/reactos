@@ -17,6 +17,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#ifndef __REACTOS_USE_PCH__
 #include <stdarg.h>
 
 #include "windef.h"
@@ -26,13 +27,16 @@
 #include "winreg.h"
 #include "wine/debug.h"
 #include "wine/unicode.h"
+#endif /* __REACTOS_USE_PCH__ */
 
 WINE_DEFAULT_DEBUG_CHANNEL (gdiplus);
 
+#ifndef __REACTOS_USE_PCH__
 #include "objbase.h"
 
 #include "gdiplus.h"
 #include "gdiplus_private.h"
+#endif /* __REACTOS_USE_PCH__ */
 
 /* PANOSE is 10 bytes in size, need to pack the structure properly */
 #include "pshpack2.h"

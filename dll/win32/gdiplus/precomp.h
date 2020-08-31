@@ -9,7 +9,13 @@
 #define NONAMELESSUNION
 #define COBJMACROS
 
+#include <assert.h>
+
 #include "gdiplus_private.h"
+
+#include <ole2.h>
+#include <winreg.h>
+#include <shlwapi.h>
 
 #include <wine/unicode.h>
 #include <wine/debug.h>

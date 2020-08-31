@@ -16,6 +16,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#ifndef __REACTOS_USE_PCH__
 #include <stdarg.h>
 #include <math.h>
 #include <assert.h>
@@ -40,6 +41,7 @@
 #include "gdiplus_private.h"
 #include "wine/debug.h"
 #include "wine/list.h"
+#endif /* __REACTOS_USE_PCH__ */
 
 WINE_DEFAULT_DEBUG_CHANNEL(gdiplus);
 
