@@ -25,6 +25,8 @@
 
 #define IDC_NOTIFY_OPTIONS 5000
 
+#define PAGE_SIZE 0x1000
+
 typedef struct
 {
     DWORD hwnd;
@@ -34,6 +36,10 @@ typedef struct
     HICON hIcon;
     WCHAR text[64];
 }TRAYDATA;
+
+HWND hListView = NULL;
+HWND hCombo = NULL;
+HIMAGELIST hImageList;
 
 // Returns TRUE if successful, and FALSE otherwise. 
 BOOL AddListViewColumn(HWND hWndListView, LPWSTR label, INT iCol, int w)
@@ -69,34 +75,29 @@ BOOL InsertItem(HWND hListView, TBBUTTON *tb, TRAYDATA *data, int id)
 HWND FindTrayToolbarWindowHandle()
 {
     HWND hwnd;
-    if ((hwnd = FindWindowW(L"Shell_TrayWnd", NULL)))
-        if ((hwnd = FindWindowExW(hwnd, NULL, L"TrayNotifyWnd", NULL)))
-            if ((hwnd = FindWindowExW(hwnd, NULL, L"SysPager", NULL)))
-                if ((hwnd = FindWindowExW(hwnd, NULL, L"ToolbarWindow32", NULL)))
-                    return hwnd;
-
-    return NULL;
+    hwnd = FindWindowW(L"Shell_TrayWnd", NULL);
+    hwnd = FindWindowExW(hwnd, NULL, L"TrayNotifyWnd", NULL);
+    hwnd = FindWindowExW(hwnd, NULL, L"SysPager", NULL);
+    hwnd = FindWindowExW(hwnd, NULL, L"ToolbarWindow32", NULL);
+    return hwnd;
 }
 
 BOOL ExtractData(HWND hListView, HIMAGELIST hImageList)
 {
-    const int BUFFER_SIZE = 0x1000;
-    VOID* pLocalBuffer = (VOID*)new CHAR[BUFFER_SIZE];
+    VOID* pLocalBuffer = (VOID*)new CHAR[PAGE_SIZE];
 
     HWND hToolbar = FindTrayToolbarWindowHandle();
     int count = SendMessageW(hToolbar, TB_BUTTONCOUNT, 0, 0);
 
     DWORD processId = 0;
     GetWindowThreadProcessId(hToolbar, &processId);
-    HANDLE hProcess = OpenProcess(PROCESS_ALL_ACCESS, FALSE, processId);
+    HANDLE hProcess = OpenProcess(PROCESS_VM_READ | PROCESS_VM_OPERATION, FALSE, processId);
     if (!hProcess)
         return FALSE;
 
-    VOID *pRemoteBuffer = VirtualAllocEx(hProcess, NULL, BUFFER_SIZE, MEM_COMMIT, PAGE_READWRITE);
+    VOID *pRemoteBuffer = VirtualAllocEx(hProcess, NULL, PAGE_SIZE, MEM_COMMIT, PAGE_READWRITE);
     if (!pRemoteBuffer)
         return FALSE;
-
-    ZeroMemory(pLocalBuffer, BUFFER_SIZE);
 
     hImageList = ImageList_Create(BITMAP_WIDTH, BITMAP_HEIGHT, FALSE, count, 0);
 
@@ -107,14 +108,14 @@ BOOL ExtractData(HWND hListView, HIMAGELIST hImageList)
         // TBBUTTON
         if (SendMessageW(hToolbar, TB_GETBUTTON, i, (LPARAM)pRemoteBuffer))
         {
-            pBytesRead = 0;
+            dwBytesRead = 0;
             if (ReadProcessMemory(hProcess, pRemoteBuffer, pLocalBuffer, sizeof(TBBUTTON), &dwBytesRead))
             {
          //  dwData
-                pBytesRead = 0;
+                dwBytesRead = 0;
                 TBBUTTON *tbb = reinterpret_cast<TBBUTTON*>(pLocalBuffer);
                 TRAYDATA *pData = reinterpret_cast<TRAYDATA*>(((CHAR*)pLocalBuffer) + sizeof(TBBUTTON));
-                if (ReadProcessMemory(hProcess, (VOID*)tbb->dwData, pData, sizeof(TRAYDATA), &pBytesRead))
+                if (ReadProcessMemory(hProcess, (VOID*)tbb->dwData, pData, sizeof(TRAYDATA), &dwBytesRead))
                 {
                     HICON hIcon = CopyIcon(pData->hIcon);
                     if (hIcon)
@@ -130,16 +131,12 @@ BOOL ExtractData(HWND hListView, HIMAGELIST hImageList)
     VirtualFree(pRemoteBuffer, 0, MEM_RELEASE);
     CloseHandle(hProcess);
 
-    delete (CHAR*)pLocalBuffer;
+    delete[] (CHAR*)pLocalBuffer;
     return TRUE;
 }
 
 INT_PTR CALLBACK CustomizeNotifyIconsProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 {
-    static HWND hListView = NULL;
-    static HWND hCombo = NULL;
-    static HIMAGELIST hImageList;
-
     switch (Message)
     {
         case WM_INITDIALOG:
@@ -154,19 +151,19 @@ INT_PTR CALLBACK CustomizeNotifyIconsProc(HWND hwnd, UINT Message, WPARAM wParam
             if (hf)
                 SendMessage(hCombo, WM_SETFONT, (WPARAM)hf, (LPARAM)TRUE);
 
-            LoadStringW(NULL, IDS_NOTIFY_SHOWALL, szText, sizeof(szText)/sizeof(szText[0]));
+            LoadStringW(NULL, IDS_NOTIFY_SHOWALL, szText, _countof(szText));
             SendMessageW(hCombo, CB_ADDSTRING, 0, (LPARAM)szText);
-            LoadStringW(NULL, IDS_NOTIFY_HIDEALL, szText, sizeof(szText)/sizeof(szText[0]));
+            LoadStringW(NULL, IDS_NOTIFY_HIDEALL, szText, _countof(szText));
             SendMessageW(hCombo, CB_ADDSTRING, 1, (LPARAM)szText);
-            LoadStringW(NULL, IDS_NOTIFY_SHOWNOTIFY, szText, sizeof(szText)/sizeof(szText[0]));
+            LoadStringW(NULL, IDS_NOTIFY_SHOWNOTIFY, szText, _countof(szText));
             SendMessageW(hCombo, CB_ADDSTRING, 2, (LPARAM)szText);
             SendMessageW(hCombo, CB_SETCURSEL, 0, 0);
 
             ListView_SetExtendedListViewStyle(hListView, LVS_EX_FULLROWSELECT);
 
-            LoadStringW(NULL, IDS_NOTIFY_COLUMN1, szText, sizeof(szText)/sizeof(szText[0]));
+            LoadStringW(NULL, IDS_NOTIFY_COLUMN1, szText, _countof(szText));
             AddListViewColumn(hListView, szText, 0, 146);
-            LoadStringW(NULL, IDS_NOTIFY_COLUMN2, szText, sizeof(szText)/sizeof(szText[0]));
+            LoadStringW(NULL, IDS_NOTIFY_COLUMN2, szText, _countof(szText));
             AddListViewColumn(hListView, szText, 1, 200);
 
             ExtractData(hListView, hImageList);
