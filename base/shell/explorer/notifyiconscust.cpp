@@ -116,8 +116,8 @@ BOOL ExtractData(HWND hListView, HIMAGELIST hImageList)
                 TRAYDATA *pData = reinterpret_cast<TRAYDATA*>(((CHAR*)pLocalBuffer) + sizeof(TBBUTTON));
                 if (ReadProcessMemory(hProcess, (VOID*)tbb->dwData, pData, sizeof(TRAYDATA), &pBytesRead))
                 {
-                    HICON hIcon;
-                    if ((hIcon = CopyIcon(pData->hIcon)))
+                    HICON hIcon = CopyIcon(pData->hIcon);
+                    if (hIcon)
                         ImageList_AddIcon(hImageList, hIcon);
 
                     InsertItem(hListView, tbb, pData, i);
