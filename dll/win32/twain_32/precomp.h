@@ -9,6 +9,8 @@
 
 #include <winuser.h>
 
+#include "resource.h"
+
 #include <wine/debug.h>
 
 #endif /* !_TWAIN32_PRECOMP_H */

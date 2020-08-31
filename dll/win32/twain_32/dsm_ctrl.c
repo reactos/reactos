@@ -19,6 +19,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#ifndef __REACTOS_USE_PCH__
 #include <stdlib.h>
 #include <stdarg.h>
 #include <stdio.h>
@@ -30,6 +31,7 @@
 #include "twain_i.h"
 #include "resource.h"
 #include "wine/debug.h"
+#endif /* __REACTOS_USE_PCH__ */
 
 WINE_DEFAULT_DEBUG_CHANNEL(twain);
 
@@ -60,7 +62,7 @@ twain_add_onedriver(const char *dsname) {
 		ERR("Failed to load TWAIN Source %s\n", debugstr_a(dsname));
 		return;
 	}
-	dsEntry = (DSENTRYPROC)GetProcAddress(hmod, "DS_Entry"); 
+	dsEntry = (DSENTRYPROC)GetProcAddress(hmod, "DS_Entry");
 	if (!dsEntry) {
 		ERR("Failed to find DS_Entry() in TWAIN DS %s\n", debugstr_a(dsname));
 		return;
@@ -322,8 +324,8 @@ TW_UINT16 TWAIN_OpenDS (pTW_IDENTITY pOrigin, TW_MEMREF pData)
                 HeapFree(GetProcessHeap(), 0, newSource);
 		return TWRC_FAILURE;
 	}
-	newSource->hmod = hmod; 
-	newSource->dsEntry = (DSENTRYPROC)GetProcAddress(hmod, "DS_Entry"); 
+	newSource->hmod = hmod;
+	newSource->dsEntry = (DSENTRYPROC)GetProcAddress(hmod, "DS_Entry");
 	/* Assign id for the opened data source */
 	pIdentity->Id = DSM_sourceId ++;
 	if (TWRC_SUCCESS != newSource->dsEntry (pOrigin, DG_CONTROL, DAT_IDENTITY, MSG_OPENDS, pIdentity)) {
