@@ -19,6 +19,7 @@
  */
 
 
+#ifndef __REACTOS_USE_PCH__
 #include "config.h"
 
 #include <assert.h>
@@ -27,6 +28,7 @@
 #endif
 
 #include "wine/debug.h"
+#endif /* __REACTOS_USE_PCH__ */
 
 /* Both XDR and XSD are valid XML
  * We just convert the doc tree, no need for a parser.

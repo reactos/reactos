@@ -18,6 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#ifndef __REACTOS_USE_PCH__
 #include "config.h"
 
 #define COBJMACROS
@@ -54,6 +55,7 @@
 #include "msxml_private.h"
 
 #include "wine/debug.h"
+#endif /* __REACTOS_USE_PCH__ */
 
 #ifdef HAVE_LIBXML2
 
@@ -876,7 +878,7 @@ HRESULT node_get_text(const xmlnode *This, BSTR *text)
 
     TRACE("%p %s\n", This, debugstr_w(str) );
     *text = str;
- 
+
     return S_OK;
 }
 

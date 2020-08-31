@@ -20,6 +20,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#ifndef __REACTOS_USE_PCH__
 #define COBJMACROS
 
 #include "config.h"
@@ -42,6 +43,7 @@
 #include "msxml_private.h"
 
 #include "wine/debug.h"
+#endif /* __REACTOS_USE_PCH__ */
 
 /* This file implements the object returned by a XPath query. Note that this is
  * not the IXMLDOMNodeList returned by childNodes - it's implemented in nodelist.c.

@@ -27,6 +27,7 @@ list(APPEND SOURCE
     doctype.c
     domdoc.c
     domimpl.c
+    factory.c
     element.c
     entityref.c
     httprequest.c
@@ -43,15 +44,12 @@ list(APPEND SOURCE
     selection.c
     stylesheet.c
     text.c
+    uuid.c
     xdr.c
     xmldoc.c
     xmlelem.c
     xmlparser.c
-    xmlview.c)
-
-list(APPEND PCH_SKIP_SOURCE
-    factory.c
-    uuid.c
+    xmlview.c
     xslpattern.tab.c
     xslpattern.yy.c)
 
@@ -73,10 +71,17 @@ add_library(msxml3 MODULE
     ${CMAKE_CURRENT_BINARY_DIR}/msxml3_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/msxml3.def)
 
+list(APPEND PCH_SKIP_SOURCE
+    factory.c
+    uuid.c
+    xslpattern.tab.c
+    xslpattern.yy.c
+    ${CMAKE_CURRENT_BINARY_DIR}/msxml3_stubs.c)
+
 add_idl_headers(xmlparser_idlheader xmlparser.idl)
 set_module_type(msxml3 win32dll)
 target_link_libraries(msxml3 libxml2 iconv-static uuid wine zlib)
 add_importlibs(msxml3 urlmon ws2_32 shlwapi oleaut32 ole32 user32 msvcrt kernel32 ntdll)
 add_dependencies(msxml3 xmlparser_idlheader stdole2) # msxml3_v1.tlb needs stdole2.tlb
-add_pch(msxml3 precomp.h "${PCH_SKIP_SOURCE}")
+add_pch(msxml3 precomp.h ${PCH_SKIP_SOURCE})
 add_cd_file(TARGET msxml3 DESTINATION reactos/system32 FOR all)

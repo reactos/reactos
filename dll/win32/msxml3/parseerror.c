@@ -19,6 +19,7 @@
  */
 
 
+#ifndef __REACTOS_USE_PCH__
 #define COBJMACROS
 
 #include "config.h"
@@ -39,6 +40,7 @@
 #include "msxml_private.h"
 
 #include "wine/debug.h"
+#endif /* __REACTOS_USE_PCH__ */
 
 WINE_DEFAULT_DEBUG_CHANNEL(msxml);
 
@@ -193,7 +195,7 @@ static HRESULT WINAPI parseError_get_reason(
 {
     parse_error_t *This = impl_from_IXMLDOMParseError2( iface );
     TRACE("(%p)->(%p)\n", This, reason);
-    
+
     if(!This->reason)
     {
         *reason = NULL;

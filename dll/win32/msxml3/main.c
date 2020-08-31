@@ -19,6 +19,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#ifndef __REACTOS_USE_PCH__
 #include "config.h"
 #include "wine/port.h"
 
@@ -58,6 +59,7 @@
 #include "wine/library.h"
 
 #include "msxml_private.h"
+#endif /* __REACTOS_USE_PCH__ */
 
 HINSTANCE MSXML_hInstance = NULL;
 
