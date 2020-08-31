@@ -102,7 +102,7 @@ BOOL ExtractData(HWND hListView, HIMAGELIST hImageList)
 
     for (int i = 0; i < count; i++)
     {
-        DWORD pBytesRead;
+        SIZE_T dwBytesRead;
 
         // TBBUTTON
         if (SendMessageW(hToolbar, TB_GETBUTTON, i, (LPARAM)pRemoteBuffer))
