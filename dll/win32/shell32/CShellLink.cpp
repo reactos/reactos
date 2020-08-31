@@ -137,7 +137,9 @@
  *
  */
 
+#ifndef __REACTOS_USE_PCH__
 #include "precomp.h"
+#endif
 
 #include <appmgmt.h>
 

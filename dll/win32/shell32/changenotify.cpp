@@ -5,7 +5,9 @@
  * COPYRIGHT:   Copyright 2020 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
+#ifndef __REACTOS_USE_PCH__
 #include "precomp.h"
+#endif
 
 WINE_DEFAULT_DEBUG_CHANNEL(shcn);
 

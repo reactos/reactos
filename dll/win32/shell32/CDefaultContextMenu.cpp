@@ -6,7 +6,9 @@
  * PROGRAMMERS: Johannes Anderwald (johannes.anderwald@reactos.org)
  */
 
+#ifndef __REACTOS_USE_PCH__
 #include "precomp.h"
+#endif
 
 WINE_DEFAULT_DEBUG_CHANNEL(dmenu);
 
@@ -504,7 +506,7 @@ UINT
 CDefaultContextMenu::AddStaticContextMenusToMenu(
     HMENU hMenu,
     UINT* pIndexMenu,
-    UINT iIdCmdFirst, 
+    UINT iIdCmdFirst,
     UINT iIdCmdLast)
 {
     MENUITEMINFOW mii;

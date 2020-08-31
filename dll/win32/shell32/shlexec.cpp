@@ -20,7 +20,10 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#ifndef __REACTOS_USE_PCH__
 #include "precomp.h"
+#endif
+
 #include <undocshell.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(exec);
@@ -617,13 +620,13 @@ static BOOL SHELL_TryAppPathW( LPCWSTR szName, LPWSTR lpResult, WCHAR **env)
     wcscpy(buffer, L"Software\\Microsoft\\Windows\\CurrentVersion\\App Paths\\");
     wcscat(buffer, szName);
     res = RegOpenKeyExW(HKEY_LOCAL_MACHINE, buffer, 0, KEY_READ, &hkApp);
-    if (res) 
+    if (res)
     {
         // Add ".exe" extension, if extension does not exists
         if (PathAddExtensionW(buffer, wszExe))
         {
             res = RegOpenKeyExW(HKEY_LOCAL_MACHINE, buffer, 0, KEY_READ, &hkApp);
-        }        
+        }
         if (res) goto end;
     }
 

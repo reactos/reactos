@@ -6,7 +6,9 @@
  *              Copyright 2019 Mark Jansen (mark.jansen@reactos.org)
  */
 
+#ifndef __REACTOS_USE_PCH__
 #include "precomp.h"
+#endif
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
@@ -133,7 +135,7 @@ HRESULT IEnumFORMATETC_Constructor(UINT cfmt, const FORMATETC afmt[], IEnumFORMA
 class CIDLDataObj :
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
     public IDataObject,
-    public IAsyncOperation 
+    public IAsyncOperation
 {
 private:
     CSimpleArray<FORMATETC> m_Formats;
@@ -355,7 +357,7 @@ HRESULT WINAPI CIDLDataObj::InOperation(BOOL *pfInAsyncOp)
     FIXME("(%p)->()\n", this);
     return E_NOTIMPL;
 }
-HRESULT WINAPI CIDLDataObj::SetAsyncMode(BOOL fDoOpAsync) 
+HRESULT WINAPI CIDLDataObj::SetAsyncMode(BOOL fDoOpAsync)
 {
     TRACE("(%p)->()\n", this);
     m_doasync = fDoOpAsync;

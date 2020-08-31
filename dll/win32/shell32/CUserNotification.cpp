@@ -19,7 +19,9 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
  */
 
+#ifndef __REACTOS_USE_PCH__
 #include "precomp.h"
+#endif
 
 #include <mmsystem.h>
 #undef PlaySound

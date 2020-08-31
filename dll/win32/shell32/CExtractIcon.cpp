@@ -4,10 +4,12 @@
  * FILE:            dll/win32/shell32/extracticon.c
  * PURPOSE:         Icon extraction
  *
- * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.org)
+ * PROGRAMMERS:     HervÃ© Poussineau (hpoussin@reactos.org)
  */
 
+#ifndef __REACTOS_USE_PCH__
 #include "precomp.h"
+#endif
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 

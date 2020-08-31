@@ -19,7 +19,9 @@
  *
  */
 
+#ifndef __REACTOS_USE_PCH__
 #include "precomp.h"
+#endif
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 

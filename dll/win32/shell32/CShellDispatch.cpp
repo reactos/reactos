@@ -6,7 +6,10 @@
  *              Copyright 2018 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
+#ifndef __REACTOS_USE_PCH__
 #include "precomp.h"
+#endif
+
 #include "winsvc.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
