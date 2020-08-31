@@ -34,6 +34,7 @@
 #pragma alloc_text(INIT, ExLuidInitialization)
 #endif
 
+C_ASSERT(sizeof(UUID_CACHED_VALUES_STRUCT) - FIELD_OFFSET(UUID_CACHED_VALUES_STRUCT, ClockSeqHiAndReserved) >= sizeof(((GUID *)0)->Data4));
 
 /* GLOBALS ****************************************************************/
 
@@ -400,7 +401,6 @@ ExUuidCreate(OUT UUID *Uuid)
         {
             Time.QuadPart = ExpUuidCachedValues.Time;
 
-            C_ASSERT(sizeof(UUID_CACHED_VALUES_STRUCT) - FIELD_OFFSET(UUID_CACHED_VALUES_STRUCT, ClockSeqHiAndReserved) >= sizeof(Uuid->Data4));
             RtlCopyMemory(&Uuid->Data4[0],
                           &ExpUuidCachedValues.ClockSeqHiAndReserved,
                           sizeof(Uuid->Data4));
