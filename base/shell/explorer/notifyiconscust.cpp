@@ -62,10 +62,7 @@ BOOL InsertItem(HWND hListView, TBBUTTON *tb, TRAYDATA *data, int id)
     iItem.iItem = id;
     iItem.iImage = id;
 
-    if (ListView_InsertItem(hListView, &iItem) == -1)
-        return FALSE;
-    else
-        return TRUE;
+    return (ListView_InsertItem(hListView, &iItem) != -1);
 }
 
 // Return Toolbar Window hander on successful, Null otherwise
