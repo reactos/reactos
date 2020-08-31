@@ -55,6 +55,7 @@ BOOL GetPhysicalFileSize(LPCWSTR PathBuffer, PULARGE_INTEGER Size)
                         &IoStatusBlock,
                         FILE_SHARE_READ,
                         FILE_SYNCHRONOUS_IO_NONALERT);
+    RtlFreeUnicodeString(&FileName);
     if (!NT_SUCCESS(Status))
     {
         ERR("NtOpenFile failed for %S (Status 0x%08lx)\n", PathBuffer, Status);
@@ -1386,7 +1387,6 @@ CFileDefExt::CountFolderAndFiles(HWND hwndDlg, LPWSTR pwszBuf, UINT cchBufMax, D
     --cchFilenameMax;
 
     // Store path without wildcard
-    ZeroMemory(PathBuffer, sizeof(PathBuffer));
     StringCchCopyW(PathBuffer, sizeof(PathBuffer), pwszBuf);
 
     /* Find all files, FIXME: shouldn't be "*"? */
