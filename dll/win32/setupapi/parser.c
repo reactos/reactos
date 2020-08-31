@@ -2,7 +2,7 @@
  * INF file parsing
  *
  * Copyright 2002 Alexandre Julliard for CodeWeavers
- *           2005-2006 Hervé Poussineau (hpoussin@reactos.org)
+ *           2005-2006 HervÃ© Poussineau (hpoussin@reactos.org)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -21,7 +21,9 @@
 
 /* Partially synced with Wine Staging 2.2 */
 
+#ifndef __REACTOS_USE_PCH__
 #include "setupapi_private.h"
+#endif
 
 #include <ndk/obfuncs.h>
 

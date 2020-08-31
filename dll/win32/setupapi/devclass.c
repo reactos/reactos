@@ -2,7 +2,7 @@
  * SetupAPI device class-related functions
  *
  * Copyright 2000 Andreas Mohr for CodeWeavers
- *           2005-2006 Hervé Poussineau (hpoussin@reactos.org)
+ *           2005-2006 HervÃ© Poussineau (hpoussin@reactos.org)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,7 +19,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#ifndef __REACTOS_USE_PCH__
 #include "setupapi_private.h"
+#endif
 
 #include <wingdi.h>
 #include <shellapi.h>
@@ -470,7 +472,7 @@ SetupDiGetClassImageListExA(
     return ret;
 }
 
-static BOOL WINAPI 
+static BOOL WINAPI
 SETUP_GetClassIconInfo(IN CONST GUID *ClassGuid, OUT PINT OutIndex, OUT LPWSTR *OutDllName)
 {
     LPWSTR Buffer = NULL;
@@ -1506,7 +1508,7 @@ SetupDiGetClassDevPropertySheetsW(
             {
                 if (PropPageData.PropertySheetHeader->nPages < PropertySheetHeaderPageListSize)
                 {
-                    PropPageData.PropertySheetHeader->phpage[PropPageData.PropertySheetHeader->nPages] = 
+                    PropPageData.PropertySheetHeader->phpage[PropPageData.PropertySheetHeader->nPages] =
                         InstallerPropPageData.DynamicPages[i];
                     PropPageData.PropertySheetHeader->nPages++;
                 }

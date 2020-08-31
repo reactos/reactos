@@ -1,4 +1,4 @@
-/* 
+/*
  * Setupapi cabinet routines
  *
  * Copyright 2003 Gregory M. Turner
@@ -20,10 +20,12 @@
  *
  * Many useful traces are commented in code, uncomment them if you have
  * trouble and run with WINEDEBUG=+setupapi
- * 
+ *
  */
 
+#ifndef __REACTOS_USE_PCH__
 #include "setupapi_private.h"
+#endif
 
 #include <fcntl.h>
 #include <share.h>

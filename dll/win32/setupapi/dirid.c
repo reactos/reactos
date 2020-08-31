@@ -18,7 +18,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#ifndef __REACTOS_USE_PCH__
 #include "setupapi_private.h"
+#endif
 
 #define MAX_SYSTEM_DIRID DIRID_PRINTPROCESSOR
 #define MIN_CSIDL_DIRID 0x4000
@@ -204,7 +206,7 @@ static BOOL store_user_dirid( HINF hinf, int id, WCHAR *str )
                 new = HeapReAlloc( GetProcessHeap(), 0, user_dirids,
                                                   new_size * sizeof(*new) );
 	    else
-                new = HeapAlloc( GetProcessHeap(), 0, 
+                new = HeapAlloc( GetProcessHeap(), 0,
                                                   new_size * sizeof(*new) );
 
             if (!new) return FALSE;

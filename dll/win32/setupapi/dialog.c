@@ -18,7 +18,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#ifndef __REACTOS_USE_PCH__
 #include "setupapi_private.h"
+#endif
 
 struct promptdisk_params {
     PCWSTR DialogTitle;

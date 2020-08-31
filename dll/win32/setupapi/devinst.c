@@ -2,7 +2,7 @@
  * SetupAPI device installer
  *
  * Copyright 2000 Andreas Mohr for CodeWeavers
- *           2005-2006 Hervé Poussineau (hpoussin@reactos.org)
+ *           2005-2006 HervÃ© Poussineau (hpoussin@reactos.org)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,7 +19,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#ifndef __REACTOS_USE_PCH__
 #include "setupapi_private.h"
+#endif
 
 /* Unicode constants */
 static const WCHAR BackSlash[] = {'\\',0};
@@ -3410,7 +3412,7 @@ BOOL WINAPI IntSetupDiSetDeviceRegistryPropertyAW(
                 hKey, PropertyMap[Property].nameA, 0,
                     PropertyMap[Property].regType, PropertyBuffer,
                     PropertyBufferSize);
-        } 
+        }
         else
         {
             l = RegSetValueExW(
