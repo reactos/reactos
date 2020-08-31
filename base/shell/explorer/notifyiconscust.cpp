@@ -108,7 +108,7 @@ BOOL ExtractData(HWND hListView, HIMAGELIST hImageList)
         if (SendMessageW(hToolbar, TB_GETBUTTON, i, (LPARAM)pRemoteBuffer))
         {
             pBytesRead = 0;
-            if (ReadProcessMemory(hProcess, pRemoteBuffer, pLocalBuffer, sizeof(TBBUTTON), &pBytesRead))
+            if (ReadProcessMemory(hProcess, pRemoteBuffer, pLocalBuffer, sizeof(TBBUTTON), &dwBytesRead))
             {
          //  dwData
                 pBytesRead = 0;
