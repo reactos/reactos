@@ -208,7 +208,7 @@ DocumentPropertiesA(HWND hWnd, HANDLE hPrinter, LPSTR pDeviceName, PDEVMODEA pDe
     PWSTR pwszDeviceName = NULL;
     PDEVMODEW pdmwInput = NULL;
     PDEVMODEW pdmwOutput = NULL;
-    BOOL bReturnValue = -1;
+    LONG lReturnValue = -1;
     DWORD cch;
 
     TRACE("DocumentPropertiesA(%p, %p, %s, %p, %p, %lu)\n", hWnd, hPrinter, pDeviceName, pDevModeOutput, pDevModeInput, fMode);
@@ -254,15 +254,10 @@ DocumentPropertiesA(HWND hWnd, HANDLE hPrinter, LPSTR pDeviceName, PDEVMODEA pDe
         }
     }
 
-    bReturnValue = DocumentPropertiesW(hWnd, hPrinter, pwszDeviceName, pdmwOutput, pdmwInput, fMode);
-    TRACE("bReturnValue from DocumentPropertiesW is '%ld'.\n", bReturnValue);
+    lReturnValue = DocumentPropertiesW(hWnd, hPrinter, pwszDeviceName, pdmwOutput, pdmwInput, fMode);
+    TRACE("lReturnValue from DocumentPropertiesW is '%ld'.\n", lReturnValue);
 
-    if (pwszDeviceName)
-    {
-        HeapFree(hProcessHeap, 0, pwszDeviceName);
-    }
-
-    if (bReturnValue < 0)
+    if (lReturnValue < 0)
     {
         TRACE("DocumentPropertiesW failed!\n");
         goto Cleanup;
@@ -283,7 +278,7 @@ Cleanup:
     if (pdmwOutput)
         HeapFree(hProcessHeap, 0, pdmwOutput);
 
-    return bReturnValue;
+    return lReturnValue;
 }
 
 static PRINTER_INFO_9W * get_devmodeW(HANDLE hprn)
