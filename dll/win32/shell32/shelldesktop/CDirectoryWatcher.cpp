@@ -4,7 +4,10 @@
  * PURPOSE:     Shell change notification
  * COPYRIGHT:   Copyright 2020 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
+#ifndef __REACTOS_USE_PCH__
 #include "shelldesktop.h"
+#endif
+
 #include "CDirectoryWatcher.h"
 #include <process.h>     // for _beginthreadex
 #include <assert.h>      // for assert

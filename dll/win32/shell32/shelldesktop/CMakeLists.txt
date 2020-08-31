@@ -14,7 +14,9 @@ list(APPEND SOURCE
     CDesktopBrowser.cpp
     CDirectoryWatcher.cpp
     CDirectoryList.cpp
-    dde.cpp)
+    dde.cpp
+    shelldesktop.h)
 
 add_library(shelldesktop ${SOURCE})
+add_pch(shelldesktop shelldesktop.h)
 add_dependencies(shelldesktop xdk psdk)
