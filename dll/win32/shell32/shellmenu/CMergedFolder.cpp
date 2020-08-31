@@ -17,7 +17,10 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
+
+#ifndef __REACTOS_USE_PCH__
 #include "shellmenu.h"
+#endif /* __REACTOS_USE_PCH__ */
 #include <atlwin.h>
 #include <shlwapi_undoc.h>
 
@@ -90,7 +93,7 @@ CEnumMergedFolder::CEnumMergedFolder() :
     m_hDsaCount(0)
 {
 }
-    
+
 CEnumMergedFolder::~CEnumMergedFolder()
 {
     DSA_DestroyCallback(m_hDsa, s_DsaDeleteCallback, this);
@@ -104,7 +107,7 @@ int  CEnumMergedFolder::DsaDeleteCallback(LocalPidlInfo * info)
     CoTaskMemFree((LPVOID)info->parseName);
     return 0;
 }
-    
+
 int CALLBACK CEnumMergedFolder::s_DsaDeleteCallback(void *pItem, void *pData)
 {
     CEnumMergedFolder * mf = (CEnumMergedFolder*) pData;
@@ -270,7 +273,7 @@ HRESULT CEnumMergedFolder::FindPidlInList(HWND hwndOwner, LPCITEMIDLIST pcidl, L
         LocalPidlInfo * pInfo = (LocalPidlInfo *) DSA_GetItemPtr(m_hDsa, i);
         if (!pInfo)
             return E_FAIL;
-        
+
         TRACE("Comparing with item at %d with parent %p and pidl { cb=%d }\n", i, pInfo->parent, pInfo->pidl->mkid.cb);
 
         hr = pInfo->parent->CompareIDs(0, pInfo->pidl, pcidl);
@@ -393,7 +396,7 @@ CMergedFolder::CMergedFolder() :
 {
 }
 
-CMergedFolder::~CMergedFolder() 
+CMergedFolder::~CMergedFolder()
 {
     if (m_UserLocalPidl) ILFree(m_UserLocalPidl);
     if (m_AllUsersPidl)  ILFree(m_AllUsersPidl);
@@ -409,7 +412,7 @@ HRESULT STDMETHODCALLTYPE CMergedFolder::AddNameSpace(LPGUID lpGuid, IShellFolde
     }
 
     TRACE("AddNameSpace %p %p\n", m_UserLocal.p, m_AllUsers.p);
-    
+
     // FIXME: Use a DSA to store the list of merged namespaces, together with their related info (psf, pidl, ...)
     // For now, assume only 2 will ever be used, and ignore all the other data.
     if (!m_UserLocal)
@@ -513,7 +516,7 @@ HRESULT STDMETHODCALLTYPE CMergedFolder::BindToObject(
 {
     LocalPidlInfo info;
     HRESULT hr;
-    
+
     hr = m_EnumSource->FindPidlInList(NULL, pidl, &info);
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
