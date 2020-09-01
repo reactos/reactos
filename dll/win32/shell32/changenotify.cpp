@@ -9,11 +9,6 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(shcn);
 
-#if 1
-    #undef TRACE
-    #define TRACE ERR
-#endif
-
 CRITICAL_SECTION SHELL32_ChangenotifyCS;
 
 // This function requests creation of the server window if it doesn't exist yet

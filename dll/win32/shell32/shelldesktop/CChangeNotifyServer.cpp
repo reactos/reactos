@@ -11,11 +11,6 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(shcn);
 
-#if 1
-    #undef TRACE
-    #define TRACE ERR
-#endif
-
 //////////////////////////////////////////////////////////////////////////////
 
 // notification target item
