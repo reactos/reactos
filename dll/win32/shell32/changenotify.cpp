@@ -328,6 +328,68 @@ CreateNotificationParamAndSend(LONG wEventId, UINT uFlags, LPCITEMIDLIST pidl1, 
     }
 }
 
+struct ALIAS_PIDL
+{
+    INT csidl1; // from
+    INT csidl2; // to
+    LPITEMIDLIST pidl1; // from
+    LPITEMIDLIST pidl2; // to
+    WCHAR szPath1[MAX_PATH]; // from
+    WCHAR szPath2[MAX_PATH]; // to
+};
+
+static ALIAS_PIDL AliasPIDLs[] =
+{
+    { CSIDL_PERSONAL, CSIDL_PERSONAL },
+    { CSIDL_COMMON_DESKTOPDIRECTORY, CSIDL_DESKTOP },
+    { CSIDL_DESKTOPDIRECTORY, CSIDL_DESKTOP },
+};
+
+static VOID DoInitAliasPIDLs(void)
+{
+    static BOOL s_bInit = FALSE;
+    if (!s_bInit)
+    {
+        for (SIZE_T i = 0; i < _countof(AliasPIDLs); ++i)
+        {
+            if (AliasPIDLs[i].pidl1 == NULL)
+            {
+                SHGetSpecialFolderLocation(NULL, AliasPIDLs[i].csidl1, &AliasPIDLs[i].pidl1);
+                SHGetPathFromIDListW(AliasPIDLs[i].pidl1, AliasPIDLs[i].szPath1);
+            }
+            if (AliasPIDLs[i].pidl2 == NULL)
+            {
+                SHGetSpecialFolderLocation(NULL, AliasPIDLs[i].csidl2, &AliasPIDLs[i].pidl2);
+                SHGetPathFromIDListW(AliasPIDLs[i].pidl2, AliasPIDLs[i].szPath2);
+            }
+        }
+        s_bInit = TRUE;
+    }
+}
+
+static LPITEMIDLIST DoGetAliasPIDL(PCIDLIST_ABSOLUTE pidl)
+{
+    DoInitAliasPIDLs();
+
+    for (SIZE_T i = 0; i < _countof(AliasPIDLs); ++i)
+    {
+        const ALIAS_PIDL *alias = &AliasPIDLs[i];
+        if (ILIsEqual(pidl, alias->pidl1))
+        {
+            if (ILIsEqual(alias->pidl1, alias->pidl2))
+            {
+                return ILCreateFromPathW(alias->szPath2);
+            }
+            else
+            {
+                return ILClone(alias->pidl2);
+            }
+        }
+    }
+
+    return NULL;
+}
+
 /*************************************************************************
  * SHChangeNotifyRegister           [SHELL32.2]
  */
@@ -410,6 +472,28 @@ SHChangeNotifyRegister(HWND hwnd, INT fSources, LONG wEventMask, UINT uMsg,
                 DestroyWindow(hwndBroker);
             }
             break;
+        }
+
+        LPITEMIDLIST pidlAlias = DoGetAliasPIDL(lpItems[iItem].pidl);
+        if (pidlAlias)
+        {
+            // create another registration entry
+            hRegEntry = CreateRegistrationParam(nRegID, hwnd, uMsg, fSources, wEventMask,
+                                                lpItems[iItem].fRecursive, pidlAlias,
+                                                dwOwnerPID, hwndBroker);
+            if (hRegEntry)
+            {
+                TRACE("CN_REGISTER: hwnd:%p, hRegEntry:%p, pid:0x%lx\n",
+                      hwndServer, hRegEntry, dwOwnerPID);
+
+                // send CN_REGISTER to the server
+                SendMessageW(hwndServer, CN_REGISTER, (WPARAM)hRegEntry, dwOwnerPID);
+
+                // free registration entry
+                SHFreeShared(hRegEntry, dwOwnerPID);
+            }
+
+            CoTaskMemFree(pidlAlias);
         }
     }
     LeaveCriticalSection(&SHELL32_ChangenotifyCS);
