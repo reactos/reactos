@@ -1387,7 +1387,7 @@ CFileDefExt::CountFolderAndFiles(HWND hwndDlg, LPWSTR pwszBuf, UINT cchBufMax, D
     --cchFilenameMax;
 
     // Store path without wildcard
-    StringCchCopyW(PathBuffer, sizeof(PathBuffer), pwszBuf);
+    StringCbCopyW(PathBuffer, sizeof(PathBuffer), pwszBuf);
 
     /* Find all files, FIXME: shouldn't be "*"? */
     StringCchCopyW(pwszFilename, cchFilenameMax, L"*");
