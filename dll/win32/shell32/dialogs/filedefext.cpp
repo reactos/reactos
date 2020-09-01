@@ -71,7 +71,7 @@ BOOL GetPhysicalFileSize(LPCWSTR PathBuffer, PULARGE_INTEGER Size)
     NtClose(FileHandle);
     if (!NT_SUCCESS(Status))
     {
-        ERR("NtQueryInformationFile failed for %S\n", PathBuffer);
+        ERR("NtQueryInformationFile failed for %S (Status: %08lX)\n", PathBuffer, Status);
         return FALSE;
     }
     
