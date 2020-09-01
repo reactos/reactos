@@ -1167,27 +1167,13 @@ LRESULT CDefView::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
     }
 
     SHChangeNotifyEntry ntreg[1];
-    PIDLIST_ABSOLUTE pidls[1];
-    if (_ILIsDesktop(m_pidlParent))
-    {
-        SHGetSpecialFolderLocation(m_hWnd, CSIDL_DESKTOP, &pidls[0]);
-        ntreg[0].fRecursive = FALSE;
-        ntreg[0].pidl = pidls[0];
-    }
-    else
-    {
-        ntreg[0].fRecursive = FALSE;
-        ntreg[0].pidl = m_pidlParent;
-    }
+    ntreg[0].fRecursive = FALSE;
+    ntreg[0].pidl = m_pidlParent;
     m_hNotify = SHChangeNotifyRegister(m_hWnd,
                                        SHCNRF_InterruptLevel | SHCNRF_ShellLevel |
                                        SHCNRF_NewDelivery,
                                        SHCNE_ALLEVENTS, SHV_CHANGE_NOTIFY,
                                        1, ntreg);
-    if (_ILIsDesktop(m_pidlParent))
-    {
-        ILFree(pidls[0]);
-    }
 
     /* _DoFolderViewCB(SFVM_GETNOTIFY, ??  ??) */
 
