@@ -299,7 +299,7 @@ CreateRegistrationParam(ULONG nRegID, HWND hwnd, UINT wMsg, INT fSources, LONG f
 // It creates a delivery ticket and send CN_DELIVER_NOTIFICATION message to
 // transport the change.
 static void
-CreateNotificationParamAndSend(LONG wEventId, UINT uFlags, LPITEMIDLIST pidl1, LPITEMIDLIST pidl2,
+CreateNotificationParamAndSend(LONG wEventId, UINT uFlags, LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2,
                                DWORD dwTick)
 {
     // get server window
@@ -491,30 +491,34 @@ static LPCSTR DumpEvent(LONG event)
 /*************************************************************************
  * SHChangeRegistrationReceive      [SHELL32.646]
  */
-EXTERN_C BOOL
-WINAPI
+EXTERN_C BOOL WINAPI
 SHChangeRegistrationReceive(LPVOID lpUnknown1, DWORD dwUnknown2)
 {
     FIXME("SHChangeRegistrationReceive() stub\n");
     return FALSE;
 }
 
-EXTERN_C VOID
-WINAPI
+EXTERN_C VOID WINAPI
 SHChangeNotifyReceiveEx(LONG lEvent, UINT uFlags,
                         LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2, DWORD dwTick)
 {
-    FIXME("SHChangeNotifyReceiveEx() stub\n");
+    // TODO: Queueing notifications
+    CreateNotificationParamAndSend(lEvent, uFlags, pidl1, pidl2, dwTick);
 }
 
 /*************************************************************************
  * SHChangeNotifyReceive        [SHELL32.643]
  */
-EXTERN_C VOID
-WINAPI
+EXTERN_C VOID WINAPI
 SHChangeNotifyReceive(LONG lEvent, UINT uFlags, LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2)
 {
     SHChangeNotifyReceiveEx(lEvent, uFlags, pidl1, pidl2, GetTickCount());
+}
+
+EXTERN_C VOID WINAPI
+SHChangeNotifyTransmit(LONG lEvent, UINT uFlags, LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2, DWORD dwTick)
+{
+    SHChangeNotifyReceiveEx(lEvent, uFlags, pidl1, pidl2, dwTick);
 }
 
 /*************************************************************************
@@ -577,7 +581,7 @@ SHChangeNotify(LONG wEventId, UINT uFlags, LPCVOID dwItem1, LPCVOID dwItem2)
     if (wEventId == 0 || (wEventId & SHCNE_ASSOCCHANGED) || pidl1 != NULL)
     {
         TRACE("notifying event %s(%x)\n", DumpEvent(wEventId), wEventId);
-        CreateNotificationParamAndSend(wEventId, uFlags, pidl1, pidl2, dwTick);
+        SHChangeNotifyTransmit(wEventId, uFlags, pidl1, pidl2, dwTick);
     }
 
     if (pidlTemp1)

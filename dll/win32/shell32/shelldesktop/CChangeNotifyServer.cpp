@@ -249,7 +249,7 @@ LRESULT CChangeNotifyServer::OnRegister(UINT uMsg, WPARAM wParam, LPARAM lParam,
 
     // create a directory watch if necessary
     CDirectoryWatcher *pDirWatch = NULL;
-    if (pRegEntry->fSources & SHCNRF_InterruptLevel)
+    if (pRegEntry->ibPidl && (pRegEntry->fSources & SHCNRF_InterruptLevel))
     {
         pDirWatch = CreateDirectoryWatcherFromRegEntry(pRegEntry);
         if (pDirWatch && !pDirWatch->RequestAddWatcher())
@@ -414,12 +414,17 @@ BOOL CChangeNotifyServer::ShouldNotify(LPDELITICKET pTicket, LPREGENTRY pRegEntr
     {
         if (!(pRegEntry->fSources & SHCNRF_InterruptLevel))
             RETURN(FALSE);
+        if (!pRegEntry->ibPidl)
+            RETURN(FALSE);
     }
     else
     {
         if (!(pRegEntry->fSources & SHCNRF_ShellLevel))
             RETURN(FALSE);
     }
+
+    if (!(pTicket->wEventId & pRegEntry->fEvents))
+        RETURN(FALSE);
 
     LPITEMIDLIST pidl = NULL, pidl1 = NULL, pidl2 = NULL;
     if (pRegEntry->ibPidl)
