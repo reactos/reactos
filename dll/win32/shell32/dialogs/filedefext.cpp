@@ -1409,8 +1409,8 @@ CFileDefExt::CountFolderAndFiles(HWND hwndDlg, LPWSTR pwszBuf, UINT cchBufMax, D
     do
     {
         ZeroMemory(WorkBuffer, sizeof(WorkBuffer));
-        StringCchCopyW(WorkBuffer, sizeof(WorkBuffer), PathBuffer);
-        StringCchCatW(WorkBuffer, sizeof(WorkBuffer), wfd.cFileName);
+        StringCbCopyW(WorkBuffer, sizeof(WorkBuffer), PathBuffer);
+        StringCbCatW(WorkBuffer, sizeof(WorkBuffer), wfd.cFileName);
 
         if (wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
         {
