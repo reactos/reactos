@@ -352,16 +352,13 @@ static VOID DoInitAliasPIDLs(void)
     {
         for (SIZE_T i = 0; i < _countof(AliasPIDLs); ++i)
         {
-            if (AliasPIDLs[i].pidl1 == NULL)
-            {
-                SHGetSpecialFolderLocation(NULL, AliasPIDLs[i].csidl1, &AliasPIDLs[i].pidl1);
-                SHGetPathFromIDListW(AliasPIDLs[i].pidl1, AliasPIDLs[i].szPath1);
-            }
-            if (AliasPIDLs[i].pidl2 == NULL)
-            {
-                SHGetSpecialFolderLocation(NULL, AliasPIDLs[i].csidl2, &AliasPIDLs[i].pidl2);
-                SHGetPathFromIDListW(AliasPIDLs[i].pidl2, AliasPIDLs[i].szPath2);
-            }
+            ALIAS_PIDL *alias = &AliasPIDLs[i];
+
+            SHGetSpecialFolderLocation(NULL, alias->csidl1, &alias->pidl1);
+            SHGetPathFromIDListW(alias->pidl1, alias->szPath1);
+
+            SHGetSpecialFolderLocation(NULL, alias->csidl2, &alias->pidl2);
+            SHGetPathFromIDListW(alias->pidl2, alias->szPath2);
         }
         s_bInit = TRUE;
     }
