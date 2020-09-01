@@ -489,6 +489,35 @@ static LPCSTR DumpEvent(LONG event)
 }
 
 /*************************************************************************
+ * SHChangeRegistrationReceive      [SHELL32.646]
+ */
+EXTERN_C BOOL
+WINAPI
+SHChangeRegistrationReceive(LPVOID lpUnknown1, DWORD dwUnknown2)
+{
+    FIXME("SHChangeRegistrationReceive() stub\n");
+    return FALSE;
+}
+
+EXTERN_C VOID
+WINAPI
+SHChangeNotifyReceiveEx(LONG lEvent, UINT uFlags,
+                        LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2, DWORD dwTick)
+{
+    FIXME("SHChangeNotifyReceiveEx() stub\n");
+}
+
+/*************************************************************************
+ * SHChangeNotifyReceive        [SHELL32.643]
+ */
+EXTERN_C VOID
+WINAPI
+SHChangeNotifyReceive(LONG lEvent, UINT uFlags, LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2)
+{
+    SHChangeNotifyReceiveEx(lEvent, uFlags, pidl1, pidl2, GetTickCount());
+}
+
+/*************************************************************************
  * SHChangeNotify               [SHELL32.@]
  */
 EXTERN_C void WINAPI
@@ -625,4 +654,18 @@ NTSHChangeNotifyDeregister(ULONG hNotify)
 {
     FIXME("(0x%08x):semi stub.\n", hNotify);
     return SHChangeNotifyDeregister(hNotify);
+}
+
+/*************************************************************************
+ * SHChangeNotifySuspendResume          [SHELL32.277]
+ */
+EXTERN_C BOOL
+WINAPI
+SHChangeNotifySuspendResume(BOOL bSuspend,
+                            LPITEMIDLIST pidl,
+                            BOOL bRecursive,
+                            DWORD dwReserved)
+{
+    FIXME("SHChangeNotifySuspendResume() stub\n");
+    return FALSE;
 }
