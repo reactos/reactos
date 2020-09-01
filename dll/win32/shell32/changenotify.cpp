@@ -322,10 +322,15 @@ CreateNotificationParamAndSend(LONG wEventId, UINT uFlags, LPITEMIDLIST pidl1, L
     TRACE("hTicket: %p, 0x%lx\n", hTicket, pid);
 
     // send the ticket by using CN_DELIVER_NOTIFICATION
-    if ((uFlags & (SHCNF_FLUSH | SHCNF_FLUSHNOWAIT)) == SHCNF_FLUSH)
+    if (pid != GetCurrentProcessId() ||
+        (uFlags & (SHCNF_FLUSH | SHCNF_FLUSHNOWAIT)) == SHCNF_FLUSH)
+    {
         SendMessageW(hwndServer, CN_DELIVER_NOTIFICATION, (WPARAM)hTicket, pid);
+    }
     else
+    {
         SendNotifyMessageW(hwndServer, CN_DELIVER_NOTIFICATION, (WPARAM)hTicket, pid);
+    }
 }
 
 /*************************************************************************
