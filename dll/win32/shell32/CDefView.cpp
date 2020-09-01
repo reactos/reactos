@@ -1166,22 +1166,16 @@ LRESULT CDefView::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
         SetShellWindowEx(hwndSB, m_ListView);
     }
 
-    INT nRegCount;
-    SHChangeNotifyEntry ntreg[2];
-    PIDLIST_ABSOLUTE pidls[2];
+    SHChangeNotifyEntry ntreg[1];
+    PIDLIST_ABSOLUTE pidls[1];
     if (_ILIsDesktop(m_pidlParent))
     {
-        nRegCount = 2;
-        SHGetSpecialFolderLocation(m_hWnd, CSIDL_DESKTOPDIRECTORY, &pidls[0]);
-        SHGetSpecialFolderLocation(m_hWnd, CSIDL_COMMON_DESKTOPDIRECTORY, &pidls[1]);
+        SHGetSpecialFolderLocation(m_hWnd, CSIDL_DESKTOP, &pidls[0]);
         ntreg[0].fRecursive = FALSE;
         ntreg[0].pidl = pidls[0];
-        ntreg[1].fRecursive = FALSE;
-        ntreg[1].pidl = pidls[1];
     }
     else
     {
-        nRegCount = 1;
         ntreg[0].fRecursive = FALSE;
         ntreg[0].pidl = m_pidlParent;
     }
@@ -1189,11 +1183,10 @@ LRESULT CDefView::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
                                        SHCNRF_InterruptLevel | SHCNRF_ShellLevel |
                                        SHCNRF_NewDelivery,
                                        SHCNE_ALLEVENTS, SHV_CHANGE_NOTIFY,
-                                       nRegCount, ntreg);
-    if (nRegCount == 2)
+                                       1, ntreg);
+    if (_ILIsDesktop(m_pidlParent))
     {
         ILFree(pidls[0]);
-        ILFree(pidls[1]);
     }
 
     /* _DoFolderViewCB(SFVM_GETNOTIFY, ??  ??) */

@@ -341,8 +341,8 @@ struct ALIAS_PIDL
 static ALIAS_PIDL AliasPIDLs[] =
 {
     { CSIDL_PERSONAL, CSIDL_PERSONAL },
-    { CSIDL_COMMON_DESKTOPDIRECTORY, CSIDL_DESKTOP },
-    { CSIDL_DESKTOPDIRECTORY, CSIDL_DESKTOP },
+    { CSIDL_DESKTOP, CSIDL_COMMON_DESKTOPDIRECTORY, },
+    { CSIDL_DESKTOP, CSIDL_DESKTOPDIRECTORY },
 };
 
 static VOID DoInitAliasPIDLs(void)
@@ -367,27 +367,32 @@ static VOID DoInitAliasPIDLs(void)
     }
 }
 
-static LPITEMIDLIST DoGetAliasPIDL(PCIDLIST_ABSOLUTE pidl)
+static BOOL DoGetAliasPIDLs(LPITEMIDLIST apidls[2], PCIDLIST_ABSOLUTE pidl)
 {
     DoInitAliasPIDLs();
 
+    apidls[0] = apidls[1] = NULL;
+
+    INT k = 0;
     for (SIZE_T i = 0; i < _countof(AliasPIDLs); ++i)
     {
         const ALIAS_PIDL *alias = &AliasPIDLs[i];
         if (ILIsEqual(pidl, alias->pidl1))
         {
-            if (ILIsEqual(alias->pidl1, alias->pidl2))
+            if (alias->csidl1 == alias->csidl2)
             {
-                return ILCreateFromPathW(alias->szPath2);
+                apidls[k++] = ILCreateFromPathW(alias->szPath2);
             }
             else
             {
-                return ILClone(alias->pidl2);
+                apidls[k++] = ILClone(alias->pidl2);
             }
+            if (k >= 2)
+                break;
         }
     }
 
-    return NULL;
+    return k > 0;
 }
 
 /*************************************************************************
@@ -474,26 +479,49 @@ SHChangeNotifyRegister(HWND hwnd, INT fSources, LONG wEventMask, UINT uMsg,
             break;
         }
 
-        LPITEMIDLIST pidlAlias = DoGetAliasPIDL(lpItems[iItem].pidl);
-        if (pidlAlias)
+        // PIDL alias
+        LPITEMIDLIST apidlAlias[2];
+        if (DoGetAliasPIDLs(apidlAlias, lpItems[iItem].pidl))
         {
-            // create another registration entry
-            hRegEntry = CreateRegistrationParam(nRegID, hwnd, uMsg, fSources, wEventMask,
-                                                lpItems[iItem].fRecursive, pidlAlias,
-                                                dwOwnerPID, hwndBroker);
-            if (hRegEntry)
+            if (apidlAlias[0])
             {
-                TRACE("CN_REGISTER: hwnd:%p, hRegEntry:%p, pid:0x%lx\n",
-                      hwndServer, hRegEntry, dwOwnerPID);
+                // create another registration entry
+                hRegEntry = CreateRegistrationParam(nRegID, hwnd, uMsg, fSources, wEventMask,
+                                                    lpItems[iItem].fRecursive, apidlAlias[0],
+                                                    dwOwnerPID, hwndBroker);
+                if (hRegEntry)
+                {
+                    TRACE("CN_REGISTER: hwnd:%p, hRegEntry:%p, pid:0x%lx\n",
+                          hwndServer, hRegEntry, dwOwnerPID);
 
-                // send CN_REGISTER to the server
-                SendMessageW(hwndServer, CN_REGISTER, (WPARAM)hRegEntry, dwOwnerPID);
+                    // send CN_REGISTER to the server
+                    SendMessageW(hwndServer, CN_REGISTER, (WPARAM)hRegEntry, dwOwnerPID);
 
-                // free registration entry
-                SHFreeShared(hRegEntry, dwOwnerPID);
+                    // free registration entry
+                    SHFreeShared(hRegEntry, dwOwnerPID);
+                }
+                ILFree(apidlAlias[0]);
             }
 
-            CoTaskMemFree(pidlAlias);
+            if (apidlAlias[1])
+            {
+                // create another registration entry
+                hRegEntry = CreateRegistrationParam(nRegID, hwnd, uMsg, fSources, wEventMask,
+                                                    lpItems[iItem].fRecursive, apidlAlias[1],
+                                                    dwOwnerPID, hwndBroker);
+                if (hRegEntry)
+                {
+                    TRACE("CN_REGISTER: hwnd:%p, hRegEntry:%p, pid:0x%lx\n",
+                          hwndServer, hRegEntry, dwOwnerPID);
+
+                    // send CN_REGISTER to the server
+                    SendMessageW(hwndServer, CN_REGISTER, (WPARAM)hRegEntry, dwOwnerPID);
+
+                    // free registration entry
+                    SHFreeShared(hRegEntry, dwOwnerPID);
+                }
+                ILFree(apidlAlias[1]);
+            }
         }
     }
     LeaveCriticalSection(&SHELL32_ChangenotifyCS);
