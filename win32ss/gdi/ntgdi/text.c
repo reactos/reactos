@@ -41,7 +41,7 @@ IntTMWFixUp(
      * to a TrueType one when we have a 'Raster' font as our input we filter
      * out the problematic TrueType and Vector bits.
      * Our list below checks for Raster Font Facenames. */
-    DPRINT1("Font Facename is '%S'.\n", lf.lfFaceName);
+    DPRINT("Font Facename is '%S'.\n", lf.lfFaceName);
     if ((wcsicmp(lf.lfFaceName, L"Helv") == 0) ||
         (wcsicmp(lf.lfFaceName, L"Courier") == 0) ||
         (wcsicmp(lf.lfFaceName, L"MS Sans Serif") == 0) ||
