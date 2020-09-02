@@ -501,6 +501,7 @@ START_TEST(Bus_PDO_QueryResourceRequirements)
     ok(ReqList->InterfaceType == Internal, "InterfaceType = %u\n", ReqList->InterfaceType);
     ok(ReqList->BusNumber == 0, "BusNumber = %lu\n", ReqList->BusNumber);
     ok(ReqList->SlotNumber == 0, "SlotNumber = %lu\n", ReqList->SlotNumber);
+  todo_if(TRUE)
     ok(ReqList->AlternativeLists == 2, "AlternativeLists = %lu\n", ReqList->AlternativeLists);
     ok(ReqList->List[0].Version == 1, "List[0].Version = %u\n", ReqList->List[0].Version);
     ok(ReqList->List[0].Revision == 1, "List[0].Revision = %u\n", ReqList->List[0].Revision);
@@ -525,6 +526,7 @@ START_TEST(Bus_PDO_QueryResourceRequirements)
         expect_irq(&ReqList2->Descriptors[5], IO_RESOURCE_ALTERNATIVE, CmResourceShareDeviceExclusive, 7, 7);
     }
     ok_int(ReqList->ListSize, GetPoolAllocSize(ReqList));
+  todo_if(TRUE)
     ok_int(ReqList->ListSize, (ULONG_PTR)&ReqList2->Descriptors[6] - (ULONG_PTR)ReqList);
     ExFreePoolWithTag(ReqList, 'RpcA');
 }
