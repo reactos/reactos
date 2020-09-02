@@ -106,10 +106,7 @@ typedef struct ExplorerCommandLineParseResults
     DWORD                           offset18;
     DWORD                           offset1C;
     LPITEMIDLIST            pidlRoot;
-    DWORD                           offset24;
-    DWORD                           offset28;
-    DWORD                           offset2C;
-    DWORD                           offset30;
+    CLSID                   clsid;
     GUID                    guidInproc;
 } EXPLORER_CMDLINE_PARSE_RESULTS, *PEXPLORER_CMDLINE_PARSE_RESULTS;
 
