@@ -134,6 +134,7 @@ uint64_t DirSizeFunc(PWCHAR targetDir);
 
 void AddItem(HWND hList, PWCHAR string, PWCHAR subString, int iIndex);
 void CleanRequiredPath(PWCHAR Path);
+void InitStartDlg(HWND hwnd, HBITMAP hBitmap);
 void InitListViewControl(HWND hList);
 void InitSagesetListViewControl(HWND hList);
 void OnTabWndSelChange(void);
