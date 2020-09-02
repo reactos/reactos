@@ -11,37 +11,39 @@
 INT_PTR CALLBACK ChoicePageDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     WCHAR StringText[MAX_PATH] = { 0 };
-    WCHAR FullText[MAX_PATH] = { 0 };
-    WCHAR TotalAmount[MAX_PATH] = { 0 };
-    static WCHAR* ViewFolder = NULL;
     static HWND hList = 0;
-    uint64_t TotalSize = sz.TempASize + sz.TempBSize + sz.RecycleBinSize + sz.ChkDskSize + sz.RappsSize;
-    
-    SHELLEXECUTEINFOW seI;
-    ZeroMemory(&seI, sizeof(seI));
-    seI.cbSize = sizeof seI;
-    seI.lpVerb = L"open";
-    seI.nShow = SW_SHOW;
-    
-    ViewFolder = wcv.RappsDir;
 
     switch (message)
     {
     case WM_INITDIALOG:
+    {
+        WCHAR FullText[MAX_PATH] = { 0 };
+        WCHAR TotalAmount[MAX_PATH] = { 0 };
+        uint64_t TotalSize = sz.TempASize + sz.TempBSize + sz.RecycleBinSize + sz.ChkDskSize + sz.RappsSize;
+
         SetWindowPos(hwnd, NULL, 10, 32, 0, 0, SWP_NOACTIVATE | SWP_NOOWNERZORDER | SWP_NOSIZE | SWP_NOZORDER);
         hList = GetDlgItem(hwnd, IDC_CHOICE_LIST);
         InitListViewControl(hList);
         LoadStringW(GetModuleHandleW(NULL), IDS_CLEANUP, StringText, _countof(StringText));
-        StringCchPrintfW(TotalAmount, _countof(TotalAmount), L"%.02lf %s", SetOptimalSize(TotalSize), SetOptimalUnit(TotalSize));
+        StringCchPrintfW(TotalAmount, _countof(TotalAmount), L"%.02lf %s", SetOptimalSize(TotalSize), FindOptimalUnit(TotalSize));
         StringCchPrintfW(FullText, _countof(FullText), StringText, TotalAmount, wcv.DriveLetter);
         SetDlgItemTextW(hwnd, IDC_STATIC_DLG, FullText);
         return TRUE;
+    }
 
     case WM_COMMAND:
         switch (LOWORD(wParam))
         {
         case IDC_VIEW_FILES:
-            if (!PathIsDirectoryW(ViewFolder))
+        {
+            SHELLEXECUTEINFOW seI;
+            ZeroMemory(&seI, sizeof(seI));
+            seI.cbSize = sizeof(seI);
+            seI.lpVerb = L"open";
+            seI.nShow = SW_SHOW;
+            seI.lpFile = wcv.RappsDir;
+            
+            if (!PathIsDirectoryW(wcv.RappsDir))
             {
                 ZeroMemory(&StringText, sizeof(StringText));
                 LoadStringW(GetModuleHandleW(NULL), IDS_WARNING_FOLDER, StringText, _countof(StringText));
@@ -49,13 +51,13 @@ INT_PTR CALLBACK ChoicePageDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
                 break;
             }
 
-            seI.lpFile = ViewFolder;
             if (!ShellExecuteExW(&seI))
             {
                 MessageBoxW(NULL, L"ShellExecuteExW() failed!", L"Ok", MB_OK | MB_ICONSTOP);
                 return FALSE;
             }
             break;
+        }
         }
         break;
 

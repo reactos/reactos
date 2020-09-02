@@ -11,65 +11,28 @@
 #define CX_BITMAP 20
 #define CY_BITMAP 20
 
+void InitStartDlg(HWND hwnd, HBITMAP hBitmap);
+
 INT_PTR CALLBACK StartDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    WCHAR LogicalDrives[MAX_PATH] = { 0 };
     WCHAR TempText[MAX_PATH] = { 0 };
-    int ItemIndex = 0;
     HBITMAP BitmapDrive = NULL;
-    DWORD DwIndex = 0;
-    DWORD NumOfDrives = 0;
-    static HWND HComboCtrl = NULL;
-
     switch(message)
     {
         case WM_INITDIALOG:
-            HComboCtrl = GetDlgItem(hwnd, IDC_DRIVE);
-            
-            if(HComboCtrl == NULL)
-            {
-                MessageBoxW(NULL, L"GetDlgItem() failed!", L"Error", MB_OK | MB_ICONERROR);
-                PostMessage(hwnd, WM_CLOSE, 0, 0);
-            }
-            
-            NumOfDrives = GetLogicalDriveStringsW(MAX_PATH, LogicalDrives);
-            if (NumOfDrives == 0)
-            {
-                MessageBoxW(NULL, L"GetLogicalDriveStringsW() failed!", L"Error", MB_OK | MB_ICONERROR);
-                PostMessage(hwnd, WM_CLOSE, 0, 0);
-            }
+        {
             BitmapDrive = LoadBitmapW(GetModuleHandleW(NULL), MAKEINTRESOURCEW(IDB_DRIVE));
-            
+ 
             if(BitmapDrive == NULL)
             {
                 MessageBoxW(NULL, L"LoadBitmapW() failed!", L"Error", MB_OK | MB_ICONERROR);
                 PostMessage(hwnd, WM_CLOSE, 0, 0);
-            }
-
-            if (NumOfDrives <= MAX_PATH)
-            {
-                WCHAR* SingleDrive = LogicalDrives;
-                WCHAR RealDrive[MAX_PATH] = { 0 };
-                while (*SingleDrive)
-                {
-                    if (GetDriveTypeW(SingleDrive) == ONLY_PHYSICAL_DRIVE)
-                    {
-                        StringCchCopyW(RealDrive, MAX_PATH, SingleDrive);
-                        RealDrive[wcslen(RealDrive) - 1] = '\0';
-                        DwIndex = SendMessageW(HComboCtrl, CB_ADDSTRING, 0, (LPARAM)RealDrive);
-                        if (SendMessageW(HComboCtrl, CB_SETITEMDATA, DwIndex, (LPARAM)BitmapDrive) == CB_ERR)
-                        {
-                            return FALSE;
-                        }
-                        memset(RealDrive, 0, sizeof RealDrive);
-                    }
-                    SingleDrive += wcslen(SingleDrive) + 1;
-                }
+                return FALSE;
             }
             
-            ComboBox_SetCurSel(HComboCtrl, 0);
-            SendMessageW(GetDlgItem(hwnd, IDC_DRIVE), CB_GETLBTEXT, (WPARAM)0, (LPARAM)wcv.DriveLetter);
+            InitStartDlg(hwnd, BitmapDrive);
             return TRUE;
+        }
 
         case WM_NOTIFY:
             return ThemeHandler(hwnd, (LPNMCUSTOMDRAW)lParam);
@@ -80,7 +43,6 @@ INT_PTR CALLBACK StartDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPa
         
         case WM_MEASUREITEM:
         {
-            // Set the height of the items in the food groups combo box.
             LPMEASUREITEMSTRUCT lpmis = (LPMEASUREITEMSTRUCT)lParam;
 
             if (lpmis->itemHeight < 18 + 2)
@@ -102,7 +64,7 @@ INT_PTR CALLBACK StartDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPa
         case WM_COMMAND:
             if(HIWORD(wParam) == CBN_SELCHANGE)
             {
-                ItemIndex = SendMessageW(GetDlgItem(hwnd, IDC_DRIVE), CB_GETCURSEL, 0, 0);
+                int ItemIndex = SendMessageW(GetDlgItem(hwnd, IDC_DRIVE), CB_GETCURSEL, 0, 0);
                 if (ItemIndex == CB_ERR)
                 {
                     MessageBoxW(NULL, L"SendMessageW failed!", L"Error", MB_OK | MB_ICONERROR);
@@ -131,6 +93,7 @@ INT_PTR CALLBACK StartDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPa
             break;
 
         case WM_CLOSE:
+            DeleteObject(BitmapDrive);
             EndDialog(hwnd, IDCANCEL);
             break;  
 
@@ -138,6 +101,57 @@ INT_PTR CALLBACK StartDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPa
             return FALSE;
     }
     return TRUE;
+}
+
+void InitStartDlg(HWND hwnd, HBITMAP hBitmap)
+{
+    DWORD DwIndex = 0;
+    DWORD NumOfDrives = 0;
+    HWND hComboCtrl = NULL;
+    WCHAR LogicalDrives[MAX_PATH] = { 0 };
+
+    hComboCtrl = GetDlgItem(hwnd, IDC_DRIVE);
+
+    if(hComboCtrl == NULL)
+    {
+        MessageBoxW(NULL, L"GetDlgItem() failed!", L"Error", MB_OK | MB_ICONERROR);
+        PostMessage(hwnd, WM_CLOSE, 0, 0);
+        return;
+    }
+  
+    NumOfDrives = GetLogicalDriveStringsW(MAX_PATH, LogicalDrives);
+    if (NumOfDrives == 0)
+    {
+        MessageBoxW(NULL, L"GetLogicalDriveStringsW() failed!", L"Error", MB_OK | MB_ICONERROR);
+        PostMessage(hwnd, WM_CLOSE, 0, 0);
+        return;
+    }
+
+    if (NumOfDrives <= MAX_PATH)
+    {
+        WCHAR* SingleDrive = LogicalDrives;
+        WCHAR RealDrive[MAX_PATH] = { 0 };
+        while (*SingleDrive)
+        {
+            if (GetDriveTypeW(SingleDrive) == ONLY_PHYSICAL_DRIVE)
+            {
+                StringCchCopyW(RealDrive, MAX_PATH, SingleDrive);
+                RealDrive[wcslen(RealDrive) - 1] = '\0';
+                DwIndex = SendMessageW(hComboCtrl, CB_ADDSTRING, 0, (LPARAM)RealDrive);
+                if (SendMessageW(hComboCtrl, CB_SETITEMDATA, DwIndex, (LPARAM)hBitmap) == CB_ERR)
+                {
+                    MessageBoxW(NULL, L"SendMessageW() failed!", L"Error", MB_OK | MB_ICONERROR);
+                    PostMessage(hwnd, WM_CLOSE, 0, 0);
+                    return;
+                }
+                memset(RealDrive, 0, sizeof RealDrive);
+            }
+            SingleDrive += wcslen(SingleDrive) + 1;
+        }
+    }
+   
+    ComboBox_SetCurSel(hComboCtrl, 0);
+    SendMessageW(hComboCtrl, CB_GETLBTEXT, (WPARAM)0, (LPARAM)wcv.DriveLetter);
 }
 
 BOOL DrawItemCombobox(LPARAM lParam)
@@ -221,13 +235,15 @@ BOOL DrawItemCombobox(LPARAM lParam)
 INT_PTR CALLBACK ProgressDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     static HANDLE ThreadOBJ = NULL;
-    WCHAR TempText[MAX_PATH] = { 0 };
-    WCHAR FullText[MAX_PATH] = { 0 };
-    WCHAR SysDrive[MAX_PATH] = { 0 };
     
     switch(message)
     {
         case WM_INITDIALOG:
+        {
+            WCHAR FullText[MAX_PATH] = { 0 };
+            WCHAR SysDrive[MAX_PATH] = { 0 };
+            WCHAR TempText[MAX_PATH] = { 0 };
+
             bv.SysDrive = FALSE;
             LoadStringW(GetModuleHandleW(NULL), IDS_SCAN, TempText, _countof(TempText));
             StringCchPrintfW(FullText, _countof(FullText), TempText, wcv.DriveLetter);
@@ -239,6 +255,7 @@ INT_PTR CALLBACK ProgressDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM 
             }
             ThreadOBJ = CreateThread(NULL, 0, &SizeCheck, (LPVOID)hwnd, 0, NULL);
             return TRUE;
+        }
         
         case WM_NOTIFY:
             return ThemeHandler(hwnd, (LPNMCUSTOMDRAW)lParam);
@@ -272,22 +289,22 @@ INT_PTR CALLBACK ProgressDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM 
 
 INT_PTR CALLBACK ChoiceDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    LPNMHDR pnmh;
-    int MesgBox;
-    
     WCHAR TempText[MAX_PATH] = { 0 };
-    WCHAR FullText[MAX_PATH] = { 0 };
 
     switch (message)
     {
         case WM_INITDIALOG:
+        {
+            WCHAR FullText[MAX_PATH] = { 0 };
             LoadStringW(GetModuleHandleW(NULL), IDS_TITLE, TempText, _countof(TempText));
             StringCchPrintfW(FullText, _countof(FullText), TempText, wcv.DriveLetter);
             SetWindowTextW(hwnd, FullText);
             return OnCreate(hwnd);
+        }
 
         case WM_NOTIFY:
-            pnmh = (LPNMHDR)lParam;
+        {
+            LPNMHDR pnmh = (LPNMHDR)lParam;
             if ((pnmh->hwndFrom == dv.hTab) &&
                 (pnmh->idFrom == IDC_TAB) &&
                 (pnmh->code == TCN_SELCHANGE))
@@ -295,6 +312,7 @@ INT_PTR CALLBACK ChoiceDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lP
                 OnTabWndSelChange();
             }
             return ThemeHandler(hwnd, (LPNMCUSTOMDRAW)lParam);
+        }
 
         case WM_THEMECHANGED:
             InvalidateRect(hwnd, NULL, FALSE);
@@ -325,7 +343,7 @@ INT_PTR CALLBACK ChoiceDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lP
                     }
 
                     LoadStringW(GetModuleHandleW(NULL), IDS_CONFIRM_DELETION, TempText, _countof(TempText));
-                    MesgBox = MessageBoxW(hwnd, TempText, L"Warning", MB_YESNO | MB_ICONWARNING | MB_DEFBUTTON2);
+                    int MesgBox = MessageBoxW(hwnd, TempText, L"Warning", MB_YESNO | MB_ICONWARNING | MB_DEFBUTTON2);
                     switch (MesgBox)
                     {
                         case IDYES:
@@ -368,17 +386,20 @@ INT_PTR CALLBACK ChoiceDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lP
 INT_PTR CALLBACK ProgressEndDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     static HANDLE ThreadOBJ = NULL;
-    WCHAR TempText[MAX_PATH] = { 0 };
-    WCHAR FullText[MAX_PATH] = { 0 };
 
     switch (message)
     {
     case WM_INITDIALOG:
+    {
+        WCHAR FullText[MAX_PATH] = { 0 };
+        WCHAR TempText[MAX_PATH] = { 0 };
+
         LoadStringW(GetModuleHandleW(NULL), IDS_REMOVAL, TempText, _countof(TempText));
         StringCchPrintfW(FullText, _countof(FullText), TempText, wcv.DriveLetter);
         SetDlgItemTextW(hwnd, IDC_STATIC_REMOVAL, FullText);
         ThreadOBJ = CreateThread(NULL, 0, &FolderRemoval, (LPVOID)hwnd, 0, NULL);
         return TRUE;
+    }
 
     case WM_NOTIFY:
         return ThemeHandler(hwnd, (LPNMCUSTOMDRAW)lParam);
@@ -414,7 +435,6 @@ INT_PTR CALLBACK ProgressEndDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPAR
 
 INT_PTR CALLBACK SagesetDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    int MesgBox;
     WCHAR TempText[MAX_PATH] = { 0 };
 
     switch (message)
@@ -454,7 +474,7 @@ INT_PTR CALLBACK SagesetDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM l
                     }
 
                     LoadStringW(GetModuleHandleW(NULL), IDS_CONFIRM_CONFIG, TempText, _countof(TempText));
-                    MesgBox = MessageBoxW(hwnd, TempText, L"Warning", MB_YESNO | MB_ICONWARNING | MB_DEFBUTTON2);
+                    int MesgBox = MessageBoxW(hwnd, TempText, L"Warning", MB_YESNO | MB_ICONWARNING | MB_DEFBUTTON2);
                     switch (MesgBox)
                     {
                         case IDYES:

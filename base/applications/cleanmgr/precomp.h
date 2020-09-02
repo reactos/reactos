@@ -123,15 +123,12 @@ DWORD WINAPI FolderRemoval(LPVOID lpParam);
 DWORD WINAPI SizeCheck(LPVOID lpParam);
 DWORD RegQuery(PWCHAR RegArg, PWCHAR SubKey);
 
-HRESULT GetFolderCLSID(LPCWSTR path, SHDESCRIPTIONID* pdid);
-
 long long CheckedItem(int index, HWND hwnd, HWND hList, long long size);
 
 LRESULT APIENTRY ThemeHandler(HWND hDlg, NMCUSTOMDRAW* pNmDraw);
 
-PWCHAR FindRecycleBin(PWCHAR TargetDrive);
+PWCHAR FindOptimalUnit(uint64_t size);
 PWCHAR RealStageFlag(int nArgs, PWCHAR ArgReal, LPWSTR* argList);
-PWCHAR SetOptimalUnit(uint64_t size);
 
 uint64_t DirSizeFunc(PWCHAR targetDir);
 

@@ -35,7 +35,7 @@ DWORD WINAPI SizeCheck(LPVOID lpParam)
 {
     HKEY hRegKey = NULL;
     //SETTINGS_INFO SettingsInfo;
-    //eroMemory(&SettingsInfo, sizeof(SETTINGS_INFO));
+    //ZeroMemory(&SettingsInfo, sizeof(SETTINGS_INFO));
     //DWORD dwSize = sizeof(SettingsInfo);
     
     if (RegOpenKeyExW(HKEY_CURRENT_USER,
@@ -51,8 +51,10 @@ DWORD WINAPI SizeCheck(LPVOID lpParam)
     
     HWND hProgressBar = NULL;
     WCHAR TargetedDir[MAX_PATH] = { 0 };
-    WCHAR *RecycleBinFolder = NULL;
-    
+    SHQUERYRBINFO RecycleBinInfo;
+    ZeroMemory(&RecycleBinInfo, sizeof(RecycleBinInfo));
+    RecycleBinInfo.cbSize = sizeof(RecycleBinInfo);
+
     hProgressBar = GetDlgItem(hwnd, IDC_PROGRESS_1);
     
     if(bv.SysDrive == TRUE)
@@ -80,23 +82,37 @@ DWORD WINAPI SizeCheck(LPVOID lpParam)
             SetDlgItemTextW(hwnd, IDC_STATIC_INFO, L"Temporary Files");
         }
     }
-
-    RecycleBinFolder = FindRecycleBin(wcv.DriveLetter);
     
-    if(RecycleBinFolder != NULL)
+    /* Hardcoding the path temporarily */
+    
+    StringCchPrintfW(TargetedDir, _countof(TargetedDir), L"%s\\RECYCLED", wcv.DriveLetter);
+    if(!PathIsDirectoryW(TargetedDir))
     {
-        StringCchPrintfW(TargetedDir, _countof(TargetedDir), L"%s\\%s", wcv.DriveLetter, RecycleBinFolder);
-        sz.RecycleBinSize = DirSizeFunc(TargetedDir);
-        if (sz.RecycleBinSize == 1)
-        {
-            return FALSE;
-        }
         ZeroMemory(&TargetedDir, sizeof(TargetedDir));
-        SendMessageW(hProgressBar, PBM_SETPOS, 50, 0);
-        SetDlgItemTextW(hwnd, IDC_STATIC_INFO, L"Recycled Files");
+        StringCchPrintfW(TargetedDir, _countof(TargetedDir), L"%s\\RECYCLER", wcv.DriveLetter);
     }
 
+    sz.RecycleBinSize = DirSizeFunc(TargetedDir);
+    if (sz.TempBSize == 1)
+        return FALSE;
+
+    SendMessageW(hProgressBar, PBM_SETPOS, 50, 0);
+    SetDlgItemTextW(hwnd, IDC_STATIC_INFO, L"Recycled Files");
     
+    
+    /* Currently disable because SHQueryRecycleBinW isn't implemented in ReactOS */
+    
+    /*StringCbCopyW(TargetedDir, _countof(TargetedDir), wcv.DriveLetter);
+    StringCbCatW(TargetedDir, _countof(TargetedDir), L"\\");
+
+    if(SHQueryRecycleBinW(TargetedDir, &RecycleBinInfo) == S_OK)
+    {
+        sz.RecycleBinSize = RecycleBinInfo.i64Size;
+        SendMessageW(hProgressBar, PBM_SETPOS, 50, 0);
+        SetDlgItemTextW(hwnd, IDC_STATIC_INFO, L"Recycled Files");
+    }*/
+
+
     for(int i = 0; i < 10; i++)
     {
         StringCchPrintfW(TargetedDir, _countof(TargetedDir), L"%s\\FOUND.%.3i", wcv.DriveLetter, i);
@@ -107,7 +123,6 @@ DWORD WINAPI SizeCheck(LPVOID lpParam)
             {
                 return FALSE;
             }
-            ZeroMemory(&TargetedDir, sizeof(TargetedDir));
             SendMessageW(hProgressBar, PBM_SETPOS, 75, 0);
             SetDlgItemTextW(hwnd, IDC_STATIC_INFO, L"Old ChkDsk Files");
         }
@@ -285,106 +300,6 @@ uint64_t DirSizeFunc(PWCHAR TargetDir)
     return Size;
 }
 
-PWCHAR FindRecycleBin(PWCHAR TargetDrive)
-{
-    WIN32_FIND_DATAW DataStruct;
-    ZeroMemory(&DataStruct, sizeof(DataStruct));
-    HANDLE HandleDir = NULL;
-    WCHAR TargetedDrive[1024] = { 0 };
-    SHDESCRIPTIONID did;
-    ZeroMemory(&did, sizeof(did));
-    HRESULT hr;
-
-    StringCchPrintfW(TargetedDrive, _countof(TargetedDrive), L"%s%s", TargetDrive, L"\\*");
-    HandleDir = FindFirstFileW(TargetedDrive, &DataStruct);
-
-    do
-    {
-        if (FILE_ATTRIBUTE_DIRECTORY == (DataStruct.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
-        {
-            if (wcscmp(DataStruct.cFileName, L".") != 0 && wcscmp(DataStruct.cFileName, L"..") != 0)
-            {
-                WCHAR childSearch[512] = { 0 };
-                StringCchPrintfW(childSearch, _countof(childSearch), L"%s\\%s\\*", TargetDrive, DataStruct.cFileName);
-
-                WIN32_FIND_DATAW childData;
-
-                HANDLE childHandle = FindFirstFileW(childSearch, &childData);
-
-                do
-                {
-                    if (FILE_ATTRIBUTE_DIRECTORY == (childData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
-                    {
-
-                        if (wcscmp(childData.cFileName, L".") != 0 && wcscmp(childData.cFileName, L"..") != 0)
-                        {
-                            WCHAR fullPath[MAX_PATH] = { 0 };
-
-                            StringCchPrintfW(fullPath, _countof(fullPath), L"%s\\%s\\%s", TargetDrive, DataStruct.cFileName, childData.cFileName);
-                            OutputDebugStringW(fullPath);
-                            hr = GetFolderCLSID(fullPath, &did);
-
-                            if (SUCCEEDED(hr) && IsEqualCLSID(&CLSID_RecycleBin, &did.clsid))
-                            {
-                                WCHAR *RetVal = DataStruct.cFileName;
-                                FindClose(HandleDir);
-                                FindClose(childHandle);
-
-                                return RetVal;
-                            }
-                        }
-                    }
-                }
-
-                while (FindNextFileW(childHandle, &childData));
-
-                FindClose(childHandle);
-            }
-        }
-    }
-
-    while (FindNextFileW(HandleDir, &DataStruct));
-
-    FindClose(HandleDir);
-
-    return NULL;
-}
-
-/* FIX ME: This function doesn't work in ReactOS because SHGDFIL_DESCRIPTIONID isn't implemented yet. */
-
-HRESULT GetFolderCLSID(LPCWSTR pszPath, SHDESCRIPTIONID* pdid)
-{
-    HRESULT hr;
-
-    LPITEMIDLIST pidl;
-
-    WCHAR LogError[MAX_PATH] = { 0 };
-
-    hr = SHParseDisplayName(pszPath, NULL, &pidl, 0, NULL);
-    StringCchPrintfW(LogError, _countof(LogError), L"\nSHParseDisplayName HANDLE hr returned 0x%08x\n", hr);
-    OutputDebugStringW(LogError);
-    if (SUCCEEDED(hr))
-    {
-        IShellFolder* psf;
-
-        LPCITEMIDLIST pidlChild;
-
-        hr = SHBindToParent(pidl, &IID_IShellFolder, (void**)&psf, &pidlChild);
-        if (SUCCEEDED(hr))
-        {
-            hr = SHGetDataFromIDList(psf, pidlChild, SHGDFIL_DESCRIPTIONID, pdid, sizeof(*pdid));
-            StringCchPrintfW(LogError, _countof(LogError), L"\nSHGetDataFromIDList HANDLE hr returned 0x%08x\n", hr);
-            OutputDebugStringW(LogError);
-            IShellFolder_Release(psf);
-        }
-
-        CoTaskMemFree(pidl);
-    }
-
-    return hr;
-}
-
-
 double SetOptimalSize(uint64_t Size)
 {
     if ((double)Size >= (GB))
@@ -442,7 +357,7 @@ BOOL CreateImageLists(HWND hList)
     return TRUE;
 }
 
-PWCHAR SetOptimalUnit(uint64_t Size)
+PWCHAR FindOptimalUnit(uint64_t Size)
 {
     if ((double)Size >= (GB))
     {
@@ -475,7 +390,7 @@ void SetTotalSize(long long Size, UINT ResourceID, HWND hwnd)
 {
     WCHAR LoadedString[MAX_PATH] = { 0 };
 
-    StringCchPrintfW(LoadedString, _countof(LoadedString), L"%.02lf %s", SetOptimalSize(Size), SetOptimalUnit(Size));
+    StringCchPrintfW(LoadedString, _countof(LoadedString), L"%.02lf %s", SetOptimalSize(Size), FindOptimalUnit(Size));
     SetDlgItemTextW(hwnd, ResourceID, LoadedString);
     memset(LoadedString, 0, sizeof LoadedString);
 }
@@ -1083,18 +998,18 @@ void InitListViewControl(HWND hList)
         MessageBoxW(NULL, L"CreateImageLists() failed!", L"Error", MB_OK | MB_ICONERROR);
     }
 
-    StringCchPrintfW(TempList, _countof(TempList), L"%.02lf %s", SetOptimalSize(sz.ChkDskSize), SetOptimalUnit(sz.ChkDskSize));
+    StringCchPrintfW(TempList, _countof(TempList), L"%.02lf %s", SetOptimalSize(sz.ChkDskSize), FindOptimalUnit(sz.ChkDskSize));
     AddItem(hList, L"Old ChkDsk Files", TempList, 0);
 
-    StringCchPrintfW(TempList, _countof(TempList), L"%.02lf %s", SetOptimalSize(sz.RappsSize), SetOptimalUnit(sz.RappsSize));
+    StringCchPrintfW(TempList, _countof(TempList), L"%.02lf %s", SetOptimalSize(sz.RappsSize), FindOptimalUnit(sz.RappsSize));
     AddItem(hList, L"RAPPS Files", TempList, 0);
  
-    StringCchPrintfW(TempList, _countof(TempList), L"%.02lf %s", SetOptimalSize(sz.RecycleBinSize), SetOptimalUnit(sz.RecycleBinSize));
+    StringCchPrintfW(TempList, _countof(TempList), L"%.02lf %s", SetOptimalSize(sz.RecycleBinSize), FindOptimalUnit(sz.RecycleBinSize));
     AddItem(hList, L"Recycle Bin", TempList, 2);
  
     if (bv.SysDrive == TRUE)
     {
-        StringCchPrintfW(TempList, _countof(TempList), L"%.02lf %s", SetOptimalSize(sz.TempASize + sz.TempBSize), SetOptimalUnit(sz.TempASize + sz.TempBSize));
+        StringCchPrintfW(TempList, _countof(TempList), L"%.02lf %s", SetOptimalSize(sz.TempASize + sz.TempBSize), FindOptimalUnit(sz.TempASize + sz.TempBSize));
         AddItem(hList, L"Temporary Files", TempList, 0);
     }
 
