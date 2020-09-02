@@ -1102,7 +1102,7 @@ LPITEMIDLIST WINAPI SHSimpleIDListFromPathA(LPCSTR lpszPath)
     }
 #ifdef __REACTOS__
     // FIXME: Needs folder attribute
-    if (PathIsDirectoryW(wPath))
+    if (PathFileExistsW(wPath))
     {
         pidl = ILCreateFromPathW(wPath);
         HeapFree(GetProcessHeap(), 0, wPath);
@@ -1124,7 +1124,7 @@ LPITEMIDLIST WINAPI SHSimpleIDListFromPathW(LPCWSTR lpszPath)
     TRACE("%s\n", debugstr_w(lpszPath));
 #ifdef __REACTOS__
     // FIXME: Needs folder attribute
-    if (PathIsDirectoryW(lpszPath))
+    if (PathFileExistsW(lpszPath))
         return ILCreateFromPathW(lpszPath);
 #endif
 
