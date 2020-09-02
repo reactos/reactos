@@ -811,17 +811,9 @@ HRESULT WINAPI CFSFolder::ParseDisplayName(HWND hwndOwner,
     }
 
     if (SUCCEEDED(hr))
-    {
-        SHGetPathFromIDListW(pidlTemp, szPath);
-        if (PathIsDirectoryW(szPath))
-            pidlTemp->mkid.abID[0] = PT_FOLDER;
-
         *ppidl = pidlTemp;
-    }
     else
-    {
         *ppidl = NULL;
-    }
 
     TRACE("(%p)->(-- pidl=%p ret=0x%08x)\n", this, ppidl ? *ppidl : 0, hr);
 
