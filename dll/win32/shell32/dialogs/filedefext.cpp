@@ -98,7 +98,6 @@ BOOL CFileVersionInfo::Load(LPCWSTR pwszPath)
     if (!GetFileVersionInfoW(pwszPath, 0, cbInfo, m_pInfo))
     {
         ERR("GetFileVersionInfoW failed\n");
-        HeapFree(GetProcessHeap(), 0, m_pInfo);
         return FALSE;
     }
 
@@ -107,7 +106,6 @@ BOOL CFileVersionInfo::Load(LPCWSTR pwszPath)
     if (!VerQueryValueW(m_pInfo, L"\\VarFileInfo\\Translation", (LPVOID *)&lpLangCode, &cBytes) || cBytes < sizeof(LANGANDCODEPAGE))
     {
         ERR("VerQueryValueW failed\n");
-        HeapFree(GetProcessHeap(), 0, m_pInfo);
         return FALSE;
     }
 
@@ -118,7 +116,6 @@ BOOL CFileVersionInfo::Load(LPCWSTR pwszPath)
     m_wLang = lpLangCode->wLang;
     m_wCode = lpLangCode->wCode;
     TRACE("Lang %hx Code %hu\n", m_wLang, m_wCode);
-    HeapFree(GetProcessHeap(), 0, m_pInfo);
 
     return TRUE;
 }
@@ -1380,8 +1377,8 @@ CFileDefExt::CountFolderAndFiles(HWND hwndDlg, LPWSTR pwszBuf, UINT cchBufMax, D
     /* Find filename position */
     UINT cchBuf = wcslen(pwszBuf);
     WCHAR *pwszFilename = pwszBuf + cchBuf;
-    WCHAR * PathBuffer;
-    CString WorkBuffer;
+    WCHAR PathBuffer[MAX_PATH] = L"";
+    WCHAR WorkBuffer[MAX_PATH] = L"";
 
     size_t cchFilenameMax = cchBufMax - cchBuf;
     if (!cchFilenameMax)
@@ -1389,14 +1386,8 @@ CFileDefExt::CountFolderAndFiles(HWND hwndDlg, LPWSTR pwszBuf, UINT cchBufMax, D
     *(pwszFilename++) = '\\';
     --cchFilenameMax;
 
-    // Store path without wildcard (+2 for NULL and \\)
-    PathBuffer = (WCHAR *)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (cchBuf + 2) * 2);
-    if (!PathBuffer)
-    {
-        ERR("HeapAlloc failed\n");
-        return FALSE;
-    }
-    StringCchCopyW(PathBuffer, cchBuf + 2, pwszBuf);
+    // Store path without wildcard
+    StringCbCopyW(PathBuffer, sizeof(PathBuffer), pwszBuf);
 
     /* Find all files, FIXME: shouldn't be "*"? */
     StringCchCopyW(pwszFilename, cchFilenameMax, L"*");
@@ -1417,8 +1408,9 @@ CFileDefExt::CountFolderAndFiles(HWND hwndDlg, LPWSTR pwszBuf, UINT cchBufMax, D
 
     do
     {
-        WorkBuffer = PathBuffer;
-        WorkBuffer += wfd.cFileName;
+        ZeroMemory(WorkBuffer, sizeof(WorkBuffer));
+        StringCbCopyW(WorkBuffer, sizeof(WorkBuffer), PathBuffer);
+        StringCbCatW(WorkBuffer, sizeof(WorkBuffer), wfd.cFileName);
 
         if (wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
         {
@@ -1428,7 +1420,7 @@ CFileDefExt::CountFolderAndFiles(HWND hwndDlg, LPWSTR pwszBuf, UINT cchBufMax, D
 
             ++m_cFolders;
 
-            CountFolderAndFiles(hwndDlg, WorkBuffer.GetBuffer(), cchBufMax, ticks);
+            CountFolderAndFiles(hwndDlg, WorkBuffer, cchBufMax, ticks);
         }
         else
         {
@@ -1490,6 +1482,5 @@ CFileDefExt::CountFolderAndFiles(HWND hwndDlg, LPWSTR pwszBuf, UINT cchBufMax, D
 
     FindClose(hFind);
 
-    HeapFree(GetProcessHeap(), 0, PathBuffer);
     return TRUE;
 }
