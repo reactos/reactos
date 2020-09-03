@@ -332,32 +332,11 @@ CDefFolderMenu_Create(LPITEMIDLIST pidlFolder,
 /*
  * Unimplemented
  */
-EXTERN_C BOOL
-WINAPI
-SHChangeRegistrationReceive(LPVOID lpUnknown1, DWORD dwUnknown2)
-{
-    FIXME("SHChangeRegistrationReceive() stub\n");
-    return FALSE;
-}
-
-/*
- * Unimplemented
- */
 EXTERN_C VOID
 WINAPI
 SHWaitOp_Operate(LPVOID lpUnknown1, DWORD dwUnknown2)
 {
     FIXME("SHWaitOp_Operate() stub\n");
-}
-
-/*
- * Unimplemented
- */
-EXTERN_C VOID
-WINAPI
-SHChangeNotifyReceive(LONG lUnknown, UINT uUnknown, LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2)
-{
-    FIXME("SHChangeNotifyReceive() stub\n");
 }
 
 /*
@@ -622,20 +601,6 @@ WINAPI
 SHCreateProcessAsUserW(PSHCREATEPROCESSINFOW pscpi)
 {
     FIXME("SHCreateProcessAsUserW() stub\n");
-    return FALSE;
-}
-
-/*
- * Unimplemented
- */
-EXTERN_C BOOL
-WINAPI
-SHChangeNotifySuspendResume(BOOL bSuspend,
-                            LPITEMIDLIST pidl,
-                            BOOL bRecursive,
-                            DWORD dwReserved)
-{
-    FIXME("SHChangeNotifySuspendResume() stub\n");
     return FALSE;
 }
 
