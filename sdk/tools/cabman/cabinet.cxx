@@ -83,13 +83,6 @@ CCabinet::CCabinet()
     CabinetReservedFileBuffer = NULL;
     CabinetReservedFileSize = 0;
 
-    FolderListHead   = NULL;
-    FolderListTail   = NULL;
-    FileListHead     = NULL;
-    FileListTail     = NULL;
-    CriteriaListHead = NULL;
-    CriteriaListTail = NULL;
-
     Codec          = NULL;
     CodecId        = -1;
     CodecSelected  = false;
@@ -251,15 +244,7 @@ ULONG CCabinet::AddSearchCriteria(const char* SearchCriteria)
         return CAB_STATUS_NOMEMORY;
     }
 
-    Criteria->Prev = CriteriaListTail;
-    Criteria->Next = NULL;
-
-    if(CriteriaListTail)
-        CriteriaListTail->Next = Criteria;
-    else
-        CriteriaListHead = Criteria;
-
-    CriteriaListTail = Criteria;
+    CriteriaList.push_back(Criteria);
 
     // Set the actual criteria string
     Criteria->Search = SearchCriteria;
@@ -272,22 +257,11 @@ void CCabinet::DestroySearchCriteria()
  * FUNCTION: Destroys the list with the search criteria
  */
 {
-    PSEARCH_CRITERIA Criteria;
-    PSEARCH_CRITERIA NextCriteria;
-
-    Criteria = CriteriaListHead;
-
-    while(Criteria)
+    for (PSEARCH_CRITERIA Criteria : CriteriaList)
     {
-        NextCriteria = Criteria->Next;
-
         delete Criteria;
-
-        Criteria = NextCriteria;
     }
-
-    CriteriaListHead = NULL;
-    CriteriaListTail = NULL;
+    CriteriaList.clear();
 }
 
 bool CCabinet::HasSearchCriteria()
@@ -297,7 +271,7 @@ bool CCabinet::HasSearchCriteria()
  *    Whether we have search criteria or not.
  */
 {
-    return (CriteriaListHead != NULL);
+    return !CriteriaList.empty();
 }
 
 bool CCabinet::SetCompressionCodec(const char* CodecName)
@@ -406,7 +380,6 @@ ULONG CCabinet::Open()
  *     Status of operation
  */
 {
-    PCFFOLDER_NODE FolderNode;
     ULONG Status;
     ULONG Index;
 
@@ -508,7 +481,7 @@ ULONG CCabinet::Open()
         /* Read all folders */
         for (Index = 0; Index < CABHeader.FolderCount; Index++)
         {
-            FolderNode = NewFolderNode();
+            PCFFOLDER_NODE FolderNode = NewFolderNode();
             if (!FolderNode)
             {
                 DPRINT(MIN_TRACE, ("Insufficient resources.\n"));
@@ -537,16 +510,14 @@ ULONG CCabinet::Open()
         }
 
         /* Read data blocks for all folders */
-        FolderNode = FolderListHead;
-        while (FolderNode != NULL)
+        for (PCFFOLDER_NODE Node : FolderList)
         {
-            Status = ReadDataBlocks(FolderNode);
+            Status = ReadDataBlocks(Node);
             if (Status != CAB_STATUS_SUCCESS)
             {
                 DPRINT(MIN_TRACE, ("ReadDataBlocks() failed (%u).\n", (UINT)Status));
                 return Status;
             }
-            FolderNode = FolderNode->Next;
         }
     }
     return CAB_STATUS_SUCCESS;
@@ -576,7 +547,7 @@ ULONG CCabinet::FindFirst(PCAB_SEARCH Search)
  */
 {
     RestartSearch = false;
-    Search->Next = FileListHead;
+    Search->Next = FileList.begin();
     return FindNext(Search);
 }
 
@@ -591,54 +562,49 @@ ULONG CCabinet::FindNext(PCAB_SEARCH Search)
  */
 {
     bool bFound = false;
-    PSEARCH_CRITERIA Criteria;
     ULONG Status;
 
     if (RestartSearch)
     {
-        Search->Next  = FileListHead;
+        Search->Next  = FileList.begin();
 
         /* Skip split files already extracted */
-        while ((Search->Next) &&
-            (Search->Next->File.FileControlID > CAB_FILE_MAX_FOLDER) &&
-            (Search->Next->File.FileOffset <= LastFileOffset))
+        while ((Search->Next != FileList.end()) &&
+            ((*Search->Next)->File.FileControlID > CAB_FILE_MAX_FOLDER) &&
+            ((*Search->Next)->File.FileOffset <= LastFileOffset))
         {
             DPRINT(MAX_TRACE, ("Skipping file (%s)  FileOffset (0x%X)  LastFileOffset (0x%X).\n",
-                Search->Next->FileName.c_str(), (UINT)Search->Next->File.FileOffset, (UINT)LastFileOffset));
-            Search->Next = Search->Next->Next;
+                (*Search->Next)->FileName.c_str(), (UINT)(*Search->Next)->File.FileOffset, (UINT)LastFileOffset));
+            Search->Next++;
         }
 
         RestartSearch = false;
     }
 
     /* Check each search criteria against each file */
-    while(Search->Next)
+    while(Search->Next != FileList.end())
     {
         // Some features (like displaying cabinets) don't require search criteria, so we can just break here.
         // If a feature requires it, handle this in the ParseCmdline() function in "main.cxx".
-        if(!CriteriaListHead)
+        if (CriteriaList.empty())
             break;
 
-        Criteria = CriteriaListHead;
-
-        while(Criteria)
+        for (PSEARCH_CRITERIA Criteria : CriteriaList)
         {
-            if(MatchFileNamePattern(Search->Next->FileName.c_str(), Criteria->Search.c_str()))
+            if (MatchFileNamePattern((*Search->Next)->FileName.c_str(), Criteria->Search.c_str()))
             {
                 bFound = true;
                 break;
             }
-
-            Criteria = Criteria->Next;
         }
 
         if(bFound)
             break;
 
-        Search->Next = Search->Next->Next;
+        Search->Next++;
     }
 
-    if (!Search->Next)
+    if (Search->Next == FileList.end())
     {
         if (strlen(DiskNext) > 0)
         {
@@ -652,17 +618,17 @@ ULONG CCabinet::FindNext(PCAB_SEARCH Search)
             if (Status != CAB_STATUS_SUCCESS)
                 return Status;
 
-            Search->Next = FileListHead;
-            if (!Search->Next)
+            Search->Next = FileList.begin();
+            if (Search->Next == FileList.end())
                 return CAB_STATUS_NOFILE;
         }
         else
             return CAB_STATUS_NOFILE;
     }
 
-    Search->File     = &Search->Next->File;
-    Search->FileName = Search->Next->FileName;
-    Search->Next     = Search->Next->Next;
+    Search->File     = &(*Search->Next)->File;
+    Search->FileName = (*Search->Next)->FileName;
+    Search->Next++;
     return CAB_STATUS_SUCCESS;
 }
 
@@ -901,7 +867,7 @@ ULONG CCabinet::ExtractFile(const char* FileName)
                         }
 
                         /* The file is continued in the first data block in the folder */
-                        File->DataBlock = CurrentFolderNode->DataListHead;
+                        File->DataBlock = CurrentFolderNode->DataList.front();
 
                         /* Search to start of file */
                         if (fseek(FileHandle, (off_t)File->DataBlock->AbsoluteOffset, SEEK_SET) != 0)
@@ -1339,14 +1305,12 @@ ULONG CCabinet::WriteDisk(ULONG MoreDisks)
  *     Status of operation
  */
 {
-    PCFFILE_NODE FileNode;
     ULONG Status;
 
     ContinueFile = false;
-    FileNode = FileListHead;
-    while (FileNode != NULL)
+    for (auto it = FileList.begin(); it != FileList.end();)
     {
-        Status = WriteFileToScratchStorage(FileNode);
+        Status = WriteFileToScratchStorage(*it);
         if (Status != CAB_STATUS_SUCCESS)
             return Status;
 
@@ -1378,7 +1342,7 @@ ULONG CCabinet::WriteDisk(ULONG MoreDisks)
         else
         {
             ContinueFile = false;
-            FileNode = FileNode->Next;
+            it++;
         }
     }
 
@@ -1398,8 +1362,6 @@ ULONG CCabinet::WriteDisk(ULONG MoreDisks)
                 CloseDisk();
                 NewDisk();
                 CreateNewDisk = false;
-
-                ASSERT(FileNode == FileListHead);
             }
 
             if ((CurrentIBufferSize > 0) || (CurrentOBufferSize > 0))
@@ -1425,7 +1387,6 @@ ULONG CCabinet::CommitDisk(ULONG MoreDisks)
  *     Status of operation
  */
 {
-    PCFFOLDER_NODE FolderNode;
     ULONG Status;
 
     OnCabinetName(CurrentDiskNumber, CabinetName);
@@ -1463,8 +1424,7 @@ ULONG CCabinet::CommitDisk(ULONG MoreDisks)
     WriteFileEntries();
 
     /* Write data blocks */
-    FolderNode = FolderListHead;
-    while (FolderNode != NULL)
+    for (PCFFOLDER_NODE FolderNode : FolderList)
     {
         if (FolderNode->Commit)
         {
@@ -1474,7 +1434,6 @@ ULONG CCabinet::CommitDisk(ULONG MoreDisks)
             /* Remove data blocks for folder */
             DestroyDataNodes(FolderNode);
         }
-        FolderNode = FolderNode->Next;
     }
 
     fclose(FileHandle);
@@ -1613,7 +1572,6 @@ bool CCabinet::CreateSimpleCabinet()
     const char* pszFile;
     char szFilePath[PATH_MAX];
     char szFile[PATH_MAX];
-    PSEARCH_CRITERIA Criteria;
     ULONG Status;
 
 #if defined(_WIN32)
@@ -1634,9 +1592,7 @@ bool CCabinet::CreateSimpleCabinet()
     }
 
     // Add each file in the criteria list
-    Criteria = CriteriaListHead;
-
-    while(Criteria)
+    for (PSEARCH_CRITERIA Criteria : CriteriaList)
     {
         // Store the file path with a trailing slash in szFilePath
         ConvertPath(Criteria->Search);
@@ -1730,8 +1686,6 @@ bool CCabinet::CreateSimpleCabinet()
             closedir(dirp);
         }
 #endif
-
-        Criteria = Criteria->Next;
     }
 
     Status = WriteDisk(false);
@@ -1862,24 +1816,20 @@ PCFFOLDER_NODE CCabinet::LocateFolderNode(ULONG Index)
  *     Pointer to folder node or NULL if the folder node was not found
  */
 {
-    PCFFOLDER_NODE Node;
-
     switch (Index)
     {
         case CAB_FILE_SPLIT:
-            return FolderListTail;
+            return FolderList.back();
 
         case CAB_FILE_CONTINUED:
         case CAB_FILE_PREV_NEXT:
-            return FolderListHead;
+            return FolderList.front();
     }
 
-    Node = FolderListHead;
-    while (Node != NULL)
+    for (PCFFOLDER_NODE Node : FolderList)
     {
         if (Node->Index == Index)
             return Node;
-        Node = Node->Next;
     }
     return NULL;
 }
@@ -1894,15 +1844,12 @@ ULONG CCabinet::GetAbsoluteOffset(PCFFILE_NODE File)
  *     Status of operation
  */
 {
-    PCFDATA_NODE Node;
-
     DPRINT(MAX_TRACE, ("FileName '%s'  FileOffset (0x%X)  FileSize (%u).\n",
         File->FileName.c_str(),
         (UINT)File->File.FileOffset,
         (UINT)File->File.FileSize));
 
-    Node = CurrentFolderNode->DataListHead;
-    while (Node != NULL)
+    for (PCFDATA_NODE Node : CurrentFolderNode->DataList)
     {
         DPRINT(MAX_TRACE, ("GetAbsoluteOffset(): Comparing (0x%X, 0x%X) (%u).\n",
             (UINT)Node->UncompOffset,
@@ -1919,8 +1866,6 @@ ULONG CCabinet::GetAbsoluteOffset(PCFFILE_NODE File)
                 File->DataBlock = Node;
                 return CAB_STATUS_SUCCESS;
         }
-
-        Node = Node->Next;
     }
     return CAB_STATUS_INVALID_CAB;
 }
@@ -1939,13 +1884,11 @@ ULONG CCabinet::LocateFile(const char* FileName,
  *     Current folder is set to the folder of the file
  */
 {
-    PCFFILE_NODE Node;
     ULONG Status;
 
     DPRINT(MAX_TRACE, ("FileName '%s'\n", FileName));
 
-    Node = FileListHead;
-    while (Node != NULL)
+    for (PCFFILE_NODE Node : FileList)
     {
         if (strcasecmp(FileName, Node->FileName.c_str()) == 0)
         {
@@ -1965,7 +1908,6 @@ ULONG CCabinet::LocateFile(const char* FileName,
             *File = Node;
             return Status;
         }
-        Node = Node->Next;
     }
     return CAB_STATUS_NOFILE;
 }
@@ -2162,14 +2104,7 @@ PCFFOLDER_NODE CCabinet::NewFolderNode()
 
     Node->Folder.CompressionType = CAB_COMP_NONE;
 
-    Node->Prev = FolderListTail;
-
-    if (FolderListTail != NULL)
-        FolderListTail->Next = Node;
-    else
-        FolderListHead = Node;
-
-    FolderListTail = Node;
+    FolderList.push_back(Node);
 
     return Node;
 }
@@ -2190,14 +2125,7 @@ PCFFILE_NODE CCabinet::NewFileNode()
     if (!Node)
         return NULL;
 
-    Node->Prev = FileListTail;
-
-    if (FileListTail != NULL)
-        FileListTail->Next = Node;
-    else
-        FileListHead = Node;
-
-    FileListTail = Node;
+    FileList.push_back(Node);
 
     return Node;
 }
@@ -2218,14 +2146,7 @@ PCFDATA_NODE CCabinet::NewDataNode(PCFFOLDER_NODE FolderNode)
     if (!Node)
         return NULL;
 
-    Node->Prev = FolderNode->DataListTail;
-
-    if (FolderNode->DataListTail != NULL)
-        FolderNode->DataListTail->Next = Node;
-    else
-        FolderNode->DataListHead = Node;
-
-    FolderNode->DataListTail = Node;
+    FolderNode->DataList.push_back(Node);
 
     return Node;
 }
@@ -2238,18 +2159,11 @@ void CCabinet::DestroyDataNodes(PCFFOLDER_NODE FolderNode)
  *     FolderNode = Pointer to folder node
  */
 {
-    PCFDATA_NODE PrevNode;
-    PCFDATA_NODE NextNode;
-
-    NextNode = FolderNode->DataListHead;
-    while (NextNode != NULL)
+    for (PCFDATA_NODE Node : FolderNode->DataList)
     {
-        PrevNode = NextNode->Next;
-        delete NextNode;
-        NextNode = PrevNode;
+        delete Node;
     }
-    FolderNode->DataListHead = NULL;
-    FolderNode->DataListTail = NULL;
+    FolderNode->DataList.clear();
 }
 
 
@@ -2258,18 +2172,11 @@ void CCabinet::DestroyFileNodes()
  * FUNCTION: Destroys file nodes
  */
 {
-    PCFFILE_NODE PrevNode;
-    PCFFILE_NODE NextNode;
-
-    NextNode = FileListHead;
-    while (NextNode != NULL)
+    for (PCFFILE_NODE Node : FileList)
     {
-        PrevNode = NextNode->Next;
-        delete NextNode;
-        NextNode = PrevNode;
+        delete Node;
     }
-    FileListHead = NULL;
-    FileListTail = NULL;
+    FileList.clear();
 }
 
 
@@ -2278,33 +2185,13 @@ void CCabinet::DestroyDeletedFileNodes()
  * FUNCTION: Destroys file nodes that are marked for deletion
  */
 {
-    PCFFILE_NODE CurNode;
-    PCFFILE_NODE NextNode;
-
-    CurNode = FileListHead;
-    while (CurNode != NULL)
+    for (auto it = FileList.begin(); it != FileList.end(); )
     {
-        NextNode = CurNode->Next;
+        PCFFILE_NODE CurNode = *it;
 
         if (CurNode->Delete)
         {
-            if (CurNode->Prev != NULL)
-                CurNode->Prev->Next = CurNode->Next;
-            else
-            {
-                FileListHead = CurNode->Next;
-                if (FileListHead)
-                    FileListHead->Prev = NULL;
-            }
-
-            if (CurNode->Next != NULL)
-                CurNode->Next->Prev = CurNode->Prev;
-            else
-            {
-                FileListTail = CurNode->Prev;
-                if (FileListTail)
-                    FileListTail->Next = NULL;
-            }
+            it = FileList.erase(it);
 
             DPRINT(MAX_TRACE, ("Deleting file node: '%s'\n", CurNode->FileName.c_str()));
 
@@ -2312,7 +2199,10 @@ void CCabinet::DestroyDeletedFileNodes()
 
             delete CurNode;
         }
-        CurNode = NextNode;
+        else
+        {
+            it++;
+        }
     }
 }
 
@@ -2322,19 +2212,12 @@ void CCabinet::DestroyFolderNodes()
  * FUNCTION: Destroys folder nodes
  */
 {
-    PCFFOLDER_NODE PrevNode;
-    PCFFOLDER_NODE NextNode;
-
-    NextNode = FolderListHead;
-    while (NextNode != NULL)
+    for (PCFFOLDER_NODE Node : FolderList)
     {
-        PrevNode = NextNode->Next;
-        DestroyDataNodes(NextNode);
-        delete NextNode;
-        NextNode = PrevNode;
+        DestroyDataNodes(Node);
+        delete Node;
     }
-    FolderListHead = NULL;
-    FolderListTail = NULL;
+    FolderList.clear();
 }
 
 
@@ -2343,40 +2226,23 @@ void CCabinet::DestroyDeletedFolderNodes()
  * FUNCTION: Destroys folder nodes that are marked for deletion
  */
 {
-    PCFFOLDER_NODE CurNode;
-    PCFFOLDER_NODE NextNode;
-
-    CurNode = FolderListHead;
-    while (CurNode != NULL)
+    for (auto it = FolderList.begin(); it != FolderList.end();)
     {
-        NextNode = CurNode->Next;
+        PCFFOLDER_NODE CurNode = *it;
 
         if (CurNode->Delete)
         {
-            if (CurNode->Prev != NULL)
-                CurNode->Prev->Next = CurNode->Next;
-            else
-            {
-                FolderListHead = CurNode->Next;
-                if (FolderListHead)
-                    FolderListHead->Prev = NULL;
-            }
-
-            if (CurNode->Next != NULL)
-                CurNode->Next->Prev = CurNode->Prev;
-            else
-            {
-                FolderListTail = CurNode->Prev;
-                if (FolderListTail)
-                    FolderListTail->Next = NULL;
-            }
+            it = FolderList.erase(it);
 
             DestroyDataNodes(CurNode);
             delete CurNode;
 
             TotalFolderSize -= sizeof(CFFOLDER);
         }
-        CurNode = NextNode;
+        else
+        {
+            it++;
+        }
     }
 }
 
@@ -2611,8 +2477,6 @@ ULONG CCabinet::WriteCabinetHeader(bool MoreDisks)
  *     Status of operation
  */
 {
-    PCFFOLDER_NODE FolderNode;
-    PCFFILE_NODE FileNode;
     ULONG BytesWritten;
     ULONG Size;
 
@@ -2631,16 +2495,13 @@ ULONG CCabinet::WriteCabinetHeader(bool MoreDisks)
     /* Set absolute folder offsets */
     BytesWritten = Size + TotalFolderSize + TotalFileSize;
     CABHeader.FolderCount = 0;
-    FolderNode = FolderListHead;
-    while (FolderNode != NULL)
+    for (PCFFOLDER_NODE FolderNode : FolderList)
     {
         FolderNode->Folder.DataOffset = BytesWritten;
 
         BytesWritten += FolderNode->TotalFolderSize;
 
         CABHeader.FolderCount++;
-
-        FolderNode = FolderNode->Next;
     }
 
     /* Set absolute offset of file table */
@@ -2648,12 +2509,10 @@ ULONG CCabinet::WriteCabinetHeader(bool MoreDisks)
 
     /* Count number of files to be committed */
     CABHeader.FileCount = 0;
-    FileNode = FileListHead;
-    while (FileNode != NULL)
+    for (PCFFILE_NODE FileNode : FileList)
     {
         if (FileNode->Commit)
             CABHeader.FileCount++;
-        FileNode = FileNode->Next;
     }
 
     CABHeader.CabinetSize = DiskSize;
@@ -2750,12 +2609,9 @@ ULONG CCabinet::WriteFolderEntries()
  *     Status of operation
  */
 {
-    PCFFOLDER_NODE FolderNode;
-
     DPRINT(MAX_TRACE, ("Writing folder table.\n"));
 
-    FolderNode = FolderListHead;
-    while (FolderNode != NULL)
+    for (PCFFOLDER_NODE FolderNode : FolderList)
     {
         if (FolderNode->Commit)
         {
@@ -2768,7 +2624,6 @@ ULONG CCabinet::WriteFolderEntries()
                 return CAB_STATUS_CANNOT_WRITE;
             }
         }
-        FolderNode = FolderNode->Next;
     }
 
     return CAB_STATUS_SUCCESS;
@@ -2782,13 +2637,11 @@ ULONG CCabinet::WriteFileEntries()
  *     Status of operation
  */
 {
-    PCFFILE_NODE File;
     bool SetCont = false;
 
     DPRINT(MAX_TRACE, ("Writing file table.\n"));
 
-    File = FileListHead;
-    while (File != NULL)
+    for (PCFFILE_NODE File : FileList)
     {
         if (File->Commit)
         {
@@ -2829,8 +2682,6 @@ ULONG CCabinet::WriteFileEntries()
                 SetCont = false;
             }
         }
-
-        File = File->Next;
     }
     return CAB_STATUS_SUCCESS;
 }
@@ -2845,15 +2696,13 @@ ULONG CCabinet::CommitDataBlocks(PCFFOLDER_NODE FolderNode)
  *     Status of operation
  */
 {
-    PCFDATA_NODE DataNode;
     ULONG BytesRead;
     ULONG Status;
 
-    DataNode = FolderNode->DataListHead;
-    if (DataNode != NULL)
-        Status = ScratchFile->Seek(DataNode->ScratchFilePosition);
+    if (!FolderNode->DataList.empty())
+        Status = ScratchFile->Seek(FolderNode->DataList.front()->ScratchFilePosition);
 
-    while (DataNode != NULL)
+    for (PCFDATA_NODE DataNode : FolderNode->DataList)
     {
         DPRINT(MAX_TRACE, ("Reading block at (0x%X)  CompSize (%u)  UncompSize (%u).\n",
             (UINT)DataNode->ScratchFilePosition,
@@ -2881,8 +2730,6 @@ ULONG CCabinet::CommitDataBlocks(PCFFOLDER_NODE FolderNode)
             DPRINT(MIN_TRACE, ("Cannot write to file.\n"));
             return CAB_STATUS_CANNOT_WRITE;
         }
-
-        DataNode = DataNode->Next;
     }
     return CAB_STATUS_SUCCESS;
 }

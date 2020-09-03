@@ -26,6 +26,7 @@
 #include <string.h>
 #include <limits.h>
 #include <string>
+#include <list>
 
 #ifndef PATH_MAX
 #define PATH_MAX MAX_PATH
@@ -204,8 +205,6 @@ C_ASSERT(sizeof(CFDATA) == 8);
 
 typedef struct _CFDATA_NODE
 {
-    struct _CFDATA_NODE *Next = nullptr;
-    struct _CFDATA_NODE *Prev = nullptr;
     ULONG       ScratchFilePosition = 0;    // Absolute offset in scratch file
     ULONG       AbsoluteOffset = 0;         // Absolute offset in cabinet
     ULONG       UncompOffset = 0;           // Uncompressed offset in folder
@@ -214,13 +213,10 @@ typedef struct _CFDATA_NODE
 
 typedef struct _CFFOLDER_NODE
 {
-    struct _CFFOLDER_NODE *Next = nullptr;
-    struct _CFFOLDER_NODE *Prev = nullptr;
     ULONG           UncompOffset = 0;       // File size accumulator
     ULONG           AbsoluteOffset = 0;
     ULONG           TotalFolderSize = 0;    // Total size of folder in current disk
-    PCFDATA_NODE    DataListHead = nullptr;
-    PCFDATA_NODE    DataListTail = nullptr;
+    std::list<PCFDATA_NODE> DataList;
     ULONG           Index = 0;
     bool            Commit = false;         // true if the folder should be committed
     bool            Delete = false;         // true if marked for deletion
@@ -229,8 +225,6 @@ typedef struct _CFFOLDER_NODE
 
 typedef struct _CFFILE_NODE
 {
-    struct _CFFILE_NODE *Next = nullptr;
-    struct _CFFILE_NODE *Prev = nullptr;
     CFFILE              File = { 0 };
     std::string         FileName;
     PCFDATA_NODE        DataBlock = nullptr;    // First data block of file. NULL if not known
@@ -241,14 +235,12 @@ typedef struct _CFFILE_NODE
 
 typedef struct _SEARCH_CRITERIA
 {
-    struct _SEARCH_CRITERIA  *Next = nullptr;   // Pointer to next search criteria
-    struct _SEARCH_CRITERIA  *Prev = nullptr;   // Pointer to previous search criteria
     std::string              Search;            // The actual search criteria
 } SEARCH_CRITERIA, *PSEARCH_CRITERIA;
 
 typedef struct _CAB_SEARCH
 {
-    PCFFILE_NODE      Next = nullptr;   // Pointer to next node
+    std::list<PCFFILE_NODE>::iterator      Next;   // Pointer to next node
     PCFFILE           File = nullptr;   // Pointer to current CFFILE
     std::string       FileName;         // Current filename
 } CAB_SEARCH, *PCAB_SEARCH;
@@ -456,14 +448,11 @@ private:
     ULONG CabinetReserved;
     ULONG FolderReserved;
     ULONG DataReserved;
-    PCFFOLDER_NODE FolderListHead;
-    PCFFOLDER_NODE FolderListTail;
+    std::list<PCFFOLDER_NODE> FolderList;
     PCFFOLDER_NODE CurrentFolderNode;
     PCFDATA_NODE CurrentDataNode;
-    PCFFILE_NODE FileListHead;
-    PCFFILE_NODE FileListTail;
-    PSEARCH_CRITERIA CriteriaListHead;
-    PSEARCH_CRITERIA CriteriaListTail;
+    std::list<PCFFILE_NODE> FileList;
+    std::list<PSEARCH_CRITERIA> CriteriaList;
     CCABCodec *Codec;
     LONG CodecId;
     bool CodecSelected;
