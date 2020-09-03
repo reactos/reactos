@@ -3,7 +3,7 @@ LANGUAGE LANG_FRENCH, SUBLANG_NEUTRAL
 IDD_POWER_METER DIALOGEX 0, 0, 252, 218
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
 EXSTYLE WS_EX_CONTEXTHELP
-CAPTION "Power Meter"
+CAPTION "Gestionnaire d'énergie"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "Etat de l'alimentation", 1001, "Button", BS_GROUPBOX | WS_CHILD | WS_VISIBLE, 9, 20, 234, 189 
@@ -16,26 +16,26 @@ STRINGTABLE
 BEGIN
     //Power related strings
     IDS_PWR_PROPERTIES        "&Modifier les paramètres d'alimentation"
-    IDS_PWR_METER             "&Open Power Meter"
+    IDS_PWR_METER             "&Ouvrir le gestionnaire d'énergie"
     IDS_PWR_RUN               "shell32.dll,Control_RunDLL PowerCfg.cpl"
-    IDS_PWR_PERCENT_REMAINING "%u%% remaining"
-    IDS_PWR_CHARGING          "%u%% and charging"
-    IDS_PWR_UNKNOWN_REMAINING "Unknown remaining"
-    IDS_PWR_AC "On AC power"
-    IDS_PWR_HOURS_REMAINING "%1!u!:%2!02u! hours (%3!u!%%) remaining"
-    IDS_PWR_MINUTES_REMAINING "%1!u! min (%2!u!%%) remaining"
+    IDS_PWR_PERCENT_REMAINING "%u%% restants"
+    IDS_PWR_CHARGING          "%u%% en charge"
+    IDS_PWR_UNKNOWN_REMAINING "Restant inconnu"
+    IDS_PWR_AC "Sur secteur"
+    IDS_PWR_HOURS_REMAINING "%1!u!:%2!02u! heures (%3!u!%%) restantes"
+    IDS_PWR_MINUTES_REMAINING "%1!u! mins (%2!u!%%) restantes"
 
     //Hotplug related strings
-    IDS_HOTPLUG_REMOVE_1 "Safely Remove Hardware"
-    IDS_HOTPLUG_REMOVE_2 "&Safely Remove Hardware"
-    IDS_HOTPLUG_REMOVE_3 "Safely remove %s"
+    IDS_HOTPLUG_REMOVE_1 "Retirer le périphérique en sécurité"
+    IDS_HOTPLUG_REMOVE_2 "&Retirer le périphérique en sécurité"
+    IDS_HOTPLUG_REMOVE_3 "Retirer %s en sécurité"
     IDS_HOTPLUG_RUN "shell32.dll,Control_RunDLL hotplug.dll"
     IDS_HOTPLUG_COMMA ", "
-    IDS_HOTPLUG_DRIVE " - Drive(%s)"
-    IDS_HOTPLUG_DRIVES " - Drives(%s)"
+    IDS_HOTPLUG_DRIVE " - Lecteur(%s)"
+    IDS_HOTPLUG_DRIVES " - Lecteurs(%s)"
     IDS_HOTPLUG_A "A:"
-    IDS_HOTPLUG_REQUIRES "This hardware requires ""Safe Removal"""
-    IDS_HOTPLUG_CLICK "Before removing this hardware, click on this icon and select the hardware you want to remove."
+    IDS_HOTPLUG_REQUIRES "Ce périphérique nécessite un ""retrait en sécurité"""
+    IDS_HOTPLUG_CLICK "Avant de retirer ce périphérique, cliquez sur cette icône et sélectionnez le périphérique à retirer."
 
     //Volume related strings
     IDS_VOL_VOLUME "Volume"
