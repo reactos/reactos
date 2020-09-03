@@ -1420,9 +1420,10 @@ CFileDefExt::CountFolderAndFiles(HWND hwndDlg, LPWSTR pwszBuf, UINT cchBufMax, D
     {
         cchWorkBuf = wcslen(PathBuffer) + wcslen(wfd.cFileName) + 1;
         WorkBuffer = (WCHAR *)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, cchWorkBuf * 2);
-        if (!PathBuffer)
+        if (!WorkBuffer)
         {
             ERR("HeapAlloc failed\n");
+            HeapFree(GetProcessHeap(), 0, PathBuffer);
             return FALSE;
         }
         StringCchCopyW(WorkBuffer, cchWorkBuf, PathBuffer);
@@ -1498,6 +1499,6 @@ CFileDefExt::CountFolderAndFiles(HWND hwndDlg, LPWSTR pwszBuf, UINT cchBufMax, D
 
     FindClose(hFind);
 
-    HeapFree(GetProcessHeap(), 0, PathBuffer);    
+    HeapFree(GetProcessHeap(), 0, PathBuffer);
     return TRUE;
 }
