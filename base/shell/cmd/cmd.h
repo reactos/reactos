@@ -297,9 +297,10 @@ LPTSTR *splitspace (LPTSTR, LPINT);
 VOID   freep (LPTSTR *);
 LPTSTR _stpcpy (LPTSTR, LPCTSTR);
 VOID   StripQuotes(LPTSTR);
-BOOL   IsValidPathName (LPCTSTR);
-BOOL   IsExistingFile (LPCTSTR);
-BOOL   IsExistingDirectory (LPCTSTR);
+
+BOOL IsValidPathName(IN LPCTSTR pszPath);
+BOOL IsExistingFile(IN LPCTSTR pszPath);
+BOOL IsExistingDirectory(IN LPCTSTR pszPath);
 VOID   GetPathCase(TCHAR *, TCHAR *);
 
 #define PROMPT_NO    0

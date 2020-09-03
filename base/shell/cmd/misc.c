@@ -477,36 +477,34 @@ StripQuotes(TCHAR *in)
 
 
 /*
- * Checks if a path is valid (accessible)
+ * Checks if a path is valid (is accessible)
  */
-BOOL IsValidPathName (LPCTSTR pszPath)
+BOOL IsValidPathName(IN LPCTSTR pszPath)
 {
-    TCHAR szOldPath[MAX_PATH];
     BOOL  bResult;
+    TCHAR szOldPath[MAX_PATH];
 
-    GetCurrentDirectory (MAX_PATH, szOldPath);
-    bResult = SetCurrentDirectory (pszPath);
+    GetCurrentDirectory(ARRAYSIZE(szOldPath), szOldPath);
+    bResult = SetCurrentDirectory(pszPath);
 
-    SetCurrentDirectory (szOldPath);
+    SetCurrentDirectory(szOldPath);
 
     return bResult;
 }
 
-
 /*
- * Checks if a file exists (accessible)
+ * Checks if a file exists (is accessible)
  */
-BOOL IsExistingFile (LPCTSTR pszPath)
+BOOL IsExistingFile(IN LPCTSTR pszPath)
 {
-    DWORD attr = GetFileAttributes (pszPath);
-    return (attr != 0xFFFFFFFF && (! (attr & FILE_ATTRIBUTE_DIRECTORY)) );
+    DWORD attr = GetFileAttributes(pszPath);
+    return ((attr != INVALID_FILE_ATTRIBUTES) && !(attr & FILE_ATTRIBUTE_DIRECTORY));
 }
 
-
-BOOL IsExistingDirectory (LPCTSTR pszPath)
+BOOL IsExistingDirectory(IN LPCTSTR pszPath)
 {
-    DWORD attr = GetFileAttributes (pszPath);
-    return (attr != 0xFFFFFFFF && (attr & FILE_ATTRIBUTE_DIRECTORY) );
+    DWORD attr = GetFileAttributes(pszPath);
+    return ((attr != INVALID_FILE_ATTRIBUTES) && (attr & FILE_ATTRIBUTE_DIRECTORY));
 }
 
 

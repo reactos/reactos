@@ -138,7 +138,7 @@ INT ExecuteIf(PARSED_COMMAND *Cmd)
             attrs = GetFileAttributes(Right);
         }
 
-        if (attrs == 0xFFFFFFFF)
+        if (attrs == INVALID_FILE_ATTRIBUTES)
             result = FALSE;
         else if (IsDir)
             result = ((attrs & FILE_ATTRIBUTE_DIRECTORY) == FILE_ATTRIBUTE_DIRECTORY);

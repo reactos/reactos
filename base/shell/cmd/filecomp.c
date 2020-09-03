@@ -532,7 +532,7 @@ FileNameContainsSpecialCharacters(LPTSTR pszFileName)
             (chr == _T('^')) ||
             (chr == _T('~')) ||
             (chr == _T('+')) ||
-            (chr == 0xB4)) // '´'
+            (chr == 0xB4)) // 'Â´'
         {
             return TRUE;
         }
@@ -669,7 +669,7 @@ VOID CompleteFilename (LPTSTR strIN, BOOL bNext, LPTSTR strOut, UINT cusor)
 
         /* Don't show files when they are doing 'cd' or 'rd' */
         if (!ShowAll &&
-            file.dwFileAttributes != 0xFFFFFFFF &&
+            file.dwFileAttributes != INVALID_FILE_ATTRIBUTES &&
             !(file.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
         {
                 continue;
