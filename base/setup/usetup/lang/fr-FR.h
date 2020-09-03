@@ -213,7 +213,7 @@ static MUI_ENTRY frFRIntroPageEntries[] =
     {
         6,
         13,
-        "\202valuation et test, pas pour un usage quotidien.",
+        "que pour \202valuation et test, pas pour un usage quotidien.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
