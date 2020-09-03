@@ -206,7 +206,7 @@ static MUI_ENTRY frFRIntroPageEntries[] =
     {
         6,
         12,
-        "et est en cours de d\202veloppement. A n'utiliser que pour",
+        "et est en cours de d\202veloppement. Il est recommand\202 de ne l'utiliser",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
