@@ -398,7 +398,7 @@ static MUI_ENTRY frFRLicensePageEntries[] =
     {
         8,
         28,
-        "l'ADEQUATION POUR UN USAGE EN PARTICULIER",
+        "l'AD\220QUATION POUR UN USAGE EN PARTICULIER",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
