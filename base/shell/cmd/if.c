@@ -78,20 +78,19 @@ INT ExecuteIf(PARSED_COMMAND *Cmd)
     Right = DoDelayedExpansion(Cmd->If.RightArg);
     if (!Right)
     {
-        cmd_free(Left);
+        if (Left) cmd_free(Left);
         return 1;
     }
 
     if (bEnableExtensions && (Cmd->If.Operator == IF_CMDEXTVERSION))
     {
-        /* IF CMDEXTVERSION n: check if Command Extensions version
-         * is greater or equal to n */
+        /* IF CMDEXTVERSION n: check if Command Extensions
+         * version is greater or equal to n. */
         DWORD n = _tcstoul(Right, &param, 10);
         if (*param != _T('\0'))
         {
             error_syntax(Right);
-            cmd_free(Right);
-            return 1;
+            goto fail;
         }
         result = (CMDEXTVERSION >= n);
     }
@@ -107,8 +106,7 @@ INT ExecuteIf(PARSED_COMMAND *Cmd)
         if (*param != _T('\0'))
         {
             error_syntax(Right);
-            cmd_free(Right);
-            return 1;
+            goto fail;
         }
         result = (nErrorLevel >= n);
     }
@@ -178,11 +176,19 @@ INT ExecuteIf(PARSED_COMMAND *Cmd)
             case IF_LEQ: result = (result <= 0); break;
             case IF_GTR: result = (result >  0); break;
             case IF_GEQ: result = (result >= 0); break;
+            default: goto unknownOp;
             }
+        }
+        else
+        {
+unknownOp:
+            ERR("Unknown IF operator 0x%x\n", Cmd->If.Operator);
+            ASSERT(FALSE);
+            goto fail;
         }
     }
 
-    cmd_free(Left);
+    if (Left) cmd_free(Left);
     cmd_free(Right);
 
     if (result ^ ((Cmd->If.Flags & IFFLAG_NEGATE) != 0))
@@ -195,6 +201,11 @@ INT ExecuteIf(PARSED_COMMAND *Cmd)
         /* Full condition was false, do the "else" command if there is one */
         return ExecuteCommand(Cmd->Subcommands->Next);
     }
+
+fail:
+    if (Left) cmd_free(Left);
+    cmd_free(Right);
+    return 1;
 }
 
 /* EOF */
