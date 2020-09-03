@@ -293,7 +293,7 @@ static MUI_ENTRY frFRLicensePageEntries[] =
     {
         8,
         10,
-        "autres licenses compatibles telles que X11, BSD et GNU LGPL.",
+        "d'autres licences compatibles telles que X11, BSD et GNU LGPL.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
