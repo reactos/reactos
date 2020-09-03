@@ -286,7 +286,7 @@ static MUI_ENTRY frFRLicensePageEntries[] =
     {
         8,
         9,
-        "GNU GPL avec des parties contenant du code sous",
+        "la licence GNU GPL avec des parties contenant du code sous",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
