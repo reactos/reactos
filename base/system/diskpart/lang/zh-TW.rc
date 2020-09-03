@@ -8,9 +8,9 @@ STRINGTABLE
 BEGIN
     IDS_APP_HEADER "ReactOS DiskPart"
     IDS_APP_USAGE "\n磁碟分區實用工具\n\n\
-Usage: DISKPART [/S filename] [/T timeout] [/?]\n\n\
+Usage: DISKPART [/S 檔名] [/T 逾時] [/?]\n\n\
 /S <檔名>\t執行指定的指令碼。\n\
-/T <超時>\t逾時秒數，防止 DiskPart 使用重疊。\n\
+/T <逾時>\t逾時秒數，防止 DiskPart 使用重疊。\n\
 /?\t\t顯示此說明訊息。\n\n"
     IDS_APP_LICENSE "根據 GNU GPLv2 許可\n"
     IDS_APP_CURR_COMPUTER "在電腦: %s\n\n"
@@ -45,7 +45,7 @@ BEGIN
     IDS_LIST_DISK_FORMAT "%c %7lu   %-10s  %4I64u %-2s  %4I64u %-2s   %1s    %1s\n"
     IDS_LIST_PARTITION_HEAD "\n     分區           類型          大小     偏移量\n"
     IDS_LIST_PARTITION_LINE "  -------------  ----------------  -------  -------\n"
-    IDS_LIST_PARTITION_FORMAT "%c Partition %2lu   %-16s  %4I64u %-2s  %4I64u %-2s\n"
+    IDS_LIST_PARTITION_FORMAT "%c 磁碟分割 %2lu   %-16s  %4I64u %-2s  %4I64u %-2s\n"
     IDS_LIST_PARTITION_NO_DISK "\n沒有可列出分區的磁碟。\n請選擇一個磁碟，再試一次。\n\n"
     IDS_LIST_VOLUME_HEAD "  磁碟區 ###  Ltr  標籤\n"
 END

@@ -6,8 +6,8 @@ LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 STRINGTABLE
 BEGIN
     IDS_USAGE "\n\
-Usage: %s [drive:] [-F] [-V] [-R] [-C]\n\n\
-[drive:]    指定需要檢查的磁碟機。\n\
+Usage: %s [磁碟機:] [-F] [-V] [-R] [-C]\n\n\
+[磁碟機:]    指定需要檢查的磁碟機。\n\
 -F          修復磁碟機上的錯誤。\n\
 -V          顯示每一個檔案的完整路徑。\n\
 -R          找出損壞的磁區並復原可讀取的資訊。\n\
