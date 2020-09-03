@@ -8,9 +8,6 @@
 #include "resource.h"
 #include "precomp.h"
 
-#define CX_BITMAP 20
-#define CY_BITMAP 20
-
 INT_PTR CALLBACK StartDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     WCHAR TempText[MAX_PATH] = { 0 };

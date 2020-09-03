@@ -16,6 +16,9 @@
 #define ALLOW_FILE_REMOVAL 2
 #define DISALLOW_FILE_REMOVAL 3
 
+#define CX_BITMAP 20
+#define CY_BITMAP 20
+
 typedef enum
 {
     OLD_CHKDSK_FILES = 0,
