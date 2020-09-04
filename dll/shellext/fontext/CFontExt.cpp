@@ -454,12 +454,8 @@ STDMETHODIMP CFontExt::DragEnter(IDataObject* pDataObj, DWORD grfKeyState, POINT
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
-#if 1   // Please implement DoGetFontTitle
-    return DRAGDROP_S_CANCEL;
-#else
     *pdwEffect = DROPEFFECT_COPY;
     return S_OK;
-#endif
 }
 
 STDMETHODIMP CFontExt::DragOver(DWORD grfKeyState, POINTL pt, DWORD* pdwEffect)
@@ -568,7 +564,7 @@ HRESULT CFontExt::DoInstallFontFile(LPCWSTR pszFontPath, LPCWSTR pszFontsDir, HK
     LPCWSTR pszFileTitle = PathFindFileName(pszFontPath);
 
     WCHAR szFontName[512];
-    if (!DoGetFontTitle(pszFontPath, szFontName))
+    if (!DoGetFontTitle(pszFontPath, szFontName, sizeof(szFontName)))
         return E_FAIL;
 
     RemoveFontResourceW(pszFileTitle);
@@ -601,8 +597,31 @@ HRESULT CFontExt::DoInstallFontFile(LPCWSTR pszFontPath, LPCWSTR pszFontsDir, HK
     return S_OK;
 }
 
-HRESULT CFontExt::DoGetFontTitle(LPCWSTR pszFontPath, LPCWSTR pszFontName)
+typedef BOOL (WINAPI *FN_GetFontResourceInfoW)(LPCWSTR, DWORD *, void*, DWORD);
+
+HRESULT
+CFontExt::DoGetFontTitle(IN LPCWSTR pszFontPath, OUT LPWSTR pszFontName,
+                         IN DWORD cbFontName)
 {
-    // TODO:
+    HMODULE hGdi32 = LoadLibraryA("gdi32");
+    FN_GetFontResourceInfoW fnGetFontResourceInfoW =
+        reinterpret_cast<FN_GetFontResourceInfoW>(
+            GetProcAddress(hGdi32, "GetFontResourceInfoW"));
+    if (!fnGetFontResourceInfoW)
+    {
+        ERR("gdi32!GetFontResourceInfoW not found\n");
+        FreeLibrary(hGdi32);
+        return E_FAIL;
+    }
+
+    BOOL ret = (*fnGetFontResourceInfoW)(pszFontPath, &cbFontName, pszFontName, 1);
+    FreeLibrary(hGdi32);
+    if (ret)
+    {
+        TRACE("pszFontName: %S\n", pszFontName);
+        return S_OK;
+    }
+
+    ERR("GetFontResourceInfoW failed\n");
     return E_FAIL;
 }
