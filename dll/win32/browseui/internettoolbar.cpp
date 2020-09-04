@@ -1532,6 +1532,30 @@ LRESULT CInternetToolbar::OnFolders(WORD wNotifyCode, WORD wID, HWND hWndCtl, BO
     return 1;
 }
 
+LRESULT CInternetToolbar::OnMoveTo(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled)
+{
+    // TODO:
+    return 0;
+}
+
+LRESULT CInternetToolbar::OnCopyTo(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled)
+{
+    // TODO:
+    return 0;
+}
+
+LRESULT CInternetToolbar::OnDelete(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled)
+{
+    // TODO:
+    return 0;
+}
+
+LRESULT CInternetToolbar::OnUndo(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled)
+{
+    // TODO:
+    return 0;
+}
+
 LRESULT CInternetToolbar::OnForwardToCommandTarget(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled)
 {
     HRESULT                                 hResult;

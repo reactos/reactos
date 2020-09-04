@@ -185,6 +185,10 @@ public:
     LRESULT OnUpLevel(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
     LRESULT OnSearch(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
     LRESULT OnFolders(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
+    LRESULT OnMoveTo(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
+    LRESULT OnCopyTo(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
+    LRESULT OnDelete(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
+    LRESULT OnUndo(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
     LRESULT OnForwardToCommandTarget(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled);
     LRESULT OnMenuDropDown(UINT idControl, NMHDR *pNMHDR, BOOL &bHandled);
     LRESULT OnQueryInsert(UINT idControl, NMHDR *pNMHDR, BOOL &bHandled);
@@ -207,6 +211,9 @@ public:
         COMMAND_ID_HANDLER(IDM_GOTO_UPONELEVEL, OnUpLevel)
         COMMAND_ID_HANDLER(gSearchCommandID, OnSearch)
         COMMAND_ID_HANDLER(gFoldersCommandID, OnFolders)
+        COMMAND_ID_HANDLER(gMoveToCommandID, OnMoveTo)
+        COMMAND_ID_HANDLER(gDeleteCommandID, OnDelete)
+        COMMAND_ID_HANDLER(gUndoCommandID, OnUndo)
         COMMAND_RANGE_HANDLER(0x7000, 0x7fff, OnForwardToCommandTarget)
         NOTIFY_HANDLER(0, TBN_DROPDOWN, OnMenuDropDown)
         NOTIFY_HANDLER(0, TBN_QUERYINSERT, OnQueryInsert)
