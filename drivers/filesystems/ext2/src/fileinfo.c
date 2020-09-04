@@ -137,7 +137,6 @@ Ext2QueryFileInformation (IN PEXT2_IRP_CONTEXT IrpContext)
             }
 
             FileBasicInformation = (PFILE_BASIC_INFORMATION) Buffer;
-            RtlZeroBytes(FileBasicInformation, sizeof(FILE_BASIC_INFORMATION));
 
             FileBasicInformation->CreationTime = Mcb->CreationTime;
             FileBasicInformation->LastAccessTime = Mcb->LastAccessTime;
