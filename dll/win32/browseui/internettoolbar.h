@@ -212,6 +212,7 @@ public:
         COMMAND_ID_HANDLER(gSearchCommandID, OnSearch)
         COMMAND_ID_HANDLER(gFoldersCommandID, OnFolders)
         COMMAND_ID_HANDLER(gMoveToCommandID, OnMoveTo)
+        COMMAND_ID_HANDLER(gCopyToCommandID, OnCopyTo)
         COMMAND_ID_HANDLER(gDeleteCommandID, OnDelete)
         COMMAND_ID_HANDLER(gUndoCommandID, OnUndo)
         COMMAND_RANGE_HANDLER(0x7000, 0x7fff, OnForwardToCommandTarget)
