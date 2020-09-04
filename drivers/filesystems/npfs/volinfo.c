@@ -74,7 +74,6 @@ NpQueryFsDeviceInfo(IN PVOID Buffer,
     PFILE_FS_DEVICE_INFORMATION InfoBuffer = Buffer;
     TRACE("Entered\n");
 
-    InfoBuffer->Characteristics = 0;
     InfoBuffer->DeviceType = FILE_DEVICE_NAMED_PIPE;
     *Length -= sizeof(*InfoBuffer);
 

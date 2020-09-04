@@ -160,7 +160,9 @@ Return Value:
         //  and false if it couldn't wait for any I/O to complete.
         //
 
+#ifdef __REACTOS__
         RtlZeroMemory(Irp->AssociatedIrp.SystemBuffer, Length);
+#endif // __REACTOS__
 
         switch (IrpSp->Parameters.QueryVolume.FsInformationClass) {
 
@@ -358,6 +360,7 @@ Return Value:
 
     Buffer->TotalAllocationUnits.QuadPart = LlSectorsFromBytes( Vcb->VolumeDasdFcb->AllocationSize.QuadPart );
 
+    Buffer->AvailableAllocationUnits.QuadPart = 0;
     Buffer->SectorsPerAllocationUnit = 1;
     Buffer->BytesPerSector = SECTOR_SIZE;
 
