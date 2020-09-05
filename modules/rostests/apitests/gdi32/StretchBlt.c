@@ -21,37 +21,10 @@
 static void test_StretchBlt(void)
 {
     HBITMAP bmpDst, bmpSrc;
-    HBITMAP oldDst, oldSrc;
-    HDC hdcScreen, hdcDst, hdcSrc;
+    HDC hdcDst, hdcSrc;
     UINT32 *dstBuffer, *srcBuffer;
     BITMAPINFO biDst, biSrc;
     UINT32 expected[256];
-
-    memset(&biDst, 0, sizeof(BITMAPINFO));
-    biDst.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-    biDst.bmiHeader.biWidth = 16;
-    biDst.bmiHeader.biHeight = -16;
-    biDst.bmiHeader.biPlanes = 1;
-    biDst.bmiHeader.biBitCount = 32;
-    biDst.bmiHeader.biCompression = BI_RGB;
-    memcpy(&biSrc, &biDst, sizeof(BITMAPINFO));
-
-    hdcScreen = CreateCompatibleDC(0);
-    hdcDst = CreateCompatibleDC(hdcScreen);
-    hdcSrc = CreateCompatibleDC(hdcDst);
-
-    bmpDst = CreateDIBSection(hdcScreen, &biDst, DIB_RGB_COLORS, (void**)&dstBuffer,
-        NULL, 0);
-    oldDst = SelectObject(hdcDst, bmpDst);
-
-    bmpSrc = CreateDIBSection(hdcScreen, &biSrc, DIB_RGB_COLORS, (void**)&srcBuffer,
-        NULL, 0);
-    oldSrc = SelectObject(hdcSrc, bmpSrc);
-
-    SelectObject(hdcSrc, oldSrc);
-    DeleteObject(bmpSrc);
-    SelectObject(hdcDst, oldDst);
-    DeleteObject(bmpDst);
 
     memset(&biDst, 0, sizeof(BITMAPINFO));
 
@@ -64,10 +37,13 @@ static void test_StretchBlt(void)
 
     memcpy(&biSrc, &biDst, sizeof(BITMAPINFO)); // Put same Destination params into the Source
 
+    hdcDst = CreateCompatibleDC(0);
+    hdcSrc = CreateCompatibleDC(0);
+
     bmpSrc = CreateDIBSection(hdcSrc, &biSrc, DIB_RGB_COLORS, (void**)&srcBuffer, NULL, 0);
-    oldSrc = SelectObject(hdcSrc, bmpSrc);
+    SelectObject(hdcSrc, bmpSrc);
     bmpDst = CreateDIBSection(hdcDst, &biDst, DIB_RGB_COLORS, (void**)&dstBuffer, NULL, 0);
-    oldDst = SelectObject(hdcDst, bmpDst);
+    SelectObject(hdcDst, bmpDst);
 
     srcBuffer[0] = 0x000000FF; // BLUE - stored beginning bottom left
     srcBuffer[1] = 0x0000FF00; // GREEN
@@ -121,12 +97,7 @@ static void test_StretchBlt(void)
         expected[1], dstBuffer[1]);
 
     DeleteDC(hdcSrc);
-
-    SelectObject(hdcDst, oldDst);
-    DeleteObject(bmpDst);
     DeleteDC(hdcDst);
-
-    DeleteDC(hdcScreen);
 }
 
 
