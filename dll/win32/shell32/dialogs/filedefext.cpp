@@ -1360,7 +1360,6 @@ CFileDefExt::_CountFolderAndFilesThreadProc(LPVOID lpParameter)
 {
     _CountFolderAndFilesData *data = static_cast<_CountFolderAndFilesData*>(lpParameter);
     DWORD ticks = 0;
-
     data->This->CountFolderAndFiles(data->hwndDlg, data->pwszBuf, &ticks);
 
     //Release the CFileDefExt and data object holds in the copying thread.
@@ -1413,7 +1412,6 @@ CFileDefExt::CountFolderAndFiles(HWND hwndDlg, LPWSTR pwszBuf, DWORD *ticks)
             m_cFiles++;
 
             ULARGE_INTEGER FileSize;
-
             FileSize.u.LowPart  = wfd.nFileSizeLow;
             FileSize.u.HighPart = wfd.nFileSizeHigh;
             m_DirSize.QuadPart += FileSize.QuadPart;
