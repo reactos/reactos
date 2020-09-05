@@ -626,8 +626,7 @@ CFileDefExt::InitFileAttr(HWND hwndDlg)
 
         _CountFolderAndFilesData *data = static_cast<_CountFolderAndFilesData*>(HeapAlloc(GetProcessHeap(), 0, sizeof(_CountFolderAndFilesData)));
         data->This = this;
-        data->pwszBuf = static_cast<LPWSTR>(HeapAlloc(GetProcessHeap(), 0, sizeof(WCHAR) * MAX_PATH));
-        data->cchBufMax = MAX_PATH;
+        data->pwszBuf = static_cast<LPWSTR>(HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(WCHAR) * MAX_PATH));
         data->hwndDlg = hwndDlg;
         this->AddRef();
         StringCchCopyW(data->pwszBuf, MAX_PATH, m_wszPath);
@@ -1361,7 +1360,8 @@ CFileDefExt::_CountFolderAndFilesThreadProc(LPVOID lpParameter)
 {
     _CountFolderAndFilesData *data = static_cast<_CountFolderAndFilesData*>(lpParameter);
     DWORD ticks = 0;
-    data->This->CountFolderAndFiles(data->hwndDlg, data->pwszBuf, data->cchBufMax, &ticks);
+
+    data->This->CountFolderAndFiles(data->hwndDlg, data->pwszBuf, &ticks);
 
     //Release the CFileDefExt and data object holds in the copying thread.
     data->This->Release();
@@ -1372,31 +1372,19 @@ CFileDefExt::_CountFolderAndFilesThreadProc(LPVOID lpParameter)
 }
 
 BOOL
-CFileDefExt::CountFolderAndFiles(HWND hwndDlg, LPWSTR pwszBuf, UINT cchBufMax, DWORD *ticks)
+CFileDefExt::CountFolderAndFiles(HWND hwndDlg, LPWSTR pwszBuf, DWORD *ticks)
 {
-    /* Find filename position */
-    UINT cchBuf = wcslen(pwszBuf);
-    WCHAR *pwszFilename = pwszBuf + cchBuf;
-    WCHAR PathBuffer[MAX_PATH] = L"";
-    WCHAR WorkBuffer[MAX_PATH] = L"";
-
-    size_t cchFilenameMax = cchBufMax - cchBuf;
-    if (!cchFilenameMax)
-        return FALSE;
-    *(pwszFilename++) = '\\';
-    --cchFilenameMax;
-
-    // Store path without wildcard
-    StringCbCopyW(PathBuffer, sizeof(PathBuffer), pwszBuf);
-
-    /* Find all files, FIXME: shouldn't be "*"? */
-    StringCchCopyW(pwszFilename, cchFilenameMax, L"*");
+    CString sBuf = pwszBuf;
+    sBuf += L"\\" ;
+    CString sSearch = sBuf;
+    sSearch += L"*" ;
+    CString sFileName;
 
     WIN32_FIND_DATAW wfd;
-    HANDLE hFind = FindFirstFileW(pwszBuf, &wfd);
+    HANDLE hFind = FindFirstFileW(sSearch.GetBuffer(), &wfd);
     if (hFind == INVALID_HANDLE_VALUE)
     {
-        ERR("FindFirstFileW %ls failed\n", pwszBuf);
+        ERR("FindFirstFileW %ls failed\n", sSearch.GetBuffer());
         return FALSE;
     }
 
@@ -1408,10 +1396,8 @@ CFileDefExt::CountFolderAndFiles(HWND hwndDlg, LPWSTR pwszBuf, UINT cchBufMax, D
 
     do
     {
-        ZeroMemory(WorkBuffer, sizeof(WorkBuffer));
-        StringCbCopyW(WorkBuffer, sizeof(WorkBuffer), PathBuffer);
-        StringCbCatW(WorkBuffer, sizeof(WorkBuffer), wfd.cFileName);
-
+        sFileName = sBuf;
+        sFileName += wfd.cFileName;
         if (wfd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
         {
             /* Don't process "." and ".." items */
@@ -1420,7 +1406,7 @@ CFileDefExt::CountFolderAndFiles(HWND hwndDlg, LPWSTR pwszBuf, UINT cchBufMax, D
 
             ++m_cFolders;
 
-            CountFolderAndFiles(hwndDlg, WorkBuffer, cchBufMax, ticks);
+            CountFolderAndFiles(hwndDlg, sFileName.GetBuffer(), ticks);
         }
         else
         {
@@ -1432,8 +1418,8 @@ CFileDefExt::CountFolderAndFiles(HWND hwndDlg, LPWSTR pwszBuf, UINT cchBufMax, D
             FileSize.u.HighPart = wfd.nFileSizeHigh;
             m_DirSize.QuadPart += FileSize.QuadPart;
             // Calculate size on disc
-            if (!GetPhysicalFileSize(WorkBuffer, &FileSize))
-                ERR("GetPhysicalFileSize failed for %ls\n", WorkBuffer);
+            if (!GetPhysicalFileSize(sFileName.GetBuffer(), &FileSize))
+                ERR("GetPhysicalFileSize failed for %ls\n", sFileName.GetBuffer());
             
             m_DirSizeOnDisc.QuadPart += FileSize.QuadPart;
         }
@@ -1442,7 +1428,7 @@ CFileDefExt::CountFolderAndFiles(HWND hwndDlg, LPWSTR pwszBuf, UINT cchBufMax, D
             /* FIXME Using IsWindow is generally ill advised */
             if (IsWindow(hwndDlg))
             {
-                WCHAR wszBuf[MAX_PATH];
+                WCHAR wszBuf[100];
 
                 if (SH_FormatFileSizeWithBytes(&m_DirSize, wszBuf, _countof(wszBuf)))
                     SetDlgItemTextW(hwndDlg, 14011, wszBuf);
@@ -1451,7 +1437,7 @@ CFileDefExt::CountFolderAndFiles(HWND hwndDlg, LPWSTR pwszBuf, UINT cchBufMax, D
                     SetDlgItemTextW(hwndDlg, 14012, wszBuf);
 
                 /* Display files and folders count */
-                WCHAR wszFormat[256];
+                WCHAR wszFormat[100];
                 LoadStringW(shell32_hInstance, IDS_FILE_FOLDER, wszFormat, _countof(wszFormat));
                 StringCchPrintfW(wszBuf, _countof(wszBuf), wszFormat, m_cFiles, m_cFolders);
                 SetDlgItemTextW(hwndDlg, 14027, wszBuf);
@@ -1465,7 +1451,7 @@ CFileDefExt::CountFolderAndFiles(HWND hwndDlg, LPWSTR pwszBuf, UINT cchBufMax, D
 
     if (root && IsWindow(hwndDlg))
     {
-        WCHAR wszBuf[MAX_PATH];
+        WCHAR wszBuf[100];
 
         if (SH_FormatFileSizeWithBytes(&m_DirSize, wszBuf, _countof(wszBuf)))
             SetDlgItemTextW(hwndDlg, 14011, wszBuf);
@@ -1474,7 +1460,7 @@ CFileDefExt::CountFolderAndFiles(HWND hwndDlg, LPWSTR pwszBuf, UINT cchBufMax, D
             SetDlgItemTextW(hwndDlg, 14012, wszBuf);
 
         /* Display files and folders count */
-        WCHAR wszFormat[256];
+        WCHAR wszFormat[100];
         LoadStringW(shell32_hInstance, IDS_FILE_FOLDER, wszFormat, _countof(wszFormat));
         StringCchPrintfW(wszBuf, _countof(wszBuf), wszFormat, m_cFiles, m_cFolders);
         SetDlgItemTextW(hwndDlg, 14027, wszBuf);
