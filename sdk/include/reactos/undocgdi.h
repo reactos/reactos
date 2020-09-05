@@ -26,19 +26,24 @@ typedef struct GDI_DRAW_STREAM_TAG
     DWORD   crTransparent; // transparent color.
 } GDI_DRAW_STREAM, *PGDI_DRAW_STREAM;
 
-BOOL
-WINAPI
+EXTERN_C BOOL WINAPI
 GdiDrawStream(HDC dc, ULONG l, PGDI_DRAW_STREAM pDS);
 
-BOOL
-WINAPI
+EXTERN_C BOOL WINAPI
 GetTextExtentExPointWPri(
     HDC hdc,
-    LPCWSTR lpwsz, 
+    LPCWSTR lpwsz,
     INT cwc,
-    INT dxMax, 
-    LPINT pcCh, 
-    LPINT pdxOut, 
+    INT dxMax,
+    LPINT pcCh,
+    LPINT pdxOut,
     LPSIZE psize);
+
+EXTERN_C BOOL WINAPI
+GetFontResourceInfoW(
+    _In_z_ LPCWSTR lpFileName,
+    _Inout_ DWORD *pdwBufSize,
+    _Out_writes_to_opt_(*pdwBufSize, 1) PVOID lpBuffer,
+    _In_ DWORD dwType);
 
 #endif

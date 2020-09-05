@@ -7,6 +7,7 @@
  */
 
 #include "precomp.h"
+#include "undocgdi.h" // for GetFontResourceInfoW
 
 WINE_DEFAULT_DEBUG_CHANNEL(fontext);
 
@@ -563,8 +564,8 @@ HRESULT CFontExt::DoInstallFontFile(LPCWSTR pszFontPath, LPCWSTR pszFontsDir, HK
     WCHAR szDestFile[MAX_PATH];
     LPCWSTR pszFileTitle = PathFindFileName(pszFontPath);
 
-    WCHAR szFontName[512];
-    if (!DoGetFontTitle(pszFontPath, szFontName, sizeof(szFontName)))
+    CStringW strFontName;
+    if (!DoGetFontTitle(pszFontPath, strFontName))
         return E_FAIL;
 
     RemoveFontResourceW(pszFileTitle);
@@ -585,7 +586,8 @@ HRESULT CFontExt::DoInstallFontFile(LPCWSTR pszFontPath, LPCWSTR pszFontsDir, HK
     }
 
     DWORD cbData = (wcslen(pszFileTitle) + 1) * sizeof(WCHAR);
-    LONG nError = RegSetValueExW(hkeyFonts, szFontName, 0, REG_SZ, (const BYTE *)szFontName, cbData);
+    LONG nError = RegSetValueExW(hkeyFonts, strFontName, 0, REG_SZ,
+                                 (const BYTE *)(LPCWSTR)strFontName, cbData);
     if (nError)
     {
         ERR("RegSetValueExW failed with %ld\n", nError);
@@ -597,28 +599,23 @@ HRESULT CFontExt::DoInstallFontFile(LPCWSTR pszFontPath, LPCWSTR pszFontsDir, HK
     return S_OK;
 }
 
-typedef BOOL (WINAPI *FN_GetFontResourceInfoW)(LPCWSTR, DWORD *, void*, DWORD);
-
 HRESULT
-CFontExt::DoGetFontTitle(IN LPCWSTR pszFontPath, OUT LPWSTR pszFontName,
-                         IN DWORD cbFontName)
+CFontExt::DoGetFontTitle(IN LPCWSTR pszFontPath, OUT CStringW& strFontName)
 {
-    HMODULE hGdi32 = LoadLibraryA("gdi32");
-    FN_GetFontResourceInfoW fnGetFontResourceInfoW =
-        reinterpret_cast<FN_GetFontResourceInfoW>(
-            GetProcAddress(hGdi32, "GetFontResourceInfoW"));
-    if (!fnGetFontResourceInfoW)
+    DWORD cbInfo = 0;
+    BOOL ret = GetFontResourceInfoW(pszFontPath, &cbInfo, NULL, 1);
+    if (!ret || !cbInfo)
     {
-        ERR("gdi32!GetFontResourceInfoW not found\n");
-        FreeLibrary(hGdi32);
+        ERR("GetFontResourceInfoW failed\n");
         return E_FAIL;
     }
 
-    BOOL ret = (*fnGetFontResourceInfoW)(pszFontPath, &cbFontName, pszFontName, 1);
-    FreeLibrary(hGdi32);
+    LPWSTR pszBuffer = strFontName.GetBuffer(cbInfo / sizeof(WCHAR));
+    ret = GetFontResourceInfoW(pszFontPath, &cbInfo, pszBuffer, 1);
+    strFontName.ReleaseBuffer();
     if (ret)
     {
-        TRACE("pszFontName: %S\n", pszFontName);
+        TRACE("pszFontName: %S\n", pszBuffer);
         return S_OK;
     }
 
