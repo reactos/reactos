@@ -196,7 +196,7 @@ RfsdReadVolume (IN PRFSD_IRP_CONTEXT IrpContext)
                 }
 
                 BlockArray.Irp = NULL;
-                BlockArray.Lba = ByteOffset.QuadPart;;
+                BlockArray.Lba = ByteOffset.QuadPart;
                 BlockArray.Offset = 0;
                 BlockArray.Length = Length;
 
@@ -403,7 +403,7 @@ RfsdReadVolume (IN PRFSD_IRP_CONTEXT IrpContext)
                         }
                     }
 
-                    RfsdCompleteIrpContext(IrpContext, Status);;
+                    RfsdCompleteIrpContext(IrpContext, Status);
                 }
 
             } else {
