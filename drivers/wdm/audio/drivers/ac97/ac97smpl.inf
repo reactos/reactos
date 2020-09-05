@@ -1,0 +1,478 @@
+;Copyright (c) 1998-2000 Microsoft Corporation All rights Reserved
+;
+;Module Name:
+;   ac97smpl.INF
+;
+;Abstract:
+;    INF file for installing AC97 WDM Sample Driver
+;
+;
+; During upgrade from Win98SE or Win ME, the default upgrade behavior won't upgrade the drivers 
+; to Win2k or Windows XP. The sample inf has implemented what's mentioned in 
+; WINDDK\..\src\setup\devupgrd\devupgrd.doc.
+; If your driver would never be installed under Win98SE or Win ME, you don't need this new migrate.dll
+; stuff.
+
+
+[Version]
+Signature="$CHICAGO$"
+Class=MEDIA
+ClassGUID={4d36e96c-e325-11ce-bfc1-08002be10318}
+provider=%ProviderName%
+;;The following line is used only when the INF comes with the Windows system
+;;IHV needs to comment out the following line for their OEM redistributed disk.
+;;LayoutFile=layout.inf, layout1.inf, layout2.inf
+DriverVer=02/22/2007,6.00.6000.1
+CatalogFile=ac97smpl.cat
+
+;You must specify which platform is supported by each SourceDisksNames section
+;Valid platform identifiers include .x86, .ia64, .alpha, .axp64
+[SourceDisksNames]
+222=%DiskDescription%,,,
+
+;You must also specify which platform is supported by each SourceDisksFiles section
+;Valid platform identifiers include .x86, .ia64, .alpha, .axp64
+[SourceDisksFiles]
+ac97smpl.sys=222
+ac97prop.dll=222
+;the entries below are used by the device migration dll, on Win95/98 to Win2K upgrades
+;Migrate.dll=222
+ac97smpl.inf=222
+
+[Manufacturer]
+%MfgName%=Intel,NTAMD64,NTIA64,NTARM
+
+;; Excluding drivers from the "Add New Hardware" list.
+[ControlFlags]
+ExcludeFromSelect = *
+
+[Intel]
+%AC97SMPL_AA.DeviceDesc%=AC97SMPL, PCI\VEN_8086&DEV_2415
+%AC97SMPL_AB.DeviceDesc%=AC97SMPL, PCI\VEN_8086&DEV_2425
+%AC97SMPL_BA.DeviceDesc%=AC97SMPL, PCI\VEN_8086&DEV_2445
+
+;; This section enables installing on x64 systems
+
+[Intel.NTAMD64]
+%AC97SMPL_AA.DeviceDesc%=AC97SMPL, PCI\VEN_8086&DEV_2415
+%AC97SMPL_AB.DeviceDesc%=AC97SMPL, PCI\VEN_8086&DEV_2425
+%AC97SMPL_BA.DeviceDesc%=AC97SMPL, PCI\VEN_8086&DEV_2445
+
+;;  This section enables installing on Itanium systems
+
+[Intel.NTIA64]
+%AC97SMPL_AA.DeviceDesc%=AC97SMPL, PCI\VEN_8086&DEV_2415
+%AC97SMPL_AB.DeviceDesc%=AC97SMPL, PCI\VEN_8086&DEV_2425
+%AC97SMPL_BA.DeviceDesc%=AC97SMPL, PCI\VEN_8086&DEV_2445
+
+;; This section enables installing on ARM systems
+
+[Intel.NTARM]
+%AC97SMPL_AA.DeviceDesc%=AC97SMPL, PCI\VEN_8086&DEV_2415
+%AC97SMPL_AB.DeviceDesc%=AC97SMPL, PCI\VEN_8086&DEV_2425
+%AC97SMPL_BA.DeviceDesc%=AC97SMPL, PCI\VEN_8086&DEV_2445
+
+[DestinationDirs]
+AC97SMPL.CopyList=10,system32\drivers
+AC97PROP.CopyList=10,system32
+
+DevUpgrd_Files = 10, win9xmig\DevUpgrd
+WDMDriver_Files = 10, win9xmig\DevUpgrd\AC97WDM ; Replace "AC97WDM" with your favorite vendor related name
+
+[AC97SMPL]
+;;This inf is intended for use by IHV. So, it's going to be used as from OEM distributed disk
+;;This is why AlsoInstall got used instead if Needs & Include
+AlsoInstall=KS.Registration(ks.inf), WDMAUDIO.Registration(wdmaudio.inf)
+CopyFiles=AC97SMPL.CopyList, DevUpgrd_Files, WDMDriver_Files
+AddReg=AC97SMPL.AddReg,AC97SMPL_NAMES.AddReg,AC97SMPL_OEM.AddReg,DevUpgrd_AddReg
+KnownRegEntries=AC97.KnownRegEntries
+;;Exclude driver installation for those PnP ID's.
+;;This PnP ID is an example of a machine where the driver won't work correctly
+ExcludeId=PCI\VEN_8086&DEV_2415&SUBSYS_536011D4&REV_00
+
+[AC97.KnownRegEntries]
+IsWin98Gold=keep
+
+[IsWin98Gold]
+1=HKLM,Software\Microsoft\Windows\CurrentVersion,VersionNumber,0,4.10.1998
+
+[AC97SMPL.CopyList]
+AC97SMPL.sys
+
+[DevUpgrd_Files]
+;;This migrate.dll can be found in the DDK (beta2 or after) under src\setup\devupgrd
+;Migrate.dll      
+
+[WDMDriver_Files]
+ac97smpl.inf    ; Name of your INF goes here
+AC97SMPL.sys    ; Name of your driver file(s) goes here
+ac97prop.dll
+
+
+
+[AC97SMPL.Interfaces]
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_Wave%,AC97SMPL.Interface.Wave
+AddInterface=%KSCATEGORY_RENDER%,%KSNAME_Wave%,AC97SMPL.Interface.Wave
+AddInterface=%KSCATEGORY_CAPTURE%,%KSNAME_Wave%,AC97SMPL.Interface.Wave
+AddInterface=%KSCATEGORY_REALTIME%,%KSNAME_Wave%,AC97SMPL.Interface.Wave
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_Topology%,AC97SMPL.Interface.Topology
+
+[AC97SMPL.Interface.Wave]
+AddReg=AC97SMPL.I.Wave.AddReg
+
+[AC97SMPL.I.Wave.AddReg]
+HKR,,CLSID,,%Proxy.CLSID%
+HKR,,FriendlyName,,%AC97SMPL.Wave.szPname%
+
+[AC97SMPL.Interface.Topology]
+AddReg=AC97SMPL.I.Topo.AddReg
+
+[AC97SMPL.I.Topo.AddReg]
+HKR,,CLSID,,%Proxy.CLSID%
+HKR,,FriendlyName,,%AC97SMPL.Topology.szPname%
+
+[AC97SMPL.AddReg]
+HKR,,AssociatedFilters,,"wdmaud,swmidi,redbook"
+HKR,,Driver,,AC97SMPL.sys
+HKR,,NTMPDriver,,"AC97SMPL.sys,sbemul.sys"
+
+HKR,Drivers,SubClasses,,"wave,midi,mixer"
+
+HKR,Drivers\wave\wdmaud.drv,Driver,,wdmaud.drv
+HKR,Drivers\midi\wdmaud.drv,Driver,,wdmaud.drv
+HKR,Drivers\mixer\wdmaud.drv,Driver,,wdmaud.drv
+
+HKR,Drivers\wave\wdmaud.drv,Description,,%AC97SMPL.DeviceDesc%
+HKR,Drivers\midi\wdmaud.drv, Description,,%AC97SMPL.DeviceDesc%
+HKR,Drivers\mixer\wdmaud.drv,Description,,%AC97SMPL.DeviceDesc%
+
+
+[DevUpgrd_AddReg]
+HKLM,"Software\Microsoft\Windows\CurrentVersion\Setup\Migration DLLs","Microsoft Device Upgrade Pack",,%10%\win9xmig\DevUpgrd
+HKLM,"Software\Microsoft\Windows\CurrentVersion\Setup\UpgradeDrivers","PCI\VEN_8086&DEV_2415",,%10%\win9xmig\DevUpgrd\AC97WDM\ac97smpl.inf
+HKLM,"Software\Microsoft\Windows\CurrentVersion\Setup\UpgradeDrivers","PCI\VEN_8086&DEV_2425",,%10%\win9xmig\DevUpgrd\AC97WDM\ac97smpl.inf
+HKLM,"Software\Microsoft\Windows\CurrentVersion\Setup\UpgradeDrivers","PCI\VEN_8086&DEV_2445",,%10%\win9xmig\DevUpgrd\AC97WDM\ac97smpl.inf
+
+
+[AC97SMPL.Services]
+AddService = AC97SMPL, 0x00000002, AC97SMPL_Service_Inst
+
+[AC97SMPL_Service_Inst]
+DisplayName   = %AC97SMPL.SvcDesc%
+ServiceType   = 1                  ; SERVICE_KERNEL_DRIVER
+StartType     = 3                  ; SERVICE_DEMAND_START
+ErrorControl  = 1                  ; SERVICE_ERROR_NORMAL
+ServiceBinary = %10%\system32\drivers\AC97SMPL.sys
+
+[AC97SMPL_NAMES.AddReg]
+;; Nodes
+HKLM,%MediaCategories%\%ICHGUID.PhoneVolume%,Name,,%ICHNode.PhoneVolume%
+HKLM,%MediaCategories%\%ICHGUID.PhoneVolume%,Display,1,00,00,00,00
+HKLM,%MediaCategories%\%ICHGUID.PhoneMute%,Name,,%ICHNode.PhoneMute%
+HKLM,%MediaCategories%\%ICHGUID.PhoneMute%,Display,1,00,00,00,00
+HKLM,%MediaCategories%\%ICHGUID.LineInMute%,Name,,%ICHNode.LineInMute%
+HKLM,%MediaCategories%\%ICHGUID.LineInMute%,Display,1,00,00,00,00
+HKLM,%MediaCategories%\%ICHGUID.MainMix%,Name,,%ICHNode.MainMix%
+HKLM,%MediaCategories%\%ICHGUID.MainMix%,Display,1,00,00,00,00
+HKLM,%MediaCategories%\%ICHGUID.3DBypass%,Name,,%ICHNode.3DBypass%
+HKLM,%MediaCategories%\%ICHGUID.3DBypass%,Display,1,00,00,00,00
+HKLM,%MediaCategories%\%ICHGUID.3DEnable%,Name,,%ICHNode.3DEnable%
+HKLM,%MediaCategories%\%ICHGUID.3DEnable%,Display,1,00,00,00,00
+HKLM,%MediaCategories%\%ICHGUID.BeepMix%,Name,,%ICHNode.BeepMix%
+HKLM,%MediaCategories%\%ICHGUID.BeepMix%,Display,1,00,00,00,00
+HKLM,%MediaCategories%\%ICHGUID.HPVolume%,Name,,%ICHNode.HPVolume%
+HKLM,%MediaCategories%\%ICHGUID.HPVolume%,Display,1,00,00,00,00
+HKLM,%MediaCategories%\%ICHGUID.HPMute%,Name,,%ICHNode.HPMute%
+HKLM,%MediaCategories%\%ICHGUID.HPMute%,Display,1,00,00,00,00
+HKLM,%MediaCategories%\%ICHGUID.MonoOutSelect%,Name,,%ICHNode.MonoOutSelect%
+HKLM,%MediaCategories%\%ICHGUID.MonoOutSelect%,Display,1,00,00,00,00
+HKLM,%MediaCategories%\%ICHGUID.WaveInSelect%,Name,,%ICHNode.WaveInSelect%
+HKLM,%MediaCategories%\%ICHGUID.WaveInSelect%,Display,1,00,00,00,00
+HKLM,%MediaCategories%\%ICHGUID.MasterInVolume%,Name,,%ICHNode.MasterInVolume%
+HKLM,%MediaCategories%\%ICHGUID.MasterInVolume%,Display,1,00,00,00,00
+HKLM,%MediaCategories%\%ICHGUID.MasterInMute%,Name,,%ICHNode.MasterInMute%
+HKLM,%MediaCategories%\%ICHGUID.MasterInMute%,Display,1,00,00,00,00
+HKLM,%MediaCategories%\%ICHGUID.MicInVolume%,Name,,%ICHNode.MicInVolume%
+HKLM,%MediaCategories%\%ICHGUID.MicInVolume%,Display,1,00,00,00,00
+HKLM,%MediaCategories%\%ICHGUID.MicInMute%,Name,,%ICHNode.MicInMute%
+HKLM,%MediaCategories%\%ICHGUID.MicInMute%,Display,1,00,00,00,00
+HKLM,%MediaCategories%\%ICHGUID.SimulStereo%,Name,,%ICHNode.SimulStereo%
+HKLM,%MediaCategories%\%ICHGUID.SimulStereo%,Display,1,00,00,00,00
+HKLM,%MediaCategories%\%ICHGUID.SurroundVolume%,Name,,%ICHNode.SurroundVolume%
+HKLM,%MediaCategories%\%ICHGUID.SurroundVolume%,Display,1,00,00,00,00
+HKLM,%MediaCategories%\%ICHGUID.SurroundMute%,Name,,%ICHNode.SurroundMute%
+HKLM,%MediaCategories%\%ICHGUID.SurroundMute%,Display,1,00,00,00,00
+HKLM,%MediaCategories%\%ICHGUID.CenterVolume%,Name,,%ICHNode.CenterVolume%
+HKLM,%MediaCategories%\%ICHGUID.CenterVolume%,Display,1,00,00,00,00
+HKLM,%MediaCategories%\%ICHGUID.CenterMute%,Name,,%ICHNode.CenterMute%
+HKLM,%MediaCategories%\%ICHGUID.CenterMute%,Display,1,00,00,00,00
+HKLM,%MediaCategories%\%ICHGUID.LFEVolume%,Name,,%ICHNode.LFEVolume%
+HKLM,%MediaCategories%\%ICHGUID.LFEVolume%,Display,1,00,00,00,00
+HKLM,%MediaCategories%\%ICHGUID.LFEMute%,Name,,%ICHNode.LFEMute%
+HKLM,%MediaCategories%\%ICHGUID.LFEMute%,Display,1,00,00,00,00
+HKLM,%MediaCategories%\%ICHGUID.FrontVolume%,Name,,%ICHNode.FrontVolume%
+HKLM,%MediaCategories%\%ICHGUID.FrontVolume%,Display,1,00,00,00,00
+HKLM,%MediaCategories%\%ICHGUID.FrontMute%,Name,,%ICHNode.FrontMute%
+HKLM,%MediaCategories%\%ICHGUID.FrontMute%,Display,1,00,00,00,00
+;; Pins
+HKLM,%MediaCategories%\%ICHGUID.Surround%,Name,,%ICHPin.Surround%
+HKLM,%MediaCategories%\%ICHGUID.Surround%,Display,1,00,00,00,00
+HKLM,%MediaCategories%\%ICHGUID.Center%,Name,,%ICHPin.Center%
+HKLM,%MediaCategories%\%ICHGUID.Center%,Display,1,00,00,00,00
+HKLM,%MediaCategories%\%ICHGUID.LFE%,Name,,%ICHPin.LFE%
+HKLM,%MediaCategories%\%ICHGUID.LFE%,Display,1,00,00,00,00
+HKLM,%MediaCategories%\%ICHGUID.Front%,Name,,%ICHPin.Front%
+HKLM,%MediaCategories%\%ICHGUID.Front%,Display,1,00,00,00,00
+
+
+[AC97SMPL_OEM.AddReg]
+;;Default register value at driver startup
+;;Uncomment some one of the lines if you want to overwrite the default setting
+;;The value in these outcommented lines is the driver default. You can change
+;;the register values (and uncomment the line) to overwrite the driver default.
+;;low byte comes first, values are hexadezimal.
+;HKR,Settings,MasterVolume,1,0,0        ;0dB
+;HKR,Settings,HeadphoneVolume,1,0,0     ;0dB
+;HKR,Settings,MonooutVolume,1,0,0       ;0dB
+;HKR,Settings,ToneControls,1,F,F        ;bypass
+;HKR,Settings,BeepVolume,1,0,0          ;0dB
+;HKR,Settings,PhoneVolume,1,8,80        ;muted
+;HKR,Settings,MicVolume,1,8,80          ;muted
+;HKR,Settings,LineInVolume,1,8,8        ;0dB
+;HKR,Settings,CDVolume,1,8,8            ;0dB
+;HKR,Settings,VideoVolume,1,8,8         ;0dB
+;HKR,Settings,AUXVolume,1,8,8           ;0dB
+;HKR,Settings,WaveOutVolume,1,8,8       ;0dB. This register is never touched by the system.
+;HKR,Settings,RecordSelect,1,4,4        ;select LiniIn
+;HKR,Settings,RecordGain,1,0,0          ;0dB
+;HKR,Settings,RecordGainMic,1,0,0       ;0dB
+;HKR,Settings,GeneralPurpose,1,0,0      ;pre 3D, 3D off, loudness off, mono=mix, mic1
+;HKR,Settings,3DControl,1,0,0           ;0%
+;HKR,Settings,PowerDown,1,0,0           ;no power down
+;HKR,Settings,ExtAudioCtrl,1,01,40      ;VRA, DACs on, MicIn off
+;HKR,Settings,CenterLFEVolume,1,0,0     ;0dB
+;HKR,Settings,SurroundVolume,1,0,0              ;0dB
+
+;;Configuration
+;;You can disable some of the input lines by outcommenting some of the lines
+;;below. This could be necessary if you have a AC97 codec on board that for
+;;example supports Video input, but you don't have the Video input accessable
+;;for the user (no plug in).
+;HKR,Settings,DisablePCBeep,1,1
+;HKR,Settings,DisablePhone,1,1
+;HKR,Settings,DisableMic2,1,1
+;HKR,Settings,DisableVideo,1,1
+;HKR,Settings,DisableAUX,1,1
+;HKR,Settings,DisableHeadphone,1,1
+;HKR,Settings,DisableMonoOut,1,1
+HKR,Settings,DisableMicIn,1,1
+;HKR,Settings,DisableMic,1,1            ;disables all MIC lines, including MIC record.
+;HKR,Settings,DisableLineIn,1,1
+;HKR,Settings,DisableCD,1,1
+;HKR,Settings,DisableSurround,1,1
+HKR,Settings,DisableCenterLFE,1,1       ;6ch playback is not supported.
+;HKR,Settings,ChannelConfig,1,3,0,0,0   ;ChannelConfig set to stereo speakers.
+
+;;================= Windows NT ====================
+[AC97SMPL.NTX86]
+Include=ks.inf,wdmaudio.inf
+Needs=KS.Registration,WDMAUDIO.Registration
+CopyFiles=AC97SMPL.CopyList,AC97PROP.CopyList
+AddReg=AC97SMPL.AddReg,AC97SMPL_NAMES.AddReg,AC97SMPL_OEM.AddReg,AC97PROP.AddReg
+;;Exclude driver installation for those PnP ID's.
+;;This PnP ID is an example of a machine where the driver won't work correctly
+ExcludeId=PCI\VEN_8086&DEV_2415&SUBSYS_536011D4&REV_00
+
+[AC97SMPL.NTX86.Interfaces]
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_Wave%,AC97SMPL.Interface.Wave
+AddInterface=%KSCATEGORY_RENDER%,%KSNAME_Wave%,AC97SMPL.Interface.Wave
+AddInterface=%KSCATEGORY_CAPTURE%,%KSNAME_Wave%,AC97SMPL.Interface.Wave
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_Topology%,AC97SMPL.Interface.Topology
+
+[AC97SMPL.NTX86.Services]
+AddService = AC97SMPL, 0x00000002, AC97SMPL_Service_Inst
+
+[AC97PROP.CopyList]
+ac97prop.dll
+
+[AC97PROP.AddReg]
+HKR,,EnumPropPages32,,"ac97prop.dll,AC97PropPageProvider"
+
+
+[Strings]
+ProviderName="FooProviderName"
+MfgName="Intel"
+DiskDescription="AC'97 WDM Sample Driver Disk"
+AC97SMPL_AA.DeviceDesc="AC'97 Sample Driver for Intel(r) 82801AA Controller"
+AC97SMPL_AB.DeviceDesc="AC'97 Sample Driver for Intel(r) 82801AB Controller"
+AC97SMPL_BA.DeviceDesc="AC'97 Sample Driver for Intel(r) 82801BA/BAM Controller"
+AC97SMPL.DeviceDesc="AC'97 Sample Driver for Intel(r) 82801 Controller"
+
+AC97SMPL.Wave.szPname="AC'97 Sound Card"
+AC97SMPL.Topology.szPname="AC'97 Mixer"
+
+MediaCategories="SYSTEM\CurrentControlSet\Control\MediaCategories"
+
+Proxy.CLSID="{17CCA71B-ECD7-11D0-B908-00A0C9223196}"
+KSCATEGORY_AUDIO="{6994AD04-93EF-11D0-A3CC-00A0C9223196}"
+KSCATEGORY_RENDER="{65E8773E-8F56-11D0-A3B9-00A0C9223196}"
+KSCATEGORY_CAPTURE="{65E8773D-8F56-11D0-A3B9-00A0C9223196}"
+KSCATEGORY_REALTIME="{EB115FFC-10C8-4964-831D-6DCB02E6F23F}"
+KSNAME_Wave="Wave"
+KSNAME_Topology="Topology"
+
+AC97SMPL.SvcDesc = "Service for AC'97 Sample Driver (WDM)"
+
+;; Nodes (non-localizeable)
+ICHGUID.PhoneVolume     ="{0A8C1A87-42B0-11D2-95D2-00C04FB925D3}"
+ICHGUID.PhoneMute       ="{0A8C1A88-42B0-11D2-95D2-00C04FB925D3}"
+ICHGUID.LineInMute      ="{0A8C1A91-42B0-11D2-95D2-00C04FB925D3}"
+ICHGUID.MainMix         ="{0A8C1A9B-42B0-11D2-95D2-00C04FB925D3}"
+ICHGUID.3DBypass        ="{0A8C1A9E-42B0-11D2-95D2-00C04FB925D3}"
+ICHGUID.3DEnable        ="{766DB5A4-6E94-11D2-9ADE-00C04F8EFB68}"
+ICHGUID.BeepMix         ="{0A8C1A9F-42B0-11D2-95D2-00C04FB925D3}"
+ICHGUID.HPVolume        ="{0A8C1AA5-42B0-11D2-95D2-00C04FB925D3}"
+ICHGUID.HPMute          ="{0A8C1AA6-42B0-11D2-95D2-00C04FB925D3}"
+ICHGUID.MonoOutSelect   ="{0A8C1AA9-42B0-11D2-95D2-00C04FB925D3}"
+ICHGUID.WaveInSelect    ="{0A8C1AAE-42B0-11D2-95D2-00C04FB925D3}"
+ICHGUID.MasterInVolume  ="{0A8C1AAF-42B0-11D2-95D2-00C04FB925D3}"
+ICHGUID.MasterInMute    ="{0A8C1AB0-42B0-11D2-95D2-00C04FB925D3}"
+ICHGUID.MicInVolume     ="{0A8C1AB2-42B0-11D2-95D2-00C04FB925D3}"
+ICHGUID.MicInMute       ="{0A8C1AB3-42B0-11D2-95D2-00C04FB925D3}"
+ICHGUID.SimulStereo     ="{B3AD50B5-3849-4983-ADD7-25E6268F912D}"
+ICHGUID.SurroundVolume  ="{A4B68BA4-6958-4ab4-BB01-E23C6F027C88}"
+ICHGUID.SurroundMute    ="{22654FBC-AC8F-4224-B19F-D858D2E10BDD}"
+ICHGUID.CenterVolume    ="{9B0F1946-ABD2-47a8-A778-BB86CDE1A167}"
+ICHGUID.CenterMute      ="{BEEF51ED-1041-43f8-9B96-5863D0A9342D}"
+ICHGUID.LFEVolume       ="{455FA6F2-21EC-4df4-B1E4-3155209797F3}"
+ICHGUID.LFEMute         ="{4A4D9210-C780-4768-BFD2-525FDBF4FCB4}"
+ICHGUID.FrontVolume     ="{9F4801BD-F746-4c7a-8A9D-F6E99004CC98}"
+ICHGUID.FrontMute       ="{C8E03B2A-EBD9-4554-A750-8E4472750A5B}"
+
+;; Pins (non-localizeable)
+ICHGUID.Surround        ="{81FBB14B-1BEE-4bf5-92EE-FFC4F75F326D}"
+ICHGUID.Center          ="{2D97372F-9CF6-4fd6-9E56-C68BACDF360D}"
+ICHGUID.LFE             ="{B60C4274-3BFD-430b-8364-D947E7D304B1}"
+ICHGUID.Front           ="{070395E2-BE7C-4b4d-B529-40CB9BFCF995}"
+
+
+;; Nodes (localizeable)
+ICHNode.PhoneVolume     ="Phone Volume"
+ICHNode.PhoneMute       ="Phone Mute"
+ICHNode.LineInMute      ="Line In Mute"
+ICHNode.MainMix         ="Main Mix"
+ICHNode.3DBypass        ="3D Bypass"
+ICHNode.3DEnable        ="3D Enable"
+ICHNode.BeepMix         ="Beep Mix"
+ICHNode.HPVolume        ="Headphone Volume"
+ICHNode.HPMute          ="Headphone Mute"
+ICHNode.MonoOutSelect   ="Mono Out Select"
+ICHNode.WaveInSelect    ="Wave In Select"
+ICHNode.MasterInVolume  ="Wave In Volume"
+ICHNode.MasterInMute    ="Wave In Mute"
+ICHNode.MicInVolume     ="Mic In Volume"
+ICHNode.MicInMute       ="Mic In Mute"
+ICHNode.SimulStereo     ="Simulated Stereo"
+ICHNode.SurroundVolume  ="Rear Speaker Volume"
+ICHNode.SurroundMute    ="Rear Speaker Mute"
+ICHNode.CenterVolume    ="Center Volume"
+ICHNode.CenterMute      ="Center Mute"
+ICHNode.LFEVolume       ="Subwoofer Volume"
+ICHNode.LFEMute         ="Subwoofer Mute"
+ICHNode.FrontVolume     ="Front Volume"
+ICHNode.FrontMute       ="Front Mute"
+
+;; Pins
+ICHPin.Surround         ="Rear Speaker"
+ICHPin.Center           ="Center"
+ICHPin.LFE              ="Subwoofer"
+ICHPin.Front            ="Front Speaker"
+
+[Strings.0407]
+ProviderName="FooProviderName"
+MfgName="Intel"
+DiskDescription="Diskette für AC'97 WDM Treiberbeispiel"
+AC97SMPL_AA.DeviceDesc="AC'97 Treiberbeispiel für Intel(r) 82801AA Kontroller"
+AC97SMPL_AB.DeviceDesc="AC'97 Treiberbeispiel für Intel(r) 82801AB Kontroller"
+AC97SMPL_BA.DeviceDesc="AC'97 Treiberbeispiel für Intel(r) 82801BA/BAM Controller"
+AC97SMPL.DeviceDesc="AC'97 Treiberbeispiel für Intel(r) 82801 Kontroller"
+
+AC97SMPL.Wave.szPname="AC'97 Musikkarte"
+AC97SMPL.Topology.szPname="AC'97 Mixer"
+
+MediaCategories="SYSTEM\CurrentControlSet\Control\MediaCategories"
+
+Proxy.CLSID="{17CCA71B-ECD7-11D0-B908-00A0C9223196}"
+KSCATEGORY_AUDIO="{6994AD04-93EF-11D0-A3CC-00A0C9223196}"
+KSCATEGORY_RENDER="{65E8773E-8F56-11D0-A3B9-00A0C9223196}"
+KSCATEGORY_CAPTURE="{65E8773D-8F56-11D0-A3B9-00A0C9223196}"
+KSCATEGORY_REALTIME="{EB115FFC-10C8-4964-831D-6DCB02E6F23F}"
+KSNAME_Wave="Wave"
+KSNAME_Topology="Topology"
+
+AC97SMPL.SvcDesc = "Installationshilfe für AC'97 Treiberbeispiel (WDM)"
+
+;; Nodes (non-localizeable)
+ICHGUID.PhoneVolume     ="{0A8C1A87-42B0-11D2-95D2-00C04FB925D3}"
+ICHGUID.PhoneMute       ="{0A8C1A88-42B0-11D2-95D2-00C04FB925D3}"
+ICHGUID.LineInMute      ="{0A8C1A91-42B0-11D2-95D2-00C04FB925D3}"
+ICHGUID.MainMix         ="{0A8C1A9B-42B0-11D2-95D2-00C04FB925D3}"
+ICHGUID.3DBypass        ="{0A8C1A9E-42B0-11D2-95D2-00C04FB925D3}"
+ICHGUID.3DEnable        ="{766DB5A4-6E94-11D2-9ADE-00C04F8EFB68}"
+ICHGUID.BeepMix         ="{0A8C1A9F-42B0-11D2-95D2-00C04FB925D3}"
+ICHGUID.HPVolume        ="{0A8C1AA5-42B0-11D2-95D2-00C04FB925D3}"
+ICHGUID.HPMute          ="{0A8C1AA6-42B0-11D2-95D2-00C04FB925D3}"
+ICHGUID.MonoOutSelect   ="{0A8C1AA9-42B0-11D2-95D2-00C04FB925D3}"
+ICHGUID.WaveInSelect    ="{0A8C1AAE-42B0-11D2-95D2-00C04FB925D3}"
+ICHGUID.MasterInVolume  ="{0A8C1AAF-42B0-11D2-95D2-00C04FB925D3}"
+ICHGUID.MasterInMute    ="{0A8C1AB0-42B0-11D2-95D2-00C04FB925D3}"
+ICHGUID.MicInVolume     ="{0A8C1AB2-42B0-11D2-95D2-00C04FB925D3}"
+ICHGUID.MicInMute       ="{0A8C1AB3-42B0-11D2-95D2-00C04FB925D3}"
+ICHGUID.SimulStereo     ="{B3AD50B5-3849-4983-ADD7-25E6268F912D}"
+ICHGUID.SurroundVolume  ="{A4B68BA4-6958-4ab4-BB01-E23C6F027C88}"
+ICHGUID.SurroundMute    ="{22654FBC-AC8F-4224-B19F-D858D2E10BDD}"
+ICHGUID.CenterVolume    ="{9B0F1946-ABD2-47a8-A778-BB86CDE1A167}"
+ICHGUID.CenterMute      ="{BEEF51ED-1041-43f8-9B96-5863D0A9342D}"
+ICHGUID.LFEVolume       ="{455FA6F2-21EC-4df4-B1E4-3155209797F3}"
+ICHGUID.LFEMute         ="{4A4D9210-C780-4768-BFD2-525FDBF4FCB4}"
+ICHGUID.FrontVolume     ="{9F4801BD-F746-4c7a-8A9D-F6E99004CC98}"
+ICHGUID.FrontMute       ="{C8E03B2A-EBD9-4554-A750-8E4472750A5B}"
+
+;; Pins (non-localizeable)
+ICHGUID.Surround        ="{81FBB14B-1BEE-4bf5-92EE-FFC4F75F326D}"
+ICHGUID.Center          ="{2D97372F-9CF6-4fd6-9E56-C68BACDF360D}"
+ICHGUID.LFE             ="{B60C4274-3BFD-430b-8364-D947E7D304B1}"
+ICHGUID.Front           ="{070395E2-BE7C-4b4d-B529-40CB9BFCF995}"
+
+;; Nodes (localizeable)
+ICHNode.PhoneVolume     ="Phone Lautstärke"
+ICHNode.PhoneMute       ="Phone Aus"
+ICHNode.LineInMute      ="Line In Aus"
+ICHNode.MainMix         ="Hauptmixer"
+ICHNode.3DBypass        ="3D umgehen"
+ICHNode.3DEnable        ="3D Aktivieren"
+ICHNode.BeepMix         ="Piepmixer"
+ICHNode.HPVolume        ="Kopfhörer Lautstärke"
+ICHNode.HPMute          ="Kopfhörer Aus"
+ICHNode.MonoOutSelect   ="Mono Ausgang Selektor"
+ICHNode.WaveInSelect    ="Aufnahme Selektor"
+ICHNode.MasterInVolume  ="Aufnahme Lautstärke"
+ICHNode.MasterInMute    ="Aufnahme unterdrücken"
+ICHNode.MicInVolume     ="Mic In Lautstärke"
+ICHNode.MicInMute       ="Mic In Aus"
+ICHNode.SimulStereo     ="Simuliertes Stereo"
+ICHNode.SurroundVolume  ="Lautsprecherlautstärke Hinten"
+ICHNode.SurroundMute    ="Lautsprecher Hinten Aus"
+ICHNode.CenterVolume    ="Lautsprecherlautstärke Mitte"
+ICHNode.CenterMute      ="Lautsprecher Mitte Aus"
+ICHNode.LFEVolume       ="Bass Lautsprecherlautstärke"
+ICHNode.LFEMute         ="Bass Lautsprecher Aus"
+ICHNode.FrontVolume     ="Lautsprecherlautstärke Vorne"
+ICHNode.FrontMute       ="Lautsprecher Vorne Aus"
+
+;; Pins
+ICHPin.Surround         ="Lautsprecher Hinten"
+ICHPin.Center           ="Lautsprecher Mitte"
+ICHPin.LFE              ="Bass Lautsprecher"
+ICHPin.Front            ="Lautsprecher Vorne"
+
