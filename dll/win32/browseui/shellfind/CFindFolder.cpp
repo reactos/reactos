@@ -280,8 +280,9 @@ static UINT RecursiveFind(LPCWSTR lpPath, _SearchData *pSearchData)
         if (FindData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
         {
             CStringW status;
-            if (FileNameMatch(FindData.cFileName, pSearchData)
-                && AttribHiddenMatch(FindData.dwFileAttributes, pSearchData))
+            if (pSearchData->szQueryA.IsEmpty() &&
+                FileNameMatch(FindData.cFileName, pSearchData) &&
+                AttribHiddenMatch(FindData.dwFileAttributes, pSearchData))
             {
                 PostMessageW(pSearchData->hwnd, WM_SEARCH_ADD_RESULT, 0, (LPARAM) StrDupW(szPath));
                 uTotalFound++;
