@@ -1418,7 +1418,6 @@ CFileDefExt::CountFolderAndFiles(HWND hwndDlg, LPWSTR pwszBuf, DWORD *ticks)
             // Calculate size on disc
             if (!GetPhysicalFileSize(sFileName.GetBuffer(), &FileSize))
                 ERR("GetPhysicalFileSize failed for %ls\n", sFileName.GetBuffer());
-            
             m_DirSizeOnDisc.QuadPart += FileSize.QuadPart;
         }
         if (GetTickCount() - *ticks > (DWORD) 300)
@@ -1444,7 +1443,6 @@ CFileDefExt::CountFolderAndFiles(HWND hwndDlg, LPWSTR pwszBuf, DWORD *ticks)
             else
                 break;
         }
-
     } while(FindNextFileW(hFind, &wfd));
 
     if (root && IsWindow(hwndDlg))
@@ -1465,6 +1463,5 @@ CFileDefExt::CountFolderAndFiles(HWND hwndDlg, LPWSTR pwszBuf, DWORD *ticks)
     }
 
     FindClose(hFind);
-
     return TRUE;
 }
