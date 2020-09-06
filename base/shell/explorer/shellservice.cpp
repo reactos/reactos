@@ -92,7 +92,6 @@ HRESULT InitShellServices(HDPA * phdpa)
         if (FAILED_UNEXPECTEDLY(hr))
         {
             ERR("CLSIDFromString failed %08x.\n", hr);
-            RegCloseKey(hkey);
             goto cleanup;
         }
 
@@ -100,7 +99,6 @@ HRESULT InitShellServices(HDPA * phdpa)
         if (FAILED_UNEXPECTEDLY(hr))
         {
             ERR("CoCreateInstance failed %08x.\n", hr);
-            RegCloseKey(hkey);
             goto cleanup;
         }
 
@@ -114,7 +112,6 @@ HRESULT InitShellServices(HDPA * phdpa)
     {
         ERR("RegEnumValueW failed %08x.\n", ret);
         hr = HRESULT_FROM_WIN32(GetLastError());
-        RegCloseKey(hkey);
         goto cleanup;
     }
 
@@ -129,6 +126,7 @@ HRESULT InitShellServices(HDPA * phdpa)
     return count > 0 ? S_OK : S_FALSE;
 
 cleanup:
+    RegCloseKey(hkey);
     *phdpa = NULL;
     ShutdownShellServices(hdpa);
     return hr;
