@@ -305,9 +305,7 @@ public:
 };
 
 #ifdef USE_CERT_PINNING
-typedef CHeapPtr<char, CLocalAllocator> CLocalPtr;
-
-static BOOL CertGetSubjectAndIssuer(HINTERNET hFile, CLocalPtr& subjectInfo, CLocalPtr& issuerInfo)
+static BOOL CertGetSubjectAndIssuer(HINTERNET hFile, CLocalPtr<char>& subjectInfo, CLocalPtr<char>& issuerInfo)
 {
     DWORD certInfoLength;
     INTERNET_CERTIFICATE_INFOA certInfo;
@@ -528,7 +526,7 @@ VOID ShowLastError(
     HWND hWndOwner,
     DWORD dwLastError)
 {
-    LPWSTR lpMsg;
+    CLocalPtr<WCHAR> lpMsg;
     
     if (!FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER |
                         FORMAT_MESSAGE_FROM_SYSTEM |
@@ -543,7 +541,6 @@ VOID ShowLastError(
     }
 
     MessageBoxW(hWndOwner, lpMsg, NULL, MB_OK | MB_ICONERROR);
-    LocalFree(lpMsg);
 }
 
 unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
@@ -724,7 +721,8 @@ unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
 
         dwContentLen = 0;
 
-        if (urlComponents.nScheme == INTERNET_SCHEME_HTTP || urlComponents.nScheme == INTERNET_SCHEME_HTTPS)
+        if (urlComponents.nScheme == INTERNET_SCHEME_HTTP ||
+            urlComponents.nScheme == INTERNET_SCHEME_HTTPS)
         {
             hFile = InternetOpenUrlW(hOpen, InfoArray[iAppId].szUrl.GetString(), NULL, 0,
                                      dwUrlConnectFlags,
@@ -754,7 +752,7 @@ unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
         else if (urlComponents.nScheme == INTERNET_SCHEME_FTP)
         {
             // force passive mode on FTP
-            hFile = InternetOpenUrlW(hOpen, InfoArray[iAppId].szUrl.GetString(), NULL, 0,
+            hFile = InternetOpenUrlW(hOpen, InfoArray[iAppId].szUrl, NULL, 0,
                                      dwUrlConnectFlags | INTERNET_FLAG_PASSIVE,
                                      0);
             if (!hFile)
@@ -764,6 +762,31 @@ unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
             }
 
             dwContentLen = FtpGetFileSize(hFile, &dwStatus);
+        }
+        else if (urlComponents.nScheme == INTERNET_SCHEME_FILE)
+        {
+            // Add support for the file scheme so testing locally is simpler
+            WCHAR LocalFilePath[MAX_PATH];
+            DWORD cchPath = _countof(LocalFilePath);
+            // Ideally we would use PathCreateFromUrlAlloc here, but that is not exported (yet)
+            HRESULT hr = PathCreateFromUrlW(InfoArray[iAppId].szUrl, LocalFilePath, &cchPath, 0);
+            if (SUCCEEDED(hr))
+            {
+                if (CopyFileW(LocalFilePath, Path, FALSE))
+                {
+                    goto run;
+                }
+                else
+                {
+                    ShowLastError(hMainWnd, GetLastError());
+                    goto end;
+                }
+            }
+            else
+            {
+                ShowLastError(hMainWnd, hr);
+                goto end;
+            }
         }
 
         if (!dwContentLen)
@@ -787,7 +810,7 @@ unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
         if ((urlComponents.nScheme == INTERNET_SCHEME_HTTPS) &&
             (InfoArray[iAppId].DLType == DLTYPE_DBUPDATE))
         {
-            CLocalPtr subjectName, issuerName;
+            CLocalPtr<char> subjectName, issuerName;
             CStringW szMsgText;
             bool bAskQuestion = false;
             if (!CertGetSubjectAndIssuer(hFile, subjectName, issuerName))
@@ -932,7 +955,8 @@ end:
         if (hOut != INVALID_HANDLE_VALUE)
             CloseHandle(hOut);
 
-        InternetCloseHandle(hFile);
+        if (hFile)
+            InternetCloseHandle(hFile);
         InternetCloseHandle(hOpen);
 
         if (bTempfile)
