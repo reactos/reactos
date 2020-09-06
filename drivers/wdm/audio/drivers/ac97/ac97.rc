@@ -5,7 +5,7 @@
 **
 ********************************************************************************/
 
-/* The file ac97smpl.rc was reviewed by LCA in June 2011 and is acceptable for use by Microsoft. */
+/* The file ac97.rc was reviewed by LCA in June 2011 and is acceptable for use by Microsoft. */
 
 #include <windows.h>
 
@@ -14,8 +14,8 @@
 #define VER_FILETYPE                    VFT_DRV
 #define VER_FILESUBTYPE                 VFT2_DRV_SOUND
 #define VER_FILEDESCRIPTION_STR         "Integrated Controller Hub Audio Driver (WDM)"
-#define VER_INTERNALNAME_STR            "ac97smpl.sys"
-#define VER_ORIGINALFILENAME_STR        "ac97smpl.sys"
+#define VER_INTERNALNAME_STR            "ac97.sys"
+#define VER_ORIGINALFILENAME_STR        "ac97.sys"
 
 #define VER_LEGALCOPYRIGHT_YEARS        "1998-2003"
 #define VER_LEGALCOPYRIGHT_STR          "Copyright (c) Microsoft Corp." VER_LEGALCOPYRIGHT_YEARS

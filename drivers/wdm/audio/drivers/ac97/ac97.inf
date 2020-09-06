@@ -1,7 +1,7 @@
 ;Copyright (c) 1998-2000 Microsoft Corporation All rights Reserved
 ;
 ;Module Name:
-;   ac97smpl.INF
+;   ac97.INF
 ;
 ;Abstract:
 ;    INF file for installing AC97 WDM Sample Driver
@@ -23,7 +23,7 @@ provider=%ProviderName%
 ;;IHV needs to comment out the following line for their OEM redistributed disk.
 ;;LayoutFile=layout.inf, layout1.inf, layout2.inf
 DriverVer=02/22/2007,6.00.6000.1
-CatalogFile=ac97smpl.cat
+CatalogFile=ac97.cat
 
 ;You must specify which platform is supported by each SourceDisksNames section
 ;Valid platform identifiers include .x86, .ia64, .alpha, .axp64
@@ -33,11 +33,11 @@ CatalogFile=ac97smpl.cat
 ;You must also specify which platform is supported by each SourceDisksFiles section
 ;Valid platform identifiers include .x86, .ia64, .alpha, .axp64
 [SourceDisksFiles]
-ac97smpl.sys=222
+ac97.sys=222
 ;ac97prop.dll=222
 ;the entries below are used by the device migration dll, on Win95/98 to Win2K upgrades
 ;Migrate.dll=222
-ac97smpl.inf=222
+ac97.inf=222
 
 [Manufacturer]
 %MfgName%=Intel,NTAMD64,NTIA64,NTARM
@@ -47,44 +47,44 @@ ac97smpl.inf=222
 ExcludeFromSelect = *
 
 [Intel]
-%AC97SMPL_AA.DeviceDesc%=AC97SMPL, PCI\VEN_8086&DEV_2415
-%AC97SMPL_AB.DeviceDesc%=AC97SMPL, PCI\VEN_8086&DEV_2425
-%AC97SMPL_BA.DeviceDesc%=AC97SMPL, PCI\VEN_8086&DEV_2445
+%AC97_AA.DeviceDesc%=AC97, PCI\VEN_8086&DEV_2415
+%AC97_AB.DeviceDesc%=AC97, PCI\VEN_8086&DEV_2425
+%AC97_BA.DeviceDesc%=AC97, PCI\VEN_8086&DEV_2445
 
 ;; This section enables installing on x64 systems
 
 [Intel.NTAMD64]
-%AC97SMPL_AA.DeviceDesc%=AC97SMPL, PCI\VEN_8086&DEV_2415
-%AC97SMPL_AB.DeviceDesc%=AC97SMPL, PCI\VEN_8086&DEV_2425
-%AC97SMPL_BA.DeviceDesc%=AC97SMPL, PCI\VEN_8086&DEV_2445
+%AC97_AA.DeviceDesc%=AC97, PCI\VEN_8086&DEV_2415
+%AC97_AB.DeviceDesc%=AC97, PCI\VEN_8086&DEV_2425
+%AC97_BA.DeviceDesc%=AC97, PCI\VEN_8086&DEV_2445
 
 ;;  This section enables installing on Itanium systems
 
 [Intel.NTIA64]
-%AC97SMPL_AA.DeviceDesc%=AC97SMPL, PCI\VEN_8086&DEV_2415
-%AC97SMPL_AB.DeviceDesc%=AC97SMPL, PCI\VEN_8086&DEV_2425
-%AC97SMPL_BA.DeviceDesc%=AC97SMPL, PCI\VEN_8086&DEV_2445
+%AC97_AA.DeviceDesc%=AC97, PCI\VEN_8086&DEV_2415
+%AC97_AB.DeviceDesc%=AC97, PCI\VEN_8086&DEV_2425
+%AC97_BA.DeviceDesc%=AC97, PCI\VEN_8086&DEV_2445
 
 ;; This section enables installing on ARM systems
 
 [Intel.NTARM]
-%AC97SMPL_AA.DeviceDesc%=AC97SMPL, PCI\VEN_8086&DEV_2415
-%AC97SMPL_AB.DeviceDesc%=AC97SMPL, PCI\VEN_8086&DEV_2425
-%AC97SMPL_BA.DeviceDesc%=AC97SMPL, PCI\VEN_8086&DEV_2445
+%AC97_AA.DeviceDesc%=AC97, PCI\VEN_8086&DEV_2415
+%AC97_AB.DeviceDesc%=AC97, PCI\VEN_8086&DEV_2425
+%AC97_BA.DeviceDesc%=AC97, PCI\VEN_8086&DEV_2445
 
 [DestinationDirs]
-AC97SMPL.CopyList=10,system32\drivers
+AC97.CopyList=10,system32\drivers
 ;AC97PROP.CopyList=10,system32
 
 DevUpgrd_Files = 10, win9xmig\DevUpgrd
 WDMDriver_Files = 10, win9xmig\DevUpgrd\AC97WDM ; Replace "AC97WDM" with your favorite vendor related name
 
-[AC97SMPL]
+[AC97]
 ;;This inf is intended for use by IHV. So, it's going to be used as from OEM distributed disk
 ;;This is why AlsoInstall got used instead if Needs & Include
 AlsoInstall=KS.Registration(ks.inf), WDMAUDIO.Registration(wdmaudio.inf)
-CopyFiles=AC97SMPL.CopyList, DevUpgrd_Files, WDMDriver_Files
-AddReg=AC97SMPL.AddReg,AC97SMPL_NAMES.AddReg,AC97SMPL_OEM.AddReg,DevUpgrd_AddReg
+CopyFiles=AC97.CopyList, DevUpgrd_Files, WDMDriver_Files
+AddReg=AC97.AddReg,AC97_NAMES.AddReg,AC97_OEM.AddReg,DevUpgrd_AddReg
 KnownRegEntries=AC97.KnownRegEntries
 ;;Exclude driver installation for those PnP ID's.
 ;;This PnP ID is an example of a machine where the driver won't work correctly
@@ -96,45 +96,45 @@ IsWin98Gold=keep
 [IsWin98Gold]
 1=HKLM,Software\Microsoft\Windows\CurrentVersion,VersionNumber,0,4.10.1998
 
-[AC97SMPL.CopyList]
-AC97SMPL.sys
+[AC97.CopyList]
+AC97.sys
 
 [DevUpgrd_Files]
 ;;This migrate.dll can be found in the DDK (beta2 or after) under src\setup\devupgrd
 ;Migrate.dll      
 
 [WDMDriver_Files]
-ac97smpl.inf    ; Name of your INF goes here
-AC97SMPL.sys    ; Name of your driver file(s) goes here
+ac97.inf    ; Name of your INF goes here
+AC97.sys    ; Name of your driver file(s) goes here
 ;ac97prop.dll
 
 
 
-[AC97SMPL.Interfaces]
-AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_Wave%,AC97SMPL.Interface.Wave
-AddInterface=%KSCATEGORY_RENDER%,%KSNAME_Wave%,AC97SMPL.Interface.Wave
-AddInterface=%KSCATEGORY_CAPTURE%,%KSNAME_Wave%,AC97SMPL.Interface.Wave
-AddInterface=%KSCATEGORY_REALTIME%,%KSNAME_Wave%,AC97SMPL.Interface.Wave
-AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_Topology%,AC97SMPL.Interface.Topology
+[AC97.Interfaces]
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_Wave%,AC97.Interface.Wave
+AddInterface=%KSCATEGORY_RENDER%,%KSNAME_Wave%,AC97.Interface.Wave
+AddInterface=%KSCATEGORY_CAPTURE%,%KSNAME_Wave%,AC97.Interface.Wave
+AddInterface=%KSCATEGORY_REALTIME%,%KSNAME_Wave%,AC97.Interface.Wave
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_Topology%,AC97.Interface.Topology
 
-[AC97SMPL.Interface.Wave]
-AddReg=AC97SMPL.I.Wave.AddReg
+[AC97.Interface.Wave]
+AddReg=AC97.I.Wave.AddReg
 
-[AC97SMPL.I.Wave.AddReg]
+[AC97.I.Wave.AddReg]
 HKR,,CLSID,,%Proxy.CLSID%
-HKR,,FriendlyName,,%AC97SMPL.Wave.szPname%
+HKR,,FriendlyName,,%AC97.Wave.szPname%
 
-[AC97SMPL.Interface.Topology]
-AddReg=AC97SMPL.I.Topo.AddReg
+[AC97.Interface.Topology]
+AddReg=AC97.I.Topo.AddReg
 
-[AC97SMPL.I.Topo.AddReg]
+[AC97.I.Topo.AddReg]
 HKR,,CLSID,,%Proxy.CLSID%
-HKR,,FriendlyName,,%AC97SMPL.Topology.szPname%
+HKR,,FriendlyName,,%AC97.Topology.szPname%
 
-[AC97SMPL.AddReg]
+[AC97.AddReg]
 HKR,,AssociatedFilters,,"wdmaud,swmidi,redbook"
-HKR,,Driver,,AC97SMPL.sys
-HKR,,NTMPDriver,,"AC97SMPL.sys,sbemul.sys"
+HKR,,Driver,,AC97.sys
+HKR,,NTMPDriver,,"AC97.sys,sbemul.sys"
 
 HKR,Drivers,SubClasses,,"wave,midi,mixer"
 
@@ -142,29 +142,29 @@ HKR,Drivers\wave\wdmaud.drv,Driver,,wdmaud.drv
 HKR,Drivers\midi\wdmaud.drv,Driver,,wdmaud.drv
 HKR,Drivers\mixer\wdmaud.drv,Driver,,wdmaud.drv
 
-HKR,Drivers\wave\wdmaud.drv,Description,,%AC97SMPL.DeviceDesc%
-HKR,Drivers\midi\wdmaud.drv, Description,,%AC97SMPL.DeviceDesc%
-HKR,Drivers\mixer\wdmaud.drv,Description,,%AC97SMPL.DeviceDesc%
+HKR,Drivers\wave\wdmaud.drv,Description,,%AC97.DeviceDesc%
+HKR,Drivers\midi\wdmaud.drv, Description,,%AC97.DeviceDesc%
+HKR,Drivers\mixer\wdmaud.drv,Description,,%AC97.DeviceDesc%
 
 
 [DevUpgrd_AddReg]
 HKLM,"Software\Microsoft\Windows\CurrentVersion\Setup\Migration DLLs","Microsoft Device Upgrade Pack",,%10%\win9xmig\DevUpgrd
-HKLM,"Software\Microsoft\Windows\CurrentVersion\Setup\UpgradeDrivers","PCI\VEN_8086&DEV_2415",,%10%\win9xmig\DevUpgrd\AC97WDM\ac97smpl.inf
-HKLM,"Software\Microsoft\Windows\CurrentVersion\Setup\UpgradeDrivers","PCI\VEN_8086&DEV_2425",,%10%\win9xmig\DevUpgrd\AC97WDM\ac97smpl.inf
-HKLM,"Software\Microsoft\Windows\CurrentVersion\Setup\UpgradeDrivers","PCI\VEN_8086&DEV_2445",,%10%\win9xmig\DevUpgrd\AC97WDM\ac97smpl.inf
+HKLM,"Software\Microsoft\Windows\CurrentVersion\Setup\UpgradeDrivers","PCI\VEN_8086&DEV_2415",,%10%\win9xmig\DevUpgrd\AC97WDM\ac97.inf
+HKLM,"Software\Microsoft\Windows\CurrentVersion\Setup\UpgradeDrivers","PCI\VEN_8086&DEV_2425",,%10%\win9xmig\DevUpgrd\AC97WDM\ac97.inf
+HKLM,"Software\Microsoft\Windows\CurrentVersion\Setup\UpgradeDrivers","PCI\VEN_8086&DEV_2445",,%10%\win9xmig\DevUpgrd\AC97WDM\ac97.inf
 
 
-[AC97SMPL.Services]
-AddService = AC97SMPL, 0x00000002, AC97SMPL_Service_Inst
+[AC97.Services]
+AddService = AC97, 0x00000002, AC97_Service_Inst
 
-[AC97SMPL_Service_Inst]
-DisplayName   = %AC97SMPL.SvcDesc%
+[AC97_Service_Inst]
+DisplayName   = %AC97.SvcDesc%
 ServiceType   = 1                  ; SERVICE_KERNEL_DRIVER
 StartType     = 3                  ; SERVICE_DEMAND_START
 ErrorControl  = 1                  ; SERVICE_ERROR_NORMAL
-ServiceBinary = %10%\system32\drivers\AC97SMPL.sys
+ServiceBinary = %10%\system32\drivers\AC97.sys
 
-[AC97SMPL_NAMES.AddReg]
+[AC97_NAMES.AddReg]
 ;; Nodes
 HKLM,%MediaCategories%\%ICHGUID.PhoneVolume%,Name,,%ICHNode.PhoneVolume%
 HKLM,%MediaCategories%\%ICHGUID.PhoneVolume%,Display,1,00,00,00,00
@@ -225,7 +225,7 @@ HKLM,%MediaCategories%\%ICHGUID.Front%,Name,,%ICHPin.Front%
 HKLM,%MediaCategories%\%ICHGUID.Front%,Display,1,00,00,00,00
 
 
-[AC97SMPL_OEM.AddReg]
+[AC97_OEM.AddReg]
 ;;Default register value at driver startup
 ;;Uncomment some one of the lines if you want to overwrite the default setting
 ;;The value in these outcommented lines is the driver default. You can change
@@ -274,25 +274,25 @@ HKR,Settings,DisableCenterLFE,1,1       ;6ch playback is not supported.
 ;HKR,Settings,ChannelConfig,1,3,0,0,0   ;ChannelConfig set to stereo speakers.
 
 ;;================= Windows NT ====================
-[AC97SMPL.NTX86]
+[AC97.NTX86]
 Include=ks.inf,wdmaudio.inf
 Needs=KS.Registration,WDMAUDIO.Registration
-CopyFiles=AC97SMPL.CopyList
+CopyFiles=AC97.CopyList
 ;,AC97PROP.CopyList
-AddReg=AC97SMPL.AddReg,AC97SMPL_NAMES.AddReg,AC97SMPL_OEM.AddReg
+AddReg=AC97.AddReg,AC97_NAMES.AddReg,AC97_OEM.AddReg
 ;,AC97PROP.AddReg
 ;;Exclude driver installation for those PnP ID's.
 ;;This PnP ID is an example of a machine where the driver won't work correctly
 ExcludeId=PCI\VEN_8086&DEV_2415&SUBSYS_536011D4&REV_00
 
-[AC97SMPL.NTX86.Interfaces]
-AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_Wave%,AC97SMPL.Interface.Wave
-AddInterface=%KSCATEGORY_RENDER%,%KSNAME_Wave%,AC97SMPL.Interface.Wave
-AddInterface=%KSCATEGORY_CAPTURE%,%KSNAME_Wave%,AC97SMPL.Interface.Wave
-AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_Topology%,AC97SMPL.Interface.Topology
+[AC97.NTX86.Interfaces]
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_Wave%,AC97.Interface.Wave
+AddInterface=%KSCATEGORY_RENDER%,%KSNAME_Wave%,AC97.Interface.Wave
+AddInterface=%KSCATEGORY_CAPTURE%,%KSNAME_Wave%,AC97.Interface.Wave
+AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_Topology%,AC97.Interface.Topology
 
-[AC97SMPL.NTX86.Services]
-AddService = AC97SMPL, 0x00000002, AC97SMPL_Service_Inst
+[AC97.NTX86.Services]
+AddService = AC97, 0x00000002, AC97_Service_Inst
 
 ;[AC97PROP.CopyList]
 ;ac97prop.dll
@@ -304,14 +304,14 @@ AddService = AC97SMPL, 0x00000002, AC97SMPL_Service_Inst
 [Strings]
 ProviderName="FooProviderName"
 MfgName="Intel"
-DiskDescription="AC'97 WDM Sample Driver Disk"
-AC97SMPL_AA.DeviceDesc="AC'97 Sample Driver for Intel(r) 82801AA Controller"
-AC97SMPL_AB.DeviceDesc="AC'97 Sample Driver for Intel(r) 82801AB Controller"
-AC97SMPL_BA.DeviceDesc="AC'97 Sample Driver for Intel(r) 82801BA/BAM Controller"
-AC97SMPL.DeviceDesc="AC'97 Sample Driver for Intel(r) 82801 Controller"
+DiskDescription="AC'97 WDM Driver Disk"
+AC97_AA.DeviceDesc="AC'97 Driver for Intel(r) 82801AA Controller"
+AC97_AB.DeviceDesc="AC'97 Driver for Intel(r) 82801AB Controller"
+AC97_BA.DeviceDesc="AC'97 Driver for Intel(r) 82801BA/BAM Controller"
+AC97.DeviceDesc="AC'97 Driver for Intel(r) 82801 Controller"
 
-AC97SMPL.Wave.szPname="AC'97 Sound Card"
-AC97SMPL.Topology.szPname="AC'97 Mixer"
+AC97.Wave.szPname="AC'97 Sound Card"
+AC97.Topology.szPname="AC'97 Mixer"
 
 MediaCategories="SYSTEM\CurrentControlSet\Control\MediaCategories"
 
@@ -323,7 +323,7 @@ KSCATEGORY_REALTIME="{EB115FFC-10C8-4964-831D-6DCB02E6F23F}"
 KSNAME_Wave="Wave"
 KSNAME_Topology="Topology"
 
-AC97SMPL.SvcDesc = "Service for AC'97 Sample Driver (WDM)"
+AC97.SvcDesc = "Service for AC'97 Driver (WDM)"
 
 ;; Nodes (non-localizeable)
 ICHGUID.PhoneVolume     ="{0A8C1A87-42B0-11D2-95D2-00C04FB925D3}"
@@ -394,13 +394,13 @@ ICHPin.Front            ="Front Speaker"
 ProviderName="FooProviderName"
 MfgName="Intel"
 DiskDescription="Diskette für AC'97 WDM Treiberbeispiel"
-AC97SMPL_AA.DeviceDesc="AC'97 Treiberbeispiel für Intel(r) 82801AA Kontroller"
-AC97SMPL_AB.DeviceDesc="AC'97 Treiberbeispiel für Intel(r) 82801AB Kontroller"
-AC97SMPL_BA.DeviceDesc="AC'97 Treiberbeispiel für Intel(r) 82801BA/BAM Controller"
-AC97SMPL.DeviceDesc="AC'97 Treiberbeispiel für Intel(r) 82801 Kontroller"
+AC97_AA.DeviceDesc="AC'97 Treiberbeispiel für Intel(r) 82801AA Kontroller"
+AC97_AB.DeviceDesc="AC'97 Treiberbeispiel für Intel(r) 82801AB Kontroller"
+AC97_BA.DeviceDesc="AC'97 Treiberbeispiel für Intel(r) 82801BA/BAM Controller"
+AC97.DeviceDesc="AC'97 Treiberbeispiel für Intel(r) 82801 Kontroller"
 
-AC97SMPL.Wave.szPname="AC'97 Musikkarte"
-AC97SMPL.Topology.szPname="AC'97 Mixer"
+AC97.Wave.szPname="AC'97 Musikkarte"
+AC97.Topology.szPname="AC'97 Mixer"
 
 MediaCategories="SYSTEM\CurrentControlSet\Control\MediaCategories"
 
@@ -412,7 +412,7 @@ KSCATEGORY_REALTIME="{EB115FFC-10C8-4964-831D-6DCB02E6F23F}"
 KSNAME_Wave="Wave"
 KSNAME_Topology="Topology"
 
-AC97SMPL.SvcDesc = "Installationshilfe für AC'97 Treiberbeispiel (WDM)"
+AC97.SvcDesc = "Installationshilfe für AC'97 Treiberbeispiel (WDM)"
 
 ;; Nodes (non-localizeable)
 ICHGUID.PhoneVolume     ="{0A8C1A87-42B0-11D2-95D2-00C04FB925D3}"
