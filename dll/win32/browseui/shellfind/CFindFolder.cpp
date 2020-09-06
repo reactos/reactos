@@ -199,7 +199,11 @@ static BOOL SearchFile(LPCWSTR lpFilePath, _SearchData *pSearchData)
     }
 
     if (size == INVALID_FILE_SIZE)
-        size = 32 * 1024 * 1024; // Use first 32 MB
+    {
+        MEMORYSTATUS status = { sizeof(status) };
+        GlobalMemoryStatus(&status);
+        size = status.dwAvailPhys * 2 / 3;
+    }
 
     HANDLE hFileMap = CreateFileMappingW(hFile, NULL, PAGE_READONLY, 0, size, NULL);
     CloseHandle(hFile);
