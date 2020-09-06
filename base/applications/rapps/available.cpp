@@ -342,26 +342,52 @@ VOID CAvailableApps::FreeCachedEntries()
     m_InfoList.RemoveAll();
 }
 
-VOID CAvailableApps::DeleteCurrentAppsDB()
+static void DeleteWithWildcard(const CStringW& DirWithFilter)
 {
     HANDLE hFind = INVALID_HANDLE_VALUE;
     WIN32_FIND_DATAW FindFileData;
 
-    hFind = FindFirstFileW(m_Strings.szSearchPath.GetString(), &FindFileData);
+    hFind = FindFirstFileW(DirWithFilter, &FindFileData);
 
-    if (hFind != INVALID_HANDLE_VALUE)
+    if (hFind == INVALID_HANDLE_VALUE)
+        return;
+
+    CStringW Dir = DirWithFilter;
+    PathRemoveFileSpecW(Dir.GetBuffer(MAX_PATH));
+    Dir.ReleaseBuffer();
+
+    do
     {
-        ATL::CStringW szTmp;
-        do
-        {
-            szTmp = m_Strings.szAppsPath;
-            PathAppendW(szTmp.GetBuffer(MAX_PATH), FindFileData.cFileName);
-            szTmp.ReleaseBuffer();
-            DeleteFileW(szTmp.GetString());
-        } while (FindNextFileW(hFind, &FindFileData) != 0);
-        FindClose(hFind);
-    }
+        ATL::CStringW szTmp = Dir + L"\\";
+        szTmp += FindFileData.cFileName;
 
+        if (!(FindFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
+        {
+            DeleteFileW(szTmp);
+        }
+    } while (FindNextFileW(hFind, &FindFileData) != 0);
+    FindClose(hFind);
+}
+
+VOID CAvailableApps::DeleteCurrentAppsDB()
+{
+    // Delete icons
+    ATL::CStringW IconPath = m_Strings.szAppsPath;
+    PathAppendW(IconPath.GetBuffer(MAX_PATH), L"icons");
+    IconPath.ReleaseBuffer();
+    DeleteWithWildcard(IconPath + L"\\*.ico");
+
+    // Delete leftover screenshots
+    ATL::CStringW ScrnshotFolder = m_Strings.szAppsPath;
+    PathAppendW(ScrnshotFolder.GetBuffer(MAX_PATH), L"screenshots");
+    ScrnshotFolder.ReleaseBuffer();
+    DeleteWithWildcard(IconPath + L"\\*.tmp");
+
+    // Delete data base files (*.txt)
+    DeleteWithWildcard(m_Strings.szSearchPath);
+
+    RemoveDirectoryW(IconPath);
+    RemoveDirectoryW(ScrnshotFolder);
     RemoveDirectoryW(m_Strings.szAppsPath);
     RemoveDirectoryW(m_Strings.szPath);
 }
