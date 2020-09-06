@@ -203,8 +203,8 @@ static BOOL SearchFile(LPCWSTR lpFilePath, _SearchData *pSearchData)
         MEMORYSTATUSEX status;
         status.dwLength = sizeof(status);
         GlobalMemoryStatusEx(&status);
-        if (status.ullAvailPhys >= (DWORD)(2 * 1024 * 1024 * 1024)) // 2GB
-            size = (DWORD)(2 * 1024 * 1024 * 1024 - 1);
+        if (status.ullAvailPhys > 0x7FFFFFFF) // 2GB
+            size = 0x7FFFFFFF;
         else
             size = (DWORD)(status.ullAvailPhys * 2 / 3); // 2/3 of physical memory
     }
@@ -230,7 +230,7 @@ static BOOL SearchFile(LPCWSTR lpFilePath, _SearchData *pSearchData)
              (memcmp(pbContents, "\xFE\xFF", 2) == 0 || (!pbContents[0] && pbContents[1])))
     {
         // UTF-16 BE
-        bFound = StrFindNIW((LPCWSTR) pbContents, pSearchData->szQueryU16BE, size / sizeof(WCHAR));
+        bFound = StrFindNIW((LPCWSTR)pbContents, pSearchData->szQueryU16BE, size / sizeof(WCHAR));
     }
     else if (size >= 3 && memcmp(pbContents, "\xEF\xBB\xBF", 3) == 0)
     {
@@ -285,13 +285,14 @@ static UINT RecursiveFind(LPCWSTR lpPath, _SearchData *pSearchData)
     BOOL bMoreFiles = TRUE;
     UINT uTotalFound = 0;
 
-    PathCombineW(szPath, lpPath, L"*.*");
+    PathCombineW(szPath, lpPath, L"*");
 
     for (hFindFile = FindFirstFileW(szPath, &FindData);
         bMoreFiles && hFindFile != INVALID_HANDLE_VALUE;
         bMoreFiles = FindNextFileW(hFindFile, &FindData))
     {
-        if (!wcscmp(FindData.cFileName, L".") || !wcscmp(FindData.cFileName, L".."))
+#define IS_DOTS(psz) ((psz)[0] == L'.' && ((psz)[1] == 0 || ((psz)[1] == L'.' && (psz)[2] == 0)))
+        if (IS_DOTS(FindData.cFileName))
             continue;
 
         PathCombineW(szPath, lpPath, FindData.cFileName);
