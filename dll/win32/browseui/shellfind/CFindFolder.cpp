@@ -152,6 +152,8 @@ struct _SearchData
     CStringW szFileName;
     CStringA szQueryA;
     CStringW szQueryW;
+    CStringW szQueryU16BE;
+    CStringA szQueryU8;
     BOOL SearchHidden;
     CComPtr<CFindFolder> pFindFolder;
 };
@@ -202,6 +204,9 @@ static UINT SearchFile(LPCWSTR lpFilePath, _SearchData *pSearchData)
         return 0;
 
     DWORD size = GetFileSize(hFile, NULL);
+    if (size == 0 || size == INVALID_FILE_SIZE)
+        return 0;
+
     HANDLE hFileMap = CreateFileMappingW(hFile, NULL, PAGE_READONLY, 0, 0, NULL);
     CloseHandle(hFile);
     if (hFileMap == INVALID_HANDLE_VALUE)
@@ -223,32 +228,14 @@ static UINT SearchFile(LPCWSTR lpFilePath, _SearchData *pSearchData)
              (memcmp(lpFileContent, "\xFE\xFF", 2) == 0 || (!lpFileContent[0] && lpFileContent[1])))
     {
         // UTF-16 BE
-        CStringW utf16 = pSearchData->szQueryW;
-        LPWSTR psz = utf16.GetBuffer();
-        for (SIZE_T i = 0; psz[i]; ++i)
-        {
-            psz[i] = MAKEWORD(HIBYTE(psz[i]), LOBYTE(psz[i]));
-        }
-        utf16.ReleaseBuffer();
-        uMatches = StrStrCountNIW((LPCWSTR) lpFileContent, utf16, utf16.GetLength());
+        uMatches = StrStrCountNIW((LPCWSTR) lpFileContent, pSearchData->szQueryU16BE,
+                                  pSearchData->szQueryU16BE.GetLength());
     }
     else if (size >= 3 && memcmp(lpFileContent, "\xEF\xBB\xBF", 3) == 0)
     {
-        CStringA utf8;
-        INT cch = WideCharToMultiByte(CP_UTF8, 0, pSearchData->szQueryW, -1, NULL, 0, NULL, NULL);
-        if (cch > 0)
-        {
-            // UTF-8
-            LPSTR psz = utf8.GetBuffer(cch);
-            WideCharToMultiByte(CP_UTF8, 0, pSearchData->szQueryW, -1, psz, cch, NULL, NULL);
-            utf8.ReleaseBuffer();
-            uMatches = StrStrCountNIA((LPCSTR) lpFileContent, utf8, utf8.GetLength());
-        }
-        else
-        {
-            // ANSI
-            uMatches = StrStrCountNIA((LPCSTR) lpFileContent, pSearchData->szQueryA, size / sizeof(CHAR));
-        }
+        // UTF-8
+        uMatches = StrStrCountNIA((LPCSTR) lpFileContent, pSearchData->szQueryU8,
+                                  pSearchData->szQueryU8.GetLength());
     }
     else
     {
@@ -400,6 +387,36 @@ LRESULT CFindFolder::StartSearch(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &
     pSearchData->szFileName = pSearchParams->szFileName;
     pSearchData->szQueryA = pSearchParams->szQuery;
     pSearchData->szQueryW = pSearchParams->szQuery;
+
+    // UTF-16 BE
+    {
+        CStringW utf16 = pSearchData->szQueryW;
+        LPWSTR psz = utf16.GetBuffer();
+        for (SIZE_T i = 0; psz[i]; ++i)
+        {
+            psz[i] = MAKEWORD(HIBYTE(psz[i]), LOBYTE(psz[i]));
+        }
+        utf16.ReleaseBuffer();
+        pSearchData->szQueryU16BE = utf16;
+    }
+
+    // UTF-8
+    {
+        CStringA utf8;
+        INT cch = WideCharToMultiByte(CP_UTF8, 0, pSearchData->szQueryW, -1, NULL, 0, NULL, NULL);
+        if (cch > 0)
+        {
+            LPSTR psz = utf8.GetBuffer(cch);
+            WideCharToMultiByte(CP_UTF8, 0, pSearchData->szQueryW, -1, psz, cch, NULL, NULL);
+            utf8.ReleaseBuffer();
+            pSearchData->szQueryU8 = utf8;
+        }
+        else
+        {
+            pSearchData->szQueryU8 = pSearchData->szQueryA;
+        }
+    }
+
     pSearchData->SearchHidden = pSearchParams->SearchHidden;
     SHFree(pSearchParams);
 
