@@ -1271,7 +1271,7 @@ typedef struct acpi_pnp_device_id_list
 {
     UINT32                          Count;              /* Number of IDs in Ids array */
     UINT32                          ListSize;           /* Size of list, including ID strings */
-    ACPI_PNP_DEVICE_ID              Ids[1];             /* ID array */
+    ACPI_PNP_DEVICE_ID              Ids[];              /* ID array */
 
 } ACPI_PNP_DEVICE_ID_LIST;
 
