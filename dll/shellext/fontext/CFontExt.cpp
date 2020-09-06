@@ -615,7 +615,7 @@ CFontExt::DoGetFontTitle(IN LPCWSTR pszFontPath, OUT CStringW& strFontName)
     strFontName.ReleaseBuffer();
     if (ret)
     {
-        TRACE("pszFontName: %S\n", pszBuffer);
+        TRACE("pszFontName: %S\n", (LPCWSTR)strFontName);
         return S_OK;
     }
 
