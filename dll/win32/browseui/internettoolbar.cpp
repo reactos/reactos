@@ -1532,30 +1532,6 @@ LRESULT CInternetToolbar::OnFolders(WORD wNotifyCode, WORD wID, HWND hWndCtl, BO
     return 1;
 }
 
-LRESULT CInternetToolbar::OnMoveTo(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled)
-{
-    // TODO:
-    return 0;
-}
-
-LRESULT CInternetToolbar::OnCopyTo(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled)
-{
-    // TODO:
-    return 0;
-}
-
-LRESULT CInternetToolbar::OnDelete(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled)
-{
-    // TODO:
-    return 0;
-}
-
-LRESULT CInternetToolbar::OnUndo(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled)
-{
-    // TODO:
-    return 0;
-}
-
 LRESULT CInternetToolbar::OnForwardToCommandTarget(WORD wNotifyCode, WORD wID, HWND hWndCtl, BOOL &bHandled)
 {
     HRESULT                                 hResult;
@@ -1563,6 +1539,10 @@ LRESULT CInternetToolbar::OnForwardToCommandTarget(WORD wNotifyCode, WORD wID, H
     if (fCommandTarget.p != NULL)
     {
         hResult = fCommandTarget->Exec(&fCommandCategory, wID, 0, NULL, NULL);
+        if (FAILED(hResult))
+        {
+            ::SendMessageW(::GetParent(m_hWnd), WM_COMMAND, wID, 0);
+        }
     }
     return 1;
 }
