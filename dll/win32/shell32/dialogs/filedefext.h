@@ -75,7 +75,7 @@ private:
     static INT_PTR CALLBACK GeneralPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 	static INT_PTR CALLBACK VersionPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 	static INT_PTR CALLBACK FolderCustomizePageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
-	BOOL CountFolderAndFiles(HWND hwndDlg, LPWSTR pwszBuf, LPDWORD ticks);
+	BOOL CountFolderAndFiles(HWND hwndDlg, LPCWSTR pwszBuf, LPDWORD ticks);
 
 	WCHAR m_wszPath[MAX_PATH];
 	CFileVersionInfo m_VerInfo;

@@ -1371,7 +1371,7 @@ CFileDefExt::_CountFolderAndFilesThreadProc(LPVOID lpParameter)
 }
 
 BOOL
-CFileDefExt::CountFolderAndFiles(HWND hwndDlg, LPWSTR pwszBuf, DWORD *ticks)
+CFileDefExt::CountFolderAndFiles(HWND hwndDlg, LPCWSTR pwszBuf, DWORD *ticks)
 {
     CString sBuf = pwszBuf;
     sBuf += L"\\" ;
@@ -1380,10 +1380,10 @@ CFileDefExt::CountFolderAndFiles(HWND hwndDlg, LPWSTR pwszBuf, DWORD *ticks)
     CString sFileName;
 
     WIN32_FIND_DATAW wfd;
-    HANDLE hFind = FindFirstFileW(sSearch.GetBuffer(), &wfd);
+    HANDLE hFind = FindFirstFileW(sSearch, &wfd);
     if (hFind == INVALID_HANDLE_VALUE)
     {
-        ERR("FindFirstFileW %ls failed\n", sSearch.GetBuffer());
+        ERR("FindFirstFileW %ls failed\n", sSearch.GetString());
         return FALSE;
     }
 
@@ -1405,7 +1405,7 @@ CFileDefExt::CountFolderAndFiles(HWND hwndDlg, LPWSTR pwszBuf, DWORD *ticks)
 
             ++m_cFolders;
 
-            CountFolderAndFiles(hwndDlg, sFileName.GetBuffer(), ticks);
+            CountFolderAndFiles(hwndDlg, sFileName, ticks);
         }
         else
         {
@@ -1416,8 +1416,8 @@ CFileDefExt::CountFolderAndFiles(HWND hwndDlg, LPWSTR pwszBuf, DWORD *ticks)
             FileSize.u.HighPart = wfd.nFileSizeHigh;
             m_DirSize.QuadPart += FileSize.QuadPart;
             // Calculate size on disc
-            if (!GetPhysicalFileSize(sFileName.GetBuffer(), &FileSize))
-                ERR("GetPhysicalFileSize failed for %ls\n", sFileName.GetBuffer());
+            if (!GetPhysicalFileSize(sFileName.GetString(), &FileSize))
+                ERR("GetPhysicalFileSize failed for %ls\n", sFileName.GetString());
             m_DirSizeOnDisc.QuadPart += FileSize.QuadPart;
         }
         if (GetTickCount() - *ticks > (DWORD) 300)
