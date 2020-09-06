@@ -422,6 +422,7 @@ START_TEST(SHExplorerParseCmdLine)
         { __LINE__, L"/inproc,\"c:\\\"", FALSE, PIDL_IS_UNTOUCHED, 0x00000000 },
         { __LINE__, L"/inproc,{20d04fe0-3aea-1069-a2d8-08002b30309d}", TRUE, PIDL_IS_UNTOUCHED, 0x00000400 },
         { __LINE__, L"shell:::{450D8FBA-AD25-11D0-98A8-0800361B1103}", TRUE, CSIDL_MYDOCUMENTS, 0x00000200 },
+        { __LINE__, L"::{450d8fba-ad25-11d0-98a8-0800361b1103}", TRUE, CSIDL_MYDOCUMENTS, 0x00000200 },
     };
     const int TestCount = sizeof(Tests) / sizeof(Tests[0]);
     PWSTR CommandLine;
