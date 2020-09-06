@@ -173,31 +173,19 @@ static const TChar* StrStrN(const TChar *lpFirst, const TString &lpSrch, UINT cc
     return NULL;
 }
 
-template<typename TChar, typename TString, int (&StrNCmp)(const TChar *, const TChar *, size_t)>
-static UINT StrStrNCount(const TChar *lpFirst, const TString &lpSrch, UINT cchMax)
+static inline BOOL
+StrFindNIA(const CHAR *lpFirst, const CStringA &lpSrch, UINT cchMax)
 {
-    const TChar *lpSearchEnd = lpFirst + cchMax;
-    UINT uCount = 0;
-    while (lpFirst < lpSearchEnd && (lpFirst = StrStrN<TChar, TString, StrNCmp>(lpFirst, lpSrch, cchMax)))
-    {
-        uCount++;
-        lpFirst += lpSrch.GetLength();
-        cchMax = lpSearchEnd - lpFirst;
-    }
-    return uCount;
+    return StrStrN<CHAR, CStringA, _strnicmp>(lpFirst, lpSrch, cchMax) != NULL;
 }
 
-static UINT StrStrCountNIA(const CHAR *lpFirst, const CStringA &lpSrch, UINT cchMax)
+static inline BOOL
+StrFindNIW(const WCHAR *lpFirst, const CStringW &lpSrch, UINT cchMax)
 {
-    return StrStrNCount<CHAR, CStringA, _strnicmp>(lpFirst, lpSrch, cchMax);
+    return StrStrN<WCHAR, CStringW, _wcsnicmp>(lpFirst, lpSrch, cchMax) != NULL;
 }
 
-static UINT StrStrCountNIW(const WCHAR *lpFirst, const CStringW &lpSrch, UINT cchMax)
-{
-    return StrStrNCount<WCHAR, CStringW, _wcsnicmp>(lpFirst, lpSrch, cchMax);
-}
-
-static UINT SearchFile(LPCWSTR lpFilePath, _SearchData *pSearchData)
+static BOOL SearchFile(LPCWSTR lpFilePath, _SearchData *pSearchData)
 {
     HANDLE hFile = CreateFileW(lpFilePath, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_READONLY, NULL);
     if (hFile == INVALID_HANDLE_VALUE)
@@ -220,35 +208,35 @@ static UINT SearchFile(LPCWSTR lpFilePath, _SearchData *pSearchData)
     if (!lpFileContent)
         return 0;
 
-    UINT uMatches = 0;
+    BOOL bMatch;
     if (size >= 2 &&
         (memcmp(lpFileContent, "\xFF\xFE", 2) == 0 || (lpFileContent[0] && !lpFileContent[1])))
     {
         // UTF-16
-        uMatches = StrStrCountNIW((LPCWSTR) lpFileContent, pSearchData->szQueryW, size / sizeof(WCHAR));
+        bMatch = StrFindNIW((LPCWSTR) lpFileContent, pSearchData->szQueryW, size / sizeof(WCHAR));
     }
     else if (size >= 2 &&
              (memcmp(lpFileContent, "\xFE\xFF", 2) == 0 || (!lpFileContent[0] && lpFileContent[1])))
     {
         // UTF-16 BE
-        uMatches = StrStrCountNIW((LPCWSTR) lpFileContent, pSearchData->szQueryU16BE,
-                                  pSearchData->szQueryU16BE.GetLength());
+        bMatch = StrFindNIW((LPCWSTR) lpFileContent, pSearchData->szQueryU16BE,
+                            pSearchData->szQueryU16BE.GetLength());
     }
     else if (size >= 3 && memcmp(lpFileContent, "\xEF\xBB\xBF", 3) == 0)
     {
         // UTF-8
-        uMatches = StrStrCountNIA((LPCSTR) lpFileContent, pSearchData->szQueryU8,
-                                  pSearchData->szQueryU8.GetLength());
+        bMatch = StrFindNIA((LPCSTR) lpFileContent, pSearchData->szQueryU8,
+                            pSearchData->szQueryU8.GetLength());
     }
     else
     {
         // ANSI
-        uMatches = StrStrCountNIA((LPCSTR)lpFileContent, pSearchData->szQueryA, size / sizeof(CHAR));
+        bMatch = StrFindNIA((LPCSTR)lpFileContent, pSearchData->szQueryA, size / sizeof(CHAR));
     }
 
     UnmapViewOfFile(lpFileContent);
 
-    return uMatches;
+    return bMatch;
 }
 
 static BOOL FileNameMatch(LPCWSTR FindDataFileName, _SearchData *pSearchData)
