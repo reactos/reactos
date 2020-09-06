@@ -189,13 +189,13 @@ static BOOL SearchFile(LPCWSTR lpFilePath, _SearchData *pSearchData)
 {
     HANDLE hFile = CreateFileW(lpFilePath, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_READONLY, NULL);
     if (hFile == INVALID_HANDLE_VALUE)
-        return 0;
+        return FALSE;
 
     DWORD size = GetFileSize(hFile, NULL);
     if (size == 0)
     {
         CloseHandle(hFile);
-        return 0;
+        return FALSE;
     }
 
     if (size == INVALID_FILE_SIZE)
@@ -203,8 +203,8 @@ static BOOL SearchFile(LPCWSTR lpFilePath, _SearchData *pSearchData)
         MEMORYSTATUSEX status;
         status.dwLength = sizeof(status);
         GlobalMemoryStatusEx(&status);
-        if (status.ullAvailPhys >= 0x7FFFFFFF)
-            size = 1024 * 1024 * 1024; // Use first 1 GB
+        if (status.ullAvailPhys >= 1024 * 1024 * 1024)
+            size = 1024 * 1024 * 1024; // 1GB
         else
             size = (DWORD)(status.ullAvailPhys * 2 / 3); // 2/3 of physical memory
     }
@@ -212,39 +212,38 @@ static BOOL SearchFile(LPCWSTR lpFilePath, _SearchData *pSearchData)
     HANDLE hFileMap = CreateFileMappingW(hFile, NULL, PAGE_READONLY, 0, size, NULL);
     CloseHandle(hFile);
     if (hFileMap == INVALID_HANDLE_VALUE)
-        return 0;
+        return FALSE;
 
-    LPBYTE lpFileContent = (LPBYTE) MapViewOfFile(hFileMap, FILE_MAP_READ, 0, 0, 0);
+    LPBYTE pbContents = (LPBYTE)MapViewOfFile(hFileMap, FILE_MAP_READ, 0, 0, size);
     CloseHandle(hFileMap);
-    if (!lpFileContent)
-        return 0;
+    if (!pbContents)
+        return FALSE;
 
     BOOL bFound;
     if (size >= 2 &&
-        (memcmp(lpFileContent, "\xFF\xFE", 2) == 0 || (lpFileContent[0] && !lpFileContent[1])))
+        (memcmp(pbContents, "\xFF\xFE", 2) == 0 || (pbContents[0] && !pbContents[1])))
     {
         // UTF-16
-        bFound = StrFindNIW((LPCWSTR) lpFileContent, pSearchData->szQueryW, size / sizeof(WCHAR));
+        bFound = StrFindNIW((LPCWSTR)pbContents, pSearchData->szQueryW, size / sizeof(WCHAR));
     }
     else if (size >= 2 &&
-             (memcmp(lpFileContent, "\xFE\xFF", 2) == 0 || (!lpFileContent[0] && lpFileContent[1])))
+             (memcmp(pbContents, "\xFE\xFF", 2) == 0 || (!pbContents[0] && pbContents[1])))
     {
         // UTF-16 BE
-        bFound = StrFindNIW((LPCWSTR) lpFileContent, pSearchData->szQueryU16BE, size / sizeof(WCHAR));
+        bFound = StrFindNIW((LPCWSTR) pbContents, pSearchData->szQueryU16BE, size / sizeof(WCHAR));
     }
-    else if (size >= 3 && memcmp(lpFileContent, "\xEF\xBB\xBF", 3) == 0)
+    else if (size >= 3 && memcmp(pbContents, "\xEF\xBB\xBF", 3) == 0)
     {
         // UTF-8
-        bFound = StrFindNIA((LPCSTR) lpFileContent, pSearchData->szQueryU8, size / sizeof(CHAR));
+        bFound = StrFindNIA((LPCSTR)pbContents, pSearchData->szQueryU8, size / sizeof(CHAR));
     }
     else
     {
         // ANSI
-        bFound = StrFindNIA((LPCSTR)lpFileContent, pSearchData->szQueryA, size / sizeof(CHAR));
+        bFound = StrFindNIA((LPCSTR)pbContents, pSearchData->szQueryA, size / sizeof(CHAR));
     }
 
-    UnmapViewOfFile(lpFileContent);
-
+    UnmapViewOfFile(pbContents);
     return bFound;
 }
 
