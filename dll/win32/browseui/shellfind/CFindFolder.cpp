@@ -191,22 +191,12 @@ static BOOL SearchFile(LPCWSTR lpFilePath, _SearchData *pSearchData)
     if (hFile == INVALID_HANDLE_VALUE)
         return FALSE;
 
+    // FIXME: support large file
     DWORD size = GetFileSize(hFile, NULL);
-    if (size == 0)
+    if (size == 0 || size == INVALID_FILE_SIZE)
     {
         CloseHandle(hFile);
         return FALSE;
-    }
-
-    if (size == INVALID_FILE_SIZE)
-    {
-        MEMORYSTATUSEX status;
-        status.dwLength = sizeof(status);
-        GlobalMemoryStatusEx(&status);
-        if (status.ullAvailPhys > 0x7FFFFFFF) // 2GB
-            size = 0x7FFFFFFF;
-        else
-            size = (DWORD)(status.ullAvailPhys * 2 / 3); // 2/3 of physical memory
     }
 
     HANDLE hFileMap = CreateFileMappingW(hFile, NULL, PAGE_READONLY, 0, size, NULL);
