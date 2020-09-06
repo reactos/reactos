@@ -203,8 +203,8 @@ static BOOL SearchFile(LPCWSTR lpFilePath, _SearchData *pSearchData)
         MEMORYSTATUSEX status;
         status.dwLength = sizeof(status);
         GlobalMemoryStatusEx(&status);
-        if (status.ullAvailPhys >= 1024 * 1024 * 1024)
-            size = 1024 * 1024 * 1024; // 1GB
+        if (status.ullAvailPhys >= 2 * 1024 * 1024 * 1024) // 2GB
+            size = 2 * 1024 * 1024 * 1024 - 1;
         else
             size = (DWORD)(status.ullAvailPhys * 2 / 3); // 2/3 of physical memory
     }
