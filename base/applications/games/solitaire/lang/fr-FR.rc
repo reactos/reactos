@@ -60,7 +60,7 @@ BEGIN
     IDS_SOL_WIN "Félicitations ! Vous avez gagné !"
     IDS_SOL_DEAL "Redistribuer ?"
     IDS_SOL_SCORE "Score : %d"
-    IDS_SOL_TIME "Temps: %d"
+    IDS_SOL_TIME "Temps : %d"
 END
 
 /* Menus */
