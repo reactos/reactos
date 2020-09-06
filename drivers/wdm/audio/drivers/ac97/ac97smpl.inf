@@ -34,7 +34,7 @@ CatalogFile=ac97smpl.cat
 ;Valid platform identifiers include .x86, .ia64, .alpha, .axp64
 [SourceDisksFiles]
 ac97smpl.sys=222
-ac97prop.dll=222
+;ac97prop.dll=222
 ;the entries below are used by the device migration dll, on Win95/98 to Win2K upgrades
 ;Migrate.dll=222
 ac97smpl.inf=222
@@ -74,7 +74,7 @@ ExcludeFromSelect = *
 
 [DestinationDirs]
 AC97SMPL.CopyList=10,system32\drivers
-AC97PROP.CopyList=10,system32
+;AC97PROP.CopyList=10,system32
 
 DevUpgrd_Files = 10, win9xmig\DevUpgrd
 WDMDriver_Files = 10, win9xmig\DevUpgrd\AC97WDM ; Replace "AC97WDM" with your favorite vendor related name
@@ -106,7 +106,7 @@ AC97SMPL.sys
 [WDMDriver_Files]
 ac97smpl.inf    ; Name of your INF goes here
 AC97SMPL.sys    ; Name of your driver file(s) goes here
-ac97prop.dll
+;ac97prop.dll
 
 
 
@@ -277,8 +277,10 @@ HKR,Settings,DisableCenterLFE,1,1       ;6ch playback is not supported.
 [AC97SMPL.NTX86]
 Include=ks.inf,wdmaudio.inf
 Needs=KS.Registration,WDMAUDIO.Registration
-CopyFiles=AC97SMPL.CopyList,AC97PROP.CopyList
-AddReg=AC97SMPL.AddReg,AC97SMPL_NAMES.AddReg,AC97SMPL_OEM.AddReg,AC97PROP.AddReg
+CopyFiles=AC97SMPL.CopyList
+;,AC97PROP.CopyList
+AddReg=AC97SMPL.AddReg,AC97SMPL_NAMES.AddReg,AC97SMPL_OEM.AddReg
+;,AC97PROP.AddReg
 ;;Exclude driver installation for those PnP ID's.
 ;;This PnP ID is an example of a machine where the driver won't work correctly
 ExcludeId=PCI\VEN_8086&DEV_2415&SUBSYS_536011D4&REV_00
@@ -292,11 +294,11 @@ AddInterface=%KSCATEGORY_AUDIO%,%KSNAME_Topology%,AC97SMPL.Interface.Topology
 [AC97SMPL.NTX86.Services]
 AddService = AC97SMPL, 0x00000002, AC97SMPL_Service_Inst
 
-[AC97PROP.CopyList]
-ac97prop.dll
+;[AC97PROP.CopyList]
+;ac97prop.dll
 
-[AC97PROP.AddReg]
-HKR,,EnumPropPages32,,"ac97prop.dll,AC97PropPageProvider"
+;[AC97PROP.AddReg]
+;HKR,,EnumPropPages32,,"ac97prop.dll,AC97PropPageProvider"
 
 
 [Strings]
