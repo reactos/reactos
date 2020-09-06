@@ -1639,7 +1639,7 @@ BOOL WINAPI ConvertFiberToThread(void);
 #endif
 _Ret_maybenull_ PVOID WINAPI ConvertThreadToFiber(_In_opt_ PVOID);
 BOOL WINAPI CopyFileA(_In_ LPCSTR, _In_ LPCSTR, _In_ BOOL);
-BOOL WINAPI CopyFileW(_In_ LPCWSTR, _In_ LPCWSTR, _In_ BOOL);
+BOOL WINAPI CopyFileW(_In_ LPCWSTR lpExistingFileName, _In_ LPCWSTR lpNewFileName, _In_ BOOL bFailIfExists);
 BOOL WINAPI CopyFileExA(_In_ LPCSTR, _In_ LPCSTR, _In_opt_ LPPROGRESS_ROUTINE, _In_opt_ LPVOID, _In_opt_ LPBOOL, _In_ DWORD);
 BOOL WINAPI CopyFileExW(_In_ LPCWSTR, _In_ LPCWSTR, _In_opt_ LPPROGRESS_ROUTINE, _In_opt_ LPVOID, _In_opt_ LPBOOL, _In_ DWORD);
 #define MoveMemory RtlMoveMemory
@@ -1652,8 +1652,8 @@ BOOL WINAPI CopySid(DWORD,PSID,PSID);
 HANDLE WINAPI CreateActCtxA(_In_ PCACTCTXA);
 HANDLE WINAPI CreateActCtxW(_In_ PCACTCTXW);
 #endif
-BOOL WINAPI CreateDirectoryA(LPCSTR,LPSECURITY_ATTRIBUTES);
-BOOL WINAPI CreateDirectoryW(LPCWSTR,LPSECURITY_ATTRIBUTES);
+BOOL WINAPI CreateDirectoryA(LPCSTR lpPathName,LPSECURITY_ATTRIBUTES lpSecurityAttributes);
+BOOL WINAPI CreateDirectoryW(LPCWSTR lpPathName,LPSECURITY_ATTRIBUTES lpSecurityAttributes);
 BOOL WINAPI CreateDirectoryExA(_In_ LPCSTR, _In_ LPCSTR, _In_opt_ LPSECURITY_ATTRIBUTES);
 BOOL WINAPI CreateDirectoryExW(_In_ LPCWSTR, _In_ LPCWSTR, _In_opt_ LPSECURITY_ATTRIBUTES);
 HANDLE WINAPI CreateEventA(_In_opt_ LPSECURITY_ATTRIBUTES lpEventAttributes, _In_ BOOL bManualReset, _In_ BOOL bInitialState, _In_opt_ LPCSTR lpName);
@@ -1976,8 +1976,8 @@ DWORD WINAPI FlsAlloc(PFLS_CALLBACK_FUNCTION);
 PVOID WINAPI FlsGetValue(DWORD);
 BOOL WINAPI FlsSetValue(DWORD,PVOID);
 BOOL WINAPI FlsFree(DWORD);
-DWORD WINAPI FormatMessageA(DWORD,LPCVOID,DWORD,DWORD,LPSTR,DWORD,va_list*);
-DWORD WINAPI FormatMessageW(DWORD,LPCVOID,DWORD,DWORD,LPWSTR,DWORD,va_list*);
+DWORD WINAPI FormatMessageA(DWORD dwFlags, LPCVOID lpSource, DWORD dwMessageId, DWORD dwLanguageId, LPSTR lpBuffer, DWORD nSize, va_list* Arguments);
+DWORD WINAPI FormatMessageW(DWORD dwFlags, LPCVOID lpSource, DWORD dwMessageId, DWORD dwLanguageId, LPWSTR lpBuffer, DWORD nSize, va_list* Arguments);
 BOOL WINAPI FreeEnvironmentStringsA(LPSTR);
 BOOL WINAPI FreeEnvironmentStringsW(LPWSTR);
 BOOL WINAPI FreeLibrary(HMODULE);
