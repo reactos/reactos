@@ -5,6 +5,7 @@
  * COPYRIGHT:   Copyright 2018 Alexander Shaposhnikov     (sanchaez@reactos.org)            
  */
 #include "rapps.h"
+#include <debug.h>
 
 #include <fdi.h>
 #include <fcntl.h>
@@ -178,18 +179,42 @@ FNFDINOTIFY(fnNotify)
     {
     case fdintCOPY_FILE:
     {
-        ATL::CStringW szNewFileName, szExtractDir, szCabFileName;
-        ATL::CStringA szFilePathUTF8;
+        CStringW szExtractDir, szCabFileName;
 
         // Append the destination directory to the file name.
         MultiByteToWide((LPCSTR) pfdin->pv, szExtractDir, CP_UTF8);
         MultiByteToWide(pfdin->psz1, szCabFileName, CP_ACP);
 
-        szNewFileName = szExtractDir + L"\\" + szCabFileName;
+        if (szCabFileName.Find('\\') >= 0)
+        {
+            CStringW szNewDirName = szExtractDir;
+            int nTokenPos = 0;
+            // We do not want to interpret the filename as directory,
+            // so bail out before the last token!
+            while (szCabFileName.Find('\\', nTokenPos) >= 0)
+            {
+                CStringW token = szCabFileName.Tokenize(L"\\", nTokenPos);
+                if (token.IsEmpty())
+                    break;
 
+                szNewDirName += L"\\" + token;
+                if (!CreateDirectoryW(szNewDirName, NULL))
+                {
+                    DWORD dwErr = GetLastError();
+                    if (dwErr != ERROR_ALREADY_EXISTS)
+                    {
+                        DPRINT1("ERROR: Unable to create directory %S (err %lu)\n", szNewDirName.GetString(), dwErr);
+                    }
+                }
+            }
+        }
+
+        CStringW szNewFileName = szExtractDir + L"\\" + szCabFileName;
+
+        CStringA szFilePathUTF8;
         WideToMultiByte(szNewFileName, szFilePathUTF8, CP_UTF8);
 
-        // Copy file
+        // Open the file
         iResult = fnFileOpen((LPSTR) szFilePathUTF8.GetString(), 
                              _O_WRONLY | _O_CREAT,
                              0);
