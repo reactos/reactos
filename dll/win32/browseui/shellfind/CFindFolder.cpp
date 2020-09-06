@@ -208,35 +208,35 @@ static BOOL SearchFile(LPCWSTR lpFilePath, _SearchData *pSearchData)
     if (!lpFileContent)
         return 0;
 
-    BOOL bMatch;
+    BOOL bFound;
     if (size >= 2 &&
         (memcmp(lpFileContent, "\xFF\xFE", 2) == 0 || (lpFileContent[0] && !lpFileContent[1])))
     {
         // UTF-16
-        bMatch = StrFindNIW((LPCWSTR) lpFileContent, pSearchData->szQueryW, size / sizeof(WCHAR));
+        bFound = StrFindNIW((LPCWSTR) lpFileContent, pSearchData->szQueryW, size / sizeof(WCHAR));
     }
     else if (size >= 2 &&
              (memcmp(lpFileContent, "\xFE\xFF", 2) == 0 || (!lpFileContent[0] && lpFileContent[1])))
     {
         // UTF-16 BE
-        bMatch = StrFindNIW((LPCWSTR) lpFileContent, pSearchData->szQueryU16BE,
+        bFound = StrFindNIW((LPCWSTR) lpFileContent, pSearchData->szQueryU16BE,
                             pSearchData->szQueryU16BE.GetLength());
     }
     else if (size >= 3 && memcmp(lpFileContent, "\xEF\xBB\xBF", 3) == 0)
     {
         // UTF-8
-        bMatch = StrFindNIA((LPCSTR) lpFileContent, pSearchData->szQueryU8,
+        bFound = StrFindNIA((LPCSTR) lpFileContent, pSearchData->szQueryU8,
                             pSearchData->szQueryU8.GetLength());
     }
     else
     {
         // ANSI
-        bMatch = StrFindNIA((LPCSTR)lpFileContent, pSearchData->szQueryA, size / sizeof(CHAR));
+        bFound = StrFindNIA((LPCSTR)lpFileContent, pSearchData->szQueryA, size / sizeof(CHAR));
     }
 
     UnmapViewOfFile(lpFileContent);
 
-    return bMatch;
+    return bFound;
 }
 
 static BOOL FileNameMatch(LPCWSTR FindDataFileName, _SearchData *pSearchData)
