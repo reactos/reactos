@@ -205,7 +205,10 @@ static UINT SearchFile(LPCWSTR lpFilePath, _SearchData *pSearchData)
 
     DWORD size = GetFileSize(hFile, NULL);
     if (size == 0 || size == INVALID_FILE_SIZE)
+    {
+        CloseHandle(hFile);
         return 0;
+    }
 
     HANDLE hFileMap = CreateFileMappingW(hFile, NULL, PAGE_READONLY, 0, 0, NULL);
     CloseHandle(hFile);
