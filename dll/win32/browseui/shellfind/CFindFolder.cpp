@@ -213,14 +213,47 @@ static UINT SearchFile(LPCWSTR lpFilePath, _SearchData *pSearchData)
         return 0;
 
     UINT uMatches = 0;
-    // Check for UTF-16 BOM
-    if (size >= 2 && lpFileContent[0] == 0xFF && lpFileContent[1] == 0xFE)
+    if (size >= 2 &&
+        (memcmp(lpFileContent, "\xFF\xFE", 2) == 0 || (lpFileContent[0] && !lpFileContent[1])))
     {
+        // UTF-16
         uMatches = StrStrCountNIW((LPCWSTR) lpFileContent, pSearchData->szQueryW, size / sizeof(WCHAR));
+    }
+    else if (size >= 2 &&
+             (memcmp(lpFileContent, "\xFE\xFF", 2) == 0 || (!lpFileContent[0] && lpFileContent[1])))
+    {
+        // UTF-16 BE
+        CStringW utf16 = pSearchData->szQueryW;
+        LPWSTR psz = utf16.GetBuffer();
+        for (SIZE_T i = 0; psz[i]; ++i)
+        {
+            psz[i] = MAKEWORD(HIBYTE(psz[i]), LOBYTE(psz[i]));
+        }
+        utf16.ReleaseBuffer();
+        uMatches = StrStrCountNIW((LPCWSTR) lpFileContent, utf16, utf16.GetLength());
+    }
+    else if (size >= 3 && memcmp(lpFileContent, "\xEF\xBB\xBF", 3) == 0)
+    {
+        CStringA utf8;
+        INT cch = WideCharToMultiByte(CP_UTF8, 0, pSearchData->szQueryW, -1, NULL, 0, NULL, NULL);
+        if (cch > 0)
+        {
+            // UTF-8
+            LPSTR psz = utf8.GetBuffer(cch);
+            WideCharToMultiByte(CP_UTF8, 0, pSearchData->szQueryW, -1, psz, cch, NULL, NULL);
+            utf8.ReleaseBuffer();
+            uMatches = StrStrCountNIA((LPCSTR) lpFileContent, utf8, utf8.GetLength());
+        }
+        else
+        {
+            // ANSI
+            uMatches = StrStrCountNIA((LPCSTR) lpFileContent, pSearchData->szQueryA, size / sizeof(CHAR));
+        }
     }
     else
     {
-        uMatches = StrStrCountNIA((LPCSTR) lpFileContent, pSearchData->szQueryA, size / sizeof(CHAR));
+        // ANSI
+        uMatches = StrStrCountNIA((LPCSTR)lpFileContent, pSearchData->szQueryA, size / sizeof(CHAR));
     }
 
     UnmapViewOfFile(lpFileContent);
