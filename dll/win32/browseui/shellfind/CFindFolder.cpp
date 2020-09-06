@@ -219,14 +219,12 @@ static BOOL SearchFile(LPCWSTR lpFilePath, _SearchData *pSearchData)
              (memcmp(lpFileContent, "\xFE\xFF", 2) == 0 || (!lpFileContent[0] && lpFileContent[1])))
     {
         // UTF-16 BE
-        bFound = StrFindNIW((LPCWSTR) lpFileContent, pSearchData->szQueryU16BE,
-                            pSearchData->szQueryU16BE.GetLength());
+        bFound = StrFindNIW((LPCWSTR) lpFileContent, pSearchData->szQueryU16BE, size / sizeof(WCHAR));
     }
     else if (size >= 3 && memcmp(lpFileContent, "\xEF\xBB\xBF", 3) == 0)
     {
         // UTF-8
-        bFound = StrFindNIA((LPCSTR) lpFileContent, pSearchData->szQueryU8,
-                            pSearchData->szQueryU8.GetLength());
+        bFound = StrFindNIA((LPCSTR) lpFileContent, pSearchData->szQueryU8, size / sizeof(CHAR));
     }
     else
     {
