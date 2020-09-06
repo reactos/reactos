@@ -192,13 +192,16 @@ static BOOL SearchFile(LPCWSTR lpFilePath, _SearchData *pSearchData)
         return 0;
 
     DWORD size = GetFileSize(hFile, NULL);
-    if (size == 0 || size == INVALID_FILE_SIZE)
+    if (size == 0)
     {
         CloseHandle(hFile);
         return 0;
     }
 
-    HANDLE hFileMap = CreateFileMappingW(hFile, NULL, PAGE_READONLY, 0, 0, NULL);
+    if (size == INVALID_FILE_SIZE)
+        size = 32 * 1024 * 1024; // Use first 32 MB
+
+    HANDLE hFileMap = CreateFileMappingW(hFile, NULL, PAGE_READONLY, 0, size, NULL);
     CloseHandle(hFile);
     if (hFileMap == INVALID_HANDLE_VALUE)
         return 0;
