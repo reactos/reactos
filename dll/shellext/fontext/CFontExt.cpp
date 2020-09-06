@@ -578,7 +578,7 @@ HRESULT CFontExt::DoInstallFontFile(LPCWSTR pszFontPath, LPCWSTR pszFontsDir, HK
         return E_FAIL;
     }
 
-    if (!AddFontResourceW(pszFileTitle))
+    if (!AddFontResourceW(szDestFile))
     {
         ERR("AddFontResourceW('%S') failed\n", pszFileTitle);
         DeleteFileW(szDestFile);
@@ -587,7 +587,7 @@ HRESULT CFontExt::DoInstallFontFile(LPCWSTR pszFontPath, LPCWSTR pszFontsDir, HK
 
     DWORD cbData = (wcslen(pszFileTitle) + 1) * sizeof(WCHAR);
     LONG nError = RegSetValueExW(hkeyFonts, strFontName, 0, REG_SZ,
-                                 (const BYTE *)(LPCWSTR)strFontName, cbData);
+                                 (const BYTE *)pszFileTitle, cbData);
     if (nError)
     {
         ERR("RegSetValueExW failed with %ld\n", nError);
