@@ -8,7 +8,7 @@
 /* The file common.cpp was reviewed by LCA in June 2011 and is acceptable for use by Microsoft. */
 
 // Every debug output has "Modulname text"
-static char STR_MODULENAME[] = "AC97 Common: ";
+#define STR_MODULENAME "AC97 Common: "
 
 #include "common.h"
 
@@ -105,7 +105,9 @@ tHardwareConfig CAC97AdapterCommon::m_stHardwareConfig =
 };
 
 
+#ifdef _MSC_VER
 #pragma code_seg("PAGE")
+#endif
 /*****************************************************************************
  * NewAdapterCommon
  *****************************************************************************
@@ -2179,7 +2181,9 @@ STDMETHODIMP_(void) CAC97AdapterCommon::WriteChannelConfigDefault (DWORD dwChann
  *****************************************************************************
  */
 
+#ifdef _MSC_VER
 #pragma code_seg()
+#endif
 /*****************************************************************************
  * CAC97AdapterCommon::WriteBMControlRegister
  *****************************************************************************

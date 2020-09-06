@@ -8,7 +8,7 @@
 /* The file prophnd.cpp was reviewed by LCA in June 2011 and is acceptable for use by Microsoft. */
 
 // Every debug output has "Modulname text".
-static char STR_MODULENAME[] = "AC97 Property handler: ";
+#define STR_MODULENAME "AC97 Property handler: "
 
 #include "mintopo.h"
 
@@ -20,7 +20,9 @@ const LONG CHAN_MASTER = -1;
 
 
 // paged code goes here.
+#ifdef _MSC_VER
 #pragma code_seg("PAGE")
+#endif
 
 
 /*****************************************************************************

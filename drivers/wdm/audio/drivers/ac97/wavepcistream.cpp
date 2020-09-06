@@ -8,7 +8,7 @@
 /* The file wavepcistream.cpp was reviewed by LCA in June 2011 and is acceptable for use by Microsoft. */
 
 // Every debug output has "Modulname text"
-static char STR_MODULENAME[] = "AC97 Stream: ";
+#define STR_MODULENAME "AC97 Stream: "
 
 #include "wavepciminiport.h"
 #include "wavepcistream.h"
@@ -23,7 +23,9 @@ static char STR_MODULENAME[] = "AC97 Stream: ";
  * to acquire the spin lock!
  */
 
+#ifdef _MSC_VER
 #pragma code_seg("PAGE")
+#endif
 /*****************************************************************************
  * CreateMiniportWaveICHStream
  *****************************************************************************
@@ -654,7 +656,9 @@ STDMETHODIMP_(NTSTATUS) CMiniportWaveICHStream::SetContentId
  *****************************************************************************
  */
 
+#ifdef _MSC_VER
 #pragma code_seg()
+#endif
 /*****************************************************************************
  * CMiniportWaveICHStream::PowerChangeNotify
  *****************************************************************************
@@ -1358,7 +1362,7 @@ STDMETHODIMP_(NTSTATUS) CMiniportWaveICHStream::RevokeMappings
     if (stBDList.nTail)
     {
         Wave->AdapterCommon->WriteBMControlRegister (m_ulBDAddr + X_LVI,
-                    (UCHAR)(stBDList.nTail - 1 & BDL_MASK));
+                    (UCHAR)((stBDList.nTail - 1) & BDL_MASK));
     }
 
     //

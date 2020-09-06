@@ -8,7 +8,7 @@
 /* The file rtminiport.cpp was reviewed by LCA in June 2011 and is acceptable for use by Microsoft. */
 
 // Every debug output has "Modulname text"
-static char STR_MODULENAME[] = "AC97 RT Miniport: ";
+#define STR_MODULENAME "AC97 RT Miniport: "
 
 #include "rtminiport.h"
 #include "rtstream.h"
@@ -310,7 +310,9 @@ static PCFILTER_DESCRIPTOR MiniportFilterDescriptor =
     NULL                                // Categories: NULL->use defaults (audio, render, capture)
 };
 
+#ifdef _MSC_VER
 #pragma code_seg("PAGE")
+#endif
 /*****************************************************************************
  * CAC97MiniportWaveRT::PropertyChannelConfig
  *****************************************************************************
@@ -1432,7 +1434,9 @@ STDMETHODIMP_(void) CAC97MiniportWaveRT::PowerChangeNotify
  *****************************************************************************
  */
 
+#ifdef _MSC_VER
 #pragma code_seg()
+#endif
 /*****************************************************************************
  * InterruptServiceRoutine
  *****************************************************************************

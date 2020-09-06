@@ -138,7 +138,7 @@ public:
     // This static functions is the interrupt service routine which is
     // not stream related, but services all streams at once.
     //
-    static NTSTATUS InterruptServiceRoutine
+    static NTSTATUS NTAPI InterruptServiceRoutine
     (
         IN      PINTERRUPTSYNC  InterruptSync,
         IN      PVOID           StaticContext
@@ -148,7 +148,7 @@ public:
     // This is the property handler for KSPROPERTY_AUDIO_CHANNEL_CONFIG of the
     // DAC node.
     //
-    static NTSTATUS PropertyChannelConfig
+    static NTSTATUS NTAPI PropertyChannelConfig
     (
         IN      PPCPROPERTY_REQUEST PropertyRequest
     );

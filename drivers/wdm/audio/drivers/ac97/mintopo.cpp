@@ -8,7 +8,7 @@
 /* The file mintopo.cpp was reviewed by LCA in June 2011 and is acceptable for use by Microsoft. */
 
 // Every debug output has "Modulname text".
-static char STR_MODULENAME[] = "AC97 Topology: ";
+#define STR_MODULENAME "AC97 Topology: "
 
 #include "mintopo.h"
 
@@ -262,7 +262,9 @@ static PCPROPERTY_ITEM FilterPropertiesPrivate[] =
 DEFINE_PCAUTOMATION_TABLE_PROP (FilterAutomationPrivate, FilterPropertiesPrivate);
 #endif
 
+#ifdef _MSC_VER
 #pragma code_seg("PAGE")
+#endif
 
 /*****************************************************************************
  * CreateAC97MiniportTopology
@@ -2024,7 +2026,7 @@ NTSTATUS CAC97MiniportTopology::BuildConnectionDescriptors (void)
 
         // add the connections to the filter descriptor
         FilterDescriptor->ConnectionCount = ConnectionCount;
-        FilterDescriptor->Connections = ConnectionDescriptors;
+        FilterDescriptor->Connections = (const PCCONNECTION_DESCRIPTOR *)ConnectionDescriptors;
     } else
     {
         ntStatus = STATUS_INSUFFICIENT_RESOURCES;
@@ -2053,7 +2055,7 @@ void CAC97MiniportTopology::UpdateRecordMute (void)
     PAGED_CODE ();
 
     WORD        wRegister;
-    TopoNodes   Node;
+    //TopoNodes   Node;
 
     DOUT (DBG_PRINT, ("[CAC97MiniportTopology::UpdateRecordMute]"));
 
@@ -2065,6 +2067,7 @@ void CAC97MiniportTopology::UpdateRecordMute (void)
     // Mask out every unused bit.
     wRegister &= (AdapterCommon->GetNodeMask (NODE_WAVEIN_SELECT) & AC97REG_MASK_RIGHT);
 
+#if 0
     // Calculate how we would program the mute.
     switch (wRegister)
     {
@@ -2082,6 +2085,7 @@ void CAC97MiniportTopology::UpdateRecordMute (void)
         default:
             return;
     }
+#endif
 
     // Program the mute.
     AdapterCommon->WriteCodecRegister (AC97REG_RECORD_GAIN,

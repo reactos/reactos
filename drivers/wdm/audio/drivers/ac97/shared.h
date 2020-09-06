@@ -33,6 +33,18 @@ extern "C" {
 #include "ac97reg.h"
 #include "debug.h"
 
+#ifdef __REACTOS__
+
+PVOID
+operator new (
+	size_t size,
+	POOL_TYPE pool_type,
+	ULONG tag);
+    
+#define GZCALL NTAPI
+#else
+#define GZCALL
+#endif
 
 /*****************************************************************************
  * Structures and Typedefs 

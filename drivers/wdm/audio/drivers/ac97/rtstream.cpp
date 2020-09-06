@@ -8,7 +8,7 @@
 /* The file rtstream.cpp was reviewed by LCA in June 2011 and is acceptable for use by Microsoft. */
 
 // Every debug output has "Modulname text"
-static char STR_MODULENAME[] = "AC97 RT Stream: ";
+#define STR_MODULENAME "AC97 RT Stream: "
 
 #include "rtminiport.h"
 #include "rtstream.h"
@@ -25,7 +25,9 @@ static char STR_MODULENAME[] = "AC97 RT Stream: ";
  * to acquire the spin lock!
  */
 
+#ifdef _MSC_VER
 #pragma code_seg("PAGE")
+#endif
 /*****************************************************************************
  * CreateAC97MiniportWaveRTStream
  *****************************************************************************
@@ -707,7 +709,9 @@ STDMETHODIMP_(NTSTATUS) CAC97MiniportWaveRTStream::GetClockRegister
  *****************************************************************************
  */
 
+#ifdef _MSC_VER
 #pragma code_seg()
+#endif
 /*****************************************************************************
  * CAC97MiniportWaveRTStream::PowerChangeNotify
  *****************************************************************************

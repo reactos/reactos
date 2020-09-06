@@ -71,7 +71,7 @@ extern "C" {
     if ((lvl) & ulDebugOut)         \
     {                               \
         DbgPrint(STR_MODULENAME);   \
-        DbgPrint##strings;          \
+        DbgPrint  strings;          \
         DbgPrint("\n");             \
     }
 

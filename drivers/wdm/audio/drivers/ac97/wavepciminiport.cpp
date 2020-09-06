@@ -8,7 +8,7 @@
 /* The file wavepciminiport.cpp was reviewed by LCA in June 2011 and is acceptable for use by Microsoft. */
 
 // Every debug output has "Modulname text"
-static char STR_MODULENAME[] = "AC97 Wave: ";
+#define STR_MODULENAME "AC97 Wave: "
 
 #include "wavepciminiport.h"
 #include "wavepcistream.h"
@@ -308,7 +308,9 @@ static PCFILTER_DESCRIPTOR MiniportFilterDescriptor =
     NULL                                // Categories: NULL->use defaults (audio, render, capture)
 };
 
+#ifdef _MSC_VER
 #pragma code_seg("PAGE")
+#endif
 /*****************************************************************************
  * CMiniportWaveICH::PropertyChannelConfig
  *****************************************************************************
@@ -802,7 +804,7 @@ NTSTATUS CMiniportWaveICH::BuildDataRangeInformation (void)
     }
 
     // Check for the MIC sample rates.
-    for (nLoop = 0; nLoop < MIC_SAMPLERATES_TESTED; nLoop++)
+    for (nLoop = 0; nLoop < int(MIC_SAMPLERATES_TESTED); nLoop++)
     {
         ntStatus = AdapterCommon->ProgramSampleRate (AC97REG_MIC_SAMPLERATE, dwMicSampleRates[nLoop]);
 
@@ -832,7 +834,7 @@ NTSTATUS CMiniportWaveICH::BuildDataRangeInformation (void)
     }
 
     // Now go through the pin descriptor list and change the data range entries to the actual number.
-    for (nLoop = 0; nLoop < SIZEOF_ARRAY(MiniportPins); nLoop++)
+    for (nLoop = 0; nLoop < int(SIZEOF_ARRAY(MiniportPins)); nLoop++)
     {
         if (MiniportPins[nLoop].KsPinDescriptor.DataRanges == PinDataRangePointersPCMStreamRender)
             MiniportPins[nLoop].KsPinDescriptor.DataRangesCount = nWavePlaybackEntries;
@@ -1461,7 +1463,9 @@ STDMETHODIMP_(void) CMiniportWaveICH::PowerChangeNotify
  *****************************************************************************
  */
 
+#ifdef _MSC_VER
 #pragma code_seg()
+#endif
 /*****************************************************************************
  * CMiniportWaveICH::Service
  *****************************************************************************

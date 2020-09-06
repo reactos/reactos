@@ -10,7 +10,7 @@
 //
 // The name that is printed in debug output messages
 //
-static char STR_MODULENAME[] = "AC97 Adapter: ";
+#define STR_MODULENAME "AC97 Adapter: "
 
 //
 // All the GUIDs from portcls and your own defined GUIDs end up in this object.
@@ -30,7 +30,9 @@ static char STR_MODULENAME[] = "AC97 Adapter: ";
  */
 DRIVER_ADD_DEVICE AddDevice;
 
+#ifdef _MSC_VER
 #pragma code_seg("PAGE")
+#endif
 /*****************************************************************************
  * InstallSubdevice
  *****************************************************************************
@@ -65,7 +67,9 @@ NTSTATUS InstallSubdevice
 
     DOUT (DBG_PRINT, ("[InstallSubdevice]"));
 
+#ifndef __REACTOS__
     UNREFERENCED_PARAMETER(PortInterfaceId);
+#endif
 
     //
     // Create the port driver object
@@ -103,15 +107,21 @@ NTSTATUS InstallSubdevice
     //
     // Init the port driver and miniport in one go.
     //
+#ifdef _MSC_VER
 #pragma warning(push)
+#endif
     // IPort::Init's annotation on ResourceList requires it to be non-NULL.  However,
     // for dynamic devices, we may no longer have the resource list and this should
     // still succeed.
     //
+#ifdef _MSC_VER
 #pragma warning(disable:6387)
+#endif
     ntStatus = port->Init (DeviceObject, Irp, miniport, UnknownAdapter,
                            ResourceList);
+#ifdef _MSC_VER
 #pragma warning(pop)
+#endif
 
     if (NT_SUCCESS (ntStatus))
     {
@@ -501,8 +511,10 @@ NTSTATUS StartDevice
  */
 // disable prefast warning 28152 because 
 // DO_DEVICE_INITIALIZING is cleared in PcAddAdapterDevice
+#ifdef _MSC_VER
 #pragma warning(disable:28152)
-NTSTATUS AddDevice
+#endif
+NTSTATUS GZCALL AddDevice
 (
     IN PDRIVER_OBJECT   DriverObject,
     IN PDEVICE_OBJECT   PhysicalDeviceObject
@@ -530,7 +542,7 @@ NTSTATUS AddDevice
  * All adapter drivers can use this code without change.
  */
 extern "C" DRIVER_INITIALIZE DriverEntry;
-extern "C" NTSTATUS DriverEntry
+extern "C" NTSTATUS GZCALL DriverEntry
 (
     IN PDRIVER_OBJECT   DriverObject,
     IN PUNICODE_STRING  RegistryPathName

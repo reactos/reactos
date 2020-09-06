@@ -290,7 +290,7 @@ public:
     );
 
     // property handler for mute controls of checkboxes like Loudness.
-    static NTSTATUS PropertyHandler_OnOff
+    static NTSTATUS NTAPI PropertyHandler_OnOff
     (
         IN      PPCPROPERTY_REQUEST PropertyRequest
     );
@@ -302,26 +302,26 @@ public:
     );
 
     // property handler for all volume controls.
-    static NTSTATUS PropertyHandler_Level
+    static NTSTATUS NTAPI PropertyHandler_Level
     (
         IN      PPCPROPERTY_REQUEST PropertyRequest
     );
 
     // property handler for tone controls.
-    static NTSTATUS PropertyHandler_Tone
+    static NTSTATUS NTAPI PropertyHandler_Tone
     (
         IN      PPCPROPERTY_REQUEST PropertyRequest
     );
 
     // property handler for muxer. we have just two muxer, one for recording
     // and one for mono out.
-    static NTSTATUS PropertyHandler_Ulong
+    static NTSTATUS NTAPI PropertyHandler_Ulong
     (
         IN      PPCPROPERTY_REQUEST PropertyRequest
     );
 
     // this says that audio is played and processed without CPU resources.
-    static NTSTATUS PropertyHandler_CpuResources
+    static NTSTATUS NTAPI PropertyHandler_CpuResources
     (
         IN      PPCPROPERTY_REQUEST PropertyRequest
     );
