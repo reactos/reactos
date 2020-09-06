@@ -200,7 +200,8 @@ static BOOL SearchFile(LPCWSTR lpFilePath, _SearchData *pSearchData)
 
     if (size == INVALID_FILE_SIZE)
     {
-        MEMORYSTATUSEX status = { sizeof(status) };
+        MEMORYSTATUSEX status;
+        status.dwLength = sizeof(status);
         GlobalMemoryStatusEx(&status);
         if (status.ullAvailPhys >= 0x7FFFFFFF)
             size = 1024 * 1024 * 1024; // Use first 1 GB
