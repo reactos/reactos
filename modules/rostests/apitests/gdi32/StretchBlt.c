@@ -3,6 +3,7 @@
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Tests for the StretchBlt API
  * COPYRIGHT:   Copyright 2020 Doug Lyons (douglyons at douglyons dot com)
+ *              Most Code copied and modified from Wine gdi32:bitmap test.
  */
 
 #include <stdarg.h>
