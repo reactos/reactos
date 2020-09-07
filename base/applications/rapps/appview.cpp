@@ -1382,7 +1382,33 @@ BOOL CAppsListView::AddInstalledApplication(CInstalledApplicationInfo *InstAppIn
         return FALSE;
     }
 
-    HICON hIcon = (HICON)LoadIconW(hInst, MAKEINTRESOURCEW(IDI_MAIN));
+    /* Load icon from registry */
+    HICON hIcon = NULL;
+    ATL::CStringW szIconPath;
+    if (InstAppInfo->RetrieveIcon(szIconPath))
+    {
+        INT Ret = PathParseIconLocationW((LPWSTR)szIconPath.GetString());
+
+        /* Check if icon location is zero-terminated */
+        if (Ret == 0)
+        {
+            hIcon = (HICON)ExtractIconW(hInst,
+                szIconPath.GetString(),
+                Ret);
+        }
+        else if (!Ret)
+        {
+            hIcon = (HICON)ExtractIconW(hInst,
+                szIconPath.GetString(),
+                0);
+        }
+    }
+
+    if (!hIcon)
+    {
+        /* Load default icon */
+        hIcon = (HICON)LoadIconW(hInst, MAKEINTRESOURCE(IDI_MAIN));
+    }
 
     int IconIndex = ImageList_AddIcon(m_hImageListView, hIcon);
     DestroyIcon(hIcon);
