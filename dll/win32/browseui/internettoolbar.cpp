@@ -1539,6 +1539,10 @@ LRESULT CInternetToolbar::OnForwardToCommandTarget(WORD wNotifyCode, WORD wID, H
     if (fCommandTarget.p != NULL)
     {
         hResult = fCommandTarget->Exec(&fCommandCategory, wID, 0, NULL, NULL);
+        if (FAILED(hResult))
+        {
+            ::SendMessageW(::GetParent(m_hWnd), WM_COMMAND, wID, 0);
+        }
     }
     return 1;
 }

@@ -95,6 +95,7 @@ class CDefaultContextMenu :
         HRESULT DoCopyOrCut(LPCMINVOKECOMMANDINFO lpcmi, BOOL bCopy);
         HRESULT DoRename(LPCMINVOKECOMMANDINFO lpcmi);
         HRESULT DoProperties(LPCMINVOKECOMMANDINFO lpcmi);
+        HRESULT DoUndo(LPCMINVOKECOMMANDINFO lpcmi);
         HRESULT DoCreateNewFolder(LPCMINVOKECOMMANDINFO lpici);
         HRESULT DoCopyToMoveToFolder(LPCMINVOKECOMMANDINFO lpici, BOOL bCopy);
         HRESULT InvokeShellExt(LPCMINVOKECOMMANDINFO lpcmi);
@@ -896,6 +897,13 @@ CDefaultContextMenu::DoProperties(
 }
 
 HRESULT
+CDefaultContextMenu::DoUndo(LPCMINVOKECOMMANDINFO lpcmi)
+{
+    ERR("TODO: Undo");
+    return E_NOTIMPL;
+}
+
+HRESULT
 CDefaultContextMenu::DoCopyToMoveToFolder(LPCMINVOKECOMMANDINFO lpici, BOOL bCopy)
 {
     HRESULT hr = E_FAIL;
@@ -1292,6 +1300,9 @@ CDefaultContextMenu::InvokeCommand(
         break;
     case FCIDM_SHVIEW_MOVETO:
         Result = DoCopyToMoveToFolder(&LocalInvokeInfo, FALSE);
+        break;
+    case FCIDM_SHVIEW_UNDO:
+        Result = DoUndo(&LocalInvokeInfo);
         break;
     default:
         Result = E_INVALIDARG;
