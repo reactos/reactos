@@ -152,6 +152,8 @@ struct _SearchData
     CStringW szFileName;
     CStringA szQueryA;
     CStringW szQueryW;
+    CStringW szQueryU16BE;
+    CStringA szQueryU8;
     BOOL SearchHidden;
     CComPtr<CFindFolder> pFindFolder;
 };
@@ -171,61 +173,68 @@ static const TChar* StrStrN(const TChar *lpFirst, const TString &lpSrch, UINT cc
     return NULL;
 }
 
-template<typename TChar, typename TString, int (&StrNCmp)(const TChar *, const TChar *, size_t)>
-static UINT StrStrNCount(const TChar *lpFirst, const TString &lpSrch, UINT cchMax)
+static inline BOOL
+StrFindNIA(const CHAR *lpFirst, const CStringA &lpSrch, UINT cchMax)
 {
-    const TChar *lpSearchEnd = lpFirst + cchMax;
-    UINT uCount = 0;
-    while (lpFirst < lpSearchEnd && (lpFirst = StrStrN<TChar, TString, StrNCmp>(lpFirst, lpSrch, cchMax)))
-    {
-        uCount++;
-        lpFirst += lpSrch.GetLength();
-        cchMax = lpSearchEnd - lpFirst;
-    }
-    return uCount;
+    return StrStrN<CHAR, CStringA, _strnicmp>(lpFirst, lpSrch, cchMax) != NULL;
 }
 
-static UINT StrStrCountNIA(const CHAR *lpFirst, const CStringA &lpSrch, UINT cchMax)
+static inline BOOL
+StrFindNIW(const WCHAR *lpFirst, const CStringW &lpSrch, UINT cchMax)
 {
-    return StrStrNCount<CHAR, CStringA, _strnicmp>(lpFirst, lpSrch, cchMax);
+    return StrStrN<WCHAR, CStringW, _wcsnicmp>(lpFirst, lpSrch, cchMax) != NULL;
 }
 
-static UINT StrStrCountNIW(const WCHAR *lpFirst, const CStringW &lpSrch, UINT cchMax)
-{
-    return StrStrNCount<WCHAR, CStringW, _wcsnicmp>(lpFirst, lpSrch, cchMax);
-}
-
-static UINT SearchFile(LPCWSTR lpFilePath, _SearchData *pSearchData)
+static BOOL SearchFile(LPCWSTR lpFilePath, _SearchData *pSearchData)
 {
     HANDLE hFile = CreateFileW(lpFilePath, GENERIC_READ, 0, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_READONLY, NULL);
     if (hFile == INVALID_HANDLE_VALUE)
-        return 0;
+        return FALSE;
 
+    // FIXME: support large file
     DWORD size = GetFileSize(hFile, NULL);
-    HANDLE hFileMap = CreateFileMappingW(hFile, NULL, PAGE_READONLY, 0, 0, NULL);
+    if (size == 0 || size == INVALID_FILE_SIZE)
+    {
+        CloseHandle(hFile);
+        return FALSE;
+    }
+
+    HANDLE hFileMap = CreateFileMappingW(hFile, NULL, PAGE_READONLY, 0, size, NULL);
     CloseHandle(hFile);
     if (hFileMap == INVALID_HANDLE_VALUE)
-        return 0;
+        return FALSE;
 
-    LPBYTE lpFileContent = (LPBYTE) MapViewOfFile(hFileMap, FILE_MAP_READ, 0, 0, 0);
+    LPBYTE pbContents = (LPBYTE)MapViewOfFile(hFileMap, FILE_MAP_READ, 0, 0, size);
     CloseHandle(hFileMap);
-    if (!lpFileContent)
-        return 0;
+    if (!pbContents)
+        return FALSE;
 
-    UINT uMatches = 0;
-    // Check for UTF-16 BOM
-    if (size >= 2 && lpFileContent[0] == 0xFF && lpFileContent[1] == 0xFE)
+    BOOL bFound;
+    if (size >= 2 &&
+        (memcmp(pbContents, "\xFF\xFE", 2) == 0 || (pbContents[0] && !pbContents[1])))
     {
-        uMatches = StrStrCountNIW((LPCWSTR) lpFileContent, pSearchData->szQueryW, size / sizeof(WCHAR));
+        // UTF-16
+        bFound = StrFindNIW((LPCWSTR)pbContents, pSearchData->szQueryW, size / sizeof(WCHAR));
+    }
+    else if (size >= 2 &&
+             (memcmp(pbContents, "\xFE\xFF", 2) == 0 || (!pbContents[0] && pbContents[1])))
+    {
+        // UTF-16 BE
+        bFound = StrFindNIW((LPCWSTR)pbContents, pSearchData->szQueryU16BE, size / sizeof(WCHAR));
+    }
+    else if (size >= 3 && memcmp(pbContents, "\xEF\xBB\xBF", 3) == 0)
+    {
+        // UTF-8
+        bFound = StrFindNIA((LPCSTR)pbContents, pSearchData->szQueryU8, size / sizeof(CHAR));
     }
     else
     {
-        uMatches = StrStrCountNIA((LPCSTR) lpFileContent, pSearchData->szQueryA, size / sizeof(CHAR));
+        // ANSI
+        bFound = StrFindNIA((LPCSTR)pbContents, pSearchData->szQueryA, size / sizeof(CHAR));
     }
 
-    UnmapViewOfFile(lpFileContent);
-
-    return uMatches;
+    UnmapViewOfFile(pbContents);
+    return bFound;
 }
 
 static BOOL FileNameMatch(LPCWSTR FindDataFileName, _SearchData *pSearchData)
@@ -266,13 +275,14 @@ static UINT RecursiveFind(LPCWSTR lpPath, _SearchData *pSearchData)
     BOOL bMoreFiles = TRUE;
     UINT uTotalFound = 0;
 
-    PathCombineW(szPath, lpPath, L"*.*");
+    PathCombineW(szPath, lpPath, L"*");
 
     for (hFindFile = FindFirstFileW(szPath, &FindData);
         bMoreFiles && hFindFile != INVALID_HANDLE_VALUE;
         bMoreFiles = FindNextFileW(hFindFile, &FindData))
     {
-        if (!wcscmp(FindData.cFileName, L".") || !wcscmp(FindData.cFileName, L".."))
+#define IS_DOTS(psz) ((psz)[0] == L'.' && ((psz)[1] == 0 || ((psz)[1] == L'.' && (psz)[2] == 0)))
+        if (IS_DOTS(FindData.cFileName))
             continue;
 
         PathCombineW(szPath, lpPath, FindData.cFileName);
@@ -368,6 +378,36 @@ LRESULT CFindFolder::StartSearch(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &
     pSearchData->szFileName = pSearchParams->szFileName;
     pSearchData->szQueryA = pSearchParams->szQuery;
     pSearchData->szQueryW = pSearchParams->szQuery;
+
+    // UTF-16 BE
+    {
+        CStringW utf16 = pSearchData->szQueryW;
+        LPWSTR psz = utf16.GetBuffer();
+        for (SIZE_T i = 0; psz[i]; ++i)
+        {
+            psz[i] = MAKEWORD(HIBYTE(psz[i]), LOBYTE(psz[i]));
+        }
+        utf16.ReleaseBuffer();
+        pSearchData->szQueryU16BE = utf16;
+    }
+
+    // UTF-8
+    {
+        CStringA utf8;
+        INT cch = WideCharToMultiByte(CP_UTF8, 0, pSearchData->szQueryW, -1, NULL, 0, NULL, NULL);
+        if (cch > 0)
+        {
+            LPSTR psz = utf8.GetBuffer(cch);
+            WideCharToMultiByte(CP_UTF8, 0, pSearchData->szQueryW, -1, psz, cch, NULL, NULL);
+            utf8.ReleaseBuffer();
+            pSearchData->szQueryU8 = utf8;
+        }
+        else
+        {
+            pSearchData->szQueryU8 = pSearchData->szQueryA;
+        }
+    }
+
     pSearchData->SearchHidden = pSearchParams->SearchHidden;
     SHFree(pSearchParams);
 
