@@ -173,6 +173,8 @@ extern "C" {
 #define PIPE_CLIENT_END 0
 #define PIPE_SERVER_END 1
 #define PIPE_UNLIMITED_INSTANCES 255
+
+// CreateProcess() dwCreationFlags.
 #define DEBUG_PROCESS			0x00000001
 #define DEBUG_ONLY_THIS_PROCESS		0x00000002
 #define CREATE_SUSPENDED		0x00000004
@@ -189,6 +191,16 @@ extern "C" {
 #define CREATE_FORCEDOS			0x00002000
 #define BELOW_NORMAL_PRIORITY_CLASS	0x00004000
 #define ABOVE_NORMAL_PRIORITY_CLASS	0x00008000
+#if (_WIN32_WINNT >= _WIN32_WINNT_VISTA)
+#define INHERIT_PARENT_AFFINITY             0x00010000
+#define INHERIT_CALLER_PRIORITY             0x00020000 // Deprecated. (As of WDK 7.1 already...)
+#define CREATE_PROTECTED_PROCESS            0x00040000
+#define EXTENDED_STARTUPINFO_PRESENT        0x00080000
+#define PROCESS_MODE_BACKGROUND_BEGIN       0x00100000 // See SetPriorityClass() dwPriorityClass.
+#define PROCESS_MODE_BACKGROUND_END         0x00200000 // See SetPriorityClass() dwPriorityClass.
+#endif // _WIN32_WINNT_VISTA
+/* #define CREATE_SECURE_PROCESS               0x00400000  // Documented on MS Docs, absent in MS file. */
+/* #define Unknown/Inexistent                  0x00800000 */
 #define CREATE_BREAKAWAY_FROM_JOB	0x01000000
 #define CREATE_PRESERVE_CODE_AUTHZ_LEVEL 0x02000000
 #define CREATE_DEFAULT_ERROR_MODE	0x04000000
@@ -196,6 +208,8 @@ extern "C" {
 #define PROFILE_USER			0x10000000
 #define PROFILE_KERNEL			0x20000000
 #define PROFILE_SERVER			0x40000000
+#define CREATE_IGNORE_SYSTEM_DEFAULT        0x80000000
+
 #define CREATE_NEW	1
 #define CREATE_ALWAYS	2
 #define OPEN_EXISTING	3
