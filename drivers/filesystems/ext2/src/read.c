@@ -285,7 +285,7 @@ Ext2ReadVolume (IN PEXT2_IRP_CONTEXT IrpContext)
                         }
                     }
 
-                    Ext2CompleteIrpContext(IrpContext, Status);
+                    Ext2CompleteIrpContext(IrpContext, Status);;
                 }
 
             } else {
