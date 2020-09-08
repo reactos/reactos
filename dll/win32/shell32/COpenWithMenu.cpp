@@ -111,7 +111,7 @@ COpenWithList::~COpenWithList()
 BOOL COpenWithList::Load()
 {
     HKEY hKey;
-    WCHAR wszName[256], wszBuf[100];;
+    WCHAR wszName[256], wszBuf[100];
     DWORD i = 0, cchName, dwSize;
     SApp *pApp;
 
