@@ -48,6 +48,12 @@ add_executable(kernel32_winetest
 if(MSVC)
     # Disable warning C4477 (printf format warnings)
     remove_target_compile_option(kernel32_winetest "/we4477")
+
+    if(ARCH STREQUAL "amd64")
+        # error C4101: 'is_wow64': unreferenced local variable
+        remove_target_compile_option(kernel32_winetest "/we4101")
+        target_compile_options(kernel32_winetest PRIVATE /wd4101)
+    endif()
 endif()
 
 if(USE_CLANG_CL OR (NOT MSVC))
