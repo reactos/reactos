@@ -229,3 +229,17 @@ jobs:
       run: cmake -S src -B build -G "Visual Studio 16 2019" -A x64 -DCMAKE_TOOLCHAIN_FILE:FILEPATH=toolchain-msvc.cmake -DARCH:STRING=${{matrix.arch}} -DENABLE_ROSTESTS=1 -DENABLE_ROSAPPS=1
     - name: Build & Generate ISOs
       run: cmake --build build --target bootcd --target livecd
+    - name: Upload ISOs
+      if: false # Useless, due to FreeLdr build issue. (CORE-17534)
+      uses: actions/upload-artifact@v2
+      with:
+        name: reactos-msbuild-${{matrix.arch}}-${{github.sha}}
+        path: |
+          build/bootcd.iso
+          build/livecd.iso
+    - name: Upload debug symbols
+      if: false # Useless, until ISOs are uploaded.
+      uses: actions/upload-artifact@v2
+      with:
+        name: reactos-syms-msbuild-${{matrix.arch}}-${{github.sha}}
+        path: build/msvc_pdb
