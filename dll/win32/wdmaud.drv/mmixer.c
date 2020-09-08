@@ -12,19 +12,14 @@
 #include <winreg.h>
 #include <setupapi.h>
 #include <mmixer.h>
+#define NTOS_MODE_USER
+#include <ndk/rtlfuncs.h>
+#include <ndk/iofuncs.h>
 
 #define NDEBUG
 #include <debug.h>
 #include <mmebuddy_debug.h>
 
-typedef struct
-{
-    KSSTREAM_HEADER Header;
-    HANDLE hDevice;
-    PSOUND_OVERLAPPED Overlap;
-    LPOVERLAPPED_COMPLETION_ROUTINE CompletionRoutine;
-    DWORD IoCtl;
-}IO_PACKET, *LPIO_PACKET;
 
 BOOL MMixerLibraryInitialized = FALSE;
 
@@ -785,27 +780,25 @@ WdmAudGetWavePositionByMMixer(
     return MMSYSERR_NOTSUPPORTED;
 }
 
-DWORD
-WINAPI
-IoStreamingThread(
-    LPVOID lpParameter)
+static
+VOID WINAPI
+CommitWaveBufferApc(PVOID ApcContext,
+           PIO_STATUS_BLOCK IoStatusBlock,
+           ULONG Reserved)
 {
-    DWORD Length;
-    //MMRESULT Result;
-    LPIO_PACKET Packet = (LPIO_PACKET)lpParameter;
+    DWORD dwErrorCode;
+    PSOUND_OVERLAPPED Overlap;
+    KSSTREAM_HEADER* lpHeader;
+    
+    dwErrorCode = RtlNtStatusToDosError(IoStatusBlock->Status);
+    Overlap = (PSOUND_OVERLAPPED)IoStatusBlock;
+    lpHeader = Overlap->CompletionContext;
 
-    /*Result = */ SyncOverlappedDeviceIoControl(Packet->hDevice,
-                    Packet->IoCtl,
-                    NULL,
-                    0,
-                    &Packet->Header,
-                    sizeof(KSSTREAM_HEADER),
-                    &Length);
+    /* Call mmebuddy overlap routine */
+    Overlap->OriginalCompletionRoutine(dwErrorCode, 
+        lpHeader->DataUsed, &Overlap->Standard);
 
-    Packet->CompletionRoutine(ERROR_SUCCESS, Packet->Header.DataUsed, (LPOVERLAPPED)Packet->Overlap);
-
-    HeapFree(GetProcessHeap(), 0, Packet);
-    return 0;
+    HeapFree(GetProcessHeap(), 0, lpHeader);                
 }
 
 MMRESULT
@@ -819,8 +812,9 @@ WdmAudCommitWaveBufferByMMixer(
     PSOUND_DEVICE SoundDevice;
     MMDEVICE_TYPE DeviceType;
     MMRESULT Result;
-    LPIO_PACKET Packet;
-    HANDLE hThread;
+    ULONG IoCtl;
+    KSSTREAM_HEADER* lpHeader;
+    NTSTATUS Status;
 
     Result = GetSoundDeviceFromInstance(SoundDeviceInstance, &SoundDevice);
 
@@ -832,37 +826,44 @@ WdmAudCommitWaveBufferByMMixer(
     Result = GetSoundDeviceType(SoundDevice, &DeviceType);
     SND_ASSERT( Result == MMSYSERR_NOERROR );
 
-    Packet = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(IO_PACKET));
-    if ( ! Packet )
+    lpHeader = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(KSSTREAM_HEADER));
+    if ( ! lpHeader )
     {
         /* no memory */
         return MMSYSERR_NOMEM;
     }
 
     /* setup stream packet */
-    Packet->Header.Size = sizeof(KSSTREAM_HEADER);
-    Packet->Header.PresentationTime.Numerator = 1;
-    Packet->Header.PresentationTime.Denominator = 1;
-    Packet->Header.Data = OffsetPtr;
-    Packet->Header.FrameExtent = Length;
-    Packet->hDevice = SoundDeviceInstance->Handle;
-    Packet->Overlap = Overlap;
-    Packet->CompletionRoutine = CompletionRoutine;
-    Packet->IoCtl = (DeviceType == WAVE_OUT_DEVICE_TYPE ? IOCTL_KS_WRITE_STREAM : IOCTL_KS_READ_STREAM);
+    lpHeader->Size = sizeof(KSSTREAM_HEADER);
+    lpHeader->PresentationTime.Numerator = 1;
+    lpHeader->PresentationTime.Denominator = 1;
+    lpHeader->Data = OffsetPtr;
+    lpHeader->FrameExtent = Length;
+    Overlap->CompletionContext = lpHeader;
+    Overlap->OriginalCompletionRoutine = CompletionRoutine;
+    IoCtl = (DeviceType == WAVE_OUT_DEVICE_TYPE ? IOCTL_KS_WRITE_STREAM : IOCTL_KS_READ_STREAM);
 
     if (DeviceType == WAVE_OUT_DEVICE_TYPE)
     {
-        Packet->Header.DataUsed = Length;
+        lpHeader->DataUsed = Length;
     }
 
-    hThread = CreateThread(NULL, 0, IoStreamingThread, (LPVOID)Packet, 0, NULL);
-    if (hThread == NULL)
+    Status = NtDeviceIoControlFile(SoundDeviceInstance->Handle, 
+                                   NULL, 
+                                   CommitWaveBufferApc, 
+                                   NULL, 
+                                   (PIO_STATUS_BLOCK)Overlap, 
+                                   IoCtl,
+                                   NULL, 
+                                   0, 
+                                   lpHeader, 
+                                   sizeof(KSSTREAM_HEADER));
+        
+    if (!NT_SUCCESS(Status))
     {
-        /* error */
+        DPRINT1("NtDeviceIoControlFile() failed with status %08lx\n", Status);
         return MMSYSERR_ERROR;
     }
-
-    CloseHandle(hThread);
-
+    
     return MMSYSERR_NOERROR;
 }
