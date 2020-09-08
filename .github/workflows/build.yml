@@ -112,9 +112,9 @@ jobs:
     - name: Configure
       run: cmake -S src -B build -G Ninja -DCMAKE_TOOLCHAIN_FILE:FILEPATH=toolchain-msvc.cmake -DARCH:STRING=${{matrix.arch}} -DENABLE_ROSTESTS=1 -DENABLE_ROSAPPS=1
     - name: Build
-      run: cmake --build ${{github.workspace}}\build  -- -k0
+      run: cmake --build build  -- -k0
     - name: Generate ISOs
-      run:  cmake --build ${{github.workspace}}\build --target bootcd --target livecd
+      run: cmake --build build --target bootcd --target livecd
     - name: Upload ISOs
       uses: actions/upload-artifact@v2
       with:
@@ -175,9 +175,9 @@ jobs:
     - name: Configure
       run: cmake -S src -B build -G Ninja -DCMAKE_TOOLCHAIN_FILE:FILEPATH=toolchain-msvc.cmake -DARCH:STRING=${{matrix.arch}} -DENABLE_ROSTESTS=1 -DENABLE_ROSAPPS=1 -DUSE_CLANG_CL:BOOL=TRUE
     - name: Build
-      run: cmake --build ${{github.workspace}}\build -- -k0
+      run: cmake --build build -- -k0
     - name: Generate ISOs
-      run:  cmake --build ${{github.workspace}}\build --target bootcd --target livecd
+      run: cmake --build build --target bootcd --target livecd
     - name: Upload ISOs
       uses: actions/upload-artifact@v2
       with:
