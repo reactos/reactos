@@ -1392,9 +1392,9 @@ BOOL CAppsListView::AddInstalledApplication(CInstalledApplicationInfo *InstAppIn
         /* Check if icon location is zero-terminated */
         if (Ret == 0)
         {
-            hIcon = (HICON)ExtractIconW(hInst,
-                szIconPath.GetString(),
-                Ret);
+            hIcon = ExtractIconW(hInst,
+                                 szIconPath.GetString(),
+                                 Ret);
         }
         else if (!Ret)
         {
@@ -2050,4 +2050,3 @@ BOOL CApplicationView::ItemCheckStateChanged(BOOL bChecked, LPVOID CallbackParam
     return TRUE;
 }
 // **** CApplicationView ****
-
