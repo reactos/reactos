@@ -132,8 +132,14 @@ else()
     # We don't need CMake importlib handling.
     unset(CMAKE_IMPORT_LIBRARY_SUFFIX)
 
-    # Print build type
-    message("-- Build Type: ${CMAKE_BUILD_TYPE}")
+    # Print build type(s)
+    if(CMAKE_CONFIGURATION_TYPES)
+        # Multi-config generators, like Visual Studio (MSBuild).
+        message("-- Configuration types: ${CMAKE_CONFIGURATION_TYPES}")
+    else()
+        # Single-configuration generators, like Ninja.
+        message("-- Build type: ${CMAKE_BUILD_TYPE}")
+    endif()
 
     # Always add /MT in VS CMAKE_GENERATOR and define _SBCS otherwise VS thinks it's a multi-byte or whatever project
     if (MSVC_IDE)
