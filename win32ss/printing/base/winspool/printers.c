@@ -582,7 +582,7 @@ DeviceCapabilitiesW(LPCWSTR pDevice, LPCWSTR pPort, WORD fwCapability, LPWSTR pO
     {
         if (!IsValidDevmodeNoSizeW( (PDEVMODEW)pDevMode ) )
         {
-            ERR("DeviceCapabilitiesW : Devode Invalid");
+            ERR("DeviceCapabilitiesW : Devode Invalid\n");
             return -1;
         }
     }
@@ -916,7 +916,9 @@ DocumentPropertySheets( PPROPSHEETUI_INFO pCPSUIInfo, LPARAM lparam )
 
                 if ( fpDocumentPropertySheets )
                 {
+                    FIXME("DPS : fpDocumentPropertySheets(%p, 0x%lx) pdmOut %p\n", pCPSUIInfo, lparam, pdphdr->pdmOut);
                     Result = fpDocumentPropertySheets( pCPSUIInfo, lparam );
+                    FIXME("DPS : fpDocumentPropertySheets result %d cbOut %d\n",Result, pdphdr->cbOut);
                 }
                 else
                 {
