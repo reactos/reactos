@@ -24,7 +24,7 @@ jobs:
         path: RosBE-CI
         key: RosBE-CI-${{runner.os}}-${{steps.get_rosbe_spec.outputs.march-sha}}-${{steps.get_rosbe_spec.outputs.git-sha}}-${{hashfiles('./build_rosbe_ci.sh')}}
     - name: Compile RosBE
-      if: steps.get_rosbe.outputs.cache-hit != 'true'
+      if: ${{ steps.get_rosbe.outputs.cache-hit != 'true' }}
       run: |
         chmod +x build_rosbe_ci.sh
         ./build_rosbe_ci.sh ${{github.workspace}}/RosBE-CI
@@ -55,7 +55,7 @@ jobs:
         echo "CCACHE_MAXSIZE=1G" >> $GITHUB_ENV
         echo "CCACHE_SLOPPINESS=time_macros" >> $GITHUB_ENV
     - name: Ease ccache compiler check (GCC)
-      if: matrix.compiler == 'gcc'
+      if: ${{ matrix.compiler == 'gcc' }}
       run: echo "CCACHE_COMPILERCHECK=string:${{steps.get_rosbe_spec.outputs.git-sha}}-${{hashfiles('./build_rosbe_ci.sh')}}" >> $GITHUB_ENV
     - name: Configure
       run: echo 'cmake -S ${{github.workspace}}/src -B ${{github.workspace}}/build -G Ninja -DCMAKE_TOOLCHAIN_FILE:FILEPATH=toolchain-${{matrix.compiler}}.cmake -DARCH:STRING=${{matrix.arch}} -DENABLE_CCACHE=1 -DENABLE_ROSTESTS=1 -DENABLE_ROSAPPS=1 -DCLANG_VERSION=${{env.LLVM_VERSION}}' | ${{github.workspace}}/RosBE-CI/RosBE.sh . 0 ${{matrix.arch}}
@@ -98,13 +98,13 @@ jobs:
       uses: ilammy/msvc-dev-cmd@v1
       with:
         arch: amd64_x86
-        toolset: ${{ matrix.toolset }}
+        toolset: ${{matrix.toolset}}
     - name: Activate VS cmd (amd64)
       if: ${{ matrix.arch == 'amd64' }}
       uses: ilammy/msvc-dev-cmd@v1
       with:
         arch: amd64
-        toolset: ${{ matrix.toolset }}
+        toolset: ${{matrix.toolset}}
     - name: Source checkout
       uses: actions/checkout@v2
       with:
