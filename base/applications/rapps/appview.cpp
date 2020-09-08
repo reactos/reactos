@@ -1398,9 +1398,9 @@ BOOL CAppsListView::AddInstalledApplication(CInstalledApplicationInfo *InstAppIn
         }
         else if (!Ret)
         {
-            hIcon = (HICON)ExtractIconW(hInst,
-                szIconPath.GetString(),
-                0);
+            hIcon = ExtractIconW(hInst,
+                                 szIconPath.GetString(),
+                                 0);
         }
     }
 
