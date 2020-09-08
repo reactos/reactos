@@ -563,7 +563,11 @@ IopSynchronousCall(IN PDEVICE_OBJECT DeviceObject,
 
     /* Allocate an IRP */
     Irp = IoAllocateIrp(TopDeviceObject->StackSize, FALSE);
-    if (!Irp) return STATUS_INSUFFICIENT_RESOURCES;
+    if (!Irp)
+    {
+        ObDereferenceObject(TopDeviceObject);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
 
     /* Initialize to failure */
     Irp->IoStatus.Status = IoStatusBlock.Status = STATUS_NOT_SUPPORTED;
