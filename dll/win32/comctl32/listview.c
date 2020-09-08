@@ -9054,6 +9054,76 @@ static BOOL LISTVIEW_SetItemCount(LISTVIEW_INFO *infoPtr, INT nItems, DWORD dwFl
     return TRUE;
 }
 
+#ifdef __REACTOS__
+static void SwapIndex(LISTVIEW_INFO *infoPtr, INT i1, INT i2)
+{
+    ITEM_ID *itemid1, *itemid2;
+    HDPA subitems1, subitems2;
+
+    itemid1 = DPA_GetPtr(infoPtr->hdpaItemIds, i1);
+    itemid2 = DPA_GetPtr(infoPtr->hdpaItemIds, i2);
+    DPA_SetPtr(infoPtr->hdpaItemIds, i1, itemid2);
+    DPA_SetPtr(infoPtr->hdpaItemIds, i2, itemid1);
+
+    subitems1 = DPA_GetPtr(infoPtr->hdpaItems, i1);
+    subitems2 = DPA_GetPtr(infoPtr->hdpaItems, i2);
+    DPA_SetPtr(infoPtr->hdpaItems, i1, subitems2);
+    DPA_SetPtr(infoPtr->hdpaItems, i2, subitems1);
+}
+
+static void SwapRelay(LISTVIEW_INFO *infoPtr, INT iFrom, INT iTo)
+{
+    INT i;
+
+    if (iFrom < 0)
+        iFrom = 0;
+    if (iFrom >= infoPtr->nItemCount)
+        iFrom = infoPtr->nItemCount - 1;
+
+    if (iTo < 0)
+        iTo = 0;
+    if (iTo >= infoPtr->nItemCount)
+        iTo = infoPtr->nItemCount - 1;
+
+    if (iFrom == iTo)
+        return;
+
+    if (iFrom < iTo)
+    {
+        for (i = iFrom; i < iTo; ++i)
+        {
+            SwapIndex(infoPtr, i, i + 1);
+        }
+    }
+    else
+    {
+        for (i = iFrom; i > iTo; --i)
+        {
+            SwapIndex(infoPtr, i, i - 1);
+        }
+    }
+}
+
+static INT LISTVIEW_HitTestBlank(const LISTVIEW_INFO *infoPtr, POINT pt)
+{
+    INT iItem, x, y;
+
+    if (pt.y < infoPtr->rcList.top)
+        return 0;
+    if (infoPtr->rcList.right < pt.x || infoPtr->rcList.bottom < pt.y)
+        return infoPtr->nItemCount;
+
+    for (iItem = 0; iItem < infoPtr->nItemCount; ++iItem)
+    {
+        x = (LONG_PTR)DPA_GetPtr(infoPtr->hdpaPosX, iItem) + infoPtr->nItemWidth;
+        y = (LONG_PTR)DPA_GetPtr(infoPtr->hdpaPosY, iItem) + infoPtr->nItemHeight / 2;
+        if (pt.x < x && pt.y < y)
+            return iItem;
+    }
+
+    return infoPtr->nItemCount;
+}
+#endif
 /***
  * DESCRIPTION:
  * Sets the position of an item.
@@ -9079,7 +9149,17 @@ static BOOL LISTVIEW_SetItemPosition(LISTVIEW_INFO *infoPtr, INT nItem, const PO
 #ifdef __REACTOS__
     /* FIXME:  This should really call snap to grid if auto-arrange is enabled
        and limit the size of the grid to nItemCount elements */
-    if (is_autoarrange(infoPtr)) return FALSE;
+    if (is_autoarrange(infoPtr))
+    {
+        INT i1 = nItem;
+        INT i2 = LISTVIEW_HitTestBlank(infoPtr, *pt);
+        if (i1 < i2)
+            --i2;
+        SwapRelay(infoPtr, i1, i2);
+        LISTVIEW_Arrange(infoPtr, LVA_SNAPTOGRID);
+        LISTVIEW_InvalidateList(infoPtr);
+        return TRUE;
+    }
 #endif
 
     Pt = *pt;
