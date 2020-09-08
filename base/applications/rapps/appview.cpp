@@ -1407,7 +1407,7 @@ BOOL CAppsListView::AddInstalledApplication(CInstalledApplicationInfo *InstAppIn
     if (!hIcon)
     {
         /* Load default icon */
-        hIcon = (HICON)LoadIconW(hInst, MAKEINTRESOURCE(IDI_MAIN));
+        hIcon = LoadIconW(hInst, MAKEINTRESOURCEW(IDI_MAIN));
     }
 
     int IconIndex = ImageList_AddIcon(m_hImageListView, hIcon);
