@@ -210,6 +210,10 @@ extern "C" {
 #define PROFILE_SERVER			0x40000000
 #define CREATE_IGNORE_SYSTEM_DEFAULT        0x80000000
 
+// CreateThread() dwCreationFlags.
+// #define CREATE_SUSPENDED                    0x00000004 // Already defined, for CreateProcess().
+#define STACK_SIZE_PARAM_IS_A_RESERVATION   0x00010000
+
 #define CREATE_NEW	1
 #define CREATE_ALWAYS	2
 #define OPEN_EXISTING	3
@@ -585,7 +589,6 @@ extern "C" {
 #define FIBER_FLAG_FLOAT_SWITCH 0x1
 #endif
 #define FLS_OUT_OF_INDEXES 0xFFFFFFFF
-#define STACK_SIZE_PARAM_IS_A_RESERVATION 0x00010000
 #if (_WIN32_WINNT >= 0x0600)
 #define MAX_RESTART_CMD_LINE 0x800
 #define RESTART_CYCLICAL 0x1
