@@ -106,9 +106,9 @@ BEGIN
     IDS_LAYOUT_EXISTS "הפריסה הזו כבר קיימת."
     IDS_LAYOUT_EXISTS2 "הפריסה הזו כבר קיימת ואינה ניתנת להוספה."
     IDS_CTRL_SHIFT "Ctrl+Shift"
-    IDS_LEFT_ALT_SHIFT "מקש Alt השמאלי+Shift"
+    IDS_LEFT_ALT_SHIFT "מקש Alt שמאלי+Shift"
     IDS_SWITCH_BET_INLANG "החלף בין שפות כתיבה"
-    IDS_REBOOT_NOW, "לאתחל כעת?"
+    IDS_REBOOT_NOW, "להפעיל מחדש כעת?"
 END
 
 STRINGTABLE
