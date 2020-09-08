@@ -9147,8 +9147,6 @@ static BOOL LISTVIEW_SetItemPosition(LISTVIEW_INFO *infoPtr, INT nItem, const PO
 	!(infoPtr->uView == LV_VIEW_ICON || infoPtr->uView == LV_VIEW_SMALLICON)) return FALSE;
 
 #ifdef __REACTOS__
-    /* FIXME:  This should really call snap to grid if auto-arrange is enabled
-       and limit the size of the grid to nItemCount elements */
     if (is_autoarrange(infoPtr))
     {
         INT i1 = nItem;
