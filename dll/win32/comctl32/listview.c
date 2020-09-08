@@ -9059,6 +9059,7 @@ static void SwapIndex(LISTVIEW_INFO *infoPtr, INT i1, INT i2)
 {
     ITEM_ID *itemid1, *itemid2;
     HDPA subitems1, subitems2;
+    BOOL b1, b2;
 
     itemid1 = DPA_GetPtr(infoPtr->hdpaItemIds, i1);
     itemid2 = DPA_GetPtr(infoPtr->hdpaItemIds, i2);
@@ -9069,6 +9070,29 @@ static void SwapIndex(LISTVIEW_INFO *infoPtr, INT i1, INT i2)
     subitems2 = DPA_GetPtr(infoPtr->hdpaItems, i2);
     DPA_SetPtr(infoPtr->hdpaItems, i1, subitems2);
     DPA_SetPtr(infoPtr->hdpaItems, i2, subitems1);
+
+    if (i1 == infoPtr->nFocusedItem)
+        infoPtr->nFocusedItem = i2;
+    else if (i2 == infoPtr->nFocusedItem)
+        infoPtr->nFocusedItem = i1;
+
+    if (i1 == infoPtr->nSelectionMark)
+        infoPtr->nSelectionMark = i2;
+    else if (i2 == infoPtr->nSelectionMark)
+        infoPtr->nSelectionMark = i1;
+
+    b1 = ranges_contain(infoPtr->selectionRanges, i1);
+    b2 = ranges_contain(infoPtr->selectionRanges, i2);
+    if (b1 && !b2)
+    {
+        ranges_delitem(infoPtr->selectionRanges, i1);
+        ranges_additem(infoPtr->selectionRanges, i2);
+    }
+    else if (!b1 && b2)
+    {
+        ranges_additem(infoPtr->selectionRanges, i1);
+        ranges_delitem(infoPtr->selectionRanges, i2);
+    }
 }
 
 static void SwapRelay(LISTVIEW_INFO *infoPtr, INT iFrom, INT iTo)
@@ -9104,21 +9128,30 @@ static void SwapRelay(LISTVIEW_INFO *infoPtr, INT iFrom, INT iTo)
     }
 }
 
+/* hit test for auto-arrange */
 static INT LISTVIEW_HitTestBlank(const LISTVIEW_INFO *infoPtr, POINT pt)
 {
     INT iItem, x, y;
 
-    if (pt.y < infoPtr->rcList.top)
-        return 0;
-    if (infoPtr->rcList.right < pt.x || infoPtr->rcList.bottom < pt.y)
-        return infoPtr->nItemCount;
-
-    for (iItem = 0; iItem < infoPtr->nItemCount; ++iItem)
+    if (infoPtr->dwStyle & LVS_ALIGNLEFT)
     {
-        x = (LONG_PTR)DPA_GetPtr(infoPtr->hdpaPosX, iItem) + infoPtr->nItemWidth;
-        y = (LONG_PTR)DPA_GetPtr(infoPtr->hdpaPosY, iItem) + infoPtr->nItemHeight / 2;
-        if (pt.x < x && pt.y < y)
-            return iItem;
+        for (iItem = 0; iItem < infoPtr->nItemCount; ++iItem)
+        {
+            x = (LONG_PTR)DPA_GetPtr(infoPtr->hdpaPosX, iItem) + infoPtr->nItemWidth;
+            y = (LONG_PTR)DPA_GetPtr(infoPtr->hdpaPosY, iItem) + infoPtr->nItemHeight / 2;
+            if (pt.x < x && pt.y < y)
+                return iItem;
+        }
+    }
+    else
+    {
+        for (iItem = 0; iItem < infoPtr->nItemCount; ++iItem)
+        {
+            x = (LONG_PTR)DPA_GetPtr(infoPtr->hdpaPosX, iItem) + infoPtr->nItemWidth / 2;
+            y = (LONG_PTR)DPA_GetPtr(infoPtr->hdpaPosY, iItem) + infoPtr->nItemHeight;
+            if (pt.x < x && pt.y < y)
+                return iItem;
+        }
     }
 
     return infoPtr->nItemCount;
@@ -9149,12 +9182,22 @@ static BOOL LISTVIEW_SetItemPosition(LISTVIEW_INFO *infoPtr, INT nItem, const PO
 #ifdef __REACTOS__
     if (is_autoarrange(infoPtr))
     {
-        INT i1 = nItem;
-        INT i2 = LISTVIEW_HitTestBlank(infoPtr, *pt);
+        INT i1, i2;
+        Pt = *pt;
+        LISTVIEW_GetOrigin(infoPtr, &Origin);
+        if (Pt.x == -1 && Pt.y == -1)
+            Pt = Origin;
+        Pt.x -= Origin.x;
+        Pt.y -= Origin.y;
+        i1 = nItem;
+        i2 = LISTVIEW_HitTestBlank(infoPtr, Pt);
         if (i1 < i2)
             --i2;
         SwapRelay(infoPtr, i1, i2);
-        LISTVIEW_Arrange(infoPtr, LVA_SNAPTOGRID);
+        if (infoPtr->dwStyle & LVS_ALIGNLEFT)
+            LISTVIEW_Arrange(infoPtr, LVA_SNAPTOGRID);
+        else
+            LISTVIEW_Arrange(infoPtr, LVA_DEFAULT);
         LISTVIEW_InvalidateList(infoPtr);
         return TRUE;
     }
