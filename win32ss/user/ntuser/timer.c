@@ -189,14 +189,14 @@ IntSetTimer( PWND Window,
   /* Windows NT/2k/XP behaviour */
   if (Elapse > USER_TIMER_MAXIMUM)
   {
-     TRACE("Adjusting uElapse\n");
+     TRACE("Adjusting uElapse to 1\n");
      Elapse = 1;
   }
 #else
   /* Windows XP SP2 and Windows Server 2003 behaviour */
   if (Elapse > USER_TIMER_MAXIMUM)
   {
-     TRACE("Adjusting uElapse\n");
+     TRACE("Adjusting uElapse to USER_TIMER_MAXIMUM\n");
      Elapse = USER_TIMER_MAXIMUM;
   }
 #endif
@@ -204,7 +204,7 @@ IntSetTimer( PWND Window,
   /* Windows 2k/XP and Windows Server 2003 SP1 behaviour */
   if (Elapse < USER_TIMER_MINIMUM)
   {
-     TRACE("Adjusting uElapse\n");
+     TRACE("Adjusting uElapse to USER_TIMER_MINIMUM\n");
      Elapse = USER_TIMER_MINIMUM; // 1024hz .9765625 ms, set to 10.0 ms (+/-)1 ms
   }
 
