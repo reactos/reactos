@@ -51,8 +51,6 @@ typedef struct
     unsigned int        len;
 } xmlstr_t;
 
-static const xmlstr_t empty_xmlstr;
-
 struct xml_elem
 {
     xmlstr_t            name;
@@ -543,6 +541,8 @@ struct actctx_loader
     unsigned int              num_dependencies;
     unsigned int              allocated_dependencies;
 };
+
+static const xmlstr_t empty_xmlstr;
 
 #ifdef __i386__
 static const WCHAR current_archW[] = {'x','8','6',0};
