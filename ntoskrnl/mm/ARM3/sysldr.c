@@ -3249,6 +3249,10 @@ LoaderScan:
     /* FIXME: Call driver verifier's loader function */
 
     /* Write-protect the system image */
+#if !defined(CORE_16449_IS_FIXED) && DBG
+    DPRINT1("(CORE-16449) Calling MiWriteProtectSystemImage(%p) for %wZ\n",
+            LdrEntry->DllBase, &LdrEntry->FullDllName);
+#endif
 #if defined(CORE_16449_IS_FIXED) || DBG
     MiWriteProtectSystemImage(LdrEntry->DllBase);
 #endif
