@@ -102,3 +102,7 @@ Website: https://sourceforge.net/projects/schilytools/
 Title: chmc and lzxcomp
 Used Version: ??? (Imported on 2015.08.11.)
 Website: https://sourceforge.net/projects/chmc/
+
+Title: TreeList
+Used Version: ??? (Imported on 2018.11.06.)
+Website: https://github.com/sebkirche/treelist
