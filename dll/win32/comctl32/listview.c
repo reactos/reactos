@@ -301,6 +301,7 @@ typedef struct tagLISTVIEW_INFO
   COLORREF clrTextBk;
 #ifdef __REACTOS__
   BOOL bDefaultBkColor;
+  BOOL bNeedsReArrange;
 #endif
 
   /* font */
@@ -9131,26 +9132,55 @@ static void SwapRelay(LISTVIEW_INFO *infoPtr, INT iFrom, INT iTo)
 /* hit test for auto-arrange */
 static INT LISTVIEW_HitTestBlank(const LISTVIEW_INFO *infoPtr, POINT pt)
 {
-    INT iItem, x, y;
+    INT iItem, x, y, xy0 = -1;
+    WCHAR sz[64];
 
     if (infoPtr->dwStyle & LVS_ALIGNLEFT)
     {
+        // vertically
         for (iItem = 0; iItem < infoPtr->nItemCount; ++iItem)
         {
             x = (LONG_PTR)DPA_GetPtr(infoPtr->hdpaPosX, iItem) + infoPtr->nItemWidth;
             y = (LONG_PTR)DPA_GetPtr(infoPtr->hdpaPosY, iItem) + infoPtr->nItemHeight / 2;
-            if (pt.x < x && pt.y < y)
+            if (xy0 == -1)
+                xy0 = x;
+            if (xy0 < x && y < pt.y)
+            {
+                wsprintfW(sz, L"x,y:(%d, %d), pt:(%d, %d), %d", x, y, pt.x, pt.y, xy0);
+                MessageBoxW(NULL, sz, L"1", 0);
                 return iItem;
+            }
+            if (pt.y <= y && pt.x <= x)
+            {
+                wsprintfW(sz, L"x,y:(%d, %d), pt:(%d, %d), %d", x, y, pt.x, pt.y, xy0);
+                MessageBoxW(NULL, sz, L"2", 0);
+                return iItem;
+            }
+            xy0 = x;
         }
     }
     else
     {
+        // horizontally
         for (iItem = 0; iItem < infoPtr->nItemCount; ++iItem)
         {
             x = (LONG_PTR)DPA_GetPtr(infoPtr->hdpaPosX, iItem) + infoPtr->nItemWidth / 2;
             y = (LONG_PTR)DPA_GetPtr(infoPtr->hdpaPosY, iItem) + infoPtr->nItemHeight;
-            if (pt.x < x && pt.y < y)
+            if (xy0 == -1)
+                xy0 = y;
+            if (xy0 < y && x < pt.x)
+            {
+                wsprintfW(sz, L"x,y:(%d, %d), pt:(%d, %d), %d", x, y, pt.x, pt.y, xy0);
+                MessageBoxW(NULL, sz, L"3", 0);
                 return iItem;
+            }
+            if (pt.x <= x && pt.y <= y)
+            {
+                wsprintfW(sz, L"x,y:(%d, %d), pt:(%d, %d), %d", x, y, pt.x, pt.y, xy0);
+                MessageBoxW(NULL, sz, L"4", 0);
+                return iItem;
+            }
+            xy0 = y;
         }
     }
 
@@ -9182,22 +9212,22 @@ static BOOL LISTVIEW_SetItemPosition(LISTVIEW_INFO *infoPtr, INT nItem, const PO
 #ifdef __REACTOS__
     if (is_autoarrange(infoPtr))
     {
+        WCHAR sz[64];
         INT i1, i2;
         Pt = *pt;
-        LISTVIEW_GetOrigin(infoPtr, &Origin);
-        if (Pt.x == -1 && Pt.y == -1)
-            Pt = Origin;
-        Pt.x -= Origin.x;
-        Pt.y -= Origin.y;
         i1 = nItem;
         i2 = LISTVIEW_HitTestBlank(infoPtr, Pt);
         if (i1 < i2)
             --i2;
+
+        wsprintfW(sz, L"(%d, %d), (%d, %d)", i1, i2, Pt.x, Pt.y);
+        MessageBoxW(NULL, sz, L"listview.c", 0);
+
         SwapRelay(infoPtr, i1, i2);
-        if (infoPtr->dwStyle & LVS_ALIGNLEFT)
-            LISTVIEW_Arrange(infoPtr, LVA_SNAPTOGRID);
-        else
-            LISTVIEW_Arrange(infoPtr, LVA_DEFAULT);
+        DPA_Sort(infoPtr->hdpaItemIds, MapIdSearchCompare, 0);
+        DPA_Sort(infoPtr->selectionRanges->hdpa, ranges_cmp, 0);
+        infoPtr->bNeedsReArrange = TRUE;
+
         LISTVIEW_InvalidateList(infoPtr);
         return TRUE;
     }
@@ -11018,6 +11048,16 @@ static inline LRESULT LISTVIEW_WMPaint(LISTVIEW_INFO *infoPtr, HDC hdc)
     if (!is_redrawing(infoPtr))
         return DefWindowProcW (infoPtr->hwndSelf, WM_PAINT, (WPARAM)hdc, 0);
 
+#ifdef __REACTOS__
+    if (infoPtr->bNeedsReArrange)
+    {
+        if (infoPtr->dwStyle & LVS_ALIGNLEFT)
+            LISTVIEW_Arrange(infoPtr, LVA_SNAPTOGRID);
+        else
+            LISTVIEW_Arrange(infoPtr, LVA_DEFAULT);
+        infoPtr->bNeedsReArrange = FALSE;
+    }
+#endif
     return LISTVIEW_Paint(infoPtr, hdc);
 }
 

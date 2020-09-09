@@ -3393,23 +3393,19 @@ HRESULT WINAPI CDefView::Drop(IDataObject* pDataObject, DWORD grfKeyState, POINT
             m_pCurDropTarget.Release();
         }
 
-        /* Restore the selection */
-        m_ListView.SetItemState(-1, 0, LVIS_SELECTED);
-        for (UINT i = 0 ; i < m_cidl; i++)
-            SelectItem(m_apidl[i], SVSI_SELECT);
-
-        /* Reposition the items */
-        int lvIndex = -1;
-        while ((lvIndex = m_ListView.GetNextItem(lvIndex,  LVNI_SELECTED)) > -1)
+        INT iItem = -1;
+        m_ListView.SetRedraw(FALSE);
+        while ((iItem = m_ListView.GetNextItem(iItem, LVNI_SELECTED)) >= 0)
         {
             POINT ptItem;
-            if (m_ListView.GetItemPosition(lvIndex, &ptItem))
+            if (m_ListView.GetItemPosition(iItem, &ptItem))
             {
                 ptItem.x += pt.x - m_ptFirstMousePos.x;
                 ptItem.y += pt.y - m_ptFirstMousePos.y;
-                m_ListView.SetItemPosition(lvIndex, &ptItem);
+                m_ListView.SetItemPosition(iItem, &ptItem);
             }
         }
+        m_ListView.SetRedraw(TRUE);
     }
     else if (m_pCurDropTarget)
     {
