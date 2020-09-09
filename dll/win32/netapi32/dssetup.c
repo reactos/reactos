@@ -83,7 +83,8 @@ DsRoleFreeMemory(
     _In_ PVOID Buffer)
 {
     TRACE("DsRoleFreeMemory(%p)\n", Buffer);
-    HeapFree(GetProcessHeap(), 0, Buffer);
+    // FIXME: Leak, until fixed to free the right memory. (CORE-13491)
+    // HeapFree(GetProcessHeap(), 0, Buffer);
 }
 
 
