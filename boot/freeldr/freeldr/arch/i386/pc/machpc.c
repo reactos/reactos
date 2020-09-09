@@ -690,7 +690,7 @@ DetectSerialPorts(PCONFIGURATION_COMPONENT_DATA BusKey, GET_SERIAL_PORT MachGetS
         if (PartialResourceList == NULL)
         {
             ERR("Failed to allocate resource descriptor\n");
-            continue;
+            break;
         }
 
         /* Initialize resource descriptor */
@@ -793,7 +793,7 @@ DetectParallelPorts(PCONFIGURATION_COMPONENT_DATA BusKey)
         if (PartialResourceList == NULL)
         {
             ERR("Failed to allocate resource descriptor\n");
-            continue;
+            break;
         }
 
         /* Initialize resource descriptor */

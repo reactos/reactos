@@ -170,6 +170,10 @@ WinLdrInitializePhase1(PLOADER_PARAMETER_BLOCK LoaderBlock,
 
         /* Allocate the ARC structure */
         ArcDiskSig = FrLdrHeapAlloc(sizeof(ARC_DISK_SIGNATURE_EX), 'giSD');
+        if (!ArcDiskSig)
+        {
+            break;
+        }
 
         /* Copy the data over */
         RtlCopyMemory(ArcDiskSig, &reactos_arc_disk_info[i], sizeof(ARC_DISK_SIGNATURE_EX));
