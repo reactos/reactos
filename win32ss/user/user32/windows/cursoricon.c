@@ -2615,7 +2615,7 @@ BOOL WINAPI SetSystemCursor(
 {
     if (hcur == NULL)
     {
-       hcur = LoadImageW( 0, MAKEINTRESOURCE(id), IMAGE_CURSOR, 0, 0, LR_DEFAULTSIZE );
+       hcur = LoadImageW(NULL, MAKEINTRESOURCEW(id), IMAGE_CURSOR, 0, 0, LR_DEFAULTSIZE);
        if (hcur == NULL)
        {
           return FALSE;
