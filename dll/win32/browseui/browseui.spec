@@ -3,7 +3,7 @@
 103 stdcall -noname SHOpenNewFrame(ptr ptr long long)
 @ stdcall -private DllCanUnloadNow()
 105 stdcall -noname SHCreateSavedWindows()
-106 stdcall -noname SHCreateFromDesktop(long)
+106 stdcall -noname SHCreateFromDesktop(ptr)
 107 stdcall -noname SHExplorerParseCmdLine(wstr)
 @ stdcall -private DllGetClassObject(ptr ptr ptr)
 @ stdcall -private DllGetVersion(ptr)
