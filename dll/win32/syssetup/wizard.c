@@ -1641,9 +1641,11 @@ DateTimePageDlgProc(HWND hwndDlg,
                     SYSTEMTIME LocalTime;
 
                     GetLocalTime(&LocalTime);
+                    UpdateLocalSystemTime(hwndDlg, LocalTime);
 
                     /* Enable the Back and Next buttons */
                     PropSheet_SetWizButtons(GetParent(hwndDlg), PSWIZB_BACK | PSWIZB_NEXT);
+
                     if (SetupData->UnattendSetup && WriteDateTimeSettings(hwndDlg, SetupData))
                     {
                         SetWindowLongPtr(hwndDlg, DWLP_MSGRESULT, SetupData->uFirstNetworkWizardPage);
@@ -1656,6 +1658,7 @@ DateTimePageDlgProc(HWND hwndDlg,
 
                 case PSN_KILLACTIVE:
                 case DTN_DATETIMECHANGE:
+                    // NB: Not re-set until changing page (PSN_SETACTIVE).
                     KillTimer(hwndDlg, 1);
                     break;
 
