@@ -38,7 +38,7 @@
 @ stdcall WTSStartRemoteControlSessionA(ptr long long long)
 @ stdcall WTSStartRemoteControlSessionW(ptr long long long)
 @ stdcall WTSStopRemoteControlSession(long)
-@ stdcall WTSTerminateProcess(long long long)
+@ stdcall WTSTerminateProcess(ptr long long)
 @ stdcall WTSUnRegisterSessionNotification(long)
 @ stdcall WTSUnRegisterSessionNotificationEx(long long)
 @ stdcall WTSVirtualChannelClose(long)
