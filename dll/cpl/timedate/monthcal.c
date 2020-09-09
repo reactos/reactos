@@ -238,10 +238,8 @@ MonthCalSetupDayTimer(IN PMONTHCALWND infoPtr)
     uElapse += (59 - (UINT)LocalTime.wMinute) * 60 * 1000;
     uElapse += (23 - (UINT)LocalTime.wHour) * 60 * 60 * 1000;
 
-    if (uElapse < USER_TIMER_MINIMUM || uElapse > USER_TIMER_MAXIMUM)
-        uElapse = 1000;
-    else
-        uElapse += 100; /* Add a delay of 0.1 seconds */
+    /* Add a delay of 0.100 second */
+    uElapse += 100;
 
     /* Setup the new timer */
     if (SetTimer(infoPtr->hSelf,
