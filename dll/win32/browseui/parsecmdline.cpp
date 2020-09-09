@@ -225,6 +225,7 @@ static LPITEMIDLIST _GetDocumentsPidl()
 /*************************************************************************
 * SHExplorerParseCmdLine		[BROWSEUI.107]
 */
+// Returns FALSE, TRUE or an address.
 extern "C"
 UINT_PTR
 WINAPI
@@ -246,7 +247,7 @@ SHExplorerParseCmdLine(_Out_ PEXPLORER_CMDLINE_PARSE_RESULTS pInfo)
             PathStripToRootW(strDir);
             pInfo->pidlPath = ILCreateFromPathW(strDir);
         }
-        return (LONG_PTR)(pInfo->pidlPath);
+        return (UINT_PTR)pInfo->pidlPath;
     }
 
     PCWSTR strNextArg = _FindFirstField(strFieldArray);

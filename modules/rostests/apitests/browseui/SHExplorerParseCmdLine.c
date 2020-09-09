@@ -81,7 +81,7 @@ static
 VOID
 TestCommandLine(
 _In_ ULONG TestLine,
-_In_ INT ExpectedRet,
+_In_ UINT_PTR ExpectedRet,
 _In_ INT ExpectedCsidl,
 _In_ DWORD ExpectedFlags,
 _In_ PCWSTR ExpectedFileName,
@@ -100,9 +100,13 @@ _Out_opt_ PUINT PWriteEnd)
 
     // Special case for empty cmdline: Ret is the PIDL for the selected folder.
     if (ExpectedRet == -1)
-        ok((LPITEMIDLIST) Ret == Info.pidl, "Line %lu: Ret = %x, expected %p\n", TestLine, Ret, Info.pidl);
+    {
+        ok(Ret == (UINT_PTR)Info.pidl, "Line %lu: Ret = %p, expected %p\n", TestLine, (PVOID)Ret, Info.pidl);
+    }
     else
-        ok(Ret == ExpectedRet, "Line %lu: Ret = %x, expected %08x\n", TestLine, Ret, ExpectedRet);
+    {
+        ok(Ret == ExpectedRet, "Line %lu: Ret = 0x%Ix, expected 0x%Ix\n", TestLine, Ret, ExpectedRet);
+    }
 
     if (ExpectedFileName == NULL)
         ok(Info.FileName == InvalidPointer, "Line %lu: FileName = %p\n", TestLine, Info.FileName);
@@ -262,7 +266,7 @@ START_TEST(SHExplorerParseCmdLine)
     {
         INT TestLine;
         PCWSTR CommandLine;
-        INT ExpectedRet;
+        UINT_PTR ExpectedRet;
         INT ExpectedCsidl;
         DWORD ExpectedFlags;
         PCWSTR ExpectedFileName;
@@ -309,8 +313,8 @@ START_TEST(SHExplorerParseCmdLine)
         { __LINE__, L"\"c:\\\" program files", TRUE, PIDL_IS_NULL, 0x02000000, L"c:\\ program files"},
         { __LINE__, L"\"c:\\\", \"c:\\program files\"", TRUE, PIDL_IS_PATH, 0x00000200, NULL, L"C:\\Program Files" },
         { __LINE__, L"c:\\,c:\\program files", TRUE, PIDL_IS_PATH, 0x00000200, NULL, L"C:\\Program Files" },
-        { __LINE__, L"/root", 0, CSIDL_MYDOCUMENTS, 0x00000000},
-        { __LINE__, L"\"/root\"", 0, CSIDL_MYDOCUMENTS, 0x00000000},
+        { __LINE__, L"/root", FALSE, CSIDL_MYDOCUMENTS, 0x00000000},
+        { __LINE__, L"\"/root\"", FALSE, CSIDL_MYDOCUMENTS, 0x00000000},
         { __LINE__, L"/root,", TRUE, CSIDL_MYDOCUMENTS, 0x00000000},
         { __LINE__, L"/root,c", TRUE, CSIDL_MYDOCUMENTS, 0x00000000},
         { __LINE__, L"/root,\"\"", TRUE, CSIDL_MYDOCUMENTS, 0x00000000},
