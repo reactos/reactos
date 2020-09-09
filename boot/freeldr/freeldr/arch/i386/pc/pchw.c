@@ -288,9 +288,9 @@ DetectBiosFloppyController(PCONFIGURATION_COMPONENT_DATA BusKey)
         ERR("Failed to allocate resource descriptor\n");
         return NULL;
     }
-    memset(PartialResourceList, 0, Size);
 
     /* Initialize resource descriptor */
+    memset(PartialResourceList, 0, Size);
     PartialResourceList->Version = 1;
     PartialResourceList->Revision = 1;
     PartialResourceList->Count = 3;

@@ -236,9 +236,9 @@ DetectPnpBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
         ERR("Failed to allocate resource descriptor\n");
         return;
     }
-    memset(PartialResourceList, 0, Size);
 
     /* Initialize resource descriptor */
+    memset(PartialResourceList, 0, Size);
     PartialResourceList->Version = 1;
     PartialResourceList->Revision = 1;
     PartialResourceList->Count = 1;
@@ -692,9 +692,9 @@ DetectSerialPorts(PCONFIGURATION_COMPONENT_DATA BusKey, GET_SERIAL_PORT MachGetS
             ERR("Failed to allocate resource descriptor\n");
             continue;
         }
-        memset(PartialResourceList, 0, Size);
 
         /* Initialize resource descriptor */
+        memset(PartialResourceList, 0, Size);
         PartialResourceList->Version = 1;
         PartialResourceList->Revision = 1;
         PartialResourceList->Count = 3;
@@ -795,9 +795,9 @@ DetectParallelPorts(PCONFIGURATION_COMPONENT_DATA BusKey)
             ERR("Failed to allocate resource descriptor\n");
             continue;
         }
-        memset(PartialResourceList, 0, Size);
 
         /* Initialize resource descriptor */
+        memset(PartialResourceList, 0, Size);
         PartialResourceList->Version = 1;
         PartialResourceList->Revision = 1;
         PartialResourceList->Count = (Irq[i] != (ULONG) - 1) ? 2 : 1;
@@ -1173,9 +1173,9 @@ DetectPS2Mouse(PCONFIGURATION_COMPONENT_DATA BusKey)
             ERR("Failed to allocate resource descriptor\n");
             return;
         }
-        memset(PartialResourceList, 0, sizeof(CM_PARTIAL_RESOURCE_LIST));
 
         /* Initialize resource descriptor */
+        memset(PartialResourceList, 0, sizeof(CM_PARTIAL_RESOURCE_LIST));
         PartialResourceList->Version = 1;
         PartialResourceList->Revision = 1;
         PartialResourceList->Count = 1;

@@ -1113,9 +1113,9 @@ DetectPnpBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
         ERR("Failed to allocate resource descriptor\n");
         return;
     }
-    RtlZeroMemory(PartialResourceList, Size);
 
     /* Initialize resource descriptor */
+    RtlZeroMemory(PartialResourceList, Size);
     PartialResourceList->Version = 1;
     PartialResourceList->Revision = 1;
     PartialResourceList->Count = 1;

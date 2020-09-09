@@ -19,8 +19,8 @@
 /* INCLUDES ******************************************************************/
 
 #include <freeldr.h>
-#include <debug.h>
 
+#include <debug.h>
 DBG_DEFAULT_CHANNEL(PELOADER);
 
 /* PRIVATE FUNCTIONS *********************************************************/
@@ -603,12 +603,12 @@ PeLdrAllocateDataTableEntry(
                                                            TAG_WLDR_DTE);
     if (DataTableEntry == NULL)
         return FALSE;
-    RtlZeroMemory(DataTableEntry, sizeof(LDR_DATA_TABLE_ENTRY));
 
     /* Get NT headers from the image */
     NtHeaders = RtlImageNtHeader(BasePA);
 
     /* Initialize corresponding fields of DTE based on NT headers value */
+    RtlZeroMemory(DataTableEntry, sizeof(LDR_DATA_TABLE_ENTRY));
     DataTableEntry->DllBase = BaseVA;
     DataTableEntry->SizeOfImage = NtHeaders->OptionalHeader.SizeOfImage;
     DataTableEntry->EntryPoint = RVA(BaseVA, NtHeaders->OptionalHeader.AddressOfEntryPoint);
@@ -624,15 +624,16 @@ PeLdrAllocateDataTableEntry(
         FrLdrHeapFree(DataTableEntry, TAG_WLDR_DTE);
         return FALSE;
     }
-    RtlZeroMemory(Buffer, Length);
 
-    DataTableEntry->BaseDllName.Length = Length;
-    DataTableEntry->BaseDllName.MaximumLength = Length;
-    DataTableEntry->BaseDllName.Buffer = PaToVa(Buffer);
+    RtlZeroMemory(Buffer, Length);
     while (*BaseDllName != 0)
     {
         *Buffer++ = *BaseDllName++;
     }
+
+    DataTableEntry->BaseDllName.Length = Length;
+    DataTableEntry->BaseDllName.MaximumLength = Length;
+    DataTableEntry->BaseDllName.Buffer = PaToVa(Buffer);
 
     /* Initialize FullDllName field (UNICODE_STRING) from the Ansi FullDllName
        using the same method */
@@ -643,15 +644,16 @@ PeLdrAllocateDataTableEntry(
         FrLdrHeapFree(DataTableEntry, TAG_WLDR_DTE);
         return FALSE;
     }
-    RtlZeroMemory(Buffer, Length);
 
-    DataTableEntry->FullDllName.Length = Length;
-    DataTableEntry->FullDllName.MaximumLength = Length;
-    DataTableEntry->FullDllName.Buffer = PaToVa(Buffer);
+    RtlZeroMemory(Buffer, Length);
     while (*FullDllName != 0)
     {
         *Buffer++ = *FullDllName++;
     }
+
+    DataTableEntry->FullDllName.Length = Length;
+    DataTableEntry->FullDllName.MaximumLength = Length;
+    DataTableEntry->FullDllName.Buffer = PaToVa(Buffer);
 
     /* Initialize what's left - LoadCount which is 1, and set Flags so that
        we know this entry is processed */

@@ -775,7 +775,6 @@ WinLdrAddDriverToList(LIST_ENTRY *BootDriverListHead,
     USHORT PathLength;
 
     BootDriverEntry = FrLdrHeapAlloc(sizeof(BOOT_DRIVER_LIST_ENTRY), TAG_WLDR_BDE);
-
     if (!BootDriverEntry)
         return FALSE;
 
@@ -792,7 +791,6 @@ WinLdrAddDriverToList(LIST_ENTRY *BootDriverListHead,
         BootDriverEntry->FilePath.Length = 0;
         BootDriverEntry->FilePath.MaximumLength = PathLength;
         BootDriverEntry->FilePath.Buffer = FrLdrHeapAlloc(PathLength, TAG_WLDR_NAME);
-
         if (!BootDriverEntry->FilePath.Buffer)
         {
             FrLdrHeapFree(BootDriverEntry, TAG_WLDR_BDE);
@@ -814,7 +812,6 @@ WinLdrAddDriverToList(LIST_ENTRY *BootDriverListHead,
         BootDriverEntry->FilePath.Length = 0;
         BootDriverEntry->FilePath.MaximumLength = PathLength;
         BootDriverEntry->FilePath.Buffer = FrLdrHeapAlloc(PathLength, TAG_WLDR_NAME);
-
         if (!BootDriverEntry->FilePath.Buffer)
         {
             FrLdrHeapFree(BootDriverEntry, TAG_WLDR_NAME);
