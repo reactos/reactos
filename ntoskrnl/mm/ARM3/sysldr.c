@@ -3249,7 +3249,9 @@ LoaderScan:
     /* FIXME: Call driver verifier's loader function */
 
     /* Write-protect the system image */
+#if defined(CORE_16449_IS_FIXED) || DBG
     MiWriteProtectSystemImage(LdrEntry->DllBase);
+#endif
 
     /* Check if notifications are enabled */
     if (PsImageNotifyEnabled)
