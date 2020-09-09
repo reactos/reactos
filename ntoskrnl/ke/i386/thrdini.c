@@ -266,8 +266,8 @@ KiInitializeContextThread(IN PKTHREAD Thread,
     Thread->KernelStack = (PVOID)CtxSwitchFrame;
 }
 
+DECLSPEC_NORETURN
 VOID
-FASTCALL
 KiIdleLoop(VOID)
 {
     PKPRCB Prcb = KeGetCurrentPrcb();
