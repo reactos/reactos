@@ -301,7 +301,7 @@ typedef struct tagLISTVIEW_INFO
   COLORREF clrTextBk;
 #ifdef __REACTOS__
   BOOL bDefaultBkColor;
-  BOOL bNeedsReArrange;
+  INT cPairs, *pPairs; /* index pairs for rearrange */
 #endif
 
   /* font */
@@ -9096,7 +9096,7 @@ static void SwapIndex(LISTVIEW_INFO *infoPtr, INT i1, INT i2)
     }
 }
 
-static void SwapRelay(LISTVIEW_INFO *infoPtr, INT iFrom, INT iTo)
+static void SwapShiftRelay(LISTVIEW_INFO *infoPtr, INT iFrom, INT iTo)
 {
     INT i;
 
@@ -9213,7 +9213,12 @@ static BOOL LISTVIEW_SetItemPosition(LISTVIEW_INFO *infoPtr, INT nItem, const PO
     if (is_autoarrange(infoPtr))
     {
         WCHAR sz[64];
-        INT i1, i2;
+        INT i1, i2, *pPairs;
+
+        pPairs = ReAlloc(infoPtr->pPairs, 2 * (infoPtr->cPairs + 1));
+        if (!pPairs)
+            return FALSE;
+
         Pt = *pt;
         i1 = nItem;
         i2 = LISTVIEW_HitTestBlank(infoPtr, Pt);
@@ -9223,10 +9228,10 @@ static BOOL LISTVIEW_SetItemPosition(LISTVIEW_INFO *infoPtr, INT nItem, const PO
         wsprintfW(sz, L"(%d, %d), (%d, %d)", i1, i2, Pt.x, Pt.y);
         MessageBoxW(NULL, sz, L"listview.c", 0);
 
-        SwapRelay(infoPtr, i1, i2);
-        DPA_Sort(infoPtr->hdpaItemIds, MapIdSearchCompare, 0);
-        DPA_Sort(infoPtr->selectionRanges->hdpa, ranges_cmp, 0);
-        infoPtr->bNeedsReArrange = TRUE;
+        infoPtr->pPairs = pPairs;
+        pPairs[2 * infoPtr->cPairs + 0] = i1;
+        pPairs[2 * infoPtr->cPairs + 1] = i2;
+        ++infoPtr->cPairs;
 
         LISTVIEW_InvalidateList(infoPtr);
         return TRUE;
@@ -11049,13 +11054,27 @@ static inline LRESULT LISTVIEW_WMPaint(LISTVIEW_INFO *infoPtr, HDC hdc)
         return DefWindowProcW (infoPtr->hwndSelf, WM_PAINT, (WPARAM)hdc, 0);
 
 #ifdef __REACTOS__
-    if (infoPtr->bNeedsReArrange)
+    if (infoPtr->pPairs && infoPtr->cPairs)
     {
+        INT i, i1, i2;
+
+        for (i = 0; i < infoPtr->cPairs; ++i)
+        {
+            i1 = infoPtr->pPairs[2 * i + 0];
+            i2 = infoPtr->pPairs[2 * i + 1];
+            SwapShiftRelay(infoPtr, i1, i2);
+        }
+        DPA_Sort(infoPtr->hdpaItemIds, MapIdSearchCompare, 0);
+        DPA_Sort(infoPtr->selectionRanges->hdpa, ranges_cmp, 0);
+
         if (infoPtr->dwStyle & LVS_ALIGNLEFT)
             LISTVIEW_Arrange(infoPtr, LVA_SNAPTOGRID);
         else
             LISTVIEW_Arrange(infoPtr, LVA_DEFAULT);
-        infoPtr->bNeedsReArrange = FALSE;
+
+        Free(infoPtr->pPairs);
+        infoPtr->pPairs = NULL;
+        infoPtr->cPairs = 0;
     }
 #endif
     return LISTVIEW_Paint(infoPtr, hdc);
