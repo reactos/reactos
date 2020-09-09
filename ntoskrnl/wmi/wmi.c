@@ -111,6 +111,15 @@ IoWMIWriteEvent(_Inout_ PVOID WnodeEventItem)
     DPRINT1("IoWMIWriteEvent() called for WnodeEventItem %p (Flags = 0x%08lx), returning success\n",
             WnodeEventItem, ((PWNODE_HEADER)WnodeEventItem)->Flags);
 
+    if (((PWNODE_HEADER)WnodeEventItem)->Flags & WNODE_FLAG_TRACED_GUID)
+    {
+        DPRINT("IoWMIWriteEvent(): Flags has WNODE_FLAG_TRACED_GUID\n");
+
+        // Never free WnodeEventItem in this case.
+
+        return STATUS_SUCCESS;
+    }
+
     /* Free the buffer if we are returning success */
     if (WnodeEventItem != NULL)
         ExFreePool(WnodeEventItem);
