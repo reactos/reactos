@@ -284,7 +284,7 @@
 @ stdcall NtCreateProcessEx(ptr long ptr ptr long ptr ptr ptr long)
 @ stdcall NtCreateProfile(ptr ptr ptr long long ptr long long long) ; CHECKME
 @ stub -version=0x600+ NtCreateResourceManager
-@ stdcall NtCreateSection(ptr long ptr ptr long long long)
+@ stdcall NtCreateSection(ptr long ptr ptr long long ptr)
 @ stdcall NtCreateSemaphore(ptr long ptr long long)
 @ stdcall NtCreateSymbolicLinkObject(ptr long ptr ptr)
 @ stdcall NtCreateThread(ptr long ptr ptr ptr ptr ptr long)
