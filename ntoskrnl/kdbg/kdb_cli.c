@@ -3798,7 +3798,11 @@ KdbpCliInit(VOID)
 
     /* Initialize the object attributes */
     RtlInitUnicodeString(&FileName, L"\\SystemRoot\\System32\\drivers\\etc\\KDBinit");
-    InitializeObjectAttributes(&ObjectAttributes, &FileName, 0, NULL, NULL);
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &FileName,
+                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
+                               NULL,
+                               NULL);
 
     /* Open the file */
     Status = ZwOpenFile(&hFile, FILE_READ_DATA | SYNCHRONIZE,
