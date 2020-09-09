@@ -17,7 +17,7 @@ jobs:
         with:
           path: src
       - name: Set up cache for ccache
-        uses: actions/cache@v1
+        uses: actions/cache@v2
         with:
           path: ccache
           key: ccache-gcc-i386-${{github.sha}}
