@@ -2480,7 +2480,9 @@ MiWriteProtectSystemImage(
     Protection = IMAGE_SCN_MEM_READ;
     if (LastPte >= FirstPte)
     {
+#if defined(CORE_16387_IS_FIXED) || DBG
         MiSetSystemCodeProtection(FirstPte, LastPte, IMAGE_SCN_MEM_READ);
+#endif
     }
 
     /* Loop the sections */
