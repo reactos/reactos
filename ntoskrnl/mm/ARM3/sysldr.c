@@ -822,11 +822,9 @@ MiSnapThunk(IN PVOID DllBase,
             /* Now assume failure in case the forwarder doesn't exist */
             Status = STATUS_DRIVER_ENTRYPOINT_NOT_FOUND;
 
-            /* Build the forwarder name */
+            /* Build the forwarder name, including the dot */
             DllName.Buffer = (PCHAR)Address->u1.Function;
-            DllName.Length = (USHORT)(strchr(DllName.Buffer, '.') -
-                                      DllName.Buffer) +
-                                      sizeof(ANSI_NULL);
+            DllName.Length = (USHORT)(strchr(DllName.Buffer, '.') - DllName.Buffer + strlen("."));
             DllName.MaximumLength = DllName.Length;
 
             /* Convert it */
@@ -869,7 +867,7 @@ MiSnapThunk(IN PVOID DllBase,
                                                         TAG_LDR_WSTR);
                     if (!ForwardName) break;
 
-                    /* Copy the data */
+                    /* Copy the data, including the ANSI_NULL */
                     RtlCopyMemory(&ForwardName->Name[0],
                                   DllName.Buffer + DllName.Length,
                                   ForwardLength);
@@ -1175,6 +1173,7 @@ CheckDllState:
         if (!ImportBase)
         {
             /* Setup the import DLL name */
+            DllName.Length = 0;
             DllName.MaximumLength = NameString.Length +
                                     ImageFileDirectory->Length +
                                     sizeof(UNICODE_NULL);
@@ -1209,6 +1208,7 @@ CheckDllState:
                 ExFreePoolWithTag(DllName.Buffer, TAG_LDR_WSTR);
 
                 /* Calculate size for a string the adds 'drivers\' */
+                DllName.Length = 0;
                 DllName.MaximumLength += DriversFolderName.Length;
 
                 /* Allocate the new buffer */
@@ -2234,8 +2234,7 @@ MiInitializeLoadedModuleList(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 
         /* Calculate the size we'll need and allocate a copy */
         EntrySize = sizeof(LDR_DATA_TABLE_ENTRY) +
-                    LdrEntry->BaseDllName.MaximumLength +
-                    sizeof(UNICODE_NULL);
+                    LdrEntry->BaseDllName.Length + sizeof(UNICODE_NULL);
         NewEntry = ExAllocatePoolWithTag(NonPagedPool, EntrySize, TAG_MODULE_OBJECT);
         if (!NewEntry) return FALSE;
 
@@ -2243,10 +2242,11 @@ MiInitializeLoadedModuleList(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         *NewEntry = *LdrEntry;
 
         /* Allocate the name */
+        // NewEntry->FullDllName.Length = LdrEntry->FullDllName.Length; // Already.
+        NewEntry->FullDllName.MaximumLength = NewEntry->FullDllName.Length + sizeof(UNICODE_NULL);
         NewEntry->FullDllName.Buffer =
             ExAllocatePoolWithTag(PagedPool,
-                                  LdrEntry->FullDllName.MaximumLength +
-                                      sizeof(UNICODE_NULL),
+                                  NewEntry->FullDllName.MaximumLength,
                                   TAG_LDR_WSTR);
         if (!NewEntry->FullDllName.Buffer)
         {
@@ -2255,17 +2255,19 @@ MiInitializeLoadedModuleList(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         }
 
         /* Set the base name */
+        // NewEntry->BaseDllName.Length = LdrEntry->BaseDllName.Length; // Already.
+        NewEntry->BaseDllName.MaximumLength = NewEntry->BaseDllName.Length + sizeof(UNICODE_NULL);
         NewEntry->BaseDllName.Buffer = (PVOID)(NewEntry + 1);
 
-        /* Copy the full and base name */
+        /* Copy and null-terminate the full and base names */
         RtlCopyMemory(NewEntry->FullDllName.Buffer,
                       LdrEntry->FullDllName.Buffer,
-                      LdrEntry->FullDllName.MaximumLength);
+                      LdrEntry->FullDllName.Length);
+        NewEntry->FullDllName.Buffer[NewEntry->FullDllName.Length /
+                                     sizeof(WCHAR)] = UNICODE_NULL;
         RtlCopyMemory(NewEntry->BaseDllName.Buffer,
                       LdrEntry->BaseDllName.Buffer,
-                      LdrEntry->BaseDllName.MaximumLength);
-
-        /* Null-terminate the base name */
+                      LdrEntry->BaseDllName.Length);
         NewEntry->BaseDllName.Buffer[NewEntry->BaseDllName.Length /
                                      sizeof(WCHAR)] = UNICODE_NULL;
 
@@ -3152,7 +3154,7 @@ LoaderScan:
     /* Now write the DLL name */
     LdrEntry->BaseDllName.Buffer = (PVOID)(LdrEntry + 1);
     LdrEntry->BaseDllName.Length = BaseName.Length;
-    LdrEntry->BaseDllName.MaximumLength = BaseName.Length;
+    LdrEntry->BaseDllName.MaximumLength = LdrEntry->BaseDllName.Length + sizeof(UNICODE_NULL);
 
     /* Copy and null-terminate it */
     RtlCopyMemory(LdrEntry->BaseDllName.Buffer,
@@ -3161,9 +3163,10 @@ LoaderScan:
     LdrEntry->BaseDllName.Buffer[BaseName.Length / sizeof(WCHAR)] = UNICODE_NULL;
 
     /* Now allocate the full name */
+    LdrEntry->FullDllName.Length = PrefixName.Length;
+    LdrEntry->FullDllName.MaximumLength = LdrEntry->FullDllName.Length + sizeof(UNICODE_NULL);
     LdrEntry->FullDllName.Buffer = ExAllocatePoolWithTag(PagedPool,
-                                                         PrefixName.Length +
-                                                         sizeof(UNICODE_NULL),
+                                                         LdrEntry->FullDllName.MaximumLength,
                                                          TAG_LDR_WSTR);
     if (!LdrEntry->FullDllName.Buffer)
     {
@@ -3173,10 +3176,6 @@ LoaderScan:
     }
     else
     {
-        /* Set it up */
-        LdrEntry->FullDllName.Length = PrefixName.Length;
-        LdrEntry->FullDllName.MaximumLength = PrefixName.Length;
-
         /* Copy and null-terminate */
         RtlCopyMemory(LdrEntry->FullDllName.Buffer,
                       PrefixName.Buffer,
@@ -3275,6 +3274,7 @@ LoaderScan:
             UnicodeTemp = PrefixName;
             UnicodeTemp.Buffer += 11;
             UnicodeTemp.Length -= (11 * sizeof(WCHAR));
+            UnicodeTemp.MaximumLength -= (11 * sizeof(WCHAR));
             sprintf_nt(Buffer,
                        "%ws%wZ",
                        &SharedUserData->NtSystemRoot[2],
