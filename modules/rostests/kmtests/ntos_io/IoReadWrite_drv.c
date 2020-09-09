@@ -158,6 +158,9 @@ TestFastIoRead(
     PTEST_FCB Fcb;
     NTSTATUS Status;
 
+    // Report whether this FastIO function is actually called or not.
+    ok(TRUE, "\n");
+
     //trace("FastIoRead: %p %lx %I64d+%lu -> %p\n", FileObject, LockKey, FileOffset->QuadPart, Length, Buffer);
     ok_eq_pointer(FileObject, TestFileObject);
     ok_bool_true(Wait, "Wait is");
@@ -226,6 +229,9 @@ TestFastIoWrite(
 {
     PTEST_FCB Fcb;
     NTSTATUS Status;
+
+    // Report whether this FastIO function is actually called or not.
+    ok(TRUE, "\n");
 
     //trace("FastIoWrite: %p %lx %p -> %I64d+%lu\n", FileObject, LockKey, Buffer, FileOffset->QuadPart, Length);
     ok_eq_pointer(FileObject, TestFileObject);
