@@ -91,7 +91,7 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
         /* Prepare to probe parameters */
         _SEH2_TRY
         {
-            /* Probe the buffer */
+            /* Probe the buffer. NT5.1+: only for read */
             ProbeForRead(ProcessInformation,
                          ProcessInformationLength,
                          sizeof(ULONG));
