@@ -6912,12 +6912,6 @@ RxInitializeDispatchVectors(
     RxFastIoDispatch.FastIoCheckIfPossible = RxFastIoCheckIfPossible;
     RxFastIoDispatch.FastIoRead = RxFastIoRead;
     RxFastIoDispatch.FastIoWrite = RxFastIoWrite;
-    RxFastIoDispatch.FastIoQueryBasicInfo = NULL;
-    RxFastIoDispatch.FastIoQueryStandardInfo = NULL;
-    RxFastIoDispatch.FastIoLock = NULL;
-    RxFastIoDispatch.FastIoUnlockSingle = NULL;
-    RxFastIoDispatch.FastIoUnlockAll = NULL;
-    RxFastIoDispatch.FastIoUnlockAllByKey = NULL;
     RxFastIoDispatch.FastIoDeviceControl = RxFastIoDeviceControl;
     RxFastIoDispatch.AcquireFileForNtCreateSection = RxAcquireFileForNtCreateSection;
     RxFastIoDispatch.ReleaseFileForNtCreateSection = RxReleaseFileForNtCreateSection;
