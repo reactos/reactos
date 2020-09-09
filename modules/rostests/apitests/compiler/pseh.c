@@ -2643,7 +2643,7 @@ int call_test(int (* func)(void))
 	static int ret;
 	static struct volatile_context before, after;
 	static LPTOP_LEVEL_EXCEPTION_FILTER prev_unhandled_exception;
-#if !defined(_PSEH3_H_) && !defined(_MSC_VER)
+#if defined(_X86_) && !defined(_PSEH3_H_) && !defined(_MSC_VER)
 	static _SEH2Registration_t * prev_frame;
 	_SEH2Registration_t passthrough_frame;
 #endif
