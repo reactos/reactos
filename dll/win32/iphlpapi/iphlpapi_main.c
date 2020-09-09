@@ -808,9 +808,8 @@ DWORD WINAPI GetAdaptersInfo(PIP_ADAPTER_INFO pAdapterInfo, PULONG pOutBufLen)
             IP_ADDRESS_STRING primaryWINS, secondaryWINS;
 
             memset(pAdapterInfo, 0, size);
-            if (RegOpenKeyExA(HKEY_LOCAL_MACHINE,
-             "Software\\Wine\\Wine\\Config\\Network", 0, KEY_READ,
-             &hKey) == ERROR_SUCCESS) {
+            /* @@ Wine registry key: HKCU\Software\Wine\Network */
+            if (RegOpenKeyA(HKEY_CURRENT_USER, "Software\\Wine\\Network", &hKey) == ERROR_SUCCESS) {
               DWORD size = sizeof(primaryWINS.String);
               unsigned long addr;
 
