@@ -173,7 +173,7 @@ MiLoadImageSection(IN OUT PVOID *SectionPtr,
 
     /* The driver is here */
     *ImageBase = DriverBase;
-    DPRINT1("Loading: %wZ at %p with %lx pages\n", FileName, DriverBase, PteCount);
+    DPRINT1("Loading: %wZ at %p with 0x%lx pages\n", FileName, DriverBase, PteCount);
 
     /* Lock the PFN database */
     OldIrql = MiAcquirePfnLock();
@@ -2042,7 +2042,7 @@ MiBuildImportsForBootDrivers(VOID)
                 if (*ImageThunk)
                 {
                     /* Should not be happening */
-                    ERROR_FATAL("Broken IAT entry for %p at %p (%lx)\n",
+                    ERROR_FATAL("Broken IAT entry for %p at %p (%p)\n",
                                 LdrEntry, ImageThunk, *ImageThunk);
                 }
 
@@ -2533,7 +2533,7 @@ MiWriteProtectSystemImage(
     if (ALIGN_UP_POINTER_BY(SectionEnd, PAGE_SIZE) !=
         Add2Ptr(ImageBase, NtHeaders->OptionalHeader.SizeOfImage))
     {
-        DPRINT1("ImageBase 0x%p ImageSize 0x%lx Section %u VA 0x%lx Raw 0x%lx virt 0x%lx\n",
+        DPRINT1("ImageBase 0x%p ImageSize 0x%lx Section %lu VA 0x%lx Raw 0x%lx virt 0x%lx\n",
             ImageBase,
             NtHeaders->OptionalHeader.SizeOfImage,
             i,
