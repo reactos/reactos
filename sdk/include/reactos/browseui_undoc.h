@@ -98,16 +98,19 @@ typedef struct IEThreadParamBlock
 typedef struct ExplorerCommandLineParseResults
 {
     LPWSTR                  strPath;
+    // TODO: PIDLIST_ABSOLUTE?
     LPITEMIDLIST            pidlPath;
     DWORD                   dwFlags;
     int                     nCmdShow;
-    DWORD                           offset10;
-    DWORD                           offset14;
-    DWORD                           offset18;
-    DWORD                           offset1C;
+    DWORD                   offset10_18;
+    DWORD                   offset14_1C;
+    DWORD                   offset18_20;
+    DWORD                   offset1C_24;
+    // TODO: PIDLIST_ABSOLUTE?
     LPITEMIDLIST            pidlRoot;
     CLSID                   clsid;
     GUID                    guidInproc;
+    // TODO: 'ULONG                   Padding[0x100];'?
 } EXPLORER_CMDLINE_PARSE_RESULTS, *PEXPLORER_CMDLINE_PARSE_RESULTS;
 
 #define SH_EXPLORER_CMDLINE_FLAG_ONE      0x00000001
