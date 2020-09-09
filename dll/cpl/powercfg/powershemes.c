@@ -38,24 +38,25 @@ typedef struct _SAVE_POWER_SCHEME_DATA
 } SAVE_POWER_SCHEME_DATA, *PSAVE_POWER_SCHEME_DATA;
 
 
-UINT Sec[]=
+// Number of seconds.
+const UINT Sec[] =
 {
-    60,
-    120,
-    180,
-    300,
-    600,
-    900,
-    1200,
-    1500,
-    1800,
-    2700,
-    3600,
-    7200,
-    10800,
-    14400,
-    18000,
-    0
+         1 * 60,
+         2 * 60,
+         3 * 60,
+         5 * 60,
+        10 * 60,
+        15 * 60,
+        20 * 60,
+        25 * 60,
+        30 * 60,
+        45 * 60,
+    1 * 60 * 60,
+    2 * 60 * 60,
+    3 * 60 * 60,
+    4 * 60 * 60,
+    5 * 60 * 60,
+              0  // Never.
 };
 
 
@@ -277,54 +278,62 @@ LoadConfig(
 
     pp = &pScheme->PowerPolicy;
 
-    for (i = 0; i < 16; i++)
+    for (i = 0; i < _countof(Sec); i++)
     {
         hwndCtrl = GetDlgItem(hwndDlg, IDC_MONITORACLIST);
         if (hwndCtrl != NULL && Sec[i] == pp->user.VideoTimeoutAc)
         {
+            // All values.
             SendMessage(hwndCtrl, CB_SETCURSEL, i, 0);
         }
 
         hwndCtrl = GetDlgItem(hwndDlg, IDC_MONITORDCLIST);
         if (hwndCtrl != NULL && Sec[i] == pp->user.VideoTimeoutDc)
         {
+            // All values.
             SendMessage(hwndCtrl, CB_SETCURSEL, i, 0);
         }
 
         hwndCtrl = GetDlgItem(hwndDlg, IDC_DISKACLIST);
         if (hwndCtrl != NULL && Sec[i] == pp->user.SpindownTimeoutAc)
         {
+            // All but the first two values.
             SendMessage(hwndCtrl, CB_SETCURSEL, i - 2, 0);
         }
 
         hwndCtrl = GetDlgItem(hwndDlg, IDC_DISKDCLIST);
         if (hwndCtrl != NULL && Sec[i] == pp->user.SpindownTimeoutDc)
         {
+            // All but the first two values.
             SendMessage(hwndCtrl, CB_SETCURSEL, i - 2, 0);
         }
 
         hwndCtrl = GetDlgItem(hwndDlg, IDC_STANDBYACLIST);
         if (hwndCtrl != NULL && Sec[i] == pp->user.IdleTimeoutAc)
         {
+            // All values.
             SendMessage(hwndCtrl, CB_SETCURSEL, i, 0);
         }
 
         hwndCtrl = GetDlgItem(hwndDlg, IDC_STANDBYDCLIST);
         if (hwndCtrl != NULL && Sec[i] == pp->user.IdleTimeoutDc)
         {
+            // All values.
             SendMessage(hwndCtrl, CB_SETCURSEL, i, 0);
         }
 
         hwndCtrl = GetDlgItem(hwndDlg, IDC_HIBERNATEACLIST);
         if (hwndCtrl != NULL && Sec[i] == pp->mach.DozeS4TimeoutAc)
         {
-            SendMessage(hwndCtrl, CB_SETCURSEL, i, 0);
+            // All but the first two values.
+            SendMessage(hwndCtrl, CB_SETCURSEL, i - 2, 0);
         }
 
         hwndCtrl = GetDlgItem(hwndDlg, IDC_HIBERNATEDCLIST);
         if (hwndCtrl != NULL && Sec[i] == pp->mach.DozeS4TimeoutDc)
         {
-            SendMessage(hwndCtrl, CB_SETCURSEL, i, 0);
+            // All but the first two values.
+            SendMessage(hwndCtrl, CB_SETCURSEL, i - 2, 0);
         }
     }  
 }
@@ -344,41 +353,49 @@ Pos_InitPage(HWND hwndDlg)
         {
             case 1:
                 hwnd = GetDlgItem(hwndDlg, IDC_MONITORACLIST);
+                // All values.
                 ifrom = IDS_TIMEOUT1;
                 break;
 
             case 2:
                 hwnd = GetDlgItem(hwndDlg, IDC_STANDBYACLIST);
+                // All values.
                 ifrom = IDS_TIMEOUT1;
                 break;
 
             case 3:
                 hwnd = GetDlgItem(hwndDlg, IDC_DISKACLIST);
+                // All but the first two values.
                 ifrom = IDS_TIMEOUT3;
                 break;
 
             case 4:
                 hwnd = GetDlgItem(hwndDlg, IDC_HIBERNATEACLIST);
+                // All but the first two values.
                 ifrom = IDS_TIMEOUT3;
                 break;
 
             case 5:
                 hwnd = GetDlgItem(hwndDlg, IDC_MONITORDCLIST);
+                // All values.
                 ifrom = IDS_TIMEOUT1;
                 break;
 
             case 6:
                 hwnd = GetDlgItem(hwndDlg, IDC_STANDBYDCLIST);
+                // All values.
                 ifrom = IDS_TIMEOUT1;
                 break;
 
             case 7:
                 hwnd = GetDlgItem(hwndDlg, IDC_DISKDCLIST);
+                // All but the first two values.
                 ifrom = IDS_TIMEOUT3;
                 break;
 
             case 8:
                 hwnd = GetDlgItem(hwndDlg, IDC_HIBERNATEDCLIST);
+                // All but the first two values.
                 ifrom = IDS_TIMEOUT3;
                 break;
 
@@ -403,10 +420,10 @@ Pos_InitPage(HWND hwndDlg)
                 SendMessage(hwnd,
                              CB_SETITEMDATA,
                              index,
-                             (LPARAM)Sec[ifrom - IDS_TIMEOUT16]);
+                             (LPARAM)Sec[ifrom - IDS_TIMEOUT1]);
             }
         }
-
+        // Separate case, as IDS_TIMEOUT16 == IDS_TIMEOUT1 - 1, not IDS_TIMEOUT15 + 1.
         if (LoadString(hApplet, IDS_TIMEOUT16, szName, MAX_PATH))
         {
             index = SendMessage(hwnd,
@@ -419,7 +436,7 @@ Pos_InitPage(HWND hwndDlg)
             SendMessage(hwnd,
                          CB_SETITEMDATA,
                          index,
-                         (LPARAM)Sec[0]);
+                         (LPARAM)Sec[_countof(Sec) - 1]);
         }
     }
 }
@@ -440,7 +457,8 @@ Pos_SaveData(
     if (hwndCtrl != NULL)
     {
         tmp = (INT)SendMessage(hwndCtrl, CB_GETCURSEL, 0, 0);
-        if (tmp > 0 && tmp < 16)
+        // All values.
+        if (tmp >= 0 && tmp < _countof(Sec))
         {
             pScheme->PowerPolicy.user.VideoTimeoutAc = Sec[tmp];
         }
@@ -450,7 +468,8 @@ Pos_SaveData(
     if (hwndCtrl != NULL)
     {
         tmp = (INT)SendMessage(hwndCtrl, CB_GETCURSEL, 0, 0);
-        if (tmp > 0 && tmp < 16)
+        // All values.
+        if (tmp >= 0 && tmp < _countof(Sec))
         {
             pScheme->PowerPolicy.user.VideoTimeoutDc = Sec[tmp];
         }
@@ -460,9 +479,11 @@ Pos_SaveData(
     if (hwndCtrl != NULL)
     {
         tmp = (INT)SendMessage(hwndCtrl, CB_GETCURSEL, 0, 0);
-        if (tmp > 0 && tmp < 16)
+        // All but the first two values.
+        tmp += 2;
+        if (tmp >= 2 && tmp < _countof(Sec))
         {
-            pScheme->PowerPolicy.user.SpindownTimeoutAc = Sec[tmp + 2];
+            pScheme->PowerPolicy.user.SpindownTimeoutAc = Sec[tmp];
         }
     }
 
@@ -470,9 +491,11 @@ Pos_SaveData(
     if (hwndCtrl != NULL)
     {
         tmp = (INT)SendMessage(hwndCtrl, CB_GETCURSEL, 0, 0);
-        if (tmp > 0 && tmp < 16)
+        // All but the first two values.
+        tmp += 2;
+        if (tmp >= 2 && tmp < _countof(Sec))
         {
-            pScheme->PowerPolicy.user.SpindownTimeoutDc = Sec[tmp + 2];
+            pScheme->PowerPolicy.user.SpindownTimeoutDc = Sec[tmp];
         }
     }
 
@@ -480,7 +503,8 @@ Pos_SaveData(
     if (hwndCtrl != NULL)
     {
         tmp = (INT)SendMessage(hwndCtrl, CB_GETCURSEL, 0, 0);
-        if (tmp > 0 && tmp < 16)
+        // All values.
+        if (tmp >= 0 && tmp < _countof(Sec))
         {
             pScheme->PowerPolicy.user.IdleTimeoutAc = Sec[tmp];
         }
@@ -490,7 +514,8 @@ Pos_SaveData(
     if (hwndCtrl != NULL)
     {
         tmp = (INT)SendMessage(hwndCtrl, CB_GETCURSEL, 0, 0);
-        if (tmp > 0 && tmp < 16)
+        // All values.
+        if (tmp >= 0 && tmp < _countof(Sec))
         {
             pScheme->PowerPolicy.user.IdleTimeoutDc = Sec[tmp];
         }
@@ -500,7 +525,9 @@ Pos_SaveData(
     if (hwndCtrl != NULL)
     {
         tmp = (INT)SendMessage(hwndCtrl, CB_GETCURSEL, 0, 0);
-        if (tmp > 0 && tmp < 16)
+        // All but the first two values.
+        tmp += 2;
+        if (tmp >= 2 && tmp < _countof(Sec))
         {
             pScheme->PowerPolicy.mach.DozeS4TimeoutAc = Sec[tmp];
         }
@@ -510,7 +537,9 @@ Pos_SaveData(
     if (hwndCtrl != NULL)
     {
         tmp = (INT)SendMessage(hwndCtrl, CB_GETCURSEL, 0, 0);
-        if (tmp > 0 && tmp < 16)
+        // All but the first two values.
+        tmp += 2;
+        if (tmp >= 2 && tmp < _countof(Sec))
         {
             pScheme->PowerPolicy.mach.DozeS4TimeoutDc = Sec[tmp];
         }
