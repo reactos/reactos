@@ -9227,14 +9227,12 @@ static BOOL LISTVIEW_SetItemPosition(LISTVIEW_INFO *infoPtr, INT nItem, const PO
             return FALSE;
 
         Pt = *pt;
-        Pt.x += GetScrollPos(infoPtr->hwndSelf, SB_HORZ);
-        Pt.y += GetScrollPos(infoPtr->hwndSelf, SB_VERT);
         i1 = nItem;
         i2 = LISTVIEW_HitTestBlank(infoPtr, Pt);
         if (i1 < i2)
             --i2;
 
-        wsprintfW(sz, L"(%d, %d), (%d, %d), (%d, %d), (%d, %d)", i1, i2, Pt.x, Pt.y, Origin.x, Origin.y, infoPtr->rcList.left, infoPtr->rcList.top);
+        wsprintfW(sz, L"(%d, %d), (%d, %d), (%d, %d)", i1, i2, Pt.x, Pt.y, infoPtr->rcList.left, infoPtr->rcList.top);
         MessageBoxW(NULL, sz, L"listview.c", 0);
 
         infoPtr->pPairs = pPairs;

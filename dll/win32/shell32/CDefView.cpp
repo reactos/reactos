@@ -57,6 +57,19 @@ typedef struct
    to call TrackPopupMenu and let it use the 0 value as an indication that the menu was canceled */
 #define CONTEXT_MENU_BASE_ID 1
 
+/* Convert client coordinates to listview coordinates */
+static void
+ClientToListView(HWND hwndLV, POINT *ppt)
+{
+    POINT Origin;
+
+    if (!ListView_GetOrigin(hwndLV, &Origin))
+        return;
+
+    ppt->x += Origin.x;
+    ppt->y += Origin.y;
+}
+
 class CDefView :
     public CWindowImpl<CDefView, CWindow, CControlWinTraits>,
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
@@ -2018,7 +2031,7 @@ LRESULT CDefView::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
 
                     m_pSourceDataObject = pda;
                     m_ptFirstMousePos = params->ptAction;
-                    ClientToScreen(&m_ptFirstMousePos);
+                    ClientToListView(m_ListView, &m_ptFirstMousePos);
 
                     HIMAGELIST big_icons, small_icons;
                     Shell_GetImageLists(&big_icons, &small_icons);
@@ -3056,7 +3069,7 @@ HRESULT STDMETHODCALLTYPE CDefView::GetDragPoint(POINT *pt)
     if (!pt)
         return E_INVALIDARG;
 
-    *pt = m_ptFirstMousePos;
+    *pt = m_ptFirstMousePos; // in view coordinates
     return S_OK;
 }
 
@@ -3393,6 +3406,10 @@ HRESULT WINAPI CDefView::Drop(IDataObject* pDataObject, DWORD grfKeyState, POINT
             m_pCurDropTarget.Release();
         }
 
+        POINT ptDrop = { pt.x, pt.y };
+        ::ScreenToClient(m_ListView, &ptDrop);
+        ::ClientToListView(m_ListView, &ptDrop);
+
         INT iItem = -1;
         m_ListView.SetRedraw(FALSE);
         while ((iItem = m_ListView.GetNextItem(iItem, LVNI_SELECTED)) >= 0)
@@ -3400,8 +3417,8 @@ HRESULT WINAPI CDefView::Drop(IDataObject* pDataObject, DWORD grfKeyState, POINT
             POINT ptItem;
             if (m_ListView.GetItemPosition(iItem, &ptItem))
             {
-                ptItem.x += pt.x - m_ptFirstMousePos.x;
-                ptItem.y += pt.y - m_ptFirstMousePos.y;
+                ptItem.x += ptDrop.x - m_ptFirstMousePos.x;
+                ptItem.y += ptDrop.y - m_ptFirstMousePos.y;
                 m_ListView.SetItemPosition(iItem, &ptItem);
             }
         }
