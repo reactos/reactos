@@ -99,12 +99,15 @@ CcMdlReadComplete (
     FastDispatch = DeviceObject->DriverObject->FastIoDispatch;
 
     /* Check if we support Fast Calls, and check this one */
-    if (FastDispatch && FastDispatch->MdlReadComplete)
-    {
-         /* Use the fast path */
+    /* Use the fast path */
+    if (FastDispatch != NULL &&
+        FastDispatch->MdlReadComplete != NULL &&
         FastDispatch->MdlReadComplete(FileObject,
                                       MdlChain,
-                                      DeviceObject);
+                                      DeviceObject))
+    {
+        /* Request was handled */
+        return;
     }
 
     /* Use slow path */
@@ -129,13 +132,16 @@ CcMdlWriteComplete (
     FastDispatch = DeviceObject->DriverObject->FastIoDispatch;
 
     /* Check if we support Fast Calls, and check this one */
-    if (FastDispatch && FastDispatch->MdlWriteComplete)
-    {
-         /* Use the fast path */
+    /* Use the fast path */
+    if (FastDispatch != NULL &&
+        FastDispatch->MdlWriteComplete != NULL &&
         FastDispatch->MdlWriteComplete(FileObject,
                                        FileOffset,
                                        MdlChain,
-                                       DeviceObject);
+                                       DeviceObject))
+    {
+        /* Request was handled */
+        return;
     }
 
     /* Use slow path */
