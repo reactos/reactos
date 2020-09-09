@@ -311,6 +311,8 @@ PAFD_HANDLE LockHandles( PAFD_HANDLE HandleArray, UINT HandleCount ) {
     PAFD_HANDLE FileObjects;
     UINT i;
     NTSTATUS Status;
+    PVOID Object;
+    HANDLE KernelHandle;
 
     FileObjects = ExAllocatePoolZero(NonPagedPool,
                                      HandleCount * sizeof(AFD_HANDLE),
@@ -328,17 +330,55 @@ PAFD_HANDLE LockHandles( PAFD_HANDLE HandleArray, UINT HandleCount ) {
             continue;
         }
 
+        // Get the object pointer, as UserMode.
         Status = ObReferenceObjectByHandle((HANDLE)HandleArray[i].Handle,
+                                           0,
+                                           NULL,
+                                           UserMode,
+                                           &Object,
+                                           NULL);
+        if (!NT_SUCCESS(Status))
+        {
+            AFD_DbgPrint(MIN_TRACE,
+                         ("ObReferenceObjectByHandle(%p, UserMode) failed: 0x%08lx\n",
+                          (HANDLE)HandleArray[i].Handle, Status));
+
+            UnlockHandles(FileObjects, i);
+            return NULL;
+        }
+
+        // Create a kernel handle from the pointer.
+        Status = ObOpenObjectByPointer(Object,
+                                       OBJ_KERNEL_HANDLE,
+                                       NULL,
+                                       FILE_ALL_ACCESS,
+                                       NULL,
+                                       KernelMode,
+                                       &KernelHandle);
+        ObDereferenceObject(Object);
+        if (!NT_SUCCESS(Status))
+        {
+            AFD_DbgPrint(MIN_TRACE,
+                         ("ObOpenObjectByPointer(%p, OBJ_KERNEL_HANDLE) failed: 0x%08lx\n",
+                          Object, Status));
+
+            UnlockHandles(FileObjects, i);
+            return NULL;
+        }
+
+        // Get the object pointer, as KernelMode.
+        Status = ObReferenceObjectByHandle(KernelHandle,
                                            FILE_ALL_ACCESS,
                                            NULL,
                                            KernelMode,
                                            (PVOID *)&FileObjects[i].Handle,
                                            NULL);
+        ZwClose(KernelHandle);
         if (!NT_SUCCESS(Status))
         {
             AFD_DbgPrint(MIN_TRACE,
-                         ("ObReferenceObjectByHandle(%p) failed: 0x%08lx\n",
-                          (HANDLE)HandleArray[i].Handle, Status));
+                         ("ObReferenceObjectByHandle(%p, KernelMode) failed: 0x%08lx\n",
+                          KernelHandle, Status));
 
             UnlockHandles(FileObjects, i);
             return NULL;
