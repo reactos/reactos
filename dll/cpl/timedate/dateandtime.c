@@ -350,6 +350,8 @@ DateTimePageProc(HWND hwndDlg,
                             SendDlgItemMessageW(hwndDlg, IDC_CLOCKWND, CLM_STOPCLOCK,
                                                 0, 0);
 
+                            // TODO: Set the clock to the input time.
+
                             /* Enable the 'Apply' button */
                             PropSheet_Changed(GetParent(hwndDlg), hwndDlg);
                             break;
