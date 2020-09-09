@@ -10,6 +10,7 @@
  
 #define COBJMACROS
 #define ONLY_PHYSICAL_DRIVE 3
+#define ARR_MAX_SIZE 512
 
 #include <windows.h>
 #include <windowsx.h>
@@ -43,6 +44,7 @@ typedef struct
     uint64_t RecycleBinSize;
     uint64_t ChkDskSize;
     uint64_t RappsSize;
+    uint64_t CountSize;
 } DIRSIZE;
 
 typedef struct
@@ -55,8 +57,8 @@ typedef struct
 
 typedef struct
 {
+    WCHAR DriveLetter[ARR_MAX_SIZE];
     WCHAR RappsDir[MAX_PATH];
-    WCHAR DriveLetter[MAX_PATH];
 } WCHAR_VAR;
 
 typedef struct
@@ -73,7 +75,7 @@ DLG_VAR dv;
 WCHAR_VAR wcv;
 BOOL_VAR bv;
 
-/* HACK: struct for gathering data from registry key */
+/* For gathering custom path for RAPPS Downloads Folder. Currently disabled because it will break after every update */
 
 /*typedef struct
 {
@@ -117,8 +119,6 @@ BOOL OnCreate(HWND hwnd);
 BOOL OnCreateSageset(HWND hwnd);
 BOOL RegValSet(PWCHAR RegArg, PWCHAR SubKey, BOOL ArgBool);
 
-double SetOptimalSize(uint64_t size);
-
 DWORD WINAPI FolderRemoval(LPVOID lpParam);
 DWORD WINAPI SizeCheck(LPVOID lpParam);
 DWORD RegQuery(PWCHAR RegArg, PWCHAR SubKey);
@@ -127,13 +127,12 @@ long long CheckedItem(int index, HWND hwnd, HWND hList, long long size);
 
 LRESULT APIENTRY ThemeHandler(HWND hDlg, NMCUSTOMDRAW* pNmDraw);
 
-PWCHAR FindOptimalUnit(uint64_t size);
 PWCHAR RealStageFlag(int nArgs, PWCHAR ArgReal, LPWSTR* argList);
 
 uint64_t DirSizeFunc(PWCHAR targetDir);
 
 void AddItem(HWND hList, PWCHAR string, PWCHAR subString, int iIndex);
-void CleanRequiredPath(PWCHAR Path);
+void CleanRequiredPath(PCWSTR TempPath);
 void InitStartDlg(HWND hwnd, HBITMAP hBitmap);
 void InitListViewControl(HWND hList);
 void InitSagesetListViewControl(HWND hList);

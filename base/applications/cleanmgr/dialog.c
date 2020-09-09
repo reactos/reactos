@@ -10,7 +10,6 @@
 
 INT_PTR CALLBACK StartDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    WCHAR TempText[MAX_PATH] = { 0 };
     HBITMAP BitmapDrive = NULL;
     switch(message)
     {
@@ -18,7 +17,7 @@ INT_PTR CALLBACK StartDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPa
         {
             BitmapDrive = LoadBitmapW(GetModuleHandleW(NULL), MAKEINTRESOURCEW(IDB_DRIVE));
  
-            if(BitmapDrive == NULL)
+            if (BitmapDrive == NULL)
             {
                 MessageBoxW(NULL, L"LoadBitmapW() failed!", L"Error", MB_OK | MB_ICONERROR);
                 PostMessage(hwnd, WM_CLOSE, 0, 0);
@@ -57,7 +56,7 @@ INT_PTR CALLBACK StartDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPa
         }
 
         case WM_COMMAND:
-            if(HIWORD(wParam) == CBN_SELCHANGE)
+            if (HIWORD(wParam) == CBN_SELCHANGE)
             {
                 int ItemIndex = SendMessageW(GetDlgItem(hwnd, IDC_DRIVE), CB_GETCURSEL, 0, 0);
                 if (ItemIndex == CB_ERR)
@@ -73,7 +72,7 @@ INT_PTR CALLBACK StartDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPa
                 case IDOK:
                     if (wcslen(wcv.DriveLetter) == 0)
                     {
-                        ZeroMemory(&TempText, sizeof(TempText));
+                        WCHAR TempText[ARR_MAX_SIZE] = { 0 };
                         LoadStringW(GetModuleHandleW(NULL), IDS_WARNING_DRIVE, TempText, _countof(TempText));
                         MessageBoxW(hwnd, TempText, L"Warning", MB_OK | MB_ICONWARNING);
                         break;
@@ -99,27 +98,27 @@ INT_PTR CALLBACK StartDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPa
 }
 
 INT_PTR CALLBACK ProgressDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
-{
-    static HANDLE ThreadOBJ = NULL;
-    
+{   
     switch(message)
     {
         case WM_INITDIALOG:
         {
-            WCHAR FullText[MAX_PATH] = { 0 };
-            WCHAR SysDrive[MAX_PATH] = { 0 };
-            WCHAR TempText[MAX_PATH] = { 0 };
+            WCHAR FullText[ARR_MAX_SIZE] = { 0 };
+            WCHAR SysDrive[ARR_MAX_SIZE] = { 0 };
+            WCHAR TempText[ARR_MAX_SIZE] = { 0 };
+            HANDLE ThreadOBJ = NULL;
 
             bv.SysDrive = FALSE;
             LoadStringW(GetModuleHandleW(NULL), IDS_SCAN, TempText, _countof(TempText));
             StringCchPrintfW(FullText, _countof(FullText), TempText, wcv.DriveLetter);
             SetDlgItemTextW(hwnd, IDC_STATIC_SCAN, FullText);
             GetEnvironmentVariableW(L"SystemDrive", SysDrive, _countof(SysDrive));
-            if(wcscmp(SysDrive, wcv.DriveLetter) == 0)
+            if (wcscmp(SysDrive, wcv.DriveLetter) == 0)
             {
                 bv.SysDrive = TRUE;
             }
             ThreadOBJ = CreateThread(NULL, 0, &SizeCheck, (LPVOID)hwnd, 0, NULL);
+            CloseHandle(ThreadOBJ);
             return TRUE;
         }
         
@@ -140,11 +139,9 @@ INT_PTR CALLBACK ProgressDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM 
             break;
 
         case WM_CLOSE:
-            CloseHandle(ThreadOBJ);
             EndDialog(hwnd, IDCANCEL);
             break;
         case WM_DESTROY:
-            CloseHandle(ThreadOBJ);
             EndDialog(hwnd, 0);
             break;
         default:
@@ -155,14 +152,14 @@ INT_PTR CALLBACK ProgressDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM 
 
 INT_PTR CALLBACK ChoiceDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    WCHAR TempText[MAX_PATH] = { 0 };
+    WCHAR TempText[ARR_MAX_SIZE] = { 0 };
 
     switch (message)
     {
         case WM_INITDIALOG:
         {
-            WCHAR FullText[MAX_PATH] = { 0 };
-            LoadStringW(GetModuleHandleW(NULL), IDS_TITLE, TempText, _countof(TempText));
+            WCHAR FullText[ARR_MAX_SIZE] = { 0 };
+            LoadStringW(GetModuleHandleW(NULL), IDS_CHOICE_DLG_TITLE, TempText, _countof(TempText));
             StringCchPrintfW(FullText, _countof(FullText), TempText, wcv.DriveLetter);
             SetWindowTextW(hwnd, FullText);
             return OnCreate(hwnd);
@@ -213,11 +210,15 @@ INT_PTR CALLBACK ChoiceDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lP
                     switch (MesgBox)
                     {
                         case IDYES:
-                            if(dv.hChoicePage)
+                            if (dv.hChoicePage)
+                            {
                                 DestroyWindow(dv.hChoicePage);
+                            }
 
                             if (dv.hOptionsPage)
+                            {
                                 DestroyWindow(dv.hOptionsPage);
+                            }
 
                             EndDialog(hwnd, IDOK);
                             break;
@@ -234,11 +235,15 @@ INT_PTR CALLBACK ChoiceDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lP
             break;
     
         case WM_CLOSE:
-            if(dv.hChoicePage)
+            if (dv.hChoicePage)
+            {
                 DestroyWindow(dv.hChoicePage);
+            }
 
             if (dv.hOptionsPage)
+            {
                 DestroyWindow(dv.hOptionsPage);
+            }
 
             EndDialog(hwnd, IDCANCEL);
             break;
@@ -251,19 +256,19 @@ INT_PTR CALLBACK ChoiceDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lP
 
 INT_PTR CALLBACK ProgressEndDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    static HANDLE ThreadOBJ = NULL;
-
     switch (message)
     {
     case WM_INITDIALOG:
     {
-        WCHAR FullText[MAX_PATH] = { 0 };
-        WCHAR TempText[MAX_PATH] = { 0 };
+        WCHAR FullText[ARR_MAX_SIZE] = { 0 };
+        WCHAR TempText[ARR_MAX_SIZE] = { 0 };
+        HANDLE ThreadOBJ = NULL;
 
         LoadStringW(GetModuleHandleW(NULL), IDS_REMOVAL, TempText, _countof(TempText));
         StringCchPrintfW(FullText, _countof(FullText), TempText, wcv.DriveLetter);
         SetDlgItemTextW(hwnd, IDC_STATIC_REMOVAL, FullText);
         ThreadOBJ = CreateThread(NULL, 0, &FolderRemoval, (LPVOID)hwnd, 0, NULL);
+        CloseHandle(ThreadOBJ);
         return TRUE;
     }
 
@@ -284,12 +289,10 @@ INT_PTR CALLBACK ProgressEndDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPAR
         break;
 
     case WM_CLOSE:
-        CloseHandle(ThreadOBJ);
         EndDialog(hwnd, 0);
         break;
 
     case WM_DESTROY:
-        CloseHandle(ThreadOBJ);
         EndDialog(hwnd, 0);
         break;
 
@@ -301,7 +304,7 @@ INT_PTR CALLBACK ProgressEndDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPAR
 
 INT_PTR CALLBACK SagesetDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    WCHAR TempText[MAX_PATH] = { 0 };
+    WCHAR TempText[ARR_MAX_SIZE] = { 0 };
 
     switch (message)
     {

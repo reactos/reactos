@@ -10,14 +10,11 @@
 
 INT_PTR CALLBACK SagesetPageDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    static HWND hList = 0;
-
     switch (message)
     {
     case WM_INITDIALOG:
         SetWindowPos(hwnd, NULL, 10, 32, 0, 0, SWP_NOACTIVATE | SWP_NOOWNERZORDER | SWP_NOSIZE | SWP_NOZORDER);
-        hList = GetDlgItem(hwnd, IDC_SAGESET_LIST);
-        InitSagesetListViewControl(hList);
+        InitSagesetListViewControl(GetDlgItem(hwnd, IDC_SAGESET_LIST));
         return TRUE;
 
     case WM_NOTIFY:
@@ -39,7 +36,7 @@ INT_PTR CALLBACK SagesetPageDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPAR
 
                 else if (NmList->uNewState & LVIS_STATEIMAGEMASK)
                 {
-                    SagesetCheckedItem(NmList->iItem, hwnd, hList);
+                    SagesetCheckedItem(NmList->iItem, hwnd, GetDlgItem(hwnd, IDC_SAGESET_LIST));
                 }
             }
         }

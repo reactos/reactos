@@ -108,7 +108,6 @@ FONT 8, "MS Sans Serif", 0, 0, 0
 STRINGTABLE
 BEGIN
     IDS_CLEANUP "You can free up to %s of disk space on (%s):"
-    IDS_TITLE "Disk Cleanup for (%s)"
     IDS_SCAN "Disk Cleanup is calculating how much space you can free on Drive (%s). This may take a few minutes to complete."
     IDS_REMOVAL "The Disk Cleanup utility is cleaning up unnecessary files on your Drive (%s)."
 END
@@ -136,6 +135,20 @@ END
 
 STRINGTABLE
 BEGIN
-	IDS_ERROR_RUNNING "Program is already running!"
 	IDS_ERROR_DRIVE "Invalid drive! Please try again!"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_LABEL_CHKDSK "Old ChkDsk Files"
+    IDS_LABEL_RECYCLE "Recycle Bin"
+    IDS_LABEL_RAPPS "Temporary RAPPS Files"
+    IDS_LABEL_TEMP "Temporary Files"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_CHOICE_DLG_TITLE "Disk Cleanup for (%s)"
+    IDS_START_DLG_TITLE "Disk Cleanup: Drive Selection"
+    IDS_PROGRESS_DLG_TITLE "Disk Cleanup"
 END

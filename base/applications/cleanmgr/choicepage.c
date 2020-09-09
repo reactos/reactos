@@ -10,23 +10,20 @@
 
 INT_PTR CALLBACK ChoicePageDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    WCHAR StringText[MAX_PATH] = { 0 };
-    static HWND hList = 0;
-
     switch (message)
     {
     case WM_INITDIALOG:
     {
-        WCHAR FullText[MAX_PATH] = { 0 };
-        WCHAR TotalAmount[MAX_PATH] = { 0 };
+        WCHAR FullText[ARR_MAX_SIZE] = { 0 };
+        WCHAR TotalAmount[ARR_MAX_SIZE] = { 0 };
+        WCHAR TempText[ARR_MAX_SIZE] = { 0 };
         uint64_t TotalSize = sz.TempASize + sz.TempBSize + sz.RecycleBinSize + sz.ChkDskSize + sz.RappsSize;
 
         SetWindowPos(hwnd, NULL, 10, 32, 0, 0, SWP_NOACTIVATE | SWP_NOOWNERZORDER | SWP_NOSIZE | SWP_NOZORDER);
-        hList = GetDlgItem(hwnd, IDC_CHOICE_LIST);
-        InitListViewControl(hList);
-        LoadStringW(GetModuleHandleW(NULL), IDS_CLEANUP, StringText, _countof(StringText));
-        StringCchPrintfW(TotalAmount, _countof(TotalAmount), L"%.02lf %s", SetOptimalSize(TotalSize), FindOptimalUnit(TotalSize));
-        StringCchPrintfW(FullText, _countof(FullText), StringText, TotalAmount, wcv.DriveLetter);
+        InitListViewControl(GetDlgItem(hwnd, IDC_CHOICE_LIST));
+        LoadStringW(GetModuleHandleW(NULL), IDS_CLEANUP, TempText, _countof(TempText));
+        StrFormatByteSizeW(TotalSize, TotalAmount, _countof(TotalAmount));
+        StringCchPrintfW(FullText, _countof(FullText), TempText, TotalAmount, wcv.DriveLetter);
         SetDlgItemTextW(hwnd, IDC_STATIC_DLG, FullText);
         return TRUE;
     }
@@ -36,6 +33,7 @@ INT_PTR CALLBACK ChoicePageDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
         {
         case IDC_VIEW_FILES:
         {
+            WCHAR LoadErrorString[ARR_MAX_SIZE] = { 0 };
             SHELLEXECUTEINFOW seI;
             ZeroMemory(&seI, sizeof(seI));
             seI.cbSize = sizeof(seI);
@@ -44,10 +42,9 @@ INT_PTR CALLBACK ChoicePageDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
             seI.lpFile = wcv.RappsDir;
             
             if (!PathIsDirectoryW(wcv.RappsDir))
-            {
-                ZeroMemory(&StringText, sizeof(StringText));
-                LoadStringW(GetModuleHandleW(NULL), IDS_WARNING_FOLDER, StringText, _countof(StringText));
-                MessageBoxW(hwnd, StringText, L"Warning", MB_OK | MB_ICONWARNING);
+            {;
+                LoadStringW(GetModuleHandleW(NULL), IDS_WARNING_FOLDER, LoadErrorString, _countof(LoadErrorString));
+                MessageBoxW(hwnd, LoadErrorString, L"Warning", MB_OK | MB_ICONWARNING);
                 break;
             }
 
@@ -67,7 +64,6 @@ INT_PTR CALLBACK ChoicePageDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
         NMLISTVIEW* NmList = (NMLISTVIEW*)lParam;
         LVITEMW lvI;
         ZeroMemory(&lvI, sizeof(lvI));
-        static long long size = 0;
 
         if (lParam)
         {
@@ -81,7 +77,7 @@ INT_PTR CALLBACK ChoicePageDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
 
                 else if (NmList->uNewState & LVIS_STATEIMAGEMASK)
                 {
-                    size = CheckedItem(NmList->iItem, hwnd, hList, size);
+                    sz.CountSize = CheckedItem(NmList->iItem, hwnd, GetDlgItem(hwnd, IDC_CHOICE_LIST), sz.CountSize);
                 }
             }
         }
