@@ -202,7 +202,6 @@ DriverEntry(IN PDRIVER_OBJECT DriverObject,
     DriverObject->DriverUnload = NullUnload;
 
     /* Initialize the fast I/O dispatch table */
-    RtlZeroMemory(&FastIoDispatch, sizeof(FastIoDispatch));
     FastIoDispatch.SizeOfFastIoDispatch = sizeof(FastIoDispatch);
 
     /* Setup our pointers */

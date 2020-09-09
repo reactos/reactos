@@ -685,7 +685,6 @@ WmipDriverEntry(
     DriverObject->MajorFunction[IRP_MJ_SHUTDOWN] = WmipShutdown;
 
     /* Initialize fast dispatch */
-    RtlZeroMemory(&WmipFastIoDispatch, sizeof(WmipFastIoDispatch));
     WmipFastIoDispatch.SizeOfFastIoDispatch = sizeof(WmipFastIoDispatch);
     WmipFastIoDispatch.FastIoDeviceControl = WmipFastIoDeviceControl;
     DriverObject->FastIoDispatch = &WmipFastIoDispatch;
