@@ -185,24 +185,17 @@ IntSetTimer( PWND Window,
   LARGE_INTEGER DueTime;
   DueTime.QuadPart = (LONGLONG)(-97656); // 1024hz .9765625 ms set to 10.0 ms
 
-  if (Elapse > USER_TIMER_MAXIMUM)
-  {
-#if 0
-     /* Windows NT/2k/XP behaviour */
-     TRACE("Adjusting uElapse to 1\n");
-     Elapse = 1;
-#else
-     /* Windows XP SP2 and Windows Server 2003 behaviour */
-     TRACE("Adjusting uElapse to USER_TIMER_MAXIMUM\n");
-     Elapse = USER_TIMER_MAXIMUM;
-#endif
-  }
-
   /* Windows 2k/XP and Windows Server 2003 SP1 behaviour */
   if (Elapse < USER_TIMER_MINIMUM)
   {
      TRACE("Adjusting uElapse to USER_TIMER_MINIMUM\n");
      Elapse = USER_TIMER_MINIMUM; // 1024hz .9765625 ms, set to 10.0 ms (+/-)1 ms
+  }
+  else if (Elapse > USER_TIMER_MAXIMUM)
+  {
+     /* Windows XP SP2 and Windows Server 2003 new behaviour */
+     TRACE("Adjusting uElapse to USER_TIMER_MAXIMUM\n");
+     Elapse = USER_TIMER_MAXIMUM;
   }
 
   /* Passing an IDEvent of 0 and the SetTimer returns 1.
