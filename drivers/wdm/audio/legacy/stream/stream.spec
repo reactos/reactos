@@ -3,7 +3,7 @@
 @ stdcall StreamClassRegisterAdapter(ptr ptr ptr)
 @ stdcall StreamClassReenumerateStreams(ptr long)
 @ stdcall StreamClassDebugAssert(long long ptr long)
-@ cdecl StreamClassDebugPrint (long str)
+@ varargs StreamClassDebugPrint(long str)
 @ cdecl StreamClassDeviceNotification(long ptr)
 @ stdcall StreamClassGetDmaBuffer(ptr)
 @ stdcall StreamClassReadWriteConfig(ptr long ptr long long)
