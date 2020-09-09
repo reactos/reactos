@@ -9134,25 +9134,28 @@ static INT LISTVIEW_HitTestBlank(const LISTVIEW_INFO *infoPtr, POINT pt)
 {
     INT iItem, x, y, xy0 = -1;
     WCHAR sz[64];
+    RECT rc;
 
     if (infoPtr->dwStyle & LVS_ALIGNLEFT)
     {
         // vertically
         for (iItem = 0; iItem < infoPtr->nItemCount; ++iItem)
         {
-            x = (LONG_PTR)DPA_GetPtr(infoPtr->hdpaPosX, iItem) + infoPtr->nItemWidth;
-            y = (LONG_PTR)DPA_GetPtr(infoPtr->hdpaPosY, iItem) + infoPtr->nItemHeight / 2;
+            rc.left = LVIR_LABEL;
+            LISTVIEW_GetItemRect(infoPtr, iItem, &rc);
+            x = (rc.left + rc.right) / 2 + infoPtr->nItemWidth / 2;
+            y = (rc.top + rc.bottom) / 2;
             if (xy0 == -1)
                 xy0 = x;
             if (xy0 < x && y < pt.y)
             {
-                wsprintfW(sz, L"x,y:(%d, %d), pt:(%d, %d), %d", x, y, pt.x, pt.y, xy0);
+                wsprintfW(sz, L"x,y:(%d, %d), pt:(%d, %d), rc:(%d, %d, %d, %d), %d", x, y, pt.x, pt.y, rc.left, rc.top, rc.right, rc.bottom, xy0);
                 MessageBoxW(NULL, sz, L"1", 0);
                 return iItem;
             }
             if (pt.y <= y && pt.x <= x)
             {
-                wsprintfW(sz, L"x,y:(%d, %d), pt:(%d, %d), %d", x, y, pt.x, pt.y, xy0);
+                wsprintfW(sz, L"x,y:(%d, %d), pt:(%d, %d), rc:(%d, %d, %d, %d), %d", x, y, pt.x, pt.y, rc.left, rc.top, rc.right, rc.bottom, xy0);
                 MessageBoxW(NULL, sz, L"2", 0);
                 return iItem;
             }
@@ -9164,19 +9167,21 @@ static INT LISTVIEW_HitTestBlank(const LISTVIEW_INFO *infoPtr, POINT pt)
         // horizontally
         for (iItem = 0; iItem < infoPtr->nItemCount; ++iItem)
         {
-            x = (LONG_PTR)DPA_GetPtr(infoPtr->hdpaPosX, iItem) + infoPtr->nItemWidth / 2;
-            y = (LONG_PTR)DPA_GetPtr(infoPtr->hdpaPosY, iItem) + infoPtr->nItemHeight;
+            rc.left = LVIR_LABEL;
+            LISTVIEW_GetItemRect(infoPtr, iItem, &rc);
+            y = (rc.top + rc.bottom) / 2 + infoPtr->nItemHeight / 2;
+            x = (rc.left + rc.right) / 2;
             if (xy0 == -1)
                 xy0 = y;
             if (xy0 < y && x < pt.x)
             {
-                wsprintfW(sz, L"x,y:(%d, %d), pt:(%d, %d), %d", x, y, pt.x, pt.y, xy0);
+                wsprintfW(sz, L"x,y:(%d, %d), pt:(%d, %d), rc:(%d, %d, %d, %d), %d", x, y, pt.x, pt.y, rc.left, rc.top, rc.right, rc.bottom, xy0);
                 MessageBoxW(NULL, sz, L"3", 0);
                 return iItem;
             }
             if (pt.x <= x && pt.y <= y)
             {
-                wsprintfW(sz, L"x,y:(%d, %d), pt:(%d, %d), %d", x, y, pt.x, pt.y, xy0);
+                wsprintfW(sz, L"x,y:(%d, %d), pt:(%d, %d), rc:(%d, %d, %d, %d), %d", x, y, pt.x, pt.y, rc.left, rc.top, rc.right, rc.bottom, xy0);
                 MessageBoxW(NULL, sz, L"4", 0);
                 return iItem;
             }
@@ -9212,6 +9217,8 @@ static BOOL LISTVIEW_SetItemPosition(LISTVIEW_INFO *infoPtr, INT nItem, const PO
 #ifdef __REACTOS__
     if (is_autoarrange(infoPtr))
     {
+        // The position of list-view items is specified in view coordinates,
+        // which are client coordinates offset by the scroll position.
         WCHAR sz[64];
         INT i1, i2, *pPairs;
 
@@ -9220,18 +9227,20 @@ static BOOL LISTVIEW_SetItemPosition(LISTVIEW_INFO *infoPtr, INT nItem, const PO
             return FALSE;
 
         Pt = *pt;
+        Pt.x += GetScrollPos(infoPtr->hwndSelf, SB_HORZ);
+        Pt.y += GetScrollPos(infoPtr->hwndSelf, SB_VERT);
         i1 = nItem;
         i2 = LISTVIEW_HitTestBlank(infoPtr, Pt);
         if (i1 < i2)
             --i2;
 
-        wsprintfW(sz, L"(%d, %d), (%d, %d)", i1, i2, Pt.x, Pt.y);
+        wsprintfW(sz, L"(%d, %d), (%d, %d), (%d, %d), (%d, %d)", i1, i2, Pt.x, Pt.y, Origin.x, Origin.y, infoPtr->rcList.left, infoPtr->rcList.top);
         MessageBoxW(NULL, sz, L"listview.c", 0);
 
         infoPtr->pPairs = pPairs;
         pPairs[2 * infoPtr->cPairs + 0] = i1;
         pPairs[2 * infoPtr->cPairs + 1] = i2;
-        ++infoPtr->cPairs;
+        ++(infoPtr->cPairs);
 
         LISTVIEW_InvalidateList(infoPtr);
         return TRUE;
