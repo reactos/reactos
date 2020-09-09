@@ -422,6 +422,10 @@ Pos_InitPage(HWND hwndDlg)
                              index,
                              (LPARAM)Sec[ifrom - IDS_TIMEOUT1]);
             }
+            else
+            {
+                return;
+            }
         }
         // Separate case, as IDS_TIMEOUT16 == IDS_TIMEOUT1 - 1, not IDS_TIMEOUT15 + 1.
         if (LoadString(hApplet, IDS_TIMEOUT16, szName, MAX_PATH))
@@ -437,6 +441,10 @@ Pos_InitPage(HWND hwndDlg)
                          CB_SETITEMDATA,
                          index,
                          (LPARAM)Sec[_countof(Sec) - 1]);
+        }
+        else
+        {
+            return;
         }
     }
 }
