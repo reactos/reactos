@@ -110,9 +110,15 @@
 
 
 /* Macros to identify the page fault reason from the error code */
-#define MI_IS_NOT_PRESENT_FAULT(FaultCode) !BooleanFlagOn(FaultCode, 0x1)
-#define MI_IS_WRITE_ACCESS(FaultCode) BooleanFlagOn(FaultCode, 0x2)
-#define MI_IS_INSTRUCTION_FETCH(FaultCode) BooleanFlagOn(FaultCode, 0x10)
+#define MI_IS_NOT_PRESENT_FAULT(FaultCode)  !BooleanFlagOn(FaultCode, 0x00000001)
+#define MI_IS_WRITE_ACCESS(FaultCode)        BooleanFlagOn(FaultCode, 0x00000002)
+// 0x00000004: user-mode access.
+#define MI_IS_RESERVED_BIT_FAULT(FaultCode)  BooleanFlagOn(FaultCode, 0x00000008)
+#define MI_IS_INSTRUCTION_FETCH(FaultCode)   BooleanFlagOn(FaultCode, 0x00000010)
+// 0x00000020: protection-key violation.
+// Bits 6-14: reserved.
+// 0x00008000: violation of SGX-specific access-control requirements.
+// Bits 16-31: reserved.
 
 /* On x86, these two are the same */
 #define MI_WRITE_VALID_PPE MI_WRITE_VALID_PTE
