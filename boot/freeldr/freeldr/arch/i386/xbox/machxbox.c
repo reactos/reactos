@@ -106,7 +106,7 @@ XboxGetHarddiskConfigurationData(UCHAR DriveNumber, ULONG* pSize)
     PartialResourceList = FrLdrHeapAlloc(Size, TAG_HW_RESOURCE_LIST);
     if (PartialResourceList == NULL)
     {
-        ERR("Failed to allocate a full resource descriptor\n");
+        ERR("Failed to allocate resource descriptor\n");
         return NULL;
     }
 
@@ -218,7 +218,7 @@ DetectIsaBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
     PartialResourceList = FrLdrHeapAlloc(Size, TAG_HW_RESOURCE_LIST);
     if (PartialResourceList == NULL)
     {
-        TRACE("Failed to allocate resource descriptor\n");
+        ERR("Failed to allocate resource descriptor\n");
         return;
     }
 

@@ -176,7 +176,8 @@ DetectBiosFloppyPeripheral(PCONFIGURATION_COMPONENT_DATA ControllerKey)
         PartialResourceList = FrLdrHeapAlloc(Size, TAG_HW_RESOURCE_LIST);
         if (PartialResourceList == NULL)
         {
-            ERR("Failed to allocate resource descriptor\n");
+            ERR("Failed to allocate resource descriptor! Ignoring remaining floppy peripherals. (FloppyNumber = %u, FloppyCount = %u)\n",
+                FloppyNumber, Pc98GetFloppyCount());
             return;
         }
         RtlZeroMemory(PartialResourceList, Size);

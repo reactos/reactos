@@ -689,7 +689,8 @@ DetectSerialPorts(PCONFIGURATION_COMPONENT_DATA BusKey, GET_SERIAL_PORT MachGetS
         PartialResourceList = FrLdrHeapAlloc(Size, TAG_HW_RESOURCE_LIST);
         if (PartialResourceList == NULL)
         {
-            ERR("Failed to allocate resource descriptor\n");
+            ERR("Failed to allocate resource descriptor! Ignoring remaining serial ports. (i = %lu, Count = %lu)\n",
+                i, Count);
             break;
         }
 
@@ -792,7 +793,7 @@ DetectParallelPorts(PCONFIGURATION_COMPONENT_DATA BusKey)
         PartialResourceList = FrLdrHeapAlloc(Size, TAG_HW_RESOURCE_LIST);
         if (PartialResourceList == NULL)
         {
-            ERR("Failed to allocate resource descriptor\n");
+            ERR("Failed to allocate resource descriptor! Ignoring remaining parallel ports. (i = %lu)\n", i);
             break;
         }
 
