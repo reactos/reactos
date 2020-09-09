@@ -239,7 +239,7 @@ LoadConfig(
     PPOWER_SCHEMES_PAGE_DATA pPageData,
     PPOWER_SCHEME pScheme)
 {
-    INT i = 0, iCurSel = 0;
+    INT i, iCurSel;
     TCHAR szTemp[MAX_PATH];
     TCHAR szConfig[MAX_PATH];
     PPOWER_POLICY pp;
@@ -333,7 +333,7 @@ LoadConfig(
 static VOID
 Pos_InitPage(HWND hwndDlg)
 {
-    int ifrom = 0, i = 0, imin = 0;
+    int i, ifrom;
     HWND hwnd = NULL;
     TCHAR szName[MAX_PATH];
     LRESULT index;
@@ -344,42 +344,42 @@ Pos_InitPage(HWND hwndDlg)
         {
             case 1:
                 hwnd = GetDlgItem(hwndDlg, IDC_MONITORACLIST);
-                imin = IDS_TIMEOUT1;
+                ifrom = IDS_TIMEOUT1;
                 break;
 
             case 2:
                 hwnd = GetDlgItem(hwndDlg, IDC_STANDBYACLIST);
-                imin = IDS_TIMEOUT1;
+                ifrom = IDS_TIMEOUT1;
                 break;
 
             case 3:
                 hwnd = GetDlgItem(hwndDlg, IDC_DISKACLIST);
-                imin = IDS_TIMEOUT3;
+                ifrom = IDS_TIMEOUT3;
                 break;
 
             case 4:
                 hwnd = GetDlgItem(hwndDlg, IDC_HIBERNATEACLIST);
-                imin = IDS_TIMEOUT3;
+                ifrom = IDS_TIMEOUT3;
                 break;
 
             case 5:
                 hwnd = GetDlgItem(hwndDlg, IDC_MONITORDCLIST);
-                imin = IDS_TIMEOUT1;
+                ifrom = IDS_TIMEOUT1;
                 break;
 
             case 6:
                 hwnd = GetDlgItem(hwndDlg, IDC_STANDBYDCLIST);
-                imin = IDS_TIMEOUT1;
+                ifrom = IDS_TIMEOUT1;
                 break;
 
             case 7:
                 hwnd = GetDlgItem(hwndDlg, IDC_DISKDCLIST);
-                imin = IDS_TIMEOUT3;
+                ifrom = IDS_TIMEOUT3;
                 break;
 
             case 8:
                 hwnd = GetDlgItem(hwndDlg, IDC_HIBERNATEDCLIST);
-                imin = IDS_TIMEOUT3;
+                ifrom = IDS_TIMEOUT3;
                 break;
 
             default:
@@ -389,7 +389,7 @@ Pos_InitPage(HWND hwndDlg)
         if (hwnd == NULL)
             continue;
 
-        for (ifrom = imin; ifrom < (IDS_TIMEOUT15 + 1); ifrom++)
+        for (; ifrom <= IDS_TIMEOUT15; ifrom++)
         {
             if (LoadString(hApplet, ifrom, szName, MAX_PATH))
             {
