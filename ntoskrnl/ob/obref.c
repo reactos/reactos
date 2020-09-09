@@ -513,21 +513,30 @@ ObReferenceObjectByHandle(IN HANDLE Handle,
     /* Assume failure */
     *Object = NULL;
 
+#ifdef ENABLE_DRIVER_VERIFIER_OBREFERENCEOBJECTBYHANDLE
 #if DBG
-        if (ObKernelHandleToHandle(Handle) == NULL &&
-            AccessMode == KernelMode)
+    if (AccessMode == KernelMode)
+    {
+        if (ObKernelHandleToHandle(Handle) == NULL)
         {
+// Disable to ease investigation if need be. (CORE-10207)
+#if TRUE
             KeBugCheckEx(DRIVER_VERIFIER_DETECTED_VIOLATION,
                          0xF5, // NULL handle passed to ObReferenceObjectByHandle.
                          (ULONG_PTR)Handle,
                          (ULONG_PTR)ObjectType,
                          (ULONG_PTR)_ReturnAddress());
+#else
+            ASSERTMSG("0xF5 = NULL handle passed to ObReferenceObjectByHandle\n",
+                      ObKernelHandleToHandle(Handle) != NULL);
+
+            return STATUS_INVALID_HANDLE;
+#endif
         }
 
         CurrentProcess = PsGetCurrentProcess();
         if (CurrentProcess != PsInitialSystemProcess &&
             CurrentProcess != PsIdleProcess &&
-            AccessMode == KernelMode &&
             Handle != (HANDLE)-1 &&
             Handle != (HANDLE)-2)
         {
@@ -539,17 +548,24 @@ ObReferenceObjectByHandle(IN HANDLE Handle,
                                                NULL);
             if (NT_SUCCESS(Status))
             {
-                ASSERT(!NT_SUCCESS(Status));
                 ObDereferenceObject(*Object);
-                if (0)
+
+// TODO: Enable by default when most/all of the code passes. (CORE-10207)
+#if FALSE
                 KeBugCheckEx(DRIVER_VERIFIER_DETECTED_VIOLATION,
                              0xF6, // Referenced a user mode handle as KernelMode.
                              (ULONG_PTR)Handle,
                              (ULONG_PTR)CurrentProcess,
                              (ULONG_PTR)_ReturnAddress());
+#else
+                ASSERTMSG("0xF6 = Referenced a user mode handle as KernelMode\n",
+                          !NT_SUCCESS(Status));
+#endif
             }
         }
+    }
 #endif // DBG
+#endif // ENABLE_DRIVER_VERIFIER_OBREFERENCEOBJECTBYHANDLE
 
     /* Check if this is a special handle */
     if (HandleToLong(Handle) < 0)
