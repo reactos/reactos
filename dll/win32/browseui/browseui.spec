@@ -4,7 +4,7 @@
 @ stdcall -private DllCanUnloadNow()
 105 stdcall -noname SHCreateSavedWindows()
 106 stdcall -noname SHCreateFromDesktop(ptr)
-107 stdcall -noname SHExplorerParseCmdLine(wstr)
+107 stdcall -noname SHExplorerParseCmdLine(ptr)
 @ stdcall -private DllGetClassObject(ptr ptr ptr)
 @ stdcall -private DllGetVersion(ptr)
 @ stdcall -private DllInstall(long wstr)

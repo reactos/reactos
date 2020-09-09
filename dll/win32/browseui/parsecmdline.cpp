@@ -228,7 +228,7 @@ static LPITEMIDLIST _GetDocumentsPidl()
 extern "C"
 UINT_PTR
 WINAPI
-SHExplorerParseCmdLine(ExplorerCommandLineParseResults * pInfo)
+SHExplorerParseCmdLine(_Out_ PEXPLORER_CMDLINE_PARSE_RESULTS pInfo)
 {
     WCHAR   strField[MAX_PATH];
     WCHAR   strDir[MAX_PATH];
