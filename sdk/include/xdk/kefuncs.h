@@ -55,7 +55,7 @@ NTKERNELAPI
 VOID
 NTAPI
 ProbeForRead(
-  __in_data_source(USER_MODE) _In_reads_bytes_(Length) CONST VOID *Address, /* CONST is added */
+  __in_data_source(USER_MODE) _In_ CONST VOID *Address, /* CONST is added */
   _In_ SIZE_T Length,
   _In_ ULONG Alignment);
 #endif /* defined(_NTDDK_) || defined(_NTIFS_) */
