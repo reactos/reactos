@@ -152,10 +152,10 @@ ClockWndProc(HWND hwnd,
             pClockData->hGreyPen = CreatePen(PS_SOLID, 1, RGB(128, 128, 128));
             pClockData->hGreyBrush = CreateSolidBrush(RGB(128, 128, 128));
 
-            SetTimer(hwnd, ID_TIMER, 1000, NULL);
-            pClockData->bTimer = TRUE;
             GetLocalTime(&pClockData->stCurrent);
             pClockData->stPrevious = pClockData->stCurrent;
+
+            pClockData->bTimer = (SetTimer(hwnd, ID_TIMER, 1000, NULL) != 0);
             break;
 
         case WM_SIZE:
@@ -255,8 +255,7 @@ ClockWndProc(HWND hwnd,
         case CLM_STARTCLOCK:
             if (!pClockData->bTimer)
             {
-                SetTimer(hwnd, ID_TIMER, 1000, NULL);
-                pClockData->bTimer = TRUE;
+                pClockData->bTimer = (SetTimer(hwnd, ID_TIMER, 1000, NULL) != 0);
             }
             break;
 
