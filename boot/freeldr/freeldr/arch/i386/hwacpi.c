@@ -75,7 +75,6 @@ DetectAcpiBios(PCONFIGURATION_COMPONENT_DATA SystemKey, ULONG *BusNumber)
         PartialResourceList =
             FrLdrHeapAlloc(sizeof(CM_PARTIAL_RESOURCE_LIST) + TableSize,
                            TAG_HW_RESOURCE_LIST);
-
         if (PartialResourceList == NULL)
         {
             ERR("Failed to allocate resource descriptor\n");
