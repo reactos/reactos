@@ -9132,30 +9132,31 @@ static void SwapShiftRelay(LISTVIEW_INFO *infoPtr, INT iFrom, INT iTo)
 /* hit test for auto-arrange */
 static INT LISTVIEW_HitTestBlank(const LISTVIEW_INFO *infoPtr, POINT pt)
 {
-    INT iItem, x, y, xy0 = -1;
+    INT iItem, x, y, xy0 = 0xFFFF;
     WCHAR sz[64];
-    RECT rc;
+    POINT Origin, Position;
+
+    LISTVIEW_GetOrigin(infoPtr, &Origin);
 
     if (infoPtr->dwStyle & LVS_ALIGNLEFT)
     {
         // vertically
         for (iItem = 0; iItem < infoPtr->nItemCount; ++iItem)
         {
-            rc.left = LVIR_LABEL;
-            LISTVIEW_GetItemRect(infoPtr, iItem, &rc);
-            x = (rc.left + rc.right) / 2 + infoPtr->nItemWidth / 2;
-            y = (rc.top + rc.bottom) / 2;
-            if (xy0 == -1)
+            LISTVIEW_GetItemOrigin(infoPtr, iItem, &Position);
+            x = Position.x + Origin.x + infoPtr->nItemWidth;
+            y = Position.y + Origin.y + infoPtr->iconSize.cy / 2;
+            if (xy0 == 0xFFFF)
                 xy0 = x;
             if (xy0 < x && y < pt.y)
             {
-                wsprintfW(sz, L"x,y:(%d, %d), pt:(%d, %d), rc:(%d, %d, %d, %d), %d", x, y, pt.x, pt.y, rc.left, rc.top, rc.right, rc.bottom, xy0);
+                wsprintfW(sz, L"x,y:(%d, %d), pt:(%d, %d), %d", x, y, pt.x, pt.y, xy0);
                 MessageBoxW(NULL, sz, L"1", 0);
                 return iItem;
             }
             if (pt.y <= y && pt.x <= x)
             {
-                wsprintfW(sz, L"x,y:(%d, %d), pt:(%d, %d), rc:(%d, %d, %d, %d), %d", x, y, pt.x, pt.y, rc.left, rc.top, rc.right, rc.bottom, xy0);
+                wsprintfW(sz, L"x,y:(%d, %d), pt:(%d, %d), %d", x, y, pt.x, pt.y, xy0);
                 MessageBoxW(NULL, sz, L"2", 0);
                 return iItem;
             }
@@ -9167,21 +9168,20 @@ static INT LISTVIEW_HitTestBlank(const LISTVIEW_INFO *infoPtr, POINT pt)
         // horizontally
         for (iItem = 0; iItem < infoPtr->nItemCount; ++iItem)
         {
-            rc.left = LVIR_LABEL;
-            LISTVIEW_GetItemRect(infoPtr, iItem, &rc);
-            y = (rc.top + rc.bottom) / 2 + infoPtr->nItemHeight / 2;
-            x = (rc.left + rc.right) / 2;
-            if (xy0 == -1)
+            LISTVIEW_GetItemOrigin(infoPtr, iItem, &Position);
+            x = Position.x + Origin.x + infoPtr->nItemWidth / 2;
+            y = Position.y + Origin.y + infoPtr->nItemHeight;
+            if (xy0 == 0xFFFF)
                 xy0 = y;
             if (xy0 < y && x < pt.x)
             {
-                wsprintfW(sz, L"x,y:(%d, %d), pt:(%d, %d), rc:(%d, %d, %d, %d), %d", x, y, pt.x, pt.y, rc.left, rc.top, rc.right, rc.bottom, xy0);
+                wsprintfW(sz, L"x,y:(%d, %d), pt:(%d, %d), %d", x, y, pt.x, pt.y, xy0);
                 MessageBoxW(NULL, sz, L"3", 0);
                 return iItem;
             }
             if (pt.x <= x && pt.y <= y)
             {
-                wsprintfW(sz, L"x,y:(%d, %d), pt:(%d, %d), rc:(%d, %d, %d, %d), %d", x, y, pt.x, pt.y, rc.left, rc.top, rc.right, rc.bottom, xy0);
+                wsprintfW(sz, L"x,y:(%d, %d), pt:(%d, %d), %d", x, y, pt.x, pt.y, xy0);
                 MessageBoxW(NULL, sz, L"4", 0);
                 return iItem;
             }
