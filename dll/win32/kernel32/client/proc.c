@@ -1683,7 +1683,7 @@ GetPriorityClass(IN HANDLE hProcess)
 
     /* Failure path */
     BaseSetLastNTError(Status);
-    return FALSE;
+    return 0;
 }
 
 /*
