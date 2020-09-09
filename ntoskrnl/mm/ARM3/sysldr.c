@@ -2533,7 +2533,7 @@ MiWriteProtectSystemImage(
     if (ALIGN_UP_POINTER_BY(SectionEnd, PAGE_SIZE) !=
         Add2Ptr(ImageBase, NtHeaders->OptionalHeader.SizeOfImage))
     {
-        DPRINT1("ImageBase 0x%p ImageSize 0x%lx Section %u VA 0x%lx Raw 0x%lx virt 0x%lx\n",
+        DPRINT1("WARNING: Image does not end with its last section. (ImageBase 0x%p ImageSize 0x%lx Section %lu VA 0x%lx Raw 0x%lx virt 0x%lx)\n",
             ImageBase,
             NtHeaders->OptionalHeader.SizeOfImage,
             i,
