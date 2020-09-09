@@ -47,6 +47,7 @@ TestEntry(
              TESTENTRY_BUFFERED_IO_DEVICE |
              TESTENTRY_NO_READONLY_DEVICE;
 
+    TestFastIoDispatch.SizeOfFastIoDispatch = sizeof(TestFastIoDispatch);
     TestFastIoDispatch.FastIoRead = TestFastIoRead;
     TestFastIoDispatch.FastIoWrite = TestFastIoWrite;
     DriverObject->FastIoDispatch = &TestFastIoDispatch;

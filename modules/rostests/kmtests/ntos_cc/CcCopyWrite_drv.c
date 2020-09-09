@@ -87,10 +87,10 @@ TestEntry(
     KmtRegisterIrpHandler(IRP_MJ_WRITE, NULL, TestIrpHandler);
     KmtRegisterIrpHandler(IRP_MJ_FLUSH_BUFFERS, NULL, TestIrpHandler);
 
+    TestFastIoDispatch.SizeOfFastIoDispatch = sizeof(TestFastIoDispatch);
     TestFastIoDispatch.FastIoRead = FastIoRead;
     TestFastIoDispatch.FastIoWrite = FastIoWrite;
     DriverObject->FastIoDispatch = &TestFastIoDispatch;
-
 
     return Status;
 }
