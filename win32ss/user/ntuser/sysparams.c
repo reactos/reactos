@@ -1490,14 +1490,19 @@ SpiGetSet(UINT uiAction, UINT uiParam, PVOID pvParam, FLONG fl)
             return SpiGetInt(pvParam, &gspv.iMouseHoverTime, fl);
 
         case SPI_SETMOUSEHOVERTIME:
-           /* See http://msdn2.microsoft.com/en-us/library/ms724947.aspx
-            * copy text from it, if some agument why xp and 2003 behovir diffent
-            * only if they do not have SP install
-            * " Windows Server 2003 and Windows XP: The operating system does not
-            *   enforce the use of USER_TIMER_MAXIMUM and USER_TIMER_MINIMUM until
-            *   Windows Server 2003 SP1 and Windows XP SP2 "
-            */
+        {
+            /* Windows XP SP2 and Windows Server 2003 SP1 new behaviour */
+            if (uiParam < USER_TIMER_MINIMUM)
+            {
+               uiParam = USER_TIMER_MINIMUM;
+            }
+            else if (uiParam > USER_TIMER_MAXIMUM)
+            {
+               uiParam = USER_TIMER_MAXIMUM;
+            }
+
             return SpiSetInt(&gspv.iMouseHoverTime, uiParam, KEY_MOUSE, VAL_HOVERTIME, fl);
+        }
 
         case SPI_GETWHEELSCROLLLINES:
             return SpiGetInt(pvParam, &gspv.iWheelScrollLines, fl);
