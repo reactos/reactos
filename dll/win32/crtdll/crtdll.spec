@@ -357,7 +357,7 @@
   @ cdecl cosh(double) msvcrt.cosh
   @ cdecl ctime(ptr) msvcrt.ctime
   @ cdecl difftime(long long) msvcrt.difftime
-  @ cdecl div(long long) msvcrt.div
+  @ cdecl div() msvcrt.div
   @ cdecl exit(long) msvcrt.exit
   @ cdecl exp(double) msvcrt.exp
   @ cdecl fabs(double) msvcrt.fabs
@@ -420,7 +420,7 @@
   @ cdecl isxdigit(long) msvcrt.isxdigit
   @ cdecl labs(long) msvcrt.labs
   @ cdecl ldexp( double long) msvcrt.ldexp
-  @ cdecl ldiv(long long) msvcrt.ldiv
+  @ cdecl ldiv() msvcrt.ldiv
   @ cdecl localeconv() msvcrt.localeconv
   @ cdecl localtime(ptr) msvcrt.localtime
   @ cdecl log(double) msvcrt.log

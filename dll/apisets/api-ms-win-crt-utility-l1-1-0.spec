@@ -13,11 +13,11 @@
 @ stdcall abs() msvcrt.abs
 @ stdcall bsearch() msvcrt.bsearch
 @ stub bsearch_s
-@ stdcall div() msvcrt.div
+@ cdecl div() msvcrt.div
 @ stub imaxabs
 @ stub imaxdiv
 @ stdcall labs() msvcrt.labs
-@ stdcall ldiv() msvcrt.ldiv
+@ cdecl ldiv() msvcrt.ldiv
 @ stub -ret64 llabs
 @ stub lldiv
 @ stdcall qsort() msvcrt.qsort
