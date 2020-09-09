@@ -354,7 +354,6 @@ VOID UnlockHandles( PAFD_HANDLE HandleArray, UINT HandleCount ) {
     }
 
     ExFreePoolWithTag(HandleArray, TAG_AFD_POLL_HANDLE);
-    HandleArray = NULL;
 }
 
 BOOLEAN SocketAcquireStateLock( PAFD_FCB FCB ) {
