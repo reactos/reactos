@@ -127,46 +127,83 @@ MiDbgDumpAddressSpace(VOID)
     //
     DPRINT1("          0x%p - 0x%p\t%s\n",
             KSEG0_BASE,
-            (ULONG_PTR)KSEG0_BASE + MmBootImageSize,
+            (ULONG_PTR)KSEG0_BASE + MmBootImageSize - 1,
             "Boot Loaded Image");
     DPRINT1("          0x%p - 0x%p\t%s\n",
             MmPfnDatabase,
-            (ULONG_PTR)MmPfnDatabase + (MxPfnAllocation << PAGE_SHIFT),
+            (ULONG_PTR)MmPfnDatabase + (MxPfnAllocation << PAGE_SHIFT) - 1,
             "PFN Database");
     DPRINT1("          0x%p - 0x%p\t%s\n",
             MmNonPagedPoolStart,
-            (ULONG_PTR)MmNonPagedPoolStart + MmSizeOfNonPagedPoolInBytes,
+            (ULONG_PTR)MmNonPagedPoolStart + MmSizeOfNonPagedPoolInBytes - 1,
             "ARM3 Non Paged Pool");
     DPRINT1("          0x%p - 0x%p\t%s\n",
             MiSystemViewStart,
-            (ULONG_PTR)MiSystemViewStart + MmSystemViewSize,
+            (ULONG_PTR)MiSystemViewStart + MmSystemViewSize - 1,
             "System View Space");
     DPRINT1("          0x%p - 0x%p\t%s\n",
             MmSessionBase,
-            MiSessionSpaceEnd,
+            (ULONG_PTR)MiSessionSpaceEnd - 1,
             "Session Space");
     DPRINT1("          0x%p - 0x%p\t%s\n",
-            PTE_BASE, PTE_TOP,
+            PTE_BASE,
+            PTE_TOP,
             "Page Tables");
     DPRINT1("          0x%p - 0x%p\t%s\n",
-            PDE_BASE, PDE_TOP,
-            "Page Directories");
+            PDE_BASE,
+            PDE_TOP,
+            "Page Directories (inside Page Tables)");
+#ifdef _M_AMD64
     DPRINT1("          0x%p - 0x%p\t%s\n",
-            HYPER_SPACE, HYPER_SPACE_END,
+            PPE_BASE,
+            PPE_TOP,
+            "PPE (inside Page Directories)");
+    DPRINT1("          0x%p - 0x%p\t%s\n",
+            PXE_BASE,
+            PXE_TOP,
+            "PXE (inside PPE)");
+#endif // _M_AMD64
+    DPRINT1("          0x%p - 0x%p\t%s\n",
+            HYPER_SPACE,
+            HYPER_SPACE_END,
             "Hyperspace");
     DPRINT1("          0x%p - 0x%p\t%s\n",
-            MmSystemCacheStart, MmSystemCacheEnd,
+            MmSystemCacheStart,
+            MmSystemCacheEnd,
             "System Cache");
     DPRINT1("          0x%p - 0x%p\t%s\n",
             MmPagedPoolStart,
-            (ULONG_PTR)MmPagedPoolStart + MmSizeOfPagedPoolInBytes,
+            (ULONG_PTR)MmPagedPoolStart + MmSizeOfPagedPoolInBytes - 1,
             "ARM3 Paged Pool");
     DPRINT1("          0x%p - 0x%p\t%s\n",
-            MmNonPagedSystemStart, MmNonPagedPoolExpansionStart,
+            MmNonPagedSystemStart,
+            (ULONG_PTR)MmNonPagedSystemStart + (MmNumberOfSystemPtes + 1) * PAGE_SIZE - 1,
             "System PTE Space");
     DPRINT1("          0x%p - 0x%p\t%s\n",
-            MmNonPagedPoolExpansionStart, MmNonPagedPoolEnd,
+            MmNonPagedPoolExpansionStart,
+            (ULONG_PTR)MmNonPagedPoolEnd - 1,
             "Non Paged Pool Expansion PTE Space");
+    DPRINT1("          0x%p - 0x%p\t%s\n",
+            MI_DEBUG_MAPPING,
+            (ULONG_PTR)MI_DEBUG_MAPPING + PAGE_SIZE - 1,
+            "Debugger mapping");
+#ifdef _X86_
+    DPRINT1("          0x%p - 0x%p\t%s\n",
+            MM_HAL_VA_START,
+            MM_HAL_VA_END,
+            "Reserved HAL area (includes KUSER_SHARED_DATA and KPCR)");
+#else // _X86_
+#ifndef _M_AMD64
+    DPRINT1("          0x%p - 0x%p\t%s\n",
+            PCR,
+            (ULONG_PTR)PCR + PAGE_SIZE * KeNumberProcessors - 1,
+            "KPCR");
+#endif // _M_AMD64
+    DPRINT1("          0x%p - 0x%p\t%s\n",
+            KI_USER_SHARED_DATA,
+            KI_USER_SHARED_DATA + PAGE_SIZE - 1,
+            "KUSER_SHARED_DATA");
+#endif // _X86_
 }
 
 INIT_FUNCTION
@@ -287,4 +324,3 @@ MmInitSystem(IN ULONG Phase,
 
     return TRUE;
 }
-
