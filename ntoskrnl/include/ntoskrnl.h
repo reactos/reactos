@@ -109,8 +109,8 @@ C_ASSERT(MAX_WIN32_PATH == MAX_PATH);
 #undef MAX_PATH
 
 /* Internal Headers */
-#include "internal/ntoskrnl.h"
 #include "config.h"
+#include "internal/ntoskrnl.h"
 
 #include <reactos/probe.h>
 #include "internal/probe.h"
