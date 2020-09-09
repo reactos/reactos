@@ -120,6 +120,8 @@ ProbeForRead(IN CONST VOID *Address,
         if ((Current & (Alignment - 1)) != 0)
         {
             /* Incorrect alignment */
+            DPRINT1("DatatypeMisalignment (Address %p, Length %Iu, Alignment %lu)\n",
+                    Address, Length, Alignment);
             ExRaiseDatatypeMisalignment();
         }
         
@@ -128,6 +130,8 @@ ProbeForRead(IN CONST VOID *Address,
         if ((Last < Current) || (Last >= (ULONG_PTR)MmUserProbeAddress))
         {
             /* Raise an access violation */
+            DPRINT1("AccessViolation (Address %p, Length %Iu, Alignment %lu)\n",
+                    Address, Length, Alignment);
             ExRaiseAccessViolation();
         }
 
@@ -161,6 +165,8 @@ ProbeForWrite(IN PVOID Address,
         if ((Current & (Alignment - 1)) != 0)
         {
             /* Incorrect alignment */
+            DPRINT1("DatatypeMisalignment (Address %p, Length %Iu, Alignment %lu)\n",
+                    Address, Length, Alignment);
             ExRaiseDatatypeMisalignment();
         }
 
@@ -169,6 +175,8 @@ ProbeForWrite(IN PVOID Address,
         if ((Last < Current) || (Last >= (ULONG_PTR)MmUserProbeAddress))
         {
             /* Raise an access violation */
+            DPRINT1("AccessViolation (Address %p, Length %Iu, Alignment %lu)\n",
+                    Address, Length, Alignment);
             ExRaiseAccessViolation();
         }
 
