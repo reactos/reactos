@@ -103,7 +103,8 @@ _Out_opt_ PUINT PWriteEnd)
     }
     else
     {
-        ok(Info.strPath != NULL && Info.strPath != InvalidPointer, "Line %lu: strPath = %p\n", TestLine, Info.strPath);
+        ok(Info.strPath != InvalidPointer, "Line %lu: strPath = InvalidPointer\n", TestLine);
+        ok(Info.strPath != NULL, "Line %lu: strPath = NULL\n", TestLine);
         if (Info.strPath != NULL && Info.strPath != InvalidPointer)
         {
             ok(!wcscmp(Info.strPath, ExpectedFileName), "Line %lu: strPath = %ls, expected %ls\n", TestLine, Info.strPath, ExpectedFileName);
@@ -126,7 +127,8 @@ _Out_opt_ PUINT PWriteEnd)
         PIDLIST_ABSOLUTE ExpectedPidl;
         HRESULT hr;
 
-        ok(Info.pidlPath != NULL, "Line %lu: pidlPath = %p\n", TestLine, Info.pidlPath);
+        ok(Info.pidlPath != InvalidPointer, "Line %lu: pidlPath = InvalidPointer\n", TestLine);
+        ok(Info.pidlPath != NULL, "Line %lu: pidlPath = NULL\n", TestLine);
         if (Info.pidlPath != NULL && Info.pidlPath != InvalidPointer)
         {
             WCHAR pidlPathName[MAX_PATH] = L"";
@@ -311,17 +313,17 @@ START_TEST(SHExplorerParseCmdLine)
         { __LINE__, L"\"c:\\\" program files", TRUE, PIDL_IS_NULL, 0x02000000, L"c:\\ program files"},
         { __LINE__, L"\"c:\\\", \"c:\\program files\"", TRUE, PIDL_IS_PATH, 0x00000200, NULL, L"C:\\Program Files" },
         { __LINE__, L"c:\\,c:\\program files", TRUE, PIDL_IS_PATH, 0x00000200, NULL, L"C:\\Program Files" },
-        { __LINE__, L"/root", FALSE, CSIDL_MYDOCUMENTS, 0x00000000},
-        { __LINE__, L"\"/root\"", FALSE, CSIDL_MYDOCUMENTS, 0x00000000},
-        { __LINE__, L"/root,", TRUE, CSIDL_MYDOCUMENTS, 0x00000000},
-        { __LINE__, L"/root,c", TRUE, CSIDL_MYDOCUMENTS, 0x00000000},
-        { __LINE__, L"/root,\"\"", TRUE, CSIDL_MYDOCUMENTS, 0x00000000},
-        { __LINE__, L"/root,wrong", TRUE, CSIDL_MYDOCUMENTS, 0x00000000},
-        { __LINE__, L"/root,0", TRUE, CSIDL_MYDOCUMENTS, 0x00000000},
+        { __LINE__, L"/root", FALSE, PIDL_IS_UNTOUCHED, 0x00000000 },
+        { __LINE__, L"\"/root\"", FALSE, PIDL_IS_UNTOUCHED, 0x00000000 },
+        { __LINE__, L"/root,", TRUE, PIDL_IS_UNTOUCHED, 0x00000000 },
+        { __LINE__, L"/root,c", TRUE, PIDL_IS_UNTOUCHED, 0x00000000 },
+        { __LINE__, L"/root,\"\"", TRUE, PIDL_IS_UNTOUCHED, 0x00000000 },
+        { __LINE__, L"/root,wrong", TRUE, PIDL_IS_UNTOUCHED, 0x00000000 },
+        { __LINE__, L"/root,0", TRUE, PIDL_IS_UNTOUCHED, 0x00000000 },
         { __LINE__, L"/root,c:\\", TRUE, PIDL_PATH_EQUALS_PATH, 0x00000000, NULL, L"c:\\" },
         { __LINE__, L"/root,\"c:\\\"", TRUE, PIDL_PATH_EQUALS_PATH, 0x00000000, NULL, L"c:\\" },
         { __LINE__, L"/root \"c:\\\"", TRUE, PIDL_IS_NULL, 0x02000000, L"/root c:\\"},
-        { __LINE__, L"/root,\"c:\\\"\"program files\"", TRUE, PIDL_IS_PATH, 0x00000000},
+        { __LINE__, L"/root,\"c:\\\"\"program files\"", TRUE, PIDL_IS_UNTOUCHED, 0x00000000 },
         { __LINE__, L"/root,\"c:\\\"program files", TRUE, PIDL_PATH_EQUALS_PATH, 0x00000000, NULL, L"c:\\Program Files" },
         { __LINE__, L"/root,c:\\,c:\\Program Files", TRUE, PIDL_IS_PATH, 0x00000200, NULL, L"C:\\Program Files" },
         { __LINE__, L"/root,c:\\,Program Files", TRUE, PIDL_IS_NULL, 0x02000000, L"Program Files"},
@@ -330,7 +332,7 @@ START_TEST(SHExplorerParseCmdLine)
 //        { __LINE__, L"a:\\,/root,c:\\", TRUE, PIDL_PATH_EQUALS_PATH, 0x00000200, NULL, L"c:\\" },
 //        { __LINE__, L"a:\\,/root,c", TRUE, PIDL_IS_PATH, 0x00000200, NULL, L"A:\\" },
         { __LINE__, L"c:\\,/root,c", TRUE, PIDL_IS_PATH, 0x00000200, NULL, L"C:\\" },
-        { __LINE__, L"/select", TRUE, CSIDL_MYDOCUMENTS, 0x00000040},
+        { __LINE__, L"/select", TRUE, PIDL_IS_UNTOUCHED, 0x00000040 },
         { __LINE__, L"/select,", TRUE, CSIDL_DRIVES, 0x00000240 },
         { __LINE__, L"/select,c", TRUE, PIDL_IS_NULL, 0x02000040, L"c"},
         { __LINE__, L"/select,0", TRUE, PIDL_IS_NULL, 0x02000040, L"0"},
@@ -347,7 +349,7 @@ START_TEST(SHExplorerParseCmdLine)
 //        { __LINE__, L"a:\\,/select,c:\\", TRUE, PIDL_IS_PATH, 0x00000240, NULL, L"C:\\" },
         { __LINE__, L"a:\\,/select,c", TRUE, PIDL_IS_NULL, 0x02000040, L"c"},
         { __LINE__, L"c:\\,/select,c", TRUE, PIDL_IS_NULL, 0x02000240, L"c"},
-        { __LINE__, L"/e", TRUE, CSIDL_MYDOCUMENTS, 0x00000008},
+        { __LINE__, L"/e", TRUE, PIDL_IS_UNTOUCHED, 0x00000008 },
         { __LINE__, L"/e,", TRUE, CSIDL_DRIVES, 0x00000208 },
         { __LINE__, L"/e,\"", TRUE, CSIDL_DRIVES, 0x00000208 },
         { __LINE__, L"/e,\"\"", TRUE, CSIDL_DRIVES, 0x00000208 },
@@ -367,7 +369,7 @@ START_TEST(SHExplorerParseCmdLine)
         { __LINE__, L"http:\\\\www.reactos.org", TRUE, PIDL_IS_NULL, 0x02000000, L"http:\\\\www.reactos.org"},
         { __LINE__, L"/e,http:\\\\www.reactos.org", TRUE, PIDL_IS_NULL, 0x02000008, L"http:\\\\www.reactos.org"},
         { __LINE__, L"/root,c:\\,http:\\\\www.reactos.org", TRUE, PIDL_IS_NULL, 0x02000000, L"http:\\\\www.reactos.org"},
-        { __LINE__, L"/separate ", TRUE, CSIDL_MYDOCUMENTS, 0x00020000},
+        { __LINE__, L"/separate ", TRUE, PIDL_IS_UNTOUCHED, 0x00020000 },
         { __LINE__, L"/separate,c:\\ program files", TRUE, PIDL_IS_NULL, 0x02020000, L"c:\\ program files"},
         { __LINE__, L"/separate,           c:\\program files", TRUE, PIDL_IS_PATH, 0x00020200, NULL, L"C:\\Program Files" },
         { __LINE__, L"/separate,           c:\\program files           ,/e", TRUE, PIDL_IS_PATH, 0x00020208, NULL, L"C:\\Program Files" },
@@ -413,10 +415,10 @@ START_TEST(SHExplorerParseCmdLine)
         { __LINE__, L"\"\"\"", TRUE, PIDL_IS_NULL, 0x02000000, L"\""},
         { __LINE__, L"\"\"\"\"", TRUE, PIDL_IS_NULL, 0x02000000, L"\""},
         { __LINE__, L"\"\"\"\"\"", TRUE, PIDL_IS_NULL, 0x02000000, L"\"\""},
-        { __LINE__, L"/s", TRUE, CSIDL_MYDOCUMENTS, 0x00000002},
-        { __LINE__, L"/noui", TRUE, CSIDL_MYDOCUMENTS, 0x00001000},
+        { __LINE__, L"/s", TRUE, PIDL_IS_UNTOUCHED, 0x00000002 },
+        { __LINE__, L"/noui", TRUE, PIDL_IS_UNTOUCHED, 0x00001000 },
         { __LINE__, L"/idlist", TRUE, PIDL_IS_UNTOUCHED, 0x00000000},
-        { __LINE__, L"-embedding", TRUE, CSIDL_MYDOCUMENTS, 0x00000080 },
+        { __LINE__, L"-embedding", TRUE, PIDL_IS_UNTOUCHED, 0x00000080 },
         { __LINE__, L"/inproc", FALSE, PIDL_IS_UNTOUCHED, 0x00000000 },
         { __LINE__, L"/inproc,1", FALSE, PIDL_IS_UNTOUCHED, 0x00000000 },
         { __LINE__, L"/inproc,a", FALSE, PIDL_IS_UNTOUCHED, 0x00000000 },
