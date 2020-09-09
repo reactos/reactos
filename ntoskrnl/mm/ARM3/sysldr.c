@@ -3250,8 +3250,12 @@ LoaderScan:
 
     /* Write-protect the system image */
 #if !defined(CORE_16449_IS_FIXED) && DBG
-    DPRINT1("(CORE-16449) Calling MiWriteProtectSystemImage(%p) for %wZ\n",
-            LdrEntry->DllBase, &LdrEntry->FullDllName);
+    if (wcscmp(LdrEntry->BaseDllName.Buffer, L"ftfd.dll"  ) == 0 ||
+        wcscmp(LdrEntry->BaseDllName.Buffer, L"win32k.sys") == 0)
+    {
+        DPRINT1("(CORE-16449) Calling MiWriteProtectSystemImage(%p) for %wZ\n",
+                LdrEntry->DllBase, &LdrEntry->FullDllName);
+    }
 #endif
 #if defined(CORE_16449_IS_FIXED) || DBG
     MiWriteProtectSystemImage(LdrEntry->DllBase);
