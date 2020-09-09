@@ -2415,8 +2415,8 @@ MiSetSystemCodeProtection(
         /* Make sure it's valid */
         if (TempPte.u.Hard.Valid != 1)
         {
-            DPRINT1("CORE-16449: FirstPte=%p, LastPte=%p, Protection=%lx\n", FirstPte, LastPte, Protection);
-            DPRINT1("CORE-16449: PointerPte=%p, TempPte=%lx\n", PointerPte, TempPte.u.Long);
+            DPRINT1("CORE-16449: FirstPte=%p, LastPte=%p, Protection=0x%08lx\n", FirstPte, LastPte, Protection);
+            DPRINT1("CORE-16449: PointerPte=%p, TempPte=0x%08lx\n", PointerPte, TempPte.u.Long);
             DPRINT1("CORE-16449: Please issue the 'mod' and 'bt' (KDBG) or 'lm' and 'kp' (WinDbg) commands. Then report this in Jira.\n");
             ASSERT(TempPte.u.Hard.Valid == 1);
             break;
