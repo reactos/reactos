@@ -16,6 +16,10 @@
 #define MODULE_INVOLVED_IN_ARM3
 #include <mm/ARM3/miarm.h>
 
+#if !defined(CORE_16449_IS_FIXED) && DBG
+static BOOLEAN MWPSI_IsCore16449 = FALSE;
+#endif
+
 static
 inline
 VOID
@@ -2533,6 +2537,13 @@ MiWriteProtectSystemImage(
         Protection = (Section->Characteristics & IMAGE_SCN_PROTECTION_MASK);
 
         /* Update the protection for this section */
+#if !defined(CORE_16449_IS_FIXED) && DBG
+    if (MWPSI_IsCore16449)
+    {
+        DPRINT1("(CORE-16449) Section %lu, Calling MiSetSystemCodeProtection(%p, %p, 0x%08lx)\n",
+                i, FirstPte, LastPte, Protection);
+    }
+#endif
         MiSetSystemCodeProtection(FirstPte, LastPte, Protection);
     }
 
@@ -3253,12 +3264,16 @@ LoaderScan:
     if (wcscmp(LdrEntry->BaseDllName.Buffer, L"ftfd.dll"  ) == 0 ||
         wcscmp(LdrEntry->BaseDllName.Buffer, L"win32k.sys") == 0)
     {
+        MWPSI_IsCore16449 = TRUE;
         DPRINT1("(CORE-16449) Calling MiWriteProtectSystemImage(%p) for %wZ\n",
                 LdrEntry->DllBase, &LdrEntry->FullDllName);
     }
 #endif
 #if defined(CORE_16449_IS_FIXED) || DBG
     MiWriteProtectSystemImage(LdrEntry->DllBase);
+#endif
+#if !defined(CORE_16449_IS_FIXED) && DBG
+    MWPSI_IsCore16449 = FALSE;
 #endif
 
     /* Check if notifications are enabled */
