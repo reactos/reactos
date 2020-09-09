@@ -4,8 +4,7 @@
  * PURPOSE:         Utility functions
  * COPYRIGHT:       Copyright 2020 Arnav Bhatt (arnavbhatt288 at gmail dot com)
  */
- 
-#include "resource.h"
+
 #include "precomp.h"
 
 #define KB 1024

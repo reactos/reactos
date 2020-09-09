@@ -4,8 +4,7 @@
  * PURPOSE:         Main file
  * COPYRIGHT:       Copyright 2020 Arnav Bhatt (arnavbhatt288 at gmail dot com)
  */
- 
-#include "resource.h"
+
 #include "precomp.h"
 
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,

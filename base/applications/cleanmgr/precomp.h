@@ -12,6 +12,8 @@
 #define ONLY_PHYSICAL_DRIVE 3
 #define ARR_MAX_SIZE 512
 
+#include "resource.h"
+
 #include <windows.h>
 #include <windowsx.h>
 #include <wchar.h>
