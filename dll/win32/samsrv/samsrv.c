@@ -650,10 +650,12 @@ SamIFree_SAMPR_USER_INFO_BUFFER(PSAMPR_USER_INFO_BUFFER Ptr,
         case UserScriptInformation:
             if (Ptr->Script.ScriptPath.Buffer != NULL)
                 MIDL_user_free(Ptr->Script.ScriptPath.Buffer);
+            break;
 
         case UserProfileInformation:
             if (Ptr->Profile.ProfilePath.Buffer != NULL)
                 MIDL_user_free(Ptr->Profile.ProfilePath.Buffer);
+            break;
 
         case UserAdminCommentInformation:
             if (Ptr->AdminComment.AdminComment.Buffer != NULL)
