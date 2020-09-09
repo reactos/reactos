@@ -83,7 +83,14 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
     ULONG_PTR Wow64 = 0;
     PROCESS_VALUES ProcessValues;
     ULONG Flags;
+
     PAGED_CODE();
+
+    /* Explicit report, though will return STATUS_INFO_LENGTH_MISMATCH */
+    if (ProcessInformationLength == 0)
+    {
+        DPRINT1("Invalid value: ProcessInformationLength == 0\n");
+    }
 
     /* Check for user-mode caller */
     if (PreviousMode != KernelMode)
