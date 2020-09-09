@@ -96,7 +96,7 @@
 #define MI_IS_PAGE_WRITEABLE(x)    ((x)->u.Hard.Writable == 1)
 #endif
 #define MI_IS_PAGE_COPY_ON_WRITE(x)((x)->u.Hard.CopyOnWrite == 1)
-#ifdef _X86PAE_
+#if _MI_HAS_NO_EXECUTE
 #define MI_IS_PAGE_EXECUTABLE(x)   ((x)->u.Hard.NoExecute == 0)
 #else
 #define MI_IS_PAGE_EXECUTABLE(x)   TRUE
