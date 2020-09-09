@@ -40,7 +40,7 @@ extern void func_NtSystemInformation(void);
 extern void func_NtUnloadDriver(void);
 extern void func_NtWriteFile(void);
 extern void func_RtlAllocateHeap(void);
-extern void func_RtlBitmap(void);
+extern void func_RtlBitmapApi(void);
 extern void func_RtlComputePrivatizedDllName_U(void);
 extern void func_RtlCopyMappedMemory(void);
 extern void func_RtlDebugInformation(void);
@@ -114,7 +114,7 @@ const struct test winetest_testlist[] =
     { "NtUnloadDriver",                 func_NtUnloadDriver },
     { "NtWriteFile",                    func_NtWriteFile },
     { "RtlAllocateHeap",                func_RtlAllocateHeap },
-    { "RtlBitmapApi",                   func_RtlBitmap },
+    { "RtlBitmapApi",                   func_RtlBitmapApi },
     { "RtlComputePrivatizedDllName_U",  func_RtlComputePrivatizedDllName_U },
     { "RtlCopyMappedMemory",            func_RtlCopyMappedMemory },
     { "RtlDebugInformation",            func_RtlDebugInformation },
