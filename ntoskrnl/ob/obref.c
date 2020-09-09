@@ -513,6 +513,44 @@ ObReferenceObjectByHandle(IN HANDLE Handle,
     /* Assume failure */
     *Object = NULL;
 
+#if DBG
+        if (ObKernelHandleToHandle(Handle) == NULL &&
+            AccessMode == KernelMode)
+        {
+            KeBugCheckEx(DRIVER_VERIFIER_DETECTED_VIOLATION,
+                         0xF5, // NULL handle passed to ObReferenceObjectByHandle.
+                         (ULONG_PTR)Handle,
+                         (ULONG_PTR)ObjectType,
+                         (ULONG_PTR)_ReturnAddress());
+        }
+
+        CurrentProcess = PsGetCurrentProcess();
+        if (CurrentProcess != PsInitialSystemProcess &&
+            CurrentProcess != PsIdleProcess &&
+            AccessMode == KernelMode &&
+            Handle != (HANDLE)-1 &&
+            Handle != (HANDLE)-2)
+        {
+            Status = ObReferenceObjectByHandle(Handle,
+                                               0,
+                                               NULL,
+                                               UserMode,
+                                               Object,
+                                               NULL);
+            if (NT_SUCCESS(Status))
+            {
+                ASSERT(!NT_SUCCESS(Status));
+                ObDereferenceObject(*Object);
+                if (0)
+                KeBugCheckEx(DRIVER_VERIFIER_DETECTED_VIOLATION,
+                             0xF6, // Referenced a user mode handle as KernelMode.
+                             (ULONG_PTR)Handle,
+                             (ULONG_PTR)CurrentProcess,
+                             (ULONG_PTR)_ReturnAddress());
+            }
+        }
+#endif // DBG
+
     /* Check if this is a special handle */
     if (HandleToLong(Handle) < 0)
     {
