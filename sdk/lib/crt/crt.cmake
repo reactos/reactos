@@ -292,7 +292,7 @@ list(APPEND CRT_SOURCE
     string/strtod.c
     string/strtoi64.c
     string/strtok.c
-    #string/strtok_s.c
+    string/strtok_s.c
     string/strtol.c
     string/strtoul.c
     string/strtoull.c
