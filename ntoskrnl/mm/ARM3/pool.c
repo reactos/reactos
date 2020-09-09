@@ -549,7 +549,7 @@ MiAllocatePoolPages(IN POOL_TYPE PoolType,
                 PageFrameNumber = MiRemoveAnyPage(MI_GET_NEXT_COLOR());
                 TempPde.u.Hard.PageFrameNumber = PageFrameNumber;
 #if (_MI_PAGING_LEVELS >= 3)
-                /* On PAE/x64 systems, there's no double-buffering */
+                /* On x64 systems, there's no double-buffering */
                 /* Initialize the PFN entry for it */
                 MiInitializePfnForOtherProcess(PageFrameNumber,
                                                (PMMPTE)PointerPde,

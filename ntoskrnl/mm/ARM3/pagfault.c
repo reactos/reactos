@@ -1764,7 +1764,7 @@ MmArmAccessFault(IN ULONG FaultCode,
             (PointerPxe->u.Hard.Valid == 0) ||
 #endif
 #if (_MI_PAGING_LEVELS >= 3)
-            /* PAE/AMD64 system, check if PPE is invalid */
+            /* AMD64 system, check if PPE is invalid */
             (PointerPpe->u.Hard.Valid == 0) ||
 #endif
             /* Always check if the PDE is valid */

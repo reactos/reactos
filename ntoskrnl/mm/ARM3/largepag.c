@@ -33,8 +33,8 @@ VOID
 NTAPI
 MiInitializeLargePageSupport(VOID)
 {
-#if _MI_PAGING_LEVELS > 2
-    DPRINT1("MiInitializeLargePageSupport: PAE/x64 Not Implemented\n");
+#if _MI_PAGING_LEVELS >= 3
+    DPRINT1("MiInitializeLargePageSupport: x64 Not Implemented\n");
     //ASSERT(FALSE);
 #else
     /* Initialize the large-page hyperspace PTE used for initial mapping */

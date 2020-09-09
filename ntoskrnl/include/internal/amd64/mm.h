@@ -3,7 +3,9 @@
  */
 #pragma once
 
+// IA-32e paging, using 4-KByte pages.
 #define _MI_PAGING_LEVELS 4
+
 #define _MI_HAS_NO_EXECUTE 1
 
 /* Memory layout base addresses (This is based on Vista!) */
