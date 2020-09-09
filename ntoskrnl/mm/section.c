@@ -5052,12 +5052,39 @@ MmCreateSection (OUT PVOID  * Section,
     // This is needed only in the old case.
     if (FileHandle)
     {
+        HANDLE KernelFileHandle;
         IO_STATUS_BLOCK Iosb;
         NTSTATUS Status;
         CHAR Buffer;
         LARGE_INTEGER ByteOffset;
+
+        // Enforce using a kernel handle.
+        if (((ULONG_PTR)FileHandle & KERNEL_HANDLE_FLAG) == KERNEL_HANDLE_FLAG)
+        {
+            KernelFileHandle = FileHandle;
+        }
+        else
+        {
+            // Create a kernel handle from the pointer.
+            Status = ObOpenObjectByPointer(FileObject,
+                                           OBJ_KERNEL_HANDLE,
+                                           NULL,
+                                           FILE_READ_DATA | FILE_WRITE_DATA,
+                                           IoFileObjectType,
+                                           KernelMode,
+                                           &KernelFileHandle);
+            if (!NT_SUCCESS(Status))
+            {
+                DPRINT1("ObOpenObjectByPointer(%p, OBJ_KERNEL_HANDLE) failed: 0x%08lx\n",
+                        FileObject, Status);
+
+                // Use the user handle, as fallback.
+                KernelFileHandle = FileHandle;
+            }
+        }
+
         ByteOffset.QuadPart = 0;
-        Status = ZwReadFile(FileHandle,
+        Status = ZwReadFile(KernelFileHandle,
                             NULL,
                             NULL,
                             NULL,
@@ -5069,19 +5096,25 @@ MmCreateSection (OUT PVOID  * Section,
         if (!NT_SUCCESS(Status) && Status != STATUS_END_OF_FILE)
         {
             DPRINT1("CC failure: %lx\n", Status);
+
+            if (KernelFileHandle != FileHandle)
+            {
+                ZwClose(KernelFileHandle);
+            }
+
             if (FileObject)
                 ObDereferenceObject(FileObject);
             return Status;
         }
         // Caching is initialized...
 
-        // Hack of the hack: actually, it might not be initialized if FSD init on effective right and if file is null-size
-        // In such case, force cache by initiating a write IRP
+        // Hack of the hack: actually, it might not be initialized if FSD init on effective read and if file is null-size.
+        // In such case, force cache by initiating a write IRP.
         if (Status == STATUS_END_OF_FILE && !(AllocationAttributes & SEC_IMAGE) && FileObject != NULL &&
             (FileObject->SectionObjectPointer == NULL || FileObject->SectionObjectPointer->SharedCacheMap == NULL))
         {
             Buffer = 0xdb;
-            Status = ZwWriteFile(FileHandle,
+            Status = ZwWriteFile(KernelFileHandle,
                                  NULL,
                                  NULL,
                                  NULL,
@@ -5101,6 +5134,11 @@ MmCreateSection (OUT PVOID  * Section,
                                           &Zero);
                 ASSERT(NT_SUCCESS(Status));
             }
+        }
+
+        if (KernelFileHandle != FileHandle)
+        {
+            ZwClose(KernelFileHandle);
         }
     }
 #endif
