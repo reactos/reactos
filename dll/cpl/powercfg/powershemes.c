@@ -383,7 +383,6 @@ Pos_InitPage(HWND hwndDlg)
                 break;
 
             default:
-                hwnd = NULL;
                 return;
         }
 
