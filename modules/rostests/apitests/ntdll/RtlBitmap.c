@@ -580,21 +580,29 @@ Test_RtlFindNextForwardRunClear(void)
 void
 Test_RtlFindFirstRunClear(void)
 {
+  todo_if(TRUE)
+    ok(FALSE, "%s() is UNIMPLEMENTED\n", __FUNCTION__);
 }
 
 void
 Test_RtlFindLastBackwardRunClear(void)
 {
+  todo_if(TRUE)
+    ok(FALSE, "%s() is UNIMPLEMENTED\n", __FUNCTION__);
 }
 
 void
 Test_RtlFindClearRuns(void)
 {
+  todo_if(TRUE)
+    ok(FALSE, "%s() is UNIMPLEMENTED\n", __FUNCTION__);
 }
 
 void
 Test_RtlFindLongestRunClear(void)
 {
+  todo_if(TRUE)
+    ok(FALSE, "%s() is UNIMPLEMENTED\n", __FUNCTION__);
 }
 
 START_TEST(RtlBitmapApi)
