@@ -341,8 +341,7 @@ static BOOL SearchFile(LPCWSTR lpFilePath, _SearchData *pSearchData)
         return FALSE;
 
     ENCODING encoding;
-    DWORD cbScanSize = (size > 4 * 1024) ? (4 * 1024) : size; // limit of 4 KB
-    IsDataUnicode(pbContents, cbScanSize, &encoding, NULL);
+    IsDataUnicode(pbContents, size, &encoding, NULL);
 
     BOOL bFound;
     switch (encoding)
