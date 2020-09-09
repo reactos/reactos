@@ -368,7 +368,7 @@ FASTCALL
 StartTheTimers(VOID)
 {
   // Need to start gdi syncro timers then start timer with Hang App proc
-  // that calles Idle process so the screen savers will know to run......
+  // that calls Idle process so the screen savers will know to run...
   IntSetTimer(NULL, 0, 1000, HungAppSysTimerProc, TMRF_RIT);
 // Test Timers
 //  IntSetTimer(NULL, 0, 1000, SystemTimerProc, TMRF_RIT);
