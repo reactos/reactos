@@ -280,9 +280,9 @@ KeIsWaitListEmpty(IN PVOID Object)
  */
 NTSTATUS
 NTAPI
-KeDelayExecutionThread(IN KPROCESSOR_MODE WaitMode,
-                       IN BOOLEAN Alertable,
-                       IN PLARGE_INTEGER Interval OPTIONAL)
+KeDelayExecutionThread(_In_ KPROCESSOR_MODE WaitMode,
+                       _In_ BOOLEAN Alertable,
+                       _In_ PLARGE_INTEGER Interval)
 {
     PKTIMER Timer;
     PKWAIT_BLOCK TimerBlock;
