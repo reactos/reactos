@@ -5099,7 +5099,7 @@ MmCreateSection (OUT PVOID  * Section,
 
             if (KernelFileHandle != FileHandle)
             {
-                ZwClose(KernelFileHandle);
+                ObCloseHandle(KernelFileHandle, KernelMode);
             }
 
             if (FileObject)
@@ -5138,7 +5138,7 @@ MmCreateSection (OUT PVOID  * Section,
 
         if (KernelFileHandle != FileHandle)
         {
-            ZwClose(KernelFileHandle);
+            ObCloseHandle(KernelFileHandle, KernelMode);
         }
     }
 #endif
