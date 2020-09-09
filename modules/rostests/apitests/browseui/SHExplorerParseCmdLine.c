@@ -201,19 +201,26 @@ _Out_opt_ PUINT PWriteEnd)
 
     for (i = 0; i < sizeof(Info) / sizeof(DWORD); i++)
     {
-        switch (i*4)
+        switch (i * sizeof(DWORD))
         {
-        case 0x00: // strPath
-        case 0x04: // pidlPath
-        case 0x08: // dwFlags
-        case 0x20: // pidlRoot
-        case 0x34: // guidInproc (1/4)
-        case 0x38: // guidInproc (2/4)
-        case 0x3C: // guidInproc (3/4)
-        case 0x40: // guidInproc (4/4)
-            break;
-        default:
-            ok(InfoWords[i] == 0x55555555, "Line %lu: Word 0x%02lx has been set to 0x%08lx\n", TestLine, i * 4, InfoWords[i]);
+            case FIELD_OFFSET(EXPLORER_CMDLINE_PARSE_RESULTS, strPath):
+            case FIELD_OFFSET(EXPLORER_CMDLINE_PARSE_RESULTS, pidlPath):
+            case FIELD_OFFSET(EXPLORER_CMDLINE_PARSE_RESULTS, dwFlags):
+            // TODO: 'case FIELD_OFFSET(EXPLORER_CMDLINE_PARSE_RESULTS, nCmdShow):'?
+            case FIELD_OFFSET(EXPLORER_CMDLINE_PARSE_RESULTS, pidlRoot):
+            // TODO: 'case FIELD_OFFSET(EXPLORER_CMDLINE_PARSE_RESULTS, clsid):'?
+            case FIELD_OFFSET(EXPLORER_CMDLINE_PARSE_RESULTS, guidInproc) + (0 * sizeof(DWORD)):
+            case FIELD_OFFSET(EXPLORER_CMDLINE_PARSE_RESULTS, guidInproc) + (1 * sizeof(DWORD)):
+            case FIELD_OFFSET(EXPLORER_CMDLINE_PARSE_RESULTS, guidInproc) + (2 * sizeof(DWORD)):
+            case FIELD_OFFSET(EXPLORER_CMDLINE_PARSE_RESULTS, guidInproc) + (3 * sizeof(DWORD)):
+#ifdef _WIN64
+            case FIELD_OFFSET(EXPLORER_CMDLINE_PARSE_RESULTS, strPath) + sizeof(DWORD):
+            case FIELD_OFFSET(EXPLORER_CMDLINE_PARSE_RESULTS, pidlPath) + sizeof(DWORD):
+            case FIELD_OFFSET(EXPLORER_CMDLINE_PARSE_RESULTS, pidlRoot) + sizeof(DWORD):
+#endif
+                break;
+            default:
+                ok(InfoWords[i] == 0x55555555, "Line %lu: Word 0x%02lx has been set to 0x%08lx\n", TestLine, i * sizeof(DWORD), InfoWords[i]);
         }
     }
 
