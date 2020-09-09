@@ -97,7 +97,7 @@ KiInitializePcr(IN PKIPCR Pcr,
     USHORT Tr = 0;
 
     /* Zero out the PCR */
-    RtlZeroMemory(Pcr, sizeof(KIPCR));
+    RtlZeroMemory(Pcr, sizeof(*Pcr));
 
     /* Set pointers to ourselves */
     Pcr->Self = (PKPCR)Pcr;
@@ -147,10 +147,6 @@ KiInitializePcr(IN PKIPCR Pcr,
 
     /* Setup the processor set */
     Pcr->Prcb.MultiThreadProcessorSet = Pcr->Prcb.SetMember;
-
-    /* Clear DR6/7 to cleanup bootloader debugging */
-    Pcr->Prcb.ProcessorState.SpecialRegisters.KernelDr6 = 0;
-    Pcr->Prcb.ProcessorState.SpecialRegisters.KernelDr7 = 0;
 
     /* Set the Current Thread */
     Pcr->Prcb.CurrentThread = IdleThread;

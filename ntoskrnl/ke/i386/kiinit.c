@@ -341,6 +341,9 @@ KiInitializePcr(IN ULONG ProcessorNumber,
                 IN PKTHREAD IdleThread,
                 IN PVOID DpcStack)
 {
+    /* Zero out the PCR */
+    RtlZeroMemory(Pcr, sizeof(*Pcr));
+
     /* Setup the TIB */
     Pcr->NtTib.ExceptionList = EXCEPTION_CHAIN_END;
     Pcr->NtTib.StackBase = 0;
@@ -760,7 +763,6 @@ KiSystemStartup(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     Ki386InitializeTss(Tss, Idt, Gdt);
 
     /* Initialize the PCR */
-    RtlZeroMemory(Pcr, PAGE_SIZE);
     KiInitializePcr(Cpu,
                     Pcr,
                     Idt,

@@ -183,6 +183,9 @@ KiInitializePcr(IN ULONG ProcessorNumber,
 {
     ULONG i;
 
+    /* Zero out the PCR */
+    RtlZeroMemory(Pcr, sizeof(*Pcr));
+
     /* Set the Current Thread */
     Pcr->Prcb.CurrentThread = IdleThread;
 
@@ -356,7 +359,6 @@ KiInitializeSystem(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     if (Cpu) goto AppCpuInit;
 
     /* Initialize the PCR */
-    RtlZeroMemory(Pcr, PAGE_SIZE);
     KiInitializePcr(Cpu,
                     Pcr,
                     InitialThread,

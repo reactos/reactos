@@ -85,6 +85,9 @@ KiInitializePcr(IN ULONG ProcessorNumber,
                 IN PKTHREAD IdleThread,
                 IN PVOID DpcStack)
 {
+    /* Zero out the PCR */
+    RtlZeroMemory(Pcr, sizeof(*Pcr));
+
     Pcr->MajorVersion = PCR_MAJOR_VERSION;
     Pcr->MinorVersion = PCR_MINOR_VERSION;
     Pcr->CurrentIrql = PASSIVE_LEVEL;
@@ -298,7 +301,6 @@ KiSystemStartupReal(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     if (Cpu) goto AppCpuInit;
 
     /* Initialize the PCR */
-    RtlZeroMemory(Pcr, PAGE_SIZE);
     KiInitializePcr(Cpu,
                     Pcr,
                     &KiInitialThread.Tcb,
