@@ -167,8 +167,8 @@ KiSwitchKernelStack(PVOID StackBase, PVOID StackLimit)
     return OldStackBase;
 }
 
+DECLSPEC_NORETURN
 VOID
-FASTCALL
 KiIdleLoop(VOID)
 {
     PKPRCB Prcb = KeGetCurrentPrcb();
