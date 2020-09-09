@@ -330,6 +330,9 @@ static BOOL SearchFile(LPCWSTR lpFilePath, _SearchData *pSearchData)
         return FALSE;
     }
 
+    if (size > 4 * 1024) // limit of 4 KB
+        size = 4 * 1024;
+
     HANDLE hFileMap = CreateFileMappingW(hFile, NULL, PAGE_READONLY, 0, size, NULL);
     CloseHandle(hFile);
     if (hFileMap == INVALID_HANDLE_VALUE)
@@ -339,9 +342,6 @@ static BOOL SearchFile(LPCWSTR lpFilePath, _SearchData *pSearchData)
     CloseHandle(hFileMap);
     if (!pbContents)
         return FALSE;
-
-    if (size > 4 * 1024) // limit of 4 KB
-        size = 4 * 1024;
 
     ENCODING encoding;
     IsDataUnicode(pbContents, size, &encoding, NULL);
