@@ -740,6 +740,7 @@ VOID
 NTAPI
 KiInitializeBugCheck(VOID);
 
+DECLSPEC_NORETURN
 VOID
 NTAPI
 KiSystemStartup(
