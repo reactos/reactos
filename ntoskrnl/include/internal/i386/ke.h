@@ -792,10 +792,11 @@ KiCheckForApcDelivery(IN PKTRAP_FRAME TrapFrame)
 // Switches from boot loader to initial kernel stack
 //
 FORCEINLINE
+DECLSPEC_NORETURN
 VOID
 KiSwitchToBootStack(IN ULONG_PTR InitialStack)
 {
-    VOID NTAPI KiSystemStartupBootStack(VOID);
+    DECLSPEC_NORETURN VOID NTAPI KiSystemStartupBootStack(VOID);
 
     /* We have to switch to a new stack before continuing kernel initialization */
 #ifdef __GNUC__
@@ -823,6 +824,8 @@ KiSwitchToBootStack(IN ULONG_PTR InitialStack)
 #else
 #error Unknown Compiler
 #endif
+
+    UNREACHABLE;
 }
 
 //
