@@ -45,10 +45,18 @@ add_compile_options(-pipe -fms-extensions -fno-strict-aliasing)
 # The case for C++ is handled through the reactos_c++ INTERFACE library
 add_compile_options("$<$<NOT:$<COMPILE_LANGUAGE:CXX>>:-nostdinc>")
 
-add_compile_options(-mstackrealign -fno-aggressive-loop-optimizations)
+add_compile_options(-mstackrealign)
 
-if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
+if(NOT CMAKE_C_COMPILER_ID STREQUAL "Clang")
+    add_compile_options(-fno-aggressive-loop-optimizations)
+    if (DBG)
+        add_compile_options("$<$<COMPILE_LANGUAGE:C>:-Wold-style-declaration>")
+    endif()
+else()
     add_compile_options("$<$<COMPILE_LANGUAGE:C>:-std=gnu99;-Wno-microsoft>")
+    add_compile_options(-Wno-pragma-pack)
+    add_compile_options(-fno-associative-math)
+    add_compile_options(-fcommon)
     set(CMAKE_LINK_DEF_FILE_FLAG "")
     set(CMAKE_STATIC_LIBRARY_SUFFIX ".a")
     set(CMAKE_LINK_LIBRARY_SUFFIX "")
@@ -60,12 +68,6 @@ if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
     set(CMAKE_ASM_FLAGS_DEBUG "")
     set(CMAKE_C_FLAGS_DEBUG "")
     set(CMAKE_CXX_FLAGS_DEBUG "")
-endif()
-
-if(DBG)
-    if(NOT CMAKE_C_COMPILER_ID STREQUAL "Clang")
-        add_compile_options("$<$<COMPILE_LANGUAGE:C>:-Wold-style-declaration>")
-    endif()
 endif()
 
 # Debugging
@@ -252,7 +254,13 @@ set(CMAKE_CXX_COMPILE_OBJECT "<CMAKE_CXX_COMPILER> <DEFINES> <INCLUDES> <FLAGS> 
 set(CMAKE_ASM_COMPILE_OBJECT "<CMAKE_ASM_COMPILER> ${_compress_debug_sections_flag} -x assembler-with-cpp -o <OBJECT> -I${REACTOS_SOURCE_DIR}/sdk/include/asm -I${REACTOS_BINARY_DIR}/sdk/include/asm <INCLUDES> <FLAGS> <DEFINES> -D__ASM__ -c <SOURCE>")
 
 set(CMAKE_RC_COMPILE_OBJECT "<CMAKE_RC_COMPILER> -O coff <INCLUDES> <FLAGS> -DRC_INVOKED -D__WIN32__=1 -D__FLAT__=1 ${I18N_DEFS} <DEFINES> <SOURCE> <OBJECT>")
-set(CMAKE_DEPFILE_FLAGS_RC "--preprocessor \"${MINGW_TOOLCHAIN_PREFIX}gcc${MINGW_TOOLCHAIN_SUFFIX} -E -xc-header -MMD -MF <DEPFILE> -MT <OBJECT>\" ")
+if (CLANG)
+    set(GCC_EXECUTABLE ${CMAKE_C_COMPILER_TARGET}-gcc)
+else()
+    set(GCC_EXECUTABLE ${CMAKE_C_COMPILER})
+endif()
+
+set(CMAKE_DEPFILE_FLAGS_RC "--preprocessor \"${GCC_EXECUTABLE} -E -xc-header -MMD -MF <DEPFILE> -MT <OBJECT>\" ")
 
 # Optional 3rd parameter: stdcall stack bytes
 function(set_entrypoint MODULE ENTRYPOINT)
@@ -423,30 +431,41 @@ add_compile_options("$<$<COMPILE_LANGUAGE:CXX>:$<IF:$<BOOL:$<TARGET_PROPERTY:WIT
 # We disable exceptions, unless said so
 add_compile_options("$<$<COMPILE_LANGUAGE:CXX>:$<IF:$<BOOL:$<TARGET_PROPERTY:WITH_CXX_EXCEPTIONS>>,-fexceptions,-fno-exceptions>>")
 
+# G++ shipped with ROSBE uses sjlj exceptions. Tell Clang it is so
+if (CLANG)
+    add_compile_options("$<$<AND:$<COMPILE_LANGUAGE:CXX>,$<BOOL:$<TARGET_PROPERTY:WITH_CXX_EXCEPTIONS>>>:-fsjlj-exceptions>")
+endif()
+
 # Find default G++ libraries
+if (CLANG)
+    set(GXX_EXECUTABLE ${CMAKE_CXX_COMPILER_TARGET}-g++)
+else()
+    set(GXX_EXECUTABLE ${CMAKE_CXX_COMPILER})
+endif()
+
 add_library(libgcc STATIC IMPORTED)
-execute_process(COMMAND ${CMAKE_CXX_COMPILER} -print-file-name=libgcc.a OUTPUT_VARIABLE LIBGCC_LOCATION)
+execute_process(COMMAND ${GXX_EXECUTABLE} -print-file-name=libgcc.a OUTPUT_VARIABLE LIBGCC_LOCATION)
 string(STRIP ${LIBGCC_LOCATION} LIBGCC_LOCATION)
 set_target_properties(libgcc PROPERTIES IMPORTED_LOCATION ${LIBGCC_LOCATION})
 # libgcc needs kernel32 imports, a CRT and msvcrtex
 target_link_libraries(libgcc INTERFACE libkernel32 libmsvcrt msvcrtex)
 
 add_library(libsupc++ STATIC IMPORTED GLOBAL)
-execute_process(COMMAND ${CMAKE_CXX_COMPILER} -print-file-name=libsupc++.a OUTPUT_VARIABLE LIBSUPCXX_LOCATION)
+execute_process(COMMAND ${GXX_EXECUTABLE} -print-file-name=libsupc++.a OUTPUT_VARIABLE LIBSUPCXX_LOCATION)
 string(STRIP ${LIBSUPCXX_LOCATION} LIBSUPCXX_LOCATION)
 set_target_properties(libsupc++ PROPERTIES IMPORTED_LOCATION ${LIBSUPCXX_LOCATION})
 # libsupc++ requires libgcc
 target_link_libraries(libsupc++ INTERFACE libgcc)
 
 add_library(libmingwex STATIC IMPORTED)
-execute_process(COMMAND ${CMAKE_CXX_COMPILER} -print-file-name=libmingwex.a OUTPUT_VARIABLE LIBMINGWEX_LOCATION)
+execute_process(COMMAND ${GXX_EXECUTABLE} -print-file-name=libmingwex.a OUTPUT_VARIABLE LIBMINGWEX_LOCATION)
 string(STRIP ${LIBMINGWEX_LOCATION} LIBMINGWEX_LOCATION)
 set_target_properties(libmingwex PROPERTIES IMPORTED_LOCATION ${LIBMINGWEX_LOCATION})
 # libmingwex requires a CRT and imports from kernel32
 target_link_libraries(libmingwex INTERFACE libmsvcrt libkernel32)
 
 add_library(libstdc++ STATIC IMPORTED GLOBAL)
-execute_process(COMMAND ${CMAKE_CXX_COMPILER} -print-file-name=libstdc++.a OUTPUT_VARIABLE LIBSTDCCXX_LOCATION)
+execute_process(COMMAND ${GXX_EXECUTABLE} -print-file-name=libstdc++.a OUTPUT_VARIABLE LIBSTDCCXX_LOCATION)
 string(STRIP ${LIBSTDCCXX_LOCATION} LIBSTDCCXX_LOCATION)
 set_target_properties(libstdc++ PROPERTIES IMPORTED_LOCATION ${LIBSTDCCXX_LOCATION})
 # libstdc++ requires libsupc++ and mingwex provided by GCC
