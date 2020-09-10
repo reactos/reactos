@@ -9132,7 +9132,7 @@ static void SwapShiftRelay(LISTVIEW_INFO *infoPtr, INT iFrom, INT iTo)
 /* hit test for auto-arrange */
 static INT LISTVIEW_HitTestBlank(const LISTVIEW_INFO *infoPtr, POINT pt)
 {
-    INT iItem, x, y, xy0 = 0xFFFF;
+    INT iItem, x, y, xy0 = 0xFFFF, yx0 = 0xFFFF;
     WCHAR sz[64];
     POINT Origin, Position;
 
@@ -9146,21 +9146,31 @@ static INT LISTVIEW_HitTestBlank(const LISTVIEW_INFO *infoPtr, POINT pt)
             LISTVIEW_GetItemOrigin(infoPtr, iItem, &Position);
             x = Position.x + Origin.x + infoPtr->nItemWidth;
             y = Position.y + Origin.y + infoPtr->iconSize.cy / 2;
-            if (xy0 == 0xFFFF)
-                xy0 = x;
-            if (xy0 < x && y < pt.y)
+            if (pt.y <= y && pt.x <= x)
             {
                 wsprintfW(sz, L"x,y:(%d, %d), pt:(%d, %d), %d", x, y, pt.x, pt.y, xy0);
                 MessageBoxW(NULL, sz, L"1", 0);
                 return iItem;
             }
-            if (pt.y <= y && pt.x <= x)
+        }
+        for (iItem = 0; iItem < infoPtr->nItemCount; ++iItem)
+        {
+            LISTVIEW_GetItemOrigin(infoPtr, iItem, &Position);
+            x = Position.x + Origin.x + infoPtr->nItemWidth;
+            y = Position.y + Origin.y + infoPtr->iconSize.cy / 2;
+            if (xy0 == 0xFFFF)
+            {
+                xy0 = x;
+                yx0 = y;
+            }
+            if (xy0 != x && yx0 < pt.y)
             {
                 wsprintfW(sz, L"x,y:(%d, %d), pt:(%d, %d), %d", x, y, pt.x, pt.y, xy0);
                 MessageBoxW(NULL, sz, L"2", 0);
                 return iItem;
             }
             xy0 = x;
+            yx0 = y;
         }
     }
     else
@@ -9171,21 +9181,31 @@ static INT LISTVIEW_HitTestBlank(const LISTVIEW_INFO *infoPtr, POINT pt)
             LISTVIEW_GetItemOrigin(infoPtr, iItem, &Position);
             x = Position.x + Origin.x + infoPtr->nItemWidth / 2;
             y = Position.y + Origin.y + infoPtr->nItemHeight;
-            if (xy0 == 0xFFFF)
-                xy0 = y;
-            if (xy0 < y && x < pt.x)
+            if (pt.x <= x && pt.y <= y)
             {
                 wsprintfW(sz, L"x,y:(%d, %d), pt:(%d, %d), %d", x, y, pt.x, pt.y, xy0);
                 MessageBoxW(NULL, sz, L"3", 0);
                 return iItem;
             }
-            if (pt.x <= x && pt.y <= y)
+        }
+        for (iItem = 0; iItem < infoPtr->nItemCount; ++iItem)
+        {
+            LISTVIEW_GetItemOrigin(infoPtr, iItem, &Position);
+            x = Position.x + Origin.x + infoPtr->nItemWidth / 2;
+            y = Position.y + Origin.y + infoPtr->nItemHeight;
+            if (xy0 == 0xFFFF)
+            {
+                xy0 = y;
+                yx0 = x;
+            }
+            if (xy0 != y && yx0 < pt.x)
             {
                 wsprintfW(sz, L"x,y:(%d, %d), pt:(%d, %d), %d", x, y, pt.x, pt.y, xy0);
                 MessageBoxW(NULL, sz, L"4", 0);
                 return iItem;
             }
             xy0 = y;
+            yx0 = x;
         }
     }
 
@@ -9221,12 +9241,22 @@ static BOOL LISTVIEW_SetItemPosition(LISTVIEW_INFO *infoPtr, INT nItem, const PO
         // which are client coordinates offset by the scroll position.
         WCHAR sz[64];
         INT i1, i2, *pPairs;
+        LISTVIEW_GetOrigin(infoPtr, &Origin);
 
+        Pt = *pt;
         pPairs = ReAlloc(infoPtr->pPairs, 2 * (infoPtr->cPairs + 1));
         if (!pPairs)
             return FALSE;
 
-        Pt = *pt;
+        {
+            HDC hDC = GetDC(infoPtr->hwndSelf);
+            MoveToEx(hDC, Pt.x - Origin.x, Pt.y - Origin.y - 10, NULL);
+            LineTo(hDC, Pt.x - Origin.x, Pt.y - Origin.y + 10);
+            MoveToEx(hDC, Pt.x - Origin.x - 10, Pt.y - Origin.y, NULL);
+            LineTo(hDC, Pt.x - Origin.x + 10, Pt.y - Origin.y);
+            ReleaseDC(infoPtr->hwndSelf, hDC);
+        }
+
         i1 = nItem;
         i2 = LISTVIEW_HitTestBlank(infoPtr, Pt);
         if (i1 < i2)
