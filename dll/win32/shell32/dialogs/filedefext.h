@@ -75,7 +75,7 @@ private:
     static INT_PTR CALLBACK GeneralPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 	static INT_PTR CALLBACK VersionPageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 	static INT_PTR CALLBACK FolderCustomizePageProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
-	BOOL CountFolderAndFiles(HWND hwndDlg, LPWSTR pwszBuf, UINT cchBufMax, LPDWORD ticks);
+	BOOL CountFolderAndFiles(HWND hwndDlg, LPCWSTR pwszBuf, LPDWORD ticks);
 
 	WCHAR m_wszPath[MAX_PATH];
 	CFileVersionInfo m_VerInfo;
@@ -84,6 +84,7 @@ private:
 	DWORD m_cFiles;
     DWORD m_cFolders;
     ULARGE_INTEGER m_DirSize;
+    ULARGE_INTEGER m_DirSizeOnDisc;
 
     static DWORD WINAPI _CountFolderAndFilesThreadProc(LPVOID lpParameter);
 
@@ -136,7 +137,6 @@ struct _CountFolderAndFilesData {
     CFileDefExt *This;
     HWND hwndDlg;
     LPWSTR pwszBuf;
-    UINT cchBufMax;
 };
 
 #endif /* _FILE_DEF_EXT_H_ */
