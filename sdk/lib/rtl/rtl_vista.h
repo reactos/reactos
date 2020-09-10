@@ -6,8 +6,13 @@
  * PROGRAMMER:      Alex Ionescu
  */
 
-#ifndef RTL_H
-#define RTL_H
+#ifndef RTL_VISTA_H
+#define RTL_VISTA_H
+
+#undef _WIN32_WINNT
+#undef WINVER
+#define _WIN32_WINNT 0x600
+#define WINVER 0x600
 
 /* We're a core NT DLL, we don't import syscalls */
 #define _INC_SWPRINTF_INL_
@@ -54,4 +59,4 @@
 #define InterlockedBitTestAndSet64 _interlockedbittestandset64
 #endif
 
-#endif /* RTL_H */
+#endif /* RTL_VISTA_H */

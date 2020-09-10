@@ -1,7 +1,7 @@
 
 /* Taken from Wine ntdll/sync.c */
 
-#include "rtl.h"
+#include "rtl_vista.h"
 #include <wine/config.h>
 #include <wine/port.h>
 
