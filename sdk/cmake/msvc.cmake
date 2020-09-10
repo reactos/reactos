@@ -172,6 +172,13 @@ string(REPLACE "/implib:<TARGET_IMPLIB>" "" CMAKE_CXX_CREATE_SHARED_LIBRARY "${C
 string(REPLACE "/implib:<TARGET_IMPLIB>" "" CMAKE_C_CREATE_SHARED_MODULE "${CMAKE_C_CREATE_SHARED_MODULE}")
 string(REPLACE "/implib:<TARGET_IMPLIB>" "" CMAKE_CXX_CREATE_SHARED_MODULE "${CMAKE_CXX_CREATE_SHARED_MODULE}")
 
+# HACK2: CMake lacks the ability to completely remove the 'implib' argument for solution files...
+# To work around this, we just let it create a dummy file
+if(MSVC_IDE)
+    set(CMAKE_IMPORT_LIBRARY_SUFFIX ".dummy")
+endif()
+
+
 if(CMAKE_DISABLE_NINJA_DEPSLOG)
     set(cl_includes_flag "")
 else()
