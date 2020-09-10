@@ -257,12 +257,12 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_CMD_USAGE "Usage: "
-    IDS_CMD_NEED_PACKAGE_NAME "Error: option %1 expects one or more package name.\n"
-    IDS_CMD_NEED_FILE_NAME "Error: option %1 expects a file name.\n"
-    IDS_CMD_NEED_PARAMS "Error: option %1 expects one or more parameters.\n"
-    IDS_CMD_INVALID_OPTION "Error: Unknown or invalid command line option specified.\n"
-    IDS_CMD_FIND_RESULT_FOR "Find result for %1:\n"
-    IDS_CMD_PACKAGE_NOT_FOUND "Failed to find package %1.\n"
-    IDS_CMD_PACKAGE_INFO "Information about package %1:\n"
+    IDS_CMD_USAGE "用法："
+    IDS_CMD_NEED_PACKAGE_NAME "错误：选项 %1 需要一个或多个软件包名。\n"
+    IDS_CMD_NEED_FILE_NAME "错误：选项 %1 需要一个文件名。\n"
+    IDS_CMD_NEED_PARAMS "错误：选项 %1 需要一个或多个参数。\n"
+    IDS_CMD_INVALID_OPTION "错误：指定了未知或错误的命令行参数。\n"
+    IDS_CMD_FIND_RESULT_FOR "%1 的搜索结果：\n"
+    IDS_CMD_PACKAGE_NOT_FOUND "未能找到软件包 %1。\n"
+    IDS_CMD_PACKAGE_INFO "有关软件包 %1 的信息：\n"
 END
