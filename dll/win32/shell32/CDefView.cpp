@@ -2031,6 +2031,15 @@ LRESULT CDefView::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
 
                     m_pSourceDataObject = pda;
                     m_ptFirstMousePos = params->ptAction;
+                    {
+                        HDC hDC = ::GetDC(m_ListView);
+                        SelectObject(hDC, CreatePen(PS_SOLID, 0, RGB(0, 255, 0)));
+                        MoveToEx(hDC, m_ptFirstMousePos.x, m_ptFirstMousePos.y - 15, NULL);
+                        LineTo(hDC, m_ptFirstMousePos.x, m_ptFirstMousePos.y + 15);
+                        MoveToEx(hDC, m_ptFirstMousePos.x - 15, m_ptFirstMousePos.y, NULL);
+                        LineTo(hDC, m_ptFirstMousePos.x + 15, m_ptFirstMousePos.y);
+                        ::ReleaseDC(m_ListView, hDC);
+                    }
                     ClientToListView(m_ListView, &m_ptFirstMousePos);
 
                     HIMAGELIST big_icons, small_icons;
@@ -3407,6 +3416,15 @@ HRESULT WINAPI CDefView::Drop(IDataObject* pDataObject, DWORD grfKeyState, POINT
         }
 
         POINT ptDrop = { pt.x, pt.y };
+        {
+            HDC hDC = ::GetDC(NULL);
+            SelectObject(hDC, CreatePen(PS_SOLID, 0, RGB(255, 0, 0)));
+            MoveToEx(hDC, ptDrop.x, ptDrop.y - 20, NULL);
+            LineTo(hDC, ptDrop.x, ptDrop.y + 20);
+            MoveToEx(hDC, ptDrop.x - 20, ptDrop.y, NULL);
+            LineTo(hDC, ptDrop.x + 20, ptDrop.y);
+            ::ReleaseDC(NULL, hDC);
+        }
         ::ScreenToClient(m_ListView, &ptDrop);
         ::ClientToListView(m_ListView, &ptDrop);
 
@@ -3417,6 +3435,9 @@ HRESULT WINAPI CDefView::Drop(IDataObject* pDataObject, DWORD grfKeyState, POINT
             POINT ptItem;
             if (m_ListView.GetItemPosition(iItem, &ptItem))
             {
+                WCHAR sz[64];
+                wsprintfW(sz, L"(%d, %d)", ptDrop.x - m_ptFirstMousePos.x, ptDrop.y - m_ptFirstMousePos.y);
+                ::MessageBoxW(NULL, sz, L"pos", 0);
                 ptItem.x += ptDrop.x - m_ptFirstMousePos.x;
                 ptItem.y += ptDrop.y - m_ptFirstMousePos.y;
                 m_ListView.SetItemPosition(iItem, &ptItem);
