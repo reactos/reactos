@@ -40,7 +40,12 @@ if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
     set(GCC TRUE CACHE BOOL "The compiler is GCC")
     set(CLANG FALSE CACHE BOOL "The compiler is LLVM Clang")
 elseif(CMAKE_C_COMPILER_ID STREQUAL "Clang")
-    set(GCC FALSE CACHE BOOL "The compiler is GCC")
+    # We can use LLVM Clang mimicking CL or GCC. Account for this
+    if (MSVC)
+        set(GCC FALSE CACHE BOOL "The compiler is GCC")
+    else()
+        set(GCC TRUE CACHE BOOL "The compiler is GCC")
+    endif()
     set(CLANG TRUE CACHE BOOL "The compiler is LLVM Clang")
 elseif(MSVC) # aka CMAKE_C_COMPILER_ID STEQUAL "MSVC"
     set(GCC FALSE CACHE BOOL "The compiler is GCC")
