@@ -129,9 +129,6 @@ void*    hash_table_iter_up(struct hash_table_iter* hti) DECLSPEC_HIDDEN;
 extern unsigned dbghelp_options DECLSPEC_HIDDEN;
 extern BOOL     dbghelp_opt_native DECLSPEC_HIDDEN;
 
-/* some more Wine extensions */
-#define SYMOPT_WINE_WITH_NATIVE_MODULES 0x40000000
-
 enum location_kind {loc_error,          /* reg is the error code */
                     loc_unavailable,    /* location is not available */
                     loc_absolute,       /* offset is the location */

@@ -859,7 +859,7 @@ BOOL  WINAPI SymEnumerateModulesW64(HANDLE hProcess,
 
     for (module = pcs->lmodules; module; module = module->next)
     {
-        if (!(dbghelp_options & SYMOPT_WINE_WITH_NATIVE_MODULES) &&
+        if (!dbghelp_opt_native &&
             (module->type == DMT_ELF || module->type == DMT_MACHO))
             continue;
         if (!EnumModulesCallback(module->modulename,
