@@ -1991,7 +1991,6 @@ static BOOL re_match_multi(const WCHAR** pstring, const WCHAR** pre, BOOL _case)
             if (!(next = re_match_one(string_end, re_beg, _case))) return FALSE;
             string_end = next;
         }
-        re_beg = re_end;
     }
 
     if (*re_end || *string_end) return FALSE;
