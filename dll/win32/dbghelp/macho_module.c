@@ -1241,6 +1241,44 @@ static BOOL try_dsym(struct process *pcs, const WCHAR* path, struct macho_file_m
     return FALSE;
 }
 
+static const WCHAR dsym_subpath[] = {'/','C','o','n','t','e','n','t','s',
+                                     '/','R','e','s','o','u','r','c','e','s',
+                                     '/','D','W','A','R','F','/',0};
+
+static WCHAR *query_dsym(const UINT8 *uuid, const WCHAR *filename)
+{
+    char uuid_string[UUID_STRING_LEN];
+    CFStringRef uuid_cfstring;
+    CFStringRef query_string;
+    MDQueryRef query = NULL;
+    WCHAR *path = NULL;
+
+    format_uuid(uuid, uuid_string);
+    uuid_cfstring = CFStringCreateWithCString(NULL, uuid_string, kCFStringEncodingASCII);
+    query_string = CFStringCreateWithFormat(NULL, NULL, CFSTR("com_apple_xcode_dsym_uuids == \"%@\""), uuid_cfstring);
+    CFRelease(uuid_cfstring);
+    query = MDQueryCreate(NULL, query_string, NULL, NULL);
+    CFRelease(query_string);
+    MDQuerySetMaxCount(query, 1);
+    if (MDQueryExecute(query, kMDQuerySynchronous) && MDQueryGetResultCount(query) >= 1)
+    {
+        MDItemRef item = (MDItemRef)MDQueryGetResultAtIndex(query, 0);
+        CFStringRef item_path = MDItemCopyAttribute(item, kMDItemPath);
+        if (item_path)
+        {
+            CFIndex item_path_len = CFStringGetLength(item_path);
+            size_t len = item_path_len + strlenW(dsym_subpath) + strlenW(filename) + 1;
+            path = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+            CFStringGetCharacters(item_path, CFRangeMake(0, item_path_len), (UniChar*)path);
+            strcpyW(path + item_path_len, dsym_subpath);
+            strcatW(path, filename);
+            CFRelease(item_path);
+        }
+    }
+    CFRelease(query);
+    return path;
+}
+
 /******************************************************************
  *              find_and_map_dsym
  *
@@ -1255,16 +1293,11 @@ static BOOL try_dsym(struct process *pcs, const WCHAR* path, struct macho_file_m
 static void find_and_map_dsym(struct process *pcs, struct module* module)
 {
     static const WCHAR dot_dsym[] = {'.','d','S','Y','M',0};
-    static const WCHAR dsym_subpath[] = {'/','C','o','n','t','e','n','t','s','/','R','e','s','o','u','r','c','e','s','/','D','W','A','R','F','/',0};
     static const WCHAR dot_dwarf[] = {'.','d','w','a','r','f',0};
     struct macho_file_map* fmap = &module->format_info[DFI_MACHO]->u.macho_info->file_map.u.macho;
     const WCHAR* p;
     size_t len;
     WCHAR* path = NULL;
-    char uuid_string[UUID_STRING_LEN];
-    CFStringRef uuid_cfstring;
-    CFStringRef query_string;
-    MDQueryRef query = NULL;
 
     /* Without a UUID, we can't verify that any debug info file we find corresponds
        to this file.  Better to have no debug info than incorrect debug info. */
@@ -1289,39 +1322,11 @@ static void find_and_map_dsym(struct process *pcs, struct module* module)
     if (try_dsym(pcs, path, fmap))
         goto found;
 
-    format_uuid(fmap->uuid->uuid, uuid_string);
-    uuid_cfstring = CFStringCreateWithCString(NULL, uuid_string, kCFStringEncodingASCII);
-    query_string = CFStringCreateWithFormat(NULL, NULL, CFSTR("com_apple_xcode_dsym_uuids == \"%@\""), uuid_cfstring);
-    CFRelease(uuid_cfstring);
-    query = MDQueryCreate(NULL, query_string, NULL, NULL);
-    CFRelease(query_string);
-    MDQuerySetMaxCount(query, 1);
-    if (MDQueryExecute(query, kMDQuerySynchronous) && MDQueryGetResultCount(query) >= 1)
-    {
-        MDItemRef item = (MDItemRef)MDQueryGetResultAtIndex(query, 0);
-        CFStringRef item_path = MDItemCopyAttribute(item, kMDItemPath);
-        if (item_path)
-        {
-            CFIndex item_path_len = CFStringGetLength(item_path);
-            if (item_path_len + strlenW(dsym_subpath) + strlenW(p) >= len)
-            {
-                HeapFree(GetProcessHeap(), 0, path);
-                len = item_path_len + strlenW(dsym_subpath) + strlenW(p) + 1;
-                path = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
-            }
-            CFStringGetCharacters(item_path, CFRangeMake(0, item_path_len), (UniChar*)path);
-            strcpyW(path + item_path_len, dsym_subpath);
-            strcatW(path, p);
-            CFRelease(item_path);
-
-            if (try_dsym(pcs, path, fmap))
-                goto found;
-        }
-    }
+    HeapFree(GetProcessHeap(), 0, path);
+    if ((path = query_dsym(fmap->uuid->uuid, p))) try_dsym(pcs, path, fmap);
 
 found:
     HeapFree(GetProcessHeap(), 0, path);
-    if (query) CFRelease(query);
 }
 
 /******************************************************************
