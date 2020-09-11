@@ -257,9 +257,8 @@ static BOOL WINAPI process_invade_cb(PCWSTR name, ULONG64 base, ULONG size, PVOI
     WCHAR       tmp[MAX_PATH];
     HANDLE      hProcess = user;
 
-    if (!GetModuleFileNameExW(hProcess, (HMODULE)(DWORD_PTR)base,
-			      tmp, sizeof(tmp) / sizeof(WCHAR)))
-        lstrcpynW(tmp, name, sizeof(tmp) / sizeof(WCHAR));
+    if (!GetModuleFileNameExW(hProcess, (HMODULE)(DWORD_PTR)base, tmp, ARRAY_SIZE(tmp)))
+        lstrcpynW(tmp, name, ARRAY_SIZE(tmp));
 
     SymLoadModuleExW(hProcess, 0, tmp, name, base, size, NULL, 0);
     return TRUE;

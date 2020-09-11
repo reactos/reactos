@@ -345,7 +345,7 @@ struct ParseTypedefData
 #ifdef PTS_DEBUG
 static void stabs_pts_push(struct ParseTypedefData* ptd, unsigned line)
 {
-    assert(ptd->err_idx < sizeof(ptd->errors) / sizeof(ptd->errors[0]));
+    assert(ptd->err_idx < ARRAY_SIZE(ptd->errors));
     ptd->errors[ptd->err_idx].line = line;
     ptd->errors[ptd->err_idx].ptr = ptd->ptr;
     ptd->err_idx++;
@@ -357,7 +357,7 @@ static void stabs_pts_push(struct ParseTypedefData* ptd, unsigned line)
 
 static int stabs_get_basic(struct ParseTypedefData* ptd, unsigned basic, struct symt** symt)
 {
-    PTS_ABORTIF(ptd, basic >= sizeof(stabs_basic) / sizeof(stabs_basic[0]));
+    PTS_ABORTIF(ptd, basic >= ARRAY_SIZE(stabs_basic));
 
     if (!stabs_basic[basic])
     {
@@ -1625,7 +1625,7 @@ BOOL stabs_parse(struct module* module, unsigned long load_offset,
             break;
         case N_BINCL:
             stabs_add_include(stabs_new_include(ptr, n_value));
-            assert(incl_stk < (int)(sizeof(incl) / sizeof(incl[0])) - 1);
+            assert(incl_stk < (int) ARRAY_SIZE(incl) - 1);
             incl[++incl_stk] = source_idx;
             source_idx = source_new(module, NULL, ptr);
             break;

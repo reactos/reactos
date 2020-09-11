@@ -1672,7 +1672,7 @@ static BOOL macho_enum_modules_internal(const struct process* pcs,
         {
             bufstr[sizeof(bufstr) - 1] = '\0';
             TRACE("[%d] image file %s\n", i, debugstr_a(bufstr));
-            MultiByteToWideChar(CP_UNIXCP, 0, bufstr, -1, bufstrW, sizeof(bufstrW) / sizeof(WCHAR));
+            MultiByteToWideChar(CP_UNIXCP, 0, bufstr, -1, bufstrW, ARRAY_SIZE(bufstrW));
             if (main_name && !bufstrW[0]) strcpyW(bufstrW, main_name);
             if (!cb(bufstrW, (unsigned long)info_array[i].imageLoadAddress, user)) break;
         }
