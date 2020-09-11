@@ -927,6 +927,7 @@ static int elf_new_public_symbols(struct module* module, const struct hash_table
     while ((ste = hash_table_iter_up(&hti)))
     {
         symt_new_public(module, ste->compiland, ste->ht_elt.name,
+                        FALSE,
                         module->reloc_delta + ste->sym.st_value,
                         ste->sym.st_size);
     }
