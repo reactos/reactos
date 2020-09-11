@@ -55,7 +55,7 @@ static void* pe_map_full(struct image_file_map* fmap, IMAGE_NT_HEADERS** nth)
         fmap->u.pe.full_count++;
         return fmap->u.pe.full_map;
     }
-    return IMAGE_NO_MAP;
+    return NULL;
 }
 
 static void pe_unmap_full(struct image_file_map* fmap)
