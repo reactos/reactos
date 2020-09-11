@@ -322,10 +322,22 @@ static BOOL elf_map_shdr(struct elf_map_file_data* emfd, struct image_file_map* 
 {
     if (fmap->addr_size == 32)
     {
-        Elf32_Shdr shdr32;
+        struct
+        {
+            UINT32  sh_name;       /* Section name (string tbl index) */
+            UINT32  sh_type;       /* Section type */
+            UINT32  sh_flags;      /* Section flags */
+            UINT32  sh_addr;       /* Section virtual addr at execution */
+            UINT32  sh_offset;     /* Section file offset */
+            UINT32  sh_size;       /* Section size in bytes */
+            UINT32  sh_link;       /* Link to another section */
+            UINT32  sh_info;       /* Additional section information */
+            UINT32  sh_addralign;  /* Section alignment */
+            UINT32  sh_entsize;    /* Entry size if section holds table */
+        } shdr32;
 
         if (!elf_map_file_read(fmap, emfd, &shdr32, sizeof(shdr32),
-                               fmap->u.elf.elfhdr.e_shoff + i * sizeof(Elf32_Shdr)))
+                               fmap->u.elf.elfhdr.e_shoff + i * sizeof(shdr32)))
             return FALSE;
 
         fmap->u.elf.sect[i].shdr.sh_name      = shdr32.sh_name;
@@ -342,7 +354,7 @@ static BOOL elf_map_shdr(struct elf_map_file_data* emfd, struct image_file_map* 
     else
     {
         if (!elf_map_file_read(fmap, emfd, &fmap->u.elf.sect[i].shdr, sizeof(fmap->u.elf.sect[i].shdr),
-                               fmap->u.elf.elfhdr.e_shoff + i * sizeof(Elf64_Shdr)))
+                               fmap->u.elf.elfhdr.e_shoff + i * sizeof(fmap->u.elf.sect[i].shdr)))
             return FALSE;
     }
     return TRUE;

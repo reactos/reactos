@@ -68,6 +68,20 @@ struct elf_header
     UINT16  e_shstrndx;   /* Section header string table index */
 };
 
+struct elf_section_header
+{
+    UINT32  sh_name;       /* Section name (string tbl index) */
+    UINT32  sh_type;       /* Section type */
+    UINT64  sh_flags;      /* Section flags */
+    UINT64  sh_addr;       /* Section virtual addr at execution */
+    UINT64  sh_offset;     /* Section file offset */
+    UINT64  sh_size;       /* Section size in bytes */
+    UINT32  sh_link;       /* Link to another section */
+    UINT32  sh_info;       /* Additional section information */
+    UINT64  sh_addralign;  /* Section alignment */
+    UINT64  sh_entsize;    /* Entry size if section holds table */
+};
+
 /* structure holding information while handling an ELF image
  * allows one by one section mapping for memory savings
  */
@@ -87,13 +101,11 @@ struct image_file_map
             const char*	                shstrtab;
             char*                       target_copy;
             struct elf_header           elfhdr;
-#if defined(__ELF__) && !defined(DBGHELP_STATIC_LIB)
             struct
             {
-                Elf64_Shdr                      shdr;
+                struct elf_section_header       shdr;
                 const char*                     mapped;
             }*                          sect;
-#endif
         } elf;
         struct macho_file_map
         {
