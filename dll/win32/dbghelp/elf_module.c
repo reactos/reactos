@@ -332,7 +332,6 @@ static BOOL elf_map_file(struct elf_map_file_data* emfd, struct image_file_map* 
     static const BYTE   elf_signature[4] = { ELFMAG0, ELFMAG1, ELFMAG2, ELFMAG3 };
     struct stat	        statbuf;
     unsigned int        i;
-    Elf_Phdr            phdr;
     size_t              tmp, page_mask = sysconf( _SC_PAGESIZE ) - 1;
     char*               filename;
     unsigned            len;
@@ -429,13 +428,31 @@ static BOOL elf_map_file(struct elf_map_file_data* emfd, struct image_file_map* 
     fmap->u.elf.elf_start = ~0L;
     for (i = 0; i < fmap->u.elf.elfhdr.e_phnum; i++)
     {
-        if (elf_map_file_read(fmap, emfd, &phdr, sizeof(phdr),
-                              fmap->u.elf.elfhdr.e_phoff + i * sizeof(phdr)) &&
-            phdr.p_type == PT_LOAD)
+        if (fmap->addr_size == 32)
         {
-            tmp = (phdr.p_vaddr + phdr.p_memsz + page_mask) & ~page_mask;
-            if (fmap->u.elf.elf_size < tmp) fmap->u.elf.elf_size = tmp;
-            if (phdr.p_vaddr < fmap->u.elf.elf_start) fmap->u.elf.elf_start = phdr.p_vaddr;
+            Elf32_Phdr phdr;
+
+            if (elf_map_file_read(fmap, emfd, &phdr, sizeof(phdr),
+                                  fmap->u.elf.elfhdr.e_phoff + i * sizeof(phdr)) &&
+                phdr.p_type == PT_LOAD)
+            {
+                tmp = (phdr.p_vaddr + phdr.p_memsz + page_mask) & ~page_mask;
+                if (fmap->u.elf.elf_size < tmp) fmap->u.elf.elf_size = tmp;
+                if (phdr.p_vaddr < fmap->u.elf.elf_start) fmap->u.elf.elf_start = phdr.p_vaddr;
+            }
+        }
+        else
+        {
+            Elf64_Phdr phdr;
+
+            if (elf_map_file_read(fmap, emfd, &phdr, sizeof(phdr),
+                                  fmap->u.elf.elfhdr.e_phoff + i * sizeof(phdr)) &&
+                phdr.p_type == PT_LOAD)
+            {
+                tmp = (phdr.p_vaddr + phdr.p_memsz + page_mask) & ~page_mask;
+                if (fmap->u.elf.elf_size < tmp) fmap->u.elf.elf_size = tmp;
+                if (phdr.p_vaddr < fmap->u.elf.elf_start) fmap->u.elf.elf_start = phdr.p_vaddr;
+            }
         }
     }
     /* if non relocatable ELF, then remove fixed address from computation
