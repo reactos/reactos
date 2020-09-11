@@ -332,7 +332,7 @@ static void macho_unmap_ranges(const struct macho_file_map* fmap,
 /******************************************************************
  *              macho_find_section
  */
-BOOL macho_find_section(struct image_file_map* ifm, const char* segname, const char* sectname, struct image_section_map* ism)
+static BOOL macho_find_segment_section(struct image_file_map* ifm, const char* segname, const char* sectname, struct image_section_map* ism)
 {
     struct macho_file_map* fmap;
     unsigned i;
@@ -367,6 +367,11 @@ BOOL macho_find_section(struct image_file_map* ifm, const char* segname, const c
     ism->fmap = NULL;
     ism->sidx = -1;
     return FALSE;
+}
+
+static BOOL macho_find_section(struct image_file_map* ifm, const char* sectname, struct image_section_map* ism)
+{
+    return macho_find_segment_section(ifm, NULL, sectname, ism);
 }
 
 /******************************************************************
@@ -419,6 +424,15 @@ unsigned macho_get_map_size(const struct image_section_map* ism)
         return 0;
     return ism->fmap->u.macho.sect[ism->sidx].section.size;
 }
+
+static const struct image_file_map_ops macho_file_map_ops =
+{
+    macho_map_section,
+    macho_unmap_section,
+    macho_find_section,
+    macho_get_map_rva,
+    macho_get_map_size,
+};
 
 /******************************************************************
  *              macho_map_load_commands
@@ -680,6 +694,7 @@ static BOOL macho_map_file(struct process *pcs, const WCHAR *filenameW,
     reset_file_map(ifm);
 
     ifm->modtype = DMT_MACHO;
+    ifm->ops = &macho_file_map_ops;
     ifm->alternate = NULL;
     ifm->addr_size = (pcs->is_64bit) ? 64 : 32;
     fmap->header_size = (pcs->is_64bit) ? sizeof(struct mach_header_64) : sizeof(struct mach_header);
@@ -1997,30 +2012,6 @@ struct module*  macho_load_module(struct process* pcs, const WCHAR* name, unsign
 }
 
 #else  /* HAVE_MACH_O_LOADER_H */
-
-BOOL macho_find_section(struct image_file_map* ifm, const char* segname, const char* sectname, struct image_section_map* ism)
-{
-    return FALSE;
-}
-
-const char* macho_map_section(struct image_section_map* ism)
-{
-    return NULL;
-}
-
-void macho_unmap_section(struct image_section_map* ism)
-{
-}
-
-DWORD_PTR macho_get_map_rva(const struct image_section_map* ism)
-{
-    return 0;
-}
-
-unsigned macho_get_map_size(const struct image_section_map* ism)
-{
-    return 0;
-}
 
 BOOL    macho_synchronize_module_list(struct process* pcs)
 {

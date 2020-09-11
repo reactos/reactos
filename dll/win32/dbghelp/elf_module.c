@@ -134,7 +134,7 @@ struct elf_module_info
  *
  * Maps a single section into memory from an ELF file
  */
-const char* elf_map_section(struct image_section_map* ism)
+static const char* elf_map_section(struct image_section_map* ism)
 {
     struct elf_file_map*        fmap = &ism->fmap->u.elf;
     SYSTEM_INFO sysinfo;
@@ -176,7 +176,7 @@ const char* elf_map_section(struct image_section_map* ism)
  * Finds a section by name (and type) into memory from an ELF file
  * or its alternate if any
  */
-BOOL elf_find_section(struct image_file_map* _fmap, const char* name, struct image_section_map* ism)
+static BOOL elf_find_section(struct image_file_map* _fmap, const char* name, struct image_section_map* ism)
 {
     struct elf_file_map*        fmap = &_fmap->u.elf;
     unsigned i;
@@ -233,7 +233,7 @@ static BOOL elf_find_section_type(struct image_file_map* _fmap, const char* name
  *
  * Unmaps a single section from memory
  */
-void elf_unmap_section(struct image_section_map* ism)
+static void elf_unmap_section(struct image_section_map* ism)
 {
     struct elf_file_map*        fmap = &ism->fmap->u.elf;
 
@@ -265,7 +265,7 @@ static void elf_end_find(struct image_file_map* fmap)
  *
  * Get the RVA of an ELF section
  */
-DWORD_PTR elf_get_map_rva(const struct image_section_map* ism)
+static DWORD_PTR elf_get_map_rva(const struct image_section_map* ism)
 {
     if (ism->sidx < 0 || ism->sidx >= ism->fmap->u.elf.elfhdr.e_shnum)
         return 0;
@@ -277,15 +277,25 @@ DWORD_PTR elf_get_map_rva(const struct image_section_map* ism)
  *
  * Get the size of an ELF section
  */
-unsigned elf_get_map_size(const struct image_section_map* ism)
+static unsigned elf_get_map_size(const struct image_section_map* ism)
 {
     if (ism->sidx < 0 || ism->sidx >= ism->fmap->u.elf.elfhdr.e_shnum)
         return 0;
     return ism->fmap->u.elf.sect[ism->sidx].shdr.sh_size;
 }
 
+static const struct image_file_map_ops elf_file_map_ops =
+{
+    elf_map_section,
+    elf_unmap_section,
+    elf_find_section,
+    elf_get_map_rva,
+    elf_get_map_size,
+};
+
 static inline void elf_reset_file_map(struct image_file_map* fmap)
 {
+    fmap->ops = &elf_file_map_ops;
     fmap->alternate = NULL;
     fmap->u.elf.handle = INVALID_HANDLE_VALUE;
     fmap->u.elf.shstrtab = IMAGE_NO_MAP;
@@ -2035,30 +2045,6 @@ BOOL	elf_synchronize_module_list(struct process* pcs)
 }
 
 #else	/* !__ELF__ */
-
-BOOL         elf_find_section(struct image_file_map* fmap, const char* name,
-                              struct image_section_map* ism)
-{
-    return FALSE;
-}
-
-const char*  elf_map_section(struct image_section_map* ism)
-{
-    return NULL;
-}
-
-void         elf_unmap_section(struct image_section_map* ism)
-{}
-
-unsigned     elf_get_map_size(const struct image_section_map* ism)
-{
-    return 0;
-}
-
-DWORD_PTR elf_get_map_rva(const struct image_section_map* ism)
-{
-    return 0;
-}
 
 BOOL	elf_synchronize_module_list(struct process* pcs)
 {
