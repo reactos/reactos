@@ -1483,64 +1483,6 @@ static BOOL elf_enum_modules_internal(const struct process* pcs,
     return TRUE;
 }
 
-/******************************************************************
- *		elf_search_loader
- *
- * Lookup in a running ELF process the loader, and sets its ELF link
- * address (for accessing the list of loaded .so libs) in pcs.
- * If flags is ELF_INFO_MODULE, the module for the loader is also
- * added as a module into pcs.
- */
-static BOOL elf_search_loader(struct process* pcs, struct elf_info* elf_info)
-{
-    WCHAR *loader = get_wine_loader_name(pcs);
-    PROCESS_BASIC_INFORMATION pbi;
-    ULONG_PTR base = 0;
-    BOOL ret;
-
-    if (NtQueryInformationProcess( pcs->handle, ProcessBasicInformation,
-                                   &pbi, sizeof(pbi), NULL ))
-        return FALSE;
-
-    if (!pcs->is_64bit)
-    {
-        PEB32 *peb32 = (PEB32 *)pbi.PebBaseAddress;
-        DWORD base32;
-
-        if (!ReadProcessMemory( pcs->handle, &peb32->Reserved[0], &base32,
-                                sizeof(base32), NULL ))
-            return FALSE;
-
-        base = base32;
-    }
-    else
-    {
-        if (!ReadProcessMemory( pcs->handle, &pbi.PebBaseAddress->Reserved[0],
-                                &base, sizeof(base), NULL ))
-            return FALSE;
-    }
-
-    ret = elf_search_and_load_file(pcs, loader, base, 0, elf_info);
-    heap_free(loader);
-    return ret;
-}
-
-/******************************************************************
- *		elf_read_wine_loader_dbg_info
- *
- * Try to find a decent wine executable which could have loaded the debuggee
- */
-BOOL elf_read_wine_loader_dbg_info(struct process* pcs)
-{
-    struct elf_info     elf_info;
-
-    elf_info.flags = ELF_INFO_DEBUG_HEADER | ELF_INFO_MODULE;
-    if (!elf_search_loader(pcs, &elf_info)) return FALSE;
-    elf_info.module->format_info[DFI_ELF]->u.elf_info->elf_loader = 1;
-    module_set_module(elf_info.module, S_WineLoaderW);
-    return (pcs->dbg_hdr_addr = elf_info.dbg_hdr_addr) != 0;
-}
-
 struct elf_enum_user
 {
     enum_modules_cb     cb;
@@ -1718,6 +1660,64 @@ BOOL	elf_synchronize_module_list(struct process* pcs)
         module = module->next;
     }
     return TRUE;
+}
+
+/******************************************************************
+ *		elf_search_loader
+ *
+ * Lookup in a running ELF process the loader, and sets its ELF link
+ * address (for accessing the list of loaded .so libs) in pcs.
+ * If flags is ELF_INFO_MODULE, the module for the loader is also
+ * added as a module into pcs.
+ */
+static BOOL elf_search_loader(struct process* pcs, struct elf_info* elf_info)
+{
+    WCHAR *loader = get_wine_loader_name(pcs);
+    PROCESS_BASIC_INFORMATION pbi;
+    ULONG_PTR base = 0;
+    BOOL ret;
+
+    if (NtQueryInformationProcess( pcs->handle, ProcessBasicInformation,
+                                   &pbi, sizeof(pbi), NULL ))
+        return FALSE;
+
+    if (!pcs->is_64bit)
+    {
+        PEB32 *peb32 = (PEB32 *)pbi.PebBaseAddress;
+        DWORD base32;
+
+        if (!ReadProcessMemory( pcs->handle, &peb32->Reserved[0], &base32,
+                                sizeof(base32), NULL ))
+            return FALSE;
+
+        base = base32;
+    }
+    else
+    {
+        if (!ReadProcessMemory( pcs->handle, &pbi.PebBaseAddress->Reserved[0],
+                                &base, sizeof(base), NULL ))
+            return FALSE;
+    }
+
+    ret = elf_search_and_load_file(pcs, loader, base, 0, elf_info);
+    heap_free(loader);
+    return ret;
+}
+
+/******************************************************************
+ *		elf_read_wine_loader_dbg_info
+ *
+ * Try to find a decent wine executable which could have loaded the debuggee
+ */
+BOOL elf_read_wine_loader_dbg_info(struct process* pcs)
+{
+    struct elf_info     elf_info;
+
+    elf_info.flags = ELF_INFO_DEBUG_HEADER | ELF_INFO_MODULE;
+    if (!elf_search_loader(pcs, &elf_info)) return FALSE;
+    elf_info.module->format_info[DFI_ELF]->u.elf_info->elf_loader = 1;
+    module_set_module(elf_info.module, S_WineLoaderW);
+    return (pcs->dbg_hdr_addr = elf_info.dbg_hdr_addr) != 0;
 }
 
 #else	/* !__ELF__ */

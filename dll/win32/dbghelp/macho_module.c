@@ -1373,7 +1373,6 @@ static void macho_module_remove(struct process* pcs, struct module_format* modfm
     HeapFree(GetProcessHeap(), 0, modfmt);
 }
 
-
 /******************************************************************
  *              get_dyld_image_info_address
  */
@@ -1730,6 +1729,96 @@ BOOL    macho_synchronize_module_list(struct process* pcs)
 }
 
 /******************************************************************
+ *              macho_enum_modules
+ *
+ * Enumerates the Mach-O loaded modules from a running target (hProc)
+ * This function doesn't require that someone has called SymInitialize
+ * on this very process.
+ */
+BOOL macho_enum_modules(struct process* process, enum_modules_cb cb, void* user)
+{
+    struct macho_info   macho_info;
+    BOOL                ret;
+
+    TRACE("(%p, %p, %p)\n", process->handle, cb, user);
+    macho_info.flags = MACHO_INFO_DEBUG_HEADER | MACHO_INFO_NAME;
+    ret = macho_enum_modules_internal(process, macho_info.module_name, cb, user);
+    HeapFree(GetProcessHeap(), 0, (char*)macho_info.module_name);
+    return ret;
+}
+
+struct macho_load
+{
+    struct process*     pcs;
+    struct macho_info   macho_info;
+    const WCHAR*        name;
+    BOOL                ret;
+};
+
+/******************************************************************
+ *              macho_load_cb
+ *
+ * Callback for macho_load_module, used to walk the list of loaded
+ * modules.
+ */
+static BOOL macho_load_cb(const WCHAR* name, unsigned long addr, void* user)
+{
+    struct macho_load*  ml = user;
+    const WCHAR*        p;
+
+    TRACE("(%s, 0x%08lx, %p)\n", debugstr_w(name), addr, user);
+
+    /* memcmp is needed for matches when bufstr contains also version information
+     * ml->name: libc.so, name: libc.so.6.0
+     */
+    p = file_name(name);
+    if (!memcmp(p, ml->name, lstrlenW(ml->name) * sizeof(WCHAR)))
+    {
+        ml->ret = macho_search_and_load_file(ml->pcs, name, addr, &ml->macho_info);
+        return FALSE;
+    }
+    return TRUE;
+}
+
+/******************************************************************
+ *              macho_load_module
+ *
+ * Loads a Mach-O module and stores it in process' module list.
+ * Also, find module real name and load address from
+ * the real loaded modules list in pcs address space.
+ */
+struct module*  macho_load_module(struct process* pcs, const WCHAR* name, unsigned long addr)
+{
+    struct macho_load   ml;
+
+    TRACE("(%p/%p, %s, 0x%08lx)\n", pcs, pcs->handle, debugstr_w(name), addr);
+
+    ml.macho_info.flags = MACHO_INFO_MODULE;
+    ml.ret = FALSE;
+
+    if (pcs->dbg_hdr_addr) /* we're debugging a live target */
+    {
+        ml.pcs = pcs;
+        /* do only the lookup from the filename, not the path (as we lookup module
+         * name in the process' loaded module list)
+         */
+        ml.name = file_name(name);
+        ml.ret = FALSE;
+
+        if (!macho_enum_modules_internal(pcs, NULL, macho_load_cb, &ml))
+            return NULL;
+    }
+    else if (addr)
+    {
+        ml.name = name;
+        ml.ret = macho_search_and_load_file(pcs, ml.name, addr, &ml.macho_info);
+    }
+    if (!ml.ret) return NULL;
+    assert(ml.macho_info.module);
+    return ml.macho_info.module;
+}
+
+/******************************************************************
  *              macho_search_loader
  *
  * Lookup in a running Mach-O process the loader, and sets its Mach-O link
@@ -1834,96 +1923,6 @@ BOOL macho_read_wine_loader_dbg_info(struct process* pcs)
     macho_info.module->format_info[DFI_MACHO]->u.macho_info->is_loader = 1;
     module_set_module(macho_info.module, S_WineLoaderW);
     return (pcs->dbg_hdr_addr = macho_info.dbg_hdr_addr) != 0;
-}
-
-/******************************************************************
- *              macho_enum_modules
- *
- * Enumerates the Mach-O loaded modules from a running target (hProc)
- * This function doesn't require that someone has called SymInitialize
- * on this very process.
- */
-BOOL macho_enum_modules(struct process* process, enum_modules_cb cb, void* user)
-{
-    struct macho_info   macho_info;
-    BOOL                ret;
-
-    TRACE("(%p, %p, %p)\n", process->handle, cb, user);
-    macho_info.flags = MACHO_INFO_DEBUG_HEADER | MACHO_INFO_NAME;
-    ret = macho_enum_modules_internal(process, macho_info.module_name, cb, user);
-    HeapFree(GetProcessHeap(), 0, (char*)macho_info.module_name);
-    return ret;
-}
-
-struct macho_load
-{
-    struct process*     pcs;
-    struct macho_info   macho_info;
-    const WCHAR*        name;
-    BOOL                ret;
-};
-
-/******************************************************************
- *              macho_load_cb
- *
- * Callback for macho_load_module, used to walk the list of loaded
- * modules.
- */
-static BOOL macho_load_cb(const WCHAR* name, unsigned long addr, void* user)
-{
-    struct macho_load*  ml = user;
-    const WCHAR*        p;
-
-    TRACE("(%s, 0x%08lx, %p)\n", debugstr_w(name), addr, user);
-
-    /* memcmp is needed for matches when bufstr contains also version information
-     * ml->name: libc.so, name: libc.so.6.0
-     */
-    p = file_name(name);
-    if (!memcmp(p, ml->name, lstrlenW(ml->name) * sizeof(WCHAR)))
-    {
-        ml->ret = macho_search_and_load_file(ml->pcs, name, addr, &ml->macho_info);
-        return FALSE;
-    }
-    return TRUE;
-}
-
-/******************************************************************
- *              macho_load_module
- *
- * Loads a Mach-O module and stores it in process' module list.
- * Also, find module real name and load address from
- * the real loaded modules list in pcs address space.
- */
-struct module*  macho_load_module(struct process* pcs, const WCHAR* name, unsigned long addr)
-{
-    struct macho_load   ml;
-
-    TRACE("(%p/%p, %s, 0x%08lx)\n", pcs, pcs->handle, debugstr_w(name), addr);
-
-    ml.macho_info.flags = MACHO_INFO_MODULE;
-    ml.ret = FALSE;
-
-    if (pcs->dbg_hdr_addr) /* we're debugging a live target */
-    {
-        ml.pcs = pcs;
-        /* do only the lookup from the filename, not the path (as we lookup module
-         * name in the process' loaded module list)
-         */
-        ml.name = file_name(name);
-        ml.ret = FALSE;
-
-        if (!macho_enum_modules_internal(pcs, NULL, macho_load_cb, &ml))
-            return NULL;
-    }
-    else if (addr)
-    {
-        ml.name = name;
-        ml.ret = macho_search_and_load_file(pcs, ml.name, addr, &ml.macho_info);
-    }
-    if (!ml.ret) return NULL;
-    assert(ml.macho_info.module);
-    return ml.macho_info.module;
 }
 
 #else  /* HAVE_MACH_O_LOADER_H */
