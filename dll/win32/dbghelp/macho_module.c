@@ -152,18 +152,6 @@ static char* format_uuid(const uint8_t uuid[16], char out[UUID_STRING_LEN])
     return out;
 }
 
-static DWORD macho_calc_crc32(int fd)
-{
-    BYTE buffer[8192];
-    DWORD crc = 0;
-    int len;
-
-    lseek(fd, 0, SEEK_SET);
-    while ((len = read(fd, buffer, sizeof(buffer))) > 0)
-        crc = RtlComputeCrc32(crc, buffer, len);
-    return crc;
-}
-
 /******************************************************************
  *              macho_calc_range
  *
@@ -174,18 +162,18 @@ static DWORD macho_calc_crc32(int fd)
  */
 static void macho_calc_range(const struct macho_file_map* fmap, unsigned long offset,
                              unsigned long len, unsigned long* out_aligned_offset,
-                             unsigned long* out_aligned_end, unsigned long* out_aligned_len,
-                             unsigned long* out_misalign)
+                             unsigned long* out_aligned_end, unsigned long* out_misalign)
 {
-    unsigned long pagemask = sysconf( _SC_PAGESIZE ) - 1;
+    SYSTEM_INFO sysinfo;
+    unsigned long pagemask;
     unsigned long file_offset, misalign;
 
+    GetSystemInfo(&sysinfo);
+    pagemask = sysinfo.dwAllocationGranularity - 1;
     file_offset = fmap->arch_offset + offset;
     misalign = file_offset & pagemask;
     *out_aligned_offset = file_offset - misalign;
-    *out_aligned_end = (file_offset + len + pagemask) & ~pagemask;
-    if (out_aligned_len)
-        *out_aligned_len = *out_aligned_end - *out_aligned_offset;
+    *out_aligned_end = file_offset + len;
     if (out_misalign)
         *out_misalign = misalign;
 }
@@ -198,19 +186,29 @@ static void macho_calc_range(const struct macho_file_map* fmap, unsigned long of
 static const char* macho_map_range(const struct macho_file_map* fmap, unsigned long offset, unsigned long len,
                                    const char** base)
 {
-    unsigned long   misalign, aligned_offset, aligned_map_end, map_size;
+    unsigned long   misalign, aligned_offset, aligned_map_end;
     const void*     aligned_ptr;
+    HANDLE          mapping;
 
-    TRACE("(%p/%d, 0x%08lx, 0x%08lx)\n", fmap, fmap->fd, offset, len);
+    TRACE("(%p/%p, 0x%08lx, 0x%08lx)\n", fmap, fmap->handle, offset, len);
 
-    macho_calc_range(fmap, offset, len, &aligned_offset, &aligned_map_end,
-                     &map_size, &misalign);
+    macho_calc_range(fmap, offset, len, &aligned_offset, &aligned_map_end, &misalign);
 
-    aligned_ptr = mmap(NULL, map_size, PROT_READ, MAP_PRIVATE, fmap->fd, aligned_offset);
+    if (!(mapping = CreateFileMappingW(fmap->handle, NULL, PAGE_READONLY, 0, 0, NULL)))
+    {
+        ERR("map creation %p failed %u size %lu\n", fmap->handle, GetLastError(), aligned_map_end);
+        return IMAGE_NO_MAP;
+    }
+    aligned_ptr = MapViewOfFile(mapping, FILE_MAP_READ, 0, aligned_offset, aligned_map_end - aligned_offset);
+    CloseHandle(mapping);
+    if (!aligned_ptr)
+    {
+        ERR("map failed %u\n", GetLastError());
+        return IMAGE_NO_MAP;
+    }
 
     TRACE("Mapped (0x%08lx - 0x%08lx) to %p\n", aligned_offset, aligned_map_end, aligned_ptr);
 
-    if (aligned_ptr == MAP_FAILED) return IMAGE_NO_MAP;
     if (base)
         *base = aligned_ptr;
     return (const char*)aligned_ptr + misalign;
@@ -224,23 +222,21 @@ static const char* macho_map_range(const struct macho_file_map* fmap, unsigned l
 static void macho_unmap_range(const char** base, const void** mapped, const struct macho_file_map* fmap,
                               unsigned long offset, unsigned long len)
 {
-    TRACE("(%p, %p, %p/%d, 0x%08lx, 0x%08lx)\n", base, mapped, fmap, fmap->fd, offset, len);
+    TRACE("(%p, %p, %p/%p, 0x%08lx, 0x%08lx)\n", base, mapped, fmap, fmap->handle, offset, len);
 
     if ((mapped && *mapped != IMAGE_NO_MAP) || (base && *base != IMAGE_NO_MAP))
     {
-        unsigned long   misalign, aligned_offset, aligned_map_end, map_size;
+        unsigned long   misalign, aligned_offset, aligned_map_end;
         void*           aligned_ptr;
 
-        macho_calc_range(fmap, offset, len, &aligned_offset, &aligned_map_end,
-                         &map_size, &misalign);
+        macho_calc_range(fmap, offset, len, &aligned_offset, &aligned_map_end, &misalign);
 
         if (mapped)
             aligned_ptr = (char*)*mapped - misalign;
         else
             aligned_ptr = (void*)*base;
-        if (munmap(aligned_ptr, map_size) < 0)
+        if (!UnmapViewOfFile(aligned_ptr))
             WARN("Couldn't unmap the range\n");
-        TRACE("Unmapped (0x%08lx - 0x%08lx) from %p - %p\n", aligned_offset, aligned_map_end, aligned_ptr, (char*)aligned_ptr + map_size);
         if (mapped)
             *mapped = IMAGE_NO_MAP;
         if (base)
@@ -263,11 +259,11 @@ static BOOL macho_map_ranges(const struct macho_file_map* fmap,
     unsigned long aligned_offset1, aligned_map_end1;
     unsigned long aligned_offset2, aligned_map_end2;
 
-    TRACE("(%p/%d, 0x%08lx, 0x%08lx, 0x%08lx, 0x%08lx, %p, %p)\n", fmap, fmap->fd,
+    TRACE("(%p/%p, 0x%08lx, 0x%08lx, 0x%08lx, 0x%08lx, %p, %p)\n", fmap, fmap->handle,
             offset1, len1, offset2, len2, mapped1, mapped2);
 
-    macho_calc_range(fmap, offset1, len1, &aligned_offset1, &aligned_map_end1, NULL, NULL);
-    macho_calc_range(fmap, offset2, len2, &aligned_offset2, &aligned_map_end2, NULL, NULL);
+    macho_calc_range(fmap, offset1, len1, &aligned_offset1, &aligned_map_end1, NULL);
+    macho_calc_range(fmap, offset2, len2, &aligned_offset2, &aligned_map_end2, NULL);
 
     if (aligned_map_end1 < aligned_offset2 || aligned_map_end2 < aligned_offset1)
     {
@@ -315,11 +311,11 @@ static void macho_unmap_ranges(const struct macho_file_map* fmap,
     unsigned long   aligned_offset1, aligned_map_end1;
     unsigned long   aligned_offset2, aligned_map_end2;
 
-    TRACE("(%p/%d, 0x%08lx, 0x%08lx, 0x%08lx, 0x%08lx, %p/%p, %p/%p)\n", fmap, fmap->fd,
+    TRACE("(%p/%p, 0x%08lx, 0x%08lx, 0x%08lx, 0x%08lx, %p/%p, %p/%p)\n", fmap, fmap->handle,
             offset1, len1, offset2, len2, mapped1, *mapped1, mapped2, *mapped2);
 
-    macho_calc_range(fmap, offset1, len1, &aligned_offset1, &aligned_map_end1, NULL, NULL);
-    macho_calc_range(fmap, offset2, len2, &aligned_offset2, &aligned_map_end2, NULL, NULL);
+    macho_calc_range(fmap, offset1, len1, &aligned_offset1, &aligned_map_end1, NULL);
+    macho_calc_range(fmap, offset2, len2, &aligned_offset2, &aligned_map_end2, NULL);
 
     if (aligned_map_end1 < aligned_offset2 || aligned_map_end2 < aligned_offset1)
     {
@@ -509,7 +505,7 @@ static int macho_enum_load_commands(struct image_file_map *ifm, unsigned cmd,
     int i;
     int count = 0;
 
-    TRACE("(%p/%d, %u, %p, %p)\n", fmap, fmap->fd, cmd, cb, user);
+    TRACE("(%p/%p, %u, %p, %p)\n", fmap, fmap->handle, cmd, cb, user);
 
     if ((lc = macho_map_load_commands(fmap)) == IMAGE_NO_MAP) return -1;
 
@@ -555,7 +551,7 @@ static int macho_count_sections(struct image_file_map* ifm, const struct load_co
         nsects = sc->nsects;
     }
 
-    TRACE("(%p/%d, %p, %p) segment %s\n", ifm, ifm->u.macho.fd, lc, user,
+    TRACE("(%p/%p, %p, %p) segment %s\n", ifm, ifm->u.macho.handle, lc, user,
         debugstr_an(segname, sizeof(segname)));
 
     ifm->u.macho.num_sections += nsects;
@@ -600,7 +596,7 @@ static int macho_load_section_info(struct image_file_map* ifm, const struct load
         sections = (const void *)(sc + 1);
     }
 
-    TRACE("(%p/%d, %p, %p) before: 0x%08lx - 0x%08lx\n", fmap, fmap->fd, lc, user,
+    TRACE("(%p/%p, %p, %p) before: 0x%08lx - 0x%08lx\n", fmap, fmap->handle, lc, user,
             (unsigned long)fmap->segs_start, (unsigned long)fmap->segs_size);
     TRACE("Segment command vm: 0x%08lx - 0x%08lx\n", (unsigned long)vmaddr,
             (unsigned long)(vmaddr + vmsize));
@@ -674,7 +670,7 @@ static inline void reset_file_map(struct image_file_map* ifm)
 {
     struct macho_file_map* fmap = &ifm->u.macho;
 
-    fmap->fd = -1;
+    fmap->handle = INVALID_HANDLE_VALUE;
     fmap->dsym = NULL;
     fmap->load_commands = IMAGE_NO_MAP;
     fmap->uuid = NULL;
@@ -692,15 +688,14 @@ static BOOL macho_map_file(struct process *pcs, const WCHAR *filenameW,
 {
     struct macho_file_map* fmap = &ifm->u.macho;
     struct fat_header   fat_header;
-    struct stat         statbuf;
     int                 i;
-    char*               filename;
-    unsigned            len;
+    WCHAR*              filename;
     struct section_info info;
     BOOL                ret = FALSE;
     cpu_type_t target_cpu = (pcs->is_64bit) ? CPU_TYPE_X86_64 : CPU_TYPE_X86;
     uint32_t target_magic = (pcs->is_64bit) ? MH_MAGIC_64 : MH_MAGIC;
     uint32_t target_cmd   = (pcs->is_64bit) ? LC_SEGMENT_64 : LC_SEGMENT;
+    DWORD bytes_read;
 
     TRACE("(%s, %p)\n", debugstr_w(filenameW), fmap);
 
@@ -712,31 +707,19 @@ static BOOL macho_map_file(struct process *pcs, const WCHAR *filenameW,
     ifm->addr_size = (pcs->is_64bit) ? 64 : 32;
     fmap->header_size = (pcs->is_64bit) ? sizeof(struct mach_header_64) : sizeof(struct mach_header);
 
-    len = WideCharToMultiByte(CP_UNIXCP, 0, filenameW, -1, NULL, 0, NULL, NULL);
-    if (!(filename = HeapAlloc(GetProcessHeap(), 0, len)))
-    {
-        WARN("failed to allocate filename buffer\n");
-        return FALSE;
-    }
-    WideCharToMultiByte(CP_UNIXCP, 0, filenameW, -1, filename, len, NULL, NULL);
+    if (!(filename = get_dos_file_name(filenameW))) return FALSE;
 
-    /* check that the file exists */
-    if (stat(filename, &statbuf) == -1 || S_ISDIR(statbuf.st_mode))
+    /* Now open the file, so that we can map it. */
+    fmap->handle = CreateFileW(filename, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
+    if (fmap->handle == INVALID_HANDLE_VALUE)
     {
-        TRACE("stat() failed or %s is directory: %s\n", debugstr_a(filename), strerror(errno));
+        TRACE("failed to open file %s: %d\n", debugstr_w(filename), errno);
         goto done;
     }
 
-    /* Now open the file, so that we can mmap() it. */
-    if ((fmap->fd = open(filename, O_RDONLY)) == -1)
+    if (!ReadFile(fmap->handle, &fat_header, sizeof(fat_header), &bytes_read, NULL) || bytes_read != sizeof(fat_header))
     {
-        TRACE("failed to open file %s: %d\n", debugstr_a(filename), errno);
-        goto done;
-    }
-
-    if (read(fmap->fd, &fat_header, sizeof(fat_header)) != sizeof(fat_header))
-    {
-        TRACE("failed to read fat header: %d\n", errno);
+        TRACE("failed to read fat header: %u\n", GetLastError());
         goto done;
     }
     TRACE("... got possible fat header\n");
@@ -748,7 +731,7 @@ static BOOL macho_map_file(struct process *pcs, const WCHAR *filenameW,
         for (i = 0; i < narch; i++)
         {
             struct fat_arch fat_arch;
-            if (read(fmap->fd, &fat_arch, sizeof(fat_arch)) != sizeof(fat_arch))
+            if (!ReadFile(fmap->handle, &fat_arch, sizeof(fat_arch), &bytes_read, NULL) || bytes_read != sizeof(fat_arch))
                 goto done;
             if (swap_ulong_be_to_host(fat_arch.cputype) == target_cpu)
             {
@@ -766,8 +749,9 @@ static BOOL macho_map_file(struct process *pcs, const WCHAR *filenameW,
     }
 
     /* Individual architecture (standalone or within a fat file) is in its native byte order. */
-    lseek(fmap->fd, fmap->arch_offset, SEEK_SET);
-    if (read(fmap->fd, &fmap->mach_header, sizeof(fmap->mach_header)) != sizeof(fmap->mach_header))
+    SetFilePointer(fmap->handle, fmap->arch_offset, 0, FILE_BEGIN);
+    if (!ReadFile(fmap->handle, &fmap->mach_header, sizeof(fmap->mach_header), &bytes_read, NULL)
+        || bytes_read != sizeof(fmap->mach_header))
         goto done;
     TRACE("... got possible Mach header\n");
     /* and check for a Mach-O header */
@@ -838,14 +822,14 @@ static void macho_unmap_file(struct image_file_map* ifm)
 {
     struct image_file_map* cursor;
 
-    TRACE("(%p/%d)\n", ifm, ifm->u.macho.fd);
+    TRACE("(%p/%p)\n", ifm, ifm->u.macho.handle);
 
     cursor = ifm;
     while (cursor)
     {
         struct image_file_map* next;
 
-        if (ifm->u.macho.fd != -1)
+        if (ifm->u.macho.handle != INVALID_HANDLE_VALUE)
         {
             struct image_section_map ism;
 
@@ -855,8 +839,8 @@ static void macho_unmap_file(struct image_file_map* ifm)
 
             HeapFree(GetProcessHeap(), 0, ifm->u.macho.sect);
             macho_unmap_load_commands(&ifm->u.macho);
-            close(ifm->u.macho.fd);
-            ifm->u.macho.fd = -1;
+            CloseHandle(ifm->u.macho.handle);
+            ifm->u.macho.handle = INVALID_HANDLE_VALUE;
         }
 
         next = cursor->u.macho.dsym;
@@ -877,7 +861,7 @@ static BOOL macho_sect_is_code(struct macho_file_map* fmap, unsigned char sectid
 {
     BOOL ret;
 
-    TRACE("(%p/%d, %u)\n", fmap, fmap->fd, sectidx);
+    TRACE("(%p/%p, %u)\n", fmap, fmap->handle, sectidx);
 
     if (!sectidx) return FALSE;
 
@@ -922,9 +906,9 @@ static void macho_stabs_def_cb(struct module* module, unsigned long load_offset,
     struct macho_debug_info*    mdi = user;
     struct symtab_elt*          ste;
 
-    TRACE("(%p, 0x%08lx, %s, 0x%08lx, %d, %d, %u, %p, %p/%p/%d)\n", module, load_offset,
+    TRACE("(%p, 0x%08lx, %s, 0x%08lx, %d, %d, %u, %p, %p/%p/%p)\n", module, load_offset,
             debugstr_a(name), offset, is_public, is_global, sectidx,
-            compiland, mdi, mdi->fmap, mdi->fmap->fd);
+            compiland, mdi, mdi->fmap, mdi->fmap->handle);
 
     /* Defer the creation of new non-debugging symbols until after we've
      * finished parsing the stabs. */
@@ -956,7 +940,7 @@ static int macho_parse_symtab(struct image_file_map* ifm,
     size_t stabsize = (ifm->addr_size == 32) ? sizeof(struct nlist) : sizeof(struct nlist_64);
     const char *stab;
 
-    TRACE("(%p/%d, %p, %p) %u syms at 0x%08x, strings 0x%08x - 0x%08x\n", fmap, fmap->fd, lc,
+    TRACE("(%p/%p, %p, %p) %u syms at 0x%08x, strings 0x%08x - 0x%08x\n", fmap, fmap->handle, lc,
             user, sc->nsyms, sc->symoff, sc->stroff, sc->stroff + sc->strsize);
 
     if (!macho_map_ranges(fmap, sc->symoff, sc->nsyms * stabsize,
@@ -1321,7 +1305,7 @@ BOOL macho_load_debug_info(struct process *pcs, struct module* module)
     ifm = &module->format_info[DFI_MACHO]->u.macho_info->file_map;
     fmap = &ifm->u.macho;
 
-    TRACE("(%p, %p/%d)\n", module, fmap, fmap->fd);
+    TRACE("(%p, %p/%p)\n", module, fmap, fmap->handle);
 
     module->module.SymType = SymExport;
 
@@ -1381,7 +1365,7 @@ BOOL macho_fetch_file_info(HANDLE process, const WCHAR* name, unsigned long load
     if (!macho_map_file(pcs, name, split_segs, &fmap)) return FALSE;
     if (base) *base = fmap.u.macho.segs_start;
     *size = fmap.u.macho.segs_size;
-    *checksum = macho_calc_crc32(fmap.u.macho.fd);
+    *checksum = calc_crc32(fmap.u.macho.handle);
     macho_unmap_file(&fmap);
     return TRUE;
 }
@@ -1496,7 +1480,7 @@ static BOOL macho_load_file(struct process* pcs, const WCHAR* filename,
         if (!load_addr)
             load_addr = fmap.u.macho.segs_start;
         macho_info->module = module_new(pcs, filename, DMT_MACHO, FALSE, load_addr,
-                                        fmap.u.macho.segs_size, 0, macho_calc_crc32(fmap.u.macho.fd));
+                                        fmap.u.macho.segs_size, 0, calc_crc32(fmap.u.macho.handle));
         if (!macho_info->module)
         {
             HeapFree(GetProcessHeap(), 0, modfmt);
