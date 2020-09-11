@@ -21,7 +21,9 @@
 #ifndef DBGHELP_STATIC_LIB
 #include "config.h"
 
+#include <unistd.h>
 #include "dbghelp_private.h"
+#include "winternl.h"
 #include "winerror.h"
 #include "psapi.h"
 #include "wine/debug.h"
@@ -38,15 +40,15 @@ WINE_DEFAULT_DEBUG_CHANNEL(dbghelp);
  *  - support for symbols' types is still partly missing
  *      + C++ support
  *      + we should store the underlying type for an enum in the symt_enum struct
- *      + for enums, we store the names & values (associated to the enum type), 
+ *      + for enums, we store the names & values (associated to the enum type),
  *        but those values are not directly usable from a debugger (that's why, I
- *        assume, that we have also to define constants for enum values, as 
+ *        assume, that we have also to define constants for enum values, as
  *        Codeview does BTW.
  *      + SymEnumTypes should only return *user* defined types (UDT, typedefs...) not
  *        all the types stored/used in the modules (like char*)
  *  - SymGetLine{Next|Prev} don't work as expected (they don't seem to work across
  *    functions, and even across function blocks...). Basically, for *Next* to work
- *    it requires an address after the prolog of the func (the base address of the 
+ *    it requires an address after the prolog of the func (the base address of the
  *    func doesn't work)
  *  - most options (dbghelp_options) are not used (loading lines...)
  *  - in symbol lookup by name, we don't use RE everywhere we should. Moreover, when
@@ -58,13 +60,13 @@ WINE_DEFAULT_DEBUG_CHANNEL(dbghelp);
  *        while processing a function's parameters
  *      + add support for function-less labels (as MSC seems to define them)
  *      + C++ management
- *  - stabs: 
+ *  - stabs:
  *      + when, in a same module, the same definition is used in several compilation
- *        units, we get several definitions of the same object (especially 
+ *        units, we get several definitions of the same object (especially
  *        struct/union). we should find a way not to duplicate them
  *      + in some cases (dlls/user/dialog16.c DIALOG_GetControl16), the same static
  *        global variable is defined several times (at different scopes). We are
- *        getting several of those while looking for a unique symbol. Part of the 
+ *        getting several of those while looking for a unique symbol. Part of the
  *        issue is that we don't give a scope to a static variable inside a function
  *      + C++ management
  */
@@ -187,7 +189,7 @@ BOOL WINAPI SymSetSearchPathW(HANDLE hProcess, PCWSTR searchPath)
     if (!searchPath) return FALSE;
 
     HeapFree(GetProcessHeap(), 0, pcs->search_path);
-    pcs->search_path = lstrcpyW(HeapAlloc(GetProcessHeap(), 0, 
+    pcs->search_path = lstrcpyW(HeapAlloc(GetProcessHeap(), 0,
                                           (lstrlenW(searchPath) + 1) * sizeof(WCHAR)),
                                 searchPath);
     return TRUE;
@@ -295,7 +297,7 @@ static BOOL check_live_target(struct process* pcs)
  *   our internal ELF modules representation (loading / unloading). This way,
  *   we'll pair every loaded builtin PE module with its ELF counterpart (and
  *   access its debug information).
- * - if fInvadeProcess (in SymInitialize) is FALSE, we check anyway if the 
+ * - if fInvadeProcess (in SymInitialize) is FALSE, we check anyway if the
  *   hProcess refers to a running process. We use some heuristics here, so YMMV.
  *   If we detect a live target, then we get the same handling as if
  *   fInvadeProcess is TRUE (except that the modules are not loaded). Otherwise,
@@ -303,7 +305,7 @@ static BOOL check_live_target(struct process* pcs)
  *   counterpart. Hence we won't be able to provide the requested debug
  *   information. We'll however be able to load native PE modules (and their
  *   debug information) without any trouble.
- * Note also that this scheme can be intertwined with the deferred loading 
+ * Note also that this scheme can be intertwined with the deferred loading
  * mechanism (ie only load the debug information when we actually need it).
  */
 BOOL WINAPI SymInitializeW(HANDLE hProcess, PCWSTR UserSearchPath, BOOL fInvadeProcess)
@@ -336,7 +338,7 @@ BOOL WINAPI SymInitializeW(HANDLE hProcess, PCWSTR UserSearchPath, BOOL fInvadeP
 
     if (UserSearchPath)
     {
-        pcs->search_path = lstrcpyW(HeapAlloc(GetProcessHeap(), 0,      
+        pcs->search_path = lstrcpyW(HeapAlloc(GetProcessHeap(), 0,
                                               (lstrlenW(UserSearchPath) + 1) * sizeof(WCHAR)),
                                     UserSearchPath);
     }
@@ -373,7 +375,7 @@ BOOL WINAPI SymInitializeW(HANDLE hProcess, PCWSTR UserSearchPath, BOOL fInvadeP
     pcs->dbg_hdr_addr = 0;
     pcs->next = process_first;
     process_first = pcs;
-    
+
 #ifndef DBGHELP_STATIC_LIB
     if (check_live_target(pcs))
     {
@@ -661,11 +663,11 @@ static BOOL sym_register_cb(HANDLE hProcess,
 /***********************************************************************
  *		SymRegisterCallback (DBGHELP.@)
  */
-BOOL WINAPI SymRegisterCallback(HANDLE hProcess, 
+BOOL WINAPI SymRegisterCallback(HANDLE hProcess,
                                 PSYMBOL_REGISTERED_CALLBACK CallbackFunction,
                                 PVOID UserContext)
 {
-    TRACE("(%p, %p, %p)\n", 
+    TRACE("(%p, %p, %p)\n",
           hProcess, CallbackFunction, UserContext);
     return sym_register_cb(hProcess, reg_cb64to32, CallbackFunction, (DWORD_PTR)UserContext, FALSE);
 }
@@ -673,11 +675,11 @@ BOOL WINAPI SymRegisterCallback(HANDLE hProcess,
 /***********************************************************************
  *		SymRegisterCallback64 (DBGHELP.@)
  */
-BOOL WINAPI SymRegisterCallback64(HANDLE hProcess, 
+BOOL WINAPI SymRegisterCallback64(HANDLE hProcess,
                                   PSYMBOL_REGISTERED_CALLBACK64 CallbackFunction,
                                   ULONG64 UserContext)
 {
-    TRACE("(%p, %p, %s)\n", 
+    TRACE("(%p, %p, %s)\n",
           hProcess, CallbackFunction, wine_dbgstr_longlong(UserContext));
     return sym_register_cb(hProcess, CallbackFunction, NULL, UserContext, FALSE);
 }
@@ -685,11 +687,11 @@ BOOL WINAPI SymRegisterCallback64(HANDLE hProcess,
 /***********************************************************************
  *		SymRegisterCallbackW64 (DBGHELP.@)
  */
-BOOL WINAPI SymRegisterCallbackW64(HANDLE hProcess, 
+BOOL WINAPI SymRegisterCallbackW64(HANDLE hProcess,
                                    PSYMBOL_REGISTERED_CALLBACK64 CallbackFunction,
                                    ULONG64 UserContext)
 {
-    TRACE("(%p, %p, %s)\n", 
+    TRACE("(%p, %p, %s)\n",
           hProcess, CallbackFunction, wine_dbgstr_longlong(UserContext));
     return sym_register_cb(hProcess, CallbackFunction, NULL, UserContext, TRUE);
 }
@@ -736,3 +738,18 @@ void WINAPI WinDbgExtensionDllInit(PWINDBG_EXTENSION_APIS lpExtensionApis,
                                    unsigned short major, unsigned short minor)
 {
 }
+
+#ifndef DBGHELP_STATIC_LIB
+DWORD calc_crc32(int fd)
+{
+    BYTE buffer[8192];
+    DWORD crc = 0;
+    int len;
+
+    lseek(fd, 0, SEEK_SET);
+    while ((len = read(fd, buffer, sizeof(buffer))) > 0)
+        crc = RtlComputeCrc32(crc, buffer, len);
+    return crc;
+}
+#endif
+

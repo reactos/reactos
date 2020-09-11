@@ -53,7 +53,6 @@ else()
         cpu_i386.c
         cpu_ppc.c
         cpu_x86_64.c
-        crc32.c
         dbghelp.c
         dwarf.c
         elf_module.c
