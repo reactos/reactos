@@ -29,6 +29,7 @@
 #include "dbghelp_private.h"
 #include "winternl.h"
 #include "psapi.h"
+#include "wine/asm.h"
 #include "wine/debug.h"
 
 WINE_DEFAULT_DEBUG_CHANNEL(dbghelp);
