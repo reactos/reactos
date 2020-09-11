@@ -896,11 +896,25 @@ PVOID WINAPI ImageDirectoryEntryToDataEx( PVOID base, BOOLEAN image, USHORT dir,
     if (section) *section = NULL;
 
     if (!(nt = RtlImageNtHeader( base ))) return NULL;
-    if (dir >= nt->OptionalHeader.NumberOfRvaAndSizes) return NULL;
-    if (!(addr = nt->OptionalHeader.DataDirectory[dir].VirtualAddress)) return NULL;
+    if (nt->OptionalHeader.Magic == IMAGE_NT_OPTIONAL_HDR64_MAGIC)
+    {
+        const IMAGE_NT_HEADERS64 *nt64 = (const IMAGE_NT_HEADERS64 *)nt;
 
-    *size = nt->OptionalHeader.DataDirectory[dir].Size;
-    if (image || addr < nt->OptionalHeader.SizeOfHeaders) return (char *)base + addr;
+        if (dir >= nt64->OptionalHeader.NumberOfRvaAndSizes) return NULL;
+        if (!(addr = nt64->OptionalHeader.DataDirectory[dir].VirtualAddress)) return NULL;
+        *size = nt64->OptionalHeader.DataDirectory[dir].Size;
+        if (image || addr < nt64->OptionalHeader.SizeOfHeaders) return (char *)base + addr;
+    }
+    else if (nt->OptionalHeader.Magic == IMAGE_NT_OPTIONAL_HDR32_MAGIC)
+    {
+        const IMAGE_NT_HEADERS32 *nt32 = (const IMAGE_NT_HEADERS32 *)nt;
+
+        if (dir >= nt32->OptionalHeader.NumberOfRvaAndSizes) return NULL;
+        if (!(addr = nt32->OptionalHeader.DataDirectory[dir].VirtualAddress)) return NULL;
+        *size = nt32->OptionalHeader.DataDirectory[dir].Size;
+        if (image || addr < nt32->OptionalHeader.SizeOfHeaders) return (char *)base + addr;
+    }
+    else return NULL;
 
     return RtlImageRvaToVa( nt, base, addr, section );
 }
