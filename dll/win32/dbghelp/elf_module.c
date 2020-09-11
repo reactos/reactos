@@ -632,6 +632,7 @@ static void elf_hash_symtab(struct module* module, struct pool* pool,
     for (i = 0; i < nsym; i++)
     {
         struct elf_sym sym;
+        unsigned int type;
 
         if (fmap->addr_size == 32)
         {
@@ -647,14 +648,13 @@ static void elf_hash_symtab(struct module* module, struct pool* pool,
         else
             sym = ((struct elf_sym *)symtab)[i];
 
+        type = sym.st_info & 0xf;
+
         /* Ignore certain types of entries which really aren't of that much
          * interest.
          */
-        if ((ELF32_ST_TYPE(sym.st_info) != STT_NOTYPE &&
-             ELF32_ST_TYPE(sym.st_info) != STT_FILE &&
-             ELF32_ST_TYPE(sym.st_info) != STT_OBJECT &&
-             ELF32_ST_TYPE(sym.st_info) != STT_FUNC) ||
-            sym.st_shndx == SHN_UNDEF)
+        if ((type != STT_NOTYPE && type != STT_FILE && type != STT_OBJECT && type != STT_FUNC)
+            || !sym.st_shndx)
         {
             continue;
         }
@@ -662,7 +662,7 @@ static void elf_hash_symtab(struct module* module, struct pool* pool,
         symname = strp + sym.st_name;
 
         /* handle some specific symtab (that we'll throw away when done) */
-        switch (ELF32_ST_TYPE(sym.st_info))
+        switch (type)
         {
         case STT_FILE:
             if (symname)
@@ -791,6 +791,11 @@ static const struct elf_sym *elf_lookup_symtab(const struct module* module,
     return &result->sym;
 }
 
+static BOOL elf_is_local_symbol(unsigned int info)
+{
+    return !(info >> 4);
+}
+
 /******************************************************************
  *		elf_finish_stabs_info
  *
@@ -857,7 +862,7 @@ static void elf_finish_stabs_info(struct module* module, const struct hash_table
                               ((struct symt_function*)sym)->address,
                               wine_dbgstr_longlong(elf_info->elf_addr + symp->st_value));
                     ((struct symt_data*)sym)->u.var.offset = elf_info->elf_addr + symp->st_value;
-                    ((struct symt_data*)sym)->kind = (ELF32_ST_BIND(symp->st_info) == STB_LOCAL) ?
+                    ((struct symt_data*)sym)->kind = elf_is_local_symbol(symp->st_info) ?
                         DataIsFileStatic : DataIsGlobal;
                 } else
                     FIXME("Couldn't find %s!%s\n",
@@ -916,7 +921,7 @@ static int elf_new_wine_thunks(struct module* module, const struct hash_table* h
                  * used yet (ie we have no debug information on them)
                  * That's the case, for example, of the .spec.c files
                  */
-                switch (ELF32_ST_TYPE(ste->sym.st_info))
+                switch (ste->sym.st_info & 0xf)
                 {
                 case STT_FUNC:
                     symt_new_function(module, ste->compiland, ste->ht_elt.name,
@@ -927,7 +932,7 @@ static int elf_new_wine_thunks(struct module* module, const struct hash_table* h
                     loc.reg = 0;
                     loc.offset = addr;
                     symt_new_global_variable(module, ste->compiland, ste->ht_elt.name,
-                                             ELF32_ST_BIND(ste->sym.st_info) == STB_LOCAL,
+                                             elf_is_local_symbol(ste->sym.st_info),
                                              loc, ste->sym.st_size, NULL);
                     break;
                 default:
