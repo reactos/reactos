@@ -2,6 +2,10 @@
 #ifndef _UNDOCGDI_H
 #define _UNDOCGDI_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define DS_TILE 0x2
 #define DS_TRANSPARENTALPHA 0x4
 #define DS_TRANSPARENTCLR 0x8
@@ -26,10 +30,9 @@ typedef struct GDI_DRAW_STREAM_TAG
     DWORD   crTransparent; // transparent color.
 } GDI_DRAW_STREAM, *PGDI_DRAW_STREAM;
 
-EXTERN_C BOOL WINAPI
-GdiDrawStream(HDC dc, ULONG l, PGDI_DRAW_STREAM pDS);
+BOOL WINAPI GdiDrawStream(HDC dc, ULONG l, PGDI_DRAW_STREAM pDS);
 
-EXTERN_C BOOL WINAPI
+BOOL WINAPI
 GetTextExtentExPointWPri(
     HDC hdc,
     LPCWSTR lpwsz,
@@ -39,11 +42,15 @@ GetTextExtentExPointWPri(
     LPINT pdxOut,
     LPSIZE psize);
 
-EXTERN_C BOOL WINAPI
+BOOL WINAPI
 GetFontResourceInfoW(
     _In_z_ LPCWSTR lpFileName,
     _Inout_ DWORD *pdwBufSize,
     _Out_writes_to_opt_(*pdwBufSize, 1) PVOID lpBuffer,
     _In_ DWORD dwType);
+
+#ifdef __cplusplus
+} // extern "C"
+#endif
 
 #endif
