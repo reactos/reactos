@@ -139,6 +139,7 @@ struct image_file_map_ops
     BOOL (*find_section)(struct image_file_map* fmap, const char* name, struct image_section_map* ism);
     DWORD_PTR (*get_map_rva)(const struct image_section_map* ism);
     unsigned (*get_map_size)(const struct image_section_map* ism);
+    void (*unmap_file)(struct image_file_map *fmap);
 };
 
 static inline BOOL image_find_section(struct image_file_map* fmap, const char* name,
@@ -152,6 +153,15 @@ static inline BOOL image_find_section(struct image_file_map* fmap, const char* n
     ism->fmap = NULL;
     ism->sidx = -1;
     return FALSE;
+}
+
+static inline void image_unmap_file(struct image_file_map* fmap)
+{
+    while (fmap)
+    {
+        fmap->ops->unmap_file(fmap);
+        fmap = fmap->alternate;
+    }
 }
 
 static inline const char* image_map_section(struct image_section_map* ism)
