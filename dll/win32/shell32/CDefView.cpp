@@ -2049,7 +2049,7 @@ LRESULT CDefView::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
                     POINT ptItem;
                     m_ListView.GetItemPosition(params->iItem, &ptItem);
 
-                    ImageList_BeginDrag(big_icons, iIcon, params->ptAction.x - ptItem.x, params->ptAction.y - ptItem.y);
+                    ImageList_BeginDrag(big_icons, iIcon, m_ptFirstMousePos.x - ptItem.x, m_ptFirstMousePos.y - ptItem.y);
 
                     DoDragDrop(pda, this, dwEffect, &dwEffect2);
 
@@ -3078,14 +3078,30 @@ HRESULT STDMETHODCALLTYPE CDefView::GetDragPoint(POINT *pt)
     if (!pt)
         return E_INVALIDARG;
 
-    *pt = m_ptFirstMousePos; // in view coordinates
-    return S_OK;
+    if (m_pSourceDataObject)
+    {
+        *pt = m_ptFirstMousePos; // in view coordinates
+        return S_OK;
+    }
+    else
+    {
+        INT iItem = m_ListView.GetNextItem(-1, LVNI_FOCUSED);
+        if (iItem >= 0)
+        {
+            m_ListView.GetItemPosition(iItem, pt); // in view coordinates
+            return S_OK;
+        }
+    }
+    return E_FAIL;
 }
 
 HRESULT STDMETHODCALLTYPE CDefView::GetDropPoint(POINT *pt)
 {
-    FIXME("(%p)->(%p) stub\n", this, pt);
-    return E_NOTIMPL;
+    if (!pt)
+        return E_INVALIDARG;
+
+    *pt = m_ptLastMousePos; // in view coordinates
+    return S_OK;
 }
 
 HRESULT STDMETHODCALLTYPE CDefView::MoveIcons(IDataObject *obj)
@@ -3285,6 +3301,7 @@ HRESULT CDefView::drag_notify_subitem(DWORD grfKeyState, POINTL pt, DWORD *pdwEf
     }
 
     m_ptLastMousePos = htinfo.pt;
+    ClientToListView(m_ListView, &m_ptLastMousePos);
 
     /* We need to check if we drag the selection over itself */
     if (lResult != -1 && m_pSourceDataObject.p != NULL)
@@ -3427,20 +3444,30 @@ HRESULT WINAPI CDefView::Drop(IDataObject* pDataObject, DWORD grfKeyState, POINT
         }
         ::ScreenToClient(m_ListView, &ptDrop);
         ::ClientToListView(m_ListView, &ptDrop);
+        m_ptLastMousePos = ptDrop;
 
         INT iItem = -1;
         m_ListView.SetRedraw(FALSE);
-        while ((iItem = m_ListView.GetNextItem(iItem, LVNI_SELECTED)) >= 0)
+
+        if (m_ListView.GetStyle() & LVS_AUTOARRANGE)
         {
-            POINT ptItem;
-            if (m_ListView.GetItemPosition(iItem, &ptItem))
+            while ((iItem = m_ListView.GetNextItem(iItem, LVNI_SELECTED)) >= 0)
             {
-                WCHAR sz[64];
-                wsprintfW(sz, L"(%d, %d)", ptDrop.x - m_ptFirstMousePos.x, ptDrop.y - m_ptFirstMousePos.y);
-                ::MessageBoxW(NULL, sz, L"pos", 0);
-                ptItem.x += ptDrop.x - m_ptFirstMousePos.x;
-                ptItem.y += ptDrop.y - m_ptFirstMousePos.y;
+                POINT ptItem = m_ptLastMousePos;
                 m_ListView.SetItemPosition(iItem, &ptItem);
+            }
+        }
+        else
+        {
+            while ((iItem = m_ListView.GetNextItem(iItem, LVNI_SELECTED)) >= 0)
+            {
+                POINT ptItem;
+                if (m_ListView.GetItemPosition(iItem, &ptItem))
+                {
+                    ptItem.x += ptDrop.x - m_ptLastMousePos.x;
+                    ptItem.y += ptDrop.y - m_ptLastMousePos.y;
+                    m_ListView.SetItemPosition(iItem, &ptItem);
+                }
             }
         }
         m_ListView.SetRedraw(TRUE);

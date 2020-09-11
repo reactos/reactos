@@ -7673,6 +7673,10 @@ static void LISTVIEW_GetOrigin(const LISTVIEW_INFO *infoPtr, LPPOINT lpptOrigin)
 
     TRACE("nHorzPos=%d, nVertPos=%d\n", nHorzPos, nVertPos);
 
+#ifdef __REACTOS__
+    lpptOrigin->x = nHorzPos;
+    lpptOrigin->y = nVertPos;
+#else
     lpptOrigin->x = infoPtr->rcList.left;
     lpptOrigin->y = infoPtr->rcList.top;
     if (infoPtr->uView == LV_VIEW_LIST)
@@ -7684,6 +7688,7 @@ static void LISTVIEW_GetOrigin(const LISTVIEW_INFO *infoPtr, LPPOINT lpptOrigin)
     lpptOrigin->y -= nVertPos;
 
     TRACE(" origin=%s\n", wine_dbgstr_point(lpptOrigin));
+#endif
 }
 
 /***
@@ -9220,6 +9225,11 @@ static BOOL LISTVIEW_SetItemPosition(LISTVIEW_INFO *infoPtr, INT nItem, const PO
 {
     POINT Origin, Pt;
 
+#ifdef __REACTOS__
+    WCHAR sz[64];
+    wsprintfW(sz, L"%d, %d", pt->x, pt->y);
+    MessageBoxW(NULL, sz, L"setitempos", 0);
+#endif
     TRACE("(nItem=%d, pt=%s)\n", nItem, wine_dbgstr_point(pt));
 
     if (!pt || nItem < 0 || nItem >= infoPtr->nItemCount ||
@@ -9239,32 +9249,42 @@ static BOOL LISTVIEW_SetItemPosition(LISTVIEW_INFO *infoPtr, INT nItem, const PO
 	Pt.x -= (infoPtr->nItemWidth - infoPtr->iconSize.cx) / 2;
 	Pt.y -= ICON_TOP_PADDING;
     }
+    Pt.x -= Origin.x;
+    Pt.y -= Origin.y;
 #ifdef __REACTOS__
     if (is_autoarrange(infoPtr))
     {
         WCHAR sz[64];
         INT i1, i2, *pPairs;
+        POINT ptView, ptClient;
 
         pPairs = ReAlloc(infoPtr->pPairs, 2 * (infoPtr->cPairs + 1));
         if (!pPairs)
             return FALSE;
 
+        ptView = Pt;
+        // Now, Pt is in item origin coordinates
+        {
+            ptClient.x = ptView.x + GetScrollPos(infoPtr->hwndSelf, SB_HORZ);
+            ptClient.y = ptView.y + GetScrollPos(infoPtr->hwndSelf, SB_VERT);
+        }
+        // Now ptClient is in client coordinates
         {
             HDC hDC = GetDC(infoPtr->hwndSelf);
             SelectObject(hDC, CreatePen(PS_SOLID, 0, RGB(0, 0, 255)));
-            MoveToEx(hDC, Pt.x, Pt.y - 10, NULL);
-            LineTo(hDC, Pt.x, Pt.y + 10);
-            MoveToEx(hDC, Pt.x - 10, Pt.y, NULL);
-            LineTo(hDC, Pt.x + 10, Pt.y);
+            MoveToEx(hDC, ptClient.x, ptClient.y - 10, NULL);
+            LineTo(hDC, ptClient.x, ptClient.y + 10);
+            MoveToEx(hDC, ptClient.x - 10, ptClient.y, NULL);
+            LineTo(hDC, ptClient.x + 10, ptClient.y);
             ReleaseDC(infoPtr->hwndSelf, hDC);
         }
 
         i1 = nItem;
-        i2 = LISTVIEW_HitTestBlank(infoPtr, Pt);
+        i2 = LISTVIEW_HitTestBlank(infoPtr, *pt);
         if (i1 < i2)
             --i2;
 
-        wsprintfW(sz, L"(%d, %d), (%d, %d), (%d, %d)", i1, i2, Pt.x, Pt.y, Origin.x, Origin.y);
+        wsprintfW(sz, L"(%d, %d), (%d, %d), (%d, %d)", i1, i2, pt->x, pt->y, Origin.x, Origin.y);
         MessageBoxW(NULL, sz, L"listview.c", 0);
 
         infoPtr->pPairs = pPairs;
@@ -9276,8 +9296,6 @@ static BOOL LISTVIEW_SetItemPosition(LISTVIEW_INFO *infoPtr, INT nItem, const PO
         return TRUE;
     }
 #endif
-    Pt.x -= Origin.x;
-    Pt.y -= Origin.y;
 
 #ifdef __REACTOS__
     if (infoPtr->dwLvExStyle & LVS_EX_SNAPTOGRID)
