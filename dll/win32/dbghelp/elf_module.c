@@ -1574,8 +1574,27 @@ static BOOL elf_search_loader(struct process* pcs, struct elf_info* elf_info)
     ULONG_PTR base = 0;
     BOOL ret;
 
-    if (!NtQueryInformationProcess( pcs->handle, ProcessBasicInformation, &pbi, sizeof(pbi), NULL ))
-        ReadProcessMemory( pcs->handle, &pbi.PebBaseAddress->Reserved[0], &base, sizeof(base), NULL );
+    if (NtQueryInformationProcess( pcs->handle, ProcessBasicInformation,
+                                   &pbi, sizeof(pbi), NULL ))
+        return FALSE;
+
+    if (!pcs->is_64bit)
+    {
+        PEB32 *peb32 = (PEB32 *)pbi.PebBaseAddress;
+        DWORD base32;
+
+        if (!ReadProcessMemory( pcs->handle, &peb32->Reserved[0], &base32,
+                                sizeof(base32), NULL ))
+            return FALSE;
+
+        base = base32;
+    }
+    else
+    {
+        if (!ReadProcessMemory( pcs->handle, &pbi.PebBaseAddress->Reserved[0],
+                                &base, sizeof(base), NULL ))
+            return FALSE;
+    }
 
     ret = elf_search_and_load_file(pcs, loader, base, 0, elf_info);
     heap_free(loader);
