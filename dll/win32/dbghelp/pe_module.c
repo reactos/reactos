@@ -553,7 +553,7 @@ static BOOL pe_load_rsym(struct module* module)
 static BOOL pe_load_dbg_file(const struct process* pcs, struct module* module,
                              const char* dbg_name, DWORD timestamp)
 {
-    char                                tmp[MAX_PATH];
+    WCHAR tmp[MAX_PATH];
     HANDLE                              hFile = INVALID_HANDLE_VALUE, hMap = 0;
     const BYTE*                         dbg_mapping = NULL;
     BOOL                                ret = FALSE;
@@ -561,7 +561,7 @@ static BOOL pe_load_dbg_file(const struct process* pcs, struct module* module,
     TRACE("Processing DBG file %s\n", debugstr_a(dbg_name));
 
     if (path_find_symbol_file(pcs, module, dbg_name, NULL, timestamp, 0, tmp, &module->module.DbgUnmatched) &&
-        (hFile = CreateFileA(tmp, GENERIC_READ, FILE_SHARE_READ, NULL,
+        (hFile = CreateFileW(tmp, GENERIC_READ, FILE_SHARE_READ, NULL,
                              OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL)) != INVALID_HANDLE_VALUE &&
         ((hMap = CreateFileMappingW(hFile, NULL, PAGE_READONLY, 0, 0, NULL)) != 0) &&
         ((dbg_mapping = MapViewOfFile(hMap, FILE_MAP_READ, 0, 0, 0)) != NULL))
@@ -584,7 +584,7 @@ static BOOL pe_load_dbg_file(const struct process* pcs, struct module* module,
                                       hdr->DebugDirectorySize / sizeof(*dbg));
     }
     else
-        ERR("Couldn't find .DBG file %s (%s)\n", debugstr_a(dbg_name), debugstr_a(tmp));
+        ERR("Couldn't find .DBG file %s (%s)\n", debugstr_a(dbg_name), debugstr_w(tmp));
 
     if (dbg_mapping) UnmapViewOfFile(dbg_mapping);
     if (hMap) CloseHandle(hMap);
