@@ -703,6 +703,8 @@ extern BOOL         path_find_symbol_file(const struct process* pcs, const struc
                                           PCSTR full_path, const GUID* guid, DWORD dw1, DWORD dw2,
                                           WCHAR *buffer, BOOL* is_unmatched) DECLSPEC_HIDDEN;
 extern WCHAR *get_dos_file_name(const WCHAR *filename) DECLSPEC_HIDDEN;
+extern const WCHAR* file_name(const WCHAR* str) DECLSPEC_HIDDEN;
+extern const char* file_nameA(const char* str) DECLSPEC_HIDDEN;
 
 /* pe_module.c */
 extern BOOL         pe_load_nt_header(HANDLE hProc, DWORD64 base, IMAGE_NT_HEADERS* nth) DECLSPEC_HIDDEN;

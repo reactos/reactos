@@ -87,14 +87,14 @@ static BOOL is_wine_loader(const WCHAR *module)
     static const WCHAR wineW[] = {'w','i','n','e',0};
     static const WCHAR suffixW[] = {'6','4',0};
     const WCHAR *filename = get_filename(module, NULL);
-    const char *ptr, *p;
+    const char *ptr;
     BOOL ret = FALSE;
     WCHAR *buffer;
     DWORD len;
 
     if ((ptr = getenv("WINELOADER")))
     {
-        if ((p = strrchr(ptr, '/'))) ptr = p + 1;
+        ptr = file_nameA(ptr);
         len = 2 + MultiByteToWideChar( CP_UNIXCP, 0, ptr, -1, NULL, 0 );
         buffer = heap_alloc( len * sizeof(WCHAR) );
         MultiByteToWideChar( CP_UNIXCP, 0, ptr, -1, buffer, len );

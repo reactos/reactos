@@ -1193,10 +1193,7 @@ static void find_and_map_dsym(struct process *pcs, struct module* module)
     if (!fmap->uuid)
         return;
 
-    if ((p = strrchrW(module->module.LoadedImageName, '/')))
-        p++;
-    else
-        p = module->module.LoadedImageName;
+    p = file_name(module->module.LoadedImageName);
     len = strlenW(module->module.LoadedImageName) + strlenW(dot_dsym) + strlenW(dsym_subpath) + strlenW(p) + 1;
     path = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
     if (!path)
@@ -1637,19 +1634,17 @@ static BOOL macho_search_and_load_file(struct process* pcs, const WCHAR* filenam
     if (strstrW(filename, S_libstdcPPW)) return FALSE; /* We know we can't do it */
 
     /* If has no directories, try PATH first. */
-    if (!strchrW(filename, '/'))
+    p = file_name(filename);
+    if (p == filename)
     {
         ret = macho_load_file_from_path(pcs, filename, load_addr,
                                       getenv("PATH"), macho_info);
     }
     /* Try DYLD_LIBRARY_PATH, with just the filename (no directories). */
     if (!ret)
-    {
-        if ((p = strrchrW(filename, '/'))) p++;
-        else p = filename;
         ret = macho_load_file_from_path(pcs, p, load_addr,
                                       getenv("DYLD_LIBRARY_PATH"), macho_info);
-    }
+
     /* Try the path as given. */
     if (!ret)
         ret = macho_load_file(pcs, filename, load_addr, macho_info);
@@ -1661,7 +1656,7 @@ static BOOL macho_search_and_load_file(struct process* pcs, const WCHAR* filenam
             fallback = "/usr/local/lib:/lib:/usr/lib";
         ret = macho_load_file_from_path(pcs, p, load_addr, fallback, macho_info);
     }
-    if (!ret && !strchrW(filename, '/'))
+    if (!ret && p == filename)
         ret = macho_load_file_from_dll_path(pcs, filename, load_addr, macho_info);
 
     return ret;
@@ -1957,8 +1952,7 @@ static BOOL macho_load_cb(const WCHAR* name, unsigned long addr, void* user)
     /* memcmp is needed for matches when bufstr contains also version information
      * ml->name: libc.so, name: libc.so.6.0
      */
-    p = strrchrW(name, '/');
-    if (!p++) p = name;
+    p = file_name(name);
     if (!memcmp(p, ml->name, lstrlenW(ml->name) * sizeof(WCHAR)))
     {
         ml->ret = macho_search_and_load_file(ml->pcs, name, addr, &ml->macho_info);
@@ -1989,8 +1983,7 @@ struct module*  macho_load_module(struct process* pcs, const WCHAR* name, unsign
         /* do only the lookup from the filename, not the path (as we lookup module
          * name in the process' loaded module list)
          */
-        ml.name = strrchrW(name, '/');
-        if (!ml.name++) ml.name = name;
+        ml.name = file_name(name);
         ml.ret = FALSE;
 
         if (!macho_enum_modules_internal(pcs, NULL, macho_load_cb, &ml))

@@ -34,7 +34,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(dbghelp);
 static inline BOOL is_sepA(char ch) {return ch == '/' || ch == '\\';}
 static inline BOOL is_sep(WCHAR ch) {return ch == '/' || ch == '\\';}
 
-static inline const char* file_nameA(const char* str)
+const char* file_nameA(const char* str)
 {
     const char*       p;
 
@@ -42,7 +42,7 @@ static inline const char* file_nameA(const char* str)
     return p + 1;
 }
 
-static inline const WCHAR* file_name(const WCHAR* str)
+const WCHAR* file_name(const WCHAR* str)
 {
     const WCHAR*      p;
 
