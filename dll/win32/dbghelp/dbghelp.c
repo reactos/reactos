@@ -19,7 +19,6 @@
  */
 
 #ifndef DBGHELP_STATIC_LIB
-#include "config.h"
 
 #include <unistd.h>
 #include "dbghelp_private.h"

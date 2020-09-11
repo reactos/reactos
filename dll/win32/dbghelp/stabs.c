@@ -29,9 +29,6 @@
  *     available (hopefully) from http://sources.redhat.com/gdb/onlinedocs
  */
 
-#include "config.h"
-#include "wine/port.h"
-
 #include <sys/types.h>
 #include <fcntl.h>
 #include <limits.h>
