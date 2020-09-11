@@ -149,44 +149,41 @@ void module_set_module(struct module* module, const WCHAR* name)
     module_fill_module(name, module->modulename, sizeof(module->modulename) / sizeof(module->modulename[0]));
 }
 
-const WCHAR *get_wine_loader_name(void)
+#ifndef __REACTOS__
+/* Returned string must be freed by caller */
+WCHAR *get_wine_loader_name(struct process *pcs)
 {
-    static const BOOL is_win64 = sizeof(void *) > sizeof(int); /* FIXME: should depend on target process */
     static const WCHAR wineW[] = {'w','i','n','e',0};
     static const WCHAR suffixW[] = {'6','4',0};
-    static const WCHAR *loader;
+    WCHAR *buffer, *p;
+    const char *env;
 
-    if (!loader)
+    /* All binaries are loaded with WINELOADER (if run from tree) or by the
+     * main executable
+     */
+    if ((env = getenv("WINELOADER")))
     {
-        WCHAR *p, *buffer;
-        const char *ptr;
-
-        /* All binaries are loaded with WINELOADER (if run from tree) or by the
-         * main executable
-         */
-        if ((ptr = getenv("WINELOADER")))
-        {
-            DWORD len = 2 + MultiByteToWideChar( CP_UNIXCP, 0, ptr, -1, NULL, 0 );
-            buffer = HeapAlloc( GetProcessHeap(), 0, len * sizeof(WCHAR) );
-            MultiByteToWideChar( CP_UNIXCP, 0, ptr, -1, buffer, len );
-        }
-        else
-        {
-            buffer = HeapAlloc( GetProcessHeap(), 0, sizeof(wineW) + 2 * sizeof(WCHAR) );
-            strcpyW( buffer, wineW );
-        }
-        p = buffer + strlenW( buffer ) - strlenW( suffixW );
-        if (p > buffer && !strcmpW( p, suffixW ))
-        {
-            if (!is_win64) *p = 0;
-        }
-        else if (is_win64) strcatW( buffer, suffixW );
-
-        TRACE( "returning %s\n", debugstr_w(buffer) );
-        loader = buffer;
+        DWORD len = 2 + MultiByteToWideChar( CP_UNIXCP, 0, env, -1, NULL, 0 );
+        buffer = heap_alloc( len * sizeof(WCHAR) );
+        MultiByteToWideChar( CP_UNIXCP, 0, env, -1, buffer, len );
     }
-    return loader;
+    else
+    {
+        buffer = heap_alloc( sizeof(wineW) + 2 * sizeof(WCHAR) );
+        strcpyW( buffer, wineW );
+    }
+
+    p = buffer + strlenW( buffer ) - strlenW( suffixW );
+    if (p > buffer && !strcmpW( p, suffixW ))
+        *p = 0;
+
+    if (pcs->is_64bit)
+        strcatW(buffer, suffixW);
+
+    TRACE( "returning %s\n", debugstr_w(buffer) );
+    return buffer;
 }
+#endif
 
 static const char*      get_module_type(enum module_type type, BOOL virtual)
 {

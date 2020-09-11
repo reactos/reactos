@@ -415,7 +415,7 @@ struct module
     struct wine_rb_tree         sources_offsets_tree;
 };
 
-struct process 
+struct process
 {
     struct process*             next;
     HANDLE                      handle;
@@ -433,6 +433,8 @@ struct process
 
     unsigned                    buffer_size;
     void*                       buffer;
+
+    BOOL                        is_64bit;
 };
 
 struct line_info
@@ -639,11 +641,13 @@ extern void         module_reset_debug_info(struct module* module) DECLSPEC_HIDD
 extern BOOL         module_remove(struct process* pcs,
                                   struct module* module) DECLSPEC_HIDDEN;
 extern void         module_set_module(struct module* module, const WCHAR* name) DECLSPEC_HIDDEN;
-extern const WCHAR *get_wine_loader_name(void) DECLSPEC_HIDDEN;
+#ifndef __REACTOS__
+extern WCHAR *      get_wine_loader_name(struct process *pcs) DECLSPEC_HIDDEN;
+#endif
 
 /* msc.c */
 extern BOOL         pe_load_debug_directory(const struct process* pcs,
-                                            struct module* module, 
+                                            struct module* module,
                                             const BYTE* mapping,
                                             const IMAGE_SECTION_HEADER* sectp, DWORD nsect,
                                             const IMAGE_DEBUG_DIRECTORY* dbg, int nDbg) DECLSPEC_HIDDEN;
@@ -657,7 +661,7 @@ extern BOOL         pdb_virtual_unwind(struct cpu_stack_walk* csw, DWORD_PTR ip,
 
 /* path.c */
 extern BOOL         path_find_symbol_file(const struct process* pcs, const struct module* module,
-                                          PCSTR full_path, const GUID* guid, DWORD dw1, DWORD dw2, 
+                                          PCSTR full_path, const GUID* guid, DWORD dw1, DWORD dw2,
                                           PSTR buffer, BOOL* is_unmatched) DECLSPEC_HIDDEN;
 
 /* pe_module.c */
@@ -720,14 +724,14 @@ extern struct symt_compiland*
                     symt_new_compiland(struct module* module, unsigned long address,
                                        unsigned src_idx) DECLSPEC_HIDDEN;
 extern struct symt_public*
-                    symt_new_public(struct module* module, 
-                                    struct symt_compiland* parent, 
+                    symt_new_public(struct module* module,
+                                    struct symt_compiland* parent,
                                     const char* typename,
                                     BOOL is_function,
                                     unsigned long address,
                                     unsigned size) DECLSPEC_HIDDEN;
 extern struct symt_data*
-                    symt_new_global_variable(struct module* module, 
+                    symt_new_global_variable(struct module* module,
                                              struct symt_compiland* parent,
                                              const char* name, unsigned is_static,
                                              struct location loc, unsigned long size,
@@ -738,31 +742,31 @@ extern struct symt_function*
                                       const char* name,
                                       unsigned long addr, unsigned long size,
                                       struct symt* type) DECLSPEC_HIDDEN;
-extern BOOL         symt_normalize_function(struct module* module, 
+extern BOOL         symt_normalize_function(struct module* module,
                                             const struct symt_function* func) DECLSPEC_HIDDEN;
 extern void         symt_add_func_line(struct module* module,
-                                       struct symt_function* func, 
-                                       unsigned source_idx, int line_num, 
+                                       struct symt_function* func,
+                                       unsigned source_idx, int line_num,
                                        unsigned long offset) DECLSPEC_HIDDEN;
 extern struct symt_data*
-                    symt_add_func_local(struct module* module, 
-                                        struct symt_function* func, 
+                    symt_add_func_local(struct module* module,
+                                        struct symt_function* func,
                                         enum DataKind dt, const struct location* loc,
                                         struct symt_block* block,
                                         struct symt* type, const char* name) DECLSPEC_HIDDEN;
 extern struct symt_block*
-                    symt_open_func_block(struct module* module, 
+                    symt_open_func_block(struct module* module,
                                          struct symt_function* func,
-                                         struct symt_block* block, 
+                                         struct symt_block* block,
                                          unsigned pc, unsigned len) DECLSPEC_HIDDEN;
 extern struct symt_block*
-                    symt_close_func_block(struct module* module, 
+                    symt_close_func_block(struct module* module,
                                           const struct symt_function* func,
                                           struct symt_block* block, unsigned pc) DECLSPEC_HIDDEN;
 extern struct symt_hierarchy_point*
-                    symt_add_function_point(struct module* module, 
+                    symt_add_function_point(struct module* module,
                                             struct symt_function* func,
-                                            enum SymTagEnum point, 
+                                            enum SymTagEnum point,
                                             const struct location* loc,
                                             const char* name) DECLSPEC_HIDDEN;
 extern BOOL         symt_fill_func_line_info(const struct module* module,
@@ -770,7 +774,7 @@ extern BOOL         symt_fill_func_line_info(const struct module* module,
                                              DWORD64 addr, IMAGEHLP_LINE64* line) DECLSPEC_HIDDEN;
 extern BOOL         symt_get_func_line_next(const struct module* module, PIMAGEHLP_LINE64 line) DECLSPEC_HIDDEN;
 extern struct symt_thunk*
-                    symt_new_thunk(struct module* module, 
+                    symt_new_thunk(struct module* module,
                                    struct symt_compiland* parent,
                                    const char* name, THUNK_ORDINAL ord,
                                    unsigned long addr, unsigned long size) DECLSPEC_HIDDEN;
@@ -791,38 +795,38 @@ extern void         symt_init_basic(struct module* module) DECLSPEC_HIDDEN;
 extern BOOL         symt_get_info(struct module* module, const struct symt* type,
                                   IMAGEHLP_SYMBOL_TYPE_INFO req, void* pInfo) DECLSPEC_HIDDEN;
 extern struct symt_basic*
-                    symt_new_basic(struct module* module, enum BasicType, 
+                    symt_new_basic(struct module* module, enum BasicType,
                                    const char* typename, unsigned size) DECLSPEC_HIDDEN;
 extern struct symt_udt*
                     symt_new_udt(struct module* module, const char* typename,
                                  unsigned size, enum UdtKind kind) DECLSPEC_HIDDEN;
 extern BOOL         symt_set_udt_size(struct module* module,
                                       struct symt_udt* type, unsigned size) DECLSPEC_HIDDEN;
-extern BOOL         symt_add_udt_element(struct module* module, 
-                                         struct symt_udt* udt_type, 
+extern BOOL         symt_add_udt_element(struct module* module,
+                                         struct symt_udt* udt_type,
                                          const char* name,
-                                         struct symt* elt_type, unsigned offset, 
+                                         struct symt* elt_type, unsigned offset,
                                          unsigned size) DECLSPEC_HIDDEN;
 extern struct symt_enum*
                     symt_new_enum(struct module* module, const char* typename,
                                   struct symt* basetype) DECLSPEC_HIDDEN;
-extern BOOL         symt_add_enum_element(struct module* module, 
-                                          struct symt_enum* enum_type, 
+extern BOOL         symt_add_enum_element(struct module* module,
+                                          struct symt_enum* enum_type,
                                           const char* name, int value) DECLSPEC_HIDDEN;
 extern struct symt_array*
-                    symt_new_array(struct module* module, int min, int max, 
+                    symt_new_array(struct module* module, int min, int max,
                                    struct symt* base, struct symt* index) DECLSPEC_HIDDEN;
 extern struct symt_function_signature*
-                    symt_new_function_signature(struct module* module, 
+                    symt_new_function_signature(struct module* module,
                                                 struct symt* ret_type,
                                                 enum CV_call_e call_conv) DECLSPEC_HIDDEN;
 extern BOOL         symt_add_function_signature_parameter(struct module* module,
                                                           struct symt_function_signature* sig,
                                                           struct symt* param) DECLSPEC_HIDDEN;
 extern struct symt_pointer*
-                    symt_new_pointer(struct module* module, 
+                    symt_new_pointer(struct module* module,
                                      struct symt* ref_type,
                                      unsigned long size) DECLSPEC_HIDDEN;
 extern struct symt_typedef*
-                    symt_new_typedef(struct module* module, struct symt* ref, 
+                    symt_new_typedef(struct module* module, struct symt* ref,
                                      const char* name) DECLSPEC_HIDDEN;
