@@ -346,12 +346,7 @@ static BOOL elf_map_file(struct elf_map_file_data* emfd, struct image_file_map* 
     /* and check for an ELF header */
     if (memcmp(fmap->u.elf.elfhdr.e_ident,
                elf_signature, sizeof(elf_signature))) goto done;
-    /* and check 32 vs 64 size according to current machine */
-#ifdef _WIN64
-    if (fmap->u.elf.elfhdr.e_ident[EI_CLASS] != ELFCLASS64) goto done;
-#else
-    if (fmap->u.elf.elfhdr.e_ident[EI_CLASS] != ELFCLASS32) goto done;
-#endif
+
     fmap->addr_size = fmap->u.elf.elfhdr.e_ident[EI_CLASS] == ELFCLASS64 ? 64 : 32;
     fmap->u.elf.sect = HeapAlloc(GetProcessHeap(), 0,
                                  fmap->u.elf.elfhdr.e_shnum * sizeof(fmap->u.elf.sect[0]));
