@@ -1572,15 +1572,9 @@ static BOOL macho_search_and_load_file(struct process* pcs, const WCHAR* filenam
     load_params.load_addr  = load_addr;
     load_params.macho_info = macho_info;
 
-    /* If has no directories, try PATH first. */
+    /* Try DYLD_LIBRARY_PATH first. */
     p = file_name(filename);
-    if (p == filename)
-    {
-        ret = search_unix_path(filename, getenv("PATH"), macho_load_file_cb, &load_params);
-    }
-    /* Try DYLD_LIBRARY_PATH, with just the filename (no directories). */
-    if (!ret)
-        ret = search_unix_path(p, getenv("DYLD_LIBRARY_PATH"), macho_load_file_cb, &load_params);
+    ret = search_unix_path(p, getenv("DYLD_LIBRARY_PATH"), macho_load_file_cb, &load_params);
 
     /* Try the path as given. */
     if (!ret)
