@@ -761,7 +761,7 @@ extern DWORD64      sw_module_base(struct cpu_stack_walk* csw, DWORD64 addr) DEC
 extern const char*  symt_get_name(const struct symt* sym) DECLSPEC_HIDDEN;
 extern WCHAR*       symt_get_nameW(const struct symt* sym) DECLSPEC_HIDDEN;
 extern BOOL         symt_get_address(const struct symt* type, ULONG64* addr) DECLSPEC_HIDDEN;
-extern int          symt_cmp_addr(const void* p1, const void* p2) DECLSPEC_HIDDEN;
+extern int __cdecl  symt_cmp_addr(const void* p1, const void* p2) DECLSPEC_HIDDEN;
 extern void         copy_symbolW(SYMBOL_INFOW* siw, const SYMBOL_INFO* si) DECLSPEC_HIDDEN;
 extern struct symt_ht*
                     symt_find_nearest(struct module* module, DWORD_PTR addr) DECLSPEC_HIDDEN;
