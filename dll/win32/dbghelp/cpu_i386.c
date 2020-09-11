@@ -526,13 +526,11 @@ static unsigned i386_map_dwarf_register(unsigned regno, const struct module* mod
     case  3: reg = CV_REG_EBX; break;
     case  4:
     case  5:
-#ifdef __APPLE__
         /* On OS X, DWARF eh_frame uses a different mapping for the registers.  It's
            apparently the mapping as emitted by GCC, at least at some point in its history. */
-        if (eh_frame)
+        if (eh_frame && module->type == DMT_MACHO)
             reg = (regno == 4) ? CV_REG_EBP : CV_REG_ESP;
         else
-#endif
             reg = (regno == 4) ? CV_REG_ESP : CV_REG_EBP;
         break;
     case  6: reg = CV_REG_ESI; break;
