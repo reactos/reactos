@@ -1357,7 +1357,10 @@ BOOL stabs_parse(struct module* module, ULONG_PTR load_offset,
         if (stab_ptr->n_type & N_STAB)
             type = stab_ptr->n_type;
         else
+        {
             type = (stab_ptr->n_type & N_TYPE);
+            if (module->type == DMT_MACHO) type &= ~N_PEXT;
+        }
 
         /* only symbol entries contain a typedef */
         switch (type)
