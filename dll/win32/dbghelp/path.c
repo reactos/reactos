@@ -474,7 +474,7 @@ struct module_find
 static BOOL CALLBACK module_find_cb(PCWSTR buffer, PVOID user)
 {
     struct module_find* mf = user;
-    DWORD               size, checksum, timestamp;
+    DWORD               size, timestamp;
     unsigned            matched = 0;
 
     /* the matching weights:
@@ -522,30 +522,6 @@ static BOOL CALLBACK module_find_cb(PCWSTR buffer, PVOID user)
             if (size != mf->dw2)
                 WARN("Found %s, but wrong size\n", debugstr_w(buffer));
             if (timestamp == mf->dw1 && size == mf->dw2) matched++;
-        }
-        break;
-    case DMT_MACHO:
-    case DMT_ELF:
-        {
-            HANDLE file;
-
-            file = CreateFileW(buffer, GENERIC_READ, FILE_SHARE_READ, NULL,
-                               OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
-            if (file == INVALID_HANDLE_VALUE) break;
-
-            checksum = calc_crc32(file);
-            if (checksum == mf->dw1) matched += 2;
-            else
-            {
-                struct image_file_map fmap;
-                WARN("Found %s, but wrong checksums: %08x %08x\n", debugstr_w(buffer), checksum, mf->dw1);
-                if (elf_map_handle(file, &fmap)) /* FIXME: validate macho files */
-                {
-                    image_unmap_file(&fmap);
-                    matched++;
-                }
-            }
-            CloseHandle(file);
         }
         break;
     case DMT_PDB:
