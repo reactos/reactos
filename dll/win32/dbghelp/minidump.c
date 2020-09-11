@@ -294,7 +294,7 @@ static BOOL fetch_macho_module_info_cb(const WCHAR* name, unsigned long base,
     return TRUE;
 }
 
-void minidump_add_memory64_block(struct dump_context* dc, ULONG64 base, ULONG64 size)
+static void minidump_add_memory64_block(struct dump_context* dc, ULONG64 base, ULONG64 size)
 {
     if (!dc->mem64)
     {
