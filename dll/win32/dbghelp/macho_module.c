@@ -1366,7 +1366,7 @@ static ULONG_PTR get_dyld_image_info_address(struct process* pcs)
     if (status == STATUS_SUCCESS)
     {
         /* Read dyld image info address from PEB */
-        if (!pcs->is_64bit)
+        if (pcs->is_64bit)
             ret = ReadProcessMemory(pcs->handle, &pbi.PebBaseAddress->Reserved[0],
                 &dyld_image_info_address, sizeof(dyld_image_info_address), NULL);
         else
