@@ -19,13 +19,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-#include "wine/port.h"
-
-#if defined(__svr4__) || defined(__sun)
-#define __ELF__ 1
-#endif
-
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -36,8 +29,6 @@
 
 #include "wine/debug.h"
 #include "wine/heap.h"
-
-#ifdef __ELF__
 
 #define ELF_INFO_DEBUG_HEADER   0x0001
 #define ELF_INFO_MODULE         0x0002
@@ -1778,22 +1769,3 @@ BOOL elf_read_wine_loader_dbg_info(struct process* pcs, ULONG_PTR addr)
     pcs->loader = &elf_loader_ops;
     return TRUE;
 }
-
-#else	/* !__ELF__ */
-
-BOOL elf_map_handle(HANDLE handle, struct image_file_map* fmap)
-{
-    return FALSE;
-}
-
-BOOL elf_read_wine_loader_dbg_info(struct process* pcs, ULONG_PTR addr)
-{
-    return FALSE;
-}
-
-int elf_is_in_thunk_area(ULONG_PTR addr,
-                         const struct elf_thunk_area* thunks)
-{
-    return -1;
-}
-#endif  /* __ELF__ */

@@ -55,9 +55,9 @@ else()
         cpu_x86_64.c
         dbghelp.c
         dwarf.c
-        elf_module.c
+#       elf_module.c
         image.c
-        macho_module.c
+#       macho_module.c
         minidump.c
         module.c
         msc.c

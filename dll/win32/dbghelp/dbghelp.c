@@ -73,13 +73,13 @@ WINE_DEFAULT_DEBUG_CHANNEL(dbghelp);
 
 unsigned   dbghelp_options = SYMOPT_UNDNAME;
 BOOL       dbghelp_opt_native = FALSE;
-#ifndef __REACTOS__
+#ifndef DBGHELP_STATIC_LIB
 SYSTEM_INFO sysinfo;
 #endif
 
 static struct process* process_first /* = NULL */;
 
-#ifndef __REACTOS__
+#ifndef DBGHELP_STATIC_LIB
 BOOL WINAPI DllMain(HINSTANCE instance, DWORD reason, LPVOID reserved)
 {
     switch (reason)
@@ -266,6 +266,7 @@ BOOL WINAPI SymGetSearchPath(HANDLE hProcess, PSTR szSearchPath,
     return ret;
 }
 
+#ifndef DBGHELP_STATIC_LIB
 /******************************************************************
  *		invade_process
  *
@@ -284,7 +285,6 @@ static BOOL WINAPI process_invade_cb(PCWSTR name, ULONG64 base, ULONG size, PVOI
     return TRUE;
 }
 
-#ifndef DBGHELP_STATIC_LIB
 /******************************************************************
  *		check_live_target
  *
@@ -313,10 +313,12 @@ static BOOL check_live_target(struct process* pcs)
     /* Wine store their loader base address in peb.reserved[0] and load its symbol from there.
      * ReactOS does not care about it */
     if (!base) return FALSE;
-#endif
 
     TRACE("got debug info address %#lx from PEB %p\n", base, pbi.PebBaseAddress);
     return elf_read_wine_loader_dbg_info(pcs, base) || macho_read_wine_loader_dbg_info(pcs, base);
+#else
+    return TRUE;
+#endif
 }
 #endif
 
@@ -423,12 +425,14 @@ BOOL WINAPI SymInitializeW(HANDLE hProcess, PCWSTR UserSearchPath, BOOL fInvadeP
         pcs->loader->synchronize_module_list(pcs);
     }
     else if (fInvadeProcess)
+#else
+    if (fInvadeProcess)
+#endif
     {
         SymCleanup(hProcess);
         SetLastError(ERROR_INVALID_PARAMETER);
         return FALSE;
     }
-#endif
 
     return TRUE;
 }
