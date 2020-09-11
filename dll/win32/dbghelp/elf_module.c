@@ -351,8 +351,33 @@ static BOOL elf_map_file(struct elf_map_file_data* emfd, struct image_file_map* 
 
     fmap->addr_size = e_ident[EI_CLASS] == ELFCLASS64 ? 64 : 32;
 
-    if (!elf_map_file_read(fmap, emfd, &fmap->u.elf.elfhdr, sizeof(fmap->u.elf.elfhdr), 0))
-        goto done;
+    if (fmap->addr_size == 32)
+    {
+        Elf32_Ehdr elfhdr32;
+
+        if (!elf_map_file_read(fmap, emfd, &elfhdr32, sizeof(elfhdr32), 0))
+            goto done;
+
+        memcpy(fmap->u.elf.elfhdr.e_ident, elfhdr32.e_ident, EI_NIDENT);
+        fmap->u.elf.elfhdr.e_type      = elfhdr32.e_type;
+        fmap->u.elf.elfhdr.e_machine   = elfhdr32.e_machine;
+        fmap->u.elf.elfhdr.e_version   = elfhdr32.e_version;
+        fmap->u.elf.elfhdr.e_entry     = elfhdr32.e_entry;
+        fmap->u.elf.elfhdr.e_phoff     = elfhdr32.e_phoff;
+        fmap->u.elf.elfhdr.e_shoff     = elfhdr32.e_shoff;
+        fmap->u.elf.elfhdr.e_flags     = elfhdr32.e_flags;
+        fmap->u.elf.elfhdr.e_ehsize    = elfhdr32.e_ehsize;
+        fmap->u.elf.elfhdr.e_phentsize = elfhdr32.e_phentsize;
+        fmap->u.elf.elfhdr.e_phnum     = elfhdr32.e_phnum;
+        fmap->u.elf.elfhdr.e_shentsize = elfhdr32.e_shentsize;
+        fmap->u.elf.elfhdr.e_shnum     = elfhdr32.e_shnum;
+        fmap->u.elf.elfhdr.e_shstrndx  = elfhdr32.e_shstrndx;
+    }
+    else
+    {
+        if (!elf_map_file_read(fmap, emfd, &fmap->u.elf.elfhdr, sizeof(fmap->u.elf.elfhdr), 0))
+            goto done;
+    }
 
     fmap->u.elf.sect = HeapAlloc(GetProcessHeap(), 0,
                                  fmap->u.elf.elfhdr.e_shnum * sizeof(fmap->u.elf.sect[0]));
