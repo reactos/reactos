@@ -152,6 +152,18 @@ static char* format_uuid(const uint8_t uuid[16], char out[UUID_STRING_LEN])
     return out;
 }
 
+static DWORD macho_calc_crc32(int fd)
+{
+    BYTE buffer[8192];
+    DWORD crc = 0;
+    int len;
+
+    lseek(fd, 0, SEEK_SET);
+    while ((len = read(fd, buffer, sizeof(buffer))) > 0)
+        crc = RtlComputeCrc32(crc, buffer, len);
+    return crc;
+}
+
 /******************************************************************
  *              macho_calc_range
  *
@@ -1369,7 +1381,7 @@ BOOL macho_fetch_file_info(HANDLE process, const WCHAR* name, unsigned long load
     if (!macho_map_file(pcs, name, split_segs, &fmap)) return FALSE;
     if (base) *base = fmap.u.macho.segs_start;
     *size = fmap.u.macho.segs_size;
-    *checksum = calc_crc32(fmap.u.macho.fd);
+    *checksum = macho_calc_crc32(fmap.u.macho.fd);
     macho_unmap_file(&fmap);
     return TRUE;
 }
@@ -1484,7 +1496,7 @@ static BOOL macho_load_file(struct process* pcs, const WCHAR* filename,
         if (!load_addr)
             load_addr = fmap.u.macho.segs_start;
         macho_info->module = module_new(pcs, filename, DMT_MACHO, FALSE, load_addr,
-                                        fmap.u.macho.segs_size, 0, calc_crc32(fmap.u.macho.fd));
+                                        fmap.u.macho.segs_size, 0, macho_calc_crc32(fmap.u.macho.fd));
         if (!macho_info->module)
         {
             HeapFree(GetProcessHeap(), 0, modfmt);
