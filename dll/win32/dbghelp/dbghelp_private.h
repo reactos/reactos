@@ -128,7 +128,7 @@ void*    hash_table_iter_up(struct hash_table_iter* hti) DECLSPEC_HIDDEN;
 
 extern unsigned dbghelp_options DECLSPEC_HIDDEN;
 extern BOOL     dbghelp_opt_native DECLSPEC_HIDDEN;
-#ifndef __REACTOS__
+#ifndef DBGHELP_STATIC_LIB
 extern SYSTEM_INFO sysinfo DECLSPEC_HIDDEN;
 #endif
 
@@ -635,6 +635,7 @@ extern const char*  wine_dbgstr_addr(const ADDRESS64* addr) DECLSPEC_HIDDEN;
 extern struct cpu*  cpu_find(DWORD) DECLSPEC_HIDDEN;
 extern DWORD calc_crc32(HANDLE handle) DECLSPEC_HIDDEN;
 
+#ifndef __REACTOS__
 /* elf_module.c */
 extern BOOL         elf_read_wine_loader_dbg_info(struct process* pcs, ULONG_PTR addr) DECLSPEC_HIDDEN;
 struct elf_thunk_area;
@@ -642,6 +643,9 @@ extern int          elf_is_in_thunk_area(ULONG_PTR addr, const struct elf_thunk_
 
 /* macho_module.c */
 extern BOOL         macho_read_wine_loader_dbg_info(struct process* pcs, ULONG_PTR addr) DECLSPEC_HIDDEN;
+#else
+struct elf_thunk_area;
+#endif
 
 /* minidump.c */
 void minidump_add_memory_block(struct dump_context* dc, ULONG64 base, ULONG size, ULONG rva) DECLSPEC_HIDDEN;

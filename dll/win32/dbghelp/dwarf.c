@@ -1950,7 +1950,7 @@ static struct symt* dwarf2_parse_subprogram(dwarf2_parse_context_t* ctx,
      * (not the case for stabs), we just drop Wine's thunks here...
      * Actual thunks will be created in elf_module from the symbol table
      */
-#ifndef DBGHELP_STATIC_LIB
+#ifndef __REACTOS__
     if (elf_is_in_thunk_area(ctx->load_offset + low_pc, ctx->thunks) >= 0)
         return NULL;
 #endif

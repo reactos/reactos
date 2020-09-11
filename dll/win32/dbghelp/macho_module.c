@@ -21,9 +21,6 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-#include "wine/port.h"
-
 #include <stdio.h>
 #include <assert.h>
 #include <stdarg.h>
@@ -41,8 +38,6 @@
 
 #include "wine/debug.h"
 #include "wine/heap.h"
-
-#ifdef HAVE_MACH_O_LOADER_H
 
 struct dyld_image_info32
 {
@@ -1933,12 +1928,3 @@ BOOL macho_read_wine_loader_dbg_info(struct process* pcs, ULONG_PTR addr)
     TRACE("Found macho debug header %#lx\n", pcs->dbg_hdr_addr);
     return TRUE;
 }
-
-#else  /* HAVE_MACH_O_LOADER_H */
-
-BOOL macho_read_wine_loader_dbg_info(struct process* pcs, ULONG_PTR addr)
-{
-    return FALSE;
-}
-
-#endif  /* HAVE_MACH_O_LOADER_H */
