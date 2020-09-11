@@ -229,6 +229,7 @@ static BOOL do_searchW(PCWSTR file, PWSTR buffer, BOOL recurse,
     static const WCHAR  S_DotDotW[] = {'.','.','\0'};
 
     pos = strlenW(buffer);
+    if (pos == 0) return FALSE;
     if (buffer[pos - 1] != '\\') buffer[pos++] = '\\';
     strcpyW(buffer + pos, S_AllW);
     if ((h = FindFirstFileW(buffer, &fd)) == INVALID_HANDLE_VALUE)
