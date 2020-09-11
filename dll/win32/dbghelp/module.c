@@ -455,7 +455,7 @@ struct module* module_find_by_addr(const struct process* pcs, DWORD64 addr,
                 return module;
         }
     }
-    SetLastError(ERROR_MOD_NOT_FOUND);
+    SetLastError(ERROR_INVALID_ADDRESS);
     return module;
 }
 
