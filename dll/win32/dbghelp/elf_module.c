@@ -1010,23 +1010,26 @@ static BOOL elf_locate_debug_link(struct image_file_map* fmap, const char* filen
     static const WCHAR globalDebugDirW[] = {'/','u','s','r','/','l','i','b','/','d','e','b','u','g','/'};
     static const WCHAR dotDebugW[] = {'.','d','e','b','u','g','/'};
     const size_t globalDebugDirLen = ARRAY_SIZE(globalDebugDirW);
-    size_t filename_len;
+    size_t filename_len, path_len;
     WCHAR* p = NULL;
     WCHAR* slash;
+    WCHAR* slash2;
     struct image_file_map* fmap_link = NULL;
 
     fmap_link = HeapAlloc(GetProcessHeap(), 0, sizeof(*fmap_link));
     if (!fmap_link) return FALSE;
 
     filename_len = MultiByteToWideChar(CP_UNIXCP, 0, filename, -1, NULL, 0);
+    path_len = strlenW(loaded_file);
     p = HeapAlloc(GetProcessHeap(), 0,
-                  (globalDebugDirLen + strlenW(loaded_file) + 6 + 1 + filename_len + 1) * sizeof(WCHAR));
+                  (globalDebugDirLen + path_len + 6 + 1 + filename_len + 1) * sizeof(WCHAR));
     if (!p) goto found;
 
     /* we prebuild the string with "execdir" */
     strcpyW(p, loaded_file);
-    slash = strrchrW(p, '/');
-    if (slash == NULL) slash = p; else slash++;
+    slash = p;
+    if ((slash2 = strrchrW(slash, '/'))) slash = slash2 + 1;
+    if ((slash2 = strrchrW(slash, '\\'))) slash = slash2 + 1;
 
     /* testing execdir/filename */
     MultiByteToWideChar(CP_UNIXCP, 0, filename, -1, slash, filename_len);
