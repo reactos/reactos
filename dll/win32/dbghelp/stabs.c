@@ -59,32 +59,16 @@ WINE_DEFAULT_DEBUG_CHANNEL(dbghelp_stabs);
 #endif
 
 /* Masks for n_type field */
-#ifndef N_STAB
 #define N_STAB		0xe0
-#endif
-#ifndef N_PEXT
 #define N_PEXT		0x10
-#endif
-#ifndef N_TYPE
 #define N_TYPE		0x1e
-#endif
-#ifndef N_EXT
 #define N_EXT		0x01
-#endif
 
 /* Values for (n_type & N_TYPE) */
-#ifndef N_UNDF
 #define N_UNDF		0x00
-#endif
-#ifndef N_ABS
 #define N_ABS		0x02
-#endif
-#ifndef N_INDR
 #define N_INDR		0x0a
-#endif
-#ifndef N_SECT
 #define N_SECT		0x0e
-#endif
 
 #define N_GSYM		0x20
 #define N_FUN		0x24
