@@ -1354,16 +1354,6 @@ union codeview_symbol
     {
         short int               len;
         short int               id;
-        unsigned int            offset;
-        unsigned short          segment;
-        unsigned short          symtype;
-        struct p_string         p_name;
-    } public_v1;
-
-    struct
-    {
-        short int               len;
-        short int               id;
         unsigned int            symtype;
         unsigned int            offset;
         unsigned short          segment;
