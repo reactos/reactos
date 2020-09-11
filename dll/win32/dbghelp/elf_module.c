@@ -1106,7 +1106,11 @@ static BOOL elf_load_file_from_fmap(struct process* pcs, const WCHAR* filename,
 
             if (fmap->addr_size == 32)
             {
-                Elf32_Dyn dyn;
+                struct
+                {
+                    INT32  d_tag;    /* Dynamic entry type */
+                    UINT32 d_val;    /* Integer or address value */
+                } dyn;
 
                 do
                 {
@@ -1115,7 +1119,7 @@ static BOOL elf_load_file_from_fmap(struct process* pcs, const WCHAR* filename,
                         return ret;
                     if (dyn.d_tag == DT_DEBUG)
                     {
-                        elf_info->dbg_hdr_addr = dyn.d_un.d_ptr;
+                        elf_info->dbg_hdr_addr = dyn.d_val;
                         if (load_offset == 0 && dyn_addr == 0) /* likely the case */
                             /* Assume this module (the Wine loader) has been
                              * loaded at its preferred address */
@@ -1128,7 +1132,11 @@ static BOOL elf_load_file_from_fmap(struct process* pcs, const WCHAR* filename,
             }
             else
             {
-                Elf64_Dyn dyn;
+                struct
+                {
+                    INT64  d_tag;    /* Dynamic entry type */
+                    UINT64 d_val;    /* Integer or address value */
+                } dyn;
 
                 do
                 {
@@ -1137,7 +1145,7 @@ static BOOL elf_load_file_from_fmap(struct process* pcs, const WCHAR* filename,
                         return ret;
                     if (dyn.d_tag == DT_DEBUG)
                     {
-                        elf_info->dbg_hdr_addr = dyn.d_un.d_ptr;
+                        elf_info->dbg_hdr_addr = dyn.d_val;
                         if (load_offset == 0 && dyn_addr == 0) /* likely the case */
                             /* Assume this module (the Wine loader) has been
                              * loaded at its preferred address */
