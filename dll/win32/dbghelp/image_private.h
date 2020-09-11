@@ -54,13 +54,10 @@
 #ifndef SHT_NULL
 #define SHT_NULL        0
 #endif
+#endif
+
 #ifndef NT_GNU_BUILD_ID
 #define NT_GNU_BUILD_ID 3
-#endif
-#elif defined(__REACTOS__)
-#ifndef NT_GNU_BUILD_ID
-#define NT_GNU_BUILD_ID 3
-#endif
 #endif
 
 /* structure holding information while handling an ELF image
