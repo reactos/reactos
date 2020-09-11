@@ -1574,7 +1574,7 @@ static BOOL macho_search_and_load_file(struct process* pcs, const WCHAR* filenam
 
     /* Try DYLD_LIBRARY_PATH first. */
     p = file_name(filename);
-    ret = search_unix_path(p, getenv("DYLD_LIBRARY_PATH"), macho_load_file_cb, &load_params);
+    ret = search_unix_path(p, process_getenv(pcs, L"DYLD_LIBRARY_PATH"), macho_load_file_cb, &load_params);
 
     /* Try the path as given. */
     if (!ret)
@@ -1582,9 +1582,9 @@ static BOOL macho_search_and_load_file(struct process* pcs, const WCHAR* filenam
     /* Try DYLD_FALLBACK_LIBRARY_PATH, with just the filename (no directories). */
     if (!ret)
     {
-        const char* fallback = getenv("DYLD_FALLBACK_LIBRARY_PATH");
+        const WCHAR* fallback = process_getenv(pcs, L"DYLD_FALLBACK_LIBRARY_PATH");
         if (!fallback)
-            fallback = "/usr/local/lib:/lib:/usr/lib";
+            fallback = L"/usr/local/lib:/lib:/usr/lib";
         ret = search_unix_path(p, fallback, macho_load_file_cb, &load_params);
     }
     if (!ret && p == filename)

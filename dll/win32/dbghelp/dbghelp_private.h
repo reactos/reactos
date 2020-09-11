@@ -707,7 +707,7 @@ extern BOOL         path_find_symbol_file(const struct process* pcs, const struc
 extern WCHAR *get_dos_file_name(const WCHAR *filename) DECLSPEC_HIDDEN;
 extern BOOL search_dll_path(const struct process* process, const WCHAR *name,
                             BOOL (*match)(void*, HANDLE, const WCHAR*), void *param) DECLSPEC_HIDDEN;
-extern BOOL search_unix_path(const WCHAR *name, const char *path, BOOL (*match)(void*, HANDLE, const WCHAR*), void *param) DECLSPEC_HIDDEN;
+extern BOOL search_unix_path(const WCHAR *name, const WCHAR *path, BOOL (*match)(void*, HANDLE, const WCHAR*), void *param) DECLSPEC_HIDDEN;
 extern const WCHAR* file_name(const WCHAR* str) DECLSPEC_HIDDEN;
 extern const char* file_nameA(const char* str) DECLSPEC_HIDDEN;
 
