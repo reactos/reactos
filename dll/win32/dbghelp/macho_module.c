@@ -31,7 +31,6 @@
 #include <CoreServices/CoreServices.h>
 #undef LoadResource
 #undef GetCurrentThread
-#undef DPRINTF
 #endif
 
 #include <stdio.h>
