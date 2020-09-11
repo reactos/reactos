@@ -1435,8 +1435,7 @@ static BOOL elf_search_and_load_file(struct process* pcs, const WCHAR* filename,
         load_elf.dyn_addr    = dyn_addr;
         load_elf.elf_info    = elf_info;
 
-        ret = search_unix_path(filename, getenv("PATH"), elf_load_file_cb, &load_elf)
-            || search_unix_path(filename, getenv("LD_LIBRARY_PATH"), elf_load_file_cb, &load_elf)
+        ret = search_unix_path(filename, getenv("LD_LIBRARY_PATH"), elf_load_file_cb, &load_elf)
             || search_dll_path(filename, elf_load_file_cb, &load_elf);
     }
 
