@@ -929,7 +929,7 @@ static BOOL x86_64_fetch_minidump_module(struct dump_context* dc, unsigned index
         const RUNTIME_FUNCTION* rtf;
         ULONG                   size;
 
-        if (!(pcs = process_find_by_handle(dc->hProcess)) ||
+        if (!(pcs = process_find_by_handle(dc->process->handle)) ||
             !(module = module_find_by_addr(pcs, dc->modules[index].base, DMT_UNKNOWN)))
             return FALSE;
         rtf = (const RUNTIME_FUNCTION*)pe_map_directory(module, IMAGE_DIRECTORY_ENTRY_EXCEPTION, &size);
@@ -947,7 +947,7 @@ static BOOL x86_64_fetch_minidump_module(struct dump_context* dc, unsigned index
                     /* we need to read into the other process */
                     /* rtf = (RUNTIME_FUNCTION*)(module->module.BaseOfImage + (rtf->UnwindData & ~1)); */
                 }
-                if (ReadProcessMemory(dc->hProcess,
+                if (ReadProcessMemory(dc->process->handle,
                                       (void*)(dc->modules[index].base + rtf->UnwindData),
                                       &ui, sizeof(ui), NULL))
                     minidump_add_memory_block(dc, dc->modules[index].base + rtf->UnwindData,

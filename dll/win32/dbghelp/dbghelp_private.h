@@ -529,7 +529,7 @@ struct dump_thread
 struct dump_context
 {
     /* process & thread information */
-    HANDLE                              hProcess;
+    struct process                     *process;
     DWORD                               pid;
     unsigned                            flags_out;
     /* thread information */
