@@ -58,28 +58,32 @@
 #include <mach-o/nlist.h>
 #include <mach-o/dyld.h>
 
-struct dyld_image_info32 {
-    uint32_t /* const struct mach_header* */    imageLoadAddress;
-    uint32_t /* const char* */                  imageFilePath;
-    uint32_t /* uintptr_t */                    imageFileModDate;
+struct dyld_image_info32
+{
+    UINT32  imageLoadAddress;  /* const struct mach_header* */
+    UINT32  imageFilePath;     /* const char* */
+    UINT32  imageFileModDate;  /* uintptr_t */
 };
 
-struct dyld_all_image_infos32 {
-    uint32_t                                        version;
-    uint32_t                                        infoArrayCount;
-    uint32_t /* const struct dyld_image_info* */    infoArray;
+struct dyld_all_image_infos32
+{
+    UINT32  version;
+    UINT32  infoArrayCount;
+    UINT32  infoArray;         /* const struct dyld_image_info* */
 };
 
-struct dyld_image_info64 {
-    uint64_t /* const struct mach_header* */    imageLoadAddress;
-    uint64_t /* const char* */                  imageFilePath;
-    uint64_t /* uintptr_t */                    imageFileModDate;
+struct dyld_image_info64
+{
+    UINT64  imageLoadAddress;  /* const struct mach_header* */
+    UINT64  imageFilePath;     /* const char* */
+    UINT64  imageFileModDate;  /* uintptr_t */
 };
 
-struct dyld_all_image_infos64 {
-    uint32_t                                        version;
-    uint32_t                                        infoArrayCount;
-    uint64_t /* const struct dyld_image_info* */    infoArray;
+struct dyld_all_image_infos64
+{
+    UINT32  version;
+    UINT32  infoArrayCount;
+    UINT64  infoArray;         /* const struct dyld_image_info* */
 };
 
 union wine_image_info {
@@ -198,7 +202,7 @@ struct macho_info
 
 static void macho_unmap_file(struct image_file_map* fmap);
 
-static char* format_uuid(const uint8_t uuid[16], char out[UUID_STRING_LEN])
+static char* format_uuid(const UINT8 uuid[16], char out[UUID_STRING_LEN])
 {
     sprintf(out, "%02X%02X%02X%02X-%02X%02X-%02X%02X-%02X%02X-%02X%02X%02X%02X%02X%02X",
             uuid[0], uuid[1], uuid[2], uuid[3], uuid[4], uuid[5], uuid[6], uuid[7],
@@ -588,7 +592,7 @@ static int macho_enum_load_commands(struct image_file_map *ifm, unsigned cmd,
 static int macho_count_sections(struct image_file_map* ifm, const struct macho_load_command* lc, void* user)
 {
     char segname[16];
-    uint32_t nsects;
+    size_t nsects;
 
     if (ifm->addr_size == 32)
     {
@@ -624,9 +628,9 @@ static int macho_load_section_info(struct image_file_map* ifm, const struct mach
     BOOL                            ignore;
     int                             i;
     ULONG_PTR                       tmp, page_mask = sysinfo.dwPageSize - 1;
-    uint64_t vmaddr, vmsize;
+    UINT64 vmaddr, vmsize;
     char segname[16];
-    uint32_t nsects;
+    size_t nsects;
     const void *sections;
 
     if (ifm->addr_size == 32)
@@ -746,7 +750,7 @@ static BOOL macho_map_file(struct process *pcs, const WCHAR *filenameW,
     BOOL                ret = FALSE;
     UINT32 target_cpu = (pcs->is_64bit) ? MACHO_CPU_TYPE_X86_64 : MACHO_CPU_TYPE_X86;
     UINT32 target_magic = (pcs->is_64bit) ? MACHO_MH_MAGIC_64 : MACHO_MH_MAGIC_32;
-    uint32_t target_cmd   = (pcs->is_64bit) ? LC_SEGMENT_64 : LC_SEGMENT;
+    UINT32 target_cmd   = (pcs->is_64bit) ? LC_SEGMENT_64 : LC_SEGMENT;
     DWORD bytes_read;
 
     struct
@@ -1863,7 +1867,7 @@ static BOOL macho_search_loader(struct process* pcs, struct macho_info* macho_in
     BOOL ret = FALSE;
     union wine_all_image_infos image_infos;
     union wine_image_info image_info;
-    uint32_t len;
+    unsigned int len;
     char path[PATH_MAX];
     BOOL got_path = FALSE;
 
