@@ -947,9 +947,7 @@ static BOOL x86_64_fetch_minidump_module(struct dump_context* dc, unsigned index
                     /* we need to read into the other process */
                     /* rtf = (RUNTIME_FUNCTION*)(module->module.BaseOfImage + (rtf->UnwindData & ~1)); */
                 }
-                if (ReadProcessMemory(dc->process->handle,
-                                      (void*)(dc->modules[index].base + rtf->UnwindData),
-                                      &ui, sizeof(ui), NULL))
+                if (read_process_memory(dc->process, dc->modules[index].base + rtf->UnwindData, &ui, sizeof(ui)))
                     minidump_add_memory_block(dc, dc->modules[index].base + rtf->UnwindData,
                                               FIELD_OFFSET(UNWIND_INFO, UnwindCode) + ui.CountOfCodes * sizeof(UNWIND_CODE), 0);
                 rtf++;

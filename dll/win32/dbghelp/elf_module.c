@@ -1486,9 +1486,7 @@ static BOOL elf_enum_modules_internal(const struct process* pcs,
             UINT64 l_next, l_prev;
         } lm;
 
-        if (!pcs->dbg_hdr_addr ||
-            !ReadProcessMemory(pcs->handle, (void*)pcs->dbg_hdr_addr,
-                               &dbg_hdr, sizeof(dbg_hdr), NULL))
+        if (!pcs->dbg_hdr_addr || !read_process_memory(pcs, pcs->dbg_hdr_addr, &dbg_hdr, sizeof(dbg_hdr)))
             return FALSE;
 
         /* Now walk the linked list.  In all known ELF implementations,
@@ -1498,12 +1496,11 @@ static BOOL elf_enum_modules_internal(const struct process* pcs,
          */
         for (lm_addr = dbg_hdr.r_map; lm_addr; lm_addr = lm.l_next)
         {
-            if (!ReadProcessMemory(pcs->handle, (void*)lm_addr, &lm, sizeof(lm), NULL))
+            if (!read_process_memory(pcs, lm_addr, &lm, sizeof(lm)))
                 return FALSE;
 
             if (lm.l_prev && /* skip first entry, normally debuggee itself */
-                lm.l_name &&
-                ReadProcessMemory(pcs->handle, (void*)(ULONG_PTR)lm.l_name, bufstr, sizeof(bufstr), NULL))
+                lm.l_name && read_process_memory(pcs, lm.l_name, bufstr, sizeof(bufstr)))
             {
                 bufstr[sizeof(bufstr) - 1] = '\0';
                 MultiByteToWideChar(CP_UNIXCP, 0, bufstr, -1, bufstrW, ARRAY_SIZE(bufstrW));
@@ -1531,9 +1528,7 @@ static BOOL elf_enum_modules_internal(const struct process* pcs,
             UINT32 l_next, l_prev;
         } lm;
 
-        if (!pcs->dbg_hdr_addr ||
-            !ReadProcessMemory(pcs->handle, (void*)pcs->dbg_hdr_addr,
-                           &dbg_hdr, sizeof(dbg_hdr), NULL))
+        if (!pcs->dbg_hdr_addr || !read_process_memory(pcs, pcs->dbg_hdr_addr, &dbg_hdr, sizeof(dbg_hdr)))
             return FALSE;
 
         /* Now walk the linked list.  In all known ELF implementations,
@@ -1543,13 +1538,11 @@ static BOOL elf_enum_modules_internal(const struct process* pcs,
          */
         for (lm_addr = dbg_hdr.r_map; lm_addr; lm_addr = lm.l_next)
         {
-            if (!ReadProcessMemory(pcs->handle, (void*)lm_addr, &lm, sizeof(lm), NULL))
+            if (!read_process_memory(pcs, lm_addr, &lm, sizeof(lm)))
                 return FALSE;
 
             if (lm.l_prev && /* skip first entry, normally debuggee itself */
-                lm.l_name &&
-                ReadProcessMemory(pcs->handle, (void *)(DWORD_PTR)lm.l_name,
-                                  bufstr, sizeof(bufstr), NULL))
+                lm.l_name && read_process_memory(pcs, lm.l_name, bufstr, sizeof(bufstr)))
             {
                 bufstr[sizeof(bufstr) - 1] = '\0';
                 MultiByteToWideChar(CP_UNIXCP, 0, bufstr, -1, bufstrW, ARRAY_SIZE(bufstrW));
