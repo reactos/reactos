@@ -65,6 +65,19 @@ struct elf_section_header
     UINT64  sh_entsize;    /* Entry size if section holds table */
 };
 
+struct macho_load_command
+{
+    UINT32  cmd;           /* type of load command */
+    UINT32  cmdsize;       /* total size of command in bytes */
+};
+
+struct macho_uuid_command
+{
+    UINT32  cmd;           /* LC_UUID */
+    UINT32  cmdsize;
+    UINT8   uuid[16];
+};
+
 /* structure holding information while handling an ELF image
  * allows one by one section mapping for memory savings
  */
@@ -100,14 +113,14 @@ struct image_file_map
             size_t                      commands_size;
             size_t                      commands_count;
 
-#ifdef HAVE_MACH_O_LOADER_H
-            const struct load_command*  load_commands;
-            const struct uuid_command*  uuid;
+            const struct macho_load_command*    load_commands;
+            const struct macho_uuid_command*    uuid;
 
             /* The offset in the file which is this architecture.  mach_header was
              * read from arch_offset. */
             unsigned                    arch_offset;
 
+#ifdef HAVE_MACH_O_LOADER_H
             int                         num_sections;
             struct
             {
