@@ -1845,8 +1845,7 @@ static BOOL macho_search_loader(struct process* pcs, struct macho_info* macho_in
         len = sizeof(image_infos.infos64);
     else
         len = sizeof(image_infos.infos32);
-    if (pcs->dbg_hdr_addr &&
-        ReadProcessMemory(pcs->handle, (void*)pcs->dbg_hdr_addr, &image_infos, len, NULL))
+    if (ReadProcessMemory(pcs->handle, (void*)pcs->dbg_hdr_addr, &image_infos, len, NULL))
     {
         if (pcs->is_64bit)
             len = sizeof(image_info.info64);
