@@ -569,7 +569,7 @@ static int macho_load_section_info(struct image_file_map* ifm, const struct load
     struct section_info*            info = user;
     BOOL                            ignore;
     int                             i;
-    unsigned long                   tmp, page_mask = sysconf( _SC_PAGESIZE ) - 1;
+    unsigned long                   tmp, page_mask = sysinfo.dwPageSize - 1;
     uint64_t vmaddr, vmsize;
     char segname[16];
     uint32_t nsects;
