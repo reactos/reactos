@@ -129,7 +129,7 @@ static BOOL pe_find_section(struct image_file_map* fmap, const char* name,
             sectname = memcpy(tmp, sectname, IMAGE_SIZEOF_SHORT_NAME);
             tmp[IMAGE_SIZEOF_SHORT_NAME] = '\0';
         }
-        if (!_strnicmp(sectname, name, -1))
+        if (!stricmp(sectname, name))
         {
             ism->fmap = fmap;
             ism->sidx = i;

@@ -21,6 +21,7 @@ typedef HANDLE HWND;
 #define min(x, y) (((x) < (y)) ? (x) : (y))
 #define max(x, y) (((x) > (y)) ? (x) : (y))
 #define _strnicmp(_String1, _String2, _MaxCount) strncasecmp(_String1, _String2, _MaxCount)
+#define stricmp(_String1, _String2) strcasecmp(_String1, _String2)
 
 #ifdef __i386__
 #define CDECL __cdecl
