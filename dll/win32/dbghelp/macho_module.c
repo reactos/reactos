@@ -88,13 +88,6 @@ struct dyld_all_image_infos {
 WINE_DEFAULT_DEBUG_CHANNEL(dbghelp_macho);
 
 
-#ifdef _WIN64
-typedef struct nlist_64             macho_nlist;
-#else
-typedef struct nlist                macho_nlist;
-#endif
-
-
 /* Bitmask for Mach-O image header flags indicating that the image is in dyld's
    shared cached.  That implies that its segments are mapped non-contiguously.
    This value isn't defined anywhere in headers.  It's used in dyld and in
@@ -913,24 +906,25 @@ static int macho_parse_symtab(struct image_file_map* ifm,
     struct macho_file_map* fmap = &ifm->u.macho;
     const struct symtab_command*    sc = (const struct symtab_command*)lc;
     struct macho_debug_info*        mdi = user;
-    const macho_nlist*              stab;
     const char*                     stabstr;
     int                             ret = 0;
+    size_t stabsize = (ifm->addr_size == 32) ? sizeof(struct nlist) : sizeof(struct nlist_64);
+    const char *stab;
 
     TRACE("(%p/%d, %p, %p) %u syms at 0x%08x, strings 0x%08x - 0x%08x\n", fmap, fmap->fd, lc,
             user, sc->nsyms, sc->symoff, sc->stroff, sc->stroff + sc->strsize);
 
-    if (!macho_map_ranges(fmap, sc->symoff, sc->nsyms * sizeof(macho_nlist),
+    if (!macho_map_ranges(fmap, sc->symoff, sc->nsyms * stabsize,
             sc->stroff, sc->strsize, (const void**)&stab, (const void**)&stabstr))
         return 0;
 
     if (!stabs_parse(mdi->module,
                      mdi->module->format_info[DFI_MACHO]->u.macho_info->load_addr - fmap->segs_start,
-                     stab, sc->nsyms * sizeof(macho_nlist),
+                     stab, sc->nsyms * stabsize,
                      stabstr, sc->strsize, macho_stabs_def_cb, mdi))
         ret = -1;
 
-    macho_unmap_ranges(fmap, sc->symoff, sc->nsyms * sizeof(macho_nlist),
+    macho_unmap_ranges(fmap, sc->symoff, sc->nsyms * stabsize,
             sc->stroff, sc->strsize, (const void**)&stab, (const void**)&stabstr);
 
     return ret;
