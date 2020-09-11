@@ -1270,29 +1270,56 @@ static BOOL elf_load_file_from_fmap(struct process* pcs, const WCHAR* filename,
 
         if (elf_find_section(fmap, ".dynamic", SHT_DYNAMIC, &ism))
         {
-            Elf_Dyn         dyn;
             char*           ptr = (char*)(ULONG_PTR)fmap->u.elf.sect[ism.sidx].shdr.sh_addr;
             unsigned long   len;
 
             if (load_offset) ptr += load_offset - fmap->u.elf.elf_start;
 
-            do
+            if (fmap->addr_size == 32)
             {
-                if (!ReadProcessMemory(pcs->handle, ptr, &dyn, sizeof(dyn), &len) ||
-                    len != sizeof(dyn))
-                    return ret;
-                if (dyn.d_tag == DT_DEBUG)
+                Elf32_Dyn dyn;
+
+                do
                 {
-                    elf_info->dbg_hdr_addr = dyn.d_un.d_ptr;
-                    if (load_offset == 0 && dyn_addr == 0) /* likely the case */
-                        /* Assume this module (the Wine loader) has been loaded at its preferred address */
-                        dyn_addr = ism.fmap->u.elf.sect[ism.sidx].shdr.sh_addr;
-                    break;
-                }
-                ptr += sizeof(dyn);
-            } while (dyn.d_tag != DT_NULL);
-            if (dyn.d_tag == DT_NULL) return ret;
-	}
+                    if (!ReadProcessMemory(pcs->handle, ptr, &dyn, sizeof(dyn), &len) ||
+                        len != sizeof(dyn))
+                        return ret;
+                    if (dyn.d_tag == DT_DEBUG)
+                    {
+                        elf_info->dbg_hdr_addr = dyn.d_un.d_ptr;
+                        if (load_offset == 0 && dyn_addr == 0) /* likely the case */
+                            /* Assume this module (the Wine loader) has been
+                             * loaded at its preferred address */
+                            dyn_addr = ism.fmap->u.elf.sect[ism.sidx].shdr.sh_addr;
+                        break;
+                    }
+                    ptr += sizeof(dyn);
+                } while (dyn.d_tag != DT_NULL);
+                if (dyn.d_tag == DT_NULL) return ret;
+            }
+            else
+            {
+                Elf64_Dyn dyn;
+
+                do
+                {
+                    if (!ReadProcessMemory(pcs->handle, ptr, &dyn, sizeof(dyn), &len) ||
+                        len != sizeof(dyn))
+                        return ret;
+                    if (dyn.d_tag == DT_DEBUG)
+                    {
+                        elf_info->dbg_hdr_addr = dyn.d_un.d_ptr;
+                        if (load_offset == 0 && dyn_addr == 0) /* likely the case */
+                            /* Assume this module (the Wine loader) has been
+                             * loaded at its preferred address */
+                            dyn_addr = ism.fmap->u.elf.sect[ism.sidx].shdr.sh_addr;
+                        break;
+                    }
+                    ptr += sizeof(dyn);
+                } while (dyn.d_tag != DT_NULL);
+                if (dyn.d_tag == DT_NULL) return ret;
+            }
+        }
         elf_end_find(fmap);
     }
 
