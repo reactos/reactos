@@ -470,7 +470,17 @@ static BOOL elf_map_file(struct elf_map_file_data* emfd, struct image_file_map* 
     {
         if (fmap->addr_size == 32)
         {
-            Elf32_Phdr phdr;
+            struct
+            {
+                UINT32  p_type;    /* Segment type */
+                UINT32  p_offset;  /* Segment file offset */
+                UINT32  p_vaddr;   /* Segment virtual address */
+                UINT32  p_paddr;   /* Segment physical address */
+                UINT32  p_filesz;  /* Segment size in file */
+                UINT32  p_memsz;   /* Segment size in memory */
+                UINT32  p_flags;   /* Segment flags */
+                UINT32  p_align;   /* Segment alignment */
+            } phdr;
 
             if (elf_map_file_read(fmap, emfd, &phdr, sizeof(phdr),
                                   fmap->u.elf.elfhdr.e_phoff + i * sizeof(phdr)) &&
@@ -483,7 +493,17 @@ static BOOL elf_map_file(struct elf_map_file_data* emfd, struct image_file_map* 
         }
         else
         {
-            Elf64_Phdr phdr;
+            struct
+            {
+                UINT32  p_type;    /* Segment type */
+                UINT32  p_flags;   /* Segment flags */
+                UINT64  p_offset;  /* Segment file offset */
+                UINT64  p_vaddr;   /* Segment virtual address */
+                UINT64  p_paddr;   /* Segment physical address */
+                UINT64  p_filesz;  /* Segment size in file */
+                UINT64  p_memsz;   /* Segment size in memory */
+                UINT64  p_align;   /* Segment alignment */
+            } phdr;
 
             if (elf_map_file_read(fmap, emfd, &phdr, sizeof(phdr),
                                   fmap->u.elf.elfhdr.e_phoff + i * sizeof(phdr)) &&
