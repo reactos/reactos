@@ -24,15 +24,6 @@
 #include "config.h"
 #include "wine/port.h"
 
-#ifdef HAVE_MACH_O_LOADER_H
-#include <CoreFoundation/CFString.h>
-#define LoadResource mac_LoadResource
-#define GetCurrentThread mac_GetCurrentThread
-#include <CoreServices/CoreServices.h>
-#undef LoadResource
-#undef GetCurrentThread
-#endif
-
 #include <stdio.h>
 #include <assert.h>
 #include <stdarg.h>
@@ -41,10 +32,15 @@
 #include "ntstatus.h"
 #define WIN32_NO_STATUS
 #include "dbghelp_private.h"
+#include "image_private.h"
+
 #include "winternl.h"
+#include "winioctl.h"
+#define WINE_MOUNTMGR_EXTENSIONS
+#include "ddk/mountmgr.h"
+
 #include "wine/debug.h"
 #include "wine/heap.h"
-#include "image_private.h"
 
 #ifdef HAVE_MACH_O_LOADER_H
 
@@ -1241,42 +1237,46 @@ static BOOL try_dsym(struct process *pcs, const WCHAR* path, struct macho_file_m
     return FALSE;
 }
 
-static const WCHAR dsym_subpath[] = {'/','C','o','n','t','e','n','t','s',
-                                     '/','R','e','s','o','u','r','c','e','s',
-                                     '/','D','W','A','R','F','/',0};
+static const WCHAR dsym_subpath[] = {'\\','C','o','n','t','e','n','t','s',
+                                     '\\','R','e','s','o','u','r','c','e','s',
+                                     '\\','D','W','A','R','F','\\',0};
 
-static WCHAR *query_dsym(const UINT8 *uuid, const WCHAR *filename)
+static WCHAR *query_dsym(const GUID *uuid, const WCHAR *filename)
 {
-    char uuid_string[UUID_STRING_LEN];
-    CFStringRef uuid_cfstring;
-    CFStringRef query_string;
-    MDQueryRef query = NULL;
-    WCHAR *path = NULL;
+    MOUNTMGR_TARGET_NAME *query;
+    WCHAR *ret = NULL;
+    char buf[1024];
+    HANDLE mgr;
+    BOOL res;
 
-    format_uuid(uuid, uuid_string);
-    uuid_cfstring = CFStringCreateWithCString(NULL, uuid_string, kCFStringEncodingASCII);
-    query_string = CFStringCreateWithFormat(NULL, NULL, CFSTR("com_apple_xcode_dsym_uuids == \"%@\""), uuid_cfstring);
-    CFRelease(uuid_cfstring);
-    query = MDQueryCreate(NULL, query_string, NULL, NULL);
-    CFRelease(query_string);
-    MDQuerySetMaxCount(query, 1);
-    if (MDQueryExecute(query, kMDQuerySynchronous) && MDQueryGetResultCount(query) >= 1)
+    mgr = CreateFileW(MOUNTMGR_DOS_DEVICE_NAME, GENERIC_READ|GENERIC_WRITE, FILE_SHARE_READ|FILE_SHARE_WRITE, NULL,
+                      OPEN_EXISTING, 0, 0);
+    if (mgr == INVALID_HANDLE_VALUE) return NULL;
+
+    query = (void *)buf;
+    res = DeviceIoControl( mgr, IOCTL_MOUNTMGR_QUERY_SYMBOL_FILE, (void*)uuid, sizeof(*uuid), query, sizeof(buf), NULL, NULL );
+    if (!res && GetLastError() == ERROR_MORE_DATA)
     {
-        MDItemRef item = (MDItemRef)MDQueryGetResultAtIndex(query, 0);
-        CFStringRef item_path = MDItemCopyAttribute(item, kMDItemPath);
-        if (item_path)
-        {
-            CFIndex item_path_len = CFStringGetLength(item_path);
-            size_t len = item_path_len + strlenW(dsym_subpath) + strlenW(filename) + 1;
-            path = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
-            CFStringGetCharacters(item_path, CFRangeMake(0, item_path_len), (UniChar*)path);
-            strcpyW(path + item_path_len, dsym_subpath);
-            strcatW(path, filename);
-            CFRelease(item_path);
-        }
+        size_t size = FIELD_OFFSET(MOUNTMGR_TARGET_NAME, DeviceName[query->DeviceNameLength]);
+        query = HeapAlloc(GetProcessHeap(), 0, size);
+        if (query)
+            res = DeviceIoControl( mgr, IOCTL_MOUNTMGR_QUERY_SYMBOL_FILE, (void*)uuid, sizeof(*uuid), query, size, NULL, NULL );
     }
-    CFRelease(query);
-    return path;
+    CloseHandle(mgr);
+
+    if (res && (ret = HeapAlloc(GetProcessHeap(), 0,
+                                query->DeviceNameLength + sizeof(dsym_subpath) + lstrlenW(filename) * sizeof(WCHAR))))
+    {
+        WCHAR *p = ret;
+        memcpy(p, query->DeviceName, query->DeviceNameLength);
+        p += query->DeviceNameLength / sizeof(WCHAR);
+        memcpy(p, dsym_subpath, sizeof(dsym_subpath));
+        p += ARRAY_SIZE(dsym_subpath) - 1;
+        strcpyW(p, filename);
+    }
+
+    if (query != (void *)buf) HeapFree(GetProcessHeap(), 0, query);
+    return ret;
 }
 
 /******************************************************************
@@ -1323,7 +1323,7 @@ static void find_and_map_dsym(struct process *pcs, struct module* module)
         goto found;
 
     HeapFree(GetProcessHeap(), 0, path);
-    if ((path = query_dsym(fmap->uuid->uuid, p))) try_dsym(pcs, path, fmap);
+    if ((path = query_dsym((const GUID *)fmap->uuid->uuid, p))) try_dsym(pcs, path, fmap);
 
 found:
     HeapFree(GetProcessHeap(), 0, path);
@@ -1843,7 +1843,7 @@ static BOOL macho_search_loader(struct process* pcs, struct macho_info* macho_in
     union wine_all_image_infos image_infos;
     union wine_image_info image_info;
     unsigned int len;
-    char path[PATH_MAX];
+    char path[1024];
     BOOL got_path = FALSE;
 
     if (pcs->is_64bit)
