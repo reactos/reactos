@@ -1730,7 +1730,7 @@ static BOOL macho_synchronize_module_list(struct process* pcs)
  * This function doesn't require that someone has called SymInitialize
  * on this very process.
  */
-BOOL macho_enum_modules(struct process* process, enum_modules_cb cb, void* user)
+static BOOL macho_enum_modules(struct process* process, enum_modules_cb cb, void* user)
 {
     struct macho_info   macho_info;
     BOOL                ret;
@@ -1906,6 +1906,7 @@ static BOOL macho_search_loader(struct process* pcs, struct macho_info* macho_in
 static const struct loader_ops macho_loader_ops =
 {
     macho_synchronize_module_list,
+    macho_enum_modules,
     macho_fetch_file_info,
 };
 
@@ -1931,11 +1932,6 @@ BOOL macho_read_wine_loader_dbg_info(struct process* pcs)
 #else  /* HAVE_MACH_O_LOADER_H */
 
 BOOL macho_read_wine_loader_dbg_info(struct process* pcs)
-{
-    return FALSE;
-}
-
-BOOL macho_enum_modules(struct process *process, enum_modules_cb cb, void* user)
 {
     return FALSE;
 }

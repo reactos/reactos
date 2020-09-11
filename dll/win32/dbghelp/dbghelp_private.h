@@ -418,9 +418,12 @@ struct module
     struct wine_rb_tree         sources_offsets_tree;
 };
 
+typedef BOOL (*enum_modules_cb)(const WCHAR*, unsigned long addr, void* user);
+
 struct loader_ops
 {
     BOOL (*synchronize_module_list)(struct process* process);
+    BOOL (*enum_modules)(struct process* process, enum_modules_cb callback, void* user);
     BOOL (*fetch_file_info)(struct process* process, const WCHAR* name, ULONG_PTR load_addr, DWORD_PTR* base, DWORD* size, DWORD* checksum);
 };
 
@@ -629,11 +632,7 @@ extern const char*  wine_dbgstr_addr(const ADDRESS64* addr) DECLSPEC_HIDDEN;
 extern struct cpu*  cpu_find(DWORD) DECLSPEC_HIDDEN;
 extern DWORD calc_crc32(HANDLE handle) DECLSPEC_HIDDEN;
 
-typedef BOOL (*enum_modules_cb)(const WCHAR*, unsigned long addr, void* user);
-
 /* elf_module.c */
-extern BOOL         elf_enum_modules(struct process*, enum_modules_cb, void*) DECLSPEC_HIDDEN;
-struct image_file_map;
 extern BOOL         elf_load_debug_info(struct module* module) DECLSPEC_HIDDEN;
 extern struct module*
                     elf_load_module(struct process* pcs, const WCHAR* name, unsigned long) DECLSPEC_HIDDEN;
@@ -642,7 +641,6 @@ struct elf_thunk_area;
 extern int          elf_is_in_thunk_area(unsigned long addr, const struct elf_thunk_area* thunks) DECLSPEC_HIDDEN;
 
 /* macho_module.c */
-extern BOOL         macho_enum_modules(struct process*, enum_modules_cb, void*) DECLSPEC_HIDDEN;
 extern BOOL         macho_load_debug_info(struct process *pcs, struct module* module) DECLSPEC_HIDDEN;
 extern struct module*
                     macho_load_module(struct process* pcs, const WCHAR* name, unsigned long) DECLSPEC_HIDDEN;
@@ -740,6 +738,7 @@ extern BOOL         stabs_parse(struct module* module, unsigned long load_offset
                                 stabs_def_cb callback, void* user) DECLSPEC_HIDDEN;
 
 /* dwarf.c */
+struct image_file_map;
 extern BOOL         dwarf2_parse(struct module* module, unsigned long load_offset,
                                  const struct elf_thunk_area* thunks,
                                  struct image_file_map* fmap) DECLSPEC_HIDDEN;
