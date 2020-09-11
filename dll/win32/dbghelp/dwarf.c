@@ -762,7 +762,10 @@ compute_location(const struct module *module, dwarf2_traverse_context_t* ctx, st
         case DW_OP_eq:          stack[stk-1] = (stack[stk-1] == stack[stk]); stk--; break;
         case DW_OP_ne:          stack[stk-1] = (stack[stk-1] != stack[stk]); stk--; break;
         case DW_OP_skip:        tmp = dwarf2_parse_u2(ctx); ctx->data += tmp; break;
-        case DW_OP_bra:         tmp = dwarf2_parse_u2(ctx); if (!stack[stk--]) ctx->data += tmp; break;
+        case DW_OP_bra:
+            tmp = dwarf2_parse_u2(ctx);
+            if (!stack[stk--]) ctx->data += tmp;
+            break;
         case DW_OP_regx:
             tmp = dwarf2_leb128_as_unsigned(ctx);
             if (!piece_found)
