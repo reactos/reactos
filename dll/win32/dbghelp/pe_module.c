@@ -465,7 +465,7 @@ static BOOL pe_load_coff_symbol_table(struct module* module)
 /******************************************************************
  *		pe_load_stabs
  *
- * look for stabs information in PE header (it's how the mingw compiler provides 
+ * look for stabs information in PE header (it's how the mingw compiler provides
  * its debugging information)
  */
 static BOOL pe_load_stabs(const struct process* pcs, struct module* module)
@@ -601,28 +601,15 @@ static BOOL pe_load_msc_debug_info(const struct process* pcs, struct module* mod
 {
     struct image_file_map*      fmap = &module->format_info[DFI_PE]->u.pe_info->fmap;
     BOOL                        ret = FALSE;
-    const IMAGE_DATA_DIRECTORY* dir;
-    const IMAGE_DEBUG_DIRECTORY*dbg = NULL;
-    int                         nDbg;
+    const IMAGE_DEBUG_DIRECTORY*dbg;
+    ULONG                       nDbg;
     void*                       mapping;
     IMAGE_NT_HEADERS*           nth;
 
     if (!(mapping = pe_map_full(fmap, &nth))) return FALSE;
     /* Read in debug directory */
-    dir = nth->OptionalHeader.DataDirectory + IMAGE_DIRECTORY_ENTRY_DEBUG;
-    nDbg = dir->Size / sizeof(IMAGE_DEBUG_DIRECTORY);
-    if (!nDbg) goto done;
-
-    dbg = RtlImageRvaToVa(nth, mapping, dir->VirtualAddress, NULL);
-
-#ifdef __REACTOS__
-    if (!dbg)
-    {
-        ERR("Debug directory not found in module %s\n",
-            debugstr_w(module->module.ModuleName));
-        goto done;
-    }
-#endif
+    dbg = RtlImageDirectoryEntryToData( mapping, FALSE, IMAGE_DIRECTORY_ENTRY_DEBUG, &nDbg );
+    if (!dbg || !(nDbg /= sizeof(IMAGE_DEBUG_DIRECTORY))) goto done;
 
     /* Parse debug directory */
     if (nth->FileHeader.Characteristics & IMAGE_FILE_DEBUG_STRIPPED)
@@ -676,18 +663,18 @@ static BOOL pe_load_export_debug_info(const struct process* pcs, struct module* 
     /* FIXME: module.ModuleName isn't correctly set yet if it's passed in SymLoadModule */
     symt_new_public(module, NULL, module->module.ModuleName, FALSE, base, 1);
 #endif
-    
+
     /* Add entry point */
     symt_new_public(module, NULL, "EntryPoint", FALSE,
                     base + nth->OptionalHeader.AddressOfEntryPoint, 1);
 #if 0
-    /* FIXME: we'd better store addresses linked to sections rather than 
+    /* FIXME: we'd better store addresses linked to sections rather than
        absolute values */
     IMAGE_SECTION_HEADER*       section;
     /* Add start of sections */
     section = (IMAGE_SECTION_HEADER*)
         ((char*)&nth->OptionalHeader + nth->FileHeader.SizeOfOptionalHeader);
-    for (i = 0; i < nth->FileHeader.NumberOfSections; i++, section++) 
+    for (i = 0; i < nth->FileHeader.NumberOfSections; i++, section++)
     {
 	symt_new_public(module, NULL, section->Name, FALSE,
                         RtlImageRvaToVa(nth, mapping, section->VirtualAddress, NULL), 1);
