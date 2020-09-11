@@ -57,10 +57,30 @@ struct elf_info
     const WCHAR*                module_name;    /* OUT found module name (if ELF_INFO_NAME is set) */
 };
 
+struct elf_sym32
+{
+    UINT32                      st_name;   /* Symbol name (string tbl index) */
+    UINT32                      st_value;  /* Symbol value */
+    UINT32                      st_size;   /* Symbol size */
+    UINT8                       st_info;   /* Symbol type and binding */
+    UINT8                       st_other;  /* Symbol visibility */
+    UINT16                      st_shndx;  /* Section index */
+};
+
+struct elf_sym
+{
+    UINT32                      st_name;   /* Symbol name (string tbl index) */
+    UINT8                       st_info;   /* Symbol type and binding */
+    UINT8                       st_other;  /* Symbol visibility */
+    UINT16                      st_shndx;  /* Section index */
+    UINT64                      st_value;  /* Symbol value */
+    UINT64                      st_size;   /* Symbol size */
+};
+
 struct symtab_elt
 {
     struct hash_table_elt       ht_elt;
-    Elf64_Sym                   sym;
+    struct elf_sym              sym;
     struct symt_compiland*      compiland;
     unsigned                    used;
 };
@@ -605,18 +625,18 @@ static void elf_hash_symtab(struct module* module, struct pool* pool,
     }
 
     nsym = image_get_map_size(&ism) /
-           (fmap->addr_size == 32 ? sizeof(Elf32_Sym) : sizeof(Elf64_Sym));
+           (fmap->addr_size == 32 ? sizeof(struct elf_sym32) : sizeof(struct elf_sym));
 
     for (j = 0; thunks[j].symname; j++)
         thunks[j].rva_start = thunks[j].rva_end = 0;
 
     for (i = 0; i < nsym; i++)
     {
-        Elf64_Sym sym;
+        struct elf_sym sym;
 
         if (fmap->addr_size == 32)
         {
-            Elf32_Sym *sym32 = &((Elf32_Sym *)symtab)[i];
+            struct elf_sym32 *sym32 = &((struct elf_sym32 *)symtab)[i];
 
             sym.st_name  = sym32->st_name;
             sym.st_value = sym32->st_value;
@@ -626,7 +646,7 @@ static void elf_hash_symtab(struct module* module, struct pool* pool,
             sym.st_shndx = sym32->st_shndx;
         }
         else
-            sym = ((Elf64_Sym *)symtab)[i];
+            sym = ((struct elf_sym *)symtab)[i];
 
         /* Ignore certain types of entries which really aren't of that much
          * interest.
@@ -709,9 +729,9 @@ static void elf_hash_symtab(struct module* module, struct pool* pool,
  *
  * lookup a symbol by name in our internal hash table for the symtab
  */
-static const Elf64_Sym *elf_lookup_symtab(const struct module* module,
-                                          const struct hash_table* ht_symtab,
-                                          const char* name, const struct symt* compiland)
+static const struct elf_sym *elf_lookup_symtab(const struct module* module,
+                                               const struct hash_table* ht_symtab,
+                                               const char* name, const struct symt* compiland)
 {
     struct symtab_elt*          weak_result = NULL; /* without compiland name */
     struct symtab_elt*          result = NULL;
@@ -783,7 +803,7 @@ static void elf_finish_stabs_info(struct module* module, const struct hash_table
     struct hash_table_iter      hti;
     void*                       ptr;
     struct symt_ht*             sym;
-    const Elf64_Sym*            symp;
+    const struct elf_sym*       symp;
     struct elf_module_info*     elf_info = module->format_info[DFI_ELF]->u.elf_info;
 
     hash_table_iter_init(&module->ht_symbols, &hti, NULL);
