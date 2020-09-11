@@ -1229,13 +1229,6 @@ union codeview_fieldtype
 #define LF_COMPLEX128           0x800f
 #define LF_VARSTRING            0x8010
 
-/* symtype e.g. for public_vx.symtype */
-#define SYMTYPE_NONE            0x0000
-#define SYMTYPE_CODE            0x0001
-#define SYMTYPE_FUNCTION        0x0002
-#define SYMTYPE_MANAGED         0x0004
-#define SYMTYPE_MSIL            0x0008
-
 /* ======================================== *
  *            Symbol information
  * ======================================== */
