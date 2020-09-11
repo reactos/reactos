@@ -985,20 +985,25 @@ static BOOL elf_check_debug_link(const WCHAR* file, struct image_file_map* fmap,
 {
     HANDLE handle;
     WCHAR *path;
-    DWORD crc;
-    BOOL ret = FALSE;
+    BOOL ret;
 
     path = get_dos_file_name(file);
     handle = CreateFileW(path, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
     heap_free(path);
     if (handle == INVALID_HANDLE_VALUE) return FALSE;
 
-    crc = calc_crc32(handle);
-    if (crc != link_crc)
-        WARN("Bad CRC for file %s (got %08x while expecting %08x)\n",  debugstr_w(file), crc, link_crc);
-    else
-        ret = elf_map_handle(handle, fmap);
+    if (link_crc)
+    {
+        DWORD crc = calc_crc32(handle);
+        if (crc != link_crc)
+        {
+            WARN("Bad CRC for file %s (got %08x while expecting %08x)\n",  debugstr_w(file), crc, link_crc);
+            CloseHandle(handle);
+            return FALSE;
+        }
+    }
 
+    ret = elf_map_handle(handle, fmap);
     CloseHandle(handle);
     return ret;
 }
@@ -1094,7 +1099,6 @@ static BOOL elf_locate_build_id_target(struct image_file_map* fmap, const BYTE* 
     WCHAR* p;
     WCHAR* z;
     const BYTE* idend = id + idlen;
-    struct elf_map_file_data emfd;
 
     fmap_link = HeapAlloc(GetProcessHeap(), 0, sizeof(*fmap_link));
     if (!fmap_link) return FALSE;
@@ -1125,9 +1129,7 @@ static BOOL elf_locate_build_id_target(struct image_file_map* fmap, const BYTE* 
     memcpy(z, dotDebug0W, sizeof(dotDebug0W));
     TRACE("checking %s\n", wine_dbgstr_w(p));
 
-    emfd.kind = from_file;
-    emfd.u.file.filename = p;
-    if (elf_map_file(&emfd, fmap_link))
+    if (elf_check_debug_link(p, fmap_link, 0))
     {
         struct image_section_map buildid_sect;
         if (image_find_section(fmap_link, ".note.gnu.build-id", &buildid_sect))
