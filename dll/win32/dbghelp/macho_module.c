@@ -680,6 +680,7 @@ static BOOL macho_map_file(struct process *pcs, const WCHAR *filenameW,
     reset_file_map(ifm);
 
     ifm->modtype = DMT_MACHO;
+    ifm->alternate = NULL;
     ifm->addr_size = (pcs->is_64bit) ? 64 : 32;
     fmap->header_size = (pcs->is_64bit) ? sizeof(struct mach_header_64) : sizeof(struct mach_header);
 

@@ -176,14 +176,36 @@ const char* elf_map_section(struct image_section_map* ism)
  * Finds a section by name (and type) into memory from an ELF file
  * or its alternate if any
  */
-BOOL elf_find_section(struct image_file_map* _fmap, const char* name,
-                      unsigned sht, struct image_section_map* ism)
+BOOL elf_find_section(struct image_file_map* _fmap, const char* name, struct image_section_map* ism)
+{
+    struct elf_file_map*        fmap = &_fmap->u.elf;
+    unsigned i;
+
+    if (fmap->shstrtab == IMAGE_NO_MAP)
+    {
+        struct image_section_map  hdr_ism = {_fmap, fmap->elfhdr.e_shstrndx};
+        if ((fmap->shstrtab = elf_map_section(&hdr_ism)) == IMAGE_NO_MAP) return FALSE;
+    }
+    for (i = 0; i < fmap->elfhdr.e_shnum; i++)
+    {
+        if (strcmp(fmap->shstrtab + fmap->sect[i].shdr.sh_name, name) == 0)
+        {
+            ism->fmap = _fmap;
+            ism->sidx = i;
+            return TRUE;
+        }
+    }
+    return FALSE;
+}
+
+static BOOL elf_find_section_type(struct image_file_map* _fmap, const char* name, unsigned sht, struct image_section_map* ism)
 {
     struct elf_file_map*        fmap;
     unsigned i;
 
     while (_fmap)
     {
+        if (_fmap->modtype != DMT_ELF) break;
         fmap = &_fmap->u.elf;
         if (fmap->shstrtab == IMAGE_NO_MAP)
         {
@@ -192,15 +214,14 @@ BOOL elf_find_section(struct image_file_map* _fmap, const char* name,
         }
         for (i = 0; i < fmap->elfhdr.e_shnum; i++)
         {
-            if (strcmp(fmap->shstrtab + fmap->sect[i].shdr.sh_name, name) == 0 &&
-                (sht == SHT_NULL || sht == fmap->sect[i].shdr.sh_type))
+            if (strcmp(fmap->shstrtab + fmap->sect[i].shdr.sh_name, name) == 0 && sht == fmap->sect[i].shdr.sh_type)
             {
                 ism->fmap = _fmap;
                 ism->sidx = i;
                 return TRUE;
             }
         }
-        _fmap = fmap->alternate;
+        _fmap = _fmap->alternate;
     }
     ism->fmap = NULL;
     ism->sidx = -1;
@@ -229,13 +250,13 @@ static void elf_end_find(struct image_file_map* fmap)
 {
     struct image_section_map      ism;
 
-    while (fmap)
+    while (fmap && fmap->modtype == DMT_ELF)
     {
         ism.fmap = fmap;
         ism.sidx = fmap->u.elf.elfhdr.e_shstrndx;
         elf_unmap_section(&ism);
         fmap->u.elf.shstrtab = IMAGE_NO_MAP;
-        fmap = fmap->u.elf.alternate;
+        fmap = fmap->alternate;
     }
 }
 
@@ -265,9 +286,9 @@ unsigned elf_get_map_size(const struct image_section_map* ism)
 
 static inline void elf_reset_file_map(struct image_file_map* fmap)
 {
+    fmap->alternate = NULL;
     fmap->u.elf.handle = INVALID_HANDLE_VALUE;
     fmap->u.elf.shstrtab = IMAGE_NO_MAP;
-    fmap->u.elf.alternate = NULL;
     fmap->u.elf.target_copy = NULL;
 }
 
@@ -512,7 +533,7 @@ static BOOL elf_map_file(struct elf_map_file_data* emfd, struct image_file_map* 
  */
 static void elf_unmap_file(struct image_file_map* fmap)
 {
-    while (fmap)
+    while (fmap && fmap->modtype == DMT_ELF)
     {
         if (fmap->u.elf.handle != INVALID_HANDLE_VALUE)
         {
@@ -526,7 +547,7 @@ static void elf_unmap_file(struct image_file_map* fmap)
             CloseHandle(fmap->u.elf.handle);
         }
         HeapFree(GetProcessHeap(), 0, fmap->u.elf.target_copy);
-        fmap = fmap->u.elf.alternate;
+        fmap = fmap->alternate;
     }
 }
 
@@ -573,8 +594,8 @@ static void elf_hash_symtab(struct module* module, struct pool* pool,
     struct image_section_map    ism, ism_str;
     const char *symtab;
 
-    if (!elf_find_section(fmap, ".symtab", SHT_SYMTAB, &ism) &&
-        !elf_find_section(fmap, ".dynsym", SHT_DYNSYM, &ism)) return;
+    if (!elf_find_section_type(fmap, ".symtab", SHT_SYMTAB, &ism) &&
+        !elf_find_section_type(fmap, ".dynsym", SHT_DYNSYM, &ism)) return;
     if ((symtab = image_map_section(&ism)) == IMAGE_NO_MAP) return;
     ism_str.fmap = ism.fmap;
     ism_str.sidx = fmap->u.elf.sect[ism.sidx].shdr.sh_link;
@@ -1040,7 +1061,7 @@ static BOOL elf_locate_debug_link(struct image_file_map* fmap, const char* filen
 found:
     TRACE("Located debug information file %s at %s\n", filename, debugstr_w(p));
     HeapFree(GetProcessHeap(), 0, p);
-    fmap->u.elf.alternate = fmap_link;
+    fmap->alternate = fmap_link;
     return TRUE;
 }
 
@@ -1094,7 +1115,7 @@ static BOOL elf_locate_build_id_target(struct image_file_map* fmap, const BYTE* 
     if (elf_map_file(&emfd, fmap_link))
     {
         struct image_section_map buildid_sect;
-        if (elf_find_section(fmap_link, ".note.gnu.build-id", SHT_NULL, &buildid_sect))
+        if (image_find_section(fmap_link, ".note.gnu.build-id", &buildid_sect))
         {
             const uint32_t* note;
 
@@ -1109,7 +1130,7 @@ static BOOL elf_locate_build_id_target(struct image_file_map* fmap, const BYTE* 
                     {
                         TRACE("Located debug information file at %s\n", debugstr_w(p));
                         HeapFree(GetProcessHeap(), 0, p);
-                        fmap->u.elf.alternate = fmap_link;
+                        fmap->alternate = fmap_link;
                         return TRUE;
                     }
                     WARN("mismatch in buildid information for %s\n", wine_dbgstr_w(p));
@@ -1223,8 +1244,8 @@ static BOOL elf_load_debug_info_from_map(struct module* module,
         /* check if we need an alternate file (from debuglink or build-id) */
         ret = elf_check_alternate(fmap, module);
 
-        if (elf_find_section(fmap, ".stab", SHT_NULL, &stab_sect) &&
-            elf_find_section(fmap, ".stabstr", SHT_NULL, &stabstr_sect))
+        if (image_find_section(fmap, ".stab", &stab_sect) &&
+            image_find_section(fmap, ".stabstr", &stabstr_sect))
         {
             const char* stab;
             const char* stabstr;
@@ -1323,7 +1344,7 @@ static BOOL elf_load_file_from_fmap(struct process* pcs, const WCHAR* filename,
     {
         struct image_section_map        ism;
 
-        if (elf_find_section(fmap, ".dynamic", SHT_DYNAMIC, &ism))
+        if (elf_find_section_type(fmap, ".dynamic", SHT_DYNAMIC, &ism))
         {
             char*           ptr = (char*)(ULONG_PTR)fmap->u.elf.sect[ism.sidx].shdr.sh_addr;
             unsigned long   len;
@@ -1385,7 +1406,7 @@ static BOOL elf_load_file_from_fmap(struct process* pcs, const WCHAR* filename,
         struct image_section_map ism;
         unsigned long           modbase = load_offset;
 
-        if (elf_find_section(fmap, ".dynamic", SHT_DYNAMIC, &ism))
+        if (elf_find_section_type(fmap, ".dynamic", SHT_DYNAMIC, &ism))
         {
             unsigned long rva_dyn = elf_get_map_rva(&ism);
 
@@ -2016,7 +2037,7 @@ BOOL	elf_synchronize_module_list(struct process* pcs)
 #else	/* !__ELF__ */
 
 BOOL         elf_find_section(struct image_file_map* fmap, const char* name,
-                              unsigned sht, struct image_section_map* ism)
+                              struct image_section_map* ism)
 {
     return FALSE;
 }
