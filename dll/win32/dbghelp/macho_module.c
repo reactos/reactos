@@ -1196,7 +1196,7 @@ static BOOL image_uses_split_segs(HANDLE process, unsigned long load_addr)
         struct process *pcs = process_find_by_handle(process);
         cpu_type_t target_cpu = (pcs->is_64bit) ? CPU_TYPE_X86_64 : CPU_TYPE_X86;
         uint32_t target_magic = (pcs->is_64bit) ? MH_MAGIC_64 : MH_MAGIC;
-        macho_mach_header header;
+        struct mach_header header;
 
         if (ReadProcessMemory(process, (void*)load_addr, &header, sizeof(header), NULL) &&
             header.magic == target_magic && header.cputype == target_cpu &&
