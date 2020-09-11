@@ -703,6 +703,7 @@ extern BOOL         path_find_symbol_file(const struct process* pcs, const struc
                                           PCSTR full_path, const GUID* guid, DWORD dw1, DWORD dw2,
                                           WCHAR *buffer, BOOL* is_unmatched) DECLSPEC_HIDDEN;
 extern WCHAR *get_dos_file_name(const WCHAR *filename) DECLSPEC_HIDDEN;
+extern BOOL search_dll_path(const WCHAR *name, BOOL (*match)(void*, HANDLE, const WCHAR*), void *param) DECLSPEC_HIDDEN;
 extern const WCHAR* file_name(const WCHAR* str) DECLSPEC_HIDDEN;
 extern const char* file_nameA(const char* str) DECLSPEC_HIDDEN;
 

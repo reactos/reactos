@@ -720,3 +720,91 @@ WCHAR *get_dos_file_name(const WCHAR *filename)
     }
     return dos_path;
 }
+
+#ifndef __REACTOS__
+BOOL search_dll_path(const WCHAR *name, BOOL (*match)(void*, HANDLE, const WCHAR*), void *param)
+{
+    size_t len, i;
+    HANDLE file;
+    WCHAR *buf;
+    BOOL ret;
+
+    static const WCHAR winebuilddirW[] = {'W','I','N','E','B','U','I','L','D','D','I','R',0};
+    static const WCHAR winedlldirW[] = {'W','I','N','E','D','L','L','D','I','R','%','u',0};
+
+    name = file_name(name);
+
+    if ((len = GetEnvironmentVariableW(winebuilddirW, NULL, 0)))
+    {
+        WCHAR *p, *end;
+        const WCHAR dllsW[] = { '\\','d','l','l','s','\\' };
+        const WCHAR programsW[] = { '\\','p','r','o','g','r','a','m','s','\\' };
+        const WCHAR dot_dllW[] = {'.','d','l','l',0};
+        const WCHAR dot_exeW[] = {'.','e','x','e',0};
+        const WCHAR dot_soW[] = {'.','s','o',0};
+
+        if (!(buf = heap_alloc((len + 8 + 3 * lstrlenW(name)) * sizeof(WCHAR)))) return FALSE;
+        end = buf + GetEnvironmentVariableW(winebuilddirW, buf, len);
+
+        memcpy(end, dllsW, sizeof(dllsW));
+        strcpyW(end + ARRAY_SIZE(dllsW), name);
+        if ((p = strrchrW(end, '.')) && !lstrcmpW(p, dot_soW)) *p = 0;
+        if ((p = strrchrW(end, '.')) && !lstrcmpW(p, dot_dllW)) *p = 0;
+        p = end + strlenW(end);
+        *p++ = '\\';
+        strcpyW(p, name);
+        file = CreateFileW(buf, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+        if (file != INVALID_HANDLE_VALUE)
+        {
+            ret = match(param, file, buf);
+            CloseHandle(file);
+            if (ret) goto found;
+        }
+
+        memcpy(end, programsW, sizeof(programsW));
+        end += ARRAY_SIZE(programsW);
+        strcpyW(end, name);
+        if ((p = strrchrW(end, '.')) && !lstrcmpW(p, dot_soW)) *p = 0;
+        if ((p = strrchrW(end, '.')) && !lstrcmpW(p, dot_exeW)) *p = 0;
+        p = end + strlenW(end);
+        *p++ = '\\';
+        strcpyW(p, name);
+        file = CreateFileW(buf, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+        if (file != INVALID_HANDLE_VALUE)
+        {
+            ret = match(param, file, buf);
+            CloseHandle(file);
+            if (ret) goto found;
+        }
+
+        heap_free(buf);
+    }
+
+    for (i = 0;; i++)
+    {
+        WCHAR env_name[64];
+        sprintfW(env_name, winedlldirW, i);
+        if (!(len = GetEnvironmentVariableW(env_name, NULL, 0))) break;
+        if (!(buf = heap_alloc((len + lstrlenW(name) + 2) * sizeof(WCHAR)))) return FALSE;
+
+        len = GetEnvironmentVariableW(env_name, buf, len);
+        buf[len++] = '\\';
+        strcpyW(buf + len, name);
+        file = CreateFileW(buf, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+        if (file != INVALID_HANDLE_VALUE)
+        {
+            ret = match(param, file, buf);
+            CloseHandle(file);
+            if (ret) goto found;
+        }
+        heap_free(buf);
+    }
+
+    return FALSE;
+
+found:
+    TRACE("found %s\n", debugstr_w(buf));
+    heap_free(buf);
+    return TRUE;
+}
+#endif
