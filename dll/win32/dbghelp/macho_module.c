@@ -944,7 +944,7 @@ static int macho_parse_symtab(struct image_file_map* ifm,
 
     if (!stabs_parse(mdi->module,
                      mdi->module->format_info[DFI_MACHO]->u.macho_info->load_addr - fmap->segs_start,
-                     stab, sc->nsyms * stabsize,
+                     stab, sc->nsyms, stabsize,
                      stabstr, sc->strsize, macho_stabs_def_cb, mdi))
         ret = -1;
 

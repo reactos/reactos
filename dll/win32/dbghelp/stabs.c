@@ -1255,7 +1255,7 @@ static inline void stabbuf_append(char **buf, unsigned *buf_size, const char *st
 }
 
 BOOL stabs_parse(struct module* module, ULONG_PTR load_offset,
-                 const char* pv_stab_ptr, int stablen,
+                 const char* pv_stab_ptr, size_t nstab, size_t stabsize,
                  const char* strs, int strtablen,
                  stabs_def_cb callback, void* user)
 {
@@ -1264,7 +1264,6 @@ BOOL stabs_parse(struct module* module, ULONG_PTR load_offset,
     struct symt_compiland*      compiland = NULL;
     char*                       srcpath = NULL;
     int                         i;
-    int                         nstab;
     const char*                 ptr;
     char*                       stabbuff;
     unsigned int                stabbufflen;
@@ -1280,14 +1279,8 @@ BOOL stabs_parse(struct module* module, ULONG_PTR load_offset,
     BOOL                        ret = TRUE;
     struct location             loc;
     unsigned char               type;
-    size_t                      stabsize = sizeof(struct stab_nlist);
     uint64_t                    n_value;
 
-#ifdef __APPLE__
-    if (module->process->is_64bit)
-        stabsize = sizeof(struct macho64_nlist);
-#endif
-    nstab = stablen / stabsize;
     strs_end = strs + strtablen;
 
     memset(stabs_basic, 0, sizeof(stabs_basic));
@@ -1306,11 +1299,7 @@ BOOL stabs_parse(struct module* module, ULONG_PTR load_offset,
     for (i = 0; i < nstab; i++)
     {
         stab_ptr = (struct stab_nlist *)(pv_stab_ptr + i * stabsize);
-        n_value = stab_ptr->n_value;
-#ifdef __APPLE__
-        if (module->process->is_64bit)
-            n_value = ((struct macho64_nlist *)stab_ptr)->n_value;
-#endif
+        n_value = stabsize == sizeof(struct macho64_nlist) ? ((struct macho64_nlist *)stab_ptr)->n_value : stab_ptr->n_value;
         ptr = strs + stab_ptr->n_strx;
         if ((ptr > strs_end) || (ptr + strlen(ptr) > strs_end))
         {

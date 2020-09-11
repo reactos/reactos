@@ -1007,7 +1007,7 @@ static BOOL elf_load_debug_info_from_map(struct module* module,
             {
                 /* OK, now just parse all of the stabs. */
                 lret = stabs_parse(module, module->format_info[DFI_ELF]->u.elf_info->elf_addr,
-                                   stab, image_get_map_size(&stab_sect),
+                                   stab, image_get_map_size(&stab_sect) / sizeof(struct stab_nlist), sizeof(struct stab_nlist),
                                    stabstr, image_get_map_size(&stabstr_sect),
                                    NULL, NULL);
                 if (lret)

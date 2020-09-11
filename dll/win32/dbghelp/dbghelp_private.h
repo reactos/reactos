@@ -723,7 +723,7 @@ typedef void (*stabs_def_cb)(struct module* module, ULONG_PTR load_offset,
                                 BOOL is_public, BOOL is_global, unsigned char other,
                                 struct symt_compiland* compiland, void* user);
 extern BOOL         stabs_parse(struct module* module, ULONG_PTR load_offset,
-                                const char* stabs, int stablen,
+                                const char* stabs, size_t nstab, size_t stabsize,
                                 const char* strs, int strtablen,
                                 stabs_def_cb callback, void* user) DECLSPEC_HIDDEN;
 
