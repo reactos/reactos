@@ -3031,7 +3031,7 @@ static void execute_cfa_instructions(dwarf2_traverse_context_t* ctx,
 }
 
 /* retrieve a context register from its dwarf number */
-static ULONG_PTR get_context_reg(CONTEXT *context, ULONG_PTR dw_reg)
+static ULONG_PTR get_context_reg(union ctx *context, ULONG_PTR dw_reg)
 {
     unsigned regno = dbghelp_current_cpu->map_dwarf_register(dw_reg, TRUE), sz;
     ULONG_PTR* ptr = dbghelp_current_cpu->fetch_context_reg(context, regno, &sz);
@@ -3045,8 +3045,8 @@ static ULONG_PTR get_context_reg(CONTEXT *context, ULONG_PTR dw_reg)
 }
 
 /* set a context register from its dwarf number */
-static void set_context_reg(struct cpu_stack_walk* csw, CONTEXT *context, ULONG_PTR dw_reg,
-                            ULONG_PTR val, BOOL isdebuggee)
+static void set_context_reg(struct cpu_stack_walk* csw, union ctx *context,
+    ULONG_PTR dw_reg, ULONG_PTR val, BOOL isdebuggee)
 {
     unsigned regno = dbghelp_current_cpu->map_dwarf_register(dw_reg, TRUE), sz;
     ULONG_PTR* ptr = dbghelp_current_cpu->fetch_context_reg(context, regno, &sz);
@@ -3079,7 +3079,8 @@ static void set_context_reg(struct cpu_stack_walk* csw, CONTEXT *context, ULONG_
 }
 
 /* copy a register from one context to another using dwarf number */
-static void copy_context_reg(CONTEXT *dstcontext, ULONG_PTR dwregdst, CONTEXT* srccontext, ULONG_PTR dwregsrc)
+static void copy_context_reg(union ctx *dstcontext, ULONG_PTR dwregdst,
+                             union ctx *srccontext, ULONG_PTR dwregsrc)
 {
     unsigned regdstno = dbghelp_current_cpu->map_dwarf_register(dwregdst, TRUE), szdst;
     unsigned regsrcno = dbghelp_current_cpu->map_dwarf_register(dwregsrc, TRUE), szsrc;
@@ -3096,7 +3097,7 @@ static void copy_context_reg(CONTEXT *dstcontext, ULONG_PTR dwregdst, CONTEXT* s
 }
 
 static ULONG_PTR eval_expression(const struct module* module, struct cpu_stack_walk* csw,
-                                 const unsigned char* zp, CONTEXT *context)
+                                 const unsigned char* zp, union ctx *context)
 {
     dwarf2_traverse_context_t    ctx;
     ULONG_PTR reg, sz, tmp, stack[64];
@@ -3207,11 +3208,11 @@ static ULONG_PTR eval_expression(const struct module* module, struct cpu_stack_w
 }
 
 static void apply_frame_state(const struct module* module, struct cpu_stack_walk* csw,
-                              CONTEXT *context, struct frame_state *state, ULONG_PTR* cfa)
+                              union ctx *context, struct frame_state *state, ULONG_PTR* cfa)
 {
     unsigned int i;
     ULONG_PTR value;
-    CONTEXT new_context = *context;
+    union ctx new_context = *context;
 
     switch (state->cfa_rule)
     {
@@ -3263,7 +3264,8 @@ static void apply_frame_state(const struct module* module, struct cpu_stack_walk
  *           dwarf2_virtual_unwind
  *
  */
-BOOL dwarf2_virtual_unwind(struct cpu_stack_walk* csw, ULONG_PTR ip, CONTEXT* context, ULONG_PTR* cfa)
+BOOL dwarf2_virtual_unwind(struct cpu_stack_walk *csw, ULONG_PTR ip,
+    union ctx *context, ULONG_PTR *cfa)
 {
     struct module_pair pair;
     struct frame_info info;
