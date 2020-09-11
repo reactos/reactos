@@ -326,7 +326,7 @@ static inline void elf_reset_file_map(struct image_file_map* fmap)
 
 struct elf_map_file_data
 {
-    enum {from_file, from_process}      kind;
+    enum {from_file, from_process, from_handle}      kind;
     union
     {
         struct
@@ -338,6 +338,7 @@ struct elf_map_file_data
             HANDLE      handle;
             void*       load_addr;
         } process;
+        HANDLE handle;
     } u;
 };
 
@@ -351,6 +352,7 @@ static BOOL elf_map_file_read(struct image_file_map* fmap, struct elf_map_file_d
     switch (emfd->kind)
     {
     case from_file:
+    case from_handle:
         li.QuadPart = off;
         if (!SetFilePointerEx(fmap->u.elf.handle, li, NULL, FILE_BEGIN)) return FALSE;
         return ReadFile(fmap->u.elf.handle, buf, len, &bytes_read, NULL);
@@ -443,6 +445,10 @@ static BOOL elf_map_file(struct elf_map_file_data* emfd, struct image_file_map* 
         fmap->u.elf.handle = CreateFileW(dos_path, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
         heap_free(dos_path);
         if (fmap->u.elf.handle == INVALID_HANDLE_VALUE) return FALSE;
+        break;
+    case from_handle:
+        if (!DuplicateHandle(GetCurrentProcess(), emfd->u.handle, GetCurrentProcess(), &fmap->u.elf.handle, GENERIC_READ, FALSE, 0))
+            return FALSE;
         break;
     case from_process:
         break;
@@ -539,6 +545,7 @@ static BOOL elf_map_file(struct elf_map_file_data* emfd, struct image_file_map* 
 
     switch (emfd->kind)
     {
+    case from_handle:
     case from_file: break;
     case from_process:
         if (!(fmap->u.elf.target_copy = HeapAlloc(GetProcessHeap(), 0, fmap->u.elf.elf_size)))
@@ -556,6 +563,14 @@ static BOOL elf_map_file(struct elf_map_file_data* emfd, struct image_file_map* 
         break;
     }
     return TRUE;
+}
+
+static BOOL elf_map_handle(HANDLE handle, struct image_file_map* fmap)
+{
+    struct elf_map_file_data emfd;
+    emfd.kind = from_handle;
+    emfd.u.handle = handle;
+    return elf_map_file(&emfd, fmap);
 }
 
 static void elf_module_remove(struct process* pcs, struct module_format* modfmt)
@@ -968,21 +983,24 @@ static int elf_new_public_symbols(struct module* module, const struct hash_table
 
 static BOOL elf_check_debug_link(const WCHAR* file, struct image_file_map* fmap, DWORD link_crc)
 {
-    struct elf_map_file_data    emfd;
+    HANDLE handle;
+    WCHAR *path;
     DWORD crc;
+    BOOL ret = FALSE;
 
-    emfd.kind = from_file;
-    emfd.u.file.filename = file;
-    if (!elf_map_file(&emfd, fmap)) return FALSE;
+    path = get_dos_file_name(file);
+    handle = CreateFileW(path, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
+    heap_free(path);
+    if (handle == INVALID_HANDLE_VALUE) return FALSE;
 
-    crc = calc_crc32(fmap->u.elf.handle);
+    crc = calc_crc32(handle);
     if (crc != link_crc)
-    {
         WARN("Bad CRC for file %s (got %08x while expecting %08x)\n",  debugstr_w(file), crc, link_crc);
-        image_unmap_file(fmap);
-        return FALSE;
-    }
-    return TRUE;
+    else
+        ret = elf_map_handle(handle, fmap);
+
+    CloseHandle(handle);
+    return ret;
 }
 
 /******************************************************************
