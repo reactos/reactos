@@ -448,7 +448,7 @@ static const struct load_command* macho_map_load_commands(struct macho_file_map*
     if (fmap->load_commands == IMAGE_NO_MAP)
     {
         fmap->load_commands = (const struct load_command*) macho_map_range(
-                fmap, fmap->header_size, fmap->mach_header.sizeofcmds, NULL);
+                fmap, fmap->header_size, fmap->commands_size, NULL);
         TRACE("Mapped load commands: %p\n", fmap->load_commands);
     }
 
@@ -466,7 +466,7 @@ static void macho_unmap_load_commands(struct macho_file_map* fmap)
     {
         TRACE("Unmapping load commands: %p\n", fmap->load_commands);
         macho_unmap_range(NULL, (const void**)&fmap->load_commands, fmap,
-                    fmap->header_size, fmap->mach_header.sizeofcmds);
+                    fmap->header_size, fmap->commands_size);
     }
 }
 
@@ -504,9 +504,9 @@ static int macho_enum_load_commands(struct image_file_map *ifm, unsigned cmd,
 
     if ((lc = macho_map_load_commands(fmap)) == IMAGE_NO_MAP) return -1;
 
-    TRACE("%d total commands\n", fmap->mach_header.ncmds);
+    TRACE("%lu total commands\n", fmap->commands_count);
 
-    for (i = 0; i < fmap->mach_header.ncmds; i++, lc = macho_next_load_command(lc))
+    for (i = 0; i < fmap->commands_count; i++, lc = macho_next_load_command(lc))
     {
         int result;
 
@@ -683,6 +683,7 @@ static BOOL macho_map_file(struct process *pcs, const WCHAR *filenameW,
 {
     struct macho_file_map* fmap = &ifm->u.macho;
     struct fat_header   fat_header;
+    struct mach_header  mach_header;
     int                 i;
     WCHAR*              filename;
     struct section_info info;
@@ -745,15 +746,16 @@ static BOOL macho_map_file(struct process *pcs, const WCHAR *filenameW,
 
     /* Individual architecture (standalone or within a fat file) is in its native byte order. */
     SetFilePointer(fmap->handle, fmap->arch_offset, 0, FILE_BEGIN);
-    if (!ReadFile(fmap->handle, &fmap->mach_header, sizeof(fmap->mach_header), &bytes_read, NULL)
-        || bytes_read != sizeof(fmap->mach_header))
+    if (!ReadFile(fmap->handle, &mach_header, sizeof(mach_header), &bytes_read, NULL)
+        || bytes_read != sizeof(mach_header))
         goto done;
     TRACE("... got possible Mach header\n");
     /* and check for a Mach-O header */
-    if (fmap->mach_header.magic != target_magic ||
-        fmap->mach_header.cputype != target_cpu) goto done;
+    if (mach_header.magic != target_magic || mach_header.cputype != target_cpu) goto done;
+    fmap->commands_size = mach_header.sizeofcmds;
+    fmap->commands_count = mach_header.ncmds;
     /* Make sure the file type is one of the ones we expect. */
-    switch (fmap->mach_header.filetype)
+    switch (mach_header.filetype)
     {
         case MH_EXECUTE:
         case MH_DYLIB:
