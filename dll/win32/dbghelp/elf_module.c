@@ -1,12 +1,3 @@
-#ifdef __REACTOS__
-#ifdef DBGHELP_STATIC_LIB
-#undef __ELF__
-#include "compat.h"
-#else
-#endif
-#include "dbghelp_private.h"
-#include "image_private.h"
-#else
 /*
  * File elf.c - processing of ELF files
  *
@@ -50,7 +41,6 @@
 #include "wine/library.h"
 #include "wine/debug.h"
 #include "wine/heap.h"
-#endif /* __REACTOS__ */
 
 #ifdef __ELF__
 
