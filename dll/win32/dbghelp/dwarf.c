@@ -827,9 +827,9 @@ compute_location(dwarf2_traverse_context_t* ctx, struct location* loc,
             if (hproc)
             {
                 DWORD_PTR addr = stack[stk--];
-                DWORD_PTR deref;
+                DWORD_PTR deref = 0;
 
-                if (!ReadProcessMemory(hproc, (void*)addr, &deref, sizeof(deref), NULL))
+                if (!ReadProcessMemory(hproc, (void*)addr, &deref, ctx->word_size, NULL))
                 {
                     WARN("Couldn't read memory at %lx\n", addr);
                     return loc_err_cant_read;
@@ -3140,7 +3140,8 @@ static ULONG_PTR eval_expression(const struct module* module, struct cpu_stack_w
         case DW_OP_constu:      stack[++sp] = dwarf2_leb128_as_unsigned(&ctx); break;
         case DW_OP_consts:      stack[++sp] = dwarf2_leb128_as_signed(&ctx); break;
         case DW_OP_deref:
-            if (!sw_read_mem(csw, stack[sp], &tmp, sizeof(tmp)))
+            tmp = 0;
+            if (!sw_read_mem(csw, stack[sp], &tmp, ctx.word_size))
             {
                 ERR("Couldn't read memory at %s\n", wine_dbgstr_longlong(stack[sp]));
                 tmp = 0;
@@ -3223,7 +3224,7 @@ static void apply_frame_state(const struct module* module, struct cpu_stack_walk
     {
     case RULE_EXPRESSION:
         *cfa = eval_expression(module, csw, (const unsigned char*)state->cfa_offset, context);
-        if (!sw_read_mem(csw, *cfa, cfa, sizeof(*cfa)))
+        if (!sw_read_mem(csw, *cfa, cfa, csw->cpu->word_size))
         {
             WARN("Couldn't read memory at %s\n", wine_dbgstr_longlong(*cfa));
             return;
