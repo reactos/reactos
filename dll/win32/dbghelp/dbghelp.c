@@ -324,7 +324,7 @@ BOOL WINAPI SymInitializeW(HANDLE hProcess, PCWSTR UserSearchPath, BOOL fInvadeP
 
     IsWow64Process(GetCurrentProcess(), &wow64);
 
-    if (!IsWow64Process(hProcess, &child_wow64))
+    if (GetProcessId(hProcess) && !IsWow64Process(hProcess, &child_wow64))
         return FALSE;
 
     pcs = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*pcs));
