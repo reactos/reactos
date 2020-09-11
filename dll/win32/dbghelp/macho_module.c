@@ -1255,18 +1255,17 @@ found:
  * The image header has to be loaded from the process's memory
  * because the relevant flag is only set in memory, not in the file.
  */
-static BOOL image_uses_split_segs(HANDLE process, unsigned long load_addr)
+static BOOL image_uses_split_segs(struct process* process, unsigned long load_addr)
 {
     BOOL split_segs = FALSE;
 
-    if (process && load_addr)
+    if (load_addr)
     {
-        struct process *pcs = process_find_by_handle(process);
-        cpu_type_t target_cpu = (pcs->is_64bit) ? CPU_TYPE_X86_64 : CPU_TYPE_X86;
-        uint32_t target_magic = (pcs->is_64bit) ? MH_MAGIC_64 : MH_MAGIC;
+        cpu_type_t target_cpu = (process->is_64bit) ? CPU_TYPE_X86_64 : CPU_TYPE_X86;
+        uint32_t target_magic = (process->is_64bit) ? MH_MAGIC_64 : MH_MAGIC;
         struct mach_header header;
 
-        if (ReadProcessMemory(process, (void*)load_addr, &header, sizeof(header), NULL) &&
+        if (ReadProcessMemory(process->handle, (void*)load_addr, &header, sizeof(header), NULL) &&
             header.magic == target_magic && header.cputype == target_cpu &&
             header.flags & MACHO_DYLD_IN_SHARED_CACHE)
         {
@@ -1351,7 +1350,7 @@ static BOOL macho_fetch_file_info(struct process* process, const WCHAR* name, UL
 
     TRACE("(%s, %p, %p, %p)\n", debugstr_w(name), base, size, checksum);
 
-    split_segs = image_uses_split_segs(process->handle, load_addr);
+    split_segs = image_uses_split_segs(process, load_addr);
     if (!macho_map_file(process, name, split_segs, &fmap)) return FALSE;
     if (base) *base = fmap.u.macho.segs_start;
     *size = fmap.u.macho.segs_size;
@@ -1449,7 +1448,7 @@ static BOOL macho_load_file(struct process* pcs, const WCHAR* filename,
     TRACE("(%p/%p, %s, 0x%08lx, %p/0x%08x)\n", pcs, pcs->handle, debugstr_w(filename),
             load_addr, macho_info, macho_info->flags);
 
-    split_segs = image_uses_split_segs(pcs->handle, load_addr);
+    split_segs = image_uses_split_segs(pcs, load_addr);
     if (!macho_map_file(pcs, filename, split_segs, &fmap)) return FALSE;
 
     /* Find the dynamic loader's table of images loaded into the process.
