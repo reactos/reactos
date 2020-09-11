@@ -359,7 +359,7 @@ static BOOL elf_map_file(struct elf_map_file_data* emfd, struct image_file_map* 
     unsigned int        i;
     size_t              tmp, page_mask = sysinfo.dwPageSize - 1;
     WCHAR              *dos_path;
-    unsigned char e_ident[EI_NIDENT];
+    unsigned char e_ident[ARRAY_SIZE(fmap->u.elf.elfhdr.e_ident)];
 
     elf_reset_file_map(fmap);
 
@@ -394,12 +394,28 @@ static BOOL elf_map_file(struct elf_map_file_data* emfd, struct image_file_map* 
 
     if (fmap->addr_size == 32)
     {
-        Elf32_Ehdr elfhdr32;
+        struct
+        {
+            UINT8   e_ident[16];  /* Magic number and other info */
+            UINT16  e_type;       /* Object file type */
+            UINT16  e_machine;    /* Architecture */
+            UINT32  e_version;    /* Object file version */
+            UINT32  e_entry;      /* Entry point virtual address */
+            UINT32  e_phoff;      /* Program header table file offset */
+            UINT32  e_shoff;      /* Section header table file offset */
+            UINT32  e_flags;      /* Processor-specific flags */
+            UINT16  e_ehsize;     /* ELF header size in bytes */
+            UINT16  e_phentsize;  /* Program header table entry size */
+            UINT16  e_phnum;      /* Program header table entry count */
+            UINT16  e_shentsize;  /* Section header table entry size */
+            UINT16  e_shnum;      /* Section header table entry count */
+            UINT16  e_shstrndx;   /* Section header string table index */
+        } elfhdr32;
 
         if (!elf_map_file_read(fmap, emfd, &elfhdr32, sizeof(elfhdr32), 0))
             return FALSE;
 
-        memcpy(fmap->u.elf.elfhdr.e_ident, elfhdr32.e_ident, EI_NIDENT);
+        memcpy(fmap->u.elf.elfhdr.e_ident, elfhdr32.e_ident, sizeof(e_ident));
         fmap->u.elf.elfhdr.e_type      = elfhdr32.e_type;
         fmap->u.elf.elfhdr.e_machine   = elfhdr32.e_machine;
         fmap->u.elf.elfhdr.e_version   = elfhdr32.e_version;
