@@ -1296,6 +1296,11 @@ typedef struct API_VERSION
     USHORT  Revision;
     USHORT  Reserved;
 } API_VERSION, *LPAPI_VERSION;
+typedef enum
+{
+    SYMOPT_EX_DISABLEACCESSTIMEUPDATE,
+    SYMOPT_EX_MAX
+} IMAGEHLP_EXTENDED_OPTIONS;
 
 // cvconst.h
 /* symbols & types enumeration */
