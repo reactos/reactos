@@ -50,6 +50,8 @@ static __inline const char *debugstr_wn( const WCHAR *s, int n ) { return wine_d
 static __inline const char *debugstr_a( const char *s )  { return wine_dbgstr_an( s, -1 ); }
 static __inline const char *debugstr_w( const WCHAR *s ) { return wine_dbgstr_wn( s, -1 ); }
 static __inline const char *wine_dbgstr_w( const WCHAR *s ){return wine_dbgstr_wn( s, -1 );}
+/* This should never be called */
+#define wine_get_dos_file_name(__x) (assert(0), NULL)
 
 #if 0
 #define WARN(fmt, ...) fprintf(stderr, "WARN %s: " fmt, __FUNCTION__, ##__VA_ARGS__)
@@ -829,6 +831,13 @@ typedef struct _IMAGEHLP_LINE64
     PCHAR                       FileName;
     DWORD64                     Address;
 } IMAGEHLP_LINE64, *PIMAGEHLP_LINE64;
+typedef enum
+{
+    SYMOPT_EX_DISABLEACCESSTIMEUPDATE,
+    SYMOPT_EX_MAX,
+/* __WINESRC__ */
+    SYMOPT_EX_WINE_NATIVE_MODULES = 1000
+} IMAGEHLP_EXTENDED_OPTIONS;
 typedef struct _SRCCODEINFO
 {
     DWORD       SizeOfStruct;
@@ -859,6 +868,7 @@ PVOID WINAPI SymFunctionTableAccess64(HANDLE, DWORD64);
 BOOL WINAPI SymFromAddr(HANDLE hProcess, DWORD64 Address, DWORD64* Displacement, PSYMBOL_INFO Symbol);
 BOOL WINAPI SymEnumLines(HANDLE hProcess, ULONG64 base, PCSTR compiland, PCSTR srcfile, PSYM_ENUMLINES_CALLBACK cb, PVOID user);
 DWORD WINAPI SymSetOptions(DWORD opts);
+BOOL WINAPI SymSetExtendedOption(IMAGEHLP_EXTENDED_OPTIONS option, BOOL value);
 BOOL WINAPI SymGetLineFromAddr64(HANDLE hProcess, DWORD64 dwAddr, PDWORD pdwDisplacement, PIMAGEHLP_LINE64 Line);
 typedef BOOL (CALLBACK *PFIND_EXE_FILE_CALLBACKW)(HANDLE, PCWSTR, PVOID);
 #define FindExecutableImageExW __FindExecutableImageExW
@@ -1296,13 +1306,6 @@ typedef struct API_VERSION
     USHORT  Revision;
     USHORT  Reserved;
 } API_VERSION, *LPAPI_VERSION;
-typedef enum
-{
-    SYMOPT_EX_DISABLEACCESSTIMEUPDATE,
-    SYMOPT_EX_MAX,
-/* __WINESRC__ */
-    SYMOPT_EX_WINE_NATIVE_MODULES = 1000
-} IMAGEHLP_EXTENDED_OPTIONS;
 
 // cvconst.h
 /* symbols & types enumeration */
