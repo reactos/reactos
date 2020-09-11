@@ -55,7 +55,7 @@ static BOOL ppc_stack_walk(struct cpu_stack_walk* csw, STACKFRAME64 *frame,
     return FALSE;
 }
 
-static unsigned ppc_map_dwarf_register(unsigned regno, BOOL eh_frame)
+static unsigned ppc_map_dwarf_register(unsigned regno, const struct module* module, BOOL eh_frame)
 {
     FIXME("not done\n");
     return 0;

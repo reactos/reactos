@@ -161,7 +161,7 @@ static BOOL arm_stack_walk(struct cpu_stack_walk *csw, STACKFRAME64 *frame,
 }
 #endif
 
-static unsigned arm_map_dwarf_register(unsigned regno, BOOL eh_frame)
+static unsigned arm_map_dwarf_register(unsigned regno, const struct module* module, BOOL eh_frame)
 {
     if (regno <= 15) return CV_ARM_R0 + regno;
     if (regno == 128) return CV_ARM_CPSR;
