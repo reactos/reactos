@@ -293,6 +293,8 @@ VfatGetBasicInformation(
     if (*BufferLength < sizeof(FILE_BASIC_INFORMATION))
         return STATUS_BUFFER_OVERFLOW;
 
+    RtlZeroMemory(BasicInfo, sizeof(FILE_BASIC_INFORMATION));
+
     if (vfatVolumeIsFatX(DeviceExt))
     {
         FsdDosDateTimeToSystemTime(DeviceExt,
