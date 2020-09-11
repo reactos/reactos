@@ -41,8 +41,7 @@ else()
     endif()
 
     include_directories(
-        BEFORE ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine
-        ${REACTOS_SOURCE_DIR}/sdk/include/reactos/libs/zlib)
+        BEFORE ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 
     spec2def(dbghelp.dll dbghelp.spec ADD_IMPORTLIB)
 
@@ -80,7 +79,7 @@ else()
         ${CMAKE_CURRENT_BINARY_DIR}/dbghelp.def)
 
     set_module_type(dbghelp win32dll)
-    target_link_libraries(dbghelp wine ${PSEH_LIB} oldnames zlib)
+    target_link_libraries(dbghelp wine ${PSEH_LIB} oldnames)
     add_delay_importlibs(dbghelp version)
     add_importlibs(dbghelp psapi msvcrt kernel32 ntdll)
     add_pch(dbghelp precomp.h SOURCE)
