@@ -30,12 +30,17 @@
 #include "psapi.h"
 #include "winternl.h"
 #include "wine/debug.h"
+#ifndef __REACTOS__
+#include "wine/heap.h"
+#endif
 #endif
 
 WINE_DEFAULT_DEBUG_CHANNEL(dbghelp);
 
 const WCHAR        S_ElfW[]         = {'<','e','l','f','>','\0'};
+#ifndef __REACTOS__
 const WCHAR        S_WineLoaderW[]  = {'<','w','i','n','e','-','l','o','a','d','e','r','>','\0'};
+#endif
 static const WCHAR S_DotSoW[]       = {'.','s','o','\0'};
 static const WCHAR S_DotDylibW[]    = {'.','d','y','l','i','b','\0'};
 static const WCHAR S_DotPdbW[]      = {'.','p','d','b','\0'};
@@ -77,9 +82,44 @@ static const WCHAR* get_filename(const WCHAR* name, const WCHAR* endptr)
     return ++ptr;
 }
 
+#ifndef __REACTOS__
+static BOOL is_wine_loader(const WCHAR *module)
+{
+    static const WCHAR wineW[] = {'w','i','n','e',0};
+    static const WCHAR suffixW[] = {'6','4',0};
+    const WCHAR *filename = get_filename(module, NULL);
+    const char *ptr, *p;
+    BOOL ret = FALSE;
+    WCHAR *buffer;
+    DWORD len;
+
+    if ((ptr = getenv("WINELOADER")))
+    {
+        if ((p = strrchr(ptr, '/'))) ptr = p + 1;
+        len = 2 + MultiByteToWideChar( CP_UNIXCP, 0, ptr, -1, NULL, 0 );
+        buffer = heap_alloc( len * sizeof(WCHAR) );
+        MultiByteToWideChar( CP_UNIXCP, 0, ptr, -1, buffer, len );
+    }
+    else
+    {
+        buffer = heap_alloc( sizeof(wineW) + 2 * sizeof(WCHAR) );
+        strcpyW( buffer, wineW );
+    }
+
+    if (!strcmpW( filename, buffer ))
+        ret = TRUE;
+
+    strcatW( buffer, suffixW );
+    if (!strcmpW( filename, buffer ))
+        ret = TRUE;
+
+    heap_free( buffer );
+    return ret;
+}
+#endif
+
 static void module_fill_module(const WCHAR* in, WCHAR* out, size_t size)
 {
-    const WCHAR *loader = get_wine_loader_name();
     const WCHAR *ptr, *endptr;
     size_t      len, l;
 
@@ -89,8 +129,10 @@ static void module_fill_module(const WCHAR* in, WCHAR* out, size_t size)
     out[len] = '\0';
     if (len > 4 && (l = match_ext(out, len)))
         out[len - l] = '\0';
-    else if (len > strlenW(loader) && !strcmpiW(out + len - strlenW(loader), loader))
+#ifndef __REACTOS__
+    else if (is_wine_loader(out))
         lstrcpynW(out, S_WineLoaderW, size);
+#endif
     else
     {
         if (len > 3 && !strcmpiW(&out[len - 3], S_DotSoW) &&
@@ -295,7 +337,7 @@ static struct module* module_get_container(const struct process* pcs,
                                     const struct module* inner)
 {
     struct module*      module;
-     
+
     for (module = pcs->lmodules; module; module = module->next)
     {
         if (module != inner &&
@@ -311,11 +353,11 @@ static struct module* module_get_container(const struct process* pcs,
  *           module_get_containee
  *
  */
-struct module* module_get_containee(const struct process* pcs, 
+struct module* module_get_containee(const struct process* pcs,
                                     const struct module* outter)
 {
     struct module*      module;
-     
+
     for (module = pcs->lmodules; module; module = module->next)
     {
         if (module != outter &&
@@ -349,7 +391,7 @@ BOOL module_get_debug(struct module_pair* pair)
     if (pair->effective->module.SymType == SymDeferred)
     {
         BOOL ret;
-        
+
         if (pair->effective->is_virtual) ret = FALSE;
         else switch (pair->effective->type)
         {
@@ -393,14 +435,14 @@ BOOL module_get_debug(struct module_pair* pair)
 /***********************************************************************
  *	module_find_by_addr
  *
- * either the addr where module is loaded, or any address inside the 
+ * either the addr where module is loaded, or any address inside the
  * module
  */
 struct module* module_find_by_addr(const struct process* pcs, DWORD64 addr,
                                    enum module_type type)
 {
     struct module*      module;
-    
+
     if (type == DMT_UNKNOWN)
     {
         if ((module = module_find_by_addr(pcs, addr, DMT_PE)) ||
@@ -413,7 +455,7 @@ struct module* module_find_by_addr(const struct process* pcs, DWORD64 addr,
         for (module = pcs->lmodules; module; module = module->next)
         {
             if (type == module->type && addr >= module->module.BaseOfImage &&
-                addr < module->module.BaseOfImage + module->module.ImageSize) 
+                addr < module->module.BaseOfImage + module->module.ImageSize)
                 return module;
         }
     }
@@ -464,8 +506,7 @@ static BOOL module_is_container_loaded(const struct process* pcs,
  */
 enum module_type module_get_type_by_name(const WCHAR* name)
 {
-    int loader_len, len = strlenW(name);
-    const WCHAR *loader;
+    int len = strlenW(name);
 
     /* Skip all version extensions (.[digits]) regex: "(\.\d+)*$" */
     do
@@ -500,10 +541,8 @@ enum module_type module_get_type_by_name(const WCHAR* name)
         return DMT_DBG;
 
     /* wine is also a native module (Mach-O on Mac OS X, ELF elsewhere) */
-    loader = get_wine_loader_name();
-    loader_len = strlenW( loader );
-    if ((len == loader_len || (len > loader_len && name[len - loader_len - 1] == '/')) &&
-        !strcmpiW(name + len - loader_len, loader))
+#ifndef __REACTOS__
+    if (is_wine_loader(name))
     {
 #ifdef __APPLE__
         return DMT_MACHO;
@@ -511,6 +550,7 @@ enum module_type module_get_type_by_name(const WCHAR* name)
         return DMT_ELF;
 #endif
     }
+#endif
     return DMT_PE;
 }
 
@@ -768,7 +808,7 @@ static BOOL CALLBACK enum_modW64_32(PCWSTR name, DWORD64 base, PVOID user)
 }
 
 BOOL  WINAPI SymEnumerateModules(HANDLE hProcess,
-                                 PSYM_ENUMMODULES_CALLBACK EnumModulesCallback,  
+                                 PSYM_ENUMMODULES_CALLBACK EnumModulesCallback,
                                  PVOID UserContext)
 {
     struct enum_modW64_32       x;
@@ -799,7 +839,7 @@ static BOOL CALLBACK enum_modW64_64(PCWSTR name, DWORD64 base, PVOID user)
 }
 
 BOOL  WINAPI SymEnumerateModules64(HANDLE hProcess,
-                                   PSYM_ENUMMODULES_CALLBACK64 EnumModulesCallback,  
+                                   PSYM_ENUMMODULES_CALLBACK64 EnumModulesCallback,
                                    PVOID UserContext)
 {
     struct enum_modW64_64       x;
@@ -822,7 +862,7 @@ BOOL  WINAPI SymEnumerateModulesW64(HANDLE hProcess,
     struct module*      module;
 
     if (!pcs) return FALSE;
-    
+
     for (module = pcs->lmodules; module; module = module->next)
     {
         if (!(dbghelp_options & SYMOPT_WINE_WITH_NATIVE_MODULES) &&
