@@ -1,4 +1,6 @@
 
+add_subdirectory(nt_0600)
+
 spec2def(ntdll.dll def/ntdll.spec ADD_IMPORTLIB)
 
 add_definitions(
@@ -61,20 +63,3 @@ target_link_libraries(ntdll rtl ntdllsys libcntpr uuid ${PSEH_LIB})
 add_pch(ntdll include/ntdll.h "${PCH_SKIP_SOURCE}")
 add_dependencies(ntdll ntstatus asm)
 add_cd_file(TARGET ntdll DESTINATION reactos/system32 NO_CAB FOR all)
-
-
-spec2def(ntdll_vista.dll ntdll_vista.spec ADD_IMPORTLIB)
-
-list(APPEND SOURCE_VISTA
-    DllMainVista.c
-    ${CMAKE_CURRENT_BINARY_DIR}/ntdll_vista.def)
-
-add_library(ntdll_vista MODULE ${SOURCE_VISTA})
-set_module_type(ntdll_vista win32dll ENTRYPOINT DllMain 12)
-target_link_libraries(ntdll_vista rtl_vista)
-if(ARCH STREQUAL "arm")
-    target_link_libraries(ntdll_vista chkstk)
-endif()
-add_importlibs(ntdll_vista ntdll)
-add_dependencies(ntdll_vista psdk)
-add_cd_file(TARGET ntdll_vista DESTINATION reactos/system32 FOR all)
