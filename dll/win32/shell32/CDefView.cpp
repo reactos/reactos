@@ -57,6 +57,19 @@ typedef struct
    to call TrackPopupMenu and let it use the 0 value as an indication that the menu was canceled */
 #define CONTEXT_MENU_BASE_ID 1
 
+/* Convert client coordinates to listview coordinates */
+static void
+ClientToListView(HWND hwndLV, POINT *ppt)
+{
+    POINT Origin;
+
+    if (!ListView_GetOrigin(hwndLV, &Origin))
+        return;
+
+    ppt->x += Origin.x;
+    ppt->y += Origin.y;
+}
+
 class CDefView :
     public CWindowImpl<CDefView, CWindow, CControlWinTraits>,
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
@@ -117,6 +130,8 @@ class CDefView :
         BOOL _Sort();
         HRESULT _DoFolderViewCB(UINT uMsg, WPARAM wParam, LPARAM lParam);
         HRESULT _GetSnapToGrid();
+        void _MoveSelectionOnAutoArrange(POINT pt);
+        INT _FindLVInsertableIndexFromPoint(POINT pt);
 
     public:
         CDefView();
@@ -2019,6 +2034,7 @@ LRESULT CDefView::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandl
                     m_pSourceDataObject = pda;
                     m_ptFirstMousePos = params->ptAction;
                     ClientToScreen(&m_ptFirstMousePos);
+                    ::ClientToListView(m_ListView, &m_ptFirstMousePos);
 
                     HIMAGELIST big_icons, small_icons;
                     Shell_GetImageLists(&big_icons, &small_icons);
@@ -3263,6 +3279,7 @@ HRESULT CDefView::drag_notify_subitem(DWORD grfKeyState, POINTL pt, DWORD *pdwEf
     }
 
     m_ptLastMousePos = htinfo.pt;
+    ::ClientToListView(m_ListView, &m_ptLastMousePos);
 
     /* We need to check if we drag the selection over itself */
     if (lResult != -1 && m_pSourceDataObject.p != NULL)
@@ -3378,6 +3395,152 @@ HRESULT WINAPI CDefView::DragLeave()
     return S_OK;
 }
 
+INT CDefView::_FindLVInsertableIndexFromPoint(POINT pt)
+{
+    RECT rcBound, rcIcon;
+    INT i, nCount = m_ListView.GetItemCount();
+
+    pt.x += m_ListView.GetScrollPos(SB_HORZ);
+    pt.y += m_ListView.GetScrollPos(SB_VERT);
+
+    if (m_ListView.GetStyle() & LVS_ALIGNLEFT)
+    {
+        // vertically
+        for (i = 0; i < nCount; ++i)
+        {
+            ListView_GetItemRect(m_ListView, i, &rcBound, LVIR_BOUNDS);
+            ListView_GetItemRect(m_ListView, i, &rcIcon, LVIR_ICON);
+            if (pt.x < rcBound.right && pt.y < (rcIcon.top + rcIcon.bottom) / 2)
+            {
+                return i;
+            }
+        }
+        INT xOld = 0xFFFF, yOld = 0xFFFF;
+        for (i = 0; i < nCount; ++i)
+        {
+            ListView_GetItemRect(m_ListView, i, &rcBound, LVIR_BOUNDS);
+            ListView_GetItemRect(m_ListView, i, &rcIcon, LVIR_ICON);
+            if (xOld == 0xFFFF)
+            {
+                xOld = rcBound.right;
+                yOld = rcIcon.bottom;
+            }
+            if (xOld != rcBound.right && rcBound.bottom < yOld && yOld < pt.y)
+            {
+                return i;
+            }
+            xOld = rcBound.right;
+            yOld = rcIcon.bottom;
+        }
+    }
+    else
+    {
+        // horizontally
+        for (i = 0; i < nCount; ++i)
+        {
+            ListView_GetItemRect(m_ListView, i, &rcBound, LVIR_BOUNDS);
+            ListView_GetItemRect(m_ListView, i, &rcIcon, LVIR_ICON);
+            if (pt.x < (rcIcon.left + rcIcon.right) / 2 && pt.y < rcBound.bottom)
+            {
+                return i;
+            }
+        }
+        INT xOld = 0xFFFF, yOld = 0xFFFF;
+        for (i = 0; i < nCount; ++i)
+        {
+            ListView_GetItemRect(m_ListView, i, &rcBound, LVIR_BOUNDS);
+            ListView_GetItemRect(m_ListView, i, &rcIcon, LVIR_ICON);
+            if (xOld == 0xFFFF)
+            {
+                xOld = rcIcon.right;
+                yOld = rcBound.bottom;
+            }
+            if (yOld != rcBound.bottom && rcBound.right < xOld && xOld < pt.x)
+            {
+                return i;
+            }
+            xOld = rcIcon.right;
+            yOld = rcBound.bottom;
+        }
+    }
+
+    return nCount;
+}
+
+typedef CSimpleMap<LPARAM, INT> CLParamIndexMap;
+
+static INT CALLBACK
+SelectionMoveCompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
+{
+    CLParamIndexMap *pmap = (CLParamIndexMap *)lParamSort;
+    INT i1 = pmap->Lookup(lParam1), i2 = pmap->Lookup(lParam2);
+    if (i1 < i2)
+        return -1;
+    if (i1 > i2)
+        return 1;
+    return 0;
+}
+
+void CDefView::_MoveSelectionOnAutoArrange(POINT pt)
+{
+    // get insertable index from position
+    INT iPosition = _FindLVInsertableIndexFromPoint(pt);
+
+    // create identity mapping of indexes
+    CSimpleArray<INT> array;
+    INT nCount = m_ListView.GetItemCount();
+    for (INT i = 0; i < nCount; ++i)
+    {
+        array.Add(i);
+    }
+
+    // re-ordering mapping
+    INT iItem = -1;
+    while ((iItem = m_ListView.GetNextItem(iItem, LVNI_SELECTED)) >= 0)
+    {
+        INT iFrom = iItem, iTo = iPosition;
+        if (iFrom < iTo)
+            --iTo;
+        if (iFrom >= nCount)
+            iFrom = nCount - 1;
+        if (iTo >= nCount)
+            iTo = nCount - 1;
+
+        // shift indexes by swapping (like a bucket relay)
+        if (iFrom < iTo)
+        {
+            for (INT i = iFrom; i < iTo; ++i)
+            {
+                // swap array[i] and array[i + 1]
+                INT tmp = array[i];
+                array[i] = array[i + 1];
+                array[i + 1] = tmp;
+            }
+        }
+        else
+        {
+            for (INT i = iFrom; i > iTo; --i)
+            {
+                // swap array[i] and array[i - 1]
+                INT tmp = array[i];
+                array[i] = array[i - 1];
+                array[i - 1] = tmp;
+            }
+        }
+    }
+
+    // create mapping (ListView's lParam to index) from array
+    CLParamIndexMap map;
+    for (INT i = 0; i < nCount; ++i)
+    {
+        LPARAM lParam = m_ListView.GetItemData(array[i]);
+        map.Add(lParam, i);
+    }
+
+    // finally sort
+    m_ListView.SortItems(SelectionMoveCompareFunc, &map);
+}
+
 HRESULT WINAPI CDefView::Drop(IDataObject* pDataObject, DWORD grfKeyState, POINTL pt, DWORD *pdwEffect)
 {
     ImageList_DragLeave(m_hWnd);
@@ -3393,23 +3556,31 @@ HRESULT WINAPI CDefView::Drop(IDataObject* pDataObject, DWORD grfKeyState, POINT
             m_pCurDropTarget.Release();
         }
 
-        /* Restore the selection */
-        m_ListView.SetItemState(-1, 0, LVIS_SELECTED);
-        for (UINT i = 0 ; i < m_cidl; i++)
-            SelectItem(m_apidl[i], SVSI_SELECT);
+        POINT ptDrop = { pt.x, pt.y };
+        ::ScreenToClient(m_ListView, &ptDrop);
+        ::ClientToListView(m_ListView, &ptDrop);
+        m_ptLastMousePos = ptDrop;
 
-        /* Reposition the items */
-        int lvIndex = -1;
-        while ((lvIndex = m_ListView.GetNextItem(lvIndex,  LVNI_SELECTED)) > -1)
+        m_ListView.SetRedraw(FALSE);
+        if (m_ListView.GetStyle() & LVS_AUTOARRANGE)
+        {
+            _MoveSelectionOnAutoArrange(m_ptLastMousePos);
+        }
+        else
         {
             POINT ptItem;
-            if (m_ListView.GetItemPosition(lvIndex, &ptItem))
+            INT iItem = -1;
+            while ((iItem = m_ListView.GetNextItem(iItem, LVNI_SELECTED)) >= 0)
             {
-                ptItem.x += pt.x - m_ptFirstMousePos.x;
-                ptItem.y += pt.y - m_ptFirstMousePos.y;
-                m_ListView.SetItemPosition(lvIndex, &ptItem);
+                if (m_ListView.GetItemPosition(iItem, &ptItem))
+                {
+                    ptItem.x += m_ptLastMousePos.x - m_ptFirstMousePos.x;
+                    ptItem.y += m_ptLastMousePos.y - m_ptFirstMousePos.y;
+                    m_ListView.SetItemPosition(iItem, &ptItem);
+                }
             }
         }
+        m_ListView.SetRedraw(TRUE);
     }
     else if (m_pCurDropTarget)
     {
