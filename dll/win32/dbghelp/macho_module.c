@@ -443,11 +443,11 @@ static const struct image_file_map_ops macho_file_map_ops =
  *
  * Maps the load commands from a Mach-O file into memory
  */
-static const struct load_command* macho_map_load_commands(struct macho_file_map* fmap)
+static const struct macho_load_command* macho_map_load_commands(struct macho_file_map* fmap)
 {
     if (fmap->load_commands == IMAGE_NO_MAP)
     {
-        fmap->load_commands = (const struct load_command*) macho_map_range(
+        fmap->load_commands = (const struct macho_load_command*) macho_map_range(
                 fmap, fmap->header_size, fmap->commands_size, NULL);
         TRACE("Mapped load commands: %p\n", fmap->load_commands);
     }
@@ -475,9 +475,9 @@ static void macho_unmap_load_commands(struct macho_file_map* fmap)
  *
  * Advance to the next load command
  */
-static const struct load_command* macho_next_load_command(const struct load_command* lc)
+static const struct macho_load_command* macho_next_load_command(const struct macho_load_command* lc)
 {
-    return (const struct load_command*)((const char*)lc + lc->cmdsize);
+    return (const struct macho_load_command*)((const char*)lc + lc->cmdsize);
 }
 
 /******************************************************************
@@ -492,11 +492,11 @@ static const struct load_command* macho_next_load_command(const struct load_comm
  * processed.
  */
 static int macho_enum_load_commands(struct image_file_map *ifm, unsigned cmd,
-                                    int (*cb)(struct image_file_map*, const struct load_command*, void*),
+                                    int (*cb)(struct image_file_map*, const struct macho_load_command*, void*),
                                     void* user)
 {
     struct macho_file_map* fmap = &ifm->u.macho;
-    const struct load_command* lc;
+    const struct macho_load_command* lc;
     int i;
     int count = 0;
 
@@ -528,7 +528,7 @@ static int macho_enum_load_commands(struct image_file_map *ifm, unsigned cmd,
  * significant sections in a Mach-O file.  All commands are
  * expected to be of LC_SEGMENT[_64] type.
  */
-static int macho_count_sections(struct image_file_map* ifm, const struct load_command* lc, void* user)
+static int macho_count_sections(struct image_file_map* ifm, const struct macho_load_command* lc, void* user)
 {
     char segname[16];
     uint32_t nsects;
@@ -560,7 +560,7 @@ static int macho_count_sections(struct image_file_map* ifm, const struct load_co
  * range covered by the segments of a Mach-O file and builds the
  * section map.  All commands are expected to be of LC_SEGMENT[_64] type.
  */
-static int macho_load_section_info(struct image_file_map* ifm, const struct load_command* lc, void* user)
+static int macho_load_section_info(struct image_file_map* ifm, const struct macho_load_command* lc, void* user)
 {
     struct macho_file_map*          fmap = &ifm->u.macho;
     struct section_info*            info = user;
@@ -652,9 +652,9 @@ static int macho_load_section_info(struct image_file_map* ifm, const struct load
  * Callback for macho_enum_load_commands.  Records the UUID load
  * command of a Mach-O file.
  */
-static int find_uuid(struct image_file_map* ifm, const struct load_command* lc, void* user)
+static int find_uuid(struct image_file_map* ifm, const struct macho_load_command* lc, void* user)
 {
-    ifm->u.macho.uuid = (const struct uuid_command*)lc;
+    ifm->u.macho.uuid = (const struct macho_uuid_command*)lc;
     return 1;
 }
 
@@ -927,7 +927,7 @@ static void macho_stabs_def_cb(struct module* module, ULONG_PTR load_offset,
  * load commands from the Mach-O file.
  */
 static int macho_parse_symtab(struct image_file_map* ifm,
-                              const struct load_command* lc, void* user)
+                              const struct macho_load_command* lc, void* user)
 {
     struct macho_file_map* fmap = &ifm->u.macho;
     const struct symtab_command*    sc = (const struct symtab_command*)lc;
