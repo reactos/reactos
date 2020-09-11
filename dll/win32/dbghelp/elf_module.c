@@ -387,7 +387,6 @@ static BOOL elf_map_shdr(struct elf_map_file_data* emfd, struct image_file_map* 
  */
 static BOOL elf_map_file(struct elf_map_file_data* emfd, struct image_file_map* fmap)
 {
-    static const BYTE   elf_signature[4] = { ELFMAG0, ELFMAG1, ELFMAG2, ELFMAG3 };
     unsigned int        i;
     size_t              tmp, page_mask = sysinfo.dwPageSize - 1;
     WCHAR              *dos_path;
@@ -419,10 +418,10 @@ static BOOL elf_map_file(struct elf_map_file_data* emfd, struct image_file_map* 
         return FALSE;
 
     /* and check for an ELF header */
-    if (memcmp(e_ident, elf_signature, sizeof(elf_signature)))
+    if (memcmp(e_ident, "\177ELF", 4))
         return FALSE;
 
-    fmap->addr_size = e_ident[EI_CLASS] == ELFCLASS64 ? 64 : 32;
+    fmap->addr_size = e_ident[4] == 2 /* ELFCLASS64 */ ? 64 : 32;
 
     if (fmap->addr_size == 32)
     {
