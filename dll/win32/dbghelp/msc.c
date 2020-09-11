@@ -2684,7 +2684,7 @@ static void pdb_process_symbol_imports(const struct process* pcs,
         {
             ptr = (const char*)imp + sizeof(*imp) + strlen(imp->filename);
             if (i >= CV_MAX_MODULES) FIXME("Out of bounds!!!\n");
-            if (!strcasecmp(pdb_lookup->filename, imp->filename))
+            if (!_strnicmp(pdb_lookup->filename, imp->filename, -1))
             {
                 if (module_index != -1) FIXME("Twice the entry\n");
                 else module_index = i;
