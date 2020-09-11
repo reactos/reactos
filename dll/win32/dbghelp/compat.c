@@ -71,8 +71,8 @@ __RtlImageRvaToSection(
 
 PVOID
 __RtlImageRvaToVa
-(const IMAGE_NT_HEADERS* NtHeader, 
- PVOID BaseAddress, 
+(const IMAGE_NT_HEADERS* NtHeader,
+ PVOID BaseAddress,
  ULONG Rva,
  PIMAGE_SECTION_HEADER *SectionHeader)
 {
@@ -160,7 +160,7 @@ HANDLE __CreateFileW(
 {
     char buf[MAX_PATH];
     HANDLE res;
-    
+
     WideCharToMultiByte(CP_ACP, 0, lpFileName, -1, buf, MAX_PATH, NULL, NULL);
     res = CreateFileA(buf, dwDesiredAccess, dwShareMode, lpSecurityAttributes, dwCreationDisposition, dwFlagsAndAttributes, hTemplateFile);
     return res;
@@ -187,7 +187,7 @@ void* __MapViewOfFile(HANDLE file,DWORD d1,DWORD d2,DWORD d3,SIZE_T s)
         free(result);
         return NULL;
     }
-    
+
     return result;
 }
 
@@ -222,15 +222,15 @@ __WideCharToMultiByte(UINT page, DWORD flags, LPCWSTR src, INT srclen,
     }
 
     if (srclen < 0) srclen = strlenW(src) + 1;
-    
+
     if(!dstlen)
         return srclen;
-    
+
     for(i=0; i<srclen && i<dstlen; i++)
         dst[i] = src[i] & 0xFF;
 
     if (used) *used = FALSE;
-    
+
     return i;
 }
 
@@ -247,7 +247,7 @@ __MultiByteToWideChar(UINT page, DWORD flags, LPCSTR src, INT srclen,
     }
 
     if (srclen < 0) srclen = strlen(src) + 1;
-    
+
     if(!dstlen)
         return srclen;
 
@@ -393,4 +393,10 @@ const char *wine_dbgstr_wn( const WCHAR *str, int n )
     }
     *dst++ = 0;
     return res;
+}
+
+BOOL __IsWow64Process(HANDLE Process, BOOL* is_wow64)
+{
+	*is_wow64 = FALSE;
+	return TRUE;
 }

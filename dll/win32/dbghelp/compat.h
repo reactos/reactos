@@ -400,7 +400,7 @@ typedef struct _EXCEPTION_REGISTRATION_RECORD
 #define INVALID_HANDLE_VALUE (HANDLE)(-1)
 #define HeapAlloc __HeapAlloc
 #define HeapReAlloc __HeapReAlloc
-#define HeapFree(x,y,z) free(z) 
+#define HeapFree(x,y,z) free(z)
 #define GetProcessHeap() 1
 #define GetProcessId(x) 8
 #define lstrcpynW __lstrcpynW
@@ -422,6 +422,8 @@ typedef struct _EXCEPTION_REGISTRATION_RECORD
 #define GetCurrentDirectoryW(x, y) 0
 #define GetFileSizeEx __GetFileSizeEx
 #define ReadProcessMemory(a,b,c,d,e) 0
+#define GetCurrentProcess() (HANDLE)1
+#define IsWow64Process __IsWow64Process
 
 void* __HeapAlloc(int heap, int flags, size_t size);
 void* __HeapReAlloc(int heap, DWORD d2, void *slab, SIZE_T newsize);
@@ -432,6 +434,7 @@ void* __MapViewOfFile(HANDLE file,DWORD d1,DWORD d2,DWORD d3,SIZE_T s);
 BOOL __UnmapViewOfFile(const void*);
 LPSTR __lstrcpynA(LPSTR,LPCSTR,int);
 BOOL __GetFileSizeEx(HANDLE,PLARGE_INTEGER);
+BOOL WINAPI __IsWow64Process(HANDLE,BOOL*);
 #define OPEN_EXISTING	3
 #define FILE_MAP_READ SECTION_MAP_READ
 typedef struct _LDT_ENTRY {
@@ -673,7 +676,7 @@ typedef VOID IMAGEHLP_CONTEXT, *PIMAGEHLP_CONTEXT;
 #define SYMFLAG_PUBLIC_CODE      0x00400000
 #define UNDNAME_COMPLETE                 (0x0000)
 #define UNDNAME_NAME_ONLY                (0x1000)
-typedef struct _TI_FINDCHILDREN_PARAMS 
+typedef struct _TI_FINDCHILDREN_PARAMS
 {
     ULONG Count;
     ULONG Start;
@@ -709,7 +712,7 @@ typedef struct _SYMBOL_INFO
     ULONG       MaxNameLen;
     CHAR        Name[1];
 } SYMBOL_INFO, *PSYMBOL_INFO;
-typedef enum 
+typedef enum
 {
     SymNone = 0,
     SymCoff,
@@ -791,7 +794,7 @@ typedef BOOL (CALLBACK *PFIND_EXE_FILE_CALLBACKW)(HANDLE, PCWSTR, PVOID);
 #define FindExecutableImageExW __FindExecutableImageExW
 HANDLE __FindExecutableImageExW(PCWSTR, PCWSTR, PWSTR, PFIND_EXE_FILE_CALLBACKW, PVOID);
 DWORD WINAPI UnDecorateSymbolName(PCSTR, PSTR, DWORD, DWORD);
-typedef enum _THREAD_WRITE_FLAGS 
+typedef enum _THREAD_WRITE_FLAGS
 {
     ThreadWriteThread            = 0x0001,
     ThreadWriteStack             = 0x0002,
@@ -911,7 +914,7 @@ typedef struct _IMAGEHLP_MODULE64
 } IMAGEHLP_MODULE64, *PIMAGEHLP_MODULE64;
 typedef DWORD   RVA;
 typedef ULONG64 RVA64;
-typedef enum _MINIDUMP_TYPE 
+typedef enum _MINIDUMP_TYPE
 {
     MiniDumpNormal                              = 0x0000,
     MiniDumpWithDataSegs                        = 0x0001,
@@ -938,7 +941,7 @@ typedef struct _MINIDUMP_THREAD_CALLBACK
     ULONG64                     StackBase;
     ULONG64                     StackEnd;
 } MINIDUMP_THREAD_CALLBACK, *PMINIDUMP_THREAD_CALLBACK;
-typedef struct _MINIDUMP_THREAD_EX_CALLBACK 
+typedef struct _MINIDUMP_THREAD_EX_CALLBACK
 {
     ULONG                       ThreadId;
     HANDLE                      ThreadHandle;
@@ -949,7 +952,7 @@ typedef struct _MINIDUMP_THREAD_EX_CALLBACK
     ULONG64                     BackingStoreBase;
     ULONG64                     BackingStoreEnd;
 } MINIDUMP_THREAD_EX_CALLBACK, *PMINIDUMP_THREAD_EX_CALLBACK;
-typedef struct _MINIDUMP_MODULE_CALLBACK 
+typedef struct _MINIDUMP_MODULE_CALLBACK
 {
     PWCHAR                      FullPath;
     ULONG64                     BaseOfImage;
@@ -966,16 +969,16 @@ typedef struct _MINIDUMP_INCLUDE_THREAD_CALLBACK
 {
     ULONG ThreadId;
 } MINIDUMP_INCLUDE_THREAD_CALLBACK, *PMINIDUMP_INCLUDE_THREAD_CALLBACK;
-typedef struct _MINIDUMP_INCLUDE_MODULE_CALLBACK 
+typedef struct _MINIDUMP_INCLUDE_MODULE_CALLBACK
 {
     ULONG64 BaseOfImage;
 } MINIDUMP_INCLUDE_MODULE_CALLBACK, *PMINIDUMP_INCLUDE_MODULE_CALLBACK;
-typedef struct _MINIDUMP_CALLBACK_INPUT 
+typedef struct _MINIDUMP_CALLBACK_INPUT
 {
     ULONG                       ProcessId;
     HANDLE                      ProcessHandle;
     ULONG                       CallbackType;
-    union 
+    union
     {
         MINIDUMP_THREAD_CALLBACK        Thread;
         MINIDUMP_THREAD_EX_CALLBACK     ThreadEx;
@@ -986,7 +989,7 @@ typedef struct _MINIDUMP_CALLBACK_INPUT
 } MINIDUMP_CALLBACK_INPUT, *PMINIDUMP_CALLBACK_INPUT;
 typedef struct _MINIDUMP_CALLBACK_OUTPUT
 {
-    union 
+    union
     {
         ULONG                           ModuleWriteFlags;
         ULONG                           ThreadWriteFlags;
@@ -998,7 +1001,7 @@ typedef struct _MINIDUMP_CALLBACK_OUTPUT
     } DUMMYUNIONNAME;
 } MINIDUMP_CALLBACK_OUTPUT, *PMINIDUMP_CALLBACK_OUTPUT;
 typedef BOOL (WINAPI* MINIDUMP_CALLBACK_ROUTINE)(PVOID, const PMINIDUMP_CALLBACK_INPUT, PMINIDUMP_CALLBACK_OUTPUT);
-typedef struct _MINIDUMP_CALLBACK_INFORMATION 
+typedef struct _MINIDUMP_CALLBACK_INFORMATION
 {
     MINIDUMP_CALLBACK_ROUTINE   CallbackRoutine;
     void*                       CallbackParam;
@@ -1060,7 +1063,7 @@ typedef struct _STACKFRAME64
     DWORD64     Reserved[3];
     KDHELP64    KdHelp;
 } STACKFRAME64, *LPSTACKFRAME64;
-typedef enum _IMAGEHLP_SYMBOL_TYPE_INFO 
+typedef enum _IMAGEHLP_SYMBOL_TYPE_INFO
 {
     TI_GET_SYMTAG,
     TI_GET_SYMNAME,
@@ -1245,13 +1248,13 @@ enum SymTagEnum
    SymTagPointerType,
    SymTagArrayType,
    SymTagBaseType,
-   SymTagTypedef, 
+   SymTagTypedef,
    SymTagBaseClass,
    SymTagFriend,
-   SymTagFunctionArgType, 
-   SymTagFuncDebugStart, 
+   SymTagFunctionArgType,
+   SymTagFuncDebugStart,
    SymTagFuncDebugEnd,
-   SymTagUsingNamespace, 
+   SymTagUsingNamespace,
    SymTagVTableShape,
    SymTagVTable,
    SymTagCustom,
@@ -1867,7 +1870,7 @@ typedef enum
    THUNK_ORDINAL_ADJUSTOR,
    THUNK_ORDINAL_VCALL,
    THUNK_ORDINAL_PCODE,
-   THUNK_ORDINAL_LOAD 
+   THUNK_ORDINAL_LOAD
 } THUNK_ORDINAL;
 
 typedef enum CV_call_e

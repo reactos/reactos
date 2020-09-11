@@ -50,6 +50,7 @@
 
 #include "wine/library.h"
 #include "wine/debug.h"
+#include "wine/heap.h"
 
 #ifdef __ELF__
 
@@ -1568,13 +1569,17 @@ static BOOL elf_enum_modules_internal(const struct process* pcs,
  */
 static BOOL elf_search_loader(struct process* pcs, struct elf_info* elf_info)
 {
+    WCHAR *loader = get_wine_loader_name(pcs);
     PROCESS_BASIC_INFORMATION pbi;
     ULONG_PTR base = 0;
+    BOOL ret;
 
     if (!NtQueryInformationProcess( pcs->handle, ProcessBasicInformation, &pbi, sizeof(pbi), NULL ))
         ReadProcessMemory( pcs->handle, &pbi.PebBaseAddress->Reserved[0], &base, sizeof(base), NULL );
 
-    return elf_search_and_load_file(pcs, get_wine_loader_name(), base, 0, elf_info);
+    ret = elf_search_and_load_file(pcs, loader, base, 0, elf_info);
+    heap_free(loader);
+    return ret;
 }
 
 /******************************************************************

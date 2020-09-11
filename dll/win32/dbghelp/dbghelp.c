@@ -309,6 +309,7 @@ static BOOL check_live_target(struct process* pcs)
 BOOL WINAPI SymInitializeW(HANDLE hProcess, PCWSTR UserSearchPath, BOOL fInvadeProcess)
 {
     struct process*     pcs;
+    BOOL wow64, child_wow64;
 
     TRACE("(%p %s %u)\n", hProcess, debugstr_w(UserSearchPath), fInvadeProcess);
 
@@ -325,6 +326,12 @@ BOOL WINAPI SymInitializeW(HANDLE hProcess, PCWSTR UserSearchPath, BOOL fInvadeP
     if (!pcs) return FALSE;
 
     pcs->handle = hProcess;
+
+    IsWow64Process(GetCurrentProcess(), &wow64);
+
+    if (!IsWow64Process(hProcess, &child_wow64))
+        return FALSE;
+    pcs->is_64bit = (sizeof(void *) == 8 || wow64) && !child_wow64;
 
     if (UserSearchPath)
     {
