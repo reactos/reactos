@@ -307,6 +307,7 @@ static BOOL elf_map_file(struct elf_map_file_data* emfd, struct image_file_map* 
     char*               filename;
     unsigned            len;
     BOOL                ret = FALSE;
+    unsigned char e_ident[EI_NIDENT];
 
     switch (emfd->kind)
     {
@@ -340,14 +341,19 @@ static BOOL elf_map_file(struct elf_map_file_data* emfd, struct image_file_map* 
     case from_process:
         break;
     }
-    if (!elf_map_file_read(fmap, emfd, &fmap->u.elf.elfhdr, sizeof(fmap->u.elf.elfhdr), 0))
+
+    if (!elf_map_file_read(fmap, emfd, e_ident, sizeof(e_ident), 0))
         goto done;
 
     /* and check for an ELF header */
-    if (memcmp(fmap->u.elf.elfhdr.e_ident,
-               elf_signature, sizeof(elf_signature))) goto done;
+    if (memcmp(e_ident, elf_signature, sizeof(elf_signature)))
+        goto done;
 
-    fmap->addr_size = fmap->u.elf.elfhdr.e_ident[EI_CLASS] == ELFCLASS64 ? 64 : 32;
+    fmap->addr_size = e_ident[EI_CLASS] == ELFCLASS64 ? 64 : 32;
+
+    if (!elf_map_file_read(fmap, emfd, &fmap->u.elf.elfhdr, sizeof(fmap->u.elf.elfhdr), 0))
+        goto done;
+
     fmap->u.elf.sect = HeapAlloc(GetProcessHeap(), 0,
                                  fmap->u.elf.elfhdr.e_shnum * sizeof(fmap->u.elf.sect[0]));
     if (!fmap->u.elf.sect) goto done;
