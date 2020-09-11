@@ -1522,7 +1522,6 @@ static BOOL elf_search_auxv(const struct process* pcs, unsigned type, unsigned l
     void*       addr;
     void*       str;
     void*       str_max;
-    Elf_auxv_t  auxv;
 
     si->SizeOfStruct = sizeof(*si);
     si->MaxNameLen = MAX_SYM_NAME;
@@ -1548,14 +1547,33 @@ static BOOL elf_search_auxv(const struct process* pcs, unsigned type, unsigned l
     while (addr < str_max && ReadProcessMemory(pcs->handle, addr, &str, sizeof(str), NULL) && str == NULL)
         addr = (void*)((DWORD_PTR)addr + sizeof(str));
 
-    while (ReadProcessMemory(pcs->handle, addr, &auxv, sizeof(auxv), NULL) && auxv.a_type != AT_NULL)
+    if (pcs->is_64bit)
     {
-        if (auxv.a_type == type)
+        Elf64_auxv_t auxv;
+
+        while (ReadProcessMemory(pcs->handle, addr, &auxv, sizeof(auxv), NULL) && auxv.a_type != AT_NULL)
         {
-            *val = auxv.a_un.a_val;
-            return TRUE;
+            if (auxv.a_type == type)
+            {
+                *val = auxv.a_un.a_val;
+                return TRUE;
+            }
+            addr = (void*)((DWORD_PTR)addr + sizeof(auxv));
         }
-        addr = (void*)((DWORD_PTR)addr + sizeof(auxv));
+    }
+    else
+    {
+        Elf32_auxv_t auxv;
+
+        while (ReadProcessMemory(pcs->handle, addr, &auxv, sizeof(auxv), NULL) && auxv.a_type != AT_NULL)
+        {
+            if (auxv.a_type == type)
+            {
+                *val = auxv.a_un.a_val;
+                return TRUE;
+            }
+            addr = (void*)((DWORD_PTR)addr + sizeof(auxv));
+        }
     }
 
     return FALSE;
