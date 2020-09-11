@@ -309,6 +309,11 @@ static BOOL check_live_target(struct process* pcs)
         base = base32;
     }
     else ReadProcessMemory(pcs->handle, &pbi.PebBaseAddress->Reserved[0], &base, sizeof(base), NULL);
+#ifndef __REACTOS__
+    /* Wine store their loader base address in peb.reserved[0] and load its symbol from there.
+     * ReactOS does not care about it */
+    if (!base) return FALSE;
+#endif
 
     TRACE("got debug info address %#lx from PEB %p\n", base, pbi.PebBaseAddress);
     return elf_read_wine_loader_dbg_info(pcs, base) || macho_read_wine_loader_dbg_info(pcs, base);
