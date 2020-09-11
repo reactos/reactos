@@ -1561,21 +1561,17 @@ static BOOL elf_enum_modules_translate(const WCHAR* name, unsigned long load_add
  * This function doesn't require that someone has called SymInitialize
  * on this very process.
  */
-BOOL elf_enum_modules(HANDLE hProc, enum_modules_cb cb, void* user)
+BOOL elf_enum_modules(struct process* process, enum_modules_cb cb, void* user)
 {
-    struct process      pcs;
     struct elf_info     elf_info;
     BOOL                ret;
     struct elf_enum_user eeu;
 
-    memset(&pcs, 0, sizeof(pcs));
-    pcs.handle = hProc;
     elf_info.flags = ELF_INFO_DEBUG_HEADER | ELF_INFO_NAME;
-    if (!elf_search_loader(&pcs, &elf_info)) return FALSE;
-    pcs.dbg_hdr_addr = elf_info.dbg_hdr_addr;
+    elf_info.module_name = NULL;
     eeu.cb = cb;
     eeu.user = user;
-    ret = elf_enum_modules_internal(&pcs, elf_info.module_name, elf_enum_modules_translate, &eeu);
+    ret = elf_enum_modules_internal(process, elf_info.module_name, elf_enum_modules_translate, &eeu);
     HeapFree(GetProcessHeap(), 0, (char*)elf_info.module_name);
     return ret;
 }
@@ -1747,7 +1743,7 @@ BOOL elf_read_wine_loader_dbg_info(struct process* pcs)
     return FALSE;
 }
 
-BOOL elf_enum_modules(HANDLE hProc, enum_modules_cb cb, void* user)
+BOOL elf_enum_modules(struct process *process, enum_modules_cb cb, void* user)
 {
     return FALSE;
 }

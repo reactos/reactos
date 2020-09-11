@@ -346,8 +346,11 @@ static void fetch_modules_info(struct dump_context* dc)
      * And it's always a good idea to have a trace of the loaded ELF modules for
      * a given application in a post mortem debugging condition.
      */
-    elf_enum_modules(dc->process->handle, fetch_elf_module_info_cb, dc);
-    macho_enum_modules(dc->process->handle, fetch_macho_module_info_cb, dc);
+    if (dc->process->dbg_hdr_addr)
+    {
+        elf_enum_modules(dc->process, fetch_elf_module_info_cb, dc);
+        macho_enum_modules(dc->process, fetch_macho_module_info_cb, dc);
+    }
 }
 
 static void fetch_module_versioninfo(LPCWSTR filename, VS_FIXEDFILEINFO* ffi)

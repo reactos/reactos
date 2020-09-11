@@ -625,7 +625,7 @@ extern DWORD calc_crc32(HANDLE handle) DECLSPEC_HIDDEN;
 typedef BOOL (*enum_modules_cb)(const WCHAR*, unsigned long addr, void* user);
 
 /* elf_module.c */
-extern BOOL         elf_enum_modules(HANDLE hProc, enum_modules_cb, void*) DECLSPEC_HIDDEN;
+extern BOOL         elf_enum_modules(struct process*, enum_modules_cb, void*) DECLSPEC_HIDDEN;
 extern BOOL         elf_fetch_file_info(const WCHAR* name, DWORD_PTR* base, DWORD* size, DWORD* checksum) DECLSPEC_HIDDEN;
 struct image_file_map;
 extern BOOL         elf_load_debug_info(struct module* module) DECLSPEC_HIDDEN;
@@ -637,7 +637,7 @@ struct elf_thunk_area;
 extern int          elf_is_in_thunk_area(unsigned long addr, const struct elf_thunk_area* thunks) DECLSPEC_HIDDEN;
 
 /* macho_module.c */
-extern BOOL         macho_enum_modules(HANDLE hProc, enum_modules_cb, void*) DECLSPEC_HIDDEN;
+extern BOOL         macho_enum_modules(struct process*, enum_modules_cb, void*) DECLSPEC_HIDDEN;
 extern BOOL         macho_fetch_file_info(HANDLE process, const WCHAR* name, unsigned long load_addr, DWORD_PTR* base, DWORD* size, DWORD* checksum) DECLSPEC_HIDDEN;
 extern BOOL         macho_load_debug_info(struct process *pcs, struct module* module) DECLSPEC_HIDDEN;
 extern struct module*
