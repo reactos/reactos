@@ -91,6 +91,7 @@ struct image_file_map
 
 #ifdef HAVE_MACH_O_LOADER_H
             struct mach_header          mach_header;
+            size_t                      header_size; /* size of real header in file */
             const struct load_command*  load_commands;
             const struct uuid_command*  uuid;
 

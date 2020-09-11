@@ -415,7 +415,7 @@ static const struct load_command* macho_map_load_commands(struct macho_file_map*
     if (fmap->load_commands == IMAGE_NO_MAP)
     {
         fmap->load_commands = (const struct load_command*) macho_map_range(
-                fmap, sizeof(fmap->mach_header), fmap->mach_header.sizeofcmds, NULL);
+                fmap, fmap->header_size, fmap->mach_header.sizeofcmds, NULL);
         TRACE("Mapped load commands: %p\n", fmap->load_commands);
     }
 
@@ -433,7 +433,7 @@ static void macho_unmap_load_commands(struct macho_file_map* fmap)
     {
         TRACE("Unmapping load commands: %p\n", fmap->load_commands);
         macho_unmap_range(NULL, (const void**)&fmap->load_commands, fmap,
-                    sizeof(fmap->mach_header), fmap->mach_header.sizeofcmds);
+                    fmap->header_size, fmap->mach_header.sizeofcmds);
     }
 }
 
@@ -666,6 +666,7 @@ static BOOL macho_map_file(struct process *pcs, const WCHAR *filenameW,
 
     ifm->modtype = DMT_MACHO;
     ifm->addr_size = (pcs->is_64bit) ? 64 : 32;
+    fmap->header_size = (pcs->is_64bit) ? sizeof(struct mach_header_64) : sizeof(struct mach_header);
 
     len = WideCharToMultiByte(CP_UNIXCP, 0, filenameW, -1, NULL, 0, NULL, NULL);
     if (!(filename = HeapAlloc(GetProcessHeap(), 0, len)))
