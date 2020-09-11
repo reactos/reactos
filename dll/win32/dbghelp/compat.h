@@ -470,6 +470,7 @@ typedef struct _EXCEPTION_REGISTRATION_RECORD
 
 // winbase.h
 #define INVALID_HANDLE_VALUE (HANDLE)(-1)
+#define INVALID_SET_FILE_POINTER	((DWORD)-1)
 #define HeapAlloc __HeapAlloc
 #define HeapReAlloc __HeapReAlloc
 #define HeapFree(x,y,z) free(z)
@@ -479,6 +480,8 @@ typedef struct _EXCEPTION_REGISTRATION_RECORD
 #define CloseHandle __CloseHandle
 #define CreateFileA(a,b,c,d,e,f,g) fopen(a, "rb")
 #define CreateFileW __CreateFileW
+#define ReadFile(a,b,c,d,e) __ReadFile
+#define SetFilePointer __SetFilePointer
 #define CreateFileMappingW(a,b,c,d,e,f) a
 #define MapViewOfFile __MapViewOfFile
 #define UnmapViewOfFile __UnmapViewOfFile
@@ -496,12 +499,15 @@ typedef struct _EXCEPTION_REGISTRATION_RECORD
 #define ReadProcessMemory(a,b,c,d,e) 0
 #define GetCurrentProcess() (HANDLE)1
 #define IsWow64Process __IsWow64Process
+#define FILE_BEGIN	0
 
 void* __HeapAlloc(int heap, int flags, size_t size);
 void* __HeapReAlloc(int heap, DWORD d2, void *slab, SIZE_T newsize);
 WCHAR* __lstrcpynW(WCHAR* lpString1, const WCHAR* lpString2, int iMaxLength);
 BOOL __CloseHandle(HANDLE handle);
 HANDLE __CreateFileW(LPCWSTR lpFileName, DWORD dwDesiredAccess, DWORD dwShareMode, LPSECURITY_ATTRIBUTES lpSecurityAttributes, DWORD dwCreationDisposition, DWORD dwFlagsAndAttributes, HANDLE hTemplateFile);
+BOOL __ReadFile(HANDLE,PVOID,DWORD,PDWORD,/*LPOVERLAPPED*/ PVOID);
+DWORD __SetFilePointer(HANDLE,LONG,PLONG,DWORD);
 void* __MapViewOfFile(HANDLE file,DWORD d1,DWORD d2,DWORD d3,SIZE_T s);
 BOOL __UnmapViewOfFile(const void*);
 LPSTR __lstrcpynA(LPSTR,LPCSTR,int);
@@ -542,6 +548,7 @@ typedef LONG KPRIORITY;
 #define RtlImageRvaToVa __RtlImageRvaToVa
 #define RtlImageRvaToSection __RtlImageRvaToSection
 #define RtlImageDirectoryEntryToData __RtlImageDirectoryEntryToData
+#define RtlComputeCrc32 __RtlComputeCrc32
 
 #ifdef _MSC_VER
 #define RtlUlongByteSwap(_x) _byteswap_ulong((_x))
@@ -552,6 +559,7 @@ typedef LONG KPRIORITY;
 PIMAGE_NT_HEADERS __RtlImageNtHeader(void *data);
 PVOID __RtlImageRvaToVa (const IMAGE_NT_HEADERS* NtHeader, PVOID BaseAddress, ULONG Rva, PIMAGE_SECTION_HEADER *SectionHeader);
 PVOID __RtlImageDirectoryEntryToData(PVOID BaseAddress, BOOLEAN MappedAsImage, USHORT Directory, PULONG Size);
+ULONG __RtlComputeCrc32(ULONG Initial, PUCHAR Data, ULONG Length);
 
 typedef struct _CLIENT_ID
 {
