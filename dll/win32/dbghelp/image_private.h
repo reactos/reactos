@@ -136,7 +136,7 @@ struct image_file_map
 struct image_section_map
 {
     struct image_file_map*      fmap;
-    long                        sidx;
+    LONG_PTR                    sidx;
 };
 
 BOOL image_check_alternate(struct image_file_map* fmap, const struct module* module) DECLSPEC_HIDDEN;

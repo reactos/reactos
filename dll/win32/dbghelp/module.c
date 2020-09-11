@@ -197,7 +197,7 @@ static const char*      get_module_type(enum module_type type, BOOL virtual)
 struct module* module_new(struct process* pcs, const WCHAR* name,
                           enum module_type type, BOOL virtual,
                           DWORD64 mod_addr, DWORD64 size,
-                          unsigned long stamp, unsigned long checksum)
+                          ULONG_PTR stamp, ULONG_PTR checksum)
 {
     struct module*      module;
     unsigned            i;
@@ -1380,7 +1380,7 @@ static BOOL native_synchronize_module_list(struct process* pcs)
     return FALSE;
 }
 
-static struct module* native_load_module(struct process* pcs, const WCHAR* name, unsigned long addr)
+static struct module* native_load_module(struct process* pcs, const WCHAR* name, ULONG_PTR addr)
 {
     return NULL;
 }

@@ -52,7 +52,7 @@ static ADDRESS_MODE get_selector_type(HANDLE hThread, const CONTEXT* ctx, WORD s
 }
 
 static BOOL i386_build_addr(HANDLE hThread, const CONTEXT* ctx, ADDRESS64* addr,
-                            unsigned seg, unsigned long offset)
+                            unsigned seg, ULONG_PTR offset)
 {
     addr->Mode    = AddrModeFlat;
     addr->Segment = seg;
