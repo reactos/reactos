@@ -41,6 +41,7 @@
 #include <sys/mman.h>
 #endif
 #include <limits.h>
+#include <stdint.h>
 #include <stdlib.h>
 #include <string.h>
 #ifdef HAVE_UNISTD_H
@@ -119,11 +120,7 @@ struct stab_nlist
     unsigned char       n_type;
     char                n_other;
     short               n_desc;
-#if defined(__APPLE__) && defined(_WIN64)
-    unsigned long       n_value;
-#else
     unsigned            n_value;
-#endif
 };
 
 static void stab_strcpy(char* dest, int sz, const char* source)
@@ -1273,7 +1270,7 @@ static inline void stabbuf_append(char **buf, unsigned *buf_size, const char *st
 }
 
 BOOL stabs_parse(struct module* module, unsigned long load_offset, 
-                 const void* pv_stab_ptr, int stablen,
+                 const char* pv_stab_ptr, int stablen,
                  const char* strs, int strtablen,
                  stabs_def_cb callback, void* user)
 {
@@ -1286,7 +1283,7 @@ BOOL stabs_parse(struct module* module, unsigned long load_offset,
     const char*                 ptr;
     char*                       stabbuff;
     unsigned int                stabbufflen;
-    const struct stab_nlist*    stab_ptr = pv_stab_ptr;
+    const struct stab_nlist*    stab_ptr;
     const char*                 strs_end;
     int                         strtabinc;
     char                        symname[4096];
@@ -1298,8 +1295,14 @@ BOOL stabs_parse(struct module* module, unsigned long load_offset,
     BOOL                        ret = TRUE;
     struct location             loc;
     unsigned char               type;
+    size_t                      stabsize = sizeof(struct stab_nlist);
+    uint64_t                    n_value;
 
-    nstab = stablen / sizeof(struct stab_nlist);
+#ifdef __APPLE__
+    if (module->process->is_64bit)
+        stabsize = sizeof(struct nlist_64);
+#endif
+    nstab = stablen / stabsize;
     strs_end = strs + strtablen;
 
     memset(stabs_basic, 0, sizeof(stabs_basic));
@@ -1315,8 +1318,14 @@ BOOL stabs_parse(struct module* module, unsigned long load_offset,
 
     strtabinc = 0;
     stabbuff[0] = '\0';
-    for (i = 0; i < nstab; i++, stab_ptr++)
+    for (i = 0; i < nstab; i++)
     {
+        stab_ptr = (struct stab_nlist *)(pv_stab_ptr + i * stabsize);
+        n_value = stab_ptr->n_value;
+#ifdef __APPLE__
+        if (module->process->is_64bit)
+            n_value = ((struct nlist_64 *)stab_ptr)->n_value;
+#endif
         ptr = strs + stab_ptr->n_strx;
         if ((ptr > strs_end) || (ptr + strlen(ptr) > strs_end))
         {
@@ -1390,7 +1399,7 @@ BOOL stabs_parse(struct module* module, unsigned long load_offset,
             stab_strcpy(symname, sizeof(symname), ptr);
             loc.kind = loc_absolute;
             loc.reg = 0;
-            loc.offset = load_offset + stab_ptr->n_value;
+            loc.offset = load_offset + n_value;
             symt_new_global_variable(module, compiland, symname, TRUE /* FIXME */,
                                      loc, 0, stabs_parse_type(ptr));
             break;
@@ -1400,7 +1409,7 @@ BOOL stabs_parse(struct module* module, unsigned long load_offset,
             stab_strcpy(symname, sizeof(symname), ptr);
             loc.kind = loc_absolute;
             loc.reg = 0;
-            loc.offset = load_offset + stab_ptr->n_value;
+            loc.offset = load_offset + n_value;
             symt_new_global_variable(module, compiland, symname, TRUE /* FIXME */,
                                      loc, 0, stabs_parse_type(ptr));
             break;
@@ -1408,14 +1417,14 @@ BOOL stabs_parse(struct module* module, unsigned long load_offset,
             if (curr_func)
             {
                 block = symt_open_func_block(module, curr_func, block,
-                                             stab_ptr->n_value, 0);
+                                             n_value, 0);
                 pending_flush(&pending_block, module, curr_func, block);
             }
             break;
         case N_RBRAC:
             if (curr_func)
                 block = symt_close_func_block(module, curr_func, block,
-                                              stab_ptr->n_value);
+                                              n_value);
             break;
         case N_PSYM:
             /* These are function parameters. */
@@ -1425,9 +1434,9 @@ BOOL stabs_parse(struct module* module, unsigned long load_offset,
                 stab_strcpy(symname, sizeof(symname), ptr);
                 loc.kind = loc_regrel;
                 loc.reg = dbghelp_current_cpu->frame_regno;
-                loc.offset = stab_ptr->n_value;
+                loc.offset = n_value;
                 symt_add_func_local(module, curr_func,
-                                    (int)stab_ptr->n_value >= 0 ? DataIsParam : DataIsLocal,
+                                    (int)n_value >= 0 ? DataIsParam : DataIsLocal,
                                     &loc, NULL, param_type, symname);
                 symt_add_function_signature_parameter(module, 
                                                       (struct symt_function_signature*)curr_func->type, 
@@ -1441,7 +1450,7 @@ BOOL stabs_parse(struct module* module, unsigned long load_offset,
                 loc.kind = loc_register;
                 loc.offset = 0;
 
-                switch (stab_ptr->n_value)
+                switch (n_value)
                 {
                 case  0: loc.reg = CV_REG_EAX; break;
                 case  1: loc.reg = CV_REG_ECX; break;
@@ -1459,7 +1468,7 @@ BOOL stabs_parse(struct module* module, unsigned long load_offset,
                 case 16:
                 case 17:
                 case 18:
-                case 19: loc.reg = CV_REG_ST0 + stab_ptr->n_value - 12; break;
+                case 19: loc.reg = CV_REG_ST0 + n_value - 12; break;
                 case 21:
                 case 22:
                 case 23:
@@ -1467,7 +1476,7 @@ BOOL stabs_parse(struct module* module, unsigned long load_offset,
                 case 25:
                 case 26:
                 case 27:
-                case 28: loc.reg = CV_REG_XMM0 + stab_ptr->n_value - 21; break;
+                case 28: loc.reg = CV_REG_XMM0 + n_value - 21; break;
                 case 29:
                 case 30:
                 case 31:
@@ -1475,9 +1484,9 @@ BOOL stabs_parse(struct module* module, unsigned long load_offset,
                 case 33:
                 case 34:
                 case 35:
-                case 36: loc.reg = CV_REG_MM0 + stab_ptr->n_value - 29; break;
+                case 36: loc.reg = CV_REG_MM0 + n_value - 29; break;
                 default:
-                    FIXME("Unknown register value (%lu)\n", (unsigned long)stab_ptr->n_value);
+                    FIXME("Unknown register value (%lu)\n", (unsigned long)n_value);
                     loc.reg = CV_REG_NONE;
                     break;
                 }
@@ -1500,7 +1509,7 @@ BOOL stabs_parse(struct module* module, unsigned long load_offset,
             /* These are local variables */
             loc.kind = loc_regrel;
             loc.reg = dbghelp_current_cpu->frame_regno;
-            loc.offset = stab_ptr->n_value;
+            loc.offset = n_value;
             if (curr_func != NULL) pending_add_var(&pending_block, ptr, DataIsLocal, &loc);
             break;
         case N_SLINE:
@@ -1511,14 +1520,14 @@ BOOL stabs_parse(struct module* module, unsigned long load_offset,
             assert(source_idx >= 0);
             if (curr_func != NULL)
             {
-                unsigned long offset = stab_ptr->n_value;
+                unsigned long offset = n_value;
                 if (module->type == DMT_MACHO)
                     offset -= curr_func->address - load_offset;
                 symt_add_func_line(module, curr_func, source_idx, 
                                    stab_ptr->n_desc, offset);
             }
             else pending_add_line(&pending_func, source_idx, stab_ptr->n_desc,
-                                  stab_ptr->n_value, load_offset);
+                                  n_value, load_offset);
             break;
         case N_FUN:
             /*
@@ -1545,13 +1554,13 @@ BOOL stabs_parse(struct module* module, unsigned long load_offset,
                      * and offset of last function
                      */
                     stabs_finalize_function(module, curr_func, 
-                                            stab_ptr->n_value ?
-                                                (load_offset + stab_ptr->n_value - curr_func->address) : 0);
+                                            n_value ?
+                                                (load_offset + n_value - curr_func->address) : 0);
                 }
                 func_type = symt_new_function_signature(module, 
                                                         stabs_parse_type(ptr), -1);
                 curr_func = symt_new_function(module, compiland, symname, 
-                                              load_offset + stab_ptr->n_value, 0,
+                                              load_offset + n_value, 0,
                                               &func_type->symt);
                 pending_flush(&pending_func, module, curr_func, NULL);
             }
@@ -1560,7 +1569,7 @@ BOOL stabs_parse(struct module* module, unsigned long load_offset,
                 /* some versions of GCC to use a N_FUN "" to mark the end of a function
                  * and n_value contains the size of the func
                  */
-                stabs_finalize_function(module, curr_func, stab_ptr->n_value);
+                stabs_finalize_function(module, curr_func, n_value);
                 curr_func = NULL;
             }
             break;
@@ -1602,7 +1611,7 @@ BOOL stabs_parse(struct module* module, unsigned long load_offset,
             break;
         case N_UNDF:
             strs += strtabinc;
-            strtabinc = stab_ptr->n_value;
+            strtabinc = n_value;
             /* I'm not sure this is needed, so trace it before we obsolete it */
             if (curr_func)
             {
@@ -1615,7 +1624,7 @@ BOOL stabs_parse(struct module* module, unsigned long load_offset,
             /* Ignore this. We don't care what it points to. */
             break;
         case N_BINCL:
-            stabs_add_include(stabs_new_include(ptr, stab_ptr->n_value));
+            stabs_add_include(stabs_new_include(ptr, n_value));
             assert(incl_stk < (int)(sizeof(incl) / sizeof(incl[0])) - 1);
             incl[++incl_stk] = source_idx;
             source_idx = source_new(module, NULL, ptr);
@@ -1625,9 +1634,9 @@ BOOL stabs_parse(struct module* module, unsigned long load_offset,
             source_idx = incl[incl_stk--];
             break;
 	case N_EXCL:
-            if (stabs_add_include(stabs_find_include(ptr, stab_ptr->n_value)) < 0)
+            if (stabs_add_include(stabs_find_include(ptr, n_value)) < 0)
             {
-                ERR("Excluded header not found (%s,%ld)\n", ptr, (unsigned long)stab_ptr->n_value);
+                ERR("Excluded header not found (%s,%ld)\n", ptr, (unsigned long)n_value);
                 module_reset_debug_info(module);
                 ret = FALSE;
                 goto done;
@@ -1664,7 +1673,7 @@ BOOL stabs_parse(struct module* module, unsigned long load_offset,
                 if (*ptr == '_') ptr++;
                 stab_strcpy(symname, sizeof(symname), ptr);
 
-                callback(module, load_offset, symname, stab_ptr->n_value,
+                callback(module, load_offset, symname, n_value,
                          is_public, is_global, stab_ptr->n_other, compiland, user);
             }
             break;
@@ -1674,7 +1683,7 @@ BOOL stabs_parse(struct module* module, unsigned long load_offset,
         }
         stabbuff[0] = '\0';
         TRACE("0x%02x %lx %s\n",
-              stab_ptr->n_type, (unsigned long)stab_ptr->n_value, debugstr_a(strs + stab_ptr->n_strx));
+              stab_ptr->n_type, (unsigned long)n_value, debugstr_a(strs + stab_ptr->n_strx));
     }
     module->module.SymType = SymDia;
     module->module.CVSig = 'S' | ('T' << 8) | ('A' << 16) | ('B' << 24);
