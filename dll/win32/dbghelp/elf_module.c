@@ -137,7 +137,6 @@ struct elf_module_info
 static const char* elf_map_section(struct image_section_map* ism)
 {
     struct elf_file_map*        fmap = &ism->fmap->u.elf;
-    SYSTEM_INFO sysinfo;
     SIZE_T ofst, size;
     HANDLE mapping;
 
@@ -152,7 +151,6 @@ static const char* elf_map_section(struct image_section_map* ism)
     }
 
     /* align required information on allocation granularity */
-    GetSystemInfo(&sysinfo);
     ofst = fmap->sect[ism->sidx].shdr.sh_offset & ~(sysinfo.dwAllocationGranularity - 1);
     size = fmap->sect[ism->sidx].shdr.sh_offset + fmap->sect[ism->sidx].shdr.sh_size - ofst;
     if (!(mapping = CreateFileMappingW(fmap->handle, NULL, PAGE_READONLY, 0, ofst + size, NULL)))
