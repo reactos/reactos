@@ -284,20 +284,36 @@ static BOOL WINAPI process_invade_cb(PCWSTR name, ULONG64 base, ULONG size, PVOI
     return TRUE;
 }
 
+#ifndef DBGHELP_STATIC_LIB
 /******************************************************************
  *		check_live_target
  *
  */
 static BOOL check_live_target(struct process* pcs)
 {
+    PROCESS_BASIC_INFORMATION pbi;
+    ULONG_PTR base = 0;
+
     if (!GetProcessId(pcs->handle)) return FALSE;
     if (GetEnvironmentVariableA("DBGHELP_NOLIVE", NULL, 0)) return FALSE;
-#ifndef DBGHELP_STATIC_LIB
-    if (!elf_read_wine_loader_dbg_info(pcs))
-        macho_read_wine_loader_dbg_info(pcs);
-#endif
-    return TRUE;
+
+    if (NtQueryInformationProcess( pcs->handle, ProcessBasicInformation,
+                                   &pbi, sizeof(pbi), NULL ))
+        return FALSE;
+
+    if (!pcs->is_64bit)
+    {
+        PEB32 *peb32 = (PEB32 *)pbi.PebBaseAddress;
+        DWORD base32 = 0;
+        ReadProcessMemory(pcs->handle, &peb32->Reserved[0], &base32, sizeof(base32), NULL);
+        base = base32;
+    }
+    else ReadProcessMemory(pcs->handle, &pbi.PebBaseAddress->Reserved[0], &base, sizeof(base), NULL);
+
+    TRACE("got debug info address %#lx from PEB %p\n", base, pbi.PebBaseAddress);
+    return elf_read_wine_loader_dbg_info(pcs, base) || macho_read_wine_loader_dbg_info(pcs, base);
 }
+#endif
 
 /******************************************************************
  *		SymInitializeW (DBGHELP.@)
