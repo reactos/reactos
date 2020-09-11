@@ -670,7 +670,7 @@ static  unsigned        dump_system_info(struct dump_context* dc)
     /* write Wine specific system information just behind the structure, and before any string */
     if (wine_extra)
     {
-        char code[] = {'W','I','N','E'};
+        static const char code[] = {'W','I','N','E'};
 
         WriteFile(dc->hFile, code, 4, &written, NULL);
         /* number of sub-info, so that we can extend structure if needed */
