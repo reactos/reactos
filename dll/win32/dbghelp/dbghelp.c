@@ -352,6 +352,7 @@ BOOL WINAPI SymInitializeW(HANDLE hProcess, PCWSTR UserSearchPath, BOOL fInvadeP
 
     pcs->handle = hProcess;
     pcs->is_64bit = (sizeof(void *) == 8 || wow64) && !child_wow64;
+    pcs->loader = &no_loader_ops; /* platform-specific initialization will override it if loader debug info can be found */
 
     if (UserSearchPath)
     {
@@ -398,8 +399,7 @@ BOOL WINAPI SymInitializeW(HANDLE hProcess, PCWSTR UserSearchPath, BOOL fInvadeP
     {
         if (fInvadeProcess)
             EnumerateLoadedModulesW64(hProcess, process_invade_cb, hProcess);
-        elf_synchronize_module_list(pcs);
-        macho_synchronize_module_list(pcs);
+        pcs->loader->synchronize_module_list(pcs);
     }
     else if (fInvadeProcess)
     {

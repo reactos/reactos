@@ -418,10 +418,16 @@ struct module
     struct wine_rb_tree         sources_offsets_tree;
 };
 
+struct loader_ops
+{
+    BOOL (*synchronize_module_list)(struct process* process);
+};
+
 struct process
 {
     struct process*             next;
     HANDLE                      handle;
+    const struct loader_ops*    loader;
     WCHAR*                      search_path;
 
     PSYMBOL_REGISTERED_CALLBACK64       reg_cb;
@@ -632,7 +638,6 @@ extern BOOL         elf_load_debug_info(struct module* module) DECLSPEC_HIDDEN;
 extern struct module*
                     elf_load_module(struct process* pcs, const WCHAR* name, unsigned long) DECLSPEC_HIDDEN;
 extern BOOL         elf_read_wine_loader_dbg_info(struct process* pcs) DECLSPEC_HIDDEN;
-extern BOOL         elf_synchronize_module_list(struct process* pcs) DECLSPEC_HIDDEN;
 struct elf_thunk_area;
 extern int          elf_is_in_thunk_area(unsigned long addr, const struct elf_thunk_area* thunks) DECLSPEC_HIDDEN;
 
@@ -643,7 +648,6 @@ extern BOOL         macho_load_debug_info(struct process *pcs, struct module* mo
 extern struct module*
                     macho_load_module(struct process* pcs, const WCHAR* name, unsigned long) DECLSPEC_HIDDEN;
 extern BOOL         macho_read_wine_loader_dbg_info(struct process* pcs) DECLSPEC_HIDDEN;
-extern BOOL         macho_synchronize_module_list(struct process* pcs) DECLSPEC_HIDDEN;
 
 /* minidump.c */
 void minidump_add_memory_block(struct dump_context* dc, ULONG64 base, ULONG size, ULONG rva) DECLSPEC_HIDDEN;
@@ -652,6 +656,7 @@ void minidump_add_memory_block(struct dump_context* dc, ULONG64 base, ULONG size
 extern const WCHAR      S_ElfW[] DECLSPEC_HIDDEN;
 extern const WCHAR      S_WineLoaderW[] DECLSPEC_HIDDEN;
 extern const WCHAR      S_SlashW[] DECLSPEC_HIDDEN;
+extern const struct loader_ops no_loader_ops DECLSPEC_HIDDEN;
 
 extern struct module*
                     module_find_by_addr(const struct process* pcs, DWORD64 addr,

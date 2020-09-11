@@ -548,17 +548,6 @@ enum module_type module_get_type_by_name(const WCHAR* name)
     return DMT_PE;
 }
 
-/******************************************************************
- *		                refresh_module_list
- */
-#ifndef DBGHELP_STATIC_LIB
-static BOOL refresh_module_list(struct process* pcs)
-{
-    /* force transparent ELF and Mach-O loading / unloading */
-    return elf_synchronize_module_list(pcs) || macho_synchronize_module_list(pcs);
-}
-#endif
-
 static BOOL image_check_debug_link(const WCHAR* file, struct image_file_map* fmap, DWORD link_crc)
 {
     DWORD read_bytes;
@@ -906,9 +895,7 @@ DWORD64 WINAPI  SymLoadModuleExW(HANDLE hProcess, HANDLE hFile, PCWSTR wImageNam
     if (Flags & ~(SLMFLAG_VIRTUAL))
         FIXME("Unsupported Flags %08x for %s\n", Flags, debugstr_w(wImageName));
 
-#ifndef DBGHELP_STATIC_LIB
-    refresh_module_list(pcs);
-#endif
+    pcs->loader->synchronize_module_list(pcs);
 
     /* this is a Wine extension to the API just to redo the synchronisation */
     if (!wImageName && !hFile) return 0;
@@ -1447,11 +1434,7 @@ BOOL WINAPI SymRefreshModuleList(HANDLE hProcess)
 
     if (!(pcs = process_find_by_handle(hProcess))) return FALSE;
 
-#ifndef DBGHELP_STATIC_LIB
-    return refresh_module_list(pcs);
-#else
-    return TRUE;
-#endif
+    return pcs->loader->synchronize_module_list(pcs);
 }
 
 /***********************************************************************
@@ -1476,3 +1459,13 @@ PVOID WINAPI SymFunctionTableAccess64(HANDLE hProcess, DWORD64 AddrBase)
 
     return dbghelp_current_cpu->find_runtime_function(module, AddrBase);
 }
+
+static BOOL native_synchronize_module_list(struct process* pcs)
+{
+    return FALSE;
+}
+
+const struct loader_ops no_loader_ops =
+{
+    native_synchronize_module_list,
+};
