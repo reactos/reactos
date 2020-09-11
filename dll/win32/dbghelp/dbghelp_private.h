@@ -421,6 +421,7 @@ struct module
 struct loader_ops
 {
     BOOL (*synchronize_module_list)(struct process* process);
+    BOOL (*fetch_file_info)(struct process* process, const WCHAR* name, ULONG_PTR load_addr, DWORD_PTR* base, DWORD* size, DWORD* checksum);
 };
 
 struct process
@@ -632,7 +633,6 @@ typedef BOOL (*enum_modules_cb)(const WCHAR*, unsigned long addr, void* user);
 
 /* elf_module.c */
 extern BOOL         elf_enum_modules(struct process*, enum_modules_cb, void*) DECLSPEC_HIDDEN;
-extern BOOL         elf_fetch_file_info(const WCHAR* name, DWORD_PTR* base, DWORD* size, DWORD* checksum) DECLSPEC_HIDDEN;
 struct image_file_map;
 extern BOOL         elf_load_debug_info(struct module* module) DECLSPEC_HIDDEN;
 extern struct module*
@@ -643,7 +643,6 @@ extern int          elf_is_in_thunk_area(unsigned long addr, const struct elf_th
 
 /* macho_module.c */
 extern BOOL         macho_enum_modules(struct process*, enum_modules_cb, void*) DECLSPEC_HIDDEN;
-extern BOOL         macho_fetch_file_info(HANDLE process, const WCHAR* name, unsigned long load_addr, DWORD_PTR* base, DWORD* size, DWORD* checksum) DECLSPEC_HIDDEN;
 extern BOOL         macho_load_debug_info(struct process *pcs, struct module* module) DECLSPEC_HIDDEN;
 extern struct module*
                     macho_load_module(struct process* pcs, const WCHAR* name, unsigned long) DECLSPEC_HIDDEN;
