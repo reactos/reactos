@@ -333,7 +333,7 @@ struct elf_map_file_data
 };
 
 static BOOL elf_map_file_read(struct image_file_map* fmap, struct elf_map_file_data* emfd,
-                              void* buf, size_t len, off_t off)
+                              void* buf, size_t len, size_t off)
 {
     LARGE_INTEGER li;
     DWORD bytes_read;
@@ -1068,8 +1068,8 @@ static BOOL elf_load_debug_info_from_map(struct module* module,
         lret = dwarf2_parse(module, module->reloc_delta, thunks, fmap);
         ret = ret || lret;
     }
-    if (strstrW(module->module.ModuleName, S_ElfW) ||
-        !strcmpW(module->module.ModuleName, S_WineLoaderW))
+    if (wcsstr(module->module.ModuleName, S_ElfW) ||
+        !wcscmp(module->module.ModuleName, S_WineLoaderW))
     {
         /* add the thunks for native libraries */
         if (!(dbghelp_options & SYMOPT_PUBLICS_ONLY))
@@ -1263,7 +1263,7 @@ static BOOL elf_load_file_from_fmap(struct process* pcs, const WCHAR* filename,
         ptr = HeapAlloc(GetProcessHeap(), 0, (lstrlenW(filename) + 1) * sizeof(WCHAR));
         if (ptr)
         {
-            strcpyW(ptr, filename);
+            lstrcpyW(ptr, filename);
             elf_info->module_name = ptr;
         }
         else ret = FALSE;
@@ -1424,7 +1424,7 @@ static BOOL elf_search_and_load_file(struct process* pcs, const WCHAR* filename,
         return module->module.SymType;
     }
 
-    if (strstrW(filename, S_libstdcPPW)) return FALSE; /* We know we can't do it */
+    if (wcsstr(filename, S_libstdcPPW)) return FALSE; /* We know we can't do it */
     ret = elf_load_file(pcs, filename, load_offset, dyn_addr, elf_info);
     /* if relative pathname, try some absolute base dirs */
     if (!ret && filename == file_name(filename))
@@ -1494,7 +1494,7 @@ static BOOL elf_enum_modules_internal(const struct process* pcs,
             {
                 bufstr[sizeof(bufstr) - 1] = '\0';
                 MultiByteToWideChar(CP_UNIXCP, 0, bufstr, -1, bufstrW, ARRAY_SIZE(bufstrW));
-                if (main_name && !bufstrW[0]) strcpyW(bufstrW, main_name);
+                if (main_name && !bufstrW[0]) lstrcpyW(bufstrW, main_name);
                 if (!cb(bufstrW, (ULONG_PTR)lm.l_addr, (ULONG_PTR)lm.l_ld, FALSE, user))
                     break;
             }
@@ -1536,7 +1536,7 @@ static BOOL elf_enum_modules_internal(const struct process* pcs,
             {
                 bufstr[sizeof(bufstr) - 1] = '\0';
                 MultiByteToWideChar(CP_UNIXCP, 0, bufstr, -1, bufstrW, ARRAY_SIZE(bufstrW));
-                if (main_name && !bufstrW[0]) strcpyW(bufstrW, main_name);
+                if (main_name && !bufstrW[0]) lstrcpyW(bufstrW, main_name);
                 if (!cb(bufstrW, (ULONG_PTR)lm.l_addr, (ULONG_PTR)lm.l_ld, FALSE, user))
                     break;
             }

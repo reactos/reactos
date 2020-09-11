@@ -46,7 +46,7 @@ const WCHAR* file_name(const WCHAR* str)
 {
     const WCHAR*      p;
 
-    for (p = str + strlenW(str) - 1; p >= str && !is_sep(*p); p--);
+    for (p = str + lstrlenW(str) - 1; p >= str && !is_sep(*p); p--);
     return p + 1;
 }
 
@@ -54,7 +54,7 @@ static inline void file_pathW(const WCHAR *src, WCHAR *dst)
 {
     int len;
 
-    for (len = strlenW(src) - 1; (len > 0) && (!is_sep(src[len])); len--);
+    for (len = lstrlenW(src) - 1; (len > 0) && (!is_sep(src[len])); len--);
     memcpy( dst, src, len * sizeof(WCHAR) );
     dst[len] = 0;
 }
@@ -176,12 +176,12 @@ BOOL WINAPI SymMatchFileNameW(PCWSTR file, PCWSTR match,
     TRACE("(%s %s %p %p)\n",
           debugstr_w(file), debugstr_w(match), filestop, matchstop);
 
-    fptr = file + strlenW(file) - 1;
-    mptr = match + strlenW(match) - 1;
+    fptr = file + lstrlenW(file) - 1;
+    mptr = match + lstrlenW(match) - 1;
 
     while (fptr >= file && mptr >= match)
     {
-        if (toupperW(*fptr) != toupperW(*mptr) && !(is_sep(*fptr) && is_sep(*mptr)))
+        if (towupper(*fptr) != towupper(*mptr) && !(is_sep(*fptr) && is_sep(*mptr)))
             break;
         fptr--; mptr--;
     }
@@ -229,10 +229,10 @@ static BOOL do_searchW(PCWSTR file, PWSTR buffer, BOOL recurse,
     static const WCHAR  S_DotW[] = {'.','\0'};
     static const WCHAR  S_DotDotW[] = {'.','.','\0'};
 
-    pos = strlenW(buffer);
+    pos = lstrlenW(buffer);
     if (pos == 0) return FALSE;
     if (buffer[pos - 1] != '\\') buffer[pos++] = '\\';
-    strcpyW(buffer + pos, S_AllW);
+    lstrcpyW(buffer + pos, S_AllW);
     if ((h = FindFirstFileW(buffer, &fd)) == INVALID_HANDLE_VALUE)
         return FALSE;
     /* doc doesn't specify how the tree is enumerated...
@@ -240,9 +240,9 @@ static BOOL do_searchW(PCWSTR file, PWSTR buffer, BOOL recurse,
      */
     do
     {
-        if (!strcmpW(fd.cFileName, S_DotW) || !strcmpW(fd.cFileName, S_DotDotW)) continue;
+        if (!wcscmp(fd.cFileName, S_DotW) || !wcscmp(fd.cFileName, S_DotDotW)) continue;
 
-        strcpyW(buffer + pos, fd.cFileName);
+        lstrcpyW(buffer + pos, fd.cFileName);
         if (recurse && (fd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
             found = do_searchW(file, buffer, TRUE, cb, user);
         else if (SymMatchFileNameW(buffer, file, NULL, NULL))
@@ -263,7 +263,7 @@ BOOL WINAPI SearchTreeForFileW(PCWSTR root, PCWSTR file, PWSTR buffer)
 {
     TRACE("(%s, %s, %p)\n",
           debugstr_w(root), debugstr_w(file), buffer);
-    strcpyW(buffer, root);
+    lstrcpyW(buffer, root);
     return do_searchW(file, buffer, TRUE, NULL, NULL);
 }
 
@@ -296,7 +296,7 @@ BOOL WINAPI EnumDirTreeW(HANDLE hProcess, PCWSTR root, PCWSTR file,
     TRACE("(%p %s %s %p %p %p)\n",
           hProcess, debugstr_w(root), debugstr_w(file), buffer, cb, user);
 
-    strcpyW(buffer, root);
+    lstrcpyW(buffer, root);
     return do_searchW(file, buffer, TRUE, cb, user);
 }
 
@@ -390,13 +390,13 @@ BOOL WINAPI SymFindFileInPathW(HANDLE hProcess, PCWSTR searchPath, PCWSTR full_p
     /* first check full path to file */
     if (sffip_cb(full_path, &s))
     {
-        strcpyW(buffer, full_path);
+        lstrcpyW(buffer, full_path);
         return TRUE;
     }
 
     while (searchPath)
     {
-        ptr = strchrW(searchPath, ';');
+        ptr = wcschr(searchPath, ';');
         if (ptr)
         {
             memcpy(tmp, searchPath, (ptr - searchPath) * sizeof(WCHAR));
@@ -405,12 +405,12 @@ BOOL WINAPI SymFindFileInPathW(HANDLE hProcess, PCWSTR searchPath, PCWSTR full_p
         }
         else
         {
-            strcpyW(tmp, searchPath);
+            lstrcpyW(tmp, searchPath);
             searchPath = NULL;
         }
         if (do_searchW(filename, tmp, FALSE, sffip_cb, &s))
         {
-            strcpyW(buffer, tmp);
+            lstrcpyW(buffer, tmp);
             return TRUE;
         }
     }
@@ -584,7 +584,7 @@ static BOOL CALLBACK module_find_cb(PCWSTR buffer, PVOID user)
     }
     if (matched > mf->matched)
     {
-        strcpyW(mf->filename, buffer);
+        lstrcpyW(mf->filename, buffer);
         mf->matched = matched;
     }
     /* yes, EnumDirTree/do_search and SymFindFileInPath callbacks use the opposite
@@ -619,7 +619,7 @@ BOOL path_find_symbol_file(const struct process* pcs, const struct module* modul
     /* first check full path to file */
     if (module_find_cb(full_pathW, &mf))
     {
-        strcpyW( buffer, full_pathW );
+        lstrcpyW( buffer, full_pathW );
         return TRUE;
     }
 
@@ -643,7 +643,7 @@ BOOL path_find_symbol_file(const struct process* pcs, const struct module* modul
 
     while (searchPath)
     {
-        ptr = strchrW(searchPath, ';');
+        ptr = wcschr(searchPath, ';');
         if (ptr)
         {
             memcpy(buffer, searchPath, (ptr - searchPath) * sizeof(WCHAR));
@@ -652,7 +652,7 @@ BOOL path_find_symbol_file(const struct process* pcs, const struct module* modul
         }
         else
         {
-            strcpyW(buffer, searchPath);
+            lstrcpyW(buffer, searchPath);
             searchPath = NULL;
         }
         /* return first fully matched file */
@@ -661,7 +661,7 @@ BOOL path_find_symbol_file(const struct process* pcs, const struct module* modul
     /* if no fully matching file is found, return the best matching file if any */
     if ((dbghelp_options & SYMOPT_LOAD_ANYTHING) && mf.matched)
     {
-        strcpyW( buffer, mf.filename );
+        lstrcpyW( buffer, mf.filename );
         *is_unmatched = TRUE;
         return TRUE;
     }
@@ -717,12 +717,12 @@ BOOL search_dll_path(const WCHAR *name, BOOL (*match)(void*, HANDLE, const WCHAR
         end = buf + GetEnvironmentVariableW(winebuilddirW, buf, len);
 
         memcpy(end, dllsW, sizeof(dllsW));
-        strcpyW(end + ARRAY_SIZE(dllsW), name);
-        if ((p = strrchrW(end, '.')) && !lstrcmpW(p, dot_soW)) *p = 0;
-        if ((p = strrchrW(end, '.')) && !lstrcmpW(p, dot_dllW)) *p = 0;
-        p = end + strlenW(end);
+        lstrcpyW(end + ARRAY_SIZE(dllsW), name);
+        if ((p = wcsrchr(end, '.')) && !lstrcmpW(p, dot_soW)) *p = 0;
+        if ((p = wcsrchr(end, '.')) && !lstrcmpW(p, dot_dllW)) *p = 0;
+        p = end + lstrlenW(end);
         *p++ = '\\';
-        strcpyW(p, name);
+        lstrcpyW(p, name);
         file = CreateFileW(buf, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
         if (file != INVALID_HANDLE_VALUE)
         {
@@ -733,12 +733,12 @@ BOOL search_dll_path(const WCHAR *name, BOOL (*match)(void*, HANDLE, const WCHAR
 
         memcpy(end, programsW, sizeof(programsW));
         end += ARRAY_SIZE(programsW);
-        strcpyW(end, name);
-        if ((p = strrchrW(end, '.')) && !lstrcmpW(p, dot_soW)) *p = 0;
-        if ((p = strrchrW(end, '.')) && !lstrcmpW(p, dot_exeW)) *p = 0;
-        p = end + strlenW(end);
+        lstrcpyW(end, name);
+        if ((p = wcsrchr(end, '.')) && !lstrcmpW(p, dot_soW)) *p = 0;
+        if ((p = wcsrchr(end, '.')) && !lstrcmpW(p, dot_exeW)) *p = 0;
+        p = end + lstrlenW(end);
         *p++ = '\\';
-        strcpyW(p, name);
+        lstrcpyW(p, name);
         file = CreateFileW(buf, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
         if (file != INVALID_HANDLE_VALUE)
         {
@@ -753,13 +753,13 @@ BOOL search_dll_path(const WCHAR *name, BOOL (*match)(void*, HANDLE, const WCHAR
     for (i = 0;; i++)
     {
         WCHAR env_name[64];
-        sprintfW(env_name, winedlldirW, i);
+        swprintf(env_name, ARRAY_SIZE(env_name), winedlldirW, i);
         if (!(len = GetEnvironmentVariableW(env_name, NULL, 0))) break;
         if (!(buf = heap_alloc((len + lstrlenW(name) + 2) * sizeof(WCHAR)))) return FALSE;
 
         len = GetEnvironmentVariableW(env_name, buf, len);
         buf[len++] = '\\';
-        strcpyW(buf + len, name);
+        lstrcpyW(buf + len, name);
         file = CreateFileW(buf, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
         if (file != INVALID_HANDLE_VALUE)
         {

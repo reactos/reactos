@@ -35,7 +35,6 @@
 #include "oaidl.h"
 #include "winnls.h"
 #include "wine/list.h"
-#include "wine/unicode.h"
 #include "wine/rbtree.h"
 
 #include "cvconst.h"

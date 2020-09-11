@@ -59,9 +59,9 @@ static int match_ext(const WCHAR* ptr, size_t len)
 
     for (e = ext; *e; e++)
     {
-        l = strlenW(*e);
+        l = lstrlenW(*e);
         if (l >= len) return 0;
-        if (strncmpiW(&ptr[len - l], *e, l)) continue;
+        if (wcsnicmp(&ptr[len - l], *e, l)) continue;
         return l;
     }
     return 0;
@@ -71,7 +71,7 @@ static const WCHAR* get_filename(const WCHAR* name, const WCHAR* endptr)
 {
     const WCHAR*        ptr;
 
-    if (!endptr) endptr = name + strlenW(name);
+    if (!endptr) endptr = name + lstrlenW(name);
     for (ptr = endptr - 1; ptr >= name; ptr--)
     {
         if (*ptr == '/' || *ptr == '\\') break;
@@ -100,14 +100,14 @@ static BOOL is_wine_loader(const WCHAR *module)
     else
     {
         buffer = heap_alloc( sizeof(wineW) + 2 * sizeof(WCHAR) );
-        strcpyW( buffer, wineW );
+        lstrcpyW( buffer, wineW );
     }
 
-    if (!strcmpW( filename, buffer ))
+    if (!wcscmp( filename, buffer ))
         ret = TRUE;
 
-    strcatW( buffer, suffixW );
-    if (!strcmpW( filename, buffer ))
+    lstrcatW( buffer, suffixW );
+    if (!wcscmp( filename, buffer ))
         ret = TRUE;
 
     heap_free( buffer );
@@ -120,7 +120,7 @@ static void module_fill_module(const WCHAR* in, WCHAR* out, size_t size)
     const WCHAR *ptr, *endptr;
     size_t      len, l;
 
-    ptr = get_filename(in, endptr = in + strlenW(in));
+    ptr = get_filename(in, endptr = in + lstrlenW(in));
     len = min(endptr - ptr, size - 1);
     memcpy(out, ptr, len * sizeof(WCHAR));
     out[len] = '\0';
@@ -132,11 +132,11 @@ static void module_fill_module(const WCHAR* in, WCHAR* out, size_t size)
 #endif
     else
     {
-        if (len > 3 && !strcmpiW(&out[len - 3], S_DotSoW) &&
+        if (len > 3 && !wcsicmp(&out[len - 3], S_DotSoW) &&
             (l = match_ext(out, len - 3)))
-            strcpyW(&out[len - l - 3], S_ElfW);
+            lstrcpyW(&out[len - l - 3], S_ElfW);
     }
-    while ((*out = tolowerW(*out))) out++;
+    while ((*out = towlower(*out))) out++;
 }
 
 void module_set_module(struct module* module, const WCHAR* name)
@@ -166,15 +166,15 @@ WCHAR *get_wine_loader_name(struct process *pcs)
     else
     {
         buffer = heap_alloc( sizeof(wineW) + 2 * sizeof(WCHAR) );
-        strcpyW( buffer, wineW );
+        lstrcpyW( buffer, wineW );
     }
 
-    p = buffer + strlenW( buffer ) - strlenW( suffixW );
-    if (p > buffer && !strcmpW( p, suffixW ))
+    p = buffer + lstrlenW( buffer ) - lstrlenW( suffixW );
+    if (p > buffer && !wcscmp( p, suffixW ))
         *p = 0;
 
     if (pcs->is_64bit)
-        strcatW(buffer, suffixW);
+        lstrcatW(buffer, suffixW);
 
     TRACE( "returning %s\n", debugstr_w(buffer) );
     return buffer;
@@ -282,7 +282,7 @@ struct module* module_find_by_nameW(const struct process* pcs, const WCHAR* name
 
     for (module = pcs->lmodules; module; module = module->next)
     {
-        if (!strcmpiW(name, module->module.ModuleName)) return module;
+        if (!wcsicmp(name, module->module.ModuleName)) return module;
     }
     SetLastError(ERROR_INVALID_NAME);
     return NULL;
@@ -308,14 +308,14 @@ struct module* module_is_already_loaded(const struct process* pcs, const WCHAR* 
     /* first compare the loaded image name... */
     for (module = pcs->lmodules; module; module = module->next)
     {
-        if (!strcmpiW(name, module->module.LoadedImageName))
+        if (!wcsicmp(name, module->module.LoadedImageName))
             return module;
     }
     /* then compare the standard filenames (without the path) ... */
     filename = get_filename(name, NULL);
     for (module = pcs->lmodules; module; module = module->next)
     {
-        if (!strcmpiW(filename, get_filename(module->module.LoadedImageName, NULL)))
+        if (!wcsicmp(filename, get_filename(module->module.LoadedImageName, NULL)))
             return module;
     }
     SetLastError(ERROR_INVALID_NAME);
@@ -457,7 +457,7 @@ static BOOL module_is_container_loaded(const struct process* pcs,
 
     if (!base) return FALSE;
     filename = get_filename(ImageName, NULL);
-    len = strlenW(filename);
+    len = lstrlenW(filename);
 
     for (module = pcs->lmodules; module; module = module->next)
     {
@@ -466,7 +466,7 @@ static BOOL module_is_container_loaded(const struct process* pcs,
             base < module->module.BaseOfImage + module->module.ImageSize)
         {
             modname = get_filename(module->module.LoadedImageName, NULL);
-            if (!strncmpiW(modname, filename, len) &&
+            if (!wcsnicmp(modname, filename, len) &&
                 !memcmp(modname + len, S_DotSoW, 3 * sizeof(WCHAR)))
             {
                 return TRUE;
@@ -555,17 +555,17 @@ static BOOL image_locate_debug_link(const struct module* module, struct image_fi
     if (!fmap_link) return FALSE;
 
     filename_len = MultiByteToWideChar(CP_UNIXCP, 0, filename, -1, NULL, 0);
-    path_len = strlenW(module->module.LoadedImageName);
-    if (module->real_path) path_len = max(path_len, strlenW(module->real_path));
+    path_len = lstrlenW(module->module.LoadedImageName);
+    if (module->real_path) path_len = max(path_len, lstrlenW(module->real_path));
     p = HeapAlloc(GetProcessHeap(), 0,
                   (globalDebugDirLen + path_len + 6 + 1 + filename_len + 1) * sizeof(WCHAR));
     if (!p) goto found;
 
     /* we prebuild the string with "execdir" */
-    strcpyW(p, module->module.LoadedImageName);
+    lstrcpyW(p, module->module.LoadedImageName);
     slash = p;
-    if ((slash2 = strrchrW(slash, '/'))) slash = slash2 + 1;
-    if ((slash2 = strrchrW(slash, '\\'))) slash = slash2 + 1;
+    if ((slash2 = wcsrchr(slash, '/'))) slash = slash2 + 1;
+    if ((slash2 = wcsrchr(slash, '\\'))) slash = slash2 + 1;
 
     /* testing execdir/filename */
     MultiByteToWideChar(CP_UNIXCP, 0, filename, -1, slash, filename_len);
@@ -578,10 +578,10 @@ static BOOL image_locate_debug_link(const struct module* module, struct image_fi
 
     if (module->real_path)
     {
-        strcpyW(p, module->real_path);
+        lstrcpyW(p, module->real_path);
         slash = p;
-        if ((slash2 = strrchrW(slash, '/'))) slash = slash2 + 1;
-        if ((slash2 = strrchrW(slash, '\\'))) slash = slash2 + 1;
+        if ((slash2 = wcsrchr(slash, '/'))) slash = slash2 + 1;
+        if ((slash2 = wcsrchr(slash, '\\'))) slash = slash2 + 1;
         MultiByteToWideChar(CP_UNIXCP, 0, filename, -1, slash, filename_len);
         if (image_check_debug_link(p, fmap_link, crc)) goto found;
     }
@@ -1200,9 +1200,9 @@ BOOL  WINAPI SymGetModuleInfoW(HANDLE hProcess, DWORD dwAddr,
     miw.CheckSum      = miw64.CheckSum;
     miw.NumSyms       = miw64.NumSyms;
     miw.SymType       = miw64.SymType;
-    strcpyW(miw.ModuleName, miw64.ModuleName);
-    strcpyW(miw.ImageName, miw64.ImageName);
-    strcpyW(miw.LoadedImageName, miw64.LoadedImageName);
+    lstrcpyW(miw.ModuleName, miw64.ModuleName);
+    lstrcpyW(miw.ImageName, miw64.ImageName);
+    lstrcpyW(miw.LoadedImageName, miw64.LoadedImageName);
     memcpy(ModuleInfo, &miw, ModuleInfo->SizeOfStruct);
 
     return TRUE;
