@@ -619,7 +619,7 @@ static BOOL CALLBACK module_find_cb(PCWSTR buffer, PVOID user)
 }
 
 BOOL path_find_symbol_file(const struct process* pcs, const struct module* module,
-                           PCSTR full_path, const GUID* guid, DWORD dw1, DWORD dw2,
+                           PCSTR full_path, enum module_type type, const GUID* guid, DWORD dw1, DWORD dw2,
                            WCHAR *buffer, BOOL* is_unmatched)
 {
     struct module_find  mf;
@@ -638,7 +638,7 @@ BOOL path_find_symbol_file(const struct process* pcs, const struct module* modul
 
     MultiByteToWideChar(CP_ACP, 0, full_path, -1, full_pathW, MAX_PATH);
     filename = file_name(full_pathW);
-    mf.kind = module_get_type_by_name(filename);
+    mf.kind = type;
     *is_unmatched = FALSE;
 
     /* first check full path to file */
