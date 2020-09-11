@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS Host Headers
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Type definitions and useful macros for host tools
- * COPYRIGHT:   Copyright 2007 Hervé Poussineau (hpoussin@reactos.org)
+ * COPYRIGHT:   Copyright 2007 HervÃ© Poussineau (hpoussin@reactos.org)
  *              Copyright 2007 Colin Finck (colin@reactos.org)
  */
 
@@ -51,6 +51,7 @@ typedef void VOID, *PVOID, *LPVOID;
 typedef char CHAR, CCHAR, *PCHAR, *PSTR, *LPSTR;
 typedef const char *PCSTR, *LPCSTR;
 typedef unsigned char UCHAR, *PUCHAR, BYTE, *LPBYTE, BOOLEAN, *PBOOLEAN;
+typedef uint8_t UINT8;
 typedef int16_t SHORT, *PSHORT;
 typedef uint16_t USHORT, *PUSHORT, WORD, *PWORD, *LPWORD, WCHAR, *PWCHAR, *PWSTR, *LPWSTR, UINT16;
 typedef const uint16_t *PCWSTR, *LPCWSTR;
