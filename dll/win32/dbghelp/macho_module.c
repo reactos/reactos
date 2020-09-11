@@ -1360,18 +1360,28 @@ static ULONG_PTR get_dyld_image_info_address(struct process* pcs)
     NTSTATUS status;
     PROCESS_BASIC_INFORMATION pbi;
     ULONG_PTR dyld_image_info_address = 0;
+    BOOL ret;
 
     /* Get address of PEB */
     status = NtQueryInformationProcess(pcs->handle, ProcessBasicInformation, &pbi, sizeof(pbi), NULL);
     if (status == STATUS_SUCCESS)
     {
         /* Read dyld image info address from PEB */
-        if (ReadProcessMemory(pcs->handle, &pbi.PebBaseAddress->Reserved[0],
-                              &dyld_image_info_address, sizeof(dyld_image_info_address), NULL))
+        if (!pcs->is_64bit)
+            ret = ReadProcessMemory(pcs->handle, &pbi.PebBaseAddress->Reserved[0],
+                &dyld_image_info_address, sizeof(dyld_image_info_address), NULL);
+        else
         {
-            TRACE("got dyld_image_info_address 0x%08lx from PEB %p MacDyldImageInfo %p\n",
-                  (unsigned long)dyld_image_info_address, pbi.PebBaseAddress, &pbi.PebBaseAddress->Reserved);
+            PEB32 *peb32 = (PEB32 *)pbi.PebBaseAddress;
+            ULONG addr32;
+            ret = ReadProcessMemory(pcs->handle, &peb32->Reserved[0], &addr32,
+                sizeof(addr32), NULL);
+            dyld_image_info_address = addr32;
         }
+
+        if (ret)
+            TRACE("got dyld_image_info_address %#lx from PEB %p\n",
+                dyld_image_info_address, pbi.PebBaseAddress);
     }
 
 #ifndef __LP64__ /* No reading the symtab with nlist(3) in LP64 */
