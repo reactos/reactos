@@ -284,6 +284,27 @@ static unsigned elf_get_map_size(const struct image_section_map* ism)
     return ism->fmap->u.elf.sect[ism->sidx].shdr.sh_size;
 }
 
+/******************************************************************
+ *		elf_unmap_file
+ *
+ * Unmaps an ELF file from memory (previously mapped with elf_map_file)
+ */
+static void elf_unmap_file(struct image_file_map* fmap)
+{
+    if (fmap->u.elf.handle != INVALID_HANDLE_VALUE)
+    {
+        struct image_section_map  ism;
+        ism.fmap = fmap;
+        for (ism.sidx = 0; ism.sidx < fmap->u.elf.elfhdr.e_shnum; ism.sidx++)
+        {
+            elf_unmap_section(&ism);
+        }
+        HeapFree(GetProcessHeap(), 0, fmap->u.elf.sect);
+        CloseHandle(fmap->u.elf.handle);
+    }
+    HeapFree(GetProcessHeap(), 0, fmap->u.elf.target_copy);
+}
+
 static const struct image_file_map_ops elf_file_map_ops =
 {
     elf_map_section,
@@ -291,6 +312,7 @@ static const struct image_file_map_ops elf_file_map_ops =
     elf_find_section,
     elf_get_map_rva,
     elf_get_map_size,
+    elf_unmap_file,
 };
 
 static inline void elf_reset_file_map(struct image_file_map* fmap)
@@ -536,34 +558,9 @@ static BOOL elf_map_file(struct elf_map_file_data* emfd, struct image_file_map* 
     return TRUE;
 }
 
-/******************************************************************
- *		elf_unmap_file
- *
- * Unmaps an ELF file from memory (previously mapped with elf_map_file)
- */
-static void elf_unmap_file(struct image_file_map* fmap)
-{
-    while (fmap && fmap->modtype == DMT_ELF)
-    {
-        if (fmap->u.elf.handle != INVALID_HANDLE_VALUE)
-        {
-            struct image_section_map  ism;
-            ism.fmap = fmap;
-            for (ism.sidx = 0; ism.sidx < fmap->u.elf.elfhdr.e_shnum; ism.sidx++)
-            {
-                elf_unmap_section(&ism);
-            }
-            HeapFree(GetProcessHeap(), 0, fmap->u.elf.sect);
-            CloseHandle(fmap->u.elf.handle);
-        }
-        HeapFree(GetProcessHeap(), 0, fmap->u.elf.target_copy);
-        fmap = fmap->alternate;
-    }
-}
-
 static void elf_module_remove(struct process* pcs, struct module_format* modfmt)
 {
-    elf_unmap_file(&modfmt->u.elf_info->file_map);
+    image_unmap_file(&modfmt->u.elf_info->file_map);
     HeapFree(GetProcessHeap(), 0, modfmt);
 }
 
@@ -994,7 +991,7 @@ static BOOL elf_check_debug_link(const WCHAR* file, struct image_file_map* fmap,
     if (crc != link_crc)
     {
         WARN("Bad CRC for file %s (got %08x while expecting %08x)\n",  debugstr_w(file), crc, link_crc);
-        elf_unmap_file(fmap);
+        image_unmap_file(fmap);
         return FALSE;
     }
     return TRUE;
@@ -1148,7 +1145,7 @@ static BOOL elf_locate_build_id_target(struct image_file_map* fmap, const BYTE* 
             }
             image_unmap_section(&buildid_sect);
         }
-        elf_unmap_file(fmap_link);
+        image_unmap_file(fmap_link);
     }
 
     TRACE("not found\n");
@@ -1340,7 +1337,7 @@ BOOL elf_fetch_file_info(const WCHAR* name, DWORD_PTR* base,
     if (base) *base = fmap.u.elf.elf_start;
     *size = fmap.u.elf.elf_size;
     *checksum = calc_crc(fmap.u.elf.handle);
-    elf_unmap_file(&fmap);
+    image_unmap_file(&fmap);
     return TRUE;
 }
 
@@ -1514,7 +1511,7 @@ static BOOL elf_load_file(struct process* pcs, const WCHAR* filename,
 
     ret = elf_load_file_from_fmap(pcs, filename, &fmap, load_offset, dyn_addr, elf_info);
 
-    elf_unmap_file(&fmap);
+    image_unmap_file(&fmap);
 
     return ret;
 }

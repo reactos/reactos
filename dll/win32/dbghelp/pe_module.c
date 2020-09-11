@@ -184,6 +184,29 @@ static unsigned pe_get_map_size(const struct image_section_map* ism)
     return ism->fmap->u.pe.sect[ism->sidx].shdr.Misc.VirtualSize;
 }
 
+/******************************************************************
+ *		pe_unmap_file
+ *
+ * Unmaps an PE file from memory (previously mapped with pe_map_file)
+ */
+static void pe_unmap_file(struct image_file_map* fmap)
+{
+    if (fmap->u.pe.hMap != 0)
+    {
+        struct image_section_map  ism;
+        ism.fmap = fmap;
+        for (ism.sidx = 0; ism.sidx < fmap->u.pe.ntheader.FileHeader.NumberOfSections; ism.sidx++)
+        {
+            pe_unmap_section(&ism);
+        }
+        while (fmap->u.pe.full_count) pe_unmap_full(fmap);
+        HeapFree(GetProcessHeap(), 0, fmap->u.pe.sect);
+        HeapFree(GetProcessHeap(), 0, (void*)fmap->u.pe.strtable); /* FIXME ugly (see pe_map_file) */
+        CloseHandle(fmap->u.pe.hMap);
+        fmap->u.pe.hMap = NULL;
+    }
+}
+
 static const struct image_file_map_ops pe_file_map_ops =
 {
     pe_map_section,
@@ -191,6 +214,7 @@ static const struct image_file_map_ops pe_file_map_ops =
     pe_find_section,
     pe_get_map_rva,
     pe_get_map_size,
+    pe_unmap_file,
 };
 
 /******************************************************************
@@ -299,29 +323,6 @@ error:
 }
 
 /******************************************************************
- *		pe_unmap_file
- *
- * Unmaps an PE file from memory (previously mapped with pe_map_file)
- */
-static void pe_unmap_file(struct image_file_map* fmap)
-{
-    if (fmap->u.pe.hMap != 0)
-    {
-        struct image_section_map  ism;
-        ism.fmap = fmap;
-        for (ism.sidx = 0; ism.sidx < fmap->u.pe.ntheader.FileHeader.NumberOfSections; ism.sidx++)
-        {
-            pe_unmap_section(&ism);
-        }
-        while (fmap->u.pe.full_count) pe_unmap_full(fmap);
-        HeapFree(GetProcessHeap(), 0, fmap->u.pe.sect);
-        HeapFree(GetProcessHeap(), 0, (void*)fmap->u.pe.strtable); /* FIXME ugly (see pe_map_file) */
-        CloseHandle(fmap->u.pe.hMap);
-        fmap->u.pe.hMap = NULL;
-    }
-}
-
-/******************************************************************
  *		pe_map_directory
  *
  * Maps a directory content out of a PE file
@@ -342,7 +343,7 @@ const char* pe_map_directory(struct module* module, int dirno, DWORD* size)
 
 static void pe_module_remove(struct process* pcs, struct module_format* modfmt)
 {
-    pe_unmap_file(&modfmt->u.pe_info->fmap);
+    image_unmap_file(&modfmt->u.pe_info->fmap);
     HeapFree(GetProcessHeap(), 0, modfmt);
 }
 
@@ -876,7 +877,7 @@ struct module* pe_load_native_module(struct process* pcs, const WCHAR* name,
             if (pe_map_file(builtin_module, &builtin_fmap, DMT_PE))
             {
                 TRACE("reloaded %s from %s\n", debugstr_w(loaded_name), debugstr_w(builtin_path));
-                pe_unmap_file(&modfmt->u.pe_info->fmap);
+                image_unmap_file(&modfmt->u.pe_info->fmap);
                 modfmt->u.pe_info->fmap = builtin_fmap;
             }
             CloseHandle(builtin_module);
@@ -912,7 +913,7 @@ struct module* pe_load_native_module(struct process* pcs, const WCHAR* name,
 #ifndef __REACTOS__
             heap_free(module->real_path);
 #endif
-            pe_unmap_file(&modfmt->u.pe_info->fmap);
+            image_unmap_file(&modfmt->u.pe_info->fmap);
         }
     }
     if (!module) HeapFree(GetProcessHeap(), 0, modfmt);

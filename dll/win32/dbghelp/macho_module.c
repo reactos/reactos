@@ -432,6 +432,7 @@ static const struct image_file_map_ops macho_file_map_ops =
     macho_find_section,
     macho_get_map_rva,
     macho_get_map_size,
+    macho_unmap_file,
 };
 
 /******************************************************************
