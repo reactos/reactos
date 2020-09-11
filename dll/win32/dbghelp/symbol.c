@@ -874,7 +874,7 @@ static void symt_get_length(struct module* module, const struct symt* symt, ULON
     *size = 0x1000; /* arbitrary value */
 }
 
-/* neede by symt_find_nearest */
+/* needed by symt_find_nearest */
 static int symt_get_best_at(struct module* module, int idx_sorttab)
 {
     ULONG64 ref_addr;
@@ -894,7 +894,7 @@ static int symt_get_best_at(struct module* module, int idx_sorttab)
                    !cmp_sorttab_addr(module, idx_sorttab + 1, ref_addr))
                 idx_sorttab++;
         }
-        /* if no better symbol fond restore original */
+        /* if no better symbol was found restore the original */
         if (module->addr_sorttab[idx_sorttab]->symt.tag == SymTagPublicSymbol)
             idx_sorttab = idx_sorttab_orig;
     }
