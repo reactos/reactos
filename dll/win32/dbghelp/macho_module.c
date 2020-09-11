@@ -328,7 +328,7 @@ BOOL macho_find_section(struct image_file_map* ifm, const char* segname, const c
 {
     struct macho_file_map* fmap;
     unsigned i;
-    char tmp[sizeof(fmap->sect[0].section->sectname)];
+    char tmp[sizeof(fmap->sect[0].section.sectname)];
 
     /* Other parts of dbghelp use section names like ".eh_frame".  Mach-O uses
        names like "__eh_frame".  Convert those. */
@@ -345,8 +345,8 @@ BOOL macho_find_section(struct image_file_map* ifm, const char* segname, const c
         for (i = 0; i < fmap->num_sections; i++)
         {
             if (!fmap->sect[i].ignored &&
-                strcmp(fmap->sect[i].section->sectname, sectname) == 0 &&
-                (!segname || strcmp(fmap->sect[i].section->segname, segname) == 0))
+                strcmp(fmap->sect[i].section.sectname, sectname) == 0 &&
+                (!segname || strcmp(fmap->sect[i].section.segname, segname) == 0))
             {
                 ism->fmap = ifm;
                 ism->sidx = i;
@@ -372,7 +372,7 @@ const char* macho_map_section(struct image_section_map* ism)
     if (ism->sidx < 0 || ism->sidx >= ism->fmap->u.macho.num_sections || fmap->sect[ism->sidx].ignored)
         return IMAGE_NO_MAP;
 
-    return macho_map_range(fmap, fmap->sect[ism->sidx].section->offset, fmap->sect[ism->sidx].section->size,
+    return macho_map_range(fmap, fmap->sect[ism->sidx].section.offset, fmap->sect[ism->sidx].section.size,
                            &fmap->sect[ism->sidx].mapped);
 }
 
@@ -385,8 +385,8 @@ void macho_unmap_section(struct image_section_map* ism)
 
     if (ism->sidx >= 0 && ism->sidx < fmap->num_sections && fmap->sect[ism->sidx].mapped != IMAGE_NO_MAP)
     {
-        macho_unmap_range(&fmap->sect[ism->sidx].mapped, NULL, fmap, fmap->sect[ism->sidx].section->offset,
-                          fmap->sect[ism->sidx].section->size);
+        macho_unmap_range(&fmap->sect[ism->sidx].mapped, NULL, fmap, fmap->sect[ism->sidx].section.offset,
+                          fmap->sect[ism->sidx].section.size);
     }
 }
 
@@ -398,7 +398,7 @@ DWORD_PTR macho_get_map_rva(const struct image_section_map* ism)
     if (ism->sidx < 0 || ism->sidx >= ism->fmap->u.macho.num_sections ||
         ism->fmap->u.macho.sect[ism->sidx].ignored)
         return 0;
-    return ism->fmap->u.macho.sect[ism->sidx].section->addr - ism->fmap->u.macho.segs_start;
+    return ism->fmap->u.macho.sect[ism->sidx].section.addr - ism->fmap->u.macho.segs_start;
 }
 
 /******************************************************************
@@ -409,7 +409,7 @@ unsigned macho_get_map_size(const struct image_section_map* ism)
     if (ism->sidx < 0 || ism->sidx >= ism->fmap->u.macho.num_sections ||
         ism->fmap->u.macho.sect[ism->sidx].ignored)
         return 0;
-    return ism->fmap->u.macho.sect[ism->sidx].section->size;
+    return ism->fmap->u.macho.sect[ism->sidx].section.size;
 }
 
 /******************************************************************
@@ -539,12 +539,12 @@ static int macho_load_section_info(struct image_file_map* ifm, const struct load
     struct macho_file_map*          fmap = &ifm->u.macho;
     struct section_info*            info = user;
     BOOL                            ignore;
-    const macho_section*            section;
     int                             i;
     unsigned long                   tmp, page_mask = sysconf( _SC_PAGESIZE ) - 1;
     uint64_t vmaddr, vmsize;
     char segname[16];
     uint32_t nsects;
+    const void *sections;
 
     if (ifm->addr_size == 32)
     {
@@ -553,7 +553,7 @@ static int macho_load_section_info(struct image_file_map* ifm, const struct load
         vmsize = sc->vmsize;
         memcpy(segname, sc->segname, sizeof(segname));
         nsects = sc->nsects;
-        section = (const macho_section*)(sc + 1);
+        sections = (const void *)(sc + 1);
     }
     else
     {
@@ -562,7 +562,7 @@ static int macho_load_section_info(struct image_file_map* ifm, const struct load
         vmsize = sc->vmsize;
         memcpy(segname, sc->segname, sizeof(segname));
         nsects = sc->nsects;
-        section = (const macho_section*)(sc + 1);
+        sections = (const void *)(sc + 1);
     }
 
     TRACE("(%p/%d, %p, %p) before: 0x%08lx - 0x%08lx\n", fmap, fmap->fd, lc, user,
@@ -596,7 +596,22 @@ static int macho_load_section_info(struct image_file_map* ifm, const struct load
 
     for (i = 0; i < nsects; i++)
     {
-        fmap->sect[info->section_index].section = &section[i];
+        if (ifm->addr_size == 32)
+        {
+            const struct section *section = &((const struct section *)sections)[i];
+            memcpy(fmap->sect[info->section_index].section.sectname, section->sectname, sizeof(section->sectname));
+            memcpy(fmap->sect[info->section_index].section.segname,  section->segname,  sizeof(section->segname));
+            fmap->sect[info->section_index].section.addr      = section->addr;
+            fmap->sect[info->section_index].section.size      = section->size;
+            fmap->sect[info->section_index].section.offset    = section->offset;
+            fmap->sect[info->section_index].section.align     = section->align;
+            fmap->sect[info->section_index].section.reloff    = section->reloff;
+            fmap->sect[info->section_index].section.nreloc    = section->nreloc;
+            fmap->sect[info->section_index].section.flags     = section->flags;
+        }
+        else
+            fmap->sect[info->section_index].section = ((const struct section_64 *)sections)[i];
+
         fmap->sect[info->section_index].mapped = IMAGE_NO_MAP;
         fmap->sect[info->section_index].ignored = ignore;
         info->section_index++;
@@ -831,8 +846,8 @@ static BOOL macho_sect_is_code(struct macho_file_map* fmap, unsigned char sectid
     sectidx--; /* convert from 1-based to 0-based */
     if (sectidx >= fmap->num_sections || fmap->sect[sectidx].ignored) return FALSE;
 
-    ret = (!(fmap->sect[sectidx].section->flags & SECTION_TYPE) &&
-           (fmap->sect[sectidx].section->flags & (S_ATTR_PURE_INSTRUCTIONS|S_ATTR_SOME_INSTRUCTIONS)));
+    ret = (!(fmap->sect[sectidx].section.flags & SECTION_TYPE) &&
+           (fmap->sect[sectidx].section.flags & (S_ATTR_PURE_INSTRUCTIONS|S_ATTR_SOME_INSTRUCTIONS)));
     TRACE("-> %d\n", ret);
     return ret;
 }
