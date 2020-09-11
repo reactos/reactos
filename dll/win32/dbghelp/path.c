@@ -698,7 +698,6 @@ BOOL path_find_symbol_file(const struct process* pcs, const struct module* modul
     return FALSE;
 }
 
-#ifndef __REACTOS__
 WCHAR *get_dos_file_name(const WCHAR *filename)
 {
     WCHAR *dos_path;
@@ -721,4 +720,3 @@ WCHAR *get_dos_file_name(const WCHAR *filename)
     }
     return dos_path;
 }
-#endif

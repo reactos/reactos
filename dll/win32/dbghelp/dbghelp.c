@@ -739,7 +739,6 @@ void WINAPI WinDbgExtensionDllInit(PWINDBG_EXTENSION_APIS lpExtensionApis,
 {
 }
 
-#ifndef DBGHELP_STATIC_LIB
 DWORD calc_crc32(HANDLE handle)
 {
     BYTE buffer[8192];
@@ -751,5 +750,3 @@ DWORD calc_crc32(HANDLE handle)
         crc = RtlComputeCrc32(crc, buffer, len);
     return crc;
 }
-#endif
-
