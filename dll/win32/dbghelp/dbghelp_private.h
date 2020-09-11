@@ -424,6 +424,7 @@ struct loader_ops
 {
     BOOL (*synchronize_module_list)(struct process* process);
     struct module* (*load_module)(struct process* process, const WCHAR* name, ULONG_PTR addr);
+    BOOL (*load_debug_info)(struct process *process, struct module* module);
     BOOL (*enum_modules)(struct process* process, enum_modules_cb callback, void* user);
     BOOL (*fetch_file_info)(struct process* process, const WCHAR* name, ULONG_PTR load_addr, DWORD_PTR* base, DWORD* size, DWORD* checksum);
 };
@@ -634,13 +635,11 @@ extern struct cpu*  cpu_find(DWORD) DECLSPEC_HIDDEN;
 extern DWORD calc_crc32(HANDLE handle) DECLSPEC_HIDDEN;
 
 /* elf_module.c */
-extern BOOL         elf_load_debug_info(struct module* module) DECLSPEC_HIDDEN;
 extern BOOL         elf_read_wine_loader_dbg_info(struct process* pcs) DECLSPEC_HIDDEN;
 struct elf_thunk_area;
 extern int          elf_is_in_thunk_area(unsigned long addr, const struct elf_thunk_area* thunks) DECLSPEC_HIDDEN;
 
 /* macho_module.c */
-extern BOOL         macho_load_debug_info(struct process *pcs, struct module* module) DECLSPEC_HIDDEN;
 extern BOOL         macho_read_wine_loader_dbg_info(struct process* pcs) DECLSPEC_HIDDEN;
 
 /* minidump.c */

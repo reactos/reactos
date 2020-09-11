@@ -1041,7 +1041,7 @@ static BOOL elf_load_debug_info_from_map(struct module* module,
  *
  * Loads ELF debugging information from the module image file.
  */
-BOOL elf_load_debug_info(struct module* module)
+static BOOL elf_load_debug_info(struct process* process, struct module* module)
 {
     BOOL                        ret = TRUE;
     struct pool                 pool;
@@ -1198,7 +1198,7 @@ static BOOL elf_load_file_from_fmap(struct process* pcs, const WCHAR* filename,
             elf_info->module->module.SymType = SymDeferred;
             ret = TRUE;
         }
-        else ret = elf_load_debug_info(elf_info->module);
+        else ret = elf_load_debug_info(pcs, elf_info->module);
 
         elf_module_info->elf_mark = 1;
         elf_module_info->elf_loader = 0;
@@ -1707,6 +1707,7 @@ static const struct loader_ops elf_loader_ops =
 {
     elf_synchronize_module_list,
     elf_load_module,
+    elf_load_debug_info,
     elf_enum_modules,
     elf_fetch_file_info,
 };
@@ -1737,11 +1738,6 @@ BOOL elf_map_handle(HANDLE handle, struct image_file_map* fmap)
 }
 
 BOOL elf_read_wine_loader_dbg_info(struct process* pcs)
-{
-    return FALSE;
-}
-
-BOOL elf_load_debug_info(struct module* module)
 {
     return FALSE;
 }

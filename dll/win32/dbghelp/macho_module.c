@@ -1281,7 +1281,7 @@ static BOOL image_uses_split_segs(struct process* process, unsigned long load_ad
  *
  * Loads Mach-O debugging information from the module image file.
  */
-BOOL macho_load_debug_info(struct process *pcs, struct module* module)
+static BOOL macho_load_debug_info(struct process *pcs, struct module* module)
 {
     BOOL                    ret = FALSE;
     struct macho_debug_info mdi;
@@ -1907,6 +1907,7 @@ static const struct loader_ops macho_loader_ops =
 {
     macho_synchronize_module_list,
     macho_load_module,
+    macho_load_debug_info,
     macho_enum_modules,
     macho_fetch_file_info,
 };
@@ -1937,8 +1938,4 @@ BOOL macho_read_wine_loader_dbg_info(struct process* pcs)
     return FALSE;
 }
 
-BOOL macho_load_debug_info(struct process *pcs, struct module* module)
-{
-    return FALSE;
-}
 #endif  /* HAVE_MACH_O_LOADER_H */

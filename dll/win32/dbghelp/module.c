@@ -387,14 +387,8 @@ BOOL module_get_debug(struct module_pair* pair)
         BOOL ret;
 
         if (pair->effective->is_virtual) ret = FALSE;
-        else switch (pair->effective->type)
+        else if (pair->effective->type == DMT_PE)
         {
-#ifndef DBGHELP_STATIC_LIB
-        case DMT_ELF:
-            ret = elf_load_debug_info(pair->effective);
-            break;
-#endif
-        case DMT_PE:
             idslW64.SizeOfStruct = sizeof(idslW64);
             idslW64.BaseOfImage = pair->effective->module.BaseOfImage;
             idslW64.CheckSum = pair->effective->module.CheckSum;
@@ -409,16 +403,9 @@ BOOL module_get_debug(struct module_pair* pair)
             pcs_callback(pair->pcs,
                          ret ? CBA_DEFERRED_SYMBOL_LOAD_COMPLETE : CBA_DEFERRED_SYMBOL_LOAD_FAILURE,
                          &idslW64);
-            break;
-#ifndef DBGHELP_STATIC_LIB
-        case DMT_MACHO:
-            ret = macho_load_debug_info(pair->pcs, pair->effective);
-            break;
-#endif
-        default:
-            ret = FALSE;
-            break;
         }
+        else ret = pair->pcs->loader->load_debug_info(pair->pcs, pair->effective);
+
         if (!ret) pair->effective->module.SymType = SymNone;
         assert(pair->effective->module.SymType != SymDeferred);
         pair->effective->module.NumSyms = pair->effective->ht_symbols.num_elts;
@@ -1457,6 +1444,11 @@ static struct module* native_load_module(struct process* pcs, const WCHAR* name,
     return NULL;
 }
 
+static BOOL native_load_debug_info(struct process* process, struct module* module)
+{
+    return FALSE;
+}
+
 static BOOL native_enum_modules(struct process *process, enum_modules_cb cb, void* user)
 {
     return FALSE;
@@ -1472,6 +1464,7 @@ const struct loader_ops no_loader_ops =
 {
     native_synchronize_module_list,
     native_load_module,
+    native_load_debug_info,
     native_enum_modules,
     native_fetch_file_info,
 };
