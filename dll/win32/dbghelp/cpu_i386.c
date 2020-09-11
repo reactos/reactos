@@ -610,6 +610,16 @@ static void *i386_fetch_context_reg(union ctx *pctx, unsigned regno, unsigned *s
     case CV_REG_FS: *size = sizeof(ctx->SegFs); return &ctx->SegFs;
     case CV_REG_GS: *size = sizeof(ctx->SegGs); return &ctx->SegGs;
 
+    case CV_REG_XMM0 + 0: *size = 16; return &ctx->ExtendedRegisters[10*16];
+    case CV_REG_XMM0 + 1: *size = 16; return &ctx->ExtendedRegisters[11*16];
+    case CV_REG_XMM0 + 2: *size = 16; return &ctx->ExtendedRegisters[12*16];
+    case CV_REG_XMM0 + 3: *size = 16; return &ctx->ExtendedRegisters[13*16];
+    case CV_REG_XMM0 + 4: *size = 16; return &ctx->ExtendedRegisters[14*16];
+    case CV_REG_XMM0 + 5: *size = 16; return &ctx->ExtendedRegisters[15*16];
+    case CV_REG_XMM0 + 6: *size = 16; return &ctx->ExtendedRegisters[16*16];
+    case CV_REG_XMM0 + 7: *size = 16; return &ctx->ExtendedRegisters[17*16];
+
+    case CV_REG_MXCSR: *size = sizeof(DWORD); return &ctx->ExtendedRegisters[24];
     }
     FIXME("Unknown register %x\n", regno);
     return NULL;
