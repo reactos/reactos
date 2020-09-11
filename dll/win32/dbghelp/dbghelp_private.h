@@ -635,12 +635,12 @@ extern struct cpu*  cpu_find(DWORD) DECLSPEC_HIDDEN;
 extern DWORD calc_crc32(HANDLE handle) DECLSPEC_HIDDEN;
 
 /* elf_module.c */
-extern BOOL         elf_read_wine_loader_dbg_info(struct process* pcs) DECLSPEC_HIDDEN;
+extern BOOL         elf_read_wine_loader_dbg_info(struct process* pcs, ULONG_PTR addr) DECLSPEC_HIDDEN;
 struct elf_thunk_area;
 extern int          elf_is_in_thunk_area(unsigned long addr, const struct elf_thunk_area* thunks) DECLSPEC_HIDDEN;
 
 /* macho_module.c */
-extern BOOL         macho_read_wine_loader_dbg_info(struct process* pcs) DECLSPEC_HIDDEN;
+extern BOOL         macho_read_wine_loader_dbg_info(struct process* pcs, ULONG_PTR addr) DECLSPEC_HIDDEN;
 
 /* minidump.c */
 void minidump_add_memory_block(struct dump_context* dc, ULONG64 base, ULONG size, ULONG rva) DECLSPEC_HIDDEN;

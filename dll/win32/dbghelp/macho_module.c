@@ -129,14 +129,12 @@ struct section_info
     unsigned int    section_index;
 };
 
-#define MACHO_INFO_DEBUG_HEADER   0x0001
-#define MACHO_INFO_MODULE         0x0002
-#define MACHO_INFO_NAME           0x0004
+#define MACHO_INFO_MODULE         0x0001
+#define MACHO_INFO_NAME           0x0002
 
 struct macho_info
 {
     unsigned                    flags;          /* IN  one (or several) of the MACHO_INFO constants */
-    unsigned long               dbg_hdr_addr;   /* OUT address of debug header (if MACHO_INFO_DEBUG_HEADER is set) */
     struct module*              module;         /* OUT loaded module (if MACHO_INFO_MODULE is set) */
     const WCHAR*                module_name;    /* OUT found module name (if MACHO_INFO_NAME is set) */
 };
@@ -1373,32 +1371,7 @@ static void macho_module_remove(struct process* pcs, struct module_format* modfm
  */
 static ULONG_PTR get_dyld_image_info_address(struct process* pcs)
 {
-    NTSTATUS status;
-    PROCESS_BASIC_INFORMATION pbi;
     ULONG_PTR dyld_image_info_address = 0;
-    BOOL ret;
-
-    /* Get address of PEB */
-    status = NtQueryInformationProcess(pcs->handle, ProcessBasicInformation, &pbi, sizeof(pbi), NULL);
-    if (status == STATUS_SUCCESS)
-    {
-        /* Read dyld image info address from PEB */
-        if (pcs->is_64bit)
-            ret = ReadProcessMemory(pcs->handle, &pbi.PebBaseAddress->Reserved[0],
-                &dyld_image_info_address, sizeof(dyld_image_info_address), NULL);
-        else
-        {
-            PEB32 *peb32 = (PEB32 *)pbi.PebBaseAddress;
-            ULONG addr32;
-            ret = ReadProcessMemory(pcs->handle, &peb32->Reserved[0], &addr32,
-                sizeof(addr32), NULL);
-            dyld_image_info_address = addr32;
-        }
-
-        if (ret)
-            TRACE("got dyld_image_info_address %#lx from PEB %p\n",
-                dyld_image_info_address, pbi.PebBaseAddress);
-    }
 
 #ifndef __LP64__ /* No reading the symtab with nlist(3) in LP64 */
     if (!dyld_image_info_address)
@@ -1450,14 +1423,6 @@ static BOOL macho_load_file(struct process* pcs, const WCHAR* filename,
 
     split_segs = image_uses_split_segs(pcs, load_addr);
     if (!macho_map_file(pcs, filename, split_segs, &fmap)) return FALSE;
-
-    /* Find the dynamic loader's table of images loaded into the process.
-     */
-    if (macho_info->flags & MACHO_INFO_DEBUG_HEADER)
-    {
-        macho_info->dbg_hdr_addr = (unsigned long)get_dyld_image_info_address(pcs);
-        ret = TRUE;
-    }
 
     if (macho_info->flags & MACHO_INFO_MODULE)
     {
@@ -1736,7 +1701,7 @@ static BOOL macho_enum_modules(struct process* process, enum_modules_cb cb, void
     BOOL                ret;
 
     TRACE("(%p, %p, %p)\n", process->handle, cb, user);
-    macho_info.flags = MACHO_INFO_DEBUG_HEADER | MACHO_INFO_NAME;
+    macho_info.flags = MACHO_INFO_NAME;
     ret = macho_enum_modules_internal(process, macho_info.module_name, cb, user);
     HeapFree(GetProcessHeap(), 0, (char*)macho_info.module_name);
     return ret;
@@ -1823,9 +1788,7 @@ static struct module* macho_load_module(struct process* pcs, const WCHAR* name, 
  */
 static BOOL macho_search_loader(struct process* pcs, struct macho_info* macho_info)
 {
-    WCHAR *loader = get_wine_loader_name(pcs);
     BOOL ret = FALSE;
-    ULONG_PTR dyld_image_info_address;
     union wine_all_image_infos image_infos;
     union wine_image_info image_info;
     uint32_t len;
@@ -1836,9 +1799,8 @@ static BOOL macho_search_loader(struct process* pcs, struct macho_info* macho_in
         len = sizeof(image_infos.infos64);
     else
         len = sizeof(image_infos.infos32);
-    dyld_image_info_address = get_dyld_image_info_address(pcs);
-    if (dyld_image_info_address &&
-        ReadProcessMemory(pcs->handle, (void*)dyld_image_info_address, &image_infos, len, NULL))
+    if (pcs->dbg_hdr_addr &&
+        ReadProcessMemory(pcs->handle, (void*)pcs->dbg_hdr_addr, &image_infos, len, NULL))
     {
         if (pcs->is_64bit)
             len = sizeof(image_info.info64);
@@ -1898,8 +1860,11 @@ static BOOL macho_search_loader(struct process* pcs, struct macho_info* macho_in
     }
 
     if (!ret)
-        ret = macho_search_and_load_file(pcs, loader, 0, macho_info);
-    heap_free(loader);
+    {
+        WCHAR *loader = get_wine_loader_name(pcs);
+        ret = loader && macho_search_and_load_file(pcs, loader, 0, macho_info);
+        heap_free(loader);
+    }
     return ret;
 }
 
@@ -1917,23 +1882,24 @@ static const struct loader_ops macho_loader_ops =
  *
  * Try to find a decent wine executable which could have loaded the debuggee
  */
-BOOL macho_read_wine_loader_dbg_info(struct process* pcs)
+BOOL macho_read_wine_loader_dbg_info(struct process* pcs, ULONG_PTR addr)
 {
     struct macho_info     macho_info;
 
     TRACE("(%p/%p)\n", pcs, pcs->handle);
-    macho_info.flags = MACHO_INFO_DEBUG_HEADER | MACHO_INFO_MODULE;
-    if (!macho_search_loader(pcs, &macho_info) || !macho_info.dbg_hdr_addr) return FALSE;
+    pcs->dbg_hdr_addr = addr ? addr : get_dyld_image_info_address(pcs);
+    macho_info.flags = MACHO_INFO_MODULE;
+    if (!macho_search_loader(pcs, &macho_info)) return FALSE;
     macho_info.module->format_info[DFI_MACHO]->u.macho_info->is_loader = 1;
     module_set_module(macho_info.module, S_WineLoaderW);
-    pcs->dbg_hdr_addr = macho_info.dbg_hdr_addr;
     pcs->loader = &macho_loader_ops;
+    TRACE("Found macho debug header %#lx\n", pcs->dbg_hdr_addr);
     return TRUE;
 }
 
 #else  /* HAVE_MACH_O_LOADER_H */
 
-BOOL macho_read_wine_loader_dbg_info(struct process* pcs)
+BOOL macho_read_wine_loader_dbg_info(struct process* pcs, ULONG_PTR addr)
 {
     return FALSE;
 }
