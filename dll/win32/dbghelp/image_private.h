@@ -21,16 +21,6 @@
 
 #pragma once
 
-#ifdef HAVE_LINK_H
-# include <link.h>
-#endif
-#ifdef HAVE_SYS_LINK_H
-# include <sys/link.h>
-#endif
-#ifdef HAVE_MACH_O_LOADER_H
-#include <mach-o/loader.h>
-#endif
-
 #define IMAGE_NO_MAP  ((void*)-1)
 
 struct elf_header
@@ -78,6 +68,37 @@ struct macho_uuid_command
     UINT8   uuid[16];
 };
 
+struct macho_section
+{
+    char    sectname[16];  /* name of this section */
+    char    segname[16];   /* segment this section goes in */
+    UINT64  addr;          /* memory address of this section */
+    UINT64  size;          /* size in bytes of this section */
+    UINT32  offset;        /* file offset of this section */
+    UINT32  align;         /* section alignment (power of 2) */
+    UINT32  reloff;        /* file offset of relocation entries */
+    UINT32  nreloc;        /* number of relocation entries */
+    UINT32  flags;         /* flags (section type and attributes)*/
+    UINT32  reserved1;     /* reserved (for offset or index) */
+    UINT32  reserved2;     /* reserved (for count or sizeof) */
+    UINT32  reserved3;     /* reserved */
+};
+
+struct macho_section32
+{
+    char    sectname[16];  /* name of this section */
+    char    segname[16];   /* segment this section goes in */
+    UINT32  addr;          /* memory address of this section */
+    UINT32  size;          /* size in bytes of this section */
+    UINT32  offset;        /* file offset of this section */
+    UINT32  align;         /* section alignment (power of 2) */
+    UINT32  reloff;        /* file offset of relocation entries */
+    UINT32  nreloc;        /* number of relocation entries */
+    UINT32  flags;         /* flags (section type and attributes)*/
+    UINT32  reserved1;     /* reserved (for offset or index) */
+    UINT32  reserved2;     /* reserved (for count or sizeof) */
+};
+
 /* structure holding information while handling an ELF image
  * allows one by one section mapping for memory savings
  */
@@ -120,15 +141,13 @@ struct image_file_map
              * read from arch_offset. */
             unsigned                    arch_offset;
 
-#ifdef HAVE_MACH_O_LOADER_H
             int                         num_sections;
             struct
             {
-                struct section_64               section;
+                struct macho_section            section;
                 const char*                     mapped;
                 unsigned int                    ignored : 1;
             }*                          sect;
-#endif
         } macho;
         struct pe_file_map
         {

@@ -624,7 +624,7 @@ static int macho_load_section_info(struct image_file_map* ifm, const struct mach
     {
         if (ifm->addr_size == 32)
         {
-            const struct section *section = &((const struct section *)sections)[i];
+            const struct macho_section32 *section = &((const struct macho_section32 *)sections)[i];
             memcpy(fmap->sect[info->section_index].section.sectname, section->sectname, sizeof(section->sectname));
             memcpy(fmap->sect[info->section_index].section.segname,  section->segname,  sizeof(section->segname));
             fmap->sect[info->section_index].section.addr      = section->addr;
@@ -636,7 +636,7 @@ static int macho_load_section_info(struct image_file_map* ifm, const struct mach
             fmap->sect[info->section_index].section.flags     = section->flags;
         }
         else
-            fmap->sect[info->section_index].section = ((const struct section_64 *)sections)[i];
+            fmap->sect[info->section_index].section = ((const struct macho_section *)sections)[i];
 
         fmap->sect[info->section_index].mapped = IMAGE_NO_MAP;
         fmap->sect[info->section_index].ignored = ignore;
