@@ -58,14 +58,7 @@ typedef struct section              macho_section;
 
 #define IMAGE_NO_MAP  ((void*)-1)
 
-#if defined(__ELF__) && !defined(DBGHELP_STATIC_LIB)
-
-#ifdef _WIN64
-#define         Elf_Sym         Elf64_Sym
-#else
-#define         Elf_Sym         Elf32_Sym
-#endif
-#else
+#ifndef __ELF__
 #ifndef SHT_NULL
 #define SHT_NULL        0
 #endif
