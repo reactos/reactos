@@ -128,6 +128,9 @@ void*    hash_table_iter_up(struct hash_table_iter* hti) DECLSPEC_HIDDEN;
 
 extern unsigned dbghelp_options DECLSPEC_HIDDEN;
 extern BOOL     dbghelp_opt_native DECLSPEC_HIDDEN;
+#ifndef __REACTOS__
+extern SYSTEM_INFO sysinfo DECLSPEC_HIDDEN;
+#endif
 
 enum location_kind {loc_error,          /* reg is the error code */
                     loc_unavailable,    /* location is not available */

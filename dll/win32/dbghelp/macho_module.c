@@ -164,11 +164,9 @@ static void macho_calc_range(const struct macho_file_map* fmap, unsigned long of
                              unsigned long len, unsigned long* out_aligned_offset,
                              unsigned long* out_aligned_end, unsigned long* out_misalign)
 {
-    SYSTEM_INFO sysinfo;
     unsigned long pagemask;
     unsigned long file_offset, misalign;
 
-    GetSystemInfo(&sysinfo);
     pagemask = sysinfo.dwAllocationGranularity - 1;
     file_offset = fmap->arch_offset + offset;
     misalign = file_offset & pagemask;
