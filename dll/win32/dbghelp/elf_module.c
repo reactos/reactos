@@ -1004,8 +1004,7 @@ static BOOL elf_check_debug_link(const WCHAR* file, struct image_file_map* fmap,
  *    is the global debug file directory, and execdir has been turned
  *    into a relative path)." (from GDB manual)
  */
-static BOOL elf_locate_debug_link(struct image_file_map* fmap, const char* filename,
-                                  const WCHAR* loaded_file, DWORD crc)
+static BOOL elf_locate_debug_link(const struct module* module, struct image_file_map* fmap, const char* filename, DWORD crc)
 {
     static const WCHAR globalDebugDirW[] = {'/','u','s','r','/','l','i','b','/','d','e','b','u','g','/'};
     static const WCHAR dotDebugW[] = {'.','d','e','b','u','g','/'};
@@ -1020,13 +1019,13 @@ static BOOL elf_locate_debug_link(struct image_file_map* fmap, const char* filen
     if (!fmap_link) return FALSE;
 
     filename_len = MultiByteToWideChar(CP_UNIXCP, 0, filename, -1, NULL, 0);
-    path_len = strlenW(loaded_file);
+    path_len = strlenW(module->module.LoadedImageName);
     p = HeapAlloc(GetProcessHeap(), 0,
                   (globalDebugDirLen + path_len + 6 + 1 + filename_len + 1) * sizeof(WCHAR));
     if (!p) goto found;
 
     /* we prebuild the string with "execdir" */
-    strcpyW(p, loaded_file);
+    strcpyW(p, module->module.LoadedImageName);
     slash = p;
     if ((slash2 = strrchrW(slash, '/'))) slash = slash2 + 1;
     if ((slash2 = strrchrW(slash, '\\'))) slash = slash2 + 1;
@@ -1190,7 +1189,7 @@ static BOOL elf_check_alternate(struct image_file_map* fmap, const struct module
              * 3/ CRC of the linked ELF file
              */
             DWORD crc = *(const DWORD*)(dbg_link + ((DWORD_PTR)(strlen(dbg_link) + 4) & ~3));
-            ret = elf_locate_debug_link(fmap, dbg_link, module->module.LoadedImageName, crc);
+            ret = elf_locate_debug_link(module, fmap, dbg_link, crc);
             if (!ret)
                 WARN("Couldn't load linked debug file for %s\n",
                      debugstr_w(module->module.ModuleName));
