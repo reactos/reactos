@@ -61,13 +61,11 @@ typedef struct section              macho_section;
 #if defined(__ELF__) && !defined(DBGHELP_STATIC_LIB)
 
 #ifdef _WIN64
-#define         Elf_Shdr        Elf64_Shdr
 #define         Elf_Phdr        Elf64_Phdr
 #define         Elf_Dyn         Elf64_Dyn
 #define         Elf_Sym         Elf64_Sym
 #define         Elf_auxv_t      Elf64_auxv_t
 #else
-#define         Elf_Shdr        Elf32_Shdr
 #define         Elf_Phdr        Elf32_Phdr
 #define         Elf_Dyn         Elf32_Dyn
 #define         Elf_Sym         Elf32_Sym
@@ -100,7 +98,7 @@ struct image_file_map
             Elf64_Ehdr                  elfhdr;
             struct
             {
-                Elf_Shdr                        shdr;
+                Elf64_Shdr                      shdr;
                 const char*                     mapped;
             }*                          sect;
 #endif

@@ -292,6 +292,36 @@ static BOOL elf_map_file_read(struct image_file_map* fmap, struct elf_map_file_d
     }
 }
 
+static BOOL elf_map_shdr(struct elf_map_file_data* emfd, struct image_file_map* fmap, unsigned int i)
+{
+    if (fmap->addr_size == 32)
+    {
+        Elf32_Shdr shdr32;
+
+        if (!elf_map_file_read(fmap, emfd, &shdr32, sizeof(shdr32),
+                               fmap->u.elf.elfhdr.e_shoff + i * sizeof(Elf32_Shdr)))
+            return FALSE;
+
+        fmap->u.elf.sect[i].shdr.sh_name      = shdr32.sh_name;
+        fmap->u.elf.sect[i].shdr.sh_type      = shdr32.sh_type;
+        fmap->u.elf.sect[i].shdr.sh_flags     = shdr32.sh_flags;
+        fmap->u.elf.sect[i].shdr.sh_addr      = shdr32.sh_addr;
+        fmap->u.elf.sect[i].shdr.sh_offset    = shdr32.sh_offset;
+        fmap->u.elf.sect[i].shdr.sh_size      = shdr32.sh_size;
+        fmap->u.elf.sect[i].shdr.sh_link      = shdr32.sh_link;
+        fmap->u.elf.sect[i].shdr.sh_info      = shdr32.sh_info;
+        fmap->u.elf.sect[i].shdr.sh_addralign = shdr32.sh_addralign;
+        fmap->u.elf.sect[i].shdr.sh_entsize   = shdr32.sh_entsize;
+    }
+    else
+    {
+        if (!elf_map_file_read(fmap, emfd, &fmap->u.elf.sect[i].shdr, sizeof(fmap->u.elf.sect[i].shdr),
+                               fmap->u.elf.elfhdr.e_shoff + i * sizeof(Elf64_Shdr)))
+            return FALSE;
+    }
+    return TRUE;
+}
+
 /******************************************************************
  *		elf_map_file
  *
@@ -385,8 +415,7 @@ static BOOL elf_map_file(struct elf_map_file_data* emfd, struct image_file_map* 
 
     for (i = 0; i < fmap->u.elf.elfhdr.e_shnum; i++)
     {
-        if (!elf_map_file_read(fmap, emfd, &fmap->u.elf.sect[i].shdr, sizeof(fmap->u.elf.sect[i].shdr),
-                               fmap->u.elf.elfhdr.e_shoff + i * sizeof(fmap->u.elf.sect[i].shdr)))
+        if (!elf_map_shdr(emfd, fmap, i))
         {
             HeapFree(GetProcessHeap(), 0, fmap->u.elf.sect);
             fmap->u.elf.sect = NULL;
@@ -1225,7 +1254,7 @@ static BOOL elf_load_file_from_fmap(struct process* pcs, const WCHAR* filename,
         if (elf_find_section(fmap, ".dynamic", SHT_DYNAMIC, &ism))
         {
             Elf_Dyn         dyn;
-            char*           ptr = (char*)fmap->u.elf.sect[ism.sidx].shdr.sh_addr;
+            char*           ptr = (char*)(ULONG_PTR)fmap->u.elf.sect[ism.sidx].shdr.sh_addr;
             unsigned long   len;
 
             if (load_offset) ptr += load_offset - fmap->u.elf.elf_start;
