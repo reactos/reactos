@@ -75,7 +75,7 @@ static void pe_unmap_full(struct image_file_map* fmap)
  *
  * Maps a single section into memory from an PE file
  */
-const char* pe_map_section(struct image_section_map* ism)
+static const char* pe_map_section(struct image_section_map* ism)
 {
     void*       mapping;
     struct pe_file_map* fmap = &ism->fmap->u.pe;
@@ -113,8 +113,8 @@ const char* pe_map_section(struct image_section_map* ism)
  * Finds a section by name (and type) into memory from an PE file
  * or its alternate if any
  */
-BOOL pe_find_section(struct image_file_map* fmap, const char* name,
-                     struct image_section_map* ism)
+static BOOL pe_find_section(struct image_file_map* fmap, const char* name,
+                            struct image_section_map* ism)
 {
     const char*                 sectname;
     unsigned                    i;
@@ -150,7 +150,7 @@ BOOL pe_find_section(struct image_file_map* fmap, const char* name,
  *
  * Unmaps a single section from memory
  */
-void pe_unmap_section(struct image_section_map* ism)
+static void pe_unmap_section(struct image_section_map* ism)
 {
     if (ism->sidx >= 0 && ism->sidx < ism->fmap->u.pe.ntheader.FileHeader.NumberOfSections &&
         ism->fmap->u.pe.sect[ism->sidx].mapped != IMAGE_NO_MAP)
@@ -165,7 +165,7 @@ void pe_unmap_section(struct image_section_map* ism)
  *
  * Get the RVA of an PE section
  */
-DWORD_PTR pe_get_map_rva(const struct image_section_map* ism)
+static DWORD_PTR pe_get_map_rva(const struct image_section_map* ism)
 {
     if (ism->sidx < 0 || ism->sidx >= ism->fmap->u.pe.ntheader.FileHeader.NumberOfSections)
         return 0;
@@ -177,12 +177,21 @@ DWORD_PTR pe_get_map_rva(const struct image_section_map* ism)
  *
  * Get the size of a PE section
  */
-unsigned pe_get_map_size(const struct image_section_map* ism)
+static unsigned pe_get_map_size(const struct image_section_map* ism)
 {
     if (ism->sidx < 0 || ism->sidx >= ism->fmap->u.pe.ntheader.FileHeader.NumberOfSections)
         return 0;
     return ism->fmap->u.pe.sect[ism->sidx].shdr.Misc.VirtualSize;
 }
+
+static const struct image_file_map_ops pe_file_map_ops =
+{
+    pe_map_section,
+    pe_unmap_section,
+    pe_find_section,
+    pe_get_map_rva,
+    pe_get_map_size,
+};
 
 /******************************************************************
  *		pe_is_valid_pointer_table
@@ -208,11 +217,12 @@ static BOOL pe_is_valid_pointer_table(const IMAGE_NT_HEADERS* nthdr, const void*
  *
  * Maps an PE file into memory (and checks it's a real PE file)
  */
-static BOOL pe_map_file(HANDLE file, struct image_file_map* fmap, enum module_type mt)
+BOOL pe_map_file(HANDLE file, struct image_file_map* fmap, enum module_type mt)
 {
     void*       mapping;
 
     fmap->modtype = mt;
+    fmap->ops = &pe_file_map_ops;
     fmap->alternate = NULL;
     fmap->u.pe.hMap = CreateFileMappingW(file, NULL, PAGE_READONLY, 0, 0, NULL);
     if (fmap->u.pe.hMap == 0) return FALSE;

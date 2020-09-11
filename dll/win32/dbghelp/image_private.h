@@ -62,6 +62,7 @@
 struct image_file_map
 {
     enum module_type            modtype;
+    const struct image_file_map_ops *ops;
     unsigned                    addr_size;      /* either 16 (not used), 32 or 64 */
     struct image_file_map*      alternate;      /* another file linked to this one */
     union
@@ -131,47 +132,21 @@ struct image_section_map
     long                        sidx;
 };
 
-extern BOOL         elf_find_section(struct image_file_map* fmap, const char* name,
-                                     struct image_section_map* ism) DECLSPEC_HIDDEN;
-extern const char*  elf_map_section(struct image_section_map* ism) DECLSPEC_HIDDEN;
-extern void         elf_unmap_section(struct image_section_map* ism) DECLSPEC_HIDDEN;
-extern DWORD_PTR    elf_get_map_rva(const struct image_section_map* ism) DECLSPEC_HIDDEN;
-extern unsigned     elf_get_map_size(const struct image_section_map* ism) DECLSPEC_HIDDEN;
-
-extern BOOL         macho_find_section(struct image_file_map* ifm, const char* segname,
-                                       const char* sectname, struct image_section_map* ism) DECLSPEC_HIDDEN;
-extern const char*  macho_map_section(struct image_section_map* ism) DECLSPEC_HIDDEN;
-extern void         macho_unmap_section(struct image_section_map* ism) DECLSPEC_HIDDEN;
-extern DWORD_PTR    macho_get_map_rva(const struct image_section_map* ism) DECLSPEC_HIDDEN;
-extern unsigned     macho_get_map_size(const struct image_section_map* ism) DECLSPEC_HIDDEN;
-
-extern BOOL         pe_find_section(struct image_file_map* fmap, const char* name,
-                                    struct image_section_map* ism) DECLSPEC_HIDDEN;
-extern const char*  pe_map_section(struct image_section_map* psm) DECLSPEC_HIDDEN;
-extern void         pe_unmap_section(struct image_section_map* psm) DECLSPEC_HIDDEN;
-extern DWORD_PTR    pe_get_map_rva(const struct image_section_map* psm) DECLSPEC_HIDDEN;
-extern unsigned     pe_get_map_size(const struct image_section_map* psm) DECLSPEC_HIDDEN;
+struct image_file_map_ops
+{
+    const char* (*map_section)(struct image_section_map* ism);
+    void  (*unmap_section)(struct image_section_map* ism);
+    BOOL (*find_section)(struct image_file_map* fmap, const char* name, struct image_section_map* ism);
+    DWORD_PTR (*get_map_rva)(const struct image_section_map* ism);
+    unsigned (*get_map_size)(const struct image_section_map* ism);
+};
 
 static inline BOOL image_find_section(struct image_file_map* fmap, const char* name,
                                       struct image_section_map* ism)
 {
     while (fmap)
     {
-        switch (fmap->modtype)
-        {
-#ifndef DBGHELP_STATIC_LIB
-        case DMT_ELF:
-            if (elf_find_section(fmap, name, ism)) return TRUE;
-            break;
-        case DMT_MACHO:
-            if (macho_find_section(fmap, NULL, name, ism)) return TRUE;
-            break;
-#endif
-        case DMT_PE:
-            if (pe_find_section(fmap, name, ism)) return TRUE;
-            break;
-        default: assert(0); return FALSE;
-        }
+        if (fmap->ops->find_section(fmap, name, ism)) return TRUE;
         fmap = fmap->alternate;
     }
     ism->fmap = NULL;
@@ -181,56 +156,20 @@ static inline BOOL image_find_section(struct image_file_map* fmap, const char* n
 
 static inline const char* image_map_section(struct image_section_map* ism)
 {
-    if (!ism->fmap) return NULL;
-    switch (ism->fmap->modtype)
-    {
-#ifndef DBGHELP_STATIC_LIB
-    case DMT_ELF:   return elf_map_section(ism);
-    case DMT_MACHO: return macho_map_section(ism);
-#endif
-    case DMT_PE:    return pe_map_section(ism);
-    default: assert(0); return NULL;
-    }
+    return ism->fmap ? ism->fmap->ops->map_section(ism) : NULL;
 }
 
 static inline void image_unmap_section(struct image_section_map* ism)
 {
-    if (!ism->fmap) return;
-    switch (ism->fmap->modtype)
-    {
-#ifndef DBGHELP_STATIC_LIB
-    case DMT_ELF:   elf_unmap_section(ism); break;
-    case DMT_MACHO: macho_unmap_section(ism); break;
-#endif
-    case DMT_PE:    pe_unmap_section(ism);   break;
-    default: assert(0); return;
-    }
+    if (ism->fmap) ism->fmap->ops->unmap_section(ism);
 }
 
 static inline DWORD_PTR image_get_map_rva(const struct image_section_map* ism)
 {
-    if (!ism->fmap) return 0;
-    switch (ism->fmap->modtype)
-    {
-#ifndef DBGHELP_STATIC_LIB
-    case DMT_ELF:   return elf_get_map_rva(ism);
-    case DMT_MACHO: return macho_get_map_rva(ism);
-#endif
-    case DMT_PE:    return pe_get_map_rva(ism);
-    default: assert(0); return 0;
-    }
+    return ism->fmap ? ism->fmap->ops->get_map_rva(ism) : 0;
 }
 
 static inline unsigned image_get_map_size(const struct image_section_map* ism)
 {
-    if (!ism->fmap) return 0;
-    switch (ism->fmap->modtype)
-    {
-#ifndef DBGHELP_STATIC_LIB
-    case DMT_ELF:   return elf_get_map_size(ism);
-    case DMT_MACHO: return macho_get_map_size(ism);
-#endif
-    case DMT_PE:    return pe_get_map_size(ism);
-    default: assert(0); return 0;
-    }
+    return ism->fmap ? ism->fmap->ops->get_map_size(ism) : 0;
 }
