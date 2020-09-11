@@ -1843,19 +1843,14 @@ BOOL macho_read_wine_loader_dbg_info(struct process* pcs)
  * This function doesn't require that someone has called SymInitialize
  * on this very process.
  */
-BOOL macho_enum_modules(HANDLE hProc, enum_modules_cb cb, void* user)
+BOOL macho_enum_modules(struct process* process, enum_modules_cb cb, void* user)
 {
-    struct process      pcs;
     struct macho_info   macho_info;
     BOOL                ret;
 
-    TRACE("(%p, %p, %p)\n", hProc, cb, user);
-    memset(&pcs, 0, sizeof(pcs));
-    pcs.handle = hProc;
+    TRACE("(%p, %p, %p)\n", process->handle, cb, user);
     macho_info.flags = MACHO_INFO_DEBUG_HEADER | MACHO_INFO_NAME;
-    if (!macho_search_loader(&pcs, &macho_info)) return FALSE;
-    pcs.dbg_hdr_addr = macho_info.dbg_hdr_addr;
-    ret = macho_enum_modules_internal(&pcs, macho_info.module_name, cb, user);
+    ret = macho_enum_modules_internal(process, macho_info.module_name, cb, user);
     HeapFree(GetProcessHeap(), 0, (char*)macho_info.module_name);
     return ret;
 }
@@ -1949,7 +1944,7 @@ BOOL macho_read_wine_loader_dbg_info(struct process* pcs)
     return FALSE;
 }
 
-BOOL macho_enum_modules(HANDLE hProc, enum_modules_cb cb, void* user)
+BOOL macho_enum_modules(struct process *process, enum_modules_cb cb, void* user)
 {
     return FALSE;
 }
