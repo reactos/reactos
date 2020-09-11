@@ -3539,7 +3539,9 @@ BOOL dwarf2_parse(struct module* module, unsigned long load_offset,
     BOOL                ret = TRUE;
     struct module_format* dwarf2_modfmt;
 
-    dwarf2_init_section(&eh_frame,                fmap, ".eh_frame",     NULL,             &eh_frame_sect);
+    if (!dwarf2_init_section(&eh_frame,                fmap, ".eh_frame",     NULL,             &eh_frame_sect))
+        /* lld produces .eh_fram to avoid generating a long name */
+        dwarf2_init_section(&eh_frame,                fmap, ".eh_fram",      NULL,             &eh_frame_sect);
     dwarf2_init_section(&section[section_debug],  fmap, ".debug_info",   ".zdebug_info",   &debug_sect);
     dwarf2_init_section(&section[section_abbrev], fmap, ".debug_abbrev", ".zdebug_abbrev", &debug_abbrev_sect);
     dwarf2_init_section(&section[section_string], fmap, ".debug_str",    ".zdebug_str",    &debug_str_sect);
