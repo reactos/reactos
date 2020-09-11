@@ -127,6 +127,8 @@ void*    hash_table_iter_up(struct hash_table_iter* hti) DECLSPEC_HIDDEN;
 
 
 extern unsigned dbghelp_options DECLSPEC_HIDDEN;
+extern BOOL     dbghelp_opt_native DECLSPEC_HIDDEN;
+
 /* some more Wine extensions */
 #define SYMOPT_WINE_WITH_NATIVE_MODULES 0x40000000
 
