@@ -54,7 +54,6 @@
 
 #ifdef HAVE_MACH_O_LOADER_H
 
-#include <mach-o/fat.h>
 #include <mach-o/loader.h>
 #include <mach-o/nlist.h>
 #include <mach-o/dyld.h>
@@ -111,6 +110,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(dbghelp_macho);
    memory by dyld. */
 #define MACHO_DYLD_IN_SHARED_CACHE 0x80000000
 
+#define MACHO_FAT_MAGIC  0xcafebabe
 
 #define UUID_STRING_LEN 37 /* 16 bytes at 2 hex digits apiece, 4 dashes, and the null terminator */
 
@@ -682,7 +682,6 @@ static BOOL macho_map_file(struct process *pcs, const WCHAR *filenameW,
     BOOL split_segs, struct image_file_map* ifm)
 {
     struct macho_file_map* fmap = &ifm->u.macho;
-    struct fat_header   fat_header;
     struct mach_header  mach_header;
     int                 i;
     WCHAR*              filename;
@@ -692,6 +691,12 @@ static BOOL macho_map_file(struct process *pcs, const WCHAR *filenameW,
     uint32_t target_magic = (pcs->is_64bit) ? MH_MAGIC_64 : MH_MAGIC;
     uint32_t target_cmd   = (pcs->is_64bit) ? LC_SEGMENT_64 : LC_SEGMENT;
     DWORD bytes_read;
+
+    struct
+    {
+        UINT32  magic;      /* FAT_MAGIC or FAT_MAGIC_64 */
+        UINT32  nfat_arch;  /* number of structs that follow */
+    } fat_header;
 
     TRACE("(%s, %p)\n", debugstr_w(filenameW), fmap);
 
@@ -721,12 +726,20 @@ static BOOL macho_map_file(struct process *pcs, const WCHAR *filenameW,
     TRACE("... got possible fat header\n");
 
     /* Fat header is always in big-endian order. */
-    if (swap_ulong_be_to_host(fat_header.magic) == FAT_MAGIC)
+    if (swap_ulong_be_to_host(fat_header.magic) == MACHO_FAT_MAGIC)
     {
         int narch = swap_ulong_be_to_host(fat_header.nfat_arch);
         for (i = 0; i < narch; i++)
         {
-            struct fat_arch fat_arch;
+            struct
+            {
+                UINT32  cputype;     /* cpu specifier (int) */
+                UINT32  cpusubtype;  /* machine specifier (int) */
+                UINT32  offset;      /* file offset to this object file */
+                UINT32  size;        /* size of this object file */
+                UINT32  align;       /* alignment as a power of 2 */
+            } fat_arch;
+
             if (!ReadFile(fmap->handle, &fat_arch, sizeof(fat_arch), &bytes_read, NULL) || bytes_read != sizeof(fat_arch))
                 goto done;
             if (swap_ulong_be_to_host(fat_arch.cputype) == target_cpu)
