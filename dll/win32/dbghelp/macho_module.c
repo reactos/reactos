@@ -1523,49 +1523,17 @@ leave:
     return ret;
 }
 
-/******************************************************************
- *              macho_load_file_from_path
- * Tries to load a Mach-O file from a set of paths (separated by ':')
- */
-static BOOL macho_load_file_from_path(struct process* pcs,
-                                      const WCHAR* filename,
-                                      unsigned long load_addr,
-                                      const char* path,
-                                      struct macho_info* macho_info)
+struct macho_load_params
 {
-    BOOL                ret = FALSE;
-    WCHAR               *s, *t, *fn;
-    WCHAR*              pathW = NULL;
-    unsigned            len;
+    struct process *process;
+    ULONG_PTR load_addr;
+    struct macho_info *macho_info;
+};
 
-    TRACE("(%p/%p, %s, 0x%08lx, %s, %p)\n", pcs, pcs->handle, debugstr_w(filename), load_addr,
-            debugstr_a(path), macho_info);
-
-    if (!path) return FALSE;
-
-    len = MultiByteToWideChar(CP_UNIXCP, 0, path, -1, NULL, 0);
-    pathW = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
-    if (!pathW) return FALSE;
-    MultiByteToWideChar(CP_UNIXCP, 0, path, -1, pathW, len);
-
-    for (s = pathW; s && *s; s = (t) ? (t+1) : NULL)
-    {
-        t = strchrW(s, ':');
-        if (t) *t = '\0';
-        fn = HeapAlloc(GetProcessHeap(), 0, (lstrlenW(filename) + 1 + lstrlenW(s) + 1) * sizeof(WCHAR));
-        if (!fn) break;
-        strcpyW(fn, s);
-        strcatW(fn, S_SlashW);
-        strcatW(fn, filename);
-        ret = macho_load_file(pcs, fn, load_addr, macho_info);
-        HeapFree(GetProcessHeap(), 0, fn);
-        if (ret) break;
-        s = (t) ? (t+1) : NULL;
-    }
-
-    TRACE(" => %d\n", ret);
-    HeapFree(GetProcessHeap(), 0, pathW);
-    return ret;
+static BOOL macho_load_file_cb(void *param, HANDLE handle, const WCHAR *filename)
+{
+    struct macho_load_params *macho_load = param;
+    return macho_load_file(macho_load->process, filename, macho_load->load_addr, macho_load->macho_info);
 }
 
 /******************************************************************
@@ -1619,6 +1587,7 @@ static BOOL macho_search_and_load_file(struct process* pcs, const WCHAR* filenam
     struct module*      module;
     static const WCHAR  S_libstdcPPW[] = {'l','i','b','s','t','d','c','+','+','\0'};
     const WCHAR*        p;
+    struct macho_load_params load_params;
 
     TRACE("(%p/%p, %s, 0x%08lx, %p)\n", pcs, pcs->handle, debugstr_w(filename), load_addr,
             macho_info);
@@ -1633,17 +1602,19 @@ static BOOL macho_search_and_load_file(struct process* pcs, const WCHAR* filenam
 
     if (strstrW(filename, S_libstdcPPW)) return FALSE; /* We know we can't do it */
 
+    load_params.process    = pcs;
+    load_params.load_addr  = load_addr;
+    load_params.macho_info = macho_info;
+
     /* If has no directories, try PATH first. */
     p = file_name(filename);
     if (p == filename)
     {
-        ret = macho_load_file_from_path(pcs, filename, load_addr,
-                                      getenv("PATH"), macho_info);
+        ret = search_unix_path(filename, getenv("PATH"), macho_load_file_cb, &load_params);
     }
     /* Try DYLD_LIBRARY_PATH, with just the filename (no directories). */
     if (!ret)
-        ret = macho_load_file_from_path(pcs, p, load_addr,
-                                      getenv("DYLD_LIBRARY_PATH"), macho_info);
+        ret = search_unix_path(p, getenv("DYLD_LIBRARY_PATH"), macho_load_file_cb, &load_params);
 
     /* Try the path as given. */
     if (!ret)
@@ -1654,7 +1625,7 @@ static BOOL macho_search_and_load_file(struct process* pcs, const WCHAR* filenam
         const char* fallback = getenv("DYLD_FALLBACK_LIBRARY_PATH");
         if (!fallback)
             fallback = "/usr/local/lib:/lib:/usr/lib";
-        ret = macho_load_file_from_path(pcs, p, load_addr, fallback, macho_info);
+        ret = search_unix_path(p, fallback, macho_load_file_cb, &load_params);
     }
     if (!ret && p == filename)
         ret = macho_load_file_from_dll_path(pcs, filename, load_addr, macho_info);
