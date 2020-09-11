@@ -740,14 +740,14 @@ void WINAPI WinDbgExtensionDllInit(PWINDBG_EXTENSION_APIS lpExtensionApis,
 }
 
 #ifndef DBGHELP_STATIC_LIB
-DWORD calc_crc32(int fd)
+DWORD calc_crc32(HANDLE handle)
 {
     BYTE buffer[8192];
     DWORD crc = 0;
-    int len;
+    DWORD len;
 
-    lseek(fd, 0, SEEK_SET);
-    while ((len = read(fd, buffer, sizeof(buffer))) > 0)
+    SetFilePointer(handle, 0, 0, FILE_BEGIN);
+    while (ReadFile(handle, buffer, sizeof(buffer), &len, NULL) && len)
         crc = RtlComputeCrc32(crc, buffer, len);
     return crc;
 }

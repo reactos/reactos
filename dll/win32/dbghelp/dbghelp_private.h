@@ -617,7 +617,7 @@ extern BOOL         pcs_callback(const struct process* pcs, ULONG action, void* 
 extern void*        fetch_buffer(struct process* pcs, unsigned size) DECLSPEC_HIDDEN;
 extern const char*  wine_dbgstr_addr(const ADDRESS64* addr) DECLSPEC_HIDDEN;
 extern struct cpu*  cpu_find(DWORD) DECLSPEC_HIDDEN;
-extern DWORD calc_crc32(int fd) DECLSPEC_HIDDEN;
+extern DWORD calc_crc32(HANDLE handle) DECLSPEC_HIDDEN;
 
 typedef BOOL (*enum_modules_cb)(const WCHAR*, unsigned long addr, void* user);
 

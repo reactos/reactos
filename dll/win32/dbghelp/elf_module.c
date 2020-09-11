@@ -966,18 +966,6 @@ static int elf_new_public_symbols(struct module* module, const struct hash_table
     return TRUE;
 }
 
-static DWORD calc_crc(HANDLE handle)
-{
-    BYTE buffer[8192];
-    DWORD crc = 0;
-    DWORD len;
-
-    SetFilePointer(handle, 0, 0, FILE_BEGIN);
-    while (ReadFile(handle, buffer, sizeof(buffer), &len, NULL) && len)
-        crc = RtlComputeCrc32(crc, buffer, len);
-    return crc;
-}
-
 static BOOL elf_check_debug_link(const WCHAR* file, struct image_file_map* fmap, DWORD link_crc)
 {
     struct elf_map_file_data    emfd;
@@ -987,7 +975,7 @@ static BOOL elf_check_debug_link(const WCHAR* file, struct image_file_map* fmap,
     emfd.u.file.filename = file;
     if (!elf_map_file(&emfd, fmap)) return FALSE;
 
-    crc = calc_crc(fmap->u.elf.handle);
+    crc = calc_crc32(fmap->u.elf.handle);
     if (crc != link_crc)
     {
         WARN("Bad CRC for file %s (got %08x while expecting %08x)\n",  debugstr_w(file), crc, link_crc);
@@ -1336,7 +1324,7 @@ BOOL elf_fetch_file_info(const WCHAR* name, DWORD_PTR* base,
     if (!elf_map_file(&emfd, &fmap)) return FALSE;
     if (base) *base = fmap.u.elf.elf_start;
     *size = fmap.u.elf.elf_size;
-    *checksum = calc_crc(fmap.u.elf.handle);
+    *checksum = calc_crc32(fmap.u.elf.handle);
     image_unmap_file(&fmap);
     return TRUE;
 }
@@ -1432,7 +1420,7 @@ static BOOL elf_load_file_from_fmap(struct process* pcs, const WCHAR* filename,
                           sizeof(struct module_format) + sizeof(struct elf_module_info));
         if (!modfmt) return FALSE;
         elf_info->module = module_new(pcs, filename, DMT_ELF, FALSE, modbase,
-                                      fmap->u.elf.elf_size, 0, calc_crc(fmap->u.elf.handle));
+                                      fmap->u.elf.elf_size, 0, calc_crc32(fmap->u.elf.handle));
         if (!elf_info->module)
         {
             HeapFree(GetProcessHeap(), 0, modfmt);
