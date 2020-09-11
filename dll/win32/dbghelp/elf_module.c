@@ -1502,7 +1502,7 @@ static BOOL elf_enum_modules_translate(const WCHAR* name, unsigned long load_add
  * This function doesn't require that someone has called SymInitialize
  * on this very process.
  */
-BOOL elf_enum_modules(struct process* process, enum_modules_cb cb, void* user)
+static BOOL elf_enum_modules(struct process* process, enum_modules_cb cb, void* user)
 {
     struct elf_info     elf_info;
     BOOL                ret;
@@ -1706,6 +1706,7 @@ static BOOL elf_search_loader(struct process* pcs, struct elf_info* elf_info)
 static const struct loader_ops elf_loader_ops =
 {
     elf_synchronize_module_list,
+    elf_enum_modules,
     elf_fetch_file_info,
 };
 
@@ -1735,11 +1736,6 @@ BOOL elf_map_handle(HANDLE handle, struct image_file_map* fmap)
 }
 
 BOOL elf_read_wine_loader_dbg_info(struct process* pcs)
-{
-    return FALSE;
-}
-
-BOOL elf_enum_modules(struct process *process, enum_modules_cb cb, void* user)
 {
     return FALSE;
 }
