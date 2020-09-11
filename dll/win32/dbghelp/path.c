@@ -664,6 +664,11 @@ BOOL path_find_symbol_file(const struct process* pcs, const struct module* modul
     /* 2. check module-path */
     file_pathW(module->module.LoadedImageName, buffer);
     if (do_searchW(filename, buffer, FALSE, module_find_cb, &mf)) return TRUE;
+    if (module->real_path)
+    {
+        file_pathW(module->real_path, buffer);
+        if (do_searchW(filename, buffer, FALSE, module_find_cb, &mf)) return TRUE;
+    }
 
     while (searchPath)
     {
