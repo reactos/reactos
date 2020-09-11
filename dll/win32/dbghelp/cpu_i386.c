@@ -514,7 +514,7 @@ done_err:
 }
 #endif /* DBGHELP_STATIC_LIB */
 
-static unsigned i386_map_dwarf_register(unsigned regno, BOOL eh_frame)
+static unsigned i386_map_dwarf_register(unsigned regno, const struct module* module, BOOL eh_frame)
 {
     unsigned    reg;
 

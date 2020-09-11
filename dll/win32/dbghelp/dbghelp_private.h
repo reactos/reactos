@@ -587,7 +587,7 @@ struct cpu
     void*       (*find_runtime_function)(struct module*, DWORD64 addr);
 
     /* dwarf dedicated information */
-    unsigned    (*map_dwarf_register)(unsigned regno, BOOL eh_frame);
+    unsigned    (*map_dwarf_register)(unsigned regno, const struct module* module, BOOL eh_frame);
 
     /* context related manipulation */
     void *      (*fetch_context_reg)(union ctx *ctx, unsigned regno, unsigned *size);
