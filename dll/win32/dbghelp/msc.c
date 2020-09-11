@@ -3092,10 +3092,10 @@ static BOOL  pev_binop(struct pevaluator* pev, char op)
 static BOOL  pev_deref(struct pevaluator* pev)
 {
     char        res[PEV_MAX_LEN];
-    DWORD_PTR   v1, v2;
+    DWORD_PTR   v1, v2 = 0;
 
     if (!pev_pop_val(pev, &v1)) return FALSE;
-    if (!sw_read_mem(pev->csw, v1, &v2, sizeof(v2)))
+    if (!sw_read_mem(pev->csw, v1, &v2, pev->csw->cpu->word_size))
         return PEV_ERROR1(pev, "deref: cannot read mem at %lx\n", v1);
     snprintf(res, sizeof(res), "%ld", v2);
     pev_push(pev, res);
