@@ -575,7 +575,7 @@ static void dwarf2_fill_attr(const dwarf2_parse_context_t* ctx,
 
     case DW_FORM_string:
         attr->u.string = (const char *)data;
-        TRACE("string<%s>\n", attr->u.string);
+        TRACE("string<%s>\n", debugstr_a(attr->u.string));
         break;
 
     case DW_FORM_strp:
@@ -583,7 +583,7 @@ static void dwarf2_fill_attr(const dwarf2_parse_context_t* ctx,
         unsigned long offset = dwarf2_get_u4(data);
         attr->u.string = (const char*)ctx->sections[section_string].address + offset;
     }
-    TRACE("strp<%s>\n", attr->u.string);
+    TRACE("strp<%s>\n", debugstr_a(attr->u.string));
     break;
 
     case DW_FORM_block:
@@ -1624,7 +1624,7 @@ static void dwarf2_parse_variable(dwarf2_subprogram_t* subpgm,
         struct attribute ext;
 
 	TRACE("found parameter %s (kind=%d, offset=%ld, reg=%d) at %s\n",
-              name.u.string, loc.kind, loc.offset, loc.reg,
+              debugstr_a(name.u.string), loc.kind, loc.offset, loc.reg,
               dwarf2_debug_ctx(subpgm->ctx));
 
         switch (loc.kind)
@@ -1659,8 +1659,8 @@ static void dwarf2_parse_variable(dwarf2_subprogram_t* subpgm,
     else if (dwarf2_find_attribute(subpgm->ctx, di, DW_AT_const_value, &value))
     {
         VARIANT v;
-        if (subpgm->func) WARN("Unsupported constant %s in function\n", name.u.string);
-        if (is_pmt)       FIXME("Unsupported constant (parameter) %s in function\n", name.u.string);
+        if (subpgm->func) WARN("Unsupported constant %s in function\n", debugstr_a(name.u.string));
+        if (is_pmt)       FIXME("Unsupported constant (parameter) %s in function\n", debugstr_a(name.u.string));
         switch (value.form)
         {
         case DW_FORM_data1:
@@ -1710,7 +1710,7 @@ static void dwarf2_parse_variable(dwarf2_subprogram_t* subpgm,
 
         default:
             FIXME("Unsupported form for const value %s (%lx)\n",
-                  name.u.string, value.form);
+                  debugstr_a(name.u.string), value.form);
             v.n1.n2.vt = VT_EMPTY;
         }
         di->symt = &symt_new_constant(subpgm->ctx->module, subpgm->ctx->compiland,
@@ -1729,7 +1729,7 @@ static void dwarf2_parse_variable(dwarf2_subprogram_t* subpgm,
         }
         else
         {
-            WARN("dropping global variable %s which has been optimized away\n", name.u.string);
+            WARN("dropping global variable %s which has been optimized away\n", debugstr_a(name.u.string));
         }
     }
     if (is_pmt && subpgm->func && subpgm->func->type)
@@ -1944,7 +1944,7 @@ static struct symt* dwarf2_parse_subprogram(dwarf2_parse_context_t* ctx,
     }
     if (!dwarf2_read_range(ctx, di, &low_pc, &high_pc))
     {
-        WARN("cannot get range for %s\n", name.u.string);
+        WARN("cannot get range for %s\n", debugstr_a(name.u.string));
         return NULL;
     }
     /* As functions (defined as inline assembly) get debug info with dwarf
@@ -2186,7 +2186,7 @@ static void dwarf2_set_line_number(struct module* module, unsigned long address,
     if (!file || !(psrc = vector_at(v, file - 1))) return;
 
     TRACE("%s %lx %s %u\n",
-          debugstr_w(module->module.ModuleName), address, source_get(module, *psrc), line);
+          debugstr_w(module->module.ModuleName), address, debugstr_a(source_get(module, *psrc)), line);
     if (!(symt = symt_find_nearest(module, address)) ||
         symt->symt.tag != SymTagFunction) return;
     func = (struct symt_function*)symt;
@@ -2247,7 +2247,7 @@ static BOOL dwarf2_parse_line_numbers(const dwarf2_section_t* sections,
     {
         const char*  rel = (const char*)traverse.data;
         unsigned     rellen = strlen(rel);
-        TRACE("Got include %s\n", rel);
+        TRACE("Got include %s\n", debugstr_a(rel));
         traverse.data += rellen + 1;
         p = vector_add(&dirs, &ctx->pool);
 
@@ -2281,7 +2281,7 @@ static BOOL dwarf2_parse_line_numbers(const dwarf2_section_t* sections,
         mod_time = dwarf2_leb128_as_unsigned(&traverse);
         length = dwarf2_leb128_as_unsigned(&traverse);
         dir = *(const char**)vector_at(&dirs, dir_index);
-        TRACE("Got file %s/%s (%u,%lu)\n", dir, name, mod_time, length);
+        TRACE("Got file %s/%s (%u,%lu)\n", debugstr_a(dir), debugstr_a(name), mod_time, length);
         psrc = vector_add(&files, &ctx->pool);
         *psrc = source_new(ctx->module, dir, name);
     }
@@ -2352,7 +2352,7 @@ static BOOL dwarf2_parse_line_numbers(const dwarf2_section_t* sections,
                         address = ctx->load_offset + dwarf2_parse_addr(&traverse);
                         break;
                     case DW_LNE_define_file:
-                        FIXME("not handled define file %s\n", traverse.data);
+                        FIXME("not handled define file %s\n", debugstr_a((char *)traverse.data));
                         traverse.data += strlen((const char *)traverse.data) + 1;
                         dwarf2_leb128_as_unsigned(&traverse);
                         dwarf2_leb128_as_unsigned(&traverse);
@@ -2545,7 +2545,7 @@ static enum location_error loc_compute_frame(struct process* pcs,
                 *frame = *pframe;
                 break;
             case loc_dwarf2_location_list:
-                WARN("Searching loclist for %s\n", func->hash_elt.name);
+                WARN("Searching loclist for %s\n", debugstr_a(func->hash_elt.name));
                 if (!dwarf2_lookup_loclist(modfmt,
                                            modfmt->u.dwarf2_info->debug_loc.address + pframe->offset,
                                            ip, &lctx))
@@ -2691,7 +2691,7 @@ static BOOL parse_cie_details(dwarf2_traverse_context_t* ctx, struct frame_info*
     info->state.cfa_rule = RULE_CFA_OFFSET;
 
     end = NULL;
-    TRACE("\tparsing augmentation %s\n", augmentation);
+    TRACE("\tparsing augmentation %s\n", debugstr_a(augmentation));
     if (*augmentation) do
     {
         switch (*augmentation)
@@ -3348,7 +3348,7 @@ static void dwarf2_location_compute(struct process* pcs,
 
     if (!func->container || func->container->tag != SymTagCompiland)
     {
-        WARN("We'd expect function %s's container to exist and be a compiland\n", func->hash_elt.name);
+        WARN("We'd expect function %s's container to exist and be a compiland\n", debugstr_a(func->hash_elt.name));
         err = loc_err_internal;
     }
     else
@@ -3423,7 +3423,7 @@ static inline BOOL dwarf2_init_zsection(dwarf2_section_t* section,
 
     if (sz <= 12 || memcmp(sect, "ZLIB", 4))
     {
-        ERR("invalid compressed section %s\n", zsectname);
+        ERR("invalid compressed section %s\n", debugstr_a(zsectname));
         goto out;
     }
 
@@ -3448,7 +3448,7 @@ static inline BOOL dwarf2_init_zsection(dwarf2_section_t* section,
     res = inflateInit(&z);
     if (res != Z_OK)
     {
-        FIXME("inflateInit failed with %i / %s\n", res, z.msg);
+        FIXME("inflateInit failed with %i / %s\n", res, debugstr_a(z.msg));
         goto out_free;
     }
 
@@ -3460,7 +3460,7 @@ static inline BOOL dwarf2_init_zsection(dwarf2_section_t* section,
 
     if (res != Z_STREAM_END)
     {
-        FIXME("Decompression failed with %i / %s\n", res, z.msg);
+        FIXME("Decompression failed with %i / %s\n", res, debugstr_a(z.msg));
         goto out_end;
     }
 
