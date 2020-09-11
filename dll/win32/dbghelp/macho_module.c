@@ -89,10 +89,8 @@ WINE_DEFAULT_DEBUG_CHANNEL(dbghelp_macho);
 
 
 #ifdef _WIN64
-typedef struct segment_command_64   macho_segment_command;
 typedef struct nlist_64             macho_nlist;
 #else
-typedef struct segment_command      macho_segment_command;
 typedef struct nlist                macho_nlist;
 #endif
 
@@ -506,12 +504,26 @@ static int macho_enum_load_commands(struct image_file_map *ifm, unsigned cmd,
  */
 static int macho_count_sections(struct image_file_map* ifm, const struct load_command* lc, void* user)
 {
-    const macho_segment_command* sc = (const macho_segment_command*)lc;
+    char segname[16];
+    uint32_t nsects;
+
+    if (ifm->addr_size == 32)
+    {
+        const struct segment_command *sc = (const struct segment_command *)lc;
+        memcpy(segname, sc->segname, sizeof(segname));
+        nsects = sc->nsects;
+    }
+    else
+    {
+        const struct segment_command_64 *sc = (const struct segment_command_64 *)lc;
+        memcpy(segname, sc->segname, sizeof(segname));
+        nsects = sc->nsects;
+    }
 
     TRACE("(%p/%d, %p, %p) segment %s\n", ifm, ifm->u.macho.fd, lc, user,
-        debugstr_an(sc->segname, sizeof(sc->segname)));
+        debugstr_an(segname, sizeof(segname)));
 
-    ifm->u.macho.num_sections += sc->nsects;
+    ifm->u.macho.num_sections += nsects;
     return 0;
 }
 
@@ -525,44 +537,64 @@ static int macho_count_sections(struct image_file_map* ifm, const struct load_co
 static int macho_load_section_info(struct image_file_map* ifm, const struct load_command* lc, void* user)
 {
     struct macho_file_map*          fmap = &ifm->u.macho;
-    const macho_segment_command*    sc = (const macho_segment_command*)lc;
     struct section_info*            info = user;
     BOOL                            ignore;
     const macho_section*            section;
     int                             i;
     unsigned long                   tmp, page_mask = sysconf( _SC_PAGESIZE ) - 1;
+    uint64_t vmaddr, vmsize;
+    char segname[16];
+    uint32_t nsects;
+
+    if (ifm->addr_size == 32)
+    {
+        const struct segment_command *sc = (const struct segment_command *)lc;
+        vmaddr = sc->vmaddr;
+        vmsize = sc->vmsize;
+        memcpy(segname, sc->segname, sizeof(segname));
+        nsects = sc->nsects;
+        section = (const macho_section*)(sc + 1);
+    }
+    else
+    {
+        const struct segment_command_64 *sc = (const struct segment_command_64 *)lc;
+        vmaddr = sc->vmaddr;
+        vmsize = sc->vmsize;
+        memcpy(segname, sc->segname, sizeof(segname));
+        nsects = sc->nsects;
+        section = (const macho_section*)(sc + 1);
+    }
 
     TRACE("(%p/%d, %p, %p) before: 0x%08lx - 0x%08lx\n", fmap, fmap->fd, lc, user,
             (unsigned long)fmap->segs_start, (unsigned long)fmap->segs_size);
-    TRACE("Segment command vm: 0x%08lx - 0x%08lx\n", (unsigned long)sc->vmaddr,
-            (unsigned long)(sc->vmaddr + sc->vmsize));
+    TRACE("Segment command vm: 0x%08lx - 0x%08lx\n", (unsigned long)vmaddr,
+            (unsigned long)(vmaddr + vmsize));
 
     /* Images in the dyld shared cache have their segments mapped non-contiguously.
        We don't know how to properly locate any of the segments other than __TEXT,
        so ignore them. */
-    ignore = (info->split_segs && strcmp(sc->segname, SEG_TEXT));
+    ignore = (info->split_segs && strcmp(segname, SEG_TEXT));
 
-    if (!strncmp(sc->segname, "WINE_", 5))
-        TRACE("Ignoring special Wine segment %s\n", debugstr_an(sc->segname, sizeof(sc->segname)));
-    else if (!strncmp(sc->segname, "__PAGEZERO", 10))
+    if (!strncmp(segname, "WINE_", 5))
+        TRACE("Ignoring special Wine segment %s\n", debugstr_an(segname, sizeof(segname)));
+    else if (!strncmp(segname, "__PAGEZERO", 10))
         TRACE("Ignoring __PAGEZERO segment\n");
     else if (ignore)
-        TRACE("Ignoring %s segment because image has split segments\n", sc->segname);
+        TRACE("Ignoring %s segment because image has split segments\n", segname);
     else
     {
         /* If this segment starts before previously-known earliest, record new earliest. */
-        if (sc->vmaddr < fmap->segs_start)
-            fmap->segs_start = sc->vmaddr;
+        if (vmaddr < fmap->segs_start)
+            fmap->segs_start = vmaddr;
 
         /* If this segment extends beyond previously-known furthest, record new furthest. */
-        tmp = (sc->vmaddr + sc->vmsize + page_mask) & ~page_mask;
+        tmp = (vmaddr + vmsize + page_mask) & ~page_mask;
         if (fmap->segs_size < tmp) fmap->segs_size = tmp;
 
         TRACE("after: 0x%08lx - 0x%08lx\n", (unsigned long)fmap->segs_start, (unsigned long)fmap->segs_size);
     }
 
-    section = (const macho_section*)(sc + 1);
-    for (i = 0; i < sc->nsects; i++)
+    for (i = 0; i < nsects; i++)
     {
         fmap->sect[info->section_index].section = &section[i];
         fmap->sect[info->section_index].mapped = IMAGE_NO_MAP;
