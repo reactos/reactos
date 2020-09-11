@@ -93,7 +93,7 @@ static void fetch_thread_stack(struct dump_context* dc, const void* teb_addr,
     NT_TIB      tib;
     ADDRESS64   addr;
 
-    if (ReadProcessMemory(dc->hProcess, teb_addr, &tib, sizeof(tib), NULL) &&
+    if (ReadProcessMemory(dc->process->handle, teb_addr, &tib, sizeof(tib), NULL) &&
         dbghelp_current_cpu &&
         dbghelp_current_cpu->get_addr(NULL /* FIXME */, ctx, cpu_addr_stack, &addr) && addr.Mode == AddrModeFlat)
     {
@@ -170,9 +170,9 @@ static BOOL fetch_thread_info(struct dump_context* dc, int thd_idx,
                 {
                     EXCEPTION_POINTERS      ep;
 
-                    ReadProcessMemory(dc->hProcess, except->ExceptionPointers,
+                    ReadProcessMemory(dc->process->handle, except->ExceptionPointers,
                                       &ep, sizeof(ep), NULL);
-                    ReadProcessMemory(dc->hProcess, ep.ContextRecord,
+                    ReadProcessMemory(dc->process->handle, ep.ContextRecord,
                                       &lctx, sizeof(lctx), NULL);
                     pctx = &lctx;
                 }
@@ -215,7 +215,7 @@ static BOOL add_module(struct dump_context* dc, const WCHAR* name,
         return FALSE;
     }
     if (is_elf ||
-        !GetModuleFileNameExW(dc->hProcess, (HMODULE)(DWORD_PTR)base,
+        !GetModuleFileNameExW(dc->process->handle, (HMODULE)(DWORD_PTR)base,
                               dc->modules[dc->num_modules].name,
                               ARRAY_SIZE(dc->modules[dc->num_modules].name)))
         lstrcpynW(dc->modules[dc->num_modules].name, name,
@@ -243,7 +243,7 @@ static BOOL WINAPI fetch_pe_module_info_cb(PCWSTR name, DWORD64 base, ULONG size
 
     if (!validate_addr64(base)) return FALSE;
 
-    if (pe_load_nt_header(dc->hProcess, base, &nth))
+    if (pe_load_nt_header(dc->process->handle, base, &nth))
         add_module(user, name, base, size,
                    nth.FileHeader.TimeDateStamp, nth.OptionalHeader.CheckSum,
                    FALSE);
@@ -289,7 +289,7 @@ static BOOL fetch_macho_module_info_cb(const WCHAR* name, unsigned long base,
     /* NB: if we have a non-null base from the live-target use it.  If we have
      * a null base, then grab its base address from Mach-O file.
      */
-    if (!macho_fetch_file_info(dc->hProcess, name, base, &rbase, &size, &checksum))
+    if (!macho_fetch_file_info(dc->process->handle, name, base, &rbase, &size, &checksum))
         size = checksum = 0;
     add_module(dc, name, base ? base : rbase, size, 0 /* FIXME */, checksum, TRUE);
     return TRUE;
@@ -323,7 +323,7 @@ static void fetch_memory64_info(struct dump_context* dc)
     MEMORY_BASIC_INFORMATION    mbi;
 
     addr = 0;
-    while (VirtualQueryEx(dc->hProcess, (LPCVOID)addr, &mbi, sizeof(mbi)) != 0)
+    while (VirtualQueryEx(dc->process->handle, (LPCVOID)addr, &mbi, sizeof(mbi)) != 0)
     {
         /* Memory regions with state MEM_COMMIT will be added to the dump */
         if (mbi.State == MEM_COMMIT)
@@ -340,14 +340,14 @@ static void fetch_memory64_info(struct dump_context* dc)
 
 static void fetch_modules_info(struct dump_context* dc)
 {
-    EnumerateLoadedModulesW64(dc->hProcess, fetch_pe_module_info_cb, dc);
+    EnumerateLoadedModulesW64(dc->process->handle, fetch_pe_module_info_cb, dc);
     /* Since we include ELF modules in a separate stream from the regular PE ones,
      * we can always include those ELF modules (they don't eat lots of space)
      * And it's always a good idea to have a trace of the loaded ELF modules for
      * a given application in a post mortem debugging condition.
      */
-    elf_enum_modules(dc->hProcess, fetch_elf_module_info_cb, dc);
-    macho_enum_modules(dc->hProcess, fetch_macho_module_info_cb, dc);
+    elf_enum_modules(dc->process->handle, fetch_elf_module_info_cb, dc);
+    macho_enum_modules(dc->process->handle, fetch_macho_module_info_cb, dc);
 }
 
 static void fetch_module_versioninfo(LPCWSTR filename, VS_FIXEDFILEINFO* ffi)
@@ -447,11 +447,11 @@ static  unsigned        dump_exception_info(struct dump_context* dc,
     {
         EXCEPTION_POINTERS      ep;
 
-        ReadProcessMemory(dc->hProcess, 
+        ReadProcessMemory(dc->process->handle,
                           except->ExceptionPointers, &ep, sizeof(ep), NULL);
-        ReadProcessMemory(dc->hProcess, 
+        ReadProcessMemory(dc->process->handle,
                           ep.ExceptionRecord, &rec, sizeof(rec), NULL);
-        ReadProcessMemory(dc->hProcess, 
+        ReadProcessMemory(dc->process->handle,
                           ep.ContextRecord, &ctx, sizeof(ctx), NULL);
         prec = &rec;
         pctx = &ctx;
@@ -537,7 +537,7 @@ static  unsigned        dump_modules(struct dump_context* dc, BOOL dump_elf)
             MINIDUMP_CALLBACK_OUTPUT    cbout;
 
             cbin.ProcessId = dc->pid;
-            cbin.ProcessHandle = dc->hProcess;
+            cbin.ProcessHandle = dc->process->handle;
             cbin.CallbackType = ModuleCallback;
 
             cbin.u.Module.FullPath = ms->Buffer;
@@ -804,7 +804,7 @@ static  unsigned        dump_threads(struct dump_context* dc,
             MINIDUMP_CALLBACK_OUTPUT    cbout;
 
             cbin.ProcessId = dc->pid;
-            cbin.ProcessHandle = dc->hProcess;
+            cbin.ProcessHandle = dc->process->handle;
             cbin.CallbackType = ThreadCallback;
             cbin.u.Thread.ThreadId = dc->threads[i].tid;
             cbin.u.Thread.ThreadHandle = 0; /* FIXME */
@@ -881,7 +881,7 @@ static unsigned         dump_memory_info(struct dump_context* dc)
         for (pos = 0; pos < dc->mem[i].size; pos += sizeof(tmp))
         {
             len = min(dc->mem[i].size - pos, sizeof(tmp));
-            if (ReadProcessMemory(dc->hProcess, 
+            if (ReadProcessMemory(dc->process->handle,
                                   (void*)(DWORD_PTR)(dc->mem[i].base + pos),
                                   tmp, len, NULL))
                 WriteFile(dc->hFile, tmp, len, &written, NULL);
@@ -939,7 +939,7 @@ static unsigned         dump_memory64_info(struct dump_context* dc)
         for (pos = 0; pos < dc->mem64[i].size; pos += sizeof(tmp))
         {
             len = min(dc->mem64[i].size - pos, sizeof(tmp));
-            if (ReadProcessMemory(dc->hProcess,
+            if (ReadProcessMemory(dc->process->handle,
                                   (void*)(ULONG_PTR)(dc->mem64[i].base + pos),
                                   tmp, len, NULL))
                 WriteFile(dc->hFile, tmp, len, &written, NULL);
@@ -982,8 +982,18 @@ BOOL WINAPI MiniDumpWriteDump(HANDLE hProcess, DWORD pid, HANDLE hFile,
     MINIDUMP_DIRECTORY  mdDir;
     DWORD               i, nStreams, idx_stream;
     struct dump_context dc;
+    BOOL                sym_initialized = FALSE;
 
-    dc.hProcess = hProcess;
+    if (!(dc.process = process_find_by_handle(hProcess)))
+    {
+        if (!(sym_initialized = SymInitializeW(hProcess, NULL, TRUE)))
+        {
+            WARN("failed to initialize process\n");
+            return FALSE;
+        }
+        dc.process = process_find_by_handle(hProcess);
+    }
+
     dc.hFile = hFile;
     dc.pid = pid;
     dc.modules = NULL;
@@ -1118,6 +1128,9 @@ BOOL WINAPI MiniDumpWriteDump(HANDLE hProcess, DWORD pid, HANDLE hFile,
     /* NOTE: this should always come last in the dump! */
     for (i = idx_stream; i < nStreams; i++)
         writeat(&dc, mdHead.StreamDirectoryRva + i * sizeof(emptyDir), &emptyDir, sizeof(emptyDir));
+
+    if (sym_initialized)
+        SymCleanup(hProcess);
 
     HeapFree(GetProcessHeap(), 0, dc.mem);
     HeapFree(GetProcessHeap(), 0, dc.mem64);
