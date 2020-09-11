@@ -756,12 +756,9 @@ BOOL search_dll_path(const struct process *process, const WCHAR *name, BOOL (*ma
         WCHAR env_name[64];
         swprintf(env_name, ARRAY_SIZE(env_name), L"WINEDLLDIR%u", i);
         if (!(env = process_getenv(process, env_name))) return FALSE;
-        len = lstrlenW(env);
-        if (!(buf = heap_alloc((len + lstrlenW(name) + 2) * sizeof(WCHAR)))) return FALSE;
-
-        len = GetEnvironmentVariableW(env_name, buf, len);
-        buf[len++] = '\\';
-        lstrcpyW(buf + len, name);
+        len = wcslen(env) + wcslen(name) + 2;
+        if (!(buf = heap_alloc(len * sizeof(WCHAR)))) return FALSE;
+        swprintf(buf, len, L"%s\\%s", env, name);
         file = CreateFileW(buf, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
         if (file != INVALID_HANDLE_VALUE)
         {
