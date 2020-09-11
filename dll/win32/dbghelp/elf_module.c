@@ -1116,8 +1116,8 @@ static BOOL elf_load_file_from_fmap(struct process* pcs, const WCHAR* filename,
                         break;
                     }
                     ptr += sizeof(dyn);
-                } while (dyn.d_tag != DT_NULL);
-                if (dyn.d_tag == DT_NULL) return ret;
+                } while (dyn.d_tag);
+                if (!dyn.d_tag) return ret;
             }
             else
             {
@@ -1138,8 +1138,8 @@ static BOOL elf_load_file_from_fmap(struct process* pcs, const WCHAR* filename,
                         break;
                     }
                     ptr += sizeof(dyn);
-                } while (dyn.d_tag != DT_NULL);
-                if (dyn.d_tag == DT_NULL) return ret;
+                } while (dyn.d_tag);
+                if (!dyn.d_tag) return ret;
             }
         }
         elf_end_find(fmap);
@@ -1311,7 +1311,7 @@ static BOOL elf_search_auxv(const struct process* pcs, unsigned type, ULONG_PTR*
     {
         Elf64_auxv_t auxv;
 
-        while (ReadProcessMemory(pcs->handle, addr, &auxv, sizeof(auxv), NULL) && auxv.a_type != AT_NULL)
+        while (ReadProcessMemory(pcs->handle, addr, &auxv, sizeof(auxv), NULL) && auxv.a_type)
         {
             if (auxv.a_type == type)
             {
@@ -1325,7 +1325,7 @@ static BOOL elf_search_auxv(const struct process* pcs, unsigned type, ULONG_PTR*
     {
         Elf32_auxv_t auxv;
 
-        while (ReadProcessMemory(pcs->handle, addr, &auxv, sizeof(auxv), NULL) && auxv.a_type != AT_NULL)
+        while (ReadProcessMemory(pcs->handle, addr, &auxv, sizeof(auxv), NULL) && auxv.a_type)
         {
             if (auxv.a_type == type)
             {

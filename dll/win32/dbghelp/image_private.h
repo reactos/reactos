@@ -50,12 +50,6 @@
 
 #define IMAGE_NO_MAP  ((void*)-1)
 
-#ifndef __ELF__
-#ifndef SHT_NULL
-#define SHT_NULL        0
-#endif
-#endif
-
 /* structure holding information while handling an ELF image
  * allows one by one section mapping for memory savings
  */
