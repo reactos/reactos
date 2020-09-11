@@ -158,6 +158,7 @@ static unsigned arm64_map_dwarf_register(unsigned regno, BOOL eh_frame)
     if (regno == 29) return CV_ARM64_FP;
     if (regno == 30) return CV_ARM64_LR;
     if (regno == 31) return CV_ARM64_SP;
+    if (regno >= 64 && regno <= 95) return CV_ARM64_Q0 + regno - 64;
 
     FIXME("Don't know how to map register %d\n", regno);
     return CV_ARM64_NOREG;
