@@ -780,9 +780,9 @@ found:
     return TRUE;
 }
 
-BOOL search_unix_path(const WCHAR *name, const char *path, BOOL (*match)(void*, HANDLE, const WCHAR*), void *param)
+BOOL search_unix_path(const WCHAR *name, const WCHAR *path, BOOL (*match)(void*, HANDLE, const WCHAR*), void *param)
 {
-    const char *iter, *next;
+    const WCHAR *iter, *next;
     size_t size, len;
     WCHAR *dos_path;
     char *buf;
@@ -791,16 +791,16 @@ BOOL search_unix_path(const WCHAR *name, const char *path, BOOL (*match)(void*, 
     if (!path) return FALSE;
     name = file_name(name);
 
-    size = WideCharToMultiByte(CP_UNIXCP, 0, name, -1, NULL, 0, NULL, NULL) + strlen(path) + 1;
+    size = WideCharToMultiByte(CP_UNIXCP, 0, name, -1, NULL, 0, NULL, NULL)
+        + WideCharToMultiByte(CP_UNIXCP, 0, path, -1, NULL, 0, NULL, NULL);
     if (!(buf = heap_alloc(size))) return FALSE;
 
     for (iter = path;; iter = next + 1)
     {
-        if (!(next = strchr(iter, ':'))) next = iter + strlen(iter);
+        if (!(next = wcschr(iter, ':'))) next = iter + lstrlenW(iter);
         if (*iter == '/')
         {
-            len = next - iter;
-            memcpy(buf, iter, len);
+            len = WideCharToMultiByte(CP_UNIXCP, 0, iter, next - iter, buf, size, NULL, NULL);
             if (buf[len - 1] != '/') buf[len++] = '/';
             WideCharToMultiByte(CP_UNIXCP, 0, name, -1, buf + len, size - len, NULL, NULL);
             if ((dos_path = wine_get_dos_file_name(buf)))
