@@ -473,6 +473,7 @@ struct cpu_stack_walk
     HANDLE                      hProcess;
     HANDLE                      hThread;
     BOOL                        is32;
+    struct cpu *                cpu;
     union
     {
         struct

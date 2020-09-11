@@ -175,6 +175,7 @@ BOOL WINAPI StackWalk(DWORD MachineType, HANDLE hProcess, HANDLE hThread,
     csw.hProcess = hProcess;
     csw.hThread = hThread;
     csw.is32 = TRUE;
+    csw.cpu = cpu;
     /* sigh... MS isn't even consistent in the func prototypes */
     csw.u.s32.f_read_mem = (f_read_mem) ? f_read_mem : read_mem;
     csw.u.s32.f_xlat_adr = f_xlat_adr;
@@ -231,6 +232,7 @@ BOOL WINAPI StackWalk64(DWORD MachineType, HANDLE hProcess, HANDLE hThread,
     csw.hProcess = hProcess;
     csw.hThread = hThread;
     csw.is32 = FALSE;
+    csw.cpu = cpu;
     /* sigh... MS isn't even consistent in the func prototypes */
     csw.u.s64.f_read_mem = (f_read_mem) ? f_read_mem : read_mem64;
     csw.u.s64.f_xlat_adr = (f_xlat_adr) ? f_xlat_adr : addr_to_linear;
