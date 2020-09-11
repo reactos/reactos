@@ -56,10 +56,6 @@
 #endif
 #endif
 
-#ifndef NT_GNU_BUILD_ID
-#define NT_GNU_BUILD_ID 3
-#endif
-
 /* structure holding information while handling an ELF image
  * allows one by one section mapping for memory savings
  */
