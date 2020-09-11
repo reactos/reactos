@@ -92,6 +92,18 @@ union wine_all_image_infos {
     struct dyld_all_image_infos64 infos64;
 };
 
+struct macho_header
+{
+    UINT32  magic;       /* mach magic number identifier */
+    UINT32  cputype;     /* cpu specifier */
+    UINT32  cpusubtype;  /* machine specifier */
+    UINT32  filetype;    /* type of file */
+    UINT32  ncmds;       /* number of load commands */
+    UINT32  sizeofcmds;  /* the size of all the load commands */
+    UINT32  flags;       /* flags */
+    UINT32  reserved;    /* reserved */
+};
+
 struct macho_segment_command
 {
     UINT32  cmd;          /* LC_SEGMENT_64 */
@@ -150,7 +162,12 @@ WINE_DEFAULT_DEBUG_CHANNEL(dbghelp_macho);
    memory by dyld. */
 #define MACHO_DYLD_IN_SHARED_CACHE 0x80000000
 
-#define MACHO_FAT_MAGIC  0xcafebabe
+#define MACHO_FAT_MAGIC    0xcafebabe
+#define MACHO_MH_MAGIC_32  0xfeedface
+#define MACHO_MH_MAGIC_64  0xfeedfacf
+
+#define MACHO_CPU_TYPE_X86     0x00000007
+#define MACHO_CPU_TYPE_X86_64  0x01000007
 
 #define UUID_STRING_LEN 37 /* 16 bytes at 2 hex digits apiece, 4 dashes, and the null terminator */
 
@@ -722,13 +739,13 @@ static BOOL macho_map_file(struct process *pcs, const WCHAR *filenameW,
     BOOL split_segs, struct image_file_map* ifm)
 {
     struct macho_file_map* fmap = &ifm->u.macho;
-    struct mach_header  mach_header;
+    struct macho_header mach_header;
     int                 i;
     WCHAR*              filename;
     struct section_info info;
     BOOL                ret = FALSE;
-    cpu_type_t target_cpu = (pcs->is_64bit) ? CPU_TYPE_X86_64 : CPU_TYPE_X86;
-    uint32_t target_magic = (pcs->is_64bit) ? MH_MAGIC_64 : MH_MAGIC;
+    UINT32 target_cpu = (pcs->is_64bit) ? MACHO_CPU_TYPE_X86_64 : MACHO_CPU_TYPE_X86;
+    UINT32 target_magic = (pcs->is_64bit) ? MACHO_MH_MAGIC_64 : MACHO_MH_MAGIC_32;
     uint32_t target_cmd   = (pcs->is_64bit) ? LC_SEGMENT_64 : LC_SEGMENT;
     DWORD bytes_read;
 
@@ -746,7 +763,7 @@ static BOOL macho_map_file(struct process *pcs, const WCHAR *filenameW,
     ifm->ops = &macho_file_map_ops;
     ifm->alternate = NULL;
     ifm->addr_size = (pcs->is_64bit) ? 64 : 32;
-    fmap->header_size = (pcs->is_64bit) ? sizeof(struct mach_header_64) : sizeof(struct mach_header);
+    fmap->header_size = (pcs->is_64bit) ? sizeof(struct macho_header) : FIELD_OFFSET(struct macho_header, reserved);
 
     if (!(filename = get_dos_file_name(filenameW))) return FALSE;
 
@@ -799,8 +816,8 @@ static BOOL macho_map_file(struct process *pcs, const WCHAR *filenameW,
 
     /* Individual architecture (standalone or within a fat file) is in its native byte order. */
     SetFilePointer(fmap->handle, fmap->arch_offset, 0, FILE_BEGIN);
-    if (!ReadFile(fmap->handle, &mach_header, sizeof(mach_header), &bytes_read, NULL)
-        || bytes_read != sizeof(mach_header))
+    if (!ReadFile(fmap->handle, &mach_header, fmap->header_size, &bytes_read, NULL)
+        || bytes_read != fmap->header_size)
         goto done;
     TRACE("... got possible Mach header\n");
     /* and check for a Mach-O header */
@@ -1314,11 +1331,11 @@ static BOOL image_uses_split_segs(struct process* process, ULONG_PTR load_addr)
 
     if (load_addr)
     {
-        cpu_type_t target_cpu = (process->is_64bit) ? CPU_TYPE_X86_64 : CPU_TYPE_X86;
-        uint32_t target_magic = (process->is_64bit) ? MH_MAGIC_64 : MH_MAGIC;
-        struct mach_header header;
+        UINT32 target_cpu = (process->is_64bit) ? MACHO_CPU_TYPE_X86_64 : MACHO_CPU_TYPE_X86;
+        UINT32 target_magic = (process->is_64bit) ? MACHO_MH_MAGIC_64 : MACHO_MH_MAGIC_32;
+        struct macho_header header;
 
-        if (ReadProcessMemory(process->handle, (void*)load_addr, &header, sizeof(header), NULL) &&
+        if (ReadProcessMemory(process->handle, (void*)load_addr, &header, FIELD_OFFSET(struct macho_header, reserved), NULL) &&
             header.magic == target_magic && header.cputype == target_cpu &&
             header.flags & MACHO_DYLD_IN_SHARED_CACHE)
         {
