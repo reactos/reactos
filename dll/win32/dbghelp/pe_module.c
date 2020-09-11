@@ -560,7 +560,7 @@ static BOOL pe_load_dbg_file(const struct process* pcs, struct module* module,
 
     TRACE("Processing DBG file %s\n", debugstr_a(dbg_name));
 
-    if (path_find_symbol_file(pcs, module, dbg_name, NULL, timestamp, 0, tmp, &module->module.DbgUnmatched) &&
+    if (path_find_symbol_file(pcs, dbg_name, NULL, timestamp, 0, tmp, &module->module.DbgUnmatched) &&
         (hFile = CreateFileA(tmp, GENERIC_READ, FILE_SHARE_READ, NULL,
                              OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL)) != INVALID_HANDLE_VALUE &&
         ((hMap = CreateFileMappingW(hFile, NULL, PAGE_READONLY, 0, 0, NULL)) != 0) &&
