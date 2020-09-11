@@ -468,6 +468,26 @@ DWORD WINAPI SymGetOptions(void)
 }
 
 /******************************************************************
+ *		SymSetExtendedOption (DBGHELP.@)
+ *
+ */
+BOOL WINAPI SymSetExtendedOption(IMAGEHLP_EXTENDED_OPTIONS option, BOOL value)
+{
+    FIXME("%d, %d\n", option, value);
+    return FALSE;
+}
+
+/******************************************************************
+ *		SymGetExtendedOption (DBGHELP.@)
+ *
+ */
+BOOL WINAPI SymGetExtendedOption(IMAGEHLP_EXTENDED_OPTIONS option)
+{
+    FIXME("%d\n", option);
+    return FALSE;
+}
+
+/******************************************************************
  *		SymSetParentWindow (DBGHELP.@)
  *
  */
