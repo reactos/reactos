@@ -105,7 +105,7 @@ struct elf_module_info
 #define ELF_SHT_FINI_ARRAY     15    /* Array of destructors */
 #define ELF_SHT_PREINIT_ARRAY  16    /* Array of pre-constructors */
 #define ELF_SHT_GROUP          17    /* Section group */
-#define ELF_SHT_SYMTAB_SHNDX   18    /* Extended section indeces */
+#define ELF_SHT_SYMTAB_SHNDX   18    /* Extended section indices */
 #define ELF_SHT_NUM            19    /* Number of defined types.  */
 
 /* Legal values for ST_TYPE subfield of st_info (symbol type).  */
