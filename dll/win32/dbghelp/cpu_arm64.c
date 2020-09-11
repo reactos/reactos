@@ -65,13 +65,14 @@ enum st_mode {stm_start, stm_arm64, stm_done};
  * modify (at least) context.Pc using unwind information
  * either out of debug info (dwarf), or simple Lr trace
  */
-static BOOL fetch_next_frame(struct cpu_stack_walk* csw,
-                               CONTEXT* context, DWORD_PTR curr_pc)
+static BOOL fetch_next_frame(struct cpu_stack_walk* csw, union ctx *pcontext,
+    DWORD_PTR curr_pc)
 {
     DWORD_PTR               xframe;
+    CONTEXT *context = &pcontext->ctx;
     DWORD_PTR               oldReturn = context->u.s.Lr;
 
-    if (dwarf2_virtual_unwind(csw, curr_pc, context, &xframe))
+    if (dwarf2_virtual_unwind(csw, curr_pc, pcontext, &xframe))
     {
         context->Sp = xframe;
         context->Pc = oldReturn;
@@ -84,7 +85,8 @@ static BOOL fetch_next_frame(struct cpu_stack_walk* csw,
     return TRUE;
 }
 
-static BOOL arm64_stack_walk(struct cpu_stack_walk* csw, LPSTACKFRAME64 frame, CONTEXT* context)
+static BOOL arm64_stack_walk(struct cpu_stack_walk *csw, STACKFRAME64 *frame,
+    union ctx *context)
 {
     unsigned deltapc = curr_count <= 1 ? 0 : 4;
 
@@ -111,8 +113,8 @@ static BOOL arm64_stack_walk(struct cpu_stack_walk* csw, LPSTACKFRAME64 frame, C
     }
     else
     {
-        if (context->Sp != frame->AddrStack.Offset) FIXME("inconsistent Stack Pointer\n");
-        if (context->Pc != frame->AddrPC.Offset) FIXME("inconsistent Program Counter\n");
+        if (context->ctx.Sp != frame->AddrStack.Offset) FIXME("inconsistent Stack Pointer\n");
+        if (context->ctx.Pc != frame->AddrPC.Offset) FIXME("inconsistent Program Counter\n");
 
         if (frame->AddrReturn.Offset == 0) goto done_err;
         if (!fetch_next_frame(csw, context, frame->AddrPC.Offset - deltapc))
@@ -122,10 +124,10 @@ static BOOL arm64_stack_walk(struct cpu_stack_walk* csw, LPSTACKFRAME64 frame, C
     memset(&frame->Params, 0, sizeof(frame->Params));
 
     /* set frame information */
-    frame->AddrStack.Offset = context->Sp;
-    frame->AddrReturn.Offset = context->u.s.Lr;
-    frame->AddrFrame.Offset = context->u.s.Fp;
-    frame->AddrPC.Offset = context->Pc;
+    frame->AddrStack.Offset = context->ctx.Sp;
+    frame->AddrReturn.Offset = context->ctx.u.s.Lr;
+    frame->AddrFrame.Offset = context->ctx.u.s.Fp;
+    frame->AddrPC.Offset = context->ctx.Pc;
 
     frame->Far = TRUE;
     frame->Virtual = TRUE;
@@ -146,7 +148,8 @@ done_err:
     return FALSE;
 }
 #else
-static BOOL arm64_stack_walk(struct cpu_stack_walk* csw, LPSTACKFRAME64 frame, CONTEXT* context)
+static BOOL arm64_stack_walk(struct cpu_stack_walk* csw, STACKFRAME64 *frame,
+    union ctx *ctx)
 {
     return FALSE;
 }
@@ -164,9 +167,11 @@ static unsigned arm64_map_dwarf_register(unsigned regno, BOOL eh_frame)
     return CV_ARM64_NOREG;
 }
 
-static void* arm64_fetch_context_reg(CONTEXT* ctx, unsigned regno, unsigned* size)
+static void *arm64_fetch_context_reg(union ctx *pctx, unsigned regno, unsigned *size)
 {
 #ifdef __aarch64__
+    CONTEXT *ctx = pctx;
+
     switch (regno)
     {
     case CV_ARM64_X0 +  0:

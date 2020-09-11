@@ -48,7 +48,8 @@ static BOOL ppc_get_addr(HANDLE hThread, const CONTEXT* ctx,
     return FALSE;
 }
 
-static BOOL ppc_stack_walk(struct cpu_stack_walk* csw, LPSTACKFRAME64 frame, CONTEXT* context)
+static BOOL ppc_stack_walk(struct cpu_stack_walk* csw, STACKFRAME64 *frame,
+    union ctx *ctx)
 {
     FIXME("not done\n");
     return FALSE;
@@ -60,7 +61,7 @@ static unsigned ppc_map_dwarf_register(unsigned regno, BOOL eh_frame)
     return 0;
 }
 
-static void* ppc_fetch_context_reg(CONTEXT* ctx, unsigned regno, unsigned* size)
+static void *ppc_fetch_context_reg(union ctx *ctx, unsigned regno, unsigned *size)
 {
     FIXME("NIY\n");
     return NULL;

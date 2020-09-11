@@ -541,6 +541,12 @@ struct dump_context
     MINIDUMP_CALLBACK_INFORMATION*      cb;
 };
 
+union ctx
+{
+    CONTEXT ctx;
+    WOW64_CONTEXT x86;
+};
+
 enum cpu_addr {cpu_addr_pc, cpu_addr_stack, cpu_addr_frame};
 struct cpu
 {
@@ -553,7 +559,8 @@ struct cpu
                             enum cpu_addr, ADDRESS64* addr);
 
     /* stack manipulation */
-    BOOL        (*stack_walk)(struct cpu_stack_walk* csw, LPSTACKFRAME64 frame, CONTEXT* context);
+    BOOL        (*stack_walk)(struct cpu_stack_walk *csw, STACKFRAME64 *frame,
+                              union ctx *ctx);
 
     /* module manipulation */
     void*       (*find_runtime_function)(struct module*, DWORD64 addr);
@@ -562,7 +569,7 @@ struct cpu
     unsigned    (*map_dwarf_register)(unsigned regno, BOOL eh_frame);
 
     /* context related manipulation */
-    void*       (*fetch_context_reg)(CONTEXT* context, unsigned regno, unsigned* size);
+    void *      (*fetch_context_reg)(union ctx *ctx, unsigned regno, unsigned *size);
     const char* (*fetch_regname)(unsigned regno);
 
     /* minidump per CPU extension */
@@ -677,8 +684,8 @@ struct pdb_cmd_pair {
     const char*         name;
     DWORD*              pvalue;
 };
-extern BOOL         pdb_virtual_unwind(struct cpu_stack_walk* csw, DWORD_PTR ip,
-                                       CONTEXT* context, struct pdb_cmd_pair* cpair) DECLSPEC_HIDDEN;
+extern BOOL pdb_virtual_unwind(struct cpu_stack_walk *csw, DWORD_PTR ip,
+    union ctx *context, struct pdb_cmd_pair *cpair) DECLSPEC_HIDDEN;
 
 /* path.c */
 extern BOOL         path_find_symbol_file(const struct process* pcs, const struct module* module,
@@ -716,8 +723,8 @@ extern BOOL         stabs_parse(struct module* module, unsigned long load_offset
 extern BOOL         dwarf2_parse(struct module* module, unsigned long load_offset,
                                  const struct elf_thunk_area* thunks,
                                  struct image_file_map* fmap) DECLSPEC_HIDDEN;
-extern BOOL         dwarf2_virtual_unwind(struct cpu_stack_walk* csw, DWORD_PTR ip,
-                                          CONTEXT* context, ULONG_PTR* cfa) DECLSPEC_HIDDEN;
+extern BOOL dwarf2_virtual_unwind(struct cpu_stack_walk *csw, DWORD_PTR ip,
+    union ctx *ctx, ULONG_PTR *cfa) DECLSPEC_HIDDEN;
 
 /* rsym.c */
 extern BOOL         rsym_parse(struct module* module, unsigned long load_offset,

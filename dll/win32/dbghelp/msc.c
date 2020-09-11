@@ -3199,8 +3199,8 @@ done:
     return FALSE;
 }
 
-BOOL         pdb_virtual_unwind(struct cpu_stack_walk* csw, DWORD_PTR ip,
-                                CONTEXT* context, struct pdb_cmd_pair* cpair)
+BOOL pdb_virtual_unwind(struct cpu_stack_walk *csw, DWORD_PTR ip,
+    union ctx *context, struct pdb_cmd_pair *cpair)
 {
     struct module_pair          pair;
     struct pdb_module_info*     pdb_info;
