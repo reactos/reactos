@@ -207,7 +207,7 @@ static WCHAR* file_regex(const char* srcfile)
 }
 
 struct symt_compiland* symt_new_compiland(struct module* module, 
-                                          unsigned long address, unsigned src_idx)
+                                          ULONG_PTR address, unsigned src_idx)
 {
     struct symt_compiland*    sym;
 
@@ -227,7 +227,7 @@ struct symt_public* symt_new_public(struct module* module,
                                     struct symt_compiland* compiland,
                                     const char* name,
                                     BOOL is_function,
-                                    unsigned long address, unsigned size)
+                                    ULONG_PTR address, unsigned size)
 {
     struct symt_public* sym;
     struct symt**       p;
@@ -258,7 +258,7 @@ struct symt_public* symt_new_public(struct module* module,
 struct symt_data* symt_new_global_variable(struct module* module, 
                                            struct symt_compiland* compiland, 
                                            const char* name, unsigned is_static,
-                                           struct location loc, unsigned long size,
+                                           struct location loc, ULONG_PTR size,
                                            struct symt* type)
 {
     struct symt_data*   sym;
@@ -295,7 +295,7 @@ struct symt_data* symt_new_global_variable(struct module* module,
 struct symt_function* symt_new_function(struct module* module, 
                                         struct symt_compiland* compiland, 
                                         const char* name,
-                                        unsigned long addr, unsigned long size,
+                                        ULONG_PTR addr, ULONG_PTR size,
                                         struct symt* sig_type)
 {
     struct symt_function*       sym;
@@ -326,7 +326,7 @@ struct symt_function* symt_new_function(struct module* module,
 }
 
 void symt_add_func_line(struct module* module, struct symt_function* func,
-                        unsigned source_idx, int line_num, unsigned long offset)
+                        unsigned source_idx, int line_num, ULONG_PTR offset)
 {
     struct line_info*   dli;
     BOOL                last_matches = FALSE;
@@ -498,7 +498,7 @@ BOOL symt_normalize_function(struct module* module, const struct symt_function* 
 struct symt_thunk* symt_new_thunk(struct module* module, 
                                   struct symt_compiland* compiland, 
                                   const char* name, THUNK_ORDINAL ord,
-                                  unsigned long addr, unsigned long size)
+                                  ULONG_PTR addr, ULONG_PTR size)
 {
     struct symt_thunk*  sym;
 
@@ -555,7 +555,7 @@ struct symt_data* symt_new_constant(struct module* module,
 
 struct symt_hierarchy_point* symt_new_label(struct module* module,
                                             struct symt_compiland* compiland,
-                                            const char* name, unsigned long address)
+                                            const char* name, ULONG_PTR address)
 {
     struct symt_hierarchy_point*        sym;
 
@@ -680,8 +680,8 @@ static void symt_fill_sym_info(struct module_pair* pair,
                 switch (data->u.value.n1.n2.vt)
                 {
                 case VT_I4:  sym_info->Value = (ULONG)data->u.value.n1.n2.n3.lVal; break;
-                case VT_I2:  sym_info->Value = (ULONG)(long)data->u.value.n1.n2.n3.iVal; break;
-                case VT_I1:  sym_info->Value = (ULONG)(long)data->u.value.n1.n2.n3.cVal; break;
+                case VT_I2:  sym_info->Value = (ULONG)(LONG_PTR)data->u.value.n1.n2.n3.iVal; break;
+                case VT_I1:  sym_info->Value = (ULONG)(LONG_PTR)data->u.value.n1.n2.n3.cVal; break;
                 case VT_UI4: sym_info->Value = (ULONG)data->u.value.n1.n2.n3.ulVal; break;
                 case VT_UI2: sym_info->Value = (ULONG)data->u.value.n1.n2.n3.uiVal; break;
                 case VT_UI1: sym_info->Value = (ULONG)data->u.value.n1.n2.n3.bVal; break;

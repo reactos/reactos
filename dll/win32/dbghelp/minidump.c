@@ -255,7 +255,7 @@ static BOOL WINAPI fetch_pe_module_info_cb(PCWSTR name, DWORD64 base, ULONG size
  *
  * Callback for accumulating in dump_context an host modules set
  */
-static BOOL fetch_host_module_info_cb(const WCHAR* name, unsigned long base,
+static BOOL fetch_host_module_info_cb(const WCHAR* name, ULONG_PTR base,
                                      void* user)
 {
     struct dump_context*        dc = user;

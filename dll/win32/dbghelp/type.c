@@ -412,7 +412,7 @@ BOOL symt_add_function_signature_parameter(struct module* module,
     return TRUE;
 }
 
-struct symt_pointer* symt_new_pointer(struct module* module, struct symt* ref_type, unsigned long size)
+struct symt_pointer* symt_new_pointer(struct module* module, struct symt* ref_type, ULONG_PTR size)
 {
     struct symt_pointer*        sym;
 
