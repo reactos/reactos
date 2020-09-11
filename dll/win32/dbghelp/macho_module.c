@@ -48,7 +48,6 @@
 #define WIN32_NO_STATUS
 #include "dbghelp_private.h"
 #include "winternl.h"
-#include "wine/library.h"
 #include "wine/debug.h"
 #include "wine/heap.h"
 #include "image_private.h"
@@ -1537,44 +1536,6 @@ static BOOL macho_load_file_cb(void *param, HANDLE handle, const WCHAR *filename
 }
 
 /******************************************************************
- *              macho_load_file_from_dll_path
- *
- * Tries to load a Mach-O file from the dll path
- */
-static BOOL macho_load_file_from_dll_path(struct process* pcs,
-                                          const WCHAR* filename,
-                                          unsigned long load_addr,
-                                          struct macho_info* macho_info)
-{
-    BOOL ret = FALSE;
-    unsigned int index = 0;
-    const char *path;
-
-    TRACE("(%p/%p, %s, 0x%08lx, %p)\n", pcs, pcs->handle, debugstr_w(filename), load_addr,
-            macho_info);
-
-    while (!ret && (path = wine_dll_enum_load_path( index++ )))
-    {
-        WCHAR *name;
-        unsigned len;
-
-        len = MultiByteToWideChar(CP_UNIXCP, 0, path, -1, NULL, 0);
-
-        name = HeapAlloc( GetProcessHeap(), 0,
-                          (len + lstrlenW(filename) + 2) * sizeof(WCHAR) );
-
-        if (!name) break;
-        MultiByteToWideChar(CP_UNIXCP, 0, path, -1, name, len);
-        strcatW( name, S_SlashW );
-        strcatW( name, filename );
-        ret = macho_load_file(pcs, name, load_addr, macho_info);
-        HeapFree( GetProcessHeap(), 0, name );
-    }
-    TRACE(" => %d\n", ret);
-    return ret;
-}
-
-/******************************************************************
  *              macho_search_and_load_file
  *
  * Lookup a file in standard Mach-O locations, and if found, load it
@@ -1628,7 +1589,7 @@ static BOOL macho_search_and_load_file(struct process* pcs, const WCHAR* filenam
         ret = search_unix_path(p, fallback, macho_load_file_cb, &load_params);
     }
     if (!ret && p == filename)
-        ret = macho_load_file_from_dll_path(pcs, filename, load_addr, macho_info);
+        ret = search_dll_path(filename, macho_load_file_cb, &load_params);
 
     return ret;
 }
