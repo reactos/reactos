@@ -727,8 +727,7 @@ static const Elf64_Sym *elf_lookup_symtab(const struct module* module,
     {
         compiland_name = source_get(module,
                                     ((const struct symt_compiland*)compiland)->source);
-        compiland_basename = strrchr(compiland_name, '/');
-        if (!compiland_basename++) compiland_basename = compiland_name;
+        compiland_basename = file_nameA(compiland_name);
     }
     else compiland_name = compiland_basename = NULL;
     
@@ -745,8 +744,7 @@ static const Elf64_Sym *elf_lookup_symtab(const struct module* module,
             const char* filename = source_get(module, ste->compiland->source);
             if (strcmp(filename, compiland_name))
             {
-                base = strrchr(filename, '/');
-                if (!base++) base = filename;
+                base = file_nameA(filename);
                 if (strcmp(base, compiland_basename)) continue;
             }
         }
@@ -1434,7 +1432,7 @@ static BOOL elf_search_and_load_file(struct process* pcs, const WCHAR* filename,
     if (strstrW(filename, S_libstdcPPW)) return FALSE; /* We know we can't do it */
     ret = elf_load_file(pcs, filename, load_offset, dyn_addr, elf_info);
     /* if relative pathname, try some absolute base dirs */
-    if (!ret && !strchrW(filename, '/'))
+    if (!ret && filename == file_name(filename))
     {
         ret = elf_load_file_from_path(pcs, filename, load_offset, dyn_addr,
                                       getenv("PATH"), elf_info) ||
@@ -1689,8 +1687,7 @@ static BOOL elf_load_cb(const WCHAR* name, unsigned long load_addr,
         /* memcmp is needed for matches when bufstr contains also version information
          * el->name: libc.so, name: libc.so.6.0
          */
-        p = strrchrW(name, '/');
-        if (!p++) p = name;
+        p = file_name(name);
     }
 
     if (!el->name || !memcmp(p, el->name, lstrlenW(el->name) * sizeof(WCHAR)))
@@ -1724,8 +1721,7 @@ struct module*  elf_load_module(struct process* pcs, const WCHAR* name, unsigned
         /* do only the lookup from the filename, not the path (as we lookup module
          * name in the process' loaded module list)
          */
-        el.name = strrchrW(name, '/');
-        if (!el.name++) el.name = name;
+        el.name = file_name(name);
         el.ret = FALSE;
 
         if (!elf_enum_modules_internal(pcs, NULL, elf_load_cb, &el))
