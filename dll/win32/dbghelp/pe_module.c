@@ -753,7 +753,8 @@ BOOL pe_load_debug_info(const struct process* pcs, struct module* module)
 
     if (!(dbghelp_options & SYMOPT_PUBLICS_ONLY))
     {
-        ret = pe_load_stabs(pcs, module);
+        ret = image_check_alternate(&module->format_info[DFI_PE]->u.pe_info->fmap, module);
+        ret = pe_load_stabs(pcs, module) || ret;
         ret = pe_load_dwarf(module) || ret;
         #ifndef DBGHELP_STATIC_LIB
         ret = pe_load_msc_debug_info(pcs, module) || ret;
