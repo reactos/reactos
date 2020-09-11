@@ -30,6 +30,7 @@
 #include <ntintsafe.h>
 #include <ndk/exfuncs.h>
 #include <ndk/iofuncs.h>
+#include <ndk/kdtypes.h>
 #include <ndk/kefuncs.h>
 #include <ndk/ldrfuncs.h>
 #include <ndk/mmfuncs.h>
@@ -53,5 +54,20 @@
 #define InterlockedBitTestAndSet _interlockedbittestandset
 #define InterlockedBitTestAndSet64 _interlockedbittestandset64
 #endif
+
+
+#define threadpooling                     4045
+
+#if DBG
+#define DEBUG_CHANNEL(ch) static ULONG gDebugChannel = ch;
+#else
+#define DEBUG_CHANNEL(ch)
+#endif
+
+#define TRACE(fmt, ...)         TRACE__(gDebugChannel, fmt, ##__VA_ARGS__)
+#define WARN(fmt, ...)          WARN__(gDebugChannel, fmt, ##__VA_ARGS__)
+#define FIXME(fmt, ...)         WARN__(gDebugChannel, fmt,## __VA_ARGS__)
+#define ERR(fmt, ...)           ERR__(gDebugChannel, fmt, ##__VA_ARGS__)
+
 
 #endif /* RTL_H */
