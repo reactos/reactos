@@ -101,7 +101,7 @@ struct elf_info
 struct symtab_elt
 {
     struct hash_table_elt       ht_elt;
-    const Elf_Sym*              symp;
+    Elf64_Sym                   sym;
     struct symt_compiland*      compiland;
     unsigned                    used;
 };
@@ -548,13 +548,13 @@ static void elf_hash_symtab(struct module* module, struct pool* pool,
     const char*                 symname;
     struct symt_compiland*      compiland = NULL;
     const char*                 ptr;
-    const Elf_Sym*              symp;
     struct symtab_elt*          ste;
     struct image_section_map    ism, ism_str;
+    const char *symtab;
 
     if (!elf_find_section(fmap, ".symtab", SHT_SYMTAB, &ism) &&
         !elf_find_section(fmap, ".dynsym", SHT_DYNSYM, &ism)) return;
-    if ((symp = (const Elf_Sym*)image_map_section(&ism)) == IMAGE_NO_MAP) return;
+    if ((symtab = image_map_section(&ism)) == IMAGE_NO_MAP) return;
     ism_str.fmap = ism.fmap;
     ism_str.sidx = fmap->u.elf.sect[ism.sidx].shdr.sh_link;
     if ((strp = image_map_section(&ism_str)) == IMAGE_NO_MAP)
@@ -563,33 +563,50 @@ static void elf_hash_symtab(struct module* module, struct pool* pool,
         return;
     }
 
-    nsym = image_get_map_size(&ism) / sizeof(*symp);
+    nsym = image_get_map_size(&ism) /
+           (fmap->addr_size == 32 ? sizeof(Elf32_Sym) : sizeof(Elf64_Sym));
 
     for (j = 0; thunks[j].symname; j++)
         thunks[j].rva_start = thunks[j].rva_end = 0;
 
-    for (i = 0; i < nsym; i++, symp++)
+    for (i = 0; i < nsym; i++)
     {
+        Elf64_Sym sym;
+
+        if (fmap->addr_size == 32)
+        {
+            Elf32_Sym *sym32 = &((Elf32_Sym *)symtab)[i];
+
+            sym.st_name  = sym32->st_name;
+            sym.st_value = sym32->st_value;
+            sym.st_size  = sym32->st_size;
+            sym.st_info  = sym32->st_info;
+            sym.st_other = sym32->st_other;
+            sym.st_shndx = sym32->st_shndx;
+        }
+        else
+            sym = ((Elf64_Sym *)symtab)[i];
+
         /* Ignore certain types of entries which really aren't of that much
          * interest.
          */
-        if ((ELF32_ST_TYPE(symp->st_info) != STT_NOTYPE &&
-             ELF32_ST_TYPE(symp->st_info) != STT_FILE &&
-             ELF32_ST_TYPE(symp->st_info) != STT_OBJECT &&
-             ELF32_ST_TYPE(symp->st_info) != STT_FUNC) ||
-            symp->st_shndx == SHN_UNDEF)
+        if ((ELF32_ST_TYPE(sym.st_info) != STT_NOTYPE &&
+             ELF32_ST_TYPE(sym.st_info) != STT_FILE &&
+             ELF32_ST_TYPE(sym.st_info) != STT_OBJECT &&
+             ELF32_ST_TYPE(sym.st_info) != STT_FUNC) ||
+            sym.st_shndx == SHN_UNDEF)
         {
             continue;
         }
 
-        symname = strp + symp->st_name;
+        symname = strp + sym.st_name;
 
         /* handle some specific symtab (that we'll throw away when done) */
-        switch (ELF32_ST_TYPE(symp->st_info))
+        switch (ELF32_ST_TYPE(sym.st_info))
         {
         case STT_FILE:
             if (symname)
-                compiland = symt_new_compiland(module, symp->st_value,
+                compiland = symt_new_compiland(module, sym.st_value,
                                                source_new(module, NULL, symname));
             else
                 compiland = NULL;
@@ -600,8 +617,8 @@ static void elf_hash_symtab(struct module* module, struct pool* pool,
             {
                 if (!strcmp(symname, thunks[j].symname))
                 {
-                    thunks[j].rva_start = symp->st_value;
-                    thunks[j].rva_end   = symp->st_value + symp->st_size;
+                    thunks[j].rva_start = sym.st_value;
+                    thunks[j].rva_end   = sym.st_value + sym.st_size;
                     break;
                 }
             }
@@ -635,7 +652,7 @@ static void elf_hash_symtab(struct module* module, struct pool* pool,
                 ste->ht_elt.name = n;
             }
         }
-        ste->symp        = symp;
+        ste->sym         = sym;
         ste->compiland   = compiland;
         ste->used        = 0;
         hash_table_add(ht_symtab, &ste->ht_elt);
@@ -651,7 +668,7 @@ static void elf_hash_symtab(struct module* module, struct pool* pool,
  *
  * lookup a symbol by name in our internal hash table for the symtab
  */
-static const Elf_Sym* elf_lookup_symtab(const struct module* module,
+static const Elf64_Sym *elf_lookup_symtab(const struct module* module,
                                           const struct hash_table* ht_symtab,
                                           const char* name, const struct symt* compiland)
 {
@@ -698,8 +715,8 @@ static const Elf_Sym* elf_lookup_symtab(const struct module* module,
         {
             FIXME("Already found symbol %s (%s) in symtab %s @%08x and %s @%08x\n",
                   name, compiland_name,
-                  source_get(module, result->compiland->source), (unsigned int)result->symp->st_value,
-                  source_get(module, ste->compiland->source), (unsigned int)ste->symp->st_value);
+                  source_get(module, result->compiland->source), (unsigned int)result->sym.st_value,
+                  source_get(module, ste->compiland->source), (unsigned int)ste->sym.st_value);
         }
         else
         {
@@ -713,7 +730,7 @@ static const Elf_Sym* elf_lookup_symtab(const struct module* module,
               debugstr_w(module->module.ModuleName), name);
         return NULL;
     }
-    return result->symp;
+    return &result->sym;
 }
 
 /******************************************************************
@@ -727,7 +744,7 @@ static void elf_finish_stabs_info(struct module* module, const struct hash_table
     struct hash_table_iter      hti;
     void*                       ptr;
     struct symt_ht*             sym;
-    const Elf_Sym*              symp;
+    const Elf64_Sym*            symp;
     struct elf_module_info*     elf_info = module->format_info[DFI_ELF]->u.elf_info;
 
     hash_table_iter_init(&module->ht_symbols, &hti, NULL);
@@ -748,9 +765,10 @@ static void elf_finish_stabs_info(struct module* module, const struct hash_table
             {
                 if (((struct symt_function*)sym)->address != elf_info->elf_addr &&
                     ((struct symt_function*)sym)->address != elf_info->elf_addr + symp->st_value)
-                    FIXME("Changing address for %p/%s!%s from %08lx to %08lx\n",
+                    FIXME("Changing address for %p/%s!%s from %08lx to %s\n",
                           sym, debugstr_w(module->module.ModuleName), sym->hash_elt.name,
-                          ((struct symt_function*)sym)->address, elf_info->elf_addr + symp->st_value);
+                          ((struct symt_function*)sym)->address,
+                          wine_dbgstr_longlong(elf_info->elf_addr + symp->st_value));
                 if (((struct symt_function*)sym)->size && ((struct symt_function*)sym)->size != symp->st_size)
                     FIXME("Changing size for %p/%s!%s from %08lx to %08x\n",
                           sym, debugstr_w(module->module.ModuleName), sym->hash_elt.name,
@@ -776,9 +794,10 @@ static void elf_finish_stabs_info(struct module* module, const struct hash_table
                 {
                     if (((struct symt_data*)sym)->u.var.offset != elf_info->elf_addr &&
                         ((struct symt_data*)sym)->u.var.offset != elf_info->elf_addr + symp->st_value)
-                        FIXME("Changing address for %p/%s!%s from %08lx to %08lx\n",
+                        FIXME("Changing address for %p/%s!%s from %08lx to %s\n",
                               sym, debugstr_w(module->module.ModuleName), sym->hash_elt.name,
-                              ((struct symt_function*)sym)->address, elf_info->elf_addr + symp->st_value);
+                              ((struct symt_function*)sym)->address,
+                              wine_dbgstr_longlong(elf_info->elf_addr + symp->st_value));
                     ((struct symt_data*)sym)->u.var.offset = elf_info->elf_addr + symp->st_value;
                     ((struct symt_data*)sym)->kind = (ELF32_ST_BIND(symp->st_info) == STB_LOCAL) ?
                         DataIsFileStatic : DataIsGlobal;
@@ -817,13 +836,13 @@ static int elf_new_wine_thunks(struct module* module, const struct hash_table* h
     {
         if (ste->used) continue;
 
-        addr = module->reloc_delta + ste->symp->st_value;
+        addr = module->reloc_delta + ste->sym.st_value;
 
-        j = elf_is_in_thunk_area(ste->symp->st_value, thunks);
+        j = elf_is_in_thunk_area(ste->sym.st_value, thunks);
         if (j >= 0) /* thunk found */
         {
             symt_new_thunk(module, ste->compiland, ste->ht_elt.name, thunks[j].ordinal,
-                           addr, ste->symp->st_size);
+                           addr, ste->sym.st_size);
         }
         else
         {
@@ -839,19 +858,19 @@ static int elf_new_wine_thunks(struct module* module, const struct hash_table* h
                  * used yet (ie we have no debug information on them)
                  * That's the case, for example, of the .spec.c files
                  */
-                switch (ELF32_ST_TYPE(ste->symp->st_info))
+                switch (ELF32_ST_TYPE(ste->sym.st_info))
                 {
                 case STT_FUNC:
                     symt_new_function(module, ste->compiland, ste->ht_elt.name,
-                                      addr, ste->symp->st_size, NULL);
+                                      addr, ste->sym.st_size, NULL);
                     break;
                 case STT_OBJECT:
                     loc.kind = loc_absolute;
                     loc.reg = 0;
                     loc.offset = addr;
                     symt_new_global_variable(module, ste->compiland, ste->ht_elt.name,
-                                             ELF32_ST_BIND(ste->symp->st_info) == STB_LOCAL,
-                                             loc, ste->symp->st_size, NULL);
+                                             ELF32_ST_BIND(ste->sym.st_info) == STB_LOCAL,
+                                             loc, ste->sym.st_size, NULL);
                     break;
                 default:
                     FIXME("Shouldn't happen\n");
@@ -891,8 +910,8 @@ static int elf_new_public_symbols(struct module* module, const struct hash_table
     while ((ste = hash_table_iter_up(&hti)))
     {
         symt_new_public(module, ste->compiland, ste->ht_elt.name,
-                        module->reloc_delta + ste->symp->st_value,
-                        ste->symp->st_size);
+                        module->reloc_delta + ste->sym.st_value,
+                        ste->sym.st_size);
     }
     return TRUE;
 }
