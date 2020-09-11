@@ -18,6 +18,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "config.h"
 #include <time.h>
 
 #define NONAMELESSUNION
@@ -542,20 +543,33 @@ static  unsigned        dump_modules(struct dump_context* dc, BOOL dump_elf)
     return sz;
 }
 
-/* Calls cpuid with an eax of 'ax' and returns the 16 bytes in *p
- * We are compiled with -fPIC, so we can't clobber ebx.
- */
-static inline void do_x86cpuid(unsigned int ax, unsigned int *p)
+#ifdef __i386__
+#ifndef __REACTOS__
+extern void do_x86cpuid(unsigned int ax, unsigned int *p);
+__ASM_GLOBAL_FUNC( do_x86cpuid,
+                   "pushl %esi\n\t"
+                   "pushl %ebx\n\t"
+                   "movl 12(%esp),%eax\n\t"
+                   "movl 16(%esp),%esi\n\t"
+                   "cpuid\n\t"
+                   "movl %eax,(%esi)\n\t"
+                   "movl %ebx,4(%esi)\n\t"
+                   "movl %ecx,8(%esi)\n\t"
+                   "movl %edx,12(%esi)\n\t"
+                   "popl %ebx\n\t"
+                   "popl %esi\n\t"
+                   "ret" )
+#else
+static void do_x86cpuid(unsigned int ax, unsigned int *p)
 {
-#if defined(__GNUC__) && defined(__i386__)
-    __asm__("pushl %%ebx\n\t"
-            "cpuid\n\t"
-            "movl %%ebx, %%esi\n\t"
-            "popl %%ebx"
-            : "=a" (p[0]), "=S" (p[1]), "=c" (p[2]), "=d" (p[3])
-            :  "0" (ax));
-#endif
+    __cpuid((int*)p, ax);
 }
+#endif
+#else
+static void do_x86cpuid(unsigned int ax, unsigned int *p)
+{
+}
+#endif
 
 /* From xf86info havecpuid.c 1.11 */
 static inline int have_x86cpuid(void)
