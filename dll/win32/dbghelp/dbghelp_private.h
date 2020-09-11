@@ -384,6 +384,7 @@ struct module
     enum module_type		type : 16;
     unsigned short              is_virtual : 1;
     DWORD64                     reloc_delta;
+    WCHAR*                      real_path;
 
     /* specific information for debug types */
     struct module_format*       format_info[DFI_LAST];
