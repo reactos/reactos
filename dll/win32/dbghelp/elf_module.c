@@ -78,6 +78,15 @@ struct r_debug
 };
 #endif /* HAVE_STRUCT_R_DEBUG */
 
+struct r_debug32
+{
+    int r_version;
+    DWORD r_map;
+    Elf32_Addr r_brk;
+    int r_state;
+    Elf32_Addr r_ldbase;
+};
+
 #ifndef HAVE_STRUCT_LINK_MAP
 struct link_map
 {
@@ -87,6 +96,14 @@ struct link_map
     struct link_map *l_next, *l_prev;
 };
 #endif /* HAVE_STRUCT_LINK_MAP */
+
+struct link_map32
+{
+    Elf32_Addr l_addr;
+    DWORD l_name;
+    DWORD l_ld;
+    DWORD l_next, l_prev;
+};
 
 WINE_DEFAULT_DEBUG_CHANNEL(dbghelp);
 
@@ -1648,36 +1665,77 @@ static BOOL elf_enum_modules_internal(const struct process* pcs,
                                       const WCHAR* main_name,
                                       enum_elf_modules_cb cb, void* user)
 {
-    struct r_debug      dbg_hdr;
-    void*               lm_addr;
-    struct link_map     lm;
-    char		bufstr[256];
-    WCHAR               bufstrW[MAX_PATH];
+    WCHAR bufstrW[MAX_PATH];
+    char bufstr[256];
+    void *lm_addr;
 
-    if (!pcs->dbg_hdr_addr ||
-        !ReadProcessMemory(pcs->handle, (void*)pcs->dbg_hdr_addr,
-                           &dbg_hdr, sizeof(dbg_hdr), NULL))
-        return FALSE;
-
-    /* Now walk the linked list.  In all known ELF implementations,
-     * the dynamic loader maintains this linked list for us.  In some
-     * cases the first entry doesn't appear with a name, in other cases it
-     * does.
-     */
-    for (lm_addr = (void*)dbg_hdr.r_map; lm_addr; lm_addr = (void*)lm.l_next)
+    if (pcs->is_64bit)
     {
-	if (!ReadProcessMemory(pcs->handle, lm_addr, &lm, sizeof(lm), NULL))
-	    return FALSE;
+        struct r_debug dbg_hdr;
+        struct link_map lm;
 
-	if (lm.l_prev != NULL && /* skip first entry, normally debuggee itself */
-	    lm.l_name != NULL &&
-	    ReadProcessMemory(pcs->handle, lm.l_name, bufstr, sizeof(bufstr), NULL))
+        if (!pcs->dbg_hdr_addr ||
+            !ReadProcessMemory(pcs->handle, (void*)pcs->dbg_hdr_addr,
+                               &dbg_hdr, sizeof(dbg_hdr), NULL))
+            return FALSE;
+
+        /* Now walk the linked list.  In all known ELF implementations,
+         * the dynamic loader maintains this linked list for us.  In some
+         * cases the first entry doesn't appear with a name, in other cases it
+         * does.
+         */
+        for (lm_addr = (void*)dbg_hdr.r_map; lm_addr; lm_addr = (void*)lm.l_next)
         {
-	    bufstr[sizeof(bufstr) - 1] = '\0';
-            MultiByteToWideChar(CP_UNIXCP, 0, bufstr, -1, bufstrW, sizeof(bufstrW) / sizeof(WCHAR));
-            if (main_name && !bufstrW[0]) strcpyW(bufstrW, main_name);
-            if (!cb(bufstrW, (unsigned long)lm.l_addr, (unsigned long)lm.l_ld, FALSE, user)) break;
-	}
+            if (!ReadProcessMemory(pcs->handle, lm_addr, &lm, sizeof(lm), NULL))
+                return FALSE;
+
+            if (lm.l_prev != NULL && /* skip first entry, normally debuggee itself */
+                lm.l_name != NULL &&
+                ReadProcessMemory(pcs->handle, lm.l_name, bufstr, sizeof(bufstr), NULL))
+            {
+                bufstr[sizeof(bufstr) - 1] = '\0';
+                MultiByteToWideChar(CP_UNIXCP, 0, bufstr, -1, bufstrW,
+                                    sizeof(bufstrW) / sizeof(WCHAR));
+                if (main_name && !bufstrW[0]) strcpyW(bufstrW, main_name);
+                if (!cb(bufstrW, (unsigned long)lm.l_addr, (unsigned long)lm.l_ld, FALSE, user))
+                    break;
+            }
+        }
+    }
+    else
+    {
+        struct r_debug32 dbg_hdr;
+        struct link_map32 lm;
+
+        if (!pcs->dbg_hdr_addr ||
+            !ReadProcessMemory(pcs->handle, (void*)pcs->dbg_hdr_addr,
+                           &dbg_hdr, sizeof(dbg_hdr), NULL))
+            return FALSE;
+
+        /* Now walk the linked list.  In all known ELF implementations,
+         * the dynamic loader maintains this linked list for us.  In some
+         * cases the first entry doesn't appear with a name, in other cases it
+         * does.
+         */
+        for (lm_addr = (void *)(DWORD_PTR)dbg_hdr.r_map; lm_addr;
+             lm_addr = (void *)(DWORD_PTR)lm.l_next)
+        {
+            if (!ReadProcessMemory(pcs->handle, lm_addr, &lm, sizeof(lm), NULL))
+                return FALSE;
+
+            if (lm.l_prev && /* skip first entry, normally debuggee itself */
+                lm.l_name &&
+                ReadProcessMemory(pcs->handle, (void *)(DWORD_PTR)lm.l_name,
+                                  bufstr, sizeof(bufstr), NULL))
+            {
+                bufstr[sizeof(bufstr) - 1] = '\0';
+                MultiByteToWideChar(CP_UNIXCP, 0, bufstr, -1, bufstrW,
+                                    sizeof(bufstrW) / sizeof(WCHAR));
+                if (main_name && !bufstrW[0]) strcpyW(bufstrW, main_name);
+                if (!cb(bufstrW, (unsigned long)lm.l_addr, (unsigned long)lm.l_ld, FALSE, user))
+                    break;
+            }
+        }
     }
 
 #ifdef AT_SYSINFO_EHDR
