@@ -96,10 +96,11 @@ struct image_file_map
             size_t                      segs_start;
             HANDLE                      handle;
             struct image_file_map*      dsym;   /* the debug symbols file associated with this one */
+            size_t                      header_size; /* size of real header in file */
+            size_t                      commands_size;
+            size_t                      commands_count;
 
 #ifdef HAVE_MACH_O_LOADER_H
-            struct mach_header          mach_header;
-            size_t                      header_size; /* size of real header in file */
             const struct load_command*  load_commands;
             const struct uuid_command*  uuid;
 
