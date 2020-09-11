@@ -60,23 +60,39 @@
 #include <mach-o/nlist.h>
 #include <mach-o/dyld.h>
 
-#ifdef HAVE_MACH_O_DYLD_IMAGES_H
-#include <mach-o/dyld_images.h>
-#else
-struct dyld_image_info {
-    const struct mach_header *imageLoadAddress;
-    const char               *imageFilePath;
-    uintptr_t                 imageFileModDate;
+struct dyld_image_info32 {
+    uint32_t /* const struct mach_header* */    imageLoadAddress;
+    uint32_t /* const char* */                  imageFilePath;
+    uint32_t /* uintptr_t */                    imageFileModDate;
 };
 
-struct dyld_all_image_infos {
-    uint32_t                      version;
-    uint32_t                      infoArrayCount;
-    const struct dyld_image_info *infoArray;
-    void*                         notification;
-    int                           processDetachedFromSharedRegion;
+struct dyld_all_image_infos32 {
+    uint32_t                                        version;
+    uint32_t                                        infoArrayCount;
+    uint32_t /* const struct dyld_image_info* */    infoArray;
 };
-#endif
+
+struct dyld_image_info64 {
+    uint64_t /* const struct mach_header* */    imageLoadAddress;
+    uint64_t /* const char* */                  imageFilePath;
+    uint64_t /* uintptr_t */                    imageFileModDate;
+};
+
+struct dyld_all_image_infos64 {
+    uint32_t                                        version;
+    uint32_t                                        infoArrayCount;
+    uint64_t /* const struct dyld_image_info* */    infoArray;
+};
+
+union wine_image_info {
+    struct dyld_image_info32 info32;
+    struct dyld_image_info64 info64;
+};
+
+union wine_all_image_infos {
+    struct dyld_all_image_infos32 infos32;
+    struct dyld_all_image_infos64 infos64;
+};
 
 #ifdef WORDS_BIGENDIAN
 #define swap_ulong_be_to_host(n) (n)
@@ -1649,8 +1665,8 @@ static BOOL macho_enum_modules_internal(const struct process* pcs,
                                         const WCHAR* main_name,
                                         enum_modules_cb cb, void* user)
 {
-    struct dyld_all_image_infos image_infos;
-    struct dyld_image_info*     info_array = NULL;
+    union wine_all_image_infos  image_infos;
+    union wine_image_info*      info_array = NULL;
     unsigned long               len;
     int                         i;
     char                        bufstr[256];
@@ -1660,31 +1676,55 @@ static BOOL macho_enum_modules_internal(const struct process* pcs,
     TRACE("(%p/%p, %s, %p, %p)\n", pcs, pcs->handle, debugstr_w(main_name), cb,
             user);
 
+    if (pcs->is_64bit)
+        len = sizeof(image_infos.infos64);
+    else
+        len = sizeof(image_infos.infos32);
     if (!pcs->dbg_hdr_addr ||
         !ReadProcessMemory(pcs->handle, (void*)pcs->dbg_hdr_addr,
-                           &image_infos, sizeof(image_infos), NULL) ||
-        !image_infos.infoArray)
+                           &image_infos, len, NULL))
         goto done;
-    TRACE("Process has %u image infos at %p\n", image_infos.infoArrayCount, image_infos.infoArray);
+    if (!pcs->is_64bit)
+    {
+        struct dyld_all_image_infos32 temp = image_infos.infos32;
+        image_infos.infos64.infoArrayCount = temp.infoArrayCount;
+        image_infos.infos64.infoArray = temp.infoArray;
+    }
+    if (!image_infos.infos64.infoArray)
+        goto done;
+    TRACE("Process has %u image infos at %p\n", image_infos.infos64.infoArrayCount, (void*)image_infos.infos64.infoArray);
 
-    len = image_infos.infoArrayCount * sizeof(info_array[0]);
+    if (pcs->is_64bit)
+        len = sizeof(info_array->info64);
+    else
+        len = sizeof(info_array->info32);
+    len *= image_infos.infos64.infoArrayCount;
     info_array = HeapAlloc(GetProcessHeap(), 0, len);
     if (!info_array ||
-        !ReadProcessMemory(pcs->handle, image_infos.infoArray,
+        !ReadProcessMemory(pcs->handle, (void*)image_infos.infos64.infoArray,
                            info_array, len, NULL))
         goto done;
     TRACE("... read image infos\n");
 
-    for (i = 0; i < image_infos.infoArrayCount; i++)
+    for (i = 0; i < image_infos.infos64.infoArrayCount; i++)
     {
-        if (info_array[i].imageFilePath != NULL &&
-            ReadProcessMemory(pcs->handle, info_array[i].imageFilePath, bufstr, sizeof(bufstr), NULL))
+        struct dyld_image_info64 info;
+        if (pcs->is_64bit)
+            info = info_array[i].info64;
+        else
+        {
+            struct dyld_image_info32 *info32 = &info_array->info32 + i;
+            info.imageLoadAddress = info32->imageLoadAddress;
+            info.imageFilePath = info32->imageFilePath;
+        }
+        if (info.imageFilePath &&
+            ReadProcessMemory(pcs->handle, (void*)info.imageFilePath, bufstr, sizeof(bufstr), NULL))
         {
             bufstr[sizeof(bufstr) - 1] = '\0';
             TRACE("[%d] image file %s\n", i, debugstr_a(bufstr));
             MultiByteToWideChar(CP_UNIXCP, 0, bufstr, -1, bufstrW, ARRAY_SIZE(bufstrW));
             if (main_name && !bufstrW[0]) strcpyW(bufstrW, main_name);
-            if (!cb(bufstrW, (unsigned long)info_array[i].imageLoadAddress, user)) break;
+            if (!cb(bufstrW, info.imageLoadAddress, user)) break;
         }
     }
 
@@ -1764,27 +1804,47 @@ static BOOL macho_search_loader(struct process* pcs, struct macho_info* macho_in
     WCHAR *loader = get_wine_loader_name(pcs);
     BOOL ret = FALSE;
     ULONG_PTR dyld_image_info_address;
-    struct dyld_all_image_infos image_infos;
-    struct dyld_image_info image_info;
+    union wine_all_image_infos image_infos;
+    union wine_image_info image_info;
     uint32_t len;
     char path[PATH_MAX];
     BOOL got_path = FALSE;
 
+    if (pcs->is_64bit)
+        len = sizeof(image_infos.infos64);
+    else
+        len = sizeof(image_infos.infos32);
     dyld_image_info_address = get_dyld_image_info_address(pcs);
     if (dyld_image_info_address &&
-        ReadProcessMemory(pcs->handle, (void*)dyld_image_info_address, &image_infos, sizeof(image_infos), NULL) &&
-        image_infos.infoArray && image_infos.infoArrayCount &&
-        ReadProcessMemory(pcs->handle, image_infos.infoArray, &image_info, sizeof(image_info), NULL) &&
-        image_info.imageFilePath)
+        ReadProcessMemory(pcs->handle, (void*)dyld_image_info_address, &image_infos, len, NULL))
     {
-        for (len = sizeof(path); len > 0; len /= 2)
+        if (pcs->is_64bit)
+            len = sizeof(image_info.info64);
+        else
         {
-            if (ReadProcessMemory(pcs->handle, image_info.imageFilePath, path, len, NULL))
+            struct dyld_all_image_infos32 temp = image_infos.infos32;
+            image_infos.infos64.infoArrayCount = temp.infoArrayCount;
+            image_infos.infos64.infoArray = temp.infoArray;
+            len = sizeof(image_info.info32);
+        }
+        if (image_infos.infos64.infoArray && image_infos.infos64.infoArrayCount &&
+            ReadProcessMemory(pcs->handle, (void*)image_infos.infos64.infoArray, &image_info, len, NULL))
+        {
+            if (!pcs->is_64bit)
             {
-                path[len - 1] = 0;
-                got_path = TRUE;
-                TRACE("got executable path from target's dyld image info: %s\n", debugstr_a(path));
-                break;
+                struct dyld_image_info32 temp = image_info.info32;
+                image_info.info64.imageLoadAddress = temp.imageLoadAddress;
+                image_info.info64.imageFilePath = temp.imageFilePath;
+            }
+            for (len = sizeof(path); image_info.info64.imageFilePath && len > 0; len /= 2)
+            {
+                if (ReadProcessMemory(pcs->handle, (void*)image_info.info64.imageFilePath, path, len, NULL))
+                {
+                    path[len - 1] = 0;
+                    got_path = TRUE;
+                    TRACE("got executable path from target's dyld image info: %s\n", debugstr_a(path));
+                    break;
+                }
             }
         }
     }
