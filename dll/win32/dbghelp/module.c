@@ -637,6 +637,7 @@ static BOOL image_locate_debug_link(const struct module* module, struct image_fi
 
     filename_len = MultiByteToWideChar(CP_UNIXCP, 0, filename, -1, NULL, 0);
     path_len = strlenW(module->module.LoadedImageName);
+    if (module->real_path) path_len = max(path_len, strlenW(module->real_path));
     p = HeapAlloc(GetProcessHeap(), 0,
                   (globalDebugDirLen + path_len + 6 + 1 + filename_len + 1) * sizeof(WCHAR));
     if (!p) goto found;
@@ -656,14 +657,22 @@ static BOOL image_locate_debug_link(const struct module* module, struct image_fi
     MultiByteToWideChar(CP_UNIXCP, 0, filename, -1, slash + ARRAY_SIZE(dotDebugW), filename_len);
     if (image_check_debug_link(p, fmap_link, crc)) goto found;
 
-#ifndef __REACTOS__
+    if (module->real_path)
+    {
+        strcpyW(p, module->real_path);
+        slash = p;
+        if ((slash2 = strrchrW(slash, '/'))) slash = slash2 + 1;
+        if ((slash2 = strrchrW(slash, '\\'))) slash = slash2 + 1;
+        MultiByteToWideChar(CP_UNIXCP, 0, filename, -1, slash, filename_len);
+        if (image_check_debug_link(p, fmap_link, crc)) goto found;
+    }
+
     /* testing globaldebugdir/execdir/filename */
     memmove(p + globalDebugDirLen, p, (slash - p) * sizeof(WCHAR));
     memcpy(p, globalDebugDirW, globalDebugDirLen * sizeof(WCHAR));
     slash += globalDebugDirLen;
     MultiByteToWideChar(CP_UNIXCP, 0, filename, -1, slash, filename_len);
     if (image_check_debug_link(p, fmap_link, crc)) goto found;
-#endif
 
     /* finally testing filename */
     if (image_check_debug_link(slash, fmap_link, crc)) goto found;
