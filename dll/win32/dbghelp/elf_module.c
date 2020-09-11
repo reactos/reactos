@@ -403,7 +403,7 @@ static BOOL elf_map_file(struct elf_map_file_data* emfd, struct image_file_map* 
 {
     static const BYTE   elf_signature[4] = { ELFMAG0, ELFMAG1, ELFMAG2, ELFMAG3 };
     unsigned int        i;
-    size_t              tmp, page_mask = sysconf( _SC_PAGESIZE ) - 1;
+    size_t              tmp, page_mask = sysinfo.dwPageSize - 1;
     WCHAR              *dos_path;
     unsigned char e_ident[EI_NIDENT];
 
