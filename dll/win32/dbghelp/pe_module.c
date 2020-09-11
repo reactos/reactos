@@ -775,68 +775,23 @@ BOOL pe_load_debug_info(const struct process* pcs, struct module* module)
 }
 
 #ifndef __REACTOS__
-static WCHAR *find_builtin_pe(const WCHAR *path, HANDLE *file)
+struct builtin_search
 {
-    const WCHAR *base_name;
-    size_t len, i;
-    WCHAR *buf;
+    WCHAR *path;
+    struct image_file_map fmap;
+};
 
-    static const WCHAR winebuilddirW[] = {'W','I','N','E','B','U','I','L','D','D','I','R',0};
-    static const WCHAR winedlldirW[] = {'W','I','N','E','D','L','L','D','I','R','%','u',0};
+static BOOL search_builtin_pe(void *param, HANDLE handle, const WCHAR *path)
+{
+    struct builtin_search *search = param;
+    size_t size;
 
-    if ((base_name = strrchrW(path, '\\'))) base_name++;
-    else base_name = path;
+    if (!pe_map_file(handle, &search->fmap, DMT_PE)) return FALSE;
 
-    if ((len = GetEnvironmentVariableW(winebuilddirW, NULL, 0)))
-    {
-        WCHAR *p, *end;
-        const WCHAR dllsW[] = { '\\','d','l','l','s','\\' };
-        const WCHAR programsW[] = { '\\','p','r','o','g','r','a','m','s','\\' };
-        const WCHAR dot_dllW[] = {'.','d','l','l',0};
-        const WCHAR dot_exeW[] = {'.','e','x','e',0};
-
-        if (!(buf = heap_alloc((len + 8 + 2 * lstrlenW(base_name)) * sizeof(WCHAR)))) return NULL;
-        end = buf + GetEnvironmentVariableW(winebuilddirW, buf, len);
-
-        memcpy(end, dllsW, sizeof(dllsW));
-        strcpyW(end + ARRAY_SIZE(dllsW), base_name);
-        if ((p = strchrW(end, '.')) && !lstrcmpW(p, dot_dllW)) *p = 0;
-        p = end + strlenW(end);
-        *p++ = '\\';
-        strcpyW(p, base_name);
-        *file = CreateFileW(buf, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
-        if (*file != INVALID_HANDLE_VALUE) return buf;
-
-        memcpy(end, programsW, sizeof(programsW));
-        end += ARRAY_SIZE(programsW);
-        strcpyW(end, base_name);
-        if ((p = strchrW(end, '.')) && !lstrcmpW(p, dot_exeW)) *p = 0;
-        p = end + strlenW(end);
-        *p++ = '\\';
-        strcpyW(p, base_name);
-        *file = CreateFileW(buf, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
-        if (*file != INVALID_HANDLE_VALUE) return buf;
-
-        heap_free(buf);
-    }
-
-    for (i = 0;; i++)
-    {
-        WCHAR name[64];
-        sprintfW(name, winedlldirW, i);
-        if (!(len = GetEnvironmentVariableW(name, NULL, 0))) break;
-        if (!(buf = heap_alloc((len + lstrlenW(base_name) + 2) * sizeof(WCHAR)))) return NULL;
-
-        GetEnvironmentVariableW(name, buf, len);
-        buf[len++] = '\\';
-        strcpyW(buf + len, base_name);
-        *file = CreateFileW(buf, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
-        if (*file != INVALID_HANDLE_VALUE) return buf;
-
-        heap_free(buf);
-    }
-
-    return NULL;
+    size = (lstrlenW(path) + 1) * sizeof(WCHAR);
+    if ((search->path = heap_alloc(size)))
+        memcpy(search->path, path, size);
+    return TRUE;
 }
 #endif
 
@@ -870,18 +825,12 @@ struct module* pe_load_native_module(struct process* pcs, const WCHAR* name,
     if (pe_map_file(hFile, &modfmt->u.pe_info->fmap, DMT_PE))
     {
 #ifndef __REACTOS__
-        WCHAR *builtin_path = NULL;
-        HANDLE builtin_module;
-        if (modfmt->u.pe_info->fmap.u.pe.builtin && (builtin_path = find_builtin_pe(loaded_name, &builtin_module)))
+        struct builtin_search builtin = { NULL };
+        if (modfmt->u.pe_info->fmap.u.pe.builtin && search_dll_path(loaded_name, search_builtin_pe, &builtin))
         {
-            struct image_file_map builtin_fmap;
-            if (pe_map_file(builtin_module, &builtin_fmap, DMT_PE))
-            {
-                TRACE("reloaded %s from %s\n", debugstr_w(loaded_name), debugstr_w(builtin_path));
-                image_unmap_file(&modfmt->u.pe_info->fmap);
-                modfmt->u.pe_info->fmap = builtin_fmap;
-            }
-            CloseHandle(builtin_module);
+            TRACE("reloaded %s from %s\n", debugstr_w(loaded_name), debugstr_w(builtin.path));
+            image_unmap_file(&modfmt->u.pe_info->fmap);
+            modfmt->u.pe_info->fmap = builtin.fmap;
         }
 #endif
         if (!base) base = modfmt->u.pe_info->fmap.u.pe.ntheader.OptionalHeader.ImageBase;
@@ -895,7 +844,7 @@ struct module* pe_load_native_module(struct process* pcs, const WCHAR* name,
 #ifdef __REACTOS__
             module->real_path = NULL;
 #else
-            module->real_path = builtin_path;
+            module->real_path = builtin.path;
 #endif
             modfmt->module = module;
             modfmt->remove = pe_module_remove;
@@ -912,7 +861,7 @@ struct module* pe_load_native_module(struct process* pcs, const WCHAR* name,
         {
             ERR("could not load the module '%s'\n", debugstr_w(loaded_name));
 #ifndef __REACTOS__
-            heap_free(module->real_path);
+            heap_free(builtin.path);
 #endif
             image_unmap_file(&modfmt->u.pe_info->fmap);
         }
