@@ -312,7 +312,8 @@ BOOL WINAPI SymInitializeW(HANDLE hProcess, PCWSTR UserSearchPath, BOOL fInvadeP
 
     TRACE("(%p %s %u)\n", hProcess, debugstr_w(UserSearchPath), fInvadeProcess);
 
-    if (process_find_by_handle(hProcess)){
+    if (process_find_by_handle(hProcess))
+    {
         WARN("the symbols for this process have already been initialized!\n");
 
         /* MSDN says to only call this function once unless SymCleanup() has been called since the last call.
@@ -321,15 +322,15 @@ BOOL WINAPI SymInitializeW(HANDLE hProcess, PCWSTR UserSearchPath, BOOL fInvadeP
         return TRUE;
     }
 
-    pcs = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*pcs));
-    if (!pcs) return FALSE;
-
-    pcs->handle = hProcess;
-
     IsWow64Process(GetCurrentProcess(), &wow64);
 
     if (!IsWow64Process(hProcess, &child_wow64))
         return FALSE;
+
+    pcs = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*pcs));
+    if (!pcs) return FALSE;
+
+    pcs->handle = hProcess;
     pcs->is_64bit = (sizeof(void *) == 8 || wow64) && !child_wow64;
 
     if (UserSearchPath)
