@@ -131,7 +131,7 @@ class CDefView :
         HRESULT _DoFolderViewCB(UINT uMsg, WPARAM wParam, LPARAM lParam);
         HRESULT _GetSnapToGrid();
         void _MoveSelectionOnAutoArrange(POINT pt);
-        INT _FindLVInsertableIndexFromPoint(POINT pt);
+        INT _FindInsertableIndexFromPoint(POINT pt);
 
     public:
         CDefView();
@@ -3395,11 +3395,12 @@ HRESULT WINAPI CDefView::DragLeave()
     return S_OK;
 }
 
-INT CDefView::_FindLVInsertableIndexFromPoint(POINT pt)
+INT CDefView::_FindInsertableIndexFromPoint(POINT pt)
 {
     RECT rcBound, rcIcon;
     INT i, nCount = m_ListView.GetItemCount();
 
+    /* FIXME: LVM_GETORIGIN is broken */
     pt.x += m_ListView.GetScrollPos(SB_HORZ);
     pt.y += m_ListView.GetScrollPos(SB_VERT);
 
@@ -3484,7 +3485,7 @@ SelectionMoveCompareFunc(LPARAM lParam1, LPARAM lParam2, LPARAM lParamSort)
 void CDefView::_MoveSelectionOnAutoArrange(POINT pt)
 {
     // get insertable index from position
-    INT iPosition = _FindLVInsertableIndexFromPoint(pt);
+    INT iPosition = _FindInsertableIndexFromPoint(pt);
 
     // create identity mapping of indexes
     CSimpleArray<INT> array;
