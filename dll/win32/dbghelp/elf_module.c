@@ -101,7 +101,38 @@ struct elf_module_info
     struct image_file_map       file_map;
 };
 
-#define ELF_AT_SYSINFO_EHDR 33
+/* Legal values for sh_type (section type).  */
+#define ELF_SHT_NULL            0    /* Section header table entry unused */
+#define ELF_SHT_PROGBITS        1    /* Program data */
+#define ELF_SHT_SYMTAB          2    /* Symbol table */
+#define ELF_SHT_STRTAB          3    /* String table */
+#define ELF_SHT_RELA            4    /* Relocation entries with addends */
+#define ELF_SHT_HASH            5    /* Symbol hash table */
+#define ELF_SHT_DYNAMIC         6    /* Dynamic linking information */
+#define ELF_SHT_NOTE            7    /* Notes */
+#define ELF_SHT_NOBITS          8    /* Program space with no data (bss) */
+#define ELF_SHT_REL             9    /* Relocation entries, no addends */
+#define ELF_SHT_SHLIB          10    /* Reserved */
+#define ELF_SHT_DYNSYM         11    /* Dynamic linker symbol table */
+#define ELF_SHT_INIT_ARRAY     14    /* Array of constructors */
+#define ELF_SHT_FINI_ARRAY     15    /* Array of destructors */
+#define ELF_SHT_PREINIT_ARRAY  16    /* Array of pre-constructors */
+#define ELF_SHT_GROUP          17    /* Section group */
+#define ELF_SHT_SYMTAB_SHNDX   18    /* Extended section indeces */
+#define ELF_SHT_NUM            19    /* Number of defined types.  */
+
+/* Legal values for ST_TYPE subfield of st_info (symbol type).  */
+#define ELF_STT_NOTYPE          0    /* Symbol type is unspecified */
+#define ELF_STT_OBJECT          1    /* Symbol is a data object */
+#define ELF_STT_FUNC            2    /* Symbol is a code object */
+#define ELF_STT_SECTION         3    /* Symbol associated with a section */
+#define ELF_STT_FILE            4    /* Symbol's name is file name */
+
+#define ELF_PT_LOAD             1    /* Loadable program segment */
+
+#define ELF_DT_DEBUG           21    /* For debugging; unspecified */
+
+#define ELF_AT_SYSINFO_EHDR    33
 
 /******************************************************************
  *		elf_map_section
@@ -116,7 +147,7 @@ static const char* elf_map_section(struct image_section_map* ism)
 
     assert(ism->fmap->modtype == DMT_ELF);
     if (ism->sidx < 0 || ism->sidx >= ism->fmap->u.elf.elfhdr.e_shnum ||
-        fmap->sect[ism->sidx].shdr.sh_type == SHT_NOBITS)
+        fmap->sect[ism->sidx].shdr.sh_type == ELF_SHT_NOBITS)
         return IMAGE_NO_MAP;
 
     if (fmap->target_copy)
@@ -503,7 +534,7 @@ static BOOL elf_map_file(struct elf_map_file_data* emfd, struct image_file_map* 
 
             if (elf_map_file_read(fmap, emfd, &phdr, sizeof(phdr),
                                   fmap->u.elf.elfhdr.e_phoff + i * sizeof(phdr)) &&
-                phdr.p_type == PT_LOAD)
+                phdr.p_type == ELF_PT_LOAD)
             {
                 tmp = (phdr.p_vaddr + phdr.p_memsz + page_mask) & ~page_mask;
                 if (fmap->u.elf.elf_size < tmp) fmap->u.elf.elf_size = tmp;
@@ -526,7 +557,7 @@ static BOOL elf_map_file(struct elf_map_file_data* emfd, struct image_file_map* 
 
             if (elf_map_file_read(fmap, emfd, &phdr, sizeof(phdr),
                                   fmap->u.elf.elfhdr.e_phoff + i * sizeof(phdr)) &&
-                phdr.p_type == PT_LOAD)
+                phdr.p_type == ELF_PT_LOAD)
             {
                 tmp = (phdr.p_vaddr + phdr.p_memsz + page_mask) & ~page_mask;
                 if (fmap->u.elf.elf_size < tmp) fmap->u.elf.elf_size = tmp;
@@ -612,8 +643,8 @@ static void elf_hash_symtab(struct module* module, struct pool* pool,
     struct image_section_map    ism, ism_str;
     const char *symtab;
 
-    if (!elf_find_section_type(fmap, ".symtab", SHT_SYMTAB, &ism) &&
-        !elf_find_section_type(fmap, ".dynsym", SHT_DYNSYM, &ism)) return;
+    if (!elf_find_section_type(fmap, ".symtab", ELF_SHT_SYMTAB, &ism) &&
+        !elf_find_section_type(fmap, ".dynsym", ELF_SHT_DYNSYM, &ism)) return;
     if ((symtab = image_map_section(&ism)) == IMAGE_NO_MAP) return;
     ism_str.fmap = ism.fmap;
     ism_str.sidx = fmap->u.elf.sect[ism.sidx].shdr.sh_link;
@@ -653,7 +684,7 @@ static void elf_hash_symtab(struct module* module, struct pool* pool,
         /* Ignore certain types of entries which really aren't of that much
          * interest.
          */
-        if ((type != STT_NOTYPE && type != STT_FILE && type != STT_OBJECT && type != STT_FUNC)
+        if ((type != ELF_STT_NOTYPE && type != ELF_STT_FILE && type != ELF_STT_OBJECT && type != ELF_STT_FUNC)
             || !sym.st_shndx)
         {
             continue;
@@ -664,14 +695,14 @@ static void elf_hash_symtab(struct module* module, struct pool* pool,
         /* handle some specific symtab (that we'll throw away when done) */
         switch (type)
         {
-        case STT_FILE:
+        case ELF_STT_FILE:
             if (symname)
                 compiland = symt_new_compiland(module, sym.st_value,
                                                source_new(module, NULL, symname));
             else
                 compiland = NULL;
             continue;
-        case STT_NOTYPE:
+        case ELF_STT_NOTYPE:
             /* we are only interested in wine markers inserted by winebuild */
             for (j = 0; thunks[j].symname; j++)
             {
@@ -923,11 +954,11 @@ static int elf_new_wine_thunks(struct module* module, const struct hash_table* h
                  */
                 switch (ste->sym.st_info & 0xf)
                 {
-                case STT_FUNC:
+                case ELF_STT_FUNC:
                     symt_new_function(module, ste->compiland, ste->ht_elt.name,
                                       addr, ste->sym.st_size, NULL);
                     break;
-                case STT_OBJECT:
+                case ELF_STT_OBJECT:
                     loc.kind = loc_absolute;
                     loc.reg = 0;
                     loc.offset = addr;
@@ -1121,7 +1152,7 @@ static BOOL elf_load_file_from_fmap(struct process* pcs, const WCHAR* filename,
     {
         struct image_section_map        ism;
 
-        if (elf_find_section_type(fmap, ".dynamic", SHT_DYNAMIC, &ism))
+        if (elf_find_section_type(fmap, ".dynamic", ELF_SHT_DYNAMIC, &ism))
         {
             char*           ptr = (char*)(ULONG_PTR)fmap->u.elf.sect[ism.sidx].shdr.sh_addr;
             ULONG_PTR       len;
@@ -1141,7 +1172,7 @@ static BOOL elf_load_file_from_fmap(struct process* pcs, const WCHAR* filename,
                     if (!ReadProcessMemory(pcs->handle, ptr, &dyn, sizeof(dyn), &len) ||
                         len != sizeof(dyn))
                         return ret;
-                    if (dyn.d_tag == DT_DEBUG)
+                    if (dyn.d_tag == ELF_DT_DEBUG)
                     {
                         elf_info->dbg_hdr_addr = dyn.d_val;
                         if (load_offset == 0 && dyn_addr == 0) /* likely the case */
@@ -1167,7 +1198,7 @@ static BOOL elf_load_file_from_fmap(struct process* pcs, const WCHAR* filename,
                     if (!ReadProcessMemory(pcs->handle, ptr, &dyn, sizeof(dyn), &len) ||
                         len != sizeof(dyn))
                         return ret;
-                    if (dyn.d_tag == DT_DEBUG)
+                    if (dyn.d_tag == ELF_DT_DEBUG)
                     {
                         elf_info->dbg_hdr_addr = dyn.d_val;
                         if (load_offset == 0 && dyn_addr == 0) /* likely the case */
@@ -1191,7 +1222,7 @@ static BOOL elf_load_file_from_fmap(struct process* pcs, const WCHAR* filename,
         struct image_section_map ism;
         ULONG_PTR               modbase = load_offset;
 
-        if (elf_find_section_type(fmap, ".dynamic", SHT_DYNAMIC, &ism))
+        if (elf_find_section_type(fmap, ".dynamic", ELF_SHT_DYNAMIC, &ism))
         {
             ULONG_PTR rva_dyn = elf_get_map_rva(&ism);
 
