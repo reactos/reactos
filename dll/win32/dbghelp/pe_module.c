@@ -213,6 +213,7 @@ static BOOL pe_map_file(HANDLE file, struct image_file_map* fmap, enum module_ty
     void*       mapping;
 
     fmap->modtype = mt;
+    fmap->alternate = NULL;
     fmap->u.pe.hMap = CreateFileMappingW(file, NULL, PAGE_READONLY, 0, 0, NULL);
     if (fmap->u.pe.hMap == 0) return FALSE;
     fmap->u.pe.full_count = 0;
