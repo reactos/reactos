@@ -396,29 +396,6 @@ static BOOL elf_map_shdr(struct elf_map_file_data* emfd, struct image_file_map* 
     return TRUE;
 }
 
-static WCHAR *get_dos_file_name(const WCHAR *filename)
-{
-    WCHAR *dos_path;
-    size_t len;
-
-    if (*filename == '/')
-    {
-        char *unix_path;
-        len = WideCharToMultiByte(CP_UNIXCP, 0, filename, -1, NULL, 0, NULL, NULL);
-        unix_path = heap_alloc(len * sizeof(WCHAR));
-        WideCharToMultiByte(CP_UNIXCP, 0, filename, -1, unix_path, len, NULL, NULL);
-        dos_path = wine_get_dos_file_name(unix_path);
-        heap_free(unix_path);
-    }
-    else
-    {
-        len = lstrlenW(filename);
-        dos_path = heap_alloc((len + 1) * sizeof(WCHAR));
-        memcpy(dos_path, filename, (len + 1) * sizeof(WCHAR));
-    }
-    return dos_path;
-}
-
 /******************************************************************
  *		elf_map_file
  *
