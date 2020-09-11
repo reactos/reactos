@@ -807,6 +807,19 @@ typedef struct _MINIDUMP_MEMORY_LIST
     MINIDUMP_MEMORY_DESCRIPTOR  MemoryRanges[1]; /* FIXME: 0-sized array not supported */
 } MINIDUMP_MEMORY_LIST, *PMINIDUMP_MEMORY_LIST;
 
+typedef struct _MINIDUMP_MEMORY_DESCRIPTOR64
+{
+    ULONG64                     StartOfMemoryRange;
+    ULONG64                     DataSize;
+} MINIDUMP_MEMORY_DESCRIPTOR64, *PMINIDUMP_MEMORY_DESCRIPTOR64;
+
+typedef struct _MINIDUMP_MEMORY64_LIST
+{
+    ULONG64                     NumberOfMemoryRanges;
+    RVA64                       BaseRva;
+    MINIDUMP_MEMORY_DESCRIPTOR64 MemoryRanges[1]; /* FIXME: 0-sized array not supported */
+} MINIDUMP_MEMORY64_LIST, *PMINIDUMP_MEMORY64_LIST;
+
 #define MINIDUMP_MISC1_PROCESS_ID       0x00000001
 #define MINIDUMP_MISC1_PROCESS_TIMES    0x00000002
 
