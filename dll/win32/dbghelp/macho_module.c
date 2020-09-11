@@ -467,10 +467,11 @@ static const struct load_command* macho_next_load_command(const struct load_comm
  * callback.  If >=0, that's the count of load commands successfully
  * processed.
  */
-static int macho_enum_load_commands(struct macho_file_map* fmap, unsigned cmd,
-                                    int (*cb)(struct macho_file_map*, const struct load_command*, void*),
+static int macho_enum_load_commands(struct image_file_map *ifm, unsigned cmd,
+                                    int (*cb)(struct image_file_map*, const struct load_command*, void*),
                                     void* user)
 {
+    struct macho_file_map* fmap = &ifm->u.macho;
     const struct load_command* lc;
     int i;
     int count = 0;
@@ -488,7 +489,7 @@ static int macho_enum_load_commands(struct macho_file_map* fmap, unsigned cmd,
         if (cmd && cmd != lc->cmd) continue;
         count++;
 
-        result = cb(fmap, lc, user);
+        result = cb(ifm, lc, user);
         TRACE("load_command[%d] (%p), cmd %u; callback => %d\n", i, lc, lc->cmd, result);
         if (result) return (result < 0) ? result : count;
     }
@@ -503,13 +504,14 @@ static int macho_enum_load_commands(struct macho_file_map* fmap, unsigned cmd,
  * significant sections in a Mach-O file.  All commands are
  * expected to be of LC_SEGMENT[_64] type.
  */
-static int macho_count_sections(struct macho_file_map* fmap, const struct load_command* lc, void* user)
+static int macho_count_sections(struct image_file_map* ifm, const struct load_command* lc, void* user)
 {
     const macho_segment_command* sc = (const macho_segment_command*)lc;
 
-    TRACE("(%p/%d, %p, %p) segment %s\n", fmap, fmap->fd, lc, user, debugstr_an(sc->segname, sizeof(sc->segname)));
+    TRACE("(%p/%d, %p, %p) segment %s\n", ifm, ifm->u.macho.fd, lc, user,
+        debugstr_an(sc->segname, sizeof(sc->segname)));
 
-    fmap->num_sections += sc->nsects;
+    ifm->u.macho.num_sections += sc->nsects;
     return 0;
 }
 
@@ -520,8 +522,9 @@ static int macho_count_sections(struct macho_file_map* fmap, const struct load_c
  * range covered by the segments of a Mach-O file and builds the
  * section map.  All commands are expected to be of LC_SEGMENT[_64] type.
  */
-static int macho_load_section_info(struct macho_file_map* fmap, const struct load_command* lc, void* user)
+static int macho_load_section_info(struct image_file_map* ifm, const struct load_command* lc, void* user)
 {
+    struct macho_file_map*          fmap = &ifm->u.macho;
     const macho_segment_command*    sc = (const macho_segment_command*)lc;
     struct section_info*            info = user;
     BOOL                            ignore;
@@ -576,9 +579,9 @@ static int macho_load_section_info(struct macho_file_map* fmap, const struct loa
  * Callback for macho_enum_load_commands.  Records the UUID load
  * command of a Mach-O file.
  */
-static int find_uuid(struct macho_file_map* fmap, const struct load_command* lc, void* user)
+static int find_uuid(struct image_file_map* ifm, const struct load_command* lc, void* user)
 {
-    fmap->uuid = (const struct uuid_command*)lc;
+    ifm->u.macho.uuid = (const struct uuid_command*)lc;
     return 1;
 }
 
@@ -700,7 +703,7 @@ static BOOL macho_map_file(struct process *pcs, const WCHAR *filenameW,
     TRACE("... verified Mach header\n");
 
     fmap->num_sections = 0;
-    if (macho_enum_load_commands(fmap, target_cmd, macho_count_sections, NULL) < 0)
+    if (macho_enum_load_commands(ifm, target_cmd, macho_count_sections, NULL) < 0)
         goto done;
     TRACE("%d sections\n", fmap->num_sections);
 
@@ -713,7 +716,7 @@ static BOOL macho_map_file(struct process *pcs, const WCHAR *filenameW,
 
     info.split_segs = split_segs;
     info.section_index = 0;
-    if (macho_enum_load_commands(fmap, target_cmd, macho_load_section_info, &info) < 0)
+    if (macho_enum_load_commands(ifm, target_cmd, macho_load_section_info, &info) < 0)
     {
         fmap->num_sections = 0;
         goto done;
@@ -723,7 +726,7 @@ static BOOL macho_map_file(struct process *pcs, const WCHAR *filenameW,
     TRACE("segs_start: 0x%08lx, segs_size: 0x%08lx\n", (unsigned long)fmap->segs_start,
             (unsigned long)fmap->segs_size);
 
-    if (macho_enum_load_commands(fmap, LC_UUID, find_uuid, NULL) < 0)
+    if (macho_enum_load_commands(ifm, LC_UUID, find_uuid, NULL) < 0)
         goto done;
     if (fmap->uuid)
     {
@@ -857,9 +860,10 @@ static void macho_stabs_def_cb(struct module* module, unsigned long load_offset,
  * Callback for macho_enum_load_commands.  Processes the LC_SYMTAB
  * load commands from the Mach-O file.
  */
-static int macho_parse_symtab(struct macho_file_map* fmap,
+static int macho_parse_symtab(struct image_file_map* ifm,
                               const struct load_command* lc, void* user)
 {
+    struct macho_file_map* fmap = &ifm->u.macho;
     const struct symtab_command*    sc = (const struct symtab_command*)lc;
     struct macho_debug_info*        mdi = user;
     const macho_nlist*              stab;
@@ -1219,6 +1223,7 @@ BOOL macho_load_debug_info(struct process *pcs, struct module* module)
     BOOL                    ret = FALSE;
     struct macho_debug_info mdi;
     int                     result;
+    struct image_file_map  *ifm;
     struct macho_file_map  *fmap;
 
     if (module->type != DMT_MACHO || !module->format_info[DFI_MACHO]->u.macho_info)
@@ -1227,7 +1232,8 @@ BOOL macho_load_debug_info(struct process *pcs, struct module* module)
         return FALSE;
     }
 
-    fmap = &module->format_info[DFI_MACHO]->u.macho_info->file_map.u.macho;
+    ifm = &module->format_info[DFI_MACHO]->u.macho_info->file_map;
+    fmap = &ifm->u.macho;
 
     TRACE("(%p, %p/%d)\n", module, fmap, fmap->fd);
 
@@ -1246,7 +1252,7 @@ BOOL macho_load_debug_info(struct process *pcs, struct module* module)
     mdi.module = module;
     pool_init(&mdi.pool, 65536);
     hash_table_init(&mdi.pool, &mdi.ht_symtab, 256);
-    result = macho_enum_load_commands(fmap, LC_SYMTAB, macho_parse_symtab, &mdi);
+    result = macho_enum_load_commands(ifm, LC_SYMTAB, macho_parse_symtab, &mdi);
     if (result > 0)
         ret = TRUE;
     else if (result < 0)
@@ -1255,7 +1261,7 @@ BOOL macho_load_debug_info(struct process *pcs, struct module* module)
     if (!(dbghelp_options & SYMOPT_PUBLICS_ONLY) && fmap->dsym)
     {
         mdi.fmap = &fmap->dsym->u.macho;
-        result = macho_enum_load_commands(mdi.fmap, LC_SYMTAB, macho_parse_symtab, &mdi);
+        result = macho_enum_load_commands(fmap->dsym, LC_SYMTAB, macho_parse_symtab, &mdi);
         if (result > 0)
             ret = TRUE;
         else if (result < 0)
