@@ -1465,7 +1465,14 @@ static BOOL native_synchronize_module_list(struct process* pcs)
     return FALSE;
 }
 
+static BOOL native_fetch_file_info(struct process* process, const WCHAR* name, ULONG_PTR load_addr, DWORD_PTR* base,
+                                   DWORD* size, DWORD* checksum)
+{
+    return FALSE;
+}
+
 const struct loader_ops no_loader_ops =
 {
     native_synchronize_module_list,
+    native_fetch_file_info,
 };

@@ -253,9 +253,9 @@ static BOOL WINAPI fetch_pe_module_info_cb(PCWSTR name, DWORD64 base, ULONG size
 /******************************************************************
  *		fetch_elf_module_info_cb
  *
- * Callback for accumulating in dump_context an ELF modules set
+ * Callback for accumulating in dump_context an host modules set
  */
-static BOOL fetch_elf_module_info_cb(const WCHAR* name, unsigned long base,
+static BOOL fetch_host_module_info_cb(const WCHAR* name, unsigned long base,
                                      void* user)
 {
     struct dump_context*        dc = user;
@@ -263,33 +263,7 @@ static BOOL fetch_elf_module_info_cb(const WCHAR* name, unsigned long base,
     DWORD                       size, checksum;
 
     /* FIXME: there's no relevant timestamp on ELF modules */
-    /* NB: if we have a non-null base from the live-target use it (whenever
-     * the ELF module is relocatable or not). If we have a null base (ELF
-     * module isn't relocatable) then grab its base address from ELF file
-     */
-    if (!elf_fetch_file_info(name, &rbase, &size, &checksum))
-        size = checksum = 0;
-    add_module(dc, name, base ? base : rbase, size, 0 /* FIXME */, checksum, TRUE);
-    return TRUE;
-}
-
-/******************************************************************
- *		fetch_macho_module_info_cb
- *
- * Callback for accumulating in dump_context a Mach-O modules set
- */
-static BOOL fetch_macho_module_info_cb(const WCHAR* name, unsigned long base,
-                                       void* user)
-{
-    struct dump_context*        dc = (struct dump_context*)user;
-    DWORD_PTR                   rbase;
-    DWORD                       size, checksum;
-
-    /* FIXME: there's no relevant timestamp on Mach-O modules */
-    /* NB: if we have a non-null base from the live-target use it.  If we have
-     * a null base, then grab its base address from Mach-O file.
-     */
-    if (!macho_fetch_file_info(dc->process->handle, name, base, &rbase, &size, &checksum))
+    if (!dc->process->loader->fetch_file_info(dc->process, name, base, &rbase, &size, &checksum))
         size = checksum = 0;
     add_module(dc, name, base ? base : rbase, size, 0 /* FIXME */, checksum, TRUE);
     return TRUE;
@@ -348,8 +322,8 @@ static void fetch_modules_info(struct dump_context* dc)
      */
     if (dc->process->dbg_hdr_addr)
     {
-        elf_enum_modules(dc->process, fetch_elf_module_info_cb, dc);
-        macho_enum_modules(dc->process, fetch_macho_module_info_cb, dc);
+        elf_enum_modules(dc->process, fetch_host_module_info_cb, dc);
+        macho_enum_modules(dc->process, fetch_host_module_info_cb, dc);
     }
 }
 

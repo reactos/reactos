@@ -1343,20 +1343,16 @@ BOOL macho_load_debug_info(struct process *pcs, struct module* module)
  *
  * Gathers some more information for a Mach-O module from a given file
  */
-BOOL macho_fetch_file_info(HANDLE process, const WCHAR* name, unsigned long load_addr, DWORD_PTR* base,
-                           DWORD* size, DWORD* checksum)
+static BOOL macho_fetch_file_info(struct process* process, const WCHAR* name, ULONG_PTR load_addr, DWORD_PTR* base,
+                                  DWORD* size, DWORD* checksum)
 {
     struct image_file_map fmap;
-    struct process *pcs;
     BOOL split_segs;
 
     TRACE("(%s, %p, %p, %p)\n", debugstr_w(name), base, size, checksum);
 
-    pcs = process_find_by_handle(process);
-    if (!pcs) return FALSE;
-
-    split_segs = image_uses_split_segs(process, load_addr);
-    if (!macho_map_file(pcs, name, split_segs, &fmap)) return FALSE;
+    split_segs = image_uses_split_segs(process->handle, load_addr);
+    if (!macho_map_file(process, name, split_segs, &fmap)) return FALSE;
     if (base) *base = fmap.u.macho.segs_start;
     *size = fmap.u.macho.segs_size;
     *checksum = calc_crc32(fmap.u.macho.handle);
@@ -1911,6 +1907,7 @@ static BOOL macho_search_loader(struct process* pcs, struct macho_info* macho_in
 static const struct loader_ops macho_loader_ops =
 {
     macho_synchronize_module_list,
+    macho_fetch_file_info,
 };
 
 /******************************************************************
@@ -1933,12 +1930,6 @@ BOOL macho_read_wine_loader_dbg_info(struct process* pcs)
 }
 
 #else  /* HAVE_MACH_O_LOADER_H */
-
-BOOL macho_fetch_file_info(HANDLE process, const WCHAR* name, unsigned long load_addr, DWORD_PTR* base,
-                           DWORD* size, DWORD* checksum)
-{
-    return FALSE;
-}
 
 BOOL macho_read_wine_loader_dbg_info(struct process* pcs)
 {

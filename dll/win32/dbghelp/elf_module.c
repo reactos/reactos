@@ -1068,8 +1068,7 @@ BOOL elf_load_debug_info(struct module* module)
  *
  * Gathers some more information for an ELF module from a given file
  */
-BOOL elf_fetch_file_info(const WCHAR* name, DWORD_PTR* base,
-                         DWORD* size, DWORD* checksum)
+static BOOL elf_fetch_file_info(struct process* process, const WCHAR* name, ULONG_PTR load_addr, DWORD_PTR* base, DWORD* size, DWORD* checksum)
 {
     struct image_file_map fmap;
 
@@ -1707,6 +1706,7 @@ static BOOL elf_search_loader(struct process* pcs, struct elf_info* elf_info)
 static const struct loader_ops elf_loader_ops =
 {
     elf_synchronize_module_list,
+    elf_fetch_file_info,
 };
 
 /******************************************************************
@@ -1730,12 +1730,6 @@ BOOL elf_read_wine_loader_dbg_info(struct process* pcs)
 #else	/* !__ELF__ */
 
 BOOL elf_map_handle(HANDLE handle, struct image_file_map* fmap)
-{
-    return FALSE;
-}
-
-BOOL elf_fetch_file_info(const WCHAR* name, DWORD_PTR* base,
-                         DWORD* size, DWORD* checksum)
 {
     return FALSE;
 }
