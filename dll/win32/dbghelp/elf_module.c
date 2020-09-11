@@ -124,6 +124,8 @@ struct elf_module_info
     struct image_file_map       file_map;
 };
 
+#define ELF_AT_SYSINFO_EHDR 33
+
 /******************************************************************
  *		elf_map_section
  *
@@ -1269,7 +1271,6 @@ static BOOL elf_load_file_cb(void *param, HANDLE handle, const WCHAR *filename)
     return elf_load_file(load_file->process, filename, load_file->load_offset, load_file->dyn_addr, load_file->elf_info);
 }
 
-#ifdef AT_SYSINFO_EHDR
 /******************************************************************
  *		elf_search_auxv
  *
@@ -1279,9 +1280,9 @@ static BOOL elf_search_auxv(const struct process* pcs, unsigned type, ULONG_PTR*
 {
     char        buffer[sizeof(SYMBOL_INFO) + MAX_SYM_NAME];
     SYMBOL_INFO*si = (SYMBOL_INFO*)buffer;
-    void*       addr;
-    void*       str;
-    void*       str_max;
+    BYTE*       addr;
+    BYTE*       str;
+    BYTE*       str_max;
 
     si->SizeOfStruct = sizeof(*si);
     si->MaxNameLen = MAX_SYM_NAME;
@@ -1309,36 +1310,43 @@ static BOOL elf_search_auxv(const struct process* pcs, unsigned type, ULONG_PTR*
 
     if (pcs->is_64bit)
     {
-        Elf64_auxv_t auxv;
+        struct
+        {
+            UINT64 a_type;
+            UINT64 a_val;
+        } auxv;
 
         while (ReadProcessMemory(pcs->handle, addr, &auxv, sizeof(auxv), NULL) && auxv.a_type)
         {
             if (auxv.a_type == type)
             {
-                *val = auxv.a_un.a_val;
+                *val = auxv.a_val;
                 return TRUE;
             }
-            addr = (void*)((DWORD_PTR)addr + sizeof(auxv));
+            addr += sizeof(auxv);
         }
     }
     else
     {
-        Elf32_auxv_t auxv;
+        struct
+        {
+            UINT32 a_type;
+            UINT32 a_val;
+        } auxv;
 
         while (ReadProcessMemory(pcs->handle, addr, &auxv, sizeof(auxv), NULL) && auxv.a_type)
         {
             if (auxv.a_type == type)
             {
-                *val = auxv.a_un.a_val;
+                *val = auxv.a_val;
                 return TRUE;
             }
-            addr = (void*)((DWORD_PTR)addr + sizeof(auxv));
+            addr += sizeof(auxv);
         }
     }
 
     return FALSE;
 }
-#endif
 
 /******************************************************************
  *		elf_search_and_load_file
@@ -1463,18 +1471,16 @@ static BOOL elf_enum_modules_internal(const struct process* pcs,
         }
     }
 
-#ifdef AT_SYSINFO_EHDR
     if (!lm_addr)
     {
         ULONG_PTR ehdr_addr;
 
-        if (elf_search_auxv(pcs, AT_SYSINFO_EHDR, &ehdr_addr))
+        if (elf_search_auxv(pcs, ELF_AT_SYSINFO_EHDR, &ehdr_addr))
         {
             static const WCHAR vdsoW[] = {'[','v','d','s','o',']','.','s','o',0};
             cb(vdsoW, ehdr_addr, 0, TRUE, user);
         }
     }
-#endif
     return TRUE;
 }
 
