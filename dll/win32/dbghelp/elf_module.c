@@ -47,49 +47,6 @@
 #define ELF_INFO_MODULE         0x0002
 #define ELF_INFO_NAME           0x0004
 
-#ifndef HAVE_STRUCT_R_DEBUG
-struct r_debug
-{
-    int r_version;
-    struct link_map *r_map;
-    ElfW(Addr) r_brk;
-    enum
-    {
-        RT_CONSISTENT,
-        RT_ADD,
-        RT_DELETE
-    } r_state;
-    ElfW(Addr) r_ldbase;
-};
-#endif /* HAVE_STRUCT_R_DEBUG */
-
-struct r_debug32
-{
-    int r_version;
-    DWORD r_map;
-    Elf32_Addr r_brk;
-    int r_state;
-    Elf32_Addr r_ldbase;
-};
-
-#ifndef HAVE_STRUCT_LINK_MAP
-struct link_map
-{
-    ElfW(Addr) l_addr;
-    char *l_name;
-    ElfW(Dyn) *l_ld;
-    struct link_map *l_next, *l_prev;
-};
-#endif /* HAVE_STRUCT_LINK_MAP */
-
-struct link_map32
-{
-    Elf32_Addr l_addr;
-    DWORD l_name;
-    DWORD l_ld;
-    DWORD l_next, l_prev;
-};
-
 WINE_DEFAULT_DEBUG_CHANNEL(dbghelp);
 
 struct elf_info
@@ -1402,12 +1359,25 @@ static BOOL elf_enum_modules_internal(const struct process* pcs,
 {
     WCHAR bufstrW[MAX_PATH];
     char bufstr[256];
-    void *lm_addr;
+    ULONG_PTR lm_addr;
 
     if (pcs->is_64bit)
     {
-        struct r_debug dbg_hdr;
-        struct link_map lm;
+        struct
+        {
+            UINT32 r_version;
+            UINT64 r_map;
+            UINT64 r_brk;
+            UINT32 r_state;
+            UINT64 r_ldbase;
+        } dbg_hdr;
+        struct
+        {
+            UINT64 l_addr;
+            UINT64 l_name;
+            UINT64 l_ld;
+            UINT64 l_next, l_prev;
+        } lm;
 
         if (!pcs->dbg_hdr_addr ||
             !ReadProcessMemory(pcs->handle, (void*)pcs->dbg_hdr_addr,
@@ -1419,14 +1389,14 @@ static BOOL elf_enum_modules_internal(const struct process* pcs,
          * cases the first entry doesn't appear with a name, in other cases it
          * does.
          */
-        for (lm_addr = (void*)dbg_hdr.r_map; lm_addr; lm_addr = (void*)lm.l_next)
+        for (lm_addr = dbg_hdr.r_map; lm_addr; lm_addr = lm.l_next)
         {
-            if (!ReadProcessMemory(pcs->handle, lm_addr, &lm, sizeof(lm), NULL))
+            if (!ReadProcessMemory(pcs->handle, (void*)lm_addr, &lm, sizeof(lm), NULL))
                 return FALSE;
 
-            if (lm.l_prev != NULL && /* skip first entry, normally debuggee itself */
-                lm.l_name != NULL &&
-                ReadProcessMemory(pcs->handle, lm.l_name, bufstr, sizeof(bufstr), NULL))
+            if (lm.l_prev && /* skip first entry, normally debuggee itself */
+                lm.l_name &&
+                ReadProcessMemory(pcs->handle, (void*)(ULONG_PTR)lm.l_name, bufstr, sizeof(bufstr), NULL))
             {
                 bufstr[sizeof(bufstr) - 1] = '\0';
                 MultiByteToWideChar(CP_UNIXCP, 0, bufstr, -1, bufstrW, ARRAY_SIZE(bufstrW));
@@ -1438,8 +1408,21 @@ static BOOL elf_enum_modules_internal(const struct process* pcs,
     }
     else
     {
-        struct r_debug32 dbg_hdr;
-        struct link_map32 lm;
+        struct
+        {
+            UINT32 r_version;
+            UINT32 r_map;
+            UINT32 r_brk;
+            UINT32 r_state;
+            UINT32 r_ldbase;
+        } dbg_hdr;
+        struct
+        {
+            UINT32 l_addr;
+            UINT32 l_name;
+            UINT32 l_ld;
+            UINT32 l_next, l_prev;
+        } lm;
 
         if (!pcs->dbg_hdr_addr ||
             !ReadProcessMemory(pcs->handle, (void*)pcs->dbg_hdr_addr,
@@ -1451,10 +1434,9 @@ static BOOL elf_enum_modules_internal(const struct process* pcs,
          * cases the first entry doesn't appear with a name, in other cases it
          * does.
          */
-        for (lm_addr = (void *)(DWORD_PTR)dbg_hdr.r_map; lm_addr;
-             lm_addr = (void *)(DWORD_PTR)lm.l_next)
+        for (lm_addr = dbg_hdr.r_map; lm_addr; lm_addr = lm.l_next)
         {
-            if (!ReadProcessMemory(pcs->handle, lm_addr, &lm, sizeof(lm), NULL))
+            if (!ReadProcessMemory(pcs->handle, (void*)lm_addr, &lm, sizeof(lm), NULL))
                 return FALSE;
 
             if (lm.l_prev && /* skip first entry, normally debuggee itself */
