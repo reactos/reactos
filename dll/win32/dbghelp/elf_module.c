@@ -32,16 +32,6 @@
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
-#ifdef HAVE_SYS_STAT_H
-# include <sys/stat.h>
-#endif
-#include <fcntl.h>
-#ifdef HAVE_SYS_MMAN_H
-#include <sys/mman.h>
-#endif
-#ifdef HAVE_UNISTD_H
-# include <unistd.h>
-#endif
 
 #include "dbghelp_private.h"
 #include "winternl.h"
@@ -147,7 +137,9 @@ struct elf_module_info
 const char* elf_map_section(struct image_section_map* ism)
 {
     struct elf_file_map*        fmap = &ism->fmap->u.elf;
-    size_t ofst, size, pgsz = sysconf( _SC_PAGESIZE );
+    SYSTEM_INFO sysinfo;
+    SIZE_T ofst, size;
+    HANDLE mapping;
 
     assert(ism->fmap->modtype == DMT_ELF);
     if (ism->sidx < 0 || ism->sidx >= ism->fmap->u.elf.elfhdr.e_shnum ||
@@ -158,14 +150,24 @@ const char* elf_map_section(struct image_section_map* ism)
     {
         return fmap->target_copy + fmap->sect[ism->sidx].shdr.sh_offset;
     }
-    /* align required information on page size (we assume pagesize is a power of 2) */
-    ofst = fmap->sect[ism->sidx].shdr.sh_offset & ~(pgsz - 1);
-    size = ((fmap->sect[ism->sidx].shdr.sh_offset +
-             fmap->sect[ism->sidx].shdr.sh_size + pgsz - 1) & ~(pgsz - 1)) - ofst;
-    fmap->sect[ism->sidx].mapped = mmap(NULL, size, PROT_READ, MAP_PRIVATE,
-                                        fmap->fd, ofst);
-    if (fmap->sect[ism->sidx].mapped == IMAGE_NO_MAP) return IMAGE_NO_MAP;
-    return fmap->sect[ism->sidx].mapped + (fmap->sect[ism->sidx].shdr.sh_offset & (pgsz - 1));
+
+    /* align required information on allocation granularity */
+    GetSystemInfo(&sysinfo);
+    ofst = fmap->sect[ism->sidx].shdr.sh_offset & ~(sysinfo.dwAllocationGranularity - 1);
+    size = fmap->sect[ism->sidx].shdr.sh_offset + fmap->sect[ism->sidx].shdr.sh_size - ofst;
+    if (!(mapping = CreateFileMappingW(fmap->handle, NULL, PAGE_READONLY, 0, ofst + size, NULL)))
+    {
+        ERR("map creation %p failed %u offset %lu %lu size %lu\n", fmap->handle, GetLastError(), ofst, ofst % 4096, size);
+        return IMAGE_NO_MAP;
+    }
+    fmap->sect[ism->sidx].mapped = MapViewOfFile(mapping, FILE_MAP_READ, 0, ofst, size);
+    CloseHandle(mapping);
+    if (!fmap->sect[ism->sidx].mapped)
+    {
+        ERR("map %p failed %u offset %lu %lu size %lu\n", fmap->handle, GetLastError(), ofst, ofst % 4096, size);
+        return IMAGE_NO_MAP;
+    }
+    return fmap->sect[ism->sidx].mapped + (fmap->sect[ism->sidx].shdr.sh_offset & (sysinfo.dwAllocationGranularity - 1));
 }
 
 /******************************************************************
@@ -215,15 +217,11 @@ void elf_unmap_section(struct image_section_map* ism)
     struct elf_file_map*        fmap = &ism->fmap->u.elf;
 
     if (ism->sidx >= 0 && ism->sidx < fmap->elfhdr.e_shnum && !fmap->target_copy &&
-        fmap->sect[ism->sidx].mapped != IMAGE_NO_MAP)
+        fmap->sect[ism->sidx].mapped)
     {
-        size_t pgsz = sysconf( _SC_PAGESIZE );
-        size_t ofst = fmap->sect[ism->sidx].shdr.sh_offset & ~(pgsz - 1);
-        size_t size = ((fmap->sect[ism->sidx].shdr.sh_offset +
-                 fmap->sect[ism->sidx].shdr.sh_size + pgsz - 1) & ~(pgsz - 1)) - ofst;
-        if (munmap((char*)fmap->sect[ism->sidx].mapped, size) < 0)
+        if (!UnmapViewOfFile(fmap->sect[ism->sidx].mapped))
             WARN("Couldn't unmap the section\n");
-        fmap->sect[ism->sidx].mapped = IMAGE_NO_MAP;
+        fmap->sect[ism->sidx].mapped = NULL;
     }
 }
 
@@ -267,7 +265,7 @@ unsigned elf_get_map_size(const struct image_section_map* ism)
 
 static inline void elf_reset_file_map(struct image_file_map* fmap)
 {
-    fmap->u.elf.fd = -1;
+    fmap->u.elf.handle = INVALID_HANDLE_VALUE;
     fmap->u.elf.shstrtab = IMAGE_NO_MAP;
     fmap->u.elf.alternate = NULL;
     fmap->u.elf.target_copy = NULL;
@@ -293,12 +291,16 @@ struct elf_map_file_data
 static BOOL elf_map_file_read(struct image_file_map* fmap, struct elf_map_file_data* emfd,
                               void* buf, size_t len, off_t off)
 {
+    LARGE_INTEGER li;
+    DWORD bytes_read;
     SIZE_T dw;
 
     switch (emfd->kind)
     {
     case from_file:
-        return pread(fmap->u.elf.fd, buf, len, off) == len;
+        li.QuadPart = off;
+        if (!SetFilePointerEx(fmap->u.elf.handle, li, NULL, FILE_BEGIN)) return FALSE;
+        return ReadFile(fmap->u.elf.handle, buf, len, &bytes_read, NULL);
     case from_process:
         return ReadProcessMemory(emfd->u.process.handle,
                                  (void*)((unsigned long)emfd->u.process.load_addr + (unsigned long)off),
@@ -339,6 +341,29 @@ static BOOL elf_map_shdr(struct elf_map_file_data* emfd, struct image_file_map* 
     return TRUE;
 }
 
+static WCHAR *get_dos_file_name(const WCHAR *filename)
+{
+    WCHAR *dos_path;
+    size_t len;
+
+    if (*filename == '/')
+    {
+        char *unix_path;
+        len = WideCharToMultiByte(CP_UNIXCP, 0, filename, -1, NULL, 0, NULL, NULL);
+        unix_path = heap_alloc(len * sizeof(WCHAR));
+        WideCharToMultiByte(CP_UNIXCP, 0, filename, -1, unix_path, len, NULL, NULL);
+        dos_path = wine_get_dos_file_name(unix_path);
+        heap_free(unix_path);
+    }
+    else
+    {
+        len = lstrlenW(filename);
+        dos_path = heap_alloc((len + 1) * sizeof(WCHAR));
+        memcpy(dos_path, filename, (len + 1) * sizeof(WCHAR));
+    }
+    return dos_path;
+}
+
 /******************************************************************
  *		elf_map_file
  *
@@ -347,53 +372,35 @@ static BOOL elf_map_shdr(struct elf_map_file_data* emfd, struct image_file_map* 
 static BOOL elf_map_file(struct elf_map_file_data* emfd, struct image_file_map* fmap)
 {
     static const BYTE   elf_signature[4] = { ELFMAG0, ELFMAG1, ELFMAG2, ELFMAG3 };
-    struct stat	        statbuf;
     unsigned int        i;
     size_t              tmp, page_mask = sysconf( _SC_PAGESIZE ) - 1;
-    char*               filename;
-    unsigned            len;
-    BOOL                ret = FALSE;
+    WCHAR              *dos_path;
     unsigned char e_ident[EI_NIDENT];
-
-    switch (emfd->kind)
-    {
-    case from_file:
-        len = WideCharToMultiByte(CP_UNIXCP, 0, emfd->u.file.filename, -1, NULL, 0, NULL, NULL);
-        if (!(filename = HeapAlloc(GetProcessHeap(), 0, len))) return FALSE;
-        WideCharToMultiByte(CP_UNIXCP, 0, emfd->u.file.filename, -1, filename, len, NULL, NULL);
-        break;
-    case from_process:
-        filename = NULL;
-        break;
-    default: assert(0);
-        return FALSE;
-    }
 
     elf_reset_file_map(fmap);
 
     fmap->modtype = DMT_ELF;
-    fmap->u.elf.fd = -1;
+    fmap->u.elf.handle = INVALID_HANDLE_VALUE;
     fmap->u.elf.target_copy = NULL;
 
     switch (emfd->kind)
     {
     case from_file:
-        /* check that the file exists, and that the module hasn't been loaded yet */
-        if (stat(filename, &statbuf) == -1 || S_ISDIR(statbuf.st_mode)) goto done;
-
-        /* Now open the file, so that we can mmap() it. */
-        if ((fmap->u.elf.fd = open(filename, O_RDONLY)) == -1) goto done;
+        if (!(dos_path = get_dos_file_name(emfd->u.file.filename))) return FALSE;
+        fmap->u.elf.handle = CreateFileW(dos_path, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL);
+        heap_free(dos_path);
+        if (fmap->u.elf.handle == INVALID_HANDLE_VALUE) return FALSE;
         break;
     case from_process:
         break;
     }
 
     if (!elf_map_file_read(fmap, emfd, e_ident, sizeof(e_ident), 0))
-        goto done;
+        return FALSE;
 
     /* and check for an ELF header */
     if (memcmp(e_ident, elf_signature, sizeof(elf_signature)))
-        goto done;
+        return FALSE;
 
     fmap->addr_size = e_ident[EI_CLASS] == ELFCLASS64 ? 64 : 32;
 
@@ -402,7 +409,7 @@ static BOOL elf_map_file(struct elf_map_file_data* emfd, struct image_file_map* 
         Elf32_Ehdr elfhdr32;
 
         if (!elf_map_file_read(fmap, emfd, &elfhdr32, sizeof(elfhdr32), 0))
-            goto done;
+            return FALSE;
 
         memcpy(fmap->u.elf.elfhdr.e_ident, elfhdr32.e_ident, EI_NIDENT);
         fmap->u.elf.elfhdr.e_type      = elfhdr32.e_type;
@@ -422,12 +429,12 @@ static BOOL elf_map_file(struct elf_map_file_data* emfd, struct image_file_map* 
     else
     {
         if (!elf_map_file_read(fmap, emfd, &fmap->u.elf.elfhdr, sizeof(fmap->u.elf.elfhdr), 0))
-            goto done;
+            return FALSE;
     }
 
     fmap->u.elf.sect = HeapAlloc(GetProcessHeap(), 0,
                                  fmap->u.elf.elfhdr.e_shnum * sizeof(fmap->u.elf.sect[0]));
-    if (!fmap->u.elf.sect) goto done;
+    if (!fmap->u.elf.sect) return FALSE;
 
     for (i = 0; i < fmap->u.elf.elfhdr.e_shnum; i++)
     {
@@ -435,9 +442,9 @@ static BOOL elf_map_file(struct elf_map_file_data* emfd, struct image_file_map* 
         {
             HeapFree(GetProcessHeap(), 0, fmap->u.elf.sect);
             fmap->u.elf.sect = NULL;
-            goto done;
+            return FALSE;
         }
-        fmap->u.elf.sect[i].mapped = IMAGE_NO_MAP;
+        fmap->u.elf.sect[i].mapped = NULL;
     }
 
     /* grab size of module once loaded in memory */
@@ -484,21 +491,18 @@ static BOOL elf_map_file(struct elf_map_file_data* emfd, struct image_file_map* 
         if (!(fmap->u.elf.target_copy = HeapAlloc(GetProcessHeap(), 0, fmap->u.elf.elf_size)))
         {
             HeapFree(GetProcessHeap(), 0, fmap->u.elf.sect);
-            goto done;
+            return FALSE;
         }
         if (!ReadProcessMemory(emfd->u.process.handle, emfd->u.process.load_addr, fmap->u.elf.target_copy,
                                fmap->u.elf.elf_size, NULL))
         {
             HeapFree(GetProcessHeap(), 0, fmap->u.elf.target_copy);
             HeapFree(GetProcessHeap(), 0, fmap->u.elf.sect);
-            goto done;
+            return FALSE;
         }
         break;
     }
-    ret = TRUE;
-done:
-    HeapFree(GetProcessHeap(), 0, filename);
-    return ret;
+    return TRUE;
 }
 
 /******************************************************************
@@ -510,7 +514,7 @@ static void elf_unmap_file(struct image_file_map* fmap)
 {
     while (fmap)
     {
-        if (fmap->u.elf.fd != -1)
+        if (fmap->u.elf.handle != INVALID_HANDLE_VALUE)
         {
             struct image_section_map  ism;
             ism.fmap = fmap;
@@ -519,7 +523,7 @@ static void elf_unmap_file(struct image_file_map* fmap)
                 elf_unmap_section(&ism);
             }
             HeapFree(GetProcessHeap(), 0, fmap->u.elf.sect);
-            close(fmap->u.elf.fd);
+            CloseHandle(fmap->u.elf.handle);
         }
         HeapFree(GetProcessHeap(), 0, fmap->u.elf.target_copy);
         fmap = fmap->u.elf.alternate;
@@ -934,21 +938,35 @@ static int elf_new_public_symbols(struct module* module, const struct hash_table
     return TRUE;
 }
 
-static BOOL elf_check_debug_link(const WCHAR* file, struct image_file_map* fmap, DWORD crc)
+static DWORD calc_crc(HANDLE handle)
 {
-    BOOL        ret;
+    BYTE buffer[8192];
+    DWORD crc = 0;
+    DWORD len;
+
+    SetFilePointer(handle, 0, 0, FILE_BEGIN);
+    while (ReadFile(handle, buffer, sizeof(buffer), &len, NULL) && len)
+        crc = RtlComputeCrc32(crc, buffer, len);
+    return crc;
+}
+
+static BOOL elf_check_debug_link(const WCHAR* file, struct image_file_map* fmap, DWORD link_crc)
+{
     struct elf_map_file_data    emfd;
+    DWORD crc;
 
     emfd.kind = from_file;
     emfd.u.file.filename = file;
     if (!elf_map_file(&emfd, fmap)) return FALSE;
-    if (!(ret = crc == calc_crc32(fmap->u.elf.fd)))
+
+    crc = calc_crc(fmap->u.elf.handle);
+    if (crc != link_crc)
     {
-        WARN("Bad CRC for file %s (got %08x while expecting %08x)\n",
-             debugstr_w(file), calc_crc32(fmap->u.elf.fd), crc);
+        WARN("Bad CRC for file %s (got %08x while expecting %08x)\n",  debugstr_w(file), crc, link_crc);
         elf_unmap_file(fmap);
+        return FALSE;
     }
-    return ret;
+    return TRUE;
 }
 
 /******************************************************************
@@ -1290,7 +1308,7 @@ BOOL elf_fetch_file_info(const WCHAR* name, DWORD_PTR* base,
     if (!elf_map_file(&emfd, &fmap)) return FALSE;
     if (base) *base = fmap.u.elf.elf_start;
     *size = fmap.u.elf.elf_size;
-    *checksum = calc_crc32(fmap.u.elf.fd);
+    *checksum = calc_crc(fmap.u.elf.handle);
     elf_unmap_file(&fmap);
     return TRUE;
 }
@@ -1386,7 +1404,7 @@ static BOOL elf_load_file_from_fmap(struct process* pcs, const WCHAR* filename,
                           sizeof(struct module_format) + sizeof(struct elf_module_info));
         if (!modfmt) return FALSE;
         elf_info->module = module_new(pcs, filename, DMT_ELF, FALSE, modbase,
-                                      fmap->u.elf.elf_size, 0, calc_crc32(fmap->u.elf.fd));
+                                      fmap->u.elf.elf_size, 0, calc_crc(fmap->u.elf.handle));
         if (!elf_info->module)
         {
             HeapFree(GetProcessHeap(), 0, modfmt);
