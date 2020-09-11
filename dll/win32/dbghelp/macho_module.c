@@ -51,6 +51,7 @@
 #include "winternl.h"
 #include "wine/library.h"
 #include "wine/debug.h"
+#include "wine/heap.h"
 #include "image_private.h"
 
 #ifdef HAVE_MACH_O_LOADER_H
