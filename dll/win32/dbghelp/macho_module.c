@@ -1267,7 +1267,7 @@ static WCHAR *query_dsym(const GUID *uuid, const WCHAR *filename)
         p += query->DeviceNameLength / sizeof(WCHAR);
         memcpy(p, dsym_subpath, sizeof(dsym_subpath));
         p += ARRAY_SIZE(dsym_subpath) - 1;
-        strcpyW(p, filename);
+        lstrcpyW(p, filename);
     }
 
     if (query != (void *)buf) HeapFree(GetProcessHeap(), 0, query);
@@ -1300,19 +1300,19 @@ static void find_and_map_dsym(struct process *pcs, struct module* module)
         return;
 
     p = file_name(module->module.LoadedImageName);
-    len = strlenW(module->module.LoadedImageName) + strlenW(dot_dsym) + strlenW(dsym_subpath) + strlenW(p) + 1;
+    len = lstrlenW(module->module.LoadedImageName) + lstrlenW(dot_dsym) + lstrlenW(dsym_subpath) + lstrlenW(p) + 1;
     path = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
     if (!path)
         return;
-    strcpyW(path, module->module.LoadedImageName);
-    strcatW(path, dot_dsym);
-    strcatW(path, dsym_subpath);
-    strcatW(path, p);
+    lstrcpyW(path, module->module.LoadedImageName);
+    lstrcatW(path, dot_dsym);
+    lstrcatW(path, dsym_subpath);
+    lstrcatW(path, p);
 
     if (try_dsym(pcs, path, fmap))
         goto found;
 
-    strcpyW(path + strlenW(module->module.LoadedImageName), dot_dwarf);
+    lstrcpyW(path + lstrlenW(module->module.LoadedImageName), dot_dwarf);
 
     if (try_dsym(pcs, path, fmap))
         goto found;
@@ -1514,7 +1514,7 @@ static BOOL macho_load_file(struct process* pcs, const WCHAR* filename,
         ptr = HeapAlloc(GetProcessHeap(), 0, (lstrlenW(filename) + 1) * sizeof(WCHAR));
         if (ptr)
         {
-            strcpyW(ptr, filename);
+            lstrcpyW(ptr, filename);
             macho_info->module_name = ptr;
         }
         else ret = FALSE;
@@ -1566,7 +1566,7 @@ static BOOL macho_search_and_load_file(struct process* pcs, const WCHAR* filenam
         return module->module.SymType;
     }
 
-    if (strstrW(filename, S_libstdcPPW)) return FALSE; /* We know we can't do it */
+    if (wcsstr(filename, S_libstdcPPW)) return FALSE; /* We know we can't do it */
 
     load_params.process    = pcs;
     load_params.load_addr  = load_addr;
@@ -1658,7 +1658,7 @@ static BOOL macho_enum_modules_internal(const struct process* pcs,
             bufstr[sizeof(bufstr) - 1] = '\0';
             TRACE("[%d] image file %s\n", i, debugstr_a(bufstr));
             MultiByteToWideChar(CP_UNIXCP, 0, bufstr, -1, bufstrW, ARRAY_SIZE(bufstrW));
-            if (main_name && !bufstrW[0]) strcpyW(bufstrW, main_name);
+            if (main_name && !bufstrW[0]) lstrcpyW(bufstrW, main_name);
             if (!cb(bufstrW, info.imageLoadAddress, user)) break;
         }
     }

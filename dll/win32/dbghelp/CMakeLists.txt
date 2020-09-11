@@ -8,13 +8,13 @@ if(NOT CMAKE_CROSSCOMPILING)
     add_definitions(-DDBGHELP_STATIC_LIB)
 
     include_directories(
-        ${REACTOS_SOURCE_DIR}/tools
-        ${REACTOS_SOURCE_DIR}/sdk/include/reactos/libs/zlib)
+        ${REACTOS_SOURCE_DIR}/tools)
 
     list(APPEND SOURCE
         compat.c
         dbghelp.c
         dwarf.c
+        inflate.c
         module.c
         pe_module.c
         source.c
@@ -57,6 +57,7 @@ else()
 #       elf_module.c
         image.c
 #       macho_module.c
+        inflate.c
         minidump.c
         module.c
         msc.c

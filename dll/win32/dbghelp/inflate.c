@@ -1,3 +1,7 @@
+#ifdef DBGHELP_STATIC_LIB
+#include "compat.h"
+#include "zlib.h"
+#else
 /* inflate.c -- zlib decompression
  *
  * Copyright (C) 1995-2017 Jean-loup Gailly and Mark Adler
@@ -28,6 +32,7 @@
 #include <limits.h>
 #include "winternl.h"
 #include "zlib.h"
+#endif /* DBGHELP_STATIC_LIB */
 
 #define DEF_WBITS MAX_WBITS
 #define zmemcpy memcpy

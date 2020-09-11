@@ -9,6 +9,12 @@
 #include <stdlib.h>
 #include <wchar.h>
 #include <ctype.h>
+#include <wctype.h>
+
+#define wcsnicmp strncmpiW
+#define wcsicmp strcmpiW
+#define wcsrchr strrchrW
+#define wcschr strchrW
 
 typedef HANDLE HWND;
 

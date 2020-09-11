@@ -26,7 +26,9 @@
 #ifndef ZLIB_H
 #define ZLIB_H
 
+#ifndef DBGHELP_STATIC_LIB
 #include "windef.h"
+#endif
 
 #undef FAR
 #define FAR
