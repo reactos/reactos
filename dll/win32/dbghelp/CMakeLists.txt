@@ -50,7 +50,6 @@ else()
         cpu_arm.c
         cpu_arm64.c
         cpu_i386.c
-        cpu_ppc.c
         cpu_x86_64.c
         dbghelp.c
         dwarf.c
