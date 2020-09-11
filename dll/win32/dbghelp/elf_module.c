@@ -1583,7 +1583,7 @@ static BOOL elf_load_cb(const WCHAR* name, unsigned long load_addr,
  * Also, find module real name and load address from
  * the real loaded modules list in pcs address space
  */
-struct module*  elf_load_module(struct process* pcs, const WCHAR* name, unsigned long addr)
+static struct module* elf_load_module(struct process* pcs, const WCHAR* name, unsigned long addr)
 {
     struct elf_load     el;
 
@@ -1706,6 +1706,7 @@ static BOOL elf_search_loader(struct process* pcs, struct elf_info* elf_info)
 static const struct loader_ops elf_loader_ops =
 {
     elf_synchronize_module_list,
+    elf_load_module,
     elf_enum_modules,
     elf_fetch_file_info,
 };
@@ -1738,11 +1739,6 @@ BOOL elf_map_handle(HANDLE handle, struct image_file_map* fmap)
 BOOL elf_read_wine_loader_dbg_info(struct process* pcs)
 {
     return FALSE;
-}
-
-struct module*  elf_load_module(struct process* pcs, const WCHAR* name, unsigned long addr)
-{
-    return NULL;
 }
 
 BOOL elf_load_debug_info(struct module* module)

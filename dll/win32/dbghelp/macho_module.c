@@ -1782,7 +1782,7 @@ static BOOL macho_load_cb(const WCHAR* name, unsigned long addr, void* user)
  * Also, find module real name and load address from
  * the real loaded modules list in pcs address space.
  */
-struct module*  macho_load_module(struct process* pcs, const WCHAR* name, unsigned long addr)
+static struct module* macho_load_module(struct process* pcs, const WCHAR* name, unsigned long addr)
 {
     struct macho_load   ml;
 
@@ -1906,6 +1906,7 @@ static BOOL macho_search_loader(struct process* pcs, struct macho_info* macho_in
 static const struct loader_ops macho_loader_ops =
 {
     macho_synchronize_module_list,
+    macho_load_module,
     macho_enum_modules,
     macho_fetch_file_info,
 };
@@ -1934,11 +1935,6 @@ BOOL macho_read_wine_loader_dbg_info(struct process* pcs)
 BOOL macho_read_wine_loader_dbg_info(struct process* pcs)
 {
     return FALSE;
-}
-
-struct module*  macho_load_module(struct process* pcs, const WCHAR* name, unsigned long addr)
-{
-    return NULL;
 }
 
 BOOL macho_load_debug_info(struct process *pcs, struct module* module)
