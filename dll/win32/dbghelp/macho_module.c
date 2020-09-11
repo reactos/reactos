@@ -1588,7 +1588,7 @@ static BOOL macho_search_and_load_file(struct process* pcs, const WCHAR* filenam
         ret = search_unix_path(p, fallback, macho_load_file_cb, &load_params);
     }
     if (!ret && p == filename)
-        ret = search_dll_path(filename, macho_load_file_cb, &load_params);
+        ret = search_dll_path(pcs, filename, macho_load_file_cb, &load_params);
 
     return ret;
 }

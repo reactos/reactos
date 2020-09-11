@@ -823,7 +823,7 @@ struct module* pe_load_native_module(struct process* pcs, const WCHAR* name,
     {
 #ifndef __REACTOS__
         struct builtin_search builtin = { NULL };
-        if (modfmt->u.pe_info->fmap.u.pe.builtin && search_dll_path(loaded_name, search_builtin_pe, &builtin))
+        if (modfmt->u.pe_info->fmap.u.pe.builtin && search_dll_path(pcs, loaded_name, search_builtin_pe, &builtin))
         {
             TRACE("reloaded %s from %s\n", debugstr_w(loaded_name), debugstr_w(builtin.path));
             image_unmap_file(&modfmt->u.pe_info->fmap);

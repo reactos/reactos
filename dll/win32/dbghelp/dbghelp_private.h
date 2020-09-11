@@ -430,6 +430,7 @@ struct process
     HANDLE                      handle;
     const struct loader_ops*    loader;
     WCHAR*                      search_path;
+    WCHAR*                      environment;
 
     PSYMBOL_REGISTERED_CALLBACK64       reg_cb;
     PSYMBOL_REGISTERED_CALLBACK reg_cb32;
@@ -632,6 +633,7 @@ extern BOOL         pcs_callback(const struct process* pcs, ULONG action, void* 
 extern void*        fetch_buffer(struct process* pcs, unsigned size) DECLSPEC_HIDDEN;
 extern const char*  wine_dbgstr_addr(const ADDRESS64* addr) DECLSPEC_HIDDEN;
 extern struct cpu*  cpu_find(DWORD) DECLSPEC_HIDDEN;
+extern const WCHAR *process_getenv(const struct process *process, const WCHAR *name);
 extern DWORD calc_crc32(HANDLE handle) DECLSPEC_HIDDEN;
 
 #ifndef __REACTOS__
@@ -703,7 +705,8 @@ extern BOOL         path_find_symbol_file(const struct process* pcs, const struc
                                           PCSTR full_path, enum module_type type, const GUID* guid, DWORD dw1, DWORD dw2,
                                           WCHAR *buffer, BOOL* is_unmatched) DECLSPEC_HIDDEN;
 extern WCHAR *get_dos_file_name(const WCHAR *filename) DECLSPEC_HIDDEN;
-extern BOOL search_dll_path(const WCHAR *name, BOOL (*match)(void*, HANDLE, const WCHAR*), void *param) DECLSPEC_HIDDEN;
+extern BOOL search_dll_path(const struct process* process, const WCHAR *name,
+                            BOOL (*match)(void*, HANDLE, const WCHAR*), void *param) DECLSPEC_HIDDEN;
 extern BOOL search_unix_path(const WCHAR *name, const char *path, BOOL (*match)(void*, HANDLE, const WCHAR*), void *param) DECLSPEC_HIDDEN;
 extern const WCHAR* file_name(const WCHAR* str) DECLSPEC_HIDDEN;
 extern const char* file_nameA(const char* str) DECLSPEC_HIDDEN;

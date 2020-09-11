@@ -692,19 +692,17 @@ WCHAR *get_dos_file_name(const WCHAR *filename)
 }
 
 #ifndef __REACTOS__
-BOOL search_dll_path(const WCHAR *name, BOOL (*match)(void*, HANDLE, const WCHAR*), void *param)
+BOOL search_dll_path(const struct process *process, const WCHAR *name, BOOL (*match)(void*, HANDLE, const WCHAR*), void *param)
 {
+    const WCHAR *env;
     size_t len, i;
     HANDLE file;
     WCHAR *buf;
     BOOL ret;
 
-    static const WCHAR winebuilddirW[] = {'W','I','N','E','B','U','I','L','D','D','I','R',0};
-    static const WCHAR winedlldirW[] = {'W','I','N','E','D','L','L','D','I','R','%','u',0};
-
     name = file_name(name);
 
-    if ((len = GetEnvironmentVariableW(winebuilddirW, NULL, 0)))
+    if ((env = process_getenv(process, L"WINEBUILDDIR")))
     {
         WCHAR *p, *end;
         const WCHAR dllsW[] = { '\\','d','l','l','s','\\' };
@@ -713,8 +711,11 @@ BOOL search_dll_path(const WCHAR *name, BOOL (*match)(void*, HANDLE, const WCHAR
         const WCHAR dot_exeW[] = {'.','e','x','e',0};
         const WCHAR dot_soW[] = {'.','s','o',0};
 
+
+        len = lstrlenW(env);
         if (!(buf = heap_alloc((len + 8 + 3 * lstrlenW(name)) * sizeof(WCHAR)))) return FALSE;
-        end = buf + GetEnvironmentVariableW(winebuilddirW, buf, len);
+        wcscpy(buf, env);
+        end = buf + len;
 
         memcpy(end, dllsW, sizeof(dllsW));
         lstrcpyW(end + ARRAY_SIZE(dllsW), name);
@@ -753,8 +754,9 @@ BOOL search_dll_path(const WCHAR *name, BOOL (*match)(void*, HANDLE, const WCHAR
     for (i = 0;; i++)
     {
         WCHAR env_name[64];
-        swprintf(env_name, ARRAY_SIZE(env_name), winedlldirW, i);
-        if (!(len = GetEnvironmentVariableW(env_name, NULL, 0))) break;
+        swprintf(env_name, ARRAY_SIZE(env_name), L"WINEDLLDIR%u", i);
+        if (!(env = process_getenv(process, env_name))) return FALSE;
+        len = lstrlenW(env);
         if (!(buf = heap_alloc((len + lstrlenW(name) + 2) * sizeof(WCHAR)))) return FALSE;
 
         len = GetEnvironmentVariableW(env_name, buf, len);
