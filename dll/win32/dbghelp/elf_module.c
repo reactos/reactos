@@ -1139,7 +1139,7 @@ static BOOL elf_check_alternate(struct image_file_map* fmap, const struct module
     struct image_section_map buildid_sect, debuglink_sect;
 
     /* if present, add the .gnu_debuglink file as an alternate to current one */
-    if (elf_find_section(fmap, ".note.gnu.build-id", SHT_NULL, &buildid_sect))
+    if (image_find_section(fmap, ".note.gnu.build-id", &buildid_sect))
     {
         const uint32_t* note;
 
@@ -1156,7 +1156,7 @@ static BOOL elf_check_alternate(struct image_file_map* fmap, const struct module
         image_unmap_section(&buildid_sect);
     }
     /* if present, add the .gnu_debuglink file as an alternate to current one */
-    if (!ret && elf_find_section(fmap, ".gnu_debuglink", SHT_NULL, &debuglink_sect))
+    if (!ret && image_find_section(fmap, ".gnu_debuglink", &debuglink_sect))
     {
         const char* dbg_link;
 
