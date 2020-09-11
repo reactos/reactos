@@ -63,6 +63,7 @@ ClientToListView(HWND hwndLV, POINT *ppt)
 {
     POINT Origin;
 
+    /* FIXME: LVM_GETORIGIN is broken. See CORE-17266 */
     if (!ListView_GetOrigin(hwndLV, &Origin))
         return;
 
@@ -3400,7 +3401,7 @@ INT CDefView::_FindInsertableIndexFromPoint(POINT pt)
     RECT rcBound, rcIcon;
     INT i, nCount = m_ListView.GetItemCount();
 
-    /* FIXME: LVM_GETORIGIN is broken */
+    /* FIXME: LVM_GETORIGIN is broken. See CORE-17266 */
     pt.x += m_ListView.GetScrollPos(SB_HORZ);
     pt.y += m_ListView.GetScrollPos(SB_VERT);
 
