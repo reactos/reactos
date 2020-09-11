@@ -132,7 +132,7 @@ struct image_file_map
             struct image_file_map*      dsym;   /* the debug symbols file associated with this one */
             size_t                      header_size; /* size of real header in file */
             size_t                      commands_size;
-            size_t                      commands_count;
+            unsigned int                commands_count;
 
             const struct macho_load_command*    load_commands;
             const struct macho_uuid_command*    uuid;

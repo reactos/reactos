@@ -566,7 +566,7 @@ static int macho_enum_load_commands(struct image_file_map *ifm, unsigned cmd,
 
     if ((lc = macho_map_load_commands(fmap)) == IMAGE_NO_MAP) return -1;
 
-    TRACE("%lu total commands\n", fmap->commands_count);
+    TRACE("%u total commands\n", fmap->commands_count);
 
     for (i = 0; i < fmap->commands_count; i++, lc = macho_next_load_command(lc))
     {
@@ -1639,7 +1639,7 @@ static BOOL macho_enum_modules_internal(const struct process* pcs,
     }
     if (!image_infos.infos64.infoArray)
         goto done;
-    TRACE("Process has %u image infos at %p\n", image_infos.infos64.infoArrayCount, (void*)image_infos.infos64.infoArray);
+    TRACE("Process has %u image infos at %s\n", image_infos.infos64.infoArrayCount, wine_dbgstr_longlong(image_infos.infos64.infoArray));
 
     if (pcs->is_64bit)
         len = sizeof(info_array->info64);
@@ -1751,6 +1751,7 @@ static BOOL macho_enum_modules(struct process* process, enum_modules_cb cb, void
 
     TRACE("(%p, %p, %p)\n", process->handle, cb, user);
     macho_info.flags = MACHO_INFO_NAME;
+    macho_info.module_name = NULL;
     ret = macho_enum_modules_internal(process, macho_info.module_name, cb, user);
     HeapFree(GetProcessHeap(), 0, (char*)macho_info.module_name);
     return ret;
