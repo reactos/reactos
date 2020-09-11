@@ -1086,7 +1086,7 @@ static BOOL sym_enum(HANDLE hProcess, ULONG64 BaseOfDll, PCWSTR Mask,
         }
         /* not found in PE modules, retry on the ELF ones
          */
-        if (!pair.requested && (dbghelp_options & SYMOPT_WINE_WITH_NATIVE_MODULES))
+        if (!pair.requested && dbghelp_opt_native)
         {
             for (pair.requested = pair.pcs->lmodules; pair.requested; pair.requested = pair.requested->next)
             {
@@ -1417,7 +1417,7 @@ BOOL WINAPI SymFromName(HANDLE hProcess, PCSTR Name, PSYMBOL_INFO Symbol)
     }
     /* not found in PE modules, retry on the ELF ones
      */
-    if (dbghelp_options & SYMOPT_WINE_WITH_NATIVE_MODULES)
+    if (dbghelp_opt_native)
     {
         for (module = pcs->lmodules; module; module = module->next)
         {
