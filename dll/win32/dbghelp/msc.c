@@ -2067,29 +2067,29 @@ static BOOL codeview_snarf_public(const struct msc_debug_info* msc_dbg, const BY
 
         switch (sym->generic.id)
         {
-	case S_PUB_V1: /* FIXME is this really a 'data_v1' structure ?? */
+        case S_PUB_V1:
             if (!(dbghelp_options & SYMOPT_NO_PUBLICS))
             {
                 symt_new_public(msc_dbg->module, compiland,
-                                terminate_string(&sym->data_v1.p_name),
-                                codeview_get_address(msc_dbg, sym->data_v1.segment, sym->data_v1.offset), 1);
+                                terminate_string(&sym->public_v1.p_name),
+                                codeview_get_address(msc_dbg, sym->public_v1.segment, sym->public_v1.offset), 1);
             }
             break;
-	case S_PUB_V2: /* FIXME is this really a 'data_v2' structure ?? */
+        case S_PUB_V2:
             if (!(dbghelp_options & SYMOPT_NO_PUBLICS))
             {
                 symt_new_public(msc_dbg->module, compiland,
-                                terminate_string(&sym->data_v2.p_name),
-                                codeview_get_address(msc_dbg, sym->data_v2.segment, sym->data_v2.offset), 1);
+                                terminate_string(&sym->public_v2.p_name),
+                                codeview_get_address(msc_dbg, sym->public_v2.segment, sym->public_v2.offset), 1);
             }
-	    break;
+            break;
 
         case S_PUB_V3:
             if (!(dbghelp_options & SYMOPT_NO_PUBLICS))
             {
                 symt_new_public(msc_dbg->module, compiland,
-                                sym->data_v3.name,
-                                codeview_get_address(msc_dbg, sym->data_v3.segment, sym->data_v3.offset), 1);
+                                sym->public_v3.name,
+                                codeview_get_address(msc_dbg, sym->public_v3.segment, sym->public_v3.offset), 1);
             }
             break;
         case S_PUB_FUNC1_V3:
