@@ -1694,7 +1694,7 @@ static BOOL macho_enum_sync_cb(const WCHAR* name, unsigned long addr, void* user
  * - if a module is in debuggee and not in pcs, it's loaded into pcs
  * - if a module is in pcs and not in debuggee, it's unloaded from pcs
  */
-BOOL    macho_synchronize_module_list(struct process* pcs)
+static BOOL macho_synchronize_module_list(struct process* pcs)
 {
     struct module*      module;
     struct macho_sync     ms;
@@ -1908,6 +1908,11 @@ static BOOL macho_search_loader(struct process* pcs, struct macho_info* macho_in
     return ret;
 }
 
+static const struct loader_ops macho_loader_ops =
+{
+    macho_synchronize_module_list,
+};
+
 /******************************************************************
  *              macho_read_wine_loader_dbg_info
  *
@@ -1919,18 +1924,15 @@ BOOL macho_read_wine_loader_dbg_info(struct process* pcs)
 
     TRACE("(%p/%p)\n", pcs, pcs->handle);
     macho_info.flags = MACHO_INFO_DEBUG_HEADER | MACHO_INFO_MODULE;
-    if (!macho_search_loader(pcs, &macho_info)) return FALSE;
+    if (!macho_search_loader(pcs, &macho_info) || !macho_info.dbg_hdr_addr) return FALSE;
     macho_info.module->format_info[DFI_MACHO]->u.macho_info->is_loader = 1;
     module_set_module(macho_info.module, S_WineLoaderW);
-    return (pcs->dbg_hdr_addr = macho_info.dbg_hdr_addr) != 0;
+    pcs->dbg_hdr_addr = macho_info.dbg_hdr_addr;
+    pcs->loader = &macho_loader_ops;
+    return TRUE;
 }
 
 #else  /* HAVE_MACH_O_LOADER_H */
-
-BOOL    macho_synchronize_module_list(struct process* pcs)
-{
-    return FALSE;
-}
 
 BOOL macho_fetch_file_info(HANDLE process, const WCHAR* name, unsigned long load_addr, DWORD_PTR* base,
                            DWORD* size, DWORD* checksum)

@@ -1623,7 +1623,7 @@ struct module*  elf_load_module(struct process* pcs, const WCHAR* name, unsigned
  * - if a module is in debuggee and not in pcs, it's loaded into pcs
  * - if a module is in pcs and not in debuggee, it's unloaded from pcs
  */
-BOOL	elf_synchronize_module_list(struct process* pcs)
+static BOOL elf_synchronize_module_list(struct process* pcs)
 {
     struct module*      module;
     struct elf_load     el;
@@ -1704,6 +1704,11 @@ static BOOL elf_search_loader(struct process* pcs, struct elf_info* elf_info)
     return ret;
 }
 
+static const struct loader_ops elf_loader_ops =
+{
+    elf_synchronize_module_list,
+};
+
 /******************************************************************
  *		elf_read_wine_loader_dbg_info
  *
@@ -1714,20 +1719,17 @@ BOOL elf_read_wine_loader_dbg_info(struct process* pcs)
     struct elf_info     elf_info;
 
     elf_info.flags = ELF_INFO_DEBUG_HEADER | ELF_INFO_MODULE;
-    if (!elf_search_loader(pcs, &elf_info)) return FALSE;
+    if (!elf_search_loader(pcs, &elf_info) || !elf_info.dbg_hdr_addr) return FALSE;
     elf_info.module->format_info[DFI_ELF]->u.elf_info->elf_loader = 1;
     module_set_module(elf_info.module, S_WineLoaderW);
-    return (pcs->dbg_hdr_addr = elf_info.dbg_hdr_addr) != 0;
+    pcs->dbg_hdr_addr = elf_info.dbg_hdr_addr;
+    pcs->loader = &elf_loader_ops;
+    return TRUE;
 }
 
 #else	/* !__ELF__ */
 
 BOOL elf_map_handle(HANDLE handle, struct image_file_map* fmap)
-{
-    return FALSE;
-}
-
-BOOL	elf_synchronize_module_list(struct process* pcs)
 {
     return FALSE;
 }
