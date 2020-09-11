@@ -70,6 +70,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(dbghelp);
  */
 
 unsigned   dbghelp_options = SYMOPT_UNDNAME;
+BOOL       dbghelp_opt_native = FALSE;
 
 static struct process* process_first /* = NULL */;
 
@@ -473,8 +474,19 @@ DWORD WINAPI SymGetOptions(void)
  */
 BOOL WINAPI SymSetExtendedOption(IMAGEHLP_EXTENDED_OPTIONS option, BOOL value)
 {
-    FIXME("%d, %d\n", option, value);
-    return FALSE;
+    BOOL old = FALSE;
+
+    switch(option)
+    {
+        case SYMOPT_EX_WINE_NATIVE_MODULES:
+            old = dbghelp_opt_native;
+            dbghelp_opt_native = value;
+            break;
+        default:
+            FIXME("Unsupported option %d with value %d\n", option, value);
+    }
+
+    return old;
 }
 
 /******************************************************************
@@ -483,7 +495,14 @@ BOOL WINAPI SymSetExtendedOption(IMAGEHLP_EXTENDED_OPTIONS option, BOOL value)
  */
 BOOL WINAPI SymGetExtendedOption(IMAGEHLP_EXTENDED_OPTIONS option)
 {
-    FIXME("%d\n", option);
+    switch(option)
+    {
+        case SYMOPT_EX_WINE_NATIVE_MODULES:
+            return dbghelp_opt_native;
+        default:
+            FIXME("Unsupported option %d\n", option);
+    }
+
     return FALSE;
 }
 
