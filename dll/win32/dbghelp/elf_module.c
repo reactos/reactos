@@ -38,7 +38,6 @@
 
 #include "image_private.h"
 
-#include "wine/library.h"
 #include "wine/debug.h"
 #include "wine/heap.h"
 
@@ -1261,6 +1260,20 @@ static BOOL elf_load_file(struct process* pcs, const WCHAR* filename,
     return ret;
 }
 
+struct elf_load_file_params
+{
+    struct process  *process;
+    ULONG_PTR        load_offset;
+    ULONG_PTR        dyn_addr;
+    struct elf_info *elf_info;
+};
+
+static BOOL elf_load_file_cb(void *param, HANDLE handle, const WCHAR *filename)
+{
+    struct elf_load_file_params *load_file = param;
+    return elf_load_file(load_file->process, filename, load_file->load_offset, load_file->dyn_addr, load_file->elf_info);
+}
+
 /******************************************************************
  *		elf_load_file_from_path
  * tries to load an ELF file from a set of paths (separated by ':')
@@ -1299,41 +1312,6 @@ static BOOL elf_load_file_from_path(HANDLE hProcess,
     }
 
     HeapFree(GetProcessHeap(), 0, pathW);
-    return ret;
-}
-
-/******************************************************************
- *		elf_load_file_from_dll_path
- *
- * Tries to load an ELF file from the dll path
- */
-static BOOL elf_load_file_from_dll_path(HANDLE hProcess,
-                                        const WCHAR* filename,
-                                        unsigned long load_offset,
-                                        unsigned long dyn_addr,
-                                        struct elf_info* elf_info)
-{
-    BOOL ret = FALSE;
-    unsigned int index = 0;
-    const char *path;
-
-    while (!ret && (path = wine_dll_enum_load_path( index++ )))
-    {
-        WCHAR *name;
-        unsigned len;
-
-        len = MultiByteToWideChar(CP_UNIXCP, 0, path, -1, NULL, 0);
-
-        name = HeapAlloc( GetProcessHeap(), 0,
-                          (len + lstrlenW(filename) + 2) * sizeof(WCHAR) );
-
-        if (!name) break;
-        MultiByteToWideChar(CP_UNIXCP, 0, path, -1, name, len);
-        strcatW( name, S_SlashW );
-        strcatW( name, filename );
-        ret = elf_load_file(hProcess, name, load_offset, dyn_addr, elf_info);
-        HeapFree( GetProcessHeap(), 0, name );
-    }
     return ret;
 }
 
@@ -1434,12 +1412,17 @@ static BOOL elf_search_and_load_file(struct process* pcs, const WCHAR* filename,
     /* if relative pathname, try some absolute base dirs */
     if (!ret && filename == file_name(filename))
     {
+        struct elf_load_file_params load_elf;
+        load_elf.process     = pcs;
+        load_elf.load_offset = load_offset;
+        load_elf.dyn_addr    = dyn_addr;
+        load_elf.elf_info    = elf_info;
+
         ret = elf_load_file_from_path(pcs, filename, load_offset, dyn_addr,
                                       getenv("PATH"), elf_info) ||
             elf_load_file_from_path(pcs, filename, load_offset, dyn_addr,
                                     getenv("LD_LIBRARY_PATH"), elf_info);
-        if (!ret) ret = elf_load_file_from_dll_path(pcs, filename,
-                                                    load_offset, dyn_addr, elf_info);
+        if (!ret) ret = search_dll_path(filename, elf_load_file_cb, &load_elf);
     }
 
     return ret;
