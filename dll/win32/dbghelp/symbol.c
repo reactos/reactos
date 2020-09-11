@@ -875,7 +875,7 @@ static void symt_get_length(struct module* module, const struct symt* symt, ULON
 }
 
 /* neede by symt_find_nearest */
-int symt_get_best_at(struct module* module, int idx_sorttab)
+static int symt_get_best_at(struct module* module, int idx_sorttab)
 {
     ULONG64 ref_addr;
     int idx_sorttab_orig = idx_sorttab;
