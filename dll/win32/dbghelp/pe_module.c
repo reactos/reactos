@@ -502,7 +502,7 @@ static BOOL pe_load_stabs(const struct process* pcs, struct module* module)
         {
             ret = stabs_parse(module,
                               module->module.BaseOfImage - fmap->u.pe.ntheader.OptionalHeader.ImageBase,
-                              stab, image_get_map_size(&sect_stabs),
+                              stab, image_get_map_size(&sect_stabs) / sizeof(struct stab_nlist), sizeof(struct stab_nlist),
                               stabstr, image_get_map_size(&sect_stabstr),
                               NULL, NULL);
         }
