@@ -41,9 +41,6 @@ const WCHAR        S_ElfW[]         = {'<','e','l','f','>','\0'};
 const WCHAR        S_WineLoaderW[]  = {'<','w','i','n','e','-','l','o','a','d','e','r','>','\0'};
 #endif
 static const WCHAR S_DotSoW[]       = {'.','s','o','\0'};
-static const WCHAR S_DotDylibW[]    = {'.','d','y','l','i','b','\0'};
-static const WCHAR S_DotPdbW[]      = {'.','p','d','b','\0'};
-static const WCHAR S_DotDbgW[]      = {'.','d','b','g','\0'};
 const WCHAR        S_SlashW[]       = {'/','\0'};
 
 static const WCHAR S_AcmW[] = {'.','a','c','m','\0'};
@@ -480,61 +477,6 @@ static BOOL module_is_container_loaded(const struct process* pcs,
     return FALSE;
 }
 
-/******************************************************************
- *		module_get_type_by_name
- *
- * Guesses a filename type from its extension
- */
-enum module_type module_get_type_by_name(const WCHAR* name)
-{
-    int len = strlenW(name);
-
-    /* Skip all version extensions (.[digits]) regex: "(\.\d+)*$" */
-    do
-    {
-        int i = len;
-
-        while (i && name[i - 1] >= '0' && name[i - 1] <= '9') i--;
-
-        if (i && name[i - 1] == '.')
-            len = i - 1;
-        else
-            break;
-    } while (len);
-
-    /* check for terminating .so or .so.[digit] */
-    /* FIXME: Can't rely solely on extension; have to check magic or
-     *        stop using .so on Mac OS X.  For now, base on platform. */
-    if (len > 3 && !memcmp(name + len - 3, S_DotSoW, 3))
-#ifdef __APPLE__
-        return DMT_MACHO;
-#else
-        return DMT_ELF;
-#endif
-
-    if (len > 6 && !strncmpiW(name + len - 6, S_DotDylibW, 6))
-        return DMT_MACHO;
-
-    if (len > 4 && !strncmpiW(name + len - 4, S_DotPdbW, 4))
-        return DMT_PDB;
-
-    if (len > 4 && !strncmpiW(name + len - 4, S_DotDbgW, 4))
-        return DMT_DBG;
-
-    /* wine is also a native module (Mach-O on Mac OS X, ELF elsewhere) */
-#ifndef __REACTOS__
-    if (is_wine_loader(name))
-    {
-#ifdef __APPLE__
-        return DMT_MACHO;
-#else
-        return DMT_ELF;
-#endif
-    }
-#endif
-    return DMT_PE;
-}
-
 static BOOL image_check_debug_link(const WCHAR* file, struct image_file_map* fmap, DWORD link_crc)
 {
     DWORD read_bytes;
@@ -871,8 +813,7 @@ DWORD64 WINAPI  SymLoadModuleExW(HANDLE hProcess, HANDLE hFile, PCWSTR wImageNam
     if (Flags & SLMFLAG_VIRTUAL)
     {
         if (!wImageName) return FALSE;
-        module = module_new(pcs, wImageName, module_get_type_by_name(wImageName),
-                            TRUE, BaseOfDll, SizeOfDll, 0, 0);
+        module = module_new(pcs, wImageName, DMT_PE, TRUE, BaseOfDll, SizeOfDll, 0, 0);
         if (!module) return FALSE;
         if (wModuleName) module_set_module(module, wModuleName);
         module->module.SymType = SymVirtual;
