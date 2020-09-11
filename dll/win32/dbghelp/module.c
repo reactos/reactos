@@ -36,6 +36,8 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(dbghelp);
 
+#define NOTE_GNU_BUILD_ID  3
+
 const WCHAR        S_ElfW[]         = {'<','e','l','f','>','\0'};
 #ifndef __REACTOS__
 const WCHAR        S_WineLoaderW[]  = {'<','w','i','n','e','-','l','o','a','d','e','r','>','\0'};
@@ -663,7 +665,7 @@ static BOOL image_locate_build_id_target(struct image_file_map* fmap, const BYTE
             if (note != IMAGE_NO_MAP)
             {
                 /* the usual ELF note structure: name-size desc-size type <name> <desc> */
-                if (note[2] == NT_GNU_BUILD_ID)
+                if (note[2] == NOTE_GNU_BUILD_ID)
                 {
                     if (note[1] == idlen &&
                         !memcmp(note + 3 + ((note[0] + 3) >> 2), idend - idlen, idlen))
@@ -709,7 +711,7 @@ BOOL image_check_alternate(struct image_file_map* fmap, const struct module* mod
         if (note != IMAGE_NO_MAP)
         {
             /* the usual ELF note structure: name-size desc-size type <name> <desc> */
-            if (note[2] == NT_GNU_BUILD_ID)
+            if (note[2] == NOTE_GNU_BUILD_ID)
             {
                 ret = image_locate_build_id_target(fmap, (const BYTE*)(note + 3 + ((note[0] + 3) >> 2)), note[1]);
             }
