@@ -144,9 +144,8 @@ static void module_fill_module(const WCHAR* in, WCHAR* out, size_t size)
 
 void module_set_module(struct module* module, const WCHAR* name)
 {
-    module_fill_module(name, module->module.ModuleName,
-            sizeof(module->module.ModuleName) / sizeof(module->module.ModuleName[0]));
-    module_fill_module(name, module->modulename, sizeof(module->modulename) / sizeof(module->modulename[0]));
+    module_fill_module(name, module->module.ModuleName, ARRAY_SIZE(module->module.ModuleName));
+    module_fill_module(name, module->modulename, ARRAY_SIZE(module->modulename));
 }
 
 #ifndef __REACTOS__
@@ -227,7 +226,7 @@ struct module* module_new(struct process* pcs, const WCHAR* name,
     module->module.ImageSize = size;
     module_set_module(module, name);
     module->module.ImageName[0] = '\0';
-    lstrcpynW(module->module.LoadedImageName, name, sizeof(module->module.LoadedImageName) / sizeof(WCHAR));
+    lstrcpynW(module->module.LoadedImageName, name, ARRAY_SIZE(module->module.LoadedImageName));
     module->module.SymType = SymNone;
     module->module.NumSyms = 0;
     module->module.TimeDateStamp = stamp;
@@ -296,7 +295,7 @@ struct module* module_find_by_nameA(const struct process* pcs, const char* name)
 {
     WCHAR wname[MAX_PATH];
 
-    MultiByteToWideChar(CP_ACP, 0, name, -1, wname, sizeof(wname) / sizeof(WCHAR));
+    MultiByteToWideChar(CP_ACP, 0, name, -1, wname, ARRAY_SIZE(wname));
     return module_find_by_nameW(pcs, wname);
 }
 
@@ -698,8 +697,7 @@ DWORD64 WINAPI  SymLoadModuleExW(HANDLE hProcess, HANDLE hFile, PCWSTR wImageNam
     if (wModuleName)
         module_set_module(module, wModuleName);
     if (wImageName)
-        lstrcpynW(module->module.ImageName, wImageName,
-              sizeof(module->module.ImageName) / sizeof(WCHAR));
+        lstrcpynW(module->module.ImageName, wImageName, ARRAY_SIZE(module->module.ImageName));
 
     return module->module.BaseOfImage;
 }
@@ -963,9 +961,9 @@ BOOL  WINAPI EnumerateLoadedModulesW64(HANDLE hProcess,
     for (i = 0; i < sz; i++)
     {
         if (!GetModuleInformation(hProcess, hMods[i], &mi, sizeof(mi)) ||
-            !GetModuleBaseNameW(hProcess, hMods[i], baseW, sizeof(baseW) / sizeof(WCHAR)))
+            !GetModuleBaseNameW(hProcess, hMods[i], baseW, ARRAY_SIZE(baseW)))
             continue;
-        module_fill_module(baseW, modW, sizeof(modW) / sizeof(modW[0]));
+        module_fill_module(baseW, modW, ARRAY_SIZE(modW));
         EnumLoadedModulesCallback(modW, (DWORD_PTR)mi.lpBaseOfDll, mi.SizeOfImage,
                                   UserContext);
     }

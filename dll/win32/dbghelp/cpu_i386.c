@@ -458,7 +458,7 @@ static BOOL i386_stack_walk(struct cpu_stack_walk* csw, LPSTACKFRAME64 frame, CO
          * work if the parameter is in fact bigger than 16bit, but
          * there's no way to know that here
          */
-        for (i = 0; i < sizeof(frame->Params) / sizeof(frame->Params[0]); i++)
+        for (i = 0; i < ARRAY_SIZE(frame->Params); i++)
         {
             sw_read_mem(csw, p + (2 + i) * sizeof(WORD), &val16, sizeof(val16));
             frame->Params[i] = val16;
@@ -491,7 +491,7 @@ static BOOL i386_stack_walk(struct cpu_stack_walk* csw, LPSTACKFRAME64 frame, CO
         frame->AddrReturn.Mode = AddrModeFlat;
         frame->AddrReturn.Offset = newctx.Eip;
 #endif
-        for (i = 0; i < sizeof(frame->Params) / sizeof(frame->Params[0]); i++)
+        for (i = 0; i < ARRAY_SIZE(frame->Params); i++)
         {
             sw_read_mem(csw, frame->AddrFrame.Offset + (2 + i) * sizeof(DWORD), &val32, sizeof(val32));
             frame->Params[i] = val32;

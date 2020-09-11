@@ -2130,7 +2130,7 @@ BOOL WINAPI SymAddSymbol(HANDLE hProcess, ULONG64 BaseOfDll, PCSTR name,
 {
     WCHAR       nameW[MAX_SYM_NAME];
 
-    MultiByteToWideChar(CP_ACP, 0, name, -1, nameW, sizeof(nameW) / sizeof(WCHAR));
+    MultiByteToWideChar(CP_ACP, 0, name, -1, nameW, ARRAY_SIZE(nameW));
     return SymAddSymbolW(hProcess, BaseOfDll, nameW, addr, size, flags);
 }
 

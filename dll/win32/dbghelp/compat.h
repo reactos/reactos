@@ -113,6 +113,7 @@ INT __WideCharToMultiByte( UINT page, DWORD flags, LPCWSTR src, INT srclen, LPST
 // #define toupperW(n) towupper((n))
 
 // winnt.h
+# define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
 #define IMAGE_FILE_MACHINE_ARMNT      0x1c4
 #define IMAGE_FILE_MACHINE_POWERPC    0x1f0
 #define IMAGE_FILE_MACHINE_ARM64      0xaa64

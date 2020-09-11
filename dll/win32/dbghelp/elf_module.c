@@ -974,7 +974,7 @@ static BOOL elf_locate_debug_link(struct image_file_map* fmap, const char* filen
 {
     static const WCHAR globalDebugDirW[] = {'/','u','s','r','/','l','i','b','/','d','e','b','u','g','/'};
     static const WCHAR dotDebugW[] = {'.','d','e','b','u','g','/'};
-    const size_t globalDebugDirLen = sizeof(globalDebugDirW) / sizeof(WCHAR);
+    const size_t globalDebugDirLen = ARRAY_SIZE(globalDebugDirW);
     size_t filename_len;
     WCHAR* p = NULL;
     WCHAR* slash;
@@ -999,7 +999,7 @@ static BOOL elf_locate_debug_link(struct image_file_map* fmap, const char* filen
 
     /* testing execdir/.debug/filename */
     memcpy(slash, dotDebugW, sizeof(dotDebugW));
-    MultiByteToWideChar(CP_UNIXCP, 0, filename, -1, slash + sizeof(dotDebugW) / sizeof(WCHAR), filename_len);
+    MultiByteToWideChar(CP_UNIXCP, 0, filename, -1, slash + ARRAY_SIZE(dotDebugW), filename_len);
     if (elf_check_debug_link(p, fmap_link, crc)) goto found;
 
     /* testing globaldebugdir/execdir/filename */
@@ -1049,9 +1049,9 @@ static BOOL elf_locate_build_id_target(struct image_file_map* fmap, const BYTE* 
                   (idlen * 2 + 1) * sizeof(WCHAR) + sizeof(dotDebug0W));
     z = p;
     memcpy(z, globalDebugDirW, sizeof(globalDebugDirW));
-    z += sizeof(globalDebugDirW) / sizeof(WCHAR);
+    z += ARRAY_SIZE(globalDebugDirW);
     memcpy(z, buildidW, sizeof(buildidW));
-    z += sizeof(buildidW) / sizeof(WCHAR);
+    z += ARRAY_SIZE(buildidW);
 
     if (id < idend)
     {
@@ -1694,8 +1694,7 @@ static BOOL elf_enum_modules_internal(const struct process* pcs,
                 ReadProcessMemory(pcs->handle, lm.l_name, bufstr, sizeof(bufstr), NULL))
             {
                 bufstr[sizeof(bufstr) - 1] = '\0';
-                MultiByteToWideChar(CP_UNIXCP, 0, bufstr, -1, bufstrW,
-                                    sizeof(bufstrW) / sizeof(WCHAR));
+                MultiByteToWideChar(CP_UNIXCP, 0, bufstr, -1, bufstrW, ARRAY_SIZE(bufstrW));
                 if (main_name && !bufstrW[0]) strcpyW(bufstrW, main_name);
                 if (!cb(bufstrW, (unsigned long)lm.l_addr, (unsigned long)lm.l_ld, FALSE, user))
                     break;
@@ -1729,8 +1728,7 @@ static BOOL elf_enum_modules_internal(const struct process* pcs,
                                   bufstr, sizeof(bufstr), NULL))
             {
                 bufstr[sizeof(bufstr) - 1] = '\0';
-                MultiByteToWideChar(CP_UNIXCP, 0, bufstr, -1, bufstrW,
-                                    sizeof(bufstrW) / sizeof(WCHAR));
+                MultiByteToWideChar(CP_UNIXCP, 0, bufstr, -1, bufstrW, ARRAY_SIZE(bufstrW));
                 if (main_name && !bufstrW[0]) strcpyW(bufstrW, main_name);
                 if (!cb(bufstrW, (unsigned long)lm.l_addr, (unsigned long)lm.l_ld, FALSE, user))
                     break;
