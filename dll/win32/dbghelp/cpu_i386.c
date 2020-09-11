@@ -99,7 +99,7 @@ static BOOL i386_get_addr(HANDLE hThread, const CONTEXT* ctx,
 static BOOL fetch_next_frame32(struct cpu_stack_walk* csw,
                                union ctx *pcontext, DWORD_PTR curr_pc)
 {
-    DWORD_PTR               xframe;
+    DWORD64 xframe;
     struct pdb_cmd_pair     cpair[4];
     DWORD                   val32;
     WOW64_CONTEXT *context = &pcontext->x86;

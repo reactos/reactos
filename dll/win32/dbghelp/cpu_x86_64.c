@@ -577,7 +577,7 @@ static BOOL interpret_function_table_entry(struct cpu_stack_walk* csw,
 static BOOL fetch_next_frame(struct cpu_stack_walk *csw, union ctx *pcontext,
                              DWORD_PTR curr_pc, void** prtf)
 {
-    DWORD_PTR               cfa;
+    DWORD64 cfa;
     RUNTIME_FUNCTION*       rtf;
     DWORD64                 base;
     CONTEXT *context = &pcontext->ctx;

@@ -3031,18 +3031,19 @@ static void execute_cfa_instructions(dwarf2_traverse_context_t* ctx,
 }
 
 /* retrieve a context register from its dwarf number */
-static ULONG_PTR get_context_reg(struct cpu_stack_walk *csw, union ctx *context,
+static DWORD64 get_context_reg(struct cpu_stack_walk *csw, union ctx *context,
     ULONG_PTR dw_reg)
 {
     unsigned regno = csw->cpu->map_dwarf_register(dw_reg, TRUE), sz;
-    ULONG_PTR* ptr = csw->cpu->fetch_context_reg(context, regno, &sz);
+    void* ptr = csw->cpu->fetch_context_reg(context, regno, &sz);
 
-    if (sz != sizeof(ULONG_PTR))
-    {
-        FIXME("reading register %lu/%u of wrong size %u\n", dw_reg, regno, sz);
-        return 0;
-    }
-    return *ptr;
+    if (sz == 8)
+        return *(DWORD64 *)ptr;
+    else if (sz == 4)
+        return *(DWORD *)ptr;
+
+    FIXME("unhandled size %d\n", sz);
+    return 0;
 }
 
 /* set a context register from its dwarf number */
@@ -3102,7 +3103,8 @@ static ULONG_PTR eval_expression(const struct module* module, struct cpu_stack_w
                                  const unsigned char* zp, union ctx *context)
 {
     dwarf2_traverse_context_t    ctx;
-    ULONG_PTR reg, sz, tmp, stack[64];
+    ULONG_PTR reg, sz, tmp;
+    DWORD64 stack[64];
     int sp = -1;
     ULONG_PTR len;
 
@@ -3140,7 +3142,7 @@ static ULONG_PTR eval_expression(const struct module* module, struct cpu_stack_w
         case DW_OP_deref:
             if (!sw_read_mem(csw, stack[sp], &tmp, sizeof(tmp)))
             {
-                ERR("Couldn't read memory at %lx\n", stack[sp]);
+                ERR("Couldn't read memory at %s\n", wine_dbgstr_longlong(stack[sp]));
                 tmp = 0;
             }
             stack[sp] = tmp;
@@ -3190,7 +3192,7 @@ static ULONG_PTR eval_expression(const struct module* module, struct cpu_stack_w
             sz = dwarf2_parse_byte(&ctx);
             if (!sw_read_mem(csw, stack[sp], &tmp, sz))
             {
-                ERR("Couldn't read memory at %lx\n", stack[sp]);
+                ERR("Couldn't read memory at %s\n", wine_dbgstr_longlong(stack[sp]));
                 tmp = 0;
             }
             /* do integral promotion */
@@ -3211,7 +3213,7 @@ static ULONG_PTR eval_expression(const struct module* module, struct cpu_stack_w
 }
 
 static void apply_frame_state(const struct module* module, struct cpu_stack_walk* csw,
-                              union ctx *context, struct frame_state *state, ULONG_PTR* cfa)
+                              union ctx *context, struct frame_state *state, DWORD64 *cfa)
 {
     unsigned int i;
     ULONG_PTR value;
@@ -3223,7 +3225,7 @@ static void apply_frame_state(const struct module* module, struct cpu_stack_walk
         *cfa = eval_expression(module, csw, (const unsigned char*)state->cfa_offset, context);
         if (!sw_read_mem(csw, *cfa, cfa, sizeof(*cfa)))
         {
-            WARN("Couldn't read memory at %p\n", (void*)*cfa);
+            WARN("Couldn't read memory at %s\n", wine_dbgstr_longlong(*cfa));
             return;
         }
         break;
@@ -3268,7 +3270,7 @@ static void apply_frame_state(const struct module* module, struct cpu_stack_walk
  *
  */
 BOOL dwarf2_virtual_unwind(struct cpu_stack_walk *csw, ULONG_PTR ip,
-    union ctx *context, ULONG_PTR *cfa)
+    union ctx *context, DWORD64 *cfa)
 {
     struct module_pair pair;
     struct frame_info info;
