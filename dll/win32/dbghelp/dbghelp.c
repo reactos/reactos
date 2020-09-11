@@ -378,10 +378,10 @@ static BOOL check_live_target(struct process* pcs)
 
     TRACE("got debug info address %#lx from PEB %p\n", base, pbi.PebBaseAddress);
 #ifndef __REACTOS__
-    return elf_read_wine_loader_dbg_info(pcs, base) || macho_read_wine_loader_dbg_info(pcs, base);
-#else
-    return TRUE;
+    if (!elf_read_wine_loader_dbg_info(pcs, base) && !macho_read_wine_loader_dbg_info(pcs, base))
+        WARN("couldn't load process debug info at %#lx\n", base);
 #endif
+    return TRUE;
 }
 #endif
 
@@ -485,7 +485,7 @@ BOOL WINAPI SymInitializeW(HANDLE hProcess, PCWSTR UserSearchPath, BOOL fInvadeP
     {
         if (fInvadeProcess)
             EnumerateLoadedModulesW64(hProcess, process_invade_cb, hProcess);
-        pcs->loader->synchronize_module_list(pcs);
+        if (pcs->loader) pcs->loader->synchronize_module_list(pcs);
     }
     else if (fInvadeProcess)
 #else
