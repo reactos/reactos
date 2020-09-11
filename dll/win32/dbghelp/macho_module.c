@@ -92,6 +92,46 @@ union wine_all_image_infos {
     struct dyld_all_image_infos64 infos64;
 };
 
+struct macho_segment_command
+{
+    UINT32  cmd;          /* LC_SEGMENT_64 */
+    UINT32  cmdsize;      /* includes sizeof section_64 structs */
+    char    segname[16];  /* segment name */
+    UINT64  vmaddr;       /* memory address of this segment */
+    UINT64  vmsize;       /* memory size of this segment */
+    UINT64  fileoff;      /* file offset of this segment */
+    UINT64  filesize;     /* amount to map from the file */
+    UINT32  maxprot;      /* maximum VM protection */
+    UINT32  initprot;     /* initial VM protection */
+    UINT32  nsects;       /* number of sections in segment */
+    UINT32  flags;        /* flags */
+};
+
+struct macho_segment_command32
+{
+    UINT32  cmd;          /* LC_SEGMENT */
+    UINT32  cmdsize;      /* includes sizeof section structs */
+    char    segname[16];  /* segment name */
+    UINT32  vmaddr;       /* memory address of this segment */
+    UINT32  vmsize;       /* memory size of this segment */
+    UINT32  fileoff;      /* file offset of this segment */
+    UINT32  filesize;     /* amount to map from the file */
+    UINT32  maxprot;      /* maximum VM protection */
+    UINT32  initprot;     /* initial VM protection */
+    UINT32  nsects;       /* number of sections in segment */
+    UINT32  flags;        /* flags */
+};
+
+struct macho_symtab_command
+{
+    UINT32  cmd;          /* LC_SYMTAB */
+    UINT32  cmdsize;      /* sizeof(struct symtab_command) */
+    UINT32  symoff;       /* symbol table offset */
+    UINT32  nsyms;        /* number of symbol table entries */
+    UINT32  stroff;       /* string table offset */
+    UINT32  strsize;      /* string table size in bytes */
+};
+
 #ifdef WORDS_BIGENDIAN
 #define swap_ulong_be_to_host(n) (n)
 #else
@@ -535,13 +575,13 @@ static int macho_count_sections(struct image_file_map* ifm, const struct macho_l
 
     if (ifm->addr_size == 32)
     {
-        const struct segment_command *sc = (const struct segment_command *)lc;
+        const struct macho_segment_command32 *sc = (const struct macho_segment_command32 *)lc;
         memcpy(segname, sc->segname, sizeof(segname));
         nsects = sc->nsects;
     }
     else
     {
-        const struct segment_command_64 *sc = (const struct segment_command_64 *)lc;
+        const struct macho_segment_command *sc = (const struct macho_segment_command *)lc;
         memcpy(segname, sc->segname, sizeof(segname));
         nsects = sc->nsects;
     }
@@ -574,7 +614,7 @@ static int macho_load_section_info(struct image_file_map* ifm, const struct mach
 
     if (ifm->addr_size == 32)
     {
-        const struct segment_command *sc = (const struct segment_command *)lc;
+        const struct macho_segment_command32 *sc = (const struct macho_segment_command32 *)lc;
         vmaddr = sc->vmaddr;
         vmsize = sc->vmsize;
         memcpy(segname, sc->segname, sizeof(segname));
@@ -583,7 +623,7 @@ static int macho_load_section_info(struct image_file_map* ifm, const struct mach
     }
     else
     {
-        const struct segment_command_64 *sc = (const struct segment_command_64 *)lc;
+        const struct macho_segment_command *sc = (const struct macho_segment_command *)lc;
         vmaddr = sc->vmaddr;
         vmsize = sc->vmsize;
         memcpy(segname, sc->segname, sizeof(segname));
@@ -943,7 +983,7 @@ static int macho_parse_symtab(struct image_file_map* ifm,
                               const struct macho_load_command* lc, void* user)
 {
     struct macho_file_map* fmap = &ifm->u.macho;
-    const struct symtab_command*    sc = (const struct symtab_command*)lc;
+    const struct macho_symtab_command* sc = (const struct macho_symtab_command*)lc;
     struct macho_debug_info*        mdi = user;
     const char*                     stabstr;
     int                             ret = 0;
