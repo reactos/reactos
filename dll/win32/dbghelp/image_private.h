@@ -145,6 +145,15 @@ struct stab_nlist
     unsigned            n_value;
 };
 
+struct macho64_nlist
+{
+    unsigned            n_strx;
+    unsigned char       n_type;
+    char                n_other;
+    short               n_desc;
+    UINT64              n_value;
+};
+
 BOOL image_check_alternate(struct image_file_map* fmap, const struct module* module) DECLSPEC_HIDDEN;
 
 BOOL elf_map_handle(HANDLE handle, struct image_file_map* fmap) DECLSPEC_HIDDEN;
