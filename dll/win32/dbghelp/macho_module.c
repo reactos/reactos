@@ -55,7 +55,6 @@
 #ifdef HAVE_MACH_O_LOADER_H
 
 #include <mach-o/nlist.h>
-#include <mach-o/dyld.h>
 
 struct dyld_image_info32
 {
@@ -1920,18 +1919,6 @@ static BOOL macho_search_loader(struct process* pcs, struct macho_info* macho_in
                     break;
                 }
             }
-        }
-    }
-
-    /* If we couldn't get the executable path from the target process, try our
-       own.  It will almost always be the same. */
-    if (!got_path)
-    {
-        len = sizeof(path);
-        if (!_NSGetExecutablePath(path, &len))
-        {
-            got_path = TRUE;
-            TRACE("using own executable path: %s\n", debugstr_a(path));
         }
     }
 
