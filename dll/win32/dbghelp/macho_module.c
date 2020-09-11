@@ -37,12 +37,6 @@
 #include <assert.h>
 #include <stdarg.h>
 #include <errno.h>
-#ifdef HAVE_SYS_STAT_H
-# include <sys/stat.h>
-#endif
-#ifdef HAVE_SYS_MMAN_H
-# include <sys/mman.h>
-#endif
 
 #include "ntstatus.h"
 #define WIN32_NO_STATUS
@@ -53,8 +47,6 @@
 #include "image_private.h"
 
 #ifdef HAVE_MACH_O_LOADER_H
-
-#include <mach-o/nlist.h>
 
 struct dyld_image_info32
 {
@@ -1456,41 +1448,6 @@ static void macho_module_remove(struct process* pcs, struct module_format* modfm
 }
 
 /******************************************************************
- *              get_dyld_image_info_address
- */
-static ULONG_PTR get_dyld_image_info_address(struct process* pcs)
-{
-    ULONG_PTR dyld_image_info_address = 0;
-
-#ifndef __LP64__ /* No reading the symtab with nlist(3) in LP64 */
-    if (!dyld_image_info_address)
-    {
-        static void* dyld_all_image_infos_addr;
-
-        /* Our next best guess is that dyld was loaded at its base address
-           and we can find the dyld image infos address by looking up its symbol. */
-        if (!dyld_all_image_infos_addr)
-        {
-            struct nlist nl[2];
-            memset(nl, 0, sizeof(nl));
-            nl[0].n_un.n_name = (char*)"_dyld_all_image_infos";
-            if (!nlist("/usr/lib/dyld", nl))
-                dyld_all_image_infos_addr = (void*)nl[0].n_value;
-        }
-
-        if (dyld_all_image_infos_addr)
-        {
-            TRACE("got dyld_image_info_address %p from /usr/lib/dyld symbol table\n",
-                  dyld_all_image_infos_addr);
-            dyld_image_info_address = (ULONG_PTR)dyld_all_image_infos_addr;
-        }
-    }
-#endif
-
-    return dyld_image_info_address;
-}
-
-/******************************************************************
  *              macho_load_file
  *
  * Loads the information for Mach-O module stored in 'filename'.
@@ -1964,7 +1921,7 @@ BOOL macho_read_wine_loader_dbg_info(struct process* pcs, ULONG_PTR addr)
     struct macho_info     macho_info;
 
     TRACE("(%p/%p)\n", pcs, pcs->handle);
-    pcs->dbg_hdr_addr = addr ? addr : get_dyld_image_info_address(pcs);
+    pcs->dbg_hdr_addr = addr;
     macho_info.flags = MACHO_INFO_MODULE;
     if (!macho_search_loader(pcs, &macho_info)) return FALSE;
     macho_info.module->format_info[DFI_MACHO]->u.macho_info->is_loader = 1;
