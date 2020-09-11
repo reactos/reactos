@@ -24,9 +24,6 @@
 
 #if defined(__svr4__) || defined(__sun)
 #define __ELF__ 1
-/* large files are not supported by libelf */
-#undef _FILE_OFFSET_BITS
-#define _FILE_OFFSET_BITS 32
 #endif
 
 #include <assert.h>
@@ -34,9 +31,8 @@
 #include <stdlib.h>
 
 #include "dbghelp_private.h"
-#include "winternl.h"
-
 #include "image_private.h"
+#include "winternl.h"
 
 #include "wine/debug.h"
 #include "wine/heap.h"
