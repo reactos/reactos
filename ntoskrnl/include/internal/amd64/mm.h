@@ -252,9 +252,10 @@ MiPxeToAddress(PMMPTE PointerPxe)
 
 //
 // Decodes a Prototype PTE into the underlying PTE
+// The 48 bit signed value gets sign-extended to 64 bits.
 //
 #define MiSubsectionPteToSubsection(x)                              \
-        (PMMPTE)((x)->u.Subsect.SubsectionAddress >> 16)
+        (PMMPTE)((LONG64)(x)->u.Subsect.SubsectionAddress)
 
 FORCEINLINE
 VOID
