@@ -1274,47 +1274,6 @@ static BOOL elf_load_file_cb(void *param, HANDLE handle, const WCHAR *filename)
     return elf_load_file(load_file->process, filename, load_file->load_offset, load_file->dyn_addr, load_file->elf_info);
 }
 
-/******************************************************************
- *		elf_load_file_from_path
- * tries to load an ELF file from a set of paths (separated by ':')
- */
-static BOOL elf_load_file_from_path(HANDLE hProcess,
-                                    const WCHAR* filename,
-                                    unsigned long load_offset,
-                                    unsigned long dyn_addr,
-                                    const char* path,
-                                    struct elf_info* elf_info)
-{
-    BOOL                ret = FALSE;
-    WCHAR               *s, *t, *fn;
-    WCHAR*	        pathW = NULL;
-    unsigned            len;
-
-    if (!path) return FALSE;
-
-    len = MultiByteToWideChar(CP_UNIXCP, 0, path, -1, NULL, 0);
-    pathW = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
-    if (!pathW) return FALSE;
-    MultiByteToWideChar(CP_UNIXCP, 0, path, -1, pathW, len);
-
-    for (s = pathW; s && *s; s = (t) ? (t+1) : NULL)
-    {
-	t = strchrW(s, ':');
-	if (t) *t = '\0';
-	fn = HeapAlloc(GetProcessHeap(), 0, (lstrlenW(filename) + 1 + lstrlenW(s) + 1) * sizeof(WCHAR));
-	if (!fn) break;
-	strcpyW(fn, s);
-	strcatW(fn, S_SlashW);
-	strcatW(fn, filename);
-	ret = elf_load_file(hProcess, fn, load_offset, dyn_addr, elf_info);
-	HeapFree(GetProcessHeap(), 0, fn);
-	if (ret) break;
-    }
-
-    HeapFree(GetProcessHeap(), 0, pathW);
-    return ret;
-}
-
 #ifdef AT_SYSINFO_EHDR
 /******************************************************************
  *		elf_search_auxv
@@ -1418,11 +1377,9 @@ static BOOL elf_search_and_load_file(struct process* pcs, const WCHAR* filename,
         load_elf.dyn_addr    = dyn_addr;
         load_elf.elf_info    = elf_info;
 
-        ret = elf_load_file_from_path(pcs, filename, load_offset, dyn_addr,
-                                      getenv("PATH"), elf_info) ||
-            elf_load_file_from_path(pcs, filename, load_offset, dyn_addr,
-                                    getenv("LD_LIBRARY_PATH"), elf_info);
-        if (!ret) ret = search_dll_path(filename, elf_load_file_cb, &load_elf);
+        ret = search_unix_path(filename, getenv("PATH"), elf_load_file_cb, &load_elf)
+            || search_unix_path(filename, getenv("LD_LIBRARY_PATH"), elf_load_file_cb, &load_elf)
+            || search_dll_path(filename, elf_load_file_cb, &load_elf);
     }
 
     return ret;

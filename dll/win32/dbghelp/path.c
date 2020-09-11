@@ -807,4 +807,47 @@ found:
     heap_free(buf);
     return TRUE;
 }
+
+BOOL search_unix_path(const WCHAR *name, const char *path, BOOL (*match)(void*, HANDLE, const WCHAR*), void *param)
+{
+    const char *iter, *next;
+    size_t size, len;
+    WCHAR *dos_path;
+    char *buf;
+    BOOL ret = FALSE;
+
+    if (!path) return FALSE;
+    name = file_name(name);
+
+    size = WideCharToMultiByte(CP_UNIXCP, 0, name, -1, NULL, 0, NULL, NULL) + strlen(path) + 1;
+    if (!(buf = heap_alloc(size))) return FALSE;
+
+    for (iter = path;; iter = next + 1)
+    {
+        if (!(next = strchr(iter, ':'))) next = iter + strlen(iter);
+        if (*iter == '/')
+        {
+            len = next - iter;
+            memcpy(buf, iter, len);
+            if (buf[len - 1] != '/') buf[len++] = '/';
+            WideCharToMultiByte(CP_UNIXCP, 0, name, -1, buf + len, size - len, NULL, NULL);
+            if ((dos_path = wine_get_dos_file_name(buf)))
+            {
+                HANDLE file = CreateFileW(dos_path, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+                if (file != INVALID_HANDLE_VALUE)
+                {
+                    ret = match(param, file, dos_path);
+                    CloseHandle(file);
+                    if (ret) TRACE("found %s\n", debugstr_w(dos_path));
+                }
+                heap_free(dos_path);
+                if (ret) break;
+            }
+        }
+        if (*next != ':') break;
+    }
+
+    heap_free(buf);
+    return ret;
+}
 #endif
