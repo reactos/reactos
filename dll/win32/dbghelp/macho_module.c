@@ -932,7 +932,7 @@ static int macho_parse_symtab(struct image_file_map* ifm,
     struct macho_debug_info*        mdi = user;
     const char*                     stabstr;
     int                             ret = 0;
-    size_t stabsize = (ifm->addr_size == 32) ? sizeof(struct stab_nlist) : sizeof(struct nlist_64);
+    size_t stabsize = (ifm->addr_size == 32) ? sizeof(struct stab_nlist) : sizeof(struct macho64_nlist);
     const char *stab;
 
     TRACE("(%p/%p, %p, %p) %u syms at 0x%08x, strings 0x%08x - 0x%08x\n", fmap, fmap->handle, lc,
