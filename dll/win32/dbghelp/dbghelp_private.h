@@ -448,6 +448,11 @@ struct process
     BOOL                        is_64bit;
 };
 
+static inline BOOL read_process_memory(const struct process *process, UINT64 addr, void *buf, size_t size)
+{
+    return ReadProcessMemory(process->handle, (void*)(UINT_PTR)addr, buf, size, NULL);
+}
+
 struct line_info
 {
     ULONG_PTR                   is_first : 1,

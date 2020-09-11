@@ -1349,7 +1349,7 @@ static BOOL image_uses_split_segs(struct process* process, ULONG_PTR load_addr)
         UINT32 target_magic = (process->is_64bit) ? MACHO_MH_MAGIC_64 : MACHO_MH_MAGIC_32;
         struct macho_header header;
 
-        if (ReadProcessMemory(process->handle, (void*)load_addr, &header, FIELD_OFFSET(struct macho_header, reserved), NULL) &&
+        if (read_process_memory(process, load_addr, &header, FIELD_OFFSET(struct macho_header, reserved)) &&
             header.magic == target_magic && header.cputype == target_cpu &&
             header.flags & MACHO_DYLD_IN_SHARED_CACHE)
         {
@@ -1629,8 +1629,7 @@ static BOOL macho_enum_modules_internal(const struct process* pcs,
     else
         len = sizeof(image_infos.infos32);
     if (!pcs->dbg_hdr_addr ||
-        !ReadProcessMemory(pcs->handle, (void*)pcs->dbg_hdr_addr,
-                           &image_infos, len, NULL))
+        !read_process_memory(pcs, pcs->dbg_hdr_addr, &image_infos, len))
         goto done;
     if (!pcs->is_64bit)
     {
@@ -1649,8 +1648,7 @@ static BOOL macho_enum_modules_internal(const struct process* pcs,
     len *= image_infos.infos64.infoArrayCount;
     info_array = HeapAlloc(GetProcessHeap(), 0, len);
     if (!info_array ||
-        !ReadProcessMemory(pcs->handle, (void*)image_infos.infos64.infoArray,
-                           info_array, len, NULL))
+        !read_process_memory(pcs, image_infos.infos64.infoArray, info_array, len))
         goto done;
     TRACE("... read image infos\n");
 
@@ -1666,7 +1664,7 @@ static BOOL macho_enum_modules_internal(const struct process* pcs,
             info.imageFilePath = info32->imageFilePath;
         }
         if (info.imageFilePath &&
-            ReadProcessMemory(pcs->handle, (void*)info.imageFilePath, bufstr, sizeof(bufstr), NULL))
+            read_process_memory(pcs, info.imageFilePath, bufstr, sizeof(bufstr)))
         {
             bufstr[sizeof(bufstr) - 1] = '\0';
             TRACE("[%d] image file %s\n", i, debugstr_a(bufstr));
@@ -1850,7 +1848,7 @@ static BOOL macho_search_loader(struct process* pcs, struct macho_info* macho_in
         len = sizeof(image_infos.infos64);
     else
         len = sizeof(image_infos.infos32);
-    if (ReadProcessMemory(pcs->handle, (void*)pcs->dbg_hdr_addr, &image_infos, len, NULL))
+    if (read_process_memory(pcs, pcs->dbg_hdr_addr, &image_infos, len))
     {
         if (pcs->is_64bit)
             len = sizeof(image_info.info64);
@@ -1862,7 +1860,7 @@ static BOOL macho_search_loader(struct process* pcs, struct macho_info* macho_in
             len = sizeof(image_info.info32);
         }
         if (image_infos.infos64.infoArray && image_infos.infos64.infoArrayCount &&
-            ReadProcessMemory(pcs->handle, (void*)image_infos.infos64.infoArray, &image_info, len, NULL))
+            read_process_memory(pcs, image_infos.infos64.infoArray, &image_info, len))
         {
             if (!pcs->is_64bit)
             {
@@ -1872,7 +1870,7 @@ static BOOL macho_search_loader(struct process* pcs, struct macho_info* macho_in
             }
             for (len = sizeof(path); image_info.info64.imageFilePath && len > 0; len /= 2)
             {
-                if (ReadProcessMemory(pcs->handle, (void*)image_info.info64.imageFilePath, path, len, NULL))
+                if (read_process_memory(pcs, image_info.info64.imageFilePath, path, len))
                 {
                     path[len - 1] = 0;
                     got_path = TRUE;
