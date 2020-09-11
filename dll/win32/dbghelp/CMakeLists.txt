@@ -15,7 +15,6 @@ if(NOT CMAKE_CROSSCOMPILING)
         compat.c
         dbghelp.c
         dwarf.c
-        elf_module.c
         module.c
         pe_module.c
         source.c
