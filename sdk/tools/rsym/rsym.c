@@ -1357,6 +1357,7 @@ int main(int argc, char* argv[])
         // SYMOPT_LOAD_ANYTHING
         // SYMOPT_LOAD_LINES
         SymSetOptions(0x10000 | 0x800000 | 0x40 | 0x10);
+        SymSetExtendedOption(SYMOPT_EX_WINE_NATIVE_MODULES, TRUE);
         SymInitialize(FileData, ".", 0);
 
         module_base = SymLoadModule(FileData, file, path1, path1, 0, FileSize) & 0xffffffff;

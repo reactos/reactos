@@ -1502,7 +1502,19 @@ BOOL symt_fill_func_line_info(const struct module* module, const struct symt_fun
         }
         if (found)
         {
-            line->FileName = (char*)source_get(module, dli->u.source_file);
+            if (dbghelp_opt_native)
+            {
+                /* Return native file paths when using winedbg */
+                line->FileName = (char*)source_get(module, dli->u.source_file);
+            }
+            else
+            {
+                WCHAR *dospath = wine_get_dos_file_name(source_get(module, dli->u.source_file));
+                DWORD len = WideCharToMultiByte(CP_ACP, 0, dospath, -1, NULL, 0, NULL, NULL);
+                line->FileName = fetch_buffer(module->process, len);
+                WideCharToMultiByte(CP_ACP, 0, dospath, -1, line->FileName, len, NULL, NULL);
+                HeapFree( GetProcessHeap(), 0, dospath );
+            }
             return TRUE;
         }
     }
