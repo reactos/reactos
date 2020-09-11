@@ -68,7 +68,7 @@ enum st_mode {stm_start, stm_arm64, stm_done};
 static BOOL fetch_next_frame(struct cpu_stack_walk* csw, union ctx *pcontext,
     DWORD_PTR curr_pc)
 {
-    DWORD_PTR               xframe;
+    DWORD64 xframe;
     CONTEXT *context = &pcontext->ctx;
     DWORD_PTR               oldReturn = context->u.s.Lr;
 
