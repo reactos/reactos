@@ -54,7 +54,6 @@
 
 #ifdef HAVE_MACH_O_LOADER_H
 
-#include <mach-o/loader.h>
 #include <mach-o/nlist.h>
 #include <mach-o/dyld.h>
 
@@ -172,6 +171,21 @@ WINE_DEFAULT_DEBUG_CHANNEL(dbghelp_macho);
 
 #define MACHO_CPU_TYPE_X86     0x00000007
 #define MACHO_CPU_TYPE_X86_64  0x01000007
+
+#define MACHO_MH_EXECUTE   0x2
+#define MACHO_MH_DYLIB     0x6
+#define MACHO_MH_DYLINKER  0x7
+#define MACHO_MH_BUNDLE    0x8
+#define MACHO_MH_DSYM      0xa
+
+#define MACHO_LC_SEGMENT     0x01
+#define MACHO_LC_SYMTAB      0x02
+#define MACHO_LC_SEGMENT_64  0x19
+#define MACHO_LC_UUID        0x1b
+
+#define MACHO_SECTION_TYPE              0x000000ff
+#define MACHO_S_ATTR_PURE_INSTRUCTIONS  0x80000000
+#define MACHO_S_ATTR_SOME_INSTRUCTIONS  0x00000400
 
 #define UUID_STRING_LEN 37 /* 16 bytes at 2 hex digits apiece, 4 dashes, and the null terminator */
 
@@ -660,7 +674,7 @@ static int macho_load_section_info(struct image_file_map* ifm, const struct mach
     /* Images in the dyld shared cache have their segments mapped non-contiguously.
        We don't know how to properly locate any of the segments other than __TEXT,
        so ignore them. */
-    ignore = (info->split_segs && strcmp(segname, SEG_TEXT));
+    ignore = (info->split_segs && strcmp(segname, "__TEXT"));
 
     if (!strncmp(segname, "WINE_", 5))
         TRACE("Ignoring special Wine segment %s\n", debugstr_an(segname, sizeof(segname)));
@@ -750,7 +764,7 @@ static BOOL macho_map_file(struct process *pcs, const WCHAR *filenameW,
     BOOL                ret = FALSE;
     UINT32 target_cpu = (pcs->is_64bit) ? MACHO_CPU_TYPE_X86_64 : MACHO_CPU_TYPE_X86;
     UINT32 target_magic = (pcs->is_64bit) ? MACHO_MH_MAGIC_64 : MACHO_MH_MAGIC_32;
-    UINT32 target_cmd   = (pcs->is_64bit) ? LC_SEGMENT_64 : LC_SEGMENT;
+    UINT32 target_cmd   = (pcs->is_64bit) ? MACHO_LC_SEGMENT_64 : MACHO_LC_SEGMENT;
     DWORD bytes_read;
 
     struct
@@ -831,11 +845,11 @@ static BOOL macho_map_file(struct process *pcs, const WCHAR *filenameW,
     /* Make sure the file type is one of the ones we expect. */
     switch (mach_header.filetype)
     {
-        case MH_EXECUTE:
-        case MH_DYLIB:
-        case MH_DYLINKER:
-        case MH_BUNDLE:
-        case MH_DSYM:
+        case MACHO_MH_EXECUTE:
+        case MACHO_MH_DYLIB:
+        case MACHO_MH_DYLINKER:
+        case MACHO_MH_BUNDLE:
+        case MACHO_MH_DSYM:
             break;
         default:
             goto done;
@@ -866,7 +880,7 @@ static BOOL macho_map_file(struct process *pcs, const WCHAR *filenameW,
     TRACE("segs_start: 0x%08lx, segs_size: 0x%08lx\n", (ULONG_PTR)fmap->segs_start,
             (ULONG_PTR)fmap->segs_size);
 
-    if (macho_enum_load_commands(ifm, LC_UUID, find_uuid, NULL) < 0)
+    if (macho_enum_load_commands(ifm, MACHO_LC_UUID, find_uuid, NULL) < 0)
         goto done;
     if (fmap->uuid)
     {
@@ -939,8 +953,8 @@ static BOOL macho_sect_is_code(struct macho_file_map* fmap, unsigned char sectid
     sectidx--; /* convert from 1-based to 0-based */
     if (sectidx >= fmap->num_sections || fmap->sect[sectidx].ignored) return FALSE;
 
-    ret = (!(fmap->sect[sectidx].section.flags & SECTION_TYPE) &&
-           (fmap->sect[sectidx].section.flags & (S_ATTR_PURE_INSTRUCTIONS|S_ATTR_SOME_INSTRUCTIONS)));
+    ret = (!(fmap->sect[sectidx].section.flags & MACHO_SECTION_TYPE) &&
+           (fmap->sect[sectidx].section.flags & (MACHO_S_ATTR_PURE_INSTRUCTIONS | MACHO_S_ATTR_SOME_INSTRUCTIONS)));
     TRACE("-> %d\n", ret);
     return ret;
 }
@@ -1389,7 +1403,7 @@ static BOOL macho_load_debug_info(struct process *pcs, struct module* module)
     mdi.module = module;
     pool_init(&mdi.pool, 65536);
     hash_table_init(&mdi.pool, &mdi.ht_symtab, 256);
-    result = macho_enum_load_commands(ifm, LC_SYMTAB, macho_parse_symtab, &mdi);
+    result = macho_enum_load_commands(ifm, MACHO_LC_SYMTAB, macho_parse_symtab, &mdi);
     if (result > 0)
         ret = TRUE;
     else if (result < 0)
@@ -1398,7 +1412,7 @@ static BOOL macho_load_debug_info(struct process *pcs, struct module* module)
     if (!(dbghelp_options & SYMOPT_PUBLICS_ONLY) && fmap->dsym)
     {
         mdi.fmap = &fmap->dsym->u.macho;
-        result = macho_enum_load_commands(fmap->dsym, LC_SYMTAB, macho_parse_symtab, &mdi);
+        result = macho_enum_load_commands(fmap->dsym, MACHO_LC_SYMTAB, macho_parse_symtab, &mdi);
         if (result > 0)
             ret = TRUE;
         else if (result < 0)
