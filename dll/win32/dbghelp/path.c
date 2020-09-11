@@ -31,22 +31,22 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(dbghelp);
 
-static inline BOOL is_sep(char ch) {return ch == '/' || ch == '\\';}
-static inline BOOL is_sepW(WCHAR ch) {return ch == '/' || ch == '\\';}
+static inline BOOL is_sepA(char ch) {return ch == '/' || ch == '\\';}
+static inline BOOL is_sep(WCHAR ch) {return ch == '/' || ch == '\\';}
 
-static inline const char* file_name(const char* str)
+static inline const char* file_nameA(const char* str)
 {
     const char*       p;
 
-    for (p = str + strlen(str) - 1; p >= str && !is_sep(*p); p--);
+    for (p = str + strlen(str) - 1; p >= str && !is_sepA(*p); p--);
     return p + 1;
 }
 
-static inline const WCHAR* file_nameW(const WCHAR* str)
+static inline const WCHAR* file_name(const WCHAR* str)
 {
     const WCHAR*      p;
 
-    for (p = str + strlenW(str) - 1; p >= str && !is_sepW(*p); p--);
+    for (p = str + strlenW(str) - 1; p >= str && !is_sep(*p); p--);
     return p + 1;
 }
 
@@ -54,7 +54,7 @@ static inline void file_pathW(const WCHAR *src, WCHAR *dst)
 {
     int len;
 
-    for (len = strlenW(src) - 1; (len > 0) && (!is_sepW(src[len])); len--);
+    for (len = strlenW(src) - 1; (len > 0) && (!is_sep(src[len])); len--);
     memcpy( dst, src, len * sizeof(WCHAR) );
     dst[len] = 0;
 }
@@ -71,7 +71,7 @@ HANDLE WINAPI FindDebugInfoFile(PCSTR FileName, PCSTR SymbolPath, PSTR DebugFile
                     OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
     if (h == INVALID_HANDLE_VALUE)
     {
-        if (!SearchPathA(SymbolPath, file_name(FileName), NULL, MAX_PATH, DebugFilePath, NULL))
+        if (!SearchPathA(SymbolPath, file_nameA(FileName), NULL, MAX_PATH, DebugFilePath, NULL))
             return NULL;
         h = CreateFileA(DebugFilePath, GENERIC_READ, FILE_SHARE_READ, NULL,
                         OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
@@ -181,7 +181,7 @@ BOOL WINAPI SymMatchFileNameW(PCWSTR file, PCWSTR match,
 
     while (fptr >= file && mptr >= match)
     {
-        if (toupperW(*fptr) != toupperW(*mptr) && !(is_sepW(*fptr) && is_sepW(*mptr)))
+        if (toupperW(*fptr) != toupperW(*mptr) && !(is_sep(*fptr) && is_sep(*mptr)))
             break;
         fptr--; mptr--;
     }
@@ -208,7 +208,7 @@ BOOL WINAPI SymMatchFileName(PCSTR file, PCSTR match,
 
     while (fptr >= file && mptr >= match)
     {
-        if (toupper(*fptr) != toupper(*mptr) && !(is_sep(*fptr) && is_sep(*mptr)))
+        if (toupper(*fptr) != toupper(*mptr) && !(is_sepA(*fptr) && is_sepA(*mptr)))
             break;
         fptr--; mptr--;
     }
@@ -385,7 +385,7 @@ BOOL WINAPI SymFindFileInPathW(HANDLE hProcess, PCWSTR searchPath, PCWSTR full_p
     s.cb = cb;
     s.user = user;
 
-    filename = file_nameW(full_path);
+    filename = file_name(full_path);
 
     /* first check full path to file */
     if (sffip_cb(full_path, &s))
@@ -642,7 +642,7 @@ BOOL path_find_symbol_file(const struct process* pcs, const struct module* modul
     mf.matched = 0;
 
     MultiByteToWideChar(CP_ACP, 0, full_path, -1, full_pathW, MAX_PATH);
-    filename = file_nameW(full_pathW);
+    filename = file_name(full_pathW);
     mf.kind = module_get_type_by_name(filename);
     *is_unmatched = FALSE;
 
