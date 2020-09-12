@@ -13,7 +13,8 @@
 #include <debug.h>
 #include <stdio.h>
 
-//#define ShellExecCmdLine ShellExecCmdLine
+#define ShellExecCmdLine ShellExecCmdLine // In testing on ReactOS
+//#undef ShellExecCmdLine // In testing on Vista+
 
 #ifndef SECL_NO_UI
     #define SECL_NO_UI          0x2
@@ -38,6 +39,7 @@ static __inline void __SHCloneStrW(WCHAR **target, const WCHAR *source)
 	lstrcpyW(*target, source);
 }
 
+// NOTE: You have to sync the following code to dll/win32/shell32/shlexec.cpp.
 static LPCWSTR
 SplitParams(LPCWSTR psz, LPWSTR pszArg0, size_t cchArg0)
 {
@@ -396,6 +398,12 @@ static const TEST_ENTRY s_entries[] =
     { __LINE__, HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), TRUE, L"Notepad", L"\"invalid program.exe\"", L"C:\\Program Files" },
     { __LINE__, HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), TRUE, L"Notepad", L"\"invalid program.exe\" \"Test File.txt\"", NULL },
     { __LINE__, HRESULT_FROM_WIN32(ERROR_FILE_NOT_FOUND), TRUE, L"Notepad", L"\"invalid program.exe\" \"Test File.txt\"", L"." },
+    // My Documents
+    { __LINE__, S_OK, TRUE, NULL, L"::{450d8fba-ad25-11d0-98a8-0800361b1103}", NULL },
+    { __LINE__, S_OK, TRUE, NULL, L"shell:::{450d8fba-ad25-11d0-98a8-0800361b1103}", NULL },
+    // Control Panel
+    { __LINE__, S_OK, TRUE, NULL, L"::{5399E694-6CE5-4D6C-8FCE-1D8870FDCBA0}", NULL },
+    { __LINE__, S_OK, TRUE, NULL, L"shell:::{5399E694-6CE5-4D6C-8FCE-1D8870FDCBA0}", NULL },
 };
 
 static void DoEntry(const TEST_ENTRY *pEntry)
@@ -455,7 +463,6 @@ START_TEST(ShellExecCmdLine)
     using namespace std;
 
 #ifndef ShellExecCmdLine
-    // CHECKME
     if (!IsWindowsVistaOrGreater())
     {
         skip("ShellExecCmdLine is not available on this platform\n");
