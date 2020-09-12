@@ -19,7 +19,7 @@ HKCR
       {
         val ThreadingModel = s 'Both'
       }
-      val InfoTip = s 'Allows browsing of the System Registry'
+      val InfoTip = s '@%MODULE%,-104'
       val LocalizedString = s '@%MODULE%,-102'
       DefaultIcon = s '%MODULE%,-7'
       ShellFolder
