@@ -1387,11 +1387,11 @@ BOOL CAppsListView::AddInstalledApplication(CInstalledApplicationInfo *InstAppIn
     ATL::CStringW szIconPath;
     if (InstAppInfo->RetrieveIcon(szIconPath))
     {
-        INT Ret = PathParseIconLocationW((LPWSTR)szIconPath.GetString());
+        PathParseIconLocationW((LPWSTR)szIconPath.GetString());
 
         hIcon = ExtractIconW(hInst,
                              szIconPath.GetString(),
-                             Ret);
+                             0);
     }
 
     if (!hIcon)
