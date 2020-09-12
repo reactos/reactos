@@ -3398,8 +3398,11 @@ HRESULT WINAPI CDefView::DragLeave()
 
 INT CDefView::_FindInsertableIndexFromPoint(POINT pt)
 {
-    RECT rcBound, rcIcon;
+    RECT rcBound;
     INT i, nCount = m_ListView.GetItemCount();
+    DWORD dwSpacing;
+    INT dx, dy;
+    BOOL bSmall = ((m_ListView.GetStyle() & LVS_TYPEMASK) != LVS_ICON);
 
     /* FIXME: LVM_GETORIGIN is broken. See CORE-17266 */
     pt.x += m_ListView.GetScrollPos(SB_HORZ);
@@ -3410,29 +3413,24 @@ INT CDefView::_FindInsertableIndexFromPoint(POINT pt)
         // vertically
         for (i = 0; i < nCount; ++i)
         {
-            ListView_GetItemRect(m_ListView, i, &rcBound, LVIR_BOUNDS);
-            ListView_GetItemRect(m_ListView, i, &rcIcon, LVIR_ICON);
-            if (pt.x < rcBound.right && pt.y < (rcIcon.top + rcIcon.bottom) / 2)
+            dwSpacing = ListView_GetItemSpacing(m_ListView, bSmall);
+            dx = LOWORD(dwSpacing);
+            dy = HIWORD(dwSpacing);
+            ListView_GetItemRect(m_ListView, i, &rcBound, LVIR_SELECTBOUNDS);
+            rcBound.right = rcBound.left + dx;
+            rcBound.bottom = rcBound.top + dy;
+            if (pt.x < rcBound.right && pt.y < (rcBound.top + rcBound.bottom) / 2)
             {
                 return i;
             }
         }
-        INT xOld = 0xFFFF, yOld = 0xFFFF;
-        for (i = 0; i < nCount; ++i)
+        for (i = nCount - 1; i >= 0; --i)
         {
-            ListView_GetItemRect(m_ListView, i, &rcBound, LVIR_BOUNDS);
-            ListView_GetItemRect(m_ListView, i, &rcIcon, LVIR_ICON);
-            if (xOld == 0xFFFF)
+            ListView_GetItemRect(m_ListView, i, &rcBound, LVIR_SELECTBOUNDS);
+            if (rcBound.left < pt.x && rcBound.top < pt.y)
             {
-                xOld = rcBound.right;
-                yOld = rcIcon.bottom;
+                return i + 1;
             }
-            if (xOld != rcBound.right && rcBound.bottom < yOld && yOld < pt.y)
-            {
-                return i;
-            }
-            xOld = rcBound.right;
-            yOld = rcIcon.bottom;
         }
     }
     else
@@ -3440,29 +3438,28 @@ INT CDefView::_FindInsertableIndexFromPoint(POINT pt)
         // horizontally
         for (i = 0; i < nCount; ++i)
         {
-            ListView_GetItemRect(m_ListView, i, &rcBound, LVIR_BOUNDS);
-            ListView_GetItemRect(m_ListView, i, &rcIcon, LVIR_ICON);
-            if (pt.x < (rcIcon.left + rcIcon.right) / 2 && pt.y < rcBound.bottom)
+            dwSpacing = ListView_GetItemSpacing(m_ListView, bSmall);
+            dx = LOWORD(dwSpacing);
+            dy = HIWORD(dwSpacing);
+            ListView_GetItemRect(m_ListView, i, &rcBound, LVIR_SELECTBOUNDS);
+            rcBound.right = rcBound.left + dx;
+            rcBound.bottom = rcBound.top + dy;
+            if (pt.y < rcBound.bottom && pt.x < rcBound.left)
             {
                 return i;
+            }
+            if (pt.y < rcBound.bottom && pt.x < rcBound.right)
+            {
+                return i + 1;
             }
         }
-        INT xOld = 0xFFFF, yOld = 0xFFFF;
-        for (i = 0; i < nCount; ++i)
+        for (i = nCount - 1; i >= 0; --i)
         {
-            ListView_GetItemRect(m_ListView, i, &rcBound, LVIR_BOUNDS);
-            ListView_GetItemRect(m_ListView, i, &rcIcon, LVIR_ICON);
-            if (xOld == 0xFFFF)
+            ListView_GetItemRect(m_ListView, i, &rcBound, LVIR_SELECTBOUNDS);
+            if (rcBound.left < pt.x && rcBound.top < pt.y)
             {
-                xOld = rcIcon.right;
-                yOld = rcBound.bottom;
+                return i + 1;
             }
-            if (yOld != rcBound.bottom && rcBound.right < xOld && xOld < pt.x)
-            {
-                return i;
-            }
-            xOld = rcIcon.right;
-            yOld = rcBound.bottom;
         }
     }
 
