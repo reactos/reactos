@@ -211,7 +211,7 @@ BEGIN
     IDS_SELECTEDFORINST "Sélectionnées pour installation"
     IDS_MISMATCH_CERT_INFO "Certificat inconnu:\nSujet: %s\nEmetteur: %s\nVoulez-vous continuer ?"
     IDS_UNABLE_PATH "Format de chemin invalide."
-    IDS_APP_DISPLAY_DETAILS "details"
+    IDS_APP_DISPLAY_DETAILS "détails"
     IDS_APP_DISPLAY_LIST "liste"
     IDS_APP_DISPLAY_TILE "tuile"
 END
