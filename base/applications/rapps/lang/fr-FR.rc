@@ -259,7 +259,7 @@ BEGIN
     IDS_CMD_NEED_FILE_NAME "Erreur : L'option %1 attent un nom de fichier.\n"
     IDS_CMD_NEED_PARAMS "Erreur : L'option %1 attend un ou plusieurs paramètres.\n"
     IDS_CMD_INVALID_OPTION "Erreur : L'option de ligne de commande spécifiée est inconnue ou invalide.\n"
-    IDS_CMD_FIND_RESULT_FOR "Résultats pour %1:\n"
+    IDS_CMD_FIND_RESULT_FOR "Résultats pour %1 :\n"
     IDS_CMD_PACKAGE_NOT_FOUND "Impossible de trouver le paquet %1.\n"
     IDS_CMD_PACKAGE_INFO "Information sur le paquet %1:\n"
 END
