@@ -182,21 +182,21 @@ ErrorMessage(
     IN LPTSTR szFormat OPTIONAL,
     ...);
 
-VOID error_no_pipe (VOID);
-VOID error_bad_command (LPTSTR);
-VOID error_invalid_drive (VOID);
-VOID error_req_param_missing (VOID);
-VOID error_sfile_not_found (LPTSTR);
-VOID error_file_not_found (VOID);
-VOID error_path_not_found (VOID);
-VOID error_too_many_parameters (LPTSTR);
+VOID error_no_pipe(VOID);
+VOID error_bad_command(LPTSTR);
+VOID error_invalid_drive(VOID);
+VOID error_req_param_missing(VOID);
+VOID error_sfile_not_found(LPTSTR);
+VOID error_file_not_found(VOID);
+VOID error_path_not_found(VOID);
+VOID error_too_many_parameters(LPTSTR);
 VOID error_parameter_format(TCHAR);
-VOID error_invalid_switch (TCHAR);
-VOID error_invalid_parameter_format (LPTSTR);
-VOID error_out_of_memory (VOID);
-VOID error_syntax (LPTSTR);
+VOID error_invalid_switch(TCHAR);
+VOID error_invalid_parameter_format(LPTSTR);
+VOID error_out_of_memory(VOID);
+VOID error_syntax(LPTSTR);
 
-VOID msg_pause (VOID);
+VOID msg_pause(VOID);
 
 /* Prototypes for FILECOMP.C */
 #ifdef FEATURE_UNIX_FILENAME_COMPLETION
