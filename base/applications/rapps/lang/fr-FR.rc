@@ -261,5 +261,5 @@ BEGIN
     IDS_CMD_INVALID_OPTION "Erreur : L'option de ligne de commande spécifiée est inconnue ou invalide.\n"
     IDS_CMD_FIND_RESULT_FOR "Résultats pour %1 :\n"
     IDS_CMD_PACKAGE_NOT_FOUND "Impossible de trouver le paquet %1.\n"
-    IDS_CMD_PACKAGE_INFO "Information sur le paquet %1:\n"
+    IDS_CMD_PACKAGE_INFO "Information sur le paquet %1 :\n"
 END
