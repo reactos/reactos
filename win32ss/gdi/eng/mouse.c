@@ -169,10 +169,6 @@ IntHideMousePointer(
     ptlSave.x = rclDest.left - pt.x;
     ptlSave.y = rclDest.top - pt.y;
 
-    // Not used from here. If not cleared this makes it
-    // impossible to use this bit for Lazarus and PeaZip flip info
-    pgp->psurfSave->SurfObj.fjBitmap &= ~BMF_TOPDOWN;
-
     IntEngBitBlt(psoDest,
                  &pgp->psurfSave->SurfObj,
                  NULL,
@@ -227,10 +223,6 @@ IntShowMousePointer(
     rclPointer.right = min(pgp->Size.cx, psoDest->sizlBitmap.cx - pt.x);
     rclPointer.bottom = min(pgp->Size.cy, psoDest->sizlBitmap.cy - pt.y);
 
-    // Not used from here. If not cleared this makes it
-    // impossible to use this bit for Lazarus and PeaZip flip info
-    psoDest->fjBitmap &= ~BMF_TOPDOWN;
-
     /* Copy the pixels under the cursor to temporary surface. */
     IntEngBitBlt(&pgp->psurfSave->SurfObj,
                  psoDest,
@@ -249,13 +241,6 @@ IntShowMousePointer(
     {
         if(!(pgp->flags & SPS_ALPHA))
         {
-            // Not used from here. If not cleared this makes it
-            // impossible to use this bit for Lazarus and PeaZip flip info
-            if (pgp->psurfMask)
-            {
-                pgp->psurfMask->SurfObj.fjBitmap &= ~BMF_TOPDOWN;
-            }
-
             IntEngBitBlt(psoDest,
                          &pgp->psurfMask->SurfObj,
                          NULL,
@@ -267,13 +252,6 @@ IntShowMousePointer(
                          NULL,
                          NULL,
                          ROP4_SRCAND);
-
-            // Not used from here. If not cleared this makes it
-            // impossible to use this bit for Lazarus and PeaZip flip info
-            if (pgp->psurfColor)
-            {
-                pgp->psurfColor->SurfObj.fjBitmap &= ~BMF_TOPDOWN;
-            }
 
             IntEngBitBlt(psoDest,
                          &pgp->psurfColor->SurfObj,
@@ -307,14 +285,6 @@ IntShowMousePointer(
     }
     else
     {
-
-        // Not used from here. If not cleared this makes it
-        // impossible to use this bit for Lazarus and PeaZip flip info
-        if (pgp->psurfMask)
-        {
-            pgp->psurfMask->SurfObj.fjBitmap &= ~BMF_TOPDOWN;
-        }
-
         IntEngBitBlt(psoDest,
                      &pgp->psurfMask->SurfObj,
                      NULL,
@@ -405,7 +375,7 @@ EngSetPointerShape(
         hbmSave = EngCreateBitmap(sizel,
                                   lDelta,
                                   pso->iBitmapFormat,
-                                  BMF_TOPDOWN | BMF_NOZEROINIT,
+                                  BMF_NOZEROINIT,
                                   NULL);
         psurfSave = SURFACE_ShareLockSurface(hbmSave);
         if (!psurfSave) goto failure;
@@ -425,7 +395,7 @@ EngSetPointerShape(
             hbmColor = EngCreateBitmap(psoColor->sizlBitmap,
                 WIDTH_BYTES_ALIGN32(sizel.cx, 32),
                 BMF_32BPP,
-                BMF_TOPDOWN | BMF_NOZEROINIT,
+                BMF_NOZEROINIT,
                 NULL);
             psurfColor = SURFACE_ShareLockSurface(hbmColor);
             if (!psurfColor) goto failure;
@@ -454,7 +424,7 @@ EngSetPointerShape(
             hbmColor = EngCreateBitmap(psoColor->sizlBitmap,
                                lDelta,
                                pso->iBitmapFormat,
-                               BMF_TOPDOWN | BMF_NOZEROINIT,
+                               BMF_NOZEROINIT,
                                NULL);
             psurfColor = SURFACE_ShareLockSurface(hbmColor);
             if (!psurfColor) goto failure;
@@ -483,7 +453,7 @@ EngSetPointerShape(
         hbmMask = EngCreateBitmap(psoMask->sizlBitmap,
                                   lDelta,
                                   pso->iBitmapFormat,
-                                  BMF_TOPDOWN | BMF_NOZEROINIT,
+                                  BMF_NOZEROINIT,
                                   NULL);
         psurfMask = SURFACE_ShareLockSurface(hbmMask);
         if (!psurfMask) goto failure;
@@ -760,6 +730,13 @@ GreSetPointerShape(
 
     /* We must have a valid surface in case of alpha bitmap */
     ASSERT(((fl & SPS_ALPHA) && psurfColor) || !(fl & SPS_ALPHA));
+
+
+    // The line below clears the BMF_TOPDOWN bit of psurf->SurfObj.fjBitmap.
+    // The BMF_TOPDOWN bit is not needed or wanted in the IntEngSetPointerShape when
+    // it is called from here. If it is not cleared here then it will interfere with
+    // how Lazarus and PeaZip call CreateDIBitmap to test whether a bitmap is flipped.
+    psurf->SurfObj.fjBitmap &= ~BMF_TOPDOWN;
 
     /* Call the driver or eng function */
     ulResult = IntEngSetPointerShape(&psurf->SurfObj,
