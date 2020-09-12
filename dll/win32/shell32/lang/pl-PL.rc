@@ -1013,5 +1013,5 @@ BEGIN
     IDS_MOVEITEMS "Przenoszenie elementów"
     IDS_MOVEBUTTON "Przenieś"
 
-    IDS_SYSTEMFOLDER "System Folder"
+    IDS_SYSTEMFOLDER "Folder systemowy"
 END
