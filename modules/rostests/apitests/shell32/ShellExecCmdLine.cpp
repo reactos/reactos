@@ -13,9 +13,6 @@
 #include <debug.h>
 #include <stdio.h>
 
-#define ShellExecCmdLine ShellExecCmdLine // In testing on ReactOS
-//#undef ShellExecCmdLine // In testing on Vista+
-
 #ifndef SECL_NO_UI
     #define SECL_NO_UI          0x2
     #define SECL_LOG_USAGE      0x8
@@ -24,7 +21,7 @@
     #define SECL_RUNAS          0x40
 #endif
 
-#ifdef ShellExecCmdLine
+#define ShellExecCmdLine proxy_ShellExecCmdLine
 
 #define shell32_hInstance   GetModuleHandle(NULL)
 #define IDS_FILE_NOT_FOUND  (-1)
@@ -238,10 +235,11 @@ HRESULT WINAPI ShellExecCmdLine(
 
     return HRESULT_FROM_WIN32(dwError);
 }
-#else
-    typedef HRESULT (WINAPI *SHELLEXECCMDLINE)(HWND, LPCWSTR, LPCWSTR, INT, LPVOID, DWORD);
-    SHELLEXECCMDLINE g_pShellExecCmdLine = NULL;
-#endif
+
+#undef ShellExecCmdLine
+
+typedef HRESULT (WINAPI *SHELLEXECCMDLINE)(HWND, LPCWSTR, LPCWSTR, INT, LPVOID, DWORD);
+SHELLEXECCMDLINE g_pShellExecCmdLine = NULL;
 
 typedef struct TEST_ENTRY
 {
@@ -418,13 +416,16 @@ static void DoEntry(const TEST_ENTRY *pEntry)
 
     _SEH2_TRY
     {
-#ifdef ShellExecCmdLine
-        hr = ShellExecCmdLine(NULL, pEntry->pwszCommand, pEntry->pwszStartDir,
-                              SW_SHOWNORMAL, NULL, dwSeclFlags);
-#else
-        hr = (*g_pShellExecCmdLine)(NULL, pEntry->pwszCommand, pEntry->pwszStartDir,
-                                    SW_SHOWNORMAL, NULL, dwSeclFlags);
-#endif
+        if (IsReactOS())
+        {
+            hr = proxy_ShellExecCmdLine(NULL, pEntry->pwszCommand, pEntry->pwszStartDir,
+                                        SW_SHOWNORMAL, NULL, dwSeclFlags);
+        }
+        else
+        {
+            hr = (*g_pShellExecCmdLine)(NULL, pEntry->pwszCommand, pEntry->pwszStartDir,
+                                        SW_SHOWNORMAL, NULL, dwSeclFlags);
+        }
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
@@ -462,21 +463,22 @@ START_TEST(ShellExecCmdLine)
 {
     using namespace std;
 
-#ifndef ShellExecCmdLine
-    if (!IsWindowsVistaOrGreater())
+    if (!IsReactOS())
     {
-        skip("ShellExecCmdLine is not available on this platform\n");
-        return;
-    }
+        if (!IsWindowsVistaOrGreater())
+        {
+            skip("ShellExecCmdLine is not available on this platform\n");
+            return;
+        }
 
-    HMODULE hShell32 = GetModuleHandleA("shell32");
-    g_pShellExecCmdLine = (SHELLEXECCMDLINE)GetProcAddress(hShell32, (LPCSTR)(INT_PTR)265);
-    if (!g_pShellExecCmdLine)
-    {
-        skip("ShellExecCmdLine is not found\n");
-        return;
+        HMODULE hShell32 = GetModuleHandleA("shell32");
+        g_pShellExecCmdLine = (SHELLEXECCMDLINE)GetProcAddress(hShell32, (LPCSTR)(INT_PTR)265);
+        if (!g_pShellExecCmdLine)
+        {
+            skip("ShellExecCmdLine is not found\n");
+            return;
+        }
     }
-#endif
 
     // s_testfile1
     FILE *fp = fopen(s_testfile1, "wb");
