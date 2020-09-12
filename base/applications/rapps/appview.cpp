@@ -1389,19 +1389,9 @@ BOOL CAppsListView::AddInstalledApplication(CInstalledApplicationInfo *InstAppIn
     {
         INT Ret = PathParseIconLocationW((LPWSTR)szIconPath.GetString());
 
-        /* Check if icon location is zero-terminated */
-        if (Ret == 0)
-        {
-            hIcon = ExtractIconW(hInst,
-                                 szIconPath.GetString(),
-                                 Ret);
-        }
-        else if (!Ret)
-        {
-            hIcon = ExtractIconW(hInst,
-                                 szIconPath.GetString(),
-                                 0);
-        }
+        hIcon = ExtractIconW(hInst,
+                             szIconPath.GetString(),
+                             Ret);
     }
 
     if (!hIcon)
