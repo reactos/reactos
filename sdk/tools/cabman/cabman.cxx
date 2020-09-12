@@ -193,7 +193,7 @@ void CCABManager::Usage()
     printf("ReactOS Cabinet Manager\n\n");
     printf("CABMAN [-D | -E] [-A] [-L dir] cabinet [filename ...]\n");
     printf("CABMAN [-M mode] -C dirfile [-I] [-RC file] [-P dir]\n");
-    printf("CABMAN [-M mode] -S cabinet filename [...]\n");
+    printf("CABMAN [-M mode] -S cabinet filename [-F folder] [filename] [...]\n");
     printf("  cabinet   Cabinet file.\n");
     printf("  filename  Name of the file to add to or extract from the cabinet.\n");
     printf("            Wild cards and multiple filenames\n");
@@ -206,6 +206,7 @@ void CCABManager::Usage()
     printf("  -C        Create cabinet.\n");
     printf("  -D        Display cabinet directory.\n");
     printf("  -E        Extract files from cabinet.\n");
+    printf("  -F        Put the files from the next 'filename' filter in the cab in folder\filename.\n");
     printf("  -I        Don't create the cabinet, only the .inf file.\n");
     printf("  -L dir    Location to place extracted or generated files\n");
     printf("            (default is current directory).\n");
@@ -233,7 +234,7 @@ bool CCABManager::ParseCmdline(int argc, char* argv[])
     int i;
     bool ShowUsage;
     bool FoundCabinet = false;
-
+    std::string NextFolder;
     ShowUsage = (argc < 2);
 
     for (i = 1; i < argc; i++)
@@ -260,6 +261,19 @@ bool CCABManager::ParseCmdline(int argc, char* argv[])
                 case 'e':
                 case 'E':
                     Mode = CM_MODE_EXTRACT;
+                    break;
+
+                case 'f':
+                case 'F':
+                    if (argv[i][2] == 0)
+                    {
+                        i++;
+                        NextFolder = argv[i];
+                    }
+                    else
+                    {
+                        NextFolder = argv[i] + 2;
+                    }
                     break;
 
                 case 'i':
@@ -374,7 +388,8 @@ bool CCABManager::ParseCmdline(int argc, char* argv[])
             else if(FoundCabinet)
             {
                 // For creating simple cabinets, displaying or extracting them, add the argument as a search criteria
-                AddSearchCriteria(argv[i]);
+                AddSearchCriteria(argv[i], NextFolder);
+                NextFolder.clear();
             }
             else
             {
@@ -618,7 +633,7 @@ void CCABManager::OnExtract(PCFFILE File,
 {
     if (Verbose)
     {
-        printf("Extracting %s\n", GetFileName(FileName));
+        printf("Extracting %s\n", GetFileName(FileName).c_str());
     }
 }
 
@@ -651,7 +666,7 @@ void CCABManager::OnAdd(PCFFILE File,
 {
     if (Verbose)
     {
-        printf("Adding %s\n", GetFileName(FileName));
+        printf("Adding %s\n", GetFileName(FileName).c_str());
     }
 }
 

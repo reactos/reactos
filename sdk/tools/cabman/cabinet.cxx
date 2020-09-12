@@ -155,7 +155,7 @@ void CCabinet::ConvertPath(std::string& Path)
 }
 
 
-const char* CCabinet::GetFileName(const char* Path)
+std::string CCabinet::GetFileName(const std::string& Path)
 /*
  * FUNCTION: Returns a pointer to file name
  * ARGUMENTS:
@@ -172,7 +172,7 @@ const char* CCabinet::GetFileName(const char* Path)
         if (IsSeparator(Path [i - 1]))
             j = i;
 
-    return Path + j;
+    return Path.c_str() + j;
 }
 
 
@@ -225,7 +225,7 @@ void CCabinet::SetDestinationPath(const char* DestinationPath)
     NormalizePath(DestPath);
 }
 
-ULONG CCabinet::AddSearchCriteria(const char* SearchCriteria)
+ULONG CCabinet::AddSearchCriteria(const std::string& SearchCriteria, const std::string& TargetFolder)
 /*
  * FUNCTION: Adds a criteria to the search criteria list
  * ARGUMENTS:
@@ -248,6 +248,7 @@ ULONG CCabinet::AddSearchCriteria(const char* SearchCriteria)
 
     // Set the actual criteria string
     Criteria->Search = SearchCriteria;
+    Criteria->TargetFolder = TargetFolder;
 
     return CAB_STATUS_SUCCESS;
 }
@@ -272,6 +273,16 @@ bool CCabinet::HasSearchCriteria()
  */
 {
     return !CriteriaList.empty();
+}
+
+std::string CCabinet::CreateCabFilename(PCFFILE_NODE Node)
+{
+    std::string fname = GetFileName(Node->FileName);
+    if (!Node->TargetFolder.empty())
+    {
+        fname = Node->TargetFolder + fname;
+    }
+    return fname;
 }
 
 bool CCabinet::SetCompressionCodec(const char* CodecName)
@@ -591,6 +602,7 @@ ULONG CCabinet::FindNext(PCAB_SEARCH Search)
 
         for (PSEARCH_CRITERIA Criteria : CriteriaList)
         {
+            // FIXME: We could handle path\filename here
             if (MatchFileNamePattern((*Search->Next)->FileName.c_str(), Criteria->Search.c_str()))
             {
                 bFound = true;
@@ -1202,7 +1214,7 @@ ULONG CCabinet::WriteFileToScratchStorage(PCFFILE_NODE FileNode)
         SourceFile = fopen(FileNode->FileName.c_str(), "rb");
         if (SourceFile == NULL)
         {
-            DPRINT(MID_TRACE, ("File not found (%s).\n", FileNode->FileName.c_str()));
+            DPRINT(MID_TRACE, ("File not found (%s).\n", FileNode->FileNameOnDisk.c_str()));
             return CAB_STATUS_NOFILE;
         }
 
@@ -1227,7 +1239,7 @@ ULONG CCabinet::WriteFileToScratchStorage(PCFFILE_NODE FileNode)
         CurrentFolderNode->Commit        = true;
         PrevCabinetNumber                = CurrentDiskNumber;
 
-        Size = sizeof(CFFILE) + (ULONG)strlen(GetFileName(FileNode->FileName.c_str())) + 1;
+        Size = sizeof(CFFILE) + (ULONG)CreateCabFilename(FileNode).length() + 1;
         CABHeader.FileTableOffset += Size;
         TotalFileSize += Size;
         DiskSize += Size;
@@ -1500,7 +1512,7 @@ ULONG CCabinet::CloseCabinet()
 }
 
 
-ULONG CCabinet::AddFile(char* FileName)
+ULONG CCabinet::AddFile(const std::string& FileName, const std::string& TargetFolder)
 /*
  * FUNCTION: Adds a file to the current disk
  * ARGUMENTS:
@@ -1534,6 +1546,9 @@ ULONG CCabinet::AddFile(char* FileName)
 
     FileNode->FolderNode = CurrentFolderNode;
     FileNode->FileName = NewFileName;
+    FileNode->TargetFolder = TargetFolder;
+    if (FileNode->TargetFolder.length() > 0 && FileNode->TargetFolder[FileNode->TargetFolder.length() - 1] != '\\')
+        FileNode->TargetFolder += '\\';
 
     /* FIXME: Check for and handle large files (>= 2GB) */
     FileNode->File.FileSize = GetSizeOfFile(SrcFile);
@@ -1569,9 +1584,6 @@ bool CCabinet::CreateSimpleCabinet()
  */
 {
     bool bRet = false;
-    const char* pszFile;
-    char szFilePath[PATH_MAX];
-    char szFile[PATH_MAX];
     ULONG Status;
 
 #if defined(_WIN32)
@@ -1595,26 +1607,25 @@ bool CCabinet::CreateSimpleCabinet()
     for (PSEARCH_CRITERIA Criteria : CriteriaList)
     {
         // Store the file path with a trailing slash in szFilePath
-        ConvertPath(Criteria->Search);
-        pszFile = strrchr(Criteria->Search.c_str(), DIR_SEPARATOR_CHAR);
+        std::string szSearchPath = Criteria->Search;
+        ConvertPath(szSearchPath);
+        auto sep = szSearchPath.find_last_of(DIR_SEPARATOR_CHAR);
+        std::string szFilePath;
+        std::string pszFile;
 
-        if(pszFile)
+        if (sep != std::string::npos)
         {
-            // Set the pointer to the start of the file name, not the slash
-            pszFile++;
+            pszFile = szSearchPath.substr(sep + 1); // We want the filename, not the dir separator!
 
-            strncpy(szFilePath, Criteria->Search.c_str(), pszFile - Criteria->Search.c_str());
-            szFilePath[pszFile - Criteria->Search.c_str()] = 0;
+            szFilePath = szSearchPath.substr(0, sep + 1);
         }
         else
         {
-            pszFile = Criteria->Search.c_str();
+            pszFile = Criteria->Search;
 
-#if defined(_WIN32)
-            szFilePath[0] = 0;
-#else
+#if !defined(_WIN32)
             // needed for opendir()
-            strcpy(szFilePath, "./");
+            szFilePath = "./";
 #endif
         }
 
@@ -1633,10 +1644,10 @@ bool CCabinet::CreateSimpleCabinet()
         {
             if(!(FindFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
             {
-                strcpy(szFile, szFilePath);
-                strcat(szFile, FindFileData.cFileName);
+                std::string szFile = szFilePath;
+                szFile += FindFileData.cFileName;
 
-                Status = AddFile(szFile);
+                Status = AddFile(szFile, Criteria->TargetFolder);
 
                 if(Status != CAB_STATUS_SUCCESS)
                 {
@@ -1651,22 +1662,22 @@ bool CCabinet::CreateSimpleCabinet()
         FindClose(hFind);
 #else
         // Unix: Use opendir/readdir to loop through all entries, stat to check if it's a file and MatchFileNamePattern to match the file against the pattern
-        dirp = opendir(szFilePath);
+        dirp = opendir(szFilePath.c_str());
 
         if(dirp)
         {
             while( (dp = readdir(dirp)) )
             {
-                strcpy(szFile, szFilePath);
-                strcat(szFile, dp->d_name);
+                std::string szFile = szFilePath;
+                szFile += dp->d_name;
 
-                if(stat(szFile, &stbuf) == 0)
+                if(stat(szFile.c_str(), &stbuf) == 0)
                 {
                     if(stbuf.st_mode != S_IFDIR)
                     {
-                        if(MatchFileNamePattern(dp->d_name, pszFile))
+                        if(MatchFileNamePattern(dp->d_name, pszFile.c_str()))
                         {
-                            Status = AddFile(szFile);
+                            Status = AddFile(szFile, Criteria->TargetFolder);
 
                             if(Status != CAB_STATUS_SUCCESS)
                             {
@@ -1890,6 +1901,7 @@ ULONG CCabinet::LocateFile(const char* FileName,
 
     for (PCFFILE_NODE Node : FileList)
     {
+        // FIXME: We could handle path\filename here
         if (strcasecmp(FileName, Node->FileName.c_str()) == 0)
         {
             CurrentFolderNode = LocateFolderNode(Node->File.FileControlID);
@@ -2011,6 +2023,7 @@ ULONG CCabinet::ReadFileTable()
         Status = ReadString(Buf, PATH_MAX);
         if (Status != CAB_STATUS_SUCCESS)
             return Status;
+        // FIXME: We could split up folder\file.txt here
         File->FileName = Buf;
 
         DPRINT(MAX_TRACE, ("Found file '%s' at uncompressed offset (0x%X).  Size (%u bytes)  ControlId (0x%X).\n",
@@ -2195,7 +2208,7 @@ void CCabinet::DestroyDeletedFileNodes()
 
             DPRINT(MAX_TRACE, ("Deleting file node: '%s'\n", CurNode->FileName.c_str()));
 
-            TotalFileSize -= (sizeof(CFFILE) + (ULONG)strlen(GetFileName(CurNode->FileName.c_str())) + 1);
+            TotalFileSize -= (sizeof(CFFILE) + (ULONG)CreateCabFilename(CurNode).length() + 1);
 
             delete CurNode;
         }
@@ -2669,7 +2682,7 @@ ULONG CCabinet::WriteFileEntries()
                 return CAB_STATUS_CANNOT_WRITE;
             }
 
-            std::string fname = GetFileName(File->FileName.c_str());
+            std::string fname = CreateCabFilename(File);
             if (fwrite(fname.c_str(), fname.length() + 1, 1, FileHandle) < 1)
             {
                 DPRINT(MIN_TRACE, ("Cannot write to file.\n"));

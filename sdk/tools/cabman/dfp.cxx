@@ -6,7 +6,7 @@
  * PROGRAMMERS: Casper S. Hornstrup (chorns@users.sourceforge.net)
  *              Colin Finck <mail@colinfinck.de>
  * NOTES:       The directive file format is similar to the
- *              directive file format used by Microsoft's MAKECAB
+ *              directive file format used by Microsoft's MAKECAB (But not entirely compatible!)
  * REVISIONS:
  *   CSH 21/03-2001 Created
  *   CSH 15/08-2003 Made it portable
@@ -1123,17 +1123,17 @@ ULONG CDFParser::PerformFileCopy()
 
     DPRINT(MID_TRACE, ("Adding file: '%s'   destination: '%s'.\n", SrcName, DstName));
 
-    Status = AddFile(SrcName);
+    Status = AddFile(SrcName, std::string());
     if (Status == CAB_STATUS_CANNOT_OPEN)
     {
         strcpy(SrcName, FileRelativePath.c_str());
         strcat(SrcName, BaseFilename);
-        Status = AddFile(SrcName);
+        Status = AddFile(SrcName, std::string());
     }
     switch (Status)
     {
         case CAB_STATUS_SUCCESS:
-            sprintf(InfLine, "%s=%s", GetFileName(SrcName), DstName);
+            sprintf(InfLine, "%s=%s", GetFileName(SrcName).c_str(), DstName);
             WriteInfLine(InfLine);
             break;
 

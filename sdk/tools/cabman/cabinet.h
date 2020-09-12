@@ -227,6 +227,7 @@ typedef struct _CFFILE_NODE
 {
     CFFILE              File = { 0 };
     std::string         FileName;
+    std::string         TargetFolder;
     PCFDATA_NODE        DataBlock = nullptr;    // First data block of file. NULL if not known
     bool                Commit = false;         // true if the file data should be committed
     bool                Delete = false;         // true if marked for deletion
@@ -235,7 +236,8 @@ typedef struct _CFFILE_NODE
 
 typedef struct _SEARCH_CRITERIA
 {
-    std::string              Search;            // The actual search criteria
+    std::string             Search;             // The actual search criteria
+    std::string             TargetFolder;       // The filename will be TargetFolder\file
 } SEARCH_CRITERIA, *PSEARCH_CRITERIA;
 
 typedef struct _CAB_SEARCH
@@ -311,8 +313,8 @@ public:
     bool IsSeparator(char Char);
     /* Replaces \ or / with the one used be the host environment */
     void ConvertPath(std::string& Path);
-    /* Returns a pointer to the filename part of a fully qualified filename */
-    const char* GetFileName(const char* Path);
+    /* Returns the filename part of a fully qualified filename */
+    std::string GetFileName(const std::string& Path);
     /* Normalizes a path */
     void NormalizePath(std::string& Path);
     /* Returns name of cabinet file */
@@ -342,11 +344,13 @@ public:
     /* Returns whether a codec engine is selected */
     bool IsCodecSelected();
     /* Adds a search criteria for adding files to a simple cabinet, displaying files in a cabinet or extracting them */
-    ULONG AddSearchCriteria(const char* SearchCriteria);
+    ULONG AddSearchCriteria(const std::string& SearchCriteria, const std::string& TargetFolder);
     /* Destroys the search criteria list */
     void DestroySearchCriteria();
     /* Returns whether we have search criteria */
     bool HasSearchCriteria();
+
+    std::string CreateCabFilename(PCFFILE_NODE Node);
 
 #ifndef CAB_READ_ONLY
     /* Creates a simple cabinet based on the search criteria data */
@@ -370,7 +374,7 @@ public:
     /* Closes the current cabinet */
     ULONG CloseCabinet();
     /* Adds a file to the current disk */
-    ULONG AddFile(char* FileName);
+    ULONG AddFile(const std::string& FileName, const std::string& TargetFolder);
     /* Sets the maximum size of the current disk */
     void SetMaxDiskSize(ULONG Size);
 #endif /* CAB_READ_ONLY */
