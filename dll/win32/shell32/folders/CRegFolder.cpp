@@ -763,8 +763,7 @@ HRESULT WINAPI CRegFolder::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, SHEL
             RegCloseKey(hKey);
             return S_OK;
         case 2:        /* type */
-            CString strSysFolder(MAKEINTRESOURCEW(IDS_SYSTEMFOLDER));
-            return SHSetStrRet(&psd->str, strSysFolder);
+            return SHSetStrRet(&psd->str, IDS_SYSTEMFOLDER);
     }
     return E_FAIL;
 }
