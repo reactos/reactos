@@ -112,7 +112,7 @@ restart:
     return (CurChar = Char);
 }
 
-void ParseErrorEx(LPTSTR s)
+VOID ParseErrorEx(IN PCTSTR s)
 {
     /* Only display the first error we encounter */
     if (!bParseError)
@@ -120,7 +120,7 @@ void ParseErrorEx(LPTSTR s)
     bParseError = TRUE;
 }
 
-static void ParseError(void)
+static __inline VOID ParseError(VOID)
 {
     ParseErrorEx(CurrentTokenType != TOK_END ? CurrentToken : NULL);
 }

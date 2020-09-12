@@ -179,22 +179,22 @@ INT  CommandEchoserr (LPTSTR);
 VOID
 ErrorMessage(
     IN DWORD dwErrorCode,
-    IN LPTSTR szFormat OPTIONAL,
+    IN PCTSTR szFormat OPTIONAL,
     ...);
 
 VOID error_no_pipe(VOID);
-VOID error_bad_command(LPTSTR);
+VOID error_bad_command(PCTSTR s);
 VOID error_invalid_drive(VOID);
 VOID error_req_param_missing(VOID);
-VOID error_sfile_not_found(LPTSTR);
+VOID error_sfile_not_found(PCTSTR s);
 VOID error_file_not_found(VOID);
 VOID error_path_not_found(VOID);
-VOID error_too_many_parameters(LPTSTR);
-VOID error_parameter_format(TCHAR);
-VOID error_invalid_switch(TCHAR);
-VOID error_invalid_parameter_format(LPTSTR);
+VOID error_too_many_parameters(PCTSTR s);
+VOID error_parameter_format(TCHAR ch);
+VOID error_invalid_switch(TCHAR ch);
+VOID error_invalid_parameter_format(PCTSTR s);
 VOID error_out_of_memory(VOID);
-VOID error_syntax(LPTSTR);
+VOID error_syntax(PCTSTR s);
 
 VOID msg_pause(VOID);
 
@@ -360,7 +360,7 @@ VOID EchoCommand(PARSED_COMMAND *Cmd);
 TCHAR *Unparse(PARSED_COMMAND *Cmd, TCHAR *Out, TCHAR *OutEnd);
 VOID FreeCommand(PARSED_COMMAND *Cmd);
 
-void ParseErrorEx(LPTSTR s);
+VOID ParseErrorEx(IN PCTSTR s);
 extern BOOL bParseError;
 extern TCHAR ParseLine[CMDLINE_LENGTH];
 
