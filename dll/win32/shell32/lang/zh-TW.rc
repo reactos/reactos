@@ -1016,4 +1016,6 @@ BEGIN
     IDS_MOVETOTITLE "選取想要移動 '%s' 的位置，然後按一下 [移動] 按鈕。"
     IDS_MOVEITEMS "移動項目"
     IDS_MOVEBUTTON "移動"
+
+    IDS_SYSTEMFOLDER "System Folder"
 END

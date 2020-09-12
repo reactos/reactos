@@ -1013,4 +1013,6 @@ BEGIN
     IDS_MOVETOTITLE "Выберите расположение, куда вы хотите переместить '%s', затем нажмите кнопку 'Переместить'."
     IDS_MOVEITEMS "Перемещение элементов"
     IDS_MOVEBUTTON "Переместить"
+
+    IDS_SYSTEMFOLDER "System Folder"
 END

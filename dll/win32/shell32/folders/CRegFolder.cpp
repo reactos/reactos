@@ -764,7 +764,8 @@ HRESULT WINAPI CRegFolder::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, SHEL
             return S_OK;
         case 2:        /* type */
             //return SHSetStrRet(&psd->str, resource_id); /* FIXME: translate */
-            return SHSetStrRet(&psd->str, "System Folder");
+            CString strSysFolder(MAKEINTRESOURCEW(IDS_SYSTEMFOLDER));
+            return SHSetStrRet(&psd->str, strSysFolder);
     }
     return E_FAIL;
 }

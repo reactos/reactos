@@ -306,6 +306,8 @@
 #define IDS_MOVEITEMS                               30538
 #define IDS_MOVEBUTTON                              30539
 
+#define IDS_SYSTEMFOLDER                            30540
+
 /* Dialogs */
 
 /* Run dialog */

@@ -1001,4 +1001,6 @@ BEGIN
     IDS_MOVETOTITLE "Select the place where you want to move '%s' to. Then click the Move button."
     IDS_MOVEITEMS "Move Items"
     IDS_MOVEBUTTON "Move"
+
+    IDS_SYSTEMFOLDER "System Folder"
 END

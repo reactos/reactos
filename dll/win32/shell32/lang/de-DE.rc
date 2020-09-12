@@ -1007,4 +1007,6 @@ BEGIN
     IDS_MOVETOTITLE "Wählen Sie den Ort, in den '%s' verschoben werden soll. Klicken Sie anschließend auf Verschieben."
     IDS_MOVEITEMS "Elemente verschieben"
     IDS_MOVEBUTTON "Verschieben"
+
+    IDS_SYSTEMFOLDER "System Folder"
 END
