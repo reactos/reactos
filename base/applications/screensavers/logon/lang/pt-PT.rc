@@ -5,5 +5,5 @@ LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
 STRINGTABLE
 BEGIN
     IDS_DESCRIPTION "Protecção de ecrã Início"
-    IDS_TEXT "Esta protecção de ecrã não é configuravel"
+    IDS_TEXT "Esta protecção de ecrã não é configuravel."
 END
