@@ -27,6 +27,18 @@ typedef struct _KSEC_LOGON_DATA
     LUID LogonId;
 } KSEC_LOGON_DATA, *PKSEC_LOGON_DATA;
 
+#if 0
+void PrintKeyData(PUCHAR KeyData)
+{
+    ULONG i;
+    for (i = 0; i < 32; i++)
+    {
+        DbgPrint("%02X", KeyData[i]);
+    }
+    DbgPrint("\n");
+}
+#endif
+
 VOID
 NTAPI
 KsecInitializeEncryptionSupport (
@@ -80,6 +92,8 @@ KsecGetKeyData (
 
     if (OptionFlags == RTL_ENCRYPT_OPTION_SAME_PROCESS)
     {
+        /* Hash some process specific data to generate the key */
+        RtlZeroMemory(&ProcessData, sizeof(ProcessData));
         ProcessData.Process = CurrentProcess;
         ProcessData.ProcessId = CurrentProcess->UniqueProcessId;
         ProcessData.CreateTime = PsGetProcessCreateTimeQuadPart(CurrentProcess);
@@ -87,13 +101,25 @@ KsecGetKeyData (
         MD5Update(&Md5Contexts[0], (PVOID)&ProcessData, sizeof(ProcessData));
         MD5Update(&Md5Contexts[1], (PVOID)&ProcessData, sizeof(ProcessData));
     }
-    else // if (OptionFlags == RTL_ENCRYPT_OPTION_SAME_LOGON)
+    else if (OptionFlags == RTL_ENCRYPT_OPTION_SAME_LOGON)
     {
+        /* Hash the logon id to generate the key */
+        RtlZeroMemory(&LogonData, sizeof(LogonData));
         Token = PsReferencePrimaryToken(CurrentProcess);
         SeQueryAuthenticationIdToken(Token, &LogonData.LogonId);
         PsDereferencePrimaryToken(Token);
         MD5Update(&Md5Contexts[0], (PVOID)&LogonData, sizeof(LogonData));
         MD5Update(&Md5Contexts[1], (PVOID)&LogonData, sizeof(LogonData));
+    }
+    else if (OptionFlags == RTL_ENCRYPT_OPTION_CROSS_PROCESS)
+    {
+        /* Use the original MD5s to generate the global key */
+        NOTHING;
+    }
+    else
+    {
+        /* Must not pass anything else */
+        ASSERT(FALSE);
     }
 
     /* Finalize the MD5s */
