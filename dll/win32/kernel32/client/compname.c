@@ -21,7 +21,8 @@
  * PROJECT:         ReactOS system libraries
  * PURPOSE:         Computer name functions
  * FILE:            dll/win32/kernel32/client/compname.c
- * PROGRAMER:       Eric Kohl
+ * PROGRAMERS:      Eric Kohl
+ *                  Katayama Hirofumi MZ
  */
 
 /* INCLUDES ******************************************************************/
@@ -31,6 +32,13 @@
 #define NDEBUG
 #include <debug.h>
 
+typedef enum _DNS_NAME_FORMAT
+{
+    DnsNameDomain, DnsNameDomainLabel, DnsNameHostnameFull,
+    DnsNameHostnameLabel, DnsNameWildcard, DnsNameSrvRecord
+} DNS_NAME_FORMAT;
+
+typedef NTSTATUS (WINAPI *FN_DnsValidateName_W)(LPCWSTR, DNS_NAME_FORMAT);
 
 /* FUNCTIONS *****************************************************************/
 
@@ -451,48 +459,90 @@ GetComputerNameW(LPWSTR lpBuffer, LPDWORD lpnSize)
     return ret;
 }
 
+static BOOL
+BaseVerifyDnsName(LPCWSTR lpDnsName)
+{
+    HINSTANCE hDNSAPI;
+    FN_DnsValidateName_W fnValidate;
+    NTSTATUS Status;
+    BOOL ret = FALSE;
+
+    hDNSAPI = LoadLibraryW(L"dnsapi.dll");
+    if (hDNSAPI == NULL)
+        return FALSE;
+
+    fnValidate = (FN_DnsValidateName_W)GetProcAddress(hDNSAPI, "DnsValidateName_W");
+    if (fnValidate)
+    {
+        Status = (*fnValidate)(lpDnsName, DnsNameHostnameLabel);
+        if (Status == STATUS_SUCCESS || Status == DNS_ERROR_NON_RFC_NAME)
+            ret = TRUE;
+    }
+
+    FreeLibrary(hDNSAPI);
+
+    return ret;
+}
 
 /*
  * @implemented
  */
-static
-BOOL
+static BOOL
 IsValidComputerName(COMPUTER_NAME_FORMAT NameType,
                     LPCWSTR lpComputerName)
 {
-    PWCHAR p;
-    ULONG Length;
+    BOOL ret;
+    SIZE_T Length;
+    static const WCHAR s_szInvalidChars[] =
+        L"\"/\\[]:|<>+=;,?"
+        L"\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0A\x0B\x0C\x0D\x0E\x0F"
+        L"\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1A\x1B\x1C\x1D\x1E\x1F";
 
-    /* FIXME: do verification according to NameType */
+    if (lpComputerName == NULL)
+        return FALSE;
 
-    Length = 0;
-    p = (PWCHAR)lpComputerName;
+    Length = wcslen(lpComputerName);
 
-    while (*p != 0)
+    /* the empty name is invalid, except the empty DNS name */
+    if (Length == 0 && NameType != ComputerNamePhysicalDnsDomain)
+        return FALSE;
+
+    /* leading or trailing spaces are invalid */
+    if (Length > 0 &&
+        (lpComputerName[0] == L' ' || lpComputerName[Length - 1] == L' '))
     {
-        if (!(iswctype(*p, _ALPHA | _DIGIT) || *p == L'!' || *p == L'@' || *p == L'#' ||
-            *p == L'$' || *p == L'%' || *p == L'^' || *p == L'&' || *p == L'\'' ||
-            *p == L')' || *p == L'(' || *p == L'.' || *p == L'-' || *p == L'_' ||
-            *p == L'{' || *p == L'}' || *p == L'~'))
-            return FALSE;
-
-        Length++;
-        p++;
+        return FALSE;
     }
 
-    if (NameType == ComputerNamePhysicalDnsDomain)
-        return TRUE;
-
-    if (Length == 0)
+    /* check whether the name contains any invalid character */
+    if (wcscspn(lpComputerName, s_szInvalidChars) < Length)
         return FALSE;
 
-    if (NameType == ComputerNamePhysicalNetBIOS &&
-        Length > MAX_COMPUTERNAME_LENGTH)
-        return FALSE;
+    ret = TRUE;
+    switch (NameType)
+    {
+        case ComputerNamePhysicalNetBIOS:
+            if (Length > MAX_COMPUTERNAME_LENGTH)
+                ret = FALSE;
+            break;
 
-    return TRUE;
+        case ComputerNamePhysicalDnsDomain:
+            /* the empty DNS name is valid */
+            if (Length != 0)
+                ret = BaseVerifyDnsName(lpComputerName);
+            break;
+
+        case ComputerNamePhysicalDnsHostname:
+            ret = BaseVerifyDnsName(lpComputerName);
+            break;
+
+        default:
+            ret = FALSE;
+            break;
+    }
+
+    return ret;
 }
-
 
 static
 BOOL
@@ -547,6 +597,7 @@ SetComputerNameToRegistry(LPCWSTR RegistryKey,
     NtFlushKey(KeyHandle);
     NtClose(KeyHandle);
 
+    SetLastError(NO_ERROR);
     return TRUE;
 }
 
@@ -637,7 +688,7 @@ SetComputerNameExW(COMPUTER_NAME_FORMAT NameType,
                                              lpBuffer);
 
         default:
-            SetLastError (ERROR_INVALID_PARAMETER);
+            SetLastError(ERROR_INVALID_PARAMETER);
             return FALSE;
     }
 }
