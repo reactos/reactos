@@ -913,7 +913,6 @@ long IEGetNameAndFlags(LPITEMIDLIST pidl, SHGDNF uFlags, LPWSTR pszBuf, UINT cch
 HRESULT CShellBrowser::BrowseToPath(IShellFolder *newShellFolder,
     LPCITEMIDLIST absolutePIDL, FOLDERSETTINGS *folderSettings, long flags)
 {
-    CComPtr<IObjectWithSite>                objectWithSite;
     CComPtr<IShellFolder>                   saveCurrentShellFolder;
     CComPtr<IShellView>                     saveCurrentShellView;
     CComPtr<IShellView>                     newShellView;
@@ -988,9 +987,6 @@ HRESULT CShellBrowser::BrowseToPath(IShellFolder *newShellFolder,
         SetCursor(saveCursor);
         return hResult;
     }
-
-    if (objectWithSite.p != NULL)
-        hResult = objectWithSite->SetSite(NULL);
 
     // update current pidl
     ILFree(fCurrentDirectoryPIDL);
