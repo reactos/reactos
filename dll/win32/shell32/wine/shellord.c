@@ -371,7 +371,8 @@ int ShellMessageBoxW(
             if (szText) LoadStringW(hInstance, LOWORD(lpText), szText, len + 1);
         }
         pszText = szText;
-        if (!pszText) {
+        if (!pszText)
+        {
             WARN("Failed to load id %d\n", LOWORD(lpText));
             __ms_va_end(args);
             return 0;
@@ -446,7 +447,8 @@ int ShellMessageBoxA(
             if (szText) LoadStringA(hInstance, LOWORD(lpText), szText, len + 1);;
         }
         pszText = szText;
-        if (!pszText) {
+        if (!pszText)
+        {
             WARN("Failed to load id %d\n", LOWORD(lpText));
             __ms_va_end(args);
             return 0;
