@@ -1801,7 +1801,7 @@ VOID CApplicationView::OnCommand(WPARAM wParam, LPARAM lParam)
                 if (!m_ListView->SetViewMode(ViewModeList[CurrSelection]))
                 {
                     MessageBoxW(MAKEINTRESOURCEW(IDS_APP_DISPLAY_INVALID));
-                    if (CurrSelection) m_ComboBox->SendMessageW(CB_SETCURSEL, nLastCusMode); //Revert to basic mode
+                    if (CurrSelection) m_ComboBox->SendMessageW(CB_SETCURSEL, nLastCusMode);
                 }
                 else
                     nLastCusMode = CurrSelection;
