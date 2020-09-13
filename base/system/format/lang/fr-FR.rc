@@ -13,7 +13,7 @@ BEGIN
                    sont fortement recommandées pour une utilisation courante\n\
                    NTFS peut utiliser 512, 1024, 2048, 4096, 8192, 16K, 32K, 64K.\n\
                    FAT peut utiliser 8192, 16K, 32K, 64K, 128K, 256K.\n\
-                   La compression NTFS n'est pas possible au de là de 4096.\n\
+                   La compression NTFS n'est pas possible au delà de 4096.\n\
   -C               Les fichiers sur le nouveau disque seront compressés automatiquement.\n\n"
     STRING_COMPLETE "%lu pourcent effectués.\r"
     STRING_FORMAT_FAIL "FormatEx ne peut se finir avec succès.\n\n"
