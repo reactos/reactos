@@ -120,6 +120,16 @@ INT WINAPI SHUnicodeToAnsi(LPCWSTR lpSrcStr, LPSTR lpDstStr, INT iLen);
 
 PVOID WINAPI SHLockSharedEx(HANDLE hData, DWORD dwProcessId, BOOL bWriteAccess);
 
+int
+WINAPIV
+ShellMessageBoxWrapW(
+  _In_opt_ HINSTANCE hAppInst,
+  _In_opt_ HWND hWnd,
+  _In_ LPCWSTR lpcText,
+  _In_opt_ LPCWSTR lpcTitle,
+  _In_ UINT fuStyle,
+  ...);
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif /* defined(__cplusplus) */

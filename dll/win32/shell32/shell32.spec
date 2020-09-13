@@ -178,7 +178,7 @@
 179 stdcall SHGetNewLinkInfoA(str str ptr long long)
 180 stdcall SHGetNewLinkInfoW(wstr wstr ptr long long)
 181 stdcall -noname RegisterShellHook(long long)
-182 varargs ShellMessageBoxW(long long wstr wstr long)
+182 varargs ShellMessageBoxW(long long wstr wstr long) shlwapi.ShellMessageBoxWrapW
 183 varargs ShellMessageBoxA(long long str str long)
 184 stdcall -noname ArrangeWindows(long long long long long)
 185 stdcall -noname SHHandleDiskFull(ptr long)
