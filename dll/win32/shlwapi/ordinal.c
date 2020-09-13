@@ -4812,51 +4812,7 @@ DWORD WINAPI GetUIVersion(void)
 INT WINAPIV ShellMessageBoxWrapW(HINSTANCE hInstance, HWND hWnd, LPCWSTR lpText,
                                  LPCWSTR lpCaption, UINT uType, ...)
 {
-    WCHAR *szText = NULL, szTitle[100];
-    LPCWSTR pszText, pszTitle = szTitle;
-    LPWSTR pszTemp;
-    __ms_va_list args;
-    int ret;
-
-    __ms_va_start(args, uType);
-
-    TRACE("(%p,%p,%p,%p,%08x)\n", hInstance, hWnd, lpText, lpCaption, uType);
-
-    if (IS_INTRESOURCE(lpCaption))
-        LoadStringW(hInstance, LOWORD(lpCaption), szTitle, sizeof(szTitle)/sizeof(szTitle[0]));
-    else
-        pszTitle = lpCaption;
-
-    if (IS_INTRESOURCE(lpText))
-    {
-        const WCHAR *ptr;
-        UINT len = LoadStringW(hInstance, LOWORD(lpText), (LPWSTR)&ptr, 0);
-
-        if (len)
-        {
-            szText = HeapAlloc(GetProcessHeap(), 0, (len + 1) * sizeof(WCHAR));
-            if (szText) LoadStringW(hInstance, LOWORD(lpText), szText, len + 1);
-        }
-        pszText = szText;
-        if (!pszText) {
-            WARN("Failed to load id %d\n", LOWORD(lpText));
-            __ms_va_end(args);
-            return 0;
-        }
-    }
-    else
-        pszText = lpText;
-
-    FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_STRING,
-                   pszText, 0, 0, (LPWSTR)&pszTemp, 0, &args);
-
-    __ms_va_end(args);
-
-    ret = MessageBoxW(hWnd, pszTemp, pszTitle, uType);
-
-    HeapFree(GetProcessHeap(), 0, szText);
-    LocalFree(pszTemp);
-    return ret;
+    return ShellMessageBoxW(hInstance, hWnd, lpText, lpCaption, uType);
 }
 
 /***********************************************************************
