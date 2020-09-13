@@ -16,8 +16,8 @@ BEGIN
                    La compression NTFS n'est pas possible au de là de 4096.\n\
   -C               Les fichiers sur le nouveau disque seront compressés automatiquement.\n\n"
     STRING_COMPLETE "%lu pourcent effectués.\r"
-    STRING_FORMAT_FAIL "FormatEx ne peut se finir avec succés.\n\n"
-    STRING_NO_SUPPORT "Fonction Non Supportée"
+    STRING_FORMAT_FAIL "FormatEx ne peut se finir avec succès.\n\n"
+    STRING_NO_SUPPORT "Opération non supportée"
     STRING_FMIFS_FAIL "Impossible de trouver les points d'entrée FMIFS.\n\n"
     STRING_UNKNOW_ARG "Argument inconnu : %s\n"
     STRING_DRIVE_PARM "Le disque à formater n'est pas indiqué.\n\n"
@@ -38,6 +38,6 @@ PERDUES !\nContinuer avec le formatage (O/N) ? "
     STRING_VOL_COMPRESS "Le disque ne supporte pas la compression.\n"
     STRING_ENTER_LABEL "Nom du disque (11 caractères, Entrée si aucun) ? "
     STRING_NO_LABEL "Impossible de donner un nom au disque"
-    STRING_FREE_SPACE "\nEspace disque total : %I64d octet(s).\n Espace disque disponible : %I64d octet(s).\n"
+    STRING_FREE_SPACE "\nEspace disque total : %I64d octet(s).\nEspace disque disponible : %I64d octet(s).\n"
     STRING_SERIAL_NUMBER "\nNuméro de série du disque: %04X-%04X\n"
 END
