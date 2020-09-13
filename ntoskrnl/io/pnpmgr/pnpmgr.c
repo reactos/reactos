@@ -1065,7 +1065,15 @@ IopEnumerateDetectedDevices(
    UNICODE_STRING HardwareIdKeyboard = RTL_CONSTANT_STRING(L"*PNP0303\0");
    static ULONG DeviceIndexKeyboard = 0;
    const UNICODE_STRING IdentifierMouse = RTL_CONSTANT_STRING(L"PointerController");
+   /* FIXME: IopEnumerateDetectedDevices() should be rewritten.
+    * The PnP identifiers can either be hardcoded or parsed from a LegacyXlate
+    * sections of driver INF files.
+    */
+#if defined(SARCH_PC98)
+   UNICODE_STRING HardwareIdMouse = RTL_CONSTANT_STRING(L"*nEC1F00\0");
+#else
    UNICODE_STRING HardwareIdMouse = RTL_CONSTANT_STRING(L"*PNP0F13\0");
+#endif
    static ULONG DeviceIndexMouse = 0;
    const UNICODE_STRING IdentifierParallel = RTL_CONSTANT_STRING(L"ParallelController");
    UNICODE_STRING HardwareIdParallel = RTL_CONSTANT_STRING(L"*PNP0400\0");
