@@ -16,7 +16,7 @@ INT_PTR CALLBACK ChoicePageDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
         WCHAR FullText[ARR_MAX_SIZE] = { 0 };
         WCHAR TotalAmount[ARR_MAX_SIZE] = { 0 };
         WCHAR TempText[ARR_MAX_SIZE] = { 0 };
-        uint64_t TotalSize = sz.TempASize + sz.TempBSize + sz.RecycleBinSize + sz.ChkDskSize + sz.RappsSize;
+        uint64_t TotalSize = sz.TempSize + sz.RecycleBinSize + sz.ChkDskSize + sz.RappsSize;
 
         SetWindowPos(hwnd, NULL, 10, 32, 0, 0, SWP_NOACTIVATE | SWP_NOOWNERZORDER | SWP_NOSIZE | SWP_NOZORDER);
         InitListViewControl(GetDlgItem(hwnd, IDC_CHOICE_LIST));
@@ -69,12 +69,12 @@ INT_PTR CALLBACK ChoicePageDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
             /* FIX ME: A bug in comctl32 causes selected item to send LVIS_STATEIMAGEMASK */
             if (Header && Header->idFrom == IDC_CHOICE_LIST && Header->code == LVN_ITEMCHANGED)
             {
-                if (NmList->uNewState & LVIS_SELECTED)
+                if ((NmList->uNewState ^ NmList->uOldState) & LVIS_SELECTED)
                 {
                     SelItem(hwnd, NmList->iItem);
                 }
 
-                else if (NmList->uNewState & LVIS_STATEIMAGEMASK)
+                else if ((NmList->uNewState ^ NmList->uOldState) & LVIS_STATEIMAGEMASK)
                 {
                     sz.CountSize = CheckedItem(NmList->iItem, hwnd, GetDlgItem(hwnd, IDC_CHOICE_LIST), sz.CountSize);
                 }

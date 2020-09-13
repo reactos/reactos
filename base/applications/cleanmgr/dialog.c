@@ -58,18 +58,24 @@ INT_PTR CALLBACK StartDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPa
             if (HIWORD(wParam) == CBN_SELCHANGE)
             {
                 int ItemIndex = SendMessageW(GetDlgItem(hwnd, IDC_DRIVE), CB_GETCURSEL, 0, 0);
+                WCHAR StringComboBox[ARR_MAX_SIZE] = { 0 };
+                WCHAR *GatheredDriveLatter = NULL;
                 if (ItemIndex == CB_ERR)
                 {
                     MessageBoxW(NULL, L"SendMessageW failed!", L"Error", MB_OK | MB_ICONERROR);
                     PostMessage(hwnd, WM_CLOSE, 0, 0);
                 }
-                SendMessageW(GetDlgItem(hwnd, IDC_DRIVE), CB_GETLBTEXT, (WPARAM)ItemIndex, (LPARAM)wcv.DriveLetter);
+                SendMessageW(GetDlgItem(hwnd, IDC_DRIVE), CB_GETLBTEXT, (WPARAM)ItemIndex, (LPARAM)StringComboBox);
+                StringComboBox[wcslen(StringComboBox) - 1] = L'\0';
+                GatheredDriveLatter = wcsrchr(StringComboBox, L':');
+                GatheredDriveLatter--;
+                StringCbCopyW(wcv.DriveLetter, _countof(wcv.DriveLetter), GatheredDriveLatter);
             }
 
             switch(LOWORD(wParam))
             {
                 case IDOK:
-                    if (wcslen(wcv.DriveLetter) == 0)
+                    if (wcv.DriveLetter == NULL)
                     {
                         WCHAR TempText[ARR_MAX_SIZE] = { 0 };
                         LoadStringW(GetModuleHandleW(NULL), IDS_WARNING_DRIVE, TempText, _countof(TempText));
@@ -158,9 +164,12 @@ INT_PTR CALLBACK ChoiceDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lP
         case WM_INITDIALOG:
         {
             WCHAR FullText[ARR_MAX_SIZE] = { 0 };
+            HICON hbmIcon = LoadIconW(GetModuleHandleW(NULL), MAKEINTRESOURCE(IDI_DRIVE));
             LoadStringW(GetModuleHandleW(NULL), IDS_CHOICE_DLG_TITLE, TempText, _countof(TempText));
             StringCchPrintfW(FullText, _countof(FullText), TempText, wcv.DriveLetter);
             SetWindowTextW(hwnd, FullText);
+            SendMessageW(hwnd, WM_SETICON, ICON_SMALL, (LPARAM)hbmIcon);
+            SendMessageW(hwnd, WM_SETICON, ICON_BIG, (LPARAM)hbmIcon);
             return OnCreate(hwnd);
         }
 

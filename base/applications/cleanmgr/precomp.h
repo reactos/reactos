@@ -34,15 +34,11 @@
 #include <vsstyle.h>
 #include <wininet.h>
 #include <cpl.h>
-
-#undef _WIN32_WINNT
-#define _WIN32_WINNT 0x0600
 #include <winreg.h>
 
 typedef struct
 {
-    uint64_t TempASize;
-    uint64_t TempBSize;
+    uint64_t TempSize;
     uint64_t RecycleBinSize;
     uint64_t ChkDskSize;
     uint64_t RappsSize;
@@ -60,6 +56,7 @@ typedef struct
 typedef struct
 {
     WCHAR DriveLetter[ARR_MAX_SIZE];
+    WCHAR TempDir[ARR_MAX_SIZE];
     WCHAR RappsDir[MAX_PATH];
 } WCHAR_VAR;
 

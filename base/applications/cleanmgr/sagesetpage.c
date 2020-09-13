@@ -28,12 +28,12 @@ INT_PTR CALLBACK SagesetPageDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPAR
             /* FIX ME: A bug in comctl32 causes selected item to send LVIS_STATEIMAGEMASK */
             if (Header && Header->idFrom == IDC_SAGESET_LIST && Header->code == LVN_ITEMCHANGED)
             {
-                if (NmList->uNewState & LVIS_SELECTED)
+                if ((NmList->uNewState ^ NmList->uOldState) & LVIS_SELECTED)
                 {
                     SelItem(hwnd, NmList->iItem);
                 }
 
-                else if (NmList->uNewState & LVIS_STATEIMAGEMASK)
+                else if ((NmList->uNewState ^ NmList->uOldState) & LVIS_STATEIMAGEMASK)
                 {
                     SagesetCheckedItem(NmList->iItem, hwnd, GetDlgItem(hwnd, IDC_SAGESET_LIST));
                 }
