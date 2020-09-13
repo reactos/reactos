@@ -212,7 +212,7 @@ InsertDefaultClusterSizeForFs(HWND hwndDlg, PFORMAT_DRIVE_CONTEXT pContext)
     {
         if (!GetDefaultClusterSize(wszBuf, &ClusterSize, &TotalNumberOfBytes))
         {
-            TRACE("FAT16 is not supported on hdd larger than 4G current %lu\n", TotalNumberOfBytes.QuadPart);
+            TRACE("FAT16 is not supported on drive larger than 4G current %lu\n", TotalNumberOfBytes.QuadPart);
             SendMessageW(hDlgCtrl, CB_DELETESTRING, iSelIndex, 0);
             return;
         }
@@ -234,7 +234,7 @@ InsertDefaultClusterSizeForFs(HWND hwndDlg, PFORMAT_DRIVE_CONTEXT pContext)
     {
         if (!GetDefaultClusterSize(wszBuf, &ClusterSize, &TotalNumberOfBytes))
         {
-            TRACE("FAT32 is not supported on hdd larger than 32G current %lu\n", TotalNumberOfBytes.QuadPart);
+            TRACE("FAT32 is not supported on drive larger than 32G current %lu\n", TotalNumberOfBytes.QuadPart);
             SendMessageW(hDlgCtrl, CB_DELETESTRING, iSelIndex, 0);
             return;
         }
@@ -256,7 +256,7 @@ InsertDefaultClusterSizeForFs(HWND hwndDlg, PFORMAT_DRIVE_CONTEXT pContext)
     {
         if (!GetDefaultClusterSize(wszBuf, &ClusterSize, &TotalNumberOfBytes))
         {
-            TRACE("NTFS is not supported on hdd larger than 2TB current %lu\n", TotalNumberOfBytes.QuadPart);
+            TRACE("NTFS is not supported on drive larger than 2TB current %lu\n", TotalNumberOfBytes.QuadPart);
             SendMessageW(hDlgCtrl, CB_DELETESTRING, iSelIndex, 0);
             return;
         }
@@ -289,7 +289,7 @@ InsertDefaultClusterSizeForFs(HWND hwndDlg, PFORMAT_DRIVE_CONTEXT pContext)
     {
         if (!GetDefaultClusterSize(wszBuf, &ClusterSize, &TotalNumberOfBytes))
         {
-            TRACE("EXT2 is not supported on hdd larger than 32T current %lu\n", TotalNumberOfBytes.QuadPart);
+            TRACE("EXT2 is not supported on drive larger than 32T current %lu\n", TotalNumberOfBytes.QuadPart);
             SendMessageW(hDlgCtrl, CB_DELETESTRING, iSelIndex, 0);
             return;
         }
@@ -310,7 +310,7 @@ InsertDefaultClusterSizeForFs(HWND hwndDlg, PFORMAT_DRIVE_CONTEXT pContext)
     {
         if (!GetDefaultClusterSize(wszBuf, &ClusterSize, &TotalNumberOfBytes))
         {
-            TRACE("BtrFS is not supported on hdd larger than 16E current %lu\n", TotalNumberOfBytes.QuadPart);
+            TRACE("BtrFS is not supported on drive larger than 16E current %lu\n", TotalNumberOfBytes.QuadPart);
             SendMessageW(hDlgCtrl, CB_DELETESTRING, iSelIndex, 0);
             return;
         }
@@ -329,7 +329,7 @@ InsertDefaultClusterSizeForFs(HWND hwndDlg, PFORMAT_DRIVE_CONTEXT pContext)
     }
     else
     {
-        FIXME("unknown fs\n");
+        FIXME("unknown fs : %ls\n",wszBuf);
         SendDlgItemMessageW(hwndDlg, 28680, CB_RESETCONTENT, iSelIndex, 0);
         return;
     }
