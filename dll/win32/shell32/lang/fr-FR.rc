@@ -1006,4 +1006,6 @@ BEGIN
     IDS_MOVETOTITLE "Sélectionnez l'emplacement où vous souhaitez déplacer '%s', puis appuyez sur le bouton Déplacer."
     IDS_MOVEITEMS "Déplacer les éléments"
     IDS_MOVEBUTTON "Déplacer"
+
+    IDS_SYSTEMFOLDER "Dossier système"
 END

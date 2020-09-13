@@ -1003,4 +1003,6 @@ BEGIN
     IDS_MOVETOTITLE "'%s' の移動先を選択して「移動」ボタンをクリックして下さい。"
     IDS_MOVEITEMS "項目の移動先"
     IDS_MOVEBUTTON "移動"
+
+    IDS_SYSTEMFOLDER "System Folder"
 END

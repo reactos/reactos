@@ -1012,4 +1012,6 @@ BEGIN
     IDS_MOVETOTITLE "Zaznacz miejsce, w które chcesz przenieść '%s', a następnie kliknij przycisk Przenieś."
     IDS_MOVEITEMS "Przenoszenie elementów"
     IDS_MOVEBUTTON "Przenieś"
+
+    IDS_SYSTEMFOLDER "Folder systemowy"
 END
