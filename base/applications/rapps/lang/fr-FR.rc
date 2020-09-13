@@ -141,7 +141,7 @@ BEGIN
     IDS_INFO_UNINSTALLSTR "\nCommande de désinstallation : "
     IDS_INFO_MODIFYPATH "\nModifier le chemin d'accès : "
     IDS_INFO_INSTALLDATE "\nDate d'installation : "
-    IDS_AINFO_PACKAGE_NAME "\nPackage Name: "
+    IDS_AINFO_PACKAGE_NAME "\nNom du paquet : "
 END
 
 STRINGTABLE
@@ -178,7 +178,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_APPTITLE "ReactOS Applications Manager"
+    IDS_APPTITLE "Gestionnaire d'applications ReactOS"
     IDS_APP_AUTHORS "Copyright 2009 Dmitry Chapyshev"
     IDS_SEARCH_TEXT "Chercher…"
     IDS_INSTALL "Installer"
@@ -211,9 +211,9 @@ BEGIN
     IDS_SELECTEDFORINST "Sélectionnées pour installation"
     IDS_MISMATCH_CERT_INFO "Certificat inconnu:\nSujet: %s\nEmetteur: %s\nVoulez-vous continuer ?"
     IDS_UNABLE_PATH "Format de chemin invalide."
-    IDS_APP_DISPLAY_DETAILS "details"
-    IDS_APP_DISPLAY_LIST "list"
-    IDS_APP_DISPLAY_TILE "tile"
+    IDS_APP_DISPLAY_DETAILS "détails"
+    IDS_APP_DISPLAY_LIST "liste"
+    IDS_APP_DISPLAY_TILE "tuile"
 END
 
 STRINGTABLE
@@ -230,8 +230,8 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_LICENSE_OPENSOURCE "Open Source"
-    IDS_LICENSE_FREEWARE "Freeware"
+    IDS_LICENSE_OPENSOURCE "Libre"
+    IDS_LICENSE_FREEWARE "Gratuit"
     IDS_LICENSE_TRIAL "Version d'essai / Démo"
 END
 
@@ -254,12 +254,12 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_CMD_USAGE "Usage: "
-    IDS_CMD_NEED_PACKAGE_NAME "Error: option %1 expects one or more package name.\n"
-    IDS_CMD_NEED_FILE_NAME "Error: option %1 expects a file name.\n"
-    IDS_CMD_NEED_PARAMS "Error: option %1 expects one or more parameters.\n"
-    IDS_CMD_INVALID_OPTION "Error: Unknown or invalid command line option specified.\n"
-    IDS_CMD_FIND_RESULT_FOR "Find result for %1:\n"
-    IDS_CMD_PACKAGE_NOT_FOUND "Failed to find package %1.\n"
-    IDS_CMD_PACKAGE_INFO "Information about package %1:\n"
+    IDS_CMD_USAGE "Usage : "
+    IDS_CMD_NEED_PACKAGE_NAME "Erreur : L'option %1 nécessite un ou plusieurs noms de paquets.\n"
+    IDS_CMD_NEED_FILE_NAME "Erreur : L'option %1 nécessite un nom de fichier.\n"
+    IDS_CMD_NEED_PARAMS "Erreur : L'option %1 nécessite un ou plusieurs paramètres.\n"
+    IDS_CMD_INVALID_OPTION "Erreur : L'option de ligne de commande spécifiée est inconnue ou invalide.\n"
+    IDS_CMD_FIND_RESULT_FOR "Résultats pour %1 :\n"
+    IDS_CMD_PACKAGE_NOT_FOUND "Impossible de trouver le paquet %1.\n"
+    IDS_CMD_PACKAGE_INFO "Information sur le paquet %1 :\n"
 END
