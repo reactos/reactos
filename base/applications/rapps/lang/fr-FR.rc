@@ -214,6 +214,7 @@ BEGIN
     IDS_APP_DISPLAY_DETAILS "details"
     IDS_APP_DISPLAY_LIST "list"
     IDS_APP_DISPLAY_TILE "tile"
+    IDS_APP_DISPLAY_INVALID "Mode d'affichage non supporté ou non implémenté"
 END
 
 STRINGTABLE
