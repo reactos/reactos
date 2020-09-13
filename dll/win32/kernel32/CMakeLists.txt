@@ -44,7 +44,6 @@ list(APPEND SOURCE
     client/vdm.c
     client/version.c
     client/virtmem.c
-    client/vista.c
     client/console/alias.c
     client/console/console.c
     client/console/history.c
