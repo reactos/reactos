@@ -7,125 +7,19 @@
 
 /* INCLUDES *******************************************************************/
 
-#include <k32.h>
+#include <k32_vista.h>
+
+#if _WIN32_WINNT != _WIN32_WINNT_VISTA
+#error "This file must be compiled with _WIN32_WINNT == _WIN32_WINNT_VISTA"
+#endif
+
+// This is defined only in ntifs.h
+#define REPARSE_DATA_BUFFER_HEADER_SIZE   FIELD_OFFSET(REPARSE_DATA_BUFFER, GenericReparseBuffer)
 
 #define NDEBUG
 #include <debug.h>
 
-#if _WIN32_WINNT >= 0x600
-
-/* FIXME: Move these RTL declarations to the NDK */
-NTSTATUS
-NTAPI
-RtlSleepConditionVariableCS(IN OUT PRTL_CONDITION_VARIABLE ConditionVariable,
-                            IN OUT PRTL_CRITICAL_SECTION CriticalSection,
-                            IN PLARGE_INTEGER TimeOut  OPTIONAL);
-
-NTSTATUS
-NTAPI
-RtlSleepConditionVariableSRW(IN OUT PRTL_CONDITION_VARIABLE ConditionVariable,
-                             IN OUT PRTL_SRWLOCK SRWLock,
-                             IN PLARGE_INTEGER TimeOut  OPTIONAL,
-                             IN ULONG Flags);
-
 /* PUBLIC FUNCTIONS ***********************************************************/
-
-/*
- * @implemented
- */
-BOOL
-WINAPI
-SleepConditionVariableCS(IN OUT PCONDITION_VARIABLE ConditionVariable,
-                         IN OUT PCRITICAL_SECTION CriticalSection,
-                         IN DWORD dwMilliseconds)
-{
-    NTSTATUS Status = STATUS_SUCCESS;
-#if 0
-    LARGE_INTEGER TimeOut;
-    PLARGE_INTEGER TimeOutPtr = NULL;
-
-    if (dwMilliseconds != INFINITE)
-    {
-        TimeOut.QuadPart = dwMilliseconds * -10000LL;
-        TimeOutPtr = &TimeOut;
-    }
-
-    Status = RtlSleepConditionVariableCS((PRTL_CONDITION_VARIABLE)ConditionVariable,
-                                         (PRTL_CRITICAL_SECTION)CriticalSection,
-                                         TimeOutPtr);
-#endif
-    if (!NT_SUCCESS(Status))
-    {
-        BaseSetLastNTError(Status);
-        return FALSE;
-    }
-
-    return TRUE;
-}
-
-
-/*
- * @implemented
- */
-BOOL
-WINAPI
-SleepConditionVariableSRW(IN OUT PCONDITION_VARIABLE ConditionVariable,
-                          IN OUT PSRWLOCK SRWLock,
-                          IN DWORD dwMilliseconds,
-                          IN ULONG Flags)
-{
-    NTSTATUS Status = STATUS_SUCCESS;
-#if 0
-    LARGE_INTEGER TimeOut;
-    PLARGE_INTEGER TimeOutPtr = NULL;
-
-    if (dwMilliseconds != INFINITE)
-    {
-        TimeOut.QuadPart = dwMilliseconds * -10000LL;
-        TimeOutPtr = &TimeOut;
-    }
-
-    Status = RtlSleepConditionVariableSRW((PRTL_CONDITION_VARIABLE)ConditionVariable,
-                                          (PRTL_SRWLOCK)SRWLock,
-                                          TimeOutPtr,
-                                          Flags);
-#endif
-    if (!NT_SUCCESS(Status))
-    {
-        BaseSetLastNTError(Status);
-        return FALSE;
-    }
-
-    return TRUE;
-}
-
-
-/*
- * @implemented
- */
-BOOL WINAPI InitializeCriticalSectionEx(OUT LPCRITICAL_SECTION lpCriticalSection,
-                                        IN DWORD dwSpinCount,
-                                        IN DWORD flags)
-{
-    NTSTATUS Status;
-
-    /* FIXME: Flags ignored */
-
-    /* Initialize the critical section */
-    Status = RtlInitializeCriticalSectionAndSpinCount(
-        (PRTL_CRITICAL_SECTION)lpCriticalSection,
-        dwSpinCount);
-    if (!NT_SUCCESS(Status))
-    {
-        /* Set failure code */
-        BaseSetLastNTError(Status);
-        return FALSE;
-    }
-
-    /* Success */
-    return TRUE;
-}
-
 
 /*
  * @implemented
@@ -267,7 +161,7 @@ GetApplicationRestart(IN HANDLE hProcess,
  */
 VOID
 WINAPI
-RecoveryFinished(IN BOOL bSuccess)
+ApplicationRecoveryFinished(IN BOOL bSuccess)
 {
     UNIMPLEMENTED;
 }
@@ -278,7 +172,7 @@ RecoveryFinished(IN BOOL bSuccess)
  */
 HRESULT
 WINAPI
-RecoveryInProgress(OUT PBOOL pbCancelled)
+ApplicationRecoveryInProgress(OUT PBOOL pbCancelled)
 {
     UNIMPLEMENTED;
     return E_FAIL;
@@ -692,30 +586,6 @@ OpenFileById(IN HANDLE hFile,
 }
 
 
-/*
- * @implemented
- */
-ULONGLONG
-WINAPI
-GetTickCount64(VOID)
-{
-    ULARGE_INTEGER TickCount;
-    
-    while (TRUE)
-    {
-        TickCount.HighPart = (ULONG)SharedUserData->TickCount.High1Time;
-        TickCount.LowPart = SharedUserData->TickCount.LowPart;
-
-        if (TickCount.HighPart == (ULONG)SharedUserData->TickCount.High2Time) break;
-
-        YieldProcessor();
-     }
-     
-     return (UInt32x32To64(TickCount.LowPart, SharedUserData->TickCountMultiplier) >> 24) +
-            (UInt32x32To64(TickCount.HighPart, SharedUserData->TickCountMultiplier) << 8);
-}
-
-#endif
 
 /*
   Vista+ MUI support functions
@@ -766,6 +636,7 @@ GetFileMUIPath(
 /*
  * @unimplemented
  */
+#if 0 // This is Windows 7+
 BOOL
 WINAPI
 GetProcessPreferredUILanguages(
@@ -778,6 +649,7 @@ GetProcessPreferredUILanguages(
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return FALSE;
 }
+#endif
 
 /*
 * @unimplemented
@@ -860,6 +732,7 @@ GetUserPreferredUILanguages(
 /*
  * @unimplemented
  */
+#if 0 // Tis is Windows 7+
 BOOL
 WINAPI
 SetProcessPreferredUILanguages(
@@ -871,7 +744,7 @@ SetProcessPreferredUILanguages(
     SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
     return FALSE;
 }
-
+#endif
 
 /*
  * @unimplemented

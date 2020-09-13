@@ -28,7 +28,7 @@ FilenameA2W(LPCSTR NameA, BOOL alloc)
    RtlInitAnsiString(&str, NameA);
    pstrW = alloc ? &strW : &NtCurrentTeb()->StaticUnicodeString;
 
-   if (bIsFileApiAnsi)
+   if (AreFileApisANSI())
         Status= RtlAnsiStringToUnicodeString( pstrW, &str, (BOOLEAN)alloc );
    else
         Status= RtlOemStringToUnicodeString( pstrW, &str, (BOOLEAN)alloc );
@@ -64,7 +64,7 @@ FilenameU2A_FitOrFail(
    /* destLen should never exceed MAX_PATH */
    if (destLen > MAX_PATH) destLen = MAX_PATH;
 
-   ret = bIsFileApiAnsi? RtlUnicodeStringToAnsiSize(SourceU) : RtlUnicodeStringToOemSize(SourceU);
+   ret = AreFileApisANSI() ? RtlUnicodeStringToAnsiSize(SourceU) : RtlUnicodeStringToOemSize(SourceU);
    /* ret incl. nullchar */
 
    if (DestA && (INT)ret <= destLen)
@@ -75,7 +75,7 @@ FilenameU2A_FitOrFail(
       str.MaximumLength = (USHORT)destLen;
 
 
-      if (bIsFileApiAnsi)
+      if (AreFileApisANSI())
          RtlUnicodeStringToAnsiString(&str, SourceU, FALSE );
       else
          RtlUnicodeStringToOemString(&str, SourceU, FALSE );
@@ -129,7 +129,7 @@ FilenameA2W_N(
 
     if (srclen < 0) srclen = strlen( src ) + 1;
 
-    if (bIsFileApiAnsi)
+    if (AreFileApisANSI())
         RtlMultiByteToUnicodeN( dest, destlen* sizeof(WCHAR), &ret, (LPSTR)src, srclen  );
     else
         RtlOemToUnicodeN( dest, destlen* sizeof(WCHAR), &ret, (LPSTR)src, srclen );
@@ -154,7 +154,7 @@ FilenameW2A_N(
 
     if (srclen < 0) srclen = wcslen( src ) + 1;
 
-    if (bIsFileApiAnsi)
+    if (AreFileApisANSI())
         RtlUnicodeToMultiByteN( dest, destlen, &ret, (LPWSTR) src, srclen * sizeof(WCHAR));
     else
         RtlUnicodeToOemN( dest, destlen, &ret, (LPWSTR) src, srclen * sizeof(WCHAR) );
