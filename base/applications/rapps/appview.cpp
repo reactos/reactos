@@ -1389,6 +1389,9 @@ BOOL CAppsListView::AddInstalledApplication(CInstalledApplicationInfo *InstAppIn
     {
         PathParseIconLocationW((LPWSTR)szIconPath.GetString());
 
+        /* Load only the 1st icon from the application executable,
+         * because all apps provide the executables which have the main icon
+         * as 1st in the index , so we don't need other icons here */
         hIcon = ExtractIconW(hInst,
                              szIconPath.GetString(),
                              0);
