@@ -1014,5 +1014,5 @@ BEGIN
     IDS_MOVEITEMS "Перемещение элементов"
     IDS_MOVEBUTTON "Переместить"
 
-    IDS_SYSTEMFOLDER "System Folder"
+    IDS_SYSTEMFOLDER "Системная папка"
 END
