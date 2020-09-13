@@ -329,7 +329,7 @@ InsertDefaultClusterSizeForFs(HWND hwndDlg, PFORMAT_DRIVE_CONTEXT pContext)
     }
     else
     {
-        FIXME("unknown fs : %ls\n", wszBuf);
+        FIXME("Unknown filesystem: %ls\n", wszBuf);
         SendDlgItemMessageW(hwndDlg, 28680, CB_RESETCONTENT, iSelIndex, 0);
         return;
     }
