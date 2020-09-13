@@ -444,7 +444,7 @@ FormatExCB(
         case FSNOTSUPPORTED:
         case CLUSTERSIZETOOSMALL:
             bSuccess = FALSE;
-            FIXME("\n");
+            FIXME("Unsupported command in FormatExCB\n");
             break;
 
         default:
@@ -476,13 +476,13 @@ FormatDrive(HWND hwndDlg, PFORMAT_DRIVE_CONTEXT pContext)
     iSelIndex = SendMessageW(hDlgCtrl, CB_GETCURSEL, 0, 0);
     if (iSelIndex == CB_ERR)
     {
-        FIXME("\n");
+        ERR("Unable to get file system selection\n");
         return;
     }
     Length = SendMessageW(hDlgCtrl, CB_GETLBTEXTLEN, iSelIndex, 0);
     if ((int)Length == CB_ERR || Length + 1 > _countof(szFileSys))
     {
-        FIXME("\n");
+        ERR("Unable to get file system selection\n");
         return;
     }
 
@@ -495,7 +495,7 @@ FormatDrive(HWND hwndDlg, PFORMAT_DRIVE_CONTEXT pContext)
     Length = SendMessageW(hDlgCtrl, WM_GETTEXTLENGTH, 0, 0);
     if (Length + 1 > _countof(szLabel))
     {
-        FIXME("\n");
+        ERR("Unable to get volume label\n");
         return;
     }
     SendMessageW(hDlgCtrl, WM_GETTEXT, _countof(szLabel), (LPARAM)szLabel);
