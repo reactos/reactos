@@ -488,7 +488,7 @@ BOOL
 IsValidComputerName(COMPUTER_NAME_FORMAT NameType,
                     LPCWSTR lpComputerName)
 {
-    SIZE_T Length;
+    size_t Length;
     static const WCHAR s_szInvalidChars[] =
         L"\"/\\[]:|<>+=;,?"
         L"\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0A\x0B\x0C\x0D\x0E\x0F"
@@ -497,7 +497,8 @@ IsValidComputerName(COMPUTER_NAME_FORMAT NameType,
     if (lpComputerName == NULL)
         return FALSE;
 
-    Length = wcslen(lpComputerName);
+    /* get string length */
+    RtlStringCchLengthW(lpComputerName, MAX_PATH, &Length);
 
     /* the empty name is invalid, except the empty DNS name */
     if (Length == 0 && NameType != ComputerNamePhysicalDnsDomain)
