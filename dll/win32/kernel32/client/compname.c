@@ -498,7 +498,8 @@ IsValidComputerName(COMPUTER_NAME_FORMAT NameType,
         return FALSE;
 
     /* get string length */
-    RtlStringCchLengthW(lpComputerName, NTSTRSAFE_MAX_CCH, &Length);
+    if (!NT_SUCCESS(RtlStringCchLengthW(lpComputerName, NTSTRSAFE_MAX_CCH, &Length)))
+        return FALSE;
 
     /* the empty name is invalid, except the empty DNS name */
     if (Length == 0 && NameType != ComputerNamePhysicalDnsDomain)
