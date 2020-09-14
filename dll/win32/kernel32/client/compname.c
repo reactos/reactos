@@ -459,7 +459,8 @@ GetComputerNameW(LPWSTR lpBuffer, LPDWORD lpnSize)
     return ret;
 }
 
-static BOOL
+static
+BOOL
 BaseVerifyDnsName(LPCWSTR lpDnsName)
 {
     HINSTANCE hDNSAPI;
@@ -487,7 +488,8 @@ BaseVerifyDnsName(LPCWSTR lpDnsName)
 /*
  * @implemented
  */
-static BOOL
+static
+BOOL
 IsValidComputerName(COMPUTER_NAME_FORMAT NameType,
                     LPCWSTR lpComputerName)
 {
