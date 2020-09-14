@@ -17,6 +17,7 @@
 #define NDEBUG
 #include <debug.h>
 #include <mmebuddy_debug.h>
+#define USE_MMIXER_LIB
 
 #ifndef USE_MMIXER_LIB
 #define FUNC_NAME(x) x##ByLegacy
