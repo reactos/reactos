@@ -28,15 +28,10 @@
 /* INCLUDES ******************************************************************/
 
 #include <k32.h>
+#include <windns.h>
 
 #define NDEBUG
 #include <debug.h>
-
-typedef enum _DNS_NAME_FORMAT
-{
-    DnsNameDomain, DnsNameDomainLabel, DnsNameHostnameFull,
-    DnsNameHostnameLabel, DnsNameWildcard, DnsNameSrvRecord
-} DNS_NAME_FORMAT;
 
 typedef NTSTATUS (WINAPI *FN_DnsValidateName_W)(LPCWSTR, DNS_NAME_FORMAT);
 
