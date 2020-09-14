@@ -11,21 +11,21 @@ INT_PTR CALLBACK OptionsPageDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPAR
 {
     switch (message)
     {
-    case WM_INITDIALOG:
-        SetWindowPos(hwnd, NULL, 10, 32, 0, 0, SWP_NOACTIVATE | SWP_NOOWNERZORDER | SWP_NOSIZE | SWP_NOZORDER);
-        return TRUE;
+        case WM_INITDIALOG:
+            SetWindowPos(hwnd, NULL, 10, 32, 0, 0, SWP_NOACTIVATE | SWP_NOOWNERZORDER | SWP_NOSIZE | SWP_NOZORDER);
+            return TRUE;
     
-    case WM_COMMAND:
-        switch (LOWORD(wParam))
-        {
-        case IDC_CLEAN_PROGRAMS:
-            ShellExecuteW(hwnd, NULL, L"control.exe", L"appwiz.cpl", NULL, SW_SHOW);
+        case WM_COMMAND:
+            switch (LOWORD(wParam))
+            {
+                case IDC_CLEAN_PROGRAMS:
+                    ShellExecuteW(hwnd, NULL, L"control.exe", L"appwiz.cpl", NULL, SW_SHOW);
+                    break;
+            }
             break;
-        }
-        break;
 
-    default:
-        return FALSE;
+        default:
+            return FALSE;
     }
     return TRUE;
 }

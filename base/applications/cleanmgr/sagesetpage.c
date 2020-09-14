@@ -11,39 +11,38 @@ INT_PTR CALLBACK SagesetPageDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPAR
 {
     switch (message)
     {
-    case WM_INITDIALOG:
-        SetWindowPos(hwnd, NULL, 10, 32, 0, 0, SWP_NOACTIVATE | SWP_NOOWNERZORDER | SWP_NOSIZE | SWP_NOZORDER);
-        InitSagesetListViewControl(GetDlgItem(hwnd, IDC_SAGESET_LIST));
-        return TRUE;
+        case WM_INITDIALOG:
+            SetWindowPos(hwnd, NULL, 10, 32, 0, 0, SWP_NOACTIVATE | SWP_NOOWNERZORDER | SWP_NOSIZE | SWP_NOZORDER);
+            InitSagesetListViewControl(GetDlgItem(hwnd, IDC_SAGESET_LIST));
+            return TRUE;
 
-    case WM_NOTIFY:
-    {
-        NMHDR* Header = (NMHDR*)lParam;
-        NMLISTVIEW* NmList = (NMLISTVIEW*)lParam;
-        LVITEMW lvI;
-        ZeroMemory(&lvI, sizeof(lvI));
-
-        if (lParam)
+        case WM_NOTIFY:
         {
-            /* FIX ME: A bug in comctl32 causes selected item to send LVIS_STATEIMAGEMASK */
-            if (Header && Header->idFrom == IDC_SAGESET_LIST && Header->code == LVN_ITEMCHANGED)
-            {
-                if ((NmList->uNewState ^ NmList->uOldState) & LVIS_SELECTED)
-                {
-                    SelItem(hwnd, NmList->iItem);
-                }
+            NMHDR* Header = (NMHDR*)lParam;
+            NMLISTVIEW* NmList = (NMLISTVIEW*)lParam;
+            LVITEMW lvI;
+            ZeroMemory(&lvI, sizeof(lvI));
 
-                else if ((NmList->uNewState ^ NmList->uOldState) & LVIS_STATEIMAGEMASK)
+            if (lParam)
+            {
+                if (Header && Header->idFrom == IDC_SAGESET_LIST && Header->code == LVN_ITEMCHANGED)
                 {
-                    SagesetCheckedItem(NmList->iItem, hwnd, GetDlgItem(hwnd, IDC_SAGESET_LIST));
+                    if ((NmList->uNewState ^ NmList->uOldState) & LVIS_SELECTED)
+                    {
+                        SelItem(hwnd, NmList->iItem);
+                    }
+
+                    else if ((NmList->uNewState ^ NmList->uOldState) & LVIS_STATEIMAGEMASK)
+                    {
+                        SagesetCheckedItem(NmList->iItem, hwnd, GetDlgItem(hwnd, IDC_SAGESET_LIST));
+                    }
                 }
             }
+            break;
         }
-        break;
-    }
 
-    default:
-        return FALSE;
+        default:
+            return FALSE;
     }
     return TRUE;
 }

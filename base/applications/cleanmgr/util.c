@@ -66,7 +66,7 @@ DWORD WINAPI SizeCheck(LPVOID lpParam)
     
     if (bv.SysDrive)
     {
-        GetTempPathW(_countof(TargetedDir), TargetedDir);
+        GetTempPathW(sizeof(TargetedDir), TargetedDir);
         if (PathIsDirectoryW(TargetedDir))
         {
             sz.TempSize = DirSizeFunc(TargetedDir);
@@ -75,7 +75,7 @@ DWORD WINAPI SizeCheck(LPVOID lpParam)
                 return FALSE;
             }
         }
-        StringCbCopyW(wcv.TempDir, _countof(wcv.TempDir), TargetedDir);
+        StringCbCopyW(wcv.TempDir, sizeof(wcv.TempDir), TargetedDir);
         SendMessageW(hProgressBar, PBM_SETPOS, 25, 0);
         LoadStringW(GetModuleHandleW(NULL), IDS_LABEL_TEMP, LoadedString, _countof(LoadedString));
         SetDlgItemTextW(hwnd, IDC_STATIC_INFO, LoadedString);
@@ -83,10 +83,10 @@ DWORD WINAPI SizeCheck(LPVOID lpParam)
     
     /* Hardcoding the path temporarily */
     
-    StringCchPrintfW(TargetedDir, _countof(TargetedDir), L"%s\\RECYCLED", wcv.DriveLetter);
+    StringCchPrintfW(TargetedDir, sizeof(TargetedDir), L"%s\\RECYCLED", wcv.DriveLetter);
     if(!PathIsDirectoryW(TargetedDir))
     {
-        StringCchPrintfW(TargetedDir, _countof(TargetedDir), L"%s\\RECYCLER", wcv.DriveLetter);
+        StringCchPrintfW(TargetedDir, sizeof(TargetedDir), L"%s\\RECYCLER", wcv.DriveLetter);
     }
 
     sz.RecycleBinSize = DirSizeFunc(TargetedDir);
@@ -102,8 +102,8 @@ DWORD WINAPI SizeCheck(LPVOID lpParam)
     
     /* Currently disabled because SHQueryRecycleBinW isn't implemented in ReactOS */
     
-    /*StringCbCopyW(TargetedDir, _countof(TargetedDir), wcv.DriveLetter);
-    StringCbCatW(TargetedDir, _countof(TargetedDir), L"\\");
+    /*StringCbCopyW(TargetedDir, sizeof(TargetedDir), wcv.DriveLetter);
+    StringCbCatW(TargetedDir, sizeof(TargetedDir), L"\\");
 
     if (SHQueryRecycleBinW(TargetedDir, &RecycleBinInfo) == S_OK)
     {
@@ -115,7 +115,7 @@ DWORD WINAPI SizeCheck(LPVOID lpParam)
 
     for (int i = 0; i < 10; i++)
     {
-        StringCchPrintfW(TargetedDir, _countof(TargetedDir), L"%s\\FOUND.%.3i", wcv.DriveLetter, i);
+        StringCchPrintfW(TargetedDir, sizeof(TargetedDir), L"%s\\FOUND.%.3i", wcv.DriveLetter, i);
         if (PathIsDirectoryW(TargetedDir))
         {
             sz.ChkDskSize += DirSizeFunc(TargetedDir);
@@ -136,18 +136,18 @@ DWORD WINAPI SizeCheck(LPVOID lpParam)
     }
 
     /*if (RegQueryValueExW(hRegKey, L"Settings", 0, NULL, (LPBYTE)&SettingsInfo, &dwSize) == ERROR_SUCCESS)
-        StringCbCopyW(TargetedDir, _countof(TargetedDir), SettingsInfo.szDownloadDir);
+        StringCbCopyW(TargetedDir, sizeof(TargetedDir), SettingsInfo.szDownloadDir);
 
 
     else
     {
         DPRINT("RegQueryValueExW(): Failed to query a registry key!\n");
         SHGetFolderPathW(NULL, CSIDL_PERSONAL, NULL, SHGFP_TYPE_CURRENT, TargetedDir);
-        StringCbCatW(TargetedDir, _countof(TargetedDir), L"\\RAPPS Downloads");
+        StringCbCatW(TargetedDir, sizeof(TargetedDir), L"\\RAPPS Downloads");
     }*/
 
     SHGetFolderPathW(NULL, CSIDL_PERSONAL, NULL, SHGFP_TYPE_CURRENT, TargetedDir);
-    StringCbCatW(TargetedDir, _countof(TargetedDir), L"\\RAPPS Downloads");
+    StringCbCatW(TargetedDir, sizeof(TargetedDir), L"\\RAPPS Downloads");
     if (PathIsDirectoryW(TargetedDir))
     {
         sz.RappsSize = DirSizeFunc(TargetedDir);
@@ -156,13 +156,14 @@ DWORD WINAPI SizeCheck(LPVOID lpParam)
             return FALSE;
         }
  
-        StringCbCopyW(wcv.RappsDir, _countof(wcv.RappsDir), TargetedDir);
+        StringCbCopyW(wcv.RappsDir, sizeof(wcv.RappsDir), TargetedDir);
         SendMessageW(hProgressBar, PBM_SETPOS, 100, 0);
         LoadStringW(GetModuleHandleW(NULL), IDS_LABEL_RAPPS, LoadedString, _countof(LoadedString));
         SetDlgItemTextW(hwnd, IDC_STATIC_INFO, LoadedString);
     }
     
-    SendMessageW(hwnd, WM_DESTROY, 0, 0);
+    EndDialog(hwnd, 0);
+
     return TRUE;
 }
 
@@ -187,8 +188,8 @@ DWORD WINAPI FolderRemoval(LPVOID lpParam)
     
     if (bv.RecycleClean)
     {   
-        StringCbCopyW(TargetedDir, _countof(TargetedDir), wcv.DriveLetter);
-        StringCbCatW(TargetedDir, _countof(TargetedDir), L"\\");
+        StringCbCopyW(TargetedDir, sizeof(TargetedDir), wcv.DriveLetter);
+        StringCbCatW(TargetedDir, sizeof(TargetedDir), L"\\");
         
         SHEmptyRecycleBinW(NULL, TargetedDir, SHERB_NOCONFIRMATION | SHERB_NOPROGRESSUI | SHERB_NOSOUND);
         
@@ -201,7 +202,7 @@ DWORD WINAPI FolderRemoval(LPVOID lpParam)
     {
         for (int i = 0; i < 10; i++)
         {
-            StringCchPrintfW(TargetedDir, _countof(TargetedDir), L"%s\\FOUND.%.3i", wcv.DriveLetter, i);
+            StringCchPrintfW(TargetedDir, sizeof(TargetedDir), L"%s\\FOUND.%.3i", wcv.DriveLetter, i);
             if (PathIsDirectoryW(TargetedDir))
             {
                 CleanRequiredPath(TargetedDir);
@@ -227,7 +228,7 @@ DWORD WINAPI FolderRemoval(LPVOID lpParam)
         SetDlgItemTextW(hwnd, IDC_STATIC_INFO, LoadedString);
     }
     
-    SendMessageW(hwnd, WM_DESTROY, 0, 0);
+    EndDialog(hwnd, 0);
 
     return TRUE;
 }
@@ -257,7 +258,7 @@ uint64_t DirSizeFunc(PWCHAR TargetDir)
     WCHAR ReTargetDir[MAX_PATH + 1] = { 0 };
     DWORD RetError = 0;
     
-    StringCchPrintfW(TargetedDir, _countof(TargetedDir), L"%s%s", TargetDir, L"\\*");
+    StringCchPrintfW(TargetedDir, sizeof(TargetedDir), L"%s%s", TargetDir, L"\\*");
     HandleDir = FindFirstFileW(TargetedDir, &DataStruct);
     RetError = GetLastError();
     
@@ -284,7 +285,7 @@ uint64_t DirSizeFunc(PWCHAR TargetDir)
 
         else if (DataStruct.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
         {
-            StringCchPrintfW(ReTargetDir, _countof(ReTargetDir), L"%s\\%s", TargetDir, DataStruct.cFileName);
+            StringCchPrintfW(ReTargetDir, sizeof(ReTargetDir), L"%s\\%s", TargetDir, DataStruct.cFileName);
             Size += DirSizeFunc(ReTargetDir);
         }
 
@@ -354,41 +355,41 @@ LRESULT APIENTRY ThemeHandler(HWND hDlg, NMCUSTOMDRAW* pNmDraw)
     {
         switch (pNmDraw->dwDrawStage)
         {
-        case CDDS_PREPAINT:
-        {
-            if (pNmDraw->uItemState & CDIS_DEFAULT)
+            case CDDS_PREPAINT:
             {
-                iState = PBS_DEFAULTED;
+                if (pNmDraw->uItemState & CDIS_DEFAULT)
+                {
+                    iState = PBS_DEFAULTED;
+                }
+                else if (pNmDraw->uItemState & CDIS_SELECTED)
+                {
+                    iState = PBS_PRESSED;
+                }
+                else if (pNmDraw->uItemState & CDIS_HOT)
+                {
+                    iState = PBS_HOT;
+                }
+
+                if (IsThemeBackgroundPartiallyTransparent(hTheme, BP_PUSHBUTTON, iState))
+                {
+                    DrawThemeParentBackground(hDlgButtonCtrl, pNmDraw->hdc, &pNmDraw->rc);
+                }
+
+                DrawThemeBackground(hTheme, pNmDraw->hdc, BP_PUSHBUTTON, iState, &pNmDraw->rc, NULL);
+
+                RetValue = CDRF_SKIPDEFAULT;
+                break;
             }
-            else if (pNmDraw->uItemState & CDIS_SELECTED)
+
+            case CDDS_PREERASE:
             {
-                iState = PBS_PRESSED;
-            }
-            else if (pNmDraw->uItemState & CDIS_HOT)
-            {
-                iState = PBS_HOT;
+                RetValue = CDRF_DODEFAULT;
+                break;
             }
 
-            if (IsThemeBackgroundPartiallyTransparent(hTheme, BP_PUSHBUTTON, iState))
-            {
-                DrawThemeParentBackground(hDlgButtonCtrl, pNmDraw->hdc, &pNmDraw->rc);
-            }
-
-            DrawThemeBackground(hTheme, pNmDraw->hdc, BP_PUSHBUTTON, iState, &pNmDraw->rc, NULL);
-
-            RetValue = CDRF_SKIPDEFAULT;
-            break;
-        }
-
-        case CDDS_PREERASE:
-        {
-            RetValue = CDRF_DODEFAULT;
-            break;
-        }
-
-        default:
-            RetValue = CDRF_SKIPDEFAULT;
-            break;
+            default:
+                RetValue = CDRF_SKIPDEFAULT;
+                break;
         }
     }
     else
@@ -434,7 +435,7 @@ BOOL ArgCheck(LPWSTR* ArgList, int nArgs)
 {
     WCHAR LogicalDrives[ARR_MAX_SIZE] = { 0 };
     WCHAR ArgReal[ARR_MAX_SIZE] = { 0 };
-    DWORD NumOfDrives = GetLogicalDriveStringsW(_countof(LogicalDrives), LogicalDrives);
+    DWORD NumOfDrives = GetLogicalDriveStringsW(sizeof(LogicalDrives), LogicalDrives);
     
     if (NumOfDrives == 0)
     {
@@ -442,7 +443,7 @@ BOOL ArgCheck(LPWSTR* ArgList, int nArgs)
         return FALSE;
     }
 
-    StringCbCopyW(ArgReal, _countof(ArgReal), ArgList[1]);
+    StringCbCopyW(ArgReal, sizeof(ArgReal), ArgList[1]);
     _wcsupr(ArgReal);
     
     if (wcscmp(ArgReal, L"/D") == 0 && nArgs == 3)
@@ -574,13 +575,13 @@ BOOL DriverunProc(LPWSTR* ArgList, PWCHAR LogicalDrives)
     WCHAR DriveArgGathered[ARR_MAX_SIZE] = { 0 };
     WCHAR TempText[ARR_MAX_SIZE] = { 0 };
 
-    StringCbCopyW(DriveArgGathered, _countof(DriveArgGathered), ArgList[2]);
+    StringCbCopyW(DriveArgGathered, sizeof(DriveArgGathered), ArgList[2]);
 
     _wcsupr(DriveArgGathered);
 
     if (wcslen(DriveArgGathered) == 1)
     {
-        StringCbCatW(DriveArgGathered, _countof(DriveArgGathered), L":");
+        StringCbCatW(DriveArgGathered, sizeof(DriveArgGathered), L":");
     }
 
     WCHAR* SingleDrive = LogicalDrives;
@@ -589,11 +590,11 @@ BOOL DriverunProc(LPWSTR* ArgList, PWCHAR LogicalDrives)
     {
         if (GetDriveTypeW(SingleDrive) == ONLY_PHYSICAL_DRIVE)
         {
-            StringCchCopyW(RealDrive, _countof(RealDrive), SingleDrive);
+            StringCchCopyW(RealDrive, sizeof(RealDrive), SingleDrive);
             RealDrive[wcslen(RealDrive) - 1] = '\0';
             if (wcscmp(DriveArgGathered, RealDrive) == 0)
             {
-                StringCbCopyW(wcv.DriveLetter, _countof(wcv.DriveLetter), DriveArgGathered);
+                StringCbCopyW(wcv.DriveLetter, sizeof(wcv.DriveLetter), DriveArgGathered);
                 break;
             }
         }
@@ -658,7 +659,7 @@ void SagerunProc(int nArgs, PWCHAR ArgReal, LPWSTR* ArgList, PWCHAR LogicalDrive
     {
         if (GetDriveTypeW(SingleDrive) == ONLY_PHYSICAL_DRIVE)
         {
-            StringCchCopyW(wcv.DriveLetter, _countof(wcv.DriveLetter), SingleDrive);
+            StringCchCopyW(wcv.DriveLetter, sizeof(wcv.DriveLetter), SingleDrive);
             wcv.DriveLetter[wcslen(wcv.DriveLetter) - 1] = '\0';
 
             DialogButtonSelect = DialogBoxParamW(GetModuleHandleW(NULL), MAKEINTRESOURCEW(IDD_PROGRESS), NULL, ProgressDlgProc, 0);
@@ -695,19 +696,19 @@ void InitStartDlg(HWND hwnd, HBITMAP hBitmap)
     if (hComboCtrl == NULL)
     {
         MessageBoxW(NULL, L"GetDlgItem() failed!", L"Error", MB_OK | MB_ICONERROR);
-        PostMessage(hwnd, WM_CLOSE, 0, 0);
+        EndDialog(hwnd, IDCANCEL);
         return;
     }
   
-    NumOfDrives = GetLogicalDriveStringsW(_countof(LogicalDrives), LogicalDrives);
+    NumOfDrives = GetLogicalDriveStringsW(sizeof(LogicalDrives), LogicalDrives);
     if (NumOfDrives == 0)
     {
         MessageBoxW(NULL, L"GetLogicalDriveStringsW() failed!", L"Error", MB_OK | MB_ICONERROR);
-        PostMessage(hwnd, WM_CLOSE, 0, 0);
+        EndDialog(hwnd, IDCANCEL);
         return;
     }
 
-    if (NumOfDrives <= _countof(LogicalDrives))
+    if (NumOfDrives <= sizeof(LogicalDrives))
     {
         WCHAR* SingleDrive = LogicalDrives;
         WCHAR RealDrive[ARR_MAX_SIZE] = { 0 };
@@ -717,7 +718,7 @@ void InitStartDlg(HWND hwnd, HBITMAP hBitmap)
         {
             if (GetDriveTypeW(SingleDrive) == ONLY_PHYSICAL_DRIVE)
             {
-                StringCchCopyW(RealDrive, _countof(RealDrive), SingleDrive);
+                StringCchCopyW(RealDrive, sizeof(RealDrive), SingleDrive);
                 RealDrive[wcslen(RealDrive) - 1] = '\0';
                 if (!GetVolumeInformationW(SingleDrive,
                                       VolumeName,
@@ -729,16 +730,16 @@ void InitStartDlg(HWND hwnd, HBITMAP hBitmap)
                                       0))
                 {
                     MessageBoxW(NULL, L"GetVolumeInformationW() failed!", L"Error", MB_OK | MB_ICONERROR);
-                    PostMessage(hwnd, WM_CLOSE, 0, 0);
+                    EndDialog(hwnd, IDCANCEL);
                     return;
                 }
 
-                StringCchPrintfW(StringComboBox, _countof(StringComboBox), L"%s (%s)", VolumeName, RealDrive);
+                StringCchPrintfW(StringComboBox, sizeof(StringComboBox), L"%s (%s)", VolumeName, RealDrive);
                 DwIndex = SendMessageW(hComboCtrl, CB_ADDSTRING, 0, (LPARAM)StringComboBox);
                 if (SendMessageW(hComboCtrl, CB_SETITEMDATA, DwIndex, (LPARAM)hBitmap) == CB_ERR)
                 {
                     MessageBoxW(NULL, L"SendMessageW() failed!", L"Error", MB_OK | MB_ICONERROR);
-                    PostMessage(hwnd, WM_CLOSE, 0, 0);
+                    EndDialog(hwnd, IDCANCEL);
                     return;
                 }
             }
@@ -751,7 +752,7 @@ void InitStartDlg(HWND hwnd, HBITMAP hBitmap)
     StringComboBox[wcslen(StringComboBox) - 1] = L'\0';
     GatheredDriveLatter = wcsrchr(StringComboBox, L':');
     GatheredDriveLatter--;
-    StringCbCopyW(wcv.DriveLetter, _countof(wcv.DriveLetter), GatheredDriveLatter);
+    StringCbCopyW(wcv.DriveLetter, sizeof(wcv.DriveLetter), GatheredDriveLatter);
 }
 
 BOOL DrawItemCombobox(LPARAM lParam)
@@ -802,7 +803,7 @@ BOOL DrawItemCombobox(LPARAM lParam)
     SendMessage(lpdis->hwndItem, CB_GETLBTEXT,
                 lpdis->itemID, (LPARAM)achTemp);
 
-    StringCchLength(achTemp, _countof(achTemp), &cch);
+    StringCchLength(achTemp, sizeof(achTemp), &cch);
 
     ExtTextOut(lpdis->hDC, CX_BITMAP + 2 * x, y,
         ETO_CLIPPED | ETO_OPAQUE, &lpdis->rcItem,
@@ -858,21 +859,21 @@ void InitListViewControl(HWND hList)
         MessageBoxW(NULL, L"CreateImageLists() failed!", L"Error", MB_OK | MB_ICONERROR);
     }
 
-    StrFormatByteSizeW(sz.ChkDskSize, TempList, _countof(TempList));
+    StrFormatByteSizeW(sz.ChkDskSize, TempList, sizeof(TempList));
     LoadStringW(GetModuleHandleW(NULL), IDS_LABEL_CHKDSK, LoadedString, _countof(LoadedString));
     AddItem(hList, LoadedString, TempList, ICON_BLANK);
 
-    StrFormatByteSizeW(sz.RappsSize, TempList, _countof(TempList));
+    StrFormatByteSizeW(sz.RappsSize, TempList, sizeof(TempList));
     LoadStringW(GetModuleHandleW(NULL), IDS_LABEL_RAPPS, LoadedString, _countof(LoadedString));
     AddItem(hList, LoadedString, TempList, ICON_BLANK);
 
-    StrFormatByteSizeW(sz.RecycleBinSize, TempList, _countof(TempList));
+    StrFormatByteSizeW(sz.RecycleBinSize, TempList, sizeof(TempList));
     LoadStringW(GetModuleHandleW(NULL), IDS_LABEL_RECYCLE, LoadedString, _countof(LoadedString));
     AddItem(hList, LoadedString, TempList, ICON_BIN);
  
     if (bv.SysDrive)
     {
-        StrFormatByteSizeW(sz.TempSize, TempList, _countof(TempList));
+        StrFormatByteSizeW(sz.TempSize, TempList, sizeof(TempList));
         LoadStringW(GetModuleHandleW(NULL), IDS_LABEL_TEMP, LoadedString, _countof(LoadedString));
         AddItem(hList, LoadedString, TempList, ICON_BLANK);
     }
@@ -980,25 +981,25 @@ void SelItem(HWND hwnd, int index)
     DIRECTORIES Dir = index;
     switch (Dir)
     {
-    case TEMPORARY_FILE:
-        ShowWindow(GetDlgItem(hwnd, IDC_VIEW_FILES), SW_HIDE);
-        SetDetails(IDS_DETAILS_TEMP, IDC_STATIC_DETAILS, hwnd);
-        break;
+        case TEMPORARY_FILE:
+            ShowWindow(GetDlgItem(hwnd, IDC_VIEW_FILES), SW_HIDE);
+            SetDetails(IDS_DETAILS_TEMP, IDC_STATIC_DETAILS, hwnd);
+            break;
 
-    case RECYCLE_BIN:
-        ShowWindow(GetDlgItem(hwnd, IDC_VIEW_FILES), SW_HIDE);
-        SetDetails(IDS_DETAILS_RECYCLE, IDC_STATIC_DETAILS, hwnd);
-        break;
+        case RECYCLE_BIN:
+            ShowWindow(GetDlgItem(hwnd, IDC_VIEW_FILES), SW_HIDE);
+            SetDetails(IDS_DETAILS_RECYCLE, IDC_STATIC_DETAILS, hwnd);
+            break;
 
-    case OLD_CHKDSK_FILES:
-        ShowWindow(GetDlgItem(hwnd, IDC_VIEW_FILES), SW_HIDE);
-        SetDetails(IDS_DETAILS_CHKDSK, IDC_STATIC_DETAILS, hwnd);
-        break;
+        case OLD_CHKDSK_FILES:
+            ShowWindow(GetDlgItem(hwnd, IDC_VIEW_FILES), SW_HIDE);
+            SetDetails(IDS_DETAILS_CHKDSK, IDC_STATIC_DETAILS, hwnd);
+            break;
 
-    case RAPPS_FILES:
-        ShowWindow(GetDlgItem(hwnd, IDC_VIEW_FILES), SW_SHOW);
-        SetDetails(IDS_DETAILS_RAPPS, IDC_STATIC_DETAILS, hwnd);
-        break;
+        case RAPPS_FILES:
+            ShowWindow(GetDlgItem(hwnd, IDC_VIEW_FILES), SW_SHOW);
+            SetDetails(IDS_DETAILS_RAPPS, IDC_STATIC_DETAILS, hwnd);
+            break;
     }
 }
 
@@ -1011,61 +1012,61 @@ long long CheckedItem(int index, HWND hwnd, HWND hList, long long Size)
     DIRECTORIES Dir = index;
     switch (Dir)
     {
-    case TEMPORARY_FILE:
-        if (ListView_GetCheckState(hList, index))
-        {
-            bv.TempClean = TRUE;
-            Size += TempSize;
-        }
+        case TEMPORARY_FILE:
+            if (ListView_GetCheckState(hList, index))
+            {
+                bv.TempClean = TRUE;
+                Size += TempSize;
+            }
 
-        else
-        {
-            bv.TempClean = FALSE;
-            Size -= TempSize;
-        }
-        break;
+            else
+            {
+                bv.TempClean = FALSE;
+                Size -= TempSize;
+            }
+            break;
 
-    case RECYCLE_BIN:
-        if (ListView_GetCheckState(hList, index))
-        {
-            bv.RecycleClean = TRUE;
-            Size += RecycleSize;
-        }
+        case RECYCLE_BIN:
+            if (ListView_GetCheckState(hList, index))
+            {
+                bv.RecycleClean = TRUE;
+                Size += RecycleSize;
+            }
 
-        else
-        {
-            bv.RecycleClean = FALSE;
-            Size -= RecycleSize;
-        }
-        break;
+            else
+            {
+                bv.RecycleClean = FALSE;
+                Size -= RecycleSize;
+            }
+            break;
 
-    case OLD_CHKDSK_FILES:
-        if (ListView_GetCheckState(hList, index))
-        {
-            bv.ChkDskClean = TRUE;
-            Size += DownloadSize;
-        }
+        case OLD_CHKDSK_FILES:
+            if (ListView_GetCheckState(hList, index))
+            {
+                bv.ChkDskClean = TRUE;
+                Size += DownloadSize;
+            }
 
-        else
-        {
-            bv.ChkDskClean = FALSE;
-            Size -= DownloadSize;
-        }
-        break;
+            else
+            {
+                bv.ChkDskClean = FALSE;
+                Size -= DownloadSize;
+            }
+            break;
 
-    case RAPPS_FILES:
-        if (ListView_GetCheckState(hList, index))
-        {
-            bv.RappsClean = TRUE;
-            Size += RappsSize;
-        }
+        case RAPPS_FILES:
+            if (ListView_GetCheckState(hList, index))
+            {
+                bv.RappsClean = TRUE;
+                Size += RappsSize;
+            }
 
-        else
-        {
-            bv.RappsClean = FALSE;
-            Size -= RappsSize;
-        }
-        break;
+            else
+            {
+                bv.RappsClean = FALSE;
+                Size -= RappsSize;
+            }
+            break;
     }
 
     if (Size < 0)
@@ -1084,21 +1085,21 @@ void SagesetCheckedItem(int index, HWND hwnd, HWND hList)
     DIRECTORIES Dir = index;
     switch (Dir)
     {
-    case TEMPORARY_FILE:
-        bv.TempClean = ListView_GetCheckState(hList, index);
-        break;
+        case TEMPORARY_FILE:
+            bv.TempClean = ListView_GetCheckState(hList, index);
+            break;
 
-    case RECYCLE_BIN:
-        bv.RecycleClean = ListView_GetCheckState(hList, index);
-        break;
+        case RECYCLE_BIN:
+            bv.RecycleClean = ListView_GetCheckState(hList, index);
+            break;
 
-    case OLD_CHKDSK_FILES:
-        bv.ChkDskClean = ListView_GetCheckState(hList, index);
-        break;
+        case OLD_CHKDSK_FILES:
+            bv.ChkDskClean = ListView_GetCheckState(hList, index);
+            break;
 
-    case RAPPS_FILES:
-        bv.RappsClean = ListView_GetCheckState(hList, index);
-        break;
+        case RAPPS_FILES:
+            bv.RappsClean = ListView_GetCheckState(hList, index);
+            break;
     }
 }
 
