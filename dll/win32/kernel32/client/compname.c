@@ -493,7 +493,6 @@ BOOL
 IsValidComputerName(COMPUTER_NAME_FORMAT NameType,
                     LPCWSTR lpComputerName)
 {
-    BOOL ret;
     SIZE_T Length;
     static const WCHAR s_szInvalidChars[] =
         L"\"/\\[]:|<>+=;,?"
@@ -520,30 +519,25 @@ IsValidComputerName(COMPUTER_NAME_FORMAT NameType,
     if (wcscspn(lpComputerName, s_szInvalidChars) < Length)
         return FALSE;
 
-    ret = TRUE;
     switch (NameType)
     {
         case ComputerNamePhysicalNetBIOS:
             if (Length > MAX_COMPUTERNAME_LENGTH)
-                ret = FALSE;
-            break;
+                return FALSE;
+            return TRUE;
 
         case ComputerNamePhysicalDnsDomain:
             /* the empty DNS name is valid */
             if (Length != 0)
-                ret = BaseVerifyDnsName(lpComputerName);
-            break;
+                return BaseVerifyDnsName(lpComputerName);
+            return TRUE;
 
         case ComputerNamePhysicalDnsHostname:
-            ret = BaseVerifyDnsName(lpComputerName);
-            break;
+            return BaseVerifyDnsName(lpComputerName);
 
         default:
-            ret = FALSE;
-            break;
+            return FALSE;
     }
-
-    return ret;
 }
 
 static
