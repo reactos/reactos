@@ -214,7 +214,6 @@ BEGIN
     IDS_APP_DISPLAY_DETAILS "details"
     IDS_APP_DISPLAY_LIST "list"
     IDS_APP_DISPLAY_TILE "tile"
-    IDS_APP_DISPLAY_INVALID "View mode invalid or unimplemented"
 END
 
 STRINGTABLE

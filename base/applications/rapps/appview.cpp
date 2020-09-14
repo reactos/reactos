@@ -1800,7 +1800,18 @@ VOID CApplicationView::OnCommand(WPARAM wParam, LPARAM lParam)
                 ATLASSERT(CurrSelection < (int)_countof(ViewModeList));
                 if (!m_ListView->SetViewMode(ViewModeList[CurrSelection]))
                 {
-                    MessageBoxW(MAKEINTRESOURCEW(IDS_APP_DISPLAY_INVALID));
+                    PWSTR lpMsgBuf;
+                    FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER |
+                                   FORMAT_MESSAGE_FROM_SYSTEM |
+                                   FORMAT_MESSAGE_IGNORE_INSERTS,
+                                   NULL,
+                                   ERROR_INVALID_FUNCTION,
+                                   MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+                                   (LPWSTR) &lpMsgBuf,
+                                   0,
+                                   NULL );
+                    MessageBoxW(lpMsgBuf, NULL, MB_OK | MB_ICONERROR);
+                    LocalFree(lpMsgBuf);
                     if (CurrSelection) m_ComboBox->SendMessageW(CB_SETCURSEL, nLastCusMode);
                 }
                 else
