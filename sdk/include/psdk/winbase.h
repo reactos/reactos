@@ -3945,6 +3945,11 @@ QueryDepthSList(
 
 #endif /* _SLIST_HEADER_ */
 
+#ifdef __WINESRC__
+/* Wine specific. Basically MultiByteToWideChar for us. */
+WCHAR * CDECL wine_get_dos_file_name(LPCSTR str);
+#endif
+
 #ifdef _MSC_VER
 #pragma warning(pop)
 #endif
