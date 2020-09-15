@@ -901,7 +901,7 @@ CPortPinWavePci::Init(
     }
 
     // allocate new irp queue
-    Status = NewIrpQueue(&m_IrpQueue);
+    Status = NewIrpQueue2(&m_IrpQueue);
     if (!NT_SUCCESS(Status))
     {
         // free references

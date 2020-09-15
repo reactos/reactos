@@ -23,6 +23,7 @@ list(APPEND SOURCE
     interrupt.cpp
     irp.cpp
     irpstream.cpp
+    irpstream2.cpp
     miniport.cpp
     miniport_dmus.cpp
     miniport_fmsynth.cpp

@@ -212,6 +212,11 @@ NTSTATUS
 NTAPI
 NewIrpQueue(
     IN IIrpQueue **Queue);
+    
+NTSTATUS
+NTAPI
+NewIrpQueue2(
+    IN IIrpQueue **Queue);
 
 NTSTATUS
 NTAPI
