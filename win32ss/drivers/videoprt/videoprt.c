@@ -31,6 +31,8 @@
 
 /* GLOBAL VARIABLES ***********************************************************/
 
+ULONG VideoDebugLevel = 0;
+
 BOOLEAN VpBaseVideo = FALSE;
 BOOLEAN VpNoVesa = FALSE;
 
@@ -293,6 +295,8 @@ IntVideoPortFindAdapter(
         ConfigInfo.SystemMemorySize = SystemBasicInfo.NumberOfPhysicalPages *
                                       SystemBasicInfo.PageSize;
     }
+
+    // FIXME: Check the adapter key and update VideoDebugLevel variable.
 
     /*
      * Call miniport HwVidFindAdapter entry point to detect if
@@ -793,6 +797,9 @@ VideoPortDebugPrint(
     ...)
 {
     va_list ap;
+
+    if (VideoDebugLevel >= DebugPrintLevel)
+        DebugPrintLevel = Error;
 
     va_start(ap, DebugMessage);
     vDbgPrintEx(DPFLTR_IHVVIDEO_ID, DebugPrintLevel, DebugMessage, ap);
