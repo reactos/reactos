@@ -51,6 +51,8 @@ protected:
     BOOLEAN m_OutOfMapping;
     ULONG m_MaxFrameSize;
     ULONG m_Alignment;
+    
+    ULONG m_StreamHeaderIndex;
     PKSSTREAM_HEADER m_CurStreamHeader;
 
     volatile ULONG m_NumDataAvailable;
@@ -71,7 +73,7 @@ typedef struct
 typedef struct
 {
     ULONG StreamHeaderCount;
-    ULONG StreamHeaderIndex;
+    
     ULONG TotalStreamData;
     
     PKSSTREAM_TAG Tags;
@@ -338,8 +340,11 @@ CIrpQueue2::GetMappingWithTag(
     {
         // get an irp from the queue
         m_Irp = KsRemoveIrpFromCancelableQueue(&m_IrpList, &m_IrpListLock, KsListEntryHead, KsAcquireAndRemoveOnlySingleItem);
-        if(m_Irp) m_CurStreamHeader = (PKSSTREAM_HEADER)
-            m_Irp->AssociatedIrp.SystemBuffer;
+        
+        if(m_Irp) {
+            m_StreamHeaderIndex = 0;
+            m_CurStreamHeader = (PKSSTREAM_HEADER)m_Irp->AssociatedIrp.SystemBuffer;
+        }
     }
 
     // check if there is an irp
@@ -355,18 +360,18 @@ CIrpQueue2::GetMappingWithTag(
     StreamData = (PKSSTREAM_DATA)m_Irp->Tail.Overlay.DriverContext[STREAM_DATA_OFFSET];
 
     // sanity check
-    PC_ASSERT(StreamData->StreamHeaderIndex < StreamData->StreamHeaderCount);
+    PC_ASSERT(m_StreamHeaderIndex < StreamData->StreamHeaderCount);
 
     // setup mapping
-    *PhysicalAddress = MmGetPhysicalAddress(StreamData->Tags[StreamData->StreamHeaderIndex].Data);
-    *VirtualAddress = StreamData->Tags[StreamData->StreamHeaderIndex].Data;
+    *PhysicalAddress = MmGetPhysicalAddress(StreamData->Tags[m_StreamHeaderIndex].Data);
+    *VirtualAddress = StreamData->Tags[m_StreamHeaderIndex].Data;
 
     // store tag in irp
-    StreamData->Tags[StreamData->StreamHeaderIndex].Tag = Tag;
-    StreamData->Tags[StreamData->StreamHeaderIndex].Used = TRUE;
+    StreamData->Tags[m_StreamHeaderIndex].Tag = Tag;
+    StreamData->Tags[m_StreamHeaderIndex].Used = TRUE;
 
     // increment header index
-    StreamData->StreamHeaderIndex++;
+    m_StreamHeaderIndex++;
 
     // mapping size
     if (m_Descriptor->DataFlow == KSPIN_DATAFLOW_IN)
@@ -386,7 +391,7 @@ CIrpQueue2::GetMappingWithTag(
         m_NumDataAvailable -= m_CurStreamHeader->FrameExtent;
     }
 
-    if (StreamData->StreamHeaderIndex == StreamData->StreamHeaderCount)
+    if (m_StreamHeaderIndex == StreamData->StreamHeaderCount)
     {
         // last mapping
         *Flags = 1;
@@ -429,10 +434,10 @@ CIrpQueue2::ReleaseMappingWithTag(
         // now check if there are already used mappings
         StreamData = (PKSSTREAM_DATA)m_Irp->Tail.Overlay.DriverContext[STREAM_DATA_OFFSET];
 
-        if (StreamData->StreamHeaderIndex)
+        if (m_StreamHeaderIndex)
         {
             // check if the released mapping is one current processed irps
-            for(Index = 0; Index < StreamData->StreamHeaderIndex; Index++)
+            for(Index = 0; Index < m_StreamHeaderIndex; Index++)
             {
                 // check if it is the same tag
                 if ((StreamData->Tags[Index].Tag == Tag) && 
@@ -468,9 +473,6 @@ CIrpQueue2::ReleaseMappingWithTag(
     // get stream data
     StreamData = (PKSSTREAM_DATA)Irp->Tail.Overlay.DriverContext[STREAM_DATA_OFFSET];
 
-    // sanity check
-    PC_ASSERT(StreamData->StreamHeaderIndex == StreamData->StreamHeaderCount);
-
     // check if the released mapping is one of these
     for(Index = 0; Index < StreamData->StreamHeaderCount; Index++)
     {
@@ -505,9 +507,6 @@ CIrpQueue2::ReleaseMappingWithTag(
         {
             // looped buffers are not completed when they have been played
             // they are completed when the stream is set to stop
-
-            // reset stream header index
-            StreamData->StreamHeaderIndex = 0;
 
             // increment available data
             InterlockedExchangeAdd((PLONG)&m_NumDataAvailable, StreamData->TotalStreamData);
@@ -601,7 +600,7 @@ NewIrpQueue2(
     if (!This)
         return STATUS_INSUFFICIENT_RESOURCES;
         
-    DbgPrint("--------------- sdfsdfsdf --------------\n");
+    DbgPrint("--------------- kkkkkkkkkkk --------------\n");
 
     This->AddRef();
 
