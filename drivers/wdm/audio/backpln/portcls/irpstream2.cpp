@@ -51,6 +51,7 @@ protected:
     BOOLEAN m_OutOfMapping;
     ULONG m_MaxFrameSize;
     ULONG m_Alignment;
+    PKSSTREAM_HEADER m_CurStreamHeader;
 
     volatile ULONG m_NumDataAvailable;
 
@@ -72,8 +73,6 @@ typedef struct
     ULONG StreamHeaderCount;
     ULONG StreamHeaderIndex;
     ULONG TotalStreamData;
-
-    PKSSTREAM_HEADER CurStreamHeader;
     
     PKSSTREAM_TAG Tags;
 }KSSTREAM_DATA, *PKSSTREAM_DATA;
@@ -166,9 +165,6 @@ CIrpQueue2::AddMapping(
 
     // get first stream header
     Header = (PKSSTREAM_HEADER)Irp->AssociatedIrp.SystemBuffer;
-
-    // store header
-    StreamData->CurStreamHeader = Header;
 
     // sanity check
     PC_ASSERT(Header);
@@ -342,6 +338,8 @@ CIrpQueue2::GetMappingWithTag(
     {
         // get an irp from the queue
         m_Irp = KsRemoveIrpFromCancelableQueue(&m_IrpList, &m_IrpListLock, KsListEntryHead, KsAcquireAndRemoveOnlySingleItem);
+        if(m_Irp) m_CurStreamHeader = (PKSSTREAM_HEADER)
+            m_Irp->AssociatedIrp.SystemBuffer;
     }
 
     // check if there is an irp
@@ -374,18 +372,18 @@ CIrpQueue2::GetMappingWithTag(
     if (m_Descriptor->DataFlow == KSPIN_DATAFLOW_IN)
     {
         // sink pin
-        *ByteCount = StreamData->CurStreamHeader->DataUsed;
+        *ByteCount = m_CurStreamHeader->DataUsed;
 
         // decrement num data available
-        m_NumDataAvailable -= StreamData->CurStreamHeader->DataUsed;
+        m_NumDataAvailable -= m_CurStreamHeader->DataUsed;
     }
     else
     {
         // source pin
-        *ByteCount = StreamData->CurStreamHeader->FrameExtent;
+        *ByteCount = m_CurStreamHeader->FrameExtent;
 
         // decrement num data available
-        m_NumDataAvailable -= StreamData->CurStreamHeader->FrameExtent;
+        m_NumDataAvailable -= m_CurStreamHeader->FrameExtent;
     }
 
     if (StreamData->StreamHeaderIndex == StreamData->StreamHeaderCount)
@@ -406,7 +404,7 @@ CIrpQueue2::GetMappingWithTag(
         *Flags = 0;
 
         // move to next header
-        StreamData->CurStreamHeader = (PKSSTREAM_HEADER)((ULONG_PTR)StreamData->CurStreamHeader + StreamData->CurStreamHeader->Size);
+        m_CurStreamHeader = (PKSSTREAM_HEADER)((ULONG_PTR)m_CurStreamHeader + m_CurStreamHeader->Size);
     }
 
     DPRINT("GetMappingWithTag Tag %p Buffer %p Flags %lu ByteCount %lx\n", Tag, VirtualAddress, *Flags, *ByteCount);
@@ -511,9 +509,6 @@ CIrpQueue2::ReleaseMappingWithTag(
             // reset stream header index
             StreamData->StreamHeaderIndex = 0;
 
-            // reset stream header
-            StreamData->CurStreamHeader = (PKSSTREAM_HEADER)Irp->AssociatedIrp.SystemBuffer;
-
             // increment available data
             InterlockedExchangeAdd((PLONG)&m_NumDataAvailable, StreamData->TotalStreamData);
 
@@ -605,6 +600,8 @@ NewIrpQueue2(
     CIrpQueue2 *This = new(NonPagedPool, TAG_PORTCLASS)CIrpQueue2(NULL);
     if (!This)
         return STATUS_INSUFFICIENT_RESOURCES;
+        
+    DbgPrint("--------------- sdfsdfsdf --------------\n");
 
     This->AddRef();
 
