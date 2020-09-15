@@ -54,7 +54,6 @@ protected:
     ULONG m_Alignment;
     
     ULONG m_StreamHeaderIndex;
-    PKSSTREAM_HEADER m_CurStreamHeader;
 
     volatile PIRP m_Irp;
     volatile LONG m_Ref;
@@ -65,6 +64,7 @@ typedef struct
     PVOID Tag;
     UCHAR Used;
     PVOID Data;
+    LONG Length;
     
     
 }KSSTREAM_TAG, *PKSSTREAM_TAG;
@@ -232,6 +232,15 @@ CIrpQueue2::AddMapping(
             // done
             return STATUS_INSUFFICIENT_RESOURCES;
         }
+        
+        if (m_Descriptor->DataFlow == KSPIN_DATAFLOW_IN)
+        {
+            StreamData->Tags[Index].Length = Header->DataUsed;
+        }
+        else if (m_Descriptor->DataFlow == KSPIN_DATAFLOW_OUT)
+        {
+            StreamData->Tags[Index].Length = Header->FrameExtent;
+        }
 
         // move to next header / mdl
         Mdl = Mdl->Next;
@@ -329,7 +338,6 @@ CIrpQueue2::GetMappingWithTag(
         
         if(m_Irp) {
             m_StreamHeaderIndex = 0;
-            m_CurStreamHeader = (PKSSTREAM_HEADER)m_Irp->AssociatedIrp.SystemBuffer;
         }
     }
 
@@ -356,20 +364,11 @@ CIrpQueue2::GetMappingWithTag(
     StreamData->Tags[m_StreamHeaderIndex].Tag = Tag;
     StreamData->Tags[m_StreamHeaderIndex].Used = TRUE;
 
+    // mapping size
+    *ByteCount = StreamData->Tags[m_StreamHeaderIndex].Length;
+    
     // increment header index
     m_StreamHeaderIndex++;
-
-    // mapping size
-    if (m_Descriptor->DataFlow == KSPIN_DATAFLOW_IN)
-    {
-        // sink pin
-        *ByteCount = m_CurStreamHeader->DataUsed;
-    }
-    else
-    {
-        // source pin
-        *ByteCount = m_CurStreamHeader->FrameExtent;
-    }
 
     if (m_StreamHeaderIndex == StreamData->StreamHeaderCount)
     {
@@ -387,9 +386,6 @@ CIrpQueue2::GetMappingWithTag(
     {
         // one more mapping in the irp
         *Flags = 0;
-
-        // move to next header
-        m_CurStreamHeader = (PKSSTREAM_HEADER)((ULONG_PTR)m_CurStreamHeader + m_CurStreamHeader->Size);
     }
     
     
@@ -583,7 +579,7 @@ NewIrpQueue2(
     if (!This)
         return STATUS_INSUFFICIENT_RESOURCES;
         
-    DbgPrint("--------------- aaaaaaaa --------------\n");
+    DbgPrint("--------------- NewIrpQueue2: " __TIME__ " --------------\n");
 
     This->AddRef();
 
