@@ -302,7 +302,9 @@ BOOL CMainWindow::UninstallSelectedApp(BOOL bModify)
         return FALSE;
 
     CInstalledApplicationInfo *InstalledApp = (CInstalledApplicationInfo *)m_ApplicationView->GetFocusedItemData();
-    if (!InstalledApp) return FALSE;
+    if (!InstalledApp)
+        return FALSE;
+
     return InstalledApp->UninstallApplication(bModify);
 }
 
