@@ -1816,7 +1816,9 @@ VOID CApplicationView::OnCommand(WPARAM wParam, LPARAM lParam)
                         m_ComboBox->SendMessageW(CB_SETCURSEL, nLastCusMode);
                 }
                 else
+                {
                     nLastCusMode = CurrSelection;
+                }
                 break;
             }
 
