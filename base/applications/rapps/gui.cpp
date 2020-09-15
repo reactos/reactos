@@ -278,20 +278,19 @@ BOOL CMainWindow::RemoveSelectedAppFromRegistry()
     if (MessageBoxW(szMsgText, szMsgTitle, MB_YESNO | MB_ICONQUESTION) == IDYES)
     {
         CInstalledApplicationInfo *InstalledApp = (CInstalledApplicationInfo *)m_ApplicationView->GetFocusedItemData();
-        if (InstalledApp)
-        {
-            LSTATUS Result = InstalledApp->RemoveFromRegistry();
-            if (Result != ERROR_SUCCESS)
-            {
-                // TODO: popup a messagebox telling user it fails somehow
-                return FALSE;
-            }
-
-            // as it's already removed form registry, this will also remove it from the list
-            UpdateApplicationsList(-1);
-            return TRUE;
-        }
+        if (!InstalledApp)
             return FALSE;
+        
+        LSTATUS Result = InstalledApp->RemoveFromRegistry();
+        if (Result != ERROR_SUCCESS)
+        {
+            // TODO: popup a messagebox telling user it fails somehow
+            return FALSE;
+        }
+
+        // as it's already removed form registry, this will also remove it from the list
+        UpdateApplicationsList(-1);
+        return TRUE;
     }
 
     return FALSE;
