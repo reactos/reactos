@@ -73,7 +73,7 @@ typedef struct
 {
     ULONG StreamHeaderCount;
 
-    PKSSTREAM_TAG Tags;
+    KSSTREAM_TAG Tags[];
 }KSSTREAM_DATA, *PKSSTREAM_DATA;
 
 #define STREAM_DATA_OFFSET   (0)
@@ -129,16 +129,9 @@ CIrpQueue2::AddMapping(
     PMDL Mdl;
     PKSSTREAM_DATA StreamData;
     LONG TotalStreamData;
+    LONG StreamHeaderCount;
 
     PC_ASSERT(KeGetCurrentIrql() == PASSIVE_LEVEL);
-
-    // allocate stream data
-    StreamData = (PKSSTREAM_DATA)AllocateItem(NonPagedPool, sizeof(KSSTREAM_DATA), TAG_PORTCLASS);
-    if (!StreamData)
-    {
-        // not enough memory
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
 
     // get current irp stack location
     IoStack = IoGetCurrentIrpStackLocation(Irp);
@@ -158,8 +151,6 @@ CIrpQueue2::AddMapping(
     // check for success
     if (!NT_SUCCESS(Status))
     {
-        // irp probing failed
-        FreeItem(StreamData, TAG_PORTCLASS);
         return Status;
     }
 
@@ -173,6 +164,7 @@ CIrpQueue2::AddMapping(
     Length = IoStack->Parameters.DeviceIoControl.OutputBufferLength;
     
     TotalStreamData = 0;
+    StreamHeaderCount = 0;
 
     do
     {
@@ -180,7 +172,7 @@ CIrpQueue2::AddMapping(
         Length -= Header->Size;
 
         /* increment header count */
-        StreamData->StreamHeaderCount++;
+        StreamHeaderCount++;
 
         if (m_Descriptor->DataFlow == KSPIN_DATAFLOW_IN)
         {
@@ -199,19 +191,18 @@ CIrpQueue2::AddMapping(
     }while(Length);
 
     // sanity check
-    ASSERT(StreamData->StreamHeaderCount);
+    ASSERT(StreamHeaderCount);
 
-    // allocate array for storing the pointers of the data */
-    StreamData->Tags = (PKSSTREAM_TAG)AllocateItem(NonPagedPool, sizeof(KSSTREAM_TAG) * StreamData->StreamHeaderCount, TAG_PORTCLASS);
-    if (!StreamData->Tags)
+    // allocate stream data
+    StreamData = (PKSSTREAM_DATA)AllocateItem(NonPagedPool, sizeof(KSSTREAM_DATA) + 
+        sizeof(KSSTREAM_TAG) * StreamHeaderCount, TAG_PORTCLASS);
+    if (!StreamData)
     {
-        // out of memory
-        FreeItem(StreamData, TAG_PORTCLASS);
-
         // done
         return STATUS_INSUFFICIENT_RESOURCES;
     }
-
+    
+    StreamData->StreamHeaderCount = StreamHeaderCount;
 
     // now get a system address for the user buffers
     Header = (PKSSTREAM_HEADER)Irp->AssociatedIrp.SystemBuffer;
@@ -225,9 +216,6 @@ CIrpQueue2::AddMapping(
         /* check for success */
         if (!StreamData->Tags[Index].Data)
         {
-            // free tag array
-            FreeItem(StreamData->Tags, TAG_PORTCLASS);
-
             FreeItem(StreamData, TAG_PORTCLASS);
             // done
             return STATUS_INSUFFICIENT_RESOURCES;
@@ -500,9 +488,6 @@ CIrpQueue2::ReleaseMappingWithTag(
         //
         // time to complete non looped buffer
         //
-
-        // free stream tags array
-        FreeItem(StreamData->Tags, TAG_PORTCLASS);
 
         // free stream data
         FreeItem(StreamData, TAG_PORTCLASS);
