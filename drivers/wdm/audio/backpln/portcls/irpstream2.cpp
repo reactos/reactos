@@ -71,7 +71,7 @@ typedef struct
 
 typedef struct
 {
-    ULONG StreamHeaderCount;
+    ULONG nTags;
 
     KSSTREAM_TAG Tags[];
 }KSSTREAM_DATA, *PKSSTREAM_DATA;
@@ -125,11 +125,12 @@ CIrpQueue2::AddMapping(
     PKSSTREAM_HEADER Header;
     NTSTATUS Status = STATUS_UNSUCCESSFUL;
     PIO_STACK_LOCATION IoStack;
-    ULONG Index, Length;
+    ULONG Length;
     PMDL Mdl;
     PKSSTREAM_DATA StreamData;
     LONG TotalStreamData;
-    LONG StreamHeaderCount;
+    LONG StreamPageCount;
+    LONG HeaderLength;
 
     PC_ASSERT(KeGetCurrentIrql() == PASSIVE_LEVEL);
 
@@ -162,59 +163,63 @@ CIrpQueue2::AddMapping(
 
     // first calculate the numbers of stream headers
     Length = IoStack->Parameters.DeviceIoControl.OutputBufferLength;
+    Mdl = Irp->MdlAddress;
     
     TotalStreamData = 0;
-    StreamHeaderCount = 0;
+    StreamPageCount = 0;
 
     do
     {
         /* subtract size */
         Length -= Header->Size;
 
-        /* increment header count */
-        StreamHeaderCount++;
-
         if (m_Descriptor->DataFlow == KSPIN_DATAFLOW_IN)
         {
             // irp sink
             TotalStreamData += Header->DataUsed;
+            HeaderLength = Header->DataUsed;
         }
         else
         {
             // irp source
             TotalStreamData += Header->FrameExtent;
+            HeaderLength = Header->DataUsed;
         }
+        
+        // append page count
+        StreamPageCount += ADDRESS_AND_SIZE_TO_SPAN_PAGES(
+            MmGetMdlByteOffset(Mdl), HeaderLength);
 
-        /* move to next header */
+        // move to next header / mdl
+        Mdl = Mdl->Next;
         Header = (PKSSTREAM_HEADER)((ULONG_PTR)Header + Header->Size);
 
     }while(Length);
 
-    // sanity check
-    ASSERT(StreamHeaderCount);
-
     // allocate stream data
     StreamData = (PKSSTREAM_DATA)AllocateItem(NonPagedPool, sizeof(KSSTREAM_DATA) + 
-        sizeof(KSSTREAM_TAG) * StreamHeaderCount, TAG_PORTCLASS);
+        sizeof(KSSTREAM_TAG) * StreamPageCount, TAG_PORTCLASS);
     if (!StreamData)
     {
         // done
         return STATUS_INSUFFICIENT_RESOURCES;
     }
-    
-    StreamData->StreamHeaderCount = StreamHeaderCount;
 
     // now get a system address for the user buffers
     Header = (PKSSTREAM_HEADER)Irp->AssociatedIrp.SystemBuffer;
+    Length = IoStack->Parameters.DeviceIoControl.OutputBufferLength;
     Mdl = Irp->MdlAddress;
     
-    for(Index = 0; Index < StreamData->StreamHeaderCount; Index++)
+    do
     {
+        /* subtract size */
+        Length -= Header->Size;    
+
         /* get system address */
-        StreamData->Tags[Index].Data = MmGetSystemAddressForMdlSafe(Mdl, NormalPagePriority);
+        char* Data = (char*)MmGetSystemAddressForMdlSafe(Mdl, NormalPagePriority);
 
         /* check for success */
-        if (!StreamData->Tags[Index].Data)
+        if (!Data)
         {
             FreeItem(StreamData, TAG_PORTCLASS);
             // done
@@ -223,17 +228,35 @@ CIrpQueue2::AddMapping(
         
         if (m_Descriptor->DataFlow == KSPIN_DATAFLOW_IN)
         {
-            StreamData->Tags[Index].Length = Header->DataUsed;
+            HeaderLength = Header->DataUsed;
         }
         else if (m_Descriptor->DataFlow == KSPIN_DATAFLOW_OUT)
         {
-            StreamData->Tags[Index].Length = Header->FrameExtent;
+            HeaderLength = Header->DataUsed;
+        }
+        
+        // append pages
+        while(HeaderLength) 
+        {
+            char* NextData = (char*)ROUND_TO_PAGES(Data+1);
+            LONG PageSize = NextData - Data;
+            
+            if(PageSize > HeaderLength) 
+                PageSize = HeaderLength;
+            HeaderLength -= PageSize;
+            
+            StreamData->Tags[StreamData->nTags].Data = Data;
+            StreamData->Tags[StreamData->nTags].Length = PageSize;
+            StreamData->nTags++;
+            
+            Data = NextData;
         }
 
         // move to next header / mdl
         Mdl = Mdl->Next;
         Header = (PKSSTREAM_HEADER)((ULONG_PTR)Header + Header->Size);
-    }
+        
+    }while(Length);
 
     // store stream data
     Irp->Tail.Overlay.DriverContext[STREAM_DATA_OFFSET] = (PVOID)StreamData;
@@ -342,7 +365,7 @@ CIrpQueue2::GetMappingWithTag(
     StreamData = (PKSSTREAM_DATA)m_Irp->Tail.Overlay.DriverContext[STREAM_DATA_OFFSET];
 
     // sanity check
-    PC_ASSERT(m_StreamHeaderIndex < StreamData->StreamHeaderCount);
+    PC_ASSERT(m_StreamHeaderIndex < StreamData->nTags);
 
     // setup mapping
 
@@ -358,7 +381,7 @@ CIrpQueue2::GetMappingWithTag(
     // increment header index
     m_StreamHeaderIndex++;
 
-    if (m_StreamHeaderIndex == StreamData->StreamHeaderCount)
+    if (m_StreamHeaderIndex == StreamData->nTags)
     {
         // last mapping
         *Flags = 1;
@@ -444,7 +467,7 @@ CIrpQueue2::ReleaseMappingWithTag(
     StreamData = (PKSSTREAM_DATA)Irp->Tail.Overlay.DriverContext[STREAM_DATA_OFFSET];
 
     // check if the released mapping is one of these
-    for(Index = 0; Index < StreamData->StreamHeaderCount; Index++)
+    for(Index = 0; Index < StreamData->nTags; Index++)
     {
         if ((StreamData->Tags[Index].Tag == Tag) &&
             (StreamData->Tags[Index].Used != FALSE))
@@ -469,7 +492,7 @@ CIrpQueue2::ReleaseMappingWithTag(
     }
 
     // check if this is the last one released mapping
-    if (Index + 1 == StreamData->StreamHeaderCount)
+    if (Index + 1 == StreamData->nTags)
     {
         // last mapping released
         // now check if this is a looped buffer
