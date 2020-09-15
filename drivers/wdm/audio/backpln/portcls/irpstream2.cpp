@@ -62,6 +62,9 @@ typedef struct
 {
     PVOID Tag;
     UCHAR Used;
+    PVOID Data;
+    
+    
 }KSSTREAM_TAG, *PKSSTREAM_TAG;
 
 typedef struct
@@ -71,7 +74,7 @@ typedef struct
     ULONG TotalStreamData;
 
     PKSSTREAM_HEADER CurStreamHeader;
-    PVOID * Data;
+    
     PKSSTREAM_TAG Tags;
 }KSSTREAM_DATA, *PKSSTREAM_DATA;
 
@@ -201,22 +204,10 @@ CIrpQueue2::AddMapping(
     ASSERT(StreamData->StreamHeaderCount);
 
     // allocate array for storing the pointers of the data */
-    StreamData->Data = (PVOID*)AllocateItem(NonPagedPool, sizeof(PVOID) * StreamData->StreamHeaderCount, TAG_PORTCLASS);
-    if (!StreamData->Data)
-    {
-        // out of memory
-        FreeItem(StreamData, TAG_PORTCLASS);
-
-        // done
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
-
-    // allocate array for storing the pointers of the data */
     StreamData->Tags = (PKSSTREAM_TAG)AllocateItem(NonPagedPool, sizeof(KSSTREAM_TAG) * StreamData->StreamHeaderCount, TAG_PORTCLASS);
-    if (!StreamData->Data)
+    if (!StreamData->Tags)
     {
         // out of memory
-        FreeItem(StreamData->Data, TAG_PORTCLASS);
         FreeItem(StreamData, TAG_PORTCLASS);
 
         // done
@@ -231,14 +222,11 @@ CIrpQueue2::AddMapping(
     for(Index = 0; Index < StreamData->StreamHeaderCount; Index++)
     {
         /* get system address */
-        StreamData->Data[Index] = MmGetSystemAddressForMdlSafe(Mdl, NormalPagePriority);
+        StreamData->Tags[Index].Data = MmGetSystemAddressForMdlSafe(Mdl, NormalPagePriority);
 
         /* check for success */
-        if (!StreamData->Data[Index])
+        if (!StreamData->Tags[Index].Data)
         {
-            // out of resources
-            FreeItem(StreamData->Data, TAG_PORTCLASS);
-
             // free tag array
             FreeItem(StreamData->Tags, TAG_PORTCLASS);
 
@@ -372,8 +360,8 @@ CIrpQueue2::GetMappingWithTag(
     PC_ASSERT(StreamData->StreamHeaderIndex < StreamData->StreamHeaderCount);
 
     // setup mapping
-    *PhysicalAddress = MmGetPhysicalAddress(StreamData->Data[StreamData->StreamHeaderIndex]);
-    *VirtualAddress = StreamData->Data[StreamData->StreamHeaderIndex];
+    *PhysicalAddress = MmGetPhysicalAddress(StreamData->Tags[StreamData->StreamHeaderIndex].Data);
+    *VirtualAddress = StreamData->Tags[StreamData->StreamHeaderIndex].Data;
 
     // store tag in irp
     StreamData->Tags[StreamData->StreamHeaderIndex].Tag = Tag;
@@ -539,9 +527,6 @@ CIrpQueue2::ReleaseMappingWithTag(
         //
         // time to complete non looped buffer
         //
-
-        // free stream data array
-        FreeItem(StreamData->Data, TAG_PORTCLASS);
 
         // free stream tags array
         FreeItem(StreamData->Tags, TAG_PORTCLASS);
