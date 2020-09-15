@@ -45,6 +45,7 @@ protected:
     PKSPIN_DESCRIPTOR m_Descriptor;
 
     KSPIN_LOCK m_IrpListLock;
+    KSPIN_LOCK m_QueueLock;
     LIST_ENTRY m_IrpList;
     LIST_ENTRY m_FreeIrpList;
 
@@ -54,8 +55,6 @@ protected:
     
     ULONG m_StreamHeaderIndex;
     PKSSTREAM_HEADER m_CurStreamHeader;
-
-    volatile ULONG m_NumDataAvailable;
 
     volatile PIRP m_Irp;
     volatile LONG m_Ref;
@@ -216,7 +215,7 @@ CIrpQueue2::AddMapping(
     // now get a system address for the user buffers
     Header = (PKSSTREAM_HEADER)Irp->AssociatedIrp.SystemBuffer;
     Mdl = Irp->MdlAddress;
-
+    
     for(Index = 0; Index < StreamData->StreamHeaderCount; Index++)
     {
         /* get system address */
@@ -233,21 +232,9 @@ CIrpQueue2::AddMapping(
             return STATUS_INSUFFICIENT_RESOURCES;
         }
 
-        if (m_Descriptor->DataFlow == KSPIN_DATAFLOW_IN)
-        {
-            // increment available data
-            InterlockedExchangeAdd((PLONG)&m_NumDataAvailable, Header->DataUsed);
-        }
-        else if (m_Descriptor->DataFlow == KSPIN_DATAFLOW_OUT)
-        {
-            // increment available data
-            InterlockedExchangeAdd((PLONG)&m_NumDataAvailable, Header->FrameExtent);
-        }
-
         // move to next header / mdl
         Mdl = Mdl->Next;
         Header = (PKSSTREAM_HEADER)((ULONG_PTR)Header + Header->Size);
-
     }
 
     // store stream data
@@ -291,7 +278,8 @@ NTAPI
 CIrpQueue2::NumData()
 {
     // returns the amount of audio stream data available
-    return m_NumDataAvailable;
+    ASSERT(0);
+    return 0;
 }
 
 BOOL
@@ -311,9 +299,6 @@ CIrpQueue2::CancelBuffers()
 
     // cancel all irps
     KsCancelIo(&m_IrpList, &m_IrpListLock);
-
-    // reset number of data available
-    m_NumDataAvailable = 0;
 
     // done
     return TRUE;
@@ -363,7 +348,7 @@ CIrpQueue2::GetMappingWithTag(
     PC_ASSERT(m_StreamHeaderIndex < StreamData->StreamHeaderCount);
 
     // setup mapping
-    *PhysicalAddress = MmGetPhysicalAddress(StreamData->Tags[m_StreamHeaderIndex].Data);
+
     *VirtualAddress = StreamData->Tags[m_StreamHeaderIndex].Data;
 
     // store tag in irp
@@ -378,17 +363,11 @@ CIrpQueue2::GetMappingWithTag(
     {
         // sink pin
         *ByteCount = m_CurStreamHeader->DataUsed;
-
-        // decrement num data available
-        m_NumDataAvailable -= m_CurStreamHeader->DataUsed;
     }
     else
     {
         // source pin
         *ByteCount = m_CurStreamHeader->FrameExtent;
-
-        // decrement num data available
-        m_NumDataAvailable -= m_CurStreamHeader->FrameExtent;
     }
 
     if (m_StreamHeaderIndex == StreamData->StreamHeaderCount)
@@ -411,6 +390,12 @@ CIrpQueue2::GetMappingWithTag(
         // move to next header
         m_CurStreamHeader = (PKSSTREAM_HEADER)((ULONG_PTR)m_CurStreamHeader + m_CurStreamHeader->Size);
     }
+    
+    
+    
+    
+    // get physical address
+    *PhysicalAddress = MmGetPhysicalAddress(*VirtualAddress);
 
     DPRINT("GetMappingWithTag Tag %p Buffer %p Flags %lu ByteCount %lx\n", Tag, VirtualAddress, *Flags, *ByteCount);
     // done
@@ -508,9 +493,6 @@ CIrpQueue2::ReleaseMappingWithTag(
             // looped buffers are not completed when they have been played
             // they are completed when the stream is set to stop
 
-            // increment available data
-            InterlockedExchangeAdd((PLONG)&m_NumDataAvailable, StreamData->TotalStreamData);
-
             // re-insert irp
             KsAddIrpToCancelableQueue(&m_IrpList, &m_IrpListLock, Irp, KsListEntryTail, NULL);
 
@@ -600,7 +582,7 @@ NewIrpQueue2(
     if (!This)
         return STATUS_INSUFFICIENT_RESOURCES;
         
-    DbgPrint("--------------- kkkkkkkkkkk --------------\n");
+    DbgPrint("--------------- zzzzzzzzz --------------\n");
 
     This->AddRef();
 
