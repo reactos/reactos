@@ -72,9 +72,7 @@ typedef struct
 typedef struct
 {
     ULONG StreamHeaderCount;
-    
-    ULONG TotalStreamData;
-    
+
     PKSSTREAM_TAG Tags;
 }KSSTREAM_DATA, *PKSSTREAM_DATA;
 
@@ -130,6 +128,7 @@ CIrpQueue2::AddMapping(
     ULONG Index, Length;
     PMDL Mdl;
     PKSSTREAM_DATA StreamData;
+    LONG TotalStreamData;
 
     PC_ASSERT(KeGetCurrentIrql() == PASSIVE_LEVEL);
 
@@ -172,6 +171,8 @@ CIrpQueue2::AddMapping(
 
     // first calculate the numbers of stream headers
     Length = IoStack->Parameters.DeviceIoControl.OutputBufferLength;
+    
+    TotalStreamData = 0;
 
     do
     {
@@ -184,12 +185,12 @@ CIrpQueue2::AddMapping(
         if (m_Descriptor->DataFlow == KSPIN_DATAFLOW_IN)
         {
             // irp sink
-            StreamData->TotalStreamData += Header->DataUsed;
+            TotalStreamData += Header->DataUsed;
         }
         else
         {
             // irp source
-            StreamData->TotalStreamData += Header->FrameExtent;
+            TotalStreamData += Header->FrameExtent;
         }
 
         /* move to next header */
@@ -240,7 +241,7 @@ CIrpQueue2::AddMapping(
     // store stream data
     Irp->Tail.Overlay.DriverContext[STREAM_DATA_OFFSET] = (PVOID)StreamData;
 
-    *Data = StreamData->TotalStreamData;
+    *Data = TotalStreamData;
 
     // mark irp as pending
     IoMarkIrpPending(Irp);
@@ -582,7 +583,7 @@ NewIrpQueue2(
     if (!This)
         return STATUS_INSUFFICIENT_RESOURCES;
         
-    DbgPrint("--------------- zzzzzzzzz --------------\n");
+    DbgPrint("--------------- aaaaaaaa --------------\n");
 
     This->AddRef();
 
