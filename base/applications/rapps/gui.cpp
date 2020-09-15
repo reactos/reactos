@@ -278,6 +278,9 @@ BOOL CMainWindow::RemoveSelectedAppFromRegistry()
     if (MessageBoxW(szMsgText, szMsgTitle, MB_YESNO | MB_ICONQUESTION) == IDYES)
     {
         CInstalledApplicationInfo *InstalledApp = (CInstalledApplicationInfo *)m_ApplicationView->GetFocusedItemData();
+        if (!InstalledApp)
+            return FALSE;
+        
         LSTATUS Result = InstalledApp->RemoveFromRegistry();
         if (Result != ERROR_SUCCESS)
         {
@@ -299,6 +302,8 @@ BOOL CMainWindow::UninstallSelectedApp(BOOL bModify)
         return FALSE;
 
     CInstalledApplicationInfo *InstalledApp = (CInstalledApplicationInfo *)m_ApplicationView->GetFocusedItemData();
+    if (!InstalledApp)
+        return FALSE;
 
     return InstalledApp->UninstallApplication(bModify);
 }
