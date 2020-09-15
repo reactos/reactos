@@ -1807,9 +1807,9 @@ VOID CApplicationView::OnCommand(WPARAM wParam, LPARAM lParam)
                                    NULL,
                                    ERROR_INVALID_FUNCTION,
                                    MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-                                   (LPWSTR) &lpMsgBuf,
+                                   (LPWSTR)&lpMsgBuf,
                                    0,
-                                   NULL );
+                                   NULL);
                     MessageBoxW(lpMsgBuf, NULL, MB_OK | MB_ICONERROR);
                     LocalFree(lpMsgBuf);
                     if (CurrSelection != nLastCusMode) m_ComboBox->SendMessageW(CB_SETCURSEL, nLastCusMode);
@@ -2039,4 +2039,3 @@ BOOL CApplicationView::ItemCheckStateChanged(BOOL bChecked, LPVOID CallbackParam
     return TRUE;
 }
 // **** CApplicationView ****
-
