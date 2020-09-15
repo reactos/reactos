@@ -497,22 +497,22 @@ IsValidComputerName(COMPUTER_NAME_FORMAT NameType,
     if (lpComputerName == NULL)
         return FALSE;
 
-    /* get string length */
+    /* Get string length */
     if (!NT_SUCCESS(RtlStringCchLengthW(lpComputerName, NTSTRSAFE_MAX_CCH, &Length)))
         return FALSE;
 
-    /* the empty name is invalid, except the empty DNS name */
+    /* An empty name is invalid, except a DNS name */
     if (Length == 0 && NameType != ComputerNamePhysicalDnsDomain)
         return FALSE;
 
-    /* leading or trailing spaces are invalid */
+    /* Leading or trailing spaces are invalid */
     if (Length > 0 &&
         (lpComputerName[0] == L' ' || lpComputerName[Length - 1] == L' '))
     {
         return FALSE;
     }
 
-    /* check whether the name contains any invalid character */
+    /* Check whether the name contains any invalid character */
     if (wcscspn(lpComputerName, s_szInvalidChars) < Length)
         return FALSE;
 
@@ -524,7 +524,7 @@ IsValidComputerName(COMPUTER_NAME_FORMAT NameType,
             return TRUE;
 
         case ComputerNamePhysicalDnsDomain:
-            /* the empty DNS name is valid */
+            /* An empty DNS name is valid */
             if (Length != 0)
                 return BaseVerifyDnsName(lpComputerName);
             return TRUE;
@@ -590,7 +590,7 @@ SetComputerNameToRegistry(LPCWSTR RegistryKey,
     NtFlushKey(KeyHandle);
     NtClose(KeyHandle);
 
-    SetLastError(NO_ERROR);
+    SetLastError(ERROR_SUCCESS);
     return TRUE;
 }
 
