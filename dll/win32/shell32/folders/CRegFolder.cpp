@@ -41,14 +41,24 @@ HRESULT CALLBACK RegFolderContextMenuCallback(IShellFolder *psf,
 
     if (_ILIsMyComputer(apidl[0]))
     {
-        if (!SHRunControlPanel(L"sysdm.cpl", hwnd))
+        if (32 >= (UINT_PTR)ShellExecuteW(hwnd,
+                                          L"open",
+                                          L"rundll32.exe",
+                                          L"shell32.dll,Control_RunDLL sysdm.cpl",
+                                          NULL,
+                                          SW_SHOWNORMAL))
         {
             hr = E_FAIL;
         }
     }
     else if (_ILIsDesktop(apidl[0]))
     {
-        if (!SHRunControlPanel(L"desk.cpl", hwnd))
+        if (32 >= (UINT_PTR)ShellExecuteW(hwnd,
+                                          L"open",
+                                          L"rundll32.exe",
+                                          L"shell32.dll,Control_RunDLL desk.cpl",
+                                          NULL,
+                                          SW_SHOWNORMAL))
         {
             hr = E_FAIL;
         }

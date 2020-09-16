@@ -405,7 +405,7 @@ static void ie_dialog_about(HWND hwnd)
 #ifdef __REACTOS__
 static void ie_dialog_properties(HWND hwnd)
 {
-    SHRunControlPanel(L"inetcpl.cpl", NULL);
+    ShellExecuteW(hwnd, NULL, L"inetcpl.cpl", NULL, NULL, 0);
 }
 #endif
 

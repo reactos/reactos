@@ -755,7 +755,7 @@ ScreenSaverPageProc(HWND hwndDlg,
                 case IDC_SCREENS_POWER_BUTTON: // Start Powercfg.Cpl
                 {
                     if (command == BN_CLICKED)
-                        SHRunControlPanel(L"powercfg.cpl", hwndDlg);
+                        WinExec("rundll32 shell32.dll,Control_RunDLL powercfg.cpl",SW_SHOWNORMAL);
                     break;
                 }
 

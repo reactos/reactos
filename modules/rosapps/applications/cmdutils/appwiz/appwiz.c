@@ -33,7 +33,19 @@ APPWIZ [/? /l] [/all /app /upd]\n\
 
 void RunGUIAppWiz()
 {
-    SHRunControlPanel(L"appwiz.cpl", NULL);
+    SHELLEXECUTEINFO shInputDll;
+
+    memset(&shInputDll, 0x0, sizeof(SHELLEXECUTEINFO));
+    shInputDll.cbSize = sizeof(shInputDll);
+    shInputDll.hwnd = NULL;
+    shInputDll.lpVerb = _T("open");
+    shInputDll.lpFile = _T("RunDll32.exe");
+    shInputDll.lpParameters = _T("shell32.dll,Control_RunDLL appwiz.cpl");
+
+    if (ShellExecuteEx(&shInputDll) == 0)
+    {
+        MessageBox(NULL, _T("Can not start appwiz.cpl"), NULL, MB_OK | MB_ICONERROR);
+    }
 }
 
 void CallUninstall(LPTSTR szUninstallString)

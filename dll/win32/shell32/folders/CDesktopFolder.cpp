@@ -848,7 +848,8 @@ HRESULT WINAPI CDesktopFolder::CallBack(IShellFolder *psf, HWND hwndOwner, IData
     {
         if (uMsg == DFM_INVOKECOMMAND && wParam == 0)
         {
-            if (!SHRunControlPanel(L"desk.cpl", hwndOwner))
+            if (32 >= (UINT_PTR)ShellExecuteW(hwndOwner, L"open", L"rundll32.exe",
+                                              L"shell32.dll,Control_RunDLL desk.cpl", NULL, SW_SHOWNORMAL))
             {
                 return E_FAIL;
             }

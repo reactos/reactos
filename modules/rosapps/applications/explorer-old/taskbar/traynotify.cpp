@@ -526,7 +526,7 @@ int NotifyArea::Command(int id, int code)
 		break;
 
 	  case ID_CONFIG_TIME:
-		SHRunControlPanel(L"timedate.cpl", _hwnd);
+		launch_cpanel(_hwnd, TEXT("timedate.cpl"));
 		break;
 
 	  default:
@@ -1293,7 +1293,7 @@ LRESULT ClockWindow::WndProc(UINT nmsg, WPARAM wparam, LPARAM lparam)
 		break;
 
 	  case WM_LBUTTONDBLCLK:
-		SHRunControlPanel(L"timedate.cpl", _hwnd);
+		launch_cpanel(_hwnd, TEXT("timedate.cpl"));
 		break;
 
 	  default:

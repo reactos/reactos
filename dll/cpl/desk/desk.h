@@ -29,7 +29,7 @@
 #include "preview.h"
 #include "draw.h"
 #include "monslctl.h"
-#include <shellapi.h>
+
 #include "resource.h"
 
 typedef struct _APPLET

@@ -380,6 +380,17 @@ BOOL RunDLL(HWND hwnd, LPCTSTR dllname, LPCSTR procname, LPCTSTR cmdline, UINT n
 #define CONTROL_RUNDLL "Control_RunDLLA"
 #endif
 
+BOOL launch_cpanel(HWND hwnd, LPCTSTR applet)
+{
+	TCHAR parameters[MAX_PATH];
+	
+	_tcscpy(parameters, TEXT("shell32.dll,Control_RunDLL "));
+	_tcscat(parameters, applet);
+
+	return ((INT_PTR)ShellExecute(hwnd, TEXT("open"), TEXT("rundll32.exe"), parameters, NULL, SW_SHOWDEFAULT) > 32);
+}
+
+
 BOOL RecursiveCreateDirectory(LPCTSTR path_in)
 {
 	TCHAR path[MAX_PATH], hole_path[MAX_PATH];
