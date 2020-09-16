@@ -211,7 +211,12 @@ HRESULT CCopyToMenu::DoRealCopy(LPCMINVOKECOMMANDINFO lpici, LPCITEMIDLIST pidl)
     op.pFrom = strFiles;
     op.pTo = szPath;
     op.fFlags = FOF_ALLOWUNDO;
-    return ((SHFileOperation(&op) == 0) ? S_OK : E_FAIL);
+    if (SHFileOperation(&op) != 0)
+    {
+        ERR("SHFileOperation failed with 0x%x\n", GetLastError());
+        return E_FAIL;
+    }
+    return S_OK;
 }
 
 CStringW CCopyToMenu::DoGetFileTitle()

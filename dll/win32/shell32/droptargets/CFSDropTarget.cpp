@@ -75,7 +75,7 @@ HRESULT CFSDropTarget::_CopyItems(IShellFolder * pSFFrom, UINT cidl,
         return hr;
 
     pszSrcList = BuildPathsList(strretFrom.pOleStr, cidl, apidl);
-    ERR("Source file (just the first) = %s, target path = %s, bCopy: %d\n", debugstr_w(pszSrcList), debugstr_w(m_sPathTarget), bCopy);
+    TRACE("Source file (just the first) = %s, target path = %s, bCopy: %d\n", debugstr_w(pszSrcList), debugstr_w(m_sPathTarget), bCopy);
     CoTaskMemFree(strretFrom.pOleStr);
     if (!pszSrcList)
         return E_OUTOFMEMORY;
@@ -92,7 +92,10 @@ HRESULT CFSDropTarget::_CopyItems(IShellFolder * pSFFrom, UINT cidl,
     HeapFree(GetProcessHeap(), 0, pszSrcList);
 
     if (res)
+    {
+        ERR("SHFileOperation failed with 0x%x\n", GetLastError());
         return E_FAIL;
+    }
     else
         return S_OK;
 }
