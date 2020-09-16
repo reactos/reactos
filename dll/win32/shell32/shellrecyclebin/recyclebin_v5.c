@@ -503,9 +503,10 @@ RecycleBin5_RecycleBin5_Restore(
             op.pFrom = pDeletedFileName;
             op.pTo = pDeletedFile->FileNameW;
 
-            if (!SHFileOperationW(&op))
+            int res = SHFileOperationW(&op);
+            if (!res)
             {
-                ERR("SHFileOperationW failed with 0x%x\n", GetLastError());
+                ERR("SHFileOperationW failed with 0x%x\n", res);
                 UnmapViewOfFile(pHeader);
                 return HRESULT_FROM_WIN32(GetLastError());
             }
