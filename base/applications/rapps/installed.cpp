@@ -141,16 +141,34 @@ BOOL CInstalledApplicationInfo::UninstallApplication(BOOL bModify)
     return StartProcess(bModify ? szModifyPath : szUninstallString, TRUE);
 }
 
+typedef LSTATUS (WINAPI *RegDeleteKeyExWProc)(HKEY, LPCWSTR, REGSAM, DWORD);
+
 LSTATUS CInstalledApplicationInfo::RemoveFromRegistry()
 {
     ATL::CStringW szFullName = L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\" + szKeyName;
+    HMODULE hMod = GetModuleHandleW(L"advapi32.dll");
+    RegDeleteKeyExWProc pRegDeleteKeyExW;
 
-    // TODO: if there are subkeys inside, simply RegDeleteKeyExW will fail
+    // TODO: if there are subkeys inside, simply RegDeleteKeyExW
+    // (or RegDeleteKeyW on Server 2003 SP0 and earlier) will fail
     // we don't have RegDeleteTree for ReactOS now. (It's a WinVista API)
     // write a function to delete all subkeys recursively to solve this
     // or consider letting ReactOS having this API
 
-    return RegDeleteKeyExW(IsUserKey ? HKEY_CURRENT_USER : HKEY_LOCAL_MACHINE, szFullName, WowKey, 0);
+    /* Load RegDeleteKeyExW from advapi32.dll if available */
+    if (hMod)
+    {
+        pRegDeleteKeyExW = (RegDeleteKeyExWProc)GetProcAddress(hMod, "RegDeleteKeyExW");
+
+        if (pRegDeleteKeyExW)
+        {
+            /* Return it */
+            return pRegDeleteKeyExW(IsUserKey ? HKEY_CURRENT_USER : HKEY_LOCAL_MACHINE, szFullName, WowKey, 0);
+        }
+    }
+
+    /* Otherwise, return non-Ex function */
+    return RegDeleteKeyW(IsUserKey ? HKEY_CURRENT_USER : HKEY_LOCAL_MACHINE, szFullName);
 }
 
 BOOL CInstalledApps::Enum(INT EnumType, APPENUMPROC lpEnumProc, PVOID param)
