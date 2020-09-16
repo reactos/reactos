@@ -158,7 +158,6 @@ CMyDocsDropHandler::Drop(IDataObject *pDataObject, DWORD dwKeyState,
     fileop.pTo = szzDir;
     fileop.fFlags = FOF_ALLOWUNDO | FOF_FILESONLY | FOF_MULTIDESTFILES | FOF_NOCONFIRMMKDIR;
     hr = SHFileOperationW(&fileop);
-
     if (hr)
         ERR("SHFileOperationW failed with 0x%x\n", GetLastError());
 
