@@ -600,9 +600,9 @@ HRESULT CFSDropTarget::_DoDrop(IDataObject *pDataObject,
                     }
 
                     hr = ppf->Save(wszTarget, FALSE);
-					if (FAILED(hr))
-						break;
-					SHChangeNotify(SHCNE_CREATE, SHCNF_PATHW, wszTarget, NULL);
+                    if (FAILED(hr))
+                        break;
+                    SHChangeNotify(SHCNE_CREATE, SHCNF_PATHW, wszTarget, NULL);
                 }
                 else
                 {
@@ -639,9 +639,9 @@ HRESULT CFSDropTarget::_DoDrop(IDataObject *pDataObject,
                         break;
 
                     hr = ppf->Save(wszTarget, TRUE);
-					if (FAILED(hr))
-						break;
-					SHChangeNotify(SHCNE_CREATE, SHCNF_PATHW, wszTarget, NULL);
+                    if (FAILED(hr))
+                        break;
+                    SHChangeNotify(SHCNE_CREATE, SHCNF_PATHW, wszTarget, NULL);
                 }
             }
         }
@@ -683,9 +683,13 @@ HRESULT CFSDropTarget::_DoDrop(IDataObject *pDataObject,
             op.hwnd = m_hwndSite;
             op.wFunc = bCopy ? FO_COPY : FO_MOVE;
             op.fFlags = FOF_ALLOWUNDO | FOF_NOCONFIRMMKDIR;
-            hr = SHFileOperationW(&op);
-            if (hr)
-                ERR("SHFileOperationW failed with 0x%x\n", hr);
+            int res = SHFileOperationW(&op);
+            if (res)
+            {
+                ERR("SHFileOperationW failed with 0x%x\n", res);
+                hr = E_FAIL;
+            }
+            
             return hr;
         }
         ERR("Error calling GetData\n");
