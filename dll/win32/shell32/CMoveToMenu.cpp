@@ -178,9 +178,9 @@ HRESULT CMoveToMenu::DoRealMove(LPCMINVOKECOMMANDINFO lpici, LPCITEMIDLIST pidl)
     op.pFrom = strFiles;
     op.pTo = szPath;
     op.fFlags = FOF_ALLOWUNDO;
-    if (SHFileOperation(&op) != 0)
+    if (SHFileOperationW(&op) != 0)
     {
-        ERR("SHFileOperation failed with 0x%x\n", GetLastError());
+        ERR("SHFileOperationW failed with 0x%x\n", GetLastError());
         return E_FAIL;
     }
     return S_OK;

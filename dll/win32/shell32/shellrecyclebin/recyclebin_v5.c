@@ -505,6 +505,7 @@ RecycleBin5_RecycleBin5_Restore(
 
             if (!SHFileOperationW(&op))
             {
+                ERR("SHFileOperationW failed with 0x%x\n", GetLastError());
                 UnmapViewOfFile(pHeader);
                 return HRESULT_FROM_WIN32(GetLastError());
             }

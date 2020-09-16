@@ -157,7 +157,10 @@ CMyDocsDropHandler::Drop(IDataObject *pDataObject, DWORD dwKeyState,
     fileop.pFrom = pszzSrcList;
     fileop.pTo = szzDir;
     fileop.fFlags = FOF_ALLOWUNDO | FOF_FILESONLY | FOF_MULTIDESTFILES | FOF_NOCONFIRMMKDIR;
-    SHFileOperationW(&fileop);
+    hr = SHFileOperationW(&fileop);
+
+    if (hr)
+        ERR("SHFileOperationW failed with 0x%x\n", GetLastError());
 
     // unlock buffer
     strSrcList.ReleaseBuffer();

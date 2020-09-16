@@ -93,7 +93,7 @@ HRESULT CFSDropTarget::_CopyItems(IShellFolder * pSFFrom, UINT cidl,
 
     if (res)
     {
-        ERR("SHFileOperation failed with 0x%x\n", GetLastError());
+        ERR("SHFileOperationW failed with 0x%x\n", GetLastError());
         return E_FAIL;
     }
     else
@@ -684,6 +684,8 @@ HRESULT CFSDropTarget::_DoDrop(IDataObject *pDataObject,
             op.wFunc = bCopy ? FO_COPY : FO_MOVE;
             op.fFlags = FOF_ALLOWUNDO | FOF_NOCONFIRMMKDIR;
             hr = SHFileOperationW(&op);
+            if (hr)
+                ERR("SHFileOperationW failed with 0x%x\n", GetLastError());
             return hr;
         }
         ERR("Error calling GetData\n");
