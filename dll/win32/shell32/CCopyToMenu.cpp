@@ -212,7 +212,7 @@ HRESULT CCopyToMenu::DoRealCopy(LPCMINVOKECOMMANDINFO lpici, LPCITEMIDLIST pidl)
     op.pTo = szPath;
     op.fFlags = FOF_ALLOWUNDO;
     int res = SHFileOperationW(&op);
-    if (res != 0)
+    if (res)
     {
         ERR("SHFileOperationW failed with 0x%x\n", res);
         return E_FAIL;
