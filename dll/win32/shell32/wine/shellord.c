@@ -1386,7 +1386,7 @@ HRESULT WINAPI SHWinHelp(HWND hwnd, LPCWSTR pszHelp, UINT uCommand, ULONG_PTR dw
  *  SHRunControlPanel [SHELL32.161]
  *
  */
-BOOL WINAPI SHRunControlPanel (_In_opt_ LPCWSTR commandLine, _In_opt_ HWND parent)
+BOOL WINAPI SHRunControlPanel (_In_ LPCWSTR commandLine, _In_opt_ HWND parent)
 {
 #ifdef __REACTOS__
     //TODO: Run in-process when possible, (HKLM\Software\Microsoft\Windows\CurrentVersion\Explorer\ControlPanel\InProcCPLs), and possibly some extra rules,

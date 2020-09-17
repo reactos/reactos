@@ -618,12 +618,6 @@ SHEmptyRecycleBinW(
   _In_opt_ LPCWSTR pszRootPath,
   DWORD dwFlags);
 
-BOOL
-WINAPI
-SHRunControlPanel(
-  _In_ LPCWSTR lpcszCmdLine,
-  _In_opt_ HWND hwndMsgParent);
-
 BOOL WINAPI SHCreateProcessAsUserW(_Inout_ PSHCREATEPROCESSINFOW);
 
 DWORD
