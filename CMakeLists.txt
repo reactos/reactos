@@ -111,9 +111,6 @@ else()
     set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY NEVER)
     set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE NEVER)
 
-    #useful stuff!
-    include(CMakeParseArguments)
-
     if(DBG)
         add_definitions(-DDBG=1 -D_SEH_ENABLE_TRACE)
     else()
