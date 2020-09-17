@@ -621,8 +621,8 @@ SHEmptyRecycleBinW(
 BOOL
 WINAPI
 SHRunControlPanel(
-  _In_ LPCWSTR commandLine,
-  _In_opt_ HWND parent);
+  _In_ LPCWSTR lpcszCmdLine,
+  _In_opt_ HWND hwndMsgParent);
 
 BOOL WINAPI SHCreateProcessAsUserW(_Inout_ PSHCREATEPROCESSINFOW);
 
