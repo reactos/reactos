@@ -96,8 +96,7 @@ HRESULT CFSDropTarget::_CopyItems(IShellFolder * pSFFrom, UINT cidl,
         ERR("SHFileOperationW failed with 0x%x\n", res);
         return E_FAIL;
     }
-    else
-        return S_OK;
+    return S_OK;
 }
 
 CFSDropTarget::CFSDropTarget():
