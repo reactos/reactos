@@ -2,8 +2,7 @@
  * PROJECT:     Dr. Watson crash reporter
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     zh-TW resource file
- * TRANSLATOR:  Aobi Chan CL (eason066 [at] gmail [dot] com), 2020
- * COPYRIGHT:   Copyright 2018 William Kent (wjk011 [at] gmail [dot] com)
+ * COPYRIGHT:   Aobi Chan CL (eason066 [at] gmail [dot] com), 2020
  */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
