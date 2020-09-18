@@ -27,6 +27,12 @@ extern "C" {
 
 BOOL WINAPI SHAboutInfoA(LPSTR lpszDest, DWORD dwDestLen);
 BOOL WINAPI SHAboutInfoW(LPWSTR lpszDest, DWORD dwDestLen);
+#ifdef UNICODE
+#define SHAboutInfo SHAboutInfoW
+#else
+#define SHAboutInfo SHAboutInfoA
+#endif
+
 HRESULT WINAPI IUnknown_QueryStatus(IUnknown *lpUnknown, REFGUID pguidCmdGroup, ULONG cCmds, OLECMD *prgCmds, OLECMDTEXT* pCmdText);
 HRESULT WINAPI IUnknown_Exec(IUnknown* lpUnknown, REFGUID pguidCmdGroup, DWORD nCmdID, DWORD nCmdexecopt, VARIANT* pvaIn, VARIANT* pvaOut);
 LONG WINAPI SHSetWindowBits(HWND hwnd, INT offset, UINT wMask, UINT wFlags);
@@ -127,6 +133,11 @@ DWORD WINAPI SHGetValueGoodBootA(HKEY hkey, LPCSTR pSubKey, LPCSTR pValue,
                                  LPDWORD pwType, LPVOID pvData, LPDWORD pbData);
 DWORD WINAPI SHGetValueGoodBootW(HKEY hkey, LPCWSTR pSubKey, LPCWSTR pValue,
                                  LPDWORD pwType, LPVOID pvData, LPDWORD pbData);
+#ifdef UNICODE
+#define SHGetValueGoodBoot SHGetValueGoodBootW
+#else
+#define SHGetValueGoodBoot SHGetValueGoodBootA
+#endif
 
 int
 WINAPIV
