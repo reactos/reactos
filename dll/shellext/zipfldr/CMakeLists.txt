@@ -7,12 +7,8 @@ endif()
 remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
 
-add_definitions(
-    -D_ATL_NO_EXCEPTIONS)
-
 include_directories(
     ${REACTOS_SOURCE_DIR}/sdk/include/reactos/libs/zlib
-    ${REACTOS_SOURCE_DIR}/sdk/lib/atl
     ${REACTOS_SOURCE_DIR}/sdk/lib/3rdparty/zlib/contrib)
 
 spec2def(zipfldr.dll zipfldr.spec ADD_IMPORTLIB)
@@ -46,7 +42,7 @@ add_library(zipfldr MODULE
 
 
 set_module_type(zipfldr win32dll UNICODE)
-target_link_libraries(zipfldr minizip zlib uuid cpprt)
+target_link_libraries(zipfldr minizip zlib uuid cpprt atl_classes)
 set_target_cpp_properties(zipfldr WITH_EXCEPTIONS)
 add_importlibs(zipfldr oleaut32 ole32 shlwapi comctl32 shell32 user32 advapi32 msvcrt kernel32 ntdll)
 add_pch(zipfldr precomp.h SOURCE)

@@ -6,13 +6,6 @@ if(NOT MSVC)
     add_compile_flags_language("-std=c++11" "CXX")
 endif()
 
-include_directories(
-    ${REACTOS_SOURCE_DIR}/sdk/lib/atl
-    ${REACTOS_SOURCE_DIR})
-
-add_definitions(
-    -D_ATL_NO_EXCEPTIONS)
-
 spec2def(stobject.dll stobject.spec)
 
 file(GLOB_RECURSE stobject_rc_deps resources/*.*)
@@ -32,7 +25,7 @@ add_library(stobject MODULE
     ${CMAKE_CURRENT_BINARY_DIR}/stobject.def)
 
 set_module_type(stobject win32dll UNICODE)
-target_link_libraries(stobject uuid wine cpprt)
+target_link_libraries(stobject uuid wine cpprt atl_classes)
 
 add_importlibs(stobject
     setupapi

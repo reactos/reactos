@@ -5,7 +5,6 @@ if(NOT MSVC)
 endif()
 
 include_directories(
-    ${REACTOS_SOURCE_DIR}/sdk/lib/atl
     includes)
 
 list(APPEND SOURCE
@@ -16,8 +15,7 @@ list(APPEND SOURCE
     testlist.c)
 
 add_executable(browseui_apitest ${SOURCE})
-target_link_libraries(browseui_apitest uuid wine cpprt)
-
+target_link_libraries(browseui_apitest uuid wine cpprt atl_classes)
 set_target_cpp_properties(browseui_apitest WITH_EXCEPTIONS WITH_RTTI)
 set_module_type(browseui_apitest win32cui)
 add_importlibs(browseui_apitest advapi32 shell32 ole32 shlwapi msvcrt kernel32 ntdll)

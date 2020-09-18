@@ -1,11 +1,5 @@
 PROJECT(SHELL)
 
-add_definitions(
-    -D_ATL_NO_EXCEPTIONS)
-
-include_directories(
-    ${REACTOS_SOURCE_DIR}/sdk/lib/atl)
-
 spec2def(rshell.dll rshell.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
@@ -23,7 +17,8 @@ target_link_libraries(rshell
     shelldesktop
     uuid
     wine
-    cpprt)
+    cpprt
+    atl_classes)
 
 add_importlibs(rshell
     browseui
