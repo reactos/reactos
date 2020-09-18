@@ -111,6 +111,20 @@ else()
     set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY NEVER)
     set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE NEVER)
 
+    # Add our own target properties
+    # C++
+    define_property(TARGET PROPERTY WITH_CXX_EXCEPTIONS
+        BRIEF_DOCS "Enable C++ exceptions on this target"
+        FULL_DOCS [[
+Enables C++ exception handling.
+Enable this if the module uses try/catch or throw. You might also need this if you use a standard operator new (the one without nothrow).]])
+    define_property(TARGET PROPERTY WITH_CXX_RTTI
+        BRIEF_DOCS "Enable C++ RTTI on this target"
+        FULL_DOCS [[
+Enables run-time type information.
+Enable this if the module uses typeid or dynamic_cast. You will probably need to link yith cpprt as well, if you are not already using STL.]])
+
+
     if(DBG)
         add_definitions(-DDBG=1 -D_SEH_ENABLE_TRACE)
     else()

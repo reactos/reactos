@@ -1,6 +1,4 @@
 
-set_cpp(WITH_RUNTIME)
-
 include_directories(BEFORE
     include
     src/include
@@ -118,6 +116,7 @@ add_library(glu32 MODULE
     ${PCH_SKIP_SOURCE}
     glu32.rc
     ${CMAKE_CURRENT_BINARY_DIR}/glu32.def)
+target_link_libraries(glu32 cpprt)
 
 set_module_type(glu32 win32dll)
 

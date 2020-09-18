@@ -1,5 +1,4 @@
 
-set_cpp(WITH_RUNTIME WITH_EXCEPTIONS)
 if(NOT MSVC)
     # HACK: this should be enabled globally!
     add_compile_flags_language("-std=c++11" "CXX")
@@ -47,7 +46,8 @@ add_library(zipfldr MODULE
 
 
 set_module_type(zipfldr win32dll UNICODE)
-target_link_libraries(zipfldr minizip zlib uuid)
+target_link_libraries(zipfldr minizip zlib uuid cpprt)
+set_target_cpp_properties(zipfldr WITH_EXCEPTIONS)
 add_importlibs(zipfldr oleaut32 ole32 shlwapi comctl32 shell32 user32 advapi32 msvcrt kernel32 ntdll)
 add_pch(zipfldr precomp.h SOURCE)
 add_cd_file(TARGET zipfldr DESTINATION reactos/system32 FOR all)

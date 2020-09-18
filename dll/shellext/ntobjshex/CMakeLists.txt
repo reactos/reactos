@@ -4,7 +4,6 @@ project(SHELL)
 add_definitions(
     -D_ATL_NO_EXCEPTIONS)
 
-set_cpp(WITH_RUNTIME)
 
 if(NOT MSVC)
     # HACK: this should be enabled globally!
@@ -33,7 +32,7 @@ add_library(ntobjshex MODULE
     ${CMAKE_CURRENT_BINARY_DIR}/ntobjshex.def)
 
 set_module_type(ntobjshex win32dll UNICODE)
-target_link_libraries(ntobjshex uuid wine)
+target_link_libraries(ntobjshex uuid wine cpprt)
 
 add_importlibs(ntobjshex
     advapi32

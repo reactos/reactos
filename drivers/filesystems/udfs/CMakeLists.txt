@@ -1,8 +1,6 @@
 
 include_directories(Include)
 
-set_cpp(WITH_RUNTIME)
-
 list(APPEND SOURCE
     udf_info/alloc.cpp
     udf_info/dirtree.cpp
