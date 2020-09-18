@@ -2,10 +2,6 @@
 remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x603)
 
-if(NOT MSVC)
-    add_compile_flags_language("-std=c++11" "CXX")
-endif()
-
 include_directories(${REACTOS_SOURCE_DIR}/drivers/filesystems/btrfs)
 
 spec2def(shellbtrfs.dll shellbtrfs.spec)

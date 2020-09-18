@@ -1,11 +1,6 @@
 
 project(SHELL)
 
-if(NOT MSVC)
-    # HACK: this should be enabled globally!
-    add_compile_flags_language("-std=c++11" "CXX")
-endif()
-
 spec2def(ntobjshex.dll ntobjshex.spec)
 
 file(GLOB_RECURSE ntobjshex_rc_deps resources/*.*)

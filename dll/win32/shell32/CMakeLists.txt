@@ -6,11 +6,6 @@ add_subdirectory(shellrecyclebin)
 
 spec2def(shell32.dll shell32.spec ADD_IMPORTLIB)
 
-if(NOT MSVC)
-    # HACK: this should be enabled globally!
-    add_compile_flags_language("-std=c++11" "CXX")
-endif()
-
 remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
 

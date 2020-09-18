@@ -1,9 +1,4 @@
 
-if(NOT MSVC)
-    # HACK: this should be enabled globally!
-    add_compile_flags_language("-std=c++11" "CXX")
-endif()
-
 remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
 
@@ -12,7 +7,6 @@ include_directories(
     ${REACTOS_SOURCE_DIR}/sdk/lib/3rdparty/zlib/contrib)
 
 spec2def(zipfldr.dll zipfldr.spec ADD_IMPORTLIB)
-
 
 list(APPEND SOURCE
     zipfldr.cpp
@@ -39,7 +33,6 @@ add_library(zipfldr MODULE
     ${ZLIB_SOURCE}
     zipfldr.rc
     ${CMAKE_CURRENT_BINARY_DIR}/zipfldr.def)
-
 
 set_module_type(zipfldr win32dll UNICODE)
 target_link_libraries(zipfldr minizip zlib uuid cpprt atl_classes)

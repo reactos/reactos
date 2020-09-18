@@ -71,13 +71,11 @@ macro(replace_compiler_option _var _old _new)
 endmacro(replace_compiler_option)
 
 # add_compile_flags
-# add_compile_flags_language
 #  Add or replace compiler flags in the global scope for either all source
 #  files or only those of the specified language.
 #
 # Examples:
 #  add_compile_flags("-pedantic -O5")
-#  add_compile_flags_language("-std=gnu99" "C")
 function(add_compile_flags _flags)
     if(${ARGC} GREATER 1)
         message(FATAL_ERROR "Excess arguments to add_compile_flags! Args ${ARGN}")
@@ -87,12 +85,3 @@ function(add_compile_flags _flags)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${_flags}" PARENT_SCOPE)
     set(CMAKE_ASM_FLAGS "${CMAKE_ASM_FLAGS} ${_flags}" PARENT_SCOPE)
 endfunction()
-
-function(add_compile_flags_language _flags _lang)
-    if(NOT ${ARGC} EQUAL 2)
-        message(FATAL_ERROR "Wrong arguments to add_compile_flags_language! Args ${ARGN}")
-    endif()
-    # Adds the compiler flag for the specified language only, e.g. CMAKE_C_FLAGS
-    set(CMAKE_${_lang}_FLAGS "${CMAKE_${_lang}_FLAGS} ${_flags}" PARENT_SCOPE)
-endfunction()
-

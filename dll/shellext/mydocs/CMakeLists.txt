@@ -3,11 +3,6 @@ spec2def(mydocs.dll mydocs.spec)
 add_definitions(
     -D_WINE)
 
-if(NOT MSVC)
-    # HACK: this should be enabled globally!
-    add_compile_flags_language("-std=c++11" "CXX")
-endif()
-
 file(GLOB_RECURSE mydocs_rc_deps res/*.*)
 add_rc_deps(mydocs.rc ${mydocs_rc_deps})
 

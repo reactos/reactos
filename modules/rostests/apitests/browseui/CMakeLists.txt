@@ -1,9 +1,4 @@
 
-if(NOT MSVC)
-    # HACK: this should be enabled globally!
-    add_compile_flags_language("-std=c++11" "CXX")
-endif()
-
 include_directories(
     includes)
 
@@ -15,6 +10,7 @@ list(APPEND SOURCE
     testlist.c)
 
 add_executable(browseui_apitest ${SOURCE})
+
 target_link_libraries(browseui_apitest uuid wine cpprt atl_classes)
 set_target_cpp_properties(browseui_apitest WITH_EXCEPTIONS WITH_RTTI)
 set_module_type(browseui_apitest win32cui)
