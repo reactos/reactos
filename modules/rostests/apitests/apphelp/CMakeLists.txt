@@ -4,12 +4,7 @@ add_definitions(
     -D__ROS_LONG64__
     -DWINETEST_USE_DBGSTR_LONGLONG
     -DUNICODE
-    -D_UNICODE
-    -D_ATL_NO_EXCEPTIONS)
-
-
-include_directories(${REACTOS_SOURCE_DIR}/sdk/lib/atl
-                    ${CMAKE_CURRENT_BINARY_DIR})
+    -D_UNICODE)
 
 list(APPEND SOURCE
     apphelp.c
@@ -29,6 +24,6 @@ add_custom_command(OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/testdb.sdb
 add_rc_deps(testdata.rc ${CMAKE_CURRENT_BINARY_DIR}/testdb.sdb)
 add_executable(apphelp_apitest ${SOURCE})
 set_module_type(apphelp_apitest win32cui)
-target_link_libraries(apphelp_apitest ${PSEH_LIB} cpprt)
+target_link_libraries(apphelp_apitest ${PSEH_LIB} cpprt atl_classes)
 add_importlibs(apphelp_apitest advapi32 userenv version shlwapi msvcrt kernel32 ntdll)
 add_rostests_file(TARGET apphelp_apitest)
