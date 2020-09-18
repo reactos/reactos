@@ -491,7 +491,10 @@ HRESULT CFSDropTarget::_DoDrop(IDataObject *pDataObject,
     {
         hr = pDataObject->GetData(&fmt, &medium);
         TRACE("CFSTR_SHELLIDLIST.\n");
-
+        if (FAILED(hr))
+        {
+            ERR("CFSTR_SHELLIDLIST failed\n");
+        }
         /* lock the handle */
         LPIDA lpcida = (LPIDA)GlobalLock(medium.hGlobal);
         if (!lpcida)
