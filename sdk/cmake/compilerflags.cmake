@@ -64,7 +64,6 @@ endmacro(replace_compiler_option)
 # add_compile_flags
 # add_compile_flags_language
 # replace_compile_flags
-# replace_compile_flags_language
 #  Add or replace compiler flags in the global scope for either all source
 #  files or only those of the specified language.
 #
@@ -72,7 +71,6 @@ endmacro(replace_compiler_option)
 #  add_compile_flags("-pedantic -O5")
 #  add_compile_flags_language("-std=gnu99" "C")
 #  replace_compile_flags("-O5" "-O3")
-#  replace_compile_flags_language("-fno-exceptions" "-fexceptions" "CXX")
 function(add_compile_flags _flags)
     if(${ARGC} GREATER 1)
         message(FATAL_ERROR "Excess arguments to add_compile_flags! Args ${ARGN}")
@@ -100,9 +98,3 @@ macro(replace_compile_flags _oldflags _newflags)
     replace_compiler_option(CMAKE_ASM_FLAGS ${_oldflags} ${_newflags})
 endmacro()
 
-macro(replace_compile_flags_language _oldflags _newflags _lang)
-    if(NOT ${ARGC} EQUAL 3)
-        message(FATAL_ERROR "Wrong arguments to replace_compile_flags_language! Args ${ARGN}")
-    endif()
-    replace_compiler_option(CMAKE_${_lang}_FLAGS ${_oldflags} ${_newflags})
-endmacro()
