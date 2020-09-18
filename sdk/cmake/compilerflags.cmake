@@ -24,6 +24,15 @@ function(add_target_property _module _propname)
     set_property(TARGET ${_module} PROPERTY ${_propname} ${_newvalue})
 endfunction()
 
+# remove_target_compile_options
+#  Remove one option from the target COMPILE_OPTIONS property,
+#  previously added through add_compile_options
+function(remove_target_compile_option _module _option)
+    get_target_property(_options ${_module} COMPILE_OPTIONS)
+    list(REMOVE_ITEM _options ${_option})
+    set_target_properties(${_module} PROPERTIES COMPILE_OPTIONS "${_options}")
+endfunction()
+
 # Wrapper functions for the important properties, using add_target_property
 # where appropriate.
 # Note that the functions for string properties take a single string
@@ -63,14 +72,12 @@ endmacro(replace_compiler_option)
 
 # add_compile_flags
 # add_compile_flags_language
-# replace_compile_flags
 #  Add or replace compiler flags in the global scope for either all source
 #  files or only those of the specified language.
 #
 # Examples:
 #  add_compile_flags("-pedantic -O5")
 #  add_compile_flags_language("-std=gnu99" "C")
-#  replace_compile_flags("-O5" "-O3")
 function(add_compile_flags _flags)
     if(${ARGC} GREATER 1)
         message(FATAL_ERROR "Excess arguments to add_compile_flags! Args ${ARGN}")
@@ -88,13 +95,4 @@ function(add_compile_flags_language _flags _lang)
     # Adds the compiler flag for the specified language only, e.g. CMAKE_C_FLAGS
     set(CMAKE_${_lang}_FLAGS "${CMAKE_${_lang}_FLAGS} ${_flags}" PARENT_SCOPE)
 endfunction()
-
-macro(replace_compile_flags _oldflags _newflags)
-    if(NOT ${ARGC} EQUAL 2)
-        message(FATAL_ERROR "Wrong arguments to replace_compile_flags! Args ${ARGN}")
-    endif()
-    replace_compiler_option(CMAKE_C_FLAGS ${_oldflags} ${_newflags})
-    replace_compiler_option(CMAKE_CXX_FLAGS ${_oldflags} ${_newflags})
-    replace_compiler_option(CMAKE_ASM_FLAGS ${_oldflags} ${_newflags})
-endmacro()
 

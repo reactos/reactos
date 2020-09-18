@@ -3,11 +3,6 @@ include_directories(BEFORE ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 remove_definitions(-DWINVER=0x502 -D_WIN32_IE=0x600 -D_WIN32_WINNT=0x502)
 add_definitions(-DWINVER=0x600 -D_WIN32_WINNT=0x601)
 
-if(MSVC)
-    # Disable warning C4477 (printf format warnings)
-    add_compile_flags("/wd4477")
-endif()
-
 list(APPEND SOURCE
     actctx.c
     atom.c
@@ -49,6 +44,11 @@ add_executable(kernel32_winetest
     ${SOURCE}
     ${PCH_SKIP_SOURCE}
     resource.rc)
+
+if(MSVC)
+    # Disable warning C4477 (printf format warnings)
+    target_compile_options(kernel32_winetest PRIVATE /wd4477)
+endif()
 
 if(USE_CLANG_CL OR (NOT MSVC))
     target_compile_options(kernel32_winetest PRIVATE "-Wno-format")
