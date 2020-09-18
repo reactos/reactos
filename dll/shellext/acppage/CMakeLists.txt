@@ -1,11 +1,6 @@
 
 project(appcompat)
 
-if(NOT MSVC)
-    # HACK: this should be enabled globally!
-    add_compile_flags_language("-std=c++11" "CXX")
-endif()
-
 include_directories(
     ${REACTOS_SOURCE_DIR}/dll/appcompat/apphelp
     ${REACTOS_SOURCE_DIR})

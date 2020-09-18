@@ -49,7 +49,7 @@ add_compile_flags("-mstackrealign")
 add_compile_flags("-fno-aggressive-loop-optimizations")
 
 if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
-    add_compile_flags_language("-std=gnu99 -Wno-microsoft" "C")
+    add_compile_options("$<$<COMPILE_LANGUAGE:C>:-std=gnu99;-Wno-microsoft>")
     set(CMAKE_LINK_DEF_FILE_FLAG "")
     set(CMAKE_STATIC_LIBRARY_SUFFIX ".a")
     set(CMAKE_LINK_LIBRARY_SUFFIX "")
@@ -65,7 +65,7 @@ endif()
 
 if(DBG)
     if(NOT CMAKE_C_COMPILER_ID STREQUAL "Clang")
-        add_compile_flags_language("-Wold-style-declaration" "C")
+        add_compile_options("$<$<COMPILE_LANGUAGE:C>:-Wold-style-declaration>")
     endif()
 endif()
 
