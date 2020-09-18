@@ -49,27 +49,6 @@ function(add_target_link_flags _module _flags)
     add_target_property(${_module} LINK_FLAGS ${_flags})
 endfunction()
 
-# replace_compiler_option
-#  (taken from LLVM)
-#  Replaces a compiler option or switch `_old' in `_var' by `_new'.
-#  If `_old' is not in `_var', appends `_new' to `_var'.
-#
-# Example:
-#  replace_compiler_option(CMAKE_CXX_FLAGS_RELEASE "-O3" "-O2")
-macro(replace_compiler_option _var _old _new)
-    # If the option already is on the variable, don't add it:
-    if("${${_var}}" MATCHES "(^| )${_new}($| )")
-        set(__n "")
-    else()
-        set(__n "${_new}")
-    endif()
-    if("${${_var}}" MATCHES "(^| )${_old}($| )")
-        string(REGEX REPLACE "(^| )${_old}($| )" " ${__n} " ${_var} "${${_var}}")
-    else()
-        set(${_var} "${${_var}} ${__n}")
-    endif()
-endmacro(replace_compiler_option)
-
 # add_compile_flags
 #  Add or replace compiler flags in the global scope for either all source
 #  files or only those of the specified language.
