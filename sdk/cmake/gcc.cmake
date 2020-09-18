@@ -69,18 +69,6 @@ if(DBG)
     endif()
 endif()
 
-#bug
-#file(TO_NATIVE_PATH ${REACTOS_SOURCE_DIR} REACTOS_SOURCE_DIR_NATIVE)
-#workaround
-set(REACTOS_SOURCE_DIR_NATIVE ${REACTOS_SOURCE_DIR})
- if(CMAKE_HOST_SYSTEM_NAME STREQUAL "Windows")
-string(REPLACE "/" "\\" REACTOS_SOURCE_DIR_NATIVE ${REACTOS_SOURCE_DIR})
-endif()
-
-if((NOT CMAKE_C_COMPILER_ID STREQUAL "Clang") AND (NOT SEPARATE_DBG))
-    add_compile_flags("-fdebug-prefix-map=\"${REACTOS_SOURCE_DIR_NATIVE}\"=ReactOS")
-endif()
-
 # Debugging
 if(NOT CMAKE_BUILD_TYPE STREQUAL "Release")
     if(SEPARATE_DBG)
