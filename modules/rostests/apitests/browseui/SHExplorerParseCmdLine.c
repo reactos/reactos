@@ -430,6 +430,8 @@ START_TEST(SHExplorerParseCmdLine)
         { __LINE__, L"::{450d8fba-ad25-11d0-98a8-0800361b1103}", TRUE, CSIDL_MYDOCUMENTS, 0x00000200 },
         { __LINE__, L"/root,shell:::{450D8FBA-AD25-11D0-98A8-0800361B1103}", TRUE, CSIDL_MYDOCUMENTS, 0x00000000 },
         { __LINE__, L"/root,::{450d8fba-ad25-11d0-98a8-0800361b1103}", TRUE, CSIDL_MYDOCUMENTS, 0x00000000 },
+        { __LINE__, L"/root,shell:::{20D04FE0-3AEA-1069-A2D8-08002B30309D}", TRUE, PIDL_IS_EMPTY, 0x00000000 },
+        { __LINE__, L"/root,::{20D04FE0-3AEA-1069-A2D8-08002B30309D}", TRUE, PIDL_IS_EMPTY, 0x00000000 },
     };
     const int TestCount = sizeof(Tests) / sizeof(Tests[0]);
     PWSTR CommandLine;
