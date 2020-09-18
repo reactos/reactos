@@ -1,7 +1,5 @@
 project(SHELL)
 
-set_cpp(WITH_RUNTIME)
-
 add_definitions(
     -DUNICODE
     -D_UNICODE

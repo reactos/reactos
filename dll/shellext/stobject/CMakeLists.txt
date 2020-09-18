@@ -1,8 +1,6 @@
 
 project(SHELL)
 
-set_cpp(WITH_RUNTIME)
-
 if(NOT MSVC)
     # HACK: this should be enabled globally!
     add_compile_flags_language("-std=c++11" "CXX")
@@ -34,7 +32,7 @@ add_library(stobject MODULE
     ${CMAKE_CURRENT_BINARY_DIR}/stobject.def)
 
 set_module_type(stobject win32dll UNICODE)
-target_link_libraries(stobject uuid wine)
+target_link_libraries(stobject uuid wine cpprt)
 
 add_importlibs(stobject
     setupapi

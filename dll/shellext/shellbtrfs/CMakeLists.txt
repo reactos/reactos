@@ -1,4 +1,3 @@
-set_cpp(WITH_RUNTIME WITH_EXCEPTIONS WITH_STL)
 
 remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x603)
@@ -39,7 +38,8 @@ file(GLOB shellbtrfs_rc_deps *.ico)
 add_rc_deps(shellbtrfs.rc ${shellbtrfs_rc_deps})
 
 set_module_type(shellbtrfs win32dll UNICODE)
-target_link_libraries(shellbtrfs uuid)
+target_link_libraries(shellbtrfs uuid cppstl)
+set_target_cpp_properties(shellbtrfs WITH_EXCEPTIONS)
 add_importlibs(shellbtrfs advapi32 advapi32_vista ole32 shell32 shlwapi user32 comctl32 uxtheme setupapi comdlg32 gdi32 msvcrt kernel32_vista kernel32 ntdll)
 add_pch(shellbtrfs precomp.h "${PCH_SKIP_SOURCE}")
 add_cd_file(TARGET shellbtrfs DESTINATION reactos/system32 FOR all)

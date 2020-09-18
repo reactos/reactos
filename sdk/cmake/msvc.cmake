@@ -42,7 +42,7 @@ endif()
 
 # Disable RTTI, exception handling and buffer security checks by default.
 # These require run-time support that may not always be available.
-add_compile_flags("/GR- /EHs-c- /GS-")
+add_compile_flags("/GS-")
 
 if(USE_CLANG_CL)
     set(CMAKE_CL_SHOWINCLUDES_PREFIX "Note: including file: ")
@@ -252,14 +252,6 @@ function(set_image_base MODULE IMAGE_BASE)
 endfunction()
 
 function(set_module_type_toolchain MODULE TYPE)
-    if(CPP_USE_STL)
-        if((${TYPE} STREQUAL "kernelmodedriver") OR (${TYPE} STREQUAL "wdmdriver"))
-            message(FATAL_ERROR "Use of STL in kernelmodedriver or wdmdriver type module prohibited")
-        endif()
-        target_link_libraries(${MODULE} cpprt stlport oldnames)
-    elseif(CPP_USE_RT)
-        target_link_libraries(${MODULE} cpprt)
-    endif()
     if((${TYPE} STREQUAL "win32dll") OR (${TYPE} STREQUAL "win32ocx") OR (${TYPE} STREQUAL "cpl"))
         add_target_link_flags(${MODULE} "/DLL")
     elseif(${TYPE} STREQUAL "kernelmodedriver")
@@ -559,3 +551,17 @@ function(add_linker_script _target _linker_script_file)
         add_target_property(${_target} LINK_DEPENDS ${_file_full_path})
     endif()
 endfunction()
+
+# handle C++ options
+# disable RTTI unless said so
+add_compile_options("$<$<COMPILE_LANGUAGE:CXX>:$<IF:$<BOOL:$<TARGET_PROPERTY:WITH_CXX_RTTI>>,/GR,/GR->>")
+# disable exceptions unless said so
+add_compile_options("$<$<COMPILE_LANGUAGE:CXX>:$<IF:$<BOOL:$<TARGET_PROPERTY:WITH_CXX_EXCEPTIONS>>,/EHsc,/EHs-c->>")
+
+# Create our interface libraries wrapping the needed library for this compiler
+add_library(cppstl INTERFACE)
+target_link_libraries(cppstl INTERFACE cpprt stlport oldnames)
+# We set this properties through our INTERFACE library
+set_target_properties(cppstl PROPERTIES INTERFACE_WITH_CXX_STL TRUE)
+# add_library(cpprt INTERFACE)
+# Our runtime library is already called cpprt

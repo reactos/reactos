@@ -41,8 +41,9 @@ endif()
 # Compiler Core
 add_compile_flags("-pipe -fms-extensions -fno-strict-aliasing")
 
-# Prevent GCC from searching any of the default directories
-add_compile_flags("-nostdinc")
+# Prevent GCC from searching any of the default directories.
+# The case for C++ is handled through the reactos_c++ INTERFACE library
+add_compile_options("$<$<NOT:$<COMPILE_LANGUAGE:CXX>>:-nostdinc>")
 
 add_compile_flags("-mstackrealign")
 add_compile_flags("-fno-aggressive-loop-optimizations")
@@ -67,8 +68,6 @@ if(DBG)
         add_compile_flags_language("-Wold-style-declaration" "C")
     endif()
 endif()
-
-add_compile_flags_language("-fno-rtti -fno-exceptions" "CXX")
 
 #bug
 #file(TO_NATIVE_PATH ${REACTOS_SOURCE_DIR} REACTOS_SOURCE_DIR_NATIVE)
@@ -292,17 +291,6 @@ function(set_image_base MODULE IMAGE_BASE)
 endfunction()
 
 function(set_module_type_toolchain MODULE TYPE)
-    if(CPP_USE_STL)
-        if((${TYPE} STREQUAL "kernelmodedriver") OR (${TYPE} STREQUAL "wdmdriver"))
-            message(FATAL_ERROR "Use of STL in kernelmodedriver or wdmdriver type module prohibited")
-        endif()
-        target_link_libraries(${MODULE} -lstdc++ -lsupc++ -lgcc -lmingwex)
-    elseif(CPP_USE_RT)
-        target_link_libraries(${MODULE} -lsupc++ -lgcc)
-    elseif(IS_CPP)
-        target_link_libraries(${MODULE} -lgcc)
-    endif()
-
     if((${TYPE} STREQUAL "kernelmodedriver") OR (${TYPE} STREQUAL "wdmdriver"))
         add_target_link_flags(${MODULE} "-Wl,--exclude-all-symbols,-file-alignment=0x1000,-section-alignment=0x1000")
         if(${TYPE} STREQUAL "wdmdriver")
@@ -440,3 +428,47 @@ function(add_linker_script _target _linker_script_file)
     add_target_link_flags(${_target} "-Wl,-T,${_file_full_path}")
     add_target_property(${_target} LINK_DEPENDS ${_file_full_path})
 endfunction()
+
+# Manage our C++ options
+# we disable standard includes if we don't use the STL
+add_compile_options("$<$<AND:$<COMPILE_LANGUAGE:CXX>,$<NOT:$<IN_LIST:cppstl,$<TARGET_PROPERTY:LINK_LIBRARIES>>>>:-nostdinc>")
+# we disable RTTI, unless said so
+add_compile_options("$<$<COMPILE_LANGUAGE:CXX>:$<IF:$<BOOL:$<TARGET_PROPERTY:WITH_CXX_RTTI>>,-frtti,-fno-rtti>>")
+# We disable exceptions, unless said so
+add_compile_options("$<$<COMPILE_LANGUAGE:CXX>:$<IF:$<BOOL:$<TARGET_PROPERTY:WITH_CXX_EXCEPTIONS>>,-fexceptions,-fno-exceptions>>")
+
+# Find default G++ libraries
+add_library(libgcc STATIC IMPORTED)
+execute_process(COMMAND ${CMAKE_CXX_COMPILER} -print-file-name=libgcc.a OUTPUT_VARIABLE LIBGCC_LOCATION)
+string(STRIP ${LIBGCC_LOCATION} LIBGCC_LOCATION)
+set_target_properties(libgcc PROPERTIES IMPORTED_LOCATION ${LIBGCC_LOCATION})
+# libgcc needs kernel32 imports, a CRT and msvcrtex
+target_link_libraries(libgcc INTERFACE libkernel32 libmsvcrt msvcrtex)
+
+add_library(libsupc++ STATIC IMPORTED GLOBAL)
+execute_process(COMMAND ${CMAKE_CXX_COMPILER} -print-file-name=libsupc++.a OUTPUT_VARIABLE LIBSUPCXX_LOCATION)
+string(STRIP ${LIBSUPCXX_LOCATION} LIBSUPCXX_LOCATION)
+set_target_properties(libsupc++ PROPERTIES IMPORTED_LOCATION ${LIBSUPCXX_LOCATION})
+# libsupc++ requires libgcc
+target_link_libraries(libsupc++ INTERFACE libgcc)
+
+add_library(libmingwex STATIC IMPORTED)
+execute_process(COMMAND ${CMAKE_CXX_COMPILER} -print-file-name=libmingwex.a OUTPUT_VARIABLE LIBMINGWEX_LOCATION)
+string(STRIP ${LIBMINGWEX_LOCATION} LIBMINGWEX_LOCATION)
+set_target_properties(libmingwex PROPERTIES IMPORTED_LOCATION ${LIBMINGWEX_LOCATION})
+# libmingwex requires a CRT and imports from kernel32
+target_link_libraries(libmingwex INTERFACE libmsvcrt libkernel32)
+
+add_library(libstdc++ STATIC IMPORTED GLOBAL)
+execute_process(COMMAND ${CMAKE_CXX_COMPILER} -print-file-name=libstdc++.a OUTPUT_VARIABLE LIBSTDCCXX_LOCATION)
+string(STRIP ${LIBSTDCCXX_LOCATION} LIBSTDCCXX_LOCATION)
+set_target_properties(libstdc++ PROPERTIES IMPORTED_LOCATION ${LIBSTDCCXX_LOCATION})
+# libstdc++ requires libsupc++ and mingwex provided by GCC
+target_link_libraries(libstdc++ INTERFACE libsupc++ libmingwex)
+# this is for our SAL annotations
+target_compile_definitions(libstdc++ INTERFACE "$<$<COMPILE_LANGUAGE:CXX>:PAL_STDCPP_COMPAT>")
+
+# Create our alias libraries
+add_library(cppstl ALIAS libstdc++)
+add_library(cpprt ALIAS libsupc++)
+

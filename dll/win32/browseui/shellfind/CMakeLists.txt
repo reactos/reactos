@@ -1,8 +1,6 @@
 
 PROJECT(SHELL)
 
-set_cpp(WITH_RUNTIME)
-
 add_definitions(-DUNICODE -D_UNICODE)
 add_definitions(-D_ATL_NO_EXCEPTIONS)
 
