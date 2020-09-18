@@ -191,10 +191,15 @@ _Out_opt_ PUINT PWriteEnd)
                     ok(hr == S_OK, "Line %lu: SHGetFolderLocation returned %08lx\n", TestLine, hr);
                     if (SUCCEEDED(hr))
                     {
-                        BOOL eq = ILIsEqual(Info.pidl, ExpectedPidl);
-                        ILFree(ExpectedPidl);
+                        WCHAR szPath[MAX_PATH];
+                        BOOL eq;
 
-                        ok(eq, "Line %lu: Unexpected pidl value %p; pidlPathName=%S CSIDL=%d\n", TestLine, Info.pidl, pidlPathName, ExpectedCsidl);
+                        SHGetPathFromIDListW(Info.pidl, szPath);
+                        eq = ILIsEqual(Info.pidl, ExpectedPidl) || (szPath[0] && lstrcmpiW(szPath, pidlPathName) == 0);
+
+                        ok(eq, "Line %lu: Unexpected pidl value %p; pidlPathName=%S szPath=%S CSIDL=%d\n", TestLine, Info.pidl, pidlPathName, szPath, ExpectedCsidl);
+
+                        ILFree(ExpectedPidl);
                     }
                 }
             }
@@ -423,6 +428,8 @@ START_TEST(SHExplorerParseCmdLine)
         { __LINE__, L"/inproc,{20d04fe0-3aea-1069-a2d8-08002b30309d}", TRUE, PIDL_IS_UNTOUCHED, 0x00000400 },
         { __LINE__, L"shell:::{450D8FBA-AD25-11D0-98A8-0800361B1103}", TRUE, CSIDL_MYDOCUMENTS, 0x00000200 },
         { __LINE__, L"::{450d8fba-ad25-11d0-98a8-0800361b1103}", TRUE, CSIDL_MYDOCUMENTS, 0x00000200 },
+        { __LINE__, L"/root,shell:::{450D8FBA-AD25-11D0-98A8-0800361B1103}", TRUE, CSIDL_MYDOCUMENTS, 0x00000000 },
+        { __LINE__, L"/root,::{450d8fba-ad25-11d0-98a8-0800361b1103}", TRUE, CSIDL_MYDOCUMENTS, 0x00000000 },
     };
     const int TestCount = sizeof(Tests) / sizeof(Tests[0]);
     PWSTR CommandLine;
