@@ -123,6 +123,11 @@ DWORD WINAPI SHUnicodeToAnsiCP(UINT CodePage, LPCWSTR lpSrcStr, LPSTR lpDstStr, 
 
 PVOID WINAPI SHLockSharedEx(HANDLE hData, DWORD dwProcessId, BOOL bWriteAccess);
 
+DWORD WINAPI SHGetValueGoodBootA(HKEY hkey, LPCSTR pSubKey, LPCSTR pValue,
+                                 LPDWORD pwType, LPVOID pvData, LPDWORD pbData);
+DWORD WINAPI SHGetValueGoodBootW(HKEY hkey, LPCWSTR pSubKey, LPCWSTR pValue,
+                                 LPDWORD pwType, LPVOID pvData, LPDWORD pbData);
+
 int
 WINAPIV
 ShellMessageBoxWrapW(
