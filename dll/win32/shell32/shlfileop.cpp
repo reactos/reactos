@@ -1027,6 +1027,10 @@ int WINAPI SHFileOperationA(LPSHFILEOPSTRUCTA lpFileOp)
 
     // Call the actual function
     retCode = SHFileOperationW(&nFileOp);
+    if (retCode)
+    {
+        ERR("SHFileOperationW failed with 0x%x\n", retCode);
+    }
 
     // Cleanup
 cleanup:
