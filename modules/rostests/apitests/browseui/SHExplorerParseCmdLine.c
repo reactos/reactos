@@ -197,7 +197,8 @@ _Out_opt_ PUINT PWriteEnd)
                         SHGetPathFromIDListW(Info.pidl, szPath);
                         eq = ILIsEqual(Info.pidl, ExpectedPidl) || (szPath[0] && lstrcmpiW(szPath, pidlPathName) == 0);
 
-                        ok(eq, "Line %lu: Unexpected pidl value %p; pidlPathName=%S szPath=%S CSIDL=%d\n", TestLine, Info.pidl, pidlPathName, szPath, ExpectedCsidl);
+                        ok(eq, "Line %lu: Unexpected pidl value %p; pidlPathName=%S szPath=%S CSIDL=%d\n",
+                           TestLine, Info.pidl, pidlPathName, szPath, ExpectedCsidl);
 
                         ILFree(ExpectedPidl);
                     }
