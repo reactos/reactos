@@ -1157,6 +1157,12 @@ static LRESULT CALLBACK cert_mgr_dlg_proc(HWND hwnd, UINT msg, WPARAM wp,
         show_store_certs(hwnd, cert_mgr_index_to_store(tab, 0));
         break;
     }
+#ifdef __REACTOS__
+    case WM_DESTROY:
+        data = (struct CertMgrData *)GetWindowLongPtrW(hwnd, DWLP_USER);
+        HeapFree(GetProcessHeap(), 0, data);
+        break;
+#endif
     case WM_NOTIFY:
     {
         NMHDR *hdr = (NMHDR *)lp;
@@ -1293,12 +1299,6 @@ static LRESULT CALLBACK cert_mgr_dlg_proc(HWND hwnd, UINT msg, WPARAM wp,
             break;
         }
         break;
-#ifdef __REACTOS__
-    case WM_DESTROY:
-        data = (struct CertMgrData *)GetWindowLongPtrW(hwnd, DWLP_USER);
-        HeapFree(GetProcessHeap(), 0, data);
-        break;
-#endif
     }
     return 0;
 }
@@ -7330,6 +7330,12 @@ static LRESULT CALLBACK select_cert_dlg_proc(HWND hwnd, UINT msg, WPARAM wp, LPA
         select_cert_update_view_button(hwnd);
         break;
     }
+#ifdef __REACTOS__
+    case WM_DESTROY:
+        data = (struct SelectCertData *)GetWindowLongPtrW(hwnd, DWLP_USER);
+        HeapFree(GetProcessHeap(), 0, data);
+        break;
+#endif
     case WM_NOTIFY:
     {
         NMHDR *hdr = (NMHDR *)lp;
@@ -7417,12 +7423,6 @@ static LRESULT CALLBACK select_cert_dlg_proc(HWND hwnd, UINT msg, WPARAM wp, LPA
         }
         }
         break;
-#ifdef __REACTOS__
-    case WM_DESTROY:
-        data = (struct SelectCertData *)GetWindowLongPtrW(hwnd, DWLP_USER);
-        HeapFree(GetProcessHeap(), 0, data);
-        break;
-#endif
     }
     return 0;
 }
