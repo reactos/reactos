@@ -632,6 +632,11 @@ IPADDRESS_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	case WM_PAINT:
 	    return IPADDRESS_Paint (infoPtr, (HDC)wParam);
 
+#ifdef __REACTOS__
+    case WM_SETFOCUS:
+        SetFocus(infoPtr->Part[0].EditHwnd);
+        return 0;
+#endif
 	case WM_COMMAND:
 	    switch(wParam >> 16) {
 		case EN_CHANGE:
