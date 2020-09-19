@@ -789,11 +789,9 @@ static LRESULT CALLBACK cert_mgr_advanced_dlg_proc(HWND hwnd, UINT msg,
         {
         case IDOK:
             save_cert_mgr_usages(hwnd);
-            ImageList_Destroy((HIMAGELIST)GetWindowLongPtrW(hwnd, DWLP_USER));
             EndDialog(hwnd, IDOK);
             break;
         case IDCANCEL:
-            ImageList_Destroy((HIMAGELIST)GetWindowLongPtrW(hwnd, DWLP_USER));
             EndDialog(hwnd, IDCANCEL);
             break;
         }
@@ -1281,7 +1279,6 @@ static LRESULT CALLBACK cert_mgr_dlg_proc(HWND hwnd, UINT msg, WPARAM wp,
             free_certs(GetDlgItem(hwnd, IDC_MGR_CERTS));
             close_stores(GetDlgItem(hwnd, IDC_MGR_STORES));
             data = (struct CertMgrData *)GetWindowLongPtrW(hwnd, DWLP_USER);
-            ImageList_Destroy(data->imageList);
             HeapFree(GetProcessHeap(), 0, data);
             EndDialog(hwnd, IDCANCEL);
             break;
@@ -7376,7 +7373,6 @@ static LRESULT CALLBACK select_cert_dlg_proc(HWND hwnd, UINT msg, WPARAM wp, LPA
             }
             *data->cert = CertDuplicateCertificateContext(cert);
             free_certs(GetDlgItem(hwnd, IDC_SELECT_CERTS));
-            ImageList_Destroy(data->imageList);
             HeapFree(GetProcessHeap(), 0, data);
             EndDialog(hwnd, IDOK);
             break;
@@ -7384,7 +7380,6 @@ static LRESULT CALLBACK select_cert_dlg_proc(HWND hwnd, UINT msg, WPARAM wp, LPA
         case IDCANCEL:
             data = (struct SelectCertData *)GetWindowLongPtrW(hwnd, DWLP_USER);
             free_certs(GetDlgItem(hwnd, IDC_SELECT_CERTS));
-            ImageList_Destroy(data->imageList);
             HeapFree(GetProcessHeap(), 0, data);
             EndDialog(hwnd, IDCANCEL);
             break;
