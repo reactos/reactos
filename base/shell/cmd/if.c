@@ -113,7 +113,7 @@ INT ExecuteIf(PARSED_COMMAND *Cmd)
     else if (Cmd->If.Operator == IF_EXIST)
     {
         BOOL IsDir;
-        INT Size;
+        SIZE_T Size;
         WIN32_FIND_DATA f;
         HANDLE hFind;
         DWORD attrs;
