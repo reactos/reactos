@@ -34,7 +34,7 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT "Цей майстер допомагає створити ярлик, який указує на\nлокальні або мережні програми, файли, папки, комп'ютери\nабо адреси в Інтернеті.", -1, 120, 15, 200, 30
     LTEXT "Укажіть розташування об'єкта:", -1, 120, 50, 120, 10
-    EDITTEXT IDC_SHORTCUT_LOCATION, 120, 65, 150, 15, ES_LEFT
+    EDITTEXT IDC_SHORTCUT_LOCATION, 120, 65, 150, 15, ES_LEFT | ES_AUTOHSCROLL
     PUSHBUTTON "Огляд...", IDC_SHORTCUT_BROWSE, 272, 65, 55, 15, ES_LEFT
     LTEXT "Щоб продовжити установку, натисніть кнопку ""Далі"".", -1, 120, 97, 162, 10
 END
@@ -45,7 +45,7 @@ CAPTION "Вибір назви програми"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT "&Введіть ім'я ярлика:", -1, 120, 15, 150, 10
-    EDITTEXT IDC_SHORTCUT_NAME, 120, 35, 150, 15, ES_LEFT
+    EDITTEXT IDC_SHORTCUT_NAME, 120, 35, 150, 15, ES_LEFT | ES_AUTOHSCROLL
     LTEXT "Щоб створити ярлик, натисніть кнопку ""Готово"".", -1, 118, 97, 178, 17
 END
 

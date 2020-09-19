@@ -26,7 +26,7 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT "Mit diesem Assistenten können Sie Verknüpfungen mit lokalen oder vernetzten Programmen, Dateien, Ordnern, Computern oder Internetadressen erstellen.", -1, 120, 15, 200, 30
     LTEXT "&Geben Sie den Speicherort des Elements ein:", -1, 120, 50, 150, 10
-    EDITTEXT IDC_SHORTCUT_LOCATION, 120, 65, 150, 15, ES_LEFT
+    EDITTEXT IDC_SHORTCUT_LOCATION, 120, 65, 150, 15, ES_LEFT | ES_AUTOHSCROLL
     PUSHBUTTON "&Durchsuchen...", IDC_SHORTCUT_BROWSE, 272, 65, 55, 15, ES_LEFT
     LTEXT "Klicken Sie auf Weiter, um fortzufahren.", -1, 120, 97, 162, 10
 END
@@ -37,7 +37,7 @@ CAPTION "Programmbezeichnung auswählen"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT "&Geben Sie den Namen für die Verknüpfung ein:", -1, 120, 15, 150, 10
-    EDITTEXT IDC_SHORTCUT_NAME, 120, 35, 150, 15, ES_LEFT
+    EDITTEXT IDC_SHORTCUT_NAME, 120, 35, 150, 15, ES_LEFT | ES_AUTOHSCROLL
     LTEXT "Klicken Sie auf Fertig stellen, um die Verknüpfung zu erstellen.", -1, 118, 97, 178, 17
 END
 
