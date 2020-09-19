@@ -1159,6 +1159,8 @@ static LRESULT CALLBACK cert_mgr_dlg_proc(HWND hwnd, UINT msg, WPARAM wp,
     }
 #ifdef __REACTOS__
     case WM_DESTROY:
+        free_certs(GetDlgItem(hwnd, IDC_MGR_CERTS));
+        close_stores(GetDlgItem(hwnd, IDC_MGR_STORES));
         data = (struct CertMgrData *)GetWindowLongPtrW(hwnd, DWLP_USER);
         HeapFree(GetProcessHeap(), 0, data);
         break;
@@ -1288,9 +1290,9 @@ static LRESULT CALLBACK cert_mgr_dlg_proc(HWND hwnd, UINT msg, WPARAM wp,
             cert_mgr_do_remove(hwnd);
             break;
         case IDCANCEL:
+#ifndef __REACTOS__
             free_certs(GetDlgItem(hwnd, IDC_MGR_CERTS));
             close_stores(GetDlgItem(hwnd, IDC_MGR_STORES));
-#ifndef __REACTOS__
             data = (struct CertMgrData *)GetWindowLongPtrW(hwnd, DWLP_USER);
             ImageList_Destroy(data->imageList);
             HeapFree(GetProcessHeap(), 0, data);
@@ -7332,6 +7334,7 @@ static LRESULT CALLBACK select_cert_dlg_proc(HWND hwnd, UINT msg, WPARAM wp, LPA
     }
 #ifdef __REACTOS__
     case WM_DESTROY:
+        free_certs(GetDlgItem(hwnd, IDC_SELECT_CERTS));
         data = (struct SelectCertData *)GetWindowLongPtrW(hwnd, DWLP_USER);
         HeapFree(GetProcessHeap(), 0, data);
         break;
@@ -7393,8 +7396,8 @@ static LRESULT CALLBACK select_cert_dlg_proc(HWND hwnd, UINT msg, WPARAM wp, LPA
                 break;
             }
             *data->cert = CertDuplicateCertificateContext(cert);
-            free_certs(GetDlgItem(hwnd, IDC_SELECT_CERTS));
 #ifndef __REACTOS__
+            free_certs(GetDlgItem(hwnd, IDC_SELECT_CERTS));
             ImageList_Destroy(data->imageList);
             HeapFree(GetProcessHeap(), 0, data);
 #endif
@@ -7404,9 +7407,7 @@ static LRESULT CALLBACK select_cert_dlg_proc(HWND hwnd, UINT msg, WPARAM wp, LPA
         case IDCANCEL:
 #ifndef __REACTOS__
             data = (struct SelectCertData *)GetWindowLongPtrW(hwnd, DWLP_USER);
-#endif
             free_certs(GetDlgItem(hwnd, IDC_SELECT_CERTS));
-#ifndef __REACTOS__
             ImageList_Destroy(data->imageList);
             HeapFree(GetProcessHeap(), 0, data);
 #endif
