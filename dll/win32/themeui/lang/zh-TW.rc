@@ -1,0 +1,35 @@
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
+
+STRINGTABLE
+BEGIN
+    IDS_BRICK "红磚色"
+    IDS_EGGPLANT "茄子"
+    IDS_GOLIVE "橄欖綠" //Spruce
+    IDS_HCONTRAST_1 "高對比度 1"
+    IDS_HCONTRAST_2 "高對比度 2"
+    IDS_HCONTRAST_BLACK "高對比度（黑）"
+    IDS_HCONTRAST_WHITE "高對比度（白）"
+    IDS_LILAC "丁香"
+    IDS_MAPLE "楓樹"
+    IDS_MARINE "海洋"
+    IDS_PLUM "梅花"
+    IDS_PUMPKIN "南瓜"
+    IDS_RAIN "雨天"
+    IDS_RWB "紅、白和藍"
+    IDS_CLASSIC "ReactOS 經典"
+    IDS_STANDARD "ReactOS 標準"
+    IDS_ROSE "玫瑰"
+    IDS_SAND "沙" //Desert
+    IDS_SLATE "石板"
+    IDS_SKY "天空"
+    IDS_STORM "風暴"
+    IDS_TEAL "青色"
+    IDS_WHEAT "麥色"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_SIZE_NORMAL "標準"
+    IDS_SIZE_LARGE "大型字"
+    IDS_SIZE_XLARGE "超大型字"
+END
