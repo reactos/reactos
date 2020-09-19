@@ -6,6 +6,11 @@
 #define CMD_KEY_INFO L"INFO"
 #define CMD_KEY_HELP L"?"
 
-const WCHAR UsageString[] = L"RAPPS [/" CMD_KEY_HELP "] [/" CMD_KEY_INSTALL " packagename] [/" CMD_KEY_SETUP " filename]";
+const WCHAR UsageString[] = L"RAPPS \
+[/" CMD_KEY_HELP L"] \
+[/" CMD_KEY_INSTALL L" packagename] \
+[/" CMD_KEY_SETUP L" filename] \
+[/" CMD_KEY_FIND L" string] \
+[/" CMD_KEY_INFO L" packagename]";
 
 BOOL ParseCmdAndExecute(LPWSTR lpCmdLine, BOOL bIsFirstLaunch, int nCmdShow);
