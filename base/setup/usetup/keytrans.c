@@ -26,7 +26,7 @@
  * NB: Hardcoded to US keyboard
  */
 #include <usetup.h>
-#include "keytrans.h"
+#include "headers/keytrans.h"
 
 #define NDEBUG
 #include <debug.h>

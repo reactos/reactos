@@ -30,10 +30,10 @@
 #include <ntstrsafe.h>
 
 #include "bootsup.h"
-#include "chkdsk.h"
-#include "cmdcons.h"
-#include "devinst.h"
-#include "format.h"
+#include "headers/chkdsk.h"
+#include "headers/cmdcons.h"
+#include "headers/devinst.h"
+#include "headers/format.h"
 
 #define NDEBUG
 #include <debug.h>
