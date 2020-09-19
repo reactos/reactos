@@ -574,7 +574,7 @@ IPADDRESS_SubclassProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
                 if (index == 0)
                     SetFocus(GetNextDlgTabItem(GetParent(infoPtr->Self), infoPtr->Self, TRUE));
                 else
-                    IPADDRESS_GotoNextField(infoPtr, index - 2, POS_RIGHT);
+                    IPADDRESS_GotoNextField(infoPtr, index - 2, POS_SELALL);
             }
             else
             {
@@ -634,7 +634,7 @@ IPADDRESS_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 
 #ifdef __REACTOS__
     case WM_SETFOCUS:
-        SetFocus(infoPtr->Part[0].EditHwnd);
+        IPADDRESS_GotoNextField(infoPtr, -1, POS_SELALL);
         return 0;
 #endif
 	case WM_COMMAND:
