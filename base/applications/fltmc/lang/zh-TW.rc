@@ -29,5 +29,5 @@ BEGIN
     IDS_ERROR_FILTERS   "無法列出篩選器 (0x%X)\n"
     IDS_ERROR_LOAD      "無法載入篩選器驅動程式 (0x%X)\n"
     IDS_ERROR_UNLOAD    "無法卸載篩選器驅動程式 (0x%X)\n"
-    IDS_ERROR_VOLUMES   "無法列出所有磁碟區 (0x%X)\n"
+    IDS_ERROR_VOLUMES   "無法列出磁碟區 (0x%X)\n"
 END
