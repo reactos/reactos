@@ -1297,7 +1297,7 @@ static LRESULT CALLBACK cert_mgr_dlg_proc(HWND hwnd, UINT msg, WPARAM wp,
     case WM_DESTROY:
         data = (struct CertMgrData *)GetWindowLongPtrW(hwnd, DWLP_USER);
         HeapFree(GetProcessHeap(), 0, data);
-    break;
+        break;
 #endif
     }
     return 0;
