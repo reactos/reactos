@@ -201,7 +201,7 @@ BEGIN
     IDS_APP_REG_REMOVE "您確定要從登錄檔刪除該程式的資料嗎？"
     IDS_INFORMATION "資訊"
     IDS_UNABLE_TO_DOWNLOAD "無法下載軟件包！找不到網路位址！"
-    IDS_UNABLE_TO_DOWNLOAD2 "無法下載軟件包！請檢查網絡連接！"
+    IDS_UNABLE_TO_DOWNLOAD2 "無法下載軟件包！請檢查網路連接！"
     IDS_UNABLE_TO_REMOVE "無法從登錄檔刪除該程式的資料！"
     IDS_UNABLE_TO_INSTALL "無法打開安裝程式！"
     IDS_UNABLE_TO_QUERY_CERT "無法獲取證書資訊。\n\n您是否仍要繼續？"
