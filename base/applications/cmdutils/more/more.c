@@ -146,6 +146,7 @@ PagePrompt(PCON_PAGER Pager, DWORD Done, DWORD Total)
     }
 
     /* 'Q': Quit */
+    // FIXME: Available only when command extensions are enabled.
     if ((KeyEvent.wVirtualKeyCode == L'Q') &&
         !(KeyEvent.dwControlKeyState & (LEFT_CTRL_PRESSED | RIGHT_CTRL_PRESSED)))
     {
