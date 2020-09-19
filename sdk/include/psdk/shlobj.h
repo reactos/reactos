@@ -2469,11 +2469,13 @@ HRESULT WINAPI CIDLData_CreateFromIDArray(
 /****************************************************************************
  * SHRunControlPanel
  */
+
 BOOL
 WINAPI
 SHRunControlPanel(
   _In_ LPCWSTR commandLine,
   _In_opt_ HWND parent);
+
 /****************************************************************************
  * SHOpenWithDialog
  */
