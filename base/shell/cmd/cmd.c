@@ -1363,143 +1363,140 @@ do { \
     if (!*Src || *Src == _T('\r') || *Src == _T('\n'))
         goto bad_subst;
 
+    if (bc && Delim == _T('%'))
     {
-        if (bc && Delim == _T('%'))
+        UINT NameLen;
+        Var = GetBatchVar(Src, &NameLen);
+        if (!Var && bParseError)
         {
-            UINT NameLen;
-            Var = GetBatchVar(Src, &NameLen);
-            if (!Var && bParseError)
-            {
-                /* Return the partially-parsed command to be
-                 * echoed for error diagnostics purposes. */
-                APPEND1(Delim);
-                APPEND(Src, _tcslen(Src) + 1);
-                return FALSE;
-            }
-            if (Var != NULL)
-            {
-                VarLength = _tcslen(Var);
-                APPEND(Var, VarLength);
-                Src += NameLen;
-                goto success;
-            }
-        }
-
-        /* Find the end of the variable name. A colon (:) will usually
-         * end the name and begin the optional modifier, but not if it
-         * is immediately followed by the delimiter (%VAR:%). */
-        SubstStart = Src;
-        while (*Src && *Src != Delim && !(*Src == _T(':') && Src[1] != Delim))
-        {
-            ++Src;
-        }
-        /* If we are either at the end of the string, or the delimiter
-         * has been repeated more than once, fail the substitution. */
-        if (!*Src || Src == SubstStart)
-            goto bad_subst;
-
-        EndChr = *Src;
-        *(PTSTR)Src = _T('\0'); // FIXME: HACK!
-        Var = GetEnvVarOrSpecial(SubstStart);
-        *(PTSTR)Src++ = EndChr;
-        if (Var == NULL)
-        {
-            /* In a batch context, %NONEXISTENT% "expands" to an
-             * empty string, otherwise fail the substitution. */
-            if (bc)
-                goto success;
-            goto bad_subst;
-        }
-        VarLength = _tcslen(Var);
-
-        if (EndChr == Delim)
-        {
-            /* %VAR% - use as-is */
-            APPEND(Var, VarLength);
-        }
-        else if (*Src == _T('~'))
-        {
-            /* %VAR:~[start][,length]% - substring
-             * Negative values are offsets from the end.
-             */
-            size_t Start = _tcstol(Src + 1, (PTSTR*)&Src, 0);
-            size_t End = VarLength;
-            if (Start < 0)
-                Start += VarLength;
-            Start = max(Start, 0);
-            Start = min(Start, VarLength);
-            if (*Src == _T(','))
-            {
-                End = _tcstol(Src + 1, (PTSTR*)&Src, 0);
-                End += (End < 0) ? VarLength : Start;
-                End = max(End, Start);
-                End = min(End, VarLength);
-            }
-            if (*Src++ != Delim)
-                goto bad_subst;
-            APPEND(&Var[Start], End - Start);
-        }
-        else
-        {
-            /* %VAR:old=new%  - Replace all occurrences of old with new.
-             * %VAR:*old=new% - Replace first occurrence only,
-             *                  and remove everything before it.
-             */
-            PCTSTR Old, New;
-            size_t OldLength, NewLength;
-            BOOL Star = FALSE;
-            size_t LastMatch = 0, i = 0;
-
-            if (*Src == _T('*'))
-            {
-                Star = TRUE;
-                Src++;
-            }
-
-            /* The string to replace may contain the delimiter */
-            Src = _tcschr(Old = Src, _T('='));
-            if (Src == NULL)
-                goto bad_subst;
-            OldLength = Src++ - Old;
-            if (OldLength == 0)
-                goto bad_subst;
-
-            Src = _tcschr(New = Src, Delim);
-            if (Src == NULL)
-                goto bad_subst;
-            NewLength = Src++ - New;
-
-            while (i < VarLength)
-            {
-                if (_tcsnicmp(&Var[i], Old, OldLength) == 0)
-                {
-                    if (!Star)
-                        APPEND(&Var[LastMatch], i - LastMatch);
-                    APPEND(New, NewLength);
-                    i += OldLength;
-                    LastMatch = i;
-                    if (Star)
-                        break;
-                    continue;
-                }
-                i++;
-            }
-            APPEND(&Var[LastMatch], VarLength - LastMatch);
-        }
-
-        goto success;
-
-    bad_subst:
-        Src = SubstStart;
-        /* Only if no batch context active do we echo the delimiter */
-        if (!bc)
+            /* Return the partially-parsed command to be
+             * echoed for error diagnostics purposes. */
             APPEND1(Delim);
+            APPEND(Src, _tcslen(Src) + 1);
+            return FALSE;
+        }
+        if (Var != NULL)
+        {
+            VarLength = _tcslen(Var);
+            APPEND(Var, VarLength);
+            Src += NameLen;
+            goto success;
+        }
+    }
+
+    /* Find the end of the variable name. A colon (:) will usually
+     * end the name and begin the optional modifier, but not if it
+     * is immediately followed by the delimiter (%VAR:%). */
+    SubstStart = Src;
+    while (*Src && *Src != Delim && !(*Src == _T(':') && Src[1] != Delim))
+    {
+        ++Src;
+    }
+    /* If we are either at the end of the string, or the delimiter
+     * has been repeated more than once, fail the substitution. */
+    if (!*Src || Src == SubstStart)
+        goto bad_subst;
+
+    EndChr = *Src;
+    *(PTSTR)Src = _T('\0'); // FIXME: HACK!
+    Var = GetEnvVarOrSpecial(SubstStart);
+    *(PTSTR)Src++ = EndChr;
+    if (Var == NULL)
+    {
+        /* In a batch context, %NONEXISTENT% "expands" to an
+         * empty string, otherwise fail the substitution. */
+        if (bc)
+            goto success;
+        goto bad_subst;
+    }
+    VarLength = _tcslen(Var);
+
+    if (EndChr == Delim)
+    {
+        /* %VAR% - use as-is */
+        APPEND(Var, VarLength);
+    }
+    else if (*Src == _T('~'))
+    {
+        /* %VAR:~[start][,length]% - substring
+         * Negative values are offsets from the end.
+         */
+        size_t Start = _tcstol(Src + 1, (PTSTR*)&Src, 0);
+        size_t End = VarLength;
+        if (Start < 0)
+            Start += VarLength;
+        Start = max(Start, 0);
+        Start = min(Start, VarLength);
+        if (*Src == _T(','))
+        {
+            End = _tcstol(Src + 1, (PTSTR*)&Src, 0);
+            End += (End < 0) ? VarLength : Start;
+            End = max(End, Start);
+            End = min(End, VarLength);
+        }
+        if (*Src++ != Delim)
+            goto bad_subst;
+        APPEND(&Var[Start], End - Start);
+    }
+    else
+    {
+        /* %VAR:old=new%  - Replace all occurrences of old with new.
+         * %VAR:*old=new% - Replace first occurrence only,
+         *                  and remove everything before it.
+         */
+        PCTSTR Old, New;
+        size_t OldLength, NewLength;
+        BOOL Star = FALSE;
+        size_t LastMatch = 0, i = 0;
+
+        if (*Src == _T('*'))
+        {
+            Star = TRUE;
+            Src++;
+        }
+
+        /* The string to replace may contain the delimiter */
+        Src = _tcschr(Old = Src, _T('='));
+        if (Src == NULL)
+            goto bad_subst;
+        OldLength = Src++ - Old;
+        if (OldLength == 0)
+            goto bad_subst;
+
+        Src = _tcschr(New = Src, Delim);
+        if (Src == NULL)
+            goto bad_subst;
+        NewLength = Src++ - New;
+
+        while (i < VarLength)
+        {
+            if (_tcsnicmp(&Var[i], Old, OldLength) == 0)
+            {
+                if (!Star)
+                    APPEND(&Var[LastMatch], i - LastMatch);
+                APPEND(New, NewLength);
+                i += OldLength;
+                LastMatch = i;
+                if (Star)
+                    break;
+                continue;
+            }
+            i++;
+        }
+        APPEND(&Var[LastMatch], VarLength - LastMatch);
     }
 
 success:
     *SrcIncLen = (Src - Start);
     *DestIncLen = (Dest - End);
     return TRUE;
+
+bad_subst:
+    Src = SubstStart;
+    /* Only if no batch context active do we echo the delimiter */
+    if (!bc)
+        APPEND1(Delim);
+    goto success;
 
 too_long:
     ConOutResPrintf(STRING_ALIAS_ERROR);
