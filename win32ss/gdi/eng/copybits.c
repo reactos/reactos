@@ -3,7 +3,7 @@
  * PROJECT:          ReactOS kernel
  * PURPOSE:          GDI EngCopyBits Function
  * FILE:             win32ss/gdi/eng/copybits.c
- * PROGRAMERS        Jason Filby
+ * PROGRAMERS:       Jason Filby
  *                   Doug Lyons
  */
 
@@ -41,13 +41,13 @@ EngCopyBits(
 
     DPRINT("Source cx/cy is %d/%d and Dest cx/cy is %d/%d.\n",
         psoSource->sizlBitmap.cx, psoSource->sizlBitmap.cy, psoDest->sizlBitmap.cx, psoDest->sizlBitmap.cy);
+
     if (psoSource)
     {
-    DPRINT("psoSource->fjBitmap & BMF_TOPDOWN is '%d'.\n", psoSource->fjBitmap & BMF_TOPDOWN);
+        DPRINT("psoSource->fjBitmap & BMF_TOPDOWN is '%d'.\n", psoSource->fjBitmap & BMF_TOPDOWN);
     }
 
     /* Retrieve Top Down/flip here and then make Well-Ordered again */
-
     if (DestRect->top > DestRect->bottom)
     {
         bTopToBottom = TRUE;
@@ -58,6 +58,7 @@ EngCopyBits(
     }
     else
         bTopToBottom = FALSE;
+
     DPRINT("bTopToBottom is '%d'.\n", bTopToBottom);
 
     ASSERT(psoDest != NULL && psoSource != NULL && DestRect != NULL && SourcePoint != NULL);

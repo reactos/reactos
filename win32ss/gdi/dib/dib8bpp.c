@@ -65,9 +65,9 @@ DIB_8BPP_BitBltSrcCopy(PBLTINFO BltInfo)
     BltInfo->DestSurface->sizlBitmap.cx, BltInfo->DestSurface->sizlBitmap.cy,
     BltInfo->DestRect.left, BltInfo->DestRect.top, BltInfo->DestRect.right, BltInfo->DestRect.bottom);
 
-  /* Normally,if we came from dibobj.c with a BltInfo->SourceSurface->fjBitmap & BMF_TOPDOWN     */
-  /* bit set, we have to set the bTopToBottom flip bit for Lazarus and PeaZip. But for some reason */
-  /* for the 8 BPP here we need to ignore this bit or we get fails in gdi32:CreateDIBPatternBrush. */
+  /* Normally,if we came from dibobj.c with a BltInfo->SourceSurface->fjBitmap & BMF_TOPDOWN
+   * bit set, we have to set the bTopToBottom flip bit for Lazarus and PeaZip. But for some reason
+   * for the 8 BPP here we need to ignore this bit or we get fails in gdi32:CreateDIBPatternBrush. */
 
   DPRINT("SourceSurface->fjBitmap & BMF_TOPDOWN is '%d'.\n", BltInfo->SourceSurface->fjBitmap & BMF_TOPDOWN);
 
@@ -226,11 +226,12 @@ DIB_8BPP_BitBltSrcCopy(PBLTINFO BltInfo)
 
     case BMF_8BPP:
       DPRINT("8BPP-dstRect: (%d,%d)-(%d,%d) and Width of '%d'.\n", 
-         BltInfo->DestRect.left, BltInfo->DestRect.top,
-         BltInfo->DestRect.right, BltInfo->DestRect.bottom,
-         BltInfo->DestRect.right - BltInfo->DestRect.left);
+        BltInfo->DestRect.left, BltInfo->DestRect.top,
+        BltInfo->DestRect.right, BltInfo->DestRect.bottom,
+        BltInfo->DestRect.right - BltInfo->DestRect.left);
 
-      if ((NULL == BltInfo->XlateSourceToDest || 0 != (BltInfo->XlateSourceToDest->flXlate & XO_TRIVIAL)) &&
+      if ((BltInfo->XlateSourceToDest == NULL ||
+        (BltInfo->XlateSourceToDest->flXlate & XO_TRIVIAL) != 0) &&
         (!bTopToBottom && !bLeftToRight))
       {
         if (BltInfo->DestRect.top < BltInfo->SourcePoint.y)
@@ -379,14 +380,13 @@ DIB_8BPP_BitBltSrcCopy(PBLTINFO BltInfo)
               return FALSE;
             }
 
-            /* The OneDone flag indicates that we are flipping for bTopToBottom and bLeftToRight   */
-            /* and have already completed the bLeftToRight. So we will lose our first flip output */
-            /* unless we work with its output which is at the destination site. So in this case   */
-            /* our new Source becomes the previous outputs Destination. */
+            /* The OneDone flag indicates that we are flipping for bTopToBottom and bLeftToRight
+             * and have already completed the bLeftToRight. So we will lose our first flip output
+             * unless we work with its output which is at the destination site. So in this case
+             * our new Source becomes the previous outputs Destination. */
 
             if (OneDone)
             {
-
               /* This sets SourceLine to the bottom line of our previous destination */
               SourceLine = (PBYTE)BltInfo->DestSurface->pvScan0 + 
                 (BltInfo->DestRect.top * BltInfo->DestSurface->lDelta) + BltInfo->DestRect.left  +
@@ -502,7 +502,6 @@ DIB_8BPP_BitBltSrcCopy(PBLTINFO BltInfo)
       break;
 
     case BMF_24BPP:
-
       DPRINT("24BPP-dstRect: (%d,%d)-(%d,%d) and Width of '%d'.\n", 
         BltInfo->DestRect.left, BltInfo->DestRect.top,
         BltInfo->DestRect.right, BltInfo->DestRect.bottom,
@@ -557,7 +556,6 @@ DIB_8BPP_BitBltSrcCopy(PBLTINFO BltInfo)
       break;
 
     case BMF_32BPP:
-
       DPRINT("32BPP Case Selected with DestRect Width of '%d'.\n",
         BltInfo->DestRect.right - BltInfo->DestRect.left);
 

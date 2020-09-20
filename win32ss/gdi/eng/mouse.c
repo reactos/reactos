@@ -731,11 +731,10 @@ GreSetPointerShape(
     /* We must have a valid surface in case of alpha bitmap */
     ASSERT(((fl & SPS_ALPHA) && psurfColor) || !(fl & SPS_ALPHA));
 
-
-    // The line below clears the BMF_TOPDOWN bit of psurf->SurfObj.fjBitmap.
-    // The BMF_TOPDOWN bit is not needed or wanted in the IntEngSetPointerShape when
-    // it is called from here. If it is not cleared here then it will interfere with
-    // how Lazarus and PeaZip call CreateDIBitmap to test whether a bitmap is flipped.
+    /* The line below clears the BMF_TOPDOWN bit of psurf->SurfObj.fjBitmap.
+     * The BMF_TOPDOWN bit is not needed or wanted in the IntEngSetPointerShape when
+     * it is called from here. If it is not cleared here then it will interfere with
+     * how Lazarus and PeaZip call CreateDIBitmap to test whether a bitmap is flipped. */
     psurf->SurfObj.fjBitmap &= ~BMF_TOPDOWN;
 
     /* Call the driver or eng function */

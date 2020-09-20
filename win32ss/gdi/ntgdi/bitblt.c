@@ -489,16 +489,16 @@ NtGdiMaskBlt(
         XlateObj = &exlo.xlo;
     }
 
-    // Should not be used from here. If not cleared this makes it
-    // impossible to use this bit for Lazarus and PeaZip flip info
+    /* Should not be used from here. If not cleared this makes it
+     * impossible to use this bit for Lazarus and PeaZip flip info */
     if (BitmapSrc)
     {
         BitmapSrc->SurfObj.fjBitmap &= ~BMF_TOPDOWN; 
     }
 
     DPRINT("DestRect: (%d,%d)-(%d,%d) and SourcePoint is (%d,%d)\n",
-           DestRect.left, DestRect.top, DestRect.right, DestRect.bottom,
-           SourcePoint.x, SourcePoint.y);
+        DestRect.left, DestRect.top, DestRect.right, DestRect.bottom,
+        SourcePoint.x, SourcePoint.y);
 
     DPRINT("nWidth is '%d' and nHeight is '%d'.\n", nWidth, nHeight);
 
@@ -657,9 +657,9 @@ GreStretchBltMask(
     pdcattr = DCDest->pdcattr;
 
     DPRINT("XOriginSrc/YOriginSrc is (%d,%d) and XOriginDest/YOriginDest is (%d,%d).\n",
-      XOriginSrc, YOriginSrc, XOriginDest, YOriginDest);
+        XOriginSrc, YOriginSrc, XOriginDest, YOriginDest);
     DPRINT("WidthSrc/HeightSrc is '%d/%d' and WidthDest/HeightDest is '%d/%d'.\n",
-      WidthSrc, HeightSrc, WidthDest, HeightDest);
+        WidthSrc, HeightSrc, WidthDest, HeightDest);
 
     DestRect.left   = XOriginDest;
     DestRect.top    = YOriginDest;
@@ -683,8 +683,8 @@ GreStretchBltMask(
     SourceRect.bottom = YOriginSrc+HeightSrc;
 
     DPRINT("SourceRect is (%d,%d)-(%d,%d) and DestRect is (%d,%d)-(%d,%d)\n",
-           SourceRect.left, SourceRect.top, SourceRect.right, SourceRect.bottom,
-           DestRect.left, DestRect.top, DestRect.right, DestRect.bottom);
+        SourceRect.left, SourceRect.top, SourceRect.right, SourceRect.bottom,
+        DestRect.left, DestRect.top, DestRect.right, DestRect.bottom);
 
     if (UsesSource)
     {
@@ -746,9 +746,9 @@ GreStretchBltMask(
         MaskPoint.y += DCMask->ptlDCOrig.y;
     }
 
-    /* The code for the BitmapSrc->SurfObj.fjBitmap BMF_TOPDOWN bit */
-    /* for flipping of the Lazarus taskbar icon comes though here.  */
-    /* Clear this bit to fix the Lazarus flipped taskbar icon.      */
+    /* The code for the BitmapSrc->SurfObj.fjBitmap BMF_TOPDOWN bit
+     * for flipping of the Lazarus taskbar icon comes though here.
+     * Clear this bit to fix the Lazarus flipped taskbar icon. */
     if (BitmapSrc)
     {
         BitmapSrc->SurfObj.fjBitmap &= ~BMF_TOPDOWN;
@@ -1600,4 +1600,3 @@ leave:
     /* Return the new RGB color or -1 on failure */
     return ulRGBColor;
 }
-

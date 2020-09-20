@@ -297,7 +297,7 @@ EngStretchBltROP(
         case DC_TRIVIAL:
             if (bLeftToRight)
             {
-               lTmp = OutputRect.left;
+                lTmp = OutputRect.left;
                 OutputRect.left = OutputRect.right;
                 OutputRect.right = lTmp;
             }
@@ -310,7 +310,7 @@ EngStretchBltROP(
             }
 
             DPRINT("About to call CallDibStretchBlt?: OutputRect: (%d,%d)-(%d,%d)\n",
-                   OutputRect.left, OutputRect.top, OutputRect.right, OutputRect.bottom);
+                OutputRect.left, OutputRect.top, OutputRect.right, OutputRect.bottom);
 
             Ret = (*BltRectFunc)(psoOutput, psoInput, Mask,
                          ColorTranslation, &OutputRect, &InputRect, MaskOrigin,
@@ -331,7 +331,7 @@ EngStretchBltROP(
 
                 if (bLeftToRight)
                 {
-                   lTmp = CombinedRect.left;
+                    lTmp = CombinedRect.left;
                     CombinedRect.left = CombinedRect.right;
                     CombinedRect.right = lTmp;
                 }
@@ -344,7 +344,7 @@ EngStretchBltROP(
                 }
 
                 DPRINT("About to call CallDibStretchBlt?: CombinedRect: (%d,%d)-(%d,%d)\n",
-                       CombinedRect.left, CombinedRect.top, CombinedRect.right, CombinedRect.bottom);
+                    CombinedRect.left, CombinedRect.top, CombinedRect.right, CombinedRect.bottom);
 
                 Ret = (*BltRectFunc)(psoOutput, psoInput, Mask,
                            ColorTranslation,
@@ -394,7 +394,7 @@ EngStretchBltROP(
 
                         if (bLeftToRight)
                         {
-                           lTmp = OutputRect.left;
+                            lTmp = OutputRect.left;
                             OutputRect.left = OutputRect.right;
                             OutputRect.right = lTmp;
                         }
@@ -407,7 +407,7 @@ EngStretchBltROP(
                         }
 
                         DPRINT("About to call CallDibStretchBlt?: CombinedRect: (%d,%d)-(%d,%d)\n",
-                               CombinedRect.left, CombinedRect.top, CombinedRect.right, CombinedRect.bottom);
+                            CombinedRect.left, CombinedRect.top, CombinedRect.right, CombinedRect.bottom);
 
                         Ret = (*BltRectFunc)(psoOutput, psoInput, Mask,
                            ColorTranslation,
@@ -513,18 +513,18 @@ IntEngStretchBlt(SURFOBJ *psoDest,
     cyDest = DestRect->bottom - DestRect->top;
 
     DPRINT("SourceRect is (%d,%d)-(%d,%d) and DestRect is (%d,%d)-(%d,%d)\n",
-           DestRect->left, DestRect->top, DestRect->right, DestRect->bottom,
-           SourceRect->left, SourceRect->top, SourceRect->right, SourceRect->bottom);
+        DestRect->left, DestRect->top, DestRect->right, DestRect->bottom,
+        SourceRect->left, SourceRect->top, SourceRect->right, SourceRect->bottom);
 
     DPRINT("cxDest(%d) cyDest(%d) cxSrc(%d) cySrc(%d)\n",
-           cxDest, cyDest, cxSrc, cySrc);
+        cxDest, cyDest, cxSrc, cySrc);
 
     /* Check if source and dest size are equal in size */
     if ((abs(cxDest) == abs(cxSrc)) && (abs(cyDest) == abs(cySrc)))
     {
-        /* if cxSrc < 0 and cxDest <0 (both negative, we change both their signs  */
-        /* because the outcome is the same as if they were both positive and we   */
-        /* reverse both their top and bottom values                               */
+        /* if cxSrc < 0 and cxDest <0 (both negative, we change both their signs
+         * because the outcome is the same as if they were both positive and we
+         * reverse both their top and bottom values */
         if ((cxSrc < 0) && (cxDest < 0))
         {
             lTmp = DestRect->left;
@@ -537,9 +537,9 @@ IntEngStretchBlt(SURFOBJ *psoDest,
             cxDest = abs(cxDest);
         }
 
-        /* if cySrc < 0 and cyDest <0 (both negative, we change both their signs  */
-        /* because the outcome is the same as if they were both positive and we   */
-        /* reverse both their top and bottom values                               */
+        /* if cySrc < 0 and cyDest <0 (both negative, we change both their signs
+         * because the outcome is the same as if they were both positive and we
+         * reverse both their top and bottom values */
         if ((cySrc < 0) && (cyDest < 0))
         {
             lTmp = DestRect->top;
@@ -552,16 +552,16 @@ IntEngStretchBlt(SURFOBJ *psoDest,
             cyDest = -cyDest;
         }
 
-        /* if the cxDest >= 0 and cxSrc < 0 then we reverse  */
-        /* the signs of both cxDest and cxSrc                */
+        /* if the cxDest >= 0 and cxSrc < 0 then we reverse
+         * the signs of both cxDest and cxSrc */
         if ((cxDest >= 0) && (cxSrc < 0))
         {
             cxDest = -cxDest;
             cxSrc = -cxSrc;
         }
 
-        /* if the cxDest < 0 and cxSrc >= 0 then we reverse */
-        /* the left and right values                        */
+        /* if the cxDest < 0 and cxSrc >= 0 then we reverse
+         * the left and right values */
         else if ((cxDest < 0) && (cxSrc >= 0))
         {
             lTmp = SourceRect->left;
@@ -569,16 +569,16 @@ IntEngStretchBlt(SURFOBJ *psoDest,
             SourceRect->right = lTmp;
         }
 
-        /* if the cyDest >= 0 and cySrc < 0 then we reverse  */
-        /* the signs of both cxDest and cxSrc                */
+        /* if the cyDest >= 0 and cySrc < 0 then we reverse
+         * the signs of both cxDest and cxSrc */
         if ((cyDest >= 0) && (cySrc < 0))
         {
             cyDest = -cyDest;
             cySrc = -cySrc;
         }
 
-        /* if the cyDest < 0 and cySrc >= 0 then we reverse */
-        /* the top and bottom values                        */
+        /* if the cyDest < 0 and cySrc >= 0 then we reverse
+         * the top and bottom values */
         else if ((cyDest <= 0) && (cySrc > 0))
         {
             lTmp = SourceRect->top;
@@ -648,8 +648,8 @@ IntEngStretchBlt(SURFOBJ *psoDest,
 
     DPRINT("bLeftToRight is '%d' and bTopToBottom is '%d'.\n", bLeftToRight, bTopToBottom);
 
-    /* if cxSrc < 0 then we change the signs for both cxSrc and cxDest and */
-    /* we reverse their coordinates, because these outcomes are the same.  */
+    /* if cxSrc < 0 then we change the signs for both cxSrc and cxDest and
+     * we reverse their coordinates, because these outcomes are the same. */
     if (cxSrc < 0)
     {
         lTmp = SourceRect->left;
@@ -662,8 +662,8 @@ IntEngStretchBlt(SURFOBJ *psoDest,
         cxDest = -cxDest;
     }
 
-    /* if cySrc < 0 then we change the signs for both cySrc and cyDest and */
-    /* we reverse their coordinates, because these outcomes are the same.  */
+    /* if cySrc < 0 then we change the signs for both cySrc and cyDest and
+     * we reverse their coordinates, because these outcomes are the same. */
     if (cySrc < 0)
     {
         lTmp = DestRect->top;
@@ -760,9 +760,9 @@ IntEngStretchBlt(SURFOBJ *psoDest,
     if (! ret)
     {
         DPRINT("bLeftToRight is '%d' and bTopToBottom is '%d'.\n", bLeftToRight, bTopToBottom);
-        /* set OutputRect to follow flip */
-        /* Above we converted cxSrc and cySrc to   */
-        /* positive so no need to check these here */
+        /* Set OutputRect to follow flip.
+         * Above we converted cxSrc and cySrc to
+         * positive so no need to check these here. */
         if (bLeftToRight)
         {
             lTmp = OutputRect.left;

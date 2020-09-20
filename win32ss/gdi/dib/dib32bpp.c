@@ -110,7 +110,7 @@ DIB_32BPP_BitBltSrcCopy(PBLTINFO BltInfo)
   {
   case BMF_1BPP:
     DPRINT("1BPP Case Selected with DestRect Width of '%d'.\n",
-           BltInfo->DestRect.right - BltInfo->DestRect.left);
+      BltInfo->DestRect.right - BltInfo->DestRect.left);
 
     sx = BltInfo->SourcePoint.x;
 
@@ -164,7 +164,7 @@ DIB_32BPP_BitBltSrcCopy(PBLTINFO BltInfo)
 
   case BMF_4BPP:
     DPRINT("4BPP Case Selected with DestRect Width of '%d'.\n",
-           BltInfo->DestRect.right - BltInfo->DestRect.left);
+      BltInfo->DestRect.right - BltInfo->DestRect.left);
 
     /* This sets SourceBits_4BPP to the top line */
     SourceBits_4BPP = (PBYTE)BltInfo->SourceSurface->pvScan0
@@ -230,7 +230,7 @@ DIB_32BPP_BitBltSrcCopy(PBLTINFO BltInfo)
 
   case BMF_8BPP:
     DPRINT("8BPP Case Selected with DestRect Width of '%d'.\n",
-           BltInfo->DestRect.right - BltInfo->DestRect.left);
+      BltInfo->DestRect.right - BltInfo->DestRect.left);
 
     /* This sets SourceLine to the top line */
     SourceLine = (PBYTE)BltInfo->SourceSurface->pvScan0 + (BltInfo->SourcePoint.y * BltInfo->SourceSurface->lDelta) + BltInfo->SourcePoint.x;
@@ -281,7 +281,7 @@ DIB_32BPP_BitBltSrcCopy(PBLTINFO BltInfo)
 
   case BMF_16BPP:
     DPRINT("16BPP Case Selected with DestRect Width of '%d'.\n",
-            BltInfo->DestRect.right - BltInfo->DestRect.left);
+        BltInfo->DestRect.right - BltInfo->DestRect.left);
 
     /* This sets SourceLine to the top line */
     SourceLine = (PBYTE)BltInfo->SourceSurface->pvScan0 + (BltInfo->SourcePoint.y * BltInfo->SourceSurface->lDelta) + 2 * BltInfo->SourcePoint.x;
@@ -397,8 +397,9 @@ DIB_32BPP_BitBltSrcCopy(PBLTINFO BltInfo)
     /* This tests for whether we can use simplified/quicker code below which uses RtlMoveMemory.
      * It works for increasing source and destination areas only where there is no full overlap and no flip.
      */
-    if ((NULL == BltInfo->XlateSourceToDest || 0 != (BltInfo->XlateSourceToDest->flXlate & XO_TRIVIAL))
-      && (!bTopToBottom && !bLeftToRight))
+    if ((BltInfo->XlateSourceToDest == NULL ||
+      (BltInfo->XlateSourceToDest->flXlate & XO_TRIVIAL) != 0) &&
+      (!bTopToBottom && !bLeftToRight))
     {
       DPRINT("XO_TRIVIAL is TRUE.\n");
       if (BltInfo->DestRect.top < BltInfo->SourcePoint.y)
@@ -551,9 +552,9 @@ DIB_32BPP_BitBltSrcCopy(PBLTINFO BltInfo)
         if (bTopToBottom)
         {
 
-          /* Note: It is very important that this code remain optimized for time used. */
-          /*   Otherwise you will have random crashes in ReactOS that are undesirable. */
-          /*   For an example of this just try executing the code here two times.      */
+          /* Note: It is very important that this code remain optimized for time used.
+           *   Otherwise you will have random crashes in ReactOS that are undesirable.
+           *   For an example of this just try executing the code here two times. */
 
           DPRINT("Flip is bTopToBottom.\n");
 
@@ -576,10 +577,10 @@ DIB_32BPP_BitBltSrcCopy(PBLTINFO BltInfo)
            + (BltInfo->DestRect.bottom - 1) * BltInfo->DestSurface->lDelta
            + 4 * BltInfo->DestRect.left;
 
-          /* The OneDone flag indicates that we are flipping for bTopToBottom and bLeftToRight   */
-          /* and have already completed the bLeftToRight. So we will lose our first flip output */
-          /* unless we work with its output which is at the destination site. So in this case   */
-          /* our new Source becomes the previous outputs Destination. */
+          /* The OneDone flag indicates that we are flipping for bTopToBottom and bLeftToRight
+           * and have already completed the bLeftToRight. So we will lose our first flip output
+           * unless we work with its output which is at the destination site. So in this case
+           * our new Source becomes the previous outputs Destination. */
 
           if (OneDone)
           {

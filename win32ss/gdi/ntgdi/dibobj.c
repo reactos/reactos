@@ -320,14 +320,14 @@ IntSetDIBits(
     ptSrc.x = 0;
     ptSrc.y = 0;
 
-    /* The code for the psurfSrc->SurfObj.fjBitmap BMF_TOPDOWN bit   */
-    /* for flipping of the Lazarus icons comes though this location. */
-    /* Allowing this bit to pass fixes the first Lazarus Lion Setup  */
-    /* icon and it fixes the flips for SPINA Thyr and SimThyr. But,  */
-    /* it causes the Lazarus pull down menus to flip on mouse touch. */
+    /* The code for the psurfSrc->SurfObj.fjBitmap BMF_TOPDOWN bit
+     * for flipping of the Lazarus icons comes though this location.
+     * Allowing this bit to pass fixes the first Lazarus Lion Setup
+     * icon and it fixes the flips for SPINA Thyr and SimThyr. But,
+     * it causes the Lazarus pull down menus to flip on mouse touch. */
 
     DPRINT("psurfSrc->SurfObj.fjBitmap & BMF_TOPDOWN is '%d'.\n",
-      psurfSrc->SurfObj.fjBitmap & BMF_TOPDOWN);
+        psurfSrc->SurfObj.fjBitmap & BMF_TOPDOWN);
 
     result = IntEngCopyBits(&psurfDst->SurfObj,
                             &psurfSrc->SurfObj,
@@ -644,8 +644,8 @@ NtGdiSetDIBitsToDeviceInternal(
            rcDest.left, rcDest.top, rcDest.right, rcDest.bottom,
            ptSource.x, ptSource.y, SourceSize.cx, SourceSize.cy);
 
-    // Not used from here. If not cleared this makes it
-    // impossible to use this bit for Lazarus and PeaZip flip info
+    /* Not used from here. If not cleared this makes it
+     * impossible to use this bit for Lazarus and PeaZip flip info */
     pSourceSurf->fjBitmap &= ~BMF_TOPDOWN;
 
     /* This fixes the large Google text on Google.com from being upside down */
@@ -1031,13 +1031,13 @@ GreGetDIBitsInternal(
 
         EXLATEOBJ_vInitialize(&exlo, psurf->ppal, psurfDest->ppal, 0xffffff, 0xffffff, 0);
 
-        /* The code for the psurfSrc->SurfObj.fjBitmap BMF_TOPDOWN bit  */
-        /* for flipping of the PeaZip icons comes though this location. */
-        /* Allowing this bit to pass fixes both PeaZip and Lazarus menu */
-        /* flips. It fixes the menubar icons for Double Commander too.  */
+        /* The code for the psurfSrc->SurfObj.fjBitmap BMF_TOPDOWN bit
+         * for flipping of the PeaZip icons comes though this location.
+         * Allowing this bit to pass fixes both PeaZip and Lazarus menu
+         * flips. It fixes the menubar icons for Double Commander too. */
 
         DPRINT("psurf->SurfObj.fjBitmap & BMF_TOPDOWN is '%d'.\n",
-          psurf->SurfObj.fjBitmap & BMF_TOPDOWN);
+            psurf->SurfObj.fjBitmap & BMF_TOPDOWN);
 
         DPRINT("Info->bmiHeader.biHeight is '%d'.\n", Info->bmiHeader.biHeight);
 

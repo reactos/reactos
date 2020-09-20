@@ -151,8 +151,8 @@ DIB_16BPP_BitBltSrcCopy(PBLTINFO BltInfo)
     BltInfo->DestSurface->sizlBitmap.cx, BltInfo->DestSurface->sizlBitmap.cy,
     BltInfo->DestRect.left, BltInfo->DestRect.top, BltInfo->DestRect.right, BltInfo->DestRect.bottom);
 
-  /* If we came from dibobj.c with a TBltInfo->SourceSurface->fjBitmap & BMF_TOPDOWN   */
-  /* bit set, then we need a flip of bTopToBottom. This mostly fixes Lazarus and PeaZip. */
+  /* If we came from dibobj.c with a TBltInfo->SourceSurface->fjBitmap & BMF_TOPDOWN
+   * bit set, then we need a flip of bTopToBottom. This mostly fixes Lazarus and PeaZip. */
 
   DPRINT("SourceSurface->fjBitmap & BMF_TOPDOWN is '%d'.\n", BltInfo->SourceSurface->fjBitmap & BMF_TOPDOWN);
 
@@ -247,7 +247,7 @@ DIB_16BPP_BitBltSrcCopy(PBLTINFO BltInfo)
 
   case BMF_4BPP:
     DPRINT("4BPP Case Selected with DestRect Width of '%d'.\n",
-           BltInfo->DestRect.right - BltInfo->DestRect.left);
+      BltInfo->DestRect.right - BltInfo->DestRect.left);
 
     /* This sets SourceBits_4BPP to the top line */
     SourceBits_4BPP = (PBYTE)BltInfo->SourceSurface->pvScan0 +
@@ -315,7 +315,7 @@ DIB_16BPP_BitBltSrcCopy(PBLTINFO BltInfo)
 
   case BMF_8BPP:
     DPRINT("8BPP Case Selected with DestRect Width of '%d'.\n",
-           BltInfo->DestRect.right - BltInfo->DestRect.left);
+      BltInfo->DestRect.right - BltInfo->DestRect.left);
 
     /* This sets SourceLine to the top line */
     SourceLine = (PBYTE)BltInfo->SourceSurface->pvScan0 +
@@ -368,15 +368,16 @@ DIB_16BPP_BitBltSrcCopy(PBLTINFO BltInfo)
 
   case BMF_16BPP:
     DPRINT("16BPP Case Selected with DestRect Width of '%d'.\n",
-           BltInfo->DestRect.right - BltInfo->DestRect.left);
+      BltInfo->DestRect.right - BltInfo->DestRect.left);
 
     DPRINT("BMF_16BPP-dstRect: (%d,%d)-(%d,%d) and Width of '%d'.\n", 
-            BltInfo->DestRect.left, BltInfo->DestRect.top,
-            BltInfo->DestRect.right, BltInfo->DestRect.bottom,
-            BltInfo->DestRect.right - BltInfo->DestRect.left);
+      BltInfo->DestRect.left, BltInfo->DestRect.top,
+      BltInfo->DestRect.right, BltInfo->DestRect.bottom,
+      BltInfo->DestRect.right - BltInfo->DestRect.left);
 
-    if ((NULL == BltInfo->XlateSourceToDest || 0 !=
-      (BltInfo->XlateSourceToDest->flXlate & XO_TRIVIAL)) && (!bTopToBottom && !bLeftToRight))
+    if ((BltInfo->XlateSourceToDest == NULL ||
+      (BltInfo->XlateSourceToDest->flXlate & XO_TRIVIAL) != 0) &&
+      (!bTopToBottom && !bLeftToRight))
     {
       DPRINT("XO_TRIVIAL is TRUE.\n");
       if (BltInfo->DestRect.top < BltInfo->SourcePoint.y)
@@ -634,9 +635,9 @@ DIB_16BPP_BitBltSrcCopy(PBLTINFO BltInfo)
   case BMF_24BPP:
 
     DPRINT("BMF_24BPP-dstRect: (%d,%d)-(%d,%d) and Width of '%d'.\n", 
-            BltInfo->DestRect.left, BltInfo->DestRect.top,
-            BltInfo->DestRect.right, BltInfo->DestRect.bottom,
-            BltInfo->DestRect.right - BltInfo->DestRect.left);
+      BltInfo->DestRect.left, BltInfo->DestRect.top,
+      BltInfo->DestRect.right, BltInfo->DestRect.bottom,
+      BltInfo->DestRect.right - BltInfo->DestRect.left);
 
     /* This sets SourceLine to the top line */
     SourceLine = (PBYTE)BltInfo->SourceSurface->pvScan0 +

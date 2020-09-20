@@ -63,16 +63,16 @@ BOOLEAN DIB_XXBPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf, SURFOBJ *Ma
   SrcHeight = SourceRect->bottom - SourceRect->top;
   SrcWidth = SourceRect->right - SourceRect->left;
 
-    /* Here we do the tests and set our conditions */
-    if (((SrcWidth < 0) && (DstWidth < 0)) || ((SrcWidth >= 0) && (DstWidth >= 0)))
-        bLeftToRight = FALSE;
-    else
-        bLeftToRight = TRUE;
+  /* Here we do the tests and set our conditions */
+  if (((SrcWidth < 0) && (DstWidth < 0)) || ((SrcWidth >= 0) && (DstWidth >= 0)))
+    bLeftToRight = FALSE;
+  else
+    bLeftToRight = TRUE;
 
-    if (((SrcHeight < 0) && (DstHeight < 0)) || ((SrcHeight >= 0) && (DstHeight >= 0)))
-        bTopToBottom = FALSE;
-    else
-        bTopToBottom = TRUE;
+  if (((SrcHeight < 0) && (DstHeight < 0)) || ((SrcHeight >= 0) && (DstHeight >= 0)))
+    bTopToBottom = FALSE;
+  else
+    bTopToBottom = TRUE;
 
   /* Make Well Ordered to start */
   RECTL_vMakeWellOrdered(DestRect);

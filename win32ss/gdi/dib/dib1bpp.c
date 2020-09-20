@@ -100,7 +100,6 @@ DIB_1BPP_BitBltSrcCopy_From1BPP (
 
   xormask = 0xFF * (BYTE)XLATEOBJ_iXlate(pxlo, 0);
 
-
   if ( DestRect->top <= SourcePoint->y )
   {
     DPRINT("Moving up (scan top -> bottom).\n");
@@ -286,8 +285,8 @@ DIB_1BPP_BitBltSrcCopy(PBLTINFO BltInfo)
     BltInfo->DestSurface->sizlBitmap.cx, BltInfo->DestSurface->sizlBitmap.cy,
     BltInfo->DestRect.left, BltInfo->DestRect.top, BltInfo->DestRect.right, BltInfo->DestRect.bottom);
 
-  /* If we came from dibobj.c with a SourceSurface BMF_TOPDOWN bit set,       */
-  /* then we need a flip of bTopToBottom. This mostly fixes Lazarus and PeaZip. */
+  /* If we came from dibobj.c with a SourceSurface BMF_TOPDOWN bit set,
+   * then we need a flip of bTopToBottom. This mostly fixes Lazarus and PeaZip. */
 
   DPRINT("SourceSurface->fjBitmap & BMF_TOPDOWN is '%d'.\n", BltInfo->SourceSurface->fjBitmap & BMF_TOPDOWN);
 
@@ -375,9 +374,9 @@ DIB_1BPP_BitBltSrcCopy(PBLTINFO BltInfo)
 
   case BMF_8BPP:
     DPRINT("8BPP-dstRect: (%d,%d)-(%d,%d) and Width of '%d'.\n", 
-       BltInfo->DestRect.left, BltInfo->DestRect.top,
-       BltInfo->DestRect.right, BltInfo->DestRect.bottom,
-       BltInfo->DestRect.right - BltInfo->DestRect.left);
+      BltInfo->DestRect.left, BltInfo->DestRect.top,
+      BltInfo->DestRect.right, BltInfo->DestRect.bottom,
+      BltInfo->DestRect.right - BltInfo->DestRect.left);
  
     if (bTopToBottom)
     {

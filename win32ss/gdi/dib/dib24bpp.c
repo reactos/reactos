@@ -322,7 +322,8 @@ DIB_24BPP_BitBltSrcCopy(PBLTINFO BltInfo)
         BltInfo->DestRect.right - BltInfo->DestRect.left);
 
       /* Check for no flips here because we are about to use RtlMoveMemory and it can only do increasing src & dst */
-      if ((NULL == BltInfo->XlateSourceToDest || 0 != (BltInfo->XlateSourceToDest->flXlate & XO_TRIVIAL)) &&
+      if ((BltInfo->XlateSourceToDest == NULL ||
+        (BltInfo->XlateSourceToDest->flXlate & XO_TRIVIAL) != 0) &&
         (!bTopToBottom && !bLeftToRight))
       {
         DPRINT("XO_TRIVIAL is TRUE.\n");
