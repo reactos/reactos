@@ -7,11 +7,7 @@
 
 #define COBJMACROS
 #include "config.h"
-#include "wine/port.h"
 #include "windef.h"
-#include "winbase.h"
-#include "winerror.h"
-#include "wine/unicode.h"
 #include "winreg.h"
 #include "shldisp.h"
 #include "shlguid.h"
