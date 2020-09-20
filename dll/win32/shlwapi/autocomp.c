@@ -30,12 +30,8 @@ typedef struct AutoComplete_EnumStringVtbl
         IEnumString* This,
         REFIID riid,
         void **ppvObject);
-
-    ULONG (STDMETHODCALLTYPE *AddRef)(
-        IEnumString* This);
-
-    ULONG (STDMETHODCALLTYPE *Release)(
-        IEnumString* This);
+    ULONG (STDMETHODCALLTYPE *AddRef)(IEnumString* This);
+    ULONG (STDMETHODCALLTYPE *Release)(IEnumString* This);
 
     /*** IEnumString methods ***/
     HRESULT (STDMETHODCALLTYPE *Next)(
@@ -43,17 +39,9 @@ typedef struct AutoComplete_EnumStringVtbl
         ULONG celt,
         LPOLESTR *rgelt,
         ULONG *pceltFetched);
-
-    HRESULT (STDMETHODCALLTYPE *Skip)(
-        IEnumString* This,
-        ULONG celt);
-
-    HRESULT (STDMETHODCALLTYPE *Reset)(
-        IEnumString* This);
-
-    HRESULT (STDMETHODCALLTYPE *Clone)(
-        IEnumString* This,
-        IEnumString **ppenum);
+    HRESULT (STDMETHODCALLTYPE *Skip)(IEnumString* This, ULONG celt);
+    HRESULT (STDMETHODCALLTYPE *Reset)(IEnumString* This);
+    HRESULT (STDMETHODCALLTYPE *Clone)(IEnumString* This, IEnumString **ppenum);
 } AutoComplete_EnumStringVtbl;
 
 typedef struct AutoComplete_EnumString
@@ -285,6 +273,7 @@ AutoComplete_EnumString_Clone(IEnumString* This, IEnumString **ppenum)
     return S_OK;
 }
 
+/* "." or ".." ? */
 #define IS_IGNORED_DOTS(sz) \
     ( sz[0] == L'.' && (sz[1] == 0 || (sz[1] == L'.' && sz[2] == 0)) )
 
@@ -327,7 +316,7 @@ AutoComplete_DoDir(AutoComplete_EnumString *pES, LPCWSTR pszDir, BOOL bDirOnly)
 static void
 AutoComplete_DoDrives(AutoComplete_EnumString *pES, BOOL bDirOnly)
 {
-    WCHAR sz[4];
+    WCHAR sz[4] = L"C:\\";
     UINT uType;
     DWORD i, dwBits = GetLogicalDrives();
 
@@ -336,9 +325,6 @@ AutoComplete_DoDrives(AutoComplete_EnumString *pES, BOOL bDirOnly)
         if (dwBits & (1 << i))
         {
             sz[0] = (WCHAR)(L'A' + i);
-            sz[1] = L':';
-            sz[2] = L'\\';
-            sz[3] = 0;
             AutoComplete_EnumString_AddString(pES, sz);
 
             uType = GetDriveTypeW(sz);
