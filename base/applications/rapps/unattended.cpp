@@ -5,14 +5,11 @@
  * COPYRIGHT:   Copyright 2017 Alexander Shaposhnikov (sanchaez@reactos.org)
  *              Copyright 2020 He Yang                (1160386205@qq.com)
  */
+
 #include "rapps.h"
-
 #include "unattended.h"
-
 #include "winmain.h"
-
 #include <setupapi.h>
-
 #include <conutils.h>
 
 BOOL MatchCmdOption(LPWSTR argvOption, LPCWSTR szOptToMacth)
@@ -119,13 +116,13 @@ BOOL HandleSetupCommand(LPWSTR szCommand, int argcLeft, LPWSTR * argvLeft)
 BOOL CALLBACK CmdFindAppEnum(CAvailableApplicationInfo *Info, BOOL bInitialCheckState, PVOID param)
 {
     LPCWSTR lpszSearch = (LPCWSTR)param;
-    if (!SearchPatternMatch(Info->m_szName.GetString(), lpszSearch) &&
-        !SearchPatternMatch(Info->m_szDesc.GetString(), lpszSearch))
+    if (!SearchPatternMatch(Info->m_szName, lpszSearch) &&
+        !SearchPatternMatch(Info->m_szDesc, lpszSearch))
     {
         return TRUE;
     }
 
-    ConPrintf(StdOut, (LPWSTR)L"%s (%s)\n", (LPCWSTR)(Info->m_szName), (LPCWSTR)(Info->m_szPkgName));
+    ConPrintf(StdOut, L"%s (%s)\n", Info->m_szName.GetString(), Info->m_szPkgName.GetString());
     return TRUE;
 }
 
@@ -144,7 +141,7 @@ BOOL HandleFindCommand(LPWSTR szCommand, int argcLeft, LPWSTR *argvLeft)
     {
         ConResMsgPrintf(StdOut, NULL, IDS_CMD_FIND_RESULT_FOR, argvLeft[i]);
         apps.Enum(ENUM_ALL_AVAILABLE, CmdFindAppEnum, argvLeft[i]);
-        ConPrintf(StdOut, (LPWSTR)L"\n");
+        ConPrintf(StdOut, L"\n");
     }
 
     return TRUE;
@@ -176,47 +173,47 @@ BOOL HandleInfoCommand(LPWSTR szCommand, int argcLeft, LPWSTR *argvLeft)
             // is in a mess. It should be refactored, and should not placed in class CAppRichEdit.
             // and the code here should reused that code after refactor.
 
-            ConPuts(StdOut, (LPWSTR)(LPCWSTR)AppInfo->m_szName);
+            ConPuts(StdOut, AppInfo->m_szName);
 
             if (AppInfo->m_szVersion)
             {
                 ConResPrintf(StdOut, IDS_AINFO_VERSION);
-                ConPuts(StdOut, (LPWSTR)(LPCWSTR)AppInfo->m_szVersion);
+                ConPuts(StdOut, AppInfo->m_szVersion);
             }
 
             if (AppInfo->m_szLicense)
             {
                 ConResPrintf(StdOut, IDS_AINFO_LICENSE);
-                ConPuts(StdOut, (LPWSTR)(LPCWSTR)AppInfo->m_szLicense);
+                ConPuts(StdOut, AppInfo->m_szLicense);
             }
 
             if (AppInfo->m_szSize)
             {
                 ConResPrintf(StdOut, IDS_AINFO_SIZE);
-                ConPuts(StdOut, (LPWSTR)(LPCWSTR)AppInfo->m_szSize);
+                ConPuts(StdOut, AppInfo->m_szSize);
             }
 
             if (AppInfo->m_szUrlSite)
             {
                 ConResPrintf(StdOut, IDS_AINFO_URLSITE);
-                ConPuts(StdOut, (LPWSTR)(LPCWSTR)AppInfo->m_szUrlSite);
+                ConPuts(StdOut, AppInfo->m_szUrlSite);
             }
 
             if (AppInfo->m_szDesc)
             {
                 ConResPrintf(StdOut, IDS_AINFO_DESCRIPTION);
-                ConPuts(StdOut, (LPWSTR)(LPCWSTR)AppInfo->m_szDesc);
+                ConPuts(StdOut, AppInfo->m_szDesc);
             }
 
             if (AppInfo->m_szUrlDownload)
             {
                 ConResPrintf(StdOut, IDS_AINFO_URLDOWNLOAD);
-                ConPuts(StdOut, (LPWSTR)(LPCWSTR)AppInfo->m_szUrlDownload);
+                ConPuts(StdOut, AppInfo->m_szUrlDownload);
             }
 
-            ConPrintf(StdOut, (LPWSTR)L"\n");
+            ConPrintf(StdOut, L"\n");
         }
-        ConPrintf(StdOut, (LPWSTR)L"\n");
+        ConPrintf(StdOut, L"\n");
     }
     return TRUE;
 }
@@ -228,12 +225,12 @@ BOOL HandleHelpCommand(LPWSTR szCommand, int argcLeft, LPWSTR * argvLeft)
         return FALSE;
     }
 
-    ConPrintf(StdOut, (LPWSTR)L"\n");
+    ConPrintf(StdOut, L"\n");
     ConResPuts(StdOut, IDS_APPTITLE);
-    ConPrintf(StdOut, (LPWSTR)L"\n\n");
+    ConPrintf(StdOut, L"\n\n");
 
     ConResPuts(StdOut, IDS_CMD_USAGE);
-    ConPrintf(StdOut, (LPWSTR)L"%ls\n", UsageString);
+    ConPrintf(StdOut, L"%ls\n", UsageString);
     return TRUE;
 }
 
