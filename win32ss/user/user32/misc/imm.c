@@ -22,14 +22,14 @@ BOOL bImmInitializing = FALSE;
 /* define stub functions */
 #undef DEFINE_IMM_ENTRY
 #define DEFINE_IMM_ENTRY(type, name, params, retval) \
-    type WINAPI STUB_##name params { return (type)retval; }
+    static type WINAPI IMMSTUB_##name params { return (type)retval; }
 #include "immtable.h"
 
 Imm32ApiTable gImmApiEntries = {
 /* initialize by stubs */
 #undef DEFINE_IMM_ENTRY
 #define DEFINE_IMM_ENTRY(type, name, params, retval) \
-    STUB_##name,
+    IMMSTUB_##name,
 #include "immtable.h"
 };
 
@@ -55,7 +55,7 @@ BOOL WINAPI IntInitializeImmEntryTable(VOID)
     WCHAR ImmFile[MAX_PATH];
     HMODULE imm32 = ghImm32;
 
-    if (IMM_FN(ImmWINNLSEnableIME) != STUB_ImmWINNLSEnableIME)
+    if (IMM_FN(ImmWINNLSEnableIME) != IMMSTUB_ImmWINNLSEnableIME)
         return TRUE;
 
     GetImmFileName(ImmFile, sizeof(ImmFile));
