@@ -248,10 +248,7 @@ AutoComplete_EnumString_Clone(IEnumString* This, IEnumString **ppenum)
     this_ = (AutoComplete_EnumString *)This;
     cloned = AutoComplete_EnumString_Construct(this_->m_cstrs);
     if (!cloned)
-    {
-        ERR("Out of memory\n");
         return E_OUTOFMEMORY;
-    }
 
     count = this_->m_cstrs;
     pstrs = this_->m_pstrs;
@@ -498,7 +495,10 @@ AutoComplete_EnumString_Construct(SIZE_T capacity)
 {
     AutoComplete_EnumString *ret = CoTaskMemAlloc(sizeof(AutoComplete_EnumString));
     if (!ret)
+    {
+        ERR("Out of memory\n");
         return ret;
+    }
 
     ret->lpVtbl = &vtbl;
 
