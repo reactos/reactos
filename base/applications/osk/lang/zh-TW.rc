@@ -276,7 +276,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "輸入模式(&T)...", IDM_TYPE_MODE, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "字體(&F)...", IDM_FONT, GRAYED
+        MENUITEM "字型(&F)...", IDM_FONT, GRAYED
     END
 
     POPUP "說明"
