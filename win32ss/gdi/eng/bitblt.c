@@ -690,23 +690,8 @@ IntEngBitBlt(
 
     DPRINT("psoSrc->fjBitmap & BMF_TOPDOWN is '%d'.\n", psoSrc->fjBitmap & BMF_TOPDOWN);
 
-    if (prclTrg->left > prclTrg->right)
-    {
-      bLeftToRight = TRUE;
-    }
-    else
-    {
-      bLeftToRight = FALSE;
-    }
-
-    if (prclTrg->top > prclTrg->bottom)
-    {
-      bTopToBottom = TRUE;
-    }
-    else
-    {
-      bTopToBottom = FALSE;
-    }
+    bLeftToRight = prclTrg->left > prclTrg->right;
+    bTopToBottom = prclTrg->top > prclTrg->bottom;
 
     /* Get the target rect and make it well ordered */
     rclClipped = *prclTrg;
