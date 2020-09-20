@@ -39,7 +39,7 @@ DEFINE_IMM_ENTRY(BOOL, ImmSetConversionStatus, (HIMC hIMC, DWORD dwConversion, D
 DEFINE_IMM_ENTRY(BOOL, ImmSetStatusWindowPos, (HIMC hIMC, LPPOINT lppt), 0)
 DEFINE_IMM_ENTRY(BOOL, ImmGetImeInfoEx, (PIMEINFOEX info, IMEINFOEXCLASS type, LPVOID pvKey), 0)
 DEFINE_IMM_ENTRY(/*PIMEDPI*/ LPVOID, ImmLockImeDpi, (HKL hKL), 0)
-DEFINE_IMM_ENTRY(VOID, ImmUnlockImeDpi, (/*PIMEDPI*/ LPVOID dpi), 0)
+DEFINE_IMM_ENTRY(/*VOID*/ BOOL, ImmUnlockImeDpi, (/*PIMEDPI*/ LPVOID dpi), 0)
 DEFINE_IMM_ENTRY(BOOL, ImmGetOpenStatus, (HIMC hIMC), 0)
 DEFINE_IMM_ENTRY(BOOL, ImmSetActiveContext, (HWND hwnd, HIMC hIMC, BOOL bFlag), 0)
 DEFINE_IMM_ENTRY(BOOL, ImmTranslateMessage, (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam), 0)
