@@ -2501,3 +2501,7 @@ diff -pudN e:\wine\dlls\comctl32/treeview.c e:\reactos\dll\win32\comctl32/treevi
  
      if (IsThemeBackgroundPartiallyTransparent (theme, 0, 0))
          DrawThemeParentBackground(infoPtr->hwnd, dc, &r);
+diff -pudN e:\wine\dlls\comctl32/idc_divider.cur e:\reactos\dll\win32\comctl32/idc_divider.cur
+#is kept at older state of ros SVN r75877 to avoid CORE-14144
+diff -pudN e:\wine\dlls\comctl32/idc_divideropen.cur e:\reactos\dll\win32\comctl32/idc_divideropen.cur
+#is kept at older state of ros SVN r75877 to avoid CORE-14144
