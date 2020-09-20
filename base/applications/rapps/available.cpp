@@ -7,15 +7,13 @@
  *              Copyright 2017 Alexander Shaposhnikov     (sanchaez@reactos.org)
  *              Copyright 2020 He Yang                    (1160386205@qq.com)
  */
+
 #include "rapps.h"
 
 #include "available.h"
 #include "misc.h"
 #include "dialogs.h"
 
-#include <atlcoll.h>
-#include <atlsimpcoll.h>
-#include <atlstr.h>
 
  // CAvailableApplicationInfo
 CAvailableApplicationInfo::CAvailableApplicationInfo(const ATL::CStringW& sFileNameParam, AvailableStrings& AvlbStrings)
