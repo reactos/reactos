@@ -308,7 +308,7 @@ AvailableStrings::AvailableStrings()
         PathAppendW(szAppsPath.GetBuffer(MAX_PATH), L"rapps");
         szAppsPath.ReleaseBuffer();
 
-        szCabName = L"rappmgr.cab";
+        szCabName = APPLICATION_DATABASE_NAME;
         szCabDir = szPath;
         szCabPath = szCabDir;
         PathAppendW(szCabPath.GetBuffer(MAX_PATH), szCabName);

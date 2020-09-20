@@ -658,7 +658,7 @@ unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
         {
         case DLTYPE_DBUPDATE:
         case DLTYPE_DBUPDATE_UNOFFICIAL:
-            PathAppendW(Path.GetBuffer(), L"rappmgr.cab"); // whatever the URL is, use the file name L"rappmgr.cab"
+            PathAppendW(Path.GetBuffer(), APPLICATION_DATABASE_NAME);
             break;
         case DLTYPE_APPLICATION:
             PathAppendW(Path.GetBuffer(), (LPWSTR)(p + 1)); // use the filename retrieved from URL
