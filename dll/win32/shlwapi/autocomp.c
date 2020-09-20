@@ -98,7 +98,10 @@ AutoComplete_EnumString_QueryInterface(
     void **ppvObject)
 {
     if (!ppvObject)
+    {
+        ERR("ppvObject is NULL\n");
         return E_POINTER;
+    }
 
     if (IsEqualIID(riid, &IID_IEnumString) || IsEqualIID(riid, &IID_IUnknown))
     {
@@ -107,6 +110,7 @@ AutoComplete_EnumString_QueryInterface(
         return S_OK;
     }
 
+    ERR("E_NOINTERFACE\n");
     return E_NOINTERFACE;
 }
 
@@ -123,9 +127,7 @@ AutoComplete_EnumString_Release(IEnumString* This)
     AutoComplete_EnumString *this_ = (AutoComplete_EnumString *)This;
     LONG ret = InterlockedDecrement(&this_->m_cRefs);
     if (!ret)
-    {
         AutoComplete_EnumString_Destruct(this_);
-    }
     return ret;
 }
 
@@ -135,7 +137,10 @@ AutoComplete_EnumString_AddBStrNoGrow(AutoComplete_EnumString *this_, BSTR bstr)
     UINT cch = SysStringLen(bstr);
     bstr = SysAllocStringLen(bstr, cch);
     if (!bstr)
+    {
+        ERR("Out of memory\n");
         return FALSE;
+    }
 
     assert(this_->m_cstrs + 1 < this_->m_capacity);
     this_->m_pstrs[this_->m_cstrs++] = bstr;
@@ -150,7 +155,10 @@ AutoComplete_EnumString_AddString(AutoComplete_EnumString *this_, LPCWSTR str)
 
     bstr = SysAllocString(str);
     if (!bstr)
+    {
+        ERR("Out of memory\n");
         return FALSE;
+    }
 
     if (this_->m_cstrs + 1 >= this_->m_capacity)
     {
@@ -158,6 +166,7 @@ AutoComplete_EnumString_AddString(AutoComplete_EnumString *this_, LPCWSTR str)
         pstrs = (BSTR *)CoTaskMemAlloc(new_capacity * sizeof(BSTR));
         if (!pstrs)
         {
+            ERR("Out of memory\n");
             SysFreeString(bstr);
             return FALSE;
         }
@@ -184,7 +193,10 @@ AutoComplete_EnumString_Next(
     AutoComplete_EnumString *this_ = (AutoComplete_EnumString *)This;
 
     if (!rgelt || !pceltFetched)
+    {
+        ERR("E_POINTER\n");
         return E_POINTER;
+    }
 
     *pceltFetched = 0;
     *rgelt = NULL;
@@ -241,12 +253,18 @@ AutoComplete_EnumString_Clone(IEnumString* This, IEnumString **ppenum)
     BSTR *pstrs;
 
     if (!ppenum)
+    {
+        ERR("E_POINTER\n");
         return E_POINTER;
+    }
 
     this_ = (AutoComplete_EnumString *)This;
     cloned = AutoComplete_EnumString_Construct(this_->m_cstrs);
     if (!cloned)
+    {
+        ERR("Out of memory\n");
         return E_OUTOFMEMORY;
+    }
 
     count = this_->m_cstrs;
     pstrs = this_->m_pstrs;
@@ -353,7 +371,10 @@ AutoComplete_DoURLHistory(AutoComplete_EnumString *pES)
 
     result = RegOpenKeyExW(HKEY_CURRENT_USER, pszTypedURLs, 0, KEY_READ, &hKey);
     if (result != ERROR_SUCCESS)
+    {
+        TRACE("Opening TypedURLs failed: 0x%lX\n", result);
         return;
+    }
 
     for (i = 1; i <= MAX_TYPED_URLS; ++i)
     {
@@ -387,7 +408,10 @@ AutoComplete_DoURLMRU(AutoComplete_EnumString *pES)
 
     result = RegOpenKeyExW(HKEY_CURRENT_USER, pszRunMRU, 0, KEY_READ, &hKey);
     if (result != ERROR_SUCCESS)
+    {
+        TRACE("Opening RunMRU failed: 0x%lX\n", result);
         return;
+    }
 
     szMRUList[0] = 0;
     cbValue = sizeof(szMRUList);
@@ -575,7 +599,10 @@ AutoComplete_AdaptFlags(HWND hwndEdit, LPDWORD pdwACO, LPDWORD pdwSHACF)
     }
 
     if (!(dwACO & (ACO_AUTOSUGGEST | ACO_AUTOAPPEND)))
+    {
+        ERR("dwACO: 0x%lX\n", dwACO);
         return FALSE;
+    }
 
     *pdwACO = dwACO;
     *pdwSHACF = dwSHACF;
@@ -621,19 +648,23 @@ HRESULT WINAPI SHAutoComplete(HWND hwndEdit, DWORD dwFlags)
     DWORD dwACO;
     DWORD dwClsCtx = CLSCTX_INPROC_HANDLER | CLSCTX_INPROC_SERVER | CLSCTX_LOCAL_SERVER;
 
+    TRACE("SHAutoComplete(%p, 0x%lX)\n", hwndEdit, dwFlags);
+
     if (!AutoComplete_AdaptFlags(hwndEdit, &dwACO, &dwFlags))
-    {
         return S_OK;
-    }
 
     hr = CoCreateInstance(&CLSID_AutoComplete, NULL, dwClsCtx,
                           &IID_IAutoComplete, (LPVOID *)&pAC2);
     if (FAILED(hr))
+    {
+        ERR("CoCreateInstance(CLSID_AutoComplete) failed: 0x%lX\n", hr);
         return hr;
+    }
 
     pES = AutoComplete_CreateEnumString(pAC2, hwndEdit, dwFlags);
     if (!pES)
     {
+        ERR("Creating IEnumString failed.\n");
         IUnknown_Release(pAC2);
         return E_FAIL;
     }
@@ -643,9 +674,12 @@ HRESULT WINAPI SHAutoComplete(HWND hwndEdit, DWORD dwFlags)
     {
         IAutoComplete2_SetOptions(pAC2, dwACO);
     }
+    else
+    {
+        ERR("IAutoComplete2::Init failed: 0x%lX\n", hr);
+    }
 
     IUnknown_Release(pAC2);
     IUnknown_Release(pES);
-
     return hr;
 }
