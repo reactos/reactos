@@ -149,7 +149,9 @@ BOOL hasArp( HANDLE tcpFile, TDIEntityID *arp_maybe ) {
                               NULL );
     if( !NT_SUCCESS(status) ) return FALSE;
 
-    return (type & AT_ARP);
+    /* This was previously treated incorrectly as a single bitmapped flag.
+     * But this is not correct because AT_ARP is 0x280. */
+    return (type == AT_ARP);
 }
 
 static NTSTATUS getInterfaceInfoSet( HANDLE tcpFile,
