@@ -46,7 +46,7 @@ typedef struct AutoComplete_EnumStringVtbl
 
 typedef struct AutoComplete_EnumString
 {
-    AutoComplete_EnumStringVtbl * lpVtbl;
+    const AutoComplete_EnumStringVtbl *lpVtbl;
     LONG                m_cRefs;
     ULONG               m_istr;
     SIZE_T              m_cstrs;
@@ -75,7 +75,6 @@ static void
 AutoComplete_EnumString_Destruct(AutoComplete_EnumString *this_)
 {
     AutoComplete_EnumString_ResetContent(this_);
-    CoTaskMemFree(this_->lpVtbl);
     CoTaskMemFree(this_);
 }
 
@@ -483,29 +482,25 @@ AutoComplete_EnumString_Reset(IEnumString* This)
     return S_OK;
 }
 
+static const AutoComplete_EnumStringVtbl vtbl =
+{
+    AutoComplete_EnumString_QueryInterface,
+    AutoComplete_EnumString_AddRef,
+    AutoComplete_EnumString_Release,
+    AutoComplete_EnumString_Next,
+    AutoComplete_EnumString_Skip,
+    AutoComplete_EnumString_Reset,
+    AutoComplete_EnumString_Clone,
+};
+
 static AutoComplete_EnumString *
 AutoComplete_EnumString_Construct(SIZE_T capacity)
 {
-    AutoComplete_EnumStringVtbl *lpVtbl;
     AutoComplete_EnumString *ret = CoTaskMemAlloc(sizeof(AutoComplete_EnumString));
     if (!ret)
         return ret;
 
-    lpVtbl = CoTaskMemAlloc(sizeof(AutoComplete_EnumStringVtbl));
-    if (!lpVtbl)
-    {
-        CoTaskMemFree(ret);
-        return NULL;
-    }
-
-    lpVtbl->QueryInterface = AutoComplete_EnumString_QueryInterface;
-    lpVtbl->AddRef = AutoComplete_EnumString_AddRef;
-    lpVtbl->Release = AutoComplete_EnumString_Release;
-    lpVtbl->Next = AutoComplete_EnumString_Next;
-    lpVtbl->Skip = AutoComplete_EnumString_Skip;
-    lpVtbl->Reset = AutoComplete_EnumString_Reset;
-    lpVtbl->Clone = AutoComplete_EnumString_Clone;
-    ret->lpVtbl = lpVtbl;
+    ret->lpVtbl = &vtbl;
 
     ret->m_pstrs = (BSTR *)CoTaskMemAlloc(capacity * sizeof(BSTR));
     if (ret->m_pstrs)
@@ -518,7 +513,6 @@ AutoComplete_EnumString_Construct(SIZE_T capacity)
         return ret;
     }
 
-    CoTaskMemFree(ret->lpVtbl);
     CoTaskMemFree(ret);
     return NULL;
 }
