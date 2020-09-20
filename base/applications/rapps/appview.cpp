@@ -1382,7 +1382,26 @@ BOOL CAppsListView::AddInstalledApplication(CInstalledApplicationInfo *InstAppIn
         return FALSE;
     }
 
-    HICON hIcon = (HICON)LoadIconW(hInst, MAKEINTRESOURCEW(IDI_MAIN));
+    /* Load icon from registry */
+    HICON hIcon = NULL;
+    ATL::CStringW szIconPath;
+    if (InstAppInfo->RetrieveIcon(szIconPath))
+    {
+        PathParseIconLocationW((LPWSTR)szIconPath.GetString());
+
+        /* Load only the 1st icon from the application executable,
+         * because all apps provide the executables which have the main icon
+         * as 1st in the index , so we don't need other icons here */
+        hIcon = ExtractIconW(hInst,
+                             szIconPath.GetString(),
+                             0);
+    }
+
+    if (!hIcon)
+    {
+        /* Load default icon */
+        hIcon = LoadIconW(hInst, MAKEINTRESOURCEW(IDI_MAIN));
+    }
 
     int IconIndex = ImageList_AddIcon(m_hImageListView, hIcon);
     DestroyIcon(hIcon);
@@ -2024,4 +2043,3 @@ BOOL CApplicationView::ItemCheckStateChanged(BOOL bChecked, LPVOID CallbackParam
     return TRUE;
 }
 // **** CApplicationView ****
-

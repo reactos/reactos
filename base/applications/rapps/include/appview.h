@@ -20,7 +20,7 @@
 
 using namespace Gdiplus;
 
-#define LISTVIEW_ICON_SIZE 24
+#define LISTVIEW_ICON_SIZE 32
 
 // default broken-image icon size
 #define BROKENIMG_ICON_SIZE 96

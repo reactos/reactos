@@ -16,9 +16,11 @@ public:
     CInstalledApplicationInfo(BOOL bIsUserKey, REGSAM RegWowKey, HKEY hKey);
     BOOL GetApplicationRegString(LPCWSTR lpKeyName, ATL::CStringW& String);
     BOOL GetApplicationRegDword(LPCWSTR lpKeyName, DWORD *lpValue);
+    BOOL RetrieveIcon(ATL::CStringW& IconLocation);
     BOOL UninstallApplication(BOOL bModify);
     LSTATUS RemoveFromRegistry();
 
+    ATL::CStringW szDisplayIcon;
     ATL::CStringW szDisplayName;
     ATL::CStringW szDisplayVersion;
     ATL::CStringW szPublisher;
