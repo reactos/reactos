@@ -454,7 +454,7 @@ static void encodedxt5alpha(GLubyte *blkaddr, GLubyte srccolors[4][4][4],
    if ((alphabase[0] > alphabase[1]) && !(alphaabsmin && alphaabsmax)) { /* one color, either max or min */
       /* shortcut here since it is a very common case (and also avoids later problems) */
       /* || (alphabase[0] == alphabase[1] && !alphaabsmin && !alphaabsmax) */
-      /* could also thest for alpha0 == alpha1 (and not min/max), but probably not common, so don't bother */
+      /* could also test for alpha0 == alpha1 (and not min/max), but probably not common, so don't bother */
 
       *blkaddr++ = srccolors[0][0][3];
       blkaddr++;
