@@ -28,13 +28,29 @@ class CAutoCompleteEnumString :
 {
 public:
     CAutoCompleteEnumString()
-        : m_bPending(FALSE)
-        , m_istr(0)
+        : m_istr(0)
         , m_hwndEdit(NULL)
         , m_dwSHACF(0)
+        , m_hThread(NULL)
     {
-        m_szPrevText[0] = 0;
+        ZeroMemory(m_szPending, sizeof(m_szPending));
     }
+
+    void CloseThread()
+    {
+        if (m_hThread)
+        {
+            CloseHandle(m_hThread);
+            m_hThread = NULL;
+        }
+    }
+
+    ~CAutoCompleteEnumString()
+    {
+        CloseThread();
+    }
+
+    BOOL IsThreadRunning(DWORD dwMilliseconds = 0) const;
 
     void Initialize(IAutoComplete2 *pAC2, DWORD dwSHACF, HWND hwndEdit);
 
@@ -50,7 +66,6 @@ public:
     {
         m_strs.RemoveAll();
         m_istr = 0;
-        m_szPrevText[0] = 0;
     }
 
     void DoAll();
@@ -70,13 +85,15 @@ public:
         COM_INTERFACE_ENTRY_IID(IID_IEnumString, IEnumString)
     END_COM_MAP()
 
+    static unsigned __stdcall ThreadProc(void *arg);
+
 protected:
-    BOOL m_bPending;
     INT m_istr;
     HWND m_hwndEdit;
     DWORD m_dwSHACF;
+    HANDLE m_hThread;
     CSimpleArray<CStringW> m_strs;
-    WCHAR m_szPrevText[MAX_PATH];
+    WCHAR m_szPending[MAX_PATH];
 };
 
 void CAutoCompleteEnumString::Initialize(IAutoComplete2 *pAC2, DWORD dwSHACF, HWND hwndEdit)
@@ -85,6 +102,13 @@ void CAutoCompleteEnumString::Initialize(IAutoComplete2 *pAC2, DWORD dwSHACF, HW
     m_hwndEdit = hwndEdit;
     m_dwSHACF = dwSHACF;
     Reset();
+}
+
+BOOL CAutoCompleteEnumString::IsThreadRunning(DWORD dwMilliseconds) const
+{
+    if (m_hThread == NULL)
+        return FALSE;
+    return (WaitForSingleObject(m_hThread, dwMilliseconds) == WAIT_TIMEOUT);
 }
 
 STDMETHODIMP
@@ -98,7 +122,10 @@ CAutoCompleteEnumString::Next(ULONG celt, LPOLESTR *rgelt, ULONG *pceltFetched)
 
     *pceltFetched = 0;
     *rgelt = NULL;
-    if (m_bPending || m_istr >= m_strs.GetSize())
+    if (IsThreadRunning())
+        return FALSE;
+
+    if (m_istr >= m_strs.GetSize())
         return S_FALSE;
 
     ULONG ielt;
@@ -120,7 +147,7 @@ CAutoCompleteEnumString::Next(ULONG celt, LPOLESTR *rgelt, ULONG *pceltFetched)
 
 STDMETHODIMP CAutoCompleteEnumString::Skip(ULONG celt)
 {
-    if (m_bPending)
+    if (IsThreadRunning())
         return S_FALSE;
 
     if (m_strs.GetSize() == 0 || m_strs.GetSize() <= INT(m_istr + celt))
@@ -162,19 +189,17 @@ void CAutoCompleteEnumString::DoAll()
     if (!IsWindow(m_hwndEdit))
     {
         ResetContent();
-        m_szPrevText[0] = 0;
-        m_bPending = FALSE;
+        CloseThread();
         return;
     }
 
     WCHAR szText[MAX_PATH];
     GetWindowTextW(m_hwndEdit, szText, _countof(szText));
 
-    if (m_bPending || lstrcmpiW(m_szPrevText, szText) == 0)
+    if (IsThreadRunning() && lstrcmpiW(m_szPending, szText) == 0)
         return;
 
-    m_bPending = TRUE;
-
+    StringCbCopyW(m_szPending, sizeof(m_szPending), szText);
     ResetContent();
 
     if (m_dwSHACF & (SHACF_FILESYS_ONLY | SHACF_FILESYSTEM | SHACF_FILESYS_DIRS))
@@ -188,11 +213,11 @@ void CAutoCompleteEnumString::DoAll()
             DoURLMRU();
     }
 
-    m_bPending = FALSE;
-    StringCbCopyW(m_szPrevText, sizeof(m_szPrevText), szText);
+    CloseThread();
+    m_szPending[0] = 0;
 }
 
-static unsigned __stdcall list_thread_proc(void *arg)
+unsigned __stdcall CAutoCompleteEnumString::ThreadProc(void *arg)
 {
     CAutoCompleteEnumString *this_ = (CAutoCompleteEnumString *)arg;
     SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_ABOVE_NORMAL);
@@ -206,12 +231,15 @@ STDMETHODIMP CAutoCompleteEnumString::Reset()
 {
     m_istr = 0;
 
-    if (m_bPending)
+    if (IsThreadRunning())
         return E_FAIL;
 
-    HANDLE hThread = (HANDLE)_beginthreadex(NULL, 0, list_thread_proc, this, 0, NULL);
-    WaitForSingleObject(hThread, 500);
-    CloseHandle(hThread);
+    m_hThread = (HANDLE)_beginthreadex(NULL, 0, ThreadProc, this, 0, NULL);
+    if (IsThreadRunning(400))
+    {
+        CloseHandle(m_hThread);
+        m_hThread = NULL;
+    }
 
     return S_OK;
 }
@@ -225,11 +253,11 @@ STDMETHODIMP CAutoCompleteEnumString::Clone(IEnumString **ppenum)
     }
 
     CAutoCompleteEnumString *pES = new CComObject<CAutoCompleteEnumString>();
+    pES->AddRef();
     pES->m_istr = m_istr;
     pES->m_hwndEdit = NULL;
     pES->m_dwSHACF = m_dwSHACF;
     pES->m_strs = m_strs;
-    pES->AddRef();
 
     *ppenum = pES;
     return S_OK;
