@@ -1208,32 +1208,6 @@ static D3DXHANDLE d3dx9_base_effect_get_technique_by_name(struct d3dx9_base_effe
     return NULL;
 }
 
-static D3DXHANDLE d3dx9_base_effect_get_pass_by_name(struct d3dx9_base_effect *base,
-        D3DXHANDLE technique, const char *name)
-{
-    struct d3dx_technique *tech = get_valid_technique(base, technique);
-
-    if (tech && name)
-    {
-        unsigned int i;
-
-        for (i = 0; i < tech->pass_count; ++i)
-        {
-            struct d3dx_pass *pass = &tech->passes[i];
-
-            if (!strcmp(pass->name, name))
-            {
-                TRACE("Returning pass %p\n", pass);
-                return get_pass_handle(pass);
-            }
-        }
-    }
-
-    WARN("Pass not found.\n");
-
-    return NULL;
-}
-
 static unsigned int get_annotation_from_object(struct d3dx_effect *effect, D3DXHANDLE object,
         struct d3dx_parameter **annotations)
 {
@@ -3442,10 +3416,29 @@ static D3DXHANDLE WINAPI d3dx_effect_GetPass(ID3DXEffect *iface, D3DXHANDLE tech
 static D3DXHANDLE WINAPI d3dx_effect_GetPassByName(ID3DXEffect *iface, D3DXHANDLE technique, const char *name)
 {
     struct d3dx_effect *effect = impl_from_ID3DXEffect(iface);
+    struct d3dx_technique *tech = get_valid_technique(&effect->base_effect, technique);
 
     TRACE("iface %p, technique %p, name %s.\n", iface, technique, debugstr_a(name));
 
-    return d3dx9_base_effect_get_pass_by_name(&effect->base_effect, technique, name);
+    if (tech && name)
+    {
+        unsigned int i;
+
+        for (i = 0; i < tech->pass_count; ++i)
+        {
+            struct d3dx_pass *pass = &tech->passes[i];
+
+            if (!strcmp(pass->name, name))
+            {
+                TRACE("Returning pass %p\n", pass);
+                return get_pass_handle(pass);
+            }
+        }
+    }
+
+    WARN("Pass not found.\n");
+
+    return NULL;
 }
 
 static D3DXHANDLE WINAPI d3dx_effect_GetFunction(ID3DXEffect *iface, UINT index)
