@@ -28,9 +28,12 @@ class CAutoCompleteEnumString :
     public IEnumString
 {
 public:
-    CAutoCompleteEnumString(DWORD dwSHACF, HWND hwndEdit);
+    CAutoCompleteEnumString(IAutoComplete2 *pAC2, DWORD dwSHACF, HWND hwndEdit);
     CAutoCompleteEnumString(const CAutoCompleteEnumString& another);
-    ~CAutoCompleteEnumString();
+
+    ~CAutoCompleteEnumString()
+    {
+    }
 
     void AddString(LPCWSTR psz);
     void DoDir(LPCWSTR pszDir, BOOL bDirOnly);
@@ -53,13 +56,15 @@ protected:
     INT m_istr;
     HWND m_hwndEdit;
     DWORD m_dwSHACF;
+    CComPtr<IAutoComplete2> m_pAC2;
     CSimpleArray<CStringW> m_strs;
 };
 
-CAutoCompleteEnumString::CAutoCompleteEnumString(DWORD dwSHACF, HWND hwndEdit)
+CAutoCompleteEnumString::CAutoCompleteEnumString(IAutoComplete2 *pAC2, DWORD dwSHACF, HWND hwndEdit)
     : m_istr(0)
     , m_hwndEdit(hwndEdit)
     , m_dwSHACF(dwSHACF)
+    , m_pAC2(pAC2)
 {
     Reset();
 }
@@ -68,11 +73,8 @@ CAutoCompleteEnumString::CAutoCompleteEnumString(const CAutoCompleteEnumString& 
     : m_istr(another.m_istr)
     , m_hwndEdit(another.m_hwndEdit)
     , m_dwSHACF(another.m_dwSHACF)
+    , m_pAC2(another.m_pAC2)
     , m_strs(another.m_strs)
-{
-}
-
-CAutoCompleteEnumString::~CAutoCompleteEnumString()
 {
 }
 
@@ -465,7 +467,7 @@ HRESULT WINAPI SHAutoComplete(HWND hwndEdit, DWORD dwFlags)
         return hr;
     }
 
-    pES = new CAutoCompleteEnumString(dwSHACF, hwndEdit);
+    pES = new CAutoCompleteEnumString(pAC2, dwFlags, hwndEdit);
     if (!pES)
     {
         ERR("Creating IEnumString failed.\n");
