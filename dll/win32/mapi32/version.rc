@@ -32,74 +32,74 @@
 #pragma code_page(65001)
 
 #ifdef LANGUAGE_CY_GB
-    #include "lang/cy-GB.rc"
+    #include "lang/Cy.rc"
 #endif
 #ifdef LANGUAGE_DA_DK
-    #include "lang/da-DK.rc"
+    #include "lang/Da.rc"
 #endif
 #ifdef LANGUAGE_DE_DE
-    #include "lang/de-DE.rc"
+    #include "lang/De.rc"
 #endif
 #ifdef LANGUAGE_EN_US
-    #include "lang/en-US.rc"
+    #include "lang/En.rc"
 #endif
 #ifdef LANGUAGE_ES_ES
-    #include "lang/es-ES.rc"
+    #include "lang/Es.rc"
 #endif
 #ifdef LANGUAGE_FR_FR
-    #include "lang/fr-FR.rc"
+    #include "lang/Fr.rc"
 #endif
 #ifdef LANGUAGE_HE_IL
-    #include "lang/he-IL.rc"
+    #include "lang/He.rc"
 #endif
 #ifdef LANGUAGE_HU_HU
-    #include "lang/hu-HU.rc"
+    #include "lang/Hu.rc"
 #endif
 #ifdef LANGUAGE_IT_IT
-    #include "lang/it-IT.rc"
+    #include "lang/It.rc"
 #endif
 #ifdef LANGUAGE_JA_JP
-    #include "lang/ja-JP.rc"
+    #include "lang/Ja.rc"
 #endif
 #ifdef LANGUAGE_KO_KR
-    #include "lang/ko-KR.rc"
+    #include "lang/Ko.rc"
 #endif
 #ifdef LANGUAGE_LT_LT
-    #include "lang/lt-LT.rc"
+    #include "lang/Lt.rc"
 #endif
 #ifdef LANGUAGE_NL_NL
-    #include "lang/nl-NL.rc"
+    #include "lang/Nl.rc"
 #endif
 #ifdef LANGUAGE_NO_NO
-    #include "lang/no-NO.rc"
+    #include "lang/No.rc"
 #endif
 #ifdef LANGUAGE_PL_PL
-    #include "lang/pl-PL.rc"
+    #include "lang/Pl.rc"
 #endif
 #ifdef LANGUAGE_PT_PT
-    #include "lang/pt-PT.rc"
+    #include "lang/Pt.rc"
 #endif
 #ifdef LANGUAGE_RO_RO
-    #include "lang/ro-RO.rc"
+    #include "lang/Ro.rc"
 #endif
 #ifdef LANGUAGE_RU_RU
-    #include "lang/ru-RU.rc"
+    #include "lang/Ru.rc"
 #endif
 #ifdef LANGUAGE_SL_SI
-    #include "lang/sl-SI.rc"
+    #include "lang/Si.rc"
 #endif
 #ifdef LANGUAGE_SQ_AL
-    #include "lang/sq-AL.rc"
+    #include "lang/Sq.rc"
 #endif
 #ifdef LANGUAGE_TR_TR
-    #include "lang/tr-TR.rc"
+    #include "lang/Tr.rc"
 #endif
 #ifdef LANGUAGE_UK_UA
-    #include "lang/uk-UA.rc"
+    #include "lang/Uk.rc"
 #endif
 #ifdef LANGUAGE_ZH_CN
-    #include "lang/zh-CN.rc"
+    #include "lang/Zh.rc"
 #endif
 #ifdef LANGUAGE_ZH_TW
-    #include "lang/zh-TW.rc"
+    #include "lang/Tw.rc"
 #endif
