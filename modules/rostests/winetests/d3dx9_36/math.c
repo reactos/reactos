@@ -414,7 +414,8 @@ static void D3DXMatrixTest(void)
     ret = D3DXMatrixInverse(&gotmat, &determinant, &mat2);
     ok(!ret, "Unexpected return value %p.\n", ret);
     expect_matrix(&expectedmat, &gotmat, 1);
-    ok(compare_float(determinant, 5.0f, 0), "Unexpected determinant %.8e.\n", determinant);
+    ok(compare_float(determinant, 5.0f, 0) || broken(!determinant), /* Vista 64 bit testbot */
+            "Unexpected determinant %.8e.\n", determinant);
 
 /*____________D3DXMatrixIsIdentity______________*/
     expected = FALSE;
