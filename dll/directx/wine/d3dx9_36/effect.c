@@ -156,7 +156,6 @@ struct d3dx9_base_effect
 {
     struct d3dx_effect *effect;
 
-    DWORD flags;
 
     ULONG64 version_counter;
 };
@@ -173,6 +172,7 @@ struct d3dx_effect
     struct d3dx_top_level_parameter *parameters;
     struct d3dx_technique *techniques;
     struct d3dx_object *objects;
+    DWORD flags;
     struct wine_rb_tree param_tree;
     char *full_name_tmp;
     unsigned int full_name_tmp_size;
@@ -507,8 +507,7 @@ static struct d3dx_parameter *get_valid_parameter(struct d3dx_effect *effect, D3
             sizeof(parameter_magic_string)))
         return handle_param;
 
-    return effect->base_effect.flags & D3DXFX_LARGEADDRESSAWARE
-                ? NULL : get_parameter_by_name(effect, NULL, parameter);
+    return effect->flags & D3DXFX_LARGEADDRESSAWARE ? NULL : get_parameter_by_name(effect, NULL, parameter);
 }
 
 static void free_state(struct d3dx_state *state)
@@ -1918,7 +1917,7 @@ static HRESULT WINAPI d3dx_effect_GetPassDesc(ID3DXEffect *iface, D3DXHANDLE pas
     desc->pVertexShaderFunction = NULL;
     desc->pPixelShaderFunction = NULL;
 
-    if (effect->base_effect.flags & D3DXFX_NOT_CLONEABLE)
+    if (effect->flags & D3DXFX_NOT_CLONEABLE)
         return D3D_OK;
 
     for (i = 0; i < pass->state_count; ++i)
@@ -4101,7 +4100,7 @@ static HRESULT WINAPI d3dx_effect_CloneEffect(ID3DXEffect *iface, IDirect3DDevic
     if (!new_effect)
         return D3DERR_INVALIDCALL;
 
-    if (effect->base_effect.flags & D3DXFX_NOT_CLONEABLE)
+    if (effect->flags & D3DXFX_NOT_CLONEABLE)
         return E_FAIL;
 
     if (!device)
@@ -6185,7 +6184,7 @@ static HRESULT d3dx9_effect_init(struct d3dx_effect *effect, struct IDirect3DDev
     effect->device = device;
 
     base->effect = effect;
-    base->flags = eflags;
+    effect->flags = eflags;
 
     read_dword(&ptr, &tag);
     TRACE("Tag: %x\n", tag);
