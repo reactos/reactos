@@ -330,13 +330,13 @@ static void test_ID3DXFont(IDirect3DDevice9 *device)
 
     /* D3DXCreateFont */
     ref = get_ref((IUnknown*)device);
-    hr = D3DXCreateFontA(device, 12, 0, FW_DONTCARE, 0, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, "Arial", &font);
+    hr = D3DXCreateFontA(device, 12, 0, FW_DONTCARE, 0, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, "Tahoma", &font);
     ok(hr == D3D_OK, "D3DXCreateFont returned %#x, expected %#x\n", hr, D3D_OK);
     check_ref((IUnknown*)device, ref + 1);
     check_release((IUnknown*)font, 0);
     check_ref((IUnknown*)device, ref);
 
-    hr = D3DXCreateFontA(device, 0, 0, FW_DONTCARE, 0, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, "Arial", &font);
+    hr = D3DXCreateFontA(device, 0, 0, FW_DONTCARE, 0, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, "Tahoma", &font);
     ok(hr == D3D_OK, "D3DXCreateFont returned %#x, expected %#x\n", hr, D3D_OK);
     ID3DXFont_Release(font);
 
@@ -348,13 +348,13 @@ static void test_ID3DXFont(IDirect3DDevice9 *device)
     ok(hr == D3D_OK, "D3DXCreateFont returned %#x, expected %#x\n", hr, D3D_OK);
     ID3DXFont_Release(font);
 
-    hr = D3DXCreateFontA(NULL, 12, 0, FW_DONTCARE, 0, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, "Arial", &font);
+    hr = D3DXCreateFontA(NULL, 12, 0, FW_DONTCARE, 0, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, "Tahoma", &font);
     ok(hr == D3DERR_INVALIDCALL, "D3DXCreateFont returned %#x, expected %#x\n", hr, D3DERR_INVALIDCALL);
 
-    hr = D3DXCreateFontA(device, 12, 0, FW_DONTCARE, 0, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, "Arial", NULL);
+    hr = D3DXCreateFontA(device, 12, 0, FW_DONTCARE, 0, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, "Tahoma", NULL);
     ok(hr == D3DERR_INVALIDCALL, "D3DXCreateFont returned %#x, expected %#x\n", hr, D3DERR_INVALIDCALL);
 
-    hr = D3DXCreateFontA(NULL, 12, 0, FW_DONTCARE, 0, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, "Arial", NULL);
+    hr = D3DXCreateFontA(NULL, 12, 0, FW_DONTCARE, 0, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, "Tahoma", NULL);
     ok(hr == D3DERR_INVALIDCALL, "D3DXCreateFont returned %#x, expected %#x\n", hr, D3DERR_INVALIDCALL);
 
 
@@ -368,7 +368,7 @@ static void test_ID3DXFont(IDirect3DDevice9 *device)
     desc.OutputPrecision = OUT_DEFAULT_PRECIS;
     desc.Quality = DEFAULT_QUALITY;
     desc.PitchAndFamily = DEFAULT_PITCH;
-    strcpy(desc.FaceName, "Arial");
+    strcpy(desc.FaceName, "Tahoma");
     hr = D3DXCreateFontIndirectA(device, &desc, &font);
     ok(hr == D3D_OK, "D3DXCreateFontIndirect returned %#x, expected %#x\n", hr, D3D_OK);
     ID3DXFont_Release(font);
@@ -384,7 +384,7 @@ static void test_ID3DXFont(IDirect3DDevice9 *device)
 
 
     /* ID3DXFont_GetDevice */
-    hr = D3DXCreateFontA(device, 12, 0, FW_DONTCARE, 0, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, "Arial", &font);
+    hr = D3DXCreateFontA(device, 12, 0, FW_DONTCARE, 0, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, "Tahoma", &font);
     if(SUCCEEDED(hr)) {
         IDirect3DDevice9 *bufdev;
 
@@ -401,7 +401,7 @@ static void test_ID3DXFont(IDirect3DDevice9 *device)
 
 
     /* ID3DXFont_GetDesc */
-    hr = D3DXCreateFontA(device, 12, 8, FW_BOLD, 2, TRUE, ANSI_CHARSET, OUT_RASTER_PRECIS, ANTIALIASED_QUALITY, VARIABLE_PITCH, "Arial", &font);
+    hr = D3DXCreateFontA(device, 12, 8, FW_BOLD, 2, TRUE, ANSI_CHARSET, OUT_RASTER_PRECIS, ANTIALIASED_QUALITY, VARIABLE_PITCH, "Tahoma", &font);
     if(SUCCEEDED(hr)) {
         hr = ID3DXFont_GetDescA(font, NULL);
         ok(hr == D3DERR_INVALIDCALL, "ID3DXFont_GetDevice returned %#x, expected %#x\n", hr, D3DERR_INVALIDCALL);
@@ -418,14 +418,14 @@ static void test_ID3DXFont(IDirect3DDevice9 *device)
         ok(desc.OutputPrecision == OUT_RASTER_PRECIS, "ID3DXFont_GetDesc returned an output precision of %d, expected %d\n", desc.OutputPrecision, OUT_RASTER_PRECIS);
         ok(desc.Quality == ANTIALIASED_QUALITY, "ID3DXFont_GetDesc returned font quality %d, expected %d\n", desc.Quality, ANTIALIASED_QUALITY);
         ok(desc.PitchAndFamily == VARIABLE_PITCH, "ID3DXFont_GetDesc returned pitch and family %d, expected %d\n", desc.PitchAndFamily, VARIABLE_PITCH);
-        ok(strcmp(desc.FaceName, "Arial") == 0, "ID3DXFont_GetDesc returned facename \"%s\", expected \"%s\"\n", desc.FaceName, "Arial");
+        ok(strcmp(desc.FaceName, "Tahoma") == 0, "ID3DXFont_GetDesc returned facename \"%s\", expected \"%s\"\n", desc.FaceName, "Tahoma");
 
         ID3DXFont_Release(font);
     } else skip("Failed to create a ID3DXFont object\n");
 
 
     /* ID3DXFont_GetDC + ID3DXFont_GetTextMetrics */
-    hr = D3DXCreateFontA(device, 12, 0, FW_DONTCARE, 0, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, "Arial", &font);
+    hr = D3DXCreateFontA(device, 12, 0, FW_DONTCARE, 0, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, "Tahoma", &font);
     if(SUCCEEDED(hr)) {
         HDC hdc;
 
@@ -466,7 +466,7 @@ static void test_ID3DXFont(IDirect3DDevice9 *device)
 
 
     /* ID3DXFont_PreloadText */
-    hr = D3DXCreateFontA(device, 12, 0, FW_DONTCARE, 0, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, "Arial", &font);
+    hr = D3DXCreateFontA(device, 12, 0, FW_DONTCARE, 0, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, "Tahoma", &font);
     if(SUCCEEDED(hr)) {
         todo_wine {
         hr = ID3DXFont_PreloadTextA(font, NULL, -1);
@@ -493,7 +493,7 @@ static void test_ID3DXFont(IDirect3DDevice9 *device)
 
 
     /* ID3DXFont_GetGlyphData, ID3DXFont_PreloadGlyphs, ID3DXFont_PreloadCharacters */
-    hr = D3DXCreateFontA(device, 12, 0, FW_DONTCARE, 0, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, "Arial", &font);
+    hr = D3DXCreateFontA(device, 12, 0, FW_DONTCARE, 0, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, "Tahoma", &font);
     if(SUCCEEDED(hr)) {
         char c;
         HDC hdc;
@@ -565,7 +565,7 @@ static void test_ID3DXFont(IDirect3DDevice9 *device)
         IDirect3DTexture9 *texture;
 
         hr = D3DXCreateFontA(device, tests[i].font_height, 0, FW_DONTCARE, 0, FALSE, DEFAULT_CHARSET,
-                OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, "Arial", &font);
+                OUT_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, "Tahoma", &font);
         if(FAILED(hr)) {
             skip("Failed to create a ID3DXFont object\n");
             continue;
