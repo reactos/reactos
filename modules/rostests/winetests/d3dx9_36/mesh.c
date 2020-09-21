@@ -86,7 +86,7 @@ static void check_floats_(int line, const char *prefix, const float *got, const 
         equal = equal && compare(*exp, *got);
         exp_buffer_ptr += sprintf(exp_buffer_ptr, "%g", *exp);
         got_buffer_ptr += sprintf(got_buffer_ptr, "%g", *got);
-        exp++, got++;
+        exp++; got++;
     }
     ok_(__FILE__,line)(equal, "%sExpected (%s), got (%s)", prefix, exp_buffer, got_buffer);
 }
