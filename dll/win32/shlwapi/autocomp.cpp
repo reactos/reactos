@@ -4,7 +4,6 @@
  * PURPOSE:     Implement SHAutoComplete
  * COPYRIGHT:   Copyright 2020 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
-
 #include <windef.h>
 #include <winreg.h>
 #include <shldisp.h>
@@ -17,7 +16,6 @@
 #include <atlstr.h>
 #include <atlsimpcoll.h>
 #include <strsafe.h>
-#include <assert.h>
 #include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
@@ -27,8 +25,19 @@ class CAutoCompleteEnumString :
     public IEnumString
 {
 public:
-    CAutoCompleteEnumString(IAutoComplete2 *pAC2, DWORD dwSHACF, HWND hwndEdit);
+    CAutoCompleteEnumString(IAutoComplete2 *pAC2, DWORD dwSHACF, HWND hwndEdit)
+        : m_istr(0), m_hwndEdit(hwndEdit), m_dwSHACF(dwSHACF)
+    {
+        Reset();
+    }
+
     CAutoCompleteEnumString(const CAutoCompleteEnumString& another);
+        : m_istr(another.m_istr)
+        , m_hwndEdit(another.m_hwndEdit)
+        , m_dwSHACF(another.m_dwSHACF)
+        , m_strs(another.m_strs)
+    {
+    }
 
     ~CAutoCompleteEnumString()
     {
@@ -67,22 +76,6 @@ protected:
     CSimpleArray<CStringW> m_strs;
 };
 
-CAutoCompleteEnumString::CAutoCompleteEnumString(IAutoComplete2 *pAC2, DWORD dwSHACF, HWND hwndEdit)
-    : m_istr(0)
-    , m_hwndEdit(hwndEdit)
-    , m_dwSHACF(dwSHACF)
-{
-    Reset();
-}
-
-CAutoCompleteEnumString::CAutoCompleteEnumString(const CAutoCompleteEnumString& another)
-    : m_istr(another.m_istr)
-    , m_hwndEdit(another.m_hwndEdit)
-    , m_dwSHACF(another.m_dwSHACF)
-    , m_strs(another.m_strs)
-{
-}
-
 STDMETHODIMP
 CAutoCompleteEnumString::Next(ULONG celt, LPOLESTR *rgelt, ULONG *pceltFetched)
 {
@@ -94,7 +87,6 @@ CAutoCompleteEnumString::Next(ULONG celt, LPOLESTR *rgelt, ULONG *pceltFetched)
 
     *pceltFetched = 0;
     *rgelt = NULL;
-
     if (m_istr >= m_strs.GetSize())
         return S_FALSE;
 
@@ -103,9 +95,7 @@ CAutoCompleteEnumString::Next(ULONG celt, LPOLESTR *rgelt, ULONG *pceltFetched)
          ielt < celt && m_istr < m_strs.GetSize();
          ++ielt, ++m_istr)
     {
-        size_t cch = wcslen(m_strs[m_istr]) + 1;
-        size_t cb = cch * sizeof(WCHAR);
-
+        size_t cb = (wcslen(m_strs[m_istr]) + 1) * sizeof(WCHAR);
         rgelt[ielt] = (LPWSTR)CoTaskMemAlloc(cb);
         if (!rgelt[ielt])
         {
@@ -114,16 +104,11 @@ CAutoCompleteEnumString::Next(ULONG celt, LPOLESTR *rgelt, ULONG *pceltFetched)
 
             return S_FALSE;
         }
-
         CopyMemory(rgelt[ielt], (LPCWSTR)m_strs[m_istr], cb);
     }
-
     *pceltFetched = ielt;
 
-    if (ielt == celt)
-        return S_OK;
-
-    return S_FALSE;
+    return (ielt == celt) ? S_OK : S_FALSE;
 }
 
 STDMETHODIMP CAutoCompleteEnumString::Skip(ULONG celt)
@@ -166,7 +151,6 @@ STDMETHODIMP CAutoCompleteEnumString::Reset()
     {
         if (m_dwSHACF & SHACF_URLHISTORY)
             DoURLHistory();
-
         if (m_dwSHACF & SHACF_URLMRU)
             DoURLMRU();
     }
@@ -188,8 +172,7 @@ STDMETHODIMP CAutoCompleteEnumString::Clone(IEnumString **ppenum)
 }
 
 /* "." or ".." ? */
-#define IS_IGNORABLE_DOTS(sz) \
-    ( sz[0] == L'.' && (sz[1] == 0 || (sz[1] == L'.' && sz[2] == 0)) )
+#define IS_DOTS(sz) (sz[0] == L'.' && (sz[1] == 0 || (sz[1] == L'.' && sz[2] == 0)))
 
 void CAutoCompleteEnumString::DoDir(LPCWSTR pszDir, BOOL bDirOnly)
 {
@@ -198,16 +181,14 @@ void CAutoCompleteEnumString::DoDir(LPCWSTR pszDir, BOOL bDirOnly)
     if (!PathAppendW(szPath, L"*"))
         return;
 
-    LPWSTR pch = PathFindFileNameW(szPath);
-    assert(pch);
-
     WIN32_FIND_DATAW find;
     HANDLE hFind = FindFirstFileW(szPath, &find);
     if (hFind != INVALID_HANDLE_VALUE)
     {
+        LPWSTR pch = PathFindFileNameW(szPath);
         do
         {
-            if (IS_IGNORABLE_DOTS(find.cFileName))
+            if (IS_DOTS(find.cFileName))
                 continue;
             if (find.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN)
                 continue;
@@ -218,7 +199,6 @@ void CAutoCompleteEnumString::DoDir(LPCWSTR pszDir, BOOL bDirOnly)
             if (PathAppendW(szPath, find.cFileName))
                 AddString(szPath);
         } while (FindNextFileW(hFind, &find));
-
         FindClose(hFind);
     }
 }
@@ -226,25 +206,20 @@ void CAutoCompleteEnumString::DoDir(LPCWSTR pszDir, BOOL bDirOnly)
 void CAutoCompleteEnumString::DoDrives(BOOL bDirOnly)
 {
     WCHAR sz[4] = L"C:\\";
-    DWORD dwBits = GetLogicalDrives();
 
-    for (DWORD i = 0; i <= L'Z' - L'A'; ++i)
+    for (DWORD i = 0, dwBits = GetLogicalDrives(); i <= L'Z' - L'A'; ++i)
     {
-        if (dwBits & (1 << i))
-        {
-            sz[0] = (WCHAR)(L'A' + i);
-            AddString(sz);
+        if ((dwBits & (1 << i)) == 0)
+            continue;
 
-            UINT uType = GetDriveTypeW(sz);
-            switch (uType)
-            {
-                case DRIVE_REMOTE: case DRIVE_RAMDISK: case DRIVE_FIXED:
-                    DoDir(sz, bDirOnly);
-                    break;
-                case DRIVE_UNKNOWN: case DRIVE_NO_ROOT_DIR: case DRIVE_REMOVABLE:
-                case DRIVE_CDROM:
-                    break;
-            }
+        sz[0] = (WCHAR)(L'A' + i);
+        AddString(sz);
+
+        switch (GetDriveTypeW(sz))
+        {
+            case DRIVE_REMOTE: case DRIVE_RAMDISK: case DRIVE_FIXED:
+                DoDir(sz, bDirOnly);
+                break;
         }
     }
 }
@@ -300,14 +275,11 @@ void CAutoCompleteEnumString::DoURLMRU()
     result = RegQueryValueExW(hKey, L"MRUList", NULL, NULL, (LPBYTE)szMRUList, &cbValue);
     if (result == ERROR_SUCCESS)
     {
-        for (DWORD i = 0; i <= L'z' - L'a'; ++i)
+        for (DWORD i = 0; i <= L'z' - L'a' && szMRUList[i]; ++i)
         {
-            if (szMRUList[i] == 0)
-                break;
-
             szName[0] = szMRUList[i];
-            szName[1] = 0;
-            szValue[0] = 0;
+            szName[1] = szValue[0] = 0;
+
             cbValue = sizeof(szValue);
             result = RegQueryValueExW(hKey, szName, NULL, NULL, (LPBYTE)szValue, &cbValue);
             if (result != ERROR_SUCCESS)
@@ -330,7 +302,6 @@ AutoComplete_AdaptFlags(HWND hwndEdit, LPDWORD pdwACO, LPDWORD pdwSHACF)
 {
     static const LPCWSTR s_pszAutoComplete =
         L"Software\\Microsoft\\Internet Explorer\\AutoComplete";
-
     WCHAR szValue[8];
     DWORD dwSHACF = *pdwSHACF, dwACO = 0;
 
