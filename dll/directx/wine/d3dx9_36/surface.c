@@ -112,6 +112,7 @@ static const GUID *d3dformat_to_wic_guid(D3DFORMAT format)
 #define DDS_PF_ALPHA 0x1
 #define DDS_PF_ALPHA_ONLY 0x2
 #define DDS_PF_FOURCC 0x4
+#define DDS_PF_INDEXED 0x20
 #define DDS_PF_RGB 0x40
 #define DDS_PF_YUV 0x200
 #define DDS_PF_LUMINANCE 0x20000
@@ -353,6 +354,15 @@ static D3DFORMAT dds_alpha_to_d3dformat(const struct dds_pixel_format *pixel_for
     return D3DFMT_UNKNOWN;
 }
 
+static D3DFORMAT dds_indexed_to_d3dformat(const struct dds_pixel_format *pixel_format)
+{
+    if (pixel_format->bpp == 8)
+        return D3DFMT_P8;
+
+    WARN("Unknown indexed pixel format (%u).\n", pixel_format->bpp);
+    return D3DFMT_UNKNOWN;
+}
+
 static D3DFORMAT dds_bump_to_d3dformat(const struct dds_pixel_format *pixel_format)
 {
     if (pixel_format->bpp == 16 && pixel_format->rmask == 0x00ff && pixel_format->gmask == 0xff00)
@@ -385,6 +395,8 @@ static D3DFORMAT dds_pixel_format_to_d3dformat(const struct dds_pixel_format *pi
 
     if (pixel_format->flags & DDS_PF_FOURCC)
         return dds_fourcc_to_d3dformat(pixel_format->fourcc);
+    if (pixel_format->flags & DDS_PF_INDEXED)
+        return dds_indexed_to_d3dformat(pixel_format);
     if (pixel_format->flags & DDS_PF_RGB)
         return dds_rgb_to_d3dformat(pixel_format);
     if (pixel_format->flags & DDS_PF_LUMINANCE)
