@@ -454,7 +454,7 @@ HRESULT WINAPI D3DXCheckCubeTextureRequirements(struct IDirect3DDevice9 *device,
     if ((caps.TextureCaps & D3DPTEXTURECAPS_CUBEMAP_POW2) && (!is_pow2(s)))
         s = make_pow2(s);
 
-    hr = D3DXCheckTextureRequirements(device, &s, &s, miplevels, usage, format, pool);
+    hr = check_texture_requirements(device, &s, &s, miplevels, usage, format, pool, D3DRTYPE_CUBETEXTURE);
 
     if (!(caps.TextureCaps & D3DPTEXTURECAPS_MIPCUBEMAP))
     {
