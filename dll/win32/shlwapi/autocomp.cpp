@@ -34,12 +34,21 @@ public:
     {
     }
 
-    void AddString(LPCWSTR psz);
+    void AddString(LPCWSTR psz)
+    {
+        m_strs.Add(psz);
+    }
+
+    void ResetContent()
+    {
+        m_strs.RemoveAll();
+        m_istr = 0;
+    }
+
     void DoDir(LPCWSTR pszDir, BOOL bDirOnly);
     void DoDrives(BOOL bDirOnly);
     void DoURLHistory();
     void DoURLMRU();
-    void ResetContent();
 
     /* IEnumString interface */
     STDMETHODIMP Next(ULONG celt, LPOLESTR *rgelt, ULONG *pceltFetched);
@@ -145,9 +154,7 @@ STDMETHODIMP CAutoCompleteEnumString::Reset()
         if (attrs != INVALID_FILE_ATTRIBUTES)
         {
             if (attrs & FILE_ATTRIBUTE_DIRECTORY)
-            {
                 DoDir(szText, bDirOnly);
-            }
         }
         else if (szText[0])
         {
@@ -163,13 +170,10 @@ STDMETHODIMP CAutoCompleteEnumString::Reset()
     if (!(dwSHACF & (SHACF_FILESYS_ONLY)))
     {
         if (dwSHACF & SHACF_URLHISTORY)
-        {
             DoURLHistory();
-        }
+
         if (dwSHACF & SHACF_URLMRU)
-        {
             DoURLMRU();
-        }
     }
 
     m_istr = 0;
@@ -186,17 +190,6 @@ STDMETHODIMP CAutoCompleteEnumString::Clone(IEnumString **ppenum)
 
     *ppenum = new CAutoCompleteEnumString(*this);
     return S_OK;
-}
-
-void CAutoCompleteEnumString::ResetContent()
-{
-    m_strs.RemoveAll();
-    m_istr = 0;
-}
-
-void CAutoCompleteEnumString::AddString(LPCWSTR psz)
-{
-    m_strs.Add(psz);
 }
 
 /* "." or ".." ? */
@@ -297,9 +290,7 @@ void CAutoCompleteEnumString::DoURLHistory()
             continue;
 
         if (UrlIsW(szValue, URLIS_URL))
-        {
             AddString(szValue);
-        }
     }
 
     RegCloseKey(hKey);
@@ -342,14 +333,10 @@ void CAutoCompleteEnumString::DoURLMRU()
 
             cch = wcslen(szValue);
             if (cch >= 2 && wcscmp(&szValue[cch - 2], L"\\1") == 0)
-            {
                 szValue[cch - 2] = 0;
-            }
 
             if (UrlIsW(szValue, URLIS_URL))
-            {
                 AddString(szValue);
-            }
         }
     }
 
@@ -413,9 +400,7 @@ AutoComplete_AdaptFlags(HWND hwndEdit, LPDWORD pdwACO, LPDWORD pdwSHACF)
         dwACO |= ACO_USETAB;
 
     if (GetWindowLongPtr(hwndEdit, GWL_EXSTYLE) & WS_EX_RTLREADING)
-    {
         dwACO |= ACO_RTLREADING;
-    }
 
     if (!(dwACO & (ACO_AUTOSUGGEST | ACO_AUTOAPPEND)))
     {
@@ -472,13 +457,9 @@ HRESULT WINAPI SHAutoComplete(HWND hwndEdit, DWORD dwFlags)
 
     hr = pAC2->Init(hwndEdit, pES, NULL, L"www.%s.com");
     if (SUCCEEDED(hr))
-    {
         pAC2->SetOptions(dwACO);
-    }
     else
-    {
         ERR("IAutoComplete2::Init failed: 0x%lX\n", hr);
-    }
 
     return hr;
 }
