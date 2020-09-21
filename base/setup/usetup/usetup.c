@@ -528,7 +528,7 @@ GetNTOSInstallationName(
 
 //Launage Page.
 
-#include headers/usetupLaunagePage.h
+#include "headers/usetupLaunagePage.h"
 
 /*
  * Start page
