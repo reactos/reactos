@@ -942,8 +942,19 @@ static void test_D3DXLoadSurface(IDirect3DDevice9 *device)
 
     check_release((IUnknown*)surf, 0);
 
+    SetRect(&rect, 1, 1, 2, 2);
+    hr = IDirect3DDevice9_CreateOffscreenPlainSurface(device, 1, 1, D3DFMT_A8R8G8B8, D3DPOOL_DEFAULT, &surf, NULL);
+    ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
+    hr = D3DXLoadSurfaceFromMemory(surf, NULL, NULL, pixdata_a8b8g8r8,
+            D3DFMT_A8R8G8B8, 8, NULL, &rect, D3DX_FILTER_NONE, 0);
+    ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
+    IDirect3DSurface9_LockRect(surf, &lockrect, NULL, D3DLOCK_READONLY);
+    check_pixel_4bpp(&lockrect, 0, 0, 0x8dc32bf6);
+    IDirect3DSurface9_UnlockRect(surf);
+    check_release((IUnknown *)surf, 0);
 
     /* test color conversion */
+    SetRect(&rect, 0, 0, 2, 2);
     /* A8R8G8B8 */
     hr = IDirect3DDevice9_CreateOffscreenPlainSurface(device, 2, 2, D3DFMT_A8R8G8B8, D3DPOOL_DEFAULT, &surf, NULL);
     if(FAILED(hr)) skip("Failed to create a surface (%#x)\n", hr);

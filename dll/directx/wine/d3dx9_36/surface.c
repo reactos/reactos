@@ -1915,6 +1915,9 @@ HRESULT WINAPI D3DXLoadSurfaceFromMemory(IDirect3DSurface9 *dst_surface,
     if (FAILED(hr = lock_surface(dst_surface, dst_rect, &lockrect, &surface, TRUE)))
         return hr;
 
+    src_memory = (BYTE *)src_memory + src_rect->top / srcformatdesc->block_height * src_pitch
+            + src_rect->left / srcformatdesc->block_width * srcformatdesc->block_byte_count;
+
     if (src_format == surfdesc.Format
             && dst_size.width == src_size.width
             && dst_size.height == src_size.height
