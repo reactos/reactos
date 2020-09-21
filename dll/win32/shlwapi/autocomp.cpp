@@ -24,19 +24,11 @@ class CAutoCompleteEnumString :
     public IEnumString
 {
 public:
-    CAutoCompleteEnumString(IAutoComplete2 *pAC2, DWORD dwSHACF, HWND hwndEdit)
-        : m_istr(0), m_hwndEdit(hwndEdit), m_dwSHACF(dwSHACF)
+    CAutoCompleteEnumString() : m_istr(0), m_hwndEdit(NULL), m_dwSHACF(0)
     {
-        Reset();
     }
 
-    CAutoCompleteEnumString(const CAutoCompleteEnumString& another)
-        : m_istr(another.m_istr)
-        , m_hwndEdit(another.m_hwndEdit)
-        , m_dwSHACF(another.m_dwSHACF)
-        , m_strs(another.m_strs)
-    {
-    }
+    void Initialize(IAutoComplete2 *pAC2, DWORD dwSHACF, HWND hwndEdit);
 
     void AddString(LPCWSTR psz)
     {
@@ -49,6 +41,7 @@ public:
         m_istr = 0;
     }
 
+    void DoFileSystem();
     void DoDir(LPCWSTR pszDir, BOOL bDirOnly);
     void DoDrives(BOOL bDirOnly);
     void DoURLHistory();
@@ -70,6 +63,14 @@ protected:
     DWORD m_dwSHACF;
     CSimpleArray<CStringW> m_strs;
 };
+
+void CAutoCompleteEnumString::Initialize(IAutoComplete2 *pAC2, DWORD dwSHACF, HWND hwndEdit)
+{
+    m_istr = 0;
+    m_hwndEdit = hwndEdit;
+    m_dwSHACF = dwSHACF;
+    Reset();
+}
 
 STDMETHODIMP
 CAutoCompleteEnumString::Next(ULONG celt, LPOLESTR *rgelt, ULONG *pceltFetched)
@@ -111,30 +112,40 @@ STDMETHODIMP CAutoCompleteEnumString::Skip(ULONG celt)
     return S_OK;
 }
 
+void CAutoCompleteEnumString::DoFileSystem()
+{
+    if (!IsWindow(m_hwndEdit))
+        return;
+
+    BOOL bDirOnly = !!(m_dwSHACF & SHACF_FILESYS_DIRS);
+
+    WCHAR szText[MAX_PATH];
+    GetWindowTextW(m_hwndEdit, szText, _countof(szText));
+    DWORD attrs = GetFileAttributesW(szText);
+
+    if (attrs != INVALID_FILE_ATTRIBUTES)
+    {
+        if (attrs & FILE_ATTRIBUTE_DIRECTORY)
+            DoDir(szText, bDirOnly);
+    }
+    else if (szText[0])
+    {
+        PathRemoveFileSpecW(szText);
+        DoDir(szText, bDirOnly);
+    }
+    else
+    {
+        DoDrives(bDirOnly);
+    }
+}
+
 STDMETHODIMP CAutoCompleteEnumString::Reset()
 {
     ResetContent();
 
     if (m_dwSHACF & (SHACF_FILESYS_ONLY | SHACF_FILESYSTEM | SHACF_FILESYS_DIRS))
     {
-        BOOL bDirOnly = !!(m_dwSHACF & SHACF_FILESYS_DIRS);
-        WCHAR szText[MAX_PATH];
-        GetWindowTextW(m_hwndEdit, szText, _countof(szText));
-        DWORD attrs = GetFileAttributesW(szText);
-        if (attrs != INVALID_FILE_ATTRIBUTES)
-        {
-            if (attrs & FILE_ATTRIBUTE_DIRECTORY)
-                DoDir(szText, bDirOnly);
-        }
-        else if (szText[0])
-        {
-            PathRemoveFileSpecW(szText);
-            DoDir(szText, bDirOnly);
-        }
-        else
-        {
-            DoDrives(bDirOnly);
-        }
+        DoFileSystem();
     }
 
     if (!(m_dwSHACF & (SHACF_FILESYS_ONLY)))
@@ -157,7 +168,14 @@ STDMETHODIMP CAutoCompleteEnumString::Clone(IEnumString **ppenum)
         return E_POINTER;
     }
 
-    *ppenum = new CAutoCompleteEnumString(*this);
+    CAutoCompleteEnumString *pES = new CComObject<CAutoCompleteEnumString>();
+    pES->m_istr = m_istr;
+    pES->m_hwndEdit = NULL;
+    pES->m_dwSHACF = m_dwSHACF;
+    pES->m_strs = m_strs;
+    pES->AddRef();
+
+    *ppenum = pES;
     return S_OK;
 }
 
@@ -375,13 +393,8 @@ HRESULT WINAPI SHAutoComplete(HWND hwndEdit, DWORD dwFlags)
         return hr;
     }
 
-    CComPtr<IEnumString> pES;
-    pES = new CAutoCompleteEnumString(pAC2, dwFlags, hwndEdit);
-    if (!pES)
-    {
-        ERR("Creating IEnumString failed.\n");
-        return E_FAIL;
-    }
+    CComPtr<CAutoCompleteEnumString> pES(new CComObject<CAutoCompleteEnumString>());
+    pES->Initialize(pAC2, dwFlags, hwndEdit);
 
     hr = pAC2->Init(hwndEdit, pES, NULL, L"www.%s.com");
     if (SUCCEEDED(hr))
