@@ -4218,41 +4218,43 @@ static HRESULT WINAPI ID3DXEffectCompilerImpl_QueryInterface(ID3DXEffectCompiler
 {
     TRACE("iface %p, riid %s, object %p.\n", iface, debugstr_guid(riid), object);
 
-    if (IsEqualGUID(riid, &IID_IUnknown) ||
-        IsEqualGUID(riid, &IID_ID3DXEffectCompiler))
+    if (IsEqualGUID(riid, &IID_IUnknown)
+            || IsEqualGUID(riid, &IID_ID3DXEffectCompiler))
     {
         iface->lpVtbl->AddRef(iface);
         *object = iface;
         return S_OK;
     }
 
-    ERR("Interface %s not found\n", debugstr_guid(riid));
+    WARN("%s not implemented, returning E_NOINTERFACE.\n", debugstr_guid(riid));
 
+    *object = NULL;
     return E_NOINTERFACE;
 }
 
 static ULONG WINAPI ID3DXEffectCompilerImpl_AddRef(ID3DXEffectCompiler *iface)
 {
-    struct ID3DXEffectCompilerImpl *This = impl_from_ID3DXEffectCompiler(iface);
+    struct ID3DXEffectCompilerImpl *compiler = impl_from_ID3DXEffectCompiler(iface);
+    ULONG refcount = InterlockedIncrement(&compiler->ref);
 
-    TRACE("iface %p: AddRef from %u\n", iface, This->ref);
+    TRACE("%p increasing refcount to %u.\n", iface, refcount);
 
-    return InterlockedIncrement(&This->ref);
+    return refcount;
 }
 
 static ULONG WINAPI ID3DXEffectCompilerImpl_Release(ID3DXEffectCompiler *iface)
 {
-    struct ID3DXEffectCompilerImpl *This = impl_from_ID3DXEffectCompiler(iface);
-    ULONG ref = InterlockedDecrement(&This->ref);
+    struct ID3DXEffectCompilerImpl *compiler = impl_from_ID3DXEffectCompiler(iface);
+    ULONG refcount = InterlockedDecrement(&compiler->ref);
 
-    TRACE("iface %p: Release from %u\n", iface, ref + 1);
+    TRACE("%p decreasing refcount to %u.\n", iface, refcount);
 
-    if (!ref)
+    if (!refcount)
     {
-        HeapFree(GetProcessHeap(), 0, This);
+        heap_free(compiler);
     }
 
-    return ref;
+    return refcount;
 }
 
 /*** ID3DXBaseEffect methods ***/
