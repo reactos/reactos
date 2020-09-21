@@ -146,20 +146,19 @@ static inline void expect_vec4_(unsigned int line, const D3DXVECTOR4 *expected, 
         got->x, got->y, got->z, got->w);
 }
 
+static BOOL compare_uint(unsigned int x, unsigned int y, unsigned int max_diff)
+{
+    unsigned int diff = x > y ? x - y : y - x;
+
+    return diff <= max_diff;
+}
+
 static BOOL compare_color(DWORD c1, DWORD c2, BYTE max_diff)
 {
-    if (abs((c1 & 0xff) - (c2 & 0xff)) > max_diff)
-        return FALSE;
-    c1 >>= 8; c2 >>= 8;
-    if (abs((c1 & 0xff) - (c2 & 0xff)) > max_diff)
-        return FALSE;
-    c1 >>= 8; c2 >>= 8;
-    if (abs((c1 & 0xff) - (c2 & 0xff)) > max_diff)
-        return FALSE;
-    c1 >>= 8; c2 >>= 8;
-    if (abs((c1 & 0xff) - (c2 & 0xff)) > max_diff)
-        return FALSE;
-    return TRUE;
+    return compare_uint(c1 & 0xff, c2 & 0xff, max_diff)
+            && compare_uint((c1 >> 8) & 0xff, (c2 >> 8) & 0xff, max_diff)
+            && compare_uint((c1 >> 16) & 0xff, (c2 >> 16) & 0xff, max_diff)
+            && compare_uint((c1 >> 24) & 0xff, (c2 >> 24) & 0xff, max_diff);
 }
 
 static BOOL is_autogenmipmap_supported(IDirect3DDevice9 *device, D3DRESOURCETYPE resource_type)
