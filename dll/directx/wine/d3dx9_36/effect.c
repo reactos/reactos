@@ -166,7 +166,6 @@ struct d3dx9_base_effect
 
     ULONG64 version_counter;
 
-    char *full_name_tmp;
     unsigned int full_name_tmp_size;
 };
 
@@ -180,6 +179,7 @@ struct d3dx_effect
     unsigned int object_count;
     struct d3dx_object *objects;
     struct wine_rb_tree param_tree;
+    char *full_name_tmp;
 
     struct ID3DXEffectStateManager *manager;
     struct IDirect3DDevice9 *device;
@@ -694,7 +694,7 @@ static void d3dx9_base_effect_cleanup(struct d3dx_effect *effect)
 
     TRACE("base %p.\n", base);
 
-    heap_free(base->full_name_tmp);
+    heap_free(effect->full_name_tmp);
 
     if (base->parameters)
     {
@@ -934,17 +934,17 @@ struct d3dx_parameter *get_parameter_by_name(struct d3dx9_base_effect *base,
         full_name_size = name_len + param_name_len + 2;
         if (base->full_name_tmp_size < full_name_size)
         {
-            if (!(full_name = heap_realloc(base->full_name_tmp, full_name_size)))
+            if (!(full_name = heap_realloc(effect->full_name_tmp, full_name_size)))
             {
                 ERR("Out of memory.\n");
                 return NULL;
             }
-            base->full_name_tmp = full_name;
+            effect->full_name_tmp = full_name;
             base->full_name_tmp_size = full_name_size;
         }
         else
         {
-            full_name = base->full_name_tmp;
+            full_name = effect->full_name_tmp;
         }
         memcpy(full_name, parameter->full_name, param_name_len);
         full_name[param_name_len] = '.';
