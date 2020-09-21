@@ -156,7 +156,6 @@ struct d3dx9_base_effect
 {
     struct d3dx_effect *effect;
 
-    struct d3dx_effect_pool *pool;
     DWORD flags;
 
     ULONG64 version_counter;
@@ -180,7 +179,7 @@ struct d3dx_effect
 
     struct ID3DXEffectStateManager *manager;
     struct IDirect3DDevice9 *device;
-    struct ID3DXEffectPool *pool;
+    struct d3dx_effect_pool *pool;
     struct d3dx_technique *active_technique;
     struct d3dx_pass *active_pass;
     BOOL started;
@@ -683,6 +682,7 @@ static void free_technique(struct d3dx_technique *technique)
 
 static void d3dx_effect_cleanup(struct d3dx_effect *effect)
 {
+    ID3DXEffectPool *pool;
     unsigned int i;
 
     TRACE("effect %p.\n", effect);
@@ -711,7 +711,10 @@ static void d3dx_effect_cleanup(struct d3dx_effect *effect)
     }
 
     if (effect->pool)
-        effect->pool->lpVtbl->Release(effect->pool);
+    {
+        pool = &effect->pool->ID3DXEffectPool_iface;
+        pool->lpVtbl->Release(pool);
+    }
 
     if (effect->manager)
         IUnknown_Release(effect->manager);
@@ -1128,7 +1131,7 @@ static BOOL walk_parameter_tree(struct d3dx_parameter *param, walk_parameter_dep
 
 static ULONG64 *get_version_counter_ptr(struct d3dx_effect *effect)
 {
-    return effect->base_effect.pool ? &effect->base_effect.pool->version_counter : &effect->base_effect.version_counter;
+    return effect->pool ? &effect->pool->version_counter : &effect->base_effect.version_counter;
 }
 
 static ULONG64 next_effect_update_version(struct d3dx_effect *effect)
@@ -3540,7 +3543,7 @@ static HRESULT WINAPI d3dx_effect_GetPool(ID3DXEffect *iface, ID3DXEffectPool **
     *pool = NULL;
     if (effect->pool)
     {
-        *pool = effect->pool;
+        *pool = &effect->pool->ID3DXEffectPool_iface;
         (*pool)->lpVtbl->AddRef(*pool);
     }
 
@@ -5941,7 +5944,6 @@ static BOOL param_set_top_level_param(void *top_level_param, struct d3dx_paramet
 static HRESULT d3dx_parse_effect(struct d3dx_effect *effect, const char *data, UINT data_size,
         DWORD start, const char **skip_constants, unsigned int skip_constants_count)
 {
-    struct d3dx9_base_effect *base = &effect->base_effect;
     const char *ptr = data + start;
     UINT stringcount, resourcecount;
     HRESULT hr;
@@ -6051,7 +6053,7 @@ static HRESULT d3dx_parse_effect(struct d3dx_effect *effect, const char *data, U
 
     for (i = 0; i < effect->parameter_count; ++i)
     {
-        if (FAILED(hr = d3dx_pool_sync_shared_parameter(base->pool, &effect->parameters[i])))
+        if (FAILED(hr = d3dx_pool_sync_shared_parameter(effect->pool, &effect->parameters[i])))
             goto err_out;
         effect->parameters[i].version_counter = get_version_counter_ptr(effect);
         set_dirty(&effect->parameters[i].param);
@@ -6157,7 +6159,6 @@ static HRESULT d3dx9_effect_init(struct d3dx_effect *effect, struct IDirect3DDev
 #endif
     struct d3dx9_base_effect *base = &effect->base_effect;
     ID3DBlob *bytecode = NULL, *temp_errors = NULL;
-    struct d3dx_effect_pool *pool_impl = NULL;
     unsigned int skip_constants_count = 0;
     char *skip_constants_buffer = NULL;
     const char **skip_constants = NULL;
@@ -6177,15 +6178,13 @@ static HRESULT d3dx9_effect_init(struct d3dx_effect *effect, struct IDirect3DDev
     if (pool)
     {
         pool->lpVtbl->AddRef(pool);
-        pool_impl = impl_from_ID3DXEffectPool(pool);
+        effect->pool = impl_from_ID3DXEffectPool(pool);
     }
-    effect->pool = pool;
 
     IDirect3DDevice9_AddRef(device);
     effect->device = device;
 
     base->effect = effect;
-    base->pool = pool_impl;
     base->flags = eflags;
 
     read_dword(&ptr, &tag);
