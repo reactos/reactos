@@ -133,6 +133,8 @@ HRESULT WINAPI D3DXCreateBuffer(DWORD size, ID3DXBuffer **buffer)
     struct ID3DXBufferImpl *object;
     HRESULT hr;
 
+    TRACE("size %u, buffer %p.\n", size, buffer);
+
     if (!buffer)
     {
         WARN("Invalid buffer specified.\n");
