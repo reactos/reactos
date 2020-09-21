@@ -858,9 +858,10 @@ static struct d3dx_parameter *get_parameter_element_by_name(struct d3dx9_base_ef
     return NULL;
 }
 
-static struct d3dx_parameter *get_annotation_by_name(struct d3dx9_base_effect *base,
-        unsigned int count, struct d3dx_parameter *annotations, const char *name)
+static struct d3dx_parameter *get_annotation_by_name(struct d3dx_effect *effect, unsigned int count,
+        struct d3dx_parameter *annotations, const char *name)
 {
+    struct d3dx9_base_effect *base = &effect->base_effect;
     UINT i, length;
     struct d3dx_parameter *temp_parameter;
     const char *part;
@@ -2255,7 +2256,7 @@ static D3DXHANDLE WINAPI d3dx_effect_GetAnnotationByName(ID3DXEffect *iface, D3D
 
     annotation_count = get_annotation_from_object(effect, object, &annotations);
 
-    annotation = get_annotation_by_name(&effect->base_effect, annotation_count, annotations, name);
+    annotation = get_annotation_by_name(effect, annotation_count, annotations, name);
     if (annotation)
     {
         TRACE("Returning parameter %p\n", annotation);
