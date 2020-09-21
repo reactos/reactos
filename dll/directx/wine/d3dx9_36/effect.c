@@ -1473,11 +1473,7 @@ static HRESULT d3dx_set_shader_const_state(struct d3dx_effect *effect, enum SHAD
     D3DXVECTOR4 value;
     HRESULT ret;
 
-    if (op < 0 || op > SCT_PSINT)
-    {
-        FIXME("Unknown op %u.\n", op);
-        return D3DERR_INVALIDCALL;
-    }
+    assert(op < ARRAY_SIZE(const_tbl));
     element_count = param->bytes / const_tbl[op].elem_size;
     TRACE("%s, index %u, element_count %u.\n", const_tbl[op].name, index, element_count);
     if (param->type != const_tbl[op].type)
