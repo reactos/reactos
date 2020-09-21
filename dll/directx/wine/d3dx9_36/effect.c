@@ -5076,7 +5076,7 @@ static int param_rb_compare(const void *key, const struct wine_rb_entry *entry)
     return strcmp(name, param->full_name);
 }
 
-static void add_param_to_tree(struct d3dx9_base_effect *base, struct d3dx_parameter *param,
+static void add_param_to_tree(struct d3dx_effect *effect, struct d3dx_parameter *param,
         struct d3dx_parameter *parent, char separator, unsigned int element)
 {
     const char *parent_name = parent ? parent->full_name : NULL;
@@ -5131,18 +5131,18 @@ static void add_param_to_tree(struct d3dx9_base_effect *base, struct d3dx_parame
         memcpy(param->full_name, param->name, len);
     }
     TRACE("Full name is %s.\n", param->full_name);
-    wine_rb_put(&base->param_tree, param->full_name, &param->rb_entry);
+    wine_rb_put(&effect->base_effect.param_tree, param->full_name, &param->rb_entry);
 
     if (is_top_level_parameter(param))
         for (i = 0; i < param->top_level_param->annotation_count; ++i)
-            add_param_to_tree(base, &param->top_level_param->annotations[i], param, '@', 0);
+            add_param_to_tree(effect, &param->top_level_param->annotations[i], param, '@', 0);
 
     if (param->element_count)
         for (i = 0; i < param->element_count; ++i)
-            add_param_to_tree(base, &param->members[i], param, '[', i);
+            add_param_to_tree(effect, &param->members[i], param, '[', i);
     else
         for (i = 0; i < param->member_count; ++i)
-            add_param_to_tree(base, &param->members[i], param, '.', 0);
+            add_param_to_tree(effect, &param->members[i], param, '.', 0);
 }
 
 static HRESULT d3dx_parse_effect_typedef(struct d3dx_effect *effect, struct d3dx_parameter *param,
@@ -6017,7 +6017,7 @@ static HRESULT d3dx_parse_effect(struct d3dx_effect *effect, const char *data, U
             }
             walk_parameter_tree(&base->parameters[i].param, param_set_top_level_param,
                 &base->parameters[i]);
-            add_param_to_tree(base, &base->parameters[i].param, NULL, 0, 0);
+            add_param_to_tree(effect, &base->parameters[i].param, NULL, 0, 0);
         }
     }
 
