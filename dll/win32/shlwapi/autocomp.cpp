@@ -38,10 +38,6 @@ public:
     {
     }
 
-    ~CAutoCompleteEnumString()
-    {
-    }
-
     void AddString(LPCWSTR psz)
     {
         m_strs.Add(psz);
@@ -196,6 +192,7 @@ void CAutoCompleteEnumString::DoDir(LPCWSTR pszDir, BOOL bDirOnly)
         if (PathAppendW(szPath, find.cFileName))
             AddString(szPath);
     } while (FindNextFileW(hFind, &find));
+
     FindClose(hFind);
 }
 
@@ -209,7 +206,6 @@ void CAutoCompleteEnumString::DoDrives(BOOL bDirOnly)
 
         sz[0] = (WCHAR)(L'A' + i);
         AddString(sz);
-
         switch (GetDriveTypeW(sz))
         {
             case DRIVE_REMOTE: case DRIVE_RAMDISK: case DRIVE_FIXED:
@@ -272,7 +268,6 @@ void CAutoCompleteEnumString::DoURLMRU()
         for (DWORD i = 0; i <= L'z' - L'a' && szMRUList[i]; ++i)
         {
             szName[0] = szMRUList[i];
-
             cbValue = sizeof(szValue);
             result = RegQueryValueExW(hKey, szName, NULL, &dwType, (LPBYTE)szValue, &cbValue);
             if (result != ERROR_SUCCESS || dwType != REG_SZ)
@@ -400,6 +395,5 @@ HRESULT WINAPI SHAutoComplete(HWND hwndEdit, DWORD dwFlags)
         pAC2->SetOptions(dwACO);
     else
         ERR("IAutoComplete2::Init failed: 0x%lX\n", hr);
-
     return hr;
 }
