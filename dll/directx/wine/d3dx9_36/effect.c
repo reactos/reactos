@@ -165,8 +165,6 @@ struct d3dx9_base_effect
     DWORD flags;
 
     ULONG64 version_counter;
-
-    unsigned int full_name_tmp_size;
 };
 
 struct d3dx_effect
@@ -180,6 +178,7 @@ struct d3dx_effect
     struct d3dx_object *objects;
     struct wine_rb_tree param_tree;
     char *full_name_tmp;
+    unsigned int full_name_tmp_size;
 
     struct ID3DXEffectStateManager *manager;
     struct IDirect3DDevice9 *device;
@@ -932,7 +931,7 @@ struct d3dx_parameter *get_parameter_by_name(struct d3dx9_base_effect *base,
         name_len = strlen(name);
         param_name_len = strlen(parameter->full_name);
         full_name_size = name_len + param_name_len + 2;
-        if (base->full_name_tmp_size < full_name_size)
+        if (effect->full_name_tmp_size < full_name_size)
         {
             if (!(full_name = heap_realloc(effect->full_name_tmp, full_name_size)))
             {
@@ -940,7 +939,7 @@ struct d3dx_parameter *get_parameter_by_name(struct d3dx9_base_effect *base,
                 return NULL;
             }
             effect->full_name_tmp = full_name;
-            base->full_name_tmp_size = full_name_size;
+            effect->full_name_tmp_size = full_name_size;
         }
         else
         {
