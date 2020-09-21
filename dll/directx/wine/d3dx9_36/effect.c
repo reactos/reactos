@@ -1563,41 +1563,6 @@ static HRESULT d3dx9_base_effect_set_matrix_transpose(struct d3dx9_base_effect *
     return D3DERR_INVALIDCALL;
 }
 
-static HRESULT d3dx9_base_effect_get_matrix_transpose(struct d3dx9_base_effect *base,
-        D3DXHANDLE parameter, D3DXMATRIX *matrix)
-{
-    struct d3dx_parameter *param = get_valid_parameter(base, parameter);
-
-    if (matrix && param && !param->element_count)
-    {
-        TRACE("Class %s\n", debug_d3dxparameter_class(param->class));
-
-        switch (param->class)
-        {
-            case D3DXPC_SCALAR:
-            case D3DXPC_VECTOR:
-                get_matrix(param, matrix, FALSE);
-                return D3D_OK;
-
-            case D3DXPC_MATRIX_ROWS:
-                get_matrix(param, matrix, TRUE);
-                return D3D_OK;
-
-            case D3DXPC_OBJECT:
-            case D3DXPC_STRUCT:
-                break;
-
-            default:
-                FIXME("Unhandled class %s\n", debug_d3dxparameter_class(param->class));
-                break;
-        }
-    }
-
-    WARN("Parameter not found.\n");
-
-    return D3DERR_INVALIDCALL;
-}
-
 static HRESULT d3dx9_base_effect_set_matrix_transpose_array(struct d3dx9_base_effect *base,
         D3DXHANDLE parameter, const D3DXMATRIX *matrix, UINT count)
 {
@@ -3580,10 +3545,38 @@ static HRESULT WINAPI d3dx_effect_GetMatrixTranspose(ID3DXEffect *iface, D3DXHAN
         D3DXMATRIX *matrix)
 {
     struct d3dx_effect *effect = impl_from_ID3DXEffect(iface);
+    struct d3dx_parameter *param = get_valid_parameter(&effect->base_effect, parameter);
 
     TRACE("iface %p, parameter %p, matrix %p.\n", iface, parameter, matrix);
 
-    return d3dx9_base_effect_get_matrix_transpose(&effect->base_effect, parameter, matrix);
+    if (matrix && param && !param->element_count)
+    {
+        TRACE("Class %s.\n", debug_d3dxparameter_class(param->class));
+
+        switch (param->class)
+        {
+            case D3DXPC_SCALAR:
+            case D3DXPC_VECTOR:
+                get_matrix(param, matrix, FALSE);
+                return D3D_OK;
+
+            case D3DXPC_MATRIX_ROWS:
+                get_matrix(param, matrix, TRUE);
+                return D3D_OK;
+
+            case D3DXPC_OBJECT:
+            case D3DXPC_STRUCT:
+                break;
+
+            default:
+                FIXME("Unhandled class %s.\n", debug_d3dxparameter_class(param->class));
+                break;
+        }
+    }
+
+    WARN("Parameter not found.\n");
+
+    return D3DERR_INVALIDCALL;
 }
 
 static HRESULT WINAPI d3dx_effect_SetMatrixTransposeArray(ID3DXEffect *iface, D3DXHANDLE parameter,
