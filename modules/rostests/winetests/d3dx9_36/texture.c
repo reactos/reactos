@@ -87,6 +87,20 @@ static const unsigned char dds_volume_map[] = {
 0x0f,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x10,0x84,0xef,0x7b,0xaa,0xab,0xab,0xab
 };
 
+/* 4x2 dxt5 */
+static const BYTE dds_dxt5[] =
+{
+    0x44,0x44,0x53,0x20,0x7c,0x00,0x00,0x00,0x07,0x10,0x08,0x00,0x02,0x00,0x00,0x00,
+    0x04,0x00,0x00,0x00,0x10,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x01,0x00,0x00,0x00,
+    0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+    0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+    0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x20,0x00,0x00,0x00,
+    0x04,0x00,0x00,0x00,0x44,0x58,0x54,0x35,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+    0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x08,0x10,0x00,0x00,
+    0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,
+    0xff,0xff,0x00,0x00,0x00,0x00,0x00,0x00,0xef,0x87,0x0f,0x78,0x05,0x05,0x50,0x50,
+};
+
 static const unsigned char png_grayscale[] =
 {
     0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00, 0x00, 0x00, 0x0d, 0x49,
@@ -400,6 +414,15 @@ static void test_D3DXCheckTextureRequirements(IDirect3DDevice9 *device)
         ok(height == 4, "Returned height %d, expected %d\n", height, 4);
         ok(mipmaps == 1, "Returned mipmaps %d, expected %d\n", mipmaps, 1);
         ok(format == D3DFMT_DXT5, "Returned format %u, expected %u\n", format, D3DFMT_DXT5);
+
+        width = 4;
+        height = 2;
+        hr = D3DXCheckTextureRequirements(device, &width, &height, &mipmaps, 0, &format, D3DPOOL_DEFAULT);
+        ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
+        ok(width == 4, "Got unexpected width %u.\n", width);
+        ok(height == 4, "Got unexpected height %u.\n", height);
+        ok(mipmaps == 1, "Got unexpected mipmap level count %u.\n", mipmaps);
+        ok(format == D3DFMT_DXT5, "Got unexpected format %u.\n", format);
     }
     else
     {
@@ -1526,13 +1549,21 @@ static void test_D3DXFillVolumeTexture(IDirect3DDevice9 *device)
 
 static void test_D3DXCreateTextureFromFileInMemory(IDirect3DDevice9 *device)
 {
-    HRESULT hr;
+    static const DWORD dds_dxt5_expected[] =
+    {
+        0xff7b207b, 0xff7b207b, 0xff84df7b, 0xff84df7b,
+        0xff7b207b, 0xff7b207b, 0xff84df7b, 0xff84df7b,
+        0xff7b207b, 0xff7b207b, 0xff84df7b, 0xff84df7b,
+        0xff7b207b, 0xff7b207b, 0xff84df7b, 0xff84df7b,
+    };
+    IDirect3DSurface9 *surface, *uncompressed_surface;
     IDirect3DTexture9 *texture;
+    D3DLOCKED_RECT lock_rect;
     D3DRESOURCETYPE type;
     D3DSURFACE_DESC desc;
-    D3DLOCKED_RECT lock_rect;
-    int i;
+    unsigned int i, x, y;
     DWORD level_count;
+    HRESULT hr;
 
     hr = D3DXCreateTextureFromFileInMemory(device, dds_16bit, sizeof(dds_16bit), &texture);
     ok(hr == D3D_OK, "D3DXCreateTextureFromFileInMemory returned %#x, expected %#x\n", hr, D3D_OK);
@@ -1568,8 +1599,50 @@ static void test_D3DXCreateTextureFromFileInMemory(IDirect3DDevice9 *device)
             IDirect3DTexture9_UnlockRect(texture, 0);
         }
         IDirect3DTexture9_Release(texture);
-
     }
+
+    /* Test with a DXT5 texture smaller than the block size. */
+    hr = D3DXCreateTextureFromFileInMemory(device, dds_dxt5, sizeof(dds_dxt5), &texture);
+    todo_wine ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
+    if (SUCCEEDED(hr) && has_2d_dxt5)
+    {
+        type = IDirect3DTexture9_GetType(texture);
+        ok(type == D3DRTYPE_TEXTURE, "Got unexpected type %u.\n", type);
+        hr = IDirect3DTexture9_GetLevelDesc(texture, 0, &desc);
+        ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
+        ok(desc.Width == 4, "Got unexpected width %u.\n", desc.Width);
+        ok(desc.Height == 4, "Got unexpected height %u.\n", desc.Height);
+
+        IDirect3DTexture9_GetSurfaceLevel(texture, 0, &surface);
+        hr = IDirect3DDevice9_CreateOffscreenPlainSurface(device, 4, 4, D3DFMT_A8R8G8B8,
+                D3DPOOL_DEFAULT, &uncompressed_surface, NULL);
+        ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
+        hr = D3DXLoadSurfaceFromSurface(uncompressed_surface, NULL, NULL, surface, NULL, NULL, D3DX_FILTER_NONE, 0);
+        ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
+        hr = IDirect3DSurface9_LockRect(uncompressed_surface, &lock_rect, NULL, D3DLOCK_READONLY);
+        ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
+        for (y = 0; y < 4; ++y)
+        {
+            for (x = 0; x < 4; ++x)
+            {
+                /* Use a large tolerance, decompression + stretching +
+                 * compression + decompression again introduce quite a bit of
+                 * precision loss. */
+                ok(compare_color(((DWORD *)lock_rect.pBits)[lock_rect.Pitch / 4 * y + x],
+                        dds_dxt5_expected[y * 4 + x], 32),
+                        "Color at position %u, %u is 0x%08x, expected 0x%08x.\n",
+                        x, y, ((DWORD *)lock_rect.pBits)[lock_rect.Pitch / 4 * y + x],
+                        dds_dxt5_expected[y * 4 + x]);
+            }
+        }
+        hr = IDirect3DSurface9_UnlockRect(uncompressed_surface);
+        ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
+
+        IDirect3DSurface9_Release(uncompressed_surface);
+        IDirect3DSurface9_Release(surface);
+    }
+    if (SUCCEEDED(hr))
+        IDirect3DTexture9_Release(texture);
 
     /* Volume textures work too. */
     hr = D3DXCreateTextureFromFileInMemory(device, dds_volume_map, sizeof(dds_volume_map), &texture);
