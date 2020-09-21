@@ -214,8 +214,6 @@ struct ID3DXEffectCompilerImpl
     LONG ref;
 };
 
-static struct d3dx_parameter *get_annotation_by_name(struct d3dx9_base_effect *base,
-        unsigned int count, struct d3dx_parameter *parameters, const char *name);
 static HRESULT d3dx_parse_state(struct d3dx_effect *effect, struct d3dx_state *state,
         const char *data, const char **ptr, struct d3dx_object *objects);
 static void free_parameter(struct d3dx_parameter *param, BOOL element, BOOL child);
