@@ -25,13 +25,13 @@ list(APPEND SOURCE
     reg.c
     regstream.c
     rosordinal.c
-    shlwapi_main.c
     stopwatch.c
     string.c
     thread.c
     url.c)
 
 list(APPEND PCH_SKIP_SOURCE
+    shlwapi_main.cpp
     autocomp.cpp
     wsprintf.c
     ${CMAKE_CURRENT_BINARY_DIR}/shlwapi_stubs.c)

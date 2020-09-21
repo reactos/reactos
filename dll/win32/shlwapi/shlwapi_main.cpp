@@ -3,6 +3,7 @@
  *
  *  Copyright 1998 Marcus Meissner
  *  Copyright 1998 Juergen Schmied (jsch)
+ *  Copyright 2020 Katayama Hirofumi MZ
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -19,19 +20,23 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include <stdarg.h>
-
-#include "windef.h"
-#include "winbase.h"
+#include <windef.h>
+#include <winbase.h>
 #define NO_SHLWAPI_REG
 #define NO_SHLWAPI_STREAM
-#include "shlwapi.h"
-#include "wine/debug.h"
+#include <shlwapi.h>
+#include <atlbase.h>
+#include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
+CComModule gModule;
+
+extern "C"
+{
 DECLSPEC_HIDDEN HINSTANCE shlwapi_hInstance = 0;
 DECLSPEC_HIDDEN DWORD SHLWAPI_ThreadRef_index = TLS_OUT_OF_INDEXES;
+}
 
 /*************************************************************************
  * SHLWAPI {SHLWAPI}
@@ -62,10 +67,12 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID fImpLoad)
             DisableThreadLibraryCalls(hinstDLL);
 	    shlwapi_hInstance = hinstDLL;
 	    SHLWAPI_ThreadRef_index = TlsAlloc();
+        //gModule.Init(ObjectMap, hinstDLL, NULL);
 	    break;
 	  case DLL_PROCESS_DETACH:
             if (fImpLoad) break;
 	    if (SHLWAPI_ThreadRef_index != TLS_OUT_OF_INDEXES) TlsFree(SHLWAPI_ThreadRef_index);
+        gModule.Term();
 	    break;
 	}
 	return TRUE;
