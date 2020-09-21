@@ -820,7 +820,7 @@ static void set_matrix_transpose(struct d3dx_parameter *param, const D3DXMATRIX 
     }
 }
 
-static struct d3dx_parameter *get_parameter_element_by_name(struct d3dx9_base_effect *base,
+static struct d3dx_parameter *get_parameter_element_by_name(struct d3dx_effect *effect,
         struct d3dx_parameter *parameter, const char *name)
 {
     UINT element;
@@ -842,7 +842,7 @@ static struct d3dx_parameter *get_parameter_element_by_name(struct d3dx9_base_ef
         switch (*part++)
         {
             case '.':
-                return get_parameter_by_name(base, temp_parameter, part);
+                return get_parameter_by_name(&effect->base_effect, temp_parameter, part);
 
             case '\0':
                 TRACE("Returning parameter %p\n", temp_parameter);
@@ -890,7 +890,7 @@ static struct d3dx_parameter *get_annotation_by_name(struct d3dx_effect *effect,
                     return get_parameter_by_name(base, temp_parameter, part);
 
                 case '[':
-                    return get_parameter_element_by_name(base, temp_parameter, part);
+                    return get_parameter_element_by_name(effect, temp_parameter, part);
 
                 default:
                     FIXME("Unhandled case \"%c\"\n", *--part);
@@ -979,7 +979,7 @@ struct d3dx_parameter *get_parameter_by_name(struct d3dx9_base_effect *base,
                     return get_parameter_by_name(base, temp_parameter, part);
 
                 case '[':
-                    return get_parameter_element_by_name(base, temp_parameter, part);
+                    return get_parameter_element_by_name(effect, temp_parameter, part);
 
                 default:
                     FIXME("Unhandled case \"%c\"\n", *--part);
