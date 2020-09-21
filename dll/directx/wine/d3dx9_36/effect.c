@@ -5678,10 +5678,10 @@ err_out:
     return hr;
 }
 
-static HRESULT d3dx9_create_object(struct d3dx9_base_effect *base, struct d3dx_object *object)
+static HRESULT d3dx9_create_object(struct d3dx_effect *effect, struct d3dx_object *object)
 {
     struct d3dx_parameter *param = object->param;
-    struct IDirect3DDevice9 *device = base->effect->device;
+    IDirect3DDevice9 *device = effect->device;
     HRESULT hr;
 
     if (*(char **)param->data)
@@ -5884,7 +5884,7 @@ static HRESULT d3dx_parse_resource(struct d3dx_effect *effect, const char *data,
 
                     if (object->data)
                     {
-                        if (FAILED(hr = d3dx9_create_object(base, object)))
+                        if (FAILED(hr = d3dx9_create_object(effect, object)))
                             return hr;
                         if (FAILED(hr = d3dx_create_param_eval(effect, object->data, object->size, param->type,
                                 &param->param_eval, get_version_counter_ptr(effect),
@@ -6061,7 +6061,7 @@ static HRESULT d3dx_parse_effect(struct d3dx_effect *effect, const char *data, U
 
         if (effect->objects[id].data)
         {
-            if (FAILED(hr = d3dx9_create_object(base, &effect->objects[id])))
+            if (FAILED(hr = d3dx9_create_object(effect, &effect->objects[id])))
                 goto err_out;
         }
     }
