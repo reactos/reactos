@@ -1174,22 +1174,6 @@ static D3DXHANDLE d3dx9_base_effect_get_technique(struct d3dx9_base_effect *base
     return get_technique_handle(&base->techniques[index]);
 }
 
-static D3DXHANDLE d3dx9_base_effect_get_technique_by_name(struct d3dx9_base_effect *base, const char *name)
-{
-    struct d3dx_technique *tech = get_technique_by_name(base, name);
-
-    if (tech)
-    {
-        D3DXHANDLE t = get_technique_handle(tech);
-        TRACE("Returning technique %p\n", t);
-        return t;
-    }
-
-    WARN("Technique not found.\n");
-
-    return NULL;
-}
-
 static unsigned int get_annotation_from_object(struct d3dx_effect *effect, D3DXHANDLE object,
         struct d3dx_parameter **annotations)
 {
@@ -3382,10 +3366,20 @@ static D3DXHANDLE WINAPI d3dx_effect_GetTechnique(ID3DXEffect *iface, UINT index
 static D3DXHANDLE WINAPI d3dx_effect_GetTechniqueByName(ID3DXEffect *iface, const char *name)
 {
     struct d3dx_effect *effect = impl_from_ID3DXEffect(iface);
+    struct d3dx_technique *tech = get_technique_by_name(&effect->base_effect, name);
 
     TRACE("iface %p, name %s.\n", iface, debugstr_a(name));
 
-    return d3dx9_base_effect_get_technique_by_name(&effect->base_effect, name);
+    if (tech)
+    {
+        D3DXHANDLE t = get_technique_handle(tech);
+        TRACE("Returning technique %p\n", t);
+        return t;
+    }
+
+    WARN("Technique not found.\n");
+
+    return NULL;
 }
 
 static D3DXHANDLE WINAPI d3dx_effect_GetPass(ID3DXEffect *iface, D3DXHANDLE technique, UINT index)
