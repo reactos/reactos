@@ -78,7 +78,7 @@ extern const struct ID3DXIncludeVtbl d3dx_include_from_file_vtbl DECLSPEC_HIDDEN
 static inline BOOL is_conversion_from_supported(const struct pixel_format_desc *format)
 {
     if (format->type == FORMAT_ARGB || format->type == FORMAT_ARGBF16
-            || format->type == FORMAT_ARGBF)
+            || format->type == FORMAT_ARGBF || format->type == FORMAT_DXT)
         return TRUE;
     return !!format->to_rgba;
 }
@@ -86,7 +86,7 @@ static inline BOOL is_conversion_from_supported(const struct pixel_format_desc *
 static inline BOOL is_conversion_to_supported(const struct pixel_format_desc *format)
 {
     if (format->type == FORMAT_ARGB || format->type == FORMAT_ARGBF16
-            || format->type == FORMAT_ARGBF)
+            || format->type == FORMAT_ARGBF || format->type == FORMAT_DXT)
         return TRUE;
     return !!format->from_rgba;
 }

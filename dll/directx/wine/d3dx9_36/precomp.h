@@ -27,6 +27,7 @@
 #include <wine/unicode.h>
 
 #include "d3dx9_private.h"
+#include "txc_dxtn.h"
 
 #include <dxfile.h>
 #include <rmxfguid.h>

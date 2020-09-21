@@ -27,6 +27,8 @@
 #include "initguid.h"
 #include "ole2.h"
 #include "wincodec.h"
+
+#include "txc_dxtn.h"
 #endif /* __REACTOS__ */
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3dx);
@@ -1931,6 +1933,11 @@ HRESULT WINAPI D3DXLoadSurfaceFromMemory(IDirect3DSurface9 *dst_surface,
     }
     else /* Stretching or format conversion. */
     {
+        const struct pixel_format_desc *dst_format;
+        DWORD *src_uncompressed = NULL;
+        unsigned int dst_pitch;
+        BYTE *dst_mem;
+
         if (!is_conversion_from_supported(srcformatdesc)
                 || !is_conversion_to_supported(destformatdesc))
         {
@@ -1939,10 +1946,76 @@ HRESULT WINAPI D3DXLoadSurfaceFromMemory(IDirect3DSurface9 *dst_surface,
             return E_NOTIMPL;
         }
 
+        if (srcformatdesc->type == FORMAT_DXT)
+        {
+            void (*fetch_dxt_texel)(int srcRowStride, const BYTE *pixdata,
+                    int i, int j, void *texel);
+            unsigned int x, y;
+
+            src_uncompressed = heap_alloc(src_size.width * src_size.height * sizeof(DWORD));
+            if (!src_uncompressed)
+            {
+                unlock_surface(dst_surface, dst_rect, surface, FALSE);
+                return E_OUTOFMEMORY;
+            }
+
+            switch(src_format)
+            {
+                case D3DFMT_DXT1:
+                    fetch_dxt_texel = fetch_2d_texel_rgba_dxt1;
+                    break;
+                case D3DFMT_DXT2:
+                case D3DFMT_DXT3:
+                    fetch_dxt_texel = fetch_2d_texel_rgba_dxt3;
+                    break;
+                case D3DFMT_DXT4:
+                case D3DFMT_DXT5:
+                    fetch_dxt_texel = fetch_2d_texel_rgba_dxt5;
+                    break;
+                default:
+                    FIXME("Unexpected compressed texture format %u.\n", src_format);
+                    fetch_dxt_texel = NULL;
+            }
+
+            TRACE("Uncompressing DXTn surface.\n");
+            for (y = 0; y < src_size.height; ++y)
+            {
+                DWORD *ptr = &src_uncompressed[y * src_size.width];
+                for (x = 0; x < src_size.width; ++x)
+                {
+                    fetch_dxt_texel(src_pitch / sizeof(DWORD), src_memory,
+                            x + src_rect->left, y + src_rect->top, ptr);
+                    ++ptr;
+                }
+            }
+            src_memory = src_uncompressed;
+            src_pitch = src_size.width * sizeof(DWORD);
+            srcformatdesc = get_format_info(D3DFMT_A8B8G8R8);
+        }
+
+        if (destformatdesc->type == FORMAT_DXT)
+        {
+            dst_mem = heap_alloc(dst_size.width * dst_size.height * sizeof(DWORD));
+            if (!dst_mem)
+            {
+                heap_free(src_uncompressed);
+                unlock_surface(dst_surface, dst_rect, surface, FALSE);
+                return E_OUTOFMEMORY;
+            }
+            dst_pitch = dst_size.width * sizeof(DWORD);
+            dst_format = get_format_info(D3DFMT_A8B8G8R8);
+        }
+        else
+        {
+            dst_mem = lockrect.pBits;
+            dst_pitch = lockrect.Pitch;
+            dst_format = destformatdesc;
+        }
+
         if ((filter & 0xf) == D3DX_FILTER_NONE)
         {
             convert_argb_pixels(src_memory, src_pitch, 0, &src_size, srcformatdesc,
-                    lockrect.pBits, lockrect.Pitch, 0, &dst_size, destformatdesc, color_key, src_palette);
+                    dst_mem, dst_pitch, 0, &dst_size, dst_format, color_key, src_palette);
         }
         else /* if ((filter & 0xf) == D3DX_FILTER_POINT) */
         {
@@ -1952,7 +2025,42 @@ HRESULT WINAPI D3DXLoadSurfaceFromMemory(IDirect3DSurface9 *dst_surface,
             /* Always apply a point filter until D3DX_FILTER_LINEAR,
              * D3DX_FILTER_TRIANGLE and D3DX_FILTER_BOX are implemented. */
             point_filter_argb_pixels(src_memory, src_pitch, 0, &src_size, srcformatdesc,
-                    lockrect.pBits, lockrect.Pitch, 0, &dst_size, destformatdesc, color_key, src_palette);
+                    dst_mem, dst_pitch, 0, &dst_size, dst_format, color_key, src_palette);
+        }
+
+        heap_free(src_uncompressed);
+
+        if (destformatdesc->type == FORMAT_DXT)
+        {
+            if (dst_rect && (dst_rect->left || dst_rect->top))
+            {
+                FIXME("Not implemented for destination rect left / top != 0.\n");
+            }
+            else
+            {
+                GLenum gl_format = 0;
+
+                TRACE("Compressing DXTn surface.\n");
+                switch(surfdesc.Format)
+                {
+                    case D3DFMT_DXT1:
+                        gl_format = GL_COMPRESSED_RGBA_S3TC_DXT1_EXT;
+                        break;
+                    case D3DFMT_DXT2:
+                    case D3DFMT_DXT3:
+                        gl_format = GL_COMPRESSED_RGBA_S3TC_DXT3_EXT;
+                        break;
+                    case D3DFMT_DXT4:
+                    case D3DFMT_DXT5:
+                        gl_format = GL_COMPRESSED_RGBA_S3TC_DXT5_EXT;
+                        break;
+                    default:
+                        ERR("Unexpected destination compressed format %u.\n", surfdesc.Format);
+                }
+                tx_compress_dxtn(4, dst_size.width, dst_size.height,
+                        dst_mem, gl_format, lockrect.pBits, lockrect.Pitch);
+            }
+            heap_free(dst_mem);
         }
     }
 

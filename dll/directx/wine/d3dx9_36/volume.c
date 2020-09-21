@@ -189,7 +189,6 @@ HRESULT WINAPI D3DXLoadVolumeFromMemory(IDirect3DVolume9 *dst_volume,
     {
         const BYTE *src_addr;
 
-
         if (!is_conversion_from_supported(src_format_desc)
                 || !is_conversion_to_supported(dst_format_desc))
         {

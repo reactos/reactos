@@ -20,6 +20,8 @@ function(add_d3dx9_target __version)
         ../d3dx9_36/sprite.c
         ../d3dx9_36/surface.c
         ../d3dx9_36/texture.c
+        ../d3dx9_36/txc_compress_dxtn.c
+        ../d3dx9_36/txc_fetch_dxtn.c
         ../d3dx9_36/util.c
         ../d3dx9_36/volume.c
         ../d3dx9_36/xfile.c)
