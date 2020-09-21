@@ -7,10 +7,6 @@ list(APPEND SOURCE
     provider.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/framedyn.def)
 
-if(MSVC)
-    add_compile_flags("/Zc:wchar_t-")
-endif()
-
 add_library(framedyn MODULE ${SOURCE})
 target_link_libraries(framedyn cpprt)
 set_target_cpp_properties(framedyn WITH_EXCEPTIONS)
@@ -22,4 +18,6 @@ if(NOT MSVC)
     add_asm_files(framedynex_asm alias_gcc.s)
     add_library(framedynex ${framedynex_asm})
     set_target_properties(framedynex PROPERTIES LINKER_LANGUAGE ASM)
+else()
+    target_compile_options(framedyn PRIVATE /Zc:wchar_t-)
 endif()

@@ -48,19 +48,3 @@ function(add_target_link_flags _module _flags)
     endif()
     add_target_property(${_module} LINK_FLAGS ${_flags})
 endfunction()
-
-# add_compile_flags
-#  Add or replace compiler flags in the global scope for either all source
-#  files or only those of the specified language.
-#
-# Examples:
-#  add_compile_flags("-pedantic -O5")
-function(add_compile_flags _flags)
-    if(${ARGC} GREATER 1)
-        message(FATAL_ERROR "Excess arguments to add_compile_flags! Args ${ARGN}")
-    endif()
-    # Adds the compiler flag for all code files: C, C++, and assembly
-    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${_flags}" PARENT_SCOPE)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${_flags}" PARENT_SCOPE)
-    set(CMAKE_ASM_FLAGS "${CMAKE_ASM_FLAGS} ${_flags}" PARENT_SCOPE)
-endfunction()
