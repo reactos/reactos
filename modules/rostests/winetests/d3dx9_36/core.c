@@ -770,6 +770,84 @@ static void test_ID3DXFont(IDirect3DDevice9 *device)
 
     height = ID3DXFont_DrawTextW(font, NULL, long_textW, -1, &rect, DT_WORDBREAK | DT_NOCLIP, 0xff00ff);
     ok(height == 96, "Got unexpected height %d.\n", height);
+
+    height = ID3DXFont_DrawTextW(font, NULL, L"a\na", -1, &rect, 0, 0xff00ff);
+    ok(height == 24, "Got unexpected height %d.\n", height);
+
+    height = ID3DXFont_DrawTextW(font, NULL, L"a\r\na", -1, &rect, 0, 0xff00ff);
+    ok(height == 24, "Got unexpected height %d.\n", height);
+
+    height = ID3DXFont_DrawTextW(font, NULL, L"a\ra", -1, &rect, 0, 0xff00ff);
+    ok(height == 12, "Got unexpected height %d.\n", height);
+
+    height = ID3DXFont_DrawTextW(font, NULL, L"a\na", -1, &rect, DT_SINGLELINE, 0xff00ff);
+    ok(height == 12, "Got unexpected height %d.\n", height);
+
+    height = ID3DXFont_DrawTextW(font, NULL, L"a\naaaaa aaaa", -1, &rect, 0, 0xff00ff);
+    ok(height == 24, "Got unexpected height %d.\n", height);
+
+    height = ID3DXFont_DrawTextW(font, NULL, L"a\naaaaa aaaa", -1, &rect, DT_WORDBREAK, 0xff00ff);
+    ok(height == 36, "Got unexpected height %d.\n", height);
+
+    height = ID3DXFont_DrawTextW(font, NULL, L"1\n2\n3\n4\n5\n6", -1, &rect, 0, 0xff00ff);
+    ok(height == 48, "Got unexpected height %d.\n", height);
+
+    height = ID3DXFont_DrawTextW(font, NULL, L"1\n2\n3\n4\n5\n6", -1, &rect, DT_NOCLIP, 0xff00ff);
+    ok(height == 72, "Got unexpected height %d.\n", height);
+
+    height = ID3DXFont_DrawTextW(font, NULL, L"\t\t\t\t\t\t\t\t\t\t", -1, &rect, DT_WORDBREAK, 0xff00ff);
+    ok(height == 0, "Got unexpected height %d.\n", height);
+
+    height = ID3DXFont_DrawTextW(font, NULL, L"\t\t\t\t\t\t\t\t\t\ta", -1, &rect, DT_WORDBREAK, 0xff00ff);
+    ok(height == 12, "Got unexpected height %d.\n", height);
+
+    height = ID3DXFont_DrawTextW(font, NULL, L"\taaaaaaaaaa", -1, &rect, DT_WORDBREAK, 0xff00ff);
+    ok(height == 24, "Got unexpected height %d.\n", height);
+
+    height = ID3DXFont_DrawTextW(font, NULL, L"\taaaaaaaaaa", -1, &rect, DT_EXPANDTABS | DT_WORDBREAK, 0xff00ff);
+    ok(height == 36, "Got unexpected height %d.\n", height);
+
+    height = ID3DXFont_DrawTextW(font, NULL, L"\taaa\taaa\taaa", -1, &rect, DT_WORDBREAK, 0xff00ff);
+    ok(height == 24, "Got unexpected height %d.\n", height);
+
+    height = ID3DXFont_DrawTextW(font, NULL, L"\taaa\taaa\taaa", -1, &rect, DT_EXPANDTABS | DT_WORDBREAK, 0xff00ff);
+    ok(height == 48, "Got unexpected height %d.\n", height);
+
+    height = ID3DXFont_DrawTextW(font, NULL, L"\t\t\t\t\t\t\t\t\t\t", -1, &rect, DT_EXPANDTABS | DT_WORDBREAK, 0xff00ff);
+    ok(height == 60, "Got unexpected height %d.\n", height);
+
+    height = ID3DXFont_DrawTextW(font, NULL, L"a\ta", -1, &rect, DT_EXPANDTABS | DT_WORDBREAK, 0xff00ff);
+    ok(height == 12, "Got unexpected height %d.\n", height);
+
+    height = ID3DXFont_DrawTextW(font, NULL, L"a\ta\ta", -1, &rect, DT_EXPANDTABS | DT_WORDBREAK, 0xff00ff);
+    ok(height == 24, "Got unexpected height %d.\n", height);
+
+    height = ID3DXFont_DrawTextW(font, NULL, L"aaaaaaaaaaaaaaaaaaaa", -1, &rect, DT_WORDBREAK, 0xff00ff);
+    ok(height == 36, "Got unexpected height %d.\n", height);
+
+    height = ID3DXFont_DrawTextW(font, NULL, L"a                        a", -1, &rect, DT_WORDBREAK, 0xff00ff);
+    ok(height == 36, "Got unexpected height %d.\n", height);
+
+    height = ID3DXFont_DrawTextW(font, NULL, L"aaaa              aaaa", -1, &rect, DT_WORDBREAK, 0xff00ff);
+    ok(height == 36, "Got unexpected height %d.\n", height);
+
+    height = ID3DXFont_DrawTextW(font, NULL, L"aaaa              aaaa", -1, &rect, DT_WORDBREAK | DT_RIGHT, 0xff00ff);
+    ok(height == 36, "Got unexpected height %d.\n", height);
+
+    height = ID3DXFont_DrawTextW(font, NULL, L"aaaa              aaaa", -1, &rect, DT_WORDBREAK | DT_RIGHT, 0xff00ff);
+    ok(height == 36, "Got unexpected height %d.\n", height);
+
+    height = ID3DXFont_DrawTextW(font, NULL, L"aaaa\naaaa", -1, &rect, DT_BOTTOM, 0xff00ff);
+    ok(height == 40, "Got unexpected height %d.\n", height);
+
+    height = ID3DXFont_DrawTextW(font, NULL, L"aaaa\naaaa", -1, &rect, DT_VCENTER, 0xff00ff);
+    ok(height == 32, "Got unexpected height %d.\n", height);
+
+    height = ID3DXFont_DrawTextW(font, NULL, L"aaaa\naaaa", -1, &rect, DT_RIGHT, 0xff00ff);
+    ok(height == 24, "Got unexpected height %d.\n", height);
+
+    height = ID3DXFont_DrawTextW(font, NULL, L"aaaa\naaaa", -1, &rect, DT_CENTER, 0xff00ff);
+    ok(height == 24, "Got unexpected height %d.\n", height);
     }
 
     ID3DXFont_Release(font);
