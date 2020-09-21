@@ -1114,55 +1114,6 @@ static HRESULT d3dx9_get_param_value_ptr(struct d3dx_pass *pass, struct d3dx_sta
     return E_NOTIMPL;
 }
 
-static HRESULT d3dx9_base_effect_get_pass_desc(struct d3dx9_base_effect *base,
-        D3DXHANDLE pass_handle, D3DXPASS_DESC *desc)
-{
-    struct d3dx_pass *pass = get_valid_pass(base, pass_handle);
-    unsigned int i;
-
-    if (!desc || !pass)
-    {
-        WARN("Invalid argument specified.\n");
-        return D3DERR_INVALIDCALL;
-    }
-
-    desc->Name = pass->name;
-    desc->Annotations = pass->annotation_count;
-
-    desc->pVertexShaderFunction = NULL;
-    desc->pPixelShaderFunction = NULL;
-
-    if (base->flags & D3DXFX_NOT_CLONEABLE)
-        return D3D_OK;
-
-    for (i = 0; i < pass->state_count; ++i)
-    {
-        struct d3dx_state *state = &pass->states[i];
-
-        if (state_table[state->operation].class == SC_VERTEXSHADER
-                || state_table[state->operation].class == SC_PIXELSHADER)
-        {
-            struct d3dx_parameter *param;
-            void *param_value;
-            BOOL param_dirty;
-            HRESULT hr;
-            void *data;
-
-            if (FAILED(hr = d3dx9_get_param_value_ptr(pass, &pass->states[i], &param_value, &param,
-                    FALSE, &param_dirty)))
-                return hr;
-
-            data = param->object_id ? base->objects[param->object_id].data : NULL;
-            if (state_table[state->operation].class == SC_VERTEXSHADER)
-                desc->pVertexShaderFunction = data;
-            else
-                desc->pPixelShaderFunction = data;
-        }
-    }
-
-    return D3D_OK;
-}
-
 static unsigned int get_annotation_from_object(struct d3dx_effect *effect, D3DXHANDLE object,
         struct d3dx_parameter **annotations)
 {
@@ -3184,13 +3135,55 @@ static HRESULT WINAPI d3dx_effect_GetTechniqueDesc(ID3DXEffect *iface, D3DXHANDL
     return D3D_OK;
 }
 
-static HRESULT WINAPI d3dx_effect_GetPassDesc(ID3DXEffect *iface, D3DXHANDLE pass, D3DXPASS_DESC *desc)
+static HRESULT WINAPI d3dx_effect_GetPassDesc(ID3DXEffect *iface, D3DXHANDLE pass_handle, D3DXPASS_DESC *desc)
 {
     struct d3dx_effect *effect = impl_from_ID3DXEffect(iface);
+    struct d3dx_pass *pass = get_valid_pass(&effect->base_effect, pass_handle);
+    unsigned int i;
 
     TRACE("iface %p, pass %p, desc %p.\n", iface, pass, desc);
 
-    return d3dx9_base_effect_get_pass_desc(&effect->base_effect, pass, desc);
+    if (!desc || !pass)
+    {
+        WARN("Invalid argument specified.\n");
+        return D3DERR_INVALIDCALL;
+    }
+
+    desc->Name = pass->name;
+    desc->Annotations = pass->annotation_count;
+
+    desc->pVertexShaderFunction = NULL;
+    desc->pPixelShaderFunction = NULL;
+
+    if (effect->base_effect.flags & D3DXFX_NOT_CLONEABLE)
+        return D3D_OK;
+
+    for (i = 0; i < pass->state_count; ++i)
+    {
+        struct d3dx_state *state = &pass->states[i];
+
+        if (state_table[state->operation].class == SC_VERTEXSHADER
+                || state_table[state->operation].class == SC_PIXELSHADER)
+        {
+            struct d3dx_parameter *param;
+            void *param_value;
+            BOOL param_dirty;
+            HRESULT hr;
+            void *data;
+
+            if (FAILED(hr = d3dx9_get_param_value_ptr(pass, &pass->states[i], &param_value, &param,
+                    FALSE, &param_dirty)))
+                return hr;
+
+            data = param->object_id ? effect->base_effect.objects[param->object_id].data : NULL;
+            if (state_table[state->operation].class == SC_VERTEXSHADER)
+                desc->pVertexShaderFunction = data;
+            else
+                desc->pPixelShaderFunction = data;
+        }
+    }
+
+    return D3D_OK;
 }
 
 static HRESULT WINAPI d3dx_effect_GetFunctionDesc(ID3DXEffect *iface, D3DXHANDLE shader,
