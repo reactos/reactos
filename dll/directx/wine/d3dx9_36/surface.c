@@ -1909,11 +1909,7 @@ HRESULT WINAPI D3DXLoadSurfaceFromMemory(IDirect3DSurface9 *dst_surface,
             && color_key == 0) /* Simple copy. */
     {
         if (src_rect->left & (srcformatdesc->block_width - 1)
-                || src_rect->top & (srcformatdesc->block_height - 1)
-                || (src_rect->right & (srcformatdesc->block_width - 1)
-                    && src_size.width != surfdesc.Width)
-                || (src_rect->bottom & (srcformatdesc->block_height - 1)
-                    && src_size.height != surfdesc.Height))
+                || src_rect->top & (srcformatdesc->block_height - 1))
         {
             WARN("Source rect %s is misaligned.\n", wine_dbgstr_rect(src_rect));
             unlock_surface(dst_surface, dst_rect, surface, FALSE);
