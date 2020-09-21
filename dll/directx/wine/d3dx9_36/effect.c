@@ -1181,24 +1181,6 @@ static HRESULT set_string(char **param_data, const char *string)
     return D3D_OK;
 }
 
-static HRESULT d3dx9_base_effect_get_vertex_shader(struct d3dx9_base_effect *base,
-        D3DXHANDLE parameter, struct IDirect3DVertexShader9 **shader)
-{
-    struct d3dx_parameter *param = get_valid_parameter(base, parameter);
-
-    if (shader && param && !param->element_count && param->type == D3DXPT_VERTEXSHADER)
-    {
-        if ((*shader = *(struct IDirect3DVertexShader9 **)param->data))
-            IDirect3DVertexShader9_AddRef(*shader);
-        TRACE("Returning %p.\n", *shader);
-        return D3D_OK;
-    }
-
-    WARN("Parameter not found.\n");
-
-    return D3DERR_INVALIDCALL;
-}
-
 static void d3dx9_set_light_parameter(enum LIGHT_TYPE op, D3DLIGHT9 *light, void *value)
 {
     static const struct
@@ -3537,14 +3519,25 @@ static HRESULT WINAPI d3dx_effect_GetPixelShader(ID3DXEffect *iface, D3DXHANDLE 
     return D3DERR_INVALIDCALL;
 }
 
-static HRESULT WINAPI d3dx_effect_GetVertexShader(struct ID3DXEffect *iface, D3DXHANDLE parameter,
-        struct IDirect3DVertexShader9 **shader)
+static HRESULT WINAPI d3dx_effect_GetVertexShader(ID3DXEffect *iface, D3DXHANDLE parameter,
+        IDirect3DVertexShader9 **shader)
 {
     struct d3dx_effect *effect = impl_from_ID3DXEffect(iface);
+    struct d3dx_parameter *param = get_valid_parameter(&effect->base_effect, parameter);
 
     TRACE("iface %p, parameter %p, shader %p.\n", iface, parameter, shader);
 
-    return d3dx9_base_effect_get_vertex_shader(&effect->base_effect, parameter, shader);
+    if (shader && param && !param->element_count && param->type == D3DXPT_VERTEXSHADER)
+    {
+        if ((*shader = *(IDirect3DVertexShader9 **)param->data))
+            IDirect3DVertexShader9_AddRef(*shader);
+        TRACE("Returning %p.\n", *shader);
+        return D3D_OK;
+    }
+
+    WARN("Parameter not found.\n");
+
+    return D3DERR_INVALIDCALL;
 }
 
 static HRESULT WINAPI d3dx_effect_SetArrayRange(ID3DXEffect *iface, D3DXHANDLE parameter, UINT start, UINT end)
