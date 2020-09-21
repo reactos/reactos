@@ -1208,22 +1208,6 @@ static D3DXHANDLE d3dx9_base_effect_get_technique_by_name(struct d3dx9_base_effe
     return NULL;
 }
 
-static D3DXHANDLE d3dx9_base_effect_get_pass(struct d3dx9_base_effect *base,
-        D3DXHANDLE technique, UINT index)
-{
-    struct d3dx_technique *tech = get_valid_technique(base, technique);
-
-    if (tech && index < tech->pass_count)
-    {
-        TRACE("Returning pass %p\n", &tech->passes[index]);
-        return get_pass_handle(&tech->passes[index]);
-    }
-
-    WARN("Pass not found.\n");
-
-    return NULL;
-}
-
 static D3DXHANDLE d3dx9_base_effect_get_pass_by_name(struct d3dx9_base_effect *base,
         D3DXHANDLE technique, const char *name)
 {
@@ -3440,10 +3424,19 @@ static D3DXHANDLE WINAPI d3dx_effect_GetTechniqueByName(ID3DXEffect *iface, cons
 static D3DXHANDLE WINAPI d3dx_effect_GetPass(ID3DXEffect *iface, D3DXHANDLE technique, UINT index)
 {
     struct d3dx_effect *effect = impl_from_ID3DXEffect(iface);
+    struct d3dx_technique *tech = get_valid_technique(&effect->base_effect, technique);
 
     TRACE("iface %p, technique %p, index %u.\n", iface, technique, index);
 
-    return d3dx9_base_effect_get_pass(&effect->base_effect, technique, index);
+    if (tech && index < tech->pass_count)
+    {
+        TRACE("Returning pass %p\n", &tech->passes[index]);
+        return get_pass_handle(&tech->passes[index]);
+    }
+
+    WARN("Pass not found.\n");
+
+    return NULL;
 }
 
 static D3DXHANDLE WINAPI d3dx_effect_GetPassByName(ID3DXEffect *iface, D3DXHANDLE technique, const char *name)
