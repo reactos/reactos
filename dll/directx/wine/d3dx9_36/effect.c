@@ -1392,44 +1392,6 @@ static HRESULT d3dx9_base_effect_set_int(struct d3dx9_base_effect *base, D3DXHAN
     return D3DERR_INVALIDCALL;
 }
 
-static HRESULT d3dx9_base_effect_get_int(struct d3dx9_base_effect *base, D3DXHANDLE parameter, INT *n)
-{
-    struct d3dx_parameter *param = get_valid_parameter(base, parameter);
-
-    if (n && param && !param->element_count)
-    {
-        if (param->columns == 1 && param->rows == 1)
-        {
-            set_number(n, D3DXPT_INT, param->data, param->type);
-            TRACE("Returning %i\n", *n);
-            return D3D_OK;
-        }
-
-        if (param->type == D3DXPT_FLOAT &&
-                ((param->class == D3DXPC_VECTOR && param->columns != 2)
-                || (param->class == D3DXPC_MATRIX_ROWS && param->rows != 2 && param->columns == 1)))
-        {
-            TRACE("Vector fixup\n");
-
-            /* all components (3,4) are clamped (0,255) and put in the INT */
-            *n = (INT)(min(max(0.0f, *((FLOAT *)param->data + 2)), 1.0f) * INT_FLOAT_MULTI);
-            *n += ((INT)(min(max(0.0f, *((FLOAT *)param->data + 1)), 1.0f) * INT_FLOAT_MULTI)) << 8;
-            *n += ((INT)(min(max(0.0f, *((FLOAT *)param->data + 0)), 1.0f) * INT_FLOAT_MULTI)) << 16;
-            if (param->columns * param->rows > 3)
-            {
-                *n += ((INT)(min(max(0.0f, *((FLOAT *)param->data + 3)), 1.0f) * INT_FLOAT_MULTI)) << 24;
-            }
-
-            TRACE("Returning %i\n", *n);
-            return D3D_OK;
-        }
-    }
-
-    WARN("Parameter not found.\n");
-
-    return D3DERR_INVALIDCALL;
-}
-
 static HRESULT d3dx9_base_effect_set_int_array(struct d3dx9_base_effect *base,
         D3DXHANDLE parameter, const INT *n, UINT count)
 {
@@ -3426,10 +3388,39 @@ static HRESULT WINAPI d3dx_effect_SetInt(ID3DXEffect *iface, D3DXHANDLE paramete
 static HRESULT WINAPI d3dx_effect_GetInt(ID3DXEffect *iface, D3DXHANDLE parameter, INT *n)
 {
     struct d3dx_effect *effect = impl_from_ID3DXEffect(iface);
+    struct d3dx_parameter *param = get_valid_parameter(&effect->base_effect, parameter);
 
     TRACE("iface %p, parameter %p, n %p.\n", iface, parameter, n);
 
-    return d3dx9_base_effect_get_int(&effect->base_effect, parameter, n);
+    if (n && param && !param->element_count)
+    {
+        if (param->columns == 1 && param->rows == 1)
+        {
+            set_number(n, D3DXPT_INT, param->data, param->type);
+            TRACE("Returning %d.\n", *n);
+            return D3D_OK;
+        }
+
+        if (param->type == D3DXPT_FLOAT &&
+                ((param->class == D3DXPC_VECTOR && param->columns != 2)
+                || (param->class == D3DXPC_MATRIX_ROWS && param->rows != 2 && param->columns == 1)))
+        {
+            TRACE("Vector fixup.\n");
+
+            *n = min(max(0.0f, *((float *)param->data + 2)), 1.0f) * INT_FLOAT_MULTI;
+            *n += ((int)(min(max(0.0f, *((float *)param->data + 1)), 1.0f) * INT_FLOAT_MULTI)) << 8;
+            *n += ((int)(min(max(0.0f, *((float *)param->data + 0)), 1.0f) * INT_FLOAT_MULTI)) << 16;
+            if (param->columns * param->rows > 3)
+                *n += ((int)(min(max(0.0f, *((float *)param->data + 3)), 1.0f) * INT_FLOAT_MULTI)) << 24;
+
+            TRACE("Returning %d.\n", *n);
+            return D3D_OK;
+        }
+    }
+
+    WARN("Parameter not found.\n");
+
+    return D3DERR_INVALIDCALL;
 }
 
 static HRESULT WINAPI d3dx_effect_SetIntArray(ID3DXEffect *iface, D3DXHANDLE parameter, const INT *n, UINT count)
