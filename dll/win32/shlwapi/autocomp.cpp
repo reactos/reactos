@@ -49,7 +49,7 @@ public:
     }
 
     void DoAll();
-    void DoFileSystem(LPWSTR pszQuery);
+    void DoFileSystem(LPCWSTR pszQuery);
     void DoDir(LPCWSTR pszDir, BOOL bDirOnly);
     void DoDrives(BOOL bDirOnly);
     void DoURLHistory();
@@ -125,7 +125,7 @@ STDMETHODIMP CAutoCompleteEnumString::Skip(ULONG celt)
     return S_OK;
 }
 
-void CAutoCompleteEnumString::DoFileSystem(LPWSTR pszQuery)
+void CAutoCompleteEnumString::DoFileSystem(LPCWSTR pszQuery)
 {
     BOOL bDirOnly = !!(m_dwSHACF & SHACF_FILESYS_DIRS);
 
@@ -135,11 +135,16 @@ void CAutoCompleteEnumString::DoFileSystem(LPWSTR pszQuery)
     {
         if (attrs & FILE_ATTRIBUTE_DIRECTORY)
             DoDir(pszQuery, bDirOnly);
+        else
+            AddString(pszQuery);
     }
     else if (pszQuery[0])
     {
-        PathRemoveFileSpecW(pszQuery);
-        DoDir(pszQuery, bDirOnly);
+        WCHAR szPath[MAX_PATH];
+        StringCbCopyW(szPath, sizeof(szPath), pszQuery);
+        PathRemoveFileSpecW(szPath);
+
+        DoDir(szPath, bDirOnly);
     }
     else
     {
@@ -160,7 +165,7 @@ void CAutoCompleteEnumString::DoAll()
     WCHAR szText[MAX_PATH];
     GetWindowTextW(m_hwndEdit, szText, _countof(szText));
 
-    if (!m_bPending && m_strPrev == szText)
+    if (!m_bPending && m_strPrev == szText && szText[0])
         return;
 
     m_bPending = TRUE;
@@ -168,9 +173,7 @@ void CAutoCompleteEnumString::DoAll()
     ResetContent();
 
     if (m_dwSHACF & (SHACF_FILESYS_ONLY | SHACF_FILESYSTEM | SHACF_FILESYS_DIRS))
-    {
         DoFileSystem(szText);
-    }
 
     if (!(m_dwSHACF & (SHACF_FILESYS_ONLY)))
     {
