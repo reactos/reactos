@@ -546,16 +546,21 @@ static void free_sampler(struct d3dx_sampler *sampler)
 
 static void d3dx_pool_release_shared_parameter(struct d3dx_top_level_parameter *param);
 
-static void free_parameter_data(struct d3dx_parameter *param, BOOL child)
+static void free_parameter_object_data(struct d3dx_parameter *param, const void *data, unsigned int bytes)
 {
-    if (!param->data)
+    unsigned int i, count;
+
+    if (param->class != D3DXPC_OBJECT)
         return;
-    if (param->class == D3DXPC_OBJECT && !param->element_count)
+
+    count = min(param->element_count ? param->element_count : 1, bytes / sizeof(void *));
+
+    for (i = 0; i < count; ++i)
     {
         switch (param->type)
         {
             case D3DXPT_STRING:
-                heap_free(*(char **)param->data);
+                heap_free(((char **)data)[i]);
                 break;
 
             case D3DXPT_TEXTURE:
@@ -565,7 +570,8 @@ static void free_parameter_data(struct d3dx_parameter *param, BOOL child)
             case D3DXPT_TEXTURECUBE:
             case D3DXPT_PIXELSHADER:
             case D3DXPT_VERTEXSHADER:
-                if (*(IUnknown **)param->data) IUnknown_Release(*(IUnknown **)param->data);
+                if (*(IUnknown **)data)
+                    IUnknown_Release(((IUnknown **)data)[i]);
                 break;
 
             case D3DXPT_SAMPLER:
@@ -573,7 +579,8 @@ static void free_parameter_data(struct d3dx_parameter *param, BOOL child)
             case D3DXPT_SAMPLER2D:
             case D3DXPT_SAMPLER3D:
             case D3DXPT_SAMPLERCUBE:
-                free_sampler((struct d3dx_sampler *)param->data);
+                assert(count == 1);
+                free_sampler((struct d3dx_sampler *)data);
                 return;
 
             default:
@@ -581,6 +588,16 @@ static void free_parameter_data(struct d3dx_parameter *param, BOOL child)
                 break;
         }
     }
+}
+
+static void free_parameter_data(struct d3dx_parameter *param, BOOL child)
+{
+    if (!param->data)
+        return;
+
+    if (!param->element_count)
+        free_parameter_object_data(param, param->data, param->bytes);
+
     if (!child || is_param_type_sampler(param->type))
         heap_free(param->data);
 }
