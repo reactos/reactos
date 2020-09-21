@@ -8016,6 +8016,250 @@ static void test_effect_find_next_valid_technique(void)
     DestroyWindow(window);
 }
 
+static void test_effect_parameter_block(void)
+{
+    static const D3DXMATRIX test_mat =
+    {{{
+        -11.0f, -12.0f, 0.0f, 0.0f,
+        -21.0f, -22.0f, 0.0f, 0.0f,
+        -31.0f, -32.0f, 0.0f, 0.0f,
+    }}};
+    static const D3DXMATRIX effect_orig_mat =
+    {{{
+        11.0f, 12.0f, 0.0f, 0.0f,
+        21.0f, 22.0f, 0.0f, 0.0f,
+        31.0f, 32.0f, 0.0f, 0.0f,
+    }}};
+    D3DPRESENT_PARAMETERS present_parameters = {0};
+    static const float float_array_zero[4];
+    IDirect3DTexture9 *texture, *tex_test;
+    ID3DXEffect *effect, *effect2;
+    D3DXHANDLE block, handle;
+    IDirect3DDevice9 *device;
+    ID3DXEffectPool *pool;
+    float float_array[4];
+    float float_value;
+    IDirect3D9 *d3d;
+    D3DXMATRIX mat;
+    ULONG refcount;
+    HWND window;
+    HRESULT hr;
+
+    if (!(window = CreateWindowA("static", "d3dx9_test", WS_OVERLAPPEDWINDOW, 0, 0,
+            640, 480, NULL, NULL, NULL, NULL)))
+    {
+        skip("Failed to create window.\n");
+        return;
+    }
+    if (!(d3d = Direct3DCreate9(D3D_SDK_VERSION)))
+    {
+        skip("Failed to create IDirect3D9 object.\n");
+        DestroyWindow(window);
+        return;
+    }
+    present_parameters.Windowed = TRUE;
+    present_parameters.SwapEffect = D3DSWAPEFFECT_DISCARD;
+    hr = IDirect3D9_CreateDevice(d3d, D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, window,
+            D3DCREATE_HARDWARE_VERTEXPROCESSING, &present_parameters, &device);
+    if (FAILED(hr))
+    {
+        skip("Failed to create IDirect3DDevice9 object, hr %#x.\n", hr);
+        IDirect3D9_Release(d3d);
+        DestroyWindow(window);
+        return;
+    }
+
+    hr = D3DXCreateEffectPool(&pool);
+    ok(hr == D3D_OK, "Got result %#x.\n", hr);
+
+    hr = D3DXCreateEffect(device, test_effect_preshader_effect_blob, sizeof(test_effect_preshader_effect_blob),
+            NULL, NULL, 0, pool, &effect, NULL);
+    ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
+    hr = D3DXCreateEffect(device, test_effect_preshader_effect_blob, sizeof(test_effect_preshader_effect_blob),
+            NULL, NULL, 0, pool, &effect2, NULL);
+    ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
+
+    hr = effect->lpVtbl->BeginParameterBlock(effect);
+    todo_wine ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
+    hr = effect->lpVtbl->BeginParameterBlock(effect);
+    todo_wine ok(hr == D3DERR_INVALIDCALL, "Got unexpected hr %#x.\n", hr);
+    block = effect->lpVtbl->EndParameterBlock(effect);
+    todo_wine ok(!!block, "Got unexpected block %p.\n", block);
+    handle = effect->lpVtbl->EndParameterBlock(effect);
+    ok(!handle, "Got unexpected handle %p.\n", handle);
+
+    /* Block doesn't hold effect reference. */
+    effect->lpVtbl->AddRef(effect);
+    refcount = effect->lpVtbl->Release(effect);
+    ok(refcount == 1, "Got unexpected refcount %u.\n", refcount);
+
+    hr = effect->lpVtbl->ApplyParameterBlock(effect, block);
+    todo_wine ok(hr == D3DERR_INVALIDCALL, "Got unexpected hr %#x.\n", hr);
+    hr = effect->lpVtbl->DeleteParameterBlock(effect, block);
+    todo_wine ok(hr == D3D_OK, "Got result %#x.\n", hr);
+
+    hr = effect->lpVtbl->BeginParameterBlock(effect);
+    todo_wine ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
+    hr = effect->lpVtbl->SetFloat(effect, "vec3[0]", 1001.0f);
+    ok(hr == D3DERR_INVALIDCALL, "Got unexpected hr %#x.\n", hr);
+    hr = effect->lpVtbl->SetFloat(effect, "arr1[0]", 91.0f);
+    ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
+    block = effect->lpVtbl->EndParameterBlock(effect);
+    todo_wine ok(!!block, "Got unexpected block %p.\n", block);
+    hr = effect->lpVtbl->ApplyParameterBlock(effect, block);
+    todo_wine ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
+
+    hr = effect->lpVtbl->DeleteParameterBlock(effect2, block);
+    todo_wine ok(hr == D3DERR_INVALIDCALL, "Got result %#x.\n", hr);
+    hr = effect->lpVtbl->DeleteParameterBlock(effect, block);
+    todo_wine ok(hr == D3D_OK, "Got result %#x.\n", hr);
+
+    hr = effect->lpVtbl->ApplyParameterBlock(effect, NULL);
+    todo_wine ok(hr == D3DERR_INVALIDCALL, "Got unexpected hr %#x.\n", hr);
+    hr = effect->lpVtbl->ApplyParameterBlock(effect, "parameter_block");
+    todo_wine ok(hr == D3DERR_INVALIDCALL, "Got unexpected hr %#x.\n", hr);
+
+    hr = D3DXCreateTexture(device, D3DX_DEFAULT, D3DX_DEFAULT, D3DX_DEFAULT, 0, 0, D3DPOOL_DEFAULT, &texture);
+    ok(hr == D3D_OK, "Got result %#x, expected 0 (D3D_OK).\n", hr);
+
+    hr = effect->lpVtbl->BeginParameterBlock(effect);
+    todo_wine ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
+
+    /* Effect parameters are not updated during recording. */
+    hr = effect->lpVtbl->SetTexture(effect, "tex1", (IDirect3DBaseTexture9 *)texture);
+    ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
+
+    hr = effect->lpVtbl->GetTexture(effect, "tex1", (IDirect3DBaseTexture9 **)&tex_test);
+    todo_wine ok(hr == D3D_OK && !tex_test, "Got unexpected hr %#x, tex_test %p.\n", hr, tex_test);
+    if (tex_test)
+        IDirect3DTexture9_Release(tex_test);
+
+    /* Child parameters and array members are recorded separately (the whole
+     * parameter is not updated when parameter block is applied). */
+    hr = effect->lpVtbl->SetFloat(effect, "arr2[0]", 92.0f);
+    ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
+    hr = effect->lpVtbl->SetFloat(effect, "ts1[0].fv", 28.0f);
+    ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
+    hr = effect->lpVtbl->GetFloat(effect, "ts1[0].fv", &float_value);
+    todo_wine ok(hr == D3D_OK && float_value == 12.0, "Got unexpected hr %#x, float_value %g.\n", hr, float_value);
+
+    float_array[0] = -29.0f;
+    hr = effect->lpVtbl->SetFloatArray(effect, "ts1[0].v2", float_array, 1);
+    ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
+    hr = effect->lpVtbl->GetFloatArray(effect, "ts1[0].v2", float_array, 1);
+    todo_wine ok(hr == D3D_OK && float_array[0] == 13.0, "Got unexpected hr %#x, float_array[0] %g.\n",
+            hr, float_array[0]);
+
+    memset(&mat, 0, sizeof(mat));
+    hr = effect->lpVtbl->SetMatrix(effect, "m3x2row", &test_mat);
+    ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
+    hr = effect->lpVtbl->GetMatrix(effect, "m3x2row", &mat);
+    ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
+    todo_wine ok(!memcmp(&mat, &effect_orig_mat, sizeof(mat)), "Got unexpected matrix.\n");
+
+    hr = effect->lpVtbl->SetMatrix(effect, "m3x2column", &test_mat);
+    ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
+    hr = effect->lpVtbl->GetMatrix(effect, "m3x2column", &mat);
+    ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
+    todo_wine ok(!memcmp(&mat, &effect_orig_mat, sizeof(mat)), "Got unexpected matrix.\n");
+
+    /* Setting shared parameter through effect2 is not recorded to effect
+     * parameter block. */
+    hr = effect2->lpVtbl->SetFloat(effect2, "arr2[1]", -1.0f);
+    ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
+    hr = effect->lpVtbl->GetFloat(effect, "arr2[1]", &float_value);
+    ok(float_value == -1.0f, "Unexpected value %g.\n", float_value);
+
+    IDirect3DTexture9_AddRef(texture);
+    refcount = IDirect3DTexture9_Release(texture);
+    ok(refcount == 2, "Got unexpected refcount %u.\n", refcount);
+
+    block = effect->lpVtbl->EndParameterBlock(effect);
+    todo_wine ok(!!block, "Got unexpected block %p.\n", block);
+
+    IDirect3DTexture9_AddRef(texture);
+    refcount = IDirect3DTexture9_Release(texture);
+    ok(refcount == 2, "Got unexpected refcount %u.\n", refcount);
+
+    hr = effect->lpVtbl->DeleteParameterBlock(effect2, block);
+    todo_wine ok(hr == D3DERR_INVALIDCALL, "Got result %#x.\n", hr);
+
+    IDirect3DTexture9_AddRef(texture);
+    refcount = IDirect3DTexture9_Release(texture);
+    ok(refcount == 2, "Got unexpected refcount %u.\n", refcount);
+
+    hr = effect->lpVtbl->SetFloat(effect, "arr2[0]", 0.0f);
+    ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
+    hr = effect->lpVtbl->SetFloat(effect, "arr2[1]", 0.0f);
+    ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
+    hr = effect->lpVtbl->SetFloatArray(effect, "ts1[0].v1", float_array_zero, 3);
+    ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
+    hr = effect->lpVtbl->SetFloat(effect, "ts1[0].fv", 0.0f);
+    ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
+    hr = effect->lpVtbl->SetFloatArray(effect, "ts1[0].v2", float_array_zero, 4);
+    ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
+    memset(&mat, 0, sizeof(mat));
+    hr = effect->lpVtbl->SetMatrix(effect, "m3x2row", &mat);
+    ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
+    hr = effect->lpVtbl->SetMatrix(effect, "m3x2column", &mat);
+    ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
+
+    hr = effect->lpVtbl->ApplyParameterBlock(effect, block);
+    todo_wine ok(hr == D3D_OK, "Got result %#x.\n", hr);
+
+    IDirect3DTexture9_AddRef(texture);
+    refcount = IDirect3DTexture9_Release(texture);
+    todo_wine ok(refcount == 3, "Got unexpected refcount %u.\n", refcount);
+
+    hr = effect->lpVtbl->GetFloat(effect, "arr2[0]", &float_value);
+    todo_wine ok(hr == D3D_OK && float_value == 92.0f, "Got unexpected hr %#x, float_value %g.\n", hr, float_value);
+    hr = effect->lpVtbl->GetFloat(effect, "arr2[1]", &float_value);
+    ok(hr == D3D_OK && float_value == 0.0f, "Got unexpected hr %#x, float_value %g.\n", hr, float_value);
+
+    hr = effect->lpVtbl->GetFloatArray(effect, "ts1[0].v1", float_array, 3);
+    ok(hr == D3D_OK && !memcmp(float_array, float_array_zero, 3 * sizeof(*float_array)),
+            "Got unexpected hr %#x, ts1[0].v1 (%g, %g, %g).\n", hr,
+            float_array[0], float_array[1], float_array[2]);
+
+    hr = effect->lpVtbl->GetMatrix(effect, "m3x2row", &mat);
+    ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
+    todo_wine ok(!memcmp(&mat, &test_mat, sizeof(mat)), "Got unexpected matrix.\n");
+    hr = effect->lpVtbl->GetMatrix(effect, "m3x2column", &mat);
+    ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
+    todo_wine ok(!memcmp(&mat, &test_mat, sizeof(mat)), "Got unexpected matrix.\n");
+
+    hr = effect->lpVtbl->GetFloat(effect, "ts1[0].fv", &float_value);
+    todo_wine ok(hr == D3D_OK && float_value == 28.0f, "Got unexpected hr %#x, float_value %g.\n", hr, float_value);
+
+    hr = effect->lpVtbl->GetFloatArray(effect, "ts1[0].v2", float_array, 4);
+    todo_wine ok(hr == D3D_OK && float_array[0] == -29.0f
+            && !memcmp(float_array + 1, float_array_zero, 3 * sizeof(*float_array)),
+            "Got unexpected hr %#x, ts1[0].v2 (%g, %g, %g, %g).\n", hr,
+            float_array[0], float_array[1], float_array[2], float_array[3]);
+
+    hr = effect->lpVtbl->DeleteParameterBlock(effect, block);
+    todo_wine ok(hr == D3D_OK, "Got result %#x.\n", hr);
+
+    hr = effect->lpVtbl->SetTexture(effect, "tex1", NULL);
+    ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
+    refcount = IDirect3DTexture9_Release(texture);
+    ok(!refcount, "Got unexpected refcount %u.\n", refcount);
+
+    refcount = effect->lpVtbl->Release(effect);
+    ok(!refcount, "Got unexpected refcount %u.\n", refcount);
+
+    refcount = effect2->lpVtbl->Release(effect2);
+    ok(!refcount, "Got unexpected refcount %u.\n", refcount);
+
+    refcount = pool->lpVtbl->Release(pool);
+    ok(!refcount, "Got unexpected refcount %u.\n", refcount);
+
+    refcount = IDirect3DDevice9_Release(device);
+    ok(!refcount, "Device has %u references left.\n", refcount);
+    IDirect3D9_Release(d3d);
+    DestroyWindow(window);
+}
+
 START_TEST(effect)
 {
     IDirect3DDevice9 *device;
@@ -8055,4 +8299,5 @@ START_TEST(effect)
     test_refcount();
     test_create_effect_from_file();
     test_effect_find_next_valid_technique();
+    test_effect_parameter_block();
 }
