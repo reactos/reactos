@@ -520,8 +520,7 @@ static void free_sampler(struct d3dx_sampler *sampler)
     {
         free_state(&sampler->states[i]);
     }
-    HeapFree(GetProcessHeap(), 0, sampler->states);
-    HeapFree(GetProcessHeap(), 0, sampler);
+    heap_free(sampler->states);
 }
 
 static void d3dx_pool_release_shared_parameter(struct d3dx_top_level_parameter *param);
@@ -535,7 +534,7 @@ static void free_parameter_data(struct d3dx_parameter *param, BOOL child)
         switch (param->type)
         {
             case D3DXPT_STRING:
-                HeapFree(GetProcessHeap(), 0, *(char **)param->data);
+                heap_free(*(char **)param->data);
                 break;
 
             case D3DXPT_TEXTURE:
@@ -561,8 +560,8 @@ static void free_parameter_data(struct d3dx_parameter *param, BOOL child)
                 break;
         }
     }
-    if (!child)
-        HeapFree(GetProcessHeap(), 0, param->data);
+    if (!child || is_param_type_sampler(param->type))
+        heap_free(param->data);
 }
 
 static void free_parameter(struct d3dx_parameter *param, BOOL element, BOOL child)
