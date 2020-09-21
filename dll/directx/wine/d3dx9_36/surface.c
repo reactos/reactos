@@ -1894,9 +1894,9 @@ HRESULT WINAPI D3DXLoadSurfaceFromMemory(IDirect3DSurface9 *dst_surface,
 
     srcformatdesc = get_format_info(src_format);
     destformatdesc = get_format_info(surfdesc.Format);
-    if (srcformatdesc->type == FORMAT_UNKNOWN || destformatdesc->type == FORMAT_UNKNOWN)
+    if (srcformatdesc->type == FORMAT_UNKNOWN)
     {
-        FIXME("Unsupported pixel format conversion %#x -> %#x\n", src_format, surfdesc.Format);
+        FIXME("Unsupported format %#x.\n", src_format);
         return E_NOTIMPL;
     }
 
