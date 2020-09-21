@@ -2061,8 +2061,14 @@ static void test_D3DXCreateCubeTextureFromFileInMemory(IDirect3DDevice9 *device)
 
 static void test_D3DXCreateCubeTextureFromFileInMemoryEx(IDirect3DDevice9 *device)
 {
-    HRESULT hr;
     IDirect3DCubeTexture9 *cube_texture;
+    HRESULT hr;
+
+    hr = D3DXCreateCubeTextureFromFileInMemoryEx(device, dds_cube_map, sizeof(dds_cube_map), D3DX_DEFAULT,
+            D3DX_DEFAULT, D3DUSAGE_RENDERTARGET, D3DFMT_UNKNOWN, D3DPOOL_DEFAULT, D3DX_DEFAULT,
+            D3DX_DEFAULT, 0, NULL, NULL, &cube_texture);
+    ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
+    IDirect3DCubeTexture9_Release(cube_texture);
 
     if (!is_autogenmipmap_supported(device, D3DRTYPE_CUBETEXTURE))
     {
@@ -2070,10 +2076,11 @@ static void test_D3DXCreateCubeTextureFromFileInMemoryEx(IDirect3DDevice9 *devic
         return;
     }
 
-    hr = D3DXCreateCubeTextureFromFileInMemoryEx(device, dds_cube_map, sizeof(dds_cube_map), D3DX_DEFAULT, D3DX_DEFAULT,
-        D3DUSAGE_DYNAMIC | D3DUSAGE_AUTOGENMIPMAP, D3DFMT_UNKNOWN, D3DPOOL_DEFAULT, D3DX_DEFAULT, D3DX_DEFAULT, 0, NULL, NULL, &cube_texture);
-    ok(hr == D3D_OK, "D3DXCreateCubeTextureFromFileInMemoryEx returned %#x, expected %#x.\n", hr, D3D_OK);
-    if (SUCCEEDED(hr)) IDirect3DCubeTexture9_Release(cube_texture);
+    hr = D3DXCreateCubeTextureFromFileInMemoryEx(device, dds_cube_map, sizeof(dds_cube_map), D3DX_DEFAULT,
+            D3DX_DEFAULT, D3DUSAGE_DYNAMIC | D3DUSAGE_AUTOGENMIPMAP, D3DFMT_UNKNOWN, D3DPOOL_DEFAULT,
+            D3DX_DEFAULT, D3DX_DEFAULT, 0, NULL, NULL, &cube_texture);
+    ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
+    IDirect3DCubeTexture9_Release(cube_texture);
 }
 
 static void test_D3DXCreateVolumeTextureFromFileInMemory(IDirect3DDevice9 *device)
