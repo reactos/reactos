@@ -3527,9 +3527,9 @@ static HRESULT WINAPI d3dx_effect_SetArrayRange(ID3DXEffect *iface, D3DXHANDLE p
 /*** ID3DXEffect methods ***/
 static HRESULT WINAPI d3dx_effect_GetPool(ID3DXEffect *iface, ID3DXEffectPool **pool)
 {
-    struct d3dx_effect *This = impl_from_ID3DXEffect(iface);
+    struct d3dx_effect *effect = impl_from_ID3DXEffect(iface);
 
-    TRACE("iface %p, pool %p\n", This, pool);
+    TRACE("iface %p, pool %p.\n", effect, pool);
 
     if (!pool)
     {
@@ -3537,14 +3537,14 @@ static HRESULT WINAPI d3dx_effect_GetPool(ID3DXEffect *iface, ID3DXEffectPool **
         return D3DERR_INVALIDCALL;
     }
 
-    if (This->pool)
+    *pool = NULL;
+    if (effect->pool)
     {
-        This->pool->lpVtbl->AddRef(This->pool);
+        *pool = effect->pool;
+        (*pool)->lpVtbl->AddRef(*pool);
     }
 
-    *pool = This->pool;
-
-    TRACE("Returning pool %p\n", *pool);
+    TRACE("Returning pool %p.\n", *pool);
 
     return S_OK;
 }
