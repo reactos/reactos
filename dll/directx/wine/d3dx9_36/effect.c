@@ -1365,22 +1365,6 @@ static HRESULT d3dx9_base_effect_set_bool(struct d3dx9_base_effect *base, D3DXHA
     return D3DERR_INVALIDCALL;
 }
 
-static HRESULT d3dx9_base_effect_get_bool(struct d3dx9_base_effect *base, D3DXHANDLE parameter, BOOL *b)
-{
-    struct d3dx_parameter *param = get_valid_parameter(base, parameter);
-
-    if (b && param && !param->element_count && param->rows == 1 && param->columns == 1)
-    {
-        set_number(b, D3DXPT_BOOL, param->data, param->type);
-        TRACE("Returning %s\n", *b ? "TRUE" : "FALSE");
-        return D3D_OK;
-    }
-
-    WARN("Parameter not found.\n");
-
-    return D3DERR_INVALIDCALL;
-}
-
 static HRESULT d3dx9_base_effect_set_bool_array(struct d3dx9_base_effect *base,
         D3DXHANDLE parameter, const BOOL *b, UINT count)
 {
@@ -3514,10 +3498,20 @@ static HRESULT WINAPI d3dx_effect_SetBool(ID3DXEffect *iface, D3DXHANDLE paramet
 static HRESULT WINAPI d3dx_effect_GetBool(ID3DXEffect *iface, D3DXHANDLE parameter, BOOL *b)
 {
     struct d3dx_effect *effect = impl_from_ID3DXEffect(iface);
+    struct d3dx_parameter *param = get_valid_parameter(&effect->base_effect, parameter);
 
     TRACE("iface %p, parameter %p, b %p.\n", iface, parameter, b);
 
-    return d3dx9_base_effect_get_bool(&effect->base_effect, parameter, b);
+    if (b && param && !param->element_count && param->rows == 1 && param->columns == 1)
+    {
+        set_number(b, D3DXPT_BOOL, param->data, param->type);
+        TRACE("Returning %s\n", *b ? "TRUE" : "FALSE");
+        return D3D_OK;
+    }
+
+    WARN("Parameter not found.\n");
+
+    return D3DERR_INVALIDCALL;
 }
 
 static HRESULT WINAPI d3dx_effect_SetBoolArray(ID3DXEffect *iface, D3DXHANDLE parameter, const BOOL *b, UINT count)
