@@ -1349,49 +1349,6 @@ static HRESULT d3dx9_base_effect_get_value(struct d3dx9_base_effect *base,
     return D3DERR_INVALIDCALL;
 }
 
-static HRESULT d3dx9_base_effect_set_int(struct d3dx9_base_effect *base, D3DXHANDLE parameter, INT n)
-{
-    struct d3dx_parameter *param = get_valid_parameter(base, parameter);
-
-    if (param && !param->element_count)
-    {
-        if (param->rows == 1 && param->columns == 1)
-        {
-            DWORD value;
-
-            set_number(&value, param->type, &n, D3DXPT_INT);
-            if (value != *(DWORD *)param->data)
-                set_dirty(param);
-             *(DWORD *)param->data = value;
-            return D3D_OK;
-        }
-
-        /*
-         * Split the value, if parameter is a vector with dimension 3 or 4.
-         */
-        if (param->type == D3DXPT_FLOAT &&
-            ((param->class == D3DXPC_VECTOR && param->columns != 2) ||
-            (param->class == D3DXPC_MATRIX_ROWS && param->rows != 2 && param->columns == 1)))
-        {
-            TRACE("Vector fixup\n");
-
-            *(FLOAT *)param->data = ((n & 0xff0000) >> 16) * INT_FLOAT_MULTI_INVERSE;
-            ((FLOAT *)param->data)[1] = ((n & 0xff00) >> 8) * INT_FLOAT_MULTI_INVERSE;
-            ((FLOAT *)param->data)[2] = (n & 0xff) * INT_FLOAT_MULTI_INVERSE;
-            if (param->rows * param->columns > 3)
-            {
-                ((FLOAT *)param->data)[3] = ((n & 0xff000000) >> 24) * INT_FLOAT_MULTI_INVERSE;
-            }
-            set_dirty(param);
-            return D3D_OK;
-        }
-    }
-
-    WARN("Parameter not found.\n");
-
-    return D3DERR_INVALIDCALL;
-}
-
 static HRESULT d3dx9_base_effect_set_int_array(struct d3dx9_base_effect *base,
         D3DXHANDLE parameter, const INT *n, UINT count)
 {
@@ -3355,10 +3312,43 @@ static HRESULT WINAPI d3dx_effect_GetBoolArray(ID3DXEffect *iface, D3DXHANDLE pa
 static HRESULT WINAPI d3dx_effect_SetInt(ID3DXEffect *iface, D3DXHANDLE parameter, INT n)
 {
     struct d3dx_effect *effect = impl_from_ID3DXEffect(iface);
+    struct d3dx_parameter *param = get_valid_parameter(&effect->base_effect, parameter);
 
     TRACE("iface %p, parameter %p, n %d.\n", iface, parameter, n);
 
-    return d3dx9_base_effect_set_int(&effect->base_effect, parameter, n);
+    if (param && !param->element_count)
+    {
+        if (param->rows == 1 && param->columns == 1)
+        {
+            DWORD value;
+
+            set_number(&value, param->type, &n, D3DXPT_INT);
+            if (value != *(DWORD *)param->data)
+                set_dirty(param);
+            *(DWORD *)param->data = value;
+            return D3D_OK;
+        }
+
+        /* Split the value if parameter is a vector with dimension 3 or 4. */
+        if (param->type == D3DXPT_FLOAT
+                && ((param->class == D3DXPC_VECTOR && param->columns != 2)
+                || (param->class == D3DXPC_MATRIX_ROWS && param->rows != 2 && param->columns == 1)))
+        {
+            TRACE("Vector fixup.\n");
+
+            *(float *)param->data = ((n & 0xff0000) >> 16) * INT_FLOAT_MULTI_INVERSE;
+            ((float *)param->data)[1] = ((n & 0xff00) >> 8) * INT_FLOAT_MULTI_INVERSE;
+            ((float *)param->data)[2] = (n & 0xff) * INT_FLOAT_MULTI_INVERSE;
+            if (param->rows * param->columns > 3)
+                ((float *)param->data)[3] = ((n & 0xff000000) >> 24) * INT_FLOAT_MULTI_INVERSE;
+            set_dirty(param);
+            return D3D_OK;
+        }
+    }
+
+    WARN("Parameter not found.\n");
+
+    return D3DERR_INVALIDCALL;
 }
 
 static HRESULT WINAPI d3dx_effect_GetInt(ID3DXEffect *iface, D3DXHANDLE parameter, INT *n)
