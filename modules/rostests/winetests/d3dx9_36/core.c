@@ -504,7 +504,6 @@ static void test_ID3DXFont(IDirect3DDevice9 *device)
             DEFAULT_QUALITY, DEFAULT_PITCH, "Tahoma", &font);
     ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
 
-    todo_wine {
     hr = ID3DXFont_PreloadTextA(font, NULL, -1);
     ok(hr == D3DERR_INVALIDCALL, "Got unexpected hr %#x.\n", hr);
     hr = ID3DXFont_PreloadTextA(font, NULL, 0);
@@ -530,7 +529,6 @@ static void test_ID3DXFont(IDirect3DDevice9 *device)
     ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
     hr = ID3DXFont_PreloadTextW(font, L"", -1);
     ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
-    }
 
     check_release((IUnknown*)font, 0);
 
