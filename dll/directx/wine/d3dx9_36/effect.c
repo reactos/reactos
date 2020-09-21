@@ -1181,65 +1181,6 @@ static HRESULT d3dx9_base_effect_get_pass_desc(struct d3dx9_base_effect *base,
     return D3D_OK;
 }
 
-static D3DXHANDLE d3dx9_base_effect_get_parameter_by_semantic(struct d3dx9_base_effect *base,
-        D3DXHANDLE parameter, const char *semantic)
-{
-    struct d3dx_parameter *param = get_valid_parameter(base, parameter);
-    struct d3dx_parameter *temp_param;
-    UINT i;
-
-    if (!parameter)
-    {
-        for (i = 0; i < base->parameter_count; ++i)
-        {
-            temp_param = &base->parameters[i].param;
-
-            if (!temp_param->semantic)
-            {
-                if (!semantic)
-                {
-                    TRACE("Returning parameter %p\n", temp_param);
-                    return get_parameter_handle(temp_param);
-                }
-                continue;
-            }
-
-            if (!strcasecmp(temp_param->semantic, semantic))
-            {
-                TRACE("Returning parameter %p\n", temp_param);
-                return get_parameter_handle(temp_param);
-            }
-        }
-    }
-    else if (param)
-    {
-        for (i = 0; i < param->member_count; ++i)
-        {
-            temp_param = &param->members[i];
-
-            if (!temp_param->semantic)
-            {
-                if (!semantic)
-                {
-                    TRACE("Returning parameter %p\n", temp_param);
-                    return get_parameter_handle(temp_param);
-                }
-                continue;
-            }
-
-            if (!strcasecmp(temp_param->semantic, semantic))
-            {
-                TRACE("Returning parameter %p\n", temp_param);
-                return get_parameter_handle(temp_param);
-            }
-        }
-    }
-
-    WARN("Parameter not found.\n");
-
-    return NULL;
-}
-
 static D3DXHANDLE d3dx9_base_effect_get_parameter_element(struct d3dx9_base_effect *base,
         D3DXHANDLE parameter, UINT index)
 {
@@ -3465,10 +3406,62 @@ static D3DXHANDLE WINAPI d3dx_effect_GetParameterBySemantic(ID3DXEffect *iface, 
         const char *semantic)
 {
     struct d3dx_effect *effect = impl_from_ID3DXEffect(iface);
+    struct d3dx_parameter *param = get_valid_parameter(&effect->base_effect, parameter);
+    struct d3dx_parameter *temp_param;
+    unsigned int i;
 
     TRACE("iface %p, parameter %p, semantic %s.\n", iface, parameter, debugstr_a(semantic));
 
-    return d3dx9_base_effect_get_parameter_by_semantic(&effect->base_effect, parameter, semantic);
+    if (!parameter)
+    {
+        for (i = 0; i < effect->base_effect.parameter_count; ++i)
+        {
+            temp_param = &effect->base_effect.parameters[i].param;
+
+            if (!temp_param->semantic)
+            {
+                if (!semantic)
+                {
+                    TRACE("Returning parameter %p\n", temp_param);
+                    return get_parameter_handle(temp_param);
+                }
+                continue;
+            }
+
+            if (!strcasecmp(temp_param->semantic, semantic))
+            {
+                TRACE("Returning parameter %p\n", temp_param);
+                return get_parameter_handle(temp_param);
+            }
+        }
+    }
+    else if (param)
+    {
+        for (i = 0; i < param->member_count; ++i)
+        {
+            temp_param = &param->members[i];
+
+            if (!temp_param->semantic)
+            {
+                if (!semantic)
+                {
+                    TRACE("Returning parameter %p\n", temp_param);
+                    return get_parameter_handle(temp_param);
+                }
+                continue;
+            }
+
+            if (!strcasecmp(temp_param->semantic, semantic))
+            {
+                TRACE("Returning parameter %p\n", temp_param);
+                return get_parameter_handle(temp_param);
+            }
+        }
+    }
+
+    WARN("Parameter not found.\n");
+
+    return NULL;
 }
 
 static D3DXHANDLE WINAPI d3dx_effect_GetParameterElement(ID3DXEffect *iface, D3DXHANDLE parameter, UINT index)
