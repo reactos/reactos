@@ -1212,7 +1212,7 @@ struct vertex_metadata {
   DWORD first_shared_index;
 };
 
-static int compare_vertex_keys(const void *a, const void *b)
+static int __cdecl compare_vertex_keys(const void *a, const void *b)
 {
     const struct vertex_metadata *left = a;
     const struct vertex_metadata *right = b;
@@ -1590,7 +1590,7 @@ static void fill_attribute_table(DWORD *attrib_buffer, DWORD numfaces, void *ind
     attrib_table_size++;
 }
 
-static int attrib_entry_compare(const void *a, const void *b)
+static int __cdecl attrib_entry_compare(const void *a, const void *b)
 {
     const DWORD *ptr_a = *(const DWORD **)a;
     const DWORD *ptr_b = *(const DWORD **)b;
@@ -5845,7 +5845,7 @@ static D3DXVECTOR2 *triangulation_get_next_point(struct triangulation *t, struct
     return &outline->items[i].pos;
 }
 
-static int compare_vertex_indices(const void *a, const void *b)
+static int __cdecl compare_vertex_indices(const void *a, const void *b)
 {
     const struct point2d_index *idx1 = a, *idx2 = b;
     const D3DXVECTOR2 *p1 = &idx1->outline->items[idx1->vertex].pos;
