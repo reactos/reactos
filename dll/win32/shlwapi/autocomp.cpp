@@ -470,7 +470,7 @@ HRESULT WINAPI SHAutoComplete(HWND hwndEdit, DWORD dwFlags)
         return E_FAIL;
     }
 
-    hr = pAC2->Init(hwndEdit, (LPUNKNOWN)pES, NULL, L"www.%s.com");
+    hr = pAC2->Init(hwndEdit, pES, NULL, L"www.%s.com");
     if (SUCCEEDED(hr))
     {
         pAC2->SetOptions(dwACO);
