@@ -777,7 +777,10 @@ HRESULT WINAPI D3DXCreateTextureFromFileExW(struct IDirect3DDevice9 *device, con
 
     hr = map_view_of_file(srcfile, &buffer, &size);
     if (FAILED(hr))
+    {
+        WARN("Failed to open file.\n");
         return D3DXERR_INVALIDDATA;
+    }
 
     hr = D3DXCreateTextureFromFileInMemoryEx(device, buffer, size, width, height, miplevels, usage, format, pool,
         filter, mipfilter, colorkey, srcinfo, palette, texture);
