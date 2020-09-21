@@ -11350,53 +11350,49 @@ static void test_load_skin_mesh_from_xof(void)
     ok(!materials, "Got unexpected value %p.\n", materials);
     ok(!effects, "Got unexpected value %p.\n", effects);
     ok(!count, "Got unexpected value %u.\n", count);
-    todo_wine ok(!!skin_info, "Got unexpected value %p.\n", skin_info);
+    ok(!!skin_info, "Got unexpected value %p.\n", skin_info);
     ok(!!mesh, "Got unexpected value %p.\n", mesh);
     count = mesh->lpVtbl->GetNumVertices(mesh);
     ok(count == 3, "Got unexpected value %u.\n", count);
     count = mesh->lpVtbl->GetNumFaces(mesh);
     ok(count == 1, "Got unexpected value %u.\n", count);
 
-    if (skin_info)
-    {
-        hr = skin_info->lpVtbl->GetDeclaration(skin_info, declaration);
-        ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
-        compare_elements(declaration, expected_declaration, __LINE__, 0);
+    hr = skin_info->lpVtbl->GetDeclaration(skin_info, declaration);
+    ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
+    compare_elements(declaration, expected_declaration, __LINE__, 0);
 
-        fvf = skin_info->lpVtbl->GetFVF(skin_info);
-        ok(fvf == D3DFVF_XYZ, "Got unexpected value %u.\n", fvf);
+    fvf = skin_info->lpVtbl->GetFVF(skin_info);
+    ok(fvf == D3DFVF_XYZ, "Got unexpected value %u.\n", fvf);
 
-        count = skin_info->lpVtbl->GetNumBones(skin_info);
-        ok(!count, "Got unexpected value %u.\n", count);
+    count = skin_info->lpVtbl->GetNumBones(skin_info);
+    ok(!count, "Got unexpected value %u.\n", count);
 
-        influence = skin_info->lpVtbl->GetMinBoneInfluence(skin_info);
-        ok(!influence, "Got unexpected value %.8e.\n", influence);
+    influence = skin_info->lpVtbl->GetMinBoneInfluence(skin_info);
+    ok(!influence, "Got unexpected value %.8e.\n", influence);
 
-        memset(max_influences, 0x55, sizeof(max_influences));
-        hr = skin_info->lpVtbl->GetMaxVertexInfluences(skin_info, max_influences);
-        ok(hr == D3D_OK, "Got unexpected value %#x.\n", hr);
-        ok(!max_influences[0], "Got unexpected value %u.\n", max_influences[0]);
-        ok(max_influences[1] == 0x55555555, "Got unexpected value %u.\n", max_influences[1]);
-        ok(max_influences[2] == 0x55555555, "Got unexpected value %u.\n", max_influences[2]);
+    memset(max_influences, 0x55, sizeof(max_influences));
+    hr = skin_info->lpVtbl->GetMaxVertexInfluences(skin_info, max_influences);
+    todo_wine ok(hr == D3D_OK, "Got unexpected value %#x.\n", hr);
+    todo_wine ok(!max_influences[0], "Got unexpected value %u.\n", max_influences[0]);
+    ok(max_influences[1] == 0x55555555, "Got unexpected value %u.\n", max_influences[1]);
+    ok(max_influences[2] == 0x55555555, "Got unexpected value %u.\n", max_influences[2]);
 
-        bone_name = skin_info->lpVtbl->GetBoneName(skin_info, 0);
-        ok(!bone_name, "Got unexpected value %p.\n", bone_name);
+    bone_name = skin_info->lpVtbl->GetBoneName(skin_info, 0);
+    ok(!bone_name, "Got unexpected value %p.\n", bone_name);
 
-        count = skin_info->lpVtbl->GetNumBoneInfluences(skin_info, 0);
-        ok(!count, "Got unexpected value %u.\n", count);
+    count = skin_info->lpVtbl->GetNumBoneInfluences(skin_info, 0);
+    ok(!count, "Got unexpected value %u.\n", count);
 
-        count = skin_info->lpVtbl->GetNumBoneInfluences(skin_info, 1);
-        ok(!count, "Got unexpected value %u.\n", count);
+    count = skin_info->lpVtbl->GetNumBoneInfluences(skin_info, 1);
+    ok(!count, "Got unexpected value %u.\n", count);
 
-        matrix = skin_info->lpVtbl->GetBoneOffsetMatrix(skin_info, -1);
-        ok(!matrix, "Got unexpected value %p.\n", matrix);
+    matrix = skin_info->lpVtbl->GetBoneOffsetMatrix(skin_info, -1);
+    ok(!matrix, "Got unexpected value %p.\n", matrix);
 
-        matrix = skin_info->lpVtbl->GetBoneOffsetMatrix(skin_info, 0);
-        ok(!matrix, "Got unexpected value %p.\n", matrix);
+    matrix = skin_info->lpVtbl->GetBoneOffsetMatrix(skin_info, 0);
+    ok(!matrix, "Got unexpected value %p.\n", matrix);
 
-        skin_info->lpVtbl->Release(skin_info);
-    }
-
+    skin_info->lpVtbl->Release(skin_info);
     mesh->lpVtbl->Release(mesh);
     adjacency->lpVtbl->Release(adjacency);
     file_data->lpVtbl->Release(file_data);

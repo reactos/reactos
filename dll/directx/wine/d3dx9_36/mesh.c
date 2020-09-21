@@ -3337,6 +3337,13 @@ static HRESULT parse_mesh(ID3DXFileData *filedata, struct mesh_data *mesh_data, 
         goto end;
     }
 
+    if ((provide_flags & PROVIDE_SKININFO) && !mesh_data->skin_info)
+    {
+        if (FAILED(hr = D3DXCreateSkinInfoFVF(mesh_data->num_vertices, mesh_data->fvf,
+                mesh_data->nb_bones, &mesh_data->skin_info)))
+            goto end;
+    }
+
     hr = D3D_OK;
 
 end:
