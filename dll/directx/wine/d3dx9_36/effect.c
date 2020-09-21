@@ -922,7 +922,6 @@ struct d3dx_parameter *get_parameter_by_name(struct d3dx9_base_effect *base,
         return NULL;
     }
 
-    /* Pass / technique annotations are not in the parameters tree. */
     if (parameter->full_name)
     {
         name_len = strlen(name);
@@ -952,9 +951,11 @@ struct d3dx_parameter *get_parameter_by_name(struct d3dx9_base_effect *base,
         return NULL;
     }
 
+    /* Pass / technique annotations are not stored in the parameters tree,
+     * do a linear search. */
     count = parameter->member_count;
 
-    length = strcspn( name, "[.@" );
+    length = strcspn( name, "[." );
     part = name + length;
 
     for (i = 0; i < count; i++)
@@ -972,9 +973,6 @@ struct d3dx_parameter *get_parameter_by_name(struct d3dx9_base_effect *base,
             {
                 case '.':
                     return get_parameter_by_name(base, temp_parameter, part);
-
-                case '@':
-                    return NULL;
 
                 case '[':
                     return get_parameter_element_by_name(base, temp_parameter, part);
