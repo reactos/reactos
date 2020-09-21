@@ -603,17 +603,46 @@ static const WCHAR *read_line(HDC hdc, const WCHAR *str, unsigned int *count,
     return NULL;
 }
 
+static int compute_rect(struct d3dx_font *font, const WCHAR *string, unsigned int count,
+        WCHAR *line, RECT *rect, DWORD format)
+{
+    int y, lh, width, top = rect->top;
+    int max_width = 0;
+    SIZE size;
+
+    y = rect->top;
+    lh = font->metrics.tmHeight;
+    width = rect->right - rect->left;
+
+    while (string)
+    {
+        unsigned int line_len;
+
+        string = read_line(font->hdc, string, &count, line, &line_len, width, format, &size);
+
+        if (size.cx > max_width)
+            max_width = size.cx;
+
+        y += lh;
+        if (!(format & DT_NOCLIP) && (y > rect->bottom))
+            break;
+    }
+
+    rect->right = rect->left + max_width;
+    rect->bottom = y;
+
+    return rect->bottom - top;
+}
+
 static INT WINAPI ID3DXFontImpl_DrawTextW(ID3DXFont *iface, ID3DXSprite *sprite,
         const WCHAR *string, INT in_count, RECT *rect, DWORD format, D3DCOLOR color)
 {
     struct d3dx_font *font = impl_from_ID3DXFont(iface);
+    int lh, x, y, width, top, ret = 0;
     ID3DXSprite *target = sprite;
-    RECT textrect = {0};
-    int lh, x, y, width;
     unsigned int count;
-    int max_width = 0;
+    RECT r = {0};
     WCHAR *line;
-    int ret = 0;
     SIZE size;
 
     TRACE("iface %p, sprite %p, string %s, in_count %d, rect %s, format %#x, color 0x%08x.\n",
@@ -633,20 +662,36 @@ static INT WINAPI ID3DXFontImpl_DrawTextW(ID3DXFont *iface, ID3DXSprite *sprite,
     if (format & DT_SINGLELINE)
         format &= ~DT_WORDBREAK;
 
-    if (rect)
-        textrect = *rect;
-
-    x = textrect.left;
-    y = textrect.top;
-    width = textrect.right - textrect.left;
-
-    lh = font->metrics.tmHeight;
-
     line = heap_alloc(count * sizeof(*line));
     if (!line)
         return 0;
 
-    if (!(format & DT_CALCRECT) && !sprite)
+    if (!rect || format & DT_CALCRECT)
+    {
+        if (!rect)
+        {
+            rect = &r;
+            format |= DT_NOCLIP;
+        }
+
+        top = rect->top;
+
+        ret = compute_rect(font, string, count, line, rect, format);
+
+        if (format & DT_CALCRECT)
+            goto cleanup;
+    }
+    else
+    {
+        top = rect->top;
+    }
+
+    x = rect->left;
+    y = rect->top;
+    lh = font->metrics.tmHeight;
+    width = rect->right - rect->left;
+
+    if (!sprite)
     {
         D3DXCreateSprite(font->device, &target);
         ID3DXSprite_Begin(target, 0);
@@ -654,72 +699,55 @@ static INT WINAPI ID3DXFontImpl_DrawTextW(ID3DXFont *iface, ID3DXSprite *sprite,
 
     while (string)
     {
-        unsigned int line_len;
+        unsigned int line_len, i;
+        GCP_RESULTSW results;
+        D3DXVECTOR3 pos;
 
         string = read_line(font->hdc, string, &count, line, &line_len, width, format, &size);
 
-        if (!(format & DT_CALCRECT))
+        memset(&results, 0, sizeof(results));
+        results.nGlyphs = line_len;
+
+        results.lpCaretPos = heap_alloc(line_len * sizeof(*results.lpCaretPos));
+        if (!results.lpCaretPos)
+            goto cleanup;
+
+        results.lpGlyphs = heap_alloc(line_len * sizeof(*results.lpGlyphs));
+        if (!results.lpGlyphs)
         {
-            GCP_RESULTSW results;
-            D3DXVECTOR3 pos;
-            unsigned int i;
-
-            memset(&results, 0, sizeof(results));
-            results.nGlyphs = line_len;
-
-            results.lpCaretPos = heap_alloc(line_len * sizeof(*results.lpCaretPos));
-            if (!results.lpCaretPos)
-                goto cleanup;
-
-            results.lpGlyphs = heap_alloc(line_len * sizeof(*results.lpGlyphs));
-            if (!results.lpGlyphs)
-            {
-                heap_free(results.lpCaretPos);
-                goto cleanup;
-            }
-
-            GetCharacterPlacementW(font->hdc, line, line_len, 0, &results, 0);
-
-            for (i = 0; i < results.nGlyphs; ++i)
-            {
-                IDirect3DTexture9 *texture;
-                POINT cell_inc;
-                RECT black_box;
-
-                ID3DXFont_GetGlyphData(iface, results.lpGlyphs[i], &texture, &black_box, &cell_inc);
-
-                if (!texture)
-                    continue;
-
-                pos.x = cell_inc.x + x + results.lpCaretPos[i];
-                pos.y = cell_inc.y + y;
-
-                ID3DXSprite_Draw(target, texture, &black_box, NULL, &pos, color);
-                IDirect3DTexture9_Release(texture);
-            }
-
             heap_free(results.lpCaretPos);
-            heap_free(results.lpGlyphs);
+            goto cleanup;
         }
-        else if (size.cx > max_width)
+
+        GetCharacterPlacementW(font->hdc, line, line_len, 0, &results, 0);
+
+        for (i = 0; i < results.nGlyphs; ++i)
         {
-            max_width = size.cx;
+            IDirect3DTexture9 *texture;
+            POINT cell_inc;
+            RECT black_box;
+
+            ID3DXFont_GetGlyphData(iface, results.lpGlyphs[i], &texture, &black_box, &cell_inc);
+
+            if (!texture)
+                continue;
+
+            pos.x = cell_inc.x + x + results.lpCaretPos[i];
+            pos.y = cell_inc.y + y;
+
+            ID3DXSprite_Draw(target, texture, &black_box, NULL, &pos, color);
+            IDirect3DTexture9_Release(texture);
         }
+
+        heap_free(results.lpCaretPos);
+        heap_free(results.lpGlyphs);
 
         y += lh;
-        if (!(DT_NOCLIP & format) && (y > textrect.bottom))
+        if (!(DT_NOCLIP & format) && (y > rect->bottom))
             break;
     }
 
-    if (format & DT_CALCRECT && rect)
-    {
-        *rect = textrect;
-
-        rect->bottom = y;
-        rect->right = rect->left + max_width;
-    }
-
-    ret = y - textrect.top;
+    ret = y - top;
 
 cleanup:
     if (target != sprite)
