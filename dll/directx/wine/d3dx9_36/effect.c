@@ -1430,30 +1430,6 @@ static HRESULT d3dx9_base_effect_set_int_array(struct d3dx9_base_effect *base,
     return D3DERR_INVALIDCALL;
 }
 
-static HRESULT d3dx9_base_effect_get_int_array(struct d3dx9_base_effect *base,
-        D3DXHANDLE parameter, INT *n, UINT count)
-{
-    struct d3dx_parameter *param = get_valid_parameter(base, parameter);
-
-    if (n && param && (param->class == D3DXPC_SCALAR
-            || param->class == D3DXPC_VECTOR
-            || param->class == D3DXPC_MATRIX_ROWS
-            || param->class == D3DXPC_MATRIX_COLUMNS))
-    {
-        UINT i, size = min(count, param->bytes / sizeof(DWORD));
-
-        for (i = 0; i < size; ++i)
-        {
-            set_number(&n[i], D3DXPT_INT, (DWORD *)param->data + i, param->type);
-        }
-        return D3D_OK;
-    }
-
-    WARN("Parameter not found.\n");
-
-    return D3DERR_INVALIDCALL;
-}
-
 static HRESULT d3dx9_base_effect_set_vector(struct d3dx9_base_effect *base,
         D3DXHANDLE parameter, const D3DXVECTOR4 *vector)
 {
@@ -3435,10 +3411,25 @@ static HRESULT WINAPI d3dx_effect_SetIntArray(ID3DXEffect *iface, D3DXHANDLE par
 static HRESULT WINAPI d3dx_effect_GetIntArray(ID3DXEffect *iface, D3DXHANDLE parameter, INT *n, UINT count)
 {
     struct d3dx_effect *effect = impl_from_ID3DXEffect(iface);
+    struct d3dx_parameter *param = get_valid_parameter(&effect->base_effect, parameter);
 
     TRACE("iface %p, parameter %p, n %p, count %u.\n", iface, parameter, n, count);
 
-    return d3dx9_base_effect_get_int_array(&effect->base_effect, parameter, n, count);
+    if (n && param && (param->class == D3DXPC_SCALAR
+            || param->class == D3DXPC_VECTOR
+            || param->class == D3DXPC_MATRIX_ROWS
+            || param->class == D3DXPC_MATRIX_COLUMNS))
+    {
+        unsigned int i, size = min(count, param->bytes / sizeof(DWORD));
+
+        for (i = 0; i < size; ++i)
+            set_number(&n[i], D3DXPT_INT, (DWORD *)param->data + i, param->type);
+        return D3D_OK;
+    }
+
+    WARN("Parameter not found.\n");
+
+    return D3DERR_INVALIDCALL;
 }
 
 static HRESULT WINAPI d3dx_effect_SetFloat(ID3DXEffect *iface, D3DXHANDLE parameter, float f)
