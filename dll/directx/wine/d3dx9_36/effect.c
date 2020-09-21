@@ -6177,11 +6177,11 @@ static const char **parse_skip_constants_string(char *skip_constants_string, uns
     return new_alloc;
 }
 
-static HRESULT d3dx9_base_effect_init(struct d3dx9_base_effect *base,
-        const char *data, SIZE_T data_size, const D3D_SHADER_MACRO *defines, ID3DInclude *include,
-        UINT eflags, ID3DBlob **errors, struct d3dx_effect *effect, struct d3dx_effect_pool *pool,
-        const char *skip_constants_string)
+static HRESULT d3dx9_base_effect_init(struct d3dx_effect *effect, const char *data, SIZE_T data_size,
+        const D3D_SHADER_MACRO *defines, ID3DInclude *include, unsigned int eflags, ID3DBlob **errors,
+        struct d3dx_effect_pool *pool, const char *skip_constants_string)
 {
+    struct d3dx9_base_effect *base = &effect->base_effect;
     DWORD tag, offset;
     const char *ptr = data;
     HRESULT hr;
@@ -6196,9 +6196,9 @@ static HRESULT d3dx9_base_effect_init(struct d3dx9_base_effect *base,
 #endif
     unsigned int i, j;
 
-    TRACE("base %p, data %p, data_size %lu, defines %p, include %p, eflags %#x, errors %p, "
-            "effect %p, pool %p, skip_constants %s.\n",
-            base, data, data_size, defines, include, eflags, errors, effect, pool,
+    TRACE("effect %p, data %p, data_size %lu, defines %p, include %p, eflags %#x, errors %p, "
+            "pool %p, skip_constants %s.\n",
+            effect, data, data_size, defines, include, eflags, errors, pool,
             debugstr_a(skip_constants_string));
 
     base->effect = effect;
@@ -6343,8 +6343,8 @@ static HRESULT d3dx9_effect_init(struct d3dx_effect *effect, struct IDirect3DDev
     IDirect3DDevice9_AddRef(device);
     effect->device = device;
 
-    if (FAILED(hr = d3dx9_base_effect_init(&effect->base_effect, data, data_size, defines, include,
-            eflags, error_messages, effect, pool_impl, skip_constants)))
+    if (FAILED(hr = d3dx9_base_effect_init(effect, data, data_size, defines, include, eflags,
+            error_messages, pool_impl, skip_constants)))
     {
         FIXME("Failed to parse effect, hr %#x.\n", hr);
         free_effect(effect);
