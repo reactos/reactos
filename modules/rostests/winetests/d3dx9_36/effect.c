@@ -22,25 +22,6 @@
 #include "wine/test.h"
 #include "d3dx9.h"
 
-#ifndef INFINITY
-static inline float __port_infinity(void)
-{
-    static const unsigned __inf_bytes = 0x7f800000;
-    return *(const float *)&__inf_bytes;
-}
-#define INFINITY __port_infinity()
-#endif /* INFINITY */
-
-#ifndef NAN
-static float get_nan(void)
-{
-    DWORD nan = 0x7fc00000;
-
-    return *(float *)&nan;
-}
-#define NAN get_nan()
-#endif
-
 /* helper functions */
 static BOOL compare_float(FLOAT f, FLOAT g, UINT ulps)
 {
