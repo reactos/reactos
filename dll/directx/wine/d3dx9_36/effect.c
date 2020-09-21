@@ -160,7 +160,6 @@ struct d3dx9_base_effect
 
     struct d3dx_top_level_parameter *parameters;
     struct d3dx_technique *techniques;
-    struct d3dx_object *objects;
 
     struct d3dx_effect_pool *pool;
     DWORD flags;
@@ -180,6 +179,7 @@ struct d3dx_effect
     struct d3dx9_base_effect base_effect;
     unsigned int parameter_count;
     unsigned int object_count;
+    struct d3dx_object *objects;
 
     struct ID3DXEffectStateManager *manager;
     struct IDirect3DDevice9 *device;
@@ -709,14 +709,14 @@ static void d3dx9_base_effect_cleanup(struct d3dx9_base_effect *base)
         base->techniques = NULL;
     }
 
-    if (base->objects)
+    if (base->effect->objects)
     {
         for (i = 0; i < base->effect->object_count; ++i)
         {
-            free_object(&base->objects[i]);
+            free_object(&base->effect->objects[i]);
         }
-        HeapFree(GetProcessHeap(), 0, base->objects);
-        base->objects = NULL;
+        HeapFree(GetProcessHeap(), 0, base->effect->objects);
+        base->effect->objects = NULL;
     }
 }
 
@@ -3175,7 +3175,7 @@ static HRESULT WINAPI d3dx_effect_GetPassDesc(ID3DXEffect *iface, D3DXHANDLE pas
                     FALSE, &param_dirty)))
                 return hr;
 
-            data = param->object_id ? effect->base_effect.objects[param->object_id].data : NULL;
+            data = param->object_id ? effect->objects[param->object_id].data : NULL;
             if (state_table[state->operation].class == SC_VERTEXSHADER)
                 desc->pVertexShaderFunction = data;
             else
@@ -3888,7 +3888,6 @@ static D3DXHANDLE WINAPI d3dx_effect_GetCurrentTechnique(ID3DXEffect *iface)
 static HRESULT WINAPI d3dx_effect_ValidateTechnique(ID3DXEffect *iface, D3DXHANDLE technique)
 {
     struct d3dx_effect *effect = impl_from_ID3DXEffect(iface);
-    struct d3dx9_base_effect *base = &effect->base_effect;
     struct d3dx_technique *tech = get_valid_technique(effect, technique);
     HRESULT ret = D3D_OK;
     unsigned int i, j;
@@ -3920,7 +3919,7 @@ static HRESULT WINAPI d3dx_effect_ValidateTechnique(ID3DXEffect *iface, D3DXHAND
                         FALSE, &param_dirty)))
                     return hr;
 
-                if (param->object_id && base->objects[param->object_id].creation_failed)
+                if (param->object_id && effect->objects[param->object_id].creation_failed)
                 {
                     ret = E_FAIL;
                     goto done;
@@ -5314,7 +5313,7 @@ static HRESULT d3dx9_parse_name(char **name, const char *ptr)
 
 static HRESULT d3dx9_copy_data(struct d3dx_effect *effect, unsigned int object_id, const char **ptr)
 {
-    struct d3dx_object *object = &effect->base_effect.objects[object_id];
+    struct d3dx_object *object = &effect->objects[object_id];
 
     if (object->size || object->data)
     {
@@ -6011,7 +6010,7 @@ static HRESULT d3dx_parse_array_selector(struct d3dx_effect *effect, struct d3dx
     struct d3dx9_base_effect *base = &effect->base_effect;
     DWORD string_size;
     struct d3dx_parameter *param = &state->parameter;
-    struct d3dx_object *object = &base->objects[param->object_id];
+    struct d3dx_object *object = &effect->objects[param->object_id];
     char *ptr = object->data;
     HRESULT ret;
 
@@ -6052,7 +6051,7 @@ static HRESULT d3dx_parse_array_selector(struct d3dx_effect *effect, struct d3dx
             if (!param->members[i].param_eval)
             {
                 TRACE("Creating preshader for object %u.\n", param->members[i].object_id);
-                object = &base->objects[param->members[i].object_id];
+                object = &effect->objects[param->members[i].object_id];
                 if (FAILED(ret = d3dx_create_param_eval(base, object->data, object->size, param->type,
                         &param->members[i].param_eval, get_version_counter_ptr(base),
                         skip_constants, skip_constants_count)))
@@ -6153,7 +6152,7 @@ static HRESULT d3dx_parse_resource(struct d3dx_effect *effect, const char *data,
     TRACE("State operation %#x (%s).\n", state->operation, state_table[state->operation].name);
     param = &state->parameter;
     TRACE("Using object id %u.\n", param->object_id);
-    object = &base->objects[param->object_id];
+    object = &effect->objects[param->object_id];
 
     TRACE("Usage %u: class %s, type %s.\n", usage, debug_d3dxparameter_class(param->class),
             debug_d3dxparameter_type(param->type));
@@ -6211,7 +6210,7 @@ static HRESULT d3dx_parse_resource(struct d3dx_effect *effect, const char *data,
                 TRACE("Mapping to parameter %p, having object id %u.\n", refpar, refpar->object_id);
                 if (refpar->type == D3DXPT_VERTEXSHADER || refpar->type == D3DXPT_PIXELSHADER)
                 {
-                    struct d3dx_object *refobj = &base->objects[refpar->object_id];
+                    struct d3dx_object *refobj = &effect->objects[refpar->object_id];
 
                     if (!refpar->param_eval)
                     {
@@ -6270,8 +6269,9 @@ static HRESULT d3dx_parse_effect(struct d3dx_effect *effect, const char *data, U
     read_dword(&ptr, &effect->object_count);
     TRACE("Object count: %u.\n", effect->object_count);
 
-    base->objects = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*base->objects) * effect->object_count);
-    if (!base->objects)
+    effect->objects = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,
+            sizeof(*effect->objects) * effect->object_count);
+    if (!effect->objects)
     {
         ERR("Out of memory.\n");
         hr = E_OUTOFMEMORY;
@@ -6293,7 +6293,7 @@ static HRESULT d3dx_parse_effect(struct d3dx_effect *effect, const char *data, U
         for (i = 0; i < effect->parameter_count; ++i)
         {
             param_set_magic_number(&base->parameters[i].param);
-            hr = d3dx_parse_effect_parameter(effect, &base->parameters[i], data, &ptr, base->objects);
+            hr = d3dx_parse_effect_parameter(effect, &base->parameters[i], data, &ptr, effect->objects);
             if (hr != D3D_OK)
             {
                 WARN("Failed to parse parameter %u.\n", i);
@@ -6319,7 +6319,7 @@ static HRESULT d3dx_parse_effect(struct d3dx_effect *effect, const char *data, U
         for (i = 0; i < base->technique_count; ++i)
         {
             TRACE("Parsing technique %u.\n", i);
-            hr = d3dx_parse_effect_technique(effect, &base->techniques[i], data, &ptr, base->objects);
+            hr = d3dx_parse_effect_technique(effect, &base->techniques[i], data, &ptr, effect->objects);
             if (hr != D3D_OK)
             {
                 WARN("Failed to parse technique %u.\n", i);
@@ -6344,9 +6344,9 @@ static HRESULT d3dx_parse_effect(struct d3dx_effect *effect, const char *data, U
         if (FAILED(hr = d3dx9_copy_data(effect, id, &ptr)))
             goto err_out;
 
-        if (base->objects[id].data)
+        if (effect->objects[id].data)
         {
-            if (FAILED(hr = d3dx9_create_object(base, &base->objects[id])))
+            if (FAILED(hr = d3dx9_create_object(base, &effect->objects[id])))
                 goto err_out;
         }
     }
@@ -6394,14 +6394,14 @@ err_out:
         base->parameters = NULL;
     }
 
-    if (base->objects)
+    if (effect->objects)
     {
         for (i = 0; i < effect->object_count; ++i)
         {
-            free_object(&base->objects[i]);
+            free_object(&effect->objects[i]);
         }
-        HeapFree(GetProcessHeap(), 0, base->objects);
-        base->objects = NULL;
+        HeapFree(GetProcessHeap(), 0, effect->objects);
+        effect->objects = NULL;
     }
 
     return hr;
