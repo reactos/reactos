@@ -25,7 +25,7 @@
 #include "d3dx9tex.h"
 #include "resources.h"
 
-static int has_2d_dxt3, has_2d_dxt5, has_cube_dxt5, has_3d_dxt3;
+static int has_2d_dxt1, has_2d_dxt3, has_2d_dxt5, has_cube_dxt5, has_3d_dxt3;
 
 /* 2x2 16-bit dds, no mipmaps */
 static const unsigned char dds_16bit[] = {
@@ -419,30 +419,57 @@ static void test_D3DXCheckTextureRequirements(IDirect3DDevice9 *device)
     ok(format == expected, "Returned format %u, expected %u\n", format, expected);
 
     /* Block-based texture formats and size < block size. */
+    format = D3DFMT_DXT1;
+    width = 2; height = 2;
+    mipmaps = 1;
+    hr = D3DXCheckTextureRequirements(device, &width, &height, &mipmaps, 0, &format, D3DPOOL_DEFAULT);
+    ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
+    ok(mipmaps == 1, "Got unexpected level count %u.\n", mipmaps);
+    if (has_2d_dxt1)
+    {
+        ok(width == 4, "Got unexpected width %d.\n", width);
+        ok(height == 4, "Got unexpected height %d.\n", height);
+        ok(format == D3DFMT_DXT1, "Got unexpected format %u.\n", format);
+    }
+    else
+    {
+        ok(width == 2, "Got unexpected width %d.\n", width);
+        ok(height == 2, "Got unexpected height %d.\n", height);
+        ok(format == D3DFMT_A8R8G8B8, "Got unexpected format %u.\n", format);
+    }
+
+    format = D3DFMT_DXT5;
+    width = 2; height = 2;
+    hr = D3DXCheckTextureRequirements(device, &width, &height, &mipmaps, 0, &format, D3DPOOL_DEFAULT);
+    ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
+    ok(mipmaps == 1, "Got unexpected level count %u.\n", mipmaps);
     if (has_2d_dxt5)
     {
-        format = D3DFMT_DXT5;
-        width = 2; height = 2;
-        mipmaps = 1;
-        hr = D3DXCheckTextureRequirements(device, &width, &height, &mipmaps, 0, &format, D3DPOOL_DEFAULT);
-        ok(hr == D3D_OK, "D3DXCheckTextureRequirements returned %#x, expected %#x\n", hr, D3D_OK);
-        ok(width == 4, "Returned width %d, expected %d\n", width, 4);
-        ok(height == 4, "Returned height %d, expected %d\n", height, 4);
-        ok(mipmaps == 1, "Returned mipmaps %d, expected %d\n", mipmaps, 1);
-        ok(format == D3DFMT_DXT5, "Returned format %u, expected %u\n", format, D3DFMT_DXT5);
-
-        width = 4;
-        height = 2;
-        hr = D3DXCheckTextureRequirements(device, &width, &height, &mipmaps, 0, &format, D3DPOOL_DEFAULT);
-        ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
-        ok(width == 4, "Got unexpected width %u.\n", width);
-        ok(height == 4, "Got unexpected height %u.\n", height);
-        ok(mipmaps == 1, "Got unexpected mipmap level count %u.\n", mipmaps);
+        ok(width == 4, "Got unexpected width %d.\n", width);
+        ok(height == 4, "Got unexpected height %d.\n", height);
         ok(format == D3DFMT_DXT5, "Got unexpected format %u.\n", format);
     }
     else
     {
-        skip("D3DFMT_DXT5 textures are not supported, skipping a test.\n");
+        ok(width == 2, "Got unexpected width %d.\n", width);
+        ok(height == 2, "Got unexpected height %d.\n", height);
+        ok(format == D3DFMT_A8R8G8B8, "Got unexpected format %u.\n", format);
+    }
+    width = 4;
+    height = 2;
+    hr = D3DXCheckTextureRequirements(device, &width, &height, &mipmaps, 0, &format, D3DPOOL_DEFAULT);
+    ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
+    ok(width == 4, "Got unexpected width %u.\n", width);
+    ok(mipmaps == 1, "Got unexpected level count %u.\n", mipmaps);
+    if (has_2d_dxt5)
+    {
+        ok(height == 4, "Got unexpected height %u.\n", height);
+        ok(format == D3DFMT_DXT5, "Got unexpected format %u.\n", format);
+    }
+    else
+    {
+        ok(height == 2, "Got unexpected height %u.\n", height);
+        ok(format == D3DFMT_A8R8G8B8, "Got unexpected format %u.\n", format);
     }
 
     IDirect3D9_Release(d3d);
@@ -2511,6 +2538,8 @@ START_TEST(texture)
     }
 
     /* Check whether DXTn textures are supported. */
+    has_2d_dxt1 = SUCCEEDED(IDirect3D9_CheckDeviceFormat(d3d, D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL,
+            D3DFMT_X8R8G8B8, 0, D3DRTYPE_TEXTURE, D3DFMT_DXT1));
     has_2d_dxt3 = SUCCEEDED(IDirect3D9_CheckDeviceFormat(d3d, D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL,
             D3DFMT_X8R8G8B8, 0, D3DRTYPE_TEXTURE, D3DFMT_DXT3));
     has_2d_dxt5 = SUCCEEDED(IDirect3D9_CheckDeviceFormat(d3d, D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL,
@@ -2519,8 +2548,8 @@ START_TEST(texture)
             D3DFMT_X8R8G8B8, 0, D3DRTYPE_CUBETEXTURE, D3DFMT_DXT5));
     has_3d_dxt3 = SUCCEEDED(IDirect3D9_CheckDeviceFormat(d3d, D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL,
             D3DFMT_X8R8G8B8, 0, D3DRTYPE_VOLUMETEXTURE, D3DFMT_DXT3));
-    trace("DXTn texture support: 2D DXT3 %#x, 2D DXT5 %#x, cube DXT5 %#x, 3D dxt3 %#x.\n",
-            has_2d_dxt3, has_2d_dxt5, has_cube_dxt5, has_3d_dxt3);
+    trace("DXTn texture support: 2D DXT1 %#x, 2D DXT3 %#x, 2D DXT5 %#x, cube DXT5 %#x, 3D dxt3 %#x.\n",
+            has_2d_dxt1, has_2d_dxt3, has_2d_dxt5, has_cube_dxt5, has_3d_dxt3);
 
     test_D3DXCheckTextureRequirements(device);
     test_D3DXCheckCubeTextureRequirements(device);
