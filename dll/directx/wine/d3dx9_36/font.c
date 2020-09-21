@@ -557,12 +557,11 @@ static void word_break(HDC hdc, const WCHAR *str, unsigned int *str_len,
 }
 
 static const WCHAR *read_line(HDC hdc, const WCHAR *str, int *count,
-        WCHAR *dest, unsigned int *dest_len, int width, DWORD format)
+        WCHAR *dest, unsigned int *dest_len, int width, DWORD format, SIZE *size)
 {
     unsigned int i = 0;
     int orig_count = *count;
     int num_fit;
-    SIZE size;
 
     *dest_len = 0;
     while (*count && (str[i] != '\n' || (format & DT_SINGLELINE)))
@@ -574,7 +573,7 @@ static const WCHAR *read_line(HDC hdc, const WCHAR *str, int *count,
     }
 
     num_fit = 0;
-    GetTextExtentExPointW(hdc, dest, *dest_len, width, &num_fit, NULL, &size);
+    GetTextExtentExPointW(hdc, dest, *dest_len, width, &num_fit, NULL, size);
 
     if (num_fit < *dest_len)
     {
@@ -582,7 +581,7 @@ static const WCHAR *read_line(HDC hdc, const WCHAR *str, int *count,
         {
             unsigned int chars_used;
 
-            word_break(hdc, dest, dest_len, num_fit, &chars_used, format, &size);
+            word_break(hdc, dest, dest_len, num_fit, &chars_used, format, size);
             *count = orig_count - chars_used;
             i = chars_used;
         }
@@ -612,7 +611,9 @@ static INT WINAPI ID3DXFontImpl_DrawTextW(ID3DXFont *iface, ID3DXSprite *sprite,
     WCHAR *line;
     RECT textrect = {0};
     int lh, x, y, width;
+    int max_width = 0;
     int ret = 0;
+    SIZE size;
 
     TRACE("iface %p, sprite %p, string %s, count %d, rect %s, format %#x, color 0x%08x.\n",
           iface,  sprite, debugstr_wn(string, count), count, wine_dbgstr_rect(rect), format, color);
@@ -664,7 +665,7 @@ static INT WINAPI ID3DXFontImpl_DrawTextW(ID3DXFont *iface, ID3DXSprite *sprite,
     {
         unsigned int line_len;
 
-        string = read_line(font->hdc, string, &count, line, &line_len, width, format);
+        string = read_line(font->hdc, string, &count, line, &line_len, width, format, &size);
 
         if (!(format & DT_CALCRECT))
         {
@@ -709,9 +710,22 @@ static INT WINAPI ID3DXFontImpl_DrawTextW(ID3DXFont *iface, ID3DXSprite *sprite,
             heap_free(results.lpCaretPos);
             heap_free(results.lpGlyphs);
         }
+        else if (size.cx > max_width)
+        {
+            max_width = size.cx;
+        }
+
         y += lh;
         if (!(DT_NOCLIP & format) && (y > textrect.bottom))
             break;
+    }
+
+    if (format & DT_CALCRECT)
+    {
+        *rect = textrect;
+
+        rect->bottom = y;
+        rect->right = rect->left + max_width;
     }
 
     ret = y - textrect.top;

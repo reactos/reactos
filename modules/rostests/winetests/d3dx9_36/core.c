@@ -64,6 +64,15 @@ static inline void check_mat(D3DXMATRIX got, D3DXMATRIX exp)
        U(exp).m[3][0],U(exp).m[3][1],U(exp).m[3][2],U(exp).m[3][3]);
 }
 
+#define check_rect(rect, left, top, right, bottom) _check_rect(__LINE__, rect, left, top, right, bottom)
+static inline void _check_rect(unsigned int line, const RECT *rect, int left, int top, int right, int bottom)
+{
+    ok_(__FILE__, line)(rect->left == left, "Unexpected rect.left %d\n", rect->left);
+    ok_(__FILE__, line)(rect->top == top, "Unexpected rect.top %d\n", rect->top);
+    ok_(__FILE__, line)(rect->right == right, "Unexpected rect.right %d\n", rect->right);
+    ok_(__FILE__, line)(rect->bottom == bottom, "Unexpected rect.bottom %d\n", rect->bottom);
+}
+
 static void test_ID3DXBuffer(void)
 {
     ID3DXBuffer *buffer;
@@ -667,8 +676,8 @@ static void test_ID3DXFont(IDirect3DDevice9 *device)
         ok(height == tests[i].font_height, "Test %d: got unexpected height %u.\n", i, height);
         ok(!rect.left, "Test %d: got unexpected rect left %d.\n", i, rect.left);
         ok(!rect.top, "Test %d: got unexpected rect top %d.\n", i, rect.top);
-        todo_wine ok(rect.right, "Test %d: got unexpected rect right %d.\n", i, rect.right);
-        todo_wine ok(rect.bottom == tests[i].font_height, "Test %d: got unexpected rect bottom %d.\n", i, rect.bottom);
+        ok(rect.right, "Test %d: got unexpected rect right %d.\n", i, rect.right);
+        ok(rect.bottom == tests[i].font_height, "Test %d: got unexpected rect bottom %d.\n", i, rect.bottom);
 
         hr = ID3DXSprite_End(sprite);
         ok (hr == D3D_OK, "Test %d: got unexpected hr %#x.\n", i, hr);
@@ -838,6 +847,11 @@ static void test_ID3DXFont(IDirect3DDevice9 *device)
 
     height = ID3DXFont_DrawTextW(font, NULL, L"aaaa\naaaa", -1, &rect, DT_CENTER, 0xff00ff);
     ok(height == 24, "Got unexpected height %d.\n", height);
+
+    SetRect(&rect, 10, 10, 50, 50);
+    height = ID3DXFont_DrawTextW(font, NULL, L"aaaa\naaaa", -1, &rect, DT_CALCRECT, 0xff00ff);
+    ok(height == 24, "Got unexpected height %d.\n", height);
+    check_rect(&rect, 10, 10, 30, 34);
 
     ID3DXFont_Release(font);
 }
