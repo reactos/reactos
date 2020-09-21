@@ -1492,44 +1492,6 @@ static HRESULT d3dx9_base_effect_get_int_array(struct d3dx9_base_effect *base,
     return D3DERR_INVALIDCALL;
 }
 
-static HRESULT d3dx9_base_effect_set_float_array(struct d3dx9_base_effect *base,
-        D3DXHANDLE parameter, const float *f, UINT count)
-{
-    struct d3dx_parameter *param = get_valid_parameter(base, parameter);
-
-    if (param)
-    {
-        UINT i, size = min(count, param->bytes / sizeof(DWORD));
-
-        TRACE("Class %s\n", debug_d3dxparameter_class(param->class));
-
-        switch (param->class)
-        {
-            case D3DXPC_SCALAR:
-            case D3DXPC_VECTOR:
-            case D3DXPC_MATRIX_ROWS:
-                for (i = 0; i < size; ++i)
-                {
-                    set_number((DWORD *)param->data + i, param->type, &f[i], D3DXPT_FLOAT);
-                }
-                set_dirty(param);
-                return D3D_OK;
-
-            case D3DXPC_OBJECT:
-            case D3DXPC_STRUCT:
-                break;
-
-            default:
-                FIXME("Unhandled class %s\n", debug_d3dxparameter_class(param->class));
-                break;
-        }
-    }
-
-    WARN("Parameter not found.\n");
-
-    return D3DERR_INVALIDCALL;
-}
-
 static HRESULT d3dx9_base_effect_set_vector(struct d3dx9_base_effect *base,
         D3DXHANDLE parameter, const D3DXVECTOR4 *vector)
 {
@@ -3534,10 +3496,39 @@ static HRESULT WINAPI d3dx_effect_SetFloatArray(ID3DXEffect *iface, D3DXHANDLE p
         const float *f, UINT count)
 {
     struct d3dx_effect *effect = impl_from_ID3DXEffect(iface);
+    struct d3dx_parameter *param = get_valid_parameter(&effect->base_effect, parameter);
 
     TRACE("iface %p, parameter %p, f %p, count %u.\n", iface, parameter, f, count);
 
-    return d3dx9_base_effect_set_float_array(&effect->base_effect, parameter, f, count);
+    if (param)
+    {
+        unsigned int i, size = min(count, param->bytes / sizeof(DWORD));
+
+        TRACE("Class %s.\n", debug_d3dxparameter_class(param->class));
+
+        switch (param->class)
+        {
+            case D3DXPC_SCALAR:
+            case D3DXPC_VECTOR:
+            case D3DXPC_MATRIX_ROWS:
+                for (i = 0; i < size; ++i)
+                    set_number((DWORD *)param->data + i, param->type, &f[i], D3DXPT_FLOAT);
+                set_dirty(param);
+                return D3D_OK;
+
+            case D3DXPC_OBJECT:
+            case D3DXPC_STRUCT:
+                break;
+
+            default:
+                FIXME("Unhandled class %s.\n", debug_d3dxparameter_class(param->class));
+                break;
+        }
+    }
+
+    WARN("Parameter not found.\n");
+
+    return D3DERR_INVALIDCALL;
 }
 
 static HRESULT WINAPI d3dx_effect_GetFloatArray(ID3DXEffect *iface, D3DXHANDLE parameter, float *f, UINT count)
