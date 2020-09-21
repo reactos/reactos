@@ -633,17 +633,8 @@ static INT WINAPI ID3DXFontImpl_DrawTextW(ID3DXFont *iface, ID3DXSprite *sprite,
     if (format & DT_SINGLELINE)
         format &= ~DT_WORDBREAK;
 
-    if (!rect)
-    {
-        y = ID3DXFont_DrawTextW(iface, NULL, string, count, &textrect, format | DT_CALCRECT, 0);
-
-        if (format & DT_CALCRECT)
-            return y;
-    }
-    else
-    {
+    if (rect)
         textrect = *rect;
-    }
 
     x = textrect.left;
     y = textrect.top;
@@ -720,7 +711,7 @@ static INT WINAPI ID3DXFontImpl_DrawTextW(ID3DXFont *iface, ID3DXSprite *sprite,
             break;
     }
 
-    if (format & DT_CALCRECT)
+    if (format & DT_CALCRECT && rect)
     {
         *rect = textrect;
 
