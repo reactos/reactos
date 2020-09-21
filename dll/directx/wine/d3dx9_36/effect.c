@@ -5568,6 +5568,12 @@ static HRESULT d3dx_parse_state(struct d3dx_effect *effect, struct d3dx_state *s
     state->type = ST_CONSTANT;
 
     read_dword(ptr, &state->operation);
+    if (state->operation >= ARRAY_SIZE(state_table))
+    {
+        WARN("Unknown state operation %u.\n", state->operation);
+        return D3DERR_INVALIDCALL;
+    }
+
     TRACE("Operation: %#x (%s)\n", state->operation, state_table[state->operation].name);
 
     read_dword(ptr, &state->index);
