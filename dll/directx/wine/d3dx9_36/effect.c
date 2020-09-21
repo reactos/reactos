@@ -1018,24 +1018,6 @@ static HRESULT d3dx9_base_effect_get_parameter_desc(struct d3dx9_base_effect *ba
     return D3D_OK;
 }
 
-static HRESULT d3dx9_base_effect_get_technique_desc(struct d3dx9_base_effect *base,
-        D3DXHANDLE technique, D3DXTECHNIQUE_DESC *desc)
-{
-    struct d3dx_technique *tech = technique ? get_valid_technique(base, technique) : &base->techniques[0];
-
-    if (!desc || !tech)
-    {
-        WARN("Invalid argument specified.\n");
-        return D3DERR_INVALIDCALL;
-    }
-
-    desc->Name = tech->name;
-    desc->Passes = tech->pass_count;
-    desc->Annotations = tech->annotation_count;
-
-    return D3D_OK;
-}
-
 static HRESULT d3dx9_get_param_value_ptr(struct d3dx_pass *pass, struct d3dx_state *state,
         void **param_value, struct d3dx_parameter **out_param,
         BOOL update_all, BOOL *param_dirty)
@@ -3212,10 +3194,21 @@ static HRESULT WINAPI d3dx_effect_GetTechniqueDesc(ID3DXEffect *iface, D3DXHANDL
         D3DXTECHNIQUE_DESC *desc)
 {
     struct d3dx_effect *effect = impl_from_ID3DXEffect(iface);
+    struct d3dx_technique *tech = technique ? get_valid_technique(&effect->base_effect, technique) : &effect->base_effect.techniques[0];
 
     TRACE("iface %p, technique %p, desc %p.\n", iface, technique, desc);
 
-    return d3dx9_base_effect_get_technique_desc(&effect->base_effect, technique, desc);
+    if (!desc || !tech)
+    {
+        WARN("Invalid argument specified.\n");
+        return D3DERR_INVALIDCALL;
+    }
+
+    desc->Name = tech->name;
+    desc->Passes = tech->pass_count;
+    desc->Annotations = tech->annotation_count;
+
+    return D3D_OK;
 }
 
 static HRESULT WINAPI d3dx_effect_GetPassDesc(ID3DXEffect *iface, D3DXHANDLE pass, D3DXPASS_DESC *desc)
