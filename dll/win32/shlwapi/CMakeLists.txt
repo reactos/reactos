@@ -6,14 +6,15 @@ add_definitions(-D_WIN32_WINNT=0x600)
 
 add_definitions(
     -D__WINESRC__
-    -D_SHLWAPI_)
+    -D_SHLWAPI_
+	-D_ATL_NO_EXCEPTIONS)
 
 include_directories(BEFORE ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
+include_directories(${REACTOS_SOURCE_DIR}/sdk/lib/atl)
 spec2def(shlwapi.dll shlwapi.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
     assoc.c
-    autocomp.c
     clist.c
     istream.c
     msgbox.c
@@ -29,6 +30,7 @@ list(APPEND SOURCE
     url.c)
 
 list(APPEND PCH_SKIP_SOURCE
+    autocomp.cpp
     wsprintf.c
     ${CMAKE_CURRENT_BINARY_DIR}/shlwapi_stubs.c)
 
