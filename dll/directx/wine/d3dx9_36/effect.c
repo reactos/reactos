@@ -4091,17 +4091,17 @@ static HRESULT WINAPI d3dx_effect_DeleteParameterBlock(ID3DXEffect *iface, D3DXH
 }
 #endif
 
-static HRESULT WINAPI d3dx_effect_CloneEffect(ID3DXEffect *iface, struct IDirect3DDevice9 *device,
-        struct ID3DXEffect **effect)
+static HRESULT WINAPI d3dx_effect_CloneEffect(ID3DXEffect *iface, IDirect3DDevice9 *device,
+        ID3DXEffect **new_effect)
 {
-    struct d3dx_effect *This = impl_from_ID3DXEffect(iface);
+    struct d3dx_effect *effect = impl_from_ID3DXEffect(iface);
 
-    FIXME("(%p)->(%p, %p): stub\n", This, device, effect);
+    FIXME("iface %p, device %p, new_effect %p stub.\n", effect, device, new_effect);
 
-    if (!effect)
+    if (!new_effect)
         return D3DERR_INVALIDCALL;
 
-    if (This->base_effect.flags & D3DXFX_NOT_CLONEABLE)
+    if (effect->base_effect.flags & D3DXFX_NOT_CLONEABLE)
         return E_FAIL;
 
     if (!device)
