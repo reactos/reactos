@@ -952,15 +952,14 @@ struct d3dx_parameter *get_parameter_by_name(struct d3dx9_base_effect *base,
         return NULL;
     }
 
-    count = parameter ? parameter->member_count : base->parameter_count;
+    count = parameter->member_count;
 
     length = strcspn( name, "[.@" );
     part = name + length;
 
     for (i = 0; i < count; i++)
     {
-        temp_parameter = !parameter ? &base->parameters[i].param
-                : &parameter->members[i];
+        temp_parameter = &parameter->members[i];
 
         if (!strcmp(temp_parameter->name, name))
         {
@@ -975,13 +974,8 @@ struct d3dx_parameter *get_parameter_by_name(struct d3dx9_base_effect *base,
                     return get_parameter_by_name(base, temp_parameter, part);
 
                 case '@':
-                {
-                    struct d3dx_top_level_parameter *top_param
-                            = top_level_parameter_from_parameter(temp_parameter);
+                    return NULL;
 
-                    return parameter ? NULL : get_annotation_by_name(base, top_param->annotation_count,
-                            top_param->annotations, part);
-                }
                 case '[':
                     return get_parameter_element_by_name(base, temp_parameter, part);
 
