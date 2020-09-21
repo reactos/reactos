@@ -152,20 +152,11 @@ struct d3dx_technique
     struct IDirect3DStateBlock9 *saved_state;
 };
 
-struct d3dx9_base_effect
-{
-    struct d3dx_effect *effect;
-
-
-    ULONG64 version_counter;
-};
-
 struct d3dx_effect
 {
     ID3DXEffect ID3DXEffect_iface;
     LONG ref;
 
-    struct d3dx9_base_effect base_effect;
     unsigned int parameter_count;
     unsigned int technique_count;
     unsigned int object_count;
@@ -173,6 +164,7 @@ struct d3dx_effect
     struct d3dx_technique *techniques;
     struct d3dx_object *objects;
     DWORD flags;
+
     struct wine_rb_tree param_tree;
     char *full_name_tmp;
     unsigned int full_name_tmp_size;
@@ -184,6 +176,7 @@ struct d3dx_effect
     struct d3dx_pass *active_pass;
     BOOL started;
     DWORD begin_flags;
+    ULONG64 version_counter;
 
     D3DLIGHT9 current_light[8];
     unsigned int light_updated;
@@ -1130,7 +1123,7 @@ static BOOL walk_parameter_tree(struct d3dx_parameter *param, walk_parameter_dep
 
 static ULONG64 *get_version_counter_ptr(struct d3dx_effect *effect)
 {
-    return effect->pool ? &effect->pool->version_counter : &effect->base_effect.version_counter;
+    return effect->pool ? &effect->pool->version_counter : &effect->version_counter;
 }
 
 static ULONG64 next_effect_update_version(struct d3dx_effect *effect)
@@ -6156,7 +6149,6 @@ static HRESULT d3dx9_effect_init(struct d3dx_effect *effect, struct IDirect3DDev
 #else
     UINT compile_flags = 0;
 #endif
-    struct d3dx9_base_effect *base = &effect->base_effect;
     ID3DBlob *bytecode = NULL, *temp_errors = NULL;
     unsigned int skip_constants_count = 0;
     char *skip_constants_buffer = NULL;
@@ -6183,7 +6175,6 @@ static HRESULT d3dx9_effect_init(struct d3dx_effect *effect, struct IDirect3DDev
     IDirect3DDevice9_AddRef(device);
     effect->device = device;
 
-    base->effect = effect;
     effect->flags = eflags;
 
     read_dword(&ptr, &tag);
