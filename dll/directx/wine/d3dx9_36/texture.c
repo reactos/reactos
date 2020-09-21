@@ -214,8 +214,8 @@ static D3DFORMAT get_replacement_format(D3DFORMAT format)
     return format;
 }
 
-HRESULT WINAPI D3DXCheckTextureRequirements(struct IDirect3DDevice9 *device, UINT *width, UINT *height,
-        UINT *miplevels, DWORD usage, D3DFORMAT *format, D3DPOOL pool)
+static HRESULT check_texture_requirements(struct IDirect3DDevice9 *device, UINT *width, UINT *height,
+        UINT *miplevels, DWORD usage, D3DFORMAT *format, D3DPOOL pool, D3DRESOURCETYPE resource_type)
 {
     UINT w = (width && *width) ? *width : 1;
     UINT h = (height && *height) ? *height : 1;
@@ -226,8 +226,6 @@ HRESULT WINAPI D3DXCheckTextureRequirements(struct IDirect3DDevice9 *device, UIN
     HRESULT hr;
     D3DFORMAT usedformat = D3DFMT_UNKNOWN;
     const struct pixel_format_desc *fmt;
-
-    TRACE("(%p, %p, %p, %p, %u, %p, %u)\n", device, width, height, miplevels, usage, format, pool);
 
     if (!device)
         return D3DERR_INVALIDCALL;
@@ -270,7 +268,7 @@ HRESULT WINAPI D3DXCheckTextureRequirements(struct IDirect3DDevice9 *device, UIN
     fmt = get_format_info(usedformat);
 
     hr = IDirect3D9_CheckDeviceFormat(d3d, params.AdapterOrdinal, params.DeviceType, mode.Format,
-        usage, D3DRTYPE_TEXTURE, usedformat);
+            usage, resource_type, usedformat);
     if (FAILED(hr))
     {
         BOOL allow_24bits;
@@ -305,7 +303,7 @@ HRESULT WINAPI D3DXCheckTextureRequirements(struct IDirect3DDevice9 *device, UIN
                 continue;
 
             hr = IDirect3D9_CheckDeviceFormat(d3d, params.AdapterOrdinal, params.DeviceType,
-                mode.Format, usage, D3DRTYPE_TEXTURE, curfmt->format);
+                    mode.Format, usage, resource_type, curfmt->format);
             if (FAILED(hr))
                 continue;
 
@@ -424,6 +422,15 @@ cleanup:
         *format = usedformat;
 
     return D3D_OK;
+}
+
+HRESULT WINAPI D3DXCheckTextureRequirements(struct IDirect3DDevice9 *device, UINT *width, UINT *height,
+        UINT *miplevels, DWORD usage, D3DFORMAT *format, D3DPOOL pool)
+{
+    TRACE("device %p, width %p, height %p, miplevels %p, usage %u, format %p, pool %u.\n",
+            device, width, height, miplevels, usage, format, pool);
+
+    return check_texture_requirements(device, width, height, miplevels, usage, format, pool, D3DRTYPE_TEXTURE);
 }
 
 HRESULT WINAPI D3DXCheckCubeTextureRequirements(struct IDirect3DDevice9 *device, UINT *size,
