@@ -342,7 +342,7 @@ struct d3dx_shared_data
     ULONG64 update_version;
 };
 
-struct d3dx9_base_effect;
+struct d3dx_effect;
 
 static inline BOOL is_top_level_parameter(struct d3dx_parameter *param)
 {
@@ -375,7 +375,7 @@ static inline BOOL is_param_dirty(struct d3dx_parameter *param, ULONG64 update_v
     return is_top_level_param_dirty(param->top_level_param, update_version);
 }
 
-struct d3dx_parameter *get_parameter_by_name(struct d3dx9_base_effect *base,
+struct d3dx_parameter *get_parameter_by_name(struct d3dx_effect *effect,
         struct d3dx_parameter *parameter, const char *name) DECLSPEC_HIDDEN;
 
 #ifdef __REACTOS__
@@ -388,7 +388,7 @@ struct d3dx_parameter *get_parameter_by_name(struct d3dx9_base_effect *base,
 #define SET_D3D_STATE(base_effect, args...) SET_D3D_STATE_(base_effect->manager, base_effect->device, args)
 #endif
 
-HRESULT d3dx_create_param_eval(struct d3dx9_base_effect *base_effect, void *byte_code,
+HRESULT d3dx_create_param_eval(struct d3dx_effect *effect, void *byte_code,
         unsigned int byte_code_size, D3DXPARAMETER_TYPE type,
         struct d3dx_param_eval **peval, ULONG64 *version_counter,
         const char **skip_constants, unsigned int skip_constants_count) DECLSPEC_HIDDEN;
