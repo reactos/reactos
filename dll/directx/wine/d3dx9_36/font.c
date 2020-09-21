@@ -513,13 +513,42 @@ static INT WINAPI ID3DXFontImpl_DrawTextA(ID3DXFont *iface, ID3DXSprite *sprite,
     return ret;
 }
 
+static const WCHAR *read_line(HDC hdc, const WCHAR *str, int *count,
+        WCHAR *dest, unsigned int *dest_len, int width)
+{
+    unsigned int i = 0;
+    SIZE size;
+
+    *dest_len = 0;
+    while (*count && str[i] != '\n')
+    {
+        --(*count);
+        if (str[i] != '\r')
+            dest[(*dest_len)++] = str[i];
+        ++i;
+    }
+
+    GetTextExtentExPointW(hdc, dest, *dest_len, width, NULL, NULL, &size);
+
+    if (*count && str[i] == '\n')
+    {
+        --(*count);
+        ++i;
+    }
+
+    if (*count)
+        return str + i;
+    return NULL;
+}
+
 static INT WINAPI ID3DXFontImpl_DrawTextW(ID3DXFont *iface, ID3DXSprite *sprite,
         const WCHAR *string, INT count, RECT *rect, DWORD format, D3DCOLOR color)
 {
     struct d3dx_font *font = impl_from_ID3DXFont(iface);
     ID3DXSprite *target = sprite;
+    WCHAR *line;
     RECT textrect = {0};
-    int lh, x, y;
+    int lh, x, y, width;
     int ret = 0;
 
     TRACE("iface %p, sprite %p, string %s, count %d, rect %s, format %#x, color 0x%08x.\n",
@@ -548,8 +577,13 @@ static INT WINAPI ID3DXFontImpl_DrawTextW(ID3DXFont *iface, ID3DXSprite *sprite,
 
     x = textrect.left;
     y = textrect.top;
+    width = textrect.right - textrect.left;
 
     lh = font->metrics.tmHeight;
+
+    line = heap_alloc(count * sizeof(*line));
+    if (!line)
+        return 0;
 
     if (!(format & DT_CALCRECT) && !sprite)
     {
@@ -557,50 +591,57 @@ static INT WINAPI ID3DXFontImpl_DrawTextW(ID3DXFont *iface, ID3DXSprite *sprite,
         ID3DXSprite_Begin(target, 0);
     }
 
-    if (!(format & DT_CALCRECT))
+    while (string)
     {
-        GCP_RESULTSW results;
-        D3DXVECTOR3 pos;
-        int i;
+        unsigned int line_len;
 
-        memset(&results, 0, sizeof(results));
-        results.nGlyphs = count;
+        string = read_line(font->hdc, string, &count, line, &line_len, width);
 
-        results.lpCaretPos = heap_alloc(count * sizeof(*results.lpCaretPos));
-        if (!results.lpCaretPos)
-            goto cleanup;
-
-        results.lpGlyphs = heap_alloc(count * sizeof(*results.lpGlyphs));
-        if (!results.lpGlyphs)
+        if (!(format & DT_CALCRECT))
         {
+            GCP_RESULTSW results;
+            D3DXVECTOR3 pos;
+            unsigned int i;
+
+            memset(&results, 0, sizeof(results));
+            results.nGlyphs = line_len;
+
+            results.lpCaretPos = heap_alloc(line_len * sizeof(*results.lpCaretPos));
+            if (!results.lpCaretPos)
+                goto cleanup;
+
+            results.lpGlyphs = heap_alloc(line_len * sizeof(*results.lpGlyphs));
+            if (!results.lpGlyphs)
+            {
+                heap_free(results.lpCaretPos);
+                goto cleanup;
+            }
+
+            GetCharacterPlacementW(font->hdc, line, line_len, 0, &results, 0);
+
+            for (i = 0; i < results.nGlyphs; ++i)
+            {
+                IDirect3DTexture9 *texture;
+                POINT cell_inc;
+                RECT black_box;
+
+                ID3DXFont_GetGlyphData(iface, results.lpGlyphs[i], &texture, &black_box, &cell_inc);
+
+                if (!texture)
+                    continue;
+
+                pos.x = cell_inc.x + x + results.lpCaretPos[i];
+                pos.y = cell_inc.y + y;
+
+                ID3DXSprite_Draw(target, texture, &black_box, NULL, &pos, color);
+                IDirect3DTexture9_Release(texture);
+            }
+
             heap_free(results.lpCaretPos);
-            goto cleanup;
+            heap_free(results.lpGlyphs);
         }
-
-        GetCharacterPlacementW(font->hdc, string, count, 0, &results, 0);
-
-        for (i = 0; i < results.nGlyphs; ++i)
-        {
-            IDirect3DTexture9 *texture;
-            POINT cell_inc;
-            RECT black_box;
-
-            ID3DXFont_GetGlyphData(iface, results.lpGlyphs[i], &texture, &black_box, &cell_inc);
-
-            if (!texture)
-                continue;
-
-            pos.x = cell_inc.x + x + results.lpCaretPos[i];
-            pos.y = cell_inc.y + y;
-
-            ID3DXSprite_Draw(target, texture, &black_box, NULL, &pos, color);
-            IDirect3DTexture9_Release(texture);
-        }
-
-        heap_free(results.lpCaretPos);
-        heap_free(results.lpGlyphs);
+        y += lh;
     }
-    y += lh;
 
     ret = y - textrect.top;
 
@@ -610,6 +651,8 @@ cleanup:
         ID3DXSprite_End(target);
         ID3DXSprite_Release(target);
     }
+
+    heap_free(line);
 
     return ret;
 }
