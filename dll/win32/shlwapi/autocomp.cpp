@@ -20,7 +20,7 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
-#define MAX_ITEMS 60
+#define MAX_ITEMS 50
 
 class CAutoCompleteEnumString :
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
@@ -37,9 +37,14 @@ public:
 
     void Initialize(IAutoComplete2 *pAC2, DWORD dwSHACF, HWND hwndEdit);
 
-    void AddString(LPCWSTR psz)
+    BOOL AddString(LPCWSTR psz)
     {
-        m_strs.Add(psz);
+        if (m_strs.GetSize() < MAX_ITEMS)
+        {
+            m_strs.Add(psz);
+            return TRUE;
+        }
+        return FALSE;
     }
 
     void ResetContent()
@@ -165,7 +170,7 @@ void CAutoCompleteEnumString::DoAll()
     WCHAR szText[MAX_PATH];
     GetWindowTextW(m_hwndEdit, szText, _countof(szText));
 
-    if (!m_bPending && m_strPrev == szText && szText[0])
+    if (m_bPending || (m_strPrev == szText && szText[0]))
         return;
 
     m_bPending = TRUE;
@@ -201,6 +206,9 @@ STDMETHODIMP CAutoCompleteEnumString::Reset()
 {
     m_istr = 0;
 
+    if (m_bPending)
+        return E_FAIL;
+
     HANDLE hThread = (HANDLE)_beginthreadex(NULL, 0, list_thread_proc, this, 0, NULL);
     WaitForSingleObject(hThread, 500);
     CloseHandle(hThread);
@@ -234,7 +242,7 @@ void CAutoCompleteEnumString::DoDir(LPCWSTR pszDir, BOOL bDirOnly)
 {
     WCHAR szPath[MAX_PATH];
     StringCbCopyW(szPath, sizeof(szPath), pszDir);
-    if (!PathAppendW(szPath, L"*"))
+    if (!PathAppendW(szPath, L"*") || m_strs.GetSize() >= MAX_ITEMS)
         return;
 
     WIN32_FIND_DATAW find;
@@ -253,8 +261,7 @@ void CAutoCompleteEnumString::DoDir(LPCWSTR pszDir, BOOL bDirOnly)
         *pch = UNICODE_NULL;
         if (PathAppendW(szPath, find.cFileName))
         {
-            AddString(szPath);
-            if (m_strs.GetSize() >= MAX_ITEMS)
+            if (!AddString(szPath))
                 break;
         }
     } while (FindNextFileW(hFind, &find));
@@ -271,7 +278,9 @@ void CAutoCompleteEnumString::DoDrives(BOOL bDirOnly)
             continue;
 
         sz[0] = (WCHAR)(L'A' + i);
-        AddString(sz);
+        if (!AddString(sz))
+            break;
+
         switch (GetDriveTypeW(sz))
         {
             case DRIVE_REMOTE: case DRIVE_RAMDISK: case DRIVE_FIXED:
@@ -303,8 +312,7 @@ void CAutoCompleteEnumString::DoURLHistory()
         result = RegQueryValueExW(hKey, szName, NULL, &dwType, (LPBYTE)szValue, &cbValue);
         if (result == ERROR_SUCCESS && dwType == REG_SZ && UrlIsW(szValue, URLIS_URL))
         {
-            AddString(szValue);
-            if (m_strs.GetSize() >= MAX_ITEMS)
+            if (!AddString(szValue))
                 break;
         }
     }
@@ -345,8 +353,7 @@ void CAutoCompleteEnumString::DoURLMRU()
 
             if (UrlIsW(szValue, URLIS_URL))
             {
-                AddString(szValue);
-                if (m_strs.GetSize() >= MAX_ITEMS)
+                if (!AddString(szValue))
                     break;
             }
         }
