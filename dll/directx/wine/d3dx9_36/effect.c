@@ -1181,83 +1181,6 @@ static HRESULT set_string(char **param_data, const char *string)
     return D3D_OK;
 }
 
-static HRESULT d3dx9_base_effect_set_value(struct d3dx9_base_effect *base,
-        D3DXHANDLE parameter, const void *data, UINT bytes)
-{
-    struct d3dx_parameter *param = get_valid_parameter(base, parameter);
-    unsigned int i;
-
-    if (!param)
-    {
-        WARN("Invalid parameter %p specified\n", parameter);
-        return D3DERR_INVALIDCALL;
-    }
-
-    /* samplers don't touch data */
-    if (param->class == D3DXPC_OBJECT && is_param_type_sampler(param->type))
-    {
-        TRACE("Sampler: returning E_FAIL\n");
-        return E_FAIL;
-    }
-
-    if (data && param->bytes <= bytes)
-    {
-        switch (param->type)
-        {
-            case D3DXPT_TEXTURE:
-            case D3DXPT_TEXTURE1D:
-            case D3DXPT_TEXTURE2D:
-            case D3DXPT_TEXTURE3D:
-            case D3DXPT_TEXTURECUBE:
-                for (i = 0; i < (param->element_count ? param->element_count : 1); ++i)
-                {
-                    IUnknown *old_texture = ((IUnknown **)param->data)[i];
-                    IUnknown *new_texture = ((IUnknown **)data)[i];
-
-                    if (new_texture == old_texture)
-                        continue;
-
-                    if (new_texture)
-                        IUnknown_AddRef(new_texture);
-                    if (old_texture)
-                        IUnknown_Release(old_texture);
-                }
-            /* fallthrough */
-            case D3DXPT_VOID:
-            case D3DXPT_BOOL:
-            case D3DXPT_INT:
-            case D3DXPT_FLOAT:
-                TRACE("Copy %u bytes.\n", param->bytes);
-                memcpy(param->data, data, param->bytes);
-                set_dirty(param);
-                break;
-
-            case D3DXPT_STRING:
-            {
-                HRESULT hr;
-
-                set_dirty(param);
-                for (i = 0; i < (param->element_count ? param->element_count : 1); ++i)
-                {
-                    if (FAILED(hr = set_string(&((char **)param->data)[i], ((const char **)data)[i])))
-                        return hr;
-                }
-                break;
-            }
-
-            default:
-                FIXME("Unhandled type %s.\n", debug_d3dxparameter_type(param->type));
-                break;
-        }
-
-        return D3D_OK;
-    }
-
-    WARN("Invalid argument specified\n");
-
-    return D3DERR_INVALIDCALL;
-}
-
 static HRESULT d3dx9_base_effect_set_vector(struct d3dx9_base_effect *base,
         D3DXHANDLE parameter, const D3DXVECTOR4 *vector)
 {
@@ -2546,10 +2469,76 @@ static HRESULT WINAPI d3dx_effect_SetValue(ID3DXEffect *iface, D3DXHANDLE parame
         const void *data, UINT bytes)
 {
     struct d3dx_effect *effect = impl_from_ID3DXEffect(iface);
+    struct d3dx_parameter *param = get_valid_parameter(&effect->base_effect, parameter);
+    unsigned int i;
 
     TRACE("iface %p, parameter %p, data %p, bytes %u.\n", iface, parameter, data, bytes);
 
-    return d3dx9_base_effect_set_value(&effect->base_effect, parameter, data, bytes);
+    if (!param)
+    {
+        WARN("Invalid parameter %p specified.\n", parameter);
+        return D3DERR_INVALIDCALL;
+    }
+    if (param->class == D3DXPC_OBJECT && is_param_type_sampler(param->type))
+    {
+        WARN("Parameter is a sampler, returning E_FAIL.\n");
+        return E_FAIL;
+    }
+
+    if (data && param->bytes <= bytes)
+    {
+        switch (param->type)
+        {
+            case D3DXPT_TEXTURE:
+            case D3DXPT_TEXTURE1D:
+            case D3DXPT_TEXTURE2D:
+            case D3DXPT_TEXTURE3D:
+            case D3DXPT_TEXTURECUBE:
+                for (i = 0; i < (param->element_count ? param->element_count : 1); ++i)
+                {
+                    IUnknown *old_texture = ((IUnknown **)param->data)[i];
+                    IUnknown *new_texture = ((IUnknown **)data)[i];
+
+                    if (new_texture == old_texture)
+                        continue;
+
+                    if (new_texture)
+                        IUnknown_AddRef(new_texture);
+                    if (old_texture)
+                        IUnknown_Release(old_texture);
+                }
+            /* fallthrough */
+            case D3DXPT_VOID:
+            case D3DXPT_BOOL:
+            case D3DXPT_INT:
+            case D3DXPT_FLOAT:
+                TRACE("Copy %u bytes.\n", param->bytes);
+                memcpy(param->data, data, param->bytes);
+                set_dirty(param);
+                break;
+
+            case D3DXPT_STRING:
+            {
+                HRESULT hr;
+
+                set_dirty(param);
+                for (i = 0; i < (param->element_count ? param->element_count : 1); ++i)
+                    if (FAILED(hr = set_string(&((char **)param->data)[i], ((const char **)data)[i])))
+                        return hr;
+                break;
+            }
+
+            default:
+                FIXME("Unhandled type %s.\n", debug_d3dxparameter_type(param->type));
+                break;
+        }
+
+        return D3D_OK;
+    }
+
+    WARN("Invalid argument specified.\n");
+
+    return D3DERR_INVALIDCALL;
 }
 
 static HRESULT WINAPI d3dx_effect_GetValue(ID3DXEffect *iface, D3DXHANDLE parameter, void *data, UINT bytes)
