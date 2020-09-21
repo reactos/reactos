@@ -1586,24 +1586,6 @@ static HRESULT d3dx9_base_effect_get_texture(struct d3dx9_base_effect *base,
     return D3DERR_INVALIDCALL;
 }
 
-static HRESULT d3dx9_base_effect_get_pixel_shader(struct d3dx9_base_effect *base,
-        D3DXHANDLE parameter, struct IDirect3DPixelShader9 **shader)
-{
-    struct d3dx_parameter *param = get_valid_parameter(base, parameter);
-
-    if (shader && param && !param->element_count && param->type == D3DXPT_PIXELSHADER)
-    {
-        if ((*shader = *(struct IDirect3DPixelShader9 **)param->data))
-            IDirect3DPixelShader9_AddRef(*shader);
-        TRACE("Returning %p.\n", *shader);
-        return D3D_OK;
-    }
-
-    WARN("Parameter not found.\n");
-
-    return D3DERR_INVALIDCALL;
-}
-
 static HRESULT d3dx9_base_effect_get_vertex_shader(struct d3dx9_base_effect *base,
         D3DXHANDLE parameter, struct IDirect3DVertexShader9 **shader)
 {
@@ -3610,13 +3592,24 @@ static HRESULT WINAPI d3dx_effect_GetTexture(struct ID3DXEffect *iface, D3DXHAND
 }
 
 static HRESULT WINAPI d3dx_effect_GetPixelShader(ID3DXEffect *iface, D3DXHANDLE parameter,
-        struct IDirect3DPixelShader9 **shader)
+        IDirect3DPixelShader9 **shader)
 {
     struct d3dx_effect *effect = impl_from_ID3DXEffect(iface);
+    struct d3dx_parameter *param = get_valid_parameter(&effect->base_effect, parameter);
 
     TRACE("iface %p, parameter %p, shader %p.\n", iface, parameter, shader);
 
-    return d3dx9_base_effect_get_pixel_shader(&effect->base_effect, parameter, shader);
+    if (shader && param && !param->element_count && param->type == D3DXPT_PIXELSHADER)
+    {
+        if ((*shader = *(IDirect3DPixelShader9 **)param->data))
+            IDirect3DPixelShader9_AddRef(*shader);
+        TRACE("Returning %p.\n", *shader);
+        return D3D_OK;
+    }
+
+    WARN("Parameter not found.\n");
+
+    return D3DERR_INVALIDCALL;
 }
 
 static HRESULT WINAPI d3dx_effect_GetVertexShader(struct ID3DXEffect *iface, D3DXHANDLE parameter,
