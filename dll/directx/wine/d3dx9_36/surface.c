@@ -260,7 +260,7 @@ HRESULT lock_surface(IDirect3DSurface9 *surface, const RECT *surface_rect, D3DLO
     return hr;
 }
 
-HRESULT unlock_surface(IDirect3DSurface9 *surface, const RECT *surface_rect, D3DLOCKED_RECT *lock,
+HRESULT unlock_surface(IDirect3DSurface9 *surface, const RECT *surface_rect,
         IDirect3DSurface9 *temp_surface, BOOL update)
 {
     IDirect3DDevice9 *device;
@@ -612,7 +612,7 @@ static HRESULT save_dds_surface_to_memory(ID3DXBuffer **dst_buffer, IDirect3DSur
     copy_pixels(locked_rect.pBits, locked_rect.Pitch, 0, pixels, dst_pitch, 0,
         &volume, pixel_format);
 
-    unlock_surface(src_surface, NULL, &locked_rect, temp_surface, FALSE);
+    unlock_surface(src_surface, NULL, temp_surface, FALSE);
 
     *dst_buffer = buffer;
     return D3D_OK;
@@ -1916,7 +1916,7 @@ HRESULT WINAPI D3DXLoadSurfaceFromMemory(IDirect3DSurface9 *dst_surface,
                     && src_size.height != surfdesc.Height))
         {
             WARN("Source rect %s is misaligned.\n", wine_dbgstr_rect(src_rect));
-            unlock_surface(dst_surface, dst_rect, &lockrect, surface, FALSE);
+            unlock_surface(dst_surface, dst_rect, surface, FALSE);
             return D3DXERR_INVALIDDATA;
         }
 
@@ -1929,7 +1929,7 @@ HRESULT WINAPI D3DXLoadSurfaceFromMemory(IDirect3DSurface9 *dst_surface,
                 || !is_conversion_to_supported(destformatdesc))
         {
             FIXME("Unsupported format conversion %#x -> %#x.\n", src_format, surfdesc.Format);
-            unlock_surface(dst_surface, dst_rect, &lockrect, surface, FALSE);
+            unlock_surface(dst_surface, dst_rect, surface, FALSE);
             return E_NOTIMPL;
         }
 
@@ -1950,7 +1950,7 @@ HRESULT WINAPI D3DXLoadSurfaceFromMemory(IDirect3DSurface9 *dst_surface,
         }
     }
 
-    return unlock_surface(dst_surface, dst_rect, &lockrect, surface, TRUE);
+    return unlock_surface(dst_surface, dst_rect, surface, TRUE);
 }
 
 /************************************************************
@@ -2040,7 +2040,7 @@ HRESULT WINAPI D3DXLoadSurfaceFromSurface(IDirect3DSurface9 *dst_surface,
     hr = D3DXLoadSurfaceFromMemory(dst_surface, dst_palette, dst_rect, lock.pBits,
             src_desc.Format, lock.Pitch, src_palette, src_rect, filter, color_key);
 
-    if (FAILED(unlock_surface(src_surface, NULL, &lock, temp_surface, FALSE)))
+    if (FAILED(unlock_surface(src_surface, NULL, temp_surface, FALSE)))
         return D3DXERR_INVALIDDATA;
 
     return hr;
@@ -2221,7 +2221,7 @@ HRESULT WINAPI D3DXSaveSurfaceToFileInMemory(ID3DXBuffer **dst_buffer, D3DXIMAGE
 
             IWICBitmapFrameEncode_WritePixels(frame, height,
                 locked_rect.Pitch, height * locked_rect.Pitch, locked_rect.pBits);
-            unlock_surface(src_surface, src_rect, &locked_rect, temp_surface, FALSE);
+            unlock_surface(src_surface, src_rect, temp_surface, FALSE);
         }
         else /* Pixel format conversion */
         {
@@ -2258,7 +2258,7 @@ HRESULT WINAPI D3DXSaveSurfaceToFileInMemory(ID3DXBuffer **dst_buffer, D3DXIMAGE
             }
             convert_argb_pixels(locked_rect.pBits, locked_rect.Pitch, 0, &size, src_format_desc,
                 dst_data, dst_pitch, 0, &size, dst_format_desc, 0, NULL);
-            unlock_surface(src_surface, src_rect, &locked_rect, temp_surface, FALSE);
+            unlock_surface(src_surface, src_rect, temp_surface, FALSE);
 
             IWICBitmapFrameEncode_WritePixels(frame, height, dst_pitch, dst_pitch * height, dst_data);
             HeapFree(GetProcessHeap(), 0, dst_data);

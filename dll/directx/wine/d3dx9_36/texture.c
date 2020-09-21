@@ -1383,7 +1383,7 @@ HRESULT WINAPI D3DXFillTexture(struct IDirect3DTexture9 *texture, LPD3DXFILL2D f
                 fill_texture(format, data + y * lock_rect.Pitch + x * format->bytes_per_pixel, &value);
             }
         }
-        if (FAILED(hr = unlock_surface(surface, NULL, &lock_rect, temp_surface, TRUE)))
+        if (FAILED(hr = unlock_surface(surface, NULL, temp_surface, TRUE)))
         {
             IDirect3DSurface9_Release(surface);
             return hr;
