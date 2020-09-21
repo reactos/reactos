@@ -34,6 +34,7 @@
 #define INT_FLOAT_MULTI_INVERSE (1/INT_FLOAT_MULTI)
 
 static const char parameter_magic_string[4] = {'@', '!', '#', '\xFF'};
+static const char parameter_block_magic_string[4] = {'@', '!', '#', '\xFE'};
 
 #define PARAMETER_FLAG_SHARED 1
 
@@ -151,6 +152,11 @@ struct d3dx_technique
     struct IDirect3DStateBlock9 *saved_state;
 };
 
+struct d3dx_parameter_block
+{
+    char magic_string[ARRAY_SIZE(parameter_block_magic_string)];
+};
+
 struct d3dx_effect
 {
     ID3DXEffect ID3DXEffect_iface;
@@ -181,6 +187,8 @@ struct d3dx_effect
     unsigned int light_updated;
     D3DMATERIAL9 current_material;
     BOOL material_updated;
+
+    struct d3dx_parameter_block *current_parameter_block;
 };
 
 #define INITIAL_SHARED_DATA_SIZE 4
@@ -672,12 +680,22 @@ static void free_technique(struct d3dx_technique *technique)
     technique->name = NULL;
 }
 
+static void free_parameter_block(struct d3dx_parameter_block *block)
+{
+    if (!block)
+        return;
+
+    heap_free(block);
+}
+
 static void d3dx_effect_cleanup(struct d3dx_effect *effect)
 {
     ID3DXEffectPool *pool;
     unsigned int i;
 
     TRACE("effect %p.\n", effect);
+
+    free_parameter_block(effect->current_parameter_block);
 
     heap_free(effect->full_name_tmp);
 
@@ -4049,11 +4067,21 @@ static HRESULT WINAPI d3dx_effect_GetStateManager(ID3DXEffect *iface, ID3DXEffec
 
 static HRESULT WINAPI d3dx_effect_BeginParameterBlock(ID3DXEffect *iface)
 {
-    struct d3dx_effect *This = impl_from_ID3DXEffect(iface);
+    struct d3dx_effect *effect = impl_from_ID3DXEffect(iface);
 
-    FIXME("(%p)->(): stub\n", This);
+    TRACE("iface %p.\n", iface);
 
-    return E_NOTIMPL;
+    if (effect->current_parameter_block)
+    {
+        WARN("Parameter block is already started.\n");
+        return D3DERR_INVALIDCALL;
+    }
+
+    effect->current_parameter_block = heap_alloc_zero(sizeof(*effect->current_parameter_block));
+    memcpy(effect->current_parameter_block->magic_string, parameter_block_magic_string,
+            sizeof(parameter_block_magic_string));
+
+    return D3D_OK;
 }
 
 static D3DXHANDLE WINAPI d3dx_effect_EndParameterBlock(ID3DXEffect *iface)

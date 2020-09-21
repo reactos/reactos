@@ -8080,9 +8080,9 @@ static void test_effect_parameter_block(void)
     ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
 
     hr = effect->lpVtbl->BeginParameterBlock(effect);
-    todo_wine ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
+    ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
     hr = effect->lpVtbl->BeginParameterBlock(effect);
-    todo_wine ok(hr == D3DERR_INVALIDCALL, "Got unexpected hr %#x.\n", hr);
+    ok(hr == D3DERR_INVALIDCALL, "Got unexpected hr %#x.\n", hr);
     block = effect->lpVtbl->EndParameterBlock(effect);
     todo_wine ok(!!block, "Got unexpected block %p.\n", block);
     handle = effect->lpVtbl->EndParameterBlock(effect);
