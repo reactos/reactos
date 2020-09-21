@@ -152,11 +152,9 @@ struct d3dx_technique
     struct IDirect3DStateBlock9 *saved_state;
 };
 
-#define ID3DXEffectImpl d3dx_effect
-
 struct d3dx9_base_effect
 {
-    struct ID3DXEffectImpl *effect;
+    struct d3dx_effect *effect;
 
     UINT parameter_count;
     UINT technique_count;
@@ -722,7 +720,7 @@ static void d3dx9_base_effect_cleanup(struct d3dx9_base_effect *base)
     }
 }
 
-static void free_effect(struct ID3DXEffectImpl *effect)
+static void free_effect(struct d3dx_effect *effect)
 {
     TRACE("Free effect %p\n", effect);
 
@@ -2845,7 +2843,7 @@ static void d3dx9_set_material_parameter(enum MATERIAL_TYPE op, D3DMATERIAL9 *ma
     }
 }
 
-static HRESULT d3dx_set_shader_const_state(struct ID3DXEffectImpl *effect, enum SHADER_CONSTANT_TYPE op, UINT index,
+static HRESULT d3dx_set_shader_const_state(struct d3dx_effect *effect, enum SHADER_CONSTANT_TYPE op, UINT index,
         struct d3dx_parameter *param, void *value_ptr)
 {
     static const struct
@@ -2944,10 +2942,10 @@ static HRESULT d3dx_set_shader_const_state(struct ID3DXEffectImpl *effect, enum 
     return ret;
 }
 
-static HRESULT d3dx9_apply_state(struct ID3DXEffectImpl *effect, struct d3dx_pass *pass,
+static HRESULT d3dx9_apply_state(struct d3dx_effect *effect, struct d3dx_pass *pass,
         struct d3dx_state *state, unsigned int parent_index, BOOL update_all);
 
-static HRESULT d3dx_set_shader_constants(struct ID3DXEffectImpl *effect, struct d3dx_pass *pass,
+static HRESULT d3dx_set_shader_constants(struct d3dx_effect *effect, struct d3dx_pass *pass,
         struct d3dx_parameter *param, BOOL vs, BOOL update_all)
 {
     HRESULT hr, ret;
@@ -2993,7 +2991,7 @@ static HRESULT d3dx_set_shader_constants(struct ID3DXEffectImpl *effect, struct 
     return ret;
 }
 
-static HRESULT d3dx9_apply_state(struct ID3DXEffectImpl *effect, struct d3dx_pass *pass,
+static HRESULT d3dx9_apply_state(struct d3dx_effect *effect, struct d3dx_pass *pass,
         struct d3dx_state *state, unsigned int parent_index, BOOL update_all)
 {
     struct d3dx_parameter *param;
@@ -3129,7 +3127,7 @@ static HRESULT d3dx9_apply_state(struct ID3DXEffectImpl *effect, struct d3dx_pas
     return D3D_OK;
 }
 
-static HRESULT d3dx9_apply_pass_states(struct ID3DXEffectImpl *effect, struct d3dx_pass *pass, BOOL update_all)
+static HRESULT d3dx9_apply_pass_states(struct d3dx_effect *effect, struct d3dx_pass *pass, BOOL update_all)
 {
     unsigned int i;
     HRESULT ret;
@@ -6544,7 +6542,7 @@ static const char **parse_skip_constants_string(char *skip_constants_string, uns
 
 static HRESULT d3dx9_base_effect_init(struct d3dx9_base_effect *base,
         const char *data, SIZE_T data_size, const D3D_SHADER_MACRO *defines, ID3DInclude *include,
-        UINT eflags, ID3DBlob **errors, struct ID3DXEffectImpl *effect, struct d3dx_effect_pool *pool,
+        UINT eflags, ID3DBlob **errors, struct d3dx_effect *effect, struct d3dx_effect_pool *pool,
         const char *skip_constants_string)
 {
     DWORD tag, offset;
@@ -6687,7 +6685,7 @@ static HRESULT d3dx9_base_effect_init(struct d3dx9_base_effect *base,
     return D3D_OK;
 }
 
-static HRESULT d3dx9_effect_init(struct ID3DXEffectImpl *effect, struct IDirect3DDevice9 *device,
+static HRESULT d3dx9_effect_init(struct d3dx_effect *effect, struct IDirect3DDevice9 *device,
         const char *data, SIZE_T data_size, const D3D_SHADER_MACRO *defines, ID3DInclude *include,
         UINT eflags, ID3DBlob **error_messages, struct ID3DXEffectPool *pool, const char *skip_constants)
 {
@@ -6731,7 +6729,7 @@ HRESULT WINAPI D3DXCreateEffectEx(struct IDirect3DDevice9 *device, const void *s
         const D3DXMACRO *defines, struct ID3DXInclude *include, const char *skip_constants, DWORD flags,
         struct ID3DXEffectPool *pool, struct ID3DXEffect **effect, struct ID3DXBuffer **compilation_errors)
 {
-    struct ID3DXEffectImpl *object;
+    struct d3dx_effect *object;
     HRESULT hr;
 
     TRACE("device %p, srcdata %p, srcdatalen %u, defines %p, include %p,"
