@@ -6307,7 +6307,6 @@ static HRESULT d3dx9_base_effect_init(struct d3dx9_base_effect *base,
                             debugstr_a(skip_constants[i]), j);
                     HeapFree(GetProcessHeap(), 0, skip_constants_buffer);
                     HeapFree(GetProcessHeap(), 0, skip_constants);
-                    d3dx9_base_effect_cleanup(effect);
                     return D3DERR_INVALIDCALL;
                 }
             }
