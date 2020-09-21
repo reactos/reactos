@@ -1202,14 +1202,6 @@ static HRESULT d3dx9_base_effect_get_pass_desc(struct d3dx9_base_effect *base,
     return D3D_OK;
 }
 
-static HRESULT d3dx9_base_effect_get_function_desc(struct d3dx9_base_effect *base,
-        D3DXHANDLE shader, D3DXFUNCTION_DESC *desc)
-{
-    FIXME("stub!\n");
-
-    return E_NOTIMPL;
-}
-
 static D3DXHANDLE d3dx9_base_effect_get_parameter(struct d3dx9_base_effect *base,
         D3DXHANDLE parameter, UINT index)
 {
@@ -1409,20 +1401,6 @@ static D3DXHANDLE d3dx9_base_effect_get_pass_by_name(struct d3dx9_base_effect *b
     }
 
     WARN("Pass not found.\n");
-
-    return NULL;
-}
-
-static D3DXHANDLE d3dx9_base_effect_get_function(struct d3dx9_base_effect *base, UINT index)
-{
-    FIXME("stub!\n");
-
-    return NULL;
-}
-
-static D3DXHANDLE d3dx9_base_effect_get_function_by_name(struct d3dx9_base_effect *base, const char *name)
-{
-    FIXME("stub!\n");
 
     return NULL;
 }
@@ -2776,14 +2754,6 @@ static HRESULT d3dx9_base_effect_get_vertex_shader(struct d3dx9_base_effect *bas
     return D3DERR_INVALIDCALL;
 }
 
-static HRESULT d3dx9_base_effect_set_array_range(struct d3dx9_base_effect *base,
-        D3DXHANDLE parameter, UINT start, UINT end)
-{
-    FIXME("stub!\n");
-
-    return E_NOTIMPL;
-}
-
 static void d3dx9_set_light_parameter(enum LIGHT_TYPE op, D3DLIGHT9 *light, void *value)
 {
     static const struct
@@ -3490,11 +3460,9 @@ static HRESULT WINAPI d3dx_effect_GetPassDesc(ID3DXEffect *iface, D3DXHANDLE pas
 static HRESULT WINAPI d3dx_effect_GetFunctionDesc(ID3DXEffect *iface, D3DXHANDLE shader,
         D3DXFUNCTION_DESC *desc)
 {
-    struct ID3DXEffectImpl *effect = impl_from_ID3DXEffect(iface);
+    FIXME("iface %p, shader %p, desc %p stub.\n", iface, shader, desc);
 
-    TRACE("iface %p, shader %p, desc %p.\n", iface, shader, desc);
-
-    return d3dx9_base_effect_get_function_desc(&effect->base_effect, shader, desc);
+    return E_NOTIMPL;
 }
 
 static D3DXHANDLE WINAPI d3dx_effect_GetParameter(ID3DXEffect *iface, D3DXHANDLE parameter, UINT index)
@@ -3573,20 +3541,16 @@ static D3DXHANDLE WINAPI d3dx_effect_GetPassByName(ID3DXEffect *iface, D3DXHANDL
 
 static D3DXHANDLE WINAPI d3dx_effect_GetFunction(ID3DXEffect *iface, UINT index)
 {
-    struct ID3DXEffectImpl *effect = impl_from_ID3DXEffect(iface);
+    FIXME("iface %p, index %u stub.\n", iface, index);
 
-    TRACE("iface %p, index %u.\n", iface, index);
-
-    return d3dx9_base_effect_get_function(&effect->base_effect, index);
+    return NULL;
 }
 
 static D3DXHANDLE WINAPI d3dx_effect_GetFunctionByName(ID3DXEffect *iface, const char *name)
 {
-    struct ID3DXEffectImpl *effect = impl_from_ID3DXEffect(iface);
+    FIXME("iface %p, name %s stub.\n", iface, debugstr_a(name));
 
-    TRACE("iface %p, name %s.\n", iface, debugstr_a(name));
-
-    return d3dx9_base_effect_get_function_by_name(&effect->base_effect, name);
+    return NULL;
 }
 
 static D3DXHANDLE WINAPI d3dx_effect_GetAnnotation(ID3DXEffect *iface, D3DXHANDLE object, UINT index)
@@ -3952,11 +3916,9 @@ static HRESULT WINAPI d3dx_effect_GetVertexShader(struct ID3DXEffect *iface, D3D
 
 static HRESULT WINAPI d3dx_effect_SetArrayRange(ID3DXEffect *iface, D3DXHANDLE parameter, UINT start, UINT end)
 {
-    struct ID3DXEffectImpl *effect = impl_from_ID3DXEffect(iface);
+    FIXME("iface %p, parameter %p, start %u, end %u stub.\n", iface, parameter, start, end);
 
-    TRACE("iface %p, parameter %p, start %u, end %u.\n", iface, parameter, start, end);
-
-    return d3dx9_base_effect_set_array_range(&effect->base_effect, parameter, start, end);
+    return E_NOTIMPL;
 }
 
 /*** ID3DXEffect methods ***/
