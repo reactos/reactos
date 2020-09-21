@@ -1147,14 +1147,14 @@ static BOOL walk_parameter_tree(struct d3dx_parameter *param, walk_parameter_dep
     return FALSE;
 }
 
-static ULONG64 *get_version_counter_ptr(struct d3dx9_base_effect *base)
+static ULONG64 *get_version_counter_ptr(struct d3dx_effect *effect)
 {
-    return base->pool ? &base->pool->version_counter : &base->version_counter;
+    return effect->base_effect.pool ? &effect->base_effect.pool->version_counter : &effect->base_effect.version_counter;
 }
 
-static ULONG64 next_effect_update_version(struct d3dx9_base_effect *base)
+static ULONG64 next_effect_update_version(struct d3dx_effect *effect)
 {
-    return next_update_version(get_version_counter_ptr(base));
+    return next_update_version(get_version_counter_ptr(effect));
 }
 
 static void set_dirty(struct d3dx_parameter *param)
@@ -1581,7 +1581,7 @@ static HRESULT d3dx9_apply_pass_states(struct d3dx_effect *effect, struct d3dx_p
     unsigned int i;
     HRESULT ret;
     HRESULT hr;
-    ULONG64 new_update_version = next_effect_update_version(&effect->base_effect);
+    ULONG64 new_update_version = next_effect_update_version(effect);
 
     TRACE("effect %p, pass %p, state_count %u.\n", effect, pass, pass->state_count);
 
@@ -5749,7 +5749,7 @@ static HRESULT d3dx_parse_array_selector(struct d3dx_effect *effect, struct d3dx
         FIXME("Unaligned string_size %u.\n", string_size);
     if (FAILED(ret = d3dx_create_param_eval(base, (DWORD *)(ptr + string_size) + 1,
             object->size - (string_size + sizeof(DWORD)), D3DXPT_INT, &param->param_eval,
-            get_version_counter_ptr(base), NULL, 0)))
+            get_version_counter_ptr(effect), NULL, 0)))
         return ret;
     ret = D3D_OK;
     param = state->referenced_param;
@@ -5769,7 +5769,7 @@ static HRESULT d3dx_parse_array_selector(struct d3dx_effect *effect, struct d3dx
                 TRACE("Creating preshader for object %u.\n", param->members[i].object_id);
                 object = &effect->objects[param->members[i].object_id];
                 if (FAILED(ret = d3dx_create_param_eval(base, object->data, object->size, param->type,
-                        &param->members[i].param_eval, get_version_counter_ptr(base),
+                        &param->members[i].param_eval, get_version_counter_ptr(effect),
                         skip_constants, skip_constants_count)))
                     break;
             }
@@ -5888,7 +5888,7 @@ static HRESULT d3dx_parse_resource(struct d3dx_effect *effect, const char *data,
                         if (FAILED(hr = d3dx9_create_object(base, object)))
                             return hr;
                         if (FAILED(hr = d3dx_create_param_eval(base, object->data, object->size, param->type,
-                                &param->param_eval, get_version_counter_ptr(base),
+                                &param->param_eval, get_version_counter_ptr(effect),
                                 skip_constants, skip_constants_count)))
                             return hr;
                     }
@@ -5902,7 +5902,7 @@ static HRESULT d3dx_parse_resource(struct d3dx_effect *effect, const char *data,
                     if (FAILED(hr = d3dx9_copy_data(effect, param->object_id, ptr)))
                         return hr;
                     if (FAILED(hr = d3dx_create_param_eval(base, object->data, object->size, param->type,
-                            &param->param_eval, get_version_counter_ptr(base), NULL, 0)))
+                            &param->param_eval, get_version_counter_ptr(effect), NULL, 0)))
                         return hr;
                     break;
 
@@ -5931,7 +5931,7 @@ static HRESULT d3dx_parse_resource(struct d3dx_effect *effect, const char *data,
                     if (!refpar->param_eval)
                     {
                         if (FAILED(hr = d3dx_create_param_eval(base, refobj->data, refobj->size,
-                                refpar->type, &refpar->param_eval, get_version_counter_ptr(base),
+                                refpar->type, &refpar->param_eval, get_version_counter_ptr(effect),
                                 skip_constants, skip_constants_count)))
                             return hr;
                     }
