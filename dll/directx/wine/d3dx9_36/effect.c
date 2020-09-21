@@ -6146,32 +6146,46 @@ static const char **parse_skip_constants_string(char *skip_constants_string, uns
     return new_alloc;
 }
 
-static HRESULT d3dx9_base_effect_init(struct d3dx_effect *effect, const char *data, SIZE_T data_size,
-        const D3D_SHADER_MACRO *defines, ID3DInclude *include, unsigned int eflags, ID3DBlob **errors,
-        struct d3dx_effect_pool *pool, const char *skip_constants_string)
+static HRESULT d3dx9_effect_init(struct d3dx_effect *effect, struct IDirect3DDevice9 *device,
+        const char *data, SIZE_T data_size, const D3D_SHADER_MACRO *defines, ID3DInclude *include,
+        UINT eflags, ID3DBlob **errors, struct ID3DXEffectPool *pool, const char *skip_constants_string)
 {
-    struct d3dx9_base_effect *base = &effect->base_effect;
-    DWORD tag, offset;
-    const char *ptr = data;
-    HRESULT hr;
-    ID3DBlob *bytecode = NULL, *temp_errors = NULL;
-    char *skip_constants_buffer = NULL;
-    const char **skip_constants = NULL;
-    unsigned int skip_constants_count = 0;
 #if D3DX_SDK_VERSION <= 36
     UINT compile_flags = D3DCOMPILE_ENABLE_BACKWARDS_COMPATIBILITY;
 #else
     UINT compile_flags = 0;
 #endif
+    struct d3dx9_base_effect *base = &effect->base_effect;
+    ID3DBlob *bytecode = NULL, *temp_errors = NULL;
+    struct d3dx_effect_pool *pool_impl = NULL;
+    unsigned int skip_constants_count = 0;
+    char *skip_constants_buffer = NULL;
+    const char **skip_constants = NULL;
+    const char *ptr = data;
+    DWORD tag, offset;
     unsigned int i, j;
+    HRESULT hr;
 
-    TRACE("effect %p, data %p, data_size %lu, defines %p, include %p, eflags %#x, errors %p, "
+    TRACE("effect %p, device %p, data %p, data_size %lu, defines %p, include %p, eflags %#x, errors %p, "
             "pool %p, skip_constants %s.\n",
-            effect, data, data_size, defines, include, eflags, errors, pool,
+            effect, device, data, data_size, defines, include, eflags, errors, pool,
             debugstr_a(skip_constants_string));
 
+    effect->ID3DXEffect_iface.lpVtbl = &ID3DXEffect_Vtbl;
+    effect->ref = 1;
+
+    if (pool)
+    {
+        pool->lpVtbl->AddRef(pool);
+        pool_impl = impl_from_ID3DXEffectPool(pool);
+    }
+    effect->pool = pool;
+
+    IDirect3DDevice9_AddRef(device);
+    effect->device = device;
+
     base->effect = effect;
-    base->pool = pool;
+    base->pool = pool_impl;
     base->flags = eflags;
 
     read_dword(&ptr, &tag);
@@ -6287,38 +6301,6 @@ static HRESULT d3dx9_base_effect_init(struct d3dx_effect *effect, const char *da
     HeapFree(GetProcessHeap(), 0, skip_constants_buffer);
     HeapFree(GetProcessHeap(), 0, skip_constants);
 
-    return D3D_OK;
-}
-
-static HRESULT d3dx9_effect_init(struct d3dx_effect *effect, struct IDirect3DDevice9 *device,
-        const char *data, SIZE_T data_size, const D3D_SHADER_MACRO *defines, ID3DInclude *include,
-        UINT eflags, ID3DBlob **error_messages, struct ID3DXEffectPool *pool, const char *skip_constants)
-{
-    HRESULT hr;
-    struct d3dx_effect_pool *pool_impl = NULL;
-
-    TRACE("effect %p, device %p, data %p, data_size %lu, pool %p\n", effect, device, data, data_size, pool);
-
-    effect->ID3DXEffect_iface.lpVtbl = &ID3DXEffect_Vtbl;
-    effect->ref = 1;
-
-    if (pool)
-    {
-        pool->lpVtbl->AddRef(pool);
-        pool_impl = impl_from_ID3DXEffectPool(pool);
-    }
-    effect->pool = pool;
-
-    IDirect3DDevice9_AddRef(device);
-    effect->device = device;
-
-    if (FAILED(hr = d3dx9_base_effect_init(effect, data, data_size, defines, include, eflags,
-            error_messages, pool_impl, skip_constants)))
-    {
-        FIXME("Failed to parse effect, hr %#x.\n", hr);
-        return hr;
-    }
-
     /* initialize defaults - check because of unsupported ascii effects */
     if (effect->techniques)
     {
@@ -6362,7 +6344,7 @@ HRESULT WINAPI D3DXCreateEffectEx(struct IDirect3DDevice9 *device, const void *s
             (ID3DInclude *)include, flags, (ID3DBlob **)compilation_errors, pool, skip_constants);
     if (FAILED(hr))
     {
-        WARN("Failed to create effect object.\n");
+        WARN("Failed to create effect object, hr %#x.\n", hr);
         d3dx_effect_cleanup(object);
         return hr;
     }
