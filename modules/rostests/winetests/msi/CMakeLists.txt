@@ -1,17 +1,4 @@
 
-add_definitions(
-    -DUSE_WINE_TODOS
-    -D__WINESRC__)
-
-if(MSVC_IDE)
-    # msi_winetest.rc: let rc.exe find custom.dll in its subdirectory, i.e. Debug.
-    include_directories($<TARGET_FILE_DIR:custom>)
-endif()
-
-if(GCC)
-    add_compile_flags("-Wno-format-overflow")
-endif()
-
 spec2def(custom.dll custom.spec)
 add_library(custom MODULE custom.c ${CMAKE_CURRENT_BINARY_DIR}/custom.def)
 target_link_libraries(custom uuid)
@@ -42,6 +29,17 @@ add_executable(msi_winetest
     ${SOURCE}
     ${PCH_SKIP_SOURCE}
     msi_winetest.rc)
+
+target_compile_definitions(msi_winetest PRIVATE __WINESRC__ USE_WINE_TODOS)
+
+if (NOT MSVC)
+    target_compile_options(msi_winetest PRIVATE -Wno-format-overflow)
+endif()
+
+# msi_winetest.rc: let rc.exe find custom.dll in its subdirectory, i.e. Debug.
+if (MSVC_IDE)
+    target_include_directories(msi_winetest PRIVATE $<$<COMPILE_LANGUAGE:RC>:$<TARGET_FILE_DIR:custom>>)
+endif()
 
 target_link_libraries(msi_winetest uuid)
 set_module_type(msi_winetest win32cui)

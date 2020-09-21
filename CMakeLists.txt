@@ -58,7 +58,7 @@ else()
 endif()
 
 if(MSVC_IDE)
-    add_compile_flags("/MP")
+    add_compile_options("/MP")
 endif()
 
 # Bison and Flex support

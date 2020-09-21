@@ -8,7 +8,7 @@ endif()
 
 if(MSVC)
     # Explicitly use string pooling
-    add_compile_flags("/GF")
+    add_compile_options("/GF")
 endif()
 
 spec2def(freeldr_pe.exe freeldr.spec)
