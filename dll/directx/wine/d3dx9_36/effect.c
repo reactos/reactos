@@ -1208,25 +1208,6 @@ static D3DXHANDLE d3dx9_base_effect_get_parameter(struct d3dx9_base_effect *base
     return NULL;
 }
 
-static D3DXHANDLE d3dx9_base_effect_get_parameter_by_name(struct d3dx9_base_effect *base,
-        D3DXHANDLE parameter, const char *name)
-{
-    struct d3dx_parameter *param = get_valid_parameter(base, parameter);
-    D3DXHANDLE handle;
-
-    if (!name)
-    {
-        handle = get_parameter_handle(param);
-        TRACE("Returning parameter %p.\n", handle);
-        return handle;
-    }
-
-    handle = get_parameter_handle(get_parameter_by_name(base, param, name));
-    TRACE("Returning parameter %p.\n", handle);
-
-    return handle;
-}
-
 static D3DXHANDLE d3dx9_base_effect_get_parameter_by_semantic(struct d3dx9_base_effect *base,
         D3DXHANDLE parameter, const char *semantic)
 {
@@ -3469,10 +3450,22 @@ static D3DXHANDLE WINAPI d3dx_effect_GetParameterByName(ID3DXEffect *iface, D3DX
         const char *name)
 {
     struct d3dx_effect *effect = impl_from_ID3DXEffect(iface);
+    struct d3dx_parameter *param = get_valid_parameter(&effect->base_effect, parameter);
+    D3DXHANDLE handle;
 
     TRACE("iface %p, parameter %p, name %s.\n", iface, parameter, debugstr_a(name));
 
-    return d3dx9_base_effect_get_parameter_by_name(&effect->base_effect, parameter, name);
+    if (!name)
+    {
+        handle = get_parameter_handle(param);
+        TRACE("Returning parameter %p.\n", handle);
+        return handle;
+    }
+
+    handle = get_parameter_handle(get_parameter_by_name(&effect->base_effect, param, name));
+    TRACE("Returning parameter %p.\n", handle);
+
+    return handle;
 }
 
 static D3DXHANDLE WINAPI d3dx_effect_GetParameterBySemantic(ID3DXEffect *iface, D3DXHANDLE parameter,
