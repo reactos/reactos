@@ -556,11 +556,11 @@ static void word_break(HDC hdc, const WCHAR *str, unsigned int *str_len,
     heap_free(sla);
 }
 
-static const WCHAR *read_line(HDC hdc, const WCHAR *str, int *count,
+static const WCHAR *read_line(HDC hdc, const WCHAR *str, unsigned int *count,
         WCHAR *dest, unsigned int *dest_len, int width, DWORD format, SIZE *size)
 {
+    unsigned int orig_count = *count;
     unsigned int i = 0;
-    int orig_count = *count;
     int num_fit;
 
     *dest_len = 0;
@@ -604,25 +604,25 @@ static const WCHAR *read_line(HDC hdc, const WCHAR *str, int *count,
 }
 
 static INT WINAPI ID3DXFontImpl_DrawTextW(ID3DXFont *iface, ID3DXSprite *sprite,
-        const WCHAR *string, INT count, RECT *rect, DWORD format, D3DCOLOR color)
+        const WCHAR *string, INT in_count, RECT *rect, DWORD format, D3DCOLOR color)
 {
     struct d3dx_font *font = impl_from_ID3DXFont(iface);
     ID3DXSprite *target = sprite;
-    WCHAR *line;
     RECT textrect = {0};
     int lh, x, y, width;
+    unsigned int count;
     int max_width = 0;
+    WCHAR *line;
     int ret = 0;
     SIZE size;
 
-    TRACE("iface %p, sprite %p, string %s, count %d, rect %s, format %#x, color 0x%08x.\n",
-          iface,  sprite, debugstr_wn(string, count), count, wine_dbgstr_rect(rect), format, color);
+    TRACE("iface %p, sprite %p, string %s, in_count %d, rect %s, format %#x, color 0x%08x.\n",
+          iface,  sprite, debugstr_wn(string, in_count), in_count, wine_dbgstr_rect(rect), format, color);
 
     if (!string)
         return 0;
 
-    if (count < 0)
-        count = lstrlenW(string);
+    count = in_count < 0 ? lstrlenW(string) : in_count;
 
     if (!count)
         return 0;
