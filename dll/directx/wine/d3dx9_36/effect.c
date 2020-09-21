@@ -584,9 +584,7 @@ static void free_parameter(struct d3dx_parameter *param, BOOL element, BOOL chil
         HeapFree(GetProcessHeap(), 0, param->members);
     }
 
-    if (param->full_name)
-        heap_free(param->full_name);
-
+    heap_free(param->full_name);
     free_parameter_data(param, child);
 
     /* only the parent has to release name and semantic */
