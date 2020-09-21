@@ -61,6 +61,7 @@ CAutoCompleteEnumString::CAutoCompleteEnumString(DWORD dwSHACF, HWND hwndEdit)
     , m_hwndEdit(hwndEdit)
     , m_dwSHACF(dwSHACF)
 {
+    Reset();
 }
 
 CAutoCompleteEnumString::CAutoCompleteEnumString(const CAutoCompleteEnumString& another)
@@ -430,18 +431,6 @@ AutoComplete_AdaptFlags(HWND hwndEdit, LPDWORD pdwACO, LPDWORD pdwSHACF)
     return TRUE;
 }
 
-static IEnumString *
-AutoComplete_CreateEnumString(IAutoComplete2 *pAC2, HWND hwndEdit, DWORD dwSHACF)
-{
-    CAutoCompleteEnumString *pEnum = new CAutoCompleteEnumString(dwSHACF, hwndEdit);
-    if (!pEnum)
-        return NULL;
-
-    IEnumString *ret = (IEnumString *)pEnum;
-    ret->Reset();
-    return ret;
-}
-
 /*************************************************************************
  *      SHAutoComplete  	[SHLWAPI.@]
  *
@@ -476,7 +465,7 @@ HRESULT WINAPI SHAutoComplete(HWND hwndEdit, DWORD dwFlags)
         return hr;
     }
 
-    pES = AutoComplete_CreateEnumString(pAC2, hwndEdit, dwFlags);
+    pES = new CAutoCompleteEnumString(dwSHACF, hwndEdit);
     if (!pES)
     {
         ERR("Creating IEnumString failed.\n");
