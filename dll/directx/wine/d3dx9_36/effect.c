@@ -1161,19 +1161,6 @@ static HRESULT d3dx9_base_effect_get_pass_desc(struct d3dx9_base_effect *base,
     return D3D_OK;
 }
 
-static D3DXHANDLE d3dx9_base_effect_get_technique(struct d3dx9_base_effect *base, UINT index)
-{
-    if (index >= base->technique_count)
-    {
-        WARN("Invalid argument specified.\n");
-        return NULL;
-    }
-
-    TRACE("Returning technique %p.\n", &base->techniques[index]);
-
-    return get_technique_handle(&base->techniques[index]);
-}
-
 static unsigned int get_annotation_from_object(struct d3dx_effect *effect, D3DXHANDLE object,
         struct d3dx_parameter **annotations)
 {
@@ -3360,7 +3347,15 @@ static D3DXHANDLE WINAPI d3dx_effect_GetTechnique(ID3DXEffect *iface, UINT index
 
     TRACE("iface %p, index %u.\n", iface, index);
 
-    return d3dx9_base_effect_get_technique(&effect->base_effect, index);
+    if (index >= effect->base_effect.technique_count)
+    {
+        WARN("Invalid argument specified.\n");
+        return NULL;
+    }
+
+    TRACE("Returning technique %p.\n", &effect->base_effect.techniques[index]);
+
+    return get_technique_handle(&effect->base_effect.techniques[index]);
 }
 
 static D3DXHANDLE WINAPI d3dx_effect_GetTechniqueByName(ID3DXEffect *iface, const char *name)
