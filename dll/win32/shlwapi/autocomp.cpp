@@ -5,7 +5,6 @@
  * COPYRIGHT:   Copyright 2020 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
-#define COBJMACROS
 #include <windef.h>
 #include <winreg.h>
 #include <shldisp.h>
