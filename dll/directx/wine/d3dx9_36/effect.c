@@ -1290,25 +1290,6 @@ static UINT get_annotation_from_object(struct d3dx9_base_effect *base,
     }
 }
 
-static D3DXHANDLE d3dx9_base_effect_get_annotation(struct d3dx9_base_effect *base,
-        D3DXHANDLE object, UINT index)
-{
-    struct d3dx_parameter *annotations = NULL;
-    UINT annotation_count = 0;
-
-    annotation_count = get_annotation_from_object(base, object, &annotations);
-
-    if (index < annotation_count)
-    {
-        TRACE("Returning parameter %p\n", &annotations[index]);
-        return get_parameter_handle(&annotations[index]);
-    }
-
-    WARN("Annotation not found.\n");
-
-    return NULL;
-}
-
 static D3DXHANDLE d3dx9_base_effect_get_annotation_by_name(struct d3dx9_base_effect *base,
         D3DXHANDLE object, const char *name)
 {
@@ -3517,10 +3498,22 @@ static D3DXHANDLE WINAPI d3dx_effect_GetFunctionByName(ID3DXEffect *iface, const
 static D3DXHANDLE WINAPI d3dx_effect_GetAnnotation(ID3DXEffect *iface, D3DXHANDLE object, UINT index)
 {
     struct d3dx_effect *effect = impl_from_ID3DXEffect(iface);
+    struct d3dx_parameter *annotations = NULL;
+    unsigned int annotation_count;
 
     TRACE("iface %p, object %p, index %u.\n", iface, object, index);
 
-    return d3dx9_base_effect_get_annotation(&effect->base_effect, object, index);
+    annotation_count = get_annotation_from_object(&effect->base_effect, object, &annotations);
+
+    if (index < annotation_count)
+    {
+        TRACE("Returning parameter %p\n", &annotations[index]);
+        return get_parameter_handle(&annotations[index]);
+    }
+
+    WARN("Annotation not found.\n");
+
+    return NULL;
 }
 
 static D3DXHANDLE WINAPI d3dx_effect_GetAnnotationByName(ID3DXEffect *iface, D3DXHANDLE object,
