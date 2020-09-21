@@ -166,7 +166,6 @@ struct d3dx9_base_effect
 
     ULONG64 version_counter;
 
-    struct wine_rb_tree param_tree;
     char *full_name_tmp;
     unsigned int full_name_tmp_size;
 };
@@ -180,6 +179,7 @@ struct d3dx_effect
     unsigned int parameter_count;
     unsigned int object_count;
     struct d3dx_object *objects;
+    struct wine_rb_tree param_tree;
 
     struct ID3DXEffectStateManager *manager;
     struct IDirect3DDevice9 *device;
@@ -907,6 +907,7 @@ static struct d3dx_parameter *get_annotation_by_name(struct d3dx_effect *effect,
 struct d3dx_parameter *get_parameter_by_name(struct d3dx9_base_effect *base,
         struct d3dx_parameter *parameter, const char *name)
 {
+    struct d3dx_effect *effect = base->effect;
     struct d3dx_parameter *temp_parameter;
     unsigned int name_len, param_name_len;
     unsigned int i, count, length;
@@ -921,7 +922,7 @@ struct d3dx_parameter *get_parameter_by_name(struct d3dx9_base_effect *base,
 
     if (!parameter)
     {
-        if ((entry = wine_rb_get(&base->param_tree, name)))
+        if ((entry = wine_rb_get(&effect->param_tree, name)))
             return WINE_RB_ENTRY_VALUE(entry, struct d3dx_parameter, rb_entry);
         return NULL;
     }
@@ -950,7 +951,7 @@ struct d3dx_parameter *get_parameter_by_name(struct d3dx9_base_effect *base,
         memcpy(full_name + param_name_len + 1, name, name_len);
         full_name[param_name_len + 1 + name_len] = 0;
 
-        if ((entry = wine_rb_get(&base->param_tree, full_name)))
+        if ((entry = wine_rb_get(&effect->param_tree, full_name)))
             return WINE_RB_ENTRY_VALUE(entry, struct d3dx_parameter, rb_entry);
         return NULL;
     }
@@ -5133,7 +5134,7 @@ static void add_param_to_tree(struct d3dx_effect *effect, struct d3dx_parameter 
         memcpy(param->full_name, param->name, len);
     }
     TRACE("Full name is %s.\n", param->full_name);
-    wine_rb_put(&effect->base_effect.param_tree, param->full_name, &param->rb_entry);
+    wine_rb_put(&effect->param_tree, param->full_name, &param->rb_entry);
 
     if (is_top_level_parameter(param))
         for (i = 0; i < param->top_level_param->annotation_count; ++i)
@@ -5996,7 +5997,7 @@ static HRESULT d3dx_parse_effect(struct d3dx_effect *effect, const char *data, U
         goto err_out;
     }
 
-    wine_rb_init(&base->param_tree, param_rb_compare);
+    wine_rb_init(&effect->param_tree, param_rb_compare);
     if (effect->parameter_count)
     {
         base->parameters = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,
