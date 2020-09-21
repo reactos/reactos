@@ -156,7 +156,6 @@ struct d3dx9_base_effect
 {
     struct d3dx_effect *effect;
 
-    struct d3dx_top_level_parameter *parameters;
     struct d3dx_technique *techniques;
 
     struct d3dx_effect_pool *pool;
@@ -174,6 +173,7 @@ struct d3dx_effect
     unsigned int parameter_count;
     unsigned int technique_count;
     unsigned int object_count;
+    struct d3dx_top_level_parameter *parameters;
     struct d3dx_object *objects;
     struct wine_rb_tree param_tree;
     char *full_name_tmp;
@@ -694,12 +694,12 @@ static void d3dx9_base_effect_cleanup(struct d3dx_effect *effect)
 
     heap_free(effect->full_name_tmp);
 
-    if (base->parameters)
+    if (effect->parameters)
     {
         for (i = 0; i < effect->parameter_count; ++i)
-            free_top_level_parameter(&base->parameters[i]);
-        HeapFree(GetProcessHeap(), 0, base->parameters);
-        base->parameters = NULL;
+            free_top_level_parameter(&effect->parameters[i]);
+        heap_free(effect->parameters);
+        effect->parameters = NULL;
     }
 
     if (base->techniques)
@@ -1988,8 +1988,8 @@ static D3DXHANDLE WINAPI d3dx_effect_GetParameter(ID3DXEffect *iface, D3DXHANDLE
     {
         if (index < effect->parameter_count)
         {
-            TRACE("Returning parameter %p.\n", &effect->base_effect.parameters[index]);
-            return get_parameter_handle(&effect->base_effect.parameters[index].param);
+            TRACE("Returning parameter %p.\n", &effect->parameters[index]);
+            return get_parameter_handle(&effect->parameters[index].param);
         }
     }
     else
@@ -2042,7 +2042,7 @@ static D3DXHANDLE WINAPI d3dx_effect_GetParameterBySemantic(ID3DXEffect *iface, 
     {
         for (i = 0; i < effect->parameter_count; ++i)
         {
-            temp_param = &effect->base_effect.parameters[i].param;
+            temp_param = &effect->parameters[i].param;
 
             if (!temp_param->semantic)
             {
@@ -2101,8 +2101,8 @@ static D3DXHANDLE WINAPI d3dx_effect_GetParameterElement(ID3DXEffect *iface, D3D
     {
         if (index < effect->parameter_count)
         {
-            TRACE("Returning parameter %p.\n", &effect->base_effect.parameters[index]);
-            return get_parameter_handle(&effect->base_effect.parameters[index].param);
+            TRACE("Returning parameter %p.\n", &effect->parameters[index]);
+            return get_parameter_handle(&effect->parameters[index].param);
         }
     }
     else
@@ -4023,13 +4023,12 @@ static BOOL param_on_lost_device(void *data, struct d3dx_parameter *param)
 static HRESULT WINAPI d3dx_effect_OnLostDevice(ID3DXEffect *iface)
 {
     struct d3dx_effect *effect = impl_from_ID3DXEffect(iface);
-    struct d3dx9_base_effect *base = &effect->base_effect;
     unsigned int i;
 
     TRACE("iface %p.\n", iface);
 
     for (i = 0; i < effect->parameter_count; ++i)
-        walk_parameter_tree(&base->parameters[i].param, param_on_lost_device, NULL);
+        walk_parameter_tree(&effect->parameters[i].param, param_on_lost_device, NULL);
 
     return D3D_OK;
 }
@@ -5813,7 +5812,7 @@ static HRESULT d3dx_parse_resource(struct d3dx_effect *effect, const char *data,
             return E_FAIL;
         }
 
-        parameter = &base->parameters[index].param;
+        parameter = &effect->parameters[index].param;
         if (element_index != 0xffffffff)
         {
             if (element_index >= parameter->element_count && parameter->element_count != 0)
@@ -5996,9 +5995,8 @@ static HRESULT d3dx_parse_effect(struct d3dx_effect *effect, const char *data, U
     wine_rb_init(&effect->param_tree, param_rb_compare);
     if (effect->parameter_count)
     {
-        base->parameters = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,
-                sizeof(*base->parameters) * effect->parameter_count);
-        if (!base->parameters)
+        effect->parameters = heap_alloc_zero(sizeof(*effect->parameters) * effect->parameter_count);
+        if (!effect->parameters)
         {
             ERR("Out of memory.\n");
             hr = E_OUTOFMEMORY;
@@ -6007,16 +6005,15 @@ static HRESULT d3dx_parse_effect(struct d3dx_effect *effect, const char *data, U
 
         for (i = 0; i < effect->parameter_count; ++i)
         {
-            param_set_magic_number(&base->parameters[i].param);
-            hr = d3dx_parse_effect_parameter(effect, &base->parameters[i], data, &ptr, effect->objects);
+            param_set_magic_number(&effect->parameters[i].param);
+            hr = d3dx_parse_effect_parameter(effect, &effect->parameters[i], data, &ptr, effect->objects);
             if (hr != D3D_OK)
             {
                 WARN("Failed to parse parameter %u.\n", i);
                 goto err_out;
             }
-            walk_parameter_tree(&base->parameters[i].param, param_set_top_level_param,
-                &base->parameters[i]);
-            add_param_to_tree(effect, &base->parameters[i].param, NULL, 0, 0);
+            walk_parameter_tree(&effect->parameters[i].param, param_set_top_level_param, &effect->parameters[i]);
+            add_param_to_tree(effect, &effect->parameters[i].param, NULL, 0, 0);
         }
     }
 
@@ -6079,10 +6076,10 @@ static HRESULT d3dx_parse_effect(struct d3dx_effect *effect, const char *data, U
 
     for (i = 0; i < effect->parameter_count; ++i)
     {
-        if (FAILED(hr = d3dx_pool_sync_shared_parameter(base->pool, &base->parameters[i])))
+        if (FAILED(hr = d3dx_pool_sync_shared_parameter(base->pool, &effect->parameters[i])))
             goto err_out;
-        base->parameters[i].version_counter = get_version_counter_ptr(effect);
-        set_dirty(&base->parameters[i].param);
+        effect->parameters[i].version_counter = get_version_counter_ptr(effect);
+        set_dirty(&effect->parameters[i].param);
     }
     return D3D_OK;
 
@@ -6096,14 +6093,14 @@ err_out:
         base->techniques = NULL;
     }
 
-    if (base->parameters)
+    if (effect->parameters)
     {
         for (i = 0; i < effect->parameter_count; ++i)
         {
-            free_top_level_parameter(&base->parameters[i]);
+            free_top_level_parameter(&effect->parameters[i]);
         }
-        HeapFree(GetProcessHeap(), 0, base->parameters);
-        base->parameters = NULL;
+        heap_free(effect->parameters);
+        effect->parameters = NULL;
     }
 
     if (effect->objects)
