@@ -629,7 +629,19 @@ static int compute_rect(struct d3dx_font *font, const WCHAR *string, unsigned in
     }
 
     rect->right = rect->left + max_width;
-    rect->bottom = y;
+    if (format & DT_VCENTER)
+    {
+        rect->top += (rect->bottom - y) / 2;
+        rect->bottom = rect->top + y - top;
+    }
+    else if (format & DT_BOTTOM)
+    {
+        rect->top += rect->bottom - y;
+    }
+    else
+    {
+        rect->bottom = y;
+    }
 
     return rect->bottom - top;
 }
@@ -666,12 +678,17 @@ static INT WINAPI ID3DXFontImpl_DrawTextW(ID3DXFont *iface, ID3DXSprite *sprite,
     if (!line)
         return 0;
 
-    if (!rect || format & DT_CALCRECT)
+    if (!rect || format & (DT_CALCRECT | DT_VCENTER | DT_BOTTOM))
     {
         if (!rect)
         {
             rect = &r;
             format |= DT_NOCLIP;
+        }
+        else if (!(format & DT_CALCRECT))
+        {
+            r = *rect;
+            rect = &r;
         }
 
         top = rect->top;
