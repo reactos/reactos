@@ -321,11 +321,11 @@ static void D3DXMatrixTest(void)
     D3DXMATRIX expectedmat, gotmat, mat, mat2, mat3;
     BOOL expected, got, equal;
     float angle, determinant;
-    D3DXMATRIX *funcpointer;
     D3DXPLANE plane;
     D3DXQUATERNION q, r;
     D3DXVECTOR3 at, axis, eye, last;
     D3DXVECTOR4 light;
+    D3DXMATRIX *ret;
 
     U(mat).m[0][1] = 5.0f; U(mat).m[0][2] = 7.0f; U(mat).m[0][3] = 8.0f;
     U(mat).m[1][0] = 11.0f; U(mat).m[1][2] = 16.0f; U(mat).m[1][3] = 33.0f;
@@ -410,8 +410,11 @@ static void D3DXMatrixTest(void)
     expect_matrix(&expectedmat, &gotmat, 1);
     equal = compare_float(determinant, -147888.0f, 0);
     ok(equal, "Got unexpected determinant %.8e.\n", determinant);
-    funcpointer = D3DXMatrixInverse(&gotmat,NULL,&mat2);
-    ok(funcpointer == NULL, "Expected: %p, Got: %p\n", NULL, funcpointer);
+    determinant = 5.0f;
+    ret = D3DXMatrixInverse(&gotmat, &determinant, &mat2);
+    ok(!ret, "Unexpected return value %p.\n", ret);
+    expect_matrix(&expectedmat, &gotmat, 1);
+    ok(compare_float(determinant, 5.0f, 0), "Unexpected determinant %.8e.\n", determinant);
 
 /*____________D3DXMatrixIsIdentity______________*/
     expected = FALSE;
