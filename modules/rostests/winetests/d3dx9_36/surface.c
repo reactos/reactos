@@ -1403,7 +1403,7 @@ static void test_D3DXSaveSurfaceToFileInMemory(IDirect3DDevice9 *device)
 
 static void test_D3DXSaveSurfaceToFile(IDirect3DDevice9 *device)
 {
-    const BYTE pixels[] =
+    static const BYTE pixels[] =
             {0xff, 0x00, 0x00, 0x00, 0xff, 0x00,
              0x00, 0x00, 0xff, 0x00, 0x00, 0xff,};
     DWORD pitch = sizeof(pixels) / 2;
