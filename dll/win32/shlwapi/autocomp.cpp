@@ -20,6 +20,8 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
+#define MAX_ITEMS 60
+
 class CAutoCompleteEnumString :
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
     public IEnumString
@@ -47,7 +49,7 @@ public:
     }
 
     void DoAll();
-    void DoFileSystem();
+    void DoFileSystem(LPWSTR pszQuery);
     void DoDir(LPCWSTR pszDir, BOOL bDirOnly);
     void DoDrives(BOOL bDirOnly);
     void DoURLHistory();
@@ -69,6 +71,7 @@ protected:
     HWND m_hwndEdit;
     DWORD m_dwSHACF;
     CSimpleArray<CStringW> m_strs;
+    CStringW m_strPrev;
 };
 
 void CAutoCompleteEnumString::Initialize(IAutoComplete2 *pAC2, DWORD dwSHACF, HWND hwndEdit)
@@ -122,26 +125,21 @@ STDMETHODIMP CAutoCompleteEnumString::Skip(ULONG celt)
     return S_OK;
 }
 
-void CAutoCompleteEnumString::DoFileSystem()
+void CAutoCompleteEnumString::DoFileSystem(LPWSTR pszQuery)
 {
-    if (!IsWindow(m_hwndEdit))
-        return;
-
     BOOL bDirOnly = !!(m_dwSHACF & SHACF_FILESYS_DIRS);
 
-    WCHAR szText[MAX_PATH];
-    GetWindowTextW(m_hwndEdit, szText, _countof(szText));
-    DWORD attrs = GetFileAttributesW(szText);
+    DWORD attrs = GetFileAttributesW(pszQuery);
 
     if (attrs != INVALID_FILE_ATTRIBUTES)
     {
         if (attrs & FILE_ATTRIBUTE_DIRECTORY)
-            DoDir(szText, bDirOnly);
+            DoDir(pszQuery, bDirOnly);
     }
-    else if (szText[0])
+    else if (pszQuery[0])
     {
-        PathRemoveFileSpecW(szText);
-        DoDir(szText, bDirOnly);
+        PathRemoveFileSpecW(pszQuery);
+        DoDir(pszQuery, bDirOnly);
     }
     else
     {
@@ -151,11 +149,27 @@ void CAutoCompleteEnumString::DoFileSystem()
 
 void CAutoCompleteEnumString::DoAll()
 {
+    if (!IsWindow(m_hwndEdit))
+    {
+        ResetContent();
+        m_strPrev = L"";
+        m_bPending = FALSE;
+        return;
+    }
+
+    WCHAR szText[MAX_PATH];
+    GetWindowTextW(m_hwndEdit, szText, _countof(szText));
+
+    if (!m_bPending && m_strPrev == szText)
+        return;
+
+    m_bPending = TRUE;
+
     ResetContent();
 
     if (m_dwSHACF & (SHACF_FILESYS_ONLY | SHACF_FILESYSTEM | SHACF_FILESYS_DIRS))
     {
-        DoFileSystem();
+        DoFileSystem(szText);
     }
 
     if (!(m_dwSHACF & (SHACF_FILESYS_ONLY)))
@@ -166,12 +180,14 @@ void CAutoCompleteEnumString::DoAll()
             DoURLMRU();
     }
 
+    m_strPrev = szText;
     m_bPending = FALSE;
 }
 
 static unsigned __stdcall list_thread_proc(void *arg)
 {
     CAutoCompleteEnumString *this_ = (CAutoCompleteEnumString *)arg;
+    SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_ABOVE_NORMAL);
     this_->AddRef();
     this_->DoAll();
     this_->Release();
@@ -180,14 +196,12 @@ static unsigned __stdcall list_thread_proc(void *arg)
 
 STDMETHODIMP CAutoCompleteEnumString::Reset()
 {
-    if (!m_bPending)
-    {
-        m_bPending = TRUE;
-        HANDLE hThread = (HANDLE)_beginthreadex(NULL, 0, list_thread_proc, this, 0, NULL);
-        CloseHandle(hThread);
-    }
-
     m_istr = 0;
+
+    HANDLE hThread = (HANDLE)_beginthreadex(NULL, 0, list_thread_proc, this, 0, NULL);
+    WaitForSingleObject(hThread, 500);
+    CloseHandle(hThread);
+
     return S_OK;
 }
 
@@ -235,7 +249,11 @@ void CAutoCompleteEnumString::DoDir(LPCWSTR pszDir, BOOL bDirOnly)
 
         *pch = UNICODE_NULL;
         if (PathAppendW(szPath, find.cFileName))
+        {
             AddString(szPath);
+            if (m_strs.GetSize() >= MAX_ITEMS)
+                break;
+        }
     } while (FindNextFileW(hFind, &find));
 
     FindClose(hFind);
@@ -274,15 +292,18 @@ void CAutoCompleteEnumString::DoURLHistory()
         return;
     }
 
-#define MAX_TYPED_URLS 50
-    for (DWORD i = 1; i <= MAX_TYPED_URLS; ++i)
+    for (DWORD i = 1; i <= MAX_ITEMS; ++i)
     {
         StringCbPrintfW(szName, sizeof(szName), L"url%lu", i);
 
         DWORD cbValue = sizeof(szValue), dwType;
         result = RegQueryValueExW(hKey, szName, NULL, &dwType, (LPBYTE)szValue, &cbValue);
         if (result == ERROR_SUCCESS && dwType == REG_SZ && UrlIsW(szValue, URLIS_URL))
+        {
             AddString(szValue);
+            if (m_strs.GetSize() >= MAX_ITEMS)
+                break;
+        }
     }
 
     RegCloseKey(hKey);
@@ -320,7 +341,11 @@ void CAutoCompleteEnumString::DoURLMRU()
                 szValue[cch - 2] = 0;
 
             if (UrlIsW(szValue, URLIS_URL))
+            {
                 AddString(szValue);
+                if (m_strs.GetSize() >= MAX_ITEMS)
+                    break;
+            }
         }
     }
 
