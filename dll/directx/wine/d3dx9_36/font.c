@@ -188,11 +188,38 @@ static HDC WINAPI ID3DXFontImpl_GetDC(ID3DXFont *iface)
 }
 
 static HRESULT WINAPI ID3DXFontImpl_GetGlyphData(ID3DXFont *iface, UINT glyph,
-        IDirect3DTexture9 **texture, RECT *blackbox, POINT *cellinc)
+        IDirect3DTexture9 **texture, RECT *black_box, POINT *cell_inc)
 {
-    FIXME("iface %p, glyph %#x, texture %p, blackbox %p, cellinc %p stub!\n",
-            iface, glyph, texture, blackbox, cellinc);
-    return E_NOTIMPL;
+    struct d3dx_font *font = impl_from_ID3DXFont(iface);
+    struct wine_rb_entry *entry;
+    HRESULT hr;
+
+    TRACE("iface %p, glyph %#x, texture %p, black_box %p, cell_inc %p.\n",
+          iface, glyph, texture, black_box, cell_inc);
+
+    hr = ID3DXFont_PreloadGlyphs(iface, glyph, glyph);
+    if (FAILED(hr))
+        return hr;
+
+    entry = wine_rb_get(&font->glyph_tree, ULongToPtr(glyph));
+    if (entry)
+    {
+        struct d3dx_glyph *current_glyph = WINE_RB_ENTRY_VALUE(entry, struct d3dx_glyph, entry);
+
+        if (cell_inc)
+            *cell_inc = current_glyph->cell_inc;
+        if (black_box)
+            *black_box = current_glyph->black_box;
+        if (texture)
+        {
+            *texture = current_glyph->texture;
+            if (*texture)
+                IDirect3DTexture9_AddRef(current_glyph->texture);
+        }
+        return D3D_OK;
+    }
+
+    return D3DXERR_INVALIDDATA;
 }
 
 static HRESULT WINAPI ID3DXFontImpl_PreloadCharacters(ID3DXFont *iface, UINT first, UINT last)
