@@ -681,11 +681,11 @@ static void free_technique(struct d3dx_technique *technique)
     technique->name = NULL;
 }
 
-static void d3dx9_base_effect_cleanup(struct d3dx_effect *effect)
+static void d3dx_effect_cleanup(struct d3dx_effect *effect)
 {
     unsigned int i;
 
-    TRACE("Effect %p.\n", effect);
+    TRACE("effect %p.\n", effect);
 
     heap_free(effect->full_name_tmp);
 
@@ -694,7 +694,6 @@ static void d3dx9_base_effect_cleanup(struct d3dx_effect *effect)
         for (i = 0; i < effect->parameter_count; ++i)
             free_top_level_parameter(&effect->parameters[i]);
         heap_free(effect->parameters);
-        effect->parameters = NULL;
     }
 
     if (effect->techniques)
@@ -702,37 +701,23 @@ static void d3dx9_base_effect_cleanup(struct d3dx_effect *effect)
         for (i = 0; i < effect->technique_count; ++i)
             free_technique(&effect->techniques[i]);
         heap_free(effect->techniques);
-        effect->techniques = NULL;
     }
 
     if (effect->objects)
     {
         for (i = 0; i < effect->object_count; ++i)
-        {
             free_object(&effect->objects[i]);
-        }
         heap_free(effect->objects);
-        effect->objects = NULL;
     }
-}
-
-static void free_effect(struct d3dx_effect *effect)
-{
-    TRACE("Free effect %p\n", effect);
-
-    d3dx9_base_effect_cleanup(effect);
 
     if (effect->pool)
-    {
         effect->pool->lpVtbl->Release(effect->pool);
-    }
 
     if (effect->manager)
-    {
         IUnknown_Release(effect->manager);
-    }
 
     IDirect3DDevice9_Release(effect->device);
+    heap_free(effect);
 }
 
 static void get_vector(struct d3dx_parameter *param, D3DXVECTOR4 *vector)
@@ -1826,18 +1811,15 @@ static ULONG WINAPI d3dx_effect_AddRef(ID3DXEffect *iface)
 
 static ULONG WINAPI d3dx_effect_Release(ID3DXEffect *iface)
 {
-    struct d3dx_effect *This = impl_from_ID3DXEffect(iface);
-    ULONG ref = InterlockedDecrement(&This->ref);
+    struct d3dx_effect *effect = impl_from_ID3DXEffect(iface);
+    ULONG refcount = InterlockedDecrement(&effect->ref);
 
-    TRACE("(%p)->(): Release from %u\n", This, ref + 1);
+    TRACE("%p decreasing refcount to %u.\n", effect, refcount);
 
-    if (!ref)
-    {
-        free_effect(This);
-        HeapFree(GetProcessHeap(), 0, This);
-    }
+    if (!refcount)
+        d3dx_effect_cleanup(effect);
 
-    return ref;
+    return refcount;
 }
 
 /*** ID3DXBaseEffect methods ***/
@@ -6334,7 +6316,6 @@ static HRESULT d3dx9_effect_init(struct d3dx_effect *effect, struct IDirect3DDev
             error_messages, pool_impl, skip_constants)))
     {
         FIXME("Failed to parse effect, hr %#x.\n", hr);
-        free_effect(effect);
         return hr;
     }
 
@@ -6382,7 +6363,7 @@ HRESULT WINAPI D3DXCreateEffectEx(struct IDirect3DDevice9 *device, const void *s
     if (FAILED(hr))
     {
         WARN("Failed to create effect object.\n");
-        HeapFree(GetProcessHeap(), 0, object);
+        d3dx_effect_cleanup(object);
         return hr;
     }
 
