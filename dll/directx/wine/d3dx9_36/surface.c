@@ -213,7 +213,7 @@ HRESULT lock_surface(IDirect3DSurface9 *surface, const RECT *surface_rect, D3DLO
     DWORD lock_flag;
     HRESULT hr;
 
-    lock_flag = write ? D3DLOCK_DISCARD : D3DLOCK_READONLY;
+    lock_flag = write ? 0 : D3DLOCK_READONLY;
     *temp_surface = NULL;
     if (FAILED(hr = IDirect3DSurface9_LockRect(surface, lock, surface_rect, lock_flag)))
     {
