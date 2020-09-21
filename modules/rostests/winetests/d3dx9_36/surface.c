@@ -1032,6 +1032,43 @@ static void test_D3DXLoadSurface(IDirect3DDevice9 *device)
     hr = D3DXLoadSurfaceFromSurface(surf, NULL, NULL, newsurf, NULL, NULL, D3DX_FILTER_LINEAR, 0);
     ok(hr == D3D_OK, "D3DXLoadSurfaceFromSurface returned %#x, expected %#x.\n", hr, D3D_OK);
 
+    /* rects */
+    SetRect(&rect, 2, 2, 1, 1);
+    hr = D3DXLoadSurfaceFromSurface(surf, NULL, NULL, newsurf, NULL, &rect, D3DX_FILTER_NONE, 0);
+    ok(hr == D3DERR_INVALIDCALL, "D3DXLoadSurfaceFromSurface returned %#x, expected %#x.\n", hr, D3DERR_INVALIDCALL);
+    hr = D3DXLoadSurfaceFromSurface(surf, NULL, NULL, newsurf, NULL, &rect, D3DX_DEFAULT, 0);
+    ok(hr == D3DERR_INVALIDCALL, "D3DXLoadSurfaceFromSurface returned %#x, expected %#x.\n", hr, D3DERR_INVALIDCALL);
+    hr = D3DXLoadSurfaceFromSurface(surf, NULL, &rect, newsurf, NULL, NULL, D3DX_FILTER_NONE, 0);
+    ok(hr == D3DERR_INVALIDCALL, "D3DXLoadSurfaceFromSurface returned %#x, expected %#x.\n", hr, D3DERR_INVALIDCALL);
+    hr = D3DXLoadSurfaceFromSurface(surf, NULL, &rect, newsurf, NULL, NULL, D3DX_DEFAULT, 0);
+    ok(hr == D3DERR_INVALIDCALL, "D3DXLoadSurfaceFromSurface returned %#x, expected %#x.\n", hr, D3DERR_INVALIDCALL);
+    hr = D3DXLoadSurfaceFromSurface(surf, NULL, &rect, newsurf, NULL, NULL, D3DX_FILTER_POINT, 0);
+    ok(hr == D3DERR_INVALIDCALL, "D3DXLoadSurfaceFromSurface returned %#x, expected %#x.\n", hr, D3DERR_INVALIDCALL);
+    SetRect(&rect, 1, 1, 1, 1);
+    hr = D3DXLoadSurfaceFromSurface(surf, NULL, NULL, newsurf, NULL, &rect, D3DX_FILTER_NONE, 0);
+    ok(hr == D3D_OK, "D3DXLoadSurfaceFromSurface returned %#x, expected %#x.\n", hr, D3D_OK);
+    hr = D3DXLoadSurfaceFromSurface(surf, NULL, &rect, newsurf, NULL, NULL, D3DX_FILTER_NONE, 0);
+    ok(hr == D3D_OK, "D3DXLoadSurfaceFromSurface returned %#x, expected %#x.\n", hr, D3D_OK);
+    hr = D3DXLoadSurfaceFromSurface(surf, NULL, NULL, newsurf, NULL, &rect, D3DX_DEFAULT, 0);
+    ok(hr == E_FAIL, "D3DXLoadSurfaceFromSurface returned %#x, expected %#x.\n", hr, E_FAIL);
+    hr = D3DXLoadSurfaceFromSurface(surf, NULL, &rect, newsurf, NULL, NULL, D3DX_DEFAULT, 0);
+    ok(hr == E_FAIL, "D3DXLoadSurfaceFromSurface returned %#x, expected %#x.\n", hr, E_FAIL);
+    if (0)
+    {
+        /* Somehow it crashes with a STATUS_INTEGER_DIVIDE_BY_ZERO exception
+         * on Windows. */
+        hr = D3DXLoadSurfaceFromSurface(surf, NULL, &rect, newsurf, NULL, NULL, D3DX_FILTER_POINT, 0);
+        ok(hr == E_FAIL, "D3DXLoadSurfaceFromSurface returned %#x, expected %#x.\n", hr, E_FAIL);
+    }
+    SetRect(&rect, 1, 1, 2, 2);
+    SetRect(&destrect, 1, 1, 2, 2);
+    hr = D3DXLoadSurfaceFromSurface(surf, NULL, &rect, newsurf, NULL, &destrect, D3DX_FILTER_NONE, 0);
+    ok(hr == D3D_OK, "D3DXLoadSurfaceFromSurface returned %#x, expected %#x.\n", hr, D3D_OK);
+    hr = D3DXLoadSurfaceFromSurface(surf, NULL, &rect, newsurf, NULL, NULL, D3DX_FILTER_NONE, 0);
+    ok(hr == D3D_OK, "D3DXLoadSurfaceFromSurface returned %#x, expected %#x.\n", hr, D3D_OK);
+    hr = D3DXLoadSurfaceFromSurface(surf, NULL, NULL, newsurf, NULL, &destrect, D3DX_FILTER_NONE, 0);
+    ok(hr == D3D_OK, "D3DXLoadSurfaceFromSurface returned %#x, expected %#x.\n", hr, D3D_OK);
+
     IDirect3DSurface9_Release(newsurf);
 
     check_release((IUnknown*)surf, 0);
