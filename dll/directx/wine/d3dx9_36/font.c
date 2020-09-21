@@ -22,6 +22,8 @@
 
 
 #include "d3dx9_private.h"
+
+#include "usp10.h"
 #endif /* __REACTOS__ */
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3dx);
@@ -513,10 +515,53 @@ static INT WINAPI ID3DXFontImpl_DrawTextA(ID3DXFont *iface, ID3DXSprite *sprite,
     return ret;
 }
 
+static void word_break(HDC hdc, const WCHAR *str, unsigned int *str_len,
+        unsigned int chars_fit, unsigned int *chars_used, SIZE *size)
+{
+    SCRIPT_LOGATTR *sla;
+    SCRIPT_ANALYSIS sa;
+    unsigned int i;
+
+    *chars_used = 0;
+
+    sla = heap_alloc(*str_len * sizeof(*sla));
+    if (!sla)
+        return;
+
+    memset(&sa, 0, sizeof(sa));
+    sa.eScript = SCRIPT_UNDEFINED;
+
+    ScriptBreak(str, *str_len, &sa, sla);
+
+    /* Work back from the last character that did fit to a place where we can break */
+    i = chars_fit;
+    while (i > 0 && !sla[i].fSoftBreak) /* chars_fit < *str_len so this is valid */
+        --i;
+
+    /* If the there is no word that fits put in all characters that do fit */
+    if (!sla[i].fSoftBreak)
+        i = chars_fit;
+
+    *chars_used = i;
+    if (sla[i].fWhiteSpace)
+        ++(*chars_used);
+
+    /* Remove extra spaces */
+    while (i > 0 && sla[i-1].fWhiteSpace)
+        --i;
+    *str_len = i;
+
+    /* Remeasure the string */
+    GetTextExtentExPointW(hdc, str, *str_len, 0, NULL, NULL, size);
+    heap_free(sla);
+}
+
 static const WCHAR *read_line(HDC hdc, const WCHAR *str, int *count,
-        WCHAR *dest, unsigned int *dest_len, int width)
+        WCHAR *dest, unsigned int *dest_len, int width, DWORD format)
 {
     unsigned int i = 0;
+    int orig_count = *count;
+    int num_fit;
     SIZE size;
 
     *dest_len = 0;
@@ -528,7 +573,17 @@ static const WCHAR *read_line(HDC hdc, const WCHAR *str, int *count,
         ++i;
     }
 
-    GetTextExtentExPointW(hdc, dest, *dest_len, width, NULL, NULL, &size);
+    num_fit = 0;
+    GetTextExtentExPointW(hdc, dest, *dest_len, width, &num_fit, NULL, &size);
+
+    if (num_fit < *dest_len && (format & DT_WORDBREAK))
+    {
+        unsigned int chars_used;
+
+        word_break(hdc, dest, dest_len, num_fit, &chars_used, &size);
+        *count = orig_count - chars_used;
+        i = chars_used;
+    }
 
     if (*count && str[i] == '\n')
     {
@@ -598,7 +653,7 @@ static INT WINAPI ID3DXFontImpl_DrawTextW(ID3DXFont *iface, ID3DXSprite *sprite,
     {
         unsigned int line_len;
 
-        string = read_line(font->hdc, string, &count, line, &line_len, width);
+        string = read_line(font->hdc, string, &count, line, &line_len, width, format);
 
         if (!(format & DT_CALCRECT))
         {

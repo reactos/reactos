@@ -20,6 +20,7 @@
 #include <winbase.h>
 #include <wingdi.h>
 #include <winuser.h>
+#include <usp10.h>
 
 #include <wine/winternl.h>
 
