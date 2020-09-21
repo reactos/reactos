@@ -5349,8 +5349,11 @@ static HRESULT d3dx_parse_effect_annotation(struct d3dx_effect *effect, struct d
 static HRESULT d3dx_parse_state(struct d3dx_effect *effect, struct d3dx_state *state,
         const char *data, const char **ptr, struct d3dx_object *objects)
 {
-    DWORD offset;
+    struct d3dx_parameter *param = &state->parameter;
+    enum STATE_CLASS state_class;
     const char *ptr2;
+    void *new_data;
+    DWORD offset;
     HRESULT hr;
 
     state->type = ST_CONSTANT;
@@ -5364,7 +5367,7 @@ static HRESULT d3dx_parse_state(struct d3dx_effect *effect, struct d3dx_state *s
     read_dword(ptr, &offset);
     TRACE("Typedef offset: %#x\n", offset);
     ptr2 = data + offset;
-    hr = d3dx_parse_effect_typedef(effect, &state->parameter, data, &ptr2, NULL, 0);
+    hr = d3dx_parse_effect_typedef(effect, param, data, &ptr2, NULL, 0);
     if (hr != D3D_OK)
     {
         WARN("Failed to parse type definition\n");
@@ -5373,18 +5376,42 @@ static HRESULT d3dx_parse_state(struct d3dx_effect *effect, struct d3dx_state *s
 
     read_dword(ptr, &offset);
     TRACE("Value offset: %#x\n", offset);
-    hr = d3dx_parse_init_value(effect, &state->parameter, data, data + offset, objects);
+    hr = d3dx_parse_init_value(effect, param, data, data + offset, objects);
     if (hr != D3D_OK)
     {
         WARN("Failed to parse value\n");
         goto err_out;
     }
 
+    if (((state_class = state_table[state->operation].class) == SC_VERTEXSHADER
+            || state_class == SC_PIXELSHADER || state_class == SC_TEXTURE)
+            && param->bytes < sizeof(void *))
+    {
+        if (param->type != D3DXPT_INT || *(unsigned int *)param->data)
+        {
+            FIXME("Unexpected parameter for object, param->type %#x, param->class %#x, *param->data %#x.\n",
+                    param->type, param->class, *(unsigned int *)param->data);
+            hr = D3DXERR_INVALIDDATA;
+            goto err_out;
+        }
+
+        new_data = heap_realloc(param->data, sizeof(void *));
+        if (!new_data)
+        {
+            ERR("Out of memory.\n");
+            hr = E_OUTOFMEMORY;
+            goto err_out;
+        }
+        memset(new_data, 0, sizeof(void *));
+        param->data = new_data;
+        param->bytes = sizeof(void *);
+    }
+
     return D3D_OK;
 
 err_out:
 
-    free_parameter(&state->parameter, FALSE, FALSE);
+    free_parameter(param, FALSE, FALSE);
 
     return hr;
 }
