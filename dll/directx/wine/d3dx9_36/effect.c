@@ -5319,9 +5319,9 @@ static HRESULT d3dx9_parse_name(char **name, const char *ptr)
     return D3D_OK;
 }
 
-static HRESULT d3dx9_copy_data(struct d3dx9_base_effect *base, unsigned int object_id, const char **ptr)
+static HRESULT d3dx9_copy_data(struct d3dx_effect *effect, unsigned int object_id, const char **ptr)
 {
-    struct d3dx_object *object = &base->objects[object_id];
+    struct d3dx_object *object = &effect->base_effect.objects[object_id];
 
     if (object->size || object->data)
     {
@@ -6172,7 +6172,7 @@ static HRESULT d3dx_parse_resource(struct d3dx_effect *effect, const char *data,
                 case D3DXPT_VERTEXSHADER:
                 case D3DXPT_PIXELSHADER:
                     state->type = ST_CONSTANT;
-                    if (FAILED(hr = d3dx9_copy_data(base, param->object_id, ptr)))
+                    if (FAILED(hr = d3dx9_copy_data(effect, param->object_id, ptr)))
                         return hr;
 
                     if (object->data)
@@ -6191,7 +6191,7 @@ static HRESULT d3dx_parse_resource(struct d3dx_effect *effect, const char *data,
                 case D3DXPT_FLOAT:
                 case D3DXPT_STRING:
                     state->type = ST_FXLC;
-                    if (FAILED(hr = d3dx9_copy_data(base, param->object_id, ptr)))
+                    if (FAILED(hr = d3dx9_copy_data(effect, param->object_id, ptr)))
                         return hr;
                     if (FAILED(hr = d3dx_create_param_eval(base, object->data, object->size, param->type,
                             &param->param_eval, get_version_counter_ptr(base), NULL, 0)))
@@ -6206,7 +6206,7 @@ static HRESULT d3dx_parse_resource(struct d3dx_effect *effect, const char *data,
 
         case 1:
             state->type = ST_PARAMETER;
-            if (FAILED(hr = d3dx9_copy_data(base, param->object_id, ptr)))
+            if (FAILED(hr = d3dx9_copy_data(effect, param->object_id, ptr)))
                 return hr;
 
             TRACE("Looking for parameter %s.\n", debugstr_a(object->data));
@@ -6238,7 +6238,7 @@ static HRESULT d3dx_parse_resource(struct d3dx_effect *effect, const char *data,
 
         case 2:
             state->type = ST_ARRAY_SELECTOR;
-            if (FAILED(hr = d3dx9_copy_data(base, param->object_id, ptr)))
+            if (FAILED(hr = d3dx9_copy_data(effect, param->object_id, ptr)))
                 return hr;
             hr = d3dx_parse_array_selector(effect, state, skip_constants, skip_constants_count);
             break;
@@ -6348,7 +6348,7 @@ static HRESULT d3dx_parse_effect(struct d3dx_effect *effect, const char *data, U
         read_dword(&ptr, &id);
         TRACE("id: %u.\n", id);
 
-        if (FAILED(hr = d3dx9_copy_data(base, id, &ptr)))
+        if (FAILED(hr = d3dx9_copy_data(effect, id, &ptr)))
             goto err_out;
 
         if (base->objects[id].data)
