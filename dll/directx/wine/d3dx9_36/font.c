@@ -563,6 +563,9 @@ static INT WINAPI ID3DXFontImpl_DrawTextW(ID3DXFont *iface, ID3DXSprite *sprite,
     if (!count)
         return 0;
 
+    if (format & DT_CALCRECT)
+        format |= DT_NOCLIP;
+
     if (!rect)
     {
         y = ID3DXFont_DrawTextW(iface, NULL, string, count, &textrect, format | DT_CALCRECT, 0);
@@ -641,6 +644,8 @@ static INT WINAPI ID3DXFontImpl_DrawTextW(ID3DXFont *iface, ID3DXSprite *sprite,
             heap_free(results.lpGlyphs);
         }
         y += lh;
+        if (!(DT_NOCLIP & format) && (y > textrect.bottom))
+            break;
     }
 
     ret = y - textrect.top;
