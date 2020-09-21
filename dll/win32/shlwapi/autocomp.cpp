@@ -86,8 +86,6 @@ CAutoCompleteEnumString::CAutoCompleteEnumString(const CAutoCompleteEnumString& 
 STDMETHODIMP
 CAutoCompleteEnumString::Next(ULONG celt, LPOLESTR *rgelt, ULONG *pceltFetched)
 {
-    SIZE_T ielt, cch, cb;
-
     if (!rgelt || !pceltFetched)
     {
         ERR("E_POINTER\n");
@@ -100,20 +98,20 @@ CAutoCompleteEnumString::Next(ULONG celt, LPOLESTR *rgelt, ULONG *pceltFetched)
     if (m_istr >= m_strs.GetSize())
         return S_FALSE;
 
+    ULONG ielt;
     for (ielt = 0;
          ielt < celt && m_istr < m_strs.GetSize();
          ++ielt, ++m_istr)
     {
-        cch = lstrlenW(m_strs[m_istr]) + 1;
-        cb = cch * sizeof(WCHAR);
+        size_t cch = wcslen(m_strs[m_istr]) + 1;
+        size_t cb = cch * sizeof(WCHAR);
 
         rgelt[ielt] = (LPWSTR)CoTaskMemAlloc(cb);
         if (!rgelt[ielt])
         {
             while (ielt-- > 0)
-            {
                 CoTaskMemFree(rgelt[ielt]);
-            }
+
             return S_FALSE;
         }
 
@@ -139,18 +137,15 @@ STDMETHODIMP CAutoCompleteEnumString::Skip(ULONG celt)
 
 STDMETHODIMP CAutoCompleteEnumString::Reset()
 {
-    DWORD attrs;
-    WCHAR szText[MAX_PATH];
-    DWORD dwSHACF = m_dwSHACF;
-
     ResetContent();
 
+    WCHAR szText[MAX_PATH];
     GetWindowTextW(m_hwndEdit, szText, _countof(szText));
-    attrs = GetFileAttributesW(szText);
+    DWORD attrs = GetFileAttributesW(szText);
 
-    if (dwSHACF & (SHACF_FILESYS_ONLY | SHACF_FILESYSTEM | SHACF_FILESYS_DIRS))
+    if (m_dwSHACF & (SHACF_FILESYS_ONLY | SHACF_FILESYSTEM | SHACF_FILESYS_DIRS))
     {
-        BOOL bDirOnly = !!(dwSHACF & SHACF_FILESYS_DIRS);
+        BOOL bDirOnly = !!(m_dwSHACF & SHACF_FILESYS_DIRS);
         if (attrs != INVALID_FILE_ATTRIBUTES)
         {
             if (attrs & FILE_ATTRIBUTE_DIRECTORY)
@@ -167,12 +162,12 @@ STDMETHODIMP CAutoCompleteEnumString::Reset()
         }
     }
 
-    if (!(dwSHACF & (SHACF_FILESYS_ONLY)))
+    if (!(m_dwSHACF & (SHACF_FILESYS_ONLY)))
     {
-        if (dwSHACF & SHACF_URLHISTORY)
+        if (m_dwSHACF & SHACF_URLHISTORY)
             DoURLHistory();
 
-        if (dwSHACF & SHACF_URLMRU)
+        if (m_dwSHACF & SHACF_URLMRU)
             DoURLMRU();
     }
 
@@ -198,19 +193,16 @@ STDMETHODIMP CAutoCompleteEnumString::Clone(IEnumString **ppenum)
 
 void CAutoCompleteEnumString::DoDir(LPCWSTR pszDir, BOOL bDirOnly)
 {
-    LPWSTR pch;
     WCHAR szPath[MAX_PATH];
-    HANDLE hFind;
-    WIN32_FIND_DATAW find;
-
     StringCbCopyW(szPath, sizeof(szPath), pszDir);
     if (!PathAppendW(szPath, L"*"))
         return;
 
-    pch = PathFindFileNameW(szPath);
+    LPWSTR pch = PathFindFileNameW(szPath);
     assert(pch);
 
-    hFind = FindFirstFileW(szPath, &find);
+    WIN32_FIND_DATAW find;
+    HANDLE hFind = FindFirstFileW(szPath, &find);
     if (hFind != INVALID_HANDLE_VALUE)
     {
         do
@@ -234,28 +226,23 @@ void CAutoCompleteEnumString::DoDir(LPCWSTR pszDir, BOOL bDirOnly)
 void CAutoCompleteEnumString::DoDrives(BOOL bDirOnly)
 {
     WCHAR sz[4] = L"C:\\";
-    UINT uType;
-    DWORD i, dwBits = GetLogicalDrives();
+    DWORD dwBits = GetLogicalDrives();
 
-    for (i = 0; i <= L'Z' - L'A'; ++i)
+    for (DWORD i = 0; i <= L'Z' - L'A'; ++i)
     {
         if (dwBits & (1 << i))
         {
             sz[0] = (WCHAR)(L'A' + i);
             AddString(sz);
 
-            uType = GetDriveTypeW(sz);
+            UINT uType = GetDriveTypeW(sz);
             switch (uType)
             {
-                case DRIVE_UNKNOWN:
-                case DRIVE_NO_ROOT_DIR:
-                case DRIVE_REMOVABLE:
-                case DRIVE_CDROM:
-                    break;
-                case DRIVE_REMOTE:
-                case DRIVE_RAMDISK:
-                case DRIVE_FIXED:
+                case DRIVE_REMOTE: case DRIVE_RAMDISK: case DRIVE_FIXED:
                     DoDir(sz, bDirOnly);
+                    break;
+                case DRIVE_UNKNOWN: case DRIVE_NO_ROOT_DIR: case DRIVE_REMOVABLE:
+                case DRIVE_CDROM:
                     break;
             }
         }
@@ -266,12 +253,10 @@ void CAutoCompleteEnumString::DoURLHistory()
 {
     static const LPCWSTR
         pszTypedURLs = L"Software\\Microsoft\\Internet Explorer\\TypedURLs";
-    HKEY hKey;
-    LONG result;
-    DWORD i, cbValue;
     WCHAR szName[32], szValue[MAX_PATH + 32];
 
-    result = RegOpenKeyExW(HKEY_CURRENT_USER, pszTypedURLs, 0, KEY_READ, &hKey);
+    HKEY hKey;
+    LONG result = RegOpenKeyExW(HKEY_CURRENT_USER, pszTypedURLs, 0, KEY_READ, &hKey);
     if (result != ERROR_SUCCESS)
     {
         TRACE("Opening TypedURLs failed: 0x%lX\n", result);
@@ -279,12 +264,12 @@ void CAutoCompleteEnumString::DoURLHistory()
     }
 
 #define MAX_TYPED_URLS 50
-    for (i = 1; i <= MAX_TYPED_URLS; ++i)
+    for (DWORD i = 1; i <= MAX_TYPED_URLS; ++i)
     {
         StringCbPrintfW(szName, sizeof(szName), L"url%lu", i);
 
         szValue[0] = 0;
-        cbValue = sizeof(szValue);
+        DWORD cbValue = sizeof(szValue);
         result = RegQueryValueExW(hKey, szName, NULL, NULL, (LPBYTE)szValue, &cbValue);
         if (result != ERROR_SUCCESS)
             continue;
@@ -300,13 +285,10 @@ void CAutoCompleteEnumString::DoURLMRU()
 {
     static const LPCWSTR
         pszRunMRU = L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\RunMRU";
-    HKEY hKey;
-    LONG result;
-    DWORD i, cbValue;
     WCHAR szName[2], szMRUList[64], szValue[MAX_PATH + 32];
-    INT cch;
 
-    result = RegOpenKeyExW(HKEY_CURRENT_USER, pszRunMRU, 0, KEY_READ, &hKey);
+    HKEY hKey;
+    LONG result = RegOpenKeyExW(HKEY_CURRENT_USER, pszRunMRU, 0, KEY_READ, &hKey);
     if (result != ERROR_SUCCESS)
     {
         TRACE("Opening RunMRU failed: 0x%lX\n", result);
@@ -314,11 +296,11 @@ void CAutoCompleteEnumString::DoURLMRU()
     }
 
     szMRUList[0] = 0;
-    cbValue = sizeof(szMRUList);
+    DWORD cbValue = sizeof(szMRUList);
     result = RegQueryValueExW(hKey, L"MRUList", NULL, NULL, (LPBYTE)szMRUList, &cbValue);
     if (result == ERROR_SUCCESS)
     {
-        for (i = 0; i <= L'z' - L'a'; ++i)
+        for (DWORD i = 0; i <= L'z' - L'a'; ++i)
         {
             if (szMRUList[i] == 0)
                 break;
@@ -331,7 +313,7 @@ void CAutoCompleteEnumString::DoURLMRU()
             if (result != ERROR_SUCCESS)
                 continue;
 
-            cch = wcslen(szValue);
+            size_t cch = wcslen(szValue);
             if (cch >= 2 && wcscmp(&szValue[cch - 2], L"\\1") == 0)
                 szValue[cch - 2] = 0;
 
@@ -349,12 +331,9 @@ AutoComplete_AdaptFlags(HWND hwndEdit, LPDWORD pdwACO, LPDWORD pdwSHACF)
     static const LPCWSTR s_pszAutoComplete =
         L"Software\\Microsoft\\Internet Explorer\\AutoComplete";
 
-    DWORD dwType, cbValue, dwACO, dwSHACF;
     WCHAR szValue[8];
+    DWORD dwSHACF = *pdwSHACF, dwACO = 0;
 
-    dwSHACF = *pdwSHACF;
-
-    dwACO = 0;
     if (dwSHACF == SHACF_DEFAULT)
         dwSHACF = SHACF_FILESYSTEM | SHACF_URLALL;
 
@@ -368,7 +347,7 @@ AutoComplete_AdaptFlags(HWND hwndEdit, LPDWORD pdwACO, LPDWORD pdwSHACF)
     }
     else
     {
-        cbValue = sizeof(szValue);
+        DWORD dwType, cbValue = sizeof(szValue);
         if (SHGetValueW(HKEY_CURRENT_USER, s_pszAutoComplete, L"Append Completion",
                         &dwType, szValue, &cbValue) != ERROR_SUCCESS ||
             _wcsicmp(szValue, L"no") != 0)
@@ -387,7 +366,7 @@ AutoComplete_AdaptFlags(HWND hwndEdit, LPDWORD pdwACO, LPDWORD pdwSHACF)
     }
     else
     {
-        cbValue = sizeof(szValue);
+        DWORD dwType, cbValue = sizeof(szValue);
         if (SHGetValueW(HKEY_CURRENT_USER, s_pszAutoComplete, L"AutoSuggest",
                         &dwType, szValue, &cbValue) != ERROR_SUCCESS ||
             _wcsicmp(szValue, L"no") != 0)
@@ -410,7 +389,6 @@ AutoComplete_AdaptFlags(HWND hwndEdit, LPDWORD pdwACO, LPDWORD pdwSHACF)
 
     *pdwACO = dwACO;
     *pdwSHACF = dwSHACF;
-
     return TRUE;
 }
 
@@ -429,25 +407,23 @@ AutoComplete_AdaptFlags(HWND hwndEdit, LPDWORD pdwACO, LPDWORD pdwSHACF)
  */
 HRESULT WINAPI SHAutoComplete(HWND hwndEdit, DWORD dwFlags)
 {
-    HRESULT hr;
-    CComPtr<IAutoComplete2> pAC2;
-    CComPtr<IEnumString> pES;
-    DWORD dwACO;
-    DWORD dwClsCtx = CLSCTX_INPROC_HANDLER | CLSCTX_INPROC_SERVER | CLSCTX_LOCAL_SERVER;
-
     TRACE("SHAutoComplete(%p, 0x%lX)\n", hwndEdit, dwFlags);
 
+    DWORD dwACO;
     if (!AutoComplete_AdaptFlags(hwndEdit, &dwACO, &dwFlags))
         return S_OK;
 
-    hr = CoCreateInstance(CLSID_AutoComplete, NULL, dwClsCtx,
-                          IID_IAutoComplete, (LPVOID *)&pAC2);
+    CComPtr<IAutoComplete2> pAC2;
+    DWORD dwClsCtx = CLSCTX_INPROC_HANDLER | CLSCTX_INPROC_SERVER | CLSCTX_LOCAL_SERVER;
+    HRESULT hr = CoCreateInstance(CLSID_AutoComplete, NULL, dwClsCtx,
+                                  IID_IAutoComplete, (LPVOID *)&pAC2);
     if (FAILED(hr))
     {
         ERR("CoCreateInstance(CLSID_AutoComplete) failed: 0x%lX\n", hr);
         return hr;
     }
 
+    CComPtr<IEnumString> pES;
     pES = new CAutoCompleteEnumString(pAC2, dwFlags, hwndEdit);
     if (!pES)
     {
