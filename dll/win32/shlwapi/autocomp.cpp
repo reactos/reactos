@@ -55,7 +55,6 @@ protected:
     INT m_istr;
     HWND m_hwndEdit;
     DWORD m_dwSHACF;
-    CComPtr<IAutoComplete2> m_pAC2;
     CSimpleArray<CStringW> m_strs;
 };
 
@@ -63,7 +62,6 @@ CAutoCompleteEnumString::CAutoCompleteEnumString(IAutoComplete2 *pAC2, DWORD dwS
     : m_istr(0)
     , m_hwndEdit(hwndEdit)
     , m_dwSHACF(dwSHACF)
-    , m_pAC2(pAC2)
 {
     Reset();
 }
@@ -72,7 +70,6 @@ CAutoCompleteEnumString::CAutoCompleteEnumString(const CAutoCompleteEnumString& 
     : m_istr(another.m_istr)
     , m_hwndEdit(another.m_hwndEdit)
     , m_dwSHACF(another.m_dwSHACF)
-    , m_pAC2(another.m_pAC2)
     , m_strs(another.m_strs)
 {
 }
