@@ -6,6 +6,7 @@
  */
 #include <windef.h>
 #include <winreg.h>
+#include <process.h>
 #include <shldisp.h>
 #include <shlguid.h>
 #define NO_SHLWAPI_STREAM
@@ -24,7 +25,11 @@ class CAutoCompleteEnumString :
     public IEnumString
 {
 public:
-    CAutoCompleteEnumString() : m_istr(0), m_hwndEdit(NULL), m_dwSHACF(0)
+    CAutoCompleteEnumString()
+        : m_bPending(FALSE)
+        , m_istr(0)
+        , m_hwndEdit(NULL)
+        , m_dwSHACF(0)
     {
     }
 
@@ -41,6 +46,7 @@ public:
         m_istr = 0;
     }
 
+    void DoAll();
     void DoFileSystem();
     void DoDir(LPCWSTR pszDir, BOOL bDirOnly);
     void DoDrives(BOOL bDirOnly);
@@ -58,6 +64,7 @@ public:
     END_COM_MAP()
 
 protected:
+    BOOL m_bPending;
     INT m_istr;
     HWND m_hwndEdit;
     DWORD m_dwSHACF;
@@ -83,7 +90,7 @@ CAutoCompleteEnumString::Next(ULONG celt, LPOLESTR *rgelt, ULONG *pceltFetched)
 
     *pceltFetched = 0;
     *rgelt = NULL;
-    if (m_istr >= m_strs.GetSize())
+    if (m_bPending || m_istr >= m_strs.GetSize())
         return S_FALSE;
 
     ULONG ielt;
@@ -105,6 +112,9 @@ CAutoCompleteEnumString::Next(ULONG celt, LPOLESTR *rgelt, ULONG *pceltFetched)
 
 STDMETHODIMP CAutoCompleteEnumString::Skip(ULONG celt)
 {
+    if (m_bPending)
+        return S_FALSE;
+
     if (m_strs.GetSize() == 0 || m_strs.GetSize() <= INT(m_istr + celt))
         return S_FALSE;
 
@@ -139,7 +149,7 @@ void CAutoCompleteEnumString::DoFileSystem()
     }
 }
 
-STDMETHODIMP CAutoCompleteEnumString::Reset()
+void CAutoCompleteEnumString::DoAll()
 {
     ResetContent();
 
@@ -154,6 +164,27 @@ STDMETHODIMP CAutoCompleteEnumString::Reset()
             DoURLHistory();
         if (m_dwSHACF & SHACF_URLMRU)
             DoURLMRU();
+    }
+
+    m_bPending = FALSE;
+}
+
+static unsigned __stdcall list_thread_proc(void *arg)
+{
+    CAutoCompleteEnumString *this_ = (CAutoCompleteEnumString *)arg;
+    this_->AddRef();
+    this_->DoAll();
+    this_->Release();
+    return 0;
+}
+
+STDMETHODIMP CAutoCompleteEnumString::Reset()
+{
+    if (!m_bPending)
+    {
+        m_bPending = TRUE;
+        HANDLE hThread = (HANDLE)_beginthreadex(NULL, 0, list_thread_proc, this, 0, NULL);
+        CloseHandle(hThread);
     }
 
     m_istr = 0;
