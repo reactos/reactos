@@ -516,7 +516,7 @@ static INT WINAPI ID3DXFontImpl_DrawTextA(ID3DXFont *iface, ID3DXSprite *sprite,
 }
 
 static void word_break(HDC hdc, const WCHAR *str, unsigned int *str_len,
-        unsigned int chars_fit, unsigned int *chars_used, SIZE *size)
+        unsigned int chars_fit, unsigned int *chars_used, DWORD format, SIZE *size)
 {
     SCRIPT_LOGATTR *sla;
     SCRIPT_ANALYSIS sa;
@@ -539,7 +539,7 @@ static void word_break(HDC hdc, const WCHAR *str, unsigned int *str_len,
         --i;
 
     /* If the there is no word that fits put in all characters that do fit */
-    if (!sla[i].fSoftBreak)
+    if (!sla[i].fSoftBreak || (format & DT_SINGLELINE))
         i = chars_fit;
 
     *chars_used = i;
@@ -565,10 +565,10 @@ static const WCHAR *read_line(HDC hdc, const WCHAR *str, int *count,
     SIZE size;
 
     *dest_len = 0;
-    while (*count && str[i] != '\n')
+    while (*count && (str[i] != '\n' || (format & DT_SINGLELINE)))
     {
         --(*count);
-        if (str[i] != '\r')
+        if (str[i] != '\r' && str[i] != '\n')
             dest[(*dest_len)++] = str[i];
         ++i;
     }
@@ -576,13 +576,21 @@ static const WCHAR *read_line(HDC hdc, const WCHAR *str, int *count,
     num_fit = 0;
     GetTextExtentExPointW(hdc, dest, *dest_len, width, &num_fit, NULL, &size);
 
-    if (num_fit < *dest_len && (format & DT_WORDBREAK))
+    if (num_fit < *dest_len)
     {
-        unsigned int chars_used;
+        if (format & DT_WORDBREAK)
+        {
+            unsigned int chars_used;
 
-        word_break(hdc, dest, dest_len, num_fit, &chars_used, &size);
-        *count = orig_count - chars_used;
-        i = chars_used;
+            word_break(hdc, dest, dest_len, num_fit, &chars_used, format, &size);
+            *count = orig_count - chars_used;
+            i = chars_used;
+        }
+        else if (format & DT_SINGLELINE)
+        {
+            *dest_len = num_fit;
+            *count = 0;
+        }
     }
 
     if (*count && str[i] == '\n')
@@ -620,6 +628,9 @@ static INT WINAPI ID3DXFontImpl_DrawTextW(ID3DXFont *iface, ID3DXSprite *sprite,
 
     if (format & DT_CALCRECT)
         format |= DT_NOCLIP;
+
+    if (format & DT_SINGLELINE)
+        format &= ~DT_WORDBREAK;
 
     if (!rect)
     {
