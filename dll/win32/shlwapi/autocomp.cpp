@@ -86,9 +86,7 @@ CAutoCompleteEnumString::Next(ULONG celt, LPOLESTR *rgelt, ULONG *pceltFetched)
         return S_FALSE;
 
     ULONG ielt;
-    for (ielt = 0;
-         ielt < celt && m_istr < m_strs.GetSize();
-         ++ielt, ++m_istr)
+    for (ielt = 0; ielt < celt && m_istr < m_strs.GetSize(); ++ielt, ++m_istr)
     {
         size_t cb = (wcslen(m_strs[m_istr]) + 1) * sizeof(WCHAR);
         rgelt[ielt] = (LPWSTR)CoTaskMemAlloc(cb);
@@ -106,7 +104,7 @@ CAutoCompleteEnumString::Next(ULONG celt, LPOLESTR *rgelt, ULONG *pceltFetched)
 
 STDMETHODIMP CAutoCompleteEnumString::Skip(ULONG celt)
 {
-    if (INT(m_istr + celt) >= m_strs.GetSize() || m_strs.GetSize() == 0)
+    if (m_strs.GetSize() == 0 || m_strs.GetSize() <= INT(m_istr + celt))
         return S_FALSE;
 
     m_istr += celt;
@@ -181,9 +179,7 @@ void CAutoCompleteEnumString::DoDir(LPCWSTR pszDir, BOOL bDirOnly)
     LPWSTR pch = PathFindFileNameW(szPath);
     do
     {
-        if (IS_DOTS(find.cFileName))
-            continue;
-        if (find.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN)
+        if (IS_DOTS(find.cFileName) || (find.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN))
             continue;
         if (bDirOnly && !(find.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
             continue;
@@ -236,10 +232,7 @@ void CAutoCompleteEnumString::DoURLHistory()
 
         DWORD cbValue = sizeof(szValue), dwType;
         result = RegQueryValueExW(hKey, szName, NULL, &dwType, (LPBYTE)szValue, &cbValue);
-        if (result != ERROR_SUCCESS || dwType != REG_SZ)
-            continue;
-
-        if (UrlIsW(szValue, URLIS_URL))
+        if (result == ERROR_SUCCESS && dwType == REG_SZ && UrlIsW(szValue, URLIS_URL))
             AddString(szValue);
     }
 
