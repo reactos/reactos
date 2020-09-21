@@ -628,7 +628,20 @@ static int compute_rect(struct d3dx_font *font, const WCHAR *string, unsigned in
             break;
     }
 
-    rect->right = rect->left + max_width;
+    if (format & DT_CENTER)
+    {
+        rect->left += (rect->right - rect->left - max_width) / 2;
+        rect->right = rect->left + max_width;
+    }
+    else if (format & DT_RIGHT)
+    {
+        rect->left = rect->right - max_width;
+    }
+    else
+    {
+        rect->right = rect->left + max_width;
+    }
+
     if (format & DT_VCENTER)
     {
         rect->top += (rect->bottom - y) / 2;
@@ -703,7 +716,6 @@ static INT WINAPI ID3DXFontImpl_DrawTextW(ID3DXFont *iface, ID3DXSprite *sprite,
         top = rect->top;
     }
 
-    x = rect->left;
     y = rect->top;
     lh = font->metrics.tmHeight;
     width = rect->right - rect->left;
@@ -721,6 +733,13 @@ static INT WINAPI ID3DXFontImpl_DrawTextW(ID3DXFont *iface, ID3DXSprite *sprite,
         D3DXVECTOR3 pos;
 
         string = read_line(font->hdc, string, &count, line, &line_len, width, format, &size);
+
+        if (format & DT_CENTER)
+            x = (rect->left + rect->right - size.cx) / 2;
+        else if (format & DT_RIGHT)
+            x = rect->right - size.cx;
+        else
+            x = rect->left;
 
         memset(&results, 0, sizeof(results));
         results.nGlyphs = line_len;
