@@ -22,7 +22,7 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-
+#include <assert.h>
 #include "d3dx9_private.h"
 #endif /* __REACTOS__ */
 
@@ -341,13 +341,12 @@ HRESULT WINAPI D3DXCheckTextureRequirements(struct IDirect3DDevice9 *device, UIN
     else if (h == D3DX_DEFAULT)
         h = (width ? w : 256);
 
-    if (fmt->block_width != 1 || fmt->block_height != 1)
-    {
-        if (w < fmt->block_width)
-            w = fmt->block_width;
-        if (h < fmt->block_height)
-            h = fmt->block_height;
-    }
+    assert(!(fmt->block_width & (fmt->block_width - 1)));
+    assert(!(fmt->block_height & (fmt->block_height - 1)));
+    if (w & (fmt->block_width - 1))
+        w = (w + fmt->block_width) & ~(fmt->block_width - 1);
+    if (h & (fmt->block_height - 1))
+        h = (h + fmt->block_height) & ~(fmt->block_height - 1);
 
     if ((caps.TextureCaps & D3DPTEXTURECAPS_POW2) && (!is_pow2(w)))
         w = make_pow2(w);

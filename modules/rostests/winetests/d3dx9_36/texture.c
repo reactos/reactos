@@ -448,6 +448,15 @@ static void test_D3DXCheckTextureRequirements(IDirect3DDevice9 *device)
         ok(width == 4, "Got unexpected width %d.\n", width);
         ok(height == 4, "Got unexpected height %d.\n", height);
         ok(format == D3DFMT_DXT5, "Got unexpected format %u.\n", format);
+
+        width = 9;
+        height = 9;
+        hr = D3DXCheckTextureRequirements(device, &width, &height, &mipmaps, 0, &format, D3DPOOL_DEFAULT);
+        ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
+        ok(width == 12, "Got unexpected width %u.\n", width);
+        ok(height == 12, "Got unexpected height %u.\n", height);
+        ok(mipmaps == 1, "Got unexpected level count %u.\n", mipmaps);
+        ok(format == D3DFMT_DXT5, "Got unexpected format %u.\n", format);
     }
     else
     {
