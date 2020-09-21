@@ -327,6 +327,11 @@ HRESULT WINAPI D3DXCheckTextureRequirements(struct IDirect3DDevice9 *device, UIN
                 bestfmt = curfmt;
             }
         }
+        if (!bestfmt)
+        {
+            hr = D3DERR_NOTAVAILABLE;
+            goto cleanup;
+        }
         fmt = bestfmt;
         hr = D3D_OK;
     }
