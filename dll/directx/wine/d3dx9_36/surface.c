@@ -1976,6 +1976,8 @@ HRESULT WINAPI D3DXLoadSurfaceFromMemory(IDirect3DSurface9 *dst_surface,
                     int i, int j, void *texel);
             unsigned int x, y;
 
+            src_pitch = src_pitch * srcformatdesc->block_width / srcformatdesc->block_byte_count;
+
             src_uncompressed = heap_alloc(src_size.width * src_size.height * sizeof(DWORD));
             if (!src_uncompressed)
             {
@@ -2007,8 +2009,7 @@ HRESULT WINAPI D3DXLoadSurfaceFromMemory(IDirect3DSurface9 *dst_surface,
                 DWORD *ptr = &src_uncompressed[y * src_size.width];
                 for (x = 0; x < src_size.width; ++x)
                 {
-                    fetch_dxt_texel(src_pitch / sizeof(DWORD), src_memory,
-                            x + src_rect->left, y + src_rect->top, ptr);
+                    fetch_dxt_texel(src_pitch, src_memory, x + src_rect->left, y + src_rect->top, ptr);
                     ++ptr;
                 }
             }
@@ -2084,7 +2085,8 @@ HRESULT WINAPI D3DXLoadSurfaceFromMemory(IDirect3DSurface9 *dst_surface,
                     ERR("Unexpected destination compressed format %u.\n", surfdesc.Format);
             }
             tx_compress_dxtn(4, dst_size_aligned.width, dst_size_aligned.height,
-                    dst_uncompressed, gl_format, lockrect.pBits, lockrect.Pitch);
+                    dst_uncompressed, gl_format, lockrect.pBits,
+                    lockrect.Pitch * destformatdesc->block_width / destformatdesc->block_byte_count);
             heap_free(dst_uncompressed);
         }
     }
