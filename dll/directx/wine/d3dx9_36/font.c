@@ -485,17 +485,133 @@ static HRESULT WINAPI ID3DXFontImpl_PreloadTextW(ID3DXFont *iface, const WCHAR *
 static INT WINAPI ID3DXFontImpl_DrawTextA(ID3DXFont *iface, ID3DXSprite *sprite,
         const char *string, INT count, RECT *rect, DWORD format, D3DCOLOR color)
 {
-    FIXME("iface %p, sprite %p, string %s, count %d, rect %s, format %#x, color 0x%08x stub!\n",
-            iface,  sprite, debugstr_a(string), count, wine_dbgstr_rect(rect), format, color);
-    return 1;
+    int ret, countW;
+    WCHAR *wstr;
+
+    TRACE("iface %p, sprite %p, string %s, count %d, rect %s, format %#x, color 0x%08x.\n",
+          iface,  sprite, debugstr_an(string, count), count, wine_dbgstr_rect(rect), format, color);
+
+    if (!string || !count)
+        return 0;
+
+    countW = MultiByteToWideChar(CP_ACP, 0, string, count < 0 ? -1 : count, NULL, 0);
+
+    if (!countW)
+        return 0;
+
+    wstr = heap_alloc_zero(countW * sizeof(*wstr));
+    if (!wstr)
+        return 0;
+
+    MultiByteToWideChar(CP_ACP, 0, string, count < 0 ? -1 : count, wstr, countW);
+
+    ret = ID3DXFont_DrawTextW(iface, sprite, wstr, count < 0 ? countW - 1 : countW,
+                              rect, format, color);
+
+    heap_free(wstr);
+
+    return ret;
 }
 
 static INT WINAPI ID3DXFontImpl_DrawTextW(ID3DXFont *iface, ID3DXSprite *sprite,
         const WCHAR *string, INT count, RECT *rect, DWORD format, D3DCOLOR color)
 {
-    FIXME("iface %p, sprite %p, string %s, count %d, rect %s, format %#x, color 0x%08x stub!\n",
-            iface,  sprite, debugstr_w(string), count, wine_dbgstr_rect(rect), format, color);
-    return 1;
+    struct d3dx_font *font = impl_from_ID3DXFont(iface);
+    ID3DXSprite *target = sprite;
+    RECT textrect = {0};
+    int lh, x, y;
+    int ret = 0;
+
+    TRACE("iface %p, sprite %p, string %s, count %d, rect %s, format %#x, color 0x%08x.\n",
+          iface,  sprite, debugstr_wn(string, count), count, wine_dbgstr_rect(rect), format, color);
+
+    if (!string)
+        return 0;
+
+    if (count < 0)
+        count = lstrlenW(string);
+
+    if (!count)
+        return 0;
+
+    if (!rect)
+    {
+        y = ID3DXFont_DrawTextW(iface, NULL, string, count, &textrect, format | DT_CALCRECT, 0);
+
+        if (format & DT_CALCRECT)
+            return y;
+    }
+    else
+    {
+        textrect = *rect;
+    }
+
+    x = textrect.left;
+    y = textrect.top;
+
+    lh = font->metrics.tmHeight;
+
+    if (!(format & DT_CALCRECT) && !sprite)
+    {
+        D3DXCreateSprite(font->device, &target);
+        ID3DXSprite_Begin(target, 0);
+    }
+
+    if (!(format & DT_CALCRECT))
+    {
+        GCP_RESULTSW results;
+        D3DXVECTOR3 pos;
+        int i;
+
+        memset(&results, 0, sizeof(results));
+        results.nGlyphs = count;
+
+        results.lpCaretPos = heap_alloc(count * sizeof(*results.lpCaretPos));
+        if (!results.lpCaretPos)
+            goto cleanup;
+
+        results.lpGlyphs = heap_alloc(count * sizeof(*results.lpGlyphs));
+        if (!results.lpGlyphs)
+        {
+            heap_free(results.lpCaretPos);
+            goto cleanup;
+        }
+
+        GetCharacterPlacementW(font->hdc, string, count, 0, &results, 0);
+
+        for (i = 0; i < results.nGlyphs; ++i)
+        {
+            IDirect3DTexture9 *texture;
+            POINT cell_inc;
+            RECT black_box;
+
+            ID3DXFont_GetGlyphData(iface, results.lpGlyphs[i], &texture, &black_box, &cell_inc);
+
+            if (!texture)
+                continue;
+
+            pos.x = cell_inc.x + x + results.lpCaretPos[i];
+            pos.y = cell_inc.y + y;
+
+            ID3DXSprite_Draw(target, texture, &black_box, NULL, &pos, color);
+            IDirect3DTexture9_Release(texture);
+        }
+
+        heap_free(results.lpCaretPos);
+        heap_free(results.lpGlyphs);
+    }
+    y += lh;
+
+    ret = y - textrect.top;
+
+cleanup:
+    if (target != sprite)
+    {
+        ID3DXSprite_End(target);
+        ID3DXSprite_Release(target);
+    }
+
+    return ret;
 }
 
 static HRESULT WINAPI ID3DXFontImpl_OnLostDevice(ID3DXFont *iface)
