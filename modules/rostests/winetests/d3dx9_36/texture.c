@@ -1814,12 +1814,11 @@ static void test_D3DXCreateTextureFromFileInMemory(IDirect3DDevice9 *device)
     {
         for (x = 0; x < 8; ++x)
         {
-            todo_wine_if (x >= 2 && x < 6 && y >= 2 && y < 6)
-                    ok(compare_color(((DWORD *)lock_rect.pBits)[lock_rect.Pitch / 4 * y + x],
-                            dds_dxt5_8_8_expected_misaligned_3[y * 8 + x], 0),
-                            "Color at position %u, %u is 0x%08x, expected 0x%08x.\n",
-                            x, y, ((DWORD *)lock_rect.pBits)[lock_rect.Pitch / 4 * y + x],
-                            dds_dxt5_8_8_expected_misaligned_3[y * 8 + x]);
+            ok(compare_color(((DWORD *)lock_rect.pBits)[lock_rect.Pitch / 4 * y + x],
+                    dds_dxt5_8_8_expected_misaligned_3[y * 8 + x], 0),
+                    "Color at position %u, %u is 0x%08x, expected 0x%08x.\n",
+                    x, y, ((DWORD *)lock_rect.pBits)[lock_rect.Pitch / 4 * y + x],
+                    dds_dxt5_8_8_expected_misaligned_3[y * 8 + x]);
         }
     }
     hr = IDirect3DSurface9_UnlockRect(uncompressed_surface);

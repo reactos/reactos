@@ -1852,7 +1852,8 @@ HRESULT WINAPI D3DXLoadSurfaceFromMemory(IDirect3DSurface9 *dst_surface,
         DWORD filter, D3DCOLOR color_key)
 {
     const struct pixel_format_desc *srcformatdesc, *destformatdesc;
-    struct volume src_size, dst_size;
+    struct volume src_size, dst_size, dst_size_aligned;
+    RECT dst_rect_temp, dst_rect_aligned;
     IDirect3DSurface9 *surface;
     D3DSURFACE_DESC surfdesc;
     D3DLOCKED_RECT lockrect;
@@ -1887,10 +1888,14 @@ HRESULT WINAPI D3DXLoadSurfaceFromMemory(IDirect3DSurface9 *dst_surface,
     src_size.depth = 1;
 
     IDirect3DSurface9_GetDesc(dst_surface, &surfdesc);
+    destformatdesc = get_format_info(surfdesc.Format);
     if (!dst_rect)
     {
-        dst_size.width = surfdesc.Width;
-        dst_size.height = surfdesc.Height;
+        dst_rect = &dst_rect_temp;
+        dst_rect_temp.left = 0;
+        dst_rect_temp.top = 0;
+        dst_rect_temp.right = surfdesc.Width;
+        dst_rect_temp.bottom = surfdesc.Height;
     }
     else
     {
@@ -1901,18 +1906,36 @@ HRESULT WINAPI D3DXLoadSurfaceFromMemory(IDirect3DSurface9 *dst_surface,
             WARN("Invalid dst_rect specified.\n");
             return D3DERR_INVALIDCALL;
         }
-        dst_size.width = dst_rect->right - dst_rect->left;
-        dst_size.height = dst_rect->bottom - dst_rect->top;
-        if (!dst_size.width || !dst_size.height)
+        if (dst_rect->left == dst_rect->right || dst_rect->top == dst_rect->bottom)
+        {
+            WARN("Empty dst_rect specified.\n");
             return D3D_OK;
+        }
     }
+
+    dst_rect_aligned = *dst_rect;
+    if (dst_rect_aligned.left & (destformatdesc->block_width - 1))
+        dst_rect_aligned.left = dst_rect_aligned.left & ~(destformatdesc->block_width - 1);
+    if (dst_rect_aligned.top & (destformatdesc->block_height - 1))
+        dst_rect_aligned.top = dst_rect_aligned.top & ~(destformatdesc->block_height - 1);
+    if (dst_rect_aligned.right & (destformatdesc->block_width - 1) && dst_rect_aligned.right != surfdesc.Width)
+        dst_rect_aligned.right = min((dst_rect_aligned.right + destformatdesc->block_width - 1)
+                & ~(destformatdesc->block_width - 1), surfdesc.Width);
+    if (dst_rect_aligned.bottom & (destformatdesc->block_height - 1) && dst_rect_aligned.bottom != surfdesc.Height)
+        dst_rect_aligned.bottom = min((dst_rect_aligned.bottom + destformatdesc->block_height - 1)
+                & ~(destformatdesc->block_height - 1), surfdesc.Height);
+
+    dst_size.width = dst_rect->right - dst_rect->left;
+    dst_size.height = dst_rect->bottom - dst_rect->top;
     dst_size.depth = 1;
-    destformatdesc = get_format_info(surfdesc.Format);
+    dst_size_aligned.width = dst_rect_aligned.right - dst_rect_aligned.left;
+    dst_size_aligned.height = dst_rect_aligned.bottom - dst_rect_aligned.top;
+    dst_size_aligned.depth = 1;
 
     if (filter == D3DX_DEFAULT)
         filter = D3DX_FILTER_TRIANGLE | D3DX_FILTER_DITHER;
 
-    if (FAILED(hr = lock_surface(dst_surface, dst_rect, &lockrect, &surface, TRUE)))
+    if (FAILED(hr = lock_surface(dst_surface, &dst_rect_aligned, &lockrect, &surface, TRUE)))
         return hr;
 
     src_memory = (BYTE *)src_memory + src_rect->top / srcformatdesc->block_height * src_pitch
@@ -1923,8 +1946,11 @@ HRESULT WINAPI D3DXLoadSurfaceFromMemory(IDirect3DSurface9 *dst_surface,
             && dst_size.height == src_size.height
             && color_key == 0
             && !(src_rect->left & (srcformatdesc->block_width - 1))
-            && !(src_rect->top & (srcformatdesc->block_height - 1))) /* Simple copy. */
+            && !(src_rect->top & (srcformatdesc->block_height - 1))
+            && !(dst_rect->left & (destformatdesc->block_width - 1))
+            && !(dst_rect->top & (destformatdesc->block_height - 1)))
     {
+        TRACE("Simple copy.\n");
         copy_pixels(src_memory, src_pitch, 0, lockrect.pBits, lockrect.Pitch, 0,
                 &src_size, srcformatdesc);
     }
@@ -1932,6 +1958,7 @@ HRESULT WINAPI D3DXLoadSurfaceFromMemory(IDirect3DSurface9 *dst_surface,
     {
         const struct pixel_format_desc *dst_format;
         DWORD *src_uncompressed = NULL;
+        BYTE *dst_uncompressed = NULL;
         unsigned int dst_pitch;
         BYTE *dst_mem;
 
@@ -1939,7 +1966,7 @@ HRESULT WINAPI D3DXLoadSurfaceFromMemory(IDirect3DSurface9 *dst_surface,
                 || !is_conversion_to_supported(destformatdesc))
         {
             FIXME("Unsupported format conversion %#x -> %#x.\n", src_format, surfdesc.Format);
-            unlock_surface(dst_surface, dst_rect, surface, FALSE);
+            unlock_surface(dst_surface, &dst_rect_aligned, surface, FALSE);
             return E_NOTIMPL;
         }
 
@@ -1952,7 +1979,7 @@ HRESULT WINAPI D3DXLoadSurfaceFromMemory(IDirect3DSurface9 *dst_surface,
             src_uncompressed = heap_alloc(src_size.width * src_size.height * sizeof(DWORD));
             if (!src_uncompressed)
             {
-                unlock_surface(dst_surface, dst_rect, surface, FALSE);
+                unlock_surface(dst_surface, &dst_rect_aligned, surface, FALSE);
                 return E_OUTOFMEMORY;
             }
 
@@ -1992,15 +2019,23 @@ HRESULT WINAPI D3DXLoadSurfaceFromMemory(IDirect3DSurface9 *dst_surface,
 
         if (destformatdesc->type == FORMAT_DXT)
         {
-            dst_mem = heap_alloc(dst_size.width * dst_size.height * sizeof(DWORD));
-            if (!dst_mem)
+            BOOL dst_misaligned = dst_rect->left != dst_rect_aligned.left
+                    || dst_rect->top != dst_rect_aligned.top
+                    || dst_rect->right != dst_rect_aligned.right
+                    || dst_rect->bottom != dst_rect_aligned.bottom;
+
+            dst_uncompressed = HeapAlloc(GetProcessHeap(), dst_misaligned ? HEAP_ZERO_MEMORY : 0,
+                    dst_size_aligned.width * dst_size_aligned.height * sizeof(DWORD));
+            if (!dst_uncompressed)
             {
                 heap_free(src_uncompressed);
-                unlock_surface(dst_surface, dst_rect, surface, FALSE);
+                unlock_surface(dst_surface, &dst_rect_aligned, surface, FALSE);
                 return E_OUTOFMEMORY;
             }
-            dst_pitch = dst_size.width * sizeof(DWORD);
+            dst_pitch = dst_size_aligned.width * sizeof(DWORD);
             dst_format = get_format_info(D3DFMT_A8B8G8R8);
+            dst_mem = dst_uncompressed + (dst_rect->top - dst_rect_aligned.top) * dst_pitch
+                    + (dst_rect->left - dst_rect_aligned.left) * sizeof(DWORD);
         }
         else
         {
@@ -2027,41 +2062,34 @@ HRESULT WINAPI D3DXLoadSurfaceFromMemory(IDirect3DSurface9 *dst_surface,
 
         heap_free(src_uncompressed);
 
-        if (destformatdesc->type == FORMAT_DXT)
+        if (dst_uncompressed)
         {
-            if (dst_rect && (dst_rect->left || dst_rect->top))
-            {
-                FIXME("Not implemented for destination rect left / top != 0.\n");
-            }
-            else
-            {
-                GLenum gl_format = 0;
+            GLenum gl_format = 0;
 
-                TRACE("Compressing DXTn surface.\n");
-                switch(surfdesc.Format)
-                {
-                    case D3DFMT_DXT1:
-                        gl_format = GL_COMPRESSED_RGBA_S3TC_DXT1_EXT;
-                        break;
-                    case D3DFMT_DXT2:
-                    case D3DFMT_DXT3:
-                        gl_format = GL_COMPRESSED_RGBA_S3TC_DXT3_EXT;
-                        break;
-                    case D3DFMT_DXT4:
-                    case D3DFMT_DXT5:
-                        gl_format = GL_COMPRESSED_RGBA_S3TC_DXT5_EXT;
-                        break;
-                    default:
-                        ERR("Unexpected destination compressed format %u.\n", surfdesc.Format);
-                }
-                tx_compress_dxtn(4, dst_size.width, dst_size.height,
-                        dst_mem, gl_format, lockrect.pBits, lockrect.Pitch);
+            TRACE("Compressing DXTn surface.\n");
+            switch(surfdesc.Format)
+            {
+                case D3DFMT_DXT1:
+                    gl_format = GL_COMPRESSED_RGBA_S3TC_DXT1_EXT;
+                    break;
+                case D3DFMT_DXT2:
+                case D3DFMT_DXT3:
+                    gl_format = GL_COMPRESSED_RGBA_S3TC_DXT3_EXT;
+                    break;
+                case D3DFMT_DXT4:
+                case D3DFMT_DXT5:
+                    gl_format = GL_COMPRESSED_RGBA_S3TC_DXT5_EXT;
+                    break;
+                default:
+                    ERR("Unexpected destination compressed format %u.\n", surfdesc.Format);
             }
-            heap_free(dst_mem);
+            tx_compress_dxtn(4, dst_size_aligned.width, dst_size_aligned.height,
+                    dst_uncompressed, gl_format, lockrect.pBits, lockrect.Pitch);
+            heap_free(dst_uncompressed);
         }
     }
 
-    return unlock_surface(dst_surface, dst_rect, surface, TRUE);
+    return unlock_surface(dst_surface, &dst_rect_aligned, surface, TRUE);
 }
 
 /************************************************************
