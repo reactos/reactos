@@ -523,6 +523,7 @@ static void free_sampler(struct d3dx_sampler *sampler)
         free_state(&sampler->states[i]);
     }
     HeapFree(GetProcessHeap(), 0, sampler->states);
+    HeapFree(GetProcessHeap(), 0, sampler);
 }
 
 static void d3dx_pool_release_shared_parameter(struct d3dx_top_level_parameter *param);
@@ -555,7 +556,7 @@ static void free_parameter_data(struct d3dx_parameter *param, BOOL child)
             case D3DXPT_SAMPLER3D:
             case D3DXPT_SAMPLERCUBE:
                 free_sampler((struct d3dx_sampler *)param->data);
-                break;
+                return;
 
             default:
                 FIXME("Unhandled type %s\n", debug_d3dxparameter_type(param->type));
