@@ -4258,7 +4258,7 @@ static HRESULT WINAPI d3dx_effect_ApplyParameterBlock(ID3DXEffect *iface, D3DXHA
     struct d3dx_parameter_block *block = get_valid_parameter_block(parameter_block);
     struct d3dx_recorded_parameter *record;
 
-    TRACE("iface %p, paramater_block %p.\n", iface, parameter_block);
+    TRACE("iface %p, parameter_block %p.\n", iface, parameter_block);
 
     if (!block || !block->offset)
         return D3DERR_INVALIDCALL;
