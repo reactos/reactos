@@ -15,7 +15,7 @@
 #include <atlbase.h>
 #include <atlwin.h>
 #include <atlcom.h>
-#include <atlsimpstr.h>
+#include <atlstr.h>
 #include <atlsimpcoll.h>
 #include <strsafe.h>
 #include <assert.h>
@@ -39,18 +39,18 @@ public:
     void DoURLMRU();
     void ResetContent();
 
-    /* IEnumString */
+    /* IEnumString interface */
     STDMETHODIMP Next(ULONG celt, LPOLESTR *rgelt, ULONG *pceltFetched);
     STDMETHODIMP Skip(ULONG celt);
     STDMETHODIMP Reset();
     STDMETHODIMP Clone(IEnumString **ppenum);
 
-    BEGIN_COM_MAP(CAutoCompleteEnumStringList)
+    BEGIN_COM_MAP(CAutoCompleteEnumString)
         COM_INTERFACE_ENTRY_IID(IID_IEnumString, IEnumString)
     END_COM_MAP()
 
 protected:
-    ULONG m_istr;
+    INT m_istr;
     HWND m_hwndEdit;
     DWORD m_dwSHACF;
     CSimpleArray<CStringW> m_strs;
@@ -79,7 +79,6 @@ STDMETHODIMP
 CAutoCompleteEnumString::Next(ULONG celt, LPOLESTR *rgelt, ULONG *pceltFetched)
 {
     SIZE_T ielt, cch, cb;
-    BSTR *pstrs;
 
     if (!rgelt || !pceltFetched)
     {
@@ -94,10 +93,10 @@ CAutoCompleteEnumString::Next(ULONG celt, LPOLESTR *rgelt, ULONG *pceltFetched)
         return S_FALSE;
 
     for (ielt = 0;
-         ielt < celt && m_istr < m_strs.GetSize()
+         ielt < celt && m_istr < m_strs.GetSize();
          ++ielt, ++m_istr)
     {
-        cch = (SysStringLen(m_strs[m_istr]) + 1);
+        cch = lstrlenW(m_strs[m_istr]) + 1;
         cb = cch * sizeof(WCHAR);
 
         rgelt[ielt] = (LPWSTR)CoTaskMemAlloc(cb);
@@ -121,25 +120,25 @@ CAutoCompleteEnumString::Next(ULONG celt, LPOLESTR *rgelt, ULONG *pceltFetched)
     return S_FALSE;
 }
 
-STDMETHODIMP CAutoCompleteEnumString::Skip(IEnumString* This, ULONG celt)
+STDMETHODIMP CAutoCompleteEnumString::Skip(ULONG celt)
 {
-    if (m_istr + celt >= m_strs.GetSize() || m_strs.GetSize() == 0)
+    if (INT(m_istr + celt) >= m_strs.GetSize() || m_strs.GetSize() == 0)
         return S_FALSE;
 
     m_istr += celt;
     return S_OK;
 }
 
-STDMETHODIMP CAutoCompleteEnumString::Reset(IEnumString* This)
+STDMETHODIMP CAutoCompleteEnumString::Reset()
 {
     DWORD attrs;
     WCHAR szText[MAX_PATH];
     DWORD dwSHACF = m_dwSHACF;
 
-    GetWindowTextW(m_hwndEdit, szText, ARRAYSIZE(szText));
-    attrs = GetFileAttributesW(szText);
-
     ResetContent();
+
+    GetWindowTextW(m_hwndEdit, szText, _countof(szText));
+    attrs = GetFileAttributesW(szText);
 
     if (dwSHACF & (SHACF_FILESYS_ONLY | SHACF_FILESYSTEM | SHACF_FILESYS_DIRS))
     {
@@ -264,7 +263,7 @@ void CAutoCompleteEnumString::DoDrives(BOOL bDirOnly)
                 case DRIVE_REMOTE:
                 case DRIVE_RAMDISK:
                 case DRIVE_FIXED:
-                    DoDir(pES, sz, bDirOnly);
+                    DoDir(sz, bDirOnly);
                     break;
             }
         }
@@ -287,6 +286,7 @@ void CAutoCompleteEnumString::DoURLHistory()
         return;
     }
 
+#define MAX_TYPED_URLS 50
     for (i = 1; i <= MAX_TYPED_URLS; ++i)
     {
         StringCbPrintfW(szName, sizeof(szName), L"url%lu", i);
@@ -433,12 +433,11 @@ AutoComplete_AdaptFlags(HWND hwndEdit, LPDWORD pdwACO, LPDWORD pdwSHACF)
 static IEnumString *
 AutoComplete_CreateEnumString(IAutoComplete2 *pAC2, HWND hwndEdit, DWORD dwSHACF)
 {
-    IEnumString *ret;
     CAutoCompleteEnumString *pEnum = new CAutoCompleteEnumString(dwSHACF, hwndEdit);
     if (!pEnum)
         return NULL;
 
-    ret = (IEnumString *)pEnum;
+    IEnumString *ret = (IEnumString *)pEnum;
     ret->Reset();
     return ret;
 }
@@ -469,8 +468,8 @@ HRESULT WINAPI SHAutoComplete(HWND hwndEdit, DWORD dwFlags)
     if (!AutoComplete_AdaptFlags(hwndEdit, &dwACO, &dwFlags))
         return S_OK;
 
-    hr = CoCreateInstance(&CLSID_AutoComplete, NULL, dwClsCtx,
-                          &IID_IAutoComplete, (LPVOID *)&pAC2);
+    hr = CoCreateInstance(CLSID_AutoComplete, NULL, dwClsCtx,
+                          IID_IAutoComplete, (LPVOID *)&pAC2);
     if (FAILED(hr))
     {
         ERR("CoCreateInstance(CLSID_AutoComplete) failed: 0x%lX\n", hr);

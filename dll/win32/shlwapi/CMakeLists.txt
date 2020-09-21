@@ -9,8 +9,10 @@ add_definitions(
     -D_SHLWAPI_
     -D_ATL_NO_EXCEPTIONS)
 
-include_directories(BEFORE ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
-include_directories(${REACTOS_SOURCE_DIR}/sdk/lib/atl)
+set_cpp(WITH_RUNTIME)
+include_directories(BEFORE
+    ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine
+    ${REACTOS_SOURCE_DIR}/sdk/lib/atl)
 spec2def(shlwapi.dll shlwapi.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
@@ -40,7 +42,7 @@ add_library(shlwapi MODULE
     shlwapi.rc
     ${CMAKE_CURRENT_BINARY_DIR}/shlwapi.def)
 
-set_module_type(shlwapi win32dll)
+set_module_type(shlwapi win32dll UNICODE)
 target_link_libraries(shlwapi uuid wine)
 add_delay_importlibs(shlwapi userenv oleaut32 ole32 comdlg32 mpr mlang urlmon shell32 winmm version)
 add_importlibs(shlwapi user32 gdi32 advapi32 wininet msvcrt kernel32 ntdll)
