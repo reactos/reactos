@@ -6575,6 +6575,54 @@ static void test_shader_semantics(void)
     }
 }
 
+static void test_fragment_linker(void)
+{
+    ID3DXFragmentLinker *linker;
+    D3DPRESENT_PARAMETERS d3dpp;
+    IDirect3DDevice9 *device;
+    IDirect3D9 *d3d;
+    ULONG refcount;
+    HWND window;
+    HRESULT hr;
+
+    window = CreateWindowA("static", "d3dx9_test", WS_OVERLAPPEDWINDOW, 0, 0, 640, 480, NULL, NULL, NULL, NULL);
+    if (!(d3d = Direct3DCreate9(D3D_SDK_VERSION)))
+    {
+        skip("Failed to create a D3D object.\n");
+        DestroyWindow(window);
+        return;
+    }
+
+    ZeroMemory(&d3dpp, sizeof(d3dpp));
+    d3dpp.Windowed = TRUE;
+    d3dpp.SwapEffect = D3DSWAPEFFECT_DISCARD;
+    hr = IDirect3D9_CreateDevice(d3d, D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, window,
+            D3DCREATE_MIXED_VERTEXPROCESSING, &d3dpp, &device);
+    if (FAILED(hr))
+    {
+        skip("Failed to create a D3D device, hr %#x.\n", hr);
+        IDirect3D9_Release(d3d);
+        DestroyWindow(window);
+        return;
+    }
+
+    hr = D3DXCreateFragmentLinker(device, 1024, &linker);
+    ok(hr == D3D_OK, "Unexpected hr %#x.\n", hr);
+    ok(!!linker, "Unexpected linker %p.\n", linker);
+    linker->lpVtbl->Release(linker);
+
+    hr = D3DXCreateFragmentLinkerEx(device, 1024, 0, &linker);
+    ok(hr == D3D_OK, "Unexpected hr %#x.\n", hr);
+    ok(!!linker, "Unexpected linker %p.\n", linker);
+    linker->lpVtbl->Release(linker);
+
+    refcount = IDirect3DDevice9_Release(device);
+    ok(!refcount, "Device has %u references left.\n", refcount);
+    refcount = IDirect3D9_Release(d3d);
+    ok(!refcount, "The D3D object has %u references left.\n", refcount);
+    DestroyWindow(window);
+}
+
 START_TEST(shader)
 {
     test_get_shader_size();
@@ -6589,4 +6637,5 @@ START_TEST(shader)
     test_registerset();
     test_registerset_defaults();
     test_shader_semantics();
+    test_fragment_linker();
 }
