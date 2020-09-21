@@ -157,6 +157,7 @@ struct d3dx_technique
 struct d3dx_parameter_block
 {
     char magic_string[ARRAY_SIZE(parameter_block_magic_string)];
+    struct d3dx_effect *effect;
     struct list entry;
     size_t size;
     size_t offset;
@@ -523,7 +524,6 @@ static struct d3dx_parameter *get_valid_parameter(struct d3dx_effect *effect, D3
     return effect->flags & D3DXFX_LARGEADDRESSAWARE ? NULL : get_parameter_by_name(effect, NULL, parameter);
 }
 
-#if D3DX_SDK_VERSION >= 26
 static struct d3dx_parameter_block *get_valid_parameter_block(D3DXHANDLE handle)
 {
     struct d3dx_parameter_block *block = (struct d3dx_parameter_block *)handle;
@@ -531,7 +531,6 @@ static struct d3dx_parameter_block *get_valid_parameter_block(D3DXHANDLE handle)
     return block && !strncmp(block->magic_string, parameter_block_magic_string,
             sizeof(parameter_block_magic_string)) ? block : NULL;
 }
-#endif
 
 static void free_state(struct d3dx_state *state)
 {
@@ -4227,6 +4226,7 @@ static HRESULT WINAPI d3dx_effect_BeginParameterBlock(ID3DXEffect *iface)
     effect->current_parameter_block = heap_alloc_zero(sizeof(*effect->current_parameter_block));
     memcpy(effect->current_parameter_block->magic_string, parameter_block_magic_string,
             sizeof(parameter_block_magic_string));
+    effect->current_parameter_block->effect = effect;
 
     return D3D_OK;
 }
@@ -4255,11 +4255,23 @@ static D3DXHANDLE WINAPI d3dx_effect_EndParameterBlock(ID3DXEffect *iface)
 
 static HRESULT WINAPI d3dx_effect_ApplyParameterBlock(ID3DXEffect *iface, D3DXHANDLE parameter_block)
 {
-    struct d3dx_effect *This = impl_from_ID3DXEffect(iface);
+    struct d3dx_parameter_block *block = get_valid_parameter_block(parameter_block);
+    struct d3dx_recorded_parameter *record;
 
-    FIXME("(%p)->(%p): stub\n", This, parameter_block);
+    TRACE("iface %p, paramater_block %p.\n", iface, parameter_block);
 
-    return E_NOTIMPL;
+    if (!block || !block->offset)
+        return D3DERR_INVALIDCALL;
+
+    record = (struct d3dx_recorded_parameter *)block->buffer;
+    while ((BYTE *)record < block->buffer + block->offset)
+    {
+        set_value(record->param, record + 1, record->bytes,
+                param_get_data_and_dirtify(block->effect, record->param, record->bytes, TRUE));
+        record = (struct d3dx_recorded_parameter *)((BYTE *)record + get_recorded_parameter_size(record));
+    }
+    assert((BYTE *)record == block->buffer + block->offset);
+    return D3D_OK;
 }
 
 #if D3DX_SDK_VERSION >= 26
