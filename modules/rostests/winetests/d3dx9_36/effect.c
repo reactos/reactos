@@ -8033,8 +8033,8 @@ static void test_effect_parameter_block(void)
     D3DPRESENT_PARAMETERS present_parameters = {0};
     static const float float_array_zero[4];
     IDirect3DTexture9 *texture, *tex_test;
+    D3DXHANDLE block, block2, handle;
     ID3DXEffect *effect, *effect2;
-    D3DXHANDLE block, handle;
     IDirect3DDevice9 *device;
     ID3DXEffectPool *pool;
     float float_array[4];
@@ -8237,7 +8237,89 @@ static void test_effect_parameter_block(void)
             "Got unexpected hr %#x, ts1[0].v2 (%g, %g, %g, %g).\n", hr,
             float_array[0], float_array[1], float_array[2], float_array[3]);
 
+    /* Test applying a parameter block while recording a new one. */
+    hr = effect->lpVtbl->SetFloat(effect, "arr2[0]", 0.0f);
+    ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
+    hr = effect->lpVtbl->SetFloat(effect, "arr2[1]", 0.0f);
+    ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
+    hr = effect->lpVtbl->SetFloatArray(effect, "ts1[0].v1", float_array_zero, 3);
+    ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
+    hr = effect->lpVtbl->SetFloat(effect, "ts1[0].fv", 0.0f);
+    ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
+    hr = effect->lpVtbl->SetFloatArray(effect, "ts1[0].v2", float_array_zero, 4);
+    ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
+    memset(&mat, 0, sizeof(mat));
+    hr = effect->lpVtbl->SetMatrix(effect, "m3x2row", &effect_orig_mat);
+    ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
+    hr = effect->lpVtbl->SetMatrix(effect, "m3x2column", &effect_orig_mat);
+    ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
+
+    hr = effect->lpVtbl->BeginParameterBlock(effect);
+    todo_wine ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
+    hr = effect->lpVtbl->ApplyParameterBlock(effect, block);
+    todo_wine ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
+
+    hr = effect->lpVtbl->GetFloat(effect, "arr2[0]", &float_value);
+    ok(hr == D3D_OK && float_value == 0.0f, "Got unexpected hr %#x, float_value %g.\n", hr, float_value);
+    hr = effect->lpVtbl->GetFloat(effect, "arr2[1]", &float_value);
+    ok(hr == D3D_OK && float_value == 0.0f, "Got unexpected hr %#x, float_value %g.\n", hr, float_value);
+
+    hr = effect->lpVtbl->GetFloatArray(effect, "ts1[0].v1", float_array, 3);
+    ok(hr == D3D_OK && !memcmp(float_array, float_array_zero, 3 * sizeof(*float_array)),
+            "Got unexpected hr %#x, ts1[0].v1 (%g, %g, %g).\n", hr,
+            float_array[0], float_array[1], float_array[2]);
+
+    hr = effect->lpVtbl->GetMatrix(effect, "m3x2row", &mat);
+    ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
+    ok(!memcmp(&mat, &effect_orig_mat, sizeof(mat)), "Got unexpected matrix.\n");
+    hr = effect->lpVtbl->GetMatrix(effect, "m3x2column", &mat);
+    ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
+    ok(!memcmp(&mat, &effect_orig_mat, sizeof(mat)), "Got unexpected matrix.\n");
+
+    hr = effect->lpVtbl->GetFloat(effect, "ts1[0].fv", &float_value);
+    ok(hr == D3D_OK && float_value == 0.0f, "Got unexpected hr %#x, float_value %g.\n", hr, float_value);
+
+    hr = effect->lpVtbl->GetFloatArray(effect, "ts1[0].v2", float_array, 4);
+    ok(hr == D3D_OK && float_array[0] == 0.0f
+            && !memcmp(float_array + 1, float_array_zero, 3 * sizeof(*float_array)),
+            "Got unexpected hr %#x, ts1[0].v2 (%g, %g, %g, %g).\n", hr,
+            float_array[0], float_array[1], float_array[2], float_array[3]);
+
+    block2 = effect->lpVtbl->EndParameterBlock(effect);
+    todo_wine ok(!!block2, "Got unexpected block %p.\n", block2);
+
+    hr = effect->lpVtbl->ApplyParameterBlock(effect, block2);
+    todo_wine ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
+
+    hr = effect->lpVtbl->GetFloat(effect, "arr2[0]", &float_value);
+    todo_wine ok(hr == D3D_OK && float_value == 92.0f, "Got unexpected hr %#x, float_value %g.\n", hr, float_value);
+    hr = effect->lpVtbl->GetFloat(effect, "arr2[1]", &float_value);
+    ok(hr == D3D_OK && float_value == 0.0f, "Got unexpected hr %#x, float_value %g.\n", hr, float_value);
+
+    hr = effect->lpVtbl->GetFloatArray(effect, "ts1[0].v1", float_array, 3);
+    ok(hr == D3D_OK && !memcmp(float_array, float_array_zero, 3 * sizeof(*float_array)),
+            "Got unexpected hr %#x, ts1[0].v1 (%g, %g, %g).\n", hr,
+            float_array[0], float_array[1], float_array[2]);
+
+    hr = effect->lpVtbl->GetMatrix(effect, "m3x2row", &mat);
+    ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
+    todo_wine ok(!memcmp(&mat, &test_mat, sizeof(mat)), "Got unexpected matrix.\n");
+    hr = effect->lpVtbl->GetMatrix(effect, "m3x2column", &mat);
+    ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
+    todo_wine ok(!memcmp(&mat, &test_mat, sizeof(mat)), "Got unexpected matrix.\n");
+
+    hr = effect->lpVtbl->GetFloat(effect, "ts1[0].fv", &float_value);
+    todo_wine ok(hr == D3D_OK && float_value == 28.0f, "Got unexpected hr %#x, float_value %g.\n", hr, float_value);
+
+    hr = effect->lpVtbl->GetFloatArray(effect, "ts1[0].v2", float_array, 4);
+    todo_wine ok(hr == D3D_OK && float_array[0] == -29.0f
+            && !memcmp(float_array + 1, float_array_zero, 3 * sizeof(*float_array)),
+            "Got unexpected hr %#x, ts1[0].v2 (%g, %g, %g, %g).\n", hr,
+            float_array[0], float_array[1], float_array[2], float_array[3]);
+
     hr = effect->lpVtbl->DeleteParameterBlock(effect, block);
+    todo_wine ok(hr == D3D_OK, "Got result %#x.\n", hr);
+    hr = effect->lpVtbl->DeleteParameterBlock(effect, block2);
     todo_wine ok(hr == D3D_OK, "Got result %#x.\n", hr);
 
     hr = effect->lpVtbl->SetTexture(effect, "tex1", NULL);
