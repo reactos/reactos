@@ -229,19 +229,12 @@ static inline BOOL is_param_type_sampler(D3DXPARAMETER_TYPE type)
 /* Returns the smallest power of 2 which is greater than or equal to num */
 static inline uint32_t make_pow2(uint32_t num)
 {
-#if defined(__GNUC__) && ((__GNUC__ > 3) || ((__GNUC__ == 3) && (__GNUC_MINOR__ >= 3)))
-    return num == 1 ? 1 : 1u << ((__builtin_clz(num - 1) ^ 0x1f) + 1);
+#ifndef __REACTOS__
+    uint32_t index;
 #else
-    num--;
-    num |= num >> 1;
-    num |= num >> 2;
-    num |= num >> 4;
-    num |= num >> 8;
-    num |= num >> 16;
-    num++;
-
-    return num;
+    unsigned long index;
 #endif
+    return BitScanReverse(&index, num - 1) ? 1u << (index + 1) : 1;
 }
 
 struct d3dx_parameter;
