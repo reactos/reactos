@@ -235,6 +235,7 @@ static HRESULT create_file(const char *filename, const unsigned char *data, cons
 #define DDS_PF_FOURCC 0x00000004
 #define DDS_PF_RGB 0x00000040
 #define DDS_PF_LUMINANCE 0x00020000
+#define DDS_PF_BUMPLUMINANCE 0x00040000
 #define DDS_PF_BUMPDUDV 0x00080000
 
 struct dds_pixel_format
@@ -703,6 +704,7 @@ static void test_D3DXGetImageInfo(void)
     check_dds_pixel_format(DDS_PF_LUMINANCE | DDS_PF_ALPHA, 0, 8, 0x0f, 0, 0, 0xf0, D3DFMT_A4L4);
     check_dds_pixel_format(DDS_PF_BUMPDUDV, 0, 16, 0x00ff, 0xff00, 0, 0, D3DFMT_V8U8);
     check_dds_pixel_format(DDS_PF_BUMPDUDV, 0, 32, 0x0000ffff, 0xffff0000, 0, 0, D3DFMT_V16U16);
+    check_dds_pixel_format(DDS_PF_BUMPLUMINANCE, 0, 32, 0x0000ff, 0x00ff00, 0xff0000, 0, D3DFMT_X8L8V8U8);
 
     test_dds_header_handling();
 
