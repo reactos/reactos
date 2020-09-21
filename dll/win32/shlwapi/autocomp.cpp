@@ -33,24 +33,24 @@ public:
         , m_hwndEdit(NULL)
         , m_dwSHACF(0)
     {
+        m_szPrevText[0] = 0;
     }
 
     void Initialize(IAutoComplete2 *pAC2, DWORD dwSHACF, HWND hwndEdit);
 
     BOOL AddString(LPCWSTR psz)
     {
-        if (m_strs.GetSize() < MAX_ITEMS)
-        {
-            m_strs.Add(psz);
-            return TRUE;
-        }
-        return FALSE;
+        if (m_strs.GetSize() >= MAX_ITEMS)
+            return FALSE;
+        m_strs.Add(psz);
+        return (m_strs.GetSize() < MAX_ITEMS);
     }
 
     void ResetContent()
     {
         m_strs.RemoveAll();
         m_istr = 0;
+        m_szPrevText[0] = 0;
     }
 
     void DoAll();
@@ -76,7 +76,7 @@ protected:
     HWND m_hwndEdit;
     DWORD m_dwSHACF;
     CSimpleArray<CStringW> m_strs;
-    CStringW m_strPrev;
+    WCHAR m_szPrevText[MAX_PATH];
 };
 
 void CAutoCompleteEnumString::Initialize(IAutoComplete2 *pAC2, DWORD dwSHACF, HWND hwndEdit)
@@ -162,7 +162,7 @@ void CAutoCompleteEnumString::DoAll()
     if (!IsWindow(m_hwndEdit))
     {
         ResetContent();
-        m_strPrev = L"";
+        m_szPrevText[0] = 0;
         m_bPending = FALSE;
         return;
     }
@@ -170,7 +170,7 @@ void CAutoCompleteEnumString::DoAll()
     WCHAR szText[MAX_PATH];
     GetWindowTextW(m_hwndEdit, szText, _countof(szText));
 
-    if (m_bPending || (m_strPrev == szText && szText[0]))
+    if (m_bPending || lstrcmpiW(m_szPrevText, szText) == 0)
         return;
 
     m_bPending = TRUE;
@@ -188,8 +188,8 @@ void CAutoCompleteEnumString::DoAll()
             DoURLMRU();
     }
 
-    m_strPrev = szText;
     m_bPending = FALSE;
+    StringCbCopyW(m_szPrevText, sizeof(m_szPrevText), szText);
 }
 
 static unsigned __stdcall list_thread_proc(void *arg)
