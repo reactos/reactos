@@ -27,6 +27,7 @@
 #include "d3dx9_private.h"
 #include "d3dcompiler.h"
 #include "winternl.h"
+#include "wine/list.h"
 #endif /* __REACTOS__ */
 
 /* Constants for special INT/FLOAT conversation */
@@ -155,6 +156,7 @@ struct d3dx_technique
 struct d3dx_parameter_block
 {
     char magic_string[ARRAY_SIZE(parameter_block_magic_string)];
+    struct list entry;
 };
 
 struct d3dx_effect
@@ -188,6 +190,7 @@ struct d3dx_effect
     D3DMATERIAL9 current_material;
     BOOL material_updated;
 
+    struct list parameter_block_list;
     struct d3dx_parameter_block *current_parameter_block;
 };
 
@@ -690,12 +693,18 @@ static void free_parameter_block(struct d3dx_parameter_block *block)
 
 static void d3dx_effect_cleanup(struct d3dx_effect *effect)
 {
+    struct d3dx_parameter_block *block, *cursor;
     ID3DXEffectPool *pool;
     unsigned int i;
 
     TRACE("effect %p.\n", effect);
 
     free_parameter_block(effect->current_parameter_block);
+    LIST_FOR_EACH_ENTRY_SAFE(block, cursor, &effect->parameter_block_list, struct d3dx_parameter_block, entry)
+    {
+        list_remove(&block->entry);
+        free_parameter_block(block);
+    }
 
     heap_free(effect->full_name_tmp);
 
@@ -4086,11 +4095,20 @@ static HRESULT WINAPI d3dx_effect_BeginParameterBlock(ID3DXEffect *iface)
 
 static D3DXHANDLE WINAPI d3dx_effect_EndParameterBlock(ID3DXEffect *iface)
 {
-    struct d3dx_effect *This = impl_from_ID3DXEffect(iface);
+    struct d3dx_effect *effect = impl_from_ID3DXEffect(iface);
+    struct d3dx_parameter_block *ret;
 
-    FIXME("(%p)->(): stub\n", This);
+    TRACE("iface %p.\n", iface);
 
-    return NULL;
+    if (!effect->current_parameter_block)
+    {
+        WARN("No active parameter block.\n");
+        return NULL;
+    }
+    ret = effect->current_parameter_block;
+    effect->current_parameter_block = NULL;
+    list_add_tail(&effect->parameter_block_list, &ret->entry);
+    return (D3DXHANDLE)ret;
 }
 
 static HRESULT WINAPI d3dx_effect_ApplyParameterBlock(ID3DXEffect *iface, D3DXHANDLE parameter_block)
@@ -6235,6 +6253,8 @@ static HRESULT d3dx9_effect_init(struct d3dx_effect *effect, struct IDirect3DDev
     effect->device = device;
 
     effect->flags = eflags;
+
+    list_init(&effect->parameter_block_list);
 
     read_dword(&ptr, &tag);
     TRACE("Tag: %x\n", tag);

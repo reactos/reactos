@@ -8084,7 +8084,7 @@ static void test_effect_parameter_block(void)
     hr = effect->lpVtbl->BeginParameterBlock(effect);
     ok(hr == D3DERR_INVALIDCALL, "Got unexpected hr %#x.\n", hr);
     block = effect->lpVtbl->EndParameterBlock(effect);
-    todo_wine ok(!!block, "Got unexpected block %p.\n", block);
+    ok(!!block, "Got unexpected block %p.\n", block);
     handle = effect->lpVtbl->EndParameterBlock(effect);
     ok(!handle, "Got unexpected handle %p.\n", handle);
 
@@ -8099,13 +8099,13 @@ static void test_effect_parameter_block(void)
     todo_wine ok(hr == D3D_OK, "Got result %#x.\n", hr);
 
     hr = effect->lpVtbl->BeginParameterBlock(effect);
-    todo_wine ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
+    ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
     hr = effect->lpVtbl->SetFloat(effect, "vec3[0]", 1001.0f);
     ok(hr == D3DERR_INVALIDCALL, "Got unexpected hr %#x.\n", hr);
     hr = effect->lpVtbl->SetFloat(effect, "arr1[0]", 91.0f);
     ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
     block = effect->lpVtbl->EndParameterBlock(effect);
-    todo_wine ok(!!block, "Got unexpected block %p.\n", block);
+    ok(!!block, "Got unexpected block %p.\n", block);
     hr = effect->lpVtbl->ApplyParameterBlock(effect, block);
     todo_wine ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
 
@@ -8123,7 +8123,7 @@ static void test_effect_parameter_block(void)
     ok(hr == D3D_OK, "Got result %#x, expected 0 (D3D_OK).\n", hr);
 
     hr = effect->lpVtbl->BeginParameterBlock(effect);
-    todo_wine ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
+    ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
 
     /* Effect parameters are not updated during recording. */
     hr = effect->lpVtbl->SetTexture(effect, "tex1", (IDirect3DBaseTexture9 *)texture);
@@ -8175,7 +8175,7 @@ static void test_effect_parameter_block(void)
     ok(refcount == 2, "Got unexpected refcount %u.\n", refcount);
 
     block = effect->lpVtbl->EndParameterBlock(effect);
-    todo_wine ok(!!block, "Got unexpected block %p.\n", block);
+    ok(!!block, "Got unexpected block %p.\n", block);
 
     IDirect3DTexture9_AddRef(texture);
     refcount = IDirect3DTexture9_Release(texture);
@@ -8255,7 +8255,7 @@ static void test_effect_parameter_block(void)
     ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
 
     hr = effect->lpVtbl->BeginParameterBlock(effect);
-    todo_wine ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
+    ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
     hr = effect->lpVtbl->ApplyParameterBlock(effect, block);
     todo_wine ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
 
@@ -8286,7 +8286,7 @@ static void test_effect_parameter_block(void)
             float_array[0], float_array[1], float_array[2], float_array[3]);
 
     block2 = effect->lpVtbl->EndParameterBlock(effect);
-    todo_wine ok(!!block2, "Got unexpected block %p.\n", block2);
+    ok(!!block2, "Got unexpected block %p.\n", block2);
 
     hr = effect->lpVtbl->ApplyParameterBlock(effect, block2);
     todo_wine ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
