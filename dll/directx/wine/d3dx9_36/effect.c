@@ -2206,7 +2206,7 @@ static D3DXHANDLE WINAPI d3dx_effect_GetParameterBySemantic(ID3DXEffect *iface, 
                 continue;
             }
 
-            if (!_strnicmp(temp_param->semantic, semantic, -1))
+            if (!stricmp(temp_param->semantic, semantic))
             {
                 TRACE("Returning parameter %p\n", temp_param);
                 return get_parameter_handle(temp_param);
@@ -2229,7 +2229,7 @@ static D3DXHANDLE WINAPI d3dx_effect_GetParameterBySemantic(ID3DXEffect *iface, 
                 continue;
             }
 
-            if (!_strnicmp(temp_param->semantic, semantic, -1))
+            if (!stricmp(temp_param->semantic, semantic))
             {
                 TRACE("Returning parameter %p\n", temp_param);
                 return get_parameter_handle(temp_param);
