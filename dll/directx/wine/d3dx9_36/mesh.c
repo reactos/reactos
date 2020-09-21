@@ -1694,11 +1694,7 @@ static HRESULT WINAPI d3dx9_mesh_OptimizeInplace(ID3DXMesh *iface, DWORD flags, 
         if (FAILED(hr)) goto cleanup;
     } else if (flags & D3DXMESHOPT_ATTRSORT) {
         if (!(flags & D3DXMESHOPT_IGNOREVERTS))
-        {
             FIXME("D3DXMESHOPT_ATTRSORT vertex reordering not implemented.\n");
-            hr = E_NOTIMPL;
-            goto cleanup;
-        }
 
         hr = iface->lpVtbl->LockAttributeBuffer(iface, 0, &attrib_buffer);
         if (FAILED(hr)) goto cleanup;
@@ -2414,20 +2410,21 @@ BOOL WINAPI D3DXIntersectTri(const D3DXVECTOR3 *p0, const D3DXVECTOR3 *p1, const
     return FALSE;
 }
 
-BOOL WINAPI D3DXSphereBoundProbe(const D3DXVECTOR3 *pcenter, float radius,
-        const D3DXVECTOR3 *prayposition, const D3DXVECTOR3 *praydirection)
+BOOL WINAPI D3DXSphereBoundProbe(const D3DXVECTOR3 *center, float radius,
+        const D3DXVECTOR3 *ray_position, const D3DXVECTOR3 *ray_direction)
 {
-    D3DXVECTOR3 difference;
-    FLOAT a, b, c, d;
+    D3DXVECTOR3 difference = {0};
+    float a, b, c, d;
 
-    a = D3DXVec3LengthSq(praydirection);
-    if (!D3DXVec3Subtract(&difference, prayposition, pcenter)) return FALSE;
-    b = D3DXVec3Dot(&difference, praydirection);
+    D3DXVec3Subtract(&difference, ray_position, center);
     c = D3DXVec3LengthSq(&difference) - radius * radius;
+    if (c < 0.0f)
+        return TRUE;
+    a = D3DXVec3LengthSq(ray_direction);
+    b = D3DXVec3Dot(&difference, ray_direction);
     d = b * b - a * c;
 
-    if ( ( d <= 0.0f ) || ( sqrt(d) <= b ) ) return FALSE;
-    return TRUE;
+    return d >= 0.0f && (b <= 0.0f || d > b * b);
 }
 
 /*************************************************************************

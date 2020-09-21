@@ -435,18 +435,42 @@ static void D3DXBoundProbeTest(void)
     radius = sqrt(77.0f);
     center.x = 1.0f; center.y = 2.0f; center.z = 3.0f;
     raydirection.x = 2.0f; raydirection.y = -4.0f; raydirection.z = 2.0f;
-
     rayposition.x = 5.0f; rayposition.y = 5.0f; rayposition.z = 9.0f;
     result = D3DXSphereBoundProbe(&center, radius, &rayposition, &raydirection);
-    ok(result == TRUE, "expected TRUE, received FALSE\n");
+    ok(result == TRUE, "Got unexpected result %#x.\n", result);
 
     rayposition.x = 45.0f; rayposition.y = -75.0f; rayposition.z = 49.0f;
     result = D3DXSphereBoundProbe(&center, radius, &rayposition, &raydirection);
-    ok(result == FALSE, "expected FALSE, received TRUE\n");
+    ok(result == FALSE, "Got unexpected result %#x.\n", result);
+
+    raydirection.x = -2.0f; raydirection.y = 4.0f; raydirection.z = -2.0f;
+    result = D3DXSphereBoundProbe(&center, radius, &rayposition, &raydirection);
+    ok(result == TRUE, "Got unexpected result %#x.\n", result);
 
     rayposition.x = 5.0f; rayposition.y = 11.0f; rayposition.z = 9.0f;
     result = D3DXSphereBoundProbe(&center, radius, &rayposition, &raydirection);
-    ok(result == FALSE, "expected FALSE, received TRUE\n");
+    ok(result == FALSE, "Got unexpected result %#x.\n", result);
+
+    raydirection.x = 2.0f; raydirection.y = -4.0f; raydirection.z = 2.0f;
+    result = D3DXSphereBoundProbe(&center, radius, &rayposition, &raydirection);
+    ok(result == FALSE, "Got unexpected result %#x.\n", result);
+
+    radius = 1.0f;
+    rayposition.x = 2.0f; rayposition.y = 2.0f; rayposition.z = 3.0f;
+    result = D3DXSphereBoundProbe(&center, radius, &rayposition, &raydirection);
+    ok(result == FALSE, "Got unexpected result %#x.\n", result);
+
+    raydirection.x = 0.0f; raydirection.y = 0.0f; raydirection.z = 1.0f;
+    result = D3DXSphereBoundProbe(&center, radius, &rayposition, &raydirection);
+    ok(result == TRUE, "Got unexpected result %#x.\n", result);
+
+    if (0)
+    {
+        /* All these crash on native. */
+        D3DXSphereBoundProbe(&center, radius, &rayposition, NULL);
+        D3DXSphereBoundProbe(&center, radius, NULL, &raydirection);
+        D3DXSphereBoundProbe(NULL, radius, &rayposition, &raydirection);
+    }
 }
 
 static void D3DXComputeBoundingBoxTest(void)
