@@ -32,7 +32,7 @@ public:
     CAutoCompleteEnumString(const CAutoCompleteEnumString& another);
     ~CAutoCompleteEnumString();
 
-    HRESULT AddString(LPCWSTR psz);
+    void AddString(LPCWSTR psz);
     void DoDir(LPCWSTR pszDir, BOOL bDirOnly);
     void DoDrives(BOOL bDirOnly);
     void DoURLHistory();
@@ -196,7 +196,7 @@ void CAutoCompleteEnumString::ResetContent()
     m_istr = 0;
 }
 
-HRESULT CAutoCompleteEnumString::AddString(LPCWSTR psz)
+void CAutoCompleteEnumString::AddString(LPCWSTR psz)
 {
     m_strs.Add(psz);
 }
