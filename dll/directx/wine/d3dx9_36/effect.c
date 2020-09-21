@@ -831,6 +831,73 @@ static void set_matrix_transpose(struct d3dx_parameter *param, const D3DXMATRIX 
     }
 }
 
+static HRESULT set_string(char **param_data, const char *string)
+{
+    heap_free(*param_data);
+    *param_data = heap_alloc(strlen(string) + 1);
+    if (!*param_data)
+    {
+        ERR("Out of memory.\n");
+        return E_OUTOFMEMORY;
+    }
+    strcpy(*param_data, string);
+    return D3D_OK;
+}
+
+static HRESULT set_value(struct d3dx_parameter *param, const void *data, unsigned int bytes)
+{
+    unsigned int i, count;
+
+    bytes = min(bytes, param->bytes);
+    count = min(param->element_count ? param->element_count : 1, bytes / sizeof(void *));
+
+    switch (param->type)
+    {
+        case D3DXPT_TEXTURE:
+        case D3DXPT_TEXTURE1D:
+        case D3DXPT_TEXTURE2D:
+        case D3DXPT_TEXTURE3D:
+        case D3DXPT_TEXTURECUBE:
+            for (i = 0; i < count; ++i)
+            {
+                IUnknown *old_texture = ((IUnknown **)param->data)[i];
+                IUnknown *new_texture = ((IUnknown **)data)[i];
+
+                if (new_texture == old_texture)
+                    continue;
+
+                if (new_texture)
+                    IUnknown_AddRef(new_texture);
+                if (old_texture)
+                    IUnknown_Release(old_texture);
+            }
+        /* fallthrough */
+        case D3DXPT_VOID:
+        case D3DXPT_BOOL:
+        case D3DXPT_INT:
+        case D3DXPT_FLOAT:
+            TRACE("Copy %u bytes.\n", bytes);
+            memcpy(param->data, data, bytes);
+            break;
+
+        case D3DXPT_STRING:
+        {
+            HRESULT hr;
+
+            for (i = 0; i < count; ++i)
+                if (FAILED(hr = set_string(&((char **)param->data)[i], ((const char **)data)[i])))
+                    return hr;
+            break;
+        }
+
+        default:
+            FIXME("Unhandled type %s.\n", debug_d3dxparameter_type(param->type));
+            break;
+    }
+
+    return D3D_OK;
+}
+
 static struct d3dx_parameter *get_parameter_element_by_name(struct d3dx_effect *effect,
         struct d3dx_parameter *parameter, const char *name)
 {
@@ -1178,19 +1245,6 @@ static void set_dirty(struct d3dx_parameter *param)
         shared_data->update_version = new_update_version;
     else
         top_param->update_version = new_update_version;
-}
-
-static HRESULT set_string(char **param_data, const char *string)
-{
-    HeapFree(GetProcessHeap(), 0, *param_data);
-    *param_data = HeapAlloc(GetProcessHeap(), 0, strlen(string) + 1);
-    if (!*param_data)
-    {
-        ERR("Out of memory.\n");
-        return E_OUTOFMEMORY;
-    }
-    strcpy(*param_data, string);
-    return D3D_OK;
 }
 
 static void d3dx9_set_light_parameter(enum LIGHT_TYPE op, D3DLIGHT9 *light, void *value)
@@ -2282,7 +2336,6 @@ static HRESULT WINAPI d3dx_effect_SetValue(ID3DXEffect *iface, D3DXHANDLE parame
 {
     struct d3dx_effect *effect = impl_from_ID3DXEffect(iface);
     struct d3dx_parameter *param = get_valid_parameter(effect, parameter);
-    unsigned int i;
 
     TRACE("iface %p, parameter %p, data %p, bytes %u.\n", iface, parameter, data, bytes);
 
@@ -2299,53 +2352,8 @@ static HRESULT WINAPI d3dx_effect_SetValue(ID3DXEffect *iface, D3DXHANDLE parame
 
     if (data && param->bytes <= bytes)
     {
-        switch (param->type)
-        {
-            case D3DXPT_TEXTURE:
-            case D3DXPT_TEXTURE1D:
-            case D3DXPT_TEXTURE2D:
-            case D3DXPT_TEXTURE3D:
-            case D3DXPT_TEXTURECUBE:
-                for (i = 0; i < (param->element_count ? param->element_count : 1); ++i)
-                {
-                    IUnknown *old_texture = ((IUnknown **)param->data)[i];
-                    IUnknown *new_texture = ((IUnknown **)data)[i];
-
-                    if (new_texture == old_texture)
-                        continue;
-
-                    if (new_texture)
-                        IUnknown_AddRef(new_texture);
-                    if (old_texture)
-                        IUnknown_Release(old_texture);
-                }
-            /* fallthrough */
-            case D3DXPT_VOID:
-            case D3DXPT_BOOL:
-            case D3DXPT_INT:
-            case D3DXPT_FLOAT:
-                TRACE("Copy %u bytes.\n", param->bytes);
-                memcpy(param->data, data, param->bytes);
-                set_dirty(param);
-                break;
-
-            case D3DXPT_STRING:
-            {
-                HRESULT hr;
-
-                set_dirty(param);
-                for (i = 0; i < (param->element_count ? param->element_count : 1); ++i)
-                    if (FAILED(hr = set_string(&((char **)param->data)[i], ((const char **)data)[i])))
-                        return hr;
-                break;
-            }
-
-            default:
-                FIXME("Unhandled type %s.\n", debug_d3dxparameter_type(param->type));
-                break;
-        }
-
-        return D3D_OK;
+        set_dirty(param);
+        return set_value(param, data, bytes);
     }
 
     WARN("Invalid argument specified.\n");
