@@ -11150,6 +11150,32 @@ static void D3DXCreateAnimationControllerTest(void)
     animation->lpVtbl->Release(animation);
 }
 
+static void D3DXCreateKeyframedAnimationSetTest(void)
+{
+    ID3DXKeyframedAnimationSet *set;
+    D3DXPLAYBACK_TYPE type;
+    unsigned int count;
+    const char *name;
+    HRESULT hr;
+
+    hr = D3DXCreateKeyframedAnimationSet("wine_bottle", 5.0, D3DXPLAY_LOOP, 0, 0, NULL, &set);
+    ok(hr == D3DERR_INVALIDCALL, "Got unexpected hr %#x.\n", hr);
+
+    hr = D3DXCreateKeyframedAnimationSet("wine_bottle", 5.0, D3DXPLAY_LOOP, 10, 0, NULL, &set);
+    ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
+
+    name = set->lpVtbl->GetName(set);
+    ok(!strcmp(name, "wine_bottle"), "Got unexpected name %s.\n", debugstr_a(name));
+
+    type = set->lpVtbl->GetPlaybackType(set);
+    ok(type == D3DXPLAY_LOOP, "Got unexpected value %u.\n", type);
+
+    count = set->lpVtbl->GetNumAnimations(set);
+    ok(!count, "Got unexpected value %u.\n", count);
+
+    set->lpVtbl->Release(set);
+}
+
 static void test_D3DXFrameFind(void)
 {
     static char n1[] = "name1";
@@ -11418,6 +11444,7 @@ START_TEST(mesh)
     D3DXCreateTextTest();
     D3DXCreateTorusTest();
     D3DXCreateAnimationControllerTest();
+    D3DXCreateKeyframedAnimationSetTest();
     test_get_decl_length();
     test_get_decl_vertex_size();
     test_fvf_decl_conversion();
