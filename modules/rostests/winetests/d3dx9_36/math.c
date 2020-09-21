@@ -2026,7 +2026,7 @@ static void D3DXVector2Test(void)
     D3DXVec2TransformCoord(&gotvec, &u, &mat);
     expect_vec2(&expectedvec, &gotvec, 1);
     gotvec.x = u.x; gotvec.y = u.y;
-    D3DXVec2TransformCoord(&gotvec, (D3DXVECTOR2 *)&gotvec, &mat);
+    D3DXVec2TransformCoord(&gotvec, &gotvec, &mat);
     expect_vec2(&expectedvec, &gotvec, 1);
 
  /*_______________D3DXVec2TransformNormal______________________*/
