@@ -513,6 +513,16 @@ static struct d3dx_parameter *get_valid_parameter(struct d3dx_effect *effect, D3
     return effect->flags & D3DXFX_LARGEADDRESSAWARE ? NULL : get_parameter_by_name(effect, NULL, parameter);
 }
 
+#if D3DX_SDK_VERSION >= 26
+static struct d3dx_parameter_block *get_valid_parameter_block(D3DXHANDLE handle)
+{
+    struct d3dx_parameter_block *block = (struct d3dx_parameter_block *)handle;
+
+    return block && !strncmp(block->magic_string, parameter_block_magic_string,
+            sizeof(parameter_block_magic_string)) ? block : NULL;
+}
+#endif
+
 static void free_state(struct d3dx_state *state)
 {
     free_parameter(&state->parameter, FALSE, FALSE);
@@ -4123,11 +4133,27 @@ static HRESULT WINAPI d3dx_effect_ApplyParameterBlock(ID3DXEffect *iface, D3DXHA
 #if D3DX_SDK_VERSION >= 26
 static HRESULT WINAPI d3dx_effect_DeleteParameterBlock(ID3DXEffect *iface, D3DXHANDLE parameter_block)
 {
-    struct d3dx_effect *This = impl_from_ID3DXEffect(iface);
+    struct d3dx_parameter_block *block = get_valid_parameter_block(parameter_block);
+    struct d3dx_effect *effect = impl_from_ID3DXEffect(iface);
+    struct d3dx_parameter_block *b;
 
-    FIXME("(%p)->(%p): stub\n", This, parameter_block);
+    TRACE("iface %p, parameter_block %p.\n", iface, parameter_block);
 
-    return E_NOTIMPL;
+    if (!block)
+        return D3DERR_INVALIDCALL;
+
+    LIST_FOR_EACH_ENTRY(b, &effect->parameter_block_list, struct d3dx_parameter_block, entry)
+    {
+        if (b == block)
+        {
+            list_remove(&b->entry);
+            free_parameter_block(b);
+            return D3D_OK;
+        }
+    }
+
+    WARN("Block is not found in issued block list, not freeing memory.\n");
+    return D3DERR_INVALIDCALL;
 }
 #endif
 

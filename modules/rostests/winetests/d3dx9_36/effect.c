@@ -8096,7 +8096,7 @@ static void test_effect_parameter_block(void)
     hr = effect->lpVtbl->ApplyParameterBlock(effect, block);
     todo_wine ok(hr == D3DERR_INVALIDCALL, "Got unexpected hr %#x.\n", hr);
     hr = effect->lpVtbl->DeleteParameterBlock(effect, block);
-    todo_wine ok(hr == D3D_OK, "Got result %#x.\n", hr);
+    ok(hr == D3D_OK, "Got result %#x.\n", hr);
 
     hr = effect->lpVtbl->BeginParameterBlock(effect);
     ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
@@ -8110,9 +8110,9 @@ static void test_effect_parameter_block(void)
     todo_wine ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
 
     hr = effect->lpVtbl->DeleteParameterBlock(effect2, block);
-    todo_wine ok(hr == D3DERR_INVALIDCALL, "Got result %#x.\n", hr);
+    ok(hr == D3DERR_INVALIDCALL, "Got result %#x.\n", hr);
     hr = effect->lpVtbl->DeleteParameterBlock(effect, block);
-    todo_wine ok(hr == D3D_OK, "Got result %#x.\n", hr);
+    ok(hr == D3D_OK, "Got result %#x.\n", hr);
 
     hr = effect->lpVtbl->ApplyParameterBlock(effect, NULL);
     todo_wine ok(hr == D3DERR_INVALIDCALL, "Got unexpected hr %#x.\n", hr);
@@ -8182,7 +8182,7 @@ static void test_effect_parameter_block(void)
     ok(refcount == 2, "Got unexpected refcount %u.\n", refcount);
 
     hr = effect->lpVtbl->DeleteParameterBlock(effect2, block);
-    todo_wine ok(hr == D3DERR_INVALIDCALL, "Got result %#x.\n", hr);
+    ok(hr == D3DERR_INVALIDCALL, "Got result %#x.\n", hr);
 
     IDirect3DTexture9_AddRef(texture);
     refcount = IDirect3DTexture9_Release(texture);
@@ -8318,9 +8318,9 @@ static void test_effect_parameter_block(void)
             float_array[0], float_array[1], float_array[2], float_array[3]);
 
     hr = effect->lpVtbl->DeleteParameterBlock(effect, block);
-    todo_wine ok(hr == D3D_OK, "Got result %#x.\n", hr);
+    ok(hr == D3D_OK, "Got result %#x.\n", hr);
     hr = effect->lpVtbl->DeleteParameterBlock(effect, block2);
-    todo_wine ok(hr == D3D_OK, "Got result %#x.\n", hr);
+    ok(hr == D3D_OK, "Got result %#x.\n", hr);
 
     hr = effect->lpVtbl->SetTexture(effect, "tex1", NULL);
     ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
