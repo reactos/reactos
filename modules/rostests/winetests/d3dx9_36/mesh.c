@@ -4966,14 +4966,20 @@ cleanup:
 
 static void test_create_skin_info(void)
 {
-    HRESULT hr;
-    ID3DXSkinInfo *skininfo = NULL;
     D3DVERTEXELEMENT9 empty_declaration[] = { D3DDECL_END() };
     D3DVERTEXELEMENT9 declaration_out[MAX_FVF_DECL_SIZE];
     const D3DVERTEXELEMENT9 declaration_with_nonzero_stream[] = {
         {1, 0, D3DDECLTYPE_FLOAT3, 0, D3DDECLUSAGE_POSITION, 0},
         D3DDECL_END()
     };
+    D3DVERTEXELEMENT9 declaration[MAX_FVF_DECL_SIZE];
+    DWORD exp_vertices[2], vertices[2];
+    float exp_weights[2], weights[2];
+    const char *exp_string, *string;
+    ID3DXSkinInfo *skininfo = NULL;
+    DWORD exp_fvf, fvf;
+    unsigned int i;
+    HRESULT hr;
 
     hr = D3DXCreateSkinInfo(0, empty_declaration, 0, &skininfo);
     ok(hr == D3D_OK, "Expected D3D_OK, got %#x\n", hr);
@@ -4990,6 +4996,7 @@ static void test_create_skin_info(void)
     ok(hr == D3D_OK, "Expected D3D_OK, got %#x\n", hr);
     if (skininfo)
     {
+        ID3DXSkinInfo *clone = NULL;
         DWORD dword_result;
         float flt_result;
         const char *string_result;
@@ -5022,6 +5029,10 @@ static void test_create_skin_info(void)
 
         transform = skininfo->lpVtbl->GetBoneOffsetMatrix(skininfo, -1);
         ok(transform == NULL, "Expected NULL, got %p\n", transform);
+
+        hr = skininfo->lpVtbl->Clone(skininfo, &clone);
+        ok(hr == D3D_OK, "Expected D3D_OK, got %#x\n", hr);
+        IUnknown_Release(clone);
 
         {
             /* test [GS]etBoneOffsetMatrix */
@@ -5066,12 +5077,7 @@ static void test_create_skin_info(void)
 
         {
             /* test [GS]etBoneInfluence */
-            DWORD vertices[2];
-            FLOAT weights[2];
-            int i;
             DWORD num_influences;
-            DWORD exp_vertices[2];
-            FLOAT exp_weights[2];
 
             /* vertex and weight arrays untouched when num_influences is 0 */
             vertices[0] = 0xdeadbeef;
@@ -5139,14 +5145,17 @@ static void test_create_skin_info(void)
             ok(hr == D3D_OK, "Expected D3D_OK, got %#x\n", hr);
             ok(vertices[0] == 0xdeadbeef, "expected vertex 0xdeadbeef, got %u\n", vertices[0]);
             ok(weights[0] == FLT_MAX, "expected weight %g, got %g\n", FLT_MAX, weights[0]);
+
+            hr = skininfo->lpVtbl->SetBoneInfluence(skininfo, 0, num_influences, exp_vertices, exp_weights);
+            ok(hr == D3D_OK, "Expected D3D_OK, got %#x\n", hr);
         }
 
         {
             /* test [GS]etFVF and [GS]etDeclaration */
             D3DVERTEXELEMENT9 declaration_in[MAX_FVF_DECL_SIZE];
-            DWORD fvf = D3DFVF_XYZ;
             DWORD got_fvf;
 
+            fvf = D3DFVF_XYZ;
             hr = skininfo->lpVtbl->SetDeclaration(skininfo, NULL);
             ok(hr == D3DERR_INVALIDCALL, "Expected D3DERR_INVALIDCALL, got %#x\n", hr);
 
@@ -5182,6 +5191,45 @@ static void test_create_skin_info(void)
             ok(hr == D3D_OK, "Expected D3D_OK, got %#x\n", hr);
             compare_elements(declaration_out, declaration_in, __LINE__, 0);
         }
+
+        /* Test Clone() */
+        hr = skininfo->lpVtbl->Clone(skininfo, NULL);
+        ok(hr == D3DERR_INVALIDCALL, "Got unexpected hr %#x.\n", hr);
+
+        clone = NULL;
+        hr = skininfo->lpVtbl->Clone(skininfo, &clone);
+        ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
+
+        hr = clone->lpVtbl->GetDeclaration(clone, declaration);
+        ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
+        compare_elements(declaration, declaration_out, __LINE__, 0);
+
+        hr = D3DXFVFFromDeclarator(declaration_out, &exp_fvf);
+        ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
+        fvf = clone->lpVtbl->GetFVF(clone);
+        ok(fvf == exp_fvf, "Got unexpected fvf %#x.\n", fvf);
+
+        exp_string = skininfo->lpVtbl->GetBoneName(skininfo, 0);
+        string = clone->lpVtbl->GetBoneName(clone, 0);
+        ok(!strcmp(string, exp_string), "Got unexpected bone 0 name %s.\n", debugstr_a(string));
+
+        transform = clone->lpVtbl->GetBoneOffsetMatrix(clone, 0);
+        check_matrix(transform, &identity_matrix);
+
+        hr = skininfo->lpVtbl->GetBoneInfluence(skininfo, 0, exp_vertices, exp_weights);
+        ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
+        hr = clone->lpVtbl->GetBoneInfluence(clone, 0, vertices, weights);
+        ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
+
+        for (i = 0; i < ARRAY_SIZE(vertices); ++i)
+        {
+            ok(vertices[i] == exp_vertices[i], "influence[%u]: got unexpected vertex %u, expected %u.\n",
+                    i, vertices[i], exp_vertices[i]);
+            ok(((DWORD *)weights)[i] == ((DWORD *)exp_weights)[i],
+                    "influence[%u]: got unexpected weight %.8e, expected %.8e.\n", i, weights[i], exp_weights[i]);
+        }
+
+        IUnknown_Release(clone);
     }
     if (skininfo) IUnknown_Release(skininfo);
     skininfo = NULL;

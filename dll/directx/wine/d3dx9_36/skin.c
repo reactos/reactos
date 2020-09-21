@@ -302,9 +302,33 @@ static D3DXMATRIX * WINAPI d3dx9_skin_info_GetBoneOffsetMatrix(ID3DXSkinInfo *if
 
 static HRESULT WINAPI d3dx9_skin_info_Clone(ID3DXSkinInfo *iface, ID3DXSkinInfo **skin_info)
 {
-    FIXME("iface %p, skin_info %p stub!\n", iface, skin_info);
+    struct d3dx9_skin_info *skin = impl_from_ID3DXSkinInfo(iface);
+    unsigned int i;
+    HRESULT hr;
 
-    return E_NOTIMPL;
+    TRACE("iface %p, skin_info %p.\n", iface, skin_info);
+
+    if (FAILED(hr = D3DXCreateSkinInfo(skin->num_vertices, skin->vertex_declaration, skin->num_bones, skin_info)))
+        return hr;
+
+    for (i = 0; i < skin->num_bones; ++i)
+    {
+        struct bone *current_bone = &skin->bones[i];
+
+        if (current_bone->name && FAILED(hr = (*skin_info)->lpVtbl->SetBoneName(*skin_info, i, current_bone->name)))
+            break;
+        if (FAILED(hr = (*skin_info)->lpVtbl->SetBoneOffsetMatrix(*skin_info, i, &current_bone->transform)))
+            break;
+        if (current_bone->vertices && current_bone->weights
+                && FAILED(hr = (*skin_info)->lpVtbl->SetBoneInfluence(*skin_info, i, current_bone->num_influences,
+                current_bone->vertices, current_bone->weights)))
+            break;
+    }
+
+    if (FAILED(hr))
+        (*skin_info)->lpVtbl->Release(*skin_info);
+
+    return hr;
 }
 
 static HRESULT WINAPI d3dx9_skin_info_Remap(ID3DXSkinInfo *iface, DWORD num_vertices, DWORD *vertex_remap)
