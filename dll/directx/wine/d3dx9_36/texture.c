@@ -1242,7 +1242,7 @@ HRESULT WINAPI D3DXCreateVolumeTextureFromFileInMemoryEx(IDirect3DDevice9 *devic
     dynamic_texture = (caps.Caps2 & D3DCAPS2_DYNAMICTEXTURES) && (usage & D3DUSAGE_DYNAMIC);
     if (pool == D3DPOOL_DEFAULT && !dynamic_texture)
     {
-        hr = D3DXCreateVolumeTexture(device, width, height, depth, mip_levels, usage, format, D3DPOOL_SYSTEMMEM, &buftex);
+        hr = D3DXCreateVolumeTexture(device, width, height, depth, mip_levels, 0, format, D3DPOOL_SYSTEMMEM, &buftex);
         tex = buftex;
     }
     else
