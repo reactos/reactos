@@ -434,7 +434,6 @@ HRESULT WINAPI D3DXCheckCubeTextureRequirements(struct IDirect3DDevice9 *device,
     if (!(caps.TextureCaps & D3DPTEXTURECAPS_CUBEMAP))
         return D3DERR_NOTAVAILABLE;
 
-    /* ensure width/height is power of 2 */
     if ((caps.TextureCaps & D3DPTEXTURECAPS_CUBEMAP_POW2) && (!is_pow2(s)))
         s = make_pow2(s);
 
@@ -474,7 +473,6 @@ HRESULT WINAPI D3DXCheckVolumeTextureRequirements(struct IDirect3DDevice9 *devic
     if (d == D3DX_DEFAULT)
         d = 1;
 
-    /* ensure width/height is power of 2 */
     if ((caps.TextureCaps & D3DPTEXTURECAPS_VOLUMEMAP_POW2) &&
         (!is_pow2(w) || !is_pow2(h) || !is_pow2(d)))
     {
@@ -650,7 +648,7 @@ HRESULT WINAPI D3DXCreateTextureFromFileInMemoryEx(struct IDirect3DDevice9 *devi
         skip_levels = 0;
     }
 
-    /* fix texture creation parameters */
+    /* Fix up texture creation parameters. */
     hr = D3DXCheckTextureRequirements(device, &width, &height, &miplevels, usage, &format, pool);
     if (FAILED(hr))
     {
