@@ -30,11 +30,3 @@ STRINGTABLE
    IDS_NO_MAPI_CLIENT, "邮件发送失败，因为您没有安装 MAPI 邮件客户端。"
    IDS_SEND_MAIL, "发送邮件"
 }
-
-LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
-
-STRINGTABLE
-{
-   IDS_NO_MAPI_CLIENT, "郵件發送失敗，因為您沒有安裝 MAPI 郵件用戶端。"
-   IDS_SEND_MAIL, "發送郵件"
-}
