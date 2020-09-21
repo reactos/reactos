@@ -556,7 +556,7 @@ static void test_ID3DXFont(IDirect3DDevice9 *device)
     hr = ID3DXFont_PreloadCharacters(font, 'b', 'a');
     ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
     hr = ID3DXFont_PreloadGlyphs(font, 1, 0);
-    todo_wine ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
+    ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
 
     hr = ID3DXFont_PreloadCharacters(font, 'a', 'a');
     ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
@@ -586,6 +586,7 @@ static void test_ID3DXFont(IDirect3DDevice9 *device)
 
         ret = ID3DXFont_GetTextMetricsW(font, &tm);
         ok(ret, "Got unexpected ret %#x.\n", ret);
+
         ok(blackbox.right - blackbox.left == glyph_metrics.gmBlackBoxX + 2, "Character %c: got %d, expected %d.\n",
                 c, blackbox.right - blackbox.left, glyph_metrics.gmBlackBoxX + 2);
         ok(blackbox.bottom - blackbox.top == glyph_metrics.gmBlackBoxY + 2, "Character %c: got %d, expected %d.\n",
@@ -603,7 +604,7 @@ static void test_ID3DXFont(IDirect3DDevice9 *device)
 
     /* Test multiple textures */
     hr = ID3DXFont_PreloadGlyphs(font, 0, 1000);
-    todo_wine ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
+    ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
 
     /* Test glyphs that are not rendered */
     for (glyph = 1; glyph < 4; ++glyph)
