@@ -1282,45 +1282,6 @@ static HRESULT d3dx9_base_effect_set_vector_array(struct d3dx9_base_effect *base
     return D3DERR_INVALIDCALL;
 }
 
-static HRESULT d3dx9_base_effect_get_vector_array(struct d3dx9_base_effect *base,
-        D3DXHANDLE parameter, D3DXVECTOR4 *vector, UINT count)
-{
-    struct d3dx_parameter *param = get_valid_parameter(base, parameter);
-
-    if (!count) return D3D_OK;
-
-    if (vector && param && count <= param->element_count)
-    {
-        UINT i;
-
-        TRACE("Class %s\n", debug_d3dxparameter_class(param->class));
-
-        switch (param->class)
-        {
-            case D3DXPC_VECTOR:
-                for (i = 0; i < count; ++i)
-                {
-                    get_vector(&param->members[i], &vector[i]);
-                }
-                return D3D_OK;
-
-            case D3DXPC_SCALAR:
-            case D3DXPC_MATRIX_ROWS:
-            case D3DXPC_OBJECT:
-            case D3DXPC_STRUCT:
-                break;
-
-            default:
-                FIXME("Unhandled class %s\n", debug_d3dxparameter_class(param->class));
-                break;
-        }
-    }
-
-    WARN("Parameter not found.\n");
-
-    return D3DERR_INVALIDCALL;
-}
-
 static HRESULT d3dx9_base_effect_get_vertex_shader(struct d3dx9_base_effect *base,
         D3DXHANDLE parameter, struct IDirect3DVertexShader9 **shader)
 {
@@ -2983,10 +2944,41 @@ static HRESULT WINAPI d3dx_effect_GetVectorArray(ID3DXEffect *iface, D3DXHANDLE 
         D3DXVECTOR4 *vector, UINT count)
 {
     struct d3dx_effect *effect = impl_from_ID3DXEffect(iface);
+    struct d3dx_parameter *param = get_valid_parameter(&effect->base_effect, parameter);
 
     TRACE("iface %p, parameter %p, vector %p, count %u.\n", iface, parameter, vector, count);
 
-    return d3dx9_base_effect_get_vector_array(&effect->base_effect, parameter, vector, count);
+    if (!count)
+        return D3D_OK;
+
+    if (vector && param && count <= param->element_count)
+    {
+        unsigned int i;
+
+        TRACE("Class %s.\n", debug_d3dxparameter_class(param->class));
+
+        switch (param->class)
+        {
+            case D3DXPC_VECTOR:
+                for (i = 0; i < count; ++i)
+                    get_vector(&param->members[i], &vector[i]);
+                return D3D_OK;
+
+            case D3DXPC_SCALAR:
+            case D3DXPC_MATRIX_ROWS:
+            case D3DXPC_OBJECT:
+            case D3DXPC_STRUCT:
+                break;
+
+            default:
+                FIXME("Unhandled class %s.\n", debug_d3dxparameter_class(param->class));
+                break;
+        }
+    }
+
+    WARN("Parameter not found.\n");
+
+    return D3DERR_INVALIDCALL;
 }
 
 static HRESULT WINAPI d3dx_effect_SetMatrix(ID3DXEffect *iface, D3DXHANDLE parameter, const D3DXMATRIX *matrix)
