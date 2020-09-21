@@ -1250,9 +1250,10 @@ static D3DXHANDLE d3dx9_base_effect_get_pass_by_name(struct d3dx9_base_effect *b
     return NULL;
 }
 
-static UINT get_annotation_from_object(struct d3dx9_base_effect *base,
-        D3DXHANDLE object, struct d3dx_parameter **annotations)
+static unsigned int get_annotation_from_object(struct d3dx_effect *effect, D3DXHANDLE object,
+        struct d3dx_parameter **annotations)
 {
+    struct d3dx9_base_effect *base = &effect->base_effect;
     struct d3dx_parameter *param = get_valid_parameter(base, object);
     struct d3dx_pass *pass = get_valid_pass(base, object);
     struct d3dx_technique *technique = get_valid_technique(base, object);
@@ -3476,7 +3477,7 @@ static D3DXHANDLE WINAPI d3dx_effect_GetAnnotation(ID3DXEffect *iface, D3DXHANDL
 
     TRACE("iface %p, object %p, index %u.\n", iface, object, index);
 
-    annotation_count = get_annotation_from_object(&effect->base_effect, object, &annotations);
+    annotation_count = get_annotation_from_object(effect, object, &annotations);
 
     if (index < annotation_count)
     {
@@ -3505,7 +3506,7 @@ static D3DXHANDLE WINAPI d3dx_effect_GetAnnotationByName(ID3DXEffect *iface, D3D
         return NULL;
     }
 
-    annotation_count = get_annotation_from_object(&effect->base_effect, object, &annotations);
+    annotation_count = get_annotation_from_object(effect, object, &annotations);
 
     annotation = get_annotation_by_name(&effect->base_effect, annotation_count, annotations, name);
     if (annotation)
