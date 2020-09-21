@@ -646,6 +646,63 @@ static void test_ID3DXFont(IDirect3DDevice9 *device)
 
         ID3DXFont_Release(font);
     }
+
+
+    /* ID3DXFont_DrawTextA, ID3DXFont_DrawTextW */
+    hr = D3DXCreateFontA(device, 12, 0, FW_DONTCARE, 0, FALSE, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS,
+            DEFAULT_QUALITY, DEFAULT_PITCH, "Tahoma", &font);
+    ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
+
+    todo_wine {
+    SetRect(&rect, 10, 10, 200, 200);
+
+    height = ID3DXFont_DrawTextA(font, NULL, "test", -2, &rect, 0, 0xFF00FF);
+    ok(height == 12, "Got unexpected height %d.\n", height);
+
+    height = ID3DXFont_DrawTextA(font, NULL, "test", -1, &rect, 0, 0xFF00FF);
+    ok(height == 12, "Got unexpected height %d.\n", height);
+
+    height = ID3DXFont_DrawTextA(font, NULL, "test", 0, &rect, 0, 0xFF00FF);
+    ok(height == 0, "Got unexpected height %d.\n", height);
+
+    height = ID3DXFont_DrawTextA(font, NULL, "test", 1, &rect, 0, 0xFF00FF);
+    ok(height == 12, "Got unexpected height %d.\n", height);
+
+    height = ID3DXFont_DrawTextA(font, NULL, "test", 2, &rect, 0, 0xFF00FF);
+    ok(height == 12, "Got unexpected height %d.\n", height);
+
+    height = ID3DXFont_DrawTextA(font, NULL, "test", -1, NULL, 0, 0xFF00FF);
+    ok(height == 12, "Got unexpected height %d.\n", height);
+
+    height = ID3DXFont_DrawTextA(font, NULL, "test", -1, NULL, DT_CALCRECT, 0xFF00FF);
+    ok(height == 12, "Got unexpected height %d.\n", height);
+
+    height = ID3DXFont_DrawTextA(font, NULL, NULL, -1, NULL, 0, 0xFF00FF);
+    ok(height == 0, "Got unexpected height %d.\n", height);
+
+    height = ID3DXFont_DrawTextW(font, NULL, testW, -1, &rect, 0, 0xFF00FF);
+    ok(height == 12, "Got unexpected height %d.\n", height);
+
+    height = ID3DXFont_DrawTextW(font, NULL, testW, 0, &rect, 0, 0xFF00FF);
+    ok(height == 0, "Got unexpected height %d.\n", height);
+
+    height = ID3DXFont_DrawTextW(font, NULL, testW, 1, &rect, 0, 0xFF00FF);
+    ok(height == 12, "Got unexpected height %d.\n", height);
+
+    height = ID3DXFont_DrawTextW(font, NULL, testW, 2, &rect, 0, 0xFF00FF);
+    ok(height == 12, "Got unexpected height %d.\n", height);
+
+    height = ID3DXFont_DrawTextW(font, NULL, testW, -1, NULL, 0, 0xFF00FF);
+    ok(height == 12, "Got unexpected height %d.\n", height);
+
+    height = ID3DXFont_DrawTextW(font, NULL, testW, -1, NULL, DT_CALCRECT, 0xFF00FF);
+    ok(height == 12, "Got unexpected height %d.\n", height);
+
+    height = ID3DXFont_DrawTextW(font, NULL, NULL, -1, NULL, 0, 0xFF00FF);
+    ok(height == 0, "Got unexpected height %d.\n", height);
+    }
+
+    ID3DXFont_Release(font);
 }
 
 static void test_D3DXCreateRenderToSurface(IDirect3DDevice9 *device)
