@@ -28,6 +28,7 @@
 
 #include "d3dx9_private.h"
 #include "d3dcompiler.h"
+#include "winternl.h"
 #endif /* __REACTOS__ */
 
 /* Constants for special INT/FLOAT conversation */
@@ -2028,7 +2029,7 @@ static D3DXHANDLE WINAPI d3dx_effect_GetParameterBySemantic(ID3DXEffect *iface, 
                 continue;
             }
 
-            if (!strcasecmp(temp_param->semantic, semantic))
+            if (!_strnicmp(temp_param->semantic, semantic, -1))
             {
                 TRACE("Returning parameter %p\n", temp_param);
                 return get_parameter_handle(temp_param);
@@ -2051,7 +2052,7 @@ static D3DXHANDLE WINAPI d3dx_effect_GetParameterBySemantic(ID3DXEffect *iface, 
                 continue;
             }
 
-            if (!strcasecmp(temp_param->semantic, semantic))
+            if (!_strnicmp(temp_param->semantic, semantic, -1))
             {
                 TRACE("Returning parameter %p\n", temp_param);
                 return get_parameter_handle(temp_param);

@@ -21,6 +21,8 @@
 #include <wingdi.h>
 #include <winuser.h>
 
+#include <wine/winternl.h>
+
 #include <wine/list.h>
 #include <wine/unicode.h>
 
