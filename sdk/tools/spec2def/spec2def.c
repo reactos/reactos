@@ -489,7 +489,7 @@ OutputLine_asmstub(FILE *fileDest, EXPORT *pexp)
     {
         /* Does the string already have stdcall decoration? */
         const char *pcAt = ScanToken(pexp->strName.buf, '@');
-        if (pcAt && (pcAt < (pexp->strName.buf + pexp->strName.len)) && 
+        if (pcAt && (pcAt < (pexp->strName.buf + pexp->strName.len)) &&
             (pexp->strName.buf[0] == '_'))
         {
             /* Skip leading underscore and remove trailing decoration */
@@ -722,7 +722,7 @@ OutputLine_def_GCC(FILE *fileDest, EXPORT *pexp)
         {
             /* Is the name in the spec file decorated? */
             const char* pcDeco = ScanToken(pexp->strName.buf, '@');
-            if (pcDeco && 
+            if (pcDeco &&
                 (pexp->strName.len > 1) &&
                 (pcDeco < pexp->strName.buf + pexp->strName.len))
             {
@@ -1148,15 +1148,15 @@ ParseFile(char* pcStart, FILE *fileDest, unsigned *cExports)
 
         /* Handle parameters */
         exp.nStackBytes = 0;
-        if (exp.nCallingConvention != CC_EXTERN &&
-            exp.nCallingConvention != CC_STUB)
+        pc = NextToken(pc);
+        /* Extern can't have parameters, and it's optional to provide ones for stubs. All other exports must have them */
+        if (!pc && (exp.nCallingConvention != CC_EXTERN && exp.nCallingConvention != CC_STUB))
         {
-            /* Go to next token */
-            if (!(pc = NextToken(pc)))
-            {
-                Fatal(pszSourceFileName, nLine, pcLine, pc, 1, "Unexpected end of line");
-            }
+            Fatal(pszSourceFileName, nLine, pcLine, pc, 1, "Unexpected end of line");
+        }
 
+        if (pc && (exp.nCallingConvention != CC_EXTERN))
+        {
             /* Verify syntax */
             if (*pc++ != '(')
             {
@@ -1228,13 +1228,23 @@ ParseFile(char* pcStart, FILE *fileDest, unsigned *cExports)
             {
                 Fatal(pszSourceFileName, nLine, pcLine, pc - 1, 0, "Expected ')'");
             }
+
+            /* Go to next token */
+            pc = NextToken(pc);
         }
 
         /* Handle special stub cases */
         if (exp.nCallingConvention == CC_STUB)
         {
+            /* If we got parameters, assume STDCALL */
+            if (exp.nArgCount != 0)
+            {
+                exp.nCallingConvention = CC_STDCALL;
+                exp.uFlags |= FL_STUB;
+            }
+
             /* Check for c++ mangled name */
-            if (pc[0] == '?')
+            if (exp.strName.buf[0] == '?')
             {
                 //printf("Found c++ mangled name...\n");
                 //
@@ -1242,13 +1252,13 @@ ParseFile(char* pcStart, FILE *fileDest, unsigned *cExports)
             else
             {
                 /* Check for stdcall name */
-                const char *p = ScanToken(pc, '@');
-                if (p && (p - pc < exp.strName.len))
+                const char *p = ScanToken(exp.strName.buf, '@');
+                if (p && (p - exp.strName.buf < exp.strName.len))
                 {
                     int i;
 
                     /* Truncate the name to before the @ */
-                    exp.strName.len = (int)(p - pc);
+                    exp.strName.len = (int)(p - exp.strName.buf);
                     if (exp.strName.len < 1)
                     {
                         Fatal(pszSourceFileName, nLine, pcLine, p, 1, "Unexpected @");
@@ -1263,8 +1273,7 @@ ParseFile(char* pcStart, FILE *fileDest, unsigned *cExports)
             }
         }
 
-        /* Get optional redirection */
-        pc = NextToken(pc);
+        /* Check optional redirection */
         if (pc)
         {
             exp.strTarget.buf = pc;
