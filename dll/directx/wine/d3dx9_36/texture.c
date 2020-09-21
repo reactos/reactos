@@ -486,7 +486,7 @@ HRESULT WINAPI D3DXCheckVolumeTextureRequirements(struct IDirect3DDevice9 *devic
     if (!(caps.TextureCaps & D3DPTEXTURECAPS_VOLUMEMAP))
         return D3DERR_NOTAVAILABLE;
 
-    hr = D3DXCheckTextureRequirements(device, &w, &h, NULL, usage, format, pool);
+    hr = check_texture_requirements(device, &w, &h, NULL, usage, format, pool, D3DRTYPE_VOLUMETEXTURE);
     if (d == D3DX_DEFAULT)
         d = 1;
 
@@ -1250,7 +1250,6 @@ HRESULT WINAPI D3DXCreateVolumeTextureFromFileInMemoryEx(IDirect3DDevice9 *devic
         hr = D3DXCreateVolumeTexture(device, width, height, depth, mip_levels, usage, format, pool, &tex);
         buftex = NULL;
     }
-
     if (FAILED(hr)) return hr;
 
     hr = load_volume_texture_from_dds(tex, data, palette, filter, color_key, &image_info);

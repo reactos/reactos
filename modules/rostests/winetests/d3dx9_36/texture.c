@@ -2125,6 +2125,22 @@ static void test_D3DXCreateVolumeTextureFromFileInMemory(IDirect3DDevice9 *devic
     ok(ref == 0, "Invalid reference count. Got %u, expected 0.\n", ref);
 }
 
+static void test_D3DXCreateVolumeTextureFromFileInMemoryEx(IDirect3DDevice9 *device)
+{
+    IDirect3DVolumeTexture9 *volume_texture;
+    HRESULT hr;
+
+    hr = D3DXCreateVolumeTextureFromFileInMemoryEx(device, dds_volume_map, sizeof(dds_volume_map), D3DX_DEFAULT,
+            D3DX_DEFAULT, D3DX_DEFAULT, 1, D3DUSAGE_RENDERTARGET, D3DFMT_UNKNOWN, D3DPOOL_DEFAULT, D3DX_DEFAULT,
+            D3DX_DEFAULT, 0, NULL, NULL, &volume_texture);
+    ok(hr == D3DERR_NOTAVAILABLE, "Got unexpected hr %#x.\n", hr);
+
+    hr = D3DXCreateVolumeTextureFromFileInMemoryEx(device, dds_volume_map, sizeof(dds_volume_map), D3DX_DEFAULT,
+            D3DX_DEFAULT, D3DX_DEFAULT, 1, D3DUSAGE_DEPTHSTENCIL, D3DFMT_UNKNOWN, D3DPOOL_DEFAULT, D3DX_DEFAULT,
+            D3DX_DEFAULT, 0, NULL, NULL, &volume_texture);
+    ok(hr == D3DERR_NOTAVAILABLE, "Got unexpected hr %#x.\n", hr);
+}
+
 /* fills positive x face with red color */
 static void WINAPI fill_cube_positive_x(D3DXVECTOR4 *out, const D3DXVECTOR3 *tex_coord, const D3DXVECTOR3 *texel_size, void *data)
 {
@@ -2599,6 +2615,7 @@ START_TEST(texture)
     test_D3DXCreateCubeTextureFromFileInMemory(device);
     test_D3DXCreateCubeTextureFromFileInMemoryEx(device);
     test_D3DXCreateVolumeTextureFromFileInMemory(device);
+    test_D3DXCreateVolumeTextureFromFileInMemoryEx(device);
     test_D3DXSaveTextureToFileInMemory(device);
 
     ref = IDirect3DDevice9_Release(device);
