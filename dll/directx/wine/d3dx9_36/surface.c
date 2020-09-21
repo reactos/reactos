@@ -1852,10 +1852,10 @@ HRESULT WINAPI D3DXLoadSurfaceFromMemory(IDirect3DSurface9 *dst_surface,
         DWORD filter, D3DCOLOR color_key)
 {
     const struct pixel_format_desc *srcformatdesc, *destformatdesc;
+    struct volume src_size, dst_size;
     IDirect3DSurface9 *surface;
     D3DSURFACE_DESC surfdesc;
     D3DLOCKED_RECT lockrect;
-    struct volume src_size, dst_size;
     HRESULT hr;
 
     TRACE("(%p, %p, %s, %p, %#x, %u, %p, %s, %#x, 0x%08x)\n",
@@ -1875,14 +1875,18 @@ HRESULT WINAPI D3DXLoadSurfaceFromMemory(IDirect3DSurface9 *dst_surface,
         return E_FAIL;
     }
 
-    if (filter == D3DX_DEFAULT)
-        filter = D3DX_FILTER_TRIANGLE | D3DX_FILTER_DITHER;
-
-    IDirect3DSurface9_GetDesc(dst_surface, &surfdesc);
+    srcformatdesc = get_format_info(src_format);
+    if (srcformatdesc->type == FORMAT_UNKNOWN)
+    {
+        FIXME("Unsupported format %#x.\n", src_format);
+        return E_NOTIMPL;
+    }
 
     src_size.width = src_rect->right - src_rect->left;
     src_size.height = src_rect->bottom - src_rect->top;
     src_size.depth = 1;
+
+    IDirect3DSurface9_GetDesc(dst_surface, &surfdesc);
     if (!dst_rect)
     {
         dst_size.width = surfdesc.Width;
@@ -1903,14 +1907,10 @@ HRESULT WINAPI D3DXLoadSurfaceFromMemory(IDirect3DSurface9 *dst_surface,
             return D3D_OK;
     }
     dst_size.depth = 1;
-
-    srcformatdesc = get_format_info(src_format);
     destformatdesc = get_format_info(surfdesc.Format);
-    if (srcformatdesc->type == FORMAT_UNKNOWN)
-    {
-        FIXME("Unsupported format %#x.\n", src_format);
-        return E_NOTIMPL;
-    }
+
+    if (filter == D3DX_DEFAULT)
+        filter = D3DX_FILTER_TRIANGLE | D3DX_FILTER_DITHER;
 
     if (FAILED(hr = lock_surface(dst_surface, dst_rect, &lockrect, &surface, TRUE)))
         return hr;
@@ -1918,16 +1918,10 @@ HRESULT WINAPI D3DXLoadSurfaceFromMemory(IDirect3DSurface9 *dst_surface,
     if (src_format == surfdesc.Format
             && dst_size.width == src_size.width
             && dst_size.height == src_size.height
-            && color_key == 0) /* Simple copy. */
+            && color_key == 0
+            && !(src_rect->left & (srcformatdesc->block_width - 1))
+            && !(src_rect->top & (srcformatdesc->block_height - 1))) /* Simple copy. */
     {
-        if (src_rect->left & (srcformatdesc->block_width - 1)
-                || src_rect->top & (srcformatdesc->block_height - 1))
-        {
-            WARN("Source rect %s is misaligned.\n", wine_dbgstr_rect(src_rect));
-            unlock_surface(dst_surface, dst_rect, surface, FALSE);
-            return D3DXERR_INVALIDDATA;
-        }
-
         copy_pixels(src_memory, src_pitch, 0, lockrect.pBits, lockrect.Pitch, 0,
                 &src_size, srcformatdesc);
     }

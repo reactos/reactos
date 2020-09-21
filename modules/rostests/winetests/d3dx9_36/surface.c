@@ -1351,7 +1351,7 @@ static void test_D3DXLoadSurface(IDirect3DDevice9 *device)
 
             hr = D3DXLoadSurfaceFromMemory(newsurf, NULL, &rect, &dds_dxt5_8_8[128],
                     D3DFMT_DXT5, 16 * 2, NULL, &rect, D3DX_FILTER_POINT, 0);
-            todo_wine ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
+            ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
 
             check_release((IUnknown *)newsurf, 1);
             check_release((IUnknown *)tex, 0);
