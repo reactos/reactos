@@ -224,8 +224,50 @@ static HRESULT WINAPI ID3DXFontImpl_GetGlyphData(ID3DXFont *iface, UINT glyph,
 
 static HRESULT WINAPI ID3DXFontImpl_PreloadCharacters(ID3DXFont *iface, UINT first, UINT last)
 {
-    FIXME("iface %p, first %u, last %u stub!\n", iface, first, last);
-    return S_OK;
+    struct d3dx_font *font = impl_from_ID3DXFont(iface);
+    unsigned int i, count, start, end;
+    WORD *indices;
+    WCHAR *chars;
+
+    TRACE("iface %p, first %u, last %u.\n", iface, first, last);
+
+    if (last < first)
+        return D3D_OK;
+
+    count = last - first + 1;
+    indices = heap_alloc(count * sizeof(*indices));
+    if (!indices)
+        return E_OUTOFMEMORY;
+
+    chars = heap_alloc(count * sizeof(*chars));
+    if (!chars)
+    {
+        heap_free(indices);
+        return E_OUTOFMEMORY;
+    }
+
+    for (i = 0; i < count; ++i)
+        chars[i] = first + i;
+
+    GetGlyphIndicesW(font->hdc, chars, count, indices, 0);
+
+    start = end = indices[0];
+    for (i = 1; i < count; ++i)
+    {
+        if (indices[i] == end + 1)
+        {
+            end = indices[i];
+            continue;
+        }
+        ID3DXFont_PreloadGlyphs(iface, start, end);
+        start = end = indices[i];
+    }
+    ID3DXFont_PreloadGlyphs(iface, start, end);
+
+    heap_free(chars);
+    heap_free(indices);
+
+    return D3D_OK;
 }
 
 static uint32_t morton_decode(uint32_t x)
