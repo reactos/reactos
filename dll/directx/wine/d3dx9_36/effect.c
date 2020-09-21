@@ -6081,9 +6081,7 @@ static HRESULT d3dx_parse_effect(struct d3dx_effect *effect, const char *data, U
     {
         if (FAILED(hr = d3dx_pool_sync_shared_parameter(base->pool, &base->parameters[i])))
             goto err_out;
-        base->parameters[i].version_counter = base->pool
-                ? &base->pool->version_counter
-                : &base->version_counter;
+        base->parameters[i].version_counter = get_version_counter_ptr(effect);
         set_dirty(&base->parameters[i].param);
     }
     return D3D_OK;
