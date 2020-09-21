@@ -1181,33 +1181,6 @@ static HRESULT d3dx9_base_effect_get_pass_desc(struct d3dx9_base_effect *base,
     return D3D_OK;
 }
 
-static D3DXHANDLE d3dx9_base_effect_get_parameter(struct d3dx9_base_effect *base,
-        D3DXHANDLE parameter, UINT index)
-{
-    struct d3dx_parameter *param = get_valid_parameter(base, parameter);
-
-    if (!parameter)
-    {
-        if (index < base->parameter_count)
-        {
-            TRACE("Returning parameter %p.\n", &base->parameters[index]);
-            return get_parameter_handle(&base->parameters[index].param);
-        }
-    }
-    else
-    {
-        if (param && !param->element_count && index < param->member_count)
-        {
-            TRACE("Returning parameter %p.\n", &param->members[index]);
-            return get_parameter_handle(&param->members[index]);
-        }
-    }
-
-    WARN("Parameter not found.\n");
-
-    return NULL;
-}
-
 static D3DXHANDLE d3dx9_base_effect_get_parameter_by_semantic(struct d3dx9_base_effect *base,
         D3DXHANDLE parameter, const char *semantic)
 {
@@ -3440,10 +3413,30 @@ static HRESULT WINAPI d3dx_effect_GetFunctionDesc(ID3DXEffect *iface, D3DXHANDLE
 static D3DXHANDLE WINAPI d3dx_effect_GetParameter(ID3DXEffect *iface, D3DXHANDLE parameter, UINT index)
 {
     struct d3dx_effect *effect = impl_from_ID3DXEffect(iface);
+    struct d3dx_parameter *param = get_valid_parameter(&effect->base_effect, parameter);
 
     TRACE("iface %p, parameter %p, index %u.\n", iface, parameter, index);
 
-    return d3dx9_base_effect_get_parameter(&effect->base_effect, parameter, index);
+    if (!parameter)
+    {
+        if (index < effect->base_effect.parameter_count)
+        {
+            TRACE("Returning parameter %p.\n", &effect->base_effect.parameters[index]);
+            return get_parameter_handle(&effect->base_effect.parameters[index].param);
+        }
+    }
+    else
+    {
+        if (param && !param->element_count && index < param->member_count)
+        {
+            TRACE("Returning parameter %p.\n", &param->members[index]);
+            return get_parameter_handle(&param->members[index]);
+        }
+    }
+
+    WARN("Parameter not found.\n");
+
+    return NULL;
 }
 
 static D3DXHANDLE WINAPI d3dx_effect_GetParameterByName(ID3DXEffect *iface, D3DXHANDLE parameter,
