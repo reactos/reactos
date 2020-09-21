@@ -1503,35 +1503,6 @@ static HRESULT d3dx9_base_effect_get_vector_array(struct d3dx9_base_effect *base
     return D3DERR_INVALIDCALL;
 }
 
-static HRESULT d3dx9_base_effect_set_texture(struct d3dx9_base_effect *base,
-        D3DXHANDLE parameter, struct IDirect3DBaseTexture9 *texture)
-{
-    struct d3dx_parameter *param = get_valid_parameter(base, parameter);
-
-    if (param && !param->element_count &&
-            (param->type == D3DXPT_TEXTURE || param->type == D3DXPT_TEXTURE1D
-            || param->type == D3DXPT_TEXTURE2D || param->type ==  D3DXPT_TEXTURE3D
-            || param->type == D3DXPT_TEXTURECUBE))
-    {
-        struct IDirect3DBaseTexture9 *oltexture = *(struct IDirect3DBaseTexture9 **)param->data;
-
-        if (texture == oltexture)
-            return D3D_OK;
-
-        if (texture) IDirect3DBaseTexture9_AddRef(texture);
-        if (oltexture) IDirect3DBaseTexture9_Release(oltexture);
-
-        *(struct IDirect3DBaseTexture9 **)param->data = texture;
-        set_dirty(param);
-
-        return D3D_OK;
-    }
-
-    WARN("Parameter not found.\n");
-
-    return D3DERR_INVALIDCALL;
-}
-
 static HRESULT d3dx9_base_effect_get_vertex_shader(struct d3dx9_base_effect *base,
         D3DXHANDLE parameter, struct IDirect3DVertexShader9 **shader)
 {
@@ -3536,14 +3507,38 @@ static HRESULT WINAPI d3dx_effect_GetString(ID3DXEffect *iface, D3DXHANDLE param
     return D3DERR_INVALIDCALL;
 }
 
-static HRESULT WINAPI d3dx_effect_SetTexture(struct ID3DXEffect *iface, D3DXHANDLE parameter,
-        struct IDirect3DBaseTexture9 *texture)
+static HRESULT WINAPI d3dx_effect_SetTexture(ID3DXEffect *iface, D3DXHANDLE parameter,
+        IDirect3DBaseTexture9 *texture)
 {
     struct d3dx_effect *effect = impl_from_ID3DXEffect(iface);
+    struct d3dx_parameter *param = get_valid_parameter(&effect->base_effect, parameter);
 
     TRACE("iface %p, parameter %p, texture %p.\n", iface, parameter, texture);
 
-    return d3dx9_base_effect_set_texture(&effect->base_effect, parameter, texture);
+    if (param && !param->element_count
+            && (param->type == D3DXPT_TEXTURE || param->type == D3DXPT_TEXTURE1D
+            || param->type == D3DXPT_TEXTURE2D || param->type ==  D3DXPT_TEXTURE3D
+            || param->type == D3DXPT_TEXTURECUBE))
+    {
+        IDirect3DBaseTexture9 *old_texture = *(IDirect3DBaseTexture9 **)param->data;
+
+        if (texture == old_texture)
+            return D3D_OK;
+
+        if (texture)
+            IDirect3DBaseTexture9_AddRef(texture);
+        if (old_texture)
+            IDirect3DBaseTexture9_Release(old_texture);
+
+        *(IDirect3DBaseTexture9 **)param->data = texture;
+        set_dirty(param);
+
+        return D3D_OK;
+    }
+
+    WARN("Parameter not found.\n");
+
+    return D3DERR_INVALIDCALL;
 }
 
 static HRESULT WINAPI d3dx_effect_GetTexture(ID3DXEffect *iface, D3DXHANDLE parameter,
