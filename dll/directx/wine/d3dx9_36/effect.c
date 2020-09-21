@@ -1492,26 +1492,6 @@ static HRESULT d3dx9_base_effect_get_int_array(struct d3dx9_base_effect *base,
     return D3DERR_INVALIDCALL;
 }
 
-static HRESULT d3dx9_base_effect_set_float(struct d3dx9_base_effect *base, D3DXHANDLE parameter, float f)
-{
-    struct d3dx_parameter *param = get_valid_parameter(base, parameter);
-
-    if (param && !param->element_count && param->rows == 1 && param->columns == 1)
-    {
-        DWORD value;
-
-        set_number(&value, param->type, &f, D3DXPT_FLOAT);
-        if (value != *(DWORD *)param->data)
-            set_dirty(param);
-         *(DWORD *)param->data = value;
-        return D3D_OK;
-    }
-
-    WARN("Parameter not found.\n");
-
-    return D3DERR_INVALIDCALL;
-}
-
 static HRESULT d3dx9_base_effect_set_float_array(struct d3dx9_base_effect *base,
         D3DXHANDLE parameter, const float *f, UINT count)
 {
@@ -3511,10 +3491,24 @@ static HRESULT WINAPI d3dx_effect_GetIntArray(ID3DXEffect *iface, D3DXHANDLE par
 static HRESULT WINAPI d3dx_effect_SetFloat(ID3DXEffect *iface, D3DXHANDLE parameter, float f)
 {
     struct d3dx_effect *effect = impl_from_ID3DXEffect(iface);
+    struct d3dx_parameter *param = get_valid_parameter(&effect->base_effect, parameter);
 
     TRACE("iface %p, parameter %p, f %.8e.\n", iface, parameter, f);
 
-    return d3dx9_base_effect_set_float(&effect->base_effect, parameter, f);
+    if (param && !param->element_count && param->rows == 1 && param->columns == 1)
+    {
+        DWORD value;
+
+        set_number(&value, param->type, &f, D3DXPT_FLOAT);
+        if (value != *(DWORD *)param->data)
+            set_dirty(param);
+        *(DWORD *)param->data = value;
+        return D3D_OK;
+    }
+
+    WARN("Parameter not found.\n");
+
+    return D3DERR_INVALIDCALL;
 }
 
 static HRESULT WINAPI d3dx_effect_GetFloat(ID3DXEffect *iface, D3DXHANDLE parameter, float *f)
