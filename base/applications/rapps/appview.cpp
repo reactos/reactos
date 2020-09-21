@@ -141,7 +141,8 @@ HWND CMainToolbar::Create(HWND hwndParent)
         return FALSE;
     }
 
-    ImageList_Destroy(SetImageList(hImageList));
+    //ImageList_Destroy(SetImageList(hImageList));
+	SetImageList(hImageList);
 
     AddButtons(_countof(Buttons), Buttons);
 
