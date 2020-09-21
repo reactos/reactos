@@ -40,6 +40,7 @@ static const char parameter_block_magic_string[4] = {'@', '!', '#', '\xFE'};
 #define PARAMETER_FLAG_SHARED 1
 
 #define INITIAL_POOL_SIZE 16
+#define INITIAL_PARAM_BLOCK_SIZE 1024
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3dx);
 
@@ -157,6 +158,15 @@ struct d3dx_parameter_block
 {
     char magic_string[ARRAY_SIZE(parameter_block_magic_string)];
     struct list entry;
+    size_t size;
+    size_t offset;
+    BYTE *buffer;
+};
+
+struct d3dx_recorded_parameter
+{
+    struct d3dx_parameter *param;
+    unsigned int bytes;
 };
 
 struct d3dx_effect
@@ -710,11 +720,27 @@ static void free_technique(struct d3dx_technique *technique)
     technique->name = NULL;
 }
 
+static unsigned int get_recorded_parameter_size(const struct d3dx_recorded_parameter *record)
+{
+    return sizeof(*record) + record->bytes;
+}
+
 static void free_parameter_block(struct d3dx_parameter_block *block)
 {
+    struct d3dx_recorded_parameter *record;
+
     if (!block)
         return;
 
+    record = (struct d3dx_recorded_parameter *)block->buffer;
+    while ((BYTE *)record < block->buffer + block->offset)
+    {
+        free_parameter_object_data(record->param, record + 1, record->bytes);
+        record = (struct d3dx_recorded_parameter *)((BYTE *)record + get_recorded_parameter_size(record));
+    }
+    assert((BYTE *)record == block->buffer + block->offset);
+
+    heap_free(block->buffer);
     heap_free(block);
 }
 
@@ -782,14 +808,12 @@ static void get_vector(struct d3dx_parameter *param, D3DXVECTOR4 *vector)
     }
 }
 
-static void set_vector(struct d3dx_parameter *param, const D3DXVECTOR4 *vector)
+static void set_vector(struct d3dx_parameter *param, const D3DXVECTOR4 *vector, void *dst_data)
 {
     UINT i;
 
     for (i = 0; i < param->columns; ++i)
-    {
-        set_number((FLOAT *)param->data + i, param->type, (FLOAT *)vector + i, D3DXPT_FLOAT);
-    }
+        set_number((FLOAT *)dst_data + i, param->type, (FLOAT *)vector + i, D3DXPT_FLOAT);
 }
 
 static void get_matrix(struct d3dx_parameter *param, D3DXMATRIX *matrix, BOOL transpose)
@@ -810,31 +834,33 @@ static void get_matrix(struct d3dx_parameter *param, D3DXMATRIX *matrix, BOOL tr
     }
 }
 
-static void set_matrix(struct d3dx_parameter *param, const D3DXMATRIX *matrix)
+static void set_matrix(struct d3dx_parameter *param, const D3DXMATRIX *matrix, void *dst_data)
 {
     UINT i, k;
 
     if (param->type == D3DXPT_FLOAT)
     {
         if (param->columns == 4)
-            memcpy(param->data, matrix->u.m, param->rows * 4 * sizeof(float));
+        {
+            memcpy(dst_data, matrix->u.m, param->rows * 4 * sizeof(float));
+        }
         else
+        {
             for (i = 0; i < param->rows; ++i)
-                memcpy((float *)param->data + i * param->columns, matrix->u.m + i, param->columns * sizeof(float));
+                memcpy((float *)dst_data + i * param->columns, matrix->u.m + i, param->columns * sizeof(float));
+        }
         return;
     }
 
     for (i = 0; i < param->rows; ++i)
     {
         for (k = 0; k < param->columns; ++k)
-        {
-            set_number((FLOAT *)param->data + i * param->columns + k, param->type,
+            set_number((FLOAT *)dst_data + i * param->columns + k, param->type,
                     &matrix->u.m[i][k], D3DXPT_FLOAT);
-        }
     }
 }
 
-static void set_matrix_transpose(struct d3dx_parameter *param, const D3DXMATRIX *matrix)
+static void set_matrix_transpose(struct d3dx_parameter *param, const D3DXMATRIX *matrix, void *dst_data)
 {
     UINT i, k;
 
@@ -842,7 +868,7 @@ static void set_matrix_transpose(struct d3dx_parameter *param, const D3DXMATRIX 
     {
         for (k = 0; k < param->columns; ++k)
         {
-            set_number((FLOAT *)param->data + i * param->columns + k, param->type,
+            set_number((FLOAT *)dst_data + i * param->columns + k, param->type,
                     &matrix->u.m[k][i], D3DXPT_FLOAT);
         }
     }
@@ -861,7 +887,8 @@ static HRESULT set_string(char **param_data, const char *string)
     return D3D_OK;
 }
 
-static HRESULT set_value(struct d3dx_parameter *param, const void *data, unsigned int bytes)
+static HRESULT set_value(struct d3dx_parameter *param, const void *data, unsigned int bytes,
+        void *dst_data)
 {
     unsigned int i, count;
 
@@ -877,7 +904,7 @@ static HRESULT set_value(struct d3dx_parameter *param, const void *data, unsigne
         case D3DXPT_TEXTURECUBE:
             for (i = 0; i < count; ++i)
             {
-                IUnknown *old_texture = ((IUnknown **)param->data)[i];
+                IUnknown *old_texture = ((IUnknown **)dst_data)[i];
                 IUnknown *new_texture = ((IUnknown **)data)[i];
 
                 if (new_texture == old_texture)
@@ -894,7 +921,7 @@ static HRESULT set_value(struct d3dx_parameter *param, const void *data, unsigne
         case D3DXPT_INT:
         case D3DXPT_FLOAT:
             TRACE("Copy %u bytes.\n", bytes);
-            memcpy(param->data, data, bytes);
+            memcpy(dst_data, data, bytes);
             break;
 
         case D3DXPT_STRING:
@@ -902,7 +929,7 @@ static HRESULT set_value(struct d3dx_parameter *param, const void *data, unsigne
             HRESULT hr;
 
             for (i = 0; i < count; ++i)
-                if (FAILED(hr = set_string(&((char **)param->data)[i], ((const char **)data)[i])))
+                if (FAILED(hr = set_string(&((char **)dst_data)[i], ((const char **)data)[i])))
                     return hr;
             break;
         }
@@ -1252,6 +1279,43 @@ static ULONG64 next_effect_update_version(struct d3dx_effect *effect)
     return next_update_version(get_version_counter_ptr(effect));
 }
 
+static void *record_parameter(struct d3dx_effect *effect, struct d3dx_parameter *param, unsigned int bytes)
+{
+    struct d3dx_parameter_block *block = effect->current_parameter_block;
+    struct d3dx_recorded_parameter new_record, *record;
+    unsigned int new_size, alloc_size;
+
+    new_record.param = param;
+    new_record.bytes = bytes;
+    new_size = block->offset + get_recorded_parameter_size(&new_record);
+
+    if (new_size > block->size)
+    {
+        BYTE *new_alloc;
+
+        alloc_size = max(block->size * 2, max(new_size, INITIAL_PARAM_BLOCK_SIZE));
+        if (block->size)
+            new_alloc = heap_realloc(block->buffer, alloc_size);
+        else
+            new_alloc = heap_alloc(alloc_size);
+
+        if (!new_alloc)
+        {
+            ERR("Out of memory.\n");
+            return param->data;
+        }
+        /* Data update functions may want to free some references upon setting value. */
+        memset(new_alloc + block->size, 0, alloc_size - block->size);
+
+        block->size = alloc_size;
+        block->buffer = new_alloc;
+    }
+    record = (struct d3dx_recorded_parameter *)(block->buffer + block->offset);
+    *record = new_record;
+    block->offset = new_size;
+    return record + 1;
+}
+
 static void set_dirty(struct d3dx_parameter *param)
 {
     struct d3dx_shared_data *shared_data;
@@ -1262,6 +1326,17 @@ static void set_dirty(struct d3dx_parameter *param)
         shared_data->update_version = new_update_version;
     else
         top_param->update_version = new_update_version;
+}
+
+static void *param_get_data_and_dirtify(struct d3dx_effect *effect, struct d3dx_parameter *param,
+        unsigned int bytes, BOOL value_changed)
+{
+    assert(bytes <= param->bytes);
+
+    if (value_changed && !effect->current_parameter_block)
+        set_dirty(param);
+
+    return effect->current_parameter_block ? record_parameter(effect, param, bytes) : param->data;
 }
 
 static void d3dx9_set_light_parameter(enum LIGHT_TYPE op, D3DLIGHT9 *light, void *value)
@@ -2368,10 +2443,7 @@ static HRESULT WINAPI d3dx_effect_SetValue(ID3DXEffect *iface, D3DXHANDLE parame
     }
 
     if (data && param->bytes <= bytes)
-    {
-        set_dirty(param);
-        return set_value(param, data, bytes);
-    }
+        return set_value(param, data, bytes, param_get_data_and_dirtify(effect, param, param->bytes, TRUE));
 
     WARN("Invalid argument specified.\n");
 
@@ -2452,8 +2524,8 @@ static HRESULT WINAPI d3dx_effect_SetBool(ID3DXEffect *iface, D3DXHANDLE paramet
 
     if (param && !param->element_count && param->rows == 1 && param->columns == 1)
     {
-        set_number(param->data, param->type, &b, D3DXPT_BOOL);
-        set_dirty(param);
+        set_number(param_get_data_and_dirtify(effect, param, sizeof(int), TRUE),
+                param->type, &b, D3DXPT_BOOL);
         return D3D_OK;
     }
 
@@ -2485,6 +2557,7 @@ static HRESULT WINAPI d3dx_effect_SetBoolArray(ID3DXEffect *iface, D3DXHANDLE pa
 {
     struct d3dx_effect *effect = impl_from_ID3DXEffect(iface);
     struct d3dx_parameter *param = get_valid_parameter(effect, parameter);
+    DWORD *data;
 
     TRACE("iface %p, parameter %p, b %p, count %u.\n", iface, parameter, b, count);
 
@@ -2499,12 +2572,12 @@ static HRESULT WINAPI d3dx_effect_SetBoolArray(ID3DXEffect *iface, D3DXHANDLE pa
             case D3DXPC_SCALAR:
             case D3DXPC_VECTOR:
             case D3DXPC_MATRIX_ROWS:
+                data = param_get_data_and_dirtify(effect, param, size * sizeof(int), TRUE);
                 for (i = 0; i < size; ++i)
                 {
                     /* don't crop the input, use D3DXPT_INT instead of D3DXPT_BOOL */
-                    set_number((DWORD *)param->data + i, param->type, &b[i], D3DXPT_INT);
+                    set_number(data + i, param->type, &b[i], D3DXPT_INT);
                 }
-                set_dirty(param);
                 return D3D_OK;
 
             case D3DXPC_OBJECT:
@@ -2562,9 +2635,8 @@ static HRESULT WINAPI d3dx_effect_SetInt(ID3DXEffect *iface, D3DXHANDLE paramete
             DWORD value;
 
             set_number(&value, param->type, &n, D3DXPT_INT);
-            if (value != *(DWORD *)param->data)
-                set_dirty(param);
-            *(DWORD *)param->data = value;
+            *(DWORD *)param_get_data_and_dirtify(effect, param, sizeof(int),
+                    value != *(DWORD *)param->data) = value;
             return D3D_OK;
         }
 
@@ -2573,14 +2645,19 @@ static HRESULT WINAPI d3dx_effect_SetInt(ID3DXEffect *iface, D3DXHANDLE paramete
                 && ((param->class == D3DXPC_VECTOR && param->columns != 2)
                 || (param->class == D3DXPC_MATRIX_ROWS && param->rows != 2 && param->columns == 1)))
         {
+            float *data;
+
             TRACE("Vector fixup.\n");
 
-            *(float *)param->data = ((n & 0xff0000) >> 16) * INT_FLOAT_MULTI_INVERSE;
-            ((float *)param->data)[1] = ((n & 0xff00) >> 8) * INT_FLOAT_MULTI_INVERSE;
-            ((float *)param->data)[2] = (n & 0xff) * INT_FLOAT_MULTI_INVERSE;
+            data = param_get_data_and_dirtify(effect, param,
+                    min(4, param->rows * param->columns) * sizeof(float), TRUE);
+
+            data[0] = ((n & 0xff0000) >> 16) * INT_FLOAT_MULTI_INVERSE;
+            data[1] = ((n & 0xff00) >> 8) * INT_FLOAT_MULTI_INVERSE;
+            data[2] = (n & 0xff) * INT_FLOAT_MULTI_INVERSE;
             if (param->rows * param->columns > 3)
-                ((float *)param->data)[3] = ((n & 0xff000000) >> 24) * INT_FLOAT_MULTI_INVERSE;
-            set_dirty(param);
+                data[3] = ((n & 0xff000000) >> 24) * INT_FLOAT_MULTI_INVERSE;
+
             return D3D_OK;
         }
     }
@@ -2632,6 +2709,7 @@ static HRESULT WINAPI d3dx_effect_SetIntArray(ID3DXEffect *iface, D3DXHANDLE par
 {
     struct d3dx_effect *effect = impl_from_ID3DXEffect(iface);
     struct d3dx_parameter *param = get_valid_parameter(effect, parameter);
+    DWORD *data;
 
     TRACE("iface %p, parameter %p, n %p, count %u.\n", iface, parameter, n, count);
 
@@ -2646,9 +2724,9 @@ static HRESULT WINAPI d3dx_effect_SetIntArray(ID3DXEffect *iface, D3DXHANDLE par
             case D3DXPC_SCALAR:
             case D3DXPC_VECTOR:
             case D3DXPC_MATRIX_ROWS:
+                data = param_get_data_and_dirtify(effect, param, size * sizeof(int), TRUE);
                 for (i = 0; i < size; ++i)
-                    set_number((DWORD *)param->data + i, param->type, &n[i], D3DXPT_INT);
-                set_dirty(param);
+                    set_number(data + i, param->type, &n[i], D3DXPT_INT);
                 return D3D_OK;
 
             case D3DXPC_OBJECT:
@@ -2702,9 +2780,8 @@ static HRESULT WINAPI d3dx_effect_SetFloat(ID3DXEffect *iface, D3DXHANDLE parame
         DWORD value;
 
         set_number(&value, param->type, &f, D3DXPT_FLOAT);
-        if (value != *(DWORD *)param->data)
-            set_dirty(param);
-        *(DWORD *)param->data = value;
+        *(DWORD *)param_get_data_and_dirtify(effect, param, sizeof(float),
+                value != *(DWORD *)param->data) = value;
         return D3D_OK;
     }
 
@@ -2737,6 +2814,7 @@ static HRESULT WINAPI d3dx_effect_SetFloatArray(ID3DXEffect *iface, D3DXHANDLE p
 {
     struct d3dx_effect *effect = impl_from_ID3DXEffect(iface);
     struct d3dx_parameter *param = get_valid_parameter(effect, parameter);
+    DWORD *data;
 
     TRACE("iface %p, parameter %p, f %p, count %u.\n", iface, parameter, f, count);
 
@@ -2751,9 +2829,9 @@ static HRESULT WINAPI d3dx_effect_SetFloatArray(ID3DXEffect *iface, D3DXHANDLE p
             case D3DXPC_SCALAR:
             case D3DXPC_VECTOR:
             case D3DXPC_MATRIX_ROWS:
+                data = param_get_data_and_dirtify(effect, param, size * sizeof(float), TRUE);
                 for (i = 0; i < size; ++i)
-                    set_number((DWORD *)param->data + i, param->type, &f[i], D3DXPT_FLOAT);
-                set_dirty(param);
+                    set_number(data + i, param->type, &f[i], D3DXPT_FLOAT);
                 return D3D_OK;
 
             case D3DXPC_OBJECT:
@@ -2810,7 +2888,6 @@ static HRESULT WINAPI d3dx_effect_SetVector(ID3DXEffect *iface, D3DXHANDLE param
         {
             case D3DXPC_SCALAR:
             case D3DXPC_VECTOR:
-                set_dirty(param);
                 if (param->type == D3DXPT_INT && param->bytes == 4)
                 {
                     DWORD tmp;
@@ -2821,16 +2898,17 @@ static HRESULT WINAPI d3dx_effect_SetVector(ID3DXEffect *iface, D3DXHANDLE param
                     tmp += ((DWORD)(max(min(vector->x, 1.0f), 0.0f) * INT_FLOAT_MULTI)) << 16;
                     tmp += ((DWORD)(max(min(vector->w, 1.0f), 0.0f) * INT_FLOAT_MULTI)) << 24;
 
-                    *(int *)param->data = tmp;
+                    *(int *)param_get_data_and_dirtify(effect, param, sizeof(int), TRUE) = tmp;
                     return D3D_OK;
                 }
                 if (param->type == D3DXPT_FLOAT)
                 {
-                    memcpy(param->data, vector, param->columns * sizeof(float));
+                    memcpy(param_get_data_and_dirtify(effect, param, param->columns * sizeof(float), TRUE),
+                            vector, param->columns * sizeof(float));
                     return D3D_OK;
                 }
 
-                set_vector(param, vector);
+                set_vector(param, vector, param_get_data_and_dirtify(effect, param, param->columns * sizeof(float), TRUE));
                 return D3D_OK;
 
             case D3DXPC_MATRIX_ROWS:
@@ -2903,26 +2981,33 @@ static HRESULT WINAPI d3dx_effect_SetVectorArray(ID3DXEffect *iface, D3DXHANDLE 
     if (param && param->element_count && param->element_count >= count)
     {
         unsigned int i;
+        BYTE *data;
 
         TRACE("Class %s.\n", debug_d3dxparameter_class(param->class));
 
         switch (param->class)
         {
             case D3DXPC_VECTOR:
-                set_dirty(param);
+                data = param_get_data_and_dirtify(effect, param, count * param->columns * sizeof(float), TRUE);
+
                 if (param->type == D3DXPT_FLOAT)
                 {
                     if (param->columns == 4)
-                        memcpy(param->data, vector, count * 4 * sizeof(float));
+                    {
+                        memcpy(data, vector, count * 4 * sizeof(float));
+                    }
                     else
+                    {
                         for (i = 0; i < count; ++i)
-                            memcpy((float *)param->data + param->columns * i, vector + i,
+                            memcpy((float *)data + param->columns * i, vector + i,
                                     param->columns * sizeof(float));
+                    }
                     return D3D_OK;
                 }
 
                 for (i = 0; i < count; ++i)
-                    set_vector(&param->members[i], &vector[i]);
+                    set_vector(&param->members[i], &vector[i], data + i * param->columns * sizeof(float));
+
                 return D3D_OK;
 
             case D3DXPC_SCALAR:
@@ -2997,8 +3082,8 @@ static HRESULT WINAPI d3dx_effect_SetMatrix(ID3DXEffect *iface, D3DXHANDLE param
         switch (param->class)
         {
             case D3DXPC_MATRIX_ROWS:
-                set_matrix(param, matrix);
-                set_dirty(param);
+                set_matrix(param, matrix, param_get_data_and_dirtify(effect, param,
+                        param->rows * param->columns * sizeof(float), TRUE));
                 return D3D_OK;
 
             case D3DXPC_SCALAR:
@@ -3063,15 +3148,20 @@ static HRESULT WINAPI d3dx_effect_SetMatrixArray(ID3DXEffect *iface, D3DXHANDLE 
     if (param && param->element_count >= count)
     {
         unsigned int i;
+        BYTE *data;
 
         TRACE("Class %s.\n", debug_d3dxparameter_class(param->class));
 
         switch (param->class)
         {
             case D3DXPC_MATRIX_ROWS:
-                set_dirty(param);
+                data = param_get_data_and_dirtify(effect, param, count * param->rows
+                        * param->columns * sizeof(float), TRUE);
+
                 for (i = 0; i < count; ++i)
-                    set_matrix(&param->members[i], &matrix[i]);
+                    set_matrix(&param->members[i], &matrix[i],
+                            data + i * param->rows * param->columns * sizeof(float));
+
                 return D3D_OK;
 
             case D3DXPC_SCALAR:
@@ -3143,13 +3233,18 @@ static HRESULT WINAPI d3dx_effect_SetMatrixPointerArray(ID3DXEffect *iface, D3DX
     if (param && count <= param->element_count)
     {
         unsigned int i;
+        BYTE *data;
 
         switch (param->class)
         {
             case D3DXPC_MATRIX_ROWS:
-                set_dirty(param);
+                data = param_get_data_and_dirtify(effect, param, count * param->rows
+                        * param->columns * sizeof(float), TRUE);
+
                 for (i = 0; i < count; ++i)
-                    set_matrix(&param->members[i], matrix[i]);
+                    set_matrix(&param->members[i], matrix[i], data + i * param->rows
+                            * param->columns * sizeof(float));
+
                 return D3D_OK;
 
             case D3DXPC_SCALAR:
@@ -3223,8 +3318,8 @@ static HRESULT WINAPI d3dx_effect_SetMatrixTranspose(ID3DXEffect *iface, D3DXHAN
         switch (param->class)
         {
             case D3DXPC_MATRIX_ROWS:
-                set_dirty(param);
-                set_matrix_transpose(param, matrix);
+                set_matrix_transpose(param, matrix, param_get_data_and_dirtify(effect, param,
+                        param->rows * param->columns * sizeof(float), TRUE));
                 return D3D_OK;
 
             case D3DXPC_SCALAR:
@@ -3293,15 +3388,20 @@ static HRESULT WINAPI d3dx_effect_SetMatrixTransposeArray(ID3DXEffect *iface, D3
     if (param && param->element_count >= count)
     {
         unsigned int i;
+        BYTE *data;
 
         TRACE("Class %s.\n", debug_d3dxparameter_class(param->class));
 
         switch (param->class)
         {
             case D3DXPC_MATRIX_ROWS:
-                set_dirty(param);
+                data = param_get_data_and_dirtify(effect, param, count * param->rows
+                        * param->columns * sizeof(float), TRUE);
+
                 for (i = 0; i < count; ++i)
-                    set_matrix_transpose(&param->members[i], &matrix[i]);
+                    set_matrix_transpose(&param->members[i], &matrix[i], data
+                            + i * param->rows * param->columns * sizeof(float));
+
                 return D3D_OK;
 
             case D3DXPC_SCALAR:
@@ -3373,13 +3473,18 @@ static HRESULT WINAPI d3dx_effect_SetMatrixTransposePointerArray(ID3DXEffect *if
     if (param && count <= param->element_count)
     {
         unsigned int i;
+        BYTE *data;
 
         switch (param->class)
         {
             case D3DXPC_MATRIX_ROWS:
-                set_dirty(param);
+                data = param_get_data_and_dirtify(effect, param, count * param->rows
+                        * param->columns * sizeof(float), TRUE);
+
                 for (i = 0; i < count; ++i)
-                    set_matrix_transpose(&param->members[i], matrix[i]);
+                    set_matrix_transpose(&param->members[i], matrix[i], data
+                            + i * param->rows * param->columns * sizeof(float));
+
                 return D3D_OK;
 
             case D3DXPC_SCALAR:
@@ -3446,10 +3551,7 @@ static HRESULT WINAPI d3dx_effect_SetString(ID3DXEffect *iface, D3DXHANDLE param
     TRACE("iface %p, parameter %p, string %s.\n", iface, parameter, debugstr_a(string));
 
     if (param && param->type == D3DXPT_STRING)
-    {
-        set_dirty(param);
-        return set_string(param->data, string);
-    }
+        return set_string(param_get_data_and_dirtify(effect, param, sizeof(void *), TRUE), string);
 
     WARN("Parameter not found.\n");
 
@@ -3488,7 +3590,11 @@ static HRESULT WINAPI d3dx_effect_SetTexture(ID3DXEffect *iface, D3DXHANDLE para
             || param->type == D3DXPT_TEXTURE2D || param->type ==  D3DXPT_TEXTURE3D
             || param->type == D3DXPT_TEXTURECUBE))
     {
-        IDirect3DBaseTexture9 *old_texture = *(IDirect3DBaseTexture9 **)param->data;
+        IDirect3DBaseTexture9 **data = param_get_data_and_dirtify(effect, param,
+                sizeof(void *), texture != *(IDirect3DBaseTexture9 **)param->data);
+        IDirect3DBaseTexture9 *old_texture = *data;
+
+        *data = texture;
 
         if (texture == old_texture)
             return D3D_OK;
@@ -3497,9 +3603,6 @@ static HRESULT WINAPI d3dx_effect_SetTexture(ID3DXEffect *iface, D3DXHANDLE para
             IDirect3DBaseTexture9_AddRef(texture);
         if (old_texture)
             IDirect3DBaseTexture9_Release(old_texture);
-
-        *(IDirect3DBaseTexture9 **)param->data = texture;
-        set_dirty(param);
 
         return D3D_OK;
     }
@@ -4141,6 +4244,10 @@ static D3DXHANDLE WINAPI d3dx_effect_EndParameterBlock(ID3DXEffect *iface)
         return NULL;
     }
     ret = effect->current_parameter_block;
+
+    ret->buffer = heap_realloc(ret->buffer, ret->offset);
+    ret->size = ret->offset;
+
     effect->current_parameter_block = NULL;
     list_add_tail(&effect->parameter_block_list, &ret->entry);
     return (D3DXHANDLE)ret;

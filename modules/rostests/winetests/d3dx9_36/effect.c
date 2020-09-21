@@ -8035,12 +8035,12 @@ static void test_effect_parameter_block(void)
     IDirect3DTexture9 *texture, *tex_test;
     D3DXHANDLE block, block2, handle;
     ID3DXEffect *effect, *effect2;
+    D3DXMATRIX mat, mat_arr[2];
     IDirect3DDevice9 *device;
     ID3DXEffectPool *pool;
     float float_array[4];
     float float_value;
     IDirect3D9 *d3d;
-    D3DXMATRIX mat;
     ULONG refcount;
     HWND window;
     HRESULT hr;
@@ -8130,9 +8130,7 @@ static void test_effect_parameter_block(void)
     ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
 
     hr = effect->lpVtbl->GetTexture(effect, "tex1", (IDirect3DBaseTexture9 **)&tex_test);
-    todo_wine ok(hr == D3D_OK && !tex_test, "Got unexpected hr %#x, tex_test %p.\n", hr, tex_test);
-    if (tex_test)
-        IDirect3DTexture9_Release(tex_test);
+    ok(hr == D3D_OK && !tex_test, "Got unexpected hr %#x, tex_test %p.\n", hr, tex_test);
 
     /* Child parameters and array members are recorded separately (the whole
      * parameter is not updated when parameter block is applied). */
@@ -8141,13 +8139,13 @@ static void test_effect_parameter_block(void)
     hr = effect->lpVtbl->SetFloat(effect, "ts1[0].fv", 28.0f);
     ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
     hr = effect->lpVtbl->GetFloat(effect, "ts1[0].fv", &float_value);
-    todo_wine ok(hr == D3D_OK && float_value == 12.0, "Got unexpected hr %#x, float_value %g.\n", hr, float_value);
+    ok(hr == D3D_OK && float_value == 12.0, "Got unexpected hr %#x, float_value %g.\n", hr, float_value);
 
     float_array[0] = -29.0f;
     hr = effect->lpVtbl->SetFloatArray(effect, "ts1[0].v2", float_array, 1);
     ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
     hr = effect->lpVtbl->GetFloatArray(effect, "ts1[0].v2", float_array, 1);
-    todo_wine ok(hr == D3D_OK && float_array[0] == 13.0, "Got unexpected hr %#x, float_array[0] %g.\n",
+    ok(hr == D3D_OK && float_array[0] == 13.0, "Got unexpected hr %#x, float_array[0] %g.\n",
             hr, float_array[0]);
 
     memset(&mat, 0, sizeof(mat));
@@ -8155,13 +8153,13 @@ static void test_effect_parameter_block(void)
     ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
     hr = effect->lpVtbl->GetMatrix(effect, "m3x2row", &mat);
     ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
-    todo_wine ok(!memcmp(&mat, &effect_orig_mat, sizeof(mat)), "Got unexpected matrix.\n");
+    ok(!memcmp(&mat, &effect_orig_mat, sizeof(mat)), "Got unexpected matrix.\n");
 
     hr = effect->lpVtbl->SetMatrix(effect, "m3x2column", &test_mat);
     ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
     hr = effect->lpVtbl->GetMatrix(effect, "m3x2column", &mat);
     ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
-    todo_wine ok(!memcmp(&mat, &effect_orig_mat, sizeof(mat)), "Got unexpected matrix.\n");
+    ok(!memcmp(&mat, &effect_orig_mat, sizeof(mat)), "Got unexpected matrix.\n");
 
     /* Setting shared parameter through effect2 is not recorded to effect
      * parameter block. */
@@ -8334,6 +8332,30 @@ static void test_effect_parameter_block(void)
     ok(!refcount, "Got unexpected refcount %u.\n", refcount);
 
     refcount = pool->lpVtbl->Release(pool);
+    ok(!refcount, "Got unexpected refcount %u.\n", refcount);
+
+    hr = D3DXCreateEffect(device, test_effect_parameter_value_blob_float, sizeof(test_effect_parameter_value_blob_float),
+            NULL, NULL, 0, NULL, &effect, NULL);
+    hr = effect->lpVtbl->BeginParameterBlock(effect);
+    ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
+    mat_arr[0] = mat_arr[1] = test_mat;
+    hr = effect->lpVtbl->SetMatrixArray(effect, "f33_2", mat_arr, 2);
+    ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
+    block = effect->lpVtbl->EndParameterBlock(effect);
+    ok(!!block, "Got unexpected block %p.\n", block);
+
+    memset(mat_arr, 0, sizeof(mat_arr));
+    hr = effect->lpVtbl->SetMatrixArray(effect, "f33_2", mat_arr, 2);
+    ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
+    hr = effect->lpVtbl->ApplyParameterBlock(effect, block);
+    todo_wine ok(hr == D3D_OK, "Got result %#x.\n", hr);
+
+    hr = effect->lpVtbl->GetMatrixArray(effect, "f33_2", mat_arr, 2);
+    ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
+    todo_wine ok(!memcmp(&mat_arr[0], &test_mat, sizeof(test_mat))
+            && !memcmp(&mat_arr[1], &test_mat, sizeof(test_mat)), "Got unexpected matrix array.\n");
+
+    refcount = effect->lpVtbl->Release(effect);
     ok(!refcount, "Got unexpected refcount %u.\n", refcount);
 
     refcount = IDirect3DDevice9_Release(device);
