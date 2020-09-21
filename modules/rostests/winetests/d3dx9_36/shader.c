@@ -1491,7 +1491,7 @@ static void test_setting_constants(void)
     ok(refcnt == 0, "The Direct3D device reference count was %u, should be 0\n", refcnt);
 
     refcnt = IDirect3D9_Release(d3d);
-    ok(refcnt == 0, "The Direct3D object referenct count was %u, should be 0\n", refcnt);
+    ok(refcnt == 0, "The Direct3D object reference count was %u, should be 0\n", refcnt);
 
     if (wnd) DestroyWindow(wnd);
 }
@@ -6170,7 +6170,7 @@ static void test_registerset(void)
     ok(count == 0, "The Direct3D device reference count was %u, should be 0\n", count);
 
     count = IDirect3D9_Release(d3d);
-    ok(count == 0, "The Direct3D object referenct count was %u, should be 0\n", count);
+    ok(count == 0, "The Direct3D object reference count was %u, should be 0\n", count);
 
     if (wnd) DestroyWindow(wnd);
 }
@@ -6407,7 +6407,7 @@ static void test_registerset_defaults(void)
     ok(count == 0, "The Direct3D device reference count was %u, should be 0\n", count);
 
     count = IDirect3D9_Release(d3d);
-    ok(count == 0, "The Direct3D object referenct count was %u, should be 0\n", count);
+    ok(count == 0, "The Direct3D object reference count was %u, should be 0\n", count);
 
     if (wnd) DestroyWindow(wnd);
 }
