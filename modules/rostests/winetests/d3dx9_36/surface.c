@@ -957,17 +957,34 @@ static void test_D3DXLoadSurface(IDirect3DDevice9 *device)
         check_pixel_4bpp(&lockrect, 1, 1, 0xfffe9aff);
         IDirect3DSurface9_UnlockRect(surf);
 
-        hr = D3DXLoadSurfaceFromMemory(surf, NULL, NULL, pixdata_a8b8g8r8, D3DFMT_A8B8G8R8, 8, NULL, &rect, D3DX_FILTER_NONE, 0);
-        ok(hr == D3D_OK, "D3DXLoadSurfaceFromMemory returned %#x, expected %#x\n", hr, D3D_OK);
-        IDirect3DSurface9_LockRect(surf, &lockrect, NULL, D3DLOCK_READONLY);
+        hr = D3DXLoadSurfaceFromMemory(surf, NULL, NULL, pixdata_a8b8g8r8, D3DFMT_A8B8G8R8,
+                8, NULL, &rect, D3DX_FILTER_NONE, 0);
+        ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
+        hr = IDirect3DSurface9_LockRect(surf, &lockrect, NULL, D3DLOCK_READONLY);
+        ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
         check_pixel_4bpp(&lockrect, 0, 0, 0xc3f04c39);
         check_pixel_4bpp(&lockrect, 1, 0, 0x2392e85a);
         check_pixel_4bpp(&lockrect, 0, 1, 0x09fd97b1);
         check_pixel_4bpp(&lockrect, 1, 1, 0x8df62bc3);
         IDirect3DSurface9_UnlockRect(surf);
 
-        hr = D3DXLoadSurfaceFromMemory(surf, NULL, NULL, pixdata_a2r10g10b10, D3DFMT_A2R10G10B10, 8, NULL, &rect, D3DX_FILTER_NONE, 0);
-        ok(hr == D3D_OK, "D3DXLoadSurfaceFromMemory returned %#x, expected %#x\n", hr, D3D_OK);
+        SetRect(&rect, 0, 0, 1, 1);
+        SetRect(&destrect, 1, 1, 2, 2);
+        hr = D3DXLoadSurfaceFromMemory(surf, NULL, &destrect, pixdata_a8b8g8r8, D3DFMT_A8B8G8R8,
+                8, NULL, &rect, D3DX_FILTER_NONE, 0);
+        ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
+        IDirect3DSurface9_LockRect(surf, &lockrect, NULL, D3DLOCK_READONLY);
+        check_pixel_4bpp(&lockrect, 0, 0, 0xc3f04c39);
+        check_pixel_4bpp(&lockrect, 1, 0, 0x2392e85a);
+        check_pixel_4bpp(&lockrect, 0, 1, 0x09fd97b1);
+        check_pixel_4bpp(&lockrect, 1, 1, 0xc3f04c39);
+        IDirect3DSurface9_UnlockRect(surf);
+
+        SetRect(&rect, 0, 0, 2, 2);
+
+        hr = D3DXLoadSurfaceFromMemory(surf, NULL, NULL, pixdata_a2r10g10b10, D3DFMT_A2R10G10B10,
+                8, NULL, &rect, D3DX_FILTER_NONE, 0);
+        ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
         IDirect3DSurface9_LockRect(surf, &lockrect, NULL, D3DLOCK_READONLY);
         check_pixel_4bpp(&lockrect, 0, 0, 0x555c95bf);
         check_pixel_4bpp(&lockrect, 1, 0, 0x556d663f);
@@ -1386,98 +1403,121 @@ static void test_D3DXSaveSurfaceToFileInMemory(IDirect3DDevice9 *device)
 
 static void test_D3DXSaveSurfaceToFile(IDirect3DDevice9 *device)
 {
-    HRESULT hr;
-    IDirect3DSurface9 *surface;
-    RECT rect;
-    D3DLOCKED_RECT lock_rect;
-    D3DXIMAGE_INFO image_info;
-    const BYTE pixels[] = { 0xff, 0x00, 0x00, 0x00, 0xff, 0x00,
-                            0x00, 0x00, 0xff, 0x00, 0x00, 0xff };
+    const BYTE pixels[] =
+            {0xff, 0x00, 0x00, 0x00, 0xff, 0x00,
+             0x00, 0x00, 0xff, 0x00, 0x00, 0xff,};
     DWORD pitch = sizeof(pixels) / 2;
+    IDirect3DSurface9 *surface;
+    D3DXIMAGE_INFO image_info;
+    D3DLOCKED_RECT lock_rect;
+    HRESULT hr;
+    RECT rect;
 
     hr = IDirect3DDevice9_CreateOffscreenPlainSurface(device, 2, 2, D3DFMT_R8G8B8, D3DPOOL_SCRATCH, &surface, NULL);
-    if (FAILED(hr)) {
-       skip("Couldn't create surface\n");
+    if (FAILED(hr))
+    {
+       skip("Couldn't create surface.\n");
        return;
     }
 
     SetRect(&rect, 0, 0, 2, 2);
-    hr = D3DXLoadSurfaceFromMemory(surface, NULL, NULL, pixels, D3DFMT_R8G8B8, pitch, NULL, &rect, D3DX_FILTER_NONE, 0);
-    if (SUCCEEDED(hr)) {
-        hr = D3DXSaveSurfaceToFileA("saved_surface.bmp", D3DXIFF_BMP, surface, NULL, NULL);
-        ok(hr == D3D_OK, "D3DXSaveSurfaceToFileA returned %#x, expected %#x\n", hr, D3D_OK);
+    hr = D3DXLoadSurfaceFromMemory(surface, NULL, NULL, pixels, D3DFMT_R8G8B8,
+            pitch, NULL, &rect, D3DX_FILTER_NONE, 0);
+    ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
 
-        hr = D3DXLoadSurfaceFromFileA(surface, NULL, NULL, "saved_surface.bmp", NULL, D3DX_FILTER_NONE, 0, &image_info);
-        ok(hr == D3D_OK, "Couldn't load saved surface %#x\n", hr);
-        if (FAILED(hr)) goto next_tests;
+    hr = D3DXSaveSurfaceToFileA("saved_surface.bmp", D3DXIFF_BMP, surface, NULL, NULL);
+    ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
 
-        ok(image_info.Width == 2, "Wrong width %u\n", image_info.Width);
-        ok(image_info.Height == 2, "Wrong height %u\n", image_info.Height);
-        ok(image_info.Format == D3DFMT_R8G8B8, "Wrong format %#x\n", image_info.Format);
-        ok(image_info.ImageFileFormat == D3DXIFF_BMP, "Wrong file format %u\n", image_info.ImageFileFormat);
+    hr = D3DXLoadSurfaceFromFileA(surface, NULL, NULL, "saved_surface.bmp",
+            NULL, D3DX_FILTER_NONE, 0, &image_info);
+    ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
 
-        hr = IDirect3DSurface9_LockRect(surface, &lock_rect, NULL, D3DLOCK_READONLY);
-        ok(hr == D3D_OK, "Couldn't lock surface %#x\n", hr);
-        if (FAILED(hr)) goto next_tests;
+    ok(image_info.Width == 2, "Wrong width %u.\n", image_info.Width);
+    ok(image_info.Height == 2, "Wrong height %u.\n", image_info.Height);
+    ok(image_info.Format == D3DFMT_R8G8B8, "Wrong format %#x.\n", image_info.Format);
+    ok(image_info.ImageFileFormat == D3DXIFF_BMP, "Wrong file format %u.\n", image_info.ImageFileFormat);
 
-        ok(!memcmp(lock_rect.pBits, pixels, pitch), "Pixel data mismatch in first row\n");
-        ok(!memcmp((BYTE *)lock_rect.pBits + lock_rect.Pitch, pixels + pitch, pitch), "Pixel data mismatch in second row\n");
+    hr = IDirect3DSurface9_LockRect(surface, &lock_rect, NULL, D3DLOCK_READONLY);
+    ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
 
-        IDirect3DSurface9_UnlockRect(surface);
-    } else skip("Couldn't fill surface\n");
+    ok(!memcmp(lock_rect.pBits, pixels, pitch),
+            "Pixel data mismatch in the first row.\n");
+    ok(!memcmp((BYTE *)lock_rect.pBits + lock_rect.Pitch, pixels + pitch, pitch),
+            "Pixel data mismatch in the second row.\n");
 
-next_tests:
+    IDirect3DSurface9_UnlockRect(surface);
+
+    SetRect(&rect, 0, 1, 2, 2);
+    hr = D3DXSaveSurfaceToFileA("saved_surface.bmp", D3DXIFF_BMP, surface, NULL, &rect);
+    ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
+    SetRect(&rect, 0, 0, 2, 1);
+    hr = D3DXLoadSurfaceFromFileA(surface, NULL, &rect, "saved_surface.bmp", NULL,
+            D3DX_FILTER_NONE, 0, &image_info);
+    ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
+
+    hr = IDirect3DSurface9_LockRect(surface, &lock_rect, NULL, D3DLOCK_READONLY);
+    ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
+    ok(!memcmp(lock_rect.pBits, pixels + pitch, pitch),
+            "Pixel data mismatch in the first row.\n");
+    ok(!memcmp((BYTE *)lock_rect.pBits + lock_rect.Pitch, pixels + pitch, pitch),
+            "Pixel data mismatch in the second row.\n");
+    IDirect3DSurface9_UnlockRect(surface);
+
+    SetRect(&rect, 0, 0, 2, 2);
+    hr = D3DXLoadSurfaceFromMemory(surface, NULL, NULL, pixels, D3DFMT_R8G8B8,
+            pitch, NULL, &rect, D3DX_FILTER_NONE, 0);
+    ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
+
     hr = D3DXSaveSurfaceToFileA(NULL, D3DXIFF_BMP, surface, NULL, NULL);
-    ok(hr == D3DERR_INVALIDCALL, "D3DXSaveSurfaceToFileA returned %#x, expected %#x\n", hr, D3DERR_INVALIDCALL);
+    ok(hr == D3DERR_INVALIDCALL, "Got unexpected hr %#x.\n", hr);
 
     /* PPM and TGA are supported, even though MSDN claims they aren't */
-    todo_wine {
-    hr = D3DXSaveSurfaceToFileA("saved_surface.ppm", D3DXIFF_PPM, surface, NULL, NULL);
-    ok(hr == D3D_OK, "D3DXSaveSurfaceToFileA returned %#x, expected %#x\n", hr, D3D_OK);
-    hr = D3DXSaveSurfaceToFileA("saved_surface.tga", D3DXIFF_TGA, surface, NULL, NULL);
-    ok(hr == D3D_OK, "D3DXSaveSurfaceToFileA returned %#x, expected %#x\n", hr, D3D_OK);
+    todo_wine
+    {
+        hr = D3DXSaveSurfaceToFileA("saved_surface.ppm", D3DXIFF_PPM, surface, NULL, NULL);
+        ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
+        hr = D3DXSaveSurfaceToFileA("saved_surface.tga", D3DXIFF_TGA, surface, NULL, NULL);
+        ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
     }
 
     hr = D3DXSaveSurfaceToFileA("saved_surface.dds", D3DXIFF_DDS, surface, NULL, NULL);
-    ok(hr == D3D_OK, "D3DXSaveSurfaceToFileA returned %#x, expected %#x\n", hr, D3D_OK);
-    if (SUCCEEDED(hr)) {
-        hr = D3DXLoadSurfaceFromFileA(surface, NULL, NULL, "saved_surface.dds", NULL, D3DX_FILTER_NONE, 0, &image_info);
-        ok(hr == D3D_OK, "Couldn't load saved surface %#x\n", hr);
+    ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
 
-        if (SUCCEEDED(hr)) {
-            ok(image_info.Width == 2, "Wrong width %u\n", image_info.Width);
-            ok(image_info.Format == D3DFMT_R8G8B8, "Wrong format %#x\n", image_info.Format);
-            ok(image_info.ImageFileFormat == D3DXIFF_DDS, "Wrong file format %u\n", image_info.ImageFileFormat);
+    hr = D3DXLoadSurfaceFromFileA(surface, NULL, NULL, "saved_surface.dds",
+            NULL, D3DX_FILTER_NONE, 0, &image_info);
+    ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
 
-            hr = IDirect3DSurface9_LockRect(surface, &lock_rect, NULL, D3DLOCK_READONLY);
-            ok(hr == D3D_OK, "Couldn't lock surface %#x\n", hr);
-            if (SUCCEEDED(hr)) {
-                ok(!memcmp(lock_rect.pBits, pixels, pitch), "Pixel data mismatch in first row\n");
-                ok(!memcmp((BYTE *)lock_rect.pBits + lock_rect.Pitch, pixels + pitch, pitch), "Pixel data mismatch in second row\n");
-                IDirect3DSurface9_UnlockRect(surface);
-            }
-        }
-    } else skip("Couldn't save surface\n");
+    ok(image_info.Width == 2, "Wrong width %u.\n", image_info.Width);
+    ok(image_info.Format == D3DFMT_R8G8B8, "Wrong format %#x.\n", image_info.Format);
+    ok(image_info.ImageFileFormat == D3DXIFF_DDS, "Wrong file format %u.\n", image_info.ImageFileFormat);
+
+    hr = IDirect3DSurface9_LockRect(surface, &lock_rect, NULL, D3DLOCK_READONLY);
+    ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
+    ok(!memcmp(lock_rect.pBits, pixels, pitch),
+            "Pixel data mismatch in the first row.\n");
+    ok(!memcmp((BYTE *)lock_rect.pBits + lock_rect.Pitch, pixels + pitch, pitch),
+            "Pixel data mismatch in the second row.\n");
+    IDirect3DSurface9_UnlockRect(surface);
 
     hr = D3DXSaveSurfaceToFileA("saved_surface", D3DXIFF_PFM + 1, surface, NULL, NULL);
-    ok(hr == D3DERR_INVALIDCALL, "D3DXSaveSurfaceToFileA returned %#x, expected %#x\n", hr, D3DERR_INVALIDCALL);
+    ok(hr == D3DERR_INVALIDCALL, "Got unexpected hr %#x.\n", hr);
 
     SetRect(&rect, 0, 0, 4, 4);
     hr = D3DXSaveSurfaceToFileA("saved_surface.bmp", D3DXIFF_BMP, surface, NULL, &rect);
-    ok(hr == D3DERR_INVALIDCALL, "D3DXSaveSurfaceToFileA returned %#x, expected %#x\n", hr, D3DERR_INVALIDCALL);
+    ok(hr == D3DERR_INVALIDCALL, "Got unexpected hr %#x.\n", hr);
     SetRect(&rect, 2, 0, 1, 4);
     hr = D3DXSaveSurfaceToFileA("saved_surface.bmp", D3DXIFF_BMP, surface, NULL, &rect);
-    ok(hr == D3DERR_INVALIDCALL, "D3DXSaveSurfaceToFileA returned %#x, expected %#x\n", hr, D3DERR_INVALIDCALL);
+    ok(hr == D3DERR_INVALIDCALL, "Got unexpected hr %#x.\n", hr);
     SetRect(&rect, 0, 2, 4, 1);
     hr = D3DXSaveSurfaceToFileA("saved_surface.bmp", D3DXIFF_BMP, surface, NULL, &rect);
-    ok(hr == D3DERR_INVALIDCALL, "D3DXSaveSurfaceToFileA returned %#x, expected %#x\n", hr, D3DERR_INVALIDCALL);
+    ok(hr == D3DERR_INVALIDCALL, "Got unexpected hr %#x.\n", hr);
     SetRect(&rect, -1, -1, 2, 2);
     hr = D3DXSaveSurfaceToFileA("saved_surface.bmp", D3DXIFF_BMP, surface, NULL, &rect);
-    ok(hr == D3DERR_INVALIDCALL, "D3DXSaveSurfaceToFileA returned %#x, expected %#x\n", hr, D3DERR_INVALIDCALL);
+    ok(hr == D3DERR_INVALIDCALL, "Got unexpected hr %#x.\n", hr);
     SetRectEmpty(&rect);
     hr = D3DXSaveSurfaceToFileA("saved_surface.bmp", D3DXIFF_BMP, surface, NULL, &rect);
     /* fails when debug version of d3d9 is used */
-    ok(hr == D3D_OK || broken(hr == D3DERR_INVALIDCALL), "D3DXSaveSurfaceToFileA returned %#x, expected %#x\n", hr, D3D_OK);
+    ok(hr == D3D_OK || broken(hr == D3DERR_INVALIDCALL), "Got unexpected hr %#x.\n", hr);
 
     DeleteFileA("saved_surface.bmp");
     DeleteFileA("saved_surface.ppm");
