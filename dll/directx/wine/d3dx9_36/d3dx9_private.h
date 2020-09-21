@@ -22,6 +22,7 @@
 #ifndef __WINE_D3DX9_PRIVATE_H
 #define __WINE_D3DX9_PRIVATE_H
 
+#include <stdint.h>
 #define NONAMELESSUNION
 #include "wine/debug.h"
 #include "wine/heap.h"
@@ -223,6 +224,24 @@ static inline BOOL is_param_type_sampler(D3DXPARAMETER_TYPE type)
     return type == D3DXPT_SAMPLER
             || type == D3DXPT_SAMPLER1D || type == D3DXPT_SAMPLER2D
             || type == D3DXPT_SAMPLER3D || type == D3DXPT_SAMPLERCUBE;
+}
+
+/* Returns the smallest power of 2 which is greater than or equal to num */
+static inline uint32_t make_pow2(uint32_t num)
+{
+#if defined(__GNUC__) && ((__GNUC__ > 3) || ((__GNUC__ == 3) && (__GNUC_MINOR__ >= 3)))
+    return num == 1 ? 1 : 1u << ((__builtin_clz(num - 1) ^ 0x1f) + 1);
+#else
+    num--;
+    num |= num >> 1;
+    num |= num >> 2;
+    num |= num >> 4;
+    num |= num >> 8;
+    num |= num >> 16;
+    num++;
+
+    return num;
+#endif
 }
 
 struct d3dx_parameter;

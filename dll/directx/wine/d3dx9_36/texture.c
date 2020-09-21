@@ -34,21 +34,6 @@ static BOOL is_pow2(UINT num)
     return !(num & (num - 1));
 }
 
-/* Returns the smallest power of 2 which is greater than or equal to num */
-static UINT make_pow2(UINT num)
-{
-    UINT result = 1;
-
-    /* In the unlikely event somebody passes a large value, make sure we don't enter an infinite loop */
-    if (num >= 0x80000000)
-        return 0x80000000;
-
-    while (result < num)
-        result <<= 1;
-
-    return result;
-}
-
 static HRESULT get_surface(D3DRESOURCETYPE type, struct IDirect3DBaseTexture9 *tex,
         int face, UINT level, struct IDirect3DSurface9 **surf)
 {
