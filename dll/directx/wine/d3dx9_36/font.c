@@ -20,11 +20,8 @@
  *
  */
 
-#include "config.h"
-#include "wine/port.h"
 
 #include "d3dx9_private.h"
-#include "wine/unicode.h"
 #endif /* __REACTOS__ */
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3dx);
@@ -270,7 +267,7 @@ HRESULT WINAPI D3DXCreateFontW(IDirect3DDevice9 *device, INT height, UINT width,
     desc.OutputPrecision=precision;
     desc.Quality=quality;
     desc.PitchAndFamily=pitchandfamily;
-    if(facename != NULL) strcpyW(desc.FaceName, facename);
+    if(facename != NULL) lstrcpyW(desc.FaceName, facename);
     else desc.FaceName[0] = '\0';
 
     return D3DXCreateFontIndirectW(device, &desc, font);

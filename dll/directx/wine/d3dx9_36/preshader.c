@@ -19,12 +19,11 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-#include "wine/port.h"
 
 #include "d3dx9_private.h"
 
 #include <float.h>
+#include <math.h>
 #include <assert.h>
 #endif /* __REACTOS__ */
 
@@ -135,11 +134,7 @@ static double pres_log(double *args, int n)
     if (v == 0.0)
         return 0.0;
     else
-#ifdef HAVE_LOG2
         return log2(v);
-#else
-        return log(v) / log(2);
-#endif
 }
 static double pres_asin(double *args, int n) {return to_signed_nan(asin(args[0]));}
 static double pres_acos(double *args, int n) {return to_signed_nan(acos(args[0]));}

@@ -21,8 +21,6 @@
  *
  */
 
-#include "config.h"
-#include "wine/port.h"
 
 #include "d3dx9_private.h"
 

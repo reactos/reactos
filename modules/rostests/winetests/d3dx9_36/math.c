@@ -4046,7 +4046,7 @@ static void test_D3DXSHMultiply3(void)
     D3DXSHMultiply3(c, c, b);
     for (i = 0; i < ARRAY_SIZE(expected_aliased); ++i)
     {
-        equal = compare_float(c[i], expected_aliased[i], 32);
+        equal = compare_float(c[i], expected_aliased[i], 34);
         ok(equal, "Expected[%u] = %.8e, received = %.8e.\n", i, expected_aliased[i], c[i]);
     }
 }
@@ -4324,7 +4324,7 @@ static void test_D3DXSHRotateZ(void)
                             expected = ( i + 1.0f ) * ( i + 1.0f );
                     else
                         expected = table[36 * (l + 3 * j) + i];
-                    equal = compare_float(expected, out_temp[i], 256);
+                    equal = compare_float(expected, out_temp[i], 512);
                     ok(equal || (fabs(expected) < 2.0e-5f && fabs(out_temp[i]) < 2.0e-5f),
                             "angle %.8e, order %u index %u, expected %.8e, received %.8e.\n",
                             angle[j], order, i, expected, out_temp[i]);
