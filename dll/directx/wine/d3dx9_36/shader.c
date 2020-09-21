@@ -428,6 +428,9 @@ HRESULT WINAPI D3DXCompileShader(const char *data, UINT length, const D3DXMACRO 
             debugstr_a(data), length, defines, include, debugstr_a(function), debugstr_a(profile),
             flags, shader, error_msgs, constant_table);
 
+    if (D3DX_SDK_VERSION <= 36)
+        flags |= D3DCOMPILE_ENABLE_BACKWARDS_COMPATIBILITY;
+
     hr = D3DCompile(data, length, NULL, (D3D_SHADER_MACRO *)defines, (ID3DInclude *)include,
                     function, profile, flags, 0, (ID3DBlob **)shader, (ID3DBlob **)error_msgs);
 
@@ -507,6 +510,9 @@ HRESULT WINAPI D3DXCompileShaderFromFileW(const WCHAR *filename, const D3DXMACRO
         HeapFree(GetProcessHeap(), 0, filename_a);
         return D3DXERR_INVALIDDATA;
     }
+
+    if (D3DX_SDK_VERSION <= 36)
+        flags |= D3DCOMPILE_ENABLE_BACKWARDS_COMPATIBILITY;
 
     hr = D3DCompile(buffer, len, filename_a, (const D3D_SHADER_MACRO *)defines,
                     (ID3DInclude *)include, entrypoint, profile, flags, 0,
