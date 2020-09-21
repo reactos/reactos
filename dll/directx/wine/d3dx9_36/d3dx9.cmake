@@ -44,5 +44,4 @@ function(add_d3dx9_target __version)
     add_cd_file(TARGET ${module} DESTINATION reactos/system32 FOR all)
 
     target_compile_definitions(${module} PRIVATE -DD3DX_SDK_VERSION=${__version} -D__WINESRC__ -Dcopysignf=_copysignf)
-    target_include_directories(${module} PRIVATE ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 endfunction()

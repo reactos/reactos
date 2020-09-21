@@ -1,3 +1,6 @@
+#ifdef __REACTOS__
+#include "precomp.h"
+#else
 /*
  * Copyright 2016 Paul Gofman
  *
@@ -23,6 +26,7 @@
 
 #include <float.h>
 #include <assert.h>
+#endif /* __REACTOS__ */
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3dx);
 

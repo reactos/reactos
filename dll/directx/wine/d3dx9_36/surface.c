@@ -1,3 +1,6 @@
+#ifdef __REACTOS__
+#include "precomp.h"
+#else
 /*
  * Copyright (C) 2009-2010 Tony Wasserka
  * Copyright (C) 2012 Józef Kucia
@@ -26,6 +29,7 @@
 #include "initguid.h"
 #include "ole2.h"
 #include "wincodec.h"
+#endif /* __REACTOS__ */
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3dx);
 

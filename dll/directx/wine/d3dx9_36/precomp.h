@@ -1,12 +1,12 @@
 
-#ifndef __WINE_D3DX9_36_PRECOMP_H
-#define __WINE_D3DX9_36_PRECOMP_H
+#pragma once
 
-#include <config.h>
+#include <wine/config.h>
 #include <wine/port.h>
 
 #include <assert.h>
 #include <stdarg.h>
+#include <stdio.h>
 
 #define WIN32_NO_STATUS
 #define _INC_WINDOWS
@@ -21,8 +21,16 @@
 #include <wingdi.h>
 #include <winuser.h>
 
+#include <wine/list.h>
 #include <wine/unicode.h>
 
 #include "d3dx9_private.h"
 
-#endif /* __WINE_D3DX9_36_PRECOMP_H */
+#include <dxfile.h>
+#include <rmxfguid.h>
+
+#include <d3dcommon.h>
+#include <d3dcompiler.h>
+
+#include <ole2.h>
+#include <wincodec.h>

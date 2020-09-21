@@ -1,3 +1,6 @@
+#ifdef __REACTOS__
+#include "precomp.h"
+#else
 /*
  * Copyright 2008 Luis Busquets
  * Copyright 2009 Matteo Bruni
@@ -24,6 +27,7 @@
 #include "d3dx9_private.h"
 #include "d3dcommon.h"
 #include "d3dcompiler.h"
+#endif /* __REACTOS__ */
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3dx);
 

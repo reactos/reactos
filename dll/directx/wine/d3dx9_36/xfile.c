@@ -1,3 +1,6 @@
+#ifdef __REACTOS__
+#include "precomp.h"
+#else
 /*
  * Copyright (C) 2012 Christian Costa
  *
@@ -24,6 +27,7 @@
 #include "d3dx9xof.h"
 #undef MAKE_DDHRESULT
 #include "dxfile.h"
+#endif /* __REACTOS__ */
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3dx);
 

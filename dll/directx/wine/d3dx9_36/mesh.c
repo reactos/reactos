@@ -1,3 +1,7 @@
+#ifdef __REACTOS__
+#include "precomp.h"
+#include <rmxftmpl.h>
+#else
  /*
  * Mesh operations specific to D3DX9.
  *
@@ -39,6 +43,7 @@
 #include "rmxftmpl.h"
 #include "wine/unicode.h"
 #include "wine/list.h"
+#endif /* __REACTOS__ */
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3dx);
 

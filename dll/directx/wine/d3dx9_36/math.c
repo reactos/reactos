@@ -1,3 +1,6 @@
+#ifdef __REACTOS__
+#include "precomp.h"
+#else
 /*
  * Mathematical operations specific to D3DX9.
  *
@@ -26,6 +29,7 @@
 #include "wine/port.h"
 
 #include "d3dx9_private.h"
+#endif /* __REACTOS__ */
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3dx);
 

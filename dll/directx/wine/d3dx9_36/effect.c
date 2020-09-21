@@ -1,3 +1,6 @@
+#ifdef __REACTOS__
+#include "precomp.h"
+#else
 /*
  * Copyright 2010 Christian Costa
  * Copyright 2011 Rico Schüller
@@ -25,6 +28,7 @@
 
 #include "d3dx9_private.h"
 #include "d3dcompiler.h"
+#endif /* __REACTOS__ */
 
 /* Constants for special INT/FLOAT conversation */
 #define INT_FLOAT_MULTI 255.0f
