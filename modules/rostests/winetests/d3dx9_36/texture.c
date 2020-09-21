@@ -1824,6 +1824,28 @@ static void test_D3DXCreateTextureFromFileInMemory(IDirect3DDevice9 *device)
     hr = IDirect3DSurface9_UnlockRect(uncompressed_surface);
     ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
 
+    hr = D3DXLoadSurfaceFromFileInMemory(surface, NULL, &rect, dds_dxt5_8_8,
+            sizeof(dds_dxt5_8_8), &rect, D3DX_FILTER_POINT, 0, NULL);
+    ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
+    hr = D3DXLoadSurfaceFromSurface(uncompressed_surface, NULL, NULL, surface, NULL, NULL, D3DX_FILTER_NONE, 0);
+    ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
+
+    hr = IDirect3DSurface9_LockRect(uncompressed_surface, &lock_rect, NULL, D3DLOCK_READONLY);
+    ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
+    for (y = 0; y < 8; ++y)
+    {
+        for (x = 0; x < 8; ++x)
+        {
+            ok(compare_color(((DWORD *)lock_rect.pBits)[lock_rect.Pitch / 4 * y + x],
+                    dds_dxt5_8_8_expected_misaligned_3[y * 8 + x], 0),
+                    "Color at position %u, %u is 0x%08x, expected 0x%08x.\n",
+                    x, y, ((DWORD *)lock_rect.pBits)[lock_rect.Pitch / 4 * y + x],
+                    dds_dxt5_8_8_expected_misaligned_3[y * 8 + x]);
+        }
+    }
+    hr = IDirect3DSurface9_UnlockRect(uncompressed_surface);
+    ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
+
     IDirect3DSurface9_Release(uncompressed_surface);
     IDirect3DSurface9_Release(surface);
     IDirect3DTexture9_Release(texture);

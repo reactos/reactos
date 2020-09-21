@@ -1172,7 +1172,7 @@ HRESULT WINAPI D3DXLoadSurfaceFromFileInMemory(IDirect3DSurface9 *pDestSurface,
         wicrect.Height = imginfo.Height;
     }
 
-    SetRect(&rect, 0, 0, wicrect.Width, wicrect.Height);
+    SetRect(&rect, wicrect.X, wicrect.Y, wicrect.X + wicrect.Width, wicrect.Y + wicrect.Height);
 
     if (imginfo.ImageFileFormat == D3DXIFF_DDS)
     {
