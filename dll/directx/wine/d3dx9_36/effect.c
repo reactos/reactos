@@ -993,33 +993,6 @@ static inline DWORD d3dx9_effect_version(DWORD major, DWORD minor)
     return (0xfeff0000 | ((major) << 8) | (minor));
 }
 
-static HRESULT d3dx9_base_effect_get_parameter_desc(struct d3dx9_base_effect *base,
-        D3DXHANDLE parameter, D3DXPARAMETER_DESC *desc)
-{
-    struct d3dx_parameter *param = get_valid_parameter(base, parameter);
-
-    if (!desc || !param)
-    {
-        WARN("Invalid argument specified.\n");
-        return D3DERR_INVALIDCALL;
-    }
-
-    desc->Name = param->name;
-    desc->Semantic = param->semantic;
-    desc->Class = param->class;
-    desc->Type = param->type;
-    desc->Rows = param->rows;
-    desc->Columns = param->columns;
-    desc->Elements = param->element_count;
-    desc->Annotations = is_top_level_parameter(param)
-            ? top_level_parameter_from_parameter(param)->annotation_count : 0;
-    desc->StructMembers = param->member_count;
-    desc->Flags = param->flags;
-    desc->Bytes = param->bytes;
-
-    return D3D_OK;
-}
-
 static HRESULT d3dx9_get_param_value_ptr(struct d3dx_pass *pass, struct d3dx_state *state,
         void **param_value, struct d3dx_parameter **out_param,
         BOOL update_all, BOOL *param_dirty)
@@ -2339,10 +2312,30 @@ static HRESULT WINAPI d3dx_effect_GetParameterDesc(ID3DXEffect *iface, D3DXHANDL
         D3DXPARAMETER_DESC *desc)
 {
     struct d3dx_effect *effect = impl_from_ID3DXEffect(iface);
+    struct d3dx_parameter *param = get_valid_parameter(&effect->base_effect, parameter);
 
     TRACE("iface %p, parameter %p, desc %p.\n", iface, parameter, desc);
 
-    return d3dx9_base_effect_get_parameter_desc(&effect->base_effect, parameter, desc);
+    if (!desc || !param)
+    {
+        WARN("Invalid argument specified.\n");
+        return D3DERR_INVALIDCALL;
+    }
+
+    desc->Name = param->name;
+    desc->Semantic = param->semantic;
+    desc->Class = param->class;
+    desc->Type = param->type;
+    desc->Rows = param->rows;
+    desc->Columns = param->columns;
+    desc->Elements = param->element_count;
+    desc->Annotations = is_top_level_parameter(param)
+            ? top_level_parameter_from_parameter(param)->annotation_count : 0;
+    desc->StructMembers = param->member_count;
+    desc->Flags = param->flags;
+    desc->Bytes = param->bytes;
+
+    return D3D_OK;
 }
 
 static HRESULT WINAPI d3dx_effect_GetTechniqueDesc(ID3DXEffect *iface, D3DXHANDLE technique,
