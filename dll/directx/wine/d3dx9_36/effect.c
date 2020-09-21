@@ -1290,33 +1290,6 @@ static UINT get_annotation_from_object(struct d3dx9_base_effect *base,
     }
 }
 
-static D3DXHANDLE d3dx9_base_effect_get_annotation_by_name(struct d3dx9_base_effect *base,
-        D3DXHANDLE object, const char *name)
-{
-    struct d3dx_parameter *annotation = NULL;
-    struct d3dx_parameter *annotations = NULL;
-    UINT annotation_count = 0;
-
-    if (!name)
-    {
-        WARN("Invalid argument specified\n");
-        return NULL;
-    }
-
-    annotation_count = get_annotation_from_object(base, object, &annotations);
-
-    annotation = get_annotation_by_name(base, annotation_count, annotations, name);
-    if (annotation)
-    {
-        TRACE("Returning parameter %p\n", annotation);
-        return get_parameter_handle(annotation);
-    }
-
-    WARN("Annotation not found.\n");
-
-    return NULL;
-}
-
 static BOOL walk_parameter_tree(struct d3dx_parameter *param, walk_parameter_dep_func param_func,
         void *data)
 {
@@ -3520,10 +3493,30 @@ static D3DXHANDLE WINAPI d3dx_effect_GetAnnotationByName(ID3DXEffect *iface, D3D
         const char *name)
 {
     struct d3dx_effect *effect = impl_from_ID3DXEffect(iface);
+    struct d3dx_parameter *annotation = NULL;
+    struct d3dx_parameter *annotations = NULL;
+    unsigned int annotation_count;
 
     TRACE("iface %p, object %p, name %s.\n", iface, object, debugstr_a(name));
 
-    return d3dx9_base_effect_get_annotation_by_name(&effect->base_effect, object, name);
+    if (!name)
+    {
+        WARN("Invalid argument specified\n");
+        return NULL;
+    }
+
+    annotation_count = get_annotation_from_object(&effect->base_effect, object, &annotations);
+
+    annotation = get_annotation_by_name(&effect->base_effect, annotation_count, annotations, name);
+    if (annotation)
+    {
+        TRACE("Returning parameter %p\n", annotation);
+        return get_parameter_handle(annotation);
+    }
+
+    WARN("Annotation not found.\n");
+
+    return NULL;
 }
 
 static HRESULT WINAPI d3dx_effect_SetValue(ID3DXEffect *iface, D3DXHANDLE parameter,
