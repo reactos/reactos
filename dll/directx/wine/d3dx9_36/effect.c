@@ -1503,22 +1503,6 @@ static HRESULT d3dx9_base_effect_get_vector_array(struct d3dx9_base_effect *base
     return D3DERR_INVALIDCALL;
 }
 
-static HRESULT d3dx9_base_effect_set_string(struct d3dx9_base_effect *base,
-        D3DXHANDLE parameter, const char *string)
-{
-    struct d3dx_parameter *param = get_valid_parameter(base, parameter);
-
-    if (param && param->type == D3DXPT_STRING)
-    {
-        set_dirty(param);
-        return set_string(param->data, string);
-    }
-
-    WARN("Parameter not found.\n");
-
-    return D3DERR_INVALIDCALL;
-}
-
 static HRESULT d3dx9_base_effect_set_texture(struct d3dx9_base_effect *base,
         D3DXHANDLE parameter, struct IDirect3DBaseTexture9 *texture)
 {
@@ -3539,10 +3523,19 @@ static HRESULT WINAPI d3dx_effect_GetMatrixTransposePointerArray(ID3DXEffect *if
 static HRESULT WINAPI d3dx_effect_SetString(ID3DXEffect *iface, D3DXHANDLE parameter, const char *string)
 {
     struct d3dx_effect *effect = impl_from_ID3DXEffect(iface);
+    struct d3dx_parameter *param = get_valid_parameter(&effect->base_effect, parameter);
 
     TRACE("iface %p, parameter %p, string %s.\n", iface, parameter, debugstr_a(string));
 
-    return d3dx9_base_effect_set_string(&effect->base_effect, parameter, string);
+    if (param && param->type == D3DXPT_STRING)
+    {
+        set_dirty(param);
+        return set_string(param->data, string);
+    }
+
+    WARN("Parameter not found.\n");
+
+    return D3DERR_INVALIDCALL;
 }
 
 static HRESULT WINAPI d3dx_effect_GetString(ID3DXEffect *iface, D3DXHANDLE parameter, const char **string)
