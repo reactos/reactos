@@ -995,25 +995,6 @@ static inline DWORD d3dx9_effect_version(DWORD major, DWORD minor)
     return (0xfeff0000 | ((major) << 8) | (minor));
 }
 
-static HRESULT d3dx9_base_effect_get_desc(struct d3dx9_base_effect *base, D3DXEFFECT_DESC *desc)
-{
-    if (!desc)
-    {
-        WARN("Invalid argument specified.\n");
-        return D3DERR_INVALIDCALL;
-    }
-
-    FIXME("partial stub!\n");
-
-    /* TODO: add creator and function count. */
-    desc->Creator = NULL;
-    desc->Functions = 0;
-    desc->Parameters = base->parameter_count;
-    desc->Techniques = base->technique_count;
-
-    return D3D_OK;
-}
-
 static HRESULT d3dx9_base_effect_get_parameter_desc(struct d3dx9_base_effect *base,
         D3DXHANDLE parameter, D3DXPARAMETER_DESC *desc)
 {
@@ -3423,9 +3404,21 @@ static HRESULT WINAPI d3dx_effect_GetDesc(ID3DXEffect *iface, D3DXEFFECT_DESC *d
 {
     struct d3dx_effect *effect = impl_from_ID3DXEffect(iface);
 
-    TRACE("iface %p, desc %p.\n", iface, desc);
+    FIXME("iface %p, desc %p partial stub.\n", iface, desc);
 
-    return d3dx9_base_effect_get_desc(&effect->base_effect, desc);
+    if (!desc)
+    {
+        WARN("Invalid argument specified.\n");
+        return D3DERR_INVALIDCALL;
+    }
+
+    /* TODO: add creator and function count. */
+    desc->Creator = NULL;
+    desc->Functions = 0;
+    desc->Parameters = effect->base_effect.parameter_count;
+    desc->Techniques = effect->base_effect.technique_count;
+
+    return D3D_OK;
 }
 
 static HRESULT WINAPI d3dx_effect_GetParameterDesc(ID3DXEffect *iface, D3DXHANDLE parameter,
