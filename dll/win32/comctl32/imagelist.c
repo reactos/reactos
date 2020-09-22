@@ -4196,7 +4196,7 @@ ImageList_Remove (HIMAGELIST himl, INT i)
 {
     IImageList2* piml = IImageList2_from_impl(himl);
     if (!piml)
-        return -1;
+        return FALSE;
 
     return (piml->lpVtbl->Remove(piml, i) == S_OK) ? TRUE : FALSE;
 }
