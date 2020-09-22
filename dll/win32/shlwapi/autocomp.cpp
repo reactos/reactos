@@ -52,6 +52,7 @@ public:
 
     void DoAll();
     void DoFileSystem(LPCWSTR pszQuery);
+    void DoTypedPaths(LPCWSTR pszQuery);
     void DoDir(LPCWSTR pszDir, BOOL bDirOnly);
     void DoDrives(BOOL bDirOnly);
     void DoURLHistory();
@@ -172,6 +173,57 @@ void CAutoCompleteEnumString::DoFileSystem(LPCWSTR pszQuery)
     }
 }
 
+void CAutoCompleteEnumString::DoTypedPaths(LPCWSTR pszQuery)
+{
+    static const LPCWSTR
+        pszTypedPaths = L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\TypedPaths";
+    WCHAR szName[32], szValue[MAX_PATH + 32], szPath[MAX_PATH];
+
+    size_t cch = wcslen(pszQuery); // The length of pszQuery
+    if (cch >= MAX_PATH)
+    {
+        ERR("cch >= MAX_PATH\n");
+        return;
+    }
+
+    // Open the registry key
+    HKEY hKey;
+    LONG result = RegOpenKeyExW(HKEY_CURRENT_USER, pszTypedPaths, 0, KEY_READ, &hKey);
+    if (result != ERROR_SUCCESS)
+    {
+        TRACE("Opening TypedPaths failed: 0x%lX\n", result);
+        return;
+    }
+
+    for (DWORD i = 1; i <= MAX_ITEMS; ++i) // For all the URL entries
+    {
+        // Build a registry value name
+        StringCbPrintfW(szName, sizeof(szName), L"url%lu", i);
+
+        // Read a registry value
+        DWORD cbValue = sizeof(szValue), dwType;
+        result = RegQueryValueExW(hKey, szName, NULL, &dwType, (LPBYTE)szValue, &cbValue);
+        if (result == ERROR_SUCCESS && dwType == REG_SZ) // Could I read it?
+        {
+            if (PathFileExistsW(szValue)) // File or folder does exist
+            {
+                if (!(m_dwSHACF & SHACF_FILESYS_DIRS) && !PathIsDirectoryW(szValue))
+                    continue; // Directory-only and not a directory
+
+                StringCbCopyW(szPath, sizeof(szPath), szValue); // Copy szValue
+                szPath[cch] = 0; // and truncate
+                if (_wcsicmp(pszQuery, szPath) == 0) // Matched
+                {
+                    if (!AddString(szValue))
+                        break;
+                }
+            }
+        }
+    }
+
+    RegCloseKey(hKey); // Close the registry key
+}
+
 void CAutoCompleteEnumString::DoAll()
 {
     ResetContent(); // Clear all the items
@@ -190,9 +242,12 @@ void CAutoCompleteEnumString::DoAll()
     WCHAR szText[MAX_PATH];
     GetWindowTextW(m_hwndEdit, szText, _countof(szText));
 
-    // Populate the items for filesystem
+    // Populate the items for filesystem and typed paths
     if (m_dwSHACF & (SHACF_FILESYS_ONLY | SHACF_FILESYSTEM | SHACF_FILESYS_DIRS))
+    {
         DoFileSystem(szText);
+        DoTypedPaths(szText);
+    }
 
     // Populate the items for URLs
     if (!(m_dwSHACF & (SHACF_FILESYS_ONLY))) // Not filesystem-only
