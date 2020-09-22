@@ -1,7 +1,8 @@
 /*
- * Chinese (Simplified) resources for shlwapi
+ * Chinese (Traditional) resources for shlwapi
  *
  * Copyright 2008 Hongbo Ni <hongbo.at.njstar.com>
+ * Resource seperated by Aobi Chan CL 2020 <eason066.at.gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -21,12 +22,12 @@
 /* Chinese text is encoded in UTF-8 */
 #pragma code_page(65001)
 
-LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
 STRINGTABLE
 {
-    IDS_BYTES_FORMAT    "%ld 字节"
-    IDS_TIME_INTERVAL_HOURS    " 小时"
+    IDS_BYTES_FORMAT    "%ld 位元組"
+    IDS_TIME_INTERVAL_HOURS    " 小時"
     IDS_TIME_INTERVAL_MINUTES  " 分"
     IDS_TIME_INTERVAL_SECONDS  " 秒"
 #ifdef __REACTOS__
@@ -41,15 +42,14 @@ STRINGTABLE
 
 IDD_ERR_DIALOG DIALOGEX 0, 0, 220, 60
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "错误"
-FONT 9, "宋体"
+CAPTION "錯誤"
+FONT 9, "新細明體"
 {
  LTEXT "", IDS_ERR_USER_MSG2, 15, 5, 28, 20
  LTEXT "", IDS_ERR_USER_MSG, 15, 5, 210, 8
- CHECKBOX "不要再显示这个讯息", IDC_ERR_DONT_SHOW, 5, 20, 210, 10, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
- PUSHBUTTON "确定(&O)", IDOK, 105, 40, 50, 14, WS_GROUP | WS_TABSTOP
+ CHECKBOX "不要再顯示這個訊息", IDC_ERR_DONT_SHOW, 5, 20, 210, 10, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+ PUSHBUTTON "確定(&O)", IDOK, 105, 40, 50, 14, WS_GROUP | WS_TABSTOP
  PUSHBUTTON "取消(&C)", IDCANCEL, 160, 40, 50, 14, WS_GROUP | WS_TABSTOP
  PUSHBUTTON "是(&Y)", IDYES, 105, 40, 50, 14, WS_GROUP | WS_TABSTOP
  PUSHBUTTON "否(&N)", IDNO, 160, 40, 50, 14, WS_GROUP | WS_TABSTOP
 }
-

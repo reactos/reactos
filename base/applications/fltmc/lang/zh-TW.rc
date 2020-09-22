@@ -1,31 +1,33 @@
+/* Chinese Traditional translation by Aobi Chan CL (eason066@gmail.com) 2020 */
+
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
 STRINGTABLE
 BEGIN
-    IDS_USAGE "\nValid commands :\n\
-               load        Loads a Filter driver\n\
-               unload      Unloads a Filter driver\n\
-               filters     Lists the Filters currently registered in the system\n\n\
-               volumes     Lists all volumes\n\n"
+    IDS_USAGE "\n有效的命令︰\n\
+               load        載入一個篩選器驅動程式\n\
+               unload      卸載一個篩選器驅動程式\n\
+               filters     列出在系統登錄的篩選器驅動程式\n\n\
+               volumes     列出所有磁碟區\n\n"
 
-    IDS_USAGE_LOAD      "Loads a filter driver\n"
-    IDS_USAGE_UNLOAD    "Unloads a filter driver\n"
-    IDS_USAGE_FILTERS   "Lists all registered filters\n"
-    IDS_USAGE_VOLUMES   "Lists all volumes\n"
+    IDS_USAGE_LOAD      "載入一個篩選器驅動程式\n"
+    IDS_USAGE_UNLOAD    "卸載一個篩選器驅動程式\n"
+    IDS_USAGE_FILTERS   "列出所有在系統登錄的篩選器驅動程式\n"
+    IDS_USAGE_VOLUMES   "列出所有磁碟區\n"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_DISPLAY_FILTERS1    "Filter Name                     Num Instances    Altitude    Frame\n"
-    IDS_DISPLAY_FILTERS2    "Filter Name                     Num Instances   Frame\n"
-    IDS_DISPLAY_VOLUMES     "Dos Name                        Volume Name                              FileSystem   Status\n"
+    IDS_DISPLAY_FILTERS1    "篩選器名稱                      數量 實例        高度        框架\n"
+    IDS_DISPLAY_FILTERS2    "篩選器名稱                      數量 實例       框架\n"
+    IDS_DISPLAY_VOLUMES     "DOS 名稱                        磁碟區名稱                               檔案系統     狀態\n"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_ERROR_PRIV      "Failed to set the driver load privilige (0x%X)\n"
-    IDS_ERROR_FILTERS   "Failed to list the filters (0x%X)\n"
-    IDS_ERROR_LOAD      "Failed to load the filter (0x%X)\n"
-    IDS_ERROR_UNLOAD    "Failed to unload the filter (0x%X)\n"
-    IDS_ERROR_VOLUMES   "Failed to list the volumes (0x%X)\n"
+    IDS_ERROR_PRIV      "無法設定驅動程式的載入次序 (0x%X)\n"
+    IDS_ERROR_FILTERS   "無法列出篩選器 (0x%X)\n"
+    IDS_ERROR_LOAD      "無法載入篩選器驅動程式 (0x%X)\n"
+    IDS_ERROR_UNLOAD    "無法卸載篩選器驅動程式 (0x%X)\n"
+    IDS_ERROR_VOLUMES   "無法列出磁碟區 (0x%X)\n"
 END
