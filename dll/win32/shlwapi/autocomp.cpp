@@ -20,6 +20,7 @@
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
 #define MAX_ITEMS 50 // Maximum number of items we can get
+#define MAX_TICKS 800 // Wait upto 800 milliseconds
 
 // IEnumString interface for SHAutoComplete
 class CAutoCompleteEnumString :
@@ -31,17 +32,27 @@ public:
         : m_iItem(0)
         , m_hwndEdit(NULL)
         , m_dwSHACF(0)
+        , m_dwOldTicks(0)
     {
     }
 
     void Initialize(IAutoComplete2 *pAC2, DWORD dwSHACF, HWND hwndEdit);
 
-    BOOL AddString(LPCWSTR psz)
+    BOOL CanAddString() const
     {
         if (m_items.GetSize() >= MAX_ITEMS)
             return FALSE;
+        if (GetTickCount() - m_dwOldTicks >= MAX_TICKS)
+            return FALSE;
+        return TRUE;
+    }
+
+    BOOL AddString(LPCWSTR psz)
+    {
+        if (!CanAddString())
+            return FALSE;
         m_items.Add(psz);
-        return (m_items.GetSize() < MAX_ITEMS);
+        return m_items.GetSize() < MAX_ITEMS;
     }
 
     void ResetContent()
@@ -73,6 +84,7 @@ protected:
     HWND m_hwndEdit; // The EDIT control
     DWORD m_dwSHACF; // The SHACF_* flags
     CSimpleArray<CStringW> m_items; // The items we got
+    DWORD m_dwOldTicks; // For checking time span
 };
 
 void CAutoCompleteEnumString::Initialize(IAutoComplete2 *pAC2, DWORD dwSHACF, HWND hwndEdit)
@@ -179,7 +191,7 @@ void CAutoCompleteEnumString::DoTypedPaths(LPCWSTR pszQuery)
         pszTypedPaths = L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\TypedPaths";
     WCHAR szName[32], szValue[MAX_PATH + 32], szPath[MAX_PATH];
 
-    if (m_items.GetSize() >= MAX_ITEMS)
+    if (!CanAddString())
         return;
 
     size_t cch = wcslen(pszQuery); // The length of pszQuery
@@ -264,6 +276,7 @@ void CAutoCompleteEnumString::DoAll()
 
 STDMETHODIMP CAutoCompleteEnumString::Reset()
 {
+    m_dwOldTicks = GetTickCount();
     DoAll();
     return S_OK; // Always return S_OK
 }
@@ -291,7 +304,7 @@ STDMETHODIMP CAutoCompleteEnumString::Clone(IEnumString **ppenum)
 
 void CAutoCompleteEnumString::DoDir(LPCWSTR pszDir, BOOL bDirOnly)
 {
-    if (m_items.GetSize() >= MAX_ITEMS)
+    if (!CanAddString())
         return;
 
     // Build a path with wildcard
@@ -347,6 +360,9 @@ void CAutoCompleteEnumString::DoURLHistory()
         pszTypedURLs = L"Software\\Microsoft\\Internet Explorer\\TypedURLs";
     WCHAR szName[32], szValue[MAX_PATH + 32];
 
+    if (!CanAddString())
+        return;
+
     // Open the registry key
     HKEY hKey;
     LONG result = RegOpenKeyExW(HKEY_CURRENT_USER, pszTypedURLs, 0, KEY_READ, &hKey);
@@ -382,6 +398,9 @@ void CAutoCompleteEnumString::DoURLMRU()
     static const LPCWSTR
         pszRunMRU = L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\RunMRU";
     WCHAR szName[2], szMRUList[64], szValue[MAX_PATH + 32];
+
+    if (!CanAddString())
+        return;
 
     // Open the registry key
     HKEY hKey;
