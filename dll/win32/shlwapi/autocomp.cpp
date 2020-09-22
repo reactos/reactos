@@ -267,16 +267,16 @@ void CAutoCompleteEnumString::DoAll()
     // Populate the items for filesystem and typed paths
     if (m_dwSHACF & (SHACF_FILESYS_ONLY | SHACF_FILESYSTEM | SHACF_FILESYS_DIRS))
     {
-        if (!DoFileSystem(szText))
+        if (!DoFileSystem(szText) && CanAddString())
             DoTypedPaths(szText);
     }
 
     // Populate the items for URLs
     if (!(m_dwSHACF & (SHACF_FILESYS_ONLY))) // Not filesystem-only
     {
-        if (m_dwSHACF & SHACF_URLHISTORY) // History URLs
+        if (CanAddString() && (m_dwSHACF & SHACF_URLHISTORY)) // History URLs
             DoURLHistory();
-        if (m_dwSHACF & SHACF_URLMRU) // Most-Recently-Used URLs
+        if (CanAddString() && (m_dwSHACF & SHACF_URLMRU)) // Most-Recently-Used URLs
             DoURLMRU();
     }
 }
