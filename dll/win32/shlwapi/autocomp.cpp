@@ -271,24 +271,15 @@ void CAutoCompleteEnumString::DoDir(LPCWSTR pszDir, BOOL bDirOnly)
 void CAutoCompleteEnumString::DoDrives(BOOL bDirOnly)
 {
     // For all the drives
-    WCHAR sz[4] = L"C:\\";
+    WCHAR szRoot[4] = L"C:\\";
     for (DWORD i = 0, dwBits = GetLogicalDrives(); i <= L'Z' - L'A'; ++i)
     {
         if ((dwBits & (1 << i)) == 0)
             continue; // The drive doesn't exist
 
-        sz[0] = (WCHAR)(L'A' + i); // Build a root path of the drive
-        if (!AddString(sz))
+        szRoot[0] = (WCHAR)(L'A' + i); // Build a root path of the drive
+        if (!AddString(szRoot))
             break;
-
-        switch (GetDriveTypeW(sz)) // Check the drive
-        {
-            case DRIVE_REMOTE: case DRIVE_RAMDISK: case DRIVE_FIXED:
-                DoDir(sz, bDirOnly);
-                break;
-            default:
-                break; // Don't scan slow drives
-        }
     }
 }
 
