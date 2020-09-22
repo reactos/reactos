@@ -19,8 +19,9 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
-#define MAX_ITEMS 50
+#define MAX_ITEMS 50 // Maximum number of items we can get
 
+// IEnumString interface for SHAutoComplete
 class CAutoCompleteEnumString :
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
     public IEnumString
@@ -67,10 +68,10 @@ public:
     END_COM_MAP()
 
 protected:
-    INT m_iItem;
-    HWND m_hwndEdit;
-    DWORD m_dwSHACF;
-    CSimpleArray<CStringW> m_items;
+    INT m_iItem; // The position for Next and Skip
+    HWND m_hwndEdit; // The EDIT control
+    DWORD m_dwSHACF; // The SHACF_* flags
+    CSimpleArray<CStringW> m_items; // The items we got
 };
 
 void CAutoCompleteEnumString::Initialize(IAutoComplete2 *pAC2, DWORD dwSHACF, HWND hwndEdit)
