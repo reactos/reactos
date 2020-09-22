@@ -178,7 +178,11 @@ void CAutoCompleteEnumString::DoAll()
 
     if (!IsWindow(m_hwndEdit)) // Check whether m_hwndEdit is valid
     {
-        TRACE("m_hwndEdit was invalid\n");
+        if (m_hwndEdit)
+        {
+            TRACE("m_hwndEdit was invalid\n");
+            m_hwndEdit = NULL;
+        }
         return;
     }
 
