@@ -121,7 +121,7 @@ CAutoCompleteEnumString::Next(ULONG celt, LPOLESTR *rgelt, ULONG *pceltFetched)
 
 STDMETHODIMP CAutoCompleteEnumString::Skip(ULONG celt)
 {
-    if (m_items.GetSize() <= INT(m_iItem + celt))
+    if (m_items.GetSize() < INT(m_iItem + celt))
         return S_FALSE; // Out of bound
 
     m_iItem += celt;
