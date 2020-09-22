@@ -75,6 +75,7 @@ extern void winetest_add_failures( LONG new_failures );
 extern void winetest_wait_child_process( HANDLE process );
 
 extern const char *wine_dbgstr_wn( const WCHAR *str, intptr_t n );
+extern const char *wine_dbgstr_an( const CHAR *str, intptr_t n );
 extern const char *wine_dbgstr_guid( const GUID *guid );
 extern const char *wine_dbgstr_point( const POINT *guid );
 extern const char *wine_dbgstr_size( const SIZE *guid );
@@ -82,6 +83,7 @@ extern const char *wine_dbgstr_rect( const RECT *rect );
 #ifdef WINETEST_USE_DBGSTR_LONGLONG
 extern const char *wine_dbgstr_longlong( ULONGLONG ll );
 #endif
+static inline const char *debugstr_a( const char *s )  { return wine_dbgstr_an( s, -1 ); }
 static inline const char *wine_dbgstr_w( const WCHAR *s ) { return wine_dbgstr_wn( s, -1 ); }
 
 /* strcmpW is available for tests compiled under Wine, but not in standalone
@@ -575,6 +577,61 @@ void winetest_wait_child_process( HANDLE process )
                 InterlockedIncrement(&failures);
         }
     }
+}
+
+const char *wine_dbgstr_an( const CHAR *str, intptr_t n )
+{
+    char *dst, *res;
+    size_t size;
+
+    if (!((ULONG_PTR)str >> 16))
+    {
+        if (!str) return "(null)";
+        res = get_temp_buffer( 6 );
+        sprintf( res, "#%04x", LOWORD(str) );
+        return res;
+    }
+    if (n == -1)
+    {
+        const CHAR *end = str;
+        while (*end) end++;
+        n = end - str;
+    }
+    if (n < 0) n = 0;
+    size = 12 + min( 300, n * 5 );
+    dst = res = get_temp_buffer( size );
+    *dst++ = '"';
+    while (n-- > 0 && dst <= res + size - 10)
+    {
+        CHAR c = *str++;
+        switch (c)
+        {
+        case '\n': *dst++ = '\\'; *dst++ = 'n'; break;
+        case '\r': *dst++ = '\\'; *dst++ = 'r'; break;
+        case '\t': *dst++ = '\\'; *dst++ = 't'; break;
+        case '"':  *dst++ = '\\'; *dst++ = '"'; break;
+        case '\\': *dst++ = '\\'; *dst++ = '\\'; break;
+        default:
+            if (c >= ' ' && c <= 126)
+                *dst++ = (char)c;
+            else
+            {
+                *dst++ = '\\';
+                sprintf(dst,"%04x",c);
+                dst+=4;
+            }
+        }
+    }
+    *dst++ = '"';
+    if (n > 0)
+    {
+        *dst++ = '.';
+        *dst++ = '.';
+        *dst++ = '.';
+    }
+    *dst++ = 0;
+    release_temp_buffer( res, dst - res );
+    return res;
 }
 
 const char *wine_dbgstr_wn( const WCHAR *str, intptr_t n )
