@@ -4928,7 +4928,7 @@ static int TreeListSetItem(TreeListData *pData, const TV_ITEM *pItem) {
 		}
 
 		if((uBits & TVIS_EXPANDED) && pEntry->uFirstChild) {	// Sollen Teile auf/zugeklappt werden
-			uMask		   &= TVIS_EXPANDPARTIAL | TVIS_EXPANDPARTIAL;
+			uMask		   &= TVIS_EXPANDED | TVIS_EXPANDPARTIAL;
 			pEntry->uState ^= TVIS_EXPANDED;
 			pEntry->uState ^= uBits & uMask;
 			iVal			= uMask & pItem->state;
