@@ -115,8 +115,7 @@ CAutoCompleteEnumString::Next(ULONG celt, LPOLESTR *rgelt, ULONG *pceltFetched)
         CopyMemory(rgelt[ielt], (LPCWSTR)m_items[m_iItem], cb);
     }
     *pceltFetched = ielt; // The number of elements we got
-
-    return (ielt == celt) ? S_OK : S_FALSE;
+    return (ielt == celt) ? S_OK : S_FALSE; // Success or failure
 }
 
 STDMETHODIMP CAutoCompleteEnumString::Skip(ULONG celt)
@@ -125,7 +124,7 @@ STDMETHODIMP CAutoCompleteEnumString::Skip(ULONG celt)
         return S_FALSE; // Out of bound
 
     m_iItem += celt;
-    return S_OK;
+    return S_OK; // Success
 }
 
 void CAutoCompleteEnumString::DoFileSystem(LPCWSTR pszQuery)
@@ -168,18 +167,15 @@ void CAutoCompleteEnumString::DoFileSystem(LPCWSTR pszQuery)
     }
     else
     {
-        // Scan drives for an empty query
-        DoDrives(bDirOnly);
+        DoDrives(bDirOnly); // Scan drives
     }
 }
 
 void CAutoCompleteEnumString::DoAll()
 {
-    // Clear all the items
-    ResetContent();
+    ResetContent(); // Clear all the items
 
-    // Check whether m_hwndEdit is valid
-    if (!IsWindow(m_hwndEdit))
+    if (!IsWindow(m_hwndEdit)) // Check whether m_hwndEdit is valid
     {
         TRACE("m_hwndEdit was invalid\n");
         return;
@@ -189,16 +185,16 @@ void CAutoCompleteEnumString::DoAll()
     WCHAR szText[MAX_PATH];
     GetWindowTextW(m_hwndEdit, szText, _countof(szText));
 
-    // Populate the items
+    // Populate the items for filesystem
     if (m_dwSHACF & (SHACF_FILESYS_ONLY | SHACF_FILESYSTEM | SHACF_FILESYS_DIRS))
         DoFileSystem(szText);
 
-    if (!(m_dwSHACF & (SHACF_FILESYS_ONLY)))
+    // Populate the items for URLs
+    if (!(m_dwSHACF & (SHACF_FILESYS_ONLY))) // Not filesystem-only
     {
-        if (m_dwSHACF & SHACF_URLHISTORY)
+        if (m_dwSHACF & SHACF_URLHISTORY) // History URLs
             DoURLHistory();
-
-        if (m_dwSHACF & SHACF_URLMRU)
+        if (m_dwSHACF & SHACF_URLMRU) // Most-Recently-Used URLs
             DoURLMRU();
     }
 }
@@ -206,7 +202,7 @@ void CAutoCompleteEnumString::DoAll()
 STDMETHODIMP CAutoCompleteEnumString::Reset()
 {
     DoAll();
-    return S_OK;
+    return S_OK; // Always return S_OK
 }
 
 STDMETHODIMP CAutoCompleteEnumString::Clone(IEnumString **ppenum)
@@ -269,6 +265,7 @@ void CAutoCompleteEnumString::DoDir(LPCWSTR pszDir, BOOL bDirOnly)
 
 void CAutoCompleteEnumString::DoDrives(BOOL bDirOnly)
 {
+    // For all the drives
     WCHAR sz[4] = L"C:\\";
     for (DWORD i = 0, dwBits = GetLogicalDrives(); i <= L'Z' - L'A'; ++i)
     {
@@ -279,7 +276,7 @@ void CAutoCompleteEnumString::DoDrives(BOOL bDirOnly)
         if (!AddString(sz))
             break;
 
-        switch (GetDriveTypeW(sz))
+        switch (GetDriveTypeW(sz)) // Check the drive
         {
             case DRIVE_REMOTE: case DRIVE_RAMDISK: case DRIVE_FIXED:
                 DoDir(sz, bDirOnly);
