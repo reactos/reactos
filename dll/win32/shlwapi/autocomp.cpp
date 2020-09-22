@@ -231,6 +231,36 @@ static BOOL IsDriveFloppyW(LPCWSTR pszDriveRoot)
     return ret;
 }
 
+static BOOL IsVirtualDrive(LPCWSTR pszRoot)
+{
+    WCHAR szDeviceName[16];
+    BOOL ret;
+    HANDLE hDevice;
+    DEVICE_TYPE DeviceType;
+    ULONG ulCharacteristics;
+
+    lstrcpynW(szDeviceName, L"\\\\.\\", _countof(szDeviceName));
+    szDeviceName[4] = pszRoot[0];
+    szDeviceName[5] = L':';
+    szDeviceName[6] = UNICODE_NULL;
+
+    hDevice = CreateFileW(szDeviceName, FILE_READ_ATTRIBUTES,
+                          FILE_SHARE_READ | FILE_SHARE_WRITE,
+                          NULL, OPEN_EXISTING, 0, NULL);
+    if (hDevice == INVALID_HANDLE_VALUE)
+        return FALSE;
+
+    ret = FALSE;
+    if (GetDriveTypeAndCharacteristics(hDevice, &DeviceType, &ulCharacteristics))
+    {
+        if ((ulCharacteristics & FILE_VIRTUAL_VOLUME) == FILE_VIRTUAL_VOLUME)
+            ret = TRUE;
+    }
+
+    CloseHandle(hDevice);
+    return ret;
+}
+
 static BOOL IsSlowDrive(LPCWSTR pszRoot)
 {
     switch (GetDriveTypeW(pszRoot))
@@ -240,6 +270,8 @@ static BOOL IsSlowDrive(LPCWSTR pszRoot)
                 break;
             // ...FALL THROUGH...
         case DRIVE_CDROM:
+            if (IsVirtualDrive(pszRoot))
+                break;
             return TRUE;
     }
     return FALSE;
