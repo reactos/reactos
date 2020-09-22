@@ -292,7 +292,8 @@ void CAutoCompleteEnumString::DoTypedPaths(LPCWSTR pszQuery)
                 continue; // Directory-only and not a directory
 
             CStringW strPath = szValue;
-            strPath = strPath.Left(cch);
+            strPath = strPath.Left(cch); // Truncate
+
             if (_wcsicmp(pszQuery, strPath) == 0) // Matched
             {
                 if (!AddItem(szValue))
@@ -371,9 +372,8 @@ STDMETHODIMP CAutoCompleteEnumString::Clone(IEnumString **ppenum)
 
 void CAutoCompleteEnumString::DoDir(LPCWSTR pszDir, BOOL bDirOnly)
 {
-    // Add backslash
     CStringW strPath = pszDir;
-    strPath += L'\\';
+    strPath += L'\\'; // Add backslash
 
     CStringW strSpec = strPath;
     strSpec += L'*'; // Build a path with wildcard
