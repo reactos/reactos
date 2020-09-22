@@ -166,9 +166,11 @@ void CAutoCompleteEnumString::DoFileSystem(LPCWSTR pszQuery)
     {
         // File or folder does exist
         if (attrs & FILE_ATTRIBUTE_DIRECTORY)
-            DoDir(pszQuery, bDirOnly); // Scan the directory
-        else
-            AddString(pszQuery); // A normal file
+        {
+            size_t cch = wcslen(pszQuery);
+            if (cch > 0 && pszQuery[cch - 1] == L'\\')
+                DoDir(pszQuery, bDirOnly); // Scan the directory
+        }
     }
     else if (pszQuery[0] && wcschr(pszQuery, L'\\') != NULL)
     {
@@ -192,9 +194,9 @@ void CAutoCompleteEnumString::DoTypedPaths(LPCWSTR pszQuery)
     WCHAR szName[32], szValue[MAX_PATH + 32], szPath[MAX_PATH];
 
     size_t cch = wcslen(pszQuery); // The length of pszQuery
-    if (cch >= MAX_PATH)
+    if (cch == 0 || cch >= MAX_PATH)
     {
-        ERR("cch >= MAX_PATH\n");
+        ERR("cch == 0 || cch >= MAX_PATH\n");
         return;
     }
 
