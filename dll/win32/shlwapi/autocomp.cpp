@@ -31,11 +31,7 @@ class CAutoCompleteEnumString :
     public IEnumString
 {
 public:
-    CAutoCompleteEnumString()
-        : m_iItem(0)
-        , m_hwndEdit(NULL)
-        , m_dwSHACF(0)
-        , m_dwOldTicks(0)
+    CAutoCompleteEnumString() : m_iItem(0), m_hwndEdit(NULL)
     {
     }
 
@@ -358,7 +354,6 @@ STDMETHODIMP CAutoCompleteEnumString::Clone(IEnumString **ppenum)
     CAutoCompleteEnumString *pES = new CComObject<CAutoCompleteEnumString>();
     pES->AddRef();
     pES->m_iItem = m_iItem;
-    pES->m_hwndEdit = NULL;
     pES->m_dwSHACF = m_dwSHACF;
     pES->m_items = m_items;
     *ppenum = pES;
