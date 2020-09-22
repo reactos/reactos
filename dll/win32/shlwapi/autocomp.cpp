@@ -89,7 +89,6 @@ protected:
 
 void CAutoCompleteEnumString::Initialize(IAutoComplete2 *pAC2, DWORD dwSHACF, HWND hwndEdit)
 {
-    m_iItem = 0;
     m_hwndEdit = hwndEdit;
     m_dwSHACF = dwSHACF;
     Reset(); // Populate the items
