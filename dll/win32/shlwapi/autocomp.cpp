@@ -191,9 +191,6 @@ void CAutoCompleteEnumString::DoTypedPaths(LPCWSTR pszQuery)
         pszTypedPaths = L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\TypedPaths";
     WCHAR szName[32], szValue[MAX_PATH + 32], szPath[MAX_PATH];
 
-    if (!CanAddString())
-        return;
-
     size_t cch = wcslen(pszQuery); // The length of pszQuery
     if (cch >= MAX_PATH)
     {
@@ -306,9 +303,6 @@ STDMETHODIMP CAutoCompleteEnumString::Clone(IEnumString **ppenum)
 
 void CAutoCompleteEnumString::DoDir(LPCWSTR pszDir, BOOL bDirOnly)
 {
-    if (!CanAddString())
-        return;
-
     // Build a path with wildcard
     WCHAR szPath[MAX_PATH];
     StringCbCopyW(szPath, sizeof(szPath), pszDir);
@@ -362,9 +356,6 @@ void CAutoCompleteEnumString::DoURLHistory()
         pszTypedURLs = L"Software\\Microsoft\\Internet Explorer\\TypedURLs";
     WCHAR szName[32], szValue[MAX_PATH + 32];
 
-    if (!CanAddString())
-        return;
-
     // Open the registry key
     HKEY hKey;
     LONG result = RegOpenKeyExW(HKEY_CURRENT_USER, pszTypedURLs, 0, KEY_READ, &hKey);
@@ -403,9 +394,6 @@ void CAutoCompleteEnumString::DoURLMRU()
     static const LPCWSTR
         pszRunMRU = L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\RunMRU";
     WCHAR szName[2], szMRUList[64], szValue[MAX_PATH + 32];
-
-    if (!CanAddString())
-        return;
 
     // Open the registry key
     HKEY hKey;
