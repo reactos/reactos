@@ -20,7 +20,7 @@
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
 #define MAX_ITEMS 50 // Maximum number of items we can get
-#define MAX_TICKS 800 // Wait upto 800 milliseconds
+#define MAX_TICKS 500 // We wait upto 500 milliseconds
 
 // IEnumString interface for SHAutoComplete
 class CAutoCompleteEnumString :
