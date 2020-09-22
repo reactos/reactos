@@ -375,14 +375,17 @@ void CAutoCompleteEnumString::DoDir(LPCWSTR pszDir, BOOL bDirOnly)
     CStringW strPath = pszDir;
     strPath += L'\\';
 
-    // Build a path with wildcard
-    CStringW strSpec = strPath + L"\\*";
+    CStringW strSpec = strPath;
+    strSpec += L'*'; // Build a path with wildcard
 
     // Start the enumeration
     WIN32_FIND_DATAW find;
     HANDLE hFind = FindFirstFileW(strSpec, &find);
     if (hFind == INVALID_HANDLE_VALUE)
+    {
+        ERR("Not found\n");
         return;
+    }
 
     do
     {
