@@ -37,7 +37,7 @@ public:
 
     void Initialize(IAutoComplete2 *pAC2, DWORD dwSHACF, HWND hwndEdit);
 
-    BOOL CanAddString() const
+    BOOL CanAddItem() const
     {
         if (m_items.GetSize() >= MAX_ITEMS)
             return FALSE;
@@ -46,9 +46,9 @@ public:
         return TRUE;
     }
 
-    BOOL AddString(LPCWSTR psz)
+    BOOL AddItem(LPCWSTR psz)
     {
-        if (!CanAddString())
+        if (!CanAddItem())
             return FALSE;
         m_items.Add(psz);
         return m_items.GetSize() < MAX_ITEMS;
@@ -272,7 +272,7 @@ void CAutoCompleteEnumString::DoTypedPaths(LPCWSTR pszQuery)
 
     for (DWORD i = 1; i <= MAX_ITEMS; ++i) // For all the URL entries
     {
-        if (!CanAddString())
+        if (!CanAddItem())
             break;
 
         // Build a registry value name
@@ -292,7 +292,7 @@ void CAutoCompleteEnumString::DoTypedPaths(LPCWSTR pszQuery)
             szPath[cch] = 0; // and truncate
             if (_wcsicmp(pszQuery, szPath) == 0) // Matched
             {
-                if (!AddString(szValue))
+                if (!AddItem(szValue))
                     break;
             }
         }
@@ -322,16 +322,16 @@ void CAutoCompleteEnumString::DoAll()
     // Populate the items for filesystem and typed paths
     if (m_dwSHACF & (SHACF_FILESYS_ONLY | SHACF_FILESYSTEM | SHACF_FILESYS_DIRS))
     {
-        if (!DoFileSystem(szText) && CanAddString())
+        if (!DoFileSystem(szText) && CanAddItem())
             DoTypedPaths(szText);
     }
 
     // Populate the items for URLs
     if (!(m_dwSHACF & SHACF_FILESYS_ONLY)) // Not filesystem-only
     {
-        if (CanAddString() && (m_dwSHACF & SHACF_URLHISTORY)) // History URLs
+        if (CanAddItem() && (m_dwSHACF & SHACF_URLHISTORY)) // History URLs
             DoURLHistory();
-        if (CanAddString() && (m_dwSHACF & SHACF_URLMRU)) // Most-Recently-Used URLs
+        if (CanAddItem() && (m_dwSHACF & SHACF_URLMRU)) // Most-Recently-Used URLs
             DoURLMRU();
     }
 }
@@ -390,7 +390,7 @@ void CAutoCompleteEnumString::DoDir(LPCWSTR pszDir, BOOL bDirOnly)
         *pchFileTitle = 0; // Truncate the path
         if (PathAppendW(szPath, find.cFileName)) // Build a path
         {
-            if (!AddString(szPath))
+            if (!AddItem(szPath))
                 break;
         }
     } while (FindNextFileW(hFind, &find));
@@ -409,7 +409,7 @@ void CAutoCompleteEnumString::DoDrives(BOOL bDirOnly)
 
         szRoot[0] = (WCHAR)(L'A' + i); // Build a root path of the drive
         assert(PathIsRootW(szRoot));
-        if (!AddString(szRoot))
+        if (!AddItem(szRoot))
             break;
     }
 }
@@ -431,7 +431,7 @@ void CAutoCompleteEnumString::DoURLHistory()
 
     for (DWORD i = 1; i <= MAX_ITEMS; ++i) // For all the URL entries
     {
-        if (!CanAddString())
+        if (!CanAddItem())
             break;
 
         // Build a registry value name
@@ -444,7 +444,7 @@ void CAutoCompleteEnumString::DoURLHistory()
         {
             if (UrlIsW(szValue, URLIS_URL)) // Is it a URL?
             {
-                if (!AddString(szValue))
+                if (!AddItem(szValue))
                     break;
             }
         }
@@ -479,7 +479,7 @@ void CAutoCompleteEnumString::DoURLMRU()
 
     for (DWORD i = 0; i <= L'z' - L'a' && szMRUList[i]; ++i) // for all the MRU items
     {
-        if (!CanAddString())
+        if (!CanAddItem())
             break;
 
         // Build a registry value name
@@ -499,7 +499,7 @@ void CAutoCompleteEnumString::DoURLMRU()
 
         if (UrlIsW(szValue, URLIS_URL)) // Is it a URL?
         {
-            if (!AddString(szValue))
+            if (!AddItem(szValue))
                 break;
         }
     }
