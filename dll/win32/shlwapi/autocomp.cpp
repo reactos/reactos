@@ -327,7 +327,7 @@ void CAutoCompleteEnumString::DoAll()
     }
 
     // Populate the items for URLs
-    if (!(m_dwSHACF & (SHACF_FILESYS_ONLY))) // Not filesystem-only
+    if (!(m_dwSHACF & SHACF_FILESYS_ONLY)) // Not filesystem-only
     {
         if (CanAddString() && (m_dwSHACF & SHACF_URLHISTORY)) // History URLs
             DoURLHistory();
