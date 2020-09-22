@@ -17,9 +17,12 @@
 #include "resource.h"
 #include "ntwrapper.h"
 
+#define IMM_RETURN_VOID(retval) /* empty */
+#define IMM_RETURN_NONVOID(retval) return (retval)
+
 /* typedef FN_... */
 #undef DEFINE_IMM_ENTRY
-#define DEFINE_IMM_ENTRY(type, name, params, retval) \
+#define DEFINE_IMM_ENTRY(type, name, params, retval, retkind) \
     typedef type (WINAPI *FN_##name)params;
 #include "immtable.h"
 
@@ -27,7 +30,7 @@
 typedef struct
 {
 #undef DEFINE_IMM_ENTRY
-#define DEFINE_IMM_ENTRY(type, name, params, retval) \
+#define DEFINE_IMM_ENTRY(type, name, params, retval, retkind) \
     FN_##name p##name;
 #include "immtable.h"
 } Imm32ApiTable;

@@ -21,14 +21,14 @@ BOOL bImmInitializing = FALSE;
 
 /* define stub functions */
 #undef DEFINE_IMM_ENTRY
-#define DEFINE_IMM_ENTRY(type, name, params, retval) \
-    static type WINAPI IMMSTUB_##name params { return (type)retval; }
+#define DEFINE_IMM_ENTRY(type, name, params, retval, retkind) \
+    static type WINAPI IMMSTUB_##name params { IMM_RETURN_##retkind((type)retval); }
 #include "immtable.h"
 
 Imm32ApiTable gImmApiEntries = {
 /* initialize by stubs */
 #undef DEFINE_IMM_ENTRY
-#define DEFINE_IMM_ENTRY(type, name, params, retval) \
+#define DEFINE_IMM_ENTRY(type, name, params, retval, retkind) \
     IMMSTUB_##name,
 #include "immtable.h"
 };
@@ -79,7 +79,7 @@ BOOL WINAPI IntInitializeImmEntryTable(VOID)
 
 /* load imm procedures */
 #undef DEFINE_IMM_ENTRY
-#define DEFINE_IMM_ENTRY(type, name, params, retval) \
+#define DEFINE_IMM_ENTRY(type, name, params, retval, retkind) \
     do { \
         FN_##name proc = (FN_##name)GetProcAddress(imm32, #name); \
         if (proc) { \
