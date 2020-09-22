@@ -257,7 +257,7 @@ void CAutoCompleteEnumString::DoTypedPaths(LPCWSTR pszQuery)
     size_t cch = wcslen(pszQuery); // The length of pszQuery
     if (cch == 0 || cch >= MAX_PATH)
     {
-        ERR("cch == 0 || cch >= MAX_PATH\n");
+        TRACE("cch == 0 || cch >= MAX_PATH\n");
         return;
     }
 
