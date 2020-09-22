@@ -252,26 +252,23 @@ BOOL CAutoCompleteEnumString::DoFileSystem(LPCWSTR pszQuery)
 }
 
 static LONG
-RegQueryCStringW(HKEY hKey, LPCWSTR pszValueName, CStringW& str)
+RegQueryCStringW(CRegKey& key, LPCWSTR pszValueName, CStringW& str)
 {
-    DWORD dwType, cbData;
-    LONG ret;
-    LPWSTR pszBuffer;
-
     // Check type and size
-    ret = RegQueryValueExW(hKey, pszValueName, NULL, &dwType, NULL, &cbData);
+    DWORD dwType, cbData;
+    LONG ret = key.QueryValue(pszValueName, &dwType, NULL, &cbData);
     if (ret != ERROR_SUCCESS)
         return ret;
     if (dwType != REG_SZ && dwType != REG_EXPAND_SZ)
         return ERROR_INVALID_DATA;
 
     // Allocate buffer
-    pszBuffer = str.GetBuffer(cbData / sizeof(WCHAR) + 1);
+    LPWSTR pszBuffer = str.GetBuffer(cbData / sizeof(WCHAR) + 1);
     if (pszBuffer == NULL)
         return ERROR_OUTOFMEMORY;
 
     // Get the data
-    ret = RegQueryValueExW(hKey, pszValueName, NULL, NULL, (LPBYTE)pszBuffer, &cbData);
+    ret = key.QueryValue(pszValueName, NULL, pszBuffer, &cbData);
 
     // Release buffer
     str.ReleaseBuffer();
@@ -291,8 +288,8 @@ void CAutoCompleteEnumString::DoTypedPaths(LPCWSTR pszQuery)
     }
 
     // Open the registry key
-    HKEY hKey;
-    LONG result = RegOpenKeyExW(HKEY_CURRENT_USER, pszTypedPaths, 0, KEY_READ, &hKey);
+    CRegKey key;
+    LONG result = key.Open(HKEY_CURRENT_USER, pszTypedPaths, KEY_READ);
     if (result != ERROR_SUCCESS)
     {
         TRACE("Opening TypedPaths failed: 0x%lX\n", result);
@@ -310,7 +307,7 @@ void CAutoCompleteEnumString::DoTypedPaths(LPCWSTR pszQuery)
         StringCbPrintfW(szName, sizeof(szName), L"url%lu", i);
 
         // Read a registry value
-        result = RegQueryCStringW(hKey, szName, strData);
+        result = RegQueryCStringW(key, szName, strData);
         if (result == ERROR_SUCCESS) // Could I read it?
         {
             if (!PathFileExistsW(strData))
@@ -328,8 +325,6 @@ void CAutoCompleteEnumString::DoTypedPaths(LPCWSTR pszQuery)
             }
         }
     }
-
-    RegCloseKey(hKey); // Close the registry key
 }
 
 void CAutoCompleteEnumString::DoAll()
@@ -459,8 +454,8 @@ void CAutoCompleteEnumString::DoURLHistory()
         pszTypedURLs = L"Software\\Microsoft\\Internet Explorer\\TypedURLs";
 
     // Open the registry key
-    HKEY hKey;
-    LONG result = RegOpenKeyExW(HKEY_CURRENT_USER, pszTypedURLs, 0, KEY_READ, &hKey);
+    CRegKey key;
+    LONG result = key.Open(HKEY_CURRENT_USER, pszTypedURLs, KEY_READ);
     if (result != ERROR_SUCCESS)
     {
         TRACE("Opening TypedURLs failed: 0x%lX\n", result);
@@ -478,7 +473,7 @@ void CAutoCompleteEnumString::DoURLHistory()
         StringCbPrintfW(szName, sizeof(szName), L"url%lu", i);
 
         // Read a registry value
-        result = RegQueryCStringW(hKey, szName, strData);
+        result = RegQueryCStringW(key, szName, strData);
         if (result == ERROR_SUCCESS) // Could I read it?
         {
             if (UrlIsW(strData, URLIS_URL)) // Is it a URL?
@@ -488,8 +483,6 @@ void CAutoCompleteEnumString::DoURLHistory()
             }
         }
     }
-
-    RegCloseKey(hKey); // Close the registry key
 }
 
 void CAutoCompleteEnumString::DoURLMRU()
@@ -498,8 +491,8 @@ void CAutoCompleteEnumString::DoURLMRU()
         pszRunMRU = L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\RunMRU";
 
     // Open the registry key
-    HKEY hKey;
-    LONG result = RegOpenKeyExW(HKEY_CURRENT_USER, pszRunMRU, 0, KEY_READ, &hKey);
+    CRegKey key;
+    LONG result = key.Open(HKEY_CURRENT_USER, pszRunMRU, KEY_READ);
     if (result != ERROR_SUCCESS)
     {
         TRACE("Opening RunMRU failed: 0x%lX\n", result);
@@ -508,12 +501,9 @@ void CAutoCompleteEnumString::DoURLMRU()
 
     // Read the MRUList
     CStringW strMRUList;
-    result = RegQueryCStringW(hKey, L"MRUList", strMRUList);
+    result = RegQueryCStringW(key, L"MRUList", strMRUList);
     if (result != ERROR_SUCCESS)
-    {
-        RegCloseKey(hKey); // Close the registry key
         return;
-    }
 
     // for all the MRU items
     CStringW strData;
@@ -528,7 +518,7 @@ void CAutoCompleteEnumString::DoURLMRU()
         szName[1] = 0;
 
         // Read a registry value
-        result = RegQueryCStringW(hKey, szName, strData);
+        result = RegQueryCStringW(key, szName, strData);
         if (result != ERROR_SUCCESS)
             continue;
 
@@ -543,8 +533,6 @@ void CAutoCompleteEnumString::DoURLMRU()
                 break;
         }
     }
-
-    RegCloseKey(hKey); // Close the registry key
 }
 
 static BOOL
