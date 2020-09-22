@@ -179,6 +179,9 @@ void CAutoCompleteEnumString::DoTypedPaths(LPCWSTR pszQuery)
         pszTypedPaths = L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\TypedPaths";
     WCHAR szName[32], szValue[MAX_PATH + 32], szPath[MAX_PATH];
 
+    if (m_items.GetSize() >= MAX_ITEMS)
+        return;
+
     size_t cch = wcslen(pszQuery); // The length of pszQuery
     if (cch >= MAX_PATH)
     {
