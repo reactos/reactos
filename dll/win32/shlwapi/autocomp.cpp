@@ -170,7 +170,7 @@ static DWORD GetDriveCharacteristics(LPCWSTR pszRoot)
     WCHAR szDeviceName[16];
     HANDLE hDevice;
     DEVICE_TYPE DeviceType;
-    ULONG ulCharacteristics;
+    ULONG ret;
 
     lstrcpynW(szDeviceName, L"\\\\.\\", _countof(szDeviceName));
     szDeviceName[4] = pszRoot[0];
@@ -183,33 +183,30 @@ static DWORD GetDriveCharacteristics(LPCWSTR pszRoot)
     if (hDevice == INVALID_HANDLE_VALUE)
         return 0;
 
-    ulCharacteristics = 0;
-    GetDriveTypeAndCharacteristics(hDevice, &DeviceType, &ulCharacteristics);
+    ret = 0;
+    GetDriveTypeAndCharacteristics(hDevice, &DeviceType, &ret);
     CloseHandle(hDevice);
-    return ulCharacteristics;
+    return ret;
 }
 
 static BOOL IsSlowDrive(LPCWSTR pszRoot)
 {
-    DWORD ulCharacteristics;
-
+    DWORD ret;
     switch (GetDriveTypeW(pszRoot))
     {
         case DRIVE_REMOVABLE:
-            ulCharacteristics = GetDriveCharacteristics(pszRoot);
-            if (ulCharacteristics & FILE_VIRTUAL_VOLUME)
+            ret = GetDriveCharacteristics(pszRoot);
+            if (!(ret & FILE_FLOPPY_DISKETTE) || (ret & FILE_VIRTUAL_VOLUME))
                 break;
-            if (!(ulCharacteristics & FILE_FLOPPY_DISKETTE))
-                break;
-            return TRUE;
+            return TRUE; // Floppy and non-virtual
 
         case DRIVE_CDROM:
-            ulCharacteristics = GetDriveCharacteristics(pszRoot);
-            if (ulCharacteristics & FILE_VIRTUAL_VOLUME)
+            ret = GetDriveCharacteristics(pszRoot);
+            if (ret & FILE_VIRTUAL_VOLUME)
                 break;
-            return TRUE;
+            return TRUE; // CD/DVD and non-virtual
     }
-    return FALSE;
+    return FALSE; // Not slow
 }
 
 BOOL CAutoCompleteEnumString::DoFileSystem(LPCWSTR pszQuery)
