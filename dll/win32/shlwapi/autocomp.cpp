@@ -6,6 +6,8 @@
  */
 #include <windef.h>
 #include <winreg.h>
+#include <winioctl.h>
+#include <winternl.h>
 #include <shldisp.h>
 #include <shlguid.h>
 #define NO_SHLWAPI_STREAM
@@ -142,6 +144,107 @@ STDMETHODIMP CAutoCompleteEnumString::Skip(ULONG celt)
     return S_OK; // Success
 }
 
+// https://stackoverflow.com/questions/3098696/get-information-about-disk-drives-result-on-windows7-32-bit-system/3100268#3100268
+static BOOL
+GetDriveTypeAndCharacteristics(HANDLE hDevice, DEVICE_TYPE *pDeviceType, ULONG *pCharacteristics)
+{
+    NTSTATUS Status;
+    IO_STATUS_BLOCK IoStatusBlock;
+    FILE_FS_DEVICE_INFORMATION DeviceInfo;
+
+    Status = NtQueryVolumeInformationFile(hDevice, &IoStatusBlock,
+                                          &DeviceInfo, sizeof(DeviceInfo),
+                                          FileFsDeviceInformation);
+    if (Status == NO_ERROR)
+    {
+        *pDeviceType = DeviceInfo.DeviceType;
+        *pCharacteristics = DeviceInfo.Characteristics;
+        return TRUE;
+    }
+
+    return FALSE;
+}
+
+static BOOL IsDriveFloppyW(LPCWSTR pszDriveRoot)
+{
+    LPCWSTR RootPath = pszDriveRoot;
+    WCHAR szRoot[16], szDeviceName[16];
+    UINT uType;
+    HANDLE hDevice;
+    DEVICE_TYPE DeviceType;
+    ULONG ulCharacteristics;
+    BOOL ret;
+
+    lstrcpynW(szRoot, RootPath, _countof(szRoot));
+
+    if (L'a' <= szRoot[0] && szRoot[0] <= 'z')
+    {
+        szRoot[0] += ('A' - 'a');
+    }
+
+    if ('A' <= szRoot[0] && szRoot[0] <= L'Z' &&
+        szRoot[1] == L':' && szRoot[2] == 0)
+    {
+        // 'C:' --> 'C:\'
+        szRoot[2] = L'\\';
+        szRoot[3] = 0;
+    }
+
+    if (!PathIsRootW(szRoot))
+    {
+        return FALSE;
+    }
+
+    uType = GetDriveTypeW(szRoot);
+    if (uType == DRIVE_REMOVABLE)
+    {
+        if (szRoot[0] == L'A' || szRoot[0] == L'B')
+            return TRUE;
+    }
+    else
+    {
+        return FALSE;
+    }
+
+    lstrcpynW(szDeviceName, L"\\\\.\\", _countof(szDeviceName));
+    szDeviceName[4] = szRoot[0];
+    szDeviceName[5] = L':';
+    szDeviceName[6] = UNICODE_NULL;
+
+    hDevice = CreateFileW(szDeviceName, FILE_READ_ATTRIBUTES,
+                          FILE_SHARE_READ | FILE_SHARE_WRITE,
+                          NULL, OPEN_EXISTING, 0, NULL);
+    if (hDevice == INVALID_HANDLE_VALUE)
+    {
+        return FALSE;
+    }
+
+    ret = FALSE;
+    if (GetDriveTypeAndCharacteristics(hDevice, &DeviceType, &ulCharacteristics))
+    {
+        if ((ulCharacteristics & FILE_FLOPPY_DISKETTE) == FILE_FLOPPY_DISKETTE)
+            ret = TRUE;
+    }
+
+    CloseHandle(hDevice);
+
+    return ret;
+}
+
+static BOOL IsSlowDrive(LPCWSTR pszRoot)
+{
+    switch (GetDriveTypeW(pszRoot))
+    {
+        case DRIVE_REMOVABLE:
+            if (!IsDriveFloppyW(pszRoot))
+                break;
+            // ...FALL THROUGH...
+        case DRIVE_CDROM:
+            return TRUE;
+    }
+    return FALSE;
+}
+
 BOOL CAutoCompleteEnumString::DoFileSystem(LPCWSTR pszQuery)
 {
     // Check the drive
@@ -150,13 +253,8 @@ BOOL CAutoCompleteEnumString::DoFileSystem(LPCWSTR pszQuery)
     {
         WCHAR szRoot[] = L"C:\\";
         szRoot[0] = WCHAR('A' + nDriveNumber);
-        switch (GetDriveTypeW(szRoot))
-        {
-            case DRIVE_REMOTE: case DRIVE_RAMDISK: case DRIVE_FIXED:
-                break;
-            default:
-                return FALSE; // Don't scan slow drives
-        }
+        if (IsSlowDrive(szRoot))
+            return FALSE; // Don't scan slow drives
     }
 
     // Is it directory-only?
