@@ -151,7 +151,7 @@ void CAutoCompleteEnumString::DoFileSystem(LPCWSTR pszQuery)
     DWORD attrs = GetFileAttributesW(pszQuery);
     if (attrs != INVALID_FILE_ATTRIBUTES) 
     {
-        // File or folder doesn't exist
+        // File or folder does exist
         if (attrs & FILE_ATTRIBUTE_DIRECTORY)
             DoDir(pszQuery, bDirOnly); // Scan the directory
         else
@@ -162,7 +162,7 @@ void CAutoCompleteEnumString::DoFileSystem(LPCWSTR pszQuery)
         // Non-existent but can be a partial path
         WCHAR szPath[MAX_PATH];
         StringCbCopyW(szPath, sizeof(szPath), pszQuery);
-        PathRemoveFileSpecW(szPath); // Remove file title part
+        PathRemoveFileSpecW(szPath); // Remove the file title part
 
         DoDir(szPath, bDirOnly); // Scan the directory
     }
@@ -205,7 +205,6 @@ void CAutoCompleteEnumString::DoAll()
 
 STDMETHODIMP CAutoCompleteEnumString::Reset()
 {
-    m_iItem = 0;
     DoAll();
     return S_OK;
 }
