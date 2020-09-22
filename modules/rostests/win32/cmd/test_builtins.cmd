@@ -33,6 +33,45 @@ N,
 O
 ) do echo %%j
 
+echo --- FOR /F token parsing
+:: This test requires extensions being enabled
+setlocal enableextensions
+
+set TEST_STRING="_ ` a b c d e f g h i j k l m n o p q r s t u v w x y z { | } ~ ? @ [ \ ] _ ` a b c d e f g h i j k l m n o p q r s t u v w x y z { | } ~ ? @ [ \ ]"
+set "ECHO_STRING=?=%%? @=%%@ A=%%A B=%%B C=%%C D=%%D E=%%E F=%%F G=%%G H=%%H I=%%I J=%%J K=%%K L=%%L M=%%M N=%%N O=%%O P=%%P Q=%%Q R=%%R S=%%S T=%%T U=%%U V=%%V W=%%W X=%%X Y=%%Y Z=%%Z [=%%[ \=%%\ ]=%%] ^^=%%^^ _=%%_ `=%%` a=%%a b=%%b c=%%c d=%%d e=%%e f=%%f g=%%g h=%%h i=%%i j=%%j k=%%k l=%%l m=%%m n=%%n o=%%o p=%%p q=%%q r=%%r s=%%s t=%%t u=%%u v=%%v w=%%w x=%%x y=%%y z=%%z {=%%{ ^|=%%^| }=%%} ^~=%%^~"
+
+echo.
+
+:: Bug 1: Ranges that are not specified in increasing order are ignored.
+:: Token numbers strictly greater than 31 are just ignored, and if they
+:: appear in a range, the whole range is ignored.
+
+for /f "tokens=30-32" %%? in (%TEST_STRING%) do echo %ECHO_STRING%
+echo.
+for /f "tokens=5-1" %%? in (%TEST_STRING%) do echo %ECHO_STRING%
+echo.
+
+:: Bug 2: Ranges that partially overlap: too many variables are being allocated,
+:: while only a subset is actually used. This leads to the extra variables returning
+:: empty strings.
+
+for /f "tokens=1-31,31,31" %%? in (%TEST_STRING%) do echo %ECHO_STRING%
+echo.
+for /f "tokens=1-31,1-31" %%? in (%TEST_STRING%) do echo %ECHO_STRING%
+echo.
+for /f "tokens=1-5,3,5,6" %%? in (%TEST_STRING%) do echo %ECHO_STRING%
+echo.
+for /f "tokens=1-31,* tokens=1-31 tokens=1-20,*" %%? in (%TEST_STRING%) do echo %ECHO_STRING%
+echo.
+
+:: For comparison, this works:
+for /f "tokens=1-5,6" %%? in (%TEST_STRING%) do echo %ECHO_STRING%
+echo.
+for /f "tokens=1-5,6-10" %%? in (%TEST_STRING%) do echo %ECHO_STRING%
+echo.
+
+endlocal
+
 
 echo ---------- Testing AND operator ----------
 :: Test for TRUE condition - Should be displayed
