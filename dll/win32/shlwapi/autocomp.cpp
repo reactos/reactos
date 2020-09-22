@@ -166,7 +166,7 @@ static DWORD GetDriveFlags(LPCWSTR pszRoot)
     HANDLE hDevice;
     ULONG ret = 0;
 
-    lstrcpynW(szDevice, L"\\\\.\\", _countof(szDevice));
+    StringCbCopyW(szDevice, sizeof(szDevice), L"\\\\.\\");
     szDevice[4] = pszRoot[0];
     szDevice[5] = L':';
     szDevice[6] = 0;
@@ -234,11 +234,14 @@ BOOL CAutoCompleteEnumString::DoFileSystem(LPCWSTR pszQuery)
     else if (pszQuery[0] && wcschr(pszQuery, L'\\') != NULL)
     {
         // Non-existent but can be a partial path
-        WCHAR szPath[MAX_PATH];
-        StringCbCopyW(szPath, sizeof(szPath), pszQuery);
-        PathRemoveFileSpecW(szPath); // Remove the file title part
+        CStringW strPath = pszQuery;
 
-        DoDir(szPath, bDirOnly); // Scan the directory
+        // Remove the file title part
+        INT ich = strPath.ReverseFind(L'\\');
+        if (ich >= 0)
+            strPath = strPath.Left(ich);
+
+        DoDir(strPath, bDirOnly); // Scan the directory
     }
     else
     {
@@ -252,12 +255,12 @@ void CAutoCompleteEnumString::DoTypedPaths(LPCWSTR pszQuery)
 {
     static const LPCWSTR
         pszTypedPaths = L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\TypedPaths";
-    WCHAR szName[32], szValue[MAX_PATH + 32], szPath[MAX_PATH];
+    WCHAR szName[32], szValue[MAX_PATH + 32];
 
-    size_t cch = wcslen(pszQuery); // The length of pszQuery
-    if (cch == 0 || cch >= MAX_PATH)
+    INT cch = (INT)wcslen(pszQuery); // The length of pszQuery
+    if (cch <= 0)
     {
-        TRACE("cch == 0 || cch >= MAX_PATH\n");
+        TRACE("cch <= 0\n");
         return;
     }
 
@@ -288,9 +291,9 @@ void CAutoCompleteEnumString::DoTypedPaths(LPCWSTR pszQuery)
             if ((m_dwSHACF & SHACF_FILESYS_DIRS) && !PathIsDirectoryW(szValue))
                 continue; // Directory-only and not a directory
 
-            StringCbCopyW(szPath, sizeof(szPath), szValue); // Copy szValue
-            szPath[cch] = 0; // and truncate
-            if (_wcsicmp(pszQuery, szPath) == 0) // Matched
+            CStringW strPath = szValue;
+            strPath = strPath.Left(cch);
+            if (_wcsicmp(pszQuery, strPath) == 0) // Matched
             {
                 if (!AddItem(szValue))
                     break;
@@ -316,14 +319,17 @@ void CAutoCompleteEnumString::DoAll()
     }
 
     // Get text from the EDIT control
-    WCHAR szText[MAX_PATH];
-    GetWindowTextW(m_hwndEdit, szText, _countof(szText));
+    INT cchMax = GetWindowTextLengthW(m_hwndEdit) + 1;
+    CString strText;
+    LPWSTR pszText = strText.GetBuffer(cchMax);
+    GetWindowTextW(m_hwndEdit, pszText, cchMax);
+    strText.ReleaseBuffer();
 
     // Populate the items for filesystem and typed paths
     if (m_dwSHACF & (SHACF_FILESYS_ONLY | SHACF_FILESYSTEM | SHACF_FILESYS_DIRS))
     {
-        if (!DoFileSystem(szText) && CanAddItem())
-            DoTypedPaths(szText);
+        if (!DoFileSystem(strText) && CanAddItem())
+            DoTypedPaths(strText);
     }
 
     // Populate the items for URLs
@@ -365,20 +371,18 @@ STDMETHODIMP CAutoCompleteEnumString::Clone(IEnumString **ppenum)
 
 void CAutoCompleteEnumString::DoDir(LPCWSTR pszDir, BOOL bDirOnly)
 {
+    // Add backslash
+    CStringW strPath = pszDir;
+    strPath += L'\\';
+
     // Build a path with wildcard
-    WCHAR szPath[MAX_PATH];
-    StringCbCopyW(szPath, sizeof(szPath), pszDir);
-    if (!PathAppendW(szPath, L"*"))
-        return;
+    CStringW strSpec = strPath + L"\\*";
 
     // Start the enumeration
     WIN32_FIND_DATAW find;
-    HANDLE hFind = FindFirstFileW(szPath, &find);
+    HANDLE hFind = FindFirstFileW(strSpec, &find);
     if (hFind == INVALID_HANDLE_VALUE)
         return;
-
-    LPWSTR pchFileTitle = PathFindFileNameW(szPath); // The file title part
-    assert(pchFileTitle);
 
     do
     {
@@ -387,12 +391,12 @@ void CAutoCompleteEnumString::DoDir(LPCWSTR pszDir, BOOL bDirOnly)
         if (bDirOnly && !(find.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
             continue; // Directory-only and not a directory
 
-        *pchFileTitle = 0; // Truncate the path
-        if (PathAppendW(szPath, find.cFileName)) // Build a path
-        {
-            if (!AddItem(szPath))
-                break;
-        }
+        // Build a path
+        CStringW strNewPath = strPath;
+        strNewPath += find.cFileName;
+
+        if (!AddItem(strNewPath))
+            break;
     } while (FindNextFileW(hFind, &find));
 
     FindClose(hFind); // End the enumeration
