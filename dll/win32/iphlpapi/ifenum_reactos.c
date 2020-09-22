@@ -149,7 +149,8 @@ BOOL hasArp( HANDLE tcpFile, TDIEntityID *arp_maybe ) {
                               NULL );
     if( !NT_SUCCESS(status) ) return FALSE;
 
-    return (type & AT_ARP);
+    /* AT_ARP corresponds to an individual TDI entity type */
+    return (type == AT_ARP);
 }
 
 static NTSTATUS getInterfaceInfoSet( HANDLE tcpFile,
