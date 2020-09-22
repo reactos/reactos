@@ -27,7 +27,7 @@ class CAutoCompleteEnumString :
 {
 public:
     CAutoCompleteEnumString()
-        : m_istr(0)
+        : m_iItem(0)
         , m_hwndEdit(NULL)
         , m_dwSHACF(0)
     {
@@ -37,16 +37,16 @@ public:
 
     BOOL AddString(LPCWSTR psz)
     {
-        if (m_strs.GetSize() >= MAX_ITEMS)
+        if (m_items.GetSize() >= MAX_ITEMS)
             return FALSE;
-        m_strs.Add(psz);
-        return (m_strs.GetSize() < MAX_ITEMS);
+        m_items.Add(psz);
+        return (m_items.GetSize() < MAX_ITEMS);
     }
 
     void ResetContent()
     {
-        m_strs.RemoveAll();
-        m_istr = 0;
+        m_items.RemoveAll();
+        m_iItem = 0;
     }
 
     void DoAll();
@@ -67,18 +67,18 @@ public:
     END_COM_MAP()
 
 protected:
-    INT m_istr;
+    INT m_iItem;
     HWND m_hwndEdit;
     DWORD m_dwSHACF;
-    CSimpleArray<CStringW> m_strs;
+    CSimpleArray<CStringW> m_items;
 };
 
 void CAutoCompleteEnumString::Initialize(IAutoComplete2 *pAC2, DWORD dwSHACF, HWND hwndEdit)
 {
-    m_istr = 0;
+    m_iItem = 0;
     m_hwndEdit = hwndEdit;
     m_dwSHACF = dwSHACF;
-    Reset();
+    Reset(); // Populate the items
 }
 
 STDMETHODIMP
@@ -94,39 +94,43 @@ CAutoCompleteEnumString::Next(ULONG celt, LPOLESTR *rgelt, ULONG *pceltFetched)
     *pceltFetched = 0;
     *rgelt = NULL;
 
-    if (m_istr >= m_strs.GetSize())
+    if (m_iItem >= m_items.GetSize())
         return S_FALSE; // No more elements
 
-    // Get elements
+    // Get the elements
     ULONG ielt;
-    for (ielt = 0; ielt < celt && m_istr < m_strs.GetSize(); ++ielt, ++m_istr)
+    for (ielt = 0; ielt < celt && m_iItem < m_items.GetSize(); ++ielt, ++m_iItem)
     {
-        size_t cb = (wcslen(m_strs[m_istr]) + 1) * sizeof(WCHAR);
+        size_t cb = (wcslen(m_items[m_iItem]) + 1) * sizeof(WCHAR);
         rgelt[ielt] = (LPWSTR)CoTaskMemAlloc(cb);
-        if (!rgelt[ielt])
+        if (!rgelt[ielt]) // Failed
         {
+            ERR("Out of memory\n");
+
+            // Clean up
             while (ielt-- > 0)
                 CoTaskMemFree(rgelt[ielt]);
             return S_FALSE;
         }
-        CopyMemory(rgelt[ielt], (LPCWSTR)m_strs[m_istr], cb);
+        CopyMemory(rgelt[ielt], (LPCWSTR)m_items[m_iItem], cb);
     }
-    *pceltFetched = ielt;
+    *pceltFetched = ielt; // The number of elements we got
+
     return (ielt == celt) ? S_OK : S_FALSE;
 }
 
 STDMETHODIMP CAutoCompleteEnumString::Skip(ULONG celt)
 {
-    if (m_strs.GetSize() == 0 || m_strs.GetSize() <= INT(m_istr + celt))
-        return S_FALSE;
+    if (m_items.GetSize() <= INT(m_iItem + celt))
+        return S_FALSE; // Out of bound
 
-    m_istr += celt;
+    m_iItem += celt;
     return S_OK;
 }
 
 void CAutoCompleteEnumString::DoFileSystem(LPCWSTR pszQuery)
 {
-    // Check drive number
+    // Check the drive
     INT nDriveNumber = PathGetDriveNumberW(pszQuery);
     if (nDriveNumber != -1)
     {
@@ -141,6 +145,7 @@ void CAutoCompleteEnumString::DoFileSystem(LPCWSTR pszQuery)
         }
     }
 
+    // Is it directory-only?
     BOOL bDirOnly = !!(m_dwSHACF & SHACF_FILESYS_DIRS);
 
     DWORD attrs = GetFileAttributesW(pszQuery);
@@ -148,41 +153,41 @@ void CAutoCompleteEnumString::DoFileSystem(LPCWSTR pszQuery)
     {
         // File or folder doesn't exist
         if (attrs & FILE_ATTRIBUTE_DIRECTORY)
-            DoDir(pszQuery, bDirOnly);
+            DoDir(pszQuery, bDirOnly); // Scan the directory
         else
-            AddString(pszQuery);
+            AddString(pszQuery); // A normal file
     }
     else if (pszQuery[0] && wcschr(pszQuery, L'\\') != NULL)
     {
         // Non-existent but can be a partial path
         WCHAR szPath[MAX_PATH];
         StringCbCopyW(szPath, sizeof(szPath), pszQuery);
-        PathRemoveFileSpecW(szPath);
+        PathRemoveFileSpecW(szPath); // Remove file title part
 
-        DoDir(szPath, bDirOnly);
+        DoDir(szPath, bDirOnly); // Scan the directory
     }
     else
     {
-        // An empty query
+        // Scan drives for an empty query
         DoDrives(bDirOnly);
     }
 }
 
 void CAutoCompleteEnumString::DoAll()
 {
+    // Clear all the items
+    ResetContent();
+
     // Check whether m_hwndEdit is valid
     if (!IsWindow(m_hwndEdit))
     {
-        ResetContent();
+        TRACE("m_hwndEdit was invalid\n");
         return;
     }
 
-    // Get text from EDIT control
+    // Get text from the EDIT control
     WCHAR szText[MAX_PATH];
     GetWindowTextW(m_hwndEdit, szText, _countof(szText));
-
-    // Clear
-    ResetContent();
 
     // Populate the items
     if (m_dwSHACF & (SHACF_FILESYS_ONLY | SHACF_FILESYSTEM | SHACF_FILESYS_DIRS))
@@ -192,6 +197,7 @@ void CAutoCompleteEnumString::DoAll()
     {
         if (m_dwSHACF & SHACF_URLHISTORY)
             DoURLHistory();
+
         if (m_dwSHACF & SHACF_URLMRU)
             DoURLMRU();
     }
@@ -199,10 +205,8 @@ void CAutoCompleteEnumString::DoAll()
 
 STDMETHODIMP CAutoCompleteEnumString::Reset()
 {
-    m_istr = 0;
-
+    m_iItem = 0;
     DoAll();
-
     return S_OK;
 }
 
@@ -216,11 +220,10 @@ STDMETHODIMP CAutoCompleteEnumString::Clone(IEnumString **ppenum)
 
     CAutoCompleteEnumString *pES = new CComObject<CAutoCompleteEnumString>();
     pES->AddRef();
-    pES->m_istr = m_istr;
+    pES->m_iItem = m_iItem;
     pES->m_hwndEdit = NULL;
     pES->m_dwSHACF = m_dwSHACF;
-    pES->m_strs = m_strs;
-
+    pES->m_items = m_items;
     *ppenum = pES;
     return S_OK;
 }
@@ -230,33 +233,39 @@ STDMETHODIMP CAutoCompleteEnumString::Clone(IEnumString **ppenum)
 
 void CAutoCompleteEnumString::DoDir(LPCWSTR pszDir, BOOL bDirOnly)
 {
-    WCHAR szPath[MAX_PATH];
-    StringCbCopyW(szPath, sizeof(szPath), pszDir);
-    if (!PathAppendW(szPath, L"*") || m_strs.GetSize() >= MAX_ITEMS)
+    if (m_items.GetSize() >= MAX_ITEMS)
         return;
 
+    // Build a path with wildcard
+    WCHAR szPath[MAX_PATH];
+    StringCbCopyW(szPath, sizeof(szPath), pszDir);
+    if (!PathAppendW(szPath, L"*"))
+        return;
+
+    // Start the enumeration
     WIN32_FIND_DATAW find;
     HANDLE hFind = FindFirstFileW(szPath, &find);
     if (hFind == INVALID_HANDLE_VALUE)
         return;
 
-    LPWSTR pch = PathFindFileNameW(szPath);
+    LPWSTR pchFileTitle = PathFindFileNameW(szPath); // The file title part
+
     do
     {
         if (IS_DOTS(find.cFileName) || (find.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN))
-            continue;
+            continue; // "." and ".." and hidden files are invisible
         if (bDirOnly && !(find.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
-            continue;
+            continue; // Directory-only and not a directory
 
-        *pch = UNICODE_NULL;
-        if (PathAppendW(szPath, find.cFileName))
+        *pchFileTitle = 0; // Truncate the path
+        if (PathAppendW(szPath, find.cFileName)) // Build a path
         {
             if (!AddString(szPath))
                 break;
         }
     } while (FindNextFileW(hFind, &find));
 
-    FindClose(hFind);
+    FindClose(hFind); // End the enumeration
 }
 
 void CAutoCompleteEnumString::DoDrives(BOOL bDirOnly)
@@ -265,9 +274,9 @@ void CAutoCompleteEnumString::DoDrives(BOOL bDirOnly)
     for (DWORD i = 0, dwBits = GetLogicalDrives(); i <= L'Z' - L'A'; ++i)
     {
         if ((dwBits & (1 << i)) == 0)
-            continue;
+            continue; // The drive doesn't exist
 
-        sz[0] = (WCHAR)(L'A' + i);
+        sz[0] = (WCHAR)(L'A' + i); // Build a root path of the drive
         if (!AddString(sz))
             break;
 
@@ -288,6 +297,7 @@ void CAutoCompleteEnumString::DoURLHistory()
         pszTypedURLs = L"Software\\Microsoft\\Internet Explorer\\TypedURLs";
     WCHAR szName[32], szValue[MAX_PATH + 32];
 
+    // Open the registry key
     HKEY hKey;
     LONG result = RegOpenKeyExW(HKEY_CURRENT_USER, pszTypedURLs, 0, KEY_READ, &hKey);
     if (result != ERROR_SUCCESS)
@@ -296,20 +306,25 @@ void CAutoCompleteEnumString::DoURLHistory()
         return;
     }
 
-    for (DWORD i = 1; i <= MAX_ITEMS; ++i)
+    for (DWORD i = 1; i <= MAX_ITEMS; ++i) // For all the URL entries
     {
+        // Build a registry value name
         StringCbPrintfW(szName, sizeof(szName), L"url%lu", i);
 
+        // Read a registry value
         DWORD cbValue = sizeof(szValue), dwType;
         result = RegQueryValueExW(hKey, szName, NULL, &dwType, (LPBYTE)szValue, &cbValue);
-        if (result == ERROR_SUCCESS && dwType == REG_SZ && UrlIsW(szValue, URLIS_URL))
+        if (result == ERROR_SUCCESS && dwType == REG_SZ) // Could I read it?
         {
-            if (!AddString(szValue))
-                break;
+            if (UrlIsW(szValue, URLIS_URL)) // Is it a URL?
+            {
+                if (!AddString(szValue))
+                    break;
+            }
         }
     }
 
-    RegCloseKey(hKey);
+    RegCloseKey(hKey); // Close the registry key
 }
 
 void CAutoCompleteEnumString::DoURLMRU()
@@ -318,6 +333,7 @@ void CAutoCompleteEnumString::DoURLMRU()
         pszRunMRU = L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\RunMRU";
     WCHAR szName[2], szMRUList[64], szValue[MAX_PATH + 32];
 
+    // Open the registry key
     HKEY hKey;
     LONG result = RegOpenKeyExW(HKEY_CURRENT_USER, pszRunMRU, 0, KEY_READ, &hKey);
     if (result != ERROR_SUCCESS)
@@ -326,32 +342,40 @@ void CAutoCompleteEnumString::DoURLMRU()
         return;
     }
 
+    // Read the MRUList
     DWORD cbValue = sizeof(szMRUList), dwType;
     result = RegQueryValueExW(hKey, L"MRUList", NULL, &dwType, (LPBYTE)szMRUList, &cbValue);
-    if (result == ERROR_SUCCESS && dwType == REG_SZ)
+    if (result != ERROR_SUCCESS || dwType != REG_SZ)
     {
+        RegCloseKey(hKey); // Close the registry key
+        return;
+    }
+
+    for (DWORD i = 0; i <= L'z' - L'a' && szMRUList[i]; ++i) // for all the MRU items
+    {
+        // Build a registry value name
+        szName[0] = szMRUList[i];
         szName[1] = 0;
-        for (DWORD i = 0; i <= L'z' - L'a' && szMRUList[i]; ++i)
+
+        // Read a registry value
+        cbValue = sizeof(szValue);
+        result = RegQueryValueExW(hKey, szName, NULL, &dwType, (LPBYTE)szValue, &cbValue);
+        if (result != ERROR_SUCCESS || dwType != REG_SZ)
+            continue;
+
+        // Fix up for special case of "\\1"
+        size_t cch = wcslen(szValue);
+        if (cch >= 2 && wcscmp(&szValue[cch - 2], L"\\1") == 0)
+            szValue[cch - 2] = 0;
+
+        if (UrlIsW(szValue, URLIS_URL)) // Is it a URL?
         {
-            szName[0] = szMRUList[i];
-            cbValue = sizeof(szValue);
-            result = RegQueryValueExW(hKey, szName, NULL, &dwType, (LPBYTE)szValue, &cbValue);
-            if (result != ERROR_SUCCESS || dwType != REG_SZ)
-                continue;
-
-            size_t cch = wcslen(szValue);
-            if (cch >= 2 && wcscmp(&szValue[cch - 2], L"\\1") == 0)
-                szValue[cch - 2] = 0;
-
-            if (UrlIsW(szValue, URLIS_URL))
-            {
-                if (!AddString(szValue))
-                    break;
-            }
+            if (!AddString(szValue))
+                break;
         }
     }
 
-    RegCloseKey(hKey);
+    RegCloseKey(hKey); // Close the registry key
 }
 
 static BOOL
