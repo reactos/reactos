@@ -167,7 +167,7 @@ BOOL CAutoCompleteEnumString::DoFileSystem(LPCWSTR pszQuery)
         if (attrs & FILE_ATTRIBUTE_DIRECTORY) // Is it a directory?
         {
             size_t cch = wcslen(pszQuery);
-            if (cch > 0 && pszQuery[cch - 1] == L'\\')
+            if (cch > 0 && pszQuery[cch - 1] == L'\\') // The last character is '\\'
             {
                 DoDir(pszQuery, bDirOnly); // Scan the directory
                 return FALSE; // Not exact match
