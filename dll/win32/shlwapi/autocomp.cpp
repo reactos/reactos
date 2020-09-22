@@ -165,76 +165,9 @@ GetDriveTypeAndCharacteristics(HANDLE hDevice, DEVICE_TYPE *pDeviceType, ULONG *
     return FALSE;
 }
 
-static BOOL IsDriveFloppyW(LPCWSTR pszDriveRoot)
-{
-    LPCWSTR RootPath = pszDriveRoot;
-    WCHAR szRoot[16], szDeviceName[16];
-    UINT uType;
-    HANDLE hDevice;
-    DEVICE_TYPE DeviceType;
-    ULONG ulCharacteristics;
-    BOOL ret;
-
-    lstrcpynW(szRoot, RootPath, _countof(szRoot));
-
-    if (L'a' <= szRoot[0] && szRoot[0] <= 'z')
-    {
-        szRoot[0] += ('A' - 'a');
-    }
-
-    if ('A' <= szRoot[0] && szRoot[0] <= L'Z' &&
-        szRoot[1] == L':' && szRoot[2] == 0)
-    {
-        // 'C:' --> 'C:\'
-        szRoot[2] = L'\\';
-        szRoot[3] = 0;
-    }
-
-    if (!PathIsRootW(szRoot))
-    {
-        return FALSE;
-    }
-
-    uType = GetDriveTypeW(szRoot);
-    if (uType == DRIVE_REMOVABLE)
-    {
-        if (szRoot[0] == L'A' || szRoot[0] == L'B')
-            return TRUE;
-    }
-    else
-    {
-        return FALSE;
-    }
-
-    lstrcpynW(szDeviceName, L"\\\\.\\", _countof(szDeviceName));
-    szDeviceName[4] = szRoot[0];
-    szDeviceName[5] = L':';
-    szDeviceName[6] = UNICODE_NULL;
-
-    hDevice = CreateFileW(szDeviceName, FILE_READ_ATTRIBUTES,
-                          FILE_SHARE_READ | FILE_SHARE_WRITE,
-                          NULL, OPEN_EXISTING, 0, NULL);
-    if (hDevice == INVALID_HANDLE_VALUE)
-    {
-        return FALSE;
-    }
-
-    ret = FALSE;
-    if (GetDriveTypeAndCharacteristics(hDevice, &DeviceType, &ulCharacteristics))
-    {
-        if ((ulCharacteristics & FILE_FLOPPY_DISKETTE) == FILE_FLOPPY_DISKETTE)
-            ret = TRUE;
-    }
-
-    CloseHandle(hDevice);
-
-    return ret;
-}
-
-static BOOL IsVirtualDrive(LPCWSTR pszRoot)
+static DWORD GetDriveCharacteristics(LPCWSTR pszRoot)
 {
     WCHAR szDeviceName[16];
-    BOOL ret;
     HANDLE hDevice;
     DEVICE_TYPE DeviceType;
     ULONG ulCharacteristics;
@@ -248,29 +181,31 @@ static BOOL IsVirtualDrive(LPCWSTR pszRoot)
                           FILE_SHARE_READ | FILE_SHARE_WRITE,
                           NULL, OPEN_EXISTING, 0, NULL);
     if (hDevice == INVALID_HANDLE_VALUE)
-        return FALSE;
+        return 0;
 
-    ret = FALSE;
-    if (GetDriveTypeAndCharacteristics(hDevice, &DeviceType, &ulCharacteristics))
-    {
-        if ((ulCharacteristics & FILE_VIRTUAL_VOLUME) == FILE_VIRTUAL_VOLUME)
-            ret = TRUE;
-    }
-
+    ulCharacteristics = 0;
+    GetDriveTypeAndCharacteristics(hDevice, &DeviceType, &ulCharacteristics);
     CloseHandle(hDevice);
-    return ret;
+    return ulCharacteristics;
 }
 
 static BOOL IsSlowDrive(LPCWSTR pszRoot)
 {
+    DWORD ulCharacteristics;
+
     switch (GetDriveTypeW(pszRoot))
     {
         case DRIVE_REMOVABLE:
-            if (!IsDriveFloppyW(pszRoot))
+            ulCharacteristics = GetDriveCharacteristics(pszRoot);
+            if (ulCharacteristics & FILE_VIRTUAL_VOLUME)
                 break;
-            // ...FALL THROUGH...
+            if (!(ulCharacteristics & FILE_FLOPPY_DISKETTE))
+                break;
+            return TRUE;
+
         case DRIVE_CDROM:
-            if (IsVirtualDrive(pszRoot))
+            ulCharacteristics = GetDriveCharacteristics(pszRoot);
+            if (ulCharacteristics & FILE_VIRTUAL_VOLUME)
                 break;
             return TRUE;
     }
