@@ -17,6 +17,7 @@
 #include <atlstr.h>
 #include <atlsimpcoll.h>
 #include <strsafe.h>
+#include <assert.h>
 #include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
@@ -146,7 +147,7 @@ STDMETHODIMP CAutoCompleteEnumString::Skip(ULONG celt)
 
 // https://stackoverflow.com/questions/3098696/get-information-about-disk-drives-result-on-windows7-32-bit-system/3100268#3100268
 static BOOL
-GetDriveTypeAndCharacteristics(HANDLE hDevice, DEVICE_TYPE *pDeviceType, ULONG *pCharacteristics)
+GetDriveCharacteristics(HANDLE hDevice, ULONG *pCharacteristics)
 {
     NTSTATUS Status;
     IO_STATUS_BLOCK IoStatusBlock;
@@ -157,34 +158,29 @@ GetDriveTypeAndCharacteristics(HANDLE hDevice, DEVICE_TYPE *pDeviceType, ULONG *
                                           FileFsDeviceInformation);
     if (Status == NO_ERROR)
     {
-        *pDeviceType = DeviceInfo.DeviceType;
         *pCharacteristics = DeviceInfo.Characteristics;
         return TRUE;
     }
-
     return FALSE;
 }
 
-static DWORD GetDriveCharacteristics(LPCWSTR pszRoot)
+static DWORD GetDriveFlags(LPCWSTR pszRoot)
 {
-    WCHAR szDeviceName[16];
+    WCHAR szDevice[16];
     HANDLE hDevice;
-    DEVICE_TYPE DeviceType;
-    ULONG ret;
+    ULONG ret = 0;
 
-    lstrcpynW(szDeviceName, L"\\\\.\\", _countof(szDeviceName));
-    szDeviceName[4] = pszRoot[0];
-    szDeviceName[5] = L':';
-    szDeviceName[6] = UNICODE_NULL;
-
-    hDevice = CreateFileW(szDeviceName, FILE_READ_ATTRIBUTES,
+    lstrcpynW(szDevice, L"\\\\.\\", _countof(szDevice));
+    szDevice[4] = pszRoot[0];
+    szDevice[5] = L':';
+    szDevice[6] = 0;
+    hDevice = CreateFileW(szDevice, FILE_READ_ATTRIBUTES,
                           FILE_SHARE_READ | FILE_SHARE_WRITE,
                           NULL, OPEN_EXISTING, 0, NULL);
     if (hDevice == INVALID_HANDLE_VALUE)
-        return 0;
+        return ret;
 
-    ret = 0;
-    GetDriveTypeAndCharacteristics(hDevice, &DeviceType, &ret);
+    GetDriveCharacteristics(hDevice, &ret);
     CloseHandle(hDevice);
     return ret;
 }
@@ -195,13 +191,13 @@ static BOOL IsSlowDrive(LPCWSTR pszRoot)
     switch (GetDriveTypeW(pszRoot))
     {
         case DRIVE_REMOVABLE:
-            ret = GetDriveCharacteristics(pszRoot);
+            ret = GetDriveFlags(pszRoot);
             if (!(ret & FILE_FLOPPY_DISKETTE) || (ret & FILE_VIRTUAL_VOLUME))
                 break;
             return TRUE; // Floppy and non-virtual
 
         case DRIVE_CDROM:
-            ret = GetDriveCharacteristics(pszRoot);
+            ret = GetDriveFlags(pszRoot);
             if (ret & FILE_VIRTUAL_VOLUME)
                 break;
             return TRUE; // CD/DVD and non-virtual
@@ -217,6 +213,7 @@ BOOL CAutoCompleteEnumString::DoFileSystem(LPCWSTR pszQuery)
     {
         WCHAR szRoot[] = L"C:\\";
         szRoot[0] = WCHAR('A' + nDriveNumber);
+        assert(PathIsRootW(szRoot));
         if (IsSlowDrive(szRoot))
             return FALSE; // Don't scan slow drives
     }
@@ -386,6 +383,7 @@ void CAutoCompleteEnumString::DoDir(LPCWSTR pszDir, BOOL bDirOnly)
         return;
 
     LPWSTR pchFileTitle = PathFindFileNameW(szPath); // The file title part
+    assert(pchFileTitle);
 
     do
     {
@@ -415,6 +413,7 @@ void CAutoCompleteEnumString::DoDrives(BOOL bDirOnly)
             continue; // The drive doesn't exist
 
         szRoot[0] = (WCHAR)(L'A' + i); // Build a root path of the drive
+        assert(PathIsRootW(szRoot));
         if (!AddString(szRoot))
             break;
     }
