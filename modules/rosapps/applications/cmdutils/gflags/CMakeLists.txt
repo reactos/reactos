@@ -15,4 +15,4 @@ if(MSVC)
     add_importlibs(gflags ntdll)
 endif()
 
-add_cd_file(TARGET gflags DESTINATION reactos/bin FOR all)
+add_cd_file(TARGET gflags DESTINATION reactos/system32 FOR all)

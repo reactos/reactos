@@ -151,10 +151,9 @@ BOOL CheckCtrlBreak(INT mode)
 
             LoadString(CMD_ModuleHandle, STRING_COPY_OPTION, options, ARRAYSIZE(options));
 
-            /* we need to be sure the string arrives on the screen! */
+            ConOutResPuts(STRING_CANCEL_BATCH_FILE);
             do
             {
-                ConOutResPuts(STRING_CANCEL_BATCH_FILE);
                 c = _totupper(cgetchar());
             } while (!(_tcschr(options, c) || c == _T('\3')) || !c);
 
@@ -478,77 +477,36 @@ StripQuotes(TCHAR *in)
 
 
 /*
- * Checks if a path is valid (accessible)
+ * Checks if a path is valid (is accessible)
  */
-BOOL IsValidPathName (LPCTSTR pszPath)
+BOOL IsValidPathName(IN LPCTSTR pszPath)
 {
-    TCHAR szOldPath[MAX_PATH];
     BOOL  bResult;
+    TCHAR szOldPath[MAX_PATH];
 
-    GetCurrentDirectory (MAX_PATH, szOldPath);
-    bResult = SetCurrentDirectory (pszPath);
+    GetCurrentDirectory(ARRAYSIZE(szOldPath), szOldPath);
+    bResult = SetCurrentDirectory(pszPath);
 
-    SetCurrentDirectory (szOldPath);
+    SetCurrentDirectory(szOldPath);
 
     return bResult;
 }
 
-
 /*
- * Checks if a file exists (accessible)
+ * Checks if a file exists (is accessible)
  */
-BOOL IsExistingFile (LPCTSTR pszPath)
+BOOL IsExistingFile(IN LPCTSTR pszPath)
 {
-    DWORD attr = GetFileAttributes (pszPath);
-    return (attr != 0xFFFFFFFF && (! (attr & FILE_ATTRIBUTE_DIRECTORY)) );
+    DWORD attr = GetFileAttributes(pszPath);
+    return ((attr != INVALID_FILE_ATTRIBUTES) && !(attr & FILE_ATTRIBUTE_DIRECTORY));
 }
 
-
-BOOL IsExistingDirectory (LPCTSTR pszPath)
+BOOL IsExistingDirectory(IN LPCTSTR pszPath)
 {
-    DWORD attr = GetFileAttributes (pszPath);
-    return (attr != 0xFFFFFFFF && (attr & FILE_ATTRIBUTE_DIRECTORY) );
+    DWORD attr = GetFileAttributes(pszPath);
+    return ((attr != INVALID_FILE_ATTRIBUTES) && (attr & FILE_ATTRIBUTE_DIRECTORY));
 }
 
-
-BOOL FileGetString (HANDLE hFile, LPTSTR lpBuffer, INT nBufferLength)
-{
-    LPSTR lpString;
-    DWORD  dwRead;
-    INT len = 0;
-#ifdef _UNICODE
-    lpString = cmd_alloc(nBufferLength);
-#else
-    lpString = lpBuffer;
-#endif
-
-    if (ReadFile(hFile, lpString, nBufferLength - 1, &dwRead, NULL))
-    {
-        /* break at new line*/
-        CHAR *end = memchr(lpString, '\n', dwRead);
-        len = dwRead;
-        if (end)
-        {
-            len = (INT)(end - lpString) + 1;
-            SetFilePointer(hFile, len - dwRead, NULL, FILE_CURRENT);
-        }
-    }
-
-    if (!len)
-    {
-#ifdef _UNICODE
-        cmd_free(lpString);
-#endif
-        return FALSE;
-    }
-
-    lpString[len++] = '\0';
-#ifdef _UNICODE
-    MultiByteToWideChar(OutputCodePage, 0, lpString, -1, lpBuffer, len);
-    cmd_free(lpString);
-#endif
-    return TRUE;
-}
 
 // See r874
 BOOL __stdcall PagePrompt(PCON_PAGER Pager, DWORD Done, DWORD Total)

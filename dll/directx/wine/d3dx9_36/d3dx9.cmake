@@ -22,14 +22,16 @@ function(add_d3dx9_target __version)
         ../d3dx9_36/texture.c
         ../d3dx9_36/util.c
         ../d3dx9_36/volume.c
-        ../d3dx9_36/xfile.c
-        ../d3dx9_36/precomp.h)
+        ../d3dx9_36/xfile.c)
+
+    list(APPEND PCH_SKIP_SOURCE
+        ../d3dx9_36/guid.c
+        ${CMAKE_CURRENT_BINARY_DIR}/${module}_stubs.c)
 
     add_library(${module} MODULE
         ${SOURCE}
-        ../d3dx9_36/guid.c
+        ${PCH_SKIP_SOURCE}
         version.rc
-        ${CMAKE_CURRENT_BINARY_DIR}/${module}_stubs.c
         ${CMAKE_CURRENT_BINARY_DIR}/${module}.def)
     
     add_definitions(-D__ROS_LONG64__)
@@ -38,7 +40,7 @@ function(add_d3dx9_target __version)
     target_link_libraries(${module} dxguid wine)
     add_importlibs(${module} d3dcompiler_43 d3dxof d3dwine user32 ole32 gdi32 msvcrt kernel32 ntdll)
     add_delay_importlibs(${module} windowscodecs)
-    add_pch(${module} ../d3dx9_36/precomp.h SOURCE)
+    add_pch(${module} ../d3dx9_36/precomp.h "${PCH_SKIP_SOURCE}")
     add_cd_file(TARGET ${module} DESTINATION reactos/system32 FOR all)
     
     target_compile_definitions(${module} PRIVATE -DD3DX_SDK_VERSION=${__version} -D__WINESRC__ -Dcopysignf=_copysignf)

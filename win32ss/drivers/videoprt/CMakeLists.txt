@@ -19,17 +19,19 @@ list(APPEND SOURCE
     spinlock.c
     stubs.c
     timer.c
-    videoprt.c
-    videoprt.h)
+    videoprt.c)
+
+list(APPEND PCH_SKIP_SOURCE
+    guid.c)
 
 add_library(videoprt MODULE
     ${SOURCE}
-    guid.c
+    ${PCH_SKIP_SOURCE}
     videoprt.rc
     ${CMAKE_CURRENT_BINARY_DIR}/videoprt.def)
 
 set_module_type(videoprt kernelmodedriver)
 target_link_libraries(videoprt ${PSEH_LIB})
 add_importlibs(videoprt ntoskrnl hal)
-add_pch(videoprt videoprt.h SOURCE)
+add_pch(videoprt videoprt.h "${PCH_SKIP_SOURCE}")
 add_cd_file(TARGET videoprt DESTINATION reactos/system32/drivers FOR all)

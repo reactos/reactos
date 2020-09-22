@@ -20,4 +20,11 @@ DEFINE_THISCALL_WRAPPER ?Initialize@CVssWriter@@QAGJU_GUID@@PBGW4VSS_USAGE_TYPE@
 DEFINE_THISCALL_WRAPPER ?Subscribe@CVssWriter@@QAGJK@Z, _VSSAPI_CVssWriter_Subscribe@8
 DEFINE_THISCALL_WRAPPER ?Unsubscribe@CVssWriter@@QAGJXZ, _VSSAPI_CVssWriter_Unsubscribe@4
 
+MACRO(DEFINE_ALIAS, alias, orig)
+EXTERN &orig:PROC
+ALIAS <&alias> = <&orig>
+ENDM
+
+DEFINE_ALIAS ?CreateVssBackupComponents@@YGJPAPAVIVssBackupComponents@@@Z, _VSSAPI_CreateVssBackupComponents@4
+
 END

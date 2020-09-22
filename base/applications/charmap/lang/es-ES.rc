@@ -54,4 +54,6 @@ BEGIN
     IDS_LICENSE "Este programa es software libre; puedes redistribuirlo y/o modificarlo bajo los términos de la GNU General Public License tal y como se publica por la Free Software Foundation; ya sea la versión 2 de la Licencia, o (bajo tu discreción) cualquier versión posterior.\r\n\r\nEste programa se distribuye con el fin de ser útil, pero viene SIN NINGUNA GARANTÍA; sin tan siquiera la garantía implícita de COMERCIALIZACIÓN o la de IDONEIDAD PARA UN PROPÓSITO CONCRETO. Para más información lee la GNU General Public License.\r\n\r\nDeberías de haber recibido una copia de la GNU General Public License con el programa; si no, puedes escribir a la Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 EE.UU."
     IDS_ABOUT "&Acerca de ..."
     IDS_TITLE "Mapa de caracteres"
+    IDS_UNICODE "Unicode"
+    IDS_ALL "All"
 END

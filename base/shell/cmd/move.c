@@ -158,16 +158,16 @@ INT cmd_move (LPTSTR param)
     {
         /* there must be at least one pathspec */
         error_req_param_missing();
-        freep(arg);
-        return 1;
+        nErrorLevel = 1;
+        goto Quit;
     }
 
     if (nFiles > 2)
     {
         /* there are more than two pathspecs */
         error_too_many_parameters(param);
-        freep(arg);
-        return 1;
+        nErrorLevel = 1;
+        goto Quit;
     }
 
     /* If no destination is given, default to current directory */
@@ -178,8 +178,8 @@ INT cmd_move (LPTSTR param)
     {
         /* '*'/'?' in dest, this doesnt happen.  give folder name instead*/
         error_invalid_parameter_format(pszDest);
-        freep(arg);
-        return 1;
+        nErrorLevel = 1;
+        goto Quit;
     }
     if (_tcschr(arg[i], _T('*')) != NULL || _tcschr(arg[i], _T('?')) != NULL)
     {
@@ -199,9 +199,9 @@ INT cmd_move (LPTSTR param)
     hFile = FindFirstFile (arg[i], &findBuffer);
     if (hFile == INVALID_HANDLE_VALUE)
     {
-        ErrorMessage (GetLastError (), arg[i]);
-        freep (arg);
-        return 1;
+        ErrorMessage(GetLastError(), arg[i]);
+        nErrorLevel = 1;
+        goto Quit;
     }
 
     /* check for special cases "." and ".." and if found skip them */
@@ -216,8 +216,8 @@ INT cmd_move (LPTSTR param)
         /* what? we don't have anything to move? */
         error_file_not_found();
         FindClose(hFile);
-        freep(arg);
-        return 1;
+        nErrorLevel = 1;
+        goto Quit;
     }
 
     OnlyOneFile = TRUE;
@@ -247,9 +247,9 @@ INT cmd_move (LPTSTR param)
     hFile = FindFirstFile (arg[i], &findBuffer);
     if (hFile == INVALID_HANDLE_VALUE)
     {
-        ErrorMessage (GetLastError (), arg[i]);
-        freep (arg);
-        return 1;
+        ErrorMessage(GetLastError(), arg[i]);
+        nErrorLevel = 1;
+        goto Quit;
     }
 
     /* check for special cases "." and ".." and if found skip them */
@@ -264,8 +264,8 @@ INT cmd_move (LPTSTR param)
         /* huh? somebody removed files and/or folders which were there */
         error_file_not_found();
         FindClose(hFile);
-        freep(arg);
-        return 1;
+        nErrorLevel = 1;
+        goto Quit;
     }
 
     /* check if source and destination paths are on different volumes */
@@ -340,8 +340,8 @@ INT cmd_move (LPTSTR param)
             /* We are not allowed to have existing source and destination dir when there is wildcard in source */
             error_syntax(NULL);
             FindClose(hFile);
-            freep(arg);
-            return 1;
+            nErrorLevel = 1;
+            goto Quit;
         }
         if (!(dwMoveStatusFlags & (MOVE_DEST_IS_FILE | MOVE_DEST_IS_DIR)))
         {
@@ -360,8 +360,8 @@ INT cmd_move (LPTSTR param)
             /*source has many files but there is only one destination file*/
             error_invalid_parameter_format(pszDest);
             FindClose(hFile);
-            freep (arg);
-            return 1;
+            nErrorLevel = 1;
+            goto Quit;
         }
 
         /*checks to make sure user wanted/wants the override*/
@@ -495,10 +495,16 @@ INT cmd_move (LPTSTR param)
                 }
             }
         }
+
         if (MoveStatus)
+        {
             ConOutResPrintf(STRING_MOVE_ERROR1);
+        }
         else
+        {
             ConOutResPrintf(STRING_MOVE_ERROR2);
+            nErrorLevel = 1;
+        }
     }
     while ((!OnlyOneFile || dwMoveStatusFlags & MOVE_SRC_CURRENT_IS_DIR ) &&
             !(dwMoveStatusFlags & MOVE_SOURCE_IS_DIR) &&
@@ -508,8 +514,9 @@ INT cmd_move (LPTSTR param)
     if(hDestFile && hDestFile != INVALID_HANDLE_VALUE)
         FindClose(hDestFile);
 
-    freep (arg);
-    return 0;
+Quit:
+    freep(arg);
+    return nErrorLevel;
 }
 
 #endif /* INCLUDE_CMD_MOVE */

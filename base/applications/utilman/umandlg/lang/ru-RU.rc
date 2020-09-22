@@ -25,16 +25,6 @@ BEGIN
     CONTROL "&Справка", IDC_HELP_TOPICS, "Button", BS_PUSHBUTTON | WS_CHILD | WS_VISIBLE | WS_DISABLED | WS_TABSTOP, 98, 161, 50, 14 
 END
 
-IDD_ABOUT_DIALOG DIALOGEX 22, 16, 210, 65
-CAPTION "О программе"
-FONT 8, "MS Shell Dlg", 0, 0
-STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
-BEGIN
-    LTEXT "Диспетчер служебных программ\n© 2019 Джордж Бисок (fraizeraust99 at gmail dot com)", IDC_STATIC, 10, 7, 150, 36
-    LTEXT "© 2019 Гермес Белуска-Майто", IDC_STATIC, 10, 33, 150, 36
-    PUSHBUTTON "OK", IDOK, 75, 47, 44, 15
-END
-
 STRINGTABLE
 BEGIN
     IDS_OSK "Экранная клавиатура"
@@ -51,4 +41,6 @@ END
 STRINGTABLE
 BEGIN
     IDM_ABOUT "О программе"
+    IDS_APP_NAME "Диспетчер служебных программ"
+    IDS_AUTHORS "© 2019 Джордж Бисок, Гермес Белуска-Майто"
 END

@@ -4203,6 +4203,12 @@ ftGdiGetGlyphOutline(
     }
 
     DPRINT("ftGdiGetGlyphOutline END and needed %lu\n", needed);
+
+    if (gm.gmBlackBoxX == 0)
+        gm.gmBlackBoxX = 1;
+    if (gm.gmBlackBoxY == 0)
+        gm.gmBlackBoxY = 1;
+
     *pgm = gm;
     return needed;
 }
@@ -4554,6 +4560,7 @@ ftGdiGetTextMetricsW(
         EngSetLastError(STATUS_INVALID_PARAMETER);
         return FALSE;
     }
+    RtlZeroMemory(ptmwi, sizeof(TMW_INTERNAL));
 
     if (!(dc = DC_LockDc(hDC)))
     {
@@ -4606,7 +4613,6 @@ ftGdiGetTextMetricsW(
                 FillTM(&ptmwi->TextMetric, FontGDI, pOS2, pHori, !Error ? &Win : 0);
 
                 /* FIXME: Fill Diff member */
-                RtlZeroMemory(&ptmwi->Diff, sizeof(ptmwi->Diff));
             }
 
             IntUnLockFreeType();

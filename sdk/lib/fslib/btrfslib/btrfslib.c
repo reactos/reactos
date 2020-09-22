@@ -37,13 +37,33 @@
 #include <mountmgr.h>
 #ifdef __REACTOS__
 #include <winnls.h>
+#include <stdbool.h>
 #include "btrfs.h"
 #include "btrfsioctl.h"
+#include "crc32c.h"
+#include "xxhash.h"
 #else
 #include <stringapiset.h>
+#include <stdbool.h>
 #include "../btrfs.h"
 #include "../btrfsioctl.h"
+#include "../crc32c.h"
+#include "../xxhash.h"
+
+#if defined(_X86_) || defined(_AMD64_)
+#ifndef _MSC_VER
+#include <cpuid.h>
+#else
+#include <intrin.h>
 #endif
+#endif
+#endif // __REACTOS__
+
+#define SHA256_HASH_SIZE 32
+void calc_sha256(uint8_t* hash, const void* input, size_t len);
+
+#define BLAKE2_HASH_SIZE 32
+void blake2b(void *out, size_t outlen, const void* in, size_t inlen);
 
 #ifndef __REACTOS__
 #define FSCTL_LOCK_VOLUME               CTL_CODE(FILE_DEVICE_FILE_SYSTEM,  6, METHOD_BUFFERED, FILE_ANY_ACCESS)
@@ -67,7 +87,7 @@ NTSTATUS NTAPI NtReadFile(HANDLE FileHandle, HANDLE Event, PIO_APC_ROUTINE ApcRo
 #ifdef __cplusplus
 }
 #endif
-#endif
+#endif // __REACTOS__
 
 // These are undocumented, and what comes from format.exe
 typedef struct {
@@ -154,6 +174,7 @@ typedef struct {
 HMODULE module;
 ULONG def_sector_size = 0, def_node_size = 0;
 uint64_t def_incompat_flags = BTRFS_INCOMPAT_FLAGS_EXTENDED_IREF | BTRFS_INCOMPAT_FLAGS_SKINNY_METADATA;
+uint16_t def_csum_type = CSUM_TYPE_CRC32C;
 
 // the following definitions come from fmifs.h in ReactOS
 
@@ -210,54 +231,6 @@ typedef enum {
 } CALLBACKCOMMAND;
 
 typedef BOOLEAN (NTAPI* PFMIFSCALLBACK)(CALLBACKCOMMAND Command, ULONG SubAction, PVOID ActionInfo);
-
-static const uint32_t crctable[] = {
-    0x00000000, 0xf26b8303, 0xe13b70f7, 0x1350f3f4, 0xc79a971f, 0x35f1141c, 0x26a1e7e8, 0xd4ca64eb,
-    0x8ad958cf, 0x78b2dbcc, 0x6be22838, 0x9989ab3b, 0x4d43cfd0, 0xbf284cd3, 0xac78bf27, 0x5e133c24,
-    0x105ec76f, 0xe235446c, 0xf165b798, 0x030e349b, 0xd7c45070, 0x25afd373, 0x36ff2087, 0xc494a384,
-    0x9a879fa0, 0x68ec1ca3, 0x7bbcef57, 0x89d76c54, 0x5d1d08bf, 0xaf768bbc, 0xbc267848, 0x4e4dfb4b,
-    0x20bd8ede, 0xd2d60ddd, 0xc186fe29, 0x33ed7d2a, 0xe72719c1, 0x154c9ac2, 0x061c6936, 0xf477ea35,
-    0xaa64d611, 0x580f5512, 0x4b5fa6e6, 0xb93425e5, 0x6dfe410e, 0x9f95c20d, 0x8cc531f9, 0x7eaeb2fa,
-    0x30e349b1, 0xc288cab2, 0xd1d83946, 0x23b3ba45, 0xf779deae, 0x05125dad, 0x1642ae59, 0xe4292d5a,
-    0xba3a117e, 0x4851927d, 0x5b016189, 0xa96ae28a, 0x7da08661, 0x8fcb0562, 0x9c9bf696, 0x6ef07595,
-    0x417b1dbc, 0xb3109ebf, 0xa0406d4b, 0x522bee48, 0x86e18aa3, 0x748a09a0, 0x67dafa54, 0x95b17957,
-    0xcba24573, 0x39c9c670, 0x2a993584, 0xd8f2b687, 0x0c38d26c, 0xfe53516f, 0xed03a29b, 0x1f682198,
-    0x5125dad3, 0xa34e59d0, 0xb01eaa24, 0x42752927, 0x96bf4dcc, 0x64d4cecf, 0x77843d3b, 0x85efbe38,
-    0xdbfc821c, 0x2997011f, 0x3ac7f2eb, 0xc8ac71e8, 0x1c661503, 0xee0d9600, 0xfd5d65f4, 0x0f36e6f7,
-    0x61c69362, 0x93ad1061, 0x80fde395, 0x72966096, 0xa65c047d, 0x5437877e, 0x4767748a, 0xb50cf789,
-    0xeb1fcbad, 0x197448ae, 0x0a24bb5a, 0xf84f3859, 0x2c855cb2, 0xdeeedfb1, 0xcdbe2c45, 0x3fd5af46,
-    0x7198540d, 0x83f3d70e, 0x90a324fa, 0x62c8a7f9, 0xb602c312, 0x44694011, 0x5739b3e5, 0xa55230e6,
-    0xfb410cc2, 0x092a8fc1, 0x1a7a7c35, 0xe811ff36, 0x3cdb9bdd, 0xceb018de, 0xdde0eb2a, 0x2f8b6829,
-    0x82f63b78, 0x709db87b, 0x63cd4b8f, 0x91a6c88c, 0x456cac67, 0xb7072f64, 0xa457dc90, 0x563c5f93,
-    0x082f63b7, 0xfa44e0b4, 0xe9141340, 0x1b7f9043, 0xcfb5f4a8, 0x3dde77ab, 0x2e8e845f, 0xdce5075c,
-    0x92a8fc17, 0x60c37f14, 0x73938ce0, 0x81f80fe3, 0x55326b08, 0xa759e80b, 0xb4091bff, 0x466298fc,
-    0x1871a4d8, 0xea1a27db, 0xf94ad42f, 0x0b21572c, 0xdfeb33c7, 0x2d80b0c4, 0x3ed04330, 0xccbbc033,
-    0xa24bb5a6, 0x502036a5, 0x4370c551, 0xb11b4652, 0x65d122b9, 0x97baa1ba, 0x84ea524e, 0x7681d14d,
-    0x2892ed69, 0xdaf96e6a, 0xc9a99d9e, 0x3bc21e9d, 0xef087a76, 0x1d63f975, 0x0e330a81, 0xfc588982,
-    0xb21572c9, 0x407ef1ca, 0x532e023e, 0xa145813d, 0x758fe5d6, 0x87e466d5, 0x94b49521, 0x66df1622,
-    0x38cc2a06, 0xcaa7a905, 0xd9f75af1, 0x2b9cd9f2, 0xff56bd19, 0x0d3d3e1a, 0x1e6dcdee, 0xec064eed,
-    0xc38d26c4, 0x31e6a5c7, 0x22b65633, 0xd0ddd530, 0x0417b1db, 0xf67c32d8, 0xe52cc12c, 0x1747422f,
-    0x49547e0b, 0xbb3ffd08, 0xa86f0efc, 0x5a048dff, 0x8ecee914, 0x7ca56a17, 0x6ff599e3, 0x9d9e1ae0,
-    0xd3d3e1ab, 0x21b862a8, 0x32e8915c, 0xc083125f, 0x144976b4, 0xe622f5b7, 0xf5720643, 0x07198540,
-    0x590ab964, 0xab613a67, 0xb831c993, 0x4a5a4a90, 0x9e902e7b, 0x6cfbad78, 0x7fab5e8c, 0x8dc0dd8f,
-    0xe330a81a, 0x115b2b19, 0x020bd8ed, 0xf0605bee, 0x24aa3f05, 0xd6c1bc06, 0xc5914ff2, 0x37faccf1,
-    0x69e9f0d5, 0x9b8273d6, 0x88d28022, 0x7ab90321, 0xae7367ca, 0x5c18e4c9, 0x4f48173d, 0xbd23943e,
-    0xf36e6f75, 0x0105ec76, 0x12551f82, 0xe03e9c81, 0x34f4f86a, 0xc69f7b69, 0xd5cf889d, 0x27a40b9e,
-    0x79b737ba, 0x8bdcb4b9, 0x988c474d, 0x6ae7c44e, 0xbe2da0a5, 0x4c4623a6, 0x5f16d052, 0xad7d5351,
-};
-
-static uint32_t calc_crc32c(uint32_t seed, uint8_t* msg, ULONG msglen) {
-    uint32_t rem;
-    ULONG i;
-
-    rem = seed;
-
-    for (i = 0; i < msglen; i++) {
-        rem = crctable[(rem ^ msg[i]) & 0xff] ^ (rem >> 8);
-    }
-
-    return rem;
-}
 
 #ifndef __REACTOS__
 NTSTATUS WINAPI ChkdskEx(PUNICODE_STRING DriveRoot, BOOLEAN FixErrors, BOOLEAN Verbose, BOOLEAN CheckOnlyIfDirty,
@@ -490,7 +463,7 @@ static btrfs_chunk* add_chunk(LIST_ENTRY* chunks, uint64_t flags, btrfs_root* ch
     return c;
 }
 
-static BOOL superblock_collision(btrfs_chunk* c, uint64_t address) {
+static bool superblock_collision(btrfs_chunk* c, uint64_t address) {
     CHUNK_ITEM_STRIPE* cis = (CHUNK_ITEM_STRIPE*)&c->chunk_item[1];
     uint64_t stripe = (address - c->offset) / c->chunk_item->stripe_length;
     uint16_t i, j;
@@ -502,13 +475,13 @@ static BOOL superblock_collision(btrfs_chunk* c, uint64_t address) {
                 uint64_t stripe2 = (superblock_addrs[j] - cis[i].offset) / c->chunk_item->stripe_length;
 
                 if (stripe2 == stripe)
-                    return TRUE;
+                    return true;
             }
             j++;
         }
     }
 
-    return FALSE;
+    return false;
 }
 
 static uint64_t get_next_address(btrfs_chunk* c) {
@@ -540,7 +513,7 @@ typedef struct {
 } EXTENT_ITEM_METADATA2;
 
 static void assign_addresses(LIST_ENTRY* roots, btrfs_chunk* sys_chunk, btrfs_chunk* metadata_chunk, uint32_t node_size,
-                             btrfs_root* root_root, btrfs_root* extent_root, BOOL skinny) {
+                             btrfs_root* root_root, btrfs_root* extent_root, bool skinny) {
     LIST_ENTRY* le;
 
     le = roots->Flink;
@@ -632,6 +605,26 @@ static NTSTATUS write_data(HANDLE h, uint64_t address, btrfs_chunk* c, void* dat
     return STATUS_SUCCESS;
 }
 
+static void calc_tree_checksum(tree_header* th, uint32_t node_size) {
+    switch (def_csum_type) {
+        case CSUM_TYPE_CRC32C:
+            *(uint32_t*)th = ~calc_crc32c(0xffffffff, (uint8_t*)&th->fs_uuid, node_size - sizeof(th->csum));
+        break;
+
+        case CSUM_TYPE_XXHASH:
+            *(uint64_t*)th = XXH64((uint8_t*)&th->fs_uuid, node_size - sizeof(th->csum), 0);
+        break;
+
+        case CSUM_TYPE_SHA256:
+            calc_sha256((uint8_t*)th, &th->fs_uuid, node_size - sizeof(th->csum));
+        break;
+
+        case CSUM_TYPE_BLAKE2:
+            blake2b((uint8_t*)th, BLAKE2_HASH_SIZE, &th->fs_uuid, node_size - sizeof(th->csum));
+        break;
+    }
+}
+
 static NTSTATUS write_roots(HANDLE h, LIST_ENTRY* roots, uint32_t node_size, BTRFS_UUID* fsuuid, BTRFS_UUID* chunkuuid) {
     LIST_ENTRY *le, *le2;
     NTSTATUS Status;
@@ -648,7 +641,6 @@ static NTSTATUS write_roots(HANDLE h, LIST_ENTRY* roots, uint32_t node_size, BTR
         btrfs_root* r = CONTAINING_RECORD(le, btrfs_root, list_entry);
         uint8_t* dp;
         leaf_node* ln;
-        uint32_t crc32;
 
         memset(tree, 0, node_size);
 
@@ -674,7 +666,7 @@ static NTSTATUS write_roots(HANDLE h, LIST_ENTRY* roots, uint32_t node_size, BTR
                 dp -= item->size;
                 memcpy(dp, item->data, item->size);
 
-                ln->offset = dp - tree - sizeof(tree_header);
+                ln->offset = (uint32_t)(dp - tree - sizeof(tree_header));
             } else
                 ln->offset = 0;
 
@@ -687,8 +679,7 @@ static NTSTATUS write_roots(HANDLE h, LIST_ENTRY* roots, uint32_t node_size, BTR
 
         memcpy(tree, &r->header, sizeof(tree_header));
 
-        crc32 = ~calc_crc32c(0xffffffff, (uint8_t*)&((tree_header*)tree)->fs_uuid, node_size - sizeof(((tree_header*)tree)->csum));
-        memcpy(tree, &crc32, sizeof(uint32_t));
+        calc_tree_checksum((tree_header*)tree, node_size);
 
         Status = write_data(h, r->header.address, r->c, tree, node_size);
         if (!NT_SUCCESS(Status)) {
@@ -758,13 +749,32 @@ static void init_device(btrfs_dev* dev, uint64_t id, uint64_t size, BTRFS_UUID* 
     dev->last_alloc = 0x100000; // skip first megabyte
 }
 
+static void calc_superblock_checksum(superblock* sb) {
+    switch (def_csum_type) {
+        case CSUM_TYPE_CRC32C:
+            *(uint32_t*)sb = ~calc_crc32c(0xffffffff, (uint8_t*)&sb->uuid, (ULONG)sizeof(superblock) - sizeof(sb->checksum));
+        break;
+
+        case CSUM_TYPE_XXHASH:
+            *(uint64_t*)sb = XXH64(&sb->uuid, sizeof(superblock) - sizeof(sb->checksum), 0);
+        break;
+
+        case CSUM_TYPE_SHA256:
+            calc_sha256((uint8_t*)sb, &sb->uuid, sizeof(superblock) - sizeof(sb->checksum));
+        break;
+
+        case CSUM_TYPE_BLAKE2:
+            blake2b((uint8_t*)sb, BLAKE2_HASH_SIZE, &sb->uuid, sizeof(superblock) - sizeof(sb->checksum));
+        break;
+    }
+}
+
 static NTSTATUS write_superblocks(HANDLE h, btrfs_dev* dev, btrfs_root* chunk_root, btrfs_root* root_root, btrfs_root* extent_root,
                                   btrfs_chunk* sys_chunk, uint32_t node_size, BTRFS_UUID* fsuuid, uint32_t sector_size, PUNICODE_STRING label, uint64_t incompat_flags) {
     NTSTATUS Status;
     IO_STATUS_BLOCK iosb;
     ULONG sblen;
     int i;
-    uint32_t crc32;
     superblock* sb;
     KEY* key;
     uint64_t bytes_used;
@@ -812,6 +822,7 @@ static NTSTATUS write_superblocks(HANDLE h, btrfs_dev* dev, btrfs_root* chunk_ro
     sb->n = sizeof(KEY) + sizeof(CHUNK_ITEM) + (sys_chunk->chunk_item->num_stripes * sizeof(CHUNK_ITEM_STRIPE));
     sb->chunk_root_generation = 1;
     sb->incompat_flags = incompat_flags;
+    sb->csum_type = def_csum_type;
     memcpy(&sb->dev_item, &dev->dev_item, sizeof(DEV_ITEM));
 
     if (label->Length > 0) {
@@ -876,8 +887,7 @@ static NTSTATUS write_superblocks(HANDLE h, btrfs_dev* dev, btrfs_root* chunk_ro
 
         sb->sb_phys_addr = superblock_addrs[i];
 
-        crc32 = ~calc_crc32c(0xffffffff, (uint8_t*)&sb->uuid, (ULONG)sizeof(superblock) - sizeof(sb->checksum));
-        memcpy(&sb->checksum, &crc32, sizeof(uint32_t));
+        calc_superblock_checksum(sb);
 
         off.QuadPart = superblock_addrs[i];
 
@@ -1017,7 +1027,7 @@ static NTSTATUS clear_first_megabyte(HANDLE h) {
     return Status;
 }
 
-static BOOL is_ssd(HANDLE h) {
+static bool is_ssd(HANDLE h) {
     ULONG aptelen;
     ATA_PASS_THROUGH_EX* apte;
     IO_STATUS_BLOCK iosb;
@@ -1051,7 +1061,7 @@ static BOOL is_ssd(HANDLE h) {
 #else
             RtlFreeHeap(RtlGetProcessHeap(), 0, apte);
 #endif
-            return TRUE;
+            return true;
         }
     }
 
@@ -1061,7 +1071,7 @@ static BOOL is_ssd(HANDLE h) {
     RtlFreeHeap(RtlGetProcessHeap(), 0, apte);
 #endif
 
-    return FALSE;
+    return false;
 }
 
 static void add_dir_item(btrfs_root* root, uint64_t inode, uint32_t hash, uint64_t key_objid, uint8_t key_type,
@@ -1130,7 +1140,7 @@ static NTSTATUS write_btrfs(HANDLE h, uint64_t size, PUNICODE_STRING label, uint
     btrfs_chunk *sys_chunk, *metadata_chunk;
     btrfs_dev dev;
     BTRFS_UUID fsuuid, chunkuuid;
-    BOOL ssd;
+    bool ssd;
     uint64_t metadata_flags;
 #ifdef __REACTOS__
     ULONG seed;
@@ -1210,7 +1220,7 @@ static NTSTATUS write_btrfs(HANDLE h, uint64_t size, PUNICODE_STRING label, uint
     return STATUS_SUCCESS;
 }
 
-static BOOL look_for_device(btrfs_filesystem* bfs, BTRFS_UUID* devuuid) {
+static bool look_for_device(btrfs_filesystem* bfs, BTRFS_UUID* devuuid) {
     uint32_t i;
     btrfs_filesystem_device* dev;
 
@@ -1221,26 +1231,60 @@ static BOOL look_for_device(btrfs_filesystem* bfs, BTRFS_UUID* devuuid) {
             dev = (btrfs_filesystem_device*)((uint8_t*)dev + offsetof(btrfs_filesystem_device, name[0]) + dev->name_length);
 
         if (RtlCompareMemory(&dev->uuid, devuuid, sizeof(BTRFS_UUID)) == sizeof(BTRFS_UUID))
-            return TRUE;
+            return true;
     }
 
-    return FALSE;
+    return false;
 }
 
-static BOOL is_mounted_multi_device(HANDLE h, uint32_t sector_size) {
+static bool check_superblock_checksum(superblock* sb) {
+    switch (sb->csum_type) {
+        case CSUM_TYPE_CRC32C: {
+            uint32_t crc32 = ~calc_crc32c(0xffffffff, (uint8_t*)&sb->uuid, (ULONG)sizeof(superblock) - sizeof(sb->checksum));
+
+            return crc32 == *(uint32_t*)sb;
+        }
+
+        case CSUM_TYPE_XXHASH: {
+            uint64_t hash = XXH64(&sb->uuid, sizeof(superblock) - sizeof(sb->checksum), 0);
+
+            return hash == *(uint64_t*)sb;
+        }
+
+        case CSUM_TYPE_SHA256: {
+            uint8_t hash[SHA256_HASH_SIZE];
+
+            calc_sha256(hash, &sb->uuid, sizeof(superblock) - sizeof(sb->checksum));
+
+            return !memcmp(hash, sb, SHA256_HASH_SIZE);
+        }
+
+        case CSUM_TYPE_BLAKE2: {
+            uint8_t hash[BLAKE2_HASH_SIZE];
+
+            blake2b(hash, sizeof(hash), &sb->uuid, sizeof(superblock) - sizeof(sb->checksum));
+
+            return !memcmp(hash, sb, BLAKE2_HASH_SIZE);
+        }
+
+        default:
+            return false;
+    }
+}
+
+static bool is_mounted_multi_device(HANDLE h, uint32_t sector_size) {
     NTSTATUS Status;
     superblock* sb;
     ULONG sblen;
     IO_STATUS_BLOCK iosb;
     LARGE_INTEGER off;
     BTRFS_UUID fsuuid, devuuid;
-    uint32_t crc32;
     UNICODE_STRING us;
     OBJECT_ATTRIBUTES atts;
     HANDLE h2;
     btrfs_filesystem *bfs = NULL, *bfs2;
     ULONG bfssize;
-    BOOL ret = FALSE;
+    bool ret = false;
 
     static WCHAR btrfs[] = L"\\Btrfs";
 
@@ -1263,7 +1307,7 @@ static BOOL is_mounted_multi_device(HANDLE h, uint32_t sector_size) {
 #else
         RtlFreeHeap(RtlGetProcessHeap(), 0, sb);
 #endif
-        return FALSE;
+        return false;
     }
 
     if (sb->magic != BTRFS_MAGIC) {
@@ -1272,17 +1316,16 @@ static BOOL is_mounted_multi_device(HANDLE h, uint32_t sector_size) {
 #else
         RtlFreeHeap(RtlGetProcessHeap(), 0, sb);
 #endif
-        return FALSE;
+        return false;
     }
 
-    crc32 = ~calc_crc32c(0xffffffff, (uint8_t*)&sb->uuid, (ULONG)sizeof(superblock) - sizeof(sb->checksum));
-    if (crc32 != *((uint32_t*)sb)) {
+    if (!check_superblock_checksum(sb)) {
 #ifndef __REACTOS__
         free(sb);
 #else
         RtlFreeHeap(RtlGetProcessHeap(), 0, sb);
 #endif
-        return FALSE;
+        return false;
     }
 
     fsuuid = sb->uuid;
@@ -1302,7 +1345,7 @@ static BOOL is_mounted_multi_device(HANDLE h, uint32_t sector_size) {
     Status = NtOpenFile(&h2, SYNCHRONIZE | FILE_READ_ATTRIBUTES, &atts, &iosb,
                         FILE_SHARE_READ | FILE_SHARE_WRITE, FILE_SYNCHRONOUS_IO_ALERT);
     if (!NT_SUCCESS(Status)) // not a problem, it usually just means the driver isn't loaded
-        return FALSE;
+        return false;
 
     bfssize = 0;
 
@@ -1320,7 +1363,7 @@ static BOOL is_mounted_multi_device(HANDLE h, uint32_t sector_size) {
         Status = NtDeviceIoControlFile(h2, NULL, NULL, NULL, &iosb, IOCTL_BTRFS_QUERY_FILESYSTEMS, NULL, 0, bfs, bfssize);
         if (!NT_SUCCESS(Status) && Status != STATUS_BUFFER_OVERFLOW) {
             NtClose(h2);
-            return FALSE;
+            return false;
         }
     } while (Status == STATUS_BUFFER_OVERFLOW);
 
@@ -1329,10 +1372,10 @@ static BOOL is_mounted_multi_device(HANDLE h, uint32_t sector_size) {
 
     if (bfs->num_devices != 0) {
         bfs2 = bfs;
-        while (TRUE) {
+        while (true) {
             if (RtlCompareMemory(&bfs2->uuid, &fsuuid, sizeof(BTRFS_UUID)) == sizeof(BTRFS_UUID)) {
                 if (bfs2->num_devices == 1)
-                    ret = FALSE;
+                    ret = false;
                 else
                     ret = look_for_device(bfs2, &devuuid);
 
@@ -1376,15 +1419,33 @@ static void do_full_trim(HANDLE h) {
     NtDeviceIoControlFile(h, NULL, NULL, NULL, &iosb, IOCTL_STORAGE_MANAGE_DATA_SET_ATTRIBUTES, &dmdsa, sizeof(DEVICE_MANAGE_DATA_SET_ATTRIBUTES), NULL, 0);
 }
 
-static BOOL is_power_of_two(ULONG i) {
+static bool is_power_of_two(ULONG i) {
     return ((i != 0) && !(i & (i - 1)));
 }
+
+#if !defined(__REACTOS__) && (defined(_X86_) || defined(_AMD64_))
+static void check_cpu() {
+    unsigned int cpuInfo[4];
+    bool have_sse42;
+
+#ifndef _MSC_VER
+    __get_cpuid(1, &cpuInfo[0], &cpuInfo[1], &cpuInfo[2], &cpuInfo[3]);
+    have_sse42 = cpuInfo[2] & bit_SSE4_2;
+#else
+    __cpuid(cpuInfo, 1);
+    have_sse42 = cpuInfo[2] & (1 << 20);
+#endif
+
+    if (have_sse42)
+        calc_crc32c = calc_crc32c_hw;
+}
+#endif
 
 #ifndef __REACTOS__
 static NTSTATUS NTAPI FormatEx2(PUNICODE_STRING DriveRoot, FMIFS_MEDIA_FLAG MediaFlag, PUNICODE_STRING Label,
 #else
 NTSTATUS NTAPI BtrfsFormatEx(PUNICODE_STRING DriveRoot, FMIFS_MEDIA_FLAG MediaFlag, PUNICODE_STRING Label,
-#endif
+#endif // __REACTOS__
                                 BOOLEAN QuickFormat, ULONG ClusterSize, PFMIFSCALLBACK Callback)
 {
     NTSTATUS Status;
@@ -1418,13 +1479,21 @@ NTSTATUS NTAPI BtrfsFormatEx(PUNICODE_STRING DriveRoot, FMIFS_MEDIA_FLAG MediaFl
     tp.Privileges[0].Luid = luid;
     tp.Privileges[0].Attributes = SE_PRIVILEGE_ENABLED;
 
-    if (!AdjustTokenPrivileges(token, FALSE, &tp, sizeof(TOKEN_PRIVILEGES), NULL, NULL)) {
+    if (!AdjustTokenPrivileges(token, false, &tp, sizeof(TOKEN_PRIVILEGES), NULL, NULL)) {
         CloseHandle(token);
         return STATUS_PRIVILEGE_NOT_HELD;
     }
 
     CloseHandle(token);
+
+#if defined(_X86_) || defined(_AMD64_)
+    check_cpu();
 #endif
+#endif
+
+    if (def_csum_type != CSUM_TYPE_CRC32C && def_csum_type != CSUM_TYPE_XXHASH && def_csum_type != CSUM_TYPE_SHA256 &&
+        def_csum_type != CSUM_TYPE_BLAKE2)
+        return STATUS_INVALID_PARAMETER;
 
     InitializeObjectAttributes(&attr, DriveRoot, OBJ_CASE_INSENSITIVE, NULL, NULL);
 
@@ -1519,7 +1588,7 @@ end:
             MOUNTDEV_NAME* mdn;
             ULONG mdnsize;
 
-            mdnsize = offsetof(MOUNTDEV_NAME, Name[0]) + DriveRoot->Length;
+            mdnsize = (ULONG)(offsetof(MOUNTDEV_NAME, Name[0]) + DriveRoot->Length);
 #ifndef __REACTOS__
             mdn = malloc(mdnsize);
 #else
@@ -1544,7 +1613,7 @@ end:
     }
 
     if (Callback) {
-        BOOL success = NT_SUCCESS(Status);
+        bool success = NT_SUCCESS(Status);
         Callback(DONE, 0, (PVOID)&success);
     }
 
@@ -1556,7 +1625,7 @@ BOOL __stdcall FormatEx(DSTRING* root, STREAM_MESSAGE* message, options* opts, u
     NTSTATUS Status;
 
     if (!root || !root->string)
-        return FALSE;
+        return false;
 
     DriveRoot.Length = DriveRoot.MaximumLength = (USHORT)(wcslen(root->string) * sizeof(WCHAR));
     DriveRoot.Buffer = root->string;
@@ -1590,10 +1659,14 @@ void __stdcall SetIncompatFlags(uint64_t incompat_flags) {
     def_incompat_flags = incompat_flags;
 }
 
+void __stdcall SetCsumType(uint16_t csum_type) {
+    def_csum_type = csum_type;
+}
+
 BOOL __stdcall GetFilesystemInformation(uint32_t unk1, uint32_t unk2, void* unk3) {
     // STUB - undocumented
 
-    return TRUE;
+    return true;
 }
 
 #ifndef __REACTOS__
@@ -1601,6 +1674,6 @@ BOOL APIENTRY DllMain(HANDLE hModule, DWORD dwReason, void* lpReserved) {
     if (dwReason == DLL_PROCESS_ATTACH)
         module = (HMODULE)hModule;
 
-    return TRUE;
+    return true;
 }
 #endif

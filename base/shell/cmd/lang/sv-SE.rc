@@ -23,7 +23,7 @@ För att ta bort ett alias från listan:\n\
     STRING_CALL_HELP "Anropa ett batchprogram från ett annat.\n\n\
 CALL [enhet:][mapp]filnamn [batch-parameter]\n\n\
   batch-parameter  Specificerar en kommandoradsinformation som batchprogrammet\n\
-                   behöver."
+                   behöver.\n"
     STRING_CD_HELP "Visar namnet på, eller ändrar aktuell mapp\n\n\
 CHDIR [/D][enhet:][mapp]\n\
 CHDIR[..|.]\n\
@@ -193,7 +193,7 @@ PUSHD [mapp | ..]\n\n\
   ECHO [meddelande]\n\
   ECHO.             skriv en tom rad\n\n\
 Skriv ECHO utan parametar för att visa aktuell ECHO inställning."
-    STRING_ECHO_HELP5 "ECHO är %s\n"
+    STRING_ECHO_HELP5 "ECHO är %s.\n"
     STRING_EXIT_HELP "Avsluta kommandotolken (cmd.exe).\n\nEXIT [/b] [ExitCode]\n\n\
   /B            Avslutt bara en batchfil.\n\
                 Om det körs utan en batch filkommer det avslutta cmd.exe\n\
@@ -228,7 +228,7 @@ För att bruke FOR kommando i en batchfil, ange %%variabel istället för\n\
     STRING_GOTO_HELP1 "Dirigerar CMD till en namngiven etikett i ett batchprogram.\n\n\
 GOTO etikett\n\n\
   etikett  Anger en text sträng använt i ett batchprogram.\n\n\
-En etikett skapas på en egen rad genom att skriva kolon följt av namn på etiketten."
+En etikett skapas på en egen rad genom att skriva kolon följt av namn på etiketten.\n"
     STRING_IF_HELP1 "Utför villkorsstyrd bearbetning i batchprogram.\n\n\
   IF [NOT] ERRORLEVEL nummer kommando\n\
   IF [NOT] sträng1==sträng2 kommando\n\
@@ -264,9 +264,9 @@ Om varken /H eller /J är angivna kommer en symbolisk länk att skapas."
     STRING_MOVE_HELP1 "Skriv över %s (Ja/Nej/Alla)? "
     STRING_MOVE_HELP2 "Flyttar filer, och byter namn på filer och mappar.\n\n\
 för att flytte en eller flera filer:\n\
-MOVE [/N][enhet:][mapp]filnamn1[,...] destination\n\n\
+MOVE [/N][/Y|/-Y][enhet:][mapp]filnamn1[,...] destination\n\n\
 för att ändra namn på en mapp:\n\
-MOVE [/N][enhet:][mapp]mappnamn1 mappnamn2\n\n\
+MOVE [/N][/Y|/-Y][enhet:][mapp]mappnamn1 mappnamn2\n\n\
   [enhet:][mapp]filnamn1  Anger placering och namn på fil\n\
                            eller filer du önsker att flytta.\n\
   /N                    Ingenting. Gör allt utom att flytta filer eller mappar.\n\n\
@@ -287,6 +287,9 @@ PATH [[enhet:]mapp[;...]]\nPATH ;\n\n\
 Skriv PATH; för att tømme alle søkemappar inställninar och angi at kommandoskallet\n\
 kun skal søke aktuell mapp.\n\
 Skriv PATH uten parameter för att visa aktuell søkesti.\n"
+    STRING_PAUSE_HELP1 "Stoppar exekvering av batch-fil och visa följande mening:\n\
+'Tryck valfri tangent för att fortsätta...' eller en användaren definerad mening.\n\n\
+PAUSE [melding]"
     STRING_PROMPT_HELP1 "Ändra kommandoledetext.\n\n\
 PROMPT [text]\n\n\
   text    Anger en nytt kommandoledetext.\n\n\
@@ -309,16 +312,13 @@ Ledetexten kan bli satt sammen av normale tegn och følgende spesielle koder:\n\
   $V   Versionsnummer för ReactOS\n\
   $_   Retur och linjeskift\n\
   $$   $ (dollar tegn)\n"
-    STRING_PAUSE_HELP1 "Stoppar exekvering av batch-fil och visa följande mening:\n\
-'Tryck valfri tangent för att fortsätta...' eller en användaren definerad mening.\n\n\
-PAUSE [melding]"
     STRING_PROMPT_HELP2 "  $+   Visa aktuell dybde av mappstakken"
     STRING_PROMPT_HELP3 "\nSkriv PROMPT uten parameter för att resette ledetexten."
     STRING_REM_HELP "Start en kommentarlinje i en batch-fil.\n\nREM [Kommentar]"
     STRING_RMDIR_HELP "Flytter en mapp.\n\n\
-RMDIR [enhet:]mapp\nRD [enhet:]mapp\n\
-/S          Sletter alle filer och mappar innenfor målet\n\
-/Q          Inte spør før sletting.\n"
+RMDIR [/S] [/Q] [enhet:]mapp\nRD [/S] [/Q] [enhet:]mapp\n\
+  /S    Sletter alle filer och mappar innenfor målet.\n\
+  /Q    Inte spør før sletting.\n"
     STRING_RMDIR_HELP2 "mappn är inte tom!\n"
     STRING_REN_HELP1 "Ändra namn på fil/mapp eller filer/mappar.\n\n\
 ENDRE NAVN [/E /N /P /Q /S /T] gammelt_namn ... nytt_namn\n\
@@ -466,9 +466,9 @@ tittel        ny tittel\n"
     STRING_ALIAS_ERROR "Kommandorad för lång efter alias utvidelse!\n"
     STRING_ASSOC_ERROR "Fil-association ble inte funnet for utvidelsen %s\n"
     STRING_BATCH_ERROR "Fel vid öppning av batch-fil\n"
-    STRING_CHOICE_ERROR "Ogiltigt val. Förväntet format: /C[:]val"
-    STRING_CHOICE_ERROR_TXT "Ogiltigt val. Förväntet format: /T[:]c,nn"
-    STRING_CHOICE_ERROR_OPTION "Ulovlig operasjon: %s"
+    STRING_CHOICE_ERROR "Ogiltigt val. Förväntet format: /C[:]val\n"
+    STRING_CHOICE_ERROR_TXT "Ogiltigt val. Förväntet format: /T[:]c,nn\n"
+    STRING_CHOICE_ERROR_OPTION "Ulovlig operasjon: %s\n"
     STRING_CMD_ERROR1 "Kan inte videreføre inndata fra fil %s\n"
     STRING_CMD_ERROR2 "Fel under oppretting av temporær fil for datakanal\n"
     STRING_CMD_ERROR3 "Kan inte videreføre till fil %s\n"
@@ -493,9 +493,9 @@ tittel        ny tittel\n"
     STRING_FOR_ERROR4 "inget kommando etter 'gjøre'."
     STRING_FREE_ERROR1 "Ogiltig drivrutin"
     STRING_FREE_ERROR2 "utmärkt"
-    STRING_GOTO_ERROR1 "Inget märke specifiserat för GOTO"
-    STRING_GOTO_ERROR2 "märke '%s' finns inte\n"
-    STRING_MD_ERROR "En undermapp eller fil finns redan.\n"
+    STRING_GOTO_ERROR1 "Inget märke specifiserat för GOTO\n"
+    STRING_GOTO_ERROR2 "Märke '%s' finns inte\n"
+    STRING_MD_ERROR "En undermapp eller fil %s finns redan.\n"
     STRING_MD_ERROR2 "Stien till den nye mappen exsisterar inte.\n"
     STRING_MOVE_ERROR1 "[OK]\n"
     STRING_MOVE_ERROR2 "[Fel]\n"
@@ -514,9 +514,9 @@ tittel        ny tittel\n"
     STRING_ERROR_BADCOMMAND "Fel kommando eller filnamn - %s\n"
     STRING_ERROR_OUT_OF_MEMORY "Fel: Minnet fullt.\n"
     STRING_ERROR_CANNOTPIPE "Fel! Kan inte bruke datakanal! Kan inte åpne midlertidig fil!\n"
-    STRING_ERROR_D_PAUSEMSG "Tryck på valfri tangent för att fortsätta . . ."
+    STRING_ERROR_D_PAUSEMSG "Tryck på valfri tangent för att fortsätta . . . "
     STRING_ERROR_DRIVER_NOT_READY "enheten är inte klar"
-    STRING_PATH_ERROR "CMD: Inte i miljön '%s'\n"
+    STRING_SET_ENV_ERROR "Environment variable '%s' is not defined\n"
     STRING_REPLACE_ERROR1 "Felaktig växel - %s\n"
     STRING_REPLACE_ERROR2 "Mappen ble inte funnet - %s\n"
     STRING_REPLACE_ERROR3 "The filename, directory name, or volume label syntax is incorrect.\n"
@@ -540,8 +540,8 @@ tittel        ny tittel\n"
     STRING_MKLINK_CREATED_JUNCTION "Junction created for %s <<===>> %s\n"
     STRING_MORE "More? "
     STRING_CANCEL_BATCH_FILE "\r\nCtrl-Break tryckt.  Avbryt batch-filen? (Ja/Nej/Alla) "
-    STRING_INVALID_OPERAND "Ogiltig operand."
-    STRING_EXPECTED_CLOSE_PAREN "Forväntat ')'."
-    STRING_EXPECTED_NUMBER_OR_VARIABLE "Förväntat nummer eller variabelnamn."
-    STRING_SYNTAX_COMMAND_INCORRECT "Syntaxen för kommandot är fel."
+    STRING_INVALID_OPERAND "Ogiltig operand.\n"
+    STRING_EXPECTED_CLOSE_PAREN "Forväntat ')'.\n"
+    STRING_EXPECTED_NUMBER_OR_VARIABLE "Förväntat nummer eller variabelnamn.\n"
+    STRING_SYNTAX_COMMAND_INCORRECT "Syntaxen för kommandot är fel.\n"
 END

@@ -1,0 +1,13 @@
+[Unattend]
+Signature = "$ReactOS$"
+
+; Set UnattendSetupEnabled to yes in order to boot the livecd immediately to desktop
+; yes - unattend setup enabled
+; no - unattend setup disabled
+UnattendSetupEnabled = no
+
+; set this option to automatically
+; specify language in the language setup
+; see hivesys.inf for available languages
+LocaleID = 409
+

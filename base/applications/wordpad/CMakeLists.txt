@@ -4,7 +4,7 @@ remove_definitions(-D_WIN32_IE=0x600)
 add_definitions(-D__ROS_LONG64__)
 include_directories(BEFORE ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 
-if (MSVC)
+if(MSVC)
     # Disable warning C4477 (printf format warnings)
     add_compile_flags("/wd4477")
 endif()

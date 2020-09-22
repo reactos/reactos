@@ -1,0 +1,94 @@
+/*
+ * PROJECT:     ReactOS Zip Shell Extension
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Portuguese (Portugal) resource translation
+ * Translated by Jose Jesus (zecarlos1957@hotmail.com)
+ */
+
+LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
+
+IDD_PROPPAGEDESTINATION DIALOGEX 0, 0, 260, 156
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Seleccione um destino"
+FONT 8, "MS Shell Dlg", 400, 0, 0x0
+BEGIN
+    LTEXT           "Seleccione o directório de destino",IDC_STATIC,86,12,174,8
+    EDITTEXT        IDC_DIRECTORY,86,24,157,12,ES_AUTOHSCROLL
+    PUSHBUTTON      "&Procurar...",IDC_BROWSE,189,42,54,14
+    PUSHBUTTON      "Palavra-passe",IDC_PASSWORD,189,66,54,14
+    LTEXT           "Clique em ""Seguinte"" para extrair",IDC_STATUSTEXT,86,114,100,8
+    CONTROL         "",IDC_PROGRESS,"msctls_progress32",WS_BORDER,86,126,157,6
+    CONTROL         IDB_ZIPFLDR,-1,"STATIC",SS_BITMAP | WS_CHILD | WS_VISIBLE,0,0,78,138
+END
+
+IDD_PROPPAGECOMPLETE DIALOGEX 0, 0, 260, 156
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Extracção Completa"
+FONT 8, "MS Shell Dlg", 400, 0, 0x0
+BEGIN
+    LTEXT           "Os arquivos foram extraídos para o seguinte diretório:",IDC_STATIC,86,12,157,18
+    LTEXT           "%s",IDC_DESTDIR,86,36,157,8
+    CONTROL         "Mostrar ficheiros extraidos",IDC_SHOW_EXTRACTED,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,86,66,98,10
+    LTEXT           "Clique em ""Concluir"" para continuar.",IDC_STATIC,86,84,116,8
+    CONTROL         IDB_ZIPFLDR,-1,"STATIC",SS_BITMAP | WS_CHILD | WS_VISIBLE,0,0,78,138
+END
+
+IDD_CONFIRM_FILE_REPLACE DIALOGEX 0, 0, 273, 56
+STYLE DS_MODALFRAME | DS_SHELLFONT | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Confirmar reposição de arquivo"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    DEFPUSHBUTTON   "&Sim",IDYES,6,36,62,14
+    PUSHBUTTON      "Sim para &todos",IDYESALL,72,36,62,14
+    PUSHBUTTON      "&Não",IDNO,138,36,62,14
+    PUSHBUTTON      "Cancelar",IDCANCEL,204,36,62,14
+    ICON            "",IDC_EXCLAMATION_ICON,6,6,24,22
+    LTEXT           "",IDC_MESSAGE,36,6,228,24
+END
+
+IDD_PASSWORD DIALOGEX 0, 0, 247, 62
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Palavra-passe"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    EDITTEXT        IDC_PASSWORD,74,42,106,13,ES_PASSWORD | ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "OK",IDOK,186,6,54,14
+    PUSHBUTTON      "Saltar Ficheiro",IDSKIP,186,24,54,14
+    PUSHBUTTON      "Cancelar",IDCANCEL,186,42,54,14
+    LTEXT           "Estático",IDC_MESSAGE,24,6,156,30
+    LTEXT           "Palavra-passe:",IDC_STATIC,24,44,50,8
+END
+
+STRINGTABLE
+BEGIN
+    IDS_COL_NAME "Nome"
+    IDS_COL_TYPE "Tipo"
+    IDS_COL_COMPRSIZE "Tamanho comprimido"
+    IDS_COL_PASSWORD "Palavra-passe"
+    IDS_COL_SIZE "Tamanho"
+    IDS_COL_RATIO "Taxa"
+    IDS_COL_DATE_MOD "Data da modificação"
+    IDS_YES "Sim"
+    IDS_NO "Não"
+    IDS_ERRORTITLE "Erro de pastas compactadas (zipadas)"
+    IDS_CANTSTARTTHREAD "Não é possível iniciar o  compactador de arquivos."
+    IDS_NOFILES "O directório especificado '%s' está vazio; portanto, as pastas compactadas (zipadas) não podem adicioná-lo ao arquivo."
+    IDS_CANTCREATEZIP "Falha ao criar a pasta compactada '%s' (Erro: %d)."
+    IDS_CANTREADFILE "Não é possível ler o arquivo '%s'."
+    IDS_EXTRACTING "A extrair..."
+
+    IDS_WIZ_TITLE "Assistente de extração"
+    IDS_WIZ_DEST_TITLE "Seleccione um destino"
+    IDS_WIZ_DEST_SUBTITLE "Os ficheiros no arquivo zip serão extraídos para o local especificado."
+    IDS_WIZ_COMPL_TITLE "Extracção completa"
+    IDS_WIZ_COMPL_SUBTITLE "Os ficheiros no arquivo zip foram extraídos."
+    IDS_WIZ_BROWSE_TITLE "Seleccione o local para onde deseja extrair os itens seleccionados."
+
+    IDS_OVERWRITEFILE_TEXT "Esta pasta já contém um arquivo chamado '%1'. \n Deseja substituí-lo?"
+    IDS_PASSWORD_FILE_TEXT "O arquivo '%1' está protegido. Por favor, digite a palavra-passe."
+    IDS_PASSWORD_ZIP_TEXT "Especifique a palavra-passe a ser usada ao extrair este arquivo zip."
+
+    IDS_MENUITEM "Extrair &todos..."
+    IDS_HELPTEXT "Extrair o conteúdo da pasta"
+    IDS_FRIENDLYNAME "Pasta compactada (zipada)"
+END

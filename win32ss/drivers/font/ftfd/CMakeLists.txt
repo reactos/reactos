@@ -6,18 +6,20 @@ list(APPEND SOURCE
     enable.c
     font.c
     glyph.c
-    rosglue.c
-    ftfd.h)
+    rosglue.c)
+
+list(APPEND PCH_SKIP_SOURCE
+    sprintf.c)
 
 add_library(ftfd MODULE
     ${SOURCE}
-    sprintf.c
+    ${PCH_SKIP_SOURCE}
     freetype.rc
     ${CMAKE_CURRENT_BINARY_DIR}/ftfd.def)
 
 set_module_type(ftfd kerneldll ENTRYPOINT FtfdEnableDriver 12)
 target_link_libraries(ftfd freetype libcntpr)
-add_pch(ftfd ftfd.h SOURCE)
+add_pch(ftfd ftfd.h "${PCH_SKIP_SOURCE}")
 add_importlibs(ftfd win32k)
 add_dependencies(ftfd psdk)
 add_cd_file(TARGET ftfd DESTINATION reactos/system32 FOR all)

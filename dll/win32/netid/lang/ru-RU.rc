@@ -7,17 +7,19 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_COMPNAME, IDC_STATIC, 4, 3, 26, 24, SS_ICON
     LTEXT "Указанные ниже сведения используются для идентификации компьютера в сети.", IDC_STATIC, 40, 5, 204, 20
-    LTEXT "Описание:", IDC_STATIC, 6, 40, 70, 9
+    LTEXT "Описание:", IDC_STATIC, 7, 40, 70, 9
     EDITTEXT IDC_COMPDESC, 98, 38, 146, 13, WS_CHILD | WS_VISIBLE | WS_TABSTOP
-    LTEXT "Полное имя:", IDC_STATIC, 6, 68, 64, 9
+    LTEXT "Полное имя:", IDC_STATIC, 7, 68, 64, 9
     EDITTEXT IDC_COMPUTERNAME, 98, 68, 144, 12, ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "Рабочая группа:", IDC_WORKGROUPDOMAIN, 6, 84, 64, 9
+    LTEXT "Рабочая группа:", IDC_WORKGROUPDOMAIN, 7, 84, 64, 9
     EDITTEXT IDC_WORKGROUPDOMAIN_NAME, 98, 84, 144, 12, ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "Чтобы вызвать мастер сетевой идентификации для присоединения компьютера к домену, нажмите кнопку ""Идентификация"".", IDC_STATIC, 6, 113, 172, 24
+    LTEXT "Чтобы вызвать мастер сетевой идентификации для присоединения компьютера к домену, нажмите кнопку ""Идентификация"".", IDC_STATIC, 7, 113, 172, 24
     PUSHBUTTON "&Идентификация...", IDC_NETWORK_ID, 180, 114, 72, 15
-    LTEXT "Чтобы изменить имя компьютера или домена нажмите ""Изменить"".", IDC_STATIC, 6, 149, 170, 17
+    LTEXT "Чтобы изменить имя компьютера или домена нажмите ""Изменить"".", IDC_STATIC, 7, 149, 170, 17
     PUSHBUTTON "И&зменить...", IDC_NETWORK_PROPERTY, 180, 149, 72, 15
-    LTEXT "Примечание: Только администраторы могут изменять эти параметры.", IDC_STATIC, 6, 179, 245, 9
+    LTEXT "", IDC_MESSAGETEXT, 7, 179, 242, 46
+    ICON IDI_WARNINGICO, IDC_RESTARTICON, 7, 194, 20, 20, SS_ICON | SS_REALSIZEIMAGE
+    LTEXT "Changes will take effect after you restart this computer.", IDC_RESTARTTEXT, 25, 195, 209, 8
 END
 
 IDD_PROPPAGECOMPNAMECHENGE DIALOGEX 0, 0, 232, 222

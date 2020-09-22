@@ -47,6 +47,7 @@
 #define IDS_TIMEOUT15              165
 #define IDS_DEL_SCHEME             166
 #define IDS_DEL_SCHEME_TITLE       167
+#define IDS_DEL_SCHEME_ERROR       168
 
 #define IDI_AC        175
 #define IDI_DC        176

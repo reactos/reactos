@@ -59,7 +59,8 @@ typedef enum _GETDCDWORD
 
 typedef enum _GETSETDCDWORD
 {
-    GdiGetSetCopyCount = 2,
+    GdiGetSetEPSPrintingEscape = 1,
+    GdiGetSetCopyCount,
     GdiGetSetTextAlign,
     GdiGetSetRelAbs,
     GdiGetSetTextCharExtra,

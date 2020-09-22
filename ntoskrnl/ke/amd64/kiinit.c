@@ -268,9 +268,9 @@ KiInitializeTss(IN PKTSS64 Tss,
     __ltr(KGDT64_SYS_TSS);
 }
 
+INIT_FUNCTION
 VOID
 NTAPI
-INIT_FUNCTION
 KiInitializeKernelMachineDependent(
     IN PKPRCB Prcb,
     IN PLOADER_PARAMETER_BLOCK LoaderBlock)

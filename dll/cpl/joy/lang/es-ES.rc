@@ -83,4 +83,5 @@ BEGIN
     IDS_CPLSYSTEMDESCRIPTION "Agrega, quita y configura hardware de dispositivos de juego como joysticks y controladores para juegos."
     IDS_CONTROLLER "Dispositivo"
     IDS_STATUS "Estado"
+    IDS_NONE "(None)"
 END

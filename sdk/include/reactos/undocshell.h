@@ -105,6 +105,22 @@ BOOL WINAPI StrRetToStrNW(LPWSTR,DWORD,LPSTRRET,const ITEMIDLIST*);
 #define SHCNRF_RecursiveInterrupt   0x1000  /* Must be combined with SHCNRF_InterruptLevel */
 #define SHCNRF_NewDelivery          0x8000  /* Messages use shared memory */
 
+/****************************************************************************
+ * SHChangeNotify
+ */
+
+typedef struct _SHCNF_PRINTJOB_INFO
+{
+    DWORD JobId;
+    // More info,,,
+} SHCNF_PRINTJOB_INFO, *PSHCNF_PRINTJOB_INFO;
+
+//
+// Add missing types for print job notifications.
+//
+#define SHCNF_PRINTJOBA 0x0004
+#define SHCNF_PRINTJOBW 0x0007
+
 
 /****************************************************************************
  * Shell Common Dialogs
@@ -611,8 +627,8 @@ HRESULT WINAPI SHCreateLinks(
     UINT uFlags,
     LPITEMIDLIST *lppidlLinks);
 
-DWORD WINAPI CheckEscapesA(LPSTR string, DWORD len);
-DWORD WINAPI CheckEscapesW(LPWSTR string, DWORD len);
+VOID WINAPI CheckEscapesA(LPSTR string, DWORD len);
+VOID WINAPI CheckEscapesW(LPWSTR string, DWORD len);
 
 /* policy functions */
 BOOL WINAPI SHInitRestricted(LPCVOID unused, LPCVOID inpRegKey);

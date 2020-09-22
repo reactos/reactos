@@ -29,28 +29,28 @@ XMLPUBFUN void XMLCALL xmlCheckVersion(int version);
  *
  * the version string like "1.2.3"
  */
-#define LIBXML_DOTTED_VERSION "2.9.9"
+#define LIBXML_DOTTED_VERSION "2.9.10"
 
 /**
  * LIBXML_VERSION:
  *
  * the version number: 1.2.3 value is 10203
  */
-#define LIBXML_VERSION 20909
+#define LIBXML_VERSION 20910
 
 /**
  * LIBXML_VERSION_STRING:
  *
  * the version number string, 1.2.3 value is "10203"
  */
-#define LIBXML_VERSION_STRING "20909"
+#define LIBXML_VERSION_STRING "20910"
 
 /**
  * LIBXML_VERSION_EXTRA:
  *
  * extra version information, used to show a CVS compilation
  */
-#define LIBXML_VERSION_EXTRA "-GITv2.9.9-rc2-2-g7c4949afa"
+#define LIBXML_VERSION_EXTRA "-GITv2.9.10-rc1-2-ga5bb6aaa2"
 
 /**
  * LIBXML_TEST_VERSION:
@@ -58,7 +58,7 @@ XMLPUBFUN void XMLCALL xmlCheckVersion(int version);
  * Macro to check that the libxml version in use is compatible with
  * the version the software has been compiled against
  */
-#define LIBXML_TEST_VERSION xmlCheckVersion(20909);
+#define LIBXML_TEST_VERSION xmlCheckVersion(20910);
 
 #ifndef VMS
 #if 0
@@ -91,10 +91,7 @@ XMLPUBFUN void XMLCALL xmlCheckVersion(int version);
  * Whether the thread support is configured in
  */
 #if 1
-#if defined(_REENTRANT) || defined(__MT__) || \
-    (defined(_POSIX_C_SOURCE) && (_POSIX_C_SOURCE - 0 >= 199506L))
 #define LIBXML_THREAD_ENABLED
-#endif
 #endif
 
 /**
@@ -291,7 +288,7 @@ XMLPUBFUN void XMLCALL xmlCheckVersion(int version);
  *
  * Whether ISO-8859-* support is made available in case iconv is not
  */
-#if 0
+#if 1
 #define LIBXML_ISO8859X_ENABLED
 #endif
 
@@ -353,8 +350,10 @@ XMLPUBFUN void XMLCALL xmlCheckVersion(int version);
  * LIBXML_EXPR_ENABLED:
  *
  * Whether the formal expressions interfaces are compiled in
+ *
+ * This code is unused and disabled unconditionally for now.
  */
-#if 1
+#if 0
 #define LIBXML_EXPR_ENABLED
 #endif
 

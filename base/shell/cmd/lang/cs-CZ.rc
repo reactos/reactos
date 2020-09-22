@@ -28,7 +28,7 @@ To remove an alias from the alias list:\n\
     STRING_CALL_HELP "Calls one batch program from another.\n\n\
 CALL [drive:][path]filename [batch-parameter]\n\n\
   batch-parameter  Specifies any command-line information required by the\n\
-                   batch program."
+                   batch program.\n"
     STRING_CD_HELP "Changes the current directory or displays it's name\n\n\
 CHDIR [/D][drive:][path]\n\
 CHDIR[..|.]\n\
@@ -198,7 +198,7 @@ PUSHD [path | ..]\n\n\
   ECHO [message]\n\
   ECHO.             prints an empty line\n\n\
 Type ECHO without a parameter to display the current ECHO setting."
-    STRING_ECHO_HELP5 "ECHO is %s\n"
+    STRING_ECHO_HELP5 "ECHO is %s.\n"
     STRING_EXIT_HELP "Exits the command line interpreter.\n\nEXIT [/b] [ExitCode]\n\n\
   /B            Exits a batch file only.\n\
                 If run outside of a batch file it will exit cmd.exe\n\
@@ -233,7 +233,7 @@ To use the FOR command in a batch program, specify %%variable instead of\n\
     STRING_GOTO_HELP1 "Directs CMD to a labeled line in a batch script.\n\n\
 GOTO label\n\n\
   label  Specifies a text string used in a batch script as a label.\n\n\
-You type a label on a line by itself, beginning with a colon."
+You type a label on a line by itself, beginning with a colon.\n"
     STRING_IF_HELP1 "Performs conditional processing in batch programs.\n\n\
   IF [NOT] ERRORLEVEL number command\n\
   IF [NOT] string1==string2 command\n\
@@ -270,9 +270,9 @@ If neither /H or /J is specified, a symbolic link is created."
     STRING_MOVE_HELP1 "Overwrite %s (Yes/No/All)? "
     STRING_MOVE_HELP2 "Moves files and renames files and directories.\n\n\
 To move one or more files:\n\
-MOVE [/N][drive:][path]filename1[,...] destination\n\n\
+MOVE [/N][/Y|/-Y][drive:][path]filename1[,...] destination\n\n\
 To rename a directory:\n\
-MOVE [/N][drive:][path]dirname1 dirname2\n\n\
+MOVE [/N][/Y|/-Y][drive:][path]dirname1 dirname2\n\n\
   [drive:][path]filename1  Specifies the location and name of the file\n\
                            or files you want to move.\n\
   /N                    Nothing. Do everything but move files or directories.\n\n\
@@ -293,6 +293,9 @@ PATH [[drive:]path[;...]]\nPATH ;\n\n\
 Type PATH ; to clear all search-path settings and direct the command shell\n\
 to search only in the current directory.\n\
 Type PATH without parameters to display the current path.\n"
+    STRING_PAUSE_HELP1 "Stops the execution of a batch file and shows the following message:\n\
+'Press any key to continue...' or a user defined message.\n\n\
+PAUSE [message]"
     STRING_PROMPT_HELP1 "Changes the command prompt.\n\n\
 PROMPT [text]\n\n\
   text    Specifies a new command prompt.\n\n\
@@ -315,16 +318,13 @@ Prompt can be made up of normal characters and the following special codes:\n\n\
   $V   OS version number\n\
   $_   Carriage return and linefeed\n\
   $$   $ (dollar sign)\n"
-    STRING_PAUSE_HELP1 "Stops the execution of a batch file and shows the following message:\n\
-'Press any key to continue...' or a user defined message.\n\n\
-PAUSE [message]"
     STRING_PROMPT_HELP2 "  $+   Displays the current depth of the directory stack"
     STRING_PROMPT_HELP3 "\nType PROMPT without parameters to reset the prompt to the default setting."
     STRING_REM_HELP "Starts a comment line in a batch file.\n\nREM [Comment]"
     STRING_RMDIR_HELP "Removes a directory.\n\n\
-RMDIR [drive:]path\nRD [drive:]path\n\
-/S          Deletes all files and folders within target\n\
-/Q          Doesn't prompt for user\n"
+RMDIR [/S] [/Q] [drive:]path\nRD [/S] [/Q] [drive:]path\n\
+  /S    Deletes all files and folders within the target.\n\
+  /Q    Doesn't prompt for user.\n"
     STRING_RMDIR_HELP2 "Directory is not empty!\n"
     STRING_REN_HELP1 "Renames a file/directory or files/directories.\n\n\
 RENAME [/E /N /P /Q /S /T] old_name ... new_name\n\
@@ -473,9 +473,9 @@ title         new title\n"
     STRING_ALIAS_ERROR "Po rozšíření aliasů je příkaz příliš dlouhý!\n"
     STRING_ASSOC_ERROR "Pro příponu %s nebyly nalezeny žádné asociace\n"
     STRING_BATCH_ERROR "Chyba při otevírání dávkového souboru\n"
-    STRING_CHOICE_ERROR "Neplatná volba. Očekávaný formát: /C[:]volby"
-    STRING_CHOICE_ERROR_TXT "Neplatná volba. Očekávaný formát: /T[:]c,nn"
-    STRING_CHOICE_ERROR_OPTION "Neplatná volba: %s"
+    STRING_CHOICE_ERROR "Neplatná volba. Očekávaný formát: /C[:]volby\n"
+    STRING_CHOICE_ERROR_TXT "Neplatná volba. Očekávaný formát: /T[:]c,nn\n"
+    STRING_CHOICE_ERROR_OPTION "Neplatná volba: %s\n"
     STRING_CMD_ERROR1 "Nelze přesměrovat vstup ze souboru %s\n"
     STRING_CMD_ERROR2 "Chyba při vytváření dočasného souboru pro data roury\n"
     STRING_CMD_ERROR3 "Nelze přesměrovat do souboru %s\n"
@@ -500,9 +500,9 @@ title         new title\n"
     STRING_FOR_ERROR4 "žádný příkaz po 'do'."
     STRING_FREE_ERROR1 "Neplatná jednotka"
     STRING_FREE_ERROR2 "bez popisku"
-    STRING_GOTO_ERROR1 "Pro GOTO nebyl zadán popisek"
+    STRING_GOTO_ERROR1 "Pro GOTO nebyl zadán popisek\n"
     STRING_GOTO_ERROR2 "Popisek '%s' nenalezen\n"
-    STRING_MD_ERROR "Podadresář nebo soubor už existuje.\n"
+    STRING_MD_ERROR "Podadresář nebo soubor %s už existuje.\n"
     STRING_MD_ERROR2 "Cesta do nového adresáře neexistuje.\n"
     STRING_MOVE_ERROR1 "[OK]\n"
     STRING_MOVE_ERROR2 "[Chyba]\n"
@@ -521,9 +521,9 @@ title         new title\n"
     STRING_ERROR_BADCOMMAND "Neplatný příkaz nebo název souboru - %s\n"
     STRING_ERROR_OUT_OF_MEMORY "Chyba - nedostatek paměti.\n"
     STRING_ERROR_CANNOTPIPE "Chyba!  Nelze vytvořit rouru!  Nelze vytvořit dočasný soubor!\n"
-    STRING_ERROR_D_PAUSEMSG "Pokračujte stisknutím libovolné klávesy . . ."
+    STRING_ERROR_D_PAUSEMSG "Pokračujte stisknutím libovolné klávesy . . . "
     STRING_ERROR_DRIVER_NOT_READY "Jednotka není připravena"
-    STRING_PATH_ERROR "CMD: Ne v prostředí '%s'\n"
+    STRING_SET_ENV_ERROR "Environment variable '%s' is not defined\n"
     STRING_REPLACE_ERROR1 "Neplatný přepínač - %s\n"
     STRING_REPLACE_ERROR2 "Cesta nenalezena - %s\n"
     STRING_REPLACE_ERROR3 "Název souboru, adresáře nebo popisek svazku je neplatný.\n"
@@ -547,8 +547,8 @@ title         new title\n"
     STRING_MKLINK_CREATED_JUNCTION "Junction vytvořena pro %s <<===>> %s\n"
     STRING_MORE "Více? "
     STRING_CANCEL_BATCH_FILE "\r\nStisknuto Ctrl-Break. Zrušit dávkový soubor? (Ano/Ne/Vše) "
-    STRING_INVALID_OPERAND "Neplatný operand."
-    STRING_EXPECTED_CLOSE_PAREN "Očekáváno ')'."
-    STRING_EXPECTED_NUMBER_OR_VARIABLE "Očekáváno číslo nebo název proměnné."
-    STRING_SYNTAX_COMMAND_INCORRECT "Syntaxe příkazu není správná."
+    STRING_INVALID_OPERAND "Neplatný operand.\n"
+    STRING_EXPECTED_CLOSE_PAREN "Očekáváno ')'.\n"
+    STRING_EXPECTED_NUMBER_OR_VARIABLE "Očekáváno číslo nebo název proměnné.\n"
+    STRING_SYNTAX_COMMAND_INCORRECT "Syntaxe příkazu není správná.\n"
 END

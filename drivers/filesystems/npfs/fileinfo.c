@@ -433,7 +433,7 @@ NpCommonQueryInformation(IN PDEVICE_OBJECT DeviceObject,
 
         case FileAllInformation:
 
-            Length -= 12;
+            Length -= sizeof(FILE_ACCESS_INFORMATION) + sizeof(FILE_MODE_INFORMATION) + sizeof(FILE_ALIGNMENT_INFORMATION);
             AllInfo = (PFILE_ALL_INFORMATION)Buffer;
             NpQueryBasicInfo(Ccb, &AllInfo->BasicInformation, &Length);
             NpQueryStandardInfo(Ccb, &AllInfo->StandardInformation, &Length, NamedPipeEnd);
@@ -441,7 +441,6 @@ NpCommonQueryInformation(IN PDEVICE_OBJECT DeviceObject,
             NpQueryEaInfo(Ccb, &AllInfo->EaInformation, &Length);
             NpQueryPositionInfo(Ccb, &AllInfo->PositionInformation, &Length, NamedPipeEnd);
             Status = NpQueryNameInfo(Ccb, &AllInfo->NameInformation, &Length);
-            Length += 96;
             break;
 
         case FileEaInformation:
@@ -453,7 +452,7 @@ NpCommonQueryInformation(IN PDEVICE_OBJECT DeviceObject,
             break;
     }
 
-    Irp->IoStatus.Information = IoStack->Parameters.Read.Length - Length;
+    Irp->IoStatus.Information = IoStack->Parameters.QueryFile.Length - Length;
     return Status;
 }
 

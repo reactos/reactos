@@ -29,7 +29,7 @@ typedef struct {
     IO_STATUS_BLOCK iosb;
     uint8_t* buf;
     bool csum_error;
-    uint32_t* bad_csums;
+    void* bad_csums;
 } scrub_context_stripe;
 
 typedef struct _scrub_context {
@@ -88,7 +88,7 @@ static void log_file_checksum_error(device_extension* Vcb, uint64_t addr, uint64
 
             Status = find_item(Vcb, Vcb->root_root, &tp, &searchkey, false, NULL);
             if (!NT_SUCCESS(Status)) {
-                ERR("find_item returned %08x\n", Status);
+                ERR("find_item returned %08lx\n", Status);
                 goto end;
             }
 
@@ -97,12 +97,12 @@ static void log_file_checksum_error(device_extension* Vcb, uint64_t addr, uint64
                 path_part* pp;
 
                 if (tp.item->size < sizeof(ROOT_REF)) {
-                    ERR("(%I64x,%x,%I64x) was %u bytes, expected at least %u\n", tp.item->key.obj_id, tp.item->key.obj_type, tp.item->key.offset, tp.item->size, sizeof(ROOT_REF));
+                    ERR("(%I64x,%x,%I64x) was %u bytes, expected at least %Iu\n", tp.item->key.obj_id, tp.item->key.obj_type, tp.item->key.offset, tp.item->size, sizeof(ROOT_REF));
                     goto end;
                 }
 
                 if (tp.item->size < offsetof(ROOT_REF, name[0]) + rr->n) {
-                    ERR("(%I64x,%x,%I64x) was %u bytes, expected at least %u\n", tp.item->key.obj_id, tp.item->key.obj_type, tp.item->key.offset,
+                    ERR("(%I64x,%x,%I64x) was %u bytes, expected at least %Iu\n", tp.item->key.obj_id, tp.item->key.obj_type, tp.item->key.offset,
                         tp.item->size, offsetof(ROOT_REF, name[0]) + rr->n);
                     goto end;
                 }
@@ -151,7 +151,7 @@ static void log_file_checksum_error(device_extension* Vcb, uint64_t addr, uint64
 
             Status = find_item(Vcb, r, &tp, &searchkey, false, NULL);
             if (!NT_SUCCESS(Status)) {
-                ERR("find_item returned %08x\n", Status);
+                ERR("find_item returned %08lx\n", Status);
                 goto end;
             }
 
@@ -160,12 +160,12 @@ static void log_file_checksum_error(device_extension* Vcb, uint64_t addr, uint64
                 path_part* pp;
 
                 if (tp.item->size < sizeof(INODE_REF)) {
-                    ERR("(%I64x,%x,%I64x) was %u bytes, expected at least %u\n", tp.item->key.obj_id, tp.item->key.obj_type, tp.item->key.offset, tp.item->size, sizeof(INODE_REF));
+                    ERR("(%I64x,%x,%I64x) was %u bytes, expected at least %Iu\n", tp.item->key.obj_id, tp.item->key.obj_type, tp.item->key.offset, tp.item->size, sizeof(INODE_REF));
                     goto end;
                 }
 
                 if (tp.item->size < offsetof(INODE_REF, name[0]) + ir->n) {
-                    ERR("(%I64x,%x,%I64x) was %u bytes, expected at least %u\n", tp.item->key.obj_id, tp.item->key.obj_type, tp.item->key.offset,
+                    ERR("(%I64x,%x,%I64x) was %u bytes, expected at least %Iu\n", tp.item->key.obj_id, tp.item->key.obj_type, tp.item->key.offset,
                         tp.item->size, offsetof(INODE_REF, name[0]) + ir->n);
                     goto end;
                 }
@@ -191,13 +191,13 @@ static void log_file_checksum_error(device_extension* Vcb, uint64_t addr, uint64
                 path_part* pp;
 
                 if (tp.item->size < sizeof(INODE_EXTREF)) {
-                    ERR("(%I64x,%x,%I64x) was %u bytes, expected at least %u\n", tp.item->key.obj_id, tp.item->key.obj_type, tp.item->key.offset,
-                                                                               tp.item->size, sizeof(INODE_EXTREF));
+                    ERR("(%I64x,%x,%I64x) was %u bytes, expected at least %Iu\n", tp.item->key.obj_id, tp.item->key.obj_type, tp.item->key.offset,
+                                                                                  tp.item->size, sizeof(INODE_EXTREF));
                     goto end;
                 }
 
                 if (tp.item->size < offsetof(INODE_EXTREF, name[0]) + ier->n) {
-                    ERR("(%I64x,%x,%I64x) was %u bytes, expected at least %u\n", tp.item->key.obj_id, tp.item->key.obj_type, tp.item->key.offset,
+                    ERR("(%I64x,%x,%I64x) was %u bytes, expected at least %Iu\n", tp.item->key.obj_id, tp.item->key.obj_type, tp.item->key.offset,
                         tp.item->size, offsetof(INODE_EXTREF, name[0]) + ier->n);
                     goto end;
                 }
@@ -280,7 +280,7 @@ static void log_file_checksum_error(device_extension* Vcb, uint64_t addr, uint64
 
     Status = utf8_to_utf16(NULL, 0, &utf16len, fn.Buffer, fn.Length);
     if (!NT_SUCCESS(Status)) {
-        ERR("utf8_to_utf16 1 returned %08x\n", Status);
+        ERR("utf8_to_utf16 1 returned %08lx\n", Status);
         ExFreePool(fn.Buffer);
         goto end;
     }
@@ -304,7 +304,7 @@ static void log_file_checksum_error(device_extension* Vcb, uint64_t addr, uint64
 
     Status = utf8_to_utf16(err->data.filename, utf16len, &utf16len, fn.Buffer, fn.Length);
     if (!NT_SUCCESS(Status)) {
-        ERR("utf8_to_utf16 2 returned %08x\n", Status);
+        ERR("utf8_to_utf16 2 returned %08lx\n", Status);
         ExFreePool(fn.Buffer);
         ExFreePool(err);
         goto end;
@@ -341,7 +341,7 @@ static void log_file_checksum_error_shared(device_extension* Vcb, uint64_t treea
 
     Status = read_data(Vcb, treeaddr, Vcb->superblock.node_size, NULL, true, (uint8_t*)tree, NULL, NULL, NULL, 0, false, NormalPagePriority);
     if (!NT_SUCCESS(Status)) {
-        ERR("read_data returned %08x\n", Status);
+        ERR("read_data returned %08lx\n", Status);
         goto end;
     }
 
@@ -417,7 +417,7 @@ static void log_tree_checksum_error_shared(device_extension* Vcb, uint64_t offse
 
     Status = read_data(Vcb, offset, Vcb->superblock.node_size, NULL, true, (uint8_t*)tree, NULL, NULL, NULL, 0, false, NormalPagePriority);
     if (!NT_SUCCESS(Status)) {
-        ERR("read_data returned %08x\n", Status);
+        ERR("read_data returned %08lx\n", Status);
         goto end;
     }
 
@@ -457,7 +457,7 @@ static void log_unrecoverable_error(device_extension* Vcb, uint64_t address, uin
 
     Status = find_item(Vcb, Vcb->extent_root, &tp, &searchkey, false, NULL);
     if (!NT_SUCCESS(Status)) {
-        ERR("find_item returned %08x\n", Status);
+        ERR("find_item returned %08lx\n", Status);
         return;
     }
 
@@ -469,7 +469,7 @@ static void log_unrecoverable_error(device_extension* Vcb, uint64_t address, uin
         return;
 
     if (tp.item->size < sizeof(EXTENT_ITEM)) {
-        ERR("(%I64x,%x,%I64x) was %u bytes, expected at least %u\n", tp.item->key.obj_id, tp.item->key.obj_type, tp.item->key.offset, tp.item->size, sizeof(EXTENT_ITEM));
+        ERR("(%I64x,%x,%I64x) was %u bytes, expected at least %Iu\n", tp.item->key.obj_id, tp.item->key.obj_type, tp.item->key.offset, tp.item->size, sizeof(EXTENT_ITEM));
         return;
     }
 
@@ -479,8 +479,8 @@ static void log_unrecoverable_error(device_extension* Vcb, uint64_t address, uin
 
     if (tp.item->key.obj_id == TYPE_EXTENT_ITEM && ei->flags & EXTENT_ITEM_TREE_BLOCK) {
         if (tp.item->size < sizeof(EXTENT_ITEM) + sizeof(EXTENT_ITEM2)) {
-            ERR("(%I64x,%x,%I64x) was %u bytes, expected at least %u\n", tp.item->key.obj_id, tp.item->key.obj_type, tp.item->key.offset,
-                                                                       tp.item->size, sizeof(EXTENT_ITEM) + sizeof(EXTENT_ITEM2));
+            ERR("(%I64x,%x,%I64x) was %u bytes, expected at least %Iu\n", tp.item->key.obj_id, tp.item->key.obj_type, tp.item->key.offset,
+                                                                          tp.item->size, sizeof(EXTENT_ITEM) + sizeof(EXTENT_ITEM2));
             return;
         }
 
@@ -502,7 +502,7 @@ static void log_unrecoverable_error(device_extension* Vcb, uint64_t address, uin
             TREE_BLOCK_REF* tbr;
 
             if (len < sizeof(TREE_BLOCK_REF)) {
-                ERR("TREE_BLOCK_REF takes up %u bytes, but only %u remaining\n", sizeof(TREE_BLOCK_REF), len);
+                ERR("TREE_BLOCK_REF takes up %Iu bytes, but only %lu remaining\n", sizeof(TREE_BLOCK_REF), len);
                 break;
             }
 
@@ -518,7 +518,7 @@ static void log_unrecoverable_error(device_extension* Vcb, uint64_t address, uin
             EXTENT_DATA_REF* edr;
 
             if (len < sizeof(EXTENT_DATA_REF)) {
-                ERR("EXTENT_DATA_REF takes up %u bytes, but only %u remaining\n", sizeof(EXTENT_DATA_REF), len);
+                ERR("EXTENT_DATA_REF takes up %Iu bytes, but only %lu remaining\n", sizeof(EXTENT_DATA_REF), len);
                 break;
             }
 
@@ -534,7 +534,7 @@ static void log_unrecoverable_error(device_extension* Vcb, uint64_t address, uin
             SHARED_BLOCK_REF* sbr;
 
             if (len < sizeof(SHARED_BLOCK_REF)) {
-                ERR("SHARED_BLOCK_REF takes up %u bytes, but only %u remaining\n", sizeof(SHARED_BLOCK_REF), len);
+                ERR("SHARED_BLOCK_REF takes up %Iu bytes, but only %lu remaining\n", sizeof(SHARED_BLOCK_REF), len);
                 break;
             }
 
@@ -550,7 +550,7 @@ static void log_unrecoverable_error(device_extension* Vcb, uint64_t address, uin
             SHARED_DATA_REF* sdr;
 
             if (len < sizeof(SHARED_DATA_REF)) {
-                ERR("SHARED_DATA_REF takes up %u bytes, but only %u remaining\n", sizeof(SHARED_DATA_REF), len);
+                ERR("SHARED_DATA_REF takes up %Iu bytes, but only %lu remaining\n", sizeof(SHARED_DATA_REF), len);
                 break;
             }
 
@@ -584,8 +584,8 @@ static void log_unrecoverable_error(device_extension* Vcb, uint64_t address, uin
                     EXTENT_DATA_REF* edr;
 
                     if (tp.item->size < sizeof(EXTENT_DATA_REF)) {
-                        ERR("(%I64x,%x,%I64x) was %u bytes, expected %u\n", tp.item->key.obj_id, tp.item->key.obj_type, tp.item->key.offset,
-                                                                          tp.item->size, sizeof(EXTENT_DATA_REF));
+                        ERR("(%I64x,%x,%I64x) was %u bytes, expected %Iu\n", tp.item->key.obj_id, tp.item->key.obj_type, tp.item->key.offset,
+                                                                             tp.item->size, sizeof(EXTENT_DATA_REF));
                         break;
                     }
 
@@ -664,7 +664,7 @@ static NTSTATUS __stdcall scrub_read_completion(PDEVICE_OBJECT DeviceObject, PIR
     return STATUS_MORE_PROCESSING_REQUIRED;
 }
 
-static NTSTATUS scrub_extent_dup(device_extension* Vcb, chunk* c, uint64_t offset, uint32_t* csum, scrub_context* context) {
+static NTSTATUS scrub_extent_dup(device_extension* Vcb, chunk* c, uint64_t offset, void* csum, scrub_context* context) {
     NTSTATUS Status;
     bool csum_error = false;
     ULONG i;
@@ -693,7 +693,7 @@ static NTSTATUS scrub_extent_dup(device_extension* Vcb, chunk* c, uint64_t offse
                         csum_error = true;
                         log_device_error(Vcb, c->devices[i], BTRFS_DEV_STAT_CORRUPTION_ERRORS);
                     } else if (!NT_SUCCESS(Status)) {
-                        ERR("check_csum returned %08x\n", Status);
+                        ERR("check_csum returned %08lx\n", Status);
                         return Status;
                     } else
                         good_stripe = i;
@@ -718,9 +718,8 @@ static NTSTATUS scrub_extent_dup(device_extension* Vcb, chunk* c, uint64_t offse
                 } else {
                     for (j = 0; j < context->stripes[i].length / Vcb->superblock.node_size; j++) {
                         tree_header* th = (tree_header*)&context->stripes[i].buf[j * Vcb->superblock.node_size];
-                        uint32_t crc32 = ~calc_crc32c(0xffffffff, (uint8_t*)&th->fs_uuid, Vcb->superblock.node_size - sizeof(th->csum));
 
-                        if (crc32 != *((uint32_t*)th->csum) || th->address != offset + UInt32x32To64(j, Vcb->superblock.node_size)) {
+                        if (!check_tree_checksum(Vcb, th) || th->address != offset + UInt32x32To64(j, Vcb->superblock.node_size)) {
                             context->stripes[i].csum_error = true;
                             csum_error = true;
                             log_device_error(Vcb, c->devices[i], BTRFS_DEV_STAT_CORRUPTION_ERRORS);
@@ -742,21 +741,17 @@ static NTSTATUS scrub_extent_dup(device_extension* Vcb, chunk* c, uint64_t offse
     for (i = 0; i < c->chunk_item->num_stripes; i++) {
         if (context->stripes[i].csum_error) {
             if (csum) {
-                context->stripes[i].bad_csums = ExAllocatePoolWithTag(PagedPool, context->stripes[i].length * sizeof(uint32_t) / Vcb->superblock.sector_size, ALLOC_TAG);
+                context->stripes[i].bad_csums = ExAllocatePoolWithTag(PagedPool, context->stripes[i].length * Vcb->csum_size / Vcb->superblock.sector_size, ALLOC_TAG);
                 if (!context->stripes[i].bad_csums) {
                     ERR("out of memory\n");
                     return STATUS_INSUFFICIENT_RESOURCES;
                 }
 
-                Status = calc_csum(Vcb, context->stripes[i].buf, context->stripes[i].length / Vcb->superblock.sector_size, context->stripes[i].bad_csums);
-                if (!NT_SUCCESS(Status)) {
-                    ERR("calc_csum returned %08x\n", Status);
-                    return Status;
-                }
+                do_calc_job(Vcb, context->stripes[i].buf, context->stripes[i].length / Vcb->superblock.sector_size, context->stripes[i].bad_csums);
             } else {
                 ULONG j;
 
-                context->stripes[i].bad_csums = ExAllocatePoolWithTag(PagedPool, context->stripes[i].length * sizeof(uint32_t) / Vcb->superblock.node_size, ALLOC_TAG);
+                context->stripes[i].bad_csums = ExAllocatePoolWithTag(PagedPool, context->stripes[i].length * Vcb->csum_size / Vcb->superblock.node_size, ALLOC_TAG);
                 if (!context->stripes[i].bad_csums) {
                     ERR("out of memory\n");
                     return STATUS_INSUFFICIENT_RESOURCES;
@@ -764,9 +759,8 @@ static NTSTATUS scrub_extent_dup(device_extension* Vcb, chunk* c, uint64_t offse
 
                 for (j = 0; j < context->stripes[i].length / Vcb->superblock.node_size; j++) {
                     tree_header* th = (tree_header*)&context->stripes[i].buf[j * Vcb->superblock.node_size];
-                    uint32_t crc32 = ~calc_crc32c(0xffffffff, (uint8_t*)&th->fs_uuid, Vcb->superblock.node_size - sizeof(th->csum));
 
-                    context->stripes[i].bad_csums[j] = crc32;
+                    get_tree_checksum(Vcb, th, (uint8_t*)context->stripes[i].bad_csums + (Vcb->csum_size * j));
                 }
             }
         }
@@ -791,7 +785,7 @@ static NTSTATUS scrub_extent_dup(device_extension* Vcb, chunk* c, uint64_t offse
 
                     if (csum) {
                         for (j = 0; j < context->stripes[i].length / Vcb->superblock.sector_size; j++) {
-                            if (context->stripes[i].bad_csums[j] != csum[j]) {
+                            if (RtlCompareMemory((uint8_t*)context->stripes[i].bad_csums + (j * Vcb->csum_size), (uint8_t*)csum + (j + Vcb->csum_size), Vcb->csum_size) != Vcb->csum_size) {
                                 uint64_t addr = offset + UInt32x32To64(j, Vcb->superblock.sector_size);
 
                                 log_error(Vcb, addr, c->devices[i]->devitem.dev_id, false, true, false);
@@ -803,7 +797,7 @@ static NTSTATUS scrub_extent_dup(device_extension* Vcb, chunk* c, uint64_t offse
                             tree_header* th = (tree_header*)&context->stripes[i].buf[j * Vcb->superblock.node_size];
                             uint64_t addr = offset + UInt32x32To64(j, Vcb->superblock.node_size);
 
-                            if (context->stripes[i].bad_csums[j] != *((uint32_t*)th->csum) || th->address != addr) {
+                            if (RtlCompareMemory((uint8_t*)context->stripes[i].bad_csums + (j * Vcb->csum_size), th, Vcb->csum_size) != Vcb->csum_size || th->address != addr) {
                                 log_error(Vcb, addr, c->devices[i]->devitem.dev_id, true, true, false);
                                 log_device_error(Vcb, c->devices[i], BTRFS_DEV_STAT_CORRUPTION_ERRORS);
                             }
@@ -820,7 +814,7 @@ static NTSTATUS scrub_extent_dup(device_extension* Vcb, chunk* c, uint64_t offse
                                              context->stripes[good_stripe].buf, context->stripes[i].length);
 
                     if (!NT_SUCCESS(Status)) {
-                        ERR("write_data_phys returned %08x\n", Status);
+                        ERR("write_data_phys returned %08lx\n", Status);
                         log_device_error(Vcb, c->devices[i], BTRFS_DEV_STAT_WRITE_ERRORS);
                         return Status;
                     }
@@ -838,13 +832,15 @@ static NTSTATUS scrub_extent_dup(device_extension* Vcb, chunk* c, uint64_t offse
             if (c->devices[i]->devobj) {
                 if (csum) {
                     for (j = 0; j < context->stripes[i].length / Vcb->superblock.sector_size; j++) {
-                        if (context->stripes[i].bad_csums[j] != csum[j]) {
+                        if (RtlCompareMemory((uint8_t*)context->stripes[i].bad_csums + (j * Vcb->csum_size), (uint8_t*)csum + (j * Vcb->csum_size), Vcb->csum_size) != Vcb->csum_size) {
                             ULONG k;
                             uint64_t addr = offset + UInt32x32To64(j, Vcb->superblock.sector_size);
                             bool recovered = false;
 
                             for (k = 0; k < c->chunk_item->num_stripes; k++) {
-                                if (i != k && c->devices[k]->devobj && context->stripes[k].bad_csums[j] == csum[j]) {
+                                if (i != k && c->devices[k]->devobj &&
+                                    RtlCompareMemory((uint8_t*)context->stripes[k].bad_csums + (j * Vcb->csum_size),
+                                                     (uint8_t*)csum + (j * Vcb->csum_size), Vcb->csum_size) == Vcb->csum_size) {
                                     log_error(Vcb, addr, c->devices[i]->devitem.dev_id, false, true, false);
                                     log_device_error(Vcb, c->devices[i], BTRFS_DEV_STAT_CORRUPTION_ERRORS);
 
@@ -867,7 +863,7 @@ static NTSTATUS scrub_extent_dup(device_extension* Vcb, chunk* c, uint64_t offse
                         tree_header* th = (tree_header*)&context->stripes[i].buf[j * Vcb->superblock.node_size];
                         uint64_t addr = offset + UInt32x32To64(j, Vcb->superblock.node_size);
 
-                        if (context->stripes[i].bad_csums[j] != *((uint32_t*)th->csum) || th->address != addr) {
+                        if (RtlCompareMemory((uint8_t*)context->stripes[i].bad_csums + (j * Vcb->csum_size), th, Vcb->csum_size) != Vcb->csum_size || th->address != addr) {
                             ULONG k;
                             bool recovered = false;
 
@@ -875,7 +871,7 @@ static NTSTATUS scrub_extent_dup(device_extension* Vcb, chunk* c, uint64_t offse
                                 if (i != k && c->devices[k]->devobj) {
                                     tree_header* th2 = (tree_header*)&context->stripes[k].buf[j * Vcb->superblock.node_size];
 
-                                    if (context->stripes[k].bad_csums[j] == *((uint32_t*)th2->csum) && th2->address == addr) {
+                                    if (RtlCompareMemory((uint8_t*)context->stripes[k].bad_csums + (j * Vcb->csum_size), th2, Vcb->csum_size) == Vcb->csum_size && th2->address == addr) {
                                         log_error(Vcb, addr, c->devices[i]->devitem.dev_id, true, true, false);
                                         log_device_error(Vcb, c->devices[i], BTRFS_DEV_STAT_CORRUPTION_ERRORS);
 
@@ -904,7 +900,7 @@ static NTSTATUS scrub_extent_dup(device_extension* Vcb, chunk* c, uint64_t offse
                 Status = write_data_phys(c->devices[i]->devobj, c->devices[i]->fileobj, cis[i].offset + offset - c->offset,
                                          context->stripes[i].buf, context->stripes[i].length);
                 if (!NT_SUCCESS(Status)) {
-                    ERR("write_data_phys returned %08x\n", Status);
+                    ERR("write_data_phys returned %08lx\n", Status);
                     log_device_error(Vcb, c->devices[i], BTRFS_DEV_STAT_CORRUPTION_ERRORS);
                     return Status;
                 }
@@ -920,7 +916,7 @@ static NTSTATUS scrub_extent_dup(device_extension* Vcb, chunk* c, uint64_t offse
 
             if (csum) {
                 for (j = 0; j < context->stripes[i].length / Vcb->superblock.sector_size; j++) {
-                    if (context->stripes[i].bad_csums[j] != csum[j]) {
+                    if (RtlCompareMemory((uint8_t*)context->stripes[i].bad_csums + (j * Vcb->csum_size), (uint8_t*)csum + (j + Vcb->csum_size), Vcb->csum_size) != Vcb->csum_size) {
                         uint64_t addr = offset + UInt32x32To64(j, Vcb->superblock.sector_size);
 
                         log_error(Vcb, addr, c->devices[i]->devitem.dev_id, false, false, false);
@@ -931,7 +927,7 @@ static NTSTATUS scrub_extent_dup(device_extension* Vcb, chunk* c, uint64_t offse
                     tree_header* th = (tree_header*)&context->stripes[i].buf[j * Vcb->superblock.node_size];
                     uint64_t addr = offset + UInt32x32To64(j, Vcb->superblock.node_size);
 
-                    if (context->stripes[i].bad_csums[j] != *((uint32_t*)th->csum) || th->address != addr)
+                    if (RtlCompareMemory((uint8_t*)context->stripes[i].bad_csums + (j * Vcb->csum_size), th, Vcb->csum_size) != Vcb->csum_size || th->address != addr)
                         log_error(Vcb, addr, c->devices[i]->devitem.dev_id, true, false, false);
                 }
             }
@@ -941,7 +937,7 @@ static NTSTATUS scrub_extent_dup(device_extension* Vcb, chunk* c, uint64_t offse
     return STATUS_SUCCESS;
 }
 
-static NTSTATUS scrub_extent_raid0(device_extension* Vcb, chunk* c, uint64_t offset, uint32_t length, uint16_t startoffstripe, uint32_t* csum, scrub_context* context) {
+static NTSTATUS scrub_extent_raid0(device_extension* Vcb, chunk* c, uint64_t offset, uint32_t length, uint16_t startoffstripe, void* csum, scrub_context* context) {
     ULONG j;
     uint16_t stripe;
     uint32_t pos, *stripeoff;
@@ -966,9 +962,7 @@ static NTSTATUS scrub_extent_raid0(device_extension* Vcb, chunk* c, uint64_t off
 
         if (csum) {
             for (j = 0; j < readlen; j += Vcb->superblock.sector_size) {
-                uint32_t crc32 = ~calc_crc32c(0xffffffff, context->stripes[stripe].buf + stripeoff[stripe], Vcb->superblock.sector_size);
-
-                if (crc32 != csum[pos / Vcb->superblock.sector_size]) {
+                if (!check_sector_csum(Vcb, context->stripes[stripe].buf + stripeoff[stripe], (uint8_t*)csum + (pos * Vcb->csum_size / Vcb->superblock.sector_size))) {
                     uint64_t addr = offset + pos;
 
                     log_error(Vcb, addr, c->devices[stripe]->devitem.dev_id, false, false, false);
@@ -981,10 +975,9 @@ static NTSTATUS scrub_extent_raid0(device_extension* Vcb, chunk* c, uint64_t off
         } else {
             for (j = 0; j < readlen; j += Vcb->superblock.node_size) {
                 tree_header* th = (tree_header*)(context->stripes[stripe].buf + stripeoff[stripe]);
-                uint32_t crc32 = ~calc_crc32c(0xffffffff, (uint8_t*)&th->fs_uuid, Vcb->superblock.node_size - sizeof(th->csum));
                 uint64_t addr = offset + pos;
 
-                if (crc32 != *((uint32_t*)th->csum) || th->address != addr) {
+                if (!check_tree_checksum(Vcb, th) || th->address != addr) {
                     log_error(Vcb, addr, c->devices[stripe]->devitem.dev_id, true, false, false);
                     log_device_error(Vcb, c->devices[stripe], BTRFS_DEV_STAT_CORRUPTION_ERRORS);
                 }
@@ -1002,7 +995,7 @@ static NTSTATUS scrub_extent_raid0(device_extension* Vcb, chunk* c, uint64_t off
     return STATUS_SUCCESS;
 }
 
-static NTSTATUS scrub_extent_raid10(device_extension* Vcb, chunk* c, uint64_t offset, uint32_t length, uint16_t startoffstripe, uint32_t* csum, scrub_context* context) {
+static NTSTATUS scrub_extent_raid10(device_extension* Vcb, chunk* c, uint64_t offset, uint32_t length, uint16_t startoffstripe, void* csum, scrub_context* context) {
     ULONG j;
     uint16_t stripe, sub_stripes = max(c->chunk_item->sub_stripes, 1);
     uint32_t pos, *stripeoff;
@@ -1045,9 +1038,8 @@ static NTSTATUS scrub_extent_raid10(device_extension* Vcb, chunk* c, uint64_t of
                         }
                     } else {
                         for (j = 0; j < readlen; j += Vcb->superblock.sector_size) {
-                            uint32_t crc32 = ~calc_crc32c(0xffffffff, context->stripes[(stripe * sub_stripes) + k].buf + stripeoff[stripe] + j, Vcb->superblock.sector_size);
-
-                            if (crc32 != csum[(pos + j) / Vcb->superblock.sector_size]) {
+                            if (!check_sector_csum(Vcb, context->stripes[(stripe * sub_stripes) + k].buf + stripeoff[stripe] + j,
+                                                   (uint8_t*)csum + ((pos + j) * Vcb->csum_size / Vcb->superblock.sector_size))) {
                                 csum_error = true;
                                 context->stripes[(stripe * sub_stripes) + k].csum_error = true;
                                 log_device_error(Vcb, c->devices[(stripe * sub_stripes) + k], BTRFS_DEV_STAT_CORRUPTION_ERRORS);
@@ -1081,10 +1073,9 @@ static NTSTATUS scrub_extent_raid10(device_extension* Vcb, chunk* c, uint64_t of
                     } else {
                         for (j = 0; j < readlen; j += Vcb->superblock.node_size) {
                             tree_header* th = (tree_header*)(context->stripes[(stripe * sub_stripes) + k].buf + stripeoff[stripe] + j);
-                            uint32_t crc32 = ~calc_crc32c(0xffffffff, (uint8_t*)&th->fs_uuid, Vcb->superblock.node_size - sizeof(th->csum));
                             uint64_t addr = offset + pos + j;
 
-                            if (crc32 != *((uint32_t*)th->csum) || th->address != addr) {
+                            if (!check_tree_checksum(Vcb, th) || th->address != addr) {
                                 csum_error = true;
                                 context->stripes[(stripe * sub_stripes) + k].csum_error = true;
                                 log_device_error(Vcb, c->devices[(stripe * sub_stripes) + k], BTRFS_DEV_STAT_CORRUPTION_ERRORS);
@@ -1198,7 +1189,7 @@ static NTSTATUS scrub_extent_raid10(device_extension* Vcb, chunk* c, uint64_t of
                                                          context->stripes[j + goodstripe].buf, context->stripes[j + goodstripe].length);
 
                                 if (!NT_SUCCESS(Status)) {
-                                    ERR("write_data_phys returned %08x\n", Status);
+                                    ERR("write_data_phys returned %08lx\n", Status);
                                     log_device_error(Vcb, c->devices[j + k], BTRFS_DEV_STAT_WRITE_ERRORS);
                                     goto end;
                                 }
@@ -1213,18 +1204,15 @@ static NTSTATUS scrub_extent_raid10(device_extension* Vcb, chunk* c, uint64_t of
                 if (csum) {
                     for (k = 0; k < sub_stripes; k++) {
                         if (c->devices[j + k]->devobj) {
-                            context->stripes[j + k].bad_csums = ExAllocatePoolWithTag(PagedPool, context->stripes[j + k].length * sizeof(uint32_t) / Vcb->superblock.sector_size, ALLOC_TAG);
+                            context->stripes[j + k].bad_csums = ExAllocatePoolWithTag(PagedPool, context->stripes[j + k].length * Vcb->csum_size / Vcb->superblock.sector_size,
+                                                                                      ALLOC_TAG);
                             if (!context->stripes[j + k].bad_csums) {
                                 ERR("out of memory\n");
                                 Status = STATUS_INSUFFICIENT_RESOURCES;
                                 goto end;
                             }
 
-                            Status = calc_csum(Vcb, context->stripes[j + k].buf, context->stripes[j + k].length / Vcb->superblock.sector_size, context->stripes[j + k].bad_csums);
-                            if (!NT_SUCCESS(Status)) {
-                                ERR("calc_csum returned %08x\n", Status);
-                                goto end;
-                            }
+                            do_calc_job(Vcb, context->stripes[j + k].buf, context->stripes[j + k].length / Vcb->superblock.sector_size, context->stripes[j + k].bad_csums);
                         }
                     }
                 } else {
@@ -1232,7 +1220,8 @@ static NTSTATUS scrub_extent_raid10(device_extension* Vcb, chunk* c, uint64_t of
                         if (c->devices[j + k]->devobj) {
                             ULONG l;
 
-                            context->stripes[j + k].bad_csums = ExAllocatePoolWithTag(PagedPool, context->stripes[j + k].length * sizeof(uint32_t) / Vcb->superblock.node_size, ALLOC_TAG);
+                            context->stripes[j + k].bad_csums = ExAllocatePoolWithTag(PagedPool, context->stripes[j + k].length * Vcb->csum_size / Vcb->superblock.node_size,
+                                                                                      ALLOC_TAG);
                             if (!context->stripes[j + k].bad_csums) {
                                 ERR("out of memory\n");
                                 Status = STATUS_INSUFFICIENT_RESOURCES;
@@ -1241,9 +1230,8 @@ static NTSTATUS scrub_extent_raid10(device_extension* Vcb, chunk* c, uint64_t of
 
                             for (l = 0; l < context->stripes[j + k].length / Vcb->superblock.node_size; l++) {
                                 tree_header* th = (tree_header*)&context->stripes[j + k].buf[l * Vcb->superblock.node_size];
-                                uint32_t crc32 = ~calc_crc32c(0xffffffff, (uint8_t*)&th->fs_uuid, Vcb->superblock.node_size - sizeof(th->csum));
 
-                                context->stripes[j + k].bad_csums[l] = crc32;
+                                get_tree_checksum(Vcb, th, (uint8_t*)context->stripes[j + k].bad_csums + (Vcb->csum_size * l));
                             }
                         }
                     }
@@ -1266,15 +1254,16 @@ static NTSTATUS scrub_extent_raid10(device_extension* Vcb, chunk* c, uint64_t of
 
                         if (csum) {
                             for (l = 0; l < readlen; l += Vcb->superblock.sector_size) {
-                                uint32_t crc32 = csum[pos / Vcb->superblock.sector_size];
                                 bool has_error = false;
 
                                 goodstripe = 0xffffffff;
                                 for (k = 0; k < sub_stripes; k++) {
                                     if (c->devices[j + k]->devobj) {
-                                        if (context->stripes[j + k].bad_csums[so / Vcb->superblock.sector_size] != crc32)
+                                        if (RtlCompareMemory((uint8_t*)context->stripes[j + k].bad_csums + (so * Vcb->csum_size / Vcb->superblock.sector_size),
+                                            (uint8_t*)csum + (pos * Vcb->csum_size / Vcb->superblock.sector_size),
+                                            Vcb->csum_size) != Vcb->csum_size) {
                                             has_error = true;
-                                        else
+                                        } else
                                             goodstripe = k;
                                     }
                                 }
@@ -1282,7 +1271,10 @@ static NTSTATUS scrub_extent_raid10(device_extension* Vcb, chunk* c, uint64_t of
                                 if (has_error) {
                                     if (goodstripe != 0xffffffff) {
                                         for (k = 0; k < sub_stripes; k++) {
-                                            if (c->devices[j + k]->devobj && context->stripes[j + k].bad_csums[so / Vcb->superblock.sector_size] != crc32) {
+                                            if (c->devices[j + k]->devobj &&
+                                                RtlCompareMemory((uint8_t*)context->stripes[j + k].bad_csums + (so * Vcb->csum_size / Vcb->superblock.sector_size),
+                                                                 (uint8_t*)csum + (pos * Vcb->csum_size / Vcb->superblock.sector_size),
+                                                                 Vcb->csum_size) != Vcb->csum_size) {
                                                 uint64_t addr = offset + pos;
 
                                                 log_error(Vcb, addr, c->devices[j + k]->devitem.dev_id, false, true, false);
@@ -1315,7 +1307,7 @@ static NTSTATUS scrub_extent_raid10(device_extension* Vcb, chunk* c, uint64_t of
                                         tree_header* th = (tree_header*)&context->stripes[j + k].buf[so];
                                         uint64_t addr = offset + pos;
 
-                                        if (context->stripes[j + k].bad_csums[so / Vcb->superblock.node_size] != *((uint32_t*)th->csum) || th->address != addr) {
+                                        if (RtlCompareMemory((uint8_t*)context->stripes[j + k].bad_csums + (so * Vcb->csum_size / Vcb->superblock.node_size), th, Vcb->csum_size) != Vcb->csum_size || th->address != addr) {
                                             ULONG m;
 
                                             recovered = false;
@@ -1324,7 +1316,7 @@ static NTSTATUS scrub_extent_raid10(device_extension* Vcb, chunk* c, uint64_t of
                                                 if (m != k) {
                                                     tree_header* th2 = (tree_header*)&context->stripes[j + m].buf[so];
 
-                                                    if (context->stripes[j + m].bad_csums[so / Vcb->superblock.node_size] == *((uint32_t*)th2->csum) && th2->address == addr) {
+                                                    if (RtlCompareMemory((uint8_t*)context->stripes[j + m].bad_csums + (so * Vcb->csum_size / Vcb->superblock.node_size), th2, Vcb->csum_size) == Vcb->csum_size && th2->address == addr) {
                                                         log_error(Vcb, addr, c->devices[j + k]->devitem.dev_id, true, true, false);
 
                                                         RtlCopyMemory(th, th2, Vcb->superblock.node_size);
@@ -1363,7 +1355,7 @@ static NTSTATUS scrub_extent_raid10(device_extension* Vcb, chunk* c, uint64_t of
                                                      context->stripes[j + k].buf, context->stripes[j + k].length);
 
                             if (!NT_SUCCESS(Status)) {
-                                ERR("write_data_phys returned %08x\n", Status);
+                                ERR("write_data_phys returned %08lx\n", Status);
                                 log_device_error(Vcb, c->devices[j + k], BTRFS_DEV_STAT_WRITE_ERRORS);
                                 goto end;
                             }
@@ -1382,14 +1374,14 @@ end:
     return Status;
 }
 
-static NTSTATUS scrub_extent(device_extension* Vcb, chunk* c, ULONG type, uint64_t offset, uint32_t size, uint32_t* csum) {
+static NTSTATUS scrub_extent(device_extension* Vcb, chunk* c, ULONG type, uint64_t offset, uint32_t size, void* csum) {
     ULONG i;
     scrub_context context;
     CHUNK_ITEM_STRIPE* cis;
     NTSTATUS Status;
     uint16_t startoffstripe, num_missing, allowed_missing;
 
-    TRACE("(%p, %p, %I64x, %I64x, %p)\n", Vcb, c, offset, size, csum);
+    TRACE("(%p, %p, %lx, %I64x, %x, %p)\n", Vcb, c, type, offset, size, csum);
 
     context.stripes = ExAllocatePoolWithTag(NonPagedPool, sizeof(scrub_context_stripe) * c->chunk_item->num_stripes, ALLOC_TAG);
     if (!context.stripes) {
@@ -1481,7 +1473,7 @@ static NTSTATUS scrub_extent(device_extension* Vcb, chunk* c, ULONG type, uint64
             context.stripes[i].start = offset - c->offset;
             context.stripes[i].length = size;
         } else if (type != BLOCK_FLAG_RAID0 && type != BLOCK_FLAG_RAID10) {
-            ERR("unexpected chunk type %x\n", type);
+            ERR("unexpected chunk type %lx\n", type);
             Status = STATUS_INTERNAL_ERROR;
             goto end;
         }
@@ -1543,7 +1535,7 @@ static NTSTATUS scrub_extent(device_extension* Vcb, chunk* c, ULONG type, uint64
                 } _SEH2_END;
 
                 if (!NT_SUCCESS(Status)) {
-                    ERR("MmProbeAndLockPages threw exception %08x\n", Status);
+                    ERR("MmProbeAndLockPages threw exception %08lx\n", Status);
                     IoFreeMdl(context.stripes[i].Irp->MdlAddress);
                     context.stripes[i].Irp->MdlAddress = NULL;
                     goto end;
@@ -1591,19 +1583,19 @@ static NTSTATUS scrub_extent(device_extension* Vcb, chunk* c, ULONG type, uint64
     if (type == BLOCK_FLAG_DUPLICATE) {
         Status = scrub_extent_dup(Vcb, c, offset, csum, &context);
         if (!NT_SUCCESS(Status)) {
-            ERR("scrub_extent_dup returned %08x\n", Status);
+            ERR("scrub_extent_dup returned %08lx\n", Status);
             goto end;
         }
     } else if (type == BLOCK_FLAG_RAID0) {
         Status = scrub_extent_raid0(Vcb, c, offset, size, startoffstripe, csum, &context);
         if (!NT_SUCCESS(Status)) {
-            ERR("scrub_extent_raid0 returned %08x\n", Status);
+            ERR("scrub_extent_raid0 returned %08lx\n", Status);
             goto end;
         }
     } else if (type == BLOCK_FLAG_RAID10) {
         Status = scrub_extent_raid10(Vcb, c, offset, size, startoffstripe, csum, &context);
         if (!NT_SUCCESS(Status)) {
-            ERR("scrub_extent_raid10 returned %08x\n", Status);
+            ERR("scrub_extent_raid10 returned %08lx\n", Status);
             goto end;
         }
     }
@@ -1632,7 +1624,7 @@ end:
     return Status;
 }
 
-static NTSTATUS scrub_data_extent(device_extension* Vcb, chunk* c, uint64_t offset, ULONG type, uint32_t* csum, RTL_BITMAP* bmp, ULONG bmplen) {
+static NTSTATUS scrub_data_extent(device_extension* Vcb, chunk* c, uint64_t offset, ULONG type, void* csum, RTL_BITMAP* bmp, ULONG bmplen) {
     NTSTATUS Status;
     ULONG runlength, index;
 
@@ -1657,9 +1649,10 @@ static NTSTATUS scrub_data_extent(device_extension* Vcb, chunk* c, uint64_t offs
             else
                 rl = runlength;
 
-            Status = scrub_extent(Vcb, c, type, offset + UInt32x32To64(index, Vcb->superblock.sector_size), rl * Vcb->superblock.sector_size, &csum[index]);
+            Status = scrub_extent(Vcb, c, type, offset + UInt32x32To64(index, Vcb->superblock.sector_size),
+                                  rl * Vcb->superblock.sector_size, (uint8_t*)csum + (index * Vcb->csum_size));
             if (!NT_SUCCESS(Status)) {
-                ERR("scrub_data_extent_dup returned %08x\n", Status);
+                ERR("scrub_data_extent_dup returned %08lx\n", Status);
                 return Status;
             }
 
@@ -1691,7 +1684,7 @@ typedef struct {
     RTL_BITMAP alloc;
     RTL_BITMAP has_csum;
     RTL_BITMAP is_tree;
-    uint32_t* csum;
+    void* csum;
     uint8_t* parity_scratch;
     uint8_t* parity_scratch2;
 } scrub_context_raid56;
@@ -1733,9 +1726,8 @@ static void scrub_raid5_stripe(device_extension* Vcb, chunk* c, scrub_context_ra
                 if (RtlCheckBit(&context->is_tree, off)) {
                     tree_header* th = (tree_header*)&context->stripes[stripe].buf[stripeoff * Vcb->superblock.sector_size];
                     uint64_t addr = c->offset + (stripe_start * (c->chunk_item->num_stripes - 1) * c->chunk_item->stripe_length) + (off * Vcb->superblock.sector_size);
-                    uint32_t crc32 = ~calc_crc32c(0xffffffff, (uint8_t*)&th->fs_uuid, Vcb->superblock.node_size - sizeof(th->csum));
 
-                    if (crc32 != *((uint32_t*)th->csum) || th->address != addr) {
+                    if (!check_tree_checksum(Vcb, th) || th->address != addr) {
                         RtlSetBits(&context->stripes[stripe].error, i, Vcb->superblock.node_size / Vcb->superblock.sector_size);
                         log_device_error(Vcb, c->devices[stripe], BTRFS_DEV_STAT_CORRUPTION_ERRORS);
 
@@ -1749,9 +1741,7 @@ static void scrub_raid5_stripe(device_extension* Vcb, chunk* c, scrub_context_ra
 
                     continue;
                 } else if (RtlCheckBit(&context->has_csum, off)) {
-                    uint32_t crc32 = ~calc_crc32c(0xffffffff, context->stripes[stripe].buf + (stripeoff * Vcb->superblock.sector_size), Vcb->superblock.sector_size);
-
-                    if (crc32 != context->csum[off]) {
+                    if (!check_sector_csum(Vcb, context->stripes[stripe].buf + (stripeoff * Vcb->superblock.sector_size), (uint8_t*)context->csum + (Vcb->csum_size * off))) {
                         RtlSetBit(&context->stripes[stripe].error, i);
                         log_device_error(Vcb, c->devices[stripe], BTRFS_DEV_STAT_CORRUPTION_ERRORS);
 
@@ -1843,7 +1833,6 @@ static void scrub_raid5_stripe(device_extension* Vcb, chunk* c, scrub_context_ra
             log_error(Vcb, addr, c->devices[parity]->devitem.dev_id, false, true, true);
             log_device_error(Vcb, c->devices[parity], BTRFS_DEV_STAT_CORRUPTION_ERRORS);
         } else if (num_errors == 1) {
-            uint32_t crc32;
             uint64_t addr = c->offset + (stripe_start * (c->chunk_item->num_stripes - 1) * c->chunk_item->stripe_length) + (bad_off * Vcb->superblock.sector_size);
 
             if (RtlCheckBit(&context->is_tree, bad_off)) {
@@ -1854,9 +1843,8 @@ static void scrub_raid5_stripe(device_extension* Vcb, chunk* c, scrub_context_ra
                        Vcb->superblock.node_size);
 
                 th = (tree_header*)&context->parity_scratch[i * Vcb->superblock.sector_size];
-                crc32 = ~calc_crc32c(0xffffffff, (uint8_t*)&th->fs_uuid, Vcb->superblock.node_size - sizeof(th->csum));
 
-                if (crc32 == *((uint32_t*)th->csum) && th->address == addr) {
+                if (check_tree_checksum(Vcb, th) && th->address == addr) {
                     RtlCopyMemory(&context->stripes[bad_stripe].buf[(num * c->chunk_item->stripe_length) + (i * Vcb->superblock.sector_size)],
                                   &context->parity_scratch[i * Vcb->superblock.sector_size], Vcb->superblock.node_size);
 
@@ -1868,13 +1856,15 @@ static void scrub_raid5_stripe(device_extension* Vcb, chunk* c, scrub_context_ra
                 } else
                     log_error(Vcb, addr, c->devices[bad_stripe]->devitem.dev_id, true, false, false);
             } else {
+                uint8_t hash[MAX_HASH_SIZE];
+
                 do_xor(&context->parity_scratch[i * Vcb->superblock.sector_size],
                        &context->stripes[bad_stripe].buf[(num * c->chunk_item->stripe_length) + (i * Vcb->superblock.sector_size)],
                        Vcb->superblock.sector_size);
 
-                crc32 = ~calc_crc32c(0xffffffff, &context->parity_scratch[i * Vcb->superblock.sector_size], Vcb->superblock.sector_size);
+                get_sector_csum(Vcb, &context->parity_scratch[i * Vcb->superblock.sector_size], hash);
 
-                if (crc32 == context->csum[bad_off]) {
+                if (RtlCompareMemory(hash, (uint8_t*)context->csum + (Vcb->csum_size * bad_off), Vcb->csum_size) == Vcb->csum_size) {
                     RtlCopyMemory(&context->stripes[bad_stripe].buf[(num * c->chunk_item->stripe_length) + (i * Vcb->superblock.sector_size)],
                                   &context->parity_scratch[i * Vcb->superblock.sector_size], Vcb->superblock.sector_size);
 
@@ -1929,9 +1919,8 @@ static void scrub_raid6_stripe(device_extension* Vcb, chunk* c, scrub_context_ra
                 if (RtlCheckBit(&context->is_tree, off)) {
                     tree_header* th = (tree_header*)&context->stripes[stripe].buf[stripeoff * Vcb->superblock.sector_size];
                     uint64_t addr = c->offset + (stripe_start * (c->chunk_item->num_stripes - 2) * c->chunk_item->stripe_length) + (off * Vcb->superblock.sector_size);
-                    uint32_t crc32 = ~calc_crc32c(0xffffffff, (uint8_t*)&th->fs_uuid, Vcb->superblock.node_size - sizeof(th->csum));
 
-                    if (crc32 != *((uint32_t*)th->csum) || th->address != addr) {
+                    if (!check_tree_checksum(Vcb, th) || th->address != addr) {
                         RtlSetBits(&context->stripes[stripe].error, i, Vcb->superblock.node_size / Vcb->superblock.sector_size);
                         log_device_error(Vcb, c->devices[stripe], BTRFS_DEV_STAT_CORRUPTION_ERRORS);
 
@@ -1945,9 +1934,11 @@ static void scrub_raid6_stripe(device_extension* Vcb, chunk* c, scrub_context_ra
 
                     continue;
                 } else if (RtlCheckBit(&context->has_csum, off)) {
-                    uint32_t crc32 = ~calc_crc32c(0xffffffff, context->stripes[stripe].buf + (stripeoff * Vcb->superblock.sector_size), Vcb->superblock.sector_size);
+                    uint8_t hash[MAX_HASH_SIZE];
 
-                    if (crc32 != context->csum[off]) {
+                    get_sector_csum(Vcb, context->stripes[stripe].buf + (stripeoff * Vcb->superblock.sector_size), hash);
+
+                    if (RtlCompareMemory(hash, (uint8_t*)context->csum + (Vcb->csum_size * off), Vcb->csum_size) != Vcb->csum_size) {
                         uint64_t addr = c->offset + (stripe_start * (c->chunk_item->num_stripes - 2) * c->chunk_item->stripe_length) + (off * Vcb->superblock.sector_size);
 
                         RtlSetBit(&context->stripes[stripe].error, i);
@@ -2081,7 +2072,7 @@ static void scrub_raid6_stripe(device_extension* Vcb, chunk* c, scrub_context_ra
                 log_device_error(Vcb, c->devices[parity2], BTRFS_DEV_STAT_CORRUPTION_ERRORS);
             }
         } else if (num_errors == 1) {
-            uint32_t crc32a, crc32b, len;
+            uint32_t len;
             uint16_t stripe_num, bad_stripe_num;
             uint64_t addr = c->offset + (stripe_start * (c->chunk_item->num_stripes - 2) * c->chunk_item->stripe_length) + (bad_off1 * Vcb->superblock.sector_size);
             uint8_t* scratch;
@@ -2122,21 +2113,23 @@ static void scrub_raid6_stripe(device_extension* Vcb, chunk* c, scrub_context_ra
             }
 
             if (RtlCheckBit(&context->is_tree, bad_off1)) {
+                uint8_t hash1[MAX_HASH_SIZE];
+                uint8_t hash2[MAX_HASH_SIZE];
                 tree_header *th1 = NULL, *th2 = NULL;
 
                 if (c->devices[parity1]->devobj) {
                     th1 = (tree_header*)&context->parity_scratch[i * Vcb->superblock.sector_size];
-                    crc32a = ~calc_crc32c(0xffffffff, (uint8_t*)&th1->fs_uuid, Vcb->superblock.node_size - sizeof(th1->csum));
+                    get_tree_checksum(Vcb, th1, hash1);
                 }
 
                 if (c->devices[parity2]->devobj) {
                     th2 = (tree_header*)scratch;
-                    crc32b = ~calc_crc32c(0xffffffff, (uint8_t*)&th2->fs_uuid, Vcb->superblock.node_size - sizeof(th2->csum));
+                    get_tree_checksum(Vcb, th2, hash2);
                 }
 
-                if ((c->devices[parity1]->devobj && crc32a == *((uint32_t*)th1->csum) && th1->address == addr) ||
-                    (c->devices[parity2]->devobj && crc32b == *((uint32_t*)th2->csum) && th2->address == addr)) {
-                    if (!c->devices[parity1]->devobj || crc32a != *((uint32_t*)th1->csum) || th1->address != addr) {
+                if ((c->devices[parity1]->devobj && RtlCompareMemory(hash1, th1, Vcb->csum_size) == Vcb->csum_size && th1->address == addr) ||
+                    (c->devices[parity2]->devobj && RtlCompareMemory(hash2, th2, Vcb->csum_size) == Vcb->csum_size && th2->address == addr)) {
+                    if (!c->devices[parity1]->devobj || RtlCompareMemory(hash1, th1, Vcb->csum_size) != Vcb->csum_size || th1->address != addr) {
                         RtlCopyMemory(&context->stripes[bad_stripe1].buf[(num * c->chunk_item->stripe_length) + (i * Vcb->superblock.sector_size)],
                                       scratch, Vcb->superblock.node_size);
 
@@ -2168,7 +2161,7 @@ static void scrub_raid6_stripe(device_extension* Vcb, chunk* c, scrub_context_ra
                         RtlCopyMemory(&context->stripes[bad_stripe1].buf[(num * c->chunk_item->stripe_length) + (i * Vcb->superblock.sector_size)],
                                       &context->parity_scratch[i * Vcb->superblock.sector_size], Vcb->superblock.node_size);
 
-                        if (!c->devices[parity2]->devobj || crc32b != *((uint32_t*)th2->csum) || th2->address != addr) {
+                        if (!c->devices[parity2]->devobj || RtlCompareMemory(hash2, th2, Vcb->csum_size) != Vcb->csum_size || th2->address != addr) {
                             // fix parity 2
                             stripe = parity1 == 0 ? (c->chunk_item->num_stripes - 1) : (parity1 - 1);
 
@@ -2205,18 +2198,22 @@ static void scrub_raid6_stripe(device_extension* Vcb, chunk* c, scrub_context_ra
                 } else
                     log_error(Vcb, addr, c->devices[bad_stripe1]->devitem.dev_id, true, false, false);
             } else {
+                uint8_t hash1[MAX_HASH_SIZE];
+                uint8_t hash2[MAX_HASH_SIZE];
+
                 if (c->devices[parity1]->devobj)
-                    crc32a = ~calc_crc32c(0xffffffff, &context->parity_scratch[i * Vcb->superblock.sector_size], Vcb->superblock.sector_size);
+                    get_sector_csum(Vcb, &context->parity_scratch[i * Vcb->superblock.sector_size], hash1);
 
                 if (c->devices[parity2]->devobj)
-                    crc32b = ~calc_crc32c(0xffffffff, scratch, Vcb->superblock.sector_size);
+                    get_sector_csum(Vcb, scratch, hash2);
 
-                if ((c->devices[parity1]->devobj && crc32a == context->csum[bad_off1]) || (c->devices[parity2]->devobj && crc32b == context->csum[bad_off1])) {
-                    if (c->devices[parity2]->devobj && crc32b == context->csum[bad_off1]) {
+                if ((c->devices[parity1]->devobj && RtlCompareMemory(hash1, (uint8_t*)context->csum + (bad_off1 * Vcb->csum_size), Vcb->csum_size) == Vcb->csum_size) ||
+                    (c->devices[parity2]->devobj && RtlCompareMemory(hash2, (uint8_t*)context->csum + (bad_off1 * Vcb->csum_size), Vcb->csum_size) == Vcb->csum_size)) {
+                    if (c->devices[parity2]->devobj && RtlCompareMemory(hash2, (uint8_t*)context->csum + (bad_off1 * Vcb->csum_size), Vcb->csum_size) == Vcb->csum_size) {
                         RtlCopyMemory(&context->stripes[bad_stripe1].buf[(num * c->chunk_item->stripe_length) + (i * Vcb->superblock.sector_size)],
                                       scratch, Vcb->superblock.sector_size);
 
-                        if (c->devices[parity1]->devobj && crc32a != context->csum[bad_off1]) {
+                        if (c->devices[parity1]->devobj && RtlCompareMemory(hash1, (uint8_t*)context->csum + (bad_off1 * Vcb->csum_size), Vcb->csum_size) != Vcb->csum_size) {
                             // fix parity 1
 
                             stripe = (parity1 + 2) % c->chunk_item->num_stripes;
@@ -2244,7 +2241,7 @@ static void scrub_raid6_stripe(device_extension* Vcb, chunk* c, scrub_context_ra
                         RtlCopyMemory(&context->stripes[bad_stripe1].buf[(num * c->chunk_item->stripe_length) + (i * Vcb->superblock.sector_size)],
                                       &context->parity_scratch[i * Vcb->superblock.sector_size], Vcb->superblock.sector_size);
 
-                        if (c->devices[parity2]->devobj && crc32b != context->csum[bad_off1]) {
+                        if (c->devices[parity2]->devobj && RtlCompareMemory(hash2, (uint8_t*)context->csum + (bad_off1 * Vcb->csum_size), Vcb->csum_size) != Vcb->csum_size) {
                             // fix parity 2
                             stripe = parity1 == 0 ? (c->chunk_item->num_stripes - 1) : (parity1 - 1);
 
@@ -2355,9 +2352,8 @@ static void scrub_raid6_stripe(device_extension* Vcb, chunk* c, scrub_context_ra
 
             if (RtlCheckBit(&context->is_tree, bad_off1)) {
                 tree_header* th = (tree_header*)&context->parity_scratch[i * Vcb->superblock.sector_size];
-                uint32_t crc32 = ~calc_crc32c(0xffffffff, (uint8_t*)&th->fs_uuid, Vcb->superblock.node_size - sizeof(th->csum));
 
-                if (crc32 == *((uint32_t*)th->csum) && th->address == addr) {
+                if (check_tree_checksum(Vcb, th) && th->address == addr) {
                     RtlCopyMemory(&context->stripes[bad_stripe1].buf[(num * c->chunk_item->stripe_length) + (i * Vcb->superblock.sector_size)],
                                   &context->parity_scratch[i * Vcb->superblock.sector_size], Vcb->superblock.node_size);
 
@@ -2369,9 +2365,7 @@ static void scrub_raid6_stripe(device_extension* Vcb, chunk* c, scrub_context_ra
                 } else
                     log_error(Vcb, addr, c->devices[bad_stripe1]->devitem.dev_id, true, false, false);
             } else {
-                uint32_t crc32 = ~calc_crc32c(0xffffffff, &context->parity_scratch[i * Vcb->superblock.sector_size], Vcb->superblock.sector_size);
-
-                if (crc32 == context->csum[bad_off1]) {
+                if (check_sector_csum(Vcb, &context->parity_scratch[i * Vcb->superblock.sector_size], (uint8_t*)context->csum + (Vcb->csum_size * bad_off1))) {
                     RtlCopyMemory(&context->stripes[bad_stripe1].buf[(num * c->chunk_item->stripe_length) + (i * Vcb->superblock.sector_size)],
                                   &context->parity_scratch[i * Vcb->superblock.sector_size], Vcb->superblock.sector_size);
 
@@ -2386,9 +2380,8 @@ static void scrub_raid6_stripe(device_extension* Vcb, chunk* c, scrub_context_ra
 
             if (RtlCheckBit(&context->is_tree, bad_off2)) {
                 tree_header* th = (tree_header*)&context->parity_scratch2[i * Vcb->superblock.sector_size];
-                uint32_t crc32 = ~calc_crc32c(0xffffffff, (uint8_t*)&th->fs_uuid, Vcb->superblock.node_size - sizeof(th->csum));
 
-                if (crc32 == *((uint32_t*)th->csum) && th->address == addr) {
+                if (check_tree_checksum(Vcb, th) && th->address == addr) {
                     RtlCopyMemory(&context->stripes[bad_stripe2].buf[(num * c->chunk_item->stripe_length) + (i * Vcb->superblock.sector_size)],
                                   &context->parity_scratch2[i * Vcb->superblock.sector_size], Vcb->superblock.node_size);
 
@@ -2400,9 +2393,7 @@ static void scrub_raid6_stripe(device_extension* Vcb, chunk* c, scrub_context_ra
                 } else
                     log_error(Vcb, addr, c->devices[bad_stripe2]->devitem.dev_id, true, false, false);
             } else {
-                uint32_t crc32 = ~calc_crc32c(0xffffffff, &context->parity_scratch2[i * Vcb->superblock.sector_size], Vcb->superblock.sector_size);
-
-                if (crc32 == context->csum[bad_off2]) {
+                if (check_sector_csum(Vcb, &context->parity_scratch2[i * Vcb->superblock.sector_size], (uint8_t*)context->csum + (Vcb->csum_size * bad_off2))) {
                     RtlCopyMemory(&context->stripes[bad_stripe2].buf[(num * c->chunk_item->stripe_length) + (i * Vcb->superblock.sector_size)],
                                   &context->parity_scratch2[i * Vcb->superblock.sector_size], Vcb->superblock.sector_size);
 
@@ -2456,7 +2447,7 @@ static NTSTATUS scrub_chunk_raid56_stripe_run(device_extension* Vcb, chunk* c, u
 
     Status = find_item(Vcb, Vcb->extent_root, &tp, &searchkey, false, NULL);
     if (!NT_SUCCESS(Status)) {
-        ERR("find_item returned %08x\n", Status);
+        ERR("find_item returned %08lx\n", Status);
         return Status;
     }
 
@@ -2503,7 +2494,7 @@ static NTSTATUS scrub_chunk_raid56_stripe_run(device_extension* Vcb, chunk* c, u
         RtlInitializeBitMap(&context.has_csum, csumarr, num_sectors);
         RtlClearAllBits(&context.has_csum);
 
-        context.csum = ExAllocatePoolWithTag(PagedPool, num_sectors * sizeof(uint32_t), ALLOC_TAG);
+        context.csum = ExAllocatePoolWithTag(PagedPool, num_sectors * Vcb->csum_size, ALLOC_TAG);
         if (!context.csum) {
             ERR("out of memory\n");
             ExFreePool(allocarr);
@@ -2553,7 +2544,7 @@ static NTSTATUS scrub_chunk_raid56_stripe_run(device_extension* Vcb, chunk* c, u
                     EXTENT_ITEM* ei = (EXTENT_ITEM*)tp.item->data;
 
                     if (tp.item->size < sizeof(EXTENT_ITEM)) {
-                        ERR("(%I64x,%x,%I64x) was %u bytes, expected at least %u\n", tp.item->key.obj_id, tp.item->key.obj_type, tp.item->key.offset, tp.item->size, sizeof(EXTENT_ITEM));
+                        ERR("(%I64x,%x,%I64x) was %u bytes, expected at least %Iu\n", tp.item->key.obj_id, tp.item->key.obj_type, tp.item->key.offset, tp.item->size, sizeof(EXTENT_ITEM));
                         Status = STATUS_INTERNAL_ERROR;
                         goto end;
                     }
@@ -2574,7 +2565,7 @@ static NTSTATUS scrub_chunk_raid56_stripe_run(device_extension* Vcb, chunk* c, u
 
                     Status = find_item(Vcb, Vcb->checksum_root, &tp2, &searchkey, false, NULL);
                     if (!NT_SUCCESS(Status) && Status != STATUS_NOT_FOUND) {
-                        ERR("find_item returned %08x\n", Status);
+                        ERR("find_item returned %08lx\n", Status);
                         goto end;
                     }
 
@@ -2586,13 +2577,13 @@ static NTSTATUS scrub_chunk_raid56_stripe_run(device_extension* Vcb, chunk* c, u
 
                         if (tp2.item->key.offset >= extent_start) {
                             uint64_t csum_start = max(extent_start, tp2.item->key.offset);
-                            uint64_t csum_end = min(extent_end, tp2.item->key.offset + (tp2.item->size * Vcb->superblock.sector_size / sizeof(uint32_t)));
+                            uint64_t csum_end = min(extent_end, tp2.item->key.offset + (tp2.item->size * Vcb->superblock.sector_size / Vcb->csum_size));
 
                             RtlSetBits(&context.has_csum, (ULONG)((csum_start - run_start) / Vcb->superblock.sector_size), (ULONG)((csum_end - csum_start) / Vcb->superblock.sector_size));
 
-                            RtlCopyMemory(&context.csum[(csum_start - run_start) / Vcb->superblock.sector_size],
-                                          tp2.item->data + ((csum_start - tp2.item->key.offset) * sizeof(uint32_t) / Vcb->superblock.sector_size),
-                                          (ULONG)((csum_end - csum_start) * sizeof(uint32_t) / Vcb->superblock.sector_size));
+                            RtlCopyMemory((uint8_t*)context.csum + ((csum_start - run_start) * Vcb->csum_size / Vcb->superblock.sector_size),
+                                          tp2.item->data + ((csum_start - tp2.item->key.offset) * Vcb->csum_size / Vcb->superblock.sector_size),
+                                          (ULONG)((csum_end - csum_start) * Vcb->csum_size / Vcb->superblock.sector_size));
                         }
 
                         b2 = find_next_item(Vcb, &tp2, &next_tp2, false, NULL);
@@ -2723,7 +2714,7 @@ static NTSTATUS scrub_chunk_raid56_stripe_run(device_extension* Vcb, chunk* c, u
                     } _SEH2_END;
 
                     if (!NT_SUCCESS(Status)) {
-                        ERR("MmProbeAndLockPages threw exception %08x\n", Status);
+                        ERR("MmProbeAndLockPages threw exception %08lx\n", Status);
                         IoFreeMdl(context.stripes[i].Irp->MdlAddress);
                         goto end3;
                     }
@@ -2806,7 +2797,7 @@ end3:
                                              context.stripes[i].buf, (uint32_t)(read_stripes * c->chunk_item->stripe_length));
 
                     if (!NT_SUCCESS(Status)) {
-                        ERR("write_data_phys returned %08x\n", Status);
+                        ERR("write_data_phys returned %08lx\n", Status);
                         log_device_error(Vcb, c->devices[i], BTRFS_DEV_STAT_WRITE_ERRORS);
                         goto end2;
                     }
@@ -2862,7 +2853,7 @@ static NTSTATUS scrub_chunk_raid56(device_extension* Vcb, chunk* c, uint64_t* of
 
     Status = find_item(Vcb, Vcb->extent_root, &tp, &searchkey, false, NULL);
     if (!NT_SUCCESS(Status)) {
-        ERR("find_item returned %08x\n", Status);
+        ERR("find_item returned %08lx\n", Status);
         return Status;
     }
 
@@ -2880,7 +2871,7 @@ static NTSTATUS scrub_chunk_raid56(device_extension* Vcb, chunk* c, uint64_t* of
             TRACE("%I64x\n", tp.item->key.obj_id);
 
             if (size < Vcb->superblock.sector_size) {
-                ERR("extent %I64x has size less than sector_size (%I64x < %x)\n", tp.item->key.obj_id, Vcb->superblock.sector_size);
+                ERR("extent %I64x has size less than sector_size (%I64x < %x)\n", tp.item->key.obj_id, size, Vcb->superblock.sector_size);
                 return STATUS_INTERNAL_ERROR;
             }
 
@@ -2890,7 +2881,7 @@ static NTSTATUS scrub_chunk_raid56(device_extension* Vcb, chunk* c, uint64_t* of
                 if (stripe > stripe_end + 1) {
                     Status = scrub_chunk_raid56_stripe_run(Vcb, c, stripe_start, stripe_end);
                     if (!NT_SUCCESS(Status)) {
-                        ERR("scrub_chunk_raid56_stripe_run returned %08x\n", Status);
+                        ERR("scrub_chunk_raid56_stripe_run returned %08lx\n", Status);
                         return Status;
                     }
 
@@ -2920,7 +2911,7 @@ static NTSTATUS scrub_chunk_raid56(device_extension* Vcb, chunk* c, uint64_t* of
     if (*changed) {
         Status = scrub_chunk_raid56_stripe_run(Vcb, c, stripe_start, stripe_end);
         if (!NT_SUCCESS(Status)) {
-            ERR("scrub_chunk_raid56_stripe_run returned %08x\n", Status);
+            ERR("scrub_chunk_raid56_stripe_run returned %08lx\n", Status);
             return Status;
         }
 
@@ -2956,7 +2947,11 @@ static NTSTATUS scrub_chunk(device_extension* Vcb, chunk* c, uint64_t* offset, b
     } else if (c->chunk_item->type & BLOCK_FLAG_RAID6) {
         Status = scrub_chunk_raid56(Vcb, c, offset, changed);
         goto end;
-    } else // SINGLE
+    } else if (c->chunk_item->type & BLOCK_FLAG_RAID1C3)
+        type = BLOCK_FLAG_DUPLICATE;
+    else if (c->chunk_item->type & BLOCK_FLAG_RAID1C4)
+        type = BLOCK_FLAG_DUPLICATE;
+    else // SINGLE
         type = BLOCK_FLAG_DUPLICATE;
 
     searchkey.obj_id = *offset;
@@ -2965,7 +2960,7 @@ static NTSTATUS scrub_chunk(device_extension* Vcb, chunk* c, uint64_t* offset, b
 
     Status = find_item(Vcb, Vcb->extent_root, &tp, &searchkey, false, NULL);
     if (!NT_SUCCESS(Status)) {
-        ERR("error - find_item returned %08x\n", Status);
+        ERR("error - find_item returned %08lx\n", Status);
         goto end;
     }
 
@@ -2978,7 +2973,7 @@ static NTSTATUS scrub_chunk(device_extension* Vcb, chunk* c, uint64_t* offset, b
         if (tp.item->key.obj_id >= *offset && (tp.item->key.obj_type == TYPE_EXTENT_ITEM || tp.item->key.obj_type == TYPE_METADATA_ITEM)) {
             uint64_t size = tp.item->key.obj_type == TYPE_METADATA_ITEM ? Vcb->superblock.node_size : tp.item->key.offset;
             bool is_tree;
-            uint32_t* csum = NULL;
+            void* csum = NULL;
             RTL_BITMAP bmp;
             ULONG* bmparr = NULL, bmplen;
 
@@ -2992,7 +2987,7 @@ static NTSTATUS scrub_chunk(device_extension* Vcb, chunk* c, uint64_t* offset, b
                 EXTENT_ITEM* ei = (EXTENT_ITEM*)tp.item->data;
 
                 if (tp.item->size < sizeof(EXTENT_ITEM)) {
-                    ERR("(%I64x,%x,%I64x) was %u bytes, expected at least %u\n", tp.item->key.obj_id, tp.item->key.obj_type, tp.item->key.offset, tp.item->size, sizeof(EXTENT_ITEM));
+                    ERR("(%I64x,%x,%I64x) was %u bytes, expected at least %Iu\n", tp.item->key.obj_id, tp.item->key.obj_type, tp.item->key.offset, tp.item->size, sizeof(EXTENT_ITEM));
                     Status = STATUS_INTERNAL_ERROR;
                     goto end;
                 }
@@ -3002,7 +2997,7 @@ static NTSTATUS scrub_chunk(device_extension* Vcb, chunk* c, uint64_t* offset, b
             }
 
             if (size < Vcb->superblock.sector_size) {
-                ERR("extent %I64x has size less than sector_size (%I64x < %x)\n", tp.item->key.obj_id, Vcb->superblock.sector_size);
+                ERR("extent %I64x has size less than sector_size (%I64x < %x)\n", tp.item->key.obj_id, size, Vcb->superblock.sector_size);
                 Status = STATUS_INTERNAL_ERROR;
                 goto end;
             }
@@ -3011,7 +3006,7 @@ static NTSTATUS scrub_chunk(device_extension* Vcb, chunk* c, uint64_t* offset, b
             if (!is_tree) {
                 traverse_ptr tp2;
 
-                csum = ExAllocatePoolWithTag(PagedPool, (ULONG)(sizeof(uint32_t) * size / Vcb->superblock.sector_size), ALLOC_TAG);
+                csum = ExAllocatePoolWithTag(PagedPool, (ULONG)(Vcb->csum_size * size / Vcb->superblock.sector_size), ALLOC_TAG);
                 if (!csum) {
                     ERR("out of memory\n");
                     Status = STATUS_INSUFFICIENT_RESOURCES;
@@ -3037,7 +3032,7 @@ static NTSTATUS scrub_chunk(device_extension* Vcb, chunk* c, uint64_t* offset, b
 
                 Status = find_item(Vcb, Vcb->checksum_root, &tp2, &searchkey, false, NULL);
                 if (!NT_SUCCESS(Status) && Status != STATUS_NOT_FOUND) {
-                    ERR("find_item returned %08x\n", Status);
+                    ERR("find_item returned %08lx\n", Status);
                     ExFreePool(csum);
                     ExFreePool(bmparr);
                     goto end;
@@ -3050,13 +3045,13 @@ static NTSTATUS scrub_chunk(device_extension* Vcb, chunk* c, uint64_t* offset, b
                         if (tp2.item->key.obj_type == TYPE_EXTENT_CSUM) {
                             if (tp2.item->key.offset >= tp.item->key.obj_id + size)
                                 break;
-                            else if (tp2.item->size >= sizeof(uint32_t) && tp2.item->key.offset + (tp2.item->size * Vcb->superblock.sector_size / sizeof(uint32_t)) >= tp.item->key.obj_id) {
+                            else if (tp2.item->size >= Vcb->csum_size && tp2.item->key.offset + (tp2.item->size * Vcb->superblock.sector_size / Vcb->csum_size) >= tp.item->key.obj_id) {
                                 uint64_t cs = max(tp.item->key.obj_id, tp2.item->key.offset);
-                                uint64_t ce = min(tp.item->key.obj_id + size, tp2.item->key.offset + (tp2.item->size * Vcb->superblock.sector_size / sizeof(uint32_t)));
+                                uint64_t ce = min(tp.item->key.obj_id + size, tp2.item->key.offset + (tp2.item->size * Vcb->superblock.sector_size / Vcb->csum_size));
 
-                                RtlCopyMemory(csum + ((cs - tp.item->key.obj_id) / Vcb->superblock.sector_size),
-                                              tp2.item->data + ((cs - tp2.item->key.offset) * sizeof(uint32_t) / Vcb->superblock.sector_size),
-                                              (ULONG)((ce - cs) * sizeof(uint32_t) / Vcb->superblock.sector_size));
+                                RtlCopyMemory((uint8_t*)csum + ((cs - tp.item->key.obj_id) * Vcb->csum_size / Vcb->superblock.sector_size),
+                                              tp2.item->data + ((cs - tp2.item->key.offset) * Vcb->csum_size / Vcb->superblock.sector_size),
+                                              (ULONG)((ce - cs) * Vcb->csum_size / Vcb->superblock.sector_size));
 
                                 RtlClearBits(&bmp, (ULONG)((cs - tp.item->key.obj_id) / Vcb->superblock.sector_size), (ULONG)((ce - cs) / Vcb->superblock.sector_size));
 
@@ -3077,7 +3072,7 @@ static NTSTATUS scrub_chunk(device_extension* Vcb, chunk* c, uint64_t* offset, b
                 if (!is_tree || tp.item->key.obj_id > tree_run_end) {
                     Status = scrub_extent(Vcb, c, type, tree_run_start, (uint32_t)(tree_run_end - tree_run_start), NULL);
                     if (!NT_SUCCESS(Status)) {
-                        ERR("scrub_extent returned %08x\n", Status);
+                        ERR("scrub_extent returned %08lx\n", Status);
                         goto end;
                     }
 
@@ -3098,7 +3093,7 @@ static NTSTATUS scrub_chunk(device_extension* Vcb, chunk* c, uint64_t* offset, b
             if (!is_tree) {
                 Status = scrub_data_extent(Vcb, c, tp.item->key.obj_id, type, csum, &bmp, bmplen);
                 if (!NT_SUCCESS(Status)) {
-                    ERR("scrub_data_extent returned %08x\n", Status);
+                    ERR("scrub_data_extent returned %08lx\n", Status);
                     ExFreePool(csum);
                     ExFreePool(bmparr);
                     goto end;
@@ -3128,7 +3123,7 @@ static NTSTATUS scrub_chunk(device_extension* Vcb, chunk* c, uint64_t* offset, b
     if (tree_run) {
         Status = scrub_extent(Vcb, c, type, tree_run_start, (uint32_t)(tree_run_end - tree_run_start), NULL);
         if (!NT_SUCCESS(Status)) {
-            ERR("scrub_extent returned %08x\n", Status);
+            ERR("scrub_extent returned %08lx\n", Status);
             goto end;
         }
     }
@@ -3163,7 +3158,7 @@ static void __stdcall scrub_thread(void* context) {
 
     if (!NT_SUCCESS(Status)) {
         ExReleaseResourceLite(&Vcb->tree_lock);
-        ERR("do_write returned %08x\n", Status);
+        ERR("do_write returned %08lx\n", Status);
         Vcb->scrub.error = Status;
         goto end;
     }
@@ -3226,7 +3221,7 @@ static void __stdcall scrub_thread(void* context) {
 
                 Status = scrub_chunk(Vcb, c, &offset, &changed);
                 if (!NT_SUCCESS(Status)) {
-                    ERR("scrub_chunk returned %08x\n", Status);
+                    ERR("scrub_chunk returned %08lx\n", Status);
                     Vcb->scrub.stopping = true;
                     Vcb->scrub.error = Status;
                     break;
@@ -3297,7 +3292,7 @@ NTSTATUS start_scrub(device_extension* Vcb, KPROCESSOR_MODE processor_mode) {
 
     Status = PsCreateSystemThread(&Vcb->scrub.thread, 0, &oa, NULL, NULL, scrub_thread, Vcb);
     if (!NT_SUCCESS(Status)) {
-        ERR("PsCreateSystemThread returned %08x\n", Status);
+        ERR("PsCreateSystemThread returned %08lx\n", Status);
         return Status;
     }
 

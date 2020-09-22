@@ -14,12 +14,14 @@ list(APPEND SOURCE
     index.c
     search.c
     stream.c
-    webbrowser.c
-    precomp.h)
+    webbrowser.c)
+
+list(APPEND PCH_SKIP_SOURCE
+    guid.c)
 
 add_library(hhctrl MODULE
     ${SOURCE}
-    guid.c
+    ${PCH_SKIP_SOURCE}
     hhctrl.rc
     ${CMAKE_CURRENT_BINARY_DIR}/hhctrl.def)
 
@@ -34,5 +36,5 @@ set_module_type(hhctrl win32ocx)
 target_link_libraries(hhctrl uuid wine)
 add_importlibs(hhctrl advapi32 comctl32 shlwapi ole32 oleaut32 user32 gdi32 msvcrt kernel32 ntdll)
 add_dependencies(hhctrl stdole2 wineheaders)
-add_pch(hhctrl precomp.h SOURCE)
+add_pch(hhctrl precomp.h "${PCH_SKIP_SOURCE}")
 add_cd_file(TARGET hhctrl DESTINATION reactos/system32 FOR all)

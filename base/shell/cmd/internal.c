@@ -141,72 +141,94 @@
 
 #ifdef INCLUDE_CMD_CHDIR
 
-/* helper functions for getting current path from drive
-   without changing drive. Return code 0 = ok, 1 = fail.
-   INT GetRootPath("C:",outbuffer,chater size of outbuffer);
-   the first param can have any size, if the the two frist
-   letter are not a drive with : it will get Currentpath on
-   current drive exactly as GetCurrentDirectory does.
-   */
-
-INT GetRootPath(TCHAR *InPath,TCHAR *OutPath,INT size)
+/*
+ * Helper function for getting the current path from drive
+ * without changing the drive. Return code: 0 = ok, 1 = fail.
+ * 'InPath' can have any size; if the two first letters are
+ * not a drive with ':' it will get the current path on
+ * the current drive exactly as GetCurrentDirectory() does.
+ */
+INT
+GetRootPath(
+    IN LPCTSTR InPath,
+    OUT LPTSTR OutPath,
+    IN INT size)
 {
     if (InPath[0] && InPath[1] == _T(':'))
     {
-        INT t=0;
+        INT t = 0;
 
         if ((InPath[0] >= _T('0')) && (InPath[0] <= _T('9')))
         {
-            t = (InPath[0] - _T('0')) +28;
+            t = (InPath[0] - _T('0')) + 28;
         }
-
-        if ((InPath[0] >= _T('a')) && (InPath[0] <= _T('z')))
+        else if ((InPath[0] >= _T('a')) && (InPath[0] <= _T('z')))
         {
-            t = (InPath[0] - _T('a')) +1;
-            InPath[0] = t + _T('A') - 1;
+            t = (InPath[0] - _T('a')) + 1;
         }
-
-        if ((InPath[0] >= _T('A')) && (InPath[0] <= _T('Z')))
+        else if ((InPath[0] >= _T('A')) && (InPath[0] <= _T('Z')))
         {
-            t = (InPath[0] - _T('A')) +1;
+            t = (InPath[0] - _T('A')) + 1;
         }
 
-        return _tgetdcwd(t,OutPath,size) == NULL;
+        return (_tgetdcwd(t, OutPath, size) == NULL);
     }
 
     /* Get current directory */
-    return !GetCurrentDirectory(size,OutPath);
+    return !GetCurrentDirectory(size, OutPath);
 }
 
 
 BOOL SetRootPath(TCHAR *oldpath, TCHAR *InPath)
 {
+    DWORD dwLastError;
     TCHAR OutPath[MAX_PATH];
     TCHAR OutPathTemp[MAX_PATH];
 
     StripQuotes(InPath);
 
     /* Retrieve the full path name from the (possibly relative) InPath */
-    if (GetFullPathName(InPath, MAX_PATH, OutPathTemp, NULL) == 0)
+    if (GetFullPathName(InPath, ARRAYSIZE(OutPathTemp), OutPathTemp, NULL) == 0)
+    {
+        dwLastError = GetLastError();
         goto Fail;
+    }
 
-    /* Convert the full path to its correct case.
-     * Example: c:\windows\SYSTEM32 => C:\WINDOWS\System32 */
-    GetPathCase(OutPathTemp, OutPath);
+    if (bEnableExtensions)
+    {
+        /*
+         * Convert the full path to its correct case, and
+         * resolve any wilcard present as well in the path
+         * and retrieve the first result.
+         * Example: c:\windows\SYSTEM32 => C:\WINDOWS\System32
+         * Example: C:\WINDOWS\S* => C:\WINDOWS\System,
+         * or C:\WINDOWS\System32, depending on the user's OS.
+         */
+        GetPathCase(OutPathTemp, OutPath);
+    }
+    else
+    {
+        _tcscpy(OutPath, OutPathTemp);
+    }
 
-    /* Use _tchdir, since unlike SetCurrentDirectory it updates
+    /* Use _tchdir(), since unlike SetCurrentDirectory() it updates
      * the current-directory-on-drive environment variables. */
     if (_tchdir(OutPath) != 0)
+    {
+        dwLastError = GetLastError();
+        if (dwLastError == ERROR_FILE_NOT_FOUND)
+            dwLastError = ERROR_PATH_NOT_FOUND;
         goto Fail;
+    }
 
-    /* Keep original drive in ordinary CD/CHDIR (without /D switch). */
+    /* Keep the original drive in ordinary CD/CHDIR (without /D switch) */
     if (oldpath != NULL && _tcsncicmp(OutPath, oldpath, 2) != 0)
         SetCurrentDirectory(oldpath);
 
     return TRUE;
 
 Fail:
-    ConErrFormatMessage(GetLastError());
+    ConErrFormatMessage(dwLastError);
     nErrorLevel = 1;
     return FALSE;
 }
@@ -214,9 +236,8 @@ Fail:
 
 /*
  * CD / CHDIR
- *
  */
-INT cmd_chdir (LPTSTR param)
+INT cmd_chdir(LPTSTR param)
 {
     BOOL bChangeDrive = FALSE;
     LPTSTR tmp;
@@ -224,27 +245,42 @@ INT cmd_chdir (LPTSTR param)
 
     /* Filter out special cases first */
 
-    /* Print Help */
+    /* Print help */
     if (!_tcsncmp(param, _T("/?"), 2))
     {
-        ConOutResPaging(TRUE,STRING_CD_HELP);
+        ConOutResPaging(TRUE, STRING_CD_HELP);
         return 0;
     }
 
-    /* Remove extra quotes and strip trailing whitespace */
-    StripQuotes(param);
-    tmp = param + _tcslen(param) - 1;
-    while (tmp > param && _istspace(*tmp))
-        tmp--;
-    *(tmp + 1) = _T('\0');
+    //
+    // FIXME: Use the split() tokenizer if bEnableExtensions == FALSE,
+    // so as to cut the parameter at the first separator (space, ',', ';'):
+    // - When bEnableExtensions == FALSE, doing
+    //   CD system32;winsxs
+    //   will go into system32, (but: CD "system32;winsxs" will fail as below), while
+    // - When bEnableExtensions == TRUE, it will fail because the "system32;winsxs"
+    //   directory does not exist.
+    //
 
-    /* Set Error Level to Success */
+    /* Remove extra quotes */
+    StripQuotes(param);
+
+    if (bEnableExtensions)
+    {
+        /* Strip trailing whitespace */
+        tmp = param + _tcslen(param) - 1;
+        while (tmp > param && _istspace(*tmp))
+            --tmp;
+        *(tmp + 1) = _T('\0');
+    }
+
+    /* Reset the error level */
     nErrorLevel = 0;
 
-    /* Print Current Directory on a disk */
+    /* Print the current directory on a disk */
     if (_tcslen(param) == 2 && param[1] == _T(':'))
     {
-        if (GetRootPath(param, szCurrent, MAX_PATH))
+        if (GetRootPath(param, szCurrent, ARRAYSIZE(szCurrent)))
         {
             error_invalid_drive();
             return 1;
@@ -253,21 +289,21 @@ INT cmd_chdir (LPTSTR param)
         return 0;
     }
 
-    /* Get Current Directory */
-    GetCurrentDirectory(MAX_PATH, szCurrent);
+    /* Get the current directory */
+    GetCurrentDirectory(ARRAYSIZE(szCurrent), szCurrent);
     if (param[0] == _T('\0'))
     {
         ConOutPrintf(_T("%s\n"), szCurrent);
         return 0;
     }
 
-    /* Input String Contains /D Switch */
+    /* If the input string is prefixed with the /D switch, change the drive */
     if (!_tcsncicmp(param, _T("/D"), 2))
     {
         bChangeDrive = TRUE;
         param += 2;
         while (_istspace(*param))
-            param++;
+            ++param;
     }
 
     if (!SetRootPath(bChangeDrive ? NULL : szCurrent, param))
@@ -325,6 +361,8 @@ INT cmd_mkdir (LPTSTR param)
 {
     LPTSTR *p;
     INT argc, i;
+    DWORD dwLastError;
+
     if (!_tcsncmp (param, _T("/?"), 2))
     {
         ConOutResPaging(TRUE,STRING_MKDIR_HELP);
@@ -345,13 +383,20 @@ INT cmd_mkdir (LPTSTR param)
     {
         if (!MakeFullPath(p[i]))
         {
-            if (GetLastError() == ERROR_PATH_NOT_FOUND)
+            dwLastError = GetLastError();
+            switch (dwLastError)
             {
+            case ERROR_PATH_NOT_FOUND:
                 ConErrResPuts(STRING_MD_ERROR2);
-            }
-            else
-            {
-                ErrorMessage (GetLastError(), _T("MD"));
+                break;
+
+            case ERROR_FILE_EXISTS:
+            case ERROR_ALREADY_EXISTS:
+                ConErrResPrintf(STRING_MD_ERROR, p[i]);
+                break;
+
+            default:
+                ErrorMessage(GetLastError(), NULL);
             }
             nErrorLevel = 1;
         }
@@ -362,89 +407,152 @@ INT cmd_mkdir (LPTSTR param)
 }
 #endif
 
-
 #ifdef INCLUDE_CMD_RMDIR
 /*
  * RD / RMDIR
  */
-BOOL DeleteFolder(LPTSTR FileName)
+BOOL DeleteFolder(LPTSTR Directory)
 {
-    TCHAR Base[MAX_PATH];
-    TCHAR TempFileName[MAX_PATH];
+    LPTSTR pFileName;
     HANDLE hFile;
     WIN32_FIND_DATA f;
-    _tcscpy(Base,FileName);
-    _tcscat(Base,_T("\\*"));
-    hFile = FindFirstFile(Base, &f);
-    Base[_tcslen(Base) - 1] = _T('\0');
+    DWORD dwAttribs;
+    TCHAR szFullPath[MAX_PATH];
+
+    _tcscpy(szFullPath, Directory);
+    pFileName = &szFullPath[_tcslen(szFullPath)];
+    /*
+     * Append a path separator if we don't have one already, and if this a drive root
+     * path is not specified (paths like "C:" mean the current directory on drive C:).
+     */
+    if (*szFullPath && *(pFileName - 1) != _T(':') && *(pFileName - 1) != _T('\\'))
+        *pFileName++ = _T('\\');
+    _tcscpy(pFileName, _T("*"));
+
+    hFile = FindFirstFile(szFullPath, &f);
     if (hFile != INVALID_HANDLE_VALUE)
     {
         do
         {
+            /* Check Breaker */
+            if (bCtrlBreak)
+                break;
+
             if (!_tcscmp(f.cFileName, _T(".")) ||
                 !_tcscmp(f.cFileName, _T("..")))
+            {
                 continue;
-            _tcscpy(TempFileName,Base);
-            _tcscat(TempFileName,f.cFileName);
+            }
 
-            if (f.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-                DeleteFolder(TempFileName);
+            _tcscpy(pFileName, f.cFileName);
+
+            dwAttribs = f.dwFileAttributes;
+
+            if (dwAttribs & FILE_ATTRIBUTE_DIRECTORY)
+            {
+                if (!DeleteFolder(szFullPath))
+                {
+                    /* Couldn't delete the file, print out the error */
+                    ErrorMessage(GetLastError(), szFullPath);
+
+                    /* Continue deleting files/subfolders */
+                }
+            }
             else
             {
-                SetFileAttributes(TempFileName,FILE_ATTRIBUTE_NORMAL);
-                if (!DeleteFile(TempFileName))
+                /* Force file deletion even if it's read-only */
+                if (dwAttribs & FILE_ATTRIBUTE_READONLY)
+                    SetFileAttributes(szFullPath, dwAttribs & ~FILE_ATTRIBUTE_READONLY);
+
+                if (!DeleteFile(szFullPath))
                 {
-                    FindClose (hFile);
-                    return 0;
+                    /* Couldn't delete the file, print out the error */
+                    ErrorMessage(GetLastError(), szFullPath);
+
+                    /* Restore file attributes */
+                    SetFileAttributes(szFullPath, dwAttribs);
+
+                    /* Continue deleting files/subfolders */
                 }
             }
 
-        }while (FindNextFile (hFile, &f));
-        FindClose (hFile);
+        } while (FindNextFile(hFile, &f));
+        FindClose(hFile);
     }
-    return RemoveDirectory(FileName);
+
+    /* Ignore directory deletion if the user pressed Ctrl-C */
+    if (bCtrlBreak)
+        return TRUE;
+
+    /*
+     * Detect whether we are trying to delete a pure root drive (e.g. "C:\\", but not "C:");
+     * if so, just return success. Otherwise the RemoveDirectory() call below would fail
+     * and return ERROR_ACCESS_DENIED.
+     */
+    if (GetFullPathName(Directory, ARRAYSIZE(szFullPath), szFullPath, NULL) == 3 &&
+        szFullPath[1] == _T(':') && szFullPath[2] == _T('\\'))
+    {
+        return TRUE;
+    }
+
+    /* First attempt to delete the directory */
+    if (RemoveDirectory(Directory))
+        return TRUE;
+
+    /*
+     * It failed; if it was due to an denied access, check whether it was
+     * due to the directory being read-only. If so, remove its attribute
+     * and retry deletion.
+     */
+    if (GetLastError() == ERROR_ACCESS_DENIED)
+    {
+        /* Force directory deletion even if it's read-only */
+        dwAttribs = GetFileAttributes(Directory);
+        if (dwAttribs & FILE_ATTRIBUTE_READONLY)
+        {
+            SetFileAttributes(Directory, dwAttribs & ~FILE_ATTRIBUTE_READONLY);
+            return RemoveDirectory(Directory);
+        }
+    }
+
+    return FALSE;
 }
 
-INT cmd_rmdir (LPTSTR param)
+INT cmd_rmdir(LPTSTR param)
 {
-    TCHAR ch;
+    INT nError = 0;
+    INT res;
+    LPTSTR *arg;
     INT args;
     INT dirCount;
-    LPTSTR *arg;
     INT i;
-    BOOL RD_SUB = FALSE;
-    BOOL RD_QUIET = FALSE;
-    INT res;
-    INT nError = 0;
-    TCHAR szFullPath[MAX_PATH];
+    TCHAR ch;
+    BOOL bRecurseDir = FALSE;
+    BOOL bQuiet = FALSE;
 
-    if (!_tcsncmp (param, _T("/?"), 2))
+    if (!_tcsncmp(param, _T("/?"), 2))
     {
         ConOutResPaging(TRUE,STRING_RMDIR_HELP);
         return 0;
     }
 
-    arg = split (param, &args, FALSE, FALSE);
+    arg = split(param, &args, FALSE, FALSE);
     dirCount = 0;
 
-    /* check for options anywhere in command line */
+    /* Check for options anywhere in command line */
     for (i = 0; i < args; i++)
     {
         if (*arg[i] == _T('/'))
         {
-            /*found a command, but check to make sure it has something after it*/
-            if (_tcslen (arg[i]) == 2)
+            /* Found an option, but check to make sure it has something after it */
+            if (_tcslen(arg[i]) == 2)
             {
-                ch = _totupper (arg[i][1]);
+                ch = _totupper(arg[i][1]);
 
                 if (ch == _T('S'))
-                {
-                    RD_SUB = TRUE;
-                }
+                    bRecurseDir = TRUE;
                 else if (ch == _T('Q'))
-                {
-                    RD_QUIET = TRUE;
-                }
+                    bQuiet = TRUE;
             }
         }
         else
@@ -466,31 +574,26 @@ INT cmd_rmdir (LPTSTR param)
         if (*arg[i] == _T('/'))
             continue;
 
-        if (RD_SUB)
+        if (bRecurseDir)
         {
-            /* ask if they want to delete everything in the folder */
-            if (!RD_QUIET)
+            /* Ask the user whether to delete everything in the folder */
+            if (!bQuiet)
             {
-                res = FilePromptYNA (STRING_DEL_HELP2);
+                res = FilePromptYNA(STRING_DEL_HELP2);
                 if (res == PROMPT_NO || res == PROMPT_BREAK)
                 {
                     nError = 1;
                     continue;
                 }
                 if (res == PROMPT_ALL)
-                    RD_QUIET = TRUE;
+                    bQuiet = TRUE;
             }
-            /* get the folder name */
-            GetFullPathName(arg[i],MAX_PATH,szFullPath,NULL);
 
-            /* remove trailing \ if any, but ONLY if dir is not the root dir */
-            if (_tcslen (szFullPath) >= 2 && szFullPath[_tcslen (szFullPath) - 1] == _T('\\'))
-                szFullPath[_tcslen(szFullPath) - 1] = _T('\0');
-
-            res = DeleteFolder(szFullPath);
+            res = DeleteFolder(arg[i]);
         }
         else
         {
+            /* Without /S, do not force directory deletion even if it's read-only */
             res = RemoveDirectory(arg[i]);
         }
 
@@ -498,19 +601,23 @@ INT cmd_rmdir (LPTSTR param)
         {
             /* Couldn't delete the folder, print out the error */
             nError = GetLastError();
-            ErrorMessage(nError, _T("RD"));
+            ErrorMessage(nError, NULL);
         }
     }
 
-    freep (arg);
+    freep(arg);
     return nError;
 }
 #endif
 
 
 /*
- * set the exitflag to true
+ * Either exits the command interpreter, or quits the current batch context.
  */
+
+/* Enable this define for supporting EXIT /B even when extensions are disabled */
+// #define SUPPORT_EXIT_B_NO_EXTENSIONS
+
 INT CommandExit(LPTSTR param)
 {
     if (!_tcsncmp(param, _T("/?"), 2))
@@ -522,7 +629,7 @@ INT CommandExit(LPTSTR param)
         return 0;
     }
 
-    if (_tcsnicmp(param, _T("/b"), 2) == 0)
+    if (_tcsnicmp(param, _T("/B"), 2) == 0)
     {
         param += 2;
 
@@ -531,9 +638,35 @@ INT CommandExit(LPTSTR param)
          * otherwise exit this command interpreter instance.
          */
         if (bc)
-            ExitBatch();
+        {
+            /* Windows' CMD compatibility: Use GOTO :EOF */
+            TCHAR EofLabel[] = _T(":EOF");
+
+#ifdef SUPPORT_EXIT_B_NO_EXTENSIONS
+            /*
+             * Temporarily enable extensions so as to support :EOF.
+             *
+             * Our GOTO implementation ensures that, when extensions are
+             * enabled and the label is ':EOF', no immediate change of batch
+             * context (done e.g. via ExitBatch() calls) is performed.
+             * This will therefore ensure that we do not spoil the extensions
+             * state when we restore it below.
+             */
+            BOOL bOldEnableExtensions = bEnableExtensions;
+            bEnableExtensions = TRUE;
+#endif
+
+            cmd_goto(EofLabel);
+
+#ifdef SUPPORT_EXIT_B_NO_EXTENSIONS
+            /* Restore the original state of the extensions */
+            bEnableExtensions = bOldEnableExtensions;
+#endif
+        }
         else
+        {
             bExit = TRUE;
+        }
     }
     else
     {
@@ -543,13 +676,16 @@ INT CommandExit(LPTSTR param)
 
     /* Search for an optional exit code */
     while (_istspace(*param))
-        param++;
+        ++param;
 
     /* Set the errorlevel to the exit code */
     if (_istdigit(*param))
+    {
         nErrorLevel = _ttoi(param);
+        // if (fSingleCommand == 1) return nErrorLevel;
+    }
 
-    return 0;
+    return (bExit ? nErrorLevel : 0);
 }
 
 #ifdef INCLUDE_CMD_REM
@@ -568,7 +704,7 @@ INT CommandRem (LPTSTR param)
 #endif /* INCLUDE_CMD_REM */
 
 
-INT CommandShowCommands (LPTSTR param)
+INT CommandShowCommands(LPTSTR param)
 {
     PrintCommandList();
     return 0;

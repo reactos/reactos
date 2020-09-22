@@ -23,7 +23,7 @@ To remove an alias from the alias list:\n\
     STRING_CALL_HELP "Calls one batch program from another.\n\n\
 CALL [drive:][path]filename [batch-parameter]\n\n\
   batch-parameter  Specifies any command-line information required by the\n\
-                   batch program."
+                   batch program.\n"
     STRING_CD_HELP "Changes the current directory or displays it's name\n\n\
 CHDIR [/D][drive:][path]\n\
 CHDIR[..|.]\n\
@@ -193,7 +193,7 @@ PUSHD [path | ..]\n\n\
   ECHO [message]\n\
   ECHO.             prints an empty line\n\n\
 Type ECHO without a parameter to display the current ECHO setting."
-    STRING_ECHO_HELP5 "ECHO is %s\n"
+    STRING_ECHO_HELP5 "ECHO is %s.\n"
     STRING_EXIT_HELP "Exits the command line interpreter.\n\nEXIT [/b] [ExitCode]\n\n\
   /B            Exits a batch file only.\n\
                 If run outside of a batch file it will exit cmd.exe\n\
@@ -228,7 +228,7 @@ To use the FOR command in a batch program, specify %%variable instead of\n\
     STRING_GOTO_HELP1 "Directs CMD to a labeled line in a batch script.\n\n\
 GOTO label\n\n\
   label  Specifies a text string used in a batch script as a label.\n\n\
-You type a label on a line by itself, beginning with a colon."
+You type a label on a line by itself, beginning with a colon.\n"
     STRING_IF_HELP1 "Performs conditional processing in batch programs.\n\n\
   IF [NOT] ERRORLEVEL number command\n\
   IF [NOT] string1==string2 command\n\
@@ -265,9 +265,9 @@ If neither /H or /J is specified, a symbolic link is created."
     STRING_MOVE_HELP1 "Overwrite %s (Yes/No/All)? "
     STRING_MOVE_HELP2 "Moves files and renames files and directories.\n\n\
 To move one or more files:\n\
-MOVE [/N][drive:][path]filename1[,...] destination\n\n\
+MOVE [/N][/Y|/-Y][drive:][path]filename1[,...] destination\n\n\
 To rename a directory:\n\
-MOVE [/N][drive:][path]dirname1 dirname2\n\n\
+MOVE [/N][/Y|/-Y][drive:][path]dirname1 dirname2\n\n\
   [drive:][path]filename1  Specifies the location and name of the file\n\
                            or files you want to move.\n\
   /N                    Nothing. Do everything but move files or directories.\n\n\
@@ -288,6 +288,9 @@ PATH [[drive:]path[;...]]\nPATH ;\n\n\
 Type PATH ; to clear all search-path settings and direct the command shell\n\
 to search only in the current directory.\n\
 Type PATH without parameters to display the current path.\n"
+    STRING_PAUSE_HELP1 "Stops the execution of a batch file and shows the following message:\n\
+'Press any key to continue...' or a user defined message.\n\n\
+PAUSE [message]"
     STRING_PROMPT_HELP1 "Changes the command prompt.\n\n\
 PROMPT [text]\n\n\
   text    Specifies a new command prompt.\n\n\
@@ -310,16 +313,13 @@ Prompt can be made up of normal characters and the following special codes:\n\n\
   $V   OS version number\n\
   $_   Carriage return and linefeed\n\
   $$   $ (dollar sign)\n"
-    STRING_PAUSE_HELP1 "Stops the execution of a batch file and shows the following message:\n\
-'Press any key to continue...' or a user defined message.\n\n\
-PAUSE [message]"
     STRING_PROMPT_HELP2 "  $+   Displays the current depth of the directory stack"
     STRING_PROMPT_HELP3 "\nType PROMPT without parameters to reset the prompt to the default setting."
     STRING_REM_HELP "Starts a comment line in a batch file.\n\nREM [Comment]"
     STRING_RMDIR_HELP "Removes a directory.\n\n\
-RMDIR [drive:]path\nRD [drive:]path\n\
-/S          Deletes all files and folders within target\n\
-/Q          Doesn't prompt for user\n"
+RMDIR [/S] [/Q] [drive:]path\nRD [/S] [/Q] [drive:]path\n\
+  /S    Deletes all files and folders within the target.\n\
+  /Q    Doesn't prompt for user.\n"
     STRING_RMDIR_HELP2 "Directory is not empty!\n"
     STRING_REN_HELP1 "Renames a file/directory or files/directories.\n\n\
 RENAME [/E /N /P /Q /S /T] old_name ... new_name\n\
@@ -468,9 +468,9 @@ title         new title\n"
     STRING_ALIAS_ERROR "Command line too long after alias expansion!\n"
     STRING_ASSOC_ERROR "File association not found for extension %s\n"
     STRING_BATCH_ERROR "Error opening batch file\n"
-    STRING_CHOICE_ERROR "Invalid option. Expected format: /C[:]options"
-    STRING_CHOICE_ERROR_TXT "Invalid option. Expected format: /T[:]c,nn"
-    STRING_CHOICE_ERROR_OPTION "Illegal Option: %s"
+    STRING_CHOICE_ERROR "Invalid option. Expected format: /C[:]options\n"
+    STRING_CHOICE_ERROR_TXT "Invalid option. Expected format: /T[:]c,nn\n"
+    STRING_CHOICE_ERROR_OPTION "Illegal Option: %s\n"
     STRING_CMD_ERROR1 "Can't redirect input from file %s\n"
     STRING_CMD_ERROR2 "Error creating temporary file for pipe data\n"
     STRING_CMD_ERROR3 "Can't redirect to file %s\n"
@@ -495,9 +495,9 @@ title         new title\n"
     STRING_FOR_ERROR4 "no command after 'do'."
     STRING_FREE_ERROR1 "Invalid drive"
     STRING_FREE_ERROR2 "unlabeled"
-    STRING_GOTO_ERROR1 "No label specified for GOTO"
+    STRING_GOTO_ERROR1 "No label specified for GOTO\n"
     STRING_GOTO_ERROR2 "Label '%s' not found\n"
-    STRING_MD_ERROR "A subdirectory or file already exists.\n"
+    STRING_MD_ERROR "A subdirectory or file %s already exists.\n"
     STRING_MD_ERROR2 "The path to the new folder does not exist.\n"
     STRING_MOVE_ERROR1 "[OK]\n"
     STRING_MOVE_ERROR2 "[Error]\n"
@@ -516,9 +516,9 @@ title         new title\n"
     STRING_ERROR_BADCOMMAND "Bad command or filename - %s\n"
     STRING_ERROR_OUT_OF_MEMORY "Out of memory error.\n"
     STRING_ERROR_CANNOTPIPE "Error!  Cannot pipe!  Cannot open temporary file!\n"
-    STRING_ERROR_D_PAUSEMSG "Press any key to continue . . ."
+    STRING_ERROR_D_PAUSEMSG "Press any key to continue . . . "
     STRING_ERROR_DRIVER_NOT_READY "Drive not ready"
-    STRING_PATH_ERROR "CMD: Not in environment '%s'\n"
+    STRING_SET_ENV_ERROR "Environment variable '%s' is not defined\n"
     STRING_REPLACE_ERROR1 "Invalid switch - %s\n"
     STRING_REPLACE_ERROR2 "Path not found - %s\n"
     STRING_REPLACE_ERROR3 "The filename, directory name, or volume label syntax is incorrect.\n"
@@ -542,8 +542,8 @@ title         new title\n"
     STRING_MKLINK_CREATED_JUNCTION "Junction created for %s <<===>> %s\n"
     STRING_MORE "More? "
     STRING_CANCEL_BATCH_FILE "\r\nCtrl-Break pressed.  Cancel batch file? (Yes/No/All) "
-    STRING_INVALID_OPERAND "Invalid operand."
-    STRING_EXPECTED_CLOSE_PAREN "Expected ')'."
-    STRING_EXPECTED_NUMBER_OR_VARIABLE "Expected number or variable name."
-    STRING_SYNTAX_COMMAND_INCORRECT "The syntax of the command is incorrect."
+    STRING_INVALID_OPERAND "Invalid operand.\n"
+    STRING_EXPECTED_CLOSE_PAREN "Expected ')'.\n"
+    STRING_EXPECTED_NUMBER_OR_VARIABLE "Expected number or variable name.\n"
+    STRING_SYNTAX_COMMAND_INCORRECT "The syntax of the command is incorrect.\n"
 END

@@ -231,7 +231,7 @@ UDFCommonCreate(
     PtrUDFFCB                   PtrRelatedFCB = NULL, PtrNewFcb = NULL;
     PtrUDFNTRequiredFCB         NtReqFcb;
 
-    ULONG                       ReturnedInformation;
+    ULONG                       ReturnedInformation = 0;
 
     UNICODE_STRING              TargetObjectName;
     UNICODE_STRING              RelatedObjectName;
@@ -487,6 +487,7 @@ UDFCommonCreate(
 
         if (Vcb->SoftEjectReq) { 
             AdPrint(("    Eject requested\n"));
+            ReturnedInformation = FILE_DOES_NOT_EXIST;
             try_return(RC = STATUS_FILE_INVALID);
         }
 
@@ -580,6 +581,7 @@ UDFCommonCreate(
 
             if ((RequestedDisposition != FILE_OPEN) && (RequestedDisposition != FILE_OPEN_IF)) {
                 // cannot create a new volume, I'm afraid ...
+                ReturnedInformation = FILE_DOES_NOT_EXIST;
                 try_return(RC = STATUS_ACCESS_DENIED);
             }
 #endif //UDF_READ_ONLY_BUILD
@@ -1026,6 +1028,7 @@ op_vol_accs_dnd:
         if(Vcb->VCBFlags & UDF_VCB_FLAGS_RAW_DISK) {
             ReturnedInformation = 0;
             AdPrint(("    Can't open File on blank volume ;)\n"));
+            ReturnedInformation = FILE_DOES_NOT_EXIST;
             try_return(RC = STATUS_OBJECT_NAME_NOT_FOUND);
         }
 
@@ -1042,6 +1045,7 @@ op_vol_accs_dnd:
             try_return(RC = STATUS_OBJECT_NAME_INVALID);
         }
         if(StreamOpen && !UDFStreamsSupported(Vcb)) {
+            ReturnedInformation = FILE_DOES_NOT_EXIST;
             try_return(RC = STATUS_OBJECT_NAME_INVALID);
         }
 
@@ -1450,6 +1454,7 @@ Skip_open_attempt:
             } else {
                 AdPrint(("  Open Target: unexpected error\n"));
                 NewFileInfo = NULL;
+                ReturnedInformation = FILE_DOES_NOT_EXIST;
                 try_return(RC = STATUS_OBJECT_NAME_INVALID);
             }
 
@@ -1500,6 +1505,7 @@ Skip_open_attempt:
             if ((RequestedDisposition != FILE_CREATE) && (RequestedDisposition != FILE_OPEN_IF) &&
                  (RequestedDisposition != FILE_OVERWRITE_IF) && (RequestedDisposition != FILE_SUPERSEDE)) {
                 AdPrint(("    File doesn't exist (2)\n"));
+                ReturnedInformation = FILE_DOES_NOT_EXIST;
                 try_return(RC);
             }
             // Check Volume ReadOnly attr

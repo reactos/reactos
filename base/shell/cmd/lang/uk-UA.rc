@@ -31,7 +31,7 @@ ALIAS [псевдонiм=[команда]]\n\n\
     STRING_CALL_HELP "Виклик однiєї пакетної програми з iншої.\n\n\
 CALL [диск:][шлях]iм'я_файла [параметри]\n\n\
   параметри  Набiр параметрiв командного рядка, необхiдних для пакетного\n\
-             файлу."
+             файлу.\n"
     STRING_CD_HELP "Виведення iменi або змiна поточного каталогу\n\n\
 CHDIR [/D][диск:][шлях]\n\
 CHDIR[..|.]\n\
@@ -204,7 +204,7 @@ PUSHD [path | ..]\n\n\
   ECHO [повiдомлення]\n\
   ECHO.             друкує порожнiй рядок\n\n\
 ECHO без параметра виводить поточний режим вiдображення команд."
-    STRING_ECHO_HELP5 "ECHO is %s\n"
+    STRING_ECHO_HELP5 "ECHO is %s.\n"
     STRING_EXIT_HELP "Завершує iнтерпретатор команд.\n\nEXIT [/b] [ExitCode]\n\n\
   /B            Виходить лише з пакетного файлу.\n\
                 Якщо робота йде поза пакетним файлом - вихiд з cmd.exe\n\
@@ -239,7 +239,7 @@ f,d,p,n,x,s,a,t,z.\n\n\
     STRING_GOTO_HELP1 "Передача управління рядку пакетного файлу, що мiстить мiтку.\n\n\
 GOTO мiтка\n\n\
   label  рядок пакетного файлу, визначений як мiтка.\n\n\
-Мітка повинна знаходитися в окремому рядку i починатися з двокрапки."
+Мітка повинна знаходитися в окремому рядку i починатися з двокрапки.\n"
     STRING_IF_HELP1 "Оператор умовного виконання команд у пакетному файлi.\n\n\
   IF [NOT] ERRORLEVEL число команда\n\
   IF [NOT] рядок1==рядок2 команда\n\
@@ -276,9 +276,9 @@ MKLINK [/D | /H | /J] назва_посилання цiль\n\n\
     STRING_MOVE_HELP1 "Переписати %s (Yes/No/All)? "
     STRING_MOVE_HELP2 "Перемiщення файлiв i перейменування файлiв i каталогiв.\n\n\
 Перемiщення одного та бiльше файлiв:\n\
-MOVE [/N][диск:][шлях]iм'я_файлу1[,...] призначення\n\n\
+MOVE [/N][/Y|/-Y][диск:][шлях]iм'я_файлу1[,...] призначення\n\n\
 Перейменування каталогу:\n\
-MOVE [/N][диск:][шлях]iм'я_каталогу1 iм'я_каталогу2\n\n\
+MOVE [/N][/Y|/-Y][диск:][шлях]iм'я_каталогу1 iм'я_каталогу2\n\n\
   [диск:][шлях]iм'я_файлу1 Вказує мiсце розташування й iм'я файлу або\n\
                            файлiв якi необхiдно перемiстити.\n\
   /N                    Нiчого. Do everything but move files or directories.\n\n\
@@ -299,6 +299,9 @@ PATH [[диск:]шлях[;...]]\nPATH ;\n\n\
 Команда PATH ; очищає шлях пошуку файлiв та обмежує його\n\
 поточним каталогом.\n\
 Команда PATH без параметрiв вiдображає поточний шлях пошуку.\n"
+    STRING_PAUSE_HELP1 "Призупинка обробки пакетного файлу i показ повiдомлення:\n\
+'Для продовження натиснiть будь-яку клавiшу...' чи задане повiдомлення.\n\n\
+PAUSE [повiдомлення]"
     STRING_PROMPT_HELP1 "Змiна запрошення командного рядка.\n\n\
 PROMPT [текст]\n\n\
   текст    Нове запрошення командного рядка.\n\n\
@@ -321,16 +324,13 @@ PROMPT [текст]\n\n\
   $V   Номер версiї операцiйної системи\n\
   $_   Повернення каретки та переведення рядка\n\
   $$   $ (знак долара)\n"
-    STRING_PAUSE_HELP1 "Призупинка обробки пакетного файлу i показ повiдомлення:\n\
-'Для продовження натиснiть будь-яку клавiшу...' чи задане повiдомлення.\n\n\
-PAUSE [повiдомлення]"
     STRING_PROMPT_HELP2 "  $+   Показує поточну глибину стека каталогiв"
     STRING_PROMPT_HELP3 "\nPROMPT без параметрiв встановлює запрошення командного рядка за замовчуванням."
     STRING_REM_HELP "Стартує рядок коментаря впакетному файлi.\n\nREM [Comment]"
     STRING_RMDIR_HELP "Видалення каталогу.\n\n\
-RMDIR [диск:]шлях\nRD [диск:]шлях\n\
-/S          Видалення всього дерева всерединi цiлi\n\
-/Q          Вимкнення запиту пiдтвердження\n"
+RMDIR [/S] [/Q] [диск:]шлях\nRD [/S] [/Q] [диск:]шлях\n\
+  /S    Видалення всього дерева всерединi цiлi.\n\
+  /Q    Вимкнення запиту пiдтвердження.\n"
     STRING_RMDIR_HELP2 "Каталог не порожнiй!\n"
     STRING_REN_HELP1 "Перейменування одного чи кiлькох файлiв/каталогiв.\n\n\
 RENAME [/E /N /P /Q /S /T] старе_iм'я ... нове_iм'я\n\
@@ -478,9 +478,9 @@ title         новий заголовок\n"
     STRING_ALIAS_ERROR "Командний рядок занадто довгий пiсля розгортання псевдонiмiв!\n"
     STRING_ASSOC_ERROR "Не знайдено файлової асоцiацiї для розширення %s\n"
     STRING_BATCH_ERROR "Помилка вiдкриття пакетного файлу\n"
-    STRING_CHOICE_ERROR "Невiрний параметр. Очiкується формат: /C[:]параметри"
-    STRING_CHOICE_ERROR_TXT "Невiрний параметр. Очiкується формат: /T[:]c,nn"
-    STRING_CHOICE_ERROR_OPTION "Невiрний параметр: %s"
+    STRING_CHOICE_ERROR "Невiрний параметр. Очiкується формат: /C[:]параметри\n"
+    STRING_CHOICE_ERROR_TXT "Невiрний параметр. Очiкується формат: /T[:]c,nn\n"
+    STRING_CHOICE_ERROR_OPTION "Невiрний параметр: %s\n"
     STRING_CMD_ERROR1 "Не можу перенаправити ввiд з файлу %s\n"
     STRING_CMD_ERROR2 "Помилка створення тимчасового файлу для pipe-даних\n"
     STRING_CMD_ERROR3 "Не можу перенаправити в файл %s\n"
@@ -505,9 +505,9 @@ title         новий заголовок\n"
     STRING_FOR_ERROR4 "немає команди пiсля 'do'."
     STRING_FREE_ERROR1 "Невiрний диск"
     STRING_FREE_ERROR2 "не вiдмiчено"
-    STRING_GOTO_ERROR1 "Не визначена мiтка для GOTO"
+    STRING_GOTO_ERROR1 "Не визначена мiтка для GOTO\n"
     STRING_GOTO_ERROR2 "Мiтка '%s' не знайдена\n"
-    STRING_MD_ERROR "Пiдкаталог чи файл вже iснує.\n"
+    STRING_MD_ERROR "Пiдкаталог чи файл %s вже iснує.\n"
     STRING_MD_ERROR2 "Шлях до нового каталогу не iснує.\n"
     STRING_MOVE_ERROR1 "[OK]\n"
     STRING_MOVE_ERROR2 "[Помилка]\n"
@@ -526,9 +526,9 @@ title         новий заголовок\n"
     STRING_ERROR_BADCOMMAND "Невiрна команда або iм'я файлу - %s\n"
     STRING_ERROR_OUT_OF_MEMORY "Недостатньо пам'ятi.\n"
     STRING_ERROR_CANNOTPIPE "Помилка!  Неможливо використати pipe!  Неможливо вiдкрити тимчасовий файл!\n"
-    STRING_ERROR_D_PAUSEMSG "Натиснiть будь-яку клавiшу для продовження . . ."
+    STRING_ERROR_D_PAUSEMSG "Натиснiть будь-яку клавiшу для продовження . . . "
     STRING_ERROR_DRIVER_NOT_READY "Пристрій не готовий"
-    STRING_PATH_ERROR "CMD: Не в середовищi '%s'\n"
+    STRING_SET_ENV_ERROR "Environment variable '%s' is not defined\n"
     STRING_REPLACE_ERROR1 "Невiрний ключ - %s\n"
     STRING_REPLACE_ERROR2 "Шлях не знайдено - %s\n"
     STRING_REPLACE_ERROR3 "Синтаксис iменi файлу, теки чи мiтки диску некоректнi.\n"
@@ -552,8 +552,8 @@ title         новий заголовок\n"
     STRING_MKLINK_CREATED_JUNCTION "Створено з'єднання для %s <<===>> %s\n"
     STRING_MORE "Бiльше? "
     STRING_CANCEL_BATCH_FILE "\r\nнатиснено Ctrl-Break.  Припинити виконання пакетного файлу? (Yes/No/All) "
-    STRING_INVALID_OPERAND "Невiрний операнд."
-    STRING_EXPECTED_CLOSE_PAREN "Очiкується ')'."
-    STRING_EXPECTED_NUMBER_OR_VARIABLE "Очiкується число або iм'я змiнної."
-    STRING_SYNTAX_COMMAND_INCORRECT "Некоректний синтаксис команди."
+    STRING_INVALID_OPERAND "Невiрний операнд.\n"
+    STRING_EXPECTED_CLOSE_PAREN "Очiкується ')'.\n"
+    STRING_EXPECTED_NUMBER_OR_VARIABLE "Очiкується число або iм'я змiнної.\n"
+    STRING_SYNTAX_COMMAND_INCORRECT "Некоректний синтаксис команди.\n"
 END

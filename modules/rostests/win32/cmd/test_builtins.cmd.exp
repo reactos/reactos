@@ -1,37 +1,88 @@
------------- Testing for1 ------------
---- plain FOR with multiple lines
+------------ Testing FOR loop ------------
+--- Multiple lines
 A
 B
 C
------------- Testing for2 ------------
---- plain FOR with lines and spaces
+--- Lines and spaces
 D
 E
 F
------------- Testing for3 ------------
---- plain FOR with multiple lines and commas
+--- Multiple lines and commas
 G
 H
 I
------------- Testing for4 ------------
---- plain FOR with multiple lines and %I
+--- Multiple lines and %I
 %I
 %I
 %I
------------- Testing for5 ------------
---- plain FOR with multiple lines and %j
+--- Multiple lines and %j
 %j
 %j
 %j
------------- Testing Amp-Amp ---------
---- test for something that is TRUE
-TRUE Amp-Amp
------------- Testing Amp-Amp ---------
---- test for something that is FALSE
------------- Testing Pipe-Pipe -------
---- test for something that is TRUE
------------- Testing Pipe-Pipe -------
---- test for something that is FALSE
-FALSE Pipe-Pipe
------------- End of Testing ------------
---- Testing ends here
+---------- Testing AND operator ----------
+TRUE AND condition
+---------- Testing OR operator -----------
+FALSE OR condition
+---------- Testing CMD exit codes and errorlevels ----------
+--- CMD /C Direct EXIT call
+OK
+OK
+--- CMD /C Direct EXIT /B call
+OK
+OK
+--- CMD /C Non-existing command
+OK
+OK
+OK
+OK
+--- CMD /C RMDIR (no ERRORLEVEL set)
+OK
+OK
+OK
+OK
+--- CMD /C DIR (sets ERRORLEVEL) - With failure
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+--- CMD /C DIR (sets ERRORLEVEL) - With success
+OK
+OK
+OK
+OK
+OK
+OK
+--- CALL Batch Non-existing command
+OK
+OK
+--- CALL Batch RMDIR (no ERRORLEVEL set)
+OK
+OK
+--- CALL Batch RMDIR with || (sets ERRORLEVEL)
+OK
+OK
+OK
+OK
+--- CALL Batch DIR (sets ERRORLEVEL) - With failure
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+--- CALL Batch DIR (sets ERRORLEVEL) - With success
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+--------- Finished  --------------

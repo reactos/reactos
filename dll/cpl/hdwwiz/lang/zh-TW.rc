@@ -3,6 +3,7 @@
  * (繁體中文資源)
  * by Henry Tang Ih 2016 (henrytang2@hotmail.com)
  *    Luo Yufan 2018 (njlyf2011@hotmail.com) 
+ *    Aobi Chan CL 2020 (eason066@gmail.com)
  */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
@@ -13,12 +14,12 @@ CAPTION "新增硬體精靈"
 FONT 9, "新細明體"
 BEGIN
     LTEXT "歡迎使用新增硬體精靈", IDC_FINISHTITLE, 114, 8, 203, 24
-    LTEXT "這個精靈幫助您:", -1, 114, 40, 182, 8
+    LTEXT "這個精靈將幫助您:", -1, 114, 40, 182, 8
     LTEXT "1) 安裝軟體來支援添加到電腦的硬體。", -1, 121, 56, 184, 16
     LTEXT "2) 解決您的硬體問題。", -1, 121, 78, 185, 16
     ICON IDI_WARNINGICON, IDC_WARNINGICON, 124, 109, 20, 20
     LTEXT "如果硬體帶安裝 CD，建議您按 [取消]，關閉這個精靈，用製造商的 CD 來安裝這個硬體。", 503, 150, 106, 155, 50
-    LTEXT "要繼續，請按 [下一步]。", -1, 114, 166, 193, 8
+    LTEXT "如要繼續，請按 [下一步]。", -1, 114, 166, 193, 8
 END
 
 IDD_SEARCHPAGE DIALOGEX 0, 0, 317, 143
@@ -35,9 +36,9 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "新增硬體精靈"
 FONT 9, "新細明體"
 BEGIN
-    LTEXT "您是否已將這個硬體跟電腦連線?", -1, 20, 11, 275, 8
-    AUTORADIOBUTTON "是，硬體已連線好(&Y)", IDC_CONNECTED, 29, 23, 266, 8, WS_GROUP
-    AUTORADIOBUTTON "否，尚未添加硬體(&N)", IDC_NOTCONNECTED, 29, 35, 266, 8
+    LTEXT "您是否已將這個硬體與電腦連接？", -1, 20, 11, 275, 8
+    AUTORADIOBUTTON "是，我已連接好硬體(&Y)", IDC_CONNECTED, 29, 23, 266, 8, WS_GROUP
+    AUTORADIOBUTTON "否，我尚未新增硬體(&N)", IDC_NOTCONNECTED, 29, 35, 266, 8
 END
 
 IDD_PROBELISTPAGE DIALOGEX 0, 0, 317, 143
@@ -45,8 +46,8 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "新增硬體精靈"
 FONT 9, "新細明體"
 BEGIN
-    LTEXT "從以下清單中選擇一個已安裝的硬體裝置，然後單擊 [下一步]，檢查內容或解決您遇到的問題。", -1, 21, 8, 275, 22
-    LTEXT "要添加列表中沒有顯示的硬體，請單擊 [添加新的硬體裝置]。", -1, 21, 32, 275, 24
+    LTEXT "從以下清單中選擇一個已安裝的硬體裝置，然後按 [下一步]，檢查內容或解決您遇到的問題。", -1, 21, 8, 275, 22
+    LTEXT "要添加列表中沒有顯示的硬體，請按 [添加新的硬體裝置]。", -1, 21, 32, 275, 24
     LTEXT "已安裝的硬體(&N):", -1, 21, 62, 140, 8
     CONTROL "", IDC_PROBELIST, "SysListView32", WS_BORDER | WS_GROUP | WS_TABSTOP | LVS_REPORT | LVS_NOSORTHEADER | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | LVS_NOCOLUMNHEADER, 21, 72, 275, 66
 END
@@ -56,10 +57,10 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "新增硬體精靈"
 FONT 9, "新細明體"
 BEGIN
-    LTEXT "這個精靈可以搜索其他硬體併為您自動安裝。或者，如果您知道要安裝哪個型號的硬體，您可以從清單選擇。", -1, 21, 8, 280, 24
-    LTEXT "您期望精靈做什麼?", -1, 23, 40, 275, 8
+    LTEXT "這個精靈可以搜索其他硬體並自動安裝。或者，如果您知道要安裝哪個型號的硬體，您可以從清單選擇。", -1, 21, 8, 280, 24
+    LTEXT "您想精靈做什麼?", -1, 23, 40, 275, 8
     AUTORADIOBUTTON "搜索並自動安裝硬體(推薦)(&S)", IDC_AUTOINSTALL, 30, 55, 266, 8, WS_GROUP | NOT WS_TABSTOP
-    AUTORADIOBUTTON "安裝我手動從清單選擇的硬體(進階)(&M)", IDC_MANUALLYINST, 30, 70, 266, 8, NOT WS_TABSTOP
+    AUTORADIOBUTTON "安裝我從清單中手動選取的硬體(進階)(&M)", IDC_MANUALLYINST, 30, 70, 266, 8, NOT WS_TABSTOP
 END
 
 IDD_DETECTEDHWPAGE DIALOGEX 0, 0, 317, 143
@@ -124,8 +125,8 @@ BEGIN
     LTEXT "正在完成新增硬體精靈", IDC_FINISHTITLE, 114, 8, 195, 28
     LTEXT "這裡是您所選硬體的當前狀態:", -1, 114, 40, 193, 19
     EDITTEXT IDC_HWSTATUSEDIT, 114, 60, 193, 70, ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_VSCROLL | NOT WS_TABSTOP
-    LTEXT "要啟用可以幫助您解決問題的疑難解答，請按 [完成]。", -1, 114, 136, 193, 16
-    LTEXT "要退出這個精靈，請按 [取消]。", IDC_STATUSTEXT, 114, 166, 132, 8
+    LTEXT "要啟用可以幫助您解決問題的疑難排解，請按 [完成]。", -1, 114, 136, 193, 16
+    LTEXT "要關閉這個精靈，請按 [取消]。", IDC_STATUSTEXT, 114, 166, 132, 8
 END
 
 IDD_NOTCONNECTEDPAGE DIALOGEX 0, 0, 317, 186
@@ -135,7 +136,7 @@ FONT 9, "新細明體"
 BEGIN
     LTEXT "無法繼續新增硬體精靈", IDC_FINISHTITLE, 114, 8, 203, 28
     LTEXT "要繼續，請將這個硬體跟電腦連線。", -1, 114, 40, 193, 16
-    AUTOCHECKBOX "點選 [完成] 時關閉電腦；這樣，我可以開啟電腦並連線硬體(&T)。", IDC_TURNOFFCHECKBOX, 114, 64, 203, 20, BS_TOP | BS_MULTILINE
+    AUTOCHECKBOX "按下 [完成] 時關閉電腦；這樣，我可以開啟電腦並連線硬體(&T)。", IDC_TURNOFFCHECKBOX, 114, 64, 203, 20, BS_TOP | BS_MULTILINE
     LTEXT "在大多數情況下，ReactOS 在硬體和電腦連線後自動將其安裝。如果 ReactOS 找不到這個硬體，您可以重新開啟這個精靈，安裝支援軟體。", -1, 114, 98, 193, 32
     LTEXT "要關閉這個精靈，請按 [完成]。", IDC_STATUSTEXT, 114, 166, 193, 8
 END

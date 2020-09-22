@@ -55,33 +55,32 @@ list(APPEND SOURCE
     stream.c
     tgaformat.c
     tiffformat.c
-    ungif.c
-    precomp.h)
+    ungif.c)
 
 if(MSVC)
     if(ARCH STREQUAL "i386")
         list(APPEND SOURCE msvc-thiscall.c)
     endif()
     set_source_files_properties(bitmap.c PROPERTIES COMPILE_FLAGS "/FImsvc.h")
-    list(APPEND ADDITIONAL_SOURCE bitmap.c)
+    list(APPEND PCH_SKIP_SOURCE bitmap.c)
 else()
     list(APPEND SOURCE bitmap.c)
 endif()
 
-list(APPEND ADDITIONAL_SOURCE
+list(APPEND PCH_SKIP_SOURCE
     guid.c
-    version.rc
     ${CMAKE_CURRENT_BINARY_DIR}/proxy.dlldata.c
     ${CMAKE_CURRENT_BINARY_DIR}/windowscodecs_stubs.c
-    ${CMAKE_CURRENT_BINARY_DIR}/windowscodecs.def
     ${CMAKE_CURRENT_BINARY_DIR}/windowscodecs_wincodec_p.c)
 
 add_library(windowscodecs MODULE
     ${SOURCE}
-    ${ADDITIONAL_SOURCE})
+    ${PCH_SKIP_SOURCE}
+    version.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/windowscodecs.def)
 
 set_module_type(windowscodecs win32dll)
 target_link_libraries(windowscodecs wine uuid ${PSEH_LIB})
 add_importlibs(windowscodecs ole32 oleaut32 rpcrt4 shlwapi user32 gdi32 advapi32 advapi32_vista propsys msvcrt kernel32 ntdll)
-add_pch(windowscodecs precomp.h SOURCE)
+add_pch(windowscodecs precomp.h "${PCH_SKIP_SOURCE}")
 add_cd_file(TARGET windowscodecs DESTINATION reactos/system32 FOR all)

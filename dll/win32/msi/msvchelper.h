@@ -1,6 +1,5 @@
 
 #ifdef __i386__
-#define __ASM_DEFINE_FUNC(name,suffix,code)
 
 typedef unsigned int (__stdcall *__MSVC__MsiCustomActionEntryPoint)(unsigned int);
 

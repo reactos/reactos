@@ -95,10 +95,11 @@ static const unsigned int message_pointer_flags[] =
 };
 
 /* check whether a given message type includes pointers */
-static inline int is_pointer_message( UINT message )
+static inline int is_pointer_message( UINT message, WPARAM wparam )
 {
     if (message >= 8*sizeof(message_pointer_flags)) return FALSE;
-        return (message_pointer_flags[message / 32] & SET(message)) != 0;
+    if (message == WM_DEVICECHANGE && !(wparam & 0x8000)) return FALSE;
+    return (message_pointer_flags[message / 32] & SET(message)) != 0;
 }
 
 #undef SET
@@ -1917,7 +1918,7 @@ DispatchMessageA(CONST MSG *lpmsg)
     else
         Wnd = NULL;
 
-    if (is_pointer_message(lpmsg->message))
+    if (is_pointer_message(lpmsg->message, lpmsg->wParam))
     {
        SetLastError( ERROR_MESSAGE_SYNC_ONLY );
        return 0;
@@ -2006,7 +2007,7 @@ DispatchMessageW(CONST MSG *lpmsg)
     else
         Wnd = NULL;
 
-    if (is_pointer_message(lpmsg->message))
+    if (is_pointer_message(lpmsg->message, lpmsg->wParam))
     {
        SetLastError( ERROR_MESSAGE_SYNC_ONLY );
        return 0;
@@ -2529,7 +2530,7 @@ SendMessageCallbackA(
   MSG AnsiMsg, UcMsg;
   CALL_BACK_INFO CallBackInfo;
 
-  if (is_pointer_message(Msg))
+  if (is_pointer_message(Msg, wParam))
   {
      SetLastError( ERROR_MESSAGE_SYNC_ONLY );
      return FALSE;
@@ -2579,7 +2580,7 @@ SendMessageCallbackW(
 {
   CALL_BACK_INFO CallBackInfo;
 
-  if (is_pointer_message(Msg))
+  if (is_pointer_message(Msg, wParam))
   {
      SetLastError( ERROR_MESSAGE_SYNC_ONLY );
      return FALSE;
@@ -2742,7 +2743,7 @@ SendNotifyMessageA(
   BOOL Ret;
   MSG AnsiMsg, UcMsg;
 
-  if (is_pointer_message(Msg))
+  if (is_pointer_message(Msg, wParam))
   {
      SetLastError( ERROR_MESSAGE_SYNC_ONLY );
      return FALSE;
@@ -2779,7 +2780,7 @@ SendNotifyMessageW(
 {
   LRESULT Result;
 
-  if (is_pointer_message(Msg))
+  if (is_pointer_message(Msg, wParam))
   {
      SetLastError( ERROR_MESSAGE_SYNC_ONLY );
      return FALSE;

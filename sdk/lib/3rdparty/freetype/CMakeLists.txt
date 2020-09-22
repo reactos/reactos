@@ -60,6 +60,8 @@ list(APPEND SOURCE
 
 add_library(freetype ${SOURCE})
 
-if(USE_CLANG_CL)
-    target_compile_options(freetype PRIVATE "-Wno-tautological-constant-compare")
+if(GCC)
+    target_compile_options(freetype PRIVATE -fno-builtin-malloc)
+elseif(CLANG)
+    target_compile_options(freetype PRIVATE -Wno-tautological-constant-compare)
 endif()

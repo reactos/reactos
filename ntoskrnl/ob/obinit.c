@@ -46,6 +46,7 @@ GENERIC_MAPPING ObpSymbolicLinkMapping =
 PDEVICE_MAP ObSystemDeviceMap = NULL;
 ULONG ObpTraceLevel = 0;
 
+INIT_FUNCTION
 VOID
 NTAPI
 PsInitializeQuotaSystem(VOID);
@@ -129,8 +130,8 @@ done:
     return Status;
 }
 
-BOOLEAN
 INIT_FUNCTION
+BOOLEAN
 NTAPI
 ObInit2(VOID)
 {
@@ -196,8 +197,8 @@ ObInit2(VOID)
     return TRUE;
 }
 
-BOOLEAN
 INIT_FUNCTION
+BOOLEAN
 NTAPI
 ObInitSystem(VOID)
 {

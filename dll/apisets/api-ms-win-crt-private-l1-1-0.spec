@@ -18,7 +18,7 @@
 @ stub __BuildCatchObject
 @ stub __BuildCatchObjectHelper
 @ stdcall -arch=x86_64,arm __C_specific_handler() msvcrt.__C_specific_handler
-@ stdcall __CxxDetectRethrow() msvcrt.__CxxDetectRethrow
+@ stdcall -arch=i386 __CxxDetectRethrow() msvcrt.__CxxDetectRethrow
 @ stub __CxxExceptionFilter
 @ stdcall -arch=i386,x86_64 __CxxFrameHandler() msvcrt.__CxxFrameHandler
 @ stdcall -arch=i386 __CxxFrameHandler2() msvcrt.__CxxFrameHandler2
@@ -27,7 +27,7 @@
 @ stdcall -arch=i386 __CxxQueryExceptionSize() msvcrt.__CxxQueryExceptionSize
 @ stub __CxxRegisterExceptionObject
 @ stub __CxxUnregisterExceptionObject
-@ stub __DestructExceptionObject
+@ cdecl __DestructExceptionObject() msvcrt.__DestructExceptionObject
 @ stub __FrameUnwindFilter
 @ stub __GetPlatformExceptionInfo
 @ stub __NLG_Dispatch2
@@ -229,7 +229,7 @@
 @ stub _o__eof
 @ stub _o__errno
 @ stub _o__except1
-@ stub _o__execute_onexit_table
+@ stub -version=0xA00+ _o__execute_onexit_table
 @ stub _o__execv
 @ stub _o__execve
 @ stub _o__execvp
@@ -348,7 +348,7 @@
 @ stub _o__i64toa_s
 @ stub _o__i64tow
 @ stub _o__i64tow_s
-@ stub _o__initialize_onexit_table
+@ stub -version=0xA00+ _o__initialize_onexit_table
 @ stub _o__invalid_parameter_noinfo
 @ stub _o__invalid_parameter_noinfo_noreturn
 @ stub _o__isatty
@@ -633,7 +633,7 @@
 @ stub _o__read
 @ stub _o__realloc_base
 @ stub _o__recalloc
-@ stub _o__register_onexit_function
+@ stub -version=0xA00+ _o__register_onexit_function
 @ stub _o__resetstkoflw
 @ stub _o__rmdir
 @ stub _o__rmtmp
@@ -641,6 +641,8 @@
 @ stub _o__scalbf
 @ stub _o__searchenv
 @ stub _o__searchenv_s
+@ cdecl -version=0xA00+ _o__seh_filter_dll() msvcrt.__CppXcptFilter
+@ cdecl -version=0xA00+ _o__seh_filter_exe() msvcrt._XcptFilter
 @ stub _o__set_abort_behavior
 @ stub _o__set_doserrno
 @ stub _o__set_errno

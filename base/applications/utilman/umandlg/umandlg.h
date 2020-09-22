@@ -44,7 +44,7 @@ typedef struct
 
 typedef struct _UTILMAN_STATE
 {
-    LPCWSTR lpProgram;
+    LPCWSTR lpszProgram;
     UINT    uNameId;
     WCHAR   szResource[MAX_BUFFER];
     BOOL    bState;
@@ -53,15 +53,15 @@ typedef struct _UTILMAN_STATE
 typedef struct _REGISTRY_SETTINGS
 {
     /* Accessibility Registry settings */
-    LPCWSTR wszAppPath;
+    LPCWSTR lpszAppPath;
     DWORD dwAppType;
     DWORD dwClientControlCode;
-    LPCWSTR wszAppName;
-    LPCWSTR wszErrorOnLaunch;
+    LPCWSTR lpszAppName;
+    LPCWSTR lpszErrorOnLaunch;
     BOOL bHideClient;
     BOOL bStartWithUtilman;
     BOOL bStartWithROS;
-    LPCWSTR wszHungRespondAction;
+    LPCWSTR lpszHungRespondAction;
     DWORD dwHungTimeOut;
 
     /* Utility Manager Registry settings */
@@ -71,12 +71,12 @@ typedef struct _REGISTRY_SETTINGS
 typedef struct _REGISTRY_DATA
 {
     /* On-Screen Keyboard Registry data */
-    LPCWSTR lpwsOskPath;
-    LPCWSTR lpwszOskDisplayName;
+    LPCWSTR lpszOskPath;
+    LPCWSTR lpszOskDisplayName;
 
     /* Magnify Registry data */
-    LPCWSTR lpwszMagnifyPath;
-    LPCWSTR lpwszMagnifyDisplayName;
+    LPCWSTR lpszMagnifyPath;
+    LPCWSTR lpszMagnifyDisplayName;
 } REGISTRY_DATA, *PREGISTRY_DATA;
 
 /* ENUMERATIONS ***************************************************************/
@@ -90,26 +90,25 @@ typedef enum _WRITE_REGISTRY
 /* DECLARATIONS ***************************************************************/
 
 /* umandlg.c */
-BOOL DlgInitHandler(HWND hDlg);
-INT_PTR APIENTRY DlgProc(HWND hDlg, UINT Msg, WPARAM wParam, LPARAM lParam);
+VOID InitUtilsList(IN BOOL bInitGui);
+BOOL DlgInitHandler(IN HWND hDlg);
+VOID ShowAboutDlg(IN HWND hDlgParent);
+VOID GroupBoxUpdateTitle(VOID);
+VOID UpdateUtilityState(IN BOOL bUtilState);
+INT_PTR APIENTRY DlgProc(IN HWND hDlg, IN UINT Msg, IN WPARAM wParam, IN LPARAM lParam);
 INT ListBoxRefreshContents(VOID);
-VOID CheckUtilityState(BOOL bUtilState);
 BOOL WINAPI UManStartDlg(VOID);
 
 /* process.c */
-DWORD GetProcessID(IN LPCWSTR lpProcessName);
-BOOL IsProcessRunning(IN LPCWSTR lpProcessName);
-BOOL LaunchProcess(LPCWSTR lpProcessName);
-BOOL CloseProcess(IN LPCWSTR lpProcessName);
-
-/* about.c */
-VOID ShowAboutDlg(HWND hDlgParent);
-INT_PTR CALLBACK AboutDlgProc(HWND hDlg, UINT Msg, WPARAM wParam, LPARAM lParam);
+DWORD GetProcessID(IN LPCWSTR lpszProcessName);
+BOOL IsProcessRunning(IN LPCWSTR lpszProcessName);
+BOOL LaunchProcess(IN LPCWSTR lpszProcessName);
+BOOL CloseProcess(IN LPCWSTR lpszProcessName);
 
 /* registry.c */
-BOOL InitAppRegKey(IN HKEY hPredefinedKey, IN LPCWSTR lpwszSubKey, OUT PHKEY phKey, OUT LPDWORD lpdwDisposition);
-BOOL QueryAppSettings(IN HKEY hKey, IN LPCWSTR lpwszSubKey, IN LPCWSTR lpwszRegValue, OUT PVOID ReturnedData, IN OUT LPDWORD lpdwSizeData);
-BOOL SaveAppSettings(IN HKEY hKey, IN LPCWSTR lpwszRegValue, IN DWORD dwRegType, IN PVOID Data, IN DWORD cbSize);
+BOOL InitAppRegKey(IN HKEY hPredefinedKey, IN LPCWSTR lpszSubKey, OUT PHKEY phKey, OUT LPDWORD lpdwDisposition);
+BOOL QueryAppSettings(IN HKEY hKey, IN LPCWSTR lpszSubKey, IN LPCWSTR lpszRegValue, OUT PVOID ReturnedData, IN OUT LPDWORD lpdwSizeData);
+BOOL SaveAppSettings(IN HKEY hKey, IN LPCWSTR lpszRegValue, IN DWORD dwRegType, IN PVOID Data, IN DWORD cbSize);
 
 /* Struct variable declaration */
 extern UTILMAN_GLOBALS Globals;

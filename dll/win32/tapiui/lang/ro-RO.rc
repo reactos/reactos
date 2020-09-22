@@ -231,7 +231,7 @@ BEGIN
     AUTORADIOBUTTON "Așteaptă o anumită perioa&dă de timp:", 1048, 7, 63, 238, 10, NOT WS_TABSTOP
     EDITTEXT 1050, 18, 77, 36, 14, ES_AUTOHSCROLL | WS_GROUP
     CONTROL "Spin1", 1049, "msctls_updown32", 0x00000036, 42, 77, 11, 14
-    LTEXT "se&cunde", -1, 58, 81, 187, 8
+    LTEXT "se&cunde", -1, 58, 79, 187, 8
     DEFPUSHBUTTON "Con&firmă", 1, 141, 103, 50, 14
     PUSHBUTTON "A&nulează", 2, 195, 103, 50, 14
 END
@@ -256,7 +256,7 @@ CAPTION "Avansate"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON 201, 2000, 7, 7, 20, 20
-    LTEXT "În acest calculator sunt disponibili următorii furnizori de servicii de telefonie:", -1, 40, 7, 205, 24
+    LTEXT "În acest calculator sunt disponibili următorii furnizori de servicii de telefonie:", -1, 40, 7, 205, 16
     LTEXT "F&urnizori:", -1, 7, 35, 238, 8
     LISTBOX 1033, 7, 46, 238, 147, LBS_STANDARD | LBS_NOINTEGRALHEIGHT | WS_TABSTOP
     PUSHBUTTON "A&dăugare…", 1005, 57, 197, 60, 14
@@ -264,16 +264,16 @@ BEGIN
     PUSHBUTTON "&Configurare…", 1031, 185, 197, 60, 14
 END
 
-114 DIALOGEX 20, 15, 252, 127
+114 DIALOGEX 20, 15, 252, 135
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "Adăugare furnizor"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Alegeți un furnizor din lista de mai jos, apoi apăsați „Adaugă”", 2000, 7, 7, 241, 8
-    LTEXT "F&urnizori de servicii de telefonie:", -1, 7, 23, 144, 10
-    LISTBOX 1055, 7, 34, 238, 74, LBS_STANDARD | WS_TABSTOP
-    PUSHBUTTON "&Adaugă", 1005, 141, 106, 50, 14
-    DEFPUSHBUTTON "A&nulează", 2, 195, 106, 50, 14
+    LTEXT "Alegeți un furnizor din lista de mai jos, apoi apăsați „Adaugă”", 2000, 7, 7, 241, 16
+    LTEXT "F&urnizori de servicii de telefonie:", -1, 7, 31, 144, 10
+    LISTBOX 1055, 7, 42, 238, 74, LBS_STANDARD | WS_TABSTOP
+    PUSHBUTTON "&Adaugă", 1005, 141, 114, 50, 14
+    DEFPUSHBUTTON "A&nulează", 2, 195, 114, 50, 14
 END
 
 115 DIALOGEX 10, 10, 303, 228

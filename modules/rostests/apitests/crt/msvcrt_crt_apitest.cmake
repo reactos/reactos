@@ -1119,7 +1119,7 @@ list(APPEND SOURCE_MSVCRT
 #    mbsrtowcs_s
     mbstowcs.c
 #    mbstowcs_s Not exported in 2k3 Sp1
-#    mbtowc.c
+    mbtowc.c
 #    memchr.c
 #    memcmp.c
 #    memcpy.c
@@ -1255,7 +1255,7 @@ list(APPEND SOURCE_MSVCRT
     wcstoul.c
 #    wcsxfrm.c
 #    wctob
-#    wctomb.c
+    wctomb.c
 #    wctomb_s
 #    wprintf.c
 #    wprintf_s.c

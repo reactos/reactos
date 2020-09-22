@@ -94,8 +94,8 @@ FreeInitializedSids(VOID)
     if (SeAnonymousLogonSid) ExFreePoolWithTag(SeAnonymousLogonSid, TAG_SID);
 }
 
-BOOLEAN
 INIT_FUNCTION
+BOOLEAN
 NTAPI
 SepInitSecurityIDs(VOID)
 {

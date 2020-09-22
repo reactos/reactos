@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS HAL
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            hal/halx86/generic/cmos.c
  * PURPOSE:         CMOS Access Routines (Real Time Clock and LastKnownGood)
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  *                  Eric Kohl
@@ -10,6 +9,7 @@
 /* INCLUDES ******************************************************************/
 
 #include <hal.h>
+
 #define NDEBUG
 #include <debug.h>
 
@@ -23,6 +23,7 @@ UCHAR HalpCmosCenturyOffset;
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
+_Requires_lock_held_(HalpSystemHardwareLock)
 UCHAR
 NTAPI
 HalpReadCmos(IN UCHAR Reg)
@@ -34,6 +35,7 @@ HalpReadCmos(IN UCHAR Reg)
     return READ_PORT_UCHAR(CMOS_DATA_PORT);
 }
 
+_Requires_lock_held_(HalpSystemHardwareLock)
 VOID
 NTAPI
 HalpWriteCmos(IN UCHAR Reg,
@@ -48,10 +50,11 @@ HalpWriteCmos(IN UCHAR Reg,
 
 ULONG
 NTAPI
-HalpGetCmosData(IN ULONG BusNumber,
-                IN ULONG SlotNumber,
-                IN PVOID Buffer,
-                IN ULONG Length)
+HalpGetCmosData(
+    _In_ ULONG BusNumber,
+    _In_ ULONG SlotNumber,
+    _Out_writes_bytes_(Length) PVOID Buffer,
+    _In_ ULONG Length)
 {
     PUCHAR Ptr = (PUCHAR)Buffer;
     ULONG Address = SlotNumber;
@@ -173,9 +176,10 @@ HalpInitializeCmos(VOID)
  */
 ARC_STATUS
 NTAPI
-HalGetEnvironmentVariable(IN PCH Name,
-                          IN USHORT ValueLength,
-                          IN PCH Value)
+HalGetEnvironmentVariable(
+    _In_ PCH Name,
+    _In_ USHORT ValueLength,
+    _Out_writes_z_(ValueLength) PCH Value)
 {
     UCHAR Val;
 

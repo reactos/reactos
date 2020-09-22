@@ -30,14 +30,16 @@ list(APPEND SOURCE
     tooltips.c
     trackbar.c
     treeview.c
-    updown.c
-    precomp.h)
+    updown.c)
+
+list(APPEND PCH_SKIP_SOURCE
+    button.c
+    subclass.c
+    testlist.c)
 
 add_executable(comctl32_winetest
     ${SOURCE}
-    button.c
-    subclass.c
-    testlist.c
+    ${PCH_SKIP_SOURCE}
     rsrc.rc)
 
 if(USE_CLANG_CL OR (NOT MSVC))
@@ -51,5 +53,5 @@ if(MSVC)
     add_importlibs(comctl32_winetest ntdll)
 endif()
 
-add_pch(comctl32_winetest precomp.h SOURCE)
+add_pch(comctl32_winetest precomp.h "${PCH_SKIP_SOURCE}")
 add_rostests_file(TARGET comctl32_winetest)

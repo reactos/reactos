@@ -45,6 +45,9 @@
 #ifdef LANGUAGE_HE_IL
     #include "lang/He.rc"
 #endif
+#ifdef LANGUAGE_ID_ID
+    #include "lang/id-ID.rc"
+#endif
 #ifdef LANGUAGE_IT_IT
     #include "lang/it-IT.rc"
 #endif

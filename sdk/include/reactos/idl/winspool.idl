@@ -834,6 +834,26 @@ typedef [switch_type(DWORD)] union _WINSPOOL_V2_UREPLY_PRINTER
 }
 WINSPOOL_V2_UREPLY_PRINTER;
 
+typedef struct _WINSPOOL_FILE_INFO_1
+{
+    BOOL            bInheritHandle;
+    WINSPOOL_HANDLE hSpoolFileHandle;
+    DWORD           dwOptions;
+}
+WINSPOOL_FILE_INFO_1;
+
+typedef struct _WINSPOOL_FILE_INFO_CONTAINER
+{
+    DWORD Level;
+
+    [switch_is(Level)] union
+    {
+        [case(1)]
+            WINSPOOL_FILE_INFO_1 *pFileInfo1;
+    }
+    FileInfo;
+}
+WINSPOOL_FILE_INFO_CONTAINER;
 
 /*
  * The actual interface
@@ -1153,14 +1173,14 @@ interface winspool {
     DWORD _RpcAddPort(
         [in, unique] WINSPOOL_HANDLE pName,
         [in] ULONG_PTR hWnd,
-        [in] WCHAR* pMonitorName
+        [in, string] WCHAR* pMonitorName
     );
 
     /* Function 0x26 */
     DWORD _RpcConfigurePort(
         [in, unique] WINSPOOL_HANDLE pName,
         [in] ULONG_PTR hWnd,
-        [in] WCHAR* pPortName
+        [in, string] WCHAR* pPortName
     );
 
     /* Function 0x27 */
@@ -1222,7 +1242,7 @@ interface winspool {
     DWORD _RpcDeleteMonitor(
         [in, unique] WINSPOOL_HANDLE pName,
         [in, string, unique] WCHAR* pEnvironment,
-        [in, string] WCHAR* pMonitorName
+        [in, string, unique] WCHAR* pMonitorName
     );
 
     /* Function 0x30 */
@@ -1322,7 +1342,7 @@ interface winspool {
 
     /* Function 0x3D */
     DWORD _RpcAddPortEx(
-        [in] WINSPOOL_HANDLE pName,
+        [in, unique] WINSPOOL_HANDLE pName,
         [in] WINSPOOL_PORT_CONTAINER* pPortContainer,
         [in] WINSPOOL_PORT_VAR_CONTAINER* pPortVarContainer,
         [in, string] WCHAR* pMonitorName
@@ -1342,9 +1362,12 @@ interface winspool {
     /* Function 0x3F */
     DWORD _RpcSpoolerInit();
 
-    /* Function 0x40 (TODO) */
+    /* Function 0x40 */
     DWORD _RpcResetPrinterEx(
-        /* TODO */
+        [in] WINSPOOL_PRINTER_HANDLE hPrinter,
+        [in, string, unique] WCHAR* pDatatype,
+        [in] WINSPOOL_DEVMODE_CONTAINER* pDevModeContainer,
+        [in] DWORD dwFlags
     );
 
     /* Function 0x41 */
@@ -1494,9 +1517,13 @@ interface winspool {
         [in, string] const WCHAR* pKeyName
     );
 
-    /* Function 0x53 (TODO) */
+    /* Function 0x53 */
     DWORD _RpcSeekPrinter(
-        /* TODO */
+        [in] WINSPOOL_PRINTER_HANDLE hPrinter,
+        [in] LARGE_INTEGER liDistanceToMove,
+        [out] PLARGE_INTEGER pliNewPointer,
+        [in] DWORD dwMoveMethod,
+        [in] BOOL bWrite
     );
 
     /* Function 0x54 */
@@ -1533,7 +1560,7 @@ interface winspool {
 
     /* Function 0x58 */
     DWORD _RpcXcvData(
-        [in] WINSPOOL_PRINTER_HANDLE hXcv,
+        [in, unique] WINSPOOL_PRINTER_HANDLE hXcv,
         [in, string]  const WCHAR* pszDataName,
         [in, size_is(cbInputData)] BYTE* pInputData,
         [in] DWORD cbInputData,
@@ -1555,31 +1582,59 @@ interface winspool {
         /* TODO */
     );
 
-    /* Function 0x5B (TODO) */
+    /* Function 0x5B */
     DWORD _RpcGetSpoolFileInfo(
-        /* TODO */
+        [in, unique] WINSPOOL_PRINTER_HANDLE hPrinter,
+        [in] WINSPOOL_HANDLE hProcessHandle,
+        [in] DWORD Level,
+        [in] WINSPOOL_FILE_INFO_1* pFileInfo,
+        [in] DWORD dwSize,
+        [in] DWORD* dwNeeded
     );
 
-    /* Function 0x5C (TODO) */
+    /* Function 0x5C */
     DWORD _RpcCommitSpoolData(
-        /* TODO */
+        [in, unique] WINSPOOL_PRINTER_HANDLE hPrinter,
+        [in, unique] WINSPOOL_HANDLE hProcessHandle,
+        [in] DWORD cbCommit,
+        [in] DWORD Level,
+        [in] WINSPOOL_FILE_INFO_1* pFileInfo,
+        [in] DWORD dwSize,
+        [in] DWORD* dwNeeded
     );
 
-    /* Function 0x5D (TODO) */
-    DWORD _RpcCloseSpoolFileHandle(
-        /* TODO */
+    /* Function 0x5D */
+    DWORD _RpcGetSpoolFileInfo2(
+        [in, unique] WINSPOOL_PRINTER_HANDLE hPrinter,
+        [in] DWORD dwProcessId,
+        [in] DWORD Level,
+        [in] WINSPOOL_FILE_INFO_CONTAINER* pFileInfoContainer
     );
 
     /* Function 0x5E */
-    DWORD _RpcFlushPrinter(
+    DWORD _RpcCommitSpoolData2(
         [in] WINSPOOL_PRINTER_HANDLE hPrinter,
+        [in] DWORD dwProcessId,
+        [in] DWORD cbCommit,
+        [in] DWORD Level,
+        [in] WINSPOOL_FILE_INFO_CONTAINER* pFileInfoContainer
+    );
+
+    /* Function 0x5F */
+    DWORD _RpcCloseSpoolFileHandle(
+        [in, unique] WINSPOOL_PRINTER_HANDLE hPrinter
+    );
+
+    /* Function 0x60 */
+    DWORD _RpcFlushPrinter(
+        [in, unique] WINSPOOL_PRINTER_HANDLE hPrinter,
         [in, size_is(cbBuf)] BYTE* pBuf,
         [in] DWORD cbBuf,
         [out] DWORD* pcWritten,
         [in] DWORD cSleep
     );
 
-    /* Function 0x5F */
+    /* Function 0x61 */
     DWORD _RpcSendRecvBidiData(
         [in] WINSPOOL_PRINTER_HANDLE hPrinter,
         [in, string, unique] const WCHAR* pAction,
@@ -1587,7 +1642,7 @@ interface winspool {
         [out] WINSPOOL_BIDI_RESPONSE_CONTAINER** ppRespData
     );
 
-    /* Function 0x60 (TODO) */
+    /* Function 0x62 (TODO) */
     DWORD _RpcAddDriverCatalog(
         /* TODO */
     );

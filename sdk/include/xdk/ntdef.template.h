@@ -220,7 +220,7 @@ char _RTL_CONSTANT_STRING_type_check(const void *s);
 #endif
 #define RTL_CONSTANT_STRING(s) { \
     sizeof(s)-sizeof((s)[0]), \
-    sizeof(s) / sizeof(_RTL_CONSTANT_STRING_type_check(s)), \
+    sizeof(s) / (sizeof(_RTL_CONSTANT_STRING_type_check(s))), \
     _RTL_CONSTANT_STRING_remove_const_macro(s) }
 
 #ifdef _MSC_VER

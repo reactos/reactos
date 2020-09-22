@@ -28,6 +28,7 @@ typedef struct _SHUTDOWN_DLG_CONTEXT
     DWORD ShutdownOptions;
     BOOL bCloseDlg;
     BOOL bReasonUI;
+    BOOL bFriendlyUI;
 } SHUTDOWN_DLG_CONTEXT, *PSHUTDOWN_DLG_CONTEXT;
 
 
@@ -89,6 +90,148 @@ GetShutdownReasonUI(VOID)
 
     return FALSE;
 //    return (VersionInfo.wProductType == VER_NT_WORKSTATION) ? FALSE : TRUE;
+}
+
+static
+BOOL
+IsFriendlyUIActive(VOID)
+{
+    DWORD dwType, dwValue, dwSize;
+    HKEY hKey;
+    LONG lRet;
+
+    /* Check product version number first */
+    lRet = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                         L"SYSTEM\\CurrentControlSet\\Control\\Windows",
+                         0,
+                         KEY_QUERY_VALUE,
+                         &hKey);
+    if (lRet != ERROR_SUCCESS)
+        return FALSE;
+
+    dwValue = 0;
+    dwSize = sizeof(dwValue);
+    lRet = RegQueryValueExW(hKey,
+                            L"CSDVersion",
+                            NULL,
+                            &dwType,
+                            (LPBYTE)&dwValue,
+                            &dwSize);
+    RegCloseKey(hKey);
+
+    if (lRet != ERROR_SUCCESS || dwType != REG_DWORD || dwValue != 0x300)
+    {
+        /* Allow Friendly UI only on Workstation */
+        return FALSE;
+    }
+
+    /* Check LogonType value */
+    lRet = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                         L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon",
+                         0,
+                         KEY_QUERY_VALUE,
+                         &hKey);
+    if (lRet != ERROR_SUCCESS)
+        return FALSE;
+
+    dwValue = 0;
+    dwSize = sizeof(dwValue);
+    lRet = RegQueryValueExW(hKey,
+                            L"LogonType",
+                            NULL,
+                            &dwType,
+                            (LPBYTE)&dwValue,
+                            &dwSize);
+    RegCloseKey(hKey);
+
+    if (lRet != ERROR_SUCCESS || dwType != REG_DWORD)
+        return FALSE;
+
+    return (dwValue != 0);
+}
+
+static
+BOOL
+IsDomainMember(VOID)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+static
+BOOL
+IsNetwareActive(VOID)
+{
+    UNIMPLEMENTED;
+    return FALSE;
+}
+
+static
+BOOL
+ForceFriendlyUI(VOID)
+{
+    DWORD dwType, dwValue, dwSize;
+    HKEY hKey;
+    LONG lRet;
+
+    lRet = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                         L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Policies\\System",
+                         0,
+                         KEY_QUERY_VALUE,
+                         &hKey);
+    if (lRet == ERROR_SUCCESS)
+    {
+        dwValue = 0;
+        dwSize = sizeof(dwValue);
+        lRet = RegQueryValueExW(hKey,
+                                L"ForceFriendlyUI",
+                                NULL,
+                                &dwType,
+                                (LPBYTE)&dwValue,
+                                &dwSize);
+        RegCloseKey(hKey);
+
+        if (lRet == ERROR_SUCCESS && dwType == REG_DWORD)
+            return (dwValue != 0);
+    }
+
+    lRet = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                         L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon",
+                         0,
+                         KEY_QUERY_VALUE,
+                         &hKey);
+    if (lRet == ERROR_SUCCESS)
+    {
+        dwValue = 0;
+        dwSize = sizeof(dwValue);
+        lRet = RegQueryValueExW(hKey,
+                                L"ForceFriendlyUI",
+                                NULL,
+                                &dwType,
+                                (LPBYTE)&dwValue,
+                                &dwSize);
+
+        RegCloseKey(hKey);
+
+        if (lRet == ERROR_SUCCESS && dwType == REG_DWORD)
+            return (dwValue != 0);
+    }
+
+    return FALSE;
+}
+
+BOOL
+WINAPI
+ShellIsFriendlyUIActive(VOID)
+{
+    BOOL bActive;
+
+    bActive = IsFriendlyUIActive();
+
+    if ((IsDomainMember() || IsNetwareActive()) && !ForceFriendlyUI())
+        return FALSE;
+
+    return bActive;
 }
 
 DWORD
@@ -326,6 +469,10 @@ ShutdownOnInit(
         if (idx != CB_ERR)
             SendMessageW(hwndList, CB_SETITEMDATA, idx, WLX_SAS_ACTION_SHUTDOWN_POWER_OFF);
     }
+    else if (pContext->bFriendlyUI)
+    {
+        EnableWindow(GetDlgItem(hDlg, IDC_BUTTON_SHUTDOWN), FALSE);
+    }
 
     /* Restart */
     if (pContext->ShutdownOptions & WLX_SHUTDOWN_STATE_REBOOT)
@@ -334,6 +481,10 @@ ShutdownOnInit(
         idx = SendMessageW(hwndList, CB_ADDSTRING, 0, (LPARAM)szBuffer);
         if (idx != CB_ERR)
             SendMessageW(hwndList, CB_SETITEMDATA, idx, WLX_SAS_ACTION_SHUTDOWN_REBOOT);
+    }
+    else if (pContext->bFriendlyUI)
+    {
+        EnableWindow(GetDlgItem(hDlg, IDC_BUTTON_REBOOT), FALSE);
     }
 
     // if (pContext->ShutdownOptions & 0x08) {}
@@ -345,6 +496,10 @@ ShutdownOnInit(
         idx = SendMessageW(hwndList, CB_ADDSTRING, 0, (LPARAM)szBuffer);
         if (idx != CB_ERR)
             SendMessageW(hwndList, CB_SETITEMDATA, idx, WLX_SAS_ACTION_SHUTDOWN_SLEEP);
+    }
+    else if (pContext->bFriendlyUI)
+    {
+        EnableWindow(GetDlgItem(hDlg, IDC_BUTTON_SLEEP), FALSE);
     }
 
     // if (pContext->ShutdownOptions & 0x20) {}
@@ -467,6 +622,18 @@ ShutdownDialogProc(
         case WM_COMMAND:
             switch (LOWORD(wParam))
             {
+                case IDC_BUTTON_SHUTDOWN:
+                    ExitWindowsEx(EWX_SHUTDOWN, SHTDN_REASON_MAJOR_OTHER);
+                    break;
+
+                case IDC_BUTTON_REBOOT:
+                    ExitWindowsEx(EWX_REBOOT, SHTDN_REASON_MAJOR_OTHER);
+                    break;
+
+                case IDC_BUTTON_SLEEP:
+                    SetSuspendState(TRUE, TRUE, TRUE);
+                    break;
+
                 case IDOK:
                     ShutdownOnOk(hDlg, pContext->pgContext);
 
@@ -497,6 +664,7 @@ ShutdownDialog(
 {
     INT_PTR ret;
     SHUTDOWN_DLG_CONTEXT Context;
+    DWORD ShutdownDialogId = IDD_SHUTDOWN;
 
 #if 0
     DWORD ShutdownOptions;
@@ -510,8 +678,9 @@ ShutdownDialog(
     Context.ShutdownOptions = ShutdownOptions;
     Context.bCloseDlg = FALSE;
     Context.bReasonUI = GetShutdownReasonUI();
+    Context.bFriendlyUI = ShellIsFriendlyUIActive();
 
-    if (pgContext->hWlx && pgContext->pWlxFuncs)
+    if (pgContext->hWlx && pgContext->pWlxFuncs && !Context.bFriendlyUI)
     {
         ret = pgContext->pWlxFuncs->WlxDialogBoxParam(pgContext->hWlx,
                                                       pgContext->hDllInstance,
@@ -522,8 +691,13 @@ ShutdownDialog(
     }
     else
     {
+        if (Context.bFriendlyUI)
+        {
+            ShutdownDialogId = IDD_SHUTDOWN_FANCY;
+        }
+
         ret = DialogBoxParamW(pgContext->hDllInstance,
-                              MAKEINTRESOURCEW(Context.bReasonUI ? IDD_SHUTDOWN_REASON : IDD_SHUTDOWN),
+                              MAKEINTRESOURCEW(Context.bReasonUI ? IDD_SHUTDOWN_REASON : ShutdownDialogId),
                               hwndDlg,
                               ShutdownDialogProc,
                               (LPARAM)&Context);

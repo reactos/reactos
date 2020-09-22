@@ -10,7 +10,7 @@
  */
 
 #include "powercfg.h"
-
+#include <debug.h>
 
 typedef struct _POWER_SCHEME
 {
@@ -245,16 +245,19 @@ LoadConfig(
     PPOWER_POLICY pp;
     HWND hwndCtrl;
 
-    if (pScheme == NULL)
-    {
-        iCurSel = (INT)SendDlgItemMessage(hwndDlg,
+    iCurSel = (INT)SendDlgItemMessage(hwndDlg,
                                           IDC_ENERGYLIST,
                                           CB_GETCURSEL,
                                           0,
                                           0);
-        if (iCurSel == CB_ERR)
-            return;
+    if (iCurSel == CB_ERR)
+        return;
+        
+    EnableWindow(GetDlgItem(hwndDlg, IDC_DELETE_BTN),
+                (iCurSel > 0));
 
+    if (pScheme == NULL)
+    {
         pScheme = (PPOWER_SCHEME)SendDlgItemMessage(hwndDlg,
                                                     IDC_ENERGYLIST,
                                                     CB_GETITEMDATA,
@@ -323,10 +326,7 @@ LoadConfig(
         {
             SendMessage(hwndCtrl, CB_SETCURSEL, i, 0);
         }
-    }
-
-    EnableWindow(GetDlgItem(hwndDlg, IDC_DELETE_BTN),
-                 (pScheme != pPageData->pActivePowerScheme));
+    }  
 }
 
 
@@ -519,8 +519,7 @@ Pos_SaveData(
 
     if (SetActivePwrScheme(pScheme->uId, NULL, &pScheme->PowerPolicy))
     {
-        pPageData->pActivePowerScheme = pScheme;
-        EnableWindow(GetDlgItem(hwndDlg, IDC_DELETE_BTN), FALSE);
+        pPageData->pActivePowerScheme = pScheme;        
     }
 }
 
@@ -536,6 +535,7 @@ DelScheme(
     INT iCurSel;
     HWND hList;
     PPOWER_SCHEME pScheme;
+    WCHAR szErrorText[512];
 
     hList = GetDlgItem(hwnd, IDC_ENERGYLIST);
 
@@ -556,8 +556,9 @@ DelScheme(
     if (MessageBoxW(hwnd, szCookedBuffer, szTitleBuffer, MB_YESNO | MB_ICONQUESTION | MB_DEFBUTTON2) == IDYES)
     {
         if (!DeletePwrScheme(pScheme->uId))
-        {
-            // FIXME: Show an error message box
+        {            
+            LoadStringW(hApplet, IDS_DEL_SCHEME_ERROR, szErrorText, sizeof(szErrorText) / sizeof(WCHAR));
+            MessageBoxW(NULL, szErrorText, NULL, MB_OK | MB_ICONERROR);
             return FALSE;
         }
 
@@ -569,7 +570,13 @@ DelScheme(
 
         iCurSel = SendMessage(hList, CB_FINDSTRING, -1, (LPARAM)pPageData->pActivePowerScheme->pszName);
         if (iCurSel != CB_ERR)
+        {
             SendMessage(hList, CB_SETCURSEL, iCurSel, 0);
+        }
+        else
+        {
+            SendMessage(hList, CB_SETCURSEL, 0, 0);
+        }
 
         LoadConfig(hwnd, pPageData, NULL);
         return TRUE;
@@ -693,21 +700,31 @@ SaveScheme(
         {
             hwndList = GetDlgItem(hwndDlg, IDC_ENERGYLIST);
 
-            index = (INT)SendMessage(hwndList,
-                                     CB_ADDSTRING,
-                                     0,
-                                     (LPARAM)SaveSchemeData.pNewScheme->pszName);
-            if (index != CB_ERR)
+            index = (INT)SendDlgItemMessage(hwndDlg,
+                                          IDC_ENERGYLIST,
+                                          CB_FINDSTRING,
+                                          -1,
+                                          (LPARAM)SaveSchemeData.pNewScheme->pszName);
+
+            if (index == CB_ERR)
             {
-                SendMessage(hwndList,
-                            CB_SETITEMDATA,
-                            index,
-                            (LPARAM)SaveSchemeData.pNewScheme);
+                index = (INT)SendMessage(hwndList,
+                                         CB_ADDSTRING,
+                                         0,
+                                         (LPARAM)SaveSchemeData.pNewScheme->pszName);
+                if (index != CB_ERR)
+                {
+                    SendMessage(hwndList,
+                                CB_SETITEMDATA,
+                                index,
+                                (LPARAM)SaveSchemeData.pNewScheme);
 
-                SendMessage(hwndList, CB_SETCURSEL, (WPARAM)index, 0);
-
-                LoadConfig(hwndDlg, pPageData, SaveSchemeData.pNewScheme);
+                    SendMessage(hwndList, CB_SETCURSEL, (WPARAM)index, 0);                    
+                    EnableWindow(GetDlgItem(hwndDlg, IDC_DELETE_BTN), TRUE);
+                }
+                
             }
+            LoadConfig(hwndDlg, pPageData, SaveSchemeData.pNewScheme);
         }
     }
 

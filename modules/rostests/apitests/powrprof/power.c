@@ -60,7 +60,7 @@ void test_CallNtPowerInformation(void)
    /* LastSleepTime tests */
    retval = CallNtPowerInformation(LastSleepTime, 0, 0, 0, 0);
    ok(retval == STATUS_SUCCESS, "function result wrong expected STATUS_SUCCESS but got %d\n", (UINT)retval);
-   retval = CallNtPowerInformation(LastSleepTime, &atime, sizeof(sizeof(ULONGLONG)), 0, 0);
+   retval = CallNtPowerInformation(LastSleepTime, &atime, sizeof(ULONGLONG), 0, 0);
    ok(retval == STATUS_INVALID_PARAMETER, "function result wrong expected STATUS_INVALID_PARAMETER but got %d\n", (UINT)retval);
    retval = CallNtPowerInformation(LastSleepTime, &atime, sizeof(ULONGLONG), &ctime, sizeof(ULONGLONG));
    ok(retval == STATUS_INVALID_PARAMETER, "function result wrong expected STATUS_INVALID_PARAMETER but got %d\n", (UINT)retval);
@@ -70,7 +70,7 @@ void test_CallNtPowerInformation(void)
    /* LastWakeTime tests */
    retval = CallNtPowerInformation(LastWakeTime, 0, 0, 0, 0);
    ok(retval == STATUS_SUCCESS, "function result wrong expected STATUS_SUCCESS but got %d\n", (UINT)retval);
-   retval = CallNtPowerInformation(LastWakeTime, &atime, sizeof(sizeof(ULONGLONG)), 0, 0);
+   retval = CallNtPowerInformation(LastWakeTime, &atime, sizeof(ULONGLONG), 0, 0);
    ok(retval == STATUS_INVALID_PARAMETER, "function result wrong expected STATUS_INVALID_PARAMETER but got %d\n", (UINT)retval);
    retval = CallNtPowerInformation(LastWakeTime, &atime, sizeof(ULONGLONG), &ctime, sizeof(ULONGLONG));
    ok(retval == STATUS_INVALID_PARAMETER, "function result wrong expected STATUS_INVALID_PARAMETER but got %d\n", (UINT)retval);
@@ -4620,7 +4620,6 @@ pPP_original->user.OptimizeForPowerDc=1;
    ret = ValidatePowerPolicies(&gpp,&pp);
    ok(ret, "function was expected to succeed error %i\n",(UINT)GetLastError());
    ok(globalcompare(gpp,gpp_compare),"Difference Found\n");
-   pp_compare.user.MaxSleepAc=4;
    pp_compare.user.MaxSleepAc=4;
    ok(compare(pp,pp_compare),"Difference Found\n");
 

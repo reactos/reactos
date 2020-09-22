@@ -27,16 +27,23 @@ function(configure_host_tools HOST_TOOLS_DIR)
 
     set_property(SOURCE host_tools PROPERTY SYMBOLIC 1)
 
+    include(${HOST_TOOLS_DIR}/ImportExecutables.cmake)
+    include(${HOST_TOOLS_DIR}/TargetList.cmake)
+
+    foreach(_target ${NATIVE_TARGETS})
+        get_target_property(_target_location native-${_target} LOCATION)
+        list(APPEND _target_locations ${_target_location})
+    endforeach()
+
     # Make a host-tools target so it'll be built when needed
     # custom target + symbolic output prevents cmake from running
     # the command multiple times per build
+    # Specify the --config option, so the Release/Debug setting from the IDE can be used
     add_custom_command(
-        COMMAND ${CMAKE_COMMAND} --build ${HOST_TOOLS_DIR}
-        OUTPUT host_tools)
+        COMMAND ${CMAKE_COMMAND} --build ${HOST_TOOLS_DIR} --config $<CONFIG>
+        OUTPUT host_tools
+        BYPRODUCTS ${_target_locations})
     add_custom_target(build-host-tools ALL DEPENDS host_tools)
-
-    include(${HOST_TOOLS_DIR}/ImportExecutables.cmake)
-    include(${HOST_TOOLS_DIR}/TargetList.cmake)
 
     foreach(_target ${NATIVE_TARGETS})
         add_dependencies(native-${_target} build-host-tools)

@@ -34,7 +34,7 @@ REGISTRY_SETTINGS Settings;
  * @param[in]   hPredefinedKey
  *     The predefined key (e.g. HKEY_CLASSES_ROOT).
  *
- * @param[in]   lpwszSubKey
+ * @param[in]   lpszSubKey
  *      The path to the sub key to be created.
  *
  * @param[out]   phKey
@@ -49,14 +49,14 @@ REGISTRY_SETTINGS Settings;
  *
  */
 BOOL InitAppRegKey(IN HKEY hPredefinedKey,
-                   IN LPCWSTR lpwszSubKey,
+                   IN LPCWSTR lpszSubKey,
                    OUT PHKEY phKey,
                    OUT LPDWORD lpdwDisposition)
 {
     LONG lResult;
 
     lResult = RegCreateKeyExW(hPredefinedKey,
-                              lpwszSubKey,
+                              lpszSubKey,
                               0,
                               NULL,
                               0,
@@ -66,7 +66,7 @@ BOOL InitAppRegKey(IN HKEY hPredefinedKey,
                               lpdwDisposition);
     if (lResult != ERROR_SUCCESS)
     {
-        DPRINT("InitAppRegKey(): Failed to create the following key (or open the key) of path \"%S\". The error code is \"%li\".\n", lpwszSubKey, lResult);
+        DPRINT("InitAppRegKey(): Failed to create the following key (or open the key) of path \"%S\". The error code is \"%li\".\n", lpszSubKey, lResult);
         return FALSE;
     }
 
@@ -81,10 +81,10 @@ BOOL InitAppRegKey(IN HKEY hPredefinedKey,
  * @param[in]   hKey
  *     A handle to a key.
  *
- * @param[in]   lpwszSubKey
+ * @param[in]   lpszSubKey
  *      The path to a sub-key.
  *
- * @param[in]   lpwszRegValue
+ * @param[in]   lpszRegValue
  *      The registry value where we need to get the data from.
  *
  * @param[out]   ReturnedData
@@ -101,8 +101,8 @@ BOOL InitAppRegKey(IN HKEY hPredefinedKey,
  *
  */
 BOOL QueryAppSettings(IN HKEY hKey,
-                      IN LPCWSTR lpwszSubKey,
-                      IN LPCWSTR lpwszRegValue,
+                      IN LPCWSTR lpszSubKey,
+                      IN LPCWSTR lpszRegValue,
                       OUT PVOID ReturnedData,
                       IN OUT LPDWORD lpdwSizeData)
 {
@@ -110,25 +110,25 @@ BOOL QueryAppSettings(IN HKEY hKey,
     HKEY hKeyQueryValue;
 
     lResult = RegOpenKeyExW(hKey,
-                            lpwszSubKey,
+                            lpszSubKey,
                             0,
                             KEY_READ,
                             &hKeyQueryValue);
     if (lResult != ERROR_SUCCESS)
     {
-        DPRINT("QueryAppSettings(): Failed to open the key of path \"%S\". The error code is \"%li\".\n", lpwszSubKey, lResult);
+        DPRINT("QueryAppSettings(): Failed to open the key of path \"%S\". The error code is \"%li\".\n", lpszSubKey, lResult);
         return FALSE;
     }
 
     lResult = RegQueryValueExW(hKeyQueryValue,
-                               lpwszRegValue,
+                               lpszRegValue,
                                NULL,
                                NULL,
                                (LPBYTE)&ReturnedData,
                                lpdwSizeData);
     if (lResult != ERROR_SUCCESS)
     {
-        DPRINT("QueryAppSettings(): Failed to query the data from value \"%S\". The error code is \"%li\".\n", lpwszRegValue, lResult);
+        DPRINT("QueryAppSettings(): Failed to query the data from value \"%S\". The error code is \"%li\".\n", lpszRegValue, lResult);
         RegCloseKey(hKeyQueryValue);
         return FALSE;
     }
@@ -145,7 +145,7 @@ BOOL QueryAppSettings(IN HKEY hKey,
  * @param[in]   hKey
  *     A handle to a key.
  *
- * @param[in]   lpwszRegValue
+ * @param[in]   lpszRegValue
  *      The path to the sub key where the value needs to be created.
  *
  * @param[out]   dwRegType
@@ -165,7 +165,7 @@ BOOL QueryAppSettings(IN HKEY hKey,
  *
  */
 BOOL SaveAppSettings(IN HKEY hKey,
-                     IN LPCWSTR lpwszRegValue,
+                     IN LPCWSTR lpszRegValue,
                      IN DWORD dwRegType,
                      IN PVOID Data,
                      IN DWORD cbSize)
@@ -185,14 +185,14 @@ BOOL SaveAppSettings(IN HKEY hKey,
     }
 
     lResult = RegSetValueExW(hKeySetValue,
-                             lpwszRegValue,
+                             lpszRegValue,
                              0,
                              dwRegType,
                              (LPBYTE)&Data,
                              cbSize);
     if (lResult != ERROR_SUCCESS)
     {
-        DPRINT("SaveAppSettings(): Failed to set the \"%S\" value with data, the error code is \"%li\"!\n", lpwszRegValue, lResult);
+        DPRINT("SaveAppSettings(): Failed to set the \"%S\" value with data, the error code is \"%li\"!\n", lpszRegValue, lResult);
         RegCloseKey(hKeySetValue);
         return FALSE;
     }

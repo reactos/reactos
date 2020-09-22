@@ -183,12 +183,19 @@ echo ------- Testing CMD /C qualifier treatment ------------
 rem no need for space after /c
 cmd /csay one
 cmd /c"say one"
-rem ignore quote before qualifier
-rem FIXME the next command in wine starts a sub-CMD
-echo THIS FAILS: cmd "/c"say one
-rem ignore anything before /c
-rem FIXME the next command in wine starts a sub-CMD
-echo THIS FAILS: cmd ignoreme/c say one
+cmd /c"say one
+cmd /c=say one
+cmd /c,say one
+cmd /c;say one
+rem non-options are ignored before /c; quotes are not treated specially
+cmd "/c"say one
+cmd ignoreme/c say one
+cmd abc "def ghi/c say one"
+cmd -\@$*'"/c say one
+echo echo bar > foo.bat
+cmd /qq/c foo
+cmd /q "xyz /c foo"
+del foo.bat
 
 echo --------- Testing special characters --------------
 echo @echo amp > "say&.bat"

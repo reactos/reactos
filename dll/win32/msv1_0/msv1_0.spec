@@ -10,7 +10,7 @@
 @ stub MsvSamLogoff
 @ stub MsvSamValidate
 @ stub MsvValidateTarget
-@ stub SpInitialize
+@ stdcall SpInitialize(long ptr ptr)
 @ stub SpInstanceInit
 @ stdcall SpLsaModeInitialize(long ptr ptr ptr)
 @ stdcall SpUserModeInitialize(long ptr ptr ptr)

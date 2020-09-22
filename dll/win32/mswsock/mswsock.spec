@@ -18,7 +18,7 @@
 @ stdcall SetServiceW(long long long ptr ptr ptr)
 @ stdcall StartWsdpService()
 @ stdcall StopWsdpService()
-@ stdcall SvchostPushServiceGlobals(long)
+@ stdcall SvchostPushServiceGlobals(ptr)
 @ stdcall TransmitFile(long long long long ptr ptr long)
 @ stdcall WSARecvEx(long ptr long ptr)
 @ stdcall WSPStartup(long ptr ptr ptr ptr ptr ptr ptr ptr ptr ptr ptr ptr ptr ptr ptr ptr ptr ptr)

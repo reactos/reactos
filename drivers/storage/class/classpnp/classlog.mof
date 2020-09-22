@@ -1,0 +1,178 @@
+#pragma autorecover
+#pragma namespace("\\\\.\\Root\\WMI")
+
+[WMI, guid("F903D6EC-8647-438f-9E42-891F4733EDAF")]
+
+class MSStorageDriver_ScsiRequestBlock {
+	[read, WmiDataId(1), Description("Length")]
+	uint16 length;
+	
+	[read, WmiDataId(2), DisplayInHex, Description("Function")]
+	uint8 function;
+	
+	[read, WmiDataId(3), DisplayInHex, Description("SRB Status")]
+	uint8 srbStatus;
+
+	[read, WmiDataId(4), DisplayInHex, Description("SCSI Status")]
+	uint8 scsiStatus;
+	
+	[read, WmiDataId(5), DisplayInHex, Description("Path ID")]
+	uint8 pathID;
+
+	[read, WmiDataId(6), DisplayInHex, Description("Target ID")]
+	uint8 targetID;
+	
+	[read, WmiDataId(7), DisplayInHex, Description("LUN")]
+	uint8 lun;
+	
+	[read, WmiDataId(8), DisplayInHex, Description("Queue Tag")]
+	uint8 queueTag;
+
+	[read, WmiDataId(9), DisplayInHex, Description("Queue Action")]
+	uint8 queueAction;
+	
+	[read, WmiDataId(10), DisplayInHex, Description("CDB Length")]
+	uint8 cdbLength;
+
+	[read, WmiDataId(11), DisplayInHex, Description("Sense Info Buffer Length")]
+	uint8 senseInfoBufferLength;
+	
+	[read, WmiDataId(12), DisplayInHex, Description("SRB Flags")]
+	uint32 srbFlags;
+
+	[read, WmiDataId(13), DisplayInHex, Description("Data Transfer Length")]
+	uint32 dataTransferLength;
+	
+	[read, WmiDataId(14), DisplayInHex, Description("Time Out Value")]
+	uint32 timeOutValue;
+	
+	[read, WmiDataId(15), DisplayInHex, Description("Data Buffer Pointer")]
+	uint64 dataBuffer;
+	
+	[read, WmiDataId(16), DisplayInHex, Description("Sense Info Buffer Pointer")]
+	uint64 senseInfoBuffer;
+	
+	[read, WmiDataId(17), DisplayInHex, Description("Next SRB Pointer")]
+	uint64 nextSRB;
+	
+	[read, WmiDataId(18), DisplayInHex, Description("Original Request Pointer")]
+	uint64 originalRequest;
+	
+	[read, WmiDataId(19), DisplayInHex, Description("SRB Extension Pointer")]
+	uint64 srbExtension;
+	
+	[read, WmiDataId(20), DisplayInHex, Description("Internal Status")]
+	uint32 internalStatus;
+	
+	[read, WmiDataId(21), DisplayInHex, Description("Reserved (only available in Win64)")]
+	uint32 reserved;
+	
+	[read, WmiDataId(22), DisplayInHex, Description("CDB")]
+	uint8 cdb[16];
+};
+
+[WMI, guid("9065566F-5FD6-4b40-9961-98E3A3DD174E")]
+
+class MSStorageDriver_SenseData {
+	[read, WmiDataId(1), Description("Error Code")]
+	uint8 errorCode;
+	
+	[read, WmiDataId(2), Description("Valid")]
+	boolean valid;
+	
+	[read, WmiDataId(3), Description("Segment Number")]
+	uint8 segmentNumber;
+	
+	[read, WmiDataId(4), Description("Sense Key")]
+	uint8 senseKey;
+
+	[read, WmiDataId(5), Description("Reserved")]
+	boolean reserved;
+	
+	[read, WmiDataId(6), Description("Incorrect Length")]
+	boolean incorrectLength;
+	
+	[read, WmiDataId(7), Description("End Of Media")]
+	boolean endOfMedia;
+	
+	[read, WmiDataId(8), Description("File Mark")]
+	boolean fileMark;
+	
+	[read, WmiDataId(9), Description("Information")]
+	uint8 information[4];
+	
+	[read, WmiDataId(10), Description("Additional Sense Length")]
+	uint8 additionalSenseLength;
+	
+	[read, WmiDataId(11), Description("Command Specific Information")]
+	uint8 commandSpecificInformation[4];
+	
+	[read, WmiDataId(12), Description("Additional Sense Code")]
+	uint8 additionalSenseCode;
+	
+	[read, WmiDataId(13), Description("Additional Sense Code Qualifier")]
+	uint8 additionalSenseCodeQualifier;
+	
+	[read, WmiDataId(14), Description("Field Replaceable Unit Code")]
+	uint8 fieldReplaceableUnitCode;
+	
+	[read, WmiDataId(15), Description("Sense Key Specific")]
+	uint8 senseKeySpecific[3];
+};
+
+[WMI, guid("0C9BF007-50E9-407e-A9DA-0F33800E4B45")]
+
+class MSStorageDriver_ClassErrorLogEntry {
+	[read, WmiDataId(1), Description("Tick Count")]
+	uint64 tickCount;
+	
+	[read, WmiDataId(2), Description("Port Number")]
+	uint32 portNumber;
+	
+	[read, WmiDataId(3), Description("Error Paging")]
+	boolean errorPaging;
+	
+	[read, WmiDataId(4), Description("Error Retried")]
+	boolean errorRetried;
+	
+	[read, WmiDataId(5), Description("Error Unhandled")]
+	boolean errorUnhandled;
+	
+	[read, WmiDataId(6), DisplayInHex, Description("Error Reserved")]
+	uint8 errorReserved;
+	
+	[read, WmiDataId(7), DisplayInHex, Description("Reserved")]
+	uint8 reserved[3];
+	
+	[read, WmiDataId(8), Description("SCSI Request Block")]
+	MSStorageDriver_ScsiRequestBlock srb;
+	
+	[read, WmiDataId(9), Description("Sense Data")]
+	MSStorageDriver_SenseData senseData;
+	
+	[read, WmiDataId(10), Description("Event Time")]
+	datetime eventTime;
+};
+
+[Dynamic, Provider("WMIProv"),
+WMI, Description("MS Storage Class Driver Error Log"), 
+guid("D5A9A51E-03F9-404d-9722-15F90EB07038"),
+locale("MS\\0x409")]
+
+class MSStorageDriver_ClassErrorLog {
+	[key, read]
+	string InstanceName;
+
+	[read]
+	boolean Active;
+
+	[read,
+	WmiDataId(1),
+	Description("Number of Error Log Entries")]
+	uint32 numEntries;
+
+	[read,
+	WmiDataId(2),
+	Description("Error Log Array")]
+	MSStorageDriver_ClassErrorLogEntry logEntries[16];
+};

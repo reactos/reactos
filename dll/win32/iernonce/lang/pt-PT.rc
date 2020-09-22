@@ -1,0 +1,27 @@
+LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_INVALIDFORMAT "O formato da entrada %1 RunEx ou RunOnceEx era inválido. Uma barra vertical ('|') é necessária após o nome da função e a função precisa suportar os parâmetros WinMain ()."
+    IDS_LOADERROR "Ocorreu um erro ao carregar %1. O arquivo pode não ter sido instalado ou está corrompido."
+    IDS_CALLERROR "Ocorreu um erro ou excepção ao chamar a função %1 em %2."
+    IDS_INCORRECTFORMAT "O formato do seguinte comando RunEx ou RunOnceEx está incorrecto: %1. O comando de execução do shell deve começar com ||."
+    IDS_NOEXPORT "Não foi possível chamar a função% 1 no arquivo% 2 porque essa função não existe ou não foi exportada."
+    IDS_EXECUTEERROR "Ocorreu um erro ou excepção ao executar %1."
+    IDS_NOFUNCTION "Não foi possível encontrar a função %1 no arquivo %2."
+    IDS_NODEPENDENCY "Não foi possível carregar o arquivo de dependência %1."
+    IDS_SETUPERROR "Ocorreu um erro ao configurar %1. Este erro foi registado, a instalação continuará"
+    IDS_INCOMPLETE "A instalação anterior de um aplicativo não foi concluída. \n \nInicie sessão com uma conta de administrador para concluir a instalação."
+    IDS_SETUP "Configuração do ReactOS"
+    IDS_SERVICEERROR "Alguns serviços não puderam ser iniciados. A instalação precisa reiniciar o sistema para iniciar os serviços."
+END
+
+IDD_DIALOG DIALOGEX 0, 0, 206, 166
+STYLE DS_MODALFRAME | DS_NOIDLEMSG | WS_POPUP | WS_VISIBLE | WS_CAPTION
+CAPTION "Configuração do ReactOS"
+FONT 8, "MS Shell Dlg"
+BEGIN
+    LTEXT "O ReactOS está a configurar os seguintes itens:", -1, 36, 13, 163, 11
+    LISTBOX IDC_LB_ITEMS, 36, 32, 163, 127, LBS_NOTIFY | LBS_OWNERDRAWVARIABLE | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | WS_CHILD | WS_VISIBLE | WS_DISABLED | WS_VSCROLL | WS_TABSTOP
+    ICON IDI_ICON, -1, 7, 7, 20, 20
+END

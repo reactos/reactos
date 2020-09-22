@@ -718,1038 +718,186 @@ INIT_SECTION CM_SYSTEM_CONTROL_VECTOR CmControlVector[] =
 //
 // Debug Filter Masks - See kd64/kddata.c
 //
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"WIN2000",
-        &Kd_WIN2000_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"SYSTEM",
-        &Kd_SYSTEM_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"SMSS",
-        &Kd_SMSS_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"SETUP",
-        &Kd_SETUP_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"NTFS",
-        &Kd_NTFS_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"FSTUB",
-        &Kd_FSTUB_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"CRASHDUMP",
-        &Kd_CRASHDUMP_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"CDAUDIO",
-        &Kd_CDAUDIO_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"CDROM",
-        &Kd_CDROM_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"CLASSPNP",
-        &Kd_CLASSPNP_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"DISK",
-        &Kd_DISK_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"REDBOOK",
-        &Kd_REDBOOK_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"STORPROP",
-        &Kd_STORPROP_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"SCSIPORT",
-        &Kd_SCSIPORT_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"SCSIMINIPORT",
-        &Kd_SCSIMINIPORT_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"CONFIG",
-        &Kd_CONFIG_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"I8042PRT",
-        &Kd_I8042PRT_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"SERMOUSE",
-        &Kd_SERMOUSE_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"LSERMOUS",
-        &Kd_LSERMOUS_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"KBDHID",
-        &Kd_KBDHID_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"MOUHID",
-        &Kd_MOUHID_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"KBDCLASS",
-        &Kd_KBDCLASS_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"MOUCLASS",
-        &Kd_MOUCLASS_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"TWOTRACK",
-        &Kd_TWOTRACK_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"WMILIB",
-        &Kd_WMILIB_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"ACPI",
-        &Kd_ACPI_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"AMLI",
-        &Kd_AMLI_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"HALIA64",
-        &Kd_HALIA64_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"VIDEO",
-        &Kd_VIDEO_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"SVCHOST",
-        &Kd_SVCHOST_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"VIDEOPRT",
-        &Kd_VIDEOPRT_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"TCPIP",
-        &Kd_TCPIP_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"DMSYNTH",
-        &Kd_DMSYNTH_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"NTOSPNP",
-        &Kd_NTOSPNP_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"FASTFAT",
-        &Kd_FASTFAT_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"SAMSS",
-        &Kd_SAMSS_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"PNPMGR",
-        &Kd_PNPMGR_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"NETAPI",
-        &Kd_NETAPI_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"SCSERVER",
-        &Kd_SCSERVER_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"SCCLIENT",
-        &Kd_SCCLIENT_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"SERIAL",
-        &Kd_SERIAL_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"SERENUM",
-        &Kd_SERENUM_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"UHCD",
-        &Kd_UHCD_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"RPCPROXY",
-        &Kd_RPCPROXY_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"AUTOCHK",
-        &Kd_AUTOCHK_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"DCOMSS",
-        &Kd_DCOMSS_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"UNIMODEM",
-        &Kd_UNIMODEM_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"SIS",
-        &Kd_SIS_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"FLTMGR",
-        &Kd_FLTMGR_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"WMICORE",
-        &Kd_WMICORE_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"BURNENG",
-        &Kd_BURNENG_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"IMAPI",
-        &Kd_IMAPI_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"SXS",
-        &Kd_SXS_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"FUSION",
-        &Kd_FUSION_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"IDLETASK",
-        &Kd_IDLETASK_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"SOFTPCI",
-        &Kd_SOFTPCI_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"TAPE",
-        &Kd_TAPE_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"MCHGR",
-        &Kd_MCHGR_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"IDEP",
-        &Kd_IDEP_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"PCIIDE",
-        &Kd_PCIIDE_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"FLOPPY",
-        &Kd_FLOPPY_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"FDC",
-        &Kd_FDC_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"TERMSRV",
-        &Kd_TERMSRV_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"W32TIME",
-        &Kd_W32TIME_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"PREFETCHER",
-        &Kd_PREFETCHER_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"RSFILTER",
-        &Kd_RSFILTER_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"FCPORT",
-        &Kd_FCPORT_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"PCI",
-        &Kd_PCI_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"DMIO",
-        &Kd_DMIO_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"DMCONFIG",
-        &Kd_DMCONFIG_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"DMADMIN",
-        &Kd_DMADMIN_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"WSOCKTRANSPORT",
-        &Kd_WSOCKTRANSPORT_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"VSS",
-        &Kd_VSS_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"PNPMEM",
-        &Kd_PNPMEM_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"PROCESSOR",
-        &Kd_PROCESSOR_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"DMSERVER",
-        &Kd_DMSERVER_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"SR",
-        &Kd_SR_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"INFINIBAND",
-        &Kd_INFINIBAND_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"IHVDRIVER",
-        &Kd_IHVDRIVER_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"IHVVIDEO",
-        &Kd_IHVVIDEO_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"IHVAUDIO",
-        &Kd_IHVAUDIO_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"IHVNETWORK",
-        &Kd_IHVNETWORK_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"IHVSTREAMING",
-        &Kd_IHVSTREAMING_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"IHVBUS",
-        &Kd_IHVBUS_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"HPS",
-        &Kd_HPS_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"RTLTHREADPOOL",
-        &Kd_RTLTHREADPOOL_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"LDR",
-        &Kd_LDR_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"TCPIP6",
-        &Kd_TCPIP6_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"ISAPNP",
-        &Kd_ISAPNP_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"SHPC",
-        &Kd_SHPC_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"STORPORT",
-        &Kd_STORPORT_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"STORMINIPORT",
-        &Kd_STORMINIPORT_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"PRINTSPOOLER",
-        &Kd_PRINTSPOOLER_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"VSSDYNDISK",
-        &Kd_VSSDYNDISK_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"VERIFIER",
-        &Kd_VERIFIER_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"VDS",
-        &Kd_VDS_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"VDSBAS",
-        &Kd_VDSBAS_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"VDSDYN",
-        &Kd_VDSDYN_Mask,    // Specified in Vista+
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"VDSDYNDR",
-        &Kd_VDSDYNDR_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"VDSLDR",
-        &Kd_VDSLDR_Mask,    // Specified in Vista+
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"VDSUTIL",
-        &Kd_VDSUTIL_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"DFRGIFC",
-        &Kd_DFRGIFC_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"DEFAULT",
-        &Kd_DEFAULT_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"MM",
-        &Kd_MM_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"DFSC",
-        &Kd_DFSC_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"WOW64",
-        &Kd_WOW64_Mask,
-        NULL,
-        NULL
-    },
+
+#define WTEXT(s) L##s
+#define CM_DEBUG_PRINT_FILTER(Name) \
+    { \
+        L"Session Manager\\Debug Print Filter", \
+        WTEXT(#Name), \
+        &Kd_##Name##_Mask, \
+        NULL, \
+        NULL \
+    }
+
+    CM_DEBUG_PRINT_FILTER(WIN2000),
+    CM_DEBUG_PRINT_FILTER(SYSTEM),
+    CM_DEBUG_PRINT_FILTER(SMSS),
+    CM_DEBUG_PRINT_FILTER(SETUP),
+    CM_DEBUG_PRINT_FILTER(NTFS),
+    CM_DEBUG_PRINT_FILTER(FSTUB),
+    CM_DEBUG_PRINT_FILTER(CRASHDUMP),
+    CM_DEBUG_PRINT_FILTER(CDAUDIO),
+    CM_DEBUG_PRINT_FILTER(CDROM),
+    CM_DEBUG_PRINT_FILTER(CLASSPNP),
+    CM_DEBUG_PRINT_FILTER(DISK),
+    CM_DEBUG_PRINT_FILTER(REDBOOK),
+    CM_DEBUG_PRINT_FILTER(STORPROP),
+    CM_DEBUG_PRINT_FILTER(SCSIPORT),
+    CM_DEBUG_PRINT_FILTER(SCSIMINIPORT),
+    CM_DEBUG_PRINT_FILTER(CONFIG),
+    CM_DEBUG_PRINT_FILTER(I8042PRT),
+    CM_DEBUG_PRINT_FILTER(SERMOUSE),
+    CM_DEBUG_PRINT_FILTER(LSERMOUS),
+    CM_DEBUG_PRINT_FILTER(KBDHID),
+    CM_DEBUG_PRINT_FILTER(MOUHID),
+    CM_DEBUG_PRINT_FILTER(KBDCLASS),
+    CM_DEBUG_PRINT_FILTER(MOUCLASS),
+    CM_DEBUG_PRINT_FILTER(TWOTRACK),
+    CM_DEBUG_PRINT_FILTER(WMILIB),
+    CM_DEBUG_PRINT_FILTER(ACPI),
+    CM_DEBUG_PRINT_FILTER(AMLI),
+    CM_DEBUG_PRINT_FILTER(HALIA64),
+    CM_DEBUG_PRINT_FILTER(VIDEO),
+    CM_DEBUG_PRINT_FILTER(SVCHOST),
+    CM_DEBUG_PRINT_FILTER(VIDEOPRT),
+    CM_DEBUG_PRINT_FILTER(TCPIP),
+    CM_DEBUG_PRINT_FILTER(DMSYNTH),
+    CM_DEBUG_PRINT_FILTER(NTOSPNP),
+    CM_DEBUG_PRINT_FILTER(FASTFAT),
+    CM_DEBUG_PRINT_FILTER(SAMSS),
+    CM_DEBUG_PRINT_FILTER(PNPMGR),
+    CM_DEBUG_PRINT_FILTER(NETAPI),
+    CM_DEBUG_PRINT_FILTER(SCSERVER),
+    CM_DEBUG_PRINT_FILTER(SCCLIENT),
+    CM_DEBUG_PRINT_FILTER(SERIAL),
+    CM_DEBUG_PRINT_FILTER(SERENUM),
+    CM_DEBUG_PRINT_FILTER(UHCD),
+    CM_DEBUG_PRINT_FILTER(RPCPROXY),
+    CM_DEBUG_PRINT_FILTER(AUTOCHK),
+    CM_DEBUG_PRINT_FILTER(DCOMSS),
+    CM_DEBUG_PRINT_FILTER(UNIMODEM),
+    CM_DEBUG_PRINT_FILTER(SIS),
+    CM_DEBUG_PRINT_FILTER(FLTMGR),
+    CM_DEBUG_PRINT_FILTER(WMICORE),
+    CM_DEBUG_PRINT_FILTER(BURNENG),
+    CM_DEBUG_PRINT_FILTER(IMAPI),
+    CM_DEBUG_PRINT_FILTER(SXS),
+    CM_DEBUG_PRINT_FILTER(FUSION),
+    CM_DEBUG_PRINT_FILTER(IDLETASK),
+    CM_DEBUG_PRINT_FILTER(SOFTPCI),
+    CM_DEBUG_PRINT_FILTER(TAPE),
+    CM_DEBUG_PRINT_FILTER(MCHGR),
+    CM_DEBUG_PRINT_FILTER(IDEP),
+    CM_DEBUG_PRINT_FILTER(PCIIDE),
+    CM_DEBUG_PRINT_FILTER(FLOPPY),
+    CM_DEBUG_PRINT_FILTER(FDC),
+    CM_DEBUG_PRINT_FILTER(TERMSRV),
+    CM_DEBUG_PRINT_FILTER(W32TIME),
+    CM_DEBUG_PRINT_FILTER(PREFETCHER),
+    CM_DEBUG_PRINT_FILTER(RSFILTER),
+    CM_DEBUG_PRINT_FILTER(FCPORT),
+    CM_DEBUG_PRINT_FILTER(PCI),
+    CM_DEBUG_PRINT_FILTER(DMIO),
+    CM_DEBUG_PRINT_FILTER(DMCONFIG),
+    CM_DEBUG_PRINT_FILTER(DMADMIN),
+    CM_DEBUG_PRINT_FILTER(WSOCKTRANSPORT),
+    CM_DEBUG_PRINT_FILTER(VSS),
+    CM_DEBUG_PRINT_FILTER(PNPMEM),
+    CM_DEBUG_PRINT_FILTER(PROCESSOR),
+    CM_DEBUG_PRINT_FILTER(DMSERVER),
+    CM_DEBUG_PRINT_FILTER(SR),
+    CM_DEBUG_PRINT_FILTER(INFINIBAND),
+    CM_DEBUG_PRINT_FILTER(IHVDRIVER),
+    CM_DEBUG_PRINT_FILTER(IHVVIDEO),
+    CM_DEBUG_PRINT_FILTER(IHVAUDIO),
+    CM_DEBUG_PRINT_FILTER(IHVNETWORK),
+    CM_DEBUG_PRINT_FILTER(IHVSTREAMING),
+    CM_DEBUG_PRINT_FILTER(IHVBUS),
+    CM_DEBUG_PRINT_FILTER(HPS),
+    CM_DEBUG_PRINT_FILTER(RTLTHREADPOOL),
+    CM_DEBUG_PRINT_FILTER(LDR),
+    CM_DEBUG_PRINT_FILTER(TCPIP6),
+    CM_DEBUG_PRINT_FILTER(ISAPNP),
+    CM_DEBUG_PRINT_FILTER(SHPC),
+    CM_DEBUG_PRINT_FILTER(STORPORT),
+    CM_DEBUG_PRINT_FILTER(STORMINIPORT),
+    CM_DEBUG_PRINT_FILTER(PRINTSPOOLER),
+    CM_DEBUG_PRINT_FILTER(VSSDYNDISK),
+    CM_DEBUG_PRINT_FILTER(VERIFIER),
+    CM_DEBUG_PRINT_FILTER(VDS),
+    CM_DEBUG_PRINT_FILTER(VDSBAS),
+    CM_DEBUG_PRINT_FILTER(VDSDYN),  // Specified in Vista+
+    CM_DEBUG_PRINT_FILTER(VDSDYNDR),
+    CM_DEBUG_PRINT_FILTER(VDSLDR),  // Specified in Vista+
+    CM_DEBUG_PRINT_FILTER(VDSUTIL),
+    CM_DEBUG_PRINT_FILTER(DFRGIFC),
+    CM_DEBUG_PRINT_FILTER(DEFAULT),
+    CM_DEBUG_PRINT_FILTER(MM),
+    CM_DEBUG_PRINT_FILTER(DFSC),
+    CM_DEBUG_PRINT_FILTER(WOW64),
 //
 // Components specified in Vista+, some of which we also use in ReactOS
 //
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"ALPC",
-        &Kd_ALPC_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"WDI",
-        &Kd_WDI_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"PERFLIB",
-        &Kd_PERFLIB_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"KTM",
-        &Kd_KTM_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"IOSTRESS",
-        &Kd_IOSTRESS_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"HEAP",
-        &Kd_HEAP_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"WHEA",
-        &Kd_WHEA_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"USERGDI",
-        &Kd_USERGDI_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"MMCSS",
-        &Kd_MMCSS_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"TPM",
-        &Kd_TPM_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"THREADORDER",
-        &Kd_THREADORDER_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"ENVIRON",
-        &Kd_ENVIRON_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"EMS",
-        &Kd_EMS_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"WDT",
-        &Kd_WDT_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"FVEVOL",
-        &Kd_FVEVOL_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"NDIS",
-        &Kd_NDIS_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"NVCTRACE",
-        &Kd_NVCTRACE_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"LUAFV",
-        &Kd_LUAFV_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"APPCOMPAT",
-        &Kd_APPCOMPAT_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"USBSTOR",
-        &Kd_USBSTOR_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"SBP2PORT",
-        &Kd_SBP2PORT_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"COVERAGE",
-        &Kd_COVERAGE_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"CACHEMGR",
-        &Kd_CACHEMGR_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"MOUNTMGR",
-        &Kd_MOUNTMGR_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"CFR",
-        &Kd_CFR_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"TXF",
-        &Kd_TXF_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"KSECDD",
-        &Kd_KSECDD_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"FLTREGRESS",
-        &Kd_FLTREGRESS_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"MPIO",
-        &Kd_MPIO_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"MSDSM",
-        &Kd_MSDSM_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"UDFS",
-        &Kd_UDFS_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"PSHED",
-        &Kd_PSHED_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"STORVSP",
-        &Kd_STORVSP_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"LSASS",
-        &Kd_LSASS_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"SSPICLI",
-        &Kd_SSPICLI_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"CNG",
-        &Kd_CNG_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"EXFAT",
-        &Kd_EXFAT_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"FILETRACE",
-        &Kd_FILETRACE_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"XSAVE",
-        &Kd_XSAVE_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"SE",
-        &Kd_SE_Mask,
-        NULL,
-        NULL
-    },
-    {
-        L"Session Manager\\Debug Print Filter",
-        L"DRIVEEXTENDER",
-        &Kd_DRIVEEXTENDER_Mask,
-        NULL,
-        NULL
-    },
+    CM_DEBUG_PRINT_FILTER(ALPC),
+    CM_DEBUG_PRINT_FILTER(WDI),
+    CM_DEBUG_PRINT_FILTER(PERFLIB),
+    CM_DEBUG_PRINT_FILTER(KTM),
+    CM_DEBUG_PRINT_FILTER(IOSTRESS),
+    CM_DEBUG_PRINT_FILTER(HEAP),
+    CM_DEBUG_PRINT_FILTER(WHEA),
+    CM_DEBUG_PRINT_FILTER(USERGDI),
+    CM_DEBUG_PRINT_FILTER(MMCSS),
+    CM_DEBUG_PRINT_FILTER(TPM),
+    CM_DEBUG_PRINT_FILTER(THREADORDER),
+    CM_DEBUG_PRINT_FILTER(ENVIRON),
+    CM_DEBUG_PRINT_FILTER(EMS),
+    CM_DEBUG_PRINT_FILTER(WDT),
+    CM_DEBUG_PRINT_FILTER(FVEVOL),
+    CM_DEBUG_PRINT_FILTER(NDIS),
+    CM_DEBUG_PRINT_FILTER(NVCTRACE),
+    CM_DEBUG_PRINT_FILTER(LUAFV),
+    CM_DEBUG_PRINT_FILTER(APPCOMPAT),
+    CM_DEBUG_PRINT_FILTER(USBSTOR),
+    CM_DEBUG_PRINT_FILTER(SBP2PORT),
+    CM_DEBUG_PRINT_FILTER(COVERAGE),
+    CM_DEBUG_PRINT_FILTER(CACHEMGR),
+    CM_DEBUG_PRINT_FILTER(MOUNTMGR),
+    CM_DEBUG_PRINT_FILTER(CFR),
+    CM_DEBUG_PRINT_FILTER(TXF),
+    CM_DEBUG_PRINT_FILTER(KSECDD),
+    CM_DEBUG_PRINT_FILTER(FLTREGRESS),
+    CM_DEBUG_PRINT_FILTER(MPIO),
+    CM_DEBUG_PRINT_FILTER(MSDSM),
+    CM_DEBUG_PRINT_FILTER(UDFS),
+    CM_DEBUG_PRINT_FILTER(PSHED),
+    CM_DEBUG_PRINT_FILTER(STORVSP),
+    CM_DEBUG_PRINT_FILTER(LSASS),
+    CM_DEBUG_PRINT_FILTER(SSPICLI),
+    CM_DEBUG_PRINT_FILTER(CNG),
+    CM_DEBUG_PRINT_FILTER(EXFAT),
+    CM_DEBUG_PRINT_FILTER(FILETRACE),
+    CM_DEBUG_PRINT_FILTER(XSAVE),
+    CM_DEBUG_PRINT_FILTER(SE),
+    CM_DEBUG_PRINT_FILTER(DRIVEEXTENDER),
+//
+// Components specified in Windows 8
+//
+    CM_DEBUG_PRINT_FILTER(POWER),
+    CM_DEBUG_PRINT_FILTER(CRASHDUMPXHCI),
+    CM_DEBUG_PRINT_FILTER(GPIO),
+    CM_DEBUG_PRINT_FILTER(REFS),
+    CM_DEBUG_PRINT_FILTER(WER),
+//
+// Components specified in Windows 10
+//
+    CM_DEBUG_PRINT_FILTER(CAPIMG),
+    CM_DEBUG_PRINT_FILTER(VPCI),
+    CM_DEBUG_PRINT_FILTER(STORAGECLASSMEMORY),
+    CM_DEBUG_PRINT_FILTER(FSLIB),
+
+#undef WTEXT
+#undef CM_DEBUG_PRINT_FILTER
+
 //
 // END OF Debug Filter Masks
 //

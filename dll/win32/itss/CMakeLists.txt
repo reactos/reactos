@@ -9,19 +9,21 @@ list(APPEND SOURCE
     itss.c
     moniker.c
     protocol.c
-    storage.c
-    precomp.h)
+    storage.c)
+
+list(APPEND PCH_SKIP_SOURCE
+    guid.c
+    ${CMAKE_CURRENT_BINARY_DIR}/itss_stubs.c)
 
 add_library(itss MODULE
     ${SOURCE}
-    guid.c
+    ${PCH_SKIP_SOURCE}
     rsrc.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/itss_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/itss.def)
 
 set_module_type(itss win32dll)
 target_link_libraries(itss uuid wine)
 add_importlibs(itss urlmon shlwapi ole32 msvcrt kernel32 ntdll)
-add_pch(itss precomp.h SOURCE)
+add_pch(itss precomp.h "${PCH_SKIP_SOURCE}")
 add_dependencies(itss wineheaders)
 add_cd_file(TARGET itss DESTINATION reactos/system32 FOR all)

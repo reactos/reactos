@@ -7,6 +7,7 @@
  */
 
 #include "precomp.h"
+#include "undocgdi.h" // for GetFontResourceInfoW
 
 WINE_DEFAULT_DEBUG_CHANNEL(fontext);
 
@@ -454,12 +455,8 @@ STDMETHODIMP CFontExt::DragEnter(IDataObject* pDataObj, DWORD grfKeyState, POINT
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 
-#if 1   // Please implement DoGetFontTitle
-    return DRAGDROP_S_CANCEL;
-#else
     *pdwEffect = DROPEFFECT_COPY;
     return S_OK;
-#endif
 }
 
 STDMETHODIMP CFontExt::DragOver(DWORD grfKeyState, POINTL pt, DWORD* pdwEffect)
@@ -567,8 +564,8 @@ HRESULT CFontExt::DoInstallFontFile(LPCWSTR pszFontPath, LPCWSTR pszFontsDir, HK
     WCHAR szDestFile[MAX_PATH];
     LPCWSTR pszFileTitle = PathFindFileName(pszFontPath);
 
-    WCHAR szFontName[512];
-    if (!DoGetFontTitle(pszFontPath, szFontName))
+    CStringW strFontName;
+    if (!DoGetFontTitle(pszFontPath, strFontName))
         return E_FAIL;
 
     RemoveFontResourceW(pszFileTitle);
@@ -581,7 +578,7 @@ HRESULT CFontExt::DoInstallFontFile(LPCWSTR pszFontPath, LPCWSTR pszFontsDir, HK
         return E_FAIL;
     }
 
-    if (!AddFontResourceW(pszFileTitle))
+    if (!AddFontResourceW(szDestFile))
     {
         ERR("AddFontResourceW('%S') failed\n", pszFileTitle);
         DeleteFileW(szDestFile);
@@ -589,7 +586,8 @@ HRESULT CFontExt::DoInstallFontFile(LPCWSTR pszFontPath, LPCWSTR pszFontsDir, HK
     }
 
     DWORD cbData = (wcslen(pszFileTitle) + 1) * sizeof(WCHAR);
-    LONG nError = RegSetValueExW(hkeyFonts, szFontName, 0, REG_SZ, (const BYTE *)szFontName, cbData);
+    LONG nError = RegSetValueExW(hkeyFonts, strFontName, 0, REG_SZ,
+                                 (const BYTE *)pszFileTitle, cbData);
     if (nError)
     {
         ERR("RegSetValueExW failed with %ld\n", nError);
@@ -601,8 +599,26 @@ HRESULT CFontExt::DoInstallFontFile(LPCWSTR pszFontPath, LPCWSTR pszFontsDir, HK
     return S_OK;
 }
 
-HRESULT CFontExt::DoGetFontTitle(LPCWSTR pszFontPath, LPCWSTR pszFontName)
+HRESULT
+CFontExt::DoGetFontTitle(IN LPCWSTR pszFontPath, OUT CStringW& strFontName)
 {
-    // TODO:
+    DWORD cbInfo = 0;
+    BOOL ret = GetFontResourceInfoW(pszFontPath, &cbInfo, NULL, 1);
+    if (!ret || !cbInfo)
+    {
+        ERR("GetFontResourceInfoW failed\n");
+        return E_FAIL;
+    }
+
+    LPWSTR pszBuffer = strFontName.GetBuffer(cbInfo / sizeof(WCHAR));
+    ret = GetFontResourceInfoW(pszFontPath, &cbInfo, pszBuffer, 1);
+    strFontName.ReleaseBuffer();
+    if (ret)
+    {
+        TRACE("pszFontName: %S\n", (LPCWSTR)strFontName);
+        return S_OK;
+    }
+
+    ERR("GetFontResourceInfoW failed\n");
     return E_FAIL;
 }

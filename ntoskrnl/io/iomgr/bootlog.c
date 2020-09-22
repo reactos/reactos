@@ -29,8 +29,8 @@ static ERESOURCE IopBootLogResource;
 
 /* FUNCTIONS ****************************************************************/
 
-VOID
 INIT_FUNCTION
+VOID
 IopInitBootLog(BOOLEAN StartBootLog)
 {
     ExInitializeResourceLite(&IopBootLogResource);
@@ -38,8 +38,8 @@ IopInitBootLog(BOOLEAN StartBootLog)
 }
 
 
-VOID
 INIT_FUNCTION
+VOID
 IopStartBootLog(VOID)
 {
     IopBootLogCreate = TRUE;

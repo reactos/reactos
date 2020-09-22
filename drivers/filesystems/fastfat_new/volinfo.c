@@ -155,7 +155,7 @@ Return Value:
         //  We had some trouble trying to perform the requested
         //  operation, so we'll abort the I/O request with
         //  the error status that we get back from the
-        //  execption code
+        //  exception code
         //
 
         Status = FatProcessException( IrpContext, Irp, _SEH2_GetExceptionCode() );
@@ -236,7 +236,7 @@ Return Value:
         //  We had some trouble trying to perform the requested
         //  operation, so we'll abort the I/O request with
         //  the error status that we get back from the
-        //  execption code
+        //  exception code
         //
 
         Status = FatProcessException( IrpContext, Irp, _SEH2_GetExceptionCode() );
@@ -331,7 +331,7 @@ Return Value:
 
         //
         //  Make sure the vcb is in a usable condition.  This will raise
-        //  and error condition if the volume is unusable
+        //  an error condition if the volume is unusable
         //
         //  Also verify the Root Dcb since we need info from there.
         //
@@ -526,7 +526,7 @@ Return Value:
 
         //
         //  Make sure the vcb is in a usable condition.  This will raise
-        //  and error condition if the volume is unusable
+        //  an error condition if the volume is unusable
         //
         //  Also verify the Root Dcb since we need info from there.
         //
@@ -598,8 +598,8 @@ Arguments:
     Buffer - Supplies a pointer to the output buffer where the information
         is to be returned
 
-    Length - Supplies the length of the buffer in byte.  This variable
-        upon return recieves the remaining bytes free in the buffer
+    Length - Supplies the length of the buffer in bytes.  This variable
+        upon return receives the remaining bytes free in the buffer
 
 Return Value:
 
@@ -692,8 +692,8 @@ Arguments:
     Buffer - Supplies a pointer to the output buffer where the information
         is to be returned
 
-    Length - Supplies the length of the buffer in byte.  This variable
-        upon return recieves the remaining bytes free in the buffer
+    Length - Supplies the length of the buffer in bytes.  This variable
+        upon return receives the remaining bytes free in the buffer
 
 Return Value:
 
@@ -761,8 +761,8 @@ Arguments:
     Buffer - Supplies a pointer to the output buffer where the information
         is to be returned
 
-    Length - Supplies the length of the buffer in byte.  This variable
-        upon return recieves the remaining bytes free in the buffer
+    Length - Supplies the length of the buffer in bytes.  This variable
+        upon return receives the remaining bytes free in the buffer
 
 Return Value:
 
@@ -826,8 +826,8 @@ Arguments:
     Buffer - Supplies a pointer to the output buffer where the information
         is to be returned
 
-    Length - Supplies the length of the buffer in byte.  This variable
-        upon return recieves the remaining bytes free in the buffer
+    Length - Supplies the length of the buffer in bytes.  This variable
+        upon return receives the remaining bytes free in the buffer
 
 Return Value:
 
@@ -949,8 +949,8 @@ Arguments:
     Buffer - Supplies a pointer to the output buffer where the information
         is to be returned
 
-    Length - Supplies the length of the buffer in byte.  This variable
-        upon return recieves the remaining bytes free in the buffer
+    Length - Supplies the length of the buffer in bytes.  This variable
+        upon return receives the remaining bytes free in the buffer
 
 Return Value:
 
@@ -1067,7 +1067,7 @@ Return Value:
 
     //
     //  Volume label that fits in 11 unicode character length limit
-    //  is not necessary within 11 characters in OEM character set.
+    //  is not necessarily within 11 characters in OEM character set.
     //
 
     if (!NT_SUCCESS( Status )) {
@@ -1158,6 +1158,15 @@ Return Value:
         //
 
         if (OemLabel.Length > 0) {
+
+            //
+            //  Translate the first character from 0xe5 to 0x5.
+            //
+
+            if ((UCHAR)OemLabel.Buffer[0] == 0xe5) {
+
+                OemLabel.Buffer[0] = FAT_DIRENT_REALLY_0E5;
+            }
 
             //
             //  Locate the volume label if there already is one
@@ -1326,7 +1335,7 @@ Arguments:
     Buffer - Supplies a pointer to the output buffer where the information
         is to be returned
 
-    Length - Supplies the length of the buffer in byte.  This variable
+    Length - Supplies the length of the buffer in bytes.  This variable
         upon return receives the remaining bytes free in the buffer
 
 Return Value:

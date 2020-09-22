@@ -125,7 +125,6 @@ ChangeUserProfileType(
     ZeroMemory(&Item, sizeof(LVITEM));
     Item.mask = LVIF_PARAM;
     Item.iItem = iSelected;
-    Item.iSubItem = 0;
     if (!ListView_GetItem(hwndListView, &Item))
         return FALSE;
 
@@ -170,7 +169,6 @@ DeleteUserProfile(
     ZeroMemory(&Item, sizeof(LVITEM));
     Item.mask = LVIF_PARAM;
     Item.iItem = iSelected;
-    Item.iSubItem = 0;
     if (!ListView_GetItem(hwndListView, &Item))
         return FALSE;
 
@@ -253,7 +251,6 @@ CopyUserProfile(
     ZeroMemory(&Item, sizeof(LVITEM));
     Item.mask = LVIF_PARAM;
     Item.iItem = iSelected;
-    Item.iSubItem = 0;
     if (!ListView_GetItem(hwndListView, &Item))
         return FALSE;
 
@@ -436,35 +433,6 @@ GetProfileName(
 }
 
 
-static
-VOID
-FormatProfileSize(
-    _Out_ LPWSTR Buffer,
-    _In_ double size)
-{
-    const LPWSTR units[] = {L"MB", L"GB", L"TB"};
-    int i = 0, j;
-
-    size /= 1024;
-    size /= 1024;
-
-    while (size >= 1024 && i < 3)
-    {
-        size /= 1024;
-        i++;
-    }
-
-    if (size < 10)
-        j = 2;
-    else if (size < 100)
-        j = 1;
-    else
-        j = 0;
-
-    swprintf(Buffer, L"%.*f %s", j, size, units[i]);
-}
-
-
 static VOID
 AddUserProfile(
     _In_ HWND hwndListView,
@@ -588,7 +556,7 @@ AddUserProfile(
     iItem = ListView_InsertItem(hwndListView, &lvi);
 
     /* Set the profile size */
-    FormatProfileSize(szNameBuffer, (double)ullProfileSize);
+    StrFormatByteSizeW(ullProfileSize, szNameBuffer, ARRAYSIZE(szNameBuffer) - 1);
     ListView_SetItemText(hwndListView, iItem, 1, szNameBuffer);
 
     /* Set the profile type */
@@ -645,9 +613,9 @@ UpdateButtonState(
         iSelected = ListView_GetNextItem(hwndListView, -1, LVNI_SELECTED);
         if (iSelected != -1)
         {
+            ZeroMemory(&Item, sizeof(LVITEM));
             Item.mask = LVIF_PARAM;
             Item.iItem = iSelected;
-            Item.iSubItem = 0;
             if (ListView_GetItem(hwndListView, &Item))
             {
                 if (Item.lParam != 0)
@@ -698,9 +666,11 @@ AddUserProfiles(
     if (!OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &hToken))
         return;
 
-    GetTokenInformation(hToken, TokenUser, NULL, 0, &dwSize);
-    if (dwSize == 0)
+    if (GetTokenInformation(hToken, TokenUser, NULL, 0, &dwSize) ||
+        GetLastError() != ERROR_INSUFFICIENT_BUFFER)
+    {
         goto done;
+    }
 
     pTokenUser = HeapAlloc(GetProcessHeap(), 0, dwSize);
     if (pTokenUser == NULL)
@@ -804,48 +774,36 @@ OnInitUserProfileDialog(HWND hwndDlg)
     AddUserProfiles(hwndDlg, GetDlgItem(hwndDlg, IDC_USERPROFILE_LIST), bAdmin);
 }
 
-
-static
-VOID
-OnDestroy(
-    _In_ HWND hwndDlg)
-{
-    HWND hwndList;
-    INT nItems, i;
-    LVITEM Item;
-
-    hwndList = GetDlgItem(hwndDlg, IDC_USERPROFILE_LIST);
-
-    nItems = ListView_GetItemCount(hwndList);
-    for (i = 0; i < nItems; i++)
-    {
-        Item.iItem = i;
-        Item.iSubItem = 0;
-        if (ListView_GetItem(hwndList, &Item))
-        {
-            if (Item.lParam != 0)
-                HeapFree(GetProcessHeap(), 0, (PVOID)Item.lParam);
-        }
-    }
-}
-
-
 static
 VOID
 OnNotify(
     _In_ HWND hwndDlg,
     _In_ NMHDR *nmhdr)
 {
+    LPNMLISTVIEW pNMLV;
+    
     if (nmhdr->idFrom == IDC_USERACCOUNT_LINK && nmhdr->code == NM_CLICK)
     {
         ShellExecuteW(hwndDlg, NULL, L"usrmgr.cpl", NULL, NULL, 0);
     }
     else if (nmhdr->idFrom == IDC_USERPROFILE_LIST)
     {
-        if (nmhdr->code == LVN_ITEMCHANGED)
-            UpdateButtonState(hwndDlg, nmhdr->hwndFrom);
-        else if (nmhdr->code == NM_DBLCLK)
-            ChangeUserProfileType(hwndDlg);
+        switch(nmhdr->code)
+        {
+            case LVN_ITEMCHANGED:
+                UpdateButtonState(hwndDlg, nmhdr->hwndFrom);            
+                break;
+            
+            case NM_DBLCLK:
+                ChangeUserProfileType(hwndDlg);
+                break;
+                
+            case LVN_DELETEITEM:
+                pNMLV = (LPNMLISTVIEW)nmhdr;            
+                if (pNMLV->lParam != 0)
+                    HeapFree(GetProcessHeap(), 0, (LPVOID)pNMLV->lParam);                
+                break;
+        }        
     }
 }
 
@@ -862,11 +820,7 @@ UserProfileDlgProc(HWND hwndDlg,
         case WM_INITDIALOG:
             OnInitUserProfileDialog(hwndDlg);
             return TRUE;
-
-        case WM_DESTROY:
-            OnDestroy(hwndDlg);
-            break;
-
+    
         case WM_COMMAND:
             switch (LOWORD(wParam))
             {

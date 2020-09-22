@@ -8,7 +8,7 @@ if(MSVC_IDE)
     include_directories($<TARGET_FILE_DIR:custom>)
 endif()
 
-if(GCC AND GCC_VERSION VERSION_GREATER 7)
+if(GCC)
     add_compile_flags("-Wno-format-overflow")
 endif()
 
@@ -29,19 +29,23 @@ list(APPEND SOURCE
     patch.c
     record.c
     source.c
-    suminfo.c
-    precomp.h)
+    suminfo.c)
 
-if(NOT ${CMAKE_VERSION} VERSION_LESS "3.9.0")
-    # CMake 3.9 and higher requires to specify this dependency manually
-    # see https://gitlab.kitware.com/cmake/cmake/issues/19933
-    set_property(SOURCE msi_winetest.rc PROPERTY OBJECT_DEPENDS custom.dll)
-endif()
+list(APPEND PCH_SKIP_SOURCE
+    testlist.c)
 
-add_executable(msi_winetest ${SOURCE} testlist.c msi_winetest.rc)
+# CMake 3.9 and higher requires to specify this dependency manually
+# see https://gitlab.kitware.com/cmake/cmake/issues/19933
+set_property(SOURCE msi_winetest.rc PROPERTY OBJECT_DEPENDS custom.dll)
+
+add_executable(msi_winetest
+    ${SOURCE}
+    ${PCH_SKIP_SOURCE}
+    msi_winetest.rc)
+
 target_link_libraries(msi_winetest uuid)
 set_module_type(msi_winetest win32cui)
 add_importlibs(msi_winetest cabinet msi shell32 ole32 oleaut32 user32 advapi32 version msvcrt kernel32)
-add_pch(msi_winetest precomp.h SOURCE)
+add_pch(msi_winetest precomp.h "${PCH_SKIP_SOURCE}")
 add_rostests_file(TARGET msi_winetest)
 add_dependencies(msi_winetest custom)

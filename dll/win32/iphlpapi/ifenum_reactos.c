@@ -246,8 +246,7 @@ static DWORD getNumInterfacesInt(BOOL onlyNonLoopback)
 
     for( i = 0; i < numEntities; i++ ) {
         if( isInterface( &entitySet[i] ) &&
-            (!onlyNonLoopback ||
-             (onlyNonLoopback && !isLoopback( tcpFile, &entitySet[i] ))) )
+            (!onlyNonLoopback || !isLoopback( tcpFile, &entitySet[i] )) )
             numInterfaces++;
     }
 

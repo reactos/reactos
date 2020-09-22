@@ -17,17 +17,19 @@ list(APPEND SOURCE
     swapchain.c
     texture.c
     vertexdeclaration.c
-    volume.c
-    precomp.h)
+    volume.c)
+
+list(APPEND PCH_SKIP_SOURCE
+    guid.c)
 
 add_library(d3d8 MODULE
     ${SOURCE}
-    guid.c
+    ${PCH_SKIP_SOURCE}
     version.rc
     ${CMAKE_CURRENT_BINARY_DIR}/d3d8.def)
 
 set_module_type(d3d8 win32dll UNICODE)
 target_link_libraries(d3d8 uuid wine)
 add_importlibs(d3d8 d3dwine msvcrt kernel32 ntdll)
-add_pch(d3d8 precomp.h SOURCE)
+add_pch(d3d8 precomp.h "${PCH_SKIP_SOURCE}")
 add_cd_file(TARGET d3d8 DESTINATION reactos/system32 FOR all)

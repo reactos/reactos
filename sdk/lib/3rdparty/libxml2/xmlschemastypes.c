@@ -70,7 +70,7 @@ struct _xmlSchemaValDate {
     unsigned int	hour	:5;	/* 0 <=  hour   <= 24   */
     unsigned int	min	:6;	/* 0 <=  min    <= 59	*/
     double		sec;
-    unsigned int	tz_flag	:1;	/* is tzo explicitely set? */
+    unsigned int	tz_flag	:1;	/* is tzo explicitly set? */
     signed int		tzo	:12;	/* -1440 <= tzo <= 1440;
 					   currently only -840 to +840 are needed */
 };
@@ -1129,7 +1129,7 @@ xmlSchemaGetBuiltInListSimpleTypeItemType(xmlSchemaTypePtr type)
 #define VALID_HOUR(hr)          ((hr >= 0) && (hr <= 23))
 #define VALID_MIN(min)          ((min >= 0) && (min <= 59))
 #define VALID_SEC(sec)          ((sec >= 0) && (sec < 60))
-#define VALID_TZO(tzo)          ((tzo > -840) && (tzo < 840))
+#define VALID_TZO(tzo)          ((tzo >= -840) && (tzo <= 840))
 #define IS_LEAP(y)						\
 	(((y % 4 == 0) && (y % 100 != 0)) || (y % 400 == 0))
 
@@ -2130,7 +2130,7 @@ xmlSchemaParseUInt(const xmlChar **str, unsigned long *llo,
  * @value: the value to check
  * @val:  the return computed value
  * @node:  the node containing the value
- * flags:  flags to control the vlidation
+ * flags:  flags to control the validation
  *
  * Check that a value conforms to the lexical space of the atomic type.
  * if true a value is computed and returned in @val.
@@ -2155,7 +2155,7 @@ xmlSchemaValAtomicType(xmlSchemaTypePtr type, const xmlChar * value,
         return (-1);
 
     /*
-     * validating a non existant text node is similar to validating
+     * validating a non existent text node is similar to validating
      * an empty one.
      */
     if (value == NULL)
@@ -2925,7 +2925,7 @@ xmlSchemaValAtomicType(xmlSchemaTypePtr type, const xmlChar * value,
                 if (*value != 0) {
 		    xmlURIPtr uri;
 		    xmlChar *tmpval, *cur;
-		    if (normOnTheFly) {
+		    if ((norm == NULL) && (normOnTheFly)) {
 			norm = xmlSchemaCollapseString(value);
 			if (norm != NULL)
 			    value = norm;
@@ -3067,7 +3067,7 @@ xmlSchemaValAtomicType(xmlSchemaTypePtr type, const xmlChar * value,
                  * following cases can arise: (1) the final quantum of
                  * encoding input is an integral multiple of 24 bits; here,
                  * the final unit of encoded output will be an integral
-                 * multiple ofindent: Standard input:701: Warning:old style
+                 * multiple of indent: Standard input:701: Warning:old style
 		 * assignment ambiguity in "=*".  Assuming "= *" 4 characters
 		 * with no "=" padding, (2) the final
                  * quantum of encoding input is exactly 8 bits; here, the
@@ -3628,8 +3628,10 @@ xmlSchemaCompareDurations(xmlSchemaValPtr x, xmlSchemaValPtr y)
 	minday = 0;
 	maxday = 0;
     } else {
-	maxday = 366 * ((myear + 3) / 4) +
-	         365 * ((myear - 1) % 4);
+        /* FIXME: This doesn't take leap year exceptions every 100/400 years
+           into account. */
+	maxday = 365 * myear + (myear + 3) / 4;
+        /* FIXME: Needs to be calculated separately */
 	minday = maxday - 1;
     }
 
@@ -3877,7 +3879,7 @@ _xmlSchemaDateAdd (xmlSchemaValPtr dt, xmlSchemaValPtr dur)
 
         temp = r->mon + carry;
         r->mon = (unsigned int) MODULO_RANGE(temp, 1, 13);
-        r->year = r->year + (unsigned int) FQUOTIENT_RANGE(temp, 1, 13);
+        r->year = r->year + (long) FQUOTIENT_RANGE(temp, 1, 13);
         if (r->year == 0) {
             if (temp < 1)
                 r->year--;

@@ -114,3 +114,13 @@ add_asm_files(rtl_asm ${ASM_SOURCE})
 add_library(rtl ${SOURCE} ${rtl_asm})
 add_pch(rtl rtl.h SOURCE)
 add_dependencies(rtl psdk asm)
+
+list(APPEND SOURCE_VISTA
+    condvar.c
+    runonce.c
+    srw.c
+)
+
+add_library(rtl_vista ${SOURCE_VISTA})
+add_pch(rtl rtl_vista.h SOURCE_VISTA)
+add_dependencies(rtl_vista psdk)

@@ -28,3 +28,5 @@
 #define IDS_LICENSE 1010
 #define IDS_ABOUT   1011
 #define IDS_TITLE   1012
+#define IDS_UNICODE 1013
+#define IDS_ALL     1014

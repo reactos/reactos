@@ -1,0 +1,11 @@
+[Version]
+Signature = "$Windows NT$"
+
+[AddReg]
+; Enable _one_ driver per section by removing the leading semicolon.
+
+;
+; Display driver section
+
+; pc98vid video miniport driver
+HKLM,"SYSTEM\CurrentControlSet\Services\vga","Start",0x00010001,0x00000001

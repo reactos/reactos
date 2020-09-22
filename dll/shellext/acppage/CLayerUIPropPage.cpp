@@ -413,7 +413,7 @@ LRESULT CLayerUIPropPage::OnEditModes(WORD wNotifyCode, WORD wID, HWND hWndCtl, 
 LRESULT CLayerUIPropPage::OnClickNotify(INT uCode, LPNMHDR hdr, BOOL& bHandled)
 {
     if (hdr->idFrom == IDC_INFOLINK)
-        ShellExecute(NULL, L"open", L"https://www.reactos.org/forum/viewforum.php?f=4", NULL, NULL, SW_SHOW);
+        ShellExecute(NULL, L"open", L"https://reactos.org/forum/viewforum.php?f=4", NULL, NULL, SW_SHOW);
     return 0;
 }
 

@@ -24,6 +24,7 @@ HKR, , Icon,           0, "-27"
 [Manufacturer]
 %GenericMfg% = GenericMfg
 %IntelMfg% = IntelMfg
+%nVidiaMfg% = nVidiaMfg
 
 [GenericMfg]
 %*PNP0000.DeviceDesc% = NO_DRV,*PNP0000
@@ -68,6 +69,14 @@ HKR, , Icon,           0, "-27"
 %PCI\VEN_8086&DEV_7180.DeviceDesc% = NO_DRV,PCI\VEN_8086&DEV_7180
 %PCI\VEN_8086&DEV_7190.DeviceDesc% = NO_DRV,PCI\VEN_8086&DEV_7190
 %PCI\VEN_8086&DEV_7192.DeviceDesc% = NO_DRV,PCI\VEN_8086&DEV_7192
+
+[nVidiaMfg]
+%PCI\VEN_10DE&DEV_01B2.DeviceDesc% = PCI_ISA_Inst,PCI\VEN_10DE&DEV_01B2
+%PCI\VEN_10DE&DEV_01B4.DeviceDesc% = NO_DRV,PCI\VEN_10DE&DEV_01B4
+%PCI\VEN_10DE&DEV_01B7.DeviceDesc% = NO_DRV,PCI\VEN_10DE&DEV_01B7
+%PCI\VEN_10DE&DEV_01B8.DeviceDesc% = NO_DRV,PCI\VEN_10DE&DEV_01B8
+%PCI\VEN_10DE&DEV_02A5.DeviceDesc% = NO_DRV,PCI\VEN_10DE&DEV_02A5
+%PCI\VEN_10DE&DEV_02A6.DeviceDesc% = NO_DRV,PCI\VEN_10DE&DEV_02A6
 
 ;---------------------------- NO DRIVER REQ -----------------------------
 
@@ -116,8 +125,7 @@ CopyFiles = PCI_ISA_CopyFiles.NT
 isapnp.sys
 
 [PCI_ISA_Inst.NT.Services]
-;AddService = isapnp, 0x00000002, isapnp_Service_Inst
-AddService = , 0x00000002
+AddService = isapnp, 0x00000002, isapnp_Service_Inst
 
 [isapnp_Service_Inst]
 ServiceType   = 1
@@ -192,6 +200,14 @@ PCI\VEN_8086&DEV_7113.DeviceDesc = "Intel 82371AB/EB Power Management Controller
 PCI\VEN_8086&DEV_7180.DeviceDesc = "Intel 82443LX/EX Pentium(R) II CPU to PCI-Bridge"
 PCI\VEN_8086&DEV_7190.DeviceDesc = "Intel 82443BX/ZX/DX Pentium(R) II CPU to PCI-Bridge"
 PCI\VEN_8086&DEV_7192.DeviceDesc = "Intel 82443BX/ZX/DX Pentium(R) II CPU to PCI-Bridge"
+
+nVidiaMfg = "nVidia Corporation"
+PCI\VEN_10DE&DEV_01B2.DeviceDesc = "nVidia nForce PCI to ISA Bridge"
+PCI\VEN_10DE&DEV_01B4.DeviceDesc = "nVidia nForce SMBus Controller"
+PCI\VEN_10DE&DEV_01B7.DeviceDesc = "nVidia nForce AGP to PCI Bridge"
+PCI\VEN_10DE&DEV_01B8.DeviceDesc = "nVidia nForce PCI to PCI Bridge"
+PCI\VEN_10DE&DEV_02A5.DeviceDesc = "nVidia MCPX CPU Bridge"
+PCI\VEN_10DE&DEV_02A6.DeviceDesc = "nVidia MCPX Memory Controller"
 
 [Strings.0405]
 SystemClassName = "Systémová zařízení"

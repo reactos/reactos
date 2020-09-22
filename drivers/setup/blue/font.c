@@ -62,6 +62,28 @@ ScrLoadFontTable(
     CloseBitPlane();
 }
 
+VOID
+ScrSetFont(
+    _In_ PUCHAR FontBitfield)
+{
+    PHYSICAL_ADDRESS BaseAddress;
+    PUCHAR Bitplane;
+
+    /* open bit plane for font table access */
+    OpenBitPlane();
+
+    /* get pointer to video memory */
+    BaseAddress.QuadPart = BITPLANE_BASE;
+    Bitplane = (PUCHAR)MmMapIoSpace(BaseAddress, 0xFFFF, MmNonCached);
+
+    LoadFont(Bitplane, FontBitfield);
+
+    MmUnmapIoSpace(Bitplane, 0xFFFF);
+
+    /* close bit plane */
+    CloseBitPlane();
+}
+
 /* PRIVATE FUNCTIONS *********************************************************/
 
 NTSTATUS

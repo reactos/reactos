@@ -14,6 +14,7 @@
 #define IDI_UPDATE_DB            20
 #define IDI_CHECK_ALL            21
 #define IDI_SELECTEDFORINST      22
+#define IDI_BROKEN_IMAGE         23
 
 /* Icons for categories */
 #define IDI_CAT_AUDIO            50
@@ -54,12 +55,14 @@
 #define IDC_USE_PROXY            1015
 #define IDC_PROXY_SERVER         1016
 #define IDC_NO_PROXY_FOR         1017
+#define IDC_SOURCE_DEFAULT       1018
+#define IDC_USE_SOURCE           1019
+#define IDC_SOURCE_URL           1020
 
 /* Dialogs */
 #define IDD_SETTINGS_DIALOG      300
 #define IDD_INSTALL_DIALOG       301
 #define IDD_DOWNLOAD_DIALOG      302
-#define IDD_ABOUT_DIALOG         303
 
 /* Menus */
 #define IDR_MAINMENU             500
@@ -81,6 +84,7 @@
 #define ID_RESETDB               561
 #define ID_CHECK_ALL             562
 #define ID_SEARCH                563
+#define ID_TOOLBAR_INSTALL       564
 
 /* Strings */
 #define IDS_APPTITLE             100
@@ -98,6 +102,7 @@
 #define IDS_APPLICATIONS         112
 #define IDS_CHOOSE_FOLDER_TEXT   113
 #define IDS_CHOOSE_FOLDER_ERROR  114
+#define IDS_URL_INVALID          115
 #define IDS_APP_REG_REMOVE       116
 #define IDS_INFORMATION          117
 #define IDS_UNABLE_TO_REMOVE     118
@@ -113,6 +118,11 @@
 #define IDS_UNABLE_TO_INSTALL    128
 #define IDS_SELECTEDFORINST      129
 #define IDS_MISMATCH_CERT_INFO   130
+#define IDS_UNABLE_PATH          131
+#define IDS_APP_AUTHORS          132
+#define IDS_APP_DISPLAY_DETAILS  133
+#define IDS_APP_DISPLAY_LIST     134
+#define IDS_APP_DISPLAY_TILE     135
 
 /* Tooltips */
 #define IDS_TOOLTIP_INSTALL      200
@@ -159,6 +169,7 @@
 #define IDS_AINFO_KILOBYTE_EXT       358
 #define IDS_AINFO_MEGABYTE_EXT       359
 #define IDS_AINFO_GIGABYTE_EXT       360
+#define IDS_AINFO_PACKAGE_NAME       361
 
 
 /* Names of categories */
@@ -205,6 +216,17 @@
 /* Dialog related entries */
 #define IDS_DL_DIALOG_DB_DISP                   950
 #define IDS_DL_DIALOG_DB_DOWNLOAD_DISP          951
+#define IDS_DL_DIALOG_DB_UNOFFICIAL_DOWNLOAD_DISP 952
+
+/* Command-line related strings */
+#define IDS_CMD_USAGE                           953
+#define IDS_CMD_NEED_PACKAGE_NAME               954
+#define IDS_CMD_NEED_FILE_NAME                  955
+#define IDS_CMD_NEED_PARAMS                     956
+#define IDS_CMD_INVALID_OPTION                  957
+#define IDS_CMD_FIND_RESULT_FOR                 958
+#define IDS_CMD_PACKAGE_NOT_FOUND               959
+#define IDS_CMD_PACKAGE_INFO                    960
 
 /* Accelerators */
 #define HOTKEYS                  715

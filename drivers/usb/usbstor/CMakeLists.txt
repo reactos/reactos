@@ -1,7 +1,4 @@
 
-add_definitions(-DDEBUG_MODE)
-include_directories(${REACTOS_SOURCE_DIR}/ntoskrnl/include)
-
 list(APPEND SOURCE
     descriptor.c
     disk.c
@@ -11,15 +8,18 @@ list(APPEND SOURCE
     queue.c
     error.c
     scsi.c
-    usbstor.c
-    usbstor.h)
+    usbstor.c)
+
+list(APPEND PCH_SKIP_SOURCE
+    guid.c)
 
 add_library(usbstor MODULE
     ${SOURCE}
-    guid.c
+    ${PCH_SKIP_SOURCE}
     usbstor.rc)
 
 set_module_type(usbstor kernelmodedriver)
 add_importlibs(usbstor ntoskrnl hal usbd)
-add_pch(usbstor usbstor.h SOURCE)
+add_pch(usbstor usbstor.h "${PCH_SKIP_SOURCE}")
 add_cd_file(TARGET usbstor DESTINATION reactos/system32/drivers NO_CAB FOR all)
+add_driver_inf(usbstor usbstor.inf)

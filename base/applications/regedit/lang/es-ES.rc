@@ -29,7 +29,7 @@ END
 
 IDR_REGEDIT_MENU MENU
 BEGIN
-    POPUP "&Registro"
+    POPUP "&Archivo"
     BEGIN
         MENUITEM "&Importar archivo...", ID_REGISTRY_IMPORTREGISTRYFILE
         MENUITEM "&Exportar archivo...", ID_REGISTRY_EXPORTREGISTRYFILE

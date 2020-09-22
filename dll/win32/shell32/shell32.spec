@@ -157,7 +157,7 @@
 158 stdcall -noname PathGetExtension(wstr long long) SHPathGetExtensionW
 159 stdcall -noname PathIsDirectory(wstr) PathIsDirectoryW
 160 stdcall -noname SHNetConnectionDialog(ptr wstr long)
-161 stdcall SHRunControlPanel(long long)
+161 stdcall SHRunControlPanel(wstr ptr)
 162 stdcall SHSimpleIDListFromPath(ptr) SHSimpleIDListFromPathAW # FIXME
 163 stdcall -noname StrToOleStr(wstr str) StrToOleStrAW # FIXME
 164 stdcall Win32DeleteFile(wstr) Win32DeleteFileW
@@ -169,7 +169,7 @@
 170 stdcall SHReplaceFromPropSheetExtArray(long long long long)
 171 stdcall PathCleanupSpec(ptr ptr)
 172 stdcall -noname SHCreateLinks(long str ptr long ptr)
-173 stdcall SHValidateUNC(long long long)
+173 stdcall SHValidateUNC(ptr wstr long)
 174 stdcall SHCreateShellFolderViewEx(ptr ptr)
 175 stdcall -noname SHGetSpecialFolderPath(long long long long) SHGetSpecialFolderPathW
 176 stdcall SHSetInstanceExplorer(long)
@@ -178,8 +178,8 @@
 179 stdcall SHGetNewLinkInfoA(str str ptr long long)
 180 stdcall SHGetNewLinkInfoW(wstr wstr ptr long long)
 181 stdcall -noname RegisterShellHook(long long)
-182 varargs ShellMessageBoxW(long long wstr wstr long)
-183 varargs ShellMessageBoxA(long long str str long)
+182 varargs ShellMessageBoxW() ShellMessageBoxWrapW ## This is the no-named 'shlwapi.ShellMessageBoxWrapW' (i.e. 'shlwapi.#388')
+183 varargs ShellMessageBoxA(ptr ptr str str long)
 184 stdcall -noname ArrangeWindows(long long long long long)
 185 stdcall -noname SHHandleDiskFull(ptr long)
 186 stdcall -noname ILGetDisplayNameEx(ptr ptr ptr long)

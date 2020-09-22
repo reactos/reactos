@@ -425,7 +425,7 @@ list(APPEND SOURCE_CRTDLL
 #    malloc.c
 #    mblen.c
     mbstowcs.c
-#    mbtowc.c
+    mbtowc.c
 #    memchr.c
 #    memcmp.c
 #    memcpy.c
@@ -519,7 +519,7 @@ list(APPEND SOURCE_CRTDLL
     wcstombs.c
     wcstoul.c
 #    wcsxfrm.c
-#    wctomb.c
+    wctomb.c
 #    wprintf.c
 #    wscanf.c
 )

@@ -11,6 +11,8 @@
 
 #define VID_PROGRESS_BAR_LEFT     259
 #define VID_PROGRESS_BAR_TOP      352
+#define VID_PROGRESS_BAR_WIDTH    121
+#define VID_PROGRESS_BAR_HEIGHT   12
 
 /* 16px space between shutdown logo and message */
 #define VID_SHUTDOWN_LOGO_LEFT    225

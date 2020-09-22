@@ -31,6 +31,8 @@
 
 /* GLOBAL VARIABLES ***********************************************************/
 
+ULONG VideoDebugLevel = 0;
+
 BOOLEAN VpBaseVideo = FALSE;
 BOOLEAN VpNoVesa = FALSE;
 
@@ -90,10 +92,10 @@ IntVideoPortDeferredRoutine(
 NTSTATUS
 NTAPI
 IntVideoPortCreateAdapterDeviceObject(
-    IN PDRIVER_OBJECT DriverObject,
-    IN PVIDEO_PORT_DRIVER_EXTENSION DriverExtension,
-    IN PDEVICE_OBJECT PhysicalDeviceObject,
-    OUT PDEVICE_OBJECT *DeviceObject  OPTIONAL)
+   _In_ PDRIVER_OBJECT DriverObject,
+   _In_ PVIDEO_PORT_DRIVER_EXTENSION DriverExtension,
+   _In_opt_ PDEVICE_OBJECT PhysicalDeviceObject,
+   _Out_opt_ PDEVICE_OBJECT *DeviceObject)
 {
     PVIDEO_PORT_DEVICE_EXTENSION DeviceExtension;
     ULONG DeviceNumber;
@@ -293,6 +295,8 @@ IntVideoPortFindAdapter(
         ConfigInfo.SystemMemorySize = SystemBasicInfo.NumberOfPhysicalPages *
                                       SystemBasicInfo.PageSize;
     }
+
+    // FIXME: Check the adapter key and update VideoDebugLevel variable.
 
     /*
      * Call miniport HwVidFindAdapter entry point to detect if
@@ -794,6 +798,9 @@ VideoPortDebugPrint(
 {
     va_list ap;
 
+    if (VideoDebugLevel >= DebugPrintLevel)
+        DebugPrintLevel = Error;
+
     va_start(ap, DebugMessage);
     vDbgPrintEx(DPFLTR_IHVVIDEO_ID, DebugPrintLevel, DebugMessage, ap);
     va_end(ap);
@@ -1046,7 +1053,6 @@ VideoPortScanRom(
 
     StringLength = strlen((PCHAR)String);
     Found = FALSE;
-    SearchLocation = RomBase;
     for (SearchLocation = RomBase;
             !Found && SearchLocation < RomBase + RomLength - StringLength;
             SearchLocation++)

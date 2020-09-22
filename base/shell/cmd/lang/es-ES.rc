@@ -1,16 +1,16 @@
-/* Spanish translation by HUMA2000, Jose Pedro Fernández Pascual e Ismael Ferreras Morezuelas (Swyter) */
+/* Spanish translation by HUMA2000, Jose Pedro Fernández Pascual, Ismael Ferreras Morezuelas (Swyter) e Catalin Gabriel Draghita */
 
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
-    STRING_ASSOC_HELP "Modify file extension associations.\n\n\
+    STRING_ASSOC_HELP "Modifica la extensión del archivo asociado.\n\n\
 assoc [.ext[=[FileType]]]\n\
 \n\
-assoc (print all associations)\n\
-assoc .ext (print specific association)\n\
-assoc .ext= (remove specific association)\n\
-assoc .ext=FileType (add new association)\n"
+assoc (muestra todas las asociaciones)\n\
+assoc .ext (muestra asociaciones especificas)\n\
+assoc .ext= (eliminar asociación especifica)\n\
+assoc .ext=FileType (añadir nueva asociación)\n"
     STRING_ALIAS_HELP "Pone, borra o muestra los alias.\n\n\
 ALIAS [alias=[command]]\n\n\
   alias    Nombre para un alias.\n\
@@ -25,7 +25,7 @@ Para borrar un alias de la lista de alias:\n\
     STRING_CALL_HELP "Ejecuta un arhivo por lotes desde otro archivo por lotes.\n\n\
 CALL [drive:][path]filename [batch-parameter]\n\n\
   batch-parameter  Especifica cualquier informacion de la linea de comandos\n\
-                   requerida por el archivo por lotes."
+                   requerida por el archivo por lotes.\n"
     STRING_CD_HELP "Cambia el directorio actual o muestra su nombre.\n\n\
 CHDIR [/D][drive:][path]\n\
 CHDIR[..|.]\n\
@@ -92,14 +92,15 @@ COPY [/V][/Y|/-Y][/A|/B] origen [/A|/B]\n\
                existente.\n\n\
 El parametro /Y tiene que estar presente en las variables de entorno de COPYCMD.\n\
 ...\n"
-    STRING_CTTY_HELP "Changes the standard I/O terminal device to an auxiliary device.\n\n\
+    STRING_CTTY_HELP "Cambia el estándar del dispositivo terminal de E/S a un dispositivo auxiliar.\n\n\
 CTTY device\n\n\
-  device    The terminal device you want to use as the new standard I/O device.\n\
-            This name must refer to a valid character device:\n\
+  device    El dispositivo terminal que quiere usar como nuevo dispositivo\n\
+            estándar de E/S. Este nombre debe referir a un dispositivo con\n\
+            un carácter válido:\n\
             AUX, COMx (x=1..N), CON, LPTx (x=1..N), PRN, NUL.\n\
-            CON is usually the default standard I/O device.\n\n\
-To return control to the standard console, type: CTTY CON on the auxiliary\n\
-device."
+            CON normalmente es el dispositivo estándar de E/S predeterminado.\n\n\
+Para devolver el control a la consola estándar, escriba: CTTY CON en el\n\
+dispositivo auxiliar."
     STRING_DATE_HELP1 "\nIntroduce la nueva fecha (mm%cdd%cyyyy): "
     STRING_DATE_HELP2 "\nIntroduce la nueva fecha (dd%cmm%cyyyy): "
     STRING_DATE_HELP3 "\nIntroduce la nueva fecha (yyyy%cmm%cdd): "
@@ -198,7 +199,7 @@ pasa de linea.\n\n\
   ECHO [mensaje]\n\
   ECHO.             Muestra una linea vacia\n\n\
 Escribe ECHO sin parámetros para mostrar la configuración actual de ECHO."
-    STRING_ECHO_HELP5 "ECHO está %s\n"
+    STRING_ECHO_HELP5 "ECHO está %s.\n"
     STRING_EXIT_HELP "Sale del interprete de la linea de comandos.\n\nEXIT\n"
     STRING_FOR_HELP1 "Ejecuta un comando específico para cada archivo de un grupo de archivos.\n\n\
 FOR %variable IN (grupo) DO comando [parametros]\n\
@@ -232,7 +233,7 @@ de %variable.\n"
     STRING_GOTO_HELP1 "Manda al CMD a una linea etiquetada en un archivo por lotes.\n\n\
 GOTO etiqueta\n\n\
   etiqueta  Especifica la cadena de texto usada en el archivo por lotes como etiqueta.\n\n\
-Escriba la etiqueta en la linea misma, empezando con dos puntos."
+Escriba la etiqueta en la linea misma, empezando con dos puntos.\n"
     STRING_IF_HELP1 "Ejecuta procesos condicionales en archivos por lotes.\n\n\
   IF [NOT] ERRORLEVEL número comando\n\
   IF [NOT] string1==string2 comando\n\
@@ -267,9 +268,9 @@ If neither /H or /J is specified, a symbolic link is created."
     STRING_MOVE_HELP1 "¿Sobreescribir %s (Si/No/Todos)? "
     STRING_MOVE_HELP2 "Mueve archivos y renombra archivos y directorios.\n\n\
 Para mover uno o más archivos:\n\
-MOVE [/N][unidad:][ruta]archivo1[,...] destino\n\n\
+MOVE [/N][/Y|/-Y][unidad:][ruta]archivo1[,...] destino\n\n\
 Para renombrar un directorio:\n\
-MOVE [/N][unidad:][ruta]directorio1 directorio2\n\n\
+MOVE [/N][/Y|/-Y][unidad:][ruta]directorio1 directorio2\n\n\
   [unidad:][ruta]archivo1  Especifica la localización y el nombre del archivo\n\
                            o archivos que quieres mover.\n\
   /N                    Nada. Hace todo menos mover archivos o directorios.\n\n\
@@ -290,6 +291,10 @@ PATH [[unidad:]ruta[;...]]\nRuta ;\n\n\
 Escribe PATH ; para limpiar todas las configuraciones de búsqueda y usar solo el\n\
 directorio actual del interprete de comandos.\n\
 Escribe PATH sin parámetros para mostrar la ruta actual.\n"
+    STRING_PAUSE_HELP1 "Detiene la ejecución del archivo por lotes actual y muestra el\n\
+siguiente mensaje:\n\
+'Pulsa cualquier tecla para continuar...' o un mensaje definido por el usuario.\n\n\
+PAUSE [mensaje]"
     STRING_PROMPT_HELP1 "Cambia el símbolo de comandos.\n\n\
 PROMPT [texto]\n\n\
   texto   Epecifica un nuevo símbolo de comandos.\n\n\
@@ -313,16 +318,14 @@ códigos especiales:\n\n\
   $V   Número de versión del SO\n\
   $_   Salto de linea\n\
   $$   $ (signo del dolar)\n"
-    STRING_PAUSE_HELP1 "Detiene la ejecución del archivo por lotes actual y muestra el\n\
-siguiente mensaje:\n\
-'Pulsa cualquier tecla para continuar...' o un mensaje definido por el usuario.\n\n\
-PAUSE [mensaje]"
     STRING_PROMPT_HELP2 "  $+   Muestra la profundidad actual de la pila de directorios"
     STRING_PROMPT_HELP3 "\nEscribe PROMPT sin parámetros para resetear el símbolo de\n\
 comandos a su configuración por defecto."
-    STRING_REM_HELP "Comienza una liena de comentarios en un archivo por lotes\n\nREM [Comentario]"
+    STRING_REM_HELP "Comienza una linea de comentarios en un archivo por lotes\n\nREM [Comentario]"
     STRING_RMDIR_HELP "Elimina un directorio.\n\n\
-RMDIR [unidad:]ruta\nRD [unidad:]ruta"
+RMDIR [/S] [/Q] [unidad:]ruta\nRD [/S] [/Q] [unidad:]ruta\n\
+  /S    Elimina todos los archivos y carpetas dentro del objetivo.\n\
+  /Q    No avisa al usuario.\n"
     STRING_RMDIR_HELP2 "La carpeta no está vacía.\n"
     STRING_REN_HELP1 "Renombra un archivo/directorio o varios archivos/directorios.\n\n\
 RENAME [/E /N /P /Q /S /T] nombre_antiguo ... nuevo_nombre\n\
@@ -342,26 +345,27 @@ el comando MOVE para este propósito.\n"
 REPLACE [drive1:][path1]filename [drive2:][path2] [/A] [/P] [/R] [/W]\n\
 REPLACE [drive1:][path1]filename [drive2:][path2] [/P] [/R] [/S] [/W] [/U]\n\n\
   [drive1:][path1]filename Especifica el archivo o archivos de origen.\n\
-  [drive2:][path2]         Especifica el nombre de la carpeta donde\n\
-                           se reemplacen los archivos.\n\
-  /A                       Adds new files to destination directory. Cannot\n\
-                           use with /S or /U switches.\n\
-  /P                       Prompts for confirmation before replacing a file or\n\
-                           adding a source file.\n\
-  /R                       Replaces read-only files as well as unprotected\n\
-                           files.\n\
-  /S                       Replaces files in all subdirectories of the\n\
-                           destination directory. Cannot use with the /A\n\
-                           switch.\n\
-  /W                       Waits for you to insert a disk before beginning.\n\
-  /U                       Replaces (updates) only files that are older than\n\
-                           source files. Cannot use with the /A switch.\n"
-    STRING_REPLACE_HELP2 "Source path required\n"
-    STRING_REPLACE_HELP3 "No files replaced\n"
-    STRING_REPLACE_HELP4 "%lu file(s) replaced\n"
+  [drive2:][path2]         Especifica el nombre de la carpeta donde se\n\
+                           reemplacen los archivos.\n\
+  /A                       Añade nuevos archivos al directorio destino. No\n\
+                           se puede usar con las opciones /S o /U.\n\
+  /P                       Pregunta para confirmación antes de reemplazar un\n\
+                           archivo o añadir un archivo origen.\n\
+  /R                       Reemplaza todos los archivos solo lectura y los\n\
+                           archivos no protegidos.\n\
+  /S                       Reemplaza todos los archivos en todos los\n\
+                           subdirectorios\n\
+                           del directorio destino. No se puede usar con la opción /A\n\
+  /W                       Espera que insertes un disco antes de empezar.\n\
+  /U                       Reemplaza (actualiza) solo los archivos que son más\n\
+                           antiguos que los de origen. No se puede usar con\n\
+                           la opción /A.\n"
+    STRING_REPLACE_HELP2 "Ruta de origen requerida\n"
+    STRING_REPLACE_HELP3 "No se han reemplazado archivos\n"
+    STRING_REPLACE_HELP4 "Se han reemplazado %lu archivo(s)\n"
     STRING_REPLACE_HELP5 "Reemplazando %s\n"
     STRING_REPLACE_HELP6 "Reemplazar %s\n"
-    STRING_REPLACE_HELP7 "No files added\n"
+    STRING_REPLACE_HELP7 "No se han añadido archivos\n"
     STRING_REPLACE_HELP8 "%lu archivo(s) añadidos\n"
     STRING_REPLACE_HELP9 "Añadir %s (S/N)? "
     STRING_REPLACE_HELP10 "Reemplazar %s (S/N)? "
@@ -376,22 +380,22 @@ SCREEN fila columna [texto]\n\n\
     STRING_SET_HELP "Muestra, cambia o borra las variables de entorno.\n\n\
 SET [variable[=][cadena]]\n\n\
   variable  Especifica el nombre de la variable de entorno.\n\
-  string    Especifies la serie de caracteres para asignar a la variable.\n\n\
+  string    Especifica la serie de carácteres para asignar a la variable.\n\n\
 Escribe SET sin parámetros para mostrar las variables de entorno actuales.\n"
     STRING_START_HELP1 "Empieza un comando.\n\n\
 START [""title""] [/D path] [/I] [/B] [/MIN] [/MAX] [/WAIT]\n\
       [command/program] [parameters]\n\n\
-  ""title""     Title of the window.\n\
-  path        Specifies the startup directory.\n\
-  I           Uses the original environment given to cmd.exe,\n\
-              instead of the current environment.\n\
-  B           Starts the command or program without creating any window.\n\
-  MIN         Starts with a minimized window.\n\
-  MAX         Starts with a maximized window.\n\
-  WAIT        Starts the command or program and waits for its termination.\n\
+  ""title""     Titulo de la ventana.\n\
+  path        Especifica el directorio de inicio.\n\
+  I           Utiliza en entorno original dado de cmd.exe,\n\
+              en vez del entorno actual.\n\
+  B           Inicia el comando o programa sin crear ventanas.\n\
+  MIN         Inicia con la ventana minimizada.\n\
+  MAX         Inicia con la ventana maximizada.\n\
+  WAIT        Inicia el comando o programa y luego espera a que termine.\n\
   comando     Especifica el comando a ejecutar.\n\
-  parameters  Specifies the parameters to be given to the command or program.\n"
-    STRING_TITLE_HELP "Cambia el título de la ventqana del intérprete de comandos.\n\n\
+  parameters  Especifica el parámetro a ser dado para el comando o programa.\n"
+    STRING_TITLE_HELP "Cambia el título de la ventana del intérprete de comandos.\n\n\
 TITLE [cadena]\n\n\
 cadena       Especifica el título de la ventana del intérprete de comandos.\n"
     STRING_TIME_HELP1 "Muestra o cambia la hora del sistema.\n\n\
@@ -472,9 +476,9 @@ title         Nuevo título\n"
     STRING_ALIAS_ERROR "¡Línea de comandos demasiado larga tras la expansión del alias!\n"
     STRING_ASSOC_ERROR "No se ha encontrado ninguna asociación de archivos para la extensión %s\n"
     STRING_BATCH_ERROR "Error abriendo el archivo por lotes\n"
-    STRING_CHOICE_ERROR "Opción inválida. Se esperaba el formato: /C[:]options"
-    STRING_CHOICE_ERROR_TXT "Opción inválida. Se esperaba el formato: /T[:]c,nn"
-    STRING_CHOICE_ERROR_OPTION "Opción ilegal: %s"
+    STRING_CHOICE_ERROR "Opción inválida. Se esperaba el formato: /C[:]options\n"
+    STRING_CHOICE_ERROR_TXT "Opción inválida. Se esperaba el formato: /T[:]c,nn\n"
+    STRING_CHOICE_ERROR_OPTION "Opción ilegal: %s\n"
     STRING_CMD_ERROR1 "No se puede redirigir la entrada del archivo %s\n"
     STRING_CMD_ERROR2 "Error creando archivo temporal para la pila de datos\n"
     STRING_CMD_ERROR3 "No se puede redirigir el archivo %s\n"
@@ -499,9 +503,9 @@ title         Nuevo título\n"
     STRING_FOR_ERROR4 "No hay comando después de 'do'."
     STRING_FREE_ERROR1 "Unidad errónea."
     STRING_FREE_ERROR2 "Sin etiqueta"
-    STRING_GOTO_ERROR1 "No se especifico etiqueta para GOTO"
+    STRING_GOTO_ERROR1 "No se especifico etiqueta para GOTO\n"
     STRING_GOTO_ERROR2 "La etiqueta '%s' no se encuentra\n"
-    STRING_MD_ERROR "A subdirectory or file already exists.\n"
+    STRING_MD_ERROR "A subdirectory or file %s already exists.\n"
     STRING_MD_ERROR2 "The path to the new folder does not exist.\n"
     STRING_MOVE_ERROR1 "[Correcto]\n"
     STRING_MOVE_ERROR2 "[Error]\n"
@@ -520,9 +524,9 @@ title         Nuevo título\n"
     STRING_ERROR_BADCOMMAND "Comando o nombre de archivo erróneo - %s\n"
     STRING_ERROR_OUT_OF_MEMORY "Error fuera de memoria.\n"
     STRING_ERROR_CANNOTPIPE "¡Error!  ¡No se puede apilar!  ¡No se puede abrir el archivo temporal!\n"
-    STRING_ERROR_D_PAUSEMSG "Pulse una tecla para continuar ..."
+    STRING_ERROR_D_PAUSEMSG "Pulse una tecla para continuar ... "
     STRING_ERROR_DRIVER_NOT_READY "La unidad no está lista"
-    STRING_PATH_ERROR "CMD: No está en el entorno '%s'\n"
+    STRING_SET_ENV_ERROR "Environment variable '%s' is not defined\n"
     STRING_REPLACE_ERROR1 "Argumento no válido - %s\n"
     STRING_REPLACE_ERROR2 "Ruta no encontrada - %s\n"
     STRING_REPLACE_ERROR3 "La sintaxis del nombre de archivo, carpeta o volúmen es incorrecta.\n"

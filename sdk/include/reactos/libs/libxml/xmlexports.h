@@ -73,9 +73,6 @@
     #define XMLCALL __cdecl
   #endif
   #define XMLCDECL __cdecl
-  #if !defined _REENTRANT
-    #define _REENTRANT
-  #endif
 #endif
 
 /* Windows platform with Borland compiler */
@@ -97,9 +94,6 @@
   #endif
   #define XMLCALL __cdecl
   #define XMLCDECL __cdecl
-  #if !defined _REENTRANT
-    #define _REENTRANT
-  #endif
 #endif
 
 /* Windows platform with GNU compiler (Mingw) */
@@ -126,9 +120,6 @@
   #endif
   #define XMLCALL __cdecl
   #define XMLCDECL __cdecl
-  #if !defined _REENTRANT
-    #define _REENTRANT
-  #endif
 #endif
 
 /* Cygwin platform (does not define _WIN32), GNU compiler */

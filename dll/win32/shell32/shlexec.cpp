@@ -1824,6 +1824,14 @@ static BOOL SHELL_execute(LPSHELLEXECUTEINFOW sei, SHELL_ExecuteW32 execfunc)
         if(l > dwApplicationNameLen) dwApplicationNameLen = l + 1;
         wszApplicationName = (LPWSTR)HeapAlloc(GetProcessHeap(), 0, dwApplicationNameLen * sizeof(WCHAR));
         memcpy(wszApplicationName, sei_tmp.lpFile, l * sizeof(WCHAR));
+
+        if (wszApplicationName[2] == 0 && wszApplicationName[1] == L':' &&
+            ((L'A' <= wszApplicationName[0] && wszApplicationName[0] <= L'Z') ||
+             (L'a' <= wszApplicationName[0] && wszApplicationName[0] <= L'z')))
+        {
+            // 'C:' --> 'C:\'
+            PathAddBackslashW(wszApplicationName);
+        }
     }
 
     wszParameters = parametersBuffer;

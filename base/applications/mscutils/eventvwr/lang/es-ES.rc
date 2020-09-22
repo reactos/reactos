@@ -144,6 +144,7 @@ BEGIN
     IDS_EVENTLOG_USER "Registros de Usuario"
     IDS_SAVE_FILTER "Registro de Eventos (*.evt)\0*.evt\0"
     IDS_CLEAREVENTS_MSG "¿Desea guardar este registro de eventos antes de borrarlo?"
+    IDS_RESTOREDEFAULTS "Do you want to restore all settings for this log to their default values?"
     IDS_EVENTSTRINGIDNOTFOUND "No se pudo recuperar la descripción para el evento con ID ( %lu ) y origen ( %s ). El equipo local puede no tener la información necesaria en el registro o las DLLs necesarias para mostrar los mensajes de un equipo remoto.\n\nLa siguiente información es parte del evento:\n\n"
 END
 

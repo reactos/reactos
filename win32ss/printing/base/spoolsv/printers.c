@@ -11,8 +11,20 @@
 DWORD
 _RpcAbortPrinter(WINSPOOL_PRINTER_HANDLE hPrinter)
 {
-    UNIMPLEMENTED;
-    return ERROR_INVALID_FUNCTION;
+    DWORD dwErrorCode;
+
+    dwErrorCode = RpcImpersonateClient(NULL);
+    if (dwErrorCode != ERROR_SUCCESS)
+    {
+        ERR("RpcImpersonateClient failed with error %lu!\n", dwErrorCode);
+        return dwErrorCode;
+    }
+
+    if (!AbortPrinter(hPrinter))
+        dwErrorCode = GetLastError();
+
+    RpcRevertToSelf();
+    return dwErrorCode;
 }
 
 DWORD
@@ -53,8 +65,20 @@ _RpcClosePrinter(WINSPOOL_PRINTER_HANDLE* phPrinter)
 DWORD
 _RpcDeletePrinter(WINSPOOL_PRINTER_HANDLE hPrinter)
 {
-    UNIMPLEMENTED;
-    return ERROR_INVALID_FUNCTION;
+    DWORD dwErrorCode;
+
+    dwErrorCode = RpcImpersonateClient(NULL);
+    if (dwErrorCode != ERROR_SUCCESS)
+    {
+        ERR("RpcImpersonateClient failed with error %lu!\n", dwErrorCode);
+        return dwErrorCode;
+    }
+
+    if (!DeletePrinter(hPrinter))
+        dwErrorCode = GetLastError();
+
+    RpcRevertToSelf();
+    return dwErrorCode;
 }
 
 DWORD
@@ -224,17 +248,64 @@ _RpcResetPrinter(WINSPOOL_PRINTER_HANDLE hPrinter, WCHAR* pDatatype, WINSPOOL_DE
 }
 
 DWORD
-_RpcResetPrinterEx(VOID)
+_RpcResetPrinterEx(WINSPOOL_PRINTER_HANDLE hPrinter, WCHAR* pDatatype, WINSPOOL_DEVMODE_CONTAINER* pDevModeContainer, DWORD dwFlags)
 {
-    UNIMPLEMENTED;
-    return ERROR_INVALID_FUNCTION;
+    DWORD dwErrorCode;
+    PRINTER_DEFAULTSW pdw;
+
+    if (pDatatype)
+    {
+        pdw.pDatatype = pDatatype;
+    }
+    else
+    {
+        pdw.pDatatype = dwFlags & RESETPRINTERDEFAULTDATATYPE ? (PWSTR)-1 : NULL;
+    }
+
+    if (pDevModeContainer->pDevMode)
+    {
+        pdw.pDevMode = (PDEVMODEW)pDevModeContainer->pDevMode;
+        // Fixme : Need to check DevMode before forward call, by copy devmode.c from WinSpool.
+        //         Local SV!SplIsValidDevmode((PDW)pDevModeContainer->pDevMode, pDevModeContainer->cbBuf)
+    }
+    else
+    {
+        pdw.pDevMode = dwFlags & RESETPRINTERDEFAULTDEVMODE ? (PDEVMODEW)-1 : NULL;
+
+    }
+    pdw.DesiredAccess = 0;
+
+    dwErrorCode = RpcImpersonateClient(NULL);
+    if (dwErrorCode != ERROR_SUCCESS)
+    {
+        ERR("RpcImpersonateClient failed with error %lu!\n", dwErrorCode);
+        return dwErrorCode;
+    }
+
+    if (!ResetPrinterW(hPrinter, &pdw))
+        dwErrorCode = GetLastError();
+
+    RpcRevertToSelf();
+    return dwErrorCode;
 }
 
 DWORD
-_RpcSeekPrinter(VOID)
+_RpcSeekPrinter( WINSPOOL_PRINTER_HANDLE hPrinter, LARGE_INTEGER liDistanceToMove, PLARGE_INTEGER pliNewPointer, DWORD dwMoveMethod, BOOL bWrite )
 {
-    UNIMPLEMENTED;
-    return ERROR_INVALID_FUNCTION;
+    DWORD dwErrorCode;
+
+    dwErrorCode = RpcImpersonateClient(NULL);
+    if (dwErrorCode != ERROR_SUCCESS)
+    {
+        ERR("RpcImpersonateClient failed with error %lu!\n", dwErrorCode);
+        return dwErrorCode;
+    }
+
+    if (!SeekPrinter(hPrinter, liDistanceToMove, pliNewPointer, dwMoveMethod, bWrite))
+        dwErrorCode = GetLastError();
+
+    RpcRevertToSelf();
+    return dwErrorCode;
 }
 
 DWORD

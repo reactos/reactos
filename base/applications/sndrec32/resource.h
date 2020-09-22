@@ -5,7 +5,6 @@
 
 #define IDD_REACTOS_SNDREC32_DIALOG 102
 #define IDS_APP_TITLE               103
-#define IDD_ABOUTBOX                103
 #define IDM_ABOUT                   104
 #define IDI_REACTOS_SNDREC32        107
 #define IDI_REACTOS_SNDREC32LL      107

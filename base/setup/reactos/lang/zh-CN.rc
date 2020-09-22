@@ -132,7 +132,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "ReactOS 安装程序完成"
 FONT 9, "宋体"
 BEGIN
-    LTEXT "Completing the ReactOS Setup Wizard", IDC_FINISHTITLE, 115, 8, 195, 24
+    LTEXT "正在完成 ReactOS 安装程序向导", IDC_FINISHTITLE, 115, 8, 195, 24
     LTEXT "您成功完成 ReactOS 第一阶段安装过程。", IDC_STATIC, 20, 50, 277, 10
     LTEXT "点击完成后，您的电脑将会重新启动。", IDC_STATIC, 20, 80, 277, 10
     CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 20, 120, 277, 8

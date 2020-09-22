@@ -47,8 +47,8 @@ static KTIMER MiBalancerTimer;
 
 /* FUNCTIONS ****************************************************************/
 
-VOID
 INIT_FUNCTION
+VOID
 NTAPI
 MmInitializeBalancer(ULONG NrAvailablePages, ULONG NrSystemPages)
 {
@@ -76,8 +76,8 @@ MmInitializeBalancer(ULONG NrAvailablePages, ULONG NrSystemPages)
     MiMemoryConsumers[MC_USER].PagesTarget = NrAvailablePages - MiMinimumAvailablePages;
 }
 
-VOID
 INIT_FUNCTION
+VOID
 NTAPI
 MmInitializeMemoryConsumer(
     ULONG Consumer,
@@ -443,8 +443,8 @@ BOOLEAN MmRosNotifyAvailablePage(PFN_NUMBER Page)
     return TRUE;
 }
 
-VOID
 INIT_FUNCTION
+VOID
 NTAPI
 MiInitBalancerThread(VOID)
 {

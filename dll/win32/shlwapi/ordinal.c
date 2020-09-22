@@ -4126,7 +4126,7 @@ BOOL WINAPI IsOS(DWORD feature)
  */
 HRESULT WINAPI SHLoadRegUIStringW(HKEY hkey, LPCWSTR value, LPWSTR buf, DWORD size)
 {
-    DWORD type, sz = size;
+    DWORD type, sz = size * sizeof(WCHAR);
 
     if(RegQueryValueExW(hkey, value, NULL, &type, (LPBYTE)buf, &sz) != ERROR_SUCCESS)
         return E_FAIL;
@@ -4324,16 +4324,28 @@ HRESULT WINAPI SHGetInverseCMAP(LPDWORD dest, DWORD dwSize)
  * Determine if the current computer has low memory.
  *
  * PARAMS
- *  x [I] FIXME
+ *  dwType [I] Zero.
  *
  * RETURNS
  *  TRUE if the users machine has 16 Megabytes of memory or less,
  *  FALSE otherwise.
  */
-BOOL WINAPI SHIsLowMemoryMachine (DWORD x)
+BOOL WINAPI SHIsLowMemoryMachine(DWORD dwType)
 {
-  FIXME("(0x%08x) stub\n", x);
+#ifdef __REACTOS__
+    MEMORYSTATUS status;
+    static int is_low = -1;
+    TRACE("(0x%08x)\n", dwType);
+    if (dwType == 0 && is_low == -1)
+    {
+        GlobalMemoryStatus(&status);
+        is_low = (status.dwTotalPhys <= 0x1000000);
+    }
+    return is_low;
+#else
+  FIXME("(0x%08x) stub\n", dwType);
   return FALSE;
+#endif
 }
 
 /*************************************************************************
@@ -4791,11 +4803,25 @@ DWORD WINAPI GetUIVersion(void)
  *
  * See shell32.ShellMessageBoxW
  *
+#ifndef __REACTOS__
+ *
  * NOTE:
  * shlwapi.ShellMessageBoxWrapW is a duplicate of shell32.ShellMessageBoxW
  * because we can't forward to it in the .spec file since it's exported by
  * ordinal. If you change the implementation here please update the code in
  * shell32 as well.
+ *
+#else // __REACTOS__
+ *
+ * From Vista+ onwards, all the implementation of ShellMessageBoxA/W that
+ * were existing in shell32 has been completely moved to shlwapi, so that
+ * shell32.ShellMessageBoxA and shell32.ShellMessageBoxW are redirections
+ * to the corresponding shlwapi functions.
+ *
+ * For Win2003 compatibility, if you change the implementation here please
+ * update the code of ShellMessageBoxA in shell32 as well.
+ *
+#endif
  */
 INT WINAPIV ShellMessageBoxWrapW(HINSTANCE hInstance, HWND hWnd, LPCWSTR lpText,
                                  LPCWSTR lpCaption, UINT uType, ...)
@@ -4811,7 +4837,7 @@ INT WINAPIV ShellMessageBoxWrapW(HINSTANCE hInstance, HWND hWnd, LPCWSTR lpText,
     TRACE("(%p,%p,%p,%p,%08x)\n", hInstance, hWnd, lpText, lpCaption, uType);
 
     if (IS_INTRESOURCE(lpCaption))
-        LoadStringW(hInstance, LOWORD(lpCaption), szTitle, sizeof(szTitle)/sizeof(szTitle[0]));
+        LoadStringW(hInstance, LOWORD(lpCaption), szTitle, ARRAY_SIZE(szTitle));
     else
         pszTitle = lpCaption;
 
@@ -4840,6 +4866,9 @@ INT WINAPIV ShellMessageBoxWrapW(HINSTANCE hInstance, HWND hWnd, LPCWSTR lpText,
 
     __ms_va_end(args);
 
+#ifdef __REACTOS__
+    uType |= MB_SETFOREGROUND;
+#endif
     ret = MessageBoxW(hWnd, pszTemp, pszTitle, uType);
 
     HeapFree(GetProcessHeap(), 0, szText);

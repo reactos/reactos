@@ -23,12 +23,15 @@ typedef struct _IOPNP_DEVICE_EXTENSION
 PUNICODE_STRING PiInitGroupOrderTable;
 USHORT PiInitGroupOrderTableCount;
 INTERFACE_TYPE PnpDefaultInterfaceType;
+BOOLEAN PnPBootDriversLoaded = FALSE;
 
 ARBITER_INSTANCE IopRootBusNumberArbiter;
 ARBITER_INSTANCE IopRootIrqArbiter;
 ARBITER_INSTANCE IopRootDmaArbiter;
 ARBITER_INSTANCE IopRootMemArbiter;
 ARBITER_INSTANCE IopRootPortArbiter;
+
+extern KEVENT PiEnumerationFinished;
 
 NTSTATUS NTAPI IopPortInitialize(VOID);
 NTSTATUS NTAPI IopMemInitialize(VOID);
@@ -438,6 +441,7 @@ IopInitializePlugPlayServices(VOID)
     KeInitializeSpinLock(&IopDeviceTreeLock);
     KeInitializeSpinLock(&IopDeviceActionLock);
     InitializeListHead(&IopDeviceActionRequestList);
+    KeInitializeEvent(&PiEnumerationFinished, NotificationEvent, TRUE);
 
     /* Get the default interface */
     PnpDefaultInterfaceType = IopDetermineDefaultInterfaceType();
@@ -596,6 +600,9 @@ IopInitializePlugPlayServices(VOID)
 
     /* Close the handle to the control set */
     NtClose(KeyHandle);
+
+    /* Initialize PnP root relations (this is a syncronous operation) */
+    PiQueueDeviceAction(IopRootDeviceNode->PhysicalDeviceObject, PiActionEnumRootDevices, NULL, NULL);
 
     /* We made it */
     return STATUS_SUCCESS;

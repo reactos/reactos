@@ -171,9 +171,12 @@ EXTERN_C BOOL
 WINAPI
 MakeShellURLFromPathA(LPCSTR lpPath, LPSTR lpUrl, INT cchMax)
 {
-    FIXME("MakeShellURLFromPathA() stub\n");
-    lpUrl = NULL;
-    return FALSE;
+    WCHAR szPath[MAX_PATH], szURL[MAX_PATH];
+    BOOL ret;
+    SHAnsiToUnicode(lpPath, szPath, _countof(szPath));
+    ret = MakeShellURLFromPathW(szPath, szURL, _countof(szURL));
+    SHUnicodeToAnsi(szURL, lpUrl, cchMax);
+    return ret;
 }
 
 /*
@@ -329,32 +332,11 @@ CDefFolderMenu_Create(LPITEMIDLIST pidlFolder,
 /*
  * Unimplemented
  */
-EXTERN_C BOOL
-WINAPI
-SHChangeRegistrationReceive(LPVOID lpUnknown1, DWORD dwUnknown2)
-{
-    FIXME("SHChangeRegistrationReceive() stub\n");
-    return FALSE;
-}
-
-/*
- * Unimplemented
- */
 EXTERN_C VOID
 WINAPI
 SHWaitOp_Operate(LPVOID lpUnknown1, DWORD dwUnknown2)
 {
     FIXME("SHWaitOp_Operate() stub\n");
-}
-
-/*
- * Unimplemented
- */
-EXTERN_C VOID
-WINAPI
-SHChangeNotifyReceive(LONG lUnknown, UINT uUnknown, LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2)
-{
-    FIXME("SHChangeNotifyReceive() stub\n");
 }
 
 /*
@@ -450,8 +432,12 @@ EXTERN_C BOOL
 WINAPI
 SheShortenPathA(LPSTR lpPath, BOOL bShorten)
 {
-    FIXME("SheShortenPathA() stub\n");
-    return FALSE;
+    BOOL ret;
+    WCHAR szPath[MAX_PATH];
+    MultiByteToWideChar(CP_ACP, 0, lpPath, -1, szPath, _countof(szPath));
+    ret = SheShortenPathW(szPath, bShorten);
+    WideCharToMultiByte(CP_ACP, 0, szPath, -1, lpPath, MAX_PATH, NULL, NULL);
+    return ret;
 }
 
 /*
@@ -615,20 +601,6 @@ WINAPI
 SHCreateProcessAsUserW(PSHCREATEPROCESSINFOW pscpi)
 {
     FIXME("SHCreateProcessAsUserW() stub\n");
-    return FALSE;
-}
-
-/*
- * Unimplemented
- */
-EXTERN_C BOOL
-WINAPI
-SHChangeNotifySuspendResume(BOOL bSuspend,
-                            LPITEMIDLIST pidl,
-                            BOOL bRecursive,
-                            DWORD dwReserved)
-{
-    FIXME("SHChangeNotifySuspendResume() stub\n");
     return FALSE;
 }
 

@@ -877,8 +877,8 @@ MmSetPageProtect(PEPROCESS Process, PVOID Address, ULONG flProtect)
         MmUnmapPageTable(Pt);
 }
 
-VOID
 INIT_FUNCTION
+VOID
 NTAPI
 MmInitGlobalKernelPageDirectory(VOID)
 {

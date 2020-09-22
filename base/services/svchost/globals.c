@@ -234,7 +234,7 @@ ScDomainIdToSid (
 NTSTATUS
 NTAPI
 ScAllocateAndInitializeSid (
-    _Out_ PVOID *Sid,
+    _Out_ PSID *Sid,
     _In_ PSID_IDENTIFIER_AUTHORITY IdentifierAuthority,
     _In_ ULONG SubAuthorityCount
     )
@@ -274,13 +274,18 @@ ScCreateWellKnownSids (
     for (i = 0; i < RTL_NUMBER_OF(SidData); i++)
     {
         /* Convert our optimized structure into an actual SID */
-        Status = ScAllocateAndInitializeSid(&SidData[i].Sid,
+        Status = ScAllocateAndInitializeSid(SidData[i].Sid,
                                             &SidData[i].Authority,
                                             1);
-        if (!NT_SUCCESS(Status)) break;
+
+        if (!NT_SUCCESS(Status))
+        {
+            DBG_ERR("ScAllocateAndInitializeSid failed for %u\n", i);
+            break;
+        }
 
         /* Write the correct sub-authority */
-        *RtlSubAuthoritySid(SidData[i].Sid, 0) = SidData[i].SubAuthority;
+        *RtlSubAuthoritySid(*SidData[i].Sid, 0) = SidData[i].SubAuthority;
     }
 
     /* Now loop the domain SIDs  */
@@ -289,8 +294,12 @@ ScCreateWellKnownSids (
         /* Convert our optimized structure into an actual SID */
         Status = ScDomainIdToSid(BuiltinDomainSid,
                                  DomainSidData[i].SubAuthority,
-                                 &DomainSidData[i].Sid);
-        if (!NT_SUCCESS(Status)) break;
+                                 DomainSidData[i].Sid);
+        if (!NT_SUCCESS(Status))
+        {
+            DBG_ERR("ScDomainIdToSid failed for %u\n", i);
+            break;
+        }
     }
 
     /* If we got to the end, return success */

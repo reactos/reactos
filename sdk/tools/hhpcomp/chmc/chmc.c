@@ -668,7 +668,9 @@ int chmc_system_done(struct chmcFile *chm)
 	sysp = malloc(16384);
 	if (sysp) {
 		UInt32 val;
+#ifndef __REACTOS__
 		UInt16 code, len;
+#endif
 		const char *entry_val;
 
 		p = chmc_syscat_mem(sysp, &system->version, sizeof(system->version));

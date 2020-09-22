@@ -474,7 +474,15 @@ HRESULT WINAPI CRegFolder::CompareIDs(LPARAM lParam, PCUIDLIST_RELATIVE pidl1, P
     }
 
     /* Guid folders come first compared to everything else */
-    return MAKE_COMPARE_HRESULT(clsid1 ? -1 : 1);
+    /* And Drives come before folders in My Computer */
+    if (_ILIsMyComputer(m_pidlRoot))
+    {
+        return MAKE_COMPARE_HRESULT(clsid1 ? 1 : -1);
+    }
+    else
+    {
+        return MAKE_COMPARE_HRESULT(clsid1 ? -1 : 1);
+    }
 }
 
 HRESULT WINAPI CRegFolder::CreateViewObject(HWND hwndOwner, REFIID riid, LPVOID *ppvOut)
@@ -763,8 +771,7 @@ HRESULT WINAPI CRegFolder::GetDetailsOf(PCUITEMID_CHILD pidl, UINT iColumn, SHEL
             RegCloseKey(hKey);
             return S_OK;
         case 2:        /* type */
-            //return SHSetStrRet(&psd->str, resource_id); /* FIXME: translate */
-            return SHSetStrRet(&psd->str, "System Folder");
+            return SHSetStrRet(&psd->str, IDS_SYSTEMFOLDER);
     }
     return E_FAIL;
 }

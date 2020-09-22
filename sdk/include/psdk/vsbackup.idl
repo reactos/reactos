@@ -1,0 +1,108 @@
+/*
+ * Copyright 2019 Alistair Leslie-Hughes
+ *
+ * This library is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 2.1 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public
+ * License along with this library; if not, write to the Free Software
+ * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
+ */
+
+import "oaidl.idl";
+import "vswriter.idl";
+import "vss.idl";
+
+interface IVssAsync;
+interface IVssEnumObject;
+interface IVssExamineWriterMetadata;
+interface IVssWriterComponentsExt;
+
+cpp_quote("#ifdef _cplusplus")
+cpp_quote("extern \"C\" {")
+cpp_quote("#endif")
+cpp_quote("HRESULT WINAPI CreateVssBackupComponentsInternal(IVssBackupComponents **backup);")
+cpp_quote("#ifdef _cplusplus")
+cpp_quote("}")
+cpp_quote("#endif")
+
+cpp_quote("static inline HRESULT CreateVssBackupComponents(IVssBackupComponents **backup)")
+cpp_quote("     { return CreateVssBackupComponentsInternal(backup); }")
+
+[
+    uuid("665c1d5f-c218-414d-a05d-7fef5f9d5c86"),
+    local
+]
+interface IVssBackupComponents : IUnknown
+{
+    HRESULT GetWriterComponentsCount([out] UINT *components);
+    HRESULT GetWriterComponents([in] UINT index, [out] IVssWriterComponentsExt **writer);
+    HRESULT InitializeForBackup( [in, optional, defaultvalue(NULL)] BSTR bstrXML);
+    HRESULT SetBackupState([in] BOOL select_components, [in] BOOL state,
+    [in] VSS_BACKUP_TYPE type, [in, defaultvalue(FALSE)] BOOL partial_support);
+    HRESULT InitializeForRestore([in] BSTR xml);
+    HRESULT SetRestoreState([in] VSS_RESTORE_TYPE restore);
+    HRESULT GatherWriterMetadata([out] IVssAsync **async);
+    HRESULT GetWriterMetadataCount([out] UINT *count);
+    HRESULT GetWriterMetadata([in] UINT index, [out] VSS_ID *instance, [out] IVssExamineWriterMetadata **metadata);
+    HRESULT FreeWriterMetadata();
+    HRESULT AddComponent([in] VSS_ID instance, [in] VSS_ID id, [in] VSS_COMPONENT_TYPE ct, [in] LPCWSTR wszLogicalPath,
+            [in] LPCWSTR name);
+    HRESULT PrepareForBackup([out] IVssAsync **async);
+    HRESULT AbortBackup();
+    HRESULT GatherWriterStatus([out] IVssAsync **async);
+    HRESULT GetWriterStatusCount([out] UINT *count);
+    HRESULT FreeWriterStatus();
+    HRESULT GetWriterStatus([in] UINT index, [out] VSS_ID *instance, [out] VSS_ID *id, [out] BSTR *writer,
+            [out] VSS_WRITER_STATE *status, [out] HRESULT *failure);
+    HRESULT SetBackupSucceeded([in] VSS_ID instance, [in] VSS_ID id, [in] VSS_COMPONENT_TYPE ct,
+            [in] LPCWSTR path, [in] LPCWSTR name, [in] BOOL succeded);
+    HRESULT SetBackupOptions([in] VSS_ID id, [in] VSS_COMPONENT_TYPE ct, [in] LPCWSTR path,
+            [in] LPCWSTR name, [in] LPCWSTR options);
+    HRESULT SetSelectedForRestore([in] VSS_ID id, [in] VSS_COMPONENT_TYPE ct, [in] LPCWSTR path,
+            [in] LPCWSTR name, [in] BOOL selected_restore);
+    HRESULT SetRestoreOptions([in] VSS_ID id, [in] VSS_COMPONENT_TYPE ct, [in] LPCWSTR path, [in] LPCWSTR name,
+            [in] LPCWSTR options);
+    HRESULT SetAdditionalRestores([in] VSS_ID id, [in] VSS_COMPONENT_TYPE ct, [in] LPCWSTR path, [in] LPCWSTR name,
+            [in] BOOL additional);
+    HRESULT SetPreviousBackupStamp([in] VSS_ID id, [in] VSS_COMPONENT_TYPE ct, [in] LPCWSTR path,  [in] LPCWSTR name,
+            [in] LPCWSTR stamp);
+    HRESULT SaveAsXML([in] BSTR *xml);
+    HRESULT BackupComplete([out] IVssAsync **async);
+    HRESULT AddAlternativeLocationMapping([in] VSS_ID id, [in] VSS_COMPONENT_TYPE type, [in] LPCWSTR logical,
+            [in] LPCWSTR name, [in] LPCWSTR path, [in] LPCWSTR filespec, [in] BOOL recursive, [in] LPCWSTR destination);
+    HRESULT AddRestoreSubcomponent([in] VSS_ID id, [in] VSS_COMPONENT_TYPE type, [in] LPCWSTR logical, [in] LPCWSTR name,
+            [in] LPCWSTR path, [in] LPCWSTR sub_name, [in] BOOL repair);
+    HRESULT SetFileRestoreStatus([in] VSS_ID id, [in] VSS_COMPONENT_TYPE ct, [in] LPCWSTR path,  [in] LPCWSTR name,
+            [in] VSS_FILE_RESTORE_STATUS status);
+    HRESULT AddNewTarget([in] VSS_ID id, [in] VSS_COMPONENT_TYPE ct, [in] LPCWSTR logical, [in] LPCWSTR component,
+            [in] LPCWSTR path, [in] LPCWSTR filename, [in] BOOL recursive, [in] LPCWSTR alternate);
+    HRESULT SetRangesFilePath([in] VSS_ID id, [in] VSS_COMPONENT_TYPE ct, [in] LPCWSTR logical, [in] LPCWSTR component,
+            [in] UINT partial,  [in] LPCWSTR ranges);
+    HRESULT PreRestore([out] IVssAsync **async);
+    HRESULT PostRestore([out] IVssAsync **async);
+    HRESULT SetContext([in] LONG context);
+    HRESULT StartSnapshotSet([out] VSS_ID *id);
+    HRESULT AddToSnapshotSet([in] VSS_PWSZ volume,[in] VSS_ID id,[out] VSS_ID *snapshot);
+    HRESULT DoSnapshotSet([out] IVssAsync ** async);
+    HRESULT DeleteSnapshots([in] VSS_ID object, [in] VSS_OBJECT_TYPE type, [in] BOOL force, [in] LONG *snapshots, [in] VSS_ID *id);
+    HRESULT ImportSnapshots([out] IVssAsync **async);
+    HRESULT BreakSnapshotSet([in] VSS_ID snapshot);
+    HRESULT GetSnapshotProperties([in] VSS_ID snapshot, [out] VSS_SNAPSHOT_PROP *prop);
+    HRESULT Query([in] VSS_ID queried, [in] VSS_OBJECT_TYPE queried_type, [in] VSS_OBJECT_TYPE returned_type, [in] IVssEnumObject **enums);
+    HRESULT IsVolumeSupported([in] VSS_ID provider, [in] VSS_PWSZ volume,[in] BOOL *supported);
+    HRESULT DisableWriterClasses([in] const VSS_ID *writer_id, [in] UINT class_id);
+    HRESULT EnableWriterClasses([in] const VSS_ID *classid, [in] UINT id);
+    HRESULT DisableWriterInstances([in] const VSS_ID *instance, [in] UINT id);
+    HRESULT ExposeSnapshot([in] VSS_ID snapshot, [in] VSS_PWSZ path, [in] LONG attributes,
+            [in] VSS_PWSZ expose, [out] VSS_PWSZ *exposed);
+    HRESULT RevertToSnapshot([in] VSS_ID snapshot, [in] BOOL force);
+    HRESULT QueryRevertStatus([in] VSS_PWSZ volume, [out] IVssAsync **async);
+};

@@ -96,10 +96,11 @@ static const unsigned int message_pointer_flags[] =
 };
 
 /* check whether a given message type includes pointers */
-static inline int is_pointer_message( UINT message )
+static inline int is_pointer_message( UINT message, WPARAM wparam )
 {
     if (message >= 8*sizeof(message_pointer_flags)) return FALSE;
-        return (message_pointer_flags[message / 32] & SET(message)) != 0;
+    if (message == WM_DEVICECHANGE && !(wparam & 0x8000)) return FALSE;
+    return (message_pointer_flags[message / 32] & SET(message)) != 0;
 }
 #undef SET
 
@@ -139,6 +140,7 @@ static MSGMEMORY g_MsgMemory[] =
     { WM_DRAWITEM, sizeof(DRAWITEMSTRUCT), MMS_FLAG_READWRITE },
     { WM_HELP, sizeof(HELPINFO), MMS_FLAG_READWRITE },
     { WM_NEXTMENU, sizeof(MDINEXTMENU), MMS_FLAG_READWRITE },
+    { WM_DEVICECHANGE, MMS_SIZE_SPECIAL, MMS_FLAG_READ },
 };
 
 static PMSGMEMORY FASTCALL
@@ -217,6 +219,16 @@ MsgMemorySize(PMSGMEMORY MsgMemoryEntry, WPARAM wParam, LPARAM lParam)
                 {
                 COPYDATASTRUCT *cds = (COPYDATASTRUCT *)lParam;
                 Size = sizeof(COPYDATASTRUCT) + cds->cbData;
+                }
+                break;
+
+            case WM_DEVICECHANGE:
+                {
+                    if ( lParam && (wParam & 0x8000) )
+                    {
+                        DEV_BROADCAST_HDR *header = (DEV_BROADCAST_HDR *)lParam;
+                        Size = header->dbch_size;
+                    }
                 }
                 break;
 
@@ -788,7 +800,7 @@ static LRESULT handle_internal_message( PWND pWnd, UINT msg, WPARAM wparam, LPAR
        }
        case WM_ASYNC_DESTROYWINDOW:
        {
-          ERR("WM_ASYNC_DESTROYWINDOW\n");
+          TRACE("WM_ASYNC_DESTROYWINDOW\n");
           if (pWnd->style & WS_CHILD)
              return co_UserFreeWindow(pWnd, PsGetCurrentProcessWin32Process(), PsGetCurrentThreadWin32Thread(), TRUE);
           else
@@ -1219,8 +1231,11 @@ co_IntGetPeekMessage( PMSG pMsg,
                                      bGMSG );
         if (Present)
         {
-           /* GetMessage or PostMessage must never get messages that contain pointers */
-           ASSERT(FindMsgMemory(pMsg->message) == NULL);
+           if ( pMsg->message != WM_DEVICECHANGE || (pMsg->wParam & 0x8000) )
+           {
+               /* GetMessage or PostMessage must never get messages that contain pointers */
+               ASSERT(FindMsgMemory(pMsg->message) == NULL);
+           }
 
            if ( pMsg->message >= WM_DDE_FIRST && pMsg->message <= WM_DDE_LAST )
            {
@@ -1298,7 +1313,7 @@ UserPostThreadMessage( PTHREADINFO pti,
 {
     MSG Message;
 
-    if (is_pointer_message(Msg))
+    if (is_pointer_message(Msg, wParam))
     {
         EngSetLastError(ERROR_MESSAGE_SYNC_ONLY );
         return FALSE;
@@ -1344,7 +1359,7 @@ UserPostMessage( HWND Wnd,
     Message.pt = gpsi->ptCursor;
     Message.time = EngGetTickCount32();
 
-    if (is_pointer_message(Message.message))
+    if (is_pointer_message(Message.message, Message.wParam))
     {
         EngSetLastError(ERROR_MESSAGE_SYNC_ONLY );
         return FALSE;
@@ -1408,7 +1423,7 @@ UserPostMessage( HWND Wnd,
         if ( Window->state & WNDS_DESTROYED )
         {
             ERR("Attempted to post message to window %p that is being destroyed!\n", Wnd);
-            /* FIXME: Last error code? */
+            EngSetLastError(ERROR_INVALID_WINDOW_HANDLE);
             return FALSE;
         }
 
@@ -1852,8 +1867,8 @@ co_IntSendMessageWithCallBack( HWND hWnd,
 
     if(!(Message = AllocateUserMessage(FALSE)))
     {
-        ERR("MsqSendMessage(): Not enough memory to allocate a message");
-        RETURN( FALSE);
+        ERR("MsqSendMessage(): Not enough memory to allocate a message\n");
+        RETURN(FALSE);
     }
 
     Message->Msg.hwnd = hWnd;
@@ -2026,7 +2041,7 @@ UserSendNotifyMessage( HWND hWnd,
 {
     BOOL Ret = TRUE;
 
-    if (is_pointer_message(Msg))
+    if (is_pointer_message(Msg, wParam))
     {
         EngSetLastError(ERROR_MESSAGE_SYNC_ONLY );
         return FALSE;
@@ -2860,7 +2875,7 @@ NtUserMessageCall( HWND hWnd,
             }
             _SEH2_END;
 
-            if (is_pointer_message(Msg))
+            if (is_pointer_message(Msg, wParam))
             {
                EngSetLastError(ERROR_MESSAGE_SYNC_ONLY );
                break;

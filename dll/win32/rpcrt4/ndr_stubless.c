@@ -402,7 +402,11 @@ static void client_free_handle(
                     pArg = ARG_FROM_OFFSET(pStubMsg->StackTop, pDesc->offset);
                 memcpy(&pObject, pArg, pDesc->flag_and_size & 0xf);
                 pGenPair = &pStubMsg->StubDesc->aGenericBindingRoutinePairs[pDesc->binding_routine_pair_index];
+#ifdef __REACTOS__
+                if (hBinding) pGenPair->pfnUnbind(pObject, hBinding);
+#else
                 pGenPair->pfnUnbind(pObject, hBinding);
+#endif
                 break;
             }
         case FC_BIND_CONTEXT: /* explicit context */

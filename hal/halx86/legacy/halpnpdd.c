@@ -91,7 +91,7 @@ HalpReportDetectedDevices(IN PDRIVER_OBJECT DriverObject,
     PdoDeviceObject->Flags &= ~DO_DEVICE_INITIALIZING;
 
     /* Invalidate device relations since we added a new device */
-    IoSynchronousInvalidateDeviceRelations(FdoExtension->PhysicalDeviceObject, BusRelations);
+    IoInvalidateDeviceRelations(FdoExtension->PhysicalDeviceObject, BusRelations);
 }
 
 NTSTATUS
@@ -888,14 +888,15 @@ HalpDriverEntry(IN PDRIVER_OBJECT DriverObject,
     DriverObject->MajorFunction[IRP_MJ_POWER] = HalpDispatchPower;
     DriverObject->MajorFunction[IRP_MJ_SYSTEM_CONTROL] = HalpDispatchWmi;
 
-    /* Create the PDO */
-    Status = IoCreateDevice(DriverObject,
-                            0,
-                            NULL,
-                            FILE_DEVICE_CONTROLLER,
-                            0,
-                            FALSE,
-                            &TargetDevice);
+    /* Create the PDO and tell the PnP manager about us*/
+    Status = IoReportDetectedDevice(DriverObject,
+                                    InterfaceTypeUndefined,
+                                    -1,
+                                    -1,
+                                    NULL,
+                                    NULL,
+                                    FALSE,
+                                    &TargetDevice);
     if (!NT_SUCCESS(Status))
         return Status;
 
@@ -908,16 +909,6 @@ HalpDriverEntry(IN PDRIVER_OBJECT DriverObject,
         IoDeleteDevice(TargetDevice);
         return Status;
     }
-
-    /* Tell the PnP manager about us */
-    Status = IoReportDetectedDevice(DriverObject,
-                                    InterfaceTypeUndefined,
-                                    -1,
-                                    -1,
-                                    NULL,
-                                    NULL,
-                                    FALSE,
-                                    &TargetDevice);
 
     /* Return to kernel */
     return Status;

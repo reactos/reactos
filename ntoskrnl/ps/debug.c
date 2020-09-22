@@ -112,7 +112,7 @@ PsGetContextThread(IN PETHREAD Thread,
     /* Enter SEH */
     _SEH2_TRY
     {
-        /* Set default ength */
+        /* Set default length */
         Size = sizeof(CONTEXT);
 
         /* Read the flags */
@@ -146,6 +146,7 @@ PsGetContextThread(IN PETHREAD Thread,
     KeInitializeEvent(&GetSetContext.Event, NotificationEvent, FALSE);
 
     /* Set the flags and previous mode */
+    RtlZeroMemory(&GetSetContext.Context, Size);
     GetSetContext.Context.ContextFlags = Flags;
     GetSetContext.Mode = PreviousMode;
 

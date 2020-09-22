@@ -20,6 +20,8 @@
 	Variadic macros are a C99 feature...
 	Now just predefining stuff non-variadic for up to 15 arguments.
 	It's cumbersome to have them all with different names, though...
+
+	Update: Also adding variadic macros now. We star to use some C99.
 */
 
 #ifdef ME
@@ -31,6 +33,10 @@
 #ifdef DEBUG
 
 #include <stdio.h>
+
+// The future (from about 20 years ago;-):
+#define mdebug(s, ...) fprintf(stderr, DBGPRFX "[" __FILE__ ":%i] debug: " s "\n", __LINE__, __VA_ARGS__)
+
 #define debug(s) fprintf(stderr, DBGPRFX"[" __FILE__ ":%i] debug: " s "\n", __LINE__)
 #define debug1(s, a) fprintf(stderr, DBGPRFX"[" __FILE__ ":%i] debug: " s "\n", __LINE__, a)
 #define debug2(s, a, b) fprintf(stderr, DBGPRFX"[" __FILE__ ":%i] debug: " s "\n", __LINE__, a, b)
@@ -48,6 +54,9 @@
 #define debug14(s, a, b, c, d, e, f, g, h, i, j, k, l, m, n) fprintf(stderr, DBGPRFX"[" __FILE__ ":%i] debug: " s "\n", __LINE__, a, b, c, d, e, f, g, h, i, j, k, l, m, n)
 #define debug15(s, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o) fprintf(stderr, DBGPRFX"[" __FILE__ ":%i] debug: " s "\n", __LINE__, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o)
 #else
+
+#define mdebug(s, ...) 
+
 #define debug(s) 
 #define debug1(s, a) 
 #define debug2(s, a, b) 
@@ -68,6 +77,9 @@
 
 /* warning macros also here... */
 #ifndef NO_WARNING
+
+#define mwarning(s, ...) fprintf(stderr, DBGPRFX "[" __FILE__ ":%i] warning: " s "\n", __LINE__, __VA_ARGS__)
+
 #define warning(s) fprintf(stderr, DBGPRFX"[" __FILE__ ":%i] warning: " s "\n", __LINE__)
 #define warning1(s, a) fprintf(stderr, DBGPRFX"[" __FILE__ ":%i] warning: " s "\n", __LINE__, a)
 #define warning2(s, a, b) fprintf(stderr, DBGPRFX"[" __FILE__ ":%i] warning: " s "\n", __LINE__, a, b)
@@ -85,6 +97,7 @@
 #define warning14(s, a, b, c, d, e, f, g, h, i, j, k, l, m, n) fprintf(stderr, DBGPRFX"[" __FILE__ ":%i] warning: " s "\n", __LINE__, a, b, c, d, e, f, g, h, i, j, k, l, m, n)
 #define warning15(s, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o) fprintf(stderr, DBGPRFX"[" __FILE__ ":%i] warning: " s "\n", __LINE__, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o)
 #else
+#define mwarning(s, ...) 
 #define warning(s) 
 #define warning1(s, a) 
 #define warning2(s, a, b) 
@@ -104,7 +117,10 @@
 #endif
 
 /* error macros also here... */
-#ifndef NO_ERROR
+#ifndef NO_ERRORMSG
+
+#define merror(s, ...) fprintf(stderr, DBGPRFX "[" __FILE__ ":%i] error: " s "\n", __LINE__, __VA_ARGS__)
+
 #define error(s) fprintf(stderr, DBGPRFX"[" __FILE__ ":%i] error: " s "\n", __LINE__)
 #define error1(s, a) fprintf(stderr, DBGPRFX"[" __FILE__ ":%i] error: " s "\n", __LINE__, a)
 #define error2(s, a, b) fprintf(stderr, DBGPRFX"[" __FILE__ ":%i] error: " s "\n", __LINE__, a, b)
@@ -122,6 +138,7 @@
 #define error14(s, a, b, c, d, e, f, g, h, i, j, k, l, m, n) fprintf(stderr, DBGPRFX"[" __FILE__ ":%i] error: " s "\n", __LINE__, a, b, c, d, e, f, g, h, i, j, k, l, m, n)
 #define error15(s, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o) fprintf(stderr, DBGPRFX"[" __FILE__ ":%i] error: " s "\n", __LINE__, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o)
 #else
+#define merror(s, ...) 
 #define error(s) 
 #define error1(s, a) 
 #define error2(s, a, b) 
@@ -142,6 +159,9 @@
 
 /* ereturn macros also here... */
 #ifndef NO_ERETURN
+
+#define mereturn(rv, s, ...) do{ fprintf(stderr, DBGPRFX "[" __FILE__ ":%i] ereturn: " s "\n", __LINE__, __VA_ARGS__); return rv; }while(0)
+
 #define ereturn(rv, s) do{ fprintf(stderr, DBGPRFX"[" __FILE__ ":%i] ereturn: " s "\n", __LINE__); return rv; }while(0)
 #define ereturn1(rv, s, a) do{ fprintf(stderr, DBGPRFX"[" __FILE__ ":%i] ereturn: " s "\n", __LINE__, a); return rv; }while(0)
 #define ereturn2(rv, s, a, b) do{ fprintf(stderr, DBGPRFX"[" __FILE__ ":%i] ereturn: " s "\n", __LINE__, a, b); return rv; }while(0)
@@ -159,6 +179,7 @@
 #define ereturn14(rv, s, a, b, c, d, e, f, g, h, i, j, k, l, m, n) do{ fprintf(stderr, DBGPRFX"[" __FILE__ ":%i] ereturn: " s "\n", __LINE__, a, b, c, d, e, f, g, h, i, j, k, l, m, n); return rv; }while(0)
 #define ereturn15(rv, s, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o) do{ fprintf(stderr, DBGPRFX"[" __FILE__ ":%i] ereturn: " s "\n", __LINE__, a, b, c, d, e, f, g, h, i, j, k, l, m, n, o); return rv; }while(0)
 #else
+#define mereturn(rv, s, ...) return rv
 #define ereturn(rv, s) return rv
 #define ereturn1(rv, s, a) return rv
 #define ereturn2(rv, s, a, b) return rv

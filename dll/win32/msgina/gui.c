@@ -56,38 +56,59 @@ DlgData_Create(HWND hwndDlg, PGINA_CONTEXT pgContext)
     return pDlgData;
 }
 
-static BOOL
-DlgData_LoadBitmaps(PDLG_DATA pDlgData)
+static VOID
+DlgData_LoadBitmaps(_Inout_ PDLG_DATA pDlgData)
 {
     BITMAP bm;
 
     if (!pDlgData)
-        return FALSE;
+    {
+        return;
+    }
 
     pDlgData->hLogoBitmap = LoadImageW(pDlgData->pgContext->hDllInstance,
                                        MAKEINTRESOURCEW(IDI_ROSLOGO), IMAGE_BITMAP,
                                        0, 0, LR_DEFAULTCOLOR);
-    GetObject(pDlgData->hLogoBitmap, sizeof(bm), &bm);
-    pDlgData->LogoWidth = bm.bmWidth;
-    pDlgData->LogoHeight = bm.bmHeight;
+    if (pDlgData->hLogoBitmap)
+    {
+        GetObject(pDlgData->hLogoBitmap, sizeof(bm), &bm);
+        pDlgData->LogoWidth = bm.bmWidth;
+        pDlgData->LogoHeight = bm.bmHeight;
+    }
 
     pDlgData->hBarBitmap = LoadImageW(hDllInstance, MAKEINTRESOURCEW(IDI_BAR),
                                       IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
-    GetObject(pDlgData->hBarBitmap, sizeof(bm), &bm);
-    pDlgData->BarWidth = bm.bmWidth;
-    pDlgData->BarHeight = bm.bmHeight;
-
-    return (pDlgData->hLogoBitmap != NULL && pDlgData->hBarBitmap != NULL);
+    if (pDlgData->hBarBitmap)
+    {
+        GetObject(pDlgData->hBarBitmap, sizeof(bm), &bm);
+        pDlgData->BarWidth = bm.bmWidth;
+        pDlgData->BarHeight = bm.bmHeight;
+    }
 }
 
-static void
-DlgData_Destroy(PDLG_DATA pDlgData)
+static VOID
+DlgData_Destroy(_Inout_ HWND hwndDlg)
 {
-    if (!pDlgData)
-        return;
+    PDLG_DATA pDlgData;
 
-    DeleteObject(pDlgData->hLogoBitmap);
-    DeleteObject(pDlgData->hBarBitmap);
+    pDlgData = (PDLG_DATA)GetWindowLongPtrW(hwndDlg, GWLP_USERDATA);
+    if (!pDlgData)
+    {
+        return;
+    }
+
+    SetWindowLongPtrW(hwndDlg, GWLP_USERDATA, (LONG_PTR)NULL);
+
+    if (pDlgData->hBarBitmap)
+    {
+        DeleteObject(pDlgData->hBarBitmap);
+    }
+
+    if (pDlgData->hLogoBitmap)
+    {
+        DeleteObject(pDlgData->hLogoBitmap);
+    }
+
     HeapFree(GetProcessHeap(), 0, pDlgData);
 }
 
@@ -192,15 +213,18 @@ StatusDialogProc(
             if (pDlgData == NULL)
                 return FALSE;
 
-            if (DlgData_LoadBitmaps(pDlgData))
+            DlgData_LoadBitmaps(pDlgData);
+            if (pDlgData->hBarBitmap)
             {
                 if (SetTimer(hwndDlg, IDT_BAR, 20, NULL) == 0)
                 {
                     ERR("SetTimer(IDT_BAR) failed: %d\n", GetLastError());
                 }
-
-                /* Get the animation bar control */
-                pDlgData->hWndBarCtrl = GetDlgItem(hwndDlg, IDC_BAR);
+                else
+                {
+                    /* Get the animation bar control */
+                    pDlgData->hWndBarCtrl = GetDlgItem(hwndDlg, IDC_BAR);
+                }
             }
             return TRUE;
         }
@@ -255,7 +279,7 @@ StatusDialogProc(
             {
                 KillTimer(hwndDlg, IDT_BAR);
             }
-            DlgData_Destroy(pDlgData);
+            DlgData_Destroy(hwndDlg);
             return TRUE;
         }
     }
@@ -425,7 +449,7 @@ WelcomeDialogProc(
         }
         case WM_DESTROY:
         {
-            DlgData_Destroy(pDlgData);
+            DlgData_Destroy(hwndDlg);
             return TRUE;
         }
     }
@@ -1221,7 +1245,7 @@ LogonDialogProc(
         }
 
         case WM_DESTROY:
-            DlgData_Destroy(pDlgData);
+            DlgData_Destroy(hwndDlg);
             return TRUE;
 
         case WM_COMMAND:
@@ -1480,7 +1504,7 @@ UnlockDialogProc(
             return TRUE;
         }
         case WM_DESTROY:
-            DlgData_Destroy(pDlgData);
+            DlgData_Destroy(hwndDlg);
             return TRUE;
 
         case WM_COMMAND:
@@ -1568,7 +1592,7 @@ LockedDialogProc(
         }
         case WM_DESTROY:
         {
-            DlgData_Destroy(pDlgData);
+            DlgData_Destroy(hwndDlg);
             return TRUE;
         }
     }

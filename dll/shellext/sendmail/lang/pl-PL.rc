@@ -1,0 +1,7 @@
+LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
+
+STRINGTABLE
+{
+    IDS_DESKLINK, "Pulpit (utwórz skrót)"
+    IDS_SHORTCUT, "Skrót do %s"
+}

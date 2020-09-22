@@ -345,3 +345,9 @@ BEGIN
     IDS_COL_LOCATION "В папке"
     IDS_COL_RELEVANCE "Релевантность"
 END
+
+STRINGTABLE
+BEGIN
+    IDS_PARSE_ADDR_ERR_TITLE "Проводник ReactOS"
+    IDS_PARSE_ADDR_ERR_TEXT "Проводник ReactOS не может найти '%1'. Проверьте правильность написания и попробуйте снова."
+END

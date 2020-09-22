@@ -1,7 +1,7 @@
 /*
 	parse: spawned from common; clustering around stream/frame parsing
 
-	copyright ?-2014 by the mpg123 project - free software under the terms of the LGPL 2.1
+	copyright ?-2020 by the mpg123 project - free software under the terms of the LGPL 2.1
 	see COPYING and AUTHORS files in distribution or http://mpg123.org
 	initially written by Michael Hipp & Thomas Orgis
 */
@@ -11,11 +11,17 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 
+#ifndef __REACTOS__
 #include "getbits.h"
+#endif
 
 #if defined (WANT_WIN32_SOCKETS)
 #include <winsock2.h>
 #include <ws2tcpip.h>
+#endif
+
+#ifdef __REACTOS__
+#include "getbits.h"
 #endif
 
 /* a limit for number of frames in a track; beyond that unsigned long may not be enough to hold byte addresses */
@@ -408,6 +414,9 @@ static int check_lame_tag(mpg123_handle *fr)
 		lame_offset += 3; /* 24 in */
 		if(VERBOSE3) fprintf(stderr, "Note: Encoder delay = %i; padding = %i\n"
 		,	(int)pad_in, (int)pad_out);
+		/* Store even if libmpg123 does not do gapless decoding itself. */
+		fr->enc_delay   = (int)pad_in;
+		fr->enc_padding = (int)pad_out;
 		#ifdef GAPLESS
 		if(fr->p.flags & MPG123_GAPLESS)
 		frame_gapless_init(fr, fr->track_frames, pad_in, pad_out);
@@ -458,8 +467,7 @@ static int halfspeed_do(mpg123_handle *fr)
 			debug("repeat!");
 			fr->to_decode = fr->to_ignore = TRUE;
 			--fr->halfphase;
-			fr->bitindex = 0;
-			fr->wordpointer = (unsigned char *) fr->bsbuf;
+			set_pointer(fr, 0, 0);
 			if(fr->lay == 3) memcpy (fr->bsbuf, fr->ssave, fr->ssize);
 			if(fr->error_protection) fr->crc = getbits(fr, 16); /* skip crc */
 			return 1;
@@ -511,6 +519,20 @@ int read_frame(mpg123_handle *fr)
 
 	/* From now on, old frame data is tainted by parsing attempts. */
 	fr->to_decode = fr->to_ignore = FALSE;
+
+	if( fr->p.flags & MPG123_NO_FRANKENSTEIN &&
+		( (fr->track_frames > 0 && fr->num >= fr->track_frames-1)
+#ifdef GAPLESS
+		|| (fr->gapless_frames > 0 && fr->num >= fr->gapless_frames-1)
+#endif
+		) )
+	{
+		mdebug( "stopping parsing at %"OFF_P
+			" frames as indicated fixed track length"
+		,	(off_p)fr->num+1 );
+		return 0;
+	}
+
 read_again:
 	/* In case we are looping to find a valid frame, discard any buffered data before the current position.
 	   This is essential to prevent endless looping, always going back to the beginning when feeder buffer is exhausted. */
@@ -543,7 +565,9 @@ init_resync:
 
 	if(!fr->firsthead)
 	{
-		ret = do_readahead(fr, newhead);
+		ret = fr->p.flags & MPG123_NO_READAHEAD
+		?	PARSE_GOOD
+		:	do_readahead(fr, newhead);
 		/* readahead can fail mit NEED_MORE, in which case we must also make the just read header available again for next go */
 		if(ret < 0) fr->rd->back_bytes(fr, 4);
 		JUMP_CONCLUSION(ret);
@@ -551,16 +575,27 @@ init_resync:
 
 	/* Now we should have our valid header and proceed to reading the frame. */
 
+	if(fr->p.flags & MPG123_NO_FRANKENSTEIN)
+	{
+		if(fr->firsthead && !head_compatible(fr->firsthead, newhead))
+		{
+			mdebug( "stopping before reading frame %"OFF_P
+				" as its header indicates Frankenstein coming for you", (off_p)fr->num );
+			return 0;
+		}
+	}
+
 	/* if filepos is invalid, so is framepos */
 	framepos = fr->rd->tell(fr) - 4;
 	/* flip/init buffer for Layer 3 */
 	{
 		unsigned char *newbuf = fr->bsspace[fr->bsnum]+512;
 		/* read main data into memory */
+		debug2("read frame body of %i at %"OFF_P, fr->framesize, framepos+4);
 		if((ret=fr->rd->read_frame_body(fr,newbuf,fr->framesize))<0)
 		{
 			/* if failed: flip back */
-			debug("need more?");
+			debug1("%s", ret == MPG123_NEED_MORE ? "need more" : "read error");
 			goto read_frame_bad;
 		}
 		fr->bsbufold = fr->bsbuf;
@@ -593,8 +628,8 @@ init_resync:
 		debug2("fr->firsthead: %08lx, audio_start: %li", fr->firsthead, (long int)fr->audio_start);
 	}
 
-  fr->bitindex = 0;
-  fr->wordpointer = (unsigned char *) fr->bsbuf;
+	set_pointer(fr, 0, 0);
+
 	/* Question: How bad does the floating point value get with repeated recomputation?
 	   Also, considering that we can play the file or parts of many times. */
 	if(++fr->mean_frames != 0)
@@ -787,6 +822,12 @@ static int decode_header(mpg123_handle *fr,unsigned long newhead, int *freeforma
 		if(fr->freeformat_framesize < 0)
 		{
 			int ret;
+			if(fr->p.flags & MPG123_NO_READAHEAD)
+			{
+				if(VERBOSE3)
+					error("Got no free-format frame size and am not allowed to read ahead.");
+				return PARSE_BAD;
+			}
 			*freeformat_count += 1;
 			if(*freeformat_count > 5)
 			{
@@ -825,9 +866,10 @@ static int decode_header(mpg123_handle *fr,unsigned long newhead, int *freeforma
 			fr->do_layer = do_layer1;
 			if(!fr->freeformat)
 			{
-				fr->framesize  = (long) tabsel_123[fr->lsf][0][fr->bitrate_index] * 12000;
-				fr->framesize /= freqs[fr->sampling_frequency];
-				fr->framesize  = ((fr->framesize+fr->padding)<<2)-4;
+				long fs = (long) tabsel_123[fr->lsf][0][fr->bitrate_index] * 12000;
+				fs /= freqs[fr->sampling_frequency];
+				fs = ((fs+fr->padding)<<2)-4;
+				fr->framesize = (int)fs;
 			}
 		break;
 #endif
@@ -838,9 +880,10 @@ static int decode_header(mpg123_handle *fr,unsigned long newhead, int *freeforma
 			if(!fr->freeformat)
 			{
 				debug2("bitrate index: %i (%i)", fr->bitrate_index, tabsel_123[fr->lsf][1][fr->bitrate_index] );
-				fr->framesize = (long) tabsel_123[fr->lsf][1][fr->bitrate_index] * 144000;
-				fr->framesize /= freqs[fr->sampling_frequency];
-				fr->framesize += fr->padding - 4;
+				long fs = (long) tabsel_123[fr->lsf][1][fr->bitrate_index] * 144000;
+				fs /= freqs[fr->sampling_frequency];
+				fs += fr->padding - 4;
+				fr->framesize = (int)fs;
 			}
 		break;
 #endif
@@ -858,9 +901,17 @@ static int decode_header(mpg123_handle *fr,unsigned long newhead, int *freeforma
 
 			if(!fr->freeformat)
 			{
-				fr->framesize  = (long) tabsel_123[fr->lsf][2][fr->bitrate_index] * 144000;
-				fr->framesize /= freqs[fr->sampling_frequency]<<(fr->lsf);
-				fr->framesize = fr->framesize + fr->padding - 4;
+				long fs = (long) tabsel_123[fr->lsf][2][fr->bitrate_index] * 144000;
+				fs /= freqs[fr->sampling_frequency]<<(fr->lsf);
+				fs += fr->padding - 4;
+				fr->framesize = fs;
+			}
+			if(fr->framesize < fr->ssize)
+			{
+				if(NOQUIET)
+					error2( "Frame smaller than mandatory side info (%i < %i)!"
+					,	fr->framesize, fr->ssize );
+				return PARSE_BAD;
 			}
 		break;
 #endif 
@@ -878,13 +929,38 @@ static int decode_header(mpg123_handle *fr,unsigned long newhead, int *freeforma
 	return PARSE_GOOD;
 }
 
-void set_pointer(mpg123_handle *fr, long backstep)
-{
-	fr->wordpointer = fr->bsbuf + fr->ssize - backstep;
-	if (backstep)
-	memcpy(fr->wordpointer,fr->bsbufold+fr->fsizeold-backstep,backstep);
+/* Prepare for bit reading. Two stages:
+  0. Layers 1 and 2, side info for layer 3
+  1. Second call for possible bit reservoir for layer 3 part 2,3.
+     This overwrites side info needed for stage 0.
 
-	fr->bitindex = 0; 
+  Continuing to read bits after layer 3 side info shall fail unless
+  set_pointer() is called to refresh things. 
+*/
+void set_pointer(mpg123_handle *fr, int part2, long backstep)
+{
+	fr->bitindex = 0;
+	if(fr->lay == 3)
+	{
+		if(part2)
+		{
+			fr->wordpointer = fr->bsbuf + fr->ssize - backstep;
+			if(backstep)
+				memcpy( fr->wordpointer, fr->bsbufold+fr->fsizeold-backstep
+				,	backstep );
+			fr->bits_avail = (long)(fr->framesize - fr->ssize + backstep)*8;
+		}
+		else
+		{
+			fr->wordpointer = fr->bsbuf;
+			fr->bits_avail  = fr->ssize*8;
+		}
+	}
+	else
+	{
+		fr->wordpointer = fr->bsbuf;
+		fr->bits_avail  = fr->framesize*8;
+	}
 }
 
 /********************************/
@@ -1204,7 +1280,8 @@ static int skip_junk(mpg123_handle *fr, unsigned long *newheadp, long *headcount
 	if(limit >= 0 && *headcount >= limit)
 	{
 		if(NOQUIET) error1("Giving up searching valid MPEG header after %li bytes of junk.", *headcount);
-		return PARSE_END;
+		fr->err = MPG123_RESYNC_FAIL;
+		return PARSE_ERR;
 	}
 	else debug1("hopefully found one at %"OFF_P, (off_p)fr->rd->tell(fr));
 

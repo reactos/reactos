@@ -7,28 +7,30 @@
 
 LANGUAGE LANG_RUSSIAN, SUBLANG_DEFAULT
 
-IDD_PROPPAGEDESTINATION DIALOGEX 0, 0, 235, 156
+IDD_PROPPAGEDESTINATION DIALOGEX 0, 0, 260, 156
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Укажите путь"
 FONT 8, "MS Shell Dlg", 400, 0, 0x0
 BEGIN
-    LTEXT           "Выберите путь для извлечения",IDC_STATIC,6,12,174,8
-    EDITTEXT        IDC_DIRECTORY,6,24,222,12,ES_AUTOHSCROLL
-    PUSHBUTTON      "Обзор...",IDC_BROWSE,174,42,54,14
-    PUSHBUTTON      "Пароль",IDC_PASSWORD,174,66,54,14
-    LTEXT           "Нажмите ""Далее"" для извлечения",IDC_STATUSTEXT,6,114,118,8
-    CONTROL         "",IDC_PROGRESS,"msctls_progress32",WS_BORDER,6,126,222,6
+    LTEXT           "Выберите путь для извлечения",IDC_STATIC,86,12,154,8
+    EDITTEXT        IDC_DIRECTORY,86,24,157,12,ES_AUTOHSCROLL
+    PUSHBUTTON      "Обзор...",IDC_BROWSE,189,42,54,14
+    PUSHBUTTON      "Пароль",IDC_PASSWORD,189,66,54,14
+    LTEXT           "Нажмите ""Далее"" для извлечения",IDC_STATUSTEXT,86,114,118,8
+    CONTROL         "",IDC_PROGRESS,"msctls_progress32",WS_BORDER,86,126,157,6
+    CONTROL         IDB_ZIPFLDR,-1,"STATIC",SS_BITMAP | WS_CHILD | WS_VISIBLE,0,0,78,138
 END
 
-IDD_PROPPAGECOMPLETE DIALOGEX 0, 0, 235, 156
+IDD_PROPPAGECOMPLETE DIALOGEX 0, 0, 260, 156
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Извлечение завершено"
 FONT 8, "MS Shell Dlg", 400, 0, 0x0
 BEGIN
-    LTEXT           "Все файлы были извлечены в следующую директорию:",IDC_STATIC,6,12,222,18
-    LTEXT           "Целевой путь",IDC_DESTDIR,6,36,222,8
-    CONTROL         "Показать извлечённые файлы",IDC_SHOW_EXTRACTED,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,66,118,10
-    LTEXT           "Нажмите ""Готово"" чтобы продолжить.",IDC_STATIC,6,84,174,8
+    LTEXT           "Все файлы были извлечены в следующую директорию:",IDC_STATIC,86,12,157,18
+    LTEXT           "%s",IDC_DESTDIR,86,36,157,8
+    CONTROL         "Показать извлечённые файлы",IDC_SHOW_EXTRACTED,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,86,66,118,10
+    LTEXT           "Нажмите ""Готово"" чтобы продолжить.",IDC_STATIC,86,84,144,8
+    CONTROL         IDB_ZIPFLDR,-1,"STATIC",SS_BITMAP | WS_CHILD | WS_VISIBLE,0,0,78,138
 END
 
 IDD_CONFIRM_FILE_REPLACE DIALOGEX 0, 0, 273, 56

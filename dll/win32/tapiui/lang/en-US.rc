@@ -225,7 +225,7 @@ BEGIN
     AUTORADIOBUTTON "Wait for a specific length of &time:", 1048, 7, 63, 238, 10, NOT WS_TABSTOP
     EDITTEXT 1050, 18, 77, 36, 14, ES_AUTOHSCROLL | WS_GROUP
     CONTROL "Spin1", 1049, "msctls_updown32", 0x00000036, 42, 78, 11, 14
-    LTEXT "&seconds", -1, 58, 81, 187, 8
+    LTEXT "&seconds", -1, 58, 79, 187, 8
     DEFPUSHBUTTON "OK", 1, 141, 103, 50, 14
     PUSHBUTTON "Cancel", 2, 195, 103, 50, 14
 END
@@ -250,7 +250,7 @@ CAPTION "Advanced"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON 201, 2000, 7, 7, 20, 20
-    LTEXT "The following telephony providers are installed on this computer:", -1, 40, 7, 205, 8
+    LTEXT "The following telephony providers are installed on this computer:", -1, 40, 7, 205, 16
     LTEXT "&Providers:", -1, 7, 35, 238, 8
     LISTBOX 1033, 7, 46, 238, 147, LBS_STANDARD | LBS_NOINTEGRALHEIGHT | WS_TABSTOP
     PUSHBUTTON "A&dd...", 1005, 87, 197, 50, 14
@@ -258,16 +258,16 @@ BEGIN
     PUSHBUTTON "&Configure...", 1031, 195, 197, 50, 14
 END
 
-114 DIALOGEX 20, 15, 252, 127
+114 DIALOGEX 20, 15, 252, 135
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "Add Provider"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Select the provider you wish to install from the list below, and click Add.", 2000, 7, 7, 241, 8
-    LTEXT "&Telephony providers:", -1, 7, 23, 144, 10
-    LISTBOX 1055, 7, 34, 238, 74, LBS_STANDARD | WS_TABSTOP
-    PUSHBUTTON "&Add", 1005, 141, 106, 50, 14
-    DEFPUSHBUTTON "Cancel", 2, 195, 106, 50, 14
+    LTEXT "Select the provider you wish to install from the list below, and click Add.", 2000, 7, 7, 241, 16
+    LTEXT "&Telephony providers:", -1, 7, 31, 144, 10
+    LISTBOX 1055, 7, 42, 238, 74, LBS_STANDARD | WS_TABSTOP
+    PUSHBUTTON "&Add", 1005, 141, 114, 50, 14
+    DEFPUSHBUTTON "Cancel", 2, 195, 114, 50, 14
 END
 
 115 DIALOGEX 10, 10, 303, 228

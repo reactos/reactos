@@ -155,7 +155,7 @@ RtlAssert(IN PVOID FailedAssertion,
     //DbgBreakPoint();
 }
 
-// DECLSPEC_NORETURN
+// FIXME: DECLSPEC_NORETURN
 VOID
 NTAPI
 KeBugCheckEx(

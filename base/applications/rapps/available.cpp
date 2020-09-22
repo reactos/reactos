@@ -1,11 +1,11 @@
 /*
  * PROJECT:     ReactOS Applications Manager
- * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
- * FILE:        base/applications/rapps/available.cpp
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Classes for working with available applications
  * COPYRIGHT:   Copyright 2009 Dmitry Chapyshev           (dmitry@reactos.org)
  *              Copyright 2015 Ismael Ferreras Morezuelas (swyterzone+ros@gmail.com)
  *              Copyright 2017 Alexander Shaposhnikov     (sanchaez@reactos.org)
+ *              Copyright 2020 He Yang                    (1160386205@qq.com)
  */
 #include "rapps.h"
 
@@ -18,25 +18,32 @@
 #include <atlstr.h>
 
  // CAvailableApplicationInfo
-CAvailableApplicationInfo::CAvailableApplicationInfo(const ATL::CStringW& sFileNameParam)
-    : m_IsSelected(FALSE), m_LicenseType(LICENSE_NONE), m_SizeBytes(0), m_sFileName(sFileNameParam),
+CAvailableApplicationInfo::CAvailableApplicationInfo(const ATL::CStringW& sFileNameParam, AvailableStrings& AvlbStrings)
+    : m_LicenseType(LICENSE_NONE), m_SizeBytes(0), m_sFileName(sFileNameParam),
     m_IsInstalled(FALSE), m_HasLanguageInfo(FALSE), m_HasInstalledVersion(FALSE)
 {
-    RetrieveGeneralInfo();
+    RetrieveGeneralInfo(AvlbStrings);
 }
 
-VOID CAvailableApplicationInfo::RefreshAppInfo()
+VOID CAvailableApplicationInfo::RefreshAppInfo(AvailableStrings& AvlbStrings)
 {
     if (m_szUrlDownload.IsEmpty())
     {
-        RetrieveGeneralInfo();
+        RetrieveGeneralInfo(AvlbStrings);
     }
 }
 
 // Lazily load general info from the file
-VOID CAvailableApplicationInfo::RetrieveGeneralInfo()
+VOID CAvailableApplicationInfo::RetrieveGeneralInfo(AvailableStrings& AvlbStrings)
 {
     m_Parser = new CConfigParser(m_sFileName);
+
+    // TODO: I temporarily use the file name (without suffix) as package name.
+    // It should be better to put this in a field of ini file.
+    // consider write a converter to do this and write a github action for rapps-db to ensure package_name is unique.
+    m_szPkgName = m_sFileName;
+    PathRemoveExtensionW(m_szPkgName.GetBuffer(MAX_PATH));
+    m_szPkgName.ReleaseBuffer();
 
     m_Parser->GetInt(L"Category", m_Category);
 
@@ -52,9 +59,55 @@ VOID CAvailableApplicationInfo::RetrieveGeneralInfo()
     GetString(L"License", m_szLicense);
     GetString(L"Description", m_szDesc);
     GetString(L"URLSite", m_szUrlSite);
-    GetString(L"CDPath", m_szCDPath);
-    GetString(L"Language", m_szRegName);
     GetString(L"SHA1", m_szSHA1);
+
+    static_assert(MAX_SCRNSHOT_NUM < 10000, "MAX_SCRNSHOT_NUM is too big");
+    for (int i = 0; i < MAX_SCRNSHOT_NUM; i++)
+    {
+        CStringW ScrnshotField;
+        ScrnshotField.Format(L"Screenshot%d", i + 1);
+        CStringW ScrnshotLocation;
+        if (!GetString(ScrnshotField, ScrnshotLocation))
+        {
+            continue;
+        }
+
+
+        if (PathIsURLW(ScrnshotLocation.GetString()))
+        {
+            m_szScrnshotLocation.Add(ScrnshotLocation);
+        }
+        else
+        {
+            // TODO: Does the filename contain anything stuff like ":" "<" ">" ?
+            // these stuff may lead to security issues
+            ATL::CStringW ScrnshotName = AvlbStrings.szAppsPath;
+            PathAppendW(ScrnshotName.GetBuffer(MAX_PATH), L"screenshots");
+            BOOL bSuccess = PathAppendNoDirEscapeW(ScrnshotName.GetBuffer(), ScrnshotLocation.GetString());
+            ScrnshotName.ReleaseBuffer();
+            if (bSuccess)
+            {
+                m_szScrnshotLocation.Add(ScrnshotName);
+            }
+        }
+    }
+
+    // TODO: are we going to support specify an URL for an icon ?
+    ATL::CStringW IconLocation;
+    if (GetString(L"Icon", IconLocation))
+    {
+        // TODO: Does the filename contain anything stuff like ":" "<" ">" ?
+        // these stuff may lead to security issues
+        ATL::CStringW IconPath = AvlbStrings.szAppsPath;
+        PathAppendW(IconPath.GetBuffer(MAX_PATH), L"icons");
+        BOOL bSuccess = PathAppendNoDirEscapeW(IconPath.GetBuffer(), IconLocation.GetString());
+        IconPath.ReleaseBuffer();
+
+        if (bSuccess)
+        {
+            m_szIconLocation = IconPath;
+        }
+    }
 
     RetrieveSize();
     RetrieveLicenseType();
@@ -209,6 +262,26 @@ BOOL CAvailableApplicationInfo::HasUpdate() const
     return (m_szInstalledVersion.Compare(m_szVersion) < 0) ? TRUE : FALSE;
 }
 
+BOOL CAvailableApplicationInfo::RetrieveScrnshot(UINT Index,ATL::CStringW& ScrnshotLocation) const
+{
+    if (Index >= (UINT)m_szScrnshotLocation.GetSize())
+    {
+        return FALSE;
+    }
+    ScrnshotLocation = m_szScrnshotLocation[Index];
+    return TRUE;
+}
+
+BOOL CAvailableApplicationInfo::RetrieveIcon(ATL::CStringW& IconLocation) const
+{
+    if (m_szIconLocation.IsEmpty())
+    {
+        return FALSE;
+    }
+    IconLocation = m_szIconLocation;
+    return TRUE;
+}
+
 VOID CAvailableApplicationInfo::SetLastWriteTime(FILETIME* ftTime)
 {
     RtlCopyMemory(&m_ftCacheStamp, ftTime, sizeof(FILETIME));
@@ -231,11 +304,19 @@ AvailableStrings::AvailableStrings()
     //FIXME: maybe provide a fallback?
     if (GetStorageDirectory(szPath))
     {
-        szAppsPath = szPath + L"\\rapps\\";
+        szAppsPath = szPath;
+        PathAppendW(szAppsPath.GetBuffer(MAX_PATH), L"rapps");
+        szAppsPath.ReleaseBuffer();
+
         szCabName = L"rappmgr.cab";
         szCabDir = szPath;
-        szCabPath = (szCabDir + L"\\") + szCabName;
-        szSearchPath = szAppsPath + L"*.txt";
+        szCabPath = szCabDir;
+        PathAppendW(szCabPath.GetBuffer(MAX_PATH), szCabName);
+        szCabPath.ReleaseBuffer();
+
+        szSearchPath = szAppsPath;
+        PathAppendW(szSearchPath.GetBuffer(MAX_PATH), L"*.txt");
+        szSearchPath.ReleaseBuffer();
     }
 }
 // AvailableStrings
@@ -273,7 +354,9 @@ VOID CAvailableApps::DeleteCurrentAppsDB()
         ATL::CStringW szTmp;
         do
         {
-            szTmp = m_Strings.szAppsPath + FindFileData.cFileName;
+            szTmp = m_Strings.szAppsPath;
+            PathAppendW(szTmp.GetBuffer(MAX_PATH), FindFileData.cFileName);
+            szTmp.ReleaseBuffer();
             DeleteFileW(szTmp.GetString());
         } while (FindNextFileW(hFind, &FindFileData) != 0);
         FindClose(hFind);
@@ -301,8 +384,9 @@ BOOL CAvailableApps::UpdateAppsDB()
         return TRUE;
     }
 
-    DownloadApplicationsDB(APPLICATION_DATABASE_URL);
-
+    DownloadApplicationsDB(SettingsInfo.bUseSource ? SettingsInfo.szSourceURL : APPLICATION_DATABASE_URL,
+        !SettingsInfo.bUseSource);
+    
     if (!ExtractFilesFromCab(m_Strings.szCabName, 
                              m_Strings.szCabDir,
                              m_Strings.szAppsPath))
@@ -323,74 +407,130 @@ BOOL CAvailableApps::ForceUpdateAppsDB()
 
 BOOL CAvailableApps::Enum(INT EnumType, AVAILENUMPROC lpEnumProc, PVOID param)
 {
-
-    HANDLE hFind = INVALID_HANDLE_VALUE;
-    WIN32_FIND_DATAW FindFileData;
-
-    hFind = FindFirstFileW(m_Strings.szSearchPath.GetString(), &FindFileData);
-
-    if (hFind == INVALID_HANDLE_VALUE)
+    if (EnumType == ENUM_CAT_SELECTED)
     {
-        //no db yet
-        return FALSE;
-    }
+        CAvailableApplicationInfo *EnumAvlbInfo = NULL;
 
-    do
-    {
-        // loop for all the cached entries
-        POSITION CurrentListPosition = m_InfoList.GetHeadPosition();
-        CAvailableApplicationInfo* Info = NULL;
-
-        while (CurrentListPosition != NULL)
+        // enum all object in m_SelectedList and invoke callback
+        for(POSITION CurrentPosition = m_SelectedList.GetHeadPosition();
+            CurrentPosition && (EnumAvlbInfo = m_SelectedList.GetAt(CurrentPosition));
+            m_SelectedList.GetNext(CurrentPosition))
         {
-            POSITION LastListPosition = CurrentListPosition;
-            Info = m_InfoList.GetNext(CurrentListPosition);
-
-            // do we already have this entry in cache?
-            if (Info->m_sFileName == FindFileData.cFileName)
-            {
-                // is it current enough, or the file has been modified since our last time here?
-                if (CompareFileTime(&FindFileData.ftLastWriteTime, &Info->m_ftCacheStamp) == 1)
-                {
-                    // recreate our cache, this is the slow path
-                    m_InfoList.RemoveAt(LastListPosition);
-
-                    delete Info;
-                    Info = NULL;
-                    break;
-                }
-                else
-                {
-                    // speedy path, compare directly, we already have the data
-                    goto skip_if_cached;
-                }
-            }
-        }
-
-        // create a new entry
-        Info = new CAvailableApplicationInfo(FindFileData.cFileName);
-
-        // set a timestamp for the next time
-        Info->SetLastWriteTime(&FindFileData.ftLastWriteTime);
-        m_InfoList.AddTail(Info);
-
-skip_if_cached:
-        if (EnumType == Info->m_Category
-            || EnumType == ENUM_ALL_AVAILABLE
-            || (EnumType == ENUM_CAT_SELECTED && Info->m_IsSelected))
-        {
-            Info->RefreshAppInfo();
+            EnumAvlbInfo->RefreshAppInfo(m_Strings);
 
             if (lpEnumProc)
-                lpEnumProc(Info, m_Strings.szAppsPath.GetString(), param);
+                lpEnumProc(EnumAvlbInfo, TRUE, param);
         }
-    } while (FindNextFileW(hFind, &FindFileData) != 0);
+        return TRUE;
+    }
+    else
+    {
+        HANDLE hFind = INVALID_HANDLE_VALUE;
+        WIN32_FIND_DATAW FindFileData;
 
-    FindClose(hFind);
-    return TRUE;
+        hFind = FindFirstFileW(m_Strings.szSearchPath.GetString(), &FindFileData);
+
+        if (hFind == INVALID_HANDLE_VALUE)
+        {
+            //no db yet
+            return FALSE;
+        }
+
+        do
+        {
+            // loop for all the cached entries
+            POSITION CurrentListPosition = m_InfoList.GetHeadPosition();
+            CAvailableApplicationInfo *Info = NULL;
+
+            while (CurrentListPosition != NULL)
+            {
+                POSITION LastListPosition = CurrentListPosition;
+                Info = m_InfoList.GetNext(CurrentListPosition);
+
+                // do we already have this entry in cache?
+                if (Info->m_sFileName == FindFileData.cFileName)
+                {
+                    // is it current enough, or the file has been modified since our last time here?
+                    if (CompareFileTime(&FindFileData.ftLastWriteTime, &Info->m_ftCacheStamp) == 1)
+                    {
+                        // recreate our cache, this is the slow path
+                        m_InfoList.RemoveAt(LastListPosition);
+
+                        // also remove this in selected list (if exist)
+                        RemoveSelected(Info);
+
+                        delete Info;
+                        Info = NULL;
+                        break;
+                    }
+                    else
+                    {
+                        // speedy path, compare directly, we already have the data
+                        goto skip_if_cached;
+                    }
+                }
+            }
+
+            // create a new entry
+            Info = new CAvailableApplicationInfo(FindFileData.cFileName, m_Strings);
+
+            // set a timestamp for the next time
+            Info->SetLastWriteTime(&FindFileData.ftLastWriteTime);
+            m_InfoList.AddTail(Info);
+
+        skip_if_cached:
+            if (EnumType == Info->m_Category
+                || EnumType == ENUM_ALL_AVAILABLE)
+            {
+                Info->RefreshAppInfo(m_Strings);
+
+                if (lpEnumProc)
+                {
+                    if (m_SelectedList.Find(Info))
+                    {
+                        lpEnumProc(Info, TRUE, param);
+                    }
+                    else
+                    {
+                        lpEnumProc(Info, FALSE, param);
+                    }
+                }
+            }
+        } while (FindNextFileW(hFind, &FindFileData));
+
+        FindClose(hFind);
+        return TRUE;
+    }
 }
 
-CAvailableApplicationInfo* CAvailableApps::FindInfo(const ATL::CStringW& szAppName) const
+BOOL CAvailableApps::AddSelected(CAvailableApplicationInfo *AvlbInfo)
+{
+        return m_SelectedList.AddTail(AvlbInfo) != 0;
+}
+
+BOOL CAvailableApps::RemoveSelected(CAvailableApplicationInfo *AvlbInfo)
+{
+    POSITION Position = m_SelectedList.Find(AvlbInfo);
+    if (Position)
+    {
+        m_SelectedList.RemoveAt(Position);
+        return TRUE;
+    }
+    return FALSE;
+}
+
+VOID CAvailableApps::RemoveAllSelected()
+{
+    m_SelectedList.RemoveAll();
+    return;
+}
+
+int CAvailableApps::GetSelectedCount()
+{
+    return m_SelectedList.GetCount();
+}
+
+CAvailableApplicationInfo* CAvailableApps::FindAppByPkgName(const ATL::CStringW& szPkgName) const
 {
     if (m_InfoList.IsEmpty())
     {
@@ -403,7 +543,7 @@ CAvailableApplicationInfo* CAvailableApps::FindInfo(const ATL::CStringW& szAppNa
     while (CurrentListPosition != NULL)
     {
         info = m_InfoList.GetNext(CurrentListPosition);
-        if (info->m_szName.CompareNoCase(szAppName) == 0)
+        if (info->m_szPkgName.CompareNoCase(szPkgName) == 0)
         {
             return info;
         }
@@ -411,30 +551,13 @@ CAvailableApplicationInfo* CAvailableApps::FindInfo(const ATL::CStringW& szAppNa
     return NULL;
 }
 
-ATL::CSimpleArray<CAvailableApplicationInfo> CAvailableApps::FindInfoList(const ATL::CSimpleArray<ATL::CStringW> &arrAppsNames) const
+ATL::CSimpleArray<CAvailableApplicationInfo> CAvailableApps::FindAppsByPkgNameList(const ATL::CSimpleArray<ATL::CStringW> &PkgNameList) const
 {
     ATL::CSimpleArray<CAvailableApplicationInfo> result;
-    for (INT i = 0; i < arrAppsNames.GetSize(); ++i)
+    for (INT i = 0; i < PkgNameList.GetSize(); ++i)
     {
-        CAvailableApplicationInfo* Info = FindInfo(arrAppsNames[i]);
+        CAvailableApplicationInfo* Info = FindAppByPkgName(PkgNameList[i]);
         if (Info)
-        {
-            result.Add(*Info);
-        }
-    }
-    return result;
-}
-
-ATL::CSimpleArray<CAvailableApplicationInfo> CAvailableApps::GetSelected() const
-{
-    ATL::CSimpleArray<CAvailableApplicationInfo> result;
-    POSITION CurrentListPosition = m_InfoList.GetHeadPosition();
-    CAvailableApplicationInfo* Info;
-
-    while (CurrentListPosition != NULL)
-    {
-        Info = m_InfoList.GetNext(CurrentListPosition);
-        if (Info->m_IsSelected)
         {
             result.Add(*Info);
         }

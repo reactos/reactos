@@ -120,22 +120,6 @@ static BOOL is_access_denied(DWORD res, DWORD lasterror)
     return FALSE;
 }
 
-static BOOL on_win9x = FALSE;
-
-static BOOL check_win9x(void)
-{
-    if (pGetPrinterW)
-    {
-        SetLastError(0xdeadbeef);
-        pGetPrinterW(NULL, 0, NULL, 0, NULL);
-        return (GetLastError() == ERROR_CALL_NOT_IMPLEMENTED);
-    }
-    else
-    {
-        return TRUE;
-    }
-}
-
 static void find_default_printer(VOID)
 {
     static  char    buffer[DEFAULT_PRINTER_SIZE];
@@ -333,8 +317,6 @@ static void test_AddMonitor(void)
         "returned %d with %d (expected '0' with ERROR_INVALID_LEVEL)\n",
         res, GetLastError());
 
-    if (0)
-    {
     /* This test crashes win9x on vmware (works with win9x on qemu 0.8.1) */
     SetLastError(MAGIC_DEAD);
     res = AddMonitorA(NULL, 2, NULL);
@@ -344,7 +326,6 @@ static void test_AddMonitor(void)
          (GetLastError() == ERROR_PRIVILEGE_NOT_HELD)), 
         "returned %d with %d (expected '0' with: MAGIC_DEAD or "
         "ERROR_PRIVILEGE_NOT_HELD)\n", res, GetLastError());
-    }
 
     ZeroMemory(&mi2a, sizeof(MONITOR_INFO_2A));
     SetLastError(MAGIC_DEAD);
@@ -1219,7 +1200,7 @@ static void test_EnumPrinterDrivers(void)
         }
 
         /* EnumPrinterDriversA returns the same number of bytes as EnumPrinterDriversW */
-        if (!on_win9x && pEnumPrinterDriversW)
+        if (pEnumPrinterDriversW)
         {
             DWORD double_needed;
             DWORD double_returned;
@@ -1407,15 +1388,14 @@ static void test_EnumPrintProcessors(void)
 
 
     /* failure-Codes for NULL */
-    if (0) {
-        /* this test crashes on win98se */
-        SetLastError(0xdeadbeef);
-        pcbNeeded = 0xdeadbeef;
-        pcReturned = 0xdeadbeef;
-        res = EnumPrintProcessorsA(NULL, NULL, 1, NULL, cbBuf, &pcbNeeded, &pcReturned);
-        ok( !res && (GetLastError() == ERROR_INVALID_USER_BUFFER) ,
-            "got %u with %u (expected '0' with ERROR_INVALID_USER_BUFFER)\n",
-            res, GetLastError());
+    SetLastError(0xdeadbeef);
+    pcbNeeded = 0xdeadbeef;
+    pcReturned = 0xdeadbeef;
+    res = EnumPrintProcessorsA(NULL, NULL, 1, NULL, cbBuf, &pcbNeeded, &pcReturned);
+    todo_wine {
+    ok( !res && (GetLastError() == ERROR_INVALID_USER_BUFFER) ,
+        "got %u with %u (expected '0' with ERROR_INVALID_USER_BUFFER)\n",
+        res, GetLastError());
     }
 
     SetLastError(0xdeadbeef);
@@ -1982,7 +1962,7 @@ static void test_SetDefaultPrinter(void)
     }
 
     if (!pSetDefaultPrinterA)  return;
-	/* only supported on win2k and above */
+    /* only supported on win2k and above */
 
     /* backup the original value */
     org_value[0] = '\0';
@@ -2356,7 +2336,7 @@ static void test_GetPrinter(void)
         ok(needed > 0,"not expected needed buffer size %d\n", needed);
 
         /* GetPrinterA returns the same number of bytes as GetPrinterW */
-        if (!on_win9x && !ret && pGetPrinterW && level != 6 && level != 7)
+        if (!ret && pGetPrinterW && level != 6 && level != 7)
         {
             DWORD double_needed;
             ret = pGetPrinterW(hprn, level, NULL, 0, &double_needed);
@@ -2408,9 +2388,6 @@ static void test_GetPrinterData(void)
     res = OpenPrinterA(NULL, &hprn, NULL);
     if (!res)
     {
-        /* printserver not available on win9x */
-        if (!on_win9x)
-            win_skip("Unable to open the printserver: %d\n", GetLastError());
         return;
     }
 
@@ -2593,7 +2570,7 @@ static void test_GetPrinterDriver(void)
         }
 
         /* GetPrinterDriverA returns the same number of bytes as GetPrinterDriverW */
-        if (!on_win9x && !ret && pGetPrinterDriverW)
+        if (!ret && pGetPrinterDriverW)
         {
             DWORD double_needed;
             ret = pGetPrinterDriverW(hprn, NULL, level, NULL, 0, &double_needed);
@@ -2961,7 +2938,7 @@ static void test_OpenPrinter_defaults(void)
     ret = GetJobA( printer, add_job->JobId, 2, (BYTE *)job_info, needed, &needed );
     ok( ret, "GetJobA() failed le=%d\n", GetLastError() );
 
-todo_wine
+    todo_wine
     ok( job_info->pDevMode != NULL, "got NULL DEVMODEA\n");
     if (job_info->pDevMode)
         ok( job_info->pDevMode->u1.s1.dmPaperSize == default_size, "got %d default %d\n",
@@ -3081,10 +3058,6 @@ START_TEST(info)
     pSetDefaultPrinterA = (void *) GetProcAddress(hwinspool, "SetDefaultPrinterA");
     pXcvDataW = (void *) GetProcAddress(hwinspool, "XcvDataW");
 
-    on_win9x = check_win9x();
-    if (on_win9x)
-        win_skip("Several W-functions are not available on Win9x/WinMe\n");
-
     find_default_printer();
     find_local_server();
     find_tempfile();
@@ -3101,20 +3074,10 @@ START_TEST(info)
     test_EnumForms(NULL);
     if (default_printer) test_EnumForms(default_printer);
     test_EnumMonitors();
-
-    if (!winetest_interactive)
-        skip("ROSTESTS-211: Skipping test_EnumPorts().\n");
-    else
-        test_EnumPorts();
-
+    test_EnumPorts();
     test_EnumPrinterDrivers();
     test_EnumPrinters();
-
-    if (!winetest_interactive)
-        skip("ROSTESTS-211: Skipping test_EnumPrintProcessors().\n");
-    else
-        test_EnumPrintProcessors();
-
+    test_EnumPrintProcessors();
     test_GetDefaultPrinter();
     test_GetPrinterDriverDirectory();
     test_GetPrintProcessorDirectory();

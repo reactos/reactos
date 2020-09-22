@@ -12,6 +12,8 @@ include_directories(${REACTOS_SOURCE_DIR}/sdk/lib/atl)
 list(APPEND SOURCE
     CChangeNotifyServer.cpp
     CDesktopBrowser.cpp
+    CDirectoryWatcher.cpp
+    CDirectoryList.cpp
     dde.cpp)
 
 add_library(shelldesktop ${SOURCE})

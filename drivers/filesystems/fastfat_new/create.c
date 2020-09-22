@@ -573,11 +573,7 @@ Return Value:
 
 {
     NTSTATUS Status;
-#ifndef __REACTOS__
     IO_STATUS_BLOCK Iosb = {0};
-#else
-    IO_STATUS_BLOCK Iosb = {{0}};
-#endif
     PIO_STACK_LOCATION IrpSp;
 
     PFILE_OBJECT FileObject;
@@ -2624,11 +2620,7 @@ Arguments:
 
 {
     PDCB RootDcb;
-#ifndef __REACTOS__
     IO_STATUS_BLOCK Iosb = {0};
-#else
-    IO_STATUS_BLOCK Iosb = {{0}};
-#endif
 
     //
     //  The following variables are for abnormal termination
@@ -2814,11 +2806,7 @@ Return Value:
 --*/
 
 {
-#ifndef __REACTOS__
     IO_STATUS_BLOCK Iosb = {0};
-#else
-    IO_STATUS_BLOCK Iosb = {{0}};
-#endif
     PBCB DirentBcb = NULL;
     PDIRENT Dirent;
 
@@ -3261,11 +3249,7 @@ Return Value:
 --*/
 
 {
-#ifndef __REACTOS__
     IO_STATUS_BLOCK Iosb = {0};
-#else
-    IO_STATUS_BLOCK Iosb = {{0}};
-#endif
 
     PBCB DirentBcb = NULL;
     PDIRENT Dirent;
@@ -3974,11 +3958,7 @@ Return Value:
 --*/
 
 {
-#ifndef __REACTOS__
     IO_STATUS_BLOCK Iosb = {0};
-#else
-    IO_STATUS_BLOCK Iosb = {{0}};
-#endif
 
     //
     //  The following variables are for abnormal termination
@@ -4222,11 +4202,7 @@ Return Value:
 --*/
 
 {
-#ifndef __REACTOS__
     IO_STATUS_BLOCK Iosb = {0};
-#else
-    IO_STATUS_BLOCK Iosb = {{0}};
-#endif
 
     //
     //  The following variables are for abnormal termination
@@ -4522,11 +4498,7 @@ Return Value:
 --*/
 
 {
-#ifndef __REACTOS__
     IO_STATUS_BLOCK Iosb = {0};
-#else
-    IO_STATUS_BLOCK Iosb = {{0}};
-#endif
 
     ACCESS_MASK AddedAccess = 0;
 
@@ -5711,11 +5683,7 @@ Return Value:
 --*/
 
 {
-#ifndef __REACTOS__
     IO_STATUS_BLOCK Iosb = {0};
-#else
-    IO_STATUS_BLOCK Iosb = {{0}};
-#endif
 
     PFCB Fcb = NULL;
 
@@ -6428,11 +6396,7 @@ Return Value:
 --*/
 
 {
-#ifndef __REACTOS__
     IO_STATUS_BLOCK Iosb = {0};
-#else
-    IO_STATUS_BLOCK Iosb = {{0}};
-#endif
 
     PDIRENT Dirent;
     PBCB DirentBcb;
@@ -6445,11 +6409,7 @@ Return Value:
 
     ULONG NotifyFilter;
     ULONG HeaderSize = 0;
-#ifndef __REACTOS__
     LARGE_INTEGER AllocSize = {0};
-#else
-    LARGE_INTEGER AllocSize = {{0}};
-#endif
 
     //
     //  The following variables are for abnormal termination

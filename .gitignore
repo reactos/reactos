@@ -8,6 +8,5 @@ modules/[Aa][Hh][Kk]_[Tt]ests
 .cproject
 .project
 .settings
-build
 .vscode
 sdk/tools/winesync/winesync.cfg

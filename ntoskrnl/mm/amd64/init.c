@@ -57,9 +57,9 @@ BOOLEAN MiPfnsInitialized = FALSE;
 
 /* FUNCTIONS *****************************************************************/
 
+INIT_FUNCTION
 VOID
 NTAPI
-INIT_FUNCTION
 MiInitializeSessionSpaceLayout(VOID)
 {
     MmSessionSize = MI_SESSION_SIZE;
@@ -180,9 +180,9 @@ MiMapPTEs(
     }
 }
 
+INIT_FUNCTION
 VOID
 NTAPI
-INIT_FUNCTION
 MiInitializePageTable(VOID)
 {
     ULONG64 PxePhysicalAddress;
@@ -266,9 +266,9 @@ MiInitializePageTable(VOID)
     MiMapPTEs((PVOID)MI_VAD_BITMAP, (PVOID)(MI_WORKING_SET_LIST + PAGE_SIZE - 1));
 }
 
+INIT_FUNCTION
 VOID
 NTAPI
-INIT_FUNCTION
 MiBuildNonPagedPool(VOID)
 {
     /* Check if this is a machine with less than 256MB of RAM, and no overide */
@@ -357,9 +357,9 @@ MiBuildNonPagedPool(VOID)
 
 }
 
+INIT_FUNCTION
 VOID
 NTAPI
-INIT_FUNCTION
 MiBuildSystemPteSpace(VOID)
 {
     PMMPTE PointerPte;
@@ -524,9 +524,9 @@ MiBuildPfnDatabaseFromPageTables(VOID)
 #endif
 }
 
+INIT_FUNCTION
 VOID
 NTAPI
-INIT_FUNCTION
 MiAddDescriptorToDatabase(
     PFN_NUMBER BasePage,
     PFN_NUMBER PageCount,
@@ -603,9 +603,9 @@ MiAddDescriptorToDatabase(
     }
 }
 
+INIT_FUNCTION
 VOID
 NTAPI
-INIT_FUNCTION
 MiBuildPfnDatabase(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     PLIST_ENTRY ListEntry;
@@ -670,9 +670,9 @@ MiBuildPfnDatabase(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     *MxFreeDescriptor = MxOldFreeDescriptor;
 }
 
+INIT_FUNCTION
 NTSTATUS
 NTAPI
-INIT_FUNCTION
 MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     ASSERT(MxPfnAllocation != 0);

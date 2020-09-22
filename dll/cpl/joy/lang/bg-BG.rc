@@ -81,4 +81,5 @@ BEGIN
     IDS_CPLSYSTEMDESCRIPTION "Добавяне, премахване и настройване на игрови управления от рода на ръчки и игрови подложки."
     IDS_CONTROLLER "Управление"
     IDS_STATUS "Състояние"
+    IDS_NONE "(None)"
 END

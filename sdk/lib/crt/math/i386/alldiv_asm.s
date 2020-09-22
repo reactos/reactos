@@ -38,10 +38,6 @@
 
 PUBLIC __alldiv
 
- /* DATA ********************************************************************/
-.data
-ASSUME CS:NOTHING, DS:NOTHING, ES:NOTHING, FS:NOTHING, GS:NOTHING
-
 /* FUNCTIONS ***************************************************************/
 .code
 

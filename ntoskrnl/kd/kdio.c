@@ -418,8 +418,8 @@ KdpScreenAcquire(VOID)
         /* Acquire ownership and reset the display */
         InbvAcquireDisplayOwnership();
         InbvResetDisplay();
-        InbvSolidColorFill(0, 0, SCREEN_WIDTH - 1, SCREEN_HEIGHT - 1, 0);
-        InbvSetTextColor(15);
+        InbvSolidColorFill(0, 0, SCREEN_WIDTH - 1, SCREEN_HEIGHT - 1, BV_COLOR_BLACK);
+        InbvSetTextColor(BV_COLOR_WHITE);
         InbvInstallDisplayStringFilter(NULL);
         InbvEnableDisplayString(TRUE);
         InbvSetScrollRegion(0, 0, SCREEN_WIDTH - 1, SCREEN_HEIGHT - 1);

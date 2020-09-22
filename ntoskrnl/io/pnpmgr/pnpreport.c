@@ -25,12 +25,6 @@ typedef struct _INTERNAL_WORK_QUEUE_ITEM
 } INTERNAL_WORK_QUEUE_ITEM, *PINTERNAL_WORK_QUEUE_ITEM;
 
 NTSTATUS
-NTAPI
-IopCreateDeviceKeyPath(IN PCUNICODE_STRING RegistryPath,
-                       IN ULONG CreateOptions,
-                       OUT PHANDLE Handle);
-
-NTSTATUS
 IopSetDeviceInstanceData(HANDLE InstanceKey,
                          PDEVICE_NODE DeviceNode);
 
@@ -400,6 +394,8 @@ IoReportDetectedDevice(IN PDRIVER_OBJECT DriverObject,
                               &DeviceNode->InstancePath);
 
     DPRINT("Reported device: %S (%wZ)\n", HardwareId, &DeviceNode->InstancePath);
+
+    PiQueueDeviceAction(Pdo, PiActionEnumDeviceTree, NULL, NULL);
 
     /* Return the PDO */
     if (DeviceObject) *DeviceObject = Pdo;

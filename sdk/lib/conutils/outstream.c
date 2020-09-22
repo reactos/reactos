@@ -84,12 +84,12 @@ INT
 __stdcall
 ConWrite(
     IN PCON_STREAM Stream,
-    IN PTCHAR szStr,
-    IN DWORD  len)
+    IN PCTCH szStr,
+    IN DWORD len)
 {
 #ifndef USE_CRT
     DWORD TotalLen = len, dwNumBytes = 0;
-    PVOID p;
+    LPCVOID p;
 
     /* If we do not write anything, just return */
     if (!szStr || len == 0)
@@ -168,30 +168,30 @@ ConWrite(
         {
             /* Loop until we find a newline character */
             p = szStr;
-            while (len > 0 && *(PWCHAR)p != L'\n')
+            while (len > 0 && *(PCWCH)p != L'\n')
             {
                 /* Advance one character */
-                p = (PVOID)((PWCHAR)p + 1);
+                p = (LPCVOID)((PCWCH)p + 1);
                 --len;
             }
 
             /* Write everything up to \n */
-            dwNumBytes = ((PWCHAR)p - (PWCHAR)szStr) * sizeof(WCHAR);
+            dwNumBytes = ((PCWCH)p - (PCWCH)szStr) * sizeof(WCHAR);
             WriteFile(Stream->hHandle, szStr, dwNumBytes, &dwNumBytes, NULL);
 
             /*
              * If we hit a newline and the previous character is not a carriage-return,
              * emit a carriage-return + newline sequence, otherwise just emit the newline.
              */
-            if (len > 0 && *(PWCHAR)p == L'\n')
+            if (len > 0 && *(PCWCH)p == L'\n')
             {
-                if (p == (PVOID)szStr || (p > (PVOID)szStr && *((PWCHAR)p - 1) != L'\r'))
+                if (p == (LPCVOID)szStr || (p > (LPCVOID)szStr && *((PCWCH)p - 1) != L'\r'))
                     WriteFile(Stream->hHandle, L"\r\n", 2 * sizeof(WCHAR), &dwNumBytes, NULL);
                 else
                     WriteFile(Stream->hHandle, L"\n", sizeof(WCHAR), &dwNumBytes, NULL);
 
                 /* Skip \n */
-                p = (PVOID)((PWCHAR)p + 1);
+                p = (LPCVOID)((PCWCH)p + 1);
                 --len;
             }
             szStr = p;
@@ -252,30 +252,30 @@ ConWrite(
         {
             /* Loop until we find a newline character */
             p = szStr;
-            while (len > 0 && *(PCHAR)p != '\n')
+            while (len > 0 && *(PCCH)p != '\n')
             {
                 /* Advance one character */
-                p = (PVOID)((PCHAR)p + 1);
+                p = (LPCVOID)((PCCH)p + 1);
                 --len;
             }
 
             /* Write everything up to \n */
-            dwNumBytes = ((PCHAR)p - (PCHAR)szStr) * sizeof(CHAR);
+            dwNumBytes = ((PCCH)p - (PCCH)szStr) * sizeof(CHAR);
             WriteFile(Stream->hHandle, szStr, dwNumBytes, &dwNumBytes, NULL);
 
             /*
              * If we hit a newline and the previous character is not a carriage-return,
              * emit a carriage-return + newline sequence, otherwise just emit the newline.
              */
-            if (len > 0 && *(PCHAR)p == '\n')
+            if (len > 0 && *(PCCH)p == '\n')
             {
-                if (p == (PVOID)szStr || (p > (PVOID)szStr && *((PCHAR)p - 1) != '\r'))
+                if (p == (LPCVOID)szStr || (p > (LPCVOID)szStr && *((PCCH)p - 1) != '\r'))
                     WriteFile(Stream->hHandle, "\r\n", 2, &dwNumBytes, NULL);
                 else
                     WriteFile(Stream->hHandle, "\n", 1, &dwNumBytes, NULL);
 
                 /* Skip \n */
-                p = (PVOID)((PCHAR)p + 1);
+                p = (LPCVOID)((PCCH)p + 1);
                 --len;
             }
             szStr = p;
@@ -397,8 +397,8 @@ do { \
 INT
 ConStreamWrite(
     IN PCON_STREAM Stream,
-    IN PTCHAR szStr,
-    IN DWORD  len)
+    IN PCTCH szStr,
+    IN DWORD len)
 {
     INT Len;
     CON_STREAM_WRITE2(Stream, szStr, len, Len);
@@ -426,7 +426,7 @@ ConStreamWrite(
 INT
 ConPuts(
     IN PCON_STREAM Stream,
-    IN LPWSTR szStr)
+    IN PCWSTR szStr)
 {
     INT Len;
 
@@ -465,7 +465,7 @@ ConPuts(
 INT
 ConPrintfV(
     IN PCON_STREAM Stream,
-    IN LPWSTR  szStr,
+    IN PCWSTR  szStr,
     IN va_list args)
 {
     INT Len;
@@ -474,12 +474,12 @@ ConPrintfV(
     // Len = vfwprintf(Stream->fStream, szStr, args); // vfprintf for direct ANSI
 
     /*
-     * Reuse szStr as the pointer to end-of-string, to compute
-     * the string length instead of calling wcslen().
+     * Re-use szStr as the pointer to end-of-string, so as
+     * to compute the string length instead of calling wcslen().
      */
     // StringCchVPrintfW(bufSrc, ARRAYSIZE(bufSrc), szStr, args);
     // Len = wcslen(bufSrc);
-    StringCchVPrintfExW(bufSrc, ARRAYSIZE(bufSrc), &szStr, NULL, 0, szStr, args);
+    StringCchVPrintfExW(bufSrc, ARRAYSIZE(bufSrc), (PWSTR*)&szStr, NULL, 0, szStr, args);
     Len = szStr - bufSrc;
 
     CON_STREAM_WRITE2(Stream, bufSrc, Len, Len);
@@ -519,7 +519,7 @@ INT
 __cdecl
 ConPrintf(
     IN PCON_STREAM Stream,
-    IN LPWSTR szStr,
+    IN PCWSTR szStr,
     ...)
 {
     INT Len;

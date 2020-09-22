@@ -33,7 +33,7 @@ Aby usunąć istniejący alias:\n\
     STRING_CALL_HELP "Umożliwia wywołanie programu wsadowego z poziomu innego.\n\n\
 CALL [napęd:][ścieżka]nazwa_pliku [parametry]\n\n\
   parametry   Wszelkie dane, wymagane przez program wsadowy,\n\
-               który ma zostać wywołany."
+               który ma zostać wywołany.\n"
     STRING_CD_HELP "Zmienia obecny katalog albo wyświetla jego pełną nazwę.\n\n\
 CHDIR [/D][napęd:][ścieżka]\n\
 CHDIR[..|.]\n\
@@ -202,7 +202,7 @@ PUSHD [ścieżka | ..]\n\n\
   ECHO [wiadomość]\n\
   ECHO.             wyświetla pustą linię\n\n\
 Wpisz ECHO bez żadnych parametrów, by wyświetlić obecne ustawienie."
-    STRING_ECHO_HELP5 "ECHO jest %s\n"
+    STRING_ECHO_HELP5 "ECHO jest %s.\n"
     STRING_EXIT_HELP "Zamyka okno konsoli.\n\nEXIT [/b] [kod]\n\n\
   /B            Zamyka jedynie plik wsadowy.\n\
                 Jeśli użyty będzie poza plikiem wsadowym, zamknie cmd.exe\n\
@@ -237,7 +237,7 @@ By użyć FOR w pliku wsadowym, oznacz zmienną jako %%zmienna zamiast\n\
     STRING_GOTO_HELP1 "Przekierowuje CMD do oznaczonej linii w programie wsadowym.\n\n\
 GOTO etykieta\n\n\
   etykieta  Ciąg znaków, użyty w programie wsadowym do oznaczenia linii.\n\n\
-Możesz oznaczyć linie dowolną etykietą, zaczynając od dwukropka."
+Możesz oznaczyć linie dowolną etykietą, zaczynając od dwukropka.\n"
     STRING_IF_HELP1 "Wykonuje przetwarzanie warunkowe w programach wsadowych.\n\n\
   IF [NOT] ERRORLEVEL numer komenda\n\
   IF [NOT] ciąg_znaków1==ciąg_znaków2 komenda\n\
@@ -272,9 +272,9 @@ Jeśli nie zostały użyte zarówno /H jak i /J, zostanie utworzone dowiązanie 
     STRING_MOVE_HELP1 "Nadpisać %s (Tak/Nie/Zawsze)? "
     STRING_MOVE_HELP2 "Przenosi, a także zmienia nazwy plików i katalogów.\n\n\
 Aby przenieść jeden lub więcej plików:\n\
-MOVE [/N][napęd:][ścieżka]nazwa_pliku1[,...] cel\n\n\
+MOVE [/N][/Y|/-Y][napęd:][ścieżka]nazwa_pliku1[,...] cel\n\n\
 Aby zmienić nazwę katalogu:\n\
-MOVE [/N][napęd:][ścieżka]nazwa1 nazwa2\n\n\
+MOVE [/N][/Y|/-Y][napęd:][ścieżka]nazwa1 nazwa2\n\n\
   [napęd:][ścieżka]nazwa  Wyznacza scieżkę dostępu do pliku lub\n\
                           plików, które chcesz przenieść.\n\
   /N                      Nic. Zrób wszystko, oprócz przenoszenia plików/katalogów.\n\n\
@@ -295,6 +295,9 @@ PATH [[napęd:]ścieżka[;...]]\nPATH ;\n\n\
 Wpisz PATH ; jeśli chcesz wyczyścić wszystkie zapisane ścieżki dostępu i zmusić konsolę\n\
 do przeszukiwania wyłącznie katalogu bieżącego.\n\
 Wpisz PATH bez żadnych parametrów, by wyświetlić zapisane ścieżki dostępu.\n"
+    STRING_PAUSE_HELP1 "Zatrzymuje wykonywanie programu wsadowego i pokazuje wiadomość:\n\
+'Naciśnij dowolny klawisz, aby kontynuować...' albo inną dowolną.\n\n\
+PAUSE [wiadomość]"
     STRING_PROMPT_HELP1 "Zmienia znak zachęty.\n\n\
 PROMPT [tekst]\n\n\
   tekst   Definiuje nowy znak zachęty.\n\n\
@@ -317,16 +320,13 @@ Znak zachęty może składać się z normalnych znaków, a także poniższych sy
   $V   Wersja systemu\n\
   $_   Znak CR/LF\n\
   $$   $ (dolar)\n"
-    STRING_PAUSE_HELP1 "Zatrzymuje wykonywanie programu wsadowego i pokazuje wiadomość:\n\
-'Naciśnij dowolny klawisz, aby kontynuować...' albo inną dowolną.\n\n\
-PAUSE [wiadomość]"
     STRING_PROMPT_HELP2 "  $+   Wyświetla obecny poziom stosu katalogów"
     STRING_PROMPT_HELP3 "\nWpisz PROMPT bez żadnych parametrów, by powrócić do ustawień domyślnych."
     STRING_REM_HELP "Definiuje linię komentarza w pliku wsadowym.\n\nREM [komentarz]"
     STRING_RMDIR_HELP "Usuwa katalog.\n\n\
-RMDIR [napęd:]ścieżka\nRD [napęd:]ścieżka\n\
-/S      Kasuje także wszystkie pliki i podkatalogi w danym katalogu\n\
-/Q      Nie wyświetla prośby o potwierdzenie\n"
+RMDIR [/S] [/Q] [napęd:]ścieżka\nRD [/S] [/Q] [napęd:]ścieżka\n\
+  /S    Kasuje także wszystkie pliki i podkatalogi w danym katalogu.\n\
+  /Q    Nie wyświetla prośby o potwierdzenie.\n"
     STRING_RMDIR_HELP2 "Katalog nie jest pusty!\n"
     STRING_REN_HELP1 "Zmienia nazwę pliku/katalogu (także wielu).\n\n\
 RENAME [/E /N /P /Q /S /T] stara_nazwa ... nowa_nazwa\n\
@@ -473,9 +473,9 @@ title         nowy tytuł okna\n"
     STRING_ALIAS_ERROR "Linia poleceń zbyt długa po rozszerzeniu aliasa!\n"
     STRING_ASSOC_ERROR "Nie można odnaleźć skojarzenia pliku dla rozszerzenia %s\n"
     STRING_BATCH_ERROR "Błąd podczas otwierania pliku wsadowego\n"
-    STRING_CHOICE_ERROR "Parametr niepoprawny. Poprawna forma: /C[:]opcja"
-    STRING_CHOICE_ERROR_TXT "Parametr niepoprawny. Poprawna forma: /T[:]c,nn"
-    STRING_CHOICE_ERROR_OPTION "Zły parametr: %s"
+    STRING_CHOICE_ERROR "Parametr niepoprawny. Poprawna forma: /C[:]opcja\n"
+    STRING_CHOICE_ERROR_TXT "Parametr niepoprawny. Poprawna forma: /T[:]c,nn\n"
+    STRING_CHOICE_ERROR_OPTION "Zły parametr: %s\n"
     STRING_CMD_ERROR1 "Nie można przekierować danych z pliku %s\n"
     STRING_CMD_ERROR2 "Błąd podczas tworzenia potokowego pliku tymczasowego\n"
     STRING_CMD_ERROR3 "Nie można przekierować do pliku %s\n"
@@ -500,9 +500,9 @@ title         nowy tytuł okna\n"
     STRING_FOR_ERROR4 "Brak komendy po 'do'."
     STRING_FREE_ERROR1 "Nieprawidłowa litera napędu"
     STRING_FREE_ERROR2 "brak"
-    STRING_GOTO_ERROR1 "Brak etykiety dla GOTO"
+    STRING_GOTO_ERROR1 "Brak etykiety dla GOTO\n"
     STRING_GOTO_ERROR2 "Etykieta '%s' nie została znaleziona\n"
-    STRING_MD_ERROR "Istnieje już plik lub podkatalog o tej nazwie.\n"
+    STRING_MD_ERROR "Istnieje już plik lub podkatalog %s o tej nazwie.\n"
     STRING_MD_ERROR2 "Ścieżka do nowego katalogu nie jest prawidłowa.\n"
     STRING_MOVE_ERROR1 "[OK]\n"
     STRING_MOVE_ERROR2 "[Błąd]\n"
@@ -521,9 +521,9 @@ title         nowy tytuł okna\n"
     STRING_ERROR_BADCOMMAND "Nieprawidłowa komenda lub nazwa pliku - %s\n"
     STRING_ERROR_OUT_OF_MEMORY "Błąd - brak pamięci.\n"
     STRING_ERROR_CANNOTPIPE "Błąd potoków! Nie można otworzyć pliku tymczasowego.\n"
-    STRING_ERROR_D_PAUSEMSG "Naciśnij dowolny klawisz, aby kontynuować . . ."
+    STRING_ERROR_D_PAUSEMSG "Naciśnij dowolny klawisz, aby kontynuować . . . "
     STRING_ERROR_DRIVER_NOT_READY "Napęd nie jest gotowy"
-    STRING_PATH_ERROR "CMD: Poza środowiskiem '%s'\n"
+    STRING_SET_ENV_ERROR "Zmienna środowiskowa '%s' nie jest zdefiniowana\n"
     STRING_REPLACE_ERROR1 "Nieprawidłowy parametr - %s\n"
     STRING_REPLACE_ERROR2 "Ścieżka nie została odnaleziona - %s\n"
     STRING_REPLACE_ERROR3 "Nazwa pliku, katalogu lub napędu nie jest prawidłowa.\n"
@@ -547,8 +547,8 @@ title         nowy tytuł okna\n"
     STRING_MKLINK_CREATED_JUNCTION "Punkt dowiązania katalogów utworzony dla %s <<===>> %s\n"
     STRING_MORE "Więcej? "
     STRING_CANCEL_BATCH_FILE "\r\nWciśnięto Ctrl-Break.  Anulować wykonanie pliku wsadowego? (Tak/Nie/Zawsze) "
-    STRING_INVALID_OPERAND "Nieprawidłowy argument operatora."
-    STRING_EXPECTED_CLOSE_PAREN "Oczekiwano ')'."
-    STRING_EXPECTED_NUMBER_OR_VARIABLE "Oczekiwano liczby lub nazwy zmiennej."
-    STRING_SYNTAX_COMMAND_INCORRECT "Składnia komendy jest nieprawidłowa."
+    STRING_INVALID_OPERAND "Nieprawidłowy argument operatora.\n"
+    STRING_EXPECTED_CLOSE_PAREN "Oczekiwano ')'.\n"
+    STRING_EXPECTED_NUMBER_OR_VARIABLE "Oczekiwano liczby lub nazwy zmiennej.\n"
+    STRING_SYNTAX_COMMAND_INCORRECT "Składnia komendy jest nieprawidłowa.\n"
 END

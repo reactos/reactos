@@ -32,7 +32,7 @@
 
 #include "precomp.h"
 
-static INT GenericCmp(INT (*StringCmp)(LPCTSTR, LPCTSTR),
+static INT GenericCmp(INT (WINAPI *StringCmp)(LPCTSTR, LPCTSTR),
                       LPCTSTR Left, LPCTSTR Right)
 {
     TCHAR *end;
@@ -49,17 +49,17 @@ static INT GenericCmp(INT (*StringCmp)(LPCTSTR, LPCTSTR),
     return StringCmp(Left, Right);
 }
 
-INT cmd_if (LPTSTR param)
+INT cmd_if(LPTSTR param)
 {
-    TRACE ("cmd_if: (\'%s\')\n", debugstr_aw(param));
+    TRACE("cmd_if(\'%s\')\n", debugstr_aw(param));
 
     if (!_tcsncmp (param, _T("/?"), 2))
     {
-        ConOutResPaging(TRUE,STRING_IF_HELP1);
+        ConOutResPaging(TRUE, STRING_IF_HELP1);
         return 0;
     }
 
-    error_syntax(param);
+    ParseErrorEx(param);
     return 1;
 }
 
@@ -78,24 +78,23 @@ INT ExecuteIf(PARSED_COMMAND *Cmd)
     Right = DoDelayedExpansion(Cmd->If.RightArg);
     if (!Right)
     {
-        cmd_free(Left);
+        if (Left) cmd_free(Left);
         return 1;
     }
 
-    if (Cmd->If.Operator == IF_CMDEXTVERSION)
+    if (bEnableExtensions && (Cmd->If.Operator == IF_CMDEXTVERSION))
     {
-        /* IF CMDEXTVERSION n: check if Command Extensions version
-         * is greater or equal to n */
+        /* IF CMDEXTVERSION n: check if Command Extensions
+         * version is greater or equal to n. */
         DWORD n = _tcstoul(Right, &param, 10);
         if (*param != _T('\0'))
         {
             error_syntax(Right);
-            cmd_free(Right);
-            return 1;
+            goto fail;
         }
-        result = (2 >= n);
+        result = (CMDEXTVERSION >= n);
     }
-    else if (Cmd->If.Operator == IF_DEFINED)
+    else if (bEnableExtensions && (Cmd->If.Operator == IF_DEFINED))
     {
         /* IF DEFINED var: check if environment variable exists */
         result = (GetEnvVarOrSpecial(Right) != NULL);
@@ -107,15 +106,14 @@ INT ExecuteIf(PARSED_COMMAND *Cmd)
         if (*param != _T('\0'))
         {
             error_syntax(Right);
-            cmd_free(Right);
-            return 1;
+            goto fail;
         }
         result = (nErrorLevel >= n);
     }
     else if (Cmd->If.Operator == IF_EXIST)
     {
         BOOL IsDir;
-        INT Size;
+        SIZE_T Size;
         WIN32_FIND_DATA f;
         HANDLE hFind;
         DWORD attrs;
@@ -140,7 +138,7 @@ INT ExecuteIf(PARSED_COMMAND *Cmd)
             attrs = GetFileAttributes(Right);
         }
 
-        if (attrs == 0xFFFFFFFF)
+        if (attrs == INVALID_FILE_ATTRIBUTES)
             result = FALSE;
         else if (IsDir)
             result = ((attrs & FILE_ATTRIBUTE_DIRECTORY) == FILE_ATTRIBUTE_DIRECTORY);
@@ -152,45 +150,62 @@ INT ExecuteIf(PARSED_COMMAND *Cmd)
     }
     else
     {
-        /* Do case-insensitive string comparisons if /I specified */
-        INT (*StringCmp)(LPCTSTR, LPCTSTR) =
-            (Cmd->If.Flags & IFFLAG_IGNORECASE) ? _tcsicmp : _tcscmp;
+        /*
+         * Do case-insensitive string comparisons if /I specified.
+         *
+         * Since both strings are user-specific, use kernel32!lstrcmp(i)
+         * instead of CRT!_tcs(i)cmp, so as to use the correct
+         * current thread locale information.
+         */
+        INT (WINAPI *StringCmp)(LPCTSTR, LPCTSTR) =
+            (Cmd->If.Flags & IFFLAG_IGNORECASE) ? lstrcmpi : lstrcmp;
 
         if (Cmd->If.Operator == IF_STRINGEQ)
         {
             /* IF str1 == str2 */
-            result = StringCmp(Left, Right) == 0;
+            result = (StringCmp(Left, Right) == 0);
         }
-        else
+        else if (bEnableExtensions)
         {
             result = GenericCmp(StringCmp, Left, Right);
             switch (Cmd->If.Operator)
             {
             case IF_EQU: result = (result == 0); break;
             case IF_NEQ: result = (result != 0); break;
-            case IF_LSS: result = (result < 0); break;
+            case IF_LSS: result = (result <  0); break;
             case IF_LEQ: result = (result <= 0); break;
-            case IF_GTR: result = (result > 0); break;
+            case IF_GTR: result = (result >  0); break;
             case IF_GEQ: result = (result >= 0); break;
+            default: goto unknownOp;
             }
+        }
+        else
+        {
+unknownOp:
+            ERR("Unknown IF operator 0x%x\n", Cmd->If.Operator);
+            ASSERT(FALSE);
+            goto fail;
         }
     }
 
-    cmd_free(Left);
+    if (Left) cmd_free(Left);
     cmd_free(Right);
 
     if (result ^ ((Cmd->If.Flags & IFFLAG_NEGATE) != 0))
     {
-        /* full condition was true, do the command */
+        /* Full condition was true, do the command */
         return ExecuteCommand(Cmd->Subcommands);
     }
     else
     {
-        /* full condition was false, do the "else" command if there is one */
-        if (Cmd->Subcommands->Next)
-            return ExecuteCommand(Cmd->Subcommands->Next);
-        return 0;
+        /* Full condition was false, do the "else" command if there is one */
+        return ExecuteCommand(Cmd->Subcommands->Next);
     }
+
+fail:
+    if (Left) cmd_free(Left);
+    cmd_free(Right);
+    return 1;
 }
 
 /* EOF */

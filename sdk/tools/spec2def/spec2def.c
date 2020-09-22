@@ -227,6 +227,13 @@ OutputHeader_stub(FILE *file)
         fprintf(file, "WINE_DECLARE_DEBUG_CHANNEL(relay);\n");
     }
 
+    /* __int128 is not supported on x86, so use a custom type */
+    fprintf(file, "\n"
+                  "typedef struct {\n"
+                  "    __int64 lower;\n"
+                  "    __int64 upper;\n"
+                  "} MyInt128;\n");
+
     fprintf(file, "\n");
 }
 
@@ -297,15 +304,15 @@ OutputLine_stub(FILE *file, EXPORT *pexp)
             if (i != 0) fprintf(file, ", ");
             switch (pexp->anArgs[i])
             {
-                case ARG_LONG: fprintf(file, "long"); break;
-                case ARG_PTR:  fprintf(file, "void*"); break;
-                case ARG_STR:  fprintf(file, "char*"); break;
-                case ARG_WSTR: fprintf(file, "wchar_t*"); break;
-                case ARG_DBL:  fprintf(file, "double"); break;
-                case ARG_INT64 :  fprintf(file, "__int64"); break;
-                /* __int128 is not supported on x86, and int128 in spec files most often represents a GUID */
-                case ARG_INT128 :  fprintf(file, "GUID"); break;
-                case ARG_FLOAT: fprintf(file, "float"); break;
+                case ARG_LONG:   fprintf(file, "long");     break;
+                case ARG_PTR:    fprintf(file, "void*");    break;
+                case ARG_STR:    fprintf(file, "char*");    break;
+                case ARG_WSTR:   fprintf(file, "wchar_t*"); break;
+                case ARG_DBL:    fprintf(file, "double");   break;
+                case ARG_INT64:  fprintf(file, "__int64");  break;
+                /* __int128 is not supported on x86, so use a custom type */
+                case ARG_INT128: fprintf(file, "MyInt128"); break;
+                case ARG_FLOAT:  fprintf(file, "float");    break;
             }
             fprintf(file, " a%d", i);
         }
@@ -345,14 +352,14 @@ OutputLine_stub(FILE *file, EXPORT *pexp)
         if (i != 0) fprintf(file, ",");
         switch (pexp->anArgs[i])
         {
-            case ARG_LONG: fprintf(file, "0x%%lx"); break;
-            case ARG_PTR:  fprintf(file, "0x%%p"); break;
-            case ARG_STR:  fprintf(file, "'%%s'"); break;
-            case ARG_WSTR: fprintf(file, "'%%ws'"); break;
-            case ARG_DBL:  fprintf(file, "%%f"); break;
-            case ARG_INT64: fprintf(file, "%%\"PRIx64\""); break;
-            case ARG_INT128: fprintf(file, "'%%s'"); break;
-            case ARG_FLOAT: fprintf(file, "%%f"); break;
+            case ARG_LONG:   fprintf(file, "0x%%lx"); break;
+            case ARG_PTR:    fprintf(file, "0x%%p");  break;
+            case ARG_STR:    fprintf(file, "'%%s'");  break;
+            case ARG_WSTR:   fprintf(file, "'%%ws'"); break;
+            case ARG_DBL:    fprintf(file, "%%f");    break;
+            case ARG_INT64:  fprintf(file, "0x%%\"PRIx64\""); break;
+            case ARG_INT128: fprintf(file, "0x%%\"PRIx64\"-0x%%\"PRIx64\""); break;
+            case ARG_FLOAT:  fprintf(file, "%%f");    break;
         }
     }
     fprintf(file, ")\\n\"");
@@ -362,14 +369,13 @@ OutputLine_stub(FILE *file, EXPORT *pexp)
         fprintf(file, ", ");
         switch (pexp->anArgs[i])
         {
-            case ARG_LONG: fprintf(file, "(long)a%d", i); break;
-            case ARG_PTR:  fprintf(file, "(void*)a%d", i); break;
-            case ARG_STR:  fprintf(file, "(char*)a%d", i); break;
-            case ARG_WSTR: fprintf(file, "(wchar_t*)a%d", i); break;
-            case ARG_DBL:  fprintf(file, "(double)a%d", i); break;
-            case ARG_INT64: fprintf(file, "(__int64)a%d", i); break;
-            case ARG_INT128: fprintf(file, "wine_dbgstr_guid(&a%d)", i); break;
-            case ARG_FLOAT: fprintf(file, "(float)a%d", i); break;
+            case ARG_LONG: case ARG_PTR: case ARG_STR:
+            case ARG_WSTR: case ARG_DBL: case ARG_INT64:
+                fprintf(file, "a%d", i); break;
+            case ARG_INT128:
+                fprintf(file, "a%d.lower, a%d.upper", i, i); break;
+            case ARG_FLOAT:
+                fprintf(file, "a%d", i); break;
         }
     }
     fprintf(file, ");\n");
@@ -404,7 +410,7 @@ OutputLine_stub(FILE *file, EXPORT *pexp)
     {
         if (pexp->uFlags & FL_RET64)
         {
-            fprintf(file, "\tif (TRACE_ON(relay))\n\t\tDPRINTF(\"%s: %.*s: retval = %%\"PRIx64\"\\n\", retval);\n",
+            fprintf(file, "\tif (TRACE_ON(relay))\n\t\tDPRINTF(\"%s: %.*s: retval = 0x%%\"PRIx64\"\\n\", retval);\n",
                     pszDllName, pexp->strName.len, pexp->strName.buf);
         }
         else

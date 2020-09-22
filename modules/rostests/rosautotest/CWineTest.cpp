@@ -213,6 +213,16 @@ CWineTest::GetNextTestInfo()
 {
     while(!m_CurrentFile.empty() || GetNextFile())
     {
+        /* The user asked for a list of all modules */
+        if (Configuration.ListModulesOnly())
+        {
+            std::stringstream ss;
+            ss << "Module: " << UnicodeToAscii(m_CurrentFile) << endl;
+            m_CurrentFile.clear();
+            StringOut(ss.str());
+            continue;
+        }
+
         try
         {
             while(GetNextTest())

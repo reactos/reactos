@@ -7,7 +7,8 @@
 @ cdecl -arch=i386 ??1CVssWriter@@UAE@XZ(ptr) VSSAPI_CVssWriter_dtor
 @ stub ?AreComponentsSelected@CVssJetWriter@@IBG_NXZ
 @ stub ?AreComponentsSelected@CVssWriter@@IBG_NXZ
-@ stub ?CreateVssBackupComponents@@YGJPAPAVIVssBackupComponents@@@Z
+@ stdcall -arch=i386 ?CreateVssBackupComponents@@YGJPAPAVIVssBackupComponents@@@Z(ptr) VSSAPI_CreateVssBackupComponents
+@ stdcall -arch=amd64 ?CreateVssBackupComponents@@YAJPEAPEAVIVssBackupComponents@@@Z(ptr) VSSAPI_CreateVssBackupComponents
 @ stub ?CreateVssExamineWriterMetadata@@YGJPAGPAPAVIVssExamineWriterMetadata@@@Z
 @ stub ?CreateVssSnapshotSetDescription@@YGJU_GUID@@JPAPAVIVssSnapshotSetDescription@@@Z
 @ stub ?GetBackupType@CVssJetWriter@@IBG?AW4_VSS_BACKUP_TYPE@@XZ
@@ -70,7 +71,7 @@
 @ cdecl -arch=i386 ?Subscribe@CVssWriter@@QAGJK@Z(ptr long) VSSAPI_CVssWriter_Subscribe
 @ stub ?Uninitialize@CVssJetWriter@@QAGXXZ
 @ cdecl -arch=i386 ?Unsubscribe@CVssWriter@@QAGJXZ(ptr) VSSAPI_CVssWriter_Unsubscribe
-@ stub CreateVssBackupComponentsInternal
+@ stdcall CreateVssBackupComponentsInternal(ptr)
 @ stub CreateVssExamineWriterMetadataInternal
 @ stub CreateVssExpressWriterInternal
 @ stub CreateWriter

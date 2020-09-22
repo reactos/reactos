@@ -32,6 +32,8 @@ RTL_RESOURCE JobListLock;
 LIST_ENTRY StartListHead;
 RTL_RESOURCE StartListLock;
 
+static WORD wDaysArray[13] = {0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
+
 
 /* FUNCTIONS *****************************************************************/
 
@@ -455,8 +457,6 @@ DaysOfMonth(
     WORD wMonth,
     WORD wYear)
 {
-    WORD wDaysArray[13] = {0, 31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31};
-
     if (wMonth == 2 && wYear % 4 == 0 && wYear % 400 != 0)
         return 29;
 
@@ -468,62 +468,134 @@ VOID
 CalculateNextStartTime(
     _In_ PJOB pJob)
 {
-    SYSTEMTIME StartTime;
-    FILETIME FileTime;
-    DWORD_PTR Now;
+    SYSTEMTIME CurrentSystemTime, StartSystemTime;
+    FILETIME StartFileTime;
+    WORD wDaysOffset, wTempOffset, i, wJobDayOfWeek, wJobDayOfMonth;
+    DWORD_PTR CurrentTimeMs;
+    BOOL bDaysOffsetValid;
 
     TRACE("CalculateNextStartTime(%p)\n", pJob);
+    TRACE("JobTime: %lu\n", pJob->JobTime);
+    TRACE("DaysOfWeek: 0x%x\n", pJob->DaysOfWeek);
+    TRACE("DaysOfMonth: 0x%x\n", pJob->DaysOfMonth);
 
-    GetLocalTime(&StartTime);
+    GetLocalTime(&CurrentSystemTime);
 
-    Now = (DWORD_PTR)StartTime.wHour * 3600000 +
-          (DWORD_PTR)StartTime.wMinute * 60000;
+    CurrentTimeMs = (DWORD_PTR)CurrentSystemTime.wHour * 3600000 +
+                    (DWORD_PTR)CurrentSystemTime.wMinute * 60000;
 
-    StartTime.wMilliseconds = 0;
-    StartTime.wSecond = 0;
-    StartTime.wHour = (WORD)(pJob->JobTime / 3600000);
-    StartTime.wMinute = (WORD)((pJob->JobTime % 3600000) / 60000);
-
-    if (pJob->DaysOfMonth != 0)
+    bDaysOffsetValid = FALSE;
+    wDaysOffset = 0;
+    if ((pJob->DaysOfWeek == 0) && (pJob->DaysOfMonth == 0))
     {
-         FIXME("Support DaysOfMonth!\n");
-    }
-    else if (pJob->DaysOfWeek != 0)
-    {
-         FIXME("Support DaysOfWeek!\n");
+        if (CurrentTimeMs >= pJob->JobTime)
+        {
+            TRACE("Tomorrow!\n");
+            wDaysOffset = 1;
+        }
+
+        bDaysOffsetValid = TRUE;
     }
     else
     {
-        /* Start the job tomorrow */
-        if (Now > pJob->JobTime)
+        if (pJob->DaysOfWeek != 0)
         {
-            if (StartTime.wDay + 1 > DaysOfMonth(StartTime.wMonth, StartTime.wYear))
+            TRACE("DaysOfWeek!\n");
+            for (i = 0; i < 7; i++)
             {
-                if (StartTime.wMonth == 12)
+                if (pJob->DaysOfWeek & (1 << i))
                 {
-                    StartTime.wDay = 1;
-                    StartTime.wMonth = 1;
-                    StartTime.wYear++;
-                }
-                else
-                {
-                    StartTime.wDay = 1;
-                    StartTime.wMonth++;
+                    /* Adjust the range */
+                    wJobDayOfWeek = (i + 1) % 7;
+                    TRACE("wJobDayOfWeek: %hu\n", wJobDayOfWeek);
+                    TRACE("CurrentSystemTime.wDayOfWeek: %hu\n", CurrentSystemTime.wDayOfWeek);
+
+                    /* Calculate the days offset */
+                    if ((CurrentSystemTime.wDayOfWeek > wJobDayOfWeek ) ||
+                        ((CurrentSystemTime.wDayOfWeek == wJobDayOfWeek) && (CurrentTimeMs >= pJob->JobTime)))
+                    {
+                        wTempOffset = 7 - CurrentSystemTime.wDayOfWeek + wJobDayOfWeek;
+                        TRACE("wTempOffset: %hu\n", wTempOffset);
+                    }
+                    else
+                    {
+                        wTempOffset = wJobDayOfWeek - CurrentSystemTime.wDayOfWeek;
+                        TRACE("wTempOffset: %hu\n", wTempOffset);
+                    }
+
+                    /* Use the smallest offset */
+                    if (bDaysOffsetValid == FALSE)
+                    {
+                        wDaysOffset = wTempOffset;
+                        bDaysOffsetValid = TRUE;
+                    }
+                    else
+                    {
+                        if (wTempOffset < wDaysOffset)
+                            wDaysOffset = wTempOffset;
+                    }
                 }
             }
-            else
+        }
+
+        if (pJob->DaysOfMonth != 0)
+        {
+            FIXME("Support DaysOfMonth!\n");
+            for (i = 0; i < 31; i++)
             {
-                StartTime.wDay++;
+                if (pJob->DaysOfMonth & (1 << i))
+                {
+                    /* Adjust the range */
+                    wJobDayOfMonth = i + 1;
+                    FIXME("wJobDayOfMonth: %hu\n", wJobDayOfMonth);
+                    FIXME("CurrentSystemTime.wDay: %hu\n", CurrentSystemTime.wDay);
+
+                    if ((CurrentSystemTime.wDay > wJobDayOfMonth) ||
+                        ((CurrentSystemTime.wDay == wJobDayOfMonth) && (CurrentTimeMs >= pJob->JobTime)))
+                    {
+                        wTempOffset = DaysOfMonth(CurrentSystemTime.wMonth, CurrentSystemTime.wYear) -
+                                      CurrentSystemTime.wDay + wJobDayOfMonth;
+                        FIXME("wTempOffset: %hu\n", wTempOffset);
+                    }
+                    else
+                    {
+                        wTempOffset = wJobDayOfMonth - CurrentSystemTime.wDay;
+                        FIXME("wTempOffset: %hu\n", wTempOffset);
+                    }
+
+                    /* Use the smallest offset */
+                    if (bDaysOffsetValid == FALSE)
+                    {
+                        wDaysOffset = wTempOffset;
+                        bDaysOffsetValid = TRUE;
+                    }
+                    else
+                    {
+                        if (wTempOffset < wDaysOffset)
+                            wDaysOffset = wTempOffset;
+                    }
+                }
             }
         }
     }
 
-    TRACE("Next start: %02hu:%02hu %02hu.%02hu.%hu\n", StartTime.wHour,
-          StartTime.wMinute, StartTime.wDay, StartTime.wMonth, StartTime.wYear);
+    TRACE("wDaysOffset: %hu\n", wDaysOffset);
 
-    SystemTimeToFileTime(&StartTime, &FileTime);
-    pJob->StartTime.u.LowPart = FileTime.dwLowDateTime;
-    pJob->StartTime.u.HighPart = FileTime.dwHighDateTime;
+    CopyMemory(&StartSystemTime, &CurrentSystemTime, sizeof(SYSTEMTIME));
+
+    StartSystemTime.wMilliseconds = 0;
+    StartSystemTime.wSecond = 0;
+    StartSystemTime.wHour = (WORD)(pJob->JobTime / 3600000);
+    StartSystemTime.wMinute = (WORD)((pJob->JobTime % 3600000) / 60000);
+
+    SystemTimeToFileTime(&StartSystemTime, &StartFileTime);
+
+    pJob->StartTime.u.LowPart = StartFileTime.dwLowDateTime;
+    pJob->StartTime.u.HighPart = StartFileTime.dwHighDateTime;
+    if (bDaysOffsetValid && wDaysOffset != 0)
+    {
+        pJob->StartTime.QuadPart += ((ULONGLONG)wDaysOffset * 24 * 60 * 60 * 10000);
+    }
 }
 
 

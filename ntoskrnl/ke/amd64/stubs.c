@@ -71,9 +71,9 @@ KiDpcInterruptHandler(VOID)
         KiSwapContext(APC_LEVEL, OldThread);
     }
 
-    /* Go back to old irql and disable interrupts */
-    KeLowerIrql(OldIrql);
+    /* Disable interrupts and go back to old irql */
     _disable();
+    KeLowerIrql(OldIrql);
 }
 
 
@@ -207,7 +207,7 @@ KiInitializeUserApc(IN PKEXCEPTION_FRAME ExceptionFrame,
                     IN PVOID SystemArgument1,
                     IN PVOID SystemArgument2)
 {
-    CONTEXT Context;
+    CONTEXT Context = { 0 };
     ULONG64 AlignedRsp, Stack;
     EXCEPTION_RECORD SehExceptRecord;
 
@@ -329,6 +329,9 @@ KiSystemCallHandler(
     /* Save the old trap frame and set the new */
     TrapFrame->TrapFrame = (ULONG64)Thread->TrapFrame;
     Thread->TrapFrame = TrapFrame;
+
+    /* We don't have an exception frame yet */
+    TrapFrame->ExceptionFrame = 0;
 
     /* Before enabling interrupts get the user rsp from the KPCR */
     UserRsp = __readgsqword(FIELD_OFFSET(KIPCR, UserRsp));

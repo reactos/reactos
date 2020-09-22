@@ -526,6 +526,7 @@ typedef struct
 /* 0x7030-0x703f are used by the shellbrowser */
 #define FCIDM_SHVIEW_AUTOARRANGE 0x7031
 #define FCIDM_SHVIEW_SNAPTOGRID 0x7032
+#define FCIDM_SHVIEW_ALIGNTOGRID 0x7033
 
 #define FCIDM_SHVIEW_HELP       0x7041
 #define FCIDM_SHVIEW_RENAME     0x7050
@@ -2464,6 +2465,16 @@ HRESULT WINAPI CIDLData_CreateFromIDArray(
   _In_ UINT cidl,
   _In_reads_opt_(cidl) PCUIDLIST_RELATIVE_ARRAY apidl,
   _Outptr_ IDataObject **ppdtobj);
+
+/****************************************************************************
+ * SHRunControlPanel
+ */
+
+BOOL
+WINAPI
+SHRunControlPanel(
+  _In_ LPCWSTR commandLine,
+  _In_opt_ HWND parent);
 
 /****************************************************************************
  * SHOpenWithDialog

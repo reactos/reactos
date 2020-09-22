@@ -102,6 +102,9 @@ static LONG WINAPI ExceptionFilterSSEException(LPEXCEPTION_POINTERS exp)
     return EXCEPTION_CONTINUE_EXECUTION;
 }
 
+#ifdef __clang__
+__attribute__((__target__("sse")))
+#endif
 static
 VOID TestSSEExceptions(VOID)
 {

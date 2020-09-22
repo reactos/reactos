@@ -257,10 +257,10 @@ IntDetachFromCSRSS(PKPROCESS *CallingProcess, PKAPC_STATE ApcState);
 
 NTSTATUS NTAPI
 IntVideoPortCreateAdapterDeviceObject(
-   IN PDRIVER_OBJECT DriverObject,
-   IN PVIDEO_PORT_DRIVER_EXTENSION DriverExtension,
-   IN PDEVICE_OBJECT PhysicalDeviceObject  OPTIONAL,
-   OUT PDEVICE_OBJECT *DeviceObject  OPTIONAL);
+   _In_ PDRIVER_OBJECT DriverObject,
+   _In_ PVIDEO_PORT_DRIVER_EXTENSION DriverExtension,
+   _In_opt_ PDEVICE_OBJECT PhysicalDeviceObject,
+   _Out_opt_ PDEVICE_OBJECT *DeviceObject);
 
 NTSTATUS NTAPI
 IntVideoPortFindAdapter(

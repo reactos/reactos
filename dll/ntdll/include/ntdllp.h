@@ -159,6 +159,9 @@ VOID NTAPI
 LdrpFreeUnicodeString(PUNICODE_STRING String);
 
 VOID NTAPI
+LdrpRecordUnloadEvent(_In_ PLDR_DATA_TABLE_ENTRY LdrEntry);
+
+VOID NTAPI
 LdrpGetShimEngineInterface(VOID);
 
 VOID

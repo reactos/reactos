@@ -1,19 +1,8 @@
 
-cmake_minimum_required(VERSION 3.2.1)
-cmake_policy(VERSION 3.2.1)
+cmake_minimum_required(VERSION 3.17.0)
 
 if(NOT CMAKE_VERSION MATCHES "ReactOS")
     message(WARNING "Building with \"${CMAKE_COMMAND}\", which is not the custom CMake included in RosBE, might cause build issues...")
-endif()
-
-if(POLICY CMP0058)
-    # Ninja requires custom command byproducts to be explicit
-    cmake_policy(SET CMP0058 OLD)
-endif()
-
-if(POLICY CMP0065)
-    # Do not add flags to export symbols from executables without the ENABLE_EXPORTS target property
-    cmake_policy(SET CMP0065 NEW)
 endif()
 
 project(REACTOS)
@@ -139,10 +128,14 @@ else()
         add_definitions(-D_WINKD_)
     endif()
 
-    if(CMAKE_VERSION MATCHES "ReactOS")
-        set(PCH 1 CACHE BOOL "Whether to use precompiled headers")
+    if(ENABLE_CCACHE)
+        message(WARNING "-- Disabling precompiled headers support (ccache).")
+        option(PCH "Whether to use precompiled headers" OFF)
+    elseif(GCC)
+        message(WARNING "-- Disabling precompiled headers on GCC by default CORE-17108.")
+        option(PCH "Whether to use precompiled headers" OFF)
     else()
-        set(PCH 0 CACHE BOOL "Whether to use precompiled headers")
+        option(PCH "Whether to use precompiled headers" ON)
     endif()
 
     # Version Options
@@ -243,13 +236,17 @@ else()
     if(NO_ROSSYM)
         include(sdk/cmake/baseaddress_dwarf.cmake)
     elseif(MSVC)
-        include(sdk/cmake/baseaddress_msvc.cmake)
+        if (ARCH STREQUAL "amd64")
+            include(sdk/cmake/baseaddress_msvc_x64.cmake)
+        else()
+            include(sdk/cmake/baseaddress_msvc.cmake)
+        endif()
     else()
         include(sdk/cmake/baseaddress.cmake)
     endif()
 
     # For MSVC builds, this puts all debug symbols file in the same directory.
-    if (MSVC)
+    if(MSVC)
         set(CMAKE_PDB_OUTPUT_DIRECTORY "${REACTOS_BINARY_DIR}/msvc_pdb")
     elseif(SEPARATE_DBG)
         set(CMAKE_PDB_OUTPUT_DIRECTORY "${REACTOS_BINARY_DIR}/symbols")

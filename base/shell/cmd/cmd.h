@@ -28,10 +28,13 @@
 #include "cmdver.h"
 #include "cmddbg.h"
 
-#define BREAK_BATCHFILE 1
-#define BREAK_OUTOFBATCH 2
-#define BREAK_INPUT 3
-#define BREAK_IGNORE 4
+/* Version of the Command Extensions */
+#define CMDEXTVERSION   2
+
+#define BREAK_BATCHFILE     1
+#define BREAK_OUTOFBATCH    2 /* aka. BREAK_ENDOFBATCHFILES */
+#define BREAK_INPUT         3
+#define BREAK_IGNORE        4
 
 /* define some error messages */
 #define D_ON         _T("on")
@@ -80,13 +83,43 @@ INT ConvertULargeInteger(ULONGLONG num, LPTSTR des, UINT len, BOOL bPutSeparator
 HANDLE RunFile(DWORD, LPTSTR, LPTSTR, LPTSTR, INT);
 INT ParseCommandLine(LPTSTR);
 struct _PARSED_COMMAND;
-INT ExecuteCommand(struct _PARSED_COMMAND *Cmd);
+
+INT
+ExecuteCommand(
+    IN struct _PARSED_COMMAND *Cmd);
+
+INT
+ExecuteCommandWithEcho(
+    IN struct _PARSED_COMMAND *Cmd);
+
 LPCTSTR GetEnvVarOrSpecial ( LPCTSTR varName );
 VOID AddBreakHandler (VOID);
 VOID RemoveBreakHandler (VOID);
-BOOL SubstituteVars(TCHAR *Src, TCHAR *Dest, TCHAR Delim);
-BOOL SubstituteForVars(TCHAR *Src, TCHAR *Dest);
-LPTSTR DoDelayedExpansion(LPTSTR Line);
+
+BOOL
+SubstituteVar(
+    IN PCTSTR Src,
+    OUT size_t* SrcIncLen, // VarNameLen
+    OUT PTCHAR Dest,
+    IN PTCHAR DestEnd,
+    OUT size_t* DestIncLen,
+    IN TCHAR Delim);
+
+BOOL
+SubstituteVars(
+    IN PCTSTR Src,
+    OUT PTSTR Dest,
+    IN TCHAR Delim);
+
+BOOL
+SubstituteForVars(
+    IN PCTSTR Src,
+    OUT PTSTR Dest);
+
+PTSTR
+DoDelayedExpansion(
+    IN PCTSTR Line);
+
 INT DoCommand(LPTSTR first, LPTSTR rest, struct _PARSED_COMMAND *Cmd);
 BOOL ReadLine(TCHAR *commandline, BOOL bMore);
 
@@ -165,23 +198,27 @@ INT  CommandEchoerr (LPTSTR);
 INT  CommandEchoserr (LPTSTR);
 
 /* Prototypes for ERROR.C */
-VOID ErrorMessage (DWORD, LPTSTR, ...);
+VOID
+ErrorMessage(
+    IN DWORD dwErrorCode,
+    IN PCTSTR szFormat OPTIONAL,
+    ...);
 
-VOID error_no_pipe (VOID);
-VOID error_bad_command (LPTSTR);
-VOID error_invalid_drive (VOID);
-VOID error_req_param_missing (VOID);
-VOID error_sfile_not_found (LPTSTR);
-VOID error_file_not_found (VOID);
-VOID error_path_not_found (VOID);
-VOID error_too_many_parameters (LPTSTR);
-VOID error_parameter_format(TCHAR);
-VOID error_invalid_switch (TCHAR);
-VOID error_invalid_parameter_format (LPTSTR);
-VOID error_out_of_memory (VOID);
-VOID error_syntax (LPTSTR);
+VOID error_no_pipe(VOID);
+VOID error_bad_command(PCTSTR s);
+VOID error_invalid_drive(VOID);
+VOID error_req_param_missing(VOID);
+VOID error_sfile_not_found(PCTSTR s);
+VOID error_file_not_found(VOID);
+VOID error_path_not_found(VOID);
+VOID error_too_many_parameters(PCTSTR s);
+VOID error_parameter_format(TCHAR ch);
+VOID error_invalid_switch(TCHAR ch);
+VOID error_invalid_parameter_format(PCTSTR s);
+VOID error_out_of_memory(VOID);
+VOID error_syntax(PCTSTR s);
 
-VOID msg_pause (VOID);
+VOID msg_pause(VOID);
 
 /* Prototypes for FILECOMP.C */
 #ifdef FEATURE_UNIX_FILENAME_COMPLETION
@@ -220,11 +257,21 @@ INT CommandHistory(LPTSTR param);
 #endif
 
 /* Prototypes for IF.C */
-#define IFFLAG_NEGATE 1     /* NOT */
-#define IFFLAG_IGNORECASE 2 /* /I  */
-enum { IF_CMDEXTVERSION, IF_DEFINED, IF_ERRORLEVEL, IF_EXIST,
-       IF_STRINGEQ,         /* == */
-       IF_EQU, IF_GTR, IF_GEQ, IF_LSS, IF_LEQ, IF_NEQ };
+#define IFFLAG_NEGATE     1 /* NOT */
+#define IFFLAG_IGNORECASE 2 /* /I - Extended */
+enum {
+    /** Unary operators **/
+    /* Standard */
+    IF_ERRORLEVEL, IF_EXIST,
+    /* Extended */
+    IF_CMDEXTVERSION, IF_DEFINED,
+
+    /** Binary operators **/
+    /* Standard */
+    IF_STRINGEQ,    /* == */
+    /* Extended */
+    IF_EQU, IF_NEQ, IF_LSS, IF_LEQ, IF_GTR, IF_GEQ
+};
 INT ExecuteIf(struct _PARSED_COMMAND *Cmd);
 
 /* Prototypes for INTERNAL.C */
@@ -257,7 +304,12 @@ INT CommandMemory (LPTSTR);
 INT cmd_mklink(LPTSTR);
 
 /* Prototypes for MISC.C */
-INT GetRootPath(TCHAR *InPath,TCHAR *OutPath,INT size);
+INT
+GetRootPath(
+    IN LPCTSTR InPath,
+    OUT LPTSTR OutPath,
+    IN INT size);
+
 BOOL SetRootPath(TCHAR *oldpath,TCHAR *InPath);
 TCHAR  cgetchar (VOID);
 BOOL   CheckCtrlBreak (INT);
@@ -267,10 +319,10 @@ LPTSTR *splitspace (LPTSTR, LPINT);
 VOID   freep (LPTSTR *);
 LPTSTR _stpcpy (LPTSTR, LPCTSTR);
 VOID   StripQuotes(LPTSTR);
-BOOL   IsValidPathName (LPCTSTR);
-BOOL   IsExistingFile (LPCTSTR);
-BOOL   IsExistingDirectory (LPCTSTR);
-BOOL   FileGetString (HANDLE, LPTSTR, INT);
+
+BOOL IsValidPathName(IN LPCTSTR pszPath);
+BOOL IsExistingFile(IN LPCTSTR pszPath);
+BOOL IsExistingDirectory(IN LPCTSTR pszPath);
 VOID   GetPathCase(TCHAR *, TCHAR *);
 
 #define PROMPT_NO    0
@@ -289,7 +341,11 @@ INT cmd_move (LPTSTR);
 INT CommandMsgbox (LPTSTR);
 
 /* Prototypes from PARSER.C */
-enum { C_COMMAND, C_QUIET, C_BLOCK, C_MULTI, C_IFFAILURE, C_IFSUCCESS, C_PIPE, C_IF, C_FOR };
+
+/* These three characters act like spaces to the parser in most contexts */
+#define STANDARD_SEPS _T(",;=")
+
+enum { C_COMMAND, C_QUIET, C_BLOCK, C_MULTI, C_OR, C_AND, C_PIPE, C_IF, C_FOR };
 typedef struct _PARSED_COMMAND
 {
     struct _PARSED_COMMAND *Subcommands;
@@ -316,14 +372,19 @@ typedef struct _PARSED_COMMAND
             TCHAR Variable;
             LPTSTR Params;
             LPTSTR List;
-            struct tagFORCONTEXT *Context;
+            struct _FOR_CONTEXT *Context;
         } For;
     };
 } PARSED_COMMAND;
+
 PARSED_COMMAND *ParseCommand(LPTSTR Line);
 VOID EchoCommand(PARSED_COMMAND *Cmd);
 TCHAR *Unparse(PARSED_COMMAND *Cmd, TCHAR *Out, TCHAR *OutEnd);
 VOID FreeCommand(PARSED_COMMAND *Cmd);
+
+VOID ParseErrorEx(IN PCTSTR s);
+extern BOOL bParseError;
+extern TCHAR ParseLine[CMDLINE_LENGTH];
 
 /* Prototypes from PATH.C */
 INT cmd_path (LPTSTR);

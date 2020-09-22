@@ -5,7 +5,7 @@
 104 stub PerfClose
 105 stub PerfCollect
 106 stub PerfOpen
-107 stub ADVANCEDSETUPDIALOG
+107 stdcall ADVANCEDSETUPDIALOG(ptr long ptr ptr) AdvancedSetupDialog
 108 stdcall AbortPrinter(ptr)
 109 stdcall AddFormA(ptr long ptr)
 110 stdcall AddFormW(ptr long ptr)
@@ -31,18 +31,18 @@
 130 stdcall AddPrinterW(wstr long ptr)
 131 stdcall AdvancedDocumentPropertiesA(ptr ptr str ptr ptr)
 132 stdcall AdvancedDocumentPropertiesW(ptr ptr wstr ptr ptr)
-133 stub AdvancedSetupDialog
+133 stdcall AdvancedSetupDialog(ptr long ptr ptr)
 134 stdcall ClosePrinter(ptr)
-135 stub CloseSpoolFileHandle
-136 stub CommitSpoolData
+135 stdcall CloseSpoolFileHandle(ptr ptr)
+136 stdcall CommitSpoolData(ptr ptr long)
 137 stdcall ConfigurePortA(str ptr str)
 138 stdcall ConfigurePortW(wstr ptr wstr)
 139 stub ConnectToPrinterDlg
 140 stub ConvertAnsiDevModeToUnicodeDevmode
 141 stub ConvertUnicodeDevModeToAnsiDevmode
-142 stub CreatePrinterIC
-143 stub DEVICECAPABILITIES
-144 stub DEVICEMODE
+142 stdcall -stub CreatePrinterIC(ptr ptr)
+143 stdcall DEVICECAPABILITIES(str str long ptr ptr) DeviceCapabilitiesA
+144 stdcall DEVICEMODE(ptr ptr str ptr) DeviceMode
 145 stdcall DeleteFormA(ptr str)
 146 stdcall DeleteFormW(ptr wstr)
 147 stdcall DeleteMonitorA(str str str)
@@ -64,21 +64,21 @@
 163 stdcall DeletePrinterDriverExA(str str str long long)
 164 stdcall DeletePrinterDriverExW(wstr wstr wstr long long)
 165 stdcall DeletePrinterDriverW(wstr wstr wstr)
-166 stub DeletePrinterIC
+166 stdcall -stub DeletePrinterIC(ptr)
 167 stdcall DeletePrinterKeyA(ptr str)
 168 stdcall DeletePrinterKeyW(ptr wstr)
-169 stub DevQueryPrint
-170 stub DevQueryPrintEx
-171 stub DeviceCapabilities
+169 stdcall DevQueryPrint(ptr ptr ptr)
+170 stdcall DevQueryPrintEx(ptr)
+171 stdcall DeviceCapabilities(str str long ptr ptr) DeviceCapabilitiesA
 172 stdcall DeviceCapabilitiesA(str str long ptr ptr)
 173 stdcall DeviceCapabilitiesW(wstr wstr long ptr ptr)
-174 stub DeviceMode
-175 stub DevicePropertySheets
+174 stdcall -stub DeviceMode(ptr ptr str ptr)
+175 stdcall DevicePropertySheets(ptr long)
 176 stdcall DocumentEvent(ptr ptr long long ptr long ptr)
-177 stdcall DocumentPropertiesA(ptr ptr ptr ptr ptr long)
-178 stdcall DocumentPropertiesW(ptr ptr ptr ptr ptr long)
-179 stub DocumentPropertySheets
-180 stub EXTDEVICEMODE
+177 stdcall DocumentPropertiesA(ptr ptr str ptr ptr long)
+178 stdcall DocumentPropertiesW(ptr ptr wstr ptr ptr long)
+179 stdcall DocumentPropertySheets(ptr long)
+180 stdcall EXTDEVICEMODE(ptr ptr ptr str str ptr str long) ExtDeviceMode
 181 stdcall EndDocPrinter(ptr)
 182 stdcall EndPagePrinter(ptr)
 183 stdcall EnumFormsA(ptr long ptr long ptr ptr)
@@ -110,13 +110,13 @@
 209 stub -noname DeletePerMachineConnectionW
 210 stub -noname EnumPerMachineConnectionsA
 211 stub -noname EnumPerMachineConnectionsW
-212 stub -noname LoadPrinterDriver
+212 stdcall -noname LoadPrinterDriver(ptr)
 213 stub -noname RefCntLoadDriver
 214 stub -noname RefCntUnloadDriver
 215 stub -noname ForceUnloadDriver
 216 stub -noname PublishPrinterA
 217 stub -noname PublishPrinterW
-218 stub -noname CallCommonPropertySheetUI
+218 stdcall -noname CallCommonPropertySheetUI(ptr ptr long ptr)
 219 stub -noname PrintUIQueueCreate
 220 stub -noname PrintUIPrinterPropPages
 221 stub -noname PrintUIDocumentDefaults
@@ -134,7 +134,7 @@
 233 stdcall EnumPrinterKeyW(ptr wstr wstr long ptr)
 234 stdcall EnumPrintersA(long ptr long ptr long ptr ptr)
 235 stdcall EnumPrintersW(long ptr long ptr long ptr ptr)
-236 stub ExtDeviceMode
+236 stdcall -stub ExtDeviceMode(ptr ptr ptr str str ptr str long)
 237 stub FindClosePrinterChangeNotification
 238 stub FindFirstPrinterChangeNotification
 239 stub FindNextPrinterChangeNotification
@@ -156,23 +156,23 @@
 255 stdcall GetPrinterDriverDirectoryW(wstr wstr long ptr long ptr)
 256 stdcall GetPrinterDriverW(ptr wstr long ptr long ptr)
 257 stdcall GetPrinterW(ptr long ptr long ptr)
-258 stub GetSpoolFileHandle
+258 stdcall GetSpoolFileHandle(ptr)
 259 stdcall IsValidDevmodeA(ptr long)
 260 stdcall IsValidDevmodeW(ptr long)
 261 stdcall OpenPrinterA(str ptr ptr)
 262 stdcall OpenPrinterW(wstr ptr ptr)
-263 stub PlayGdiScriptOnPrinterIC
-264 stub PrinterMessageBoxA
-265 stub PrinterMessageBoxW
-266 stub PrinterProperties
-267 stub QueryColorProfile
-268 stub QueryRemoteFonts
-269 stub QuerySpoolMode
+263 stdcall -stub PlayGdiScriptOnPrinterIC(ptr ptr long ptr long long)
+264 stdcall PrinterMessageBoxA(ptr long ptr str str long)
+265 stdcall PrinterMessageBoxW(ptr long ptr wstr wstr long)
+266 stdcall PrinterProperties(ptr ptr)
+267 stdcall QueryColorProfile(ptr ptr long ptr ptr ptr)
+268 stdcall QueryRemoteFonts(ptr ptr long)
+269 stdcall QuerySpoolMode(ptr ptr ptr)
 270 stdcall ReadPrinter(ptr ptr long ptr)
 271 stdcall ResetPrinterA(ptr ptr)
 272 stdcall ResetPrinterW(ptr ptr)
 273 stdcall ScheduleJob(ptr long)
-274 stub SeekPrinter
+274 stdcall SeekPrinter(ptr int64 ptr long long)
 275 stub SetAllocFailCount
 276 stdcall SetFormA(ptr str long str)
 277 stdcall SetFormW(ptr str long str)
@@ -189,9 +189,9 @@
 288 stdcall SplDriverUnloadComplete(ptr)
 289 stub SpoolerDevQueryPrintW
 290 stdcall SpoolerInit()
-291 stub SpoolerPrinterEvent
-292 stub StartDocDlgA
-293 stub StartDocDlgW
+291 stdcall SpoolerPrinterEvent(wstr long long long)
+292 stdcall StartDocDlgA(ptr ptr)
+293 stdcall StartDocDlgW(ptr ptr)
 294 stdcall StartDocPrinterA(ptr long ptr)
 295 stdcall StartDocPrinterW(ptr long ptr)
 296 stdcall StartPagePrinter(ptr)

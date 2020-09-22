@@ -215,8 +215,10 @@ TestObjectTypes(VOID)
     CheckObjectType(Section, MmSectionObjectType,               OBT_PAGED_POOL,                             0x100,  0x020005, 0x020002, 0x020008, 0x0f001f, 0x1f001f);
     CheckObjectType(Key, CmpKeyObjectType,                      OBT_CUSTOM_SECURITY_PROC | OBT_SECURITY_REQUIRED | OBT_PAGED_POOL,
                                                                                                             0x030,  0x020019, 0x020006, 0x020019, 0x0f003f, 0x1f003f);
-    CheckObjectType(Port, LpcPortObjectType,                    OBT_PAGED_POOL,                             0x7b2,  0x020001, 0x010001, 0x000000, 0x1f0001, 0x1f0001);
-    CheckObjectType(WaitablePort, LpcWaitablePortObjectType,    OBT_NO_DEFAULT,                             0x7b2,  0x020001, 0x010001, 0x000000, 0x1f0001, 0x1f0001);
+    // 0x7b2 is used for Server 2003 SP2 RTM, it seems it was changed to 0xfb2 in some patch level.
+    CheckObjectType(Port, LpcPortObjectType,                    OBT_PAGED_POOL,                             0xfb2,  0x020001, 0x010001, 0x000000, 0x1f0001, 0x1f0001);
+    // 0x7b2 is used for Server 2003 SP2 RTM, it seems it was changed to 0xfb2 in some patch level.
+    CheckObjectType(WaitablePort, LpcWaitablePortObjectType,    OBT_NO_DEFAULT,                             0xfb2,  0x020001, 0x010001, 0x000000, 0x1f0001, 0x1f0001);
     CheckObjectType(Adapter, IoAdapterObjectType,               0,                                          0x100,  0x120089, 0x120116, 0x1200a0, 0x1f01ff, 0x1f01ff);
     CheckObjectType(Controller, IoControllerObjectType,         0,                                          0x100,  0x120089, 0x120116, 0x1200a0, 0x1f01ff, 0x1f01ff);
     CheckObjectType(Device, IoDeviceObjectType,                 OBT_CUSTOM_SECURITY_PROC | OBT_CASE_INSENSITIVE,

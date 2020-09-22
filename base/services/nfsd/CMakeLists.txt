@@ -7,7 +7,7 @@ include_directories(
     ${REACTOS_SOURCE_DIR}/drivers/filesystems/nfs
     ${REACTOS_SOURCE_DIR}/dll/np/nfs)
 
-if (MSVC)
+if(MSVC)
     # Disable warning C4477 (printf format warnings)
     add_compile_flags("/wd4477")
 endif()

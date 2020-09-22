@@ -1716,8 +1716,6 @@ SpLsaModeInitialize(
     _Out_ PSECPKG_FUNCTION_TABLE *ppTables,
     _Out_ PULONG pcTables)
 {
-    SECPKG_FUNCTION_TABLE Tables[1];
-
     TRACE("SpLsaModeInitialize(0x%lx %p %p %p)\n",
           LsaVersion, PackageVersion, ppTables, pcTables);
 
@@ -1726,37 +1724,40 @@ SpLsaModeInitialize(
 
     *PackageVersion = SECPKG_INTERFACE_VERSION;
 
-    RtlZeroMemory(&Tables, sizeof(Tables));
+    RtlZeroMemory(NtlmLsaFn, sizeof(NtlmLsaFn));
 
-    Tables[0].InitializePackage = LsaApInitializePackage;
-//    Tables[0].LogonUser = NULL;
-    Tables[0].CallPackage = (PLSA_AP_CALL_PACKAGE)LsaApCallPackage;
-    Tables[0].LogonTerminated = LsaApLogonTerminated;
-    Tables[0].CallPackageUntrusted = LsaApCallPackageUntrusted;
-    Tables[0].CallPackagePassthrough = (PLSA_AP_CALL_PACKAGE_PASSTHROUGH)LsaApCallPackagePassthrough;
-//    Tables[0].LogonUserEx = NULL;
-    Tables[0].LogonUserEx2 = LsaApLogonUserEx2;
-//    Tables[0].Initialize = SpInitialize;
-//    Tables[0].Shutdown = NULL;
-//    Tables[0].GetInfo = NULL;
-//    Tables[0].AcceptCredentials = NULL;
-//    Tables[0].SpAcquireCredentialsHandle = NULL;
-//    Tables[0].SpQueryCredentialsAttributes = NULL;
-//    Tables[0].FreeCredentialsHandle = NULL;
-//    Tables[0].SaveCredentials = NULL;
-//    Tables[0].GetCredentials = NULL;
-//    Tables[0].DeleteCredentials = NULL;
-//    Tables[0].InitLsaModeContext = NULL;
-//    Tables[0].AcceptLsaModeContext = NULL;
-//    Tables[0].DeleteContext = NULL;
-//    Tables[0].ApplyControlToken = NULL;
-//    Tables[0].GetUserInfo = NULL;
-//    Tables[0].GetExtendedInformation = NULL;
-//    Tables[0].SpQueryContextAttributes = NULL;
-//    Tables[0].SpAddCredentials = NULL;
-//    Tables[0].SetExtendedInformation = NULL;
+    /* msv1_0 (XP, win2k) returns NULL for
+     * InitializePackage, LsaLogonUser,LsaLogonUserEx,
+     * SpQueryContextAttributes and SpAddCredentials */
+    NtlmLsaFn[0].InitializePackage = NULL;
+    NtlmLsaFn[0].LsaLogonUser = NULL;
+    NtlmLsaFn[0].CallPackage = LsaApCallPackage;
+    NtlmLsaFn[0].LogonTerminated = LsaApLogonTerminated;
+    NtlmLsaFn[0].CallPackageUntrusted = LsaApCallPackageUntrusted;
+    NtlmLsaFn[0].CallPackagePassthrough = LsaApCallPackagePassthrough;
+    NtlmLsaFn[0].LogonUserEx = NULL;
+    NtlmLsaFn[0].LogonUserEx2 = LsaApLogonUserEx2;
+    NtlmLsaFn[0].Initialize = SpInitialize;
+    NtlmLsaFn[0].Shutdown = LsaSpShutDown;
+    NtlmLsaFn[0].GetInfo = LsaSpGetInfoW;
+    NtlmLsaFn[0].AcceptCredentials = SpAcceptCredentials;
+    NtlmLsaFn[0].SpAcquireCredentialsHandle = LsaSpAcquireCredentialsHandle;
+    NtlmLsaFn[0].SpQueryCredentialsAttributes = LsaSpQueryCredentialsAttributes;
+    NtlmLsaFn[0].FreeCredentialsHandle = LsaSpFreeCredentialsHandle;
+    NtlmLsaFn[0].SaveCredentials = LsaSpSaveCredentials;
+    NtlmLsaFn[0].GetCredentials = LsaSpGetCredentials;
+    NtlmLsaFn[0].DeleteCredentials = LsaSpDeleteCredentials;
+    NtlmLsaFn[0].InitLsaModeContext = LsaSpInitLsaModeContext;
+    NtlmLsaFn[0].AcceptLsaModeContext = LsaSpAcceptLsaModeContext;
+    NtlmLsaFn[0].DeleteContext = LsaSpDeleteContext;
+    NtlmLsaFn[0].ApplyControlToken = LsaSpApplyControlToken;
+    NtlmLsaFn[0].GetUserInfo = LsaSpGetUserInfo;
+    NtlmLsaFn[0].GetExtendedInformation = LsaSpGetExtendedInformation;
+    NtlmLsaFn[0].SpQueryContextAttributes = NULL;
+    NtlmLsaFn[0].SpAddCredentials = NULL;
+    NtlmLsaFn[0].SetExtendedInformation = LsaSpSetExtendedInformation;
 
-    *ppTables = Tables;
+    *ppTables = NtlmLsaFn;
     *pcTables = 1;
 
     return STATUS_SUCCESS;

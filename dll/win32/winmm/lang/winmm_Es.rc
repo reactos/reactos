@@ -24,14 +24,14 @@ BEGIN
    MMSYSERR_NOERROR, "El comando especificado fue ejecutado."
    MMSYSERR_ERROR, "Error externo indefinido."
    MMSYSERR_BADDEVICEID, "Un identificador de dispositivo que ha sido usado está fuera de rango para su sistema."
-   MMSYSERR_NOTENABLED, "El manejador no fue activado."
+   MMSYSERR_NOTENABLED, "El controlador no está activado."
    MMSYSERR_ALLOCATED, "El dispositivo especificado aún está en uso. Espere hasta que esté libre e intente nuevamente."
    MMSYSERR_INVALHANDLE, "El handle de dispositivo especificado es inválido."
-   MMSYSERR_NODRIVER, "¡No hay un manejador instalado en su sistema!\n"
+   MMSYSERR_NODRIVER, "¡No hay ningún controlador instalado en su sistema!\n"
    MMSYSERR_NOMEM, "No hay suficiente memoria disponible para esta tarea. Cierre una o más aplicaciones para aumentar la memoria disponible e inténtelo de nuevo."
-   MMSYSERR_NOTSUPPORTED, "Esta función no está soportada. Use la función Capacidades para determinar qué funciones y mensajes soporta el manejador."
+   MMSYSERR_NOTSUPPORTED, "Esta función no está soportada. Use la función Capacidades para determinar qué funciones y mensajes soporta el controlador."
    MMSYSERR_BADERRNUM, "Se ha especificado un número de error que no está definido en el sistema."
-   MMSYSERR_INVALFLAG, "Se ha pasado una bandera no válida a una función del sistema."
+   MMSYSERR_INVALFLAG, "Se ha pasado una marca no válida a una función del sistema."
    MMSYSERR_INVALPARAM, "Se ha pasado un parámetro no válido a una función del sistema."
 
 /* WAVE errors */

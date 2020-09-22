@@ -364,9 +364,6 @@ void ProcessPageShowContextMenu(DWORD dwProcessId)
     if (si.dwNumberOfProcessors < 2)
         RemoveMenu(hSubMenu, ID_PROCESS_PAGE_SETAFFINITY, MF_BYCOMMAND);
 
-    if (!DebugChannelsAreSupported())
-        RemoveMenu(hSubMenu, ID_PROCESS_PAGE_DEBUGCHANNELS, MF_BYCOMMAND);
-
     switch (dwProcessPriorityClass)    {
     case REALTIME_PRIORITY_CLASS:
         CheckMenuRadioItem(hPriorityMenu, ID_PROCESS_PAGE_SETPRIORITY_REALTIME, ID_PROCESS_PAGE_SETPRIORITY_LOW, ID_PROCESS_PAGE_SETPRIORITY_REALTIME, MF_BYCOMMAND);

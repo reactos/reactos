@@ -608,7 +608,7 @@ HRESULT WINAPI CDesktopFolder::GetUIObjectOf(
 
     if (IsEqualIID (riid, IID_IContextMenu))
     {
-        if (_ILIsSpecialFolder(apidl[0]))
+        if (cidl > 0 && _ILIsSpecialFolder(apidl[0]))
         {
             hr = m_regFolder->GetUIObjectOf(hwndOwner, cidl, apidl, riid, prgfInOut, &pObj);
         }
@@ -619,7 +619,10 @@ HRESULT WINAPI CDesktopFolder::GetUIObjectOf(
             /* Otherwise operations like that involve items from both user and shared desktop will not work */
             HKEY hKeys[16];
             UINT cKeys = 0;
-            AddFSClassKeysToArray(apidl[0], hKeys, &cKeys);
+            if (cidl > 0)
+            {
+                AddFSClassKeysToArray(apidl[0], hKeys, &cKeys);
+            }
 
             DEFCONTEXTMENU dcm;
             dcm.hwnd = hwndOwner;

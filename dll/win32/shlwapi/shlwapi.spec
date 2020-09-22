@@ -385,7 +385,7 @@
 385 stub -noname SHLoadRawAccelerators
 386 stub -noname SHQueryRawAccelerator
 387 stub -noname SHQueryRawAcceleratorMsg
-388 varargs -noname ShellMessageBoxWrapW(long long wstr wstr long)
+388 varargs -noname ShellMessageBoxWrapW(ptr ptr wstr wstr long)
 389 stdcall -noname GetSaveFileNameWrapW(ptr)
 390 stdcall -noname WNetRestoreConnectionWrapW(long wstr)
 391 stdcall -noname WNetGetLastErrorWrapW(ptr ptr long ptr long)
@@ -549,7 +549,7 @@
 549 stdcall -noname SHCoCreateInstanceAC(ptr ptr long ptr ptr)
 550 stub -noname GetTemplateInfoFromHandle
 551 stub -noname IShellFolder_CompareIDs
-552 stub -noname SHEvaluateSystemCommandTemplate
+552 stdcall -stub -noname -version=0x501-0x502 SHEvaluateSystemCommandTemplate(wstr ptr ptr ptr)
 553 stdcall IsInternetESCEnabled()
 554 stdcall -noname -stub SHGetAllAccessSA()
 555 stdcall AssocQueryStringByKeyA(long long ptr str ptr ptr)

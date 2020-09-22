@@ -83,18 +83,14 @@ list(APPEND SOURCE
     COpenWithMenu.cpp
     CNewMenu.cpp
     CSendToMenu.cpp
+    CCopyToMenu.cpp
+    CMoveToMenu.cpp
     CShellDispatch.cpp
     CFolder.cpp
     CFolderItems.cpp
-    CFolderItemVerbs.cpp
-    precomp.h)
+    CFolderItemVerbs.cpp)
 
-file(GLOB_RECURSE shell32_rc_deps res/*.*)
-list(APPEND shell32_rc_deps ${CMAKE_CURRENT_BINARY_DIR}/shell32_shldisp.tlb)
-add_rc_deps(shell32.rc ${shell32_rc_deps})
-
-add_library(shell32 MODULE
-    ${SOURCE}
+list(APPEND PCH_SKIP_SOURCE
     wine/appbar.c
     wine/brsfolder.c
     wine/classes.c
@@ -110,10 +106,17 @@ add_library(shell32 MODULE
     wine/shlmenu.c
     wine/shpolicy.c
     vista.c
-    shell32.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/shell32_stubs.c
-    ${CMAKE_CURRENT_BINARY_DIR}/shell32.def)
+    ${CMAKE_CURRENT_BINARY_DIR}/shell32_stubs.c)
 
+file(GLOB_RECURSE shell32_rc_deps res/*.*)
+list(APPEND shell32_rc_deps ${CMAKE_CURRENT_BINARY_DIR}/shell32_shldisp.tlb)
+add_rc_deps(shell32.rc ${shell32_rc_deps})
+
+add_library(shell32 MODULE
+    ${SOURCE}
+    ${PCH_SKIP_SOURCE}
+    shell32.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/shell32.def)
 
 add_typelib(shell32_shldisp.idl)
 set_source_files_properties(shell32.rc PROPERTIES OBJECT_DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/shell32_shldisp.tlb)
@@ -123,5 +126,5 @@ target_link_libraries(shell32 shellmenu shelldesktop wine uuid recyclebin)
 add_delay_importlibs(shell32 powrprof shdocvw devmgr winspool.drv winmm mpr uxtheme ole32 oleaut32 userenv browseui version fmifs)
 add_importlibs(shell32 advapi32 gdi32 user32 comctl32 comdlg32 shlwapi msvcrt kernel32 ntdll)
 add_dependencies(shell32 stdole2) # shell32_shldisp.tlb needs stdole2.tlb
-add_pch(shell32 precomp.h SOURCE)
+add_pch(shell32 precomp.h "${PCH_SKIP_SOURCE}")
 add_cd_file(TARGET shell32 DESTINATION reactos/system32 FOR all)

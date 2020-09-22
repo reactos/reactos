@@ -294,6 +294,7 @@ END
 STRINGTABLE DISCARDABLE
 BEGIN
   IDS_APPNAME               "ReactOS Seadmehaldur"
+  IDS_APP_AUTHORS           "Copyright 2015 Ged Murphy"
   IDS_CONFIRM_DISABLE       "Selle seadme keelamine põhjustab selle töötamise lakkamise.\r\nKas soovite kindlasti seda keelata?"
   IDS_CONFIRM_UNINSTALL     "Hoiatus: Hakkate seda seadet süsteemist desinstallima.\r\nKas soovite jätkata?"
 END

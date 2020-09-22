@@ -8,7 +8,7 @@ Module Name:
 
 Abstract:
 
-    SCSI disk class driver - this module contains all the code for generating 
+    SCSI disk class driver - this module contains all the code for generating
     disk geometries.
 
 Environment:
@@ -21,31 +21,33 @@ Revision History:
 
 --*/
 
-#include "disk.h"
 
-#if defined (_X86_)
+#include "disk.h"
+#include "ntddstor.h"
+
+#ifdef DEBUG_USE_WPP
+#include "geometry.tmh"
+#endif
+
+#if defined(_X86_) || defined(_AMD64_)
 
 DISK_GEOMETRY_SOURCE
-NTAPI
 DiskUpdateGeometry(
     IN PFUNCTIONAL_DEVICE_EXTENSION DeviceExtension
     );
 
 NTSTATUS
-NTAPI
 DiskUpdateRemovableGeometry (
     IN PFUNCTIONAL_DEVICE_EXTENSION FdoExtension
     );
 
 VOID
-NTAPI
 DiskScanBusDetectInfo(
     IN PDRIVER_OBJECT DriverObject,
     IN HANDLE BusKey
     );
 
 NTSTATUS
-NTAPI
 DiskSaveBusDetectInfo(
     IN PDRIVER_OBJECT DriverObject,
     IN HANDLE TargetKey,
@@ -53,14 +55,12 @@ DiskSaveBusDetectInfo(
     );
 
 NTSTATUS
-NTAPI
 DiskSaveGeometryDetectInfo(
     IN PDRIVER_OBJECT DriverObject,
     IN HANDLE HardwareKey
     );
 
 NTSTATUS
-NTAPI
 DiskGetPortGeometry(
     IN PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
     OUT PDISK_GEOMETRY Geometry
@@ -76,13 +76,71 @@ typedef struct _DISK_DETECT_INFO {
 } DISK_DETECT_INFO, *PDISK_DETECT_INFO;
 
 //
-// Information about the disk geometries collected and saved into the registry 
+// Information about the disk geometries collected and saved into the registry
 // by NTDETECT.COM or the system firmware.
 //
 
 PDISK_DETECT_INFO DetectInfoList = NULL;
-ULONG DetectInfoCount = 0;
-ULONG DetectInfoUsedCount = 0;
+ULONG DetectInfoCount            = 0;
+LONG DetectInfoUsedCount        = 0;
+
+#define GET_STARTING_SECTOR(p)                (     \
+        (ULONG) (p->StartingSectorLsb0)       +     \
+        (ULONG) (p->StartingSectorLsb1 << 8 ) +     \
+        (ULONG) (p->StartingSectorMsb0 << 16) +     \
+        (ULONG) (p->StartingSectorMsb1 << 24) )
+
+#define GET_ENDING_S_OF_CHS(p)                (     \
+        (UCHAR) (p->EndingCylinderLsb & 0x3F) )
+
+//
+// Definitions from hal.h
+//
+
+//
+// Boot record disk partition table entry structure format
+//
+
+typedef struct _PARTITION_DESCRIPTOR
+{
+    UCHAR ActiveFlag;
+    UCHAR StartingTrack;
+    UCHAR StartingCylinderLsb;
+    UCHAR StartingCylinderMsb;
+    UCHAR PartitionType;
+    UCHAR EndingTrack;
+    UCHAR EndingCylinderLsb;
+    UCHAR EndingCylinderMsb;
+    UCHAR StartingSectorLsb0;
+    UCHAR StartingSectorLsb1;
+    UCHAR StartingSectorMsb0;
+    UCHAR StartingSectorMsb1;
+    UCHAR PartitionLengthLsb0;
+    UCHAR PartitionLengthLsb1;
+    UCHAR PartitionLengthMsb0;
+    UCHAR PartitionLengthMsb1;
+
+} PARTITION_DESCRIPTOR, *PPARTITION_DESCRIPTOR;
+
+//
+// Number of partition table entries
+//
+
+#define NUM_PARTITION_TABLE_ENTRIES     4
+
+//
+// Partition table record and boot signature offsets in 16-bit words
+//
+
+#define PARTITION_TABLE_OFFSET          ( 0x1be / 2)
+#define BOOT_SIGNATURE_OFFSET           ((0x200 / 2) - 1)
+
+//
+// Boot record signature value
+//
+
+#define BOOT_RECORD_SIGNATURE           (0xaa55)
+
 
 #ifdef ALLOC_PRAGMA
 #pragma alloc_text(INIT, DiskSaveDetectInfo)
@@ -93,39 +151,40 @@ ULONG DetectInfoUsedCount = 0;
 #pragma alloc_text(PAGE, DiskUpdateGeometry)
 #pragma alloc_text(PAGE, DiskUpdateRemovableGeometry)
 #pragma alloc_text(PAGE, DiskGetPortGeometry)
+#pragma alloc_text(PAGE, DiskIsNT4Geometry)
 #pragma alloc_text(PAGE, DiskGetDetectInfo)
 #pragma alloc_text(PAGE, DiskReadSignature)
 #endif
 
 
 NTSTATUS
-NTAPI
 DiskSaveDetectInfo(
     PDRIVER_OBJECT DriverObject
     )
+
 /*++
 
 Routine Description:
 
-    This routine saves away the firmware information about the disks which has 
-    been saved in the registry.  It generates a list (DetectInfoList) which 
-    contains the disk geometries, signatures & checksums of all drives which 
-    were examined by NtDetect.  This list is later used to assign geometries 
+    This routine saves away the firmware information about the disks which has
+    been saved in the registry.  It generates a list (DetectInfoList) which
+    contains the disk geometries, signatures & checksums of all drives which
+    were examined by NtDetect.  This list is later used to assign geometries
     to disks as they are initialized.
 
 Arguments:
 
-    DriverObject - the driver being initialized.  This is used to get to the 
+    DriverObject - the driver being initialized.  This is used to get to the
                    hardware database.
-    
+
 Return Value:
 
     status.
-    
---*/        
-    
+
+--*/
+
 {
-    OBJECT_ATTRIBUTES objectAttributes;
+    OBJECT_ATTRIBUTES objectAttributes = {0};
     HANDLE hardwareKey;
 
     UNICODE_STRING unicodeString;
@@ -138,7 +197,7 @@ Return Value:
     InitializeObjectAttributes(
         &objectAttributes,
         DriverObject->HardwareDatabase,
-        OBJ_CASE_INSENSITIVE,
+        OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
         NULL,
         NULL);
 
@@ -149,8 +208,8 @@ Return Value:
     status = ZwOpenKey(&hardwareKey, KEY_READ, &objectAttributes);
 
     if(!NT_SUCCESS(status)) {
-        DebugPrint((1, "DiskSaveDetectInfo: Cannot open hardware data. "
-                       "Name: %wZ\n", 
+        TracePrint((TRACE_LEVEL_ERROR, TRACE_FLAG_GENERAL, "DiskSaveDetectInfo: Cannot open hardware data. "
+                       "Name: %wZ\n",
                     DriverObject->HardwareDatabase));
         return status;
     }
@@ -158,7 +217,7 @@ Return Value:
     status = DiskSaveGeometryDetectInfo(DriverObject, hardwareKey);
 
     if(!NT_SUCCESS(status)) {
-        DebugPrint((1, "DiskSaveDetectInfo: Can't query configuration data "
+        TracePrint((TRACE_LEVEL_ERROR, TRACE_FLAG_GENERAL, "DiskSaveDetectInfo: Can't query configuration data "
                        "(%#08lx)\n",
                     status));
         ZwClose(hardwareKey);
@@ -172,7 +231,7 @@ Return Value:
     RtlInitUnicodeString(&unicodeString, L"EisaAdapter");
     InitializeObjectAttributes(&objectAttributes,
                                &unicodeString,
-                               OBJ_CASE_INSENSITIVE,
+                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
                                hardwareKey,
                                NULL);
 
@@ -181,19 +240,19 @@ Return Value:
                        &objectAttributes);
 
     if(NT_SUCCESS(status)) {
-        DebugPrint((1, "DiskSaveDetectInfo: Opened EisaAdapter key\n"));
+        TracePrint((TRACE_LEVEL_INFORMATION, TRACE_FLAG_GENERAL, "DiskSaveDetectInfo: Opened EisaAdapter key\n"));
         DiskScanBusDetectInfo(DriverObject, busKey);
         ZwClose(busKey);
     }
 
     //
     // Open MultiFunction bus key.
-    // 
+    //
 
     RtlInitUnicodeString(&unicodeString, L"MultifunctionAdapter");
     InitializeObjectAttributes(&objectAttributes,
                                &unicodeString,
-                               OBJ_CASE_INSENSITIVE,
+                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
                                hardwareKey,
                                NULL);
 
@@ -202,7 +261,7 @@ Return Value:
                        &objectAttributes);
 
     if(NT_SUCCESS(status)) {
-        DebugPrint((1, "DiskSaveDetectInfo: Opened MultifunctionAdapter key\n"));
+        TracePrint((TRACE_LEVEL_INFORMATION, TRACE_FLAG_GENERAL, "DiskSaveDetectInfo: Opened MultifunctionAdapter key\n"));
         DiskScanBusDetectInfo(DriverObject, busKey);
         ZwClose(busKey);
     }
@@ -212,37 +271,35 @@ Return Value:
     return STATUS_SUCCESS;
 }
 
+
 VOID
-NTAPI
 DiskCleanupDetectInfo(
     IN PDRIVER_OBJECT DriverObject
     )
 /*++
 
 Routine Description:
-    
+
     This routine will cleanup the data structure built by DiskSaveDetectInfo.
-    
+
 Arguments:
 
     DriverObject - a pointer to the kernel object for this driver.
-    
+
 Return Value:
 
     none
-    
---*/            
+
+--*/
 
 {
-    if(DetectInfoList != NULL) {
-        ExFreePool(DetectInfoList);
-        DetectInfoList = NULL;
-    }
+    UNREFERENCED_PARAMETER(DriverObject);
+    FREE_POOL(DetectInfoList);
     return;
 }
 
+
 NTSTATUS
-NTAPI
 DiskSaveGeometryDetectInfo(
     IN PDRIVER_OBJECT DriverObject,
     IN HANDLE HardwareKey
@@ -263,6 +320,7 @@ DiskSaveGeometryDetectInfo(
     NTSTATUS status;
 
     PAGED_CODE();
+    UNREFERENCED_PARAMETER(DriverObject);
 
     //
     // Get disk BIOS geometry information.
@@ -273,9 +331,9 @@ DiskSaveGeometryDetectInfo(
     keyData = ExAllocatePoolWithTag(PagedPool,
                                     VALUE_BUFFER_SIZE,
                                     DISK_TAG_UPDATE_GEOM);
-                                   
+
     if(keyData == NULL) {
-        DebugPrint((1, "DiskSaveGeometryDetectInfo: Can't allocate config "
+        TracePrint((TRACE_LEVEL_ERROR, TRACE_FLAG_GENERAL, "DiskSaveGeometryDetectInfo: Can't allocate config "
                        "data buffer\n"));
         return STATUS_INSUFFICIENT_RESOURCES;
     }
@@ -288,20 +346,20 @@ DiskSaveGeometryDetectInfo(
                              &length);
 
     if(!NT_SUCCESS(status)) {
-        DebugPrint((1, "DiskSaveGeometryDetectInfo: Can't query configuration "
+        TracePrint((TRACE_LEVEL_ERROR, TRACE_FLAG_GENERAL, "DiskSaveGeometryDetectInfo: Can't query configuration "
                        "data (%#08lx)\n",
                     status));
-        ExFreePool(keyData);
+        FREE_POOL(keyData);
         return status;
     }
 
     //
     // Extract the resource list out of the key data.
-    // 
+    //
 
     fullDescriptor = (PCM_FULL_RESOURCE_DESCRIPTOR)
                       (((PUCHAR) keyData) + keyData->DataOffset);
-    partialDescriptor = 
+    partialDescriptor =
         fullDescriptor->PartialResourceList.PartialDescriptors;
     length = partialDescriptor->u.DeviceSpecificData.DataSize;
 
@@ -310,14 +368,14 @@ DiskSaveGeometryDetectInfo(
        (partialDescriptor->Type != CmResourceTypeDeviceSpecific) ||
        (length < sizeof(ULONG))) {
 
-        DebugPrint((1, "DiskSaveGeometryDetectInfo: BIOS header data too small "
+           TracePrint((TRACE_LEVEL_ERROR, TRACE_FLAG_GENERAL, "DiskSaveGeometryDetectInfo: BIOS header data too small "
                        "or invalid\n"));
-        ExFreePool(keyData);
+        FREE_POOL(keyData);
         return STATUS_INVALID_PARAMETER;
     }
 
     //
-    // Point to the BIOS data.  THe BIOS data is located after the first 
+    // Point to the BIOS data.  THe BIOS data is located after the first
     // partial Resource list which should be device specific data.
     //
 
@@ -331,8 +389,8 @@ DiskSaveGeometryDetectInfo(
     numberOfDrives = length / sizeof(CM_INT13_DRIVE_PARAMETER);
 
     //
-    // Allocate our detect info list now that we know how many entries there 
-    // are going to be.  No other routine allocates detect info and this is 
+    // Allocate our detect info list now that we know how many entries there
+    // are going to be.  No other routine allocates detect info and this is
     // done out of DriverEntry so we don't need to synchronize it's creation.
     //
 
@@ -342,11 +400,11 @@ DiskSaveGeometryDetectInfo(
                                            DISK_TAG_UPDATE_GEOM);
 
     if(DetectInfoList == NULL) {
-        DebugPrint((1, "DiskSaveGeometryDetectInfo: Couldn't allocate %x bytes "
-                       "for DetectInfoList\n", 
+        TracePrint((TRACE_LEVEL_ERROR, TRACE_FLAG_GENERAL, "DiskSaveGeometryDetectInfo: Couldn't allocate %x bytes "
+                       "for DetectInfoList\n",
                     length));
 
-        ExFreePool(keyData);
+        FREE_POOL(keyData);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
@@ -355,20 +413,23 @@ DiskSaveGeometryDetectInfo(
     RtlZeroMemory(DetectInfoList, length);
 
     //
-    // Copy the information out of the key data and into the list we've 
+    // Copy the information out of the key data and into the list we've
     // allocated.
     //
 
     for(i = 0; i < numberOfDrives; i++) {
+#ifdef _MSC_VER
+#pragma warning(suppress: 6386) // PREFast bug means it doesn't correctly remember the size of DetectInfoList
+#endif
         DetectInfoList[i].DriveParameters = driveParameters[i];
     }
 
-    ExFreePool(keyData);
+    FREE_POOL(keyData);
     return STATUS_SUCCESS;
 }
 
+
 VOID
-NTAPI
 DiskScanBusDetectInfo(
     IN PDRIVER_OBJECT DriverObject,
     IN HANDLE BusKey
@@ -378,7 +439,7 @@ DiskScanBusDetectInfo(
 Routine Description:
 
     The routine queries the registry to determine which disks are visible to
-    the BIOS.  If a disk is visible to the BIOS then the geometry information
+    the BIOS.  If a disk is visable to the BIOS then the geometry information
     is updated with the disk's signature and MBR checksum.
 
 Arguments:
@@ -389,7 +450,7 @@ Arguments:
 Return Value:
 
     status
-    
+
 --*/
 {
     ULONG busNumber;
@@ -398,36 +459,41 @@ Return Value:
 
     for(busNumber = 0; ; busNumber++) {
 
-        WCHAR buffer[32];
+        WCHAR buffer[32] = { 0 };
         UNICODE_STRING unicodeString;
 
-        OBJECT_ATTRIBUTES objectAttributes;
+        OBJECT_ATTRIBUTES objectAttributes = {0};
 
         HANDLE spareKey;
         HANDLE adapterKey;
 
         ULONG adapterNumber;
 
-        DebugPrint((1, "DiskScanBusDetectInfo: Scanning bus %d\n", busNumber));
+        TracePrint((TRACE_LEVEL_INFORMATION, TRACE_FLAG_GENERAL, "DiskScanBusDetectInfo: Scanning bus %d\n", busNumber));
 
         //
         // Open controller name key.
         //
 
-        swprintf(buffer, L"%d", busNumber);
+        status = RtlStringCchPrintfW(buffer, sizeof(buffer) / sizeof(buffer[0]) - 1, L"%d", busNumber);
+        if (!NT_SUCCESS(status)) {
+            TracePrint((TRACE_LEVEL_ERROR, TRACE_FLAG_GENERAL, "DiskScanBusDetectInfo: Format symbolic link failed with error: 0x%X\n", status));
+            break;
+        }
+
         RtlInitUnicodeString(&unicodeString, buffer);
 
         InitializeObjectAttributes(&objectAttributes,
                                    &unicodeString,
-                                   OBJ_CASE_INSENSITIVE,
+                                   OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
                                    BusKey,
                                    NULL);
 
         status = ZwOpenKey(&spareKey, KEY_READ, &objectAttributes);
 
         if(!NT_SUCCESS(status)) {
-            DebugPrint((1, "DiskScanBusDetectInfo: Error %#08lx opening bus "
-                           "key %#x\n", 
+            TracePrint((TRACE_LEVEL_ERROR, TRACE_FLAG_GENERAL, "DiskScanBusDetectInfo: Error %#08lx opening bus "
+                           "key %#x\n",
                         status, busNumber));
             break;
         }
@@ -439,7 +505,7 @@ Return Value:
         RtlInitUnicodeString(&unicodeString, L"DiskController");
         InitializeObjectAttributes(&objectAttributes,
                                    &unicodeString,
-                                   OBJ_CASE_INSENSITIVE,
+                                   OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
                                    spareKey,
                                    NULL);
 
@@ -447,8 +513,8 @@ Return Value:
         ZwClose(spareKey);
 
         if(!NT_SUCCESS(status)) {
-            DebugPrint((1, "DiskScanBusDetectInfo: Error %#08lx opening "
-                           "DiskController key\n", 
+            TracePrint((TRACE_LEVEL_ERROR, TRACE_FLAG_GENERAL, "DiskScanBusDetectInfo: Error %#08lx opening "
+                           "DiskController key\n",
                            status));
             continue;
         }
@@ -457,28 +523,33 @@ Return Value:
 
             HANDLE diskKey;
             ULONG diskNumber;
-            
+
             //
             // Open disk key.
             //
 
-            DebugPrint((1, "DiskScanBusDetectInfo: Scanning disk key "
+            TracePrint((TRACE_LEVEL_INFORMATION, TRACE_FLAG_GENERAL, "DiskScanBusDetectInfo: Scanning disk key "
                            "%d\\DiskController\\%d\\DiskPeripheral\n",
                            busNumber, adapterNumber));
 
-            swprintf(buffer, L"%d\\DiskPeripheral", adapterNumber);
+            status = RtlStringCchPrintfW(buffer, sizeof(buffer) / sizeof(buffer[0]) - 1, L"%d\\DiskPeripheral", adapterNumber);
+            if (!NT_SUCCESS(status)) {
+                TracePrint((TRACE_LEVEL_ERROR, TRACE_FLAG_GENERAL, "DiskScanBusDetectInfo: Format symbolic link failed with error: 0x%X\n", status));
+                break;
+            }
+
             RtlInitUnicodeString(&unicodeString, buffer);
 
             InitializeObjectAttributes(&objectAttributes,
                                        &unicodeString,
-                                       OBJ_CASE_INSENSITIVE,
+                                       OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
                                        adapterKey,
                                        NULL);
 
             status = ZwOpenKey(&diskKey, KEY_READ, &objectAttributes);
 
             if(!NT_SUCCESS(status)) {
-                DebugPrint((1, "DiskScanBusDetectInfo: Error %#08lx opening "
+                TracePrint((TRACE_LEVEL_ERROR, TRACE_FLAG_GENERAL, "DiskScanBusDetectInfo: Error %#08lx opening "
                                "disk key\n",
                                status));
                 break;
@@ -488,44 +559,49 @@ Return Value:
 
                 HANDLE targetKey;
 
-                DebugPrint((1, "DiskScanBusDetectInfo: Scanning target key "
+                TracePrint((TRACE_LEVEL_INFORMATION, TRACE_FLAG_GENERAL, "DiskScanBusDetectInfo: Scanning target key "
                                "%d\\DiskController\\%d\\DiskPeripheral\\%d\n",
                                busNumber, adapterNumber, diskNumber));
 
-                swprintf(buffer, L"%d", diskNumber);
+                status = RtlStringCchPrintfW(buffer, sizeof(buffer) / sizeof(buffer[0]) - 1, L"%d", diskNumber);
+                if (!NT_SUCCESS(status)) {
+                    TracePrint((TRACE_LEVEL_ERROR, TRACE_FLAG_GENERAL, "DiskScanBusDetectInfo: Format symbolic link failed with error: 0x%X\n", status));
+                    break;
+                }
+
                 RtlInitUnicodeString(&unicodeString, buffer);
 
                 InitializeObjectAttributes(&objectAttributes,
                                            &unicodeString,
-                                           OBJ_CASE_INSENSITIVE,
+                                           OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
                                            diskKey,
                                            NULL);
 
                 status = ZwOpenKey(&targetKey, KEY_READ, &objectAttributes);
 
                 if(!NT_SUCCESS(status)) {
-                    DebugPrint((1, "DiskScanBusDetectInfo: Error %#08lx "
-                                   "opening target key\n", 
+                    TracePrint((TRACE_LEVEL_ERROR, TRACE_FLAG_GENERAL, "DiskScanBusDetectInfo: Error %#08lx "
+                                   "opening target key\n",
                                 status));
                     break;
                 }
 
-                status = DiskSaveBusDetectInfo(DriverObject, 
-                                               targetKey,
-                                               diskNumber);
+                DiskSaveBusDetectInfo(DriverObject, targetKey, diskNumber);
 
                 ZwClose(targetKey);
             }
 
             ZwClose(diskKey);
         }
+
         ZwClose(adapterKey);
     }
+
     return;
 }
 
+
 NTSTATUS
-NTAPI
 DiskSaveBusDetectInfo(
     IN PDRIVER_OBJECT DriverObject,
     IN HANDLE TargetKey,
@@ -535,22 +611,22 @@ DiskSaveBusDetectInfo(
 
 Routine Description:
 
-    This routine will transfer the firmware/ntdetect reported information 
-    in the specified target key into the appropriate entry in the 
+    This routine will transfer the firmware/ntdetect reported information
+    in the specified target key into the appropriate entry in the
     DetectInfoList.
 
 Arguments:
 
     DriverObject - the object for this driver.
-    
-    TargetKey - the key for the disk being saved.    
 
-    DiskNumber - the ordinal of the entry in the DiskPeripheral tree for this 
+    TargetKey - the key for the disk being saved.
+
+    DiskNumber - the ordinal of the entry in the DiskPeripheral tree for this
                  entry
 
 Return Value:
 
-    status    
+    status
 
 --*/
 {
@@ -564,14 +640,20 @@ Return Value:
     NTSTATUS status;
 
     PAGED_CODE();
+    UNREFERENCED_PARAMETER(DriverObject);
+
+    if (DiskNumber >= DetectInfoCount)
+    {
+        return STATUS_UNSUCCESSFUL;
+    }
 
     diskInfo = &(DetectInfoList[DiskNumber]);
 
     if(diskInfo->Initialized) {
 
-        ASSERT(FALSE);
-        DebugPrint((1, "DiskSaveBusDetectInfo: disk entry %#x already has a "
-                        "signature of %#08lx and mbr checksum of %#08lx\n", 
+        NT_ASSERT(FALSE);
+        TracePrint((TRACE_LEVEL_ERROR, TRACE_FLAG_GENERAL, "DiskSaveBusDetectInfo: disk entry %#x already has a "
+                        "signature of %#08lx and mbr checksum of %#08lx\n",
                         DiskNumber,
                         diskInfo->Signature,
                         diskInfo->MbrCheckSum));
@@ -585,7 +667,7 @@ Return Value:
                                     DISK_TAG_UPDATE_GEOM);
 
     if(keyData == NULL) {
-        DebugPrint((1, "DiskSaveBusDetectInfo: Couldn't allocate space for "
+        TracePrint((TRACE_LEVEL_ERROR, TRACE_FLAG_GENERAL, "DiskSaveBusDetectInfo: Couldn't allocate space for "
                        "registry data\n"));
         return STATUS_INSUFFICIENT_RESOURCES;
     }
@@ -602,10 +684,10 @@ Return Value:
                              &length);
 
     if(!NT_SUCCESS(status)) {
-        DebugPrint((1, "DiskSaveBusDetectInfo: Error %#08lx getting "
+        TracePrint((TRACE_LEVEL_ERROR, TRACE_FLAG_GENERAL, "DiskSaveBusDetectInfo: Error %#08lx getting "
                        "Identifier\n",
                     status));
-        ExFreePool(keyData);
+        FREE_POOL(keyData);
         return status;
 
     } else if (keyData->DataLength < 9*sizeof(WCHAR)) {
@@ -613,11 +695,11 @@ Return Value:
         //
         // the data is too short to use (we subtract 9 chars in normal path)
         //
-        DebugPrint((1, "DiskSaveBusDetectInfo: Saved data was invalid, "
+        TracePrint((TRACE_LEVEL_ERROR, TRACE_FLAG_GENERAL, "DiskSaveBusDetectInfo: Saved data was invalid, "
                     "not enough data in registry!\n"));
-        ExFreePool(keyData);
+        FREE_POOL(keyData);
         return STATUS_UNSUCCESSFUL;
-        
+
     } else {
 
         UNICODE_STRING identifier;
@@ -626,45 +708,44 @@ Return Value:
         //
         // Complete unicode string.
         //
-    
+
         identifier.Buffer = (PWSTR) ((PUCHAR)keyData + keyData->DataOffset);
         identifier.Length = (USHORT) keyData->DataLength;
         identifier.MaximumLength = (USHORT) keyData->DataLength;
-    
+
         //
-        // Get the first value out of the identifier - this will be the MBR 
+        // Get the first value out of the identifier - this will be the MBR
         // checksum.
         //
-    
+
         status = RtlUnicodeStringToInteger(&identifier, 16, &value);
-    
+
         if(!NT_SUCCESS(status)) {
-            DebugPrint((1, "DiskSaveBusDetectInfo: Error %#08lx converting "
-                           "identifier %wZ into MBR xsum\n", 
+            TracePrint((TRACE_LEVEL_ERROR, TRACE_FLAG_GENERAL, "DiskSaveBusDetectInfo: Error %#08lx converting "
+                           "identifier %wZ into MBR xsum\n",
                            status,
                            &identifier));
-            ExFreePool(keyData);
+            FREE_POOL(keyData);
             return status;
         }
-    
+
         diskInfo->MbrCheckSum = value;
-    
+
         //
         // Shift the string over to get the disk signature
         //
-    
+
         identifier.Buffer += 9;
         identifier.Length -= 9 * sizeof(WCHAR);
         identifier.MaximumLength -= 9 * sizeof(WCHAR);
-    
+
         status = RtlUnicodeStringToInteger(&identifier, 16, &value);
-    
+
         if(!NT_SUCCESS(status)) {
-            DebugPrint((1, "DiskSaveBusDetectInfo: Error %#08lx converting "
-                           "identifier %wZ into disk signature\n", 
+            TracePrint((TRACE_LEVEL_ERROR, TRACE_FLAG_GENERAL, "DiskSaveBusDetectInfo: Error %#08lx converting "
+                           "identifier %wZ into disk signature\n",
                            status,
                            &identifier));
-            ExFreePool(keyData);
             value = 0;
         }
 
@@ -681,12 +762,13 @@ Return Value:
 
     diskInfo->Initialized = TRUE;
 
+    FREE_POOL(keyData);
 
     return STATUS_SUCCESS;
 }
 
+
 DISK_GEOMETRY_SOURCE
-NTAPI
 DiskUpdateGeometry(
     IN PFUNCTIONAL_DEVICE_EXTENSION FdoExtension
     )
@@ -695,13 +777,13 @@ DiskUpdateGeometry(
 Routine Description:
 
     This routine checks the DetectInfoList saved away during disk driver init
-    to see if any geometry information was reported for this drive.  If the 
-    geometry data exists (determined by matching non-zero signatures or 
+    to see if any geometry information was reported for this drive.  If the
+    geometry data exists (determined by matching non-zero signatures or
     non-zero MBR checksums) then it will be saved in the RealGeometry member
     of the disk data block.
 
     ClassReadDriveCapacity MUST be called after calling this routine to update
-    the cylinder count based on the size of the disk and the presence of any 
+    the cylinder count based on the size of the disk and the presence of any
     disk management software.
 
 Arguments:
@@ -710,7 +792,7 @@ Arguments:
 
 Return Value:
 
-    Indicates whether the "RealGeometry" in the data block is now valid.
+    Inidicates whether the "RealGeometry" in the data block is now valid.
 
 --*/
 
@@ -718,7 +800,7 @@ Return Value:
     PDISK_DATA diskData = FdoExtension->CommonExtension.DriverData;
 
     ULONG i;
-    PDISK_DETECT_INFO diskInfo;
+    PDISK_DETECT_INFO diskInfo = NULL;
 
     BOOLEAN found = FALSE;
 
@@ -727,11 +809,10 @@ Return Value:
     PAGED_CODE();
 
 
-    ASSERT(FdoExtension->CommonExtension.IsFdo);
-    ASSERT((FdoExtension->DeviceObject->Characteristics & FILE_REMOVABLE_MEDIA) == 0);
+    NT_ASSERT((FdoExtension->DeviceObject->Characteristics & FILE_REMOVABLE_MEDIA) == 0);
 
     //
-    // If we've already set a non-default geometry for this drive then there's 
+    // If we've already set a non-default geometry for this drive then there's
     // no need to try and update again.
     //
 
@@ -740,27 +821,27 @@ Return Value:
     }
 
     //
-    // Scan through the saved detect info to see if we can find a match 
+    // Scan through the saved detect info to see if we can find a match
     // for this device.
     //
 
     for(i = 0; i < DetectInfoCount; i++) {
 
-        ASSERT(DetectInfoList != NULL);
+        NT_ASSERT(DetectInfoList != NULL);
 
         diskInfo = &(DetectInfoList[i]);
 
-        if((diskData->Mbr.Signature != 0) && 
-           (diskData->Mbr.Signature == diskInfo->Signature)) { 
-            DebugPrint((1, "DiskUpdateGeometry: found match for signature "
+        if((diskData->Mbr.Signature != 0) &&
+           (diskData->Mbr.Signature == diskInfo->Signature)) {
+               TracePrint((TRACE_LEVEL_INFORMATION, TRACE_FLAG_GENERAL, "DiskUpdateGeometry: found match for signature "
                            "%#08lx\n",
                         diskData->Mbr.Signature));
             found = TRUE;
             break;
-        } else if((diskData->Mbr.Signature == 0) && 
+        } else if((diskData->Mbr.Signature == 0) &&
                   (diskData->Mbr.MbrCheckSum != 0) &&
                   (diskData->Mbr.MbrCheckSum == diskInfo->MbrCheckSum)) {
-            DebugPrint((1, "DiskUpdateGeometry: found match for xsum %#08lx\n",
+                      TracePrint((TRACE_LEVEL_INFORMATION, TRACE_FLAG_GENERAL, "DiskUpdateGeometry: found match for xsum %#08lx\n",
                         diskData->Mbr.MbrCheckSum));
             found = TRUE;
             break;
@@ -773,13 +854,12 @@ Return Value:
         ULONG sectorsPerTrack;
         ULONG tracksPerCylinder;
 
-        //ULONG sectors;
         ULONG length;
 
         //
         // Point to the array of drive parameters.
         //
-        
+
         cylinders = diskInfo->DriveParameters.MaxCylinders + 1;
         sectorsPerTrack = diskInfo->DriveParameters.SectorsPerTrack;
         tracksPerCylinder = diskInfo->DriveParameters.MaxHeads + 1;
@@ -789,20 +869,20 @@ Return Value:
         // size based on the volume size and the BIOS values for tracks per
         // cylinder and sectors per track..
         //
-    
+
         length = tracksPerCylinder * sectorsPerTrack;
-    
+
         if (length == 0) {
-    
+
             //
             // The BIOS information is bogus.
             //
-    
-            DebugPrint((1, "DiskUpdateGeometry: H (%d) or S(%d) is zero\n",
+
+            TracePrint((TRACE_LEVEL_INFORMATION, TRACE_FLAG_GENERAL, "DiskUpdateGeometry: H (%d) or S(%d) is zero\n",
                         tracksPerCylinder, sectorsPerTrack));
-            return FALSE;
+            return DiskGeometryUnknown;
         }
-    
+
         //
         // since we are copying the structure RealGeometry here, we should
         // really initialize all the fields, especially since a zero'd
@@ -810,9 +890,9 @@ Return Value:
         //
 
         diskData->RealGeometry = FdoExtension->DiskGeometry;
-        
+
         //
-        // Save the geometry information away in the disk data block and 
+        // Save the geometry information away in the disk data block and
         // set the bit indicating that we found a valid one.
         //
 
@@ -820,22 +900,28 @@ Return Value:
         diskData->RealGeometry.TracksPerCylinder = tracksPerCylinder;
         diskData->RealGeometry.Cylinders.QuadPart = (LONGLONG)cylinders;
 
-        DebugPrint((1, "DiskUpdateGeometry: BIOS spt %#x, #heads %#x, "
+        TracePrint((TRACE_LEVEL_INFORMATION, TRACE_FLAG_GENERAL, "DiskUpdateGeometry: BIOS spt %#x, #heads %#x, "
                        "#cylinders %#x\n",
                    sectorsPerTrack, tracksPerCylinder, cylinders));
 
         diskData->GeometrySource = DiskGeometryFromBios;
         diskInfo->Device = FdoExtension->DeviceObject;
 
+        //
+        // Increment the count of used geometry entries.
+        //
+
+        InterlockedIncrement(&DetectInfoUsedCount);
+
     } else {
-    
-       DebugPrint((1, "DiskUpdateGeometry: no match found for signature %#08lx\n", diskData->Mbr.Signature));
+
+        TracePrint((TRACE_LEVEL_ERROR, TRACE_FLAG_GENERAL, "DiskUpdateGeometry: no match found for signature %#08lx\n", diskData->Mbr.Signature));
     }
 
     if(diskData->GeometrySource == DiskGeometryUnknown) {
 
         //
-        // We couldn't find a geometry from the BIOS.  Check with the port 
+        // We couldn't find a geometry from the BIOS.  Check with the port
         // driver and see if it can provide one.
         //
 
@@ -847,20 +933,20 @@ Return Value:
             // Check the geometry to make sure it's valid.
             //
 
-            if((diskData->RealGeometry.TracksPerCylinder * 
+            if((diskData->RealGeometry.TracksPerCylinder *
                 diskData->RealGeometry.SectorsPerTrack) != 0) {
 
                 diskData->GeometrySource = DiskGeometryFromPort;
-                DebugPrint((1, "DiskUpdateGeometry: using Port geometry for disk %#p\n", FdoExtension));
-                
+                TracePrint((TRACE_LEVEL_INFORMATION, TRACE_FLAG_GENERAL, "DiskUpdateGeometry: using Port geometry for disk %#p\n", FdoExtension));
+
                 if (diskData->RealGeometry.BytesPerSector == 0) {
-                    
-                    DebugPrint((0, "DiskDriverReinit: Port driver failed to "
+
+                    TracePrint((TRACE_LEVEL_ERROR, TRACE_FLAG_GENERAL, "DiskDriverReinit: Port driver failed to "
                                 "set BytesPerSector in the RealGeometry\n"));
                     diskData->RealGeometry.BytesPerSector =
                         FdoExtension->DiskGeometry.BytesPerSector;
                     if (diskData->RealGeometry.BytesPerSector == 0) {
-                        ASSERT(!"BytesPerSector is still zero!");
+                        NT_ASSERT(!"BytesPerSector is still zero!");
                     }
 
                 }
@@ -869,25 +955,20 @@ Return Value:
     }
 
     //
-    // If we came up with a "real" geometry for this drive then set it in the 
+    // If we came up with a "real" geometry for this drive then set it in the
     // device extension.
     //
 
-    if(diskData->GeometrySource != DiskGeometryUnknown) {
+    if (diskData->GeometrySource != DiskGeometryUnknown) {
+
         FdoExtension->DiskGeometry = diskData->RealGeometry;
-
-        //
-        // Increment the count of used geometry entries.
-        //
-
-        InterlockedIncrement(&DetectInfoUsedCount);
     }
 
     return diskData->GeometrySource;
 }
 
+
 NTSTATUS
-NTAPI
 DiskUpdateRemovableGeometry (
     IN PFUNCTIONAL_DEVICE_EXTENSION FdoExtension
     )
@@ -896,12 +977,12 @@ DiskUpdateRemovableGeometry (
 
 Routine Description:
 
-    This routine updates the geometry of the disk.  It will query the port 
-    driver to see if it can provide any geometry info.  If not it will use 
+    This routine updates the geometry of the disk.  It will query the port
+    driver to see if it can provide any geometry info.  If not it will use
     the current head & sector count.
-    
-    Based on these values & the capacity of the drive as reported by 
-    ClassReadDriveCapacity it will determine a new cylinder count for the 
+
+    Based on these values & the capacity of the drive as reported by
+    ClassReadDriveCapacity it will determine a new cylinder count for the
     device.
 
 Arguments:
@@ -910,7 +991,7 @@ Arguments:
 
 Return Value:
 
-    Returns the status of the operation.
+    Returns the status of the opertion.
 
 --*/
 {
@@ -922,21 +1003,20 @@ Return Value:
 
     PAGED_CODE();
 
-    ASSERT_FDO(commonExtension->DeviceObject);
     if (FdoExtension->DeviceDescriptor) {
-        ASSERT(FdoExtension->DeviceDescriptor->RemovableMedia);
+        NT_ASSERT(FdoExtension->DeviceDescriptor->RemovableMedia);
     }
-    ASSERT(TEST_FLAG(FdoExtension->DeviceObject->Characteristics,
+    NT_ASSERT(TEST_FLAG(FdoExtension->DeviceObject->Characteristics,
                      FILE_REMOVABLE_MEDIA));
 
     //
-    // Attempt to determine the disk geometry.  First we'll check with the 
+    // Attempt to determine the disk geometry.  First we'll check with the
     // port driver to see what it suggests for a value.
     //
 
     status = DiskGetPortGeometry(FdoExtension, geometry);
 
-    if(NT_SUCCESS(status) && 
+    if(NT_SUCCESS(status) &&
        ((geometry->TracksPerCylinder * geometry->SectorsPerTrack) != 0)) {
 
         FdoExtension->DiskGeometry = (*geometry);
@@ -945,8 +1025,8 @@ Return Value:
     return status;
 }
 
+
 NTSTATUS
-NTAPI
 DiskGetPortGeometry(
     IN PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
     OUT PDISK_GEOMETRY Geometry
@@ -955,22 +1035,22 @@ DiskGetPortGeometry(
 
 Routine Description:
 
-    This routine will query the port driver for disk geometry.  Some port 
-    drivers (in particular IDEPORT) may be able to provide geometry for the 
+    This routine will query the port driver for disk geometry.  Some port
+    drivers (in particular IDEPORT) may be able to provide geometry for the
     device.
-    
+
 Arguments:
 
     FdoExtension - the device object for the disk.
-    
-    Geometry - a structure to save the geometry information into (if any is 
+
+    Geometry - a structure to save the geometry information into (if any is
                available)
-               
+
 Return Value:
-    
-    STATUS_SUCCESS if geometry information can be provided or 
+
+    STATUS_SUCCESS if geometry information can be provided or
     error status indicating why it can't.
-    
+
 --*/
 {
     PCOMMON_DEVICE_EXTENSION commonExtension = &(FdoExtension->CommonExtension);
@@ -996,35 +1076,170 @@ Return Value:
 
     irpStack->MajorFunction = IRP_MJ_DEVICE_CONTROL;
 
-    irpStack->Parameters.DeviceIoControl.IoControlCode = 
+    irpStack->Parameters.DeviceIoControl.IoControlCode =
         IOCTL_DISK_GET_DRIVE_GEOMETRY;
-    irpStack->Parameters.DeviceIoControl.OutputBufferLength = 
+    irpStack->Parameters.DeviceIoControl.OutputBufferLength =
         sizeof(DISK_GEOMETRY);
 
     irp->AssociatedIrp.SystemBuffer = Geometry;
 
     KeInitializeEvent(&event, SynchronizationEvent, FALSE);
 
-    IoSetCompletionRoutine(irp, 
-                           (PIO_COMPLETION_ROUTINE)ClassSignalCompletion,
+    IoSetCompletionRoutine(irp,
+                           ClassSignalCompletion,
                            &event,
                            TRUE,
                            TRUE,
                            TRUE);
 
     status = IoCallDriver(commonExtension->LowerDeviceObject, irp);
-    KeWaitForSingleObject(&event, Executive, KernelMode, FALSE, NULL);
-
-    ASSERT((status == STATUS_PENDING) || (status == irp->IoStatus.Status));
-    status = irp->IoStatus.Status;
+    if (status == STATUS_PENDING) {
+        KeWaitForSingleObject(&event, Executive, KernelMode, FALSE, NULL);
+        status = irp->IoStatus.Status;
+    }
 
     IoFreeIrp(irp);
 
     return status;
 }
 
+
+BOOLEAN
+DiskIsNT4Geometry(
+    IN PFUNCTIONAL_DEVICE_EXTENSION FdoExtension
+    )
+
+/*++
+
+Routine Description:
+
+    The default geometry that was used in partitioning disks under Windows NT 4.0 was
+
+    Sectors per Track   = 0x20 =  32
+    Tracks per Cylinder = 0x40 =  64
+
+    This was changed in Windows 2000 to
+
+    Sectors per Track   = 0x3F =  63
+    Tracks per Cylinder = 0xFF = 255
+
+    If neither the BIOS nor the port driver can report the correct geometry,  we will
+    default to the new numbers on such disks. Now LVM uses the geometry when creating
+    logical volumes and dynamic disks.  So reporting an incorrect geometry will cause
+    the entire extended partition / dynamic disk to be destroyed
+
+    In this routine, we will look at the Master Boot Record. In 90% of the cases, the
+    first entry corresponds to a partition that starts on the first track. If this is
+    so,  we shall retrieve the logical block address associated with it and calculate
+    the correct geometry.  Now, all partitions start on a cylinder boundary.  So, for
+    the remaining 10% we will look at the ending CHS number to determine the geometry
+
+--*/
+
+{
+    PUSHORT readBuffer = NULL;
+    BOOLEAN bFoundNT4 = FALSE;
+
+    PAGED_CODE();
+
+    readBuffer = ExAllocatePoolWithTag(NonPagedPoolNx, FdoExtension->DiskGeometry.BytesPerSector, DISK_TAG_UPDATE_GEOM);
+
+    if (readBuffer)
+    {
+        KEVENT event;
+        LARGE_INTEGER diskOffset;
+        IO_STATUS_BLOCK ioStatus = { 0 };
+        PIRP irp;
+
+        KeInitializeEvent(&event, NotificationEvent, FALSE);
+
+        //
+        // Read the Master Boot Record at disk offset 0
+        //
+
+        diskOffset.QuadPart = 0;
+
+        irp = IoBuildSynchronousFsdRequest(IRP_MJ_READ, FdoExtension->DeviceObject, readBuffer, FdoExtension->DiskGeometry.BytesPerSector, &diskOffset, &event, &ioStatus);
+
+        if (irp)
+        {
+            PIO_STACK_LOCATION irpSp = IoGetNextIrpStackLocation(irp);
+            NTSTATUS status;
+
+            irpSp->Flags |= SL_OVERRIDE_VERIFY_VOLUME;
+
+            status = IoCallDriver(FdoExtension->DeviceObject, irp);
+
+            if (status == STATUS_PENDING)
+            {
+                KeWaitForSingleObject(&event, Executive, KernelMode, FALSE, NULL);
+                status = ioStatus.Status;
+            }
+
+            if (NT_SUCCESS(status))
+            {
+                //
+                // Match the boot record signature
+                //
+
+                if (readBuffer[BOOT_SIGNATURE_OFFSET] == BOOT_RECORD_SIGNATURE)
+                {
+                    PPARTITION_DESCRIPTOR partitionTableEntry = (PPARTITION_DESCRIPTOR)&readBuffer[PARTITION_TABLE_OFFSET];
+                    ULONG uCount = 0;
+
+                    //
+                    // Walk the entries looking for a clue as to what the geometry might be
+                    //
+
+                    for (uCount = 0; uCount < NUM_PARTITION_TABLE_ENTRIES; uCount++)
+                    {
+                        //
+                        // We are only concerned if there might be a logical volume or if this disk is part of a dynamic set
+                        //
+
+                        if (IsContainerPartition(partitionTableEntry->PartitionType) || partitionTableEntry->PartitionType == PARTITION_LDM)
+                        {
+                            //
+                            // In 90% of the cases, the first entry corresponds to a partition that starts on the first track
+                            //
+
+                            if (partitionTableEntry->StartingTrack == 1 && GET_STARTING_SECTOR(partitionTableEntry) == 0x20)
+                            {
+                                bFoundNT4 = TRUE;
+                                break;
+                            }
+
+                            //
+                            // In almost every case, the ending CHS number is on a cylinder boundary
+                            //
+
+                            if (partitionTableEntry->EndingTrack == 0x3F && GET_ENDING_S_OF_CHS(partitionTableEntry) == 0x20)
+                            {
+                                bFoundNT4 = TRUE;
+                                break;
+                            }
+                        }
+
+                        partitionTableEntry++;
+                    }
+                }
+                else
+                {
+                    //
+                    // The Master Boot Record is invalid
+                    //
+                }
+            }
+        }
+
+        FREE_POOL(readBuffer);
+    }
+
+    return bFoundNT4;
+}
+
+
 NTSTATUS
-NTAPI
 DiskReadDriveCapacity(
     IN PDEVICE_OBJECT Fdo
     )
@@ -1032,36 +1247,32 @@ DiskReadDriveCapacity(
 
 Routine Description:
 
-    This routine is used by disk.sys as a wrapper for the classpnp API 
-    ClassReadDriveCapacity.  It will perform some additional operations to 
-    attempt to determine drive geometry before it calls the classpnp version 
+    This routine is used by disk.sys as a wrapper for the classpnp API
+    ClassReadDriveCapacity.  It will perform some additional operations to
+    attempt to determine drive geometry before it calls the classpnp version
     of the routine.
-    
-    For fixed disks this involves calling DiskUpdateGeometry which will check 
+
+    For fixed disks this involves calling DiskUpdateGeometry which will check
     various sources (the BIOS, the port driver) for geometry information.
-    
+
 Arguments:
 
-    Fdo - a pointer to the device object to be checked.    
+    Fdo - a pointer to the device object to be checked.
 
 Return Value:
 
     status of ClassReadDriveCapacity.
-    
---*/        
+
+--*/
 
 {
     PFUNCTIONAL_DEVICE_EXTENSION fdoExtension = Fdo->DeviceExtension;
-    //PDISK_DATA diskData = fdoExtension->CommonExtension.DriverData;
-    //DISK_GEOMETRY_SOURCE diskGeometrySource = DiskGeometryUnknown;
     NTSTATUS status;
-
-    ASSERT_FDO(Fdo);
 
     if (TEST_FLAG(Fdo->Characteristics, FILE_REMOVABLE_MEDIA)) {
         DiskUpdateRemovableGeometry(fdoExtension);
     } else {
-        /* diskGeometrySource =*/ DiskUpdateGeometry(fdoExtension);
+        DiskUpdateGeometry(fdoExtension);
     }
 
     status = ClassReadDriveCapacity(Fdo);
@@ -1069,8 +1280,8 @@ Return Value:
     return status;
 }
 
+
 VOID
-NTAPI
 DiskDriverReinitialization(
     IN PDRIVER_OBJECT DriverObject,
     IN PVOID Nothing,
@@ -1080,8 +1291,8 @@ DiskDriverReinitialization(
 
 Routine Description:
 
-    This routine will scan through the current list of disks and attempt to 
-    match them to any remaining geometry information.  This will only be done 
+    This routine will scan through the current list of disks and attempt to
+    match them to any remaining geometry information.  This will only be done
     on the first call to the routine.
 
     Note: This routine assumes that the system will not be adding or removing
@@ -1091,11 +1302,11 @@ Routine Description:
 Arguments:
 
     DriverObject - a pointer to the object for the disk driver.
-    
+
     Nothing - unused
-    
+
     Count - an indication of how many times this routine has been called.
-    
+
 Return Value:
 
     none
@@ -1113,8 +1324,10 @@ Return Value:
     ULONG i;
     PDISK_DETECT_INFO diskInfo = NULL;
 
+    UNREFERENCED_PARAMETER(Nothing);
+
     if(Count != 1) {
-        DebugPrint((1, "DiskDriverReinitialization: ignoring call %d\n", 
+        TracePrint((TRACE_LEVEL_WARNING, TRACE_FLAG_GENERAL, "DiskDriverReinitialization: ignoring call %d\n",
                     Count));
         return;
     }
@@ -1126,39 +1339,39 @@ Return Value:
     //
 
     if(DetectInfoCount == 0) {
-        DebugPrint((1, "DiskDriverReinitialization: no detect info saved\n"));
+        TracePrint((TRACE_LEVEL_WARNING, TRACE_FLAG_GENERAL, "DiskDriverReinitialization: no detect info saved\n"));
         return;
     }
 
     if((DetectInfoCount - DetectInfoUsedCount) != 1) {
-        DebugPrint((1, "DiskDriverReinitialization: %d of %d geometry entries "
-                       "used - will not attempt match\n"));
+        TracePrint((TRACE_LEVEL_WARNING, TRACE_FLAG_GENERAL, "DiskDriverReinitialization: %d of %d geometry entries "
+                       "used - will not attempt match\n", DetectInfoUsedCount, DetectInfoCount));
         return;
     }
 
     //
     // Scan through the list of disks and see if any of them are missing
-    // geometry information.  If there is only one such disk we'll try to 
+    // geometry information.  If there is only one such disk we'll try to
     // match it to the unmatched geometry.
     //
-    
-    
+
+
     //
     // ISSUE-2000/5/24-henrygab - figure out if there's a way to keep
     //                            removals from happening while doing this.
     //
-
-    for(deviceObject = DriverObject->DeviceObject, unmatchedDiskCount = 0;
+    unmatchedDiskCount = 0;
+    for(deviceObject = DriverObject->DeviceObject;
         deviceObject != NULL;
+#ifdef _MSC_VER
+#pragma prefast(suppress:28175, "Need to access the opaque field to scan through the list of disks")
+#endif
         deviceObject = deviceObject->NextDevice) {
 
-        //
-        // Make sure this is a disk and not a partition.
-        //
-
         fdoExtension = deviceObject->DeviceExtension;
-        if(fdoExtension->CommonExtension.IsFdo == FALSE) {
-            DebugPrint((1, "DiskDriverReinit: DO %#p is not an FDO\n", 
+
+        if (!fdoExtension->CommonExtension.IsFdo) {
+            TracePrint((TRACE_LEVEL_INFORMATION, TRACE_FLAG_GENERAL, "DiskDriverReinit: %#p is not an FDO\n",
                            deviceObject));
             continue;
         }
@@ -1169,17 +1382,17 @@ Return Value:
 
         diskData = fdoExtension->CommonExtension.DriverData;
         if(diskData->GeometrySource != DiskGeometryUnknown) {
-            DebugPrint((1, "DiskDriverReinit: FDO %#p has a geometry\n", 
+            TracePrint((TRACE_LEVEL_INFORMATION, TRACE_FLAG_GENERAL, "DiskDriverReinit: FDO %#p has a geometry\n",
                            deviceObject));
             continue;
         }
 
-        DebugPrint((1, "DiskDriverReinit: FDO %#p has no geometry\n",
+        TracePrint((TRACE_LEVEL_WARNING, TRACE_FLAG_GENERAL, "DiskDriverReinit: FDO %#p has no geometry\n",
                        deviceObject));
 
         //
         // Mark this one as using the default.  It's past the time when disk
-        // might blunder across the geometry info.  If we set the geometry 
+        // might blunder across the geometry info.  If we set the geometry
         // from the bios we'll reset this field down below.
         //
 
@@ -1191,8 +1404,8 @@ Return Value:
 
         unmatchedDiskCount++;
         if(unmatchedDiskCount > 1) {
-            ASSERT(unmatchedDisk != NULL);
-            DebugPrint((1, "DiskDriverReinit: FDO %#p also has no geometry\n",
+            NT_ASSERT(unmatchedDisk != NULL);
+            TracePrint((TRACE_LEVEL_WARNING, TRACE_FLAG_GENERAL, "DiskDriverReinit: FDO %#p also has no geometry\n",
                            unmatchedDisk));
             unmatchedDisk = NULL;
             break;
@@ -1202,12 +1415,12 @@ Return Value:
     }
 
     //
-    // If there's more or less than one ungeometried disk then we can't do 
+    // If there's more or less than one ungeometried disk then we can't do
     // anything about the geometry.
     //
 
     if(unmatchedDiskCount != 1) {
-        DebugPrint((1, "DiskDriverReinit: Unable to match geometry\n"));
+        TracePrint((TRACE_LEVEL_ERROR, TRACE_FLAG_GENERAL, "DiskDriverReinit: Unable to match geometry\n"));
         return;
 
     }
@@ -1215,7 +1428,7 @@ Return Value:
     fdoExtension = unmatchedDisk->DeviceExtension;
     diskData = fdoExtension->CommonExtension.DriverData;
 
-    DebugPrint((1, "DiskDriverReinit: Found possible match\n"));
+    TracePrint((TRACE_LEVEL_INFORMATION, TRACE_FLAG_GENERAL, "DiskDriverReinit: Found possible match\n"));
 
     //
     // Find the geometry which wasn't assigned.
@@ -1228,11 +1441,10 @@ Return Value:
         }
     }
 
-    ASSERT(diskInfo != NULL);
-
+    if (diskInfo != NULL)
     {
         //
-        // Save the geometry information away in the disk data block and 
+        // Save the geometry information away in the disk data block and
         // set the bit indicating that we found a valid one.
         //
 
@@ -1240,13 +1452,12 @@ Return Value:
         ULONG sectorsPerTrack;
         ULONG tracksPerCylinder;
 
-        //ULONG sectors;
         ULONG length;
 
         //
         // Point to the array of drive parameters.
         //
-        
+
         cylinders = diskInfo->DriveParameters.MaxCylinders + 1;
         sectorsPerTrack = diskInfo->DriveParameters.SectorsPerTrack;
         tracksPerCylinder = diskInfo->DriveParameters.MaxHeads + 1;
@@ -1256,38 +1467,38 @@ Return Value:
         // size based on the volume size and the BIOS values for tracks per
         // cylinder and sectors per track..
         //
-    
+
         length = tracksPerCylinder * sectorsPerTrack;
-    
+
         if (length == 0) {
-    
+
             //
             // The BIOS information is bogus.
             //
-    
-            DebugPrint((1, "DiskDriverReinit: H (%d) or S(%d) is zero\n",
+
+            TracePrint((TRACE_LEVEL_INFORMATION, TRACE_FLAG_GENERAL, "DiskDriverReinit: H (%d) or S(%d) is zero\n",
                         tracksPerCylinder, sectorsPerTrack));
             return;
         }
-    
+
         //
         // since we are copying the structure RealGeometry here, we should
         // really initialize all the fields, especially since a zero'd
         // BytesPerSector field would cause a trap in xHalReadPartitionTable()
         //
-        
+
         diskData->RealGeometry = fdoExtension->DiskGeometry;
-        
+
         //
-        // Save the geometry information away in the disk data block and 
+        // Save the geometry information away in the disk data block and
         // set the bit indicating that we found a valid one.
         //
-    
+
         diskData->RealGeometry.SectorsPerTrack = sectorsPerTrack;
         diskData->RealGeometry.TracksPerCylinder = tracksPerCylinder;
         diskData->RealGeometry.Cylinders.QuadPart = (LONGLONG)cylinders;
 
-        DebugPrint((1, "DiskDriverReinit: BIOS spt %#x, #heads %#x, "
+        TracePrint((TRACE_LEVEL_INFORMATION, TRACE_FLAG_GENERAL, "DiskDriverReinit: BIOS spt %#x, #heads %#x, "
                        "#cylinders %#x\n",
                    sectorsPerTrack, tracksPerCylinder, cylinders));
 
@@ -1295,17 +1506,13 @@ Return Value:
         diskInfo->Device = unmatchedDisk;
 
         //
-        // Now copy the geometry over to the fdo extension and call 
+        // Now copy the geometry over to the fdo extension and call
         // classpnp to redetermine the disk size and cylinder count.
         //
 
         fdoExtension->DiskGeometry = diskData->RealGeometry;
-        
-        //
-        // BUGBUG - why not call DiskReadDriveCapacity()?
-        //
 
-        ClassReadDriveCapacity(unmatchedDisk);
+        (VOID)ClassReadDriveCapacity(unmatchedDisk);
 
         if (diskData->RealGeometry.BytesPerSector == 0) {
 
@@ -1316,15 +1523,15 @@ Return Value:
             // easier to determine what is happening this way.
             //
 
-            ASSERT(!"RealGeometry not set to non-zero bps\n");
+            NT_ASSERT(!"RealGeometry not set to non-zero bps\n");
         }
     }
 
     return;
 }
 
+
 NTSTATUS
-NTAPI
 DiskGetDetectInfo(
     IN PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
     OUT PDISK_DETECTION_INFO DetectInfo
@@ -1349,18 +1556,16 @@ Return Value:
 --*/
 {
     ULONG i;
-    BOOLEAN found;
+    BOOLEAN found = FALSE;
     PDISK_DETECT_INFO diskInfo = NULL;
     PDISK_DATA diskData = FdoExtension->CommonExtension.DriverData;
 
     PAGED_CODE ();
 
-    ASSERT(FdoExtension->CommonExtension.IsFdo);
-
     //
     // Fail for non-fixed drives.
     //
-    
+
     if (TEST_FLAG (FdoExtension->DeviceObject->Characteristics, FILE_REMOVABLE_MEDIA)) {
         return STATUS_NOT_SUPPORTED;
     }
@@ -1368,29 +1573,29 @@ Return Value:
     //
     // There is no GPT detection info, so fail this.
     //
-    
+
     if (diskData->PartitionStyle == PARTITION_STYLE_GPT) {
         return STATUS_NOT_SUPPORTED;
     }
 
     for(i = 0; i < DetectInfoCount; i++) {
 
-        
-        ASSERT(DetectInfoList != NULL);
+
+        NT_ASSERT(DetectInfoList != NULL);
 
         diskInfo = &(DetectInfoList[i]);
 
-        if((diskData->Mbr.Signature != 0) && 
-           (diskData->Mbr.Signature == diskInfo->Signature)) { 
-            DebugPrint((1, "DiskGetDetectInfo: found match for signature "
+        if((diskData->Mbr.Signature != 0) &&
+           (diskData->Mbr.Signature == diskInfo->Signature)) {
+               TracePrint((TRACE_LEVEL_INFORMATION, TRACE_FLAG_GENERAL, "DiskGetDetectInfo: found match for signature "
                            "%#08lx\n",
                         diskData->Mbr.Signature));
             found = TRUE;
             break;
-        } else if((diskData->Mbr.Signature == 0) && 
+        } else if((diskData->Mbr.Signature == 0) &&
                   (diskData->Mbr.MbrCheckSum != 0) &&
                   (diskData->Mbr.MbrCheckSum == diskInfo->MbrCheckSum)) {
-            DebugPrint((1, "DiskGetDetectInfo: found match for xsum %#08lx\n",
+                      TracePrint((TRACE_LEVEL_INFORMATION, TRACE_FLAG_GENERAL, "DiskGetDetectInfo: found match for xsum %#08lx\n",
                         diskData->Mbr.MbrCheckSum));
             found = TRUE;
             break;
@@ -1410,8 +1615,8 @@ Return Value:
     return (found ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL);
 }
 
+
 NTSTATUS
-NTAPI
 DiskReadSignature(
     IN PDEVICE_OBJECT Fdo
     )
@@ -1428,7 +1633,7 @@ Routine Description:
 Arguments:
 
     Fdo - Pointer to the FDO of a disk to read the signature for.
-    
+
 Return Value:
 
     NTSTATUS code.
@@ -1440,10 +1645,10 @@ Return Value:
     NTSTATUS Status;
     PFUNCTIONAL_DEVICE_EXTENSION fdoExtension = Fdo->DeviceExtension;
     PDISK_DATA diskData = fdoExtension->CommonExtension.DriverData;
-    DISK_SIGNATURE Signature;
+    DISK_SIGNATURE Signature = { 0 };
 
-    PAGED_CODE ();
-    
+    PAGED_CODE();
+
     Status = IoReadDiskSignature (Fdo,
                                   fdoExtension->DiskGeometry.BytesPerSector,
                                   &Signature);
@@ -1451,7 +1656,7 @@ Return Value:
     if (!NT_SUCCESS (Status)) {
         return Status;
     }
-    
+
     if (Signature.PartitionStyle == PARTITION_STYLE_GPT) {
         diskData->PartitionStyle = PARTITION_STYLE_GPT;
         diskData->Efi.DiskId = Signature.Gpt.DiskId;
@@ -1460,11 +1665,12 @@ Return Value:
         diskData->Mbr.Signature = Signature.Mbr.Signature;
         diskData->Mbr.MbrCheckSum = Signature.Mbr.CheckSum;
     } else {
-        ASSERT (FALSE);
+        NT_ASSERT (FALSE);
         Status = STATUS_UNSUCCESSFUL;
     }
 
     return Status;
 }
 
-#endif // defined(_X86_)
+#endif // defined(_X86_) || defined(_AMD64_)
+

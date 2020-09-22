@@ -354,3 +354,9 @@ BEGIN
     IDS_COL_LOCATION "In Folder"
     IDS_COL_RELEVANCE "Relevance"
 END
+
+STRINGTABLE
+BEGIN
+    IDS_PARSE_ADDR_ERR_TITLE "ReactOS Explorer"
+    IDS_PARSE_ADDR_ERR_TEXT "ReactOS Explorer cannot find '%1'. Check the spelling and try again."
+END

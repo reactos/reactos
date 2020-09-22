@@ -107,13 +107,15 @@ list(APPEND LIBNURBS_SOURCE
     src/libnurbs/nurbtess/sampleCompTop.cc
     src/libnurbs/nurbtess/sampleMonoPoly.cc
     src/libnurbs/nurbtess/sampledLine.cc
-    src/libnurbs/nurbtess/searchTree.cc
-    precomp.h)
+    src/libnurbs/nurbtess/searchTree.cc)
+
+list(APPEND PCH_SKIP_SOURCE
+    src/libnurbs/nurbtess/polyDBG.cc
+    ${SOURCE})
 
 add_library(glu32 MODULE
     ${LIBNURBS_SOURCE}
-    src/libnurbs/nurbtess/polyDBG.cc
-    ${SOURCE}
+    ${PCH_SKIP_SOURCE}
     glu32.rc
     ${CMAKE_CURRENT_BINARY_DIR}/glu32.def)
 
@@ -129,5 +131,5 @@ elseif(USE_CLANG_CL)
 endif()
 
 add_importlibs(glu32 opengl32 gdi32 msvcrt kernel32 ntdll)
-add_pch(glu32 precomp.h LIBNURBS_SOURCE)
+add_pch(glu32 precomp.h "${PCH_SKIP_SOURCE}")
 add_cd_file(TARGET glu32 DESTINATION reactos/system32 FOR all)

@@ -1,7 +1,7 @@
 /*
 	lfs_wrap: Crappy wrapper code for supporting crappy ambiguous large file support.
 
-	copyright 2010 by the mpg123 project - free software under the terms of the LGPL 2.1
+	copyright 2010-2020 by the mpg123 project - free software under the terms of the LGPL 2.1
 	see COPYING and AUTHORS files in distribution or http://mpg123.org
 
 	initially written by Thomas Orgis, thanks to Guido Draheim for consulting
@@ -552,7 +552,6 @@ off_t wrap_lseek(void *handle, off_t offset, int whence)
 			case IO_FD: return ioh->r_lseek(ioh->fd, smalloff, whence);
 			case IO_HANDLE: return ioh->r_h_lseek(ioh->handle, smalloff, whence);
 		}
-		error("Serious breakage - bad IO type in LFS wrapper!");
 		return -1;
 	}
 	else
@@ -571,6 +570,7 @@ off_t wrap_lseek(void *handle, off_t offset, int whence)
 #undef mpg123_replace_reader
 #undef mpg123_replace_reader_handle
 #undef mpg123_open
+#undef mpg123_open_fixed
 #undef mpg123_open_fd
 #undef mpg123_open_handle
 
@@ -697,6 +697,19 @@ int attribute_align_arg mpg123_open(mpg123_handle *mh, const char *path)
 		return MPG123_OK;
 	}
 	else return MPG123_LARGENAME(mpg123_open)(mh, path);
+}
+
+// This one needs to follow the logic of the original, and wrap the actual
+// mpg123_open() here.
+int attribute_align_arg mpg123_open_fixed( mpg123_handle *mh, const char *path
+,	int channels, int encoding )
+{
+	int err = open_fixed_pre(mh, channels, encoding);
+	if(err == MPG123_OK)
+		err = mpg123_open(mh, path);
+	if(err == MPG123_OK)
+		err = open_fixed_post(mh, channels, encoding);
+	return err;
 }
 
 /*

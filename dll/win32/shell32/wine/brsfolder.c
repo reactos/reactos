@@ -38,6 +38,9 @@
 #include "pidl.h"
 #include "shell32_main.h"
 #include "shresdef.h"
+#ifdef __REACTOS__
+    #include <shlwapi.h>
+#endif
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
@@ -625,6 +628,40 @@ static HRESULT BrsFolder_Rename(browse_info *info, HTREEITEM rename)
     return S_OK;
 }
 
+#ifdef __REACTOS__
+static void
+BrsFolder_Delete(browse_info *info, HTREEITEM selected_item)
+{
+    TV_ITEMW item;
+    TV_ITEMDATA *item_data;
+    SHFILEOPSTRUCTW fileop = { info->hwndTreeView };
+    WCHAR szzFrom[MAX_PATH + 1];
+
+    /* get item_data */
+    item.mask = TVIF_HANDLE | TVIF_PARAM;
+    item.hItem = selected_item;
+    if (!SendMessageW(info->hwndTreeView, TVM_GETITEMW, 0, (LPARAM)&item))
+    {
+        ERR("TVM_GETITEMW failed\n");
+        return;
+    }
+    item_data = (TV_ITEMDATA *)item.lParam;
+
+    /* get the path */
+    if (!SHGetPathFromIDListW(item_data->lpifq, szzFrom))
+    {
+        ERR("SHGetPathFromIDListW failed\n");
+        return;
+    }
+    szzFrom[lstrlenW(szzFrom) + 1] = 0; /* double NULL-terminated */
+    fileop.pFrom = szzFrom;
+
+    /* delete folder */
+    fileop.fFlags = FOF_ALLOWUNDO;
+    fileop.wFunc = FO_DELETE;
+    SHFileOperationW(&fileop);
+}
+#endif
 static LRESULT BrsFolder_Treeview_Keydown(browse_info *info, LPNMTVKEYDOWN keydown)
 {
     HTREEITEM selected_item;
@@ -643,14 +680,7 @@ static LRESULT BrsFolder_Treeview_Keydown(browse_info *info, LPNMTVKEYDOWN keydo
     case VK_DELETE:
         {
 #ifdef __REACTOS__
-            /*********************************************************
-            FIXME: Add a proper alternative implementation for ReactOS
-
-            NOTES: Wine makes use of the ISFHelper interface, which we
-            don't have in ReactOS.
-            It's defined in dlls/shell32/shellfolder.h and implemented
-            in dlls/shell32/shfldr_fs.c on Wine's side.
-            *********************************************************/
+            BrsFolder_Delete(info, selected_item);
 #else
             const ITEMIDLIST *item_id;
             ISFHelper *psfhlp;
@@ -934,13 +964,28 @@ cleanup:
 static BOOL BrsFolder_OnCommand( browse_info *info, UINT id )
 {
     LPBROWSEINFOW lpBrowseInfo = info->lpBrowseInfo;
+#ifdef __REACTOS__
+    WCHAR szPath[MAX_PATH];
+#endif
 
     switch (id)
     {
     case IDOK:
 #ifdef __REACTOS__
+        /* Get the text */
+        GetDlgItemTextW(info->hWnd, IDC_BROWSE_FOR_FOLDER_FOLDER_TEXT, szPath, _countof(szPath));
+        StrTrimW(szPath, L" \t");
+
         /* The original pidl is owned by the treeview and will be free'd. */
-        info->pidlRet = ILClone(info->pidlRet);
+        if (!PathIsRelativeW(szPath) && PathIsDirectoryW(szPath))
+        {
+            /* It's valid path */
+            info->pidlRet = ILCreateFromPathW(szPath);
+        }
+        else
+        {
+            info->pidlRet = ILClone(info->pidlRet);
+        }
 #endif
         if (info->pidlRet == NULL) /* A null pidl would mean a cancel */
             info->pidlRet = _ILCreateDesktop();
@@ -986,6 +1031,14 @@ static BOOL BrsFolder_OnSetExpanded(browse_info *info, LPVOID selection,
         if (FAILED(hr)) 
             goto done;
     }
+#ifdef __REACTOS__
+    if (_ILIsDesktop(pidlSelection))
+    {
+        item.hItem = TVI_ROOT;
+        bResult = TRUE;
+        goto done;
+    }
+#endif
 
     /* Move pidlCurrent behind the SHITEMIDs in pidlSelection, which are the root of
      * the sub-tree currently displayed. */

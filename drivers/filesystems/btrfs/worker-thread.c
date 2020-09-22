@@ -49,18 +49,18 @@ NTSTATUS do_read_job(PIRP Irp) {
         ExReleaseResourceLite(fcb->Header.Resource);
 
     if (!NT_SUCCESS(Status))
-        ERR("do_read returned %08x\n", Status);
+        ERR("do_read returned %08lx\n", Status);
 
     Irp->IoStatus.Status = Status;
 
-    TRACE("read %lu bytes\n", Irp->IoStatus.Information);
+    TRACE("read %Iu bytes\n", Irp->IoStatus.Information);
 
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
     if (top_level)
         IoSetTopLevelIrp(NULL);
 
-    TRACE("returning %08x\n", Status);
+    TRACE("returning %08lx\n", Status);
 
     return Status;
 }
@@ -76,18 +76,18 @@ NTSTATUS do_write_job(device_extension* Vcb, PIRP Irp) {
     } _SEH2_END;
 
     if (!NT_SUCCESS(Status))
-        ERR("write_file returned %08x\n", Status);
+        ERR("write_file returned %08lx\n", Status);
 
     Irp->IoStatus.Status = Status;
 
-    TRACE("wrote %u bytes\n", Irp->IoStatus.Information);
+    TRACE("wrote %Iu bytes\n", Irp->IoStatus.Information);
 
     IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
     if (top_level)
         IoSetTopLevelIrp(NULL);
 
-    TRACE("returning %08x\n", Status);
+    TRACE("returning %08lx\n", Status);
 
     return Status;
 }
@@ -147,7 +147,7 @@ bool add_thread_job(device_extension* Vcb, PIRP Irp) {
         _SEH2_TRY {
             MmProbeAndLockPages(Mdl, Irp->RequestorMode, op);
         } _SEH2_EXCEPT (EXCEPTION_EXECUTE_HANDLER) {
-            ERR("MmProbeAndLockPages raised status %08x\n", _SEH2_GetExceptionCode());
+            ERR("MmProbeAndLockPages raised status %08lx\n", _SEH2_GetExceptionCode());
 
             IoFreeMdl(Mdl);
             Irp->MdlAddress = NULL;

@@ -916,11 +916,7 @@ Return Value:
 
     PLIST_ENTRY Links;
 
-#ifndef __REACTOS__
     IO_STATUS_BLOCK Iosb = {0};
-#else
-    IO_STATUS_BLOCK Iosb = {{0}};
-#endif
     ULONG ChangeCount = 0;
 
     DISK_GEOMETRY Geometry;
@@ -1426,22 +1422,34 @@ Return Value:
 
         if (Dirent != NULL) {
 
+            UCHAR OemBuffer[11];
             OEM_STRING OemString;
             UNICODE_STRING UnicodeString;
+
+            OemString.Buffer = (PCHAR)&OemBuffer[0];
+            OemString.MaximumLength = 11;
+
+            RtlCopyMemory( OemString.Buffer, Dirent->FileName, 11 );
+
+            //
+            //  Translate the first character from 0x5 to 0xe5.
+            //
+
+            if (OemString.Buffer[0] == FAT_DIRENT_REALLY_0E5) {
+
+                OemString.Buffer[0] = 0xe5;
+            }
 
             //
             //  Compute the length of the volume name
             //
 
-            OemString.Buffer = (PCHAR)&Dirent->FileName[0];
-            OemString.MaximumLength = 11;
-
             for ( OemString.Length = 11;
                   OemString.Length > 0;
                   OemString.Length -= 1) {
 
-                if ( (Dirent->FileName[OemString.Length-1] != 0x00) &&
-                     (Dirent->FileName[OemString.Length-1] != 0x20) ) { break; }
+                if ( (OemString.Buffer[OemString.Length-1] != 0x00) &&
+                     (OemString.Buffer[OemString.Length-1] != 0x20) ) { break; }
             }
 
             UnicodeString.MaximumLength = MAXIMUM_VOLUME_LABEL_LENGTH;
@@ -1907,11 +1915,7 @@ Return Value:
     BOOLEAN LabelFound;
 
     ULONG ChangeCount = 0;
-#ifndef __REACTOS__
     IO_STATUS_BLOCK Iosb = {0};
-#else
-    IO_STATUS_BLOCK Iosb = {{0}};
-#endif
 
     PAGED_CODE();
 
@@ -2125,11 +2129,7 @@ Return Value:
             try_return( Status = STATUS_WRONG_VOLUME );
         }
 
-#ifndef __REACTOS__
         BootSector = FsRtlAllocatePoolWithTag(NonPagedPoolNxCacheAligned,
-#else
-        BootSector = FsRtlAllocatePoolWithTag(NonPagedPoolCacheAligned,
-#endif
                                               (ULONG) ROUND_TO_PAGES( SectorSize ),
                                               TAG_VERIFY_BOOTSECTOR);
 
@@ -2220,11 +2220,7 @@ Return Value:
             RootDirectorySize = FatBytesPerCluster(&Bpb);
         }
 
-#ifndef __REACTOS__
         RootDirectory = FsRtlAllocatePoolWithTag( NonPagedPoolNxCacheAligned,
-#else
-        RootDirectory = FsRtlAllocatePoolWithTag( NonPagedPoolCacheAligned,
-#endif
                                                   (ULONG) ROUND_TO_PAGES( RootDirectorySize ),
                                                   TAG_VERIFY_ROOTDIR);
 
@@ -4017,11 +4013,7 @@ Return Value:
 
     } else if (Irp->MdlAddress != NULL) {
 
-#ifndef __REACTOS__
         VolumeState = MmGetSystemAddressForMdlSafe( Irp->MdlAddress, LowPagePriority | MdlMappingNoExecute );
-#else
-        VolumeState = MmGetSystemAddressForMdlSafe( Irp->MdlAddress, LowPagePriority );
-#endif
 
         if (VolumeState == NULL) {
 
@@ -4837,11 +4829,7 @@ Return Value:
             try_leave( Status = STATUS_FILE_CORRUPT_ERROR);
         }
         
-#ifndef __REACTOS__
         *MappingPairs = FsRtlAllocatePoolWithTag( NonPagedPoolNx,
-#else
-        *MappingPairs = FsRtlAllocatePoolWithTag( NonPagedPool,
-#endif
                                                   (Index + 2) * (2 * sizeof(LARGE_INTEGER)),
                                                   TAG_OUTPUT_MAPPINGPAIRS );
 
@@ -6095,11 +6083,7 @@ Return Value:
 
             if (Buffer == NULL) {
 
-#ifndef __REACTOS__
                 Buffer = FsRtlAllocatePoolWithTag( NonPagedPoolNx,
-#else
-                Buffer = FsRtlAllocatePoolWithTag( NonPagedPool,
-#endif
                                                    BufferSize,
                                                    TAG_DEFRAG_BUFFER );
             }
@@ -7877,6 +7861,7 @@ Return Value:
     PDIRENT Dirent;
     PDIRENT TerminationDirent;
     ULONG VolumeLabelLength;
+    UCHAR OemBuffer[11];
     OEM_STRING OemString;
     UNICODE_STRING UnicodeString;
 
@@ -7923,19 +7908,30 @@ Return Value:
     }
 
 
+    OemString.Buffer = (PCHAR)&OemBuffer[0];
+    OemString.MaximumLength = 11;
+
+    RtlCopyMemory( OemString.Buffer, Dirent->FileName, 11 );
+
+    //
+    //  Translate the first character from 0x5 to 0xe5.
+    //
+
+    if (OemString.Buffer[0] == FAT_DIRENT_REALLY_0E5) {
+
+        OemString.Buffer[0] = 0xe5;
+    }
+
     //
     //  Compute the length of the volume name
     //
-
-    OemString.Buffer = (PCHAR)&Dirent->FileName[0];
-    OemString.MaximumLength = 11;
 
     for ( OemString.Length = 11;
           OemString.Length > 0;
           OemString.Length -= 1) {
 
-        if ( (Dirent->FileName[OemString.Length-1] != 0x00) &&
-             (Dirent->FileName[OemString.Length-1] != 0x20) ) { break; }
+        if ( (OemString.Buffer[OemString.Length-1] != 0x00) &&
+             (OemString.Buffer[OemString.Length-1] != 0x20) ) { break; }
     }
 
     UnicodeString.MaximumLength = sizeof( UnicodeBuffer );
@@ -7987,11 +7983,7 @@ FatVerifyLookupFatEntry (
 
     FatVerifyIndexIsValid( IrpContext, Vcb, FatIndex);
 
-#ifndef __REACTOS__
     Buffer = FsRtlAllocatePoolWithTag( NonPagedPoolNxCacheAligned,
-#else
-    Buffer = FsRtlAllocatePoolWithTag( NonPagedPoolCacheAligned,
-#endif
                                        PAGE_SIZE,
                                        TAG_ENTRY_LOOKUP_BUFFER );
 

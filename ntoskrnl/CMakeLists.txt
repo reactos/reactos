@@ -12,14 +12,19 @@ set(NTKRNLMP_ASM_SOURCE ${ASM_SOURCE})
 spec2def(ntoskrnl.exe ntoskrnl.spec ADD_IMPORTLIB)
 add_asm_files(ntoskrnl_asm ${NTOSKRNL_ASM_SOURCE})
 
+list(APPEND PCH_SKIP_SOURCE
+    guid.c)
+
 add_executable(ntoskrnl
     ${ntoskrnl_asm}
     ${NTOSKRNL_SOURCE}
-    guid.c
+    ${PCH_SKIP_SOURCE}
     ntoskrnl.rc
     ${CMAKE_CURRENT_BINARY_DIR}/ntoskrnl.def)
 set_property(TARGET ntoskrnl PROPERTY ENABLE_EXPORTS TRUE)
 set_target_properties(ntoskrnl PROPERTIES DEFINE_SYMBOL "")
+
+source_group(TREE ${REACTOS_SOURCE_DIR}/ntoskrnl PREFIX "Source Files" FILES ${NTOSKRNL_SOURCE})
 
 if(ARCH STREQUAL "i386")
     set_entrypoint(ntoskrnl KiSystemStartup 4)
@@ -38,8 +43,7 @@ else()
     else()
         set_image_base(ntoskrnl 0x80800000)
     endif()
-    #Disabled due to LD bug: ROSBE-154
-    #add_linker_script(ntoskrnl ${REACTOS_SOURCE_DIR}/sdk/cmake/init-section.lds)
+    add_linker_script(ntoskrnl ${REACTOS_SOURCE_DIR}/sdk/cmake/init-section.lds)
 endif()
 
 target_link_libraries(ntoskrnl cportlib csq ${PSEH_LIB} arbiter cmlib ntlsalib rtl ${ROSSYM_LIB} libcntpr wdmguid ioevent)
@@ -51,7 +55,7 @@ elseif(RUNTIME_CHECKS)
 endif()
 
 add_importlibs(ntoskrnl hal kdcom bootvid)
-add_pch(ntoskrnl ${REACTOS_SOURCE_DIR}/ntoskrnl/include/ntoskrnl.h NTOSKRNL_SOURCE)
+add_pch(ntoskrnl ${REACTOS_SOURCE_DIR}/ntoskrnl/include/ntoskrnl.h "${PCH_SKIP_SOURCE}")
 add_dependencies(ntoskrnl psdk bugcodes asm)
 add_cd_file(TARGET ntoskrnl DESTINATION reactos/system32 NO_CAB FOR all)
 

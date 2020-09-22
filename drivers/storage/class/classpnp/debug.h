@@ -22,16 +22,26 @@ Revision History:
 
 --*/
 
-#pragma once
+#define DBGGETIOCTLSTR(_ioctl)              DbgGetIoctlStr(_ioctl)
+#define DBGGETSCSIOPSTR(_pSrb)              DbgGetScsiOpStr(_pSrb)
+#define DBGGETSRBSTATUSSTR(_pSrb)           DbgGetSrbStatusStr(_pSrb)
+#define DBGGETSENSECODESTR(_pSrb)           DbgGetSenseCodeStr(_pSrb)
+#define DBGGETADSENSECODESTR(_pSrb)         DbgGetAdditionalSenseCodeStr(_pSrb)
+#define DBGGETADSENSEQUALIFIERSTR(_pSrb)    DbgGetAdditionalSenseCodeQualifierStr(_pSrb)
 
-VOID ClassDebugPrint(CLASS_DEBUG_LEVEL DebugPrintLevel, PCCHAR DebugMessage, ...);
+char *DbgGetIoctlStr(ULONG ioctl);
+char *DbgGetScsiOpStr(PSTORAGE_REQUEST_BLOCK_HEADER Srb);
+char *DbgGetSrbStatusStr(PSTORAGE_REQUEST_BLOCK_HEADER Srb);
+char *DbgGetSenseCodeStr(PSTORAGE_REQUEST_BLOCK_HEADER Srb);
+char *DbgGetAdditionalSenseCodeStr(PSTORAGE_REQUEST_BLOCK_HEADER Srb);
+char *DbgGetAdditionalSenseCodeQualifierStr(PSTORAGE_REQUEST_BLOCK_HEADER Srb);
 
 #if DBG
 
     typedef struct _CLASSPNP_GLOBALS {
 
         //
-        // whether or not to ASSERT for lost irps
+        // whether or not to NT_ASSERT for lost irps
         //
 
         ULONG BreakOnLostIrps;
@@ -54,7 +64,7 @@ VOID ClassDebugPrint(CLASS_DEBUG_LEVEL DebugPrintLevel, PCCHAR DebugMessage, ...
 
         ULONG Index;                // index into buffer
         KSPIN_LOCK SpinLock;
-        PSTR Buffer;                // requires spinlock to access
+        PUCHAR Buffer;              // requires spinlock to access
         ULONG NumberOfBuffers;      // number of buffers available
         SIZE_T EachBufferSize;      // size of each buffer
 
@@ -68,62 +78,42 @@ VOID ClassDebugPrint(CLASS_DEBUG_LEVEL DebugPrintLevel, PCCHAR DebugMessage, ...
 
     } CLASSPNP_GLOBALS, *PCLASSPNP_GLOBALS;
 
-    #define DBGTRACE(dbgTraceLevel, args_in_parens)                                \
-        if (ClassDebug & (1 << (dbgTraceLevel+15))){                                               \
-            DbgPrint("CLASSPNP> *** TRACE *** (file %s, line %d)\n", __FILE__, __LINE__ ); \
-            DbgPrint("    >  "); \
-            DbgPrint args_in_parens; \
-            DbgPrint("\n"); \
-            if (DebugTrapOnWarn && (dbgTraceLevel == ClassDebugWarning)){ \
-                DbgBreakPoint();  \
-            } \
-        }
-    #define DBGWARN(args_in_parens)                                \
-        {                                               \
-            DbgPrint("CLASSPNP> *** WARNING *** (file %s, line %d)\n", __FILE__, __LINE__ ); \
-            DbgPrint("    >  "); \
-            DbgPrint args_in_parens; \
-            DbgPrint("\n"); \
-            if (DebugTrapOnWarn){ \
-                DbgBreakPoint();  \
-            } \
-        }
-    #define DBGERR(args_in_parens)                                \
-        {                                               \
-            DbgPrint("CLASSPNP> *** ERROR *** (file %s, line %d)\n", __FILE__, __LINE__ ); \
-            DbgPrint("    >  "); \
-            DbgPrint args_in_parens; \
-            DbgPrint("\n"); \
-            DbgBreakPoint();                            \
-        }
-    #define DBGTRAP(args_in_parens)                                \
-        {                                               \
-            DbgPrint("CLASSPNP> *** COVERAGE TRAP *** (file %s, line %d)\n", __FILE__, __LINE__ ); \
-            DbgPrint("    >  "); \
-            DbgPrint args_in_parens; \
-            DbgPrint("\n"); \
-            DbgBreakPoint();                            \
-        }
+
+    //
+    // Define a structure used to capture stack traces when we
+    // get an access request and the disks are powered off.  This
+    // will help us determine who's causing disk respins.
+    //
+
+    //
+    // How many stack frames to capture each time?
+    //
+    #define DISK_SPINUP_BACKTRACE_LENGTH    (0x18)
+
+    //
+    // How many stack traces can we capture before
+    // out buffer wraps? (needs to be power of 2)
+    //
+    #define NUMBER_OF_DISK_SPINUP_TRACES    (0x10)
+
+    typedef struct _DISK_SPINUP_TRACES {
+
+        LARGE_INTEGER   TimeStamp;  // timestamp of the spinup event.
+        PVOID   StackTrace[DISK_SPINUP_BACKTRACE_LENGTH]; // Holds stack trace
+    } DISK_SPINUP_TRACES, *PDISK_SPINUP_TRACES;
 
 
-    #define DBGGETIOCTLSTR(_ioctl) DbgGetIoctlStr(_ioctl)
-    #define DBGGETSCSIOPSTR(_pSrb) DbgGetScsiOpStr(_pSrb)
-    #define DBGGETSENSECODESTR(_pSrb) DbgGetSenseCodeStr(_pSrb)
-    #define DBGGETADSENSECODESTR(_pSrb) DbgGetAdditionalSenseCodeStr(_pSrb)
-    #define DBGGETADSENSEQUALIFIERSTR(_pSrb) DbgGetAdditionalSenseCodeQualifierStr(_pSrb)
     #define DBGCHECKRETURNEDPKT(_pkt) DbgCheckReturnedPkt(_pkt)
-    #define DBGGETSRBSTATUSSTR(_pSrb) DbgGetSrbStatusStr(_pSrb)
-    
-    VOID ClasspInitializeDebugGlobals(VOID);
-    char *DbgGetIoctlStr(ULONG ioctl);
-    char *DbgGetScsiOpStr(PSCSI_REQUEST_BLOCK Srb);
-    char *DbgGetSenseCodeStr(PSCSI_REQUEST_BLOCK Srb);
-    char *DbgGetAdditionalSenseCodeStr(PSCSI_REQUEST_BLOCK Srb);
-    char *DbgGetAdditionalSenseCodeQualifierStr(PSCSI_REQUEST_BLOCK Srb);
+    #define DBGLOGSENDPACKET(_pkt) DbgLogSendPacket(_pkt)
+    #define DBGLOGRETURNPACKET(_pkt) DbgLogReturnPacket(_pkt)
+    #define DBGLOGFLUSHINFO(_fdoData, _isIO, _isFUA, _isFlush) DbgLogFlushInfo(_fdoData, _isIO, _isFUA, _isFlush)
+
+    VOID ClasspInitializeDebugGlobals();
     VOID DbgCheckReturnedPkt(TRANSFER_PACKET *Pkt);
-    char *DbgGetSrbStatusStr(PSCSI_REQUEST_BLOCK Srb);
-
-
+    VOID DbgLogSendPacket(TRANSFER_PACKET *Pkt);
+    VOID DbgLogReturnPacket(TRANSFER_PACKET *Pkt);
+    VOID DbgLogFlushInfo(PCLASS_PRIVATE_FDO_DATA FdoData, BOOLEAN IsIO, BOOLEAN IsFUA, BOOLEAN IsFlush);
+    VOID SnapDiskStartup(VOID);
     extern CLASSPNP_GLOBALS ClasspnpGlobals;
     extern LONG ClassDebug;
     extern BOOLEAN DebugTrapOnWarn;
@@ -131,17 +121,12 @@ VOID ClassDebugPrint(CLASS_DEBUG_LEVEL DebugPrintLevel, PCCHAR DebugMessage, ...
 #else
 
     #define ClasspInitializeDebugGlobals()
-    #define DBGWARN(args_in_parens)                                
-    #define DBGERR(args_in_parens)                                
-    #define DBGTRACE(dbgTraceLevel, args_in_parens)                                
-    #define DBGTRAP(args_in_parens)
-    
-    #define DBGGETIOCTLSTR(_ioctl)
-    #define DBGGETSCSIOPSTR(_pSrb)
-    #define DBGGETSENSECODESTR(_pSrb)    
-    #define DBGGETADSENSECODESTR(_pSrb)
-    #define DBGGETADSENSEQUALIFIERSTR(_pSrb)
+    #define SnapDiskStartup()
+
     #define DBGCHECKRETURNEDPKT(_pkt)
-    #define DBGGETSRBSTATUSSTR(_pSrb)
-    
+    #define DBGLOGSENDPACKET(_pkt)
+    #define DBGLOGRETURNPACKET(_pkt)
+    #define DBGLOGFLUSHINFO(_fdoData, _isIO, _isFUA, _isFlush)
+
 #endif
+

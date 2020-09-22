@@ -301,7 +301,7 @@ FontGetObject(PTEXTOBJ plfont, ULONG cjBuffer, PVOID pvBuffer)
     if (!(plfont->fl & TEXTOBJECT_INIT))
     {
         NTSTATUS Status;
-        DPRINT1("FontGetObject font not initialized!\n");
+        DPRINT("FontGetObject font not initialized!\n");
 
         Status = TextIntRealizeFont(plfont->BaseObject.hHmgr, plfont);
         if (!NT_SUCCESS(Status))
@@ -743,7 +743,7 @@ NtGdiGetGlyphOutline(
 
   if (UnsafeBuf && cjBuf)
   {
-     pvBuf = ExAllocatePoolWithTag(PagedPool, cjBuf, GDITAG_TEXT);
+     pvBuf = ExAllocatePoolZero(PagedPool, cjBuf, GDITAG_TEXT);
      if (!pvBuf)
      {
         EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
@@ -927,6 +927,7 @@ NtGdiGetOutlineTextMetricsInternalW (HDC  hDC,
       EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
       return 0;
   }
+  RtlZeroMemory(potm, Size);
   IntGetOutlineTextMetrics(FontGDI, Size, potm);
 
   _SEH2_TRY

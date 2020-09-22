@@ -48,8 +48,9 @@ struct _StaticInvokeCommandMap_
     { "delete", FCIDM_SHVIEW_DELETE},
     { "properties", FCIDM_SHVIEW_PROPERTIES},
     { "rename", FCIDM_SHVIEW_RENAME},
+    { "copyto", FCIDM_SHVIEW_COPYTO },
+    { "moveto", FCIDM_SHVIEW_MOVETO },
 };
-
 
 class CDefaultContextMenu :
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
@@ -94,7 +95,9 @@ class CDefaultContextMenu :
         HRESULT DoCopyOrCut(LPCMINVOKECOMMANDINFO lpcmi, BOOL bCopy);
         HRESULT DoRename(LPCMINVOKECOMMANDINFO lpcmi);
         HRESULT DoProperties(LPCMINVOKECOMMANDINFO lpcmi);
+        HRESULT DoUndo(LPCMINVOKECOMMANDINFO lpcmi);
         HRESULT DoCreateNewFolder(LPCMINVOKECOMMANDINFO lpici);
+        HRESULT DoCopyToMoveToFolder(LPCMINVOKECOMMANDINFO lpici, BOOL bCopy);
         HRESULT InvokeShellExt(LPCMINVOKECOMMANDINFO lpcmi);
         HRESULT InvokeRegVerb(LPCMINVOKECOMMANDINFO lpcmi);
         DWORD BrowserFlagsFromVerb(LPCMINVOKECOMMANDINFO lpcmi, PStaticShellEntry pEntry);
@@ -893,6 +896,50 @@ CDefaultContextMenu::DoProperties(
     return S_OK;
 }
 
+HRESULT
+CDefaultContextMenu::DoUndo(LPCMINVOKECOMMANDINFO lpcmi)
+{
+    ERR("TODO: Undo");
+    return E_NOTIMPL;
+}
+
+HRESULT
+CDefaultContextMenu::DoCopyToMoveToFolder(LPCMINVOKECOMMANDINFO lpici, BOOL bCopy)
+{
+    HRESULT hr = E_FAIL;
+    if (!m_pDataObj)
+    {
+        ERR("m_pDataObj is NULL\n");
+        return hr;
+    }
+
+    CComPtr<IContextMenu> pContextMenu;
+    if (bCopy)
+        hr = SHCoCreateInstance(NULL, &CLSID_CopyToMenu, NULL,
+                                IID_PPV_ARG(IContextMenu, &pContextMenu));
+    else
+        hr = SHCoCreateInstance(NULL, &CLSID_MoveToMenu, NULL,
+                                IID_PPV_ARG(IContextMenu, &pContextMenu));
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    CComPtr<IShellExtInit> pInit;
+    hr = pContextMenu->QueryInterface(IID_PPV_ARG(IShellExtInit, &pInit));
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    hr = pInit->Initialize(m_pidlFolder, m_pDataObj, NULL);
+    if (FAILED_UNEXPECTEDLY(hr))
+        return hr;
+
+    if (bCopy)
+        lpici->lpVerb = "copyto";
+    else
+        lpici->lpVerb = "moveto";
+
+    return pContextMenu->InvokeCommand(lpici);
+}
+
 // This code is taken from CNewMenu and should be shared between the 2 classes
 HRESULT
 CDefaultContextMenu::DoCreateNewFolder(
@@ -1247,6 +1294,15 @@ CDefaultContextMenu::InvokeCommand(
         break;
     case FCIDM_SHVIEW_NEWFOLDER:
         Result = DoCreateNewFolder(&LocalInvokeInfo);
+        break;
+    case FCIDM_SHVIEW_COPYTO:
+        Result = DoCopyToMoveToFolder(&LocalInvokeInfo, TRUE);
+        break;
+    case FCIDM_SHVIEW_MOVETO:
+        Result = DoCopyToMoveToFolder(&LocalInvokeInfo, FALSE);
+        break;
+    case FCIDM_SHVIEW_UNDO:
+        Result = DoUndo(&LocalInvokeInfo);
         break;
     default:
         Result = E_INVALIDARG;

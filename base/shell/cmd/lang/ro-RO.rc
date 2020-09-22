@@ -216,7 +216,7 @@ comenzilor în ecou.\n\n\
   ECHO [mesaj]\n\
   ECHO.             afișează un rând gol\n\n\
 Tastați ECHO fără argumente pentru afișarea stării curente a ecoului.\n"
-    STRING_ECHO_HELP5 "ECHO: %s\n"
+    STRING_ECHO_HELP5 "ECHO: %s.\n"
     STRING_EXIT_HELP "Închide interpretorul de comenzi.\n\nEXIT [/b] [cod_de_ieșire]\n\n\
   /B              Doar pentru ieșirea dintr-un fișier de comenzi.\n\
                   Dacă este executat în afara unui fișier de comenzi, va\n\
@@ -255,7 +255,7 @@ Numărul de serie este %s\n\
 GOTO etichetă\n\n\
   etichetă      Specifică un șir text utilizat ca etichetă în\n\
                 fișierele de comenzi.\n\n\
-O etichetă va fi definită pe un rând întreg, începând cu două puncte (:)\n"
+O etichetă va fi definită pe un rând întreg, începând cu două puncte (:).\n"
     STRING_IF_HELP1 "Realizează execuția condiționată a comenzilor într-un fișier de comenzi.\n\n\
   IF [NOT] ERRORLEVEL număr comandă\n\
   IF [NOT] șir1==șir2 comandă\n\
@@ -296,9 +296,9 @@ legătură simbolică."
     STRING_MOVE_HELP1 "Suprascrieți «%s» (Da|Nu|Toate)?"
     STRING_MOVE_HELP2 "Mută sau redenumește fișiere și directoare.\n\n\
 Pentru a muta unul sau mai multe fișiere:\n\
-MOVE [/N][unitate:][cale]fișier[,...] destinație\n\n\
+MOVE [/N][/Y|/-Y][unitate:][cale]fișier[,...] destinație\n\n\
 Pentru a redenumi un director:\n\
-MOVE [/N][unitate:][cale]nume_director_1 nume_director_2\n\n\
+MOVE [/N][/Y|/-Y][unitate:][cale]nume_director_1 nume_director_2\n\n\
   [unitate:][cale]fișier   Specică locul și numele fișierului sau fișierelor\n\
                            pe care doriți să le mutați.\n\
   /N                    Nimic. Execută orice în afară de mutarea fișiere\n\
@@ -323,6 +323,9 @@ PATH [[unitate:]cale[;...]]\nPATH ;\n\n\
 Tastați PATH ; pentru a curăța toate căile de căutare și a impune mediul de\n\
 comandă să caute doar în directorul curent.\n\
 Tastați PATH fără argumente pentru a afișa căile curente.\n"
+    STRING_PAUSE_HELP1 "Oprește execuția unui fișier de comenzi și afișează următorul mesaj:\n\
+«Tastați pentru a continua...» sau un alt mesaj definit.\n\n\
+PAUSE [mesaj]\n"
     STRING_PROMPT_HELP1 "Modifică aspectul liniei de comandă.\n\n\
 PROMPT [text]\n\n\
   text    Specifică textul liniei de comandă a consolei.\n\n\
@@ -345,14 +348,11 @@ PROMPT [text]\n\n\
   $V   Numărul versiunii SO\n\
   $_   Sfârșit de linie și rând nou\n\
   $$   $ (semnul dolar)\n"
-    STRING_PAUSE_HELP1 "Oprește execuția unui fișier de comenzi și afișează următorul mesaj:\n\
-«Tastați pentru a continua...» sau un alt mesaj definit.\n\n\
-PAUSE [mesaj]\n"
     STRING_PROMPT_HELP2 "  $+   Afișează adâncimea curentă a stivei de directoare\n"
     STRING_PROMPT_HELP3 "\nTastați PROMPT fără argumente pentru a readuce consola în starea implicită.\n"
     STRING_REM_HELP "Începe o linie de comentariu într-un fișier de comenzi.\n\nREM [comentariu]\n"
     STRING_RMDIR_HELP "Șterge un director.\n\n\
-RMDIR [unitate:]cale\nRD [unitate:]cale\n\
+RMDIR [/S] [/Q] [unitate:]cale\nRD [/S] [/Q] [unitate:]cale\n\
   /S    Șterge toate fișierele și directoarele țintă.\n\
   /Q    Omite cererile de confirmare.\n"
     STRING_RMDIR_HELP2 "Directorul nu este gol!\n"
@@ -501,9 +501,9 @@ titlu         Noul titlu.\n"
     STRING_ALIAS_ERROR "Linia de comandă devine prea lungă după extinderea alias!\n"
     STRING_ASSOC_ERROR "Nu poate fi găsită nici o aplicație asociată extensiei «%s»\n"
     STRING_BATCH_ERROR "Eroare la deschiderea fișierului de comenzi\n"
-    STRING_CHOICE_ERROR "Opțiune eronată. Vedeți formatul: /C[:]opțiuni"
-    STRING_CHOICE_ERROR_TXT "Opțiune eronată. Vedeți formatul: /T[:]implicit,nn"
-    STRING_CHOICE_ERROR_OPTION "Opțiune eronată: %s"
+    STRING_CHOICE_ERROR "Opțiune eronată. Vedeți formatul: /C[:]opțiuni\n"
+    STRING_CHOICE_ERROR_TXT "Opțiune eronată. Vedeți formatul: /T[:]implicit,nn\n"
+    STRING_CHOICE_ERROR_OPTION "Opțiune eronată: %s\n"
     STRING_CMD_ERROR1 "Redirecționarea intrării din fișierul «%s» nu a fost posibilă\n"
     STRING_CMD_ERROR2 "Crearea fișierului temporar pentru canalizarea de date nu a fost posibilă\n"
     STRING_CMD_ERROR3 "Redirecționarea către fișierul %s nu a fost posibilă\n"
@@ -528,9 +528,9 @@ titlu         Noul titlu.\n"
     STRING_FOR_ERROR4 "Nici o comandă după «DO»."
     STRING_FREE_ERROR1 "Unitate nevalidă"
     STRING_FREE_ERROR2 "neetichetat"
-    STRING_GOTO_ERROR1 "Nu a fost specificată nici o etichetă pentru «GOTO»"
+    STRING_GOTO_ERROR1 "Nu a fost specificată nici o etichetă pentru «GOTO»\n"
     STRING_GOTO_ERROR2 "Eticheta «%s» nu a fost găsită\n"
-    STRING_MD_ERROR "Există deja un fișier sau un subdirector cu acest nume.\n"
+    STRING_MD_ERROR "Există deja un fișier sau un subdirector %s cu acest nume.\n"
     STRING_MD_ERROR2 "Calea către noul director nu există.\n"
     STRING_MOVE_ERROR1 "[OK]\n"
     STRING_MOVE_ERROR2 "[Eroare]\n"
@@ -549,9 +549,9 @@ titlu         Noul titlu.\n"
     STRING_ERROR_BADCOMMAND "Comandă eronată sau fișier inexistent - %s\n"
     STRING_ERROR_OUT_OF_MEMORY "Eroare de exces de memorie.\n"
     STRING_ERROR_CANNOTPIPE "Eroare!  Nu datele nu pot fi canalizate!  Nu fișierul temporar nu a putut fi deschis!\n"
-    STRING_ERROR_D_PAUSEMSG "Tastați pentru a continua..."
+    STRING_ERROR_D_PAUSEMSG "Tastați pentru a continua... "
     STRING_ERROR_DRIVER_NOT_READY "Unitatea de stocare nu e utilizabilă"
-    STRING_PATH_ERROR "CMD: «%s» inexistentă în mediu\n"
+    STRING_SET_ENV_ERROR "Environment variable '%s' is not defined\n"
     STRING_REPLACE_ERROR1 "Argument eronat - %s\n"
     STRING_REPLACE_ERROR2 "Calea nu este găsită - %s\n"
     STRING_REPLACE_ERROR3 "Numele fișierului, directorului sau eticheta volumului este incorectă.\n"
@@ -575,8 +575,8 @@ titlu         Noul titlu.\n"
     STRING_MKLINK_CREATED_JUNCTION "A fost creată o joncțiune pentru %s <<===>> %s\n"
     STRING_MORE "Mai mult? "
     STRING_CANCEL_BATCH_FILE "\r\nAți apăsat Ctrl-Break.  Anulați fișierul de comenzi? (Da|Nu|Toate)"
-    STRING_INVALID_OPERAND "Operand eronat."
-    STRING_EXPECTED_CLOSE_PAREN "Este necesar «)»."
-    STRING_EXPECTED_NUMBER_OR_VARIABLE "Este necesar un număr sau un nume de variabilă."
-    STRING_SYNTAX_COMMAND_INCORRECT "Sintaxa comenzii este eronată."
+    STRING_INVALID_OPERAND "Operand eronat.\n"
+    STRING_EXPECTED_CLOSE_PAREN "Este necesar «)».\n"
+    STRING_EXPECTED_NUMBER_OR_VARIABLE "Este necesar un număr sau un nume de variabilă.\n"
+    STRING_SYNTAX_COMMAND_INCORRECT "Sintaxa comenzii este eronată.\n"
 END

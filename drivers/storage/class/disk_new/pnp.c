@@ -22,25 +22,34 @@ Revision History:
 
 #include "disk.h"
 
+
+#ifdef DEBUG_USE_WPP
+#include "pnp.tmh"
+#endif
+
+#ifndef __REACTOS__
+extern PULONG InitSafeBootMode;
+#else
 extern NTSYSAPI ULONG InitSafeBootMode;
+#endif
+ULONG diskDeviceSequenceNumber = 0;
+extern BOOLEAN DiskIsPastReinit;
+
 
 #ifdef ALLOC_PRAGMA
 
 #pragma alloc_text(PAGE, DiskAddDevice)
 #pragma alloc_text(PAGE, DiskInitFdo)
-#pragma alloc_text(PAGE, DiskInitPdo)
 #pragma alloc_text(PAGE, DiskStartFdo)
-#pragma alloc_text(PAGE, DiskStartPdo)
-#pragma alloc_text(PAGE, DiskQueryId)
 #pragma alloc_text(PAGE, DiskGenerateDeviceName)
 #pragma alloc_text(PAGE, DiskCreateSymbolicLinks)
 #pragma alloc_text(PAGE, DiskDeleteSymbolicLinks)
 #pragma alloc_text(PAGE, DiskRemoveDevice)
-
 #endif
 
+
 NTSTATUS
-NTAPI
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 DiskAddDevice(
     IN PDRIVER_OBJECT DriverObject,
     IN PDEVICE_OBJECT PhysicalDeviceObject
@@ -81,13 +90,13 @@ Return Value:
     //
 
     TRY {
-        HANDLE deviceKey;
+        HANDLE deviceKey = NULL;
 
         UNICODE_STRING diskKeyName;
-        OBJECT_ATTRIBUTES objectAttributes;
+        OBJECT_ATTRIBUTES objectAttributes = {0};
         HANDLE diskKey;
 
-        RTL_QUERY_REGISTRY_TABLE queryTable[2];
+        RTL_QUERY_REGISTRY_TABLE queryTable[2] = { 0 };
 
         status = IoOpenDeviceRegistryKey(PhysicalDeviceObject,
                                          PLUGPLAY_REGKEY_DEVICE,
@@ -95,8 +104,8 @@ Return Value:
                                          &deviceKey);
 
         if(!NT_SUCCESS(status)) {
-            DebugPrint((1, "DiskAddDevice: Error %#08lx opening device key "
-                           "for pdo %#08lx\n",
+            TracePrint((TRACE_LEVEL_ERROR, TRACE_FLAG_PNP, "DiskAddDevice: Error %#08lx opening device key "
+                           "for pdo %p\n",
                         status, PhysicalDeviceObject));
             LEAVE;
         }
@@ -104,7 +113,7 @@ Return Value:
         RtlInitUnicodeString(&diskKeyName, L"Disk");
         InitializeObjectAttributes(&objectAttributes,
                                    &diskKeyName,
-                                   OBJ_CASE_INSENSITIVE,
+                                   OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
                                    deviceKey,
                                    NULL);
 
@@ -112,18 +121,18 @@ Return Value:
         ZwClose(deviceKey);
 
         if(!NT_SUCCESS(status)) {
-            DebugPrint((1, "DiskAddDevice: Error %#08lx opening disk key "
-                           "for pdo %#08lx device key %#x\n",
+            TracePrint((TRACE_LEVEL_ERROR, TRACE_FLAG_PNP, "DiskAddDevice: Error %#08lx opening disk key "
+                           "for pdo %p device key %p\n",
                         status, PhysicalDeviceObject, deviceKey));
             LEAVE;
         }
 
-        RtlZeroMemory(queryTable, sizeof(queryTable));
-
-        queryTable[0].Flags = RTL_QUERY_REGISTRY_DIRECT;
+        queryTable[0].Flags = RTL_QUERY_REGISTRY_DIRECT | RTL_QUERY_REGISTRY_TYPECHECK;
         queryTable[0].Name = L"RootPartitionMountable";
         queryTable[0].EntryContext = &(rootPartitionMountable);
+        queryTable[0].DefaultType = (REG_DWORD << RTL_QUERY_REGISTRY_TYPECHECK_SHIFT) | REG_NONE;
 
+#pragma prefast(suppress:6309, "We don't have QueryRoutine so Context doesn't make any sense")
         status = RtlQueryRegistryValues(RTL_REGISTRY_HANDLE,
                                         diskKey,
                                         queryTable,
@@ -131,8 +140,8 @@ Return Value:
                                         NULL);
 
         if(!NT_SUCCESS(status)) {
-            DebugPrint((1, "DiskAddDevice: Error %#08lx reading value from "
-                           "disk key %#x for pdo %#08lx\n",
+            TracePrint((TRACE_LEVEL_ERROR, TRACE_FLAG_PNP, "DiskAddDevice: Error %#08lx reading value from "
+                           "disk key %p for pdo %p\n",
                         status, diskKey, PhysicalDeviceObject));
         }
 
@@ -145,8 +154,8 @@ Return Value:
         //
 
         if(!NT_SUCCESS(status)) {
-            DebugPrint((1, "DiskAddDevice: Will %sallow file system to mount on "
-                           "partition zero of disk %#08lx\n",
+            TracePrint((TRACE_LEVEL_WARNING, TRACE_FLAG_PNP, "DiskAddDevice: Will %sallow file system to mount on "
+                           "partition zero of disk %p\n",
                         (rootPartitionMountable ? "" : "not "),
                         PhysicalDeviceObject));
         }
@@ -185,8 +194,9 @@ Return Value:
 
 } // end DiskAddDevice()
 
+
 NTSTATUS
-NTAPI
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 DiskInitFdo(
     IN PDEVICE_OBJECT Fdo
     )
@@ -210,21 +220,15 @@ Return Value:
 
 {
     PFUNCTIONAL_DEVICE_EXTENSION fdoExtension = Fdo->DeviceExtension;
-
     PDISK_DATA diskData = (PDISK_DATA) fdoExtension->CommonExtension.DriverData;
 
-    //ULONG srbFlags = 0;
-
+    ULONG srbFlags = 0;
     ULONG timeOut = 0;
-
     ULONG bytesPerSector;
-    //UCHAR sectorShift;
 
-    //BOOLEAN dmActive = FALSE;
     PULONG dmSkew;
-    //ULONG dmByteSkew;
 
-    NTSTATUS status;
+    NTSTATUS status = STATUS_SUCCESS;
 
     PAGED_CODE();
 
@@ -237,6 +241,15 @@ Return Value:
     ClassInitializeSrbLookasideList((PCOMMON_DEVICE_EXTENSION) fdoExtension,
                                     PARTITION0_LIST_SIZE);
 
+    if (fdoExtension->DeviceDescriptor->RemovableMedia)
+    {
+        SET_FLAG(Fdo->Characteristics, FILE_REMOVABLE_MEDIA);
+    }
+
+    //
+    // Initialize the srb flags.
+    //
+
     //
     // Because all requests share a common sense buffer, it is possible
     // for the buffer to be overwritten if the port driver completes
@@ -248,21 +261,13 @@ Return Value:
     // additional sense data beyond the minimum 18 bytes.
     //
 
-    fdoExtension->SrbFlags = SRB_FLAGS_PORT_DRIVER_ALLOCSENSE;
-
-    //
-    // Initialize the srb flags.
-    //
+    SET_FLAG(fdoExtension->SrbFlags, SRB_FLAGS_PORT_DRIVER_ALLOCSENSE);
 
     if (fdoExtension->DeviceDescriptor->CommandQueueing &&
         fdoExtension->AdapterDescriptor->CommandQueueing) {
 
-        fdoExtension->SrbFlags = SRB_FLAGS_QUEUE_ACTION_ENABLE;
+        SET_FLAG(fdoExtension->SrbFlags, SRB_FLAGS_QUEUE_ACTION_ENABLE);
 
-    }
-
-    if (!TEST_FLAG(Fdo->Characteristics, FILE_REMOVABLE_MEDIA)) {
-        SET_FLAG(fdoExtension->DeviceFlags, DEV_SAFE_START_UNIT);
     }
 
     //
@@ -270,15 +275,6 @@ Return Value:
     //
 
     ClassScanForSpecial(fdoExtension, DiskBadControllers, DiskSetSpecialHacks);
-
-    //
-    // Look into the registry to see if this device
-    // requires special attention - [ like a hack ]
-    //
-
-    DiskScanRegistryForSpecial(fdoExtension);
-
-    //srbFlags = fdoExtension->SrbFlags;
 
     //
     // Clear buffer for drive geometry.
@@ -291,8 +287,8 @@ Return Value:
     // Allocate request sense buffer.
     //
 
-    fdoExtension->SenseData = ExAllocatePoolWithTag(NonPagedPoolCacheAligned,
-                                                    SENSE_BUFFER_SIZE,
+    fdoExtension->SenseData = ExAllocatePoolWithTag(NonPagedPoolNxCacheAligned,
+                                                    SENSE_BUFFER_SIZE_EX,
                                                     DISK_TAG_START);
 
     if (fdoExtension->SenseData == NULL) {
@@ -301,11 +297,17 @@ Return Value:
         // The buffer can not be allocated.
         //
 
-        DebugPrint((1, "DiskInitFdo: Can not allocate request sense buffer\n"));
+        TracePrint((TRACE_LEVEL_ERROR, TRACE_FLAG_PNP, "DiskInitFdo: Can not allocate request sense buffer\n"));
 
         status = STATUS_INSUFFICIENT_RESOURCES;
         return status;
     }
+
+    //
+    // Set the buffer size of SenseData
+    //
+
+    fdoExtension->SenseDataLength = SENSE_BUFFER_SIZE_EX;
 
     //
     // Physical device object will describe the entire
@@ -317,14 +319,24 @@ Return Value:
     //
     // Set timeout value in seconds.
     //
-
-    timeOut = ClassQueryTimeOutRegistryValue(Fdo);
-    if (timeOut) {
-        fdoExtension->TimeOutValue = timeOut;
+    if ( (fdoExtension->MiniportDescriptor != NULL) &&
+         (fdoExtension->MiniportDescriptor->IoTimeoutValue > 0) ) {
+        //
+        // use the value set by Storport miniport driver
+        //
+        fdoExtension->TimeOutValue = fdoExtension->MiniportDescriptor->IoTimeoutValue;
     } else {
-        fdoExtension->TimeOutValue = SCSI_DISK_TIMEOUT;
-    }
+        //
+        // get timeout value from registry
+        //
+        timeOut = ClassQueryTimeOutRegistryValue(Fdo);
 
+        if (timeOut) {
+            fdoExtension->TimeOutValue = timeOut;
+        } else {
+            fdoExtension->TimeOutValue = SCSI_DISK_TIMEOUT;
+        }
+    }
     //
     // If this is a removable drive, build an entry in devicemap\scsi
     // indicating it's physicaldriveN name, set up the appropriate
@@ -332,7 +344,8 @@ Return Value:
     // note: only do this after the timeout value is set, above.
     //
 
-    if (fdoExtension->DeviceDescriptor->RemovableMedia) {
+    if (TEST_FLAG(Fdo->Characteristics, FILE_REMOVABLE_MEDIA)) {
+
         ClassUpdateInformationInRegistry( Fdo,
                                           "PhysicalDrive",
                                           fdoExtension->DeviceNumber,
@@ -342,17 +355,23 @@ Return Value:
         // Enable media change notification for removable disks
         //
         ClassInitializeMediaChangeDetection(fdoExtension,
-                                            "Disk");
-
-        SET_FLAG(Fdo->Characteristics, FILE_REMOVABLE_MEDIA);
-        diskData->UpdatePartitionRoutine = DiskUpdateRemovablePartitions;
+                                            (PUCHAR)"Disk");
 
     } else {
 
+        SET_FLAG(fdoExtension->DeviceFlags, DEV_SAFE_START_UNIT);
         SET_FLAG(fdoExtension->SrbFlags, SRB_FLAGS_NO_QUEUE_FREEZE);
-        diskData->UpdatePartitionRoutine = DiskUpdatePartitions;
 
     }
+
+    //
+    // The commands we send during the init could cause the flags to change
+    // in case of any error.  Save the SRB flags locally and restore it at
+    // the end of this function, so that the class driver can get it.
+    //
+
+    srbFlags = fdoExtension->SrbFlags;
+
 
     //
     // Read the drive capacity.  Don't use the disk version of the routine here
@@ -360,29 +379,7 @@ Return Value:
     // attempt to determine the BIOS reported geometry.
     //
 
-    status = ClassReadDriveCapacity(Fdo);
-
-    //
-    // If the read capacity failed then just return, unless this is a
-    // removable disk where a device object partition needs to be created.
-    //
-
-    if (!NT_SUCCESS(status) &&
-        !(Fdo->Characteristics & FILE_REMOVABLE_MEDIA)) {
-
-        DebugPrint((1,
-            "DiskInitFdo: Can't read capacity for device %p\n",
-            Fdo));
-
-        if (fdoExtension->DeviceDescriptor->RemovableMedia) {
-            fdoExtension->DiskGeometry.MediaType = RemovableMedia;
-            Fdo->Flags &= ~DO_VERIFY_VOLUME;
-        } else {
-            fdoExtension->DiskGeometry.MediaType = FixedMedia;
-        }
-
-        status = STATUS_SUCCESS;
-    }
+    (VOID)ClassReadDriveCapacity(Fdo);
 
     //
     // Set up sector size fields.
@@ -410,9 +407,8 @@ Return Value:
         //
 
         bytesPerSector = fdoExtension->DiskGeometry.BytesPerSector = 512;
+        fdoExtension->SectorShift = 9;
     }
-
-    //sectorShift = fdoExtension->SectorShift;
 
     //
     // Determine is DM Driver is loaded on an IDE drive that is
@@ -423,7 +419,7 @@ Return Value:
     HalExamineMBR(fdoExtension->CommonExtension.DeviceObject,
                   fdoExtension->DiskGeometry.BytesPerSector,
                   (ULONG)0x54,
-                  (PVOID*)&dmSkew);
+                  (PVOID *)&dmSkew);
 
     if (dmSkew) {
 
@@ -433,76 +429,100 @@ Return Value:
         // to be skewed by *dmSkew sectors aka DMByteSkew.
         //
 
-        fdoExtension->DMSkew = *dmSkew;
-        fdoExtension->DMActive = TRUE;
+        fdoExtension->DMSkew     = *dmSkew;
+        fdoExtension->DMActive   = TRUE;
         fdoExtension->DMByteSkew = fdoExtension->DMSkew * bytesPerSector;
 
-        //
-        // Save away the information that we need, since this deviceExtension will soon be
-        // blown away.
-        //
-
-        //dmActive = TRUE;
-        //dmByteSkew = fdoExtension->DMByteSkew;
-
+        FREE_POOL(dmSkew);
     }
 
-#if defined(_X86_)
+#if defined(_X86_) || defined(_AMD64_)
+
     //
     // Try to read the signature off the disk and determine the correct drive
     // geometry based on that.  This requires rereading the disk size to get
     // the cylinder count updated correctly.
     //
 
-    if(fdoExtension->DeviceDescriptor->RemovableMedia == FALSE) {
+    if(!TEST_FLAG(Fdo->Characteristics, FILE_REMOVABLE_MEDIA)) {
+
         DiskReadSignature(Fdo);
         DiskReadDriveCapacity(Fdo);
+
+        if (diskData->GeometrySource == DiskGeometryUnknown)
+        {
+            //
+            // Neither the  BIOS  nor the port driver could provide us with a  reliable
+            // geometry.  Before we use the default,  look to see if it was partitioned
+            // under Windows NT4 [or earlier] and apply the one that was used back then
+            //
+
+            if (DiskIsNT4Geometry(fdoExtension))
+            {
+                diskData->RealGeometry = fdoExtension->DiskGeometry;
+                diskData->RealGeometry.SectorsPerTrack   = 0x20;
+                diskData->RealGeometry.TracksPerCylinder = 0x40;
+                fdoExtension->DiskGeometry = diskData->RealGeometry;
+
+                diskData->GeometrySource = DiskGeometryFromNT4;
+            }
+        }
     }
+
 #endif
 
+    DiskCreateSymbolicLinks(Fdo);
+
     //
-    // Register interfaces for this device
+    // Get the SCSI address if it's available for use with SMART ioctls.
+    // SMART ioctls are used for failure prediction, so we need to get
+    // the SCSI address before initializing failure prediction.
     //
+
     {
-        UNICODE_STRING interfaceName;
+        PIRP irp;
+        KEVENT event;
+        IO_STATUS_BLOCK statusBlock = { 0 };
 
-        RtlInitUnicodeString(&interfaceName, NULL);
+        KeInitializeEvent(&event, SynchronizationEvent, FALSE);
 
-        status = IoRegisterDeviceInterface(fdoExtension->LowerPdo,
-                                           (LPGUID) &DiskClassGuid,
-                                           NULL,
-                                           &interfaceName);
+        irp = IoBuildDeviceIoControlRequest(IOCTL_SCSI_GET_ADDRESS,
+                                            fdoExtension->CommonExtension.LowerDeviceObject,
+                                            NULL,
+                                            0L,
+                                            &(diskData->ScsiAddress),
+                                            sizeof(SCSI_ADDRESS),
+                                            FALSE,
+                                            &event,
+                                            &statusBlock);
 
-        if(NT_SUCCESS(status)) {
+        status = STATUS_UNSUCCESSFUL;
 
-            diskData->DiskInterfaceString = interfaceName;
-            status = IoSetDeviceInterfaceState(&interfaceName, TRUE);
+        if(irp != NULL) {
 
-        } else {
-            interfaceName.Buffer = NULL;
-        }
+            status = IoCallDriver(fdoExtension->CommonExtension.LowerDeviceObject, irp);
 
-        if(!NT_SUCCESS(status)) {
-
-            DebugPrint((1, "DiskInitFdo: Unable to register or set disk DCA "
-                           "for fdo %p [%lx]\n", Fdo, status));
-
-            RtlFreeUnicodeString(&interfaceName);
-            RtlInitUnicodeString(&(diskData->DiskInterfaceString), NULL);
+            if(status == STATUS_PENDING) {
+                KeWaitForSingleObject(&event,
+                                      Executive,
+                                      KernelMode,
+                                      FALSE,
+                                      NULL);
+                status = statusBlock.Status;
+            }
         }
     }
-
-    DiskCreateSymbolicLinks(Fdo);
 
     //
     // Determine the type of disk and enable failure prediction in the hardware
     // and enable failure prediction polling.
     //
 
-    if (InitSafeBootMode == 0)
+    if (InitSafeBootMode == 0) // __REACTOS__
     {
         DiskDetectFailurePrediction(fdoExtension,
-                                  &diskData->FailurePredictionCapability);
+                                    &diskData->FailurePredictionCapability,
+                                    NT_SUCCESS(status));
 
         if (diskData->FailurePredictionCapability != FailurePredictionNone)
         {
@@ -514,8 +534,6 @@ Return Value:
             //
             // By default we allow performance to be degradeded if failure
             // prediction is enabled.
-            //
-            // TODO: Make a registry entry ?
             //
 
             diskData->AllowFPPerfHit = TRUE;
@@ -530,10 +548,11 @@ Return Value:
                                           TRUE,
                                           DISK_DEFAULT_FAILURE_POLLING_PERIOD);
 
-            DebugPrint((3, "DiskInitFdo: Failure Prediction Poll enabled as "
-                           "%d for device %p\n",
+            TracePrint((TRACE_LEVEL_INFORMATION, TRACE_FLAG_PNP, "DiskInitFdo: Failure Prediction Poll enabled as "
+                           "%d for device %p, Status = %lx\n",
                      diskData->FailurePredictionCapability,
-                     Fdo));
+                     Fdo,
+                     status));
         }
     } else {
 
@@ -552,241 +571,45 @@ Return Value:
 
     KeInitializeMutex(&diskData->VerifyMutex, MAX_SECTORS_PER_VERIFY);
 
-    return(STATUS_SUCCESS);
+    //
+    // Initialize the flush group context
+    //
+
+    RtlZeroMemory(&diskData->FlushContext, sizeof(DISK_GROUP_CONTEXT));
+
+    InitializeListHead(&diskData->FlushContext.CurrList);
+    InitializeListHead(&diskData->FlushContext.NextList);
+
+    KeInitializeSpinLock(&diskData->FlushContext.Spinlock);
+    KeInitializeEvent(&diskData->FlushContext.Event, SynchronizationEvent, FALSE);
+
+
+    //
+    // Restore the saved value
+    //
+    fdoExtension->SrbFlags = srbFlags;
+
+    return STATUS_SUCCESS;
 
 } // end DiskInitFdo()
 
 NTSTATUS
-NTAPI
-DiskInitPdo(
-    IN PDEVICE_OBJECT Pdo
-    )
-
-/*++
-
-Routine Description:
-
-    This routine will create the well known names for a PDO and register
-    it's device interfaces.
-
---*/
-
-{
-    PCOMMON_DEVICE_EXTENSION pdoExtension = Pdo->DeviceExtension;
-    PDISK_DATA diskData = pdoExtension->DriverData;
-
-    UNICODE_STRING interfaceName;
-
-    NTSTATUS status;
-
-    PAGED_CODE();
-
-    DiskCreateSymbolicLinks(Pdo);
-
-    //
-    // Register interfaces for this device
-    //
-
-    RtlInitUnicodeString(&interfaceName, NULL);
-
-    status = IoRegisterDeviceInterface(Pdo,
-                                       (LPGUID) &PartitionClassGuid,
-                                       NULL,
-                                       &interfaceName);
-
-    if(NT_SUCCESS(status)) {
-
-        diskData->PartitionInterfaceString = interfaceName;
-        status = IoSetDeviceInterfaceState(&interfaceName, TRUE);
-
-    } else {
-        interfaceName.Buffer = NULL;
-    }
-
-    if(!NT_SUCCESS(status)) {
-        DebugPrint((1, "DiskInitPdo: Unable to register partition DCA for "
-                    "pdo %p [%lx]\n", Pdo, status));
-
-        RtlFreeUnicodeString(&interfaceName);
-        RtlInitUnicodeString(&(diskData->PartitionInterfaceString), NULL);
-    }
-
-    return STATUS_SUCCESS;
-}
-
-NTSTATUS
-NTAPI
-DiskStartPdo(
-    IN PDEVICE_OBJECT Pdo
-    )
-
-/*++
-
-Routine Description:
-
-    This routine will create the well known names for a PDO and register
-    it's device interfaces.
-
---*/
-
-{
-    PAGED_CODE();
-
-    return STATUS_SUCCESS;
-}
-
-NTSTATUS
-NTAPI
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 DiskStopDevice(
     IN PDEVICE_OBJECT DeviceObject,
     IN UCHAR Type
     )
 
 {
-    PFUNCTIONAL_DEVICE_EXTENSION fdo = DeviceObject->DeviceExtension;
-
-    if(fdo->CommonExtension.IsFdo) {
-        DiskAcquirePartitioningLock(fdo);
-        DiskInvalidatePartitionTable(fdo, TRUE);
-        DiskReleasePartitioningLock(fdo);
-    }
-
+    UNREFERENCED_PARAMETER(DeviceObject);
+    UNREFERENCED_PARAMETER(Type);
     return STATUS_SUCCESS;
 }
 
 NTSTATUS
-NTAPI
-DiskQueryId(
-    IN PDEVICE_OBJECT Pdo,
-    IN BUS_QUERY_ID_TYPE IdType,
-    IN PUNICODE_STRING UnicodeIdString
-    )
-
-/*++
-
-Routine Description:
-
-    This routine generates the PNP id's for the disk's "children".  If the
-    specified ID isn't one that the routine can generate it must return
-    STATUS_NOT_IMPLEMENTED so classpnp will know not to do anything with the
-    PNP request's status.
-
-    This routine allocates the buffer for the UnicodeIdString.  It is the
-    caller's responsibility to free the buffer when it's done.
-
-Arguments:
-
-    Pdo - a pointer to the PDO we are to generate an ID for
-
-    IdType - the type of ID to be generated
-
-    UnicodeIdString - a string to put the results into.
-
-Return Value:
-
-    STATUS_SUCCCESS if successful
-
-    STATUS_NOT_IMPLEMENTED if the IdType is not one supported by this routine
-
-    error status otherwise.
-
---*/
-
-{
-    ANSI_STRING ansiIdString;
-
-    //NTSTATUS status;
-
-    PAGED_CODE();
-    ASSERT_PDO(Pdo);
-
-    if(IdType == BusQueryDeviceID) {
-
-        if((Pdo->Characteristics & FILE_REMOVABLE_MEDIA) == 0) {
-            RtlInitAnsiString(&ansiIdString, "STORAGE\\Partition");
-            return RtlAnsiStringToUnicodeString(UnicodeIdString, &ansiIdString, TRUE);
-        }
-
-        RtlInitAnsiString(&ansiIdString,
-                          "STORAGE\\RemovableMedia");
-
-        return RtlAnsiStringToUnicodeString(UnicodeIdString, &ansiIdString, TRUE);
-    }
-
-    if(IdType == BusQueryInstanceID) {
-
-        //PPHYSICAL_DEVICE_EXTENSION pdoExtension = Pdo->DeviceExtension;
-        PCOMMON_DEVICE_EXTENSION commonExtension = Pdo->DeviceExtension;
-        PDISK_DATA diskData = commonExtension->PartitionZeroExtension->CommonExtension.DriverData;
-
-        UCHAR string[64];
-
-        if((Pdo->Characteristics & FILE_REMOVABLE_MEDIA) == 0) {
-
-            if (diskData->PartitionStyle == PARTITION_STYLE_MBR) {
-                sprintf(string, "S%08lx_O%I64x_L%I64x",
-                        diskData->Mbr.Signature,
-                        commonExtension->StartingOffset.QuadPart,
-                        commonExtension->PartitionLength.QuadPart);
-            } else {
-                sprintf(string,
-                        "S%08lx-%04x-%04x-%02x%02x-%02x%02x%02x%02x%02x%02xS_O%I64x_L%I64x",
-                        diskData->Efi.DiskId.Data1,
-                        diskData->Efi.DiskId.Data2,
-                        diskData->Efi.DiskId.Data3,
-                        diskData->Efi.DiskId.Data4[0],
-                        diskData->Efi.DiskId.Data4[1],
-                        diskData->Efi.DiskId.Data4[2],
-                        diskData->Efi.DiskId.Data4[3],
-                        diskData->Efi.DiskId.Data4[4],
-                        diskData->Efi.DiskId.Data4[5],
-                        diskData->Efi.DiskId.Data4[6],
-                        diskData->Efi.DiskId.Data4[7],
-                        commonExtension->StartingOffset.QuadPart,
-                        commonExtension->PartitionLength.QuadPart);
-            }
-        } else {
-            sprintf(string, "RM");
-        }
-
-        RtlInitAnsiString(&ansiIdString, string);
-
-        return RtlAnsiStringToUnicodeString(UnicodeIdString, &ansiIdString, TRUE);
-    }
-
-    if((IdType == BusQueryHardwareIDs) || (IdType == BusQueryCompatibleIDs)) {
-
-        RtlInitAnsiString(&ansiIdString, "STORAGE\\Volume");
-
-        UnicodeIdString->MaximumLength = (USHORT) RtlAnsiStringToUnicodeSize(&ansiIdString) + sizeof(UNICODE_NULL);
-
-        UnicodeIdString->Buffer = ExAllocatePoolWithTag(PagedPool,
-                                                        UnicodeIdString->MaximumLength,
-                                                        DISK_TAG_PNP_ID);
-
-        if(UnicodeIdString->Buffer == NULL) {
-            return STATUS_INSUFFICIENT_RESOURCES;
-        }
-
-        RtlZeroMemory(UnicodeIdString->Buffer, UnicodeIdString->MaximumLength);
-
-        return RtlAnsiStringToUnicodeString(UnicodeIdString,
-                                            &ansiIdString,
-                                            FALSE);
-    }
-
-    return STATUS_NOT_IMPLEMENTED;
-}
-
-NTSTATUS
-NTAPI
 DiskGenerateDeviceName(
-    IN BOOLEAN IsFdo,
     IN ULONG DeviceNumber,
-    IN OPTIONAL ULONG PartitionNumber,
-    IN OPTIONAL PLARGE_INTEGER StartingOffset,
-    IN OPTIONAL PLARGE_INTEGER PartitionLength,
-    OUT PUCHAR *RawName
+    OUT PCCHAR *RawName
     )
 
 /*++
@@ -811,38 +634,20 @@ Return Value:
 
 --*/
 
-//#define PDO_NAME_FORMAT "\\Device\\Harddisk%d\\DP(%d)%d"
-#define PDO_NAME_FORMAT "\\Device\\Harddisk%d\\DP(%d)%#I64x-%#I64x+%lx"
 #define FDO_NAME_FORMAT "\\Device\\Harddisk%d\\DR%d"
 
-//#define PDO_NAME_FORMAT (PDO_BASE_NAME "+%#I64x+%#I64x+%#lx")
-
 {
-    UCHAR rawName[64];
-    static ULONG diskDeviceSequenceNumber = 0;
+    CHAR rawName[64] = { 0 };
+    NTSTATUS status;
 
     PAGED_CODE();
 
-    if(!IsFdo) {
-
-        ASSERT(ARGUMENT_PRESENT((PVOID)(ULONG_PTR) PartitionNumber));
-        ASSERT(ARGUMENT_PRESENT(PartitionLength));
-        ASSERT(ARGUMENT_PRESENT(StartingOffset));
-
-        sprintf(rawName, PDO_NAME_FORMAT, DeviceNumber, PartitionNumber,
-                                          StartingOffset->QuadPart,
-                                          PartitionLength->QuadPart,
-                                          diskDeviceSequenceNumber++);
-    } else {
-
-        ASSERT(!ARGUMENT_PRESENT((PVOID)(ULONG_PTR) PartitionNumber));
-        ASSERT(!ARGUMENT_PRESENT(PartitionLength));
-        ASSERT(!ARGUMENT_PRESENT(StartingOffset));
-
-        sprintf(rawName, FDO_NAME_FORMAT, DeviceNumber,
-                                          diskDeviceSequenceNumber++);
-
-    }
+        status = RtlStringCchPrintfA(rawName, sizeof(rawName) - 1, FDO_NAME_FORMAT, DeviceNumber,
+                                    diskDeviceSequenceNumber++);
+        if (!NT_SUCCESS(status)) {
+            TracePrint((TRACE_LEVEL_ERROR, TRACE_FLAG_PNP, "DiskGenerateDeviceName: Format FDO name failed with error: 0x%X\n", status));
+            return status;
+        }
 
     *RawName = ExAllocatePoolWithTag(PagedPool,
                                      strlen(rawName) + 1,
@@ -852,15 +657,20 @@ Return Value:
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    strcpy(*RawName, rawName);
+    status = RtlStringCchCopyA(*RawName, strlen(rawName) + 1, rawName);
+    if (!NT_SUCCESS(status)) {
+        TracePrint((TRACE_LEVEL_ERROR, TRACE_FLAG_PNP, "DiskGenerateDeviceName: Device name copy failed with error: 0x%X\n", status));
+        FREE_POOL(*RawName);
+        return status;
+    }
 
-    DebugPrint((2, "DiskGenerateDeviceName: generated \"%s\"\n", rawName));
+    TracePrint((TRACE_LEVEL_INFORMATION, TRACE_FLAG_PNP, "DiskGenerateDeviceName: generated \"%s\"\n", rawName));
 
     return STATUS_SUCCESS;
 }
 
+
 VOID
-NTAPI
 DiskCreateSymbolicLinks(
     IN PDEVICE_OBJECT DeviceObject
     )
@@ -870,8 +680,8 @@ DiskCreateSymbolicLinks(
 Routine Description:
 
     This routine will generate a symbolic link for the specified device object
-    using the well known form \\Device\HarddiskX\PartitionY, where X and Y are
-    filled in using the partition information in the device object's extension.
+    using the well known form \\Device\HarddiskX\PartitionY, where X and Y is
+    always 0 which represents the entire disk object.
 
     This routine will not try to delete any previous symbolic link for the
     same generated name - the caller must make sure the symbolic link has
@@ -889,10 +699,9 @@ Return Value:
 
 {
     PCOMMON_DEVICE_EXTENSION commonExtension = DeviceObject->DeviceExtension;
-
     PDISK_DATA diskData = commonExtension->DriverData;
 
-    WCHAR wideSourceName[64];
+    WCHAR wideSourceName[64] = { 0 };
     UNICODE_STRING unicodeSourceName;
 
     NTSTATUS status;
@@ -904,7 +713,7 @@ Return Value:
     // stored in the device object
     //
 
-    ASSERT(commonExtension->DeviceName.Buffer);
+    NT_ASSERT(commonExtension->DeviceName.Buffer);
 
     if(!diskData->LinkStatus.WellKnownNameCreated) {
         //
@@ -912,79 +721,60 @@ Return Value:
         // in the device extension and disk data segment
         //
 
-        swprintf(wideSourceName, L"\\Device\\Harddisk%d\\Partition%d",
-                 commonExtension->PartitionZeroExtension->DeviceNumber,
-                 (commonExtension->IsFdo ?
-                    0 :
-                    commonExtension->PartitionNumber));
+        status = RtlStringCchPrintfW(wideSourceName, sizeof(wideSourceName) / sizeof(wideSourceName[0]) - 1,
+                                     L"\\Device\\Harddisk%d\\Partition0",
+                                     commonExtension->PartitionZeroExtension->DeviceNumber);
 
-        RtlInitUnicodeString(&unicodeSourceName, wideSourceName);
+        if (NT_SUCCESS(status)) {
 
-        DebugPrint((1, "DiskCreateSymbolicLink: Linking %wZ to %wZ\n",
-                   &unicodeSourceName,
-                   &commonExtension->DeviceName));
+            RtlInitUnicodeString(&unicodeSourceName, wideSourceName);
 
-        status = IoCreateSymbolicLink(&unicodeSourceName,
-                                      &commonExtension->DeviceName);
+            TracePrint((TRACE_LEVEL_INFORMATION, TRACE_FLAG_PNP, "DiskCreateSymbolicLink: Linking %wZ to %wZ\n",
+                       &unicodeSourceName,
+                       &commonExtension->DeviceName));
 
-    #if DBG
+            status = IoCreateSymbolicLink(&unicodeSourceName,
+                                          &commonExtension->DeviceName);
 
-        if((status == STATUS_OBJECT_NAME_EXISTS) ||
-           (status == STATUS_OBJECT_NAME_COLLISION)) {
-
-            DebugPrint((1, "DiskCreateSymbolicLink: name %wZ already exists\n",
-                        &unicodeSourceName));
-        }
-    #endif
-
-        if(NT_SUCCESS(status)){
-            diskData->LinkStatus.WellKnownNameCreated = TRUE;
+            if(NT_SUCCESS(status)){
+                diskData->LinkStatus.WellKnownNameCreated = TRUE;
+            }
         }
     }
 
-    if((!diskData->LinkStatus.PhysicalDriveLinkCreated) &&
-       (commonExtension->IsFdo)) {
+    if (!diskData->LinkStatus.PhysicalDriveLinkCreated) {
 
         //
         // Create a physical drive N link using the device number we saved
         // away during AddDevice.
         //
 
-        swprintf(wideSourceName,
-                 L"\\DosDevices\\PhysicalDrive%d",
-                 commonExtension->PartitionZeroExtension->DeviceNumber);
+        status = RtlStringCchPrintfW(wideSourceName, sizeof(wideSourceName) / sizeof(wideSourceName[0]) - 1,
+                                     L"\\DosDevices\\PhysicalDrive%d",
+                                     commonExtension->PartitionZeroExtension->DeviceNumber);
+        if (NT_SUCCESS(status)) {
 
-        RtlInitUnicodeString(&unicodeSourceName, wideSourceName);
+            RtlInitUnicodeString(&unicodeSourceName, wideSourceName);
 
-        DebugPrint((1, "DiskCreateSymbolicLink: Linking %wZ to %wZ\n",
-                    &unicodeSourceName,
-                    &(commonExtension->DeviceName)));
+            TracePrint((TRACE_LEVEL_INFORMATION, TRACE_FLAG_PNP, "DiskCreateSymbolicLink: Linking %wZ to %wZ\n",
+                        &unicodeSourceName,
+                        &(commonExtension->DeviceName)));
 
-        status = IoCreateSymbolicLink(&unicodeSourceName,
-                                      &(commonExtension->DeviceName));
+            status = IoCreateSymbolicLink(&unicodeSourceName,
+                                          &(commonExtension->DeviceName));
 
-#if DBG
-
-        if((status == STATUS_OBJECT_NAME_EXISTS) ||
-           (status == STATUS_OBJECT_NAME_COLLISION)) {
-
-            DebugPrint((1, "DiskCreateSymbolicLink: name %wZ already exists\n",
-                        &unicodeSourceName));
+            if(NT_SUCCESS(status)) {
+                diskData->LinkStatus.PhysicalDriveLinkCreated = TRUE;
+            }
         }
-#endif
-
-        if(NT_SUCCESS(status)) {
-            diskData->LinkStatus.PhysicalDriveLinkCreated = TRUE;
-        }
-    } else if(commonExtension->IsFdo == FALSE) {
-        diskData->LinkStatus.PhysicalDriveLinkCreated = FALSE;
     }
+
 
     return;
 }
 
+
 VOID
-NTAPI
 DiskDeleteSymbolicLinks(
     IN PDEVICE_OBJECT DeviceObject
     )
@@ -1011,46 +801,43 @@ Return Value:
     PCOMMON_DEVICE_EXTENSION commonExtension = DeviceObject->DeviceExtension;
     PDISK_DATA diskData = commonExtension->DriverData;
 
-    WCHAR wideLinkName[64];
+    WCHAR wideLinkName[64] = { 0 };
     UNICODE_STRING unicodeLinkName;
+    NTSTATUS status;
 
     PAGED_CODE();
 
     if(diskData->LinkStatus.WellKnownNameCreated) {
 
-        swprintf(wideLinkName,
-                 L"\\Device\\Harddisk%d\\Partition%d",
-                 commonExtension->PartitionZeroExtension->DeviceNumber,
-                 (commonExtension->IsFdo ? 0 :
-                                           commonExtension->PartitionNumber));
-
-        RtlInitUnicodeString(&unicodeLinkName, wideLinkName);
-
-        IoDeleteSymbolicLink(&unicodeLinkName);
-
+        status = RtlStringCchPrintfW(wideLinkName, sizeof(wideLinkName) / sizeof(wideLinkName[0]) - 1,
+                                    L"\\Device\\Harddisk%d\\Partition0",
+                                    commonExtension->PartitionZeroExtension->DeviceNumber);
+        if (NT_SUCCESS(status)) {
+            RtlInitUnicodeString(&unicodeLinkName, wideLinkName);
+            IoDeleteSymbolicLink(&unicodeLinkName);
+        }
         diskData->LinkStatus.WellKnownNameCreated = FALSE;
     }
 
     if(diskData->LinkStatus.PhysicalDriveLinkCreated) {
 
-        ASSERT_FDO(DeviceObject);
-
-        swprintf(wideLinkName,
-                 L"\\DosDevices\\PhysicalDrive%d",
-                 commonExtension->PartitionZeroExtension->DeviceNumber);
-
-        RtlInitUnicodeString(&unicodeLinkName, wideLinkName);
-
-        IoDeleteSymbolicLink(&unicodeLinkName);
-
+        status = RtlStringCchPrintfW(wideLinkName, sizeof(wideLinkName) / sizeof(wideLinkName[0]) - 1,
+                                    L"\\DosDevices\\PhysicalDrive%d",
+                                    commonExtension->PartitionZeroExtension->DeviceNumber);
+        if (NT_SUCCESS(status)) {
+            RtlInitUnicodeString(&unicodeLinkName, wideLinkName);
+            IoDeleteSymbolicLink(&unicodeLinkName);
+        }
         diskData->LinkStatus.PhysicalDriveLinkCreated = FALSE;
     }
+
 
     return;
 }
 
+
 NTSTATUS
-NTAPI
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 DiskRemoveDevice(
     IN PDEVICE_OBJECT DeviceObject,
     IN UCHAR Type
@@ -1075,7 +862,7 @@ Return Value:
 
 {
     PCOMMON_DEVICE_EXTENSION commonExtension = DeviceObject->DeviceExtension;
-    PDISK_DATA diskData = commonExtension->DriverData;
+    PFUNCTIONAL_DEVICE_EXTENSION fdoExtension = DeviceObject->DeviceExtension;
 
     PAGED_CODE();
 
@@ -1084,81 +871,41 @@ Return Value:
     //
 
     if((Type == IRP_MN_QUERY_REMOVE_DEVICE) ||
-       (Type == IRP_MN_CANCEL_REMOVE_DEVICE))  {
+       (Type == IRP_MN_CANCEL_REMOVE_DEVICE)) {
         return STATUS_SUCCESS;
     }
 
-    if(commonExtension->IsFdo) {
+    //
+    // Delete our object directory.
+    //
 
-        PFUNCTIONAL_DEVICE_EXTENSION fdoExtension =
-            DeviceObject->DeviceExtension;
+    if(fdoExtension->DeviceDirectory != NULL) {
+        ZwMakeTemporaryObject(fdoExtension->DeviceDirectory);
+        ZwClose(fdoExtension->DeviceDirectory);
+        fdoExtension->DeviceDirectory = NULL;
+    }
 
-        //
-        // Purge the cached partition table (if any).
-        //
+    if(Type == IRP_MN_REMOVE_DEVICE) {
 
-        DiskAcquirePartitioningLock(fdoExtension);
-        DiskInvalidatePartitionTable(fdoExtension, TRUE);
-        DiskReleasePartitioningLock(fdoExtension);
+        FREE_POOL(fdoExtension->SenseData);
 
-        //
-        // Delete our object directory.
-        //
-
-        if(fdoExtension->AdapterDescriptor) {
-            ExFreePool(fdoExtension->AdapterDescriptor);
-            fdoExtension->AdapterDescriptor = NULL;
-        }
-
-        if(fdoExtension->DeviceDescriptor) {
-            ExFreePool(fdoExtension->DeviceDescriptor);
-            fdoExtension->DeviceDescriptor = NULL;
-        }
-
-        if(fdoExtension->SenseData) {
-            ExFreePool(fdoExtension->SenseData);
-            fdoExtension->SenseData = NULL;
-        }
-
-        if(fdoExtension->DeviceDirectory != NULL) {
-            ZwMakeTemporaryObject(fdoExtension->DeviceDirectory);
-            ZwClose(fdoExtension->DeviceDirectory);
-            fdoExtension->DeviceDirectory = NULL;
-        }
-
-        if(Type == IRP_MN_REMOVE_DEVICE) {
-            IoGetConfigurationInformation()->DiskCount--;
-        }
-
-    } else {
-
-        //PPHYSICAL_DEVICE_EXTENSION pdoExtension = DeviceObject->DeviceExtension;
+        IoGetConfigurationInformation()->DiskCount--;
 
     }
 
     DiskDeleteSymbolicLinks(DeviceObject);
 
-    //
-    // Release the mounted device interface if we've set it.
-    //
-
-    if(diskData->PartitionInterfaceString.Buffer != NULL) {
-        IoSetDeviceInterfaceState(&(diskData->PartitionInterfaceString), FALSE);
-        RtlFreeUnicodeString(&(diskData->PartitionInterfaceString));
-        RtlInitUnicodeString(&(diskData->PartitionInterfaceString), NULL);
-    }
-    if(diskData->DiskInterfaceString.Buffer != NULL) {
-        IoSetDeviceInterfaceState(&(diskData->DiskInterfaceString), FALSE);
-        RtlFreeUnicodeString(&(diskData->DiskInterfaceString));
-        RtlInitUnicodeString(&(diskData->DiskInterfaceString), NULL);
+    if (Type == IRP_MN_REMOVE_DEVICE)
+    {
+        ClassDeleteSrbLookasideList(commonExtension);
     }
 
-    ClassDeleteSrbLookasideList(commonExtension);
     return STATUS_SUCCESS;
 }
 
+
 NTSTATUS
-NTAPI
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 DiskStartFdo(
     IN PDEVICE_OBJECT Fdo
     )
@@ -1191,9 +938,9 @@ Return Value:
     PFUNCTIONAL_DEVICE_EXTENSION fdoExtension = Fdo->DeviceExtension;
     PCOMMON_DEVICE_EXTENSION commonExtension = &(fdoExtension->CommonExtension);
     PDISK_DATA diskData = commonExtension->DriverData;
-    STORAGE_HOTPLUG_INFO hotplugInfo;
-    ULONG writeCacheOverride = DiskWriteCacheDefault;
-    DISK_CACHE_INFORMATION cacheInfo;
+    STORAGE_HOTPLUG_INFO hotplugInfo = { 0 };
+    DISK_CACHE_INFORMATION cacheInfo = { 0 };
+    ULONG isPowerProtected = 0;
     NTSTATUS status;
 
     PAGED_CODE();
@@ -1209,10 +956,9 @@ Return Value:
     {
         PIRP irp;
         KEVENT event;
-        IO_STATUS_BLOCK statusBlock;
+        IO_STATUS_BLOCK statusBlock = { 0 };
 
         KeInitializeEvent(&event, SynchronizationEvent, FALSE);
-        RtlZeroMemory(&hotplugInfo, sizeof(STORAGE_HOTPLUG_INFO));
 
         irp = IoBuildDeviceIoControlRequest(IOCTL_STORAGE_GET_HOTPLUG_INFO,
                                             Fdo,
@@ -1234,8 +980,10 @@ Return Value:
                                       KernelMode,
                                       FALSE,
                                       NULL);
+
                 status = statusBlock.Status;
             }
+            NT_ASSERT(NT_SUCCESS(status));
         }
     }
 
@@ -1243,63 +991,59 @@ Return Value:
     // Clear the DEV_WRITE_CACHE flag now  and set
     // it below only if we read that from the disk
     //
-
     CLEAR_FLAG(fdoExtension->DeviceFlags, DEV_WRITE_CACHE);
+    ADJUST_FUA_FLAG(fdoExtension);
 
-    if (TEST_FLAG(fdoExtension->ScanForSpecialFlags, CLASS_SPECIAL_DISABLE_WRITE_CACHE))
+    diskData->WriteCacheOverride = DiskWriteCacheDefault;
+
+    //
+    // Look into the registry to  see if the user
+    // has chosen to override the default setting
+    //
+    ClassGetDeviceParameter(fdoExtension,
+                            DiskDeviceParameterSubkey,
+                            DiskDeviceUserWriteCacheSetting,
+                            (PULONG)&diskData->WriteCacheOverride);
+
+    if (diskData->WriteCacheOverride == DiskWriteCacheDefault)
     {
         //
-        // This flag overrides the user's  setting, because  faulty firmware
-        // may cause the filesystem to refuse to format media on this device
+        // The user has not overridden the default settings
         //
-        DebugPrint((1,
-                    "DiskStartFdo: Shutting off write cache for %p due to %s\n",
-                    Fdo,
-                    "Possible Firmware Issue"));
-
-        writeCacheOverride = DiskWriteCacheDisable;
-    }
-    else
-    {
-        //
-        // Look into the registry to  see if the user
-        // has chosen to override the default setting
-        //
-        ClassGetDeviceParameter(fdoExtension,
-                                DiskDeviceParameterSubkey,
-                                DiskDeviceUserWriteCacheSetting,
-                                &writeCacheOverride);
-
-        if (writeCacheOverride == DiskWriteCacheDefault)
+        if (TEST_FLAG(fdoExtension->ScanForSpecialFlags, CLASS_SPECIAL_DISABLE_WRITE_CACHE))
         {
             //
-            // The user has not overridden the default settings
+            // This flag indicates that we have faulty firmware and this
+            // may cause the filesystem to refuse to mount on this media
             //
-            if (hotplugInfo.DeviceHotplug && !hotplugInfo.WriteCacheEnableOverride)
-            {
-                DebugPrint((1,
-                            "DiskStartFdo: Shutting off write cache for %p due to %s\n",
-                            Fdo,
-                            "Hotplug Device"));
+            TracePrint((TRACE_LEVEL_WARNING, TRACE_FLAG_PNP, "DiskStartFdo: Turning off write cache for %p due to a firmware issue\n", Fdo));
 
-                writeCacheOverride = DiskWriteCacheDisable;
-            }
-            else if (hotplugInfo.MediaHotplug)
-            {
-                DebugPrint((1,
-                            "DiskStartFdo: Shutting off write cache for %p due to %s\n",
-                            Fdo,
-                            "Hotplug (unlockable) Media"));
+            diskData->WriteCacheOverride = DiskWriteCacheDisable;
+        }
+        else if (hotplugInfo.DeviceHotplug && !hotplugInfo.WriteCacheEnableOverride)
+        {
+            //
+            // This flag indicates that the device is hotpluggable making it unsafe to enable caching
+            //
+            TracePrint((TRACE_LEVEL_WARNING, TRACE_FLAG_PNP, "DiskStartFdo: Turning off write cache for %p due to hotpluggable device\n", Fdo));
 
-                writeCacheOverride = DiskWriteCacheDisable;
-            }
-            else
-            {
-                //
-                // We enable write cache if this device has no specific issues
-                //
-                writeCacheOverride = DiskWriteCacheEnable;
-            }
+            diskData->WriteCacheOverride = DiskWriteCacheDisable;
+        }
+        else if (hotplugInfo.MediaHotplug)
+        {
+            //
+            // This flag indicates that the media in the device cannot be reliably locked
+            //
+            TracePrint((TRACE_LEVEL_WARNING, TRACE_FLAG_PNP, "DiskStartFdo: Turning off write cache for %p due to unlockable media\n", Fdo));
+
+            diskData->WriteCacheOverride = DiskWriteCacheDisable;
+        }
+        else
+        {
+            //
+            // Even though the device does  not seem to have any obvious problems
+            // we leave it to the user to modify the previous write cache setting
+            //
         }
     }
 
@@ -1308,15 +1052,16 @@ Return Value:
     // and  set the DEV_WRITE_CACHE flag appropriately
     //
 
-    RtlZeroMemory(&cacheInfo, sizeof(DISK_CACHE_INFORMATION));
-
     status = DiskGetCacheInformation(fdoExtension, &cacheInfo);
 
     if (NT_SUCCESS(status))
     {
-        if (cacheInfo.WriteCacheEnabled != FALSE)
+        if (cacheInfo.WriteCacheEnabled == TRUE)
         {
-            if (writeCacheOverride == DiskWriteCacheDisable)
+            SET_FLAG(fdoExtension->DeviceFlags, DEV_WRITE_CACHE);
+            ADJUST_FUA_FLAG(fdoExtension);
+
+            if (diskData->WriteCacheOverride == DiskWriteCacheDisable)
             {
                 //
                 // Write cache is currently enabled on this
@@ -1324,20 +1069,12 @@ Return Value:
                 //
                 cacheInfo.WriteCacheEnabled = FALSE;
 
-                status = DiskSetCacheInformation(fdoExtension, &cacheInfo);
-            }
-            else
-            {
-                //
-                // The write cache setting either matches
-                // our needs or we don't care
-                //
-                SET_FLAG(fdoExtension->DeviceFlags, DEV_WRITE_CACHE);
+                DiskSetCacheInformation(fdoExtension, &cacheInfo);
             }
         }
         else
         {
-            if (writeCacheOverride == DiskWriteCacheEnable)
+            if (diskData->WriteCacheOverride == DiskWriteCacheEnable)
             {
                 //
                 // Write cache is currently disabled on this
@@ -1345,58 +1082,27 @@ Return Value:
                 //
                 cacheInfo.WriteCacheEnabled = TRUE;
 
-                status = DiskSetCacheInformation(fdoExtension, &cacheInfo);
-
-                SET_FLAG(fdoExtension->DeviceFlags, DEV_WRITE_CACHE);
+                DiskSetCacheInformation(fdoExtension, &cacheInfo);
             }
         }
     }
 
     //
-    // In the event that there's a cached partition table flush it now.
+    // Query the registry to see if this disk is power-protected or not
     //
 
-    DiskAcquirePartitioningLock(fdoExtension);
-    DiskInvalidatePartitionTable(fdoExtension, TRUE);
-    DiskReleasePartitioningLock(fdoExtension);
+    CLEAR_FLAG(fdoExtension->DeviceFlags, DEV_POWER_PROTECTED);
 
-    //
-    // Get the SCSI address if it's available for use with SMART ioctls.
-    //
+    ClassGetDeviceParameter(fdoExtension, DiskDeviceParameterSubkey, DiskDeviceCacheIsPowerProtected, &isPowerProtected);
 
+    if (isPowerProtected == 1)
     {
-        PIRP irp;
-        KEVENT event;
-        IO_STATUS_BLOCK statusBlock;
-
-        KeInitializeEvent(&event, SynchronizationEvent, FALSE);
-
-        irp = IoBuildDeviceIoControlRequest(IOCTL_SCSI_GET_ADDRESS,
-                                            commonExtension->LowerDeviceObject,
-                                            NULL,
-                                            0L,
-                                            &(diskData->ScsiAddress),
-                                            sizeof(SCSI_ADDRESS),
-                                            FALSE,
-                                            &event,
-                                            &statusBlock);
-
-        if(irp != NULL) {
-
-
-            status = IoCallDriver(commonExtension->LowerDeviceObject, irp);
-
-            if(status == STATUS_PENDING) {
-                KeWaitForSingleObject(&event,
-                                      Executive,
-                                      KernelMode,
-                                      FALSE,
-                                      NULL);
-                status = statusBlock.Status;
-            }
-        }
+        SET_FLAG(fdoExtension->DeviceFlags, DEV_POWER_PROTECTED);
     }
+
+    ADJUST_FUA_FLAG(fdoExtension);
 
     return STATUS_SUCCESS;
 
 } // end DiskStartFdo()
+

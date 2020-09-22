@@ -138,6 +138,9 @@ STRING KdbPromptString = RTL_CONSTANT_STRING("kdb:> ");
 //
 // Debug Filter Component Table
 //
+#define KD_DEBUG_PRINT_FILTER(Name) \
+    { #Name, DPFLTR_##Name##_ID }
+
 static struct
 {
     PCSTR Name;
@@ -148,160 +151,176 @@ ComponentTable[] =
 //
 // Default components
 //
-    { "WIN2000", MAXULONG          },
-    { "DEFAULT", DPFLTR_DEFAULT_ID },
+    { "WIN2000", MAXULONG },
+    KD_DEBUG_PRINT_FILTER(DEFAULT),
 //
 // Standard components
 //
-    { "SYSTEM",         DPFLTR_SYSTEM_ID        },
-    { "SMSS",           DPFLTR_SMSS_ID          },
-    { "SETUP",          DPFLTR_SETUP_ID         },
-    { "NTFS",           DPFLTR_NTFS_ID          },
-    { "FSTUB",          DPFLTR_FSTUB_ID         },
-    { "CRASHDUMP",      DPFLTR_CRASHDUMP_ID     },
-    { "CDAUDIO",        DPFLTR_CDAUDIO_ID       },
-    { "CDROM",          DPFLTR_CDROM_ID         },
-    { "CLASSPNP",       DPFLTR_CLASSPNP_ID      },
-    { "DISK",           DPFLTR_DISK_ID          },
-    { "REDBOOK",        DPFLTR_REDBOOK_ID       },
-    { "STORPROP",       DPFLTR_STORPROP_ID      },
-    { "SCSIPORT",       DPFLTR_SCSIPORT_ID      },
-    { "SCSIMINIPORT",   DPFLTR_SCSIMINIPORT_ID  },
-    { "CONFIG",         DPFLTR_CONFIG_ID        },
-    { "I8042PRT",       DPFLTR_I8042PRT_ID      },
-    { "SERMOUSE",       DPFLTR_SERMOUSE_ID      },
-    { "LSERMOUS",       DPFLTR_LSERMOUS_ID      },
-    { "KBDHID",         DPFLTR_KBDHID_ID        },
-    { "MOUHID",         DPFLTR_MOUHID_ID        },
-    { "KBDCLASS",       DPFLTR_KBDCLASS_ID      },
-    { "MOUCLASS",       DPFLTR_MOUCLASS_ID      },
-    { "TWOTRACK",       DPFLTR_TWOTRACK_ID      },
-    { "WMILIB",         DPFLTR_WMILIB_ID        },
-    { "ACPI",           DPFLTR_ACPI_ID          },
-    { "AMLI",           DPFLTR_AMLI_ID          },
-    { "HALIA64",        DPFLTR_HALIA64_ID       },
-    { "VIDEO",          DPFLTR_VIDEO_ID         },
-    { "SVCHOST",        DPFLTR_SVCHOST_ID       },
-    { "VIDEOPRT",       DPFLTR_VIDEOPRT_ID      },
-    { "TCPIP",          DPFLTR_TCPIP_ID         },
-    { "DMSYNTH",        DPFLTR_DMSYNTH_ID       },
-    { "NTOSPNP",        DPFLTR_NTOSPNP_ID       },
-    { "FASTFAT",        DPFLTR_FASTFAT_ID       },
-    { "SAMSS",          DPFLTR_SAMSS_ID         },
-    { "PNPMGR",         DPFLTR_PNPMGR_ID        },
-    { "NETAPI",         DPFLTR_NETAPI_ID        },
-    { "SCSERVER",       DPFLTR_SCSERVER_ID      },
-    { "SCCLIENT",       DPFLTR_SCCLIENT_ID      },
-    { "SERIAL",         DPFLTR_SERIAL_ID        },
-    { "SERENUM",        DPFLTR_SERENUM_ID       },
-    { "UHCD",           DPFLTR_UHCD_ID          },
-    { "RPCPROXY",       DPFLTR_RPCPROXY_ID      },
-    { "AUTOCHK",        DPFLTR_AUTOCHK_ID       },
-    { "DCOMSS",         DPFLTR_DCOMSS_ID        },
-    { "UNIMODEM",       DPFLTR_UNIMODEM_ID      },
-    { "SIS",            DPFLTR_SIS_ID           },
-    { "FLTMGR",         DPFLTR_FLTMGR_ID        },
-    { "WMICORE",        DPFLTR_WMICORE_ID       },
-    { "BURNENG",        DPFLTR_BURNENG_ID       },
-    { "IMAPI",          DPFLTR_IMAPI_ID         },
-    { "SXS",            DPFLTR_SXS_ID           },
-    { "FUSION",         DPFLTR_FUSION_ID        },
-    { "IDLETASK",       DPFLTR_IDLETASK_ID      },
-    { "SOFTPCI",        DPFLTR_SOFTPCI_ID       },
-    { "TAPE",           DPFLTR_TAPE_ID          },
-    { "MCHGR",          DPFLTR_MCHGR_ID         },
-    { "IDEP",           DPFLTR_IDEP_ID          },
-    { "PCIIDE",         DPFLTR_PCIIDE_ID        },
-    { "FLOPPY",         DPFLTR_FLOPPY_ID        },
-    { "FDC",            DPFLTR_FDC_ID           },
-    { "TERMSRV",        DPFLTR_TERMSRV_ID       },
-    { "W32TIME",        DPFLTR_W32TIME_ID       },
-    { "PREFETCHER",     DPFLTR_PREFETCHER_ID    },
-    { "RSFILTER",       DPFLTR_RSFILTER_ID      },
-    { "FCPORT",         DPFLTR_FCPORT_ID        },
-    { "PCI",            DPFLTR_PCI_ID           },
-    { "DMIO",           DPFLTR_DMIO_ID          },
-    { "DMCONFIG",       DPFLTR_DMCONFIG_ID      },
-    { "DMADMIN",        DPFLTR_DMADMIN_ID       },
-    { "WSOCKTRANSPORT", DPFLTR_WSOCKTRANSPORT_ID },
-    { "VSS",            DPFLTR_VSS_ID           },
-    { "PNPMEM",         DPFLTR_PNPMEM_ID        },
-    { "PROCESSOR",      DPFLTR_PROCESSOR_ID     },
-    { "DMSERVER",       DPFLTR_DMSERVER_ID      },
-    { "SR",             DPFLTR_SR_ID            },
-    { "INFINIBAND",     DPFLTR_INFINIBAND_ID    },
-    { "IHVDRIVER",      DPFLTR_IHVDRIVER_ID     },
-    { "IHVVIDEO",       DPFLTR_IHVVIDEO_ID      },
-    { "IHVAUDIO",       DPFLTR_IHVAUDIO_ID      },
-    { "IHVNETWORK",     DPFLTR_IHVNETWORK_ID    },
-    { "IHVSTREAMING",   DPFLTR_IHVSTREAMING_ID  },
-    { "IHVBUS",         DPFLTR_IHVBUS_ID        },
-    { "HPS",            DPFLTR_HPS_ID           },
-    { "RTLTHREADPOOL",  DPFLTR_RTLTHREADPOOL_ID },
-    { "LDR",            DPFLTR_LDR_ID           },
-    { "TCPIP6",         DPFLTR_TCPIP6_ID        },
-    { "ISAPNP",         DPFLTR_ISAPNP_ID        },
-    { "SHPC",           DPFLTR_SHPC_ID          },
-    { "STORPORT",       DPFLTR_STORPORT_ID      },
-    { "STORMINIPORT",   DPFLTR_STORMINIPORT_ID  },
-    { "PRINTSPOOLER",   DPFLTR_PRINTSPOOLER_ID  },
-    { "VSSDYNDISK",     DPFLTR_VSSDYNDISK_ID    },
-    { "VERIFIER",       DPFLTR_VERIFIER_ID      },
-    { "VDS",            DPFLTR_VDS_ID           },
-    { "VDSBAS",         DPFLTR_VDSBAS_ID        },
-    { "VDSDYN",         DPFLTR_VDSDYN_ID        },  // Specified in Vista+
-    { "VDSDYNDR",       DPFLTR_VDSDYNDR_ID      },
-    { "VDSLDR",         DPFLTR_VDSLDR_ID        },  // Specified in Vista+
-    { "VDSUTIL",        DPFLTR_VDSUTIL_ID       },
-    { "DFRGIFC",        DPFLTR_DFRGIFC_ID       },
-    { "MM",             DPFLTR_MM_ID            },
-    { "DFSC",           DPFLTR_DFSC_ID          },
-    { "WOW64",          DPFLTR_WOW64_ID         },
+    KD_DEBUG_PRINT_FILTER(SYSTEM),
+    KD_DEBUG_PRINT_FILTER(SMSS),
+    KD_DEBUG_PRINT_FILTER(SETUP),
+    KD_DEBUG_PRINT_FILTER(NTFS),
+    KD_DEBUG_PRINT_FILTER(FSTUB),
+    KD_DEBUG_PRINT_FILTER(CRASHDUMP),
+    KD_DEBUG_PRINT_FILTER(CDAUDIO),
+    KD_DEBUG_PRINT_FILTER(CDROM),
+    KD_DEBUG_PRINT_FILTER(CLASSPNP),
+    KD_DEBUG_PRINT_FILTER(DISK),
+    KD_DEBUG_PRINT_FILTER(REDBOOK),
+    KD_DEBUG_PRINT_FILTER(STORPROP),
+    KD_DEBUG_PRINT_FILTER(SCSIPORT),
+    KD_DEBUG_PRINT_FILTER(SCSIMINIPORT),
+    KD_DEBUG_PRINT_FILTER(CONFIG),
+    KD_DEBUG_PRINT_FILTER(I8042PRT),
+    KD_DEBUG_PRINT_FILTER(SERMOUSE),
+    KD_DEBUG_PRINT_FILTER(LSERMOUS),
+    KD_DEBUG_PRINT_FILTER(KBDHID),
+    KD_DEBUG_PRINT_FILTER(MOUHID),
+    KD_DEBUG_PRINT_FILTER(KBDCLASS),
+    KD_DEBUG_PRINT_FILTER(MOUCLASS),
+    KD_DEBUG_PRINT_FILTER(TWOTRACK),
+    KD_DEBUG_PRINT_FILTER(WMILIB),
+    KD_DEBUG_PRINT_FILTER(ACPI),
+    KD_DEBUG_PRINT_FILTER(AMLI),
+    KD_DEBUG_PRINT_FILTER(HALIA64),
+    KD_DEBUG_PRINT_FILTER(VIDEO),
+    KD_DEBUG_PRINT_FILTER(SVCHOST),
+    KD_DEBUG_PRINT_FILTER(VIDEOPRT),
+    KD_DEBUG_PRINT_FILTER(TCPIP),
+    KD_DEBUG_PRINT_FILTER(DMSYNTH),
+    KD_DEBUG_PRINT_FILTER(NTOSPNP),
+    KD_DEBUG_PRINT_FILTER(FASTFAT),
+    KD_DEBUG_PRINT_FILTER(SAMSS),
+    KD_DEBUG_PRINT_FILTER(PNPMGR),
+    KD_DEBUG_PRINT_FILTER(NETAPI),
+    KD_DEBUG_PRINT_FILTER(SCSERVER),
+    KD_DEBUG_PRINT_FILTER(SCCLIENT),
+    KD_DEBUG_PRINT_FILTER(SERIAL),
+    KD_DEBUG_PRINT_FILTER(SERENUM),
+    KD_DEBUG_PRINT_FILTER(UHCD),
+    KD_DEBUG_PRINT_FILTER(RPCPROXY),
+    KD_DEBUG_PRINT_FILTER(AUTOCHK),
+    KD_DEBUG_PRINT_FILTER(DCOMSS),
+    KD_DEBUG_PRINT_FILTER(UNIMODEM),
+    KD_DEBUG_PRINT_FILTER(SIS),
+    KD_DEBUG_PRINT_FILTER(FLTMGR),
+    KD_DEBUG_PRINT_FILTER(WMICORE),
+    KD_DEBUG_PRINT_FILTER(BURNENG),
+    KD_DEBUG_PRINT_FILTER(IMAPI),
+    KD_DEBUG_PRINT_FILTER(SXS),
+    KD_DEBUG_PRINT_FILTER(FUSION),
+    KD_DEBUG_PRINT_FILTER(IDLETASK),
+    KD_DEBUG_PRINT_FILTER(SOFTPCI),
+    KD_DEBUG_PRINT_FILTER(TAPE),
+    KD_DEBUG_PRINT_FILTER(MCHGR),
+    KD_DEBUG_PRINT_FILTER(IDEP),
+    KD_DEBUG_PRINT_FILTER(PCIIDE),
+    KD_DEBUG_PRINT_FILTER(FLOPPY),
+    KD_DEBUG_PRINT_FILTER(FDC),
+    KD_DEBUG_PRINT_FILTER(TERMSRV),
+    KD_DEBUG_PRINT_FILTER(W32TIME),
+    KD_DEBUG_PRINT_FILTER(PREFETCHER),
+    KD_DEBUG_PRINT_FILTER(RSFILTER),
+    KD_DEBUG_PRINT_FILTER(FCPORT),
+    KD_DEBUG_PRINT_FILTER(PCI),
+    KD_DEBUG_PRINT_FILTER(DMIO),
+    KD_DEBUG_PRINT_FILTER(DMCONFIG),
+    KD_DEBUG_PRINT_FILTER(DMADMIN),
+    KD_DEBUG_PRINT_FILTER(WSOCKTRANSPORT),
+    KD_DEBUG_PRINT_FILTER(VSS),
+    KD_DEBUG_PRINT_FILTER(PNPMEM),
+    KD_DEBUG_PRINT_FILTER(PROCESSOR),
+    KD_DEBUG_PRINT_FILTER(DMSERVER),
+    KD_DEBUG_PRINT_FILTER(SR),
+    KD_DEBUG_PRINT_FILTER(INFINIBAND),
+    KD_DEBUG_PRINT_FILTER(IHVDRIVER),
+    KD_DEBUG_PRINT_FILTER(IHVVIDEO),
+    KD_DEBUG_PRINT_FILTER(IHVAUDIO),
+    KD_DEBUG_PRINT_FILTER(IHVNETWORK),
+    KD_DEBUG_PRINT_FILTER(IHVSTREAMING),
+    KD_DEBUG_PRINT_FILTER(IHVBUS),
+    KD_DEBUG_PRINT_FILTER(HPS),
+    KD_DEBUG_PRINT_FILTER(RTLTHREADPOOL),
+    KD_DEBUG_PRINT_FILTER(LDR),
+    KD_DEBUG_PRINT_FILTER(TCPIP6),
+    KD_DEBUG_PRINT_FILTER(ISAPNP),
+    KD_DEBUG_PRINT_FILTER(SHPC),
+    KD_DEBUG_PRINT_FILTER(STORPORT),
+    KD_DEBUG_PRINT_FILTER(STORMINIPORT),
+    KD_DEBUG_PRINT_FILTER(PRINTSPOOLER),
+    KD_DEBUG_PRINT_FILTER(VSSDYNDISK),
+    KD_DEBUG_PRINT_FILTER(VERIFIER),
+    KD_DEBUG_PRINT_FILTER(VDS),
+    KD_DEBUG_PRINT_FILTER(VDSBAS),
+    KD_DEBUG_PRINT_FILTER(VDSDYN),  // Specified in Vista+
+    KD_DEBUG_PRINT_FILTER(VDSDYNDR),
+    KD_DEBUG_PRINT_FILTER(VDSLDR),  // Specified in Vista+
+    KD_DEBUG_PRINT_FILTER(VDSUTIL),
+    KD_DEBUG_PRINT_FILTER(DFRGIFC),
+    KD_DEBUG_PRINT_FILTER(MM),
+    KD_DEBUG_PRINT_FILTER(DFSC),
+    KD_DEBUG_PRINT_FILTER(WOW64),
 //
 // Components specified in Vista+, some of which we also use in ReactOS
 //
-    { "ALPC",           DPFLTR_ALPC_ID          },
-    { "WDI",            DPFLTR_WDI_ID           },
-    { "PERFLIB",        DPFLTR_PERFLIB_ID       },
-    { "KTM",            DPFLTR_KTM_ID           },
-    { "IOSTRESS",       DPFLTR_IOSTRESS_ID      },
-    { "HEAP",           DPFLTR_HEAP_ID          },
-    { "WHEA",           DPFLTR_WHEA_ID          },
-    { "USERGDI",        DPFLTR_USERGDI_ID       },
-    { "MMCSS",          DPFLTR_MMCSS_ID         },
-    { "TPM",            DPFLTR_TPM_ID           },
-    { "THREADORDER",    DPFLTR_THREADORDER_ID   },
-    { "ENVIRON",        DPFLTR_ENVIRON_ID       },
-    { "EMS",            DPFLTR_EMS_ID           },
-    { "WDT",            DPFLTR_WDT_ID           },
-    { "FVEVOL",         DPFLTR_FVEVOL_ID        },
-    { "NDIS",           DPFLTR_NDIS_ID          },
-    { "NVCTRACE",       DPFLTR_NVCTRACE_ID      },
-    { "LUAFV",          DPFLTR_LUAFV_ID         },
-    { "APPCOMPAT",      DPFLTR_APPCOMPAT_ID     },
-    { "USBSTOR",        DPFLTR_USBSTOR_ID       },
-    { "SBP2PORT",       DPFLTR_SBP2PORT_ID      },
-    { "COVERAGE",       DPFLTR_COVERAGE_ID      },
-    { "CACHEMGR",       DPFLTR_CACHEMGR_ID      },
-    { "MOUNTMGR",       DPFLTR_MOUNTMGR_ID      },
-    { "CFR",            DPFLTR_CFR_ID           },
-    { "TXF",            DPFLTR_TXF_ID           },
-    { "KSECDD",         DPFLTR_KSECDD_ID        },
-    { "FLTREGRESS",     DPFLTR_FLTREGRESS_ID    },
-    { "MPIO",           DPFLTR_MPIO_ID          },
-    { "MSDSM",          DPFLTR_MSDSM_ID         },
-    { "UDFS",           DPFLTR_UDFS_ID          },
-    { "PSHED",          DPFLTR_PSHED_ID         },
-    { "STORVSP",        DPFLTR_STORVSP_ID       },
-    { "LSASS",          DPFLTR_LSASS_ID         },
-    { "SSPICLI",        DPFLTR_SSPICLI_ID       },
-    { "CNG",            DPFLTR_CNG_ID           },
-    { "EXFAT",          DPFLTR_EXFAT_ID         },
-    { "FILETRACE",      DPFLTR_FILETRACE_ID     },
-    { "XSAVE",          DPFLTR_XSAVE_ID         },
-    { "SE",             DPFLTR_SE_ID            },
-    { "DRIVEEXTENDER",  DPFLTR_DRIVEEXTENDER_ID },
+    KD_DEBUG_PRINT_FILTER(ALPC),
+    KD_DEBUG_PRINT_FILTER(WDI),
+    KD_DEBUG_PRINT_FILTER(PERFLIB),
+    KD_DEBUG_PRINT_FILTER(KTM),
+    KD_DEBUG_PRINT_FILTER(IOSTRESS),
+    KD_DEBUG_PRINT_FILTER(HEAP),
+    KD_DEBUG_PRINT_FILTER(WHEA),
+    KD_DEBUG_PRINT_FILTER(USERGDI),
+    KD_DEBUG_PRINT_FILTER(MMCSS),
+    KD_DEBUG_PRINT_FILTER(TPM),
+    KD_DEBUG_PRINT_FILTER(THREADORDER),
+    KD_DEBUG_PRINT_FILTER(ENVIRON),
+    KD_DEBUG_PRINT_FILTER(EMS),
+    KD_DEBUG_PRINT_FILTER(WDT),
+    KD_DEBUG_PRINT_FILTER(FVEVOL),
+    KD_DEBUG_PRINT_FILTER(NDIS),
+    KD_DEBUG_PRINT_FILTER(NVCTRACE),
+    KD_DEBUG_PRINT_FILTER(LUAFV),
+    KD_DEBUG_PRINT_FILTER(APPCOMPAT),
+    KD_DEBUG_PRINT_FILTER(USBSTOR),
+    KD_DEBUG_PRINT_FILTER(SBP2PORT),
+    KD_DEBUG_PRINT_FILTER(COVERAGE),
+    KD_DEBUG_PRINT_FILTER(CACHEMGR),
+    KD_DEBUG_PRINT_FILTER(MOUNTMGR),
+    KD_DEBUG_PRINT_FILTER(CFR),
+    KD_DEBUG_PRINT_FILTER(TXF),
+    KD_DEBUG_PRINT_FILTER(KSECDD),
+    KD_DEBUG_PRINT_FILTER(FLTREGRESS),
+    KD_DEBUG_PRINT_FILTER(MPIO),
+    KD_DEBUG_PRINT_FILTER(MSDSM),
+    KD_DEBUG_PRINT_FILTER(UDFS),
+    KD_DEBUG_PRINT_FILTER(PSHED),
+    KD_DEBUG_PRINT_FILTER(STORVSP),
+    KD_DEBUG_PRINT_FILTER(LSASS),
+    KD_DEBUG_PRINT_FILTER(SSPICLI),
+    KD_DEBUG_PRINT_FILTER(CNG),
+    KD_DEBUG_PRINT_FILTER(EXFAT),
+    KD_DEBUG_PRINT_FILTER(FILETRACE),
+    KD_DEBUG_PRINT_FILTER(XSAVE),
+    KD_DEBUG_PRINT_FILTER(SE),
+    KD_DEBUG_PRINT_FILTER(DRIVEEXTENDER),
+//
+// Components specified in Windows 8
+//
+    KD_DEBUG_PRINT_FILTER(POWER),
+    KD_DEBUG_PRINT_FILTER(CRASHDUMPXHCI),
+    KD_DEBUG_PRINT_FILTER(GPIO),
+    KD_DEBUG_PRINT_FILTER(REFS),
+    KD_DEBUG_PRINT_FILTER(WER),
+//
+// Components specified in Windows 10
+//
+    KD_DEBUG_PRINT_FILTER(CAPIMG),
+    KD_DEBUG_PRINT_FILTER(VPCI),
+    KD_DEBUG_PRINT_FILTER(STORAGECLASSMEMORY),
+    KD_DEBUG_PRINT_FILTER(FSLIB),
 };
+#undef KD_DEBUG_PRINT_FILTER
 
 //
 // Command Table
@@ -641,7 +660,7 @@ KdbpGetComponentId(
 {
     ULONG i;
 
-    for (i = 0; i < sizeof(ComponentTable) / sizeof(ComponentTable[0]); i++)
+    for (i = 0; i < RTL_NUMBER_OF(ComponentTable); i++)
     {
         if (_stricmp(ComponentName, ComponentTable[i].Name) == 0)
         {
@@ -687,11 +706,11 @@ KdbpCmdFilter(
                   "- The 'DEFAULT' debug filter component is used for DbgPrint() messages with\n"
                   "  an unknown Component ID.\n\n");
         KdbpPrint("The list of debug filter components currently available on your system is:\n\n");
-        KdbpPrint(" Component Name        Component ID\n"
-                  "================      ==============\n");
-        for (i = 0; i < sizeof(ComponentTable) / sizeof(ComponentTable[0]); i++)
+        KdbpPrint("    Component Name         Component ID\n"
+                  "  ==================     ================\n");
+        for (i = 0; i < RTL_NUMBER_OF(ComponentTable); i++)
         {
-            KdbpPrint("%16s        0x%08lx\n", ComponentTable[i].Name, ComponentTable[i].Id);
+            KdbpPrint("%20s        0x%08lx\n", ComponentTable[i].Name, ComponentTable[i].Id);
         }
         return TRUE;
     }
@@ -704,7 +723,7 @@ KdbpCmdFilter(
 
         if (p > opt)
         {
-            for (j = 0; j < sizeof(debug_classes) / sizeof(debug_classes[0]); j++)
+            for (j = 0; j < RTL_NUMBER_OF(debug_classes); j++)
             {
                 SIZE_T len = strlen(debug_classes[j].Name);
                 if (len != (p - opt))
@@ -718,7 +737,7 @@ KdbpCmdFilter(
                     break;
                 }
             }
-            if (j == sizeof(debug_classes) / sizeof(debug_classes[0]))
+            if (j == RTL_NUMBER_OF(debug_classes))
             {
                 Level = strtoul(opt, &pend, 0);
                 if (pend != p)
@@ -1702,7 +1721,7 @@ KdbpCmdThread(
                 Eip = 0;
 
                 if (Ebp) /* FIXME: Should we attach to the process to read Ebp[1]? */
-                    KdbpSafeReadMemory(&Eip, Ebp + 1, sizeof (Eip));
+                    KdbpSafeReadMemory(&Eip, Ebp + 1, sizeof(Eip));
             }
 
             if (Thread->Tcb.State < (DeferredReady + 1))
@@ -2688,7 +2707,7 @@ KdbpPrint(
                 break;
 
             Buffer[Length++] = c;
-            if (Length >= (sizeof (Buffer) - 1))
+            if (Length >= (sizeof(Buffer) - 1))
                 break;
         }
 
@@ -2723,7 +2742,7 @@ KdbpPrint(
                             break;
 
                         Buffer[Length++] = c;
-                        if (isalpha(c) || Length >= (sizeof (Buffer) - 1))
+                        if (isalpha(c) || Length >= (sizeof(Buffer) - 1))
                             break;
                     }
 
@@ -2762,7 +2781,7 @@ KdbpPrint(
 
     /* Get the string */
     va_start(ap, Format);
-    Length = _vsnprintf(Buffer, sizeof (Buffer) - 1, Format, ap);
+    Length = _vsnprintf(Buffer, sizeof(Buffer) - 1, Format, ap);
     Buffer[Length] = '\0';
     va_end(ap);
 
@@ -3005,7 +3024,7 @@ KdbpPager(
                 break;
 
             InBuffer[Length++] = c;
-            if (Length >= (sizeof (InBuffer) - 1))
+            if (Length >= (sizeof(InBuffer) - 1))
                 break;
         }
 
@@ -3040,7 +3059,7 @@ KdbpPager(
                             break;
 
                         InBuffer[Length++] = c;
-                        if (isalpha(c) || Length >= (sizeof (InBuffer) - 1))
+                        if (isalpha(c) || Length >= (sizeof(InBuffer) - 1))
                             break;
                     }
 
@@ -3680,7 +3699,7 @@ KdbpCliMainLoop(
         KdbpPrint(KdbPromptString.Buffer);
 
         /* Read a command and remember it */
-        KdbpReadCommand(Command, sizeof (Command));
+        KdbpReadCommand(Command, sizeof(Command));
         KdbpCommandHistoryAppend(Command);
 
         /* Reset the number of rows/cols printed and output aborted state */
@@ -3793,7 +3812,7 @@ KdbpCliInit(VOID)
     }
 
     /* Get the size of the file */
-    Status = ZwQueryInformationFile(hFile, &Iosb, &FileStdInfo, sizeof (FileStdInfo),
+    Status = ZwQueryInformationFile(hFile, &Iosb, &FileStdInfo, sizeof(FileStdInfo),
                                     FileStandardInformation);
     if (!NT_SUCCESS(Status))
     {

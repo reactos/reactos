@@ -23,19 +23,38 @@ Revision History:
 
 --*/
 
-#include "classp.h"
+#include <ntddk.h>
+#include <classpnp.h>
 
-#define DICTIONARY_SIGNATURE 'dsig'
+#ifdef __REACTOS__
+#undef MdlMappingNoExecute
+#define MdlMappingNoExecute 0
+#define NonPagedPoolNx NonPagedPool
+#define NonPagedPoolNxCacheAligned NonPagedPoolCacheAligned
+#undef POOL_NX_ALLOCATION
+#define POOL_NX_ALLOCATION 0
+#endif
 
-typedef struct _DICTIONARY_HEADER {
-    struct _DICTIONARY_HEADER* Next;
+#define DICTIONARY_SIGNATURE 'tciD'
+
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable:4200) // nonstandard extension used : zero-sized array in struct/union
+#endif
+struct _DICTIONARY_HEADER {
+    PDICTIONARY_HEADER Next;
     ULONGLONG Key;
     UCHAR Data[0];
-} DICTIONARY_HEADER, *PDICTIONARY_HEADER;
+};
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 
+struct _DICTIONARY_HEADER;
+typedef struct _DICTIONARY_HEADER DICTIONARY_HEADER, *PDICTIONARY_HEADER;
 
+
 VOID
-NTAPI
 InitializeDictionary(
     IN PDICTIONARY Dictionary
     )
@@ -46,8 +65,8 @@ InitializeDictionary(
     return;
 }
 
+
 BOOLEAN
-NTAPI
 TestDictionarySignature(
     IN PDICTIONARY Dictionary
     )
@@ -56,11 +75,10 @@ TestDictionarySignature(
 }
 
 NTSTATUS
-NTAPI
 AllocateDictionaryEntry(
     IN PDICTIONARY Dictionary,
     IN ULONGLONG Key,
-    IN ULONG Size,
+    _In_range_(0, sizeof(FILE_OBJECT_EXTENSION)) IN ULONG Size,
     IN ULONG Tag,
     OUT PVOID *Entry
     )
@@ -73,7 +91,7 @@ AllocateDictionaryEntry(
 
     *Entry = NULL;
 
-    header = ExAllocatePoolWithTag(NonPagedPool,
+    header = ExAllocatePoolWithTag(NonPagedPoolNx,
                                    Size + sizeof(DICTIONARY_HEADER),
                                    Tag);
 
@@ -126,7 +144,7 @@ AllocateDictionaryEntry(
         KeReleaseSpinLock(&(Dictionary->SpinLock), oldIrql);
 
         if(!NT_SUCCESS(status)) {
-            ExFreePool(header);
+            FREE_POOL(header);
         } else {
             *Entry = (PVOID) header->Data;
         }
@@ -134,8 +152,8 @@ AllocateDictionaryEntry(
     return status;
 }
 
+
 PVOID
-NTAPI
 GetDictionaryEntry(
     IN PDICTIONARY Dictionary,
     IN ULONGLONG Key
@@ -152,7 +170,7 @@ GetDictionaryEntry(
 
     entry = Dictionary->List;
     while (entry != NULL) {
-        
+
         if (entry->Key == Key) {
             data = entry->Data;
             break;
@@ -166,8 +184,8 @@ GetDictionaryEntry(
     return data;
 }
 
+
 VOID
-NTAPI
 FreeDictionaryEntry(
     IN PDICTIONARY Dictionary,
     IN PVOID Entry
@@ -199,14 +217,15 @@ FreeDictionaryEntry(
 
     //
     // calling this w/an invalid pointer invalidates the dictionary system,
-    // so ASSERT() that we never try to Free something not in the list
+    // so NT_ASSERT() that we never try to Free something not in the list
     //
 
-    ASSERT(found);
+    NT_ASSERT(found);
     if (found) {
-        ExFreePool(header);
+        FREE_POOL(header);
     }
 
     return;
 
 }
+

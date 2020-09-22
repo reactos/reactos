@@ -992,27 +992,26 @@ RtlLockHeap(
     _In_ HANDLE Heap
 );
 
-_Must_inspect_result_
 NTSYSAPI
-NTSTATUS
+ULONG
 NTAPI
-RtlMultipleAllocateHeap (
+RtlMultipleAllocateHeap(
     _In_ HANDLE HeapHandle,
     _In_ ULONG Flags,
     _In_ SIZE_T Size,
     _In_ ULONG Count,
     _Out_cap_(Count) _Deref_post_bytecap_(Size) PVOID * Array
-    );
+);
 
 NTSYSAPI
-NTSTATUS
+ULONG
 NTAPI
-RtlMultipleFreeHeap (
+RtlMultipleFreeHeap(
     _In_ HANDLE HeapHandle,
     _In_ ULONG Flags,
     _In_ ULONG Count,
     _In_count_(Count) /* _Deref_ _Post_invalid_ */ PVOID * Array
-    );
+);
 
 NTSYSAPI
 NTSTATUS
@@ -3575,13 +3574,39 @@ NTSYSAPI
 VOID
 NTAPI
 RtlInitializeRangeList(
-    _Inout_ PRTL_RANGE_LIST RangeList
+    _Out_ PRTL_RANGE_LIST RangeList
 );
 
 NTSYSAPI
 VOID
 NTAPI
 RtlFreeRangeList(
+    _In_ PRTL_RANGE_LIST RangeList
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlCopyRangeList(
+    _Out_ PRTL_RANGE_LIST CopyRangeList,
+    _In_ PRTL_RANGE_LIST RangeList
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlMergeRangeLists(
+    _Out_ PRTL_RANGE_LIST MergedRangeList,
+    _In_ PRTL_RANGE_LIST RangeList1,
+    _In_ PRTL_RANGE_LIST RangeList2,
+    _In_ ULONG Flags
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlInvertRangeList(
+    _Out_ PRTL_RANGE_LIST InvertedRangeList,
     _In_ PRTL_RANGE_LIST RangeList
 );
 
@@ -3596,6 +3621,72 @@ RtlAddRange(
     _In_ ULONG Flags,
     _In_opt_ PVOID UserData,
     _In_opt_ PVOID Owner
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlDeleteRange(
+    _Inout_ PRTL_RANGE_LIST RangeList,
+    _In_ ULONGLONG Start,
+    _In_ ULONGLONG End,
+    _In_ PVOID Owner
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlDeleteOwnersRanges(
+    _Inout_ PRTL_RANGE_LIST RangeList,
+    _In_ _Maybenull_ PVOID Owner
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlFindRange(
+    _In_ PRTL_RANGE_LIST RangeList,
+    _In_ ULONGLONG Minimum,
+    _In_ ULONGLONG Maximum,
+    _In_ ULONG Length,
+    _In_ ULONG Alignment,
+    _In_ ULONG Flags,
+    _In_ UCHAR AttributeAvailableMask,
+    _In_opt_ PVOID Context,
+    _In_opt_ PRTL_CONFLICT_RANGE_CALLBACK Callback,
+    _Out_ PULONGLONG Start
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlIsRangeAvailable(
+    _In_ PRTL_RANGE_LIST RangeList,
+    _In_ ULONGLONG Start,
+    _In_ ULONGLONG End,
+    _In_ ULONG Flags,
+    _In_ UCHAR AttributeAvailableMask,
+    _In_opt_ PVOID Context,
+    _In_opt_ PRTL_CONFLICT_RANGE_CALLBACK Callback,
+    _Out_ PBOOLEAN Available
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlGetFirstRange(
+    _In_ PRTL_RANGE_LIST RangeList,
+    _Out_ PRTL_RANGE_LIST_ITERATOR Iterator,
+    _Outptr_ PRTL_RANGE *Range
+);
+
+NTSYSAPI
+NTSTATUS
+NTAPI
+RtlGetNextRange(
+    _Inout_ PRTL_RANGE_LIST_ITERATOR Iterator,
+    _Outptr_ PRTL_RANGE *Range,
+    _In_ BOOLEAN MoveForwards
 );
 
 //
@@ -4524,10 +4615,11 @@ RtlGetVersion(
         PRTL_OSVERSIONINFOW lpVersionInformation
 );
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 NTSYSAPI
 BOOLEAN
 NTAPI
-RtlGetNtProductType(OUT PNT_PRODUCT_TYPE ProductType);
+RtlGetNtProductType(_Out_ PNT_PRODUCT_TYPE ProductType);
 
 //
 // Secure Memory Functions

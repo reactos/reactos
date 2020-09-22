@@ -140,16 +140,31 @@ BOOL PerformRegAction(REGEDIT_ACTION action, LPWSTR s, BOOL silent)
         {
             WCHAR szText[512];
             WCHAR filename[MAX_PATH];
+            LPWSTR command_line = s;
+            UINT count = 0, mbType = MB_YESNO;
             FILE *fp;
 
-            get_file_name(&s, filename);
-            if (!filename[0])
+            get_file_name(&command_line, filename);
+            while (filename[0])
+            {
+                count++;
+                get_file_name(&command_line, filename);
+            }
+
+            if (count == 0)
             {
                 InfoMessageBox(NULL, MB_OK | MB_ICONINFORMATION, NULL, L"No file name is specified.");
                 InfoMessageBox(NULL, MB_OK | MB_ICONINFORMATION, szTitle, usage);
                 exit(4);
             }
 
+            if (count > 1)
+            {
+                /* Enable three buttons if we have more than one file */
+                mbType = MB_YESNOCANCEL;
+            }
+
+            get_file_name(&s, filename);
             while (filename[0])
             {
                 /* Request import confirmation */
@@ -159,7 +174,7 @@ BOOL PerformRegAction(REGEDIT_ACTION action, LPWSTR s, BOOL silent)
 
                     LoadStringW(hInst, IDS_IMPORT_PROMPT, szText, COUNT_OF(szText));
 
-                    choice = InfoMessageBox(NULL, MB_YESNOCANCEL | MB_ICONWARNING, szTitle, szText, filename);
+                    choice = InfoMessageBox(NULL, mbType | MB_ICONQUESTION, szTitle, szText, filename);
 
                     switch (choice)
                     {

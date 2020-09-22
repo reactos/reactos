@@ -8,7 +8,12 @@
 #pragma once
 
 #define PPI_IO_o_PORT_C     0x35
+
 #define PPI_IO_o_CONTROL    0x37
+    #define PPI_TIMER_1_GATE_TO_SPEAKER      0x06
+    #define PPI_TIMER_1_UNGATE_TO_SPEAKER    0x07
+    #define PPI_SHUTDOWN_1_ENABLE            0x0B
+    #define PPI_SHUTDOWN_0_ENABLE            0x0F
 
 #define PPI_IO_i_PORT_A     0x31
 #define PPI_IO_i_PORT_B     0x33
@@ -64,19 +69,3 @@ typedef union _SYSTEM_CONTROL_PORT_C_REGISTER
     };
     UCHAR Bits;
 } SYSTEM_CONTROL_PORT_C_REGISTER, *PSYSTEM_CONTROL_PORT_C_REGISTER;
-
-typedef union _SYSTEM_CONTROL_PORT_REGISTER
-{
-    struct
-    {
-        UCHAR InterruptEnableRxReady:1;
-        UCHAR InterruptEnableTxEmpty:1;
-        UCHAR InterruptEnableTxReady:1;
-        UCHAR Timer1GateToSpeaker:1;
-        UCHAR Mcke:1;
-        UCHAR Shut1:1;
-        UCHAR PrinterStrobeSignal:1;
-        UCHAR Shut0:1;
-    };
-    UCHAR Bits;
-} SYSTEM_CONTROL_PORT_REGISTER, *PSYSTEM_CONTROL_PORT_REGISTER;

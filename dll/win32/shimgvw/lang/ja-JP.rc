@@ -4,6 +4,7 @@ STRINGTABLE
 BEGIN
     IDS_APPTITLE "ReactOS画像とFAXビュアー"
     IDS_SETASDESKBG "デスクトップの背景に設定する"
+    IDS_NOPREVIEW "プレビューは利用できません。"
     IDS_PREVIEW "プレビュー"
     /* Tooltips */
     IDS_TOOLTIP_NEXT_PIC "次の画像"
@@ -18,11 +19,11 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_EMF_FILE    "EMF画像"
-    IDS_GIF_FILE    "GIF画像"
-    IDS_JPG_FILE    "JPEG画像"
-    IDS_BMP_FILE    "Bitmap画像"
-    IDS_PNG_FILE    "PNG画像"
-    IDS_TIF_FILE    "TIF画像"
-    IDS_WMF_FILE    "WMF画像"
+    IDS_EMF_FILE    "EMF 画像"
+    IDS_GIF_FILE    "GIF 画像"
+    IDS_JPG_FILE    "JPEG 画像"
+    IDS_BMP_FILE    "ビットマップ画像"
+    IDS_PNG_FILE    "PNG 画像"
+    IDS_TIF_FILE    "TIFF 画像"
+    IDS_WMF_FILE    "WMF 画像"
 END

@@ -184,7 +184,8 @@ xsltRegisterLocalRVT(xsltTransformContextPtr ctxt,
  * This function is unsupported in newer releases of libxslt.
  */
 int
-xsltExtensionInstructionResultFinalize(xsltTransformContextPtr ctxt)
+xsltExtensionInstructionResultFinalize(
+        xsltTransformContextPtr ctxt ATTRIBUTE_UNUSED)
 {
     xmlGenericError(xmlGenericErrorContext,
             "xsltExtensionInstructionResultFinalize is unsupported "
@@ -209,8 +210,9 @@ xsltExtensionInstructionResultFinalize(xsltTransformContextPtr ctxt)
  * libxslt.
  */
 int
-xsltExtensionInstructionResultRegister(xsltTransformContextPtr ctxt,
-				       xmlXPathObjectPtr obj)
+xsltExtensionInstructionResultRegister(
+        xsltTransformContextPtr ctxt ATTRIBUTE_UNUSED,
+	xmlXPathObjectPtr obj ATTRIBUTE_UNUSED)
 {
     return(0);
 }
@@ -837,7 +839,7 @@ xsltEvalVariable(xsltTransformContextPtr ctxt, xsltStackElemPtr variable,
 	if ((comp != NULL) && (comp->comp != NULL)) {
 	    xpExpr = comp->comp;
 	} else {
-	    xpExpr = xmlXPathCompile(variable->select);
+	    xpExpr = xmlXPathCtxtCompile(ctxt->xpathCtxt, variable->select);
 	}
 	if (xpExpr == NULL)
 	    return(NULL);
@@ -1078,7 +1080,7 @@ xsltEvalGlobalVariable(xsltStackElemPtr elem, xsltTransformContextPtr ctxt)
 	if ((comp != NULL) && (comp->comp != NULL)) {
 	    xpExpr = comp->comp;
 	} else {
-	    xpExpr = xmlXPathCompile(elem->select);
+	    xpExpr = xmlXPathCtxtCompile(ctxt->xpathCtxt, elem->select);
 	}
 	if (xpExpr == NULL)
 	    goto error;
@@ -1529,7 +1531,7 @@ xsltProcessUserParamInternal(xsltTransformContextPtr ctxt,
 
     result = NULL;
     if (eval != 0) {
-        xpExpr = xmlXPathCompile(value);
+        xpExpr = xmlXPathCtxtCompile(ctxt->xpathCtxt, value);
 	if (xpExpr != NULL) {
 	    xmlDocPtr oldXPDoc;
 	    xmlNodePtr oldXPContextNode;
@@ -1946,7 +1948,7 @@ xsltVariableLookup(xsltTransformContextPtr ctxt, const xmlChar *name,
  * @inst:  the xsl:with-param instruction element
  *
  * Processes an xsl:with-param instruction at transformation time.
- * The value is compute, but not recorded.
+ * The value is computed, but not recorded.
  * NOTE that this is also called with an *xsl:param* element
  * from exsltFuncFunctionFunction().
  *

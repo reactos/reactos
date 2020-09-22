@@ -65,7 +65,7 @@ INT cmd_shift (LPTSTR param)
     {
         if (*param == _T('/'))
         {
-            if (param[1] < '0' || param[1] > '9')
+            if (!_istdigit(param[1]))
             {
                 error_invalid_switch(param[1]);
                 return 1;

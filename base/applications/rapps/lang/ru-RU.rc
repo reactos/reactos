@@ -52,7 +52,7 @@ BEGIN
     END
 END
 
-IDD_SETTINGS_DIALOG DIALOGEX 0, 0, 250, 215
+IDD_SETTINGS_DIALOG DIALOGEX 0, 0, 250, 265
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Параметры"
 FONT 8, "MS Shell Dlg"
@@ -66,16 +66,20 @@ BEGIN
     EDITTEXT IDC_DOWNLOAD_DIR_EDIT, 15, 86, 166, 12, WS_CHILD | WS_VISIBLE | WS_GROUP | ES_AUTOHSCROLL
     PUSHBUTTON "В&ыбрать", IDC_CHOOSE, 187, 85, 50, 14
     AUTOCHECKBOX "&Удалять инсталляторы программ после установки", IDC_DEL_AFTER_INSTALL, 16, 100, 218, 12
-    GROUPBOX "Прокси", -1, 4, 116, 240, 76
-    CONTROL "Системные настройки прокси", IDC_PROXY_DEFAULT, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 15, 130, 210, 10
-    CONTROL "Без прокси", IDC_NO_PROXY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 145, 210, 10
-    CONTROL "Прокси", IDC_USE_PROXY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 160, 74, 10
-    EDITTEXT IDC_PROXY_SERVER, 90, 160, 147, 12, ES_AUTOHSCROLL | WS_DISABLED
-    LTEXT "Исключения", -1, 27, 175, 64, 10
-    EDITTEXT IDC_NO_PROXY_FOR, 90, 175, 147, 12, ES_AUTOHSCROLL | WS_DISABLED
-    PUSHBUTTON "По умолчанию", IDC_DEFAULT_SETTINGS, 8, 195, 60, 14
-    DEFPUSHBUTTON "OK", IDOK, 116, 195, 60, 14
-    PUSHBUTTON "Отмена", IDCANCEL, 181, 195, 60, 14
+    GROUPBOX "Software source", -1, 4, 118, 240, 46
+    CONTROL "Use default", IDC_SOURCE_DEFAULT, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 15, 132, 74, 10
+    CONTROL "Specified source", IDC_USE_SOURCE, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 147, 74, 10
+    EDITTEXT IDC_SOURCE_URL, 97, 147, 140, 12, ES_AUTOHSCROLL | WS_DISABLED
+    GROUPBOX "Прокси", -1, 4, 166, 240, 76
+    CONTROL "Системные настройки прокси", IDC_PROXY_DEFAULT, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 15, 180, 210, 10
+    CONTROL "Без прокси", IDC_NO_PROXY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 195, 210, 10
+    CONTROL "Прокси", IDC_USE_PROXY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 210, 74, 10
+    EDITTEXT IDC_PROXY_SERVER, 90, 210, 147, 12, ES_AUTOHSCROLL | WS_DISABLED
+    LTEXT "Исключения", -1, 27, 225, 64, 10
+    EDITTEXT IDC_NO_PROXY_FOR, 90, 225, 147, 12, ES_AUTOHSCROLL | WS_DISABLED
+    PUSHBUTTON "По умолчанию", IDC_DEFAULT_SETTINGS, 8, 245, 60, 14
+    DEFPUSHBUTTON "OK", IDOK, 116, 245, 60, 14
+    PUSHBUTTON "Отмена", IDCANCEL, 181, 245, 60, 14
 END
 
 IDD_INSTALL_DIALOG DIALOGEX 0, 0, 216, 97
@@ -98,16 +102,6 @@ BEGIN
     CONTROL "Progress1", IDC_DOWNLOAD_PROGRESS, "msctls_progress32", WS_BORDER | PBS_SMOOTH, 10, 10, 200, 12
     EDITTEXT IDC_DOWNLOAD_STATUS, 10, 28, 200, 22, ES_CENTER | ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_DISABLED | NOT WS_BORDER
     PUSHBUTTON "Отмена", IDCANCEL, 85, 53, 50, 15, WS_GROUP | WS_TABSTOP
-END
-
-IDD_ABOUT_DIALOG DIALOGEX 22, 16, 190, 66
-STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
-CAPTION "О программе"
-FONT 8, "MS Shell Dlg"
-BEGIN
-    ICON IDI_MAIN, IDC_STATIC, 10, 10, 7, 30
-    LTEXT "Менеджер приложений ReactOS\nАвторские права (C) 2009\nДмитрий Чапышев (dmitry@reactos.org)", IDC_STATIC, 48, 7, 130, 39
-    DEFPUSHBUTTON "Закрыть", IDOK, 133, 46, 50, 14
 END
 
 STRINGTABLE
@@ -147,6 +141,7 @@ BEGIN
     IDS_INFO_UNINSTALLSTR "\nСтрока для удаления: "
     IDS_INFO_MODIFYPATH "\nСтрока для изменения: "
     IDS_INFO_INSTALLDATE "\nДата установки: "
+    IDS_AINFO_PACKAGE_NAME "\nPackage Name: "
 END
 
 STRINGTABLE
@@ -184,6 +179,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_APPTITLE "Менеджер приложений ReactOS"
+    IDS_APP_AUTHORS "Copyright 2009 Dmitry Chapyshev"
     IDS_SEARCH_TEXT "Поиск…"
     IDS_INSTALL "Установить"
     IDS_UNINSTALL "Удалить"
@@ -191,13 +187,14 @@ BEGIN
     IDS_APPS_COUNT "Количество приложений: %d; Выбрано: %d"
     IDS_WELCOME_TITLE "Добро пожаловать в ""Менеджер приложений ReactOS""!\n\n"
     IDS_WELCOME_TEXT "Выберите категорию слева и приложение для установки или удаления.\nСайт ReactOS: "
-    IDS_WELCOME_URL "http://www.reactos.org"
+    IDS_WELCOME_URL "https://reactos.org/"
     IDS_INSTALLED "Установленные"
     IDS_AVAILABLEFORINST "Доступно для установки"
     IDS_UPDATES "Обновления"
     IDS_APPLICATIONS "Приложения"
     IDS_CHOOSE_FOLDER_TEXT "Выберите папку, которая будет использоваться для загрузки программ:"
     IDS_CHOOSE_FOLDER_ERROR "Указанная вами папка не существует. Создать?"
+    IDS_URL_INVALID "The URL you have specified is invalid or not supported. Please correct it!"
     IDS_APP_REG_REMOVE "Вы действительно хотите удалить данные об установленной программе из реестра?"
     IDS_INFORMATION "Информация"
     IDS_UNABLE_TO_DOWNLOAD "Не удалось скачать приложение! Не найден адрес!"
@@ -213,6 +210,10 @@ BEGIN
     IDS_INSTALL_SELECTED "Установить выбранное"
     IDS_SELECTEDFORINST "Выбрано для установки"
     IDS_MISMATCH_CERT_INFO "Используемый сертификат не опознан:\nНазначение: %s\nВыдан: %s\nВы хотите продолжить в любом случае?"
+    IDS_UNABLE_PATH "Incorrect path format."
+    IDS_APP_DISPLAY_DETAILS "details"
+    IDS_APP_DISPLAY_LIST "list"
+    IDS_APP_DISPLAY_TILE "tile"
 END
 
 STRINGTABLE
@@ -248,4 +249,17 @@ STRINGTABLE
 BEGIN
     IDS_DL_DIALOG_DB_DISP "База данных приложений"
     IDS_DL_DIALOG_DB_DOWNLOAD_DISP "Обновление базы данных…"
+    IDS_DL_DIALOG_DB_UNOFFICIAL_DOWNLOAD_DISP "Updating Database… (Unofficial source)"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_CMD_USAGE "Usage: "
+    IDS_CMD_NEED_PACKAGE_NAME "Error: option %1 expects one or more package name.\n"
+    IDS_CMD_NEED_FILE_NAME "Error: option %1 expects a file name.\n"
+    IDS_CMD_NEED_PARAMS "Error: option %1 expects one or more parameters.\n"
+    IDS_CMD_INVALID_OPTION "Error: Unknown or invalid command line option specified.\n"
+    IDS_CMD_FIND_RESULT_FOR "Find result for %1:\n"
+    IDS_CMD_PACKAGE_NOT_FOUND "Failed to find package %1.\n"
+    IDS_CMD_PACKAGE_INFO "Information about package %1:\n"
 END

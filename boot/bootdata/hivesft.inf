@@ -317,7 +317,8 @@ HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\Hidden\
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\Hidden\NOHIDDEN","Type",0x00000000,"radio"
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\Hidden\NOHIDDEN","CheckedValue",0x00010001,0x00000002
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\Hidden\NOHIDDEN","ValueName",0x00000000,"Hidden"
-HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\Hidden\NOHIDDEN","DefaultValue",0x00010001,0x00000002
+; "DefaultValue" to be changed to 2 if we later want to have "Hide hidden files by default"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\Hidden\NOHIDDEN","DefaultValue",0x00010001,0x00000001
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\Hidden\NOHIDDEN","HKeyRoot",0x00010001,0x80000001
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\Hidden\NOHIDDEN","HelpID",0x00000000,"shell.hlp#51104"
 
@@ -327,7 +328,8 @@ HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\Hidden\
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\Hidden\SHOWALL","Type",0x00000000,"radio"
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\Hidden\SHOWALL","CheckedValue",0x00010001,0x00000001
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\Hidden\SHOWALL","ValueName",0x00000000,"Hidden"
-HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\Hidden\SHOWALL","DefaultValue",0x00010001,0x00000002
+; "DefaultValue" to be changed to 2 if we later want to have "Hide hidden files by default"
+HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\Hidden\SHOWALL","DefaultValue",0x00010001,0x00000001
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\Hidden\SHOWALL","HKeyRoot",0x00010001,0x80000001
 HKLM,"SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Advanced\Folder\Hidden\SHOWALL","HelpID",0x00000000,"shell.hlp#51105"
 
@@ -1482,6 +1484,7 @@ HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon","ConsoleShell",0x00
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon","Shell",0x00020000,"%SystemRoot%\explorer.exe"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon","Userinit",0x00020000,"%SystemRoot%\system32\userinit.exe"
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon","AutoAdminLogon",0x00000000,"1"
+HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon","LogonType",0x00010001,0
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon","DefaultDomainName",0x00000000,""
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon","DefaultUserName",0x00000000,""
 HKLM,"SOFTWARE\Microsoft\Windows NT\CurrentVersion\Winlogon","DefaultPassword",0x00000000,""

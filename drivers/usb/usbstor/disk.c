@@ -283,8 +283,7 @@ USBSTOR_HandleQueryProperty(
         ASSERT(FDODeviceExtension);
         ASSERT(FDODeviceExtension->Common.IsFDO);
 
-        InquiryData = PDODeviceExtension->InquiryData;
-        ASSERT(InquiryData);
+        InquiryData = (PINQUIRYDATA)&PDODeviceExtension->InquiryData;
 
         // compute extra parameters length
         FieldLengthVendor = USBSTOR_GetFieldLength(InquiryData->VendorId, 8);
@@ -507,7 +506,7 @@ USBSTOR_HandleDeviceControl(
 
             // Note: INQUIRYDATA structure is larger than INQUIRYDATABUFFERSIZE
             RtlZeroMemory(InquiryData, sizeof(INQUIRYDATA));
-            RtlCopyMemory(InquiryData, PDODeviceExtension->InquiryData, INQUIRYDATABUFFERSIZE);
+            RtlCopyMemory(InquiryData, &PDODeviceExtension->InquiryData, sizeof(PDODeviceExtension->InquiryData));
 
             InquiryData->Versions = 0x04;
             InquiryData->ResponseDataFormat = 0x02; // some devices set this to 1

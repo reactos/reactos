@@ -659,6 +659,11 @@ CsrUnhandledExceptionFilter(IN PEXCEPTION_POINTERS ExceptionInfo)
                                             FALSE,
                                             &OldValue);
             }
+            if (!NT_SUCCESS(Status))
+            {
+                DPRINT1("CsrUnhandledExceptionFilter(): RtlAdjustPrivilege(SE_SHUTDOWN_PRIVILEGE) failed, Status = 0x%08lx\n", Status);
+                goto NoPrivilege;
+            }
 
             /* Initialize our Name String */
             RtlInitUnicodeString(&ErrorSource, L"Windows SubSystem");
@@ -670,14 +675,15 @@ CsrUnhandledExceptionFilter(IN PEXCEPTION_POINTERS ExceptionInfo)
             ErrorParameters[3] = (ULONG_PTR)ExceptionInfo->ContextRecord;
 
             /* Bugcheck */
-            Status = NtRaiseHardError(STATUS_SYSTEM_PROCESS_TERMINATED,
-                                      4,
-                                      1,
-                                      ErrorParameters,
-                                      OptionShutdownSystem,
-                                      &Response);
+            NtRaiseHardError(STATUS_SYSTEM_PROCESS_TERMINATED,
+                             4,
+                             1,
+                             ErrorParameters,
+                             OptionShutdownSystem,
+                             &Response);
         }
 
+NoPrivilege:
         /* Just terminate us */
         NtTerminateProcess(NtCurrentProcess(),
                            ExceptionInfo->ExceptionRecord->ExceptionCode);

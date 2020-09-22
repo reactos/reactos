@@ -460,6 +460,11 @@ static INT PRINTDLG_SetUpPrinterListComboW(HWND hDlg, UINT id, LPCWSTR name)
     return num;
 }
 
+#ifdef __REACTOS__
+static const CHAR  cDriverName[] = "winspool";
+static const WCHAR wDriverName[] = L"winspool";
+#endif
+
 /***********************************************************************
  *             PRINTDLG_CreateDevNames          [internal]
  *
@@ -481,8 +486,11 @@ static BOOL PRINTDLG_CreateDevNames(HGLOBAL *hmem, const char* DeviceDriverName,
 
     p = strrchr( DeviceDriverName, '\\' );
     if (p) DeviceDriverName = p + 1;
-
+#ifndef __REACTOS__
     size = strlen(DeviceDriverName) + 1
+#else
+    size = strlen(cDriverName) + 1
+#endif
             + strlen(DeviceName) + 1
             + strlen(OutputPort) + 1
             + sizeof(DEVNAMES);
@@ -498,7 +506,11 @@ static BOOL PRINTDLG_CreateDevNames(HGLOBAL *hmem, const char* DeviceDriverName,
     lpDevNames = (LPDEVNAMES) pDevNamesSpace;
 
     pTempPtr = pDevNamesSpace + sizeof(DEVNAMES);
+#ifndef __REACTOS__
     strcpy(pTempPtr, DeviceDriverName);
+#else
+    strcpy(pTempPtr, cDriverName);
+#endif
     lpDevNames->wDriverOffset = pTempPtr - pDevNamesSpace;
 
     pTempPtr += strlen(DeviceDriverName) + 1;
@@ -528,8 +540,11 @@ static BOOL PRINTDLG_CreateDevNamesW(HGLOBAL *hmem, LPCWSTR DeviceDriverName,
 
     p = wcsrchr( DeviceDriverName, '\\' );
     if (p) DeviceDriverName = p + 1;
-
+#ifndef __REACTOS__
     size = sizeof(WCHAR)*lstrlenW(DeviceDriverName) + 2
+#else
+    size = sizeof(WCHAR)*lstrlenW(wDriverName) + 2
+#endif
             + sizeof(WCHAR)*lstrlenW(DeviceName) + 2
             + sizeof(WCHAR)*lstrlenW(OutputPort) + 2
             + sizeof(DEVNAMES);
@@ -545,7 +560,11 @@ static BOOL PRINTDLG_CreateDevNamesW(HGLOBAL *hmem, LPCWSTR DeviceDriverName,
     lpDevNames = (LPDEVNAMES) pDevNamesSpace;
 
     pTempPtr = (LPWSTR)((LPDEVNAMES)pDevNamesSpace + 1);
+#ifndef __REACTOS__
     lstrcpyW(pTempPtr, DeviceDriverName);
+#else
+    lstrcpyW(pTempPtr, wDriverName);
+#endif
     lpDevNames->wDriverOffset = pTempPtr - pDevNamesSpace;
 
     pTempPtr += lstrlenW(DeviceDriverName) + 1;

@@ -234,7 +234,7 @@ extern LONG FatDebugTraceIndent;
     }                                                       \
 }
 
-#ifdef _MSC_VER
+#if !defined(__REACTOS__) || defined(_MSC_VER)
 #define DebugDump(STR,LEVEL,PTR) {                          \
     __pragma(warning(push))                                 \
     __pragma(warning(disable:4210))                         \

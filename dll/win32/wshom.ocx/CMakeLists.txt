@@ -11,12 +11,14 @@ add_typelib(wshom.idl)
 
 list(APPEND SOURCE
     shell.c
-    wshom_main.c
-    precomp.h)
+    wshom_main.c)
+
+list(APPEND PCH_SKIP_SOURCE
+    guid.c)
 
 add_library(wshom MODULE
     ${SOURCE}
-    guid.c
+    ${PCH_SKIP_SOURCE}
     wshom.rc
     ${CMAKE_CURRENT_BINARY_DIR}/wshom.def)
 
@@ -30,5 +32,5 @@ set_module_type(wshom win32ocx)
 target_link_libraries(wshom uuid wine)
 add_importlibs(wshom oleaut32 ole32 shell32 advapi32 advapi32_vista user32 msvcrt kernel32 ntdll)
 add_dependencies(wshom stdole2 wshom_idlheader)
-add_pch(wshom precomp.h SOURCE)
+add_pch(wshom precomp.h "${PCH_SKIP_SOURCE}")
 add_cd_file(TARGET wshom DESTINATION reactos/system32 FOR all)

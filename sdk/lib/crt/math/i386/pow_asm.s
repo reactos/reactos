@@ -30,7 +30,7 @@
 PUBLIC _pow
 
 .data
-ASSUME nothing
+ASSUME cs:nothing
 
 	.align ALIGNARG(4)
 	ASM_TYPE_DIRECTIVE(infinity,@object)

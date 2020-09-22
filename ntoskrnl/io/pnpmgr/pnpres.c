@@ -12,6 +12,16 @@
 #define NDEBUG
 #include <debug.h>
 
+FORCEINLINE
+PIO_RESOURCE_LIST
+IopGetNextResourceList(
+    _In_ const IO_RESOURCE_LIST *ResourceList)
+{
+    ASSERT((ResourceList->Count > 0) && (ResourceList->Count < 1000));
+    return (PIO_RESOURCE_LIST)(
+        &ResourceList->Descriptors[ResourceList->Count]);
+}
+
 static
 BOOLEAN
 IopCheckDescriptorForConflict(
@@ -199,6 +209,9 @@ IopFindInterruptResource(
         }
     }
 
+    DPRINT1("Failed to satisfy interrupt requirement with IRQ 0x%x-0x%x\n",
+            IoDesc->u.Interrupt.MinimumVector,
+            IoDesc->u.Interrupt.MaximumVector);
     return FALSE;
 }
 
@@ -209,6 +222,7 @@ IopFixupResourceListWithRequirements(
 {
     ULONG i, OldCount;
     BOOLEAN AlternateRequired = FALSE;
+    PIO_RESOURCE_LIST ResList;
 
     /* Save the initial resource count when we got here so we can restore if an alternate fails */
     if (*ResourceList != NULL)
@@ -216,10 +230,10 @@ IopFixupResourceListWithRequirements(
     else
         OldCount = 0;
 
-    for (i = 0; i < RequirementsList->AlternativeLists; i++)
+    ResList = &RequirementsList->List[0];
+    for (i = 0; i < RequirementsList->AlternativeLists; i++, ResList = IopGetNextResourceList(ResList))
     {
         ULONG ii;
-        PIO_RESOURCE_LIST ResList = &RequirementsList->List[i];
 
         /* We need to get back to where we were before processing the last alternative list */
         if (OldCount == 0 && *ResourceList != NULL)
@@ -275,6 +289,8 @@ IopFixupResourceListWithRequirements(
 
             for (iii = 0; PartialList && iii < PartialList->Count && !Matched; iii++)
             {
+                /* Partial resource descriptors can be of variable size (CmResourceTypeDeviceSpecific),
+                   but only one is allowed and it must be the last one in the list! */
                 PCM_PARTIAL_RESOURCE_DESCRIPTOR CmDesc = &PartialList->PartialDescriptors[iii];
 
                 /* First check types */
@@ -548,12 +564,18 @@ IopCheckResourceDescriptor(
 {
     ULONG i, ii;
     BOOLEAN Result = FALSE;
+    PCM_FULL_RESOURCE_DESCRIPTOR FullDescriptor;
 
+    FullDescriptor = &ResourceList->List[0];
     for (i = 0; i < ResourceList->Count; i++)
     {
-        PCM_PARTIAL_RESOURCE_LIST ResList = &ResourceList->List[i].PartialResourceList;
+        PCM_PARTIAL_RESOURCE_LIST ResList = &FullDescriptor->PartialResourceList;
+        FullDescriptor = CmiGetNextResourceDescriptor(FullDescriptor);
+
         for (ii = 0; ii < ResList->Count; ii++)
         {
+            /* Partial resource descriptors can be of variable size (CmResourceTypeDeviceSpecific),
+               but only one is allowed and it must be the last one in the list! */
             PCM_PARTIAL_RESOURCE_DESCRIPTOR ResDesc2 = &ResList->PartialDescriptors[ii];
 
             /* We don't care about shared resources */
@@ -674,7 +696,9 @@ ByeBye:
                       sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR));
     }
 
-    return Result;
+    // Hacked, because after fixing resource list parsing
+    // we actually detect resource conflicts
+    return Silent ? Result : FALSE; // Result; 
 }
 
 static
@@ -937,6 +961,7 @@ IopTranslateDeviceResources(
 {
    PCM_PARTIAL_RESOURCE_LIST pPartialResourceList;
    PCM_PARTIAL_RESOURCE_DESCRIPTOR DescriptorRaw, DescriptorTranslated;
+   PCM_FULL_RESOURCE_DESCRIPTOR FullDescriptor;
    ULONG i, j, ListSize;
    NTSTATUS Status;
 
@@ -959,13 +984,23 @@ IopTranslateDeviceResources(
    }
    RtlCopyMemory(DeviceNode->ResourceListTranslated, DeviceNode->ResourceList, ListSize);
 
+   FullDescriptor = &DeviceNode->ResourceList->List[0];
    for (i = 0; i < DeviceNode->ResourceList->Count; i++)
    {
-      pPartialResourceList = &DeviceNode->ResourceList->List[i].PartialResourceList;
+      pPartialResourceList = &FullDescriptor->PartialResourceList;
+      FullDescriptor = CmiGetNextResourceDescriptor(FullDescriptor);
+
       for (j = 0; j < pPartialResourceList->Count; j++)
       {
+        /* Partial resource descriptors can be of variable size (CmResourceTypeDeviceSpecific),
+           but only one is allowed and it must be the last one in the list! */
          DescriptorRaw = &pPartialResourceList->PartialDescriptors[j];
-         DescriptorTranslated = &DeviceNode->ResourceListTranslated->List[i].PartialResourceList.PartialDescriptors[j];
+
+         /* Calculate the location of the translated resource descriptor */
+         DescriptorTranslated = (PCM_PARTIAL_RESOURCE_DESCRIPTOR)(
+             (PUCHAR)DeviceNode->ResourceListTranslated +
+             ((PUCHAR)DescriptorRaw - (PUCHAR)DeviceNode->ResourceList));
+
          switch (DescriptorRaw->Type)
          {
             case CmResourceTypePort:
@@ -996,14 +1031,15 @@ IopTranslateDeviceResources(
             }
             case CmResourceTypeInterrupt:
             {
+               KIRQL Irql;
                DescriptorTranslated->u.Interrupt.Vector = HalGetInterruptVector(
                   DeviceNode->ResourceList->List[i].InterfaceType,
                   DeviceNode->ResourceList->List[i].BusNumber,
                   DescriptorRaw->u.Interrupt.Level,
                   DescriptorRaw->u.Interrupt.Vector,
-                  (PKIRQL)&DescriptorTranslated->u.Interrupt.Level,
+                  &Irql,
                   &DescriptorTranslated->u.Interrupt.Affinity);
-
+               DescriptorTranslated->u.Interrupt.Level = Irql;
                if (!DescriptorTranslated->u.Interrupt.Vector)
                {
                    Status = STATUS_UNSUCCESSFUL;
@@ -1184,12 +1220,18 @@ IopCheckForResourceConflict(
 {
    ULONG i, ii;
    BOOLEAN Result = FALSE;
+   PCM_FULL_RESOURCE_DESCRIPTOR FullDescriptor;
 
+   FullDescriptor = &ResourceList1->List[0];
    for (i = 0; i < ResourceList1->Count; i++)
    {
-      PCM_PARTIAL_RESOURCE_LIST ResList = &ResourceList1->List[i].PartialResourceList;
+      PCM_PARTIAL_RESOURCE_LIST ResList = &FullDescriptor->PartialResourceList;
+      FullDescriptor = CmiGetNextResourceDescriptor(FullDescriptor);
+
       for (ii = 0; ii < ResList->Count; ii++)
       {
+        /* Partial resource descriptors can be of variable size (CmResourceTypeDeviceSpecific),
+           but only one is allowed and it must be the last one in the list! */
          PCM_PARTIAL_RESOURCE_DESCRIPTOR ResDesc = &ResList->PartialDescriptors[ii];
 
          Result = IopCheckResourceDescriptor(ResDesc,

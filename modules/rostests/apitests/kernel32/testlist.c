@@ -3,6 +3,7 @@
 #define STANDALONE
 #include <apitest.h>
 
+extern void func_ActCtxWithXmlNamespaces(void);
 extern void func_ConsoleCP(void);
 extern void func_CreateProcess(void);
 extern void func_DefaultActCtx(void);
@@ -26,6 +27,7 @@ extern void func_lstrlen(void);
 extern void func_Mailslot(void);
 extern void func_MultiByteToWideChar(void);
 extern void func_PrivMoveFileIdentityW(void);
+extern void func_QueueUserAPC(void);
 extern void func_SetComputerNameExW(void);
 extern void func_SetConsoleWindowInfo(void);
 extern void func_SetCurrentDirectory(void);
@@ -60,6 +62,7 @@ const struct test winetest_testlist[] =
     { "MailslotRead",                func_Mailslot },
     { "MultiByteToWideChar",         func_MultiByteToWideChar },
     { "PrivMoveFileIdentityW",       func_PrivMoveFileIdentityW },
+    { "QueueUserAPC",                func_QueueUserAPC },
     { "SetComputerNameExW",          func_SetComputerNameExW },
     { "SetConsoleWindowInfo",        func_SetConsoleWindowInfo },
     { "SetCurrentDirectory",         func_SetCurrentDirectory },
@@ -68,5 +71,6 @@ const struct test winetest_testlist[] =
     { "TerminateProcess",            func_TerminateProcess },
     { "TunnelCache",                 func_TunnelCache },
     { "WideCharToMultiByte",         func_WideCharToMultiByte },
+    { "ActCtxWithXmlNamespaces",     func_ActCtxWithXmlNamespaces },
     { 0, 0 }
 };

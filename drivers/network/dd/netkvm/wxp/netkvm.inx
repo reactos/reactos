@@ -1,0 +1,331 @@
+;/*++
+;INX_COPYRIGHT_1
+;INX_COPYRIGHT_2
+;
+;Module Name:
+;    netkvm.inf
+;
+;Abstract:
+;    VirtIO Ethernet Adapter
+;
+;Installation Notes:
+;    Using Devcon: Type "devcon install netkvm.inf PCI\VEN_1AF4&DEV_1000&SUBSYS_0001_INX_SUBSYS_VENDOR_ID&REV_00" or
+;                       "devcon install netkvm.inf PCI\VEN_1AF4&DEV_1041&SUBSYS_1100_INX_SUBSYS_VENDOR_ID&REV_01" to install
+;
+;--*/
+
+[version]
+Signature   = "$Windows NT$"
+Class       = Net
+CatalogFile = netkvm.cat
+ClassGUID   = {4d36e972-e325-11ce-bfc1-08002be10318}
+Provider    = %VENDOR%
+DriverVer=01/01/2008,0.0.0.1 ; this line will be replaced with stampinf
+DriverPackageType = PlugAndPlay
+DriverPackageDisplayName = %kvmnet5.DeviceDesc%
+
+[Manufacturer]
+%VENDOR% = NetKVM, NT$ARCH$
+
+[NetKVM.NT$ARCH$]
+%kvmnet5.DeviceDesc%    = kvmnet5.ndi, PCI\VEN_1AF4&DEV_1000&SUBSYS_0001_INX_SUBSYS_VENDOR_ID&REV_00, PCI\VEN_1AF4&DEV_1000
+%kvmnet5.DeviceDesc%    = kvmnet5.ndi, PCI\VEN_1AF4&DEV_1041&SUBSYS_1100_INX_SUBSYS_VENDOR_ID&REV_01, PCI\VEN_1AF4&DEV_1041
+
+
+[kvmnet5.ndi]
+Characteristics = 0x84 ; NCF_PHYSICAL | NCF_HAS_UI
+BusType     = 5 ; PCI
+AddReg          = kvmnet5.Reg, Parameters
+CopyFiles       = kvmnet5.CopyFiles
+*IfType         = 6
+*MediaType      = 0     ; NdisMedium802_3
+*PhysicalMediaType = 0      ; NdisPhysicalMediumUnspecified
+
+
+[kvmnet5.ndi.Services]
+AddService      = netkvm, 2, kvmnet5.Service, kvmnet5.EventLog
+
+
+[kvmnet5.Reg]
+HKR,    ,                         BusNumber,           0, "0" 
+HKR, Ndi,                         Service,             0, "netkvm"
+HKR, Ndi\Interfaces,              UpperRange,          0, "ndis5"
+HKR, Ndi\Interfaces,              LowerRange,          0, "ethernet"
+
+[Parameters]
+HKR, Ndi\Params\ConnectRate,        ParamDesc,  0,          %ConnectRate%
+HKR, Ndi\Params\ConnectRate,        Default,    0,          "1001"
+HKR, Ndi\Params\ConnectRate,        type,       0,          "enum"
+HKR, Ndi\Params\ConnectRate\enum,   "10",       0,          %10M%
+HKR, Ndi\Params\ConnectRate\enum,   "100",      0,          %100M%
+HKR, Ndi\Params\ConnectRate\enum,   "1001",     0,          %1G%
+HKR, Ndi\Params\ConnectRate\enum,   "10000",    0,          %10G%
+
+HKR, Ndi\Params\Priority,           ParamDesc,  0,          %Priority%
+HKR, Ndi\Params\Priority,           Default,    0,          "1"
+HKR, Ndi\Params\Priority,           type,       0,          "enum"
+HKR, Ndi\Params\Priority\enum,      "1",        0,          %Enable%
+HKR, Ndi\Params\Priority\enum,      "0",        0,          %Disable%
+
+HKR, Ndi\Params\*PriorityVLANTag,           ParamDesc,  0,          %PriorityVlanTag%
+HKR, Ndi\Params\*PriorityVLANTag,           Default,    0,          "3"
+HKR, Ndi\Params\*PriorityVLANTag,           type,       0,          "enum"
+HKR, Ndi\Params\*PriorityVLANTag\enum,      "3",        0,          %Priority_Vlan%
+HKR, Ndi\Params\*PriorityVLANTag\enum,      "2",        0,          %VLan%
+HKR, Ndi\Params\*PriorityVLANTag\enum,      "1",        0,          %PriorityOnly%
+HKR, Ndi\Params\*PriorityVLANTag\enum,      "0",        0,          %Disable%
+
+HKR, Ndi\Params\DoLog,              ParamDesc,  0,          %EnableLogging%
+HKR, Ndi\Params\DoLog,              Default,    0,          "1"
+HKR, Ndi\Params\DoLog,              type,       0,          "enum"
+HKR, Ndi\Params\DoLog\enum,         "1",        0,          %Enable%
+HKR, Ndi\Params\DoLog\enum,         "0",        0,          %Disable%
+
+HKR, Ndi\params\DebugLevel,         ParamDesc,  0,          %DebugLevel%
+HKR, Ndi\params\DebugLevel,         type,       0,          "int"
+HKR, Ndi\params\DebugLevel,         default,    0,          "0"
+HKR, Ndi\params\DebugLevel,         min,        0,          "0"
+HKR, Ndi\params\DebugLevel,         max,        0,          "8"
+HKR, Ndi\params\DebugLevel,         step,       0,          "1"
+
+HKR, Ndi\params\LogStatistics,      ParamDesc,  0,          %LogStatistics%
+HKR, Ndi\params\LogStatistics,      type,       0,          "int"
+HKR, Ndi\params\LogStatistics,      default,    0,          "0"
+HKR, Ndi\params\LogStatistics,      min,        0,          "0"
+HKR, Ndi\params\LogStatistics,      max,        0,          "10000"
+HKR, Ndi\params\LogStatistics,      step,       0,          "1"
+
+HKR, Ndi\params\MTU,                ParamDesc,  0,          %MTU%
+HKR, Ndi\params\MTU,                type,       0,          "long"
+HKR, Ndi\params\MTU,                default,    0,          "1500"
+HKR, Ndi\params\MTU,                min,        0,          "500"
+HKR, Ndi\params\MTU,                max,        0,          "65500"
+HKR, Ndi\params\MTU,                step,       0,          "1"
+
+HKR, Ndi\params\TxCapacity,         ParamDesc,  0,          %TxCapacity%
+HKR, Ndi\params\TxCapacity,         type,       0,          "enum"
+HKR, Ndi\params\TxCapacity,         default,    0,          "1024"
+HKR, Ndi\Params\TxCapacity\enum,    "16",       0,          %String_16%
+HKR, Ndi\Params\TxCapacity\enum,    "32",       0,          %String_32%
+HKR, Ndi\Params\TxCapacity\enum,    "64",       0,          %String_64%
+HKR, Ndi\Params\TxCapacity\enum,    "128",      0,          %String_128%
+HKR, Ndi\Params\TxCapacity\enum,    "256",      0,          %String_256%
+HKR, Ndi\Params\TxCapacity\enum,    "512",      0,          %String_512%
+HKR, Ndi\Params\TxCapacity\enum,    "1024",     0,          %String_1024%
+
+HKR, Ndi\params\RxCapacity,         ParamDesc,  0,          %RxCapacity%
+HKR, Ndi\params\RxCapacity,         type,       0,          "enum"
+HKR, Ndi\params\RxCapacity,         default,    0,          "256"
+HKR, Ndi\Params\RxCapacity\enum,    "16",       0,          %String_16%
+HKR, Ndi\Params\RxCapacity\enum,    "32",       0,          %String_32%
+HKR, Ndi\Params\RxCapacity\enum,    "64",       0,          %String_64%
+HKR, Ndi\Params\RxCapacity\enum,    "128",      0,          %String_128%
+HKR, Ndi\Params\RxCapacity\enum,    "256",      0,          %String_256%
+HKR, Ndi\Params\RxCapacity\enum,    "512",      0,          %String_512%
+HKR, Ndi\Params\RxCapacity\enum,    "1024",     0,          %String_1024%
+
+HKR, Ndi\Params\MergeableBuf,       ParamDesc,  0,          %MergeableBuf%
+HKR, Ndi\Params\MergeableBuf,       Default,    0,          "1"
+HKR, Ndi\Params\MergeableBuf,       type,       0,          "enum"
+HKR, Ndi\Params\MergeableBuf\enum,  "1",        0,          %Enable%
+HKR, Ndi\Params\MergeableBuf\enum,  "0",        0,          %Disable%
+
+HKR, Ndi\params\NetworkAddress,     ParamDesc,  0,          %NetworkAddress%
+HKR, Ndi\params\NetworkAddress,     type,       0,          "edit"
+HKR, Ndi\params\NetworkAddress,     Optional,   0,          "1"
+
+HKR, Ndi\Params\Indirect,           ParamDesc,  0,          %Indirect%
+HKR, Ndi\Params\Indirect,           Default,    0,          "0"
+HKR, Ndi\Params\Indirect,           type,       0,          "enum"
+HKR, Ndi\Params\Indirect\enum,      "0",        0,          %Disable%
+HKR, Ndi\Params\Indirect\enum,      "1",        0,          %Enable%
+HKR, Ndi\Params\Indirect\enum,      "2",        0,          %Enable*%
+
+HKR, Ndi\Params\OffLoad.TxChecksum, ParamDesc,  0,          %OffLoad.TxChecksum%
+HKR, Ndi\Params\OffLoad.TxChecksum, Default,    0,          "0"
+HKR, Ndi\Params\OffLoad.TxChecksum, type,       0,          "enum"
+HKR, Ndi\Params\OffLoad.TxChecksum\enum,    "31",       0,  %All%
+HKR, Ndi\Params\OffLoad.TxChecksum\enum,    "27",       0,  %TCPUDPAll%
+HKR, Ndi\Params\OffLoad.TxChecksum\enum,    "3",        0,  %TCPUDPv4%
+HKR, Ndi\Params\OffLoad.TxChecksum\enum,    "1",        0,  %TCPv4%
+HKR, Ndi\Params\OffLoad.TxChecksum\enum,    "0",        0,  %Disable%
+
+HKR, Ndi\Params\OffLoad.TxLSO,      ParamDesc,  0,          %OffLoad.TxLSO%
+HKR, Ndi\Params\OffLoad.TxLSO,      Default,    0,          "2"
+HKR, Ndi\Params\OffLoad.TxLSO,      type,       0,          "enum"
+HKR, Ndi\Params\OffLoad.TxLSO\enum, "2",        0,          %Maximal%
+HKR, Ndi\Params\OffLoad.TxLSO\enum, "1",        0,          %IPv4%
+HKR, Ndi\Params\OffLoad.TxLSO\enum, "0",        0,          %Disable%
+
+HKR, Ndi\Params\OffLoad.RxCS,       ParamDesc,  0,          %OffLoad.RxCS%
+HKR, Ndi\Params\OffLoad.RxCS,       Default,    0,          "0"
+HKR, Ndi\Params\OffLoad.RxCS,       type,       0,          "enum"
+HKR, Ndi\Params\OffLoad.RxCS\enum,  "31",       0,          %All%
+HKR, Ndi\Params\OffLoad.RxCS\enum,  "27",       0,          %TCPUDPAll%
+HKR, Ndi\Params\OffLoad.RxCS\enum,  "3",        0,          %TCPUDPv4%
+HKR, Ndi\Params\OffLoad.RxCS\enum,  "1",        0,          %TCPv4%
+HKR, Ndi\Params\OffLoad.RxCS\enum,  "0",        0,          %Disable%
+
+HKR, Ndi\params\ConnectTimer,       ParamDesc,  0,          %ConnectAfter%
+HKR, Ndi\params\ConnectTimer,       type,       0,          "long"
+HKR, Ndi\params\ConnectTimer,       default,    0,          "0"
+HKR, Ndi\params\ConnectTimer,       min,        0,          "0"
+HKR, Ndi\params\ConnectTimer,       max,        0,          "300000"
+HKR, Ndi\params\ConnectTimer,       step,       0,          "50"
+
+HKR, Ndi\Params\DpcCheck,           ParamDesc,  0,          %DPCCheck%
+HKR, Ndi\Params\DpcCheck,           Default,    0,          "0"
+HKR, Ndi\Params\DpcCheck,           type,       0,          "enum"
+HKR, Ndi\Params\DpcCheck\enum,      "1",        0,          %Enable%
+HKR, Ndi\Params\DpcCheck\enum,      "0",        0,          %Disable%
+HKR, Ndi\Params\DpcCheck\enum,      "2",        0,          %Enable*%
+
+HKR, Ndi\Params\Gather,             ParamDesc,  0,          %Gather%
+HKR, Ndi\Params\Gather,             Default,    0,          "1"
+HKR, Ndi\Params\Gather,             type,       0,          "enum"
+HKR, Ndi\Params\Gather\enum,        "1",        0,          %Enable%
+HKR, Ndi\Params\Gather\enum,        "0",        0,          %Disable%
+
+HKR, Ndi\Params\Offload.GuestCS,    ParamDesc,  0,          %GuestCS%
+HKR, Ndi\Params\Offload.GuestCS,    Default,    0,          "0"
+HKR, Ndi\Params\Offload.GuestCS,    type,       0,          "enum"
+HKR, Ndi\Params\Offload.GuestCS\enum,"1",       0,          %Enable%
+HKR, Ndi\Params\Offload.GuestCS\enum,"0",       0,          %Disable%
+
+HKR, Ndi\Params\InterruptRecovery,  ParamDesc,  0,          %InterruptRecovery%
+HKR, Ndi\Params\InterruptRecovery,  Default,    0,          "1"
+HKR, Ndi\Params\InterruptRecovery,  type,       0,          "enum"
+HKR, Ndi\Params\InterruptRecovery\enum,         "1",        0,  %Enable%
+HKR, Ndi\Params\InterruptRecovery\enum,         "0",        0,  %Disable%
+
+HKR, Ndi\params\NumberOfHandledRXPackersInDPC,       ParamDesc,  0,          %NumberOfHandledRXPackersInDPC%
+HKR, Ndi\params\NumberOfHandledRXPackersInDPC,       type,       0,          "long"
+HKR, Ndi\params\NumberOfHandledRXPackersInDPC,       default,    0,          "1000"
+HKR, Ndi\params\NumberOfHandledRXPackersInDPC,       min,        0,          "1"
+HKR, Ndi\params\NumberOfHandledRXPackersInDPC,       max,        0,          "10000"
+HKR, Ndi\params\NumberOfHandledRXPackersInDPC,       step,       0,          "1"
+
+HKR, Ndi\Params\PacketFilter,       ParamDesc,  0,          %PacketFilter%
+HKR, Ndi\Params\PacketFilter,       Default,    0,          "1"
+HKR, Ndi\Params\PacketFilter,       type,       0,          "enum"
+HKR, Ndi\Params\PacketFilter\enum,  "1",        0,          %Enable%
+HKR, Ndi\Params\PacketFilter\enum,  "0",        0,          %Disable%
+
+HKR, Ndi\Params\BatchReceive,       ParamDesc,  0,          %BatchReceive%
+HKR, Ndi\Params\BatchReceive,       Default,    0,          "1"
+HKR, Ndi\Params\BatchReceive,       type,       0,          "enum"
+HKR, Ndi\Params\BatchReceive\enum,  "1",        0,          %Enable%
+HKR, Ndi\Params\BatchReceive\enum,  "0",        0,          %Disable%
+
+HKR, Ndi\Params\Promiscuous,        ParamDesc,  0,          %Promiscuous%
+HKR, Ndi\Params\Promiscuous,        Default,    0,          "0"
+HKR, Ndi\Params\Promiscuous,        type,       0,          "enum"
+HKR, Ndi\Params\Promiscuous\enum,   "1",        0,          %Enable%
+HKR, Ndi\Params\Promiscuous\enum,   "0",        0,          %Disable%
+
+HKR, Ndi\Params\IPPacketsCheck,     ParamDesc,  0,          %IPPacketsCheck%
+HKR, Ndi\Params\IPPacketsCheck,     Default,    0,          "0"
+HKR, Ndi\Params\IPPacketsCheck,     type,       0,          "enum"
+HKR, Ndi\Params\IPPacketsCheck\enum,"0",        0,          %Disable%
+HKR, Ndi\Params\IPPacketsCheck\enum,"1",        0,          %Tx%
+HKR, Ndi\Params\IPPacketsCheck\enum,"2",        0,          %Rx%
+HKR, Ndi\Params\IPPacketsCheck\enum,"3",        0,          %TxRx%
+
+HKR, Ndi\Params\UseSwTxChecksum,    ParamDesc,  0,          %UseSwTxChecksum%
+HKR, Ndi\Params\UseSwTxChecksum,    Default,    0,          "0"
+HKR, Ndi\Params\UseSwTxChecksum,    type,       0,          "enum"
+HKR, Ndi\Params\UseSwTxChecksum\enum,   "1",    0,          %Enable%
+HKR, Ndi\Params\UseSwTxChecksum\enum,   "0",    0,          %Disable%
+
+[kvmnet5.CopyFiles]
+netkvm.sys,,,2
+
+[kvmnet5.Service]
+DisplayName     = %kvmnet5.Service.DispName%
+ServiceType     = 1 ;%SERVICE_KERNEL_DRIVER%
+StartType       = 3 ;%SERVICE_DEMAND_START%
+ErrorControl    = 1 ;%SERVICE_ERROR_NORMAL%
+ServiceBinary   = %12%\netkvm.sys
+LoadOrderGroup  = NDIS
+AddReg          = TextModeFlags.Reg
+
+[kvmnet5.EventLog]
+AddReg = kvmnet5.AddEventLog.Reg
+
+[kvmnet5.AddEventLog.Reg]
+HKR, , EventMessageFile, 0x00020000, "%%SystemRoot%%\System32\netevent.dll"
+HKR, , TypesSupported,   0x00010001, 7
+
+[TextModeFlags.Reg]
+HKR, , TextModeFlags,    0x00010001, 0x0001
+
+[SourceDisksNames]
+1 = %DiskId1%,,,""
+
+[SourceDisksFiles]
+netkvm.sys  = 1,,
+
+[DestinationDirs]
+kvmnet5.CopyFiles = 12
+
+[Strings]
+VENDOR            = "INX_COMPANY"
+kvmnet5.DeviceDesc   = "INX_PREFIX_VENDORVirtIO Ethernet Adapter"
+kvmnet5.Service.DispName  = "INX_PREFIX_VENDORVirtIO Ethernet Adapter Service"
+DiskId1 = "INX_PREFIX_VENDORVirtIO Ethernet Adapter Driver Disk #1"
+
+NetworkAddress = "Assign MAC"
+ConnectRate = "Init.ConnectionRate(Mb)"
+Priority = "Init.Do802.1PQ"
+MergeableBuf = "Init.UseMergedBuffers"
+MTU = "Init.MTUSize"
+Indirect = "Init.IndirectTx"
+TxCapacity = "Init.MaxTxBuffers"
+RxCapacity = "Init.MaxRxBuffers"
+Offload.TxChecksum = "Offload.Tx.Checksum"
+Offload.TxLSO = "Offload.Tx.LSO"
+Offload.RxCS = "Offload.Rx.Checksum"
+EnableLogging = "Logging.Enable"
+DebugLevel = "Logging.Level"
+LogStatistics = "Logging.Statistics(sec)"
+
+ConnectAfter = "TestOnly.DelayConnect(ms)"
+DPCCheck = "TestOnly.DPCChecking"
+Gather = "TestOnly.Scatter-Gather"
+GuestCS = "TestOnly.GuestChecksum"
+InterruptRecovery = "TestOnly.InterruptRecovery"
+PacketFilter = "TestOnly.HwPacketFilter"
+BatchReceive = "TestOnly.BatchReceive"
+Promiscuous = "TestOnly.Promiscuous"
+IPPacketsCheck = "TestOnly.AnalyzeIPPackets"
+NumberOfHandledRXPackersInDPC = "TestOnly.RXThrottle"
+UseSwTxChecksum = "TestOnly.UseSwTxChecksum"
+Tx = "Tx Enabled";
+Rx = "Rx Enabled";
+TxRx = "Rx & Tx Enabled";
+
+Disable = "Disabled"
+Enable  = "Enabled"
+Enable* = "Enabled*"
+String_16 = "16"
+String_32 = "32"
+String_64 = "64"
+String_128 = "128"
+String_256 = "256"
+String_512 = "512"
+String_1024 = "1024"
+PriorityVlanTag = "Priority and VLAN tagging"
+PriorityOnly = "Priority"
+VLan = "VLan"
+Priority_Vlan = "All"
+10M = "10M"
+100M = "100M"
+1G   = "1G"
+10G = "10G"
+TCPv4 = "TCP(v4)"
+TCPUDPv4 = "TCP/UDP(v4)"
+TCPUDPAll = "TCP/UDP(v4,v6)"
+All = "All"
+IPv4 = "IPv4"
+Maximal = "Maximal"
+

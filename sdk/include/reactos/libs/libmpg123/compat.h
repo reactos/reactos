@@ -17,9 +17,8 @@
 #include "config.h"
 #include "intsym.h"
 
-/* For --nagging compilation with -std=c89, we need
-   to disable the inline keyword. */
-#ifdef PLAIN_C89
+/* Disable inline for non-C99 compilers. */
+#if !defined(__STDC_VERSION__) || __STDC_VERSION__ < 199901L
 #ifndef inline
 #define inline
 #endif
@@ -65,6 +64,9 @@
  
 #ifndef SIZE_MAX
 #define SIZE_MAX ((size_t)-1)
+#endif
+#ifndef SSIZE_MAX
+#define SSIZE_MAX ((size_t)-1/2)
 #endif
 #ifndef ULONG_MAX
 #define ULONG_MAX ((unsigned long)-1)
@@ -122,7 +124,7 @@ char* compat_strdup(const char *s);
 /* If we have the size checks enabled, try to derive some sane printfs.
    Simple start: Use max integer type and format if long is not big enough.
    I am hesitating to use %ll without making sure that it's there... */
-#if !(defined PLAIN_C89) && (defined SIZEOF_OFF_T) && (SIZEOF_OFF_T > SIZEOF_LONG) && (defined PRIiMAX)
+#if (defined SIZEOF_OFF_T) && (SIZEOF_OFF_T > SIZEOF_LONG) && (defined PRIiMAX)
 # define OFF_P PRIiMAX
 typedef intmax_t off_p;
 #else
@@ -130,7 +132,7 @@ typedef intmax_t off_p;
 typedef long off_p;
 #endif
 
-#if !(defined PLAIN_C89) && (defined SIZEOF_SIZE_T) && (SIZEOF_SIZE_T > SIZEOF_LONG) && (defined PRIuMAX)
+#if (defined SIZEOF_SIZE_T) && (SIZEOF_SIZE_T > SIZEOF_LONG) && (defined PRIuMAX)
 # define SIZE_P PRIuMAX
 typedef uintmax_t size_p;
 #else
@@ -138,7 +140,7 @@ typedef uintmax_t size_p;
 typedef unsigned long size_p;
 #endif
 
-#if !(defined PLAIN_C89) && (defined SIZEOF_SSIZE_T) && (SIZEOF_SSIZE_T > SIZEOF_LONG) && (defined PRIiMAX)
+#if (defined SIZEOF_SSIZE_T) && (SIZEOF_SSIZE_T > SIZEOF_LONG) && (defined PRIiMAX)
 # define SSIZE_P PRIuMAX
 typedef intmax_t ssize_p;
 #else
@@ -266,10 +268,11 @@ void  compat_dlclose(void *handle);
 #endif
 
 /* Blocking write/read of data with signal resilience.
-   Both continue after being interrupted by signals and always return the
+   They continue after being interrupted by signals and always return the
    amount of processed data (shortage indicating actual problem or EOF). */
 size_t unintr_write(int fd, void const *buffer, size_t bytes);
 size_t unintr_read (int fd, void *buffer, size_t bytes);
+size_t unintr_fwrite(const void *ptr, size_t size, size_t nmemb, FILE *stream);
 
 /* That one comes from Tellie on OS/2, needed in resolver. */
 #ifdef __KLIBC__

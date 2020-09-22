@@ -1529,8 +1529,8 @@ CcGetFileObjectFromSectionPtrs (
     return NULL;
 }
 
-VOID
 INIT_FUNCTION
+VOID
 NTAPI
 CcInitView (
     VOID)

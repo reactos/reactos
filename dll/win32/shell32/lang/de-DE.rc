@@ -11,6 +11,7 @@ BEGIN
     BEGIN
         MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "&Automatisch anordnen", FCIDM_SHVIEW_AUTOARRANGE
+        MENUITEM "Align to &Grid", FCIDM_SHVIEW_ALIGNTOGRID
     END
 END
 
@@ -31,9 +32,8 @@ BEGIN
         BEGIN
             MENUITEM "", -1, MFT_SEPARATOR
             MENUITEM "&Automatisch anordnen", FCIDM_SHVIEW_AUTOARRANGE
+            MENUITEM "Align to &Grid", FCIDM_SHVIEW_ALIGNTOGRID
         END
-        MENUITEM "Icons anordnen", FCIDM_SHVIEW_SNAPTOGRID
-        MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "Aktualisieren", FCIDM_SHVIEW_REFRESH
         MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "Einfügen", FCIDM_SHVIEW_INSERT
@@ -108,8 +108,8 @@ BEGIN
     LTEXT "", IDC_BROWSE_FOR_FOLDER_TITLE, 10, 8, 198, 24
     LTEXT "", IDC_BROWSE_FOR_FOLDER_STATUS, 10, 25, 198, 12
     LTEXT "Ordner:", IDC_BROWSE_FOR_FOLDER_FOLDER, 10, 152, 40, 12
-    CONTROL "", IDC_BROWSE_FOR_FOLDER_TREEVIEW, "SysTreeView32", TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_EDITLABELS  | WS_BORDER | WS_TABSTOP, 12, 38, 194, 105
-    EDITTEXT IDC_BROWSE_FOR_FOLDER_FOLDER_TEXT, 46, 150, 160, 14, WS_BORDER | WS_GROUP | WS_TABSTOP
+    CONTROL "", IDC_BROWSE_FOR_FOLDER_TREEVIEW, "SysTreeView32", TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_EDITLABELS | WS_BORDER | WS_TABSTOP, 12, 38, 194, 105
+    EDITTEXT IDC_BROWSE_FOR_FOLDER_FOLDER_TEXT, 46, 150, 160, 14, ES_AUTOHSCROLL | WS_BORDER | WS_GROUP | WS_TABSTOP
     PUSHBUTTON "&Neuen Ordner erstellen", IDC_BROWSE_FOR_FOLDER_NEW_FOLDER, 12, 174, 77, 14, WS_GROUP | WS_TABSTOP
     DEFPUSHBUTTON "OK", IDOK, 102, 174, 50, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
     PUSHBUTTON "Abbrechen", IDCANCEL, 156, 174, 50, 14, WS_GROUP | WS_TABSTOP
@@ -384,7 +384,7 @@ BEGIN
     CONTROL "", 14000, "SysListView32", LVS_REPORT | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 10, 10, 220, 50
     GROUPBOX "Einstellungen für gewählten Ort", -1, 10, 72, 220, 70
     RADIOBUTTON "&Definierte Größe:", 14001, 20, 90, 80, 10, WS_TABSTOP
-    EDITTEXT 14002, 106, 87, 50, 14, WS_TABSTOP | ES_NUMBER
+    EDITTEXT 14002, 116, 103, 50, 14, WS_TABSTOP | ES_NUMBER
     LTEXT "M&aximale Größe (MB):", -1, 20, 105, 70, 10
     RADIOBUTTON "Dateien nicht in den Papie&rkorb verschieben, sondern sofort löschen", 14003, 20, 117, 170, 20, BS_MULTILINE | WS_TABSTOP
     AUTOCHECKBOX "Bestätigungs&dialog nach erfolgreichem Löschvorgang anzeigen", 14004, 20, 155, 215, 10, WS_TABSTOP
@@ -400,7 +400,7 @@ BEGIN
     LTEXT "Datei:    ", 14001, 44, 30, 188, 10
     GROUPBOX "&Programme", -1, 7, 42, 249, 187
     CONTROL "Programs", 14002, WC_TREEVIEW, WS_BORDER | WS_TABSTOP | TVS_SHOWSELALWAYS, 16 ,57, 230, 130
-    AUTOCHECKBOX "&Dateityp &immer mit dem ausgewählten Programm öffnen", 14003, 20, 193, 225, 10
+    AUTOCHECKBOX "Dateityp &immer mit diesem Programm öffnen", 14003, 16, 193, 232, 10
     PUSHBUTTON "&Durchsuchen...", 14004, 188, 207, 60, 14
     DEFPUSHBUTTON "OK", IDOK, 150, 236, 50, 14
     PUSHBUTTON "Abbrechen", IDCANCEL, 206, 236, 50, 14
@@ -448,7 +448,7 @@ STYLE DS_SHELLFONT | WS_POPUP | WS_CAPTION
 CAPTION "Dateitypen"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "&Registrierte Dateitypen:", -1, 7, 10, 80, 10
+    LTEXT "&Registrierte Dateitypen:", -1, 7, 10, 180, 10
     CONTROL "", IDC_FILETYPES_LISTVIEW, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHAREIMAGELISTS | LVS_SHOWSELALWAYS | WS_BORDER | WS_TABSTOP, 7, 20, 249, 115
     PUSHBUTTON "&Neu", IDC_FILETYPES_NEW, 140, 140, 55, 14, WS_TABSTOP
     PUSHBUTTON "&Löschen", IDC_FILETYPES_DELETE, 200, 140, 55, 14, WS_TABSTOP
@@ -457,7 +457,7 @@ BEGIN
     CONTROL "", IDC_FILETYPES_ICON, "STATIC", SS_BITMAP | SS_REALSIZEIMAGE, 85, 180, 10, 10
     LTEXT "Name", IDC_FILETYPES_APPNAME, 100, 180, 80, 10
     PUSHBUTTON "Än&dern...", IDC_FILETYPES_CHANGE, 200, 180, 50, 14, WS_TABSTOP
-    LTEXT "", IDC_FILETYPES_DESCRIPTION, 12, 195, 160, 30
+    LTEXT "", IDC_FILETYPES_DESCRIPTION, 12, 195, 160, 40
     PUSHBUTTON "&Erweitert", IDC_FILETYPES_ADVANCED, 200, 215, 50, 14, WS_TABSTOP
 END
 
@@ -710,6 +710,20 @@ BEGIN
     PUSHBUTTON "Anderes &Symbol...", IDC_FOLDERCUST_CHANGE_ICON, 15, 210, 75, 15
 END
 
+IDD_LINK_PROBLEM DIALOGEX 0, 0, 250, 140
+CAPTION "Problem with Shortcut"
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON 0, IDC_LINK_PROBLEM_ICON, 5, 5, 0, 0
+    LTEXT "The item '%s' that this shortcut refers to has been changed or moved, so this shortcut will no longer work properly.", IDC_LINK_PROBLEM_LABEL1, 35, 5, 210, 35
+    LTEXT "Nearest match based on name, type, size, and date:", IDC_LINK_PROBLEM_LABEL2, 35, 45, 210, 35
+    LTEXT "Do you want to fix this shortcut to point to this target or do you just want to delete it?", -1, 35, 85, 210, 30
+    DEFPUSHBUTTON "&Fix it", IDOK, 55, 120, 60, 15, WS_DISABLED
+    PUSHBUTTON "&Delete it", IDYES, 120, 120, 60, 15
+    PUSHBUTTON "Cancel", IDCANCEL, 185, 120, 60, 15
+END
+
 STRINGTABLE
 BEGIN
     /* columns in the shellview */
@@ -770,7 +784,6 @@ BEGIN
     IDS_EJECT "Auswerfen"
     IDS_DISCONNECT "Trennen"
     IDS_OPENFILELOCATION "Date&ipfad öffnen"
-    IDS_DESKLINK "Desktop (Verknüpfung erstellen)"
     IDS_SENDTO_MENU "S&enden an"
 
     IDS_MOVEERRORTITLE "Fehler beim Verschieben der Datei/des Ordners"
@@ -985,4 +998,15 @@ BEGIN
     IDS_EDITING_ACTION "Vorgang bearbeiten für Typ: "
     IDS_NO_ICONS "Die Datei '%s' enthält keine Symbole.\n\nWählen Sie ein Symbol aus der Liste oder wählen Sie eine andere Datei."
     IDS_FILE_NOT_FOUND "Die Datei '%s' wurde nicht gefunden."
+    IDS_LINK_INVALID "The item '%s' that this shortcut refers to has been changed or moved, so this shortcut will no longer work properly."
+    IDS_COPYTOMENU "In &Ordner kopieren..."
+    IDS_COPYTOTITLE "Wählen Sie den Ort, in den '%s' kopiert werden soll. Klicken Sie anschließend auf Kopieren."
+    IDS_COPYITEMS "Elemente kopieren"
+    IDS_COPYBUTTON "Kopieren"
+    IDS_MOVETOMENU "In Ordner &verschieben..."
+    IDS_MOVETOTITLE "Wählen Sie den Ort, in den '%s' verschoben werden soll. Klicken Sie anschließend auf Verschieben."
+    IDS_MOVEITEMS "Elemente verschieben"
+    IDS_MOVEBUTTON "Verschieben"
+
+    IDS_SYSTEMFOLDER "System Folder"
 END

@@ -45,8 +45,8 @@ static BOOLEAN IsNekoProject = FALSE;
 static BOOLEAN
 CpIsNekoProject(VOID)
 {
-    UCHAR Input[3] = "NP2";
-    UCHAR Output[3];
+    UCHAR Input[4] = "NP2";
+    UCHAR Output[4] = {0};
     UCHAR i;
 
     for (i = 0; i < 3; i++)
@@ -55,7 +55,7 @@ CpIsNekoProject(VOID)
     for (i = 0; i < 3; i++)
         Output[i] = READ_PORT_UCHAR((PUCHAR)0x7EF);
 
-    return (memcmp(Input, Output, 3) == 0);
+    return (*(PULONG)Input == *(PULONG)Output);
 }
 
 static VOID

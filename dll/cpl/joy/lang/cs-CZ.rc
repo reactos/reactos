@@ -86,4 +86,5 @@ BEGIN
     IDS_CPLSYSTEMDESCRIPTION "Přidat, odebrat a konfigurovat herní ovladače jako například joysticky nebo gamepady."
     IDS_CONTROLLER "Ovladač"
     IDS_STATUS "Stav"
+    IDS_NONE "(None)"
 END

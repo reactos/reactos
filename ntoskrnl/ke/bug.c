@@ -295,8 +295,8 @@ KeRosDumpStackFrames(IN PULONG_PTR Frame OPTIONAL,
     }
 }
 
-VOID
 INIT_FUNCTION
+VOID
 NTAPI
 KiInitializeBugCheck(VOID)
 {
@@ -626,8 +626,8 @@ KiDisplayBlueScreen(IN ULONG MessageId,
         InbvResetDisplay();
 
         /* Display blue screen */
-        InbvSolidColorFill(0, 0, SCREEN_WIDTH - 1, SCREEN_HEIGHT - 1, 4);
-        InbvSetTextColor(15);
+        InbvSolidColorFill(0, 0, SCREEN_WIDTH - 1, SCREEN_HEIGHT - 1, BV_COLOR_BLUE);
+        InbvSetTextColor(BV_COLOR_WHITE);
         InbvInstallDisplayStringFilter(NULL);
         InbvEnableDisplayString(TRUE);
         InbvSetScrollRegion(0, 0, SCREEN_WIDTH - 1, SCREEN_HEIGHT - 1);
@@ -706,6 +706,7 @@ KiDisplayBlueScreen(IN ULONG MessageId,
     }
 }
 
+DECLSPEC_NORETURN
 VOID
 NTAPI
 KeBugCheckWithTf(IN ULONG BugCheckCode,
@@ -1403,6 +1404,7 @@ KeDeregisterNmiCallback(IN PVOID Handle)
 /*
  * @implemented
  */
+DECLSPEC_NORETURN
 VOID
 NTAPI
 KeBugCheckEx(IN ULONG BugCheckCode,
@@ -1423,6 +1425,7 @@ KeBugCheckEx(IN ULONG BugCheckCode,
 /*
  * @implemented
  */
+DECLSPEC_NORETURN
 VOID
 NTAPI
 KeBugCheck(ULONG BugCheckCode)

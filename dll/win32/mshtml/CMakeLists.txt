@@ -88,19 +88,21 @@ list(APPEND SOURCE
     task.c
     txtrange.c
     view.c
-    xmlhttprequest.c
-    mshtml_private.h)
+    xmlhttprequest.c)
 
 if(MSVC)
     add_asm_files(mshtml_asm msvc.S)
 endif()
 
+list(APPEND PCH_SKIP_SOURCE
+    guid.c
+    ${CMAKE_CURRENT_BINARY_DIR}/mshtml_stubs.c)
+
 add_library(mshtml MODULE
     ${SOURCE}
     ${mshtml_asm}
-    guid.c
+    ${PCH_SKIP_SOURCE}
     rsrc.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/mshtml_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/mshtml.def)
 
 list(APPEND mshtml_rc_deps
@@ -114,5 +116,5 @@ target_link_libraries(mshtml uuid wine strmiids oldnames)
 add_delay_importlibs(mshtml wininet)
 add_importlibs(mshtml urlmon shlwapi shell32 ole32 oleaut32 user32 gdi32 advapi32 msvcrt kernel32 ntdll)
 add_dependencies(mshtml mshtml_nsiface_header)
-add_pch(mshtml mshtml_private.h SOURCE)
+add_pch(mshtml mshtml_private.h "${PCH_SKIP_SOURCE}")
 add_cd_file(TARGET mshtml DESTINATION reactos/system32 FOR all)

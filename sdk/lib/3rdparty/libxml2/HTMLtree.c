@@ -1048,7 +1048,7 @@ htmlDocContentDumpFormatOutput(xmlOutputBufferPtr buf, xmlDocPtr cur,
  * @cur:  the document
  * @encoding:  the encoding string
  *
- * Dump an HTML document. Formating return/spaces are added.
+ * Dump an HTML document. Formatting return/spaces are added.
  */
 void
 htmlDocContentDumpOutput(xmlOutputBufferPtr buf, xmlDocPtr cur,

@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS Host Headers
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Type definitions and useful macros for host tools
- * COPYRIGHT:   Copyright 2007 Hervé Poussineau (hpoussin@reactos.org)
+ * COPYRIGHT:   Copyright 2007 HervÃ© Poussineau (hpoussin@reactos.org)
  *              Copyright 2007 Colin Finck (colin@reactos.org)
  */
 
@@ -51,10 +51,11 @@ typedef void VOID, *PVOID, *LPVOID;
 typedef char CHAR, CCHAR, *PCHAR, *PSTR, *LPSTR;
 typedef const char *PCSTR, *LPCSTR;
 typedef unsigned char UCHAR, *PUCHAR, BYTE, *LPBYTE, BOOLEAN, *PBOOLEAN;
+typedef uint8_t UINT8;
 typedef int16_t SHORT, *PSHORT;
 typedef uint16_t USHORT, *PUSHORT, WORD, *PWORD, *LPWORD, WCHAR, *PWCHAR, *PWSTR, *LPWSTR, UINT16;
 typedef const uint16_t *PCWSTR, *LPCWSTR;
-typedef int32_t INT, LONG, *PLONG, *LPLONG, BOOL, WINBOOL;
+typedef int32_t INT, LONG, *PLONG, *LPLONG, BOOL, WINBOOL, INT32;
 typedef uint32_t UINT, *PUINT, *LPUINT, ULONG, *PULONG, DWORD, *PDWORD, *LPDWORD, UINT32;
 #if defined(_LP64) || defined(_WIN64)
 typedef int64_t LONG_PTR, *PLONG_PTR, INT_PTR, *PINT_PTR;
@@ -64,7 +65,7 @@ typedef int32_t LONG_PTR, *PLONG_PTR, INT_PTR, *PINT_PTR;
 typedef uint32_t ULONG_PTR, DWORD_PTR, *PULONG_PTR, UINT_PTR, *PUINT_PTR;
 #endif
 typedef uint64_t ULONG64, DWORD64, *PDWORD64, UINT64, ULONGLONG;
-typedef int64_t LONGLONG, LONG64;
+typedef int64_t LONGLONG, LONG64, INT64;
 typedef float FLOAT;
 typedef double DOUBLE;
 

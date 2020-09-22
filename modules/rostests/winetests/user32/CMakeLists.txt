@@ -5,7 +5,7 @@ add_definitions(-DWINVER=0x602 -D_WIN32_WINNT=0x602)
 if(MSVC)
     # Disable warning C4477 (printf format warnings)
     add_compile_flags("/wd4477")
-elseif(GCC AND GCC_VERSION VERSION_GREATER 7)
+elseif(GCC)
     add_compile_flags("-Wno-format-overflow")
 endif()
 
@@ -34,15 +34,17 @@ list(APPEND SOURCE
     uitools.c
     win.c
     winstation.c
-    wsprintf.c
-    precomp.h)
+    wsprintf.c)
+
+list(APPEND PCH_SKIP_SOURCE
+    testlist.c)
 
 add_executable(user32_winetest
     ${SOURCE}
-    testlist.c
+    ${PCH_SKIP_SOURCE}
     resource.rc)
 
-add_pch(user32_winetest precomp.h SOURCE)
+add_pch(user32_winetest precomp.h "${PCH_SKIP_SOURCE}")
 # some tests need to be run from an app compiled as GUI
 set_module_type(user32_winetest win32gui)
 add_importlibs(user32_winetest user32 gdi32 advapi32 msvcrt kernel32)

@@ -261,6 +261,10 @@ public:
     E& GetAt(size_t iElement);
     const E& GetAt(size_t iElement) const;
 
+    E* GetData();
+    const E* GetData() const;
+
+
     //FIXME: Most of this class is missing!
 };
 
@@ -403,6 +407,17 @@ const E& CAtlArray<E, ETraits>::GetAt(size_t iElement) const
     return m_pData[iElement];
 }
 
+template<typename E, class ETraits>
+E* CAtlArray<E, ETraits>::GetData()
+{
+    return m_pData;
+}
+
+template<typename E, class ETraits>
+const E* CAtlArray<E, ETraits>::GetData() const
+{
+    return m_pData;
+}
 
 
 template<typename E, class ETraits = CElementTraits<E> >

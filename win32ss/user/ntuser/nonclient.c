@@ -696,7 +696,7 @@ PCURICON_OBJECT FASTCALL NC_IconForWindow( PWND pWnd )
    // it does not use the default icon! And it does not check for DS_MODALFRAME.
    if (!hIcon && !(pWnd->ExStyle & WS_EX_DLGMODALFRAME))
    {
-      if (!hIcon) hIcon = gpsi->hIconSmWindows; // Both are IDI_WINLOGO Small
+      hIcon = gpsi->hIconSmWindows; // Both are IDI_WINLOGO Small
       if (!hIcon) hIcon = gpsi->hIconWindows;   // Reg size.
    }
    if (hIcon)

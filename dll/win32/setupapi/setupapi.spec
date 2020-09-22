@@ -502,8 +502,8 @@
 @ stub SetupRemoveFileLogEntryW
 @ stub SetupRemoveFromDiskSpaceListA
 @ stub SetupRemoveFromDiskSpaceListW
-@ stub SetupRemoveFromSourceListA
-@ stub SetupRemoveFromSourceListW
+@ stdcall -stub SetupRemoveFromSourceListA(long str)
+@ stdcall -stub SetupRemoveFromSourceListW(long wstr)
 @ stub SetupRemoveInstallSectionFromDiskSpaceListA
 @ stub SetupRemoveInstallSectionFromDiskSpaceListW
 @ stub SetupRemoveSectionFromDiskSpaceListA

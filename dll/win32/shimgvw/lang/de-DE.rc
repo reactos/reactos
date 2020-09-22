@@ -4,6 +4,7 @@ STRINGTABLE
 BEGIN
     IDS_APPTITLE "ReactOS-Bild- und Faxansicht"
     IDS_SETASDESKBG "Als Desktophintergrund setzen"
+    IDS_NOPREVIEW "No preview available."
     IDS_PREVIEW "Vorschau"
     /* Tooltips */
     IDS_TOOLTIP_NEXT_PIC "Nächstes Bild"

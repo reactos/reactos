@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS HAL
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            hal/halx86/generic/timer.c
  * PURPOSE:         HAL Timer Routines
  * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
  *                  Timo Kreuzer (timo.kreuzer@reactos.org)
@@ -10,6 +9,7 @@
 /* INCLUDES ******************************************************************/
 
 #include <hal.h>
+
 #define NDEBUG
 #include <debug.h>
 
@@ -21,6 +21,8 @@
 
 #define PIT_LATCH  0x00
 
+extern HALP_ROLLOVER HalpRolloverTable[15];
+
 LARGE_INTEGER HalpLastPerfCounter;
 LARGE_INTEGER HalpPerfCounter;
 ULONG HalpPerfCounterCutoff;
@@ -29,29 +31,6 @@ ULONG HalpCurrentTimeIncrement;
 ULONG HalpCurrentRollOver;
 ULONG HalpNextMSRate = 14;
 ULONG HalpLargestClockMS = 15;
-
-static struct _HALP_ROLLOVER
-{
-    ULONG RollOver;
-    ULONG Increment;
-} HalpRolloverTable[15] =
-{
-    {1197, 10032},
-    {2394, 20064},
-    {3591, 30096},
-    {4767, 39952},
-    {5964, 49984},
-    {7161, 60016},
-    {8358, 70048},
-    {9555, 80080},
-    {10731, 89936},
-    {11949, 100144},
-    {13125, 110000},
-    {14322, 120032},
-    {15519, 130064},
-    {16695, 139920},
-    {17892, 149952}
-};
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
@@ -88,7 +67,7 @@ HalpSetTimerRollOver(USHORT RollOver)
     TimerControl.BcdMode = FALSE;
 
     /*
-     * Program the PIT to generate a normal rate wave (Mode 3) on channel 0.
+     * Program the PIT to generate a normal rate wave (Mode 2) on channel 0.
      * Channel 0 is used for the IRQ0 clock interval timer, and channel
      * 1 is used for DRAM refresh.
      *
@@ -121,6 +100,10 @@ HalpInitializeClock(VOID)
 
     DPRINT("HalpInitializeClock()\n");
 
+#if defined(SARCH_PC98)
+    HalpInitializeClockPc98();
+#endif
+
     /* Get increment and rollover for the largest time clock ms possible */
     Increment = HalpRolloverTable[HalpLargestClockMS - 1].Increment;
     RollOver = (USHORT)HalpRolloverTable[HalpLargestClockMS - 1].RollOver;
@@ -149,7 +132,7 @@ HalpClockInterruptHandler(IN PKTRAP_FRAME TrapFrame)
     KiEnterInterruptTrap(TrapFrame);
 
     /* Start the interrupt */
-    if (HalBeginSystemInterrupt(CLOCK2_LEVEL, PRIMARY_VECTOR_BASE, &Irql))
+    if (HalBeginSystemInterrupt(CLOCK2_LEVEL, PRIMARY_VECTOR_BASE + PIC_TIMER_IRQ, &Irql))
     {
         /* Update the performance counter */
         HalpPerfCounter.QuadPart += HalpCurrentRollOver;
@@ -190,13 +173,20 @@ HalpProfileInterruptHandler(IN PKTRAP_FRAME TrapFrame)
     KiEnterInterruptTrap(TrapFrame);
 
     /* Start the interrupt */
-    if (HalBeginSystemInterrupt(PROFILE_LEVEL, PRIMARY_VECTOR_BASE + 8, &Irql))
+    if (HalBeginSystemInterrupt(PROFILE_LEVEL, PRIMARY_VECTOR_BASE + PIC_RTC_IRQ, &Irql))
     {
+#if defined(SARCH_PC98)
+        /* Clear the interrupt flag */
+        HalpAcquireCmosSpinLock();
+        (VOID)__inbyte(RTC_IO_i_INTERRUPT_RESET);
+        HalpReleaseCmosSpinLock();
+#else
         /* Spin until the interrupt pending bit is clear */
         HalpAcquireCmosSpinLock();
         while (HalpReadCmos(RTC_REGISTER_C) & RTC_REG_C_IRQ)
-            ;
+            NOTHING;
         HalpReleaseCmosSpinLock();
+#endif
 
         /* If profiling is enabled, call the kernel function */
         if (!HalpProfilingStopped)
@@ -212,9 +202,9 @@ HalpProfileInterruptHandler(IN PKTRAP_FRAME TrapFrame)
     /* Spurious, just end the interrupt */
     KiEoiHelper(TrapFrame);
 }
-#endif
+#endif /* !_MINIHAL_ */
 
-#endif
+#endif /* _M_IX86 */
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 

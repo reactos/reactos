@@ -4,17 +4,13 @@ if(NOT ARCH)
 endif()
 
 # Choose the right MinGW toolchain prefix
-if (NOT DEFINED MINGW_TOOLCHAIN_PREFIX)
+if(NOT DEFINED MINGW_TOOLCHAIN_PREFIX)
     if(ARCH STREQUAL "i386")
 
         if(CMAKE_HOST_WIN32)
             set(MINGW_TOOLCHAIN_PREFIX "" CACHE STRING "MinGW Toolchain Prefix")
         else()
-            if(NOT $ENV{_ROSBE_VERSION} VERSION_LESS 2.1)
-                set(MINGW_TOOLCHAIN_PREFIX "i686-w64-mingw32-" CACHE STRING "MinGW-W64 Toolchain Prefix")
-            else()
-                set(MINGW_TOOLCHAIN_PREFIX "mingw32-" CACHE STRING "MinGW Toolchain Prefix")
-            endif()
+            set(MINGW_TOOLCHAIN_PREFIX "i686-w64-mingw32-" CACHE STRING "MinGW-W64 Toolchain Prefix")
         endif()
 
     elseif(ARCH STREQUAL "amd64")
@@ -24,7 +20,7 @@ if (NOT DEFINED MINGW_TOOLCHAIN_PREFIX)
     endif()
 endif()
 
-if (NOT DEFINED MINGW_TOOLCHAIN_SUFFIX)
+if(NOT DEFINED MINGW_TOOLCHAIN_SUFFIX)
     set(MINGW_TOOLCHAIN_SUFFIX "" CACHE STRING "MinGW Toolchain Suffix")
 endif()
 

@@ -1042,8 +1042,10 @@ RealDefWindowProcW(HWND hWnd,
                if (!Wnd->pSBInfo)
                {
                   SCROLLINFO si = {sizeof si, SIF_ALL, 0, 100, 0, 0, 0};
-                  SetScrollInfo( hWnd, SB_HORZ, &si, FALSE );
-                  SetScrollInfo( hWnd, SB_VERT, &si, FALSE );
+                  if (Wnd->style & WS_HSCROLL)
+                     SetScrollInfo( hWnd, SB_HORZ, &si, FALSE );
+                  if (Wnd->style & WS_VSCROLL)
+                     SetScrollInfo( hWnd, SB_VERT, &si, FALSE );
                }
             }
 

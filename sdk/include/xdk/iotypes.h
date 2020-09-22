@@ -14,9 +14,11 @@ $if (_WDMDDK_)
 #define CONNECT_FULLY_SPECIFIED_GROUP   0x4
 #define CONNECT_CURRENT_VERSION         0x4
 
-#define POOL_COLD_ALLOCATION                256
-#define POOL_QUOTA_FAIL_INSTEAD_OF_RAISE    8
-#define POOL_RAISE_IF_ALLOCATION_FAILURE    16
+#define POOL_QUOTA_FAIL_INSTEAD_OF_RAISE    0x8
+#define POOL_RAISE_IF_ALLOCATION_FAILURE    0x10
+#define POOL_COLD_ALLOCATION                0x100
+#define POOL_NX_ALLOCATION                  0x200
+#define POOL_ZERO_ALLOCATION                0x400
 
 #define IO_TYPE_ADAPTER                 1
 #define IO_TYPE_CONTROLLER              2
@@ -244,6 +246,8 @@ $if (_WDMDDK_)
 #define FILE_CHARACTERISTIC_PNP_DEVICE    0x00000800
 #define FILE_CHARACTERISTIC_TS_DEVICE     0x00001000
 #define FILE_CHARACTERISTIC_WEBDAV_DEVICE 0x00002000
+#define FILE_PORTABLE_DEVICE              0x00004000
+#define FILE_DEVICE_ALLOW_APPCONTAINER_TRAVERSAL 0x00020000
 
 /* DEVICE_OBJECT.AlignmentRequirement */
 #define FILE_BYTE_ALIGNMENT             0x00000000
@@ -1132,7 +1136,10 @@ typedef enum _DEVICE_USAGE_NOTIFICATION_TYPE {
   DeviceUsageTypeUndefined,
   DeviceUsageTypePaging,
   DeviceUsageTypeHibernation,
-  DeviceUsageTypeDumpFile
+  DeviceUsageTypeDumpFile,
+  DeviceUsageTypeBoot,
+  DeviceUsageTypePostDisplay,
+  DeviceUsageTypeGuestAssigned,
 } DEVICE_USAGE_NOTIFICATION_TYPE;
 
 typedef struct _POWER_SEQUENCE {

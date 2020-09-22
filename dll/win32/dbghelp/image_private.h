@@ -21,65 +21,83 @@
 
 #pragma once
 
-#ifdef HAVE_ELF_H
-# include <elf.h>
-#endif
-#ifdef HAVE_SYS_ELF32_H
-# include <sys/elf32.h>
-#endif
-#ifdef HAVE_SYS_EXEC_ELF_H
-# include <sys/exec_elf.h>
-#endif
-#if !defined(DT_NUM)
-# if defined(DT_COUNT)
-#  define DT_NUM DT_COUNT
-# else
-/* this seems to be a satisfactory value on Solaris, which doesn't support this AFAICT */
-#  define DT_NUM 24
-# endif
-#endif
-#ifdef HAVE_LINK_H
-# include <link.h>
-#endif
-#ifdef HAVE_SYS_LINK_H
-# include <sys/link.h>
-#endif
-#ifdef HAVE_MACH_O_LOADER_H
-#include <mach-o/loader.h>
-
-#ifdef _WIN64
-typedef struct mach_header_64       macho_mach_header;
-typedef struct section_64           macho_section;
-#else
-typedef struct mach_header          macho_mach_header;
-typedef struct section              macho_section;
-#endif
-#endif
-
 #define IMAGE_NO_MAP  ((void*)-1)
 
-#if defined(__ELF__) && !defined(DBGHELP_STATIC_LIB)
+struct elf_header
+{
+    UINT8   e_ident[16];  /* Magic number and other info */
+    UINT16  e_type;       /* Object file type */
+    UINT16  e_machine;    /* Architecture */
+    UINT32  e_version;    /* Object file version */
+    UINT64  e_entry;      /* Entry point virtual address */
+    UINT64  e_phoff;      /* Program header table file offset */
+    UINT64  e_shoff;      /* Section header table file offset */
+    UINT32  e_flags;      /* Processor-specific flags */
+    UINT16  e_ehsize;     /* ELF header size in bytes */
+    UINT16  e_phentsize;  /* Program header table entry size */
+    UINT16  e_phnum;      /* Program header table entry count */
+    UINT16  e_shentsize;  /* Section header table entry size */
+    UINT16  e_shnum;      /* Section header table entry count */
+    UINT16  e_shstrndx;   /* Section header string table index */
+};
 
-#ifdef _WIN64
-#define         Elf_Ehdr        Elf64_Ehdr
-#define         Elf_Shdr        Elf64_Shdr
-#define         Elf_Phdr        Elf64_Phdr
-#define         Elf_Dyn         Elf64_Dyn
-#define         Elf_Sym         Elf64_Sym
-#define         Elf_auxv_t      Elf64_auxv_t
-#else
-#define         Elf_Ehdr        Elf32_Ehdr
-#define         Elf_Shdr        Elf32_Shdr
-#define         Elf_Phdr        Elf32_Phdr
-#define         Elf_Dyn         Elf32_Dyn
-#define         Elf_Sym         Elf32_Sym
-#define         Elf_auxv_t      Elf32_auxv_t
-#endif
-#else
-#ifndef SHT_NULL
-#define SHT_NULL        0
-#endif
-#endif
+struct elf_section_header
+{
+    UINT32  sh_name;       /* Section name (string tbl index) */
+    UINT32  sh_type;       /* Section type */
+    UINT64  sh_flags;      /* Section flags */
+    UINT64  sh_addr;       /* Section virtual addr at execution */
+    UINT64  sh_offset;     /* Section file offset */
+    UINT64  sh_size;       /* Section size in bytes */
+    UINT32  sh_link;       /* Link to another section */
+    UINT32  sh_info;       /* Additional section information */
+    UINT64  sh_addralign;  /* Section alignment */
+    UINT64  sh_entsize;    /* Entry size if section holds table */
+};
+
+struct macho_load_command
+{
+    UINT32  cmd;           /* type of load command */
+    UINT32  cmdsize;       /* total size of command in bytes */
+};
+
+struct macho_uuid_command
+{
+    UINT32  cmd;           /* LC_UUID */
+    UINT32  cmdsize;
+    UINT8   uuid[16];
+};
+
+struct macho_section
+{
+    char    sectname[16];  /* name of this section */
+    char    segname[16];   /* segment this section goes in */
+    UINT64  addr;          /* memory address of this section */
+    UINT64  size;          /* size in bytes of this section */
+    UINT32  offset;        /* file offset of this section */
+    UINT32  align;         /* section alignment (power of 2) */
+    UINT32  reloff;        /* file offset of relocation entries */
+    UINT32  nreloc;        /* number of relocation entries */
+    UINT32  flags;         /* flags (section type and attributes)*/
+    UINT32  reserved1;     /* reserved (for offset or index) */
+    UINT32  reserved2;     /* reserved (for count or sizeof) */
+    UINT32  reserved3;     /* reserved */
+};
+
+struct macho_section32
+{
+    char    sectname[16];  /* name of this section */
+    char    segname[16];   /* segment this section goes in */
+    UINT32  addr;          /* memory address of this section */
+    UINT32  size;          /* size in bytes of this section */
+    UINT32  offset;        /* file offset of this section */
+    UINT32  align;         /* section alignment (power of 2) */
+    UINT32  reloff;        /* file offset of relocation entries */
+    UINT32  nreloc;        /* number of relocation entries */
+    UINT32  flags;         /* flags (section type and attributes)*/
+    UINT32  reserved1;     /* reserved (for offset or index) */
+    UINT32  reserved2;     /* reserved (for count or sizeof) */
+};
 
 /* structure holding information while handling an ELF image
  * allows one by one section mapping for memory savings
@@ -87,37 +105,37 @@ typedef struct section              macho_section;
 struct image_file_map
 {
     enum module_type            modtype;
+    const struct image_file_map_ops *ops;
     unsigned                    addr_size;      /* either 16 (not used), 32 or 64 */
+    struct image_file_map*      alternate;      /* another file linked to this one */
     union
     {
         struct elf_file_map
         {
             size_t                      elf_size;
             size_t                      elf_start;
-            int                         fd;
+            HANDLE                      handle;
             const char*	                shstrtab;
-            struct image_file_map*      alternate;      /* another ELF file (linked to this one) */
             char*                       target_copy;
-#if defined(__ELF__) && !defined(DBGHELP_STATIC_LIB)
-            Elf_Ehdr                    elfhdr;
+            struct elf_header           elfhdr;
             struct
             {
-                Elf_Shdr                        shdr;
+                struct elf_section_header       shdr;
                 const char*                     mapped;
             }*                          sect;
-#endif
         } elf;
         struct macho_file_map
         {
             size_t                      segs_size;
             size_t                      segs_start;
-            int                         fd;
+            HANDLE                      handle;
             struct image_file_map*      dsym;   /* the debug symbols file associated with this one */
+            size_t                      header_size; /* size of real header in file */
+            size_t                      commands_size;
+            unsigned int                commands_count;
 
-#ifdef HAVE_MACH_O_LOADER_H
-            macho_mach_header           mach_header;
-            const struct load_command*  load_commands;
-            const struct uuid_command*  uuid;
+            const struct macho_load_command*    load_commands;
+            const struct macho_uuid_command*    uuid;
 
             /* The offset in the file which is this architecture.  mach_header was
              * read from arch_offset. */
@@ -126,16 +144,16 @@ struct image_file_map
             int                         num_sections;
             struct
             {
-                const macho_section*            section;
+                struct macho_section            section;
                 const char*                     mapped;
                 unsigned int                    ignored : 1;
             }*                          sect;
-#endif
         } macho;
         struct pe_file_map
         {
             HANDLE                      hMap;
             IMAGE_NT_HEADERS            ntheader;
+            BOOL                        builtin;
             unsigned                    full_count;
             void*                       full_map;
             struct
@@ -151,96 +169,80 @@ struct image_file_map
 struct image_section_map
 {
     struct image_file_map*      fmap;
-    long                        sidx;
+    LONG_PTR                    sidx;
 };
 
-extern BOOL         elf_find_section(struct image_file_map* fmap, const char* name,
-                                     unsigned sht, struct image_section_map* ism) DECLSPEC_HIDDEN;
-extern const char*  elf_map_section(struct image_section_map* ism) DECLSPEC_HIDDEN;
-extern void         elf_unmap_section(struct image_section_map* ism) DECLSPEC_HIDDEN;
-extern DWORD_PTR    elf_get_map_rva(const struct image_section_map* ism) DECLSPEC_HIDDEN;
-extern unsigned     elf_get_map_size(const struct image_section_map* ism) DECLSPEC_HIDDEN;
+struct stab_nlist
+{
+    unsigned            n_strx;
+    unsigned char       n_type;
+    char                n_other;
+    short               n_desc;
+    unsigned            n_value;
+};
 
-extern BOOL         macho_find_section(struct image_file_map* ifm, const char* segname,
-                                       const char* sectname, struct image_section_map* ism) DECLSPEC_HIDDEN;
-extern const char*  macho_map_section(struct image_section_map* ism) DECLSPEC_HIDDEN;
-extern void         macho_unmap_section(struct image_section_map* ism) DECLSPEC_HIDDEN;
-extern DWORD_PTR    macho_get_map_rva(const struct image_section_map* ism) DECLSPEC_HIDDEN;
-extern unsigned     macho_get_map_size(const struct image_section_map* ism) DECLSPEC_HIDDEN;
+struct macho64_nlist
+{
+    unsigned            n_strx;
+    unsigned char       n_type;
+    char                n_other;
+    short               n_desc;
+    UINT64              n_value;
+};
 
-extern BOOL         pe_find_section(struct image_file_map* fmap, const char* name,
-                                    struct image_section_map* ism) DECLSPEC_HIDDEN;
-extern const char*  pe_map_section(struct image_section_map* psm) DECLSPEC_HIDDEN;
-extern void         pe_unmap_section(struct image_section_map* psm) DECLSPEC_HIDDEN;
-extern DWORD_PTR    pe_get_map_rva(const struct image_section_map* psm) DECLSPEC_HIDDEN;
-extern unsigned     pe_get_map_size(const struct image_section_map* psm) DECLSPEC_HIDDEN;
+BOOL image_check_alternate(struct image_file_map* fmap, const struct module* module) DECLSPEC_HIDDEN;
+
+BOOL elf_map_handle(HANDLE handle, struct image_file_map* fmap) DECLSPEC_HIDDEN;
+BOOL pe_map_file(HANDLE file, struct image_file_map* fmap, enum module_type mt) DECLSPEC_HIDDEN;
+
+struct image_file_map_ops
+{
+    const char* (*map_section)(struct image_section_map* ism);
+    void  (*unmap_section)(struct image_section_map* ism);
+    BOOL (*find_section)(struct image_file_map* fmap, const char* name, struct image_section_map* ism);
+    DWORD_PTR (*get_map_rva)(const struct image_section_map* ism);
+    unsigned (*get_map_size)(const struct image_section_map* ism);
+    void (*unmap_file)(struct image_file_map *fmap);
+};
 
 static inline BOOL image_find_section(struct image_file_map* fmap, const char* name,
                                       struct image_section_map* ism)
 {
-    switch (fmap->modtype)
+    while (fmap)
     {
-#ifndef DBGHELP_STATIC_LIB
-    case DMT_ELF:   return elf_find_section(fmap, name, SHT_NULL, ism);
-    case DMT_MACHO: return macho_find_section(fmap, NULL, name, ism);
-#endif
-    case DMT_PE:    return pe_find_section(fmap, name, ism);
-    default: assert(0); return FALSE;
+        if (fmap->ops->find_section(fmap, name, ism)) return TRUE;
+        fmap = fmap->alternate;
+    }
+    ism->fmap = NULL;
+    ism->sidx = -1;
+    return FALSE;
+}
+
+static inline void image_unmap_file(struct image_file_map* fmap)
+{
+    while (fmap)
+    {
+        fmap->ops->unmap_file(fmap);
+        fmap = fmap->alternate;
     }
 }
 
 static inline const char* image_map_section(struct image_section_map* ism)
 {
-    if (!ism->fmap) return NULL;
-    switch (ism->fmap->modtype)
-    {
-#ifndef DBGHELP_STATIC_LIB
-    case DMT_ELF:   return elf_map_section(ism);
-    case DMT_MACHO: return macho_map_section(ism);
-#endif
-    case DMT_PE:    return pe_map_section(ism);
-    default: assert(0); return NULL;
-    }
+    return ism->fmap ? ism->fmap->ops->map_section(ism) : NULL;
 }
 
 static inline void image_unmap_section(struct image_section_map* ism)
 {
-    if (!ism->fmap) return;
-    switch (ism->fmap->modtype)
-    {
-#ifndef DBGHELP_STATIC_LIB
-    case DMT_ELF:   elf_unmap_section(ism); break;
-    case DMT_MACHO: macho_unmap_section(ism); break;
-#endif
-    case DMT_PE:    pe_unmap_section(ism);   break;
-    default: assert(0); return;
-    }
+    if (ism->fmap) ism->fmap->ops->unmap_section(ism);
 }
 
 static inline DWORD_PTR image_get_map_rva(const struct image_section_map* ism)
 {
-    if (!ism->fmap) return 0;
-    switch (ism->fmap->modtype)
-    {
-#ifndef DBGHELP_STATIC_LIB
-    case DMT_ELF:   return elf_get_map_rva(ism);
-    case DMT_MACHO: return macho_get_map_rva(ism);
-#endif
-    case DMT_PE:    return pe_get_map_rva(ism);
-    default: assert(0); return 0;
-    }
+    return ism->fmap ? ism->fmap->ops->get_map_rva(ism) : 0;
 }
 
 static inline unsigned image_get_map_size(const struct image_section_map* ism)
 {
-    if (!ism->fmap) return 0;
-    switch (ism->fmap->modtype)
-    {
-#ifndef DBGHELP_STATIC_LIB
-    case DMT_ELF:   return elf_get_map_size(ism);
-    case DMT_MACHO: return macho_get_map_size(ism);
-#endif
-    case DMT_PE:    return pe_get_map_size(ism);
-    default: assert(0); return 0;
-    }
+    return ism->fmap ? ism->fmap->ops->get_map_size(ism) : 0;
 }

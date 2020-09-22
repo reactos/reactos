@@ -34,13 +34,15 @@ list(APPEND SOURCE
     systemclock.c
     videorenderer.c
     vmr9.c
-    waveparser.c
-    precomp.h)
+    waveparser.c)
+
+list(APPEND PCH_SKIP_SOURCE
+    ${CMAKE_CURRENT_BINARY_DIR}/proxy.dlldata.c
+    ${CMAKE_CURRENT_BINARY_DIR}/quartz_strmif_p.c)
 
 add_library(quartz MODULE
     ${SOURCE}
-    ${CMAKE_CURRENT_BINARY_DIR}/proxy.dlldata.c
-    ${CMAKE_CURRENT_BINARY_DIR}/quartz_strmif_p.c
+    ${PCH_SKIP_SOURCE}
     ${CMAKE_CURRENT_BINARY_DIR}/quartz.def
     version.rc)
 
@@ -57,5 +59,5 @@ set_module_type(quartz win32dll)
 target_link_libraries(quartz strmbase strmiids uuid dxguid wine ${PSEH_LIB})
 add_importlibs(quartz dsound msacm32 msvfw32 ole32 oleaut32 rpcrt4 user32 gdi32 advapi32 advapi32_vista shlwapi msvcrt kernel32 ntdll)
 add_dependencies(quartz dxsdk quartz_idlheader stdole2)
-add_pch(quartz precomp.h SOURCE)
+add_pch(quartz precomp.h "${PCH_SKIP_SOURCE}")
 add_cd_file(TARGET quartz DESTINATION reactos/system32 FOR all)

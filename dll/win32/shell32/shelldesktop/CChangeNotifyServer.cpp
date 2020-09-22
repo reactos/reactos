@@ -6,10 +6,12 @@
  */
 #include "shelldesktop.h"
 #include "shlwapi_undoc.h"
-#include <atlsimpcoll.h>
-#include <assert.h>
+#include "CDirectoryWatcher.h"
+#include <assert.h>      // for assert
 
 WINE_DEFAULT_DEBUG_CHANNEL(shcn);
+
+//////////////////////////////////////////////////////////////////////////////
 
 // notification target item
 struct ITEM
@@ -18,6 +20,7 @@ struct ITEM
     DWORD dwUserPID;    // The user PID; that is the process ID of the target window.
     HANDLE hRegEntry;   // The registration entry.
     HWND hwndBroker;    // Client broker window (if any).
+    CDirectoryWatcher *pDirWatch; // for filesystem notification
 };
 
 typedef CWinTraits <
@@ -53,6 +56,7 @@ public:
     LRESULT OnDeliverNotification(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnSuspendResume(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
     LRESULT OnRemoveByPID(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
+    LRESULT OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled);
 
     DECLARE_NOT_AGGREGATABLE(CChangeNotifyServer)
 
@@ -69,13 +73,15 @@ public:
         MESSAGE_HANDLER(CN_DELIVER_NOTIFICATION, OnDeliverNotification)
         MESSAGE_HANDLER(CN_SUSPEND_RESUME, OnSuspendResume)
         MESSAGE_HANDLER(CN_UNREGISTER_PROCESS, OnRemoveByPID);
+        MESSAGE_HANDLER(WM_DESTROY, OnDestroy);
     END_MSG_MAP()
 
 private:
     UINT m_nNextRegID;
     CSimpleArray<ITEM> m_items;
 
-    BOOL AddItem(UINT nRegID, DWORD dwUserPID, HANDLE hRegEntry, HWND hwndBroker);
+    BOOL AddItem(UINT nRegID, DWORD dwUserPID, HANDLE hRegEntry, HWND hwndBroker,
+                 CDirectoryWatcher *pDirWatch);
     BOOL RemoveItemsByRegID(UINT nRegID, DWORD dwOwnerPID);
     void RemoveItemsByProcess(DWORD dwOwnerPID, DWORD dwUserPID);
     void DestroyItem(ITEM& item, DWORD dwOwnerPID, HWND *phwndBroker);
@@ -94,7 +100,8 @@ CChangeNotifyServer::~CChangeNotifyServer()
 {
 }
 
-BOOL CChangeNotifyServer::AddItem(UINT nRegID, DWORD dwUserPID, HANDLE hRegEntry, HWND hwndBroker)
+BOOL CChangeNotifyServer::AddItem(UINT nRegID, DWORD dwUserPID, HANDLE hRegEntry,
+                                  HWND hwndBroker, CDirectoryWatcher *pDirWatch)
 {
     // find the empty room
     for (INT i = 0; i < m_items.GetSize(); ++i)
@@ -106,12 +113,13 @@ BOOL CChangeNotifyServer::AddItem(UINT nRegID, DWORD dwUserPID, HANDLE hRegEntry
             m_items[i].dwUserPID = dwUserPID;
             m_items[i].hRegEntry = hRegEntry;
             m_items[i].hwndBroker = hwndBroker;
+            m_items[i].pDirWatch = pDirWatch;
             return TRUE;
         }
     }
 
     // no empty room found
-    ITEM item = { nRegID, dwUserPID, hRegEntry, hwndBroker };
+    ITEM item = { nRegID, dwUserPID, hRegEntry, hwndBroker, pDirWatch };
     m_items.Add(item);
     return TRUE;
 }
@@ -119,11 +127,19 @@ BOOL CChangeNotifyServer::AddItem(UINT nRegID, DWORD dwUserPID, HANDLE hRegEntry
 void CChangeNotifyServer::DestroyItem(ITEM& item, DWORD dwOwnerPID, HWND *phwndBroker)
 {
     // destroy broker if any and if first time
-    if (item.hwndBroker && item.hwndBroker != *phwndBroker)
+    HWND hwndBroker = item.hwndBroker;
+    item.hwndBroker = NULL;
+    if (hwndBroker && hwndBroker != *phwndBroker)
     {
-        ::DestroyWindow(item.hwndBroker);
-        *phwndBroker = item.hwndBroker;
+        ::DestroyWindow(hwndBroker);
+        *phwndBroker = hwndBroker;
     }
+
+    // request termination of pDirWatch if any
+    CDirectoryWatcher *pDirWatch = item.pDirWatch;
+    item.pDirWatch = NULL;
+    if (pDirWatch)
+        pDirWatch->RequestTermination();
 
     // free
     SHFreeShared(item.hRegEntry, dwOwnerPID);
@@ -131,6 +147,7 @@ void CChangeNotifyServer::DestroyItem(ITEM& item, DWORD dwOwnerPID, HWND *phwndB
     item.dwUserPID = 0;
     item.hRegEntry = NULL;
     item.hwndBroker = NULL;
+    item.pDirWatch = NULL;
 }
 
 BOOL CChangeNotifyServer::RemoveItemsByRegID(UINT nRegID, DWORD dwOwnerPID)
@@ -160,6 +177,27 @@ void CChangeNotifyServer::RemoveItemsByProcess(DWORD dwOwnerPID, DWORD dwUserPID
             DestroyItem(m_items[i], dwOwnerPID, &hwndBroker);
         }
     }
+}
+
+// create a CDirectoryWatcher from a REGENTRY
+static CDirectoryWatcher *
+CreateDirectoryWatcherFromRegEntry(LPREGENTRY pRegEntry)
+{
+    if (pRegEntry->ibPidl == 0)
+        return NULL;
+
+    // get the path
+    WCHAR szPath[MAX_PATH];
+    LPITEMIDLIST pidl = (LPITEMIDLIST)((LPBYTE)pRegEntry + pRegEntry->ibPidl);
+    if (!SHGetPathFromIDListW(pidl, szPath) || !PathIsDirectoryW(szPath))
+        return NULL;
+
+    // create a CDirectoryWatcher
+    CDirectoryWatcher *pDirectoryWatcher = CDirectoryWatcher::Create(szPath, pRegEntry->fRecursive);
+    if (pDirectoryWatcher == NULL)
+        return NULL;
+
+    return pDirectoryWatcher;
 }
 
 // Message CN_REGISTER: Register the registration entry.
@@ -204,11 +242,26 @@ LRESULT CChangeNotifyServer::OnRegister(UINT uMsg, WPARAM wParam, LPARAM lParam,
         return FALSE;
     }
 
+    // create a directory watch if necessary
+    CDirectoryWatcher *pDirWatch = NULL;
+    if (pRegEntry->ibPidl && (pRegEntry->fSources & SHCNRF_InterruptLevel))
+    {
+        pDirWatch = CreateDirectoryWatcherFromRegEntry(pRegEntry);
+        if (pDirWatch && !pDirWatch->RequestAddWatcher())
+        {
+            ERR("RequestAddWatcher failed: %u\n", pRegEntry->nRegID);
+            pRegEntry->nRegID = INVALID_REG_ID;
+            SHUnlockShared(pRegEntry);
+            delete pDirWatch;
+            return FALSE;
+        }
+    }
+
     // unlock the registry entry
     SHUnlockShared(pRegEntry);
 
     // add an ITEM
-    return AddItem(m_nNextRegID, dwUserPID, hNewEntry, hwndBroker);
+    return AddItem(m_nNextRegID, dwUserPID, hNewEntry, hwndBroker, pDirWatch);
 }
 
 // Message CN_UNREGISTER: Unregister registration entries.
@@ -274,6 +327,12 @@ LRESULT CChangeNotifyServer::OnRemoveByPID(UINT uMsg, WPARAM wParam, LPARAM lPar
     return 0;
 }
 
+LRESULT CChangeNotifyServer::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    CDirectoryWatcher::RequestAllWatchersTermination();
+    return 0;
+}
+
 // get next valid registration ID
 UINT CChangeNotifyServer::GetNextRegID()
 {
@@ -326,6 +385,7 @@ BOOL CChangeNotifyServer::DeliverNotification(HANDLE hTicket, DWORD dwOwnerPID)
             TRACE("Notifying: %p, 0x%x, %p, %lu\n",
                   pRegEntry->hwnd, pRegEntry->uMsg, hTicket, dwOwnerPID);
             SendMessageW(pRegEntry->hwnd, pRegEntry->uMsg, (WPARAM)hTicket, dwOwnerPID);
+            TRACE("GetLastError(): %ld\n", ::GetLastError());
         }
 
         // unlock the registration entry
@@ -340,79 +400,58 @@ BOOL CChangeNotifyServer::DeliverNotification(HANDLE hTicket, DWORD dwOwnerPID)
 
 BOOL CChangeNotifyServer::ShouldNotify(LPDELITICKET pTicket, LPREGENTRY pRegEntry)
 {
-    LPITEMIDLIST pidl, pidl1 = NULL, pidl2 = NULL;
-    WCHAR szPath[MAX_PATH], szPath1[MAX_PATH], szPath2[MAX_PATH];
-    INT cch, cch1, cch2;
+#define RETURN(x) do { \
+    TRACE("ShouldNotify return %d\n", (x)); \
+    return (x); \
+} while (0)
 
-    if (pRegEntry->ibPidl == 0)
-        return TRUE;
+    if (pTicket->wEventId & SHCNE_INTERRUPT)
+    {
+        if (!(pRegEntry->fSources & SHCNRF_InterruptLevel))
+            RETURN(FALSE);
+        if (!pRegEntry->ibPidl)
+            RETURN(FALSE);
+    }
+    else
+    {
+        if (!(pRegEntry->fSources & SHCNRF_ShellLevel))
+            RETURN(FALSE);
+    }
 
-    // get the stored pidl
-    pidl = (LPITEMIDLIST)((LPBYTE)pRegEntry + pRegEntry->ibPidl);
-    if (pidl->mkid.cb == 0 && pRegEntry->fRecursive)
-        return TRUE;    // desktop is the root
+    if (!(pTicket->wEventId & pRegEntry->fEvents))
+        RETURN(FALSE);
 
-    // check pidl1
+    LPITEMIDLIST pidl = NULL, pidl1 = NULL, pidl2 = NULL;
+    if (pRegEntry->ibPidl)
+        pidl = (LPITEMIDLIST)((LPBYTE)pRegEntry + pRegEntry->ibPidl);
     if (pTicket->ibOffset1)
-    {
         pidl1 = (LPITEMIDLIST)((LPBYTE)pTicket + pTicket->ibOffset1);
-        if (ILIsEqual(pidl, pidl1) || ILIsParent(pidl, pidl1, !pRegEntry->fRecursive))
-            return TRUE;
-    }
-
-    // check pidl2
     if (pTicket->ibOffset2)
-    {
         pidl2 = (LPITEMIDLIST)((LPBYTE)pTicket + pTicket->ibOffset2);
-        if (ILIsEqual(pidl, pidl2) || ILIsParent(pidl, pidl2, !pRegEntry->fRecursive))
-            return TRUE;
-    }
 
-    // The paths:
-    //   "C:\\Path\\To\\File1"
-    //   "C:\\Path\\To\\File1Test"
-    // should be distinguished in comparison, so we add backslash at last as follows:
-    //   "C:\\Path\\To\\File1\\"
-    //   "C:\\Path\\To\\File1Test\\"
-    if (SHGetPathFromIDListW(pidl, szPath))
+    if (pidl == NULL || (pTicket->wEventId & SHCNE_GLOBALEVENTS))
+        RETURN(TRUE);
+
+    if (pRegEntry->fRecursive)
     {
-        PathAddBackslashW(szPath);
-        cch = lstrlenW(szPath);
-
-        if (pidl1 && SHGetPathFromIDListW(pidl1, szPath1))
+        if (ILIsParent(pidl, pidl1, FALSE) ||
+            (pidl2 && ILIsParent(pidl, pidl2, FALSE)))
         {
-            PathAddBackslashW(szPath1);
-            cch1 = lstrlenW(szPath1);
-
-            // Is szPath1 a subfile or subdirectory of szPath?
-            if (cch < cch1 &&
-                (pRegEntry->fRecursive ||
-                 wcschr(&szPath1[cch], L'\\') == &szPath1[cch1 - 1]))
-            {
-                szPath1[cch] = 0;
-                if (lstrcmpiW(szPath, szPath1) == 0)
-                    return TRUE;
-            }
+            RETURN(TRUE);
         }
-
-        if (pidl2 && SHGetPathFromIDListW(pidl2, szPath2))
+    }
+    else
+    {
+        if (ILIsEqual(pidl, pidl1) ||
+            ILIsParent(pidl, pidl1, TRUE) ||
+            (pidl2 && ILIsParent(pidl, pidl2, TRUE)))
         {
-            PathAddBackslashW(szPath2);
-            cch2 = lstrlenW(szPath2);
-
-            // Is szPath2 a subfile or subdirectory of szPath?
-            if (cch < cch2 &&
-                (pRegEntry->fRecursive ||
-                 wcschr(&szPath2[cch], L'\\') == &szPath2[cch2 - 1]))
-            {
-                szPath2[cch] = 0;
-                if (lstrcmpiW(szPath, szPath2) == 0)
-                    return TRUE;
-            }
+            RETURN(TRUE);
         }
     }
 
-    return FALSE;
+    RETURN(FALSE);
+#undef RETURN
 }
 
 HRESULT WINAPI CChangeNotifyServer::GetWindow(HWND* phwnd)

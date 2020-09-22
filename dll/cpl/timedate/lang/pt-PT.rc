@@ -1,0 +1,59 @@
+LANGUAGE LANG_PORTUGUESE, SUBLANG_NEUTRAL
+
+IDD_DATETIMEPAGE DIALOGEX 0, 0, 252, 146
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Data e hora"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    GROUPBOX "&Data", -1, 4, 2, 122, 125
+    COMBOBOX IDC_MONTHCB, 11, 17, 50, 120, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    EDITTEXT IDC_YEARTEXT, 65, 17, 55, 12, ES_LEFT | WS_GROUP | ES_READONLY
+    CONTROL "", IDC_YEAR, UPDOWN_CLASS, UDS_SETBUDDYINT | UDS_NOTHOUSANDS |
+            UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_BORDER | WS_GROUP, 120, 17, 50, 12
+    CONTROL "", IDC_MONTHCALENDAR, "MonthCalWnd", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 11, 37, 108, 80, WS_EX_CLIENTEDGE
+    GROUPBOX "&Hora", -1, 132, 2, 113, 125
+    CONTROL "", IDC_TIMEPICKER, "SysDateTimePick32", DTS_TIMEFORMAT | WS_CHILD | WS_VISIBLE | WS_TABSTOP, 144, 105, 90, 12
+    LTEXT "", IDC_TIMEZONE, 6, 132, 242, 11
+    CONTROL "", IDC_CLOCKWND, "ClockWndClass", WS_CHILD | WS_VISIBLE, 138, 12, 102, 89
+END
+
+IDD_TIMEZONEPAGE DIALOGEX 0, 0, 252, 146
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Fuso horário"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    COMBOBOX IDC_TIMEZONELIST, 5, 4, 241, 136, CBS_DROPDOWNLIST | WS_VSCROLL | WS_VISIBLE | WS_TABSTOP
+    CONTROL "", IDC_WORLD_BACKGROUND, "Static", SS_OWNERDRAW, 5, 20, 240, 110, WS_EX_STATICEDGE
+    AUTOCHECKBOX "Ajustar automáticamente o relógio para o &horário de verão",
+                 IDC_AUTODAYLIGHT, 6, 132, 242, 11, WS_VISIBLE | WS_GROUP | WS_TABSTOP
+END
+
+IDD_INETTIMEPAGE DIALOGEX 0, 0, 252, 146
+STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
+CAPTION "Horário na Internet"
+FONT 8, "MS Shell Dlg", 0, 0, 0x0
+BEGIN
+    COMBOBOX IDC_SERVERLIST, 65, 22, 117, 136, CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
+    AUTOCHECKBOX "&Sincronizar automáticamente com um servidor de horário na Internet",
+                 IDC_AUTOSYNC, 11, 7, 241, 10, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
+    LTEXT "Servidor:", IDC_SERVERTEXT, 34, 22, 28, 13
+    PUSHBUTTON "Ac&tualizar agora", IDC_UPDATEBUTTON, 187, 22, 56, 14
+    LTEXT "", IDC_SUCSYNC, 12, 54, 214, 23
+    LTEXT "", IDC_NEXTSYNC, 12, 96, 137, 12
+    LTEXT "A sincronização só pode ocorrer quando o computador está ligado à Internet.", -1, 12, 114, 225, 25
+END
+
+STRINGTABLE
+BEGIN
+    IDS_CPLNAME "Data e hora"
+    IDS_CPLDESCRIPTION "Define a data, a hora e o fuso horário para o computador"
+    IDS_TIMEZONETEXT "Fuso horário actual: %s"
+    IDS_TIMEZONEINVALID "Inválido"
+    IDS_TIMEZONEUNKNOWN "Desconhecido"
+    IDS_INETTIMESUCSYNC "A hora foi sincronizada com sucesso com %s em %s às %s"
+    IDS_INETTIMENEXTSYNC "Próxima sincronização: %s às %s"
+    IDS_INETTIMESYNCING "Aguarde enquanto o ReactOS é sincronizado com %s"
+    IDS_INETTIMEERROR "Erro enquanto o ReactOS estava a sincronizar com %s"
+    IDS_INETTIMESUCFILL "Por favor digite um nome de servidor NTP para sincronizar o horário"
+    IDS_INETTIMEWELCOME "Seleccione um servidor NTP na lista ou digite o nome do servidor NTP para sincronizar a hora do computador."
+END

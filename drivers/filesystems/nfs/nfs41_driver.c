@@ -4546,6 +4546,10 @@ NTSTATUS nfs41_QueryVolumeInformation(
     status = check_nfs41_dirquery_args(RxContext);
     if (status) goto out;
 
+#ifdef __REACTOS__
+    RtlZeroMemory(RxContext->Info.Buffer, RxContext->Info.LengthRemaining);
+#endif // __REACTOS__
+
     switch (InfoClass) {
     case FileFsVolumeInformation:
         if ((ULONG)RxContext->Info.LengthRemaining >= DevExt->VolAttrsLen) {

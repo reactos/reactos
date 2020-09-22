@@ -697,7 +697,6 @@ typedef NTSTATUS
 //
 // RTL Range List callbacks
 //
-#ifdef NTOS_MODE_USER
 typedef BOOLEAN
 (NTAPI *PRTL_CONFLICT_RANGE_CALLBACK)(
     PVOID Context,
@@ -707,6 +706,7 @@ typedef BOOLEAN
 //
 // Custom Heap Commit Routine for RtlCreateHeap
 //
+#ifdef NTOS_MODE_USER
 typedef NTSTATUS
 (NTAPI * PRTL_HEAP_COMMIT_ROUTINE)(
     _In_ PVOID Base,
@@ -1159,7 +1159,7 @@ typedef struct _RTL_PROCESS_BACKTRACE_INFORMATION
     ULONG TraceCount;
     USHORT Index;
     USHORT Depth;
-    PVOID BackTrace[16];
+    PVOID BackTrace[32];
 } RTL_PROCESS_BACKTRACE_INFORMATION, *PRTL_PROCESS_BACKTRACE_INFORMATION;
 
 typedef struct _RTL_PROCESS_BACKTRACES
@@ -1205,7 +1205,7 @@ typedef struct _RTL_DEBUG_INFORMATION
     PRTL_PROCESS_LOCKS Locks;
     HANDLE SpecificHeap;
     HANDLE TargetProcessHandle;
-    RTL_PROCESS_VERIFIER_OPTIONS VerifierOptions;
+    PRTL_PROCESS_VERIFIER_OPTIONS VerifierOptions;
     HANDLE ProcessHeap;
     HANDLE CriticalSectionHandle;
     HANDLE CriticalSectionOwnerThread;
@@ -1226,7 +1226,7 @@ typedef struct _RTL_FLS_DATA
 //
 // Unload Event Trace Structure for RtlGetUnloadEventTrace
 //
-#define RTL_UNLOAD_EVENT_TRACE_NUMBER 64
+#define RTL_UNLOAD_EVENT_TRACE_NUMBER 16
 
 typedef struct _RTL_UNLOAD_EVENT_TRACE
 {
@@ -1479,6 +1479,29 @@ typedef struct _RANGE_LIST_ITERATOR
     PVOID Current;
     ULONG Stamp;
 } RTL_RANGE_LIST_ITERATOR, *PRTL_RANGE_LIST_ITERATOR;
+
+typedef struct _RTLP_RANGE_LIST_ENTRY
+{
+    ULONGLONG Start;
+    ULONGLONG End;
+    union
+    {
+        struct
+        {
+            PVOID UserData;
+            PVOID Owner;
+        } Allocated;
+        struct
+        {
+            LIST_ENTRY ListHead;
+        } Merged;
+    };
+    UCHAR Attributes;
+    UCHAR PublicFlags;
+    USHORT PrivateFlags;
+    LIST_ENTRY ListEntry;
+} RTLP_RANGE_LIST_ENTRY, *PRTLP_RANGE_LIST_ENTRY;
+C_ASSERT(RTL_SIZEOF_THROUGH_FIELD(RTL_RANGE, Flags) == RTL_SIZEOF_THROUGH_FIELD(RTLP_RANGE_LIST_ENTRY, PublicFlags));
 
 //
 // RTL Resource
@@ -1736,10 +1759,47 @@ typedef struct _RTL_STACK_TRACE_ENTRY
     PVOID BackTrace[32];
 } RTL_STACK_TRACE_ENTRY, *PRTL_STACK_TRACE_ENTRY;
 
+
 typedef struct _STACK_TRACE_DATABASE
 {
-    RTL_CRITICAL_SECTION CriticalSection;
+    union
+    {
+        PVOID Lock;
+
+        /* Padding for ERESOURCE */
+#if defined(_M_AMD64)
+        UCHAR Padding[0x68];
+#else
+        UCHAR Padding[56];
+#endif
+    } Lock;
+
+    BOOLEAN DumpInProgress;
+
+    PVOID CommitBase;
+    PVOID CurrentLowerCommitLimit;
+    PVOID CurrentUpperCommitLimit;
+
+    PCHAR NextFreeLowerMemory;
+    PCHAR NextFreeUpperMemory;
+
+    ULONG NumberOfEntriesAdded;
+    ULONG NumberOfAllocationFailures;
+    PRTL_STACK_TRACE_ENTRY* EntryIndexArray;
+
+    ULONG NumberOfBuckets;
+    PRTL_STACK_TRACE_ENTRY Buckets[ANYSIZE_ARRAY];
 } STACK_TRACE_DATABASE, *PSTACK_TRACE_DATABASE;
+
+// Validate that our padding is big enough:
+#ifndef NTOS_MODE_USER
+#if defined(_M_AMD64)
+C_ASSERT(sizeof(ERESOURCE) <= 0x68);
+#else
+C_ASSERT(sizeof(ERESOURCE) <= 56);
+#endif
+#endif
+
 
 //
 // Trace Database

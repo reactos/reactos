@@ -312,7 +312,9 @@ This function edits and displays an error message and then jumps back to the
 error exit point in main().
 -----------------------------------------------------------------------------*/
 
-static void error_exit(const char* fmt, ...)
+static
+DECLSPEC_NORETURN
+void error_exit(const char* fmt, ...)
 {
     va_list arg;
 

@@ -4,7 +4,8 @@
 
 static BOOLEAN
 NTAPI
-VgaInterpretCmdStream(IN PUSHORT CmdStream)
+VgaInterpretCmdStream(
+    _In_ PUSHORT CmdStream)
 {
     USHORT Cmd;
     UCHAR Major, Minor;
@@ -358,7 +359,8 @@ VgaIsPresent(VOID)
  */
 BOOLEAN
 NTAPI
-VidInitialize(IN BOOLEAN SetMode)
+VidInitialize(
+    _In_ BOOLEAN SetMode)
 {
     ULONG_PTR Context = 0;
     PHYSICAL_ADDRESS TranslatedAddress;
@@ -464,7 +466,8 @@ VidInitialize(IN BOOLEAN SetMode)
  */
 VOID
 NTAPI
-VidResetDisplay(IN BOOLEAN HalReset)
+VidResetDisplay(
+    _In_ BOOLEAN HalReset)
 {
     /* Clear the current position */
     VidpCurrentX = 0;
@@ -485,5 +488,5 @@ VidResetDisplay(IN BOOLEAN HalReset)
 
     /* Re-initialize the palette and fill the screen black */
     InitializePalette();
-    VidSolidColorFill(0, 0, SCREEN_WIDTH - 1, SCREEN_HEIGHT - 1, 0);
+    VidSolidColorFill(0, 0, SCREEN_WIDTH - 1, SCREEN_HEIGHT - 1, BV_COLOR_BLACK);
 }

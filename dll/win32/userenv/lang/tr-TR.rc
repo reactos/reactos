@@ -1,4 +1,4 @@
-/* TRANSLATOR: 2014 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net) */
+/* TRANSLATOR: 2014, 2020 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net) */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
@@ -6,22 +6,22 @@ LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 STRINGTABLE
 BEGIN
     IDS_PROFILEPATH "%SystemDrive%\\Belgeler ve Ayarlar"
-    IDS_APPDATA "Uygulama Verisi"
+    IDS_APPDATA "Uygulama Verileri"
     IDS_DESKTOP "Masaüstü"
     IDS_FAVORITES "Yer İmleri"
     IDS_MYDOCUMENTS "Belgelerim"
-    IDS_NETHOOD "Sunucular"
+    IDS_NETHOOD "Ağ Komşuları"
     IDS_PRINTHOOD "Yazıcılar"
     IDS_RECENT "En Son"
     IDS_SENDTO "Gönder"
-    IDS_TEMPLATES "Kalıplar"
-    IDS_STARTMENU "Başlat Seçkesi"
-    IDS_PROGRAMS "Başlat Seçkesi\\İzlenceler"
-    IDS_STARTUP "Başlat Seçkesi\\İzlenceler\\Başlangıç"
-    IDS_LOCALSETTINGS "Yerli Ayarlar"
-    IDS_LOCALAPPDATA "Yerli Ayarlar\\Uygulama Verisi"
-    IDS_TEMP "Yerli Ayarlar\\Geçici" /* See also TEMP_DIR in boot/bootdata/hivedef.inf */
-    IDS_CACHE "Yerli Ayarlar\\Geçici Umûmî Ağ Kütükleri"
-    IDS_HISTORY "Yerli Ayarlar\\Geçmiş"
+    IDS_TEMPLATES "Şablonlar"
+    IDS_STARTMENU "Başlat Menüsü"
+    IDS_PROGRAMS "Başlat Menüsü\\Programlar"
+    IDS_STARTUP "Başlat Menüsü\\Programlar\\Başlangıç"
+    IDS_LOCALSETTINGS "Yerel Ayarlar"
+    IDS_LOCALAPPDATA "Yerel Ayarlar\\Uygulama Verileri"
+    IDS_TEMP "Yerel Ayarlar\\Geçici" /* See also TEMP_DIR in boot/bootdata/hivedef.inf */
+    IDS_CACHE "Yerel Ayarlar\\Geçici İnternet Dosyaları"
+    IDS_HISTORY "Yerel Ayarlar\\Geçmiş"
     IDS_COOKIES "Tanımlama Bilgileri"
 END

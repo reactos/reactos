@@ -12,6 +12,7 @@
 #include <windef.h>
 #include <ws2spi.h>
 #include <nspapi.h>
+#include <svc.h>
 
 typedef DWORD (* LPFN_NSPAPI)(VOID);
 typedef struct _NS_ROUTINE {
@@ -441,14 +442,14 @@ StopWsdpService()
 
 /*
  * @unimplemented
+ * 
+ * See https://www.geoffchappell.com/studies/windows/win32/services/svchost/dll/svchostpushserviceglobals.htm
  */
-DWORD
+VOID
 WINAPI
-SvchostPushServiceGlobals(DWORD Value)
+SvchostPushServiceGlobals(SVCHOST_GLOBALS *lpGlobals)
 {
   OutputDebugStringW(L"mswsock SvchostPushServiceGlobals stub called\n");
-
-  return 0;
 }
 
 

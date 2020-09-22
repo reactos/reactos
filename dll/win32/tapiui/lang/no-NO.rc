@@ -225,7 +225,7 @@ BEGIN
     AUTORADIOBUTTON "Vent etter en viss &tid:", 1048, 7, 63, 238, 10, NOT WS_TABSTOP
     EDITTEXT 1050, 18, 77, 36, 14, ES_AUTOHSCROLL | WS_GROUP
     CONTROL "Spin1", 1049, "msctls_updown32", 0x00000036, 42, 78, 11, 14
-    LTEXT "&sekunder", -1, 58, 81, 187, 8
+    LTEXT "&sekunder", -1, 58, 79, 187, 8
     DEFPUSHBUTTON "OK", 1, 141, 103, 50, 14
     PUSHBUTTON "Avbryt", 2, 195, 103, 50, 14
 END
@@ -250,7 +250,7 @@ CAPTION "Avansert"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON 201, 2000, 7, 7, 20, 20
-    LTEXT "Følgende telefoni produsenter er installert på denne datamaskinen:", -1, 40, 7, 205, 8
+    LTEXT "Følgende telefoni produsenter er installert på denne datamaskinen:", -1, 40, 7, 205, 16
     LTEXT "&Produsenter:", -1, 7, 35, 238, 8
     LISTBOX 1033, 7, 46, 238, 147, LBS_STANDARD | LBS_NOINTEGRALHEIGHT | WS_TABSTOP
     PUSHBUTTON "L&egg til...", 1005, 87, 197, 50, 14
@@ -258,16 +258,16 @@ BEGIN
     PUSHBUTTON "&Konfigurer...", 1031, 195, 197, 50, 14
 END
 
-114 DIALOGEX 20, 15, 252, 127
+114 DIALOGEX 20, 15, 252, 135
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
 CAPTION "Legg til produsenter"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Velg produsenter som du ønsker å installere fra listen under, og trykk på Legg til.", 2000, 7, 7, 241, 8
-    LTEXT "&Telefoni produsenter:", -1, 7, 23, 144, 10
-    LISTBOX 1055, 7, 34, 238, 74, LBS_STANDARD | WS_TABSTOP
-    PUSHBUTTON "&Legg til", 1005, 141, 106, 50, 14
-    DEFPUSHBUTTON "Avbryt", 2, 195, 106, 50, 14
+    LTEXT "Velg produsenter som du ønsker å installere fra listen under, og trykk på Legg til.", 2000, 7, 7, 241, 16
+    LTEXT "&Telefoni produsenter:", -1, 7, 31, 144, 10
+    LISTBOX 1055, 7, 42, 238, 74, LBS_STANDARD | WS_TABSTOP
+    PUSHBUTTON "&Legg til", 1005, 141, 114, 50, 14
+    DEFPUSHBUTTON "Avbryt", 2, 195, 114, 50, 14
 END
 
 115 DIALOGEX 10, 10, 303, 228

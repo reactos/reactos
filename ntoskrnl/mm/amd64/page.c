@@ -626,8 +626,11 @@ MmCreateProcessAddressSpace(IN ULONG MinWs,
     /* Release PFN lock */
     MiReleasePfnLock(OldIrql);
 
-    /* Zero pages */ /// FIXME:
+    /* Zero pages */
+    MiZeroPhysicalPage(TableBasePfn);
     MiZeroPhysicalPage(HyperPfn);
+    MiZeroPhysicalPage(HyperPdPfn);
+    MiZeroPhysicalPage(HyperPtPfn);
     MiZeroPhysicalPage(WorkingSetPfn);
 
     /* Set the base directory pointers */
@@ -710,6 +713,8 @@ MmCreateProcessAddressSpace(IN ULONG MinWs,
     ASSERT(Process->AddressSpaceInitialized == 0);
     Process->AddressSpaceInitialized = 1;
 
+    /* Add the process to the session */
+    MiSessionAddProcess(Process);
     return TRUE;
 }
 

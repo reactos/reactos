@@ -383,6 +383,12 @@ static void DoTestEntry(const TEST_ENTRY *pEntry)
 
 START_TEST(DragDrop)
 {
+    if (!winetest_interactive)
+    {
+        skip("Skipping the test due to crash. CORE-17057\n");
+        return;
+    }
+
     HRESULT hr = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED);
     ok_int(SUCCEEDED(hr), TRUE);
 

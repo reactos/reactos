@@ -232,7 +232,7 @@ cmdUse(
 
         Status = WNetUseConnection(NULL, &lpNet, NULL, NULL, CONNECT_REDIRECT | (Persist ? CONNECT_UPDATE_PROFILE : 0), Access, &Size, &OutFlags);
         if (argv[2][0] == L'*' && Status == NO_ERROR && OutFlags == CONNECT_LOCALDRIVE)
-            ConResPrintf(StdOut, IDS_USE_NOW_CONNECTED, argv[3], Access);
+            PrintMessageStringV(3919, argv[3], Access);
         else if (Status != NO_ERROR)
             PrintError(Status);
 

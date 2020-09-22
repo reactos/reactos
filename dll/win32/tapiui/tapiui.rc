@@ -28,6 +28,9 @@ IDB_WIZARD BITMAP "res/302.bmp"
 #ifdef LANGUAGE_EN_US
     #include "lang/en-US.rc"
 #endif
+#ifdef LANGUAGE_ES_ES
+    #include "lang/es-ES.rc"
+#endif
 #ifdef LANGUAGE_HE_IL
     #include "lang/he-IL.rc"
 #endif

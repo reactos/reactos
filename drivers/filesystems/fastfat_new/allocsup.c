@@ -2727,11 +2727,7 @@ Return Value:
                     // Map the MDL.
                     //
 
-#ifndef __REACTOS__
                     Buffer = MmGetSystemAddressForMdlSafe(Mdl, HighPagePriority|MdlMappingNoExecute);
-#else
-                    Buffer = MmGetSystemAddressForMdlSafe(Mdl, HighPagePriority);
-#endif
                     if (!Buffer) {
                         NT_ASSERT( FALSE );
                         ZeroingStatus = STATUS_INSUFFICIENT_RESOURCES;

@@ -37,9 +37,10 @@
 @ stdcall _endthread() msvcrt._endthread
 @ stdcall _endthreadex() msvcrt._endthreadex
 @ stdcall _errno() msvcrt._errno
-@ stub _execute_onexit_table
+@ stub -version=0xA00+ _execute_onexit_table
 @ stdcall _exit() msvcrt._exit
-@ stdcall _fpieee_flt() msvcrt._fpieee_flt
+@ stdcall -arch=i386 _fpieee_flt() msvcrt._fpieee_flt
+@ stdcall -stub -arch=x86_64 _fpieee_flt() # ucrtbase._fpieee_flt (msvcrt x64 doesn't have this!)
 @ stdcall _fpreset() msvcrt._fpreset
 @ stub _get_doserrno
 @ stub _get_errno
@@ -55,7 +56,7 @@
 @ stdcall _getdllprocaddr() msvcrt._getdllprocaddr
 @ stdcall _getpid() msvcrt._getpid
 @ stub _initialize_narrow_environment
-@ stub _initialize_onexit_table
+@ stub -version=0xA00+ _initialize_onexit_table
 @ stub _initialize_wide_environment
 @ stdcall _initterm() msvcrt._initterm
 @ stub _initterm_e
@@ -63,11 +64,11 @@
 @ stub _invalid_parameter_noinfo_noreturn
 @ stub _invoke_watson
 @ stub _query_app_type
-@ stub _register_onexit_function
+@ stub -version=0xA00+ _register_onexit_function
 @ stub _register_thread_local_exe_atexit_callback
 @ stdcall _resetstkoflw() msvcrt._resetstkoflw
-@ cdecl _seh_filter_dll(long ptr) msvcrt.__CppXcptFilter
-@ cdecl _seh_filter_exe(long ptr) msvcrt._XcptFilter
+@ cdecl -version=0xA00+ _seh_filter_dll() msvcrt.__CppXcptFilter
+@ cdecl -version=0xA00+ _seh_filter_exe() msvcrt._XcptFilter
 @ stub _set_abort_behavior
 @ stub _set_app_type
 @ stub _set_controlfp

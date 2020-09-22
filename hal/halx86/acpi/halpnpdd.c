@@ -99,8 +99,8 @@ HalpReportDetectedDevices(IN PDRIVER_OBJECT DriverObject,
         DPRINT1("You have an ACPI Watchdog. That's great! You should be proud ;-)\n");
     }
 
-    /* This will synchronously load the ACPI driver (needed because we're critical for boot) */
-    IoSynchronousInvalidateDeviceRelations(FdoExtension->PhysicalDeviceObject, BusRelations);
+    /* This will load the ACPI driver (IO initialization will wait for this operation to finish) */
+    IoInvalidateDeviceRelations(FdoExtension->PhysicalDeviceObject, BusRelations);
 }
 
 NTSTATUS
@@ -862,14 +862,15 @@ HalpDriverEntry(IN PDRIVER_OBJECT DriverObject,
     DriverObject->MajorFunction[IRP_MJ_POWER] = HalpDispatchPower;
     DriverObject->MajorFunction[IRP_MJ_SYSTEM_CONTROL] = HalpDispatchWmi;
 
-    /* Create the PDO */
-    Status = IoCreateDevice(DriverObject,
-                            0,
-                            NULL,
-                            FILE_DEVICE_CONTROLLER,
-                            0,
-                            FALSE,
-                            &TargetDevice);
+    /* Create the PDO and tell the PnP manager about us*/
+    Status = IoReportDetectedDevice(DriverObject,
+                                    InterfaceTypeUndefined,
+                                    -1,
+                                    -1,
+                                    NULL,
+                                    NULL,
+                                    FALSE,
+                                    &TargetDevice);
     if (!NT_SUCCESS(Status))
         return Status;
 
@@ -882,16 +883,6 @@ HalpDriverEntry(IN PDRIVER_OBJECT DriverObject,
         IoDeleteDevice(TargetDevice);
         return Status;
     }
-
-    /* Tell the PnP manager about us */
-    Status = IoReportDetectedDevice(DriverObject,
-                                    InterfaceTypeUndefined,
-                                    -1,
-                                    -1,
-                                    NULL,
-                                    NULL,
-                                    FALSE,
-                                    &TargetDevice);
 
     /* Return to kernel */
     return Status;

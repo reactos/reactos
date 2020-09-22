@@ -114,7 +114,7 @@ real* init_layer12_table_mmx(mpg123_handle *fr, real *table, int m)
 
 #ifndef NO_LAYER2
 
-static void II_step_one(unsigned int *bit_alloc,int *scale,mpg123_handle *fr)
+static int II_step_one(unsigned int *bit_alloc,int *scale,mpg123_handle *fr)
 {
 	int stereo = fr->stereo-1;
 	int sblimit = fr->II_sblimit;
@@ -125,6 +125,9 @@ static void II_step_one(unsigned int *bit_alloc,int *scale,mpg123_handle *fr)
 	unsigned int scfsi_buf[64];
 	unsigned int *scfsi,*bita;
 	int sc,step;
+	/* Count the bits needed for getbits_fast(). */
+	unsigned int needbits = 0;
+	unsigned int scale_bits[4] = { 18, 12, 6, 12 };
 
 	bita = bit_alloc;
 	if(stereo)
@@ -132,19 +135,28 @@ static void II_step_one(unsigned int *bit_alloc,int *scale,mpg123_handle *fr)
 		for(i=jsbound;i;i--,alloc1+=(1<<step))
 		{
 			step=alloc1->bits;
-			*bita++ = (char) getbits(fr, step);
-			*bita++ = (char) getbits(fr, step);
+			bita[0] = (char) getbits(fr, step);
+			bita[1] = (char) getbits(fr, step);
+			needbits += ((bita[0]?1:0)+(bita[1]?1:0))*2;
+			bita+=2;
 		}
 		for(i=sblimit-jsbound;i;i--,alloc1+=(1<<step))
 		{
 			step=alloc1->bits;
 			bita[0] = (char) getbits(fr, step);
 			bita[1] = bita[0];
+			needbits += (bita[0]?1:0)*2*2;
 			bita+=2;
 		}
 		bita = bit_alloc;
 		scfsi=scfsi_buf;
 
+		if(fr->bits_avail < needbits)
+		{
+			if(NOQUIET)
+				error2("need %u bits, have %li", needbits, fr->bits_avail);
+			return -1;
+		}
 		for(i=sblimit2;i;i--)
 		if(*bita++) *scfsi++ = (char) getbits_fast(fr, 2);
 	}
@@ -153,17 +165,39 @@ static void II_step_one(unsigned int *bit_alloc,int *scale,mpg123_handle *fr)
 		for(i=sblimit;i;i--,alloc1+=(1<<step))
 		{
 			step=alloc1->bits;
-			*bita++ = (char) getbits(fr, step);
+			*bita = (char) getbits(fr, step);
+			if(*bita)
+				needbits += 2;
+			++bita;
 		}
 		bita = bit_alloc;
 		scfsi=scfsi_buf;
+		if(fr->bits_avail < needbits)
+		{
+			if(NOQUIET)
+				error2("need %u bits, have %li", needbits, fr->bits_avail);
+			return -1;
+		}
 		for(i=sblimit;i;i--)
 		if(*bita++) *scfsi++ = (char) getbits_fast(fr, 2);
 	}
 
+	needbits = 0;
 	bita = bit_alloc;
 	scfsi=scfsi_buf;
-	for(i=sblimit2;i;i--)
+	for(i=sblimit2;i;--i)
+		if(*bita++)
+			needbits += scale_bits[*scfsi++];
+	if(fr->bits_avail < needbits)
+	{
+		if(NOQUIET)
+			error2("need %u bits, have %li", needbits, fr->bits_avail);
+		return -1;
+	}
+
+	bita = bit_alloc;
+	scfsi=scfsi_buf;
+	for(i=sblimit2;i;--i)
 	if(*bita++)
 	switch(*scfsi++)
 	{
@@ -188,6 +222,8 @@ static void II_step_one(unsigned int *bit_alloc,int *scale,mpg123_handle *fr)
 			*scale++ = sc;
 		break;
 	}
+
+	return 0;
 }
 
 
@@ -230,6 +266,8 @@ static void II_step_two(unsigned int *bit_alloc,real fraction[2][4][SBLIMIT],int
 			}
 			else
 			fraction[j][0][i] = fraction[j][1][i] = fraction[j][2][i] = DOUBLE_TO_REAL(0.0);
+			if(fr->bits_avail < 0)
+				return; /* Caller checks that again. */
 		}
 	}
 
@@ -267,6 +305,8 @@ static void II_step_two(unsigned int *bit_alloc,real fraction[2][4][SBLIMIT],int
 				fraction[0][2][i] = REAL_SCALE_LAYER12(fr->muls[*tab][m1]); fraction[1][2][i] = REAL_SCALE_LAYER12(fr->muls[*tab][m2]);
 			}
 			scale+=6;
+			if(fr->bits_avail < 0)
+				return; /* Caller checks that again. */
 		}
 		else
 		{
@@ -351,11 +391,22 @@ int do_layer2(mpg123_handle *fr)
 	if(stereo == 1 || single == SINGLE_MIX) /* also, mix not really handled */
 	single = SINGLE_LEFT;
 
-	II_step_one(bit_alloc, scale, fr);
+	if(II_step_one(bit_alloc, scale, fr))
+	{
+		if(NOQUIET)
+			error("first step of layer I decoding failed");
+		return clip;
+	}
 
 	for(i=0;i<SCALE_BLOCK;i++)
 	{
 		II_step_two(bit_alloc,fraction,scale,fr,i>>2);
+		if(fr->bits_avail < 0)
+		{
+			if(NOQUIET)
+				error("missing bits in layer II step two");
+			return clip;
+		}
 		for(j=0;j<3;j++) 
 		{
 			if(single != SINGLE_STEREO)

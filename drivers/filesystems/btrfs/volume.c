@@ -487,7 +487,7 @@ static NTSTATUS vol_get_disk_extents(volume_device_extension* vde, PIRP Irp) {
 
         Status = dev_ioctl(vc->devobj, IOCTL_VOLUME_GET_VOLUME_DISK_EXTENTS, NULL, 0, &ext2, sizeof(VOLUME_DISK_EXTENTS), false, NULL);
         if (!NT_SUCCESS(Status) && Status != STATUS_BUFFER_OVERFLOW) {
-            ERR("IOCTL_VOLUME_GET_VOLUME_DISK_EXTENTS returned %08x\n", Status);
+            ERR("IOCTL_VOLUME_GET_VOLUME_DISK_EXTENTS returned %08lx\n", Status);
             goto end;
         }
 
@@ -525,7 +525,7 @@ static NTSTATUS vol_get_disk_extents(volume_device_extension* vde, PIRP Irp) {
         Status = dev_ioctl(vc->devobj, IOCTL_VOLUME_GET_VOLUME_DISK_EXTENTS, NULL, 0, ext3,
                            (ULONG)offsetof(VOLUME_DISK_EXTENTS, Extents[0]) + (max_extents * sizeof(DISK_EXTENT)), false, NULL);
         if (!NT_SUCCESS(Status)) {
-            ERR("IOCTL_VOLUME_GET_VOLUME_DISK_EXTENTS returned %08x\n", Status);
+            ERR("IOCTL_VOLUME_GET_VOLUME_DISK_EXTENTS returned %08lx\n", Status);
             ExFreePool(ext3);
             goto end;
         }
@@ -876,8 +876,21 @@ NTSTATUS vol_device_control(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp) {
         case IOCTL_VOLUME_GET_VOLUME_DISK_EXTENTS:
             return vol_get_disk_extents(vde, Irp);
 
-        default: // pass ioctl through if only one child device
-            return vol_ioctl_passthrough(vde, Irp);
+        default: { // pass ioctl through if only one child device
+            ULONG code = IrpSp->Parameters.DeviceIoControl.IoControlCode;
+            NTSTATUS Status = vol_ioctl_passthrough(vde, Irp);
+
+#ifdef __REACTOS__
+            &code;
+#endif
+
+            if (NT_SUCCESS(Status))
+                TRACE("passing through ioctl %lx (returning %08lx)\n", code, Status);
+            else
+                WARN("passing through ioctl %lx (returning %08lx)\n", code, Status);
+
+            return Status;
+        }
     }
 
     return STATUS_INVALID_DEVICE_REQUEST;
@@ -917,12 +930,12 @@ NTSTATUS mountmgr_add_drive_letter(PDEVICE_OBJECT mountmgr, PUNICODE_STRING devp
 
     mmdlt->DeviceNameLength = devpath->Length;
     RtlCopyMemory(&mmdlt->DeviceName, devpath->Buffer, devpath->Length);
-    TRACE("mmdlt = %.*S\n", mmdlt->DeviceNameLength / sizeof(WCHAR), mmdlt->DeviceName);
+    TRACE("mmdlt = %.*S\n", (int)(mmdlt->DeviceNameLength / sizeof(WCHAR)), mmdlt->DeviceName);
 
     Status = dev_ioctl(mountmgr, IOCTL_MOUNTMGR_NEXT_DRIVE_LETTER, mmdlt, mmdltsize, &mmdli, sizeof(MOUNTMGR_DRIVE_LETTER_INFORMATION), false, NULL);
 
     if (!NT_SUCCESS(Status))
-        ERR("IOCTL_MOUNTMGR_NEXT_DRIVE_LETTER returned %08x\n", Status);
+        ERR("IOCTL_MOUNTMGR_NEXT_DRIVE_LETTER returned %08lx\n", Status);
     else
         TRACE("DriveLetterWasAssigned = %u, CurrentDriveLetter = %c\n", mmdli.DriveLetterWasAssigned, mmdli.CurrentDriveLetter);
 
@@ -995,7 +1008,7 @@ static bool allow_degraded_mount(BTRFS_UUID* uuid) {
     if (Status == STATUS_OBJECT_NAME_NOT_FOUND)
         goto end;
     else if (!NT_SUCCESS(Status)) {
-        ERR("ZwOpenKey returned %08x\n", Status);
+        ERR("ZwOpenKey returned %08lx\n", Status);
         goto end;
     }
 
@@ -1095,7 +1108,7 @@ static void drive_letter_callback2(pdo_device_extension* pdode, PDEVICE_OBJECT m
         dlr->Status = remove_drive_letter(mountmgr, &dlr->name);
 
         if (!NT_SUCCESS(dlr->Status) && dlr->Status != STATUS_NOT_FOUND)
-            WARN("remove_drive_letter returned %08x\n", dlr->Status);
+            WARN("remove_drive_letter returned %08lx\n", dlr->Status);
 
         le = le->Flink;
     }
@@ -1137,7 +1150,7 @@ static void __stdcall drive_letter_callback(pdo_device_extension* pdode) {
     RtlInitUnicodeString(&mmdevpath, MOUNTMGR_DEVICE_NAME);
     Status = IoGetDeviceObjectPointer(&mmdevpath, FILE_READ_ATTRIBUTES, &mountmgrfo, &mountmgr);
     if (!NT_SUCCESS(Status)) {
-        ERR("IoGetDeviceObjectPointer returned %08x\n", Status);
+        ERR("IoGetDeviceObjectPointer returned %08lx\n", Status);
         return;
     }
 
@@ -1177,7 +1190,7 @@ void add_volume_device(superblock* sb, PUNICODE_STRING devpath, uint64_t length,
 
     Status = IoGetDeviceObjectPointer(devpath, FILE_READ_ATTRIBUTES, &FileObject, &DeviceObject);
     if (!NT_SUCCESS(Status)) {
-        ERR("IoGetDeviceObjectPointer returned %08x\n", Status);
+        ERR("IoGetDeviceObjectPointer returned %08lx\n", Status);
         ExReleaseResourceLite(&pdo_list_lock);
         return;
     }
@@ -1187,7 +1200,7 @@ void add_volume_device(superblock* sb, PUNICODE_STRING devpath, uint64_t length,
             Status = IoReportDetectedDevice(drvobj, InterfaceTypeUndefined, 0xFFFFFFFF, 0xFFFFFFFF, NULL, NULL, 0, &pdo);
 
             if (!NT_SUCCESS(Status)) {
-                ERR("IoReportDetectedDevice returned %08x\n", Status);
+                ERR("IoReportDetectedDevice returned %08lx\n", Status);
                 ExReleaseResourceLite(&pdo_list_lock);
                 return;
             }
@@ -1203,7 +1216,7 @@ void add_volume_device(superblock* sb, PUNICODE_STRING devpath, uint64_t length,
             Status = IoCreateDevice(drvobj, sizeof(pdo_device_extension), NULL, FILE_DEVICE_DISK,
                                     FILE_AUTOGENERATED_DEVICE_NAME | FILE_DEVICE_SECURE_OPEN, false, &pdo);
             if (!NT_SUCCESS(Status)) {
-                ERR("IoCreateDevice returned %08x\n", Status);
+                ERR("IoCreateDevice returned %08lx\n", Status);
                 ExReleaseResourceLite(&pdo_list_lock);
                 goto fail;
             }
@@ -1263,11 +1276,12 @@ void add_volume_device(superblock* sb, PUNICODE_STRING devpath, uint64_t length,
     vc->devid = sb->dev_item.dev_id;
     vc->generation = sb->generation;
     vc->notification_entry = NULL;
+    vc->boot_volume = false;
 
     Status = IoRegisterPlugPlayNotification(EventCategoryTargetDeviceChange, 0, FileObject,
                                             drvobj, pnp_removal, pdode, &vc->notification_entry);
     if (!NT_SUCCESS(Status))
-        WARN("IoRegisterPlugPlayNotification returned %08x\n", Status);
+        WARN("IoRegisterPlugPlayNotification returned %08lx\n", Status);
 
     vc->devobj = DeviceObject;
     vc->fileobj = FileObject;
@@ -1354,7 +1368,7 @@ void add_volume_device(superblock* sb, PUNICODE_STRING devpath, uint64_t length,
         if ((!new_pdo || !no_pnp) && pdode->vde) {
             Status = IoSetDeviceInterfaceState(&pdode->vde->bus_name, true);
             if (!NT_SUCCESS(Status))
-                WARN("IoSetDeviceInterfaceState returned %08x\n", Status);
+                WARN("IoSetDeviceInterfaceState returned %08lx\n", Status);
         }
 
         process_drive_letters = true;
@@ -1371,7 +1385,9 @@ void add_volume_device(superblock* sb, PUNICODE_STRING devpath, uint64_t length,
         drive_letter_callback(pdode);
 
     if (new_pdo) {
-        if (no_pnp)
+        if (RtlCompareMemory(&sb->uuid, &boot_uuid, sizeof(BTRFS_UUID)) == sizeof(BTRFS_UUID))
+            boot_add_device(pdo);
+        else if (no_pnp)
             AddDevice(drvobj, pdo);
         else {
             bus_device_extension* bde = busobj->DeviceExtension;

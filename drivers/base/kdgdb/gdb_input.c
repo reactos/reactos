@@ -22,7 +22,7 @@ UINT_PTR gdb_dbg_tid;
 
 static inline
 KDSTATUS
-LOOP_IF_SUCCESS(x)
+LOOP_IF_SUCCESS(int x)
 {
     return (x == KdPacketReceived) ? (KDSTATUS)-1 : x;
 }

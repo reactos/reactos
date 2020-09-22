@@ -372,7 +372,7 @@ static BOOLEAN __stdcall fast_io_lock(PFILE_OBJECT FileObject, PLARGE_INTEGER Fi
     BOOLEAN ret;
     fcb* fcb = FileObject->FsContext;
 
-    TRACE("(%p, %I64x, %I64x, %p, %x, %u, %u, %p, %p)\n", FileObject, FileOffset ? FileOffset->QuadPart : 0, Length ? Length->QuadPart : 0,
+    TRACE("(%p, %I64x, %I64x, %p, %lx, %u, %u, %p, %p)\n", FileObject, FileOffset ? FileOffset->QuadPart : 0, Length ? Length->QuadPart : 0,
           ProcessId, Key, FailImmediately, ExclusiveLock, IoStatus, DeviceObject);
 
     if (fcb->type != BTRFS_TYPE_FILE) {
@@ -402,7 +402,7 @@ static BOOLEAN __stdcall fast_io_unlock_single(PFILE_OBJECT FileObject, PLARGE_I
                                                ULONG Key, PIO_STATUS_BLOCK IoStatus, PDEVICE_OBJECT DeviceObject) {
     fcb* fcb = FileObject->FsContext;
 
-    TRACE("(%p, %I64x, %I64x, %p, %x, %p, %p)\n", FileObject, FileOffset ? FileOffset->QuadPart : 0, Length ? Length->QuadPart : 0,
+    TRACE("(%p, %I64x, %I64x, %p, %lx, %p, %p)\n", FileObject, FileOffset ? FileOffset->QuadPart : 0, Length ? Length->QuadPart : 0,
           ProcessId, Key, IoStatus, DeviceObject);
 
     IoStatus->Information = 0;
@@ -458,7 +458,7 @@ static BOOLEAN __stdcall fast_io_unlock_all_by_key(PFILE_OBJECT FileObject, PVOI
                                                    PIO_STATUS_BLOCK IoStatus, PDEVICE_OBJECT DeviceObject) {
     fcb* fcb = FileObject->FsContext;
 
-    TRACE("(%p, %p, %x, %p, %p)\n", FileObject, ProcessId, Key, IoStatus, DeviceObject);
+    TRACE("(%p, %p, %lx, %p, %p)\n", FileObject, ProcessId, Key, IoStatus, DeviceObject);
 
     IoStatus->Information = 0;
 

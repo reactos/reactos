@@ -44,15 +44,11 @@ add_compile_flags("-pipe -fms-extensions -fno-strict-aliasing")
 # Prevent GCC from searching any of the default directories
 add_compile_flags("-nostdinc")
 
-if(GCC_VERSION VERSION_GREATER 4.7)
-    add_compile_flags("-mstackrealign")
-endif()
-if(NOT GCC_VERSION VERSION_LESS 4.8)
-    add_compile_flags("-fno-aggressive-loop-optimizations")
-endif()
+add_compile_flags("-mstackrealign")
+add_compile_flags("-fno-aggressive-loop-optimizations")
 
 if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
-    add_compile_flags_language("-std=gnu89 -Wno-microsoft" "C")
+    add_compile_flags_language("-std=gnu99 -Wno-microsoft" "C")
     set(CMAKE_LINK_DEF_FILE_FLAG "")
     set(CMAKE_STATIC_LIBRARY_SUFFIX ".a")
     set(CMAKE_LINK_LIBRARY_SUFFIX "")
@@ -70,7 +66,6 @@ if(DBG)
     if(NOT CMAKE_C_COMPILER_ID STREQUAL "Clang")
         add_compile_flags_language("-Wold-style-declaration" "C")
     endif()
-    add_compile_flags_language("-Wdeclaration-after-statement" "C")
 endif()
 
 add_compile_flags_language("-fno-rtti -fno-exceptions" "CXX")
@@ -113,9 +108,7 @@ endif()
 
 add_compile_flags("-Wall -Wpointer-arith")
 add_compile_flags("-Wno-char-subscripts -Wno-multichar -Wno-unused-value")
-if(NOT GCC_VERSION VERSION_LESS 6.1)
-    add_compile_flags("-Wno-unused-const-variable")
-endif()
+add_compile_flags("-Wno-unused-const-variable")
 add_compile_flags("-Wno-unused-local-typedefs")
 add_compile_flags("-Wno-deprecated")
 
@@ -267,21 +260,12 @@ if((CMAKE_C_COMPILER_ID STREQUAL "GNU") AND
     set(_compress_debug_sections_flag "-Wa,--compress-debug-sections")
 endif()
 
-if(CMAKE_VERSION VERSION_LESS 3.4.0)
-    set(CMAKE_C_COMPILE_OBJECT "${CCACHE} <CMAKE_C_COMPILER> <DEFINES> ${_compress_debug_sections_flag} <FLAGS> -o <OBJECT> -c <SOURCE>")
-    # FIXME: Once the GCC toolchain bugs are fixed, add _compress_debug_sections_flag to CXX too
-    set(CMAKE_CXX_COMPILE_OBJECT "${CCACHE} <CMAKE_CXX_COMPILER> <DEFINES> <FLAGS> -o <OBJECT> -c <SOURCE>")
-    set(CMAKE_ASM_COMPILE_OBJECT "<CMAKE_ASM_COMPILER> ${_compress_debug_sections_flag} -x assembler-with-cpp -o <OBJECT> -I${REACTOS_SOURCE_DIR}/sdk/include/asm -I${REACTOS_BINARY_DIR}/sdk/include/asm <FLAGS> <DEFINES> -D__ASM__ -c <SOURCE>")
+set(CMAKE_C_COMPILE_OBJECT "${CCACHE} <CMAKE_C_COMPILER> <DEFINES> ${_compress_debug_sections_flag} <INCLUDES> <FLAGS> -o <OBJECT> -c <SOURCE>")
+# FIXME: Once the GCC toolchain bugs are fixed, add _compress_debug_sections_flag to CXX too
+set(CMAKE_CXX_COMPILE_OBJECT "${CCACHE} <CMAKE_CXX_COMPILER> <DEFINES> <INCLUDES> <FLAGS> -o <OBJECT> -c <SOURCE>")
+set(CMAKE_ASM_COMPILE_OBJECT "<CMAKE_ASM_COMPILER> ${_compress_debug_sections_flag} -x assembler-with-cpp -o <OBJECT> -I${REACTOS_SOURCE_DIR}/sdk/include/asm -I${REACTOS_BINARY_DIR}/sdk/include/asm <INCLUDES> <FLAGS> <DEFINES> -D__ASM__ -c <SOURCE>")
 
-    set(CMAKE_RC_COMPILE_OBJECT "<CMAKE_RC_COMPILER> -O coff <FLAGS> -DRC_INVOKED -D__WIN32__=1 -D__FLAT__=1 ${I18N_DEFS} <DEFINES> <SOURCE> <OBJECT>")
-else()
-    set(CMAKE_C_COMPILE_OBJECT "${CCACHE} <CMAKE_C_COMPILER> <DEFINES> ${_compress_debug_sections_flag} <INCLUDES> <FLAGS> -o <OBJECT> -c <SOURCE>")
-    # FIXME: Once the GCC toolchain bugs are fixed, add _compress_debug_sections_flag to CXX too
-    set(CMAKE_CXX_COMPILE_OBJECT "${CCACHE} <CMAKE_CXX_COMPILER> <DEFINES> <INCLUDES> <FLAGS> -o <OBJECT> -c <SOURCE>")
-    set(CMAKE_ASM_COMPILE_OBJECT "<CMAKE_ASM_COMPILER> ${_compress_debug_sections_flag} -x assembler-with-cpp -o <OBJECT> -I${REACTOS_SOURCE_DIR}/sdk/include/asm -I${REACTOS_BINARY_DIR}/sdk/include/asm <INCLUDES> <FLAGS> <DEFINES> -D__ASM__ -c <SOURCE>")
-
-    set(CMAKE_RC_COMPILE_OBJECT "<CMAKE_RC_COMPILER> -O coff <INCLUDES> <FLAGS> -DRC_INVOKED -D__WIN32__=1 -D__FLAT__=1 ${I18N_DEFS} <DEFINES> <SOURCE> <OBJECT>")
-endif()
+set(CMAKE_RC_COMPILE_OBJECT "<CMAKE_RC_COMPILER> -O coff <INCLUDES> <FLAGS> -DRC_INVOKED -D__WIN32__=1 -D__FLAT__=1 ${I18N_DEFS} <DEFINES> <SOURCE> <OBJECT>")
 set(CMAKE_DEPFILE_FLAGS_RC "--preprocessor \"${MINGW_TOOLCHAIN_PREFIX}gcc${MINGW_TOOLCHAIN_SUFFIX} -E -xc-header -MMD -MF <DEPFILE> -MT <OBJECT>\" ")
 
 # Optional 3rd parameter: stdcall stack bytes
@@ -351,8 +335,8 @@ endif()
 
 function(fixup_load_config _target)
     get_target_property(PEFIXUP native-pefixup IMPORTED_LOCATION_NOCONFIG)
-    add_custom_command(TARGET ${_target} POST_BUILD 
-        COMMAND "${PEFIXUP}" 
+    add_custom_command(TARGET ${_target} POST_BUILD
+        COMMAND "${PEFIXUP}"
                 "$<TARGET_FILE:${_target}>"
         COMMENT "Patching in LOAD_CONFIG")
 endfunction()
@@ -389,7 +373,7 @@ function(spec2def _dllname _spec_file)
         message(FATAL_ERROR "spec2def only takes spec files as input.")
     endif()
 
-    if (__spec2def_WITH_RELAY)
+    if(__spec2def_WITH_RELAY)
         set(__with_relay_arg "--with-tracing")
     endif()
 
@@ -419,41 +403,6 @@ endmacro()
 
 # PSEH lib, needed with mingw
 set(PSEH_LIB "pseh")
-
-# Macros
-if(PCH AND (NOT ENABLE_CCACHE) AND (NOT CMAKE_HOST_APPLE))
-    add_compile_flags("-Winvalid-pch -Werror=invalid-pch")
-    macro(add_pch _target _pch _sources)
-        # When including x.h GCC looks for x.h.gch first
-        set(_pch_final_name "${_target}_pch.h")
-        set(_gch ${CMAKE_CURRENT_BINARY_DIR}/${_pch_final_name}.gch)
-
-        if(IS_CPP)
-            set(_pch_language CXX)
-        else()
-            set(_pch_language C)
-        endif()
-
-        # Build the precompiled header
-        # HEADER_FILE_ONLY FALSE: force compiling the header
-        # EXTERNAL_SOURCE TRUE: don't use the .gch file when linking
-        set_source_files_properties(${_pch} PROPERTIES
-            HEADER_FILE_ONLY FALSE
-            LANGUAGE ${_pch_language}
-            EXTERNAL_SOURCE TRUE
-            OBJECT_LOCATION ${_gch})
-
-        # Include the gch in the specified source files, skipping the pch file itself
-        list(REMOVE_ITEM ${_sources} ${_pch})
-        foreach(_src ${${_sources}})
-            set_property(SOURCE ${_src} APPEND_STRING PROPERTY COMPILE_FLAGS " ${_ccache_flag} -include ${CMAKE_CURRENT_BINARY_DIR}/${_pch_final_name}")
-            set_property(SOURCE ${_src} APPEND PROPERTY OBJECT_DEPENDS ${_gch})
-        endforeach()
-    endmacro()
-else()
-    macro(add_pch _target _pch _sources)
-    endmacro()
-endif()
 
 function(CreateBootSectorTarget _target_name _asm_file _binary_file _base_address)
     set(_object_file ${_binary_file}.o)

@@ -69,10 +69,15 @@ INT cmd_call(LPTSTR param)
 
     if (*first == _T(':') && bc)
     {
+        INT ret;
+
         /* CALL :label - call a subroutine of the current batch file */
         while (*param == _T(' '))
             param++;
-        nErrorLevel = Batch(bc->BatchFilePath, first, param, NULL);
+
+        ret = Batch(bc->BatchFilePath, first, param, NULL);
+        nErrorLevel = (ret != 0 ? ret : nErrorLevel);
+
         return nErrorLevel;
     }
 

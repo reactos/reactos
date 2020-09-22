@@ -64,7 +64,6 @@ endif
 
 libxslt_la_LIBADD = $(LIBXML_LIBS) $(EXTRA_LIBS) $(M_LIBS)
 libxslt_la_LDFLAGS =					\
-		$(WIN32_EXTRA_LDFLAGS)			\
 		$(LIBXSLT_VERSION_SCRIPT)		\
 		-version-info $(LIBXSLT_VERSION_INFO)
 

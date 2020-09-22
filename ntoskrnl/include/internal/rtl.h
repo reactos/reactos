@@ -34,4 +34,9 @@ RtlFindCharInUnicodeString(
     _Out_ PUSHORT Position
 );
 
+_IRQL_requires_max_(APC_LEVEL)
+ULONG
+NTAPI
+RtlRosGetAppcompatVersion(VOID);
+
 /* EOF */

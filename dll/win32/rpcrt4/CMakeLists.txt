@@ -39,21 +39,23 @@ list(APPEND SOURCE
     rpc_server.c
     rpc_transport.c
     unix_func.c
-    precomp.h
     ${CMAKE_CURRENT_BINARY_DIR}/epm_c.c)
 
 if(MSVC AND NOT ARCH STREQUAL "arm")
     add_asm_files(rpcrt4_asm msvc.S)
 endif()
 
-add_library(rpcrt4 MODULE
-    ${SOURCE}
+list(APPEND PCH_SKIP_SOURCE
     ndr_typelib.c
     ${CMAKE_CURRENT_BINARY_DIR}/ndr_types_p.c
     ${CMAKE_CURRENT_BINARY_DIR}/proxy.dlldata.c
+    ${CMAKE_CURRENT_BINARY_DIR}/rpcrt4_stubs.c)
+
+add_library(rpcrt4 MODULE
+    ${SOURCE}
     ${rpcrt4_asm}
+    ${PCH_SKIP_SOURCE}
     rpcrt4.rc
-    ${CMAKE_CURRENT_BINARY_DIR}/rpcrt4_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/rpcrt4.def)
 
 set_module_type(rpcrt4 win32dll)
@@ -61,5 +63,5 @@ target_link_libraries(rpcrt4 wine uuid ${PSEH_LIB})
 add_delay_importlibs(rpcrt4 iphlpapi wininet secur32 user32 oleaut32)
 add_importlibs(rpcrt4 advapi32 advapi32_vista kernel32_vista ws2_32 msvcrt kernel32 ntdll)
 add_dependencies(rpcrt4 ndr_types_header)
-add_pch(rpcrt4 precomp.h SOURCE)
+add_pch(rpcrt4 precomp.h "${PCH_SKIP_SOURCE}")
 add_cd_file(TARGET rpcrt4 DESTINATION reactos/system32 FOR all)

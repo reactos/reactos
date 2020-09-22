@@ -342,7 +342,7 @@ OnAutoSync(BOOL Sync)
     RegCloseKey(hKey);
 }
 
-static DWORD
+static DWORD WINAPI
 UpdateThread(
     _In_ LPVOID lpParameter)
 {
@@ -368,7 +368,7 @@ OnUpdate(
     {
         SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)TRUE);
 
-        if (CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)UpdateThread, (PVOID)hwndDlg, 0, NULL) == NULL)
+        if (CreateThread(NULL, 0, UpdateThread, (PVOID)hwndDlg, 0, NULL) == NULL)
         {
             UpdateNTPStatus(hwndDlg, GetLastError());
             SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)FALSE);

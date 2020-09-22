@@ -2887,7 +2887,7 @@ ScsiPortDeviceControl(IN PDEVICE_OBJECT DeviceObject,
                 DPRINT1("Got unexpected IOCTL_MOUNTDEV_QUERY_UNIQUE_ID\n");
                 break;
             default:
-                DPRINT1("  got ioctl intended for the mount manager: 0x%lX\n", Stack->Parameters.DeviceIoControl.IoControlCode);
+                DPRINT("  got ioctl intended for the mount manager: 0x%lX\n", Stack->Parameters.DeviceIoControl.IoControlCode);
                 break;
             }
           } else {

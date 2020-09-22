@@ -128,7 +128,8 @@ _RtlpExecuteHandlerForUnwind@20:
     mov edx, offset _RtlpUnwindProtector
 
 
-_RtlpExecuteHandler@20:
+.PROC _RtlpExecuteHandler@20
+    FPO 0, 0, 0, 0, 0, FRAME_FPO
 
     /* Save non-volatile */
     push ebx
@@ -155,6 +156,7 @@ _RtlpExecuteHandler@20:
     pop ebx
     ret 20
 
+.ENDP
 
 PUBLIC _RtlpExecuteHandler2@20
 _RtlpExecuteHandler2@20:

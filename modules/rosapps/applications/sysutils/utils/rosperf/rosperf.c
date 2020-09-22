@@ -290,12 +290,11 @@ ProcessTest(PTEST Test, PPERF_INFO PerfInfo)
 static void
 PrintOSVersion(void)
 {
-#define BUFSIZE 160
   OSVERSIONINFOEXW VersionInfo;
   BOOL OsVersionInfoEx;
   HKEY hKey;
-  WCHAR ProductType[BUFSIZE];
-  DWORD BufLen;
+  WCHAR ProductType[9] = { L'\0' };
+  DWORD BufLen, dwType;
   LONG Ret;
   unsigned RosVersionLen;
   LPWSTR RosVersion;
@@ -423,8 +422,6 @@ PrintOSVersion(void)
           }
         else  /* Test for specific product on Windows NT 4.0 SP5 and earlier */
           {
-            BufLen = BUFSIZE;
-
             Ret = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
                                 L"SYSTEM\\CurrentControlSet\\Control\\ProductOptions",
                                 0, KEY_QUERY_VALUE, &hKey);
@@ -433,14 +430,16 @@ PrintOSVersion(void)
                 return;
               }
 
-            Ret = RegQueryValueExW(hKey, L"ProductType", NULL, NULL,
+            BufLen = sizeof(ProductType);
+            Ret = RegQueryValueExW(hKey, L"ProductType", NULL, &dwType,
                                    (LPBYTE) ProductType, &BufLen);
-            if (ERROR_SUCCESS != Ret || BUFSIZE < BufLen)
+
+            RegCloseKey(hKey);
+
+            if (Ret != ERROR_SUCCESS || dwType != REG_SZ)
               {
                 return;
               }
-
-            RegCloseKey(hKey);
 
             if (0 == lstrcmpiW(L"WINNT", ProductType))
               {

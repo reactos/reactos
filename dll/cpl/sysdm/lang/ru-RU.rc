@@ -19,7 +19,7 @@ BEGIN
     LTEXT "", IDC_MACHINELINE4, 130, 155, 118, 9
     LTEXT "", IDC_MACHINELINE5, 130, 164, 118, 9
     LTEXT "", IDC_MACHINELINE6, 130, 173, 118, 9
-    CONTROL "Посетите <A HREF=""http://www.reactos.org/"">домашнюю страницу ReactOS</A>.", IDC_ROSHOMEPAGE_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 10, 200, 140, 10
+    CONTROL "Посетите <A HREF=""https://reactos.org/"">домашнюю страницу ReactOS</A>.", IDC_ROSHOMEPAGE_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 10, 200, 140, 10
     PUSHBUTTON "&Лицензия...", IDC_LICENCE, 170, 198, 78, 15
 END
 
@@ -199,7 +199,7 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Загрузка операционной системы", IDC_STATIC, 7, 12, 238, 95
     LTEXT "Операционная система по умолчанию:", IDC_STATIC, 14, 26, 145, 8
-    COMBOBOX IDC_STRECOSCOMBO, 14, 37, 224, 46, CBS_DROPDOWNLIST | WS_VSCROLL
+    COMBOBOX IDC_STRECOSCOMBO, 14, 37, 224, 46, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     AUTOCHECKBOX "О&тображать список операционных систем:", IDC_STRECLIST, 14, 56, 161, 8
     EDITTEXT IDC_STRRECLISTEDIT, 179, 54, 30, 12, ES_NUMBER
     CONTROL "", IDC_STRRECLISTUPDWN, "msctls_updown32", UDS_WRAP | UDS_SETBUDDYINT |
@@ -217,7 +217,7 @@ BEGIN
     AUTOCHECKBOX "&Отправить административное оповещение", IDC_STRRECSENDALERT, 14, 138, 165, 10
     AUTOCHECKBOX "Выполнить &автоматическую перезагрузку", IDC_STRRECRESTART, 14, 152, 160, 10
     GROUPBOX "Запись отладочной информации", IDC_STATIC, 12, 167, 227, 76
-    COMBOBOX IDC_STRRECDEBUGCOMBO, 17, 182, 151, 49, CBS_DROPDOWNLIST
+    COMBOBOX IDC_STRRECDEBUGCOMBO, 17, 182, 151, 49, CBS_DROPDOWNLIST | WS_TABSTOP
     LTEXT "Файл дампа памяти:", IDC_STATIC, 17, 202, 150, 8
     EDITTEXT IDC_STRRECDUMPFILE, 17, 210, 153, 12, ES_AUTOHSCROLL
     AUTOCHECKBOX "Заменять &существующий файл дампа", IDC_STRRECOVERWRITE, 17, 228, 145, 10
@@ -231,15 +231,15 @@ CAPTION "Виртуальная память"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT "Диск [метка тома]", IDC_STATIC, 12, 5, 96, 9
-    LTEXT "Файл подкачки (MB)", IDC_STATIC, 115, 5, 96, 9
+    LTEXT "Файл подкачки (МБ)", IDC_STATIC, 115, 5, 96, 9
     LISTBOX IDC_PAGEFILELIST, 10, 16, 204, 52, LBS_NOTIFY | LBS_USETABSTOPS
     GROUPBOX "Размер файла подкачки для выбранного диска", IDC_DRIVEGROUP, 10, 70, 204, 104
     LTEXT "Диск:", IDC_STATIC, 20, 80, 20, 8
-    LTEXT "", IDC_DRIVE, 88, 81, 100, 9
-    LTEXT "Доступное пространство:", IDC_STATIC, 20, 92, 183, 9
-    LTEXT "", IDC_SPACEAVAIL, 154, 92, 104, 9
-    LTEXT "Исходный размер (MB):", -1, 22, 118, 80, 9
-    LTEXT "Максимальный размер (MB):", -1, 22, 131, 98, 9
+    LTEXT "%s", IDC_DRIVE, 110, 80, 100, 9
+    LTEXT "Доступное пространство:", IDC_STATIC, 20, 92, 92, 9
+    LTEXT "%s", IDC_SPACEAVAIL, 110, 92, 100, 9
+    LTEXT "Исходный размер (МБ):", -1, 22, 118, 80, 9
+    LTEXT "Максимальный размер (МБ):", -1, 22, 131, 98, 9
     AUTORADIOBUTTON "&Другой размер", IDC_CUSTOM, 20, 105, 65, 9, WS_GROUP
     AUTORADIOBUTTON "Размер по выбору системы", IDC_SYSMANSIZE, 20, 145, 105, 9
     AUTORADIOBUTTON "Без файла подкачки", IDC_NOPAGEFILE, 20, 158, 85, 9
@@ -247,12 +247,12 @@ BEGIN
     EDITTEXT IDC_MAXSIZE, 120, 129, 44, 13, NOT WS_BORDER, WS_EX_CLIENTEDGE
     PUSHBUTTON "Установить", IDC_SET, 158, 154, 50, 15
     GROUPBOX "Общий объем файла подкачки на всех дисках", IDC_TOTALGROUP, 10, 177, 204, 46
-    LTEXT "Минимальный размер:", IDC_STATIC, 18, 188, 120, 9
-    LTEXT "", IDC_MINIMUM, 145, 188, 60, 9
-    LTEXT "Рекомендуемый:", IDC_STATIC, 18, 199, 120, 9
-    LTEXT "", IDC_RECOMMENDED, 145, 197, 60, 9
-    LTEXT "Текущий размер:", IDC_STATIC, 18, 210, 120, 9
-    LTEXT "", IDC_CURRENT, 145, 208, 60, 9
+    LTEXT "Минимальный размер:", IDC_STATIC, 18, 188, 78, 9
+    LTEXT "%s", IDC_MINIMUM, 98, 188, 108, 9
+    LTEXT "Рекомендуемый:", IDC_STATIC, 18, 199, 78, 9
+    LTEXT "%s", IDC_RECOMMENDED, 98, 199, 108, 9
+    LTEXT "Текущий размер:", IDC_STATIC, 18, 210, 78, 9
+    LTEXT "%s", IDC_CURRENT, 98, 210, 108, 9
     DEFPUSHBUTTON "OK", IDOK, 114, 230, 48, 15
     PUSHBUTTON "Отмена", IDCANCEL, 168, 230, 48, 15
 END
@@ -333,8 +333,9 @@ BEGIN
     IDS_MESSAGEBOXTITLE "Панель управления системы"
     IDS_WARNINITIALSIZE "Введите числовое значение исходного размера файла подкачки."
     IDS_WARNMAXIMUMSIZE "Введите числовое значение для параметра максимальный размер файла подкачки."
-    IDS_WARNINITIALRANGE "Начальный размер файла подкачки должен быть не меньше, чем 16 МБ и не должен превышать свободного места на выбранном диске."
+    IDS_WARNINITIALRANGE "Начальный размер файла подкачки должен быть не меньше, чем 2 МБ и не должен превышать свободного места на выбранном диске."
     IDS_WARNMAXIMUMRANGE "Максимальный размер файла подкачки должен быть не меньше, чем начальный размер, который не должен превышать свободного места на выбранном диске."
+    IDS_PAGEFILE_MB "%u МБ"
     IDS_PAGEFILE_NONE "Нет"
     IDS_PAGEFILE_SYSTEM "По выбору системы"
     IDS_INFOREBOOT "Необходимо перезагрузить компьютер для применения изменений."

@@ -1,5 +1,5 @@
 /* Spanish Language resource file.
- * Translated by: ?? and Ismael Ferreras Morezuelas (Swyter) <2014-11-07> and Julen Urizar Compains 2020-04-14 */
+ * Translated by: ?? and Ismael Ferreras Morezuelas (Swyter) <2014-11-07> and Julen Urizar Compains 2020-04-14 and Catalin Gabriel Draghita 2020-08-22 */
 
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
@@ -55,7 +55,7 @@ BEGIN
     END
 END
 
-IDD_SETTINGS_DIALOG DIALOGEX 0, 0, 250, 200
+IDD_SETTINGS_DIALOG DIALOGEX 0, 0, 250, 265
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 CAPTION "Ajustes"
 FONT 8, "MS Shell Dlg"
@@ -69,16 +69,20 @@ BEGIN
     EDITTEXT IDC_DOWNLOAD_DIR_EDIT, 15, 86, 166, 12, WS_CHILD | WS_VISIBLE | WS_GROUP | ES_AUTOHSCROLL
     PUSHBUTTON "&Seleccionar", IDC_CHOOSE, 187, 85, 50, 14
     AUTOCHECKBOX "&Borrar el instalador del programa tras su instalación", IDC_DEL_AFTER_INSTALL, 16, 100, 218, 12
-    GROUPBOX "Proxy", -1, 4, 116, 240, 61
-    CONTROL "Utilizar el proxy del sistema", IDC_PROXY_DEFAULT, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 15, 128, 218, 10
-    CONTROL "Conexión directa (sin nada)", IDC_NO_PROXY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 141, 218, 10
-    CONTROL "Proxy:", IDC_USE_PROXY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 154, 35, 10
-    EDITTEXT IDC_PROXY_SERVER, 51, 153, 70, 14, ES_AUTOHSCROLL
-    LTEXT "Sin proxy para:", -1, 125, 154, 50, 8, SS_RIGHT
-    EDITTEXT IDC_NO_PROXY_FOR, 177, 153, 61, 14, ES_AUTOHSCROLL
-    PUSHBUTTON "Por defecto", IDC_DEFAULT_SETTINGS, 8, 180, 60, 14
-    DEFPUSHBUTTON "Aceptar", IDOK, 116, 180, 60, 14
-    PUSHBUTTON "Cancelar", IDCANCEL, 181, 180, 60, 14
+    GROUPBOX "Origen del Software", -1, 4, 118, 240, 46
+    CONTROL "Usar predeterminado", IDC_SOURCE_DEFAULT, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 15, 132, 74, 10
+    CONTROL "Origen especificado", IDC_USE_SOURCE, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 147, 74, 10
+    EDITTEXT IDC_SOURCE_URL, 97, 147, 140, 12, ES_AUTOHSCROLL | WS_DISABLED
+    GROUPBOX "Proxy", -1, 4, 166, 240, 76
+    CONTROL "Utilizar el proxy del sistema", IDC_PROXY_DEFAULT, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 15, 180, 210, 10
+    CONTROL "Conexión directa (sin nada)", IDC_NO_PROXY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 195, 210, 10
+    CONTROL "Proxy:", IDC_USE_PROXY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 210, 74, 10
+    EDITTEXT IDC_PROXY_SERVER, 90, 210, 147, 12, ES_AUTOHSCROLL
+    LTEXT "Sin proxy para:", -1, 27, 225, 64, 10
+    EDITTEXT IDC_NO_PROXY_FOR, 90, 225, 147, 12, ES_AUTOHSCROLL
+    PUSHBUTTON "Por defecto", IDC_DEFAULT_SETTINGS, 8, 245, 60, 14
+    DEFPUSHBUTTON "Aceptar", IDOK, 116, 245, 60, 14
+    PUSHBUTTON "Cancelar", IDCANCEL, 181, 245, 60, 14
 END
 
 IDD_INSTALL_DIALOG DIALOGEX 0, 0, 216, 97
@@ -101,16 +105,6 @@ BEGIN
     CONTROL "Progress1", IDC_DOWNLOAD_PROGRESS, "msctls_progress32", WS_BORDER | PBS_SMOOTH, 10, 10, 200, 12
     EDITTEXT IDC_DOWNLOAD_STATUS, 10, 28, 200, 22, ES_CENTER | ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | WS_CHILD | WS_VISIBLE | WS_DISABLED | NOT WS_BORDER, 0
     PUSHBUTTON "Cancelar", IDCANCEL, 85, 53, 50, 15, WS_GROUP | WS_TABSTOP
-END
-
-IDD_ABOUT_DIALOG DIALOGEX 22, 16, 190, 66
-STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
-CAPTION "Acerca de"
-FONT 8, "MS Shell Dlg"
-BEGIN
-    ICON IDI_MAIN, IDC_STATIC, 10, 10, 7, 30
-    LTEXT "Administrador de aplicaciones de ReactOS\nCopyright (C) 2009\nCreado por Dmitry Chapyshev (dmitry@reactos.org)", IDC_STATIC, 48, 7, 130, 39
-    DEFPUSHBUTTON "Cerrar", IDOK, 133, 46, 50, 14
 END
 
 STRINGTABLE
@@ -150,6 +144,7 @@ BEGIN
     IDS_INFO_UNINSTALLSTR "\nComando de desinstalación: "
     IDS_INFO_MODIFYPATH "\nRuta de modificación: "
     IDS_INFO_INSTALLDATE "\nFecha de instalación: "
+    IDS_AINFO_PACKAGE_NAME "\nPackage Name: "
 END
 
 STRINGTABLE
@@ -161,7 +156,7 @@ BEGIN
     IDS_AINFO_URLSITE "\nPágina Web: "
     IDS_AINFO_LICENSE "\nLicencia: "
     IDS_AINFO_URLDOWNLOAD "\nDescargar: "
-    IDS_AINFO_LANGUAGES "\nLanguages: "
+    IDS_AINFO_LANGUAGES "\nIdiomas: "
 END
 
 STRINGTABLE
@@ -181,12 +176,13 @@ BEGIN
     IDS_CAT_SCIENCE "Ciencia"
     IDS_CAT_TOOLS "Herramientas"
     IDS_CAT_VIDEO "Vídeo"
-    IDS_CAT_THEMES "Themes"
+    IDS_CAT_THEMES "Temas"
 END
 
 STRINGTABLE
 BEGIN
     IDS_APPTITLE "Administrador de aplicaciones de ReactOS"
+    IDS_APP_AUTHORS "Copyright 2009 Dmitry Chapyshev"
     IDS_SEARCH_TEXT "Buscar…"
     IDS_INSTALL "Instalar"
     IDS_UNINSTALL "Desinstalar"
@@ -194,13 +190,14 @@ BEGIN
     IDS_APPS_COUNT "Nº de aplicaciones: %d; Selecionadas: %d"
     IDS_WELCOME_TITLE "Bienvenido al Administrador de aplicaciones de ReactOS.\n\n"
     IDS_WELCOME_TEXT "Seleccione una categoría a la izquierda, para más tarde seleccionar la aplicación a instalar o desinstalar.\nWeb de ReactOS: "
-    IDS_WELCOME_URL "http://www.reactos.org"
+    IDS_WELCOME_URL "https://reactos.org/"
     IDS_INSTALLED "Instaladas"
     IDS_AVAILABLEFORINST "Disponible para su instalación"
     IDS_UPDATES "Actualizaciones"
     IDS_APPLICATIONS "Aplicaciones"
     IDS_CHOOSE_FOLDER_TEXT "Seleccione una carpeta de donde se descargarán los programas:"
     IDS_CHOOSE_FOLDER_ERROR "La carpeta especificada no existe."
+    IDS_URL_INVALID "La URL que ha especificado es inválido o no esta disponible. Por favor, corrígelo."
     IDS_APP_REG_REMOVE "¿Está seguro de querer borrar del Registro los datos de instalación del programa?"
     IDS_INFORMATION "Información"
     IDS_UNABLE_TO_DOWNLOAD "No se pudo descargar el paquete. No se ha encontrado la dirección de Internet."
@@ -216,6 +213,10 @@ BEGIN
     IDS_INSTALL_SELECTED "Instalar selección"
     IDS_SELECTEDFORINST "Seleccionados para instalar"
     IDS_MISMATCH_CERT_INFO "El certificado que usa es desconocido:\nSujeto: %s\nEmisor: %s\n¿Quiere continuar a pesar de ello?"
+    IDS_UNABLE_PATH "Formato de ruta incorrecto."
+    IDS_APP_DISPLAY_DETAILS "details"
+    IDS_APP_DISPLAY_LIST "list"
+    IDS_APP_DISPLAY_TILE "tile"
 END
 
 STRINGTABLE
@@ -251,4 +252,17 @@ STRINGTABLE
 BEGIN
     IDS_DL_DIALOG_DB_DISP "Base de datos de aplicaciones"
     IDS_DL_DIALOG_DB_DOWNLOAD_DISP "Actualizando listado…"
+    IDS_DL_DIALOG_DB_UNOFFICIAL_DOWNLOAD_DISP "Actualizando listado… (Origen no oficial)"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_CMD_USAGE "Usage: "
+    IDS_CMD_NEED_PACKAGE_NAME "Error: option %1 expects one or more package name.\n"
+    IDS_CMD_NEED_FILE_NAME "Error: option %1 expects a file name.\n"
+    IDS_CMD_NEED_PARAMS "Error: option %1 expects one or more parameters.\n"
+    IDS_CMD_INVALID_OPTION "Error: Unknown or invalid command line option specified.\n"
+    IDS_CMD_FIND_RESULT_FOR "Find result for %1:\n"
+    IDS_CMD_PACKAGE_NOT_FOUND "Failed to find package %1.\n"
+    IDS_CMD_PACKAGE_INFO "Information about package %1:\n"
 END

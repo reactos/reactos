@@ -137,7 +137,6 @@ BEGIN
             MENUITEM "N&iedrig", ID_PROCESS_PAGE_SETPRIORITY_LOW
         END
         MENUITEM "&Zugehörigkeit festlegen...", ID_PROCESS_PAGE_SETAFFINITY
-        MENUITEM "Debu&g-Kanäle ändern...", ID_PROCESS_PAGE_DEBUGCHANNELS
     END
 END
 

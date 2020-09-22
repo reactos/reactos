@@ -316,8 +316,7 @@ SaveFontSubstitutionSettings(
     if (!SetupInstallFromInfSectionW(hwnd, hFontInf, szSection, SPINST_REGISTRY & ~SPINST_FILES,
                                      NULL, NULL, 0, NULL, NULL, NULL, NULL))
     {
-        MessageBoxW(hwnd, L"Unable to install a new language for programs don't support unicode!",
-                   NULL, MB_ICONERROR | MB_OK);
+        PrintErrorMsgBox(IDS_ERROR_UNICODE);
     }
 
     SetupCloseInfFile(hFontInf);

@@ -37,6 +37,7 @@ Pc98PrepareForReactOS(VOID)
     Pc98DiskPrepareForReactOS();
     Pc98VideoPrepareForReactOS();
     DiskStopFloppyMotor();
+    DebugDisableScreenPort();
 }
 
 ULONG

@@ -1174,6 +1174,14 @@ typedef struct tagIMEINFOEX
     };
 } IMEINFOEX, *PIMEINFOEX;
 
+typedef enum IMEINFOEXCLASS
+{
+    ImeInfoExKeyboardLayout,
+    ImeInfoExImeFileName
+} IMEINFOEXCLASS;
+
+#define IS_IME_HKL(hkl) ((((ULONG_PTR)(hkl)) & 0xF0000000) == 0xE0000000)
+
 typedef struct tagIMEUI
 {
     PWND spwnd;
@@ -2278,19 +2286,17 @@ NtUserGetIconSize(
     LONG *plcx,
     LONG *plcy);
 
-DWORD
-NTAPI
-NtUserGetImeHotKey(
-    DWORD Unknown0,
-    DWORD Unknown1,
-    DWORD Unknown2,
-    DWORD Unknown3);
+BOOL NTAPI
+NtUserGetImeHotKey(IN DWORD dwHotKey,
+                   OUT LPUINT lpuModifiers,
+                   OUT LPUINT lpuVKey,
+                   OUT LPHKL lphKL);
 
-DWORD
+BOOL
 NTAPI
 NtUserGetImeInfoEx(
     PIMEINFOEX pImeInfoEx,
-    DWORD dwUnknown2);
+    IMEINFOEXCLASS SearchType);
 
 DWORD
 NTAPI
@@ -2800,6 +2806,9 @@ NtUserQueryUserCounters(
 #define QUERY_WINDOW_ISHUNG            0x04
 #define QUERY_WINDOW_REAL_ID           0x05
 #define QUERY_WINDOW_FOREGROUND        0x06
+#define QUERY_WINDOW_DEFAULT_IME       0x07
+#define QUERY_WINDOW_DEFAULT_ICONTEXT  0x08
+#define QUERY_WINDOW_ACTIVE_IME        0x09
 
 DWORD_PTR
 NTAPI
