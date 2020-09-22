@@ -453,6 +453,9 @@ static BOOL IPADDRESS_GotoNextField (const IPADDRESS_INFO *infoPtr, int cur, int
 		    end = -1;
 	        SendMessageW(next->EditHwnd, EM_SETSEL, start, end);
 	    }
+#ifdef __REACTOS__
+	    SetFocus(next->EditHwnd);
+#endif
 	    return TRUE;
 	}
 
@@ -563,6 +566,26 @@ IPADDRESS_SubclassProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 			return 0;
 		    }
 		    break;
+#ifdef __REACTOS__
+        case VK_TAB:
+            if (GetKeyState(VK_SHIFT) < 0)
+            {
+                /* Shift+Tab */
+                if (index == 0)
+                    SetFocus(GetNextDlgTabItem(GetParent(infoPtr->Self), infoPtr->Self, TRUE));
+                else
+                    IPADDRESS_GotoNextField(infoPtr, index - 2, POS_SELALL);
+            }
+            else
+            {
+                /* Tab */
+                if (index == 3)
+                    SetFocus(GetNextDlgTabItem(GetParent(infoPtr->Self), infoPtr->Self, FALSE));
+                else
+                    IPADDRESS_GotoNextField(infoPtr, index, POS_SELALL);
+            }
+            break;
+#endif
 	    }
 	    break;
 	case WM_KILLFOCUS:
@@ -573,6 +596,13 @@ IPADDRESS_SubclassProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	    if (IPADDRESS_GetPartIndex(infoPtr, (HWND)wParam) < 0)
 		IPADDRESS_Notify(infoPtr, EN_SETFOCUS);
 	    break;
+#ifdef __REACTOS__
+    case WM_GETDLGCODE:
+        {
+            LRESULT ret = DefWindowProcW(hwnd, uMsg, wParam, lParam);
+            return ret | DLGC_WANTTAB;
+        }
+#endif
     }
     return CallWindowProcW (part->OrigProc, hwnd, uMsg, wParam, lParam);
 }
@@ -602,6 +632,11 @@ IPADDRESS_WindowProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	case WM_PAINT:
 	    return IPADDRESS_Paint (infoPtr, (HDC)wParam);
 
+#ifdef __REACTOS__
+    case WM_SETFOCUS:
+        IPADDRESS_GotoNextField(infoPtr, -1, POS_SELALL);
+        return 0;
+#endif
 	case WM_COMMAND:
 	    switch(wParam >> 16) {
 		case EN_CHANGE:
