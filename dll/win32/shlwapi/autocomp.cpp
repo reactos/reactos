@@ -251,11 +251,37 @@ BOOL CAutoCompleteEnumString::DoFileSystem(LPCWSTR pszQuery)
     return FALSE; // Not exact match
 }
 
+static LONG
+RegQueryCStringW(HKEY hKey, LPCWSTR pszValueName, CStringW& str)
+{
+    DWORD dwType, cbData;
+    LONG ret;
+    LPWSTR pszBuffer;
+
+    // Check type and size
+    ret = RegQueryValueExW(hKey, pszValueName, NULL, &dwType, NULL, &cbData);
+    if (ret != ERROR_SUCCESS)
+        return ret;
+    if (dwType != REG_SZ && dwType != REG_EXPAND_SZ)
+        return ERROR_INVALID_DATA;
+
+    // Allocate buffer
+    pszBuffer = str.GetBuffer(cbData / sizeof(WCHAR) + 1);
+    if (pszBuffer == NULL)
+        return ERROR_OUTOFMEMORY;
+
+    // Get the data
+    ret = RegQueryValueExW(hKey, pszValueName, NULL, NULL, (LPBYTE)pszBuffer, &cbData);
+
+    // Release buffer
+    str.ReleaseBuffer();
+    return ret;
+}
+
 void CAutoCompleteEnumString::DoTypedPaths(LPCWSTR pszQuery)
 {
     static const LPCWSTR
         pszTypedPaths = L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\TypedPaths";
-    WCHAR szName[32], szValue[MAX_PATH + 32];
 
     INT cch = (INT)wcslen(pszQuery); // The length of pszQuery
     if (cch <= 0)
@@ -273,6 +299,8 @@ void CAutoCompleteEnumString::DoTypedPaths(LPCWSTR pszQuery)
         return;
     }
 
+    WCHAR szName[32];
+    CStringW strData;
     for (DWORD i = 1; i <= MAX_ITEMS; ++i) // For all the URL entries
     {
         if (!CanAddItem())
@@ -282,21 +310,20 @@ void CAutoCompleteEnumString::DoTypedPaths(LPCWSTR pszQuery)
         StringCbPrintfW(szName, sizeof(szName), L"url%lu", i);
 
         // Read a registry value
-        DWORD cbValue = sizeof(szValue), dwType;
-        result = RegQueryValueExW(hKey, szName, NULL, &dwType, (LPBYTE)szValue, &cbValue);
-        if (result == ERROR_SUCCESS && dwType == REG_SZ) // Could I read it?
+        result = RegQueryCStringW(hKey, szName, strData);
+        if (result == ERROR_SUCCESS) // Could I read it?
         {
-            if (!PathFileExistsW(szValue))
+            if (!PathFileExistsW(strData))
                 continue; // File or folder doesn't exist
-            if ((m_dwSHACF & SHACF_FILESYS_DIRS) && !PathIsDirectoryW(szValue))
+            if ((m_dwSHACF & SHACF_FILESYS_DIRS) && !PathIsDirectoryW(strData))
                 continue; // Directory-only and not a directory
 
-            CStringW strPath = szValue;
+            CStringW strPath = strData;
             strPath = strPath.Left(cch); // Truncate
 
             if (_wcsicmp(pszQuery, strPath) == 0) // Matched
             {
-                if (!AddItem(szValue))
+                if (!AddItem(strData))
                     break;
             }
         }
@@ -323,6 +350,11 @@ void CAutoCompleteEnumString::DoAll()
     INT cchMax = GetWindowTextLengthW(m_hwndEdit) + 1;
     CString strText;
     LPWSTR pszText = strText.GetBuffer(cchMax);
+    if (pszText == NULL)
+    {
+        ERR("Out of memory\n");
+        return;
+    }
     GetWindowTextW(m_hwndEdit, pszText, cchMax);
     strText.ReleaseBuffer();
 
@@ -425,7 +457,6 @@ void CAutoCompleteEnumString::DoURLHistory()
 {
     static const LPCWSTR
         pszTypedURLs = L"Software\\Microsoft\\Internet Explorer\\TypedURLs";
-    WCHAR szName[32], szValue[MAX_PATH + 32];
 
     // Open the registry key
     HKEY hKey;
@@ -436,6 +467,8 @@ void CAutoCompleteEnumString::DoURLHistory()
         return;
     }
 
+    WCHAR szName[32];
+    CStringW strData;
     for (DWORD i = 1; i <= MAX_ITEMS; ++i) // For all the URL entries
     {
         if (!CanAddItem())
@@ -445,13 +478,12 @@ void CAutoCompleteEnumString::DoURLHistory()
         StringCbPrintfW(szName, sizeof(szName), L"url%lu", i);
 
         // Read a registry value
-        DWORD cbValue = sizeof(szValue), dwType;
-        result = RegQueryValueExW(hKey, szName, NULL, &dwType, (LPBYTE)szValue, &cbValue);
-        if (result == ERROR_SUCCESS && dwType == REG_SZ) // Could I read it?
+        result = RegQueryCStringW(hKey, szName, strData);
+        if (result == ERROR_SUCCESS) // Could I read it?
         {
-            if (UrlIsW(szValue, URLIS_URL)) // Is it a URL?
+            if (UrlIsW(strData, URLIS_URL)) // Is it a URL?
             {
-                if (!AddItem(szValue))
+                if (!AddItem(strData))
                     break;
             }
         }
@@ -464,7 +496,6 @@ void CAutoCompleteEnumString::DoURLMRU()
 {
     static const LPCWSTR
         pszRunMRU = L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\RunMRU";
-    WCHAR szName[2], szMRUList[64], szValue[MAX_PATH + 32];
 
     // Open the registry key
     HKEY hKey;
@@ -476,37 +507,39 @@ void CAutoCompleteEnumString::DoURLMRU()
     }
 
     // Read the MRUList
-    DWORD cbValue = sizeof(szMRUList), dwType;
-    result = RegQueryValueExW(hKey, L"MRUList", NULL, &dwType, (LPBYTE)szMRUList, &cbValue);
-    if (result != ERROR_SUCCESS || dwType != REG_SZ)
+    CStringW strMRUList;
+    result = RegQueryCStringW(hKey, L"MRUList", strMRUList);
+    if (result != ERROR_SUCCESS)
     {
         RegCloseKey(hKey); // Close the registry key
         return;
     }
 
-    for (DWORD i = 0; i <= L'z' - L'a' && szMRUList[i]; ++i) // for all the MRU items
+    // for all the MRU items
+    CStringW strData;
+    for (INT i = 0; i <= L'z' - L'a' && i < strMRUList.GetLength(); ++i)
     {
         if (!CanAddItem())
             break;
 
         // Build a registry value name
-        szName[0] = szMRUList[i];
+        WCHAR szName[2];
+        szName[0] = strMRUList[i];
         szName[1] = 0;
 
         // Read a registry value
-        cbValue = sizeof(szValue);
-        result = RegQueryValueExW(hKey, szName, NULL, &dwType, (LPBYTE)szValue, &cbValue);
-        if (result != ERROR_SUCCESS || dwType != REG_SZ)
+        result = RegQueryCStringW(hKey, szName, strData);
+        if (result != ERROR_SUCCESS)
             continue;
 
         // Fix up for special case of "\\1"
-        size_t cch = wcslen(szValue);
-        if (cch >= 2 && wcscmp(&szValue[cch - 2], L"\\1") == 0)
-            szValue[cch - 2] = 0;
+        INT cch = INT(wcslen(strData));
+        if (cch >= 2 && wcscmp(&strData[cch - 2], L"\\1") == 0)
+            strData = strData.Left(cch - 2);
 
-        if (UrlIsW(szValue, URLIS_URL)) // Is it a URL?
+        if (UrlIsW(strData, URLIS_URL)) // Is it a URL?
         {
-            if (!AddItem(szValue))
+            if (!AddItem(strData))
                 break;
         }
     }
