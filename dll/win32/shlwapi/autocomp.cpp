@@ -222,7 +222,7 @@ void CAutoCompleteEnumString::DoTypedPaths(LPCWSTR pszQuery)
         {
             if (!PathFileExistsW(szValue))
                 continue; // File or folder doesn't exist
-            if (!(m_dwSHACF & SHACF_FILESYS_DIRS) && !PathIsDirectoryW(szValue))
+            if ((m_dwSHACF & SHACF_FILESYS_DIRS) && !PathIsDirectoryW(szValue))
                 continue; // Directory-only and not a directory
 
             StringCbCopyW(szPath, sizeof(szPath), szValue); // Copy szValue
