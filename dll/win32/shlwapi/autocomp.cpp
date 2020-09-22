@@ -62,7 +62,7 @@ public:
     }
 
     void DoAll();
-    void DoFileSystem(LPCWSTR pszQuery);
+    BOOL DoFileSystem(LPCWSTR pszQuery);
     void DoTypedPaths(LPCWSTR pszQuery);
     void DoDir(LPCWSTR pszDir, BOOL bDirOnly);
     void DoDrives(BOOL bDirOnly);
@@ -141,7 +141,7 @@ STDMETHODIMP CAutoCompleteEnumString::Skip(ULONG celt)
     return S_OK; // Success
 }
 
-void CAutoCompleteEnumString::DoFileSystem(LPCWSTR pszQuery)
+BOOL CAutoCompleteEnumString::DoFileSystem(LPCWSTR pszQuery)
 {
     // Check the drive
     INT nDriveNumber = PathGetDriveNumberW(pszQuery);
@@ -154,7 +154,7 @@ void CAutoCompleteEnumString::DoFileSystem(LPCWSTR pszQuery)
             case DRIVE_REMOTE: case DRIVE_RAMDISK: case DRIVE_FIXED:
                 break;
             default:
-                return; // Don't scan slow drives
+                return FALSE; // Don't scan slow drives
         }
     }
 
@@ -162,15 +162,18 @@ void CAutoCompleteEnumString::DoFileSystem(LPCWSTR pszQuery)
     BOOL bDirOnly = !!(m_dwSHACF & SHACF_FILESYS_DIRS);
 
     DWORD attrs = GetFileAttributesW(pszQuery);
-    if (attrs != INVALID_FILE_ATTRIBUTES) 
+    if (attrs != INVALID_FILE_ATTRIBUTES) // File or folder does exist
     {
-        // File or folder does exist
-        if (attrs & FILE_ATTRIBUTE_DIRECTORY)
+        if (attrs & FILE_ATTRIBUTE_DIRECTORY) // Is it a directory?
         {
             size_t cch = wcslen(pszQuery);
             if (cch > 0 && pszQuery[cch - 1] == L'\\')
+            {
                 DoDir(pszQuery, bDirOnly); // Scan the directory
+                return FALSE; // Not exact match
+            }
         }
+        return TRUE; // Exact match should hide the list
     }
     else if (pszQuery[0] && wcschr(pszQuery, L'\\') != NULL)
     {
@@ -185,6 +188,8 @@ void CAutoCompleteEnumString::DoFileSystem(LPCWSTR pszQuery)
     {
         DoDrives(bDirOnly); // Scan drives
     }
+
+    return FALSE; // Not exact match
 }
 
 void CAutoCompleteEnumString::DoTypedPaths(LPCWSTR pszQuery)
@@ -261,8 +266,8 @@ void CAutoCompleteEnumString::DoAll()
     // Populate the items for filesystem and typed paths
     if (m_dwSHACF & (SHACF_FILESYS_ONLY | SHACF_FILESYSTEM | SHACF_FILESYS_DIRS))
     {
-        DoFileSystem(szText);
-        DoTypedPaths(szText);
+        if (!DoFileSystem(szText))
+            DoTypedPaths(szText);
     }
 
     // Populate the items for URLs
