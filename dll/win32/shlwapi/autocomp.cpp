@@ -6,7 +6,6 @@
  */
 #include <windef.h>
 #include <winreg.h>
-#include <process.h>
 #include <shldisp.h>
 #include <shlguid.h>
 #define NO_SHLWAPI_STREAM
@@ -31,26 +30,9 @@ public:
         : m_istr(0)
         , m_hwndEdit(NULL)
         , m_dwSHACF(0)
-        , m_hThread(NULL)
     {
         ZeroMemory(m_szPending, sizeof(m_szPending));
     }
-
-    void CloseThread()
-    {
-        if (m_hThread)
-        {
-            CloseHandle(m_hThread);
-            m_hThread = NULL;
-        }
-    }
-
-    ~CAutoCompleteEnumString()
-    {
-        CloseThread();
-    }
-
-    BOOL IsThreadRunning(DWORD dwMilliseconds = 0) const;
 
     void Initialize(IAutoComplete2 *pAC2, DWORD dwSHACF, HWND hwndEdit);
 
@@ -85,13 +67,10 @@ public:
         COM_INTERFACE_ENTRY_IID(IID_IEnumString, IEnumString)
     END_COM_MAP()
 
-    static unsigned __stdcall ThreadProc(void *arg);
-
 protected:
     INT m_istr;
     HWND m_hwndEdit;
     DWORD m_dwSHACF;
-    HANDLE m_hThread;
     CSimpleArray<CStringW> m_strs;
     WCHAR m_szPending[MAX_PATH];
 };
@@ -102,13 +81,6 @@ void CAutoCompleteEnumString::Initialize(IAutoComplete2 *pAC2, DWORD dwSHACF, HW
     m_hwndEdit = hwndEdit;
     m_dwSHACF = dwSHACF;
     Reset();
-}
-
-BOOL CAutoCompleteEnumString::IsThreadRunning(DWORD dwMilliseconds) const
-{
-    if (m_hThread == NULL)
-        return FALSE;
-    return (WaitForSingleObject(m_hThread, dwMilliseconds) == WAIT_TIMEOUT);
 }
 
 STDMETHODIMP
@@ -122,9 +94,6 @@ CAutoCompleteEnumString::Next(ULONG celt, LPOLESTR *rgelt, ULONG *pceltFetched)
 
     *pceltFetched = 0;
     *rgelt = NULL;
-    if (IsThreadRunning())
-        return FALSE;
-
     if (m_istr >= m_strs.GetSize())
         return S_FALSE;
 
@@ -147,9 +116,6 @@ CAutoCompleteEnumString::Next(ULONG celt, LPOLESTR *rgelt, ULONG *pceltFetched)
 
 STDMETHODIMP CAutoCompleteEnumString::Skip(ULONG celt)
 {
-    if (IsThreadRunning())
-        return S_FALSE;
-
     if (m_strs.GetSize() == 0 || m_strs.GetSize() <= INT(m_istr + celt))
         return S_FALSE;
 
@@ -161,6 +127,20 @@ void CAutoCompleteEnumString::DoFileSystem(LPCWSTR pszQuery)
 {
     BOOL bDirOnly = !!(m_dwSHACF & SHACF_FILESYS_DIRS);
 
+    INT nDriveNumber = PathGetDriveNumberW(pszQuery);
+    if (nDriveNumber != -1)
+    {
+        WCHAR szRoot[] = L"C:\\";
+        szRoot[0] = WCHAR('A' + nDriveNumber);
+        switch (GetDriveTypeW(szRoot))
+        {
+            case DRIVE_REMOTE: case DRIVE_RAMDISK: case DRIVE_FIXED:
+                break;
+            default:
+                return; // Don't scan slow drive
+        }
+    }
+
     DWORD attrs = GetFileAttributesW(pszQuery);
 
     if (attrs != INVALID_FILE_ATTRIBUTES)
@@ -170,7 +150,7 @@ void CAutoCompleteEnumString::DoFileSystem(LPCWSTR pszQuery)
         else
             AddString(pszQuery);
     }
-    else if (pszQuery[0])
+    else if (pszQuery[0] && wcschr(pszQuery, L'\\') != NULL)
     {
         WCHAR szPath[MAX_PATH];
         StringCbCopyW(szPath, sizeof(szPath), pszQuery);
@@ -189,14 +169,13 @@ void CAutoCompleteEnumString::DoAll()
     if (!IsWindow(m_hwndEdit))
     {
         ResetContent();
-        CloseThread();
         return;
     }
 
     WCHAR szText[MAX_PATH];
     GetWindowTextW(m_hwndEdit, szText, _countof(szText));
 
-    if (IsThreadRunning() && lstrcmpiW(m_szPending, szText) == 0)
+    if (m_szPending[0] && lstrcmpiW(m_szPending, szText) == 0)
         return;
 
     StringCbCopyW(m_szPending, sizeof(m_szPending), szText);
@@ -213,33 +192,14 @@ void CAutoCompleteEnumString::DoAll()
             DoURLMRU();
     }
 
-    CloseThread();
     m_szPending[0] = 0;
-}
-
-unsigned __stdcall CAutoCompleteEnumString::ThreadProc(void *arg)
-{
-    CAutoCompleteEnumString *this_ = (CAutoCompleteEnumString *)arg;
-    SetThreadPriority(GetCurrentThread(), THREAD_PRIORITY_ABOVE_NORMAL);
-    this_->AddRef();
-    this_->DoAll();
-    this_->Release();
-    return 0;
 }
 
 STDMETHODIMP CAutoCompleteEnumString::Reset()
 {
     m_istr = 0;
 
-    if (IsThreadRunning())
-        return E_FAIL;
-
-    m_hThread = (HANDLE)_beginthreadex(NULL, 0, ThreadProc, this, 0, NULL);
-    if (IsThreadRunning(400))
-    {
-        CloseHandle(m_hThread);
-        m_hThread = NULL;
-    }
+    DoAll();
 
     return S_OK;
 }
@@ -314,6 +274,8 @@ void CAutoCompleteEnumString::DoDrives(BOOL bDirOnly)
             case DRIVE_REMOTE: case DRIVE_RAMDISK: case DRIVE_FIXED:
                 DoDir(sz, bDirOnly);
                 break;
+            default:
+                break; // Don't scan slow drives
         }
     }
 }
