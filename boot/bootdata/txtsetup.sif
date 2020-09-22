@@ -226,7 +226,7 @@ pci_up = "Standard PC Uniprocessor"
 acpi_up = "ACPI PC Uniprocessor"
 ;acpi_mp = "ACPI PC Multiprocessor"
 xbox = "Original Xbox (x86 based)"
-pc98_up = "Uniprocessor NEC PC-98"
+pc98_up = "NEC PC-98 Uniprocessor"
 
 [Computer.NTamd64]
 x64_up = "Standard x64 Uniprocessor"
