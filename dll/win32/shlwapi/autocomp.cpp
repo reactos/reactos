@@ -212,6 +212,9 @@ void CAutoCompleteEnumString::DoTypedPaths(LPCWSTR pszQuery)
 
     for (DWORD i = 1; i <= MAX_ITEMS; ++i) // For all the URL entries
     {
+        if (!CanAddString())
+            break;
+
         // Build a registry value name
         StringCbPrintfW(szName, sizeof(szName), L"url%lu", i);
 
@@ -220,18 +223,17 @@ void CAutoCompleteEnumString::DoTypedPaths(LPCWSTR pszQuery)
         result = RegQueryValueExW(hKey, szName, NULL, &dwType, (LPBYTE)szValue, &cbValue);
         if (result == ERROR_SUCCESS && dwType == REG_SZ) // Could I read it?
         {
-            if (PathFileExistsW(szValue)) // File or folder does exist
-            {
-                if (!(m_dwSHACF & SHACF_FILESYS_DIRS) && !PathIsDirectoryW(szValue))
-                    continue; // Directory-only and not a directory
+            if (!PathFileExistsW(szValue))
+                continue; // File or folder doesn't exist
+            if (!(m_dwSHACF & SHACF_FILESYS_DIRS) && !PathIsDirectoryW(szValue))
+                continue; // Directory-only and not a directory
 
-                StringCbCopyW(szPath, sizeof(szPath), szValue); // Copy szValue
-                szPath[cch] = 0; // and truncate
-                if (_wcsicmp(pszQuery, szPath) == 0) // Matched
-                {
-                    if (!AddString(szValue))
-                        break;
-                }
+            StringCbCopyW(szPath, sizeof(szPath), szValue); // Copy szValue
+            szPath[cch] = 0; // and truncate
+            if (_wcsicmp(pszQuery, szPath) == 0) // Matched
+            {
+                if (!AddString(szValue))
+                    break;
             }
         }
     }
@@ -374,6 +376,9 @@ void CAutoCompleteEnumString::DoURLHistory()
 
     for (DWORD i = 1; i <= MAX_ITEMS; ++i) // For all the URL entries
     {
+        if (!CanAddString())
+            break;
+
         // Build a registry value name
         StringCbPrintfW(szName, sizeof(szName), L"url%lu", i);
 
@@ -422,6 +427,9 @@ void CAutoCompleteEnumString::DoURLMRU()
 
     for (DWORD i = 0; i <= L'z' - L'a' && szMRUList[i]; ++i) // for all the MRU items
     {
+        if (!CanAddString())
+            break;
+
         // Build a registry value name
         szName[0] = szMRUList[i];
         szName[1] = 0;
