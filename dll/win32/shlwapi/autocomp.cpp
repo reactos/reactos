@@ -42,7 +42,7 @@ public:
         if (m_items.GetSize() >= MAX_ITEMS)
             return FALSE;
         if (GetTickCount() - m_dwOldTicks >= MAX_TICKS)
-            return FALSE;
+            return FALSE; // Timeout
         return TRUE;
     }
 
