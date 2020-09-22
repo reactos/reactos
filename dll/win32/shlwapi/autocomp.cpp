@@ -119,11 +119,13 @@ CAutoCompleteEnumString::Next(ULONG celt, LPOLESTR *rgelt, ULONG *pceltFetched)
         if (!rgelt[ielt]) // Failed
         {
             ERR("Out of memory\n");
-
             // Clean up
             while (ielt-- > 0)
+            {
                 CoTaskMemFree(rgelt[ielt]);
-            return S_FALSE;
+                rgelt[ielt] = NULL;
+            }
+            return S_FALSE; // Failure
         }
         CopyMemory(rgelt[ielt], (LPCWSTR)m_items[m_iItem], cb);
     }
