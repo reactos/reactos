@@ -31,7 +31,6 @@ public:
         , m_hwndEdit(NULL)
         , m_dwSHACF(0)
     {
-        ZeroMemory(m_szPending, sizeof(m_szPending));
     }
 
     void Initialize(IAutoComplete2 *pAC2, DWORD dwSHACF, HWND hwndEdit);
@@ -72,7 +71,6 @@ protected:
     HWND m_hwndEdit;
     DWORD m_dwSHACF;
     CSimpleArray<CStringW> m_strs;
-    WCHAR m_szPending[MAX_PATH];
 };
 
 void CAutoCompleteEnumString::Initialize(IAutoComplete2 *pAC2, DWORD dwSHACF, HWND hwndEdit)
@@ -92,11 +90,14 @@ CAutoCompleteEnumString::Next(ULONG celt, LPOLESTR *rgelt, ULONG *pceltFetched)
         return E_POINTER;
     }
 
+    // Initialize
     *pceltFetched = 0;
     *rgelt = NULL;
-    if (m_istr >= m_strs.GetSize())
-        return S_FALSE;
 
+    if (m_istr >= m_strs.GetSize())
+        return S_FALSE; // No more elements
+
+    // Get elements
     ULONG ielt;
     for (ielt = 0; ielt < celt && m_istr < m_strs.GetSize(); ++ielt, ++m_istr)
     {
@@ -125,8 +126,7 @@ STDMETHODIMP CAutoCompleteEnumString::Skip(ULONG celt)
 
 void CAutoCompleteEnumString::DoFileSystem(LPCWSTR pszQuery)
 {
-    BOOL bDirOnly = !!(m_dwSHACF & SHACF_FILESYS_DIRS);
-
+    // Check drive number
     INT nDriveNumber = PathGetDriveNumberW(pszQuery);
     if (nDriveNumber != -1)
     {
@@ -137,14 +137,16 @@ void CAutoCompleteEnumString::DoFileSystem(LPCWSTR pszQuery)
             case DRIVE_REMOTE: case DRIVE_RAMDISK: case DRIVE_FIXED:
                 break;
             default:
-                return; // Don't scan slow drive
+                return; // Don't scan slow drives
         }
     }
 
-    DWORD attrs = GetFileAttributesW(pszQuery);
+    BOOL bDirOnly = !!(m_dwSHACF & SHACF_FILESYS_DIRS);
 
-    if (attrs != INVALID_FILE_ATTRIBUTES)
+    DWORD attrs = GetFileAttributesW(pszQuery);
+    if (attrs != INVALID_FILE_ATTRIBUTES) 
     {
+        // File or folder doesn't exist
         if (attrs & FILE_ATTRIBUTE_DIRECTORY)
             DoDir(pszQuery, bDirOnly);
         else
@@ -152,6 +154,7 @@ void CAutoCompleteEnumString::DoFileSystem(LPCWSTR pszQuery)
     }
     else if (pszQuery[0] && wcschr(pszQuery, L'\\') != NULL)
     {
+        // Non-existent but can be a partial path
         WCHAR szPath[MAX_PATH];
         StringCbCopyW(szPath, sizeof(szPath), pszQuery);
         PathRemoveFileSpecW(szPath);
@@ -160,27 +163,28 @@ void CAutoCompleteEnumString::DoFileSystem(LPCWSTR pszQuery)
     }
     else
     {
+        // An empty query
         DoDrives(bDirOnly);
     }
 }
 
 void CAutoCompleteEnumString::DoAll()
 {
+    // Check whether m_hwndEdit is valid
     if (!IsWindow(m_hwndEdit))
     {
         ResetContent();
         return;
     }
 
+    // Get text from EDIT control
     WCHAR szText[MAX_PATH];
     GetWindowTextW(m_hwndEdit, szText, _countof(szText));
 
-    if (m_szPending[0] && lstrcmpiW(m_szPending, szText) == 0)
-        return;
-
-    StringCbCopyW(m_szPending, sizeof(m_szPending), szText);
+    // Clear
     ResetContent();
 
+    // Populate the items
     if (m_dwSHACF & (SHACF_FILESYS_ONLY | SHACF_FILESYSTEM | SHACF_FILESYS_DIRS))
         DoFileSystem(szText);
 
@@ -191,8 +195,6 @@ void CAutoCompleteEnumString::DoAll()
         if (m_dwSHACF & SHACF_URLMRU)
             DoURLMRU();
     }
-
-    m_szPending[0] = 0;
 }
 
 STDMETHODIMP CAutoCompleteEnumString::Reset()
