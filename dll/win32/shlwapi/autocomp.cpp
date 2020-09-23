@@ -44,7 +44,6 @@ AutoComplete_CreateUnknownFromCLSID(const CLSID& clsid, LPCSTR name)
     }
     return ret;
 }
-
 #define CREATE_FROM_CLSID(name) AutoComplete_CreateUnknownFromCLSID(name, #name)
 
 static CComPtr<IUnknown>
@@ -95,14 +94,14 @@ AutoComplete_CreateList(DWORD dwSHACF, DWORD dwACLO)
     return pList;
 }
 
+#define AUTOCOMPLETE_KEY L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\AutoComplete"
+
 static BOOL
 AutoComplete_AdaptFlags(IN HWND hwndEdit,
                         IN OUT LPDWORD pdwSHACF,
                         OUT LPDWORD pdwACO,
                         OUT LPDWORD pdwACLO)
 {
-#define AUTOCOMPLETE_KEY L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\AutoComplete"
-
     DWORD dwSHACF = *pdwSHACF, dwACO = 0, dwACLO = 0;
     if (dwSHACF == SHACF_DEFAULT)
         dwSHACF = SHACF_FILESYSTEM | SHACF_URLALL;
