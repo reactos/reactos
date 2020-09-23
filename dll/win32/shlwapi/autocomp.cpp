@@ -32,13 +32,16 @@ IUnknown_SetOptions(IUnknown *punk, DWORD dwACLO)
 }
 
 static CComPtr<IUnknown>
-CreateUnknownFromCLSID(const CLSID& clsid, const char *name)
+CreateUnknownFromCLSID(const CLSID& clsid, LPCSTR name)
 {
     CComPtr<IUnknown> ret;
     HRESULT hr = CoCreateInstance(clsid, NULL, CLSCTX_INPROC_SERVER,
                                   IID_IUnknown, (LPVOID *)&ret);
     if (FAILED(hr))
-        ERR("%s: hr: 0x%08lX", name, hr);
+    {
+        ERR("%s: hr:0x%08lX", name, hr);
+        return NULL;
+    }
     return ret;
 }
 
