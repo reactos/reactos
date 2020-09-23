@@ -57,6 +57,8 @@
 #include <wine/unicode.h>
 #include <wine/debug.h>
 
+#include <winnls32.h>
+
 /* Internal User32 Headers */
 #include "user32p.h"
 
