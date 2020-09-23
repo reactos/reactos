@@ -123,7 +123,7 @@ AutoComplete_AdaptFlags(IN HWND hwndEdit,
 
     if (!(dwSHACF & SHACF_AUTOSUGGEST_FORCE_OFF) &&
         ((dwSHACF & SHACF_AUTOSUGGEST_FORCE_ON) ||
-         SHRegGetBoolUSValueW(AUTOCOMPLETE_KEY, L"AutoSuggest", FALSE, FALSE)))
+         SHRegGetBoolUSValueW(AUTOCOMPLETE_KEY, L"AutoSuggest", FALSE, TRUE)))
     {
         dwACO |= ACO_AUTOSUGGEST;
     }
