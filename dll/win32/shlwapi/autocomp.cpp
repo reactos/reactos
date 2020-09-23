@@ -187,12 +187,12 @@ static BOOL IsSlowDrive(LPCWSTR pszRoot)
     {
         case DRIVE_REMOVABLE:
             ret = GetDriveFlags(pszRoot);
-            // Floppy and non-virtual
+            // Floppy and non-virtual is slow
             return ((ret & FILE_FLOPPY_DISKETTE) && !(ret & FILE_VIRTUAL_VOLUME));
 
         case DRIVE_CDROM:
             ret = GetDriveFlags(pszRoot);
-            // CD/DVD and non-virtual
+            // CD/DVD and non-virtual is slow
             return !(ret & FILE_VIRTUAL_VOLUME);
     }
     return FALSE; // Not slow
