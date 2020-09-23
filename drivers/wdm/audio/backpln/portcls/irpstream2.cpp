@@ -14,6 +14,51 @@
 
 #include <debug.h>
 
+static
+KSDDKAPI
+PIRP
+NTAPI
+RemoveHeadList_IRP(
+    IN  OUT PLIST_ENTRY QueueHead)
+{
+    PIRP Irp;
+    PLIST_ENTRY CurEntry;    
+
+    /* point to queue head */
+    CurEntry = QueueHead;
+    
+    do
+    {
+        /* iterate to next entry */
+        CurEntry = CurEntry->Flink;
+        
+        /* is the end of list reached */
+        if (CurEntry == QueueHead)
+        {
+            /* reached end of list */
+            break;
+        }
+
+        /* get irp offset */
+        Irp = (PIRP)CONTAINING_RECORD(CurEntry, IRP, Tail.Overlay.ListEntry);
+
+        /* remove cancel routine */
+        if (IoSetCancelRoutine(Irp, NULL))
+        {
+        
+            /* remove irp from list */
+            RemoveEntryList(&Irp->Tail.Overlay.ListEntry);
+            
+            /* return irp */
+            return Irp;
+        }
+        
+    }while(TRUE);
+        
+    /* no non canceled irp has been found */
+    return NULL;
+}
+
 class CIrpQueue2 : public IIrpQueue
 {
 public:
@@ -45,7 +90,6 @@ protected:
     PKSPIN_DESCRIPTOR m_Descriptor;
 
     KSPIN_LOCK m_IrpListLock;
-    KSPIN_LOCK m_QueueLock;
     LIST_ENTRY m_IrpList;
     LIST_ENTRY m_FreeIrpList;
 
@@ -112,7 +156,6 @@ CIrpQueue2::Init(
     InitializeListHead(&m_IrpList);
     InitializeListHead(&m_FreeIrpList);
     KeInitializeSpinLock(&m_IrpListLock);
-    KeInitializeSpinLock(&m_QueueLock);
 
     return STATUS_SUCCESS;
 }
@@ -345,27 +388,25 @@ CIrpQueue2::GetMappingWithTag(
     PC_ASSERT(Flags);
     
     
-    KeAcquireSpinLock(&m_QueueLock, &OldLevel);
+    KeAcquireSpinLock(&m_IrpListLock, &OldLevel);
     
     if (!m_Irp)
     {
         // get an irp from the queue
-        m_Irp = KsRemoveIrpFromCancelableQueue(&m_IrpList, &m_IrpListLock, KsListEntryHead, KsAcquireAndRemoveOnlySingleItem);
-        
-        if(m_Irp) {
-            m_StreamHeaderIndex = 0;
-        }
-    }
+        m_Irp = RemoveHeadList_IRP(&m_IrpList);
 
-    // check if there is an irp
-    if (!m_Irp)
-    {
-        // no irp available
-        m_OutOfMapping = TRUE;
-        KeReleaseSpinLock(&m_QueueLock, OldLevel);
+        // check if there is an irp
+        if (!m_Irp)
+        {
+            // no irp available
+            m_OutOfMapping = TRUE;
+            KeReleaseSpinLock(&m_IrpListLock, OldLevel);
+            
+            DPRINT("GetMappingWithTag no mapping available\n");
+            return STATUS_NOT_FOUND;
+        }
         
-        DPRINT("GetMappingWithTag no mapping available\n");
-        return STATUS_NOT_FOUND;
+        m_StreamHeaderIndex = 0;
     }
 
     // get stream data
@@ -412,7 +453,7 @@ CIrpQueue2::GetMappingWithTag(
     // get physical address
     *PhysicalAddress = MmGetPhysicalAddress(*VirtualAddress);
     
-    KeReleaseSpinLock(&m_QueueLock, OldLevel);
+    KeReleaseSpinLock(&m_IrpListLock, OldLevel);
 
     DPRINT("GetMappingWithTag Tag %p Buffer %p Flags %lu ByteCount %lx\n", Tag, VirtualAddress, *Flags, *ByteCount);
     // done
@@ -431,7 +472,7 @@ CIrpQueue2::ReleaseMappingWithTag(
     ULONG Index;
     KIRQL OldLevel;
 
-    KeAcquireSpinLock(&m_QueueLock, &OldLevel);
+    KeAcquireSpinLock(&m_IrpListLock, &OldLevel);
 
     // check if used list empty
     if (IsListEmpty(&m_FreeIrpList))
@@ -439,7 +480,7 @@ CIrpQueue2::ReleaseMappingWithTag(
         // get current irp
         if(m_Irp == NULL)
         {
-            KeReleaseSpinLock(&m_QueueLock, OldLevel);
+            KeReleaseSpinLock(&m_IrpListLock, OldLevel);
     
             // this should not happen
             DPRINT("ReleaseMappingWithTag Tag %p not found\n", Tag);
@@ -488,7 +529,7 @@ CIrpQueue2::ReleaseMappingWithTag(
     // current IRP, do not complete
     if(Irp == m_Irp)
     {
-        KeReleaseSpinLock(&m_QueueLock, OldLevel);
+        KeReleaseSpinLock(&m_IrpListLock, OldLevel);
         return STATUS_SUCCESS;
     }
     
@@ -501,11 +542,11 @@ CIrpQueue2::ReleaseMappingWithTag(
         {
             // looped buffers are not completed when they have been played
             // they are completed when the stream is set to stop
+            
+            KeReleaseSpinLock(&m_IrpListLock, OldLevel);
 
             // re-insert irp
             KsAddIrpToCancelableQueue(&m_IrpList, &m_IrpListLock, Irp, KsListEntryTail, NULL);
-            
-            KeReleaseSpinLock(&m_QueueLock, OldLevel);
 
             // done
             return STATUS_SUCCESS;
@@ -515,7 +556,7 @@ CIrpQueue2::ReleaseMappingWithTag(
         // time to complete non looped buffer
         //
         
-        KeReleaseSpinLock(&m_QueueLock, OldLevel);
+        KeReleaseSpinLock(&m_IrpListLock, OldLevel);
 
         // free stream data
         FreeItem(StreamData, TAG_PORTCLASS);
@@ -537,7 +578,7 @@ CIrpQueue2::ReleaseMappingWithTag(
         // there are still some headers not consumed
         InsertHeadList(&m_FreeIrpList, &Irp->Tail.Overlay.ListEntry);
         
-        KeReleaseSpinLock(&m_QueueLock, OldLevel);
+        KeReleaseSpinLock(&m_IrpListLock, OldLevel);
     }
 
     return STATUS_SUCCESS;
