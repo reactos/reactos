@@ -32,7 +32,7 @@ IUnknown_SetOptions(IUnknown *punk, DWORD dwACLO)
 }
 
 static CComPtr<IUnknown>
-CreateUnknownFromCLSID(const CLSID& clsid, LPCSTR name)
+AutoComplete_CreateUnknownFromCLSID(const CLSID& clsid, LPCSTR name)
 {
     CComPtr<IUnknown> ret;
     HRESULT hr = CoCreateInstance(clsid, NULL, CLSCTX_INPROC_SERVER,
@@ -45,7 +45,7 @@ CreateUnknownFromCLSID(const CLSID& clsid, LPCSTR name)
     return ret;
 }
 
-#define CREATE_FROM_CLSID(name) CreateUnknownFromCLSID(name, #name)
+#define CREATE_FROM_CLSID(name) AutoComplete_CreateUnknownFromCLSID(name, #name)
 
 static CComPtr<IUnknown>
 AutoComplete_CreateList(DWORD dwSHACF, DWORD dwACLO)
