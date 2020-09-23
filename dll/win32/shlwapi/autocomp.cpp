@@ -102,7 +102,6 @@ CAutoCompleteEnumString::Next(ULONG celt, LPOLESTR *rgelt, ULONG *pceltFetched)
         return E_POINTER;
     }
 
-    // Initialize
     *pceltFetched = 0;
     *rgelt = NULL;
 
