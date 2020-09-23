@@ -31,6 +31,16 @@ IUnknown_SetOptions(IUnknown *punk, DWORD dwACLO)
     return hr;
 }
 
+static HRESULT
+AutoComplete_CreateObjectByCLSID(CComPtr<IUnknown>& punk, const CLSID& clsid)
+{
+    HRESULT hr = CoCreateInstance(clsid, NULL, CLSCTX_INPROC_SERVER,
+                                  IID_IUnknown, (LPVOID *)&punk);
+    if (FAILED(hr))
+        ERR("hr: 0x%08lX", hr);
+    return hr;
+}
+
 static CComPtr<IUnknown>
 AutoComplete_CreateLists(DWORD dwSHACF, DWORD dwACLO)
 {
@@ -54,48 +64,33 @@ AutoComplete_CreateLists(DWORD dwSHACF, DWORD dwACLO)
     if (dwSHACF & SHACF_URLMRU)
     {
         CComPtr<IUnknown> pACLMRU;
-        hr = CoCreateInstance(CLSID_ACLMRU, NULL, CLSCTX_INPROC_SERVER,
-                              IID_IUnknown, (LPVOID *)&pACLMRU);
+        hr = AutoComplete_CreateObjectByCLSID(pACLMRU, CLSID_ACLMRU);
         if (SUCCEEDED(hr))
         {
             pManager->Append(pACLMRU);
             IUnknown_SetOptions(pACLMRU, dwACLO);
-        }
-        else
-        {
-            ERR("hr: 0x%08lX", hr);
         }
     }
 
     if (dwSHACF & SHACF_URLHISTORY)
     {
         CComPtr<IUnknown> pACLHistory;
-        hr = CoCreateInstance(CLSID_ACLHistory, NULL, CLSCTX_INPROC_SERVER,
-                              IID_IUnknown, (LPVOID *)&pACLHistory);
+        hr = AutoComplete_CreateObjectByCLSID(pACLHistory, CLSID_ACLHistory);
         if (SUCCEEDED(hr))
         {
             pManager->Append(pACLHistory);
             IUnknown_SetOptions(pACLHistory, dwACLO);
-        }
-        else
-        {
-            ERR("hr: 0x%08lX", hr);
         }
     }
 
     if (dwSHACF & SHACF_FILESYSTEM)
     {
         CComPtr<IUnknown> pACListISF;
-        hr = CoCreateInstance(CLSID_ACListISF, NULL, CLSCTX_INPROC_SERVER,
-                              IID_IUnknown, (LPVOID *)&pACListISF);
+        hr = AutoComplete_CreateObjectByCLSID(pACListISF, CLSID_ACListISF);
         if (SUCCEEDED(hr))
         {
             pManager->Append(pACListISF);
             IUnknown_SetOptions(pACListISF, dwACLO);
-        }
-        else
-        {
-            ERR("hr: 0x%08lX", hr);
         }
     }
 
