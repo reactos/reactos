@@ -61,7 +61,7 @@ START_TEST(sw_extensions)
 
     /* Get the version */
     output = (const char*)glGetString(GL_VERSION);
-    ok(strcmp(output, "1.1.0") == 0, "Expected version 1.1.0, got \"%s\".\n", output);
+    ok(strcmp(output, "1.1") == 0, "Expected version 1.1, got \"%s\".\n", output);
 
     /* Get the extensions list */
     output = (const char*)glGetString(GL_EXTENSIONS);
