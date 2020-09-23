@@ -158,40 +158,43 @@ GetDriveCharacteristics(HANDLE hDevice, ULONG *pCharacteristics)
     return TRUE;
 }
 
-static DWORD GetDriveFlags(LPCWSTR pszRoot)
+static BOOL GetDriveFlags(LPCWSTR pszRoot, LPDWORD pdwFlags)
 {
+    // Build a device name
     WCHAR szDevice[16];
-    ULONG ret = 0;
-
     StringCbCopyW(szDevice, sizeof(szDevice), L"\\\\.\\");
     szDevice[4] = pszRoot[0];
     szDevice[5] = L':';
     szDevice[6] = 0;
+
+    // Open the device
     HANDLE hDevice = CreateFileW(szDevice, FILE_READ_ATTRIBUTES,
                                  FILE_SHARE_READ | FILE_SHARE_WRITE,
                                  NULL, OPEN_EXISTING, 0, NULL);
     if (hDevice == INVALID_HANDLE_VALUE)
-        return ret;
+        return FALSE;
 
-    GetDriveCharacteristics(hDevice, &ret);
-    CloseHandle(hDevice);
-    return ret;
+    GetDriveCharacteristics(hDevice, pdwFlags); // Get it
+    CloseHandle(hDevice); // Close the device
+    return TRUE;
 }
 
 static BOOL IsSlowDrive(LPCWSTR pszRoot)
 {
-    DWORD ret;
+    DWORD dwFlags;
     switch (GetDriveTypeW(pszRoot))
     {
         case DRIVE_REMOVABLE:
             // Non-virtual floppy is slow
-            ret = GetDriveFlags(pszRoot);
-            return ((ret & FILE_FLOPPY_DISKETTE) && !(ret & FILE_VIRTUAL_VOLUME));
+            if (!GetDriveFlags(pszRoot, &dwFlags))
+                break;
+            return ((dwFlags & FILE_FLOPPY_DISKETTE) && !(dwFlags & FILE_VIRTUAL_VOLUME));
 
         case DRIVE_CDROM:
             // Non-virtual CD/DVD is slow
-            ret = GetDriveFlags(pszRoot);
-            return !(ret & FILE_VIRTUAL_VOLUME);
+            if (!GetDriveFlags(pszRoot, &dwFlags))
+                break;
+            return !(dwFlags & FILE_VIRTUAL_VOLUME);
     }
     return FALSE; // Not slow
 }
@@ -303,21 +306,21 @@ void CAutoCompleteEnumString::DoTypedPaths(LPCWSTR pszQuery)
 
         // Read a registry value
         result = RegQueryCStringW(key, szName, strData);
-        if (result == ERROR_SUCCESS) // Could I read it?
+        if (result != ERROR_SUCCESS) // Could I read it?
+            continue;
+
+        if (!PathFileExistsW(strData))
+            continue; // File or folder doesn't exist
+        if ((m_dwSHACF & SHACF_FILESYS_DIRS) && !PathIsDirectoryW(strData))
+            continue; // Directory-only and not a directory
+
+        CStringW strPath = strData;
+        strPath = strPath.Left(cch); // Truncate
+
+        if (_wcsicmp(pszQuery, strPath) == 0) // Matched
         {
-            if (!PathFileExistsW(strData))
-                continue; // File or folder doesn't exist
-            if ((m_dwSHACF & SHACF_FILESYS_DIRS) && !PathIsDirectoryW(strData))
-                continue; // Directory-only and not a directory
-
-            CStringW strPath = strData;
-            strPath = strPath.Left(cch); // Truncate
-
-            if (_wcsicmp(pszQuery, strPath) == 0) // Matched
-            {
-                if (!AddItem(strData))
-                    break;
-            }
+            if (!AddItem(strData))
+                break;
         }
     }
 }
@@ -469,13 +472,13 @@ void CAutoCompleteEnumString::DoURLHistory()
 
         // Read a registry value
         result = RegQueryCStringW(key, szName, strData);
-        if (result == ERROR_SUCCESS) // Could I read it?
+        if (result != ERROR_SUCCESS) // Could I read it?
+            continue;
+
+        if (UrlIsW(strData, URLIS_URL)) // Is it a URL?
         {
-            if (UrlIsW(strData, URLIS_URL)) // Is it a URL?
-            {
-                if (!AddItem(strData))
-                    break;
-            }
+            if (!AddItem(strData))
+                break;
         }
     }
 }
