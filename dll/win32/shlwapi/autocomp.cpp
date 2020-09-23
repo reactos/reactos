@@ -32,30 +32,27 @@ IUnknown_SetOptions(IUnknown *punk, DWORD dwACLO)
 }
 
 static CComPtr<IUnknown>
-ObjectFromCLSID(const CLSID& clsid)
+CreateUnknownFromCLSID(const CLSID& clsid, const char *name)
 {
     CComPtr<IUnknown> ret;
     HRESULT hr = CoCreateInstance(clsid, NULL, CLSCTX_INPROC_SERVER,
                                   IID_IUnknown, (LPVOID *)&ret);
     if (FAILED(hr))
-        ERR("hr: 0x%08lX", hr);
+        ERR("%s: hr: 0x%08lX", name, hr);
     return ret;
 }
 
+#define CREATE_FROM_CLSID(name) CreateUnknownFromCLSID(name, #name)
+
 static CComPtr<IUnknown>
-AutoComplete_CreateLists(DWORD dwSHACF, DWORD dwACLO)
+AutoComplete_CreateList(DWORD dwSHACF, DWORD dwACLO)
 {
-    CComPtr<IUnknown> pLists;
-    HRESULT hr = CoCreateInstance(CLSID_ACLMulti, NULL, CLSCTX_INPROC_SERVER,
-                                  IID_IUnknown, (LPVOID *)&pLists);
-    if (FAILED(hr))
-    {
-        ERR("CoCreateInstance(CLSID_ACLMulti) failed: 0x%08lX\n", hr);
+    CComPtr<IUnknown> pList = CREATE_FROM_CLSID(CLSID_ACLMulti);
+    if (!pList)
         return NULL;
-    }
 
     CComPtr<IObjMgr> pManager;
-    hr = pLists->QueryInterface(IID_IObjMgr, (LPVOID *)&pManager);
+    HRESULT hr = pList->QueryInterface(IID_IObjMgr, (LPVOID *)&pManager);
     if (FAILED(hr))
     {
         ERR("IObjMgr::QueryInterface failed: 0x%08lX\n", hr);
@@ -64,7 +61,7 @@ AutoComplete_CreateLists(DWORD dwSHACF, DWORD dwACLO)
 
     if (dwSHACF & SHACF_URLMRU)
     {
-        CComPtr<IUnknown> pMRU = ObjectFromCLSID(CLSID_ACLMRU);
+        CComPtr<IUnknown> pMRU = CREATE_FROM_CLSID(CLSID_ACLMRU);
         if (pMRU)
         {
             pManager->Append(pMRU);
@@ -74,7 +71,7 @@ AutoComplete_CreateLists(DWORD dwSHACF, DWORD dwACLO)
 
     if (dwSHACF & SHACF_URLHISTORY)
     {
-        CComPtr<IUnknown> pHistory = ObjectFromCLSID(CLSID_ACLHistory);
+        CComPtr<IUnknown> pHistory = CREATE_FROM_CLSID(CLSID_ACLHistory);
         if (pHistory)
         {
             pManager->Append(pHistory);
@@ -84,7 +81,7 @@ AutoComplete_CreateLists(DWORD dwSHACF, DWORD dwACLO)
 
     if (dwSHACF & SHACF_FILESYSTEM)
     {
-        CComPtr<IUnknown> pISF = ObjectFromCLSID(CLSID_ACListISF);
+        CComPtr<IUnknown> pISF = CREATE_FROM_CLSID(CLSID_ACListISF);
         if (pISF)
         {
             pManager->Append(pISF);
@@ -92,7 +89,7 @@ AutoComplete_CreateLists(DWORD dwSHACF, DWORD dwACLO)
         }
     }
 
-    return pLists;
+    return pList;
 }
 
 static BOOL
@@ -164,10 +161,10 @@ HRESULT WINAPI SHAutoComplete(HWND hwndEdit, DWORD dwFlags)
         return S_OK;
 
     CComPtr<IUnknown> pACL;
-    pACL = AutoComplete_CreateLists(dwSHACF, dwACLO);
+    pACL = AutoComplete_CreateList(dwSHACF, dwACLO);
     if (!pACL)
     {
-        ERR("AutoComplete_CreateLists failed\n");
+        ERR("AutoComplete_CreateList failed\n");
         return E_OUTOFMEMORY;
     }
 
