@@ -161,16 +161,15 @@ GetDriveCharacteristics(HANDLE hDevice, ULONG *pCharacteristics)
 static DWORD GetDriveFlags(LPCWSTR pszRoot)
 {
     WCHAR szDevice[16];
-    HANDLE hDevice;
     ULONG ret = 0;
 
     StringCbCopyW(szDevice, sizeof(szDevice), L"\\\\.\\");
     szDevice[4] = pszRoot[0];
     szDevice[5] = L':';
     szDevice[6] = 0;
-    hDevice = CreateFileW(szDevice, FILE_READ_ATTRIBUTES,
-                          FILE_SHARE_READ | FILE_SHARE_WRITE,
-                          NULL, OPEN_EXISTING, 0, NULL);
+    HANDLE hDevice = CreateFileW(szDevice, FILE_READ_ATTRIBUTES,
+                                 FILE_SHARE_READ | FILE_SHARE_WRITE,
+                                 NULL, OPEN_EXISTING, 0, NULL);
     if (hDevice == INVALID_HANDLE_VALUE)
         return ret;
 
