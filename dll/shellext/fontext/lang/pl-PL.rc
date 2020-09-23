@@ -9,20 +9,20 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_COL_NAME "Name"
+    IDS_COL_NAME "Nazwa"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_COL_FILENAME "Filename"
-    IDS_COL_SIZE "Size"
-    IDS_COL_MODIFIED "Modified"
-    IDS_COL_ATTR "Attributes"
+    IDS_COL_FILENAME "Nazwa pliku"
+    IDS_COL_SIZE "Rozmiar"
+    IDS_COL_MODIFIED "Zmodyfikowano"
+    IDS_COL_ATTR "Atrybuty"
     IDS_COL_ATTR_LETTERS "RHSAC"
 END
 
 
 STRINGTABLE
 BEGIN
-    IDS_FONT_PREVIEW "Preview"
+    IDS_FONT_PREVIEW "Podgląd"
 END

@@ -3173,11 +3173,11 @@ Options      Are as follows:
 NET HELP command | MORE displays Help one screen at a time.
 .
 Language=Polish
-NET USER tworzy i modyfikuje konta użytkowników na komputerach. 
-Stosowane bez przełączników, listy kont uzytkowników na komputerze. 
-Konto użytkownika informacje są przechowywane w bazie danych kont użytkowników.
+NET USER tworzy i modyfikuje konta użytkowników na komputerach. Użyte bez
+przełączników wyświetla listę kont użytkowników na komputerze. Informacja
+o kontach użytkowników przechowywana jest w bazie danych kont użytkowników.
 
-nazwaużytkownika
+nazwa_użytkownika
   Nazwa konta użytkownika do dodania, usunięcia, modyfikacji
   lub wyświetlenia. Nazwa konta użytkownika może składać się
   maksymalnie z 20 znaków.
