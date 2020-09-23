@@ -58,7 +58,7 @@ AutoComplete_CreateList(DWORD dwSHACF, DWORD dwACLO)
     HRESULT hr = pList->QueryInterface(IID_IObjMgr, (LPVOID *)&pManager);
     if (FAILED(hr))
     {
-        ERR("IObjMgr::QueryInterface failed: 0x%08lX\n", hr);
+        ERR("pList->QueryInterface failed: 0x%08lX\n", hr);
         return NULL;
     }
 
