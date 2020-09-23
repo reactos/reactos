@@ -152,12 +152,11 @@ GetDriveCharacteristics(HANDLE hDevice, ULONG *pCharacteristics)
     Status = NtQueryVolumeInformationFile(hDevice, &IoStatusBlock,
                                           &DeviceInfo, sizeof(DeviceInfo),
                                           FileFsDeviceInformation);
-    if (Status == NO_ERROR)
-    {
-        *pCharacteristics = DeviceInfo.Characteristics;
-        return TRUE;
-    }
-    return FALSE;
+    if (Status != NO_ERROR)
+        return FALSE;
+
+    *pCharacteristics = DeviceInfo.Characteristics;
+    return TRUE;
 }
 
 static DWORD GetDriveFlags(LPCWSTR pszRoot)
