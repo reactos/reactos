@@ -207,7 +207,7 @@ NTSTATUS ValidateResources
  * the adapter because it calls out miniports for functions that are specific
  * to the adapter.
  */
-NTSTATUS StartDevice
+NTSTATUS GZCALL StartDevice
 (
     IN  PDEVICE_OBJECT  DeviceObject,   // Device object.
     IN  PIRP            Irp,            // IO request packet.
