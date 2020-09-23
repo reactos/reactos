@@ -31,14 +31,15 @@ IUnknown_SetOptions(IUnknown *punk, DWORD dwACLO)
     return hr;
 }
 
-static HRESULT
-AutoComplete_CreateObjectByCLSID(CComPtr<IUnknown>& punk, const CLSID& clsid)
+static CComPtr<IUnknown>
+ObjectFromCLSID(const CLSID& clsid)
 {
+    CComPtr<IUnknown> ret;
     HRESULT hr = CoCreateInstance(clsid, NULL, CLSCTX_INPROC_SERVER,
-                                  IID_IUnknown, (LPVOID *)&punk);
+                                  IID_IUnknown, (LPVOID *)&ret);
     if (FAILED(hr))
         ERR("hr: 0x%08lX", hr);
-    return hr;
+    return ret;
 }
 
 static CComPtr<IUnknown>
@@ -63,34 +64,31 @@ AutoComplete_CreateLists(DWORD dwSHACF, DWORD dwACLO)
 
     if (dwSHACF & SHACF_URLMRU)
     {
-        CComPtr<IUnknown> pACLMRU;
-        hr = AutoComplete_CreateObjectByCLSID(pACLMRU, CLSID_ACLMRU);
-        if (SUCCEEDED(hr))
+        CComPtr<IUnknown> pMRU = ObjectFromCLSID(CLSID_ACLMRU);
+        if (pMRU)
         {
-            pManager->Append(pACLMRU);
-            IUnknown_SetOptions(pACLMRU, dwACLO);
+            pManager->Append(pMRU);
+            IUnknown_SetOptions(pMRU, dwACLO);
         }
     }
 
     if (dwSHACF & SHACF_URLHISTORY)
     {
-        CComPtr<IUnknown> pACLHistory;
-        hr = AutoComplete_CreateObjectByCLSID(pACLHistory, CLSID_ACLHistory);
-        if (SUCCEEDED(hr))
+        CComPtr<IUnknown> pHistory = ObjectFromCLSID(CLSID_ACLHistory);
+        if (pHistory)
         {
-            pManager->Append(pACLHistory);
-            IUnknown_SetOptions(pACLHistory, dwACLO);
+            pManager->Append(pHistory);
+            IUnknown_SetOptions(pHistory, dwACLO);
         }
     }
 
     if (dwSHACF & SHACF_FILESYSTEM)
     {
-        CComPtr<IUnknown> pACListISF;
-        hr = AutoComplete_CreateObjectByCLSID(pACListISF, CLSID_ACListISF);
-        if (SUCCEEDED(hr))
+        CComPtr<IUnknown> pISF = ObjectFromCLSID(CLSID_ACListISF);
+        if (pISF)
         {
-            pManager->Append(pACListISF);
-            IUnknown_SetOptions(pACListISF, dwACLO);
+            pManager->Append(pISF);
+            IUnknown_SetOptions(pISF, dwACLO);
         }
     }
 
