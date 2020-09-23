@@ -96,7 +96,7 @@ AutoComplete_CreateList(DWORD dwSHACF, DWORD dwACLO)
 
 #define AUTOCOMPLETE_KEY L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\AutoComplete"
 
-static BOOL
+static VOID
 AutoComplete_AdaptFlags(IN HWND hwndEdit,
                         IN OUT LPDWORD pdwSHACF,
                         OUT LPDWORD pdwACO,
@@ -120,9 +120,6 @@ AutoComplete_AdaptFlags(IN HWND hwndEdit,
         dwACO |= ACO_AUTOSUGGEST;
     }
 
-    if (!(dwACO & (ACO_AUTOSUGGEST | ACO_AUTOAPPEND)))
-        return FALSE;
-
     if (dwSHACF & SHACF_FILESYS_ONLY)
         dwACLO |= ACLO_FILESYSONLY;
 
@@ -138,7 +135,6 @@ AutoComplete_AdaptFlags(IN HWND hwndEdit,
     *pdwACO = dwACO;
     *pdwSHACF = dwSHACF;
     *pdwACLO = dwACLO;
-    return TRUE;
 }
 
 /*************************************************************************
@@ -159,8 +155,7 @@ HRESULT WINAPI SHAutoComplete(HWND hwndEdit, DWORD dwFlags)
     TRACE("SHAutoComplete(%p, 0x%lX)\n", hwndEdit, dwFlags);
 
     DWORD dwACO = 0, dwACLO = 0, dwSHACF = dwFlags;
-    if (!AutoComplete_AdaptFlags(hwndEdit, &dwACO, &dwACLO, &dwSHACF))
-        return S_OK;
+    AutoComplete_AdaptFlags(hwndEdit, &dwACO, &dwACLO, &dwSHACF);
 
     CComPtr<IUnknown> pACL = AutoComplete_CreateList(dwSHACF, dwACLO);
     if (!pACL)
