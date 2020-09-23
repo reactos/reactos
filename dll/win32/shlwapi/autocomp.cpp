@@ -108,7 +108,7 @@ AutoComplete_AdaptFlags(IN HWND hwndEdit,
                         OUT LPDWORD pdwACO,
                         OUT LPDWORD pdwACLO)
 {
-#define AUTOCOMPLETE_KEY L"Software\\Microsoft\\Internet Explorer\\AutoComplete"
+#define AUTOCOMPLETE_KEY L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\AutoComplete"
 
     DWORD dwSHACF = *pdwSHACF, dwACO = 0, dwACLO = 0;
     if (dwSHACF == SHACF_DEFAULT)
