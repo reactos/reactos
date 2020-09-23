@@ -163,8 +163,7 @@ HRESULT WINAPI SHAutoComplete(HWND hwndEdit, DWORD dwFlags)
     if (!AutoComplete_AdaptFlags(hwndEdit, &dwACO, &dwACLO, &dwSHACF))
         return S_OK;
 
-    CComPtr<IUnknown> pACL;
-    pACL = AutoComplete_CreateList(dwSHACF, dwACLO);
+    CComPtr<IUnknown> pACL = AutoComplete_CreateList(dwSHACF, dwACLO);
     if (!pACL)
     {
         ERR("AutoComplete_CreateList failed\n");
