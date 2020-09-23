@@ -157,10 +157,10 @@ HRESULT WINAPI SHAutoComplete(HWND hwndEdit, DWORD dwFlags)
     DWORD dwACO = 0, dwACLO = 0, dwSHACF = dwFlags;
     AutoComplete_AdaptFlags(hwndEdit, &dwACO, &dwACLO, &dwSHACF);
 
-    CComPtr<IUnknown> pACL = AutoComplete_CreateList(dwSHACF, dwACLO);
-    if (!pACL)
+    CComPtr<IUnknown> pList = AutoComplete_CreateList(dwSHACF, dwACLO);
+    if (!pList)
     {
-        ERR("AutoComplete_CreateList failed\n");
+        ERR("Out of memory\n");
         return E_OUTOFMEMORY;
     }
 
@@ -173,7 +173,7 @@ HRESULT WINAPI SHAutoComplete(HWND hwndEdit, DWORD dwFlags)
         return hr;
     }
 
-    hr = pAC2->Init(hwndEdit, pACL, NULL, L"www.%s.com");
+    hr = pAC2->Init(hwndEdit, pList, NULL, L"www.%s.com");
     if (SUCCEEDED(hr))
         pAC2->SetOptions(dwACO);
     else
