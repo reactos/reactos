@@ -430,62 +430,36 @@ CIrpQueue2::ReleaseMappingWithTag(
     PIO_STACK_LOCATION IoStack;
     ULONG Index;
     KIRQL OldLevel;
-    
-    
+
     KeAcquireSpinLock(&m_QueueLock, &OldLevel);
-
-    // first check if there is an active irp
-    if (m_Irp)
-    {
-        // now check if there are already used mappings
-        StreamData = (PKSSTREAM_DATA)m_Irp->Tail.Overlay.DriverContext[STREAM_DATA_OFFSET];
-
-        if (m_StreamHeaderIndex)
-        {
-            // check if the released mapping is one current processed irps
-            for(Index = 0; Index < m_StreamHeaderIndex; Index++)
-            {
-                // check if it is the same tag
-                if ((StreamData->Tags[Index].Tag == Tag) && 
-                    (StreamData->Tags[Index].Used != FALSE))
-                {
-                    // mark mapping as released
-                    StreamData->Tags[Index].Tag = NULL;
-                    StreamData->Tags[Index].Used = FALSE;
-                    
-                     KeReleaseSpinLock(&m_QueueLock, OldLevel);
-
-                    // done
-                    return STATUS_SUCCESS;
-                }
-
-            }
-        }
-    }
 
     // check if used list empty
     if (IsListEmpty(&m_FreeIrpList))
     {
-        KeReleaseSpinLock(&m_QueueLock, OldLevel);
+        // get current irp
+        if(m_Irp == NULL)
+        {
+            KeReleaseSpinLock(&m_QueueLock, OldLevel);
     
-    
-        // this should not happen
-        DPRINT("ReleaseMappingWithTag Tag %p not found\n", Tag);
-        return STATUS_NOT_FOUND;
+            // this should not happen
+            DPRINT("ReleaseMappingWithTag Tag %p not found\n", Tag);
+            return STATUS_NOT_FOUND;
+        }
+        
+        Irp = m_Irp;
     }
+    else
+    {
+        // remove irp from used list
+        CurEntry = RemoveHeadList(&m_FreeIrpList);
 
-    // remove irp from used list
-    CurEntry = RemoveHeadList(&m_FreeIrpList);
-
-    // sanity check
-    PC_ASSERT(CurEntry);
-
-    // get irp from list entry
-    Irp = (PIRP)CONTAINING_RECORD(CurEntry, IRP, Tail.Overlay.ListEntry);
+        // get irp from list entry
+        Irp = (PIRP)CONTAINING_RECORD(CurEntry, IRP, Tail.Overlay.ListEntry);   
+    }
 
     // get stream data
     StreamData = (PKSSTREAM_DATA)Irp->Tail.Overlay.DriverContext[STREAM_DATA_OFFSET];
-
+    
     // check if the released mapping is one of these
     for(Index = 0; Index < StreamData->nTags; Index++)
     {
@@ -510,7 +484,14 @@ CIrpQueue2::ReleaseMappingWithTag(
             ASSERT(StreamData->Tags[Index].Used == FALSE);
         }
     }
-
+    
+    // current IRP, do not complete
+    if(Irp == m_Irp)
+    {
+        KeReleaseSpinLock(&m_QueueLock, OldLevel);
+        return STATUS_SUCCESS;
+    }
+    
     // check if this is the last one released mapping
     if (Index + 1 == StreamData->nTags)
     {
