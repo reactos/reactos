@@ -84,10 +84,7 @@ AutoComplete_AddRunMRU(CComPtr<IACLCustomMRU> pMRU)
         if (cch >= 2 && wcscmp(&strData[cch - 2], L"\\1") == 0)
             strData = strData.Left(cch - 2);
 
-        if (UrlIsW(strData, URLIS_URL)) // Is it a URL?
-        {
-            pMRU->AddMRUString(strData);
-        }
+        pMRU->AddMRUString(strData);
     }
 }
 
