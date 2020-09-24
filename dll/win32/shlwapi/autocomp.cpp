@@ -6,116 +6,13 @@
  */
 #include <windef.h>
 #include <shlobj.h>
-#include <shldisp.h>
 #include <shlwapi.h>
 #include <shlwapi_undoc.h>
-#include <browseui_undoc.h>
-#include <shlguid_undoc.h>
 #include <atlbase.h>
 #include <atlcom.h>
-#include <atlstr.h>
-#include <strsafe.h>
 #include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
-
-#define MAX_ITEMS 50
-
-static LONG
-RegQueryCStringW(CRegKey& key, LPCWSTR pszValueName, CStringW& str)
-{
-    // Check type and size
-    DWORD dwType, cbData;
-    LONG ret = key.QueryValue(pszValueName, &dwType, NULL, &cbData);
-    if (ret != ERROR_SUCCESS)
-        return ret;
-    if (dwType != REG_SZ && dwType != REG_EXPAND_SZ)
-        return ERROR_INVALID_DATA;
-
-    // Allocate buffer
-    LPWSTR pszBuffer = str.GetBuffer(cbData / sizeof(WCHAR) + 1);
-    if (pszBuffer == NULL)
-        return ERROR_OUTOFMEMORY;
-
-    // Get the data
-    ret = key.QueryValue(pszValueName, NULL, pszBuffer, &cbData);
-
-    // Release buffer
-    str.ReleaseBuffer();
-    return ret;
-}
-
-static VOID
-AutoComplete_AddRunMRU(CComPtr<IACLCustomMRU> pMRU)
-{
-#define RUN_MRU_KEY L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\RunMRU"
-    // Open the registry key
-    CRegKey key;
-    LONG result = key.Open(HKEY_CURRENT_USER, RUN_MRU_KEY, KEY_READ);
-    if (result != ERROR_SUCCESS)
-    {
-        TRACE("Opening RunMRU failed: 0x%lX\n", result);
-        return;
-    }
-
-    // Read the MRUList
-    CStringW strMRUList;
-    result = RegQueryCStringW(key, L"MRUList", strMRUList);
-    if (result != ERROR_SUCCESS)
-    {
-        TRACE("No MRUList\n");
-        return;
-    }
-
-    // for all the MRU items
-    CStringW strData;
-    for (INT i = 0; i <= L'z' - L'a' && i < strMRUList.GetLength(); ++i)
-    {
-        // Build a registry value name
-        WCHAR szName[2] = {strMRUList[i]};
-
-        // Read a registry value
-        result = RegQueryCStringW(key, szName, strData);
-        if (result != ERROR_SUCCESS)
-            continue;
-
-        // Fix up for special case of "\\1"
-        INT cch = INT(wcslen(strData));
-        if (cch >= 2 && wcscmp(&strData[cch - 2], L"\\1") == 0)
-            strData = strData.Left(cch - 2);
-
-        pMRU->AddMRUString(strData);
-    }
-}
-
-static VOID
-AutoComplete_AddTypedURLs(CComPtr<IACLCustomMRU> pMRU)
-{
-#define TYPED_URLS_KEY L"Software\\Microsoft\\Internet Explorer\\TypedURLs"
-    // Open the registry key
-    CRegKey key;
-    LONG result = key.Open(HKEY_CURRENT_USER, TYPED_URLS_KEY, KEY_READ);
-    if (result != ERROR_SUCCESS)
-    {
-        TRACE("%ld\n", result);
-        return;
-    }
-
-    for (LONG i = 1; i <= MAX_ITEMS; ++i)
-    {
-        // Build a registry value name
-        WCHAR szName[32];
-        StringCbPrintfW(szName, sizeof(szName), L"url%lu", i);
-
-        // Read a registry value
-        CString strData;
-        result = RegQueryCStringW(key, szName, strData);
-        if (result != ERROR_SUCCESS)
-            break;
-
-        pMRU->AddMRUString(strData);
-    }
-}
 
 static CComPtr<IUnknown>
 AutoComplete_CreateList(DWORD dwSHACF, DWORD dwACLO)
@@ -139,35 +36,24 @@ AutoComplete_CreateList(DWORD dwSHACF, DWORD dwACLO)
 
     if (dwSHACF & SHACF_URLMRU)
     {
-        CComPtr<IACLCustomMRU> pMRU;
-        hr = CoCreateInstance(CLSID_ACLCustomMRU, NULL, CLSCTX_INPROC_SERVER,
-                              IID_IACLCustomMRU, (LPVOID *)&pMRU);
+        CComPtr<IUnknown> pMRU;
+        hr = CoCreateInstance(CLSID_ACLMRU, NULL, CLSCTX_INPROC_SERVER,
+                              IID_IUnknown, (LPVOID *)&pMRU);
         if (SUCCEEDED(hr))
-        {
-            AutoComplete_AddRunMRU(pMRU);
-            AutoComplete_AddTypedURLs(pMRU);
             pManager->Append(pMRU);
-        }
         else
-        {
-            ERR("hr:%08lX\n", hr);
-        }
+            ERR("CLSID_ACLMRU hr:%08lX\n", hr);
     }
 
     if (dwSHACF & SHACF_URLHISTORY)
     {
-        CComPtr<IACList2> pHistory;
+        CComPtr<IUnknown> pHistory;
         hr = CoCreateInstance(CLSID_ACLHistory, NULL, CLSCTX_INPROC_SERVER,
-                              IID_IACList2, (LPVOID *)&pHistory);
+                              IID_IUnknown, (LPVOID *)&pHistory);
         if (SUCCEEDED(hr))
-        {
             pManager->Append(pHistory);
-            pHistory->SetOptions(dwACLO);
-        }
         else
-        {
-            ERR("hr:%08lX\n", hr);
-        }
+            ERR("CLSID_ACLHistory hr:%08lX\n", hr);
     }
 
     if (dwSHACF & (SHACF_FILESYSTEM | SHACF_FILESYS_ONLY | SHACF_FILESYS_DIRS))
@@ -182,7 +68,7 @@ AutoComplete_CreateList(DWORD dwSHACF, DWORD dwACLO)
         }
         else
         {
-            ERR("hr:%08lX\n", hr);
+            ERR("CLSID_ACListISF hr:%08lX\n", hr);
         }
     }
 
