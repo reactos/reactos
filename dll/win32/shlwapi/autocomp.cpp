@@ -193,7 +193,7 @@ HRESULT WINAPI SHAutoComplete(HWND hwndEdit, DWORD dwFlags)
     hr = E_FAIL;
     if (SHPinDllOfCLSID(CLSID_ACListISF) && SHPinDllOfCLSID(CLSID_AutoComplete))
     {
-        // Initalize the auto-completion for auto-completion
+        // Initialize IAutoComplete2 for auto-completion
         if (dwSHACF & SHACF_URLALL)
             hr = pAC2->Init(hwndEdit, pList, NULL, L"www.%s.com");
         else
