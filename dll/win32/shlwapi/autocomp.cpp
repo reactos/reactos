@@ -7,12 +7,39 @@
 #include <windef.h>
 #include <shlobj.h>
 #include <shlwapi.h>
+#include <browseui_undoc.h>
 #include <shlwapi_undoc.h>
+#include <shlguid_undoc.h>
 #include <atlbase.h>
 #include <atlcom.h>
 #include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
+
+static HRESULT
+AutoComplete_AddMRU(CComPtr<IObjMgr> pManager, LPCWSTR pszKey)
+{
+    CComPtr<IACLCustomMRU> pMRU;
+    HRESULT hr = CoCreateInstance(CLSID_ACLMRU, NULL, CLSCTX_INPROC_SERVER,
+                                  IID_IACLCustomMRU, (LPVOID *)&pMRU);
+    if (FAILED(hr))
+    {
+        ERR("CoCreateInstance(CLSID_ACLMRU) failed with 0x%08lX\n", hr);
+        return hr;
+    }
+
+    hr = pMRU->Initialize(pszKey, 'z' - 'a' + 1);
+    if (FAILED(hr))
+    {
+        ERR("pMRU->Initialize(%ls) failed with 0x%08lX\n", pszKey, hr);
+        return hr;
+    }
+
+    hr = pManager->Append(pMRU);
+    if (FAILED(hr))
+        ERR("pManager->Append for '%ls' failed with 0x%08lX\n", pszKey, hr);
+    return hr;
+}
 
 static CComPtr<IUnknown>
 AutoComplete_CreateList(DWORD dwSHACF, DWORD dwACLO)
@@ -36,13 +63,10 @@ AutoComplete_CreateList(DWORD dwSHACF, DWORD dwACLO)
 
     if (dwSHACF & SHACF_URLMRU)
     {
-        CComPtr<IUnknown> pMRU;
-        hr = CoCreateInstance(CLSID_ACLMRU, NULL, CLSCTX_INPROC_SERVER,
-                              IID_IUnknown, (LPVOID *)&pMRU);
-        if (SUCCEEDED(hr))
-            pManager->Append(pMRU);
-        else
-            ERR("CLSID_ACLMRU hr:%08lX\n", hr);
+#define RUN_MRU_KEY L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\RunMRU"
+#define TYPED_URLS_KEY L"Software\\Microsoft\\Internet Explorer\\TypedURLs"
+        AutoComplete_AddMRU(pManager, RUN_MRU_KEY);
+        AutoComplete_AddMRU(pManager, TYPED_URLS_KEY);
     }
 
     if (dwSHACF & SHACF_URLHISTORY)
