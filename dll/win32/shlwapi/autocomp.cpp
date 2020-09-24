@@ -19,6 +19,8 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
+#define MAX_ITEMS 50
+
 static LONG
 RegQueryCStringW(CRegKey& key, LPCWSTR pszValueName, CStringW& str)
 {
@@ -101,7 +103,7 @@ AutoComplete_AddTypedURLs(CComPtr<IACLCustomMRU> pMRU)
         return;
     }
 
-    for (LONG i = 0; i < 50; ++i)
+    for (LONG i = 1; i <= MAX_ITEMS; ++i)
     {
         // Build a registry value name
         WCHAR szName[32];
