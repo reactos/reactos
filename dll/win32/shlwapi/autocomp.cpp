@@ -158,17 +158,18 @@ HRESULT WINAPI SHAutoComplete(HWND hwndEdit, DWORD dwFlags)
         return hr;
     }
 
+    hr = E_FAIL;
     if (SHPinDllOfCLSID(CLSID_ACListISF) && SHPinDllOfCLSID(CLSID_AutoComplete))
     {
-        hr = pAC2->Init(hwndEdit, pList, NULL, L"www.%s.com");
+        if (dwSHACF & SHACF_URLALL)
+            hr = pAC2->Init(hwndEdit, pList, NULL, L"www.%s.com");
+        else
+            hr = pAC2->Init(hwndEdit, pList, NULL, NULL);
+
         if (SUCCEEDED(hr))
             pAC2->SetOptions(dwACO);
         else
             ERR("IAutoComplete2::Init failed: 0x%lX\n", hr);
-    }
-    else
-    {
-        hr = E_FAIL;
     }
 
     return hr;
