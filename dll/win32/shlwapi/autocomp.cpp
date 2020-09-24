@@ -19,6 +19,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(shell);
 static HRESULT
 AutoComplete_AddMRU(CComPtr<IObjMgr> pManager, LPCWSTR pszKey)
 {
+    // FIXME: CLSID_ACLCustomMRU or CLSID_ACLMRU?
     CComPtr<IACLCustomMRU> pMRU;
     HRESULT hr = CoCreateInstance(CLSID_ACLCustomMRU, NULL, CLSCTX_INPROC_SERVER,
                                   IID_IACLCustomMRU, (LPVOID *)&pMRU);
@@ -28,14 +29,14 @@ AutoComplete_AddMRU(CComPtr<IObjMgr> pManager, LPCWSTR pszKey)
         return hr;
     }
 
-    hr = pMRU->Initialize(pszKey, 'z' - 'a' + 1);
+    hr = pMRU->Initialize(pszKey, 'z' - 'a' + 1); // Load the list from registry
     if (FAILED(hr))
     {
         ERR("pMRU->Initialize(%ls) failed with 0x%08lX\n", pszKey, hr);
         return hr;
     }
 
-    hr = pManager->Append(pMRU);
+    hr = pManager->Append(pMRU); // Add to the manager
     if (FAILED(hr))
         ERR("pManager->Append for '%ls' failed with 0x%08lX\n", pszKey, hr);
     return hr;
@@ -44,18 +45,19 @@ AutoComplete_AddMRU(CComPtr<IObjMgr> pManager, LPCWSTR pszKey)
 static CComPtr<IUnknown>
 AutoComplete_CreateList(DWORD dwSHACF, DWORD dwACLO)
 {
+    // Create a multiple list (with IEnumString interface)
     CComPtr<IUnknown> pList;
     HRESULT hr = CoCreateInstance(CLSID_ACLMulti, NULL, CLSCTX_INPROC_SERVER,
                                   IID_IUnknown, (LPVOID *)&pList);
-    if (FAILED(hr))
+    if (FAILED(hr)) // Failed to create the list
     {
         ERR("CoCreateInstance(CLSID_ACLMulti) failed with 0x%08lX\n", hr);
         return NULL;
     }
 
-    CComPtr<IObjMgr> pManager;
+    CComPtr<IObjMgr> pManager; // This is the manager of the multiple list
     hr = pList->QueryInterface(IID_IObjMgr, (LPVOID *)&pManager);
-    if (FAILED(hr))
+    if (FAILED(hr)) // Failed to get interface
     {
         ERR("pList->QueryInterface failed: 0x%08lX\n", hr);
         return NULL;
@@ -63,6 +65,7 @@ AutoComplete_CreateList(DWORD dwSHACF, DWORD dwACLO)
 
     if (dwSHACF & SHACF_URLMRU)
     {
+        // The MRU (Most-Recently-Used) lists (with IEnumString interface)
 #define RUN_MRU_KEY L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\RunMRU"
 #define TYPED_URLS_KEY L"Software\\Microsoft\\Internet Explorer\\TypedURLs"
         AutoComplete_AddMRU(pManager, RUN_MRU_KEY);
@@ -71,24 +74,26 @@ AutoComplete_CreateList(DWORD dwSHACF, DWORD dwACLO)
 
     if (dwSHACF & SHACF_URLHISTORY)
     {
+        // The history list (with IEnumString interface)
         CComPtr<IUnknown> pHistory;
         hr = CoCreateInstance(CLSID_ACLHistory, NULL, CLSCTX_INPROC_SERVER,
                               IID_IUnknown, (LPVOID *)&pHistory);
         if (SUCCEEDED(hr))
-            pManager->Append(pHistory);
+            pManager->Append(pHistory); // Add to the manager
         else
             ERR("CLSID_ACLHistory hr:%08lX\n", hr);
     }
 
     if (dwSHACF & (SHACF_FILESYSTEM | SHACF_FILESYS_ONLY | SHACF_FILESYS_DIRS))
     {
+        // The filesystem list (with IEnumString interface)
         CComPtr<IACList2> pISF;
         hr = CoCreateInstance(CLSID_ACListISF, NULL, CLSCTX_INPROC_SERVER,
                               IID_IACList2, (LPVOID *)&pISF);
         if (SUCCEEDED(hr))
         {
-            pManager->Append(pISF);
-            pISF->SetOptions(dwACLO);
+            pManager->Append(pISF); // Add to the manager
+            pISF->SetOptions(dwACLO); // Set ACLO_* flags
         }
         else
         {
@@ -96,7 +101,7 @@ AutoComplete_CreateList(DWORD dwSHACF, DWORD dwACLO)
         }
     }
 
-    return pList;
+    return pList; // The list
 }
 
 #define AUTOCOMPLETE_KEY L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\AutoComplete"
@@ -166,6 +171,7 @@ HRESULT WINAPI SHAutoComplete(HWND hwndEdit, DWORD dwFlags)
     DWORD dwACO = 0, dwACLO = 0, dwSHACF = dwFlags;
     AutoComplete_AdaptFlags(hwndEdit, &dwACO, &dwACLO, &dwSHACF);
 
+    // Create the list (with IEnumString interface)
     CComPtr<IUnknown> pList = AutoComplete_CreateList(dwSHACF, dwACLO);
     if (!pList)
     {
@@ -173,6 +179,7 @@ HRESULT WINAPI SHAutoComplete(HWND hwndEdit, DWORD dwFlags)
         return E_OUTOFMEMORY;
     }
 
+    // Create an auto-completion (IAutoComplete2)
     CComPtr<IAutoComplete2> pAC2;
     HRESULT hr = CoCreateInstance(CLSID_AutoComplete, NULL, CLSCTX_INPROC_SERVER,
                                   IID_IAutoComplete2, (LPVOID *)&pAC2);
@@ -182,16 +189,18 @@ HRESULT WINAPI SHAutoComplete(HWND hwndEdit, DWORD dwFlags)
         return hr;
     }
 
+    // Keep the DLLs of CLSID_ACListISF and CLSID_AutoComplete
     hr = E_FAIL;
     if (SHPinDllOfCLSID(CLSID_ACListISF) && SHPinDllOfCLSID(CLSID_AutoComplete))
     {
+        // Initalize the auto-completion for auto-completion
         if (dwSHACF & SHACF_URLALL)
             hr = pAC2->Init(hwndEdit, pList, NULL, L"www.%s.com");
         else
             hr = pAC2->Init(hwndEdit, pList, NULL, NULL);
 
         if (SUCCEEDED(hr))
-            pAC2->SetOptions(dwACO);
+            pAC2->SetOptions(dwACO); // Set ACO_* flags
         else
             ERR("IAutoComplete2::Init failed: 0x%lX\n", hr);
     }
