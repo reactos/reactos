@@ -9,8 +9,11 @@
 #include <shldisp.h>
 #include <shlwapi.h>
 #include <shlwapi_undoc.h>
+#include <browseui_undoc.h>
+#include <shlguid_undoc.h>
 #include <atlbase.h>
 #include <atlcom.h>
+#include <strsafe.h>
 #include <wine/debug.h>
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
@@ -45,7 +48,40 @@ AutoComplete_CreateUnknownFromCLSID(const CLSID& clsid, LPCSTR name)
     }
     return ret;
 }
+
+static VOID
+AutoComplete_AddListFromRegistry(CComPtr<IUnknown> punk, LPCWSTR pszSubKey)
+{
+    CComPtr<IACLCustomMRU> pCustom;
+    HRESULT hr = punk->QueryInterface(IID_IACLCustomMRU, (LPVOID *)&pCustom);
+    if (FAILED(hr))
+        return;
+
+    LONG result;
+    HKEY hKey;
+    result = RegOpenKeyExW(HKEY_CURRENT_USER, pszSubKey, 0, KEY_READ, &hKey);
+    if (result != ERROR_SUCCESS)
+        return;
+
+    for (LONG i = 0; i < 50; ++i)
+    {
+        WCHAR szName[32], szValue[MAX_PATH];
+        StringCbPrintfW(szName, sizeof(szName), L"url%lu", i);
+
+        DWORD cbValue = sizeof(szValue);
+        result = RegQueryValueExW(hKey, szName, NULL, NULL, (LPBYTE)szValue, &cbValue);
+        if (result != ERROR_SUCCESS)
+            break;
+
+        pCustom->AddMRUString(szValue);
+    }
+
+    RegCloseKey(hKey);
+}
+
 #define CREATE_FROM_CLSID(name) AutoComplete_CreateUnknownFromCLSID(name, #name)
+#define RUN_MRU_KEY L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\RunMRU"
+#define TYPED_URLS_KEY L"Software\\Microsoft\\Internet Explorer\\TypedURLs"
 
 static CComPtr<IUnknown>
 AutoComplete_CreateList(DWORD dwSHACF, DWORD dwACLO)
@@ -64,9 +100,11 @@ AutoComplete_CreateList(DWORD dwSHACF, DWORD dwACLO)
 
     if (dwSHACF & SHACF_URLMRU)
     {
-        CComPtr<IUnknown> pMRU = CREATE_FROM_CLSID(CLSID_ACLMRU);
+        CComPtr<IUnknown> pMRU = CREATE_FROM_CLSID(CLSID_ACLCustomMRU);
         if (pMRU)
         {
+            AutoComplete_AddListFromRegistry(pMRU, RUN_MRU_KEY);
+            AutoComplete_AddListFromRegistry(pMRU, TYPED_URLS_KEY);
             pManager->Append(pMRU);
             IUnknown_SetOptions(pMRU, dwACLO);
         }
