@@ -13,6 +13,7 @@
 #include <shlguid_undoc.h>
 #include <atlbase.h>
 #include <atlcom.h>
+#include <atlstr.h>
 #include <strsafe.h>
 #include <wine/debug.h>
 
@@ -35,63 +36,118 @@ IUnknown_SetOptions(IUnknown *punk, DWORD dwACLO)
     return hr;
 }
 
-static CComPtr<IUnknown>
-AutoComplete_CreateUnknownFromCLSID(const CLSID& clsid, LPCSTR name)
+static LONG
+RegQueryCStringW(CRegKey& key, LPCWSTR pszValueName, CStringW& str)
 {
-    CComPtr<IUnknown> ret;
-    HRESULT hr = CoCreateInstance(clsid, NULL, CLSCTX_INPROC_SERVER,
-                                  IID_IUnknown, (LPVOID *)&ret);
-    if (FAILED(hr))
-    {
-        ERR("%s: hr:0x%08lX", name, hr);
-        return NULL;
-    }
+    // Check type and size
+    DWORD dwType, cbData;
+    LONG ret = key.QueryValue(pszValueName, &dwType, NULL, &cbData);
+    if (ret != ERROR_SUCCESS)
+        return ret;
+    if (dwType != REG_SZ && dwType != REG_EXPAND_SZ)
+        return ERROR_INVALID_DATA;
+
+    // Allocate buffer
+    LPWSTR pszBuffer = str.GetBuffer(cbData / sizeof(WCHAR) + 1);
+    if (pszBuffer == NULL)
+        return ERROR_OUTOFMEMORY;
+
+    // Get the data
+    ret = key.QueryValue(pszValueName, NULL, pszBuffer, &cbData);
+
+    // Release buffer
+    str.ReleaseBuffer();
     return ret;
 }
 
 static VOID
-AutoComplete_AddListFromRegistry(CComPtr<IUnknown> punk, LPCWSTR pszSubKey)
+AutoComplete_AddRunMRU(CComPtr<IACLCustomMRU> pMRU)
 {
-    CComPtr<IACLCustomMRU> pCustom;
-    HRESULT hr = punk->QueryInterface(IID_IACLCustomMRU, (LPVOID *)&pCustom);
-    if (FAILED(hr))
+#define RUN_MRU_KEY L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\RunMRU"
+    // Open the registry key
+    CRegKey key;
+    LONG result = key.Open(HKEY_CURRENT_USER, RUN_MRU_KEY, KEY_READ);
+    if (result != ERROR_SUCCESS)
+    {
+        TRACE("Opening RunMRU failed: 0x%lX\n", result);
         return;
+    }
 
-    LONG result;
-    HKEY hKey;
-    result = RegOpenKeyExW(HKEY_CURRENT_USER, pszSubKey, 0, KEY_READ, &hKey);
+    // Read the MRUList
+    CStringW strMRUList;
+    result = RegQueryCStringW(key, L"MRUList", strMRUList);
     if (result != ERROR_SUCCESS)
         return;
 
-    for (LONG i = 0; i < 50; ++i)
+    // for all the MRU items
+    CStringW strData;
+    for (INT i = 0; i <= L'z' - L'a' && i < strMRUList.GetLength(); ++i)
     {
-        WCHAR szName[32], szValue[MAX_PATH];
-        StringCbPrintfW(szName, sizeof(szName), L"url%lu", i);
+        // Build a registry value name
+        WCHAR szName[2];
+        szName[0] = strMRUList[i];
+        szName[1] = 0;
 
-        DWORD cbValue = sizeof(szValue);
-        result = RegQueryValueExW(hKey, szName, NULL, NULL, (LPBYTE)szValue, &cbValue);
+        // Read a registry value
+        result = RegQueryCStringW(key, szName, strData);
         if (result != ERROR_SUCCESS)
-            break;
+            continue;
 
-        pCustom->AddMRUString(szValue);
+        // Fix up for special case of "\\1"
+        INT cch = INT(wcslen(strData));
+        if (cch >= 2 && wcscmp(&strData[cch - 2], L"\\1") == 0)
+            strData = strData.Left(cch - 2);
+
+        if (UrlIsW(strData, URLIS_URL)) // Is it a URL?
+        {
+            pMRU->AddMRUString(strData);
+        }
     }
-
-    RegCloseKey(hKey);
 }
 
-#define CREATE_FROM_CLSID(name) AutoComplete_CreateUnknownFromCLSID(name, #name)
-#define RUN_MRU_KEY L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\RunMRU"
+static VOID
+AutoComplete_AddTypedURLs(CComPtr<IACLCustomMRU> pMRU)
+{
 #define TYPED_URLS_KEY L"Software\\Microsoft\\Internet Explorer\\TypedURLs"
+    // Open the registry key
+    CRegKey key;
+    LONG result = key.Open(HKEY_CURRENT_USER, TYPED_URLS_KEY, KEY_READ);
+    if (result != ERROR_SUCCESS)
+    {
+        TRACE("%ld\n", result);
+        return;
+    }
+
+    for (LONG i = 0; i < 50; ++i)
+    {
+        // Build a registry value name
+        WCHAR szName[32];
+        StringCbPrintfW(szName, sizeof(szName), L"url%lu", i);
+
+        // Read a registry value
+        CString strData;
+        result = RegQueryCStringW(key, szName, strData);
+        if (result != ERROR_SUCCESS)
+            continue;
+
+        pMRU->AddMRUString(strData);
+    }
+}
 
 static CComPtr<IUnknown>
 AutoComplete_CreateList(DWORD dwSHACF, DWORD dwACLO)
 {
-    CComPtr<IUnknown> pList = CREATE_FROM_CLSID(CLSID_ACLMulti);
-    if (!pList)
+    CComPtr<IUnknown> pList;
+    HRESULT hr = CoCreateInstance(CLSID_ACLMulti, NULL, CLSCTX_INPROC_SERVER,
+                                  IID_IUnknown, (LPVOID *)&pList);
+    if (FAILED(hr))
+    {
+        ERR("CoCreateInstance(CLSID_ACLMulti) failed with 0x%08lX\n", hr);
         return NULL;
+    }
 
     CComPtr<IObjMgr> pManager;
-    HRESULT hr = pList->QueryInterface(IID_IObjMgr, (LPVOID *)&pManager);
+    hr = pList->QueryInterface(IID_IObjMgr, (LPVOID *)&pManager);
     if (FAILED(hr))
     {
         ERR("pList->QueryInterface failed: 0x%08lX\n", hr);
@@ -100,33 +156,50 @@ AutoComplete_CreateList(DWORD dwSHACF, DWORD dwACLO)
 
     if (dwSHACF & SHACF_URLMRU)
     {
-        CComPtr<IUnknown> pMRU = CREATE_FROM_CLSID(CLSID_ACLCustomMRU);
-        if (pMRU)
+        CComPtr<IACLCustomMRU> pMRU;
+        hr = CoCreateInstance(CLSID_ACLCustomMRU, NULL, CLSCTX_INPROC_SERVER,
+                              IID_IACLCustomMRU, (LPVOID *)&pMRU);
+        if (SUCCEEDED(hr))
         {
-            AutoComplete_AddListFromRegistry(pMRU, RUN_MRU_KEY);
-            AutoComplete_AddListFromRegistry(pMRU, TYPED_URLS_KEY);
+            AutoComplete_AddRunMRU(pMRU);
+            AutoComplete_AddTypedURLs(pMRU);
             pManager->Append(pMRU);
-            IUnknown_SetOptions(pMRU, dwACLO);
+        }
+        else
+        {
+            ERR("hr:%08lX\n", hr);
         }
     }
 
     if (dwSHACF & SHACF_URLHISTORY)
     {
-        CComPtr<IUnknown> pHistory = CREATE_FROM_CLSID(CLSID_ACLHistory);
-        if (pHistory)
+        CComPtr<IUnknown> pHistory;
+        hr = CoCreateInstance(CLSID_ACLHistory, NULL, CLSCTX_INPROC_SERVER,
+                              IID_IUnknown, (LPVOID *)&pHistory);
+        if (SUCCEEDED(hr))
         {
             pManager->Append(pHistory);
             IUnknown_SetOptions(pHistory, dwACLO);
+        }
+        else
+        {
+            ERR("hr:%08lX\n", hr);
         }
     }
 
     if (dwSHACF & (SHACF_FILESYSTEM | SHACF_FILESYS_ONLY | SHACF_FILESYS_DIRS))
     {
-        CComPtr<IUnknown> pISF = CREATE_FROM_CLSID(CLSID_ACListISF);
-        if (pISF)
+        CComPtr<IUnknown> pISF;
+        hr = CoCreateInstance(CLSID_ACListISF, NULL, CLSCTX_INPROC_SERVER,
+                              IID_IUnknown, (LPVOID *)&pISF);
+        if (SUCCEEDED(hr))
         {
             pManager->Append(pISF);
             IUnknown_SetOptions(pISF, dwACLO);
+        }
+        else
+        {
+            ERR("hr:%08lX\n", hr);
         }
     }
 
