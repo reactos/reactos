@@ -41,3 +41,23 @@ PoQueryWatchdogTime(
 {
     return FALSE;
 }
+
+_IRQL_requires_max_(DISPATCH_LEVEL)
+NTKRNLVISTAAPI
+VOID
+NTAPI
+PoSetSystemWake(
+    _Inout_ struct _IRP *Irp)
+{
+
+}
+
+_IRQL_requires_max_(DISPATCH_LEVEL)
+NTKRNLVISTAAPI
+BOOLEAN
+NTAPI
+PoGetSystemWake(
+    _In_ struct _IRP *Irp)
+{
+    return FALSE;
+}
