@@ -20,7 +20,7 @@ static HRESULT
 AutoComplete_AddMRU(CComPtr<IObjMgr> pManager, LPCWSTR pszKey)
 {
     CComPtr<IACLCustomMRU> pMRU;
-    HRESULT hr = CoCreateInstance(CLSID_ACLMRU, NULL, CLSCTX_INPROC_SERVER,
+    HRESULT hr = CoCreateInstance(CLSID_ACLCustomMRU, NULL, CLSCTX_INPROC_SERVER,
                                   IID_IACLCustomMRU, (LPVOID *)&pMRU);
     if (FAILED(hr))
     {
