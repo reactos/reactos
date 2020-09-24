@@ -55,6 +55,7 @@ _Function_class_(EVT_WDF_DPC)
 _IRQL_requires_same_
 _IRQL_requires_(DISPATCH_LEVEL)
 VOID
+STDCALL
 EVT_WDF_DPC(
     _In_
     WDFDPC Dpc
@@ -77,8 +78,8 @@ typedef struct _WDF_DPC_CONFIG {
 
 } WDF_DPC_CONFIG, *PWDF_DPC_CONFIG;
 
-VOID
 FORCEINLINE
+VOID
 WDF_DPC_CONFIG_INIT(
     _Out_ PWDF_DPC_CONFIG Config,
     _In_  PFN_WDF_DPC     EvtDpcFunc
@@ -99,7 +100,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 NTSTATUS
-(*PFN_WDFDPCCREATE)(
+(STDCALL *PFN_WDFDPCCREATE)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -112,8 +113,8 @@ NTSTATUS
 
 _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
-NTSTATUS
 FORCEINLINE
+NTSTATUS
 WdfDpcCreate(
     _In_
     PWDF_DPC_CONFIG Config,
@@ -133,7 +134,7 @@ typedef
 _IRQL_requires_max_(HIGH_LEVEL)
 WDFAPI
 BOOLEAN
-(*PFN_WDFDPCENQUEUE)(
+(STDCALL *PFN_WDFDPCENQUEUE)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -141,8 +142,8 @@ BOOLEAN
     );
 
 _IRQL_requires_max_(HIGH_LEVEL)
-BOOLEAN
 FORCEINLINE
+BOOLEAN
 WdfDpcEnqueue(
     _In_
     WDFDPC Dpc
@@ -159,7 +160,7 @@ _When_(Wait == __true, _IRQL_requires_max_(PASSIVE_LEVEL))
 _When_(Wait == __false, _IRQL_requires_max_(HIGH_LEVEL))
 WDFAPI
 BOOLEAN
-(*PFN_WDFDPCCANCEL)(
+(STDCALL *PFN_WDFDPCCANCEL)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -170,8 +171,8 @@ BOOLEAN
 
 _When_(Wait == __true, _IRQL_requires_max_(PASSIVE_LEVEL))
 _When_(Wait == __false, _IRQL_requires_max_(HIGH_LEVEL))
-BOOLEAN
 FORCEINLINE
+BOOLEAN
 WdfDpcCancel(
     _In_
     WDFDPC Dpc,
@@ -189,7 +190,7 @@ typedef
 _IRQL_requires_max_(HIGH_LEVEL)
 WDFAPI
 WDFOBJECT
-(*PFN_WDFDPCGETPARENTOBJECT)(
+(STDCALL *PFN_WDFDPCGETPARENTOBJECT)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -197,8 +198,8 @@ WDFOBJECT
     );
 
 _IRQL_requires_max_(HIGH_LEVEL)
-WDFOBJECT
 FORCEINLINE
+WDFOBJECT
 WdfDpcGetParentObject(
     _In_
     WDFDPC Dpc
@@ -214,7 +215,7 @@ typedef
 _IRQL_requires_max_(HIGH_LEVEL)
 WDFAPI
 PKDPC
-(*PFN_WDFDPCWDMGETDPC)(
+(STDCALL *PFN_WDFDPCWDMGETDPC)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -222,8 +223,8 @@ PKDPC
     );
 
 _IRQL_requires_max_(HIGH_LEVEL)
-PKDPC
 FORCEINLINE
+PKDPC
 WdfDpcWdmGetDpc(
     _In_
     WDFDPC Dpc

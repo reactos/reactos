@@ -57,7 +57,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 NTSTATUS
-(*PFN_WDFCOLLECTIONCREATE)(
+(STDCALL *PFN_WDFCOLLECTIONCREATE)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_opt_
@@ -68,8 +68,8 @@ NTSTATUS
 
 _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
-NTSTATUS
 FORCEINLINE
+NTSTATUS
 WdfCollectionCreate(
     _In_opt_
     PWDF_OBJECT_ATTRIBUTES CollectionAttributes,
@@ -87,7 +87,7 @@ typedef
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 ULONG
-(*PFN_WDFCOLLECTIONGETCOUNT)(
+(STDCALL *PFN_WDFCOLLECTIONGETCOUNT)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -95,8 +95,8 @@ ULONG
     );
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
-ULONG
 FORCEINLINE
+ULONG
 WdfCollectionGetCount(
     _In_
     WDFCOLLECTION Collection
@@ -113,7 +113,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 NTSTATUS
-(*PFN_WDFCOLLECTIONADD)(
+(STDCALL *PFN_WDFCOLLECTIONADD)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -124,8 +124,8 @@ NTSTATUS
 
 _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
-NTSTATUS
 FORCEINLINE
+NTSTATUS
 WdfCollectionAdd(
     _In_
     WDFCOLLECTION Collection,
@@ -143,7 +143,7 @@ typedef
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 VOID
-(*PFN_WDFCOLLECTIONREMOVE)(
+(STDCALL *PFN_WDFCOLLECTIONREMOVE)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -153,8 +153,8 @@ VOID
     );
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
-VOID
 FORCEINLINE
+VOID
 WdfCollectionRemove(
     _In_
     WDFCOLLECTION Collection,
@@ -172,7 +172,7 @@ typedef
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 VOID
-(*PFN_WDFCOLLECTIONREMOVEITEM)(
+(STDCALL *PFN_WDFCOLLECTIONREMOVEITEM)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -182,8 +182,8 @@ VOID
     );
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
-VOID
 FORCEINLINE
+VOID
 WdfCollectionRemoveItem(
     _In_
     WDFCOLLECTION Collection,
@@ -201,7 +201,7 @@ typedef
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 WDFOBJECT
-(*PFN_WDFCOLLECTIONGETITEM)(
+(STDCALL *PFN_WDFCOLLECTIONGETITEM)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -211,8 +211,8 @@ WDFOBJECT
     );
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
-WDFOBJECT
 FORCEINLINE
+WDFOBJECT
 WdfCollectionGetItem(
     _In_
     WDFCOLLECTION Collection,
@@ -230,7 +230,7 @@ typedef
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 WDFOBJECT
-(*PFN_WDFCOLLECTIONGETFIRSTITEM)(
+(STDCALL *PFN_WDFCOLLECTIONGETFIRSTITEM)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -238,8 +238,8 @@ WDFOBJECT
     );
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
-WDFOBJECT
 FORCEINLINE
+WDFOBJECT
 WdfCollectionGetFirstItem(
     _In_
     WDFCOLLECTION Collection
@@ -255,7 +255,7 @@ typedef
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 WDFOBJECT
-(*PFN_WDFCOLLECTIONGETLASTITEM)(
+(STDCALL *PFN_WDFCOLLECTIONGETLASTITEM)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -263,8 +263,8 @@ WDFOBJECT
     );
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
-WDFOBJECT
 FORCEINLINE
+WDFOBJECT
 WdfCollectionGetLastItem(
     _In_
     WDFCOLLECTION Collection

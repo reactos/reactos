@@ -67,6 +67,7 @@ _Function_class_(EVT_WDF_DRIVER_DEVICE_ADD)
 _IRQL_requires_same_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 NTSTATUS
+STDCALL
 EVT_WDF_DRIVER_DEVICE_ADD(
     _In_
     WDFDRIVER Driver,
@@ -81,6 +82,7 @@ _Function_class_(EVT_WDF_DRIVER_UNLOAD)
 _IRQL_requires_same_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 VOID
+STDCALL
 EVT_WDF_DRIVER_UNLOAD(
     _In_
     WDFDRIVER Driver
@@ -97,6 +99,7 @@ _Function_class_(EVT_WDF_TRACE_CALLBACK)
 _IRQL_requires_same_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 NTSTATUS
+STDCALL
 EVT_WDF_TRACE_CALLBACK(
     _In_
     UCHAR   minorFunction,
@@ -140,8 +143,8 @@ typedef struct _WDF_DRIVER_CONFIG {
 
 } WDF_DRIVER_CONFIG, *PWDF_DRIVER_CONFIG;
 
-VOID
 FORCEINLINE
+VOID
 WDF_DRIVER_CONFIG_INIT(
     _Out_ PWDF_DRIVER_CONFIG Config,
     _In_opt_ PFN_WDF_DRIVER_DEVICE_ADD EvtDriverDeviceAdd
@@ -171,8 +174,8 @@ typedef struct _WDF_DRIVER_VERSION_AVAILABLE_PARAMS {
 
 } WDF_DRIVER_VERSION_AVAILABLE_PARAMS, *PWDF_DRIVER_VERSION_AVAILABLE_PARAMS;
 
-VOID
 FORCEINLINE
+VOID
 WDF_DRIVER_VERSION_AVAILABLE_PARAMS_INIT(
     _Out_ PWDF_DRIVER_VERSION_AVAILABLE_PARAMS Params,
     _In_ ULONG MajorVersion,
@@ -186,8 +189,8 @@ WDF_DRIVER_VERSION_AVAILABLE_PARAMS_INIT(
     Params->MinorVersion = MinorVersion;
 }
 
-WDFDRIVER
 FORCEINLINE
+WDFDRIVER
 WdfGetDriver(
     VOID
     )
@@ -203,7 +206,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 NTSTATUS
-(*PFN_WDFDRIVERCREATE)(
+(STDCALL *PFN_WDFDRIVERCREATE)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -220,8 +223,8 @@ NTSTATUS
 
 _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
-NTSTATUS
 FORCEINLINE
+NTSTATUS
 WdfDriverCreate(
     _In_
     PDRIVER_OBJECT DriverObject,
@@ -245,7 +248,7 @@ typedef
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 PWSTR
-(*PFN_WDFDRIVERGETREGISTRYPATH)(
+(STDCALL *PFN_WDFDRIVERGETREGISTRYPATH)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -253,8 +256,8 @@ PWSTR
     );
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
-PWSTR
 FORCEINLINE
+PWSTR
 WdfDriverGetRegistryPath(
     _In_
     WDFDRIVER Driver
@@ -270,7 +273,7 @@ typedef
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 PDRIVER_OBJECT
-(*PFN_WDFDRIVERWDMGETDRIVEROBJECT)(
+(STDCALL *PFN_WDFDRIVERWDMGETDRIVEROBJECT)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -278,8 +281,8 @@ PDRIVER_OBJECT
     );
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
-PDRIVER_OBJECT
 FORCEINLINE
+PDRIVER_OBJECT
 WdfDriverWdmGetDriverObject(
     _In_
     WDFDRIVER Driver
@@ -296,7 +299,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 NTSTATUS
-(*PFN_WDFDRIVEROPENPARAMETERSREGISTRYKEY)(
+(STDCALL *PFN_WDFDRIVEROPENPARAMETERSREGISTRYKEY)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -311,8 +314,8 @@ NTSTATUS
 
 _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
-NTSTATUS
 FORCEINLINE
+NTSTATUS
 WdfDriverOpenParametersRegistryKey(
     _In_
     WDFDRIVER Driver,
@@ -334,7 +337,7 @@ typedef
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 WDFDRIVER
-(*PFN_WDFWDMDRIVERGETWDFDRIVERHANDLE)(
+(STDCALL *PFN_WDFWDMDRIVERGETWDFDRIVERHANDLE)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -342,8 +345,8 @@ WDFDRIVER
     );
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
-WDFDRIVER
 FORCEINLINE
+WDFDRIVER
 WdfWdmDriverGetWdfDriverHandle(
     _In_
     PDRIVER_OBJECT DriverObject
@@ -360,7 +363,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 NTSTATUS
-(*PFN_WDFDRIVERREGISTERTRACEINFO)(
+(STDCALL *PFN_WDFDRIVERREGISTERTRACEINFO)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -373,8 +376,8 @@ NTSTATUS
 
 _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
-NTSTATUS
 FORCEINLINE
+NTSTATUS
 WdfDriverRegisterTraceInfo(
     _In_
     PDRIVER_OBJECT DriverObject,
@@ -395,7 +398,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 NTSTATUS
-(*PFN_WDFDRIVERRETRIEVEVERSIONSTRING)(
+(STDCALL *PFN_WDFDRIVERRETRIEVEVERSIONSTRING)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -406,8 +409,8 @@ NTSTATUS
 
 _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
-NTSTATUS
 FORCEINLINE
+NTSTATUS
 WdfDriverRetrieveVersionString(
     _In_
     WDFDRIVER Driver,
@@ -426,7 +429,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 BOOLEAN
-(*PFN_WDFDRIVERISVERSIONAVAILABLE)(
+(STDCALL *PFN_WDFDRIVERISVERSIONAVAILABLE)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -437,8 +440,8 @@ BOOLEAN
 
 _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
-BOOLEAN
 FORCEINLINE
+BOOLEAN
 WdfDriverIsVersionAvailable(
     _In_
     WDFDRIVER Driver,

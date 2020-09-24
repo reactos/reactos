@@ -57,8 +57,8 @@ WDF_EXTERN_C_START
 #define WDF_TIMEOUT_TO_SEC              ((LONGLONG) 1 * 10 * 1000 * 1000)
 #define WDF_TIMEOUT_TO_MS               ((LONGLONG) 1 * 10 * 1000)
 #define WDF_TIMEOUT_TO_US               ((LONGLONG) 1 * 10)
-LONGLONG
 FORCEINLINE
+LONGLONG
 WDF_REL_TIMEOUT_IN_SEC(
     _In_ ULONGLONG Time
     )
@@ -66,8 +66,8 @@ WDF_REL_TIMEOUT_IN_SEC(
     return Time * -1 * WDF_TIMEOUT_TO_SEC;
 }
 
-LONGLONG
 FORCEINLINE
+LONGLONG
 WDF_ABS_TIMEOUT_IN_SEC(
     _In_ ULONGLONG Time
     )
@@ -75,8 +75,8 @@ WDF_ABS_TIMEOUT_IN_SEC(
     return Time *  1 * WDF_TIMEOUT_TO_SEC;
 }
 
-LONGLONG
 FORCEINLINE
+LONGLONG
 WDF_REL_TIMEOUT_IN_MS(
     _In_ ULONGLONG Time
     )
@@ -84,8 +84,8 @@ WDF_REL_TIMEOUT_IN_MS(
     return Time * -1 * WDF_TIMEOUT_TO_MS;
 }
 
-LONGLONG
 FORCEINLINE
+LONGLONG
 WDF_ABS_TIMEOUT_IN_MS(
     _In_ ULONGLONG Time
     )
@@ -93,8 +93,8 @@ WDF_ABS_TIMEOUT_IN_MS(
     return Time *  1 * WDF_TIMEOUT_TO_MS;
 }
 
-LONGLONG
 FORCEINLINE
+LONGLONG
 WDF_REL_TIMEOUT_IN_US(
     _In_ ULONGLONG Time
     )
@@ -102,8 +102,8 @@ WDF_REL_TIMEOUT_IN_US(
     return Time * -1 * WDF_TIMEOUT_TO_US;
 }
 
-LONGLONG
 FORCEINLINE
+LONGLONG
 WDF_ABS_TIMEOUT_IN_US(
     _In_ ULONGLONG Time
     )
@@ -114,8 +114,8 @@ WDF_ABS_TIMEOUT_IN_US(
 //
 // Rounding functions
 //
-size_t
 FORCEINLINE
+size_t
 WDF_ALIGN_SIZE_DOWN(
     _In_ size_t Length,
     _In_ size_t AlignTo
@@ -124,8 +124,8 @@ WDF_ALIGN_SIZE_DOWN(
     return Length & ~(AlignTo - 1);
 }
 
-size_t
 FORCEINLINE
+size_t
 WDF_ALIGN_SIZE_UP(
     _In_ size_t Length,
     _In_ size_t AlignTo

@@ -83,6 +83,7 @@ _Function_class_(EVT_WDF_INTERRUPT_ISR)
 _IRQL_requires_same_
 _IRQL_requires_min_(PASSIVE_LEVEL)
 BOOLEAN
+STDCALL
 EVT_WDF_INTERRUPT_ISR(
     _In_
     WDFINTERRUPT Interrupt,
@@ -103,6 +104,7 @@ _Function_class_(EVT_WDF_INTERRUPT_SYNCHRONIZE)
 _IRQL_requires_same_
 _IRQL_requires_min_(PASSIVE_LEVEL)
 BOOLEAN
+STDCALL
 EVT_WDF_INTERRUPT_SYNCHRONIZE(
     _In_
     WDFINTERRUPT Interrupt,
@@ -121,6 +123,7 @@ _Function_class_(EVT_WDF_INTERRUPT_DPC)
 _IRQL_requires_same_
 _IRQL_requires_(DISPATCH_LEVEL)
 VOID
+STDCALL
 EVT_WDF_INTERRUPT_DPC(
     _In_
     WDFINTERRUPT Interrupt,
@@ -139,6 +142,7 @@ _Function_class_(EVT_WDF_INTERRUPT_WORKITEM)
 _IRQL_requires_same_
 _IRQL_requires_(PASSIVE_LEVEL)
 VOID
+STDCALL
 EVT_WDF_INTERRUPT_WORKITEM(
     _In_
     WDFINTERRUPT Interrupt,
@@ -160,6 +164,7 @@ _Function_class_(EVT_WDF_INTERRUPT_ENABLE)
 _IRQL_requires_same_
 _IRQL_requires_min_(PASSIVE_LEVEL)
 NTSTATUS
+STDCALL
 EVT_WDF_INTERRUPT_ENABLE(
     _In_
     WDFINTERRUPT Interrupt,
@@ -181,6 +186,7 @@ _Function_class_(EVT_WDF_INTERRUPT_DISABLE)
 _IRQL_requires_same_
 _IRQL_requires_min_(PASSIVE_LEVEL)
 NTSTATUS
+STDCALL
 EVT_WDF_INTERRUPT_DISABLE(
     _In_
     WDFINTERRUPT Interrupt,
@@ -260,8 +266,8 @@ typedef struct _WDF_INTERRUPT_CONFIG {
 } WDF_INTERRUPT_CONFIG, *PWDF_INTERRUPT_CONFIG;
 
 
-VOID
 FORCEINLINE
+VOID
 WDF_INTERRUPT_CONFIG_INIT(
     _Out_ PWDF_INTERRUPT_CONFIG Configuration,
     _In_ PFN_WDF_INTERRUPT_ISR EvtInterruptIsr,
@@ -286,8 +292,10 @@ WDF_INTERRUPT_CONFIG_INIT(
 //
 // Disable warning C4324: structure was padded due to DECLSPEC_ALIGN
 // This padding is intentional and necessary.
+#ifdef _MSC_VER
 #pragma warning(push)
 #pragma warning(disable: 4324)
+#endif
 
 typedef struct _WDF_INTERRUPT_INFO {
     //
@@ -308,10 +316,12 @@ typedef struct _WDF_INTERRUPT_INFO {
 
 } WDF_INTERRUPT_INFO, *PWDF_INTERRUPT_INFO;
 
+#ifdef _MSC_VER
 #pragma warning(pop)
+#endif
 
-VOID
 FORCEINLINE
+VOID
 WDF_INTERRUPT_INFO_INIT(
     _Out_ PWDF_INTERRUPT_INFO Info
     )
@@ -334,8 +344,8 @@ typedef struct _WDF_INTERRUPT_EXTENDED_POLICY {
 
 } WDF_INTERRUPT_EXTENDED_POLICY, *PWDF_INTERRUPT_EXTENDED_POLICY;
 
-VOID
 FORCEINLINE
+VOID
 WDF_INTERRUPT_EXTENDED_POLICY_INIT(
     _Out_ PWDF_INTERRUPT_EXTENDED_POLICY ExtendedPolicy
     )
@@ -355,7 +365,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 NTSTATUS
-(*PFN_WDFINTERRUPTCREATE)(
+(STDCALL *PFN_WDFINTERRUPTCREATE)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -370,8 +380,8 @@ NTSTATUS
 
 _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
-NTSTATUS
 FORCEINLINE
+NTSTATUS
 WdfInterruptCreate(
     _In_
     WDFDEVICE Device,
@@ -392,15 +402,15 @@ WdfInterruptCreate(
 typedef
 WDFAPI
 BOOLEAN
-(*PFN_WDFINTERRUPTQUEUEDPCFORISR)(
+(STDCALL *PFN_WDFINTERRUPTQUEUEDPCFORISR)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
     WDFINTERRUPT Interrupt
     );
 
-BOOLEAN
 FORCEINLINE
+BOOLEAN
 WdfInterruptQueueDpcForIsr(
     _In_
     WDFINTERRUPT Interrupt
@@ -415,15 +425,15 @@ WdfInterruptQueueDpcForIsr(
 typedef
 WDFAPI
 BOOLEAN
-(*PFN_WDFINTERRUPTQUEUEWORKITEMFORISR)(
+(STDCALL *PFN_WDFINTERRUPTQUEUEWORKITEMFORISR)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
     WDFINTERRUPT Interrupt
     );
 
-BOOLEAN
 FORCEINLINE
+BOOLEAN
 WdfInterruptQueueWorkItemForIsr(
     _In_
     WDFINTERRUPT Interrupt
@@ -439,7 +449,7 @@ typedef
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 BOOLEAN
-(*PFN_WDFINTERRUPTSYNCHRONIZE)(
+(STDCALL *PFN_WDFINTERRUPTSYNCHRONIZE)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -451,8 +461,8 @@ BOOLEAN
     );
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
-BOOLEAN
 FORCEINLINE
+BOOLEAN
 WdfInterruptSynchronize(
     _In_
     WDFINTERRUPT Interrupt,
@@ -472,7 +482,7 @@ typedef
 _IRQL_requires_max_(DISPATCH_LEVEL + 1)
 WDFAPI
 VOID
-(*PFN_WDFINTERRUPTACQUIRELOCK)(
+(STDCALL *PFN_WDFINTERRUPTACQUIRELOCK)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -482,8 +492,8 @@ VOID
     );
 
 _IRQL_requires_max_(DISPATCH_LEVEL + 1)
-VOID
 FORCEINLINE
+VOID
 WdfInterruptAcquireLock(
     _In_
     _Requires_lock_not_held_(_Curr_)
@@ -501,7 +511,7 @@ typedef
 _IRQL_requires_max_(DISPATCH_LEVEL + 1)
 WDFAPI
 VOID
-(*PFN_WDFINTERRUPTRELEASELOCK)(
+(STDCALL *PFN_WDFINTERRUPTRELEASELOCK)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -511,8 +521,8 @@ VOID
     );
 
 _IRQL_requires_max_(DISPATCH_LEVEL + 1)
-VOID
 FORCEINLINE
+VOID
 WdfInterruptReleaseLock(
     _In_
     _Requires_lock_held_(_Curr_)
@@ -530,7 +540,7 @@ typedef
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 VOID
-(*PFN_WDFINTERRUPTENABLE)(
+(STDCALL *PFN_WDFINTERRUPTENABLE)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -538,8 +548,8 @@ VOID
     );
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
-VOID
 FORCEINLINE
+VOID
 WdfInterruptEnable(
     _In_
     WDFINTERRUPT Interrupt
@@ -555,7 +565,7 @@ typedef
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 VOID
-(*PFN_WDFINTERRUPTDISABLE)(
+(STDCALL *PFN_WDFINTERRUPTDISABLE)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -563,8 +573,8 @@ VOID
     );
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
-VOID
 FORCEINLINE
+VOID
 WdfInterruptDisable(
     _In_
     WDFINTERRUPT Interrupt
@@ -580,7 +590,7 @@ typedef
 _Must_inspect_result_
 WDFAPI
 PKINTERRUPT
-(*PFN_WDFINTERRUPTWDMGETINTERRUPT)(
+(STDCALL *PFN_WDFINTERRUPTWDMGETINTERRUPT)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -588,8 +598,8 @@ PKINTERRUPT
     );
 
 _Must_inspect_result_
-PKINTERRUPT
 FORCEINLINE
+PKINTERRUPT
 WdfInterruptWdmGetInterrupt(
     _In_
     WDFINTERRUPT Interrupt
@@ -605,7 +615,7 @@ typedef
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 VOID
-(*PFN_WDFINTERRUPTGETINFO)(
+(STDCALL *PFN_WDFINTERRUPTGETINFO)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -615,8 +625,8 @@ VOID
     );
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
-VOID
 FORCEINLINE
+VOID
 WdfInterruptGetInfo(
     _In_
     WDFINTERRUPT Interrupt,
@@ -634,7 +644,7 @@ typedef
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 VOID
-(*PFN_WDFINTERRUPTSETPOLICY)(
+(STDCALL *PFN_WDFINTERRUPTSETPOLICY)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -648,8 +658,8 @@ VOID
     );
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
-VOID
 FORCEINLINE
+VOID
 WdfInterruptSetPolicy(
     _In_
     WDFINTERRUPT Interrupt,
@@ -671,7 +681,7 @@ typedef
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 VOID
-(*PFN_WDFINTERRUPTSETEXTENDEDPOLICY)(
+(STDCALL *PFN_WDFINTERRUPTSETEXTENDEDPOLICY)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -681,8 +691,8 @@ VOID
     );
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
-VOID
 FORCEINLINE
+VOID
 WdfInterruptSetExtendedPolicy(
     _In_
     WDFINTERRUPT Interrupt,
@@ -699,15 +709,15 @@ WdfInterruptSetExtendedPolicy(
 typedef
 WDFAPI
 WDFDEVICE
-(*PFN_WDFINTERRUPTGETDEVICE)(
+(STDCALL *PFN_WDFINTERRUPTGETDEVICE)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
     WDFINTERRUPT Interrupt
     );
 
-WDFDEVICE
 FORCEINLINE
+WDFDEVICE
 WdfInterruptGetDevice(
     _In_
     WDFINTERRUPT Interrupt
@@ -725,7 +735,7 @@ _Post_satisfies_(return == 1 || return == 0)
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 BOOLEAN
-(*PFN_WDFINTERRUPTTRYTOACQUIRELOCK)(
+(STDCALL *PFN_WDFINTERRUPTTRYTOACQUIRELOCK)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -737,8 +747,8 @@ BOOLEAN
 _Must_inspect_result_
 _Post_satisfies_(return == 1 || return == 0)
 _IRQL_requires_max_(PASSIVE_LEVEL)
-BOOLEAN
 FORCEINLINE
+BOOLEAN
 WdfInterruptTryToAcquireLock(
     _In_
     _Requires_lock_not_held_(_Curr_)
@@ -756,7 +766,7 @@ typedef
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 VOID
-(*PFN_WDFINTERRUPTREPORTACTIVE)(
+(STDCALL *PFN_WDFINTERRUPTREPORTACTIVE)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -764,8 +774,8 @@ VOID
     );
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
-VOID
 FORCEINLINE
+VOID
 WdfInterruptReportActive(
     _In_
     WDFINTERRUPT Interrupt
@@ -781,7 +791,7 @@ typedef
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 VOID
-(*PFN_WDFINTERRUPTREPORTINACTIVE)(
+(STDCALL *PFN_WDFINTERRUPTREPORTINACTIVE)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -789,8 +799,8 @@ VOID
     );
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
-VOID
 FORCEINLINE
+VOID
 WdfInterruptReportInactive(
     _In_
     WDFINTERRUPT Interrupt

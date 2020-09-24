@@ -62,7 +62,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 NTSTATUS
-(*PFN_WDFREGISTRYOPENKEY)(
+(STDCALL *PFN_WDFREGISTRYOPENKEY)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_opt_
@@ -79,8 +79,8 @@ NTSTATUS
 
 _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
-NTSTATUS
 FORCEINLINE
+NTSTATUS
 WdfRegistryOpenKey(
     _In_opt_
     WDFKEY ParentKey,
@@ -105,7 +105,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 NTSTATUS
-(*PFN_WDFREGISTRYCREATEKEY)(
+(STDCALL *PFN_WDFREGISTRYCREATEKEY)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_opt_
@@ -126,8 +126,8 @@ NTSTATUS
 
 _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
-NTSTATUS
 FORCEINLINE
+NTSTATUS
 WdfRegistryCreateKey(
     _In_opt_
     WDFKEY ParentKey,
@@ -155,7 +155,7 @@ typedef
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 VOID
-(*PFN_WDFREGISTRYCLOSE)(
+(STDCALL *PFN_WDFREGISTRYCLOSE)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -163,8 +163,8 @@ VOID
     );
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
-VOID
 FORCEINLINE
+VOID
 WdfRegistryClose(
     _In_
     WDFKEY Key
@@ -180,7 +180,7 @@ typedef
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 HANDLE
-(*PFN_WDFREGISTRYWDMGETHANDLE)(
+(STDCALL *PFN_WDFREGISTRYWDMGETHANDLE)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -188,8 +188,8 @@ HANDLE
     );
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
-HANDLE
 FORCEINLINE
+HANDLE
 WdfRegistryWdmGetHandle(
     _In_
     WDFKEY Key
@@ -206,7 +206,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 NTSTATUS
-(*PFN_WDFREGISTRYREMOVEKEY)(
+(STDCALL *PFN_WDFREGISTRYREMOVEKEY)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -215,8 +215,8 @@ NTSTATUS
 
 _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
-NTSTATUS
 FORCEINLINE
+NTSTATUS
 WdfRegistryRemoveKey(
     _In_
     WDFKEY Key
@@ -233,7 +233,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 NTSTATUS
-(*PFN_WDFREGISTRYREMOVEVALUE)(
+(STDCALL *PFN_WDFREGISTRYREMOVEVALUE)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -244,8 +244,8 @@ NTSTATUS
 
 _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
-NTSTATUS
 FORCEINLINE
+NTSTATUS
 WdfRegistryRemoveValue(
     _In_
     WDFKEY Key,
@@ -264,7 +264,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 NTSTATUS
-(*PFN_WDFREGISTRYQUERYVALUE)(
+(STDCALL *PFN_WDFREGISTRYQUERYVALUE)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -283,8 +283,8 @@ NTSTATUS
 
 _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
-NTSTATUS
 FORCEINLINE
+NTSTATUS
 WdfRegistryQueryValue(
     _In_
     WDFKEY Key,
@@ -311,7 +311,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 NTSTATUS
-(*PFN_WDFREGISTRYQUERYMEMORY)(
+(STDCALL *PFN_WDFREGISTRYQUERYMEMORY)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -331,8 +331,8 @@ NTSTATUS
 
 _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
-NTSTATUS
 FORCEINLINE
+NTSTATUS
 WdfRegistryQueryMemory(
     _In_
     WDFKEY Key,
@@ -360,7 +360,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 NTSTATUS
-(*PFN_WDFREGISTRYQUERYMULTISTRING)(
+(STDCALL *PFN_WDFREGISTRYQUERYMULTISTRING)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -375,8 +375,8 @@ NTSTATUS
 
 _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
-NTSTATUS
 FORCEINLINE
+NTSTATUS
 WdfRegistryQueryMultiString(
     _In_
     WDFKEY Key,
@@ -399,7 +399,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 NTSTATUS
-(*PFN_WDFREGISTRYQUERYUNICODESTRING)(
+(STDCALL *PFN_WDFREGISTRYQUERYUNICODESTRING)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -414,8 +414,8 @@ NTSTATUS
 
 _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
-NTSTATUS
 FORCEINLINE
+NTSTATUS
 WdfRegistryQueryUnicodeString(
     _In_
     WDFKEY Key,
@@ -438,7 +438,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 NTSTATUS
-(*PFN_WDFREGISTRYQUERYSTRING)(
+(STDCALL *PFN_WDFREGISTRYQUERYSTRING)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -451,8 +451,8 @@ NTSTATUS
 
 _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
-NTSTATUS
 FORCEINLINE
+NTSTATUS
 WdfRegistryQueryString(
     _In_
     WDFKEY Key,
@@ -473,7 +473,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 NTSTATUS
-(*PFN_WDFREGISTRYQUERYULONG)(
+(STDCALL *PFN_WDFREGISTRYQUERYULONG)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -486,8 +486,8 @@ NTSTATUS
 
 _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
-NTSTATUS
 FORCEINLINE
+NTSTATUS
 WdfRegistryQueryULong(
     _In_
     WDFKEY Key,
@@ -508,7 +508,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 NTSTATUS
-(*PFN_WDFREGISTRYASSIGNVALUE)(
+(STDCALL *PFN_WDFREGISTRYASSIGNVALUE)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -525,8 +525,8 @@ NTSTATUS
 
 _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
-NTSTATUS
 FORCEINLINE
+NTSTATUS
 WdfRegistryAssignValue(
     _In_
     WDFKEY Key,
@@ -551,7 +551,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 NTSTATUS
-(*PFN_WDFREGISTRYASSIGNMEMORY)(
+(STDCALL *PFN_WDFREGISTRYASSIGNMEMORY)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -568,8 +568,8 @@ NTSTATUS
 
 _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
-NTSTATUS
 FORCEINLINE
+NTSTATUS
 WdfRegistryAssignMemory(
     _In_
     WDFKEY Key,
@@ -594,7 +594,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 NTSTATUS
-(*PFN_WDFREGISTRYASSIGNMULTISTRING)(
+(STDCALL *PFN_WDFREGISTRYASSIGNMULTISTRING)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -607,8 +607,8 @@ NTSTATUS
 
 _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
-NTSTATUS
 FORCEINLINE
+NTSTATUS
 WdfRegistryAssignMultiString(
     _In_
     WDFKEY Key,
@@ -629,7 +629,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 NTSTATUS
-(*PFN_WDFREGISTRYASSIGNUNICODESTRING)(
+(STDCALL *PFN_WDFREGISTRYASSIGNUNICODESTRING)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -642,8 +642,8 @@ NTSTATUS
 
 _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
-NTSTATUS
 FORCEINLINE
+NTSTATUS
 WdfRegistryAssignUnicodeString(
     _In_
     WDFKEY Key,
@@ -664,7 +664,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 NTSTATUS
-(*PFN_WDFREGISTRYASSIGNSTRING)(
+(STDCALL *PFN_WDFREGISTRYASSIGNSTRING)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -677,8 +677,8 @@ NTSTATUS
 
 _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
-NTSTATUS
 FORCEINLINE
+NTSTATUS
 WdfRegistryAssignString(
     _In_
     WDFKEY Key,
@@ -699,7 +699,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 NTSTATUS
-(*PFN_WDFREGISTRYASSIGNULONG)(
+(STDCALL *PFN_WDFREGISTRYASSIGNULONG)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -712,8 +712,8 @@ NTSTATUS
 
 _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
-NTSTATUS
 FORCEINLINE
+NTSTATUS
 WdfRegistryAssignULong(
     _In_
     WDFKEY Key,

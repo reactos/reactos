@@ -141,8 +141,8 @@ typedef enum _WDF_IO_QUEUE_STATE {
 // is not operating on any.
 //
 
-BOOLEAN
 FORCEINLINE
+BOOLEAN
 WDF_IO_QUEUE_IDLE(
     _In_ WDF_IO_QUEUE_STATE State
     )
@@ -155,8 +155,8 @@ WDF_IO_QUEUE_IDLE(
 // A Queue is ready if it can accept and dispatch requests and
 // queue is not held by PNP
 //
-BOOLEAN
 FORCEINLINE
+BOOLEAN
 WDF_IO_QUEUE_READY(
     _In_ WDF_IO_QUEUE_STATE State
     )
@@ -171,8 +171,8 @@ WDF_IO_QUEUE_READY(
 // is not automatically delivering them to the device driver,
 // and the queue is idle.
 //
-BOOLEAN
 FORCEINLINE
+BOOLEAN
 WDF_IO_QUEUE_STOPPED(
     _In_ WDF_IO_QUEUE_STATE State
     )
@@ -189,8 +189,8 @@ WDF_IO_QUEUE_STOPPED(
 // either in the Queue or the device driver.
 //
 
-BOOLEAN
 FORCEINLINE
+BOOLEAN
 WDF_IO_QUEUE_DRAINED(
     _In_ WDF_IO_QUEUE_STATE State
     )
@@ -207,8 +207,8 @@ WDF_IO_QUEUE_DRAINED(
 // and there are no requests either in the Queue or
 // the device driver.
 //
-BOOLEAN
 FORCEINLINE
+BOOLEAN
 WDF_IO_QUEUE_PURGED(
     _In_ WDF_IO_QUEUE_STATE State
     )
@@ -228,6 +228,7 @@ _Function_class_(EVT_WDF_IO_QUEUE_IO_DEFAULT)
 _IRQL_requires_same_
 _IRQL_requires_max_(DISPATCH_LEVEL)
 VOID
+STDCALL
 EVT_WDF_IO_QUEUE_IO_DEFAULT(
     _In_
     WDFQUEUE Queue,
@@ -243,6 +244,7 @@ _Function_class_(EVT_WDF_IO_QUEUE_IO_STOP)
 _IRQL_requires_same_
 _IRQL_requires_max_(DISPATCH_LEVEL)
 VOID
+STDCALL
 EVT_WDF_IO_QUEUE_IO_STOP(
     _In_
     WDFQUEUE Queue,
@@ -259,6 +261,7 @@ _Function_class_(EVT_WDF_IO_QUEUE_IO_RESUME)
 _IRQL_requires_same_
 _IRQL_requires_max_(DISPATCH_LEVEL)
 VOID
+STDCALL
 EVT_WDF_IO_QUEUE_IO_RESUME(
     _In_
     WDFQUEUE Queue,
@@ -273,6 +276,7 @@ _Function_class_(EVT_WDF_IO_QUEUE_IO_READ)
 _IRQL_requires_same_
 _IRQL_requires_max_(DISPATCH_LEVEL)
 VOID
+STDCALL
 EVT_WDF_IO_QUEUE_IO_READ(
     _In_
     WDFQUEUE Queue,
@@ -289,6 +293,7 @@ _Function_class_(EVT_WDF_IO_QUEUE_IO_WRITE)
 _IRQL_requires_same_
 _IRQL_requires_max_(DISPATCH_LEVEL)
 VOID
+STDCALL
 EVT_WDF_IO_QUEUE_IO_WRITE(
     _In_
     WDFQUEUE Queue,
@@ -305,6 +310,7 @@ _Function_class_(EVT_WDF_IO_QUEUE_IO_DEVICE_CONTROL)
 _IRQL_requires_same_
 _IRQL_requires_max_(DISPATCH_LEVEL)
 VOID
+STDCALL
 EVT_WDF_IO_QUEUE_IO_DEVICE_CONTROL(
     _In_
     WDFQUEUE Queue,
@@ -325,6 +331,7 @@ _Function_class_(EVT_WDF_IO_QUEUE_IO_INTERNAL_DEVICE_CONTROL)
 _IRQL_requires_same_
 _IRQL_requires_max_(DISPATCH_LEVEL)
 VOID
+STDCALL
 EVT_WDF_IO_QUEUE_IO_INTERNAL_DEVICE_CONTROL(
     _In_
     WDFQUEUE Queue,
@@ -346,6 +353,7 @@ _Function_class_(EVT_WDF_IO_QUEUE_IO_CANCELED_ON_QUEUE)
 _IRQL_requires_same_
 _IRQL_requires_max_(DISPATCH_LEVEL)
 VOID
+STDCALL
 EVT_WDF_IO_QUEUE_IO_CANCELED_ON_QUEUE(
     _In_
     WDFQUEUE Queue,
@@ -361,6 +369,7 @@ _Function_class_(EVT_WDF_IO_QUEUE_STATE)
 _IRQL_requires_same_
 _IRQL_requires_max_(DISPATCH_LEVEL)
 VOID
+STDCALL
 EVT_WDF_IO_QUEUE_STATE(
     _In_
     WDFQUEUE Queue,
@@ -412,8 +421,8 @@ typedef struct _WDF_IO_QUEUE_CONFIG {
     WDFDRIVER                                   Driver;
 } WDF_IO_QUEUE_CONFIG, *PWDF_IO_QUEUE_CONFIG;
 
-VOID
 FORCEINLINE
+VOID
 WDF_IO_QUEUE_CONFIG_INIT(
     _Out_ PWDF_IO_QUEUE_CONFIG      Config,
     _In_ WDF_IO_QUEUE_DISPATCH_TYPE DispatchType
@@ -429,8 +438,8 @@ WDF_IO_QUEUE_CONFIG_INIT(
     }
 }
 
-VOID
 FORCEINLINE
+VOID
 WDF_IO_QUEUE_CONFIG_INIT_DEFAULT_QUEUE(
     _Out_ PWDF_IO_QUEUE_CONFIG      Config,
     _In_ WDF_IO_QUEUE_DISPATCH_TYPE DispatchType
@@ -465,6 +474,7 @@ _Function_class_(EVT_WDF_IO_ALLOCATE_RESOURCES_FOR_RESERVED_REQUEST)
 _IRQL_requires_same_
 _IRQL_requires_max_(DISPATCH_LEVEL)
 NTSTATUS
+STDCALL
 EVT_WDF_IO_ALLOCATE_RESOURCES_FOR_RESERVED_REQUEST(
     _In_
     WDFQUEUE Queue,
@@ -479,6 +489,7 @@ _Function_class_(EVT_WDF_IO_ALLOCATE_REQUEST_RESOURCES)
 _IRQL_requires_same_
 _IRQL_requires_max_(DISPATCH_LEVEL)
 NTSTATUS
+STDCALL
 EVT_WDF_IO_ALLOCATE_REQUEST_RESOURCES(
     _In_
     WDFQUEUE Queue,
@@ -493,6 +504,7 @@ _Function_class_(EVT_WDF_IO_WDM_IRP_FOR_FORWARD_PROGRESS)
 _IRQL_requires_same_
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDF_IO_FORWARD_PROGRESS_ACTION
+STDCALL
 EVT_WDF_IO_WDM_IRP_FOR_FORWARD_PROGRESS(
     _In_
     WDFQUEUE Queue,
@@ -539,8 +551,8 @@ typedef struct _WDF_IO_QUEUE_FORWARD_PROGRESS_POLICY {
 
 }  WDF_IO_QUEUE_FORWARD_PROGRESS_POLICY, *PWDF_IO_QUEUE_FORWARD_PROGRESS_POLICY;
 
-VOID
 FORCEINLINE
+VOID
 WDF_IO_QUEUE_FORWARD_PROGRESS_POLICY_DEFAULT_INIT(
     _Out_ PWDF_IO_QUEUE_FORWARD_PROGRESS_POLICY Policy,
     _In_ ULONG TotalForwardProgressRequests
@@ -554,8 +566,8 @@ WDF_IO_QUEUE_FORWARD_PROGRESS_POLICY_DEFAULT_INIT(
 }
 
 
-VOID
 FORCEINLINE
+VOID
 WDF_IO_QUEUE_FORWARD_PROGRESS_POLICY_EXAMINE_INIT(
     _Out_ PWDF_IO_QUEUE_FORWARD_PROGRESS_POLICY      Policy,
     _In_ ULONG TotalForwardProgressRequests,
@@ -571,8 +583,8 @@ WDF_IO_QUEUE_FORWARD_PROGRESS_POLICY_EXAMINE_INIT(
             EvtIoWdmIrpForForwardProgress;
 }
 
-VOID
 FORCEINLINE
+VOID
 WDF_IO_QUEUE_FORWARD_PROGRESS_POLICY_PAGINGIO_INIT(
     _Out_ PWDF_IO_QUEUE_FORWARD_PROGRESS_POLICY      Policy,
     _In_ ULONG TotalForwardProgressRequests
@@ -594,7 +606,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 NTSTATUS
-(*PFN_WDFIOQUEUECREATE)(
+(STDCALL *PFN_WDFIOQUEUECREATE)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -609,8 +621,8 @@ NTSTATUS
 
 _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
-NTSTATUS
 FORCEINLINE
+NTSTATUS
 WdfIoQueueCreate(
     _In_
     WDFDEVICE Device,
@@ -632,7 +644,7 @@ typedef
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 WDF_IO_QUEUE_STATE
-(*PFN_WDFIOQUEUEGETSTATE)(
+(STDCALL *PFN_WDFIOQUEUEGETSTATE)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -644,8 +656,8 @@ WDF_IO_QUEUE_STATE
     );
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
-WDF_IO_QUEUE_STATE
 FORCEINLINE
+WDF_IO_QUEUE_STATE
 WdfIoQueueGetState(
     _In_
     WDFQUEUE Queue,
@@ -665,7 +677,7 @@ typedef
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 VOID
-(*PFN_WDFIOQUEUESTART)(
+(STDCALL *PFN_WDFIOQUEUESTART)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -673,8 +685,8 @@ VOID
     );
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
-VOID
 FORCEINLINE
+VOID
 WdfIoQueueStart(
     _In_
     WDFQUEUE Queue
@@ -690,7 +702,7 @@ typedef
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 VOID
-(*PFN_WDFIOQUEUESTOP)(
+(STDCALL *PFN_WDFIOQUEUESTOP)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -704,8 +716,8 @@ VOID
     );
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
-VOID
 FORCEINLINE
+VOID
 WdfIoQueueStop(
     _In_
     WDFQUEUE Queue,
@@ -727,7 +739,7 @@ typedef
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 VOID
-(*PFN_WDFIOQUEUESTOPSYNCHRONOUSLY)(
+(STDCALL *PFN_WDFIOQUEUESTOPSYNCHRONOUSLY)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -735,8 +747,8 @@ VOID
     );
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
-VOID
 FORCEINLINE
+VOID
 WdfIoQueueStopSynchronously(
     _In_
     WDFQUEUE Queue
@@ -752,7 +764,7 @@ typedef
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 WDFDEVICE
-(*PFN_WDFIOQUEUEGETDEVICE)(
+(STDCALL *PFN_WDFIOQUEUEGETDEVICE)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -760,8 +772,8 @@ WDFDEVICE
     );
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
-WDFDEVICE
 FORCEINLINE
+WDFDEVICE
 WdfIoQueueGetDevice(
     _In_
     WDFQUEUE Queue
@@ -778,7 +790,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 NTSTATUS
-(*PFN_WDFIOQUEUERETRIEVENEXTREQUEST)(
+(STDCALL *PFN_WDFIOQUEUERETRIEVENEXTREQUEST)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -789,8 +801,8 @@ NTSTATUS
 
 _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
-NTSTATUS
 FORCEINLINE
+NTSTATUS
 WdfIoQueueRetrieveNextRequest(
     _In_
     WDFQUEUE Queue,
@@ -809,7 +821,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 NTSTATUS
-(*PFN_WDFIOQUEUERETRIEVEREQUESTBYFILEOBJECT)(
+(STDCALL *PFN_WDFIOQUEUERETRIEVEREQUESTBYFILEOBJECT)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -822,8 +834,8 @@ NTSTATUS
 
 _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
-NTSTATUS
 FORCEINLINE
+NTSTATUS
 WdfIoQueueRetrieveRequestByFileObject(
     _In_
     WDFQUEUE Queue,
@@ -844,7 +856,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 NTSTATUS
-(*PFN_WDFIOQUEUEFINDREQUEST)(
+(STDCALL *PFN_WDFIOQUEUEFINDREQUEST)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -861,8 +873,8 @@ NTSTATUS
 
 _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
-NTSTATUS
 FORCEINLINE
+NTSTATUS
 WdfIoQueueFindRequest(
     _In_
     WDFQUEUE Queue,
@@ -887,7 +899,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 NTSTATUS
-(*PFN_WDFIOQUEUERETRIEVEFOUNDREQUEST)(
+(STDCALL *PFN_WDFIOQUEUERETRIEVEFOUNDREQUEST)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -900,8 +912,8 @@ NTSTATUS
 
 _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
-NTSTATUS
 FORCEINLINE
+NTSTATUS
 WdfIoQueueRetrieveFoundRequest(
     _In_
     WDFQUEUE Queue,
@@ -921,7 +933,7 @@ typedef
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 VOID
-(*PFN_WDFIOQUEUEDRAINSYNCHRONOUSLY)(
+(STDCALL *PFN_WDFIOQUEUEDRAINSYNCHRONOUSLY)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -929,8 +941,8 @@ VOID
     );
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
-VOID
 FORCEINLINE
+VOID
 WdfIoQueueDrainSynchronously(
     _In_
     WDFQUEUE Queue
@@ -946,7 +958,7 @@ typedef
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 VOID
-(*PFN_WDFIOQUEUEDRAIN)(
+(STDCALL *PFN_WDFIOQUEUEDRAIN)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -960,8 +972,8 @@ VOID
     );
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
-VOID
 FORCEINLINE
+VOID
 WdfIoQueueDrain(
     _In_
     WDFQUEUE Queue,
@@ -983,7 +995,7 @@ typedef
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 VOID
-(*PFN_WDFIOQUEUEPURGESYNCHRONOUSLY)(
+(STDCALL *PFN_WDFIOQUEUEPURGESYNCHRONOUSLY)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -991,8 +1003,8 @@ VOID
     );
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
-VOID
 FORCEINLINE
+VOID
 WdfIoQueuePurgeSynchronously(
     _In_
     WDFQUEUE Queue
@@ -1008,7 +1020,7 @@ typedef
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 VOID
-(*PFN_WDFIOQUEUEPURGE)(
+(STDCALL *PFN_WDFIOQUEUEPURGE)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -1022,8 +1034,8 @@ VOID
     );
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
-VOID
 FORCEINLINE
+VOID
 WdfIoQueuePurge(
     _In_
     WDFQUEUE Queue,
@@ -1046,7 +1058,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 NTSTATUS
-(*PFN_WDFIOQUEUEREADYNOTIFY)(
+(STDCALL *PFN_WDFIOQUEUEREADYNOTIFY)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -1059,8 +1071,8 @@ NTSTATUS
 
 _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
-NTSTATUS
 FORCEINLINE
+NTSTATUS
 WdfIoQueueReadyNotify(
     _In_
     WDFQUEUE Queue,
@@ -1081,7 +1093,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 NTSTATUS
-(*PFN_WDFIOQUEUEASSIGNFORWARDPROGRESSPOLICY)(
+(STDCALL *PFN_WDFIOQUEUEASSIGNFORWARDPROGRESSPOLICY)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -1092,8 +1104,8 @@ NTSTATUS
 
 _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
-NTSTATUS
 FORCEINLINE
+NTSTATUS
 WdfIoQueueAssignForwardProgressPolicy(
     _In_
     WDFQUEUE Queue,
@@ -1111,7 +1123,7 @@ typedef
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 VOID
-(*PFN_WDFIOQUEUESTOPANDPURGE)(
+(STDCALL *PFN_WDFIOQUEUESTOPANDPURGE)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -1125,8 +1137,8 @@ VOID
     );
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
-VOID
 FORCEINLINE
+VOID
 WdfIoQueueStopAndPurge(
     _In_
     WDFQUEUE Queue,
@@ -1148,7 +1160,7 @@ typedef
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 VOID
-(*PFN_WDFIOQUEUESTOPANDPURGESYNCHRONOUSLY)(
+(STDCALL *PFN_WDFIOQUEUESTOPANDPURGESYNCHRONOUSLY)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -1156,8 +1168,8 @@ VOID
     );
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
-VOID
 FORCEINLINE
+VOID
 WdfIoQueueStopAndPurgeSynchronously(
     _In_
     WDFQUEUE Queue

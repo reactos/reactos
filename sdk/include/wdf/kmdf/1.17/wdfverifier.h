@@ -44,7 +44,9 @@ Revision History:
 
 WDF_EXTERN_C_START
 
-
+#ifndef STDCALL // __REACTOS__
+#define STDCALL __stdcall
+#endif
 
 #if (NTDDI_VERSION >= NTDDI_WIN2K)
 
@@ -56,13 +58,13 @@ WDF_EXTERN_C_START
 typedef
 WDFAPI
 VOID
-(*PFN_WDFVERIFIERDBGBREAKPOINT)(
+(STDCALL *PFN_WDFVERIFIERDBGBREAKPOINT)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals
     );
 
-VOID
 FORCEINLINE
+VOID
 WdfVerifierDbgBreakPoint(
     )
 {
@@ -75,7 +77,7 @@ WdfVerifierDbgBreakPoint(
 typedef
 WDFAPI
 VOID
-(*PFN_WDFVERIFIERKEBUGCHECK)(
+(STDCALL *PFN_WDFVERIFIERKEBUGCHECK)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -90,8 +92,8 @@ VOID
     ULONG_PTR BugCheckParameter4
     );
 
-VOID
 FORCEINLINE
+VOID
 WdfVerifierKeBugCheck(
     _In_
     ULONG BugCheckCode,
@@ -114,13 +116,13 @@ WdfVerifierKeBugCheck(
 typedef
 WDFAPI
 PVOID
-(*PFN_WDFGETTRIAGEINFO)(
+(STDCALL *PFN_WDFGETTRIAGEINFO)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals
     );
 
-PVOID
 FORCEINLINE
+PVOID
 WdfGetTriageInfo(
     )
 {

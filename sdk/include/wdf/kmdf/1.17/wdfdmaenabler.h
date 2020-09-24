@@ -76,6 +76,7 @@ _Function_class_(EVT_WDF_DMA_ENABLER_FILL)
 _IRQL_requires_same_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 NTSTATUS
+STDCALL
 EVT_WDF_DMA_ENABLER_FILL(
     _In_
     WDFDMAENABLER DmaEnabler
@@ -88,6 +89,7 @@ _Function_class_(EVT_WDF_DMA_ENABLER_FLUSH)
 _IRQL_requires_same_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 NTSTATUS
+STDCALL
 EVT_WDF_DMA_ENABLER_FLUSH(
     _In_
     WDFDMAENABLER DmaEnabler
@@ -100,6 +102,7 @@ _Function_class_(EVT_WDF_DMA_ENABLER_ENABLE)
 _IRQL_requires_same_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 NTSTATUS
+STDCALL
 EVT_WDF_DMA_ENABLER_ENABLE(
     _In_
     WDFDMAENABLER DmaEnabler
@@ -112,6 +115,7 @@ _Function_class_(EVT_WDF_DMA_ENABLER_DISABLE)
 _IRQL_requires_same_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 NTSTATUS
+STDCALL
 EVT_WDF_DMA_ENABLER_DISABLE(
     _In_
     WDFDMAENABLER DmaEnabler
@@ -124,6 +128,7 @@ _Function_class_(EVT_WDF_DMA_ENABLER_SELFMANAGED_IO_START)
 _IRQL_requires_same_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 NTSTATUS
+STDCALL
 EVT_WDF_DMA_ENABLER_SELFMANAGED_IO_START(
     _In_
     WDFDMAENABLER DmaEnabler
@@ -136,6 +141,7 @@ _Function_class_(EVT_WDF_DMA_ENABLER_SELFMANAGED_IO_STOP)
 _IRQL_requires_same_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 NTSTATUS
+STDCALL
 EVT_WDF_DMA_ENABLER_SELFMANAGED_IO_STOP(
     _In_
     WDFDMAENABLER DmaEnabler
@@ -213,8 +219,8 @@ typedef struct _WDF_DMA_ENABLER_CONFIG {
     ULONG               Flags;
 } WDF_DMA_ENABLER_CONFIG, *PWDF_DMA_ENABLER_CONFIG;
 
-VOID
 FORCEINLINE
+VOID
 WDF_DMA_ENABLER_CONFIG_INIT(
     _Out_ PWDF_DMA_ENABLER_CONFIG Config,
     _In_  WDF_DMA_PROFILE    Profile,
@@ -268,8 +274,8 @@ typedef struct _WDF_DMA_SYSTEM_PROFILE_CONFIG {
 
 } WDF_DMA_SYSTEM_PROFILE_CONFIG, *PWDF_DMA_SYSTEM_PROFILE_CONFIG;
 
-VOID
 FORCEINLINE
+VOID
 WDF_DMA_SYSTEM_PROFILE_CONFIG_INIT(
     _Out_ PWDF_DMA_SYSTEM_PROFILE_CONFIG  DmaConfig,
     _In_  PHYSICAL_ADDRESS                Address,
@@ -293,7 +299,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 NTSTATUS
-(*PFN_WDFDMAENABLERCREATE)(
+(STDCALL *PFN_WDFDMAENABLERCREATE)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -308,8 +314,8 @@ NTSTATUS
 
 _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
-NTSTATUS
 FORCEINLINE
+NTSTATUS
 WdfDmaEnablerCreate(
     _In_
     WDFDEVICE Device,
@@ -332,7 +338,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 NTSTATUS
-(*PFN_WDFDMAENABLERCONFIGURESYSTEMPROFILE)(
+(STDCALL *PFN_WDFDMAENABLERCONFIGURESYSTEMPROFILE)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -345,8 +351,8 @@ NTSTATUS
 
 _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
-NTSTATUS
 FORCEINLINE
+NTSTATUS
 WdfDmaEnablerConfigureSystemProfile(
     _In_
     WDFDMAENABLER DmaEnabler,
@@ -366,7 +372,7 @@ typedef
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 size_t
-(*PFN_WDFDMAENABLERGETMAXIMUMLENGTH)(
+(STDCALL *PFN_WDFDMAENABLERGETMAXIMUMLENGTH)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -374,8 +380,8 @@ size_t
     );
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
-size_t
 FORCEINLINE
+size_t
 WdfDmaEnablerGetMaximumLength(
     _In_
     WDFDMAENABLER DmaEnabler
@@ -391,7 +397,7 @@ typedef
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 size_t
-(*PFN_WDFDMAENABLERGETMAXIMUMSCATTERGATHERELEMENTS)(
+(STDCALL *PFN_WDFDMAENABLERGETMAXIMUMSCATTERGATHERELEMENTS)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -399,8 +405,8 @@ size_t
     );
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
-size_t
 FORCEINLINE
+size_t
 WdfDmaEnablerGetMaximumScatterGatherElements(
     _In_
     WDFDMAENABLER DmaEnabler
@@ -416,7 +422,7 @@ typedef
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 VOID
-(*PFN_WDFDMAENABLERSETMAXIMUMSCATTERGATHERELEMENTS)(
+(STDCALL *PFN_WDFDMAENABLERSETMAXIMUMSCATTERGATHERELEMENTS)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -427,8 +433,8 @@ VOID
     );
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
-VOID
 FORCEINLINE
+VOID
 WdfDmaEnablerSetMaximumScatterGatherElements(
     _In_
     WDFDMAENABLER DmaEnabler,
@@ -447,7 +453,7 @@ typedef
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 size_t
-(*PFN_WDFDMAENABLERGETFRAGMENTLENGTH)(
+(STDCALL *PFN_WDFDMAENABLERGETFRAGMENTLENGTH)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -457,8 +463,8 @@ size_t
     );
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
-size_t
 FORCEINLINE
+size_t
 WdfDmaEnablerGetFragmentLength(
     _In_
     WDFDMAENABLER DmaEnabler,
@@ -476,7 +482,7 @@ typedef
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 PDMA_ADAPTER
-(*PFN_WDFDMAENABLERWDMGETDMAADAPTER)(
+(STDCALL *PFN_WDFDMAENABLERWDMGETDMAADAPTER)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -486,8 +492,8 @@ PDMA_ADAPTER
     );
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
-PDMA_ADAPTER
 FORCEINLINE
+PDMA_ADAPTER
 WdfDmaEnablerWdmGetDmaAdapter(
     _In_
     WDFDMAENABLER DmaEnabler,

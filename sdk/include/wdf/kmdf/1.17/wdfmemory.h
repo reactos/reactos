@@ -97,8 +97,8 @@ typedef struct _WDF_MEMORY_DESCRIPTOR {
 
 } WDF_MEMORY_DESCRIPTOR, *PWDF_MEMORY_DESCRIPTOR;
 
-VOID
 FORCEINLINE
+VOID
 WDF_MEMORY_DESCRIPTOR_INIT_BUFFER(
     _Out_ PWDF_MEMORY_DESCRIPTOR Descriptor,
     _In_  PVOID Buffer,
@@ -112,8 +112,8 @@ WDF_MEMORY_DESCRIPTOR_INIT_BUFFER(
     Descriptor->u.BufferType.Length = BufferLength;
 }
 
-VOID
 FORCEINLINE
+VOID
 WDF_MEMORY_DESCRIPTOR_INIT_HANDLE(
     _Out_ PWDF_MEMORY_DESCRIPTOR Descriptor,
     _In_ WDFMEMORY Memory,
@@ -128,8 +128,8 @@ WDF_MEMORY_DESCRIPTOR_INIT_HANDLE(
 }
 
 
-VOID
 FORCEINLINE
+VOID
 WDF_MEMORY_DESCRIPTOR_INIT_MDL(
     _Out_ PWDF_MEMORY_DESCRIPTOR Descriptor,
     _In_ PMDL Mdl,
@@ -152,7 +152,7 @@ _When_(PoolType == 1 || PoolType == 257, _IRQL_requires_max_(APC_LEVEL))
 _When_(PoolType == 0 || PoolType == 256, _IRQL_requires_max_(DISPATCH_LEVEL))
 WDFAPI
 NTSTATUS
-(*PFN_WDFMEMORYCREATE)(
+(STDCALL *PFN_WDFMEMORYCREATE)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_opt_
@@ -174,8 +174,8 @@ NTSTATUS
 _Must_inspect_result_
 _When_(PoolType == 1 || PoolType == 257, _IRQL_requires_max_(APC_LEVEL))
 _When_(PoolType == 0 || PoolType == 256, _IRQL_requires_max_(DISPATCH_LEVEL))
-NTSTATUS
 FORCEINLINE
+NTSTATUS
 WdfMemoryCreate(
     _In_opt_
     PWDF_OBJECT_ATTRIBUTES Attributes,
@@ -204,7 +204,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 NTSTATUS
-(*PFN_WDFMEMORYCREATEPREALLOCATED)(
+(STDCALL *PFN_WDFMEMORYCREATEPREALLOCATED)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_opt_
@@ -220,8 +220,8 @@ NTSTATUS
 
 _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
-NTSTATUS
 FORCEINLINE
+NTSTATUS
 WdfMemoryCreatePreallocated(
     _In_opt_
     PWDF_OBJECT_ATTRIBUTES Attributes,
@@ -244,7 +244,7 @@ typedef
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 PVOID
-(*PFN_WDFMEMORYGETBUFFER)(
+(STDCALL *PFN_WDFMEMORYGETBUFFER)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -254,8 +254,8 @@ PVOID
     );
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
-PVOID
 FORCEINLINE
+PVOID
 WdfMemoryGetBuffer(
     _In_
     WDFMEMORY Memory,
@@ -274,7 +274,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 NTSTATUS
-(*PFN_WDFMEMORYASSIGNBUFFER)(
+(STDCALL *PFN_WDFMEMORYASSIGNBUFFER)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -288,8 +288,8 @@ NTSTATUS
 
 _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
-NTSTATUS
 FORCEINLINE
+NTSTATUS
 WdfMemoryAssignBuffer(
     _In_
     WDFMEMORY Memory,
@@ -311,7 +311,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 NTSTATUS
-(*PFN_WDFMEMORYCOPYTOBUFFER)(
+(STDCALL *PFN_WDFMEMORYCOPYTOBUFFER)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -327,8 +327,8 @@ NTSTATUS
 
 _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
-NTSTATUS
 FORCEINLINE
+NTSTATUS
 WdfMemoryCopyToBuffer(
     _In_
     WDFMEMORY SourceMemory,
@@ -352,7 +352,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 NTSTATUS
-(*PFN_WDFMEMORYCOPYFROMBUFFER)(
+(STDCALL *PFN_WDFMEMORYCOPYFROMBUFFER)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -368,8 +368,8 @@ NTSTATUS
 
 _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
-NTSTATUS
 FORCEINLINE
+NTSTATUS
 WdfMemoryCopyFromBuffer(
     _In_
     WDFMEMORY DestinationMemory,
@@ -394,7 +394,7 @@ _When_(PoolType == 1 || PoolType == 257, _IRQL_requires_max_(APC_LEVEL))
 _When_(PoolType == 0 || PoolType == 256, _IRQL_requires_max_(DISPATCH_LEVEL))
 WDFAPI
 NTSTATUS
-(*PFN_WDFLOOKASIDELISTCREATE)(
+(STDCALL *PFN_WDFLOOKASIDELISTCREATE)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_opt_
@@ -416,8 +416,8 @@ NTSTATUS
 _Must_inspect_result_
 _When_(PoolType == 1 || PoolType == 257, _IRQL_requires_max_(APC_LEVEL))
 _When_(PoolType == 0 || PoolType == 256, _IRQL_requires_max_(DISPATCH_LEVEL))
-NTSTATUS
 FORCEINLINE
+NTSTATUS
 WdfLookasideListCreate(
     _In_opt_
     PWDF_OBJECT_ATTRIBUTES LookasideAttributes,
@@ -446,7 +446,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 NTSTATUS
-(*PFN_WDFMEMORYCREATEFROMLOOKASIDE)(
+(STDCALL *PFN_WDFMEMORYCREATEFROMLOOKASIDE)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -457,8 +457,8 @@ NTSTATUS
 
 _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
-NTSTATUS
 FORCEINLINE
+NTSTATUS
 WdfMemoryCreateFromLookaside(
     _In_
     WDFLOOKASIDE Lookaside,

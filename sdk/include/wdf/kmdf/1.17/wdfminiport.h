@@ -57,7 +57,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 NTSTATUS
-(*PFN_WDFDEVICEMINIPORTCREATE)(
+(STDCALL *PFN_WDFDEVICEMINIPORTCREATE)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -76,8 +76,8 @@ NTSTATUS
 
 _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
-NTSTATUS
 FORCEINLINE
+NTSTATUS
 WdfDeviceMiniportCreate(
     _In_
     WDFDRIVER Driver,
@@ -102,15 +102,15 @@ WdfDeviceMiniportCreate(
 typedef
 WDFAPI
 VOID
-(*PFN_WDFDRIVERMINIPORTUNLOAD)(
+(STDCALL *PFN_WDFDRIVERMINIPORTUNLOAD)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
     WDFDRIVER Driver
     );
 
-VOID
 FORCEINLINE
+VOID
 WdfDriverMiniportUnload(
     _In_
     WDFDRIVER Driver

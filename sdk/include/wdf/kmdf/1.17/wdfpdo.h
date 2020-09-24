@@ -54,6 +54,7 @@ _Function_class_(EVT_WDF_DEVICE_RESOURCES_QUERY)
 _IRQL_requires_same_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 NTSTATUS
+STDCALL
 EVT_WDF_DEVICE_RESOURCES_QUERY(
     _In_
     WDFDEVICE Device,
@@ -68,6 +69,7 @@ _Function_class_(EVT_WDF_DEVICE_RESOURCE_REQUIREMENTS_QUERY)
 _IRQL_requires_same_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 NTSTATUS
+STDCALL
 EVT_WDF_DEVICE_RESOURCE_REQUIREMENTS_QUERY(
     _In_
     WDFDEVICE Device,
@@ -82,6 +84,7 @@ _Function_class_(EVT_WDF_DEVICE_EJECT)
 _IRQL_requires_same_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 NTSTATUS
+STDCALL
 EVT_WDF_DEVICE_EJECT(
     _In_
     WDFDEVICE Device
@@ -94,6 +97,7 @@ _Function_class_(EVT_WDF_DEVICE_SET_LOCK)
 _IRQL_requires_same_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 NTSTATUS
+STDCALL
 EVT_WDF_DEVICE_SET_LOCK(
     _In_
     WDFDEVICE Device,
@@ -108,6 +112,7 @@ _Function_class_(EVT_WDF_DEVICE_ENABLE_WAKE_AT_BUS)
 _IRQL_requires_same_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 NTSTATUS
+STDCALL
 EVT_WDF_DEVICE_ENABLE_WAKE_AT_BUS(
     _In_
     WDFDEVICE Device,
@@ -122,6 +127,7 @@ _Function_class_(EVT_WDF_DEVICE_DISABLE_WAKE_AT_BUS)
 _IRQL_requires_same_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 VOID
+STDCALL
 EVT_WDF_DEVICE_DISABLE_WAKE_AT_BUS(
     _In_
     WDFDEVICE Device
@@ -134,6 +140,7 @@ _Function_class_(EVT_WDF_DEVICE_REPORTED_MISSING)
 _IRQL_requires_same_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 VOID
+STDCALL
 EVT_WDF_DEVICE_REPORTED_MISSING(
     _In_
     WDFDEVICE Device
@@ -187,8 +194,8 @@ typedef struct _WDF_PDO_EVENT_CALLBACKS {
 
 } WDF_PDO_EVENT_CALLBACKS, *PWDF_PDO_EVENT_CALLBACKS;
 
-VOID
 FORCEINLINE
+VOID
 WDF_PDO_EVENT_CALLBACKS_INIT(
     _Out_ PWDF_PDO_EVENT_CALLBACKS Callbacks
     )
@@ -205,7 +212,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 PWDFDEVICE_INIT
-(*PFN_WDFPDOINITALLOCATE)(
+(STDCALL *PFN_WDFPDOINITALLOCATE)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -214,8 +221,8 @@ PWDFDEVICE_INIT
 
 _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
-PWDFDEVICE_INIT
 FORCEINLINE
+PWDFDEVICE_INIT
 WdfPdoInitAllocate(
     _In_
     WDFDEVICE ParentDevice
@@ -231,7 +238,7 @@ typedef
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 VOID
-(*PFN_WDFPDOINITSETEVENTCALLBACKS)(
+(STDCALL *PFN_WDFPDOINITSETEVENTCALLBACKS)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -241,8 +248,8 @@ VOID
     );
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
-VOID
 FORCEINLINE
+VOID
 WdfPdoInitSetEventCallbacks(
     _In_
     PWDFDEVICE_INIT DeviceInit,
@@ -261,7 +268,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 NTSTATUS
-(*PFN_WDFPDOINITASSIGNDEVICEID)(
+(STDCALL *PFN_WDFPDOINITASSIGNDEVICEID)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -272,8 +279,8 @@ NTSTATUS
 
 _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
-NTSTATUS
 FORCEINLINE
+NTSTATUS
 WdfPdoInitAssignDeviceID(
     _In_
     PWDFDEVICE_INIT DeviceInit,
@@ -292,7 +299,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 NTSTATUS
-(*PFN_WDFPDOINITASSIGNINSTANCEID)(
+(STDCALL *PFN_WDFPDOINITASSIGNINSTANCEID)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -303,8 +310,8 @@ NTSTATUS
 
 _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
-NTSTATUS
 FORCEINLINE
+NTSTATUS
 WdfPdoInitAssignInstanceID(
     _In_
     PWDFDEVICE_INIT DeviceInit,
@@ -323,7 +330,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 NTSTATUS
-(*PFN_WDFPDOINITADDHARDWAREID)(
+(STDCALL *PFN_WDFPDOINITADDHARDWAREID)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -334,8 +341,8 @@ NTSTATUS
 
 _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
-NTSTATUS
 FORCEINLINE
+NTSTATUS
 WdfPdoInitAddHardwareID(
     _In_
     PWDFDEVICE_INIT DeviceInit,
@@ -354,7 +361,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 NTSTATUS
-(*PFN_WDFPDOINITADDCOMPATIBLEID)(
+(STDCALL *PFN_WDFPDOINITADDCOMPATIBLEID)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -365,8 +372,8 @@ NTSTATUS
 
 _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
-NTSTATUS
 FORCEINLINE
+NTSTATUS
 WdfPdoInitAddCompatibleID(
     _In_
     PWDFDEVICE_INIT DeviceInit,
@@ -385,7 +392,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 NTSTATUS
-(*PFN_WDFPDOINITASSIGNCONTAINERID)(
+(STDCALL *PFN_WDFPDOINITASSIGNCONTAINERID)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -396,8 +403,8 @@ NTSTATUS
 
 _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
-NTSTATUS
 FORCEINLINE
+NTSTATUS
 WdfPdoInitAssignContainerID(
     _In_
     PWDFDEVICE_INIT DeviceInit,
@@ -416,7 +423,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 NTSTATUS
-(*PFN_WDFPDOINITADDDEVICETEXT)(
+(STDCALL *PFN_WDFPDOINITADDDEVICETEXT)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -431,8 +438,8 @@ NTSTATUS
 
 _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
-NTSTATUS
 FORCEINLINE
+NTSTATUS
 WdfPdoInitAddDeviceText(
     _In_
     PWDFDEVICE_INIT DeviceInit,
@@ -454,7 +461,7 @@ typedef
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 VOID
-(*PFN_WDFPDOINITSETDEFAULTLOCALE)(
+(STDCALL *PFN_WDFPDOINITSETDEFAULTLOCALE)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -464,8 +471,8 @@ VOID
     );
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
-VOID
 FORCEINLINE
+VOID
 WdfPdoInitSetDefaultLocale(
     _In_
     PWDFDEVICE_INIT DeviceInit,
@@ -484,7 +491,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 NTSTATUS
-(*PFN_WDFPDOINITASSIGNRAWDEVICE)(
+(STDCALL *PFN_WDFPDOINITASSIGNRAWDEVICE)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -495,8 +502,8 @@ NTSTATUS
 
 _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
-NTSTATUS
 FORCEINLINE
+NTSTATUS
 WdfPdoInitAssignRawDevice(
     _In_
     PWDFDEVICE_INIT DeviceInit,
@@ -514,7 +521,7 @@ typedef
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 VOID
-(*PFN_WDFPDOINITALLOWFORWARDINGREQUESTTOPARENT)(
+(STDCALL *PFN_WDFPDOINITALLOWFORWARDINGREQUESTTOPARENT)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -522,8 +529,8 @@ VOID
     );
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
-VOID
 FORCEINLINE
+VOID
 WdfPdoInitAllowForwardingRequestToParent(
     _In_
     PWDFDEVICE_INIT DeviceInit
@@ -540,7 +547,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 NTSTATUS
-(*PFN_WDFPDOMARKMISSING)(
+(STDCALL *PFN_WDFPDOMARKMISSING)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -549,8 +556,8 @@ NTSTATUS
 
 _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
-NTSTATUS
 FORCEINLINE
+NTSTATUS
 WdfPdoMarkMissing(
     _In_
     WDFDEVICE Device
@@ -566,7 +573,7 @@ typedef
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 VOID
-(*PFN_WDFPDOREQUESTEJECT)(
+(STDCALL *PFN_WDFPDOREQUESTEJECT)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -574,8 +581,8 @@ VOID
     );
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
-VOID
 FORCEINLINE
+VOID
 WdfPdoRequestEject(
     _In_
     WDFDEVICE Device
@@ -591,7 +598,7 @@ typedef
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 WDFDEVICE
-(*PFN_WDFPDOGETPARENT)(
+(STDCALL *PFN_WDFPDOGETPARENT)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -599,8 +606,8 @@ WDFDEVICE
     );
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
-WDFDEVICE
 FORCEINLINE
+WDFDEVICE
 WdfPdoGetParent(
     _In_
     WDFDEVICE Device
@@ -617,7 +624,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 NTSTATUS
-(*PFN_WDFPDORETRIEVEIDENTIFICATIONDESCRIPTION)(
+(STDCALL *PFN_WDFPDORETRIEVEIDENTIFICATIONDESCRIPTION)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -628,8 +635,8 @@ NTSTATUS
 
 _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
-NTSTATUS
 FORCEINLINE
+NTSTATUS
 WdfPdoRetrieveIdentificationDescription(
     _In_
     WDFDEVICE Device,
@@ -648,7 +655,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 NTSTATUS
-(*PFN_WDFPDORETRIEVEADDRESSDESCRIPTION)(
+(STDCALL *PFN_WDFPDORETRIEVEADDRESSDESCRIPTION)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -659,8 +666,8 @@ NTSTATUS
 
 _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
-NTSTATUS
 FORCEINLINE
+NTSTATUS
 WdfPdoRetrieveAddressDescription(
     _In_
     WDFDEVICE Device,
@@ -679,7 +686,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 NTSTATUS
-(*PFN_WDFPDOUPDATEADDRESSDESCRIPTION)(
+(STDCALL *PFN_WDFPDOUPDATEADDRESSDESCRIPTION)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -690,8 +697,8 @@ NTSTATUS
 
 _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
-NTSTATUS
 FORCEINLINE
+NTSTATUS
 WdfPdoUpdateAddressDescription(
     _In_
     WDFDEVICE Device,
@@ -710,7 +717,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 NTSTATUS
-(*PFN_WDFPDOADDEJECTIONRELATIONSPHYSICALDEVICE)(
+(STDCALL *PFN_WDFPDOADDEJECTIONRELATIONSPHYSICALDEVICE)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -721,8 +728,8 @@ NTSTATUS
 
 _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
-NTSTATUS
 FORCEINLINE
+NTSTATUS
 WdfPdoAddEjectionRelationsPhysicalDevice(
     _In_
     WDFDEVICE Device,
@@ -740,7 +747,7 @@ typedef
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 VOID
-(*PFN_WDFPDOREMOVEEJECTIONRELATIONSPHYSICALDEVICE)(
+(STDCALL *PFN_WDFPDOREMOVEEJECTIONRELATIONSPHYSICALDEVICE)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -750,8 +757,8 @@ VOID
     );
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
-VOID
 FORCEINLINE
+VOID
 WdfPdoRemoveEjectionRelationsPhysicalDevice(
     _In_
     WDFDEVICE Device,
@@ -769,7 +776,7 @@ typedef
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 VOID
-(*PFN_WDFPDOCLEAREJECTIONRELATIONSDEVICES)(
+(STDCALL *PFN_WDFPDOCLEAREJECTIONRELATIONSDEVICES)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -777,8 +784,8 @@ VOID
     );
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
-VOID
 FORCEINLINE
+VOID
 WdfPdoClearEjectionRelationsDevices(
     _In_
     WDFDEVICE Device

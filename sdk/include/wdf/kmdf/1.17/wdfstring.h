@@ -57,7 +57,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 NTSTATUS
-(*PFN_WDFSTRINGCREATE)(
+(STDCALL *PFN_WDFSTRINGCREATE)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_opt_
@@ -70,8 +70,8 @@ NTSTATUS
 
 _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
-NTSTATUS
 FORCEINLINE
+NTSTATUS
 WdfStringCreate(
     _In_opt_
     PCUNICODE_STRING UnicodeString,
@@ -91,7 +91,7 @@ typedef
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 VOID
-(*PFN_WDFSTRINGGETUNICODESTRING)(
+(STDCALL *PFN_WDFSTRINGGETUNICODESTRING)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -101,8 +101,8 @@ VOID
     );
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
-VOID
 FORCEINLINE
+VOID
 WdfStringGetUnicodeString(
     _In_
     WDFSTRING String,

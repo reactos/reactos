@@ -55,6 +55,7 @@ _Function_class_(EVT_WDF_WORKITEM)
 _IRQL_requires_same_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 VOID
+STDCALL
 EVT_WDF_WORKITEM(
     _In_
     WDFWORKITEM WorkItem
@@ -79,8 +80,8 @@ typedef struct _WDF_WORKITEM_CONFIG {
 
 } WDF_WORKITEM_CONFIG, *PWDF_WORKITEM_CONFIG;
 
-VOID
 FORCEINLINE
+VOID
 WDF_WORKITEM_CONFIG_INIT(
     _Out_ PWDF_WORKITEM_CONFIG Config,
     _In_ PFN_WDF_WORKITEM     EvtWorkItemFunc
@@ -102,7 +103,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 NTSTATUS
-(*PFN_WDFWORKITEMCREATE)(
+(STDCALL *PFN_WDFWORKITEMCREATE)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -115,8 +116,8 @@ NTSTATUS
 
 _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
-NTSTATUS
 FORCEINLINE
+NTSTATUS
 WdfWorkItemCreate(
     _In_
     PWDF_WORKITEM_CONFIG Config,
@@ -136,7 +137,7 @@ typedef
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 VOID
-(*PFN_WDFWORKITEMENQUEUE)(
+(STDCALL *PFN_WDFWORKITEMENQUEUE)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -144,8 +145,8 @@ VOID
     );
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
-VOID
 FORCEINLINE
+VOID
 WdfWorkItemEnqueue(
     _In_
     WDFWORKITEM WorkItem
@@ -161,7 +162,7 @@ typedef
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 WDFOBJECT
-(*PFN_WDFWORKITEMGETPARENTOBJECT)(
+(STDCALL *PFN_WDFWORKITEMGETPARENTOBJECT)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -169,8 +170,8 @@ WDFOBJECT
     );
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
-WDFOBJECT
 FORCEINLINE
+WDFOBJECT
 WdfWorkItemGetParentObject(
     _In_
     WDFWORKITEM WorkItem
@@ -186,7 +187,7 @@ typedef
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 VOID
-(*PFN_WDFWORKITEMFLUSH)(
+(STDCALL *PFN_WDFWORKITEMFLUSH)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -194,8 +195,8 @@ VOID
     );
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
-VOID
 FORCEINLINE
+VOID
 WdfWorkItemFlush(
     _In_
     WDFWORKITEM WorkItem

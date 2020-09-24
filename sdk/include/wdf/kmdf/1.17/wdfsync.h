@@ -58,7 +58,7 @@ typedef
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 VOID
-(*PFN_WDFOBJECTACQUIRELOCK)(
+(STDCALL *PFN_WDFOBJECTACQUIRELOCK)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -68,8 +68,8 @@ VOID
     );
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
-VOID
 FORCEINLINE
+VOID
 WdfObjectAcquireLock(
     _In_
     _Requires_lock_not_held_(_Curr_)
@@ -87,7 +87,7 @@ typedef
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 VOID
-(*PFN_WDFOBJECTRELEASELOCK)(
+(STDCALL *PFN_WDFOBJECTRELEASELOCK)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -97,8 +97,8 @@ VOID
     );
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
-VOID
 FORCEINLINE
+VOID
 WdfObjectReleaseLock(
     _In_
     _Requires_lock_held_(_Curr_)
@@ -117,7 +117,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 NTSTATUS
-(*PFN_WDFWAITLOCKCREATE)(
+(STDCALL *PFN_WDFWAITLOCKCREATE)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_opt_
@@ -128,8 +128,8 @@ NTSTATUS
 
 _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
-NTSTATUS
 FORCEINLINE
+NTSTATUS
 WdfWaitLockCreate(
     _In_opt_
     PWDF_OBJECT_ATTRIBUTES LockAttributes,
@@ -152,7 +152,7 @@ _When_(Timeout != NULL && return == STATUS_SUCCESS, _Acquires_lock_(Lock))
 _When_(Timeout != NULL, _Must_inspect_result_)
 WDFAPI
 NTSTATUS
-(*PFN_WDFWAITLOCKACQUIRE)(
+(STDCALL *PFN_WDFWAITLOCKACQUIRE)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -168,8 +168,8 @@ _When_(Timeout != NULL && *Timeout != 0, _IRQL_requires_max_(PASSIVE_LEVEL))
 _Always_(_When_(Timeout == NULL, _Acquires_lock_(Lock)))
 _When_(Timeout != NULL && return == STATUS_SUCCESS, _Acquires_lock_(Lock))
 _When_(Timeout != NULL, _Must_inspect_result_)
-NTSTATUS
 FORCEINLINE
+NTSTATUS
 WdfWaitLockAcquire(
     _In_
     _Requires_lock_not_held_(_Curr_)
@@ -188,7 +188,7 @@ typedef
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 VOID
-(*PFN_WDFWAITLOCKRELEASE)(
+(STDCALL *PFN_WDFWAITLOCKRELEASE)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -198,8 +198,8 @@ VOID
     );
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
-VOID
 FORCEINLINE
+VOID
 WdfWaitLockRelease(
     _In_
     _Requires_lock_held_(_Curr_)
@@ -218,7 +218,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 NTSTATUS
-(*PFN_WDFSPINLOCKCREATE)(
+(STDCALL *PFN_WDFSPINLOCKCREATE)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_opt_
@@ -229,8 +229,8 @@ NTSTATUS
 
 _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
-NTSTATUS
 FORCEINLINE
+NTSTATUS
 WdfSpinLockCreate(
     _In_opt_
     PWDF_OBJECT_ATTRIBUTES SpinLockAttributes,
@@ -249,7 +249,7 @@ _IRQL_requires_max_(DISPATCH_LEVEL)
 _IRQL_raises_(DISPATCH_LEVEL)
 WDFAPI
 VOID
-(*PFN_WDFSPINLOCKACQUIRE)(
+(STDCALL *PFN_WDFSPINLOCKACQUIRE)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -261,8 +261,8 @@ VOID
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
 _IRQL_raises_(DISPATCH_LEVEL)
-VOID
 FORCEINLINE
+VOID
 WdfSpinLockAcquire(
     _In_
     _Requires_lock_not_held_(_Curr_)
@@ -282,7 +282,7 @@ _IRQL_requires_max_(DISPATCH_LEVEL)
 _IRQL_requires_min_(DISPATCH_LEVEL)
 WDFAPI
 VOID
-(*PFN_WDFSPINLOCKRELEASE)(
+(STDCALL *PFN_WDFSPINLOCKRELEASE)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -294,8 +294,8 @@ VOID
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
 _IRQL_requires_min_(DISPATCH_LEVEL)
-VOID
 FORCEINLINE
+VOID
 WdfSpinLockRelease(
     _In_
     _Requires_lock_held_(_Curr_)

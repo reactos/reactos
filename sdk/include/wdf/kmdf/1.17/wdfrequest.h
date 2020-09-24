@@ -53,7 +53,7 @@ WDF_EXTERN_C_START
 // Types
 //
 
-typedef enum _WDF_REQUEST_TYPE {
+/* typedef enum _WDF_REQUEST_TYPE { // declaration moved to wdfdevice.h
     WdfRequestTypeCreate = 0x0,
     WdfRequestTypeCreateNamedPipe = 0x1,
     WdfRequestTypeClose = 0x2,
@@ -86,7 +86,7 @@ typedef enum _WDF_REQUEST_TYPE {
     WdfRequestTypeUsb = 0x40,
     WdfRequestTypeNoFormat = 0xFF,
     WdfRequestTypeMax,
-} WDF_REQUEST_TYPE;
+} WDF_REQUEST_TYPE; */
 
 typedef enum _WDF_REQUEST_REUSE_FLAGS {
     WDF_REQUEST_REUSE_NO_FLAGS = 0x00000000,
@@ -121,6 +121,7 @@ _Function_class_(EVT_WDF_REQUEST_CANCEL)
 _IRQL_requires_same_
 _IRQL_requires_max_(DISPATCH_LEVEL)
 VOID
+STDCALL
 EVT_WDF_REQUEST_CANCEL(
     _In_
     WDFREQUEST Request
@@ -205,8 +206,8 @@ typedef struct _WDF_REQUEST_PARAMETERS {
 
 } WDF_REQUEST_PARAMETERS, *PWDF_REQUEST_PARAMETERS;
 
-VOID
 FORCEINLINE
+VOID
 WDF_REQUEST_PARAMETERS_INIT(
     _Out_ PWDF_REQUEST_PARAMETERS Parameters
     )
@@ -282,8 +283,8 @@ typedef struct _WDF_REQUEST_COMPLETION_PARAMS {
 
 } WDF_REQUEST_COMPLETION_PARAMS, *PWDF_REQUEST_COMPLETION_PARAMS;
 
-VOID
 FORCEINLINE
+VOID
 WDF_REQUEST_COMPLETION_PARAMS_INIT(
     _Out_ PWDF_REQUEST_COMPLETION_PARAMS Params
     )
@@ -297,6 +298,7 @@ typedef
 _Function_class_(EVT_WDF_REQUEST_COMPLETION_ROUTINE)
 _IRQL_requires_same_
 VOID
+STDCALL
 EVT_WDF_REQUEST_COMPLETION_ROUTINE(
     _In_
     WDFREQUEST Request,
@@ -357,8 +359,8 @@ typedef struct _WDF_REQUEST_REUSE_PARAMS {
 
 } WDF_REQUEST_REUSE_PARAMS, *PWDF_REQUEST_REUSE_PARAMS;
 
-VOID
 FORCEINLINE
+VOID
 WDF_REQUEST_REUSE_PARAMS_INIT(
     _Out_ PWDF_REQUEST_REUSE_PARAMS Params,
     _In_ ULONG Flags,
@@ -372,8 +374,8 @@ WDF_REQUEST_REUSE_PARAMS_INIT(
     Params->Status = Status;
 }
 
-VOID
 FORCEINLINE
+VOID
 WDF_REQUEST_REUSE_PARAMS_SET_NEW_IRP(
     _Inout_ PWDF_REQUEST_REUSE_PARAMS Params,
     _In_ PIRP NewIrp
@@ -402,8 +404,8 @@ typedef struct _WDF_REQUEST_SEND_OPTIONS {
 
 } WDF_REQUEST_SEND_OPTIONS, *PWDF_REQUEST_SEND_OPTIONS;
 
-VOID
 FORCEINLINE
+VOID
 WDF_REQUEST_SEND_OPTIONS_INIT(
     _Out_ PWDF_REQUEST_SEND_OPTIONS Options,
     _In_ ULONG Flags
@@ -414,8 +416,8 @@ WDF_REQUEST_SEND_OPTIONS_INIT(
     Options->Flags = Flags;
 }
 
-VOID
 FORCEINLINE
+VOID
 WDF_REQUEST_SEND_OPTIONS_SET_TIMEOUT(
     _Inout_ PWDF_REQUEST_SEND_OPTIONS Options,
     _In_ LONGLONG Timeout
@@ -446,8 +448,8 @@ typedef struct _WDF_REQUEST_FORWARD_OPTIONS {
 //
 // Default REquest forward initialization macro
 //
-VOID
 FORCEINLINE
+VOID
 WDF_REQUEST_FORWARD_OPTIONS_INIT(
     _Out_ PWDF_REQUEST_FORWARD_OPTIONS  ForwardOptions
     )
@@ -469,7 +471,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 NTSTATUS
-(*PFN_WDFREQUESTCREATE)(
+(STDCALL *PFN_WDFREQUESTCREATE)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_opt_
@@ -482,8 +484,8 @@ NTSTATUS
 
 _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
-NTSTATUS
 FORCEINLINE
+NTSTATUS
 WdfRequestCreate(
     _In_opt_
     PWDF_OBJECT_ATTRIBUTES RequestAttributes,
@@ -504,7 +506,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 NTSTATUS
-(*PFN_WDFREQUESTCREATEFROMIRP)(
+(STDCALL *PFN_WDFREQUESTCREATEFROMIRP)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_opt_
@@ -519,8 +521,8 @@ NTSTATUS
 
 _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
-NTSTATUS
 FORCEINLINE
+NTSTATUS
 WdfRequestCreateFromIrp(
     _In_opt_
     PWDF_OBJECT_ATTRIBUTES RequestAttributes,
@@ -542,7 +544,7 @@ typedef
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 NTSTATUS
-(*PFN_WDFREQUESTREUSE)(
+(STDCALL *PFN_WDFREQUESTREUSE)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -552,8 +554,8 @@ NTSTATUS
     );
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
-NTSTATUS
 FORCEINLINE
+NTSTATUS
 WdfRequestReuse(
     _In_
     WDFREQUEST Request,
@@ -572,7 +574,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 NTSTATUS
-(*PFN_WDFREQUESTCHANGETARGET)(
+(STDCALL *PFN_WDFREQUESTCHANGETARGET)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -583,8 +585,8 @@ NTSTATUS
 
 _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
-NTSTATUS
 FORCEINLINE
+NTSTATUS
 WdfRequestChangeTarget(
     _In_
     WDFREQUEST Request,
@@ -602,7 +604,7 @@ typedef
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 VOID
-(*PFN_WDFREQUESTFORMATREQUESTUSINGCURRENTTYPE)(
+(STDCALL *PFN_WDFREQUESTFORMATREQUESTUSINGCURRENTTYPE)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -610,8 +612,8 @@ VOID
     );
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
-VOID
 FORCEINLINE
+VOID
 WdfRequestFormatRequestUsingCurrentType(
     _In_
     WDFREQUEST Request
@@ -627,7 +629,7 @@ typedef
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 VOID
-(*PFN_WDFREQUESTWDMFORMATUSINGSTACKLOCATION)(
+(STDCALL *PFN_WDFREQUESTWDMFORMATUSINGSTACKLOCATION)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -637,8 +639,8 @@ VOID
     );
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
-VOID
 FORCEINLINE
+VOID
 WdfRequestWdmFormatUsingStackLocation(
     _In_
     WDFREQUEST Request,
@@ -657,7 +659,7 @@ _IRQL_requires_max_(DISPATCH_LEVEL)
 _When_(Options->Flags & WDF_REQUEST_SEND_OPTION_SYNCHRONOUS == 0, _Must_inspect_result_)
 WDFAPI
 BOOLEAN
-(*PFN_WDFREQUESTSEND)(
+(STDCALL *PFN_WDFREQUESTSEND)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -670,8 +672,8 @@ BOOLEAN
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
 _When_(Options->Flags & WDF_REQUEST_SEND_OPTION_SYNCHRONOUS == 0, _Must_inspect_result_)
-BOOLEAN
 FORCEINLINE
+BOOLEAN
 WdfRequestSend(
     _In_
     WDFREQUEST Request,
@@ -692,7 +694,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 NTSTATUS
-(*PFN_WDFREQUESTGETSTATUS)(
+(STDCALL *PFN_WDFREQUESTGETSTATUS)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -701,8 +703,8 @@ NTSTATUS
 
 _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
-NTSTATUS
 FORCEINLINE
+NTSTATUS
 WdfRequestGetStatus(
     _In_
     WDFREQUEST Request
@@ -718,7 +720,7 @@ typedef
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 VOID
-(*PFN_WDFREQUESTMARKCANCELABLE)(
+(STDCALL *PFN_WDFREQUESTMARKCANCELABLE)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -728,8 +730,8 @@ VOID
     );
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
-VOID
 FORCEINLINE
+VOID
 WdfRequestMarkCancelable(
     _In_
     WDFREQUEST Request,
@@ -748,7 +750,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 NTSTATUS
-(*PFN_WDFREQUESTMARKCANCELABLEEX)(
+(STDCALL *PFN_WDFREQUESTMARKCANCELABLEEX)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -759,8 +761,8 @@ NTSTATUS
 
 _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
-NTSTATUS
 FORCEINLINE
+NTSTATUS
 WdfRequestMarkCancelableEx(
     _In_
     WDFREQUEST Request,
@@ -779,7 +781,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 NTSTATUS
-(*PFN_WDFREQUESTUNMARKCANCELABLE)(
+(STDCALL *PFN_WDFREQUESTUNMARKCANCELABLE)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -788,8 +790,8 @@ NTSTATUS
 
 _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
-NTSTATUS
 FORCEINLINE
+NTSTATUS
 WdfRequestUnmarkCancelable(
     _In_
     WDFREQUEST Request
@@ -806,7 +808,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 BOOLEAN
-(*PFN_WDFREQUESTISCANCELED)(
+(STDCALL *PFN_WDFREQUESTISCANCELED)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -815,8 +817,8 @@ BOOLEAN
 
 _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
-BOOLEAN
 FORCEINLINE
+BOOLEAN
 WdfRequestIsCanceled(
     _In_
     WDFREQUEST Request
@@ -832,7 +834,7 @@ typedef
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 BOOLEAN
-(*PFN_WDFREQUESTCANCELSENTREQUEST)(
+(STDCALL *PFN_WDFREQUESTCANCELSENTREQUEST)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -840,8 +842,8 @@ BOOLEAN
     );
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
-BOOLEAN
 FORCEINLINE
+BOOLEAN
 WdfRequestCancelSentRequest(
     _In_
     WDFREQUEST Request
@@ -858,7 +860,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(APC_LEVEL)
 WDFAPI
 BOOLEAN
-(*PFN_WDFREQUESTISFROM32BITPROCESS)(
+(STDCALL *PFN_WDFREQUESTISFROM32BITPROCESS)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -867,8 +869,8 @@ BOOLEAN
 
 _Must_inspect_result_
 _IRQL_requires_max_(APC_LEVEL)
-BOOLEAN
 FORCEINLINE
+BOOLEAN
 WdfRequestIsFrom32BitProcess(
     _In_
     WDFREQUEST Request
@@ -884,7 +886,7 @@ typedef
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 VOID
-(*PFN_WDFREQUESTSETCOMPLETIONROUTINE)(
+(STDCALL *PFN_WDFREQUESTSETCOMPLETIONROUTINE)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -896,8 +898,8 @@ VOID
     );
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
-VOID
 FORCEINLINE
+VOID
 WdfRequestSetCompletionRoutine(
     _In_
     WDFREQUEST Request,
@@ -917,7 +919,7 @@ typedef
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 VOID
-(*PFN_WDFREQUESTGETCOMPLETIONPARAMS)(
+(STDCALL *PFN_WDFREQUESTGETCOMPLETIONPARAMS)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -927,8 +929,8 @@ VOID
     );
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
-VOID
 FORCEINLINE
+VOID
 WdfRequestGetCompletionParams(
     _In_
     WDFREQUEST Request,
@@ -947,7 +949,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 NTSTATUS
-(*PFN_WDFREQUESTALLOCATETIMER)(
+(STDCALL *PFN_WDFREQUESTALLOCATETIMER)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -956,8 +958,8 @@ NTSTATUS
 
 _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
-NTSTATUS
 FORCEINLINE
+NTSTATUS
 WdfRequestAllocateTimer(
     _In_
     WDFREQUEST Request
@@ -973,7 +975,7 @@ typedef
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 VOID
-(*PFN_WDFREQUESTCOMPLETE)(
+(STDCALL *PFN_WDFREQUESTCOMPLETE)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -983,8 +985,8 @@ VOID
     );
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
-VOID
 FORCEINLINE
+VOID
 WdfRequestComplete(
     _In_
     WDFREQUEST Request,
@@ -1002,7 +1004,7 @@ typedef
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 VOID
-(*PFN_WDFREQUESTCOMPLETEWITHPRIORITYBOOST)(
+(STDCALL *PFN_WDFREQUESTCOMPLETEWITHPRIORITYBOOST)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -1014,8 +1016,8 @@ VOID
     );
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
-VOID
 FORCEINLINE
+VOID
 WdfRequestCompleteWithPriorityBoost(
     _In_
     WDFREQUEST Request,
@@ -1035,7 +1037,7 @@ typedef
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 VOID
-(*PFN_WDFREQUESTCOMPLETEWITHINFORMATION)(
+(STDCALL *PFN_WDFREQUESTCOMPLETEWITHINFORMATION)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -1047,8 +1049,8 @@ VOID
     );
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
-VOID
 FORCEINLINE
+VOID
 WdfRequestCompleteWithInformation(
     _In_
     WDFREQUEST Request,
@@ -1068,7 +1070,7 @@ typedef
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 VOID
-(*PFN_WDFREQUESTGETPARAMETERS)(
+(STDCALL *PFN_WDFREQUESTGETPARAMETERS)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -1078,8 +1080,8 @@ VOID
     );
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
-VOID
 FORCEINLINE
+VOID
 WdfRequestGetParameters(
     _In_
     WDFREQUEST Request,
@@ -1098,7 +1100,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 NTSTATUS
-(*PFN_WDFREQUESTRETRIEVEINPUTMEMORY)(
+(STDCALL *PFN_WDFREQUESTRETRIEVEINPUTMEMORY)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -1109,8 +1111,8 @@ NTSTATUS
 
 _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
-NTSTATUS
 FORCEINLINE
+NTSTATUS
 WdfRequestRetrieveInputMemory(
     _In_
     WDFREQUEST Request,
@@ -1129,7 +1131,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 NTSTATUS
-(*PFN_WDFREQUESTRETRIEVEOUTPUTMEMORY)(
+(STDCALL *PFN_WDFREQUESTRETRIEVEOUTPUTMEMORY)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -1140,8 +1142,8 @@ NTSTATUS
 
 _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
-NTSTATUS
 FORCEINLINE
+NTSTATUS
 WdfRequestRetrieveOutputMemory(
     _In_
     WDFREQUEST Request,
@@ -1160,7 +1162,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 NTSTATUS
-(*PFN_WDFREQUESTRETRIEVEINPUTBUFFER)(
+(STDCALL *PFN_WDFREQUESTRETRIEVEINPUTBUFFER)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -1175,8 +1177,8 @@ NTSTATUS
 
 _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
-NTSTATUS
 FORCEINLINE
+NTSTATUS
 WdfRequestRetrieveInputBuffer(
     _In_
     WDFREQUEST Request,
@@ -1199,7 +1201,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 NTSTATUS
-(*PFN_WDFREQUESTRETRIEVEOUTPUTBUFFER)(
+(STDCALL *PFN_WDFREQUESTRETRIEVEOUTPUTBUFFER)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -1214,8 +1216,8 @@ NTSTATUS
 
 _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
-NTSTATUS
 FORCEINLINE
+NTSTATUS
 WdfRequestRetrieveOutputBuffer(
     _In_
     WDFREQUEST Request,
@@ -1238,7 +1240,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 NTSTATUS
-(*PFN_WDFREQUESTRETRIEVEINPUTWDMMDL)(
+(STDCALL *PFN_WDFREQUESTRETRIEVEINPUTWDMMDL)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -1249,8 +1251,8 @@ NTSTATUS
 
 _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
-NTSTATUS
 FORCEINLINE
+NTSTATUS
 WdfRequestRetrieveInputWdmMdl(
     _In_
     WDFREQUEST Request,
@@ -1269,7 +1271,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 NTSTATUS
-(*PFN_WDFREQUESTRETRIEVEOUTPUTWDMMDL)(
+(STDCALL *PFN_WDFREQUESTRETRIEVEOUTPUTWDMMDL)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -1280,8 +1282,8 @@ NTSTATUS
 
 _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
-NTSTATUS
 FORCEINLINE
+NTSTATUS
 WdfRequestRetrieveOutputWdmMdl(
     _In_
     WDFREQUEST Request,
@@ -1300,7 +1302,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 NTSTATUS
-(*PFN_WDFREQUESTRETRIEVEUNSAFEUSERINPUTBUFFER)(
+(STDCALL *PFN_WDFREQUESTRETRIEVEUNSAFEUSERINPUTBUFFER)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -1315,8 +1317,8 @@ NTSTATUS
 
 _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
-NTSTATUS
 FORCEINLINE
+NTSTATUS
 WdfRequestRetrieveUnsafeUserInputBuffer(
     _In_
     WDFREQUEST Request,
@@ -1339,7 +1341,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 NTSTATUS
-(*PFN_WDFREQUESTRETRIEVEUNSAFEUSEROUTPUTBUFFER)(
+(STDCALL *PFN_WDFREQUESTRETRIEVEUNSAFEUSEROUTPUTBUFFER)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -1354,8 +1356,8 @@ NTSTATUS
 
 _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
-NTSTATUS
 FORCEINLINE
+NTSTATUS
 WdfRequestRetrieveUnsafeUserOutputBuffer(
     _In_
     WDFREQUEST Request,
@@ -1377,7 +1379,7 @@ typedef
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 VOID
-(*PFN_WDFREQUESTSETINFORMATION)(
+(STDCALL *PFN_WDFREQUESTSETINFORMATION)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -1387,8 +1389,8 @@ VOID
     );
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
-VOID
 FORCEINLINE
+VOID
 WdfRequestSetInformation(
     _In_
     WDFREQUEST Request,
@@ -1406,7 +1408,7 @@ typedef
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 ULONG_PTR
-(*PFN_WDFREQUESTGETINFORMATION)(
+(STDCALL *PFN_WDFREQUESTGETINFORMATION)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -1414,8 +1416,8 @@ ULONG_PTR
     );
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
-ULONG_PTR
 FORCEINLINE
+ULONG_PTR
 WdfRequestGetInformation(
     _In_
     WDFREQUEST Request
@@ -1431,7 +1433,7 @@ typedef
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 WDFFILEOBJECT
-(*PFN_WDFREQUESTGETFILEOBJECT)(
+(STDCALL *PFN_WDFREQUESTGETFILEOBJECT)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -1439,8 +1441,8 @@ WDFFILEOBJECT
     );
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
-WDFFILEOBJECT
 FORCEINLINE
+WDFFILEOBJECT
 WdfRequestGetFileObject(
     _In_
     WDFREQUEST Request
@@ -1457,7 +1459,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 NTSTATUS
-(*PFN_WDFREQUESTPROBEANDLOCKUSERBUFFERFORREAD)(
+(STDCALL *PFN_WDFREQUESTPROBEANDLOCKUSERBUFFERFORREAD)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -1472,8 +1474,8 @@ NTSTATUS
 
 _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
-NTSTATUS
 FORCEINLINE
+NTSTATUS
 WdfRequestProbeAndLockUserBufferForRead(
     _In_
     WDFREQUEST Request,
@@ -1496,7 +1498,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 NTSTATUS
-(*PFN_WDFREQUESTPROBEANDLOCKUSERBUFFERFORWRITE)(
+(STDCALL *PFN_WDFREQUESTPROBEANDLOCKUSERBUFFERFORWRITE)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -1511,8 +1513,8 @@ NTSTATUS
 
 _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
-NTSTATUS
 FORCEINLINE
+NTSTATUS
 WdfRequestProbeAndLockUserBufferForWrite(
     _In_
     WDFREQUEST Request,
@@ -1534,7 +1536,7 @@ typedef
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 KPROCESSOR_MODE
-(*PFN_WDFREQUESTGETREQUESTORMODE)(
+(STDCALL *PFN_WDFREQUESTGETREQUESTORMODE)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -1542,8 +1544,8 @@ KPROCESSOR_MODE
     );
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
-KPROCESSOR_MODE
 FORCEINLINE
+KPROCESSOR_MODE
 WdfRequestGetRequestorMode(
     _In_
     WDFREQUEST Request
@@ -1560,7 +1562,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 NTSTATUS
-(*PFN_WDFREQUESTFORWARDTOIOQUEUE)(
+(STDCALL *PFN_WDFREQUESTFORWARDTOIOQUEUE)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -1571,8 +1573,8 @@ NTSTATUS
 
 _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
-NTSTATUS
 FORCEINLINE
+NTSTATUS
 WdfRequestForwardToIoQueue(
     _In_
     WDFREQUEST Request,
@@ -1590,7 +1592,7 @@ typedef
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 WDFQUEUE
-(*PFN_WDFREQUESTGETIOQUEUE)(
+(STDCALL *PFN_WDFREQUESTGETIOQUEUE)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -1598,8 +1600,8 @@ WDFQUEUE
     );
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
-WDFQUEUE
 FORCEINLINE
+WDFQUEUE
 WdfRequestGetIoQueue(
     _In_
     WDFREQUEST Request
@@ -1616,7 +1618,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 NTSTATUS
-(*PFN_WDFREQUESTREQUEUE)(
+(STDCALL *PFN_WDFREQUESTREQUEUE)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -1625,8 +1627,8 @@ NTSTATUS
 
 _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
-NTSTATUS
 FORCEINLINE
+NTSTATUS
 WdfRequestRequeue(
     _In_
     WDFREQUEST Request
@@ -1642,7 +1644,7 @@ typedef
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 VOID
-(*PFN_WDFREQUESTSTOPACKNOWLEDGE)(
+(STDCALL *PFN_WDFREQUESTSTOPACKNOWLEDGE)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -1652,8 +1654,8 @@ VOID
     );
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
-VOID
 FORCEINLINE
+VOID
 WdfRequestStopAcknowledge(
     _In_
     WDFREQUEST Request,
@@ -1671,7 +1673,7 @@ typedef
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 PIRP
-(*PFN_WDFREQUESTWDMGETIRP)(
+(STDCALL *PFN_WDFREQUESTWDMGETIRP)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -1679,8 +1681,8 @@ PIRP
     );
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
-PIRP
 FORCEINLINE
+PIRP
 WdfRequestWdmGetIrp(
     _In_
     WDFREQUEST Request
@@ -1696,7 +1698,7 @@ typedef
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 BOOLEAN
-(*PFN_WDFREQUESTISRESERVED)(
+(STDCALL *PFN_WDFREQUESTISRESERVED)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -1704,8 +1706,8 @@ BOOLEAN
     );
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
-BOOLEAN
 FORCEINLINE
+BOOLEAN
 WdfRequestIsReserved(
     _In_
     WDFREQUEST Request
@@ -1722,7 +1724,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 NTSTATUS
-(*PFN_WDFREQUESTFORWARDTOPARENTDEVICEIOQUEUE)(
+(STDCALL *PFN_WDFREQUESTFORWARDTOPARENTDEVICEIOQUEUE)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -1735,8 +1737,8 @@ NTSTATUS
 
 _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
-NTSTATUS
 FORCEINLINE
+NTSTATUS
 WdfRequestForwardToParentDeviceIoQueue(
     _In_
     WDFREQUEST Request,

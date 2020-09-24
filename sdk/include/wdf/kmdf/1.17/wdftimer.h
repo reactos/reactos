@@ -58,6 +58,7 @@ _Function_class_(EVT_WDF_TIMER)
 _IRQL_requires_same_
 _IRQL_requires_max_(DISPATCH_LEVEL)
 VOID
+STDCALL
 EVT_WDF_TIMER(
     _In_
     WDFTIMER Timer
@@ -68,8 +69,10 @@ typedef EVT_WDF_TIMER *PFN_WDF_TIMER;
 //
 // Disable warning C4324: structure was padded due to DECLSPEC_ALIGN
 // This padding is intentional and necessary.
+#ifdef _MSC_VER
 #pragma warning(push)
 #pragma warning(disable: 4324)
+#endif
 
 typedef struct _WDF_TIMER_CONFIG {
     ULONG Size;
@@ -99,10 +102,12 @@ typedef struct _WDF_TIMER_CONFIG {
 
 } WDF_TIMER_CONFIG, *PWDF_TIMER_CONFIG;
 
+#ifdef _MSC_VER
 #pragma warning(pop)
+#endif
 
-VOID
 FORCEINLINE
+VOID
 WDF_TIMER_CONFIG_INIT(
     _Out_ PWDF_TIMER_CONFIG Config,
     _In_  PFN_WDF_TIMER     EvtTimerFunc
@@ -116,8 +121,8 @@ WDF_TIMER_CONFIG_INIT(
     Config->TolerableDelay = 0;
 }
 
-VOID
 FORCEINLINE
+VOID
 WDF_TIMER_CONFIG_INIT_PERIODIC(
     _Out_ PWDF_TIMER_CONFIG Config,
     _In_  PFN_WDF_TIMER     EvtTimerFunc,
@@ -141,7 +146,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 NTSTATUS
-(*PFN_WDFTIMERCREATE)(
+(STDCALL *PFN_WDFTIMERCREATE)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -154,8 +159,8 @@ NTSTATUS
 
 _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
-NTSTATUS
 FORCEINLINE
+NTSTATUS
 WdfTimerCreate(
     _In_
     PWDF_TIMER_CONFIG Config,
@@ -175,7 +180,7 @@ typedef
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 BOOLEAN
-(*PFN_WDFTIMERSTART)(
+(STDCALL *PFN_WDFTIMERSTART)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -185,8 +190,8 @@ BOOLEAN
     );
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
-BOOLEAN
 FORCEINLINE
+BOOLEAN
 WdfTimerStart(
     _In_
     WDFTIMER Timer,
@@ -205,7 +210,7 @@ _When_(Wait == __true, _IRQL_requires_max_(PASSIVE_LEVEL))
 _When_(Wait == __false, _IRQL_requires_max_(DISPATCH_LEVEL))
 WDFAPI
 BOOLEAN
-(*PFN_WDFTIMERSTOP)(
+(STDCALL *PFN_WDFTIMERSTOP)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -216,8 +221,8 @@ BOOLEAN
 
 _When_(Wait == __true, _IRQL_requires_max_(PASSIVE_LEVEL))
 _When_(Wait == __false, _IRQL_requires_max_(DISPATCH_LEVEL))
-BOOLEAN
 FORCEINLINE
+BOOLEAN
 WdfTimerStop(
     _In_
     WDFTIMER Timer,
@@ -235,7 +240,7 @@ typedef
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 WDFOBJECT
-(*PFN_WDFTIMERGETPARENTOBJECT)(
+(STDCALL *PFN_WDFTIMERGETPARENTOBJECT)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -243,8 +248,8 @@ WDFOBJECT
     );
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
-WDFOBJECT
 FORCEINLINE
+WDFOBJECT
 WdfTimerGetParentObject(
     _In_
     WDFTIMER Timer

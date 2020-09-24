@@ -73,6 +73,7 @@ _Function_class_(EVT_WDF_OBJECT_CONTEXT_CLEANUP)
 _IRQL_requires_same_
 _IRQL_requires_max_(DISPATCH_LEVEL)
 VOID
+STDCALL
 EVT_WDF_OBJECT_CONTEXT_CLEANUP(
     _In_
     WDFOBJECT Object
@@ -85,6 +86,7 @@ _Function_class_(EVT_WDF_OBJECT_CONTEXT_DESTROY)
 _IRQL_requires_same_
 _IRQL_requires_max_(DISPATCH_LEVEL)
 VOID
+STDCALL
 EVT_WDF_OBJECT_CONTEXT_DESTROY(
     _In_
     WDFOBJECT Object
@@ -140,8 +142,8 @@ typedef struct _WDF_OBJECT_ATTRIBUTES {
 
 } WDF_OBJECT_ATTRIBUTES, *PWDF_OBJECT_ATTRIBUTES;
 
-VOID
 FORCEINLINE
+VOID
 WDF_OBJECT_ATTRIBUTES_INIT(
     _Out_ PWDF_OBJECT_ATTRIBUTES Attributes
     )
@@ -316,9 +318,8 @@ typedef struct _WDF_OBJECT_CONTEXT_TYPE_INFO {
 typedef _contexttype* WDF_TYPE_NAME_POINTER_TYPE(_contexttype);         \
                                                                         \
 WDF_EXTERN_C                                                            \
-__declspec(allocate( _section ))                                        \
-__declspec(selectany)                                                   \
-extern const WDF_OBJECT_CONTEXT_TYPE_INFO                               \
+DECLSPEC_SELECTANY                                                      \
+const WDF_OBJECT_CONTEXT_TYPE_INFO                                      \
 WDF_TYPE_NAME_TO_TYPE_INFO(_contexttype) =                              \
 {                                                                       \
     sizeof(WDF_OBJECT_CONTEXT_TYPE_INFO),                               \
@@ -327,13 +328,14 @@ WDF_TYPE_NAME_TO_TYPE_INFO(_contexttype) =                              \
     _UniqueType,                                                        \
     _GetUniqueType,                                                     \
 };                                                                      \
+//__declspec(allocate(_section))
 
 #define WDF_DECLARE_CASTING_FUNCTION(_contexttype, _castingfunction)    \
                                                                         \
 WDF_EXTERN_C                                                            \
 __drv_aliasesMem                                                        \
-WDF_TYPE_NAME_POINTER_TYPE(_contexttype)                                \
 FORCEINLINE                                                             \
+WDF_TYPE_NAME_POINTER_TYPE(_contexttype)                                \
 _castingfunction(                                                       \
    _In_ WDFOBJECT Handle                                                \
    )                                                                    \
@@ -448,8 +450,8 @@ WDF_DECLARE_CONTEXT_TYPE_WITH_NAME(                                     \
         );                                                              \
                                                                         \
 WDF_EXTERN_C                                                            \
-NTSTATUS                                                                \
 FORCEINLINE                                                             \
+NTSTATUS                                                                \
 WDF_ADD_CUSTOM_TYPE_FUNCTION_NAME(_type)(                               \
    _In_ WDFOBJECT Handle,                                               \
    _In_opt_ ULONG_PTR Data,                                             \
@@ -551,8 +553,8 @@ PVOID
     PCWDF_OBJECT_CONTEXT_TYPE_INFO TypeInfo
     );
 
-PVOID
 FORCEINLINE
+PVOID
 WdfObjectGetTypedContextWorker(
     _In_
     WDFOBJECT Handle,
@@ -569,7 +571,7 @@ WdfObjectGetTypedContextWorker(
 typedef
 WDFAPI
 NTSTATUS
-(*PFN_WDFOBJECTALLOCATECONTEXT)(
+(STDCALL *PFN_WDFOBJECTALLOCATECONTEXT)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -580,8 +582,8 @@ NTSTATUS
     PVOID* Context
     );
 
-NTSTATUS
 FORCEINLINE
+NTSTATUS
 WdfObjectAllocateContext(
     _In_
     WDFOBJECT Handle,
@@ -607,8 +609,8 @@ WDFOBJECT
     PVOID ContextPointer
     );
 
-WDFOBJECT
 FORCEINLINE
+WDFOBJECT
 WdfObjectContextGetObject(
     _In_
     PVOID ContextPointer
@@ -623,7 +625,7 @@ WdfObjectContextGetObject(
 typedef
 WDFAPI
 VOID
-(*PFN_WDFOBJECTREFERENCEACTUAL)(
+(STDCALL *PFN_WDFOBJECTREFERENCEACTUAL)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -636,8 +638,8 @@ VOID
     PCHAR File
     );
 
-VOID
 FORCEINLINE
+VOID
 WdfObjectReferenceActual(
     _In_
     WDFOBJECT Handle,
@@ -658,7 +660,7 @@ WdfObjectReferenceActual(
 typedef
 WDFAPI
 VOID
-(*PFN_WDFOBJECTDEREFERENCEACTUAL)(
+(STDCALL *PFN_WDFOBJECTDEREFERENCEACTUAL)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -671,8 +673,8 @@ VOID
     PCHAR File
     );
 
-VOID
 FORCEINLINE
+VOID
 WdfObjectDereferenceActual(
     _In_
     WDFOBJECT Handle,
@@ -695,7 +697,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 NTSTATUS
-(*PFN_WDFOBJECTCREATE)(
+(STDCALL *PFN_WDFOBJECTCREATE)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_opt_
@@ -706,8 +708,8 @@ NTSTATUS
 
 _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
-NTSTATUS
 FORCEINLINE
+NTSTATUS
 WdfObjectCreate(
     _In_opt_
     PWDF_OBJECT_ATTRIBUTES Attributes,
@@ -725,7 +727,7 @@ typedef
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 VOID
-(*PFN_WDFOBJECTDELETE)(
+(STDCALL *PFN_WDFOBJECTDELETE)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -733,8 +735,8 @@ VOID
     );
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
-VOID
 FORCEINLINE
+VOID
 WdfObjectDelete(
     _In_
     WDFOBJECT Object
@@ -751,7 +753,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFAPI
 NTSTATUS
-(*PFN_WDFOBJECTQUERY)(
+(STDCALL *PFN_WDFOBJECTQUERY)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -766,8 +768,8 @@ NTSTATUS
 
 _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
-NTSTATUS
 FORCEINLINE
+NTSTATUS
 WdfObjectQuery(
     _In_
     WDFOBJECT Object,

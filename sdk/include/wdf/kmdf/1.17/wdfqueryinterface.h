@@ -54,6 +54,7 @@ _Function_class_(EVT_WDF_DEVICE_PROCESS_QUERY_INTERFACE_REQUEST)
 _IRQL_requires_same_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 NTSTATUS
+STDCALL
 EVT_WDF_DEVICE_PROCESS_QUERY_INTERFACE_REQUEST(
     _In_
     WDFDEVICE Device,
@@ -125,8 +126,8 @@ typedef struct _WDF_QUERY_INTERFACE_CONFIG {
 
 } WDF_QUERY_INTERFACE_CONFIG, *PWDF_QUERY_INTERFACE_CONFIG;
 
-VOID
 FORCEINLINE
+VOID
 WDF_QUERY_INTERFACE_CONFIG_INIT(
     _Out_ PWDF_QUERY_INTERFACE_CONFIG InterfaceConfig,
     _In_opt_ PINTERFACE Interface,
@@ -151,7 +152,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 WDFAPI
 NTSTATUS
-(*PFN_WDFDEVICEADDQUERYINTERFACE)(
+(STDCALL *PFN_WDFDEVICEADDQUERYINTERFACE)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
     _In_
@@ -162,8 +163,8 @@ NTSTATUS
 
 _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
-NTSTATUS
 FORCEINLINE
+NTSTATUS
 WdfDeviceAddQueryInterface(
     _In_
     WDFDEVICE Device,
@@ -187,8 +188,8 @@ WdfDeviceAddQueryInterface(
 // interfaces which can be queried for and used independent of the PNP state of
 // the WDFDEVICE the interface was retrieved from.
 //
-VOID
 FORCEINLINE
+VOID
 WdfDeviceInterfaceReferenceNoOp(
     _In_ PVOID Context
     )
@@ -196,8 +197,8 @@ WdfDeviceInterfaceReferenceNoOp(
     UNREFERENCED_PARAMETER(Context);
 }
 
-VOID
 FORCEINLINE
+VOID
 WdfDeviceInterfaceDereferenceNoOp(
     _In_ PVOID Context
     )
