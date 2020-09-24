@@ -113,6 +113,7 @@ extern "C" {
 #define NOTIFICATION_BUSY_EVENT_NO_EVENT            0x0
 #define NOTIFICATION_BUSY_EVENT_NO_CHANGE           0x0
 #define NOTIFICATION_BUSY_EVENT_BUSY                0x1
+#define NOTIFICATION_BUSY_EVENT_LO_CHANGE           0x2
 
 #define NOTIFICATION_BUSY_STATUS_NO_EVENT           0x0
 #define NOTIFICATION_BUSY_STATUS_POWER              0x1
