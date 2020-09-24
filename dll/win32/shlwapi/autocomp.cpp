@@ -151,7 +151,7 @@ HRESULT WINAPI SHAutoComplete(HWND hwndEdit, DWORD dwFlags)
 
     CComPtr<IAutoComplete2> pAC2;
     HRESULT hr = CoCreateInstance(CLSID_AutoComplete, NULL, CLSCTX_INPROC_SERVER,
-                                  IID_IAutoComplete, (LPVOID *)&pAC2);
+                                  IID_IAutoComplete2, (LPVOID *)&pAC2);
     if (FAILED(hr))
     {
         ERR("CoCreateInstance(CLSID_AutoComplete) failed: 0x%lX\n", hr);
