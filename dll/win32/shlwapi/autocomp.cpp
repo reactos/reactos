@@ -19,23 +19,6 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
-static HRESULT
-IUnknown_SetOptions(IUnknown *punk, DWORD dwACLO)
-{
-    CComPtr<IACList2> pAL2;
-    HRESULT hr = punk->QueryInterface(IID_IACList2, (LPVOID *)&pAL2);
-    if (FAILED(hr))
-    {
-        ERR("QueryInterface(IID_IACList2) failed: 0x%08lX\n", hr);
-        return hr;
-    }
-
-    hr = pAL2->SetOptions(dwACLO);
-    if (FAILED(hr))
-        ERR("pAL2->SetOptions failed: 0x%08lX\n", hr);
-    return hr;
-}
-
 static LONG
 RegQueryCStringW(CRegKey& key, LPCWSTR pszValueName, CStringW& str)
 {
@@ -77,7 +60,10 @@ AutoComplete_AddRunMRU(CComPtr<IACLCustomMRU> pMRU)
     CStringW strMRUList;
     result = RegQueryCStringW(key, L"MRUList", strMRUList);
     if (result != ERROR_SUCCESS)
+    {
+        TRACE("No MRUList\n");
         return;
+    }
 
     // for all the MRU items
     CStringW strData;
@@ -128,7 +114,7 @@ AutoComplete_AddTypedURLs(CComPtr<IACLCustomMRU> pMRU)
         CString strData;
         result = RegQueryCStringW(key, szName, strData);
         if (result != ERROR_SUCCESS)
-            continue;
+            break;
 
         pMRU->AddMRUString(strData);
     }
@@ -173,13 +159,13 @@ AutoComplete_CreateList(DWORD dwSHACF, DWORD dwACLO)
 
     if (dwSHACF & SHACF_URLHISTORY)
     {
-        CComPtr<IUnknown> pHistory;
+        CComPtr<IACList2> pHistory;
         hr = CoCreateInstance(CLSID_ACLHistory, NULL, CLSCTX_INPROC_SERVER,
-                              IID_IUnknown, (LPVOID *)&pHistory);
+                              IID_IACList2, (LPVOID *)&pHistory);
         if (SUCCEEDED(hr))
         {
             pManager->Append(pHistory);
-            IUnknown_SetOptions(pHistory, dwACLO);
+            pHistory->SetOptions(dwACLO);
         }
         else
         {
@@ -189,13 +175,13 @@ AutoComplete_CreateList(DWORD dwSHACF, DWORD dwACLO)
 
     if (dwSHACF & (SHACF_FILESYSTEM | SHACF_FILESYS_ONLY | SHACF_FILESYS_DIRS))
     {
-        CComPtr<IUnknown> pISF;
+        CComPtr<IACList2> pISF;
         hr = CoCreateInstance(CLSID_ACListISF, NULL, CLSCTX_INPROC_SERVER,
-                              IID_IUnknown, (LPVOID *)&pISF);
+                              IID_IACList2, (LPVOID *)&pISF);
         if (SUCCEEDED(hr))
         {
             pManager->Append(pISF);
-            IUnknown_SetOptions(pISF, dwACLO);
+            pISF->SetOptions(dwACLO);
         }
         else
         {
