@@ -108,7 +108,7 @@ BEGIN
     EDITTEXT IDC_DISPLAY, 95, 52, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT "Clavier :", IDC_STATIC, 18, 65, 74, 11
     EDITTEXT IDC_KEYBOARD, 95, 64, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "Volume de destination:", IDC_STATIC, 18, 77, 74, 11
+    LTEXT "Volume de destination :", IDC_STATIC, 18, 77, 74, 11
     EDITTEXT IDC_DESTDRIVE, 95, 76, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT "Dossier de destination :", IDC_STATIC, 18, 89, 74, 11
     EDITTEXT IDC_PATH, 95, 88, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
@@ -134,9 +134,9 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     LTEXT "Finalisation de l'assistant d'installation de ReactOS", IDC_FINISHTITLE, 115, 8, 195, 24
     LTEXT "Vous avez complété avec succès la première étape d'installation de ReactOS.", IDC_STATIC, 20, 50, 277, 10
-    LTEXT "Si vous appuyez sur Terminé, votre ordinateur va redémarrer.", IDC_STATIC, 20, 80, 277, 10
+    LTEXT "Si vous appuyez sur Terminer, votre ordinateur va redémarrer.", IDC_STATIC, 20, 80, 277, 10
     CONTROL "", IDC_RESTART_PROGRESS, "msctls_progress32", PBS_SMOOTH | WS_CHILD | WS_VISIBLE | WS_BORDER, 20, 120, 277, 8
-    LTEXT "S'il y a un CD dans le lecteur, retirer le. Ensuite pour redémarrer votre ordinateur appuyez sur Terminer.", IDC_STATIC, 10, 180, 297, 20
+    LTEXT "S'il y a un CD dans le lecteur, retirez le. Appuyez ensuite sur Terminer pour redémarrer votre ordinateur.", IDC_STATIC, 10, 180, 297, 20
 END
 
 STRINGTABLE
@@ -144,15 +144,15 @@ BEGIN
     IDS_TYPETITLE "Bienvenue dans l'installation de ReactOS"
     IDS_TYPESUBTITLE "Choisissez un type d'installation."
     IDS_DEVICETITLE "Configurer les périphériques de base."
-    IDS_DEVICESUBTITLE "Configrer l'affichage et le clavier."
+    IDS_DEVICESUBTITLE "Configurer l'affichage et le clavier."
     IDS_DRIVETITLE "Configurer la partition d'installation et le dossier système."
     IDS_DRIVESUBTITLE "Préparer la partition d'installation, le dossier système et le chargeur de démarrage."
     IDS_PROCESSTITLE "Configurer la partition, copier les fichiers et configurer le système."
-    IDS_PROCESSSUBTITLE "Créer et formatter la partition, copier les fichier, installer et configurer le chargeur de démarrage"
+    IDS_PROCESSSUBTITLE "Créer et formatter la partition, copier les fichiers, installer et configurer le chargeur de démarrage."
     IDS_RESTARTTITLE "Première étape de configuration terminée"
-    IDS_RESTARTSUBTITLE "La première étape de l'installation est terminée. Veuillez redémarrer pour continuer avec la seconde étape"
+    IDS_RESTARTSUBTITLE "La première étape de l'installation est terminée. Veuillez redémarrer pour continuer avec la seconde étape."
     IDS_SUMMARYTITLE "Résumé de l'installation"
-    IDS_SUMMARYSUBTITLE "Lister les propriétés d'installation pou vérifier avant d'appliquer sur le périphérique d'installation"
+    IDS_SUMMARYSUBTITLE "Lister les propriétés d'installation à vérifier avant application sur le périphérique d'installation."
     IDS_ABORTSETUP "ReactOS n'est pas complètement installé sur votre ordinateur. Si vous quittez l'installation maintenant, vous devrez lancer l'installation de nouveau pour installer ReactOS. Voulez-vous quitter ?"
     IDS_ABORTSETUP2 "Abandonner l'installation ?"
     IDS_NO_TXTSETUP_SIF "Impossible de trouver 'txtsetup.sif'.\nL'installation ne peut continuer."
@@ -163,7 +163,7 @@ STRINGTABLE
 BEGIN
     IDS_INSTALLATION_NAME "Nom"
     IDS_INSTALLATION_PATH "Chemin d'installation"
-    IDS_INSTALLATION_VENDOR "Nom de fabriquant"
+    IDS_INSTALLATION_VENDOR "Nom du fabricant"
 END
 
 STRINGTABLE
