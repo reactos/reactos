@@ -72,9 +72,7 @@ AutoComplete_AddRunMRU(CComPtr<IACLCustomMRU> pMRU)
     for (INT i = 0; i <= L'z' - L'a' && i < strMRUList.GetLength(); ++i)
     {
         // Build a registry value name
-        WCHAR szName[2];
-        szName[0] = strMRUList[i];
-        szName[1] = 0;
+        WCHAR szName[2] = {strMRUList[i]};
 
         // Read a registry value
         result = RegQueryCStringW(key, szName, strData);
