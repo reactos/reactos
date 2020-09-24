@@ -36,9 +36,20 @@ if(ARCH STREQUAL "i386")
         list(APPEND MSVCRTEX_SOURCE
             math/i386/sqrtf.c)
     endif()
+    if(MSVC AND DLL_EXPORT_VERSION LESS 0x600)
+        list(APPEND MSVCRTEX_ASM_SOURCE
+            except/i386/__CxxFrameHandler3.s)
+        list(APPEND MSVCRTEX_SOURCE
+            except/i386/CxxHandleV8Frame.c)
+    endif()
 elseif(ARCH STREQUAL "amd64")
     list(APPEND MSVCRTEX_ASM_SOURCE
         except/amd64/chkstk_ms.s)
+    if(MSVC AND DLL_EXPORT_VERSION LESS 0x600)
+        list(APPEND MSVCRTEX_ASM_SOURCE
+            except/amd64/__CxxFrameHandler3.s
+        )
+    endif()
 elseif(ARCH STREQUAL "arm")
     list(APPEND MSVCRTEX_SOURCE
         math/arm/__rt_sdiv.c
