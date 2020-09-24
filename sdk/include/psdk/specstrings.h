@@ -48,6 +48,13 @@
 #define __nullnullterminated
 #define __in_data_source(src_sym)
 #define __kernel_entry
+#define __range(lb,ub)
+#define __in_bound
+#define __out_bound
+#define __in_range(lb,ub)
+#define __out_range(lb,ub)
+#define __deref_in_range(lb,ub)
+#define __deref_out_range(lb,ub)
 
 #if (_MSC_VER >= 1000) && !defined(__midl) && defined(_PREFAST_)
 
