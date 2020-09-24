@@ -213,13 +213,7 @@
 
 /* Inlines */
 #ifndef FORCEINLINE
- #if defined(_MSC_VER)
-  #define FORCEINLINE __forceinline
- #elif ( __MINGW_GNUC_PREREQ(4, 3)  &&  __STDC_VERSION__ >= 199901L)
-  #define FORCEINLINE extern inline __attribute__((__always_inline__,__gnu_inline__))
- #else
-  #define FORCEINLINE extern __inline__ __attribute__((__always_inline__))
- #endif
+ #define FORCEINLINE __forceinline
 #endif /* FORCEINLINE */
 
 #ifndef DECLSPEC_NOINLINE
