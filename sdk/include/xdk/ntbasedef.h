@@ -800,6 +800,14 @@ $endif(_WINNT_)
  #define DEFAULT_UNREACHABLE default: break
 #endif
 
+#if defined(__GNUC__) || defined(__clang__)
+ #define UNREACHABLE __builtin_unreachable()
+#elif defined(_MSC_VER)
+ #define UNREACHABLE __assume(0)
+#else
+ #define UNREACHABLE
+#endif
+
 #define VER_WORKSTATION_NT                  0x40000000
 #define VER_SERVER_NT                       0x80000000
 #define VER_SUITE_SMALLBUSINESS             0x00000001
