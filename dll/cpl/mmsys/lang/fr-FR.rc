@@ -27,13 +27,13 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Sons"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Un schéma sons est un ensemble de sons appliqués aux évènements de ReactOS et aux programmes. Vous pouvez sélectionner un schéma existant ou en enregistrer que vous avez modifié.", -1, 8, 7, 230, 40
+    LTEXT "Un schéma sons est un ensemble de sons appliqués aux événements de ReactOS et aux programmes. Vous pouvez sélectionner un schéma existant ou en enregistrer un que vous avez modifié.", -1, 8, 7, 230, 40
     LTEXT "S&chéma sons :", -1, 8, 42, 150, 17
     COMBOBOX IDC_SOUND_SCHEME, 8, 53, 230, 46, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     PUSHBUTTON "&Enregistrer sous...", IDC_SAVEAS_BTN, 120, 70, 65, 15
     PUSHBUTTON "Supprimer", IDC_DELETE_BTN, 188, 70, 50, 15
-    LTEXT "Pour changer les sons, cliquez sur un évènement de programme dans la liste suivante, puis sélectionnez un son à appliquer. Vous pouvez enregistrer les changements en tant que nouveau schéma son.", -1, 8, 90, 230, 40
-    LTEXT "Évènements des programmes :", -1, 8, 118, 150, 17
+    LTEXT "Pour changer les sons, cliquez sur un événement de programme dans la liste suivante, puis sélectionnez un son à appliquer. Vous pouvez enregistrer les changements en tant que nouveau schéma sons.", -1, 8, 90, 230, 40
+    LTEXT "Événements des programmes :", -1, 8, 118, 150, 17
     CONTROL "", IDC_SCHEME_LIST, "SysTreeView32", TVS_DISABLEDRAGDROP| TVS_SHOWSELALWAYS | WS_CHILD | WS_VISIBLE| WS_BORDER | WS_TABSTOP, 8, 130, 230, 60
     LTEXT "&Sons :", IDC_TEXT_SOUND, 8, 194, 80, 17, WS_DISABLED
     COMBOBOX IDC_SOUND_LIST, 8, 205, 155, 146, CBS_DROPDOWNLIST | CBS_SORT | WS_VSCROLL | WS_TABSTOP | WS_DISABLED

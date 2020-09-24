@@ -740,7 +740,7 @@ BEGIN
     IDS_SHV_COLUMN_DELFROM "Localisation d'origine"
     IDS_SHV_COLUMN_DELDATE "Date de suppression"
     IDS_SHV_COLUMN_FONTTYPE "Type de police"
-    IDS_SHV_COLUMN_WORKGROUP "Workgroup"
+    IDS_SHV_COLUMN_WORKGROUP "Groupe de travail"
     IDS_SHV_COLUMN_NETLOCATION "Emplacement réseau"
     IDS_SHV_COLUMN_DOCUMENTS "Documents"
     IDS_SHV_COLUMN_STATUS "État"
