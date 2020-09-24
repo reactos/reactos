@@ -11,7 +11,6 @@ list(APPEND SOURCE
 
 if(ARCH STREQUAL "i386")
   add_asm_files(cpprt_asm i386/cpprt.s)
-  list(APPEND SOURCE i386/framehandler.c)
 elseif(ARCH STREQUAL "amd64")
   add_asm_files(cpprt_asm amd64/cpprt.s)
 elseif(ARCH STREQUAL "arm")

@@ -4,8 +4,12 @@ if(ARCH STREQUAL "i386")
         except/i386/chkstk_asm.s
     )
     list(APPEND CRT_EXCEPT_ASM_SOURCE
+        except/i386/__CxxFrameHandler3.s
         except/i386/chkesp.s
         except/i386/prolog.s
+    )
+    list(APPEND CRT_EXCEPT_SOURCE
+        except/i386/CxxHandleV8Frame.c
     )
     if(MSVC)
         list(APPEND CRT_EXCEPT_ASM_SOURCE
