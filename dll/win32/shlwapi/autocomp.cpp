@@ -8,6 +8,7 @@
 #include <shlobj.h>
 #include <shldisp.h>
 #include <shlwapi.h>
+#include <shlwapi_undoc.h>
 #include <atlbase.h>
 #include <atlcom.h>
 #include <wine/debug.h>
@@ -81,7 +82,7 @@ AutoComplete_CreateList(DWORD dwSHACF, DWORD dwACLO)
         }
     }
 
-    if (dwSHACF & SHACF_FILESYSTEM)
+    if (dwSHACF & (SHACF_FILESYSTEM | SHACF_FILESYS_ONLY | SHACF_FILESYS_DIRS))
     {
         CComPtr<IUnknown> pISF = CREATE_FROM_CLSID(CLSID_ACListISF);
         if (pISF)
@@ -120,6 +121,10 @@ AutoComplete_AdaptFlags(IN HWND hwndEdit,
         dwACO |= ACO_AUTOSUGGEST;
     }
 
+    if (dwSHACF & (SHACF_FILESYSTEM | SHACF_FILESYS_ONLY | SHACF_FILESYS_DIRS))
+        dwACLO |= ACLO_CURRENTDIR | ACLO_MYCOMPUTER;
+    if (dwSHACF & SHACF_FILESYS_DIRS)
+        dwACLO |= ACLO_FILESYSDIRS;
     if (dwSHACF & SHACF_FILESYS_ONLY)
         dwACLO |= ACLO_FILESYSONLY;
 
@@ -173,11 +178,18 @@ HRESULT WINAPI SHAutoComplete(HWND hwndEdit, DWORD dwFlags)
         return hr;
     }
 
-    hr = pAC2->Init(hwndEdit, pList, NULL, L"www.%s.com");
-    if (SUCCEEDED(hr))
-        pAC2->SetOptions(dwACO);
+    if (SHPinDllOfCLSID(CLSID_ACListISF) && SHPinDllOfCLSID(CLSID_AutoComplete))
+    {
+        hr = pAC2->Init(hwndEdit, pList, NULL, L"www.%s.com");
+        if (SUCCEEDED(hr))
+            pAC2->SetOptions(dwACO);
+        else
+            ERR("IAutoComplete2::Init failed: 0x%lX\n", hr);
+    }
     else
-        ERR("IAutoComplete2::Init failed: 0x%lX\n", hr);
+    {
+        hr = E_FAIL;
+    }
 
     return hr;
 }
