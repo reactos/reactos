@@ -42,7 +42,7 @@ AutoComplete_AddMRU(CComPtr<IObjMgr> pManager, LPCWSTR pszKey)
 }
 
 static CComPtr<IUnknown>
-AutoComplete_CreateList(DWORD dwSHACF, DWORD dwACLO)
+AutoComplete_LoadList(DWORD dwSHACF, DWORD dwACLO)
 {
     // Create a multiple list (with IEnumString interface)
     CComPtr<IUnknown> pList;
@@ -103,14 +103,12 @@ AutoComplete_CreateList(DWORD dwSHACF, DWORD dwACLO)
     return pList; // The list
 }
 
-#define AUTOCOMPLETE_KEY L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\AutoComplete"
-
 static VOID
-AutoComplete_AdaptFlags(IN HWND hwndEdit,
-                        IN OUT LPDWORD pdwSHACF,
+AutoComplete_AdaptFlags(IN OUT LPDWORD pdwSHACF,
                         OUT LPDWORD pdwACO,
                         OUT LPDWORD pdwACLO)
 {
+#define AUTOCOMPLETE_KEY L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\AutoComplete"
     DWORD dwSHACF = *pdwSHACF, dwACO = 0, dwACLO = 0;
     if (dwSHACF == SHACF_DEFAULT)
         dwSHACF = SHACF_FILESYSTEM | SHACF_URLALL;
@@ -129,21 +127,17 @@ AutoComplete_AdaptFlags(IN HWND hwndEdit,
         dwACO |= ACO_AUTOSUGGEST;
     }
 
-    if (dwSHACF & (SHACF_FILESYSTEM | SHACF_FILESYS_ONLY | SHACF_FILESYS_DIRS))
-        dwACLO |= ACLO_CURRENTDIR | ACLO_MYCOMPUTER;
     if (dwSHACF & SHACF_FILESYS_DIRS)
         dwACLO |= ACLO_FILESYSDIRS;
     if (dwSHACF & SHACF_FILESYS_ONLY)
         dwACLO |= ACLO_FILESYSONLY;
 
-    if ((dwSHACF & SHACF_USETAB) ||
-        SHRegGetBoolUSValueW(AUTOCOMPLETE_KEY, L"Always Use Tab", FALSE, FALSE))
-    {
-        dwACO |= ACO_USETAB;
-    }
+    static BOOL s_bAlwaysUseTab = 999;
+    if (s_bAlwaysUseTab == 999)
+        s_bAlwaysUseTab = SHRegGetBoolUSValueW(AUTOCOMPLETE_KEY, L"Always Use Tab", FALSE, FALSE);
 
-    if (GetWindowLongPtrW(hwndEdit, GWL_EXSTYLE) & WS_EX_RTLREADING)
-        dwACO |= ACO_RTLREADING;
+    if (s_bAlwaysUseTab || (dwSHACF & SHACF_USETAB))
+        dwACO |= ACO_USETAB;
 
     *pdwACO = dwACO;
     *pdwSHACF = dwSHACF;
@@ -168,10 +162,10 @@ HRESULT WINAPI SHAutoComplete(HWND hwndEdit, DWORD dwFlags)
     TRACE("SHAutoComplete(%p, 0x%lX)\n", hwndEdit, dwFlags);
 
     DWORD dwACO = 0, dwACLO = 0, dwSHACF = dwFlags;
-    AutoComplete_AdaptFlags(hwndEdit, &dwACO, &dwACLO, &dwSHACF);
+    AutoComplete_AdaptFlags(&dwACO, &dwACLO, &dwSHACF);
 
-    // Create the list (with IEnumString interface)
-    CComPtr<IUnknown> pList = AutoComplete_CreateList(dwSHACF, dwACLO);
+    // Load the list (with IEnumString interface)
+    CComPtr<IUnknown> pList = AutoComplete_LoadList(dwSHACF, dwACLO);
     if (!pList)
     {
         ERR("Out of memory\n");
@@ -188,16 +182,12 @@ HRESULT WINAPI SHAutoComplete(HWND hwndEdit, DWORD dwFlags)
         return hr;
     }
 
-    // Keep the DLLs of CLSID_ACListISF and CLSID_AutoComplete
+    // Keep the DLLs of CLSID_ACListISF and CLSID_AutoComplete loaded
     hr = E_FAIL;
     if (SHPinDllOfCLSID(CLSID_ACListISF) && SHPinDllOfCLSID(CLSID_AutoComplete))
     {
         // Initialize IAutoComplete2 for auto-completion
-        if (dwSHACF & SHACF_URLALL)
-            hr = pAC2->Init(hwndEdit, pList, NULL, L"www.%s.com");
-        else
-            hr = pAC2->Init(hwndEdit, pList, NULL, NULL);
-
+        hr = pAC2->Init(hwndEdit, pList, NULL, NULL);
         if (SUCCEEDED(hr))
             pAC2->SetOptions(dwACO); // Set ACO_* flags
         else
