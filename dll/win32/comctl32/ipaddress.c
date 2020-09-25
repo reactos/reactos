@@ -453,9 +453,6 @@ static BOOL IPADDRESS_GotoNextField (const IPADDRESS_INFO *infoPtr, int cur, int
 		    end = -1;
 	        SendMessageW(next->EditHwnd, EM_SETSEL, start, end);
 	    }
-#ifdef __REACTOS__
-	    SetFocus(next->EditHwnd);
-#endif
 	    return TRUE;
 	}
 
@@ -599,8 +596,9 @@ IPADDRESS_SubclassProc (HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 #ifdef __REACTOS__
     case WM_GETDLGCODE:
         {
-            LRESULT ret = DefWindowProcW(hwnd, uMsg, wParam, lParam);
-            return ret | DLGC_WANTTAB;
+            LRESULT result = CallWindowProcW(part->OrigProc, hwnd, uMsg, wParam, lParam);
+            result |= DLGC_WANTALLKEYS | DLGC_WANTCHARS | DLGC_WANTTAB;
+            return result;
         }
 #endif
     }
