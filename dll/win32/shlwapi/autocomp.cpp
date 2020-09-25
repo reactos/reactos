@@ -19,8 +19,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(shell);
 static HRESULT
 AutoComplete_AddMRU(CComPtr<IObjMgr> pManager, LPCWSTR pszKey)
 {
-    // FIXME: CLSID_ACLCustomMRU or CLSID_ACLMRU?
-    CComPtr<IACLCustomMRU> pMRU;
+    CComPtr<IACLCustomMRU> pMRU; // Create an MRU list
     HRESULT hr = CoCreateInstance(CLSID_ACLCustomMRU, NULL, CLSCTX_INPROC_SERVER,
                                   IID_IACLCustomMRU, (LPVOID *)&pMRU);
     if (FAILED(hr))
