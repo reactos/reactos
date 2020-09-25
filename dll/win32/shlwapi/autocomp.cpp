@@ -41,6 +41,23 @@ AutoComplete_AddMRU(CComPtr<IObjMgr> pManager, LPCWSTR pszKey)
     return hr;
 }
 
+static HRESULT
+IUnknown_SetOptions(CComPtr<IUnknown> punk, DWORD dwACLO)
+{
+    CComPtr<IACList2> pList;
+    HRESULT hr = punk->QueryInterface(IID_IACList2, (LPVOID *)&pList);
+    if (FAILED(hr))
+    {
+        ERR("punk->QueryInterface failed: 0x%08lX\n", hr);
+        return hr;
+    }
+
+    hr = pList->SetOptions(dwACLO);
+    if (FAILED(hr))
+        ERR("pList->SetOptions failed: 0x%08lX\n", hr);
+    return hr;
+}
+
 static CComPtr<IUnknown>
 AutoComplete_LoadList(DWORD dwSHACF, DWORD dwACLO)
 {
@@ -78,21 +95,26 @@ AutoComplete_LoadList(DWORD dwSHACF, DWORD dwACLO)
         hr = CoCreateInstance(CLSID_ACLHistory, NULL, CLSCTX_INPROC_SERVER,
                               IID_IUnknown, (LPVOID *)&pHistory);
         if (SUCCEEDED(hr))
+        {
             pManager->Append(pHistory); // Add to the manager
+            IUnknown_SetOptions(pHistory, dwACLO); // Set ACLO_* options
+        }
         else
+        {
             ERR("CLSID_ACLHistory hr:%08lX\n", hr);
+        }
     }
 
     if (dwSHACF & (SHACF_FILESYSTEM | SHACF_FILESYS_ONLY | SHACF_FILESYS_DIRS))
     {
         // The filesystem list (with IEnumString interface)
-        CComPtr<IACList2> pISF;
+        CComPtr<IUnknown> pISF;
         hr = CoCreateInstance(CLSID_ACListISF, NULL, CLSCTX_INPROC_SERVER,
-                              IID_IACList2, (LPVOID *)&pISF);
+                              IID_IUnknown, (LPVOID *)&pISF);
         if (SUCCEEDED(hr))
         {
             pManager->Append(pISF); // Add to the manager
-            pISF->SetOptions(dwACLO); // Set ACLO_* flags
+            IUnknown_SetOptions(pISF, dwACLO); // Set ACLO_* options
         }
         else
         {
