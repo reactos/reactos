@@ -11,6 +11,7 @@
 #include <atlbase.h>
 #include <atlcom.h>
 #include <atlstr.h>
+#include <shlwapi_undoc.h>
 
 CComModule gModule;
 static CStringA *s_pstrTest = NULL;
@@ -80,6 +81,9 @@ public:
     // IACList
     STDMETHODIMP Expand(LPCOLESTR pszExpand)
     {
+        CHAR szText[64];
+        SHUnicodeToAnsi(pszExpand, szText, _countof(szText));
+        trace("CEnumString1::Expand: %s\n", szText);
         *s_pstrTest += 'e';
         return S_OK;
     }
@@ -163,6 +167,9 @@ public:
     // IACList
     STDMETHODIMP Expand(LPCOLESTR pszExpand)
     {
+        CHAR szText[64];
+        SHUnicodeToAnsi(pszExpand, szText, _countof(szText));
+        trace("CEnumString2::Expand: %s\n", szText);
         *s_pstrTest += 'E';
         return S_OK;
     }
@@ -200,18 +207,27 @@ START_TEST(ACLMulti)
 
     s_pstrTest = new CStringA();
 
-    CComPtr<IObjMgr> pList;
+    CComPtr<IObjMgr> pManager;
     HRESULT hr = CoCreateInstance(CLSID_ACLMulti, NULL, CLSCTX_ALL,
-                                  IID_IObjMgr, (LPVOID *)&pList);
+                                  IID_IObjMgr, (LPVOID *)&pManager);
     ok_hr(hr, S_OK);
-    if (!pList)
+    if (!pManager)
     {
         skip("CoCreateInstance failed\n");
         return;
     }
 
     CComPtr<IEnumString> pEnum;
-    hr = pList->QueryInterface(IID_IEnumString, (LPVOID *)&pEnum);
+    hr = pManager->QueryInterface(IID_IEnumString, (LPVOID *)&pEnum);
+    ok_hr(hr, S_OK);
+    if (!pEnum)
+    {
+        skip("QueryInterface failed\n");
+        return;
+    }
+
+    CComPtr<IACList> pACL;
+    hr = pManager->QueryInterface(IID_IACList, (LPVOID *)&pACL);
     ok_hr(hr, S_OK);
     if (!pEnum)
     {
@@ -220,14 +236,17 @@ START_TEST(ACLMulti)
     }
 
     CComPtr<IEnumString> p1(new CComObject<CEnumString1>());
-    hr = pList->Append(p1);
+    hr = pManager->Append(p1);
     ok_hr(hr, S_OK);
 
     CComPtr<IEnumString> p2(new CComObject<CEnumString2>());
-    hr = pList->Append(p2);
+    hr = pManager->Append(p2);
     ok_hr(hr, S_OK);
 
     hr = pEnum->Reset();
+    ok_hr(hr, S_OK);
+
+    hr = pACL->Expand(L"C:\\");
     ok_hr(hr, S_OK);
 
     LPOLESTR psz;
@@ -292,6 +311,6 @@ START_TEST(ACLMulti)
     ok_int(c, 1);
     CoTaskMemFree(psz);
 
-    ok_str(s_pstrTest->GetString(), "rRnnnNNNrRnnnN");
+    ok_str(s_pstrTest->GetString(), "rReEnnnNNNrRnnnN");
     delete s_pstrTest;
 }
