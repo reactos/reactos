@@ -115,7 +115,7 @@ static LONG s_nFileDialogHookLock = 0;
 #define MAX_TRANSLATE 8
 static HWND s_ahwndTranslate[MAX_TRANSLATE] = { NULL };
 
-static BOOL FILEDLG95_AddTranslate(HWND hwnd)
+static __inline void FILEDLG95_AddTranslate(HWND hwnd)
 {
     LONG i;
     for (i = 0; i < MAX_TRANSLATE; ++i)
@@ -123,13 +123,12 @@ static BOOL FILEDLG95_AddTranslate(HWND hwnd)
         if (s_ahwndTranslate[i] == NULL)
         {
             s_ahwndTranslate[i] = hwnd;
-            return TRUE;
+            return;
         }
     }
-    return FALSE;
 }
 
-static BOOL FILEDLG95_RemoveTranslate(HWND hwnd)
+static __inline void FILEDLG95_RemoveTranslate(HWND hwnd)
 {
     LONG i;
     for (i = 0; i < MAX_TRANSLATE; ++i)
@@ -137,9 +136,30 @@ static BOOL FILEDLG95_RemoveTranslate(HWND hwnd)
         if (s_ahwndTranslate[i] == hwnd)
         {
             s_ahwndTranslate[i] = NULL;
-            return TRUE;
+            return;
         }
     }
+}
+
+static __inline BOOL
+FILEDLG95_DoTranslate(LONG i, HWND hwndFocus, LPMSG pMsg)
+{
+    FileOpenDlgInfos *fodInfos;
+
+    if (s_ahwndTranslate[i] == NULL)
+        return FALSE;
+
+    fodInfos = get_filedlg_infoptr(s_ahwndTranslate[i]);
+    if (fodInfos == NULL)
+        return FALSE;
+
+    if (fodInfos->ShellInfos.hwndView == hwndFocus ||
+        IsChild(fodInfos->ShellInfos.hwndView, hwndFocus))
+    {
+        IShellView_TranslateAccelerator(fodInfos->Shell.FOIShellView, pMsg);
+        return TRUE;
+    }
+
     return FALSE;
 }
 
@@ -150,7 +170,6 @@ FILEDLG95_TranslateMsgProc(INT nCode, WPARAM wParam, LPARAM lParam)
     LPMSG pMsg;
     HWND hwndFocus;
     LONG i;
-    FileOpenDlgInfos *fodInfos;
 
     if (nCode < 0)
         return CallNextHookEx(s_hFileDialogHook, nCode, wParam, lParam);
@@ -164,19 +183,8 @@ FILEDLG95_TranslateMsgProc(INT nCode, WPARAM wParam, LPARAM lParam)
         hwndFocus = GetFocus();
         for (i = 0; i < MAX_TRANSLATE; ++i)
         {
-            if (s_ahwndTranslate[i] == NULL)
-                continue;
-
-            fodInfos = get_filedlg_infoptr(s_ahwndTranslate[i]);
-            if (fodInfos == NULL)
-                continue;
-
-            if (fodInfos->ShellInfos.hwndView == hwndFocus ||
-                IsChild(fodInfos->ShellInfos.hwndView, hwndFocus))
-            {
-                IShellView_TranslateAccelerator(fodInfos->Shell.FOIShellView, pMsg);
+            if (FILEDLG95_DoTranslate(i, hwndFocus, pMsg))
                 break;
-            }
         }
     }
 
