@@ -7,6 +7,14 @@
 
 #pragma once
 
+#include <wdm.h>
+#include <ntddk.h>
+#include <stdio.h>
+#include <scsi.h>
+#include <ntddscsi.h>
+#include <ntdddisk.h>
+#include <mountdev.h>
+
 #define VERSION "0.0.3"
 
 #ifndef PAGE_ROUND_UP
