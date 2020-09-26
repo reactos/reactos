@@ -1555,9 +1555,9 @@ INT_PTR CALLBACK FileOpenDlgProc95(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
           FILEDLG95_AddRemoveTranslate(hwnd, NULL);
           if (InterlockedDecrement(&s_nFileDialogHookCount) == 0)
           {
+              DeleteCriticalSection(&s_csFileDialogHookLock);
               UnhookWindowsHookEx(s_hFileDialogHook);
               s_hFileDialogHook = NULL;
-              DeleteCriticalSection(&s_csFileDialogHookLock);
           }
 #endif
           return FALSE;
