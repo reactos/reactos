@@ -110,7 +110,8 @@ typedef struct tagLookInInfo
 /* We have to call IShellView::TranslateAccelerator to handle the standard
    key bindings of File Open Dialog. We use hook to realize them. */
 static HHOOK s_hFileDialogHook = NULL;
-static LONG s_nFileDialogHookLock = 0;
+static LONG s_nFileDialogHookCount = 0;
+static CRITICAL_SECTION s_csFileDialogHookLock;
 
 #define MAX_TRANSLATE 8
 static HWND s_ahwndTranslate[MAX_TRANSLATE] = { NULL };
@@ -118,14 +119,17 @@ static HWND s_ahwndTranslate[MAX_TRANSLATE] = { NULL };
 static __inline void FILEDLG95_AddRemoveTranslate(HWND hwndOld, HWND hwndNew)
 {
     LONG i;
+
+    EnterCriticalSection(&s_csFileDialogHookLock);
     for (i = 0; i < MAX_TRANSLATE; ++i)
     {
         if (s_ahwndTranslate[i] == hwndOld)
         {
             s_ahwndTranslate[i] = hwndNew;
-            return;
+            break;
         }
     }
+    LeaveCriticalSection(&s_csFileDialogHookLock);
 }
 
 static __inline BOOL
@@ -165,11 +169,13 @@ FILEDLG95_TranslateMsgProc(INT nCode, WPARAM wParam, LPARAM lParam)
     {
         LONG i;
         HWND hwndFocus = GetFocus();
+        EnterCriticalSection(&s_csFileDialogHookLock);
         for (i = 0; i < MAX_TRANSLATE; ++i)
         {
             if (FILEDLG95_DoTranslate(i, hwndFocus, pMsg))
                 break;
         }
+        LeaveCriticalSection(&s_csFileDialogHookLock);
     }
 
     return 0;
@@ -1499,8 +1505,9 @@ INT_PTR CALLBACK FileOpenDlgProc95(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 
 #ifdef __REACTOS__
          /* Enable hook and translate */
-         if (InterlockedIncrement(&s_nFileDialogHookLock) == 1)
+         if (InterlockedIncrement(&s_nFileDialogHookCount) == 1)
          {
+             InitializeCriticalSection(&s_csFileDialogHookLock);
              s_hFileDialogHook = SetWindowsHookEx(WH_MSGFILTER, FILEDLG95_TranslateMsgProc,
                                                   0, GetCurrentThreadId());
          }
@@ -1546,10 +1553,11 @@ INT_PTR CALLBACK FileOpenDlgProc95(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 #ifdef __REACTOS__
           /* Disable hook and translate */
           FILEDLG95_AddRemoveTranslate(hwnd, NULL);
-          if (InterlockedDecrement(&s_nFileDialogHookLock) == 0)
+          if (InterlockedDecrement(&s_nFileDialogHookCount) == 0)
           {
               UnhookWindowsHookEx(s_hFileDialogHook);
               s_hFileDialogHook = NULL;
+              DeleteCriticalSection(&s_csFileDialogHookLock);
           }
 #endif
           return FALSE;
