@@ -3,6 +3,7 @@
 #define STANDALONE
 #include <apitest.h>
 
+extern void func_ACLMulti(void);
 extern void func_ACListISF(void);
 extern void func_IACLCustomMRU(void);
 extern void func_SHEnumClassesOfCategories(void);
@@ -10,6 +11,7 @@ extern void func_SHExplorerParseCmdLine(void);
 
 const struct test winetest_testlist[] =
 {
+    { "ACLMulti", func_ACLMulti },
     { "ACListISF", func_ACListISF },
     { "IACLCustomMRU", func_IACLCustomMRU },
     { "SHEnumClassesOfCategories", func_SHEnumClassesOfCategories },
