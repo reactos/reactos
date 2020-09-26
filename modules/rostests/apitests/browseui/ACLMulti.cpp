@@ -11,9 +11,11 @@
 #include <atlbase.h>
 #include <atlcom.h>
 #include <atlstr.h>
+#include <string.h>
 #include <shlwapi_undoc.h>
 #include <shlguid_undoc.h>
 #include <shellutils.h>
+#include <strsafe.h>
 
 CComModule gModule;
 static CStringA s_strTest;
@@ -70,9 +72,11 @@ public:
 
         if (m_i < m_c)
         {
+            static const WCHAR szText[] = L"TEST";
             ++m_i;
-            *rgelt = (LPOLESTR)CoTaskMemAlloc((4 + 1) * sizeof(WCHAR));
-            lstrcpyW(*rgelt, L"TEST");
+            size_t cb = (wcslen(szText) + 1) * sizeof(WCHAR);
+            *rgelt = (LPOLESTR)CoTaskMemAlloc(cb);
+            StringCbCopyW(*rgelt, cb, szText);
             *pceltFetched = 1;
             return S_OK;
         }
@@ -132,7 +136,7 @@ public:
         if (m_i < m_c)
         {
             ++m_i;
-            lstrcpynW(pszUrl, L"TEST", cchMax);
+            StringCchCopyW(pszUrl, cchMax, L"TEST");
             *pulSortIndex = m_i;
             return S_OK;
         }
