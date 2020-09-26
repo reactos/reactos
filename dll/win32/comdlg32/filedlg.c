@@ -107,38 +107,76 @@ typedef struct tagLookInInfo
 } LookInInfos;
 
 #ifdef __REACTOS__
-/* We have to call IShellView::TranslateAccelerator to handle
-   the standard keyboard bindings of File Open Dialog.
-   We use hook to realize them. */
-static HWND s_hwndFileDialog = NULL;
+/* We have to call IShellView::TranslateAccelerator to handle the standard
+   key bindings of File Open Dialog. We use hook to realize them. */
 static HHOOK s_hFileDialogHook = NULL;
+static LONG s_nFileDialogHookLock = 0;
+
+#define MAX_TRANSLATE 8
+static HWND s_ahwndTranslate[MAX_TRANSLATE] = { NULL };
+
+static BOOL FILEDLG95_AddTranslate(HWND hwnd)
+{
+    LONG i;
+    for (i = 0; i < MAX_TRANSLATE; ++i)
+    {
+        if (s_ahwndTranslate[i] == NULL)
+        {
+            s_ahwndTranslate[i] = hwnd;
+            return TRUE;
+        }
+    }
+    return FALSE;
+}
+
+static BOOL FILEDLG95_RemoveTranslate(HWND hwnd)
+{
+    LONG i;
+    for (i = 0; i < MAX_TRANSLATE; ++i)
+    {
+        if (s_ahwndTranslate[i] == hwnd)
+        {
+            s_ahwndTranslate[i] = NULL;
+            return TRUE;
+        }
+    }
+    return FALSE;
+}
 
 /* WH_MSGFILTER hook procedure */
 static LRESULT CALLBACK
-OpenFileMsgProc(INT nCode, WPARAM wParam, LPARAM lParam)
+FILEDLG95_TranslateMsgProc(INT nCode, WPARAM wParam, LPARAM lParam)
 {
     LPMSG pMsg;
     HWND hwndFocus;
+    LONG i;
     FileOpenDlgInfos *fodInfos;
 
     if (nCode < 0)
         return CallNextHookEx(s_hFileDialogHook, nCode, wParam, lParam);
 
-    if (nCode != MSGF_DIALOGBOX || s_hwndFileDialog == NULL)
-        return 0;
-
-    fodInfos = get_filedlg_infoptr(s_hwndFileDialog);
-    if (fodInfos == NULL)
+    if (nCode != MSGF_DIALOGBOX)
         return 0;
 
     pMsg = (LPMSG)lParam;
     if (WM_KEYFIRST <= pMsg->message && pMsg->message <= WM_KEYLAST)
     {
         hwndFocus = GetFocus();
-        if (fodInfos->ShellInfos.hwndView == hwndFocus ||
-            IsChild(fodInfos->ShellInfos.hwndView, hwndFocus))
+        for (i = 0; i < MAX_TRANSLATE; ++i)
         {
-            IShellView_TranslateAccelerator(fodInfos->Shell.FOIShellView, pMsg);
+            if (s_ahwndTranslate[i] == NULL)
+                continue;
+
+            fodInfos = get_filedlg_infoptr(s_ahwndTranslate[i]);
+            if (fodInfos == NULL)
+                continue;
+
+            if (fodInfos->ShellInfos.hwndView == hwndFocus ||
+                IsChild(fodInfos->ShellInfos.hwndView, hwndFocus))
+            {
+                IShellView_TranslateAccelerator(fodInfos->Shell.FOIShellView, pMsg);
+                break;
+            }
         }
     }
 
@@ -1468,13 +1506,13 @@ INT_PTR CALLBACK FileOpenDlgProc95(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
              SendCustomDlgNotificationMessage(hwnd,CDN_SELCHANGE);
 
 #ifdef __REACTOS__
-         if (s_hFileDialogHook == NULL)
-         {
              /* Enable hook */
-             s_hwndFileDialog = hwnd;
-             s_hFileDialogHook = SetWindowsHookEx(WH_MSGFILTER, OpenFileMsgProc, 0,
-                                                  GetCurrentThreadId());
+         if (InterlockedIncrement(&s_nFileDialogHookLock) == 1)
+         {
+             s_hFileDialogHook = SetWindowsHookEx(WH_MSGFILTER, FILEDLG95_TranslateMsgProc,
+                                                  0, GetCurrentThreadId());
          }
+         FILEDLG95_AddTranslate(hwnd);
 #endif
          return 0;
        }
@@ -1515,9 +1553,12 @@ INT_PTR CALLBACK FileOpenDlgProc95(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
           }
 #ifdef __REACTOS__
           /* Disable hook */
-          UnhookWindowsHookEx(s_hFileDialogHook);
-          s_hFileDialogHook = NULL;
-          s_hwndFileDialog = NULL;
+          if (InterlockedDecrement(&s_nFileDialogHookLock) == 0)
+          {
+              UnhookWindowsHookEx(s_hFileDialogHook);
+              s_hFileDialogHook = NULL;
+          }
+          FILEDLG95_RemoveTranslate(hwnd);
 #endif
           return FALSE;
       }
