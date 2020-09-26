@@ -115,27 +115,14 @@ static LONG s_nFileDialogHookLock = 0;
 #define MAX_TRANSLATE 8
 static HWND s_ahwndTranslate[MAX_TRANSLATE] = { NULL };
 
-static __inline void FILEDLG95_AddTranslate(HWND hwnd)
+static __inline void FILEDLG95_AddRemoveTranslate(HWND hwndOld, HWND hwndNew)
 {
     LONG i;
     for (i = 0; i < MAX_TRANSLATE; ++i)
     {
-        if (s_ahwndTranslate[i] == NULL)
+        if (s_ahwndTranslate[i] == hwndOld)
         {
-            s_ahwndTranslate[i] = hwnd;
-            return;
-        }
-    }
-}
-
-static __inline void FILEDLG95_RemoveTranslate(HWND hwnd)
-{
-    LONG i;
-    for (i = 0; i < MAX_TRANSLATE; ++i)
-    {
-        if (s_ahwndTranslate[i] == hwnd)
-        {
-            s_ahwndTranslate[i] = NULL;
+            s_ahwndTranslate[i] = hwndNew;
             return;
         }
     }
@@ -1517,7 +1504,7 @@ INT_PTR CALLBACK FileOpenDlgProc95(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
              s_hFileDialogHook = SetWindowsHookEx(WH_MSGFILTER, FILEDLG95_TranslateMsgProc,
                                                   0, GetCurrentThreadId());
          }
-         FILEDLG95_AddTranslate(hwnd);
+         FILEDLG95_AddRemoveTranslate(NULL, hwnd);
 #endif
          return 0;
        }
@@ -1558,7 +1545,7 @@ INT_PTR CALLBACK FileOpenDlgProc95(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
           }
 #ifdef __REACTOS__
           /* Disable hook and translate */
-          FILEDLG95_RemoveTranslate(hwnd);
+          FILEDLG95_AddRemoveTranslate(hwnd, NULL);
           if (InterlockedDecrement(&s_nFileDialogHookLock) == 0)
           {
               UnhookWindowsHookEx(s_hFileDialogHook);
