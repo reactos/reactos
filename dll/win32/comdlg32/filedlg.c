@@ -115,6 +115,7 @@ OpenFileMsgProc(INT nCode, WPARAM wParam, LPARAM lParam)
 {
     LPMSG pMsg;
     FileOpenDlgInfos *fodInfos;
+    DWORD tid1, tid2;
 
     if (nCode < 0)
         return CallNextHookEx(s_hFileDialogHook, nCode, wParam, lParam);
@@ -129,7 +130,12 @@ OpenFileMsgProc(INT nCode, WPARAM wParam, LPARAM lParam)
     pMsg = (LPMSG)lParam;
     if (WM_KEYFIRST <= pMsg->message && pMsg->message <= WM_KEYLAST)
     {
-        IShellView_TranslateAccelerator(fodInfos->Shell.FOIShellView, pMsg);
+        tid1 = GetWindowThreadProcessId(pMsg->hwnd, NULL);
+        tid2 = GetWindowThreadProcessId(s_hwndFileDialog, NULL);
+        if (tid1 == tid2)
+        {
+            IShellView_TranslateAccelerator(fodInfos->Shell.FOIShellView, pMsg);
+        }
     }
 
     return 0;
