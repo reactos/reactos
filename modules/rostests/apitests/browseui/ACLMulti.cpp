@@ -13,6 +13,7 @@
 #include <atlstr.h>
 #include <shlwapi_undoc.h>
 #include <shlguid_undoc.h>
+#include <shellutils.h>
 
 CComModule gModule;
 static CStringA s_strTest;
@@ -162,7 +163,7 @@ START_TEST(ACLMulti)
 
     CComPtr<IObjMgr> pManager;
     HRESULT hr = CoCreateInstance(CLSID_ACLMulti, NULL, CLSCTX_ALL,
-                                  IID_IObjMgr, (LPVOID *)&pManager);
+                                  IID_PPV_ARG(IObjMgr, &pManager));
     ok_hr(hr, S_OK);
     if (!pManager)
     {
@@ -171,7 +172,7 @@ START_TEST(ACLMulti)
     }
 
     CComPtr<IEnumString> pEnum;
-    hr = pManager->QueryInterface(IID_IEnumString, (LPVOID *)&pEnum);
+    hr = pManager->QueryInterface(IID_PPV_ARG(IEnumString, &pEnum));
     ok_hr(hr, S_OK);
     if (!pEnum)
     {
@@ -180,7 +181,7 @@ START_TEST(ACLMulti)
     }
 
     CComPtr<IACList> pACL;
-    hr = pManager->QueryInterface(IID_IACList, (LPVOID *)&pACL);
+    hr = pManager->QueryInterface(IID_PPV_ARG(IACList, &pACL));
     ok_hr(hr, S_OK);
     if (!pACL)
     {
