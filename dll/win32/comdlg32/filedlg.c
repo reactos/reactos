@@ -159,7 +159,6 @@ FILEDLG95_DoTranslate(LONG i, HWND hwndFocus, LPMSG pMsg)
         IShellView_TranslateAccelerator(fodInfos->Shell.FOIShellView, pMsg);
         return TRUE;
     }
-
     return FALSE;
 }
 
@@ -168,19 +167,17 @@ static LRESULT CALLBACK
 FILEDLG95_TranslateMsgProc(INT nCode, WPARAM wParam, LPARAM lParam)
 {
     LPMSG pMsg;
-    HWND hwndFocus;
-    LONG i;
 
     if (nCode < 0)
         return CallNextHookEx(s_hFileDialogHook, nCode, wParam, lParam);
-
     if (nCode != MSGF_DIALOGBOX)
         return 0;
 
     pMsg = (LPMSG)lParam;
     if (WM_KEYFIRST <= pMsg->message && pMsg->message <= WM_KEYLAST)
     {
-        hwndFocus = GetFocus();
+        LONG i;
+        HWND hwndFocus = GetFocus();
         for (i = 0; i < MAX_TRANSLATE; ++i)
         {
             if (FILEDLG95_DoTranslate(i, hwndFocus, pMsg))
