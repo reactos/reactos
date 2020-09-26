@@ -111,16 +111,13 @@ typedef struct tagLookInInfo
    key bindings of File Open Dialog. We use hook to realize them. */
 static HHOOK s_hFileDialogHook = NULL;
 static LONG s_nFileDialogHookCount = 0;
-static CRITICAL_SECTION s_csFileDialogHookLock;
 
 #define MAX_TRANSLATE 8
 static HWND s_ahwndTranslate[MAX_TRANSLATE] = { NULL };
 
-static __inline void FILEDLG95_AddRemoveTranslate(HWND hwndOld, HWND hwndNew)
+static void FILEDLG95_AddRemoveTranslate(HWND hwndOld, HWND hwndNew)
 {
     LONG i;
-
-    EnterCriticalSection(&s_csFileDialogHookLock);
     for (i = 0; i < MAX_TRANSLATE; ++i)
     {
         if (s_ahwndTranslate[i] == hwndOld)
@@ -129,7 +126,6 @@ static __inline void FILEDLG95_AddRemoveTranslate(HWND hwndOld, HWND hwndNew)
             break;
         }
     }
-    LeaveCriticalSection(&s_csFileDialogHookLock);
 }
 
 static __inline BOOL
@@ -169,13 +165,13 @@ FILEDLG95_TranslateMsgProc(INT nCode, WPARAM wParam, LPARAM lParam)
     {
         LONG i;
         HWND hwndFocus = GetFocus();
-        EnterCriticalSection(&s_csFileDialogHookLock);
+        EnterCriticalSection(&COMDLG32_OpenFileLock);
         for (i = 0; i < MAX_TRANSLATE; ++i)
         {
             if (FILEDLG95_DoTranslate(i, hwndFocus, pMsg))
                 break;
         }
-        LeaveCriticalSection(&s_csFileDialogHookLock);
+        LeaveCriticalSection(&COMDLG32_OpenFileLock);
     }
 
     return 0;
@@ -1505,13 +1501,14 @@ INT_PTR CALLBACK FileOpenDlgProc95(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
 
 #ifdef __REACTOS__
          /* Enable hook and translate */
-         if (InterlockedIncrement(&s_nFileDialogHookCount) == 1)
+         EnterCriticalSection(&COMDLG32_OpenFileLock);
+         if (++s_nFileDialogHookCount == 1)
          {
-             InitializeCriticalSection(&s_csFileDialogHookLock);
              s_hFileDialogHook = SetWindowsHookEx(WH_MSGFILTER, FILEDLG95_TranslateMsgProc,
                                                   0, GetCurrentThreadId());
          }
          FILEDLG95_AddRemoveTranslate(NULL, hwnd);
+         LeaveCriticalSection(&COMDLG32_OpenFileLock);
 #endif
          return 0;
        }
@@ -1552,13 +1549,14 @@ INT_PTR CALLBACK FileOpenDlgProc95(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
           }
 #ifdef __REACTOS__
           /* Disable hook and translate */
+          EnterCriticalSection(&COMDLG32_OpenFileLock);
           FILEDLG95_AddRemoveTranslate(hwnd, NULL);
-          if (InterlockedDecrement(&s_nFileDialogHookCount) == 0)
+          if (--s_nFileDialogHookCount == 0)
           {
-              DeleteCriticalSection(&s_csFileDialogHookLock);
               UnhookWindowsHookEx(s_hFileDialogHook);
               s_hFileDialogHook = NULL;
           }
+          LeaveCriticalSection(&COMDLG32_OpenFileLock);
 #endif
           return FALSE;
       }
