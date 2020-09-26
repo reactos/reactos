@@ -10,8 +10,8 @@ include_directories(
     includes)
 
 list(APPEND SOURCE
-	ACLMulti.cpp
     ACListISF.cpp
+    ACLMulti.cpp
     IACLCustomMRU.cpp
     SHEnumClassesOfCategories.cpp
     SHExplorerParseCmdLine.c
