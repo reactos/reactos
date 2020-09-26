@@ -2400,8 +2400,11 @@ AUDIO_SERVICE_DESCRIPTION="Zapewnia aplikacjom dostęp do urządzeń audio."
 BITS_SERVICE="Usługa inteligentnego transferu w tle"
 BITS_SERVICE_DESCRIPTION="Przenosi dane pomiędzy klientami a serwerami w tle."
 
-DCOMLAUNCH_SERVICE="DcomLaunch service"
-DCOMLAUNCH_SERVICE_DESCRIPTION="DcomLaunch service stub."
+BROWSER_SERVICE="Przeglądarka komputera"
+BROWSER_SERVICE_DESCRIPTION="Utrzymuje aktualną listę komputerów w sieci i dostarcza ją do komputerów wyznaczonych jako przeglądarki."
+
+DCOMLAUNCH_SERVICE="Usługa DcomLaunch"
+DCOMLAUNCH_SERVICE_DESCRIPTION="Namiastka usługi DcomLaunch"
 
 EVENTLOG_SERVICE="Dziennik zdarzeń"
 EVENTLOG_SERVICE_DESCRIPTION="Zapisuje zdarzenia lub wiadomości wysyłane przez system operacyjny do bazy danych dostępnej za pomocą podglądu zdarzeń."
@@ -2418,8 +2421,8 @@ PLUGPLAY_SERVICE_DESCRIPTION="Wykrywa zmiany w sprzęcie i instaluje potrzebne o
 RPCSS_SERVICE="Zdalne wykonywanie procedur"
 RPCSS_SERVICE_DESCRIPTION="Podsystem RPC, który jest odpowiedzialny za zdalne wykonywanie procedur na tym komputerze."
 
-SAMSS_SERVICE="Security Accounts Manager"
-SAMSS_SERVICE_DESCRIPTION="The startup of this service signals other services that the Security Accounts Manager (SAM) is ready to accept requests.  Disabling this service will prevent other services in the system from being notified when the SAM is ready, which may in turn cause those services to fail to start correctly.  This service should not be disabled."
+SAMSS_SERVICE="Menedżer kont zabezpieczeń"
+SAMSS_SERVICE_DESCRIPTION="Uruchomienie tej usługi informuje inne usługi, że Menedżer kont zabezpieczeń jest gotowy do akceptowania żądań. Wyłączenie tej usługi spowoduje, że inne usługi w systemie nie będą powiadamiane o gotowości Menedżera kont zabezpieczeń, przez co te usługi mogą być uruchamiane nieprawidłowo. Tej usługi nie należy wyłączać."
 
 SCHEDULE_SERVICE="Usługa Harmonogram"
 SCHEDULE_SERVICE_DESCRIPTION="Umożliwia uruchamianie programów w określonym czasie."

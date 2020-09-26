@@ -42,6 +42,9 @@ IDI_HOTPLUG ICON "resources/1.ico"
 #ifdef LANGUAGE_JA_JP
     #include "lang/ja-JP.rc"
 #endif
+#ifdef LANGUAGE_PL_PL
+    #include "lang/pl-PL.rc"
+#endif
 #ifdef LANGUAGE_PT_PT
     #include "lang/pt-PT.rc"
 #endif
