@@ -132,6 +132,7 @@ static __inline BOOL
 FILEDLG95_DoTranslate(LONG i, HWND hwndFocus, LPMSG pMsg)
 {
     FileOpenDlgInfos *fodInfos;
+    HWND hwndView;
 
     if (s_ahwndTranslate[i] == NULL)
         return FALSE;
@@ -140,8 +141,8 @@ FILEDLG95_DoTranslate(LONG i, HWND hwndFocus, LPMSG pMsg)
     if (fodInfos == NULL)
         return FALSE;
 
-    if (fodInfos->ShellInfos.hwndView == hwndFocus ||
-        IsChild(fodInfos->ShellInfos.hwndView, hwndFocus))
+    hwndView = fodInfos->ShellInfos.hwndView;
+    if (hwndView == hwndFocus || IsChild(hwndView, hwndFocus))
     {
         IShellView_TranslateAccelerator(fodInfos->Shell.FOIShellView, pMsg);
         return TRUE;
