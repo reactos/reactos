@@ -114,8 +114,8 @@ static LRESULT CALLBACK
 OpenFileMsgProc(INT nCode, WPARAM wParam, LPARAM lParam)
 {
     LPMSG pMsg;
+    HWND hwndFocus;
     FileOpenDlgInfos *fodInfos;
-    DWORD tid1, tid2;
 
     if (nCode < 0)
         return CallNextHookEx(s_hFileDialogHook, nCode, wParam, lParam);
@@ -130,9 +130,9 @@ OpenFileMsgProc(INT nCode, WPARAM wParam, LPARAM lParam)
     pMsg = (LPMSG)lParam;
     if (WM_KEYFIRST <= pMsg->message && pMsg->message <= WM_KEYLAST)
     {
-        tid1 = GetWindowThreadProcessId(pMsg->hwnd, NULL);
-        tid2 = GetWindowThreadProcessId(s_hwndFileDialog, NULL);
-        if (tid1 == tid2)
+        hwndFocus = GetFocus();
+        if (fodInfos->ShellInfos.hwndView == hwndFocus ||
+            IsChild(fodInfos->ShellInfos.hwndView, hwndFocus))
         {
             IShellView_TranslateAccelerator(fodInfos->Shell.FOIShellView, pMsg);
         }
