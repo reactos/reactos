@@ -18,9 +18,15 @@
 CComModule gModule;
 static CStringA s_strTest;
 
+#define USE_ENUM_AC_STRING
+
 class CEnumString :
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
+#ifdef USE_ENUM_AC_STRING
+    public IEnumACString,
+#else
     public IEnumString,
+#endif
     public IACList2
 {
 public:
@@ -49,6 +55,9 @@ public:
         COM_INTERFACE_ENTRY_IID(IID_IEnumString, IEnumString)
         COM_INTERFACE_ENTRY_IID(IID_IACList2, IACList2)
         COM_INTERFACE_ENTRY_IID(IID_IACList, IACList)
+#ifdef USE_ENUM_AC_STRING
+        COM_INTERFACE_ENTRY_IID(IID_IEnumACString, IEnumACString)
+#endif
     END_COM_MAP()
 
     // IEnumString
@@ -114,6 +123,34 @@ public:
         *pdwFlags = 0;
         return S_OK;
     }
+
+#ifdef USE_ENUM_AC_STRING
+    // IEnumACString
+    STDMETHODIMP NextItem(LPWSTR pszUrl, ULONG cchMax, ULONG *pulSortIndex)
+    {
+        Log('M');
+        if (m_i < m_c)
+        {
+            ++m_i;
+            lstrcpynW(pszUrl, L"TEST", cchMax);
+            *pulSortIndex = m_i;
+            return S_OK;
+        }
+        return S_FALSE;
+    }
+    STDMETHODIMP SetEnumOptions(DWORD dwOptions)
+    {
+        Log('P');
+        trace("SetEnumOptions(0x%lX)\n", dwOptions);
+        return S_OK;
+    }
+    STDMETHODIMP GetEnumOptions(DWORD *pdwOptions)
+    {
+        Log('p');
+        *pdwOptions = 0;
+        return S_OK;
+    }
+#endif
 
     IUnknown *GetUnknown()
     {
