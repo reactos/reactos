@@ -182,7 +182,7 @@ START_TEST(ACLMulti)
     CComPtr<IACList> pACL;
     hr = pManager->QueryInterface(IID_IACList, (LPVOID *)&pACL);
     ok_hr(hr, S_OK);
-    if (!pEnum)
+    if (!pACL)
     {
         skip("QueryInterface failed\n");
         return;
