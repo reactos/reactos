@@ -1514,7 +1514,7 @@ INT_PTR CALLBACK FileOpenDlgProc95(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
              SendCustomDlgNotificationMessage(hwnd,CDN_SELCHANGE);
 
 #ifdef __REACTOS__
-         /* Enable hook */
+         /* Enable hook and translate */
          if (InterlockedIncrement(&s_nFileDialogHookLock) == 1)
          {
              s_hFileDialogHook = SetWindowsHookEx(WH_MSGFILTER, FILEDLG95_TranslateMsgProc,
@@ -1560,13 +1560,13 @@ INT_PTR CALLBACK FileOpenDlgProc95(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
               ImageList_Destroy(himl);
           }
 #ifdef __REACTOS__
-          /* Disable hook */
+          /* Disable hook and translate */
+          FILEDLG95_RemoveTranslate(hwnd);
           if (InterlockedDecrement(&s_nFileDialogHookLock) == 0)
           {
               UnhookWindowsHookEx(s_hFileDialogHook);
               s_hFileDialogHook = NULL;
           }
-          FILEDLG95_RemoveTranslate(hwnd);
 #endif
           return FALSE;
       }
