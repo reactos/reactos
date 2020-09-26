@@ -12,26 +12,39 @@
 #include <atlcom.h>
 #include <atlstr.h>
 #include <shlwapi_undoc.h>
+#include <shlguid_undoc.h>
 
 CComModule gModule;
-static CStringA *s_pstrTest = NULL;
+static CStringA s_strTest;
 
-class CEnumString1 :
+class CEnumString :
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
     public IEnumString,
     public IACList2
 {
 public:
     INT m_i, m_c;
+    char m_ch;
 
-    CEnumString1() : m_i(0), m_c(2)
+    CEnumString()
     {
     }
-    virtual ~CEnumString1()
+    virtual ~CEnumString()
     {
     }
+    void Initialize(INT c, char ch)
+    {
+        m_i = 0;
+        m_c = c;
+        m_ch = ch;
+    }
+    void Log(char ch)
+    {
+        s_strTest += ch;
+        s_strTest += m_ch;
+    }
 
-    BEGIN_COM_MAP(CEnumString1)
+    BEGIN_COM_MAP(CEnumString)
         COM_INTERFACE_ENTRY_IID(IID_IEnumString, IEnumString)
         COM_INTERFACE_ENTRY_IID(IID_IACList2, IACList2)
         COM_INTERFACE_ENTRY_IID(IID_IACList, IACList)
@@ -40,7 +53,7 @@ public:
     // IEnumString
     STDMETHODIMP Next(ULONG celt, LPOLESTR *rgelt, ULONG *pceltFetched)
     {
-        *s_pstrTest += 'n';
+        Log('N');
 
         *rgelt = NULL;
         *pceltFetched = 0;
@@ -58,7 +71,7 @@ public:
     }
     STDMETHODIMP Skip(ULONG celt)
     {
-        *s_pstrTest += 's';
+        Log('S');
         if (m_i < m_c)
         {
             ++m_i;
@@ -68,123 +81,65 @@ public:
     }
     STDMETHODIMP Reset()
     {
-        *s_pstrTest += 'r';
+        Log('R');
         m_i = 0;
         return S_OK;
     }
     STDMETHODIMP Clone(IEnumString **ppenum)
     {
-        *s_pstrTest += 'c';
+        Log('C');
         return E_NOTIMPL;
     }
 
     // IACList
     STDMETHODIMP Expand(LPCOLESTR pszExpand)
     {
+        Log('E');
         CHAR szText[64];
         SHUnicodeToAnsi(pszExpand, szText, _countof(szText));
-        trace("CEnumString1::Expand: %s\n", szText);
-        *s_pstrTest += 'e';
+        trace("CEnumString::Expand: %s\n", szText);
         return S_OK;
     }
 
     // IACList2
     STDMETHODIMP SetOptions(DWORD dwFlags)
     {
-        *s_pstrTest += 'o';
+        Log('O');
         return S_OK;
     }
     STDMETHODIMP GetOptions(DWORD* pdwFlags)
     {
-        *s_pstrTest += 'g';
+        Log('G');
         *pdwFlags = 0;
         return S_OK;
+    }
+
+    IUnknown *GetUnknown()
+    {
+        return static_cast<IACList *>(this);
     }
 };
 
-class CEnumString2 :
-    public CComObjectRootEx<CComMultiThreadModelNoCS>,
-    public IEnumString,
-    public IACList2
+template <typename T_BASE>
+struct CRefWatch : public T_BASE
 {
-public:
-    INT m_i, m_c;
-
-    CEnumString2() : m_i(0), m_c(2)
+    STDMETHODIMP QueryInterface(REFIID iid, void **ppv)
     {
-    }
-    virtual ~CEnumString2()
-    {
-    }
-
-    BEGIN_COM_MAP(CEnumString1)
-        COM_INTERFACE_ENTRY_IID(IID_IEnumString, IEnumString)
-        COM_INTERFACE_ENTRY_IID(IID_IACList2, IACList2)
-        COM_INTERFACE_ENTRY_IID(IID_IACList, IACList)
-    END_COM_MAP()
-
-    // IEnumString
-    STDMETHODIMP Next(ULONG celt, LPOLESTR *rgelt, ULONG *pceltFetched)
-    {
-        *s_pstrTest += 'N';
-
-        *rgelt = NULL;
-        *pceltFetched = 0;
-
-        if (m_i < m_c)
-        {
-            ++m_i;
-            *rgelt = (LPOLESTR)CoTaskMemAlloc((4 + 1) * sizeof(WCHAR));
-            lstrcpyW(*rgelt, L"TEST");
-            *pceltFetched = 1;
-            return S_OK;
-        }
-
-        return S_FALSE;
-    }
-    STDMETHODIMP Skip(ULONG celt)
-    {
-        *s_pstrTest += 'S';
-        if (m_i < m_c)
-        {
-            ++m_i;
-            return S_OK;
-        }
-        return S_FALSE;
-    }
-    STDMETHODIMP Reset()
-    {
-        *s_pstrTest += 'R';
-        m_i = 0;
-        return S_OK;
-    }
-    STDMETHODIMP Clone(IEnumString **ppenum)
-    {
-        *s_pstrTest += 'C';
-        return E_NOTIMPL;
-    }
-
-    // IACList
-    STDMETHODIMP Expand(LPCOLESTR pszExpand)
-    {
-        CHAR szText[64];
-        SHUnicodeToAnsi(pszExpand, szText, _countof(szText));
-        trace("CEnumString2::Expand: %s\n", szText);
-        *s_pstrTest += 'E';
-        return S_OK;
-    }
-
-    // IACList2
-    STDMETHODIMP SetOptions(DWORD dwFlags)
-    {
-        *s_pstrTest += 'O';
-        return S_OK;
-    }
-    STDMETHODIMP GetOptions(DWORD* pdwFlags)
-    {
-        *s_pstrTest += 'G';
-        *pdwFlags = 0;
-        return S_OK;
+        if (iid == IID_IEnumString)
+            T_BASE::Log('m');
+        else if (iid == IID_IACList2)
+            T_BASE::Log('i');
+        else if (iid == IID_IACList)
+            T_BASE::Log('s');
+        else if (iid == IID_IUnknown)
+            T_BASE::Log('u');
+        else if (iid == IID_IACLCustomMRU)
+            T_BASE::Log('r');
+        else if (iid == IID_IEnumACString)
+            T_BASE::Log('a');
+        else
+            T_BASE::Log('*');
+        return T_BASE::QueryInterface(iid, ppv);
     }
 };
 
@@ -204,8 +159,6 @@ START_TEST(ACLMulti)
         skip("CCoInit failed\n");
         return;
     }
-
-    s_pstrTest = new CStringA();
 
     CComPtr<IObjMgr> pManager;
     HRESULT hr = CoCreateInstance(CLSID_ACLMulti, NULL, CLSCTX_ALL,
@@ -235,19 +188,24 @@ START_TEST(ACLMulti)
         return;
     }
 
-    CComPtr<IEnumString> p1(new CComObject<CEnumString1>());
-    hr = pManager->Append(p1);
+    CComPtr<CEnumString> p1(new CRefWatch<CComObject<CEnumString> >());
+    p1->Initialize(2, '1');
+    hr = pManager->Append(p1->GetUnknown());
     ok_hr(hr, S_OK);
 
-    CComPtr<IEnumString> p2(new CComObject<CEnumString2>());
-    hr = pManager->Append(p2);
+    s_strTest += '|';
+
+    CComPtr<CEnumString> p2(new CRefWatch<CComObject<CEnumString> >());
+    p2->Initialize(3, '2');
+    hr = pManager->Append(p2->GetUnknown());
     ok_hr(hr, S_OK);
+
+    s_strTest += '|';
 
     hr = pEnum->Reset();
     ok_hr(hr, S_OK);
 
-    hr = pACL->Expand(L"C:\\");
-    ok_hr(hr, S_OK);
+    s_strTest += '|';
 
     LPOLESTR psz;
     ULONG c;
@@ -281,11 +239,13 @@ START_TEST(ACLMulti)
 
     psz = NULL;
     hr = pEnum->Next(1, &psz, &c);
-    ok_hr(hr, S_FALSE);
-    ok_int(c, 0);
+    ok_hr(hr, S_OK);
+    ok_int(c, 1);
     CoTaskMemFree(psz);
 
+    s_strTest += '|';
     pEnum->Reset();
+    s_strTest += '|';
 
     psz = NULL;
     hr = pEnum->Next(2, &psz, &c);
@@ -311,6 +271,5 @@ START_TEST(ACLMulti)
     ok_int(c, 1);
     CoTaskMemFree(psz);
 
-    ok_str(s_pstrTest->GetString(), "rReEnnnNNNrRnnnN");
-    delete s_pstrTest;
+    ok_str((LPCSTR)s_strTest, "m1a1s1|m2a2s2|R1R2|N1N1N1N2N2N2|R1R2|N1N1N1N2");
 }
