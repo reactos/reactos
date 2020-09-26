@@ -1514,7 +1514,7 @@ INT_PTR CALLBACK FileOpenDlgProc95(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
              SendCustomDlgNotificationMessage(hwnd,CDN_SELCHANGE);
 
 #ifdef __REACTOS__
-             /* Enable hook */
+         /* Enable hook */
          if (InterlockedIncrement(&s_nFileDialogHookLock) == 1)
          {
              s_hFileDialogHook = SetWindowsHookEx(WH_MSGFILTER, FILEDLG95_TranslateMsgProc,
