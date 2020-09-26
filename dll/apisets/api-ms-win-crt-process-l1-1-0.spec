@@ -11,7 +11,8 @@
 @ stdcall _execve() msvcrt._execve
 @ stdcall _execvp() msvcrt._execvp
 @ stdcall _execvpe() msvcrt._execvpe
-@ stdcall _loaddll() msvcrt._loaddll
+@ cdecl -arch=i386 _loaddll() msvcrt._loaddll
+@ cdecl -arch=x86_64 -version=0x502 _loaddll() msvcrt._loaddll
 @ stdcall _spawnl() msvcrt._spawnl
 @ stdcall _spawnle() msvcrt._spawnle
 @ stdcall _spawnlp() msvcrt._spawnlp
@@ -20,7 +21,8 @@
 @ stdcall _spawnve() msvcrt._spawnve
 @ stdcall _spawnvp() msvcrt._spawnvp
 @ stdcall _spawnvpe() msvcrt._spawnvpe
-@ stdcall _unloaddll() msvcrt._unloaddll
+@ cdecl -arch=i386 _unloaddll() msvcrt._unloaddll
+@ cdecl -arch=x86_64 -version=0x502 _unloaddll() msvcrt._unloaddll
 @ stdcall _wexecl() msvcrt._wexecl
 @ stdcall _wexecle() msvcrt._wexecle
 @ stdcall _wexeclp() msvcrt._wexeclp
