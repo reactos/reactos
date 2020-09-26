@@ -8,23 +8,26 @@
 @ stub _GetImageBase
 @ stub _GetThrowImageBase
 @ stub _IsExceptionObjectToBeDestroyed
-@ stub _NLG_Dispatch2
-@ stub _NLG_Return
-@ stub _NLG_Return2
+@ stub -arch=i386 _NLG_Dispatch2
+@ stub -arch=i386 _NLG_Return
+@ stub -arch=i386 _NLG_Return2
 @ stub _SetImageBase
 @ stub _SetThrowImageBase
 @ stub _SetWinRTOutOfMemoryExceptionCallback
 @ stub __AdjustPointer
 @ stub __BuildCatchObject
 @ stub __BuildCatchObjectHelper
-@ stdcall -arch=x86_64,arm __C_specific_handler() msvcrt.__C_specific_handler
+@ cdecl -arch=x86_64,arm __C_specific_handler() msvcrt.__C_specific_handler
+@ stub -arch=x86_64,arm __C_specific_handler_noexcept
 @ stdcall -arch=i386 __CxxDetectRethrow() msvcrt.__CxxDetectRethrow
 @ stub __CxxExceptionFilter
-@ stdcall -arch=i386,x86_64 __CxxFrameHandler() msvcrt.__CxxFrameHandler
-@ stdcall -arch=i386 __CxxFrameHandler2() msvcrt.__CxxFrameHandler2
-@ stdcall -arch=arm __CxxFrameHandler3() msvcrt.__CxxFrameHandler3
+@ cdecl -arch=i386,x86_64 __CxxFrameHandler() msvcrt.__CxxFrameHandler
+@ cdecl -arch=i386 __CxxFrameHandler2() msvcrt.__CxxFrameHandler2
+@ cdecl -version=0x600+ -arch=x86_64 __CxxFrameHandler2() msvcrt.__CxxFrameHandler2
+@ cdecl -arch=arm __CxxFrameHandler3() msvcrt.__CxxFrameHandler3
+#@ cdecl -version=0x600+ -arch=i386,x86_64 __CxxFrameHandler3() msvcrt.__CxxFrameHandler3
 @ stdcall -arch=i386 __CxxLongjmpUnwind() msvcrt.__CxxLongjmpUnwind
-@ stdcall -arch=i386 __CxxQueryExceptionSize() msvcrt.__CxxQueryExceptionSize
+@ stdcall -arch=i386 __CxxQueryExceptionSize() msvcrt.__CxxQueryExceptionSize # should be x64, too
 @ stub __CxxRegisterExceptionObject
 @ stub __CxxUnregisterExceptionObject
 @ cdecl __DestructExceptionObject() msvcrt.__DestructExceptionObject
@@ -40,13 +43,14 @@
 @ stub __current_exception_context
 @ stub __dcrt_get_wide_environment_from_os
 @ stub __dcrt_initial_narrow_environment
-@ stub __intrinsic_abnormal_termination
+@ stub -arch=i386 __intrinsic_abnormal_termination
 @ stub __intrinsic_setjmp
 @ stub __intrinsic_setjmpex
 @ stub __processing_throw
 @ stub __report_gsfailure
 @ stub __std_exception_copy
 @ stub __std_exception_destroy
+@ stub -arch=x86_64 __std_terminate
 @ stub __std_type_info_compare
 @ stub __std_type_info_destroy_list
 @ stub __std_type_info_hash
@@ -54,34 +58,35 @@
 @ stdcall __unDName() msvcrt.__unDName
 @ stdcall __unDNameEx() msvcrt.__unDNameEx
 @ stdcall -arch=i386,x86_64,arm __uncaught_exception() msvcrt.__uncaught_exception
+@ stub -arch=x86_64 __uncaught_exceptions
 @ stdcall -arch=i386 _chkesp() msvcrt._chkesp
-@ stdcall -arch=i386 _except_handler2() msvcrt._except_handler2
-@ stdcall -arch=i386 _except_handler3() msvcrt._except_handler3
-@ stdcall -version=0x600+ _except_handler4_common()  msvcrt._except_handler4_common
+@ cdecl -arch=i386 _except_handler2() msvcrt._except_handler2
+@ cdecl -arch=i386 _except_handler3() msvcrt._except_handler3
+@ stdcall -version=0x600+ -arch=i386 _except_handler4_common() msvcrt._except_handler4_common
 @ stub _get_purecall_handler
 @ stub _get_unexpected
 @ stdcall -arch=i386 _global_unwind2() msvcrt._global_unwind2
 @ stub _is_exception_typeof
 @ stdcall -arch=x86_64 _local_unwind() kernel32._local_unwind
 @ stdcall -arch=i386 _local_unwind2() msvcrt._local_unwind2
-@ stdcall -version=0x600+ _local_unwind4() msvcrt._local_unwind4
+@ stdcall -version=0x600+ -arch=i386 _local_unwind4() msvcrt._local_unwind4
 @ stdcall -arch=i386 _longjmpex() msvcrt._longjmpex
-@ stub _o__CIacos
-@ stub _o__CIasin
-@ stub _o__CIatan
-@ stub _o__CIatan2
-@ stub _o__CIcos
-@ stub _o__CIcosh
-@ stub _o__CIexp
-@ stub _o__CIfmod
-@ stub _o__CIlog
-@ stub _o__CIlog10
-@ stub _o__CIpow
-@ stub _o__CIsin
-@ stub _o__CIsinh
-@ stub _o__CIsqrt
-@ stub _o__CItan
-@ stub _o__CItanh
+@ stub -arch=i386 _o__CIacos
+@ stub -arch=i386 _o__CIasin
+@ stub -arch=i386 _o__CIatan
+@ stub -arch=i386 _o__CIatan2
+@ stub -arch=i386 _o__CIcos
+@ stub -arch=i386 _o__CIcosh
+@ stub -arch=i386 _o__CIexp
+@ stub -arch=i386 _o__CIfmod
+@ stub -arch=i386 _o__CIlog
+@ stub -arch=i386 _o__CIlog10
+@ stub -arch=i386 _o__CIpow
+@ stub -arch=i386 _o__CIsin
+@ stub -arch=i386 _o__CIsinh
+@ stub -arch=i386 _o__CIsqrt
+@ stub -arch=i386 _o__CItan
+@ stub -arch=i386 _o__CItanh
 @ stub _o__Getdays
 @ stub _o__Getmonths
 @ stub _o__Gettnames
@@ -90,6 +95,10 @@
 @ stub _o__W_Getmonths
 @ stub _o__W_Gettnames
 @ stub _o__Wcsftime
+@ stub -arch=x86_64 _o____lc_codepage_func
+@ stub -arch=x86_64 _o____lc_collate_cp_func
+@ stub -arch=x86_64 _o____lc_locale_name_func
+@ stub -arch=x86_64 _o____mb_cur_max_func
 @ stub _o___acrt_iob_func
 @ stub _o___conio_common_vcprintf
 @ stub _o___conio_common_vcprintf_p
@@ -102,27 +111,27 @@
 @ stub _o___daylight
 @ stub _o___dstbias
 @ stub _o___fpe_flt_rounds
-@ stub _o___libm_sse2_acos
-@ stub _o___libm_sse2_acosf
-@ stub _o___libm_sse2_asin
-@ stub _o___libm_sse2_asinf
-@ stub _o___libm_sse2_atan
-@ stub _o___libm_sse2_atan2
-@ stub _o___libm_sse2_atanf
-@ stub _o___libm_sse2_cos
-@ stub _o___libm_sse2_cosf
-@ stub _o___libm_sse2_exp
-@ stub _o___libm_sse2_expf
-@ stub _o___libm_sse2_log
-@ stub _o___libm_sse2_log10
-@ stub _o___libm_sse2_log10f
-@ stub _o___libm_sse2_logf
-@ stub _o___libm_sse2_pow
-@ stub _o___libm_sse2_powf
-@ stub _o___libm_sse2_sin
-@ stub _o___libm_sse2_sinf
-@ stub _o___libm_sse2_tan
-@ stub _o___libm_sse2_tanf
+@ stub -arch=i386 _o___libm_sse2_acos
+@ stub -arch=i386 _o___libm_sse2_acosf
+@ stub -arch=i386 _o___libm_sse2_asin
+@ stub -arch=i386 _o___libm_sse2_asinf
+@ stub -arch=i386 _o___libm_sse2_atan
+@ stub -arch=i386 _o___libm_sse2_atan2
+@ stub -arch=i386 _o___libm_sse2_atanf
+@ stub -arch=i386 _o___libm_sse2_cos
+@ stub -arch=i386 _o___libm_sse2_cosf
+@ stub -arch=i386 _o___libm_sse2_exp
+@ stub -arch=i386 _o___libm_sse2_expf
+@ stub -arch=i386 _o___libm_sse2_log
+@ stub -arch=i386 _o___libm_sse2_log10
+@ stub -arch=i386 _o___libm_sse2_log10f
+@ stub -arch=i386 _o___libm_sse2_logf
+@ stub -arch=i386 _o___libm_sse2_pow
+@ stub -arch=i386 _o___libm_sse2_powf
+@ stub -arch=i386 _o___libm_sse2_sin
+@ stub -arch=i386 _o___libm_sse2_sinf
+@ stub -arch=i386 _o___libm_sse2_tan
+@ stub -arch=i386 _o___libm_sse2_tanf
 @ stub _o___p___argc
 @ stub _o___p___argv
 @ stub _o___p___wargv
@@ -138,6 +147,10 @@
 @ stub _o___p__wpgmptr
 @ stub _o___pctype_func
 @ stub _o___pwctype_func
+@ stub -arch=x86_64 _o___std_exception_copy
+@ stub -arch=x86_64 _o___std_exception_destroy
+@ stub -arch=x86_64 _o___std_type_info_destroy_list
+@ stub -arch=x86_64 _o___std_type_info_name
 @ stub _o___stdio_common_vfprintf
 @ stub _o___stdio_common_vfprintf_p
 @ stub _o___stdio_common_vfprintf_s
@@ -187,6 +200,7 @@
 @ stub _o__cabs
 @ stub _o__callnewh
 @ stub _o__calloc_base
+@ stub -arch=x86_64 _o__cexit
 @ stub _o__cgets
 @ stub _o__cgets_s
 @ stub _o__cgetws
@@ -198,11 +212,15 @@
 @ stub _o__chsize_s
 @ stub _o__close
 @ stub _o__commit
+@ stub -arch=x86_64 _o__configthreadlocale
+@ stub -arch=x86_64 _o__configure_narrow_argv
 @ stub _o__configure_wide_argv
+@ stub -arch=x86_64 _o__controlfp_s
 @ stub _o__cputs
 @ stub _o__cputws
 @ stub _o__creat
 @ stub _o__create_locale
+@ stub -arch=x86_64 _o__crt_atexit
 @ stub _o__ctime32_s
 @ stub _o__ctime64_s
 @ stub _o__cwait
@@ -234,6 +252,7 @@
 @ stub _o__execve
 @ stub _o__execvp
 @ stub _o__execvpe
+@ stub -arch=x86_64 _o__exit
 @ stub _o__expand
 @ stub _o__fclose_nolock
 @ stub _o__fcloseall
@@ -304,6 +323,8 @@
 @ stub _o__get_errno
 @ stub _o__get_fmode
 @ stub _o__get_heap_handle
+@ stub -arch=x86_64 _o__get_initial_narrow_environment
+@ stub -arch=x86_64 _o__get_initial_wide_environment
 @ stub _o__get_invalid_parameter_handler
 @ stub _o__get_narrow_winmain_command_line
 @ stub _o__get_osfhandle
