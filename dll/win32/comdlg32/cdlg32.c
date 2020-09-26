@@ -80,7 +80,7 @@ BOOL WINAPI DllMain(HINSTANCE hInstance, DWORD Reason, LPVOID Reserved)
 
 		SHELL32_hInstance = GetModuleHandleA("SHELL32.DLL");
 #ifdef __REACTOS__
-        InitializeCriticalSection(&COMDLG32_OpenFileLock);
+		InitializeCriticalSection(&COMDLG32_OpenFileLock);
 #endif
 
 		/* SHELL */
