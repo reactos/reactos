@@ -106,6 +106,35 @@ typedef struct tagLookInInfo
   UINT uSelectedItem;
 } LookInInfos;
 
+#ifdef __REACTOS__
+static HWND s_hwndFileDialog = NULL;
+static HHOOK s_hFileDialogHook = NULL;
+
+static LRESULT CALLBACK
+OpenFileMsgProc(INT nCode, WPARAM wParam, LPARAM lParam)
+{
+    LPMSG pMsg;
+    FileOpenDlgInfos *fodInfos;
+
+    if (nCode < 0)
+        return CallNextHookEx(s_hFileDialogHook, nCode, wParam, lParam);
+
+    if (nCode != MSGF_DIALOGBOX || s_hwndFileDialog == NULL)
+        return 0;
+
+    fodInfos = get_filedlg_infoptr(s_hwndFileDialog);
+    if (fodInfos == NULL)
+        return 0;
+
+    pMsg = (LPMSG)lParam;
+    if (WM_KEYFIRST <= pMsg->message && pMsg->message <= WM_KEYLAST)
+    {
+        IShellView_TranslateAccelerator(fodInfos->Shell.FOIShellView, pMsg);
+    }
+
+    return 0;
+}
+#endif
 
 /***********************************************************************
  * Defines and global variables
@@ -1428,6 +1457,14 @@ INT_PTR CALLBACK FileOpenDlgProc95(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
          if(fodInfos->ofnInfos->Flags & OFN_EXPLORER)
              SendCustomDlgNotificationMessage(hwnd,CDN_SELCHANGE);
 
+#ifdef __REACTOS__
+         if (s_hFileDialogHook == NULL)
+         {
+             s_hwndFileDialog = hwnd;
+             s_hFileDialogHook = SetWindowsHookEx(WH_MSGFILTER, OpenFileMsgProc, 0,
+                                                  GetCurrentThreadId());
+         }
+#endif
          return 0;
        }
     case WM_SIZE:
@@ -1465,6 +1502,11 @@ INT_PTR CALLBACK FileOpenDlgProc95(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
               SendDlgItemMessageW(hwnd, IDC_TOOLBARPLACES, TB_SETIMAGELIST, 0, 0);
               ImageList_Destroy(himl);
           }
+#ifdef __REACTOS__
+          UnhookWindowsHookEx(s_hFileDialogHook);
+          s_hFileDialogHook = NULL;
+          s_hwndFileDialog = NULL;
+#endif
           return FALSE;
       }
 
