@@ -9,14 +9,8 @@
 #include <apitest.h>
 #include <shlobj.h>
 #include <atlbase.h>
-#include <tchar.h>
 #include <atlcom.h>
-#include <atlwin.h>
 #include <atlstr.h>
-#include <stdio.h>
-#include <shellutils.h>
-#include <shlwapi.h>
-#include <strsafe.h>
 
 CComModule gModule;
 static CStringA *s_pstrTest = NULL;
