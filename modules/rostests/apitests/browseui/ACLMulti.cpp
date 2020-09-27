@@ -287,6 +287,8 @@ START_TEST(ACLMulti)
 
     s_strTest += '|';
     pEnum->Reset();
+    p1->Initialize(2, '1');
+    p2->Initialize(1, '2');
     s_strTest += '|';
 
     psz = NULL;
@@ -313,7 +315,19 @@ START_TEST(ACLMulti)
     ok_int(c, 1);
     CoTaskMemFree(psz);
 
-    ok_str((LPCSTR)s_strTest, "m1a1s1|m2a2s2|R1R2|N1N1N1N2N2N2|R1R2|N1N1N1N2");
+    psz = NULL;
+    hr = pEnum->Next(1, &psz, &c);
+    ok_hr(hr, S_FALSE);
+    ok_int(c, 0);
+    CoTaskMemFree(psz);
+
+    psz = NULL;
+    hr = pEnum->Next(1, &psz, &c);
+    ok_hr(hr, S_FALSE);
+    ok_int(c, 0);
+    CoTaskMemFree(psz);
+
+    ok_str((LPCSTR)s_strTest, "m1a1s1|m2a2s2|R1R2|N1N1N1N2N2N2|R1R2|N1N1N1N2N2");
 
     s_strTest = "";
 
@@ -324,5 +338,5 @@ START_TEST(ACLMulti)
     ok_hr(hr, S_OK);
     s_strTest += '|';
 
-    ok(s_strTest == "E1E2|E1E2|" || s_strTest == "E1|E1|", "\n");
+    ok(s_strTest == "E1E2|E1E2|" || s_strTest == "E1|E1|", "s_strTest was %s\n", (LPCSTR)s_strTest);
 }
