@@ -40,7 +40,11 @@ typedef struct _MSSTYLES_CLASS_MAP {
 
 typedef struct _MSSTYLES_CLASS_NAME {
     const MSSTYLES_CLASS_MAP *lpMap;
+#if __REACTOS__
+    WCHAR pszClass[32];
+#else
     WCHAR pszClass[12];
+#endif
 } MSSTYLES_CLASS_NAME, *PMSSTYLES_CLASS_NAME;
 
 /***********************************************************************
@@ -1005,8 +1009,42 @@ static const MSSTYLES_CLASS_MAP classWindow[] = {
     {0,0,{'\0'}}
 };
 
+#if __REACTOS__
+static const MSSTYLES_CLASS_MAP classAeroWizard[] = {
+    {AW_TITLEBAR,0,L"TitleBar"},
+    {AW_TITLEBAR,AW_S_TITLEBAR_ACTIVE,L"Active"},
+    {AW_TITLEBAR,AW_S_TITLEBAR_INACTIVE,L"Inactive"},
+    {AW_HEADERAREA,0,L"Header"},
+    {AW_HEADERAREA,AW_S_HEADERAREA_NOMARGIN,L"NoMargin"},
+    {AW_CONTENTAREA,0,L"ContentArea"},
+    {AW_CONTENTAREA,AW_S_CONTENTAREA_NOMARGIN,L"NoMargin"},
+    {AW_COMMANDAREA,0,L"CommandArea"},
+    {AW_BUTTON,0,L"Button"}
+};
+
+static const MSSTYLES_CLASS_MAP classTextStyle[] = {
+    {TEXT_MAININSTRUCTION,0,L"MainInstruction"},
+    {TEXT_INSTRUCTION,0,L"Instruction"},
+    {TEXT_BODYTITLE,0,L"BodyTitle"},
+    {TEXT_BODYTEXT,0,L"Body"},
+    {TEXT_SECONDARYTEXT,0,L"Secondary"},
+    {TEXT_HYPERLINKTEXT,0,L"Hyperlink"},
+    {TEXT_HYPERLINKTEXT,TS_HYPERLINK_HOT,L"Hot"},
+    {TEXT_HYPERLINKTEXT,TS_HYPERLINK_PRESSED,L"Pressed"},
+    {TEXT_HYPERLINKTEXT,TS_HYPERLINK_DISABLED,L"Disabled"},
+    {TEXT_EXPANDED,0,L"Expanded"},
+    {TEXT_LABEL,0,L"Label"},
+    {TEXT_CONTROLLABEL,0,L"ControlLabel"}
+};
+#endif
+
 /* Map class names to part/state maps */
 static const MSSTYLES_CLASS_NAME mapClass[] = {
+#if __REACTOS__
+    {classAeroWizard, L"AEROWIZARD"},
+    {classAeroWizard, L"AEROWIZARDSTYLE"},
+    {classTextStyle, L"TEXTSTYLE"},
+#endif
     {classGlobals, {'G','L','O','B','A','L','S','\0'}},
     {classButton, {'B','U','T','T','O','N','\0'}},
     {classClock, {'C','L','O','C','K','\0'}},
