@@ -501,28 +501,20 @@ CIrpQueue2::ReleaseMappingWithTag(
     // get stream data
     StreamData = (PKSSTREAM_DATA)Irp->Tail.Overlay.DriverContext[STREAM_DATA_OFFSET];
     
-    // check if the released mapping is one of these
+    // release oldest in use mapping
     for(Index = 0; Index < StreamData->nTags; Index++)
     {
-        if ((StreamData->Tags[Index].Tag == Tag) &&
-            (StreamData->Tags[Index].Used != FALSE))
+        if (StreamData->Tags[Index].Used != FALSE)
         {
-            // mark mapping as released
-            StreamData->Tags[Index].Tag = NULL;
             StreamData->Tags[Index].Used = FALSE;
-
-            // done
+            
+            // Warn if wrong mapping released
+            if(StreamData->Tags[Index].Tag != Tag)
+            {
+                DPRINT1("mapping release out of oreder");
+            }
+            
             break;
-        }
-        else
-        {
-            //
-            // we assume that mappings are released in the same order as they have been acquired
-            // therefore if the current mapping is not the searched one, it must have been already
-            // released
-            //
-            ASSERT(StreamData->Tags[Index].Tag == NULL);
-            ASSERT(StreamData->Tags[Index].Used == FALSE);
         }
     }
     
