@@ -564,12 +564,6 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
         /* DOS Device Map */
         case ProcessDeviceMap:
 
-            if (ProcessInformationLength < sizeof(PROCESS_DEVICEMAP_INFORMATION))
-            {
-                Status = STATUS_INFO_LENGTH_MISMATCH;
-                break;
-            }
-
             if (ProcessInformationLength == sizeof(PROCESS_DEVICEMAP_INFORMATION_EX))
             {
                 /* Protect read in SEH */
@@ -601,7 +595,8 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
             }
             else
             {
-                if (ProcessInformationLength != sizeof(PROCESS_DEVICEMAP_INFORMATION))
+                /* This has to be the size of the Query union field for x64 compatibility! */
+                if (ProcessInformationLength != RTL_FIELD_SIZE(PROCESS_DEVICEMAP_INFORMATION, Query))
                 {
                     Status = STATUS_INFO_LENGTH_MISMATCH;
                     break;
