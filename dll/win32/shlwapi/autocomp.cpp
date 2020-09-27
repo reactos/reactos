@@ -97,7 +97,8 @@ AutoComplete_LoadList(DWORD dwSHACF, DWORD dwACLO)
         if (SUCCEEDED(hr))
         {
             pManager->Append(pHistory); // Add to the manager
-            IUnknown_SetOptions(pHistory, dwACLO); // Set ACLO_* options
+            // Set ACLO_* options
+            IUnknown_SetOptions(pHistory, dwACLO | ACLO_CURRENTDIR | ACLO_MYCOMPUTER);
         }
         else
         {
