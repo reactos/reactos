@@ -1421,21 +1421,19 @@ do { \
     }
     else if (*Src == _T('~'))
     {
-        /* %VAR:~[start][,length]% - substring
+        /* %VAR:~[start][,length]% - Substring.
          * Negative values are offsets from the end.
          */
-        size_t Start = _tcstol(Src + 1, (PTSTR*)&Src, 0);
-        size_t End = VarLength;
+        SSIZE_T Start = _tcstol(Src + 1, (PTSTR*)&Src, 0);
+        SSIZE_T End = (SSIZE_T)VarLength;
         if (Start < 0)
             Start += VarLength;
-        Start = max(Start, 0);
-        Start = min(Start, VarLength);
+        Start = min(max(Start, 0), VarLength);
         if (*Src == _T(','))
         {
             End = _tcstol(Src + 1, (PTSTR*)&Src, 0);
             End += (End < 0) ? VarLength : Start;
-            End = max(End, Start);
-            End = min(End, VarLength);
+            End = min(max(End, Start), VarLength);
         }
         if (*Src++ != Delim)
             goto bad_subst;
