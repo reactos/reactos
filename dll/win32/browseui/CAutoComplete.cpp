@@ -3,6 +3,7 @@
  *
  *    Copyright 2004    Maxime Bellengé <maxime.bellenge@laposte.net>
  *    Copyright 2009  Andrew Hill
+ *    Copyright 2020  Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -279,6 +280,49 @@ HRESULT WINAPI CAutoComplete::SetOptions(DWORD dwFlag)
     return hr;
 }
 
+/* Edit_BackWord --- Delete previous word in text box */
+static void Edit_BackWord(HWND hwndEdit)
+{
+    INT iStart, iEnd;
+    iStart = iEnd = 0;
+    SendMessageW(hwndEdit, EM_GETSEL, (WPARAM)&iStart, (LPARAM)&iEnd);
+
+    if (iStart != iEnd)
+        return;
+
+    DWORD cchText = GetWindowTextLengthW(hwndEdit);
+    size_t cb = (cchText + 1) * sizeof(WCHAR);
+    LPWSTR pszText = (LPWSTR)CoTaskMemAlloc(cb);
+    if (pszText == NULL)
+        return;
+
+    if (GetWindowTextW(hwndEdit, pszText, cchText + 1) <= 0)
+    {
+        CoTaskMemFree(pszText);
+        return;
+    }
+
+    for (; 0 < iStart; --iStart)
+    {
+        if (pszText[iStart - 1] == L' ' &&
+            IsCharAlphaNumericW(pszText[iStart]))
+        {
+            SendMessageW(hwndEdit, EM_SETSEL, iStart, iEnd);
+            SendMessageW(hwndEdit, EM_REPLACESEL, TRUE, (LPARAM)L"");
+            iStart = -1;
+            break;
+        }
+    }
+
+    if (iStart == 0)
+    {
+        SendMessageW(hwndEdit, EM_SETSEL, iStart, iEnd);
+        SendMessageW(hwndEdit, EM_REPLACESEL, TRUE, (LPARAM)L"");
+    }
+
+    CoTaskMemFree(pszText);
+}
+
 /*
   Window procedure for autocompletion
  */
@@ -407,6 +451,14 @@ LRESULT APIENTRY CAutoComplete::ACEditSubclassProc(HWND hwnd, UINT uMsg, WPARAM 
                 }; break;
                 
                 case VK_BACK:
+                {
+                    if (GetKeyState(VK_CONTROL) < 0) // Ctrl+Backspace
+                    {
+                        Edit_BackWord(hwnd);
+                        return 0;
+                    }
+                }
+                // FALL THROUGH
                 case VK_DELETE:
                 {
                     if ((! *hwndText) && (pThis->options & ACO_AUTOSUGGEST))
