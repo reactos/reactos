@@ -754,7 +754,7 @@ l_ReadHeaderFromFile:
         pssSegments[i].Protection = SectionCharacteristicsToProtect[nCharacteristics >> 28];
         pssSegments[i].WriteCopy = !(nCharacteristics & IMAGE_SCN_MEM_SHARED);
 
-        if(pishSectionHeaders[i].Misc.VirtualSize == 0 || pishSectionHeaders[i].Misc.VirtualSize < pishSectionHeaders[i].SizeOfRawData)
+        if(pishSectionHeaders[i].Misc.VirtualSize == 0)
             pssSegments[i].Length.QuadPart = pishSectionHeaders[i].SizeOfRawData;
         else
             pssSegments[i].Length.QuadPart = pishSectionHeaders[i].Misc.VirtualSize;
