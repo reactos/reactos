@@ -302,11 +302,9 @@ static void Edit_BackWord(HWND hwndEdit)
         return;
     }
 
-    WORD wType;
     for (; 0 < iStart; --iStart)
     {
-        GetStringTypeW(CT_CTYPE1, &pszText[iStart - 1], 1, &wType);
-        if ((wType & C1_SPACE) && IsCharAlphaNumericW(pszText[iStart]))
+        if (IsCharSpaceW(pszText[iStart - 1]) && IsCharAlphaNumericW(pszText[iStart]))
         {
             SendMessageW(hwndEdit, EM_SETSEL, iStart, iEnd);
             SendMessageW(hwndEdit, EM_REPLACESEL, TRUE, (LPARAM)L"");
