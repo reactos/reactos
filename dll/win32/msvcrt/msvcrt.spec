@@ -1085,7 +1085,7 @@
 @ stub -version=0x600+ _vcprintf_p_l
 @ stub -version=0x600+ _vcprintf_s
 @ stub -version=0x600+ _vcprintf_s_l
-@ stub -version=0x600+ _vcwprintf
+@ cdecl -version=0x600+ _vcwprintf(wstr ptr)
 @ stub -version=0x600+ _vcwprintf_l
 @ stub -version=0x600+ _vcwprintf_p
 @ stub -version=0x600+ _vcwprintf_p_l
@@ -1452,7 +1452,7 @@
 @ cdecl sinh(double)
 @ cdecl -arch=x86_64,arm sinhf(long)
 @ varargs sprintf(ptr str)
-@ stub -version=0x600+ sprintf_s
+@ varargs -version=0x600+ sprintf_s(ptr long str)
 @ cdecl sqrt(double)
 @ cdecl -arch=x86_64,arm sqrtf(long)
 @ cdecl srand(long)
