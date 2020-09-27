@@ -40,7 +40,7 @@ typedef struct _MSSTYLES_CLASS_MAP {
 
 typedef struct _MSSTYLES_CLASS_NAME {
     const MSSTYLES_CLASS_MAP *lpMap;
-#if __REACTOS__
+#ifdef __REACTOS__
     WCHAR pszClass[32];
 #else
     WCHAR pszClass[12];
@@ -1009,7 +1009,7 @@ static const MSSTYLES_CLASS_MAP classWindow[] = {
     {0,0,{'\0'}}
 };
 
-#if __REACTOS__
+#ifdef __REACTOS__
 static const MSSTYLES_CLASS_MAP classAeroWizard[] = {
     {AW_TITLEBAR,0,L"TitleBar"},
     {AW_TITLEBAR,AW_S_TITLEBAR_ACTIVE,L"Active"},
@@ -1071,7 +1071,7 @@ static const MSSTYLES_CLASS_MAP classTaskDialog[] = {
 
 /* Map class names to part/state maps */
 static const MSSTYLES_CLASS_NAME mapClass[] = {
-#if __REACTOS__
+#ifdef __REACTOS__
     {classAeroWizard, L"AEROWIZARD"},
     {classAeroWizard, L"AEROWIZARDSTYLE"},
     {classTextStyle, L"TEXTSTYLE"},
