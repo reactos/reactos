@@ -723,12 +723,16 @@ l_ReadHeaderFromFile:
 //            if(!IsAligned(pishSectionHeaders[i].PointerToRawData, nFileAlignment))
 //                DIE(("PointerToRawData[%u] is not aligned\n", i));
 
+            if(!Intsafe_CanAddULong32(pishSectionHeaders[i].PointerToRawData, pishSectionHeaders[i].SizeOfRawData))
+                DIE(("SizeOfRawData[%u] too large\n", i));
+
             /* conversion */
             pssSegments[i].Image.FileOffset = pishSectionHeaders[i].PointerToRawData;
             pssSegments[i].RawLength.QuadPart = pishSectionHeaders[i].SizeOfRawData;
         }
         else
         {
+            /* FIXME: Should reset PointerToRawData to 0 in the image mapping */
             ASSERT(pssSegments[i].Image.FileOffset == 0);
             ASSERT(pssSegments[i].RawLength.QuadPart == 0);
         }
