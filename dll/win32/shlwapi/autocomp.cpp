@@ -59,7 +59,7 @@ IUnknown_SetOptions(CComPtr<IUnknown> punk, DWORD dwACLO)
 }
 
 static CComPtr<IUnknown>
-AutoComplete_LoadList(HWND hwndEdit, DWORD dwSHACF, DWORD dwACLO)
+AutoComplete_LoadList(DWORD dwSHACF, DWORD dwACLO)
 {
     // Create a multiple list (with IEnumString interface)
     CComPtr<IUnknown> pList;
@@ -127,7 +127,8 @@ AutoComplete_LoadList(HWND hwndEdit, DWORD dwSHACF, DWORD dwACLO)
 }
 
 static VOID
-AutoComplete_AdaptFlags(IN OUT LPDWORD pdwSHACF,
+AutoComplete_AdaptFlags(IN HWND hwndEdit,
+                        IN OUT LPDWORD pdwSHACF,
                         OUT LPDWORD pdwACO,
                         OUT LPDWORD pdwACLO)
 {
@@ -188,10 +189,10 @@ HRESULT WINAPI SHAutoComplete(HWND hwndEdit, DWORD dwFlags)
     TRACE("SHAutoComplete(%p, 0x%lX)\n", hwndEdit, dwFlags);
 
     DWORD dwACO = 0, dwACLO = 0, dwSHACF = dwFlags;
-    AutoComplete_AdaptFlags(&dwACO, &dwACLO, &dwSHACF);
+    AutoComplete_AdaptFlags(hwndEdit, &dwACO, &dwACLO, &dwSHACF);
 
     // Load the list (with IEnumString interface)
-    CComPtr<IUnknown> pList = AutoComplete_LoadList(hwndEdit, dwSHACF, dwACLO);
+    CComPtr<IUnknown> pList = AutoComplete_LoadList(dwSHACF, dwACLO);
     if (!pList)
     {
         ERR("Out of memory\n");
