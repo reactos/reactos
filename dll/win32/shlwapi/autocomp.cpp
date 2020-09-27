@@ -59,7 +59,7 @@ IUnknown_SetOptions(CComPtr<IUnknown> punk, DWORD dwACLO)
 }
 
 static CComPtr<IUnknown>
-AutoComplete_LoadList(DWORD dwSHACF, DWORD dwACLO)
+AutoComplete_LoadList(HWND hwndEdit, DWORD dwSHACF, DWORD dwACLO)
 {
     // Create a multiple list (with IEnumString interface)
     CComPtr<IUnknown> pList;
@@ -114,7 +114,8 @@ AutoComplete_LoadList(DWORD dwSHACF, DWORD dwACLO)
         if (SUCCEEDED(hr))
         {
             pManager->Append(pISF); // Add to the manager
-            IUnknown_SetOptions(pISF, dwACLO); // Set ACLO_* options
+            // Set ACLO_* options
+            IUnknown_SetOptions(pISF, dwACLO | ACLO_CURRENTDIR | ACLO_MYCOMPUTER);
         }
         else
         {
@@ -154,12 +155,15 @@ AutoComplete_AdaptFlags(IN OUT LPDWORD pdwSHACF,
     if (dwSHACF & SHACF_FILESYS_ONLY)
         dwACLO |= ACLO_FILESYSONLY;
 
-    static BOOL s_bAlwaysUseTab = 999;
-    if (s_bAlwaysUseTab == 999)
+    static BOOL s_bAlwaysUseTab = 99;
+    if (s_bAlwaysUseTab == 99)
         s_bAlwaysUseTab = SHRegGetBoolUSValueW(AUTOCOMPLETE_KEY, L"Always Use Tab", FALSE, FALSE);
 
     if (s_bAlwaysUseTab || (dwSHACF & SHACF_USETAB))
         dwACO |= ACO_USETAB;
+
+    if (GetWindowLongPtrW(hwndEdit, GWL_EXSTYLE) & WS_EX_LAYOUTRTL)
+        dwACO |= ACO_RTLREADING;
 
     *pdwACO = dwACO;
     *pdwSHACF = dwSHACF;
@@ -187,7 +191,7 @@ HRESULT WINAPI SHAutoComplete(HWND hwndEdit, DWORD dwFlags)
     AutoComplete_AdaptFlags(&dwACO, &dwACLO, &dwSHACF);
 
     // Load the list (with IEnumString interface)
-    CComPtr<IUnknown> pList = AutoComplete_LoadList(dwSHACF, dwACLO);
+    CComPtr<IUnknown> pList = AutoComplete_LoadList(hwndEdit, dwSHACF, dwACLO);
     if (!pList)
     {
         ERR("Out of memory\n");
