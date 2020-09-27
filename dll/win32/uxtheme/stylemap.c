@@ -1036,6 +1036,37 @@ static const MSSTYLES_CLASS_MAP classTextStyle[] = {
     {TEXT_LABEL,0,L"Label"},
     {TEXT_CONTROLLABEL,0,L"ControlLabel"}
 };
+
+static const MSSTYLES_CLASS_MAP classTaskDialog[] = {
+    {TDLG_PRIMARYPANEL,0,L"PrimaryPanel"},
+    {TDLG_MAININSTRUCTIONPANE,0,L"MainInstructionPane"},
+    {TDLG_MAINICON,0,L"MainIcon"},
+    {TDLG_CONTENTPANE,0,L"ContentPane"},
+    {TDLG_CONTENTPANE,TDLGCPS_STANDALONE,L"Standalone"},
+    {TDLG_CONTENTICON,0,L"ContentIcon"},
+    {TDLG_EXPANDEDCONTENT,0,L"ExpandedContent"},
+    {TDLG_COMMANDLINKPANE,0,L"CommandLinkPane"},
+    {TDLG_SECONDARYPANEL,0,L"SecondaryPanel"},
+    {TDLG_CONTROLPANE,0,L"ControlPane"},
+    {TDLG_BUTTONSECTION,0,L"ButtonSection"},
+    {TDLG_BUTTONWRAPPER,0,L"ButtonWrapper"},
+    {TDLG_EXPANDOTEXT,0,L"ExpandoText"},
+    {TDLG_EXPANDOBUTTON,0,L"ExpandoButton"},
+    {TDLG_EXPANDOBUTTON,TDLGEBS_NORMAL,L"Normal"},
+    {TDLG_EXPANDOBUTTON,TDLGEBS_HOVER,L"Hover"},
+    {TDLG_EXPANDOBUTTON,TDLGEBS_PRESSED,L"Pressed"},
+    {TDLG_EXPANDOBUTTON,TDLGEBS_EXPANDEDNORMAL,L"ExpandedNormal"},
+    {TDLG_EXPANDOBUTTON,TDLGEBS_EXPANDEDHOVER,L"ExpandedHover"},
+    {TDLG_EXPANDOBUTTON,TDLGEBS_EXPANDEDPRESSED,L"ExpandedPressed"},
+    {TDLG_VERIFICATIONTEXT,0,L"VerificationText"},
+    {TDLG_FOOTNOTEPANE,0,L"FootnotePane"},
+    {TDLG_FOOTNOTEAREA,0,L"FootnoteArea"},
+    {TDLG_FOOTNOTESEPARATOR,0,L"FootnoteSeparator"},
+    {TDLG_EXPANDEDFOOTERAREA,0,L"ExpandedFooterArea"},
+    {TDLG_PROGRESSBAR,0,L"ProgressBar"},
+    {TDLG_IMAGEALIGNMENT,0,L"ImageAlignment"},
+    {TDLG_RADIOBUTTONPANE,0,L"RadioButtonPane"}
+};
 #endif
 
 /* Map class names to part/state maps */
@@ -1044,6 +1075,8 @@ static const MSSTYLES_CLASS_NAME mapClass[] = {
     {classAeroWizard, L"AEROWIZARD"},
     {classAeroWizard, L"AEROWIZARDSTYLE"},
     {classTextStyle, L"TEXTSTYLE"},
+    {classTaskDialog, L"TASKDIALOG"},
+    {classTaskDialog, L"TASKDIALOGSTYLE"},
 #endif
     {classGlobals, {'G','L','O','B','A','L','S','\0'}},
     {classButton, {'B','U','T','T','O','N','\0'}},
