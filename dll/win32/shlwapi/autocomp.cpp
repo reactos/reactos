@@ -42,7 +42,7 @@ AutoComplete_AddMRU(CComPtr<IObjMgr> pManager, LPCWSTR pszKey)
 }
 
 static HRESULT
-IUnknown_SetOptions(CComPtr<IUnknown> punk, DWORD dwACLO)
+IUnknown_AddOptions(CComPtr<IUnknown> punk, DWORD dwACLO)
 {
     CComPtr<IACList2> pList;
     HRESULT hr = punk->QueryInterface(IID_IACList2, (LPVOID *)&pList);
@@ -52,7 +52,10 @@ IUnknown_SetOptions(CComPtr<IUnknown> punk, DWORD dwACLO)
         return hr;
     }
 
-    hr = pList->SetOptions(dwACLO);
+    DWORD dwOptions = 0;
+    pList->GetOptions(&dwOptions);
+    dwOptions |= dwACLO;
+    hr = pList->SetOptions(dwOptions);
     if (FAILED(hr))
         ERR("pList->SetOptions failed: 0x%08lX\n", hr);
     return hr;
@@ -97,8 +100,8 @@ AutoComplete_LoadList(DWORD dwSHACF, DWORD dwACLO)
         if (SUCCEEDED(hr))
         {
             pManager->Append(pHistory); // Add to the manager
-            // Set ACLO_* options
-            IUnknown_SetOptions(pHistory, dwACLO | ACLO_CURRENTDIR | ACLO_MYCOMPUTER);
+            // Add ACLO_* options
+            IUnknown_AddOptions(pHistory, dwACLO);
         }
         else
         {
@@ -115,8 +118,8 @@ AutoComplete_LoadList(DWORD dwSHACF, DWORD dwACLO)
         if (SUCCEEDED(hr))
         {
             pManager->Append(pISF); // Add to the manager
-            // Set ACLO_* options
-            IUnknown_SetOptions(pISF, dwACLO | ACLO_CURRENTDIR | ACLO_MYCOMPUTER);
+            // Add ACLO_* options
+            IUnknown_AddOptions(pISF, dwACLO);
         }
         else
         {
