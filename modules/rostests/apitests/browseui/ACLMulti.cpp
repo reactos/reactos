@@ -314,4 +314,15 @@ START_TEST(ACLMulti)
     CoTaskMemFree(psz);
 
     ok_str((LPCSTR)s_strTest, "m1a1s1|m2a2s2|R1R2|N1N1N1N2N2N2|R1R2|N1N1N1N2");
+
+    s_strTest = "";
+
+    hr = pACL->Expand(L"C:");
+    ok_hr(hr, S_OK);
+    s_strTest += '|';
+    hr = pACL->Expand(L"C:\\");
+    ok_hr(hr, S_OK);
+    s_strTest += '|';
+
+    ok(s_strTest == "E1E2|E1E2|" || s_strTest == "E1|E1|", "\n");
 }
