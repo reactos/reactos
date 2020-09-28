@@ -433,6 +433,11 @@ test_IACLCustomMRU_TypedURLs()
     HRESULT hr = CoCreateInstance(CLSID_ACLCustomMRU, NULL, CLSCTX_ALL,
                                   IID_PPV_ARG(IACLCustomMRU, &CustomMRU));
     ok_hex(hr, S_OK);
+    if (FAILED(hr))
+    {
+        skip("IACLCustomMRU was NULL\n");
+        return;
+    }
 
     hr = CustomMRU->Initialize(TYPED_URL_KEY, 64);
     ok_hex(hr, S_OK);
@@ -440,6 +445,11 @@ test_IACLCustomMRU_TypedURLs()
     CComPtr<IEnumString> pEnum;
     hr = CustomMRU->QueryInterface(IID_PPV_ARG(IEnumString, &pEnum));
     ok_hex(hr, S_OK);
+    if (FAILED(hr))
+    {
+        skip("IEnumString was NULL\n");
+        return;
+    }
 
     LPOLESTR psz = NULL;
     ULONG c = 0;
@@ -447,8 +457,7 @@ test_IACLCustomMRU_TypedURLs()
     ok_hex(hr, S_OK);
     ok_wstri(psz, L"aaa");
     ok_int(c, 1);
-    if (psz)
-        CoTaskMemFree(psz);
+    CoTaskMemFree(psz);
 
     psz = NULL;
     c = 0;
@@ -456,8 +465,7 @@ test_IACLCustomMRU_TypedURLs()
     ok_hex(hr, S_OK);
     ok_wstri(psz, L"bbb");
     ok_int(c, 1);
-    if (psz)
-        CoTaskMemFree(psz);
+    CoTaskMemFree(psz);
 
     // Restore
     CRegKey key;
