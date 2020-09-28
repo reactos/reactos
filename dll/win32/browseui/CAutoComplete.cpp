@@ -299,13 +299,12 @@ static void Edit_BackWord(HWND hwndEdit)
     if (GetWindowTextW(hwndEdit, pszText, cchText + 1) <= 0 || cchText < (size_t)iStart)
         return;
 
-    WORD wType1, wType2;
+    WORD types[2];
     for (--iStart; 0 < iStart; --iStart)
     {
-        GetStringTypeW(CT_CTYPE1, &pszText[iStart - 1], 1, &wType1);
-        GetStringTypeW(CT_CTYPE1, &pszText[iStart], 1, &wType2);
-        if (((wType1 & C1_PUNCT) && !(wType2 & C1_SPACE)) ||
-            ((wType1 & C1_SPACE) && (wType2 & (C1_ALPHA | C1_DIGIT))))
+        GetStringTypeW(CT_CTYPE1, &pszText[iStart - 1], 2, types);
+        if (((types[0] & C1_PUNCT) && !(types[1] & C1_SPACE)) ||
+            ((types[0] & C1_SPACE) && (types[1] & (C1_ALPHA | C1_DIGIT))))
         {
             SendMessageW(hwndEdit, EM_SETSEL, iStart, iEnd);
             SendMessageW(hwndEdit, EM_REPLACESEL, TRUE, (LPARAM)L"");
