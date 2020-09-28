@@ -302,12 +302,11 @@ static void Edit_BackWord(HWND hwndEdit)
         return;
     }
 
-    WCHAR ch1, ch2;
     WORD wType1, wType2;
     for (--iStart; 0 < iStart; --iStart)
     {
-        ch1 = pszText[iStart - 1];
-        ch2 = pszText[iStart];
+        WCHAR& ch1 = pszText[iStart - 1];
+        WCHAR& ch2 = pszText[iStart];
         GetStringTypeW(CT_CTYPE1, &ch1, 1, &wType1);
         GetStringTypeW(CT_CTYPE1, &ch2, 1, &wType2);
         if (((wType1 & C1_PUNCT) && !(wType2 & C1_SPACE)) ||
