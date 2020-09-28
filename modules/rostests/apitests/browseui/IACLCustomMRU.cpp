@@ -29,7 +29,8 @@ ULONG DbgPrint(PCH Format,...);
            #expression, (int)(result), _value, (char)key); \
     } while (0)
 
-
+#define ok_wstri(x, y) \
+    ok(lstrcmpiW(x, y) == 0, "Wrong string. Expected '%S', got '%S'\n", y, x)
 
 struct CCoInit
 {
@@ -401,6 +402,83 @@ test_IACLCustomMRU_Continue()
     verify_mru(CustomMRU, L"ba", L"FIRST_ENTRY", L"SECOND_ENTRY");
 }
 
+static void
+test_IACLCustomMRU_TypedURLs()
+{
+    Cleanup_Testdata();
+
+    // TypedURLs is special case
+#define TYPED_URL_KEY L"Software\\Microsoft\\Internet Explorer\\TypedURLs"
+
+    CStringW url1, url2;
+    {
+        CRegKey key;
+        WCHAR Value[MAX_PATH];
+        ULONG cch;
+        key.Open(HKEY_CURRENT_USER, TYPED_URL_KEY, KEY_READ | KEY_WRITE);
+
+        cch = _countof(Value);
+        LONG result = key.QueryStringValue(L"url1", Value, &cch);
+        if (!result)
+            url1 = Value;
+
+        cch = _countof(Value);
+        result = key.QueryStringValue(L"url2", Value, &cch);
+        if (!result)
+            url2 = Value;
+
+        key.SetStringValue(L"url1", L"aaa");
+        key.SetStringValue(L"url2", L"bbb");
+    }
+
+    CComPtr<IACLCustomMRU> CustomMRU;
+    HRESULT hr = CoCreateInstance(CLSID_ACLCustomMRU, NULL, CLSCTX_ALL,
+                                  IID_PPV_ARG(IACLCustomMRU, &CustomMRU));
+    ok_hex(hr, S_OK);
+    if (!SUCCEEDED(hr))
+        return;
+
+    hr = CustomMRU->Initialize(TYPED_URL_KEY, 3);
+    ok_hex(hr, S_OK);
+    if (!SUCCEEDED(hr))
+        return;
+
+    CComPtr<IEnumString> pEnum;
+    hr = CustomMRU->QueryInterface(IID_PPV_ARG(IEnumString, &pEnum));
+    ok_hex(hr, S_OK);
+    if (!SUCCEEDED(hr))
+        return;
+
+    LPOLESTR psz;
+    ULONG c;
+
+    psz = NULL;
+    c = 0;
+    hr = pEnum->Next(1, &psz, &c);
+    ok_hex(hr, S_OK);
+    ok_wstri(psz, L"aaa");
+    if (psz)
+        CoTaskMemFree(psz);
+
+    psz = NULL;
+    c = 0;
+    hr = pEnum->Next(1, &psz, &c);
+    ok_hex(hr, S_OK);
+    ok_wstri(psz, L"bbb");
+    if (psz)
+        CoTaskMemFree(psz);
+
+    // Restore
+    {
+        CRegKey key;
+        key.Open(HKEY_CURRENT_USER, TYPED_URL_KEY, KEY_WRITE);
+        if (url1 != L"")
+            key.SetStringValue(L"url1", url1);
+        if (url2 != L"")
+            key.SetStringValue(L"url2", url2);
+    }
+}
+
 START_TEST(IACLCustomMRU)
 {
     CCoInit init;
@@ -412,6 +490,7 @@ START_TEST(IACLCustomMRU)
     test_IACLCustomMRU_UpdateOrder();
     test_IACLCustomMRU_ExtraChars();
     test_IACLCustomMRU_Continue();
+    test_IACLCustomMRU_TypedURLs();
 
     Cleanup_Testdata();
 }
