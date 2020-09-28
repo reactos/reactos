@@ -291,7 +291,7 @@ static void Edit_BackWord(HWND hwndEdit)
         return;
 
     size_t cchText = GetWindowTextLengthW(hwndEdit);
-    if (cchText < (size_t)iStart || (INT)cchText < 0)
+    if (cchText < (size_t)iStart || (INT)cchText <= 0)
         return;
 
     size_t cb = (cchText + 1) * sizeof(WCHAR);
