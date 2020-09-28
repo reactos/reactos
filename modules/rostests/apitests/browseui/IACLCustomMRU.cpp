@@ -457,6 +457,7 @@ test_IACLCustomMRU_TypedURLs()
     hr = pEnum->Next(1, &psz, &c);
     ok_hex(hr, S_OK);
     ok_wstri(psz, L"aaa");
+    ok_int(c, 1);
     if (psz)
         CoTaskMemFree(psz);
 
@@ -465,6 +466,7 @@ test_IACLCustomMRU_TypedURLs()
     hr = pEnum->Next(1, &psz, &c);
     ok_hex(hr, S_OK);
     ok_wstri(psz, L"bbb");
+    ok_int(c, 1);
     if (psz)
         CoTaskMemFree(psz);
 
