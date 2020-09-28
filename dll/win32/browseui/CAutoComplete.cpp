@@ -292,15 +292,12 @@ static void Edit_BackWord(HWND hwndEdit)
 
     DWORD cchText = GetWindowTextLengthW(hwndEdit);
     size_t cb = (cchText + 1) * sizeof(WCHAR);
-    LPWSTR pszText = (LPWSTR)CoTaskMemAlloc(cb);
-    if (pszText == NULL)
+    CComHeapPtr<WCHAR> pszText((LPWSTR)CoTaskMemAlloc(cb));
+    if (!pszText)
         return;
 
     if (GetWindowTextW(hwndEdit, pszText, cchText + 1) <= 0)
-    {
-        CoTaskMemFree(pszText);
         return;
-    }
 
     WORD wType1, wType2;
     for (--iStart; 0 < iStart; --iStart)
@@ -322,8 +319,6 @@ static void Edit_BackWord(HWND hwndEdit)
         SendMessageW(hwndEdit, EM_SETSEL, iStart, iEnd);
         SendMessageW(hwndEdit, EM_REPLACESEL, TRUE, (LPARAM)L"");
     }
-
-    CoTaskMemFree(pszText);
 }
 
 /*
