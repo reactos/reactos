@@ -310,8 +310,7 @@ static void Edit_BackWord(HWND hwndEdit)
         {
             SendMessageW(hwndEdit, EM_SETSEL, iStart, iEnd);
             SendMessageW(hwndEdit, EM_REPLACESEL, TRUE, (LPARAM)L"");
-            iStart = -1;
-            break;
+            return;
         }
     }
 
