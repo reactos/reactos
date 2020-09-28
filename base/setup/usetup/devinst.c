@@ -25,12 +25,14 @@ static HANDLE hNoPendingInstalls = NULL;
 static HANDLE hPnpThread = NULL;
 static HANDLE hDeviceInstallThread = NULL;
 
-static SLIST_HEADER DeviceInstallListHead;
+/* Device-install event list */
+static HANDLE hDeviceInstallListMutex = NULL;
+static LIST_ENTRY DeviceInstallListHead;
 static HANDLE hDeviceInstallListNotEmpty = NULL;
 
 typedef struct
 {
-    SLIST_ENTRY ListEntry;
+    LIST_ENTRY ListEntry;
     WCHAR DeviceIds[ANYSIZE_ARRAY];
 } DeviceInstallParams;
 
@@ -363,13 +365,17 @@ static ULONG NTAPI
 DeviceInstallThread(IN PVOID Parameter)
 {
     HINF hSetupInf = *(HINF*)Parameter;
-    PSLIST_ENTRY ListEntry;
+    PLIST_ENTRY ListEntry;
     DeviceInstallParams* Params;
     LARGE_INTEGER Timeout;
 
     for (;;)
     {
-        ListEntry = RtlInterlockedPopEntrySList(&DeviceInstallListHead);
+        /* Dequeue the next oldest device-install event */
+        NtWaitForSingleObject(hDeviceInstallListMutex, FALSE, NULL);
+        ListEntry = (IsListEmpty(&DeviceInstallListHead)
+                        ? NULL : RemoveHeadList(&DeviceInstallListHead));
+        NtReleaseMutant(hDeviceInstallListMutex, NULL);
 
         if (ListEntry == NULL)
         {
@@ -454,18 +460,23 @@ PnpEventThread(IN PVOID Parameter)
             ULONG len;
             ULONG DeviceIdLength;
 
-            DPRINT("Device enumerated event: %S\n", PnpEvent->TargetDevice.DeviceIds);
+            DPRINT("Device enumerated: %S\n", PnpEvent->TargetDevice.DeviceIds);
 
             DeviceIdLength = wcslen(PnpEvent->TargetDevice.DeviceIds);
             if (DeviceIdLength)
             {
-                /* Queue device install (will be dequeued by DeviceInstallThread) */
+                /* Allocate a new device-install event */
                 len = FIELD_OFFSET(DeviceInstallParams, DeviceIds) + (DeviceIdLength + 1) * sizeof(WCHAR);
                 Params = RtlAllocateHeap(ProcessHeap, 0, len);
                 if (Params)
                 {
                     wcscpy(Params->DeviceIds, PnpEvent->TargetDevice.DeviceIds);
-                    RtlInterlockedPushEntrySList(&DeviceInstallListHead, &Params->ListEntry);
+
+                    /* Queue the event (will be dequeued by DeviceInstallThread) */
+                    NtWaitForSingleObject(hDeviceInstallListMutex, FALSE, NULL);
+                    InsertTailList(&DeviceInstallListHead, &Params->ListEntry);
+                    NtReleaseMutant(hDeviceInstallListMutex, NULL);
+
                     NtSetEvent(hDeviceInstallListNotEmpty, NULL);
                 }
                 else
@@ -559,17 +570,6 @@ InitializeUserModePnpManager(
     UNICODE_STRING EnumU = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Enum");
     UNICODE_STRING ServicesU = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Services");
 
-    Status = NtCreateEvent(&hDeviceInstallListNotEmpty,
-                           EVENT_ALL_ACCESS,
-                           NULL,
-                           SynchronizationEvent,
-                           FALSE);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("Could not create the event! (Status 0x%08lx)\n", Status);
-        goto Failure;
-    }
-
     Status = NtCreateEvent(&hNoPendingInstalls,
                            EVENT_ALL_ACCESS,
                            NULL,
@@ -577,11 +577,34 @@ InitializeUserModePnpManager(
                            FALSE);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Could not create the event! (Status 0x%08lx)\n", Status);
+        DPRINT1("Could not create the Pending-Install Event! (Status 0x%08lx)\n", Status);
         goto Failure;
     }
 
-    RtlInitializeSListHead(&DeviceInstallListHead);
+    /*
+     * Initialize the device-install event list
+     */
+
+    Status = NtCreateEvent(&hDeviceInstallListNotEmpty,
+                           EVENT_ALL_ACCESS,
+                           NULL,
+                           SynchronizationEvent,
+                           FALSE);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Could not create the List Event! (Status 0x%08lx)\n", Status);
+        goto Failure;
+    }
+
+    Status = NtCreateMutant(&hDeviceInstallListMutex,
+                            MUTANT_ALL_ACCESS,
+                            NULL, FALSE);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Could not create the List Mutex! (Status 0x%08lx)\n", Status);
+        goto Failure;
+    }
+    InitializeListHead(&DeviceInstallListHead);
 
     InitializeObjectAttributes(&ObjectAttributes, &EnumU, OBJ_CASE_INSENSITIVE, NULL, NULL);
     Status = NtOpenKey(&hEnumKey, KEY_QUERY_VALUE, &ObjectAttributes);
@@ -653,13 +676,17 @@ Failure:
         NtClose(hEnumKey);
     hEnumKey = NULL;
 
-    if (hNoPendingInstalls)
-        NtClose(hNoPendingInstalls);
-    hNoPendingInstalls = NULL;
+    if (hDeviceInstallListMutex)
+        NtClose(hDeviceInstallListMutex);
+    hDeviceInstallListMutex = NULL;
 
     if (hDeviceInstallListNotEmpty)
         NtClose(hDeviceInstallListNotEmpty);
     hDeviceInstallListNotEmpty = NULL;
+
+    if (hNoPendingInstalls)
+        NtClose(hNoPendingInstalls);
+    hNoPendingInstalls = NULL;
 
     return Status;
 }

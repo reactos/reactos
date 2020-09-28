@@ -104,13 +104,18 @@ PnpEventThread(LPVOID lpParameter)
             DeviceIdLength = lstrlenW(PnpEvent->TargetDevice.DeviceIds);
             if (DeviceIdLength)
             {
-                /* Queue device install (will be dequeued by DeviceInstallThread) */
+                /* Allocate a new device-install event */
                 len = FIELD_OFFSET(DeviceInstallParams, DeviceIds) + (DeviceIdLength + 1) * sizeof(WCHAR);
                 Params = HeapAlloc(GetProcessHeap(), 0, len);
                 if (Params)
                 {
                     wcscpy(Params->DeviceIds, PnpEvent->TargetDevice.DeviceIds);
-                    InterlockedPushEntrySList(&DeviceInstallListHead, &Params->ListEntry);
+
+                    /* Queue the event (will be dequeued by DeviceInstallThread) */
+                    WaitForSingleObject(hDeviceInstallListMutex, INFINITE);
+                    InsertTailList(&DeviceInstallListHead, &Params->ListEntry);
+                    ReleaseMutex(hDeviceInstallListMutex);
+
                     SetEvent(hDeviceInstallListNotEmpty);
                 }
             }
@@ -413,14 +418,6 @@ InitializePnPManager(VOID)
         return dwError;
     }
 
-    hDeviceInstallListNotEmpty = CreateEventW(NULL, FALSE, FALSE, NULL);
-    if (hDeviceInstallListNotEmpty == NULL)
-    {
-        dwError = GetLastError();
-        DPRINT1("Could not create the Event! (Error %lu)\n", dwError);
-        return dwError;
-    }
-
     hNoPendingInstalls = CreateEventW(NULL,
                                       TRUE,
                                       FALSE,
@@ -428,11 +425,30 @@ InitializePnPManager(VOID)
     if (hNoPendingInstalls == NULL)
     {
         dwError = GetLastError();
-        DPRINT1("Could not create the Event! (Error %lu)\n", dwError);
+        DPRINT1("Could not create the Pending-Install Event! (Error %lu)\n", dwError);
         return dwError;
     }
 
-    InitializeSListHead(&DeviceInstallListHead);
+    /*
+     * Initialize the device-install event list
+     */
+
+    hDeviceInstallListNotEmpty = CreateEventW(NULL, FALSE, FALSE, NULL);
+    if (hDeviceInstallListNotEmpty == NULL)
+    {
+        dwError = GetLastError();
+        DPRINT1("Could not create the List Event! (Error %lu)\n", dwError);
+        return dwError;
+    }
+
+    hDeviceInstallListMutex = CreateMutexW(NULL, FALSE, NULL);
+    if (hDeviceInstallListMutex == NULL)
+    {
+        dwError = GetLastError();
+        DPRINT1("Could not create the List Mutex! (Error %lu)\n", dwError);
+        return dwError;
+    }
+    InitializeListHead(&DeviceInstallListHead);
 
     /* Query the SuppressUI registry value and cache it for our whole lifetime */
     GetBooleanRegValue(HKEY_LOCAL_MACHINE,
