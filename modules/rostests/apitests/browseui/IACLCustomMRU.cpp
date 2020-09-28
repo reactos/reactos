@@ -405,8 +405,6 @@ test_IACLCustomMRU_Continue()
 static void
 test_IACLCustomMRU_TypedURLs()
 {
-    Cleanup_Testdata();
-
     // TypedURLs is special case
 #define TYPED_URL_KEY L"Software\\Microsoft\\Internet Explorer\\TypedURLs"
 
