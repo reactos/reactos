@@ -287,32 +287,30 @@ static void Edit_BackWord(HWND hwndEdit)
     iStart = iEnd = 0;
     SendMessageW(hwndEdit, EM_GETSEL, (WPARAM)&iStart, (LPARAM)&iEnd);
 
-    if (iStart != iEnd)
+    if (iStart != iEnd || iStart < 0)
         return;
 
-    DWORD cchText = GetWindowTextLengthW(hwndEdit);
-    size_t cb = (cchText + 1) * sizeof(WCHAR);
-    LPWSTR pszText = (LPWSTR)CoTaskMemAlloc(cb);
-    if (pszText == NULL)
+    size_t cchText = GetWindowTextLengthW(hwndEdit);
+    if (cchText < (size_t)iStart || (INT)cchText <= 0)
+        return;
+
+    CComHeapPtr<WCHAR> pszText;
+    if (!pszText.Allocate(cchText + 1))
         return;
 
     if (GetWindowTextW(hwndEdit, pszText, cchText + 1) <= 0)
-    {
-        CoTaskMemFree(pszText);
         return;
-    }
 
-    for (; 0 < iStart; --iStart)
+    WORD types[2];
+    for (--iStart; 0 < iStart; --iStart)
     {
-        WCHAR ch1 = pszText[iStart - 1];
-        WCHAR ch2 = pszText[iStart];
-        if ((wcschr(L"\\/.:;", ch1) && ch2 && !IsCharSpaceW(ch2)) ||
-            (IsCharSpaceW(ch1) && IsCharAlphaNumericW(ch2)))
+        GetStringTypeW(CT_CTYPE1, &pszText[iStart - 1], 2, types);
+        if (((types[0] & C1_PUNCT) && !(types[1] & C1_SPACE)) ||
+            ((types[0] & C1_SPACE) && (types[1] & (C1_ALPHA | C1_DIGIT))))
         {
             SendMessageW(hwndEdit, EM_SETSEL, iStart, iEnd);
             SendMessageW(hwndEdit, EM_REPLACESEL, TRUE, (LPARAM)L"");
-            iStart = -1;
-            break;
+            return;
         }
     }
 
@@ -321,8 +319,6 @@ static void Edit_BackWord(HWND hwndEdit)
         SendMessageW(hwndEdit, EM_SETSEL, iStart, iEnd);
         SendMessageW(hwndEdit, EM_REPLACESEL, TRUE, (LPARAM)L"");
     }
-
-    CoTaskMemFree(pszText);
 }
 
 /*
