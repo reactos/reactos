@@ -302,12 +302,16 @@ static void Edit_BackWord(HWND hwndEdit)
         return;
     }
 
-    for (; 0 < iStart; --iStart)
+    WCHAR ch1, ch2;
+    WORD wType1, wType2;
+    for (--iStart; 0 < iStart; --iStart)
     {
-        WCHAR ch1 = pszText[iStart - 1];
-        WCHAR ch2 = pszText[iStart];
-        if ((wcschr(L"\\/.:;", ch1) && ch2 && !IsCharSpaceW(ch2)) ||
-            (IsCharSpaceW(ch1) && IsCharAlphaNumericW(ch2)))
+        ch1 = pszText[iStart - 1];
+        ch2 = pszText[iStart];
+        GetStringTypeW(CT_CTYPE1, &ch1, 1, &wType1);
+        GetStringTypeW(CT_CTYPE1, &ch2, 1, &wType2);
+        if (((wType1 & C1_PUNCT) && !(wType2 & C1_SPACE)) ||
+            ((wType1 & C1_SPACE) && (wType2 & (C1_ALPHA | C1_DIGIT))))
         {
             SendMessageW(hwndEdit, EM_SETSEL, iStart, iEnd);
             SendMessageW(hwndEdit, EM_REPLACESEL, TRUE, (LPARAM)L"");
