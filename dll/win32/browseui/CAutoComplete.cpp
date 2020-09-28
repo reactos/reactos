@@ -294,9 +294,8 @@ static void Edit_BackWord(HWND hwndEdit)
     if (cchText < (size_t)iStart || (INT)cchText <= 0)
         return;
 
-    size_t cb = (cchText + 1) * sizeof(WCHAR);
-    CComHeapPtr<WCHAR> pszText((LPWSTR)CoTaskMemAlloc(cb));
-    if (!pszText)
+    CComHeapPtr<WCHAR> pszText;
+    if (!pszText.Allocate(cchText + 1))
         return;
 
     if (GetWindowTextW(hwndEdit, pszText, cchText + 1) <= 0)
