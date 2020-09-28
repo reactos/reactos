@@ -410,7 +410,7 @@ test_IACLCustomMRU_TypedURLs()
     // TypedURLs is special case
 #define TYPED_URL_KEY L"Software\\Microsoft\\Internet Explorer\\TypedURLs"
 
-    CStringW url1, url2;
+    CStringW url1, url2; // Save
     {
         CRegKey key;
         WCHAR Value[MAX_PATH];
@@ -427,6 +427,7 @@ test_IACLCustomMRU_TypedURLs()
         if (!result)
             url2 = Value;
 
+        // Set values
         key.SetStringValue(L"url1", L"aaa");
         key.SetStringValue(L"url2", L"bbb");
     }
