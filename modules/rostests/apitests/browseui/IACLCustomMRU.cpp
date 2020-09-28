@@ -402,12 +402,22 @@ test_IACLCustomMRU_Continue()
     verify_mru(CustomMRU, L"ba", L"FIRST_ENTRY", L"SECOND_ENTRY");
 }
 
-static void
-test_IACLCustomMRU_TypedURLs()
-{
-    // TypedURLs is special case
 #define TYPED_URL_KEY L"Software\\Microsoft\\Internet Explorer\\TypedURLs"
 
+static void
+RestoreTypedURLs(const CStringW& url1, const CStringW& url2)
+{
+    CRegKey key;
+    key.Open(HKEY_CURRENT_USER, TYPED_URL_KEY, KEY_WRITE);
+    if (url1 != L"")
+        key.SetStringValue(L"url1", url1);
+    if (url2 != L"")
+        key.SetStringValue(L"url2", url2);
+}
+
+static void
+test_IACLCustomMRU_TypedURLs() // TypedURLs is special case
+{
     CStringW url1, url2; // Save values
     {
         CRegKey key;
@@ -436,6 +446,7 @@ test_IACLCustomMRU_TypedURLs()
     if (FAILED(hr))
     {
         skip("IACLCustomMRU was NULL\n");
+        RestoreTypedURLs(url1, url2);
         return;
     }
 
@@ -448,6 +459,7 @@ test_IACLCustomMRU_TypedURLs()
     if (FAILED(hr))
     {
         skip("IEnumString was NULL\n");
+        RestoreTypedURLs(url1, url2);
         return;
     }
 
@@ -467,13 +479,7 @@ test_IACLCustomMRU_TypedURLs()
     ok_int(c, 1);
     CoTaskMemFree(psz);
 
-    // Restore
-    CRegKey key;
-    key.Open(HKEY_CURRENT_USER, TYPED_URL_KEY, KEY_WRITE);
-    if (url1 != L"")
-        key.SetStringValue(L"url1", url1);
-    if (url2 != L"")
-        key.SetStringValue(L"url2", url2);
+    RestoreTypedURLs(url1, url2);
 }
 
 START_TEST(IACLCustomMRU)
