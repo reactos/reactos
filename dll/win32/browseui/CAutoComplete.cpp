@@ -290,7 +290,7 @@ static void Edit_BackWord(HWND hwndEdit)
     if (iStart != iEnd)
         return;
 
-    DWORD cchText = GetWindowTextLengthW(hwndEdit);
+    INT cchText = GetWindowTextLengthW(hwndEdit);
     size_t cb = (cchText + 1) * sizeof(WCHAR);
     CComHeapPtr<WCHAR> pszText((LPWSTR)CoTaskMemAlloc(cb));
     if (!pszText)
