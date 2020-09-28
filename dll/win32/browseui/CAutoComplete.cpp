@@ -287,7 +287,7 @@ static void Edit_BackWord(HWND hwndEdit)
     iStart = iEnd = 0;
     SendMessageW(hwndEdit, EM_GETSEL, (WPARAM)&iStart, (LPARAM)&iEnd);
 
-    if (iStart != iEnd)
+    if (iStart != iEnd || iStart < 0 || iEnd < 0)
         return;
 
     size_t cchText = GetWindowTextLengthW(hwndEdit);
