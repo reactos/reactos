@@ -410,7 +410,7 @@ test_IACLCustomMRU_TypedURLs()
     // TypedURLs is special case
 #define TYPED_URL_KEY L"Software\\Microsoft\\Internet Explorer\\TypedURLs"
 
-    CStringW url1, url2; // Save
+    CStringW url1, url2; // Save values
     {
         CRegKey key;
         WCHAR Value[MAX_PATH];
@@ -450,11 +450,8 @@ test_IACLCustomMRU_TypedURLs()
     if (!SUCCEEDED(hr))
         return;
 
-    LPOLESTR psz;
-    ULONG c;
-
-    psz = NULL;
-    c = 0;
+    LPOLESTR psz = NULL;
+    ULONG c = 0;
     hr = pEnum->Next(1, &psz, &c);
     ok_hex(hr, S_OK);
     ok_wstri(psz, L"aaa");
@@ -472,14 +469,12 @@ test_IACLCustomMRU_TypedURLs()
         CoTaskMemFree(psz);
 
     // Restore
-    {
-        CRegKey key;
-        key.Open(HKEY_CURRENT_USER, TYPED_URL_KEY, KEY_WRITE);
-        if (url1 != L"")
-            key.SetStringValue(L"url1", url1);
-        if (url2 != L"")
-            key.SetStringValue(L"url2", url2);
-    }
+    CRegKey key;
+    key.Open(HKEY_CURRENT_USER, TYPED_URL_KEY, KEY_WRITE);
+    if (url1 != L"")
+        key.SetStringValue(L"url1", url1);
+    if (url2 != L"")
+        key.SetStringValue(L"url2", url2);
 }
 
 START_TEST(IACLCustomMRU)
