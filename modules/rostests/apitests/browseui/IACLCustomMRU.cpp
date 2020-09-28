@@ -413,18 +413,17 @@ test_IACLCustomMRU_TypedURLs()
     CStringW url1, url2; // Save values
     {
         CRegKey key;
-        WCHAR Value[MAX_PATH];
-        ULONG cch;
         key.Open(HKEY_CURRENT_USER, TYPED_URL_KEY, KEY_READ | KEY_WRITE);
 
-        cch = _countof(Value);
-        LONG result = key.QueryStringValue(L"url1", Value, &cch);
-        if (!result)
+        WCHAR Value[MAX_PATH];
+        ULONG cch = _countof(Value);
+        LSTATUS Status = key.QueryStringValue(L"url1", Value, &cch);
+        if (!Status)
             url1 = Value;
 
         cch = _countof(Value);
-        result = key.QueryStringValue(L"url2", Value, &cch);
-        if (!result)
+        Status = key.QueryStringValue(L"url2", Value, &cch);
+        if (!Status)
             url2 = Value;
 
         // Set values
