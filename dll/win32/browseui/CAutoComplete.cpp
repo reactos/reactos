@@ -304,7 +304,8 @@ static void Edit_BackWord(HWND hwndEdit)
 
     for (; 0 < iStart; --iStart)
     {
-        if (IsCharSpaceW(pszText[iStart - 1]) && IsCharAlphaNumericW(pszText[iStart]))
+        if (pszText[iStart - 1] == L'\\' ||
+            (IsCharSpaceW(pszText[iStart - 1]) && IsCharAlphaNumericW(pszText[iStart])))
         {
             SendMessageW(hwndEdit, EM_SETSEL, iStart, iEnd);
             SendMessageW(hwndEdit, EM_REPLACESEL, TRUE, (LPARAM)L"");
