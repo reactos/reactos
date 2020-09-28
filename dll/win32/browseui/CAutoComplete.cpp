@@ -296,7 +296,7 @@ static void Edit_BackWord(HWND hwndEdit)
     if (!pszText)
         return;
 
-    if (GetWindowTextW(hwndEdit, pszText, cchText + 1) <= 0)
+    if (GetWindowTextW(hwndEdit, pszText, cchText + 1) <= 0 || cchText < iStart)
         return;
 
     WORD wType1, wType2;
