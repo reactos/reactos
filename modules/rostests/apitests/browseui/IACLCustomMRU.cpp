@@ -433,19 +433,13 @@ test_IACLCustomMRU_TypedURLs()
     HRESULT hr = CoCreateInstance(CLSID_ACLCustomMRU, NULL, CLSCTX_ALL,
                                   IID_PPV_ARG(IACLCustomMRU, &CustomMRU));
     ok_hex(hr, S_OK);
-    if (!SUCCEEDED(hr))
-        return;
 
-    hr = CustomMRU->Initialize(TYPED_URL_KEY, 3);
+    hr = CustomMRU->Initialize(TYPED_URL_KEY, 64);
     ok_hex(hr, S_OK);
-    if (!SUCCEEDED(hr))
-        return;
 
     CComPtr<IEnumString> pEnum;
     hr = CustomMRU->QueryInterface(IID_PPV_ARG(IEnumString, &pEnum));
     ok_hex(hr, S_OK);
-    if (!SUCCEEDED(hr))
-        return;
 
     LPOLESTR psz = NULL;
     ULONG c = 0;
