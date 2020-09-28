@@ -547,10 +547,17 @@ static INT_PTR CALLBACK RunDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
             ComboInfo.cbSize = sizeof(ComboInfo);
             GetComboBoxInfo(hwndCombo, &ComboInfo);
             hwndEdit = ComboInfo.hwndItem;
+            ASSERT(::IsWindow(hwndEdit));
+
+            CoInitializeEx(NULL, COINIT_APARTMENTTHREADED); // SHAutoComplete needs co init
             SHAutoComplete(hwndEdit, SHACF_FILESYSTEM | SHACF_FILESYS_ONLY | SHACF_URLALL);
 
             SetFocus(hwndCombo);
             return TRUE;
+
+        case WM_DESTROY:
+            CoUninitialize();
+            break;
 
         case WM_COMMAND:
             switch (LOWORD(wParam))
