@@ -502,6 +502,10 @@ test_IACLCustomMRU_TypedURLs() // TypedURLs is special case
         return;
     }
 
+    CComPtr<IEnumString> pEnumClone;
+    hr = pEnum->Clone(&pEnumClone);
+    ok_hex(hr, E_NOTIMPL);
+
     hr = pEnum->Skip(1);
     ok_hex(hr, E_NOTIMPL);
 
