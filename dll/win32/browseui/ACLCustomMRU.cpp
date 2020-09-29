@@ -109,8 +109,6 @@ RegQueryCStringW(CRegKey& key, LPCWSTR pszValueName, CStringW& str)
 
 HRESULT CACLCustomMRU::LoadTypedURLs(DWORD dwMax)
 {
-    m_MRUData.RemoveAll();
-
     dwMax = max(0, dwMax);
     dwMax = min(29, dwMax);
 
@@ -143,6 +141,7 @@ HRESULT STDMETHODCALLTYPE CACLCustomMRU::Initialize(LPCWSTR pwszMRURegKey, DWORD
     if (Status != ERROR_SUCCESS)
         return HRESULT_FROM_WIN32(Status);
 
+    m_MRUData.RemoveAll();
     if (lstrcmpiW(pwszMRURegKey, TYPED_URLS_KEY) == 0)
     {
         m_bTypedURLs = TRUE;
@@ -157,7 +156,6 @@ HRESULT STDMETHODCALLTYPE CACLCustomMRU::Initialize(LPCWSTR pwszMRURegKey, DWORD
 
 HRESULT CACLCustomMRU::LoadMRUList(DWORD dwMax)
 {
-    m_MRUData.RemoveAll();
     dwMax = max(0, dwMax);
     dwMax = min(29, dwMax);
     while (dwMax--)
