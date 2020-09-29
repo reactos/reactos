@@ -628,77 +628,49 @@ CIrpQueue::ReleaseMappingWithTag(
     PIO_STACK_LOCATION IoStack;
     ULONG Index;
 
-    // first check if there is an active irp
-    if (m_Irp)
-    {
-        // now check if there are already used mappings
-        StreamData = (PKSSTREAM_DATA)m_Irp->Tail.Overlay.DriverContext[STREAM_DATA_OFFSET];
-
-        if (StreamData->StreamHeaderIndex)
-        {
-            // check if the released mapping is one current processed irps
-            for(Index = 0; Index < StreamData->StreamHeaderIndex; Index++)
-            {
-                // check if it is the same tag
-                if ((StreamData->Tags[Index].Tag == Tag) && 
-                    (StreamData->Tags[Index].Used != FALSE))
-                {
-                    // mark mapping as released
-                    StreamData->Tags[Index].Tag = NULL;
-                    StreamData->Tags[Index].Used = FALSE;
-
-                    // done
-                    return STATUS_SUCCESS;
-                }
-
-            }
-        }
-    }
-
     // remove irp from used list
     CurEntry = ExInterlockedRemoveHeadList(&m_FreeIrpList, &m_IrpListLock);
     if (CurEntry == NULL)
     {
-        // this should not happen
-        DPRINT("ReleaseMappingWithTag Tag %p not found\n", Tag);
-        return STATUS_NOT_FOUND;
+        // get current irp
+        if(m_Irp == NULL)
+        {
+            // this should not happen
+            DPRINT("ReleaseMappingWithTag Tag %p not found\n", Tag);
+            return STATUS_NOT_FOUND;
+        }
+
+        Irp = m_Irp;
     }
-
-    // sanity check
-    PC_ASSERT(CurEntry);
-
-    // get irp from list entry
-    Irp = (PIRP)CONTAINING_RECORD(CurEntry, IRP, Tail.Overlay.ListEntry);
+    else
+    {
+        // get irp from list entry
+        Irp = (PIRP)CONTAINING_RECORD(CurEntry, IRP, Tail.Overlay.ListEntry);
+    }
 
     // get stream data
     StreamData = (PKSSTREAM_DATA)Irp->Tail.Overlay.DriverContext[STREAM_DATA_OFFSET];
 
-    // sanity check
-    PC_ASSERT(StreamData->StreamHeaderIndex == StreamData->StreamHeaderCount);
-
-    // check if the released mapping is one of these
+    // release oldest in use mapping
     for(Index = 0; Index < StreamData->StreamHeaderCount; Index++)
     {
-        if ((StreamData->Tags[Index].Tag == Tag) &&
-            (StreamData->Tags[Index].Used != FALSE))
+        if (StreamData->Tags[Index].Used != FALSE)
         {
-            // mark mapping as released
-            StreamData->Tags[Index].Tag = NULL;
             StreamData->Tags[Index].Used = FALSE;
 
-            // done
+            // Warn if wrong mapping released
+            if(StreamData->Tags[Index].Tag != Tag)
+            {
+                DPRINT1("Mapping released out of order\n");
+            }
             break;
         }
-        else
-        {
-            //
-            // we assume that mappings are released in the same order as they have been acquired
-            // therefore if the current mapping is not the searched one, it must have been already
-            // released
-            //
-            ASSERT(StreamData->Tags[Index].Tag == NULL);
-            ASSERT(StreamData->Tags[Index].Used == FALSE);
-        }
+    }
+
+    // current IRP, do not complete
+    if(Irp == m_Irp)
+    {
+        return STATUS_SUCCESS;
     }
 
     // check if this is the last one released mapping
