@@ -25,6 +25,7 @@ private:
 
     void PersistMRU();
     HRESULT LoadTypedURLs(DWORD dwMax);
+    HRESULT LoadMRUList(DWORD dwMax);
 
 public:
     CACLCustomMRU();

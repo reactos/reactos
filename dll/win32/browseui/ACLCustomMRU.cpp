@@ -148,8 +148,15 @@ HRESULT STDMETHODCALLTYPE CACLCustomMRU::Initialize(LPCWSTR pwszMRURegKey, DWORD
         m_bTypedURLs = TRUE;
         return LoadTypedURLs(dwMax);
     }
-    m_bTypedURLs = FALSE;
+    else
+    {
+        m_bTypedURLs = FALSE;
+        return LoadMRUList(dwMax);
+    }
+}
 
+HRESULT CACLCustomMRU::LoadMRUList(DWORD dwMax)
+{
     m_MRUData.RemoveAll();
     dwMax = max(0, dwMax);
     dwMax = min(29, dwMax);
@@ -159,7 +166,7 @@ HRESULT STDMETHODCALLTYPE CACLCustomMRU::Initialize(LPCWSTR pwszMRURegKey, DWORD
     WCHAR MRUList[40];
     ULONG nChars = _countof(MRUList);
 
-    Status = m_Key.QueryStringValue(L"MRUList", MRUList, &nChars);
+    LSTATUS Status = m_Key.QueryStringValue(L"MRUList", MRUList, &nChars);
     if (Status != ERROR_SUCCESS)
         return S_OK;
 
