@@ -502,9 +502,12 @@ test_IACLCustomMRU_TypedURLs() // TypedURLs is special case
         return;
     }
 
+    hr = pEnum->Skip(1);
+    ok_hex(hr, E_NOTIMPL);
+
     LPOLESTR psz = NULL;
     ULONG c = 0;
-    hr = pEnum->Next(1, &psz, &c);
+    hr = pEnum->Next(2, &psz, &c);
     ok_hex(hr, S_OK);
     ok_wstri(psz, L"aaa");
     ok_int(c, 1);
