@@ -11,6 +11,8 @@
 class CACLCustomMRU :
     public CComCoClass<CACLCustomMRU, &CLSID_ACLCustomMRU>,
     public CComObjectRootEx<CComMultiThreadModelNoCS>,
+    public IEnumString,
+    public IACList,
     public IACLCustomMRU
 {
 private:
@@ -19,6 +21,7 @@ private:
     CSimpleArray<CStringW> m_MRUData;
     bool m_bDirty;
     BOOL m_bTypedURLs;
+    ULONG m_ielt;
 
     void PersistMRU();
     HRESULT LoadTypedURLs(DWORD dwMax);
@@ -27,9 +30,18 @@ public:
     CACLCustomMRU();
     ~CACLCustomMRU();
 
+    // *** IEnumString methods ***
+    STDMETHODIMP Next(ULONG celt, LPWSTR * rgelt, ULONG * pceltFetched) override;
+    STDMETHODIMP Skip(ULONG celt) override;
+    STDMETHODIMP Reset() override;
+    STDMETHODIMP Clone(IEnumString ** ppenum) override;
+
+    // *** IACList methods ***
+    STDMETHODIMP Expand(LPCOLESTR pszExpand) override;
+
     // *** IACLCustomMRU methods ***
-    virtual HRESULT STDMETHODCALLTYPE Initialize(LPCWSTR pwszMRURegKey, DWORD dwMax);
-    virtual HRESULT STDMETHODCALLTYPE AddMRUString(LPCWSTR pwszEntry);
+    STDMETHODIMP Initialize(LPCWSTR pwszMRURegKey, DWORD dwMax) override;
+    STDMETHODIMP AddMRUString(LPCWSTR pwszEntry) override;
 
 public:
 
@@ -39,6 +51,8 @@ public:
     DECLARE_PROTECT_FINAL_CONSTRUCT()
 
     BEGIN_COM_MAP(CACLCustomMRU)
+        COM_INTERFACE_ENTRY_IID(IID_IEnumString, IEnumString)
+        COM_INTERFACE_ENTRY_IID(IID_IACList, IACList)
         COM_INTERFACE_ENTRY_IID(IID_IACLCustomMRU, IACLCustomMRU)
     END_COM_MAP()
 };

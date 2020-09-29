@@ -11,13 +11,54 @@
 #define TYPED_URLS_KEY L"Software\\Microsoft\\Internet Explorer\\TypedURLs"
 
 CACLCustomMRU::CACLCustomMRU()
-    : m_bDirty(false), m_bTypedURLs(FALSE)
+    : m_bDirty(false), m_bTypedURLs(FALSE), m_ielt(0)
 {
 }
 
 CACLCustomMRU::~CACLCustomMRU()
 {
     PersistMRU();
+}
+
+STDMETHODIMP CACLCustomMRU::Next(ULONG celt, LPWSTR * rgelt, ULONG * pceltFetched)
+{
+    if (!pceltFetched || !rgelt)
+        return E_POINTER;
+
+    *pceltFetched = 0;
+    *rgelt = NULL;
+    if (INT(m_ielt) >= m_MRUData.GetSize())
+        return S_FALSE;
+
+    size_t cb = (m_MRUData[m_ielt].GetLength() + 1) * sizeof(WCHAR);
+    LPWSTR psz = (LPWSTR)CoTaskMemAlloc(cb);
+    if (!psz)
+        return S_FALSE;
+    *rgelt = psz;
+    *pceltFetched = 1;
+    return S_OK;
+}
+
+STDMETHODIMP CACLCustomMRU::Skip(ULONG celt)
+{
+    return E_NOTIMPL;
+}
+
+STDMETHODIMP CACLCustomMRU::Reset()
+{
+    m_ielt = 0;
+    return S_OK;
+}
+
+STDMETHODIMP CACLCustomMRU::Clone(IEnumString ** ppenum)
+{
+    *ppenum = NULL;
+    return E_NOTIMPL;
+}
+
+STDMETHODIMP CACLCustomMRU::Expand(LPCOLESTR pszExpand)
+{
+    return E_NOTIMPL;
 }
 
 void CACLCustomMRU::PersistMRU()
@@ -94,6 +135,8 @@ HRESULT CACLCustomMRU::LoadTypedURLs(DWORD dwMax)
 // *** IACLCustomMRU methods ***
 HRESULT STDMETHODCALLTYPE CACLCustomMRU::Initialize(LPCWSTR pwszMRURegKey, DWORD dwMax)
 {
+    m_ielt = 0;
+
     LSTATUS Status = m_Key.Create(HKEY_CURRENT_USER, pwszMRURegKey);
     if (Status != ERROR_SUCCESS)
         return HRESULT_FROM_WIN32(Status);
