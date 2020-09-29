@@ -100,7 +100,6 @@ protected:
     ULONG m_StreamHeaderIndex;
     PKSSTREAM_HEADER m_CurStreamHeader;
 
-    volatile ULONG m_NumDataAvailable;
     volatile ULONG m_CurrentOffset;
     volatile PIRP m_Irp;
     volatile LONG m_Ref;
@@ -115,7 +114,6 @@ typedef struct
 typedef struct
 {
     ULONG StreamHeaderCount;
-    ULONG TotalStreamData;
 
     PVOID * Data;
     PKSSTREAM_TAG Tags;
@@ -174,6 +172,7 @@ CIrpQueue::AddMapping(
     ULONG Index, Length;
     PMDL Mdl;
     PKSSTREAM_DATA StreamData;
+    LONG TotalStreamData;
 
     PC_ASSERT(KeGetCurrentIrql() == PASSIVE_LEVEL);
 
@@ -217,6 +216,8 @@ CIrpQueue::AddMapping(
     // first calculate the numbers of stream headers
     Length = IoStack->Parameters.DeviceIoControl.OutputBufferLength;
 
+    TotalStreamData = 0;
+
     do
     {
         /* subtract size */
@@ -228,12 +229,12 @@ CIrpQueue::AddMapping(
         if (m_Descriptor->DataFlow == KSPIN_DATAFLOW_IN)
         {
             // irp sink
-            StreamData->TotalStreamData += Header->DataUsed;
+            TotalStreamData += Header->DataUsed;
         }
         else
         {
             // irp source
-            StreamData->TotalStreamData += Header->FrameExtent;
+            TotalStreamData += Header->FrameExtent;
         }
 
         /* move to next header */
@@ -300,12 +301,10 @@ CIrpQueue::AddMapping(
         if (m_Descriptor->DataFlow == KSPIN_DATAFLOW_IN)
         {
             // increment available data
-            InterlockedExchangeAdd((PLONG)&m_NumDataAvailable, Header->DataUsed);
         }
         else if (m_Descriptor->DataFlow == KSPIN_DATAFLOW_OUT)
         {
             // increment available data
-            InterlockedExchangeAdd((PLONG)&m_NumDataAvailable, Header->FrameExtent);
         }
 
         // move to next header / mdl
@@ -317,7 +316,7 @@ CIrpQueue::AddMapping(
     // store stream data
     Irp->Tail.Overlay.DriverContext[STREAM_DATA_OFFSET] = (PVOID)StreamData;
 
-    *Data = StreamData->TotalStreamData;
+    *Data = TotalStreamData;
 
     // mark irp as pending
     IoMarkIrpPending(Irp);
@@ -442,9 +441,6 @@ CIrpQueue::UpdateMapping(
         m_CurStreamHeader->DataUsed += BytesWritten;
     }
 
-    // decrement available data counter
-    m_NumDataAvailable -= BytesWritten;
-
     // get audio buffer size
     if (m_Descriptor->DataFlow == KSPIN_DATAFLOW_OUT)
         Size = m_CurStreamHeader->FrameExtent;
@@ -482,11 +478,6 @@ CIrpQueue::UpdateMapping(
         {
             // looped streaming repeat the buffers untill
             // the caller decides to stop the streams
-
-
-
-            // increment available data
-            InterlockedExchangeAdd((PLONG)&m_NumDataAvailable, StreamData->TotalStreamData);
 
             // re-insert irp
             KsAddIrpToCancelableQueue(&m_IrpList, &m_IrpListLock, m_Irp, KsListEntryTail, NULL);
@@ -545,7 +536,8 @@ NTAPI
 CIrpQueue::NumData()
 {
     // returns the amount of audio stream data available
-    return m_NumDataAvailable;
+    UNIMPLEMENTED;
+    return 0;
 }
 
 BOOL
@@ -565,9 +557,6 @@ CIrpQueue::CancelBuffers()
 
     // cancel all irps
     KsCancelIo(&m_IrpList, &m_IrpListLock);
-
-    // reset number of data available
-    m_NumDataAvailable = 0;
 
     // done
     return TRUE;
@@ -638,17 +627,11 @@ CIrpQueue::GetMappingWithTag(
     {
         // sink pin
         *ByteCount = m_CurStreamHeader->DataUsed;
-
-        // decrement num data available
-        m_NumDataAvailable -= m_CurStreamHeader->DataUsed;
     }
     else
     {
         // source pin
         *ByteCount = m_CurStreamHeader->FrameExtent;
-
-        // decrement num data available
-        m_NumDataAvailable -= m_CurStreamHeader->FrameExtent;
     }
 
     if (m_StreamHeaderIndex == StreamData->StreamHeaderCount)
@@ -756,9 +739,6 @@ CIrpQueue::ReleaseMappingWithTag(
         {
             // looped buffers are not completed when they have been played
             // they are completed when the stream is set to stop
-
-            // increment available data
-            InterlockedExchangeAdd((PLONG)&m_NumDataAvailable, StreamData->TotalStreamData);
 
             KeReleaseSpinLock(&m_IrpListLock, OldLevel);
 
