@@ -505,13 +505,22 @@ test_IACLCustomMRU_TypedURLs() // TypedURLs is special case
     hr = pEnum->Skip(1);
     ok_hex(hr, E_NOTIMPL);
 
-    LPOLESTR psz = NULL;
+#define INVALID_LPOLESTR ((LPOLESTR)(LONG_PTR)0xDEADBEEF)
+    LPOLESTR apsz[2] = { NULL, INVALID_LPOLESTR };
     ULONG c = 0;
-    hr = pEnum->Next(2, &psz, &c);
+    hr = pEnum->Next(2, apsz, &c);
     ok_hex(hr, S_OK);
-    ok_wstri(psz, L"aaa");
+    ok_wstri(apsz[0], L"aaa");
     ok_int(c, 1);
-    CoTaskMemFree(psz);
+    ok(apsz[1] == INVALID_LPOLESTR, "apsz[1] was '%S'\n", apsz[1]);
+    CoTaskMemFree(apsz[0]);
+
+    LPOLESTR psz = INVALID_LPOLESTR;
+    c = 0;
+    hr = pEnum->Next(0, &psz, &c);
+    ok_hex(hr, S_OK);
+    ok(psz == INVALID_LPOLESTR, "psz was '%S'\n", psz);
+    ok_int(c, 0);
 
     psz = NULL;
     c = 0;
