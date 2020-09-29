@@ -3,12 +3,15 @@
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Custom MRU AutoComplete List
  * COPYRIGHT:   Copyright 2017 Mark Jansen (mark.jansen@reactos.org)
+ *              Copyright 2020 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
 #include "precomp.h"
 
+#define TYPED_URLS_KEY L"Software\\Microsoft\\Internet Explorer\\TypedURLs"
+
 CACLCustomMRU::CACLCustomMRU()
-    :m_bDirty(false)
+    : m_bDirty(false), m_bTypedURLs(FALSE)
 {
 }
 
@@ -37,12 +40,70 @@ void CACLCustomMRU::PersistMRU()
     }
 }
 
+static LONG
+RegQueryCStringW(CRegKey& key, LPCWSTR pszValueName, CStringW& str)
+{
+    // Check type and size
+    DWORD dwType, cbData;
+    LONG ret = key.QueryValue(pszValueName, &dwType, NULL, &cbData);
+    if (ret != ERROR_SUCCESS)
+        return ret;
+    if (dwType != REG_SZ && dwType != REG_EXPAND_SZ)
+        return ERROR_INVALID_DATA;
+
+    // Allocate buffer
+    LPWSTR pszBuffer = str.GetBuffer(cbData / sizeof(WCHAR) + 1);
+    if (pszBuffer == NULL)
+        return ERROR_OUTOFMEMORY;
+
+    // Get the data
+    ret = key.QueryValue(pszValueName, NULL, pszBuffer, &cbData);
+
+    // Release buffer
+    str.ReleaseBuffer();
+    return ret;
+}
+
+HRESULT CACLCustomMRU::LoadTypedURLs(DWORD dwMax)
+{
+    m_MRUData.RemoveAll();
+
+    dwMax = max(0, dwMax);
+    dwMax = min(29, dwMax);
+
+    BOOL bLoaded = FALSE;
+    for (DWORD i = 1; i <= dwMax; ++i)
+    {
+        // Build a registry value name
+        WCHAR szName[32];
+        StringCbPrintfW(szName, sizeof(szName), L"url%lu", i);
+
+        // Read a registry value
+        CString strData;
+        LSTATUS status = RegQueryCStringW(m_Key, szName, strData);
+        if (status != ERROR_SUCCESS)
+            break;
+
+        m_MRUData.Add(strData);
+        bLoaded = TRUE;
+    }
+
+    return bLoaded ? S_OK : E_FAIL;
+}
+
 // *** IACLCustomMRU methods ***
 HRESULT STDMETHODCALLTYPE CACLCustomMRU::Initialize(LPCWSTR pwszMRURegKey, DWORD dwMax)
 {
     LSTATUS Status = m_Key.Create(HKEY_CURRENT_USER, pwszMRURegKey);
     if (Status != ERROR_SUCCESS)
         return HRESULT_FROM_WIN32(Status);
+
+    if (lstrcmpiW(pwszMRURegKey, TYPED_URLS_KEY) == 0)
+    {
+        m_bTypedURLs = TRUE;
+        return LoadTypedURLs(dwMax);
+    }
+    m_bTypedURLs = FALSE;
 
     m_MRUData.RemoveAll();
     dwMax = max(0, dwMax);
@@ -91,6 +152,9 @@ HRESULT STDMETHODCALLTYPE CACLCustomMRU::Initialize(LPCWSTR pwszMRURegKey, DWORD
 HRESULT STDMETHODCALLTYPE CACLCustomMRU::AddMRUString(LPCWSTR pwszEntry)
 {
     ATLASSERT(m_MRUData.GetSize() <= m_MRUList.GetLength());
+
+    if (m_bTypedURLs)
+        return E_FAIL;
 
     m_bDirty = true;
 

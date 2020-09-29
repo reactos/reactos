@@ -3,6 +3,7 @@
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Custom MRU AutoComplete List
  * COPYRIGHT:   Copyright 2017 Mark Jansen (mark.jansen@reactos.org)
+ *              Copyright 2020 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
 #pragma once
@@ -17,8 +18,10 @@ private:
     CStringW m_MRUList;
     CSimpleArray<CStringW> m_MRUData;
     bool m_bDirty;
+    BOOL m_bTypedURLs;
 
     void PersistMRU();
+    HRESULT LoadTypedURLs(DWORD dwMax);
 
 public:
     CACLCustomMRU();
