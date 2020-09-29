@@ -18,15 +18,15 @@ CACLCustomMRU::CACLCustomMRU()
 CACLCustomMRU::~CACLCustomMRU()
 {
     PersistMRU();
-    m_Key.Close();
 }
 
 void CACLCustomMRU::PersistMRU()
 {
+    if (!m_bDirty || m_bTypedURLs)
+        return;
+
     WCHAR Key[2] = { 0, 0 };
 
-    if (!m_bDirty)
-        return;
     m_bDirty = false;
 
     if (m_Key.m_hKey)
