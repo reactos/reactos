@@ -31,7 +31,7 @@ public:
     ~CACLCustomMRU();
 
     // *** IEnumString methods ***
-    STDMETHODIMP Next(ULONG celt, LPWSTR * rgelt, ULONG * pceltFetched) override;
+    STDMETHODIMP Next(ULONG celt, LPWSTR *rgelt, ULONG *pceltFetched) override;
     STDMETHODIMP Skip(ULONG celt) override;
     STDMETHODIMP Reset() override;
     STDMETHODIMP Clone(IEnumString ** ppenum) override;

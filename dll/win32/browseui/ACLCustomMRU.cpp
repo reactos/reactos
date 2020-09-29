@@ -20,7 +20,7 @@ CACLCustomMRU::~CACLCustomMRU()
     PersistMRU();
 }
 
-STDMETHODIMP CACLCustomMRU::Next(ULONG celt, LPWSTR * rgelt, ULONG * pceltFetched)
+STDMETHODIMP CACLCustomMRU::Next(ULONG celt, LPWSTR *rgelt, ULONG *pceltFetched)
 {
     if (!pceltFetched || !rgelt)
         return E_POINTER;
@@ -34,8 +34,10 @@ STDMETHODIMP CACLCustomMRU::Next(ULONG celt, LPWSTR * rgelt, ULONG * pceltFetche
     LPWSTR psz = (LPWSTR)CoTaskMemAlloc(cb);
     if (!psz)
         return S_FALSE;
+
     *rgelt = psz;
     *pceltFetched = 1;
+    ++m_ielt;
     return S_OK;
 }
 
