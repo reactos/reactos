@@ -14,6 +14,50 @@
 
 #include <debug.h>
 
+static
+KSDDKAPI
+PIRP
+NTAPI
+RemoveHeadList_IRP(
+    IN  OUT PLIST_ENTRY QueueHead)
+{
+    PIRP Irp;
+    PLIST_ENTRY CurEntry;
+
+    /* point to queue head */
+    CurEntry = QueueHead;
+
+    do
+    {
+        /* iterate to next entry */
+        CurEntry = CurEntry->Flink;
+
+        /* is the end of list reached */
+        if (CurEntry == QueueHead)
+        {
+            /* reached end of list */
+            break;
+        }
+
+        /* get irp offset */
+        Irp = (PIRP)CONTAINING_RECORD(CurEntry, IRP, Tail.Overlay.ListEntry);
+
+        /* remove cancel routine */
+        if (IoSetCancelRoutine(Irp, NULL))
+        {
+
+            /* remove irp from list */
+            RemoveEntryList(&Irp->Tail.Overlay.ListEntry);
+
+            /* return irp */
+            return Irp;
+        }
+
+    }while(TRUE);
+
+    /* no non canceled irp has been found */
+    return NULL;
+}
 class CIrpQueue : public IIrpQueue
 {
 public:
@@ -534,6 +578,7 @@ CIrpQueue::GetMappingWithTag(
     OUT PULONG  Flags)
 {
     PKSSTREAM_DATA StreamData;
+    KIRQL OldLevel;
 
     /* sanity checks */
     PC_ASSERT(PhysicalAddress);
@@ -541,20 +586,27 @@ CIrpQueue::GetMappingWithTag(
     PC_ASSERT(ByteCount);
     PC_ASSERT(Flags);
 
+
+    KeAcquireSpinLock(&m_IrpListLock, &OldLevel);
+
     if (!m_Irp)
     {
         // get an irp from the queue
-        m_Irp = KsRemoveIrpFromCancelableQueue(&m_IrpList, &m_IrpListLock, KsListEntryHead, KsAcquireAndRemoveOnlySingleItem);
+        m_Irp = RemoveHeadList_IRP(&m_IrpList);
+
+        // check if there is an irp
+        if (!m_Irp)
+        {
+            // no irp available
+            m_OutOfMapping = TRUE;
+            KeReleaseSpinLock(&m_IrpListLock, OldLevel);
+
+            DPRINT("GetMappingWithTag no mapping available\n");
+            return STATUS_NOT_FOUND;
+        }
     }
 
-    // check if there is an irp
-    if (!m_Irp)
-    {
-        // no irp available
-        m_OutOfMapping = TRUE;
-        DPRINT("GetMappingWithTag no mapping available\n");
-        return STATUS_NOT_FOUND;
-    }
+
 
     // get stream data
     StreamData = (PKSSTREAM_DATA)m_Irp->Tail.Overlay.DriverContext[STREAM_DATA_OFFSET];
@@ -563,7 +615,6 @@ CIrpQueue::GetMappingWithTag(
     PC_ASSERT(StreamData->StreamHeaderIndex < StreamData->StreamHeaderCount);
 
     // setup mapping
-    *PhysicalAddress = MmGetPhysicalAddress(StreamData->Data[StreamData->StreamHeaderIndex]);
     *VirtualAddress = StreamData->Data[StreamData->StreamHeaderIndex];
 
     // store tag in irp
@@ -597,7 +648,7 @@ CIrpQueue::GetMappingWithTag(
         *Flags = 1;
 
         // insert mapping into free list
-        ExInterlockedInsertTailList(&m_FreeIrpList, &m_Irp->Tail.Overlay.ListEntry, &m_IrpListLock);
+        InsertTailList(&m_FreeIrpList, &m_Irp->Tail.Overlay.ListEntry);
 
         // clear irp
         m_Irp = NULL;
@@ -611,6 +662,11 @@ CIrpQueue::GetMappingWithTag(
         // move to next header
         StreamData->CurStreamHeader = (PKSSTREAM_HEADER)((ULONG_PTR)StreamData->CurStreamHeader + StreamData->CurStreamHeader->Size);
     }
+
+    // get physical address
+    *PhysicalAddress = MmGetPhysicalAddress(*VirtualAddress);
+
+    KeReleaseSpinLock(&m_IrpListLock, OldLevel);
 
     DPRINT("GetMappingWithTag Tag %p Buffer %p Flags %lu ByteCount %lx\n", Tag, VirtualAddress, *Flags, *ByteCount);
     // done
@@ -627,14 +683,18 @@ CIrpQueue::ReleaseMappingWithTag(
     PKSSTREAM_DATA StreamData;
     PIO_STACK_LOCATION IoStack;
     ULONG Index;
+    KIRQL OldLevel;
 
-    // remove irp from used list
-    CurEntry = ExInterlockedRemoveHeadList(&m_FreeIrpList, &m_IrpListLock);
-    if (CurEntry == NULL)
+    KeAcquireSpinLock(&m_IrpListLock, &OldLevel);
+
+    // check if used list empty
+    if (IsListEmpty(&m_FreeIrpList))
     {
         // get current irp
         if(m_Irp == NULL)
         {
+            KeReleaseSpinLock(&m_IrpListLock, OldLevel);
+
             // this should not happen
             DPRINT("ReleaseMappingWithTag Tag %p not found\n", Tag);
             return STATUS_NOT_FOUND;
@@ -644,6 +704,9 @@ CIrpQueue::ReleaseMappingWithTag(
     }
     else
     {
+        // remove irp from used list
+        CurEntry = RemoveHeadList(&m_FreeIrpList);
+
         // get irp from list entry
         Irp = (PIRP)CONTAINING_RECORD(CurEntry, IRP, Tail.Overlay.ListEntry);
     }
@@ -663,6 +726,7 @@ CIrpQueue::ReleaseMappingWithTag(
             {
                 DPRINT1("Mapping released out of order\n");
             }
+
             break;
         }
     }
@@ -670,6 +734,7 @@ CIrpQueue::ReleaseMappingWithTag(
     // current IRP, do not complete
     if(Irp == m_Irp)
     {
+        KeReleaseSpinLock(&m_IrpListLock, OldLevel);
         return STATUS_SUCCESS;
     }
 
@@ -692,6 +757,8 @@ CIrpQueue::ReleaseMappingWithTag(
             // increment available data
             InterlockedExchangeAdd((PLONG)&m_NumDataAvailable, StreamData->TotalStreamData);
 
+            KeReleaseSpinLock(&m_IrpListLock, OldLevel);
+
             // re-insert irp
             KsAddIrpToCancelableQueue(&m_IrpList, &m_IrpListLock, Irp, KsListEntryTail, NULL);
 
@@ -702,6 +769,8 @@ CIrpQueue::ReleaseMappingWithTag(
         //
         // time to complete non looped buffer
         //
+
+        KeReleaseSpinLock(&m_IrpListLock, OldLevel);
 
         // free stream data array
         FreeItem(StreamData->Data, TAG_PORTCLASS);
@@ -727,7 +796,9 @@ CIrpQueue::ReleaseMappingWithTag(
     else
     {
         // there are still some headers not consumed
-        ExInterlockedInsertHeadList(&m_FreeIrpList, &Irp->Tail.Overlay.ListEntry, &m_IrpListLock);
+        InsertHeadList(&m_FreeIrpList, &Irp->Tail.Overlay.ListEntry);
+
+        KeReleaseSpinLock(&m_IrpListLock, OldLevel);
     }
 
     return STATUS_SUCCESS;
