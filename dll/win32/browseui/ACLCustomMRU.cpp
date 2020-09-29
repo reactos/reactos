@@ -26,6 +26,9 @@ STDMETHODIMP CACLCustomMRU::Next(ULONG celt, LPWSTR *rgelt, ULONG *pceltFetched)
         return E_POINTER;
 
     *pceltFetched = 0;
+    if (celt == 0)
+        return S_OK;
+
     *rgelt = NULL;
     if (INT(m_ielt) >= m_MRUData.GetSize())
         return S_FALSE;
