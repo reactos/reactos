@@ -450,8 +450,47 @@ test_IACLCustomMRU_TypedURLs() // TypedURLs is special case
         return;
     }
 
+    CComPtr<IACList> ACList;
+    hr = CustomMRU->QueryInterface(IID_PPV_ARG(IACList, &ACList));
+    ok_hex(hr, S_OK);
+    if (SUCCEEDED(hr))
+    {
+        hr = ACList->Expand(L"C:");
+        ok_hex(hr, E_NOTIMPL);
+        hr = ACList->Expand(L"C:\\");
+        ok_hex(hr, E_NOTIMPL);
+        hr = ACList->Expand(L"C:\\Program Files");
+        ok_hex(hr, E_NOTIMPL);
+        hr = ACList->Expand(L"C:\\Program Files\\");
+        ok_hex(hr, E_NOTIMPL);
+        hr = ACList->Expand(L"http://");
+        ok_hex(hr, E_NOTIMPL);
+        hr = ACList->Expand(L"https://");
+        ok_hex(hr, E_NOTIMPL);
+        hr = ACList->Expand(L"https://google.co.jp/");
+        ok_hex(hr, E_NOTIMPL);
+    }
+
     hr = CustomMRU->Initialize(TYPED_URLS_KEY, 64);
     ok_hex(hr, S_OK);
+
+    if (ACList)
+    {
+        hr = ACList->Expand(L"C:");
+        ok_hex(hr, E_NOTIMPL);
+        hr = ACList->Expand(L"C:\\");
+        ok_hex(hr, E_NOTIMPL);
+        hr = ACList->Expand(L"C:\\Program Files");
+        ok_hex(hr, E_NOTIMPL);
+        hr = ACList->Expand(L"C:\\Program Files\\");
+        ok_hex(hr, E_NOTIMPL);
+        hr = ACList->Expand(L"http://");
+        ok_hex(hr, E_NOTIMPL);
+        hr = ACList->Expand(L"https://");
+        ok_hex(hr, E_NOTIMPL);
+        hr = ACList->Expand(L"https://google.co.jp/");
+        ok_hex(hr, E_NOTIMPL);
+    }
 
     CComPtr<IEnumString> pEnum;
     hr = CustomMRU->QueryInterface(IID_PPV_ARG(IEnumString, &pEnum));
