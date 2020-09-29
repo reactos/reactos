@@ -479,6 +479,13 @@ test_IACLCustomMRU_TypedURLs() // TypedURLs is special case
     ok_int(c, 1);
     CoTaskMemFree(psz);
 
+    hr = CustomMRU->AddMRUString(L"https://google.co.jp");
+    ok_hex(hr, E_FAIL);
+    hr = CustomMRU->AddMRUString(L"C:");
+    ok_hex(hr, E_FAIL);
+    hr = CustomMRU->AddMRUString(L"C:\\");
+    ok_hex(hr, E_FAIL);
+
     RestoreTypedURLs(url1, url2);
 }
 
