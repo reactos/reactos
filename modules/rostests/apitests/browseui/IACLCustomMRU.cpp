@@ -402,13 +402,13 @@ test_IACLCustomMRU_Continue()
     verify_mru(CustomMRU, L"ba", L"FIRST_ENTRY", L"SECOND_ENTRY");
 }
 
-#define TYPED_URL_KEY L"Software\\Microsoft\\Internet Explorer\\TypedURLs"
+#define TYPED_URLS_KEY L"Software\\Microsoft\\Internet Explorer\\TypedURLs"
 
 static void
 RestoreTypedURLs(const CStringW& url1, const CStringW& url2)
 {
     CRegKey key;
-    key.Open(HKEY_CURRENT_USER, TYPED_URL_KEY, KEY_WRITE);
+    key.Open(HKEY_CURRENT_USER, TYPED_URLS_KEY, KEY_WRITE);
     if (url1 != L"")
         key.SetStringValue(L"url1", url1);
     if (url2 != L"")
@@ -421,7 +421,7 @@ test_IACLCustomMRU_TypedURLs() // TypedURLs is special case
     CStringW url1, url2; // Save values
     {
         CRegKey key;
-        key.Open(HKEY_CURRENT_USER, TYPED_URL_KEY, KEY_READ | KEY_WRITE);
+        key.Open(HKEY_CURRENT_USER, TYPED_URLS_KEY, KEY_READ | KEY_WRITE);
 
         WCHAR Value[MAX_PATH];
         ULONG cch = _countof(Value);
@@ -450,7 +450,7 @@ test_IACLCustomMRU_TypedURLs() // TypedURLs is special case
         return;
     }
 
-    hr = CustomMRU->Initialize(TYPED_URL_KEY, 64);
+    hr = CustomMRU->Initialize(TYPED_URLS_KEY, 64);
     ok_hex(hr, S_OK);
 
     CComPtr<IEnumString> pEnum;
