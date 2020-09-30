@@ -90,6 +90,8 @@ void CACLCustomMRU::PersistMRU()
 static LONG
 RegQueryCStringW(CRegKey& key, LPCWSTR pszValueName, CStringW& str)
 {
+    str = L"";
+
     // Check type and size
     DWORD dwType, cbData;
     LONG ret = key.QueryValue(pszValueName, &dwType, NULL, &cbData);
@@ -123,7 +125,7 @@ HRESULT CACLCustomMRU::LoadTypedURLs(DWORD dwMax)
         StringCbPrintfW(szName, sizeof(szName), L"url%lu", i);
 
         // Read a registry value
-        CString strData;
+        CStringW strData;
         LSTATUS status = RegQueryCStringW(m_Key, szName, strData);
         if (status != ERROR_SUCCESS)
             break;
