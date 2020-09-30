@@ -19,7 +19,7 @@ KSDDKAPI
 PIRP
 NTAPI
 RemoveHeadList_IRP(
-    IN  OUT PLIST_ENTRY QueueHead)
+    IN OUT PLIST_ENTRY QueueHead)
 {
     PIRP Irp;
     PLIST_ENTRY CurEntry;
