@@ -15,9 +15,7 @@
 #include <debug.h>
 
 static
-KSDDKAPI
 PIRP
-NTAPI
 RemoveHeadList_IRP(
     IN OUT PLIST_ENTRY QueueHead)
 {
