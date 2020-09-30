@@ -38,6 +38,7 @@ STDMETHODIMP CACLCustomMRU::Next(ULONG celt, LPWSTR *rgelt, ULONG *pceltFetched)
     if (!psz)
         return S_FALSE;
 
+    CopyMemory(psz, (LPCWSTR)m_MRUData[m_ielt], cb);
     *rgelt = psz;
     *pceltFetched = 1;
     ++m_ielt;
@@ -115,7 +116,6 @@ HRESULT CACLCustomMRU::LoadTypedURLs(DWORD dwMax)
     dwMax = max(0, dwMax);
     dwMax = min(29, dwMax);
 
-    BOOL bLoaded = FALSE;
     for (DWORD i = 1; i <= dwMax; ++i)
     {
         // Build a registry value name
@@ -129,10 +129,9 @@ HRESULT CACLCustomMRU::LoadTypedURLs(DWORD dwMax)
             break;
 
         m_MRUData.Add(strData);
-        bLoaded = TRUE;
     }
 
-    return bLoaded ? S_OK : E_FAIL;
+    return S_OK;
 }
 
 // *** IACLCustomMRU methods ***
