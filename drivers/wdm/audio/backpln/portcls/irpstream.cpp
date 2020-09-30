@@ -513,9 +513,70 @@ ULONG
 NTAPI
 CIrpQueue::NumData()
 {
-    // returns the amount of audio stream data available
-    UNIMPLEMENTED;
-    return 0;
+    KIRQL OldLevel;
+    ULONG NumDataAvailable;
+    PLIST_ENTRY CurEntry;
+    PIRP Irp;
+    ULONG CurrentOffset;
+    ULONG StreamHeaderIndex;
+    PKSSTREAM_HEADER CurStreamHeader;
+    PKSSTREAM_DATA StreamData;
+    ULONG Size;
+
+    KeAcquireSpinLock(&m_IrpListLock, &OldLevel);
+
+    NumDataAvailable = 0;
+    CurEntry = &m_IrpList;
+
+    // current IRP state
+    Irp = m_Irp;
+    CurrentOffset = m_CurrentOffset;
+    StreamHeaderIndex = m_StreamHeaderIndex;
+    CurStreamHeader = m_CurStreamHeader;
+
+    while (TRUE)
+    {
+        if (Irp != NULL)
+        {
+            // get stream data
+            StreamData = (PKSSTREAM_DATA)Irp->Tail.Overlay.DriverContext[STREAM_DATA_OFFSET];
+
+            // loop over stream headers
+            for (; StreamHeaderIndex < StreamData->StreamHeaderCount; StreamHeaderIndex++)
+            {
+                // get audio buffer size
+                if (m_Descriptor->DataFlow == KSPIN_DATAFLOW_OUT)
+                    Size = CurStreamHeader->FrameExtent;
+                else
+                    Size = CurStreamHeader->DataUsed;
+
+                // increment available data
+                NumDataAvailable += Size - CurrentOffset;
+                CurrentOffset = 0;
+
+                // move to next stream header
+                CurStreamHeader = (PKSSTREAM_HEADER)((ULONG_PTR)CurStreamHeader + CurStreamHeader->Size);
+            }
+        }
+
+        /* iterate to next entry */
+        CurEntry = CurEntry->Flink;
+
+        /* is the end of list reached */
+        if (CurEntry == &m_IrpList)
+            break;
+
+        /* get irp offset */
+        Irp = (PIRP)CONTAINING_RECORD(CurEntry, IRP, Tail.Overlay.ListEntry);
+
+        // next IRP state
+        CurrentOffset = 0;
+        StreamHeaderIndex = 0;
+        CurStreamHeader = (PKSSTREAM_HEADER)Irp->AssociatedIrp.SystemBuffer;
+    }
+
+    KeReleaseSpinLock(&m_IrpListLock, OldLevel);
+    return NumDataAvailable;
 }
 
 BOOL
