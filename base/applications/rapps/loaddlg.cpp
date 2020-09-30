@@ -629,7 +629,7 @@ unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
         // do we have a final slash separator?
         if (!p)
         {
-            MessageBox_LoadString(hMainWnd, IDS_UNABLE_PATH);            
+            MessageBox_LoadString(hMainWnd, IDS_UNABLE_PATH);
             goto end;
         }
 
@@ -811,7 +811,7 @@ unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
             (InfoArray[iAppId].DLType == DLTYPE_DBUPDATE))
         {
             CLocalPtr<char> subjectName, issuerName;
-            CStringW szMsgText;
+            CStringA szMsgText;
             bool bAskQuestion = false;
             if (!CertGetSubjectAndIssuer(hFile, subjectName, issuerName))
             {
@@ -830,7 +830,7 @@ unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
 
             if (bAskQuestion)
             {
-                if (MessageBoxW(hMainWnd, szMsgText.GetString(), NULL, MB_YESNO | MB_ICONERROR) != IDYES)
+                if (MessageBoxA(hMainWnd, szMsgText.GetString(), NULL, MB_YESNO | MB_ICONERROR) != IDYES)
                 {
                     goto end;
                 }
