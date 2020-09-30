@@ -87,14 +87,14 @@ void CACLCustomMRU::PersistMRU()
     }
 }
 
-static LONG
+static LSTATUS
 RegQueryCStringW(CRegKey& key, LPCWSTR pszValueName, CStringW& str)
 {
     str = L"";
 
     // Check type and size
     DWORD dwType, cbData;
-    LONG ret = key.QueryValue(pszValueName, &dwType, NULL, &cbData);
+    LSTATUS ret = key.QueryValue(pszValueName, &dwType, NULL, &cbData);
     if (ret != ERROR_SUCCESS)
         return ret;
     if (dwType != REG_SZ && dwType != REG_EXPAND_SZ)
