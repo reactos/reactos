@@ -228,7 +228,7 @@ CIrpQueue::AddMapping(
 
         // append page count
         StreamPageCount += ADDRESS_AND_SIZE_TO_SPAN_PAGES(
-            MmGetMdlByteOffset(Mdl), HeaderLength);
+                               MmGetMdlByteOffset(Mdl), HeaderLength);
 
         // move to next header / mdl
         Mdl = Mdl->Next;
