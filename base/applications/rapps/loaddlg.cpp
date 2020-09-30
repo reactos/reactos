@@ -563,7 +563,7 @@ unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
     HANDLE hOut = INVALID_HANDLE_VALUE;
 
     unsigned char lpBuffer[4096];
-    LPCWSTR lpszAgent = L"RApps/1.0";
+    LPCWSTR lpszAgent = L"RApps/1.1";
     URL_COMPONENTSW urlComponents;
     size_t urlLength, filenameLength;
 
