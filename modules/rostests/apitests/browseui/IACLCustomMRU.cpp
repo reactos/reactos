@@ -411,8 +411,12 @@ RestoreTypedURLs(const CStringW& url1, const CStringW& url2)
     key.Open(HKEY_CURRENT_USER, TYPED_URLS_KEY, KEY_WRITE);
     if (url1 != L"")
         key.SetStringValue(L"url1", url1);
+    else
+        key.DeleteValue(L"url1");
     if (url2 != L"")
         key.SetStringValue(L"url2", url2);
+    else
+        key.DeleteValue(L"url2");
 }
 
 static void
@@ -421,7 +425,7 @@ test_IACLCustomMRU_TypedURLs() // TypedURLs is special case
     CStringW url1, url2; // Save values
     {
         CRegKey key;
-        key.Open(HKEY_CURRENT_USER, TYPED_URLS_KEY, KEY_READ | KEY_WRITE);
+        key.Create(HKEY_CURRENT_USER, TYPED_URLS_KEY);
 
         WCHAR Value[MAX_PATH];
         ULONG cch = _countof(Value);
