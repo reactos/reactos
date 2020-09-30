@@ -24,36 +24,19 @@ RemoveHeadList_IRP(
     PIRP Irp;
     PLIST_ENTRY CurEntry;
 
-    /* point to queue head */
-    CurEntry = QueueHead;
-
-    do
+    for (CurEntry = QueueHead->Flink; CurEntry != QueueHead; CurEntry = CurEntry->Flink)
     {
-        /* iterate to next entry */
-        CurEntry = CurEntry->Flink;
-
-        /* is the end of list reached */
-        if (CurEntry == QueueHead)
-        {
-            /* reached end of list */
-            break;
-        }
-
-        /* get irp offset */
+        /* Get the IRP offset */
         Irp = (PIRP)CONTAINING_RECORD(CurEntry, IRP, Tail.Overlay.ListEntry);
 
-        /* remove cancel routine */
+        /* Remove the cancel routine */
         if (IoSetCancelRoutine(Irp, NULL))
         {
-
-            /* remove irp from list */
+            /* Remove the IRP from the list and return it */
             RemoveEntryList(&Irp->Tail.Overlay.ListEntry);
-
-            /* return irp */
             return Irp;
         }
-
-    }while(TRUE);
+    }
 
     /* no non canceled irp has been found */
     return NULL;
