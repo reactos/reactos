@@ -732,7 +732,7 @@ CIrpQueue::ReleaseMappingWithTag(
             StreamData->Tags[Index].Used = FALSE;
 
             // Warn if wrong mapping released
-            if(StreamData->Tags[Index].Tag != Tag)
+            if (StreamData->Tags[Index].Tag != Tag)
             {
                 DPRINT1("Mapping released out of order\n");
             }
