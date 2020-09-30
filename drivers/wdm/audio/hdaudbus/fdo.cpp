@@ -625,7 +625,6 @@ HDA_FDOStartDevice(
     ULONG Index;
     USHORT Value;
     PCI_COMMON_CONFIG PciConfig;
-    ULONG BytesRead;
 
     /* get device extension */
     DeviceExtension = (PHDA_FDO_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
@@ -653,7 +652,7 @@ HDA_FDOStartDevice(
         return Status;
     }
 
-    BytesRead = (*DeviceExtension->BusInterface.GetBusData)(DeviceExtension->BusInterface.Context,
+    (*DeviceExtension->BusInterface.GetBusData)(DeviceExtension->BusInterface.Context,
                                                          PCI_WHICHSPACE_CONFIG,
                                                          &PciConfig,
                                                          0,
