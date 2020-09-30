@@ -725,7 +725,7 @@ CIrpQueue::ReleaseMappingWithTag(
     StreamData = (PKSSTREAM_DATA)Irp->Tail.Overlay.DriverContext[STREAM_DATA_OFFSET];
 
     // release oldest in use mapping
-    for(Index = 0; Index < StreamData->nTags; Index++)
+    for (Index = 0; Index < StreamData->nTags; Index++)
     {
         if (StreamData->Tags[Index].Used != FALSE)
         {
