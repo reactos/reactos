@@ -92,18 +92,32 @@ VOID CAvailableApplicationInfo::RetrieveGeneralInfo(AvailableStrings& AvlbString
         }
     }
 
+    ATL::CStringW IconPath = AvlbStrings.szAppsPath;
+    PathAppendW(IconPath.GetBuffer(MAX_PATH), L"icons");
+
     // TODO: are we going to support specify an URL for an icon ?
     ATL::CStringW IconLocation;
     if (GetString(L"Icon", IconLocation))
     {
-        // TODO: Does the filename contain anything stuff like ":" "<" ">" ?
-        // these stuff may lead to security issues
-        ATL::CStringW IconPath = AvlbStrings.szAppsPath;
-        PathAppendW(IconPath.GetBuffer(MAX_PATH), L"icons");
         BOOL bSuccess = PathAppendNoDirEscapeW(IconPath.GetBuffer(), IconLocation.GetString());
         IconPath.ReleaseBuffer();
 
-        if (bSuccess)
+        if (!bSuccess)
+        {
+            IconPath.Empty();
+        }
+    }
+    else
+    {
+        // inifile.ico
+        PathAppendW(IconPath.GetBuffer(), m_szPkgName);
+        IconPath.ReleaseBuffer();
+        IconPath += L".ico";
+    }
+
+    if (!IconPath.IsEmpty())
+    {
+        if (PathFileExistsW(IconPath))
         {
             m_szIconLocation = IconPath;
         }
