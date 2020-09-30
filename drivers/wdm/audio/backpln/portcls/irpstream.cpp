@@ -701,7 +701,7 @@ CIrpQueue::ReleaseMappingWithTag(
     if (IsListEmpty(&m_FreeIrpList))
     {
         // get current irp
-        if(m_Irp == NULL)
+        if (!m_Irp)
         {
             KeReleaseSpinLock(&m_IrpListLock, OldLevel);
 
