@@ -100,8 +100,8 @@ protected:
     ULONG m_TagIndex;
     PKSSTREAM_HEADER m_CurStreamHeader;
 
-    volatile ULONG m_CurrentOffset;
-    volatile PIRP m_Irp;
+    ULONG m_CurrentOffset;
+    PIRP m_Irp;
     volatile LONG m_Ref;
 };
 
@@ -431,7 +431,7 @@ CIrpQueue::UpdateMapping(
     ASSERT(StreamData);
 
     // add to current offset
-    InterlockedExchangeAdd((PLONG)&m_CurrentOffset, (LONG)BytesWritten);
+    m_CurrentOffset += BytesWritten;
 
     if (m_Descriptor->DataFlow == KSPIN_DATAFLOW_OUT)
     {
