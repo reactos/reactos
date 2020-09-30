@@ -367,7 +367,7 @@ CIrpQueue::GetMapping(
         m_CurrentOffset = Offset = 0;
 
 
-        if(m_Irp)
+        if (m_Irp)
         {
             // reset stream header index
             m_StreamHeaderIndex = 0;
@@ -855,4 +855,3 @@ NewIrpQueue(
     *Queue = (IIrpQueue*)This;
     return STATUS_SUCCESS;
 }
-
