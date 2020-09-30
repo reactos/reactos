@@ -366,7 +366,6 @@ CIrpQueue::GetMapping(
         m_Irp = Irp = KsRemoveIrpFromCancelableQueue(&m_IrpList, &m_IrpListLock, KsListEntryHead, KsAcquireAndRemoveOnlySingleItem);
         m_CurrentOffset = Offset = 0;
 
-
         if (m_Irp)
         {
             // reset stream header index
