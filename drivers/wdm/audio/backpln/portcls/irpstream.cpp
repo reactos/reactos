@@ -636,7 +636,7 @@ CIrpQueue::GetMappingWithTag(
 
     // get byte count
     *ByteCount = (LPBYTE)ROUND_TO_PAGES(Data+1)-Data;
-    if(*ByteCount > (Size - m_CurrentOffset))
+    if (*ByteCount > (Size - m_CurrentOffset))
         *ByteCount = (Size - m_CurrentOffset);
     m_CurrentOffset += *ByteCount;
 
