@@ -287,7 +287,18 @@ PropertyItemDispatch(
                 PropertyRequest->Node, PropertyRequest->MajorTarget, PropertyRequest->MinorTarget, GuidBuffer.Buffer, Property->Id, Property->Flags, PropertyRequest->InstanceSize, PropertyRequest->ValueSize,
                 PropertyRequest->PropertyItem->Handler, PropertyRequest, PropertyRequest->PropertyItem->Flags, PropertyRequest->PropertyItem->Id);
         RtlFreeUnicodeString(&GuidBuffer);
-        Status = PropertyRequest->PropertyItem->Handler(PropertyRequest);
+
+        _SEH2_TRY
+        {
+            Status = PropertyRequest->PropertyItem->Handler(PropertyRequest);
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            /* Fail the IRP */
+            Status = _SEH2_GetExceptionCode();
+        }
+        _SEH2_END;
+
         DPRINT("Status %lx ValueSize %lu Information %lu\n", Status, PropertyRequest->ValueSize, Irp->IoStatus.Information);
         Irp->IoStatus.Information = PropertyRequest->ValueSize;
 

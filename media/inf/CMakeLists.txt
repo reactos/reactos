@@ -27,7 +27,6 @@ list(APPEND INF_FILES
     usb.inf
     usbport.inf
     wdmaudio.inf
-    xboxdisp.inf
     wdma_usb.inf)
 
 list(APPEND UTF8_INF_FILES
