@@ -549,12 +549,9 @@ CPortPinWavePci::HandleKsStream(
 {
     NTSTATUS Status;
     ULONG Data = 0;
-    BOOLEAN bFailed;
     InterlockedIncrement((PLONG)&m_TotalPackets);
 
     DPRINT("IPortPinWaveCyclic_HandleKsStream entered Total %u State %x MinData %u\n", m_TotalPackets, m_State, m_IrpQueue->NumData());
-
-    bFailed = m_IrpQueue->HasLastMappingFailed();
 
     Status = m_IrpQueue->AddMapping(Irp, &Data);
 
@@ -565,7 +562,7 @@ CPortPinWavePci::HandleKsStream(
         else
             m_Position.PlayOffset += Data;
 
-        if (bFailed)
+        if (m_State == KSSTATE_RUN)
         {
             // notify stream of new mapping
             m_Stream->MappingAvailable();

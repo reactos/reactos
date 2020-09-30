@@ -92,7 +92,6 @@ protected:
     LIST_ENTRY m_IrpList;
     LIST_ENTRY m_FreeIrpList;
 
-    BOOLEAN m_OutOfMapping;
     ULONG m_MaxFrameSize;
     ULONG m_Alignment;
     ULONG m_TagSupportEnabled;
@@ -329,9 +328,6 @@ CIrpQueue::AddMapping(
     // add irp to cancelable queue
     KsAddIrpToCancelableQueue(&m_IrpList, &m_IrpListLock, Irp, KsListEntryTail, NULL);
 
-    // disable mapping failed status
-    m_OutOfMapping = FALSE;
-
     // done
     return STATUS_SUCCESS;
 }
@@ -410,9 +406,6 @@ CIrpQueue::GetMapping(
 
     // store buffer
     *Buffer = &((PUCHAR)StreamData->Data[m_StreamHeaderIndex])[Offset];
-
-    // unset flag that no irps are available
-    m_OutOfMapping = FALSE;
 
     return STATUS_SUCCESS;
 }
@@ -599,7 +592,6 @@ CIrpQueue::GetMappingWithTag(
         if (!m_Irp)
         {
             // no irp available
-            m_OutOfMapping = TRUE;
             KeReleaseSpinLock(&m_IrpListLock, OldLevel);
 
             DPRINT("GetMappingWithTag no mapping available\n");
@@ -812,13 +804,6 @@ CIrpQueue::ReleaseMappingWithTag(
     }
 
     return STATUS_SUCCESS;
-}
-
-BOOLEAN
-NTAPI
-CIrpQueue::HasLastMappingFailed()
-{
-    return m_OutOfMapping;
 }
 
 ULONG
