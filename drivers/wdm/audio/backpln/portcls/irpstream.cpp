@@ -741,7 +741,7 @@ CIrpQueue::ReleaseMappingWithTag(
         }
     }
 
-    // current IRP, do not complete
+    // If this is the current IRP, do not complete
     if(Irp == m_Irp)
     {
         KeReleaseSpinLock(&m_IrpListLock, OldLevel);
