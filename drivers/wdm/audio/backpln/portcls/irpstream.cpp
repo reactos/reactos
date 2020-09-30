@@ -579,7 +579,6 @@ CIrpQueue::GetMappingWithTag(
     PC_ASSERT(ByteCount);
     PC_ASSERT(Flags);
 
-
     KeAcquireSpinLock(&m_IrpListLock, &OldLevel);
 
     if (!m_Irp)
