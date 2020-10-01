@@ -235,17 +235,32 @@ CONSOLE_ClearScreen(VOID)
     coPos.X = 0;
     coPos.Y = 0;
 
+    /*
+     * Hide everything under the same foreground & background colors, so that
+     * the actual color and text blanking reset does not create a visual "blinking".
+     * We do this because we cannot do the screen scrolling trick that would
+     * allow to change both the text and the colors at the same time (the
+     * function is currently not available in our console "emulation" layer).
+     */
     FillConsoleOutputAttribute(StdOutput,
-                               FOREGROUND_WHITE | BACKGROUND_BLUE,
+                               FOREGROUND_BLUE | BACKGROUND_BLUE,
                                xScreen * yScreen,
                                coPos,
                                &Written);
 
+    /* Blank the text */
     FillConsoleOutputCharacterA(StdOutput,
                                 ' ',
                                 xScreen * yScreen,
                                 coPos,
                                 &Written);
+
+    /* Reset the actual foreground & background colors */
+    FillConsoleOutputAttribute(StdOutput,
+                               FOREGROUND_WHITE | BACKGROUND_BLUE,
+                               xScreen * yScreen,
+                               coPos,
+                               &Written);
 }
 
 VOID
