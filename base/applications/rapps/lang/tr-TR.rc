@@ -1,4 +1,4 @@
-/* TRANSLATOR: 2013-2016 Erdem Ersoy (eersoy93) (erdemersoy@live.com) */
+/* TRANSLATOR: 2013-2016 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net) */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
@@ -6,7 +6,7 @@ IDR_MAINMENU MENU
 BEGIN
     POPUP "&Kütük"
     BEGIN
-        MENUITEM "&Ayarlar...", ID_SETTINGS
+        MENUITEM "&Ayarlar…", ID_SETTINGS
         MENUITEM SEPARATOR
         MENUITEM "&Çıkış", ID_EXIT
     END
@@ -76,7 +76,7 @@ BEGIN
     LTEXT "Şunun İçin Vekil Sunucu Yok", -1, 27, 175, 64, 10
     EDITTEXT IDC_NO_PROXY_FOR, 90, 175, 147, 12, ES_AUTOHSCROLL | WS_DISABLED
     PUSHBUTTON "Ön Tanımlılar", IDC_DEFAULT_SETTINGS, 8, 195, 60, 14
-    PUSHBUTTON "Tamam", IDOK, 116, 195, 60, 14
+    DEFPUSHBUTTON "Tamam", IDOK, 116, 195, 60, 14
     PUSHBUTTON "İptal", IDCANCEL, 181, 195, 60, 14
 END
 
@@ -85,16 +85,16 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "İzlence Kurulumu"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "...", IDC_INSTALL_TEXT, 4, 5, 209, 35
+    LTEXT "…", IDC_INSTALL_TEXT, 4, 5, 209, 35
     AUTORADIOBUTTON "&Bir Diskten (CD'den veyâ DVD'den) Kur", IDC_CD_INSTALL, 10, 46, 197, 11, WS_GROUP
     AUTORADIOBUTTON "&İndir ve Kur", IDC_DOWNLOAD_INSTALL, 10, 59, 197, 11, NOT WS_TABSTOP
-    PUSHBUTTON "Tamam", IDOK, 86, 78, 60, 14
+    DEFPUSHBUTTON "Tamam", IDOK, 86, 78, 60, 14
     PUSHBUTTON "İptal", IDCANCEL, 150, 78, 60, 14
 END
 
 IDD_DOWNLOAD_DIALOG DIALOGEX 0, 0, 220, 72
 STYLE DS_SHELLFONT | DS_CENTER | WS_BORDER | WS_CAPTION | WS_POPUP | WS_SYSMENU | WS_VISIBLE
-CAPTION "İndiriliyor %ls..."
+CAPTION "İndiriliyor %ls…"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "Progress1", IDC_DOWNLOAD_PROGRESS, "msctls_progress32", WS_BORDER | PBS_SMOOTH, 10, 10, 200, 12
@@ -107,9 +107,9 @@ STYLE DS_SHELLFONT | WS_BORDER | WS_DLGFRAME | WS_SYSMENU | DS_MODALFRAME
 CAPTION "Üzerine"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "ReactOS Uygulama Yöneticisi\nTelif Hakkı: 2009\nDmitry Chapyshev (dmitry@reactos.org) ile.", IDC_STATIC, 48, 7, 130, 39
-    PUSHBUTTON "Tamam", IDOK, 133, 46, 50, 14
     ICON IDI_MAIN, IDC_STATIC, 10, 10, 7, 30
+    LTEXT "ReactOS Uygulama Yöneticisi\nTelif Hakkı: 2009\nDmitry Chapyshev (dmitry@reactos.org) ile.", IDC_STATIC, 48, 7, 130, 39
+    DEFPUSHBUTTON "Tamam", IDOK, 133, 46, 50, 14
 END
 
 STRINGTABLE
@@ -205,13 +205,15 @@ BEGIN
     IDS_UNABLE_TO_DOWNLOAD2 "Paket indirilemez! Umûmî Ağ bağlantınızı yoklayınız!"
     IDS_UNABLE_TO_REMOVE "İzlencenin girişi değer defterinden silinemiyor."
     IDS_UNABLE_TO_INSTALL "Unable to open installer!"
-    IDS_CERT_DOES_NOT_MATCH "SSL onay belgesi doğrulaması başarısız."
-    IDS_INTEG_CHECK_TITLE "Paket bütünlüğü doğrulanıyor..."
+    IDS_UNABLE_TO_QUERY_CERT "Unable to retrieve certificate info.\n\nDo you want to continue anyway?"
+    IDS_INTEG_CHECK_TITLE "Paket bütünlüğü doğrulanıyor…"
     IDS_INTEG_CHECK_FAIL "Paket bütünlük denetimini geçmedi, bozulmuş veyâ indirme esnâsında oynanmış olabilir. Yazılımı çalıştırmak önerilmez."
     IDS_INTERRUPTED_DOWNLOAD "İndirme kesildi. Umûmî Ağ bağlantınızı denetleyiniz."
     IDS_UNABLE_TO_WRITE "Diske yazılamıyor. Disk dolu olabilir."
     IDS_SELECT_ALL "Select/Deselect All"
     IDS_INSTALL_SELECTED "Install Selected"
+    IDS_SELECTEDFORINST "Selected for installation"
+    IDS_MISMATCH_CERT_INFO "The certificate used is unknown:\nSubject: %s\nIssuer: %s\nDo you want to continue anyway?"
 END
 
 STRINGTABLE
@@ -246,5 +248,5 @@ END
 STRINGTABLE
 BEGIN
     IDS_DL_DIALOG_DB_DISP "Applications Database"
-    IDS_DL_DIALOG_DB_DOWNLOAD_DISP "Updating Database..."
+    IDS_DL_DIALOG_DB_DOWNLOAD_DISP "Updating Database…"
 END

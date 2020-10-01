@@ -30,9 +30,9 @@ BOOL UseCmdParameters(LPWSTR lpCmdLine)
         for (INT i = 1; i < argc; ++i)
         {
             arrNames.Add(argv[i]);
-        }       
-    } 
-    else 
+        }
+    }
+    else
     if (!StrCmpW(argv[0], CMD_KEY_SETUP))
     {
         HINF InfHandle = SetupOpenInfFileW(argv[1], NULL, INF_STYLE_WIN4, NULL);
@@ -47,7 +47,7 @@ BOOL UseCmdParameters(LPWSTR lpCmdLine)
             WCHAR szName[MAX_PATH];
             do
             {
-                if (SetupGetStringFieldW(&Context, 1, szName, MAX_PATH, NULL))
+                if (SetupGetStringFieldW(&Context, 1, szName, _countof(szName), NULL))
                 {
                     arrNames.Add(szName);
                 }
@@ -64,12 +64,12 @@ BOOL UseCmdParameters(LPWSTR lpCmdLine)
     apps.UpdateAppsDB();
     apps.Enum(ENUM_ALL_AVAILABLE, NULL);
 
-    ATL::CSimpleArray<CAvailableApplicationInfo*> arrAppInfo = apps.FindInfoList(arrNames);
+    ATL::CSimpleArray<CAvailableApplicationInfo> arrAppInfo = apps.FindInfoList(arrNames);
     if (arrAppInfo.GetSize() > 0)
     {
         CDownloadManager::DownloadListOfApplications(arrAppInfo, TRUE);
         return TRUE;
     }
-    
+
     return FALSE;
 }

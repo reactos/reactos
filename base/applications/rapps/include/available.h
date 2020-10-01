@@ -1,7 +1,7 @@
 #pragma once
 
 #include <windef.h>
-#include <atlstr.h> 
+#include <atlstr.h>
 #include <atlsimpcoll.h>
 #include <atlcoll.h>
 
@@ -25,6 +25,7 @@ inline BOOL IsLicenseType(INT x)
 struct CAvailableApplicationInfo
 {
     INT m_Category;
+    BOOL m_IsSelected;
     LicenseType m_LicenseType;
     ATL::CStringW m_szName;
     ATL::CStringW m_szRegName;
@@ -45,6 +46,7 @@ struct CAvailableApplicationInfo
     ATL::CStringW m_szSHA1;
     ATL::CStringW m_szInstalledVersion;
 
+    // Create an object from file
     CAvailableApplicationInfo(const ATL::CStringW& sFileNameParam);
 
     // Load all info from the file
@@ -63,7 +65,7 @@ private:
     BOOL m_IsInstalled;
     BOOL m_HasLanguageInfo;
     BOOL m_HasInstalledVersion;
-    CConfigParser m_Parser;
+    CConfigParser* m_Parser;
 
     inline BOOL GetString(LPCWSTR lpKeyName, ATL::CStringW& ReturnedString);
 
@@ -78,15 +80,19 @@ private:
 
 typedef BOOL(CALLBACK *AVAILENUMPROC)(CAvailableApplicationInfo *Info, LPCWSTR szFolderPath);
 
+struct AvailableStrings
+{
+    ATL::CStringW szPath;
+    ATL::CStringW szCabPath;
+    ATL::CStringW szAppsPath;
+    ATL::CStringW szSearchPath;
+
+    AvailableStrings();
+};
+
 class CAvailableApps
 {
-    static ATL::CStringW m_szPath;
-    static ATL::CStringW m_szCabPath;
-    static ATL::CStringW m_szAppsPath;
-    static ATL::CStringW m_szSearchPath;
-
-    static BOOL InitializeStaticStrings();
-
+    static AvailableStrings m_Strings;
     ATL::CAtlList<CAvailableApplicationInfo*> m_InfoList;
 
 public:
@@ -100,12 +106,10 @@ public:
     BOOL Enum(INT EnumType, AVAILENUMPROC lpEnumProc);
 
     CAvailableApplicationInfo* FindInfo(const ATL::CStringW& szAppName) const;
-    ATL::CSimpleArray<CAvailableApplicationInfo*> FindInfoList(const ATL::CSimpleArray<ATL::CStringW> &arrAppsNames) const;
+    ATL::CSimpleArray<CAvailableApplicationInfo> FindInfoList(const ATL::CSimpleArray<ATL::CStringW> &arrAppsNames) const;
+    ATL::CSimpleArray<CAvailableApplicationInfo> GetSelected() const;
 
     const ATL::CStringW& GetFolderPath() const;
     const ATL::CStringW& GetAppPath() const;
     const ATL::CStringW& GetCabPath() const;
-    LPCWSTR GetFolderPathString() const;
-    LPCWSTR GetAppPathString() const;
-    LPCWSTR GetCabPathString() const;
 };

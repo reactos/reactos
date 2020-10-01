@@ -15,6 +15,7 @@ class CDownloadManager
     static CDowloadingAppsListView DownloadsListView;
 
     static VOID Download(const DownloadInfo& DLInfo, BOOL bIsModal = FALSE);
+    static VOID SetProgressMarquee(HWND Item, BOOL Enable);
 
 public:
     static INT_PTR CALLBACK DownloadDlgProc(HWND Dlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
@@ -26,7 +27,7 @@ public:
                                                  DWORD_PTR dwRefData);
 
     static DWORD WINAPI ThreadFunc(LPVOID Context);
-    static BOOL DownloadListOfApplications(const ATL::CSimpleArray<CAvailableApplicationInfo*>& AppsList, BOOL bIsModal = FALSE);
+    static BOOL DownloadListOfApplications(const ATL::CSimpleArray<CAvailableApplicationInfo>& AppsList, BOOL bIsModal = FALSE);
     static BOOL DownloadApplication(CAvailableApplicationInfo* pAppInfo, BOOL bIsModal = FALSE);
     static VOID DownloadApplicationsDB(LPCWSTR lpUrl);
     static VOID LaunchDownloadDialog(BOOL);

@@ -23,13 +23,13 @@
 #include <ndk/rtlfuncs.h>
 #include <atlcoll.h>
 #include <atlsimpcoll.h>
-#include <atlstr.h> 
+#include <atlstr.h>
 #include <rappsmsg.h>
 
 #include "resource.h"
 #include "winmain.h"
 
-#define APPLICATION_DATABASE_URL L"https://svn.reactos.org/packages/rappmgr.cab"
+#define APPLICATION_DATABASE_URL L"https://rapps.reactos.org/rappmgr.cab"
 #define MAX_STR_LEN              256
 
 enum AppsCategories
@@ -50,13 +50,14 @@ enum AppsCategories
     ENUM_CAT_DRIVERS,
     ENUM_CAT_LIBS,
     ENUM_CAT_OTHER,
+    ENUM_CAT_SELECTED,
     ENUM_ALL_INSTALLED,
     ENUM_INSTALLED_APPLICATIONS = 31,
     ENUM_UPDATES = 32,
     ENUM_INSTALLED_MIN = ENUM_ALL_INSTALLED,
     ENUM_INSTALLED_MAX = ENUM_UPDATES,
     ENUM_AVAILABLE_MIN = ENUM_ALL_AVAILABLE,
-    ENUM_AVAILABLE_MAX = ENUM_CAT_OTHER,
+    ENUM_AVAILABLE_MAX = ENUM_CAT_SELECTED,
 };
 
 inline BOOL IsAvailableEnum(INT x)

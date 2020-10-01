@@ -20,7 +20,7 @@
 
 #pragma once
 
-#ifdef __GNUC__
+#if defined(__GNUC__) || defined(__clang__)
 #define GCCU(x)    x __attribute__((unused))
 #define Unused(x)
 #else
@@ -574,6 +574,17 @@ public:
         ATLASSERT(::IsWindow(m_hWnd));
         return ::GetDlgItemText(m_hWnd, nID, lpStr, nMaxCount);
     }
+
+#ifdef __ATLSTR_H__
+    UINT GetDlgItemText(int nID, CSimpleString& string)
+    {
+        HWND item = GetDlgItem(nID);
+        int len = ::GetWindowTextLength(item);
+        len = GetDlgItemText(nID, string.GetBuffer(len+1), len+1);
+        string.ReleaseBuffer(len);
+        return len;
+    }
+#endif
 
     BOOL GetDlgItemText(int nID, BSTR& bstrText) const
     {
@@ -1793,6 +1804,15 @@ public:                                                                         
 
 #define COMMAND_ID_HANDLER(id, func)                                                            \
     if (uMsg == WM_COMMAND && id == LOWORD(wParam))                                                \
+    {                                                                                            \
+        bHandled = TRUE;                                                                        \
+        lResult = func(HIWORD(wParam), LOWORD(wParam), (HWND)lParam, bHandled);                    \
+        if (bHandled)                                                                            \
+            return TRUE;                                                                        \
+    }
+
+#define COMMAND_CODE_HANDLER(code, func)                                                            \
+    if (uMsg == WM_COMMAND && code == HIWORD(wParam))                                                \
     {                                                                                            \
         bHandled = TRUE;                                                                        \
         lResult = func(HIWORD(wParam), LOWORD(wParam), (HWND)lParam, bHandled);                    \

@@ -145,7 +145,6 @@ class CAvailableAppView
 
         szLoadedAInfoText.LoadStringW(IDS_AINFO_LANGUAGES);
 
-        //TODO: replace those hardcoded strings
         if (Info->HasNativeLanguage())
         {
             szLoadedTextAvailability.LoadStringW(IDS_LANGUAGE_AVAILABLE_TRANSLATION);
@@ -389,14 +388,17 @@ class CAppsListView :
     };
 
     BOOL bHasAllChecked;
-    BOOL bAscending;
+    BOOL bIsAscending;
     BOOL bHasCheckboxes;
+
+    INT nLastHeaderID;
 
 public:
     CAppsListView() :
         bHasAllChecked(FALSE),
-        bAscending(TRUE),
-        bHasCheckboxes(FALSE)
+        bIsAscending(TRUE),
+        bHasCheckboxes(FALSE),
+        nLastHeaderID(-1)
     {
     }
 
@@ -416,11 +418,40 @@ public:
 
     VOID ColumnClick(LPNMLISTVIEW pnmv)
     {
-        SortContext ctx = {this, pnmv->iSubItem};
+        HWND hHeader;
+        HDITEMW hColumn;
+        INT nHeaderID = pnmv->iSubItem;
 
+        if ((GetWindowLongPtr(GWL_STYLE) & ~LVS_NOSORTHEADER) == 0)
+            return;
+
+        hHeader = (HWND) SendMessage(LVM_GETHEADER, 0, 0);
+        ZeroMemory(&hColumn, sizeof(hColumn));
+
+        /* If the sorting column changed, remove the sorting style from the old column */
+        if ((nLastHeaderID != -1) && (nLastHeaderID != nHeaderID))
+        {
+            hColumn.mask = HDI_FORMAT;
+            Header_GetItem(hHeader, nLastHeaderID, &hColumn);
+            hColumn.fmt &= ~(HDF_SORTUP | HDF_SORTDOWN);
+            Header_SetItem(hHeader, nLastHeaderID, &hColumn);
+        }
+
+        /* Set the sorting style to the new column */
+        hColumn.mask = HDI_FORMAT;
+        Header_GetItem(hHeader, nHeaderID, &hColumn);
+
+        hColumn.fmt &= (bIsAscending ? ~HDF_SORTDOWN : ~HDF_SORTUP);
+        hColumn.fmt |= (bIsAscending ? HDF_SORTUP : HDF_SORTDOWN);
+        Header_SetItem(hHeader, nHeaderID, &hColumn);
+
+        /* Sort the list, using the current values of nHeaderID and bIsAscending */
+        SortContext ctx = {this, nHeaderID};
         SortItems(s_CompareFunc, &ctx);
 
-        bAscending = !bAscending;
+        /* Save new values */
+        nLastHeaderID = nHeaderID;
+        bIsAscending = !bIsAscending;
     }
 
     PVOID GetLParam(INT Index)
@@ -508,12 +539,7 @@ public:
         GetItemText(Index, iSubItem, Item2.GetBuffer(MAX_STR_LEN), MAX_STR_LEN);
         Item2.ReleaseBuffer();
 
-        if (bAscending)
-            return Item2 == Item1;
-        else
-            return Item1 == Item2;
-
-        return 0;
+        return bIsAscending ? Item1.Compare(Item2) : Item2.Compare(Item1);
     }
 
     HWND Create(HWND hwndParent)
@@ -542,6 +568,30 @@ public:
         if (bHasCheckboxes)
         {
             SetItemState(item, INDEXTOSTATEIMAGEMASK((fCheck) ? 2 : 1), LVIS_STATEIMAGEMASK);
+            SetSelected(item, fCheck);
+        }
+    }
+
+    VOID SetSelected(INT item, BOOL value)
+    {
+        if (item < 0)
+        {
+            for (INT i = 0; i >= 0; i = GetNextItem(i, LVNI_ALL))
+            {
+                CAvailableApplicationInfo* pAppInfo = (CAvailableApplicationInfo*) GetItemData(i);
+                if (pAppInfo)
+                {
+                    pAppInfo->m_IsSelected = value;
+                }
+            }
+        }
+        else
+        {
+            CAvailableApplicationInfo* pAppInfo = (CAvailableApplicationInfo*) GetItemData(item);
+            if (pAppInfo)
+            {
+                pAppInfo->m_IsSelected = value;
+            }
         }
     }
 
@@ -554,20 +604,20 @@ public:
         }
     }
 
-    ATL::CSimpleArray<CAvailableApplicationInfo*> GetCheckedItems()
+    ATL::CSimpleArray<CAvailableApplicationInfo> GetCheckedItems()
     {
         if (!bHasCheckboxes)
         {
-            return ATL::CSimpleArray<CAvailableApplicationInfo*>();
+            return ATL::CSimpleArray<CAvailableApplicationInfo>();
         }
 
-        ATL::CSimpleArray<CAvailableApplicationInfo*> list;
+        ATL::CSimpleArray<CAvailableApplicationInfo> list;
         for (INT i = 0; i >= 0; i = GetNextItem(i, LVNI_ALL))
         {
             if (GetCheckState(i) != FALSE)
             {
                 CAvailableApplicationInfo* pAppInfo = (CAvailableApplicationInfo*) GetItemData(i);
-                list.Add(pAppInfo);
+                list.Add(*pAppInfo);
             }
         }
         return list;
@@ -645,7 +695,7 @@ public:
     const INT m_Width;
     const INT m_Height;
 
-    CSearchBar() : m_Width(200), m_Height(22) 
+    CSearchBar() : m_Width(200), m_Height(22)
     {
     }
 
@@ -729,33 +779,35 @@ private:
 
     VOID InitCategoriesList()
     {
-        HTREEITEM hRootItem1, hRootItem2;
+        HTREEITEM hRootItemInstalled, hRootItemAvailable;
 
-        hRootItem1 = AddCategory(TVI_ROOT, IDS_INSTALLED, IDI_CATEGORY);
-        AddCategory(hRootItem1, IDS_APPLICATIONS, IDI_APPS);
-        AddCategory(hRootItem1, IDS_UPDATES, IDI_APPUPD);
+        hRootItemInstalled = AddCategory(TVI_ROOT, IDS_INSTALLED, IDI_CATEGORY);
+        AddCategory(hRootItemInstalled, IDS_APPLICATIONS, IDI_APPS);
+        AddCategory(hRootItemInstalled, IDS_UPDATES, IDI_APPUPD);
 
-        hRootItem2 = AddCategory(TVI_ROOT, IDS_AVAILABLEFORINST, IDI_CATEGORY);
-        AddCategory(hRootItem2, IDS_CAT_AUDIO, IDI_CAT_AUDIO);
-        AddCategory(hRootItem2, IDS_CAT_VIDEO, IDI_CAT_VIDEO);
-        AddCategory(hRootItem2, IDS_CAT_GRAPHICS, IDI_CAT_GRAPHICS);
-        AddCategory(hRootItem2, IDS_CAT_GAMES, IDI_CAT_GAMES);
-        AddCategory(hRootItem2, IDS_CAT_INTERNET, IDI_CAT_INTERNET);
-        AddCategory(hRootItem2, IDS_CAT_OFFICE, IDI_CAT_OFFICE);
-        AddCategory(hRootItem2, IDS_CAT_DEVEL, IDI_CAT_DEVEL);
-        AddCategory(hRootItem2, IDS_CAT_EDU, IDI_CAT_EDU);
-        AddCategory(hRootItem2, IDS_CAT_ENGINEER, IDI_CAT_ENGINEER);
-        AddCategory(hRootItem2, IDS_CAT_FINANCE, IDI_CAT_FINANCE);
-        AddCategory(hRootItem2, IDS_CAT_SCIENCE, IDI_CAT_SCIENCE);
-        AddCategory(hRootItem2, IDS_CAT_TOOLS, IDI_CAT_TOOLS);
-        AddCategory(hRootItem2, IDS_CAT_DRIVERS, IDI_CAT_DRIVERS);
-        AddCategory(hRootItem2, IDS_CAT_LIBS, IDI_CAT_LIBS);
-        AddCategory(hRootItem2, IDS_CAT_OTHER, IDI_CAT_OTHER);
+        AddCategory(TVI_ROOT, IDS_SELECTEDFORINST, IDI_SELECTEDFORINST);
+
+        hRootItemAvailable = AddCategory(TVI_ROOT, IDS_AVAILABLEFORINST, IDI_CATEGORY);
+        AddCategory(hRootItemAvailable, IDS_CAT_AUDIO, IDI_CAT_AUDIO);
+        AddCategory(hRootItemAvailable, IDS_CAT_VIDEO, IDI_CAT_VIDEO);
+        AddCategory(hRootItemAvailable, IDS_CAT_GRAPHICS, IDI_CAT_GRAPHICS);
+        AddCategory(hRootItemAvailable, IDS_CAT_GAMES, IDI_CAT_GAMES);
+        AddCategory(hRootItemAvailable, IDS_CAT_INTERNET, IDI_CAT_INTERNET);
+        AddCategory(hRootItemAvailable, IDS_CAT_OFFICE, IDI_CAT_OFFICE);
+        AddCategory(hRootItemAvailable, IDS_CAT_DEVEL, IDI_CAT_DEVEL);
+        AddCategory(hRootItemAvailable, IDS_CAT_EDU, IDI_CAT_EDU);
+        AddCategory(hRootItemAvailable, IDS_CAT_ENGINEER, IDI_CAT_ENGINEER);
+        AddCategory(hRootItemAvailable, IDS_CAT_FINANCE, IDI_CAT_FINANCE);
+        AddCategory(hRootItemAvailable, IDS_CAT_SCIENCE, IDI_CAT_SCIENCE);
+        AddCategory(hRootItemAvailable, IDS_CAT_TOOLS, IDI_CAT_TOOLS);
+        AddCategory(hRootItemAvailable, IDS_CAT_DRIVERS, IDI_CAT_DRIVERS);
+        AddCategory(hRootItemAvailable, IDS_CAT_LIBS, IDI_CAT_LIBS);
+        AddCategory(hRootItemAvailable, IDS_CAT_OTHER, IDI_CAT_OTHER);
 
         m_TreeView->SetImageList();
-        m_TreeView->Expand(hRootItem1, TVE_EXPAND);
-        m_TreeView->Expand(hRootItem2, TVE_EXPAND);
-        m_TreeView->SelectItem(hRootItem1);
+        m_TreeView->Expand(hRootItemInstalled, TVE_EXPAND);
+        m_TreeView->Expand(hRootItemAvailable, TVE_EXPAND);
+        m_TreeView->SelectItem(hRootItemAvailable);
     }
 
     BOOL CreateStatusBar()
@@ -914,6 +966,8 @@ private:
 
     VOID OnSize(HWND hwnd, WPARAM wParam, LPARAM lParam)
     {
+        if (wParam == SIZE_MINIMIZED)
+            return;
 
         /* Size status bar */
         m_StatusBar->SendMessage(WM_SIZE, 0, 0);
@@ -1081,6 +1135,10 @@ private:
                     case IDS_CAT_VIDEO:
                         UpdateApplicationsList(ENUM_CAT_VIDEO);
                         break;
+
+                    case IDS_SELECTEDFORINST:
+                        UpdateApplicationsList(ENUM_CAT_SELECTED);
+                        break;
                     }
                 }
 
@@ -1153,7 +1211,7 @@ private:
                     /* Check if the item is checked */
                     if ((pnic->uNewState & LVIS_STATEIMAGEMASK) && !bUpdating)
                     {
-                        BOOL checked = ListView_GetCheckState(pnic->hdr.hwndFrom, pnic->iItem);
+                        BOOL checked = m_ListView->GetCheckState(pnic->iItem);
                         /* FIXME: HAX!
                         - preventing decremention below zero as a safeguard for ReactOS
                           In ReactOS this action is triggered whenever user changes *selection*, but should be only when *checkbox* state toggled
@@ -1165,6 +1223,10 @@ private:
                             : ((nSelectedApps > 0)
                                ? -1
                                : 0);
+
+                        /* Update item's selection status */
+                        m_ListView->SetSelected(pnic->iItem, checked);
+
                         UpdateStatusBarText();
                     }
                 }
@@ -1399,7 +1461,7 @@ private:
             {
                 if (nSelectedApps > 0)
                 {
-                    CDownloadManager::DownloadListOfApplications(m_ListView->GetCheckedItems());
+                    CDownloadManager::DownloadListOfApplications(m_AvailableApps.GetSelected());
                     UpdateApplicationsList(-1);
                 }
                 else if (CDownloadManager::DownloadApplication(m_ListView->GetSelectedData()))
@@ -1541,6 +1603,7 @@ private:
 
         ListView_SetItemText(hListView, Index, 1, const_cast<LPWSTR>(Info->m_szVersion.GetString()));
         ListView_SetItemText(hListView, Index, 2, const_cast<LPWSTR>(Info->m_szDesc.GetString()));
+        ListView_SetCheckState(hListView, Index, Info->m_IsSelected);
 
         return TRUE;
     }
@@ -1565,7 +1628,6 @@ private:
         bUpdating = TRUE;
         m_ListView->SetRedraw(FALSE);
 
-        nSelectedApps = 0;
         if (EnumType < 0)
         {
             EnumType = SelectedEnumType;
@@ -1580,7 +1642,7 @@ private:
 
         m_ListView->DeleteAllItems();
 
-        // Create new ImageList 
+        // Create new ImageList
         hImageListView = ImageList_Create(LISTVIEW_ICON_SIZE,
                                           LISTVIEW_ICON_SIZE,
                                           GetSystemColorDepth() | ILC_MASK,

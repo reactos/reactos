@@ -143,6 +143,12 @@ public:
         return ::vswprintf(pszDest, pszFormat, args);
     }
 
+    static BSTR __cdecl AllocSysString(
+        _In_z_ LPCWSTR pszSource,
+        _In_ int nLength)
+    {
+        return ::SysAllocStringLen(pszSource, nLength);
+    }
 };
 
 
@@ -267,6 +273,19 @@ public:
         if (pszDest == NULL)
             return ::_vscprintf(pszFormat, args);
         return ::vsprintf(pszDest, pszFormat, args);
+    }
+
+    static BSTR __cdecl AllocSysString(
+        _In_z_ LPCSTR pszSource,
+        _In_ int nLength)
+    {
+        int nLen = ChTraitsCRT<wchar_t>::GetBaseTypeLength(pszSource, nLength);
+        BSTR bstr = ::SysAllocStringLen(NULL, nLen);
+        if (bstr)
+        {
+            ChTraitsCRT<wchar_t>::ConvertToBaseType(bstr, nLen, pszSource, nLength);
+        }
+        return bstr;
     }
 
 };
@@ -794,6 +813,12 @@ public:
     CStringT& Trim(PCXSTR pszTargets)
     {
         return TrimRight(pszTargets).TrimLeft(pszTargets);
+    }
+
+
+    BSTR AllocSysString() const
+    {
+        return StringTraits::AllocSysString(CThisSimpleString::GetString(), CThisSimpleString::GetLength());
     }
 
 
