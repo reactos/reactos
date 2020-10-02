@@ -595,6 +595,10 @@ bind_lease(struct interface_info *ip)
 
     /* Remember the medium. */
     ip->client->new->medium = ip->client->medium;
+
+    /* Replace the old active lease with the new one. */
+    if (ip->client->active)
+        free_client_lease(ip->client->active);
     ip->client->active = ip->client->new;
     ip->client->new = NULL;
 
