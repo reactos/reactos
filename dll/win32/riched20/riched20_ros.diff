@@ -1,0 +1,2 @@
+diff -pudN e:\wine\dlls\riched20/ocr_reverse.cur e:\reactos\dll\win32\ole32/ocr_reverse.cur
+#cur file kept at older state of ros SVN r75865 to avoid CORE-15190
