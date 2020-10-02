@@ -91,3 +91,8 @@ diff -pudN e:\wine\dlls\ole32/stg_prop.c e:\reactos\dll\win32\ole32/stg_prop.c
 +    void* (__cdecl *fn)(void*,ULONG) = **(void***)this;
      return fn(this, cbSize);
  }
+diff -pudN e:\wine\dlls\ole32/drag_copy.cur e:\reactos\dll\win32\ole32/drag_copy.cur
+diff -pudN e:\wine\dlls\ole32/drag_link.cur e:\reactos\dll\win32\ole32/drag_link.cur
+diff -pudN e:\wine\dlls\ole32/drag_move.cur e:\reactos\dll\win32\ole32/drag_move.cur
+diff -pudN e:\wine\dlls\ole32/nodrop.cur e:\reactos\dll\win32\ole32/nodrop.cur
+#4 cur files kept at older state of ros SVN r75889 to avoid CORE-14608
