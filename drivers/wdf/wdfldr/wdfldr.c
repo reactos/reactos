@@ -414,6 +414,8 @@ FindModuleByServiceNameLocked(
 	WCHAR name[30];
 	WCHAR searchedServiceName[30];
 	size_t length;
+	UNICODE_STRING nameString;
+	UNICODE_STRING searchedNameString;
 	
 	name[0] = 0;
 	searchedServiceName[0] = 0;
@@ -429,8 +431,10 @@ FindModuleByServiceNameLocked(
 
 		pLibModule = CONTAINING_RECORD(currentLib, LIBRARY_MODULE, LibraryListEntry);
 		GetNameFromUnicodePath(&pLibModule->Service, name, sizeof(name));
+        RtlInitUnicodeString(&nameString, name);
+        RtlInitUnicodeString(&searchedNameString, searchedServiceName);
 
-		if(RtlCompareMemory(name, searchedServiceName, length) == length)
+		if (RtlEqualUnicodeString(&nameString, &searchedNameString, TRUE))
 		{
 			break;
 		}
