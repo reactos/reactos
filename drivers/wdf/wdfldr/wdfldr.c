@@ -73,13 +73,12 @@ WdfLdrOpenRegistryDiagnosticsHandle(
 	ObjectAttributes.ObjectName = &registryPath;	
 	*KeyHandle = NULL;	
 	ObjectAttributes.Length = 24;
-	ObjectAttributes.Attributes = OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE;//576;
+	ObjectAttributes.Attributes = OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE;
 	status = ZwOpenKey(KeyHandle, KEY_QUERY_VALUE, &ObjectAttributes);
 	
-	if (!NT_SUCCESS(status) && WdfLdrDiags)
+	if (!NT_SUCCESS(status))
 	{
-		DbgPrint("WdfLdr: WdfLdrOpenRegistryDiagnosticsHandle - ");
-		DbgPrint("ERROR: ZwOpenKey (%wZ) failed with Status 0x%x\n", &registryPath, status);
+		__DBGPRINT(("ERROR: ZwOpenKey (%wZ) failed with Status 0x%x\n", &registryPath, status));
 	}
 
 	return status;
@@ -112,11 +111,7 @@ WdfLdrDiagnosticsValueByNameAsULONG(
 		*Value = 0;
 		if (KeGetCurrentIrql())
 		{
-			if (WdfLdrDiags)
-			{
-				DbgPrint("WdfLdr: WdfLdrDiagnosticsValueByNameAsULONG - ");
-				DbgPrint("ERROR: Not at PASSIVE_LEVEL\n");
-			}
+			__DBGPRINT(("Not at PASSIVE_LEVEL\n"));
 
 			status = STATUS_INVALID_PARAMETER;
 		}
@@ -129,16 +124,12 @@ WdfLdrDiagnosticsValueByNameAsULONG(
 			{
                 // get value as ulong
 				status = FxLdrQueryUlong(keyHandle, ValueName, Value);
-				if (WdfLdrDiags)
-				{
-					DbgPrint("WdfLdr: WdfLdrDiagnosticsValueByNameAsULONG - ");
-					DbgPrint("Value 0x%x\n", *Value);
-				}
+				
+				__DBGPRINT(("Value 0x%x\n", *Value));
 			}
-			else if (WdfLdrDiags)
+			else
 			{
-				DbgPrint("WdfLdr: WdfLdrDiagnosticsValueByNameAsULONG - ");
-				DbgPrint("ERROR: WdfLdrOpenRegistryDiagnosticsHandle failed with Status 0x%x\n", status);
+				__DBGPRINT(("ERROR: WdfLdrOpenRegistryDiagnosticsHandle failed with Status 0x%x\n", status));
 			}
 		}
 		
@@ -146,22 +137,14 @@ WdfLdrDiagnosticsValueByNameAsULONG(
 		{
 			WdfLdrCloseRegistryDiagnosticsHandle(keyHandle);
 		}
-		
-		if (WdfLdrDiags)
-		{
-			DbgPrint("WdfLdr: WdfLdrDiagnosticsValueByNameAsULONG - ");
-			DbgPrint("Status 0x%x\n", status);
-		}
+
+		__DBGPRINT(("Status 0x%x\n", status));
 
 		result = status;
 	}
 	else
 	{
-		if (WdfLdrDiags)
-		{
-			DbgPrint("WdfLdr: WdfLdrDiagnosticsValueByNameAsULONG - ");
-			DbgPrint("ERROR: Invalid Input Parameter\n");
-		}
+		__DBGPRINT(("ERROR: Invalid Input Parameter\n"));
 
 		status = STATUS_INVALID_PARAMETER;
 	}
@@ -195,7 +178,7 @@ DllInitialize(
 	
     // get debug print value
 	status = WdfLdrDiagnosticsValueByNameAsULONG(&csdVersion, &ldrDiagnostic);
-	if ( NT_SUCCESS(status) && ldrDiagnostic)
+	if (NT_SUCCESS(status) && ldrDiagnostic)
 	{
 		WdfLdrDiags = TRUE;
 	}
@@ -203,24 +186,16 @@ DllInitialize(
     // TODO: move this code to aux_klib.lib
 	status = AuxKlibInitialize();
 	
-	if(NT_SUCCESS(status))
+	if (NT_SUCCESS(status))
 	{
 		RtlGetVersion(&gOsVersionInfoW);
 
-		if (WdfLdrDiags)
-		{
-			DbgPrint("WdfLdr: FxDllInitialize - ");			
-			DbgPrint("OsVersion(%d.%d)\n", gOsVersionInfoW.dwMajorVersion, gOsVersionInfoW.dwMinorVersion);
-		}
+		__DBGPRINT(("OsVersion(%d.%d)\n", gOsVersionInfoW.dwMajorVersion, gOsVersionInfoW.dwMinorVersion));
 		status = STATUS_SUCCESS;
 	}
 	else
 	{
-		if (WdfLdrDiags)
-		{
-			DbgPrint("WdfLdr: FxDllInitialize - ");
-			DbgPrint("ERROR: AuxKlibInitialize failed with Status 0x%x\n", status);
-		}
+		__DBGPRINT(("ERROR: AuxKlibInitialize failed with Status 0x%x\n", status));
 	}
 
 	return status;
@@ -263,12 +238,8 @@ LibraryUnloadClasses(
 			RemoveHeadList(&removedList);
 			InitializeListHead(classListHead);
 			pClassModule = CONTAINING_RECORD(classListHead, CLASS_MODULE, LibraryLinkage);
-
-			if (WdfLdrDiags)
-			{
-				DbgPrint("WdfLdr: LibraryUnloadClasses - ");
-				DbgPrint("WdfLdr: LibraryUnloadClasses: unload class library %wZ (%p)\n", &pClassModule->Service, pClassModule);
-			}
+			
+			__DBGPRINT(("Unload class library %wZ (%p)\n", &pClassModule->Service, pClassModule));
 
 			ClassUnload(pClassModule, 0);
 			if (!_InterlockedExchangeAdd(&pClassModule->ClassRefCount, -1))
@@ -288,11 +259,7 @@ DllUnload()
 	LIST_ENTRY entry;
 	LIST_ENTRY removeList;
 
-	if (WdfLdrDiags)
-	{
-		DbgPrint("WdfLdr: DllUnload - ");
-		DbgPrint("WdfLdr: DllUnload: enter\n");
-	}
+	__DBGPRINT(("enter"));
 
 	if (!gUnloaded)
 	{
@@ -324,11 +291,7 @@ DllUnload()
 				InitializeListHead(entry.Flink);
 				pLibModule = CONTAINING_RECORD(&entry, LIBRARY_MODULE, LibraryListEntry);
 
-				if (WdfLdrDiags)
-				{
-					DbgPrint("WdfLdr: DllUnload - ");
-					DbgPrint("WdfLdr: DllUnload: module(%p)\n", pLibModule);
-				}
+				__DBGPRINT(("module(%p)\n", pLibModule));
 
 				LibraryUnloadClasses(pLibModule);
 				LibraryUnload(pLibModule, 0);
@@ -338,11 +301,7 @@ DllUnload()
 		}
 		ExDeleteResourceLite(&Resource);
 
-		if (WdfLdrDiags)
-		{
-			DbgPrint("WdfLdr: DllUnload - ");
-			DbgPrint("WdfLdr: DllUnload: exit\n");
-		}
+		__DBGPRINT(("exit"));
 	}
 }
 
@@ -481,13 +440,11 @@ WdfRegisterLibrary(
 		if (!NT_SUCCESS(status))
 		{
 			FxLdrReleaseLoadedModuleLock();
-			if (WdfLdrDiags)
-			{
-				DbgPrint("WdfLdr: WdfRegisterLibrary - ");
-				DbgPrint("ERROR: GetImageBase(%wZ) failed with status 0x%x\n",
+			
+			__DBGPRINT(("ERROR: GetImageBase(%wZ) failed with status 0x%x\n",
 					pLibModule->ImageName,
-					status);
-			}
+					status));
+
 			goto end;
 		}
 	}
@@ -508,11 +465,7 @@ WdfRegisterLibrary(
 	FxLdrReleaseLoadedModuleLock();
 	if (pLibModule != NULL)
 	{
-		if (WdfLdrDiags)
-		{
-			DbgPrint("WdfLdr: WdfRegisterLibrary - ");
-			DbgPrint("Module(%p) %wZ\n", pLibModule, &pLibModule->ImageName);
-		}
+		__DBGPRINT(("Module(%p) %wZ\n", pLibModule, &pLibModule->ImageName));
 		status = LibraryOpen(pLibModule, LibraryDeviceName);
 
 		if (NT_SUCCESS(status))
@@ -522,17 +475,12 @@ WdfRegisterLibrary(
 			{
 				return status;
 			}
-			
-			if (WdfLdrDiags)
-			{
-				DbgPrint("WdfLdr: WdfRegisterLibrary - ");
-				DbgPrint("ERROR: WdfRegisterLibrary: LibraryCommissionfailed status 0x%X\n", status);
-			}
+
+			__DBGPRINT(("ERROR: WdfRegisterLibrary: LibraryCommissionfailed status 0x%X\n", status));
 		}
-		else if (WdfLdrDiags)
+		else
 		{
-			DbgPrint("WdfLdr: WdfRegisterLibrary - ");
-			DbgPrint("ERROR: LibraryOpen(%wZ) failed with status 0x%x\n", LibraryDeviceName, status);
+			__DBGPRINT(("ERROR: LibraryOpen(%wZ) failed with status 0x%x\n", LibraryDeviceName, status));
 		}
 	}
 end:	
@@ -575,19 +523,11 @@ GetVersionRegistryHandle(
 
 	if (!NT_SUCCESS(status))
 	{
-		if (WdfLdrDiags)
-		{
-			DbgPrint("WdfLdr: GetVersionRegistryHandle - ");
-			DbgPrint("ERROR: RtlUnicodeStringPrintf failed with Status 0x%x\n", status);
-		}
+		__DBGPRINT(("ERROR: RtlUnicodeStringPrintf failed with Status 0x%x\n", status));
 		goto end;
 	}
 
-	if (WdfLdrDiags)
-	{
-		DbgPrint("WdfLdr: GetVersionRegistryHandle - ");
-		DbgPrint("Component path %wZ\n", &String);
-	}
+	__DBGPRINT(("Component path %wZ\n", &String));
 
 	ObjectAttributes.ObjectName = &String;
 	ObjectAttributes.RootDirectory = NULL;
@@ -600,15 +540,13 @@ GetVersionRegistryHandle(
 	if (NT_SUCCESS(status))
 	{
 		status = ConvertUlongToWString(BindInfo->Version.Major, &String);
+		
 		if (!NT_SUCCESS(status))
 		{
-			if (WdfLdrDiags)
-			{
-				DbgPrint("WdfLdr: GetVersionRegistryHandle - ");
-				DbgPrint("ERROR: ConvertUlongToWString failed with Status 0x%x\n", status);
-			}
+			__DBGPRINT(("ERROR: ConvertUlongToWString failed with Status 0x%x\n", status));
 			goto end;
 		}
+
 		ObjectAttributes.SecurityDescriptor = 0;
 		ObjectAttributes.SecurityQualityOfService = 0;
 		ObjectAttributes.RootDirectory = KeyHandle;
@@ -621,11 +559,7 @@ GetVersionRegistryHandle(
 			goto end;
 	}
 
-	if (WdfLdrDiags)
-	{
-		DbgPrint("WdfLdr: GetVersionRegistryHandle - ");
-		DbgPrint("ERROR: ZwOpenKey (%wZ) failed with Status 0x%x\n", &String, status);
-	}
+	__DBGPRINT(("ERROR: ZwOpenKey (%wZ) failed with Status 0x%x\n", &String, status));
 
 end:
 	*HandleRegKey = handle;
@@ -677,20 +611,13 @@ GetDefaultServiceName(
 
 		if (NT_SUCCESS(status))
 		{
-			if (WdfLdrDiags)
-			{
-				DbgPrint("WdfLdr: GetDefaultServiceName - ");
-				DbgPrint("Couldn't find control Key -- using default service name %wZ\n", defaultServiceName);
-			}
+			__DBGPRINT(("Couldn't find control Key -- using default service name %wZ\n", defaultServiceName));
 			status = STATUS_SUCCESS;
 		}
 		else
 		{
-			if (WdfLdrDiags)
-			{
-				DbgPrint("WdfLdr: GetDefaultServiceName - ");
-				DbgPrint("ERROR: RtlUnicodeStringCopyString failed with Status 0x%x\n", status);
-			}
+			__DBGPRINT(("ERROR: RtlUnicodeStringCopyString failed with Status 0x%x\n", status));
+			
 			ExFreePoolWithTag(buffer, 0);
 			defaultServiceName->Length = 0;
 			defaultServiceName->Buffer = NULL;
@@ -698,12 +625,8 @@ GetDefaultServiceName(
 	}
 	else
 	{
-		if (WdfLdrDiags)
-		{
-			DbgPrint("WdfLdr: GetDefaultServiceName - ");
-			DbgPrint("ERROR: ExAllocatePoolWithTag failed with status 0x%x\n", STATUS_INSUFFICIENT_RESOURCES);
-		}
 		status = STATUS_INSUFFICIENT_RESOURCES;
+		__DBGPRINT(("ERROR: ExAllocatePoolWithTag failed with status 0x%x\n", status));
 	}
 
 	return status;
@@ -741,23 +664,16 @@ GetVersionServicePath(
 
 	if (!NT_SUCCESS(status))
 	{
-		if (WdfLdrDiags)
-		{
-			DbgPrint("WdfLdr: GetVersionServicePath - ");
-			DbgPrint("ERROR: GetVersionRegistryHandle failed with Status 0x%x\n", status);
-		}
+		__DBGPRINT(("ERROR: GetVersionRegistryHandle failed with Status 0x%x\n", status));
 	}
 	else
 	{
 		// get service name
 		status = FxLdrQueryData(handleRegKey, &ValueName, WDFLDR_TAG, &pKeyVal);
+		
 		if (!NT_SUCCESS(status))
 		{
-			if (WdfLdrDiags)
-			{
-				DbgPrint("WdfLdr: GetVersionServicePath - ");
-				DbgPrint("ERROR: QueryData failed with status 0x%x\n", status);
-			}
+			__DBGPRINT(("ERROR: QueryData failed with status 0x%x\n", status));
 		}
 		else
 		{			
@@ -768,16 +684,15 @@ GetVersionServicePath(
 	if (!NT_SUCCESS(status))
 	{
 		status = GetDefaultServiceName(BindInfo, ServicePath);
-		if (!NT_SUCCESS(status) && WdfLdrDiags)
+		
+		if (!NT_SUCCESS(status))
 		{
-			DbgPrint("WdfLdr: GetVersionServicePath - ");
-			DbgPrint("ERROR: GetVersionServicePath failed with Status 0x%x\n", status);
+			__DBGPRINT(("ERROR: GetVersionServicePath failed with Status 0x%x\n", status));
 		}
 	}
-	else if (WdfLdrDiags)
+	else
 	{
-		DbgPrint("WdfLdr: GetVersionServicePath - ");
-		DbgPrint("GetVersionServicePath (%wZ)\n", ServicePath);
+		__DBGPRINT(("(%wZ)\n", ServicePath));
 	}
 
 	if (handleRegKey != NULL)
@@ -863,21 +778,14 @@ ReferenceVersion(
 				{
 					status = STATUS_SUCCESS;
 				}
-				else if (WdfLdrDiags)
+				else
 				{
-					DbgPrint("WdfLdr: ReferenceVersion - ");
-					DbgPrint(
-						"WdfLdr: ReferenceVersion: ZwLoadDriver failed and no Libray information was returned: %X\n",
-						status);
+					__DBGPRINT(("ZwLoadDriver failed and no Libray information was returned: %X\n", status));
 				}
 			}
 			else
 			{
-				if (WdfLdrDiags)
-				{
-					DbgPrint("WdfLdr: ReferenceVersion - ");
-					DbgPrint("WARNING: ZwLoadDriver (%wZ) failed with Status 0x%x\n", &driverServiceName, status);
-				}
+				__DBGPRINT(("WARNING: ZwLoadDriver (%wZ) failed with Status 0x%x\n", &driverServiceName, status));
 				pLibModule->ImageAlreadyLoaded = TRUE;
 			}
 		}
@@ -898,11 +806,7 @@ ReferenceVersion(
 	goto success;
 
 error:
-	if (WdfLdrDiags)
-	{
-		DbgPrint("WdfLdr: ReferenceVersion - ");
-		DbgPrint("ERROR: GetVersionServicePath failed, status 0x%x\n", status);
-	}
+    __DBGPRINT(("ERROR: GetVersionServicePath failed, status 0x%x\n", status));
 
 success:
 	FreeString(&driverServiceName);
@@ -945,11 +849,7 @@ WdfVersionBind(
 	pLibModule = NULL;
 	clientInfo.Size = 8;
 
-	if (WdfLdrDiags)
-	{
-		DbgPrint("WdfLdr: WdfVersionBind - ");
-		DbgPrint("WdfLdr: WdfVersionBind: enter\n");
-	}
+	__DBGPRINT(("enter"));
 
 	pClientModule = NULL;
 	if (ComponentGlobals == NULL ||
@@ -983,10 +883,9 @@ WdfVersionBind(
 			pClientModule->Globals = *ComponentGlobals;
 			pClientModule->Context = &clientInfo;
 		}
-		else if (WdfLdrDiags)
+		else
 		{
-			DbgPrint("WdfLdr: WdfVersionBind - ");
-			DbgPrint("WdfLdr: libraryRegisterClient: LibraryLinkInClient failed %X\n", status);
+			__DBGPRINT(("LibraryLinkInClient failed %X\n", status));
 		}
 	}
 	else
@@ -997,18 +896,10 @@ WdfVersionBind(
 			WdfVersionUnbind(RegistryPath, BindInfo, *ComponentGlobals);
 		}
 		
-		if (WdfLdrDiags)
-		{
-			DbgPrint("WdfLdr: WdfVersionBind - ");
-			DbgPrint("WdfLdr: DereferenceVersion: LibraryLinkInClient failed %X\n", status);
-		}
+		__DBGPRINT(("LibraryLinkInClient failed %X\n", status));
 	}
 
-	if (WdfLdrDiags)
-	{
-		DbgPrint("WdfLdr: WdfVersionBind - ");
-		DbgPrint("Returning with Status 0x%x\n", status);
-	}
+	__DBGPRINT(("Returning with Status 0x%x\n", status));
 
 	return status;
 }
@@ -1031,21 +922,13 @@ WdfVersionBindClass(
 	
 	pClassModule = NULL;
 
-	if (WdfLdrDiags)
-	{
-		DbgPrint("WdfLdr: WdfVersionBindClass - ");
-		DbgPrint("WdfLdr: WdfVersionBindClass: enter\n");
-	}
+	__DBGPRINT(("enter\n"));
 
 	pClassClientModule = ClassClientCreate();
 
 	if (pClassClientModule == NULL)
 	{
-		if (WdfLdrDiags)
-		{
-			DbgPrint("WdfLdr: WdfVersionBindClass - ");
-			DbgPrint("WdfLdr: Could not create class client struct\n");
-		}
+		__DBGPRINT(("Could not create class client struct\n"));
 		
 		return STATUS_INSUFFICIENT_RESOURCES;
 	}
@@ -1063,11 +946,7 @@ WdfVersionBindClass(
 	
 	if (!NT_SUCCESS(status))
 	{
-		if (WdfLdrDiags)
-		{
-			DbgPrint("WdfLdr: WdfVersionBindClass - ");
-			DbgPrint("WdfLdr: ClassLinkInClient failed 0x%x\n", status);
-		}
+		__DBGPRINT(("ClassLinkInClient failed 0x%x\n", status));
 		goto end;
 	}
 
@@ -1075,10 +954,9 @@ WdfVersionBindClass(
 	pClassClientModule = NULL;
 	status = pfnBindClient->ClassLibraryBindClient(ClassBindInfo, Globals);
 
-	if (!NT_SUCCESS(status) && WdfLdrDiags)
+	if (!NT_SUCCESS(status))
 	{
-		DbgPrint("WdfLdr: WdfVersionBindClass - ");
-		DbgPrint("WdfLdr: ClassLibraryBindClient failed, status 0x%x\n", status);
+		__DBGPRINT(("ClassLibraryBindClient failed, status 0x%x\n", status));
 	}
 
 end:
@@ -1087,11 +965,7 @@ end:
 	if (pClassClientModule != NULL)
 		ExFreePoolWithTag(pClassClientModule, 0);
 
-	if (WdfLdrDiags)
-	{
-		DbgPrint("WdfLdr: WdfVersionBindClass - ");
-		DbgPrint("Returning with Status 0x%x\n", status);
-	}
+	__DBGPRINT(("Returning with Status 0x%x\n", status));
 
 	return status;
 }
@@ -1137,20 +1011,17 @@ DereferenceVersion(
 		// Call wdf01000 function for unregister client
 		status = pLibModule->LibraryInfo->LibraryUnregisterClient(BindInfo, ComponentGlobals);
 		
-		if (!NT_SUCCESS(status) && WdfLdrDiags)
+		if (!NT_SUCCESS(status))
 		{
-			DbgPrint("WdfLdr: DereferenceVersion - ");
-			DbgPrint("WdfLdr: DereferenceVersion: LibraryUnregisterClient failed %X\n", status);
-
+			__DBGPRINT(("LibraryUnregisterClient failed %X\n", status));
 		}
 	}
 
 	status = LibraryUnlinkClient(pLibModule, BindInfo);
 
-	if (!NT_SUCCESS(status) && WdfLdrDiags)
+	if (!NT_SUCCESS(status))
 	{
-		DbgPrint("WdfLdr: DereferenceVersion - ");
-		DbgPrint("WdfLdr: DereferenceVersion: LibraryUnlinkClient failed %X\n", status);
+		__DBGPRINT(("LibraryUnlinkClient failed %X\n", status));
 	}
 
 	LibraryReleaseClientReference(pLibModule);
@@ -1187,11 +1058,7 @@ WdfVersionUnbind(
 
 	status = DereferenceVersion(BindInfo, ComponentGlobals);
 	
-	if (WdfLdrDiags)
-	{
-		DbgPrint("WdfLdr: WdfVersionUnbind - ");
-		DbgPrint("WdfLdr: WdfVersionUnbind: exit: %X\n", status);
-	}
+	__DBGPRINT(("exit: %X\n", status));
 
 	return status;
 }
@@ -1251,11 +1118,8 @@ WdfRegisterClassLibrary(
 	
 	if (pClassModule)
 	{
-		if (WdfLdrDiags)
-		{
-			DbgPrint("WdfLdr: WdfRegisterClassLibrary - ");
-			DbgPrint("Class Library (%p)\n", pClassModule);
-		}
+		__DBGPRINT(("Class Library (%p)\n", pClassModule));
+
 		status = ClassOpen(pClassModule, ObjectName);
 
 		if (NT_SUCCESS(status))
@@ -1267,17 +1131,12 @@ WdfRegisterClassLibrary(
 				if (NT_SUCCESS(status))
 					return status;
 				
-				if (WdfLdrDiags)
-				{
-					DbgPrint("WdfLdr: WdfRegisterClassLibrary - ");
-					DbgPrint("ERROR: WdfRegisterClassLibrary: ClassLibraryInitialize failed, status 0x%x\n", status);
-				}
+				__DBGPRINT(("ERROR: WdfRegisterClassLibrary: ClassLibraryInitialize failed, status 0x%x\n", status));
 			}
 		}
-		else if (WdfLdrDiags)
+		else
 		{
-			DbgPrint("WdfLdr: WdfRegisterClassLibrary - ");
-			DbgPrint("ERROR: ClassOpen(%wZ) failed, status 0x%x\n", ObjectName, status);
+			__DBGPRINT(("ERROR: ClassOpen(%wZ) failed, status 0x%x\n", ObjectName, status));
 		}
 	}
 

@@ -24,6 +24,16 @@ PRtlQueryModuleInformation pfnRtlQueryModuleInformation;
 
 #define WDFLDR_TAG 'LfdW'
 
+#define __PrintUnfiltered(...)          \
+    DbgPrint(__VA_ARGS__);
+
+#define __DBGPRINT(_x_)                                                           \
+{                                                                              \
+    if (WdfLdrDiags) {                                                    \
+        DbgPrint("Wdfldr: %s - ", __FUNCTION__); \
+        __PrintUnfiltered _x_                                                  \
+    }                                                                          \
+}
 
 typedef struct _WDF_INTERFACE_HEADER {
 	PGUID InterfaceType;

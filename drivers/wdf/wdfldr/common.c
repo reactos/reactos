@@ -146,13 +146,11 @@ GetImageName(
 	if (name.Length > 0) 
 	{
 		status = RtlUShortAdd(name.Length, 2u, &ImageName->Length);
+		
 		if (!NT_SUCCESS(status)) 
 		{
 			status = STATUS_INTEGER_OVERFLOW;
-			if (WdfLdrDiags) {
-				DbgPrint("WdfLdr: GetImageName - ");
-				DbgPrint("ERROR: size computation failed with Status 0x%x\n", STATUS_INTEGER_OVERFLOW);
-			}
+			__DBGPRINT(("ERROR: size computation failed with Status 0x%x\n", status));
 		}
 		else 
 		{
@@ -165,43 +163,25 @@ GetImageName(
 				ImageName->Length = 0;
 				RtlCopyUnicodeString(ImageName, &name);
 
-				if (WdfLdrDiags) 
-				{
-					DbgPrint("WdfLdr: GetImageName - ");
-					DbgPrint("Version Image Name \"%wZ\"\n", ImageName);
-				}
+				__DBGPRINT(("Version Image Name \"%wZ\"\n", ImageName));
 			}
 			else 
 			{
 				status = STATUS_INSUFFICIENT_RESOURCES;
-
-				if (WdfLdrDiags) 
-				{
-					DbgPrint("WdfLdr: GetImageName - ");
-					DbgPrint("ERROR: ExAllocatePoolWithTag failed with Status 0x%x\n", STATUS_INSUFFICIENT_RESOURCES);
-				}
+				__DBGPRINT(("ERROR: ExAllocatePoolWithTag failed with Status 0x%x\n", status));
 			}
 		}
 	}
 	else 
 	{
 		status = STATUS_INVALID_PARAMETER;
-
-		if (WdfLdrDiags) 
-		{
-			DbgPrint("WdfLdr: GetImageName - ");
-			DbgPrint("ERROR: GetNameFromPathW could not find a name, status 0x%x\n", STATUS_INVALID_PARAMETER);
-		}
+		__DBGPRINT(("ERROR: GetNameFromPathW could not find a name, status 0x%x\n", status));
 	}
 
 	goto end;
 
 error:
-	if (WdfLdrDiags)
-	{
-		DbgPrint("WdfLdr: GetImageName - ");
-		DbgPrint("ERROR: GetImageName failed with status 0x%x\n", status);
-	}
+    __DBGPRINT(("ERROR: GetImageName failed with status 0x%x\n", status));
 
 end:
 	if (KeyHandle) 
@@ -372,11 +352,8 @@ GetImageBase(
 
 	if (!NT_SUCCESS(status) || ansiImageName.Buffer == NULL)
 	{
-		if (WdfLdrDiags)
-		{
-			DbgPrint("WdfLdr: GetImageBase - ");
-			DbgPrint("ERROR: RtlUnicodeStringToAnsiString failed with Status 0x%x\n", status);
-		}
+		__DBGPRINT(("ERROR: RtlUnicodeStringToAnsiString failed with Status 0x%x\n", status));
+
 		ansiImageName.Buffer = NULL;
 		goto end;
 	}
@@ -407,11 +384,7 @@ GetImageBase(
 
 		if (!NT_SUCCESS(status))
 		{
-			if (WdfLdrDiags)
-			{
-				DbgPrint("WdfLdr: GetImageBase - ");
-				DbgPrint("ERROR: RtlUlongAdd failed with Status 0x%x\n", status);
-			}
+			__DBGPRINT(("ERROR: RtlUlongAdd failed with Status 0x%x\n", status));
 		}
 		else
 		{
@@ -423,12 +396,8 @@ GetImageBase(
 		if (pModuleInfoBuffer == NULL)
 		{
 			status = STATUS_INSUFFICIENT_RESOURCES;
+			__DBGPRINT(("ERROR: ExAllocatePoolWithTag failed with Status 0x%x\n", status));
 
-			if (WdfLdrDiags)
-			{
-				DbgPrint("WdfLdr: GetImageBase - ");
-				DbgPrint("ERROR: ExAllocatePoolWithTag failed with Status 0x%x\n", status);
-			}
 			goto end;
 		}
 
@@ -449,11 +418,7 @@ GetImageBase(
 
 	if (!NT_SUCCESS(status))
 	{
-		if (WdfLdrDiags)
-		{
-			DbgPrint("WdfLdr: GetImageBase - ");
-			DbgPrint("ERROR: AuxKlibQueryModuleInformation failed with Status 0x%x\n", status);
-		}
+		__DBGPRINT(("ERROR: AuxKlibQueryModuleInformation failed with Status 0x%x\n", status));
 
 		goto end;
 	}
@@ -509,10 +474,9 @@ ServiceCheckBootStart(
 				result = value == 0;
 			}
 		}
-		else if (WdfLdrDiags) 
+		else
 		{
-			DbgPrint("WdfLdr: ServiceCheckBootStart - ");
-			DbgPrint("WdfLdr: ZwOpenKey(%wZ) failed: %08X\n", Service, status);
+			__DBGPRINT(("ZwOpenKey(%wZ) failed: %08X\n", Service, status));
 		}
 	}
 
@@ -555,11 +519,7 @@ FxLdrQueryUlong(
 	}
 	else 
 	{
-		if (WdfLdrDiags) 
-		{
-			DbgPrint("WdfLdr: FxLdrQueryUlong - ");
-			DbgPrint("ERROR: ZwQueryValueKey failed with Status 0x%x\n", status);
-		}
+		__DBGPRINT(("ERROR: ZwQueryValueKey failed with Status 0x%x\n", status));
 	}
 
 	return status;
@@ -585,10 +545,9 @@ FxLdrQueryData(
 		status = ZwQueryValueKey(KeyHandle, ValueName, KeyValuePartialInformation, NULL, 0, &resultLength);
 		if (status != STATUS_BUFFER_TOO_SMALL) 
 		{
-			if (!NT_SUCCESS(status) && WdfLdrDiags) 
+			if (!NT_SUCCESS(status)) 
 			{
-				DbgPrint("WdfLdr: FxLdrQueryData - ");
-				DbgPrint("ERROR: ZwQueryValueKey failed with status 0x%x\n", status);
+				__DBGPRINT(("ERROR: ZwQueryValueKey failed with status 0x%x\n", status));
 			}
 
 			return status;
@@ -597,11 +556,7 @@ FxLdrQueryData(
 		status = RtlULongAdd(resultLength, 0xCu, &resultLength);
 		if (!NT_SUCCESS(status)) 
 		{
-			if (WdfLdrDiags) 
-			{
-				DbgPrint("WdfLdr: FxLdrQueryData - ");
-				DbgPrint("ERROR: Computing length of data under %wZ failed with status 0x%x\n", ValueName, status);
-			}
+			__DBGPRINT(("ERROR: Computing length of data under %wZ failed with status 0x%x\n", ValueName, status));
 
 			return status;
 		}
@@ -632,20 +587,13 @@ FxLdrQueryData(
 
 		if (status != STATUS_BUFFER_TOO_SMALL) 
 		{
-			if (WdfLdrDiags) {
-				DbgPrint("WdfLdr: FxLdrQueryData - ");
-				DbgPrint("ERROR: ZwQueryValueKey (%wZ) failed with Status 0x%x\n", ValueName, status);
-			}
+			__DBGPRINT(("ERROR: ZwQueryValueKey (%wZ) failed with Status 0x%x\n", ValueName, status));
 
 			return status;
 		}
 	}
 
-	if (WdfLdrDiags) 
-	{
-		DbgPrint("WdfLdr: FxLdrQueryData - ");
-		DbgPrint("ERROR: ExAllocatePoolWithTag failed with Status 0x%x\n", STATUS_INSUFFICIENT_RESOURCES);
-	}
+    __DBGPRINT(("ERROR: ExAllocatePoolWithTag failed with Status 0x%x\n", STATUS_INSUFFICIENT_RESOURCES));
 
 	return STATUS_INSUFFICIENT_RESOURCES;
 }
@@ -748,21 +696,13 @@ BuildServicePath(
 	else 
 	{
 		status = STATUS_INSUFFICIENT_RESOURCES;
-		if (WdfLdrDiags) 
-		{
-			DbgPrint("WdfLdr: BuildServicePath - ");
-			DbgPrint("ERROR: ExAllocatePoolWithTag failed with Status 0x%x\n", STATUS_INSUFFICIENT_RESOURCES);
-		}
+		__DBGPRINT(("ERROR: ExAllocatePoolWithTag failed with Status 0x%x\n", status));
 	}
 
 	goto done;
 
 error:
-	if (WdfLdrDiags)
-	{
-		DbgPrint("WdfLdr: BuildServicePath - ");
-		DbgPrint("ERROR: BuildServicePath failed with status 0x%x\n", status);
-	}
+    __DBGPRINT(("ERROR: BuildServicePath failed with status 0x%x\n", status));
 
 done:
 

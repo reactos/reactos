@@ -111,11 +111,7 @@ LibraryCreate(
 
 	if (!NT_SUCCESS(status))
 	{
-		if (WdfLdrDiags)
-		{
-			DbgPrint("WdfLdr: LibraryCreate - ");
-			DbgPrint("WdfLdr: LibraryCreate: GetImageBase failed\n");
-		}
+		__DBGPRINT(("GetImageBase failed\n"));
 	}
 	else
 	{
@@ -259,11 +255,7 @@ ClientCleanupAndFree(
 {
 	if (ClientModule->ImageName.Buffer != NULL)
 	{
-		if (WdfLdrDiags)
-		{
-			DbgPrint("WdfLdr: ClientCleanupAndFree - ");
-			DbgPrint("Client Image Name: %wZ\n", &ClientModule->ImageName);
-		}
+		__DBGPRINT(("Client Image Name: %wZ\n", &ClientModule->ImageName));
 
 		ExFreePoolWithTag(ClientModule->ImageName.Buffer, WDFLDR_TAG);
 		ClientModule->ImageName.Length = 0;
@@ -306,14 +298,10 @@ LibraryLinkInClient(
 
 	if (pClientModule == NULL)
 	{
-		status = STATUS_INSUFFICIENT_RESOURCES;
-		if (!WdfLdrDiags)
-		{
-			return status;
-		}
+		status = STATUS_INSUFFICIENT_RESOURCES;		
 
-		DbgPrint("WdfLdr: LibraryLinkInClient - ");
-		DbgPrint("ERROR: ExAllocatePoolWithTag failed with Status 0x%x\n", STATUS_INSUFFICIENT_RESOURCES);
+        __DBGPRINT(("ERROR: ExAllocatePoolWithTag failed with Status 0x%x\n", status));
+
 		goto error;
 	}
 
@@ -326,21 +314,14 @@ LibraryLinkInClient(
 
 	if (NT_SUCCESS(status))
 	{
-		if (WdfLdrDiags)
-		{
-			DbgPrint("WdfLdr: LibraryLinkInClient - ");
-			DbgPrint("Client Image Name: %wZ\n", &pClientModule->ImageName);
-		}
+		__DBGPRINT(("Client Image Name: %wZ\n", &pClientModule->ImageName));
 
 		status = GetImageBase(&pClientModule->ImageName, &pClientModule->ImageAddr, &pClientModule->ImageSize);
 
 		if (!NT_SUCCESS(status))
 		{
-			if (WdfLdrDiags)
-			{
-				DbgPrint("WdfLdr: LibraryLinkInClient - ");
-				DbgPrint("WdfLdr: LibraryLinkInClient: GetImageBase failed with status 0x%x\n", status);
-			}
+			__DBGPRINT(("GetImageBase failed with status 0x%x\n", status));
+
 			ClientCleanupAndFree(pClientModule);
 			goto error;
 		}
@@ -358,11 +339,7 @@ LibraryLinkInClient(
 	return STATUS_SUCCESS;	
 
 error:
-	if (WdfLdrDiags)
-	{
-		DbgPrint("WdfLdr: LibraryLinkInClient - ");
-		DbgPrint("ERROR: Client module NOT linked\n");
-	}
+    __DBGPRINT(("ERROR: Client module NOT linked\n"));
 
 	return status;
 }
@@ -387,30 +364,23 @@ LibraryUnload(
 	{
 		status = LibInfo->LibraryDecommission();
 
-		if (!NT_SUCCESS(status) && WdfLdrDiags)
+		if (!NT_SUCCESS(status))
 		{
-			DbgPrint("WdfLdr: LibraryUnload - ");
-			DbgPrint("WdfLdr: LibraryUnload: LibraryDecommission failed %08X\n", status);
+			__DBGPRINT(("LibraryDecommission failed %08X\n", status));
 		}
 	}
 	
-	if (WdfLdrDiags)
-	{
-		DbgPrint("WdfLdr: LibraryUnload - ");
-		DbgPrint("WdfLdr: LibraryUnload: Unload module %wZ\n", &LibModule->Service);
-	}	
+	__DBGPRINT(("Unload module %wZ\n", &LibModule->Service));
 
 	LibraryClose(LibModule);
 	status = ZwUnloadDriver(&LibModule->Service);
 
-	if (!NT_SUCCESS(status) && WdfLdrDiags)
+	if (!NT_SUCCESS(status))
 	{
-		DbgPrint("WdfLdr: LibraryUnload - ");
-		DbgPrint(
-			"WdfLdr: LibraryUnload: unload of %wZ returned 0x%x (this may not be a true error if someone else attempted to stop"
+		__DBGPRINT(("unload of %wZ returned 0x%x (this may not be a true error if someone else attempted to stop"
 			" the service first)\n",
 			&LibModule->Service,
-			status);
+			status));
 	}
 
 	if (RemoveFromList)
@@ -426,11 +396,7 @@ LibraryReleaseClientReference(
 {
 	int refs;
 
-	if (WdfLdrDiags)
-	{
-		DbgPrint("WdfLdr: LibraryReleaseClientReference - ");
-		DbgPrint("WdfLdr: LibraryReleaseClientReference: Dereference module %wZ\n", &LibModule->Service);
-	}
+	__DBGPRINT(("Dereference module %wZ\n", &LibModule->Service));
 
 	refs = _InterlockedDecrement(&LibModule->ClientRefCount);
 	
@@ -439,13 +405,11 @@ LibraryReleaseClientReference(
 	{
 		LibraryUnload(LibModule, TRUE);
 	}
-	else if (WdfLdrDiags)
+	else
 	{
-		DbgPrint("WdfLdr: LibraryReleaseClientReference - ");
-		DbgPrint(
-			"WdfLdr: LibraryReleaseClientReference: Dereference module %wZ still has %d references\n",
+		__DBGPRINT(("Dereference module %wZ still has %d references\n",
 			&LibModule->Service,
-			refs);
+			refs));
 	}
 }
 
@@ -489,11 +453,7 @@ LibraryUnlinkClient(
 	else
 	{
 		status = STATUS_UNSUCCESSFUL;
-		if (WdfLdrDiags)
-		{
-			DbgPrint("WdfLdr: LibraryUnlinkClient - ");
-			DbgPrint("ERROR: Client module %p, bind %p NOT found\n", LibModule, BindInfo);
-		}
+		__DBGPRINT(("ERROR: Client module %p, bind %p NOT found\n", LibModule, BindInfo));
 	}
 
 	return status;

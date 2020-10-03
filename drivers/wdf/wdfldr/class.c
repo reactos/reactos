@@ -174,10 +174,9 @@ ClassCreate(
 	{
 		return pNewClassModule;
 	}
-	else if (WdfLdrDiags)
+	else
 	{
-			DbgPrint("WdfLdr: ClassCreate - ");
-			DbgPrint("WdfLdr: ClassCreate: GetImageBase failed\n");
+		__DBGPRINT(("GetImageBase failed\n"));
 	}
 
 clean:
@@ -261,12 +260,8 @@ ClassLinkInClient(
 	}
 	else
 	{
-		if (WdfLdrDiags)
-		{
-			DbgPrint("WdfLdr: ClassLinkInClient - ");
-			DbgPrint("ERROR: Could not locate client from Info %p, status 0x%x\n", BindInfo, STATUS_INVALID_DEVICE_STATE);
-		}
 		status = STATUS_INVALID_DEVICE_STATE;
+		__DBGPRINT(("ERROR: Could not locate client from Info %p, status 0x%x\n", BindInfo, status));
 	}
 
 	return status;
@@ -448,11 +443,7 @@ GetClassServicePath(
 
 	if (!NT_SUCCESS(status))
 	{
-		if (WdfLdrDiags)
-		{
-			DbgPrint("WdfLdr: GetClassServicePath - ");
-			DbgPrint("ERROR: GetClassRegistryHandle failed with status 0x%x\n", status);
-		}
+		__DBGPRINT(("ERROR: GetClassRegistryHandle failed with status 0x%x\n", status));		
 	}
 	else
 	{
@@ -460,11 +451,7 @@ GetClassServicePath(
 		
 		if (!NT_SUCCESS(status))
 		{
-			if (WdfLdrDiags)
-			{
-				DbgPrint("WdfLdr: GetClassServicePath - ");
-				DbgPrint("ERROR: QueryData failed with status 0x%x\n", status);
-			}
+			__DBGPRINT(("ERROR: QueryData failed with status 0x%x\n", status));
 		}
 		else
 		{
@@ -478,11 +465,7 @@ GetClassServicePath(
 		
 		if (!NT_SUCCESS(status))
 		{
-			if (WdfLdrDiags)
-			{
-				DbgPrint("WdfLdr: GetClassServicePath - ");
-				DbgPrint("ERROR: GetDefaultClassServiceName failed, status 0x%x\n", status);
-			}
+			__DBGPRINT(("ERROR: GetDefaultClassServiceName failed, status 0x%x\n", status));
 		}
 	}
 
@@ -556,16 +539,11 @@ ReferenceClassVersion(
 	{
 		status = STATUS_REVISION_MISMATCH;
 
-		if (WdfLdrDiags)
-		{
-			DbgPrint("WdfLdr: ReferenceClassVersion - ");
-			DbgPrint(
-				"WdfLdr: ReferenceClassVersion class %S bound to library %p,client bound to library %p, status 0x%x\n",
+        __DBGPRINT(("class %S bound to library %p,client bound to library %p, status 0x%x\n",
 				ClassBindInfo->ClassName,
 				pLibModule,
 				pBindInfo->Module,
-				status);
-		}
+				status));
 	}
 	FxLdrReleaseLoadedModuleLock();
 
@@ -586,22 +564,16 @@ ReferenceClassVersion(
 			{
 				status = STATUS_SUCCESS;				
 			}
-			else if (WdfLdrDiags)
+			else
 			{
-				DbgPrint("WdfLdr: ReferenceClassVersion - ");
-				DbgPrint(
-					"WdfLdr: ReferenceVersion: ZwLoadDriver (%wZ) failed and no Libray information was returned: 0x%x\n",
+				__DBGPRINT(("ZwLoadDriver (%wZ) failed and no Libray information was returned: 0x%x\n",
 					&driverServiceName,
-					status);
+					status));
 			}
 		}
 		else
 		{
-			if (WdfLdrDiags)
-			{
-				DbgPrint("WdfLdr: ReferenceClassVersion - ");
-				DbgPrint("WARNING: ZwLoadDriver (%wZ) failed with Status 0x%x\n", &driverServiceName, status);
-			}
+			__DBGPRINT(("WARNING: ZwLoadDriver (%wZ) failed with Status 0x%x\n", &driverServiceName, status));
 			pClassModule->ImageAlreadyLoaded = 1;
 		}
 		goto clean;
@@ -785,33 +757,23 @@ ClassUnload(
 
 	if (pClassLibInfo && pClassLibInfo->ClassLibraryDeinitialize)
 	{
-		if (WdfLdrDiags)
-		{
-			DbgPrint("WdfLdr: ClassUnload - ");
-			DbgPrint(
-				"WdfLdr: ClassUnload: calling ClassLibraryDeinitialize (%p)\n",
-				ClassModule->ClassLibraryInfo->ClassLibraryDeinitialize);
-		}
+		__DBGPRINT(("calling ClassLibraryDeinitialize (%p)\n",
+				ClassModule->ClassLibraryInfo->ClassLibraryDeinitialize));
+
 		ClassModule->ClassLibraryInfo->ClassLibraryDeinitialize();
 	}
 
-	if (WdfLdrDiags)
-	{
-		DbgPrint("WdfLdr: ClassUnload - ");
-		DbgPrint("WdfLdr: ClassUnload: Unload class library %wZ\n", &ClassModule->Service);
-	}
+    __DBGPRINT(("Unload class library %wZ\n", &ClassModule->Service));
 
 	ClassClose(ClassModule);
 	status = ZwUnloadDriver(&ClassModule->Service);
 
-	if (!NT_SUCCESS(status) && WdfLdrDiags)
+	if (!NT_SUCCESS(status))
 	{
-		DbgPrint("WdfLdr: ClassUnload - ");
-		DbgPrint(
-			"WdfLdr: ClassUnload: unload of class %wZ returned 0x%x (this may not be a true error if someone else attempted to "
+        __DBGPRINT(("unload of class %wZ returned 0x%x (this may not be a true error if someone else attempted to "
 			"stop the service first)\n",
 			&pClassModule->Service,
-			status);
+			status));
 	}
 
 	if (RemoveFromList)
@@ -826,12 +788,8 @@ ClassReleaseClientReference(
 )
 {
 	int refs;
-
-	if (WdfLdrDiags)
-	{
-		DbgPrint("WdfLdr: ClassReleaseClientReference - ");
-		DbgPrint("WdfLdr: ClassReleaseClientReference: Dereference module %wZ\n", &ClassModule->Service);
-	}
+	
+	__DBGPRINT(("Dereference module %wZ\n", &ClassModule->Service));
 
 	refs = _InterlockedDecrement(&ClassModule->ClientRefCount);
 
@@ -839,13 +797,11 @@ ClassReleaseClientReference(
 	{
 		ClassUnload(ClassModule, TRUE);
 	}
-	else if (WdfLdrDiags)
+	else
 	{
-		DbgPrint("WdfLdr: ClassReleaseClientReference - ");
-		DbgPrint(
-			"WdfLdr: ClassReleaseClientReference: Dereference module %wZ still has %d references\n",
+		__DBGPRINT(("Dereference module %wZ still has %d references\n",
 			&ClassModule->Service,
-			refs);
+			refs));
 	}
 }
 
