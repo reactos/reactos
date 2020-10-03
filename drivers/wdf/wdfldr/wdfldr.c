@@ -122,10 +122,12 @@ WdfLdrDiagnosticsValueByNameAsULONG(
 		}
 		else
 		{
+			// open framework diagnostic key
 			status = WdfLdrOpenRegistryDiagnosticsHandle(&keyHandle);
 			
 			if(NT_SUCCESS(status))
-			{				
+			{
+                // get value as ulong
 				status = FxLdrQueryUlong(keyHandle, ValueName, Value);
 				if (WdfLdrDiags)
 				{
@@ -186,16 +188,19 @@ DllInitialize(
 		return STATUS_SUCCESS;
 	}
 
+    // initialize library list
 	gFlagInit = TRUE;
 	InitializeListHead(&gLibList);
 	ExInitializeResourceLite(&Resource);	
 	
+    // get debug print value
 	status = WdfLdrDiagnosticsValueByNameAsULONG(&csdVersion, &ldrDiagnostic);
 	if ( NT_SUCCESS(status) && ldrDiagnostic)
 	{
 		WdfLdrDiags = TRUE;
 	}
 
+    // TODO: move this code to aux_klib.lib
 	status = AuxKlibInitialize();
 	
 	if(NT_SUCCESS(status))
@@ -297,6 +302,7 @@ DllUnload()
 
 		if (!IsListEmpty(&gLibList))
 		{
+			// copy libs from main list to remove list
 			do
 			{
 				RemoveHeadList(&gLibList);				
@@ -305,6 +311,7 @@ DllUnload()
 				entry.Flink = gLibList.Flink;
 			} while (!IsListEmpty(&gLibList));
 
+            // remove list entries and unload libs
 			for(;;)
 			{
 				entry = removeList;
@@ -353,6 +360,7 @@ WdfLdrQueryInterface(
 		{
 			if (LoaderInterface->Header.InterfaceSize == 24)
 			{
+				// fill interface functions addresses
 				LoaderInterface->RegisterLibrary = (int(__stdcall*)(PWDF_LIBRARY_INFO, PUNICODE_STRING, PUNICODE_STRING))WdfRegisterLibrary;
 				LoaderInterface->VersionBind = (int(__stdcall*)(PDRIVER_OBJECT, PUNICODE_STRING, PWDF_BIND_INFO, void***))WdfVersionBind;
 				LoaderInterface->VersionUnbind = WdfVersionUnbind;
@@ -384,7 +392,17 @@ WdfLdrQueryInterface(
 	return STATUS_INVALID_PARAMETER;
 }
 
-
+/********************************************
+ * 
+ * Search module by name in global library list
+ * 
+ * Params:
+ *    ServiceName - searched name
+ * 
+ * Result:
+ *    Finded module pointer
+ * 
+*********************************************/
 PLIBRARY_MODULE
 NTAPI
 FindModuleByServiceNameLocked(
@@ -421,7 +439,19 @@ FindModuleByServiceNameLocked(
 	return pLibModule;
 }
 
-
+/********************************************
+ * 
+ * Register wdf01000 library
+ * 
+ * Params:
+ *    LibraryInfo - information by register lib
+ *    ServicePath - service path in registry
+ *    LibraryDeviceName - kmdf device name
+ * 
+ * Result:
+ *    Finded module pointer
+ * 
+*********************************************/
 NTSTATUS
 NTAPI
 WdfRegisterLibrary(
@@ -460,6 +490,7 @@ WdfRegisterLibrary(
 	else
 	{
 		pLibModule = LibraryCreate(LibraryInfo, ServicePath);
+		// add lib to global list
 		if (pLibModule)
 		{
 			LibraryAddToLibraryListLocked(pLibModule);
@@ -476,7 +507,7 @@ WdfRegisterLibrary(
 		if (WdfLdrDiags)
 		{
 			DbgPrint("WdfLdr: WdfRegisterLibrary - ");
-			DbgPrint("Module(%p)\n", pLibModule);
+			DbgPrint("Module(%p) %wZ\n", pLibModule, &pLibModule->ImageName);
 		}
 		status = LibraryOpen(pLibModule, LibraryDeviceName);
 
@@ -507,7 +538,18 @@ end:
 	return status;
 }
 
-
+/********************************************
+ * 
+ * Open framework version registry key
+ * 
+ * Params:
+ *    BindInfo - bind information
+ *    HandleRegKey - opened key handle
+ * 
+ * Result:
+ *    Operation status
+ * 
+*********************************************/
 NTSTATUS
 NTAPI
 GetVersionRegistryHandle(
@@ -548,7 +590,7 @@ GetVersionRegistryHandle(
 	ObjectAttributes.SecurityDescriptor = NULL;
 	ObjectAttributes.SecurityQualityOfService = NULL;
 	ObjectAttributes.Length = 24;
-	ObjectAttributes.Attributes = OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE;//576;
+	ObjectAttributes.Attributes = OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE;
 	status = ZwOpenKey(&KeyHandle, KEY_QUERY_VALUE, &ObjectAttributes);
 	
 	if (NT_SUCCESS(status))
@@ -568,7 +610,7 @@ GetVersionRegistryHandle(
 		ObjectAttributes.RootDirectory = KeyHandle;
 		ObjectAttributes.ObjectName = &String;
 		ObjectAttributes.Length = 24;
-		ObjectAttributes.Attributes = OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE;// 576;
+		ObjectAttributes.Attributes = OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE;
 		status = ZwOpenKey(&handle, 0x20019u, &ObjectAttributes);
 		
 		if (NT_SUCCESS(status))
@@ -592,7 +634,18 @@ end:
 	return status;
 }
 
-
+/********************************************
+ * 
+ * Create service path by bind info
+ * 
+ * Params:
+ *    BindInfo - bind information
+ *    RegistryPath - created path
+ * 
+ * Result:
+ *    Operation status
+ * 
+*********************************************/
 NTSTATUS
 NTAPI
 GetDefaultServiceName(
@@ -652,12 +705,23 @@ GetDefaultServiceName(
 	return status;
 }
 
-
+/********************************************
+ * 
+ * Create service path by bind info
+ * 
+ * Params:
+ *    BindInfo - bind information
+ *    ServicePath - service path in registry
+ * 
+ * Result:
+ *    Operation status
+ * 
+*********************************************/
 NTSTATUS
 NTAPI
 GetVersionServicePath(
 	IN PWDF_BIND_INFO BindInfo,
-	IN PUNICODE_STRING ServiceName
+	OUT PUNICODE_STRING ServicePath
 )
 {
 	NTSTATUS status;
@@ -681,7 +745,8 @@ GetVersionServicePath(
 	}
 	else
 	{
-		status = FxLdrQueryData(handleRegKey, &ValueName, '4LxF', &pKeyVal);
+		// get service name
+		status = FxLdrQueryData(handleRegKey, &ValueName, WDFLDR_TAG, &pKeyVal);
 		if (!NT_SUCCESS(status))
 		{
 			if (WdfLdrDiags)
@@ -692,13 +757,13 @@ GetVersionServicePath(
 		}
 		else
 		{			
-			status = BuildServicePath(pKeyVal, '8LxF', ServiceName);
+			status = BuildServicePath(pKeyVal, WDFLDR_TAG, ServicePath);
 		}
 	}
 
 	if (!NT_SUCCESS(status))
 	{
-		status = GetDefaultServiceName(BindInfo, ServiceName);
+		status = GetDefaultServiceName(BindInfo, ServicePath);
 		if (!NT_SUCCESS(status) && WdfLdrDiags)
 		{
 			DbgPrint("WdfLdr: GetVersionServicePath - ");
@@ -708,7 +773,7 @@ GetVersionServicePath(
 	else if (WdfLdrDiags)
 	{
 		DbgPrint("WdfLdr: GetVersionServicePath - ");
-		DbgPrint("GetVersionServicePath (%wZ)\n", ServiceName);
+		DbgPrint("GetVersionServicePath (%wZ)\n", ServicePath);
 	}
 
 	if (handleRegKey != NULL)
@@ -719,7 +784,18 @@ GetVersionServicePath(
 	return status;
 }
 
-
+/********************************************
+ * 
+ * Increment reference for wdf01000
+ * 
+ * Params:
+ *    BindInfo - bind information
+ *    ServicePath - service path in registry
+ * 
+ * Result:
+ *    Operation status
+ * 
+*********************************************/
 NTSTATUS
 NTAPI
 ReferenceVersion(
@@ -741,16 +817,18 @@ ReferenceVersion(
 		goto error;
 	}
 
-
+    // try find module in loaded list
 	FxLdrAcquireLoadedModuleLock();
 	pLibModule = FindModuleByServiceNameLocked(&driverServiceName);
 
+    // if module finded, increment reference
 	if (pLibModule != NULL)
 	{
 		_InterlockedExchangeAdd(&pLibModule->LibraryRefCount, 1);
 	}
 	else
 	{
+        // create library and add it to list
 		pLibModule = LibraryCreate(0, &driverServiceName);
 		if (pLibModule != NULL)
 		{
@@ -766,6 +844,7 @@ ReferenceVersion(
 
 	FxLdrReleaseLoadedModuleLock();
 
+    // if new library create, load driver
 	if (newCreated)
 	{
 		status = ZwLoadDriver(&driverServiceName);
@@ -799,7 +878,7 @@ ReferenceVersion(
 			}
 		}
 	}
-
+	
 	if (pLibModule != NULL &&
 		_InterlockedExchangeAdd(&pLibModule->LibraryRefCount, -1) == 0)
 	{
@@ -827,7 +906,20 @@ success:
 	return status;
 }
 
-
+/********************************************
+ * 
+ * Bind client driver with framework
+ * 
+ * Params:
+ *    DriverObject - driver object 
+ *    RegistryPath - registry path
+ *    BindInfo - client driver bind information
+ *    ComponentGlobals - client driver global settings
+ * 
+ * Result:
+ *    Operation status
+ * 
+*********************************************/
 NTSTATUS
 NTAPI
 WdfVersionBind(
@@ -869,7 +961,7 @@ WdfVersionBind(
 	{
 		goto clean;
 	}
-	
+
 	_InterlockedExchangeAdd(&pLibModule->ClientRefCount, 1);
 	status = LibraryLinkInClient(BindInfo->Module, RegistryPath, BindInfo, &clientInfo, &pClientModule);
 
@@ -877,6 +969,9 @@ WdfVersionBind(
 	{
 		clientInfo.RegistryPath = RegistryPath;
 		pclientInfo = &clientInfo;
+		
+		// Call register function from wdf01000 driver.
+		// Framework driver write functions table address in bindInfo
 		status = pLibModule->LibraryInfo->LibraryRegisterClient(BindInfo, ComponentGlobals, (PVOID*)&pclientInfo);
 
 		if (NT_SUCCESS(status))
@@ -914,7 +1009,9 @@ WdfVersionBind(
 	return status;
 }
 
-
+/*
+* http://redplait.blogspot.com/2013/03/ucxfunctionsidc.html
+*/
 NTSTATUS
 NTAPI
 WdfVersionBindClass(
@@ -1007,7 +1104,18 @@ WdfVersionUnbindClass(
 	DereferenceClassVersion(ClassBindInfo, BindInfo, Globals);
 }
 
-
+/********************************************
+ * 
+ * Decrement library client count and unregister client driver
+ * 
+ * Params:
+ *    BindInfo - client driver bind information
+ *    ComponentGlobals - clien driver global settings
+ * 
+ * Result:
+ *    Operation status
+ * 
+*********************************************/
 NTSTATUS
 NTAPI
 DereferenceVersion(
@@ -1022,6 +1130,7 @@ DereferenceVersion(
 	
 	if (ComponentGlobals != NULL)
 	{
+		// Call wdf01000 function for unregister client
 		status = pLibModule->LibraryInfo->LibraryUnregisterClient(BindInfo, ComponentGlobals);
 		
 		if (!NT_SUCCESS(status) && WdfLdrDiags)
@@ -1046,7 +1155,19 @@ DereferenceVersion(
 	return STATUS_SUCCESS;
 }
 
-
+/********************************************
+ * 
+ * Unbind client driver from framework
+ * 
+ * Params:
+ *    RegistryPath - registry path
+ *    BindInfo - client driver bind information
+ *    ComponentGlobals - client driver global settings
+ * 
+ * Result:
+ *    Operation status
+ * 
+*********************************************/
 NTSTATUS
 NTAPI
 WdfVersionUnbind(
@@ -1072,6 +1193,21 @@ WdfVersionUnbind(
 }
 
 
+/********************************************
+ * 
+ * http://redplait.blogspot.com/2013/03/ucxfunctionsidc.html
+ * 
+ * Register extension driver
+ * 
+ * Params:
+ *    ClassBindInfo - client driver bind information
+ *    SourceString - 
+ *    ObjectName - 
+ * 
+ * Result:
+ *    Operation status
+ * 
+*********************************************/
 NTSTATUS
 NTAPI
 WdfRegisterClassLibrary(

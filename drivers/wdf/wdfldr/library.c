@@ -170,7 +170,7 @@ LibraryCleanupAndFree(
 	ExFreePoolWithTag(LibModule, WDFLDR_TAG);
 }
 
-
+// TODO: move to aux_klib.lib
 NTSTATUS
 NTAPI
 AuxKlibInitialize()
@@ -273,6 +273,21 @@ ClientCleanupAndFree(
 	ExFreePoolWithTag(ClientModule, WDFLDR_TAG);
 }
 
+/********************************************
+ * 
+ * Create client module and add it to client list in library
+ * 
+ * Params:
+ *    LibModule - library that client being added
+ *    DriverServiceName - client driver service registry path
+ *    BindInfo - bind information
+ *    Context - 
+ *    ClientModule - client added to library clients list
+ * 
+ * Result:
+ *    Operation status
+ * 
+*********************************************/
 NTSTATUS
 NTAPI
 LibraryLinkInClient(
@@ -419,6 +434,7 @@ LibraryReleaseClientReference(
 
 	refs = _InterlockedDecrement(&LibModule->ClientRefCount);
 	
+	// unload library if hasn't clients
 	if (refs <= 0)
 	{
 		LibraryUnload(LibModule, TRUE);
@@ -450,6 +466,7 @@ LibraryUnlinkClient(
 	pClientModule = NULL;
 	LibraryAcquireClientLock(LibModule);
 
+    // search in library clients entry to remove
 	for (entry = LibModule->ClientsListHead.Flink; entry != &LibModule->ClientsListHead; entry = entry->Flink)
 	{
 		pClientModule = CONTAINING_RECORD(entry, CLIENT_MODULE, LibListEntry);
@@ -463,6 +480,7 @@ LibraryUnlinkClient(
 
 	if (isBindFound)
 	{
+		// remove client from list and release resources
 		RemoveEntryList(entry);
 		InitializeListHead(entry);
 		status = STATUS_SUCCESS;

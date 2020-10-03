@@ -242,7 +242,7 @@ GetFileName(
 	return Path;
 }
 
-
+// TODO: move to aux_klib.lib
 NTSTATUS
 NTAPI
 AuxKlibQueryModuleInformation(
