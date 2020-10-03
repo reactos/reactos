@@ -14,17 +14,17 @@
 NTSTATUS
 NTAPI
 WdfRegisterLibrary(
-	PWDF_LIBRARY_INFO LibraryInfo,
-	PUNICODE_STRING ServicePath,
-	PUNICODE_STRING LibraryDeviceName
+    PWDF_LIBRARY_INFO LibraryInfo,
+    PUNICODE_STRING ServicePath,
+    PUNICODE_STRING LibraryDeviceName
 );
 
 NTSTATUS
 NTAPI
 WdfRegisterClassLibrary(
-	IN PWDF_CLASS_LIBRARY_INFO ClassLibInfo,
-	IN PUNICODE_STRING SourceString,
-	IN PUNICODE_STRING ObjectName
+    IN PWDF_CLASS_LIBRARY_INFO ClassLibInfo,
+    IN PUNICODE_STRING SourceString,
+    IN PUNICODE_STRING ObjectName
 );
 
 VOID
@@ -34,56 +34,56 @@ DllUnload();
 NTSTATUS
 NTAPI
 DllInitialize(
-	PUNICODE_STRING RegistryPath
+    PUNICODE_STRING RegistryPath
 );
 
 
 NTSTATUS
 NTAPI
 WdfLdrDiagnosticsValueByNameAsULONG(
-	PUNICODE_STRING ValueName,
-	PULONG Value
+    PUNICODE_STRING ValueName,
+    PULONG Value
 );
 
 
 NTSTATUS
 NTAPI
 WdfVersionBind(
-	PDRIVER_OBJECT DriverObject,
-	PUNICODE_STRING RegistryPath,
-	PWDF_BIND_INFO BindInfo,
-	PWDF_COMPONENT_GLOBALS *ComponentGlobals
+    PDRIVER_OBJECT DriverObject,
+    PUNICODE_STRING RegistryPath,
+    PWDF_BIND_INFO BindInfo,
+    PWDF_COMPONENT_GLOBALS *ComponentGlobals
 );
 
 
 NTSTATUS
 NTAPI
 WdfVersionUnbind(
-	PUNICODE_STRING RegistryPath,
-	PWDF_BIND_INFO BindInfo,
-	void** ComponentGlobals
+    PUNICODE_STRING RegistryPath,
+    PWDF_BIND_INFO BindInfo,
+    void** ComponentGlobals
 );
 
 
 NTSTATUS
 NTAPI
 WdfVersionBindClass(
-	PWDF_BIND_INFO BindInfo,
-	PWDF_COMPONENT_GLOBALS Globals,
-	PWDF_CLASS_BIND_INFO ClassBindInfo
+    PWDF_BIND_INFO BindInfo,
+    PWDF_COMPONENT_GLOBALS Globals,
+    PWDF_CLASS_BIND_INFO ClassBindInfo
 );
 
 
 VOID
 NTAPI
 WdfVersionUnbindClass(
-	PWDF_BIND_INFO BindInfo,
-	PWDF_COMPONENT_GLOBALS Globals,
-	PWDF_CLASS_BIND_INFO ClassBindInfo
+    PWDF_BIND_INFO BindInfo,
+    PWDF_COMPONENT_GLOBALS Globals,
+    PWDF_CLASS_BIND_INFO ClassBindInfo
 );
 
 NTSTATUS
 NTAPI
 WdfLdrQueryInterface(
-	IN PWDF_LOADER_INTERFACE LoaderInterface
+    IN PWDF_LOADER_INTERFACE LoaderInterface
 );
