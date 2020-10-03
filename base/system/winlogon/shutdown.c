@@ -3,7 +3,8 @@
  * PROJECT:         ReactOS Winlogon
  * FILE:            base/system/winlogon/shutdown.c
  * PURPOSE:         System shutdown dialog
- * PROGRAMMERS:     alpha5056 <alpha5056@users.noreply.github.com>
+ * PROGRAMMERS:     Edward Bronsten <tanki.alpha5056@gmail.com>
+ *                  Eric Kohl
  */
 
 /* INCLUDES ******************************************************************/
@@ -19,7 +20,6 @@
 #define SECONDS_PER_DAY 86400
 #define SECONDS_PER_DECADE 315360000
 
-
 /* STRUCTS *******************************************************************/
 
 typedef struct _SYS_SHUTDOWN_PARAMS
@@ -33,11 +33,9 @@ typedef struct _SYS_SHUTDOWN_PARAMS
     BOOLEAN bShuttingDown;
 } SYS_SHUTDOWN_PARAMS, *PSYS_SHUTDOWN_PARAMS;
 
-
 /* GLOBALS *******************************************************************/
 
 SYS_SHUTDOWN_PARAMS g_ShutdownParams;
-
 
 /* FUNCTIONS *****************************************************************/
 
@@ -70,12 +68,11 @@ DoSystemShutdown(
     return Success;
 }
 
-
 static
 VOID
 OnTimer(
-    HWND hwndDlg,
-    PSYS_SHUTDOWN_PARAMS pShutdownParams)
+    IN HWND hwndDlg,
+    IN PSYS_SHUTDOWN_PARAMS pShutdownParams)
 {
     WCHAR szFormatBuffer[32];
     WCHAR szBuffer[32];
@@ -120,15 +117,14 @@ OnTimer(
     pShutdownParams->dwTimeout--;
 }
 
-
 static
 INT_PTR
 CALLBACK
 ShutdownDialogProc(
-    HWND hwndDlg,
-    UINT uMsg,
-    WPARAM wParam,
-    LPARAM lParam)
+    IN HWND hwndDlg,
+    IN UINT uMsg,
+    IN WPARAM wParam,
+    IN LPARAM lParam)
 {
     PSYS_SHUTDOWN_PARAMS pShutdownParams;
 
@@ -172,12 +168,11 @@ ShutdownDialogProc(
     return TRUE;
 }
 
-
 static
 DWORD
 WINAPI
 InitiateSystemShutdownThread(
-    LPVOID lpParameter)
+    IN LPVOID lpParameter)
 {
     PSYS_SHUTDOWN_PARAMS pShutdownParams;
     INT_PTR status;
@@ -213,14 +208,13 @@ TerminateSystemShutdown(VOID)
     return ERROR_SUCCESS;
 }
 
-
 DWORD
 StartSystemShutdown(
-    PUNICODE_STRING lpMessage,
-    ULONG dwTimeout,
-    BOOLEAN bForceAppsClosed,
-    BOOLEAN bRebootAfterShutdown,
-    ULONG dwReason)
+    IN PUNICODE_STRING pMessage,
+    IN ULONG dwTimeout,
+    IN BOOLEAN bForceAppsClosed,
+    IN BOOLEAN bRebootAfterShutdown,
+    IN ULONG dwReason)
 {
     HANDLE hThread;
 
@@ -231,11 +225,11 @@ StartSystemShutdown(
     if (_InterlockedCompareExchange8((volatile char*)&g_ShutdownParams.bShuttingDown, TRUE, FALSE) == TRUE)
         return ERROR_SHUTDOWN_IN_PROGRESS;
 
-    if (lpMessage && lpMessage->Length && lpMessage->Buffer)
+    if (pMessage && pMessage->Length && pMessage->Buffer)
     {
         g_ShutdownParams.pszMessage = HeapAlloc(GetProcessHeap(),
                                                 HEAP_ZERO_MEMORY,
-                                                lpMessage->Length + sizeof(UNICODE_NULL));
+                                                pMessage->Length + sizeof(UNICODE_NULL));
         if (g_ShutdownParams.pszMessage == NULL)
         {
             g_ShutdownParams.bShuttingDown = FALSE;
@@ -243,8 +237,8 @@ StartSystemShutdown(
         }
 
         wcsncpy(g_ShutdownParams.pszMessage,
-                lpMessage->Buffer,
-                lpMessage->Length / sizeof(WCHAR));
+                pMessage->Buffer,
+                pMessage->Length / sizeof(WCHAR));
     }
     else
     {
@@ -256,7 +250,8 @@ StartSystemShutdown(
     g_ShutdownParams.bRebootAfterShutdown = bRebootAfterShutdown;
     g_ShutdownParams.dwReason = dwReason;
 
-    /* If dwTimeout is zero perform an immediate system shutdown, otherwise display the countdown shutdown dialog */
+    /* If dwTimeout is zero perform an immediate system shutdown,
+     * otherwise display the countdown shutdown dialog. */
     if (g_ShutdownParams.dwTimeout == 0)
     {
         if (DoSystemShutdown(&g_ShutdownParams))
@@ -264,7 +259,8 @@ StartSystemShutdown(
     }
     else
     {
-        hThread = CreateThread(NULL, 0, InitiateSystemShutdownThread, (PVOID)&g_ShutdownParams, 0, NULL);
+        hThread = CreateThread(NULL, 0, InitiateSystemShutdownThread,
+                               &g_ShutdownParams, 0, NULL);
         if (hThread)
         {
             CloseHandle(hThread);
