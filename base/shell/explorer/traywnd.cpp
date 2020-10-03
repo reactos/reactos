@@ -3098,7 +3098,7 @@ public:
                        MF_BYCOMMAND);
         }
 
-        CheckMenuItem(hPopup,
+        CheckMenuItem(menubase,
                       ID_LOCKTASKBAR,
                       MF_BYCOMMAND | (TrayWnd->Locked ? MF_CHECKED : MF_UNCHECKED));
 
