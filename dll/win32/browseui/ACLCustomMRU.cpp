@@ -204,11 +204,10 @@ HRESULT CACLCustomMRU::LoadMRUList(DWORD dwMax)
 
 HRESULT STDMETHODCALLTYPE CACLCustomMRU::AddMRUString(LPCWSTR pwszEntry)
 {
-    ATLASSERT(m_MRUData.GetSize() <= m_MRUList.GetLength());
-
     if (m_bTypedURLs)
         return E_FAIL;
 
+    ATLASSERT(m_MRUData.GetSize() <= m_MRUList.GetLength());
     m_bDirty = true;
 
     CStringW NewElement = pwszEntry;
