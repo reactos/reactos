@@ -1394,7 +1394,6 @@ CcRosInitializeFileCache (
     DPRINT("CcRosInitializeFileCache(FileObject 0x%p)\n", FileObject);
 
     Allocated = FALSE;
-    KeAcquireGuardedMutex(&ViewLock);
     SharedCacheMap = FileObject->SectionObjectPointer->SharedCacheMap;
     if (SharedCacheMap == NULL)
     {
@@ -1402,14 +1401,9 @@ CcRosInitializeFileCache (
         SharedCacheMap = ExAllocateFromNPagedLookasideList(&SharedCacheMapLookasideList);
         if (SharedCacheMap == NULL)
         {
-            KeReleaseGuardedMutex(&ViewLock);
             return STATUS_INSUFFICIENT_RESOURCES;
         }
         RtlZeroMemory(SharedCacheMap, sizeof(*SharedCacheMap));
-        ObReferenceObjectByPointer(FileObject,
-                                   FILE_ALL_ACCESS,
-                                   NULL,
-                                   KernelMode);
         SharedCacheMap->NodeTypeCode = NODE_TYPE_SHARED_MAP;
         SharedCacheMap->NodeByteSize = sizeof(*SharedCacheMap);
         SharedCacheMap->FileObject = FileObject;
@@ -1423,11 +1417,28 @@ CcRosInitializeFileCache (
         InitializeListHead(&SharedCacheMap->PrivateList);
         KeInitializeSpinLock(&SharedCacheMap->CacheMapLock);
         InitializeListHead(&SharedCacheMap->CacheMapVacbListHead);
-        FileObject->SectionObjectPointer->SharedCacheMap = SharedCacheMap;
+    }
 
-        OldIrql = KeAcquireQueuedSpinLock(LockQueueMasterLock);
-        InsertTailList(&CcCleanSharedCacheMapList, &SharedCacheMap->SharedCacheMapLinks);
-        KeReleaseQueuedSpinLock(LockQueueMasterLock, OldIrql);
+    KeAcquireGuardedMutex(&ViewLock);
+    if (Allocated)
+    {
+        if (FileObject->SectionObjectPointer->SharedCacheMap == NULL)
+        {
+            ObReferenceObjectByPointer(FileObject,
+                                       FILE_ALL_ACCESS,
+                                       NULL,
+                                       KernelMode);
+            FileObject->SectionObjectPointer->SharedCacheMap = SharedCacheMap;
+
+            OldIrql = KeAcquireQueuedSpinLock(LockQueueMasterLock);
+            InsertTailList(&CcCleanSharedCacheMapList, &SharedCacheMap->SharedCacheMapLinks);
+            KeReleaseQueuedSpinLock(LockQueueMasterLock, OldIrql);
+        }
+        else
+        {
+            ExFreeToNPagedLookasideList(&SharedCacheMapLookasideList, SharedCacheMap);
+            SharedCacheMap = FileObject->SectionObjectPointer->SharedCacheMap;
+        }
     }
     if (FileObject->PrivateCacheMap == NULL)
     {
