@@ -283,23 +283,20 @@ GetClassRegistryHandle(
     PWDF_CLASS_BIND_INFO pClassBindInfo;
     UNICODE_STRING classVersions;
     OBJECT_ATTRIBUTES objectAttributes;
-    HANDLE rootHandle;
-    HANDLE classVersionsHandle;
-    HANDLE classVersionHandle;
+    HANDLE rootHandle = NULL;
+    HANDLE classVersionsHandle = NULL;
+    HANDLE classVersionHandle = NULL;
     NTSTATUS status;
     SIZE_T numOfBytes;
-    UNICODE_STRING objectName;
+    UNICODE_STRING objectName = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\Wdf\\Kmdf");
     DECLARE_UNICODE_STRING_SIZE(versionString, 22);
     
     pClassBindInfo = ClassBindInfo;
     pBindInfo = BindInfo;
     classVersions.Length = 0;
     classVersions.Buffer = NULL;
-    RtlInitUnicodeString(&objectName, L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\Wdf\\Kmdf");
-    rootHandle = NULL;
-    classVersionsHandle = NULL;
-    classVersionHandle = NULL;
     *KeyHandle = NULL;
+
     InitializeObjectAttributes(&objectAttributes, &objectName, OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE, NULL, NULL);
 
     status = ZwOpenKey(&rootHandle, KEY_QUERY_VALUE, &objectAttributes);
@@ -430,15 +427,13 @@ GetClassServicePath(
 )
 {
     NTSTATUS status;
-    HANDLE Handle;
-    PKEY_VALUE_PARTIAL_INFORMATION pKeyValPartial;
-    UNICODE_STRING ValueName;
+    HANDLE Handle = NULL;
+    PKEY_VALUE_PARTIAL_INFORMATION pKeyValPartial = NULL;
+    UNICODE_STRING ValueName = RTL_CONSTANT_STRING(L"Service");
 
     ServicePath->Length = 0;
     ServicePath->Buffer = NULL;
-    Handle = NULL;
-    pKeyValPartial = NULL;
-    RtlInitUnicodeString(&ValueName, L"Service");
+
     status = GetClassRegistryHandle(ClassBindInfo, BindInfo, &Handle);
 
     if (!NT_SUCCESS(status))

@@ -173,9 +173,8 @@ AuxKlibInitialize()
 {
     NTSTATUS status;
     RTL_OSVERSIONINFOW osVersion;
-    UNICODE_STRING strRtlQueryModuleInformation;
+    UNICODE_STRING strRtlQueryModuleInformation = RTL_CONSTANT_STRING(L"RtlQueryModuleInformation");
 
-    RtlInitUnicodeString(&strRtlQueryModuleInformation, L"RtlQueryModuleInformation");
     PAGED_CODE();
 
     status = STATUS_SUCCESS;

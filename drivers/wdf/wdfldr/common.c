@@ -91,17 +91,15 @@ GetImageName(
     OBJECT_ATTRIBUTES objectAttributes;
     UNICODE_STRING name;
     UNICODE_STRING path;
-    PKEY_VALUE_PARTIAL_INFORMATION pKeyValPartial;
-    HANDLE KeyHandle;
-    UNICODE_STRING ValueName;
+    PKEY_VALUE_PARTIAL_INFORMATION pKeyValPartial = NULL;
+    HANDLE KeyHandle = NULL;
+    UNICODE_STRING ValueName = RTL_CONSTANT_STRING(L"ImagePath");
 
     ImageName->Length = 0;
     ImageName->Buffer = NULL;
     name.Length = 0;
     name.Buffer = NULL;
-    KeyHandle = NULL;
-    pKeyValPartial = NULL;
-    RtlInitUnicodeString(&ValueName, L"ImagePath");
+
     InitializeObjectAttributes(&objectAttributes, DriverServiceName, OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE, NULL, NULL);
 
     status = ZwOpenKey(&KeyHandle, KEY_READ, &objectAttributes);
@@ -453,16 +451,13 @@ ServiceCheckBootStart(
 {
     NTSTATUS status;
     OBJECT_ATTRIBUTES objectAttributes;
-    HANDLE keyHandle;
-    BOOLEAN result;
+    HANDLE keyHandle = NULL;
+    BOOLEAN result = FALSE;
     ULONG value;
-    UNICODE_STRING valueName;
+    UNICODE_STRING valueName = RTL_CONSTANT_STRING(L"Start");
 
-    keyHandle = NULL;
-    result = FALSE;
     InitializeObjectAttributes(&objectAttributes, Service, OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE, NULL, NULL);
-    status = ZwOpenKey(&keyHandle, KEY_READ, &objectAttributes);
-    RtlInitUnicodeString(&valueName, L"Start");
+    status = ZwOpenKey(&keyHandle, KEY_READ, &objectAttributes);    
 
     if (status != STATUS_OBJECT_NAME_NOT_FOUND) 
     {

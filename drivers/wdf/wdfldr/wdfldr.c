@@ -64,9 +64,8 @@ WdfLdrOpenRegistryDiagnosticsHandle(
 {
     NTSTATUS status;
     OBJECT_ATTRIBUTES ObjectAttributes;
-    UNICODE_STRING registryPath;    
+    UNICODE_STRING registryPath = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\Wdf\\Kmdf\\Diagnostics");
 
-    RtlInitUnicodeString(&registryPath, L"\\Registry\\Machine\\System\\CurrentControlSet\\Control\\Wdf\\Kmdf\\Diagnostics");
     ObjectAttributes.RootDirectory = 0;
     ObjectAttributes.SecurityDescriptor = 0;
     ObjectAttributes.SecurityQualityOfService = 0;
@@ -160,11 +159,10 @@ DllInitialize(
 )
 {
     NTSTATUS status;
-    UNICODE_STRING csdVersion;
+    UNICODE_STRING csdVersion = RTL_CONSTANT_STRING(L"DbgPrintOn");
     ULONG ldrDiagnostic;
 
     UNREFERENCED_PARAMETER(RegistryPath);
-    RtlInitUnicodeString(&csdVersion, L"DbgPrintOn");
         
     if (gFlagInit)
     {
@@ -652,14 +650,10 @@ GetVersionServicePath(
 )
 {
     NTSTATUS status;
-    PKEY_VALUE_PARTIAL_INFORMATION pKeyVal;
-    HANDLE handleRegKey;
-    UNICODE_STRING ValueName;
+    PKEY_VALUE_PARTIAL_INFORMATION pKeyVal = NULL;
+    HANDLE handleRegKey = NULL;
+    UNICODE_STRING ValueName = RTL_CONSTANT_STRING(L"Service");
 
-
-    handleRegKey = NULL;
-    pKeyVal = NULL;
-    RtlInitUnicodeString(&ValueName, L"Service");
     status = GetVersionRegistryHandle(BindInfo, &handleRegKey);
 
     if (!NT_SUCCESS(status))
