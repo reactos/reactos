@@ -319,9 +319,9 @@ CreateStartMenu(IN ITrayWindow *Tray,
 
 INT ShowCustomizeClassic(HINSTANCE, HWND);
 
-DWORD LoadUserConfData(DWORD *dwUserData);
+DWORD LoadUserConfData(DWORD &dwUserData);
 
-DWORD UpLoadUserConfData(DWORD &dwUserData);
+DWORD SaveUserConfData(DWORD &dwUserData);
 
 VOID ExecuteCustomOptions(DWORD dwItem, DWORD dwUserOptions, DWORD dwOptSize);
 

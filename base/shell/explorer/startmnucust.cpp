@@ -71,50 +71,27 @@ VOID OnClearRecentItems(HWND hwnd)
     }
 }
 
-typedef void (*STARTMENU_CUSTOM_OPTION)(DWORD, DWORD);
-
-VOID DefaultFunc(DWORD dwItem, DWORD dwState);
-
 static struct
 {
     PCWSTR OptionName;
-    STARTMENU_CUSTOM_OPTION StartMenu_CustomOption;
     BOOL IsDirty;
 } ClassicOption[] = {
-    {L"Start_EnableDragDrop", DefaultFunc, FALSE},       // REG_DWORD
-    {L"Start_ShowRun", DefaultFunc, FALSE},              // REG_DWORD
-    {L"StartMenuScrollPrograms", DefaultFunc, FALSE},    // REG_SZ
-    {L"CascadeMyPictures", DefaultFunc, FALSE},          // REG_SZ
-    {L"CascadePrinters", DefaultFunc, FALSE},            // REG_SZ
-    {L"CascadeNetworkConnections", DefaultFunc, FALSE},  // REG_SZ
-    {L"CascadeMyDocuments", DefaultFunc, FALSE},         // REG_SZ
-    {L"CascadeControlPanel", DefaultFunc, FALSE},        // REG_SZ
-    {L"StartMenuFavorites", DefaultFunc, FALSE},         // REG_DWORD
-    {L"StartMenuAdminToolsRoot", DefaultFunc, FALSE},    // REG_SZ
-    {L"ShowSmallIcons", DefaultFunc, FALSE},            // REG_DWORD
-    {L"StartCustomMenus", DefaultFunc, FALSE},           // REG_DWORD
-    {NULL, NULL, FALSE}                                  // Last IsDirty stores the bitmap of all current checkBtn state
+    {L"Start_EnableDragDrop", FALSE},       // REG_DWORD
+    {L"Start_ShowRun", FALSE},              // REG_DWORD
+    {L"StartMenuScrollPrograms", FALSE},    // REG_SZ
+    {L"CascadeMyPictures", FALSE},          // REG_SZ
+    {L"CascadePrinters", FALSE},            // REG_SZ
+    {L"CascadeNetworkConnections", FALSE},  // REG_SZ
+    {L"CascadeMyDocuments", FALSE},         // REG_SZ
+    {L"CascadeControlPanel", FALSE},        // REG_SZ
+    {L"StartMenuFavorites", FALSE},         // REG_DWORD
+    {L"StartMenuAdminToolsRoot", FALSE},    // REG_SZ
+    {L"ShowSmallIcons", FALSE},             // REG_DWORD
+    {L"StartCustomMenus", FALSE},           // REG_DWORD
+    {NULL, FALSE}                           // Last IsDirty stores the bitmap of all current checkBtn state
 };
 
-VOID DefaultFunc(DWORD dwItem, DWORD dwState)
-{
-    WCHAR buf[128];
-    const WCHAR *ptr = dwState ? L"ON" : L"OFF";
-    wsprintf(buf, L"%s   %s\n", ClassicOption[dwItem].OptionName, ptr);
-
-    MessageBoxW(0, buf, L"Not implemented", MB_OK);
-}
-
-VOID ExecuteCustomOptions(DWORD dwItem, DWORD dwUserOptions, DWORD dwOptSize)
-{
-    for (DWORD idx = 0; idx < dwOptSize; idx++)
-    {
-        if ((dwItem >> idx) & 0x01)
-            ClassicOption[idx].StartMenu_CustomOption(idx, !((dwUserOptions >> idx) & 0x01));
-    }
-}
-
-DWORD LoadUserConfData(DWORD *dwLength)
+DWORD LoadUserConfData(DWORD &dwLength)
 {
     HKEY hKey;
     DWORD iItem;
@@ -124,9 +101,9 @@ DWORD LoadUserConfData(DWORD *dwLength)
     WCHAR chBuffer[16];
 
     if (RegOpenKeyExW(HKEY_CURRENT_USER,
-                     L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
-                     0, KEY_QUERY_VALUE,
-                     &hKey) != ERROR_SUCCESS)
+                      L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced",
+                      0, KEY_QUERY_VALUE,
+                      &hKey) != ERROR_SUCCESS)
          return 0;
     for (iItem = 0; ClassicOption[iItem].OptionName != NULL; iItem++)
     {
@@ -162,14 +139,14 @@ DWORD LoadUserConfData(DWORD *dwLength)
             }
         }
     }
-    *dwLength = iItem;
+    dwLength = iItem;
     //  Save Current User options
     ClassicOption[iItem].IsDirty = dwStatus;
     RegCloseKey(hKey);
     return dwStatus;
 }
 
-DWORD UpLoadUserConfData(DWORD &dwUserData)
+DWORD SaveUserConfData(DWORD &dwUserData)
 {
     HKEY hKey;
     DWORD iItem = 0;
@@ -218,12 +195,13 @@ DWORD UpLoadUserConfData(DWORD &dwUserData)
 HWND InitClassicListView(HWND hwnd)
 {
     RECT rcClient;
+    WCHAR chBuffer[MAX_PATH];
+    INT id = IDS_DRAG_DROP;
+    INT nItems = 0;
     HWND hListView = GetDlgItem(hwnd, IDC_CLASSICSTART_SETTINGS);
+
     ListView_SetExtendedListViewStyle(hListView, LVS_EX_CHECKBOXES | LVS_EX_FULLROWSELECT);
     GetClientRect(hListView, &rcClient);
-    WCHAR chBuffer[80];
-    int id = IDS_DRAG_DROP;
-    int nItems = 0;
 
     while (ClassicOption[nItems].OptionName != NULL)
         nItems++;
@@ -240,7 +218,7 @@ HWND InitClassicListView(HWND hwnd)
         LVITEM hitem = {0};
         hitem.mask = LVIF_TEXT;
         hitem.iItem = iItem;
-        LoadStringW(NULL, id++, chBuffer, 79);
+        LoadStringW(NULL, id++, chBuffer, MAX_PATH);
         hitem.pszText = chBuffer;
         hitem.cchTextMax = (lstrlen(chBuffer)) * sizeof(WCHAR);
         SendMessage(hListView, LVM_INSERTITEM, 0, (LPARAM)&hitem);
@@ -281,6 +259,7 @@ INT_PTR CALLBACK CustomizeClassicProc(HWND hwnd, UINT Message, WPARAM wParam, LP
             /* FIXME: Properly initialize the dialog (check whether 'clear' button must be disabled, for example) */
             hListView = InitClassicListView(hwnd);
             return TRUE;
+
         case WM_NOTIFY:
             if (((LPNMHDR)lParam)->idFrom == IDC_CLASSICSTART_SETTINGS && ((LPNMHDR)lParam)->code == NM_CLICK)
             {
@@ -288,6 +267,7 @@ INT_PTR CALLBACK CustomizeClassicProc(HWND hwnd, UINT Message, WPARAM wParam, LP
                 ClassicOption[item].IsDirty = TRUE;
             }
             break;
+
         case WM_COMMAND:
             switch (LOWORD(wParam))
             {
@@ -315,6 +295,7 @@ INT_PTR CALLBACK CustomizeClassicProc(HWND hwnd, UINT Message, WPARAM wParam, LP
                     break;
             }
             break;
+
         case WM_DESTROY:
             SendMessage(hListView, LVM_DELETEALLITEMS, 0, 0);
             return FALSE;

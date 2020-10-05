@@ -105,18 +105,18 @@
 
 /* Keep the sequential order of these elements */
 
-#define IDS_DRAG_DROP 900
-#define IDS_SHOW_RUN 901
-#define IDS_SCROOL_PROG_MENU 902
-#define IDS_EXP_MYIMAGES 903
-#define IDS_EXP_PRINTERS 904
-#define IDS_EXP_WEB_CONNECT 905
-#define IDS_EXP_MYDOCUMENTS 906
+#define IDS_DRAG_DROP         900
+#define IDS_SHOW_RUN          901
+#define IDS_SCROOL_PROG_MENU  902
+#define IDS_EXP_MYIMAGES      903
+#define IDS_EXP_PRINTERS      904
+#define IDS_EXP_WEB_CONNECT   905
+#define IDS_EXP_MYDOCUMENTS   906
 #define IDS_EXP_CONTROL_PANEL 907
-#define IDS_SHOW_FAVORITES 908
-#define IDS_SHOW_TOOLS 909
-#define IDS_SHOW_SMALL_ICO 910
-#define IDS_CUST_MENUS 911
+#define IDS_SHOW_FAVORITES    908
+#define IDS_SHOW_TOOLS        909
+#define IDS_SHOW_SMALL_ICO    910
+#define IDS_CUST_MENUS        911
 
 /*******************************************************************************\
 |*                              Control Resources                              *|

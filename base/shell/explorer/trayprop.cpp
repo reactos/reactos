@@ -242,7 +242,7 @@ public:
     CStartMenuSettingsPage():
         m_hbmpStartBitmap(NULL), dwOptSize(0)
     {
-        dwUserOptions = LoadUserConfData(&dwOptSize);
+        dwUserOptions = LoadUserConfData(dwOptSize);
     }
 
     ~CStartMenuSettingsPage()
@@ -270,10 +270,7 @@ public:
 
     int OnApply()
     {
-        DWORD dwNewOptions = UpLoadUserConfData(dwUserOptions);
-        DWORD dwItems = dwNewOptions ^ dwUserOptions;
-        ExecuteCustomOptions(dwItems, dwUserOptions, dwOptSize);
-        dwUserOptions = dwNewOptions;
+        dwUserOptions = SaveUserConfData(dwUserOptions);
 
         return PSNRET_NOERROR;
     }
