@@ -221,11 +221,11 @@ static PVOID AllocSysObjectCB(
     ASSERT(Size > sizeof(HEAD));
 
     /* Allocate the clipboard data */
-    Object =  ExAllocatePoolWithTag(PagedPool, Size, USERTAG_CLIPBOARD);
+    Object = ExAllocatePoolWithTag(PagedPool, Size, USERTAG_CLIPBOARD);
 
     if (!Object)
     {
-        ERR("Object is NULL-No Object Created.\n");
+        ERR("ExAllocatePoolWithTag failed, no object created.\n");
         return NULL;
     }
 
