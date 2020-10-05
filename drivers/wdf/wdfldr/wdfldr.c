@@ -100,49 +100,49 @@ WdfLdrDiagnosticsValueByNameAsULONG(
     NTSTATUS status;
     NTSTATUS result = STATUS_SUCCESS;
 
-    if (ValueName != NULL && NULL != Value)
-    {
-        *Value = 0;
-        if (KeGetCurrentIrql())
-        {
-            __DBGPRINT(("Not at PASSIVE_LEVEL\n"));
-
-            status = STATUS_INVALID_PARAMETER;
-        }
-        else
-        {
-            // open framework diagnostic key
-            status = WdfLdrOpenRegistryDiagnosticsHandle(&keyHandle);
-            
-            if(NT_SUCCESS(status))
-            {
-                // get value as ulong
-                status = FxLdrQueryUlong(keyHandle, ValueName, Value);
-                
-                __DBGPRINT(("Value 0x%x\n", *Value));
-            }
-            else
-            {
-                __DBGPRINT(("ERROR: WdfLdrOpenRegistryDiagnosticsHandle failed with Status 0x%x\n", status));
-            }
-        }
-        
-        if (keyHandle != NULL)
-        {
-            WdfLdrCloseRegistryDiagnosticsHandle(keyHandle);
-        }
-
-        __DBGPRINT(("Status 0x%x\n", status));
-
-        result = status;
-    }
-    else
+    if (ValueName == NULL || NULL == Value)
     {
         __DBGPRINT(("ERROR: Invalid Input Parameter\n"));
 
         status = STATUS_INVALID_PARAMETER;
+        goto exit;
     }
 
+    *Value = 0;
+    if (KeGetCurrentIrql())
+    {
+        __DBGPRINT(("Not at PASSIVE_LEVEL\n"));
+
+        status = STATUS_INVALID_PARAMETER;
+    }
+    else
+    {
+        // open framework diagnostic key
+        status = WdfLdrOpenRegistryDiagnosticsHandle(&keyHandle);
+            
+        if(NT_SUCCESS(status))
+        {
+            // get value as ulong
+            status = FxLdrQueryUlong(keyHandle, ValueName, Value);
+                
+            __DBGPRINT(("Value 0x%x\n", *Value));
+        }
+        else
+        {
+            __DBGPRINT(("ERROR: WdfLdrOpenRegistryDiagnosticsHandle failed with Status 0x%x\n", status));
+        }
+    }
+        
+    if (keyHandle != NULL)
+    {
+        WdfLdrCloseRegistryDiagnosticsHandle(keyHandle);
+    }
+
+    __DBGPRINT(("Status 0x%x\n", status));
+
+    result = status;
+
+exit:
     return result;
 }
 
@@ -208,36 +208,39 @@ LibraryUnloadClasses(
     InitializeListHead(&removedList);
     classListHead = &LibModule->ClassListHead;
 
-    if (!IsListEmpty(classListHead))
+    if (IsListEmpty(classListHead))
     {
-        do
-        {
-            entry = classListHead->Flink;
-            RemoveHeadList(classListHead);
-            InsertTailList(&removedList, entry);
-        } while (!IsListEmpty(classListHead));
-
-        for(;;)
-        {
-            classListHead = removedList.Flink;
-
-            if (IsListEmpty(&removedList))
-            {
-                break;
-            }
-
-            RemoveHeadList(&removedList);
-            InitializeListHead(classListHead);
-            pClassModule = CONTAINING_RECORD(classListHead, CLASS_MODULE, LibraryLinkage);
-            
-            __DBGPRINT(("Unload class library %wZ (%p)\n", &pClassModule->Service, pClassModule));
-
-            ClassUnload(pClassModule, 0);
-            if (!_InterlockedExchangeAdd(&pClassModule->ClassRefCount, -1))
-                ClassCleanupAndFree(pClassModule);
-        }
+        goto exit;
     }
 
+    do
+    {
+        entry = classListHead->Flink;
+        RemoveHeadList(classListHead);
+        InsertTailList(&removedList, entry);
+    } while (!IsListEmpty(classListHead));
+
+    for(;;)
+    {
+        classListHead = removedList.Flink;
+
+        if (IsListEmpty(&removedList))
+        {
+            break;
+        }
+
+        RemoveHeadList(&removedList);
+        InitializeListHead(classListHead);
+        pClassModule = CONTAINING_RECORD(classListHead, CLASS_MODULE, LibraryLinkage);
+            
+        __DBGPRINT(("Unload class library %wZ (%p)\n", &pClassModule->Service, pClassModule));
+
+        ClassUnload(pClassModule, 0);
+        if (!_InterlockedExchangeAdd(&pClassModule->ClassRefCount, -1))
+            ClassCleanupAndFree(pClassModule);
+    }
+    
+exit:
     return classListHead;
 }
 
@@ -252,48 +255,55 @@ DllUnload()
 
     __DBGPRINT(("enter"));
 
-    if (!gUnloaded)
+    if (gUnloaded)
     {
-        InitializeListHead(&removeList);
-        entry.Flink = gLibList.Flink;
-        gUnloaded = TRUE;
-
-        if (!IsListEmpty(&gLibList))
-        {
-            // copy libs from main list to remove list
-            do
-            {
-                RemoveHeadList(&gLibList);                
-                InsertTailList(&removeList, &entry);
-
-                entry.Flink = gLibList.Flink;
-            } while (!IsListEmpty(&gLibList));
-
-            // remove list entries and unload libs
-            for(;;)
-            {
-                entry = removeList;
-                if (IsListEmpty(&removeList))
-                {
-                    break;
-                }
-                
-                RemoveHeadList(&removeList);
-                InitializeListHead(entry.Flink);
-                pLibModule = CONTAINING_RECORD(&entry, LIBRARY_MODULE, LibraryListEntry);
-
-                __DBGPRINT(("module(%p)\n", pLibModule));
-
-                LibraryUnloadClasses(pLibModule);
-                LibraryUnload(pLibModule, 0);
-                if (!_InterlockedExchangeAdd(&pLibModule->LibraryRefCount, -1))
-                    LibraryCleanupAndFree(pLibModule);
-            }
-        }
-        ExDeleteResourceLite(&Resource);
-
-        __DBGPRINT(("exit"));
+        return;
     }
+
+    InitializeListHead(&removeList);
+    entry.Flink = gLibList.Flink;
+    gUnloaded = TRUE;
+
+    if (IsListEmpty(&gLibList))
+    {
+        goto clean;
+    }
+    
+    // copy libs from main list to remove list
+    do
+    {
+        RemoveHeadList(&gLibList);                
+        InsertTailList(&removeList, &entry);
+
+        entry.Flink = gLibList.Flink;
+    } while (!IsListEmpty(&gLibList));
+
+    // remove list entries and unload libs
+    for(;;)
+    {
+        entry = removeList;
+        if (IsListEmpty(&removeList))
+        {
+            break;
+        }
+                
+        RemoveHeadList(&removeList);
+        InitializeListHead(entry.Flink);
+        pLibModule = CONTAINING_RECORD(&entry, LIBRARY_MODULE, LibraryListEntry);
+
+        __DBGPRINT(("module(%p)\n", pLibModule));
+
+        LibraryUnloadClasses(pLibModule);
+        LibraryUnload(pLibModule, 0);
+
+        if (!_InterlockedExchangeAdd(&pLibModule->LibraryRefCount, -1))
+            LibraryCleanupAndFree(pLibModule);
+    }
+
+clean:    
+    ExDeleteResourceLite(&Resource);
+
+    __DBGPRINT(("exit"));
 }
 
 
@@ -303,41 +313,44 @@ NTAPI
 WdfLdrQueryInterface(
     _In_ PWDF_LOADER_INTERFACE LoaderInterface)
 {
-    if (LoaderInterface && LoaderInterface->Header.InterfaceType)
+    if (LoaderInterface == NULL || LoaderInterface->Header.InterfaceType == NULL)
     {
-        if (RtlCompareMemory(LoaderInterface->Header.InterfaceType, &GUID_WDF_LOADER_INTERFACE_STANDARD, 0x10u) == 16)
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    if (RtlCompareMemory(LoaderInterface->Header.InterfaceType, &GUID_WDF_LOADER_INTERFACE_STANDARD, 0x10u) == 16)
+    {
+        if (LoaderInterface->Header.InterfaceSize == 24)
         {
-            if (LoaderInterface->Header.InterfaceSize == 24)
-            {
-                // fill interface functions addresses
-                LoaderInterface->RegisterLibrary = (int(__stdcall*)(PWDF_LIBRARY_INFO, PUNICODE_STRING, PUNICODE_STRING))WdfRegisterLibrary;
-                LoaderInterface->VersionBind = (int(__stdcall*)(PDRIVER_OBJECT, PUNICODE_STRING, PWDF_BIND_INFO, void***))WdfVersionBind;
-                LoaderInterface->VersionUnbind = WdfVersionUnbind;
-                LoaderInterface->DiagnosticsValueByNameAsULONG = WdfLdrDiagnosticsValueByNameAsULONG;
-                return STATUS_SUCCESS;
-            }
-        }
-        else if (RtlCompareMemory(LoaderInterface->Header.InterfaceType, &GUID_WDF_LOADER_INTERFACE_DIAGNOSTIC, 0x10u) == 16)
-        {
-            if (LoaderInterface->Header.InterfaceSize == 12)
-            {
-                LoaderInterface->RegisterLibrary = (int(__stdcall*)(PWDF_LIBRARY_INFO, PUNICODE_STRING, PUNICODE_STRING))WdfLdrDiagnosticsValueByNameAsULONG;
-                return STATUS_SUCCESS;
-            }
-        }
-        else
-        {
-            if (RtlCompareMemory(LoaderInterface->Header.InterfaceType, &GUID_WDF_LOADER_INTERFACE_CLASS_BIND, 0x10u) != 16)
-                return STATUS_NOINTERFACE;
-            if (LoaderInterface->Header.InterfaceSize == 16)
-            {
-                LoaderInterface->RegisterLibrary = (int(__stdcall*)(PWDF_LIBRARY_INFO, PUNICODE_STRING, PUNICODE_STRING))WdfVersionBindClass;
-                LoaderInterface->VersionBind = (int(__stdcall*)(PDRIVER_OBJECT, PUNICODE_STRING, PWDF_BIND_INFO, void***))WdfVersionUnbindClass;
-                return STATUS_SUCCESS;
-            }
+            // fill interface functions addresses
+            LoaderInterface->RegisterLibrary = (int(__stdcall*)(PWDF_LIBRARY_INFO, PUNICODE_STRING, PUNICODE_STRING))WdfRegisterLibrary;
+            LoaderInterface->VersionBind = (int(__stdcall*)(PDRIVER_OBJECT, PUNICODE_STRING, PWDF_BIND_INFO, void***))WdfVersionBind;
+            LoaderInterface->VersionUnbind = WdfVersionUnbind;
+            LoaderInterface->DiagnosticsValueByNameAsULONG = WdfLdrDiagnosticsValueByNameAsULONG;
+            return STATUS_SUCCESS;
         }
     }
+    else if (RtlCompareMemory(LoaderInterface->Header.InterfaceType, &GUID_WDF_LOADER_INTERFACE_DIAGNOSTIC, 0x10u) == 16)
+    {
+        if (LoaderInterface->Header.InterfaceSize == 12)
+        {
+            LoaderInterface->RegisterLibrary = (int(__stdcall*)(PWDF_LIBRARY_INFO, PUNICODE_STRING, PUNICODE_STRING))WdfLdrDiagnosticsValueByNameAsULONG;
+            return STATUS_SUCCESS;
+        }
+    }
+    else
+    {
+        if (RtlCompareMemory(LoaderInterface->Header.InterfaceType, &GUID_WDF_LOADER_INTERFACE_CLASS_BIND, 0x10u) != 16)
+            return STATUS_NOINTERFACE;
     
+        if (LoaderInterface->Header.InterfaceSize == 16)
+        {
+            LoaderInterface->RegisterLibrary = (int(__stdcall*)(PWDF_LIBRARY_INFO, PUNICODE_STRING, PUNICODE_STRING))WdfVersionBindClass;
+            LoaderInterface->VersionBind = (int(__stdcall*)(PDRIVER_OBJECT, PUNICODE_STRING, PWDF_BIND_INFO, void***))WdfVersionUnbindClass;
+            return STATUS_SUCCESS;
+        }
+    }
+
     return STATUS_INVALID_PARAMETER;
 }
 
@@ -524,29 +537,32 @@ GetVersionRegistryHandle(
     ObjectAttributes.Attributes = OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE;
     status = ZwOpenKey(&KeyHandle, KEY_QUERY_VALUE, &ObjectAttributes);
     
-    if (NT_SUCCESS(status))
+    if (!NT_SUCCESS(status))
     {
-        status = ConvertUlongToWString(BindInfo->Version.Major, &String);
-        
-        if (!NT_SUCCESS(status))
-        {
-            __DBGPRINT(("ERROR: ConvertUlongToWString failed with Status 0x%x\n", status));
-            goto end;
-        }
-
-        ObjectAttributes.SecurityDescriptor = 0;
-        ObjectAttributes.SecurityQualityOfService = 0;
-        ObjectAttributes.RootDirectory = KeyHandle;
-        ObjectAttributes.ObjectName = &String;
-        ObjectAttributes.Length = 24;
-        ObjectAttributes.Attributes = OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE;
-        status = ZwOpenKey(&handle, 0x20019u, &ObjectAttributes);
-        
-        if (NT_SUCCESS(status))
-            goto end;
+        __DBGPRINT(("ERROR: ZwOpenKey (%wZ) failed with Status 0x%x\n", &String, status));
+        goto end;
     }
 
-    __DBGPRINT(("ERROR: ZwOpenKey (%wZ) failed with Status 0x%x\n", &String, status));
+    status = ConvertUlongToWString(BindInfo->Version.Major, &String);
+        
+    if (!NT_SUCCESS(status))
+    {
+        __DBGPRINT(("ERROR: ConvertUlongToWString failed with Status 0x%x\n", status));
+        goto end;
+    }
+
+    ObjectAttributes.SecurityDescriptor = 0;
+    ObjectAttributes.SecurityQualityOfService = 0;
+    ObjectAttributes.RootDirectory = KeyHandle;
+    ObjectAttributes.ObjectName = &String;
+    ObjectAttributes.Length = 24;
+    ObjectAttributes.Attributes = OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE;
+    status = ZwOpenKey(&handle, 0x20019u, &ObjectAttributes);
+        
+    if (!NT_SUCCESS(status))
+    {
+        __DBGPRINT(("ERROR: ZwOpenKey (%wZ) failed with Status 0x%x\n", &String, status));
+    }
 
 end:
     *HandleRegKey = handle;
@@ -584,38 +600,38 @@ GetDefaultServiceName(
 
     buffer = ExAllocatePoolWithTag(PagedPool, 120, WDFLDR_TAG);
     
-    if (buffer != NULL)
-    {
-        defaultServiceName = RegistryPath;
-        RegistryPath->Length = 0;
-        RegistryPath->Buffer = NULL;
-        RegistryPath->Length = 0;
-        RegistryPath->MaximumLength = 120;
-        RegistryPath->Buffer = buffer;
-        status = RtlUnicodeStringPrintf(RegistryPath,
-            L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\Wdf%02d000",
-            BindInfo->Version.Major);
-
-        if (NT_SUCCESS(status))
-        {
-            __DBGPRINT(("Couldn't find control Key -- using default service name %wZ\n", defaultServiceName));
-            status = STATUS_SUCCESS;
-        }
-        else
-        {
-            __DBGPRINT(("ERROR: RtlUnicodeStringCopyString failed with Status 0x%x\n", status));
-            
-            ExFreePoolWithTag(buffer, 0);
-            defaultServiceName->Length = 0;
-            defaultServiceName->Buffer = NULL;
-        }
-    }
-    else
+    if (buffer == NULL)
     {
         status = STATUS_INSUFFICIENT_RESOURCES;
         __DBGPRINT(("ERROR: ExAllocatePoolWithTag failed with status 0x%x\n", status));
+        goto exit;
     }
 
+    defaultServiceName = RegistryPath;
+    RegistryPath->Length = 0;
+    RegistryPath->Buffer = NULL;
+    RegistryPath->Length = 0;
+    RegistryPath->MaximumLength = 120;
+    RegistryPath->Buffer = buffer;
+    status = RtlUnicodeStringPrintf(RegistryPath,
+        L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\Wdf%02d000",
+        BindInfo->Version.Major);
+
+    if (NT_SUCCESS(status))
+    {
+        __DBGPRINT(("Couldn't find control Key -- using default service name %wZ\n", defaultServiceName));
+        status = STATUS_SUCCESS;
+    }
+    else
+    {
+        __DBGPRINT(("ERROR: RtlUnicodeStringCopyString failed with Status 0x%x\n", status));
+        
+        ExFreePoolWithTag(buffer, 0);
+        defaultServiceName->Length = 0;
+        defaultServiceName->Buffer = NULL;
+    }
+    
+exit:
     return status;
 }
 
@@ -843,42 +859,44 @@ WdfVersionBind(
 
     if (!NT_SUCCESS(status))
     {
+        __DBGPRINT(("ReferenceVersion failed %X\n", status));
         goto clean;
     }
 
     _InterlockedExchangeAdd(&pLibModule->ClientRefCount, 1);
     status = LibraryLinkInClient(BindInfo->Module, RegistryPath, BindInfo, &clientInfo, &pClientModule);
 
+    if (!NT_SUCCESS(status))
+    {
+        __DBGPRINT(("LibraryLinkInClient failed %X\n", status));
+        goto clean;
+    }
+
+    clientInfo.RegistryPath = RegistryPath;
+    pclientInfo = &clientInfo;
+        
+    // Call register function from wdf01000 driver.
+    // Framework driver write functions table address in bindInfo
+    status = pLibModule->LibraryInfo->LibraryRegisterClient(BindInfo, ComponentGlobals, (PVOID*)&pclientInfo);
+
     if (NT_SUCCESS(status))
     {
-        clientInfo.RegistryPath = RegistryPath;
-        pclientInfo = &clientInfo;
-        
-        // Call register function from wdf01000 driver.
-        // Framework driver write functions table address in bindInfo
-        status = pLibModule->LibraryInfo->LibraryRegisterClient(BindInfo, ComponentGlobals, (PVOID*)&pclientInfo);
-
-        if (NT_SUCCESS(status))
-        {
-            pClientModule->Globals = *ComponentGlobals;
-            pClientModule->Context = &clientInfo;
-        }
-        else
-        {
-            __DBGPRINT(("LibraryLinkInClient failed %X\n", status));
-        }
+        pClientModule->Globals = *ComponentGlobals;
+        pClientModule->Context = &clientInfo;
+        goto exit;
     }
     else
     {
-    clean:
-        if (pLibModule)
-        {
-            WdfVersionUnbind(RegistryPath, BindInfo, *ComponentGlobals);
-        }
-        
         __DBGPRINT(("LibraryLinkInClient failed %X\n", status));
     }
 
+clean:
+    if (pLibModule)
+    {
+        WdfVersionUnbind(RegistryPath, BindInfo, *ComponentGlobals);
+    }
+
+exit:
     __DBGPRINT(("Returning with Status 0x%x\n", status));
 
     return status;
@@ -1091,32 +1109,35 @@ WdfRegisterClassLibrary(
     }
     FxLdrReleaseLoadedModuleLock();
     
-    if (pClassModule)
+    if (!pClassModule)
     {
-        __DBGPRINT(("Class Library (%p)\n", pClassModule));
-
-        status = ClassOpen(pClassModule, ObjectName);
-
-        if (NT_SUCCESS(status))
-        {
-            fnClassLibInit = (int (*)(void))pClassModule->ClassLibraryInfo->ClassLibraryInitialize;
-            if (fnClassLibInit)
-            {
-                status = fnClassLibInit();
-                if (NT_SUCCESS(status))
-                    return status;
-                
-                __DBGPRINT(("ERROR: WdfRegisterClassLibrary: ClassLibraryInitialize failed, status 0x%x\n", status));
-            }
-        }
-        else
-        {
-            __DBGPRINT(("ERROR: ClassOpen(%wZ) failed, status 0x%x\n", ObjectName, status));
-        }
+        goto exit;
     }
 
+    __DBGPRINT(("Class Library (%p)\n", pClassModule));
+
+    status = ClassOpen(pClassModule, ObjectName);
+
+    if (!NT_SUCCESS(status))
+    {
+        __DBGPRINT(("ERROR: ClassOpen(%wZ) failed, status 0x%x\n", ObjectName, status));
+        goto clean;
+    }
+
+    fnClassLibInit = (int (*)(void))pClassModule->ClassLibraryInfo->ClassLibraryInitialize;
+    if (fnClassLibInit)
+    {
+        status = fnClassLibInit();
+        if (NT_SUCCESS(status))
+            return status;
+        
+        __DBGPRINT(("ERROR: WdfRegisterClassLibrary: ClassLibraryInitialize failed, status 0x%x\n", status));
+    }
+
+clean:
     if (!NT_SUCCESS(status) && pClassModule)
         ClassRemoveFromLibraryList(pClassModule);
 
+exit:
     return status;
 }

@@ -36,45 +36,45 @@ GetNameFromPath(
     PWCHAR pNextSym;
     PWCHAR pCurrSym;
 
-    if (Path->Length >= sizeof(WCHAR))
-    {
-        Name->Buffer = Path->Buffer + (Path->Length / 2) - 1;
-        Name->Length = sizeof(WCHAR);
-
-        for (pNextSym = Name->Buffer; ; Name->Buffer = pNextSym)
-        {
-            if (pNextSym < Path->Buffer)
-            {
-                Name->Length -= sizeof(WCHAR);
-                ++Name->Buffer;
-                goto end;
-            }
-            pCurrSym = Name->Buffer;
-
-            if (*pCurrSym == '\\')
-            {
-                break;
-            }
-            pNextSym = pCurrSym - 1;
-            Name->Length += sizeof(WCHAR);
-        }
-
-        ++Name->Buffer;
-        Name->Length -= sizeof(WCHAR);
-
-        if (Name->Length == sizeof(WCHAR))
-        {
-            Name->Buffer = NULL;
-            Name->Length = 0;
-        }
-    end:
-        Name->MaximumLength = Name->Length;
-    }
-    else 
+    if (Path->Length < sizeof(WCHAR))
     {
         Name->Length = 0;
         Name->Buffer = NULL;
+        return;
     }
+    
+    Name->Buffer = Path->Buffer + (Path->Length / 2) - 1;
+    Name->Length = sizeof(WCHAR);
+
+    for (pNextSym = Name->Buffer; ; Name->Buffer = pNextSym)
+    {
+        if (pNextSym < Path->Buffer)
+        {
+            Name->Length -= sizeof(WCHAR);
+            ++Name->Buffer;
+            goto end;
+        }
+        pCurrSym = Name->Buffer;
+
+        if (*pCurrSym == '\\')
+        {
+            break;
+        }
+        pNextSym = pCurrSym - 1;
+        Name->Length += sizeof(WCHAR);
+    }
+
+    ++Name->Buffer;
+    Name->Length -= sizeof(WCHAR);
+
+    if (Name->Length == sizeof(WCHAR))
+    {
+        Name->Buffer = NULL;
+        Name->Length = 0;
+    }
+
+end:
+    Name->MaximumLength = Name->Length;
 }
 
 
@@ -104,13 +104,13 @@ GetImageName(
 
     if (!NT_SUCCESS(status)) 
     {
-        goto end;
+        goto error;
     }
 
     status = FxLdrQueryData(KeyHandle, &ValueName, WDFLDR_TAG, &pKeyValPartial);
     if (!NT_SUCCESS(status)) 
     {
-        goto end;
+        goto error;
     }
 
     if (pKeyValPartial->Type != REG_SZ &&
@@ -139,42 +139,39 @@ GetImageName(
 
     GetNameFromPath(&path, &name);
 
-    if (name.Length > 0) 
-    {
-        status = RtlUShortAdd(name.Length, 2u, &ImageName->Length);
-        
-        if (!NT_SUCCESS(status)) 
-        {
-            status = STATUS_INTEGER_OVERFLOW;
-            __DBGPRINT(("ERROR: size computation failed with Status 0x%x\n", status));
-        }
-        else 
-        {
-            ImageName->Buffer = ExAllocatePoolWithTag(PagedPool, ImageName->Length, Tag);
-
-            if (ImageName->Buffer != NULL) 
-            {
-                RtlZeroMemory(ImageName->Buffer, ImageName->Length);
-                ImageName->MaximumLength = ImageName->Length;
-                ImageName->Length = 0;
-                RtlCopyUnicodeString(ImageName, &name);
-
-                __DBGPRINT(("Version Image Name \"%wZ\"\n", ImageName));
-            }
-            else 
-            {
-                status = STATUS_INSUFFICIENT_RESOURCES;
-                __DBGPRINT(("ERROR: ExAllocatePoolWithTag failed with Status 0x%x\n", status));
-            }
-        }
-    }
-    else 
+    if (name.Length == 0) 
     {
         status = STATUS_INVALID_PARAMETER;
         __DBGPRINT(("ERROR: GetNameFromPathW could not find a name, status 0x%x\n", status));
+        goto error;
     }
 
-    goto end;
+    status = RtlUShortAdd(name.Length, 2u, &ImageName->Length);
+        
+    if (!NT_SUCCESS(status)) 
+    {
+        status = STATUS_INTEGER_OVERFLOW;
+        __DBGPRINT(("ERROR: size computation failed with Status 0x%x\n", status));
+        goto error;
+    }
+    
+    ImageName->Buffer = ExAllocatePoolWithTag(PagedPool, ImageName->Length, Tag);
+
+    if (ImageName->Buffer != NULL) 
+    {
+        RtlZeroMemory(ImageName->Buffer, ImageName->Length);
+        ImageName->MaximumLength = ImageName->Length;
+        ImageName->Length = 0;
+        RtlCopyUnicodeString(ImageName, &name);
+
+        __DBGPRINT(("Version Image Name \"%wZ\"\n", ImageName));
+        goto end;
+    }
+    else 
+    {
+        status = STATUS_INSUFFICIENT_RESOURCES;
+        __DBGPRINT(("ERROR: ExAllocatePoolWithTag failed with Status 0x%x\n", status));
+    }
 
 error:
     __DBGPRINT(("ERROR: GetImageName failed with status 0x%x\n", status));
@@ -706,21 +703,23 @@ GetNameFromUnicodePath(
     NTSTATUS status;
 
     *Dest = UNICODE_NULL;
-    if (Path->Length >= sizeof(WCHAR))
+    if (Path->Length == 0)
     {
-        stringEnd = &Path->Buffer[Path->Length / sizeof(WCHAR)];
+        return;
+    }
 
-        for (current = stringEnd - 1; *current != '\\'; --current) 
-        {
-            if (current == Path->Buffer)
-                return;
-        }
+    stringEnd = &Path->Buffer[Path->Length / sizeof(WCHAR)];
 
-        status = RtlStringCchCopyNW(Dest, DestSize, current + 1, stringEnd - (current + 1));
+    for (current = stringEnd - 1; *current != '\\'; --current) 
+    {
+        if (current == Path->Buffer)
+            return;
+    }
 
-        if (!NT_SUCCESS(status)) 
-        {
-            *Dest = L'\0';
-        }
+    status = RtlStringCchCopyNW(Dest, DestSize, current + 1, stringEnd - (current + 1));
+
+    if (!NT_SUCCESS(status)) 
+    {
+        *Dest = L'\0';
     }
 }

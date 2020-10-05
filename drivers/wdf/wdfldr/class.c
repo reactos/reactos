@@ -290,56 +290,69 @@ GetClassRegistryHandle(
 
     status = ZwOpenKey(&rootHandle, KEY_QUERY_VALUE, &objectAttributes);
 
+    if (!NT_SUCCESS(status))
+    {
+        __DBGPRINT(("ZwOpenKey status 0x%08X\n", status));
+        goto clean;
+    }
+
+    pClassName = pClassBindInfo->ClassName;
+    pClassNameBegin = pClassName;
+    do
+    {
+        currentSym = *pClassName;
+        ++pClassName;
+    } while ( currentSym != '\0');
+
+    numOfBytes = sizeof(WCHAR) * (pClassName - pClassNameBegin - 1) + sizeof(L"\\Versions");
+    classVersions.Buffer = ExAllocatePoolWithTag(PagedPool, numOfBytes, WDFLDR_TAG);
+
+    if (classVersions.Buffer == NULL)
+    {
+        status = STATUS_INSUFFICIENT_RESOURCES;
+        goto clean;
+    }
+        
+    classVersions.MaximumLength = (USHORT)numOfBytes;
+    status = RtlUnicodeStringPrintf(&classVersions, L"%s\\Versions", pClassBindInfo->ClassName);
+    
+    if (!NT_SUCCESS(status))
+    {
+        __DBGPRINT(("RtlUnicodeStringPrintf status 0x%08x\n", status));
+        goto clean;
+    }
+
+    InitializeObjectAttributes(&objectAttributes, &classVersions, OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE, rootHandle, NULL);
+    status = ZwOpenKey(&classVersionsHandle, KEY_QUERY_VALUE, &objectAttributes);
+
+    if (!NT_SUCCESS(status))
+    {
+        __DBGPRINT(("ZwOpenKey status 0x%08X\n", status));
+        goto clean;
+    }
+
+    status = ConvertUlongToWString(pClassBindInfo->Version.Major, &versionString);
+    if (!NT_SUCCESS(status))
+    {
+        __DBGPRINT(("ConvertUlongToWString status 0x%08X\n", status));
+        goto clean;
+    }
+
+    InitializeObjectAttributes(&objectAttributes, &versionString, OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE, classVersionsHandle, NULL);
+    status = ZwOpenKey(&classVersionHandle, KEY_QUERY_VALUE, &objectAttributes);
+
     if (NT_SUCCESS(status))
     {
-        pClassName = pClassBindInfo->ClassName;
-        pClassNameBegin = pClassName;
-        do
+        status = ConvertUlongToWString(pBindInfo->Version.Major, &versionString);
+        if (NT_SUCCESS(status))
         {
-            currentSym = *pClassName;
-            ++pClassName;
-        } while ( currentSym != '\0');
-
-        numOfBytes = sizeof(WCHAR) * (pClassName - pClassNameBegin - 1) + sizeof(L"\\Versions");
-        classVersions.Buffer = ExAllocatePoolWithTag(PagedPool, numOfBytes, WDFLDR_TAG);
-
-        if (classVersions.Buffer != NULL)
-        {
-            classVersions.MaximumLength = (USHORT)numOfBytes;
-            status = RtlUnicodeStringPrintf(&classVersions, L"%s\\Versions", pClassBindInfo->ClassName);
-            if (NT_SUCCESS(status))
-            {
-                InitializeObjectAttributes(&objectAttributes, &classVersions, OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE, rootHandle, NULL);
-                status = ZwOpenKey(&classVersionsHandle, KEY_QUERY_VALUE, &objectAttributes);
-
-                if (NT_SUCCESS(status))
-                {
-                    status = ConvertUlongToWString(pClassBindInfo->Version.Major, &versionString);
-                    if (NT_SUCCESS(status))
-                    {
-                        InitializeObjectAttributes(&objectAttributes, &versionString, OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE, classVersionsHandle, NULL);
-                        status = ZwOpenKey(&classVersionHandle, KEY_QUERY_VALUE, &objectAttributes);
-
-                        if (NT_SUCCESS(status))
-                        {
-                            status = ConvertUlongToWString(pBindInfo->Version.Major, &versionString);
-                            if (NT_SUCCESS(status))
-                            {
-                                InitializeObjectAttributes(&objectAttributes, &versionString, OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE, classVersionHandle, NULL);
-                                status = ZwOpenKey(KeyHandle, KEY_QUERY_VALUE, &objectAttributes);
-                                //*keyHandle = tmpKeyHandle;
-                            }
-                        }
-                    }
-                }
-            }
-        }
-        else
-        {
-            status = STATUS_INSUFFICIENT_RESOURCES;
+            InitializeObjectAttributes(&objectAttributes, &versionString, OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE, classVersionHandle, NULL);
+            status = ZwOpenKey(KeyHandle, KEY_QUERY_VALUE, &objectAttributes);
+            //*keyHandle = tmpKeyHandle;
         }
     }
 
+clean:
     if (rootHandle)
         ZwClose(rootHandle);
     if (classVersionsHandle)
@@ -537,28 +550,30 @@ ReferenceClassVersion(
 
     status = ZwLoadDriver(&driverServiceName);
     
-    if (!NT_SUCCESS(status))
+    if (NT_SUCCESS(status))
     {
-        if (status == STATUS_IMAGE_ALREADY_LOADED || status == STATUS_OBJECT_NAME_COLLISION)
+        goto done;
+    }
+        
+    if (status == STATUS_IMAGE_ALREADY_LOADED || status == STATUS_OBJECT_NAME_COLLISION)
+    {
+        if (pClassModule->ClassLibraryInfo)
         {
-            if (pClassModule->ClassLibraryInfo)
-            {
-                status = STATUS_SUCCESS;                
-            }
-            else
-            {
-                __DBGPRINT(("ZwLoadDriver (%wZ) failed and no Libray information was returned: 0x%x\n",
-                    &driverServiceName,
-                    status));
-            }
+            status = STATUS_SUCCESS;                
         }
         else
         {
-            __DBGPRINT(("WARNING: ZwLoadDriver (%wZ) failed with Status 0x%x\n", &driverServiceName, status));
-            pClassModule->ImageAlreadyLoaded = 1;
+            __DBGPRINT(("ZwLoadDriver (%wZ) failed and no Libray information was returned: 0x%x\n",
+                &driverServiceName,
+                status));
         }
-        goto clean;
     }
+    else
+    {
+        __DBGPRINT(("WARNING: ZwLoadDriver (%wZ) failed with Status 0x%x\n", &driverServiceName, status));
+        pClassModule->ImageAlreadyLoaded = 1;
+    }
+    goto clean;
 
 done:
     ClassBindInfo->ClassModule = pClassModule;
@@ -593,36 +608,39 @@ FindClassByServiceNameLocked(
     tmpName[0] = 0;
     GetNameFromUnicodePath(Path, searchName, sizeof(searchName));
 
-    if (!IsListEmpty(&gLibList))
+    if (IsListEmpty(&gLibList))
     {
-        for (libEntry = gLibList.Flink; libEntry != &gLibList; libEntry = libEntry->Flink)
+        goto end;
+    }
+
+    for (libEntry = gLibList.Flink; libEntry != &gLibList; libEntry = libEntry->Flink)
+    {
+        pLibModule = CONTAINING_RECORD(libEntry, LIBRARY_MODULE, LibraryListEntry);
+
+        for (classEntry = pLibModule->ClassListHead.Flink;
+            classEntry != &pLibModule->ClassListHead;
+            classEntry = classEntry->Flink)
         {
-            pLibModule = CONTAINING_RECORD(libEntry, LIBRARY_MODULE, LibraryListEntry);
 
-            for (classEntry = pLibModule->ClassListHead.Flink;
-                classEntry != &pLibModule->ClassListHead;
-                classEntry = classEntry->Flink)
-            {
-
-                pClassModule = CONTAINING_RECORD(classEntry, CLASS_MODULE, LibraryLinkage);
-                GetNameFromUnicodePath(&pClassModule->Service, tmpName, sizeof(tmpName));
-                                
-                RtlInitUnicodeString(&tmp1, tmpName);                
-                RtlInitUnicodeString(&tmp2, searchName);
+            pClassModule = CONTAINING_RECORD(classEntry, CLASS_MODULE, LibraryLinkage);
+            GetNameFromUnicodePath(&pClassModule->Service, tmpName, sizeof(tmpName));
+                            
+            RtlInitUnicodeString(&tmp1, tmpName);                
+            RtlInitUnicodeString(&tmp2, searchName);
                 
-                if (RtlCompareUnicodeString(&tmp1, &tmp2, FALSE) == 0)
+            if (RtlCompareUnicodeString(&tmp1, &tmp2, FALSE) == 0)
+            {
+                if (LibModule != NULL)
                 {
-                    if (LibModule != NULL)
-                    {
-                        *LibModule = pLibModule;
-                    }
-
-                    return pClassModule;
+                    *LibModule = pLibModule;
                 }
+
+                return pClassModule;
             }
         }
     }
 
+end:
     if (LibModule != NULL)
         *LibModule = NULL;
 
