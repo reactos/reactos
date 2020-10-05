@@ -43,7 +43,7 @@ typedef struct
     HWND hTab;
 } DLG_HANDLE;
 
-extern BOOL SystemDrive;
+extern BOOL IsSystemDrive;
 extern UINT CleanmgrWindowMsg;
 extern WCHAR DriveLetter[ARR_MAX_SIZE];
 extern WCHAR RappsDir[MAX_PATH];
@@ -63,7 +63,7 @@ BOOL DrawItemCombobox(LPARAM lParam);
 BOOL InitTabControl(HWND hwnd);
 BOOL InitStageFlagTabControl(HWND hwnd);
 
-DWORD WINAPI FolderRemoval(LPVOID lpParam);
+DWORD WINAPI RemoveRequiredFolder(LPVOID lpParam);
 DWORD WINAPI GetRemovableDirSize(LPVOID lpParam);
 
 uint64_t CheckedItem(int ItemIndex, HWND hwnd, HWND hList, long long size);

@@ -23,7 +23,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
     CleanmgrWindowMsg = RegisterWindowMessageW(L"CleanmgrCreated");
 
-    if(CleanmgrWindowMsg == 0)
+    if (CleanmgrWindowMsg == 0)
     {
         DPRINT("RegisterWindowMessageW(): Failed to register a window message!\n");
     }

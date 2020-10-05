@@ -7,7 +7,7 @@
 
 #include "util.h"
 
-BOOL SystemDrive;
+BOOL IsSystemDrive;
 WCHAR DriveLetter[ARR_MAX_SIZE];
 WCHAR RappsDir[MAX_PATH];
 
@@ -27,7 +27,7 @@ void AddRequiredItem(HWND hList, UINT StringID, PWCHAR SubString, int ItemIndex)
     lvI.pszText = LoadedString;
     ListView_InsertItem(hList, &lvI);
 
-    if(SubString != NULL)
+    if (SubString != NULL)
     {
         lvI.iSubItem = 1;
         lvI.pszText = SubString;    
@@ -339,14 +339,14 @@ BOOL EnableDialogTheme(HWND hwnd)
     return TRUE;
 }
 
-DWORD WINAPI FolderRemoval(LPVOID lpParam)
+DWORD WINAPI RemoveRequiredFolder(LPVOID lpParam)
 {
     WCHAR LoadedString[ARR_MAX_SIZE] = { 0 };
     WCHAR TargetedDir[MAX_PATH] = { 0 };
     HWND hwnd = lpParam;
     HWND hProgressBar = GetDlgItem(hwnd, IDC_PROGRESS_2);
 
-    if (CleanDirectories.TempClean && SystemDrive)
+    if (CleanDirectories.TempClean && IsSystemDrive)
     {
         CleanRequiredPath(TempDir);
 
@@ -413,7 +413,7 @@ DWORD WINAPI GetRemovableDirSize(LPVOID lpParam)
     ZeroMemory(&RecycleBinInfo, sizeof(RecycleBinInfo));
     RecycleBinInfo.cbSize = sizeof(RecycleBinInfo);*/
 
-    if (SystemDrive)
+    if (IsSystemDrive)
     {
         SendMessageW(hProgressBar, PBM_SETPOS, 25, 0);
         LoadStringW(GetModuleHandleW(NULL), IDS_LABEL_TEMP, LoadedString, _countof(LoadedString));
@@ -665,7 +665,7 @@ void InitListViewControl(HWND hList)
     StrFormatByteSizeW(DirectorySizes.RecycleBinSize, TempList, sizeof(TempList));
     AddRequiredItem(hList, IDS_LABEL_RECYCLE, TempList, ICON_BIN);
 
-    if (SystemDrive)
+    if (IsSystemDrive)
     {
         StrFormatByteSizeW(DirectorySizes.TempSize, TempList, sizeof(TempList));
         AddRequiredItem(hList, IDS_LABEL_TEMP, TempList, ICON_BLANK);

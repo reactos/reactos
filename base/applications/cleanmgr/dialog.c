@@ -7,7 +7,7 @@
  
 #include "precomp.h"
 
-BOOL SystemDrive;
+BOOL IsSystemDrive;
 DLG_HANDLE DialogHandle;
 WCHAR DriveLetter[ARR_MAX_SIZE];
 UINT CleanmgrWindowMsg;
@@ -111,14 +111,14 @@ INT_PTR CALLBACK ProgressDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM 
             WCHAR TempText[ARR_MAX_SIZE] = { 0 };
             HANDLE ThreadOBJ = NULL;
 
-            SystemDrive = FALSE;
+            IsSystemDrive = FALSE;
             LoadStringW(GetModuleHandleW(NULL), IDS_SCAN, TempText, _countof(TempText));
             StringCchPrintfW(FullText, sizeof(FullText), TempText, DriveLetter);
             SetDlgItemTextW(hwnd, IDC_STATIC_SCAN, FullText);
             GetEnvironmentVariableW(L"SystemDrive", SysDrive, sizeof(SysDrive));
             if (wcscmp(SysDrive, DriveLetter) == 0)
             {
-                SystemDrive = TRUE;
+                IsSystemDrive = TRUE;
             }
             ThreadOBJ = CreateThread(NULL, 0, &GetRemovableDirSize, (LPVOID)hwnd, 0, NULL);
             CloseHandle(ThreadOBJ);
@@ -258,7 +258,7 @@ INT_PTR CALLBACK ProgressEndDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPAR
             LoadStringW(GetModuleHandleW(NULL), IDS_REMOVAL, TempText, _countof(TempText));
             StringCchPrintfW(FullText, sizeof(FullText), TempText, DriveLetter);
             SetDlgItemTextW(hwnd, IDC_STATIC_REMOVAL, FullText);
-            ThreadOBJ = CreateThread(NULL, 0, &FolderRemoval, (LPVOID)hwnd, 0, NULL);
+            ThreadOBJ = CreateThread(NULL, 0, &RemoveRequiredFolder, (LPVOID)hwnd, 0, NULL);
             CloseHandle(ThreadOBJ);
             SetForegroundWindow(hwnd);
             return TRUE;
