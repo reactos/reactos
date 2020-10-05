@@ -5,7 +5,7 @@ Signature = "$Windows NT$"
 
 HKLM,"SYSTEM\CurrentControlSet\Control","CurrentUser",2,"USERNAME"
 HKLM,"SYSTEM\CurrentControlSet\Control","WaitToKillServiceTimeout",2,"20000"
-HKLM,"SYSTEM\CurrentControlSet\Control\Biosinfo","InfName",2,"biosinfo.inf"
+;HKLM,"SYSTEM\CurrentControlSet\Control\Biosinfo","InfName",2,"biosinfo.inf"
 HKLM,"SYSTEM\CurrentControlSet\Control\PnP",,0x00000012
 HKLM,"SYSTEM\CurrentControlSet\Control\Video",,0x00000012
 
