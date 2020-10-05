@@ -35,7 +35,7 @@ STDMETHODIMP CACLCustomMRU::Next(ULONG celt, LPWSTR *rgelt, ULONG *pceltFetched)
 
     CStringW str = m_MRUData[m_ielt];
 
-    if (!m_bTypedURLs)
+    if (!m_bTypedURLs && !PathFileExistsW(str))
     {
         // Erase the last "\\1" etc. (indicates SW_* value)
         INT ich = str.ReverseFind(L'\\');
