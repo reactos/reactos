@@ -7,22 +7,28 @@
  
 #include "precomp.h"
 
+BOOL SystemDrive;
+DLG_HANDLE DialogHandle;
+WCHAR DriveLetter[ARR_MAX_SIZE];
+UINT CleanmgrWindowMsg;
+
 INT_PTR CALLBACK StartDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     HBITMAP BitmapDrive = NULL;
-    switch(message)
-    {
+    
+    switch (message)
+    {    
         case WM_INITDIALOG:
         {
             BitmapDrive = LoadBitmapW(GetModuleHandleW(NULL), MAKEINTRESOURCEW(IDB_DRIVE));
- 
+
             if (BitmapDrive == NULL)
             {
-                MessageBoxW(NULL, L"LoadBitmapW() failed!", L"Error", MB_OK | MB_ICONERROR);
+                DPRINT("LoadBitmapW(): Failed to open the bitmap!\n");
                 EndDialog(hwnd, IDCANCEL);
                 return FALSE;
             }
-            
+
             InitStartDlg(hwnd, BitmapDrive);
             return TRUE;
         }
@@ -33,7 +39,7 @@ INT_PTR CALLBACK StartDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPa
         case WM_THEMECHANGED:
             InvalidateRect(hwnd, NULL, FALSE);
             break;
-        
+
         case WM_MEASUREITEM:
         {
             LPMEASUREITEMSTRUCT lpmis = (LPMEASUREITEMSTRUCT)lParam;
@@ -48,7 +54,7 @@ INT_PTR CALLBACK StartDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPa
         {
             if (!DrawItemCombobox(lParam))
             {
-                MessageBoxW(NULL, L"DrawItemCombobox() failed!", L"Error", MB_OK | MB_ICONERROR);
+                DPRINT("DrawItemCombobox(): Failed to initialize the ComboBox!\n");
                 EndDialog(hwnd, IDCANCEL);
             }
             break;
@@ -57,31 +63,14 @@ INT_PTR CALLBACK StartDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPa
         case WM_COMMAND:
             if (HIWORD(wParam) == CBN_SELCHANGE)
             {
-                int ItemIndex = SendMessageW(GetDlgItem(hwnd, IDC_DRIVE), CB_GETCURSEL, 0, 0);
-                WCHAR StringComboBox[ARR_MAX_SIZE] = { 0 };
-                WCHAR *GatheredDriveLatter = NULL;
-                if (ItemIndex == CB_ERR)
-                {
-                    MessageBoxW(NULL, L"SendMessageW failed!", L"Error", MB_OK | MB_ICONERROR);
-                    EndDialog(hwnd, IDCANCEL);
-                }
-                SendMessageW(GetDlgItem(hwnd, IDC_DRIVE), CB_GETLBTEXT, (WPARAM)ItemIndex, (LPARAM)StringComboBox);
-                StringComboBox[wcslen(StringComboBox) - 1] = L'\0';
-                GatheredDriveLatter = wcsrchr(StringComboBox, L':');
-                GatheredDriveLatter--;
-                StringCbCopyW(wcv.DriveLetter, sizeof(wcv.DriveLetter), GatheredDriveLatter);
+                HWND hComboCtrl = GetDlgItem(hwnd, IDC_DRIVE);
+                int ItemIndex = SendMessageW(hComboCtrl, CB_GETCURSEL, 0, 0);
+                StringCbCopyW(DriveLetter, sizeof(DriveLetter), GetProperDriveLetter(hComboCtrl, ItemIndex));
             }
 
             switch(LOWORD(wParam))
             {
                 case IDOK:
-                    if (wcv.DriveLetter == NULL)
-                    {
-                        WCHAR TempText[ARR_MAX_SIZE] = { 0 };
-                        LoadStringW(GetModuleHandleW(NULL), IDS_WARNING_DRIVE, TempText, _countof(TempText));
-                        MessageBoxW(hwnd, TempText, L"Warning", MB_OK | MB_ICONWARNING);
-                        break;
-                    }
                     DeleteObject(BitmapDrive);
                     EndDialog(hwnd, IDOK);
                     break;
@@ -98,9 +87,15 @@ INT_PTR CALLBACK StartDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lPa
         case WM_DESTROY:
             DeleteObject(BitmapDrive);
             break;
-        
+
         default:
+        {
+            if (message == CleanmgrWindowMsg)
+            {
+                SetForegroundWindow(hwnd);
+            }
             return FALSE;
+        }
     }
     return TRUE;
 }
@@ -116,20 +111,21 @@ INT_PTR CALLBACK ProgressDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM 
             WCHAR TempText[ARR_MAX_SIZE] = { 0 };
             HANDLE ThreadOBJ = NULL;
 
-            bv.SysDrive = FALSE;
+            SystemDrive = FALSE;
             LoadStringW(GetModuleHandleW(NULL), IDS_SCAN, TempText, _countof(TempText));
-            StringCchPrintfW(FullText, sizeof(FullText), TempText, wcv.DriveLetter);
+            StringCchPrintfW(FullText, sizeof(FullText), TempText, DriveLetter);
             SetDlgItemTextW(hwnd, IDC_STATIC_SCAN, FullText);
             GetEnvironmentVariableW(L"SystemDrive", SysDrive, sizeof(SysDrive));
-            if (wcscmp(SysDrive, wcv.DriveLetter) == 0)
+            if (wcscmp(SysDrive, DriveLetter) == 0)
             {
-                bv.SysDrive = TRUE;
+                SystemDrive = TRUE;
             }
-            ThreadOBJ = CreateThread(NULL, 0, &SizeCheck, (LPVOID)hwnd, 0, NULL);
+            ThreadOBJ = CreateThread(NULL, 0, &GetRemovableDirSize, (LPVOID)hwnd, 0, NULL);
             CloseHandle(ThreadOBJ);
+            SetForegroundWindow(hwnd);
             return TRUE;
         }
-        
+
         case WM_NOTIFY:
             return ThemeHandler(hwnd, (LPNMCUSTOMDRAW)lParam);
 
@@ -151,7 +147,13 @@ INT_PTR CALLBACK ProgressDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM 
             break;
 
         default:
+        {
+            if (message == CleanmgrWindowMsg)
+            {
+                SetForegroundWindow(hwnd);
+            }
             return FALSE;
+        }
     }
     return TRUE;
 }
@@ -165,23 +167,26 @@ INT_PTR CALLBACK ChoiceDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lP
         case WM_INITDIALOG:
         {
             WCHAR FullText[ARR_MAX_SIZE] = { 0 };
-            HICON hbmIcon = LoadIconW(GetModuleHandleW(NULL), MAKEINTRESOURCE(IDI_DRIVE));
+            HICON hbmIcon = LoadIconW(GetModuleHandleW(NULL), MAKEINTRESOURCE(IDI_CLEANMGR));
+
             LoadStringW(GetModuleHandleW(NULL), IDS_CHOICE_DLG_TITLE, TempText, _countof(TempText));
-            StringCchPrintfW(FullText, sizeof(FullText), TempText, wcv.DriveLetter);
+            StringCchPrintfW(FullText, sizeof(FullText), TempText, DriveLetter);
             SetWindowTextW(hwnd, FullText);
             SendMessageW(hwnd, WM_SETICON, ICON_SMALL, (LPARAM)hbmIcon);
             SendMessageW(hwnd, WM_SETICON, ICON_BIG, (LPARAM)hbmIcon);
-            return OnCreate(hwnd);
+            SetForegroundWindow(hwnd);
+            return InitTabControl(hwnd);
         }
 
         case WM_NOTIFY:
         {
             LPNMHDR pnmh = (LPNMHDR)lParam;
-            if ((pnmh->hwndFrom == dv.hTab) &&
+            if ((pnmh->hwndFrom == DialogHandle.hTab) &&
                 (pnmh->idFrom == IDC_TAB) &&
                 (pnmh->code == TCN_SELCHANGE))
             {
-                OnTabWndSelChange();
+                TabControlSelChange();
+                break;
             }
             return ThemeHandler(hwnd, (LPNMCUSTOMDRAW)lParam);
         }
@@ -195,26 +200,6 @@ INT_PTR CALLBACK ChoiceDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lP
             {
                 case IDOK:
                 {
-                    HWND hList = GetDlgItem(dv.hChoicePage, IDC_CHOICE_LIST);
-                    int NumOfItems = ListView_GetItemCount(hList);
-                    BOOL ItemChecked = FALSE;
-                    for (int i = 0; i < NumOfItems; i++)
-                    {
-                        if (ListView_GetCheckState(hList, i))
-                        {
-                            ItemChecked = TRUE;
-                            break;
-                        }
-                    }
-                    
-                    if (ItemChecked == FALSE)
-                    {
-                        LoadStringW(GetModuleHandleW(NULL), IDS_WARNING_OPTION, TempText, _countof(TempText));
-                        MessageBoxW(hwnd, TempText, L"Warning", MB_OK | MB_ICONWARNING);
-                        break;
-                    }
-
-                    LoadStringW(GetModuleHandleW(NULL), IDS_CONFIRM_DELETION, TempText, _countof(TempText));
                     int MesgBox = MessageBoxW(hwnd, TempText, L"Warning", MB_YESNO | MB_ICONWARNING | MB_DEFBUTTON2);
                     switch (MesgBox)
                     {
@@ -232,24 +217,30 @@ INT_PTR CALLBACK ChoiceDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lP
                     break;
             }
             break;
-    
+
         case WM_CLOSE:
             EndDialog(hwnd, IDCANCEL);
             break;
-        
+
         case WM_DESTROY:
-            if (dv.hChoicePage)
+            if (DialogHandle.hChoicePage)
             {
-                DestroyWindow(dv.hChoicePage);
+                DestroyWindow(DialogHandle.hChoicePage);
             }
-            else if (dv.hOptionsPage)
+            else if (DialogHandle.hOptionsPage)
             {
-                DestroyWindow(dv.hOptionsPage);
+                DestroyWindow(DialogHandle.hOptionsPage);
             }
             break;
-        
+
         default:
+        {
+            if (message == CleanmgrWindowMsg)
+            {
+                SetForegroundWindow(hwnd);
+            }
             return FALSE;
+        }
     }
     return TRUE;
 }
@@ -265,10 +256,11 @@ INT_PTR CALLBACK ProgressEndDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPAR
             HANDLE ThreadOBJ = NULL;
 
             LoadStringW(GetModuleHandleW(NULL), IDS_REMOVAL, TempText, _countof(TempText));
-            StringCchPrintfW(FullText, sizeof(FullText), TempText, wcv.DriveLetter);
+            StringCchPrintfW(FullText, sizeof(FullText), TempText, DriveLetter);
             SetDlgItemTextW(hwnd, IDC_STATIC_REMOVAL, FullText);
             ThreadOBJ = CreateThread(NULL, 0, &FolderRemoval, (LPVOID)hwnd, 0, NULL);
             CloseHandle(ThreadOBJ);
+            SetForegroundWindow(hwnd);
             return TRUE;
         }
 
@@ -278,7 +270,7 @@ INT_PTR CALLBACK ProgressEndDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPAR
         case WM_THEMECHANGED:
             InvalidateRect(hwnd, NULL, FALSE);
             break;
-    
+
         case WM_COMMAND:
             switch (LOWORD(wParam))
             {
@@ -293,19 +285,25 @@ INT_PTR CALLBACK ProgressEndDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPAR
             break;
 
         default:
+        {
+            if (message == CleanmgrWindowMsg)
+            {
+                SetForegroundWindow(hwnd);
+            }
             return FALSE;
+        }
     }
     return TRUE;
 }
 
-INT_PTR CALLBACK SagesetDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK SetStageFlagDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     WCHAR TempText[ARR_MAX_SIZE] = { 0 };
 
     switch (message)
     {
         case WM_INITDIALOG:
-            return OnCreateSageset(hwnd);
+            return InitStageFlagTabControl(hwnd);
 
         case WM_NOTIFY:
             return ThemeHandler(hwnd, (LPNMCUSTOMDRAW)lParam);
@@ -319,26 +317,6 @@ INT_PTR CALLBACK SagesetDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM l
             {
                 case IDOK:
                 {
-                    HWND hList = GetDlgItem(dv.hSagesetPage, IDC_SAGESET_LIST);
-                    int NumOfItems = ListView_GetItemCount(hList);
-                    BOOL ItemChecked = FALSE;
-                    for (int i = 0; i < NumOfItems; i++)
-                    {
-                        if (ListView_GetCheckState(hList, i))
-                        {
-                            ItemChecked = TRUE;
-                            break;
-                        }
-                    }
-
-                    if (ItemChecked == FALSE)
-                    {
-                        LoadStringW(GetModuleHandleW(NULL), IDS_WARNING_OPTION, TempText, _countof(TempText));
-                        MessageBoxW(hwnd, TempText, L"Warning", MB_OK | MB_ICONWARNING);
-                        break;
-                    }
-
-                    LoadStringW(GetModuleHandleW(NULL), IDS_CONFIRM_CONFIG, TempText, _countof(TempText));
                     int MesgBox = MessageBoxW(hwnd, TempText, L"Warning", MB_YESNO | MB_ICONWARNING | MB_DEFBUTTON2);
                     switch (MesgBox)
                     {
@@ -356,17 +334,23 @@ INT_PTR CALLBACK SagesetDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM l
                     break;
             }
             break;
-    
+
         case WM_CLOSE:
             EndDialog(hwnd, IDCANCEL);
             break;
-        
+
         case WM_DESTROY:
-            DestroyWindow(dv.hSagesetPage);
+            DestroyWindow(DialogHandle.hSagesetPage);
             break;
-        
+
         default:
+        {
+            if (message == CleanmgrWindowMsg)
+            {
+                SetForegroundWindow(hwnd);
+            }
             return FALSE;
+        }
     }
     return TRUE;
 }

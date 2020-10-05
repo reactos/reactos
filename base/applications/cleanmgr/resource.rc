@@ -17,13 +17,15 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_NEUTRAL
 
 #include <reactos/manifest_exe.rc>
 
-IDI_DRIVE ICON "res/9.ico"
-IDI_COMPUTER ICON "res/16.ico"
-IDI_BLANK ICON "res/1.ico"
-IDI_FOLDER ICON "res/4.ico"
-IDI_BIN ICON "res/32.ico"
+/* Icons */
+IDI_CLEANMGR ICON "res/cleanmgr.ico"
+IDI_INSTALLER ICON "res/installer.ico"
+IDI_BLANK ICON "res/blank.ico"
+IDI_FOLDER ICON "res/folder.ico"
+IDI_BIN ICON "res/bin.ico"
 
-IDB_DRIVE BITMAP "res/9.bmp"
+/* Bitmaps */
+IDB_DRIVE BITMAP "res/drive.bmp"
 IDB_MASK BITMAP "res/mask.bmp"
 
 /* UTF-8 */

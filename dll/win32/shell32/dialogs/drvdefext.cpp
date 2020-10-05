@@ -526,7 +526,7 @@ CDrvDefExt::GeneralPageProc(
             if (LOWORD(wParam) == 14010) /* Disk Cleanup */
             {
                 CDrvDefExt *pDrvDefExt = reinterpret_cast<CDrvDefExt *>(GetWindowLongPtr(hwndDlg, DWLP_USER));
-                WCHAR wszBuf[256];
+                WCHAR wszBuf[MAX_PATH];
                 DWORD cbBuf = sizeof(wszBuf);
 
                 if (RegGetValueW(HKEY_LOCAL_MACHINE,
@@ -537,15 +537,21 @@ CDrvDefExt::GeneralPageProc(
                                  (PVOID)wszBuf,
                                  &cbBuf) == ERROR_SUCCESS)
                 {
+                    /* Separating the program path and the paramaters for ShellExecuteW() */
                     WCHAR wszCmd[MAX_PATH];
-                    WCHAR TempArr[MAX_PATH] = { 0 };
+                    WCHAR wszPar[MAX_PATH];
+                    WCHAR *TempPtr;
 
-                    StringCbPrintfW(TempArr, sizeof(TempArr), L"/c %s", wszBuf);
-                    
-                    StringCbPrintfW(wszCmd, sizeof(wszCmd), TempArr, pDrvDefExt->m_wszDrive[0]);
+                    /* For program's paramaters */
+                    TempPtr = wcschr(wszBuf, L' ');
+                    StringCbPrintfW(wszPar, sizeof(wszPar), TempPtr, pDrvDefExt->m_wszDrive[0]);
 
-                    if (ShellExecuteW(hwndDlg, L"open", L"cmd", wszCmd, NULL, SW_HIDE) <= (HINSTANCE)32)
-                        ERR("Failed to create cleanup process %ls\n", wszCmd);
+                    /* Actual path of the program */
+                    ExpandEnvironmentStringsW(wszBuf, wszCmd, _countof(wszCmd));
+                    wszCmd[wcslen(wszCmd) - 6] = L'\0';
+
+                    if (ShellExecuteW(hwndDlg, L"runas", wszCmd, wszPar, NULL, SW_SHOW) <= (HINSTANCE)32)
+                        ERR("Failed to create cleanup process %ls %ls\n", wszCmd, wszPar);
                 }
             }
             else if (LOWORD(wParam) == 14000) /* Label */

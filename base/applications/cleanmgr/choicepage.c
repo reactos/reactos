@@ -1,14 +1,20 @@
 /*
  * PROJECT:         ReactOS Disk Cleanup
  * LICENSE:         GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
- * PURPOSE:         Child dialog proc
+ * PURPOSE:         ChoicePage child dialog proc
  * COPYRIGHT:       Copyright 2020 Arnav Bhatt (arnavbhatt288 at gmail dot com)
  */
 
 #include "precomp.h"
 
+DIRSIZE DirectorySizes;
+WCHAR DriveLetter[ARR_MAX_SIZE];
+WCHAR RappsDir[MAX_PATH];
+
 INT_PTR CALLBACK ChoicePageDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
+    HWND hList = GetDlgItem(hwnd, IDC_CHOICE_LIST);
+
     switch (message)
     {
         case WM_INITDIALOG:
@@ -16,13 +22,13 @@ INT_PTR CALLBACK ChoicePageDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
             WCHAR FullText[ARR_MAX_SIZE] = { 0 };
             WCHAR TotalAmount[ARR_MAX_SIZE] = { 0 };
             WCHAR TempText[ARR_MAX_SIZE] = { 0 };
-            uint64_t TotalSize = sz.TempSize + sz.RecycleBinSize + sz.ChkDskSize + sz.RappsSize;
+            uint64_t TotalSize = DirectorySizes.TempSize + DirectorySizes.RecycleBinSize + DirectorySizes.ChkDskSize + DirectorySizes.RappsSize;
 
             SetWindowPos(hwnd, NULL, 10, 32, 0, 0, SWP_NOACTIVATE | SWP_NOOWNERZORDER | SWP_NOSIZE | SWP_NOZORDER);
-            InitListViewControl(GetDlgItem(hwnd, IDC_CHOICE_LIST));
+            InitListViewControl(hList);
             LoadStringW(GetModuleHandleW(NULL), IDS_CLEANUP, TempText, _countof(TempText));
             StrFormatByteSizeW(TotalSize, TotalAmount, sizeof(TotalAmount));
-            StringCchPrintfW(FullText, sizeof(FullText), TempText, TotalAmount, wcv.DriveLetter);
+            StringCchPrintfW(FullText, sizeof(FullText), TempText, TotalAmount, DriveLetter);
             SetDlgItemTextW(hwnd, IDC_STATIC_DLG, FullText);
             return TRUE;
         }
@@ -38,9 +44,9 @@ INT_PTR CALLBACK ChoicePageDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
                     seI.cbSize = sizeof(seI);
                     seI.lpVerb = L"open";
                     seI.nShow = SW_SHOW;
-                    seI.lpFile = wcv.RappsDir;
+                    seI.lpFile = RappsDir;
             
-                    if (!PathIsDirectoryW(wcv.RappsDir))
+                    if (!PathIsDirectoryW(RappsDir))
                     {
                         LoadStringW(GetModuleHandleW(NULL), IDS_WARNING_FOLDER, LoadErrorString, sizeof(LoadErrorString));
                         MessageBoxW(hwnd, LoadErrorString, L"Warning", MB_OK | MB_ICONWARNING);
@@ -49,7 +55,7 @@ INT_PTR CALLBACK ChoicePageDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
 
                     if (!ShellExecuteExW(&seI))
                     {
-                        MessageBoxW(NULL, L"ShellExecuteExW() failed!", L"Ok", MB_OK | MB_ICONSTOP);
+                        DPRINT("ShellExecuteExW(): Failed to perform the operation!\n");
                         return FALSE;
                     }
                     break;
@@ -59,14 +65,16 @@ INT_PTR CALLBACK ChoicePageDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
 
         case WM_NOTIFY:
         {
-            NMHDR* Header = (NMHDR*)lParam;
+            HWND hParentDialog = GetParent(hwnd);
+            HWND hButton = GetDlgItem(hParentDialog, IDOK);
+            NMHDR* header = (NMHDR*)lParam;
             NMLISTVIEW* NmList = (NMLISTVIEW*)lParam;
             LVITEMW lvI;
             ZeroMemory(&lvI, sizeof(lvI));
 
             if (lParam)
             {
-                if (Header && Header->idFrom == IDC_CHOICE_LIST && Header->code == LVN_ITEMCHANGED)
+                if (header && header->idFrom == IDC_CHOICE_LIST && header->code == LVN_ITEMCHANGED)
                 {
                     if ((NmList->uNewState ^ NmList->uOldState) & LVIS_SELECTED)
                     {
@@ -74,10 +82,17 @@ INT_PTR CALLBACK ChoicePageDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
                     }
                     else if ((NmList->uNewState ^ NmList->uOldState) & LVIS_STATEIMAGEMASK)
                     {
-                        sz.CountSize = CheckedItem(NmList->iItem, hwnd, GetDlgItem(hwnd, IDC_CHOICE_LIST), sz.CountSize);
+                        DirectorySizes.CountSize = CheckedItem(NmList->iItem, hwnd, hList, DirectorySizes.CountSize);
                     }
                 }
             }
+
+            if (DirectorySizes.CountSize == 0)
+            {
+                EnableWindow(hButton, FALSE);
+                break;
+            }
+            EnableWindow(hButton, TRUE);
             break;
         }
 

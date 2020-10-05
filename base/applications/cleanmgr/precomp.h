@@ -7,9 +7,7 @@
  
 #ifndef _CLEANMGR_PRECOMP_H
 #define _CLEANMGR_PRECOMP_H
- 
-#define COBJMACROS
-#define ONLY_PHYSICAL_DRIVE 3
+
 #define ARR_MAX_SIZE 512
 
 #include "resource.h"
@@ -19,21 +17,13 @@
 #include <wchar.h>
 #include <shlwapi.h>
 #include <commctrl.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdint.h>
 #include <strsafe.h>
-#include <string.h>
-#include <guiddef.h>
 #include <inttypes.h>
 #include <debug.h>
 #include <shlobj.h>
-#include <shobjidl.h>
-#include <shlguid.h>
 #include <uxtheme.h>
 #include <vsstyle.h>
 #include <wininet.h>
-#include <cpl.h>
 #include <winreg.h>
 
 typedef struct
@@ -51,102 +41,48 @@ typedef struct
     HWND hOptionsPage;
     HWND hSagesetPage;
     HWND hTab;
-} DLG_VAR;
+} DLG_HANDLE;
 
-typedef struct
-{
-    WCHAR DriveLetter[ARR_MAX_SIZE];
-    WCHAR TempDir[ARR_MAX_SIZE];
-    WCHAR RappsDir[MAX_PATH];
-} WCHAR_VAR;
-
-typedef struct
-{
-    BOOL TempClean;
-    BOOL RecycleClean;
-    BOOL ChkDskClean;
-    BOOL RappsClean;
-    BOOL SysDrive;
-} BOOL_VAR;
-
-DIRSIZE sz;
-DLG_VAR dv;
-WCHAR_VAR wcv;
-BOOL_VAR bv;
-
-/* For gathering custom path for RAPPS Downloads Folder. Currently disabled because it will break after every update */
-
-/*typedef struct
-{
-    BOOL bSaveWndPos;
-    BOOL bUpdateAtStart;
-    BOOL bLogEnabled;
-    WCHAR szDownloadDir[MAX_PATH];
-    BOOL bDelInstaller;
-
-    BOOL Maximized;
-    INT Left;
-    INT Top;
-    INT Width;
-    INT Height;
-
-    INT Proxy;
-    WCHAR szProxyServer[MAX_PATH];
-    WCHAR szNoProxyFor[MAX_PATH];
-
-    BOOL bUseSource;
-    WCHAR szSourceURL[INTERNET_MAX_URL_LENGTH];
-} SETTINGS_INFO; */
+extern BOOL SystemDrive;
+extern UINT CleanmgrWindowMsg;
+extern WCHAR DriveLetter[ARR_MAX_SIZE];
+extern WCHAR RappsDir[MAX_PATH];
 
 
 // For dialog.c
-
 INT_PTR CALLBACK StartDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 INT_PTR CALLBACK ProgressDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 INT_PTR CALLBACK ChoiceDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 INT_PTR CALLBACK ProgressEndDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
-INT_PTR CALLBACK SagesetDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
+INT_PTR CALLBACK SetStageFlagDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
+
 
 // For util.c
-
-BOOL ArgCheck(LPWSTR* argList, int nArgs);
-BOOL CreateImageLists(HWND hList);
+BOOL ArgCheck(LPWSTR* ArgList, int nArgs);
 BOOL DrawItemCombobox(LPARAM lParam);
-BOOL DriverunProc(LPWSTR* argList, PWCHAR LogicalDrives);
-BOOL EnableDialogTheme(HWND hwnd);
-BOOL OnCreate(HWND hwnd);
-BOOL OnCreateSageset(HWND hwnd);
-BOOL RegValSet(PWCHAR RegArg, PWCHAR SubKey, BOOL ArgBool);
+BOOL InitTabControl(HWND hwnd);
+BOOL InitStageFlagTabControl(HWND hwnd);
 
 DWORD WINAPI FolderRemoval(LPVOID lpParam);
-DWORD WINAPI SizeCheck(LPVOID lpParam);
-DWORD RegQuery(PWCHAR RegArg, PWCHAR SubKey);
+DWORD WINAPI GetRemovableDirSize(LPVOID lpParam);
 
-long long CheckedItem(int index, HWND hwnd, HWND hList, long long size);
+uint64_t CheckedItem(int ItemIndex, HWND hwnd, HWND hList, long long size);
 
 LRESULT APIENTRY ThemeHandler(HWND hDlg, NMCUSTOMDRAW* pNmDraw);
 
-PWCHAR RealStageFlag(int nArgs, PWCHAR ArgReal, LPWSTR* argList);
+PWCHAR GetProperDriveLetter(HWND hComboCtrl, int ItemIndex);
 
-uint64_t DirSizeFunc(PWCHAR targetDir);
-
-void AddItem(HWND hList, PWCHAR string, PWCHAR subString, int iIndex);
-void CleanRequiredPath(PCWSTR TempPath);
 void InitStartDlg(HWND hwnd, HBITMAP hBitmap);
 void InitListViewControl(HWND hList);
-void InitSagesetListViewControl(HWND hList);
-void OnTabWndSelChange(void);
-void SagesetCheckedItem(int index, HWND hwnd, HWND hList);
-void SagesetProc(int nArgs, PWCHAR ArgReal, LPWSTR* argList);
-void SagerunProc(int nArgs, PWCHAR ArgReal, LPWSTR* argList, PWCHAR LogicalDrives);
-void SelItem(HWND hwnd, int index);
-void SetDetails(UINT stringID, UINT resourceID, HWND hwnd);
-void SetTotalSize(long long size, UINT resourceID, HWND hwnd);
+void InitStageFlagListViewControl(HWND hList);
+void SelItem(HWND hwnd, int ItemIndex);
+void StageFlagCheckedItem(int ItemIndex, HWND hwnd, HWND hList);
+void TabControlSelChange(void);
 
 
 // Dlg pages
 INT_PTR CALLBACK ChoicePageDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 INT_PTR CALLBACK OptionsPageDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
-INT_PTR CALLBACK SagesetPageDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
+INT_PTR CALLBACK SetStageFlagPageDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 
 #endif /* !_CLEANMGR_PRECOMP_H */
