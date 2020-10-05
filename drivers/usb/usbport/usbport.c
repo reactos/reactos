@@ -1390,6 +1390,11 @@ USBPORT_WorkerThread(IN PVOID StartContext)
                               FALSE,
                               NULL);
 
+        if (FdoExtension->Flags & USBPORT_FLAG_WORKER_THREAD_EXIT)
+        {
+            break;
+        }
+
         KeQuerySystemTime(&NewTime);
 
         KeAcquireSpinLock(&FdoExtension->WorkerThreadEventSpinLock, &OldIrql);
@@ -1443,6 +1448,23 @@ USBPORT_CreateWorkerThread(IN PDEVICE_OBJECT FdoDevice)
                                   (PVOID)FdoDevice);
 
     return Status;
+}
+
+VOID
+NTAPI
+USBPORT_StopWorkerThread(IN PDEVICE_OBJECT FdoDevice)
+{
+    PUSBPORT_DEVICE_EXTENSION FdoExtension;
+    NTSTATUS Status;
+
+    DPRINT("USBPORT_StopWorkerThread ... \n");
+
+    FdoExtension = FdoDevice->DeviceExtension;
+
+    FdoExtension->Flags |= USBPORT_FLAG_WORKER_THREAD_EXIT;
+    USBPORT_SignalWorkerThread(FdoDevice);
+    Status = ZwWaitForSingleObject(FdoExtension->WorkerThreadHandle, FALSE, NULL);
+    NT_ASSERT(Status == STATUS_SUCCESS);
 }
 
 VOID

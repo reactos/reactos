@@ -8,7 +8,7 @@
 #ifndef USBPORT_H__
 #define USBPORT_H__
 
-#include <ntddk.h>
+#include <ntifs.h>
 #include <windef.h>
 #include <stdio.h>
 #include <wdmguid.h>
@@ -67,6 +67,7 @@
 #define USBPORT_FLAG_HC_STARTED        0x00000002
 #define USBPORT_FLAG_HC_POLLING        0x00000004
 #define USBPORT_FLAG_WORKER_THREAD_ON  0x00000008
+#define USBPORT_FLAG_WORKER_THREAD_EXIT 0x00000010
 #define USBPORT_FLAG_HC_SUSPEND        0x00000100
 #define USBPORT_FLAG_INTERRUPT_ENABLED 0x00000400
 #define USBPORT_FLAG_SELECTIVE_SUSPEND 0x00000800
@@ -593,6 +594,11 @@ USBPORT_TransferFlushDpc(
 NTSTATUS
 NTAPI
 USBPORT_CreateWorkerThread(
+  IN PDEVICE_OBJECT FdoDevice);
+
+VOID
+NTAPI
+USBPORT_StopWorkerThread(
   IN PDEVICE_OBJECT FdoDevice);
 
 BOOLEAN
