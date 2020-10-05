@@ -95,15 +95,15 @@ CsrAllocateCaptureBuffer(IN ULONG ArgumentCount,
     /* Validate size */
     if (BufferSize >= MAXLONG) return NULL;
 
-    /* Add the size of the header and for each offset to the pointers */
+    /* Add the size of the header and of the pointer-offset array */
     BufferSize += FIELD_OFFSET(CSR_CAPTURE_BUFFER, PointerOffsetsArray) +
                     (ArgumentCount * sizeof(ULONG_PTR));
 
-    /* Align it to a 4-byte boundary */
-    BufferSize = (BufferSize + 3) & ~3;
-
     /* Add the size of the alignment padding for each argument */
     BufferSize += ArgumentCount * 3;
+
+    /* Align it to a 4-byte boundary */
+    BufferSize = (BufferSize + 3) & ~3;
 
     /* Allocate memory from the port heap */
     CaptureBuffer = RtlAllocateHeap(CsrPortHeap, HEAP_ZERO_MEMORY, BufferSize);
