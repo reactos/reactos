@@ -50,22 +50,19 @@ typedef struct _WDF_VERSION {
 typedef
 NTSTATUS
 (*PFNLIBRARYCOMMISSION)(
-    VOID
-    );
+    VOID);
 
 typedef
 NTSTATUS
 (*PFNLIBRARYDECOMMISSION)(
-    VOID
-    );
+    VOID);
 
 typedef
 NTSTATUS
 (*PFNLIBRARYREGISTERCLIENT)(
     PWDF_BIND_INFO Info,
     PWDF_COMPONENT_GLOBALS* ComponentGlobals,
-    PVOID* Context
-    );
+    PVOID* Context);
 
 typedef
 NTSTATUS
@@ -205,46 +202,40 @@ typedef struct _CLIENT_INFO {
 NTSTATUS
 NTAPI
 GetImageName(
-    IN PUNICODE_STRING DriverServiceName,
-    IN ULONG Tag,
-    IN PUNICODE_STRING ImageName
-);
+    _In_ PUNICODE_STRING DriverServiceName,
+    _In_ ULONG Tag,
+    _In_ PUNICODE_STRING ImageName);
 
 NTSTATUS
 NTAPI
 GetImageBase(
-    IN PCUNICODE_STRING ImageName,
-    OUT PVOID* ImageBase,
-    OUT PULONG ImageSize
-);
+    _In_ PCUNICODE_STRING ImageName,
+    _Out_ PVOID* ImageBase,
+    _Out_ PULONG ImageSize);
 
 BOOLEAN
 NTAPI
 ServiceCheckBootStart(
-    IN PUNICODE_STRING Service
-);
+    _In_ PUNICODE_STRING Service);
 
 NTSTATUS
 NTAPI
 FxLdrQueryUlong(
-    IN HANDLE KeyHandle,
-    IN PUNICODE_STRING ValueName,
-    OUT PULONG Value
-);
+    _In_ HANDLE KeyHandle,
+    _In_ PUNICODE_STRING ValueName,
+    _Out_ PULONG Value);
 
 NTSTATUS
 NTAPI
 FxLdrQueryData(
-    IN HANDLE KeyHandle,
-    IN PUNICODE_STRING ValueName,
-    IN ULONG Tag,
-    OUT PKEY_VALUE_PARTIAL_INFORMATION* KeyValPartialInfo
-);
+    _In_ HANDLE KeyHandle,
+    _In_ PUNICODE_STRING ValueName,
+    _In_ ULONG Tag,
+    _Out_ PKEY_VALUE_PARTIAL_INFORMATION* KeyValPartialInfo);
 
 VOID
 FreeString(
-    IN PUNICODE_STRING String
-);
+    _In_ PUNICODE_STRING String);
 
 VOID
 FxLdrAcquireLoadedModuleLock();
@@ -255,22 +246,19 @@ FxLdrReleaseLoadedModuleLock();
 NTSTATUS
 NTAPI
 ConvertUlongToWString(
-    ULONG Value,
-    PUNICODE_STRING String
-);
+    _In_ ULONG Value,
+    _Inout_ PUNICODE_STRING String);
 
 NTSTATUS
 NTAPI
 BuildServicePath(
-    IN PKEY_VALUE_PARTIAL_INFORMATION KeyValueInformation,
-    IN ULONG Tag,
-    IN PUNICODE_STRING ServicePath
-);
+    _In_ PKEY_VALUE_PARTIAL_INFORMATION KeyValueInformation,
+    _In_ ULONG Tag,
+    _In_ PUNICODE_STRING ServicePath);
 
 VOID
 NTAPI
 GetNameFromUnicodePath(
-    IN PUNICODE_STRING Path,
-    IN OUT PWCHAR Dest,
-    IN LONG DestSize
-);
+    _In_ PUNICODE_STRING Path,
+    _Inout_ PWCHAR Dest,
+    _In_ LONG DestSize);

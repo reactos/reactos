@@ -14,18 +14,17 @@
 NTSTATUS
 NTAPI
 WdfRegisterLibrary(
-    PWDF_LIBRARY_INFO LibraryInfo,
-    PUNICODE_STRING ServicePath,
-    PUNICODE_STRING LibraryDeviceName
+    _In_ PWDF_LIBRARY_INFO LibraryInfo,
+    _In_ PUNICODE_STRING ServicePath,
+    _In_ PUNICODE_STRING LibraryDeviceName
 );
 
 NTSTATUS
 NTAPI
 WdfRegisterClassLibrary(
-    IN PWDF_CLASS_LIBRARY_INFO ClassLibInfo,
-    IN PUNICODE_STRING SourceString,
-    IN PUNICODE_STRING ObjectName
-);
+    _In_ PWDF_CLASS_LIBRARY_INFO ClassLibInfo,
+    _In_ PUNICODE_STRING SourceString,
+    _In_ PUNICODE_STRING ObjectName);
 
 VOID
 NTAPI
@@ -34,56 +33,49 @@ DllUnload();
 NTSTATUS
 NTAPI
 DllInitialize(
-    PUNICODE_STRING RegistryPath
-);
+    _In_ PUNICODE_STRING RegistryPath);
 
 
 NTSTATUS
 NTAPI
 WdfLdrDiagnosticsValueByNameAsULONG(
-    PUNICODE_STRING ValueName,
-    PULONG Value
-);
+    _In_ PUNICODE_STRING ValueName,
+    _Out_ PULONG Value);
 
 
 NTSTATUS
 NTAPI
 WdfVersionBind(
-    PDRIVER_OBJECT DriverObject,
-    PUNICODE_STRING RegistryPath,
-    PWDF_BIND_INFO BindInfo,
-    PWDF_COMPONENT_GLOBALS *ComponentGlobals
-);
+    _In_ PDRIVER_OBJECT DriverObject,
+    _In_ PUNICODE_STRING RegistryPath,
+    _Inout_ PWDF_BIND_INFO BindInfo,
+    _Out_ PWDF_COMPONENT_GLOBALS *ComponentGlobals);
 
 
 NTSTATUS
 NTAPI
 WdfVersionUnbind(
-    PUNICODE_STRING RegistryPath,
-    PWDF_BIND_INFO BindInfo,
-    void** ComponentGlobals
-);
+    _In_ PUNICODE_STRING RegistryPath,
+    _In_ PWDF_BIND_INFO BindInfo,
+    _In_ PWDF_COMPONENT_GLOBALS ComponentGlobals);
 
 
 NTSTATUS
 NTAPI
 WdfVersionBindClass(
-    PWDF_BIND_INFO BindInfo,
-    PWDF_COMPONENT_GLOBALS Globals,
-    PWDF_CLASS_BIND_INFO ClassBindInfo
-);
+    _In_ PWDF_BIND_INFO BindInfo,
+    _In_ PWDF_COMPONENT_GLOBALS Globals,
+    _In_ PWDF_CLASS_BIND_INFO ClassBindInfo);
 
 
 VOID
 NTAPI
 WdfVersionUnbindClass(
-    PWDF_BIND_INFO BindInfo,
-    PWDF_COMPONENT_GLOBALS Globals,
-    PWDF_CLASS_BIND_INFO ClassBindInfo
-);
+    _In_ PWDF_BIND_INFO BindInfo,
+    _In_ PWDF_COMPONENT_GLOBALS Globals,
+    _In_ PWDF_CLASS_BIND_INFO ClassBindInfo);
 
 NTSTATUS
 NTAPI
 WdfLdrQueryInterface(
-    IN PWDF_LOADER_INTERFACE LoaderInterface
-);
+    _In_ PWDF_LOADER_INTERFACE LoaderInterface);

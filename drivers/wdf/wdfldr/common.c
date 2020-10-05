@@ -16,9 +16,9 @@
 NTSTATUS
 NTAPI
 AuxKlibQueryModuleInformation(
-    IN PULONG InformationLenght,
-    IN ULONG SizePerModule,
-    IN OUT PRTL_MODULE_EXTENDED_INFO ModuleInfo
+    _In_ PULONG InformationLenght,
+    _In_ ULONG SizePerModule,
+    _Inout_ PRTL_MODULE_EXTENDED_INFO ModuleInfo
 );
 
 
@@ -30,9 +30,8 @@ AuxKlibQueryModuleInformation(
 VOID
 NTAPI
 GetNameFromPath(
-    IN PUNICODE_STRING Path,
-    OUT PUNICODE_STRING Name
-)
+    _In_ PUNICODE_STRING Path,
+    _Out_  PUNICODE_STRING Name)
 {
     PWCHAR pNextSym;
     PWCHAR pCurrSym;
@@ -82,10 +81,9 @@ GetNameFromPath(
 NTSTATUS
 NTAPI
 GetImageName(
-    IN PUNICODE_STRING DriverServiceName,
-    IN ULONG Tag,
-    IN PUNICODE_STRING ImageName
-)
+    _In_ PUNICODE_STRING DriverServiceName,
+    _In_ ULONG Tag,
+    _In_ PUNICODE_STRING ImageName)
 {
     NTSTATUS status;
     OBJECT_ATTRIBUTES objectAttributes;
@@ -198,8 +196,7 @@ end:
 PCHAR
 NTAPI
 GetFileName(
-    IN PCHAR Path
-)
+    _In_ PCHAR Path)
 {
     size_t length;
     PCHAR currentSym;
@@ -224,10 +221,9 @@ GetFileName(
 NTSTATUS
 NTAPI
 AuxKlibQueryModuleInformation(
-    IN PULONG InformationLenght,
-    IN ULONG SizePerModule,
-    IN OUT PRTL_MODULE_EXTENDED_INFO ModuleInfo
-)
+    _In_ PULONG InformationLenght,
+    _In_ ULONG SizePerModule,
+    _Inout_ PRTL_MODULE_EXTENDED_INFO ModuleInfo)
 {
     NTSTATUS status;
     PRTL_PROCESS_MODULES pSysInfo;
@@ -324,10 +320,9 @@ clean:
 NTSTATUS
 NTAPI
 GetImageBase(
-    IN PCUNICODE_STRING ImageName,
-    OUT PVOID* ImageBase,
-    OUT PULONG ImageSize
-)
+    _In_ PCUNICODE_STRING ImageName,
+    _Out_  PVOID* ImageBase,
+    _Out_  PULONG ImageSize)
 {
     PCHAR fileName;
     PRTL_MODULE_EXTENDED_INFO pModuleInfoBuffer;
@@ -446,8 +441,7 @@ clean:
 BOOLEAN
 NTAPI
 ServiceCheckBootStart(
-    IN PUNICODE_STRING Service
-)
+    _In_ PUNICODE_STRING Service)
 {
     NTSTATUS status;
     OBJECT_ATTRIBUTES objectAttributes;
@@ -485,10 +479,9 @@ ServiceCheckBootStart(
 NTSTATUS
 NTAPI
 FxLdrQueryUlong(
-    IN HANDLE KeyHandle,
-    IN PUNICODE_STRING ValueName,
-    OUT PULONG Value
-)
+    _In_ HANDLE KeyHandle,
+    _In_ PUNICODE_STRING ValueName,
+    _Out_  PULONG Value)
 {
     NTSTATUS status;
     ULONG resultLength;
@@ -524,11 +517,10 @@ FxLdrQueryUlong(
 NTSTATUS
 NTAPI
 FxLdrQueryData(
-    IN HANDLE KeyHandle,
-    IN PUNICODE_STRING ValueName,
-    IN ULONG Tag,
-    OUT PKEY_VALUE_PARTIAL_INFORMATION* KeyValPartialInfo
-)
+    _In_ HANDLE KeyHandle,
+    _In_ PUNICODE_STRING ValueName,
+    _In_ ULONG Tag,
+    _Out_  PKEY_VALUE_PARTIAL_INFORMATION* KeyValPartialInfo)
 {
     PKEY_VALUE_PARTIAL_INFORMATION pKeyInfo;
     NTSTATUS status;
@@ -595,8 +587,7 @@ FxLdrQueryData(
 
 VOID
 FreeString(
-    IN PUNICODE_STRING String
-)
+    _In_ PUNICODE_STRING String)
 {
     if (String != NULL && String->Buffer != NULL)
     {
@@ -624,9 +615,8 @@ FxLdrReleaseLoadedModuleLock()
 NTSTATUS
 NTAPI
 ConvertUlongToWString(
-    ULONG Value,
-    PUNICODE_STRING String
-)
+    _In_ ULONG Value,
+    _Inout_ PUNICODE_STRING String)
 {
     return RtlIntegerToUnicodeString(Value, 10, String);
 }
@@ -635,10 +625,9 @@ ConvertUlongToWString(
 NTSTATUS
 NTAPI
 BuildServicePath(
-    IN PKEY_VALUE_PARTIAL_INFORMATION KeyValueInformation,
-    IN ULONG Tag,
-    IN PUNICODE_STRING ServicePath
-)
+    _In_ PKEY_VALUE_PARTIAL_INFORMATION KeyValueInformation,
+    _In_ ULONG Tag,
+    _In_ PUNICODE_STRING ServicePath)
 {
     NTSTATUS status;
     PWCHAR buffer;
@@ -708,10 +697,9 @@ done:
 VOID
 NTAPI
 GetNameFromUnicodePath(
-    IN PUNICODE_STRING Path,
-    IN OUT PWCHAR Dest,
-    IN LONG DestSize
-)
+    _In_ PUNICODE_STRING Path,
+    _Inout_ PWCHAR Dest,
+    _In_ LONG DestSize)
 {
     PWCHAR stringEnd;
     PWCHAR current;

@@ -93,8 +93,7 @@ NTSYSAPI
 NTSTATUS
 NTAPI
 ZwQuerySystemInformation(
-    IN SYSTEM_INFORMATION_CLASS SystemInfoClass,
-    OUT PVOID SystemInfoBuffer,
-    IN ULONG SystemInfoBufferSize,
-    OUT PULONG BytesReturned OPTIONAL
-);
+    _In_ SYSTEM_INFORMATION_CLASS SystemInfoClass,
+    _Out_ PVOID SystemInfoBuffer,
+    _In_ ULONG SystemInfoBufferSize,
+    _Out_opt_ PULONG BytesReturned);

@@ -21,9 +21,8 @@
 NTSTATUS
 NTAPI
 LibraryOpen(
-    IN PLIBRARY_MODULE LibModule,
-    IN PUNICODE_STRING ObjectName
-)
+    _In_ PLIBRARY_MODULE LibModule,
+    _In_ PUNICODE_STRING ObjectName)
 {
     NTSTATUS status;
     PDEVICE_OBJECT devObj;
@@ -47,8 +46,7 @@ LibraryOpen(
 VOID
 NTAPI
 LibraryClose(
-    IN PLIBRARY_MODULE LibModule
-)
+    _In_ PLIBRARY_MODULE LibModule)
 {
     if (LibModule->LibraryFileObject != NULL)
     {
@@ -61,9 +59,8 @@ LibraryClose(
 PLIBRARY_MODULE
 NTAPI
 LibraryCreate(
-    IN PWDF_LIBRARY_INFO LibInfo,
-    IN PUNICODE_STRING DriverServiceName
-)
+    _In_ PWDF_LIBRARY_INFO LibInfo,
+    _In_ PUNICODE_STRING DriverServiceName)
 {
     NTSTATUS status;
     PLIBRARY_MODULE pLibModule;
@@ -127,9 +124,8 @@ clean:
 PWDF_LIBRARY_INFO
 NTAPI
 LibraryCopyInfo(
-    IN PLIBRARY_MODULE LibModule,
-    IN OUT PWDF_LIBRARY_INFO LibInfo
-)
+    _In_ PLIBRARY_MODULE LibModule,
+    _Inout_ PWDF_LIBRARY_INFO LibInfo)
 {
     LibModule->LibraryInfo = LibInfo;
     LibModule->Version.Major = LibInfo->Version.Major;
@@ -143,8 +139,7 @@ LibraryCopyInfo(
 VOID
 NTAPI
 LibraryCleanupAndFree(
-    IN PLIBRARY_MODULE LibModule
-)
+    _In_ PLIBRARY_MODULE LibModule)
 {
     LibraryClose(LibModule);
 
@@ -200,8 +195,7 @@ AuxKlibInitialize()
 PLIST_ENTRY
 NTAPI
 LibraryAddToLibraryListLocked(
-    IN PLIBRARY_MODULE LibModule
-)
+    _In_ PLIBRARY_MODULE LibModule)
 {
     PLIST_ENTRY result;
 
@@ -216,8 +210,7 @@ LibraryAddToLibraryListLocked(
 VOID
 NTAPI
 LibraryRemoveFromLibraryList(
-    IN PLIBRARY_MODULE LibModule
-)
+    _In_ PLIBRARY_MODULE LibModule)
 {
     PLIST_ENTRY libListEntry;
     BOOLEAN removed;
@@ -249,8 +242,7 @@ LibraryRemoveFromLibraryList(
 VOID
 NTAPI
 ClientCleanupAndFree(
-    IN PCLIENT_MODULE ClientModule
-)
+    _In_ PCLIENT_MODULE ClientModule)
 {
     if (ClientModule->ImageName.Buffer != NULL)
     {
@@ -282,12 +274,11 @@ ClientCleanupAndFree(
 NTSTATUS
 NTAPI
 LibraryLinkInClient(
-    IN PLIBRARY_MODULE LibModule,
-    IN PUNICODE_STRING DriverServiceName,
-    IN PWDF_BIND_INFO BindInfo,
-    IN PVOID Context,
-    OUT PCLIENT_MODULE* ClientModule
-)
+    _In_ PLIBRARY_MODULE LibModule,
+    _In_ PUNICODE_STRING DriverServiceName,
+    _In_ PWDF_BIND_INFO BindInfo,
+    _In_ PVOID Context,
+    _Out_ PCLIENT_MODULE* ClientModule)
 {
     PCLIENT_MODULE pClientModule;
     NTSTATUS status;
@@ -347,9 +338,8 @@ error:
 VOID
 NTAPI
 LibraryUnload(
-    PLIBRARY_MODULE LibModule,
-    BOOLEAN RemoveFromList
-)
+    _In_ PLIBRARY_MODULE LibModule,
+    _In_ BOOLEAN RemoveFromList)
 {
     PWDF_LIBRARY_INFO LibInfo;
     NTSTATUS status;
@@ -390,8 +380,7 @@ LibraryUnload(
 VOID
 NTAPI
 LibraryReleaseClientReference(
-    PLIBRARY_MODULE LibModule
-)
+    _In_ PLIBRARY_MODULE LibModule)
 {
     int refs;
 
@@ -416,9 +405,8 @@ LibraryReleaseClientReference(
 NTSTATUS
 NTAPI
 LibraryUnlinkClient(
-    PLIBRARY_MODULE LibModule,
-    PWDF_BIND_INFO BindInfo
-)
+    _In_ PLIBRARY_MODULE LibModule,
+    _In_ PWDF_BIND_INFO BindInfo)
 {
     BOOLEAN isBindFound;
     PCLIENT_MODULE pClientModule;

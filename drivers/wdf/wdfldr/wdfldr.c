@@ -38,8 +38,7 @@ OSVERSIONINFOW gOsVersionInfoW;
 VOID
 NTAPI
 WdfLdrUnload(
-    IN PDRIVER_OBJECT DriverObject
-)
+    _In_ PDRIVER_OBJECT DriverObject)
 {
     UNREFERENCED_PARAMETER(DriverObject);
     DllUnload();
@@ -47,9 +46,8 @@ WdfLdrUnload(
 
 NTSTATUS
 DriverEntry(
-    IN PDRIVER_OBJECT DriverObject,
-    IN PUNICODE_STRING RegistryPath
-)
+    _In_ PDRIVER_OBJECT DriverObject,
+    _In_ PUNICODE_STRING RegistryPath)
 {
     DriverObject->DriverUnload = &WdfLdrUnload;
     return DllInitialize(RegistryPath);
@@ -59,8 +57,7 @@ DriverEntry(
 NTSTATUS
 NTAPI
 WdfLdrOpenRegistryDiagnosticsHandle(
-    OUT PHANDLE KeyHandle
-)
+    _Out_ PHANDLE KeyHandle)
 {
     NTSTATUS status;
     OBJECT_ATTRIBUTES ObjectAttributes;
@@ -87,8 +84,7 @@ WdfLdrOpenRegistryDiagnosticsHandle(
 VOID
 NTAPI
 WdfLdrCloseRegistryDiagnosticsHandle(
-    IN PVOID Handle
-)
+    _In_ PVOID Handle)
 {
     ZwClose(Handle);
 }
@@ -97,9 +93,8 @@ WdfLdrCloseRegistryDiagnosticsHandle(
 NTSTATUS
 NTAPI
 WdfLdrDiagnosticsValueByNameAsULONG(
-    IN PUNICODE_STRING ValueName,
-    OUT PULONG Value
-)
+    _In_ PUNICODE_STRING ValueName,
+    _Out_ PULONG Value)
 {
     HANDLE keyHandle = NULL;
     NTSTATUS status;
@@ -155,8 +150,7 @@ WdfLdrDiagnosticsValueByNameAsULONG(
 NTSTATUS
 NTAPI
 DllInitialize(
-    IN PUNICODE_STRING RegistryPath
-)
+    _In_ PUNICODE_STRING RegistryPath)
 {
     NTSTATUS status;
     UNICODE_STRING csdVersion = RTL_CONSTANT_STRING(L"DbgPrintOn");
@@ -203,8 +197,7 @@ DllInitialize(
 PLIST_ENTRY
 NTAPI
 LibraryUnloadClasses(
-    IN PLIBRARY_MODULE LibModule
-)
+    _In_ PLIBRARY_MODULE LibModule)
 {
     PLIST_ENTRY classListHead;
     PLIST_ENTRY entry;
@@ -308,8 +301,7 @@ DllUnload()
 NTSTATUS
 NTAPI
 WdfLdrQueryInterface(
-    IN PWDF_LOADER_INTERFACE LoaderInterface
-)
+    _In_ PWDF_LOADER_INTERFACE LoaderInterface)
 {
     if (LoaderInterface && LoaderInterface->Header.InterfaceType)
     {
@@ -363,8 +355,7 @@ WdfLdrQueryInterface(
 PLIBRARY_MODULE
 NTAPI
 FindModuleByServiceNameLocked(
-    IN PUNICODE_STRING ServiceName
-)
+    _In_ PUNICODE_STRING ServiceName)
 {
     PLIBRARY_MODULE pLibModule;
     PLIST_ENTRY currentLib;
@@ -416,10 +407,9 @@ FindModuleByServiceNameLocked(
 NTSTATUS
 NTAPI
 WdfRegisterLibrary(
-    IN PWDF_LIBRARY_INFO LibraryInfo,
-    IN PUNICODE_STRING ServicePath,
-    IN PUNICODE_STRING LibraryDeviceName
-)
+    _In_ PWDF_LIBRARY_INFO LibraryInfo,
+    _In_ PUNICODE_STRING ServicePath,
+    _In_ PUNICODE_STRING LibraryDeviceName)
 {
     NTSTATUS status;
     PLIBRARY_MODULE pLibModule;
@@ -503,9 +493,8 @@ end:
 NTSTATUS
 NTAPI
 GetVersionRegistryHandle(
-    IN PWDF_BIND_INFO BindInfo,
-    OUT PHANDLE HandleRegKey
-)
+    _In_ PWDF_BIND_INFO BindInfo,
+    _Out_ PHANDLE HandleRegKey)
 {
     NTSTATUS status;
     OBJECT_ATTRIBUTES ObjectAttributes;
@@ -585,8 +574,8 @@ end:
 NTSTATUS
 NTAPI
 GetDefaultServiceName(
-    IN PWDF_BIND_INFO BindInfo,
-    OUT PUNICODE_STRING RegistryPath
+    _In_ PWDF_BIND_INFO BindInfo,
+    _Out_ PUNICODE_STRING RegistryPath
 )
 {
     PWCHAR buffer;
@@ -645,9 +634,8 @@ GetDefaultServiceName(
 NTSTATUS
 NTAPI
 GetVersionServicePath(
-    IN PWDF_BIND_INFO BindInfo,
-    OUT PUNICODE_STRING ServicePath
-)
+    _In_ PWDF_BIND_INFO BindInfo,
+    _Out_ PUNICODE_STRING ServicePath)
 {
     NTSTATUS status;
     PKEY_VALUE_PARTIAL_INFORMATION pKeyVal = NULL;
@@ -712,9 +700,8 @@ GetVersionServicePath(
 NTSTATUS
 NTAPI
 ReferenceVersion(
-    IN PWDF_BIND_INFO BindInfo,
-    OUT PLIBRARY_MODULE* LibModule
-)
+    _In_ PWDF_BIND_INFO BindInfo,
+    _Out_ PLIBRARY_MODULE* LibModule)
 {
     BOOLEAN newCreated;
     NTSTATUS status;
@@ -825,11 +812,10 @@ success:
 NTSTATUS
 NTAPI
 WdfVersionBind(
-    IN PDRIVER_OBJECT DriverObject,
-    IN PUNICODE_STRING RegistryPath,
-    IN OUT PWDF_BIND_INFO BindInfo,
-    OUT PWDF_COMPONENT_GLOBALS *ComponentGlobals
-)
+    _In_ PDRIVER_OBJECT DriverObject,
+    _In_ PUNICODE_STRING RegistryPath,
+    _Inout_ PWDF_BIND_INFO BindInfo,
+    _Out_ PWDF_COMPONENT_GLOBALS *ComponentGlobals)
 {
     NTSTATUS status;
     PLIBRARY_MODULE pLibModule;
@@ -904,10 +890,9 @@ WdfVersionBind(
 NTSTATUS
 NTAPI
 WdfVersionBindClass(
-    IN PWDF_BIND_INFO BindInfo,
-    IN PWDF_COMPONENT_GLOBALS Globals,
-    IN PWDF_CLASS_BIND_INFO ClassBindInfo
-)
+    _In_ PWDF_BIND_INFO BindInfo,
+    _In_ PWDF_COMPONENT_GLOBALS Globals,
+    _In_ PWDF_CLASS_BIND_INFO ClassBindInfo)
 {
     PCLASS_CLIENT_MODULE pClassClientModule;    
     NTSTATUS status;
@@ -968,10 +953,9 @@ end:
 VOID
 NTAPI
 WdfVersionUnbindClass(
-    IN PWDF_BIND_INFO BindInfo,
-    IN PWDF_COMPONENT_GLOBALS Globals,
-    IN PWDF_CLASS_BIND_INFO ClassBindInfo
-)
+    _In_ PWDF_BIND_INFO BindInfo,
+    _In_ PWDF_COMPONENT_GLOBALS Globals,
+    _In_ PWDF_CLASS_BIND_INFO ClassBindInfo)
 {
     DereferenceClassVersion(ClassBindInfo, BindInfo, Globals);
 }
@@ -991,9 +975,8 @@ WdfVersionUnbindClass(
 NTSTATUS
 NTAPI
 DereferenceVersion(
-    IN PWDF_BIND_INFO BindInfo,
-    IN PWDF_COMPONENT_GLOBALS ComponentGlobals
-)
+    _In_ PWDF_BIND_INFO BindInfo,
+    _In_ PWDF_COMPONENT_GLOBALS ComponentGlobals)
 {
     PLIBRARY_MODULE pLibModule;
     NTSTATUS status;
@@ -1040,10 +1023,9 @@ DereferenceVersion(
 NTSTATUS
 NTAPI
 WdfVersionUnbind(
-    IN PUNICODE_STRING RegistryPath,
-    IN PWDF_BIND_INFO BindInfo,
-    IN PWDF_COMPONENT_GLOBALS ComponentGlobals
-)
+    _In_ PUNICODE_STRING RegistryPath,
+    _In_ PWDF_BIND_INFO BindInfo,
+    _In_ PWDF_COMPONENT_GLOBALS ComponentGlobals)
 {
     NTSTATUS status;
 
@@ -1076,10 +1058,9 @@ WdfVersionUnbind(
 NTSTATUS
 NTAPI
 WdfRegisterClassLibrary(
-    IN PWDF_CLASS_LIBRARY_INFO ClassLibInfo,
-    IN PUNICODE_STRING SourceString,
-    IN PUNICODE_STRING ObjectName
-)
+    _In_ PWDF_CLASS_LIBRARY_INFO ClassLibInfo,
+    _In_ PUNICODE_STRING SourceString,
+    _In_ PUNICODE_STRING ObjectName)
 {
     NTSTATUS status;
     PCLASS_MODULE pClassModule;

@@ -13,8 +13,7 @@
 BOOLEAN
 NTAPI
 LibraryAcquireClientLock(
-    IN PLIBRARY_MODULE LibModule
-)
+    _In_ PLIBRARY_MODULE LibModule)
 {
     KeEnterCriticalRegion();
     return ExAcquireResourceExclusiveLite(&LibModule->ClientsListLock, TRUE);
@@ -24,8 +23,7 @@ LibraryAcquireClientLock(
 VOID
 NTAPI
 LibraryReleaseClientLock(
-    IN PLIBRARY_MODULE LibModule
-)
+    _In_ PLIBRARY_MODULE LibModule)
 {
     ExReleaseResourceLite(&LibModule->ClientsListLock);
     KeLeaveCriticalRegion();
@@ -35,8 +33,7 @@ LibraryReleaseClientLock(
 VOID
 NTAPI
 ClassAcquireClientLock(
-    IN PERESOURCE Resource
-)
+    _In_ PERESOURCE Resource)
 {
     KeEnterCriticalRegion();
     ExAcquireResourceExclusiveLite(Resource, TRUE);
@@ -46,8 +43,7 @@ ClassAcquireClientLock(
 VOID
 NTAPI
 ClassReleaseClientLock(
-    IN PERESOURCE Resource
-)
+    _In_ PERESOURCE Resource)
 {
     ExReleaseResourceLite(Resource);
     KeLeaveCriticalRegion();
@@ -57,9 +53,8 @@ ClassReleaseClientLock(
 NTSTATUS
 NTAPI
 ClassOpen(
-    IN PCLASS_MODULE ClassModule,
-    IN PUNICODE_STRING ObjectName
-)
+    _In_ PCLASS_MODULE ClassModule,
+    _In_ PUNICODE_STRING ObjectName)
 {
     NTSTATUS result;
     PDEVICE_OBJECT deviceObject;
@@ -79,8 +74,7 @@ ClassOpen(
 VOID
 NTAPI
 ClassClose(
-    IN PCLASS_MODULE ClassModule
-)
+    _In_ PCLASS_MODULE ClassModule)
 {
     if (ClassModule->ClassFileObject != NULL)
     {
@@ -93,8 +87,7 @@ ClassClose(
 VOID
 NTAPI
 ClassCleanupAndFree(
-    IN PCLASS_MODULE ClassModule
-)
+    _In_ PCLASS_MODULE ClassModule)
 {
     ClassClose(ClassModule);
 
@@ -120,10 +113,9 @@ ClassCleanupAndFree(
 PCLASS_MODULE
 NTAPI
 ClassCreate(
-    IN PWDF_CLASS_LIBRARY_INFO ClassLibInfo,
-    IN PLIBRARY_MODULE LibModule,
-    IN PUNICODE_STRING ServiceName
-)
+    _In_ PWDF_CLASS_LIBRARY_INFO ClassLibInfo,
+    _In_ PLIBRARY_MODULE LibModule,
+    _In_ PUNICODE_STRING ServiceName)
 {
     PCLASS_MODULE pNewClassModule;
     NTSTATUS status;
@@ -208,9 +200,8 @@ ClassClientCreate()
 PCLIENT_MODULE
 NTAPI
 LibraryFindClientLocked(
-    IN PLIBRARY_MODULE LibModule,
-    IN PWDF_BIND_INFO BindInfo
-)
+    _In_ PLIBRARY_MODULE LibModule,
+    _In_ PWDF_BIND_INFO BindInfo)
 {
     PCLIENT_MODULE pFoundClient;
     PLIST_ENTRY entry;
@@ -229,11 +220,10 @@ LibraryFindClientLocked(
 NTSTATUS
 NTAPI
 ClassLinkInClient(
-    IN PCLASS_MODULE ClassModule,
-    IN PWDF_CLASS_BIND_INFO ClassBindInfo,
-    IN PWDF_BIND_INFO BindInfo,
-    OUT PCLASS_CLIENT_MODULE ClassClientModule
-)
+    _In_ PCLASS_MODULE ClassModule,
+    _In_ PWDF_CLASS_BIND_INFO ClassBindInfo,
+    _In_ PWDF_BIND_INFO BindInfo,
+    _Out_ PCLASS_CLIENT_MODULE ClassClientModule)
 {
     PCLIENT_MODULE pClienInfo;
     NTSTATUS status;
@@ -271,10 +261,9 @@ ClassLinkInClient(
 NTSTATUS
 NTAPI
 GetClassRegistryHandle(
-    IN PWDF_CLASS_BIND_INFO ClassBindInfo,
-    IN PWDF_BIND_INFO BindInfo,
-    OUT PHANDLE KeyHandle
-)
+    _In_ PWDF_CLASS_BIND_INFO ClassBindInfo,
+    _In_ PWDF_BIND_INFO BindInfo,
+    _Out_ PHANDLE KeyHandle)
 {
     PWCHAR pClassName;
     PWCHAR pClassNameBegin;
@@ -372,10 +361,9 @@ GetClassRegistryHandle(
 NTSTATUS
 NTAPI
 GetDefaultClassServiceName(
-    IN PWDF_CLASS_BIND_INFO ClassBindInfo,
-    IN PWDF_BIND_INFO BindInfo,
-    OUT PUNICODE_STRING ServiceName
-)
+    _In_ PWDF_CLASS_BIND_INFO ClassBindInfo,
+    _In_ PWDF_BIND_INFO BindInfo,
+    _Out_ PUNICODE_STRING ServiceName)
 {
     PWCHAR pClassName;
     PWCHAR pClassNameBegin;
@@ -421,10 +409,9 @@ GetDefaultClassServiceName(
 NTSTATUS
 NTAPI
 GetClassServicePath(
-    IN PWDF_CLASS_BIND_INFO ClassBindInfo,
-    IN PWDF_BIND_INFO BindInfo,
-    OUT PUNICODE_STRING ServicePath
-)
+    _In_ PWDF_CLASS_BIND_INFO ClassBindInfo,
+    _In_ PWDF_BIND_INFO BindInfo,
+    _Out_ PUNICODE_STRING ServicePath)
 {
     NTSTATUS status;
     HANDLE Handle = NULL;
@@ -476,10 +463,9 @@ GetClassServicePath(
 NTSTATUS
 NTAPI
 ReferenceClassVersion(
-    IN PWDF_CLASS_BIND_INFO ClassBindInfo,
-    IN PWDF_BIND_INFO BindInfo,
-    OUT PCLASS_MODULE* ClassModule
-)
+    _In_ PWDF_CLASS_BIND_INFO ClassBindInfo,
+    _In_ PWDF_BIND_INFO BindInfo,
+    _Out_ PCLASS_MODULE* ClassModule)
 {
     PWDF_BIND_INFO pBindInfo;
     PCLASS_MODULE pClassModule;
@@ -592,9 +578,8 @@ clean:
 PCLASS_MODULE
 NTAPI
 FindClassByServiceNameLocked(
-    IN PUNICODE_STRING Path,
-    OUT PLIBRARY_MODULE* LibModule
-)
+    _In_ PUNICODE_STRING Path,
+    _Out_ PLIBRARY_MODULE* LibModule)
 {
     PLIST_ENTRY libEntry;
     PLIBRARY_MODULE pLibModule;
@@ -648,9 +633,8 @@ FindClassByServiceNameLocked(
 PLIST_ENTRY
 NTAPI
 LibraryAddToClassListLocked(
-    IN PLIBRARY_MODULE LibModule,
-    IN PCLASS_MODULE ClassModule
-)
+    _In_ PLIBRARY_MODULE LibModule,
+    _In_ PCLASS_MODULE ClassModule)
 {
     PLIST_ENTRY result;
 
@@ -664,8 +648,7 @@ LibraryAddToClassListLocked(
 VOID
 NTAPI
 ClassRemoveFromLibraryList(
-    IN PCLASS_MODULE ClassModule
-)
+    _In_ PCLASS_MODULE ClassModule)
 {
     PLIST_ENTRY libLinkEntry;
     BOOLEAN removed;
@@ -696,9 +679,8 @@ ClassRemoveFromLibraryList(
 VOID
 NTAPI
 ClassUnlinkClient(
-    IN PCLASS_MODULE ClassModule,
-    IN PWDF_CLASS_BIND_INFO ClassBindInfo
-)
+    _In_ PCLASS_MODULE ClassModule,
+    _In_ PWDF_CLASS_BIND_INFO ClassBindInfo)
 {
     PCLASS_CLIENT_MODULE client;
     BOOLEAN isUnlinked;
@@ -739,9 +721,8 @@ ClassUnlinkClient(
 VOID
 NTAPI
 ClassUnload(
-    IN PCLASS_MODULE ClassModule,
-    IN BOOLEAN RemoveFromList
-)
+    _In_ PCLASS_MODULE ClassModule,
+    _In_ BOOLEAN RemoveFromList)
 {
     PCLASS_MODULE pClassModule;
     PWDF_CLASS_LIBRARY_INFO pClassLibInfo;
@@ -779,8 +760,7 @@ ClassUnload(
 VOID
 NTAPI
 ClassReleaseClientReference(
-    IN PCLASS_MODULE ClassModule
-)
+    _In_ PCLASS_MODULE ClassModule)
 {
     int refs;
     
@@ -804,10 +784,9 @@ ClassReleaseClientReference(
 VOID
 NTAPI
 DereferenceClassVersion(
-    PWDF_CLASS_BIND_INFO ClassBindInfo,
-    PWDF_BIND_INFO BindInfo,
-    PWDF_COMPONENT_GLOBALS Globals
-)
+    _In_ PWDF_CLASS_BIND_INFO ClassBindInfo,
+    _In_ PWDF_BIND_INFO BindInfo,
+    _In_ PWDF_COMPONENT_GLOBALS Globals)
 {
     PCLASS_MODULE pClassModule;
 
