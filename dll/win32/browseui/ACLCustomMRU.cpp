@@ -33,12 +33,22 @@ STDMETHODIMP CACLCustomMRU::Next(ULONG celt, LPWSTR *rgelt, ULONG *pceltFetched)
     if (INT(m_ielt) >= m_MRUData.GetSize())
         return S_FALSE;
 
-    size_t cb = (m_MRUData[m_ielt].GetLength() + 1) * sizeof(WCHAR);
+    CStringW str = m_MRUData[m_ielt];
+
+    if (!m_bTypedURLs)
+    {
+        // Erase the last "\\1" etc. (indicates SW_* value)
+        INT ich = str.ReverseFind(L'\\');
+        if (ich >= 0)
+            str = str.Left(ich);
+    }
+
+    size_t cb = (str.GetLength() + 1) * sizeof(WCHAR);
     LPWSTR psz = (LPWSTR)CoTaskMemAlloc(cb);
     if (!psz)
         return S_FALSE;
 
-    CopyMemory(psz, (LPCWSTR)m_MRUData[m_ielt], cb);
+    CopyMemory(psz, (LPCWSTR)str, cb);
     *rgelt = psz;
     *pceltFetched = 1;
     ++m_ielt;
