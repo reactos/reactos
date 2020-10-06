@@ -899,7 +899,7 @@ MountMgrUnload(IN struct _DRIVER_OBJECT *DriverObject)
 /*
  * @implemented
  */
-INIT_FUNCTION
+CODE_SEG("INIT")
 BOOLEAN
 MountmgrReadNoAutoMount(IN PUNICODE_STRING RegistryPath)
 {
@@ -1793,7 +1793,7 @@ MountMgrShutdown(IN PDEVICE_OBJECT DeviceObject,
 
 /* FUNCTIONS ****************************************************************/
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 NTSTATUS
 NTAPI
 DriverEntry(IN PDRIVER_OBJECT DriverObject,

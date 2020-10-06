@@ -253,7 +253,7 @@ InitLookasideList(UCHAR objt, ULONG cjSize)
                                    0);
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 NTSTATUS
 NTAPI
 InitGdiHandleTable(void)

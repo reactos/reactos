@@ -1492,7 +1492,7 @@ DbgkClearProcessDebugObject(IN PEPROCESS Process,
     return STATUS_SUCCESS;
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 DbgkInitialize(VOID)

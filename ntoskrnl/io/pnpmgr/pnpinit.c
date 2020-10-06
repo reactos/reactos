@@ -93,7 +93,7 @@ IopInitializeArbiters(VOID)
 }
 
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 NTSTATUS
 NTAPI
 PiInitCacheGroupInformation(VOID)
@@ -425,7 +425,7 @@ Exit:
     return Status;
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 NTSTATUS
 NTAPI
 IopInitializePlugPlayServices(VOID)

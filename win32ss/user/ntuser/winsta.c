@@ -28,7 +28,7 @@ UNICODE_STRING gustrWindowStationsDir;
 
 /* INITIALIZATION FUNCTIONS ****************************************************/
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 NTSTATUS
 NTAPI
 InitWindowStationImpl(VOID)

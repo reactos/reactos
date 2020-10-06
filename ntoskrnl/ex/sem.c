@@ -13,10 +13,6 @@
 #define NDEBUG
 #include <debug.h>
 
-#if defined (ALLOC_PRAGMA)
-#pragma alloc_text(INIT, ExpInitializeSemaphoreImplementation)
-#endif
-
 /* GLOBALS ******************************************************************/
 
 POBJECT_TYPE ExSemaphoreObjectType;
@@ -37,7 +33,7 @@ static const INFORMATION_CLASS_INFO ExSemaphoreInfoClass[] =
 
 /* FUNCTIONS *****************************************************************/
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 BOOLEAN
 NTAPI
 ExpInitializeSemaphoreImplementation(VOID)

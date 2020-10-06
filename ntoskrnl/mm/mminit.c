@@ -39,7 +39,7 @@ extern NTSTATUS MiRosTrimCache(ULONG Target, ULONG Priority, PULONG NrFreed);
 // Helper function to create initial memory areas.
 // The created area is always read/write.
 //
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 MiCreateArm3StaticMemoryArea(PVOID BaseAddress, SIZE_T Size, BOOLEAN Executable)
@@ -61,7 +61,7 @@ MiCreateArm3StaticMemoryArea(PVOID BaseAddress, SIZE_T Size, BOOLEAN Executable)
     // TODO: Perhaps it would be  prudent to bugcheck here, not only assert?
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 MiInitSystemMemoryAreas(VOID)
@@ -122,7 +122,7 @@ MiInitSystemMemoryAreas(VOID)
 #endif /* _X86_ */
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 MiDbgDumpAddressSpace(VOID)
@@ -174,7 +174,7 @@ MiDbgDumpAddressSpace(VOID)
             "Non Paged Pool Expansion PTE Space");
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 NTSTATUS
 NTAPI
 MmInitBsmThread(VOID)
@@ -198,7 +198,7 @@ MmInitBsmThread(VOID)
     return Status;
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 BOOLEAN
 NTAPI
 MmInitSystem(IN ULONG Phase,

@@ -13,10 +13,6 @@
 #define NDEBUG
 #include <debug.h>
 
-#if defined (ALLOC_PRAGMA)
-#pragma alloc_text(INIT, SepInitSDs)
-#endif
-
 /* GLOBALS ********************************************************************/
 
 PSECURITY_DESCRIPTOR SePublicDefaultSd = NULL;
@@ -28,7 +24,7 @@ PSECURITY_DESCRIPTOR SeUnrestrictedSd = NULL;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 BOOLEAN
 NTAPI
 SepInitSDs(VOID)

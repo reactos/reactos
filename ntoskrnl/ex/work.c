@@ -12,10 +12,6 @@
 #define NDEBUG
 #include <debug.h>
 
-#if defined (ALLOC_PRAGMA)
-#pragma alloc_text(INIT, ExpInitializeWorkerThreads)
-#endif
-
 /* DATA **********************************************************************/
 
 /* Number of worker threads for each Queue */
@@ -515,7 +511,7 @@ ExpWorkerThreadBalanceManager(IN PVOID Context)
  * @remarks This routine is only called once during system initialization.
  *
  *--*/
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 ExpInitializeWorkerThreads(VOID)

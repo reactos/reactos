@@ -1703,7 +1703,6 @@ MiQueryPageTableReferences(IN PVOID Address)
     return *RefCount;
 }
 
-INIT_FUNCTION
 BOOLEAN
 NTAPI
 MmArmInitSystem(
@@ -1711,40 +1710,34 @@ MmArmInitSystem(
     IN PLOADER_PARAMETER_BLOCK LoaderBlock
 );
 
-INIT_FUNCTION
 VOID
 NTAPI
 MiInitializeSessionSpaceLayout(VOID);
 
-INIT_FUNCTION
 NTSTATUS
 NTAPI
 MiInitMachineDependent(
     IN PLOADER_PARAMETER_BLOCK LoaderBlock
 );
 
-INIT_FUNCTION
 VOID
 NTAPI
 MiComputeColorInformation(
     VOID
 );
 
-INIT_FUNCTION
 VOID
 NTAPI
 MiMapPfnDatabase(
     IN PLOADER_PARAMETER_BLOCK LoaderBlock
 );
 
-INIT_FUNCTION
 VOID
 NTAPI
 MiInitializeColorTables(
     VOID
 );
 
-INIT_FUNCTION
 VOID
 NTAPI
 MiInitializePfnDatabase(
@@ -1763,21 +1756,18 @@ MiInitializeSessionIds(
     VOID
 );
 
-INIT_FUNCTION
 BOOLEAN
 NTAPI
 MiInitializeMemoryEvents(
     VOID
 );
 
-INIT_FUNCTION
 PFN_NUMBER
 NTAPI
 MxGetNextPage(
     IN PFN_NUMBER PageCount
 );
 
-INIT_FUNCTION
 PPHYSICAL_MEMORY_DESCRIPTOR
 NTAPI
 MmInitializeMemoryLimits(
@@ -1824,28 +1814,24 @@ MiCheckPdeForPagedPool(
     IN PVOID Address
 );
 
-INIT_FUNCTION
 VOID
 NTAPI
 MiInitializeNonPagedPool(
     VOID
 );
 
-INIT_FUNCTION
 VOID
 NTAPI
 MiInitializeNonPagedPoolThresholds(
     VOID
 );
 
-INIT_FUNCTION
 VOID
 NTAPI
 MiInitializePoolEvents(
     VOID
 );
 
-INIT_FUNCTION
 VOID                      //
 NTAPI                     //
 InitializePool(           //
@@ -1854,7 +1840,6 @@ InitializePool(           //
 );                        //
 
 // FIXFIX: THIS ONE TOO
-INIT_FUNCTION
 VOID
 NTAPI
 ExInitializePoolDescriptor(
@@ -1871,7 +1856,6 @@ MiInitializeSessionPool(
     VOID
 );
 
-INIT_FUNCTION
 VOID
 NTAPI
 MiInitializeSystemPtes(
@@ -2033,21 +2017,18 @@ MiLookupDataTableEntry(
     IN PVOID Address
 );
 
-INIT_FUNCTION
 VOID
 NTAPI
 MiInitializeDriverLargePageList(
     VOID
 );
 
-INIT_FUNCTION
 VOID
 NTAPI
 MiInitializeLargePageSupport(
     VOID
 );
 
-INIT_FUNCTION
 VOID
 NTAPI
 MiSyncCachedRanges(

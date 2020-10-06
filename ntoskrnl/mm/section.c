@@ -50,12 +50,6 @@
 #define NDEBUG
 #include <debug.h>
 #include <reactos/exeformat.h>
-
-#if defined (ALLOC_PRAGMA)
-#pragma alloc_text(INIT, MmCreatePhysicalMemorySection)
-#pragma alloc_text(INIT, MmInitSectionImplementation)
-#endif
-
 #include "ARM3/miarm.h"
 
 #undef MmSetPageEntrySectionSegment
@@ -2753,7 +2747,7 @@ MmpCloseSection(IN PEPROCESS Process OPTIONAL,
     DPRINT("MmpCloseSection(OB %p, HC %lu)\n", Object, ProcessHandleCount);
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 NTSTATUS
 NTAPI
 MmCreatePhysicalMemorySection(VOID)
@@ -2804,7 +2798,7 @@ MmCreatePhysicalMemorySection(VOID)
     return(STATUS_SUCCESS);
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 NTSTATUS
 NTAPI
 MmInitSectionImplementation(VOID)

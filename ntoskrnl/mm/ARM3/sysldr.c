@@ -587,7 +587,7 @@ MiProcessLoaderEntry(IN PLDR_DATA_TABLE_ENTRY LdrEntry,
     KeLeaveCriticalRegion();
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 MiUpdateThunks(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
@@ -1445,7 +1445,7 @@ MiFreeInitializationCode(IN PVOID InitStart,
                                           NULL);
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 MiFindInitializationCode(OUT PVOID *StartVa,
@@ -1688,7 +1688,7 @@ MmFreeDriverInitialization(IN PLDR_DATA_TABLE_ENTRY LdrEntry)
     MiDeleteSystemPageableVm(StartPte, PageCount, 0, NULL);
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 MiReloadBootLoadedDrivers(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
@@ -1877,7 +1877,7 @@ MiReloadBootLoadedDrivers(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     }
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 NTSTATUS
 NTAPI
 MiBuildImportsForBootDrivers(VOID)
@@ -2142,7 +2142,7 @@ MiBuildImportsForBootDrivers(VOID)
     return STATUS_SUCCESS;
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 MiLocateKernelSections(IN PLDR_DATA_TABLE_ENTRY LdrEntry)
@@ -2199,7 +2199,7 @@ MiLocateKernelSections(IN PLDR_DATA_TABLE_ENTRY LdrEntry)
     }
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 BOOLEAN
 NTAPI
 MiInitializeLoadedModuleList(IN PLOADER_PARAMETER_BLOCK LoaderBlock)

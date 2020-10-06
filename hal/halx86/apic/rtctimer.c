@@ -15,10 +15,6 @@
 #define NDEBUG
 #include <debug.h>
 
-#if defined(ALLOC_PRAGMA) && !defined(_MINIHAL_)
-#pragma alloc_text(INIT, HalpInitializeClock)
-#endif
-
 /* GLOBALS ********************************************************************/
 
 const UCHAR HalpClockVector = 0xD1;
@@ -92,7 +88,7 @@ RtcSetClockRate(UCHAR ClockRate)
     HalpReleaseCmosSpinLock();
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 HalpInitializeClock(VOID)

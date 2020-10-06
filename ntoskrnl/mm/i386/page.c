@@ -15,10 +15,6 @@
 
 #include <mm/ARM3/miarm.h>
 
-#if defined (ALLOC_PRAGMA)
-#pragma alloc_text(INIT, MmInitGlobalKernelPageDirectory)
-#endif
-
 #define ADDR_TO_PDE_OFFSET MiAddressToPdeOffset
 #define ADDR_TO_PAGE_TABLE(v)  (((ULONG)(v)) / (1024 * PAGE_SIZE))
 
@@ -877,7 +873,7 @@ MmSetPageProtect(PEPROCESS Process, PVOID Address, ULONG flProtect)
         MmUnmapPageTable(Pt);
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 MmInitGlobalKernelPageDirectory(VOID)
