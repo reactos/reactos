@@ -44,7 +44,7 @@ PVOID MmUnloadedDrivers;
 PVOID MmLastUnloadedDrivers;
 
 BOOLEAN MmMakeLowMemory;
-BOOLEAN MmEnforceWriteProtection = TRUE;
+BOOLEAN MmEnforceWriteProtection = FALSE; // FIXME: should be TRUE, but that would cause CORE-16387 & CORE-16449
 
 PMMPTE MiKernelResourceStartPte, MiKernelResourceEndPte;
 ULONG_PTR ExPoolCodeStart, ExPoolCodeEnd, MmPoolCodeStart, MmPoolCodeEnd;
