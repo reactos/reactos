@@ -86,6 +86,17 @@ NtGdiDdDDICreateDCFromMemory(D3DKMT_CREATEDCFROMMEMORY *desc)
     /* Get the handle for the bitmap */
     desc->hBitmap = (HBITMAP)psurf->SurfObj.hsurf;
 
+    /* Allocate a palette for this surface */
+    if (format->bit_count <= 8)
+    {
+        PPALETTE palette = PALETTE_AllocPalette(PAL_INDEXED, 1 << format->bit_count, NULL, 0, 0, 0);
+        if (palette)
+        {
+            SURFACE_vSetPalette(psurf, palette);
+            PALETTE_ShareUnlockPalette(palette);
+        }
+    }
+
     /* Unlock the surface and return */
     SURFACE_UnlockSurface(psurf);
 
