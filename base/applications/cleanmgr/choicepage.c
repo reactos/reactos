@@ -22,7 +22,7 @@ INT_PTR CALLBACK ChoicePageDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
             WCHAR FullText[ARR_MAX_SIZE] = { 0 };
             WCHAR TotalAmount[ARR_MAX_SIZE] = { 0 };
             WCHAR TempText[ARR_MAX_SIZE] = { 0 };
-            uint64_t TotalSize = DirectorySizes.TempSize + DirectorySizes.RecycleBinSize + DirectorySizes.ChkDskSize + DirectorySizes.RappsSize;
+            uint64_t TotalSize = DirectorySizes.TempDirSize + DirectorySizes.RecycleBinDirSize + DirectorySizes.ChkDskDirSize + DirectorySizes.RappsDirSize;
 
             SetWindowPos(hwnd, NULL, 10, 32, 0, 0, SWP_NOACTIVATE | SWP_NOOWNERZORDER | SWP_NOSIZE | SWP_NOZORDER);
             InitListViewControl(hList);
@@ -82,12 +82,12 @@ INT_PTR CALLBACK ChoicePageDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
                     }
                     else if ((NmList->uNewState ^ NmList->uOldState) & LVIS_STATEIMAGEMASK)
                     {
-                        DirectorySizes.CountSize = CheckedItem(NmList->iItem, hwnd, hList, DirectorySizes.CountSize);
+                        DirectorySizes.SizeCountOfSelDir = CheckedItem(NmList->iItem, hwnd, hList, DirectorySizes.SizeCountOfSelDir);
                     }
                 }
             }
 
-            if (DirectorySizes.CountSize == 0)
+            if (DirectorySizes.SizeCountOfSelDir == 0)
             {
                 EnableWindow(hButton, FALSE);
                 break;

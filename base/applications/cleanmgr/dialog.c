@@ -8,7 +8,7 @@
 #include "precomp.h"
 
 BOOL IsSystemDrive;
-DLG_HANDLE DialogHandle;
+DLGHANDLE DialogHandle;
 WCHAR DriveLetter[ARR_MAX_SIZE];
 UINT CleanmgrWindowMsg;
 

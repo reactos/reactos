@@ -28,11 +28,11 @@
 
 typedef struct
 {
-    uint64_t TempSize;
-    uint64_t RecycleBinSize;
-    uint64_t ChkDskSize;
-    uint64_t RappsSize;
-    uint64_t CountSize;
+    uint64_t TempDirSize;
+    uint64_t RecycleBinDirSize;
+    uint64_t ChkDskDirSize;
+    uint64_t RappsDirSize;
+    uint64_t SizeCountOfSelDir;
 } DIRSIZE;
 
 typedef struct
@@ -41,7 +41,7 @@ typedef struct
     HWND hOptionsPage;
     HWND hSagesetPage;
     HWND hTab;
-} DLG_HANDLE;
+} DLGHANDLE;
 
 extern BOOL IsSystemDrive;
 extern UINT CleanmgrWindowMsg;
@@ -58,7 +58,7 @@ INT_PTR CALLBACK SetStageFlagDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPA
 
 
 // For util.c
-BOOL ArgCheck(LPWSTR* ArgList, int nArgs);
+BOOL UseAquiredArguments(LPWSTR* ArgList, int nArgs);
 BOOL DrawItemCombobox(LPARAM lParam);
 BOOL InitTabControl(HWND hwnd);
 BOOL InitStageFlagTabControl(HWND hwnd);

@@ -41,19 +41,19 @@ typedef enum
     RAPPS_FILES = 1,
     RECYCLE_BIN = 2,
     TEMPORARY_FILE = 3
-} DIRECTORIES;
+} SELECTEDDIR;
 
 typedef struct
 {
-    BOOL TempClean;
-    BOOL RecycleClean;
-    BOOL ChkDskClean;
-    BOOL RappsClean;
-} CLEAN_DIR;
+    BOOL CleanTempDir;
+    BOOL CleanRecycleDir;
+    BOOL CleanChkDskDir;
+    BOOL CleanRappsDir;
+} CLEANDIR;
 
-CLEAN_DIR CleanDirectories;
+CLEANDIR CleanDirectories;
 DIRSIZE DirectorySizes;
-DLG_HANDLE DialogHandle;
+DLGHANDLE DialogHandle;
 
 typedef HRESULT (WINAPI * ETDTProc) (HWND, DWORD);
 
@@ -69,7 +69,7 @@ uint64_t GetTargetedDirSize(PWCHAR SpecifiedDir);
 
 void AddRequiredItem(HWND hList, UINT StringID, PWCHAR SubString, int ItemIndex);
 void CleanRequiredPath(PCWSTR TempPath);
-void SagesetProc(int nArgs, PWCHAR ArgSpecified, LPWSTR* ArgList);
-void SagerunProc(int nArgs, PWCHAR ArgSpecified, LPWSTR* ArgList, PWCHAR LogicalDrives);
+void SetStageFlags(int nArgs, PWCHAR ArgSpecified, LPWSTR* ArgList);
+void GetStageFlags(int nArgs, PWCHAR ArgSpecified, LPWSTR* ArgList, PWCHAR LogicalDrives);
 void SetDetails(UINT StringID, UINT ResourceID, HWND hwnd);
 void SetTotalSize(uint64_t size, UINT ResourceID, HWND hwnd);

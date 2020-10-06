@@ -59,19 +59,16 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
     }
     else if (nArgs > 1)
     {
-        if(!ArgCheck(ArgList, nArgs))
+        if(!UseAquiredArguments(ArgList, nArgs))
         {
             return FALSE;
         }
     }
-    else
+ 
+    DialogButtonSelect = DialogBoxParamW(hInstance, MAKEINTRESOURCEW(IDD_START), NULL, StartDlgProc, 0);
+    if (DialogButtonSelect == IDCANCEL)
     {
-        DialogButtonSelect = DialogBoxParamW(hInstance, MAKEINTRESOURCEW(IDD_START), NULL, StartDlgProc, 0);
-
-        if (DialogButtonSelect == IDCANCEL)
-        {
-            return TRUE;
-        }
+        return TRUE;
     }
 
     DialogButtonSelect = DialogBoxParamW(hInstance, MAKEINTRESOURCEW(IDD_PROGRESS), NULL, ProgressDlgProc, 0);

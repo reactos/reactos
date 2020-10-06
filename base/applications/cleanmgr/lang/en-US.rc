@@ -145,7 +145,6 @@ END
 STRINGTABLE
 BEGIN
 	IDS_WARNING_FOLDER "Folder doesn't exist!"
-	IDS_WARNING_OPTION "Select an option!"
 END
 
 STRINGTABLE

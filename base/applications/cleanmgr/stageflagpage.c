@@ -20,7 +20,7 @@ INT_PTR CALLBACK SetStageFlagPageDlgProc(HWND hwnd, UINT message, WPARAM wParam,
 
         case WM_NOTIFY:
         {
-            BOOL ItemChecked = FALSE;
+            BOOL IsItemChecked = FALSE;
             HWND hParentDialog = GetParent(hwnd);
             HWND hButton = GetDlgItem(hParentDialog, IDOK);
             NMHDR* header = (NMHDR*)lParam;
@@ -47,11 +47,11 @@ INT_PTR CALLBACK SetStageFlagPageDlgProc(HWND hwnd, UINT message, WPARAM wParam,
             {
                 if (ListView_GetCheckState(hList, i))
                 {
-                    ItemChecked = TRUE;
+                    IsItemChecked = TRUE;
                     break;
                 }
             }
-            EnableWindow(hButton, ItemChecked);
+            EnableWindow(hButton, IsItemChecked);
             break;
         }
 

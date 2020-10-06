@@ -49,7 +49,6 @@
 #define IDS_DETAILS_RAPPS                   8004
 
 #define IDS_WARNING_FOLDER                  9001
-#define IDS_WARNING_OPTION                  9002
 
 #define IDS_CONFIRM_DELETION                10001
 #define IDS_CONFIRM_CONFIG                  10002

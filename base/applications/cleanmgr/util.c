@@ -35,89 +35,37 @@ void AddRequiredItem(HWND hList, UINT StringID, PWCHAR SubString, int ItemIndex)
     }
 }
 
-BOOL ArgCheck(LPWSTR* ArgList, int nArgs)
-{
-    WCHAR LogicalDrives[ARR_MAX_SIZE] = { 0 };
-    WCHAR ArgSpecified[ARR_MAX_SIZE] = { 0 };
-    DWORD NumOfDrives = GetLogicalDriveStringsW(sizeof(LogicalDrives), LogicalDrives);
-
-    if (NumOfDrives == 0)
-    {
-        DPRINT("GetLogicalDriveStringsW(): Failed to get logical drives!\n");
-        return FALSE;
-    }
-
-    StringCbCopyW(ArgSpecified, sizeof(ArgSpecified), ArgList[1]);
-    _wcsupr(ArgSpecified);
-    
-    if (wcscmp(ArgSpecified, L"/D") == 0 && nArgs == 3)
-    {
-        if(!DriverunProc(ArgList, LogicalDrives))
-        {
-            return FALSE;
-        }
-    }
-    else if (wcsstr(ArgSpecified, L"/SAGERUN:") != NULL)
-    {
-        SagerunProc(nArgs, ArgSpecified, ArgList, LogicalDrives);
-        return FALSE;
-    }
-    else if (wcsstr(ArgSpecified, L"/SAGESET:") != NULL)
-    {
-        SagesetProc(nArgs, ArgSpecified, ArgList);
-        return FALSE;
-    }
-    else if (wcsstr(ArgSpecified, L"/TUNEUP:") != NULL)
-    {
-        SagesetProc(nArgs, ArgSpecified, ArgList);
-        SagerunProc(nArgs, ArgSpecified, ArgList, LogicalDrives);
-        return FALSE;
-    }
-    else if (wcscmp(ArgSpecified, L"/?") == 0)
-    {
-        MessageBoxW(NULL, L"cleanmgr /D <drive>", L"Usage", MB_OK);
-        return FALSE;
-    }
-    else
-    {
-        MessageBoxW(NULL, L"Type cleanmgr /? for help", L"Invalid argument", MB_OK);
-        return FALSE;
-    }
-    
-    return TRUE;
-}
-
 uint64_t CheckedItem(int ItemIndex, HWND hwnd, HWND hList, long long Size)
 {
-    DIRECTORIES Dir = ItemIndex;
-    uint64_t TempSize = DirectorySizes.TempSize;
-    uint64_t RecycleSize = DirectorySizes.RecycleBinSize;
-    uint64_t ChkDskSize = DirectorySizes.ChkDskSize;
-    uint64_t RappsSize = DirectorySizes.RappsSize;
-    switch (Dir)
+    SELECTEDDIR SelectedDir = ItemIndex;
+    uint64_t TempDirSize = DirectorySizes.TempDirSize;
+    uint64_t RecycleSize = DirectorySizes.RecycleBinDirSize;
+    uint64_t ChkDskDirSize = DirectorySizes.ChkDskDirSize;
+    uint64_t RappsDirSize = DirectorySizes.RappsDirSize;
+    switch (SelectedDir)
     {
         case TEMPORARY_FILE:
             if (ListView_GetCheckState(hList, TEMPORARY_FILE))
             {
-                CleanDirectories.TempClean = TRUE;
-                Size += TempSize;
+                CleanDirectories.CleanTempDir = TRUE;
+                Size += TempDirSize;
             }
             else
             {
-                CleanDirectories.TempClean = FALSE;
-                Size -= TempSize;
+                CleanDirectories.CleanTempDir = FALSE;
+                Size -= TempDirSize;
             }
             break;
 
         case RECYCLE_BIN:
             if (ListView_GetCheckState(hList, RECYCLE_BIN))
             {
-                CleanDirectories.RecycleClean = TRUE;
+                CleanDirectories.CleanRecycleDir = TRUE;
                 Size += RecycleSize;
             }
             else
             {
-                CleanDirectories.RecycleClean = FALSE;
+                CleanDirectories.CleanRecycleDir = FALSE;
                 Size -= RecycleSize;
             }
             break;
@@ -125,26 +73,26 @@ uint64_t CheckedItem(int ItemIndex, HWND hwnd, HWND hList, long long Size)
         case OLD_CHKDSK_FILES:
             if (ListView_GetCheckState(hList, OLD_CHKDSK_FILES))
             {
-                CleanDirectories.ChkDskClean = TRUE;
-                Size += ChkDskSize;
+                CleanDirectories.CleanChkDskDir = TRUE;
+                Size += ChkDskDirSize;
             }
             else
             {
-                CleanDirectories.ChkDskClean = FALSE;
-                Size -= ChkDskSize;
+                CleanDirectories.CleanChkDskDir = FALSE;
+                Size -= ChkDskDirSize;
             }
             break;
 
         case RAPPS_FILES:
             if (ListView_GetCheckState(hList, RAPPS_FILES))
             {
-                CleanDirectories.RappsClean = TRUE;
-                Size += RappsSize;
+                CleanDirectories.CleanRappsDir = TRUE;
+                Size += RappsDirSize;
             }
             else
             {
-                CleanDirectories.RappsClean = FALSE;
-                Size -= RappsSize;
+                CleanDirectories.CleanRappsDir = FALSE;
+                Size -= RappsDirSize;
             }
             break;
     }
@@ -346,7 +294,7 @@ DWORD WINAPI RemoveRequiredFolder(LPVOID lpParam)
     HWND hwnd = lpParam;
     HWND hProgressBar = GetDlgItem(hwnd, IDC_PROGRESS_2);
 
-    if (CleanDirectories.TempClean && IsSystemDrive)
+    if (CleanDirectories.CleanTempDir && IsSystemDrive)
     {
         CleanRequiredPath(TempDir);
 
@@ -355,7 +303,7 @@ DWORD WINAPI RemoveRequiredFolder(LPVOID lpParam)
         SetDlgItemTextW(hwnd, IDC_STATIC_INFO, LoadedString);
     }
 
-    if (CleanDirectories.RecycleClean)
+    if (CleanDirectories.CleanRecycleDir)
     {   
         StringCbCopyW(TargetedDir, sizeof(TargetedDir), DriveLetter);
         StringCbCatW(TargetedDir, sizeof(TargetedDir), L"\\");
@@ -367,7 +315,7 @@ DWORD WINAPI RemoveRequiredFolder(LPVOID lpParam)
         SetDlgItemTextW(hwnd, IDC_STATIC_INFO, LoadedString);
     }
 
-    if (CleanDirectories.ChkDskClean)
+    if (CleanDirectories.CleanChkDskDir)
     {
         for (int i = 0; i < 10; i++)
         {
@@ -387,7 +335,7 @@ DWORD WINAPI RemoveRequiredFolder(LPVOID lpParam)
         SetDlgItemTextW(hwnd, IDC_STATIC_INFO, LoadedString);
     }
 
-    if (CleanDirectories.RappsClean)
+    if (CleanDirectories.CleanRappsDir)
     {
         CleanRequiredPath(RappsDir);
 
@@ -422,8 +370,8 @@ DWORD WINAPI GetRemovableDirSize(LPVOID lpParam)
         GetTempPathW(sizeof(TargetedDir), TargetedDir);
         if (PathIsDirectoryW(TargetedDir))
         {
-            DirectorySizes.TempSize = GetTargetedDirSize(TargetedDir);
-            if (DirectorySizes.TempSize == -1)
+            DirectorySizes.TempDirSize = GetTargetedDirSize(TargetedDir);
+            if (DirectorySizes.TempDirSize == -1)
             {
                 return FALSE;
             }
@@ -442,8 +390,8 @@ DWORD WINAPI GetRemovableDirSize(LPVOID lpParam)
         StringCchPrintfW(TargetedDir, sizeof(TargetedDir), L"%s\\RECYCLER", DriveLetter);
     }
 
-    DirectorySizes.RecycleBinSize = GetTargetedDirSize(TargetedDir);
-    if (DirectorySizes.RecycleBinSize == -1)
+    DirectorySizes.RecycleBinDirSize = GetTargetedDirSize(TargetedDir);
+    if (DirectorySizes.RecycleBinDirSize == -1)
     {
         return FALSE;
     }
@@ -455,7 +403,7 @@ DWORD WINAPI GetRemovableDirSize(LPVOID lpParam)
 
     if (SHQueryRecycleBinW(TargetedDir, &RecycleBinInfo) == S_OK)
     {
-        DirectorySizes.RecycleBinSize = RecycleBinInfo.i64Size;
+        DirectorySizes.RecycleBinDirSize = RecycleBinInfo.i64Size;
         SendMessageW(hProgressBar, PBM_SETPOS, 50, 0);
         SetDlgItemTextW(hwnd, IDC_STATIC_INFO, L"Recycled Files");
     }*/
@@ -469,8 +417,8 @@ DWORD WINAPI GetRemovableDirSize(LPVOID lpParam)
             LoadStringW(GetModuleHandleW(NULL), IDS_LABEL_CHKDSK, LoadedString, _countof(LoadedString));
             SetDlgItemTextW(hwnd, IDC_STATIC_INFO, LoadedString);
 
-            DirectorySizes.ChkDskSize += GetTargetedDirSize(TargetedDir);
-            if (DirectorySizes.ChkDskSize == -1)
+            DirectorySizes.ChkDskDirSize += GetTargetedDirSize(TargetedDir);
+            if (DirectorySizes.ChkDskDirSize == -1)
             {
                 return FALSE;
             }
@@ -509,8 +457,8 @@ DWORD WINAPI GetRemovableDirSize(LPVOID lpParam)
         LoadStringW(GetModuleHandleW(NULL), IDS_LABEL_RAPPS, LoadedString, _countof(LoadedString));
         SetDlgItemTextW(hwnd, IDC_STATIC_INFO, LoadedString);
 
-        DirectorySizes.RappsSize = GetTargetedDirSize(TargetedDir);
-        if (DirectorySizes.RappsSize == 1)
+        DirectorySizes.RappsDirSize = GetTargetedDirSize(TargetedDir);
+        if (DirectorySizes.RappsDirSize == 1)
         {
             return FALSE;
         }
@@ -656,18 +604,18 @@ void InitListViewControl(HWND hList)
         return;
     }
 
-    StrFormatByteSizeW(DirectorySizes.ChkDskSize, TempList, sizeof(TempList));
+    StrFormatByteSizeW(DirectorySizes.ChkDskDirSize, TempList, sizeof(TempList));
     AddRequiredItem(hList, IDS_LABEL_CHKDSK, TempList, ICON_BLANK);
 
-    StrFormatByteSizeW(DirectorySizes.RappsSize, TempList, sizeof(TempList));
+    StrFormatByteSizeW(DirectorySizes.RappsDirSize, TempList, sizeof(TempList));
     AddRequiredItem(hList, IDS_LABEL_RAPPS, TempList, ICON_BLANK);
 
-    StrFormatByteSizeW(DirectorySizes.RecycleBinSize, TempList, sizeof(TempList));
+    StrFormatByteSizeW(DirectorySizes.RecycleBinDirSize, TempList, sizeof(TempList));
     AddRequiredItem(hList, IDS_LABEL_RECYCLE, TempList, ICON_BIN);
 
     if (IsSystemDrive)
     {
-        StrFormatByteSizeW(DirectorySizes.TempSize, TempList, sizeof(TempList));
+        StrFormatByteSizeW(DirectorySizes.TempDirSize, TempList, sizeof(TempList));
         AddRequiredItem(hList, IDS_LABEL_TEMP, TempList, ICON_BLANK);
     }
 
@@ -811,7 +759,7 @@ void TabControlSelChange(void)
     }
 }
 
-void SagerunProc(int nArgs, PWCHAR ArgSpecified, LPWSTR* ArgList, PWCHAR LogicalDrives)
+void GetStageFlags(int nArgs, PWCHAR ArgSpecified, LPWSTR* ArgList, PWCHAR LogicalDrives)
 {
     WCHAR *ValStr = NULL;
     WCHAR* SingleDrive = LogicalDrives;
@@ -819,10 +767,10 @@ void SagerunProc(int nArgs, PWCHAR ArgSpecified, LPWSTR* ArgList, PWCHAR Logical
 
     ValStr = GetStageFlag(nArgs, ArgSpecified, ArgList);
 
-    CleanDirectories.ChkDskClean = GetStageFlagVal(ValStr, L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\VolumeCaches\\Old ChkDsk Files");
-    CleanDirectories.TempClean = GetStageFlagVal(ValStr, L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\VolumeCaches\\Temporary Files");
-    CleanDirectories.RappsClean = GetStageFlagVal(ValStr, L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\VolumeCaches\\RAPPS Files");
-    CleanDirectories.RecycleClean = GetStageFlagVal(ValStr, L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\VolumeCaches\\Recycle Bin");
+    CleanDirectories.CleanChkDskDir = GetStageFlagVal(ValStr, L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\VolumeCaches\\Old ChkDsk Files");
+    CleanDirectories.CleanTempDir = GetStageFlagVal(ValStr, L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\VolumeCaches\\Temporary Files");
+    CleanDirectories.CleanRappsDir = GetStageFlagVal(ValStr, L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\VolumeCaches\\RAPPS Files");
+    CleanDirectories.CleanRecycleDir = GetStageFlagVal(ValStr, L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\VolumeCaches\\Recycle Bin");
 
     while (*SingleDrive)
     {
@@ -851,7 +799,7 @@ void SagerunProc(int nArgs, PWCHAR ArgSpecified, LPWSTR* ArgList, PWCHAR Logical
     }
 }
 
-void SagesetProc(int nArgs, PWCHAR ArgSpecified, LPWSTR* ArgList)
+void SetStageFlags(int nArgs, PWCHAR ArgSpecified, LPWSTR* ArgList)
 {
     WCHAR *ValStr = GetStageFlag(nArgs, ArgSpecified, ArgList);
     INT_PTR DialogButtonSelect;
@@ -866,28 +814,28 @@ void SagesetProc(int nArgs, PWCHAR ArgSpecified, LPWSTR* ArgList)
 
     if (!SetStageFlagVal(ValStr,
                          L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\VolumeCaches\\Old ChkDsk Files",
-                         CleanDirectories.ChkDskClean))
+                         CleanDirectories.CleanChkDskDir))
     {
         DPRINT("SetStageFlagVal(): Failed to set a registry value!\n");
     }
 
     if (!SetStageFlagVal(ValStr,
                          L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\VolumeCaches\\Temporary Files",
-                         CleanDirectories.TempClean))
+                         CleanDirectories.CleanTempDir))
     {
         DPRINT("SetStageFlagVal(): Failed to set a registry value!\n");
     }
 
     if (!SetStageFlagVal(ValStr,
                          L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\VolumeCaches\\RAPPS Files",
-                         CleanDirectories.RappsClean))
+                         CleanDirectories.CleanRappsDir))
     {
         DPRINT("SetStageFlagVal(): Failed to set a registry value!\n");
     }
 
     if (!SetStageFlagVal(ValStr,
                          L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\VolumeCaches\\Recycle Bin",
-                         CleanDirectories.RecycleClean))
+                         CleanDirectories.CleanRecycleDir))
     {
         DPRINT("SetStageFlagVal(): Failed to set a registry value!\n");
     }
@@ -896,33 +844,33 @@ void SagesetProc(int nArgs, PWCHAR ArgSpecified, LPWSTR* ArgList)
 
 void StageFlagCheckedItem(int ItemIndex, HWND hwnd, HWND hList)
 {
-    DIRECTORIES Dir = ItemIndex;
-    switch (Dir)
+    SELECTEDDIR SelectedDir = ItemIndex;
+    switch (SelectedDir)
     {
         case TEMPORARY_FILE:
-            CleanDirectories.TempClean = ListView_GetCheckState(hList, ItemIndex);
+            CleanDirectories.CleanTempDir = ListView_GetCheckState(hList, ItemIndex);
             break;
 
         case RECYCLE_BIN:
-            CleanDirectories.RecycleClean = ListView_GetCheckState(hList, ItemIndex);
+            CleanDirectories.CleanRecycleDir = ListView_GetCheckState(hList, ItemIndex);
             break;
 
         case OLD_CHKDSK_FILES:
-            CleanDirectories.ChkDskClean = ListView_GetCheckState(hList, ItemIndex);
+            CleanDirectories.CleanChkDskDir = ListView_GetCheckState(hList, ItemIndex);
             break;
 
         case RAPPS_FILES:
-            CleanDirectories.RappsClean = ListView_GetCheckState(hList, ItemIndex);
+            CleanDirectories.CleanRappsDir = ListView_GetCheckState(hList, ItemIndex);
             break;
     }
 }
 
 void SelItem(HWND hwnd, int ItemIndex)
 {
-    DIRECTORIES Dir = ItemIndex;
+    SELECTEDDIR SelectedDir = ItemIndex;
     HWND hButton = GetDlgItem(hwnd, IDC_VIEW_FILES);
 
-    switch (Dir)
+    switch (SelectedDir)
     {
         case TEMPORARY_FILE:
             ShowWindow(hButton, SW_HIDE);
@@ -1052,4 +1000,54 @@ LRESULT APIENTRY ThemeHandler(HWND hDlg, NMCUSTOMDRAW* pNmDraw)
         RetValue = CDRF_DODEFAULT;
     }
     return RetValue;
+}
+
+BOOL UseAquiredArguments(LPWSTR* ArgList, int nArgs)
+{
+    WCHAR LogicalDrives[ARR_MAX_SIZE] = { 0 };
+    WCHAR ArgSpecified[ARR_MAX_SIZE] = { 0 };
+    DWORD NumOfDrives = GetLogicalDriveStringsW(sizeof(LogicalDrives), LogicalDrives);
+
+    if (NumOfDrives == 0)
+    {
+        DPRINT("GetLogicalDriveStringsW(): Failed to get logical drives!\n");
+        return FALSE;
+    }
+
+    StringCbCopyW(ArgSpecified, sizeof(ArgSpecified), ArgList[1]);
+    _wcsupr(ArgSpecified);
+    
+    if (wcscmp(ArgSpecified, L"/D") == 0 && nArgs == 3)
+    {
+        if(!DriverunProc(ArgList, LogicalDrives))
+        {
+            return FALSE;
+        }
+    }
+    else if (wcsstr(ArgSpecified, L"/SAGERUN:") != NULL)
+    {
+        GetStageFlags(nArgs, ArgSpecified, ArgList, LogicalDrives);
+        return FALSE;
+    }
+    else if (wcsstr(ArgSpecified, L"/SAGESET:") != NULL)
+    {
+        SetStageFlags(nArgs, ArgSpecified, ArgList);
+        return FALSE;
+    }
+    else if (wcsstr(ArgSpecified, L"/TUNEUP:") != NULL)
+    {
+        SetStageFlags(nArgs, ArgSpecified, ArgList);
+        GetStageFlags(nArgs, ArgSpecified, ArgList, LogicalDrives);
+        return FALSE;
+    }
+    else if (wcscmp(ArgSpecified, L"/?") == 0)
+    {
+        MessageBoxW(NULL, L"cleanmgr [/SAGESET:n | /SAGERUN:n | /TUNEUP:n]", L"Usage", MB_OK);
+        return FALSE;
+    }
+    else
+    {
+        return TRUE;
+    }
+    return TRUE;
 }
