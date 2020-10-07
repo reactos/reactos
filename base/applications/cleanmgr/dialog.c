@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS Disk Cleanup
  * LICENSE:         GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
- * PURPOSE:         Dialog Procs
+ * PURPOSE:         Dialog Functions
  * COPYRIGHT:       Copyright 2020 Arnav Bhatt (arnavbhatt288 at gmail dot com)
  */
  
@@ -303,7 +303,13 @@ INT_PTR CALLBACK SetStageFlagDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPA
     switch (message)
     {
         case WM_INITDIALOG:
+        {
+            HICON hbmIcon = LoadIconW(GetModuleHandleW(NULL), MAKEINTRESOURCE(IDI_CLEANMGR));
+
+            SendMessageW(hwnd, WM_SETICON, ICON_SMALL, (LPARAM)hbmIcon);
+            SendMessageW(hwnd, WM_SETICON, ICON_BIG, (LPARAM)hbmIcon);
             return InitStageFlagTabControl(hwnd);
+        }
 
         case WM_NOTIFY:
             return ThemeHandler(hwnd, (LPNMCUSTOMDRAW)lParam);

@@ -58,12 +58,12 @@ DLGHANDLE DialogHandle;
 typedef HRESULT (WINAPI * ETDTProc) (HWND, DWORD);
 
 BOOL CreateImageLists(HWND hList);
-BOOL DriverunProc(LPWSTR* ArgList, PWCHAR LogicalDrives);
 BOOL EnableDialogTheme(HWND hwnd);
 BOOL GetStageFlagVal(PWCHAR RegArg, PWCHAR SubKey);
 BOOL SetStageFlagVal(PWCHAR RegArg, PWCHAR SubKey, BOOL ArgBool);
+BOOL StartNormalDriveCheck(LPWSTR* ArgList, PWCHAR LogicalDrives);
 
-PWCHAR GetStageFlag(int nArgs, PWCHAR ArgSpecified, LPWSTR* ArgList);
+PWCHAR GetRequiredStageFlag(int nArgs, PWCHAR ArgSpecified, LPWSTR* ArgList);
 
 uint64_t GetTargetedDirSize(PWCHAR SpecifiedDir);
 

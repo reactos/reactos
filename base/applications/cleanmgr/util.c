@@ -130,9 +130,9 @@ BOOL CreateImageLists(HWND hList)
         return FALSE;
     }
 
-    for (int ItemIndex = 0; ItemIndex < 3; ItemIndex++)
+    for (int i = 0; i < 3; i++)
     {
-        hbmIcon = LoadIconW(GetModuleHandleW(NULL), MAKEINTRESOURCE(IDI_BLANK + ItemIndex));
+        hbmIcon = LoadIconW(GetModuleHandleW(NULL), MAKEINTRESOURCE(IDI_BLANK + i));
         ImageList_AddIcon(hSmall, hbmIcon);
     }
 
@@ -219,7 +219,7 @@ BOOL DrawItemCombobox(LPARAM lParam)
     return TRUE;
 }
 
-BOOL DriverunProc(LPWSTR* ArgList, PWCHAR LogicalDrives)
+BOOL StartNormalDriveCheck(LPWSTR* ArgList, PWCHAR LogicalDrives)
 {
     WCHAR DriveArgGathered[ARR_MAX_SIZE] = { 0 };
     WCHAR TempText[ARR_MAX_SIZE] = { 0 };
@@ -284,67 +284,6 @@ BOOL EnableDialogTheme(HWND hwnd)
     {
         return FALSE;
     }
-    return TRUE;
-}
-
-DWORD WINAPI RemoveRequiredFolder(LPVOID lpParam)
-{
-    WCHAR LoadedString[ARR_MAX_SIZE] = { 0 };
-    WCHAR TargetedDir[MAX_PATH] = { 0 };
-    HWND hwnd = lpParam;
-    HWND hProgressBar = GetDlgItem(hwnd, IDC_PROGRESS_2);
-
-    if (CleanDirectories.CleanTempDir && IsSystemDrive)
-    {
-        CleanRequiredPath(TempDir);
-
-        SendMessageW(hProgressBar, PBM_SETPOS, 25, 0);
-        LoadStringW(GetModuleHandleW(NULL), IDS_LABEL_TEMP, LoadedString, _countof(LoadedString));
-        SetDlgItemTextW(hwnd, IDC_STATIC_INFO, LoadedString);
-    }
-
-    if (CleanDirectories.CleanRecycleDir)
-    {   
-        StringCbCopyW(TargetedDir, sizeof(TargetedDir), DriveLetter);
-        StringCbCatW(TargetedDir, sizeof(TargetedDir), L"\\");
-
-        SHEmptyRecycleBinW(NULL, TargetedDir, SHERB_NOCONFIRMATION | SHERB_NOPROGRESSUI | SHERB_NOSOUND);
-
-        SendMessageW(hProgressBar, PBM_SETPOS, 50, 0);
-        LoadStringW(GetModuleHandleW(NULL), IDS_LABEL_RECYCLE, LoadedString, _countof(LoadedString));
-        SetDlgItemTextW(hwnd, IDC_STATIC_INFO, LoadedString);
-    }
-
-    if (CleanDirectories.CleanChkDskDir)
-    {
-        for (int i = 0; i < 10; i++)
-        {
-            StringCchPrintfW(TargetedDir, sizeof(TargetedDir), L"%s\\FOUND.%.3i", DriveLetter, i);
-            if (PathIsDirectoryW(TargetedDir))
-            {
-                CleanRequiredPath(TargetedDir);
-            }
-            else
-            {
-                break;
-            }
-        }
-
-        SendMessageW(hProgressBar, PBM_SETPOS, 75, 0);
-        LoadStringW(GetModuleHandleW(NULL), IDS_LABEL_CHKDSK, LoadedString, _countof(LoadedString));
-        SetDlgItemTextW(hwnd, IDC_STATIC_INFO, LoadedString);
-    }
-
-    if (CleanDirectories.CleanRappsDir)
-    {
-        CleanRequiredPath(RappsDir);
-
-        SendMessageW(hProgressBar, PBM_SETPOS, 100, 0);
-        LoadStringW(GetModuleHandleW(NULL), IDS_LABEL_RAPPS, LoadedString, _countof(LoadedString));
-        SetDlgItemTextW(hwnd, IDC_STATIC_INFO, LoadedString);
-    }
-
-    EndDialog(hwnd, 0);
     return TRUE;
 }
 
@@ -447,8 +386,7 @@ DWORD WINAPI GetRemovableDirSize(LPVOID lpParam)
                          &ArrSize) != ERROR_SUCCESS)
     {
         DPRINT("RegQueryValueExW(): Failed to query a registry key!\n");
-        SHGetFolderPathW(NULL, CSIDL_PERSONAL, NULL, SHGFP_TYPE_CURRENT, TargetedDir);
-        StringCbCatW(TargetedDir, sizeof(TargetedDir), L"\\RAPPS Downloads");
+        return FALSE;
     }
 
     if (PathIsDirectoryW(TargetedDir))
@@ -535,13 +473,13 @@ PWCHAR GetProperDriveLetter(HWND hComboCtrl, int ItemIndex)
     return GatheredDriveLetter;
 }
 
-PWCHAR GetStageFlag(int nArgs, PWCHAR ArgSpecified, LPWSTR* ArgList)
+PWCHAR GetRequiredStageFlag(int nArgs, PWCHAR ArgSpecified, LPWSTR* ArgList)
 {
     int Num = 0;
     WCHAR *StrNum = NULL;
-    WCHAR *ValStr = NULL;
+    WCHAR *TargetedStageFlag = NULL;
 
-    ValStr = (PWCHAR)malloc(ARR_MAX_SIZE);
+    TargetedStageFlag = (PWCHAR)malloc(ARR_MAX_SIZE);
 
     if (nArgs == 2)
     {
@@ -555,8 +493,8 @@ PWCHAR GetStageFlag(int nArgs, PWCHAR ArgSpecified, LPWSTR* ArgList)
 
     Num = _wtoi(StrNum);
 
-    StringCchPrintfW(ValStr, ARR_MAX_SIZE, L"StateFlags%.4i", Num);
-    return ValStr;
+    StringCchPrintfW(TargetedStageFlag, ARR_MAX_SIZE, L"StateFlags%.4i", Num);
+    return TargetedStageFlag;
 }
 
 BOOL GetStageFlagVal(PWCHAR RegArg, PWCHAR SubKey)
@@ -571,7 +509,7 @@ BOOL GetStageFlagVal(PWCHAR RegArg, PWCHAR SubKey)
                      (PVOID)&RetValue,
                      &DwordSize) != ERROR_SUCCESS)
     {
-        DPRINT("GetStageFlag(): Failed to gather value!\n");
+        DPRINT("GetRequiredStageFlag(): Failed to gather value!\n");
         return FALSE;               
     }
 
@@ -741,36 +679,16 @@ BOOL InitStageFlagTabControl(HWND hwnd)
     return TRUE;
 }
 
-void TabControlSelChange(void)
-{
-    switch (TabCtrl_GetCurSel(DialogHandle.hTab))
-    {
-        case 0:
-            ShowWindow(DialogHandle.hChoicePage, SW_SHOW);
-            ShowWindow(DialogHandle.hOptionsPage, SW_HIDE);
-            BringWindowToTop(DialogHandle.hChoicePage);
-            break;
-
-        case 1:
-            ShowWindow(DialogHandle.hChoicePage, SW_HIDE);
-            ShowWindow(DialogHandle.hOptionsPage, SW_SHOW);
-            BringWindowToTop(DialogHandle.hOptionsPage);
-            break;
-    }
-}
-
 void GetStageFlags(int nArgs, PWCHAR ArgSpecified, LPWSTR* ArgList, PWCHAR LogicalDrives)
 {
-    WCHAR *ValStr = NULL;
+    WCHAR *TargetedStageFlag = GetRequiredStageFlag(nArgs, ArgSpecified, ArgList);
     WCHAR* SingleDrive = LogicalDrives;
     INT_PTR DialogButtonSelect;
 
-    ValStr = GetStageFlag(nArgs, ArgSpecified, ArgList);
-
-    CleanDirectories.CleanChkDskDir = GetStageFlagVal(ValStr, L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\VolumeCaches\\Old ChkDsk Files");
-    CleanDirectories.CleanTempDir = GetStageFlagVal(ValStr, L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\VolumeCaches\\Temporary Files");
-    CleanDirectories.CleanRappsDir = GetStageFlagVal(ValStr, L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\VolumeCaches\\RAPPS Files");
-    CleanDirectories.CleanRecycleDir = GetStageFlagVal(ValStr, L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\VolumeCaches\\Recycle Bin");
+    CleanDirectories.CleanChkDskDir = GetStageFlagVal(TargetedStageFlag, L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\VolumeCaches\\Old ChkDsk Files");
+    CleanDirectories.CleanTempDir = GetStageFlagVal(TargetedStageFlag, L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\VolumeCaches\\Temporary Files");
+    CleanDirectories.CleanRappsDir = GetStageFlagVal(TargetedStageFlag, L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\VolumeCaches\\RAPPS Files");
+    CleanDirectories.CleanRecycleDir = GetStageFlagVal(TargetedStageFlag, L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\VolumeCaches\\Recycle Bin");
 
     while (*SingleDrive)
     {
@@ -797,49 +715,112 @@ void GetStageFlags(int nArgs, PWCHAR ArgSpecified, LPWSTR* ArgList, PWCHAR Logic
         }
         SingleDrive += wcslen(SingleDrive) + 1;
     }
+    free(TargetedStageFlag);
 }
+
+DWORD WINAPI RemoveRequiredFolder(LPVOID lpParam)
+{
+    WCHAR LoadedString[ARR_MAX_SIZE] = { 0 };
+    WCHAR TargetedDir[MAX_PATH] = { 0 };
+    HWND hwnd = lpParam;
+    HWND hProgressBar = GetDlgItem(hwnd, IDC_PROGRESS_2);
+
+    if (CleanDirectories.CleanTempDir && IsSystemDrive)
+    {
+        CleanRequiredPath(TempDir);
+
+        SendMessageW(hProgressBar, PBM_SETPOS, 25, 0);
+        LoadStringW(GetModuleHandleW(NULL), IDS_LABEL_TEMP, LoadedString, _countof(LoadedString));
+        SetDlgItemTextW(hwnd, IDC_STATIC_INFO, LoadedString);
+    }
+
+    if (CleanDirectories.CleanRecycleDir)
+    {   
+        StringCbCopyW(TargetedDir, sizeof(TargetedDir), DriveLetter);
+        StringCbCatW(TargetedDir, sizeof(TargetedDir), L"\\");
+
+        SHEmptyRecycleBinW(NULL, TargetedDir, SHERB_NOCONFIRMATION | SHERB_NOPROGRESSUI | SHERB_NOSOUND);
+
+        SendMessageW(hProgressBar, PBM_SETPOS, 50, 0);
+        LoadStringW(GetModuleHandleW(NULL), IDS_LABEL_RECYCLE, LoadedString, _countof(LoadedString));
+        SetDlgItemTextW(hwnd, IDC_STATIC_INFO, LoadedString);
+    }
+
+    if (CleanDirectories.CleanChkDskDir)
+    {
+        for (int i = 0; i < 10; i++)
+        {
+            StringCchPrintfW(TargetedDir, sizeof(TargetedDir), L"%s\\FOUND.%.3i", DriveLetter, i);
+            if (PathIsDirectoryW(TargetedDir))
+            {
+                CleanRequiredPath(TargetedDir);
+            }
+            else
+            {
+                break;
+            }
+        }
+
+        SendMessageW(hProgressBar, PBM_SETPOS, 75, 0);
+        LoadStringW(GetModuleHandleW(NULL), IDS_LABEL_CHKDSK, LoadedString, _countof(LoadedString));
+        SetDlgItemTextW(hwnd, IDC_STATIC_INFO, LoadedString);
+    }
+
+    if (CleanDirectories.CleanRappsDir)
+    {
+        CleanRequiredPath(RappsDir);
+
+        SendMessageW(hProgressBar, PBM_SETPOS, 100, 0);
+        LoadStringW(GetModuleHandleW(NULL), IDS_LABEL_RAPPS, LoadedString, _countof(LoadedString));
+        SetDlgItemTextW(hwnd, IDC_STATIC_INFO, LoadedString);
+    }
+
+    EndDialog(hwnd, 0);
+    return TRUE;
+}
+
 
 void SetStageFlags(int nArgs, PWCHAR ArgSpecified, LPWSTR* ArgList)
 {
-    WCHAR *ValStr = GetStageFlag(nArgs, ArgSpecified, ArgList);
+    WCHAR *TargetedStageFlag = GetRequiredStageFlag(nArgs, ArgSpecified, ArgList);
     INT_PTR DialogButtonSelect;
 
     DialogButtonSelect = DialogBoxParamW(GetModuleHandleW(NULL), MAKEINTRESOURCEW(IDD_STAGEFLAG), NULL, SetStageFlagDlgProc, 0);
 
     if (DialogButtonSelect == IDCANCEL)
     {
-        free(ValStr);
+        free(TargetedStageFlag);
         return;
     }
 
-    if (!SetStageFlagVal(ValStr,
+    if (!SetStageFlagVal(TargetedStageFlag,
                          L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\VolumeCaches\\Old ChkDsk Files",
                          CleanDirectories.CleanChkDskDir))
     {
         DPRINT("SetStageFlagVal(): Failed to set a registry value!\n");
     }
 
-    if (!SetStageFlagVal(ValStr,
+    if (!SetStageFlagVal(TargetedStageFlag,
                          L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\VolumeCaches\\Temporary Files",
                          CleanDirectories.CleanTempDir))
     {
         DPRINT("SetStageFlagVal(): Failed to set a registry value!\n");
     }
 
-    if (!SetStageFlagVal(ValStr,
+    if (!SetStageFlagVal(TargetedStageFlag,
                          L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\VolumeCaches\\RAPPS Files",
                          CleanDirectories.CleanRappsDir))
     {
         DPRINT("SetStageFlagVal(): Failed to set a registry value!\n");
     }
 
-    if (!SetStageFlagVal(ValStr,
+    if (!SetStageFlagVal(TargetedStageFlag,
                          L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\VolumeCaches\\Recycle Bin",
                          CleanDirectories.CleanRecycleDir))
     {
         DPRINT("SetStageFlagVal(): Failed to set a registry value!\n");
     }
-    free(ValStr);
+    free(TargetedStageFlag);
 }
 
 void StageFlagCheckedItem(int ItemIndex, HWND hwnd, HWND hList)
@@ -944,6 +925,24 @@ void SetTotalSize(uint64_t Size, UINT ResourceID, HWND hwnd)
     SetDlgItemTextW(hwnd, ResourceID, LoadedString);
 }
 
+void TabControlSelChange(void)
+{
+    switch (TabCtrl_GetCurSel(DialogHandle.hTab))
+    {
+        case 0:
+            ShowWindow(DialogHandle.hChoicePage, SW_SHOW);
+            ShowWindow(DialogHandle.hOptionsPage, SW_HIDE);
+            BringWindowToTop(DialogHandle.hChoicePage);
+            break;
+
+        case 1:
+            ShowWindow(DialogHandle.hChoicePage, SW_HIDE);
+            ShowWindow(DialogHandle.hOptionsPage, SW_SHOW);
+            BringWindowToTop(DialogHandle.hOptionsPage);
+            break;
+    }
+}
+
 LRESULT APIENTRY ThemeHandler(HWND hDlg, NMCUSTOMDRAW* pNmDraw)
 {
     HTHEME hTheme;
@@ -1019,7 +1018,7 @@ BOOL UseAquiredArguments(LPWSTR* ArgList, int nArgs)
     
     if (wcscmp(ArgSpecified, L"/D") == 0 && nArgs == 3)
     {
-        if(!DriverunProc(ArgList, LogicalDrives))
+        if(!StartNormalDriveCheck(ArgList, LogicalDrives))
         {
             return FALSE;
         }

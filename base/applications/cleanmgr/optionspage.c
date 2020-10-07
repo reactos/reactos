@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS Disk Cleanup
  * LICENSE:         GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
- * PURPOSE:         OptionsPage child dialog proc
+ * PURPOSE:         OptionsPage child dialog function
  * COPYRIGHT:       Copyright 2020 Arnav Bhatt (arnavbhatt288 at gmail dot com)
  */
 
