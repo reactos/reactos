@@ -266,6 +266,7 @@ PDEVOBJ_vRefreshModeList(
     PGRAPHICS_DEVICE pGraphicsDevice;
     PDEVMODEINFO pdminfo, pdmiNext;
     DEVMODEW dmDefault;
+    DEVMODEW dmCurrent;
 
     /* Lock the PDEV */
     EngAcquireSemaphore(ppdev->hsemDevLock);
@@ -274,6 +275,7 @@ PDEVOBJ_vRefreshModeList(
 
     /* Remember our default mode */
     dmDefault = *pGraphicsDevice->pDevModeList[pGraphicsDevice->iDefaultMode].pdm;
+    dmCurrent = *ppdev->pdmwDev;
 
     /* Clear out the modes */
     for (pdminfo = pGraphicsDevice->pdevmodeInfo;
@@ -293,7 +295,7 @@ PDEVOBJ_vRefreshModeList(
         DPRINT1("FIXME: EngpPopulateDeviceModeList failed, we just destroyed a perfectly good mode list\n");
     }
 
-    ppdev->pdmwDev = pGraphicsDevice->pDevModeList[pGraphicsDevice->iCurrentMode].pdm;
+    ppdev->pdmwDev = PDEVOBJ_pdmMatchDevMode(ppdev, &dmCurrent);
 
     /* Unlock PDEV */
     EngReleaseSemaphore(ppdev->hsemDevLock);
