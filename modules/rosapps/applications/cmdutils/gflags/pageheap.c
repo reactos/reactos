@@ -117,7 +117,6 @@ static VOID ModifyStatus(VOID)
     wprintf(L"path: %s\n", ImageExecOptionsString);
     wprintf(L"\t%s: page heap %s\n", Image, (Set ? L"enabled" : L"disabled"));
 
-    HeapFree(GetProcessHeap(), 0, Buffer);
     RegCloseKey(IFEOKey);
 }
 
