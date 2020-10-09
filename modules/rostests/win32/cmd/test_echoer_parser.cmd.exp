@@ -322,4 +322,299 @@ updated TN == TN
 updated TN == TN
 updated TN == TN
 updated TN == TN
+
+@pwd@>echo --------- Parsing FOR, IF and REM commands ---------@space@
+--------- Parsing FOR, IF and REM commands ---------
+
+@pwd@>fOr / %d iN (*) do eCHo %d@space@
+
+@pwd@>eCHo script_testsuite@space@
+script_testsuite
+
+@pwd@>for / %d in (*) do echo %~ed@space@
+
+@pwd@>echo %~ed@space@
+%~ed
+
+@pwd@>for / %d in (*) do echo D::@space@
+
+@pwd@>echo D::@space@
+D::
+
+@pwd@>fOr /L %c iN (1 1 5) Do echo@tab@@space@@space@@space@@space@@tab@@tab@%c@space@
+
+@pwd@>echo@tab@@space@@space@@space@@space@@tab@@tab@1@space@
+@space@@space@@space@@space@@tab@@tab@1
+
+@pwd@>echo@tab@@space@@space@@space@@space@@tab@@tab@2@space@
+@space@@space@@space@@space@@tab@@tab@2
+
+@pwd@>echo@tab@@space@@space@@space@@space@@tab@@tab@3@space@
+@space@@space@@space@@space@@tab@@tab@3
+
+@pwd@>echo@tab@@space@@space@@space@@space@@tab@@tab@4@space@
+@space@@space@@space@@space@@tab@@tab@4
+
+@pwd@>echo@tab@@space@@space@@space@@space@@tab@@tab@5@space@
+@space@@space@@space@@space@@tab@@tab@5
+
+@pwd@>iF 457 NEQ 458 (echo@space@@tab@ D:  )  eLSe (echo $~d0@space@@tab@  )@space@
+@tab@ D:@space@
+
+@pwd@>iF "2147483647" GEQ "2147483648" (Echo Larger )  Else (ecHO sMaLlEr )@space@
+sMaLlEr
+
+@pwd@>iF eRrOrlevel 0 echo hi!@space@
+hi
+
+@pwd@>rEM     /v@space@@tab@/d@space@
+
+@pwd@>REm@space@@space@@space@@tab@@tab@  /d@space@
+
+@pwd@>rEm REM2 /d@space@
+
+@pwd@>reM@space@@tab@ /d@space@@tab@ >@space@@tab@ NUL@space@
+
+@pwd@>echo --------- Parsing random commands ---------@space@
+--------- Parsing random commands ---------
+
+@pwd@>dir   1>NUL  & (b)@space@
+
+@pwd@>setlocal enabledelayedexpansion@space@
+
+@pwd@>echo @pwd@\@space@
+@pwd@\
+
+@pwd@>set SOMEVAR=C:\ReAcToS@space@
+
+@pwd@>rem C:\ReAcToS |@space@
+
+@pwd@>Set "_var=first"@space@
+
+@pwd@>Set "_var=second"   & Rem first !_var!@space@
+
+@pwd@>Set "_var=third"   & Echo second !_var!@space@
+second third
+
+@pwd@>endlocal
+
+@pwd@>echo --------- Parsing line continuations ---------@space@
+--------- Parsing line continuations ---------
+
+@pwd@>(a   & b@space@
+ c@space@
+ d)@space@
+
+@pwd@>(
+a   && b@space@
+ c@space@
+ d
+)@space@
+
+@pwd@>(a   & b)@space@
+
+@pwd@>(a   & b)@space@
+
+@pwd@>(a   & b@space@
+ c   & d)@space@
+
+@pwd@>(a   & b@space@
+ c   & d)@space@
+
+@pwd@>(a   & b@space@
+ c@space@
+ d)@space@
+
+@pwd@>(
+a   && b@space@
+ c@space@
+ d
+)@space@
+
+@pwd@>(
+a   || b@space@
+ c@space@
+ d
+)@space@
+
+@pwd@>(
+a@space@
+ b   & c@space@
+ d
+)@space@
+
+@pwd@>(
+a@space@
+ b   && c@space@
+ d
+)@space@
+
+@pwd@>(
+a@space@
+ b@space@
+ c   && d
+)@space@
+
+@pwd@>(
+a@space@
+ b@space@
+ c   & d
+)@space@
+
+@pwd@>(
+a@space@
+ b@space@
+ c@space@
+ d
+)@space@
+
+@pwd@>REMbaz trol^@space@
+
+@pwd@>if 1 == 1 (echo a )  else (echo b )@space@
+a
+
+@pwd@>if 1 == 1 (echo a )  else (echo b )@space@
+a
+
+@pwd@>if 1 == 1 (echo a )  else (echo b )@space@
+a
+
+@pwd@>if 1 == 1 (echo a )  else (echo b )@space@
+a
+
+@pwd@>REM if 1==1 (^@space@
+
+@pwd@>REM echo a@space@
+
+@pwd@>REM ) ^@space@
+
+@pwd@>REM else@space@
+
+@pwd@>REMREM echo b@space@
+
+@pwd@>REM )@space@
+
+@pwd@>REM if 1==1 (^@space@
+
+@pwd@>REM echo a@space@
+
+@pwd@>REM ) ^@space@
+
+@pwd@>REMREM (^@space@
+
+@pwd@>REM echo b@space@
+
+@pwd@>REM )@space@
+
+@pwd@>REM if 1==1 (^@space@
+
+@pwd@>REM echo a@space@
+
+@pwd@>REM ) ^@space@
+
+@pwd@>REMREM (@space@
+
+@pwd@>REM echo b@space@
+
+@pwd@>REM )@space@
+
+@pwd@>if 1 == 1 (echo a )@space@
+a
+
+@pwd@>if 1 == 1 ()@space@
+a
+
+@pwd@>(foo bar )@space@
+
+@pwd@>(foo &  & bar@space@
+ baz)@space@
+
+@pwd@>(
+foo    && bar@space@
+ baz
+)@space@
+
+@pwd@>REMREM && bar@space@
+
+@pwd@>REM baz@space@
+
+@pwd@>REM )@space@
+
+@pwd@>(
+bar@space@
+ baz
+)@space@
+
+@pwd@>(foo   & & bar@space@@space@
+ baz)@space@
+
+@pwd@>(
+foo@space@
+ bar
+)@space@
+
+@pwd@>(foo bar )@space@
+
+@pwd@>(foo &  & bar@space@
+ baz)@space@
+
+@pwd@>(
+foo    && bar@space@
+ baz
+)@space@
+
+@pwd@>REM (@space@
+
+@pwd@>REM
+
+@pwd@>REM
+
+@pwd@>REMREM && bar@space@
+
+@pwd@>REM baz@space@
+
+@pwd@>REM )@space@
+
+@pwd@>(
+bar@space@
+ baz
+)@space@
+
+@pwd@>(foo   & & bar@space@@space@
+ baz)@space@
+
+@pwd@>(
+foo@space@
+ bar
+)@space@
+
+@pwd@>("!pc::=!")@space@
+
+@pwd@>("!pc::^=^!^")@space@
+
+@pwd@>("!pc::=!")@space@
+
+@pwd@>(!")@space@
+
+@pwd@>REM  @   2>&1    (   (  dir)   )    &&     lol@space@
+
+@pwd@>echo   & & & lol
+ECHO is on.
+
+@pwd@>REM echo & ^@space@
+
+@pwd@>REMREM &&lol@space@
+
+@pwd@>trol &  & lol
+
+@pwd@>trol& & lol
+
+@pwd@>REM (echo hi)^@space@
+
+@pwd@>REM &&lol@space@
+
+@pwd@>remline@space@
+
+@pwd@>echo trolline@space@
+trolline
 --------- Finished  --------------

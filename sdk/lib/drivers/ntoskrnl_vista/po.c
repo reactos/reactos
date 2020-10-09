@@ -8,7 +8,7 @@
 #include <ntdef.h>
 #include <ntifs.h>
 
-NTKERNELAPI
+NTKRNLVISTAAPI
 NTSTATUS
 NTAPI
 PoRegisterPowerSettingCallback(
@@ -22,7 +22,7 @@ PoRegisterPowerSettingCallback(
 }
 
 _IRQL_requires_max_(APC_LEVEL)
-NTKERNELAPI
+NTKRNLVISTAAPI
 NTSTATUS
 NTAPI
 PoUnregisterPowerSettingCallback(
@@ -32,12 +32,32 @@ PoUnregisterPowerSettingCallback(
 }
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
-NTKERNELAPI
+NTKRNLVISTAAPI
 BOOLEAN
 NTAPI
 PoQueryWatchdogTime(
     _In_ PDEVICE_OBJECT Pdo,
     _Out_ PULONG SecondsRemaining)
+{
+    return FALSE;
+}
+
+_IRQL_requires_max_(DISPATCH_LEVEL)
+NTKRNLVISTAAPI
+VOID
+NTAPI
+PoSetSystemWake(
+    _Inout_ struct _IRP *Irp)
+{
+
+}
+
+_IRQL_requires_max_(DISPATCH_LEVEL)
+NTKRNLVISTAAPI
+BOOLEAN
+NTAPI
+PoGetSystemWake(
+    _In_ struct _IRP *Irp)
 {
     return FALSE;
 }

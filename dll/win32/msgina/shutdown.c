@@ -100,7 +100,6 @@ IsFriendlyUIActive(VOID)
     HKEY hKey;
     LONG lRet;
 
-    /* Check product version number first */
     lRet = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
                          L"SYSTEM\\CurrentControlSet\\Control\\Windows",
                          0,
@@ -109,6 +108,25 @@ IsFriendlyUIActive(VOID)
     if (lRet != ERROR_SUCCESS)
         return FALSE;
 
+    /* CORE-17282 First check an optional ReactOS specific override, that Windows does not check.
+       We use this to allow users pairing 'Server'-configuration with FriendlyShutdown.
+       Otherwise users would have to change CSDVersion or LogonType (side-effects AppCompat) */
+    dwValue = 0;
+    dwSize = sizeof(dwValue);
+    lRet = RegQueryValueExW(hKey,
+                            L"EnforceFriendlyShutdown",
+                            NULL,
+                            &dwType,
+                            (LPBYTE)&dwValue,
+                            &dwSize);
+
+    if (lRet == ERROR_SUCCESS && dwType == REG_DWORD && dwValue == 0x1)
+    {
+        RegCloseKey(hKey);
+        return TRUE;
+    }
+
+    /* Check product version number */
     dwValue = 0;
     dwSize = sizeof(dwValue);
     lRet = RegQueryValueExW(hKey,

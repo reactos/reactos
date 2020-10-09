@@ -119,7 +119,7 @@ $if (_WDMDDK_)
 
 typedef USHORT IRQ_DEVICE_POLICY, *PIRQ_DEVICE_POLICY;
 
-typedef enum _IRQ_DEVICE_POLICY_USHORT {
+enum _IRQ_DEVICE_POLICY_USHORT {
   IrqPolicyMachineDefault = 0,
   IrqPolicyAllCloseProcessors = 1,
   IrqPolicyOneCloseProcessor = 2,
@@ -391,6 +391,17 @@ typedef struct _IO_DISCONNECT_INTERRUPT_PARAMETERS {
     _In_ PIO_INTERRUPT_MESSAGE_INFO InterruptMessageTable;
   } ConnectionContext;
 } IO_DISCONNECT_INTERRUPT_PARAMETERS, *PIO_DISCONNECT_INTERRUPT_PARAMETERS;
+
+typedef struct _IO_REPORT_INTERRUPT_ACTIVE_STATE_PARAMETERS
+{
+  ULONG Version;
+  union
+  {
+    PVOID Generic;
+    PKINTERRUPT InterruptObject;
+    PIO_INTERRUPT_MESSAGE_INFO InterruptMessageTable;
+  } ConnectionContext;
+} IO_REPORT_INTERRUPT_ACTIVE_STATE_PARAMETERS, *PIO_REPORT_INTERRUPT_ACTIVE_STATE_PARAMETERS;
 
 typedef enum _IO_ACCESS_TYPE {
   ReadAccess,
@@ -920,7 +931,12 @@ typedef struct _DEVICE_CAPABILITIES {
   ULONG NonDynamic:1;
   ULONG WarmEjectSupported:1;
   ULONG NoDisplayInUI:1;
-  ULONG Reserved:14;
+  ULONG Reserved1:1;
+  ULONG WakeFromInterrupt:1;
+  ULONG SecureDevice:1;
+  ULONG ChildOfVgaEnabledBridge:1;
+  ULONG DecodeIoOnBoot:1;
+  ULONG Reserved:9;
   ULONG Address;
   ULONG UINumber;
   DEVICE_POWER_STATE DeviceState[PowerSystemMaximum];
@@ -2027,6 +2043,7 @@ typedef enum _DMA_SPEED {
 #define DEVICE_DESCRIPTION_VERSION        0x0000
 #define DEVICE_DESCRIPTION_VERSION1       0x0001
 #define DEVICE_DESCRIPTION_VERSION2       0x0002
+#define DEVICE_DESCRIPTION_VERSION3       0x0003
 
 typedef struct _DEVICE_DESCRIPTION {
   ULONG Version;
@@ -2045,7 +2062,71 @@ typedef struct _DEVICE_DESCRIPTION {
   DMA_SPEED DmaSpeed;
   ULONG MaximumLength;
   ULONG DmaPort;
+#if (NTDDI_VERSION >= NTDDI_WIN8)
+  ULONG DmaAddressWidth;
+  ULONG DmaControllerInstance;
+  ULONG DmaRequestLine;
+  PHYSICAL_ADDRESS DeviceAddress;
+#endif // NTDDI_WIN8
 } DEVICE_DESCRIPTION, *PDEVICE_DESCRIPTION;
+
+#define DMA_ADAPTER_INFO_VERSION1   1
+
+#define ADAPTER_INFO_SYNCHRONOUS_CALLBACK             0x0001
+#define ADAPTER_INFO_API_BYPASS                       0x0002
+
+typedef struct _DMA_ADAPTER_INFO_V1
+{
+  ULONG ReadDmaCounterAvailable;
+  ULONG ScatterGatherLimit;
+  ULONG DmaAddressWidth;
+  ULONG Flags;
+  ULONG MinimumTransferUnit;
+} DMA_ADAPTER_INFO_V1, *PDMA_ADAPTER_INFO_V1;
+
+typedef struct _DMA_ADAPTER_INFO
+{
+  ULONG Version;
+  union
+  {
+    DMA_ADAPTER_INFO_V1 V1;
+  };
+} DMA_ADAPTER_INFO, *PDMA_ADAPTER_INFO;
+
+#define DMA_TRANSFER_INFO_VERSION1  1
+#define DMA_TRANSFER_INFO_VERSION2  2
+
+typedef struct _DMA_TRANSFER_INFO_V1
+{
+  ULONG MapRegisterCount;
+  ULONG ScatterGatherElementCount;
+  ULONG ScatterGatherListSize;
+} DMA_TRANSFER_INFO_V1, *PDMA_TRANSFER_INFO_V1;
+
+typedef struct _DMA_TRANSFER_INFO_V2
+{
+  ULONG MapRegisterCount;
+  ULONG ScatterGatherElementCount;
+  ULONG ScatterGatherListSize;
+  ULONG LogicalPageCount;
+} DMA_TRANSFER_INFO_V2, *PDMA_TRANSFER_INFO_V2;
+
+typedef struct _DMA_TRANSFER_INFO
+{
+  ULONG Version;
+  union {
+    DMA_TRANSFER_INFO_V1 V1;
+    DMA_TRANSFER_INFO_V2 V2;
+  };
+} DMA_TRANSFER_INFO, *PDMA_TRANSFER_INFO;
+
+#define DMA_TRANSFER_CONTEXT_VERSION1 1
+
+#ifdef _WIN64
+#define DMA_TRANSFER_CONTEXT_SIZE_V1 128
+#else
+#define DMA_TRANSFER_CONTEXT_SIZE_V1 64
+#endif
 
 typedef enum _DEVICE_RELATION_TYPE {
   BusRelations,
@@ -2194,6 +2275,14 @@ typedef struct _DMA_ADAPTER {
   struct _DMA_OPERATIONS* DmaOperations;
 } DMA_ADAPTER, *PDMA_ADAPTER;
 
+typedef enum
+{
+  DmaComplete,
+  DmaAborted,
+  DmaError,
+  DmaCancelled
+} DMA_COMPLETION_STATUS;
+
 typedef VOID
 (NTAPI *PPUT_DMA_ADAPTER)(
   PDMA_ADAPTER DmaAdapter);
@@ -2313,6 +2402,213 @@ typedef NTSTATUS
   _In_ PMDL OriginalMdl,
   _Out_ PMDL *TargetMdl);
 
+typedef NTSTATUS
+(NTAPI *PGET_DMA_ADAPTER_INFO)(
+  _In_ PDMA_ADAPTER DmaAdapter,
+  _Inout_ PDMA_ADAPTER_INFO AdapterInfo);
+
+typedef NTSTATUS
+(NTAPI *PGET_DMA_TRANSFER_INFO)(
+  _In_ PDMA_ADAPTER DmaAdapter,
+  _In_ PMDL Mdl,
+  _In_ ULONGLONG Offset,
+  _In_ ULONG Length,
+  _In_ BOOLEAN WriteOnly,
+  _Inout_ PDMA_TRANSFER_INFO TransferInfo);
+
+typedef NTSTATUS
+(NTAPI *PINITIALIZE_DMA_TRANSFER_CONTEXT)(
+  _In_ PDMA_ADAPTER DmaAdapter,
+  _Out_ PVOID DmaTransferContext);
+
+typedef PVOID
+(NTAPI *PALLOCATE_COMMON_BUFFER_EX)(
+  _In_ PDMA_ADAPTER DmaAdapter,
+  _In_opt_ PPHYSICAL_ADDRESS MaximumAddress,
+  _In_ ULONG Length,
+  _Out_ PPHYSICAL_ADDRESS LogicalAddress,
+  _In_ BOOLEAN CacheEnabled,
+  _In_ NODE_REQUIREMENT PreferredNode);
+
+typedef NTSTATUS
+(NTAPI *PALLOCATE_ADAPTER_CHANNEL_EX)(
+  _In_ PDMA_ADAPTER DmaAdapter,
+  _In_ PDEVICE_OBJECT DeviceObject,
+  _In_ PVOID DmaTransferContext,
+  _In_ ULONG NumberOfMapRegisters,
+  _In_ ULONG Flags,
+  _In_opt_ PDRIVER_CONTROL ExecutionRoutine,
+  _In_opt_ PVOID ExecutionContext,
+  _Out_opt_ PVOID *MapRegisterBase);
+
+typedef NTSTATUS
+(NTAPI *PCONFIGURE_ADAPTER_CHANNEL)(
+  _In_ PDMA_ADAPTER DmaAdapter,
+  _In_ ULONG FunctionNumber,
+  _In_ PVOID Context);
+
+typedef BOOLEAN
+(NTAPI *PCANCEL_ADAPTER_CHANNEL)(
+  _In_ PDMA_ADAPTER DmaAdapter,
+  _In_ PDEVICE_OBJECT DeviceObject,
+  _In_ PVOID DmaTransferContext);
+
+typedef
+_Function_class_(DMA_COMPLETION_ROUTINE)
+_IRQL_requires_max_(DISPATCH_LEVEL)
+_IRQL_requires_min_(DISPATCH_LEVEL)
+VOID
+NTAPI
+DMA_COMPLETION_ROUTINE(
+  _In_ PDMA_ADAPTER DmaAdapter,
+  _In_ PDEVICE_OBJECT DeviceObject,
+  _In_ PVOID CompletionContext,
+  _In_ DMA_COMPLETION_STATUS Status);
+
+typedef DMA_COMPLETION_ROUTINE *PDMA_COMPLETION_ROUTINE;
+
+typedef NTSTATUS
+(NTAPI *PMAP_TRANSFER_EX)(
+  _In_ PDMA_ADAPTER DmaAdapter,
+  _In_ PMDL Mdl,
+  _In_ PVOID MapRegisterBase,
+  _In_ ULONGLONG Offset,
+  _In_ ULONG DeviceOffset,
+  _Inout_ PULONG Length,
+  _In_ BOOLEAN WriteToDevice,
+  _Out_writes_bytes_opt_(ScatterGatherBufferLength) PSCATTER_GATHER_LIST ScatterGatherBuffer,
+  _In_ ULONG ScatterGatherBufferLength,
+  _In_opt_ PDMA_COMPLETION_ROUTINE DmaCompletionRoutine,
+  _In_opt_ PVOID CompletionContext);
+
+typedef NTSTATUS
+(NTAPI *PGET_SCATTER_GATHER_LIST_EX)(
+  _In_ PDMA_ADAPTER DmaAdapter,
+  _In_ PDEVICE_OBJECT DeviceObject,
+  _In_ PVOID DmaTransferContext,
+  _In_ PMDL Mdl,
+  _In_ ULONGLONG Offset,
+  _In_ ULONG Length,
+  _In_ ULONG Flags,
+  _In_opt_ PDRIVER_LIST_CONTROL ExecutionRoutine,
+  _In_opt_ PVOID Context,
+  _In_ BOOLEAN WriteToDevice,
+  _In_opt_ PDMA_COMPLETION_ROUTINE DmaCompletionRoutine,
+  _In_opt_ PVOID CompletionContext,
+  _Out_opt_ PSCATTER_GATHER_LIST *ScatterGatherList);
+
+typedef NTSTATUS
+(NTAPI *PBUILD_SCATTER_GATHER_LIST_EX)(
+  _In_ PDMA_ADAPTER DmaAdapter,
+  _In_ PDEVICE_OBJECT DeviceObject,
+  _In_ PVOID DmaTransferContext,
+  _In_ PMDL Mdl,
+  _In_ ULONGLONG Offset,
+  _In_ ULONG Length,
+  _In_ ULONG Flags,
+  _In_opt_ PDRIVER_LIST_CONTROL ExecutionRoutine,
+  _In_opt_ PVOID Context,
+  _In_ BOOLEAN WriteToDevice,
+  _In_ PVOID ScatterGatherBuffer,
+  _In_ ULONG ScatterGatherLength,
+  _In_opt_ PDMA_COMPLETION_ROUTINE DmaCompletionRoutine,
+  _In_opt_ PVOID CompletionContext,
+  _Out_opt_ PVOID ScatterGatherList);
+
+typedef NTSTATUS
+(NTAPI *PFLUSH_ADAPTER_BUFFERS_EX)(
+  _In_ PDMA_ADAPTER DmaAdapter,
+  _In_ PMDL Mdl,
+  _In_ PVOID MapRegisterBase,
+  _In_ ULONGLONG Offset,
+  _In_ ULONG Length,
+  _In_ BOOLEAN WriteToDevice);
+
+typedef VOID
+(NTAPI *PFREE_ADAPTER_OBJECT)(
+  _In_ PDMA_ADAPTER DmaAdapter,
+  _In_ IO_ALLOCATION_ACTION AllocationAction);
+
+typedef NTSTATUS
+(NTAPI *PCANCEL_MAPPED_TRANSFER)(
+  _In_ PDMA_ADAPTER DmaAdapter,
+  _In_ PVOID DmaTransferContext);
+
+typedef NTSTATUS
+(NTAPI *PALLOCATE_DOMAIN_COMMON_BUFFER)(
+  _In_ PDMA_ADAPTER DmaAdapter,
+  _In_ HANDLE DomainHandle,
+  _In_opt_ PPHYSICAL_ADDRESS MaximumAddress,
+  _In_ ULONG Length,
+  _In_ ULONG Flags,
+  _In_opt_ MEMORY_CACHING_TYPE *CacheType,
+  _In_ NODE_REQUIREMENT PreferredNode,
+  _Out_ PPHYSICAL_ADDRESS LogicalAddress,
+  _Out_ PVOID *VirtualAddress);
+
+typedef NTSTATUS
+(NTAPI *PFLUSH_DMA_BUFFER)(
+  _In_ PDMA_ADAPTER DmaAdapter,
+  _In_ PMDL Mdl,
+  _In_ BOOLEAN ReadOperation);
+
+typedef NTSTATUS
+(NTAPI *PJOIN_DMA_DOMAIN)(
+  _In_ PDMA_ADAPTER DmaAdapter,
+  _In_ HANDLE DomainHandle);
+
+typedef NTSTATUS
+(NTAPI *PLEAVE_DMA_DOMAIN)(
+  _In_ PDMA_ADAPTER DmaAdapter);
+
+typedef HANDLE
+(NTAPI *PGET_DMA_DOMAIN)(
+  _In_ PDMA_ADAPTER DmaAdapter);
+
+typedef PVOID
+(NTAPI *PALLOCATE_COMMON_BUFFER_WITH_BOUNDS)(
+  _In_ PDMA_ADAPTER DmaAdapter,
+  _In_opt_ PPHYSICAL_ADDRESS MinimumAddress,
+  _In_opt_ PPHYSICAL_ADDRESS MaximumAddress,
+  _In_ ULONG Length,
+  _In_ ULONG Flags,
+  _In_opt_ MEMORY_CACHING_TYPE *CacheType,
+  _In_ NODE_REQUIREMENT PreferredNode,
+  _Out_ PPHYSICAL_ADDRESS LogicalAddress);
+
+typedef struct _DMA_COMMON_BUFFER_VECTOR DMA_COMMON_BUFFER_VECTOR, *PDMA_COMMON_BUFFER_VECTOR;
+
+typedef NTSTATUS
+(NTAPI *PALLOCATE_COMMON_BUFFER_VECTOR)(
+  _In_ PDMA_ADAPTER DmaAdapter,
+  _In_ PHYSICAL_ADDRESS LowAddress,
+  _In_ PHYSICAL_ADDRESS HighAddress,
+  _In_ MEMORY_CACHING_TYPE CacheType,
+  _In_ ULONG IdealNode,
+  _In_ ULONG Flags,
+  _In_ ULONG NumberOfElements,
+  _In_ ULONGLONG SizeOfElements,
+  _Out_ PDMA_COMMON_BUFFER_VECTOR *VectorOut);
+
+typedef VOID
+(NTAPI *PGET_COMMON_BUFFER_FROM_VECTOR_BY_INDEX)(
+  _In_ PDMA_ADAPTER DmaAdapter,
+  _In_ PDMA_COMMON_BUFFER_VECTOR Vector,
+  _In_ ULONG Index,
+  _Out_ PVOID *VirtualAddressOut,
+  _Out_ PPHYSICAL_ADDRESS LogicalAddressOut);
+
+typedef VOID
+(NTAPI *PFREE_COMMON_BUFFER_FROM_VECTOR)(
+  _In_ PDMA_ADAPTER DmaAdapter,
+  _In_ PDMA_COMMON_BUFFER_VECTOR Vector,
+  _In_ ULONG Index);
+
+typedef VOID
+(NTAPI *PFREE_COMMON_BUFFER_VECTOR)(
+  _In_ PDMA_ADAPTER DmaAdapter,
+  _In_ PDMA_COMMON_BUFFER_VECTOR Vector);
+
 typedef struct _DMA_OPERATIONS {
   ULONG Size;
   PPUT_DMA_ADAPTER PutDmaAdapter;
@@ -2330,6 +2626,29 @@ typedef struct _DMA_OPERATIONS {
   PCALCULATE_SCATTER_GATHER_LIST_SIZE CalculateScatterGatherList;
   PBUILD_SCATTER_GATHER_LIST BuildScatterGatherList;
   PBUILD_MDL_FROM_SCATTER_GATHER_LIST BuildMdlFromScatterGatherList;
+  PGET_DMA_ADAPTER_INFO GetDmaAdapterInfo;
+  PGET_DMA_TRANSFER_INFO GetDmaTransferInfo;
+  PINITIALIZE_DMA_TRANSFER_CONTEXT InitializeDmaTransferContext;
+  PALLOCATE_COMMON_BUFFER_EX AllocateCommonBufferEx;
+  PALLOCATE_ADAPTER_CHANNEL_EX AllocateAdapterChannelEx;
+  PCONFIGURE_ADAPTER_CHANNEL ConfigureAdapterChannel;
+  PCANCEL_ADAPTER_CHANNEL CancelAdapterChannel;
+  PMAP_TRANSFER_EX MapTransferEx;
+  PGET_SCATTER_GATHER_LIST_EX GetScatterGatherListEx;
+  PBUILD_SCATTER_GATHER_LIST_EX BuildScatterGatherListEx;
+  PFLUSH_ADAPTER_BUFFERS_EX FlushAdapterBuffersEx;
+  PFREE_ADAPTER_OBJECT FreeAdapterObject;
+  PCANCEL_MAPPED_TRANSFER CancelMappedTransfer;
+  PALLOCATE_DOMAIN_COMMON_BUFFER AllocateDomainCommonBuffer;
+  PFLUSH_DMA_BUFFER FlushDmaBuffer;
+  PJOIN_DMA_DOMAIN JoinDmaDomain;
+  PLEAVE_DMA_DOMAIN LeaveDmaDomain;
+  PGET_DMA_DOMAIN GetDmaDomain;
+  PALLOCATE_COMMON_BUFFER_WITH_BOUNDS AllocateCommonBufferWithBounds;
+  PALLOCATE_COMMON_BUFFER_VECTOR AllocateCommonBufferVector;
+  PGET_COMMON_BUFFER_FROM_VECTOR_BY_INDEX GetCommonBufferFromVectorByIndex;
+  PFREE_COMMON_BUFFER_FROM_VECTOR FreeCommonBufferFromVector;
+  PFREE_COMMON_BUFFER_VECTOR FreeCommonBufferVector;
 } DMA_OPERATIONS, *PDMA_OPERATIONS;
 
 typedef struct _IO_RESOURCE_DESCRIPTOR {
@@ -2355,6 +2674,14 @@ typedef struct _IO_RESOURCE_DESCRIPTOR {
     struct {
       ULONG MinimumVector;
       ULONG MaximumVector;
+#if defined(NT_PROCESSOR_GROUPS)
+      IRQ_DEVICE_POLICY AffinityPolicy;
+      USHORT Group;
+#else
+      IRQ_DEVICE_POLICY AffinityPolicy;
+#endif
+      IRQ_PRIORITY PriorityPolicy;
+      KAFFINITY TargetedProcessors;
     } Interrupt;
     struct {
       ULONG MinimumChannel;
@@ -2589,7 +2916,8 @@ typedef enum _BUS_QUERY_ID_TYPE {
   BusQueryHardwareIDs,
   BusQueryCompatibleIDs,
   BusQueryInstanceID,
-  BusQueryDeviceSerialNumber
+  BusQueryDeviceSerialNumber,
+  BusQueryContainerID
 } BUS_QUERY_ID_TYPE, *PBUS_QUERY_ID_TYPE;
 
 typedef enum _DEVICE_TEXT_TYPE {
@@ -7110,3 +7438,149 @@ typedef struct _IO_PRIORITY_INFO {
 } IO_PRIORITY_INFO, *PIO_PRIORITY_INFO;
 #endif
 $endif (_NTIFS_)
+
+$if (_WDMDDK_)
+
+#define D3COLD_SUPPORT_INTERFACE_VERSION 1
+
+typedef
+_Function_class_(SET_D3COLD_SUPPORT)
+_IRQL_requires_(PASSIVE_LEVEL)
+VOID
+SET_D3COLD_SUPPORT(
+  _In_reads_opt_(_Inexpressible_("varies")) PVOID Context,
+  _In_ BOOLEAN D3ColdSupport);
+
+typedef SET_D3COLD_SUPPORT *PSET_D3COLD_SUPPORT;
+
+typedef enum _DEVICE_WAKE_DEPTH
+{
+  DeviceWakeDepthNotWakeable = 0,
+  DeviceWakeDepthD0,
+  DeviceWakeDepthD1,
+  DeviceWakeDepthD2,
+  DeviceWakeDepthD3hot,
+  DeviceWakeDepthD3cold,
+  DeviceWakeDepthMaximum
+} DEVICE_WAKE_DEPTH, *PDEVICE_WAKE_DEPTH;
+
+FORCEINLINE
+DEVICE_POWER_STATE
+MapWakeDepthToDstate(
+  _In_ DEVICE_WAKE_DEPTH WakeDepth)
+{
+  const DEVICE_POWER_STATE dstateMap[DeviceWakeDepthMaximum] =
+  {
+    PowerDeviceD0,
+    PowerDeviceD0,
+    PowerDeviceD1,
+    PowerDeviceD2,
+    PowerDeviceD3,
+    PowerDeviceD3
+  };
+
+  if (WakeDepth < 0 || WakeDepth >= DeviceWakeDepthMaximum)
+  {
+    return PowerDeviceUnspecified;
+  }
+  else
+  {
+    return dstateMap[WakeDepth];
+  }
+}
+
+typedef
+_Function_class_(GET_IDLE_WAKE_INFO)
+_IRQL_requires_(PASSIVE_LEVEL)
+NTSTATUS
+GET_IDLE_WAKE_INFO(
+  _In_reads_opt_(_Inexpressible_("varies")) PVOID Context,
+  _In_ SYSTEM_POWER_STATE SystemPowerState,
+  _Out_ PDEVICE_WAKE_DEPTH DeepestWakeableDstate);
+
+typedef GET_IDLE_WAKE_INFO *PGET_IDLE_WAKE_INFO;
+
+typedef
+_Function_class_(GET_D3COLD_CAPABILITY)
+_IRQL_requires_(PASSIVE_LEVEL)
+NTSTATUS
+GET_D3COLD_CAPABILITY(
+  _In_reads_opt_(_Inexpressible_("varies")) PVOID Context,
+  _Out_ PBOOLEAN D3ColdSupported);
+
+typedef GET_D3COLD_CAPABILITY *PGET_D3COLD_CAPABILITY;
+
+typedef enum _D3COLD_LAST_TRANSITION_STATUS
+{
+  LastDStateTransitionStatusUnknown = 0,
+  LastDStateTransitionD3hot,
+  LastDStateTransitionD3cold
+} D3COLD_LAST_TRANSITION_STATUS, *PD3COLD_LAST_TRANSITION_STATUS;
+
+typedef
+_Function_class_(GET_D3COLD_LAST_TRANSITION_STATUS)
+_IRQL_requires_max_(DISPATCH_LEVEL)
+VOID
+GET_D3COLD_LAST_TRANSITION_STATUS(
+  _In_reads_opt_(_Inexpressible_("varies")) PVOID Context,
+  _Out_ PD3COLD_LAST_TRANSITION_STATUS LastTransitionStatus);
+
+typedef GET_D3COLD_LAST_TRANSITION_STATUS *PGET_D3COLD_LAST_TRANSITION_STATUS;
+
+typedef struct _D3COLD_SUPPORT_INTERFACE
+{
+    USHORT Size;
+    USHORT Version;
+    PVOID Context;
+    PINTERFACE_REFERENCE InterfaceReference;
+    PINTERFACE_DEREFERENCE InterfaceDereference;
+    PSET_D3COLD_SUPPORT SetD3ColdSupport;
+    PGET_IDLE_WAKE_INFO GetIdleWakeInfo;
+    PGET_D3COLD_CAPABILITY GetD3ColdCapability;
+    PGET_D3COLD_CAPABILITY GetBusDriverD3ColdSupport;
+    PGET_D3COLD_LAST_TRANSITION_STATUS GetLastTransitionStatus;
+} D3COLD_SUPPORT_INTERFACE, *PD3COLD_SUPPORT_INTERFACE;
+
+typedef
+_Function_class_(D3COLD_REQUEST_CORE_POWER_RAIL)
+_IRQL_requires_(PASSIVE_LEVEL)
+VOID
+D3COLD_REQUEST_CORE_POWER_RAIL(
+  _In_reads_opt_(_Inexpressible_("varies")) PVOID Context,
+  _In_ BOOLEAN CorePowerRailNeeded);
+
+typedef D3COLD_REQUEST_CORE_POWER_RAIL *PD3COLD_REQUEST_CORE_POWER_RAIL;
+
+typedef
+_Function_class_(D3COLD_REQUEST_AUX_POWER)
+_IRQL_requires_(PASSIVE_LEVEL)
+NTSTATUS
+D3COLD_REQUEST_AUX_POWER(
+  _In_reads_opt_(_Inexpressible_("varies")) PVOID Context,
+  _In_ ULONG AuxPowerInMilliWatts,
+  _Out_ PULONG RetryInSeconds);
+
+typedef D3COLD_REQUEST_AUX_POWER *PD3COLD_REQUEST_AUX_POWER;
+
+typedef
+_Function_class_(D3COLD_REQUEST_PERST_DELAY)
+_IRQL_requires_(PASSIVE_LEVEL)
+NTSTATUS
+D3COLD_REQUEST_PERST_DELAY(
+  _In_reads_opt_(_Inexpressible_("varies")) PVOID Context,
+  _In_ ULONG DelayInMicroSeconds);
+
+typedef D3COLD_REQUEST_PERST_DELAY *PD3COLD_REQUEST_PERST_DELAY;
+
+typedef struct _D3COLD_AUX_POWER_AND_TIMING_INTERFACE
+{
+    USHORT Size;
+    USHORT Version;
+    PVOID Context;
+    PINTERFACE_REFERENCE InterfaceReference;
+    PINTERFACE_DEREFERENCE InterfaceDereference;
+    PD3COLD_REQUEST_CORE_POWER_RAIL RequestCorePowerRail;
+    PD3COLD_REQUEST_AUX_POWER RequestAuxPower;
+    PD3COLD_REQUEST_PERST_DELAY RequestPerstDelay;
+} D3COLD_AUX_POWER_AND_TIMING_INTERFACE, *PD3COLD_AUX_POWER_AND_TIMING_INTERFACE;
+$endif(_WDMDDK_)

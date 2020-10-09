@@ -938,7 +938,7 @@ BEGIN
     IDS_EDIT_VERB "Edytuj"
     IDS_FIND_VERB "Wyszukaj"
     IDS_PRINT_VERB "Drukuj"
-    IDS_CMD_VERB "&Wiersz poleceń tutaj"
+    IDS_CMD_VERB "&Otwórz wiersz polecenia tutaj"
 
     IDS_FILE_FOLDER "%u Plików, %u Katalogów"
     IDS_PRINTERS "Drukarki"

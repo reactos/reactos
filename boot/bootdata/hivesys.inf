@@ -5,7 +5,7 @@ Signature = "$Windows NT$"
 
 HKLM,"SYSTEM\CurrentControlSet\Control","CurrentUser",2,"USERNAME"
 HKLM,"SYSTEM\CurrentControlSet\Control","WaitToKillServiceTimeout",2,"20000"
-HKLM,"SYSTEM\CurrentControlSet\Control\Biosinfo","InfName",2,"biosinfo.inf"
+;HKLM,"SYSTEM\CurrentControlSet\Control\Biosinfo","InfName",2,"biosinfo.inf"
 HKLM,"SYSTEM\CurrentControlSet\Control\PnP",,0x00000012
 HKLM,"SYSTEM\CurrentControlSet\Control\Video",,0x00000012
 
@@ -992,6 +992,7 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage","28606",0x00000000,"c_28606
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage","ACP",0x00000000,"1252"
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage","OEMCP",0x00000000,"437"
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage","MACCP",0x00000000,"10000"
+HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage","OEMHAL",0x00000000,"vgaoem.fon"
 
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage\EUDCCodeRange","932",2,"F040-F9FC"
 HKLM,"SYSTEM\CurrentControlSet\Control\Nls\CodePage\EUDCCodeRange","936",2,"AAA1-AFFE,F8A1-FEFE,A140-A7A0"
@@ -2400,8 +2401,11 @@ AUDIO_SERVICE_DESCRIPTION="Zapewnia aplikacjom dostęp do urządzeń audio."
 BITS_SERVICE="Usługa inteligentnego transferu w tle"
 BITS_SERVICE_DESCRIPTION="Przenosi dane pomiędzy klientami a serwerami w tle."
 
-DCOMLAUNCH_SERVICE="DcomLaunch service"
-DCOMLAUNCH_SERVICE_DESCRIPTION="DcomLaunch service stub."
+BROWSER_SERVICE="Przeglądarka komputera"
+BROWSER_SERVICE_DESCRIPTION="Utrzymuje aktualną listę komputerów w sieci i dostarcza ją do komputerów wyznaczonych jako przeglądarki."
+
+DCOMLAUNCH_SERVICE="Usługa DcomLaunch"
+DCOMLAUNCH_SERVICE_DESCRIPTION="Namiastka usługi DcomLaunch"
 
 EVENTLOG_SERVICE="Dziennik zdarzeń"
 EVENTLOG_SERVICE_DESCRIPTION="Zapisuje zdarzenia lub wiadomości wysyłane przez system operacyjny do bazy danych dostępnej za pomocą podglądu zdarzeń."
@@ -2418,8 +2422,8 @@ PLUGPLAY_SERVICE_DESCRIPTION="Wykrywa zmiany w sprzęcie i instaluje potrzebne o
 RPCSS_SERVICE="Zdalne wykonywanie procedur"
 RPCSS_SERVICE_DESCRIPTION="Podsystem RPC, który jest odpowiedzialny za zdalne wykonywanie procedur na tym komputerze."
 
-SAMSS_SERVICE="Security Accounts Manager"
-SAMSS_SERVICE_DESCRIPTION="The startup of this service signals other services that the Security Accounts Manager (SAM) is ready to accept requests.  Disabling this service will prevent other services in the system from being notified when the SAM is ready, which may in turn cause those services to fail to start correctly.  This service should not be disabled."
+SAMSS_SERVICE="Menedżer kont zabezpieczeń"
+SAMSS_SERVICE_DESCRIPTION="Uruchomienie tej usługi informuje inne usługi, że Menedżer kont zabezpieczeń jest gotowy do akceptowania żądań. Wyłączenie tej usługi spowoduje, że inne usługi w systemie nie będą powiadamiane o gotowości Menedżera kont zabezpieczeń, przez co te usługi mogą być uruchamiane nieprawidłowo. Tej usługi nie należy wyłączać."
 
 SCHEDULE_SERVICE="Usługa Harmonogram"
 SCHEDULE_SERVICE_DESCRIPTION="Umożliwia uruchamianie programów w określonym czasie."

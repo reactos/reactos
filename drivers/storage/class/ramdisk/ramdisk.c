@@ -1733,6 +1733,7 @@ RamdiskQueryId(IN PRAMDISK_DRIVE_EXTENSION DriveExtension,
         }
 
         case BusQueryDeviceSerialNumber:
+        case BusQueryContainerID:
         {
             /* Nothing to do */
             break;

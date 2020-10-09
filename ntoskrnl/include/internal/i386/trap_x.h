@@ -9,12 +9,7 @@
 #pragma once
 
 #if defined(_MSC_VER)
-#define UNREACHABLE   __assume(0)
 #define               __builtin_expect(a,b) (a)
-#elif defined(__GNUC__)
-#define UNREACHABLE   __builtin_unreachable()
-#else
-#error
 #endif
 
 //

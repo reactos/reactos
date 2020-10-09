@@ -42,7 +42,7 @@ HRESULT STDMETHODCALLTYPE CFolder::get_Title(BSTR *pbs)
         return E_POINTER;
 
     WCHAR path[MAX_PATH+2] = {0};
-    HRESULT hr = ILGetDisplayNameExW(NULL, m_idlist, path, ILGDN_INFOLDER);
+    HRESULT hr = ILGetDisplayNameExW(NULL, m_idlist, path, ILGDN_INFOLDER) ? S_OK : E_FAIL;
     if (FAILED_UNEXPECTEDLY(hr))
         return hr;
 

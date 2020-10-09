@@ -694,7 +694,7 @@ INT CommandExit(LPTSTR param)
  */
 INT CommandRem (LPTSTR param)
 {
-    if (!_tcsncmp (param, _T("/?"), 2))
+    if (_tcsstr(param, _T("/?")) == param)
     {
         ConOutResPaging(TRUE,STRING_REM_HELP);
     }

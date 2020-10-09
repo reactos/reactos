@@ -22,7 +22,7 @@
  * FILE:             base/services/umpnpmgr/install.c
  * PURPOSE:          Device installer
  * PROGRAMMER:       Eric Kohl (eric.kohl@reactos.org)
- *                   Hervé Poussineau (hpoussin@reactos.org)
+ *                   HervÃ© Poussineau (hpoussin@reactos.org)
  *                   Colin Finck (colin@reactos.org)
  */
 
@@ -40,7 +40,9 @@ HANDLE hUserToken = NULL;
 HANDLE hInstallEvent = NULL;
 HANDLE hNoPendingInstalls = NULL;
 
-SLIST_HEADER DeviceInstallListHead;
+/* Device-install event list */
+HANDLE hDeviceInstallListMutex;
+LIST_ENTRY DeviceInstallListHead;
 HANDLE hDeviceInstallListNotEmpty;
 
 
@@ -354,7 +356,7 @@ DWORD
 WINAPI
 DeviceInstallThread(LPVOID lpParameter)
 {
-    PSLIST_ENTRY ListEntry;
+    PLIST_ENTRY ListEntry;
     DeviceInstallParams* Params;
     BOOL showWizard;
 
@@ -366,7 +368,11 @@ DeviceInstallThread(LPVOID lpParameter)
 
     while (TRUE)
     {
-        ListEntry = InterlockedPopEntrySList(&DeviceInstallListHead);
+        /* Dequeue the next oldest device-install event */
+        WaitForSingleObject(hDeviceInstallListMutex, INFINITE);
+        ListEntry = (IsListEmpty(&DeviceInstallListHead)
+                        ? NULL : RemoveHeadList(&DeviceInstallListHead));
+        ReleaseMutex(hDeviceInstallListMutex);
 
         if (ListEntry == NULL)
         {

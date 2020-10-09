@@ -664,7 +664,7 @@ ExecuteAsync(PARSED_COMMAND *Cmd)
 
     /* Build the parameter string to pass to cmd.exe */
     ParamsEnd = _stpcpy(CmdParams, _T("/S/D/C\""));
-    ParamsEnd = Unparse(Cmd, ParamsEnd, &CmdParams[CMDLINE_LENGTH - 2]);
+    ParamsEnd = UnparseCommand(Cmd, ParamsEnd, &CmdParams[CMDLINE_LENGTH - 2]);
     if (!ParamsEnd)
     {
         error_out_of_memory();
@@ -785,12 +785,13 @@ ExecuteCommand(
     LPTSTR First, Rest;
     INT Ret = 0;
 
+    /* If we don't have any command, or if this is REM, ignore it */
+    if (!Cmd || (Cmd->Type == C_REM))
+        return 0;
     /*
      * Do not execute any command if we are about to exit CMD, or about to
      * change batch execution context, e.g. in case of a CALL / GOTO / EXIT.
      */
-    if (!Cmd)
-        return 0;
     if (bExit || SeenGoto())
         return 0;
 
@@ -812,6 +813,8 @@ ExecuteCommand(
             }
             cmd_free(First);
         }
+        /* Fall through */
+    case C_REM:
         break;
 
     case C_QUIET:
@@ -842,12 +845,12 @@ ExecuteCommand(
         Ret = ExecutePipeline(Cmd);
         break;
 
-    case C_IF:
-        Ret = ExecuteIf(Cmd);
-        break;
-
     case C_FOR:
         Ret = ExecuteFor(Cmd);
+        break;
+
+    case C_IF:
+        Ret = ExecuteIf(Cmd);
         break;
     }
 
@@ -1418,21 +1421,19 @@ do { \
     }
     else if (*Src == _T('~'))
     {
-        /* %VAR:~[start][,length]% - substring
+        /* %VAR:~[start][,length]% - Substring.
          * Negative values are offsets from the end.
          */
-        size_t Start = _tcstol(Src + 1, (PTSTR*)&Src, 0);
-        size_t End = VarLength;
+        SSIZE_T Start = _tcstol(Src + 1, (PTSTR*)&Src, 0);
+        SSIZE_T End = (SSIZE_T)VarLength;
         if (Start < 0)
             Start += VarLength;
-        Start = max(Start, 0);
-        Start = min(Start, VarLength);
+        Start = min(max(Start, 0), VarLength);
         if (*Src == _T(','))
         {
             End = _tcstol(Src + 1, (PTSTR*)&Src, 0);
             End += (End < 0) ? VarLength : Start;
-            End = max(End, Start);
-            End = min(End, VarLength);
+            End = min(max(End, Start), VarLength);
         }
         if (*Src++ != Delim)
             goto bad_subst;

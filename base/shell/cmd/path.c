@@ -29,71 +29,87 @@
 
 #ifdef INCLUDE_CMD_PATH
 
-/* size of environment variable buffer */
+/* Size of environment variable buffer */
 #define ENV_BUFFER_SIZE 1024
 
 
-INT cmd_path (LPTSTR param)
+INT cmd_path(LPTSTR param)
 {
-    if (!_tcsncmp (param, _T("/?"), 2))
+    INT retval = 0;
+
+    if (!_tcsncmp(param, _T("/?"), 2))
     {
-        ConOutResPaging(TRUE,STRING_PATH_HELP1);
+        ConOutResPaging(TRUE, STRING_PATH_HELP1);
         return 0;
     }
 
-    nErrorLevel = 0;
-
-    /* if param is empty, display the PATH environment variable */
+    /* If param is empty, display the PATH environment variable */
     if (!param || !*param)
     {
         DWORD  dwBuffer;
         LPTSTR pszBuffer;
 
-        pszBuffer = (LPTSTR)cmd_alloc (ENV_BUFFER_SIZE * sizeof(TCHAR));
+        pszBuffer = (LPTSTR)cmd_alloc(ENV_BUFFER_SIZE * sizeof(TCHAR));
         if (!pszBuffer)
         {
             WARN("Cannot allocate memory for pszBuffer!\n");
-            return 1;
+            error_out_of_memory();
+            retval = 1;
+            goto Quit;
         }
 
-        dwBuffer = GetEnvironmentVariable (_T("PATH"), pszBuffer, ENV_BUFFER_SIZE);
+        dwBuffer = GetEnvironmentVariable(_T("PATH"), pszBuffer, ENV_BUFFER_SIZE);
         if (dwBuffer == 0)
         {
             cmd_free(pszBuffer);
             ConErrResPrintf(STRING_SET_ENV_ERROR, _T("PATH"));
-            return 0;
+            retval = 0;
+            goto Quit;
         }
         else if (dwBuffer > ENV_BUFFER_SIZE)
         {
             LPTSTR pszOldBuffer = pszBuffer;
-            pszBuffer = (LPTSTR)cmd_realloc (pszBuffer, dwBuffer * sizeof (TCHAR));
+            pszBuffer = (LPTSTR)cmd_realloc(pszBuffer, dwBuffer * sizeof (TCHAR));
             if (!pszBuffer)
             {
                 WARN("Cannot reallocate memory for pszBuffer!\n");
+                error_out_of_memory();
                 cmd_free(pszOldBuffer);
-                return 1;
+                retval = 1;
+                goto Quit;
             }
-            GetEnvironmentVariable (_T("PATH"), pszBuffer, dwBuffer);
+            GetEnvironmentVariable(_T("PATH"), pszBuffer, dwBuffer);
         }
 
         ConOutPrintf(_T("PATH=%s\n"), pszBuffer);
-        cmd_free (pszBuffer);
+        cmd_free(pszBuffer);
 
-        return 0;
+        retval = 0;
+        goto Quit;
     }
 
-    /* skip leading '=' */
+    /* Skip leading '=' */
     if (*param == _T('='))
         param++;
 
-    /* set PATH environment variable */
-    if (!SetEnvironmentVariable (_T("PATH"), param))
+    /* Set PATH environment variable */
+    if (!SetEnvironmentVariable(_T("PATH"), param))
     {
-        nErrorLevel = 1;
-        return 1;
+        retval = 1;
     }
 
-    return 0;
+Quit:
+    if (BatType != CMD_TYPE)
+    {
+        if (retval != 0)
+            nErrorLevel = retval;
+    }
+    else
+    {
+        nErrorLevel = retval;
+    }
+
+    return retval;
 }
 
 #endif

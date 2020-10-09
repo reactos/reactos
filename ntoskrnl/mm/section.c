@@ -723,12 +723,16 @@ l_ReadHeaderFromFile:
 //            if(!IsAligned(pishSectionHeaders[i].PointerToRawData, nFileAlignment))
 //                DIE(("PointerToRawData[%u] is not aligned\n", i));
 
+            if(!Intsafe_CanAddULong32(pishSectionHeaders[i].PointerToRawData, pishSectionHeaders[i].SizeOfRawData))
+                DIE(("SizeOfRawData[%u] too large\n", i));
+
             /* conversion */
             pssSegments[i].Image.FileOffset = pishSectionHeaders[i].PointerToRawData;
             pssSegments[i].RawLength.QuadPart = pishSectionHeaders[i].SizeOfRawData;
         }
         else
         {
+            /* FIXME: Should reset PointerToRawData to 0 in the image mapping */
             ASSERT(pssSegments[i].Image.FileOffset == 0);
             ASSERT(pssSegments[i].RawLength.QuadPart == 0);
         }
@@ -754,7 +758,7 @@ l_ReadHeaderFromFile:
         pssSegments[i].Protection = SectionCharacteristicsToProtect[nCharacteristics >> 28];
         pssSegments[i].WriteCopy = !(nCharacteristics & IMAGE_SCN_MEM_SHARED);
 
-        if(pishSectionHeaders[i].Misc.VirtualSize == 0 || pishSectionHeaders[i].Misc.VirtualSize < pishSectionHeaders[i].SizeOfRawData)
+        if(pishSectionHeaders[i].Misc.VirtualSize == 0)
             pssSegments[i].Length.QuadPart = pishSectionHeaders[i].SizeOfRawData;
         else
             pssSegments[i].Length.QuadPart = pishSectionHeaders[i].Misc.VirtualSize;

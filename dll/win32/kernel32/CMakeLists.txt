@@ -1,7 +1,17 @@
 
+add_subdirectory(kernel32_vista)
+
 add_definitions(-D_KERNEL32_)
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/subsys)
 spec2def(kernel32.dll kernel32.spec ADD_IMPORTLIB)
+
+# Shared between kernel32 and kernel32_vista
+add_library(kernel32_shared
+    client/shared_utils.c
+    client/file/fileutils.c
+)
+
+add_dependencies(kernel32_shared psdk)
 
 list(APPEND SOURCE
     client/actctx.c
@@ -34,7 +44,6 @@ list(APPEND SOURCE
     client/vdm.c
     client/version.c
     client/virtmem.c
-    client/vista.c
     client/console/alias.c
     client/console/console.c
     client/console/history.c
@@ -112,7 +121,7 @@ set_module_type(kernel32 win32dll ENTRYPOINT DllMain 12)
 set_subsystem(kernel32 console)
 ################# END  HACK #################
 
-target_link_libraries(kernel32 wine chkstk ${PSEH_LIB})
+target_link_libraries(kernel32 kernel32_shared wine chkstk ${PSEH_LIB})
 add_importlibs(kernel32 ntdll)
 add_pch(kernel32 k32.h SOURCE)
 add_dependencies(kernel32 psdk errcodes asm)
