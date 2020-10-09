@@ -4,6 +4,7 @@
 
 #include <precomp.h>
 
+static BOOL gbInitialized = FALSE;
 extern HGDIOBJ stock_objects[];
 BOOL SetStockObjects = FALSE;
 PDEVCAPS GdiDevCaps = NULL;
@@ -40,18 +41,22 @@ VOID
 WINAPI
 GdiProcessSetup(VOID)
 {
-    hProcessHeap = GetProcessHeap();
+    if (!gbInitialized)
+    {
+        gbInitialized = TRUE;
+        hProcessHeap = GetProcessHeap();
 
-    /* map the gdi handle table to user space */
-    GdiHandleTable = NtCurrentTeb()->ProcessEnvironmentBlock->GdiSharedHandleTable;
-    GdiSharedHandleTable = NtCurrentTeb()->ProcessEnvironmentBlock->GdiSharedHandleTable;
-    GdiDevCaps = &GdiSharedHandleTable->DevCaps;
-    CurrentProcessId = NtCurrentTeb()->ClientId.UniqueProcess;
-    GDI_BatchLimit = (DWORD) NtCurrentTeb()->ProcessEnvironmentBlock->GdiDCAttributeList;
-    GdiHandleCache = (PGDIHANDLECACHE)NtCurrentTeb()->ProcessEnvironmentBlock->GdiHandleBuffer;
-    RtlInitializeCriticalSection(&semLocal);
-    InitializeCriticalSection(&gcsClientObjLinks);
-    GdiInitializeLanguagePack(0);
+        /* map the gdi handle table to user space */
+        GdiHandleTable = NtCurrentTeb()->ProcessEnvironmentBlock->GdiSharedHandleTable;
+        GdiSharedHandleTable = NtCurrentTeb()->ProcessEnvironmentBlock->GdiSharedHandleTable;
+        GdiDevCaps = &GdiSharedHandleTable->DevCaps;
+        CurrentProcessId = NtCurrentTeb()->ClientId.UniqueProcess;
+        GDI_BatchLimit = (DWORD) NtCurrentTeb()->ProcessEnvironmentBlock->GdiDCAttributeList;
+        GdiHandleCache = (PGDIHANDLECACHE)NtCurrentTeb()->ProcessEnvironmentBlock->GdiHandleBuffer;
+        RtlInitializeCriticalSection(&semLocal);
+        InitializeCriticalSection(&gcsClientObjLinks);
+        GdiInitializeLanguagePack(0);
+    }
 }
 
 VOID
