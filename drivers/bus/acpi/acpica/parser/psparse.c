@@ -554,8 +554,8 @@ AcpiPsParseAml (
             }
 
             /*
-             * If the transfer to the new method method call worked
-             *, a new walk state was created -- get it
+             * If the transfer to the new method method call worked,
+             * a new walk state was created -- get it
              */
             WalkState = AcpiDsGetCurrentWalkState (Thread);
             continue;

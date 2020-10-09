@@ -869,7 +869,7 @@ typedef UINT8                           ACPI_ADR_SPACE_TYPE;
  *
  * Note: A Data Table region is a special type of operation region
  * that has its own AML opcode. However, internally, the AML
- * interpreter simply creates an operation region with an an address
+ * interpreter simply creates an operation region with an address
  * space type of ACPI_ADR_SPACE_DATA_TABLE.
  */
 #define ACPI_ADR_SPACE_DATA_TABLE       (ACPI_ADR_SPACE_TYPE) 0x7E /* Internal to ACPICA only */
@@ -1332,13 +1332,21 @@ typedef struct acpi_pci_id
 
 } ACPI_PCI_ID;
 
+typedef struct acpi_mem_mapping
+{
+    ACPI_PHYSICAL_ADDRESS           PhysicalAddress;
+    UINT8                           *LogicalAddress;
+    ACPI_SIZE                       Length;
+    struct acpi_mem_mapping         *NextMm;
+
+} ACPI_MEM_MAPPING;
+
 typedef struct acpi_mem_space_context
 {
     UINT32                          Length;
     ACPI_PHYSICAL_ADDRESS           Address;
-    ACPI_PHYSICAL_ADDRESS           MappedPhysicalAddress;
-    UINT8                           *MappedLogicalAddress;
-    ACPI_SIZE                       MappedLength;
+    ACPI_MEM_MAPPING                *CurMm;
+    ACPI_MEM_MAPPING                *FirstMm;
 
 } ACPI_MEM_SPACE_CONTEXT;
 
