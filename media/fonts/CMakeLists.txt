@@ -65,7 +65,7 @@ list(APPEND FONT_FILES
     verdanaz.ttf
     verdanai.ttf
     verdana.ttf
-    vgaoem.fon
+    #vgaoem.fon # to be added
     wingding.ttf)
 
 foreach(item ${FONT_FILES})
