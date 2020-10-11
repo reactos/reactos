@@ -148,37 +148,37 @@ static const TEST_ENTRY s_entries[] =
     { __LINE__, 0, TYPE_2, STYLE_0, EXSTYLE_1, STYLE_1, EXSTYLE_3 },
 
     // STYLE_1, EXSTYLE_1
-    { __LINE__, 3, TYPE_0, STYLE_1, EXSTYLE_1 },
-    { __LINE__, 3, TYPE_1, STYLE_1, EXSTYLE_1, STYLE_0, EXSTYLE_0 },
-    { __LINE__, 3, TYPE_2, STYLE_1, EXSTYLE_1, STYLE_0, EXSTYLE_0 },
+    { __LINE__, 0xB, TYPE_0, STYLE_1, EXSTYLE_1 },
+    { __LINE__, 0xB, TYPE_1, STYLE_1, EXSTYLE_1, STYLE_0, EXSTYLE_0 },
+    { __LINE__, 0xB, TYPE_2, STYLE_1, EXSTYLE_1, STYLE_0, EXSTYLE_0 },
 
-    { __LINE__, 3, TYPE_0, STYLE_1, EXSTYLE_1 },
-    { __LINE__, 3, TYPE_1, STYLE_1, EXSTYLE_1, STYLE_1, EXSTYLE_0 },
-    { __LINE__, 3, TYPE_2, STYLE_1, EXSTYLE_1, STYLE_1, EXSTYLE_0 },
+    { __LINE__, 0xB, TYPE_0, STYLE_1, EXSTYLE_1 },
+    { __LINE__, 0x1B, TYPE_1, STYLE_1, EXSTYLE_1, STYLE_1, EXSTYLE_0 },
+    { __LINE__, 0x1B, TYPE_2, STYLE_1, EXSTYLE_1, STYLE_1, EXSTYLE_0 },
 
-    { __LINE__, 3, TYPE_0, STYLE_1, EXSTYLE_1 },
-    { __LINE__, 3, TYPE_1, STYLE_1, EXSTYLE_1, STYLE_0, EXSTYLE_1 },
-    { __LINE__, 3, TYPE_2, STYLE_1, EXSTYLE_1, STYLE_0, EXSTYLE_1 },
+    { __LINE__, 0xB, TYPE_0, STYLE_1, EXSTYLE_1 },
+    { __LINE__, 0x4B, TYPE_1, STYLE_1, EXSTYLE_1, STYLE_0, EXSTYLE_1 },
+    { __LINE__, 0x4B, TYPE_2, STYLE_1, EXSTYLE_1, STYLE_0, EXSTYLE_1 },
 
-    { __LINE__, 3, TYPE_0, STYLE_1, EXSTYLE_1 },
-    { __LINE__, 3, TYPE_1, STYLE_1, EXSTYLE_1, STYLE_1, EXSTYLE_1 },
-    { __LINE__, 3, TYPE_2, STYLE_1, EXSTYLE_1, STYLE_1, EXSTYLE_1 },
+    { __LINE__, 0xB, TYPE_0, STYLE_1, EXSTYLE_1 },
+    { __LINE__, 0x5B, TYPE_1, STYLE_1, EXSTYLE_1, STYLE_1, EXSTYLE_1 },
+    { __LINE__, 0x5B, TYPE_2, STYLE_1, EXSTYLE_1, STYLE_1, EXSTYLE_1 },
 
-    { __LINE__, 3, TYPE_0, STYLE_1, EXSTYLE_1 },
-    { __LINE__, 3, TYPE_1, STYLE_1, EXSTYLE_1, STYLE_0, EXSTYLE_2 },
-    { __LINE__, 3, TYPE_2, STYLE_1, EXSTYLE_1, STYLE_0, EXSTYLE_2 },
+    { __LINE__, 0xB, TYPE_0, STYLE_1, EXSTYLE_1 },
+    { __LINE__, 0x2B, TYPE_1, STYLE_1, EXSTYLE_1, STYLE_0, EXSTYLE_2 },
+    { __LINE__, 0x2B, TYPE_2, STYLE_1, EXSTYLE_1, STYLE_0, EXSTYLE_2 },
 
-    { __LINE__, 3, TYPE_0, STYLE_1, EXSTYLE_1 },
-    { __LINE__, 3, TYPE_1, STYLE_1, EXSTYLE_1, STYLE_1, EXSTYLE_2 },
-    { __LINE__, 3, TYPE_2, STYLE_1, EXSTYLE_1, STYLE_1, EXSTYLE_2 },
+    { __LINE__, 0xB, TYPE_0, STYLE_1, EXSTYLE_1 },
+    { __LINE__, 0x3B, TYPE_1, STYLE_1, EXSTYLE_1, STYLE_1, EXSTYLE_2 },
+    { __LINE__, 0x3B, TYPE_2, STYLE_1, EXSTYLE_1, STYLE_1, EXSTYLE_2 },
 
-    { __LINE__, 3, TYPE_0, STYLE_1, EXSTYLE_1 },
-    { __LINE__, 3, TYPE_1, STYLE_1, EXSTYLE_1, STYLE_0, EXSTYLE_3 },
-    { __LINE__, 3, TYPE_2, STYLE_1, EXSTYLE_1, STYLE_0, EXSTYLE_3 },
+    { __LINE__, 0xB, TYPE_0, STYLE_1, EXSTYLE_1 },
+    { __LINE__, 0x6B, TYPE_1, STYLE_1, EXSTYLE_1, STYLE_0, EXSTYLE_3 },
+    { __LINE__, 0x6B, TYPE_2, STYLE_1, EXSTYLE_1, STYLE_0, EXSTYLE_3 },
 
-    { __LINE__, 3, TYPE_0, STYLE_1, EXSTYLE_1 },
-    { __LINE__, 3, TYPE_1, STYLE_1, EXSTYLE_1, STYLE_1, EXSTYLE_3 },
-    { __LINE__, 3, TYPE_2, STYLE_1, EXSTYLE_1, STYLE_1, EXSTYLE_3 },
+    { __LINE__, 0xB, TYPE_0, STYLE_1, EXSTYLE_1 },
+    { __LINE__, 0x7B, TYPE_1, STYLE_1, EXSTYLE_1, STYLE_1, EXSTYLE_3 },
+    { __LINE__, 0x7B, TYPE_2, STYLE_1, EXSTYLE_1, STYLE_1, EXSTYLE_3 },
 
     // STYLE_0, EXSTYLE_2
     { __LINE__, 0, TYPE_0, STYLE_0, EXSTYLE_2 },
@@ -280,37 +280,37 @@ static const TEST_ENTRY s_entries[] =
     { __LINE__, 0, TYPE_2, STYLE_0, EXSTYLE_3, STYLE_1, EXSTYLE_3 },
 
     // STYLE_1, EXSTYLE_3
-    { __LINE__, 3, TYPE_0, STYLE_1, EXSTYLE_3 },
-    { __LINE__, 3, TYPE_1, STYLE_1, EXSTYLE_3, STYLE_0, EXSTYLE_0 },
-    { __LINE__, 3, TYPE_2, STYLE_1, EXSTYLE_3, STYLE_0, EXSTYLE_0 },
+    { __LINE__, 0xF, TYPE_0, STYLE_1, EXSTYLE_3 },
+    { __LINE__, 0xF, TYPE_1, STYLE_1, EXSTYLE_3, STYLE_0, EXSTYLE_0 },
+    { __LINE__, 0xF, TYPE_2, STYLE_1, EXSTYLE_3, STYLE_0, EXSTYLE_0 },
 
-    { __LINE__, 3, TYPE_0, STYLE_1, EXSTYLE_3 },
-    { __LINE__, 3, TYPE_1, STYLE_1, EXSTYLE_3, STYLE_1, EXSTYLE_0 },
-    { __LINE__, 3, TYPE_2, STYLE_1, EXSTYLE_3, STYLE_1, EXSTYLE_0 },
+    { __LINE__, 0xF, TYPE_0, STYLE_1, EXSTYLE_3 },
+    { __LINE__, 0x1F, TYPE_1, STYLE_1, EXSTYLE_3, STYLE_1, EXSTYLE_0 },
+    { __LINE__, 0x1F, TYPE_2, STYLE_1, EXSTYLE_3, STYLE_1, EXSTYLE_0 },
 
-    { __LINE__, 3, TYPE_0, STYLE_1, EXSTYLE_3 },
-    { __LINE__, 3, TYPE_1, STYLE_1, EXSTYLE_3, STYLE_0, EXSTYLE_1 },
-    { __LINE__, 3, TYPE_2, STYLE_1, EXSTYLE_3, STYLE_0, EXSTYLE_1 },
+    { __LINE__, 0xF, TYPE_0, STYLE_1, EXSTYLE_3 },
+    { __LINE__, 0x4F, TYPE_1, STYLE_1, EXSTYLE_3, STYLE_0, EXSTYLE_1 },
+    { __LINE__, 0x4F, TYPE_2, STYLE_1, EXSTYLE_3, STYLE_0, EXSTYLE_1 },
 
-    { __LINE__, 3, TYPE_0, STYLE_1, EXSTYLE_3 },
-    { __LINE__, 3, TYPE_1, STYLE_1, EXSTYLE_3, STYLE_1, EXSTYLE_1 },
-    { __LINE__, 3, TYPE_2, STYLE_1, EXSTYLE_3, STYLE_1, EXSTYLE_1 },
+    { __LINE__, 0xF, TYPE_0, STYLE_1, EXSTYLE_3 },
+    { __LINE__, 0x5F, TYPE_1, STYLE_1, EXSTYLE_3, STYLE_1, EXSTYLE_1 },
+    { __LINE__, 0x5F, TYPE_2, STYLE_1, EXSTYLE_3, STYLE_1, EXSTYLE_1 },
 
-    { __LINE__, 3, TYPE_0, STYLE_1, EXSTYLE_3 },
-    { __LINE__, 3, TYPE_1, STYLE_1, EXSTYLE_3, STYLE_0, EXSTYLE_2 },
-    { __LINE__, 3, TYPE_2, STYLE_1, EXSTYLE_3, STYLE_0, EXSTYLE_2 },
+    { __LINE__, 0xF, TYPE_0, STYLE_1, EXSTYLE_3 },
+    { __LINE__, 0x2F, TYPE_1, STYLE_1, EXSTYLE_3, STYLE_0, EXSTYLE_2 },
+    { __LINE__, 0x2F, TYPE_2, STYLE_1, EXSTYLE_3, STYLE_0, EXSTYLE_2 },
 
-    { __LINE__, 3, TYPE_0, STYLE_1, EXSTYLE_3 },
-    { __LINE__, 3, TYPE_1, STYLE_1, EXSTYLE_3, STYLE_1, EXSTYLE_2 },
-    { __LINE__, 3, TYPE_2, STYLE_1, EXSTYLE_3, STYLE_1, EXSTYLE_2 },
+    { __LINE__, 0xF, TYPE_0, STYLE_1, EXSTYLE_3 },
+    { __LINE__, 0x3F, TYPE_1, STYLE_1, EXSTYLE_3, STYLE_1, EXSTYLE_2 },
+    { __LINE__, 0x3F, TYPE_2, STYLE_1, EXSTYLE_3, STYLE_1, EXSTYLE_2 },
 
-    { __LINE__, 3, TYPE_0, STYLE_1, EXSTYLE_3 },
-    { __LINE__, 3, TYPE_1, STYLE_1, EXSTYLE_3, STYLE_0, EXSTYLE_3 },
-    { __LINE__, 3, TYPE_2, STYLE_1, EXSTYLE_3, STYLE_0, EXSTYLE_3 },
+    { __LINE__, 0xF, TYPE_0, STYLE_1, EXSTYLE_3 },
+    { __LINE__, 0x6F, TYPE_1, STYLE_1, EXSTYLE_3, STYLE_0, EXSTYLE_3 },
+    { __LINE__, 0x6F, TYPE_2, STYLE_1, EXSTYLE_3, STYLE_0, EXSTYLE_3 },
 
-    { __LINE__, 3, TYPE_0, STYLE_1, EXSTYLE_3 },
-    { __LINE__, 3, TYPE_1, STYLE_1, EXSTYLE_3, STYLE_1, EXSTYLE_3 },
-    { __LINE__, 3, TYPE_2, STYLE_1, EXSTYLE_3, STYLE_1, EXSTYLE_3 },
+    { __LINE__, 0xF, TYPE_0, STYLE_1, EXSTYLE_3 },
+    { __LINE__, 0x7F, TYPE_1, STYLE_1, EXSTYLE_3, STYLE_1, EXSTYLE_3 },
+    { __LINE__, 0x7F, TYPE_2, STYLE_1, EXSTYLE_3, STYLE_1, EXSTYLE_3 },
 };
 
 static const size_t s_num_entries = sizeof(s_entries) / sizeof(s_entries[0]);
@@ -339,7 +339,7 @@ static void DoTestEntryPart1(const TEST_ENTRY *pEntry)
 
 static void DoTestEntryPart2(const TEST_ENTRY *pEntry)
 {
-    ok(s_dwFlags == pEntry->dwFlags, "Line %d: s_dwFlags expected 0x%08lX but was 0x%08lX\n",
+    ok(s_dwFlags == pEntry->dwFlags, "Line %d: s_dwFlags expected 0x%lX but was 0x%lX\n",
        pEntry->lineno, pEntry->dwFlags, s_dwFlags);
 
     PostMessageW(s_hwndTarget, WM_CLOSE, 0, 0);
@@ -365,12 +365,12 @@ WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
             case HSHELL_WINDOWCREATED:
                 if ((HWND)lParam != s_hwndTarget)
                     break;
-                style = (LONG)GetWindowLongPtrW(hwnd, GWL_STYLE);
-                exstyle = (LONG)GetWindowLongPtrW(hwnd, GWL_EXSTYLE);
+                style = (LONG)GetWindowLongPtrW(s_hwndTarget, GWL_STYLE);
+                exstyle = (LONG)GetWindowLongPtrW(s_hwndTarget, GWL_EXSTYLE);
                 if (style & WS_CHILD)
-                    hwndOwner = GetParent(hwnd);
+                    hwndOwner = GetParent(s_hwndTarget);
                 else
-                    hwndOwner = GetWindow(hwnd, GW_OWNER);
+                    hwndOwner = GetWindow(s_hwndTarget, GW_OWNER);
                 owner_style = (LONG)GetWindowLongPtrW(hwndOwner, GWL_STYLE);
                 owner_exstyle = (LONG)GetWindowLongPtrW(hwndOwner, GWL_EXSTYLE);
                 dwFlags = (1 << 0);
