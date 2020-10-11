@@ -315,7 +315,7 @@ static const TEST_ENTRY s_entries[] =
 
 static const size_t s_num_entries = sizeof(s_entries) / sizeof(s_entries[0]);
 
-static void DoTestEntry(const TEST_ENTRY *pEntry)
+static void DoTestEntryPart1(const TEST_ENTRY *pEntry)
 {
     ok(!pEntry->bIsChild || pEntry->bHasOwner,
        "Line %d: bIsChild && !bHasOwner\n", pEntry->lineno);
@@ -334,18 +334,20 @@ static void DoTestEntry(const TEST_ENTRY *pEntry)
         style &= ~WS_CHILD;
 
     s_dwFlags = 0;
-
     s_hwndTarget = DoCreateWindow(s_hwndParent, style, exstyle);
+}
 
+static void DoTestEntryPart2(const TEST_ENTRY *pEntry)
+{
     ok(s_dwFlags == pEntry->dwFlags, "Line %d: s_dwFlags expected 0x%08lX but was 0x%08lX\n",
        pEntry->lineno, pEntry->dwFlags, s_dwFlags);
 
-    DestroyWindow(s_hwndTarget);
+    PostMessageW(s_hwndTarget, WM_CLOSE, 0, 0);
     s_hwndTarget = NULL;
 
     if (pEntry->bIsChild || pEntry->bHasOwner)
     {
-        DestroyWindow(s_hwndParent);
+        PostMessageW(s_hwndParent, WM_CLOSE, 0, 0);
         s_hwndParent = NULL;
     }
 }
@@ -361,9 +363,14 @@ WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
         switch (wParam)
         {
             case HSHELL_WINDOWCREATED:
+                if ((HWND)lParam != s_hwndTarget)
+                    break;
                 style = (LONG)GetWindowLongPtrW(hwnd, GWL_STYLE);
                 exstyle = (LONG)GetWindowLongPtrW(hwnd, GWL_EXSTYLE);
-                hwndOwner = GetWindow(hwnd, GW_OWNER);
+                if (style & WS_CHILD)
+                    hwndOwner = GetParent(hwnd);
+                else
+                    hwndOwner = GetWindow(hwnd, GW_OWNER);
                 owner_style = (LONG)GetWindowLongPtrW(hwndOwner, GWL_STYLE);
                 owner_exstyle = (LONG)GetWindowLongPtrW(hwndOwner, GWL_EXSTYLE);
                 dwFlags = (1 << 0);
@@ -385,26 +392,35 @@ WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     }
     switch (uMsg)
     {
-        case WM_DESTROY:
-            if (s_hwndHookViewer == hwnd)
-                PostQuitMessage(0);
+        case WM_CREATE:
+            PostMessageW(hwnd, WM_COMMAND, 1000, 0);
+            return DefWindowProcW(hwnd, uMsg, wParam, lParam);
+        case WM_COMMAND:
+            if (hwnd == s_hwndHookViewer)
+            {
+                if (1000 <= wParam && wParam < 2000)
+                {
+                    INT i = (INT)wParam - 1000;
+                    DoTestEntryPart1(&s_entries[i]);
+                    PostMessageW(hwnd, WM_COMMAND, 2000 + i, 0);
+                }
+                else if (2000 <= wParam && wParam < 3000)
+                {
+                    INT i = (INT)wParam - 2000;
+                    DoTestEntryPart2(&s_entries[i]);
+                    ++i;
+                    if (i == s_num_entries)
+                    {
+                        PostQuitMessage(0);
+                        break;
+                    }
+                    PostMessageW(hwnd, WM_COMMAND, 1000 + i, 0);
+                }
+            }
             break;
         default:
             return DefWindowProcW(hwnd, uMsg, wParam, lParam);
     }
-    return 0;
-}
-
-static BOOL s_bQuit = FALSE;
-
-static DWORD WINAPI ThreadProc(LPVOID)
-{
-    for (size_t i = 0; i < s_num_entries; ++i)
-    {
-        DoTestEntry(&s_entries[i]);
-    }
-
-    s_bQuit = TRUE;
     return 0;
 }
 
@@ -435,12 +451,8 @@ START_TEST(ShellHook)
     s_uShellHookMsg = RegisterWindowMessageW(L"SHELLHOOK");
     RegisterShellHookWindow(s_hwndHookViewer);
 
-    s_bQuit = FALSE;
-    HANDLE hThread = CreateThread(NULL, 0, ThreadProc, NULL, 0, NULL);
-    CloseHandle(hThread);
-
     MSG msg;
-    while (!s_bQuit && GetMessageW(&msg, NULL, 0, 0))
+    while (GetMessageW(&msg, NULL, 0, 0))
     {
         TranslateMessage(&msg);
         DispatchMessageW(&msg);
