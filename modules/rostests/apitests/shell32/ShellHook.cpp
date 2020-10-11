@@ -328,7 +328,6 @@ static void DoTestEntry(const TEST_ENTRY *pEntry)
 
     DWORD style = pEntry->style;
     DWORD exstyle = pEntry->exstyle;
-
     if (pEntry->bIsChild)
         style |= WS_CHILD;
     else
@@ -450,7 +449,4 @@ START_TEST(ShellHook)
     DeregisterShellHookWindow(s_hwndHookViewer);
     DestroyWindow(s_hwndHookViewer);
     s_hwndHookViewer = NULL;
-
-    HWND hwndTaskSwitch = FindWindowW(L"MSTaskSwWClass", NULL);
-    RegisterShellHookWindow(hwndTaskSwitch);
 }
