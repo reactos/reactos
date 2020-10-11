@@ -16,38 +16,6 @@ GetRegisteredFileSystems(
     IN ULONG Index,
     OUT PCWSTR* FileSystemName);
 
-NTSTATUS
-GetFileSystemNameByHandle(
-    IN HANDLE PartitionHandle,
-    IN OUT PWSTR FileSystemName,
-    IN SIZE_T FileSystemNameSize);
-
-NTSTATUS
-GetFileSystemName_UStr(
-    IN PUNICODE_STRING PartitionPath,
-    IN OUT PWSTR FileSystemName,
-    IN SIZE_T FileSystemNameSize);
-
-NTSTATUS
-GetFileSystemName(
-    IN PCWSTR Partition,
-    IN OUT PWSTR FileSystemName,
-    IN SIZE_T FileSystemNameSize);
-
-NTSTATUS
-InferFileSystemByHandle(
-    IN HANDLE PartitionHandle,
-    IN UCHAR PartitionType,
-    IN OUT PWSTR FileSystemName,
-    IN SIZE_T FileSystemNameSize);
-
-NTSTATUS
-InferFileSystem(
-    IN PCWSTR Partition,
-    IN UCHAR PartitionType,
-    IN OUT PWSTR FileSystemName,
-    IN SIZE_T FileSystemNameSize);
-
 
 /** ChkdskEx() **/
 NTSTATUS
@@ -91,13 +59,6 @@ FormatFileSystem(
     IN BOOLEAN QuickFormat,
     IN ULONG ClusterSize,
     IN PFMIFSCALLBACK Callback);
-
-
-UCHAR
-FileSystemToPartitionType(
-    IN PCWSTR FileSystem,
-    IN PULARGE_INTEGER StartSector,
-    IN PULARGE_INTEGER SectorCount);
 
 
 //

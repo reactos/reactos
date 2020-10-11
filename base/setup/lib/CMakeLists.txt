@@ -9,6 +9,7 @@ list(APPEND SOURCE
     utils/arcname.c
     utils/bldrsup.c
     utils/filesup.c
+    utils/fsrec.c
     utils/genlist.c
     utils/inicache.c
     utils/ntverrsrc.c

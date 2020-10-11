@@ -33,6 +33,7 @@ extern HANDLE ProcessHeap;
 #include "utils/bldrsup.h"
 #include "bootsup.h"
 #include "utils/filesup.h"
+#include "utils/fsrec.h"
 #include "fsutil.h"
 #include "utils/genlist.h"
 #include "utils/inicache.h"
