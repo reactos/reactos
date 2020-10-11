@@ -394,7 +394,7 @@ VOID FindPrefixAndSuffix(LPTSTR strIN, LPTSTR szPrefix, LPTSTR szSuffix)
         /* Find the one closest to end */
         szSearch1 = _tcsrchr(str, _T('\"'));
         szSearch2 = _tcsrchr(str, _T('\\'));
-        szSearch3 = _tcsrchr(str, _T('.'));
+        szSearch3 = _tcsrchr(str, _T('/'));
         if (szSearch2 != NULL && _tcslen(szSearch1) > _tcslen(szSearch2))
             szSearch = szSearch2;
         else if (szSearch3 != NULL && _tcslen(szSearch1) > _tcslen(szSearch3))
