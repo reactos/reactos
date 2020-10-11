@@ -430,7 +430,7 @@ START_TEST(ShellHook)
     }
 
     s_uShellHookMsg = RegisterWindowMessageW(L"SHELLHOOK");
-    RegisterShellHook(s_hwndHookViewer, RSH_REGISTER_TASKMAN);
+    RegisterShellHookWindow(s_hwndHookViewer);
 
     s_bQuit = FALSE;
     HANDLE hThread = CreateThread(NULL, 0, ThreadProc, NULL, 0, NULL);
@@ -443,9 +443,10 @@ START_TEST(ShellHook)
         DispatchMessageW(&msg);
     }
 
+    DeregisterShellHookWindow(s_hwndHookViewer);
     DestroyWindow(s_hwndHookViewer);
     s_hwndHookViewer = NULL;
 
     HWND hwndTaskSwitch = FindWindowW(L"MSTaskSwWClass", NULL);
-    RegisterShellHook(hwndTaskSwitch, RSH_REGISTER_TASKMAN);
+    RegisterShellHookWindow(hwndTaskSwitch);
 }
