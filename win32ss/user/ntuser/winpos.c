@@ -1904,7 +1904,7 @@ co_WinPosSetWindowPos(
    }
    else if (WinPos.flags & SWP_SHOWWINDOW)
    {
-      if ((Window->ExStyle & (WS_EX_APPWINDOW | WS_EX_TOOLWINDOW)) >= WS_EX_APPWINDOW ||
+      if ((Window->ExStyle & WS_EX_APPWINDOW) ||
           (!(Window->ExStyle & WS_EX_TOOLWINDOW) && !Window->spwndOwner &&
            (!Window->spwndParent || UserIsDesktopWindow(Window->spwndParent))))
       {
