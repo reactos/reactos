@@ -21,9 +21,11 @@ const int PIN_WAVEOUT_OFFSET = (PIN_WAVEOUT / 2);
 const int PIN_WAVEIN_OFFSET  = (PIN_WAVEIN / 2);
 const int PIN_MICIN_OFFSET   = (PIN_MICIN / 2);
 
+class CMiniport;
 class CMiniportStream
 {
 public:
+    CMiniport*                  Miniport;
     PSERVICEGROUP               ServiceGroup;   // service group helps with DPCs
     ULONG                       CurrentRate;    // Current Sample Rate
 

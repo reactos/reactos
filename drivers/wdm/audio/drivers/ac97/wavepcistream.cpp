@@ -81,31 +81,31 @@ CMiniportWaveICHStream::~CMiniportWaveICHStream ()
                    stBDList.nHead, stBDList.nTail, stBDList.ulTagCounter,
                    stBDList.nBDEntries));
 
-    if (Wave)
+    if (Miniport)
     {
         //
         // Disable interrupts and stop DMA just in case.
         //
-        if (Wave->AdapterCommon)
+        if (Miniport->AdapterCommon)
         {
-            Wave->AdapterCommon->WriteBMControlRegister (m_ulBDAddr + X_CR, (UCHAR)0);
+            Miniport->AdapterCommon->WriteBMControlRegister (m_ulBDAddr + X_CR, (UCHAR)0);
 
             //
             // Update also the topology miniport if this was the render stream.
             //
-            if (Wave->AdapterCommon->GetMiniportTopology () &&
+            if (Miniport->AdapterCommon->GetMiniportTopology () &&
                 (Channel == PIN_WAVEOUT_OFFSET))
             {
-                Wave->AdapterCommon->GetMiniportTopology ()->SetCopyProtectFlag (FALSE);
+                Miniport->AdapterCommon->GetMiniportTopology ()->SetCopyProtectFlag (FALSE);
             }
         }
 
         //
         // Remove stream from miniport Streams array.
         //
-        if (Wave->Streams[Channel] == this)
+        if (Miniport->Streams[Channel] == this)
         {
-            Wave->Streams[Channel] = NULL;
+            Miniport->Streams[Channel] = NULL;
         }
 
         //
@@ -113,8 +113,8 @@ CMiniportWaveICHStream::~CMiniportWaveICHStream ()
         //
         if (stBDList.pBDEntry)
         {
-            Wave->AdapterObject->DmaOperations->
-               FreeCommonBuffer (Wave->AdapterObject,
+            Wave()->AdapterObject->DmaOperations->
+               FreeCommonBuffer (Wave()->AdapterObject,
                                  PAGE_SIZE,
                                  stBDList.PhysAddr,
                                  (PVOID)stBDList.pBDEntry,
@@ -125,8 +125,8 @@ CMiniportWaveICHStream::~CMiniportWaveICHStream ()
         //
         // Release the miniport.
         //
-        Wave->Release ();
-        Wave = NULL;
+        Wave()->Release ();
+        Miniport = NULL;
     }
 
     //
@@ -204,8 +204,8 @@ NTSTATUS CMiniportWaveICHStream::Init
     //
     // Save miniport pointer and addref it.
     //
-    Wave = Miniport_;
-    Wave->AddRef ();
+    Miniport = Miniport_;
+    Wave()->AddRef ();
 
     //
     // Save portstream interface pointer and addref it.
@@ -254,8 +254,8 @@ NTSTATUS CMiniportWaveICHStream::Init
     // because we need one table as a backup.
     // The pointer is aligned on a 8 byte boundary (that's what we need).
     //
-    stBDList.pBDEntry = (tBDEntry *)Wave->AdapterObject->DmaOperations->
-         AllocateCommonBuffer (Wave->AdapterObject,
+    stBDList.pBDEntry = (tBDEntry *)Wave()->AdapterObject->DmaOperations->
+         AllocateCommonBuffer (Wave()->AdapterObject,
                                MAX_BDL_ENTRIES * sizeof (tBDEntry) * 2,
                                &stBDList.PhysAddr,
                                FALSE);
@@ -353,7 +353,7 @@ NTSTATUS CMiniportWaveICHStream::Init
     //
     // Store the stream pointer, it is used by the ISR.
     //
-    Wave->Streams[Channel] = this;
+    Miniport->Streams[Channel] = this;
 
     return STATUS_SUCCESS;
 }
@@ -497,7 +497,7 @@ STDMETHODIMP_(NTSTATUS) CMiniportWaveICHStream::SetFormat
     //
     // Ensure format falls in proper range and is supported.
     //
-    NTSTATUS ntStatus = Wave->TestDataFormat (Format, (WavePins)(Channel << 1));
+    NTSTATUS ntStatus = Miniport->TestDataFormat (Format, (WavePins)(Channel << 1));
     if (!NT_SUCCESS (ntStatus))
         return ntStatus;
 
@@ -515,18 +515,18 @@ STDMETHODIMP_(NTSTATUS) CMiniportWaveICHStream::SetFormat
     // Check if we have a codec with one sample rate converter and there are streams
     // already open.
     //
-    if (Wave->Streams[PIN_WAVEIN_OFFSET] && Wave->Streams[PIN_WAVEOUT_OFFSET] &&
-        !Wave->AdapterCommon->GetNodeConfig (NODEC_PCM_VSR_INDEPENDENT_RATES))
+    if (Miniport->Streams[PIN_WAVEIN_OFFSET] && Miniport->Streams[PIN_WAVEOUT_OFFSET] &&
+        !Miniport->AdapterCommon->GetNodeConfig (NODEC_PCM_VSR_INDEPENDENT_RATES))
     {
         //
         // Figure out at which sample rate the other stream is running.
         //
         ULONG   ulFrequency;
 
-        if (Wave->Streams[PIN_WAVEIN_OFFSET] == this)
-            ulFrequency = Wave->Streams[PIN_WAVEOUT_OFFSET]->CurrentRate;
+        if (Miniport->Streams[PIN_WAVEIN_OFFSET] == this)
+            ulFrequency = Miniport->Streams[PIN_WAVEOUT_OFFSET]->CurrentRate;
         else
-            ulFrequency = Wave->Streams[PIN_WAVEIN_OFFSET]->CurrentRate;
+            ulFrequency = Miniport->Streams[PIN_WAVEIN_OFFSET]->CurrentRate;
 
         //
         // Check if this sample rate is requested sample rate.
@@ -542,10 +542,10 @@ STDMETHODIMP_(NTSTATUS) CMiniportWaveICHStream::SetFormat
     //
     if (Channel == PIN_WAVEOUT_OFFSET)
     {
-        dwControlReg = Wave->AdapterCommon->ReadBMControlRegister32 (GLOB_CNT);
+        dwControlReg = Miniport->AdapterCommon->ReadBMControlRegister32 (GLOB_CNT);
         dwControlReg = (dwControlReg & 0x03F) |
                        (((waveFormat->Format.nChannels >> 1) - 1) * GLOB_CNT_PCM4);
-        Wave->AdapterCommon->WriteBMControlRegister (GLOB_CNT, dwControlReg);
+        Miniport->AdapterCommon->WriteBMControlRegister (GLOB_CNT, dwControlReg);
     }
 
     //
@@ -557,12 +557,12 @@ STDMETHODIMP_(NTSTATUS) CMiniportWaveICHStream::SetFormat
     {
         if (Channel == PIN_WAVEIN_OFFSET)
         {
-            ntStatus = Wave->AdapterCommon->
+            ntStatus = Miniport->AdapterCommon->
                 ProgramSampleRate (AC97REG_RECORD_SAMPLERATE, TempRate);
         }
         else
         {
-            ntStatus = Wave->AdapterCommon->
+            ntStatus = Miniport->AdapterCommon->
                 ProgramSampleRate (AC97REG_MIC_SAMPLERATE, TempRate);
         }
     }
@@ -572,17 +572,17 @@ STDMETHODIMP_(NTSTATUS) CMiniportWaveICHStream::SetFormat
         // In the playback case we might need to update several DACs
         // with the new sample rate.
         //
-        ntStatus = Wave->AdapterCommon->
+        ntStatus = Miniport->AdapterCommon->
             ProgramSampleRate (AC97REG_FRONT_SAMPLERATE, TempRate);
 
-        if (Wave->AdapterCommon->GetNodeConfig (NODEC_SURROUND_DAC_PRESENT))
+        if (Miniport->AdapterCommon->GetNodeConfig (NODEC_SURROUND_DAC_PRESENT))
         {
-            ntStatus = Wave->AdapterCommon->
+            ntStatus = Miniport->AdapterCommon->
                 ProgramSampleRate (AC97REG_SURROUND_SAMPLERATE, TempRate);
         }
-        if (Wave->AdapterCommon->GetNodeConfig (NODEC_LFE_DAC_PRESENT))
+        if (Miniport->AdapterCommon->GetNodeConfig (NODEC_LFE_DAC_PRESENT))
         {
-            ntStatus = Wave->AdapterCommon->
+            ntStatus = Miniport->AdapterCommon->
                 ProgramSampleRate (AC97REG_LFE_SAMPLERATE, TempRate);
         }
     }
@@ -631,14 +631,14 @@ STDMETHODIMP_(NTSTATUS) CMiniportWaveICHStream::SetContentId
     //
     // Store the copyright flag. We have to disable PCM recording if it's set.
     //
-    if (!Wave->AdapterCommon->GetMiniportTopology ())
+    if (!Miniport->AdapterCommon->GetMiniportTopology ())
     {
         DOUT (DBG_ERROR, ("Topology pointer not set!"));
         return STATUS_UNSUCCESSFUL;
     }
     else
     {
-        Wave->AdapterCommon->GetMiniportTopology ()->
+        Miniport->AdapterCommon->GetMiniportTopology ()->
             SetCopyProtectFlag (drmRights->CopyProtect);
     }
 
@@ -706,7 +706,7 @@ NTSTATUS CMiniportWaveICHStream::PowerChangeNotify
                 // equal to head + entries.
                 if (stBDList.nTail)
                 {
-                    Wave->AdapterCommon->WriteBMControlRegister (m_ulBDAddr + X_LVI,
+                    Miniport->AdapterCommon->WriteBMControlRegister (m_ulBDAddr + X_LVI,
                                             (UCHAR)((stBDList.nTail - 1) & BDL_MASK));
                 }
 
@@ -735,10 +735,10 @@ NTSTATUS CMiniportWaveICHStream::PowerChangeNotify
             KeAcquireSpinLock (&MapLock,&OldIrql);
 
             // Disable interrupts and stop DMA just in case.
-            Wave->AdapterCommon->WriteBMControlRegister (m_ulBDAddr + X_CR, (UCHAR)0);
+            Miniport->AdapterCommon->WriteBMControlRegister (m_ulBDAddr + X_CR, (UCHAR)0);
 
             // Get current index
-            int nCurrentIndex = (int)Wave->AdapterCommon->
+            int nCurrentIndex = (int)Miniport->AdapterCommon->
                 ReadBMControlRegister8 (m_ulBDAddr + X_CIV);
 
             //
@@ -1043,11 +1043,11 @@ STDMETHODIMP_(NTSTATUS) CMiniportWaveICHStream::GetPosition
         //
         do
         {
-            nCurrentIndex = Wave->AdapterCommon->
+            nCurrentIndex = Miniport->AdapterCommon->
                 ReadBMControlRegister8 (m_ulBDAddr + X_CIV);
 
-            RegisterX_PICB = (DWORD)Wave->AdapterCommon->ReadBMControlRegister16 (m_ulBDAddr + X_PICB);
-        } while (nCurrentIndex != (int)Wave->AdapterCommon->
+            RegisterX_PICB = (DWORD)Miniport->AdapterCommon->ReadBMControlRegister16 (m_ulBDAddr + X_PICB);
+        } while (nCurrentIndex != (int)Miniport->AdapterCommon->
                 ReadBMControlRegister8 (m_ulBDAddr + X_CIV));
 
         //
@@ -1135,7 +1135,7 @@ STDMETHODIMP_(NTSTATUS) CMiniportWaveICHStream::RevokeMappings
     PauseDMA ();
 
     // Get current index
-    nCurrentIndex = Wave->AdapterCommon->
+    nCurrentIndex = Miniport->AdapterCommon->
         ReadBMControlRegister8 (m_ulBDAddr + X_CIV);
 
     //
@@ -1361,7 +1361,7 @@ STDMETHODIMP_(NTSTATUS) CMiniportWaveICHStream::RevokeMappings
     //
     if (stBDList.nTail)
     {
-        Wave->AdapterCommon->WriteBMControlRegister (m_ulBDAddr + X_LVI,
+        Miniport->AdapterCommon->WriteBMControlRegister (m_ulBDAddr + X_LVI,
                     (UCHAR)((stBDList.nTail - 1) & BDL_MASK));
     }
 
@@ -1435,7 +1435,7 @@ NTSTATUS CMiniportWaveICHStream::GetNewMappings (void)
     KeAcquireSpinLock (&MapLock,&OldIrql);
 
 #if (DBG)
-    if (Wave->AdapterCommon->ReadBMControlRegister16 (m_ulBDAddr + X_SR) & SR_CELV)
+    if (Miniport->AdapterCommon->ReadBMControlRegister16 (m_ulBDAddr + X_SR) & SR_CELV)
     {
         //
         // We starve.  :-(
@@ -1557,7 +1557,7 @@ NTSTATUS CMiniportWaveICHStream::GetNewMappings (void)
         // of the BDList with the HW. Note that we need to release spin locks every time
         // we call into portcls, that means we can be interrupted by ReleaseUsedMappings.
         //
-        Wave->AdapterCommon->WriteBMControlRegister (m_ulBDAddr + X_LVI, (UCHAR)nTail);
+        Miniport->AdapterCommon->WriteBMControlRegister (m_ulBDAddr + X_LVI, (UCHAR)nTail);
     }
 
     //
@@ -1611,7 +1611,7 @@ NTSTATUS CMiniportWaveICHStream::ReleaseUsedMappings (void)
         //
         // Get current index
         //
-        int nCurrentIndex = (int)Wave->AdapterCommon->
+        int nCurrentIndex = (int)Miniport->AdapterCommon->
             ReadBMControlRegister8 (m_ulBDAddr + X_CIV);
 
         //
@@ -1661,7 +1661,7 @@ NTSTATUS CMiniportWaveICHStream::ReleaseUsedMappings (void)
                 // DMA engine finished playing the buffers, CVI is equal LVI
                 // and SR_CELV is set.
                 //
-                if (!(Wave->AdapterCommon->
+                if (!(Miniport->AdapterCommon->
                      ReadBMControlRegister16 (m_ulBDAddr + X_SR) & SR_CELV))
                 {
                     // It is still playing the last buffer.
@@ -1738,16 +1738,16 @@ NTSTATUS CMiniportWaveICHStream::ResetDMA (void)
     //
     // Turn off DMA engine (or make sure it's turned off)
     //
-    UCHAR RegisterValue = Wave->AdapterCommon->
+    UCHAR RegisterValue = Miniport->AdapterCommon->
         ReadBMControlRegister8 (m_ulBDAddr + X_CR) & ~CR_RPBM;
-    Wave->AdapterCommon->
+    Miniport->AdapterCommon->
         WriteBMControlRegister (m_ulBDAddr + X_CR, RegisterValue);
 
     //
     // Reset all register contents.
     //
     RegisterValue |= CR_RR;
-    Wave->AdapterCommon->
+    Miniport->AdapterCommon->
         WriteBMControlRegister (m_ulBDAddr + X_CR, RegisterValue);
 
     //
@@ -1757,7 +1757,7 @@ NTSTATUS CMiniportWaveICHStream::ResetDMA (void)
     BOOL bTimedOut = TRUE;
     do
     {
-        if (!(Wave->AdapterCommon->
+        if (!(Miniport->AdapterCommon->
            ReadBMControlRegister8 (m_ulBDAddr + X_CR) & CR_RR))
         {
             bTimedOut = FALSE;
@@ -1775,13 +1775,13 @@ NTSTATUS CMiniportWaveICHStream::ResetDMA (void)
     // We only want interrupts upon completion.
     //
     RegisterValue = CR_IOCE | CR_LVBIE;
-    Wave->AdapterCommon->
+    Miniport->AdapterCommon->
         WriteBMControlRegister (m_ulBDAddr + X_CR, RegisterValue);
 
     //
     // Setup the Buffer Descriptor Base Address (BDBA) register.
     //
-    Wave->AdapterCommon->
+    Miniport->AdapterCommon->
         WriteBMControlRegister (m_ulBDAddr,
                                stBDList.PhysAddr.u.LowPart);
 
@@ -1819,10 +1819,10 @@ NTSTATUS CMiniportWaveICHStream::PauseDMA (void)
     // Turn off DMA engine by resetting the RPBM bit to 0. Don't reset any
     // registers.
     //
-    UCHAR RegisterValue = Wave->AdapterCommon->
+    UCHAR RegisterValue = Miniport->AdapterCommon->
         ReadBMControlRegister8 (m_ulBDAddr + X_CR);
     RegisterValue &= ~CR_RPBM;
-    Wave->AdapterCommon->
+    Miniport->AdapterCommon->
         WriteBMControlRegister (m_ulBDAddr + X_CR, RegisterValue);
 
     //
@@ -1865,12 +1865,12 @@ NTSTATUS CMiniportWaveICHStream::ResumeDMA (void)
     // Turn DMA engine on by setting the RPBM bit to 1. Don't do anything to
     // the registers.
     //
-    UCHAR RegisterValue = Wave->AdapterCommon->
+    UCHAR RegisterValue = Miniport->AdapterCommon->
         ReadBMControlRegister8 (m_ulBDAddr + X_CR);
     UCHAR RegisterValueNew = RegisterValue | CR_RPBM;
     if(RegisterValue != RegisterValueNew)
     {
-        Wave->AdapterCommon->
+        Miniport->AdapterCommon->
             WriteBMControlRegister (m_ulBDAddr + X_CR, RegisterValueNew);
     }
 

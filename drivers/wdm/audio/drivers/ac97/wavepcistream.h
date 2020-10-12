@@ -114,7 +114,6 @@ private:
     //
     // CMiniportWaveICHStream private variables
     //
-    CMiniportWaveICH *          Wave;           // Miniport Object
     ULONG                       Channel;        // channel this stream handles.
     BOOL                        Capture;        // TRUE=Capture,FALSE=Render
     WORD                        NumberOfChannels; // Number of channels
@@ -163,6 +162,9 @@ private:
     NTSTATUS ResetDMA (void);
     NTSTATUS PauseDMA (void);
     NTSTATUS ResumeDMA (void);
+
+    CMiniportWaveICH* Wave() {
+      return (CMiniportWaveICH*)Miniport; }
 
 
 public:
