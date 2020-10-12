@@ -70,7 +70,7 @@ private:
     // CAC97MiniportWaveRT private variables
     //
     CAC97MiniportWaveRTStream           *Streams[PIN_MICIN_OFFSET + 1];
-    PPORTWAVERT             Port;           // Port driver object.
+    PPORT               Port;           // Port driver object.
     PADAPTERCOMMON      AdapterCommon;  // Adapter common object.
     PINTERRUPTSYNC      InterruptSync;  // Interrupt Sync.
     DEVICE_POWER_STATE  m_PowerState;   // advanced power control.

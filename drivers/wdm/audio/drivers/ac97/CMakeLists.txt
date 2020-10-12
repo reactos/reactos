@@ -6,6 +6,7 @@ list(APPEND SOURCE
     common.cpp
     mintopo.cpp
     prophnd.cpp
+    miniport.cpp
     rtminiport.cpp
     rtstream.cpp
     wavepciminiport.cpp

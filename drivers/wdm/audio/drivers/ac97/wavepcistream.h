@@ -11,6 +11,7 @@
 #define _ICHWAVE_H_
 
 #include "shared.h"
+#include "miniport.h"
 
 //*****************************************************************************
 // Defines
@@ -42,7 +43,7 @@ const int DMA_ENGINE_RESET      = 2;
 const int DMA_ENGINE_NEED_START = 3; // DMA_ENGINE_RESET | DMA_ENGINE_ON
 
 
- 
+
 //*****************************************************************************
 // Data Structures and Typedefs
 //*****************************************************************************
@@ -106,7 +107,8 @@ typedef struct tagBDList
  */
 class CMiniportWaveICHStream : public IMiniportWavePciStream,
                                public IDrmAudioStream,
-                               public CUnknown
+                               public CUnknown,
+                               public CMiniportStream
 {
 private:
     //
@@ -115,9 +117,7 @@ private:
     CMiniportWaveICH *          Wave;           // Miniport Object
     ULONG                       Channel;        // channel this stream handles.
     BOOL                        Capture;        // TRUE=Capture,FALSE=Render
-    ULONG                       CurrentRate;    // Current Sample Rate
     WORD                        NumberOfChannels; // Number of channels
-    PSERVICEGROUP               ServiceGroup;   // service group helps with DPCs
     tBDList                     stBDList;       // needed for scatter gather org.
     PPORTWAVEPCISTREAM          PortStream;     // Port Stream Interface
     PKSDATAFORMAT_WAVEFORMATEX  DataFormat;     // Data Format
@@ -142,8 +142,8 @@ private:
     //
     void MoveBDList
     (
-        IN  int nFirst, 
-        IN  int nLast, 
+        IN  int nFirst,
+        IN  int nLast,
         IN  int nNewPos
     );
 
@@ -163,7 +163,7 @@ private:
     NTSTATUS ResetDMA (void);
     NTSTATUS PauseDMA (void);
     NTSTATUS ResumeDMA (void);
-    
+
 
 public:
     /*************************************************************************
@@ -179,7 +179,7 @@ public:
     DEFINE_STD_CONSTRUCTOR (CMiniportWaveICHStream);
 
     ~CMiniportWaveICHStream ();
-    
+
     /*************************************************************************
      * Include IMiniportWavePciStream (public/exported) methods.
      *************************************************************************
@@ -191,12 +191,12 @@ public:
      *************************************************************************
      */
     IMP_IDrmAudioStream;
-    
+
     /*************************************************************************
      * CMiniportWaveICHStream methods
      *************************************************************************
      */
-    
+
     //
     // Initializes the Stream object.
     //
@@ -217,14 +217,6 @@ public:
     (
         IN  POWER_STATE NewState
     );
-
-    //
-    // Return the current sample rate.
-    //
-    ULONG GetCurrentSampleRate (void)
-    {
-        return CurrentRate;
-    }
 
     //
     // Friends

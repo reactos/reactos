@@ -34,7 +34,7 @@
  */
 NTSTATUS CreateMiniportWaveICHStream
 (
-    OUT CMiniportWaveICHStream  **WavePCIStream,
+    OUT CMiniportWaveICHStream  **MiniportPCIStream,
     IN  PUNKNOWN                pUnknownOuter,
     _When_((PoolType & NonPagedPoolMustSucceed) != 0,
        __drv_reportError("Must succeed pool allocations are forbidden. "
@@ -48,13 +48,13 @@ NTSTATUS CreateMiniportWaveICHStream
 
     //
     // This is basically like the macro at stdunk with the change that we
-    // don't cast to interface unknown but to interface WaveIchStream.
+    // don't cast to interface unknown but to interface MiniportIchStream.
     //
-    *WavePCIStream = new (PoolType, PoolTag)
+    *MiniportPCIStream = new (PoolType, PoolTag)
                         CMiniportWaveICHStream (pUnknownOuter);
-    if (*WavePCIStream)
+    if (*MiniportPCIStream)
     {
-        (*WavePCIStream)->AddRef ();
+        (*MiniportPCIStream)->AddRef ();
         return STATUS_SUCCESS;
     }
 
@@ -1003,7 +1003,7 @@ STDMETHODIMP_(NTSTATUS) CMiniportWaveICHStream::NormalizePhysicalPosition
  *****************************************************************************
  * Gets the stream position. This is a byte count of the current position of
  * a stream running on a particular DMA engine.  We must return a sample
- * accurate count or the WaveDrv32 wave drift tests (35.2 & 36.2) will fail.
+ * accurate count or the MiniportDrv32 wave drift tests (35.2 & 36.2) will fail.
  *
  * The position is the sum of three parts:
  *     1) The total number of bytes in released buffers
@@ -1868,7 +1868,7 @@ NTSTATUS CMiniportWaveICHStream::ResumeDMA (void)
     UCHAR RegisterValue = Wave->AdapterCommon->
         ReadBMControlRegister8 (m_ulBDAddr + X_CR);
     UCHAR RegisterValueNew = RegisterValue | CR_RPBM;
-    if(RegisterValue != RegisterValueNew) 
+    if(RegisterValue != RegisterValueNew)
     {
         Wave->AdapterCommon->
             WriteBMControlRegister (m_ulBDAddr + X_CR, RegisterValueNew);

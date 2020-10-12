@@ -66,7 +66,8 @@ typedef struct tagBDEntry
  */
 class CAC97MiniportWaveRTStream : public IMiniportWaveRTStream,
                                              public IDrmAudioStream,
-                                             public CUnknown
+                                             public CUnknown,
+                                             public CMiniportStream
 {
 private:
     //
@@ -156,14 +157,6 @@ public:
     (
         IN  POWER_STATE NewState
     );
-
-    //
-    // Return the current sample rate.
-    //
-    ULONG GetCurrentSampleRate (void)
-    {
-        return CurrentRate;
-    }
 
     //
     // Friends

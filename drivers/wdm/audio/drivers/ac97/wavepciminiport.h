@@ -11,22 +11,8 @@
 #define _MINWAVE_H_
 
 #include "shared.h"
-
-/*****************************************************************************
- * Constants
- *****************************************************************************
- */
-const int WAVE_SAMPLERATES_TESTED = 7;
-const int MIC_SAMPLERATES_TESTED = 4;
-
-const DWORD dwWaveSampleRates[WAVE_SAMPLERATES_TESTED] =
-    {48000, 44100, 32000, 22050, 16000, 11025, 8000};
-const DWORD dwMicSampleRates[MIC_SAMPLERATES_TESTED] =
-    {48000, 32000, 16000, 8000};
-
-const int PIN_WAVEOUT_OFFSET = (PIN_WAVEOUT / 2);
-const int PIN_WAVEIN_OFFSET  = (PIN_WAVEIN / 2);
-const int PIN_MICIN_OFFSET   = (PIN_MICIN / 2);
+#define PPORT_ PPORTWAVEPCI
+#include "miniport.h"
 
 /*****************************************************************************
  * Forward References
@@ -55,12 +41,13 @@ extern NTSTATUS CreateMiniportWaveICHStream
  * AC97 wave PCI miniport.  This object is associated with the device and is
  * created when the device is started.  The class inherits IMiniportWavePci
  * so it can expose this interface, CUnknown so it automatically gets
- * reference counting and aggregation support, and IPowerNotify for ACPI 
+ * reference counting and aggregation support, and IPowerNotify for ACPI
  * power management notification.
  */
 class CMiniportWaveICH : public IMiniportWavePci,
                                 public IPowerNotify,
-                                public CUnknown
+                                public CUnknown,
+                                public CMiniport
 {
 private:
     // The stream class accesses a lot of private member variables.
@@ -72,15 +59,8 @@ private:
     //
     // CMiniportWaveICH private variables
     //
-    CMiniportWaveICHStream *Streams[PIN_MICIN_OFFSET + 1];
-    PPORTWAVEPCI        Port;           // Port driver object.
-    PADAPTERCOMMON      AdapterCommon;  // Adapter common object.
     PDMA_ADAPTER        AdapterObject;
-    PINTERRUPTSYNC      InterruptSync;  // Interrupt Sync.
     PDMACHANNEL         DmaChannel;     // Bus master support.
-    DEVICE_POWER_STATE  m_PowerState;   // advanced power control.
-    DWORD               m_dwChannelMask; // Channel config for speaker positions.
-    WORD                m_wChannels;      // Number of channels.
 
     /*************************************************************************
      * CMiniportWaveICH methods
@@ -92,23 +72,9 @@ private:
     //
     // Checks and connects the miniport to the resources.
     //
-    NTSTATUS ProcessResources
-    (
-        IN   PRESOURCELIST     ResourceList
-    );
+    NTSTATUS ProcessResources();
 
-    //
-    // Tests the data format but not the sample rate.
-    //
-    NTSTATUS TestDataFormat
-    (
-        IN PKSDATAFORMAT Format,
-        IN WavePins      Pin
-    );
 
-    // Test for standard sample rate support and fill the data range information
-    // in the structures below.
-    NTSTATUS BuildDataRangeInformation (void);
 
 public:
     /*************************************************************************
