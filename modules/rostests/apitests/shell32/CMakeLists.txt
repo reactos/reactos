@@ -31,6 +31,7 @@ list(APPEND SOURCE
     ShellExecCmdLine.cpp
     ShellExecuteEx.cpp
     ShellExecuteW.cpp
+    ShellHook.cpp
     ShellState.cpp
     SHLimitInputEdit.cpp
     menu.cpp
