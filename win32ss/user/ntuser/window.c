@@ -2282,17 +2282,12 @@ co_UserCreateWindowEx(CREATESTRUCTW* Cs,
    IntSendParentNotify(Window, WM_CREATE);
 
    /* Notify the shell that a new window was created */
-   if (Window->spwndOwner == NULL ||
-       !(Window->spwndOwner->style & WS_VISIBLE) ||
-       (Window->spwndOwner->ExStyle & WS_EX_TOOLWINDOW))
+   if ((Window->style & WS_VISIBLE) &&
+       ((Window->ExStyle & (WS_EX_APPWINDOW | WS_EX_TOOLWINDOW)) >= WS_EX_APPWINDOW ||
+        (!(Window->ExStyle & WS_EX_TOOLWINDOW) && !Window->spwndOwner &&
+         (!Window->spwndParent || UserIsDesktopWindow(Window->spwndParent)))))
    {
-      if (UserIsDesktopWindow(Window->spwndParent) &&
-          (Window->style & WS_VISIBLE) &&
-          (!(Window->ExStyle & WS_EX_TOOLWINDOW) ||
-           (Window->ExStyle & WS_EX_APPWINDOW)))
-      {
-         co_IntShellHookNotify(HSHELL_WINDOWCREATED, (WPARAM)hWnd, 0);
-      }
+      co_IntShellHookNotify(HSHELL_WINDOWCREATED, (WPARAM)hWnd, 0);
    }
 
    /* Initialize and show the window's scrollbars */
