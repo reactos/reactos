@@ -1148,11 +1148,13 @@ NC_DoNCPaint(PWND pWnd, HDC hDC, INT Flags)
         FillRect(hDC, &TempRect, IntGetSysColorBrush(COLOR_BTNFACE));
 
         if (Parent)
+        {
            IntGetClientRect(Parent, &ParentClientRect);
 
-        if (HASSIZEGRIP(Style, ExStyle, Parent->style, WindowRect, ParentClientRect))
-        {
-           DrawFrameControl(hDC, &TempRect, DFC_SCROLL, DFCS_SCROLLSIZEGRIP);
+           if (HASSIZEGRIP(Style, ExStyle, Parent->style, WindowRect, ParentClientRect))
+           {
+              DrawFrameControl(hDC, &TempRect, DFC_SCROLL, DFCS_SCROLLSIZEGRIP);
+           }
         }
 
         IntDrawScrollBar(pWnd, hDC, SB_VERT);
