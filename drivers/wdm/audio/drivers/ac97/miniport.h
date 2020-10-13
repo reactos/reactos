@@ -47,7 +47,7 @@ public:
     }
 };
 
-class CMiniport
+class CMiniport : public IPowerNotify
 {
 public:
     CMiniportStream     *Streams[PIN_MICIN_OFFSET + 1];
@@ -130,9 +130,6 @@ STDMETHODIMP_(NTSTATUS) cType::DataRangeIntersection(    \
     OUT PULONG ResultantFormatLength)                    \
 {   return CMiniport::DataRangeIntersection(PinId, DataRange,   \
         MatchingDataRange, OutputBufferLength, ResultantFormat,     \
-        ResultantFormatLength); }                                   \
-                                                                    \
-STDMETHODIMP_(VOID) cType::PowerChangeNotify(POWER_STATE PowerState) { \
-    return CMiniport::PowerChangeNotify(PowerState); }
+        ResultantFormatLength); }
 
 #endif

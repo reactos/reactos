@@ -45,7 +45,6 @@ extern NTSTATUS CreateMiniportWaveICHStream
  * power management notification.
  */
 class CMiniportWaveICH : public IMiniportWavePci,
-                                public IPowerNotify,
                                 public CUnknown,
                                 public CMiniport
 {
@@ -94,11 +93,6 @@ public:
     // Include IMiniportWavePci (public/exported) methods
     //
     IMP_IMiniportWavePci;
-
-    //
-    // IPowerNotify methods
-    //
-    IMP_IPowerNotify;
 
     //
     // This static functions is the interrupt service routine which is
