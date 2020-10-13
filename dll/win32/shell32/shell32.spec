@@ -456,7 +456,7 @@
 745 stub -noname Create_IUIElement
 747 stdcall SHLimitInputEdit(ptr ptr)
 748 stdcall -noname SHLimitInputCombo(ptr ptr)
-749 stdcall -noname SHGetShellStyleHInstance()
+749 stdcall -noname -version=0x501-0x502 SHGetShellStyleHInstance()
 750 stdcall -noname SHGetAttributesFromDataObject(ptr long long long)
 751 stub -noname SHSimulateDropOnClsid
 752 stdcall -noname SHGetComputerDisplayNameW(long long long long)
