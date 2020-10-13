@@ -65,7 +65,6 @@ typedef struct tagBDEntry
  * AC97 wave miniport stream.
  */
 class CAC97MiniportWaveRTStream : public IMiniportWaveRTStream,
-                                             public IDrmAudioStream,
                                              public CUnknown,
                                              public CMiniportStream
 {
@@ -126,12 +125,6 @@ public:
      *************************************************************************
      */
     IMP_IMiniportWaveRTStream;
-
-    /*************************************************************************
-     * Include IDrmAudioStream (public/exported) methods.
-     *************************************************************************
-     */
-    IMP_IDrmAudioStream;
 
     /*************************************************************************
      * CAC97MiniportWaveRTStream methods

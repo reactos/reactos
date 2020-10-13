@@ -106,7 +106,6 @@ typedef struct tagBDList
  * AC97 wave miniport stream.
  */
 class CMiniportWaveICHStream : public IMiniportWavePciStream,
-                               public IDrmAudioStream,
                                public CUnknown,
                                public CMiniportStream
 {
@@ -187,12 +186,6 @@ public:
      *************************************************************************
      */
     IMP_IMiniportWavePciStream;
-
-    /*************************************************************************
-     * Include IDrmAudioStream (public/exported) methods.
-     *************************************************************************
-     */
-    IMP_IDrmAudioStream;
 
     /*************************************************************************
      * CMiniportWaveICHStream methods

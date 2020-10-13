@@ -7,6 +7,7 @@ list(APPEND SOURCE
     mintopo.cpp
     prophnd.cpp
     miniport.cpp
+    stream.cpp
     rtminiport.cpp
     rtstream.cpp
     wavepciminiport.cpp

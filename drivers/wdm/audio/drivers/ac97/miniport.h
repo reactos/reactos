@@ -22,7 +22,7 @@ const int PIN_WAVEIN_OFFSET  = (PIN_WAVEIN / 2);
 const int PIN_MICIN_OFFSET   = (PIN_MICIN / 2);
 
 class CMiniport;
-class CMiniportStream
+class CMiniportStream : public IDrmAudioStream
 {
 public:
     CMiniport*                  Miniport;
@@ -30,13 +30,20 @@ public:
     ULONG                       CurrentRate;    // Current Sample Rate
 
 public:
+
+    /*************************************************************************
+     * Include IDrmAudioStream (public/exported) methods.
+     *************************************************************************
+     */
+    IMP_IDrmAudioStream;
+
     //
     // This method is called when the device changes power states.
     //
     virtual NTSTATUS PowerChangeNotify
     (
         IN  POWER_STATE NewState
-    );
+    ) = 0;
 
     //
     // Return the current sample rate.
