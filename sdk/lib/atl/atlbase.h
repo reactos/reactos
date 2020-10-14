@@ -868,8 +868,7 @@ public:
         }
         if (hResult == S_OK && *ppv == NULL)
         {
-            // FIXME: call AtlComModuleGetClassObject
-            hResult = CLASS_E_CLASSNOTAVAILABLE;
+            hResult = AtlComModuleGetClassObject(&_AtlComModule, rclsid, riid, ppv);
         }
         return hResult;
     }
@@ -1802,6 +1801,30 @@ inline HRESULT WINAPI AtlComModuleUnregisterServer(_ATL_COM_MODULE *mod, BOOL bU
     return hResult;
 }
 
+// Adapted from dll/win32/atl/atl.c
+inline HRESULT WINAPI AtlComModuleGetClassObject(_ATL_COM_MODULE *pComModule, REFCLSID rclsid, REFIID riid, void **ppv)
+{
+    _ATL_OBJMAP_ENTRY **iter;
+    IUnknown* unk;
+    HRESULT hr;
+
+    if (!pComModule)
+        return E_INVALIDARG;
+
+    for (iter = pComModule->m_ppAutoObjMapFirst; iter < pComModule->m_ppAutoObjMapLast; iter++)
+    {
+        if (IsEqualCLSID(*(*iter)->pclsid, rclsid) && (*iter)->pfnGetClassObject)
+        {
+            if (!(*iter)->pCF)
+                hr = (*iter)->pfnGetClassObject((void*)(*iter)->pfnCreateInstance, IID_IUnknown, (void**)&(*iter)->pCF);
+            if ((*iter)->pCF)
+                hr = unk->QueryInterface(riid, ppv);
+            return hr;
+        }
+    }
+
+    return CLASS_E_CLASSNOTAVAILABLE;
+}
 
 // Adapted from dll/win32/atl/atl.c
 inline HRESULT WINAPI AtlComModuleRegisterClassObjects(_ATL_COM_MODULE *module, DWORD context, DWORD flags)
