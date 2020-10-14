@@ -111,15 +111,15 @@ CMiniportWaveICHStream::~CMiniportWaveICHStream ()
         //
         // Release the scatter/gather table.
         //
-        if (stBDList.pBDEntry)
+        if (BDList)
         {
             Wave()->AdapterObject->DmaOperations->
                FreeCommonBuffer (Wave()->AdapterObject,
                                  PAGE_SIZE,
-                                 stBDList.PhysAddr,
-                                 (PVOID)stBDList.pBDEntry,
+                                 BDList_PhysAddr,
+                                 (PVOID)BDList,
                                  FALSE);
-            stBDList.pBDEntry = NULL;
+            BDList = NULL;
         }
 
         //
@@ -194,7 +194,7 @@ NTSTATUS CMiniportWaveICHStream::Init
     //
     // Initialize BDL info.
     //
-    stBDList.pBDEntry = NULL;
+    BDList = NULL;
     stBDList.pMapData = NULL;
     stBDList.nHead = 0;
     stBDList.nTail = 0;
@@ -254,20 +254,20 @@ NTSTATUS CMiniportWaveICHStream::Init
     // because we need one table as a backup.
     // The pointer is aligned on a 8 byte boundary (that's what we need).
     //
-    stBDList.pBDEntry = (tBDEntry *)Wave()->AdapterObject->DmaOperations->
+    BDList = (tBDEntry *)Wave()->AdapterObject->DmaOperations->
          AllocateCommonBuffer (Wave()->AdapterObject,
                                MAX_BDL_ENTRIES * sizeof (tBDEntry) * 2,
-                               &stBDList.PhysAddr,
+                               &BDList_PhysAddr,
                                FALSE);
 
-    if (!stBDList.pBDEntry)
+    if (!BDList)
     {
         DOUT (DBG_ERROR, ("Failed AllocateCommonBuffer!"));
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
     // calculate the (backup) pointer.
-    stBDList.pBDEntryBackup = (tBDEntry *)stBDList.pBDEntry + MAX_BDL_ENTRIES;
+    stBDList.pBDEntryBackup = (tBDEntry *)BDList + MAX_BDL_ENTRIES;
 
     //
     // Allocate a buffer for the 32 possible mappings. We allocate two tables
@@ -649,7 +649,7 @@ NTSTATUS CMiniportWaveICHStream::PowerChangeNotify
                 // Acquire the mapping spin lock
                 KeAcquireSpinLock (&MapLock,&OldIrql);
 
-                ntStatus = ResetDMA ();
+                ResetDMA ();
 
                 // Restore the remaining DMA registers, that is last valid index
                 // only if the index is not pointing to 0. Note that the index is
@@ -813,7 +813,7 @@ STDMETHODIMP_(NTSTATUS) CMiniportWaveICHStream::SetState
             KeAcquireSpinLock (&MapLock,&OldIrql);
 
             // Kick DMA again just in case.
-            ResumeDMA ();
+            ResumeDMA (DMA_ENGINE_PEND);
 
             // release the mapping spin lock
             KeReleaseSpinLock (&MapLock,OldIrql);
@@ -857,7 +857,7 @@ void CMiniportWaveICHStream::MoveBDList
     // First copy the tables to a save place.
     //
     RtlCopyMemory ((PVOID)stBDList.pBDEntryBackup,
-                   (PVOID)stBDList.pBDEntry,
+                   (PVOID)BDList,
                    sizeof (tBDEntry) * MAX_BDL_ENTRIES);
     RtlCopyMemory ((PVOID)stBDList.pMapDataBackup,
                    (PVOID)stBDList.pMapData,
@@ -881,7 +881,7 @@ void CMiniportWaveICHStream::MoveBDList
             //
             // copy one block (multiple entries).
             //
-            RtlCopyMemory ((PVOID)&stBDList.pBDEntry[nNewPos],
+            RtlCopyMemory ((PVOID)&BDList[nNewPos],
                            (PVOID)&stBDList.pBDEntryBackup[nFirst],
                            sizeof (tBDEntry) * nBlockCounter);
             RtlCopyMemory ((PVOID)&stBDList.pMapData[nNewPos],
@@ -1176,7 +1176,7 @@ STDMETHODIMP_(NTSTATUS) CMiniportWaveICHStream::RevokeMappings
         // restart DMA in case it was running
         //
         if ((ulOldDMAEngineState & DMA_ENGINE_ON) && stBDList.nBDEntries)
-            ResumeDMA ();
+            ResumeDMA (DMA_ENGINE_PEND);
         *MappingsRevoked = 0;
         KeReleaseSpinLock (&MapLock, OldIrql);
         return STATUS_UNSUCCESSFUL;         // one of the tags not found
@@ -1322,7 +1322,7 @@ STDMETHODIMP_(NTSTATUS) CMiniportWaveICHStream::RevokeMappings
     if ((ulOldDMAEngineState & DMA_ENGINE_ON) && stBDList.nBDEntries
        && stBDList.nTail)
     {
-        ResumeDMA ();
+        ResumeDMA (DMA_ENGINE_PEND);
     }
 
     //
@@ -1481,16 +1481,16 @@ NTSTATUS CMiniportWaveICHStream::GetNewMappings (void)
         //
         // Fill in the BDL entry with pointer to physical address and length.
         //
-        stBDList.pBDEntry[nTail].dwPtrToPhyAddress = PhysAddr.LowPart;
-        stBDList.pBDEntry[nTail].wLength = (WORD)(ulBufferLength >> 1);
-        stBDList.pBDEntry[nTail].wPolicyBits = BUP_SET;
+        BDList[nTail].dwPtrToPhyAddress = PhysAddr.LowPart;
+        BDList[nTail].wLength = (WORD)(ulBufferLength >> 1);
+        BDList[nTail].wPolicyBits = BUP_SET;
 
         //
         // Generate an interrupt when portcls tells us to or roughly every 10ms.
         //
         if (Flags || (ulBytesMapped > (CurrentRate * NumberOfChannels * 2) / 100))
         {
-            stBDList.pBDEntry[nTail].wPolicyBits |= IOC_ENABLE;
+            BDList[nTail].wPolicyBits |= IOC_ENABLE;
             ulBytesMapped = 0;
         }
 
@@ -1523,9 +1523,8 @@ NTSTATUS CMiniportWaveICHStream::GetNewMappings (void)
         DOUT (DBG_DMA, ("[GetNewMappings] Head %d, Tail %d, Entries %d.",
                 stBDList.nHead, stBDList.nTail, stBDList.nBDEntries));
 
-
-        if (DMAEngineState & DMA_ENGINE_NEED_START)
-            ResumeDMA ();
+        if(stBDList.nBDEntries >= 2)
+            ResumeDMA (DMA_ENGINE_PAUSE);
     }
 
     // Release the mapping spin lock
@@ -1672,164 +1671,4 @@ NTSTATUS CMiniportWaveICHStream::ReleaseUsedMappings (void)
 
     return STATUS_SUCCESS;
 }
-
-
-/*****************************************************************************
- * CMiniportWaveICHStream::ResetDMA
- *****************************************************************************
- * This routine resets the Run/Pause bit in the control register. In addition, it
- * resets all DMA registers contents.
- * You need to have the spin lock "MapLock" acquired.
- */
-NTSTATUS CMiniportWaveICHStream::ResetDMA (void)
-{
-    DOUT (DBG_PRINT, ("ResetDMA"));
-
-    //
-    // Turn off DMA engine (or make sure it's turned off)
-    //
-    UCHAR RegisterValue = Miniport->AdapterCommon->
-        ReadBMControlRegister8 (m_ulBDAddr + X_CR) & ~CR_RPBM;
-    Miniport->AdapterCommon->
-        WriteBMControlRegister (m_ulBDAddr + X_CR, RegisterValue);
-
-    //
-    // Reset all register contents.
-    //
-    RegisterValue |= CR_RR;
-    Miniport->AdapterCommon->
-        WriteBMControlRegister (m_ulBDAddr + X_CR, RegisterValue);
-
-    //
-    // Wait until reset condition is cleared by HW; should not take long.
-    //
-    ULONG count = 0;
-    BOOL bTimedOut = TRUE;
-    do
-    {
-        if (!(Miniport->AdapterCommon->
-           ReadBMControlRegister8 (m_ulBDAddr + X_CR) & CR_RR))
-        {
-            bTimedOut = FALSE;
-            break;
-        }
-        KeStallExecutionProcessor (1);
-    } while (count++ < 10);
-
-    if (bTimedOut)
-    {
-        DOUT (DBG_ERROR, ("ResetDMA TIMEOUT!!"));
-    }
-
-    //
-    // We only want interrupts upon completion.
-    //
-    RegisterValue = CR_IOCE | CR_LVBIE;
-    Miniport->AdapterCommon->
-        WriteBMControlRegister (m_ulBDAddr + X_CR, RegisterValue);
-
-    //
-    // Setup the Buffer Descriptor Base Address (BDBA) register.
-    //
-    Miniport->AdapterCommon->
-        WriteBMControlRegister (m_ulBDAddr,
-                               stBDList.PhysAddr.u.LowPart);
-
-    //
-    // Set the DMA engine state.
-    //
-    DMAEngineState = DMA_ENGINE_RESET;
-
-
-    return STATUS_SUCCESS;
-}
-
-
-/*****************************************************************************
- * CMiniportWaveICHStream::PauseDMA
- *****************************************************************************
- * This routine pauses a hardware stream by reseting the Run/Pause bit in the
- * control registers, leaving DMA registers content intact so that the stream
- * can later be resumed.
- * You need to have the spin lock "MapLock" acquired.
- */
-NTSTATUS CMiniportWaveICHStream::PauseDMA (void)
-{
-    DOUT (DBG_PRINT, ("PauseDMA"));
-
-    //
-    // Only pause if we're actually "ON" (DMA_ENGINE_ON or DMA_ENGINE_NEED_START)
-    //
-    if (!(DMAEngineState & DMA_ENGINE_ON))
-    {
-        return STATUS_SUCCESS;
-    }
-
-    //
-    // Turn off DMA engine by resetting the RPBM bit to 0. Don't reset any
-    // registers.
-    //
-    UCHAR RegisterValue = Miniport->AdapterCommon->
-        ReadBMControlRegister8 (m_ulBDAddr + X_CR);
-    RegisterValue &= ~CR_RPBM;
-    Miniport->AdapterCommon->
-        WriteBMControlRegister (m_ulBDAddr + X_CR, RegisterValue);
-
-    //
-    // DMA_ENGINE_NEED_START transitions to DMA_ENGINE_RESET.
-    // DMA_ENGINE_ON transitions to DMA_ENGINE_OFF.
-    //
-    DMAEngineState &= DMA_ENGINE_RESET;
-
-    return STATUS_SUCCESS;
-}
-
-
-/*****************************************************************************
- * CMiniportWaveICHStream::ResumeDMA
- *****************************************************************************
- * This routine sets the Run/Pause bit for the particular DMA engine to resume
- * it after it's been paused. This assumes that DMA registers content have
- * been preserved.
- * You need to have the spin lock "MapLock" acquired.
- */
-NTSTATUS CMiniportWaveICHStream::ResumeDMA (void)
-{
-    DOUT (DBG_PRINT, ("ResumeDMA"));
-
-    //
-    // Before we can turn on the DMA engine the first time, we need to check
-    // if we have at least 2 mappings in the scatter gather table.
-    //
-    if ((DMAEngineState & DMA_ENGINE_RESET) && (stBDList.nBDEntries < 2))
-    {
-        //
-        // That won't work. Set engine state to DMA_ENGINE_NEED_START so that
-        // we don't forget to call here regularly.
-        //
-        DMAEngineState = DMA_ENGINE_NEED_START;
-        return STATUS_SUCCESS;
-    }
-
-    //
-    // Turn DMA engine on by setting the RPBM bit to 1. Don't do anything to
-    // the registers.
-    //
-    UCHAR RegisterValue = Miniport->AdapterCommon->
-        ReadBMControlRegister8 (m_ulBDAddr + X_CR);
-    UCHAR RegisterValueNew = RegisterValue | CR_RPBM;
-    if(RegisterValue != RegisterValueNew)
-    {
-        Miniport->AdapterCommon->
-            WriteBMControlRegister (m_ulBDAddr + X_CR, RegisterValueNew);
-    }
-
-    //
-    // Set the DMA engine state.
-    //
-    DMAEngineState = DMA_ENGINE_ON;
-
-    return STATUS_SUCCESS;
-}
-
 

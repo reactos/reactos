@@ -28,32 +28,6 @@ const int MAX_BDL_ENTRIES = 32;
 //
 const int BDL_MASK = 31;
 
-//
-// These defines reflect what the DMA is supposed to be.
-//
-const int DMA_ENGINE_OFF   = 0;
-const int DMA_ENGINE_PAUSE = 1;
-const int DMA_ENGINE_ON    = 2;
-
-
-//*****************************************************************************
-// Data Structures and Typedefs
-//*****************************************************************************
-
-//
-// Structure to describe the AC97 Buffer Descriptor List (BDL).
-// The AC97 can handle 32 entries, they are allocated at once in common
-// memory (non-cached memory). To avoid slow-down of CPU, the additional
-// information for handling this structure is stored in tBDList.
-//
-typedef struct tagBDEntry
-{
-    DWORD   dwPtrToPhyAddress;
-    WORD    wLength;
-    WORD    wPolicyBits;
-} tBDEntry;
-
-
 
 //*****************************************************************************
 // Classes
@@ -79,8 +53,6 @@ private:
     WORD                NumberOfChannels;   // Number of channels
     PPORTWAVERTSTREAM       PortStream;         // Port Stream Interface
     PKSDATAFORMAT_WAVEFORMATEX  DataFormat;     // Data Format
-    ULONG               m_ulBDAddr;         // Offset of the stream's DMA registers.
-    ULONG               DMAEngineState;     // DMA engine state (STOP, PAUSE, RUN)
     DEVICE_POWER_STATE  m_PowerState;       // Current power state of the device.
 
 
@@ -96,14 +68,6 @@ private:
      * These are private member functions used internally by the object.  See
      * ICHWAVE.CPP for specific descriptions.
      */
-
-    //
-    // DMA start/stop/pause/reset routines.
-    //
-    NTSTATUS ResetDMA (void);
-    NTSTATUS PauseDMA (void);
-    NTSTATUS ResumeDMA (void);
-
 
 public:
     /*************************************************************************

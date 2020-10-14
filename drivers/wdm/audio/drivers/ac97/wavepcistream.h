@@ -27,23 +27,6 @@ const int MAX_BDL_ENTRIES = 32;
 //
 const int BDL_MASK = 31;
 
-//
-// These are the differnet DMA engine states. The HW can only be in two states
-// (on or off) but there are also 2 transition states.
-// From DMA_ENGINE_RESET a failed start transitions to DMA_ENGINE_NEED_START, a
-// successful start transitions to DMA_ENGINE_ON. From DMA_ENGINE_NEED_START a
-// successful restart transitions to DMA_ENGINE_ON, a pause or stop transitions
-// to DMA_ENGINE_RESET. From DMA_ENGINE_ON a pause or stop transitions to
-// DMA_ENGINE_OFF. From DMA_ENGINE_OFF a start transitions to DMA_ENGINE_ON,
-// a reset would transitions to DMA_ENGINE_RESET.
-//
-const int DMA_ENGINE_OFF        = 0;
-const int DMA_ENGINE_ON         = 1;
-const int DMA_ENGINE_RESET      = 2;
-const int DMA_ENGINE_NEED_START = 3; // DMA_ENGINE_RESET | DMA_ENGINE_ON
-
-
-
 //*****************************************************************************
 // Data Structures and Typedefs
 //*****************************************************************************
@@ -63,19 +46,6 @@ typedef struct tagMapData
 } tMapData;
 
 //
-// Structure to describe the AC97 Buffer Descriptor List (BDL).
-// The AC97 can handle 32 entries, they are allocated at once in common
-// memory (non-cached memory). To avoid slow-down of CPU, the additional
-// information for handling this structure is stored in tBDList.
-//
-typedef struct tagBDEntry
-{
-    DWORD   dwPtrToPhyAddress;
-    WORD    wLength;
-    WORD    wPolicyBits;
-} tBDEntry;
-
-//
 // Structure needed to keep track of the BDL tables.
 // This structure is seperated from tBDEntry because we want to
 // have it in cached memory (and not along with tBDEntry in non-
@@ -83,8 +53,6 @@ typedef struct tagBDEntry
 //
 typedef struct tagBDList
 {
-    PHYSICAL_ADDRESS        PhysAddr;       // Physical address of BDList
-    volatile tBDEntry       *pBDEntry;      // Virtual Address of BDList
     tBDEntry                *pBDEntryBackup;// needed for rearranging the BDList
     tMapData                *pMapData;      // mapping list
     tMapData                *pMapDataBackup;// needed for rearranging the BDList
@@ -120,8 +88,6 @@ private:
     PPORTWAVEPCISTREAM          PortStream;     // Port Stream Interface
     PKSDATAFORMAT_WAVEFORMATEX  DataFormat;     // Data Format
     KSPIN_LOCK                  MapLock;        // for processing mappings.
-    ULONG               m_ulBDAddr;         // Offset of the stream's DMA registers.
-    ULONG               DMAEngineState;     // DMA engine state (STOP, PAUSE, RUN)
     ULONGLONG           TotalBytesMapped;   // factor in position calculation
     ULONGLONG           TotalBytesReleased; // factor in position calculation
     DEVICE_POWER_STATE  m_PowerState;       // Current power state of the device.
@@ -154,13 +120,6 @@ private:
     // Called when we want to release some mappings.
     //
     NTSTATUS ReleaseUsedMappings (void);
-
-    //
-    // DMA start/stop/pause/reset routines.
-    //
-    NTSTATUS ResetDMA (void);
-    NTSTATUS PauseDMA (void);
-    NTSTATUS ResumeDMA (void);
 
     CMiniportWaveICH* Wave() {
       return (CMiniportWaveICH*)Miniport; }
