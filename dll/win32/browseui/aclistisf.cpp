@@ -251,7 +251,7 @@ STDMETHODIMP CACListISF::Next(ULONG celt, LPOLESTR *rgelt, ULONG *pceltFetched)
 
     do
     {
-        do
+        for (;;)
         {
             pidlChild.Free();
             hr = m_pEnumIDList->Next(1, &pidlChild, &cGot);
@@ -260,13 +260,15 @@ STDMETHODIMP CACListISF::Next(ULONG celt, LPOLESTR *rgelt, ULONG *pceltFetched)
 
             pszPathName.Free();
             GetPathName(pidlChild, pszPathName);
-            if (pszPathName)
-            {
-                hr = S_OK;
-                break;
-            }
-            hr = E_FAIL;
-        } while (hr != S_OK);
+            if (!pszPathName)
+                continue;
+            if ((m_dwOptions & (ACLO_FILESYSONLY | ACLO_FILESYSDIRS)) && !PathFileExistsW(pszPathName))
+                continue;
+            if ((m_dwOptions & ACLO_FILESYSDIRS) && !PathIsDirectoryW(pszPathName))
+                continue;
+            hr = S_OK;
+            break;
+        }
     } while (hr == S_FALSE && NextLocation() == S_OK);
 
     if (hr == S_OK)
