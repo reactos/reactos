@@ -146,7 +146,6 @@ HRESULT CACListISF::SetLocation(LPITEMIDLIST pidl)
     {
         ERR("EnumObjects failed: 0x%lX\n", hr);
         hr = E_FAIL;
-        return hr;
     }
     return hr;
 }
