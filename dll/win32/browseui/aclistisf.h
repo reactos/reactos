@@ -43,7 +43,7 @@ private:
     DWORD m_dwOptions;
     INT m_iNextLocation; /* LOCATION_TYPE */
     BOOL m_fShowHidden;
-    WCHAR m_szExpand[MAX_PATH];
+    CStringW m_szExpand;
     CComHeapPtr<ITEMIDLIST> m_pidlLocation;
     CComHeapPtr<ITEMIDLIST> m_pidlCurDir;
     CComPtr<IEnumIDList> m_pEnumIDList;

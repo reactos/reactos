@@ -26,7 +26,6 @@ CACListISF::CACListISF()
     , m_iNextLocation(LT_DIRECTORY)
     , m_fShowHidden(FALSE)
 {
-    m_szExpand[0] = 0;
 }
 
 CACListISF::~CACListISF()
@@ -196,18 +195,17 @@ HRESULT CACListISF::GetPathName(LPCITEMIDLIST pidlChild, CComHeapPtr<WCHAR>& psz
         return hr;
     }
 
-    WCHAR szPath[MAX_PATH];
-    szPath[0] = 0;
-    if (m_szExpand[0] && m_iNextLocation == LT_DIRECTORY)
+    CStringW szPath;
+    if (m_szExpand.GetLength() && m_iNextLocation == LT_DIRECTORY)
     {
         size_t cchExpand = wcslen(m_szExpand);
         if (StrCmpNIW(pszChild, m_szExpand, INT(cchExpand)) != 0 ||
             pszChild[0] != L'\\' || pszChild[1] != L'\\')
         {
-            StringCchCopyW(szPath, MAX_PATH, m_szExpand);
+            szPath = m_szExpand;
         }
     }
-    StringCchCatW(szPath, MAX_PATH, pszChild);
+    szPath += pszChild;
 
     size_t cchMax = wcslen(szPath) + 1;
     CComHeapPtr<WCHAR> pszFullPath;
@@ -302,7 +300,7 @@ STDMETHODIMP CACListISF::Reset()
     TRACE("Reset(%p)\n", this);
 
     m_iNextLocation = LT_DIRECTORY;
-    m_szExpand[0] = 0;
+    m_szExpand = L"";
 
     SHELLSTATE ss = { 0 };
     SHGetSetSettings(&ss, SSF_SHOWALLOBJECTS, FALSE);
@@ -342,7 +340,7 @@ STDMETHODIMP CACListISF::Expand(LPCOLESTR pszExpand)
 {
     TRACE("Expand(%p, %ls)\n", this, pszExpand);
 
-    StringCbCopyW(m_szExpand, sizeof(m_szExpand), pszExpand);
+    m_szExpand = pszExpand;
 
     m_iNextLocation = LT_DIRECTORY;
     CComHeapPtr<ITEMIDLIST> pidl;
@@ -352,7 +350,7 @@ STDMETHODIMP CACListISF::Expand(LPCOLESTR pszExpand)
         hr = SetLocation(pidl);
         if (FAILED(hr))
         {
-            m_szExpand[0] = 0;
+            m_szExpand = L"";
         }
     }
     return hr;
