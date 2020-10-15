@@ -840,6 +840,108 @@ MmCreateTeb(IN PEPROCESS Process,
     return Status;
 }
 
+static
+ULONG
+MiGetFirstFreeWsleIndex(_Inout_ PMMSUPPORT Vm)
+{
+    PMMWSL WsList = Vm->VmWorkingSetList;
+
+    /* Some sanity checks */
+    ASSERT((WsList->FirstFree <= WsList->LastInitializedWsle) || (WsList->FirstFree == MMWSLE_NEXT_FREE_INVALID));
+    ASSERT(WsList->LastEntry <= WsList->LastInitializedWsle + 1);
+
+    /* Check if we are initializing */
+    if (WsList->LastEntry == 0)
+    {
+        ASSERT(WsList->FirstDynamic < WsList->LastInitializedWsle);
+        return WsList->FirstDynamic++;
+    }
+
+    if (WsList->FirstFree == MMWSLE_NEXT_FREE_INVALID)
+    {
+        if (WsList->LastEntry == WsList->LastInitializedWsle)
+        {
+            /* We must grow our array. Allocate a new page */
+            PMMPTE PointerPte = MiAddressToPte(&WsList->Wsle[WsList->LastInitializedWsle + 1]);
+            MMPTE TempPte;
+            PFN_NUMBER PageFrameIndex = MiRemoveAnyPage(MI_GET_NEXT_COLOR());
+
+            MiInitializePfn(PageFrameIndex, PointerPte, TRUE);
+            MI_MAKE_HARDWARE_PTE_KERNEL(&TempPte, PointerPte, MM_READWRITE, PageFrameIndex);
+            MI_WRITE_VALID_PTE(PointerPte, TempPte);
+
+            WsList->LastInitializedWsle += PAGE_SIZE / sizeof(MMWSLE);
+
+            /* We must insert this page in our working set ! */
+            MiInsertInWorkingSetList(Vm, &WsList->Wsle[WsList->LastInitializedWsle], MM_READWRITE);
+        }
+
+        /* At this point we must be good to go */
+        ASSERT(WsList->LastEntry < WsList->LastInitializedWsle);
+
+        return ++WsList->LastEntry;
+    }
+    else
+    {
+        ULONG WsIndex = WsList->FirstFree;
+        PMMWSLE WsleEntry = &WsList->Wsle[WsIndex];
+
+        ASSERT(WsIndex < WsList->LastEntry);
+
+        ASSERT(WsleEntry->u1.Free.MustBeZero == 0);
+        ASSERT(WsleEntry->u1.Free.PreviousFree == MMWSLE_PREVIOUS_FREE_INVALID);
+        ASSERT(WsleEntry->u1.Free.NextFree > WsIndex);
+
+        if (WsleEntry->u1.Free.NextFree != MMWSLE_NEXT_FREE_INVALID)
+        {
+            PMMWSLE_FREE_ENTRY NextFree = &WsList->Wsle[WsleEntry->u1.Free.NextFree].u1.Free;
+
+            ASSERT(NextFree->MustBeZero == 0);
+            ASSERT(NextFree->PreviousFree == WsList->FirstFree);
+            NextFree->PreviousFree = MMWSLE_PREVIOUS_FREE_INVALID;
+        }
+
+        WsList->FirstFree = WsleEntry->u1.Free.NextFree;
+
+        return WsIndex;
+    }
+}
+
+VOID
+NTAPI
+MiInsertInWorkingSetList(_Inout_ PMMSUPPORT Vm, _In_ PVOID Address, _In_ ULONG Protection)
+{
+    ULONG WsIndex = MiGetFirstFreeWsleIndex(Vm);
+    PMMWSLE WsleEntry = &Vm->VmWorkingSetList->Wsle[WsIndex];
+    PMMPTE PointerPte = MiAddressToPte(Address);
+    PMMPFN Pfn1 = MiGetPfnEntry(PFN_FROM_PTE(PointerPte));
+
+    /* Make sure we got a rounded address */
+    Address = ALIGN_DOWN_POINTER_BY(Address, PAGE_SIZE);
+
+    /* Make sure we are locking the right thing */
+    ASSERT(MM_ANY_WS_LOCK_HELD(PsGetCurrentThread()));
+
+    /* The Pfn must be an active one */
+    ASSERT(Pfn1->u3.e1.PageLocation == ActiveAndValid);
+
+    WsleEntry->u1.Long = 0;
+    WsleEntry->u1.VirtualAddress = Address;
+    WsleEntry->u1.e1.Protection = Protection;
+
+    /* Shared pages not supported yet */
+    ASSERT(Pfn1->u1.WsIndex == 0);
+    WsleEntry->u1.e1.Direct = 1;
+
+    Pfn1->u1.WsIndex = WsIndex;
+    WsleEntry->u1.e1.Valid = 1;
+
+    Vm->WorkingSetSize += PAGE_SIZE;
+    if (Vm->WorkingSetSize > Vm->PeakWorkingSetSize)
+        Vm->PeakWorkingSetSize = Vm->WorkingSetSize;
+}
+
+
 VOID
 NTAPI
 MiInitializeWorkingSetList(IN PEPROCESS CurrentProcess)
@@ -848,30 +950,56 @@ MiInitializeWorkingSetList(IN PEPROCESS CurrentProcess)
     PMMPTE sysPte;
     MMPTE tempPte;
 
-    /* Setup some bogus list data */
-    MmWorkingSetList->LastEntry = CurrentProcess->Vm.MinimumWorkingSetSize;
+    /* We start with the space left behind us */
+    MmWorkingSetList->Wsle = (PMMWSLE)(MmWorkingSetList + 1);
+    /* Which leaves us this much entries */
+    MmWorkingSetList->LastInitializedWsle = ((PAGE_SIZE - sizeof(MMWSL)) / sizeof(MMWSLE)) - 1;
+
+    /* No entry in this list yet ! */
+    MmWorkingSetList->LastEntry = 0;
     MmWorkingSetList->HashTable = NULL;
     MmWorkingSetList->HashTableSize = 0;
     MmWorkingSetList->NumberOfImageWaiters = 0;
-    MmWorkingSetList->Wsle = (PVOID)(ULONG_PTR)0xDEADBABEDEADBABEULL;
-    MmWorkingSetList->VadBitMapHint = 1;
-    MmWorkingSetList->HashTableStart = (PVOID)(ULONG_PTR)0xBADAB00BBADAB00BULL;
-    MmWorkingSetList->HighestPermittedHashAddress = (PVOID)(ULONG_PTR)0xCAFEBABECAFEBABEULL;
-    MmWorkingSetList->FirstFree = 1;
-    MmWorkingSetList->FirstDynamic = 2;
-    MmWorkingSetList->NextSlot = 3;
-    MmWorkingSetList->LastInitializedWsle = 4;
-
-    /* The rule is that the owner process is always in the FLINK of the PDE's PFN entry */
-    Pfn1 = MiGetPfnEntry(CurrentProcess->Pcb.DirectoryTableBase[0] >> PAGE_SHIFT);
-    ASSERT(Pfn1->u4.PteFrame == MiGetPfnEntryIndex(Pfn1));
-    Pfn1->u1.Event = (PKEVENT)CurrentProcess;
+    MmWorkingSetList->VadBitMapHint = 0;
+    MmWorkingSetList->HashTableStart = NULL;
+    MmWorkingSetList->HighestPermittedHashAddress = NULL;
+    MmWorkingSetList->FirstFree = MMWSLE_NEXT_FREE_INVALID;
+    MmWorkingSetList->FirstDynamic = 0;
+    MmWorkingSetList->NextSlot = 0;
 
     /* Map the process working set in kernel space */
+    /* FIXME: there should be no need */
     sysPte = MiReserveSystemPtes(1, SystemPteSpace);
     MI_MAKE_HARDWARE_PTE_KERNEL(&tempPte, sysPte, MM_READWRITE, CurrentProcess->WorkingSetPage);
     MI_WRITE_VALID_PTE(sysPte, tempPte);
     CurrentProcess->Vm.VmWorkingSetList = MiPteToAddress(sysPte);
+
+    /* Insert the address we already know: our PDE base and the Working Set List */
+#if _MI_PAGING_LEVELS == 4
+    MiInsertInWorkingSetList(&CurrentProcess->Vm, (PVOID)PXE_BASE, 0);
+#elif _MI_PAGING_LEVELS == 3
+    MiInsertInWorkingSetList(&CurrentProcess->Vm, (PVOID)PPE_BASE, 0);
+#elif _MI_PAGING_LEVELS == 2
+    MiInsertInWorkingSetList(&CurrentProcess->Vm, (PVOID)PDE_BASE, 0);
+#endif
+
+#if _MI_PAGING_LEVELS == 4
+    MiInsertInWorkingSetList(&CurrentProcess->Vm, MiAddressToPpe(MmWorkingSetList), 0);
+#endif
+#if _MI_PAGING_LEVELS >= 3
+    MiInsertInWorkingSetList(&CurrentProcess->Vm, MiAddressToPde(MmWorkingSetList), 0);
+#endif
+    MiInsertInWorkingSetList(&CurrentProcess->Vm, MiAddressToPte(MmWorkingSetList), 0);
+    MiInsertInWorkingSetList(&CurrentProcess->Vm, MmWorkingSetList, 0);
+
+    /* The rule is that the owner process is always in the FLINK of the PDE's PFN entry */
+    Pfn1 = MiGetPfnEntry(CurrentProcess->Pcb.DirectoryTableBase[0] >> PAGE_SHIFT);
+    ASSERT(Pfn1->u4.PteFrame == MiGetPfnEntryIndex(Pfn1));
+    ASSERT(Pfn1->u1.WsIndex == 0);
+    Pfn1->u1.Event = (PKEVENT)CurrentProcess;
+
+    /* Mark this as not initializing anymore */
+    MmWorkingSetList->LastEntry = MmWorkingSetList->FirstDynamic - 1;
 }
 
 NTSTATUS
@@ -915,12 +1043,17 @@ MmInitializeProcessAddressSpace(IN PEPROCESS Process,
     ASSERT(Process->VadRoot.NumberGenericTableElements == 0);
     Process->VadRoot.BalancedRoot.u1.Parent = &Process->VadRoot.BalancedRoot;
 
+    /* Lock our working set */
+    MiLockProcessWorkingSet(Process, PsGetCurrentThread());
+
     /* Lock PFN database */
     OldIrql = MiAcquirePfnLock();
 
     /* Setup the PFN for the PDE base of this process */
-#ifdef _M_AMD64
+#if _MI_PAGING_LEVELS == 4
     PointerPte = MiAddressToPte(PXE_BASE);
+#elif _MI_PAGING_LEVELS == 3
+    PointerPte = MiAddressToPte(PPE_BASE);
 #else
     PointerPte = MiAddressToPte(PDE_BASE);
 #endif
@@ -929,8 +1062,10 @@ MmInitializeProcessAddressSpace(IN PEPROCESS Process,
     MiInitializePfn(PageFrameNumber, PointerPte, TRUE);
 
     /* Do the same for hyperspace */
-#ifdef _M_AMD64
+#if _MI_PAGING_LEVELS == 4
     PointerPde = MiAddressToPxe((PVOID)HYPER_SPACE);
+#elif _MI_PAGING_LEVELS == 3
+    PointerPde = MiAddressToPpe((PVOID)HYPER_SPACE);
 #else
     PointerPde = MiAddressToPde(HYPER_SPACE);
 #endif
@@ -956,6 +1091,9 @@ MmInitializeProcessAddressSpace(IN PEPROCESS Process,
 
     /* Release PFN lock */
     MiReleasePfnLock(OldIrql);
+
+    /* Release the process working set */
+    MiUnlockProcessWorkingSet(Process, PsGetCurrentThread());
 
     /* Check if there's a Section Object */
     if (SectionObject)
