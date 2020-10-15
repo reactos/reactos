@@ -35,7 +35,7 @@ CACListISF::~CACListISF()
 
 HRESULT CACListISF::NextLocation()
 {
-    TRACE("CACListISF::NextLocation()\n");
+    TRACE("NextLocation(%p)\n", this);
     HRESULT hr;
     switch (m_iNextLocation)
     {
@@ -108,7 +108,7 @@ HRESULT CACListISF::NextLocation()
 
 HRESULT CACListISF::SetLocation(LPCITEMIDLIST pidl)
 {
-    TRACE("SetLocation(%p)\n", pidl);
+    TRACE("SetLocation(%p, %p)\n", this, pidl);
 
     m_pEnumIDList.Release();
     m_pShellFolder.Release();
@@ -156,7 +156,7 @@ HRESULT CACListISF::SetLocation(LPCITEMIDLIST pidl)
 
 HRESULT CACListISF::GetDisplayName(LPCITEMIDLIST pidlChild, CComHeapPtr<WCHAR>& pszChild)
 {
-    TRACE("GetDisplayName(%p)\n", pidlChild);
+    TRACE("GetDisplayName(%p, %p)\n", this, pidlChild);
     HRESULT hr;
     STRRET StrRet;
     pszChild.Free();
@@ -186,7 +186,7 @@ HRESULT CACListISF::GetDisplayName(LPCITEMIDLIST pidlChild, CComHeapPtr<WCHAR>& 
 
 HRESULT CACListISF::GetPathName(LPCITEMIDLIST pidlChild, CComHeapPtr<WCHAR>& pszPath)
 {
-    TRACE("GetPathName(%p)\n", pidlChild);
+    TRACE("GetPathName(%p, %p)\n", this, pidlChild);
 
     CComHeapPtr<WCHAR> pszChild;
     HRESULT hr = GetDisplayName(pidlChild, pszChild);
@@ -291,7 +291,7 @@ STDMETHODIMP CACListISF::Next(ULONG celt, LPOLESTR *rgelt, ULONG *pceltFetched)
         hr = S_FALSE;
     }
 
-    TRACE("Next: %ls\n", *rgelt);
+    TRACE("*rgelt: %S\n", *rgelt);
     return hr;
 }
 
