@@ -599,6 +599,8 @@ IopSynchronousCall(IN PDEVICE_OBJECT DeviceObject,
 
     /* Call the driver */
     Status = IoCallDriver(TopDeviceObject, Irp);
+    /* Otherwise we may get stuck here or have IoStatusBlock not populated */
+    ASSERT(!KeAreAllApcsDisabled());
     if (Status == STATUS_PENDING)
     {
         /* Wait for it */
