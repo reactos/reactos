@@ -180,7 +180,7 @@ HRESULT CACListISF::GetDisplayName(LPCITEMIDLIST pidlChild, CComHeapPtr<WCHAR>& 
         ERR("StrRetToStrW failed: 0x%lX\n", hr);
         return hr;
     }
-    TRACE("GetDisplayName: '%S'\n", (LPCWSTR)pszChild);
+    TRACE("GetDisplayName: '%S'\n", static_cast<LPCWSTR>(pszChild));
     return hr;
 }
 
@@ -201,7 +201,7 @@ HRESULT CACListISF::GetPathName(LPCITEMIDLIST pidlChild, CComHeapPtr<WCHAR>& psz
     if (m_szExpand[0] && m_iNextLocation == LT_DIRECTORY)
     {
         size_t cchExpand = wcslen(m_szExpand);
-        if (StrCmpNIW(pszChild, m_szExpand, (INT)cchExpand) != 0 ||
+        if (StrCmpNIW(pszChild, m_szExpand, INT(cchExpand)) != 0 ||
             pszChild[0] != L'\\' || pszChild[1] != L'\\')
         {
             StringCchCopyW(szPath, MAX_PATH, m_szExpand);
@@ -219,7 +219,7 @@ HRESULT CACListISF::GetPathName(LPCITEMIDLIST pidlChild, CComHeapPtr<WCHAR>& psz
 
     StringCchCopyW(pszFullPath, cchMax, szPath);
     pszPath.Attach(pszFullPath.Detach());
-    TRACE("GetPathName: '%S'\n", (LPCWSTR)pszPath);
+    TRACE("GetPathName: '%S'\n", static_cast<LPCWSTR>(pszPath));
     return S_OK;
 }
 
