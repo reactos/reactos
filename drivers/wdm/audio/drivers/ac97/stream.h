@@ -26,14 +26,23 @@ class CMiniportStream : public IDrmAudioStream
 
 public:
     CMiniport*                  Miniport;
+    ULONG                       Channel;        // channel this stream handles.
+    BOOL                        Capture;        // TRUE=Capture,FALSE=Render
+    WORD                        NumberOfChannels; // Number of channels
+
+
+
+    PKSDATAFORMAT_WAVEFORMATEX  DataFormat;     // Data Format
+
+
     PSERVICEGROUP               ServiceGroup;   // service group helps with DPCs
     ULONG                       CurrentRate;    // Current Sample Rate
     ULONG                       DMAEngineState; // DMA engine state
     ULONG                       m_ulBDAddr;     // Offset of the stream's DMA registers.
-    
+
     PHYSICAL_ADDRESS            BDList_PhysAddr;     // Physical address of BDList
     tBDEntry                    *BDList;             // Virtual Address of BDList
-    
+
 public:
 
 
@@ -49,6 +58,15 @@ public:
      *************************************************************************
      */
     IMP_IDrmAudioStream;
+
+
+    STDMETHODIMP_(NTSTATUS) SetFormat
+    (
+        _In_  PKSDATAFORMAT   Format
+    );
+
+
+
 
     //
     // This method is called when the device changes power states.
@@ -66,5 +84,11 @@ public:
         return CurrentRate;
     }
 };
+
+
+
+#define IMP_CMiniportStream(cType) \
+    STDMETHODIMP_(NTSTATUS) cType::SetFormat (_In_ PKSDATAFORMAT Format) \
+      { return CMiniportStream::SetFormat(Format); }
 
 #endif

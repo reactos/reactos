@@ -46,13 +46,7 @@ private:
     //
     // CAC97MiniportWaveRTStream private variables
     //
-    CAC97MiniportWaveRT *       Miniport;           // Miniport Object
-    ULONG               Channel;            // channel this stream handles.
-    BOOL                Capture;            // TRUE=Capture,FALSE=Render
-    ULONG               CurrentRate;        // Current Sample Rate
-    WORD                NumberOfChannels;   // Number of channels
     PPORTWAVERTSTREAM       PortStream;         // Port Stream Interface
-    PKSDATAFORMAT_WAVEFORMATEX  DataFormat;     // Data Format
     DEVICE_POWER_STATE  m_PowerState;       // Current power state of the device.
 
 

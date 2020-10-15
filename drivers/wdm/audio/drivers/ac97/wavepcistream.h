@@ -81,12 +81,10 @@ private:
     //
     // CMiniportWaveICHStream private variables
     //
-    ULONG                       Channel;        // channel this stream handles.
-    BOOL                        Capture;        // TRUE=Capture,FALSE=Render
-    WORD                        NumberOfChannels; // Number of channels
+
     tBDList                     stBDList;       // needed for scatter gather org.
     PPORTWAVEPCISTREAM          PortStream;     // Port Stream Interface
-    PKSDATAFORMAT_WAVEFORMATEX  DataFormat;     // Data Format
+
     KSPIN_LOCK                  MapLock;        // for processing mappings.
     ULONGLONG           TotalBytesMapped;   // factor in position calculation
     ULONGLONG           TotalBytesReleased; // factor in position calculation

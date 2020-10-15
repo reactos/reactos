@@ -13,6 +13,8 @@
 #include "wavepciminiport.h"
 #include "wavepcistream.h"
 
+IMP_CMiniportStream(CMiniportWaveICHStream);
+
 /*****************************************************************************
  * General Info
  *****************************************************************************
@@ -461,144 +463,6 @@ STDMETHODIMP_(NTSTATUS) CMiniportWaveICHStream::GetAllocatorFraming
 }
 
 
-/*****************************************************************************
- * CMiniportWaveICHStream::SetFormat
- *****************************************************************************
- * This routine tests for proper data format (calls wave miniport) and sets
- * or changes the stream data format.
- * To figure out if the codec supports the sample rate, we just program the
- * sample rate and read it back. If it matches we return happy, if not then
- * we restore the sample rate and return unhappy.
- * We fail this routine if we are currently running (playing or recording).
- */
-STDMETHODIMP_(NTSTATUS) CMiniportWaveICHStream::SetFormat
-(
-    _In_  PKSDATAFORMAT   Format
-)
-{
-    PAGED_CODE ();
-
-    ASSERT (Format);
-
-    ULONG   TempRate;
-    DWORD   dwControlReg;
-
-    DOUT (DBG_PRINT, ("[CMiniportWaveICHStream::SetFormat]"));
-
-    //
-    // Change sample rate when we are in the stop or pause states - not
-    // while running!
-    //
-    if (DMAEngineState & DMA_ENGINE_ON)
-    {
-        return STATUS_UNSUCCESSFUL;
-    }
-
-    //
-    // Ensure format falls in proper range and is supported.
-    //
-    NTSTATUS ntStatus = Miniport->TestDataFormat (Format, (WavePins)(Channel << 1));
-    if (!NT_SUCCESS (ntStatus))
-        return ntStatus;
-
-    //
-    // Retrieve wave format portion.
-    //
-    PWAVEFORMATPCMEX waveFormat = (PWAVEFORMATPCMEX)(Format + 1);
-
-    //
-    // Save current rate in this context.
-    //
-    TempRate = waveFormat->Format.nSamplesPerSec;
-
-    //
-    // Check if we have a codec with one sample rate converter and there are streams
-    // already open.
-    //
-    if (Miniport->Streams[PIN_WAVEIN_OFFSET] && Miniport->Streams[PIN_WAVEOUT_OFFSET] &&
-        !Miniport->AdapterCommon->GetNodeConfig (NODEC_PCM_VSR_INDEPENDENT_RATES))
-    {
-        //
-        // Figure out at which sample rate the other stream is running.
-        //
-        ULONG   ulFrequency;
-
-        if (Miniport->Streams[PIN_WAVEIN_OFFSET] == this)
-            ulFrequency = Miniport->Streams[PIN_WAVEOUT_OFFSET]->CurrentRate;
-        else
-            ulFrequency = Miniport->Streams[PIN_WAVEIN_OFFSET]->CurrentRate;
-
-        //
-        // Check if this sample rate is requested sample rate.
-        //
-        if (ulFrequency != TempRate)
-        {
-            return STATUS_UNSUCCESSFUL;
-        }
-    }
-
-    //
-    // Program the AC97 to support n channels.
-    //
-    if (Channel == PIN_WAVEOUT_OFFSET)
-    {
-        dwControlReg = Miniport->AdapterCommon->ReadBMControlRegister32 (GLOB_CNT);
-        dwControlReg = (dwControlReg & 0x03F) |
-                       (((waveFormat->Format.nChannels >> 1) - 1) * GLOB_CNT_PCM4);
-        Miniport->AdapterCommon->WriteBMControlRegister (GLOB_CNT, dwControlReg);
-    }
-
-    //
-    // Check for rate support by hardware.  If it is supported, then update
-    // hardware registers else return not implemented and audio stack will
-    // handle it.
-    //
-    if (Capture)
-    {
-        if (Channel == PIN_WAVEIN_OFFSET)
-        {
-            ntStatus = Miniport->AdapterCommon->
-                ProgramSampleRate (AC97REG_RECORD_SAMPLERATE, TempRate);
-        }
-        else
-        {
-            ntStatus = Miniport->AdapterCommon->
-                ProgramSampleRate (AC97REG_MIC_SAMPLERATE, TempRate);
-        }
-    }
-    else
-    {
-        //
-        // In the playback case we might need to update several DACs
-        // with the new sample rate.
-        //
-        ntStatus = Miniport->AdapterCommon->
-            ProgramSampleRate (AC97REG_FRONT_SAMPLERATE, TempRate);
-
-        if (Miniport->AdapterCommon->GetNodeConfig (NODEC_SURROUND_DAC_PRESENT))
-        {
-            ntStatus = Miniport->AdapterCommon->
-                ProgramSampleRate (AC97REG_SURROUND_SAMPLERATE, TempRate);
-        }
-        if (Miniport->AdapterCommon->GetNodeConfig (NODEC_LFE_DAC_PRESENT))
-        {
-            ntStatus = Miniport->AdapterCommon->
-                ProgramSampleRate (AC97REG_LFE_SAMPLERATE, TempRate);
-        }
-    }
-
-    if (NT_SUCCESS (ntStatus))
-    {
-        //
-        // print information and save the format information.
-        //
-        DataFormat = (PKSDATAFORMAT_WAVEFORMATEX)Format;
-        CurrentRate = TempRate;
-        NumberOfChannels = waveFormat->Format.nChannels;
-    }
-
-    return ntStatus;
-}
 
 
 /*****************************************************************************
