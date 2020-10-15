@@ -156,12 +156,11 @@ HRESULT CACListISF::SetLocation(LPCITEMIDLIST pidl)
 HRESULT CACListISF::GetDisplayName(LPCITEMIDLIST pidlChild, CComHeapPtr<WCHAR>& pszChild)
 {
     TRACE("GetDisplayName(%p, %p)\n", this, pidlChild);
-    HRESULT hr;
-    STRRET StrRet;
     pszChild.Free();
 
+    STRRET StrRet;
     DWORD dwFlags = SHGDN_INFOLDER | SHGDN_FORPARSING | SHGDN_FORADDRESSBAR;
-    hr = m_pShellFolder->GetDisplayNameOf(pidlChild, dwFlags, &StrRet);
+    HRESULT hr = m_pShellFolder->GetDisplayNameOf(pidlChild, dwFlags, &StrRet);
     if (FAILED(hr))
     {
         dwFlags = SHGDN_INFOLDER | SHGDN_FORPARSING;
