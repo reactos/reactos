@@ -288,8 +288,6 @@ STDMETHODIMP CACListISF::Next(ULONG celt, LPOLESTR *rgelt, ULONG *pceltFetched)
     }
     else
     {
-        CoTaskMemFree(*rgelt);
-        *rgelt = NULL;
         hr = S_FALSE;
     }
 
