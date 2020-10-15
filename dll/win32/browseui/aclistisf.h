@@ -55,7 +55,7 @@ public:
     ~CACListISF();
 
     HRESULT NextLocation();
-    HRESULT SetLocation(LPCITEMIDLIST pidl);
+    HRESULT SetLocation(LPITEMIDLIST pidl);
     HRESULT GetDisplayName(LPCITEMIDLIST pidlChild, CComHeapPtr<WCHAR>& pszChild);
     HRESULT GetPathName(LPCITEMIDLIST pidlChild, CComHeapPtr<WCHAR>& pszPath);
 

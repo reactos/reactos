@@ -42,7 +42,8 @@ HRESULT CACListISF::NextLocation()
             m_iNextLocation = LT_DESKTOP;
             if (!ILIsEmpty(m_pidlCurDir) && (m_dwOptions & ACLO_CURRENTDIR))
             {
-                hr = SetLocation(m_pidlCurDir);
+                CComHeapPtr<ITEMIDLIST> pidl(ILClone(m_pidlCurDir));
+                hr = SetLocation(pidl.Detach());
                 if (SUCCEEDED(hr))
                 {
                     TRACE("LT_DIRECTORY\n");
@@ -58,7 +59,7 @@ HRESULT CACListISF::NextLocation()
                 hr = SHGetSpecialFolderLocation(NULL, CSIDL_DESKTOP, &pidl);
                 if (FAILED_UNEXPECTEDLY(hr))
                     return S_FALSE;
-                hr = SetLocation(pidl);
+                hr = SetLocation(pidl.Detach());
                 if (SUCCEEDED(hr))
                 {
                     TRACE("LT_DESKTOP\n");
@@ -74,7 +75,7 @@ HRESULT CACListISF::NextLocation()
                 hr = SHGetSpecialFolderLocation(NULL, CSIDL_DRIVES, &pidl);
                 if (FAILED_UNEXPECTEDLY(hr))
                     return S_FALSE;
-                hr = SetLocation(pidl);
+                hr = SetLocation(pidl.Detach());
                 if (SUCCEEDED(hr))
                 {
                     TRACE("LT_MYCOMPUTER\n");
@@ -90,7 +91,7 @@ HRESULT CACListISF::NextLocation()
                 hr = SHGetSpecialFolderLocation(NULL, CSIDL_FAVORITES, &pidl);
                 if (FAILED_UNEXPECTEDLY(hr))
                     return S_FALSE;
-                hr = SetLocation(pidl);
+                hr = SetLocation(pidl.Detach());
                 if (SUCCEEDED(hr))
                 {
                     TRACE("LT_FAVORITES\n");
@@ -105,7 +106,7 @@ HRESULT CACListISF::NextLocation()
     }
 }
 
-HRESULT CACListISF::SetLocation(LPCITEMIDLIST pidl)
+HRESULT CACListISF::SetLocation(LPITEMIDLIST pidl)
 {
     TRACE("(%p, %p)\n", this, pidl);
 
@@ -116,13 +117,7 @@ HRESULT CACListISF::SetLocation(LPCITEMIDLIST pidl)
     if (!pidl)
         return E_FAIL;
 
-    LPITEMIDLIST pidlClone = ILClone(pidl);
-    if (!pidlClone)
-    {
-        ERR("Out of memory\n");
-        return E_OUTOFMEMORY;
-    }
-    m_pidlLocation.Attach(pidlClone);
+    m_pidlLocation.Attach(pidl);
 
     CComPtr<IShellFolder> pFolder;
     HRESULT hr = SHGetDesktopFolder(&pFolder);
@@ -302,7 +297,7 @@ STDMETHODIMP CACListISF::Reset()
             if (pidl)
                 Initialize(pidl);
         }
-        HRESULT hr = SetLocation(pidl);
+        HRESULT hr = SetLocation(pidl.Detach());
         if (FAILED_UNEXPECTEDLY(hr))
             return S_FALSE;
     }
@@ -334,7 +329,7 @@ STDMETHODIMP CACListISF::Expand(LPCOLESTR pszExpand)
     HRESULT hr = SHParseDisplayName(m_szExpand, NULL, &pidl, NULL, NULL);
     if (SUCCEEDED(hr))
     {
-        hr = SetLocation(pidl);
+        hr = SetLocation(pidl.Detach());
         if (FAILED_UNEXPECTEDLY(hr))
             m_szExpand = L"";
     }
