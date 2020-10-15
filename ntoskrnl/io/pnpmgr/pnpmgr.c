@@ -601,6 +601,9 @@ IopSynchronousCall(IN PDEVICE_OBJECT DeviceObject,
     Status = IoCallDriver(TopDeviceObject, Irp);
     if (Status == STATUS_PENDING)
     {
+        /* Otherwise we may stuck here */
+        ASSERT(!KeAreAllApcsDisabled());
+
         /* Wait for it */
         KeWaitForSingleObject(&Event,
                               Executive,
