@@ -313,7 +313,7 @@ STDMETHODIMP CACListISF::Reset()
         {
             m_pBrowserService->GetPidl(&pidl);
             if (pidl)
-                m_pidlCurDir.Attach(pidl.Detach());
+                Initialize(pidl);
         }
         HRESULT hr = SetLocation(pidl);
         if (FAILED(hr))
@@ -398,8 +398,18 @@ STDMETHODIMP CACListISF::GetClassID(CLSID *pClassID)
 STDMETHODIMP CACListISF::Initialize(PCIDLIST_ABSOLUTE pidl)
 {
     TRACE("Initialize(%p, %p)\n", this, pidl);
-    m_pidlCurDir.Attach(ILClone(pidl));
-    return Reset();
+    m_pidlCurDir.Free();
+    if (!pidl)
+        return S_OK;
+
+    LPITEMIDLIST pidlClone = ILClone(pidl);
+    if (!pidlClone)
+    {
+        ERR("Out of memory\n");
+        return E_OUTOFMEMORY;
+    }
+    m_pidlCurDir.Attach(pidlClone);
+    return S_OK;
 }
 
 // *** ICurrentWorkingDirectory methods ***
