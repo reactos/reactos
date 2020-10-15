@@ -247,7 +247,6 @@ STDMETHODIMP CACListISF::Next(ULONG celt, LPOLESTR *rgelt, ULONG *pceltFetched)
     HRESULT hr;
     CComHeapPtr<ITEMIDLIST> pidlChild;
     CComHeapPtr<WCHAR> pszPathName;
-    WCHAR szPath[MAX_PATH];
     ULONG cGot;
 
     do
@@ -263,18 +262,8 @@ STDMETHODIMP CACListISF::Next(ULONG celt, LPOLESTR *rgelt, ULONG *pceltFetched)
             GetPathName(pidlChild, pszPathName);
             if (pszPathName)
             {
-                StringCbCopyW(szPath, sizeof(szPath), pszPathName);
-                PathAddBackslashW(szPath);
-                size_t cch1 = wcslen(m_szExpand), cch2 = wcslen(szPath);
-                if (cch1 <= cch2)
-                {
-                    szPath[cch1] = 0;
-                    if (_wcsicmp(szPath, m_szExpand) != 0)
-                        continue;
-
-                    hr = S_OK;
-                    break;
-                }
+                hr = S_OK;
+                break;
             }
             hr = E_FAIL;
         } while (hr != S_OK);
