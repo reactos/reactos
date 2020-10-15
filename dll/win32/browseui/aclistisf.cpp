@@ -126,11 +126,8 @@ HRESULT CACListISF::SetLocation(LPCITEMIDLIST pidl)
 
     CComPtr<IShellFolder> pFolder;
     HRESULT hr = SHGetDesktopFolder(&pFolder);
-    if (FAILED(hr))
-    {
-        ERR("SHGetDesktopFolder failed: 0x%lX\n", hr);
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
-    }
 
     if (!ILIsEmpty(pidl))
         pFolder->BindToObject(pidl, NULL, IID_PPV_ARG(IShellFolder, &m_pShellFolder));
@@ -165,19 +162,14 @@ HRESULT CACListISF::GetDisplayName(LPCITEMIDLIST pidlChild, CComHeapPtr<WCHAR>& 
     {
         dwFlags = SHGDN_INFOLDER | SHGDN_FORPARSING;
         hr = m_pShellFolder->GetDisplayNameOf(pidlChild, dwFlags, &StrRet);
-        if (FAILED(hr))
-        {
-            ERR("m_pShellFolder->GetDisplayNameOf failed: 0x%lX\n", hr);
+        if (FAILED_UNEXPECTEDLY(hr))
             return hr;
-        }
     }
 
     hr = StrRetToStrW(&StrRet, NULL, &pszChild);
-    if (FAILED(hr))
-    {
-        ERR("StrRetToStrW failed: 0x%lX\n", hr);
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
-    }
+
     TRACE("pszChild: '%S'\n", static_cast<LPCWSTR>(pszChild));
     return hr;
 }
@@ -188,11 +180,8 @@ HRESULT CACListISF::GetPathName(LPCITEMIDLIST pidlChild, CComHeapPtr<WCHAR>& psz
 
     CComHeapPtr<WCHAR> pszChild;
     HRESULT hr = GetDisplayName(pidlChild, pszChild);
-    if (FAILED(hr))
-    {
-        ERR("GetDisplayName failed: 0x%lX\n", hr);
+    if (FAILED_UNEXPECTEDLY(hr))
         return hr;
-    }
 
     CStringW szPath;
     if (m_szExpand.GetLength() && m_iNextLocation == LT_DIRECTORY)
@@ -314,7 +303,7 @@ STDMETHODIMP CACListISF::Reset()
                 Initialize(pidl);
         }
         HRESULT hr = SetLocation(pidl);
-        if (FAILED(hr))
+        if (FAILED_UNEXPECTEDLY(hr))
             return S_FALSE;
     }
     return S_OK;
@@ -346,10 +335,8 @@ STDMETHODIMP CACListISF::Expand(LPCOLESTR pszExpand)
     if (SUCCEEDED(hr))
     {
         hr = SetLocation(pidl);
-        if (FAILED(hr))
-        {
+        if (FAILED_UNEXPECTEDLY(hr))
             m_szExpand = L"";
-        }
     }
     return hr;
 }
