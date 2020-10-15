@@ -34,7 +34,7 @@ CACListISF::~CACListISF()
 
 HRESULT CACListISF::NextLocation()
 {
-    TRACE("NextLocation(%p)\n", this);
+    TRACE("(%p)\n", this);
     HRESULT hr;
     switch (m_iNextLocation)
     {
@@ -107,7 +107,7 @@ HRESULT CACListISF::NextLocation()
 
 HRESULT CACListISF::SetLocation(LPCITEMIDLIST pidl)
 {
-    TRACE("SetLocation(%p, %p)\n", this, pidl);
+    TRACE("(%p, %p)\n", this, pidl);
 
     m_pEnumIDList.Release();
     m_pShellFolder.Release();
@@ -155,7 +155,7 @@ HRESULT CACListISF::SetLocation(LPCITEMIDLIST pidl)
 
 HRESULT CACListISF::GetDisplayName(LPCITEMIDLIST pidlChild, CComHeapPtr<WCHAR>& pszChild)
 {
-    TRACE("GetDisplayName(%p, %p)\n", this, pidlChild);
+    TRACE("(%p, %p)\n", this, pidlChild);
     pszChild.Free();
 
     STRRET StrRet;
@@ -178,13 +178,13 @@ HRESULT CACListISF::GetDisplayName(LPCITEMIDLIST pidlChild, CComHeapPtr<WCHAR>& 
         ERR("StrRetToStrW failed: 0x%lX\n", hr);
         return hr;
     }
-    TRACE("GetDisplayName: '%S'\n", static_cast<LPCWSTR>(pszChild));
+    TRACE("pszChild: '%S'\n", static_cast<LPCWSTR>(pszChild));
     return hr;
 }
 
 HRESULT CACListISF::GetPathName(LPCITEMIDLIST pidlChild, CComHeapPtr<WCHAR>& pszPath)
 {
-    TRACE("GetPathName(%p, %p)\n", this, pidlChild);
+    TRACE("(%p, %p)\n", this, pidlChild);
 
     CComHeapPtr<WCHAR> pszChild;
     HRESULT hr = GetDisplayName(pidlChild, pszChild);
@@ -216,14 +216,14 @@ HRESULT CACListISF::GetPathName(LPCITEMIDLIST pidlChild, CComHeapPtr<WCHAR>& psz
 
     StringCchCopyW(pszFullPath, cchMax, szPath);
     pszPath.Attach(pszFullPath.Detach());
-    TRACE("GetPathName: '%S'\n", static_cast<LPCWSTR>(pszPath));
+    TRACE("pszPath: '%S'\n", static_cast<LPCWSTR>(pszPath));
     return S_OK;
 }
 
 // *** IEnumString methods ***
 STDMETHODIMP CACListISF::Next(ULONG celt, LPOLESTR *rgelt, ULONG *pceltFetched)
 {
-    TRACE("Next(%p, %d, %p, %p)\n", this, celt, rgelt, pceltFetched);
+    TRACE("(%p, %d, %p, %p)\n", this, celt, rgelt, pceltFetched);
 
     if (celt == 0)
         return S_OK;
@@ -295,7 +295,7 @@ STDMETHODIMP CACListISF::Next(ULONG celt, LPOLESTR *rgelt, ULONG *pceltFetched)
 
 STDMETHODIMP CACListISF::Reset()
 {
-    TRACE("Reset(%p)\n", this);
+    TRACE("(%p)\n", this);
 
     m_iNextLocation = LT_DIRECTORY;
     m_szExpand = L"";
@@ -322,13 +322,13 @@ STDMETHODIMP CACListISF::Reset()
 
 STDMETHODIMP CACListISF::Skip(ULONG celt)
 {
-    TRACE("Skip(%p, %d)\n", this, celt);
+    TRACE("(%p, %d)\n", this, celt);
     return E_NOTIMPL;
 }
 
 STDMETHODIMP CACListISF::Clone(IEnumString **ppOut)
 {
-    TRACE("Clone(%p, %p)\n", this, ppOut);
+    TRACE("(%p, %p)\n", this, ppOut);
     *ppOut = NULL;
     return E_NOTIMPL;
 }
@@ -336,7 +336,7 @@ STDMETHODIMP CACListISF::Clone(IEnumString **ppOut)
 // *** IACList methods ***
 STDMETHODIMP CACListISF::Expand(LPCOLESTR pszExpand)
 {
-    TRACE("Expand(%p, %ls)\n", this, pszExpand);
+    TRACE("(%p, %ls)\n", this, pszExpand);
 
     m_szExpand = pszExpand;
 
@@ -357,14 +357,14 @@ STDMETHODIMP CACListISF::Expand(LPCOLESTR pszExpand)
 // *** IACList2 methods ***
 STDMETHODIMP CACListISF::SetOptions(DWORD dwFlag)
 {
-    TRACE("SetOptions(%p, %lu)\n", this, dwFlag);
+    TRACE("(%p, %lu)\n", this, dwFlag);
     m_dwOptions = dwFlag;
     return S_OK;
 }
 
 STDMETHODIMP CACListISF::GetOptions(DWORD* pdwFlag)
 {
-    TRACE("GetOptions(%p, %p)\n", this, pdwFlag);
+    TRACE("(%p, %p)\n", this, pdwFlag);
     if (pdwFlag)
     {
         *pdwFlag = m_dwOptions;
@@ -376,7 +376,7 @@ STDMETHODIMP CACListISF::GetOptions(DWORD* pdwFlag)
 // *** IShellService methods ***
 STDMETHODIMP CACListISF::SetOwner(IUnknown *punkOwner)
 {
-    TRACE("SetOwner(%p, %p)\n", this, punkOwner);
+    TRACE("(%p, %p)\n", this, punkOwner);
     m_pBrowserService.Release();
     punkOwner->QueryInterface(IID_PPV_ARG(IBrowserService, &m_pBrowserService));
     return S_OK;
@@ -385,7 +385,7 @@ STDMETHODIMP CACListISF::SetOwner(IUnknown *punkOwner)
 // *** IPersist methods ***
 STDMETHODIMP CACListISF::GetClassID(CLSID *pClassID)
 {
-    TRACE("GetClassID(%p, %p)\n", this, pClassID);
+    TRACE("(%p, %p)\n", this, pClassID);
     if (pClassID == NULL)
         return E_POINTER;
     *pClassID = CLSID_ACListISF;
@@ -395,7 +395,7 @@ STDMETHODIMP CACListISF::GetClassID(CLSID *pClassID)
 // *** IPersistFolder methods ***
 STDMETHODIMP CACListISF::Initialize(PCIDLIST_ABSOLUTE pidl)
 {
-    TRACE("Initialize(%p, %p)\n", this, pidl);
+    TRACE("(%p, %p)\n", this, pidl);
     m_pidlCurDir.Free();
     if (!pidl)
         return S_OK;
@@ -413,13 +413,13 @@ STDMETHODIMP CACListISF::Initialize(PCIDLIST_ABSOLUTE pidl)
 // *** ICurrentWorkingDirectory methods ***
 STDMETHODIMP CACListISF::GetDirectory(LPWSTR pwzPath, DWORD cchSize)
 {
-    TRACE("GetDirectory(%p, %p, %ld)\n", this, pwzPath, cchSize);
+    TRACE("(%p, %p, %ld)\n", this, pwzPath, cchSize);
     return E_NOTIMPL;
 }
 
 STDMETHODIMP CACListISF::SetDirectory(LPCWSTR pwzPath)
 {
-    TRACE("SetDirectory(%p, %ls, %ld)\n", this, pwzPath);
+    TRACE("(%p, %ls, %ld)\n", this, pwzPath);
     LPITEMIDLIST pidl = ILCreateFromPathW(pwzPath);
     if (!pidl)
     {
