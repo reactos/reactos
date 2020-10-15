@@ -56,7 +56,7 @@ HRESULT CACListISF::NextLocation()
             {
                 CComHeapPtr<ITEMIDLIST> pidl;
                 hr = SHGetSpecialFolderLocation(NULL, CSIDL_DESKTOP, &pidl);
-                if (FAILED(hr))
+                if (FAILED_UNEXPECTEDLY(hr))
                     return S_FALSE;
                 hr = SetLocation(pidl);
                 if (SUCCEEDED(hr))
@@ -72,7 +72,7 @@ HRESULT CACListISF::NextLocation()
             {
                 CComHeapPtr<ITEMIDLIST> pidl;
                 hr = SHGetSpecialFolderLocation(NULL, CSIDL_DRIVES, &pidl);
-                if (FAILED(hr))
+                if (FAILED_UNEXPECTEDLY(hr))
                     return S_FALSE;
                 hr = SetLocation(pidl);
                 if (SUCCEEDED(hr))
@@ -88,7 +88,7 @@ HRESULT CACListISF::NextLocation()
             {
                 CComHeapPtr<ITEMIDLIST> pidl;
                 hr = SHGetSpecialFolderLocation(NULL, CSIDL_FAVORITES, &pidl);
-                if (FAILED(hr))
+                if (FAILED_UNEXPECTEDLY(hr))
                     return S_FALSE;
                 hr = SetLocation(pidl);
                 if (SUCCEEDED(hr))
