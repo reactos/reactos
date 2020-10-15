@@ -125,9 +125,15 @@ HRESULT CACListISF::SetLocation(LPITEMIDLIST pidl)
         return hr;
 
     if (!ILIsEmpty(pidl))
-        pFolder->BindToObject(pidl, NULL, IID_PPV_ARG(IShellFolder, &m_pShellFolder));
+    {
+        hr = pFolder->BindToObject(pidl, NULL, IID_PPV_ARG(IShellFolder, &m_pShellFolder));
+        if (FAILED_UNEXPECTEDLY(hr))
+            return hr;
+    }
     else
+    {
         m_pShellFolder.Attach(pFolder.Detach());
+    }
 
     SHCONTF Flags = SHCONTF_FOLDERS | SHCONTF_INIT_ON_FIRST_NEXT;
     if (m_fShowHidden)
