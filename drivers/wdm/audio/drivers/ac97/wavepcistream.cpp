@@ -1399,3 +1399,29 @@ NTSTATUS CMiniportWaveICHStream::ReleaseUsedMappings (void)
     return STATUS_SUCCESS;
 }
 
+/*****************************************************************************
+ * Non paged code begins here
+ *****************************************************************************
+ */
+
+#ifdef _MSC_VER
+#pragma code_seg()
+#endif
+
+void CMiniportWaveICHStream::InterruptServiceRoutine()
+{
+    //
+    // Request DPC service for PCM out.
+    //
+    if ((Wave()->Port) && (ServiceGroup))
+    {
+        Wave()->Port->Notify (ServiceGroup);
+    }
+    else
+    {
+        //
+        // Bad, bad.  Shouldn't print in an ISR!
+        //
+        DOUT (DBG_ERROR, ("WaveOut INT fired but no stream object there."));
+    }
+}

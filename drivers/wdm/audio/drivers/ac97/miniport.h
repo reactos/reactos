@@ -45,8 +45,7 @@ public:
     //
     NTSTATUS ProcessResources
     (
-        IN  PRESOURCELIST     ResourceList,
-        IN  PINTERRUPTSYNCROUTINE Routine
+        IN  PRESOURCELIST     ResourceList
     );
 
     //
@@ -69,6 +68,16 @@ public:
     //
     IMP_IPowerNotify;
 
+    //
+    // This static functions is the interrupt service routine which is
+    // not stream related, but services all streams at once.
+    //
+    static NTSTATUS NTAPI InterruptServiceRoutine
+    (
+        IN      PINTERRUPTSYNC  InterruptSync,
+        IN      PVOID           StaticContext
+    );
+
 public:
 
     ~CMiniport();
@@ -77,8 +86,7 @@ public:
     (
         _In_  PUNKNOWN      UnknownAdapter,
         _In_  PRESOURCELIST ResourceList,
-        _In_  PPORT         Port_,
-        _In_  PINTERRUPTSYNCROUTINE Routine
+        _In_  PPORT         Port_
     );
 
     //

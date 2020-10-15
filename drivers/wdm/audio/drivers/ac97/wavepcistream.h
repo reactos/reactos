@@ -13,19 +13,6 @@
 #include "shared.h"
 #include "miniport.h"
 
-//*****************************************************************************
-// Defines
-//*****************************************************************************
-
-//
-// The scatter gather can (only) handle 32 entries
-//
-const int MAX_BDL_ENTRIES = 32;
-
-//
-// Mask for accessing the scatter gather entries with a counter.
-//
-const int BDL_MASK = 31;
 
 //*****************************************************************************
 // Data Structures and Typedefs
@@ -170,15 +157,7 @@ public:
         IN  POWER_STATE NewState
     );
 
-    //
-    // Friends
-    //
-    friend
-    NTSTATUS CMiniportWaveICH::InterruptServiceRoutine
-    (
-        IN  PINTERRUPTSYNC  InterruptSync,
-        IN  PVOID           StaticContext
-    );
+    void InterruptServiceRoutine();
 };
 
 #endif

@@ -6,6 +6,20 @@ const int DMA_ENGINE_PAUSE      = 1;
 const int DMA_ENGINE_PEND       = 2;
 const int DMA_ENGINE_ON         = 3;
 
+//*****************************************************************************
+// Defines
+//*****************************************************************************
+
+//
+// The scatter gather can (only) handle 32 entries
+//
+const int MAX_BDL_ENTRIES = 32;
+
+//
+// Mask for accessing the scatter gather entries with a counter.
+//
+const int BDL_MASK = 31;
+
 //
 // Structure to describe the AC97 Buffer Descriptor List (BDL).
 // The AC97 can handle 32 entries, they are allocated at once in common
@@ -97,6 +111,7 @@ public:
     );
 
 
+    virtual void InterruptServiceRoutine() PURE;
 };
 
 

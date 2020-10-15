@@ -74,7 +74,6 @@ private:
     NTSTATUS ProcessResources();
 
 
-
 public:
     /*************************************************************************
      * The following two macros are from STDUNK.H.  DECLARE_STD_UNKNOWN()
@@ -94,15 +93,6 @@ public:
     //
     IMP_IMiniportWavePci;
 
-    //
-    // This static functions is the interrupt service routine which is
-    // not stream related, but services all streams at once.
-    //
-    static NTSTATUS NTAPI InterruptServiceRoutine
-    (
-        IN      PINTERRUPTSYNC  InterruptSync,
-        IN      PVOID           StaticContext
-    );
 
     //
     // This is the property handler for KSPROPERTY_AUDIO_CHANNEL_CONFIG of the

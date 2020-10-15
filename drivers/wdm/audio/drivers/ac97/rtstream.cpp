@@ -600,7 +600,23 @@ STDMETHODIMP_(NTSTATUS) CAC97MiniportWaveRTStream::GetPosition
     return STATUS_SUCCESS;
 }
 
++/*****************************************************************************
++ * Non paged code begins here
++ *****************************************************************************
++ */
+
+#ifdef _MSC_VER
+#pragma code_seg()
+#endif
+
+void CMiniportWaveICHStream::InterruptServiceRoutine()
+{
+    //
+    // Update the LVI so that we cycle around in the scatter gather list.
+    //
+
+    UCHAR CIV = that->AdapterCommon->ReadBMControlRegister8 (m_ulBDAddr + X_CIV);
+    that->AdapterCommon->WriteBMControlRegister (m_ulBDAddr + X_LVI, (UCHAR)((CIV-1) & BDL_MASK));
+}
 
 #endif          // (NTDDI_VERSION >= NTDDI_VISTA)
-
-

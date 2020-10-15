@@ -1036,8 +1036,7 @@ STDMETHODIMP_(void) CMiniport::PowerChangeNotify
  */
 NTSTATUS CMiniport::ProcessResources
 (
-    IN  PRESOURCELIST ResourceList,
-    IN  PINTERRUPTSYNCROUTINE Routine
+    IN  PRESOURCELIST ResourceList
 )
 {
     PAGED_CODE ();
@@ -1074,7 +1073,7 @@ NTSTATUS CMiniport::ProcessResources
     //
     // Register our ISR.
     //
-    ntStatus = InterruptSync->RegisterServiceRoutine (Routine,
+    ntStatus = InterruptSync->RegisterServiceRoutine (InterruptServiceRoutine,
                                                       (PVOID)this, FALSE);
     if (!NT_SUCCESS (ntStatus))
     {
@@ -1108,8 +1107,7 @@ STDMETHODIMP_(NTSTATUS) CMiniport::Init
 (
     _In_  PUNKNOWN      UnknownAdapter,
     _In_  PRESOURCELIST ResourceList,
-    _In_  PPORT         Port_,
-    _In_  PINTERRUPTSYNCROUTINE Routine
+    _In_  PPORT         Port_
 )
 {
     PAGED_CODE ();
@@ -1152,7 +1150,7 @@ STDMETHODIMP_(NTSTATUS) CMiniport::Init
         //
         // Process the resources.
         //
-        ntStatus = ProcessResources (ResourceList, Routine);
+        ntStatus = ProcessResources (ResourceList);
 
         //
         // Get the default channel config
@@ -1213,5 +1211,167 @@ CMiniport::~CMiniport ()
     }
 }
 
+/*****************************************************************************
+ * Non paged code begins here
+ *****************************************************************************
+ */
+
+#ifdef _MSC_VER
+#pragma code_seg()
+#endif
+/*****************************************************************************
+ * InterruptServiceRoutine
+ *****************************************************************************
+ * The task of the ISR is to clear an interrupt from this device so we don't
+ * get an interrupt storm and schedule a DPC which actually does the
+ * real work.
+ */
+NTSTATUS CMiniport::InterruptServiceRoutine
+(
+    IN  PINTERRUPTSYNC  InterruptSync,
+    IN  PVOID           DynamicContext
+)
+{
+    UNREFERENCED_PARAMETER(InterruptSync);
+
+    ASSERT (InterruptSync);
+    ASSERT (DynamicContext);
+
+    ULONG   GlobalStatus;
+    USHORT  DMAStatusRegister;
+
+    //
+    // Get our context which is a pointer to class CAC97MiniportWaveRT.
+    //
+    CMiniport *that = (CMiniport *)DynamicContext;
+
+    //
+    // Check for a valid AdapterCommon pointer.
+    //
+    if (!that->AdapterCommon)
+    {
+        //
+        // In case we didn't handle the interrupt, unsuccessful tells the system
+        // to call the next interrupt handler in the chain.
+        //
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    //
+    // From this point down, basically in the complete ISR, we cannot use
+    // relative addresses (stream class base address + X_CR for example)
+    // cause we might get called when the stream class is destroyed or
+    // not existent. This doesn't make too much sense (that there is an
+    // interrupt for a non-existing stream) but could happen and we have
+    // to deal with the interrupt.
+    //
+
+    //
+    // Read the global register to check the interrupt bits
+    //
+    GlobalStatus = that->AdapterCommon->ReadBMControlRegister32 (GLOB_STA);
+
+    //
+    // Check for weird return values. Could happen if the PCI device is already
+    // disabled and another device that shares this interrupt generated an
+    // interrupt.
+    // The register should never have all bits cleared or set.
+    //
+    if (!GlobalStatus || (GlobalStatus == 0xFFFFFFFF))
+    {
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    //
+    // Check for PCM out interrupt.
+    //
+    NTSTATUS ntStatus = STATUS_UNSUCCESSFUL;
+    if (GlobalStatus & GLOB_STA_POINT)
+    {
+        //
+        // Read PCM out DMA status registers.
+        //
+        DMAStatusRegister = (USHORT)that->AdapterCommon->
+            ReadBMControlRegister16 (PO_SR);
 
 
+        //
+        // We could now check for every possible error condition
+        // (like FIFO error) and monitor the different errors, but currently
+        // we have the same action for every INT and therefore we simplify
+        // this routine enormous with just clearing the bits.
+        //
+        if (that->Streams[PIN_WAVEOUT_OFFSET])
+        {
+            //
+            // ACK the interrupt.
+            //
+            that->AdapterCommon->WriteBMControlRegister (PO_SR, DMAStatusRegister);
+            ntStatus = STATUS_SUCCESS;
+
+            //
+
+            that->Streams[PIN_WAVEOUT_OFFSET]->InterruptServiceRoutine();
+        }
+    }
+
+    //
+    // Check for PCM in interrupt.
+    //
+    if (GlobalStatus & GLOB_STA_PIINT)
+    {
+        //
+        // Read PCM in DMA status registers.
+        //
+        DMAStatusRegister = (USHORT)that->AdapterCommon->
+            ReadBMControlRegister16 (PI_SR);
+
+        //
+        // We could now check for every possible error condition
+        // (like FIFO error) and monitor the different errors, but currently
+        // we have the same action for every INT and therefore we simplify
+        // this routine enormous with just clearing the bits.
+        //
+        if (that->Streams[PIN_WAVEIN_OFFSET])
+        {
+            //
+            // ACK the interrupt.
+            //
+            that->AdapterCommon->WriteBMControlRegister (PI_SR, DMAStatusRegister);
+            ntStatus = STATUS_SUCCESS;
+
+            that->Streams[PIN_WAVEIN_OFFSET]->InterruptServiceRoutine();
+        }
+    }
+
+    //
+    // Check for MIC in interrupt.
+    //
+    if (GlobalStatus & GLOB_STA_MINT)
+    {
+        //
+        // Read MIC in DMA status registers.
+        //
+        DMAStatusRegister = (USHORT)that->AdapterCommon->
+            ReadBMControlRegister16 (MC_SR);
+
+        //
+        // We could now check for every possible error condition
+        // (like FIFO error) and monitor the different errors, but currently
+        // we have the same action for every INT and therefore we simplify
+        // this routine enormous with just clearing the bits.
+        //
+        if (that->Streams[PIN_MICIN_OFFSET])
+        {
+            //
+            // ACK the interrupt.
+            //
+            that->AdapterCommon->WriteBMControlRegister (MC_SR, DMAStatusRegister);
+            ntStatus = STATUS_SUCCESS;
+
+            that->Streams[PIN_MICIN_OFFSET]->InterruptServiceRoutine();
+        }
+    }
+
+    return ntStatus;
+}
