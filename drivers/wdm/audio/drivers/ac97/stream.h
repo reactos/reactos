@@ -44,6 +44,8 @@ public:
     tBDEntry                    *BDList;             // Virtual Address of BDList
 
 public:
+    ~CMiniportStream();
+
 
 
     //

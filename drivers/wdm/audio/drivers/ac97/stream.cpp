@@ -9,6 +9,44 @@
 #define ReadReg8(addr) (Miniport->AdapterCommon-> \
     ReadBMControlRegister8 (m_ulBDAddr + addr))
 
+
+CMiniportStream::~CMiniportStream()
+{
+    if (Miniport)
+    {
+        //
+        // Disable interrupts and stop DMA just in case.
+        //
+        if (Miniport->AdapterCommon)
+        {
+            Miniport->AdapterCommon->WriteBMControlRegister (m_ulBDAddr + X_CR, (UCHAR)0);
+
+            //
+            // Update also the topology miniport if this was the render stream.
+            //
+            if (Miniport->AdapterCommon->GetMiniportTopology () &&
+                (Channel == PIN_WAVEOUT_OFFSET))
+            {
+                Miniport->AdapterCommon->GetMiniportTopology ()->SetCopyProtectFlag (FALSE);
+            }
+        }
+
+        //
+        // Remove stream from miniport Streams array.
+        //
+        if (Miniport->Streams[Channel] == this)
+        {
+            Miniport->Streams[Channel] = NULL;
+        }
+
+        //
+        // Release the miniport.
+        //
+        Miniport->Release ();
+        Miniport = NULL;
+    }
+}
+
 UCHAR CMiniportStream::UpdateDMA (void)
 {
     // get X_CR register value
