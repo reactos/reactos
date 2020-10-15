@@ -197,8 +197,8 @@ HRESULT CACListISF::GetPathName(LPCITEMIDLIST pidlChild, CComHeapPtr<WCHAR>& psz
     CStringW szPath;
     if (m_szExpand.GetLength() && m_iNextLocation == LT_DIRECTORY)
     {
-        size_t cchExpand = wcslen(m_szExpand);
-        if (StrCmpNIW(pszChild, m_szExpand, INT(cchExpand)) != 0 ||
+        INT cchExpand = m_szExpand.GetLength();
+        if (StrCmpNIW(pszChild, m_szExpand, cchExpand) != 0 ||
             pszChild[0] != L'\\' || pszChild[1] != L'\\')
         {
             szPath = m_szExpand;
@@ -206,7 +206,7 @@ HRESULT CACListISF::GetPathName(LPCITEMIDLIST pidlChild, CComHeapPtr<WCHAR>& psz
     }
     szPath += pszChild;
 
-    size_t cchMax = wcslen(szPath) + 1;
+    INT cchMax = szPath.GetLength() + 1;
     CComHeapPtr<WCHAR> pszFullPath;
     if (!pszFullPath.Allocate(cchMax))
     {
