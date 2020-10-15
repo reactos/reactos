@@ -123,32 +123,6 @@ NTSTATUS CAC97MiniportWaveRTStream::Init
     // The rule here is that we return when we fail without a cleanup.
     // The destructor will relase the allocated memory.
     //
-    NTSTATUS ntStatus = STATUS_SUCCESS;
-
-    //
-    // Save miniport pointer and addref it.
-    //
-    Miniport = Miniport_;
-    Miniport->AddRef ();
-
-    //
-    // Save portstream interface pointer and addref it.
-    //
-    PortStream = PortStream_;
-    PortStream->AddRef ();
-
-    //
-    // Save channel ID and capture flag.
-    //
-    Channel = Channel_;
-    Capture = Capture_;
-
-    //
-    // Save data format and current sample rate.
-    //
-    DataFormat = (PKSDATAFORMAT_WAVEFORMATEX)DataFormat_;
-    CurrentRate = DataFormat->WaveFormatEx.nSamplesPerSec;
-    NumberOfChannels = DataFormat->WaveFormatEx.nChannels;
 
     //
     // Allocate memory for the BDL.
@@ -191,60 +165,13 @@ NTSTATUS CAC97MiniportWaveRTStream::Init
           return STATUS_INSUFFICIENT_RESOURCES;
       }
     }
-
-    //
-    // Store the base address of this DMA engine.
-    //
-    if (Capture)
-    {
-        //
-        // could be PCM or MIC capture
-        //
-        if (Channel == PIN_WAVEIN_OFFSET)
-        {
-            // Base address for DMA registers.
-            m_ulBDAddr = PI_BDBAR;
-        }
-        else
-        {
-            // Base address for DMA registers.
-            m_ulBDAddr = MC_BDBAR;
-        }
-    }
-    else    // render
-    {
-        // Base address for DMA registers.
-        m_ulBDAddr = PO_BDBAR;
-    }
-
-    //
-    // Reset the DMA and set the BD list pointer.
-    //
-    ResetDMA ();
-
-    //
-    // Now set the requested sample rate. In case of a failure, the object
-    // gets destroyed and releases all memory etc.
-    //
-    ntStatus = SetFormat (DataFormat_);
-    if (!NT_SUCCESS (ntStatus))
-    {
-        DOUT (DBG_ERROR, ("Stream init SetFormat call failed!"));
-        return ntStatus;
-    }
-
-    //
-    // Initialize the device state.
-    //
-    m_PowerState = PowerDeviceD0;
-
-
-    //
-    // Store the stream pointer, it is used by the ISR.
-    //
-    Miniport->Streams[Channel] = this;
-
-    return STATUS_SUCCESS;
+    
+    
+    return CMiniportStream::Init(Miniport_, 
+                                 Channel_, 
+                                 Capture_, 
+                                 DataFormat_, 
+                                 NULL);
 }
 
 

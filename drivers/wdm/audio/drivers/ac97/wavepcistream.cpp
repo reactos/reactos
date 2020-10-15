@@ -100,15 +100,6 @@ CMiniportWaveICHStream::~CMiniportWaveICHStream ()
     }
 
     //
-    // Release the service group.
-    //
-    if (ServiceGroup)
-    {
-        ServiceGroup->Release ();
-        ServiceGroup = NULL;
-    }
-
-    //
     // Release the mapping table.
     //
     if (stBDList.pMapData)
@@ -159,23 +150,6 @@ NTSTATUS CMiniportWaveICHStream::Init
     // The rule here is that we return when we fail without a cleanup.
     // The destructor will relase the allocated memory.
     //
-    NTSTATUS ntStatus = STATUS_SUCCESS;
-
-    //
-    // Initialize BDL info.
-    //
-    BDList = NULL;
-    stBDList.pMapData = NULL;
-    stBDList.nHead = 0;
-    stBDList.nTail = 0;
-    stBDList.ulTagCounter = 0;
-    stBDList.nBDEntries = 0;
-
-    //
-    // Save miniport pointer and addref it.
-    //
-    Miniport = Miniport_;
-    Wave()->AddRef ();
 
     //
     // Save portstream interface pointer and addref it.
@@ -184,39 +158,9 @@ NTSTATUS CMiniportWaveICHStream::Init
     PortStream->AddRef ();
 
     //
-    // Save channel ID and capture flag.
-    //
-    Channel = Channel_;
-    Capture = Capture_;
-
-    //
-    // Save data format and current sample rate.
-    //
-    DataFormat = (PKSDATAFORMAT_WAVEFORMATEX)DataFormat_;
-    CurrentRate = DataFormat->WaveFormatEx.nSamplesPerSec;
-    NumberOfChannels = DataFormat->WaveFormatEx.nChannels;
-
-    //
     // Initialize the BDL spinlock.
     //
     KeInitializeSpinLock (&MapLock);
-
-    //
-    // Create a service group (a DPC abstraction/helper) to help with
-    // interrupts.
-    //
-    ntStatus = PcNewServiceGroup (&ServiceGroup, NULL);
-    if (!NT_SUCCESS (ntStatus))
-    {
-        DOUT (DBG_ERROR, ("Failed to create a service group!"));
-        return ntStatus;
-    }
-
-    //
-    // Pass the ServiceGroup pointer to portcls.
-    //
-    *ServiceGroup_ = ServiceGroup;
-    ServiceGroup->AddRef ();
 
     //
     // Setup the Buffer Descriptor List (BDL)
@@ -224,8 +168,8 @@ NTSTATUS CMiniportWaveICHStream::Init
     // because we need one table as a backup.
     // The pointer is aligned on a 8 byte boundary (that's what we need).
     //
-    BDList = (tBDEntry *)Wave()->AdapterObject->DmaOperations->
-         AllocateCommonBuffer (Wave()->AdapterObject,
+    BDList = (tBDEntry *)Miniport_->AdapterObject->DmaOperations->
+         AllocateCommonBuffer (Miniport_->AdapterObject,
                                MAX_BDL_ENTRIES * sizeof (tBDEntry) * 2,
                                &BDList_PhysAddr,
                                FALSE);
@@ -254,59 +198,15 @@ NTSTATUS CMiniportWaveICHStream::Init
 
     // calculate the (backup) pointer.
     stBDList.pMapDataBackup = stBDList.pMapData + MAX_BDL_ENTRIES;
-
-    //
-    // Store the base address of this DMA engine.
-    //
-    if (Capture)
-    {
-        //
-        // could be PCM or MIC capture
-        //
-        if (Channel == PIN_WAVEIN_OFFSET)
-        {
-            // Base address for DMA registers.
-            m_ulBDAddr = PI_BDBAR;
-        }
-        else
-        {
-            // Base address for DMA registers.
-            m_ulBDAddr = MC_BDBAR;
-        }
-    }
-    else    // render
-    {
-        // Base address for DMA registers.
-        m_ulBDAddr = PO_BDBAR;
-    }
-
-    //
-    // Reset the DMA and set the BD list pointer.
-    //
-    ResetDMA ();
-
-    //
-    // Reset the position pointers.
-    //
-    TotalBytesMapped   = 0;
-    TotalBytesReleased = 0;
-
-    //
-    // Now set the requested sample rate. In case of a failure, the object
-    // gets destroyed and releases all memory etc.
-    //
-    ntStatus = SetFormat (DataFormat_);
-    if (!NT_SUCCESS (ntStatus))
-    {
-        DOUT (DBG_ERROR, ("Stream init SetFormat call failed!"));
+    
+    
+    NTSTATUS ntStatus = CMiniportStream::Init(Miniport_, 
+                                              Channel_, 
+                                              Capture_, 
+                                              DataFormat_, 
+                                              ServiceGroup_);
+    if (!NT_SUCCESS (ntStatus)) 
         return ntStatus;
-    }
-
-    //
-    // Initialize the device state.
-    //
-    m_PowerState = PowerDeviceD0;
-
 
     PPREFETCHOFFSET PreFetchOffset;
     //
@@ -319,11 +219,6 @@ NTSTATUS CMiniportWaveICHStream::Init
         PreFetchOffset->SetPreFetchOffset(32 * (DataFormat->WaveFormatEx.nChannels * 2));
         PreFetchOffset->Release();
     }
-
-    //
-    // Store the stream pointer, it is used by the ISR.
-    //
-    Miniport->Streams[Channel] = this;
 
     return STATUS_SUCCESS;
 }

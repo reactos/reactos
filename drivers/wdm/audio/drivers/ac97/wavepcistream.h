@@ -88,7 +88,7 @@ private:
     KSPIN_LOCK                  MapLock;        // for processing mappings.
     ULONGLONG           TotalBytesMapped;   // factor in position calculation
     ULONGLONG           TotalBytesReleased; // factor in position calculation
-    DEVICE_POWER_STATE  m_PowerState;       // Current power state of the device.
+
 
 
     /*************************************************************************

@@ -29,6 +29,7 @@ public:
     ULONG                       Channel;        // channel this stream handles.
     BOOL                        Capture;        // TRUE=Capture,FALSE=Render
     WORD                        NumberOfChannels; // Number of channels
+    DEVICE_POWER_STATE  m_PowerState;       // Current power state of the device.
 
 
 
@@ -85,6 +86,17 @@ public:
     {
         return CurrentRate;
     }
+
+    NTSTATUS Init
+    (
+        IN  CMiniport*              Miniport_,
+        IN  ULONG                   Channel_,
+        IN  BOOLEAN                 Capture_,
+        IN  PKSDATAFORMAT           DataFormat_,
+        OUT PSERVICEGROUP           *ServiceGroup_
+    );
+
+
 };
 
 

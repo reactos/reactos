@@ -10,6 +10,124 @@
     ReadBMControlRegister8 (m_ulBDAddr + addr))
 
 
+NTSTATUS CMiniportStream::Init
+(
+    IN  CMiniport               *Miniport_,
+    IN  ULONG                   Channel_,
+    IN  BOOLEAN                 Capture_,
+    IN  PKSDATAFORMAT           DataFormat_,
+    OUT PSERVICEGROUP           *ServiceGroup_
+)
+{
+    PAGED_CODE ();
+
+    DOUT (DBG_PRINT, ("[CMiniportStream::Init]"));
+
+    ASSERT (Miniport_);
+    ASSERT (DataFormat_);
+
+    //
+    // The rule here is that we return when we fail without a cleanup.
+    // The destructor will relase the allocated memory.
+    //
+    NTSTATUS ntStatus = STATUS_SUCCESS;
+
+    //
+    // Save miniport pointer and addref it.
+    //
+    Miniport = Miniport_;
+    Miniport->AddRef ();
+
+    //
+    // Save channel ID and capture flag.
+    //
+    Channel = Channel_;
+    Capture = Capture_;
+
+    //
+    // Save data format and current sample rate.
+    //
+    DataFormat = (PKSDATAFORMAT_WAVEFORMATEX)DataFormat_;
+    CurrentRate = DataFormat->WaveFormatEx.nSamplesPerSec;
+    NumberOfChannels = DataFormat->WaveFormatEx.nChannels;
+
+
+    if (ServiceGroup_)
+    {
+
+        //
+        // Create a service group (a DPC abstraction/helper) to help with
+        // interrupts.
+        //
+        ntStatus = PcNewServiceGroup (&ServiceGroup, NULL);
+        if (!NT_SUCCESS (ntStatus))
+        {
+            DOUT (DBG_ERROR, ("Failed to create a service group!"));
+            return ntStatus;
+        }
+
+        //
+        // Pass the ServiceGroup pointer to portcls.
+        //
+        *ServiceGroup_ = ServiceGroup;
+        ServiceGroup->AddRef ();
+    }
+
+    //
+    // Store the base address of this DMA engine.
+    //
+    if (Capture)
+    {
+        //
+        // could be PCM or MIC capture
+        //
+        if (Channel == PIN_WAVEIN_OFFSET)
+        {
+            // Base address for DMA registers.
+            m_ulBDAddr = PI_BDBAR;
+        }
+        else
+        {
+            // Base address for DMA registers.
+            m_ulBDAddr = MC_BDBAR;
+        }
+    }
+    else    // render
+    {
+        // Base address for DMA registers.
+        m_ulBDAddr = PO_BDBAR;
+    }
+
+    //
+    // Reset the DMA and set the BD list pointer.
+    //
+    ResetDMA ();
+
+    //
+    // Now set the requested sample rate. In case of a failure, the object
+    // gets destroyed and releases all memory etc.
+    //
+    ntStatus = SetFormat (DataFormat_);
+    if (!NT_SUCCESS (ntStatus))
+    {
+        DOUT (DBG_ERROR, ("Stream init SetFormat call failed!"));
+        return ntStatus;
+    }
+
+    //
+    // Initialize the device state.
+    //
+    m_PowerState = PowerDeviceD0;
+
+    //
+    // Store the stream pointer, it is used by the ISR.
+    //
+    Miniport->Streams[Channel] = this;
+
+    return STATUS_SUCCESS;
+}
+
+
 CMiniportStream::~CMiniportStream()
 {
     if (Miniport)
@@ -44,6 +162,15 @@ CMiniportStream::~CMiniportStream()
         //
         Miniport->Release ();
         Miniport = NULL;
+    }
+
+    //
+    // Release the service group.
+    //
+    if (ServiceGroup)
+    {
+        ServiceGroup->Release ();
+        ServiceGroup = NULL;
     }
 }
 
