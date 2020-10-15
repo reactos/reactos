@@ -39,7 +39,7 @@ HRESULT CACListISF::NextLocation()
     switch (m_iNextLocation)
     {
         case LT_DIRECTORY:
-            ++m_iNextLocation;
+            m_iNextLocation = LT_DESKTOP;
             if (!ILIsEmpty(m_pidlCurDir) && (m_dwOptions & ACLO_CURRENTDIR))
             {
                 hr = SetLocation(m_pidlCurDir);
@@ -51,7 +51,7 @@ HRESULT CACListISF::NextLocation()
             }
             // FALL THROUGH
         case LT_DESKTOP:
-            ++m_iNextLocation;
+            m_iNextLocation = LT_MYCOMPUTER;
             if (m_dwOptions & ACLO_DESKTOP)
             {
                 CComHeapPtr<ITEMIDLIST> pidl;
@@ -67,7 +67,7 @@ HRESULT CACListISF::NextLocation()
             }
             // FALL THROUGH
         case LT_MYCOMPUTER:
-            ++m_iNextLocation;
+            m_iNextLocation = LT_FAVORITES;
             if (m_dwOptions & ACLO_MYCOMPUTER)
             {
                 CComHeapPtr<ITEMIDLIST> pidl;
@@ -83,7 +83,7 @@ HRESULT CACListISF::NextLocation()
             }
             // FALL THROUGH
         case LT_FAVORITES:
-            ++m_iNextLocation;
+            m_iNextLocation = LT_MAX;
             if (m_dwOptions & ACLO_FAVORITES)
             {
                 CComHeapPtr<ITEMIDLIST> pidl;

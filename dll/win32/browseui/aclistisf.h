@@ -41,7 +41,7 @@ private:
     };
 
     DWORD m_dwOptions;
-    INT m_iNextLocation; /* LOCATION_TYPE */
+    LOCATION_TYPE m_iNextLocation;
     BOOL m_fShowHidden;
     CStringW m_szExpand;
     CComHeapPtr<ITEMIDLIST> m_pidlLocation;
