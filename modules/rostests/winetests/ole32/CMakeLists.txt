@@ -30,6 +30,8 @@ add_importlibs(ole32_winetest oleaut32 ole32 user32 gdi32 advapi32 msvcrt kernel
 
 if(MSVC)
     add_importlibs(ole32_winetest ntdll)
+else()
+	target_compile_options(ole32_winetest PRIVATE -Wno-format-overflow)
 endif()
 
 add_pch(ole32_winetest precomp.h "${PCH_SKIP_SOURCE}")
