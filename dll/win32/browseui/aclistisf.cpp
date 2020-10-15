@@ -262,10 +262,21 @@ STDMETHODIMP CACListISF::Next(ULONG celt, LPOLESTR *rgelt, ULONG *pceltFetched)
             GetPathName(pidlChild, pszPathName);
             if (!pszPathName)
                 continue;
-            if ((m_dwOptions & (ACLO_FILESYSONLY | ACLO_FILESYSDIRS)) && !PathFileExistsW(pszPathName))
-                continue;
+
+            if (m_dwOptions & (ACLO_FILESYSONLY | ACLO_FILESYSDIRS))
+            {
+                DWORD attrs = SFGAO_FILESYSANCESTOR | SFGAO_FILESYSTEM;
+                hr = m_pShellFolder->GetAttributesOf(1, const_cast<LPCITEMIDLIST *>(&pidlChild), &attrs);
+                if (SUCCEEDED(hr))
+                {
+                   if (!(attrs & (SFGAO_FILESYSTEM | SFGAO_FILESYSANCESTOR)))
+                        continue;
+                }
+            }
+
             if ((m_dwOptions & ACLO_FILESYSDIRS) && !PathIsDirectoryW(pszPathName))
                 continue;
+
             hr = S_OK;
             break;
         }
