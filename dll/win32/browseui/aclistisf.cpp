@@ -421,10 +421,11 @@ STDMETHODIMP CACListISF::SetDirectory(LPCWSTR pwzPath)
 {
     TRACE("SetDirectory(%p, %ls, %ld)\n", this, pwzPath);
     LPITEMIDLIST pidl = ILCreateFromPathW(pwzPath);
-    if (pidl)
+    if (!pidl)
     {
-        m_pidlCurDir.Attach(pidl);
-        return S_OK;
+        ERR("Out of memory\n");
+        return E_OUTOFMEMORY;
     }
-    return E_OUTOFMEMORY;
+    m_pidlCurDir.Attach(pidl);
+    return S_OK;
 }
