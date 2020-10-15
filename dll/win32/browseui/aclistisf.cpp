@@ -244,14 +244,13 @@ STDMETHODIMP CACListISF::Next(ULONG celt, LPOLESTR *rgelt, ULONG *pceltFetched)
     HRESULT hr;
     CComHeapPtr<ITEMIDLIST> pidlChild;
     CComHeapPtr<WCHAR> pszPathName;
-    ULONG cGot;
 
     do
     {
         for (;;)
         {
             pidlChild.Free();
-            hr = m_pEnumIDList->Next(1, &pidlChild, &cGot);
+            hr = m_pEnumIDList->Next(1, &pidlChild, NULL);
             if (hr != S_OK)
                 break;
 
