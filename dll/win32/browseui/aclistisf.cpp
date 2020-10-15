@@ -129,7 +129,7 @@ HRESULT CACListISF::SetLocation(LPCITEMIDLIST pidl)
     HRESULT hr = SHGetDesktopFolder(&pFolder);
     if (FAILED(hr))
     {
-        ERR("SHGetDesktopFolder failed\n");
+        ERR("SHGetDesktopFolder failed: 0x%lX\n", hr);
         return hr;
     }
 
@@ -147,7 +147,7 @@ HRESULT CACListISF::SetLocation(LPCITEMIDLIST pidl)
     hr = m_pShellFolder->EnumObjects(NULL, Flags, &m_pEnumIDList);
     if (hr != S_OK)
     {
-        ERR("EnumObjects failed\n");
+        ERR("EnumObjects failed: 0x%lX\n", hr);
         hr = E_FAIL;
         return hr;
     }
@@ -169,7 +169,7 @@ HRESULT CACListISF::GetDisplayName(LPCITEMIDLIST pidlChild, CComHeapPtr<WCHAR>& 
         hr = m_pShellFolder->GetDisplayNameOf(pidlChild, dwFlags, &StrRet);
         if (FAILED(hr))
         {
-            ERR("m_pShellFolder->GetDisplayNameOf failed\n");
+            ERR("m_pShellFolder->GetDisplayNameOf failed: 0x%lX\n", hr);
             return hr;
         }
     }
@@ -177,7 +177,7 @@ HRESULT CACListISF::GetDisplayName(LPCITEMIDLIST pidlChild, CComHeapPtr<WCHAR>& 
     hr = StrRetToStrW(&StrRet, NULL, &pszChild);
     if (FAILED(hr))
     {
-        ERR("StrRetToStrW failed\n");
+        ERR("StrRetToStrW failed: 0x%lX\n", hr);
         return hr;
     }
     TRACE("GetDisplayName: '%S'\n", (LPCWSTR)pszChild);
@@ -192,7 +192,7 @@ HRESULT CACListISF::GetPathName(LPCITEMIDLIST pidlChild, CComHeapPtr<WCHAR>& psz
     HRESULT hr = GetDisplayName(pidlChild, pszChild);
     if (FAILED(hr))
     {
-        ERR("GetDisplayName failed\n");
+        ERR("GetDisplayName failed: 0x%lX\n", hr);
         return hr;
     }
 
@@ -213,7 +213,7 @@ HRESULT CACListISF::GetPathName(LPCITEMIDLIST pidlChild, CComHeapPtr<WCHAR>& psz
     CComHeapPtr<WCHAR> pszFullPath;
     if (!pszFullPath.Allocate(cchMax))
     {
-        ERR("pszFullPath.Allocate failed\n");
+        ERR("Out of memory\n");
         return E_OUTOFMEMORY;
     }
 
