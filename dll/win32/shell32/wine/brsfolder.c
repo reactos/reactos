@@ -40,6 +40,7 @@
 #include "shresdef.h"
 #ifdef __REACTOS__
     #include <shlwapi.h>
+    #include "cresize/cresize.h"
 #endif
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
@@ -59,7 +60,11 @@ typedef struct tagbrowse_info
     HWND          hwndTreeView;
     LPBROWSEINFOW lpBrowseInfo;
     LPITEMIDLIST  pidlRet;
+#ifdef __REACTOS__
+    CRESIZE      *layout;
+#else
     LAYOUT_DATA  *layout;  /* filled by LayoutInit, used by LayoutUpdate */
+#endif
     SIZE          szMin;
     ULONG         hNotify; /* change notification handle */
 } browse_info;
@@ -72,6 +77,7 @@ typedef struct tagTV_ITEMDATA
    IEnumIDList*  pEnumIL;    /* Children iterator */ 
 } TV_ITEMDATA, *LPTV_ITEMDATA;
 
+#ifndef __REACTOS__
 typedef struct tagLAYOUT_INFO
 {
     int iItemId;          /* control id */
@@ -92,6 +98,7 @@ static const LAYOUT_INFO g_layout_info[] =
 };
 
 #define LAYOUT_INFO_COUNT (sizeof(g_layout_info)/sizeof(g_layout_info[0]))
+#endif
 
 #define SUPPORTEDFLAGS (BIF_STATUSTEXT | \
                         BIF_BROWSEFORCOMPUTER | \
@@ -125,6 +132,7 @@ static void browsefolder_callback( LPBROWSEINFOW lpBrowseInfo, HWND hWnd,
     lpBrowseInfo->lpfn( hWnd, msg, param, lpBrowseInfo->lParam );
 }
 
+#ifndef __REACTOS__
 static LAYOUT_DATA *LayoutInit(HWND hwnd, const LAYOUT_INFO *layout_info, int layout_count)
 {
     LAYOUT_DATA *data;
@@ -185,6 +193,7 @@ static void LayoutUpdate(HWND hwnd, LAYOUT_DATA *data, const LAYOUT_INFO *layout
         SetWindowPos(hItem, NULL, r.left, r.top, r.right - r.left, r.bottom - r.top, SWP_NOZORDER);
     }
 }
+#endif
 
 
 /******************************************************************************
@@ -766,7 +775,22 @@ static BOOL BrsFolder_OnCreate( HWND hWnd, browse_info *info )
     {
         RECT rcWnd;
 
+#ifdef __REACTOS__
+        info->layout = cresize_Create(hWnd, TRUE);
+        if (info->layout)
+        {
+            cresize_SetLayoutAnchorByID(info->layout, IDC_BROWSE_FOR_FOLDER_TITLE, LA_TOP_LEFT, LA_TOP_RIGHT);
+            cresize_SetLayoutAnchorByID(info->layout, IDC_BROWSE_FOR_FOLDER_STATUS, LA_TOP_LEFT, LA_TOP_RIGHT);
+            cresize_SetLayoutAnchorByID(info->layout, IDC_BROWSE_FOR_FOLDER_FOLDER, LA_BOTTOM_LEFT, LA_BOTTOM_LEFT);
+            cresize_SetLayoutAnchorByID(info->layout, IDC_BROWSE_FOR_FOLDER_TREEVIEW, LA_TOP_LEFT, LA_BOTTOM_RIGHT);
+            cresize_SetLayoutAnchorByID(info->layout, IDC_BROWSE_FOR_FOLDER_FOLDER_TEXT, LA_BOTTOM_LEFT, LA_BOTTOM_RIGHT);
+            cresize_SetLayoutAnchorByID(info->layout, IDC_BROWSE_FOR_FOLDER_NEW_FOLDER, LA_BOTTOM_LEFT, LA_BOTTOM_LEFT);
+            cresize_SetLayoutAnchorByID(info->layout, IDOK, LA_BOTTOM_RIGHT, LA_BOTTOM_RIGHT);
+            cresize_SetLayoutAnchorByID(info->layout, IDCANCEL, LA_BOTTOM_RIGHT, LA_BOTTOM_RIGHT);
+        }
+#else
         info->layout = LayoutInit(hWnd, g_layout_info, LAYOUT_INFO_COUNT);
+#endif
 
         /* TODO: Windows allows shrinking the windows a bit */
         GetWindowRect(hWnd, &rcWnd);
@@ -1143,7 +1167,11 @@ static INT BrsFolder_OnDestroy(browse_info *info)
 {
     if (info->layout)
     {
+#ifdef __REACTOS__
+        cresize_Destroy(info->layout);
+#else
         SHFree(info->layout);
+#endif
         info->layout = NULL;
     }
 
@@ -1231,7 +1259,11 @@ static INT_PTR CALLBACK BrsFolderDlgProc( HWND hWnd, UINT msg, WPARAM wParam,
 
     case WM_SIZE:
         if (info->layout)  /* new style dialogs */
+#ifdef __REACTOS__
+            cresize_OnSize(info->layout, NULL);
+#else
             LayoutUpdate(hWnd, info->layout, g_layout_info, LAYOUT_INFO_COUNT);
+#endif
         return 0;
 
     case BFFM_SETSTATUSTEXTA:
