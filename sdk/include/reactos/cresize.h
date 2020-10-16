@@ -37,7 +37,7 @@ typedef struct CRESIZE_LAYOUT {
 typedef struct CRESIZE {
     HWND m_hwndParent;
     BOOL m_bResizeEnabled;
-    HWND m_hwndSizeGrip;
+    HWND m_hwndGrip;
     size_t m_cLayouts;
     CRESIZE_LAYOUT *m_pLayouts;
 } CRESIZE;
@@ -56,10 +56,6 @@ cresize_ModifySystemMenu(CRESIZE *pResize, BOOL bEnableResize)
         RemoveMenu(hSysMenu, SC_SIZE, MF_BYCOMMAND);
         RemoveMenu(hSysMenu, SC_RESTORE, MF_BYCOMMAND);
     }
-
-    RedrawWindow(pResize->m_hwndParent, NULL, NULL,
-                 RDW_FRAME | RDW_INVALIDATE | RDW_ERASENOW);
-    InvalidateRect(pResize->m_hwndParent, NULL, TRUE);
 }
 
 static __inline void
@@ -67,17 +63,13 @@ cresize_MoveSizeGrip(CRESIZE *pResize)
 {
     RECT ClientRect;
     INT cx, cy;
-
     assert(IsWindow(pResize->m_hwndParent));
-
-    if (!pResize->m_hwndSizeGrip)
-        return;
 
     GetClientRect(pResize->m_hwndParent, &ClientRect);
 
     cx = GetSystemMetrics(SM_CXVSCROLL);
     cy = GetSystemMetrics(SM_CYHSCROLL);
-    SetWindowPos(pResize->m_hwndSizeGrip, NULL,
+    SetWindowPos(pResize->m_hwndGrip, NULL,
                  ClientRect.right - cx, ClientRect.bottom - cy,
                  cx, cy, SWP_NOACTIVATE | SWP_NOOWNERZORDER | SWP_NOZORDER);
 }
@@ -85,26 +77,23 @@ cresize_MoveSizeGrip(CRESIZE *pResize)
 static __inline void
 cresize_ShowSizeGrip(CRESIZE *pResize, BOOL bShow)
 {
-    assert(IsWindow(pResize->m_hwndParent));
-
     if (!bShow)
     {
-        if (IsWindow(pResize->m_hwndSizeGrip))
-            ShowWindow(pResize->m_hwndSizeGrip, SW_HIDE);
+        if (IsWindow(pResize->m_hwndGrip))
+            ShowWindow(pResize->m_hwndGrip, SW_HIDE);
         return;
     }
 
-    if (!IsWindow(pResize->m_hwndSizeGrip))
+    if (!IsWindow(pResize->m_hwndGrip))
     {
         DWORD style = WS_CHILD | WS_CLIPSIBLINGS | SBS_SIZEGRIP;
-        pResize->m_hwndSizeGrip = CreateWindowExW(
-            0, L"SCROLLBAR", NULL, style,
-            0, 0, 0, 0, pResize->m_hwndParent,
-            NULL, GetModuleHandleW(NULL), NULL);
+        pResize->m_hwndGrip = CreateWindowExW(0, L"SCROLLBAR", NULL, style,
+                                              0, 0, 0, 0, pResize->m_hwndParent,
+                                              NULL, GetModuleHandleW(NULL), NULL);
     }
 
     cresize_MoveSizeGrip(pResize);
-    ShowWindow(pResize->m_hwndSizeGrip, SW_SHOWNOACTIVATE);
+    ShowWindow(pResize->m_hwndGrip, SW_SHOWNOACTIVATE);
 }
 
 static __inline void
@@ -119,11 +108,10 @@ static __inline HDWP
 cresize_DoLayout(CRESIZE *pResize, HDWP hDwp, const CRESIZE_LAYOUT *pLayout,
                  const RECT *ClientRect)
 {
-    RECT ChildRect, NewRect;
     HWND hwndCtrl = pLayout->m_hwndCtrl;
-    INT width, height;
+    RECT ChildRect, NewRect;
+    LONG width, height;
     const UINT uFlags = SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOREPOSITION;
-
     if (!IsWindow(hwndCtrl))
         return hDwp;
 
@@ -142,8 +130,8 @@ cresize_DoLayout(CRESIZE *pResize, HDWP hDwp, const CRESIZE_LAYOUT *pLayout,
     {
         width = NewRect.right - NewRect.left;
         height = NewRect.bottom - NewRect.top;
-        hDwp = DeferWindowPos(hDwp, hwndCtrl, NULL,
-            NewRect.left, NewRect.top, width, height, uFlags);
+        hDwp = DeferWindowPos(hDwp, hwndCtrl, NULL, NewRect.left, NewRect.top,
+                              width, height, uFlags);
     }
 
     InvalidateRect(hwndCtrl, NULL, TRUE);
@@ -154,9 +142,8 @@ static __inline void
 cresize_ArrangeLayout(CRESIZE *pResize, const RECT *prc OPTIONAL)
 {
     RECT ClientRect;
-    size_t i;
+    size_t iItem;
     HDWP hDwp;
-
     assert(IsWindow(pResize->m_hwndParent));
 
     if (prc)
@@ -168,9 +155,9 @@ cresize_ArrangeLayout(CRESIZE *pResize, const RECT *prc OPTIONAL)
     if (hDwp == NULL)
         return;
 
-    for (i = 0; i < pResize->m_cLayouts; ++i)
+    for (iItem = 0; iItem < pResize->m_cLayouts; ++iItem)
     {
-        const CRESIZE_LAYOUT *pLayout = &pResize->m_pLayouts[i];
+        const CRESIZE_LAYOUT *pLayout = &pResize->m_pLayouts[iItem];
         hDwp = cresize_DoLayout(pResize, hDwp, pLayout, &ClientRect);
     }
 
@@ -194,14 +181,13 @@ cresize_InitializeLayouts(CRESIZE *pResize)
     LONG width, height;
     size_t iItem;
     HWND hwndCtrl;
-
     assert(IsWindow(pResize->m_hwndParent));
+
     GetClientRect(pResize->m_hwndParent, &ClientRect);
 
     for (iItem = 0; iItem < pResize->m_cLayouts; ++iItem)
     {
         CRESIZE_LAYOUT *layout = &pResize->m_pLayouts[iItem];
-
         if (layout->m_hwndCtrl == NULL)
         {
             layout->m_hwndCtrl = GetDlgItem(pResize->m_hwndParent, layout->m_nCtrlID);
@@ -230,25 +216,28 @@ cresize_Create(HWND hwndParent, const CRESIZE_LAYOUT *pLayouts, size_t cLayouts,
     size_t cb;
     CRESIZE *pResize = SHAlloc(sizeof(CRESIZE));
     if (pResize == NULL)
+    {
+        assert(0);
         return NULL;
+    }
 
     cb = cLayouts * sizeof(CRESIZE_LAYOUT);
     pResize->m_cLayouts = cLayouts;
     pResize->m_pLayouts = SHAlloc(cb);
     if (pResize->m_pLayouts == NULL)
     {
+        assert(0);
         SHFree(pResize);
         return NULL;
     }
     memcpy(pResize->m_pLayouts, pLayouts, cb);
 
     /* NOTE: The parent window must have initially WS_THICKFRAME style. */
-    assert(IsWindow(hwndParent));
     assert(GetWindowLongPtrW(hwndParent, GWL_STYLE) & WS_THICKFRAME);
 
     pResize->m_hwndParent = hwndParent;
     pResize->m_bResizeEnabled = FALSE;
-    pResize->m_hwndSizeGrip = NULL;
+    pResize->m_hwndGrip = NULL;
     cresize_EnableResize(pResize, bEnableResize);
     cresize_InitializeLayouts(pResize);
 
