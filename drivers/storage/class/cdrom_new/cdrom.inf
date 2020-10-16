@@ -1,0 +1,159 @@
+;
+; Copyright (c) Microsoft Corporation.  All rights reserved.
+;
+
+[Version]
+Signature = "$WINDOWS NT$"
+LayoutFile = layout.inf
+Class     = CDROM
+ClassGuid = {4D36E965-E325-11CE-BFC1-08002BE10318}
+Provider  = %MSFT%
+; Git commit 96eb96d @ https://github.com/microsoft/Windows-driver-samples
+DriverVer = 08/11/2016, 1.0
+
+;[SourceDisksNames]
+;3426=windows cd
+
+;[SourceDisksFiles]
+;cdrom.sys         = 3426
+
+[DestinationDirs]
+cdrom_copyfiles   = 12
+
+[cdrom_copyfiles]
+cdrom.sys,,,0x100
+
+[ControlFlags]
+BasicDriverOk=*
+
+[Manufacturer]
+%MITSUMI%         = mitsumi_cdrom,NT$ARCH$
+%GenManufacturer% = cdrom_device,NT$ARCH$
+
+;[mitsumi_cdrom.NT$ARCH$]
+[mitsumi_cdrom.NT]
+%Mitsumi_cdrom_devdesc%    = mitsumi_install,IDE\CdRomMITSUMI_CD-ROM________!A________________
+
+;[cdrom_device.NT$ARCH$]
+[cdrom_device.NT]
+;;
+;; if none of the above matched, then only cdrom.sys is required for this drive
+;;
+%gencdrom_devdesc%         = cdrom_install,SCSI\WormPIONEER_CD-WO_DR-R504X__
+%gencdrom_devdesc%         = cdrom_install,SCSI\WormSONY____CD-R___CDU920S__
+%gencdrom_devdesc%         = cdrom_install,SCSI\WormSONY____CD-R___CDU948S__
+%gencdrom_devdesc%         = cdrom_install,GenCdRom
+%gencdrom_devdesc%         = cdrom_install_ISO_drive,SCSI\CdRomMsft____Virtual_DVD-ROM_
+
+;;
+;; Use to add filter drivers for the device
+;;
+
+[mitsumi_addreg]
+HKR,,"FriendlyName",,%Mitsumi_Generic_FriendlyName%
+
+;;
+;; Give ISO drives a more friendly name
+;;
+
+[ISO_addreg]
+HKR,,"FriendlyName",,%ISO_Generic_FriendlyName%
+
+;;
+;; The AutoRunAlwaysDisable key is only for use when the hardware cannot
+;; accepts  TEST_UNIT_READY  commands.  Disabling 'AutoRun' or including
+;; devices in this list will prevent removable media services from being
+;; able to properly handle these devices.
+;;
+
+[autorun_addreg]
+HKR,,"AutoRun",0x00010003,1
+HKR,,"AutoRunAlwaysDisable", 0x00010008, "NEC     MBR-7   "
+HKR,,"AutoRunAlwaysDisable", 0x00010008, "NEC     MBR-7.4 "
+HKR,,"AutoRunAlwaysDisable", 0x00010008, "PIONEER CHANGR DRM-1804X"
+HKR,,"AutoRunAlwaysDisable", 0x00010008, "PIONEER CD-ROM DRM-6324X"
+HKR,,"AutoRunAlwaysDisable", 0x00010008, "PIONEER CD-ROM DRM-624X "
+HKR,,"AutoRunAlwaysDisable", 0x00010008, "TORiSAN CD-ROM CDR_C36"
+
+;;
+;; Use to disable synchronous transfers to this device.  Sync transfers will
+;; always be turned off by default in this INF for any cdrom-type device
+;;
+
+[nosync_addreg]
+HKR,,"DefaultRequestFlags",0x00010001,8
+HKR,"Storport","MinimumIdleTimeoutInMS",0x00010001,0
+
+;;
+;; Installation section for mitsumi.
+;;
+
+[mitsumi_install]
+CopyFiles=cdrom_copyfiles
+
+[mitsumi_install.HW]
+AddReg=nosync_addreg,mitsumi_addreg
+
+[mitsumi_install.Services]
+Needs=cdrom_install.Services
+
+;;
+;; Installation section for generic cdrom.
+;;
+
+[cdrom_install]
+CopyFiles=cdrom_copyfiles
+
+[cdrom_install.HW]
+AddReg=nosync_addreg
+
+[cdrom_install.Services]
+AddService=cdrom,0x00000002,cdrom_ServiceInstallSection,cdrom_EventLog_InstallSection
+
+[cdrom_install_ISO_drive]
+CopyFiles=cdrom_copyfiles
+
+[cdrom_install_ISO_drive.HW]
+AddReg=nosync_addreg,ISO_addreg
+
+[cdrom_install_ISO_drive.Services]
+AddService=cdrom,0x00000002,cdrom_ServiceInstallSection,cdrom_EventLog_InstallSection
+
+;;
+;; Service install sections
+;;
+
+[cdrom_ServiceInstallSection]
+DisplayName   = %cdrom_ServiceDesc%
+ServiceType   = 1
+StartType     = 1
+ErrorControl  = 1
+ServiceBinary = %12%\cdrom.sys
+LoadOrderGroup = "SCSI CDROM Class"
+AddReg=autorun_addreg
+
+[cdrom_EventLog_InstallSection]
+;AddReg=cdrom_EventLog_AddReg
+
+;[cdrom_EventLog_AddReg]
+;HKR,,EventMessageFile,0x00020000,"%%SystemRoot%%\System32\IoLogMsg.dll"
+;HKR,,TypesSupported,0x00010001,7
+
+
+[Strings]
+MSFT        = "Microsoft"
+
+;; Manufacturer specific strings
+MITSUMI         = "Mitsumi"
+GenManufacturer = "(Standard CD-ROM drives)"
+
+;; Descriptions for enumerated brands and models
+Mitsumi_cdrom_devdesc    = "Mitsumi CD-ROM Drive"
+gencdrom_devdesc         = "CD-ROM Drive"
+
+;; Friendly names
+Mitsumi_Generic_FriendlyName = "Mitsumi CD-ROM Drive"
+ISO_Generic_FriendlyName = "Microsoft Virtual DVD-ROM"
+
+;; Service descriptions
+cdrom_ServiceDesc   = "CD-ROM Driver"
