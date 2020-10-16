@@ -62,7 +62,7 @@ add_importlibs(libtiff user32 msvcrt kernel32 ntdll)
 add_pch(libtiff precomp.h SOURCE)
 add_cd_file(TARGET libtiff DESTINATION reactos/system32 FOR all)
 
-if (MSVC)
+if(MSVC)
     # error C4311: 'type cast': pointer truncation from 'thandle_t' to 'int'
     remove_target_compile_option(libtiff "/we4311")
     # error C4312: 'type cast': conversion from 'int' to 'thandle_t' of greater size
