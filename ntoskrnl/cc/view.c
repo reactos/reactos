@@ -665,7 +665,6 @@ CcRosMapVacbInKernelSpace(
     {
         PFN_NUMBER PageFrameNumber;
 
-        MI_SET_USAGE(MI_USAGE_CACHE);
         Status = MmRequestPageMemoryConsumer(MC_CACHE, TRUE, &PageFrameNumber);
         if (PageFrameNumber == 0)
         {
@@ -906,25 +905,6 @@ Retry:
     KeReleaseSpinLockFromDpcLevel(&SharedCacheMap->CacheMapLock);
     InsertTailList(&VacbLruListHead, &current->VacbLruListEntry);
     KeReleaseQueuedSpinLock(LockQueueMasterLock, oldIrql);
-
-    MI_SET_USAGE(MI_USAGE_CACHE);
-#if MI_TRACE_PFNS
-    if ((SharedCacheMap->FileObject) && (SharedCacheMap->FileObject->FileName.Buffer))
-    {
-        PWCHAR pos;
-        ULONG len = 0;
-        pos = wcsrchr(SharedCacheMap->FileObject->FileName.Buffer, '\\');
-        if (pos)
-        {
-            len = wcslen(pos) * sizeof(WCHAR);
-            snprintf(MI_PFN_CURRENT_PROCESS_NAME, min(16, len), "%S", pos);
-        }
-        else
-        {
-            snprintf(MI_PFN_CURRENT_PROCESS_NAME, min(16, len), "%wZ", &SharedCacheMap->FileObject->FileName);
-        }
-    }
-#endif
 
     /* Reference it to allow release */
     CcRosVacbIncRefCount(current);

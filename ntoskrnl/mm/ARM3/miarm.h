@@ -1058,6 +1058,10 @@ VOID
 NTAPI
 MiInsertInWorkingSetList(_Inout_ PMMSUPPORT Vm, _In_ PVOID Address, _In_ ULONG Protection);
 
+VOID
+NTAPI
+MiRemoveFromWorkingSetList(_Inout_ PMMSUPPORT Vm, _In_ PVOID Address);
+
 //
 // New ARM3<->RosMM PAGE Architecture
 //
