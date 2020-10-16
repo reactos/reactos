@@ -34,8 +34,8 @@ FONT 8, "MS Sans Serif", 0, 0, 0
     ICON IDI_CLEANMGR, -1, 6, 8, 0, 0
 }
 
-IDD_CHOICE DIALOGEX 0, 0, 244, 274
-CAPTION "Disk Cleanup"
+IDD_TAB_PARENT DIALOGEX 0, 0, 244, 274
+CAPTION "Disk Cleanup Settings"
 STYLE DS_CENTER | DS_SHELLFONT | WS_POPUPWINDOW | WS_CAPTION | WS_CLIPSIBLINGS | WS_CLIPCHILDREN
 FONT 8, "MS Shell Dlg", 0, 0, 0
 {
@@ -55,16 +55,6 @@ FONT 8, "MS Sans Serif", 0, 0, 0
     LTEXT "Removing:", -1, 8, 65, 33, 9
     PUSHBUTTON "Cancel", IDCANCEL, 156, 43, 48, 13, 0, 0, 2
     ICON IDI_CLEANMGR, -1, 6, 8, 0, 0
-}
-
-IDD_STAGEFLAG DIALOGEX 0, 0, 244, 274
-CAPTION "Disk Cleanup Settings"
-STYLE DS_CENTER | DS_SHELLFONT | WS_POPUPWINDOW | WS_CAPTION | WS_CLIPSIBLINGS | WS_CLIPCHILDREN
-FONT 8, "MS Shell Dlg", 0, 0, 0
-{
-    CONTROL "Tab1", IDC_TAB_SAGESET, "SysTabControl32", WS_TABSTOP, 4, 4, 235, 246
-    DEFPUSHBUTTON "OK", IDOK, 132, 257, 50, 14
-    PUSHBUTTON "Cancel", IDCANCEL, 185, 257, 50, 14
 }
 
 IDD_CHOICE_PAGE DIALOGEX 0, 0, 230, 227
@@ -100,7 +90,7 @@ FONT 8, "MS Sans Serif", 0, 0, 0
 {
     LTEXT "Check the items that you would like Disk Cleanup to automatically clean up during its scheduled run times.", -1, 37, 9, 177, 20
     LTEXT "Files to delete:", -1, 10, 36, 65, 9
-    CONTROL "", IDC_SAGESET_LIST, "SysListView32", LVS_NOCOLUMNHEADER | LVS_ALIGNLEFT | LVS_AUTOARRANGE | LVS_SINGLESEL | LVS_REPORT | WS_BORDER | WS_TABSTOP, 8, 51, 214, 64
+    CONTROL "", IDC_STAGEFLAG_LIST, "SysListView32", LVS_NOCOLUMNHEADER | LVS_ALIGNLEFT | LVS_AUTOARRANGE | LVS_SINGLESEL | LVS_REPORT | WS_BORDER | WS_TABSTOP, 8, 51, 214, 64
     LTEXT "", IDC_STATIC_DETAILS, 14, 134, 202, 45
     GROUPBOX "Description", -1, 8, 123, 214, 91, BS_LEFTTEXT, WS_EX_TRANSPARENT
     ICON IDI_CLEANMGR, -1, 9, 8, 0, 0
@@ -117,8 +107,7 @@ END
 
 STRINGTABLE
 BEGIN
-	IDS_CONFIRM_DELETION "Are you sure to delete these files?"
-	IDS_CONFIRM_CONFIG "Are you sure to save this configuration?"
+	IDS_CONFIRMATION "Are you sure to continue with current configuration?"
 END
 
 STRINGTABLE

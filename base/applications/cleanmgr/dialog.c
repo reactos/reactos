@@ -158,7 +158,7 @@ INT_PTR CALLBACK ProgressDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM 
     return TRUE;
 }
 
-INT_PTR CALLBACK ChoiceDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK TabParentDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     WCHAR TempText[ARR_MAX_SIZE] = { 0 };
 
@@ -166,16 +166,19 @@ INT_PTR CALLBACK ChoiceDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lP
     {
         case WM_INITDIALOG:
         {
-            WCHAR FullText[ARR_MAX_SIZE] = { 0 };
             HICON hbmIcon = LoadIconW(GetModuleHandleW(NULL), MAKEINTRESOURCE(IDI_CLEANMGR));
+            if (!lParam)
+            {
+                WCHAR FullText[ARR_MAX_SIZE] = { 0 };
+                LoadStringW(GetModuleHandleW(NULL), IDS_CHOICE_DLG_TITLE, TempText, _countof(TempText));
+                StringCchPrintfW(FullText, sizeof(FullText), TempText, DriveLetter);
+                SetWindowTextW(hwnd, FullText);
+            }
 
-            LoadStringW(GetModuleHandleW(NULL), IDS_CHOICE_DLG_TITLE, TempText, _countof(TempText));
-            StringCchPrintfW(FullText, sizeof(FullText), TempText, DriveLetter);
-            SetWindowTextW(hwnd, FullText);
+            InitTabControl(hwnd, lParam);
             SendMessageW(hwnd, WM_SETICON, ICON_SMALL, (LPARAM)hbmIcon);
             SendMessageW(hwnd, WM_SETICON, ICON_BIG, (LPARAM)hbmIcon);
-            SetForegroundWindow(hwnd);
-            return InitTabControl(hwnd);
+            return TRUE;
         }
 
         case WM_NOTIFY:
@@ -200,6 +203,7 @@ INT_PTR CALLBACK ChoiceDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lP
             {
                 case IDOK:
                 {
+                    LoadStringW(GetModuleHandleW(NULL), IDS_CONFIRMATION, TempText, _countof(TempText));
                     int MesgBox = MessageBoxW(hwnd, TempText, L"Warning", MB_YESNO | MB_ICONWARNING | MB_DEFBUTTON2);
                     switch (MesgBox)
                     {
@@ -282,71 +286,6 @@ INT_PTR CALLBACK ProgressEndDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPAR
 
         case WM_CLOSE:
             EndDialog(hwnd, 0);
-            break;
-
-        default:
-        {
-            if (message == CleanmgrWindowMsg)
-            {
-                SetForegroundWindow(hwnd);
-            }
-            return FALSE;
-        }
-    }
-    return TRUE;
-}
-
-INT_PTR CALLBACK SetStageFlagDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
-{
-    WCHAR TempText[ARR_MAX_SIZE] = { 0 };
-
-    switch (message)
-    {
-        case WM_INITDIALOG:
-        {
-            HICON hbmIcon = LoadIconW(GetModuleHandleW(NULL), MAKEINTRESOURCE(IDI_CLEANMGR));
-
-            SendMessageW(hwnd, WM_SETICON, ICON_SMALL, (LPARAM)hbmIcon);
-            SendMessageW(hwnd, WM_SETICON, ICON_BIG, (LPARAM)hbmIcon);
-            return InitStageFlagTabControl(hwnd);
-        }
-
-        case WM_NOTIFY:
-            return ThemeHandler(hwnd, (LPNMCUSTOMDRAW)lParam);
-
-        case WM_THEMECHANGED:
-            InvalidateRect(hwnd, NULL, FALSE);
-            break;
-
-        case WM_COMMAND:
-            switch (LOWORD(wParam))
-            {
-                case IDOK:
-                {
-                    int MesgBox = MessageBoxW(hwnd, TempText, L"Warning", MB_YESNO | MB_ICONWARNING | MB_DEFBUTTON2);
-                    switch (MesgBox)
-                    {
-                        case IDYES:
-                            EndDialog(hwnd, IDOK);
-                            break;
-
-                        case IDNO:
-                            break;
-                    }
-                    break;
-                }
-                case IDCANCEL:
-                    EndDialog(hwnd, IDCANCEL);
-                    break;
-            }
-            break;
-
-        case WM_CLOSE:
-            EndDialog(hwnd, IDCANCEL);
-            break;
-
-        case WM_DESTROY:
-            DestroyWindow(DialogHandle.hSagesetPage);
             break;
 
         default:

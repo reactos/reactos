@@ -77,7 +77,8 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
         return TRUE;
     }
 
-    DialogButtonSelect = DialogBoxParamW(hInstance, MAKEINTRESOURCEW(IDD_CHOICE), NULL, ChoiceDlgProc, 0);
+    /* Setting lParam to false to tell the dialog box to start with regular procedure */
+    DialogButtonSelect = DialogBoxParamW(hInstance, MAKEINTRESOURCEW(IDD_TAB_PARENT), NULL, TabParentDlgProc, FALSE);
     if (DialogButtonSelect == IDCANCEL)
     {
         return TRUE;

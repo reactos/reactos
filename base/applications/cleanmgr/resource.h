@@ -7,10 +7,9 @@
 
 /* Dialog Box Resource IDs */
 #define IDD_PROGRESS                        1001
-#define IDD_CHOICE                          1002
+#define IDD_TAB_PARENT                      1002
 #define IDD_START                           1003
 #define IDD_PROGRESS_END                    1004
-#define IDD_STAGEFLAG                       1005
 
 /* Progress Bar Resource IDs */
 #define IDC_PROGRESS_1                      2001
@@ -36,7 +35,7 @@
 
 /* Listview Control IDs */
 #define IDC_CHOICE_LIST                     6001
-#define IDC_SAGESET_LIST                    6002
+#define IDC_STAGEFLAG_LIST                  6002
 
 /* String Resource IDs */
 #define IDS_CLEANUP                         7001
@@ -50,8 +49,7 @@
 
 #define IDS_WARNING_FOLDER                  9001
 
-#define IDS_CONFIRM_DELETION                10001
-#define IDS_CONFIRM_CONFIG                  10002
+#define IDS_CONFIRMATION                    10001
 
 #define IDS_ERROR_DRIVE                     11001
 
@@ -77,4 +75,3 @@
 
 /* Tab control Resource IDs */
 #define IDC_TAB                             17001
-#define IDC_TAB_SAGESET                     17002

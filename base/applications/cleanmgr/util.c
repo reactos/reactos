@@ -219,7 +219,7 @@ BOOL DrawItemCombobox(LPARAM lParam)
     return TRUE;
 }
 
-BOOL StartNormalDriveCheck(LPWSTR* ArgList, PWCHAR LogicalDrives)
+BOOL StartDriveCleanupFromArg(LPWSTR* ArgList, PWCHAR LogicalDrives)
 {
     WCHAR DriveArgGathered[ARR_MAX_SIZE] = { 0 };
     WCHAR TempText[ARR_MAX_SIZE] = { 0 };
@@ -386,7 +386,7 @@ DWORD WINAPI GetRemovableDirSize(LPVOID lpParam)
                          &ArrSize) != ERROR_SUCCESS)
     {
         DPRINT("RegQueryValueExW(): Failed to query a registry key!\n");
-        return FALSE;
+        //return FALSE;
     }
 
     if (PathIsDirectoryW(TargetedDir))
@@ -640,43 +640,36 @@ void InitStartDlg(HWND hwnd, HBITMAP hBitmap)
     StringCbCopyW(DriveLetter, sizeof(DriveLetter), GetProperDriveLetter(hComboCtrl, 0));
 }
 
-BOOL InitTabControl(HWND hwnd)
+void InitTabControl(HWND hwnd, BOOL IsStageFlagReady)
 {
     TCITEMW InsertItem;
     ZeroMemory(&InsertItem, sizeof(InsertItem));
 
+    InsertItem.mask = TCIF_TEXT;
+    InsertItem.pszText = L"Disk Cleanup";
     DialogHandle.hTab = GetDlgItem(hwnd, IDC_TAB);
-    DialogHandle.hChoicePage = CreateDialogW(GetModuleHandleW(NULL), MAKEINTRESOURCE(IDD_CHOICE_PAGE), hwnd, ChoicePageDlgProc);
-    EnableDialogTheme(DialogHandle.hChoicePage);
-    DialogHandle.hOptionsPage = CreateDialogW(GetModuleHandleW(NULL), MAKEINTRESOURCE(IDD_OPTIONS_PAGE), hwnd, OptionsPageDlgProc);
-    EnableDialogTheme(DialogHandle.hOptionsPage);
-
-    InsertItem.mask = TCIF_TEXT;
-    InsertItem.pszText = L"Disk Cleanup";
-    (void)TabCtrl_InsertItem(DialogHandle.hTab, 0, &InsertItem);
-    InsertItem.pszText = L"More Options";
-    (void)TabCtrl_InsertItem(DialogHandle.hTab, 1, &InsertItem);
-
-    TabControlSelChange();
-    return TRUE;
-}
-
-BOOL InitStageFlagTabControl(HWND hwnd)
-{
-    TCITEMW InsertItem;
-    ZeroMemory(&InsertItem, sizeof(InsertItem));
-
-    DialogHandle.hTab = GetDlgItem(hwnd, IDC_TAB_SAGESET);
-    DialogHandle.hSagesetPage = CreateDialogW(GetModuleHandleW(NULL), MAKEINTRESOURCE(IDD_STAGEFLAG_PAGE), hwnd, SetStageFlagPageDlgProc);
-    EnableDialogTheme(DialogHandle.hSagesetPage);
-
-    InsertItem.mask = TCIF_TEXT;
-    InsertItem.pszText = L"Disk Cleanup";
     (void)TabCtrl_InsertItem(DialogHandle.hTab, 0, &InsertItem);
 
-    ShowWindow(DialogHandle.hSagesetPage, SW_SHOW);
-    BringWindowToTop(DialogHandle.hSagesetPage);
-    return TRUE;
+    if (!IsStageFlagReady)
+    {
+        DialogHandle.hChoicePage = CreateDialogW(GetModuleHandleW(NULL), MAKEINTRESOURCE(IDD_CHOICE_PAGE), hwnd, MainPageDlgProc);
+        EnableDialogTheme(DialogHandle.hChoicePage);
+        DialogHandle.hOptionsPage = CreateDialogW(GetModuleHandleW(NULL), MAKEINTRESOURCE(IDD_OPTIONS_PAGE), hwnd, OptionsPageDlgProc);
+        EnableDialogTheme(DialogHandle.hOptionsPage);
+
+        InsertItem.pszText = L"More Options";
+        (void)TabCtrl_InsertItem(DialogHandle.hTab, 1, &InsertItem);
+        TabControlSelChange();
+        return;
+    }
+    else
+    {
+        DialogHandle.hSagesetPage = CreateDialogW(GetModuleHandleW(NULL), MAKEINTRESOURCE(IDD_STAGEFLAG_PAGE), hwnd, SetStageFlagPageDlgProc);
+        EnableDialogTheme(DialogHandle.hSagesetPage);
+        ShowWindow(DialogHandle.hSagesetPage, SW_SHOW);
+        BringWindowToTop(DialogHandle.hSagesetPage);
+        return;
+    }
 }
 
 void GetStageFlags(int nArgs, PWCHAR ArgSpecified, LPWSTR* ArgList, PWCHAR LogicalDrives)
@@ -785,7 +778,8 @@ void SetStageFlags(int nArgs, PWCHAR ArgSpecified, LPWSTR* ArgList)
     WCHAR *TargetedStageFlag = GetRequiredStageFlag(nArgs, ArgSpecified, ArgList);
     INT_PTR DialogButtonSelect;
 
-    DialogButtonSelect = DialogBoxParamW(GetModuleHandleW(NULL), MAKEINTRESOURCEW(IDD_STAGEFLAG), NULL, SetStageFlagDlgProc, 0);
+    /* Setting lParam to true to tell the dialog box to initialize specific controls for stageflag */
+    DialogButtonSelect = DialogBoxParamW(GetModuleHandleW(NULL), MAKEINTRESOURCEW(IDD_TAB_PARENT), NULL, TabParentDlgProc, TRUE);
 
     if (DialogButtonSelect == IDCANCEL)
     {
@@ -1018,7 +1012,7 @@ BOOL UseAquiredArguments(LPWSTR* ArgList, int nArgs)
     
     if (wcscmp(ArgSpecified, L"/D") == 0 && nArgs == 3)
     {
-        if(!StartNormalDriveCheck(ArgList, LogicalDrives))
+        if(!StartDriveCleanupFromArg(ArgList, LogicalDrives))
         {
             return FALSE;
         }

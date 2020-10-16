@@ -1,7 +1,7 @@
 /*
  * PROJECT:         ReactOS Disk Cleanup
  * LICENSE:         GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
- * PURPOSE:         ChoicePage child dialog function
+ * PURPOSE:         MainPage child dialog function
  * COPYRIGHT:       Copyright 2020 Arnav Bhatt (arnavbhatt288 at gmail dot com)
  */
 
@@ -11,7 +11,7 @@ DIRSIZE DirectorySizes;
 WCHAR DriveLetter[ARR_MAX_SIZE];
 WCHAR RappsDir[MAX_PATH];
 
-INT_PTR CALLBACK ChoicePageDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK MainPageDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     HWND hList = GetDlgItem(hwnd, IDC_CHOICE_LIST);
 

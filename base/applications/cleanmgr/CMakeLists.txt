@@ -2,9 +2,9 @@ remove_definitions(-D_WIN32_WINNT=0x502)
 add_definitions(-D_WIN32_WINNT=0x600)
 
 list(APPEND SOURCE
-    choicepage.c
     dialog.c
     main.c
+    mainpage.c
     optionspage.c
     util.c
     stageflagpage.c

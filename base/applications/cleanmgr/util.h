@@ -61,7 +61,7 @@ BOOL CreateImageLists(HWND hList);
 BOOL EnableDialogTheme(HWND hwnd);
 BOOL GetStageFlagVal(PWCHAR RegArg, PWCHAR SubKey);
 BOOL SetStageFlagVal(PWCHAR RegArg, PWCHAR SubKey, BOOL ArgBool);
-BOOL StartNormalDriveCheck(LPWSTR* ArgList, PWCHAR LogicalDrives);
+BOOL StartDriveCleanupFromArg(LPWSTR* ArgList, PWCHAR LogicalDrives);
 
 PWCHAR GetRequiredStageFlag(int nArgs, PWCHAR ArgSpecified, LPWSTR* ArgList);
 

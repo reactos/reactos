@@ -9,7 +9,7 @@
 
 INT_PTR CALLBACK SetStageFlagPageDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    HWND hList = GetDlgItem(hwnd, IDC_SAGESET_LIST);
+    HWND hList = GetDlgItem(hwnd, IDC_STAGEFLAG_LIST);
 
     switch (message)
     {
@@ -31,7 +31,7 @@ INT_PTR CALLBACK SetStageFlagPageDlgProc(HWND hwnd, UINT message, WPARAM wParam,
 
             if (lParam)
             {
-                if (header && header->idFrom == IDC_SAGESET_LIST && header->code == LVN_ITEMCHANGED)
+                if (header && header->idFrom == IDC_STAGEFLAG_LIST && header->code == LVN_ITEMCHANGED)
                 {
                     if ((NmList->uNewState ^ NmList->uOldState) & LVIS_SELECTED)
                     {
@@ -39,7 +39,7 @@ INT_PTR CALLBACK SetStageFlagPageDlgProc(HWND hwnd, UINT message, WPARAM wParam,
                     }
                     else if ((NmList->uNewState ^ NmList->uOldState) & LVIS_STATEIMAGEMASK)
                     {
-                        StageFlagCheckedItem(NmList->iItem, hwnd, GetDlgItem(hwnd, IDC_SAGESET_LIST));
+                        StageFlagCheckedItem(NmList->iItem, hwnd, GetDlgItem(hwnd, IDC_STAGEFLAG_LIST));
                     }
                 }
             }

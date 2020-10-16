@@ -52,16 +52,13 @@ extern WCHAR RappsDir[MAX_PATH];
 // For dialog.c
 INT_PTR CALLBACK StartDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 INT_PTR CALLBACK ProgressDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
-INT_PTR CALLBACK ChoiceDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
+INT_PTR CALLBACK TabParentDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 INT_PTR CALLBACK ProgressEndDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
-INT_PTR CALLBACK SetStageFlagDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 
 
 // For util.c
 BOOL UseAquiredArguments(LPWSTR* ArgList, int nArgs);
 BOOL DrawItemCombobox(LPARAM lParam);
-BOOL InitTabControl(HWND hwnd);
-BOOL InitStageFlagTabControl(HWND hwnd);
 
 DWORD WINAPI RemoveRequiredFolder(LPVOID lpParam);
 DWORD WINAPI GetRemovableDirSize(LPVOID lpParam);
@@ -75,13 +72,14 @@ PWCHAR GetProperDriveLetter(HWND hComboCtrl, int ItemIndex);
 void InitStartDlg(HWND hwnd, HBITMAP hBitmap);
 void InitListViewControl(HWND hList);
 void InitStageFlagListViewControl(HWND hList);
+void InitTabControl(HWND hwnd, BOOL IsStageFlagReady);
 void SelItem(HWND hwnd, int ItemIndex);
 void StageFlagCheckedItem(int ItemIndex, HWND hwnd, HWND hList);
 void TabControlSelChange(void);
 
 
 // Dlg pages
-INT_PTR CALLBACK ChoicePageDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
+INT_PTR CALLBACK MainPageDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 INT_PTR CALLBACK OptionsPageDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 INT_PTR CALLBACK SetStageFlagPageDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam);
 
