@@ -277,7 +277,7 @@ CreateCommonFreeLdrSections(
 
     /* MenuTextColor=White */
     IniCacheInsertKey(IniSection, NULL, INSERT_LAST,
-                      L"MenuTextColor", L"Gray");
+                      L"MenuTextColor", L"Default");
 
     /* MenuColor=Blue */
     IniCacheInsertKey(IniSection, NULL, INSERT_LAST,
@@ -285,15 +285,15 @@ CreateCommonFreeLdrSections(
 
     /* TextColor=Yellow */
     IniCacheInsertKey(IniSection, NULL, INSERT_LAST,
-                      L"TextColor", L"Gray");
+                      L"TextColor", L"Default");
 
     /* SelectedTextColor=Black */
     IniCacheInsertKey(IniSection, NULL, INSERT_LAST,
                       L"SelectedTextColor", L"Black");
 
-    /* SelectedColor=Gray */
+    /* SelectedColor=Default */
     IniCacheInsertKey(IniSection, NULL, INSERT_LAST,
-                      L"SelectedColor", L"Gray");
+                      L"SelectedColor", L"Default");
 
     /* ShowTime=Yes */
     IniCacheInsertKey(IniSection, NULL, INSERT_LAST,

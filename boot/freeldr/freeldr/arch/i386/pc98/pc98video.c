@@ -35,6 +35,8 @@ static BOOLEAN UseCGFont = TRUE;
  * This option is possible only with BIOS fonts enabled. */
 static BOOLEAN CGAccelDraw = TRUE;
 
+UCHAR MachDefaultTextColor = COLOR_WHITE;
+
 ULONG VramText;
 static ULONG VramPlaneB;
 static ULONG VramPlaneG;
