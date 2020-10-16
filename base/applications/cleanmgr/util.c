@@ -386,7 +386,8 @@ DWORD WINAPI GetRemovableDirSize(LPVOID lpParam)
                          &ArrSize) != ERROR_SUCCESS)
     {
         DPRINT("RegQueryValueExW(): Failed to query a registry key!\n");
-        //return FALSE;
+        EndDialog(hwnd, IDCANCEL);
+        return FALSE;
     }
 
     if (PathIsDirectoryW(TargetedDir))
