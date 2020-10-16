@@ -1263,7 +1263,7 @@ static INT_PTR CALLBACK BrsFolderDlgProc( HWND hWnd, UINT msg, WPARAM wParam,
     case WM_SIZE:
         if (info->layout)  /* new style dialogs */
 #ifdef __REACTOS__
-            cresize_OnSize(info->layout, NULL);
+            cresize_OnSize(info->layout);
 #else
             LayoutUpdate(hWnd, info->layout, g_layout_info, LAYOUT_INFO_COUNT);
 #endif

@@ -139,21 +139,15 @@ cresize_DoLayout(CRESIZE *pResize, HDWP hDwp, const CRESIZE_LAYOUT *pLayout,
 }
 
 static __inline void
-cresize_ArrangeLayout(CRESIZE *pResize, const RECT *prc OPTIONAL)
+cresize_ArrangeLayout(CRESIZE *pResize)
 {
     RECT ClientRect;
     size_t iItem;
-    HDWP hDwp;
-    assert(IsWindow(pResize->m_hwndParent));
-
-    if (prc)
-        ClientRect = *prc;
-    else
-        GetClientRect(pResize->m_hwndParent, &ClientRect);
-
-    hDwp = BeginDeferWindowPos((INT)pResize->m_cLayouts);
+    HDWP hDwp = BeginDeferWindowPos((INT)pResize->m_cLayouts);
     if (hDwp == NULL)
         return;
+
+    GetClientRect(pResize->m_hwndParent, &ClientRect);
 
     for (iItem = 0; iItem < pResize->m_cLayouts; ++iItem)
     {
@@ -166,11 +160,12 @@ cresize_ArrangeLayout(CRESIZE *pResize, const RECT *prc OPTIONAL)
 
 // NOTE: Please call cresize_OnSize on parent's WM_SIZE.
 static __inline void
-cresize_OnSize(CRESIZE *pResize, const RECT *prcClient OPTIONAL)
+cresize_OnSize(CRESIZE *pResize)
 {
+    assert(IsWindow(pResize->m_hwndParent));
     if (pResize == NULL)
         return;
-    cresize_ArrangeLayout(pResize, prcClient);
+    cresize_ArrangeLayout(pResize);
     cresize_MoveSizeGrip(pResize);
 }
 
@@ -180,7 +175,6 @@ cresize_InitializeLayouts(CRESIZE *pResize)
     RECT ClientRect, ChildRect;
     LONG width, height;
     size_t iItem;
-    HWND hwndCtrl;
     assert(IsWindow(pResize->m_hwndParent));
 
     GetClientRect(pResize->m_hwndParent, &ClientRect);
@@ -194,9 +188,8 @@ cresize_InitializeLayouts(CRESIZE *pResize)
             if (layout->m_hwndCtrl == NULL)
                 continue;
         }
-        hwndCtrl = layout->m_hwndCtrl;
 
-        GetWindowRect(hwndCtrl, &ChildRect);
+        GetWindowRect(layout->m_hwndCtrl, &ChildRect);
         MapWindowPoints(NULL, pResize->m_hwndParent, (LPPOINT)&ChildRect, 2);
 
         width = ClientRect.right - ClientRect.left;
