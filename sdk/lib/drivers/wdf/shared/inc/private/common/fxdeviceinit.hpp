@@ -78,7 +78,7 @@ struct FdoInit {
 
 
 
-#include "FxDeviceInitShared.hpp"
+#include "fxdeviceinitshared.hpp"
 
 struct ControlInit {
     ControlInit(
@@ -327,4 +327,4 @@ public:
 
 };
 
-#endif __FXDEVICEINIT_HPP__
+#endif // __FXDEVICEINIT_HPP__

@@ -15,7 +15,7 @@ Abstract:
 #include "fxmin.hpp"
 #include "fxldrum.h"
 
-PVOID
+PDRIVER_ADD_DEVICE
 MxDriverObject::GetDriverExtensionAddDevice(
     VOID
     )

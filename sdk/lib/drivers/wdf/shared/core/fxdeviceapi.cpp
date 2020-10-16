@@ -26,7 +26,7 @@ Revision History:
 #include "fxiotarget.hpp"
 
 extern "C" {
-#include "FxDeviceApi.tmh"
+// #include "FxDeviceApi.tmh"
 }
 
 struct FxOffsetAndName {
@@ -43,6 +43,7 @@ extern "C" {
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 WDFDRIVER
+STDCALL
 WDFEXPORT(WdfDeviceGetDriver)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -83,6 +84,7 @@ Returns:
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 WDFIOTARGET
+STDCALL
 WDFEXPORT(WdfDeviceGetIoTarget)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -111,6 +113,7 @@ WDFEXPORT(WdfDeviceGetIoTarget)(
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
 WDFIOTARGET
+STDCALL
 WDFEXPORT(WdfDeviceGetSelfIoTarget)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -160,6 +163,7 @@ Returns:
 _Must_inspect_result_
 __drv_maxIRQL(PASSIVE_LEVEL)
 NTSTATUS
+STDCALL
 WDFEXPORT(WdfDeviceRetrieveDeviceName)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -208,6 +212,7 @@ WDFEXPORT(WdfDeviceRetrieveDeviceName)(
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 VOID
+STDCALL
 WDFEXPORT(WdfDeviceSetCharacteristics)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -234,6 +239,7 @@ WDFEXPORT(WdfDeviceSetCharacteristics)(
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 ULONG
+STDCALL
 WDFEXPORT(WdfDeviceGetCharacteristics)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -258,6 +264,7 @@ WDFEXPORT(WdfDeviceGetCharacteristics)(
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 ULONG
+STDCALL
 WDFEXPORT(WdfDeviceGetAlignmentRequirement)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -282,6 +289,7 @@ WDFEXPORT(WdfDeviceGetAlignmentRequirement)(
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 VOID
+STDCALL
 WDFEXPORT(WdfDeviceSetAlignmentRequirement)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -308,6 +316,7 @@ WDFEXPORT(WdfDeviceSetAlignmentRequirement)(
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 WDF_DEVICE_PNP_STATE
+STDCALL
 WDFEXPORT(WdfDeviceGetDevicePnpState)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -329,6 +338,7 @@ WDFEXPORT(WdfDeviceGetDevicePnpState)(
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 WDF_DEVICE_POWER_STATE
+STDCALL
 WDFEXPORT(WdfDeviceGetDevicePowerState)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -350,6 +360,7 @@ WDFEXPORT(WdfDeviceGetDevicePowerState)(
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 WDF_DEVICE_POWER_POLICY_STATE
+STDCALL
 WDFEXPORT(WdfDeviceGetDevicePowerPolicyState)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -372,6 +383,7 @@ WDFEXPORT(WdfDeviceGetDevicePowerPolicyState)(
 _Must_inspect_result_
 __drv_maxIRQL(DISPATCH_LEVEL)
 NTSTATUS
+STDCALL
 WDFEXPORT(WdfDeviceAssignS0IdleSettings)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -484,6 +496,7 @@ WDFEXPORT(WdfDeviceAssignS0IdleSettings)(
 _Must_inspect_result_
 __drv_maxIRQL(DISPATCH_LEVEL)
 NTSTATUS
+STDCALL
 WDFEXPORT(WdfDeviceAssignSxWakeSettings)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -579,6 +592,7 @@ WDFEXPORT(WdfDeviceAssignSxWakeSettings)(
 _Must_inspect_result_
 __drv_maxIRQL(PASSIVE_LEVEL)
 NTSTATUS
+STDCALL
 WDFEXPORT(WdfDeviceOpenRegistryKey)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -635,6 +649,7 @@ WDFEXPORT(WdfDeviceOpenRegistryKey)(
 _Must_inspect_result_
 _IRQL_requires_max_(PASSIVE_LEVEL)
 NTSTATUS
+STDCALL
 WDFEXPORT(WdfDeviceOpenDevicemapKey) (
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -727,6 +742,7 @@ WDFEXPORT(WdfDeviceOpenDevicemapKey) (
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 VOID
+STDCALL
 WDFEXPORT(WdfDeviceGetDeviceState)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -765,6 +781,7 @@ WDFEXPORT(WdfDeviceGetDeviceState)(
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 VOID
+STDCALL
 WDFEXPORT(WdfDeviceSetDeviceState)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -846,6 +863,7 @@ WDFEXPORT(WdfDeviceSetDeviceState)(
 _Must_inspect_result_
 __drv_maxIRQL(PASSIVE_LEVEL)
 NTSTATUS
+STDCALL
 WDFEXPORT(WdfDeviceCreate)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -957,6 +975,7 @@ WDFEXPORT(WdfDeviceCreate)(
 _Must_inspect_result_
 __drv_maxIRQL(PASSIVE_LEVEL)
 NTSTATUS
+STDCALL
 WDFEXPORT(WdfDeviceCreateSymbolicLink)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -969,7 +988,6 @@ WDFEXPORT(WdfDeviceCreateSymbolicLink)(
     DDI_ENTRY();
 
     PFX_DRIVER_GLOBALS pFxDriverGlobals;
-    PUNICODE_STRING pName;
     FxAutoString pdoName;
     FxDevice* pDevice;
     NTSTATUS status;
@@ -979,7 +997,6 @@ WDFEXPORT(WdfDeviceCreateSymbolicLink)(
                                    FX_TYPE_DEVICE,
                                    (PVOID *) &pDevice,
                                    &pFxDriverGlobals);
-    pName = NULL;
 
     FxPointerNotNull(pFxDriverGlobals, SymbolicLinkName);
 
@@ -1022,6 +1039,7 @@ WDFEXPORT(WdfDeviceCreateSymbolicLink)(
 _Must_inspect_result_
 __drv_maxIRQL(PASSIVE_LEVEL)
 NTSTATUS
+STDCALL
 WDFEXPORT(WdfDeviceQueryProperty)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1109,6 +1127,7 @@ Return Value:
 _Must_inspect_result_
 __drv_maxIRQL(PASSIVE_LEVEL)
 NTSTATUS
+STDCALL
 WDFEXPORT(WdfDeviceAllocAndQueryProperty)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1201,6 +1220,7 @@ Return Value:
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 VOID
+STDCALL
 WDFEXPORT(WdfDeviceSetStaticStopRemove)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1237,6 +1257,7 @@ WDFEXPORT(WdfDeviceSetStaticStopRemove)(
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 VOID
+STDCALL
 WDFEXPORT(WdfDeviceSetFailed)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1368,6 +1389,7 @@ _Must_inspect_result_
 __drv_when(WaitForD0 == 0, __drv_maxIRQL(DISPATCH_LEVEL))
 __drv_when(WaitForD0 != 0, __drv_maxIRQL(PASSIVE_LEVEL))
 NTSTATUS
+STDCALL
 WDFEXPORT(WdfDeviceStopIdleNoTrack)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1395,6 +1417,7 @@ _Must_inspect_result_
 __drv_when(WaitForD0 == 0, __drv_maxIRQL(DISPATCH_LEVEL))
 __drv_when(WaitForD0 != 0, __drv_maxIRQL(PASSIVE_LEVEL))
 NTSTATUS
+STDCALL
 WDFEXPORT(WdfDeviceStopIdleActual)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1426,6 +1449,7 @@ WDFEXPORT(WdfDeviceStopIdleActual)(
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 VOID
+STDCALL
 WDFEXPORT(WdfDeviceResumeIdleNoTrack)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1444,6 +1468,7 @@ WDFEXPORT(WdfDeviceResumeIdleNoTrack)(
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 VOID
+STDCALL
 WDFEXPORT(WdfDeviceResumeIdleActual)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1468,6 +1493,7 @@ WDFEXPORT(WdfDeviceResumeIdleActual)(
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 VOID
+STDCALL
 WDFEXPORT(WdfDeviceSetPnpCapabilities)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1565,6 +1591,7 @@ Return Value:
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 VOID
+STDCALL
 WDFEXPORT(WdfDeviceSetPowerCapabilities)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1734,6 +1761,7 @@ Return Value:
 _Must_inspect_result_
 __drv_maxIRQL(DISPATCH_LEVEL)
 NTSTATUS
+STDCALL
 WDFEXPORT(WdfDeviceConfigureRequestDispatching)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1865,6 +1893,7 @@ Returns:
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 WDFQUEUE
+STDCALL
 WDFEXPORT(WdfDeviceGetDefaultQueue)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1927,6 +1956,7 @@ Returns:
 _Must_inspect_result_
 __drv_maxIRQL(DISPATCH_LEVEL)
 NTSTATUS
+STDCALL
 WDFEXPORT(WdfDeviceEnqueueRequest)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -2002,6 +2032,7 @@ Return Value:
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 POWER_ACTION
+STDCALL
 WDFEXPORT(WdfDeviceGetSystemPowerAction)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -2055,6 +2086,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(APC_LEVEL)
 WDFAPI
 NTSTATUS
+STDCALL
 WDFEXPORT(WdfDeviceQueryPropertyEx)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -2186,6 +2218,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(APC_LEVEL)
 WDFAPI
 NTSTATUS
+STDCALL
 WDFEXPORT(WdfDeviceAllocAndQueryPropertyEx)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -2303,6 +2336,7 @@ _Must_inspect_result_
 _IRQL_requires_max_(APC_LEVEL)
 WDFAPI
 NTSTATUS
+STDCALL
 WDFEXPORT(WdfDeviceAssignProperty)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -2408,6 +2442,7 @@ _Must_inspect_result_
 __drv_maxIRQL(DISPATCH_LEVEL)
 WDFAPI
 NTSTATUS
+STDCALL
 WDFEXPORT(WdfDeviceConfigureWdmIrpDispatchCallback)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,

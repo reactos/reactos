@@ -24,10 +24,10 @@ Revision History:
 --*/
 
 #include "coreprivshared.hpp"
-#include "FxFileObject.hpp"
+#include "fxfileobject.hpp"
 
 extern "C" {
-#include "FxFileObjectApi.tmh"
+// #include "FxFileObjectApi.tmh"
 }
 
 //
@@ -37,6 +37,7 @@ extern "C" {
 
 __drv_maxIRQL(PASSIVE_LEVEL)
 PUNICODE_STRING
+STDCALL
 WDFEXPORT(WdfFileObjectGetFileName)(
    __in
    PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -93,6 +94,7 @@ Return Value:
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 ULONG
+STDCALL
 WDFEXPORT(WdfFileObjectGetFlags)(
    __in
    PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -139,6 +141,7 @@ Return Value:
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 WDFDEVICE
+STDCALL
 WDFEXPORT(WdfFileObjectGetDevice)(
    __in
    PWDF_DRIVER_GLOBALS DriverGlobals,

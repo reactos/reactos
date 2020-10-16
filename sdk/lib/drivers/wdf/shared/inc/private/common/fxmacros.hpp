@@ -22,14 +22,14 @@
 
 
 
-#if defined(_M_ARM)
+#if defined(_M_ARM) || defined(__REACTOS__)
 #define FX_VF_PAGING
 #else
 #define FX_VF_PAGING __declspec(code_seg(FX_VF_SECTION_NAME_QUOTED(WDF_FX_VF_SECTION_NAME)))
 #endif
 
 #define FX_VF_NAME_TO_IMP_NAME( fnName ) Vf_##fnName
-#define FX_VF_NAME_TO_SCOPED_IMP_NAME( classname, fnName ) classname##::Vf_##fnName
+#define FX_VF_NAME_TO_SCOPED_IMP_NAME( classname, fnName ) classname::Vf_##fnName
 #define FX_VF_QF_VOID
 #define FX_VF_QF_NTSTATUS _Must_inspect_result_
 #define FX_VF_DEFAULT_RT_VOID

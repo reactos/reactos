@@ -34,10 +34,10 @@ Revision History:
 extern "C" {
 #include "mx.h"
 }
-#include "FxMin.hpp"
+#include "fxmin.hpp"
 
 extern "C" {
-#include "FxPkgGeneral.tmh"
+// #include "FxPkgGeneral.tmh"
 }
 
 

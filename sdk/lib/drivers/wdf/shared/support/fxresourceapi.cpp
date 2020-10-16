@@ -22,10 +22,10 @@ Environment:
 Revision History:
 
 --*/
-#include "FxSupportPch.hpp"
+#include "fxsupportpch.hpp"
 
 extern "C" {
-#include "FxResourceAPI.tmh"
+// #include "FxResourceAPI.tmh"
 }
 
 //

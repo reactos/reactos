@@ -562,7 +562,7 @@ FxUsbDeviceControlContext::StoreAndReferenceMemory(
 {
     SetUsbType(WdfUsbRequestTypeDeviceControlTransfer);
 
-    __super::StoreAndReferenceMemory(Buffer);
+    FxUsbRequestContext::StoreAndReferenceMemory(Buffer); // __super call
 
     //
     // Convert WDF_USB_CONTROL_SETUP_PACKET to WINUSB_SETUP_PACKET

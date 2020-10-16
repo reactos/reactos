@@ -32,7 +32,7 @@ Return Value:
     m_Urb->Hdr.Function = URB_FUNCTION_BULK_OR_INTERRUPT_TRANSFER;
     m_Urb->Hdr.Length = sizeof(*m_Urb);
 
-    __super::StoreAndReferenceMemory(Buffer);
+    FxUsbRequestContext::StoreAndReferenceMemory(Buffer); // __super call
 
     Buffer->AssignValues(&m_Urb->TransferBuffer,
                          &m_Urb->TransferBufferMDL,

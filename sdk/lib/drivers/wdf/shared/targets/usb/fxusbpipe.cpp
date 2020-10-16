@@ -876,7 +876,7 @@ FxUsbPipeTransferContext::ReleaseAndRestore(
         m_PartialMdl = NULL;
     }
 #endif
-    __super::ReleaseAndRestore(Request);
+    FxUsbRequestContext::ReleaseAndRestore(Request); // __super call
 }
 
 VOID
@@ -896,7 +896,7 @@ FxUsbPipeTransferContext::CopyParameters(
                             Parameters.PipeWrite.Length));
 
     m_UsbParameters.Parameters.PipeRead.Length = GetUrbTransferLength();
-    __super::CopyParameters(Request);
+    FxUsbRequestContext::CopyParameters(Request); // __super call
 }
 
 VOID
@@ -957,7 +957,7 @@ FxUsbUrbContext::ReleaseAndRestore(
     )
 {
     m_pUrb = NULL;
-    __super::ReleaseAndRestore(Request);
+    FxUsbRequestContext::ReleaseAndRestore(Request); // __super call
 }
 
 
@@ -1106,7 +1106,7 @@ FxUsbPipe::Dispose()
     //
     // Call base class: callbacks, terminates I/Os, etc.
     //
-    callCleanup = __super::Dispose();
+    callCleanup = FxIoTarget::Dispose(); // __super call
 
     //
     // Don't need the reader anymore. The reader is deleted after calling the
@@ -1245,7 +1245,7 @@ FxUsbPipe::GotoStopState(
         Action = WdfIoTargetCancelSentIo;
     }
 
-    __super::GotoStopState(Action, SentRequestListHead, Wait, FALSE);
+    FxIoTarget::GotoStopState(Action, SentRequestListHead, Wait, FALSE); // __super call
 
     if (m_Reader != NULL) {
         //
@@ -1323,7 +1323,7 @@ FxUsbPipe::GotoPurgeState(
         Action = WdfIoTargetPurgeIoAndWait;
     }
 
-    __super::GotoPurgeState(Action,
+    FxIoTarget::GotoPurgeState(Action, // __super call
                             PendedRequestListHead,
                             SentRequestListHead,
                             Wait,
@@ -1395,7 +1395,7 @@ FxUsbPipe::GotoRemoveState(
         }
     }
 
-    __super::GotoRemoveState(NewState,
+    FxIoTarget::GotoRemoveState(NewState, // __super call
                              PendedRequestListHead,
                              SentRequestListHead,
                              FALSE,
@@ -1455,7 +1455,7 @@ FxUsbPipe::WaitForSentIoToComplete(
     //
     // Finally, let the parent class wait for all I/O to complete
     //
-    __super::WaitForSentIoToComplete();
+    FxIoTarget::WaitForSentIoToComplete(); // __super call
 }
 
 _Must_inspect_result_

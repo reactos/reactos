@@ -17,9 +17,9 @@ Abstract:
 #define __FX_SUPPORT_PCH_HPP__
 
 #if FX_CORE_MODE == FX_CORE_USER_MODE
-#include "um\FxSupportPchUM.hpp"
+#include "um/fxsupportpchum.hpp"
 #elif FX_CORE_MODE == FX_CORE_KERNEL_MODE
-#include "km\FxSupportPchKM.hpp"
+#include "km/fxsupportpchkm.hpp"
 #endif
 
 #endif // __FX_SUPPORT_PCH_HPP__

@@ -25,7 +25,7 @@ Revision History:
 
 #pragma once
 
-#include "MxMacros.h"
+#include "mxmacros.h"
 
 //
 // Greater than 64 logical processors support: direct DDK to include the new
@@ -34,9 +34,11 @@ Revision History:
 //
 #define NT_PROCESSOR_GROUPS 1
 
+#define WDF_VIOLATION                    ((ULONG)0x0000010DL)
+
 #if (FX_CORE_MODE == FX_CORE_USER_MODE)
-#include "MxUm.h"
+#include "mxum.h"
 #elif (FX_CORE_MODE == FX_CORE_KERNEL_MODE)
-#include "MxKm.h"
+#include "mxkm.h"
 #endif
 

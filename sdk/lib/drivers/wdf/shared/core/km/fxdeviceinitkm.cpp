@@ -25,7 +25,7 @@ Revision History:
 #include "coreprivshared.hpp"
 
 extern "C" {
-#include "FxDeviceInitKm.tmh"
+// #include "FxDeviceInitKm.tmh"
 }
 
 VOID

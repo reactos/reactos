@@ -24,7 +24,7 @@ Revision History:
 #include "coreprivshared.hpp"
 
 extern "C" {
-#include "FxDeviceInit.tmh"
+// #include "FxDeviceInit.tmh"
 }
 
 WDFDEVICE_INIT::WDFDEVICE_INIT(

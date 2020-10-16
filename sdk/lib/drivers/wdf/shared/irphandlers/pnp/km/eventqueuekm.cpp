@@ -70,7 +70,7 @@ FxWorkItemEventQueue::QueueWorkItem(
     // object), taking this ref prevents the globals from going away until a
     // corresponding deref at the end of workitem.
     //
-    m_PkgPnp->GetDriverGlobals()->ADDREF(_WorkItemCallback);
+    m_PkgPnp->GetDriverGlobals()->ADDREF((PVOID)_WorkItemCallback);
 
     m_WorkItem.Enqueue(
         (PMX_WORKITEM_ROUTINE) _WorkItemCallback,
@@ -112,7 +112,7 @@ Routine Description:
     //
     // Release the ref on FxDriverGlobals taken before queuing this workitem.
     //
-    pFxDriverGlobals->RELEASE(_WorkItemCallback);
+    pFxDriverGlobals->RELEASE((PVOID)_WorkItemCallback);
 
     Mx::MxDereferenceObject(pDriverObject);
 }

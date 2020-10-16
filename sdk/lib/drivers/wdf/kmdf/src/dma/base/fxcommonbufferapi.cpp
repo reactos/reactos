@@ -21,10 +21,10 @@ Revision History:
 
 --*/
 
-#include "FxDmaPCH.hpp"
+#include "fxdmapch.hpp"
 
 extern "C" {
-#include "FxCommonBufferAPI.tmh"
+// #include "FxCommonBufferAPI.tmh"
 }
 
 //
@@ -35,6 +35,7 @@ extern "C" {
 _Must_inspect_result_
 __drv_maxIRQL(PASSIVE_LEVEL)
 NTSTATUS
+STDCALL
 WDFEXPORT(WdfCommonBufferCreate)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -134,6 +135,7 @@ WDFEXPORT(WdfCommonBufferCreate)(
 _Must_inspect_result_
 __drv_maxIRQL(PASSIVE_LEVEL)
 NTSTATUS
+STDCALL
 WDFEXPORT(WdfCommonBufferCreateWithConfig)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -245,6 +247,7 @@ WDFEXPORT(WdfCommonBufferCreateWithConfig)(
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 PVOID
+STDCALL
 WDFEXPORT(WdfCommonBufferGetAlignedVirtualAddress)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -264,6 +267,7 @@ WDFEXPORT(WdfCommonBufferGetAlignedVirtualAddress)(
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 PHYSICAL_ADDRESS
+STDCALL
 WDFEXPORT(WdfCommonBufferGetAlignedLogicalAddress)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -283,6 +287,7 @@ WDFEXPORT(WdfCommonBufferGetAlignedLogicalAddress)(
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 size_t
+STDCALL
 WDFEXPORT(WdfCommonBufferGetLength)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,

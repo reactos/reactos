@@ -22,10 +22,10 @@ Environment:
 Revision History:
 
 --*/
-#include "FxSupportPch.hpp"
+#include "fxsupportpch.hpp"
 
 extern "C" {
-#include "FxQueryInterfaceAPI.tmh"
+// #include "FxQueryInterfaceAPI.tmh"
 }
 
 //
@@ -35,6 +35,7 @@ extern "C" {
 _Must_inspect_result_
 __drv_maxIRQL(PASSIVE_LEVEL)
 NTSTATUS
+STDCALL
 WDFEXPORT(WdfDeviceAddQueryInterface)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,

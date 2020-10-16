@@ -66,7 +66,7 @@ public:
         m_DriverObject = DriverObject;
     }
 
-    PVOID
+    PDRIVER_ADD_DEVICE
     GetDriverExtensionAddDevice(
         VOID
         );

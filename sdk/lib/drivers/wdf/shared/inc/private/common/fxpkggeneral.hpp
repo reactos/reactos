@@ -26,7 +26,7 @@ Revision History:
 #ifndef _FXPKGGENERAL_H_
 #define _FXPKGGENERAL_H_
 
-#include  "FxFileObjectCallbacks.hpp"
+#include  "fxfileobjectcallbacks.hpp"
 
 class FxShutDown :  public FxCallback {
 

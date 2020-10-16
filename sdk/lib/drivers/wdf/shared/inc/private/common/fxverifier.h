@@ -137,8 +137,8 @@ IsFxVerifierFunctionTableHooking(
     }
 }
 
+DECLSPEC_NORETURN
 VOID
-__declspec(noreturn)
 FxVerifierBugCheckWorker(
     __in     PFX_DRIVER_GLOBALS FxDriverGlobals,
     __in     WDF_BUGCHECK_CODES WdfBugCheckCode,
@@ -146,8 +146,8 @@ FxVerifierBugCheckWorker(
     __in_opt ULONG_PTR BugCheckParameter3 = 0
     );
 
+DECLSPEC_NORETURN
 VOID
-__declspec(noreturn)
 FxVerifierNullBugCheck(
     __in PFX_DRIVER_GLOBALS FxDriverGlobals,
     __in PVOID ReturnAddress

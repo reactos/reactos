@@ -26,7 +26,7 @@ Revision History:
 
 // Tracing support
 extern "C" {
-#include "FxSyncRequest.tmh"
+// #include "FxSyncRequest.tmh"
 }
 
 FxSyncRequest::FxSyncRequest(
@@ -126,7 +126,7 @@ Return Value:
     // Release the initial reference taken on create.  Use the base release call
     // so that we don't unnecessarily set the event unless we have to.
     //
-    count = __super::RELEASE(NULL);
+    count = FxRequestBase::RELEASE(NULL); // __super call
 
     //
     // For a driver supplied request(m_TrueRequest) the request context is

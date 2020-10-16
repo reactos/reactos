@@ -19,7 +19,7 @@ public:
         __in PFX_DRIVER_GLOBALS FxDriverGlobals
         )
     {
-        __super::LockForEnum(FxDriverGlobals);
+        FxSpinLockTransactionedList::LockForEnum(FxDriverGlobals); // __super call
     }
 
     VOID
@@ -27,7 +27,7 @@ public:
         __in PFX_DRIVER_GLOBALS FxDriverGlobals
         )
     {
-        __super::UnlockFromEnum(FxDriverGlobals);
+        FxSpinLockTransactionedList::UnlockFromEnum(FxDriverGlobals); // __super call
     }
 
     _Must_inspect_result_
@@ -109,4 +109,4 @@ public:
     ULONG m_NeedReportMissing;
 };
 
-#endif  _FXRELATEDDEVICELIST_H_
+#endif //  _FXRELATEDDEVICELIST_H_

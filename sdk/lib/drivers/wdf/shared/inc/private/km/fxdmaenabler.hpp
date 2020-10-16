@@ -24,7 +24,7 @@ Revision History:
 #ifndef __FX_DMA_ENABLER_HPP__
 #define __FX_DMA_ENABLER_HPP__
 
-#include "FxDmaEnablerCallbacks.hpp"
+#include "fxdmaenablercallbacks.hpp"
 
 //
 // Dma Description structure

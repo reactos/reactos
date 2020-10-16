@@ -4,7 +4,7 @@
 #ifndef _FXCXDEVICEINFO_H_
 #define _FXCXDEVICEINFO_H_
 
-#include "FxDeviceCallbacks.hpp"
+#include "fxdevicecallbacks.hpp"
 
 struct FxCxDeviceInfo : public FxStump {
     FxCxDeviceInfo(PFX_DRIVER_GLOBALS FxDriverGlobals) :

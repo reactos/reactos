@@ -66,7 +66,7 @@ FxIoContext::ReleaseAndRestore(
     //
     // Release the other buffer and all __super related fields
     //
-    __super::ReleaseAndRestore(Request);
+    FxRequestContext::ReleaseAndRestore(Request); // __super call
 }
 
 __inline

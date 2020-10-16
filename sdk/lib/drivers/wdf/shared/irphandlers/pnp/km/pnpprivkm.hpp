@@ -5,11 +5,11 @@
 #define _PNPPRIVKM_H_
 
 // public headers
-#include "WdfDmaEnabler.h"
+#include "wdfdmaenabler.h"
 
 // private headers
-#include "FxIrpQueue.hpp"
-#include "FxCallback.hpp"
+#include "fxirpqueue.hpp"
+#include "fxcallback.hpp"
 
 // <FxSystemWorkItem.hpp>
 __drv_functionClass(EVT_SYSTEMWORKITEM)
@@ -26,25 +26,41 @@ typedef EVT_SYSTEMWORKITEM *PFN_WDF_SYSTEMWORKITEM;
 
 // </FxSystemWorkItem.hpp>
 
-#include "FxCallbackSpinlock.hpp"
-#include "FxCallbackMutexLock.hpp"
-#include "FxPackage.hpp"
-#include "IfxMemory.hpp"
-#include "FxCallback.hpp"
-#include "FxRequestContext.hpp"
-#include "FxRequestContextTypes.h"
-#include "FxRequestBase.hpp"
-#include "FxRequest.hpp"
-#include "FxPkgPnp.hpp"
-#include "FxPkgIo.hpp"
-#include "FxIoQueue.hpp"
+#include "fxcallbackspinlock.hpp"
+#include "fxcallbackmutexlock.hpp"
+#include "fxpackage.hpp"
+#include "ifxmemory.hpp"
+#include "fxcallback.hpp"
+#include "fxrequestcontext.hpp"
+#include "fxrequestcontexttypes.h"
+#include "fxrequestbase.hpp"
+#include "fxrequest.hpp"
+#include "fxpkgpnp.hpp"
+#include "fxpkgio.hpp"
+#include "fxioqueue.hpp"
 
-#include "FxDmaEnabler.hpp"
-#include "FxSystemWorkItem.hpp"
+#include "fxdmaenabler.hpp"
+#include "fxsystemworkitem.hpp"
 
-#include "FxDsf.h"    // DSF support.
-#include <device_common.h>
-#include "FxTelemetry.hpp"
+// #include "FxDsf.h"    // DSF support.
+// #include <device_common.h>
+// #include "FxTelemetry.hpp"
+// __REACTOS__
+typedef struct _STACK_DEVICE_CAPABILITIES {
+    //
+    // The capabilities as garnered from IRP_MN_QUERY_CAPABILITIES.
+    //
+    DEVICE_CAPABILITIES DeviceCaps;
+
+    //
+    // The lowest-power D-state that a device can be in and still generate
+    // a wake signal, indexed by system state.  (PowerSystemUnspecified is
+    // an unused slot in this array.)
+    //
+    DEVICE_WAKE_DEPTH DeepestWakeableDstate[PowerSystemHibernate+1];
+} STACK_DEVICE_CAPABILITIES, *PSTACK_DEVICE_CAPABILITIES;
+// end __REACTOS__
+
 
 _Must_inspect_result_
 NTSTATUS

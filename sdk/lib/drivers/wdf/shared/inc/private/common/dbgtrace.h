@@ -68,6 +68,9 @@ Revision History:
 #define TRACINGDRIVER         0x00001000
 #define TRACINGPNPPOWERSTATES 0x00002000
 
+#define TRACINGDMA            0x00004000 // __REACTOS__
+#define TRACINGIOTARGET       0x00008000 // __REACTOS__
+
 extern "C" {
 void
 __cdecl
@@ -93,7 +96,9 @@ DoTraceLevelMessage    (
 #define WPP_CLEANUP(DriverObject)
 #endif
 
+extern "C" {
 extern ULONG DebugLevel;
 extern ULONG DebugFlag;
+}
 
 #endif

@@ -21,7 +21,7 @@ Revision History:
 #ifndef _FXUSBDEVICE_H_
 #define _FXUSBDEVICE_H_
 
-#include "FxUsbRequestContext.hpp"
+#include "fxusbrequestcontext.hpp"
 
 typedef enum _FX_URB_TYPE : UCHAR {
     FxUrbTypeLegacy,
@@ -214,6 +214,7 @@ public:
         );
 
     __inline
+    VOID
     CopyDeviceDescriptor(
         __out PUSB_DEVICE_DESCRIPTOR UsbDeviceDescriptor
         )
@@ -449,7 +450,9 @@ public:
         PURB* Urb
         );
 
+#ifdef _MSC_VER
 #pragma warning(disable:28285)
+#endif
     __checkReturn
     NTSTATUS
     CreateIsochUrb(

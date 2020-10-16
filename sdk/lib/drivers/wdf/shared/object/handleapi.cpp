@@ -504,6 +504,7 @@ _Must_inspect_result_
 __drv_maxIRQL(DISPATCH_LEVEL)
 WDFAPI
 NTSTATUS
+STDCALL
 WDFEXPORT(WdfObjectAllocateContext)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,

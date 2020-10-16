@@ -27,7 +27,7 @@ Revision History:
 #include "pnppriv.hpp"
 
 extern "C" {
-#include "FxInterruptApi.tmh"
+// #include "FxInterruptApi.tmh"
 }
 
 //

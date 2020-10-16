@@ -28,7 +28,7 @@ Revision History:
 #define _FXCALLBACKMUTEXLOCK_H_
 
 extern "C" {
-#include "FxCallbackMutexLock.hpp.tmh"
+// #include "FxCallbackMutexLock.hpp.tmh"
 }
 
 class FxCallbackMutexLock : public FxCallbackLock {

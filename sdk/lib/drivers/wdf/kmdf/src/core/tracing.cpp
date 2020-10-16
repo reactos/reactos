@@ -30,12 +30,12 @@ Revision History:
 
 // We use DoTraceMessage
 extern "C" {
-#include "tracing.tmh"
+// #include "tracing.tmh"
 }
 
 #include <initguid.h>
-#include "fxIFR.h"       // shared struct between IFR and debug ext.
-#include "fxIFRKm.h"     // kernel mode only IFR definitions
+#include "fxifr.h"       // shared struct between IFR and debug ext.
+#include "fxifrkm.h"     // kernel mode only IFR definitions
 
 
 //=============================================================================

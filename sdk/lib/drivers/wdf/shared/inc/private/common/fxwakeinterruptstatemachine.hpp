@@ -11,7 +11,7 @@
 //
 const UCHAR FxWakeInterruptEventQueueDepth = 8;
 
-enum FxWakeInterruptEvents {
+enum FxWakeInterruptEvents : UINT32 {
     WakeInterruptEventInvalid                  = 0x00,
     WakeInterruptEventIsr                      = 0x01,
     WakeInterruptEventEnteringD0               = 0x02,

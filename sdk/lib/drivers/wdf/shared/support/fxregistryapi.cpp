@@ -22,10 +22,11 @@ Revision History:
 
 --*/
 
-#include "FxSupportPch.hpp"
+#include "fxsupportpch.hpp"
 
 extern "C" {
-#include "FxRegistryAPI.tmh"
+// #include "FxRegistryAPI.tmh"
+#define RtlSizeTToULong RtlULongPtrToULong
 }
 
 extern "C" {
@@ -50,6 +51,7 @@ extern "C" {
 _Must_inspect_result_
 __drv_maxIRQL(PASSIVE_LEVEL)
 NTSTATUS
+STDCALL
 WDFEXPORT(WdfRegistryOpenKey)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -162,6 +164,7 @@ WDFEXPORT(WdfRegistryOpenKey)(
 _Must_inspect_result_
 __drv_maxIRQL(PASSIVE_LEVEL)
 NTSTATUS
+STDCALL
 WDFEXPORT(WdfRegistryCreateKey)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -281,6 +284,7 @@ WDFEXPORT(WdfRegistryCreateKey)(
 
 __drv_maxIRQL(PASSIVE_LEVEL)
 VOID
+STDCALL
 WDFEXPORT(WdfRegistryClose)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -313,6 +317,7 @@ WDFEXPORT(WdfRegistryClose)(
 
 __drv_maxIRQL(PASSIVE_LEVEL)
 HANDLE
+STDCALL
 WDFEXPORT(WdfRegistryWdmGetHandle)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -335,6 +340,7 @@ WDFEXPORT(WdfRegistryWdmGetHandle)(
 _Must_inspect_result_
 __drv_maxIRQL(PASSIVE_LEVEL)
 NTSTATUS
+STDCALL
 WDFEXPORT(WdfRegistryRemoveKey)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -374,6 +380,7 @@ WDFEXPORT(WdfRegistryRemoveKey)(
 _Must_inspect_result_
 __drv_maxIRQL(PASSIVE_LEVEL)
 NTSTATUS
+STDCALL
 WDFEXPORT(WdfRegistryRemoveValue)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -415,6 +422,7 @@ WDFEXPORT(WdfRegistryRemoveValue)(
 _Must_inspect_result_
 __drv_maxIRQL(PASSIVE_LEVEL)
 NTSTATUS
+STDCALL
 WDFEXPORT(WdfRegistryQueryValue)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -485,6 +493,7 @@ WDFEXPORT(WdfRegistryQueryValue)(
 _Must_inspect_result_
 __drv_maxIRQL(PASSIVE_LEVEL)
 NTSTATUS
+STDCALL
 WDFEXPORT(WdfRegistryQueryMemory)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -603,6 +612,7 @@ WDFEXPORT(WdfRegistryQueryMemory)(
 _Must_inspect_result_
 __drv_maxIRQL(PASSIVE_LEVEL)
 NTSTATUS
+STDCALL
 WDFEXPORT(WdfRegistryQueryMultiString)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -786,6 +796,7 @@ WDFEXPORT(WdfRegistryQueryMultiString)(
 _Must_inspect_result_
 __drv_maxIRQL(PASSIVE_LEVEL)
 NTSTATUS
+STDCALL
 WDFEXPORT(WdfRegistryQueryUnicodeString)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -908,6 +919,7 @@ WDFEXPORT(WdfRegistryQueryUnicodeString)(
 _Must_inspect_result_
 __drv_maxIRQL(PASSIVE_LEVEL)
 NTSTATUS
+STDCALL
 WDFEXPORT(WdfRegistryQueryString)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1043,6 +1055,7 @@ WDFEXPORT(WdfRegistryQueryString)(
 _Must_inspect_result_
 __drv_maxIRQL(PASSIVE_LEVEL)
 NTSTATUS
+STDCALL
 WDFEXPORT(WdfRegistryQueryULong)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1094,6 +1107,7 @@ WDFEXPORT(WdfRegistryQueryULong)(
 _Must_inspect_result_
 __drv_maxIRQL(PASSIVE_LEVEL)
 NTSTATUS
+STDCALL
 WDFEXPORT(WdfRegistryAssignValue)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1147,6 +1161,7 @@ WDFEXPORT(WdfRegistryAssignValue)(
 _Must_inspect_result_
 __drv_maxIRQL(PASSIVE_LEVEL)
 NTSTATUS
+STDCALL
 WDFEXPORT(WdfRegistryAssignMemory)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1239,6 +1254,7 @@ WDFEXPORT(WdfRegistryAssignMemory)(
 _Must_inspect_result_
 __drv_maxIRQL(PASSIVE_LEVEL)
 NTSTATUS
+STDCALL
 WDFEXPORT(WdfRegistryAssignULong)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1288,6 +1304,7 @@ WDFEXPORT(WdfRegistryAssignULong)(
 _Must_inspect_result_
 __drv_maxIRQL(PASSIVE_LEVEL)
 NTSTATUS
+STDCALL
 WDFEXPORT(WdfRegistryAssignUnicodeString)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1374,6 +1391,7 @@ WDFEXPORT(WdfRegistryAssignUnicodeString)(
 _Must_inspect_result_
 __drv_maxIRQL(PASSIVE_LEVEL)
 NTSTATUS
+STDCALL
 WDFEXPORT(WdfRegistryAssignString)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1433,6 +1451,7 @@ WDFEXPORT(WdfRegistryAssignString)(
 _Must_inspect_result_
 __drv_maxIRQL(PASSIVE_LEVEL)
 NTSTATUS
+STDCALL
 WDFEXPORT(WdfRegistryAssignMultiString)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,

@@ -22,7 +22,7 @@ Revision History:
 
 --*/
 
-#include "FxSupportPch.hpp"
+#include "fxsupportpch.hpp"
 
 // extern the entire file
 extern "C" {
@@ -32,6 +32,7 @@ _Must_inspect_result_
 __drv_maxIRQL(DISPATCH_LEVEL)
 NTSTATUS
 WDFAPI
+STDCALL
 WDFEXPORT(WdfWaitLockCreate)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -97,6 +98,7 @@ __drv_when(Timeout != 0 && *Timeout == 0, __drv_maxIRQL(DISPATCH_LEVEL))
 __drv_when(Timeout != 0 && *Timeout != 0, __drv_maxIRQL(PASSIVE_LEVEL))
 NTSTATUS
 WDFAPI
+STDCALL
 WDFEXPORT(WdfWaitLockAcquire)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -151,6 +153,7 @@ Return Value:
 __drv_maxIRQL(DISPATCH_LEVEL)
 VOID
 WDFAPI
+STDCALL
 WDFEXPORT(WdfWaitLockRelease)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,

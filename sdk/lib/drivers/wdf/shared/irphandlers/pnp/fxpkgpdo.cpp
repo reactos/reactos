@@ -353,7 +353,7 @@ FxPkgPdo::FinishInitialize(
     // Important to do this last since this will cause a pnp state machine
     // transition
     //
-    __super::FinishInitialize(DeviceInit);
+    FxPkgPnp::FinishInitialize(DeviceInit); // __super call
 }
 
 _Must_inspect_result_

@@ -27,10 +27,10 @@ Revision History:
 // Tracing support
 extern "C" {
 #include <ntverp.h>
-#include "FxDriverApi.tmh"
+// #include "FxDriverApi.tmh"
 }
 
-#include "FxTelemetry.hpp"
+#include "fxtelemetry.hpp"
 
 //
 // extern the whole file
@@ -44,6 +44,7 @@ extern "C" {
 
 __drv_maxIRQL(PASSIVE_LEVEL)
 PWSTR
+STDCALL
 WDFEXPORT(WdfDriverGetRegistryPath)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -71,9 +72,13 @@ WDFEXPORT(WdfDriverGetRegistryPath)(
     return pDriver->GetRegistryPathUnicodeString()->Buffer;
 }
 
+VOID
+RosInitWdf();
+
 _Must_inspect_result_
 __drv_maxIRQL(PASSIVE_LEVEL)
 NTSTATUS
+STDCALL
 WDFEXPORT(WdfDriverCreate)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -97,6 +102,9 @@ WDFEXPORT(WdfDriverCreate)(
     WDFDRIVER hDriver;
     const LONG validFlags = WdfDriverInitNonPnpDriver |
                             WdfDriverInitNoDispatchOverride;
+
+    RosInitWdf();
+    DriverGlobals = WdfDriverGlobals;
 
     hDriver = NULL;
     pFxDriverGlobals = GetFxDriverGlobals(DriverGlobals);
@@ -302,6 +310,7 @@ WDFEXPORT(WdfDriverCreate)(
             *Driver = hDriver;
         }
 
+#ifndef __REACTOS__
         if (FX_TELEMETRY_ENABLED(g_TelemetryProvider, pFxDriverGlobals)) {
             FxAutoString imageName;
 
@@ -329,6 +338,7 @@ WDFEXPORT(WdfDriverCreate)(
                                     imageName.m_UnicodeString.Buffer,
                                     pVersionStr);
         }
+#endif // __REACTOS__
     }
     else {
         if (pDriver != NULL) {
@@ -344,6 +354,7 @@ WDFEXPORT(WdfDriverCreate)(
 _Must_inspect_result_
 __drv_maxIRQL(PASSIVE_LEVEL)
 NTSTATUS
+STDCALL
 WDFEXPORT(WdfDriverRegisterTraceInfo)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -368,6 +379,7 @@ WDFEXPORT(WdfDriverRegisterTraceInfo)(
 _Must_inspect_result_
 __drv_maxIRQL(PASSIVE_LEVEL)
 NTSTATUS
+STDCALL
 WDFEXPORT(WdfDriverRetrieveVersionString)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -442,6 +454,7 @@ WDFEXPORT(WdfDriverRetrieveVersionString)(
 _Must_inspect_result_
 __drv_maxIRQL(PASSIVE_LEVEL)
 BOOLEAN
+STDCALL
 WDFEXPORT(WdfDriverIsVersionAvailable)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,

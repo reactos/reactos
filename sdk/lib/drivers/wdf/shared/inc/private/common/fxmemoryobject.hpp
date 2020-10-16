@@ -189,7 +189,7 @@ protected:
             return STATUS_SUCCESS;
 
         default:
-            return __super::QueryInterface(Params);
+            return FxObject::QueryInterface(Params); // __super call
         }
     }
 

@@ -23,7 +23,7 @@ Revision History:
 --*/
 
 #include "ioprivshared.hpp"
-#include "FxIoQueue.hpp"
+#include "fxioqueue.hpp"
 
 extern "C" {
 #if defined(EVENT_TRACING)
@@ -561,7 +561,7 @@ Returns:
     //
 End:
 
-    __super::Dispose();
+    FxNonPagedObject::Dispose(); // __super call
 
     return TRUE;
 }
@@ -6334,7 +6334,7 @@ Routine Description:
     return;
 }
 
-__declspec(noreturn)
+DECLSPEC_NORETURN
 VOID
 FxIoQueue::FatalError(
     __in NTSTATUS Status

@@ -27,7 +27,7 @@ Revision History:
 
 // Tracing support
 extern "C" {
-#include "FxFileObjectKm.tmh"
+// #include "FxFileObjectKm.tmh"
 }
 
 VOID

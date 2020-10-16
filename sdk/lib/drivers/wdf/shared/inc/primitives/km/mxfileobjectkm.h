@@ -14,7 +14,7 @@ Abstract:
 
 #pragma once
 
-#include "MxFileObject.h"
+#include "mxfileobject.h"
 
 __inline
 PUNICODE_STRING

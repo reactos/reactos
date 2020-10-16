@@ -126,6 +126,7 @@ public:
 
 
     static
+    DECLSPEC_NORETURN
     VOID
     MxBugCheckEx(
         __in ULONG  BugCheckCode,

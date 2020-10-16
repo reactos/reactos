@@ -22,10 +22,10 @@ Revision History:
 --*/
 
 #include "coreprivshared.hpp"
-#include "FxMemoryBufferPreallocated.hpp"
+#include "fxmemorybufferpreallocated.hpp"
 
 extern "C" {
-#include "FxMemoryBufferPreallocatedAPI.tmh"
+// #include "FxMemoryBufferPreallocatedAPI.tmh"
 }
 
 extern "C" {
@@ -34,6 +34,7 @@ _Must_inspect_result_
 __drv_maxIRQL(DISPATCH_LEVEL)
 WDFAPI
 NTSTATUS
+STDCALL
 WDFEXPORT(WdfMemoryCreatePreallocated)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -136,6 +137,7 @@ _Must_inspect_result_
 __drv_maxIRQL(DISPATCH_LEVEL)
 WDFAPI
 NTSTATUS
+STDCALL
 WDFEXPORT(WdfMemoryAssignBuffer)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,

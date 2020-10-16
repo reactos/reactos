@@ -23,7 +23,7 @@ Revision History:
 
 #pragma once
 
-#include "MxMemory.h"
+#include "mxmemory.h"
 
 __inline
 PVOID

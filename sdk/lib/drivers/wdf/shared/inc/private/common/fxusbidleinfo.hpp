@@ -37,6 +37,7 @@ private:
     __drv_maxIRQL(PASSIVE_LEVEL)
     static
     VOID
+    STDCALL
     _UsbIdleCallback(
         __in PVOID Context
         );

@@ -23,11 +23,11 @@ Revision History:
 
 #pragma once
 
-#include "DbgMacros.h"
+#include "dbgmacros.h"
 
 typedef FAST_MUTEX MdPagedLock;
 
-#include "MxPagedLock.h"
+#include "mxpagedlock.h"
 
 __inline
 MxPagedLock::MxPagedLock(
@@ -46,7 +46,9 @@ MxPagedLock::MxPagedLock(
 
 __inline
 NTSTATUS
+#ifdef _MSC_VER
 #pragma prefast(suppress:__WARNING_UNMATCHED_DEFN, "_Must_inspect_result_ not needed in kernel mode as the function always succeeds");
+#endif
 MxPagedLockNoDynam::Initialize(
     )
 {

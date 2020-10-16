@@ -22,10 +22,10 @@ Revision History:
 
 --*/
 
-#include "FxSupportPch.hpp"
+#include "fxsupportpch.hpp"
 
 extern "C"  {
-#include "FxStringAPI.tmh"
+// #include "FxStringAPI.tmh"
 }
 
 extern "C" {
@@ -33,6 +33,7 @@ extern "C" {
 _Must_inspect_result_
 __drv_maxIRQL(PASSIVE_LEVEL)
 NTSTATUS
+STDCALL
 WDFEXPORT(WdfStringCreate)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -116,6 +117,7 @@ WDFEXPORT(WdfStringCreate)(
 
 __drv_maxIRQL(PASSIVE_LEVEL)
 VOID
+STDCALL
 WDFEXPORT(WdfStringGetUnicodeString)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,

@@ -25,13 +25,14 @@ Revision History:
 #include "coreprivshared.hpp"
 
 extern "C" {
-#include "FxDeviceControlAPI.tmh"
+// #include "FxDeviceControlAPI.tmh"
 }
 
 extern "C" {
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 VOID
+STDCALL
 WDFEXPORT(WdfControlFinishInitializing)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -51,7 +52,7 @@ WDFEXPORT(WdfControlFinishInitializing)(
     MxDeviceObject device(pDevice->GetDeviceObject());
 
     if (pDevice->IsLegacy()) {
-        pDevice->m_PkgWmi->Register();
+        // pDevice->m_PkgWmi->Register(); __REACTOS__
         device.SetFlags(device.GetFlags() & ~DO_DEVICE_INITIALIZING);
     }
     else {

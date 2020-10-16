@@ -53,7 +53,7 @@ VOID
     __in PVOID CancelContext
     );
 
-#include "FxIrp.hpp"
+#include "fxirp.hpp"
 
 
 
@@ -64,6 +64,17 @@ FxIrp::GetIrp(
     )
 {
     return m_Irp;
+}
+
+__inline
+MdIrp
+FxIrp::SetIrp(
+    MdIrp irp
+    )
+{
+    MdIrp old = m_Irp;
+    m_Irp = irp;
+    return old;
 }
 
 __inline
@@ -174,6 +185,7 @@ FxIrp::SetCancelRoutine(
 
 __inline
 NTSTATUS
+STDCALL
 FxIrp::_IrpSynchronousCompletion(
     __in MdDeviceObject DeviceObject,
     __in PIRP OriginalIrp,

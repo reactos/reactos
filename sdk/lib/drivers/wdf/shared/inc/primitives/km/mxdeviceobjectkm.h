@@ -14,7 +14,7 @@ Abstract:
 
 #pragma once
 
-#include "MxDeviceObject.h"
+#include "mxdeviceobject.h"
 
 __inline
 CCHAR
@@ -65,7 +65,9 @@ MxDeviceObject::GetFlags(
     VOID
     )
 {
+#ifdef _MSC_VER
 #pragma warning(disable:28129)
+#endif
     return m_DeviceObject->Flags;
 }
 
@@ -75,7 +77,9 @@ MxDeviceObject::SetFlags(
     ULONG Flags
     )
 {
+#ifdef _MSC_VER
 #pragma warning(disable:28129)
+#endif
     m_DeviceObject->Flags = Flags;
 }
 

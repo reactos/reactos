@@ -521,7 +521,7 @@ FxInterrupt::Initialize(
     //        reference, so that even if we return error, the reference is
     //        still there to be removed on cleanup.
     //
-    ADDREF(_InterruptThunk);
+    ADDREF((PVOID)_InterruptThunk);
 
     //
     // Values always supplied by the caller
@@ -881,7 +881,7 @@ FxInterrupt::DeleteObject(
     //
     // Use the base FxObject's DeleteObject implementation which will Dispose us
     //
-    __super::DeleteObject();
+    FxNonPagedObject::DeleteObject(); // __super call
 }
 
 //
@@ -1678,7 +1678,7 @@ FxInterrupt::FlushAndRundown()
     //
     // Release the reference taken in FxInterrupt::Initialize
     //
-    RELEASE(_InterruptThunk);
+    RELEASE((PVOID)_InterruptThunk);
 }
 
 //

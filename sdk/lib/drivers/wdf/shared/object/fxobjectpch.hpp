@@ -25,6 +25,6 @@ Revision History:
 
 #include "objectpriv.hpp"
 #include "fxmin.hpp"
-#include "FxToObjectItf.hpp"
+#include "fxtoobjectitf.hpp"
 
 #endif // __FX_CORE_PCH_H__

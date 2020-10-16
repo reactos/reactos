@@ -23,7 +23,7 @@ Revision History:
 
 --*/
 
-#include "FxSupportPch.hpp"
+#include "fxsupportpch.hpp"
 
 extern "C" {
 #if defined(EVENT_TRACING)

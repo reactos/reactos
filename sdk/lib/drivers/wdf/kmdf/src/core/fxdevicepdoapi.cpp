@@ -25,7 +25,7 @@ Revision History:
 #include "fxcorepch.hpp"
 
 extern "C" {
-#include "FxDevicePdoApi.tmh"
+// #include "FxDevicePdoApi.tmh"
 }
 
 NTSTATUS
@@ -87,6 +87,7 @@ extern "C" {
 _Must_inspect_result_
 __drv_maxIRQL(DISPATCH_LEVEL)
 NTSTATUS
+STDCALL
 WDFEXPORT(WdfPdoMarkMissing)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -101,7 +102,7 @@ WDFEXPORT(WdfPdoMarkMissing)(
 
     status = GetPdoPackageFromDeviceHandle(GetFxDriverGlobals(DriverGlobals),
                                            Device,
-                                           __FUNCTION__,
+                                           (PCHAR)__FUNCTION__,
                                            &pPkgPdo,
                                            &pFxDriverGlobals,
                                            &pDevice);
@@ -120,6 +121,7 @@ WDFEXPORT(WdfPdoMarkMissing)(
 __drv_maxIRQL(DISPATCH_LEVEL)
 WDFAPI
 VOID
+STDCALL
 WDFEXPORT(WdfPdoRequestEject)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -134,7 +136,7 @@ WDFEXPORT(WdfPdoRequestEject)(
 
     status = GetPdoPackageFromDeviceHandle(GetFxDriverGlobals(DriverGlobals),
                                            Device,
-                                           __FUNCTION__,
+                                           (PCHAR)__FUNCTION__,
                                            &pPkgPdo,
                                            &pFxDriverGlobals,
                                            &pDevice);
@@ -163,6 +165,7 @@ WDFEXPORT(WdfPdoRequestEject)(
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 WDFDEVICE
+STDCALL
 WDFEXPORT(WdfPdoGetParent)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -177,7 +180,7 @@ WDFEXPORT(WdfPdoGetParent)(
 
     status = GetPdoPackageFromDeviceHandle(GetFxDriverGlobals(DriverGlobals),
                                            Device,
-                                           __FUNCTION__,
+                                           (PCHAR)__FUNCTION__,
                                            &pPkgPdo,
                                            &pFxDriverGlobals,
                                            &pDevice);
@@ -197,6 +200,7 @@ _Must_inspect_result_
 __drv_maxIRQL(DISPATCH_LEVEL)
 WDFAPI
 NTSTATUS
+STDCALL
 WDFEXPORT(WdfPdoRetrieveIdentificationDescription)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -212,7 +216,7 @@ WDFEXPORT(WdfPdoRetrieveIdentificationDescription)(
 
     status = GetPdoPackageFromDeviceHandle(GetFxDriverGlobals(DriverGlobals),
                                            Device,
-                                           __FUNCTION__,
+                                           (PCHAR)__FUNCTION__,
                                            &pPkgPdo,
                                            &pFxDriverGlobals);
 
@@ -251,6 +255,7 @@ _Must_inspect_result_
 __drv_maxIRQL(DISPATCH_LEVEL)
 WDFAPI
 NTSTATUS
+STDCALL
 WDFEXPORT(WdfPdoRetrieveAddressDescription)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -266,7 +271,7 @@ WDFEXPORT(WdfPdoRetrieveAddressDescription)(
 
     status = GetPdoPackageFromDeviceHandle(GetFxDriverGlobals(DriverGlobals),
                                            Device,
-                                           __FUNCTION__,
+                                           (PCHAR)__FUNCTION__,
                                            &pPkgPdo,
                                            &pFxDriverGlobals);
 
@@ -307,6 +312,7 @@ _Must_inspect_result_
 __drv_maxIRQL(DISPATCH_LEVEL)
 WDFAPI
 NTSTATUS
+STDCALL
 WDFEXPORT(WdfPdoUpdateAddressDescription)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -322,7 +328,7 @@ WDFEXPORT(WdfPdoUpdateAddressDescription)(
 
     status = GetPdoPackageFromDeviceHandle(GetFxDriverGlobals(DriverGlobals),
                                            Device,
-                                           __FUNCTION__,
+                                           (PCHAR)__FUNCTION__,
                                            &pPkgPdo,
                                            &pFxDriverGlobals);
 
@@ -354,6 +360,7 @@ WDFEXPORT(WdfPdoUpdateAddressDescription)(
 _Must_inspect_result_
 __drv_maxIRQL(DISPATCH_LEVEL)
 NTSTATUS
+STDCALL
 WDFEXPORT(WdfPdoAddEjectionRelationsPhysicalDevice)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -386,7 +393,7 @@ Return Value:
 
     status = GetPdoPackageFromDeviceHandle(GetFxDriverGlobals(DriverGlobals),
                                            Device,
-                                           __FUNCTION__,
+                                           (PCHAR)__FUNCTION__,
                                            &pPkgPdo,
                                            &pFxDriverGlobals);
 
@@ -403,6 +410,7 @@ Return Value:
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 VOID
+STDCALL
 WDFEXPORT(WdfPdoRemoveEjectionRelationsPhysicalDevice)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -434,7 +442,7 @@ Return Value:
 
     status = GetPdoPackageFromDeviceHandle(GetFxDriverGlobals(DriverGlobals),
                                            Device,
-                                           __FUNCTION__,
+                                           (PCHAR)__FUNCTION__,
                                            &pPkgPdo,
                                            &pFxDriverGlobals);
 
@@ -449,6 +457,7 @@ Return Value:
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 VOID
+STDCALL
 WDFEXPORT(WdfPdoClearEjectionRelationsDevices)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -476,7 +485,7 @@ Return Value:
 
     status = GetPdoPackageFromDeviceHandle(GetFxDriverGlobals(DriverGlobals),
                                            Device,
-                                           __FUNCTION__,
+                                           (PCHAR)__FUNCTION__,
                                            &pPkgPdo,
                                            &pFxDriverGlobals);
 

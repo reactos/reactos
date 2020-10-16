@@ -71,7 +71,7 @@ protected:
          ASSERTMSG("FxSyncRequest::operator new called, should only be"
                       " declared on the stack\n", FALSE);
 
-         return NULL;
+         return (PVOID)1;
      }
 
 public:
@@ -81,7 +81,7 @@ public:
         VOID
         )
     {
-        NTSTATUS status;
+        NTSTATUS status = STATUS_SUCCESS;
 
 #if (FX_CORE_MODE == FX_CORE_USER_MODE)
         //
@@ -118,4 +118,4 @@ public:
     BOOLEAN m_ClearContextOnDestroy;
 };
 
-#endif _FXSYNCREQUEST_H_
+#endif // _FXSYNCREQUEST_H_

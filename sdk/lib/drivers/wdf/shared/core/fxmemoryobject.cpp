@@ -23,7 +23,7 @@ Revision History:
 #include "coreprivshared.hpp"
 
 extern "C" {
-#include "FxMemoryObject.tmh"
+// #include "FxMemoryObject.tmh"
 }
 
 FxMemoryObject::FxMemoryObject(

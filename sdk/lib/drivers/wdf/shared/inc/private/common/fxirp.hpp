@@ -20,71 +20,32 @@ Environment:
 
 Revision History:
 
+--*/
 
+#ifndef _FXIRP_HPP_
+#define _FXIRP_HPP_
 
+class FxIrp {
 
+    friend struct FxAutoIrp;
 
+private:
+    MdIrp m_Irp;
 
+public:
 
+    FxIrp() {}
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    FxIrp(MdIrp irp) : m_Irp(irp)
+    {
+    }
 
     // A function for when not assigning
+
+    MdIrp
+    SetIrp(
+        MdIrp irp
+        );
 
     MdIrp
     GetIrp(
@@ -743,6 +704,7 @@ private:
 
     static
     NTSTATUS
+    STDCALL
     _IrpSynchronousCompletion(
         __in MdDeviceObject DeviceObject,
         __in MdIrp OriginalIrp,
@@ -841,4 +803,4 @@ struct FxAutoIrp : public FxIrp {
     ~FxAutoIrp();
 };
 
-#endif //  _FXIRP_H_
+#endif //  _FXIRP_HPP_

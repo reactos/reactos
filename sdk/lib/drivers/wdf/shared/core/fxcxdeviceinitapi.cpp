@@ -28,7 +28,7 @@ Revision History:
 #include "coreprivshared.hpp"
 
 extern "C" {
-#include "FxCxDeviceInitApi.tmh"
+// #include "FxCxDeviceInitApi.tmh"
 }
 
 //

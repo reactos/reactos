@@ -26,7 +26,7 @@ Revision History:
 
 // Tracing support
 extern "C" {
-#include "FxRequestBase.tmh"
+// #include "FxRequestBase.tmh"
 }
 
 FxRequestBase::FxRequestBase(
@@ -811,7 +811,7 @@ Return Value:
     return TRUE;
 }
 
-__declspec(noreturn)
+DECLSPEC_NORETURN
 VOID
 FxRequestBase::FatalError(
     __in NTSTATUS Status

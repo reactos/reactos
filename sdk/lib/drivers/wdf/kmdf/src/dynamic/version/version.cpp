@@ -44,7 +44,7 @@ extern "C" {
 // available in public symbols. Various WDFKD debug commands use these
 // internal structures to provide information about WDF.
 //-----------------------------------------------------------------------------
-#include "FxIFR.h"
+#include "fxifr.h"
 
 extern "C" {
 
@@ -78,9 +78,9 @@ union {
 
 extern "C" {
 
-#include "FxDynamics.h"
+#include "fxdynamics.h"
 
-#include "FxLibraryCommon.h"
+#include "fxlibrarycommon.h"
 
 #define  KMDF_DEFAULT_NAME   "Wdf" ## \
                              LITERAL(__WDF_MAJOR_VERSION_STRING)   ## \

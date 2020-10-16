@@ -18,12 +18,12 @@ Revision History:
 
 --*/
 
-#include "FxSupportPch.hpp"
+#include "fxsupportpch.hpp"
 
 #if defined(EVENT_TRACING)
 // Tracing support
 extern "C" {
-#include "FxWaitLock.tmh"
+#include "fxwaitlock.tmh"
 }
 #endif
 

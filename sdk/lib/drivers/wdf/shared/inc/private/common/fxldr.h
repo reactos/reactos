@@ -218,7 +218,7 @@ WdfRegisterLibrary(
 #pragma alloc_text (PAGE, WdfVersionBind)
 #pragma alloc_text (PAGE, WdfVersionUnbind)
 #pragma alloc_text (PAGE, WdfRegisterLibrary)
-#pragma alloc_text (PAGE, WdfRegisterClassLibrary)
+// #pragma alloc_text (PAGE, WdfRegisterClassLibrary)
 #endif
 
 #ifdef __cplusplus
@@ -246,4 +246,4 @@ WdfRegisterLibrary(
                 TraceLoggingWideString(ClientImageName,   "ClientImageName"  ) \
                 );
 
-#endif __FXLDR_H__
+#endif // __FXLDR_H__

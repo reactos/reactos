@@ -31,7 +31,7 @@ Revision History:
 // Extern "C" the tmh file and all external APIs
 //
 extern "C" {
-#include "FxWmiAPI.tmh"
+#include "fxwmiapi.tmh"
 
 _Must_inspect_result_
 __drv_maxIRQL(DISPATCH_LEVEL)

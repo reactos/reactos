@@ -4,8 +4,8 @@
 #ifndef _FXUSBPIPE_H_
 #define _FXUSBPIPE_H_
 
-#include "FxUsbRequestContext.hpp"
-#include "FxUsbInterface.hpp"
+#include "fxusbrequestcontext.hpp"
+#include "fxusbinterface.hpp"
 
 //
 // Technically, EHCI can support 4MB, but the usb driver stack doesn't

@@ -19,9 +19,9 @@ extern "C" {
 
 #include "fx.hpp"
 #include "fxldr.h"
-#include "FxLibraryCommon.h"
-#include "FxTelemetry.hpp"
-#include "WdfVersionLog.h"
+#include "fxlibrarycommon.h"
+#include "fxtelemetry.hpp"
+#include "wdfversionlog.h"
 #include "minwindef.h"
 
 extern "C" {

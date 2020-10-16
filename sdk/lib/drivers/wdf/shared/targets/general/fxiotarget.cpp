@@ -21,7 +21,7 @@ Revision History:
 --*/
 
 
-#include "..\FxTargetsShared.hpp"
+#include "../fxtargetsshared.hpp"
 
 extern "C" {
 #if defined(EVENT_TRACING)
@@ -308,12 +308,10 @@ FxIoTarget::GotoStartState(
     __in BOOLEAN Lock
     )
 {
-    FxRequestBase* pRequest;
     NTSTATUS status;
     KIRQL irql;
 
     irql = PASSIVE_LEVEL;
-    pRequest = NULL;
 
     ADDREF(START_TAG);
 
@@ -1110,7 +1108,7 @@ FxIoTarget::QueryInterface(
         *Params->Object = (FxIoTarget*) this;
         break;
     default:
-        return __super::QueryInterface(Params);
+        return FxNonPagedObject::QueryInterface(Params); // __super call
     }
 
     return STATUS_SUCCESS;

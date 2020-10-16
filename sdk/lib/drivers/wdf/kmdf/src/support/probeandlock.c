@@ -30,6 +30,7 @@ Revision History:
 //
 
 #include <ntddk.h>
+#include <pseh/pseh2.h> // __REACTOS__
 
 NTSTATUS
 FxProbeAndLockForRead(
@@ -37,11 +38,15 @@ FxProbeAndLockForRead(
     __in  KPROCESSOR_MODE AccessMode
     )
 {
-    try {
+    _SEH2_TRY
+    {
         MmProbeAndLockPages(Mdl, AccessMode, IoReadAccess);
-    } except(EXCEPTION_EXECUTE_HANDLER) {
-          return GetExceptionCode();
     }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        _SEH2_YIELD(return _SEH2_GetExceptionCode());
+    }
+    _SEH2_END;
 
     return STATUS_SUCCESS;
 }
@@ -52,11 +57,16 @@ FxProbeAndLockForWrite(
     __in  KPROCESSOR_MODE AccessMode
     )
 {
-    try {
+    _SEH2_TRY
+    {
         MmProbeAndLockPages(Mdl, AccessMode, IoWriteAccess);
-    } except(EXCEPTION_EXECUTE_HANDLER) {
-          return GetExceptionCode();
     }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        _SEH2_YIELD(return _SEH2_GetExceptionCode());
+    }
+    _SEH2_END;
+
     return STATUS_SUCCESS;
 }
 
@@ -67,13 +77,15 @@ FxProbeAndLockWithAccess(
     __in  LOCK_OPERATION Operation
     )
 {
-    try {
+    _SEH2_TRY
+    {
         MmProbeAndLockPages(Mdl, AccessMode, Operation);
-    } except(EXCEPTION_EXECUTE_HANDLER) {
-          return GetExceptionCode();
     }
+    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+    {
+        _SEH2_YIELD(return _SEH2_GetExceptionCode());
+    }
+    _SEH2_END;
 
     return STATUS_SUCCESS;
 }
-
-

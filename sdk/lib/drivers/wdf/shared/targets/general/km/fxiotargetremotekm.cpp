@@ -18,10 +18,10 @@ Revision History:
 
 --*/
 
-#include "..\..\FxTargetsShared.hpp"
+#include "../../fxtargetsshared.hpp"
 
 extern "C" {
-#include "FxIoTargetRemoteKm.tmh"
+// #include "FxIoTargetRemoteKm.tmh"
 }
 
 #include <initguid.h>
@@ -48,7 +48,7 @@ FxIoTargetRemote::_PlugPlayNotification(
     // If that is the case, we need to be able to return and deref the object until
     // we are done.
     //
-    pThis->ADDREF(_PlugPlayNotification);
+    pThis->ADDREF((PVOID)_PlugPlayNotification);
 
     pFxDriverGlobals = pThis->GetDriverGlobals();
 
@@ -133,7 +133,7 @@ FxIoTargetRemote::_PlugPlayNotification(
         }
     }
 
-    pThis->RELEASE(_PlugPlayNotification);
+    pThis->RELEASE((PVOID)_PlugPlayNotification);
 
     return status;
 }

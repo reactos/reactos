@@ -37,7 +37,7 @@ typedef PKINTERRUPT             MdInterrupt;
 typedef KSERVICE_ROUTINE        MdInterruptServiceRoutineType, *MdInterruptServiceRoutine;
 typedef KSYNCHRONIZE_ROUTINE    MdInterruptSynchronizeRoutineType, *MdInterruptSynchronizeRoutine;
 
-#include "MxGeneral.h"
+#include "mxgeneral.h"
 #include <ntstrsafe.h>
 
 __inline
@@ -138,7 +138,9 @@ Mx::MxBugCheckEx(
     __in ULONG_PTR  BugCheckParameter4
 )
 {
+#ifdef _MSC_VER
     #pragma prefast(suppress:__WARNING_USE_OTHER_FUNCTION, "KeBugCheckEx is the intent.");
+#endif
     KeBugCheckEx(
         BugCheckCode,
         BugCheckParameter1,
@@ -146,6 +148,8 @@ Mx::MxBugCheckEx(
         BugCheckParameter3,
         BugCheckParameter4
         );
+
+    UNREACHABLE;
 }
 
 __inline
@@ -177,7 +181,9 @@ Mx::MxAssertMsg(
     UNREFERENCED_PARAMETER(Message);
     UNREFERENCED_PARAMETER(Condition);
 
-    ASSERTMSG(Message, Condition);
+    ASSERT(Condition);
+
+    // ASSERTMSG(Message, Condition); TODO: wtf
 }
 
 _Acquires_lock_(_Global_critical_region_)
@@ -524,6 +530,7 @@ Mx::MxCreateDeviceSecure(
       _Out_     MdDeviceObject *DeviceObject
     )
 {
+#ifndef __REACTOS__ // we don't have wdmsec.lib
     return IoCreateDeviceSecure(DriverObject,
                 DeviceExtensionSize,
                 DeviceName,
@@ -533,6 +540,16 @@ Mx::MxCreateDeviceSecure(
                 DefaultSDDLString,
                 DeviceClassGuid,
                 DeviceObject);
+#else
+    return IoCreateDevice(
+                DriverObject,
+                DeviceExtensionSize,
+                DeviceName,
+                DeviceType,
+                DeviceCharacteristics,
+                Exclusive,
+                DeviceObject);
+#endif
 }
 
 __inline

@@ -155,7 +155,7 @@ struct FxInternalIoctlOthersContext : public FxRequestContext {
             }
         }
 
-        __super::ReleaseAndRestore(Request);
+        FxRequestContext::ReleaseAndRestore(Request); // __super call
     }
 
 private:
@@ -165,7 +165,7 @@ private:
         __in FxRequestBuffer* Buffer
         )
     {
-        __super::StoreAndReferenceMemory(Buffer);
+        FxRequestContext::StoreAndReferenceMemory(Buffer); // __super call
     }
 
 public:
@@ -958,9 +958,9 @@ protected:
 
 
 #if ((FX_CORE_MODE)==(FX_CORE_KERNEL_MODE))
-#include "FxIoTargetKm.hpp"
-#else if ((FX_CORE_MODE)==(FX_CORE_USER_MODE))
-#include "FxIoTargetUm.hpp"
+#include "fxiotargetkm.hpp"
+#elif ((FX_CORE_MODE)==(FX_CORE_USER_MODE))
+#include "fxiotargetum.hpp"
 #endif
 
 #endif //_FXIOTARGET_H_

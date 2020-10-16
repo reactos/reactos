@@ -22,10 +22,10 @@ Revision History:
 
 --*/
 
-#include "FxSupportPch.hpp"
+#include "fxsupportpch.hpp"
 
 extern "C" {
-#include "FxDeviceInterfaceKM.tmh"
+// #include "FxDeviceInterfaceKM.tmh"
 }
 
 FxDeviceInterface::FxDeviceInterface(

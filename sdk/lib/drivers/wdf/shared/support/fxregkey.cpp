@@ -1,7 +1,7 @@
 //
 //    Copyright (C) Microsoft.  All rights reserved.
 //
-#include "FxSupportPch.hpp"
+#include "fxsupportpch.hpp"
 
 extern "C" {
 #if defined(EVENT_TRACING)

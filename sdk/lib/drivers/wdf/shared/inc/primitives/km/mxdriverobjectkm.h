@@ -18,10 +18,10 @@ typedef DRIVER_ADD_DEVICE MdDriverAddDeviceType, *MdDriverAddDevice;
 typedef DRIVER_UNLOAD MdDriverUnloadType, *MdDriverUnload;
 typedef DRIVER_DISPATCH MdDriverDispatchType, *MdDriverDispatch;
 
-#include "MxDriverObject.h"
+#include "mxdriverobject.h"
 
 __inline
-PVOID
+PDRIVER_ADD_DEVICE
 MxDriverObject::GetDriverExtensionAddDevice(
     VOID
     )

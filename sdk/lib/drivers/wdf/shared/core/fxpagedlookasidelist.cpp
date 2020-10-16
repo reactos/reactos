@@ -23,8 +23,8 @@ Revision History:
 
 #include "coreprivshared.hpp"
 
-#include "FxPagedLookasideList.hpp"
-#include "FxMemoryBufferFromLookaside.hpp"
+#include "fxpagedlookasidelist.hpp"
+#include "fxmemorybufferfromlookaside.hpp"
 
 FxPagedLookasideListFromPool::FxPagedLookasideListFromPool(
     __in PFX_DRIVER_GLOBALS FxDriverGlobals,

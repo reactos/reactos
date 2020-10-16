@@ -109,7 +109,7 @@ Return Value:
             (DebugPrintLevel <= DebugLevel &&
              ((DebugPrintFlag & DebugFlag) == DebugPrintFlag))) {
 #if FX_CORE_MODE==FX_CORE_KERNEL_MODE
-            DbgPrint("WDFTrace: %s", debugMessageBuffer);
+            DbgPrint("WDFTrace: %s\n", debugMessageBuffer);
 #else
             OutputDebugString("WDFTrace: ");
             OutputDebugString(DebugMessage);

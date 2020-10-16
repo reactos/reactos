@@ -37,7 +37,7 @@ Revision History:
 #if defined(EVENT_TRACING)
 // Tracing support
 extern "C" {
-#include "FxPkgFdo.tmh"
+#include "fxpkgfdo.tmh"
 }
 #endif
 
@@ -1525,7 +1525,7 @@ FxPkgFdo::PostCreateDeviceInitialize(
 {
     NTSTATUS status;
 
-    status = __super::PostCreateDeviceInitialize();
+    status = FxPkgPnp::PostCreateDeviceInitialize(); // __super call
     if (!NT_SUCCESS(status)) {
         return status;
     }

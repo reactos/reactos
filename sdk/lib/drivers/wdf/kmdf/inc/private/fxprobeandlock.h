@@ -35,4 +35,4 @@ FxProbeAndLockWithAccess(
 
 }
 
-#endif __FXPROBEANDLOCK_H__
+#endif // __FXPROBEANDLOCK_H__

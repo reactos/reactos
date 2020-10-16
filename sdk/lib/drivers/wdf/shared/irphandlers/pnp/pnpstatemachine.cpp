@@ -3270,7 +3270,7 @@ Return Value:
     //
     // Reset WMI state
     //
-    This->m_Device->m_PkgWmi->ResetStateForPdoRestart();
+    // This->m_Device->m_PkgWmi->ResetStateForPdoRestart(); __REACTOS__
 
 
     This->m_Device->m_PkgIo->ResetStateForRestart();
@@ -3354,7 +3354,7 @@ Return Value:
     if (This->m_DeviceRemoveProcessed == NULL) {
         status = Mx::MxAcquireRemoveLock(
             This->m_Device->GetRemoveLock(),
-            &FxPkgPnp::PnpEventFinal);
+            (PVOID)&FxPkgPnp::PnpEventFinal);
 
         ASSERT(NT_SUCCESS(status));
         UNREFERENCED_PARAMETER(status);
@@ -3389,7 +3389,7 @@ Return Value:
         //
         Mx::MxReleaseRemoveLockAndWait(
             This->m_Device->GetRemoveLock(),
-            &FxPkgPnp::PnpEventFinal);
+            (PVOID)&FxPkgPnp::PnpEventFinal);
 
         //
         // Delete the object when we exit the state machine.  Dispose was run

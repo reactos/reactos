@@ -7,12 +7,10 @@
 //
 
 extern "C" {
-#pragma  warning(disable:4200)     // zero-sized array in struct/union
 #include <usbdrivr.h>
-#pragma  warning(default:4200)
 
 #include <wdfusb.h>
 #include <wdfminiport.h>
-#include "FxDynamics.h"
-#include "VfFxDynamics.h"
+#include "fxdynamics.h"
+#include "vffxdynamics.h"
 }

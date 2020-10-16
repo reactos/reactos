@@ -289,7 +289,7 @@ FxDriverGlobalsInitializeDebugExtension(
         return;
     }
 
-    RtlZeroMemory(pExtension, sizeof(*pExtension));
+    *pExtension = {};
 
     pExtension->AllocatedTagTrackersLock.Initialize();
 
@@ -678,7 +678,7 @@ FxLibraryGlobalsCommission(
     // Register for the global (library) bugcheck callbacks.
     //
     FxInitializeBugCheckDriverInfo();
-
+#ifdef EVENT_TRACING // __REACTOS__
     //
     // Init driver usage tracker. This tracker is used by the debug dump
     // callback routines for finding the driver's dump log file to write
@@ -728,7 +728,9 @@ FxLibraryGlobalsCommission(
     //
     ASSERT(FxLibraryGlobals.PerfTraceRoutines->Size >=
         sizeof(WMI_WDF_NOTIFY_ROUTINES));
-
+#else
+    status = STATUS_SUCCESS; // __REACTOS__
+#endif // EVENT_TRACING
 #else
     status = STATUS_SUCCESS;
 #endif
@@ -810,7 +812,7 @@ LockVerifierSection(
         // VerifierLockHandle is a function that we use to lock in all the code from it's section
         // since all the verifier code is in the same section as VerifierLockHandle.
         //
-        FxLibraryGlobals.VerifierSectionHandle = MmLockPagableCodeSection(VerifierPageLockHandle);
+        FxLibraryGlobals.VerifierSectionHandle = MmLockPagableCodeSection((PVOID)VerifierPageLockHandle);
     }
     else {
         MmLockPagableSectionByHandle(FxLibraryGlobals.VerifierSectionHandle);
@@ -898,7 +900,7 @@ Returns:
     //
     // Initialize IFR logging
     //
-    FxIFRStart(FxDriverGlobals, RegistryPath, DriverObject);
+    // FxIFRStart(FxDriverGlobals, RegistryPath, DriverObject); __REACTOS__
 
     DoTraceLevelMessage(FxDriverGlobals, TRACE_LEVEL_VERBOSE, TRACINGDRIVER,
                         "Initialize globals for %!wZ!", RegistryPath);
@@ -912,7 +914,7 @@ Returns:
         // FxPoolPackageInitialize logs a message in case of failure so
         // we don't need to log failure here.
         //
-        FxIFRStop(FxDriverGlobals);
+        // FxIFRStop(FxDriverGlobals); __REACTOS__
         return status;
     }
 
@@ -1002,7 +1004,7 @@ Returns:
     //
     // Release the last reference.
     //
-    FxDriverGlobals->RELEASE(FxDestroy);
+    FxDriverGlobals->RELEASE((PVOID)FxDestroy);
 
     //
     // Wait for everyone else to be done.
@@ -1052,7 +1054,7 @@ FxAllocateDriverGlobals(
     )
 {
     PFX_DRIVER_GLOBALS  pFxDriverGlobals;
-    KIRQL               irql;
+    // KIRQL               irql;
     NTSTATUS            status;
 
     pFxDriverGlobals = (PFX_DRIVER_GLOBALS)
@@ -1062,7 +1064,7 @@ FxAllocateDriverGlobals(
         return NULL;
     }
 
-    RtlZeroMemory(pFxDriverGlobals, sizeof(FX_DRIVER_GLOBALS));
+    *pFxDriverGlobals = {};
 
     pFxDriverGlobals->Refcnt = 1;
 
@@ -1079,10 +1081,12 @@ FxAllocateDriverGlobals(
     //
     // Initialize this new FxDriverGlobals structure.
     //
+#ifndef __REACTOS__
     FxLibraryGlobals.FxDriverGlobalsListLock.Acquire(&irql);
     InsertHeadList(&FxLibraryGlobals.FxDriverGlobalsList,
                    &pFxDriverGlobals->Linkage);
     FxLibraryGlobals.FxDriverGlobalsListLock.Release(irql);
+#endif
 
     pFxDriverGlobals->WdfHandleMask                  = FxHandleValueMask;
     pFxDriverGlobals->WdfVerifierAllocateFailCount   = (ULONG) -1;
@@ -1140,7 +1144,8 @@ FxAllocateDriverGlobals(
     pFxDriverGlobals->FxForceLogsInMiniDump          = FALSE;
 
 #if (FX_CORE_MODE==FX_CORE_KERNEL_MODE)
-    pFxDriverGlobals->FxTrackDriverForMiniDumpLog    = TRUE;
+    // pFxDriverGlobals->FxTrackDriverForMiniDumpLog    = TRUE;
+    pFxDriverGlobals->FxTrackDriverForMiniDumpLog    = FALSE; // __REACTOS__
     pFxDriverGlobals->IsUserModeDriver               = FALSE;
 #else
     pFxDriverGlobals->FxTrackDriverForMiniDumpLog    = FALSE;
@@ -1163,9 +1168,11 @@ FxAllocateDriverGlobals(
     // Allocate a telemetry context if a telemetry client is enabled, for any level/keyword.
     //
     pFxDriverGlobals->TelemetryContext = NULL;
+#ifdef EVENT_TRACING // __REACTOS__
     if (TraceLoggingProviderEnabled(g_TelemetryProvider, 0 ,0)) {
         AllocAndInitializeTelemetryContext(&(pFxDriverGlobals->TelemetryContext));
     }
+#endif
 
     return &pFxDriverGlobals->Public;
 }

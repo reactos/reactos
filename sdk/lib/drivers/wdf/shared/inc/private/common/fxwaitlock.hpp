@@ -337,7 +337,7 @@ public:
     Initialize(
         )
     {
-        return __super::Initialize();
+        return FxWaitLockInternal::Initialize(); // __super call
     }
 
     FxWaitLock(

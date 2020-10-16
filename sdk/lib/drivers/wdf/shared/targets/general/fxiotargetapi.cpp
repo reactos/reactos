@@ -20,10 +20,10 @@ Revision History:
 
 --*/
 
-#include "..\FxTargetsShared.hpp"
+#include "../fxtargetsshared.hpp"
 
 extern "C" {
-#include "FxIoTargetAPI.tmh"
+// #include "FxIoTargetAPI.tmh"
 }
 
 //
@@ -34,6 +34,7 @@ extern "C" {
 _Must_inspect_result_
 __drv_maxIRQL(DISPATCH_LEVEL)
 NTSTATUS
+STDCALL
 WDFEXPORT(WdfIoTargetStart)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -69,6 +70,7 @@ Return Value:
 __drv_when(Action == 3, __drv_maxIRQL(DISPATCH_LEVEL))
 __drv_when(Action == 0 || Action == 1 || Action == 2, __drv_maxIRQL(PASSIVE_LEVEL))
 VOID
+STDCALL
 WDFEXPORT(WdfIoTargetStop)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -128,6 +130,7 @@ Return Value:
 __drv_when(Action == 2, __drv_maxIRQL(DISPATCH_LEVEL))
 __drv_when(Action == 0 || Action == 1, __drv_maxIRQL(PASSIVE_LEVEL))
 VOID
+STDCALL
 WDFEXPORT(WdfIoTargetPurge)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -185,6 +188,7 @@ Return Value:
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 WDF_IO_TARGET_STATE
+STDCALL
 WDFEXPORT(WdfIoTargetGetState)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -364,6 +368,7 @@ Return Value:
 _Must_inspect_result_
 __drv_maxIRQL(PASSIVE_LEVEL)
 NTSTATUS
+STDCALL
 WDFEXPORT(WdfIoTargetCreate)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -437,6 +442,7 @@ Return Value:
 _Must_inspect_result_
 __drv_maxIRQL(PASSIVE_LEVEL)
 NTSTATUS
+STDCALL
 WDFEXPORT(WdfIoTargetOpen)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -543,6 +549,7 @@ Return Value:
 
 __drv_maxIRQL(PASSIVE_LEVEL)
 VOID
+STDCALL
 WDFEXPORT(WdfIoTargetCloseForQueryRemove)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -591,6 +598,7 @@ Return Value:
 
 __drv_maxIRQL(PASSIVE_LEVEL)
 VOID
+STDCALL
 WDFEXPORT(WdfIoTargetClose)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -636,6 +644,7 @@ Return Value:
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 WDFDEVICE
+STDCALL
 WDFEXPORT(WdfIoTargetGetDevice)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -943,6 +952,7 @@ Return Value:
 _Must_inspect_result_
 __drv_maxIRQL(PASSIVE_LEVEL)
 NTSTATUS
+STDCALL
 WDFEXPORT(WdfIoTargetSendReadSynchronously)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -975,6 +985,7 @@ WDFEXPORT(WdfIoTargetSendReadSynchronously)(
 _Must_inspect_result_
 __drv_maxIRQL(DISPATCH_LEVEL)
 NTSTATUS
+STDCALL
 WDFEXPORT(WdfIoTargetFormatRequestForRead)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1005,6 +1016,7 @@ WDFEXPORT(WdfIoTargetFormatRequestForRead)(
 _Must_inspect_result_
 __drv_maxIRQL(PASSIVE_LEVEL)
 NTSTATUS
+STDCALL
 WDFEXPORT(WdfIoTargetSendWriteSynchronously)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1037,6 +1049,7 @@ WDFEXPORT(WdfIoTargetSendWriteSynchronously)(
 _Must_inspect_result_
 __drv_maxIRQL(DISPATCH_LEVEL)
 NTSTATUS
+STDCALL
 WDFEXPORT(WdfIoTargetFormatRequestForWrite)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1386,6 +1399,7 @@ Return Value:
 _Must_inspect_result_
 __drv_maxIRQL(PASSIVE_LEVEL)
 NTSTATUS
+STDCALL
 WDFEXPORT(WdfIoTargetSendIoctlSynchronously)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1423,6 +1437,7 @@ WDFEXPORT(WdfIoTargetSendIoctlSynchronously)(
 _Must_inspect_result_
 __drv_maxIRQL(DISPATCH_LEVEL)
 NTSTATUS
+STDCALL
 WDFEXPORT(WdfIoTargetFormatRequestForIoctl)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1458,6 +1473,7 @@ WDFEXPORT(WdfIoTargetFormatRequestForIoctl)(
 _Must_inspect_result_
 __drv_maxIRQL(PASSIVE_LEVEL)
 NTSTATUS
+STDCALL
 WDFEXPORT(WdfIoTargetSendInternalIoctlSynchronously)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1495,6 +1511,7 @@ WDFEXPORT(WdfIoTargetSendInternalIoctlSynchronously)(
 _Must_inspect_result_
 __drv_maxIRQL(DISPATCH_LEVEL)
 NTSTATUS
+STDCALL
 WDFEXPORT(WdfIoTargetFormatRequestForInternalIoctl)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1530,6 +1547,7 @@ WDFEXPORT(WdfIoTargetFormatRequestForInternalIoctl)(
 _Must_inspect_result_
 __drv_maxIRQL(PASSIVE_LEVEL)
 NTSTATUS
+STDCALL
 WDFEXPORT(WdfIoTargetSendInternalIoctlOthersSynchronously)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1708,6 +1726,7 @@ Return Value:
 _Must_inspect_result_
 __drv_maxIRQL(DISPATCH_LEVEL)
 NTSTATUS
+STDCALL
 WDFEXPORT(WdfIoTargetFormatRequestForInternalIoctlOthers)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1847,6 +1866,7 @@ Return Value:
 _Must_inspect_result_
 _IRQL_requires_max_(DISPATCH_LEVEL)
 NTSTATUS
+STDCALL
 WDFEXPORT(WdfIoTargetSelfAssignDefaultIoQueue)(
     _In_
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1964,6 +1984,7 @@ Returns:
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 HANDLE
+STDCALL
 WDFEXPORT(WdfIoTargetWdmGetTargetFileHandle)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,

@@ -32,13 +32,13 @@ Notes:
 #include "fxldr.h"
 #include <ntstrsafe.h>
 #else
-#include "DriverFrameworks-UserMode-UmEvents.h"
-#include "FxldrUm.h"
+#include "driverframeworks-usermode-umevents.h"
+#include "fxldrum.h"
 #endif
 
 extern "C" {
 #if defined(EVENT_TRACING)
-#include "FxTelemetry.tmh"
+#include "fxtelemetry.tmh"
 #endif
 }
 

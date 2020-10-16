@@ -22,7 +22,7 @@ Revision History:
 --*/
 
 #include "coreprivshared.hpp"
-#include "FxLookasideList.hpp"
+#include "fxlookasidelist.hpp"
 
 FxLookasideList::FxLookasideList(
     __in PFX_DRIVER_GLOBALS FxDriverGlobals,

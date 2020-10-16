@@ -36,6 +36,7 @@ extern "C" {
 __drv_maxIRQL(DISPATCH_LEVEL)
 WDFAPI
 VOID
+STDCALL
 WDFEXPORT(WdfObjectReferenceActual)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -81,6 +82,7 @@ Return Value:
 __drv_maxIRQL(DISPATCH_LEVEL)
 WDFAPI
 VOID
+STDCALL
 WDFEXPORT(WdfObjectDereferenceActual)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -170,6 +172,7 @@ Returns:
 __drv_maxIRQL(DISPATCH_LEVEL)
 WDFAPI
 VOID
+STDCALL
 WDFEXPORT(WdfObjectAcquireLock)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -229,6 +232,7 @@ WDFEXPORT(WdfObjectAcquireLock)(
 __drv_maxIRQL(DISPATCH_LEVEL)
 WDFAPI
 VOID
+STDCALL
 WDFEXPORT(WdfObjectReleaseLock)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -284,6 +288,7 @@ WDFEXPORT(WdfObjectReleaseLock)(
 __drv_maxIRQL(DISPATCH_LEVEL)
 WDFAPI
 VOID
+STDCALL
 WDFEXPORT(WdfObjectDelete)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -322,6 +327,7 @@ _Must_inspect_result_
 __drv_maxIRQL(DISPATCH_LEVEL)
 WDFAPI
 NTSTATUS
+STDCALL
 WDFEXPORT(WdfObjectQuery)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,

@@ -25,7 +25,7 @@ Revision History:
 
 --*/
 
-#include "..\pnppriv.hpp"
+#include "../pnppriv.hpp"
 
 #include <initguid.h>
 #include <wdmguid.h>
@@ -456,108 +456,110 @@ FxPkgFdo::QueryForDsfInterface(
     VOID
     )
 {
-    WDF_DSF_INTERFACE dsfInterface;
-    NTSTATUS status;
-    BOOLEAN derefQI = FALSE;
+// __REACTOS__ : not supported
+//     WDF_DSF_INTERFACE dsfInterface;
+//     NTSTATUS status;
+//     BOOLEAN derefQI = FALSE;
 
-    RtlZeroMemory(&dsfInterface, sizeof(dsfInterface));
+//     RtlZeroMemory(&dsfInterface, sizeof(dsfInterface));
 
-    //
-    // Since there are some stacks that are not PnP re-entrant (like USBHUB,
-    // xpsp2), we specify that the QI goes only to our attached device and
-    // not to the top of the stack as a normal QI irp would.
-    //
-    // We also do this a preventative measure for other stacks we don't know
-    // about internally and do not have access to when testing.
-    //
-    status = m_Device->QueryForInterface(&GUID_WDF_DSF_INTERFACE,
-        (PINTERFACE) &dsfInterface,
-        sizeof(dsfInterface),
-        WDM_DSF_INTERFACE_V1_0,
-        NULL,
-        m_Device->GetAttachedDevice()
-        );
+//     //
+//     // Since there are some stacks that are not PnP re-entrant (like USBHUB,
+//     // xpsp2), we specify that the QI goes only to our attached device and
+//     // not to the top of the stack as a normal QI irp would.
+//     //
+//     // We also do this a preventative measure for other stacks we don't know
+//     // about internally and do not have access to when testing.
+//     //
+//     status = m_Device->QueryForInterface(&GUID_WDF_DSF_INTERFACE,
+//         (PINTERFACE) &dsfInterface,
+//         sizeof(dsfInterface),
+//         WDM_DSF_INTERFACE_V1_0,
+//         NULL,
+//         m_Device->GetAttachedDevice()
+//         );
 
-    if (status == STATUS_NOT_SUPPORTED) {
-        DoTraceLevelMessage(
-            GetDriverGlobals(), TRACE_LEVEL_WARNING, TRACINGPNP,
-            "Lower stack does not have a DSF interface");
-        status = STATUS_SUCCESS;
-        goto Done;
-    }
+//     if (status == STATUS_NOT_SUPPORTED) {
+//         DoTraceLevelMessage(
+//             GetDriverGlobals(), TRACE_LEVEL_WARNING, TRACINGPNP,
+//             "Lower stack does not have a DSF interface");
+//         status = STATUS_SUCCESS;
+//         goto Done;
+//     }
 
-    if (!NT_SUCCESS(status)) {
-        DoTraceLevelMessage(
-            GetDriverGlobals(), TRACE_LEVEL_ERROR, TRACINGPNP,
-            "Lower stack returned an error for query DSF interface, %!STATUS!",
-            status);
-        goto Done;
-    }
+//     if (!NT_SUCCESS(status)) {
+//         DoTraceLevelMessage(
+//             GetDriverGlobals(), TRACE_LEVEL_ERROR, TRACINGPNP,
+//             "Lower stack returned an error for query DSF interface, %!STATUS!",
+//             status);
+//         goto Done;
+//     }
 
-    derefQI = TRUE;
+//     derefQI = TRUE;
 
-    //
-    // Basic run time checks.
-    //
-    if (dsfInterface.Interface.Version != WDM_DSF_INTERFACE_V1_0) {
-        status = STATUS_REVISION_MISMATCH;
-        DoTraceLevelMessage(
-            GetDriverGlobals(), TRACE_LEVEL_ERROR, TRACINGPNP,
-            "Lower DSF stack supports v(%x), requested v(%x), %!STATUS!",
-            dsfInterface.Interface.Version,
-            WDM_DSF_INTERFACE_V1_0,
-            status);
-        goto Done;
-    }
+//     //
+//     // Basic run time checks.
+//     //
+//     if (dsfInterface.Interface.Version != WDM_DSF_INTERFACE_V1_0) {
+//         status = STATUS_REVISION_MISMATCH;
+//         DoTraceLevelMessage(
+//             GetDriverGlobals(), TRACE_LEVEL_ERROR, TRACINGPNP,
+//             "Lower DSF stack supports v(%x), requested v(%x), %!STATUS!",
+//             dsfInterface.Interface.Version,
+//             WDM_DSF_INTERFACE_V1_0,
+//             status);
+//         goto Done;
+//     }
 
-    //
-    // Ex functions should be both set or cleared.
-    // Active/Inactive functions should be both set or cleared.
-    // Ex function must be present.
-    // Note: !!(ptr) expression below converts ptr value to true/false value.
-    //       I.e., ptr==NULL to false and ptr!=NULL to true.
-    //
-    if (!((!!(dsfInterface.IoConnectInterruptEx) ==
-              !!(dsfInterface.IoDisconnectInterruptEx)) &&
-          (!!(dsfInterface.IoReportInterruptActive) ==
-              !!(dsfInterface.IoReportInterruptInactive)) &&
-          (dsfInterface.IoConnectInterruptEx != NULL)
-              )) {
-        status = STATUS_DATA_ERROR;
-        DoTraceLevelMessage(
-            GetDriverGlobals(), TRACE_LEVEL_ERROR, TRACINGPNP,
-            "Function mismatch detected in DSF interface, %!STATUS!",
-            status);
-        goto Done;
-    }
+//     //
+//     // Ex functions should be both set or cleared.
+//     // Active/Inactive functions should be both set or cleared.
+//     // Ex function must be present.
+//     // Note: !!(ptr) expression below converts ptr value to true/false value.
+//     //       I.e., ptr==NULL to false and ptr!=NULL to true.
+//     //
+//     if (!((!!(dsfInterface.IoConnectInterruptEx) ==
+//               !!(dsfInterface.IoDisconnectInterruptEx)) &&
+//           (!!(dsfInterface.IoReportInterruptActive) ==
+//               !!(dsfInterface.IoReportInterruptInactive)) &&
+//           (dsfInterface.IoConnectInterruptEx != NULL)
+//               )) {
+//         status = STATUS_DATA_ERROR;
+//         DoTraceLevelMessage(
+//             GetDriverGlobals(), TRACE_LEVEL_ERROR, TRACINGPNP,
+//             "Function mismatch detected in DSF interface, %!STATUS!",
+//             status);
+//         goto Done;
+//     }
 
-    //
-    // Info is correct.
-    //
-    m_IoConnectInterruptEx      = dsfInterface.IoConnectInterruptEx;
-    m_IoDisconnectInterruptEx   = dsfInterface.IoDisconnectInterruptEx;
+//     //
+//     // Info is correct.
+//     //
+//     m_IoConnectInterruptEx      = dsfInterface.IoConnectInterruptEx;
+//     m_IoDisconnectInterruptEx   = dsfInterface.IoDisconnectInterruptEx;
 
-    //
-    // If DSF interface provides active/inactive functions then use them
-    //
-    if (dsfInterface.IoReportInterruptActive != NULL)
-    {
-        m_IoReportInterruptActive   = dsfInterface.IoReportInterruptActive;
-        m_IoReportInterruptInactive = dsfInterface.IoReportInterruptInactive;
-    }
+//     //
+//     // If DSF interface provides active/inactive functions then use them
+//     //
+//     if (dsfInterface.IoReportInterruptActive != NULL)
+//     {
+//         m_IoReportInterruptActive   = dsfInterface.IoReportInterruptActive;
+//         m_IoReportInterruptInactive = dsfInterface.IoReportInterruptInactive;
+//     }
 
-Done:
+// Done:
 
-    //
-    // The contract with the DSF layer is to release the interface right away;
-    // the embedded interrupt function ptrs will be valid until this driver is
-    // unloaded.
-    //
-    if (derefQI) {
-        dsfInterface.Interface.InterfaceDereference(dsfInterface.Interface.Context);
-    }
+//     //
+//     // The contract with the DSF layer is to release the interface right away;
+//     // the embedded interrupt function ptrs will be valid until this driver is
+//     // unloaded.
+//     //
+//     if (derefQI) {
+//         dsfInterface.Interface.InterfaceDereference(dsfInterface.Interface.Context);
+//     }
 
-    return status;
+//     return status;
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 _Must_inspect_result_

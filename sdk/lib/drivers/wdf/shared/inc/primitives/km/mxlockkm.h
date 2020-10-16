@@ -23,11 +23,11 @@ Revision History:
 
 #pragma once
 
-#include "DbgMacros.h"
+#include "dbgmacros.h"
 
 typedef KSPIN_LOCK MdLock;
 
-#include "MxLock.h"
+#include "mxlock.h"
 
 __inline
 MxLock::MxLock(

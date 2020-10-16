@@ -1,7 +1,7 @@
 //
 //    Copyright (C) Microsoft.  All rights reserved.
 //
-#include "..\pnppriv.hpp"
+#include "../pnppriv.hpp"
 
 #include <initguid.h>
 #include <wdmguid.h>
@@ -307,70 +307,70 @@ FxPkgPnp::WriteStateToRegistry(
     ZwSetValueKey(RegKey, ValueName, 0, REG_DWORD, &Value, sizeof(Value));
 }
 
-NTSTATUS
-FxPkgPnp::UpdateWmiInstanceForS0Idle(
-    __in FxWmiInstanceAction Action
-    )
-{
-    FxWmiProvider* pProvider;
-    NTSTATUS status;
+// NTSTATUS __REACTOS__
+// FxPkgPnp::UpdateWmiInstanceForS0Idle(
+//     __in FxWmiInstanceAction Action
+//     )
+// {
+//     FxWmiProvider* pProvider;
+//     NTSTATUS status;
 
-    switch(Action) {
-    case AddInstance:
-        if (m_PowerPolicyMachine.m_Owner->m_IdleSettings.WmiInstance == NULL) {
-            FxWmiInstanceInternalCallbacks cb;
+//     switch(Action) {
+//     case AddInstance:
+//         if (m_PowerPolicyMachine.m_Owner->m_IdleSettings.WmiInstance == NULL) {
+//             FxWmiInstanceInternalCallbacks cb;
 
-            cb.SetInstance = _S0IdleSetInstance;
-            cb.QueryInstance = _S0IdleQueryInstance;
-            cb.SetItem = _S0IdleSetItem;
+//             cb.SetInstance = _S0IdleSetInstance;
+//             cb.QueryInstance = _S0IdleQueryInstance;
+//             cb.SetItem = _S0IdleSetItem;
 
-            status = RegisterPowerPolicyWmiInstance(
-                &GUID_POWER_DEVICE_ENABLE,
-                &cb,
-                &m_PowerPolicyMachine.m_Owner->m_IdleSettings.WmiInstance);
+//             status = RegisterPowerPolicyWmiInstance(
+//                 &GUID_POWER_DEVICE_ENABLE,
+//                 &cb,
+//                 &m_PowerPolicyMachine.m_Owner->m_IdleSettings.WmiInstance);
 
-            if (!NT_SUCCESS(status)) {
-                return status;
-            }
-        }
-        else {
-            pProvider = m_PowerPolicyMachine.m_Owner->m_IdleSettings.
-                WmiInstance->GetProvider();
+//             if (!NT_SUCCESS(status)) {
+//                 return status;
+//             }
+//         }
+//         else {
+//             pProvider = m_PowerPolicyMachine.m_Owner->m_IdleSettings.
+//                 WmiInstance->GetProvider();
 
-            //
-            // Enable the WMI GUID by adding the instance back to the provider's
-            // list.  If there is an error, ignore it.  It just means we were
-            // racing with another thread removing or adding the instance.
-            //
-            (void) pProvider->AddInstance(
-                m_PowerPolicyMachine.m_Owner->m_IdleSettings.WmiInstance,
-                TRUE
-                );
-        }
-        break;
+//             //
+//             // Enable the WMI GUID by adding the instance back to the provider's
+//             // list.  If there is an error, ignore it.  It just means we were
+//             // racing with another thread removing or adding the instance.
+//             //
+//             (void) pProvider->AddInstance(
+//                 m_PowerPolicyMachine.m_Owner->m_IdleSettings.WmiInstance,
+//                 TRUE
+//                 );
+//         }
+//         break;
 
-    case RemoveInstance:
-        if (m_PowerPolicyMachine.m_Owner->m_IdleSettings.WmiInstance != NULL) {
-            //
-            // Disable the WMI guid by removing it from the provider's list of
-            // instances.
-            //
-            pProvider = m_PowerPolicyMachine.m_Owner->m_IdleSettings.
-                WmiInstance->GetProvider();
+//     case RemoveInstance:
+//         if (m_PowerPolicyMachine.m_Owner->m_IdleSettings.WmiInstance != NULL) {
+//             //
+//             // Disable the WMI guid by removing it from the provider's list of
+//             // instances.
+//             //
+//             pProvider = m_PowerPolicyMachine.m_Owner->m_IdleSettings.
+//                 WmiInstance->GetProvider();
 
-            pProvider->RemoveInstance(
-                m_PowerPolicyMachine.m_Owner->m_IdleSettings.WmiInstance
-                );
-        }
-        break;
+//             pProvider->RemoveInstance(
+//                 m_PowerPolicyMachine.m_Owner->m_IdleSettings.WmiInstance
+//                 );
+//         }
+//         break;
 
-    default:
-        ASSERT(FALSE);
-        break;
-    }
+//     default:
+//         ASSERT(FALSE);
+//         break;
+//     }
 
-    return STATUS_SUCCESS;;
-}
+//     return STATUS_SUCCESS;;
+// }
 
 VOID
 FxPkgPnp::ReadRegistryS0Idle(
@@ -401,69 +401,69 @@ FxPkgPnp::ReadRegistryS0Idle(
     }
 }
 
-NTSTATUS
-FxPkgPnp::UpdateWmiInstanceForSxWake(
-    __in FxWmiInstanceAction Action
-    )
-{
-    FxWmiProvider* pProvider;
-    NTSTATUS status;
+// NTSTATUS __REACTOS__
+// FxPkgPnp::UpdateWmiInstanceForSxWake(
+//     __in FxWmiInstanceAction Action
+//     )
+// {
+//     FxWmiProvider* pProvider;
+//     NTSTATUS status;
 
-    switch(Action) {
-    case AddInstance:
-        if (m_PowerPolicyMachine.m_Owner->m_WakeSettings.WmiInstance == NULL) {
-            FxWmiInstanceInternalCallbacks cb;
+//     switch(Action) {
+//     case AddInstance:
+//         if (m_PowerPolicyMachine.m_Owner->m_WakeSettings.WmiInstance == NULL) {
+//             FxWmiInstanceInternalCallbacks cb;
 
-            cb.SetInstance = _SxWakeSetInstance;
-            cb.QueryInstance = _SxWakeQueryInstance;
-            cb.SetItem = _SxWakeSetItem;
+//             cb.SetInstance = _SxWakeSetInstance;
+//             cb.QueryInstance = _SxWakeQueryInstance;
+//             cb.SetItem = _SxWakeSetItem;
 
-            status = RegisterPowerPolicyWmiInstance(
-                &GUID_POWER_DEVICE_WAKE_ENABLE,
-                &cb,
-                &m_PowerPolicyMachine.m_Owner->m_WakeSettings.WmiInstance);
+//             status = RegisterPowerPolicyWmiInstance(
+//                 &GUID_POWER_DEVICE_WAKE_ENABLE,
+//                 &cb,
+//                 &m_PowerPolicyMachine.m_Owner->m_WakeSettings.WmiInstance);
 
-            if (!NT_SUCCESS(status)) {
-                return status;
-            }
-        } else {
-            pProvider = m_PowerPolicyMachine.m_Owner->m_WakeSettings.
-                WmiInstance->GetProvider();
+//             if (!NT_SUCCESS(status)) {
+//                 return status;
+//             }
+//         } else {
+//             pProvider = m_PowerPolicyMachine.m_Owner->m_WakeSettings.
+//                 WmiInstance->GetProvider();
 
-            //
-            // Enable the WMI GUID by adding the instance back to the provider's
-            // list.  If there is an error, ignore it.  It just means we were
-            // racing with another thread removing or adding the instance.
-            //
-            (void) pProvider->AddInstance(
-                m_PowerPolicyMachine.m_Owner->m_WakeSettings.WmiInstance,
-                TRUE
-                );
-        }
-        break;
+//             //
+//             // Enable the WMI GUID by adding the instance back to the provider's
+//             // list.  If there is an error, ignore it.  It just means we were
+//             // racing with another thread removing or adding the instance.
+//             //
+//             (void) pProvider->AddInstance(
+//                 m_PowerPolicyMachine.m_Owner->m_WakeSettings.WmiInstance,
+//                 TRUE
+//                 );
+//         }
+//         break;
 
-    case RemoveInstance:
-        if (m_PowerPolicyMachine.m_Owner->m_WakeSettings.WmiInstance != NULL) {
-            //
-            // Disable the WMI guid by removing it from the provider's list of
-            // instances.
-            //
-            pProvider = m_PowerPolicyMachine.m_Owner->m_WakeSettings.
-                WmiInstance->GetProvider();
+//     case RemoveInstance:
+//         if (m_PowerPolicyMachine.m_Owner->m_WakeSettings.WmiInstance != NULL) {
+//             //
+//             // Disable the WMI guid by removing it from the provider's list of
+//             // instances.
+//             //
+//             pProvider = m_PowerPolicyMachine.m_Owner->m_WakeSettings.
+//                 WmiInstance->GetProvider();
 
-            pProvider->RemoveInstance(
-                m_PowerPolicyMachine.m_Owner->m_WakeSettings.WmiInstance
-                );
-        }
-        break;
+//             pProvider->RemoveInstance(
+//                 m_PowerPolicyMachine.m_Owner->m_WakeSettings.WmiInstance
+//                 );
+//         }
+//         break;
 
-    default:
-        ASSERT(FALSE);
-        break;
-    }
+//     default:
+//         ASSERT(FALSE);
+//         break;
+//     }
 
-    return STATUS_SUCCESS;
-}
+//     return STATUS_SUCCESS;
+// }
 
 VOID
 FxPkgPnp::ReadRegistrySxWake(
@@ -530,7 +530,8 @@ FxPkgPnp::RevokeDmaEnablerResources(
     __in FxDmaEnabler *DmaEnabler
     )
 {
-    DmaEnabler->RevokeResources();
+    // DmaEnabler->RevokeResources();
+    ROSWDFNOTIMPLEMENTED;
 }
 
 VOID

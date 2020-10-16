@@ -28,19 +28,19 @@ Notes:
 #pragma once
 
 #include <strsafe.h>
-#include "FxTelemetryCommon.hpp"
+#include "fxtelemetrycommon.hpp"
 
 #if (FX_CORE_MODE == FX_CORE_KERNEL_MODE)
-#include "FxTelemetryKm.hpp"
+#include "fxtelemetrykm.hpp"
 #else
-#include "FxTelemetryUm.hpp"
+#include "fxtelemetryum.hpp"
 #endif
 
 #if defined(__cplusplus)
 extern "C" {
 #endif
 
-TRACELOGGING_DECLARE_PROVIDER(g_TelemetryProvider);
+// TRACELOGGING_DECLARE_PROVIDER(g_TelemetryProvider); __REACTOS__
 
 #define FX_TELEMETRY_ENABLED(TraceHandle, Globals)                \
     (TraceHandle && IsDriverTelemetryContextInitialized(Globals))     \

@@ -27,7 +27,7 @@ Revision History:
 
 // Tracing support
 extern "C" {
-#include "FxDriver.tmh"
+// #include "FxDriver.tmh"
 }
 
 FxDriver::FxDriver(
@@ -133,7 +133,7 @@ FxDriver::Dispose(
         m_DisposeList->WaitForEmpty();
     }
 
-    return __super::Dispose();
+    return FxNonPagedObject::Dispose(); // __super call
 }
 
 VOID

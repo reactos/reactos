@@ -26,11 +26,11 @@ Revision History:
 
 #include "fxcorepch.hpp"
 
-#include "FxDpc.hpp"
+#include "fxdpc.hpp"
 
 // Tracing support
 extern "C" {
-#include "FxDpc.tmh"
+// #include "FxDpc.tmh"
 }
 
 //

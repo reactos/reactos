@@ -24,7 +24,7 @@ Revision History:
 
 #include "fxobjectpch.hpp"
 
-#include "FxUserObject.hpp"
+#include "fxuserobject.hpp"
 
 // Tracing support
 extern "C" {
@@ -39,6 +39,7 @@ extern "C" {
 _Must_inspect_result_
 __drv_maxIRQL(DISPATCH_LEVEL)
 NTSTATUS
+STDCALL
 WDFEXPORT(WdfObjectCreate)(
    __in
    PWDF_DRIVER_GLOBALS DriverGlobals,

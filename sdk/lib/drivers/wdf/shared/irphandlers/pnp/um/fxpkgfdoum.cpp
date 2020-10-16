@@ -26,7 +26,7 @@ Revision History:
 
 --*/
 
-#include "..\pnppriv.hpp"
+#include "../pnppriv.hpp"
 
 #include <initguid.h>
 #include <wdmguid.h>

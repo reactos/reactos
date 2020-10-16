@@ -20,10 +20,10 @@ Revision History:
 
 --*/
 
-#include "..\..\FxTargetsShared.hpp"
+#include "../../fxtargetsshared.hpp"
 
 extern "C" {
-#include "FxIoTargetAPIKm.tmh"
+// #include "FxIoTargetAPIKm.tmh"
 }
 
 //
@@ -33,6 +33,7 @@ extern "C" {
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 PDEVICE_OBJECT
+STDCALL
 WDFEXPORT(WdfIoTargetWdmGetTargetDeviceObject)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -76,6 +77,7 @@ Return Value:
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 PDEVICE_OBJECT
+STDCALL
 WDFEXPORT(WdfIoTargetWdmGetTargetPhysicalDevice)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -121,6 +123,7 @@ Return Value:
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 PFILE_OBJECT
+STDCALL
 WDFEXPORT(WdfIoTargetWdmGetTargetFileObject)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -165,6 +168,7 @@ Return Value:
 __drv_maxIRQL(PASSIVE_LEVEL)
 _Must_inspect_result_
 NTSTATUS
+STDCALL
 WDFEXPORT(WdfIoTargetQueryForInterface)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -242,6 +246,7 @@ Return Value:
 _Must_inspect_result_
 __drv_maxIRQL(PASSIVE_LEVEL)
 NTSTATUS
+STDCALL
 WDFEXPORT(WdfIoTargetQueryTargetProperty)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -254,7 +259,7 @@ WDFEXPORT(WdfIoTargetQueryTargetProperty)(
     __drv_when(BufferLength != 0, __out_bcount_part_opt(BufferLength, *ResultLength))
     __drv_when(BufferLength == 0, __out_opt)
     PVOID PropertyBuffer,
-   __deref_out_range(<=,BufferLength)
+    __deref_out_range(<=,BufferLength)
     PULONG ResultLength
     )
 /*++
@@ -333,6 +338,7 @@ _Must_inspect_result_
 __drv_maxIRQL(PASSIVE_LEVEL)
 WDFAPI
 NTSTATUS
+STDCALL
 WDFEXPORT(WdfIoTargetAllocAndQueryTargetProperty)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,

@@ -25,10 +25,10 @@ Revision History:
 
 #include "coreprivshared.hpp"
 
-#include "FxWorkItem.hpp"
+#include "fxworkitem.hpp"
 
 extern "C" {
-#include "FxWorkItemApi.tmh"
+// #include "FxWorkItemApi.tmh"
 }
 
 
@@ -40,6 +40,7 @@ extern "C" {
 _Must_inspect_result_
 __drv_maxIRQL(DISPATCH_LEVEL)
 NTSTATUS
+STDCALL
 WDFEXPORT(WdfWorkItemCreate)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -144,6 +145,7 @@ Notes:
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 VOID
+STDCALL
 WDFEXPORT(WdfWorkItemEnqueue)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -180,6 +182,7 @@ Returns:
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 WDFOBJECT
+STDCALL
 WDFEXPORT(WdfWorkItemGetParentObject)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -219,6 +222,7 @@ Returns:
 
 __drv_maxIRQL(PASSIVE_LEVEL)
 VOID
+STDCALL
 WDFEXPORT(WdfWorkItemFlush)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,

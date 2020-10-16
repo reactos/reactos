@@ -66,7 +66,7 @@ enum FxHandleFlags {
 // We cannot define FxHandleValueMask as an enumerant in FxHandleFlags because
 // an enum is limited to sizeof(ULONG), which doesn't work for us on a 64 bit OS
 //
-extern __declspec(selectany) const ULONG_PTR FxHandleValueMask = (~((ULONG_PTR) FxHandleFlagMask));
+extern DECLSPEC_SELECTANY const ULONG_PTR FxHandleValueMask = (~((ULONG_PTR) FxHandleFlagMask));
 
 //
 // The type itself is aligned, but the pointer is not b/c those interested in the
@@ -114,7 +114,7 @@ struct FxQueryInterfaceParams {
 // 1) have its size rounded up to an alignment value
 // 2) extra size and context header appended to the allocation
 //
-enum FxObjectType {
+enum FxObjectType : UINT32 {
     FxObjectTypeInvalid = 0,
     FxObjectTypeInternal,
     FxObjectTypeExternal,

@@ -148,9 +148,9 @@ public:
 };
 
 #if ((FX_CORE_MODE)==(FX_CORE_KERNEL_MODE))
-#include "FxRequestBufferKm.hpp"
-#else if ((FX_CORE_MODE)==(FX_CORE_USER_MODE))
-#include "FxRequestBufferUm.hpp"
+#include "fxrequestbufferkm.hpp"
+#elif ((FX_CORE_MODE)==(FX_CORE_USER_MODE))
+#include "fxrequestbufferum.hpp"
 #endif
 
 

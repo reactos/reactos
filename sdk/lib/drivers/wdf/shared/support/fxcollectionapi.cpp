@@ -22,10 +22,10 @@ Revision History:
 
 --*/
 
-#include "FxSupportPch.hpp"
+#include "fxsupportpch.hpp"
 
 extern "C" {
-#include "FxCollectionApi.tmh"
+// #include "FxCollectionApi.tmh"
 }
 
 //
@@ -35,6 +35,7 @@ extern "C" {
 _Must_inspect_result_
 __drv_maxIRQL(DISPATCH_LEVEL)
 NTSTATUS
+STDCALL
 WDFEXPORT(WdfCollectionCreate)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -105,6 +106,7 @@ WDFEXPORT(WdfCollectionCreate)(
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 ULONG
+STDCALL
 WDFEXPORT(WdfCollectionGetCount)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -133,6 +135,7 @@ WDFEXPORT(WdfCollectionGetCount)(
 _Must_inspect_result_
 __drv_maxIRQL(DISPATCH_LEVEL)
 NTSTATUS
+STDCALL
 WDFEXPORT(WdfCollectionAdd)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -170,6 +173,7 @@ WDFEXPORT(WdfCollectionAdd)(
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 VOID
+STDCALL
 WDFEXPORT(WdfCollectionRemoveItem)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -225,6 +229,7 @@ WDFEXPORT(WdfCollectionRemoveItem)(
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 VOID
+STDCALL
 WDFEXPORT(WdfCollectionRemove)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -283,6 +288,7 @@ WDFEXPORT(WdfCollectionRemove)(
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 WDFOBJECT
+STDCALL
 WDFEXPORT(WdfCollectionGetItem)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -296,10 +302,7 @@ WDFEXPORT(WdfCollectionGetItem)(
 
     FxCollection *pCollection;
     FxObject *pObject;
-    WDFOBJECT hObject;
     KIRQL irql;
-
-    hObject = NULL;
 
     FxObjectHandleGetPtr(GetFxDriverGlobals(DriverGlobals),
                          Collection,
@@ -319,6 +322,7 @@ WDFEXPORT(WdfCollectionGetItem)(
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 WDFOBJECT
+STDCALL
 WDFEXPORT(WdfCollectionGetFirstItem)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -351,6 +355,7 @@ WDFEXPORT(WdfCollectionGetFirstItem)(
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 WDFOBJECT
+STDCALL
 WDFEXPORT(WdfCollectionGetLastItem)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,

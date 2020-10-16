@@ -26,7 +26,7 @@ Revision History:
 
 #include "coreprivshared.hpp"
 
-#include "FxWorkItem.hpp"
+#include "fxworkitem.hpp"
 
 #if (FX_CORE_MODE == FX_CORE_USER_MODE)
 //
@@ -37,7 +37,7 @@ Revision History:
 
 // Tracing support
 extern "C" {
-#include "FxWorkItem.tmh"
+// #include "FxWorkItem.tmh"
 }
 
 FxWorkItem::FxWorkItem(
@@ -319,8 +319,8 @@ FxWorkItem::Enqueue(
         // object and Globals while they are outstanding.
         // These will be released when the workitem completes.
         //
-        ADDREF(WorkItemThunk);
-        pFxDriverGlobals->ADDREF(WorkItemThunk);
+        ADDREF((PVOID)WorkItemThunk);
+        pFxDriverGlobals->ADDREF((PVOID)WorkItemThunk);
 
         enqueue = TRUE;
     }
@@ -436,12 +436,12 @@ Return Value:
     // Release the reference on the FxWorkItem and Globals taken when Enqueue
     // was done. This may release the FxWorkItem if it is running down.
     //
-    pWorkItem->RELEASE(WorkItemThunk);
+    pWorkItem->RELEASE((PVOID)WorkItemThunk);
 
     //
     // This may release the driver if it is running down.
     //
-    pFxDriverGlobals->RELEASE(WorkItemThunk);
+    pFxDriverGlobals->RELEASE((PVOID)WorkItemThunk);
 }
 
 VOID

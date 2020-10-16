@@ -36,15 +36,15 @@ extern "C" {
 #include "mx.h"
 }
 
-#include "FxMin.hpp"
+#include "fxmin.hpp"
 
 
 
 #include "wdfmemory.h"
 #include "wdfrequest.h"
 #include "wdfdevice.h"
-#include "wdfWmi.h"
-#include "wdfChildList.h"
+#include "wdfwmi.h"
+#include "wdfchildlist.h"
 #include "wdfpdo.h"
 #include "wdffdo.h"
 #include "wdfiotarget.h"
@@ -53,26 +53,26 @@ extern "C" {
 #include "wdfio.h"
 #include "wdfqueryinterface.h"
 
-#include "FxIrpQueue.hpp"
-#include "FxCallback.hpp"
+#include "fxirpqueue.hpp"
+#include "fxcallback.hpp"
 #if (FX_CORE_MODE == FX_CORE_USER_MODE)
-#include "FxIrpUm.hpp"
-#else if ((FX_CORE_MODE)==(FX_CORE_KERNEL_MODE))
-#include "FxIrpKm.hpp"
+#include "fxirpum.hpp"
+#elif ((FX_CORE_MODE)==(FX_CORE_KERNEL_MODE))
+#include "fxirpkm.hpp"
 #endif
-#include "FxTransactionedList.hpp"
+#include "fxtransactionedlist.hpp"
 
-#include "FxCollection.hpp"
-#include "FxDeviceInitShared.hpp"
-#include "FxDeviceToMxInterface.hpp"
-#include "FxRequestContext.hpp"
-#include "FxRequestContextTypes.h"
-#include "FxRequestBase.hpp"
-#include "FxRequestBuffer.hpp"
-#include "IfxMemory.hpp"
-#include "FxIoTarget.hpp"
-#include "FxIoTargetRemote.hpp"
-#include "FxIoTargetSelf.hpp"
+#include "fxcollection.hpp"
+#include "fxdeviceinitshared.hpp"
+#include "fxdevicetomxinterface.hpp"
+#include "fxrequestcontext.hpp"
+#include "fxrequestcontexttypes.h"
+#include "fxrequestbase.hpp"
+#include "fxrequestbuffer.hpp"
+#include "ifxmemory.hpp"
+#include "fxiotarget.hpp"
+#include "fxiotargetremote.hpp"
+#include "fxiotargetself.hpp"
 
 
 

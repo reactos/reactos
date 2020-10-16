@@ -30,7 +30,7 @@ Revision History:
 
 // Tracing support
 extern "C" {
-#include "FxRequestSystemBuffer.tmh"
+// #include "FxRequestSystemBuffer.tmh"
 }
 
 size_t

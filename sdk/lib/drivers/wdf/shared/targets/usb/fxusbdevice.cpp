@@ -108,7 +108,7 @@ FxUsbDeviceControlContext::CopyParameters(
     m_CompletionParams.IoStatus.Information = m_UmUrb.UmUrbControlTransfer.TransferBufferLength;
     m_UsbParameters.Parameters.DeviceControlTransfer.Length = m_UmUrb.UmUrbControlTransfer.TransferBufferLength;
 #endif
-    __super::CopyParameters(Request);
+    FxUsbRequestContext::CopyParameters(Request); // __super call
 }
 
 VOID
@@ -131,7 +131,7 @@ FxUsbDeviceControlContext::ReleaseAndRestore(
         m_PartialMdl = NULL;
     }
 
-    __super::ReleaseAndRestore(Request);
+    FxUsbRequestContext::ReleaseAndRestore(Request); // __super call
 }
 
 USBD_STATUS
@@ -262,7 +262,7 @@ FxUsbDeviceStringContext::CopyParameters(
         }
     }
 
-    __super::CopyParameters(Request);
+    FxUsbRequestContext::CopyParameters(Request); // __super call
 }
 
 VOID
@@ -365,7 +365,7 @@ FxUsbUrb::Dispose(
     m_pBuffer = NULL;
     m_USBDHandle = NULL;
 
-    return __super::Dispose();
+    return FxMemoryBufferPreallocated::Dispose(); // __super call
 }
 
 FxUsbDevice::FxUsbDevice(
@@ -429,7 +429,7 @@ FxUsbDevice::Dispose(
     }
 #endif
 
-    return __super::Dispose();
+    return FxIoTarget::Dispose(); // __super call
 }
 
 FxUsbDevice::~FxUsbDevice()
@@ -2114,7 +2114,7 @@ FxUsbDevice::CancelSentIo(
             }
         }
     }
-    __super::CancelSentIo();
+    FxIoTarget::CancelSentIo(); // __super call
 }
 
 __checkReturn

@@ -26,7 +26,7 @@ Revision History:
 typedef IO_WORKITEM_ROUTINE MX_WORKITEM_ROUTINE, *PMX_WORKITEM_ROUTINE;
 typedef PIO_WORKITEM MdWorkItem;
 
-#include "MxWorkItem.h"
+#include "mxworkitem.h"
 
 __inline
 MxWorkItem::MxWorkItem(

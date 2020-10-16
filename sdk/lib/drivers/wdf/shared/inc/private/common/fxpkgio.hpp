@@ -28,10 +28,10 @@ Revision History:
 
 
 
-#include "FxPkgIoShared.hpp"
-#include "FxIrpDynamicDispatchInfo.hpp"
-#include "FxDeviceCallbacks.hpp"
-#include "FxCxDeviceInfo.hpp"
+#include "fxpkgioshared.hpp"
+#include "fxirpdynamicdispatchinfo.hpp"
+#include "fxdevicecallbacks.hpp"
+#include "fxcxdeviceinfo.hpp"
 
 //
 // This flag is or-ed with a pointer value that is ptr aligned, only lower 2 bits are available.

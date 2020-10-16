@@ -39,6 +39,7 @@ extern "C" {
 extern
 _Success_(return != 0)
 USHORT
+STDCALL
 RtlCaptureStackBackTrace(
     _In_ ULONG FramesToSkip,
     _In_ ULONG FramesToCapture,

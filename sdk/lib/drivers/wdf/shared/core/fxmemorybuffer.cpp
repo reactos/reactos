@@ -21,10 +21,10 @@ Revision History:
 --*/
 
 #include "coreprivshared.hpp"
-#include "FxMemoryBuffer.hpp"
+#include "fxmemorybuffer.hpp"
 
 extern "C" {
-#include "FxMemoryBuffer.tmh"
+// #include "FxMemoryBuffer.tmh"
 }
 
 _Must_inspect_result_

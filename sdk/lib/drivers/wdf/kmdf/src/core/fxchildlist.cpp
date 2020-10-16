@@ -25,7 +25,7 @@ Revision History:
 #include "fxcorepch.hpp"
 
 extern "C" {
-#include "FxChildList.tmh"
+// #include "FxChildList.tmh"
 }
 
 FxDeviceDescriptionEntry::FxDeviceDescriptionEntry(
@@ -1145,9 +1145,6 @@ FxChildList::GetNextStaticDevice(
         for (ple = m_ModificationListHead.Flink;
              ple != &m_ModificationListHead;
              ple = ple->Flink) {
-            BOOLEAN check;
-
-            check = FALSE;
 
             pEntry = FxDeviceDescriptionEntry::_FromModificationLink(ple);
 

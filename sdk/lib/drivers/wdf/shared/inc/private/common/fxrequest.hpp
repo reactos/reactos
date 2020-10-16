@@ -639,7 +639,7 @@ protected:
         );
 
     #if DBG
-    FxRequest::~FxRequest(
+    ~FxRequest(
         VOID
         );
     #endif // DBG
@@ -1300,7 +1300,7 @@ public:
 
         ASSERT(m_ForwardRequestToParent == FALSE);
 
-        __super::ClearFieldsForReuse();
+        FxRequestBase::ClearFieldsForReuse(); // __super call
     }
 
     virtual

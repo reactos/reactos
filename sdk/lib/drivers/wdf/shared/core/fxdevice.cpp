@@ -25,7 +25,7 @@ Revision History:
 #include "coreprivshared.hpp"
 
 extern "C" {
-#include "FxDevice.tmh"
+// #include "FxDevice.tmh"
 }
 
 //
@@ -681,14 +681,12 @@ Return Value:
     PFX_DRIVER_GLOBALS  pGlobals;
     PLIST_ENTRY         next;
     NTSTATUS            status;
-    BOOLEAN             wmiTracing;
     size_t              reqCtxSize;
     PWDFCXDEVICE_INIT   cxInit;
     CCHAR               cxIndex;
     FxCxDeviceInfo*     cxDeviceInfo;
 
     pGlobals    = GetDriverGlobals();
-    wmiTracing  = FALSE;
     m_Exclusive = DeviceInit->Exclusive;
     cxIndex     = 0;
 
@@ -832,11 +830,11 @@ Return Value:
 
 
 
-    m_PkgWmi = new(pGlobals) FxWmiIrpHandler(pGlobals, this);
-    if (m_PkgWmi == NULL) {
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
-    InstallPackage(m_PkgWmi);
+    // m_PkgWmi = new(pGlobals) FxWmiIrpHandler(pGlobals, this); __REACTOS__
+    // if (m_PkgWmi == NULL) {
+    //     return STATUS_INSUFFICIENT_RESOURCES;
+    // }
+    // InstallPackage(m_PkgWmi);
 #endif
 
     //
@@ -1019,7 +1017,8 @@ FxDevice::CreateDevice(
             // administrator complete control over the device. No other users
             // may access the device.
             //
-            pSddl = (PUNICODE_STRING) &SDDL_DEVOBJ_SYS_ALL_ADM_ALL;
+            // pSddl = (PUNICODE_STRING) &SDDL_DEVOBJ_SYS_ALL_ADM_ALL;
+            pSddl = NULL; // __REACTOS__ : wdmsec.lib is not supported
         }
 
         status = Mx::MxCreateDeviceSecure(
@@ -1217,7 +1216,7 @@ Return Value:
             // we delete the device object, otherwise we can bugcheck when
             // running under driver verifier.
             //
-            m_PkgWmi->Deregister();
+            // m_PkgWmi->Deregister(); __REACTOS__
         }
 
         //
@@ -1236,7 +1235,7 @@ Return Value:
         }
     }
 
-    __super::DeleteObject();
+    FxDeviceBase::DeleteObject(); // __super call
 }
 
 BOOLEAN
@@ -1262,7 +1261,7 @@ FxDevice::Dispose(
             // valid to reference the pointer because there is an explicit
             // reference on the object that was taken when we created this object.
             //
-            m_PkgWmi->Deregister();
+            // m_PkgWmi->Deregister(); __REACTOS__
         }
 
         //
@@ -1289,7 +1288,7 @@ FxDevice::Dispose(
         return FALSE;
     }
 
-    return __super::Dispose();
+    return FxDeviceBase::Dispose(); // __super call
 }
 
 _Must_inspect_result_
@@ -1456,7 +1455,6 @@ PreprocessIrp(
     )
 {
     NTSTATUS        status;
-    MdDeviceObject  devObj;
     UCHAR           major, minor;
     FxIrp irp(Irp);
 
@@ -1468,7 +1466,6 @@ PreprocessIrp(
     // EvtDevicePreprocess returns.  To not touch freed pool, capture all
     // values we will need before preprocessing.
     //
-    devObj = Device->GetDeviceObject();
 
     if (Info->ClassExtension == FALSE) {
         status = Info->Dispatch[major].EvtDevicePreprocess( Device->GetHandle(),
@@ -1518,7 +1515,7 @@ DispatchWorker(
     next = (PLIST_ENTRY)DispatchContext;
 
     ASSERT(NULL != DispatchContext &&
-           ((UCHAR)DispatchContext & FX_IN_DISPATCH_CALLBACK) == 0);
+           ((UCHAR)(ULONG_PTR)DispatchContext & FX_IN_DISPATCH_CALLBACK) == 0);
 
     //
     // Check for any driver/class-extensions' preprocess requirements.
@@ -1762,7 +1759,7 @@ FxDevice::QueryInterface(
         break;
 
     default:
-        return __super::QueryInterface(Params);
+        return FxDeviceBase::QueryInterface(Params); // __super call
     }
 
     return STATUS_SUCCESS;

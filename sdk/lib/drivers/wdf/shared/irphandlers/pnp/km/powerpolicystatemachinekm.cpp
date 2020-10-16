@@ -17,13 +17,13 @@ Revision History:
 
 --*/
 
-#include "..\pnppriv.hpp"
+#include "../pnppriv.hpp"
 
 #if FX_IS_KERNEL_MODE
 #include <usbdrivr.h>
 #endif
 
-#include "FxUsbIdleInfo.hpp"
+#include "fxusbidleinfo.hpp"
 
 extern "C" {
 #if defined(EVENT_TRACING)
@@ -163,33 +163,34 @@ FxPkgPnp::PowerPolicySubmitUsbIdleNotification(
     VOID
     )
 {
-    FxIrp* usbIdleIrp;
+    // FxIrp* usbIdleIrp;
 
-    //
-    // This will be set to TRUE if USBSS completion event gets dropped.
-    //
-    m_PowerPolicyMachine.m_Owner->m_UsbIdle->m_EventDropped = FALSE;
+    // //
+    // // This will be set to TRUE if USBSS completion event gets dropped.
+    // //
+    // m_PowerPolicyMachine.m_Owner->m_UsbIdle->m_EventDropped = FALSE;
 
-    usbIdleIrp = &m_PowerPolicyMachine.m_Owner->m_UsbIdle->m_IdleIrp;
+    // usbIdleIrp = &m_PowerPolicyMachine.m_Owner->m_UsbIdle->m_IdleIrp;
 
-    usbIdleIrp->Reuse();
+    // usbIdleIrp->Reuse();
 
-    usbIdleIrp->SetCompletionRoutineEx(
-        m_Device->GetDeviceObject(),
-        _PowerPolicyUsbSelectiveSuspendCompletionRoutine,
-        this);
+    // usbIdleIrp->SetCompletionRoutineEx(
+    //     m_Device->GetDeviceObject(),
+    //     _PowerPolicyUsbSelectiveSuspendCompletionRoutine,
+    //     this);
 
-    usbIdleIrp->SetMajorFunction(IRP_MJ_INTERNAL_DEVICE_CONTROL);
-    usbIdleIrp->SetParameterIoctlCode(
-        IOCTL_INTERNAL_USB_SUBMIT_IDLE_NOTIFICATION);
-    usbIdleIrp->SetParameterIoctlInputBufferLength(
-        sizeof(m_PowerPolicyMachine.m_Owner->m_UsbIdle->m_CallbackInfo));
-    usbIdleIrp->SetParameterIoctlType3InputBuffer(
-        (PVOID) &m_PowerPolicyMachine.m_Owner->m_UsbIdle->m_CallbackInfo);
+    // usbIdleIrp->SetMajorFunction(IRP_MJ_INTERNAL_DEVICE_CONTROL);
+    // usbIdleIrp->SetParameterIoctlCode(
+    //     IOCTL_INTERNAL_USB_SUBMIT_IDLE_NOTIFICATION);
+    // usbIdleIrp->SetParameterIoctlInputBufferLength(
+    //     sizeof(m_PowerPolicyMachine.m_Owner->m_UsbIdle->m_CallbackInfo));
+    // usbIdleIrp->SetParameterIoctlType3InputBuffer(
+    //     (PVOID) &m_PowerPolicyMachine.m_Owner->m_UsbIdle->m_CallbackInfo);
 
-    m_PowerPolicyMachine.m_Owner->m_UsbIdle->m_IdleIrp.CallDriver(
-        m_Device->GetAttachedDevice()
-        );
+    // m_PowerPolicyMachine.m_Owner->m_UsbIdle->m_IdleIrp.CallDriver(
+    //     m_Device->GetAttachedDevice()
+    //     );
+    ROSWDFNOTIMPLEMENTED;
 }
 
 VOID

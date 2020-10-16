@@ -88,6 +88,7 @@ Mx::MxBugCheckEx(
 
     FX_VERIFY(DRIVER(BadAction, BugCheckCode), TRAPMSG("UMDF verification "
                 "faults should not call this code path"));
+    UNREACHABLE;
 }
 
 VOID

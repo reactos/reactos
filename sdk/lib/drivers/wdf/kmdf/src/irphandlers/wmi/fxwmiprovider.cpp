@@ -22,7 +22,7 @@ Revision History:
 #include "fxwmipch.hpp"
 
 extern "C" {
-#include "FxWmiProvider.tmh"
+// #include "FxWmiProvider.tmh"
 }
 
 FxWmiProvider::FxWmiProvider(
@@ -80,7 +80,7 @@ FxWmiProvider::Dispose(
     //
     m_Parent->RemoveProvider(this);
 
-    return __super::Dispose();
+    return FxNonPagedObject::Dispose(); // __super call
 }
 
 _Must_inspect_result_

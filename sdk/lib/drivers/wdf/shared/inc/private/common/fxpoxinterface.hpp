@@ -4,7 +4,7 @@
 #ifndef _FXPOXINTERFACE_H_
 #define _FXPOXINTERFACE_H_
 
-#include "FxDevicePwrReqStateMachine.hpp"
+#include "fxdevicepwrreqstatemachine.hpp"
 
 class FxPoxInterface {
 

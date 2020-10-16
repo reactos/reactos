@@ -25,7 +25,7 @@ Revision History:
 #include "fxcorepch.hpp"
 
 extern "C" {
-#include "FxChildListAPI.tmh"
+// #include "FxChildListAPI.tmh"
 }
 
 //
@@ -36,6 +36,7 @@ extern "C" {
 _Must_inspect_result_
 __drv_maxIRQL(PASSIVE_LEVEL)
 NTSTATUS
+STDCALL
 WDFEXPORT(WdfChildListCreate)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -125,6 +126,7 @@ WDFEXPORT(WdfChildListCreate)(
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 WDFDEVICE
+STDCALL
 WDFEXPORT(WdfChildListGetDevice)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -150,6 +152,7 @@ WDFEXPORT(WdfChildListGetDevice)(
 _Must_inspect_result_
 __drv_maxIRQL(DISPATCH_LEVEL)
 NTSTATUS
+STDCALL
 WDFEXPORT(WdfChildListRetrieveAddressDescription)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -226,6 +229,7 @@ WDFEXPORT(WdfChildListRetrieveAddressDescription)(
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 VOID
+STDCALL
 WDFEXPORT(WdfChildListBeginScan)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -250,6 +254,7 @@ WDFEXPORT(WdfChildListBeginScan)(
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 VOID
+STDCALL
 WDFEXPORT(WdfChildListEndScan)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -274,6 +279,7 @@ WDFEXPORT(WdfChildListEndScan)(
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 VOID
+STDCALL
 WDFEXPORT(WdfChildListBeginIteration)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -323,6 +329,7 @@ WDFEXPORT(WdfChildListBeginIteration)(
 _Must_inspect_result_
 __drv_maxIRQL(DISPATCH_LEVEL)
 NTSTATUS
+STDCALL
 WDFEXPORT(WdfChildListRetrieveNextDevice)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -425,6 +432,7 @@ WDFEXPORT(WdfChildListRetrieveNextDevice)(
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 VOID
+STDCALL
 WDFEXPORT(WdfChildListEndIteration)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -473,6 +481,7 @@ WDFEXPORT(WdfChildListEndIteration)(
 _Must_inspect_result_
 __drv_maxIRQL(DISPATCH_LEVEL)
 NTSTATUS
+STDCALL
 WDFEXPORT(WdfChildListAddOrUpdateChildDescriptionAsPresent)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -561,6 +570,7 @@ WDFEXPORT(WdfChildListAddOrUpdateChildDescriptionAsPresent)(
 _Must_inspect_result_
 __drv_maxIRQL(DISPATCH_LEVEL)
 NTSTATUS
+STDCALL
 WDFEXPORT(WdfChildListUpdateChildDescriptionAsMissing)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -609,6 +619,7 @@ WDFEXPORT(WdfChildListUpdateChildDescriptionAsMissing)(
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 VOID
+STDCALL
 WDFEXPORT(WdfChildListUpdateAllChildDescriptionsAsPresent)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -637,6 +648,7 @@ WDFEXPORT(WdfChildListUpdateAllChildDescriptionsAsPresent)(
 _Must_inspect_result_
 __drv_maxIRQL(DISPATCH_LEVEL)
 WDFDEVICE
+STDCALL
 WDFEXPORT(WdfChildListRetrievePdo)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -734,6 +746,7 @@ WDFEXPORT(WdfChildListRetrievePdo)(
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 BOOLEAN
+STDCALL
 WDFEXPORT(WdfChildListRequestChildEject)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,

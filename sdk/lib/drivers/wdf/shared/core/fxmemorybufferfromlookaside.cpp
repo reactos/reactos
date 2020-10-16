@@ -22,8 +22,8 @@ Revision History:
 --*/
 
 #include "coreprivshared.hpp"
-#include "FxNPagedLookasideList.hpp"
-#include "FxMemoryBufferFromLookaside.hpp"
+#include "fxnpagedlookasidelist.hpp"
+#include "fxmemorybufferfromlookaside.hpp"
 
 FxMemoryBufferFromLookaside::FxMemoryBufferFromLookaside(
     __in PFX_DRIVER_GLOBALS FxDriverGlobals,
@@ -215,7 +215,7 @@ Return Value:
     // within the destructor b/c then all parent objects would be destructing on
     // freed pool.
     //
-    FxMemoryBufferFromLookaside::~FxMemoryBufferFromLookaside();
+    this->~FxMemoryBufferFromLookaside();
 
     //
     // After FxLookaside::Reclaim, this no longer points to valid memory so we
@@ -268,7 +268,7 @@ FxMemoryBufferFromPoolLookaside::SelfDestruct(
     //
     // Free the object itself
     //
-    __super::SelfDestruct();
+    FxMemoryBufferFromLookaside::SelfDestruct(); // __super call
 }
 
 _Must_inspect_result_

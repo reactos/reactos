@@ -27,15 +27,8 @@ Revision History:
 
 // Tracing support
 extern "C" {
-#include "FxRequest.tmh"
+// #include "FxRequest.tmh"
 }
-
-
-
-
-
-
-#define WDF_REQUEST_REUSE_MUST_COMPLETE 2
 
 FxRequest::FxRequest(
     __in PFX_DRIVER_GLOBALS FxDriverGlobals,
@@ -1298,13 +1291,12 @@ FxRequest::GetMemoryObject(
     NTSTATUS status;
     ULONG length;
     KIRQL irql;
-    BOOLEAN mapMdl, mdlMapped;
+    BOOLEAN mapMdl;
     UCHAR majorFunction;
 
     status = STATUS_SUCCESS;
     length = 0x0;
     mapMdl = FALSE;
-    mdlMapped = FALSE;
     irql = PASSIVE_LEVEL;
     majorFunction = m_Irp.GetMajorFunction();
 
@@ -2146,7 +2138,6 @@ FxRequest::Reuse(
     )
 {
     FxIrp               currentIrp;
-    FxRequestContext*   pContext;
     PFX_DRIVER_GLOBALS  pFxDriverGlobals = GetDriverGlobals();
 
     //
@@ -2177,7 +2168,6 @@ FxRequest::Reuse(
        SetCompletionRoutine(NULL, NULL);
     }
 
-    pContext = NULL;
     currentIrp.SetIrp(m_Irp.GetIrp());
 
     if (currentIrp.GetIrp() != NULL) {
@@ -2743,7 +2733,7 @@ FxRequest::QueryInterface(
         //  ||   ||   Fall      ||  ||
         //  \/   \/   through   \/  \/
     default:
-        return __super::QueryInterface(Params);
+        return FxRequestBase::QueryInterface(Params); // __super call
     }
 
     return STATUS_SUCCESS;
@@ -3114,7 +3104,7 @@ FxRequest::Release(
     allocFromIo     = IsAllocatedFromIo();
     canComplete     = IsCanComplete();
 
-    retValue =  __super::Release(Tag, Line, File);
+    retValue = FxRequestBase::Release(Tag, Line, File); // __super call
 
     if (reservedRequest && retValue == 1 && m_Completed) {
         //
@@ -3195,7 +3185,7 @@ FxRequestFromLookaside::SelfDestruct(
     //
     // Destroy the object
     //
-    FxRequestFromLookaside::~FxRequestFromLookaside();
+    // FxRequestFromLookaside::~FxRequestFromLookaside(); __REACTOS__
 
     if (IsRequestForwardedToParent()) {
 

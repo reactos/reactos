@@ -29,7 +29,7 @@ Revision History:
 
 // Tracing support
 extern "C" {
-#include "FxRequestOutputBuffer.tmh"
+// #include "FxRequestOutputBuffer.tmh"
 }
 
 PVOID

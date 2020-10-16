@@ -25,10 +25,10 @@ Revision History:
 
 #include "coreprivshared.hpp"
 
-#include "FxTimer.hpp"
+#include "fxtimer.hpp"
 
 extern "C" {
-#include "FxTimerApi.tmh"
+// #include "FxTimerApi.tmh"
 }
 
 //
@@ -39,6 +39,7 @@ extern "C" {
 _Must_inspect_result_
 __drv_maxIRQL(DISPATCH_LEVEL)
 NTSTATUS
+STDCALL
 WDFEXPORT(WdfTimerCreate)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -199,6 +200,7 @@ Notes:
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 BOOLEAN
+STDCALL
 WDFEXPORT(WdfTimerStart)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -245,6 +247,7 @@ Returns:
 __drv_when(Wait == __true, __drv_maxIRQL(PASSIVE_LEVEL))
 __drv_when(Wait == __false, __drv_maxIRQL(DISPATCH_LEVEL))
 BOOLEAN
+STDCALL
 WDFEXPORT(WdfTimerStop)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -295,6 +298,7 @@ Returns:
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 WDFOBJECT
+STDCALL
 WDFEXPORT(WdfTimerGetParentObject)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,

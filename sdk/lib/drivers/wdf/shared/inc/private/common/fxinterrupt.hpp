@@ -27,7 +27,7 @@ Revision History:
 #ifndef _FXINTERRUPT_H_
 #define _FXINTERRUPT_H_
 
-#include "FxWakeInterruptStateMachine.hpp"
+#include "fxwakeinterruptstatemachine.hpp"
 
 //
 // We need two parameters for KeSynchronizeExecution when enabling
@@ -271,7 +271,7 @@ public:
 
     _Must_inspect_result_
     NTSTATUS
-    FxInterrupt::CreateWakeInterruptMachine(
+    CreateWakeInterruptMachine(
         VOID
         );
 

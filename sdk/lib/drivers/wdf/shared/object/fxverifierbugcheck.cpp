@@ -39,8 +39,8 @@ extern "C" {
 //=============================================================================
 
 
+DECLSPEC_NORETURN
 VOID
-__declspec(noreturn)
 FxVerifierBugCheckWorker(
     __in PFX_DRIVER_GLOBALS FxDriverGlobals,
     __in WDF_BUGCHECK_CODES WdfBugCheckCode,
@@ -72,8 +72,8 @@ Returns:
                  (ULONG_PTR) FxDriverGlobals );
 }
 
+DECLSPEC_NORETURN
 VOID
-__declspec(noreturn)
 FxVerifierNullBugCheck(
     __in PFX_DRIVER_GLOBALS FxDriverGlobals,
     __in PVOID ReturnAddress

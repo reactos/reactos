@@ -25,7 +25,7 @@ Revision History:
 #ifndef _FXDRIVER_H_
 #define _FXDRIVER_H_
 
-#include "FxDriverCallbacks.hpp"
+#include "fxdrivercallbacks.hpp"
 
 
 //
@@ -46,7 +46,7 @@ struct FxTraceInfo {
 // Unique value to retrieve the FxDriver* from the MdDriverObject.  Use a value
 // that is not exposed to the driver writer through the dispatch table or WDM.
 //
-#define FX_DRIVER_ID (FxDriver::GetFxDriver)
+#define FX_DRIVER_ID ((PVOID)FxDriver::GetFxDriver)
 
 //
 // The following are support classes for FxDriver
@@ -321,7 +321,7 @@ public:
             break;
 
         default:
-            return __super::QueryInterface(Params);
+            return FxNonPagedObject::QueryInterface(Params); // __super call
         }
 
         return STATUS_SUCCESS;
@@ -340,7 +340,7 @@ public:
         //
         ASSERT(Mx::MxGetCurrentIrql() == PASSIVE_LEVEL);
 
-        __super::DeleteObject();
+        FxNonPagedObject::DeleteObject(); // __super call
     }
 
     virtual

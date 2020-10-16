@@ -23,7 +23,7 @@ Revision History:
 
 --*/
 
-#include "FxSupportPch.hpp"
+#include "fxsupportpch.hpp"
 
 FxCollectionInternal::FxCollectionInternal(
     VOID

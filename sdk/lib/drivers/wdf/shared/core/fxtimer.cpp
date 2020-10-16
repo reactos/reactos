@@ -26,11 +26,11 @@ Revision History:
 
 #include "coreprivshared.hpp"
 
-#include "FxTimer.hpp"
+#include "fxtimer.hpp"
 
 // Tracing support
 extern "C" {
-#include "FxTimer.tmh"
+// #include "FxTimer.tmh"
 }
 
 //
@@ -160,10 +160,12 @@ FxTimer::Initialize(
     //
 
 #if (FX_CORE_MODE == FX_CORE_KERNEL_MODE)
-    if (pFxDriverGlobals->IsVersionGreaterThanOrEqualTo(1,13)) {
-        status = m_Timer.InitializeEx(this, FxTimer::_FxTimerExtCallbackThunk, m_Period,
-                                      m_TolerableDelay, m_UseHighResolutionTimer);
-    } else {
+    // __REACTOS__ Ex timers are not supported
+    // if (pFxDriverGlobals->IsVersionGreaterThanOrEqualTo(1,13)) {
+    //     status = m_Timer.InitializeEx(this, FxTimer::_FxTimerExtCallbackThunk, m_Period,
+    //                                   m_TolerableDelay, m_UseHighResolutionTimer);
+    // } else
+    {
         status = m_Timer.Initialize(this, FxTimer::_FxTimerDpcThunk, m_Period);
     }
 #else

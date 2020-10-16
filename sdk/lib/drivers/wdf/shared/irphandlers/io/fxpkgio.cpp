@@ -159,7 +159,6 @@ FX_VF_METHOD(FxPkgIo, VerifyDispatchContext) (
     return status;
 }
 
-__inline
 _Must_inspect_result_
 NTSTATUS
 __fastcall
@@ -190,7 +189,7 @@ Return Value:
     NTSTATUS                status;
     FxIrp                   fxIrp(Irp);
 
-    ASSERT(((UCHAR)DispatchContext & FX_IN_DISPATCH_CALLBACK) == 0);
+    ASSERT(((UCHAR)(ULONG_PTR)DispatchContext & FX_IN_DISPATCH_CALLBACK) == 0);
 
     ASSERT(fxIrp.GetMajorFunction() <= IRP_MJ_MAXIMUM_FUNCTION);
 
@@ -236,7 +235,7 @@ Return Value:
             // Advance to next node.
             //
             DispatchContext = (WDFCONTEXT)(((PLIST_ENTRY)DispatchContext)->Flink);
-            ASSERT(((UCHAR)DispatchContext & FX_IN_DISPATCH_CALLBACK) == 0);
+            ASSERT(((UCHAR)(ULONG_PTR)DispatchContext & FX_IN_DISPATCH_CALLBACK) == 0);
 
             ASSERT(fxIrp.GetMajorFunction() == IRP_MJ_READ ||
                    fxIrp.GetMajorFunction() == IRP_MJ_WRITE ||
@@ -337,7 +336,6 @@ CompleteIrp:
     return status;
 }
 
-__inline
 _Must_inspect_result_
 NTSTATUS
 __fastcall

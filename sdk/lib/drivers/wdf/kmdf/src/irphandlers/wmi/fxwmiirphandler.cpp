@@ -25,7 +25,7 @@ Revision History:
 #include "fxwmipch.hpp"
 
 extern "C" {
-#include "FxWmiIrpHandler.tmh"
+// #include "FxWmiIrpHandler.tmh"
 }
 
 #ifndef WppDebug

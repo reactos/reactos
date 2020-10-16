@@ -6,10 +6,10 @@
 
 extern "C" {
 #include <usbdrivr.h>
-#include <WdfUsb.h>
+#include <wdfusb.h>
 }
 
-#include "FxUsbRequestContext.hpp"
+#include "fxusbrequestcontext.hpp"
 
 #define FX_USB_INTERFACE_TAG   'uItG' //using a random uniqure value
 

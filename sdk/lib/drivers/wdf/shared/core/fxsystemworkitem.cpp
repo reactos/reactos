@@ -26,11 +26,11 @@ Revision History:
 
 #include "coreprivshared.hpp"
 
-#include "FxSystemWorkItem.hpp"
+#include "fxsystemworkitem.hpp"
 
 // Tracing support
 extern "C" {
-#include "FxSystemWorkItem.tmh"
+// #include "FxSystemWorkItem.tmh"
 }
 
 //

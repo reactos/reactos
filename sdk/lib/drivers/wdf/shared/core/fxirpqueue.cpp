@@ -32,7 +32,7 @@ Revision History:
 
 // Tracing support
 extern "C" {
-#include "FxIrpQueue.tmh"
+// #include "FxIrpQueue.tmh"
 }
 
 //

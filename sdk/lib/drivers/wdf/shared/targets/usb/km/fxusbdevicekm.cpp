@@ -698,7 +698,7 @@ FxUsbDeviceControlContext::StoreAndReferenceMemory(
     m_Urb->Hdr.Function = URB_FUNCTION_CONTROL_TRANSFER;
     m_Urb->Hdr.Length = sizeof(*m_Urb);
 
-    __super::StoreAndReferenceMemory(Buffer);
+    FxUsbRequestContext::StoreAndReferenceMemory(Buffer); // __super call
 
     //
     // Set the values using what is stored in the buffer

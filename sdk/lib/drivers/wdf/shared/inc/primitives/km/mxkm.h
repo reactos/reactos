@@ -26,24 +26,24 @@ Revision History:
 #pragma once
 
 #include <ntddk.h>
-#include <procgrp.h>
-#include <wdmsec.h>
+// #include <procgrp.h>
+// #include <wdmsec.h>
 
-#include <wmikm.h>
-#include <ntwmi.h>
+// #include <wmikm.h>
+// #include <ntwmi.h>
 
 typedef KDEFERRED_ROUTINE MdDeferredRoutineType, *MdDeferredRoutine;
 typedef EXT_CALLBACK MdExtCallbackType, *MdExtCallback;
 #define FX_DEVICEMAP_PATH L"\\REGISTRY\\MACHINE\\HARDWARE\\DEVICEMAP\\"
 
-#include "MxGeneralKm.h"
-#include "MxLockKm.h"
-#include "MxPagedLockKm.h"
-#include "MxEventKm.h"
-#include "MxMemoryKm.h"
-#include "MxTimerKm.h"
-#include "MxWorkItemKm.h"
-#include "MxDriverObjectKm.h"
-#include "MxDeviceObjectKm.h"
-#include "MxFileObjectKm.h"
+#include "mxgeneralkm.h"
+#include "mxlockkm.h"
+#include "mxpagedlockkm.h"
+#include "mxeventkm.h"
+#include "mxmemorykm.h"
+#include "mxtimerkm.h"
+#include "mxworkitemkm.h"
+#include "mxdriverobjectkm.h"
+#include "mxdeviceobjectkm.h"
+#include "mxfileobjectkm.h"
 

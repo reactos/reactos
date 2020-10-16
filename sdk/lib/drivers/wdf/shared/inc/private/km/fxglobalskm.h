@@ -250,6 +250,7 @@ VOID
     );
 
 typedef
+VOID
 (*PFN_POX_ACTIVATE_COMPONENT) (
     __in POHANDLE Handle,
     __in ULONG Component,
@@ -257,6 +258,7 @@ typedef
     );
 
 typedef
+VOID
 (*PFN_POX_IDLE_COMPONENT) (
     __in POHANDLE Handle,
     __in ULONG Component,
@@ -456,7 +458,7 @@ private:
 } FX_DRIVER_TRACKER_CACHE_AWARE, *PFX_DRIVER_TRACKER_CACHE_AWARE;
 
 
-#include "FxGlobals.h"
+#include "fxglobals.h"
 
 
 //

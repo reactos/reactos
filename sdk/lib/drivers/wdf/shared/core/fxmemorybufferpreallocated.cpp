@@ -21,7 +21,7 @@ Revision History:
 --*/
 
 #include "coreprivshared.hpp"
-#include "FxMemoryBufferPreallocated.hpp"
+#include "fxmemorybufferpreallocated.hpp"
 
 FxMemoryBufferPreallocated::FxMemoryBufferPreallocated(
     _In_ PFX_DRIVER_GLOBALS FxDriverGlobals,
@@ -125,7 +125,7 @@ FxMemoryBufferPreallocated::QueryInterface(
         return STATUS_SUCCESS;
     }
     else {
-        return __super::QueryInterface(Params);
+        return FxMemoryObject::QueryInterface(Params); // __super call
     }
 }
 

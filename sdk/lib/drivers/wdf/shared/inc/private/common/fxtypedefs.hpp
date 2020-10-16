@@ -31,11 +31,11 @@ Revision History:
 
 #if (FX_CORE_MODE==FX_CORE_KERNEL_MODE)
 
-#include "fxtypedefsKm.hpp"
+#include "fxtypedefskm.hpp"
 
 #else
 
-#include "fxtypedefsUm.hpp"
+#include "fxtypedefsum.hpp"
 
 #endif
 

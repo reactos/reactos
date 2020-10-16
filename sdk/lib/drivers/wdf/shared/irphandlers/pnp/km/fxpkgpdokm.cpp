@@ -24,7 +24,7 @@ Revision History:
 
 --*/
 
-#include "..\pnppriv.hpp"
+#include "../pnppriv.hpp"
 #include <wdmguid.h>
 
 // Tracing support

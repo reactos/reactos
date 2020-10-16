@@ -22,7 +22,7 @@ Revision History:
 
 --*/
 
-#include "FxSupportPch.hpp"
+#include "fxsupportpch.hpp"
 
 FxDeviceText::FxDeviceText(
     VOID

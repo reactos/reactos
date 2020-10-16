@@ -49,6 +49,7 @@ struct  FxDeviceText : public FxStump {
     }
 
     static
+    void
     _CleanupList(
         __inout PSINGLE_LIST_ENTRY Head
         )

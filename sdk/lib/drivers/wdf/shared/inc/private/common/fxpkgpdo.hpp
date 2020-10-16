@@ -284,6 +284,7 @@ private:
 
     static
     VOID
+    STDCALL
     _QueryCapsWorkItem(
         __in MdDeviceObject DeviceObject,
         __in PVOID Context
@@ -574,6 +575,7 @@ private:
 
     static
     VOID
+    STDCALL
     _RemoveAndReenumerateSelf(
         __in PVOID Context
         );

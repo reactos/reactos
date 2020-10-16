@@ -156,7 +156,7 @@ FxRequestMemory::QueryInterface(
         return STATUS_SUCCESS;
     }
     else {
-        return __super::QueryInterface(Params);
+        return FxMemoryBufferPreallocated::QueryInterface(Params); // __super call
     }
 }
 

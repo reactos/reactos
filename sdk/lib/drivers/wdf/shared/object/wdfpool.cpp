@@ -150,7 +150,7 @@ Remarks:
     if (FxDriverGlobals->IsPoolTrackingOn()) {
 
         if (FxDriverGlobals->FxVerifierOn &&
-            (FxDriverGlobals->WdfVerifierAllocateFailCount != 0xFFFFFFFF)) {
+            (FxDriverGlobals->WdfVerifierAllocateFailCount != -1L)) {
 
             //
             // If the registry key VerifierAllocateFailCount is set, all allocations

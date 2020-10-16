@@ -76,9 +76,9 @@ enum FxStateMachineDeviceType {
 
 // @@SMVERIFY_SPLIT_END
 
-#include "FxPnpCallbacks.hpp"
+#include "fxpnpcallbacks.hpp"
 
-#include "FxEventQueue.hpp"
+#include "fxeventqueue.hpp"
 
 //
 // Bit-flags for tracking which callback is currently executing.
@@ -119,11 +119,11 @@ typedef struct _POWER_THREAD_INTERFACE {
 // be instantiated only in drivers which are the power policy owners
 // for their device stacks, which usually amounts to the being the FDO.
 //
-#include "FxPnpStateMachine.hpp"
-#include "FxPowerStateMachine.hpp"
-#include "FxPowerPolicyStateMachine.hpp"
+#include "fxpnpstatemachine.hpp"
+#include "fxpowerstatemachine.hpp"
+#include "fxpowerpolicystatemachine.hpp"
 
-#include "FxSelfManagedIoStateMachine.hpp"
+#include "fxselfmanagediostatemachine.hpp"
 
 //
 // Group these here instead of in the individual headers because, for some reason,
@@ -423,6 +423,11 @@ struct FxPowerCaps {
     ULONG D1Latency;
     ULONG D2Latency;
     ULONG D3Latency;
+};
+
+enum FxWmiInstanceAction : UINT32 {
+    AddInstance,
+    RemoveInstance
 };
 
 struct FxEnumerationInfo : public FxStump {
@@ -1732,37 +1737,37 @@ protected:
 
     static
     WDF_DEVICE_POWER_STATE
-    FxPkgPnp::PowerUpFailedDerefParentNP(
+    PowerUpFailedDerefParentNP(
         __inout FxPkgPnp*   This
         );
 
     static
     WDF_DEVICE_POWER_STATE
-    FxPkgPnp::PowerUpFailedNP(
+    PowerUpFailedNP(
         __inout FxPkgPnp*   This
         );
 
     static
     WDF_DEVICE_POWER_STATE
-    FxPkgPnp::PowerNotifyingD0ExitToWakeInterrupts(
+    PowerNotifyingD0ExitToWakeInterrupts(
         __inout FxPkgPnp*   This
         );
 
     static
     WDF_DEVICE_POWER_STATE
-    FxPkgPnp::PowerNotifyingD0EntryToWakeInterrupts(
+    PowerNotifyingD0EntryToWakeInterrupts(
         __inout FxPkgPnp*   This
         );
 
     static
     WDF_DEVICE_POWER_STATE
-    FxPkgPnp::PowerNotifyingD0ExitToWakeInterruptsNP(
+    PowerNotifyingD0ExitToWakeInterruptsNP(
         __inout FxPkgPnp*   This
         );
 
     static
     WDF_DEVICE_POWER_STATE
-    FxPkgPnp::PowerNotifyingD0EntryToWakeInterruptsNP(
+    PowerNotifyingD0EntryToWakeInterruptsNP(
         __inout FxPkgPnp*   This
         );
 
@@ -3953,12 +3958,14 @@ private:
 
     static
     VOID
+    STDCALL
     _PowerThreadInterfaceReference(
         __inout PVOID Context
         );
 
     static
     VOID
+    STDCALL
     _PowerThreadInterfaceDereference(
         __inout PVOID Context
         );

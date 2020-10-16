@@ -25,7 +25,7 @@ Revision History:
 #include "fxcorepch.hpp"
 
 extern "C" {
-#include "FxDeviceFdoApi.tmh"
+// #include "FxDeviceFdoApi.tmh"
 }
 
 //
@@ -36,6 +36,7 @@ extern "C" {
 _Must_inspect_result_
 __drv_maxIRQL(DISPATCH_LEVEL)
 NTSTATUS
+STDCALL
 WDFEXPORT(WdfFdoAddStaticChild)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -121,6 +122,7 @@ Return Value:
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 VOID
+STDCALL
 WDFEXPORT(WdfFdoLockStaticChildListForIteration)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -179,6 +181,7 @@ Return Value:
 _Must_inspect_result_
 __drv_maxIRQL(DISPATCH_LEVEL)
 WDFDEVICE
+STDCALL
 WDFEXPORT(WdfFdoRetrieveNextStaticChild)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -256,6 +259,7 @@ Return Value:
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 VOID
+STDCALL
 WDFEXPORT(WdfFdoUnlockStaticChildListFromIteration)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -311,6 +315,7 @@ Return Value:
 _Must_inspect_result_
 __drv_maxIRQL(PASSIVE_LEVEL)
 NTSTATUS
+STDCALL
 WDFEXPORT(WdfFdoQueryForInterface)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -405,6 +410,7 @@ Return Value:
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 WDFCHILDLIST
+STDCALL
 WDFEXPORT(WdfFdoGetDefaultChildList)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,

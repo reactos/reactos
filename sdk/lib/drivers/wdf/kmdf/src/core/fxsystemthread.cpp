@@ -27,7 +27,7 @@ Revision History:
 #include "fxcorepch.hpp"
 
 extern "C" {
-#include "FxSystemThread.tmh"
+// #include "FxSystemThread.tmh"
 }
 
 
@@ -151,7 +151,7 @@ FxSystemThread::CreateThread(
     //
     // The thread itself will release this reference in its exit routine
     //
-    ADDREF(FxSystemThread::StaticThreadThunk);
+    ADDREF((PVOID)FxSystemThread::StaticThreadThunk);
 
     status = PsCreateSystemThread(
         &threadHandle,
@@ -171,7 +171,7 @@ FxSystemThread::CreateThread(
         //
         // Release the reference taken above due to failure
         //
-        RELEASE(FxSystemThread::StaticThreadThunk);
+        RELEASE((PVOID)FxSystemThread::StaticThreadThunk);
     }
     else {
         status = ObReferenceObjectByHandle(
@@ -347,7 +347,7 @@ FxSystemThread::ExitThreadAsync(
     m_Exit = TRUE;
 
     // Add a reference which will be released by the reaper
-    ADDREF(FxSystemThread::StaticReaperThunk);
+    ADDREF((PVOID)FxSystemThread::StaticReaperThunk);
 
     Unlock(irql);
 
@@ -524,7 +524,7 @@ FxSystemThread::Thread()
             Unlock(irql);
 
             // Release the object reference held by the thread
-            RELEASE(FxSystemThread::StaticThreadThunk);
+            RELEASE((PVOID)FxSystemThread::StaticThreadThunk);
 
             status = PsTerminateSystemThread(STATUS_SUCCESS);
             UNREFERENCED_PARAMETER(status);
@@ -635,7 +635,7 @@ FxSystemThread::Reaper()
 
     ObDereferenceObject(m_ThreadPtr);
 
-    RELEASE(FxSystemThread::StaticReaperThunk);
+    RELEASE((PVOID)FxSystemThread::StaticReaperThunk);
 
     return;
 }

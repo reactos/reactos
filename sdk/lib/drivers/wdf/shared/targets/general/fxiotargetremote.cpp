@@ -18,10 +18,10 @@ Revision History:
 
 --*/
 
-#include "..\FxTargetsShared.hpp"
+#include "../fxtargetsshared.hpp"
 
 extern "C" {
-#include "FxIoTargetRemote.tmh"
+// #include "FxIoTargetRemote.tmh"
 }
 
 #include <initguid.h>
@@ -55,7 +55,7 @@ FxIoTargetRemote::FxIoTargetRemote(
 
 #if (FX_CORE_MODE == FX_CORE_KERNEL_MODE)
     m_TargetNotifyHandle = NULL;
-#else (FX_CORE_MODE == FX_CORE_USER_MODE)
+#elif (FX_CORE_MODE == FX_CORE_USER_MODE)
     m_TargetNotifyHandle = WUDF_TARGET_CONTEXT_INVALID;
 
     m_pIoDispatcher = NULL;
@@ -173,7 +173,7 @@ FxIoTargetRemote::InitRemote(
     //
     // do the base class mode-specific initialization
     //
-    status = __super::InitModeSpecific(Device);
+    status = FxIoTarget::InitModeSpecific(Device); // __super call
     if (!NT_SUCCESS(status)) {
         return status;
     }
@@ -757,7 +757,7 @@ FxIoTargetRemote::ClearTargetPointers(
     // canceled or completing.  When we receive either of those notifications,
     // m_TargetNotifyHandle will be freed then.
     //
-    __super::ClearTargetPointers();
+    FxIoTarget::ClearTargetPointers(); // __super call
 }
 
 VOID

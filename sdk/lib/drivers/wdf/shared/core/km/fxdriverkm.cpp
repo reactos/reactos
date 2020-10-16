@@ -29,7 +29,7 @@ Revision History:
 
 // Tracing support
 extern "C" {
-#include "FxDriverKm.tmh"
+// #include "FxDriverKm.tmh"
 }
 
 _Must_inspect_result_

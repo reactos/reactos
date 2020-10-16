@@ -23,7 +23,7 @@ Revision History:
 
 --*/
 
-#include "..\pnppriv.hpp"
+#include "../pnppriv.hpp"
 
 extern "C" {
 #if defined(EVENT_TRACING)
@@ -51,8 +51,8 @@ Return Value:
   --*/
 
 {
-    FxTransactionedEntry* ple;
-    NTSTATUS status;
+    // FxTransactionedEntry* ple;
+    // NTSTATUS status;
     BOOLEAN result;
 
     result = TRUE;
@@ -60,21 +60,21 @@ Return Value:
     //
     // Power up each dma enabler
     //
-    if (m_DmaEnablerList != NULL) {
-        m_DmaEnablerList->LockForEnum(GetDriverGlobals());
+    // if (m_DmaEnablerList != NULL) {
+    //     m_DmaEnablerList->LockForEnum(GetDriverGlobals());
 
-        ple = NULL;
-        while ((ple = m_DmaEnablerList->GetNextEntry(ple)) != NULL) {
-            status = ((FxDmaEnabler*) ple->GetTransactionedObject())->PowerUp();
+    //     ple = NULL;
+    //     while ((ple = m_DmaEnablerList->GetNextEntry(ple)) != NULL) {
+    //         status = ((FxDmaEnabler*) ple->GetTransactionedObject())->PowerUp();
 
-            if (!NT_SUCCESS(status)) {
-                result = FALSE;
-                break;
-            }
-        }
+    //         if (!NT_SUCCESS(status)) {
+    //             result = FALSE;
+    //             break;
+    //         }
+    //     }
 
-        m_DmaEnablerList->UnlockFromEnum(GetDriverGlobals());
-    }
+    //     m_DmaEnablerList->UnlockFromEnum(GetDriverGlobals());
+    // }
 
     return result;
 }
@@ -97,8 +97,8 @@ Return Value:
 
   --*/
 {
-    FxTransactionedEntry* ple;
-    NTSTATUS status;
+    // FxTransactionedEntry* ple;
+    // NTSTATUS status;
     BOOLEAN result;
 
     result = TRUE;
@@ -106,25 +106,25 @@ Return Value:
     //
     // Power up each dma enabler
     //
-    if (m_DmaEnablerList != NULL) {
-        m_DmaEnablerList->LockForEnum(GetDriverGlobals());
+    // if (m_DmaEnablerList != NULL) {
+    //     m_DmaEnablerList->LockForEnum(GetDriverGlobals());
 
-        ple = NULL;
-        while ((ple = m_DmaEnablerList->GetNextEntry(ple)) != NULL) {
-            status = ((FxDmaEnabler*) ple->GetTransactionedObject())->PowerDown();
+    //     ple = NULL;
+    //     while ((ple = m_DmaEnablerList->GetNextEntry(ple)) != NULL) {
+    //         status = ((FxDmaEnabler*) ple->GetTransactionedObject())->PowerDown();
 
-            if (!NT_SUCCESS(status)) {
-                //
-                // We do not break out of the loop on power down failure.  We will
-                // continue to power down each channel regardless of the previous
-                // channel's power down status.
-                //
-                result = FALSE;
-            }
-        }
+    //         if (!NT_SUCCESS(status)) {
+    //             //
+    //             // We do not break out of the loop on power down failure.  We will
+    //             // continue to power down each channel regardless of the previous
+    //             // channel's power down status.
+    //             //
+    //             result = FALSE;
+    //         }
+    //     }
 
-        m_DmaEnablerList->UnlockFromEnum(GetDriverGlobals());
-    }
+    //     m_DmaEnablerList->UnlockFromEnum(GetDriverGlobals());
+    // }
 
     return result;
 }

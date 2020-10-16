@@ -21,10 +21,10 @@ Revision History:
 
 --*/
 
-#include "FxDmaPCH.hpp"
+#include "fxdmapch.hpp"
 
 extern "C" {
-#include "FxDmaEnabler.tmh"
+// #include "FxDmaEnabler.tmh"
 }
 
 FxDmaEnabler::FxDmaEnabler(

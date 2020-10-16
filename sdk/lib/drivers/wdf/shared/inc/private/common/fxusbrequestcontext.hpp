@@ -48,7 +48,7 @@ struct FxUsbRequestContext : public FxRequestContext {
         )
     {
         m_UsbParameters.UsbdStatus = GetUsbdStatus();
-        __super::CopyParameters(Request);
+        FxRequestContext::CopyParameters(Request); // __super call
     }
 
     VOID

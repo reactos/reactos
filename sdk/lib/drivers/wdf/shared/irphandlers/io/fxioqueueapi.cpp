@@ -21,11 +21,11 @@ Revision History:
 --*/
 
 #include "ioprivshared.hpp"
-#include "FxPkgIo.hpp"
-#include "FxIoQueue.hpp"
+#include "fxpkgio.hpp"
+#include "fxioqueue.hpp"
 
 extern "C" {
-#include "FxIoQueueApi.tmh"
+// #include "FxIoQueueApi.tmh"
 }
 
 //
@@ -49,6 +49,7 @@ extern "C" {
 _Must_inspect_result_
 __drv_maxIRQL(DISPATCH_LEVEL)
 NTSTATUS
+STDCALL
 WDFEXPORT(WdfIoQueueCreate)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -249,6 +250,7 @@ Return Value:
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 WDF_IO_QUEUE_STATE
+STDCALL
 WDFEXPORT(WdfIoQueueGetState)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -297,6 +299,7 @@ Returns:
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 WDFDEVICE
+STDCALL
 WDFEXPORT(WdfIoQueueGetDevice)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -333,6 +336,7 @@ Return Value:
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 VOID
+STDCALL
 WDFEXPORT(WdfIoQueueStart)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -379,6 +383,7 @@ Returns:
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 VOID
+STDCALL
 WDFEXPORT(WdfIoQueueStop)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -435,6 +440,7 @@ Returns:
 
 __drv_maxIRQL(PASSIVE_LEVEL)
 VOID
+STDCALL
 WDFEXPORT(WdfIoQueueStopSynchronously)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -486,6 +492,7 @@ Returns:
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 VOID
+STDCALL
 WDFEXPORT(WdfIoQueueStopAndPurge)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -548,6 +555,7 @@ Returns:
 
 __drv_maxIRQL(PASSIVE_LEVEL)
 VOID
+STDCALL
 WDFEXPORT(WdfIoQueueStopAndPurgeSynchronously)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -605,6 +613,7 @@ Returns:
 _Must_inspect_result_
 __drv_maxIRQL(DISPATCH_LEVEL)
 NTSTATUS
+STDCALL
 WDFEXPORT(WdfIoQueueRetrieveNextRequest)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -673,6 +682,7 @@ Returns:
 _Must_inspect_result_
 __drv_maxIRQL(DISPATCH_LEVEL)
 NTSTATUS
+STDCALL
 WDFEXPORT(WdfIoQueueRetrieveRequestByFileObject)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -766,6 +776,7 @@ Returns:
 _Must_inspect_result_
 __drv_maxIRQL(DISPATCH_LEVEL)
 NTSTATUS
+STDCALL
 WDFEXPORT(WdfIoQueueRetrieveFoundRequest)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -864,6 +875,7 @@ Returns:
 _Must_inspect_result_
 __drv_maxIRQL(DISPATCH_LEVEL)
 NTSTATUS
+STDCALL
 WDFEXPORT(WdfIoQueueFindRequest)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1064,6 +1076,7 @@ Returns:
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 VOID
+STDCALL
 WDFEXPORT(WdfIoQueueDrain)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1115,6 +1128,7 @@ WDFEXPORT(WdfIoQueueDrain)(
 
 __drv_maxIRQL(PASSIVE_LEVEL)
 VOID
+STDCALL
 WDFEXPORT(WdfIoQueueDrainSynchronously)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1160,6 +1174,7 @@ WDFEXPORT(WdfIoQueueDrainSynchronously)(
 
 __drv_maxIRQL(PASSIVE_LEVEL)
 VOID
+STDCALL
 WDFEXPORT(WdfIoQueuePurgeSynchronously)(
    __in
    PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1208,6 +1223,7 @@ WDFEXPORT(WdfIoQueuePurgeSynchronously)(
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 VOID
+STDCALL
 WDFEXPORT(WdfIoQueuePurge)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1270,6 +1286,7 @@ WDFEXPORT(WdfIoQueuePurge)(
 _Must_inspect_result_
 __drv_maxIRQL(DISPATCH_LEVEL)
 NTSTATUS
+STDCALL
 WDFEXPORT(WdfIoQueueReadyNotify)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1318,6 +1335,7 @@ WDFEXPORT(WdfIoQueueReadyNotify)(
 _Must_inspect_result_
 __drv_maxIRQL(PASSIVE_LEVEL)
 NTSTATUS
+STDCALL
 WDFEXPORT(WdfIoQueueAssignForwardProgressPolicy)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,

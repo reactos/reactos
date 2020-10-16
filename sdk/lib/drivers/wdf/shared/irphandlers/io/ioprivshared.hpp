@@ -34,7 +34,7 @@ Revision History:
 #endif
 
 /*#if defined(MODE_AGNSOTIC_FXPKGIO_NOT_IN_SHARED_FOLDER)
-#include <Fx.hpp>
+#include <fx.hpp>
 #else
 // common header file for all irphandler\* files
 #include "irphandlerspriv.hpp"
@@ -50,18 +50,18 @@ extern "C" {
 #include "mx.h"
 }
 
-#include "FxMin.hpp"
+#include "fxmin.hpp"
 
 #include "wdfmemory.h"
 #include "wdfrequest.h"
 #include "wdfio.h"
 #include "wdfdevice.h"
-#include "wdfWmi.h"
-#include "wdfChildList.h"
+#include "wdfwmi.h"
+#include "wdfchildlist.h"
 #include "wdfpdo.h"
 #include "wdffdo.h"
-#include "FxIrpQueue.hpp"
-#include "FxCallback.hpp"
+#include "fxirpqueue.hpp"
+#include "fxcallback.hpp"
 
 // <FxSystemWorkItem.hpp>
 __drv_functionClass(EVT_SYSTEMWORKITEM)
@@ -78,41 +78,41 @@ typedef EVT_SYSTEMWORKITEM *PFN_WDF_SYSTEMWORKITEM;
 
 // </FxSystemWorkItem.hpp>
 
-#include "FxSystemThread.hpp"
+#include "fxsystemthread.hpp"
 
-#include "FxCallbackSpinlock.hpp"
-#include "FxCallbackMutexLock.hpp"
-#include "FxTransactionedList.hpp"
+#include "fxcallbackspinlock.hpp"
+#include "fxcallbackmutexlock.hpp"
+#include "fxtransactionedlist.hpp"
 
 #if (FX_CORE_MODE == FX_CORE_KERNEL_MODE)
-#include "FxIrpKm.hpp"
+#include "fxirpkm.hpp"
 #else
-#include "FxIrpUm.hpp"
+#include "fxirpum.hpp"
 #endif
 
 
-#include "FxPackage.hpp"
-#include "FxCollection.hpp"
-#include "FxDeviceInitShared.hpp"
-#include "FxDeviceToMxInterface.hpp"
+#include "fxpackage.hpp"
+#include "fxcollection.hpp"
+#include "fxdeviceinitshared.hpp"
+#include "fxdevicetomxinterface.hpp"
 
-#include "IfxMemory.hpp"
-#include "FxCallback.hpp"
-#include "FxRequestContext.hpp"
-#include "FxRequestContextTypes.h"
-#include "FxRequestBase.hpp"
-#include "FxMemoryObject.hpp"
-#include "FxMemoryBufferPreallocated.hpp"
-#include "FxRequestMemory.hpp"
-#include "FxRequest.hpp"
-#include "FxRequestBuffer.hpp"
-#include "FxSyncRequest.hpp"
+#include "ifxmemory.hpp"
+#include "fxcallback.hpp"
+#include "fxrequestcontext.hpp"
+#include "fxrequestcontexttypes.h"
+#include "fxrequestbase.hpp"
+#include "fxmemoryobject.hpp"
+#include "fxmemorybufferpreallocated.hpp"
+#include "fxrequestmemory.hpp"
+#include "fxrequest.hpp"
+#include "fxrequestbuffer.hpp"
+#include "fxsyncrequest.hpp"
 
-#include "irphandlerspriv.hpp"
-#include "FxPkgPnp.hpp"
-#include "FxPkgIo.hpp"
-#include "FxIoQueue.hpp"
-#include "FxIoQueueCallbacks.hpp"
+#include "shared/irphandlers/irphandlerspriv.hpp"
+#include "fxpkgpnp.hpp"
+#include "fxpkgio.hpp"
+#include "fxioqueue.hpp"
+#include "fxioqueuecallbacks.hpp"
 
 
 //
@@ -251,7 +251,7 @@ typedef struct _WDF_IO_QUEUE_CONFIG_V1_9 {
 #include "FxIoQueue.hpp"
 
 
-/*#if !defined(MODE_AGNSOTIC_FXPKGIO_NOT_IN_SHARED_FOLDER)
+#if !defined(MODE_AGNSOTIC_FXPKGIO_NOT_IN_SHARED_FOLDER)
 
 // <wdf17.h>
 //

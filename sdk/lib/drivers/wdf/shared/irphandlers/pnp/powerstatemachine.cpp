@@ -2283,7 +2283,7 @@ Return Value:
         status = This->m_SelfManagedIoMachine->Start();
 
         if (!NT_SUCCESS(status)) {
-            return WdfDevStatePowerInitialSelfManagedIoFailed;
+            // return WdfDevStatePowerInitialSelfManagedIoFailed; __REACTOS__ : allow to fail
         }
     }
 

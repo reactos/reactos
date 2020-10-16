@@ -27,7 +27,7 @@ Revision History:
 
 // Tracing support
 extern "C" {
-#include "FxRequestKm.tmh"
+// #include "FxRequestKm.tmh"
 }
 
 VOID
@@ -51,8 +51,8 @@ Return Value:
 
   --*/
 {
-    PWDF_REQUEST_PARAMETERS pWdfRequestParameters;
-    PIO_STACK_LOCATION pIoStackLocation;
+    PWDF_REQUEST_PARAMETERS pWdfRequestParameters = NULL;
+    PIO_STACK_LOCATION pIoStackLocation = NULL;
 
     UNREFERENCED_PARAMETER(pWdfRequestParameters);
     UNREFERENCED_PARAMETER(pIoStackLocation);

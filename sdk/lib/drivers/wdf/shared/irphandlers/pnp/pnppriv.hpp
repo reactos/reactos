@@ -38,18 +38,18 @@ Revision History:
 //
 // common header file for all irphandler\* files
 //
-#include "irphandlerspriv.hpp"
+#include "shared/irphandlers/irphandlerspriv.hpp"
 
 //
 // public headers
 //
-#include "wdfDevice.h"
-#include "wdfChildList.h"
-#include "wdfPdo.h"
+#include "wdfdevice.h"
+#include "wdfchildlist.h"
+#include "wdfpdo.h"
 #include "wdffdo.h"
-#include "wdfQueryInterface.h"
-#include "wdfMemory.h"
-#include "wdfWmi.h"
+#include "wdfqueryinterface.h"
+#include "wdfmemory.h"
+#include "wdfwmi.h"
 
 
 
@@ -70,7 +70,7 @@ Revision History:
 
 
 #ifndef _INTERRUPT_COMMON_H_
-#include "WdfInterrupt.h"
+#include "wdfinterrupt.h"
 #endif
 #ifndef _WUDFDDI_TYPES_PRIVATE_H_
 #include "wdfrequest.h"
@@ -80,70 +80,70 @@ Revision History:
 //
 // private headers
 //
-#include "FxWaitLock.hpp"
-#include "FxTransactionedList.hpp"
-#include "FxRelatedDeviceList.hpp"
-#include "FxCollection.hpp"
+#include "fxwaitlock.hpp"
+#include "fxtransactionedlist.hpp"
+#include "fxrelateddevicelist.hpp"
+#include "fxcollection.hpp"
 
 // support
-#include "StringUtil.hpp"
-#include "FxString.hpp"
-#include "FxDeviceText.hpp"
-#include "FxCallback.hpp"
-#include "FxSystemThread.hpp"
-#include "FxResource.hpp"
+#include "stringutil.hpp"
+#include "fxstring.hpp"
+#include "fxdevicetext.hpp"
+#include "fxcallback.hpp"
+#include "fxsystemthread.hpp"
+#include "fxresource.hpp"
 
 // io
-#include "FxPkgIoShared.hpp"
+#include "fxpkgioshared.hpp"
 
 //
 // FxDeviceInitShared.hpp is new header with definition of PdoInit split from
 // FxDeviceInit.hpp
 //
-#include "FxDeviceInitShared.hpp"
+#include "fxdeviceinitshared.hpp"
 
 // bus
-#include "FxChildList.hpp"
+#include "fxchildlist.hpp"
 
 // FxDevice To Shared interface header
-#include "FxDeviceToMxInterface.hpp"
+#include "fxdevicetomxinterface.hpp"
 
 // mode specific headers
 #if FX_IS_KERNEL_MODE
-#include "PnpPrivKM.hpp"
+#include "pnpprivkm.hpp"
 #elif FX_IS_USER_MODE
-#include "PnpPrivUM.hpp"
+#include "pnpprivum.hpp"
 #endif
 
-#include "FxSpinLock.hpp"
+#include "fxspinlock.hpp"
 
 #if FX_IS_KERNEL_MODE
-#include "FxInterruptKm.hpp"
+#include "fxinterruptkm.hpp"
 #elif FX_IS_USER_MODE
-#include "FxInterruptUm.hpp"
+#include "fxinterruptum.hpp"
 #endif
 
 #if FX_IS_KERNEL_MODE
-#include "FxPerfTraceKm.hpp"
+#include "fxperftracekm.hpp"
 #endif
 
-#include "FxTelemetry.hpp"
+#include "fxtelemetry.hpp"
 
 // pnp
-#include "FxRelatedDevice.hpp"
-#include "FxDeviceInterface.hpp"
-#include "FxQueryInterface.hpp"
-#include "FxPnpCallbacks.hpp"
-#include "FxPackage.hpp"
-#include "FxPkgPnp.hpp"
-#include "FxWatchDog.hpp"
-#include "FxPkgPdo.hpp"
-#include "FxPkgFdo.hpp"
+#include "fxrelateddevice.hpp"
+#include "fxdeviceinterface.hpp"
+#include "fxqueryinterface.hpp"
+#include "fxpnpcallbacks.hpp"
+#include "fxpackage.hpp"
+#include "fxpkgpnp.hpp"
+#include "fxwatchdog.hpp"
+#include "fxpkgpdo.hpp"
+#include "fxpkgfdo.hpp"
 
 // wmi
-#include "FxWmiIrpHandler.hpp"
-#include "FxWmiProvider.hpp"
-#include "FxWmiInstance.hpp"
+#include "fxwmiirphandler.hpp"
+#include "fxwmiprovider.hpp"
+#include "fxwmiinstance.hpp"
 
 
 VOID

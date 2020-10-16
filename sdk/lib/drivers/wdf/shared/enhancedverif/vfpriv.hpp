@@ -23,13 +23,13 @@ Revision History:
 --*/
 
 #if FX_CORE_MODE==FX_CORE_KERNEL_MODE
-#include "VfPrivKm.hpp"
+#include "vfprivkm.hpp"
 #else if ((FX_CORE_MODE)==(FX_CORE_USER_MODE))
-#include "VfPrivUm.hpp"
+#include "vfprivum.hpp"
 #endif
 
 extern "C" {
-#include "FxDynamics.h"
+#include "fxdynamics.h"
 }
 #include "vfeventhooks.hpp"
 

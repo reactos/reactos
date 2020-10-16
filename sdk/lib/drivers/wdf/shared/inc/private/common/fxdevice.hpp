@@ -25,9 +25,9 @@ Revision History:
 #ifndef _FXDEVICE_H_
 #define _FXDEVICE_H_
 
-#include "FxCxDeviceInit.hpp"
-#include "FxDeviceInit.hpp"
-#include "FxTelemetry.hpp"
+#include "fxcxdeviceinit.hpp"
+#include "fxdeviceinit.hpp"
+#include "fxtelemetry.hpp"
 
 struct FxWdmDeviceExtension {
 #if (FX_CORE_MODE == FX_CORE_USER_MODE)
@@ -1022,6 +1022,7 @@ public:
     static
     _Must_inspect_result_
     NTSTATUS
+    STDCALL
     Dispatch(
         __in MdDeviceObject DeviceObject,
         __in MdIrp OriginalIrp
@@ -1065,6 +1066,7 @@ public:
     static
     _Must_inspect_result_
     NTSTATUS
+    STDCALL
     DispatchWithLock(
         __in MdDeviceObject DeviceObject,
         __in MdIrp OriginalIrp
@@ -1470,7 +1472,7 @@ public:
         //
         ASSERT(m_DeviceObjectDeleted);
 
-        __super::DeleteObject();
+        FxDeviceBase::DeleteObject(); // __super call
     }
 
     _Must_inspect_result_
@@ -1761,6 +1763,7 @@ public:
 
     static
     VOID
+    STDCALL
     _InterfaceReferenceNoOp(
         __in_opt PVOID Context
         )
@@ -1771,6 +1774,7 @@ public:
 
     static
     VOID
+    STDCALL
     _InterfaceDereferenceNoOp(
         __in_opt PVOID Context
         )
@@ -1795,7 +1799,7 @@ public:
         VOID
         )
     {
-        LogDeviceStartTelemetryEvent(GetDriverGlobals(), this);
+        // LogDeviceStartTelemetryEvent(GetDriverGlobals(), this); __REACTOS__ : no-op
     }
 
     virtual
@@ -2288,9 +2292,9 @@ public:
 };
 
 #if (FX_CORE_MODE==FX_CORE_KERNEL_MODE)
-#include "FxDeviceKm.hpp"
+#include "fxdevicekm.hpp"
 #else
-#include "FxDeviceUm.hpp"
+#include "fxdeviceum.hpp"
 #endif
 
 

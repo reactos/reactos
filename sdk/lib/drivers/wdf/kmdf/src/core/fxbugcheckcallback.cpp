@@ -20,12 +20,12 @@ Revision History:
 
 
 #include "fxcorepch.hpp"
-#include "FxIFR.h"
-#include "fxIFRKm.h"     // kernel mode only IFR definitions
-#include "FxLdr.h"
-#include "FxBugcheck.h"
+#include "fxifr.h"
+#include "fxifrkm.h"     // kernel mode only IFR definitions
+#include "fxldr.h"
+#include "fxbugcheck.h"
 
-#include <aux_klib.h>
+// #include <aux_klib.h>
 
 //
 // Disable warnings of features used by the standard headers
@@ -35,9 +35,9 @@ Revision History:
 // Disable warning C4201: nonstandard extension used : nameless struct/union
 // Disable warning C4214: nonstandard extension used : bit field types other than int
 //
-#pragma warning(disable:4115 4200 4201 4214)
+// #pragma warning(disable:4115 4200 4201 4214)
 #include <ntimage.h>
-#pragma warning(default:4115 4200 4201 4214)
+// #pragma warning(default:4115 4200 4201 4214)
 
 
 extern "C" {
@@ -125,102 +125,104 @@ FxpGetImageBase(
     __out PULONG ImageSize
     )
 {
-    NTSTATUS status = STATUS_UNSUCCESSFUL;
-    ULONG modulesSize = 0;
-    AUX_MODULE_EXTENDED_INFO* modules = NULL;
-    AUX_MODULE_EXTENDED_INFO* module;
-    PVOID addressInImage = NULL;
-    ULONG numberOfModules;
-    ULONG i;
+//     NTSTATUS status = STATUS_UNSUCCESSFUL;
+//     ULONG modulesSize = 0;
+//     AUX_MODULE_EXTENDED_INFO* modules = NULL;
+//     AUX_MODULE_EXTENDED_INFO* module;
+//     PVOID addressInImage = NULL;
+//     ULONG numberOfModules;
+//     ULONG i;
 
-    //
-    // Basic validation.
-    //
-    if (NULL == DriverObject || NULL == ImageBase || NULL == ImageSize) {
-        status = STATUS_INVALID_PARAMETER;
-        goto exit;
-    }
+//     //
+//     // Basic validation.
+//     //
+//     if (NULL == DriverObject || NULL == ImageBase || NULL == ImageSize) {
+//         status = STATUS_INVALID_PARAMETER;
+//         goto exit;
+//     }
 
-    //
-    // Get the address of a well known entry in the Image.
-    //
-    addressInImage = (PVOID) DriverObject->DriverStart;
-    ASSERT(addressInImage != NULL);
+//     //
+//     // Get the address of a well known entry in the Image.
+//     //
+//     addressInImage = (PVOID) DriverObject->DriverStart;
+//     ASSERT(addressInImage != NULL);
 
-    //
-    // Initialize the AUX Kernel Library.
-    //
-    status = AuxKlibInitialize();
-    if (!NT_SUCCESS(status)) {
-        goto exit;
-    }
+//     //
+//     // Initialize the AUX Kernel Library.
+//     //
+//     status = AuxKlibInitialize();
+//     if (!NT_SUCCESS(status)) {
+//         goto exit;
+//     }
 
-    //
-    // Get size of area needed for loaded modules.
-    //
-    status = AuxKlibQueryModuleInformation(&modulesSize,
-                                           sizeof(AUX_MODULE_EXTENDED_INFO),
-                                           NULL);
+//     //
+//     // Get size of area needed for loaded modules.
+//     //
+//     status = AuxKlibQueryModuleInformation(&modulesSize,
+//                                            sizeof(AUX_MODULE_EXTENDED_INFO),
+//                                            NULL);
 
-    if (!NT_SUCCESS(status) || (0 == modulesSize)) {
-        goto exit;
-    }
+//     if (!NT_SUCCESS(status) || (0 == modulesSize)) {
+//         goto exit;
+//     }
 
-    numberOfModules = modulesSize / sizeof(AUX_MODULE_EXTENDED_INFO);
+//     numberOfModules = modulesSize / sizeof(AUX_MODULE_EXTENDED_INFO);
 
-    //
-    // Allocate returned-sized memory for the modules area.
-    //
-    modules = (AUX_MODULE_EXTENDED_INFO*) ExAllocatePoolWithTag(PagedPool,
-                                                                modulesSize,
-                                                                '30LW');
-    if (NULL == modules) {
-        status = STATUS_INSUFFICIENT_RESOURCES;
-        goto exit;
-    }
+//     //
+//     // Allocate returned-sized memory for the modules area.
+//     //
+//     modules = (AUX_MODULE_EXTENDED_INFO*) ExAllocatePoolWithTag(PagedPool,
+//                                                                 modulesSize,
+//                                                                 '30LW');
+//     if (NULL == modules) {
+//         status = STATUS_INSUFFICIENT_RESOURCES;
+//         goto exit;
+//     }
 
-    //
-    // Request the modules array be filled with module information.
-    //
-    status = AuxKlibQueryModuleInformation(&modulesSize,
-                                           sizeof(AUX_MODULE_EXTENDED_INFO),
-                                           modules);
+//     //
+//     // Request the modules array be filled with module information.
+//     //
+//     status = AuxKlibQueryModuleInformation(&modulesSize,
+//                                            sizeof(AUX_MODULE_EXTENDED_INFO),
+//                                            modules);
 
-    if (!NT_SUCCESS(status)) {
-        goto exit;
-    }
+//     if (!NT_SUCCESS(status)) {
+//         goto exit;
+//     }
 
-    //
-    // Traverse list, searching for the well known address in Image for which the
-    // module's Image Base Address is in its range.
-    //
-    module = modules;
+//     //
+//     // Traverse list, searching for the well known address in Image for which the
+//     // module's Image Base Address is in its range.
+//     //
+//     module = modules;
 
-    for (i=0; i < numberOfModules; i++) {
+//     for (i=0; i < numberOfModules; i++) {
 
-        if (addressInImage >= module->BasicInfo.ImageBase &&
-            addressInImage < WDF_PTR_ADD_OFFSET(module->BasicInfo.ImageBase,
-                                                module->ImageSize)) {
+//         if (addressInImage >= module->BasicInfo.ImageBase &&
+//             addressInImage < WDF_PTR_ADD_OFFSET(module->BasicInfo.ImageBase,
+//                                                 module->ImageSize)) {
 
-            *ImageBase = module->BasicInfo.ImageBase;
-            *ImageSize = module->ImageSize;
+//             *ImageBase = module->BasicInfo.ImageBase;
+//             *ImageSize = module->ImageSize;
 
-            status = STATUS_SUCCESS;
-            goto exit;
-        }
-        module++;
-    }
+//             status = STATUS_SUCCESS;
+//             goto exit;
+//         }
+//         module++;
+//     }
 
-    status = STATUS_NOT_FOUND;
+//     status = STATUS_NOT_FOUND;
 
-exit:
+// exit:
 
-    if (modules != NULL) {
-        ExFreePool(modules);
-        modules = NULL;
-    }
+//     if (modules != NULL) {
+//         ExFreePool(modules);
+//         modules = NULL;
+//     }
 
-    return status;
+//     return status;
+    ROSWDFNOTIMPLEMENTED;
+    return STATUS_NOT_IMPLEMENTED;
 }
 
 _Must_inspect_result_
@@ -246,77 +248,65 @@ Return Value:
 
 --*/
 {
-    PVOID codeAddr = NULL;
-    BOOLEAN found = FALSE;
-    KBUGCHECK_DATA bugCheckData = {0};
+    // PVOID codeAddr = NULL;
+    // BOOLEAN found = FALSE;
+    // KBUGCHECK_DATA bugCheckData = {0};
 
-    if (FxDriverGlobals->FxForceLogsInMiniDump) {
-        return TRUE;
-    }
+    // if (FxDriverGlobals->FxForceLogsInMiniDump) {
+    //     return TRUE;
+    // }
 
-    //
-    // Retrieve the bugcheck parameters.
-    //
-    bugCheckData.BugCheckDataSize = sizeof(KBUGCHECK_DATA);
-    AuxKlibGetBugCheckData(&bugCheckData);
+    // //
+    // // Retrieve the bugcheck parameters.
+    // //
+    // bugCheckData.BugCheckDataSize = sizeof(KBUGCHECK_DATA);
+    // AuxKlibGetBugCheckData(&bugCheckData);
 
-    //
-    // Check whether the code address that caused the bugcheck is from this wdf
-    // driver.
-    //
-    switch (bugCheckData.BugCheckCode) {
+    // //
+    // // Check whether the code address that caused the bugcheck is from this wdf
+    // // driver.
+    // //
+    // switch (bugCheckData.BugCheckCode) {
 
-    case KERNEL_APC_PENDING_DURING_EXIT:                    // 0x20
-        codeAddr = (PVOID)bugCheckData.Parameter1;
-        found = FxpIsAddressKnownToWdf(codeAddr, FxDriverGlobals);
-        break;
+    // case KERNEL_APC_PENDING_DURING_EXIT:                    // 0x20
+    //     codeAddr = (PVOID)bugCheckData.Parameter1;
+    //     found = FxpIsAddressKnownToWdf(codeAddr, FxDriverGlobals);
+    //     break;
 
-    case KMODE_EXCEPTION_NOT_HANDLED:                       // 0x1E
-    case SYSTEM_THREAD_EXCEPTION_NOT_HANDLED:               // 0x7E
-    case KERNEL_MODE_EXCEPTION_NOT_HANDLED:                 // 0x8E
-        codeAddr = (PVOID)bugCheckData.Parameter2;
-        found = FxpIsAddressKnownToWdf(codeAddr, FxDriverGlobals);
-        break;
+    // case KMODE_EXCEPTION_NOT_HANDLED:                       // 0x1E
+    // case SYSTEM_THREAD_EXCEPTION_NOT_HANDLED:               // 0x7E
+    // case KERNEL_MODE_EXCEPTION_NOT_HANDLED:                 // 0x8E
+    //     codeAddr = (PVOID)bugCheckData.Parameter2;
+    //     found = FxpIsAddressKnownToWdf(codeAddr, FxDriverGlobals);
+    //     break;
 
-    case PAGE_FAULT_IN_NONPAGED_AREA:                       // 0x50
-        codeAddr = (PVOID)bugCheckData.Parameter3;
-        found = FxpIsAddressKnownToWdf(codeAddr, FxDriverGlobals);
-        break;
+    // case PAGE_FAULT_IN_NONPAGED_AREA:                       // 0x50
+    //     codeAddr = (PVOID)bugCheckData.Parameter3;
+    //     found = FxpIsAddressKnownToWdf(codeAddr, FxDriverGlobals);
+    //     break;
 
-    case IRQL_NOT_LESS_OR_EQUAL:                            // 0xA
-    case DRIVER_IRQL_NOT_LESS_OR_EQUAL:                     // 0xD1
-        codeAddr = (PVOID)bugCheckData.Parameter4;
-        found = FxpIsAddressKnownToWdf(codeAddr, FxDriverGlobals);
-        break;
-    }
+    // case IRQL_NOT_LESS_OR_EQUAL:                            // 0xA
+    // case DRIVER_IRQL_NOT_LESS_OR_EQUAL:                     // 0xD1
+    //     codeAddr = (PVOID)bugCheckData.Parameter4;
+    //     found = FxpIsAddressKnownToWdf(codeAddr, FxDriverGlobals);
+    //     break;
+    // }
 
-    //
-    // If the code address was found in the wdf driver, then set the flag in the
-    // driver globals to indicate that the IFR data has to be written to the
-    // mini-dump.
-    //
-    if (found) {
-        FxDriverGlobals->FxForceLogsInMiniDump = TRUE;
-    }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    return found;
+    // //
+    // // If the code address was found in the wdf driver, then set the flag in the
+    // // driver globals to indicate that the IFR data has to be written to the
+    // // mini-dump.
+    // //
+    // if (found) {
+    //     FxDriverGlobals->FxForceLogsInMiniDump = TRUE;
+    // }
+    // return found;
+    ROSWDFNOTIMPLEMENTED;
+    return FALSE;
 }
 
 VOID
+STDCALL
 FxpBugCheckCallback(
     __in    KBUGCHECK_CALLBACK_REASON Reason,
     __in    PKBUGCHECK_REASON_CALLBACK_RECORD Record,
@@ -567,6 +557,7 @@ Done:;
 }
 
 VOID
+STDCALL
 FxpLibraryBugCheckCallback(
     __in    KBUGCHECK_CALLBACK_REASON Reason,
     __in    PKBUGCHECK_REASON_CALLBACK_RECORD /* Record */,
@@ -1043,7 +1034,7 @@ FX_DRIVER_TRACKER_CACHE_AWARE::Register(
     //
     // Intialize the procgrp down level library.
     //
-    WdmlibProcgrpInitialize();
+    // WdmlibProcgrpInitialize(); __REACTOS__ : haha we don't support ProcGrp
 
     //
     // Capture maximum number of processors.

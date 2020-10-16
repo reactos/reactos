@@ -26,7 +26,7 @@ Revision History:
 #include "coreprivshared.hpp"
 
 extern "C" {
-#include "FxCxDeviceInit.tmh"
+// #include "FxCxDeviceInit.tmh"
 }
 
 WDFCXDEVICE_INIT::WDFCXDEVICE_INIT()

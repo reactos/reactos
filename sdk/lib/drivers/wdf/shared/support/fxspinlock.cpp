@@ -22,11 +22,11 @@ Revision History:
 
 --*/
 
-#include "FxSupportPch.hpp"
-#include "FxSpinLock.hpp"
+#include "fxsupportpch.hpp"
+#include "fxspinlock.hpp"
 
 extern "C" {
-#include "FxSpinLock.tmh"
+// #include "FxSpinLock.tmh"
 }
 
 FxSpinLock::FxSpinLock(

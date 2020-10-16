@@ -44,7 +44,7 @@ enum FxPowerEvent {
     //
     PowerSingularEventMask          = PowerParentToD0,
 
-    PowerEventMaximum               = 0xFFFFFFFF,
+    PowerEventMaximum               = 0xFFFF,
 };
 
 union FxPowerStateInfo {

@@ -22,7 +22,7 @@ Revision History:
 #include "fxwmipch.hpp"
 
 extern "C" {
-#include "FxWmiInstance.tmh"
+// #include "FxWmiInstance.tmh"
 }
 
 FxWmiInstance::FxWmiInstance(
@@ -56,7 +56,7 @@ FxWmiInstance::Dispose(
     // of instances.  If we don't do this, the provider will have a list which
     // contains entries which have been freed.
     //
-    return __super::Dispose();
+    return FxNonPagedObject::Dispose(); // __super call
 }
 
 _Must_inspect_result_

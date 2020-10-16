@@ -35,8 +35,8 @@ extern "C" {
 #include "mx.h"
 }
 #include "fxmin.hpp"
-#include "fxldrUm.h"
-#include "fxIFR.h"
+#include "fxldrum.h"
+#include "fxifr.h"
 
 #include <strsafe.h>
 #include <driverspecs.h>
@@ -45,9 +45,9 @@ extern const WDFFUNC *WdfFunctions;
 
 extern "C" {
 
-#include "FxDynamics.h"
+#include "fxdynamics.h"
 
-#include "..\librarycommon\FxLibraryCommon.h"
+#include "..\librarycommon\fxlibrarycommon.h"
 
 #define  KMDF_DEFAULT_NAME   "Wdf" ## \
                              LITERAL(__WDF_MAJOR_VERSION)   ## \

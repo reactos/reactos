@@ -30,7 +30,9 @@ Revision History:
 #ifndef _FXREQUESTBASE_H_
 #define _FXREQUESTBASE_H_
 
-#include "FxRequestCallbacks.hpp"
+#include "fxrequestcallbacks.hpp"
+
+#define WDF_REQUEST_REUSE_MUST_COMPLETE 2
 
 
 //
@@ -293,6 +295,7 @@ public:
     }
 
     __inline
+    BOOLEAN
     HasContext(
         VOID
         )
@@ -690,7 +693,7 @@ public:
         VOID
     );
 
-    __declspec(noreturn)
+    DECLSPEC_NORETURN
     VOID
     FatalError(
         __in NTSTATUS Status
@@ -950,9 +953,9 @@ protected:
 };
 
 #if ((FX_CORE_MODE)==(FX_CORE_KERNEL_MODE))
-#include "FxRequestBaseKm.hpp"
-#else if ((FX_CORE_MODE)==(FX_CORE_USER_MODE))
-#include "FxRequestBaseUm.hpp"
+#include "fxrequestbasekm.hpp"
+#elif ((FX_CORE_MODE)==(FX_CORE_USER_MODE))
+#include "fxrequestbaseum.hpp"
 #endif
 
 

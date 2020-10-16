@@ -45,8 +45,6 @@ typedef PVOID PIO_REMOVE_LOCK;
 
 #include "wdmdefs.h"
 
-#define WDF_VIOLATION                    ((ULONG)0x0000010DL)
-
 #define FX_PLUGPLAY_REGKEY_DEVICEMAP 0x8
 
 //

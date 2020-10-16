@@ -1,7 +1,7 @@
 //
 //    Copyright (C) Microsoft.  All rights reserved.
 //
-#include "Mx.h"
+#include "mx.h"
 
 VOID
 Mx::MxDbgPrint(

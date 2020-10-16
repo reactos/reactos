@@ -24,7 +24,7 @@ Revision History:
 
 --*/
 
-#include "..\pnppriv.hpp"
+#include "../pnppriv.hpp"
 
 extern "C" {
 #if defined(EVENT_TRACING)

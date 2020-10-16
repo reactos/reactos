@@ -26,13 +26,13 @@ extern "C" {
 #include "mx.h"
 }
 
-#include "FxMin.hpp"
+#include "fxmin.hpp"
 
 #if (FX_CORE_MODE == FX_CORE_USER_MODE)
 #include "wdmdefs.h"
-#include "FxIrpUm.hpp"
+#include "fxirpum.hpp"
 #else
-#include "FxIrpKm.hpp"
+#include "fxirpkm.hpp"
 #endif
 
-#include "FxIrp.hpp"
+#include "fxirp.hpp"

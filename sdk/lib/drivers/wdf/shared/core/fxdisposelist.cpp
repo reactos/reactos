@@ -31,11 +31,11 @@ Revision History:
 
 #include "coreprivshared.hpp"
 
-#include "FxDisposeList.hpp"
+#include "fxdisposelist.hpp"
 
 // Tracing support
 extern "C" {
-#include "FxDisposeList.tmh"
+// #include "FxDisposeList.tmh"
 }
 
 FxDisposeList::FxDisposeList(
@@ -121,7 +121,7 @@ FxDisposeList::Dispose(
 
     ASSERT(m_List.Next == NULL);
 
-    __super::Dispose();
+    FxNonPagedObject::Dispose(); // __super call
 
     return TRUE;
 }

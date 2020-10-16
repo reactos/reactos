@@ -22,7 +22,7 @@ Revision History:
 
 --*/
 
-#include "FxSupportPch.hpp"
+#include "fxsupportpch.hpp"
 
 _Must_inspect_result_
 NTSTATUS
@@ -111,7 +111,7 @@ FxRelatedDeviceList::ProcessAdd(
     }
 
     pEntry = NULL;
-    while ((pEntry = __super::GetNextEntryLocked(pEntry)) != NULL) {
+    while ((pEntry = FxSpinLockTransactionedList::GetNextEntryLocked(pEntry)) != NULL) { // __super call
         pInList = CONTAINING_RECORD(pEntry, FxRelatedDevice, m_TransactionedEntry);
 
         if (pInList->m_DeviceObject == pNew->m_DeviceObject) {

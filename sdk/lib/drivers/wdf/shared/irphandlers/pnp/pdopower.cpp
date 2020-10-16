@@ -96,11 +96,8 @@ FxPkgPdo::DispatchSystemSetPower(
     __in FxIrp *Irp
     )
 {
-    NTSTATUS status;
     KIRQL irql;
     MxDeviceObject deviceObject(m_Device->GetDeviceObject());
-
-    status = STATUS_SUCCESS;
 
     m_SystemPowerState = (BYTE) Irp->GetParameterPowerStateSystemState();
     deviceObject.SetPowerState(SystemPowerState,
@@ -155,10 +152,6 @@ FxPkgPdo::DispatchDeviceSetPower(
     __in FxIrp *Irp
     )
 {
-    NTSTATUS status;
-
-    status = STATUS_SUCCESS;
-
     if (IsPowerPolicyOwner()) {
         if (m_PowerPolicyMachine.m_Owner->m_RequestedPowerUpIrp == FALSE &&
             m_PowerPolicyMachine.m_Owner->m_RequestedPowerDownIrp == FALSE) {

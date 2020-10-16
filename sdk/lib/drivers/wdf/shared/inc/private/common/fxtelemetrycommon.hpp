@@ -33,8 +33,8 @@ Notes:
 // MmGetSystemRoutineAddress. This allows our code to be backwards compatible to Win7
 //
 #define TLG_HAVE_EVENT_SET_INFORMATION 2
-#include <traceloggingprovider.h>
-#include <telemetry\MicrosoftTelemetry.h>
+// #include <traceloggingprovider.h>
+// #include <telemetry\MicrosoftTelemetry.h>
 
 // WDF01000.sys
 #define KMDF_FX_TRACE_LOGGING_PROVIDER_NAME    "Microsoft.Wdf.KMDF.Fx"

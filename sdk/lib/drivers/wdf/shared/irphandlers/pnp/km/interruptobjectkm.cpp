@@ -31,7 +31,7 @@ Revision History:
 #include "pnppriv.hpp"
 
 // Tracing support
-#include "InterruptObjectKm.tmh"
+// #include "InterruptObjectKm.tmh"
 
 _Must_inspect_result_
 NTSTATUS

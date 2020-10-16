@@ -91,5 +91,5 @@ public:
     FxCxDeviceInfo*         CxDeviceInfo;
 };
 
-#endif __FXCXDEVICEINIT_HPP__
+#endif // __FXCXDEVICEINIT_HPP__
 

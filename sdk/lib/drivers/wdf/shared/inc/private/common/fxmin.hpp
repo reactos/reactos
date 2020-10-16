@@ -34,7 +34,7 @@ Revision History:
 extern "C" {
 #include "mx.h"
 }
-#include "FxMacros.hpp"
+#include "fxmacros.hpp"
 
 #if (FX_CORE_MODE == FX_CORE_USER_MODE)
 //
@@ -81,15 +81,15 @@ extern const WDFFUNC *WdfFunctions;
 
 #include "wdfcore.h"
 #include "wdfdevice.h"
-#include "wdfdevicepri.h"
-#include "wdfiotargetpri.h"
+// #include "wdfdevicepri.h"
+// #include "wdfiotargetpri.h"
 #include "wdfdriver.h"
 
 #include "wdfmemory.h"
 
 #include "wdfrequest.h"
 #include "wdfwmi.h"
-#include "wdfChildList.h"
+#include "wdfchildlist.h"
 #include "wdfpdo.h"
 #include "wdffdo.h"
 #include "wdfiotarget.h"
@@ -113,9 +113,9 @@ extern const WDFFUNC *WdfFunctions;
 #include "wdfhid.h"
 #endif
 
-#pragma warning(disable:4200)  // suppress nameless struct/union warning
-#pragma warning(disable:4201)  // suppress nameless struct/union warning
-#pragma warning(disable:4214)  // suppress bit field types other than int warning
+// #pragma warning(disable:4200)  // suppress nameless struct/union warning
+// #pragma warning(disable:4201)  // suppress nameless struct/union warning
+// #pragma warning(disable:4214)  // suppress bit field types other than int warning
 #include <usb.h>
 #include <usbspec.h>
 #include "wdfusb.h"
@@ -160,7 +160,7 @@ typedef struct _WDF_OBJECT_CONTEXT_TYPE_INFO_V1_0 {
 
 typedef struct _WDF_OBJECT_CONTEXT_TYPE_INFO_V1_0 *PWDF_OBJECT_CONTEXT_TYPE_INFO_V1_0;
 
-#include "cobbled.hpp"
+// #include "cobbled.hpp"
 
 }  //extern "C"
 
@@ -187,10 +187,10 @@ typedef enum _TRACE_INFORMATION_CLASS {
 #include <wmium.h>
 #endif  // FX_CORE_MODE==FX_CORE_USER_MODE
 
-#include "FxForward.hpp"
+#include "fxforward.hpp"
 
 #if (FX_CORE_MODE == FX_CORE_USER_MODE)
-#include "HostFxUtil.h"
+#include "hostfxutil.h"
 #include "wdfplatform.h"
 #include "wdfplatformimpl.h"
 #include "debug.h"
@@ -198,187 +198,187 @@ typedef enum _TRACE_INFORMATION_CLASS {
 #include "wudfx_namespace_on.h"
 #include "wudfx.h"
 #include "wudfx_namespace_off.h"
-#include "DriverFrameworks-UserMode-UmEvents.h"
+#include "driverframeworks-usermode-umevents.h"
 #endif
 
 #include "fxtypedefs.hpp"
 
 #if defined(EVENT_TRACING)
 #include "fxwmicompat.h"
-#include "FxTrace.h"
+#include "fxtrace.h"
 #else
-#include "DbgTrace.h"
+#include "dbgtrace.h"
 #endif  // EVENT_TRACING
 
-#include "FxTypes.h"
+#include "fxtypes.h"
 #include "fxrequestcontexttypes.h"
-#include "FxPool.h"
+#include "fxpool.h"
 
 #if (FX_CORE_MODE==FX_CORE_KERNEL_MODE)
-#include "FxGlobalsKm.h"
-#include "FxPerfTraceKm.hpp"
-#include "DriverFrameworks-KernelMode-KmEvents.h"
+#include "fxglobalskm.h"
+#include "fxperftracekm.hpp"
+// #include "DriverFrameworks-KernelMode-KmEvents.h"
 #else
-#include "FxGlobalsUm.h"
+#include "fxglobalsum.h"
 #endif
-#include "FxPoolInlines.hpp"
+#include "fxpoolinlines.hpp"
 #include "fxverifier.h"
 #if (FX_CORE_MODE==FX_CORE_KERNEL_MODE)
-#include "FxVerifierKm.h"
+#include "fxverifierkm.h"
 #else
-#include "FxVerifierUm.h"
+#include "fxverifierum.h"
 #include "device_common.h"
 #endif
 #if (FX_CORE_MODE==FX_CORE_KERNEL_MODE)
-#include "FxMdl.h"
+#include "fxmdl.h"
 #endif
 
-#include "FxProbeAndLock.h"
+#include "fxprobeandlock.h"
 //#include "FxPerfTraceKm.hpp"
 //#include <NtStrSafe.h>
 
-#include "FxStump.hpp"
-#include "FxRequestBuffer.hpp"
-#include "FxTagTracker.hpp"
+#include "fxstump.hpp"
+#include "fxrequestbuffer.hpp"
+#include "fxtagtracker.hpp"
 
 // internal locks
-#include "FxVerifierLock.hpp"
-#include "FxLock.hpp"
+#include "fxverifierlock.hpp"
+#include "fxlock.hpp"
 
 // base objects
-#include "FxObject.hpp"
-#include "FxPagedObject.hpp"
-#include "FxNonPagedObject.hpp"
+#include "fxobject.hpp"
+#include "fxpagedobject.hpp"
+#include "fxnonpagedobject.hpp"
 
 #include "fxhandle.h"
 
 // external locks
-#include "FxWaitLock.hpp"
+#include "fxwaitlock.hpp"
 //#include "FxSpinLock.hpp"
 
 // utitilty classes and functions
-#include "FxTransactionedList.hpp"
-#include "FxRelatedDeviceList.hpp"
-#include "FxDisposeList.hpp"
-#include "FxCollection.hpp"
-#include "StringUtil.hpp"
+#include "fxtransactionedlist.hpp"
+#include "fxrelateddevicelist.hpp"
+#include "fxdisposelist.hpp"
+#include "fxcollection.hpp"
+#include "stringutil.hpp"
 
 // abstract classes
-#include "IFxHasCallbacks.hpp"
+#include "ifxhascallbacks.hpp"
 
 // callback delegation and locking
-#include "FxSystemThread.hpp"
-#include "FxSystemWorkItem.hpp"
-#include "FxCallbackLock.hpp"
-#include "FxCallbackSpinLock.hpp"
-#include "FxCallbackMutexLock.hpp"
-#include "FxCallback.hpp"
-#include "FxSystemThread.hpp"
+#include "fxsystemthread.hpp"
+#include "fxsystemworkitem.hpp"
+#include "fxcallbacklock.hpp"
+#include "fxcallbackspinlock.hpp"
+#include "fxcallbackmutexlock.hpp"
+#include "fxcallback.hpp"
+#include "fxsystemthread.hpp"
 
-#include "IFxMemory.hpp"
-#include "FxLookasideList.hpp"
-//#include "FxNPagedLookasideList.hpp"
-//#include "FxPagedLookasideList.hpp"
-#include "FxMemoryObject.hpp"
-#include "FxMemoryBuffer.hpp"
-#include "FxMemoryBufferFromPool.hpp"
-#include "FxMemoryBufferPreallocated.hpp"
-//#include "FxMemoryBufferFromLookaside.hpp"
-#include "FxRequestMemory.hpp"
-#include "FxRegKey.hpp"
-#include "FxAutoRegistry.hpp"
-#include "FxAutoString.hpp"
-#include "FxString.hpp"
+#include "ifxmemory.hpp"
+#include "fxlookasidelist.hpp"
+//#include "fxnpagedlookasidelist.hpp"
+//#include "fxpagedlookasidelist.hpp"
+#include "fxmemoryobject.hpp"
+#include "fxmemorybuffer.hpp"
+#include "fxmemorybufferfrompool.hpp"
+#include "fxmemorybufferpreallocated.hpp"
+//#include "fxmemorybufferfromlookaside.hpp"
+#include "fxrequestmemory.hpp"
+#include "fxregkey.hpp"
+#include "fxautoregistry.hpp"
+#include "fxautostring.hpp"
+#include "fxstring.hpp"
 
-#include "FxValidateFunctions.hpp"
+#include "fxvalidatefunctions.hpp"
 
-#include "FxResource.hpp"
-#include "FxRelatedDevice.hpp"
-#include "FxDeviceInterface.hpp"
-#include "FxQueryInterface.hpp"
-#include "FxDeviceText.hpp"
+#include "fxresource.hpp"
+#include "fxrelateddevice.hpp"
+#include "fxdeviceinterface.hpp"
+#include "fxqueryinterface.hpp"
+#include "fxdevicetext.hpp"
 
 #if (FX_CORE_MODE == FX_CORE_USER_MODE)
-#include "FxIrpUm.hpp"
-#include "FxInterruptThreadpoolUm.hpp"
+#include "fxirpum.hpp"
+#include "fxinterruptthreadpoolum.hpp"
 #else
-#include "FxIrpKm.hpp"
+#include "fxirpkm.hpp"
 #endif
-#include "FxDriver.hpp"
+#include "fxdriver.hpp"
 
 // generic package interface
-#include "FxPackage.hpp"
-#include "FxPkgGeneral.hpp"
-#include "FxDefaultIrpHandler.hpp"
-//#include "FxPoxKm.hpp"
-#include "FxPkgPnp.hpp"
-#include "FxWatchDog.hpp"
+#include "fxpackage.hpp"
+#include "fxpkggeneral.hpp"
+#include "fxdefaultirphandler.hpp"
+//#include "fxpoxkm.hpp"
+#include "fxpkgpnp.hpp"
+#include "fxwatchdog.hpp"
 
 // Device supportfx
-#include "FxChildList.hpp"
-#include "FxCxDeviceInfo.hpp"
+#include "fxchildlist.hpp"
+#include "fxcxdeviceinfo.hpp"
 
-#include "FxDevice.hpp"
+#include "fxdevice.hpp"
 
-#include "FxPkgIo.hpp"
+#include "fxpkgio.hpp"
 
-#include "FxDeviceToMxInterface.hpp"
+#include "fxdevicetomxinterface.hpp"
 
-#include "FxIrpQueue.hpp"
-#include "FxRequestContext.hpp"
-#include "FxRequestCallbacks.hpp"
-#include "FxRequestBase.hpp"
-#include "FxRequest.hpp"
-#include "FxSyncRequest.hpp"
+#include "fxirpqueue.hpp"
+#include "fxrequestcontext.hpp"
+#include "fxrequestcallbacks.hpp"
+#include "fxrequestbase.hpp"
+#include "fxrequest.hpp"
+#include "fxsyncrequest.hpp"
 
-#include "FxRequestValidateFunctions.hpp"
+#include "fxrequestvalidatefunctions.hpp"
 
 // specialized irp handlers (ie packages)
-#include "FxPkgFdo.hpp"
-#include "FxPkgPdo.hpp"
+#include "fxpkgfdo.hpp"
+#include "fxpkgpdo.hpp"
 
-//#include "FxWmiIrpHandler.hpp"
-//#include "FxWmiProvider.hpp"
-//#include "FxWmiInstance.hpp"
+//#include "fxwmiirphandler.hpp"
+//#include "fxwmiprovider.hpp"
+//#include "fxwmiinstance.hpp"
 
 // queus for read, write, (internal) IOCTL
-#include "FxIoQueue.hpp"
-#include "FxFileObject.hpp"
-#include "FxIrpPreprocessInfo.hpp"
-#include "FxIrpDynamicDispatchInfo.hpp"
+#include "fxioqueue.hpp"
+#include "fxfileobject.hpp"
+#include "fxirppreprocessinfo.hpp"
+#include "fxirpdynamicdispatchinfo.hpp"
 
-//#include "FxDpc.hpp"
-#include "FxWorkItem.hpp"
-#include "FxTimer.hpp"
+//#include "fxdpc.hpp"
+#include "fxworkitem.hpp"
+#include "fxtimer.hpp"
 #if FX_CORE_MODE==FX_CORE_USER_MODE
-#include "FxInterruptUm.hpp"
-#include "FxMessageDispatchUm.hpp"
+#include "fxinterruptum.hpp"
+#include "fxmessagedispatchum.hpp"
 #else
-#include "FxInterruptKm.hpp"
+#include "fxinterruptkm.hpp"
 #endif
 
 // IO targets (device lower edge interface)
-#include "FxIoTarget.hpp"
-#include "FxIoTargetRemote.hpp"
-#include "FxIoTargetSelf.hpp"
+#include "fxiotarget.hpp"
+#include "fxiotargetremote.hpp"
+#include "fxiotargetself.hpp"
 
-#include "FxUsbDevice.hpp"
-#include "FxUsbInterface.hpp"
-#include "FxUsbPipe.hpp"
+#include "fxusbdevice.hpp"
+#include "fxusbinterface.hpp"
+#include "fxusbpipe.hpp"
 
 // DMA support
-//#include "FxDmaEnabler.hpp"
-//#include "FxDmaTransaction.hpp"
-//#include "FxCommonBuffer.hpp"
+//#include "fxdmaenabler.hpp"
+//#include "fxdmatransaction.hpp"
+//#include "fxcommonbuffer.hpp"
 
 // Triage info.
-#include "wdftriage.h"
+// #include "wdftriage.h"
 
 
-#include "FxPkgIoShared.hpp"
+#include "fxpkgioshared.hpp"
 
 #if FX_CORE_MODE==FX_CORE_USER_MODE
-#include "UfxVerifier.h"
+#include "ufxverifier.h"
 #endif
 
 

@@ -21,10 +21,10 @@ Revision History:
 
 --*/
 
-#include "FxDmaPCH.hpp"
+#include "fxdmapch.hpp"
 
 extern "C" {
-#include "FxDmaTransaction.tmh"
+// #include "FxDmaTransaction.tmh"
 }
 
 FxDmaTransactionBase::FxDmaTransactionBase(
@@ -842,7 +842,7 @@ FxDmaScatterGatherTransaction::Dispose(
 {
     BOOLEAN ret;
 
-    ret = __super::Dispose();
+    ret = FxDmaTransactionBase::Dispose(); // __super call
 
     //
     // Free Lookaside Buffer which held SGList

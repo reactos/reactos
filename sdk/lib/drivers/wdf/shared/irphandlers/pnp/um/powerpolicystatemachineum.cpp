@@ -17,7 +17,7 @@ Revision History:
 
 --*/
 
-#include "..\pnppriv.hpp"
+#include "../pnppriv.hpp"
 
 #include "FxUsbIdleInfo.hpp"
 

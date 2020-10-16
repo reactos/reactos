@@ -25,7 +25,7 @@ Revision History:
 #include "coreprivshared.hpp"
 
 extern "C" {
-#include "FxDeviceKm.tmh"
+// #include "FxDeviceKm.tmh"
 }
 
 _Must_inspect_result_
@@ -192,10 +192,10 @@ FxDevice::FdoInitialize(
         return status;
     }
 
-    status = m_PkgWmi->PostCreateDeviceInitialize();
-    if (!NT_SUCCESS(status)) {
-        return status;
-    }
+    // status = m_PkgWmi->PostCreateDeviceInitialize(); __REACTOS__
+    // if (!NT_SUCCESS(status)) {
+    //     return status;
+    // }
 
     status = m_PkgGeneral->PostCreateDeviceInitialize(DeviceInit);
     if (!NT_SUCCESS(status)) {
@@ -302,10 +302,10 @@ FxDevice::PdoInitialize(
             pPkgPdo->m_AllowForwardRequestToParent = TRUE;
         }
 
-        status = m_PkgWmi->PostCreateDeviceInitialize();
-        if (!NT_SUCCESS(status)) {
-            return status;
-        }
+        // status = m_PkgWmi->PostCreateDeviceInitialize(); __REACTOS__
+        // if (!NT_SUCCESS(status)) {
+        //     return status;
+        // }
 
         status = m_PkgGeneral->PostCreateDeviceInitialize(DeviceInit);
         if (!NT_SUCCESS(status)) {
@@ -410,10 +410,10 @@ FxDevice::ControlDeviceInitialize(
         return status;
     }
 
-    status = m_PkgWmi->PostCreateDeviceInitialize();
-    if (!NT_SUCCESS(status)) {
-        return status;
-    }
+    // status = m_PkgWmi->PostCreateDeviceInitialize(); __REACTOS__
+    // if (!NT_SUCCESS(status)) {
+    //     return status;
+    // }
 
     status = m_PkgGeneral->PostCreateDeviceInitialize(DeviceInit);
     if (!NT_SUCCESS(status)) {
@@ -489,7 +489,8 @@ FxDevice::WmiPkgRegister(
     VOID
     )
 {
-    return m_PkgWmi->Register();
+    // return m_PkgWmi->Register(); __REACTOS__
+    return STATUS_SUCCESS;
 }
 
 VOID
@@ -497,7 +498,7 @@ FxDevice::WmiPkgDeregister(
     VOID
     )
 {
-    m_PkgWmi->Deregister();
+    // m_PkgWmi->Deregister(); __REACTOS__
 }
 
 VOID
@@ -505,7 +506,7 @@ FxDevice::WmiPkgCleanup(
     VOID
     )
 {
-    m_PkgWmi->Cleanup();
+    // m_PkgWmi->Cleanup(); __REACTOS__
 }
 
 NTSTATUS

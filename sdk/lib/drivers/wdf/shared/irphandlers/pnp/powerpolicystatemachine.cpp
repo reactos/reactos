@@ -32,7 +32,7 @@ Revision History:
 #include <usbdrivr.h>
 #endif
 
-#include "FxUsbIdleInfo.hpp"
+#include "fxusbidleinfo.hpp"
 
 extern "C" {
 #if defined(EVENT_TRACING)

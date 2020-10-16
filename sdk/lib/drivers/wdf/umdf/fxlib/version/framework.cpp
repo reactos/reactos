@@ -30,9 +30,8 @@ extern "C" {
 extern WDF_LIBRARY_INFO  WdfLibraryInfo;
 
 #if !(NO_UMDF_VERSION_EXPORT)
-__declspec(dllexport)
-
-__declspec(selectany)
+DECLSPEC_EXPORT
+DECLSPEC_SELECTANY
 
 UMDF_VERSION_DATA Microsoft_WDF_UMDF_Version = {__WUDF_MAJOR_VERSION,
 

@@ -24,9 +24,9 @@ Revision History:
 --*/
 
 
-#include "irphandlerspriv.hpp"
+#include "shared/irphandlers/irphandlerspriv.hpp"
 
-#include "FxPackage.hpp"
+#include "fxpackage.hpp"
 
 FxPackage::FxPackage(
     __in PFX_DRIVER_GLOBALS FxDriverGlobals,

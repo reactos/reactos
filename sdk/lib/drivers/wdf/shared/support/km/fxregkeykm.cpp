@@ -18,10 +18,10 @@ Revision History:
 
 --*/
 
-#include "FxSupportPch.hpp"
+#include "fxsupportpch.hpp"
 
 extern "C" {
-#include "FxRegKeyKM.tmh"
+// #include "FxRegKeyKM.tmh"
 }
 
 #define AT_PASSIVE()     ASSERT(KeGetCurrentIrql() == PASSIVE_LEVEL)

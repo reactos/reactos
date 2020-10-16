@@ -27,11 +27,11 @@ Revision History:
 
 #include "fxobjectpch.hpp"
 
-#include "FxMemoryBufferPreallocated.hpp"
-#include "FxUserObject.hpp"
-#include "FxUsbDevice.hpp"
-#include "FxUsbPipe.hpp"
-#include "FxUsbInterface.hpp"
+#include "fxmemorybufferpreallocated.hpp"
+#include "fxuserobject.hpp"
+#include "fxusbdevice.hpp"
+#include "fxusbpipe.hpp"
+#include "fxusbinterface.hpp"
 
 extern "C"
 {

@@ -88,4 +88,4 @@ FxIrpMdlFree(
 #define IoAllocateMdl use_FxMdlAllocate_instead
 #define IoFreeMdl use_FxMdlFree_instead
 
-#endif __FXMDL_H__
+#endif // __FXMDL_H__

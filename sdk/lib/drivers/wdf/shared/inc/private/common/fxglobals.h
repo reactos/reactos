@@ -46,6 +46,11 @@ Revision History:
 #define _FXGLOBALS_H
 
 #include "wdfglobals.h"
+#include <debug.h>
+
+// REACTOS
+#define ROSWDFNOTIMPLEMENTED (DbgPrint("(%s:%d) ReactOS KMDF: %s not implemented\n", __RELFILE__, __LINE__, __FUNCTION__))
+// REACTOS
 
 #ifdef __cplusplus
 extern "C" {
@@ -68,7 +73,7 @@ typedef enum FxTrackPowerOption : UCHAR {
     FxTrackPowerRefs,
     FxTrackPowerRefsAndStack,
     FxTrackPowerMaxValue
-};
+} FxTrackPowerOption;
 
 typedef enum FxVerifierDownlevelOption {
     NotOkForDownLevel = 0,
@@ -847,13 +852,15 @@ struct FxLibraryGlobalsType {
     // tracing of WDF operations. The size member of this structure
     // allows versioning across multiple OS versions.
     //
-    PWMI_WDF_NOTIFY_ROUTINES PerfTraceRoutines;
+    //PWMI_WDF_NOTIFY_ROUTINES PerfTraceRoutines; __REACTOS__
+    PVOID PerfTraceRoutines;
 
     //
     //  PerfTraceRoutines points here if the SystemTraceProvider failed
     //  to provide trace routines.
     //
-    WMI_WDF_NOTIFY_ROUTINES DummyPerfTraceRoutines;
+    //WMI_WDF_NOTIFY_ROUTINES DummyPerfTraceRoutines; __REACTOS__
+    PVOID DummyPerfTraceRoutines;
 
 #endif
 

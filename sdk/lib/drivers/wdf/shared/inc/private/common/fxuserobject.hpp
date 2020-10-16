@@ -63,7 +63,7 @@ public:
              break;
 
         default:
-            return __super::QueryInterface(Params);
+            return FxNonPagedObject::QueryInterface(Params); // __super call
         }
 
         return STATUS_SUCCESS;

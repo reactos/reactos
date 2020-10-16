@@ -22,10 +22,10 @@ Revision History:
 --*/
 
 #include "coreprivshared.hpp"
-#include "FxFileObject.hpp"
+#include "fxfileobject.hpp"
 
 extern "C" {
-#include "FxFileObjectApiKm.tmh"
+// #include "FxFileObjectApiKm.tmh"
 }
 
 //
@@ -35,6 +35,7 @@ extern "C" {
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 PFILE_OBJECT
+STDCALL
 WDFEXPORT(WdfFileObjectWdmGetFileObject)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,

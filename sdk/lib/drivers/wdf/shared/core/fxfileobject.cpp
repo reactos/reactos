@@ -27,7 +27,7 @@ Revision History:
 
 // Tracing support
 extern "C" {
-#include "FxFileObject.tmh"
+// #include "FxFileObject.tmh"
 }
 
 //
@@ -501,7 +501,7 @@ Return Value:
         break;
 
     default:
-        return __super::QueryInterface(Params);
+        return FxNonPagedObject::QueryInterface(Params); // __super call
     }
 
     return STATUS_SUCCESS;

@@ -5,15 +5,15 @@
 #define _FXDMATRANSACTION_HPP_
 
 extern "C" {
-#include "FxDmaTransaction.hpp.tmh"
+// #include "FxDmaTransaction.hpp.tmh"
 }
 
-#include "FxDmaTransactionCallbacks.hpp"
+#include "fxdmatransactioncallbacks.hpp"
 
 //
 // This type is used to allocate scatter-gather list of 1 element on the stack.
 //
-typedef __declspec(align(MEMORY_ALLOCATION_ALIGNMENT))UCHAR UCHAR_MEMORY_ALIGNED;
+typedef DECLSPEC_ALIGN(MEMORY_ALLOCATION_ALIGNMENT) UCHAR UCHAR_MEMORY_ALIGNED;
 
 // begin_wpp enum
 
@@ -912,6 +912,7 @@ protected:
 protected:
 
     inline
+    void
     SetMapRegisterBase(
         __in PVOID Value
         )
@@ -924,6 +925,7 @@ protected:
     }
 
     inline
+    void
     ClearMapRegisterBase(
         VOID
         )
@@ -934,6 +936,7 @@ protected:
     }
 
     inline
+    BOOLEAN
     IsMapRegisterBaseSet(
         VOID
         )
@@ -1005,6 +1008,7 @@ protected:
 
     static
     IO_ALLOCATION_ACTION
+    STDCALL
     _AdapterControl(
         __in PDEVICE_OBJECT  DeviceObject,
         __in PIRP            Irp,
@@ -1528,7 +1532,7 @@ protected:
         VOID
         )
     {
-        __super::Reuse();
+        FxDmaPacketTransaction::Reuse(); // __super call
         m_ConfigureChannelFunction.Method = NULL;
         m_ConfigureChannelContext = NULL;
 

@@ -46,15 +46,15 @@ extern "C" {
 #include "mx.h"
 }
 
-#include "FxMin.hpp"
+#include "fxmin.hpp"
 
 #include "wdfmemory.h"
 #include "wdfrequest.h"
 #include "wdfdevice.h"
-#include "wdfdevicepri.h"
-#include "wdfiotargetpri.h"
+// #include "wdfdevicepri.h"
+// #include "wdfiotargetpri.h"
 #include "wdfwmi.h"
-#include "wdfChildList.h"
+#include "wdfchildlist.h"
 #include "wdfpdo.h"
 #include "wdffdo.h"
 #include "wdfiotarget.h"
@@ -62,12 +62,12 @@ extern "C" {
 #include "wdfcx.h"
 #include "wdfio.h"
 #include "wdfqueryinterface.h"
-#include "wdftriage.h"
+// #include "wdftriage.h"
 
 #if (FX_CORE_MODE == FX_CORE_USER_MODE)
-#include "FxIrpUm.hpp"
+#include "fxirpum.hpp"
 #else
-#include "FxIrpKm.hpp"
+#include "fxirpkm.hpp"
 #endif
 
 // <FxSystemWorkItem.hpp>
@@ -77,92 +77,92 @@ VOID
     IN PVOID             Parameter
     );
 
-#include "FxIrpQueue.hpp"
+#include "fxirpqueue.hpp"
 
 
 // </FxSystemWorkItem.hpp>
 
 
-#include "FxProbeAndLock.h"
-#include "FxPackage.hpp"
-#include "FxCollection.hpp"
-#include "FxDeviceInitShared.hpp"
+#include "fxprobeandlock.h"
+#include "fxpackage.hpp"
+#include "fxcollection.hpp"
+#include "fxdeviceinitshared.hpp"
 
-#include "IfxMemory.hpp"
-#include "FxCallback.hpp"
-#include "FxRequestContext.hpp"
-#include "FxRequestContextTypes.h"
-#include "FxRequestBase.hpp"
-#include "FxMemoryObject.hpp"
-#include "FxMemoryBuffer.hpp"
+#include "ifxmemory.hpp"
+#include "fxcallback.hpp"
+#include "fxrequestcontext.hpp"
+#include "fxrequestcontexttypes.h"
+#include "fxrequestbase.hpp"
+#include "fxmemoryobject.hpp"
+#include "fxmemorybuffer.hpp"
 
-#include "FxMemoryBufferFromPool.hpp"
+#include "fxmemorybufferfrompool.hpp"
 
-#include "FxMemoryBufferPreallocated.hpp"
+#include "fxmemorybufferpreallocated.hpp"
 
-#include "FxTransactionedList.hpp"
+#include "fxtransactionedlist.hpp"
 
 //
 // MERGE temp: We may not need these include files here,
 // temporarily including them to verify they compile in shared code
 //
-#include "FxRequestValidateFunctions.hpp"
-#include "FxRequestCallbacks.hpp"
+#include "fxrequestvalidatefunctions.hpp"
+#include "fxrequestcallbacks.hpp"
 
 // support
-#include "StringUtil.hpp"
-#include "FxAutoString.hpp"
-#include "FxString.hpp"
-#include "FxDeviceText.hpp"
-#include "FxCallback.hpp"
-#include "FxDisposeList.hpp"
-#include "FxSystemThread.hpp"
+#include "stringutil.hpp"
+#include "fxautostring.hpp"
+#include "fxstring.hpp"
+#include "fxdevicetext.hpp"
+#include "fxcallback.hpp"
+#include "fxdisposelist.hpp"
+#include "fxsystemthread.hpp"
 
-#include "FxIrpPreprocessInfo.hpp"
-#include "FxPnpCallbacks.hpp"
+#include "fxirppreprocessinfo.hpp"
+#include "fxpnpcallbacks.hpp"
 
 // device init
-#include "FxCxDeviceInit.hpp"
-#include "FxCxDeviceInfo.hpp"
-#include "FxDeviceInit.hpp"
+#include "fxcxdeviceinit.hpp"
+#include "fxcxdeviceinfo.hpp"
+#include "fxdeviceinit.hpp"
 
-#include "FxDeviceToMxInterface.hpp"
+#include "fxdevicetomxinterface.hpp"
 
 // request
-#include "FxRequestMemory.hpp"
-#include "FxRequest.hpp"
-#include "FxRequestBuffer.hpp"
-#include "FxSyncRequest.hpp"
+#include "fxrequestmemory.hpp"
+#include "fxrequest.hpp"
+#include "fxrequestbuffer.hpp"
+#include "fxsyncrequest.hpp"
 
 // io target
-#include "FxIoTarget.hpp"
-#include "FxIoTargetSelf.hpp"
+#include "fxiotarget.hpp"
+#include "fxiotargetself.hpp"
 
-#include "FxSystemWorkItem.hpp"
-#include "FxCallbackMutexLock.hpp"
-#include "FxDriver.hpp"
+#include "fxsystemworkitem.hpp"
+#include "fxcallbackmutexlock.hpp"
+#include "fxdriver.hpp"
 
-#include "FxDeviceInterface.hpp"
-#include "FxQueryInterface.hpp"
+#include "fxdeviceinterface.hpp"
+#include "fxqueryinterface.hpp"
 
-#include "FxCallbackSpinLock.hpp"
-#include "FxDefaultIrpHandler.hpp"
-#include "FxWmiIrpHandler.hpp"
+#include "fxcallbackspinlock.hpp"
+#include "fxdefaultirphandler.hpp"
+#include "fxwmiirphandler.hpp"
 
 // packages
-#include "FxPkgIo.hpp"
-#include "FxPkgPnp.hpp"
-#include "FxPkgFdo.hpp"
-#include "FxPkgPdo.hpp"
-#include "FxPkgGeneral.hpp"
-#include "FxFileObject.hpp"
-#include "FxIoQueue.hpp"
-#include "FxDevice.hpp"
-#include "FxTelemetry.hpp"
+#include "fxpkgio.hpp"
+#include "fxpkgpnp.hpp"
+#include "fxpkgfdo.hpp"
+#include "fxpkgpdo.hpp"
+#include "fxpkggeneral.hpp"
+#include "fxfileobject.hpp"
+#include "fxioqueue.hpp"
+#include "fxdevice.hpp"
+#include "fxtelemetry.hpp"
 
-#include "FxChildList.hpp"
+#include "fxchildlist.hpp"
 
-#include "FxLookasideList.hpp"
+#include "fxlookasidelist.hpp"
 
 /*#if FX_IS_KERNEL_MODE
 #include "wdfrequest.h"

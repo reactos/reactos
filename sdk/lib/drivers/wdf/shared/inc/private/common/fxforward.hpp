@@ -117,9 +117,11 @@ class  FxWorkItem;
 class  IFxHasCallbacks;
 class  IFxMemory;
 
-enum FxObjectType;
-enum FxWmiInstanceAction;
+enum FxObjectType : UINT32;
+enum FxWmiInstanceAction : UINT32;
 enum FxDriverObjectUmFlags : USHORT;
+enum FxWakeInterruptEvents : UINT32;
+
 
 PVOID
 FxObjectHandleAlloc(
@@ -133,7 +135,7 @@ FxObjectHandleAlloc(
     );
 
 #if (FX_CORE_MODE==FX_CORE_USER_MODE)
-#include "FxForwardUm.hpp"
+#include "fxforwardum.hpp"
 #endif
 
 #endif //  _FXFORWARD_HPP_

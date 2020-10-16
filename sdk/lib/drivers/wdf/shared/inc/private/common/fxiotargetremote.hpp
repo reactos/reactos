@@ -311,13 +311,13 @@ protected:
             return STATUS_SUCCESS;
         }
         else {
-            return __super::QueryInterface(Params);
+            return FxIoTarget::QueryInterface(Params); // __super call
         }
     }
 
     _Must_inspect_result_
     NTSTATUS
-    FxIoTargetRemote::OpenLocalTargetByFile(
+    OpenLocalTargetByFile(
         _In_ PWDF_IO_TARGET_OPEN_PARAMS OpenParams
         );
 
@@ -432,9 +432,9 @@ protected:
 };
 
 #if (FX_CORE_MODE == FX_CORE_KERNEL_MODE)
-#include "FxIoTargetRemoteKm.hpp"
+#include "fxiotargetremotekm.hpp"
 #else
-#include "FxIoTargetRemoteUm.hpp"
+#include "fxiotargetremoteum.hpp"
 #endif
 
 #endif // _FXIOTARGETREMOTE_H_

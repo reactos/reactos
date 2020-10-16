@@ -28,7 +28,7 @@ Revision History:
 
 // Tracing support
 extern "C" {
-#include "FxRequestContext.tmh"
+// #include "FxRequestContext.tmh"
 }
 
 FxRequestContext::FxRequestContext(

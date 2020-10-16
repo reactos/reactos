@@ -25,10 +25,10 @@ Revision History:
 
 #include "fxcorepch.hpp"
 
-#include "FxDpc.hpp"
+#include "fxdpc.hpp"
 
 extern "C" {
-#include "FxDpcApi.tmh"
+// #include "FxDpcApi.tmh"
 }
 
 //
@@ -39,6 +39,7 @@ extern "C" {
 _Must_inspect_result_
 __drv_maxIRQL(DISPATCH_LEVEL)
 NTSTATUS
+STDCALL
 WDFEXPORT(WdfDpcCreate)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -129,6 +130,7 @@ Notes:
 
 __drv_maxIRQL(HIGH_LEVEL)
 KDPC*
+STDCALL
 WDFEXPORT(WdfDpcWdmGetDpc)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -166,6 +168,7 @@ Returns:
 
 __drv_maxIRQL(HIGH_LEVEL)
 BOOLEAN
+STDCALL
 WDFEXPORT(WdfDpcEnqueue)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -202,6 +205,7 @@ Returns:
 __drv_when(Wait == __true, __drv_maxIRQL(PASSIVE_LEVEL))
 __drv_when(Wait == __false, __drv_maxIRQL(HIGH_LEVEL))
 BOOLEAN
+STDCALL
 WDFEXPORT(WdfDpcCancel)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -254,6 +258,7 @@ Returns:
 
 __drv_maxIRQL(HIGH_LEVEL)
 WDFOBJECT
+STDCALL
 WDFEXPORT(WdfDpcGetParentObject)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,

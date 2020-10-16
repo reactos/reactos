@@ -23,10 +23,10 @@ Revision History:
 
 --*/
 
-#include "FxSupportPch.hpp"
+#include "fxsupportpch.hpp"
 
 extern "C" {
-#include "FxDeviceInterfaceAPI.tmh"
+// #include "FxDeviceInterfaceAPI.tmh"
 }
 
 //
@@ -37,6 +37,7 @@ extern "C" {
 _Must_inspect_result_
 __drv_maxIRQL(PASSIVE_LEVEL)
 NTSTATUS
+STDCALL
 WDFEXPORT(WdfDeviceCreateDeviceInterface)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -164,6 +165,7 @@ Done:
 
 __drv_maxIRQL(PASSIVE_LEVEL)
 VOID
+STDCALL
 WDFEXPORT(WdfDeviceSetDeviceInterfaceState)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -271,6 +273,7 @@ WDFEXPORT(WdfDeviceSetDeviceInterfaceState)(
 _Must_inspect_result_
 __drv_maxIRQL(PASSIVE_LEVEL)
 NTSTATUS
+STDCALL
 WDFEXPORT(WdfDeviceRetrieveDeviceInterfaceString)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,

@@ -31,9 +31,9 @@ Revision History:
 #define _FXIRPQUEUE_H_
 
 #if (FX_CORE_MODE == FX_CORE_KERNEL_MODE)
-#include "FxIrpKm.hpp"
+#include "fxirpkm.hpp"
 #else
-#include "FxIrpUm.hpp"
+#include "fxirpum.hpp"
 #endif
 
 
@@ -52,9 +52,9 @@ Revision History:
 #define FX_IRP_QUEUE_ENTRY_IDENTIFIER 1
 
 #if ((FX_CORE_MODE)==(FX_CORE_KERNEL_MODE))
-#include "FxIrpKm.hpp"
-#else if ((FX_CORE_MODE)==(FX_CORE_USER_MODE))
-#include "FxIrpUm.hpp"
+#include "fxirpkm.hpp"
+#elif ((FX_CORE_MODE)==(FX_CORE_USER_MODE))
+#include "fxirpum.hpp"
 #endif
 
 

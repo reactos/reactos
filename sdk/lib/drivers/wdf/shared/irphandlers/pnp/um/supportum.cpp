@@ -21,7 +21,7 @@ Revision History:
 
 --*/
 
-#include "..\pnppriv.hpp"
+#include "../pnppriv.hpp"
 
 VOID
 CopyQueryInterfaceToIrpStack(

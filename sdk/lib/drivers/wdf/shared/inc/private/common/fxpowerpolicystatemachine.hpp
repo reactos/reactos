@@ -4,8 +4,8 @@
 #ifndef _FXPOWERPOLICYSTATEMACHINE_H_
 #define _FXPOWERPOLICYSTATEMACHINE_H_
 
-#include "FxPowerIdleStateMachine.hpp"
-#include "FxPoxInterface.hpp"
+#include "fxpoweridlestatemachine.hpp"
+#include "fxpoxinterface.hpp"
 
 // @@SMVERIFY_SPLIT_BEGIN
 //

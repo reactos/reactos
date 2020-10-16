@@ -22,11 +22,11 @@ Revision History:
 
 --*/
 
-#include "FxSupportPch.hpp"
-#include "FxSpinLock.hpp"
+#include "fxsupportpch.hpp"
+#include "fxspinlock.hpp"
 
 extern "C" {
-#include "FxSpinLockAPI.tmh"
+// #include "FxSpinLockAPI.tmh"
 }
 
 //
@@ -37,6 +37,7 @@ extern "C" {
 _Must_inspect_result_
 __drv_maxIRQL(DISPATCH_LEVEL)
 NTSTATUS
+STDCALL
 WDFEXPORT(WdfSpinLockCreate)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -108,6 +109,7 @@ WDFEXPORT(WdfSpinLockCreate)(
 __drv_raisesIRQL(DISPATCH_LEVEL)
 __drv_maxIRQL(DISPATCH_LEVEL)
 VOID
+STDCALL
 WDFEXPORT(WdfSpinLockAcquire)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -145,6 +147,7 @@ WDFEXPORT(WdfSpinLockAcquire)(
 __drv_maxIRQL(DISPATCH_LEVEL)
 __drv_minIRQL(DISPATCH_LEVEL)
 VOID
+STDCALL
 WDFEXPORT(WdfSpinLockRelease)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,

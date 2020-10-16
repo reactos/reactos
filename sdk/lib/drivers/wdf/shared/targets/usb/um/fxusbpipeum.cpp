@@ -51,7 +51,7 @@ Return Value:
     m_UmUrb.UmUrbHeader.Function = UMURB_FUNCTION_BULK_OR_INTERRUPT_TRANSFER;
     m_UmUrb.UmUrbHeader.Length = sizeof(_UMURB_BULK_OR_INTERRUPT_TRANSFER);
 
-    __super::StoreAndReferenceMemory(Buffer);
+    FxUsbRequestContext::StoreAndReferenceMemory(Buffer); // __super call
 
     Buffer->AssignValues(&m_UmUrb.UmUrbBulkOrInterruptTransfer.TransferBuffer,
                          NULL,

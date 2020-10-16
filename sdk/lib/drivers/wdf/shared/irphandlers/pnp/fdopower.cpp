@@ -65,14 +65,11 @@ Returns:
 --*/
 {
     FxPkgFdo* pThis;
-    MdDeviceObject pDevObj;
     NTSTATUS status;
     MdIrp pIrp;
 
     pIrp = Irp->GetIrp();
     pThis = (FxPkgFdo*) This;
-
-    pDevObj = pThis->m_Device->GetDeviceObject();
 
     //
     // FDOs don't handle this IRP, so simply pass it down.

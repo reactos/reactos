@@ -23,7 +23,7 @@ Revision History:
 
 --*/
 
-#include "FxSupportPch.hpp"
+#include "fxsupportpch.hpp"
 
 FxString::FxString(
     __in PFX_DRIVER_GLOBALS FxDriverGlobals

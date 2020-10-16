@@ -28,7 +28,7 @@ Revision History:
 #ifndef _FXIOQUEUE_H_
 #define _FXIOQUEUE_H_
 
-#include "FxIoQueueCallbacks.hpp"
+#include "fxioqueuecallbacks.hpp"
 
 extern "C" {
 #if defined(EVENT_TRACING)
@@ -1089,7 +1089,7 @@ public:
             break;
 
         default:
-            return __super::QueryInterface(Params);
+            return FxNonPagedObject::QueryInterface(Params); // __super call
         }
 
         return STATUS_SUCCESS;
@@ -1230,7 +1230,7 @@ public:
         return CONTAINING_RECORD(Entry, FxIoQueue, m_PowerSListEntry);
     }
 
-    __declspec(noreturn)
+    DECLSPEC_NORETURN
     VOID
     FatalError(
         __in NTSTATUS Status
@@ -1705,9 +1705,9 @@ protected:
 };
 
 #if (FX_CORE_MODE==FX_CORE_KERNEL_MODE)
-#include "FxIoQueueKm.hpp"
+#include "fxioqueuekm.hpp"
 #else
-#include "FxIoQueueUm.hpp"
+#include "fxioqueueum.hpp"
 #endif
 
 

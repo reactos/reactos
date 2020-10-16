@@ -27,7 +27,7 @@ Revision History:
 // Tracing support
 extern "C" {
 #include <ntverp.h>
-#include "FxDriverApiKm.tmh"
+// #include "FxDriverApiKm.tmh"
 }
 
 //
@@ -38,6 +38,7 @@ extern "C" {
 _Must_inspect_result_
 __drv_maxIRQL(PASSIVE_LEVEL)
 NTSTATUS
+STDCALL
 WDFEXPORT(WdfDriverOpenParametersRegistryKey)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -117,6 +118,7 @@ WDFEXPORT(WdfDriverOpenParametersRegistryKey)(
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 PDRIVER_OBJECT
+STDCALL
 WDFEXPORT(WdfDriverWdmGetDriverObject)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -136,6 +138,7 @@ WDFEXPORT(WdfDriverWdmGetDriverObject)(
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 WDFDRIVER
+STDCALL
 WDFEXPORT(WdfWdmDriverGetWdfDriverHandle)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -149,6 +152,7 @@ WDFEXPORT(WdfWdmDriverGetWdfDriverHandle)(
 }
 
 VOID
+STDCALL
 WDFEXPORT(WdfDriverMiniportUnload)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -169,6 +173,7 @@ WDFEXPORT(WdfDriverMiniportUnload)(
 _Must_inspect_result_
 __drv_maxIRQL(PASSIVE_LEVEL)
 NTSTATUS
+STDCALL
 WDFEXPORT(WdfDeviceMiniportCreate)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,

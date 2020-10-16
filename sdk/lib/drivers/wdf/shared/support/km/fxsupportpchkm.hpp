@@ -29,13 +29,13 @@ extern "C" {
 
 #include <fxmin.hpp>
 
-#include "FxCollection.hpp"
-#include "StringUtil.hpp"
-#include "FxString.hpp"
-#include "FxDeviceText.hpp"
-#include "FxWaitLock.hpp"
+#include "fxcollection.hpp"
+#include "stringutil.hpp"
+#include "fxstring.hpp"
+#include "fxdevicetext.hpp"
+#include "fxwaitlock.hpp"
 
-#include <WdfResource.h>
-#include <FxResource.hpp>
+#include <wdfresource.h>
+#include <fxresource.hpp>
 
 #endif // __FX_SUPPORT_PCH_KM_HPP__

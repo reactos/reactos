@@ -157,7 +157,7 @@ extern "C" {
 #define FX_CALLBACKLOCK_ORDER_PACKAGE     0x30
 #define FX_CALLBACKLOCK_ORDER_QUEUE       0x31
 
-#define FX_VERIFIER_LOCK_ENTRY(FX_OBJECT_TYPE, FX_LOCK_ORDER) { ##FX_OBJECT_TYPE, ##FX_LOCK_ORDER }
+#define FX_VERIFIER_LOCK_ENTRY(FX_OBJECT_TYPE, FX_LOCK_ORDER) { FX_OBJECT_TYPE, FX_LOCK_ORDER }
 
 // Internal FxLock spinlock entries
 #define FX_VERIFIER_LOCK_ENTRIES()                                                                  \
@@ -303,7 +303,7 @@ private:
         );
 
     void
-    FxVerifierLock::FxVerifierLockDumpDetails(
+    FxVerifierLockDumpDetails(
         __in FxVerifierLock* Lock,
         __in PVOID           curThread,
         __in FxVerifierLock* PerThreadList

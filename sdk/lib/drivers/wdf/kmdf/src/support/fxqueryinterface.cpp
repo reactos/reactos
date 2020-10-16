@@ -22,10 +22,10 @@ Revision History:
 
 --*/
 
-#include "FxSupportPch.hpp"
+#include "fxsupportpch.hpp"
 
 extern "C" {
-#include "FxQueryInterface.tmh"
+// #include "FxQueryInterface.tmh"
 }
 
 FxQueryInterface::FxQueryInterface(
