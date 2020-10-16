@@ -40,7 +40,7 @@
 #include "shresdef.h"
 #ifdef __REACTOS__
     #include <shlwapi.h>
-    #include "cresize/cresize.h"
+    #include "cresize.h"
 #endif
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
@@ -776,7 +776,7 @@ static BOOL BrsFolder_OnCreate( HWND hWnd, browse_info *info )
         RECT rcWnd;
 
 #ifdef __REACTOS__
-        info->layout = cresize_Create(hWnd, TRUE);
+        info->layout = cresize_Create(hWnd, TRUE, 8);
         if (info->layout)
         {
             cresize_SetLayoutAnchorByID(info->layout, IDC_BROWSE_FOR_FOLDER_TITLE, LA_TOP_LEFT, LA_TOP_RIGHT);

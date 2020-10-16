@@ -4,6 +4,12 @@
     #include <windows.h>
 #endif
 #include <assert.h>
+
+#define CVECTOR_LOGARITHMIC_GROWTH
+#define CVECTOR_ASSERT(x) assert(x)
+#define CVECTOR_MALLOC(cb) LocalAlloc(LPTR, (cb))
+#define CVECTOR_REALLOC(ptr,cb) LocalReAlloc((ptr), (cb), LMEM_ZEROINIT)
+#define CVECTOR_FREE(ptr) LocalFree(ptr)
 #include "cvector.h" /* Evan Teran's C vector */
 
 /* The layout anchors for cresize_SetLayoutAnchor */
@@ -252,7 +258,7 @@ cresize_SetLayoutAnchorByID(CRESIZE *pResize, UINT nCtrlID,
 }
 
 static __inline CRESIZE *
-cresize_Create(HWND hwndParent, BOOL bEnableResize)
+cresize_Create(HWND hwndParent, BOOL bEnableResize, size_t capacity)
 {
     CRESIZE *pResize = LocalAlloc(LPTR, sizeof(CRESIZE));
     if (pResize == NULL)
@@ -260,6 +266,7 @@ cresize_Create(HWND hwndParent, BOOL bEnableResize)
 
     assert(IsWindow(hwndParent));
     pResize->m_hwndParent = hwndParent;
+    cvector_reserve(pResize->m_pLayouts, capacity);
 
     /* NOTE: The parent window must have initially WS_THICKFRAME style. */
     assert(GetWindowLongPtrW(hwndParent, GWL_STYLE) & WS_THICKFRAME);
