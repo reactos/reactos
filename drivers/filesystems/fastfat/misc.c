@@ -130,7 +130,7 @@ VfatDispatchRequest(
             break;
 
         case IRP_MJ_WRITE:
-            Status = VfatWrite(IrpContext);
+            Status = VfatWrite(&IrpContext);
             break;
 
         case IRP_MJ_FILE_SYSTEM_CONTROL:
@@ -182,30 +182,33 @@ VfatDispatchRequest(
             Status = STATUS_DRIVER_INTERNAL_ERROR;
     }
 
-    QueueIrp = BooleanFlagOn(IrpContext->Flags, IRPCONTEXT_QUEUE);
-    CompleteIrp = BooleanFlagOn(IrpContext->Flags, IRPCONTEXT_COMPLETE);
-
-    ASSERT((!CompleteIrp && !QueueIrp) ||
-           (CompleteIrp && !QueueIrp) ||
-           (!CompleteIrp && QueueIrp));
-
-    if (CompleteIrp)
+    if (IrpContext != NULL)
     {
-        IrpContext->Irp->IoStatus.Status = Status;
-        IoCompleteRequest(IrpContext->Irp, IrpContext->PriorityBoost);
-    }
+        QueueIrp = BooleanFlagOn(IrpContext->Flags, IRPCONTEXT_QUEUE);
+        CompleteIrp = BooleanFlagOn(IrpContext->Flags, IRPCONTEXT_COMPLETE);
 
-    if (QueueIrp)
-    {
-        /* Reset our status flags before queueing the IRP */
-        IrpContext->Flags |= IRPCONTEXT_COMPLETE;
-        IrpContext->Flags &= ~IRPCONTEXT_QUEUE;
-        Status = VfatQueueRequest(IrpContext);
-    }
-    else
-    {
-        /* Unless the IRP was queued, always free the IRP context */
-        VfatFreeIrpContext(IrpContext);
+        ASSERT((!CompleteIrp && !QueueIrp) ||
+               (CompleteIrp && !QueueIrp) ||
+               (!CompleteIrp && QueueIrp));
+
+        if (CompleteIrp)
+        {
+            IrpContext->Irp->IoStatus.Status = Status;
+            IoCompleteRequest(IrpContext->Irp, IrpContext->PriorityBoost);
+        }
+
+        if (QueueIrp)
+        {
+            /* Reset our status flags before queueing the IRP */
+            IrpContext->Flags |= IRPCONTEXT_COMPLETE;
+            IrpContext->Flags &= ~IRPCONTEXT_QUEUE;
+            Status = VfatQueueRequest(IrpContext);
+        }
+        else
+        {
+            /* Unless the IRP was queued, always free the IRP context */
+            VfatFreeIrpContext(IrpContext);
+        }
     }
 
     FsRtlExitFileSystem();

@@ -1189,7 +1189,7 @@ VfatRead(
 
 NTSTATUS
 VfatWrite(
-    PVFAT_IRP_CONTEXT IrpContext);
+    PVFAT_IRP_CONTEXT *pIrpContext);
 
 NTSTATUS
 NextCluster(

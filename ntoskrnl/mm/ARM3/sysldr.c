@@ -991,7 +991,7 @@ MmUnloadSystemImage(IN PVOID ImageHandle)
 
     /* Release the system lock and return */
 Done:
-    KeReleaseMutant(&MmSystemLoadLock, 1, FALSE, FALSE);
+    KeReleaseMutant(&MmSystemLoadLock, MUTANT_INCREMENT, FALSE, FALSE);
     KeLeaveCriticalRegion();
     return STATUS_SUCCESS;
 }
@@ -1623,7 +1623,7 @@ MiFindInitializationCode(OUT PVOID *StartVa,
 
     /* Release the locks and return */
     ExReleaseResourceLite(&PsLoadedModuleResource);
-    KeReleaseMutant(&MmSystemLoadLock, 1, FALSE, FALSE);
+    KeReleaseMutant(&MmSystemLoadLock, MUTANT_INCREMENT, FALSE, FALSE);
     KeLeaveCriticalRegion();
 }
 
@@ -2972,7 +2972,7 @@ LoaderScan:
     else if (!Section)
     {
         /* It wasn't loaded, and we didn't have a previous attempt */
-        KeReleaseMutant(&MmSystemLoadLock, 1, FALSE, FALSE);
+        KeReleaseMutant(&MmSystemLoadLock, MUTANT_INCREMENT, FALSE, FALSE);
         KeLeaveCriticalRegion();
         LockOwned = FALSE;
 
@@ -3324,7 +3324,7 @@ Quickie:
     if (LockOwned)
     {
         /* Release the lock */
-        KeReleaseMutant(&MmSystemLoadLock, 1, FALSE, FALSE);
+        KeReleaseMutant(&MmSystemLoadLock, MUTANT_INCREMENT, FALSE, FALSE);
         KeLeaveCriticalRegion();
         LockOwned = FALSE;
     }
