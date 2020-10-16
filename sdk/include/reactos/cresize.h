@@ -14,7 +14,7 @@
 #endif
 #include <assert.h>
 
-/* The layout anchors for cresize_SetLayoutAnchor */
+/* The layout anchors */
 #define LA_TOP_LEFT      0, 0     /* upper left */
 #define LA_TOP_CENTER    50, 0    /* upper center */
 #define LA_TOP_RIGHT     100, 0   /* upper right */
@@ -27,11 +27,9 @@
 
 typedef struct CRESIZE_LAYOUT {
     INT m_nCtrlID;
-    LONG m_cx1, m_cy1;
-    LONG m_cx2, m_cy2;
-    SIZE m_anchor1;
+    LONG m_cx1, m_cy1; /* layout anchor */
+    LONG m_cx2, m_cy2; /* layout anchor */
     SIZE m_margin1;
-    SIZE m_anchor2;
     SIZE m_margin2;
     HWND m_hwndCtrl;
 } CRESIZE_LAYOUT;
@@ -135,10 +133,10 @@ cresize_DoLayout(CRESIZE *pResize, HDWP hDwp, const CRESIZE_LAYOUT *pLayout,
     width = ClientRect->right - ClientRect->left;
     height = ClientRect->bottom - ClientRect->top;
 
-    NewRect.left = pLayout->m_margin1.cx + width * pLayout->m_anchor1.cx / 100;
-    NewRect.top = pLayout->m_margin1.cy + height * pLayout->m_anchor1.cy / 100;
-    NewRect.right = pLayout->m_margin2.cx + width * pLayout->m_anchor2.cx / 100;
-    NewRect.bottom = pLayout->m_margin2.cy + height * pLayout->m_anchor2.cy / 100;
+    NewRect.left = pLayout->m_margin1.cx + width * pLayout->m_cx1 / 100;
+    NewRect.top = pLayout->m_margin1.cy + height * pLayout->m_cy1 / 100;
+    NewRect.right = pLayout->m_margin2.cx + width * pLayout->m_cx2 / 100;
+    NewRect.bottom = pLayout->m_margin2.cy + height * pLayout->m_cy2 / 100;
 
     if (!EqualRect(&NewRect, &ChildRect))
     {
@@ -193,13 +191,11 @@ static __inline void
 cresize_InitializeLayouts(CRESIZE *pResize)
 {
     RECT ClientRect, ChildRect;
-    SIZE margin1, margin2;
     LONG width, height;
     size_t iItem;
     HWND hwndCtrl;
 
     assert(IsWindow(pResize->m_hwndParent));
-
     GetClientRect(pResize->m_hwndParent, &ClientRect);
 
     for (iItem = 0; iItem < pResize->m_cLayouts; ++iItem)
@@ -220,17 +216,10 @@ cresize_InitializeLayouts(CRESIZE *pResize)
         width = ClientRect.right - ClientRect.left;
         height = ClientRect.bottom - ClientRect.top;
 
-        margin1.cx = ChildRect.left - width * layout->m_cx1 / 100;
-        margin1.cy = ChildRect.top - height * layout->m_cy1 / 100;
-        margin2.cx = ChildRect.right - width * layout->m_cx2 / 100;
-        margin2.cy = ChildRect.bottom - height * layout->m_cy2 / 100;
-
-        layout->m_anchor1.cx = layout->m_cx1;
-        layout->m_anchor1.cy = layout->m_cy1;
-        layout->m_margin1 = margin1;
-        layout->m_anchor2.cx = layout->m_cx2;
-        layout->m_anchor2.cy = layout->m_cy2;
-        layout->m_margin2 = margin2;
+        layout->m_margin1.cx = ChildRect.left - width * layout->m_cx1 / 100;
+        layout->m_margin1.cy = ChildRect.top - height * layout->m_cy1 / 100;
+        layout->m_margin2.cx = ChildRect.right - width * layout->m_cx2 / 100;
+        layout->m_margin2.cy = ChildRect.bottom - height * layout->m_cy2 / 100;
     }
 }
 
@@ -258,6 +247,8 @@ cresize_Create(HWND hwndParent, const CRESIZE_LAYOUT *pLayouts, size_t cLayouts,
     assert(GetWindowLongPtrW(hwndParent, GWL_STYLE) & WS_THICKFRAME);
 
     pResize->m_hwndParent = hwndParent;
+    pResize->m_bResizeEnabled = FALSE;
+    pResize->m_hwndSizeGrip = NULL;
     cresize_EnableResize(pResize, bEnableResize);
     cresize_InitializeLayouts(pResize);
 
