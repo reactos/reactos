@@ -62,6 +62,6 @@ add_library(lwip ${SOURCE})
 add_dependencies(lwip bugcodes xdk)
 add_pch(lwip precomp.h SOURCE)
 
-if((NOT MSVC) AND  LTCG)
+if((NOT MSVC) AND LTCG)
     target_compile_options(lwip PRIVATE -fno-builtin-malloc -fno-builtin-free)
 endif()

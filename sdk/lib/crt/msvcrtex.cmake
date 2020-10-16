@@ -96,9 +96,9 @@ add_asm_files(msvcrtex_asm ${MSVCRTEX_ASM_SOURCE})
 add_library(msvcrtex ${MSVCRTEX_SOURCE} ${msvcrtex_asm})
 target_compile_definitions(msvcrtex PRIVATE _DLL _MSVCRTEX_)
 
-if ((NOT MSVC) OR USE_CLANG_CL)
+if(GCC OR CLANG)
     target_compile_options(msvcrtex PRIVATE $<$<COMPILE_LANGUAGE:C>:-Wno-main>)
-    if (LTCG)
+    if(LTCG)
         target_compile_options(msvcrtex PRIVATE -fno-lto)
     endif()
 endif()
@@ -107,7 +107,7 @@ set_source_files_properties(startup/crtdll.c PROPERTIES COMPILE_DEFINITIONS CRTD
 set_source_files_properties(startup/crtexe.c
                             startup/wcrtexe.c PROPERTIES COMPILE_DEFINITIONS _M_CEE_PURE)
 
-if (NOT MSVC)
+if(NOT MSVC)
     target_link_libraries(msvcrtex oldnames)
 endif()
 
