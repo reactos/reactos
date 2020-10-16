@@ -83,7 +83,21 @@ typedef struct tagLAYOUT_INFO
     int iItemId;          /* control id */
     DWORD dwAnchor;       /* BF_* flags specifying which margins should remain constant */
 } LAYOUT_INFO;
+#endif
 
+#ifdef __REACTOS__
+static const CRESIZE_LAYOUT g_layout_info[] =
+{
+    { IDC_BROWSE_FOR_FOLDER_TITLE, LA_TOP_LEFT, LA_TOP_RIGHT },
+    { IDC_BROWSE_FOR_FOLDER_STATUS, LA_TOP_LEFT, LA_TOP_RIGHT },
+    { IDC_BROWSE_FOR_FOLDER_FOLDER, LA_BOTTOM_LEFT, LA_BOTTOM_LEFT },
+    { IDC_BROWSE_FOR_FOLDER_TREEVIEW, LA_TOP_LEFT, LA_BOTTOM_RIGHT },
+    { IDC_BROWSE_FOR_FOLDER_FOLDER_TEXT, LA_BOTTOM_LEFT, LA_BOTTOM_RIGHT },
+    { IDC_BROWSE_FOR_FOLDER_NEW_FOLDER, LA_BOTTOM_LEFT, LA_BOTTOM_LEFT },
+    { IDOK, LA_BOTTOM_RIGHT, LA_BOTTOM_RIGHT },
+    { IDCANCEL, LA_BOTTOM_RIGHT, LA_BOTTOM_RIGHT },
+};
+#else
 static const LAYOUT_INFO g_layout_info[] =
 {
     {IDC_BROWSE_FOR_FOLDER_TITLE,         BF_TOP|BF_LEFT|BF_RIGHT},
@@ -96,9 +110,9 @@ static const LAYOUT_INFO g_layout_info[] =
     {IDOK,              BF_BOTTOM|BF_RIGHT},
     {IDCANCEL,          BF_BOTTOM|BF_RIGHT}
 };
+#endif
 
 #define LAYOUT_INFO_COUNT (sizeof(g_layout_info)/sizeof(g_layout_info[0]))
-#endif
 
 #define SUPPORTEDFLAGS (BIF_STATUSTEXT | \
                         BIF_BROWSEFORCOMPUTER | \
@@ -776,18 +790,7 @@ static BOOL BrsFolder_OnCreate( HWND hWnd, browse_info *info )
         RECT rcWnd;
 
 #ifdef __REACTOS__
-        info->layout = cresize_Create(hWnd, TRUE, 8);
-        if (info->layout)
-        {
-            cresize_SetLayoutAnchorByID(info->layout, IDC_BROWSE_FOR_FOLDER_TITLE, LA_TOP_LEFT, LA_TOP_RIGHT);
-            cresize_SetLayoutAnchorByID(info->layout, IDC_BROWSE_FOR_FOLDER_STATUS, LA_TOP_LEFT, LA_TOP_RIGHT);
-            cresize_SetLayoutAnchorByID(info->layout, IDC_BROWSE_FOR_FOLDER_FOLDER, LA_BOTTOM_LEFT, LA_BOTTOM_LEFT);
-            cresize_SetLayoutAnchorByID(info->layout, IDC_BROWSE_FOR_FOLDER_TREEVIEW, LA_TOP_LEFT, LA_BOTTOM_RIGHT);
-            cresize_SetLayoutAnchorByID(info->layout, IDC_BROWSE_FOR_FOLDER_FOLDER_TEXT, LA_BOTTOM_LEFT, LA_BOTTOM_RIGHT);
-            cresize_SetLayoutAnchorByID(info->layout, IDC_BROWSE_FOR_FOLDER_NEW_FOLDER, LA_BOTTOM_LEFT, LA_BOTTOM_LEFT);
-            cresize_SetLayoutAnchorByID(info->layout, IDOK, LA_BOTTOM_RIGHT, LA_BOTTOM_RIGHT);
-            cresize_SetLayoutAnchorByID(info->layout, IDCANCEL, LA_BOTTOM_RIGHT, LA_BOTTOM_RIGHT);
-        }
+        info->layout = cresize_Create(hWnd, g_layout_info, LAYOUT_INFO_COUNT, TRUE);
 #else
         info->layout = LayoutInit(hWnd, g_layout_info, LAYOUT_INFO_COUNT);
 #endif

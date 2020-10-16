@@ -1,72 +1,55 @@
+/*
+ * PROJECT:     ReactOS include
+ * LICENSE:     LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
+ * PURPOSE:     Resizable dialog box / window
+ * COPYRIGHT:   Copyright 2020 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
+ */
 #pragma once
 
-#ifndef _INC_WINDOWS
-    #include <windows.h>
+#ifndef _WINDEF_
+    #include <windef.h>
+#endif
+#ifndef _WINBASE_
+    #include <winbase.h>
 #endif
 #include <assert.h>
 
-#define CVECTOR_LOGARITHMIC_GROWTH
-#define CVECTOR_ASSERT(x) assert(x)
-#define CVECTOR_MALLOC(cb) LocalAlloc(LPTR, (cb))
-#define CVECTOR_REALLOC(ptr,cb) LocalReAlloc((ptr), (cb), LMEM_ZEROINIT)
-#define CVECTOR_FREE(ptr) LocalFree(ptr)
-#include "cvector.h" /* Evan Teran's C vector */
-
 /* The layout anchors for cresize_SetLayoutAnchor */
-#define LA_TOP_LEFT         0, 0      /* upper left */
-#define LA_TOP_CENTER       50, 0     /* upper center */
-#define LA_TOP_RIGHT        100, 0    /* upper right */
-#define LA_MIDDLE_LEFT      0, 50     /* middle left */
-#define LA_MIDDLE_CENTER    50, 50    /* middle center */
-#define LA_MIDDLE_RIGHT     100, 50   /* middle right */
-#define LA_BOTTOM_LEFT      0, 100    /* lower left */
-#define LA_BOTTOM_CENTER    50, 100   /* lower center */
-#define LA_BOTTOM_RIGHT     100, 100  /* lower right */
+#define LA_TOP_LEFT      0, 0     /* upper left */
+#define LA_TOP_CENTER    50, 0    /* upper center */
+#define LA_TOP_RIGHT     100, 0   /* upper right */
+#define LA_MIDDLE_LEFT   0, 50    /* middle left */
+#define LA_MIDDLE_CENTER 50, 50   /* middle center */
+#define LA_MIDDLE_RIGHT  100, 50  /* middle right */
+#define LA_BOTTOM_LEFT   0, 100   /* lower left */
+#define LA_BOTTOM_CENTER 50, 100  /* lower center */
+#define LA_BOTTOM_RIGHT  100, 100 /* lower right */
 
-typedef struct CRESIZE_CTRL_LAYOUT
-{
-    HWND m_hwndCtrl;
+typedef struct CRESIZE_LAYOUT {
+    INT m_nCtrlID;
+    LONG m_cx1, m_cy1;
+    LONG m_cx2, m_cy2;
     SIZE m_anchor1;
     SIZE m_margin1;
     SIZE m_anchor2;
     SIZE m_margin2;
-} CRESIZE_CTRL_LAYOUT;
+    HWND m_hwndCtrl;
+} CRESIZE_LAYOUT;
 
-typedef struct CRESIZE
-{
-    HWND            m_hwndParent;
-    BOOL            m_bResizeEnabled;
-    HWND            m_hwndSizeGrip;
-    cvector_vector_type(CRESIZE_CTRL_LAYOUT) m_pLayouts;
+typedef struct CRESIZE {
+    HWND m_hwndParent;
+    BOOL m_bResizeEnabled;
+    HWND m_hwndSizeGrip;
+    size_t m_cLayouts;
+    CRESIZE_LAYOUT *m_pLayouts;
 } CRESIZE;
-
-static __inline CRESIZE_CTRL_LAYOUT *
-cresize_FindCtrlHWND(CRESIZE *pResize, HWND hwndCtrl)
-{
-    CRESIZE_CTRL_LAYOUT *it;
-    for (it = cvector_begin(pResize->m_pLayouts);
-         it != cvector_end(pResize->m_pLayouts);
-         ++it)
-    {
-        if (it->m_hwndCtrl == hwndCtrl)
-            return it;
-    }
-    return NULL;
-}
-
-static __inline CRESIZE_CTRL_LAYOUT *
-cresize_FindCtrlID(CRESIZE *pResize, UINT nCtrlID)
-{
-    HWND hwndCtrl = GetDlgItem(pResize->m_hwndParent, nCtrlID);
-    return cresize_FindCtrlHWND(pResize, hwndCtrl);
-}
 
 static __inline void
 cresize_ModifySystemMenu(CRESIZE *pResize, BOOL bEnableResize)
 {
     if (bEnableResize)
     {
-        GetSystemMenu(pResize->m_hwndParent, TRUE);
+        GetSystemMenu(pResize->m_hwndParent, TRUE); /* revert */
     }
     else
     {
@@ -135,7 +118,7 @@ cresize_EnableResize(CRESIZE *pResize, BOOL bEnableResize)
 }
 
 static __inline HDWP
-cresize_DoLayout(CRESIZE *pResize, HDWP hDwp, const CRESIZE_CTRL_LAYOUT *pLayout,
+cresize_DoLayout(CRESIZE *pResize, HDWP hDwp, const CRESIZE_LAYOUT *pLayout,
                  const RECT *ClientRect)
 {
     RECT ChildRect, NewRect;
@@ -173,7 +156,7 @@ static __inline void
 cresize_ArrangeLayout(CRESIZE *pResize, const RECT *prc OPTIONAL)
 {
     RECT ClientRect;
-    INT i, count;
+    size_t i;
     HDWP hDwp;
 
     assert(IsWindow(pResize->m_hwndParent));
@@ -183,17 +166,13 @@ cresize_ArrangeLayout(CRESIZE *pResize, const RECT *prc OPTIONAL)
     else
         GetClientRect(pResize->m_hwndParent, &ClientRect);
 
-    count = (INT)cvector_size(pResize->m_pLayouts);
-    if (count == 0)
-        return;
-
-    hDwp = BeginDeferWindowPos(count);
+    hDwp = BeginDeferWindowPos((INT)pResize->m_cLayouts);
     if (hDwp == NULL)
         return;
 
-    for (i = 0; i < count; ++i)
+    for (i = 0; i < pResize->m_cLayouts; ++i)
     {
-        const CRESIZE_CTRL_LAYOUT *pLayout = &pResize->m_pLayouts[i];
+        const CRESIZE_LAYOUT *pLayout = &pResize->m_pLayouts[i];
         hDwp = cresize_DoLayout(pResize, hDwp, pLayout, &ClientRect);
     }
 
@@ -210,68 +189,77 @@ cresize_OnSize(CRESIZE *pResize, const RECT *prcClient OPTIONAL)
     cresize_MoveSizeGrip(pResize);
 }
 
-// NOTE: Please call cresize_SetLayoutAnchor and/or cresize_SetLayoutAnchorByID to set control layouts.
 static __inline void
-cresize_SetLayoutAnchor(CRESIZE *pResize, HWND hwndCtrl,
-                        INT cx1, INT cy1, INT cx2, INT cy2)
+cresize_InitializeLayouts(CRESIZE *pResize)
 {
     RECT ClientRect, ChildRect;
     SIZE margin1, margin2;
     LONG width, height;
-    CRESIZE_CTRL_LAYOUT *pLayout, layout;
+    size_t iItem;
+    HWND hwndCtrl;
 
     assert(IsWindow(pResize->m_hwndParent));
 
     GetClientRect(pResize->m_hwndParent, &ClientRect);
-    GetWindowRect(hwndCtrl, &ChildRect);
-    MapWindowPoints(NULL, pResize->m_hwndParent, (LPPOINT)&ChildRect, 2);
 
-    width = ClientRect.right - ClientRect.left;
-    height = ClientRect.bottom - ClientRect.top;
+    for (iItem = 0; iItem < pResize->m_cLayouts; ++iItem)
+    {
+        CRESIZE_LAYOUT *layout = &pResize->m_pLayouts[iItem];
 
-    margin1.cx = ChildRect.left - width * cx1 / 100;
-    margin1.cy = ChildRect.top - height * cy1 / 100;
-    margin2.cx = ChildRect.right - width * cx2 / 100;
-    margin2.cy = ChildRect.bottom - height * cy2 / 100;
+        if (layout->m_hwndCtrl == NULL)
+        {
+            layout->m_hwndCtrl = GetDlgItem(pResize->m_hwndParent, layout->m_nCtrlID);
+            if (layout->m_hwndCtrl == NULL)
+                continue;
+        }
+        hwndCtrl = layout->m_hwndCtrl;
 
-    pLayout = cresize_FindCtrlHWND(pResize, hwndCtrl);
-    if (pLayout)
-        return;
+        GetWindowRect(hwndCtrl, &ChildRect);
+        MapWindowPoints(NULL, pResize->m_hwndParent, (LPPOINT)&ChildRect, 2);
 
-    layout.m_hwndCtrl = hwndCtrl;
-    layout.m_anchor1.cx = cx1;
-    layout.m_anchor1.cy = cy1;
-    layout.m_margin1 = margin1;
-    layout.m_anchor2.cx = cx2;
-    layout.m_anchor2.cy = cy2;
-    layout.m_margin2 = margin2;
+        width = ClientRect.right - ClientRect.left;
+        height = ClientRect.bottom - ClientRect.top;
 
-    cvector_push_back(pResize->m_pLayouts, layout);
-}
+        margin1.cx = ChildRect.left - width * layout->m_cx1 / 100;
+        margin1.cy = ChildRect.top - height * layout->m_cy1 / 100;
+        margin2.cx = ChildRect.right - width * layout->m_cx2 / 100;
+        margin2.cy = ChildRect.bottom - height * layout->m_cy2 / 100;
 
-static __inline void
-cresize_SetLayoutAnchorByID(CRESIZE *pResize, UINT nCtrlID,
-                            INT cx1, INT cy1, INT cx2, INT cy2)
-{
-    HWND hwndCtrl = GetDlgItem(pResize->m_hwndParent, nCtrlID);
-    cresize_SetLayoutAnchor(pResize, hwndCtrl, cx1, cy1, cx2, cy2);
+        layout->m_anchor1.cx = layout->m_cx1;
+        layout->m_anchor1.cy = layout->m_cy1;
+        layout->m_margin1 = margin1;
+        layout->m_anchor2.cx = layout->m_cx2;
+        layout->m_anchor2.cy = layout->m_cy2;
+        layout->m_margin2 = margin2;
+    }
 }
 
 static __inline CRESIZE *
-cresize_Create(HWND hwndParent, BOOL bEnableResize, size_t capacity)
+cresize_Create(HWND hwndParent, const CRESIZE_LAYOUT *pLayouts, size_t cLayouts,
+               BOOL bEnableResize)
 {
-    CRESIZE *pResize = LocalAlloc(LPTR, sizeof(CRESIZE));
+    size_t cb;
+    CRESIZE *pResize = SHAlloc(sizeof(CRESIZE));
     if (pResize == NULL)
         return NULL;
 
-    assert(IsWindow(hwndParent));
-    pResize->m_hwndParent = hwndParent;
-    cvector_reserve(pResize->m_pLayouts, capacity);
+    cb = cLayouts * sizeof(CRESIZE_LAYOUT);
+    pResize->m_cLayouts = cLayouts;
+    pResize->m_pLayouts = SHAlloc(cb);
+    if (pResize->m_pLayouts == NULL)
+    {
+        SHFree(pResize);
+        return NULL;
+    }
+    memcpy(pResize->m_pLayouts, pLayouts, cb);
 
     /* NOTE: The parent window must have initially WS_THICKFRAME style. */
+    assert(IsWindow(hwndParent));
     assert(GetWindowLongPtrW(hwndParent, GWL_STYLE) & WS_THICKFRAME);
 
+    pResize->m_hwndParent = hwndParent;
     cresize_EnableResize(pResize, bEnableResize);
+    cresize_InitializeLayouts(pResize);
 
     return pResize;
 }
@@ -279,6 +267,6 @@ cresize_Create(HWND hwndParent, BOOL bEnableResize, size_t capacity)
 static __inline void
 cresize_Destroy(CRESIZE *pResize)
 {
-    cvector_free(pResize->m_pLayouts);
-    LocalFree(pResize);
+    SHFree(pResize->m_pLayouts);
+    SHFree(pResize);
 }
