@@ -43,10 +43,9 @@ if(MSVC)
     add_importlibs(libxslt ntdll)
 endif()
 
-if ((NOT MSVC) OR USE_CLANG_CL)
+if(GCC OR CLANG)
     target_compile_options(libxslt PRIVATE -Wno-misleading-indentation -Wno-pointer-sign -Wno-unused-function)
 endif()
 
 add_pch(libxslt precomp.h SOURCE)
 add_cd_file(TARGET libxslt DESTINATION reactos/system32 FOR all)
-
