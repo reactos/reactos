@@ -131,7 +131,7 @@ NTSTATUS CMiniportWaveICHStream::Init
 (
     IN  CMiniportWaveICH        *Miniport_,
     IN  PPORTWAVEPCISTREAM      PortStream_,
-    IN  ULONG                   Channel_,
+    IN  WavePins                Pin,
     IN  BOOLEAN                 Capture_,
     IN  PKSDATAFORMAT           DataFormat_,
     OUT PSERVICEGROUP           *ServiceGroup_
@@ -198,14 +198,14 @@ NTSTATUS CMiniportWaveICHStream::Init
 
     // calculate the (backup) pointer.
     stBDList.pMapDataBackup = stBDList.pMapData + MAX_BDL_ENTRIES;
-    
-    
-    NTSTATUS ntStatus = CMiniportStream::Init(Miniport_, 
-                                              Channel_, 
-                                              Capture_, 
-                                              DataFormat_, 
+
+
+    NTSTATUS ntStatus = CMiniportStream::Init(Miniport_,
+                                              Pin,
+                                              Capture_,
+                                              DataFormat_,
                                               ServiceGroup_);
-    if (!NT_SUCCESS (ntStatus)) 
+    if (!NT_SUCCESS (ntStatus))
         return ntStatus;
 
     PPREFETCHOFFSET PreFetchOffset;

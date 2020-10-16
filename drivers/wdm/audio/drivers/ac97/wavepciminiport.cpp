@@ -165,7 +165,7 @@ STDMETHODIMP CMiniportWaveICH::NewStream
     PUNKNOWN                OuterUnknown,
     POOL_TYPE               PoolType,
     PPORTWAVEPCISTREAM      PortStream,
-    ULONG                   Channel_,
+    ULONG                   Pin_,
     BOOLEAN                 Capture,
     PKSDATAFORMAT           DataFormat,
     PDMACHANNEL            *DmaChannel_,
@@ -186,32 +186,11 @@ STDMETHODIMP CMiniportWaveICH::NewStream
     DOUT (DBG_PRINT, ("[CMiniportWaveICH::NewStream]"));
 
     //
-    // Validate the channel (pin id).
-    //
-    if ((Channel_ != PIN_WAVEOUT) && (Channel_ != PIN_WAVEIN) &&
-       (Channel_ != PIN_MICIN))
-    {
-        DOUT (DBG_ERROR, ("[NewStream] Invalid channel passed!"));
-        return STATUS_INVALID_PARAMETER;
-    }
-
-    //
-    // Check if the pin is already in use
-    //
-    ULONG Channel = Channel_ >> 1;
-    if (Streams[Channel])
-    {
-        DOUT (DBG_ERROR, ("[NewStream] Pin is already in use!"));
-        return STATUS_UNSUCCESSFUL;
-    }
-
-    //
     // Check parameters.
     //
-    ntStatus = TestDataFormat (DataFormat, (WavePins)Channel_);
+    ntStatus = ValidateFormat (DataFormat, (WavePins)Pin_);
     if (!NT_SUCCESS (ntStatus))
     {
-        DOUT (DBG_VSR, ("[NewStream] TestDataFormat failed!"));
         return ntStatus;
     }
 
@@ -235,7 +214,7 @@ STDMETHODIMP CMiniportWaveICH::NewStream
     //
     ntStatus = pWaveICHStream->Init (this,
                                     PortStream,
-                                    Channel,
+                                    (WavePins)Pin_,
                                     Capture,
                                     DataFormat,
                                     ServiceGroup);

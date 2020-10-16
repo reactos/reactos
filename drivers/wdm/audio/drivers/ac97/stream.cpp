@@ -66,7 +66,7 @@ NTSTATUS CMiniportStream::NonDelegatingQueryInterface
 NTSTATUS CMiniportStream::Init
 (
     IN  CMiniport               *Miniport_,
-    IN  ULONG                   Channel_,
+    IN  WavePins                Pin_,
     IN  BOOLEAN                 Capture_,
     IN  PKSDATAFORMAT           DataFormat_,
     OUT PSERVICEGROUP           *ServiceGroup_
@@ -94,7 +94,7 @@ NTSTATUS CMiniportStream::Init
     //
     // Save channel ID and capture flag.
     //
-    Channel = Channel_;
+    Pin = Pin_;
     Capture = Capture_;
 
     //
@@ -134,7 +134,7 @@ NTSTATUS CMiniportStream::Init
         //
         // could be PCM or MIC capture
         //
-        if (Channel == PIN_WAVEIN_OFFSET)
+        if (Pin == PIN_WAVEIN)
         {
             // Base address for DMA registers.
             m_ulBDAddr = PI_BDBAR;
@@ -175,7 +175,7 @@ NTSTATUS CMiniportStream::Init
     //
     // Store the stream pointer, it is used by the ISR.
     //
-    Miniport->Streams[Channel] = this;
+    Miniport->Streams[Pin/2] = this;
 
     return STATUS_SUCCESS;
 }
@@ -196,7 +196,7 @@ CMiniportStream::~CMiniportStream()
             // Update also the topology miniport if this was the render stream.
             //
             if (Miniport->AdapterCommon->GetMiniportTopology () &&
-                (Channel == PIN_WAVEOUT_OFFSET))
+                (Pin == PIN_WAVEOUT))
             {
                 Miniport->AdapterCommon->GetMiniportTopology ()->SetCopyProtectFlag (FALSE);
             }
@@ -205,9 +205,9 @@ CMiniportStream::~CMiniportStream()
         //
         // Remove stream from miniport Streams array.
         //
-        if (Miniport->Streams[Channel] == this)
+        if (Miniport->Streams[Pin/2] == this)
         {
-            Miniport->Streams[Channel] = NULL;
+            Miniport->Streams[Pin/2] = NULL;
         }
 
         //
@@ -412,7 +412,7 @@ STDMETHODIMP_(NTSTATUS) CMiniportStream::SetFormat
     //
     // Ensure format falls in proper range and is supported.
     //
-    NTSTATUS ntStatus = Miniport->TestDataFormat (Format, (WavePins)(Channel << 1));
+    NTSTATUS ntStatus = Miniport->TestDataFormat (Format, Pin);
     if (!NT_SUCCESS (ntStatus))
         return ntStatus;
 
@@ -455,7 +455,7 @@ STDMETHODIMP_(NTSTATUS) CMiniportStream::SetFormat
     //
     // Program the AC97 to support n channels.
     //
-    if (Channel == PIN_WAVEOUT_OFFSET)
+    if (Pin == PIN_WAVEOUT)
     {
         dwControlReg = Miniport->AdapterCommon->ReadBMControlRegister32 (GLOB_CNT);
         dwControlReg = (dwControlReg & 0x03F) |
@@ -470,7 +470,7 @@ STDMETHODIMP_(NTSTATUS) CMiniportStream::SetFormat
     //
     if (Capture)
     {
-        if (Channel == PIN_WAVEIN_OFFSET)
+        if (Pin == PIN_WAVEIN)
         {
             ntStatus = Miniport->AdapterCommon->
                 ProgramSampleRate (AC97REG_RECORD_SAMPLERATE, TempRate);

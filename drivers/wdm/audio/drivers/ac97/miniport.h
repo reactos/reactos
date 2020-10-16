@@ -57,6 +57,12 @@ public:
         IN WavePins      Pin
     );
 
+    NTSTATUS ValidateFormat
+    (
+        IN  PKSDATAFORMAT DataFormat,
+        IN  WavePins      Pin
+    );
+
     // Test for standard sample rate support and fill the data range information
     // in the structures below.
     NTSTATUS BuildDataRangeInformation (void);

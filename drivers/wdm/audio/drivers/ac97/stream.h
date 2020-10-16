@@ -40,7 +40,7 @@ class CMiniportStream : public IDrmAudioStream
 
 public:
     CMiniport*                  Miniport;
-    ULONG                       Channel;        // channel this stream handles.
+    WavePins                    Pin;        // channel this stream handles.
     BOOL                        Capture;        // TRUE=Capture,FALSE=Render
     WORD                        NumberOfChannels; // Number of channels
     DEVICE_POWER_STATE  m_PowerState;       // Current power state of the device.
@@ -104,7 +104,7 @@ public:
     NTSTATUS Init
     (
         IN  CMiniport*              Miniport_,
-        IN  ULONG                   Channel_,
+        IN  WavePins                Pin_,
         IN  BOOLEAN                 Capture_,
         IN  PKSDATAFORMAT           DataFormat_,
         OUT PSERVICEGROUP           *ServiceGroup_

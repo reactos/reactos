@@ -774,6 +774,45 @@ STDMETHODIMP_(NTSTATUS) CMiniport::DataRangeIntersection
 }
 
 
+NTSTATUS CMiniport::ValidateFormat
+(
+    IN  PKSDATAFORMAT DataFormat,
+    IN  WavePins      Pin
+)
+{
+    //
+    // Validate the channel (pin id).
+    //
+    if ((Pin != PIN_WAVEOUT) && (Pin != PIN_WAVEIN) &&
+       (Pin != PIN_MICIN))
+    {
+        DOUT (DBG_ERROR, ("[NewStream] Invalid channel passed!"));
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    //
+    // Check if the pin is already in use
+    //
+    if (Streams[Pin/2])
+    {
+        DOUT (DBG_ERROR, ("[NewStream] Pin is already in use!"));
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    //
+    // Check parameters.
+    //
+    NTSTATUS ntStatus = TestDataFormat (DataFormat, Pin);
+    if (!NT_SUCCESS (ntStatus))
+    {
+        DOUT (DBG_VSR, ("[NewStream] TestDataFormat failed!"));
+        return ntStatus;
+    }
+
+    return ntStatus;
+}
+
+
 /*****************************************************************************
  * CMiniport::TestDataFormat
  *****************************************************************************

@@ -143,7 +143,7 @@ public:
     (
         IN  CMiniportWaveICH    *Miniport_,
         IN  PPORTWAVEPCISTREAM  PortStream,
-        IN  ULONG               Channel,
+        IN  WavePins            Pin_,
         IN  BOOLEAN             Capture,
         IN  PKSDATAFORMAT       DataFormat,
         OUT PSERVICEGROUP *     ServiceGroup
