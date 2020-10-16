@@ -1221,6 +1221,10 @@ BOOLEAN
 vfatIsLongIllegal(
     WCHAR c);
 
+BOOLEAN
+IsDotOrDotDot(
+    PCUNICODE_STRING Name);
+
 /* volume.c */
 
 NTSTATUS

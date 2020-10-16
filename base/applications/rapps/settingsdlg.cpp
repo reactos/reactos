@@ -66,6 +66,7 @@ BOOL IsUrlValid(const WCHAR * Url)
         case INTERNET_SCHEME_HTTP:
         case INTERNET_SCHEME_HTTPS:
         case INTERNET_SCHEME_FTP:
+        case INTERNET_SCHEME_FILE:
         // supported
             return TRUE;
             

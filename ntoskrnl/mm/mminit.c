@@ -273,7 +273,8 @@ MmInitSystem(IN ULONG Phase,
     /* Initialize the balance set manager */
     MmInitBsmThread();
 
-    /* Loop the boot loaded images */
+    /* Loop the boot loaded images (under lock) */
+    ExAcquireResourceExclusiveLite(&PsLoadedModuleResource, TRUE);
     for (ListEntry = PsLoadedModuleList.Flink;
          ListEntry != &PsLoadedModuleList;
          ListEntry = ListEntry->Flink)
@@ -284,6 +285,7 @@ MmInitSystem(IN ULONG Phase,
         /* Set up the image protection */
         MiWriteProtectSystemImage(DataTableEntry->DllBase);
     }
+    ExReleaseResourceLite(&PsLoadedModuleResource);
 
     return TRUE;
 }

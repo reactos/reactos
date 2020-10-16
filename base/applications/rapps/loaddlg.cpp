@@ -305,9 +305,7 @@ public:
 };
 
 #ifdef USE_CERT_PINNING
-typedef CHeapPtr<char, CLocalAllocator> CLocalPtr;
-
-static BOOL CertGetSubjectAndIssuer(HINTERNET hFile, CLocalPtr& subjectInfo, CLocalPtr& issuerInfo)
+static BOOL CertGetSubjectAndIssuer(HINTERNET hFile, CLocalPtr<char>& subjectInfo, CLocalPtr<char>& issuerInfo)
 {
     DWORD certInfoLength;
     INTERNET_CERTIFICATE_INFOA certInfo;
@@ -528,7 +526,7 @@ VOID ShowLastError(
     HWND hWndOwner,
     DWORD dwLastError)
 {
-    LPWSTR lpMsg;
+    CLocalPtr<WCHAR> lpMsg;
     
     if (!FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER |
                         FORMAT_MESSAGE_FROM_SYSTEM |
@@ -543,7 +541,6 @@ VOID ShowLastError(
     }
 
     MessageBoxW(hWndOwner, lpMsg, NULL, MB_OK | MB_ICONERROR);
-    LocalFree(lpMsg);
 }
 
 unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
@@ -566,7 +563,7 @@ unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
     HANDLE hOut = INVALID_HANDLE_VALUE;
 
     unsigned char lpBuffer[4096];
-    LPCWSTR lpszAgent = L"RApps/1.0";
+    LPCWSTR lpszAgent = L"RApps/1.1";
     URL_COMPONENTSW urlComponents;
     size_t urlLength, filenameLength;
 
@@ -632,7 +629,7 @@ unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
         // do we have a final slash separator?
         if (!p)
         {
-            MessageBox_LoadString(hMainWnd, IDS_UNABLE_PATH);            
+            MessageBox_LoadString(hMainWnd, IDS_UNABLE_PATH);
             goto end;
         }
 
@@ -661,7 +658,7 @@ unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
         {
         case DLTYPE_DBUPDATE:
         case DLTYPE_DBUPDATE_UNOFFICIAL:
-            PathAppendW(Path.GetBuffer(), L"rappmgr.cab"); // whatever the URL is, use the file name L"rappmgr.cab"
+            PathAppendW(Path.GetBuffer(), APPLICATION_DATABASE_NAME);
             break;
         case DLTYPE_APPLICATION:
             PathAppendW(Path.GetBuffer(), (LPWSTR)(p + 1)); // use the filename retrieved from URL
@@ -724,7 +721,8 @@ unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
 
         dwContentLen = 0;
 
-        if (urlComponents.nScheme == INTERNET_SCHEME_HTTP || urlComponents.nScheme == INTERNET_SCHEME_HTTPS)
+        if (urlComponents.nScheme == INTERNET_SCHEME_HTTP ||
+            urlComponents.nScheme == INTERNET_SCHEME_HTTPS)
         {
             hFile = InternetOpenUrlW(hOpen, InfoArray[iAppId].szUrl.GetString(), NULL, 0,
                                      dwUrlConnectFlags,
@@ -754,7 +752,7 @@ unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
         else if (urlComponents.nScheme == INTERNET_SCHEME_FTP)
         {
             // force passive mode on FTP
-            hFile = InternetOpenUrlW(hOpen, InfoArray[iAppId].szUrl.GetString(), NULL, 0,
+            hFile = InternetOpenUrlW(hOpen, InfoArray[iAppId].szUrl, NULL, 0,
                                      dwUrlConnectFlags | INTERNET_FLAG_PASSIVE,
                                      0);
             if (!hFile)
@@ -764,6 +762,31 @@ unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
             }
 
             dwContentLen = FtpGetFileSize(hFile, &dwStatus);
+        }
+        else if (urlComponents.nScheme == INTERNET_SCHEME_FILE)
+        {
+            // Add support for the file scheme so testing locally is simpler
+            WCHAR LocalFilePath[MAX_PATH];
+            DWORD cchPath = _countof(LocalFilePath);
+            // Ideally we would use PathCreateFromUrlAlloc here, but that is not exported (yet)
+            HRESULT hr = PathCreateFromUrlW(InfoArray[iAppId].szUrl, LocalFilePath, &cchPath, 0);
+            if (SUCCEEDED(hr))
+            {
+                if (CopyFileW(LocalFilePath, Path, FALSE))
+                {
+                    goto run;
+                }
+                else
+                {
+                    ShowLastError(hMainWnd, GetLastError());
+                    goto end;
+                }
+            }
+            else
+            {
+                ShowLastError(hMainWnd, hr);
+                goto end;
+            }
         }
 
         if (!dwContentLen)
@@ -787,8 +810,8 @@ unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
         if ((urlComponents.nScheme == INTERNET_SCHEME_HTTPS) &&
             (InfoArray[iAppId].DLType == DLTYPE_DBUPDATE))
         {
-            CLocalPtr subjectName, issuerName;
-            CStringW szMsgText;
+            CLocalPtr<char> subjectName, issuerName;
+            CStringA szMsgText;
             bool bAskQuestion = false;
             if (!CertGetSubjectAndIssuer(hFile, subjectName, issuerName))
             {
@@ -807,7 +830,7 @@ unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
 
             if (bAskQuestion)
             {
-                if (MessageBoxW(hMainWnd, szMsgText.GetString(), NULL, MB_YESNO | MB_ICONERROR) != IDYES)
+                if (MessageBoxA(hMainWnd, szMsgText.GetString(), NULL, MB_YESNO | MB_ICONERROR) != IDYES)
                 {
                     goto end;
                 }
@@ -932,7 +955,8 @@ end:
         if (hOut != INVALID_HANDLE_VALUE)
             CloseHandle(hOut);
 
-        InternetCloseHandle(hFile);
+        if (hFile)
+            InternetCloseHandle(hFile);
         InternetCloseHandle(hOpen);
 
         if (bTempfile)
