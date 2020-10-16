@@ -10,6 +10,59 @@
     ReadBMControlRegister8 (m_ulBDAddr + addr))
 
 
+
+/*****************************************************************************
+ * CAC97MiniportWaveRTStream::NonDelegatingQueryInterface
+ *****************************************************************************
+ * Obtains an interface.  This function works just like a COM QueryInterface
+ * call and is used if the object is not being aggregated.
+ */
+NTSTATUS CMiniportStream::NonDelegatingQueryInterface
+(
+    _In_         REFIID  Interface,
+    _COM_Outptr_ PVOID * Object,
+    _In_         REFIID iStream,
+    _In_         PUNKNOWN stream
+)
+{
+    PAGED_CODE ();
+
+    ASSERT (Object);
+
+    DOUT (DBG_PRINT, ("[CMiniportStream::NonDelegatingQueryInterface]"));
+
+    //
+    // Convert for IID_IMiniportXXXStream
+    //
+    if (IsEqualGUIDAligned (Interface, iStream))
+    {
+        *Object = (PVOID)stream;
+    }
+    //
+    // Convert for IID_IDrmAudioStream
+    //
+    else if (IsEqualGUIDAligned (Interface, IID_IDrmAudioStream))
+    {
+        *Object = (PVOID)(PDRMAUDIOSTREAM)this;
+    }
+    //
+    // Convert for IID_IUnknown
+    //
+    else if (IsEqualGUIDAligned (Interface, IID_IUnknown))
+    {
+        *Object = (PVOID)stream;
+    }
+    else
+    {
+        *Object = NULL;
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    ((PUNKNOWN)*Object)->AddRef ();
+    return STATUS_SUCCESS;
+}
+
+
 NTSTATUS CMiniportStream::Init
 (
     IN  CMiniport               *Miniport_,

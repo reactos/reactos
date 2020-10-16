@@ -13,7 +13,7 @@
 #include "wavepciminiport.h"
 #include "wavepcistream.h"
 
-IMP_CMiniportStream(CMiniportWaveICHStream);
+IMP_CMiniportStream(CMiniportWaveICHStream, IMiniportWavePciStream);
 
 /*****************************************************************************
  * General Info
@@ -222,64 +222,6 @@ NTSTATUS CMiniportWaveICHStream::Init
 
     return STATUS_SUCCESS;
 }
-
-
-/*****************************************************************************
- * CMiniportWaveICHStream::NonDelegatingQueryInterface
- *****************************************************************************
- * Obtains an interface.  This function works just like a COM QueryInterface
- * call and is used if the object is not being aggregated.
- */
-STDMETHODIMP_(NTSTATUS) CMiniportWaveICHStream::NonDelegatingQueryInterface
-(
-    _In_         REFIID  Interface,
-    _COM_Outptr_ PVOID * Object
-)
-{
-    PAGED_CODE ();
-
-    ASSERT (Object);
-
-    DOUT (DBG_PRINT, ("[CMiniportWaveICHStream::NonDelegatingQueryInterface]"));
-
-    //
-    // Convert for IID_IMiniportWavePciStream
-    //
-    if (IsEqualGUIDAligned (Interface, IID_IMiniportWavePciStream))
-    {
-        *Object = (PVOID)(PMINIPORTWAVEPCISTREAM)this;
-    }
-    //
-    // Convert for IID_IServiceSink
-    //
-    else if (IsEqualGUIDAligned (Interface, IID_IServiceSink))
-    {
-        *Object = (PVOID)(PSERVICESINK)this;
-    }
-    //
-    // Convert for IID_IDrmAudioStream
-    //
-    else if (IsEqualGUIDAligned (Interface, IID_IDrmAudioStream))
-    {
-        *Object = (PVOID)(PDRMAUDIOSTREAM)this;
-    }
-    //
-    // Convert for IID_IUnknown
-    //
-    else if (IsEqualGUIDAligned (Interface, IID_IUnknown))
-    {
-        *Object = (PVOID)(PUNKNOWN)(PMINIPORTWAVEPCISTREAM)this;
-    }
-    else
-    {
-        *Object = NULL;
-        return STATUS_INVALID_PARAMETER;
-    }
-
-    ((PUNKNOWN)*Object)->AddRef ();
-    return STATUS_SUCCESS;
-}
-
 
 /*****************************************************************************
  * CMiniportWaveICHStream::GetAllocatorFraming

@@ -19,6 +19,8 @@
 #pragma code_seg("PAGE")
 #endif
 
+IMP_CMiniport(CAC97MiniportWaveRT, IID_IMiniportRT)
+
 /*****************************************************************************
  * CreateAC97MiniportWaveRT
  *****************************************************************************
@@ -48,60 +50,6 @@ NTSTATUS CreateAC97MiniportWaveRT
 
 
 /*****************************************************************************
- * CAC97MiniportWaveRT::NonDelegatingQueryInterface
- *****************************************************************************
- * Obtains an interface.  This function works just like a COM QueryInterface
- * call and is used if the object is not being aggregated.
- */
-STDMETHODIMP_(NTSTATUS) CAC97MiniportWaveRT::NonDelegatingQueryInterface
-(
-    _In_         REFIID  Interface,
-    _COM_Outptr_ PVOID  *Object
-)
-{
-    PAGED_CODE ();
-
-    ASSERT (Object);
-
-    DOUT (DBG_PRINT, ("[CAC97MiniportWaveRT::NonDelegatingQueryInterface]"));
-
-    // Is it IID_IUnknown?
-    if (IsEqualGUIDAligned (Interface, IID_IUnknown))
-    {
-        *Object = (PVOID)(PUNKNOWN)(PMINIPORTWAVERT)this;
-    }
-    // or IID_IMiniport ...
-    else if (IsEqualGUIDAligned (Interface, IID_IMiniport))
-    {
-        *Object = (PVOID)(PMINIPORT)this;
-    }
-    // or IID_IMiniportWaveRT ...
-    else if (IsEqualGUIDAligned (Interface, IID_IMiniportWaveRT))
-    {
-        *Object = (PVOID)(PMINIPORTWAVERT)this;
-    }
-    // or IID_IPowerNotify ...
-    else if (IsEqualGUIDAligned (Interface, IID_IPowerNotify))
-    {
-        *Object = (PVOID)(PPOWERNOTIFY)this;
-    }
-    else
-    {
-        // nothing found, must be an unknown interface.
-        *Object = NULL;
-        return STATUS_INVALID_PARAMETER;
-    }
-
-    //
-    // We reference the interface for the caller.
-    //
-    ((PUNKNOWN)(*Object))->AddRef();
-    return STATUS_SUCCESS;
-}
-
-
-
-/*****************************************************************************
  * CAC97MiniportWaveRT::Init
  *****************************************************************************
  * Initializes the miniport.
@@ -119,8 +67,7 @@ STDMETHODIMP_(NTSTATUS) CAC97MiniportWaveRT::Init
     return CMiniport::Init(
         UnknownAdapter,
         ResourceList,
-        Port_,
-        InterruptServiceRoutine
+        Port_
         );
 }
 

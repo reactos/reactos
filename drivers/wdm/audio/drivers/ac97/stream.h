@@ -112,12 +112,25 @@ public:
 
 
     virtual void InterruptServiceRoutine() PURE;
+
+    NTSTATUS NonDelegatingQueryInterface
+    (
+        _In_         REFIID  Interface,
+        _COM_Outptr_ PVOID * Object,
+        _In_         REFIID iStream,
+        _In_         PUNKNOWN stream
+    );
 };
 
 
 
-#define IMP_CMiniportStream(cType) \
+#define IMP_CMiniportStream(cType, sType) \
     STDMETHODIMP_(NTSTATUS) cType::SetFormat (_In_ PKSDATAFORMAT Format) \
-      { return CMiniportStream::SetFormat(Format); }
+      { return CMiniportStream::SetFormat(Format); } \
+    STDMETHODIMP_(NTSTATUS) cType::NonDelegatingQueryInterface(     \
+        _In_         REFIID  Interface,                             \
+        _COM_Outptr_ PVOID  *Object)                                \
+    {   return CMiniportStream::NonDelegatingQueryInterface(        \
+            Interface, Object, IID_##sType, (sType*)this); }
 
 #endif

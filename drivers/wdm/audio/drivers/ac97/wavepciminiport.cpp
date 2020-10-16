@@ -18,7 +18,7 @@
 #pragma code_seg("PAGE")
 #endif
 
-IMP_CMiniport(CMiniportWaveICH)
+IMP_CMiniport(CMiniportWaveICH, IID_IMiniportWavePci)
 
 /*****************************************************************************
  * CreateAC97MiniportWavePCI
@@ -46,60 +46,6 @@ NTSTATUS CreateAC97MiniportWavePCI
     STD_CREATE_BODY_WITH_TAG_(CMiniportWaveICH,Unknown,UnknownOuter,PoolType,
                      PoolTag, PMINIPORTWAVEPCI);
 }
-
-
-/*****************************************************************************
- * CMiniportWaveICH::NonDelegatingQueryInterface
- *****************************************************************************
- * Obtains an interface.  This function works just like a COM QueryInterface
- * call and is used if the object is not being aggregated.
- */
-STDMETHODIMP_(NTSTATUS) CMiniportWaveICH::NonDelegatingQueryInterface
-(
-    _In_         REFIID  Interface,
-    _COM_Outptr_ PVOID  *Object
-)
-{
-    PAGED_CODE ();
-
-    ASSERT (Object);
-
-    DOUT (DBG_PRINT, ("[CMiniportWaveICH::NonDelegatingQueryInterface]"));
-
-    // Is it IID_IUnknown?
-    if (IsEqualGUIDAligned (Interface, IID_IUnknown))
-    {
-        *Object = (PVOID)(PUNKNOWN)(PMINIPORTWAVEPCI)this;
-    }
-    // or IID_IMiniport ...
-    else if (IsEqualGUIDAligned (Interface, IID_IMiniport))
-    {
-        *Object = (PVOID)(PMINIPORT)this;
-    }
-    // or IID_IMiniportWavePci ...
-    else if (IsEqualGUIDAligned (Interface, IID_IMiniportWavePci))
-    {
-        *Object = (PVOID)(PMINIPORTWAVEPCI)this;
-    }
-    // or IID_IPowerNotify ...
-    else if (IsEqualGUIDAligned (Interface, IID_IPowerNotify))
-    {
-        *Object = (PVOID)(PPOWERNOTIFY)this;
-    }
-    else
-    {
-        // nothing found, must be an unknown interface.
-        *Object = NULL;
-        return STATUS_INVALID_PARAMETER;
-    }
-
-    //
-    // We reference the interface for the caller.
-    //
-    ((PUNKNOWN)(*Object))->AddRef();
-    return STATUS_SUCCESS;
-}
-
 
 /*****************************************************************************
  * CMiniportWaveICH::~CMiniportWaveICH

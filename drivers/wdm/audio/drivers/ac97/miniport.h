@@ -97,9 +97,18 @@ public:
     (
         IN      PPCPROPERTY_REQUEST PropertyRequest
     );
+
+
+    NTSTATUS NonDelegatingQueryInterface
+    (
+        _In_         REFIID  Interface,
+        _COM_Outptr_ PVOID   *Object,
+        _In_         REFIID  iMiniPort,
+        _In_         PMINIPORT miniPort
+    );
 };
 
-#define IMP_CMiniport(cType) \
+#define IMP_CMiniport(cType, IID) \
 STDMETHODIMP_(NTSTATUS) cType::GetDescription( \
     _Out_ PPCFILTER_DESCRIPTOR *OutFilterDescriptor)\
 {   return CMiniport::GetDescription(OutFilterDescriptor); } \
@@ -113,7 +122,12 @@ STDMETHODIMP_(NTSTATUS) cType::DataRangeIntersection(    \
     OUT PULONG ResultantFormatLength)                    \
 {   return CMiniport::DataRangeIntersection(PinId, DataRange,   \
         MatchingDataRange, OutputBufferLength, ResultantFormat,     \
-        ResultantFormatLength); }
+        ResultantFormatLength); } \
+STDMETHODIMP_(NTSTATUS) cType::NonDelegatingQueryInterface(     \
+    _In_         REFIID  Interface,                             \
+    _COM_Outptr_ PVOID  *Object)                                \
+{   return CMiniport::NonDelegatingQueryInterface(              \
+        Interface, Object, IID, (PMINIPORT)this); }
 
 #include "stream.h"
 #endif

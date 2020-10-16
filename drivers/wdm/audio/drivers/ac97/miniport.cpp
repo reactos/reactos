@@ -1098,6 +1098,60 @@ NTSTATUS CMiniport::ProcessResources
 }
 
 /*****************************************************************************
+ * CMiniport::NonDelegatingQueryInterface
+ *****************************************************************************
+ * Obtains an interface.  This function works just like a COM QueryInterface
+ * call and is used if the object is not being aggregated.
+ */
+NTSTATUS CMiniport::NonDelegatingQueryInterface
+(
+    _In_         REFIID  Interface,
+    _COM_Outptr_ PVOID  *Object,
+    _In_         REFIID iMiniPort,
+    _In_         PMINIPORT miniPort
+)
+{
+    PAGED_CODE ();
+
+    ASSERT (Object);
+
+    DOUT (DBG_PRINT, ("[CMiniport::NonDelegatingQueryInterface]"));
+
+    // Is it IID_IUnknown?
+    if (IsEqualGUIDAligned (Interface, IID_IUnknown))
+    {
+        *Object = (PVOID)miniPort;
+    }
+    // or IID_IMiniport ...
+    else if (IsEqualGUIDAligned (Interface, IID_IMiniport))
+    {
+        *Object = (PVOID)miniPort;
+    }
+    // or IID_IMiniportWavePci ...
+    else if (IsEqualGUIDAligned (Interface, iMiniPort))
+    {
+        *Object = (PVOID)miniPort;
+    }
+    // or IID_IPowerNotify ...
+    else if (IsEqualGUIDAligned (Interface, IID_IPowerNotify))
+    {
+        *Object = (PVOID)(PPOWERNOTIFY)this;
+    }
+    else
+    {
+        // nothing found, must be an unknown interface.
+        *Object = NULL;
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    //
+    // We reference the interface for the caller.
+    //
+    ((PUNKNOWN)(*Object))->AddRef();
+    return STATUS_SUCCESS;
+}
+
+/*****************************************************************************
  * CAC97MiniportWaveRT::Init
  *****************************************************************************
  * Initializes the miniport.

@@ -176,55 +176,6 @@ NTSTATUS CAC97MiniportWaveRTStream::Init
 
 
 /*****************************************************************************
- * CAC97MiniportWaveRTStream::NonDelegatingQueryInterface
- *****************************************************************************
- * Obtains an interface.  This function works just like a COM QueryInterface
- * call and is used if the object is not being aggregated.
- */
-STDMETHODIMP_(NTSTATUS) CAC97MiniportWaveRTStream::NonDelegatingQueryInterface
-(
-    _In_         REFIID  Interface,
-    _COM_Outptr_ PVOID * Object
-)
-{
-    PAGED_CODE ();
-
-    ASSERT (Object);
-
-    DOUT (DBG_PRINT, ("[CAC97MiniportWaveRTStream::NonDelegatingQueryInterface]"));
-
-    //
-    // Convert for IID_IMiniportWaveRTStream
-    //
-    if (IsEqualGUIDAligned (Interface, IID_IMiniportWaveRTStream))
-    {
-        *Object = (PVOID)(PMINIPORTWAVERTSTREAM)this;
-    }
-    //
-    // Convert for IID_IDrmAudioStream
-    //
-    else if (IsEqualGUIDAligned (Interface, IID_IDrmAudioStream))
-    {
-        *Object = (PVOID)(PDRMAUDIOSTREAM)this;
-    }
-    //
-    // Convert for IID_IUnknown
-    //
-    else if (IsEqualGUIDAligned (Interface, IID_IUnknown))
-    {
-        *Object = (PVOID)(PUNKNOWN)(PMINIPORTWAVERTSTREAM)this;
-    }
-    else
-    {
-        *Object = NULL;
-        return STATUS_INVALID_PARAMETER;
-    }
-
-    ((PUNKNOWN)*Object)->AddRef ();
-    return STATUS_SUCCESS;
-}
-
-/*****************************************************************************
  * CAC97MiniportWaveRTStream::AllocateAudioBuffer
  *****************************************************************************
  * This functions allocates an audio buffer of the size specified and maps
