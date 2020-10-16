@@ -295,23 +295,23 @@ CreateCommonFreeLdrSections(
     IniCacheInsertKey(IniSection, NULL, INSERT_LAST,
                       L"SelectedColor", L"Gray");
 
-    /* SelectedColor=Gray */
+    /* ShowTime=Yes */
     IniCacheInsertKey(IniSection, NULL, INSERT_LAST,
                       L"ShowTime", L"No");
 
-    /* SelectedColor=Gray */
+    /* MenuBox=Yes */
     IniCacheInsertKey(IniSection, NULL, INSERT_LAST,
                       L"MenuBox", L"No");
 
-    /* SelectedColor=Gray */
+    /* CenterMenu=Yes */
     IniCacheInsertKey(IniSection, NULL, INSERT_LAST,
                       L"CenterMenu", L"No");
 
-    /* SelectedColor=Gray */
+    /* MinimalUI=No */
     IniCacheInsertKey(IniSection, NULL, INSERT_LAST,
                       L"MinimalUI", L"Yes");
 
-    /* SelectedColor=Gray */
+    /* TimeText=Your text goes here... */
     IniCacheInsertKey(IniSection, NULL, INSERT_LAST,
                       L"TimeText",
                       L"Seconds until highlighted choice will be started automatically:   ");
