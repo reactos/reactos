@@ -224,9 +224,9 @@ cresize_Create(HWND hwndParent, const CRESIZE_LAYOUT *pLayouts, UINT cLayouts)
     }
     memcpy(pResize->m_pLayouts, pLayouts, cb);
 
-    /* NOTE: The parent window must have initially WS_THICKFRAME style. */
+    /* NOTE: The parent window must have initially WS_SIZEBOX style. */
     assert(IsWindow(hwndParent));
-    assert(GetWindowLongPtrW(hwndParent, GWL_STYLE) & WS_THICKFRAME);
+    assert(GetWindowLongPtrW(hwndParent, GWL_STYLE) & WS_SIZEBOX);
 
     pResize->m_hwndParent = hwndParent;
     pResize->m_hwndGrip = NULL;
