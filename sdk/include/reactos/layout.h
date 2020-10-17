@@ -9,7 +9,7 @@
 
 typedef struct LAYOUT_INFO {
     UINT m_nCtrlID;
-    UINT uEdges; /* BF_* flags */
+    UINT m_uEdges; /* BF_* flags */
     HWND m_hwndCtrl;
     SIZE m_margin1;
     SIZE m_margin2;
@@ -105,7 +105,7 @@ _layout_DoMoveItem(LAYOUT_DATA *pData, HDWP hDwp, const LAYOUT_INFO *pLayout,
     nWidth = rcClient->right - rcClient->left;
     nHeight = rcClient->bottom - rcClient->top;
 
-    _layout_GetPercents(&rcPercents, pLayout->uEdges);
+    _layout_GetPercents(&rcPercents, pLayout->m_uEdges);
     NewRect.left = pLayout->m_margin1.cx + nWidth * rcPercents.left / 100;
     NewRect.top = pLayout->m_margin1.cy + nHeight * rcPercents.top / 100;
     NewRect.right = pLayout->m_margin2.cx + nWidth * rcPercents.right / 100;
@@ -175,7 +175,7 @@ _layout_InitLayouts(LAYOUT_DATA *pData)
         GetWindowRect(pInfo->m_hwndCtrl, &rcChild);
         MapWindowPoints(NULL, pData->m_hwndParent, (LPPOINT)&rcChild, 2);
 
-        _layout_GetPercents(&rcPercents, pInfo->uEdges);
+        _layout_GetPercents(&rcPercents, pInfo->m_uEdges);
         pInfo->m_margin1.cx = rcChild.left - nWidth * rcPercents.left / 100;
         pInfo->m_margin1.cy = rcChild.top - nHeight * rcPercents.top / 100;
         pInfo->m_margin2.cx = rcChild.right - nWidth * rcPercents.right / 100;
