@@ -89,8 +89,7 @@ cresize_ShowSizeGrip(CRESIZE *pResize, BOOL bShow)
 {
     if (!bShow)
     {
-        if (IsWindow(pResize->m_hwndGrip))
-            ShowWindow(pResize->m_hwndGrip, SW_HIDE);
+        ShowWindow(pResize->m_hwndGrip, SW_HIDE);
         return;
     }
 
