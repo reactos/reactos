@@ -26,7 +26,7 @@
 #define LA_BOTTOM_RIGHT  100, 100 /* lower right */
 
 typedef struct CRESIZE_LAYOUT {
-    INT m_nCtrlID;
+    UINT m_nCtrlID;
     LONG m_cx1, m_cy1; /* layout anchor */
     LONG m_cx2, m_cy2; /* layout anchor */
     SIZE m_margin1;
@@ -38,7 +38,7 @@ typedef struct CRESIZE {
     HWND m_hwndParent;
     HWND m_hwndGrip;
     CRESIZE_LAYOUT *m_pLayouts;
-    INT m_cLayouts;
+    UINT m_cLayouts;
 } CRESIZE;
 
 static __inline void
@@ -144,7 +144,7 @@ static __inline void
 cresize_ArrangeLayout(CRESIZE *pResize)
 {
     RECT ClientRect;
-    INT iItem;
+    UINT iItem;
     HDWP hDwp = BeginDeferWindowPos(pResize->m_cLayouts + 1);
     if (hDwp == NULL)
         return;
@@ -176,7 +176,7 @@ cresize_InitLayouts(CRESIZE *pResize)
 {
     RECT ClientRect, ChildRect;
     LONG width, height;
-    INT iItem;
+    UINT iItem;
 
     GetClientRect(pResize->m_hwndParent, &ClientRect);
 
@@ -204,7 +204,7 @@ cresize_InitLayouts(CRESIZE *pResize)
 }
 
 static __inline CRESIZE *
-cresize_Create(HWND hwndParent, const CRESIZE_LAYOUT *pLayouts, INT cLayouts)
+cresize_Create(HWND hwndParent, const CRESIZE_LAYOUT *pLayouts, UINT cLayouts)
 {
     size_t cb;
     CRESIZE *pResize = SHAlloc(sizeof(CRESIZE));
