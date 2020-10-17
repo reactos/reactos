@@ -30,15 +30,15 @@ typedef struct LAYOUT_DATA {
 } LAYOUT_DATA;
 
 static __inline void
-layout_ModifySystemMenu(LAYOUT_DATA *pResize, BOOL bEnableResize)
+_layout_ModifySystemMenu(LAYOUT_DATA *pData, BOOL bEnableResize)
 {
     if (bEnableResize)
     {
-        GetSystemMenu(pResize->m_hwndParent, TRUE); /* revert */
+        GetSystemMenu(pData->m_hwndParent, TRUE); /* revert */
     }
     else
     {
-        HMENU hSysMenu = GetSystemMenu(pResize->m_hwndParent, FALSE);
+        HMENU hSysMenu = GetSystemMenu(pData->m_hwndParent, FALSE);
         RemoveMenu(hSysMenu, SC_MAXIMIZE, MF_BYCOMMAND);
         RemoveMenu(hSysMenu, SC_SIZE, MF_BYCOMMAND);
         RemoveMenu(hSysMenu, SC_RESTORE, MF_BYCOMMAND);
@@ -46,52 +46,52 @@ layout_ModifySystemMenu(LAYOUT_DATA *pResize, BOOL bEnableResize)
 }
 
 static __inline HDWP
-layout_MoveGrip(LAYOUT_DATA *pResize, HDWP hDwp OPTIONAL)
+_layout_MoveGrip(LAYOUT_DATA *pData, HDWP hDwp OPTIONAL)
 {
     RECT ClientRect;
     INT cx, cy;
     const UINT uFlags = SWP_NOACTIVATE | SWP_NOOWNERZORDER | SWP_NOZORDER;
 
-    GetClientRect(pResize->m_hwndParent, &ClientRect);
+    GetClientRect(pData->m_hwndParent, &ClientRect);
 
     cx = GetSystemMetrics(SM_CXVSCROLL);
     cy = GetSystemMetrics(SM_CYHSCROLL);
     if (hDwp)
     {
-        hDwp = DeferWindowPos(hDwp, pResize->m_hwndGrip, NULL,
+        hDwp = DeferWindowPos(hDwp, pData->m_hwndGrip, NULL,
                               ClientRect.right - cx, ClientRect.bottom - cy,
                               cx, cy, uFlags);
     }
     else
     {
-        SetWindowPos(pResize->m_hwndGrip, NULL,
+        SetWindowPos(pData->m_hwndGrip, NULL,
                      ClientRect.right - cx, ClientRect.bottom - cy, cx, cy, uFlags);
     }
     return hDwp;
 }
 
 static __inline void
-layout_ShowGrip(LAYOUT_DATA *pResize, BOOL bShow)
+_layout_ShowGrip(LAYOUT_DATA *pData, BOOL bShow)
 {
     if (!bShow)
     {
-        ShowWindow(pResize->m_hwndGrip, SW_HIDE);
+        ShowWindow(pData->m_hwndGrip, SW_HIDE);
         return;
     }
 
-    if (pResize->m_hwndGrip == NULL)
+    if (pData->m_hwndGrip == NULL)
     {
         DWORD style = WS_CHILD | WS_CLIPSIBLINGS | SBS_SIZEGRIP;
-        pResize->m_hwndGrip = CreateWindowExW(0, L"SCROLLBAR", NULL, style,
-                                              0, 0, 0, 0, pResize->m_hwndParent,
+        pData->m_hwndGrip = CreateWindowExW(0, L"SCROLLBAR", NULL, style,
+                                              0, 0, 0, 0, pData->m_hwndParent,
                                               NULL, GetModuleHandleW(NULL), NULL);
     }
-    layout_MoveGrip(pResize, NULL);
-    ShowWindow(pResize->m_hwndGrip, SW_SHOWNOACTIVATE);
+    _layout_MoveGrip(pData, NULL);
+    ShowWindow(pData->m_hwndGrip, SW_SHOWNOACTIVATE);
 }
 
 static __inline void
-layout_GetPercents(UINT uEdges, LPRECT prcPercents)
+_layout_GetPercents(UINT uEdges, LPRECT prcPercents)
 {
     prcPercents->left = (uEdges & BF_LEFT) ? 0 : 100;
     prcPercents->right = (uEdges & BF_RIGHT) ? 100 : 0;
@@ -100,15 +100,15 @@ layout_GetPercents(UINT uEdges, LPRECT prcPercents)
 }
 
 static __inline void
-LayoutEnableResize(LAYOUT_DATA *pResize, BOOL bEnable)
+LayoutEnableResize(LAYOUT_DATA *pData, BOOL bEnable)
 {
-    layout_ShowGrip(pResize, bEnable);
-    layout_ModifySystemMenu(pResize, bEnable);
+    _layout_ShowGrip(pData, bEnable);
+    _layout_ModifySystemMenu(pData, bEnable);
 }
 
 static __inline HDWP
-layout_DoLayout(LAYOUT_DATA *pResize, HDWP hDwp, const LAYOUT_INFO *pLayout,
-                 const RECT *ClientRect)
+_layout_DoMove(LAYOUT_DATA *pData, HDWP hDwp, const LAYOUT_INFO *pLayout,
+               const RECT *ClientRect)
 {
     HWND hwndCtrl = pLayout->m_hwndCtrl;
     RECT ChildRect, NewRect, rcPercents;
@@ -117,12 +117,12 @@ layout_DoLayout(LAYOUT_DATA *pResize, HDWP hDwp, const LAYOUT_INFO *pLayout,
 
     if (!GetWindowRect(hwndCtrl, &ChildRect))
         return hDwp;
-    MapWindowPoints(NULL, pResize->m_hwndParent, (LPPOINT)&ChildRect, 2);
+    MapWindowPoints(NULL, pData->m_hwndParent, (LPPOINT)&ChildRect, 2);
 
     width = ClientRect->right - ClientRect->left;
     height = ClientRect->bottom - ClientRect->top;
 
-    layout_GetPercents(pLayout->uEdges, &rcPercents);
+    _layout_GetPercents(pLayout->uEdges, &rcPercents);
     NewRect.left = pLayout->m_margin1.cx + width * rcPercents.left / 100;
     NewRect.top = pLayout->m_margin1.cy + height * rcPercents.top / 100;
     NewRect.right = pLayout->m_margin2.cx + width * rcPercents.right / 100;
@@ -139,62 +139,61 @@ layout_DoLayout(LAYOUT_DATA *pResize, HDWP hDwp, const LAYOUT_INFO *pLayout,
 }
 
 static __inline void
-layout_ArrangeLayout(LAYOUT_DATA *pResize)
+_layout_ArrangeLayout(LAYOUT_DATA *pData)
 {
     RECT ClientRect;
     UINT iItem;
-    HDWP hDwp = BeginDeferWindowPos(pResize->m_cLayouts + 1);
+    HDWP hDwp = BeginDeferWindowPos(pData->m_cLayouts + 1);
     if (hDwp == NULL)
         return;
 
-    GetClientRect(pResize->m_hwndParent, &ClientRect);
+    GetClientRect(pData->m_hwndParent, &ClientRect);
 
-    for (iItem = 0; iItem < pResize->m_cLayouts; ++iItem)
+    for (iItem = 0; iItem < pData->m_cLayouts; ++iItem)
     {
-        const LAYOUT_INFO *pLayout = &pResize->m_pLayouts[iItem];
-        hDwp = layout_DoLayout(pResize, hDwp, pLayout, &ClientRect);
+        hDwp = _layout_DoMove(pData, hDwp, &pData->m_pLayouts[iItem], &ClientRect);
     }
 
-    hDwp = layout_MoveGrip(pResize, hDwp);
+    hDwp = _layout_MoveGrip(pData, hDwp);
     EndDeferWindowPos(hDwp);
 }
 
 // NOTE: Please call LayoutUpdate on parent's WM_SIZE.
 static __inline void
-LayoutUpdate(HWND ignored1, LAYOUT_DATA *pResize, LPCVOID ignored2, UINT ignored3)
+LayoutUpdate(HWND ignored1, LAYOUT_DATA *pData, LPCVOID ignored2, UINT ignored3)
 {
-    if (pResize == NULL)
+    if (pData == NULL)
         return;
-    assert(IsWindow(pResize->m_hwndParent));
-    layout_ArrangeLayout(pResize);
+    assert(IsWindow(pData->m_hwndParent));
+    _layout_ArrangeLayout(pData);
 }
 
 static __inline void
-layout_InitLayouts(LAYOUT_DATA *pResize)
+_layout_InitLayouts(LAYOUT_DATA *pData)
 {
     RECT ClientRect, ChildRect, rcPercents;
     LONG width, height;
     UINT iItem;
 
-    GetClientRect(pResize->m_hwndParent, &ClientRect);
+    GetClientRect(pData->m_hwndParent, &ClientRect);
 
-    for (iItem = 0; iItem < pResize->m_cLayouts; ++iItem)
+    for (iItem = 0; iItem < pData->m_cLayouts; ++iItem)
     {
-        LAYOUT_INFO *layout = &pResize->m_pLayouts[iItem];
+        LAYOUT_INFO *layout = &pData->m_pLayouts[iItem];
         if (layout->m_hwndCtrl == NULL)
         {
-            layout->m_hwndCtrl = GetDlgItem(pResize->m_hwndParent, layout->m_nCtrlID);
+            layout->m_hwndCtrl = GetDlgItem(pData->m_hwndParent, layout->m_nCtrlID);
             if (layout->m_hwndCtrl == NULL)
                 continue;
         }
 
         GetWindowRect(layout->m_hwndCtrl, &ChildRect);
-        MapWindowPoints(NULL, pResize->m_hwndParent, (LPPOINT)&ChildRect, 2);
+        MapWindowPoints(NULL, pData->m_hwndParent, (LPPOINT)&ChildRect, 2);
 
         width = ClientRect.right - ClientRect.left;
         height = ClientRect.bottom - ClientRect.top;
 
-        layout_GetPercents(layout->uEdges, &rcPercents);
+        _layout_GetPercents(layout->uEdges, &rcPercents);
         layout->m_margin1.cx = ChildRect.left - width * rcPercents.left / 100;
         layout->m_margin1.cy = ChildRect.top - height * rcPercents.top / 100;
         layout->m_margin2.cx = ChildRect.right - width * rcPercents.right / 100;
@@ -206,40 +205,40 @@ static __inline LAYOUT_DATA *
 LayoutInit(HWND hwndParent, const LAYOUT_INFO *pLayouts, UINT cLayouts)
 {
     SIZE_T cb;
-    LAYOUT_DATA *pResize = SHAlloc(sizeof(LAYOUT_DATA));
-    if (pResize == NULL)
+    LAYOUT_DATA *pData = SHAlloc(sizeof(LAYOUT_DATA));
+    if (pData == NULL)
     {
         assert(0);
         return NULL;
     }
 
     cb = cLayouts * sizeof(LAYOUT_INFO);
-    pResize->m_cLayouts = cLayouts;
-    pResize->m_pLayouts = SHAlloc(cb);
-    if (pResize->m_pLayouts == NULL)
+    pData->m_cLayouts = cLayouts;
+    pData->m_pLayouts = SHAlloc(cb);
+    if (pData->m_pLayouts == NULL)
     {
         assert(0);
-        SHFree(pResize);
+        SHFree(pData);
         return NULL;
     }
-    memcpy(pResize->m_pLayouts, pLayouts, cb);
+    memcpy(pData->m_pLayouts, pLayouts, cb);
 
     /* NOTE: The parent window must have initially WS_SIZEBOX style. */
     assert(IsWindow(hwndParent));
     assert(GetWindowLongPtrW(hwndParent, GWL_STYLE) & WS_SIZEBOX);
 
-    pResize->m_hwndParent = hwndParent;
-    pResize->m_hwndGrip = NULL;
-    LayoutEnableResize(pResize, TRUE);
-    layout_InitLayouts(pResize);
-    return pResize;
+    pData->m_hwndParent = hwndParent;
+    pData->m_hwndGrip = NULL;
+    LayoutEnableResize(pData, TRUE);
+    _layout_InitLayouts(pData);
+    return pData;
 }
 
 static __inline void
-LayoutDestroy(LAYOUT_DATA *pResize)
+LayoutDestroy(LAYOUT_DATA *pData)
 {
-    if (!pResize)
+    if (!pData)
         return;
-    SHFree(pResize->m_pLayouts);
-    SHFree(pResize);
+    SHFree(pData->m_pLayouts);
+    SHFree(pData);
 }
