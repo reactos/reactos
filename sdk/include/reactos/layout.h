@@ -6,12 +6,6 @@
  */
 #pragma once
 
-#ifndef _WINDEF_
-    #include <windef.h>
-#endif
-#ifndef _WINBASE_
-    #include <winbase.h>
-#endif
 #include <assert.h>
 
 typedef struct LAYOUT_INFO {
@@ -49,23 +43,22 @@ static __inline HDWP
 _layout_MoveGrip(LAYOUT_DATA *pData, HDWP hDwp OPTIONAL)
 {
     RECT ClientRect;
-    INT cx, cy;
+    SIZE size = { GetSystemMetrics(SM_CXVSCROLL), GetSystemMetrics(SM_CYHSCROLL) };
     const UINT uFlags = SWP_NOACTIVATE | SWP_NOOWNERZORDER | SWP_NOZORDER;
 
     GetClientRect(pData->m_hwndParent, &ClientRect);
 
-    cx = GetSystemMetrics(SM_CXVSCROLL);
-    cy = GetSystemMetrics(SM_CYHSCROLL);
     if (hDwp)
     {
         hDwp = DeferWindowPos(hDwp, pData->m_hwndGrip, NULL,
-                              ClientRect.right - cx, ClientRect.bottom - cy,
-                              cx, cy, uFlags);
+                              ClientRect.right - size.cx, ClientRect.bottom - size.cy,
+                              size.cx, size.cy, uFlags);
     }
     else
     {
         SetWindowPos(pData->m_hwndGrip, NULL,
-                     ClientRect.right - cx, ClientRect.bottom - cy, cx, cy, uFlags);
+                     ClientRect.right - size.cx, ClientRect.bottom - size.cy,
+                     size.cx, size.cy, uFlags);
     }
     return hDwp;
 }
@@ -107,15 +100,14 @@ LayoutEnableResize(LAYOUT_DATA *pData, BOOL bEnable)
 }
 
 static __inline HDWP
-_layout_DoMove(LAYOUT_DATA *pData, HDWP hDwp, const LAYOUT_INFO *pLayout,
-               const RECT *ClientRect)
+_layout_DoMoveItem(LAYOUT_DATA *pData, HDWP hDwp, const LAYOUT_INFO *pLayout,
+                   const RECT *ClientRect)
 {
-    HWND hwndCtrl = pLayout->m_hwndCtrl;
     RECT ChildRect, NewRect, rcPercents;
     LONG width, height;
     const UINT uFlags = SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOREPOSITION;
 
-    if (!GetWindowRect(hwndCtrl, &ChildRect))
+    if (!GetWindowRect(pLayout->m_hwndCtrl, &ChildRect))
         return hDwp;
     MapWindowPoints(NULL, pData->m_hwndParent, (LPPOINT)&ChildRect, 2);
 
@@ -130,10 +122,9 @@ _layout_DoMove(LAYOUT_DATA *pData, HDWP hDwp, const LAYOUT_INFO *pLayout,
 
     if (!EqualRect(&NewRect, &ChildRect))
     {
-        width = NewRect.right - NewRect.left;
-        height = NewRect.bottom - NewRect.top;
-        hDwp = DeferWindowPos(hDwp, hwndCtrl, NULL, NewRect.left, NewRect.top,
-                              width, height, uFlags);
+        hDwp = DeferWindowPos(hDwp, pLayout->m_hwndCtrl, NULL, NewRect.left, NewRect.top,
+                              NewRect.right - NewRect.left, NewRect.bottom - NewRect.top,
+                              uFlags);
     }
     return hDwp;
 }
@@ -150,9 +141,7 @@ _layout_ArrangeLayout(LAYOUT_DATA *pData)
     GetClientRect(pData->m_hwndParent, &ClientRect);
 
     for (iItem = 0; iItem < pData->m_cLayouts; ++iItem)
-    {
-        hDwp = _layout_DoMove(pData, hDwp, &pData->m_pLayouts[iItem], &ClientRect);
-    }
+        hDwp = _layout_DoMoveItem(pData, hDwp, &pData->m_pLayouts[iItem], &ClientRect);
 
     hDwp = _layout_MoveGrip(pData, hDwp);
     EndDeferWindowPos(hDwp);
@@ -179,6 +168,8 @@ _layout_InitLayouts(LAYOUT_DATA *pData)
     UINT iItem;
 
     GetClientRect(pData->m_hwndParent, &ClientRect);
+    width = ClientRect.right - ClientRect.left;
+    height = ClientRect.bottom - ClientRect.top;
 
     for (iItem = 0; iItem < pData->m_cLayouts; ++iItem)
     {
@@ -192,9 +183,6 @@ _layout_InitLayouts(LAYOUT_DATA *pData)
 
         GetWindowRect(layout->m_hwndCtrl, &ChildRect);
         MapWindowPoints(NULL, pData->m_hwndParent, (LPPOINT)&ChildRect, 2);
-
-        width = ClientRect.right - ClientRect.left;
-        height = ClientRect.bottom - ClientRect.top;
 
         _layout_GetPercents(layout->uEdges, &rcPercents);
         layout->m_margin1.cx = ChildRect.left - width * rcPercents.left / 100;
