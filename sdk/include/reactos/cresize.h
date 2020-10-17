@@ -206,7 +206,7 @@ cresize_InitLayouts(CRESIZE *pResize)
 static __inline CRESIZE *
 cresize_Create(HWND hwndParent, const CRESIZE_LAYOUT *pLayouts, UINT cLayouts)
 {
-    size_t cb;
+    SIZE_T cb;
     CRESIZE *pResize = SHAlloc(sizeof(CRESIZE));
     if (pResize == NULL)
     {
