@@ -58,20 +58,30 @@ cresize_ModifySystemMenu(CRESIZE *pResize, BOOL bEnableResize)
     }
 }
 
-static __inline void
-cresize_MoveSizeGrip(CRESIZE *pResize)
+static __inline HDWP
+cresize_MoveGrip(CRESIZE *pResize, HDWP hDwp OPTIONAL)
 {
     RECT ClientRect;
     INT cx, cy;
+    const UINT uFlags = SWP_NOACTIVATE | SWP_NOOWNERZORDER | SWP_NOZORDER;
     assert(IsWindow(pResize->m_hwndParent));
 
     GetClientRect(pResize->m_hwndParent, &ClientRect);
 
     cx = GetSystemMetrics(SM_CXVSCROLL);
     cy = GetSystemMetrics(SM_CYHSCROLL);
-    SetWindowPos(pResize->m_hwndGrip, NULL,
-                 ClientRect.right - cx, ClientRect.bottom - cy,
-                 cx, cy, SWP_NOACTIVATE | SWP_NOOWNERZORDER | SWP_NOZORDER);
+    if (hDwp)
+    {
+        hDwp = DeferWindowPos(hDwp, pResize->m_hwndGrip, NULL,
+                              ClientRect.right - cx, ClientRect.bottom - cy,
+                              cx, cy, uFlags);
+    }
+    else
+    {
+        SetWindowPos(pResize->m_hwndGrip, NULL,
+                     ClientRect.right - cx, ClientRect.bottom - cy, cx, cy, uFlags);
+    }
+    return hDwp;
 }
 
 static __inline void
@@ -91,8 +101,7 @@ cresize_ShowSizeGrip(CRESIZE *pResize, BOOL bShow)
                                               0, 0, 0, 0, pResize->m_hwndParent,
                                               NULL, GetModuleHandleW(NULL), NULL);
     }
-
-    cresize_MoveSizeGrip(pResize);
+    cresize_MoveGrip(pResize, NULL);
     ShowWindow(pResize->m_hwndGrip, SW_SHOWNOACTIVATE);
 }
 
@@ -133,8 +142,6 @@ cresize_DoLayout(CRESIZE *pResize, HDWP hDwp, const CRESIZE_LAYOUT *pLayout,
         hDwp = DeferWindowPos(hDwp, hwndCtrl, NULL, NewRect.left, NewRect.top,
                               width, height, uFlags);
     }
-
-    InvalidateRect(hwndCtrl, NULL, TRUE);
     return hDwp;
 }
 
@@ -143,7 +150,7 @@ cresize_ArrangeLayout(CRESIZE *pResize)
 {
     RECT ClientRect;
     size_t iItem;
-    HDWP hDwp = BeginDeferWindowPos((INT)pResize->m_cLayouts);
+    HDWP hDwp = BeginDeferWindowPos((INT)pResize->m_cLayouts + 1);
     if (hDwp == NULL)
         return;
 
@@ -155,6 +162,7 @@ cresize_ArrangeLayout(CRESIZE *pResize)
         hDwp = cresize_DoLayout(pResize, hDwp, pLayout, &ClientRect);
     }
 
+    hDwp = cresize_MoveGrip(pResize, hDwp);
     EndDeferWindowPos(hDwp);
 }
 
@@ -162,15 +170,14 @@ cresize_ArrangeLayout(CRESIZE *pResize)
 static __inline void
 cresize_OnSize(CRESIZE *pResize)
 {
-    assert(IsWindow(pResize->m_hwndParent));
     if (pResize == NULL)
         return;
+    assert(IsWindow(pResize->m_hwndParent));
     cresize_ArrangeLayout(pResize);
-    cresize_MoveSizeGrip(pResize);
 }
 
 static __inline void
-cresize_InitializeLayouts(CRESIZE *pResize)
+cresize_InitLayouts(CRESIZE *pResize)
 {
     RECT ClientRect, ChildRect;
     LONG width, height;
@@ -203,8 +210,7 @@ cresize_InitializeLayouts(CRESIZE *pResize)
 }
 
 static __inline CRESIZE *
-cresize_Create(HWND hwndParent, const CRESIZE_LAYOUT *pLayouts, size_t cLayouts,
-               BOOL bEnableResize)
+cresize_Create(HWND hwndParent, const CRESIZE_LAYOUT *pLayouts, size_t cLayouts)
 {
     size_t cb;
     CRESIZE *pResize = SHAlloc(sizeof(CRESIZE));
@@ -231,9 +237,8 @@ cresize_Create(HWND hwndParent, const CRESIZE_LAYOUT *pLayouts, size_t cLayouts,
     pResize->m_hwndParent = hwndParent;
     pResize->m_bResizeEnabled = FALSE;
     pResize->m_hwndGrip = NULL;
-    cresize_EnableResize(pResize, bEnableResize);
-    cresize_InitializeLayouts(pResize);
-
+    cresize_EnableResize(pResize, TRUE);
+    cresize_InitLayouts(pResize);
     return pResize;
 }
 
