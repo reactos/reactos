@@ -40,7 +40,7 @@
 #include "shresdef.h"
 #ifdef __REACTOS__
     #include <shlwapi.h>
-    #include "cresize.h"
+    #include "cresize.h" /* Resizable window */
 #endif
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
@@ -84,8 +84,7 @@ typedef struct tagLAYOUT_INFO
 } LAYOUT_INFO;
 
 #ifdef __REACTOS__
-static const CRESIZE_LAYOUT g_layout_info[] =
-{
+static const CRESIZE_LAYOUT g_layout_info[] = {
     { IDC_BROWSE_FOR_FOLDER_TITLE, LA_TOP_LEFT, LA_TOP_RIGHT },
     { IDC_BROWSE_FOR_FOLDER_STATUS, LA_TOP_LEFT, LA_TOP_RIGHT },
     { IDC_BROWSE_FOR_FOLDER_FOLDER, LA_BOTTOM_LEFT, LA_BOTTOM_LEFT },

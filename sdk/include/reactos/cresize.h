@@ -63,7 +63,6 @@ cresize_MoveGrip(CRESIZE *pResize, HDWP hDwp OPTIONAL)
     RECT ClientRect;
     INT cx, cy;
     const UINT uFlags = SWP_NOACTIVATE | SWP_NOOWNERZORDER | SWP_NOZORDER;
-    assert(IsWindow(pResize->m_hwndParent));
 
     GetClientRect(pResize->m_hwndParent, &ClientRect);
 
@@ -92,7 +91,7 @@ cresize_ShowGrip(CRESIZE *pResize, BOOL bShow)
         return;
     }
 
-    if (!IsWindow(pResize->m_hwndGrip))
+    if (pResize->m_hwndGrip == NULL)
     {
         DWORD style = WS_CHILD | WS_CLIPSIBLINGS | SBS_SIZEGRIP;
         pResize->m_hwndGrip = CreateWindowExW(0, L"SCROLLBAR", NULL, style,
@@ -104,10 +103,10 @@ cresize_ShowGrip(CRESIZE *pResize, BOOL bShow)
 }
 
 static __inline void
-cresize_EnableResize(CRESIZE *pResize, BOOL bEnableResize)
+cresize_EnableResize(CRESIZE *pResize, BOOL bEnable)
 {
-    cresize_ShowGrip(pResize, bEnableResize);
-    cresize_ModifySystemMenu(pResize, bEnableResize);
+    cresize_ShowGrip(pResize, bEnable);
+    cresize_ModifySystemMenu(pResize, bEnable);
 }
 
 static __inline HDWP
@@ -118,10 +117,9 @@ cresize_DoLayout(CRESIZE *pResize, HDWP hDwp, const CRESIZE_LAYOUT *pLayout,
     RECT ChildRect, NewRect;
     LONG width, height;
     const UINT uFlags = SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOREPOSITION;
-    if (!IsWindow(hwndCtrl))
-        return hDwp;
 
-    GetWindowRect(hwndCtrl, &ChildRect);
+    if (!GetWindowRect(hwndCtrl, &ChildRect))
+        return hDwp;
     MapWindowPoints(NULL, pResize->m_hwndParent, (LPPOINT)&ChildRect, 2);
 
     width = ClientRect->right - ClientRect->left;
@@ -179,7 +177,6 @@ cresize_InitLayouts(CRESIZE *pResize)
     RECT ClientRect, ChildRect;
     LONG width, height;
     INT iItem;
-    assert(IsWindow(pResize->m_hwndParent));
 
     GetClientRect(pResize->m_hwndParent, &ClientRect);
 
@@ -229,6 +226,7 @@ cresize_Create(HWND hwndParent, const CRESIZE_LAYOUT *pLayouts, INT cLayouts)
     memcpy(pResize->m_pLayouts, pLayouts, cb);
 
     /* NOTE: The parent window must have initially WS_THICKFRAME style. */
+    assert(IsWindow(pResize->m_hwndParent));
     assert(GetWindowLongPtrW(hwndParent, GWL_STYLE) & WS_THICKFRAME);
 
     pResize->m_hwndParent = hwndParent;
