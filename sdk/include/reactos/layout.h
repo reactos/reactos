@@ -161,7 +161,7 @@ layout_ArrangeLayout(LAYOUT_DATA *pResize)
 
 // NOTE: Please call LayoutUpdate on parent's WM_SIZE.
 static __inline void
-LayoutUpdate(HWND ingored1, LAYOUT_DATA *pResize, LPCVOID ignored2, UINT ignored3)
+LayoutUpdate(HWND ignored1, LAYOUT_DATA *pResize, LPCVOID ignored2, UINT ignored3)
 {
     if (pResize == NULL)
         return;
