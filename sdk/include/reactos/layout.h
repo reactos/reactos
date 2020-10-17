@@ -138,19 +138,6 @@ _layout_ArrangeLayout(LAYOUT_DATA *pData)
     EndDeferWindowPos(hDwp);
 }
 
-// NOTE: Please call LayoutUpdate on parent's WM_SIZE.
-static __inline void
-LayoutUpdate(HWND ignored1, LAYOUT_DATA *pData, LPCVOID ignored2, UINT ignored3)
-{
-    UNREFERENCED_PARAMETER(ignored1);
-    UNREFERENCED_PARAMETER(ignored2);
-    UNREFERENCED_PARAMETER(ignored3);
-    if (pData == NULL)
-        return;
-    assert(IsWindow(pData->m_hwndParent));
-    _layout_ArrangeLayout(pData);
-}
-
 static __inline void
 _layout_InitLayouts(LAYOUT_DATA *pData)
 {
@@ -181,6 +168,19 @@ _layout_InitLayouts(LAYOUT_DATA *pData)
         pInfo->m_margin2.cx = rcChild.right - nWidth * rcPercents.right / 100;
         pInfo->m_margin2.cy = rcChild.bottom - nHeight * rcPercents.bottom / 100;
     }
+}
+
+/* NOTE: Please call LayoutUpdate on parent's WM_SIZE. */
+static __inline void
+LayoutUpdate(HWND ignored1, LAYOUT_DATA *pData, LPCVOID ignored2, UINT ignored3)
+{
+    UNREFERENCED_PARAMETER(ignored1);
+    UNREFERENCED_PARAMETER(ignored2);
+    UNREFERENCED_PARAMETER(ignored3);
+    if (pData == NULL)
+        return;
+    assert(IsWindow(pData->m_hwndParent));
+    _layout_ArrangeLayout(pData);
 }
 
 static __inline void
