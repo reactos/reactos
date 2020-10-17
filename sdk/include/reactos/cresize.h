@@ -38,7 +38,7 @@ typedef struct CRESIZE {
     HWND m_hwndParent;
     BOOL m_bResizeEnabled;
     HWND m_hwndGrip;
-    size_t m_cLayouts;
+    INT m_cLayouts;
     CRESIZE_LAYOUT *m_pLayouts;
 } CRESIZE;
 
@@ -148,8 +148,8 @@ static __inline void
 cresize_ArrangeLayout(CRESIZE *pResize)
 {
     RECT ClientRect;
-    size_t iItem;
-    HDWP hDwp = BeginDeferWindowPos((INT)pResize->m_cLayouts + 1);
+    INT iItem;
+    HDWP hDwp = BeginDeferWindowPos(pResize->m_cLayouts + 1);
     if (hDwp == NULL)
         return;
 
@@ -180,7 +180,7 @@ cresize_InitLayouts(CRESIZE *pResize)
 {
     RECT ClientRect, ChildRect;
     LONG width, height;
-    size_t iItem;
+    INT iItem;
     assert(IsWindow(pResize->m_hwndParent));
 
     GetClientRect(pResize->m_hwndParent, &ClientRect);
@@ -209,7 +209,7 @@ cresize_InitLayouts(CRESIZE *pResize)
 }
 
 static __inline CRESIZE *
-cresize_Create(HWND hwndParent, const CRESIZE_LAYOUT *pLayouts, size_t cLayouts)
+cresize_Create(HWND hwndParent, const CRESIZE_LAYOUT *pLayouts, INT cLayouts)
 {
     size_t cb;
     CRESIZE *pResize = SHAlloc(sizeof(CRESIZE));
@@ -244,6 +244,8 @@ cresize_Create(HWND hwndParent, const CRESIZE_LAYOUT *pLayouts, size_t cLayouts)
 static __inline void
 cresize_Destroy(CRESIZE *pResize)
 {
+    if (!pResize)
+        return;
     SHFree(pResize->m_pLayouts);
     SHFree(pResize);
 }

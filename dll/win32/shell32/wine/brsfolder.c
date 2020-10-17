@@ -788,7 +788,7 @@ static BOOL BrsFolder_OnCreate( HWND hWnd, browse_info *info )
         RECT rcWnd;
 
 #ifdef __REACTOS__
-        info->layout = cresize_Create(hWnd, g_layout_info, LAYOUT_INFO_COUNT);
+        info->layout = cresize_Create(hWnd, g_layout_info, (INT)LAYOUT_INFO_COUNT);
 #else
         info->layout = LayoutInit(hWnd, g_layout_info, LAYOUT_INFO_COUNT);
 #endif
