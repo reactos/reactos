@@ -12,6 +12,7 @@
 
 #include "shared.h"
 #define PPORT_ PPORTWAVEPCI
+#define PPORTSTREAM_ PPORTWAVEPCISTREAM
 #include "miniport.h"
 
 /*****************************************************************************
@@ -59,7 +60,7 @@ private:
     // CMiniportWaveICH private variables
     //
     PDMA_ADAPTER        AdapterObject;
-    PDMACHANNEL         DmaChannel;     // Bus master support.
+
 
     /*************************************************************************
      * CMiniportWaveICH methods
@@ -86,7 +87,6 @@ public:
      */
     DECLARE_STD_UNKNOWN ();
     DEFINE_STD_CONSTRUCTOR (CMiniportWaveICH);
-    ~CMiniportWaveICH ();
 
     //
     // Include IMiniportWavePci (public/exported) methods

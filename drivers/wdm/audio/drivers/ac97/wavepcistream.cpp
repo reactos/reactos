@@ -107,16 +107,6 @@ CMiniportWaveICHStream::~CMiniportWaveICHStream ()
         ExFreePool (stBDList.pMapData);
         stBDList.pMapData = NULL;
     }
-
-    //
-    // Release the port stream.
-    //
-    if (PortStream)
-    {
-        PortStream->Release ();
-        PortStream = NULL;
-    }
-
 }
 
 
@@ -150,12 +140,6 @@ NTSTATUS CMiniportWaveICHStream::Init
     // The rule here is that we return when we fail without a cleanup.
     // The destructor will relase the allocated memory.
     //
-
-    //
-    // Save portstream interface pointer and addref it.
-    //
-    PortStream = PortStream_;
-    PortStream->AddRef ();
 
     //
     // Initialize the BDL spinlock.
@@ -201,6 +185,7 @@ NTSTATUS CMiniportWaveICHStream::Init
 
 
     NTSTATUS ntStatus = CMiniportStream::Init(Miniport_,
+                                              PortStream_,
                                               Pin,
                                               Capture_,
                                               DataFormat_,

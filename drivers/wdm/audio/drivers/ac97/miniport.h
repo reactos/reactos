@@ -3,6 +3,7 @@
 
 #ifndef PPORT_
  #define PPORT_ PPORT
+ #define PPORTSTREAM_ PUNKNOWN
 #endif
 
 /*****************************************************************************
@@ -29,6 +30,7 @@ public:
     PPORT_              Port;           // Port driver object.
     PADAPTERCOMMON      AdapterCommon;  // Adapter common object.
     PINTERRUPTSYNC      InterruptSync;  // Interrupt Sync.
+    PDMACHANNEL         DmaChannel;     // Bus master support.
     DEVICE_POWER_STATE  m_PowerState;   // advanced power control.
     DWORD               m_dwChannelMask; // Channel config for speaker positions.
     WORD                m_wChannels;      // Number of channels.
@@ -134,6 +136,10 @@ STDMETHODIMP_(NTSTATUS) cType::NonDelegatingQueryInterface(     \
     _COM_Outptr_ PVOID  *Object)                                \
 {   return CMiniport::NonDelegatingQueryInterface(              \
         Interface, Object, IID, (PMINIPORT)this); }
+
+
+void __fastcall obj_AddRef(PUNKNOWN obj, void **ppvObject);
+void __fastcall obj_Release(void **ppvObject);
 
 #include "stream.h"
 #endif

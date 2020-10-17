@@ -48,28 +48,6 @@ NTSTATUS CreateAC97MiniportWavePCI
 }
 
 /*****************************************************************************
- * CMiniportWaveICH::~CMiniportWaveICH
- *****************************************************************************
- * Destructor.
- */
-CMiniportWaveICH::~CMiniportWaveICH ()
-{
-    PAGED_CODE ();
-
-    DOUT (DBG_PRINT, ("[CMiniportWaveICH::~CMiniportWaveICH]"));
-
-    //
-    // Release the DMA channel.
-    //
-    if (DmaChannel)
-    {
-        DmaChannel->Release ();
-        DmaChannel = NULL;
-    }
-}
-
-
-/*****************************************************************************
  * CMiniportWaveICH::Init
  *****************************************************************************
  * Initializes the miniport.

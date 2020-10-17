@@ -46,7 +46,6 @@ private:
     //
     // CAC97MiniportWaveRTStream private variables
     //
-    PPORTWAVERTSTREAM       PortStream;         // Port Stream Interface
     DEVICE_POWER_STATE  m_PowerState;       // Current power state of the device.
 
 

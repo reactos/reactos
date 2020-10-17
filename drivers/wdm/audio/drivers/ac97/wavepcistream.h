@@ -70,7 +70,6 @@ private:
     //
 
     tBDList                     stBDList;       // needed for scatter gather org.
-    PPORTWAVEPCISTREAM          PortStream;     // Port Stream Interface
 
     KSPIN_LOCK                  MapLock;        // for processing mappings.
     ULONGLONG           TotalBytesMapped;   // factor in position calculation

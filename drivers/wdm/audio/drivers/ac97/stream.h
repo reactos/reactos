@@ -45,6 +45,8 @@ public:
     WORD                        NumberOfChannels; // Number of channels
     DEVICE_POWER_STATE  m_PowerState;       // Current power state of the device.
 
+    PPORTSTREAM_                PortStream;
+
 
 
     PKSDATAFORMAT_WAVEFORMATEX  DataFormat;     // Data Format
@@ -123,6 +125,7 @@ public:
     NTSTATUS Init
     (
         IN  CMiniport*              Miniport_,
+        IN  PUNKNOWN                PortStream,
         IN  WavePins                Pin_,
         IN  BOOLEAN                 Capture_,
         IN  PKSDATAFORMAT           DataFormat_,

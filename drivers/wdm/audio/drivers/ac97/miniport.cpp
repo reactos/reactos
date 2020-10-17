@@ -1209,8 +1209,7 @@ STDMETHODIMP_(NTSTATUS) CMiniport::Init
     //
     // AddRef() is required because we are keeping this pointer.
     //
-    Port = Port_;
-    Port->AddRef ();
+    obj_AddRef(Port_, (PVOID *)&Port);
 
     //
     // Set initial device power state
@@ -1259,6 +1258,23 @@ STDMETHODIMP_(NTSTATUS) CMiniport::Init
     return ntStatus;
 }
 
+void __fastcall obj_AddRef(PUNKNOWN obj, void **ppvObject)
+{
+    if(obj) {
+        obj->AddRef();
+        *ppvObject = obj;
+    }
+}
+
+
+void __fastcall obj_Release(void **ppvObject)
+{
+    if(*ppvObject)
+    {
+        ((PUNKNOWN)*ppvObject)->Release ();
+        *ppvObject = NULL;
+    }
+}
 
 /*****************************************************************************
  * CAC97MiniportWaveRT::~CAC97MiniportWaveRT
@@ -1271,32 +1287,10 @@ CMiniport::~CMiniport ()
 
     DOUT (DBG_PRINT, ("[CMiniport::~CMiniport]"));
 
-    //
-    // Release the interrupt sync.
-    //
-    if (InterruptSync)
-    {
-        InterruptSync->Release ();
-        InterruptSync = NULL;
-    }
-
-    //
-    // Release adapter common object.
-    //
-    if (AdapterCommon)
-    {
-        AdapterCommon->Release ();
-        AdapterCommon = NULL;
-    }
-
-    //
-    // Release the port.
-    //
-    if (Port)
-    {
-        Port->Release ();
-        Port = NULL;
-    }
+    obj_Release((PVOID *)&DmaChannel);
+    obj_Release((PVOID *)&InterruptSync);
+    obj_Release((PVOID *)&AdapterCommon);
+    obj_Release((PVOID *)&Port);
 }
 
 /*****************************************************************************

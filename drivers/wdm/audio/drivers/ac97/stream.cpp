@@ -68,6 +68,7 @@ NTSTATUS CMiniportStream::NonDelegatingQueryInterface
 NTSTATUS CMiniportStream::Init
 (
     IN  CMiniport               *Miniport_,
+    IN  PUNKNOWN                PortStream_,
     IN  WavePins                Pin_,
     IN  BOOLEAN                 Capture_,
     IN  PKSDATAFORMAT           DataFormat_,
@@ -90,8 +91,13 @@ NTSTATUS CMiniportStream::Init
     //
     // Save miniport pointer and addref it.
     //
-    Miniport = Miniport_;
-    Miniport->AddRef ();
+    obj_AddRef(Miniport_, (PVOID *)&Miniport);
+
+    //
+    // Save portstream interface pointer and addref it.
+    //
+    obj_AddRef(PortStream_, (PVOID *)&PortStream);
+
 
     //
     // Save channel ID and capture flag.
@@ -124,8 +130,7 @@ NTSTATUS CMiniportStream::Init
         //
         // Pass the ServiceGroup pointer to portcls.
         //
-        *ServiceGroup_ = ServiceGroup;
-        ServiceGroup->AddRef ();
+        obj_AddRef(ServiceGroup, (PVOID *)ServiceGroup_);
     }
 
     //
@@ -219,14 +224,8 @@ CMiniportStream::~CMiniportStream()
         Miniport = NULL;
     }
 
-    //
-    // Release the service group.
-    //
-    if (ServiceGroup)
-    {
-        ServiceGroup->Release ();
-        ServiceGroup = NULL;
-    }
+    obj_Release((PVOID *)&ServiceGroup);
+    obj_Release((PVOID *)&PortStream);
 }
 
 UCHAR CMiniportStream::UpdateDMA (void)
