@@ -85,7 +85,7 @@ cresize_MoveGrip(CRESIZE *pResize, HDWP hDwp OPTIONAL)
 }
 
 static __inline void
-cresize_ShowSizeGrip(CRESIZE *pResize, BOOL bShow)
+cresize_ShowGrip(CRESIZE *pResize, BOOL bShow)
 {
     if (!bShow)
     {
@@ -107,7 +107,7 @@ cresize_ShowSizeGrip(CRESIZE *pResize, BOOL bShow)
 static __inline void
 cresize_EnableResize(CRESIZE *pResize, BOOL bEnableResize)
 {
-    cresize_ShowSizeGrip(pResize, bEnableResize);
+    cresize_ShowGrip(pResize, bEnableResize);
     cresize_ModifySystemMenu(pResize, bEnableResize);
     pResize->m_bResizeEnabled = bEnableResize;
 }
