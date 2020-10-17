@@ -377,6 +377,93 @@ STDMETHODIMP_(NTSTATUS) CMiniportStream::SetContentId
     return STATUS_SUCCESS;
 }
 
+
+/*****************************************************************************
+ * CMiniportStream::PowerChangeNotify
+ *****************************************************************************
+ * This functions saves and maintains the stream state through power changes.
+ */
+
+void CMiniportStream::PowerChangeNotify_
+(
+    IN  POWER_STATE NewState
+)
+{
+    if(NewState.DeviceState == PowerDeviceD0)
+    {
+        //
+        // The scatter gather list is already arranged. A reset of the DMA
+        // brings all pointers to the default state. From there we can start.
+        //
+
+        ResetDMA ();
+    }
+    else
+    {
+        // Disable interrupts and stop DMA just in case.
+        Miniport->AdapterCommon->WriteBMControlRegister (m_ulBDAddr + X_CR, (UCHAR)0);
+    }
+}
+
+void CMiniportStream::PowerChangeNotify
+(
+    IN  POWER_STATE NewState
+)
+{
+    DOUT (DBG_PRINT, ("[CMiniportStream::PowerChangeNotify]"));
+
+    //
+    // We don't have to check the power state, that's already done by the wave
+    // miniport.
+    //
+
+    DOUT (DBG_POWER, ("Changing state to D%d.",
+                     (ULONG)NewState.DeviceState - (ULONG)PowerDeviceD0));
+
+    switch (NewState.DeviceState)
+    {
+        case PowerDeviceD0:
+            //
+            // If we are coming from D2 or D3 we have to restore the registers cause
+            // there might have been a power loss.
+            //
+            if ((m_PowerState == PowerDeviceD3) || (m_PowerState == PowerDeviceD2))
+            {
+                PowerChangeNotify_(NewState);
+            }
+            break;
+
+        case PowerDeviceD1:
+            // Here we do nothing. The device has still enough power to keep all
+            // it's register values.
+            break;
+
+        case PowerDeviceD2:
+        case PowerDeviceD3:
+            //
+            // If we power down to D2 or D3 we might loose power, so we have to be
+            // aware of the DMA engine resetting. In that case a play would start
+            // with scatter gather entry 0 (the current index is read only).
+            // This is fine with the RT port.
+            //
+
+            PowerChangeNotify_(NewState);
+
+            break;
+    }
+
+    //
+    // Save the new state.  This local value is used to determine when to
+    // cache property accesses and when to permit the driver from accessing
+    // the hardware.
+    //
+    m_PowerState = NewState.DeviceState;
+    DOUT (DBG_POWER, ("Entering D%d",
+                      (ULONG)m_PowerState - (ULONG)PowerDeviceD0));
+
+}
+
+
 /*
  *****************************************************************************
  * This routine tests for proper data format (calls wave miniport) and sets

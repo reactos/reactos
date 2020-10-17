@@ -88,10 +88,20 @@ public:
     //
     // This method is called when the device changes power states.
     //
-    virtual NTSTATUS PowerChangeNotify
+    void PowerChangeNotify
     (
         IN  POWER_STATE NewState
-    ) = 0;
+    );
+
+    virtual void PowerChangeNotify_
+    (
+        IN  POWER_STATE NewState
+    );
+
+
+
+
+
 
     //
     // Return the current sample rate.

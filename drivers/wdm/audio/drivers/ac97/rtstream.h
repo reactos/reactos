@@ -102,14 +102,6 @@ public:
     );
 
     //
-    // This method is called when the device changes power states.
-    //
-    NTSTATUS PowerChangeNotify
-    (
-        IN  POWER_STATE NewState
-    );
-
-    //
     // Friends
     //
     friend

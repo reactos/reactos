@@ -152,7 +152,7 @@ public:
     //
     // This method is called when the device changes power states.
     //
-    NTSTATUS PowerChangeNotify
+    void PowerChangeNotify_
     (
         IN  POWER_STATE NewState
     );

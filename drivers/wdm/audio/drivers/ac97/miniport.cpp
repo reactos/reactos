@@ -1036,12 +1036,7 @@ STDMETHODIMP_(void) CMiniport::PowerChangeNotify
     {
         if (Streams[loop])
         {
-            ntStatus = Streams[loop]->PowerChangeNotify (NewState);
-            if (!NT_SUCCESS (ntStatus))
-            {
-                DOUT (DBG_ERROR, ("PowerChangeNotify D%d for the stream failed",
-                              (ULONG)NewState.DeviceState - (ULONG)PowerDeviceD0));
-            }
+            Streams[loop]->PowerChangeNotify (NewState);
         }
     }
 

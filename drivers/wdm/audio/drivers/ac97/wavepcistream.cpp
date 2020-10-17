@@ -279,130 +279,72 @@ STDMETHODIMP_(NTSTATUS) CMiniportWaveICHStream::GetAllocatorFraming
 #pragma code_seg()
 #endif
 /*****************************************************************************
- * CMiniportWaveICHStream::PowerChangeNotify
+ * CMiniportWaveICHStream::PowerChangeNotify_
  *****************************************************************************
  * This functions saves and maintains the stream state through power changes.
  */
-NTSTATUS CMiniportWaveICHStream::PowerChangeNotify
+void CMiniportWaveICHStream::PowerChangeNotify_
 (
     IN  POWER_STATE NewState
 )
 {
     KIRQL       OldIrql;
-    NTSTATUS    ntStatus = STATUS_SUCCESS;
 
-    DOUT (DBG_PRINT, ("[CMiniportWaveICHStream::PowerChangeNotify]"));
+    KeAcquireSpinLock (&MapLock,&OldIrql);
 
-    //
-    // We don't have to check the power state, that's already done by the wave
-    // miniport.
-    //
-
-    DOUT (DBG_POWER, ("Changing state to D%d.",
-                     (ULONG)NewState.DeviceState - (ULONG)PowerDeviceD0));
-
-    switch (NewState.DeviceState)
+    if(NewState.DeviceState == PowerDeviceD0)
     {
-        case PowerDeviceD0:
-            //
-            // If we are coming from D2 or D3 we have to restore the registers cause
-            // there might have been a power loss.
-            //
-            if ((m_PowerState == PowerDeviceD3) || (m_PowerState == PowerDeviceD2))
-            {
-                //
-                // The scatter gather list is already arranged. A reset of the DMA
-                // brings all pointers to the default state. From there we can start.
-                //
+        ResetDMA ();
 
-                // Acquire the mapping spin lock
-                KeAcquireSpinLock (&MapLock,&OldIrql);
+        // Restore the remaining DMA registers, that is last valid index
+        // only if the index is not pointing to 0. Note that the index is
+        // equal to head + entries.
+        if (stBDList.nTail)
+        {
+            Miniport->AdapterCommon->WriteBMControlRegister (m_ulBDAddr + X_LVI,
+                                    (UCHAR)((stBDList.nTail - 1) & BDL_MASK));
+        }
+    }
+    else
+    {
 
-                ResetDMA ();
+        // Disable interrupts and stop DMA just in case.
+        Miniport->AdapterCommon->WriteBMControlRegister (m_ulBDAddr + X_CR, (UCHAR)0);
 
-                // Restore the remaining DMA registers, that is last valid index
-                // only if the index is not pointing to 0. Note that the index is
-                // equal to head + entries.
-                if (stBDList.nTail)
-                {
-                    Miniport->AdapterCommon->WriteBMControlRegister (m_ulBDAddr + X_LVI,
-                                            (UCHAR)((stBDList.nTail - 1) & BDL_MASK));
-                }
+        // Get current index
+        int nCurrentIndex = (int)Miniport->AdapterCommon->
+            ReadBMControlRegister8 (m_ulBDAddr + X_CIV);
 
-                // Release the mapping spin lock
-                KeReleaseSpinLock (&MapLock,OldIrql);
-            }
-            break;
+        //
+        // First move the BD list to the beginning.
+        //
+        // In case the DMA engine was stopped, current index may point to an
+        // empty BD entry. When we start the DMA engine it would then play this
+        // (undefined) entry, so we check here for that condition.
+        //
+        if ((nCurrentIndex == ((stBDList.nHead - 1) & BDL_MASK)) &&
+           (stBDList.nBDEntries != MAX_BDL_ENTRIES - 1))
+        {
+            nCurrentIndex = stBDList.nHead;     // point to head
+        }
 
-        case PowerDeviceD1:
-            // Here we do nothing. The device has still enough power to keep all
-            // it's register values.
-            break;
+        //
+        // Move BD list to (0-((current - head) & mask)) & mask, where
+        // ((current - head) & mask) is the difference between head and
+        // current index, no matter where they are :)
+        //
+        MoveBDList (stBDList.nHead, (stBDList.nTail - 1) & BDL_MASK,
+                (0 - ((nCurrentIndex - stBDList.nHead) & BDL_MASK)) & BDL_MASK);
 
-        case PowerDeviceD2:
-        case PowerDeviceD3:
-            //
-            // If we power down to D2 or D3 we might loose power, so we have to be
-            // aware of the DMA engine resetting. In that case a play would start
-            // with scatter gather entry 0 (the current index is read only).
-            // We just rearrange the scatter gather list (like we do on
-            // RevokeMappings) so that the current buffer which is played is at
-            // entry 0.
-            //
-
-            // Acquire the mapping spin lock
-            KeAcquireSpinLock (&MapLock,&OldIrql);
-
-            // Disable interrupts and stop DMA just in case.
-            Miniport->AdapterCommon->WriteBMControlRegister (m_ulBDAddr + X_CR, (UCHAR)0);
-
-            // Get current index
-            int nCurrentIndex = (int)Miniport->AdapterCommon->
-                ReadBMControlRegister8 (m_ulBDAddr + X_CIV);
-
-            //
-            // First move the BD list to the beginning.
-            //
-            // In case the DMA engine was stopped, current index may point to an
-            // empty BD entry. When we start the DMA engine it would then play this
-            // (undefined) entry, so we check here for that condition.
-            //
-            if ((nCurrentIndex == ((stBDList.nHead - 1) & BDL_MASK)) &&
-               (stBDList.nBDEntries != MAX_BDL_ENTRIES - 1))
-            {
-                nCurrentIndex = stBDList.nHead;     // point to head
-            }
-
-            //
-            // Move BD list to (0-((current - head) & mask)) & mask, where
-            // ((current - head) & mask) is the difference between head and
-            // current index, no matter where they are :)
-            //
-            MoveBDList (stBDList.nHead, (stBDList.nTail - 1) & BDL_MASK,
-                    (0 - ((nCurrentIndex - stBDList.nHead) & BDL_MASK)) & BDL_MASK);
-
-            //
-            // Update structure.
-            //
-            stBDList.nHead = (0 - ((nCurrentIndex - stBDList.nHead) & BDL_MASK)) &
-                BDL_MASK;
-            stBDList.nTail = (stBDList.nHead + stBDList.nBDEntries) & BDL_MASK;
-
-            // release the mapping spin lock
-            KeReleaseSpinLock (&MapLock,OldIrql);
-            break;
+        //
+        // Update structure.
+        //
+        stBDList.nHead = (0 - ((nCurrentIndex - stBDList.nHead) & BDL_MASK)) &
+            BDL_MASK;
+        stBDList.nTail = (stBDList.nHead + stBDList.nBDEntries) & BDL_MASK;
     }
 
-    //
-    // Save the new state.  This local value is used to determine when to
-    // cache property accesses and when to permit the driver from accessing
-    // the hardware.
-    //
-    m_PowerState = NewState.DeviceState;
-    DOUT (DBG_POWER, ("Entering D%d",
-                      (ULONG)m_PowerState - (ULONG)PowerDeviceD0));
-
-    return ntStatus;
+    KeReleaseSpinLock (&MapLock,OldIrql);
 }
 
 /*****************************************************************************
