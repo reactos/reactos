@@ -14,21 +14,9 @@
 #endif
 #include <assert.h>
 
-/* The layout anchors */
-#define LA_TOP_LEFT      0, 0     /* upper left */
-#define LA_TOP_CENTER    50, 0    /* upper center */
-#define LA_TOP_RIGHT     100, 0   /* upper right */
-#define LA_MIDDLE_LEFT   0, 50    /* middle left */
-#define LA_MIDDLE_CENTER 50, 50   /* middle center */
-#define LA_MIDDLE_RIGHT  100, 50  /* middle right */
-#define LA_BOTTOM_LEFT   0, 100   /* lower left */
-#define LA_BOTTOM_CENTER 50, 100  /* lower center */
-#define LA_BOTTOM_RIGHT  100, 100 /* lower right */
-
 typedef struct CRESIZE_LAYOUT {
     UINT m_nCtrlID;
-    LONG m_cx1, m_cy1; /* layout anchor */
-    LONG m_cx2, m_cy2; /* layout anchor */
+    UINT uEdges; /* BF_* flags */
     SIZE m_margin1;
     SIZE m_margin2;
     HWND m_hwndCtrl;
@@ -103,6 +91,15 @@ cresize_ShowGrip(CRESIZE *pResize, BOOL bShow)
 }
 
 static __inline void
+cresize_GetLayoutAnchor(UINT uEdges, LPRECT prcPercents)
+{
+    prcPercents->left = (uEdges & BF_LEFT) ? 0 : 100;
+    prcPercents->right = (uEdges & BF_RIGHT) ? 100 : 0;
+    prcPercents->top = (uEdges & BF_TOP) ? 0 : 100;
+    prcPercents->bottom = (uEdges & BF_BOTTOM) ? 100 : 0;
+}
+
+static __inline void
 cresize_EnableResize(CRESIZE *pResize, BOOL bEnable)
 {
     cresize_ShowGrip(pResize, bEnable);
@@ -114,7 +111,7 @@ cresize_DoLayout(CRESIZE *pResize, HDWP hDwp, const CRESIZE_LAYOUT *pLayout,
                  const RECT *ClientRect)
 {
     HWND hwndCtrl = pLayout->m_hwndCtrl;
-    RECT ChildRect, NewRect;
+    RECT ChildRect, NewRect, rcPercents;
     LONG width, height;
     const UINT uFlags = SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOREPOSITION;
 
@@ -125,10 +122,11 @@ cresize_DoLayout(CRESIZE *pResize, HDWP hDwp, const CRESIZE_LAYOUT *pLayout,
     width = ClientRect->right - ClientRect->left;
     height = ClientRect->bottom - ClientRect->top;
 
-    NewRect.left = pLayout->m_margin1.cx + width * pLayout->m_cx1 / 100;
-    NewRect.top = pLayout->m_margin1.cy + height * pLayout->m_cy1 / 100;
-    NewRect.right = pLayout->m_margin2.cx + width * pLayout->m_cx2 / 100;
-    NewRect.bottom = pLayout->m_margin2.cy + height * pLayout->m_cy2 / 100;
+    cresize_GetLayoutAnchor(pLayout->uEdges, &rcPercents);
+    NewRect.left = pLayout->m_margin1.cx + width * rcPercents.left / 100;
+    NewRect.top = pLayout->m_margin1.cy + height * rcPercents.top / 100;
+    NewRect.right = pLayout->m_margin2.cx + width * rcPercents.right / 100;
+    NewRect.bottom = pLayout->m_margin2.cy + height * rcPercents.bottom / 100;
 
     if (!EqualRect(&NewRect, &ChildRect))
     {
@@ -174,7 +172,7 @@ cresize_OnSize(CRESIZE *pResize)
 static __inline void
 cresize_InitLayouts(CRESIZE *pResize)
 {
-    RECT ClientRect, ChildRect;
+    RECT ClientRect, ChildRect, rcPercents;
     LONG width, height;
     UINT iItem;
 
@@ -196,10 +194,11 @@ cresize_InitLayouts(CRESIZE *pResize)
         width = ClientRect.right - ClientRect.left;
         height = ClientRect.bottom - ClientRect.top;
 
-        layout->m_margin1.cx = ChildRect.left - width * layout->m_cx1 / 100;
-        layout->m_margin1.cy = ChildRect.top - height * layout->m_cy1 / 100;
-        layout->m_margin2.cx = ChildRect.right - width * layout->m_cx2 / 100;
-        layout->m_margin2.cy = ChildRect.bottom - height * layout->m_cy2 / 100;
+        cresize_GetLayoutAnchor(layout->uEdges, &rcPercents);
+        layout->m_margin1.cx = ChildRect.left - width * rcPercents.left / 100;
+        layout->m_margin1.cy = ChildRect.top - height * rcPercents.top / 100;
+        layout->m_margin2.cx = ChildRect.right - width * rcPercents.right / 100;
+        layout->m_margin2.cy = ChildRect.bottom - height * rcPercents.bottom / 100;
     }
 }
 
@@ -226,7 +225,7 @@ cresize_Create(HWND hwndParent, const CRESIZE_LAYOUT *pLayouts, UINT cLayouts)
     memcpy(pResize->m_pLayouts, pLayouts, cb);
 
     /* NOTE: The parent window must have initially WS_THICKFRAME style. */
-    assert(IsWindow(pResize->m_hwndParent));
+    assert(IsWindow(hwndParent));
     assert(GetWindowLongPtrW(hwndParent, GWL_STYLE) & WS_THICKFRAME);
 
     pResize->m_hwndParent = hwndParent;
