@@ -91,7 +91,7 @@ cresize_ShowGrip(CRESIZE *pResize, BOOL bShow)
 }
 
 static __inline void
-cresize_GetLayoutAnchor(UINT uEdges, LPRECT prcPercents)
+cresize_GetPercents(UINT uEdges, LPRECT prcPercents)
 {
     prcPercents->left = (uEdges & BF_LEFT) ? 0 : 100;
     prcPercents->right = (uEdges & BF_RIGHT) ? 100 : 0;
@@ -122,7 +122,7 @@ cresize_DoLayout(CRESIZE *pResize, HDWP hDwp, const CRESIZE_LAYOUT *pLayout,
     width = ClientRect->right - ClientRect->left;
     height = ClientRect->bottom - ClientRect->top;
 
-    cresize_GetLayoutAnchor(pLayout->uEdges, &rcPercents);
+    cresize_GetPercents(pLayout->uEdges, &rcPercents);
     NewRect.left = pLayout->m_margin1.cx + width * rcPercents.left / 100;
     NewRect.top = pLayout->m_margin1.cy + height * rcPercents.top / 100;
     NewRect.right = pLayout->m_margin2.cx + width * rcPercents.right / 100;
@@ -194,7 +194,7 @@ cresize_InitLayouts(CRESIZE *pResize)
         width = ClientRect.right - ClientRect.left;
         height = ClientRect.bottom - ClientRect.top;
 
-        cresize_GetLayoutAnchor(layout->uEdges, &rcPercents);
+        cresize_GetPercents(layout->uEdges, &rcPercents);
         layout->m_margin1.cx = ChildRect.left - width * rcPercents.left / 100;
         layout->m_margin1.cy = ChildRect.top - height * rcPercents.top / 100;
         layout->m_margin2.cx = ChildRect.right - width * rcPercents.right / 100;
