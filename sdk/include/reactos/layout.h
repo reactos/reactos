@@ -84,7 +84,7 @@ _layout_ShowGrip(LAYOUT_DATA *pData, BOOL bShow)
 }
 
 static __inline void
-_layout_GetPercents(UINT uEdges, LPRECT prcPercents)
+_layout_GetPercents(LPRECT prcPercents, UINT uEdges)
 {
     prcPercents->left = (uEdges & BF_LEFT) ? 0 : 100;
     prcPercents->right = (uEdges & BF_RIGHT) ? 100 : 0;
@@ -114,7 +114,7 @@ _layout_DoMoveItem(LAYOUT_DATA *pData, HDWP hDwp, const LAYOUT_INFO *pLayout,
     width = ClientRect->right - ClientRect->left;
     height = ClientRect->bottom - ClientRect->top;
 
-    _layout_GetPercents(pLayout->uEdges, &rcPercents);
+    _layout_GetPercents(&rcPercents, pLayout->uEdges);
     NewRect.left = pLayout->m_margin1.cx + width * rcPercents.left / 100;
     NewRect.top = pLayout->m_margin1.cy + height * rcPercents.top / 100;
     NewRect.right = pLayout->m_margin2.cx + width * rcPercents.right / 100;
@@ -184,7 +184,7 @@ _layout_InitLayouts(LAYOUT_DATA *pData)
         GetWindowRect(layout->m_hwndCtrl, &ChildRect);
         MapWindowPoints(NULL, pData->m_hwndParent, (LPPOINT)&ChildRect, 2);
 
-        _layout_GetPercents(layout->uEdges, &rcPercents);
+        _layout_GetPercents(&rcPercents, layout->uEdges);
         layout->m_margin1.cx = ChildRect.left - width * rcPercents.left / 100;
         layout->m_margin1.cy = ChildRect.top - height * rcPercents.top / 100;
         layout->m_margin2.cx = ChildRect.right - width * rcPercents.right / 100;
