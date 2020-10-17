@@ -11,9 +11,9 @@
 typedef struct LAYOUT_INFO {
     UINT m_nCtrlID;
     UINT uEdges; /* BF_* flags */
+    HWND m_hwndCtrl;
     SIZE m_margin1;
     SIZE m_margin2;
-    HWND m_hwndCtrl;
 } LAYOUT_INFO;
 
 typedef struct LAYOUT_DATA {
