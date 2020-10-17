@@ -1154,6 +1154,7 @@ static BOOL BrsFolder_OnSetSelectionA(browse_info *info, LPVOID selection, BOOL 
     return result;
 }
 
+#ifndef __REACTOS__
 static LRESULT BrsFolder_OnWindowPosChanging(browse_info *info, WINDOWPOS *pos)
 {
     if ((info->lpBrowseInfo->ulFlags & BIF_NEWDIALOGSTYLE) && !(pos->flags & SWP_NOSIZE))
@@ -1165,6 +1166,7 @@ static LRESULT BrsFolder_OnWindowPosChanging(browse_info *info, WINDOWPOS *pos)
     }
     return 0;
 }
+#endif
 
 static INT BrsFolder_OnDestroy(browse_info *info)
 {
@@ -1257,8 +1259,15 @@ static INT_PTR CALLBACK BrsFolderDlgProc( HWND hWnd, UINT msg, WPARAM wParam,
     case WM_COMMAND:
         return BrsFolder_OnCommand( info, wParam );
 
+#ifdef __REACTOS__
+    case WM_GETMINMAXINFO:
+        ((LPMINMAXINFO)lParam)->ptMinTrackSize.x = info->szMin.cx;
+        ((LPMINMAXINFO)lParam)->ptMinTrackSize.y = info->szMin.cy;
+        return 0;
+#else
     case WM_WINDOWPOSCHANGING:
         return BrsFolder_OnWindowPosChanging( info, (WINDOWPOS *)lParam);
+#endif
 
     case WM_SIZE:
         if (info->layout)  /* new style dialogs */
