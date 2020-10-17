@@ -36,10 +36,10 @@ typedef struct CRESIZE_LAYOUT {
 
 typedef struct CRESIZE {
     HWND m_hwndParent;
-    BOOL m_bResizeEnabled;
     HWND m_hwndGrip;
-    INT m_cLayouts;
     CRESIZE_LAYOUT *m_pLayouts;
+    BOOL m_bResizeEnabled;
+    INT m_cLayouts;
 } CRESIZE;
 
 static __inline void
