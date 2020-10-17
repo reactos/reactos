@@ -1,7 +1,7 @@
 /*
- * PROJECT:     ReactOS include
+ * PROJECT:     ReactOS headers
  * LICENSE:     LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
- * PURPOSE:     Resizable dialog box / window
+ * PURPOSE:     The layout engine of resizable dialog boxes / windows
  * COPYRIGHT:   Copyright 2020 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 #pragma once
@@ -14,23 +14,23 @@
 #endif
 #include <assert.h>
 
-typedef struct CRESIZE_LAYOUT {
+typedef struct LAYOUT_INFO {
     UINT m_nCtrlID;
     UINT uEdges; /* BF_* flags */
     SIZE m_margin1;
     SIZE m_margin2;
     HWND m_hwndCtrl;
-} CRESIZE_LAYOUT;
+} LAYOUT_INFO;
 
-typedef struct CRESIZE {
+typedef struct LAYOUT_DATA {
     HWND m_hwndParent;
     HWND m_hwndGrip;
-    CRESIZE_LAYOUT *m_pLayouts;
+    LAYOUT_INFO *m_pLayouts;
     UINT m_cLayouts;
-} CRESIZE;
+} LAYOUT_DATA;
 
 static __inline void
-cresize_ModifySystemMenu(CRESIZE *pResize, BOOL bEnableResize)
+layout_ModifySystemMenu(LAYOUT_DATA *pResize, BOOL bEnableResize)
 {
     if (bEnableResize)
     {
@@ -46,7 +46,7 @@ cresize_ModifySystemMenu(CRESIZE *pResize, BOOL bEnableResize)
 }
 
 static __inline HDWP
-cresize_MoveGrip(CRESIZE *pResize, HDWP hDwp OPTIONAL)
+layout_MoveGrip(LAYOUT_DATA *pResize, HDWP hDwp OPTIONAL)
 {
     RECT ClientRect;
     INT cx, cy;
@@ -71,7 +71,7 @@ cresize_MoveGrip(CRESIZE *pResize, HDWP hDwp OPTIONAL)
 }
 
 static __inline void
-cresize_ShowGrip(CRESIZE *pResize, BOOL bShow)
+layout_ShowGrip(LAYOUT_DATA *pResize, BOOL bShow)
 {
     if (!bShow)
     {
@@ -86,12 +86,12 @@ cresize_ShowGrip(CRESIZE *pResize, BOOL bShow)
                                               0, 0, 0, 0, pResize->m_hwndParent,
                                               NULL, GetModuleHandleW(NULL), NULL);
     }
-    cresize_MoveGrip(pResize, NULL);
+    layout_MoveGrip(pResize, NULL);
     ShowWindow(pResize->m_hwndGrip, SW_SHOWNOACTIVATE);
 }
 
 static __inline void
-cresize_GetPercents(UINT uEdges, LPRECT prcPercents)
+layout_GetPercents(UINT uEdges, LPRECT prcPercents)
 {
     prcPercents->left = (uEdges & BF_LEFT) ? 0 : 100;
     prcPercents->right = (uEdges & BF_RIGHT) ? 100 : 0;
@@ -100,14 +100,14 @@ cresize_GetPercents(UINT uEdges, LPRECT prcPercents)
 }
 
 static __inline void
-cresize_EnableResize(CRESIZE *pResize, BOOL bEnable)
+LayoutEnableResize(LAYOUT_DATA *pResize, BOOL bEnable)
 {
-    cresize_ShowGrip(pResize, bEnable);
-    cresize_ModifySystemMenu(pResize, bEnable);
+    layout_ShowGrip(pResize, bEnable);
+    layout_ModifySystemMenu(pResize, bEnable);
 }
 
 static __inline HDWP
-cresize_DoLayout(CRESIZE *pResize, HDWP hDwp, const CRESIZE_LAYOUT *pLayout,
+layout_DoLayout(LAYOUT_DATA *pResize, HDWP hDwp, const LAYOUT_INFO *pLayout,
                  const RECT *ClientRect)
 {
     HWND hwndCtrl = pLayout->m_hwndCtrl;
@@ -122,7 +122,7 @@ cresize_DoLayout(CRESIZE *pResize, HDWP hDwp, const CRESIZE_LAYOUT *pLayout,
     width = ClientRect->right - ClientRect->left;
     height = ClientRect->bottom - ClientRect->top;
 
-    cresize_GetPercents(pLayout->uEdges, &rcPercents);
+    layout_GetPercents(pLayout->uEdges, &rcPercents);
     NewRect.left = pLayout->m_margin1.cx + width * rcPercents.left / 100;
     NewRect.top = pLayout->m_margin1.cy + height * rcPercents.top / 100;
     NewRect.right = pLayout->m_margin2.cx + width * rcPercents.right / 100;
@@ -139,7 +139,7 @@ cresize_DoLayout(CRESIZE *pResize, HDWP hDwp, const CRESIZE_LAYOUT *pLayout,
 }
 
 static __inline void
-cresize_ArrangeLayout(CRESIZE *pResize)
+layout_ArrangeLayout(LAYOUT_DATA *pResize)
 {
     RECT ClientRect;
     UINT iItem;
@@ -151,26 +151,26 @@ cresize_ArrangeLayout(CRESIZE *pResize)
 
     for (iItem = 0; iItem < pResize->m_cLayouts; ++iItem)
     {
-        const CRESIZE_LAYOUT *pLayout = &pResize->m_pLayouts[iItem];
-        hDwp = cresize_DoLayout(pResize, hDwp, pLayout, &ClientRect);
+        const LAYOUT_INFO *pLayout = &pResize->m_pLayouts[iItem];
+        hDwp = layout_DoLayout(pResize, hDwp, pLayout, &ClientRect);
     }
 
-    hDwp = cresize_MoveGrip(pResize, hDwp);
+    hDwp = layout_MoveGrip(pResize, hDwp);
     EndDeferWindowPos(hDwp);
 }
 
-// NOTE: Please call cresize_OnSize on parent's WM_SIZE.
+// NOTE: Please call LayoutUpdate on parent's WM_SIZE.
 static __inline void
-cresize_OnSize(CRESIZE *pResize)
+LayoutUpdate(HWND ingored1, LAYOUT_DATA *pResize, LPCVOID ignored2, UINT ignored3)
 {
     if (pResize == NULL)
         return;
     assert(IsWindow(pResize->m_hwndParent));
-    cresize_ArrangeLayout(pResize);
+    layout_ArrangeLayout(pResize);
 }
 
 static __inline void
-cresize_InitLayouts(CRESIZE *pResize)
+layout_InitLayouts(LAYOUT_DATA *pResize)
 {
     RECT ClientRect, ChildRect, rcPercents;
     LONG width, height;
@@ -180,7 +180,7 @@ cresize_InitLayouts(CRESIZE *pResize)
 
     for (iItem = 0; iItem < pResize->m_cLayouts; ++iItem)
     {
-        CRESIZE_LAYOUT *layout = &pResize->m_pLayouts[iItem];
+        LAYOUT_INFO *layout = &pResize->m_pLayouts[iItem];
         if (layout->m_hwndCtrl == NULL)
         {
             layout->m_hwndCtrl = GetDlgItem(pResize->m_hwndParent, layout->m_nCtrlID);
@@ -194,7 +194,7 @@ cresize_InitLayouts(CRESIZE *pResize)
         width = ClientRect.right - ClientRect.left;
         height = ClientRect.bottom - ClientRect.top;
 
-        cresize_GetPercents(layout->uEdges, &rcPercents);
+        layout_GetPercents(layout->uEdges, &rcPercents);
         layout->m_margin1.cx = ChildRect.left - width * rcPercents.left / 100;
         layout->m_margin1.cy = ChildRect.top - height * rcPercents.top / 100;
         layout->m_margin2.cx = ChildRect.right - width * rcPercents.right / 100;
@@ -202,18 +202,18 @@ cresize_InitLayouts(CRESIZE *pResize)
     }
 }
 
-static __inline CRESIZE *
-cresize_Create(HWND hwndParent, const CRESIZE_LAYOUT *pLayouts, UINT cLayouts)
+static __inline LAYOUT_DATA *
+LayoutInit(HWND hwndParent, const LAYOUT_INFO *pLayouts, UINT cLayouts)
 {
     SIZE_T cb;
-    CRESIZE *pResize = SHAlloc(sizeof(CRESIZE));
+    LAYOUT_DATA *pResize = SHAlloc(sizeof(LAYOUT_DATA));
     if (pResize == NULL)
     {
         assert(0);
         return NULL;
     }
 
-    cb = cLayouts * sizeof(CRESIZE_LAYOUT);
+    cb = cLayouts * sizeof(LAYOUT_INFO);
     pResize->m_cLayouts = cLayouts;
     pResize->m_pLayouts = SHAlloc(cb);
     if (pResize->m_pLayouts == NULL)
@@ -230,13 +230,13 @@ cresize_Create(HWND hwndParent, const CRESIZE_LAYOUT *pLayouts, UINT cLayouts)
 
     pResize->m_hwndParent = hwndParent;
     pResize->m_hwndGrip = NULL;
-    cresize_EnableResize(pResize, TRUE);
-    cresize_InitLayouts(pResize);
+    LayoutEnableResize(pResize, TRUE);
+    layout_InitLayouts(pResize);
     return pResize;
 }
 
 static __inline void
-cresize_Destroy(CRESIZE *pResize)
+LayoutDestroy(LAYOUT_DATA *pResize)
 {
     if (!pResize)
         return;

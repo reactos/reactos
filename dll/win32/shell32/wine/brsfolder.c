@@ -40,19 +40,21 @@
 #include "shresdef.h"
 #ifdef __REACTOS__
     #include <shlwapi.h>
-    #include "cresize.h" /* Resizable window */
+    #include "layout.h" /* Resizable window */
 #endif
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
 #define SHV_CHANGE_NOTIFY (WM_USER + 0x1111)
 
+#ifndef __REACTOS__
 /* original margins and control size */
 typedef struct tagLAYOUT_DATA
 {
     LONG left, width, right;
     LONG top, height, bottom;
 } LAYOUT_DATA;
+#endif
 
 typedef struct tagbrowse_info
 {
@@ -60,11 +62,7 @@ typedef struct tagbrowse_info
     HWND          hwndTreeView;
     LPBROWSEINFOW lpBrowseInfo;
     LPITEMIDLIST  pidlRet;
-#ifdef __REACTOS__
-    CRESIZE      *layout;
-#else
     LAYOUT_DATA  *layout;  /* filled by LayoutInit, used by LayoutUpdate */
-#endif
     SIZE          szMin;
     ULONG         hNotify; /* change notification handle */
 } browse_info;
@@ -77,14 +75,16 @@ typedef struct tagTV_ITEMDATA
    IEnumIDList*  pEnumIL;    /* Children iterator */ 
 } TV_ITEMDATA, *LPTV_ITEMDATA;
 
+#ifndef __REACTOS__
 typedef struct tagLAYOUT_INFO
 {
     int iItemId;          /* control id */
     DWORD dwAnchor;       /* BF_* flags specifying which margins should remain constant */
 } LAYOUT_INFO;
+#endif
 
 #ifdef __REACTOS__
-static const CRESIZE_LAYOUT g_layout_info[] = {
+static const LAYOUT_INFO g_layout_info[] = {
     { IDC_BROWSE_FOR_FOLDER_TITLE, BF_TOP | BF_LEFT | BF_RIGHT },
     { IDC_BROWSE_FOR_FOLDER_STATUS, BF_TOP | BF_LEFT | BF_RIGHT },
     { IDC_BROWSE_FOR_FOLDER_TREEVIEW, BF_TOP | BF_BOTTOM | BF_LEFT | BF_RIGHT },
@@ -786,11 +786,7 @@ static BOOL BrsFolder_OnCreate( HWND hWnd, browse_info *info )
     {
         RECT rcWnd;
 
-#ifdef __REACTOS__
-        info->layout = cresize_Create(hWnd, g_layout_info, (UINT)LAYOUT_INFO_COUNT);
-#else
         info->layout = LayoutInit(hWnd, g_layout_info, LAYOUT_INFO_COUNT);
-#endif
 
         /* TODO: Windows allows shrinking the windows a bit */
         GetWindowRect(hWnd, &rcWnd);
@@ -1170,7 +1166,7 @@ static INT BrsFolder_OnDestroy(browse_info *info)
     if (info->layout)
     {
 #ifdef __REACTOS__
-        cresize_Destroy(info->layout);
+        LayoutDestroy(info->layout);
 #else
         SHFree(info->layout);
 #endif
@@ -1268,11 +1264,7 @@ static INT_PTR CALLBACK BrsFolderDlgProc( HWND hWnd, UINT msg, WPARAM wParam,
 
     case WM_SIZE:
         if (info->layout)  /* new style dialogs */
-#ifdef __REACTOS__
-            cresize_OnSize(info->layout);
-#else
             LayoutUpdate(hWnd, info->layout, g_layout_info, LAYOUT_INFO_COUNT);
-#endif
         return 0;
 
     case BFFM_SETSTATUSTEXTA:
