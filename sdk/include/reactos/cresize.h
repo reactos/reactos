@@ -38,7 +38,6 @@ typedef struct CRESIZE {
     HWND m_hwndParent;
     HWND m_hwndGrip;
     CRESIZE_LAYOUT *m_pLayouts;
-    BOOL m_bResizeEnabled;
     INT m_cLayouts;
 } CRESIZE;
 
@@ -109,7 +108,6 @@ cresize_EnableResize(CRESIZE *pResize, BOOL bEnableResize)
 {
     cresize_ShowGrip(pResize, bEnableResize);
     cresize_ModifySystemMenu(pResize, bEnableResize);
-    pResize->m_bResizeEnabled = bEnableResize;
 }
 
 static __inline HDWP
@@ -234,7 +232,6 @@ cresize_Create(HWND hwndParent, const CRESIZE_LAYOUT *pLayouts, INT cLayouts)
     assert(GetWindowLongPtrW(hwndParent, GWL_STYLE) & WS_THICKFRAME);
 
     pResize->m_hwndParent = hwndParent;
-    pResize->m_bResizeEnabled = FALSE;
     pResize->m_hwndGrip = NULL;
     cresize_EnableResize(pResize, TRUE);
     cresize_InitLayouts(pResize);
