@@ -162,6 +162,9 @@ _layout_ArrangeLayout(LAYOUT_DATA *pData)
 static __inline void
 LayoutUpdate(HWND ignored1, LAYOUT_DATA *pData, LPCVOID ignored2, UINT ignored3)
 {
+    UNREFERENCED_PARAMETER(ignored1);
+    UNREFERENCED_PARAMETER(ignored2);
+    UNREFERENCED_PARAMETER(ignored3);
     if (pData == NULL)
         return;
     assert(IsWindow(pData->m_hwndParent));
