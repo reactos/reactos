@@ -435,7 +435,7 @@ STDMETHODIMP_(NTSTATUS) CAC97MiniportWaveRTStream::GetPosition
 )
 {
     UCHAR   nCurrentIndex = 0;
-    DWORD   RegisterX_PICB;
+    DWORD   bufferPos;
 
     ASSERT (Position);
 
@@ -443,39 +443,12 @@ STDMETHODIMP_(NTSTATUS) CAC97MiniportWaveRTStream::GetPosition
     {
         Position->PlayOffset = 0;
         Position->WriteOffset = 0;
-        return STATUS_SUCCESS;
-    }
-
-    //
-    // Repeat this until we get the same reading twice.  This will prevent
-    // jumps when we are near the end of the buffer.
-    //
-    do
-    {
-        nCurrentIndex = Miniport->AdapterCommon->
-            ReadBMControlRegister8 (m_ulBDAddr + X_CIV);
-
-        RegisterX_PICB = (DWORD)Miniport->AdapterCommon->ReadBMControlRegister16 (m_ulBDAddr + X_PICB);
-    } while (nCurrentIndex != (int)Miniport->AdapterCommon->
-            ReadBMControlRegister8 (m_ulBDAddr + X_CIV));
-
-    //
-    // The HW is really running if RegisterX_PICB is not 0 or nCurrentIndex is not 0.
-    //
-    if (RegisterX_PICB || nCurrentIndex)
-    {
-        //
-        // The PlayOffset we assume is the position we got from the HW. The
-        // WriteOffset is PlayOffset + FIFO size.
-        //
-        Position->PlayOffset = BDList[nCurrentIndex].wLength - RegisterX_PICB;
-        Position->PlayOffset = Position->PlayOffset << 1;
-        Position->WriteOffset = Position->PlayOffset + NumberOfChannels * 2 * 8;
     }
     else
     {
-        Position->PlayOffset = 0;
-        Position->WriteOffset = 0;
+        nCurrentIndex = GetBuffPos(&bufferPos);
+        Position->PlayOffset = bufferPos;
+        Position->WriteOffset = bufferPos + NumberOfChannels * 2 * 8;
     }
 
     return STATUS_SUCCESS;

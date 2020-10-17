@@ -70,6 +70,15 @@ public:
     void PauseDMA (void);
     void ResumeDMA (ULONG state = DMA_ENGINE_ON);
 
+
+    //
+    // Get playback position
+    //
+    int GetBuffPos
+    (
+        DWORD* buffPos
+    );
+
     /*************************************************************************
      * Include IDrmAudioStream (public/exported) methods.
      *************************************************************************

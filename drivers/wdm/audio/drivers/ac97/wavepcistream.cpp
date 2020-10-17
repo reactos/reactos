@@ -578,7 +578,7 @@ STDMETHODIMP_(NTSTATUS) CMiniportWaveICHStream::GetPosition
 {
     KIRQL   OldIrql;
     UCHAR   nCurrentIndex = 0;
-    DWORD   RegisterX_PICB;
+    DWORD   buffPos;
 
     ASSERT (Position);
 
@@ -596,44 +596,25 @@ STDMETHODIMP_(NTSTATUS) CMiniportWaveICHStream::GetPosition
     // If we have entries in the list, we may have buffers that have not been
     // released but have been at least partially played.
     //
-    if (stBDList.nBDEntries)
+    if (DMAEngineState != DMA_ENGINE_OFF)
     {
+        nCurrentIndex = GetBuffPos(&buffPos);
+
         //
-        // Repeat this until we get the same reading twice.  This will prevent
-        // jumps when we are near the end of the buffer.
+        // Add in our position in the current buffer
         //
-        do
+        *Position += buffPos;
+
+        //
+        // Total any buffers that have been played and not released.
+        //
+        if (nCurrentIndex != ((stBDList.nHead -1) & BDL_MASK))
         {
-            nCurrentIndex = Miniport->AdapterCommon->
-                ReadBMControlRegister8 (m_ulBDAddr + X_CIV);
-
-            RegisterX_PICB = (DWORD)Miniport->AdapterCommon->ReadBMControlRegister16 (m_ulBDAddr + X_PICB);
-        } while (nCurrentIndex != (int)Miniport->AdapterCommon->
-                ReadBMControlRegister8 (m_ulBDAddr + X_CIV));
-
-        //
-        // If we never released a buffer and register X_PICB is zero then the DMA was not
-        // initialized yet and the position should be zero.
-        //
-        if (RegisterX_PICB || nCurrentIndex || TotalBytesReleased)
-        {
-            //
-            // Add in our position in the current buffer.  The read returns the
-            // amount left in the buffer.
-            //
-            *Position += (stBDList.pMapData[nCurrentIndex].ulBufferLength - (RegisterX_PICB << 1));
-
-            //
-            // Total any buffers that have been played and not released.
-            //
-            if (nCurrentIndex != ((stBDList.nHead -1) & BDL_MASK))
+            int i = stBDList.nHead;
+            while (i != nCurrentIndex)
             {
-                int i = stBDList.nHead;
-                while (i != nCurrentIndex)
-                {
-                    *Position += (ULONGLONG)stBDList.pMapData[i].ulBufferLength;
-                    i = (i + 1) & BDL_MASK;
-                }
+                *Position += (ULONGLONG)stBDList.pMapData[i].ulBufferLength;
+                i = (i + 1) & BDL_MASK;
             }
         }
     }
@@ -664,6 +645,8 @@ STDMETHODIMP_(NTSTATUS) CMiniportWaveICHStream::RevokeMappings
     _Out_ PULONG    MappingsRevoked
 )
 {
+    DbgPrint("[CMiniportWaveICHStream::RevokeMappings]\n");
+
     ASSERT (MappingsRevoked);
 
     KIRQL   OldIrql;

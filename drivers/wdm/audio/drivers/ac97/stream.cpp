@@ -9,6 +9,8 @@
 #define ReadReg8(addr) (Miniport->AdapterCommon-> \
     ReadBMControlRegister8 (m_ulBDAddr + addr))
 
+#define ulDebugOut DBG_ALL
+
 
 
 /*****************************************************************************
@@ -239,6 +241,38 @@ UCHAR CMiniportStream::UpdateDMA (void)
     if(RegisterValue != RegisterValueNew)
         WriteReg(X_CR, RegisterValueNew);
     return RegisterValueNew;
+}
+
+
+int CMiniportStream::GetBuffPos
+(
+    DWORD* buffPos
+)
+{
+    int nCurrentIndex;
+    DWORD RegisterX_PICB;
+
+    if (DMAEngineState == DMA_ENGINE_OFF)
+    {
+        *buffPos = 0;
+        return 0;
+    }
+
+    //
+    // Repeat this until we get the same reading twice.  This will prevent
+    // jumps when we are near the end of the buffer.
+    //
+    do
+    {
+        nCurrentIndex = Miniport->AdapterCommon->
+            ReadBMControlRegister8 (m_ulBDAddr + X_CIV);
+
+        RegisterX_PICB = (DWORD)Miniport->AdapterCommon->ReadBMControlRegister16 (m_ulBDAddr + X_PICB);
+    } while (nCurrentIndex != (int)Miniport->AdapterCommon->
+            ReadBMControlRegister8 (m_ulBDAddr + X_CIV));
+
+    *buffPos = (BDList[nCurrentIndex].wLength - RegisterX_PICB) * 2;
+    return nCurrentIndex;
 }
 
 /*****************************************************************************
