@@ -96,7 +96,6 @@ _layout_DoMoveItem(LAYOUT_DATA *pData, HDWP hDwp, const LAYOUT_INFO *pLayout,
 {
     RECT rcChild, NewRect, rcPercents;
     LONG nWidth, nHeight;
-    const UINT uFlags = SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOREPOSITION;
 
     if (!GetWindowRect(pLayout->m_hwndCtrl, &rcChild))
         return hDwp;
@@ -115,7 +114,7 @@ _layout_DoMoveItem(LAYOUT_DATA *pData, HDWP hDwp, const LAYOUT_INFO *pLayout,
     {
         hDwp = DeferWindowPos(hDwp, pLayout->m_hwndCtrl, NULL, NewRect.left, NewRect.top,
                               NewRect.right - NewRect.left, NewRect.bottom - NewRect.top,
-                              uFlags);
+                              SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOREPOSITION);
     }
     return hDwp;
 }
