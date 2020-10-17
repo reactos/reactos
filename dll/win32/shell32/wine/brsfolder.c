@@ -47,7 +47,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
 #define SHV_CHANGE_NOTIFY (WM_USER + 0x1111)
 
-#ifndef __REACTOS__
+#ifndef __REACTOS__ /* Defined in "layout.h" */
 /* original margins and control size */
 typedef struct tagLAYOUT_DATA
 {
@@ -75,7 +75,7 @@ typedef struct tagTV_ITEMDATA
    IEnumIDList*  pEnumIL;    /* Children iterator */ 
 } TV_ITEMDATA, *LPTV_ITEMDATA;
 
-#ifndef __REACTOS__
+#ifndef __REACTOS__ /* Defined in "layout.h" */
 typedef struct tagLAYOUT_INFO
 {
     int iItemId;          /* control id */
@@ -132,7 +132,7 @@ static void browsefolder_callback( LPBROWSEINFOW lpBrowseInfo, HWND hWnd,
     lpBrowseInfo->lpfn( hWnd, msg, param, lpBrowseInfo->lParam );
 }
 
-#ifndef __REACTOS__
+#ifndef __REACTOS__ /* Defined in "layout.h" */
 static LAYOUT_DATA *LayoutInit(HWND hwnd, const LAYOUT_INFO *layout_info, int layout_count)
 {
     LAYOUT_DATA *data;
@@ -1246,7 +1246,7 @@ static INT_PTR CALLBACK BrsFolderDlgProc( HWND hWnd, UINT msg, WPARAM wParam,
         ((LPMINMAXINFO)lParam)->ptMinTrackSize.x = info->szMin.cx;
         ((LPMINMAXINFO)lParam)->ptMinTrackSize.y = info->szMin.cy;
         return 0;
-#else
+#else /* This is a buggy way (resize on title bar) */
     case WM_WINDOWPOSCHANGING:
         return BrsFolder_OnWindowPosChanging( info, (WINDOWPOS *)lParam);
 #endif
