@@ -77,13 +77,11 @@ typedef struct tagTV_ITEMDATA
    IEnumIDList*  pEnumIL;    /* Children iterator */ 
 } TV_ITEMDATA, *LPTV_ITEMDATA;
 
-#ifndef __REACTOS__
 typedef struct tagLAYOUT_INFO
 {
     int iItemId;          /* control id */
     DWORD dwAnchor;       /* BF_* flags specifying which margins should remain constant */
 } LAYOUT_INFO;
-#endif
 
 #ifdef __REACTOS__
 static const CRESIZE_LAYOUT g_layout_info[] =
