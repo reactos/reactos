@@ -2,6 +2,11 @@
 spec2def(scsiport.sys scsiport.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
+	fdo.c
+	ioctl.c
+	pdo.c
+	registry.c
+	scsi.c
     scsiport.c
     stubs.c)
 

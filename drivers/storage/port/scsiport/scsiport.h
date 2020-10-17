@@ -17,13 +17,6 @@
 
 #define VERSION "0.0.3"
 
-#ifndef PAGE_ROUND_UP
-#define PAGE_ROUND_UP(x) ( (((ULONG_PTR)x)%PAGE_SIZE) ? ((((ULONG_PTR)x)&(~(PAGE_SIZE-1)))+PAGE_SIZE) : ((ULONG_PTR)x) )
-#endif
-#ifndef ROUND_UP
-#define ROUND_UP(N, S) ((((N) + (S) - 1) / (S)) * (S))
-#endif
-
 #define TAG_SCSIPORT 'ISCS'
 
 /* Defines how many logical unit arrays will be in a device extension */
@@ -309,3 +302,92 @@ typedef struct _RESETBUS_PARAMS
     ULONG PathId;
     PSCSI_PORT_DEVICE_EXTENSION DeviceExtension;
 } RESETBUS_PARAMS, *PRESETBUS_PARAMS;
+
+
+// ioctl.c
+
+NTSTATUS
+NTAPI
+ScsiPortDeviceControl(
+    _In_ PDEVICE_OBJECT DeviceObject,
+    _In_ PIRP Irp);
+
+// fdo.c
+
+VOID
+SpiScanAdapter(
+    _In_ PSCSI_PORT_DEVICE_EXTENSION DeviceExtension);
+
+NTSTATUS
+CallHWInitialize(
+    _In_ PSCSI_PORT_DEVICE_EXTENSION DeviceExtension);
+
+VOID
+SpiCleanupAfterInit(
+    _In_ PSCSI_PORT_DEVICE_EXTENSION DeviceExtension);
+
+// pdo.c
+
+PSCSI_PORT_LUN_EXTENSION
+SpiAllocateLunExtension(
+    _In_ PSCSI_PORT_DEVICE_EXTENSION DeviceExtension);
+
+PSCSI_PORT_LUN_EXTENSION
+SpiGetLunExtension(
+    _In_ PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
+    _In_ UCHAR PathId,
+    _In_ UCHAR TargetId,
+    _In_ UCHAR Lun);
+
+PSCSI_REQUEST_BLOCK_INFO
+SpiGetSrbData(
+    _In_ PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
+    _In_ UCHAR PathId,
+    _In_ UCHAR TargetId,
+    _In_ UCHAR Lun,
+    _In_ UCHAR QueueTag);
+
+// registry.c
+
+VOID
+SpiInitOpenKeys(
+    _Inout_ PCONFIGURATION_INFO ConfigInfo,
+    _In_ PUNICODE_STRING RegistryPath);
+
+NTSTATUS
+SpiBuildDeviceMap(
+    _In_ PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
+    _In_ PUNICODE_STRING RegistryPath);
+
+// scsi.c
+
+VOID
+SpiGetNextRequestFromLun(
+    _In_ PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
+    _Inout_ PSCSI_PORT_LUN_EXTENSION LunExtension);
+
+IO_DPC_ROUTINE ScsiPortDpcForIsr;
+DRIVER_DISPATCH ScsiPortDispatchScsi;
+KSYNCHRONIZE_ROUTINE ScsiPortStartPacket;
+DRIVER_STARTIO ScsiPortStartIo;
+
+
+// scsiport.c
+
+KSERVICE_ROUTINE ScsiPortIsr;
+
+IO_ALLOCATION_ACTION
+NTAPI
+SpiAdapterControl(
+    _In_ PDEVICE_OBJECT DeviceObject,
+    _In_ PIRP Irp,
+    _In_ PVOID MapRegisterBase,
+    _In_ PVOID Context);
+
+IO_ALLOCATION_ACTION
+NTAPI
+ScsiPortAllocateAdapterChannel(
+    _In_ PDEVICE_OBJECT DeviceObject,
+    _In_ PIRP Irp,
+    _In_ PVOID MapRegisterBase,
+    _In_ PVOID Context);
