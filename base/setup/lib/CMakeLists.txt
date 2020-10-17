@@ -16,6 +16,7 @@ list(APPEND SOURCE
     utils/osdetect.c
     utils/partlist.c
     utils/regutil.c
+    bootcode.c
     bootsup.c
     fsutil.c
     install.c

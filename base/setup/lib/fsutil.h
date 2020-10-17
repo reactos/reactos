@@ -3,7 +3,7 @@
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Filesystem support functions
  * COPYRIGHT:   Copyright 2003-2019 Casper S. Hornstrup (chorns@users.sourceforge.net)
- *              Copyright 2017-2019 Hermes Belusca-Maito
+ *              Copyright 2017-2020 Hermes Belusca-Maito
  */
 
 #pragma once
@@ -59,6 +59,42 @@ FormatFileSystem(
     IN BOOLEAN QuickFormat,
     IN ULONG ClusterSize,
     IN PFMIFSCALLBACK Callback);
+
+
+//
+// Bootsector routines
+//
+
+#define FAT_BOOTSECTOR_SIZE     (1 * SECTORSIZE)
+#define FAT32_BOOTSECTOR_SIZE   (1 * SECTORSIZE) // Counts only the primary sector.
+#define BTRFS_BOOTSECTOR_SIZE   (3 * SECTORSIZE)
+
+typedef NTSTATUS
+(/*NTAPI*/ *PFS_INSTALL_BOOTCODE)(
+    IN PCWSTR SrcPath,          // Bootsector source file (on the installation medium)
+    IN HANDLE DstPath,          // Where to save the bootsector built from the source + partition information
+    IN HANDLE RootPartition);   // Partition holding the (old) bootsector data information
+
+NTSTATUS
+InstallFat1216BootCode(
+    IN PCWSTR SrcPath,
+    IN HANDLE DstPath,
+    IN HANDLE RootPartition);
+
+#define InstallFat12BootCode    InstallFat1216BootCode
+#define InstallFat16BootCode    InstallFat1216BootCode
+
+NTSTATUS
+InstallFat32BootCode(
+    IN PCWSTR SrcPath,
+    IN HANDLE DstPath,
+    IN HANDLE RootPartition);
+
+NTSTATUS
+InstallBtrfsBootCode(
+    IN PCWSTR SrcPath,
+    IN HANDLE DstPath,
+    IN HANDLE RootPartition);
 
 
 //
