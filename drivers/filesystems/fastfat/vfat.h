@@ -330,6 +330,12 @@ typedef struct DEVICE_EXTENSION
     struct _VFATFCB *RootFcb;
     PSTATISTICS Statistics;
 
+    /* Overflow request queue */
+    KSPIN_LOCK OverflowQueueSpinLock;
+    LIST_ENTRY OverflowQueue;
+    ULONG OverflowQueueCount;
+    ULONG PostedRequestCount;
+
     /* Pointers to functions for manipulating FAT. */
     PGET_NEXT_CLUSTER GetNextCluster;
     PFIND_AND_MARK_AVAILABLE_CLUSTER FindAndMarkAvailableCluster;
