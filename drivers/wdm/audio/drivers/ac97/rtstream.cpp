@@ -366,55 +366,6 @@ STDMETHODIMP_(NTSTATUS) CAC97MiniportWaveRTStream::GetClockRegister
 #pragma code_seg()
 #endif
 
-/*****************************************************************************
- * CAC97MiniportWaveRTStream::SetState
- *****************************************************************************
- * This routine sets/changes the DMA engine state to play, stop, or pause
- */
-STDMETHODIMP_(NTSTATUS) CAC97MiniportWaveRTStream::SetState
-(
-    _In_  KSSTATE State
-)
-{
-    DOUT (DBG_PRINT, ("[CAC97MiniportWaveRTStream::SetState]"));
-    DOUT (DBG_STREAM, ("SetState to %d", State));
-
-
-    //
-    // Start or stop the DMA engine dependent of the state.
-    //
-    switch (State)
-    {
-        case KSSTATE_STOP:
-            // We reset the DMA engine which will also reset the position pointers.
-            ResetDMA ();
-            break;
-
-        case KSSTATE_ACQUIRE:
-            break;
-
-        case KSSTATE_PAUSE:
-            // pause now.
-            PauseDMA ();
-            break;
-
-        case KSSTATE_RUN:
-            //
-            // Let's rock.
-            //
-            // Make sure we are not running already.
-            if (DMAEngineState == DMA_ENGINE_ON)
-            {
-                return STATUS_SUCCESS;
-            }
-
-            // Kick DMA again just in case.
-            ResumeDMA ();
-            break;
-    }
-
-    return STATUS_SUCCESS;
-}
 
 
 /*****************************************************************************

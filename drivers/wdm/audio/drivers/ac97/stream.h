@@ -142,17 +142,38 @@ public:
         _In_         REFIID iStream,
         _In_         PUNKNOWN stream
     );
+
+
+    NTSTATUS SetState
+    (
+        _In_  KSSTATE State
+    );
+
+    NTSTATUS NormalizePhysicalPosition
+    (
+        _Inout_ PLONGLONG PhysicalPosition
+    );
 };
 
 
 
-#define IMP_CMiniportStream(cType, sType) \
+#define IMP_CMiniportStream_SetFormat(cType) \
     STDMETHODIMP_(NTSTATUS) cType::SetFormat (_In_ PKSDATAFORMAT Format) \
-      { return CMiniportStream::SetFormat(Format); } \
+      { return CMiniportStream::SetFormat(Format); }
+
+#define IMP_CMiniportStream_QueryInterface(cType, sType) \
     STDMETHODIMP_(NTSTATUS) cType::NonDelegatingQueryInterface(     \
         _In_         REFIID  Interface,                             \
         _COM_Outptr_ PVOID  *Object)                                \
     {   return CMiniportStream::NonDelegatingQueryInterface(        \
             Interface, Object, IID_##sType, (sType*)this); }
+
+#define IMP_CMiniport_SetState(cType) \
+    STDMETHODIMP_(NTSTATUS) cType::SetState (_In_ KSSTATE State) \
+    { return CMiniportStream::SetState(State); }
+
+#define IMP_CMiniport_NormalizePhysicalPosition(cType) \
+    STDMETHODIMP_(NTSTATUS) cType::NormalizePhysicalPosition (_Inout_ PLONGLONG PhysicalPosition) \
+    { return CMiniportStream::NormalizePhysicalPosition(PhysicalPosition); }
 
 #endif

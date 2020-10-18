@@ -410,34 +410,6 @@ STDMETHODIMP_(NTSTATUS) CMiniportStream::SetContentId
     return STATUS_SUCCESS;
 }
 
-
-/*****************************************************************************
- * CMiniportStream::PowerChangeNotify
- *****************************************************************************
- * This functions saves and maintains the stream state through power changes.
- */
-
-void CMiniportStream::PowerChangeNotify_
-(
-    IN  POWER_STATE NewState
-)
-{
-    if(NewState.DeviceState == PowerDeviceD0)
-    {
-        //
-        // The scatter gather list is already arranged. A reset of the DMA
-        // brings all pointers to the default state. From there we can start.
-        //
-
-        ResetDMA ();
-    }
-    else
-    {
-        // Disable interrupts and stop DMA just in case.
-        Miniport->AdapterCommon->WriteBMControlRegister (m_ulBDAddr + X_CR, (UCHAR)0);
-    }
-}
-
 void CMiniportStream::PowerChangeNotify
 (
     IN  POWER_STATE NewState

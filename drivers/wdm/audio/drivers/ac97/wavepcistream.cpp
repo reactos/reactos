@@ -13,7 +13,8 @@
 #include "wavepciminiport.h"
 #include "wavepcistream.h"
 
-IMP_CMiniportStream(CMiniportWaveICHStream, IMiniportWavePciStream);
+IMP_CMiniportStream_SetFormat(CMiniportWaveICHStream);
+IMP_CMiniportStream_QueryInterface(CMiniportWaveICHStream, IMiniportWavePciStream);
 
 /*****************************************************************************
  * General Info
