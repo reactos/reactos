@@ -74,7 +74,7 @@ private:
     KSPIN_LOCK                  MapLock;        // for processing mappings.
     ULONGLONG           TotalBytesMapped;   // factor in position calculation
     ULONGLONG           TotalBytesReleased; // factor in position calculation
-
+    BOOL                m_inGetMapping;
 
 
     /*************************************************************************

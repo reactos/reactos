@@ -960,6 +960,13 @@ NTSTATUS CMiniportWaveICHStream::GetNewMappings (void)
     // acquire the mapping spin lock
     KeAcquireSpinLock (&MapLock,&OldIrql);
 
+    // detect reentrance
+    if(m_inGetMapping) {
+        m_inGetMapping = 2;
+        KeReleaseSpinLock (&MapLock,OldIrql);
+        return STATUS_SUCCESS;
+    }
+
 #if (DBG)
     if (ReadReg16 (X_SR) & SR_CELV)
     {
@@ -987,6 +994,8 @@ NTSTATUS CMiniportWaveICHStream::GetNewMappings (void)
 
 
         // Release the mapping spin lock
+NEW_MAPPINGS_AVAILBLE_MAYBE:
+        m_inGetMapping = TRUE;
         KeReleaseSpinLock (&MapLock,OldIrql);
 
         //
@@ -1010,6 +1019,8 @@ NTSTATUS CMiniportWaveICHStream::GetNewMappings (void)
         //
         if (!NT_SUCCESS (ntStatus))
         {
+            if(m_inGetMapping == 2)
+                goto NEW_MAPPINGS_AVAILBLE_MAYBE;
             break;
         }
 
@@ -1104,6 +1115,7 @@ NTSTATUS CMiniportWaveICHStream::GetNewMappings (void)
     }
 
     // Release the mapping spin lock
+    m_inGetMapping = FALSE;
     KeReleaseSpinLock (&MapLock,OldIrql);
 
     return ntStatus;
