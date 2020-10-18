@@ -600,6 +600,11 @@ VfatMount(
     DeviceExt->HashTableSize = HashTableSize;
     DeviceExt->VolumeDevice = DeviceObject;
 
+    KeInitializeSpinLock(&DeviceExt->OverflowQueueSpinLock);
+    InitializeListHead(&DeviceExt->OverflowQueue);
+    DeviceExt->OverflowQueueCount = 0;
+    DeviceExt->PostedRequestCount = 0;
+
     /* use same vpb as device disk */
     DeviceObject->Vpb = Vpb;
     DeviceToMount->Vpb = Vpb;
