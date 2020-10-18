@@ -26,10 +26,8 @@
 //
 typedef struct tagMapData
 {
-    ULONG               ulTag;                  //tag, a simple counter.
-    PHYSICAL_ADDRESS    PhysAddr;               //phys. addr. of buffer
-    PVOID               pVirtAddr;              //virt. addr. of buffer
     ULONG               ulBufferLength;         //buffer length
+    ULONG               ulState;                //buffer state
 } tMapData;
 
 //
@@ -40,15 +38,11 @@ typedef struct tagMapData
 //
 typedef struct tagBDList
 {
-    tBDEntry                *pBDEntryBackup;// needed for rearranging the BDList
-    tMapData                *pMapData;      // mapping list
-    tMapData                *pMapDataBackup;// needed for rearranging the BDList
     int                     nHead;          // index for the BDL Head
     int                     nTail;          // index for the BDL Tail
-    ULONG                   ulTagCounter;   // the tag is a simple counter.
     int                     nBDEntries;     // number of entries.
+    tMapData                pMapData[32];      // mapping list
 } tBDList;
-
 
 
 //*****************************************************************************
@@ -68,13 +62,12 @@ private:
     //
     // CMiniportWaveICHStream private variables
     //
-
-    tBDList                     stBDList;       // needed for scatter gather org.
-
     KSPIN_LOCK                  MapLock;        // for processing mappings.
     ULONGLONG           TotalBytesMapped;   // factor in position calculation
     ULONGLONG           TotalBytesReleased; // factor in position calculation
     BOOL                m_inGetMapping;
+    
+    tBDList                     stBDList;       // needed for scatter gather org.
 
 
     /*************************************************************************
@@ -84,16 +77,6 @@ private:
      * These are private member functions used internally by the object.  See
      * ICHWAVE.CPP for specific descriptions.
      */
-
-    //
-    // Moves the BDL and associated mappings list around.
-    //
-    void MoveBDList
-    (
-        IN  int nFirst,
-        IN  int nLast,
-        IN  int nNewPos
-    );
 
     //
     // Called when new mappings have to be processed.

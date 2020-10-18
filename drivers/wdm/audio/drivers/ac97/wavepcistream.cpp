@@ -80,8 +80,8 @@ CMiniportWaveICHStream::~CMiniportWaveICHStream ()
     //
     // Print information about the scatter gather list.
     //
-    DOUT (DBG_DMA, ("Head %d, Tail %d, Tag counter %d, Entries %d.",
-                   stBDList.nHead, stBDList.nTail, stBDList.ulTagCounter,
+    DOUT (DBG_DMA, ("Head %d, Tail %d, Entries %d.",
+                   stBDList.nHead, stBDList.nTail,
                    stBDList.nBDEntries));
 
 
@@ -98,15 +98,6 @@ CMiniportWaveICHStream::~CMiniportWaveICHStream ()
                              (PVOID)BDList,
                              FALSE);
         BDList = NULL;
-    }
-
-    //
-    // Release the mapping table.
-    //
-    if (stBDList.pMapData)
-    {
-        ExFreePool (stBDList.pMapData);
-        stBDList.pMapData = NULL;
     }
 }
 
@@ -149,8 +140,7 @@ NTSTATUS CMiniportWaveICHStream::Init
 
     //
     // Setup the Buffer Descriptor List (BDL)
-    // Allocate 32 entries of 8 bytes (one BDL entry). We allocate two tables
-    // because we need one table as a backup.
+    // Allocate 32 entries of 8 bytes (one BDL entry).
     // The pointer is aligned on a 8 byte boundary (that's what we need).
     //
     BDList = (tBDEntry *)Miniport_->AdapterObject->DmaOperations->
@@ -164,26 +154,6 @@ NTSTATUS CMiniportWaveICHStream::Init
         DOUT (DBG_ERROR, ("Failed AllocateCommonBuffer!"));
         return STATUS_INSUFFICIENT_RESOURCES;
     }
-
-    // calculate the (backup) pointer.
-    stBDList.pBDEntryBackup = (tBDEntry *)BDList + MAX_BDL_ENTRIES;
-
-    //
-    // Allocate a buffer for the 32 possible mappings. We allocate two tables
-    // because we need one table as a backup
-    //
-    stBDList.pMapData =
-        (tMapData *)ExAllocatePoolWithTag (NonPagedPool, sizeof(tMapData) *
-                                    MAX_BDL_ENTRIES * 2, PoolTag);
-    if (!stBDList.pMapData)
-    {
-        DOUT (DBG_ERROR, ("Failed to allocate the back up buffer!"));
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
-
-    // calculate the (backup) pointer.
-    stBDList.pMapDataBackup = stBDList.pMapData + MAX_BDL_ENTRIES;
-
 
     NTSTATUS ntStatus = CMiniportStream::Init(Miniport_,
                                               PortStream_,
@@ -297,35 +267,7 @@ void CMiniportWaveICHStream::PowerChangeNotify_
         WriteReg8 (X_CR, (UCHAR)0);
 
         // Get current index
-        int nCurrentIndex = (int)ReadReg8 (X_CIV);
-
-        //
-        // First move the BD list to the beginning.
-        //
-        // In case the DMA engine was stopped, current index may point to an
-        // empty BD entry. When we start the DMA engine it would then play this
-        // (undefined) entry, so we check here for that condition.
-        //
-        if ((nCurrentIndex == ((stBDList.nHead - 1) & BDL_MASK)) &&
-           (stBDList.nBDEntries != MAX_BDL_ENTRIES - 1))
-        {
-            nCurrentIndex = stBDList.nHead;     // point to head
-        }
-
-        //
-        // Move BD list to (0-((current - head) & mask)) & mask, where
-        // ((current - head) & mask) is the difference between head and
-        // current index, no matter where they are :)
-        //
-        MoveBDList (stBDList.nHead, (stBDList.nTail - 1) & BDL_MASK,
-                (0 - ((nCurrentIndex - stBDList.nHead) & BDL_MASK)) & BDL_MASK);
-
-        //
-        // Update structure.
-        //
-        stBDList.nHead = (0 - ((nCurrentIndex - stBDList.nHead) & BDL_MASK)) &
-            BDL_MASK;
-        stBDList.nTail = (stBDList.nHead + stBDList.nBDEntries) & BDL_MASK;
+       // int nCurrentIndex = (int)ReadReg8 (X_CIV);
     }
 
     KeReleaseSpinLock (&MapLock,OldIrql);
@@ -417,80 +359,6 @@ STDMETHODIMP_(NTSTATUS) CMiniportWaveICHStream::SetState
 
     return STATUS_SUCCESS;
 }
-
-/*****************************************************************************
- * CMiniportWaveICHStream::MoveBDList
- *****************************************************************************
- * Moves the BDList.
- * This function is used to remove entries from the scatter gather list or to
- * move the valid entries to the top. The mapping table which is hard linked
- * to the scatter gather entries is moved too.
- * The function does not change any variables in tBDList.
- * The mapping spin lock must be held when calling this routine.
- * We use this function to remove mappings (RevokeMappings) or to rearrange the
- * list for powerdown/up management (the DMA starts at position zero again).
- * Note that there is a simple way of doing this also. When you zero the buffer
- * length in the scatter gather, the DMA engine ignores the entry and continues
- * with the next. But our way is more generic and if you ever want to port the
- * driver to another DMA engine you might be thankful for this code.
- */
-void CMiniportWaveICHStream::MoveBDList
-(
-    IN  int nFirst,
-    IN  int nLast,
-    IN  int nNewPos
-)
-{
-    DOUT (DBG_PRINT, ("[CMiniportWaveICHStream::MoveBDList]"));
-
-    //
-    // Print information about the scatter gather list.
-    //
-    DOUT (DBG_DMA, ("Moving BD entry %d-%d to %d.", nFirst, nLast, nNewPos));
-
-    //
-    // First copy the tables to a save place.
-    //
-    RtlCopyMemory ((PVOID)stBDList.pBDEntryBackup,
-                   (PVOID)BDList,
-                   sizeof (tBDEntry) * MAX_BDL_ENTRIES);
-    RtlCopyMemory ((PVOID)stBDList.pMapDataBackup,
-                   (PVOID)stBDList.pMapData,
-                   sizeof (tMapData) * MAX_BDL_ENTRIES);
-
-    //
-    // We move all the entries in blocks to the new position.
-    //
-    int nBlockCounter = 0;
-    do
-    {
-        nBlockCounter++;
-        //
-        // We must copy the block when the index wraps around (ring buffer)
-        // or we are at the last entry.
-        //
-        if (((nNewPos + nBlockCounter) == MAX_BDL_ENTRIES) ||   // wrap around
-            ((nFirst + nBlockCounter) == MAX_BDL_ENTRIES) ||    // wrap around
-            ((nFirst + nBlockCounter) == (nLast + 1)))          // last entry
-        {
-            //
-            // copy one block (multiple entries).
-            //
-            RtlCopyMemory ((PVOID)&BDList[nNewPos],
-                           (PVOID)&stBDList.pBDEntryBackup[nFirst],
-                           sizeof (tBDEntry) * nBlockCounter);
-            RtlCopyMemory ((PVOID)&stBDList.pMapData[nNewPos],
-                           (PVOID)&stBDList.pMapDataBackup[nFirst],
-                           sizeof (tMapData) * nBlockCounter);
-            // adjust the index
-            nNewPos = (nNewPos + nBlockCounter) & BDL_MASK;
-            nFirst = (nFirst + nBlockCounter) & BDL_MASK;
-            nBlockCounter = 0;
-        }
-    // nBlockCounter should be zero when the end condition hits.
-    } while (((nFirst + nBlockCounter - 1) & BDL_MASK) != nLast);
-}
-
 
 /*****************************************************************************
  * CMiniportWaveICHStream::Service
@@ -635,15 +503,14 @@ STDMETHODIMP_(NTSTATUS) CMiniportWaveICHStream::RevokeMappings
 
     KIRQL   OldIrql;
     ULONG   ulOldDMAEngineState;
-    int     nCurrentIndex, nSearchIndex, nFirst, nLast, nNumMappings;
 
     DOUT (DBG_PRINT, ("[CMiniportWaveICHStream::RevokeMappings]"));
 
     //
     // print information about the scatter gather list.
     //
-    DOUT (DBG_DMA, ("Head %d, Tail %d, Tag counter %d, Entries %d.",
-                   stBDList.nHead, stBDList.nTail, stBDList.ulTagCounter,
+    DOUT (DBG_DMA, ("Head %d, Tail %d, Entries %d.",
+                   stBDList.nHead, stBDList.nTail,
                    stBDList.nBDEntries));
 
     //
@@ -662,251 +529,29 @@ STDMETHODIMP_(NTSTATUS) CMiniportWaveICHStream::RevokeMappings
     //
     PauseDMA ();
 
-    // Get current index
-    nCurrentIndex = ReadReg8 (X_CIV);
-
     //
-    // We always rearrange the scatter gather list. That means we reset the DMA
-    // engine and move the BD list so that the entry where the current index
-    // pointed to is located at position 0.
+    // Mark items as revoked
     //
-    ResetDMA ();
-
-    //
-    // Return immediately if we just have 1 entry in our BD list.
-    //
-    if (!stBDList.nBDEntries || (stBDList.nBDEntries == 1))
+    for (int i = (int)FirstTag; i != (int)LastTag; i = (i + 1) & BDL_MASK)
     {
-        *MappingsRevoked = stBDList.nBDEntries;
-        stBDList.nHead = stBDList.nTail = stBDList.nBDEntries = 0;
-
-        //
-        // CIV and LVI of DMA registers are set to 0 already.
-        //
-        KeReleaseSpinLock (&MapLock, OldIrql);
-        return STATUS_SUCCESS;
-    }
-
-    //
-    // First move the BD list to the beginning.  In case the DMA engine was
-    // stopped, current index may point to an empty BD entry.
-    //
-    if ((nCurrentIndex == ((stBDList.nHead - 1) & BDL_MASK)) &&
-       (stBDList.nBDEntries != MAX_BDL_ENTRIES - 1))
-    {
-        nCurrentIndex = stBDList.nHead;     // point to head
-    }
-
-    //
-    // Move BD list to (0-((current - head) & mask)) & mask
-    // where ((current - head) & mask) is the difference between head and
-    // current index, no matter where they are :)
-    //
-    MoveBDList (stBDList.nHead, (stBDList.nTail - 1) & BDL_MASK,
-            (0 - ((nCurrentIndex - stBDList.nHead) & BDL_MASK)) & BDL_MASK);
-
-    //
-    // Update structure.
-    //
-    stBDList.nHead = (0 - ((nCurrentIndex - stBDList.nHead) & BDL_MASK)) &
-        BDL_MASK;
-    stBDList.nTail = (stBDList.nHead + stBDList.nBDEntries) & BDL_MASK;
-
-    //
-    // Then we have to search for the tags. If we wouldn't have to rearrange the
-    // scatter gather list all the time, then we could use the tag as an index
-    // to the array, but the only way to clear DMA caches is a reset which has
-    // the side-effect that we have to rearrange the BD list (see above).
-    //
-    // search for first...
-    //
-    nSearchIndex = stBDList.nHead;
-    do
-    {
-        if ((void *)ULongToPtr(stBDList.pMapData[nSearchIndex].ulTag) == FirstTag)
-            break;
-        nSearchIndex = (nSearchIndex + 1) & BDL_MASK;
-    } while (nSearchIndex != stBDList.nTail);
-    nFirst = nSearchIndex;
-
-    //
-    // Search for last...
-    //
-    nSearchIndex = stBDList.nHead;
-    do
-    {
-        if ((void *)ULongToPtr(stBDList.pMapData[nSearchIndex].ulTag) == LastTag)
-            break;
-        nSearchIndex = (nSearchIndex + 1) & BDL_MASK;
-    } while (nSearchIndex != stBDList.nTail);
-    nLast = nSearchIndex;
-
-
-    //
-    // Check search result.
-    //
-    if ((nFirst == stBDList.nTail) || (nLast == stBDList.nTail))
-    {
-        DOUT (DBG_ERROR, ("!!! Entry not found !!!"));
-
-        //
-        // restart DMA in case it was running
-        //
-        if ((ulOldDMAEngineState & DMA_ENGINE_ON) && stBDList.nBDEntries)
-            ResumeDMA (DMA_ENGINE_PEND);
-        *MappingsRevoked = 0;
-        KeReleaseSpinLock (&MapLock, OldIrql);
-        return STATUS_UNSUCCESSFUL;         // one of the tags not found
-    }
-
-    // Print the index numbers found.
-    DOUT (DBG_DMA, ("Removing entries %d (%p) to %d (%p).", nFirst, FirstTag,
-                  nLast, LastTag));
-
-    //
-    // Calculate the entries between the indizes.
-    //
-    if (nLast < nFirst)
-    {
-        nNumMappings = ((nLast + MAX_BDL_ENTRIES) - nFirst) + 1;
-    }
-    else
-    {
-        nNumMappings = (nLast - nFirst) + 1;
-    }
-
-    //
-    // Print debug inormation.
-    //
-    DOUT (DBG_DMA, ("Found entries: %d-%d, %d entries.", nFirst, nLast,
-                   nNumMappings));
-
-    //
-    // Now remove the revoked buffers.  Move the BD list and modify the
-    // status information.
-    //
-    if (nFirst < stBDList.nTail)
-    {
-        //
-        // In this case, both first and last are >= the current index (0)
-        //
-        if (nLast != ((stBDList.nTail - 1) & BDL_MASK))
+        if (stBDList.pMapData[i].ulState == 1)
         {
-            //
-            // Not the last entry, so move the BD list + mappings.
-            //
-            MoveBDList ((nLast + 1) & BDL_MASK, (stBDList.nTail - 1) & BDL_MASK,
-                        nFirst);
-        }
-        stBDList.nTail = (stBDList.nTail - nNumMappings) & BDL_MASK;
-    }
-
-    //
-    // In this case, at least first is "<" than current index (0)
-    //
-    else
-    {
-        //
-        // Check for last.
-        //
-        if (nLast < stBDList.nTail)
-        {
-            //
-            // Last is ">=" current index and first is "<" current index (0).
-            // Remove MAX_DBL_ENTRIES - first entries in front of current index.
-            //
-            if (nFirst != stBDList.nHead)
-            {
-                //
-                // Move from head towards current index.
-                //
-                MoveBDList (stBDList.nHead, nFirst - 1,
-                           (stBDList.nHead + (MAX_BDL_ENTRIES - nFirst)) &
-                           BDL_MASK);
-            }
-
-            //
-            // Adjust head.
-            //
-            stBDList.nHead = (stBDList.nHead + (MAX_BDL_ENTRIES - nFirst)) &
-                BDL_MASK;
-
-            //
-            // Remove nLast entries from CIV to tail.
-            //
-            if (nLast != ((stBDList.nTail - 1) & BDL_MASK))
-            {
-                //
-                // Not the last entry, so move the BD list + mappings.
-                //
-                MoveBDList (nLast + 1, (stBDList.nTail - 1) & BDL_MASK, 0);
-            }
-
-            //
-            // Adjust tail.
-            //
-            stBDList.nTail = (stBDList.nTail - (nLast + 1)) & BDL_MASK;
-        }
-
-        //
-        // Last is "<" current index and first is "<" current index (0).
-        //
-        else
-        {
-            //
-            // Remove nNumMappings entries in front of current index.
-            //
-            if (nFirst != stBDList.nHead)
-            {
-                //
-                // Move from head towards current index.
-                //
-                MoveBDList (stBDList.nHead, nFirst - 1,
-                           (nLast - nNumMappings) + 1);
-            }
-
-            //
-            // Adjust head.
-            //
-            stBDList.nHead = (stBDList.nHead + nNumMappings) & BDL_MASK;
+            stBDList.pMapData[i].ulState = 2;
+            BDList[i].wLength = 0;
+            BDList[i].wPolicyBits = 0;
+            *MappingsRevoked += 1;
         }
     }
 
     //
-    // In all cases, reduce the number of mappings.
+    // Just un-pause the DMA engine if it was running before
     //
-    stBDList.nBDEntries -= nNumMappings;
+    ResumeDMA(ulOldDMAEngineState);
 
     //
-    // Print debug information.
-    //
-    DOUT (DBG_DMA, ("Number of mappings is now %d, Head is %d, Tail is %d",
-            stBDList.nBDEntries, stBDList.nHead, stBDList.nTail));
-
-    //
-    // Reprogram the last valid index only when tail != 0
-    //
-    if (stBDList.nTail)
-    {
-        WriteReg8 (X_LVI, (UCHAR)((stBDList.nTail - 1) & BDL_MASK));
-    }
-
-    //
-    // Just un-pause the DMA engine if it was running before and there are
-    // still entries left and tail != 0.
-    //
-    if ((ulOldDMAEngineState & DMA_ENGINE_ON) && stBDList.nBDEntries
-       && stBDList.nTail)
-    {
-        ResumeDMA (DMA_ENGINE_PEND);
-    }
-
-    //
-    // Release the mapping spin lock and return the number of mappings we
-    // revoked.
+    // Release the mapping spin lock
     //
     KeReleaseSpinLock (&MapLock, OldIrql);
-    *MappingsRevoked = nNumMappings;
 
 
     return STATUS_SUCCESS;
@@ -987,7 +632,7 @@ NTSTATUS CMiniportWaveICHStream::GetNewMappings (void)
         // Get the information from the list.
         //
         ULONG               Flags;
-        ULONG               ulTag = stBDList.ulTagCounter++;
+        ULONG               ulTag = stBDList.nTail;
         ULONG               ulBufferLength;
         PHYSICAL_ADDRESS    PhysAddr;
         PVOID               VirtAddr;
@@ -1059,10 +704,8 @@ NEW_MAPPINGS_AVAILBLE_MAYBE:
         // Save the mapping.
         //
         nTail = stBDList.nTail;
-        stBDList.pMapData[nTail].ulTag = ulTag;
-        stBDList.pMapData[nTail].PhysAddr = PhysAddr;
-        stBDList.pMapData[nTail].pVirtAddr = VirtAddr;
         stBDList.pMapData[nTail].ulBufferLength = ulBufferLength;
+        stBDList.pMapData[nTail].ulState = 1;
         ulBytesMapped += ulBufferLength;
 
         //
@@ -1223,22 +866,29 @@ NTSTATUS CMiniportWaveICHStream::ReleaseUsedMappings (void)
         //
         // Save the tag and remove the entry from the list.
         //
-        ULONG   ulTag = stBDList.pMapData[stBDList.nHead].ulTag;
-        TotalBytesReleased += (ULONGLONG)stBDList.pMapData[stBDList.nHead].ulBufferLength;
+        ULONG   ulTag = stBDList.nHead;
         stBDList.nBDEntries--;
         stBDList.nHead = (stBDList.nHead + 1) & BDL_MASK;
         nMappingsReleased++;
 
-        // Release the mapping spin lock
-        KeReleaseSpinLock (&MapLock,OldIrql);
+        // if entry has not been revoked
+        if(stBDList.pMapData[ulTag].ulState == 1)
+        {
+            TotalBytesReleased += (ULONGLONG)stBDList.pMapData[ulTag].ulBufferLength;
 
-        //
-        // Release this entry.
-        //
-        PortStream->ReleaseMapping ((PVOID)ULongToPtr(ulTag));
+            // Release the mapping spin lock
+            KeReleaseSpinLock (&MapLock,OldIrql);
 
-        // acquire the mapping spin lock
-        KeAcquireSpinLock (&MapLock,&OldIrql);
+            //
+            // Release this entry.
+            //
+            PortStream->ReleaseMapping ((PVOID)ULongToPtr(ulTag));
+
+            // acquire the mapping spin lock
+            KeAcquireSpinLock (&MapLock,&OldIrql);
+        }
+
+        stBDList.pMapData[ulTag].ulState = 0;
     }
 
 
