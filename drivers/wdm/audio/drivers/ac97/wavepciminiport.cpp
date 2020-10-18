@@ -203,13 +203,7 @@ STDMETHODIMP CMiniportWaveICH::NewStream
         //
         DOUT (DBG_ERROR, ("[NewStream] Failed to init stream!"));
         pWaveICHStream->Release ();
-        // In case the stream passed us a ServiceGroup, portcls will ignore all parameters
-        // on a failure, so we have to release it here.
-        if (*ServiceGroup)
-            (*ServiceGroup)->Release();
-        *ServiceGroup = NULL;
-        *Stream = NULL;
-        *DmaChannel_ = NULL;
+
         return ntStatus;
     }
 

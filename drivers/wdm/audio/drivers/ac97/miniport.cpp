@@ -1260,19 +1260,19 @@ STDMETHODIMP_(NTSTATUS) CMiniport::Init
 
 void __fastcall obj_AddRef(PUNKNOWN obj, void **ppvObject)
 {
-    if(obj) {
-        obj->AddRef();
+    if(ppvObject) {
         *ppvObject = obj;
+        if(obj) obj->AddRef();
     }
 }
 
 
 void __fastcall obj_Release(void **ppvObject)
 {
-    if(*ppvObject)
-    {
-        ((PUNKNOWN)*ppvObject)->Release ();
+    if(ppvObject) {
+        PUNKNOWN obj = (PUNKNOWN)*ppvObject;
         *ppvObject = NULL;
+        if(obj) obj->Release();
     }
 }
 

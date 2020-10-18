@@ -126,11 +126,6 @@ NTSTATUS CMiniportStream::Init
             DOUT (DBG_ERROR, ("Failed to create a service group!"));
             return ntStatus;
         }
-
-        //
-        // Pass the ServiceGroup pointer to portcls.
-        //
-        obj_AddRef(ServiceGroup, (PVOID *)ServiceGroup_);
     }
 
     //
@@ -183,6 +178,11 @@ NTSTATUS CMiniportStream::Init
     // Store the stream pointer, it is used by the ISR.
     //
     Miniport->Streams[Pin/2] = this;
+
+    //
+    // Pass the ServiceGroup pointer to portcls.
+    //
+    obj_AddRef(ServiceGroup, (PVOID *)ServiceGroup_);
 
     return STATUS_SUCCESS;
 }
