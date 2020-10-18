@@ -420,8 +420,8 @@ void CMiniportWaveICHStream::InterruptServiceRoutine()
     // Update the LVI so that we cycle around in the scatter gather list.
     //
 
-    UCHAR CIV = that->AdapterCommon->ReadBMControlRegister8 (m_ulBDAddr + X_CIV);
-    that->AdapterCommon->WriteBMControlRegister (m_ulBDAddr + X_LVI, (UCHAR)((CIV-1) & BDL_MASK));
+    UCHAR CIV = ReadReg8 (X_CIV);
+    WriteReg (X_LVI, (UCHAR)((CIV-1) & BDL_MASK));
 }
 
 #endif          // (NTDDI_VERSION >= NTDDI_VISTA)

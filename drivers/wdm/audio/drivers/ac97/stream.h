@@ -80,6 +80,16 @@ public:
     (
         DWORD* buffPos
     );
+    
+    // 
+    // Stream regiter read/write
+    // 
+    void WriteReg8(ULONG addr, UCHAR data);
+    void WriteReg16(ULONG addr, USHORT data);
+    void WriteReg32(ULONG addr, ULONG data);
+    UCHAR ReadReg8(ULONG addr);
+    USHORT ReadReg16(ULONG addr);
+    ULONG ReadReg32(ULONG addr);
 
     /*************************************************************************
      * Include IDrmAudioStream (public/exported) methods.

@@ -4,15 +4,6 @@
 #include "shared.h"
 #include "miniport.h"
 
-#define WriteReg(addr, data) (Miniport->AdapterCommon-> \
-    WriteBMControlRegister (m_ulBDAddr + addr, data))
-#define ReadReg8(addr) (Miniport->AdapterCommon-> \
-    ReadBMControlRegister8 (m_ulBDAddr + addr))
-
-#define ulDebugOut DBG_ALL
-
-
-
 /*****************************************************************************
  * CAC97MiniportWaveRTStream::NonDelegatingQueryInterface
  *****************************************************************************
@@ -197,7 +188,7 @@ CMiniportStream::~CMiniportStream()
         //
         if (Miniport->AdapterCommon)
         {
-            Miniport->AdapterCommon->WriteBMControlRegister (m_ulBDAddr + X_CR, (UCHAR)0);
+            WriteReg8 (X_CR, (UCHAR)0);
 
             //
             // Update also the topology miniport if this was the render stream.
@@ -238,7 +229,7 @@ UCHAR CMiniportStream::UpdateDMA (void)
 
     // write X_CR register value
     if(RegisterValue != RegisterValueNew)
-        WriteReg(X_CR, RegisterValueNew);
+        WriteReg8(X_CR, RegisterValueNew);
     return RegisterValueNew;
 }
 
@@ -263,12 +254,10 @@ int CMiniportStream::GetBuffPos
     //
     do
     {
-        nCurrentIndex = Miniport->AdapterCommon->
-            ReadBMControlRegister8 (m_ulBDAddr + X_CIV);
+        nCurrentIndex = ReadReg8(X_CIV);
 
-        RegisterX_PICB = (DWORD)Miniport->AdapterCommon->ReadBMControlRegister16 (m_ulBDAddr + X_PICB);
-    } while (nCurrentIndex != (int)Miniport->AdapterCommon->
-            ReadBMControlRegister8 (m_ulBDAddr + X_CIV));
+        RegisterX_PICB = ReadReg16 (X_PICB);
+    } while (nCurrentIndex != (int)ReadReg8(X_CIV));
 
     *buffPos = (BDList[nCurrentIndex].wLength - RegisterX_PICB) * 2;
     return nCurrentIndex;
@@ -295,7 +284,7 @@ void CMiniportStream::ResetDMA (void)
     // Reset all register contents.
     //
     RegisterValue |= CR_RR;
-    WriteReg(X_CR, RegisterValue);
+    WriteReg8(X_CR, RegisterValue);
 
     //
     // Wait until reset condition is cleared by HW; should not take long.
@@ -321,12 +310,12 @@ void CMiniportStream::ResetDMA (void)
     // We only want interrupts upon completion.
     //
     RegisterValue = CR_IOCE | CR_LVBIE;
-    WriteReg(X_CR,  RegisterValue);
+    WriteReg8(X_CR,  RegisterValue);
 
     //
     // Setup the Buffer Descriptor Base Address (BDBA) register.
     //
-    WriteReg(0,  BDList_PhysAddr.LowPart);
+    WriteReg32(0,  BDList_PhysAddr.LowPart);
 }
 
 /*****************************************************************************
@@ -607,3 +596,16 @@ STDMETHODIMP_(NTSTATUS) CMiniportStream::SetFormat
     return ntStatus;
 }
 
+
+void CMiniportStream::WriteReg8(ULONG addr, UCHAR data) { Miniport->AdapterCommon->
+    WriteBMControlRegister (m_ulBDAddr + addr, data); }
+void CMiniportStream::WriteReg16(ULONG addr, USHORT data) { Miniport->AdapterCommon->
+    WriteBMControlRegister (m_ulBDAddr + addr, data); }
+void CMiniportStream::WriteReg32(ULONG addr, ULONG data) { Miniport->AdapterCommon->
+    WriteBMControlRegister (m_ulBDAddr + addr, data); }
+UCHAR CMiniportStream::ReadReg8(ULONG addr) { return Miniport->AdapterCommon->
+    ReadBMControlRegister8 (m_ulBDAddr + addr); }
+USHORT CMiniportStream::ReadReg16(ULONG addr) { return Miniport->AdapterCommon->
+    ReadBMControlRegister16 (m_ulBDAddr + addr); }
+ULONG CMiniportStream::ReadReg32(ULONG addr) { return Miniport->AdapterCommon->
+    ReadBMControlRegister32 (m_ulBDAddr + addr); }

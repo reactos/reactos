@@ -287,19 +287,17 @@ void CMiniportWaveICHStream::PowerChangeNotify_
         // equal to head + entries.
         if (stBDList.nTail)
         {
-            Miniport->AdapterCommon->WriteBMControlRegister (m_ulBDAddr + X_LVI,
-                                    (UCHAR)((stBDList.nTail - 1) & BDL_MASK));
+            WriteReg8 (X_LVI, (UCHAR)((stBDList.nTail - 1) & BDL_MASK));
         }
     }
     else
     {
 
         // Disable interrupts and stop DMA just in case.
-        Miniport->AdapterCommon->WriteBMControlRegister (m_ulBDAddr + X_CR, (UCHAR)0);
+        WriteReg8 (X_CR, (UCHAR)0);
 
         // Get current index
-        int nCurrentIndex = (int)Miniport->AdapterCommon->
-            ReadBMControlRegister8 (m_ulBDAddr + X_CIV);
+        int nCurrentIndex = (int)ReadReg8 (X_CIV);
 
         //
         // First move the BD list to the beginning.
@@ -665,8 +663,7 @@ STDMETHODIMP_(NTSTATUS) CMiniportWaveICHStream::RevokeMappings
     PauseDMA ();
 
     // Get current index
-    nCurrentIndex = Miniport->AdapterCommon->
-        ReadBMControlRegister8 (m_ulBDAddr + X_CIV);
+    nCurrentIndex = ReadReg8 (X_CIV);
 
     //
     // We always rearrange the scatter gather list. That means we reset the DMA
@@ -891,8 +888,7 @@ STDMETHODIMP_(NTSTATUS) CMiniportWaveICHStream::RevokeMappings
     //
     if (stBDList.nTail)
     {
-        Miniport->AdapterCommon->WriteBMControlRegister (m_ulBDAddr + X_LVI,
-                    (UCHAR)((stBDList.nTail - 1) & BDL_MASK));
+        WriteReg8 (X_LVI, (UCHAR)((stBDList.nTail - 1) & BDL_MASK));
     }
 
     //
@@ -965,7 +961,7 @@ NTSTATUS CMiniportWaveICHStream::GetNewMappings (void)
     KeAcquireSpinLock (&MapLock,&OldIrql);
 
 #if (DBG)
-    if (Miniport->AdapterCommon->ReadBMControlRegister16 (m_ulBDAddr + X_SR) & SR_CELV)
+    if (ReadReg16 (X_SR) & SR_CELV)
     {
         //
         // We starve.  :-(
@@ -1087,7 +1083,7 @@ NTSTATUS CMiniportWaveICHStream::GetNewMappings (void)
         // of the BDList with the HW. Note that we need to release spin locks every time
         // we call into portcls, that means we can be interrupted by ReleaseUsedMappings.
         //
-        Miniport->AdapterCommon->WriteBMControlRegister (m_ulBDAddr + X_LVI, (UCHAR)nTail);
+        WriteReg8 (X_LVI, (UCHAR)nTail);
     }
 
     //
@@ -1140,8 +1136,7 @@ NTSTATUS CMiniportWaveICHStream::ReleaseUsedMappings (void)
         //
         // Get current index
         //
-        int nCurrentIndex = (int)Miniport->AdapterCommon->
-            ReadBMControlRegister8 (m_ulBDAddr + X_CIV);
+        int nCurrentIndex = (int)ReadReg8 (X_CIV);
 
         //
         // When CIV is == Head -1 we released all mappings.
@@ -1190,8 +1185,7 @@ NTSTATUS CMiniportWaveICHStream::ReleaseUsedMappings (void)
                 // DMA engine finished playing the buffers, CVI is equal LVI
                 // and SR_CELV is set.
                 //
-                if (!(Miniport->AdapterCommon->
-                     ReadBMControlRegister16 (m_ulBDAddr + X_SR) & SR_CELV))
+                if (!(ReadReg16 (X_SR) & SR_CELV))
                 {
                     // It is still playing the last buffer.
                     break;
