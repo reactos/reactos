@@ -171,6 +171,20 @@ NTSTATUS CMiniportStream::Init
     Miniport->Streams[Pin/2] = this;
 
     //
+    // Call miniport specific init routine
+    //
+    ntStatus = Init_();
+    if (!NT_SUCCESS (ntStatus))
+    {
+        return ntStatus;
+    }
+
+    //
+    // Setup the Buffer Descriptor Base Address (BDBA) register.
+    //
+    WriteReg32(0,  BDList_PhysAddr.LowPart);
+
+    //
     // Pass the ServiceGroup pointer to portcls.
     //
     obj_AddRef(ServiceGroup, (PVOID *)ServiceGroup_);

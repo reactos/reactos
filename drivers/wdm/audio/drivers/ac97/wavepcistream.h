@@ -121,15 +121,7 @@ public:
     //
     // Initializes the Stream object.
     //
-    NTSTATUS Init
-    (
-        IN  CMiniportWaveICH    *Miniport_,
-        IN  PPORTWAVEPCISTREAM  PortStream,
-        IN  WavePins            Pin_,
-        IN  BOOLEAN             Capture,
-        IN  PKSDATAFORMAT       DataFormat,
-        OUT PSERVICEGROUP *     ServiceGroup
-    );
+    NTSTATUS Init_();
 
     //
     // This method is called when the device changes power states.

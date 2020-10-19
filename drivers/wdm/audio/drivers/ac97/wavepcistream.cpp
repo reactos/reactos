@@ -109,24 +109,11 @@ CMiniportWaveICHStream::~CMiniportWaveICHStream ()
  * the buffer descriptor list base address register for the pin being
  * initialized.
  */
-NTSTATUS CMiniportWaveICHStream::Init
-(
-    IN  CMiniportWaveICH        *Miniport_,
-    IN  PPORTWAVEPCISTREAM      PortStream_,
-    IN  WavePins                Pin,
-    IN  BOOLEAN                 Capture_,
-    IN  PKSDATAFORMAT           DataFormat_,
-    OUT PSERVICEGROUP           *ServiceGroup_
-)
+NTSTATUS CMiniportWaveICHStream::Init_()
 {
     PAGED_CODE ();
 
     DOUT (DBG_PRINT, ("[CMiniportWaveICHStream::Init]"));
-
-    ASSERT (Miniport_);
-    ASSERT (PortStream_);
-    ASSERT (DataFormat_);
-    ASSERT (ServiceGroup_);
 
     //
     // The rule here is that we return when we fail without a cleanup.
@@ -143,26 +130,12 @@ NTSTATUS CMiniportWaveICHStream::Init
     // Allocate 32 entries of 8 bytes (one BDL entry).
     // The pointer is aligned on a 8 byte boundary (that's what we need).
     //
-    BDList = (tBDEntry *)Miniport_->AdapterObject->DmaOperations->
-         AllocateCommonBuffer (Miniport_->AdapterObject,
-                               MAX_BDL_ENTRIES * sizeof (tBDEntry) * 2,
-                               &BDList_PhysAddr,
-                               FALSE);
 
-    if (!BDList)
+    if (!BDList_Alloc())
     {
         DOUT (DBG_ERROR, ("Failed AllocateCommonBuffer!"));
         return STATUS_INSUFFICIENT_RESOURCES;
     }
-
-    NTSTATUS ntStatus = CMiniportStream::Init(Miniport_,
-                                              PortStream_,
-                                              Pin,
-                                              Capture_,
-                                              DataFormat_,
-                                              ServiceGroup_);
-    if (!NT_SUCCESS (ntStatus))
-        return ntStatus;
 
     PPREFETCHOFFSET PreFetchOffset;
     //

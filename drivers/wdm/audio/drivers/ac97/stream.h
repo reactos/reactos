@@ -144,6 +144,7 @@ public:
 
 
     virtual void InterruptServiceRoutine() PURE;
+    virtual NTSTATUS Init_() PURE;
 
     NTSTATUS NonDelegatingQueryInterface
     (
@@ -163,6 +164,10 @@ public:
     (
         _Inout_ PLONGLONG PhysicalPosition
     );
+
+
+    PVOID BDList_Alloc();
+    void BDList_Free();
 };
 
 

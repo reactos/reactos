@@ -190,7 +190,7 @@ STDMETHODIMP CMiniportWaveICH::NewStream
     //
     // Initialize the stream.
     //
-    ntStatus = pWaveICHStream->Init (this,
+    ntStatus = pWaveICHStream->Init ((CMiniport*)this,
                                     PortStream,
                                     (WavePins)Pin_,
                                     Capture,

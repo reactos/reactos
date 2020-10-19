@@ -4,6 +4,39 @@
 #include "shared.h"
 #include "miniport.h"
 
+PVOID CMiniportStream::BDList_Alloc()
+{
+    // get DMA_ADAPTER object
+    PDMA_ADAPTER AdapterObject = (PDMA_ADAPTER)
+      Miniport->DmaChannel->GetAdapterObject();
+
+    // allocate DBList
+    BDList = (tBDEntry *)AdapterObject->DmaOperations->
+         AllocateCommonBuffer (AdapterObject,
+                               MAX_BDL_ENTRIES * sizeof (tBDEntry),
+                               &BDList_PhysAddr, FALSE);
+    return BDList;
+}
+
+void CMiniportStream::BDList_Free()
+{
+    if (BDList)
+    {
+        // get DMA_ADAPTER object
+        PDMA_ADAPTER AdapterObject = (PDMA_ADAPTER)
+          Miniport->DmaChannel->GetAdapterObject();
+
+        // free DBList
+        AdapterObject->DmaOperations->
+           FreeCommonBuffer (AdapterObject,
+                             PAGE_SIZE,
+                             BDList_PhysAddr,
+                             (PVOID)BDList,
+                             FALSE);
+        BDList = NULL;
+    }
+}
+
 /*****************************************************************************
  * CMiniportStream::PowerChangeNotify
  *****************************************************************************
