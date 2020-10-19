@@ -34,9 +34,7 @@
 
 static BOOL is_wow64;
 
-static BOOL (WINAPI *pConvertSidToStringSidA)(PSID, LPSTR*);
 static LONG (WINAPI *pRegDeleteKeyExA)(HKEY, LPCSTR, REGSAM, DWORD);
-static BOOLEAN (WINAPI *pGetUserNameExA)(EXTENDED_NAME_FORMAT, LPSTR, PULONG);
 static BOOL (WINAPI *pIsWow64Process)(HANDLE, PBOOL);
 
 static UINT (WINAPI *pMsiSourceListAddMediaDiskA)
@@ -50,6 +48,8 @@ static UINT (WINAPI *pMsiSourceListEnumSourcesA)
     (LPCSTR, LPCSTR, MSIINSTALLCONTEXT, DWORD, DWORD, LPSTR, LPDWORD);
 static UINT (WINAPI *pMsiSourceListGetInfoA)
     (LPCSTR, LPCSTR, MSIINSTALLCONTEXT, DWORD, LPCSTR, LPSTR, LPDWORD);
+static UINT (WINAPI *pMsiSourceListGetInfoW)
+    (LPCWSTR, LPCWSTR, MSIINSTALLCONTEXT, DWORD, LPCWSTR, LPWSTR, LPDWORD);
 static UINT (WINAPI *pMsiSourceListSetInfoA)
     (LPCSTR, LPCSTR, MSIINSTALLCONTEXT,  DWORD,LPCSTR,  LPCSTR);
 static UINT (WINAPI *pMsiSourceListAddSourceA)
@@ -60,7 +60,6 @@ static void init_functionpointers(void)
     HMODULE hmsi = GetModuleHandleA("msi.dll");
     HMODULE hadvapi32 = GetModuleHandleA("advapi32.dll");
     HMODULE hkernel32 = GetModuleHandleA("kernel32.dll");
-    HMODULE hsecur32 = LoadLibraryA("secur32.dll");
 
 #define GET_PROC(dll, func) \
     p ## func = (void *)GetProcAddress(dll, #func); \
@@ -72,13 +71,12 @@ static void init_functionpointers(void)
     GET_PROC(hmsi, MsiSourceListEnumMediaDisksA)
     GET_PROC(hmsi, MsiSourceListEnumSourcesA)
     GET_PROC(hmsi, MsiSourceListGetInfoA)
+    GET_PROC(hmsi, MsiSourceListGetInfoW)
     GET_PROC(hmsi, MsiSourceListSetInfoA)
     GET_PROC(hmsi, MsiSourceListAddSourceA)
 
-    GET_PROC(hadvapi32, ConvertSidToStringSidA)
     GET_PROC(hadvapi32, RegDeleteKeyExA)
     GET_PROC(hkernel32, IsWow64Process)
-    GET_PROC(hsecur32, GetUserNameExA)
 
 #undef GET_PROC
 }
@@ -142,17 +140,12 @@ static char *get_user_sid(void)
     TOKEN_USER *user;
     char *usersid = NULL;
 
-    if (!pConvertSidToStringSidA)
-    {
-        win_skip("ConvertSidToStringSidA is not available\n");
-        return NULL;
-    }
     OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &token);
     GetTokenInformation(token, TokenUser, NULL, size, &size);
 
     user = HeapAlloc(GetProcessHeap(), 0, size);
     GetTokenInformation(token, TokenUser, user, size, &size);
-    pConvertSidToStringSidA(user->User.Sid, &usersid);
+    ConvertSidToStringSidA(user->User.Sid, &usersid);
     HeapFree(GetProcessHeap(), 0, user);
 
     CloseHandle(token);
@@ -189,14 +182,21 @@ static void check_reg_str(HKEY prodkey, LPCSTR name, LPCSTR expected, BOOL bcase
 #define CHECK_REG_STR(prodkey, name, expected) \
     check_reg_str(prodkey, name, expected, TRUE, __LINE__);
 
+static inline WCHAR *strdupAW( const char *str )
+{
+    int len;
+    WCHAR *ret;
+    len = MultiByteToWideChar( CP_ACP, 0, str, -1, NULL, 0 );
+    if (!(ret = HeapAlloc( GetProcessHeap(), 0, len * sizeof(WCHAR) ))) return NULL;
+    MultiByteToWideChar( CP_ACP, 0, str, -1, ret, len );
+    return ret;
+}
+
 static void test_MsiSourceListGetInfo(void)
 {
-    CHAR prodcode[MAX_PATH];
-    CHAR prod_squashed[MAX_PATH];
-    CHAR keypath[MAX_PATH*2];
-    CHAR value[MAX_PATH];
-    LPSTR usersid;
-    LPCSTR data;
+    char prodcode[MAX_PATH], prod_squashed[MAX_PATH], keypath[MAX_PATH * 2], value[MAX_PATH], *usersid;
+    WCHAR valueW[MAX_PATH], *usersidW, *prodcodeW;
+    const char *data;
     LONG res;
     UINT r;
     HKEY userkey, hkey, media;
@@ -425,6 +425,30 @@ static void test_MsiSourceListGetInfo(void)
     ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
     ok(!lstrcmpA(value, "prompt"), "Expected \"prompt\", got \"%s\"\n", value);
     ok(size == 6, "Expected 6, got %d\n", size);
+
+    /* LastUsedSource value doesn't exist */
+    RegDeleteValueA(hkey, "LastUsedSource");
+    size = MAX_PATH;
+    memset(value, 0x55, sizeof(value));
+    r = pMsiSourceListGetInfoA(prodcode, usersid, MSIINSTALLCONTEXT_USERUNMANAGED,
+                               MSICODE_PRODUCT, INSTALLPROPERTY_LASTUSEDSOURCEA,
+                               value, &size);
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
+    ok(!lstrcmpA(value, ""), "Expected \"\", got \"%s\"\n", value);
+    ok(size == 0, "Expected 0, got %d\n", size);
+
+    size = MAX_PATH;
+    usersidW = strdupAW(usersid);
+    prodcodeW = strdupAW(prodcode);
+    memset(valueW, 0x55, sizeof(valueW));
+    r = pMsiSourceListGetInfoW(prodcodeW, usersidW, MSIINSTALLCONTEXT_USERUNMANAGED,
+                               MSICODE_PRODUCT, INSTALLPROPERTY_LASTUSEDSOURCEW,
+                               valueW, &size);
+    ok(r == ERROR_SUCCESS, "Expected ERROR_SUCCESS, got %d\n", r);
+    ok(!valueW[0], "Expected \"\"");
+    ok(size == 0, "Expected 0, got %d\n", size);
+    HeapFree(GetProcessHeap(), 0, usersidW);
+    HeapFree(GetProcessHeap(), 0, prodcodeW);
 
     data = "";
     res = RegSetValueExA(hkey, "LastUsedSource", 0, REG_SZ,
@@ -3241,7 +3265,7 @@ static void test_MsiSourceListAddSource(void)
     CHAR prod_squashed[MAX_PATH];
     CHAR keypath[MAX_PATH*2];
     CHAR username[MAX_PATH];
-    LPSTR usersid, ptr;
+    LPSTR usersid;
     LONG res;
     UINT r;
     HKEY prodkey, userkey, net, source;
@@ -3263,16 +3287,7 @@ static void test_MsiSourceListAddSource(void)
 
     /* MACHINENAME\username */
     size = MAX_PATH;
-    if (pGetUserNameExA != NULL)
-        pGetUserNameExA(NameSamCompatible, username, &size);
-    else
-    {
-        GetComputerNameA(username, &size);
-        lstrcatA(username, "\\");
-        ptr = username + lstrlenA(username);
-        size = MAX_PATH - (ptr - username);
-        GetUserNameA(ptr, &size);
-    }
+    GetUserNameExA(NameSamCompatible, username, &size);
     trace("username: %s\n", username);
 
     if (is_wow64)
