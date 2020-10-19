@@ -3519,7 +3519,7 @@ FormatPartitionPage(PINPUT_RECORD Ir)
                         "\n"
                         "  \x07  Press ENTER to continue Setup.\n"
                         "  \x07  Press F3 to quit Setup.",
-                        PartEntry->FileSystem);
+                        SelectedFileSystem->FileSystem /* PartEntry->FileSystem */);
 
                 PopupError(Buffer,
                            MUIGetString(STRING_QUITCONTINUE),
