@@ -129,11 +129,11 @@ typedef struct _FILE_SYSTEM
 /* The list of file systems on which we can install ReactOS */
 static FILE_SYSTEM RegisteredFileSystems[] =
 {
-    /* NOTE: The FAT formatter automatically determines
-     * whether it will use FAT-16 or FAT-32. */
+    /* NOTE: The FAT formatter will automatically
+     * determine whether to use FAT12/16 or FAT32. */
     { L"FAT"  , VfatFormat, VfatChkdsk },
+    { L"FAT32", VfatFormat, VfatChkdsk },
 #if 0
-    { L"FAT32", VfatFormat, VfatChkdsk }, // Do we support specific FAT sub-formats specifications?
     { L"FATX" , VfatxFormat, VfatxChkdsk },
     { L"NTFS" , NtfsFormat, NtfsChkdsk },
 #endif
@@ -180,9 +180,7 @@ GetFileSystemByName(
     {
         Item = CONTAINING_RECORD(ListEntry, FILE_SYSTEM_ITEM, ListEntry);
         if (Item->FileSystemName &&
-            (wcsicmp(FileSystemName, Item->FileSystemName) == 0 ||
-            /* Map FAT32 back to FAT */
-            (wcsicmp(FileSystemName, L"FAT32") == 0 && wcsicmp(Item->FileSystemName, L"FAT") == 0)))
+            (wcsicmp(FileSystemName, Item->FileSystemName) == 0))
         {
             return Item;
         }
@@ -200,9 +198,7 @@ GetFileSystemByName(
     while (Count--)
     {
         if (FileSystems->FileSystemName &&
-            (wcsicmp(FileSystemName, FileSystems->FileSystemName) == 0 ||
-            /* Map FAT32 back to FAT */
-            (wcsicmp(FileSystemName, L"FAT32") == 0 && wcsicmp(FileSystems->FileSystemName, L"FAT") == 0)))
+            (wcsicmp(FileSystemName, FileSystems->FileSystemName) == 0))
         {
             return FileSystems;
         }
@@ -330,7 +326,7 @@ FormatFileSystem(
 //
 
 NTSTATUS
-InstallFat1216BootCode(
+InstallFatBootCode(
     IN PCWSTR SrcPath,          // FAT12/16 bootsector source file (on the installation medium)
     IN HANDLE DstPath,          // Where to save the bootsector built from the source + partition information
     IN HANDLE RootPartition)    // Partition holding the (old) FAT12/16 information
@@ -644,6 +640,19 @@ PreparePartitionForFormatting(
     }
 
     SetPartitionType(PartEntry, PartitionType);
+
+    /*
+     * Adjust the filesystem name in case of FAT vs. FAT32, according to
+     * the type of partition set by FileSystemToPartitionType().
+     */
+    if (wcsicmp(FileSystemName, L"FAT") == 0)
+    {
+        if ((/*PartEntry->*/PartitionType == PARTITION_FAT32) ||
+            (/*PartEntry->*/PartitionType == PARTITION_FAT32_XINT13))
+        {
+            FileSystemName = L"FAT32";
+        }
+    }
 
 //
 // FIXME: Do this now, or after the partition was actually formatted??

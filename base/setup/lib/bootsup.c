@@ -794,7 +794,7 @@ InstallFatBootcodeToPartition(
     IN PUNICODE_STRING SystemRootPath,
     IN PUNICODE_STRING SourceRootPath,
     IN PUNICODE_STRING DestinationArcPath,
-    IN UCHAR PartitionType)
+    IN PCWSTR FileSystemName)
 {
     NTSTATUS Status;
     BOOLEAN DoesFreeLdrExist;
@@ -856,8 +856,7 @@ InstallFatBootcodeToPartition(
             /* Install new bootcode into a file */
             CombinePaths(DstPath, ARRAYSIZE(DstPath), 2, SystemRootPath->Buffer, L"bootsect.ros");
 
-            if (PartitionType == PARTITION_FAT32 ||
-                PartitionType == PARTITION_FAT32_XINT13)
+            if (wcsicmp(FileSystemName, L"FAT32") == 0)
             {
                 /* Install FAT32 bootcode */
                 CombinePaths(SrcPath, ARRAYSIZE(SrcPath), 2, SourceRootPath->Buffer, L"\\loader\\fat32.bin");
@@ -872,7 +871,7 @@ InstallFatBootcodeToPartition(
                     return Status;
                 }
             }
-            else
+            else // if (wcsicmp(FileSystemName, L"FAT") == 0)
             {
                 /* Install FAT16 bootcode */
                 CombinePaths(SrcPath, ARRAYSIZE(SrcPath), 2, SourceRootPath->Buffer, L"\\loader\\fat.bin");
@@ -1070,8 +1069,7 @@ InstallFatBootcodeToPartition(
             }
 
             /* Install new bootsector on the disk */
-            if (PartitionType == PARTITION_FAT32 ||
-                PartitionType == PARTITION_FAT32_XINT13)
+            if (wcsicmp(FileSystemName, L"FAT32") == 0)
             {
                 /* Install FAT32 bootcode */
                 CombinePaths(SrcPath, ARRAYSIZE(SrcPath), 2, SourceRootPath->Buffer, L"\\loader\\fat32.bin");
@@ -1084,7 +1082,7 @@ InstallFatBootcodeToPartition(
                     return Status;
                 }
             }
-            else
+            else // if (wcsicmp(FileSystemName, L"FAT") == 0)
             {
                 /* Install FAT16 bootcode */
                 CombinePaths(SrcPath, ARRAYSIZE(SrcPath), 2, SourceRootPath->Buffer, L"\\loader\\fat.bin");
@@ -1212,40 +1210,46 @@ InstallVBRToPartition(
     IN PUNICODE_STRING SystemRootPath,
     IN PUNICODE_STRING SourceRootPath,
     IN PUNICODE_STRING DestinationArcPath,
-    IN UCHAR PartitionType)
+    IN PCWSTR FileSystemName)
 {
-    switch (PartitionType)
+    if (wcsicmp(FileSystemName, L"FAT")   == 0 ||
+        wcsicmp(FileSystemName, L"FAT32") == 0)
     {
-        case PARTITION_FAT_12:
-        case PARTITION_FAT_16:
-        case PARTITION_HUGE:
-        case PARTITION_XINT13:
-        case PARTITION_FAT32:
-        case PARTITION_FAT32_XINT13:
-        {
-            return InstallFatBootcodeToPartition(SystemRootPath,
-                                                 SourceRootPath,
-                                                 DestinationArcPath,
-                                                 PartitionType);
-        }
-
-        case PARTITION_LINUX:
-        {
-            return InstallBtrfsBootcodeToPartition(SystemRootPath,
-                                                   SourceRootPath,
-                                                   DestinationArcPath);
-        }
-
-        case PARTITION_IFS:
-            DPRINT1("Partitions of type NTFS or HPFS are not supported yet!\n");
-            break;
-
-        default:
-            DPRINT1("PartitionType 0x%02X unknown!\n", PartitionType);
-            break;
+        return InstallFatBootcodeToPartition(SystemRootPath,
+                                             SourceRootPath,
+                                             DestinationArcPath,
+                                             FileSystemName);
+    }
+    /*
+    else if (wcsicmp(FileSystemName, L"NTFS") == 0)
+    {
+        DPRINT1("Partitions of type NTFS or HPFS are not supported yet!\n");
+        return STATUS_NOT_SUPPORTED;
+    }
+    */
+    else if (wcsicmp(FileSystemName, L"BTRFS") == 0)
+    {
+        return InstallBtrfsBootcodeToPartition(SystemRootPath,
+                                               SourceRootPath,
+                                               DestinationArcPath);
+    }
+    /*
+    else if (wcsicmp(FileSystemName, L"EXT2")  == 0 ||
+             wcsicmp(FileSystemName, L"EXT3")  == 0 ||
+             wcsicmp(FileSystemName, L"EXT4")  == 0 ||
+             wcsicmp(FileSystemName, L"FFS")   == 0 ||
+             wcsicmp(FileSystemName, L"REISERFS") == 0)
+    {
+        return STATUS_NOT_SUPPORTED;
+    }
+    */
+    else
+    {
+        /* Unknown file system */
+        DPRINT1("Unknown file system '%S'\n", FileSystemName);
     }
 
-    return STATUS_UNSUCCESSFUL;
+    return STATUS_NOT_SUPPORTED;
 }
 
 

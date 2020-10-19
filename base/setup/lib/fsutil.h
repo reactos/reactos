@@ -76,13 +76,13 @@ typedef NTSTATUS
     IN HANDLE RootPartition);   // Partition holding the (old) bootsector data information
 
 NTSTATUS
-InstallFat1216BootCode(
+InstallFatBootCode(
     IN PCWSTR SrcPath,
     IN HANDLE DstPath,
     IN HANDLE RootPartition);
 
-#define InstallFat12BootCode    InstallFat1216BootCode
-#define InstallFat16BootCode    InstallFat1216BootCode
+#define InstallFat12BootCode    InstallFatBootCode
+#define InstallFat16BootCode    InstallFatBootCode
 
 NTSTATUS
 InstallFat32BootCode(
