@@ -267,7 +267,7 @@ AvrfpResolveThunks(IN PLDR_DATA_TABLE_ENTRY LdrEntry)
 
                     RtlInitAnsiString(&ThunkName, ThunkDescriptor->ThunkName);
                     /* We cannot call the public api, because that would run init routines! */
-                    if (NT_SUCCESS(LdrpGetProcedureAddress(LdrEntry->DllBase, &ThunkName, 0, &ThunkDescriptor->ThunkOldAddress, FALSE)))
+                    if (NT_SUCCESS(LdrpGetProcedureAddress(LdrEntry->DllBase, &ThunkName, 0, &ThunkDescriptor->ThunkOldAddress, FALSE, FALSE)))
                     {
                         if (AVrfpDebug & RTL_VRF_DBG_SHOWFOUNDEXPORTS)
                             DbgPrint("AVRF: (%wZ) %Z export found.\n", &LdrEntry->BaseDllName, &ThunkName);

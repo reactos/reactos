@@ -25,6 +25,7 @@ add_typelib(winhttp_tlb.idl)
 add_library(winhttp MODULE
     ${SOURCE}
     rsrc.rc
+    ${CMAKE_CURRENT_BINARY_DIR}/winhttp_stubs.c
     ${CMAKE_CURRENT_BINARY_DIR}/winhttp.def)
 
 set_module_type(winhttp win32dll)

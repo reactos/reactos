@@ -56,9 +56,11 @@ if(ARCH STREQUAL "i386")
     list(APPEND MSVCRTEX_ASM_SOURCE
         except/i386/chkstk_asm.s
         except/i386/chkstk_ms.s
+        except/i386/ehandler-asm.s
         math/i386/ftol2_asm.s
         math/i386/alldiv_asm.s)
     list(APPEND MSVCRTEX_SOURCE
+        except/i386/ehandler.c
         math/i386/ci.c
         math/i386/cicos.c
         math/i386/cilog.c
@@ -67,7 +69,10 @@ if(ARCH STREQUAL "i386")
         math/i386/cisqrt.c)
 elseif(ARCH STREQUAL "amd64")
     list(APPEND MSVCRTEX_ASM_SOURCE
-        except/amd64/chkstk_ms.s)
+        except/amd64/chkstk_ms.s
+        except/amd64/ehandler-asm.s)
+    list(APPEND MSVCRTEX_SOURCE
+        except/amd64/ehandler.c)
 elseif(ARCH STREQUAL "arm")
     list(APPEND MSVCRTEX_SOURCE
         math/arm/__rt_sdiv.c

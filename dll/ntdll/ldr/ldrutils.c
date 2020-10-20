@@ -1537,6 +1537,11 @@ NoRelocNeeded:
         LdrpValidateImageForMp(LdrEntry);
     }
 
+    if (NT_SUCCESS(Status))
+    {
+        LdrpApplyRosCompatMagic(LdrEntry);
+    }
+
     // FIXME: LdrpCorUnloadImage() is missing
 
     /* Close section and return status */
@@ -2253,7 +2258,8 @@ LdrpGetProcedureAddress(IN PVOID BaseAddress,
                         IN PANSI_STRING Name,
                         IN ULONG Ordinal,
                         OUT PVOID *ProcedureAddress,
-                        IN BOOLEAN ExecuteInit)
+                        IN BOOLEAN ExecuteInit,
+                        IN BOOLEAN UsePrivateExports)
 {
     NTSTATUS Status = STATUS_SUCCESS;
     UCHAR ImportBuffer[64];
@@ -2358,13 +2364,13 @@ LdrpGetProcedureAddress(IN PVOID BaseAddress,
         }
 
         /* Now get the thunk */
-        Status = LdrpSnapThunk(LdrEntry->DllBase,
+        Status = LdrpSnapThunk(LdrEntry,
                                ImageBase,
                                &Thunk,
                                &Thunk,
                                ExportDir,
                                ExportDirSize,
-                               FALSE,
+                               UsePrivateExports ? SNAP_PRIVATE : 0,
                                NULL);
 
         /* Finally, see if we're supposed to run the init routines */
@@ -2702,7 +2708,7 @@ PVOID LdrpGetShimEngineFunction(PCSZ FunctionName)
     PVOID Address;
     RtlInitAnsiString(&Function, FunctionName);
     /* Skip Dll init */
-    Status = LdrpGetProcedureAddress(g_pShimEngineModule, &Function, 0, &Address, FALSE);
+    Status = LdrpGetProcedureAddress(g_pShimEngineModule, &Function, 0, &Address, FALSE, TRUE);
     return NT_SUCCESS(Status) ? Address : NULL;
 }
 

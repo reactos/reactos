@@ -1083,7 +1083,7 @@
 @ stub -version=0x600+ _vcprintf_p_l
 @ stub -version=0x600+ _vcprintf_s
 @ stub -version=0x600+ _vcprintf_s_l
-@ stub -version=0x600+ _vcwprintf
+@ cdecl -version=0x600+ _vcwprintf(wstr ptr)
 @ stub -version=0x600+ _vcwprintf_l
 @ stub -version=0x600+ _vcwprintf_p
 @ stub -version=0x600+ _vcwprintf_p_l

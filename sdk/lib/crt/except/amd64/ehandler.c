@@ -1,8 +1,6 @@
 
 #include <precomp.h>
 
-
-_CRTIMP
 EXCEPTION_DISPOSITION
 __cdecl
 __C_specific_handler(
@@ -11,7 +9,6 @@ __C_specific_handler(
     struct _CONTEXT *_ContextRecord,
     struct _DISPATCHER_CONTEXT *_DispatcherContext)
 {
-    UNIMPLEMENTED;
     __debugbreak();
     return 0;
 }
