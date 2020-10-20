@@ -36,7 +36,7 @@ list(APPEND PCH_SKIP_SOURCE
 
 # CMake 3.9 and higher requires to specify this dependency manually
 # see https://gitlab.kitware.com/cmake/cmake/issues/19933
-set_property(SOURCE msi_winetest.rc PROPERTY OBJECT_DEPENDS custom.dll)
+set_property(SOURCE msi_winetest.rc PROPERTY OBJECT_DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/custom.dll)
 
 add_executable(msi_winetest
     ${SOURCE}
