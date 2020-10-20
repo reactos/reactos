@@ -1003,7 +1003,6 @@ MiInitializePfn(IN PFN_NUMBER PageFrameIndex,
     Pfn1->u3.e1.PageLocation = ActiveAndValid;
     ASSERT(Pfn1->u3.e1.Rom == 0);
     Pfn1->u3.e1.Modified = Modified;
-    Pfn1->u1.WsIndex = 0;
 
     /* Get the page table for the PTE */
     PointerPtePte = MiAddressToPte(PointerPte);
