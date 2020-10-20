@@ -503,9 +503,6 @@ MiDeletePte(IN PMMPTE PointerPte,
     }
     else
     {
-        /* Remove this address from the WS list */
-        MiRemoveFromWorkingSetList(&CurrentProcess->Vm, VirtualAddress);
-
         /* Make sure the saved PTE address is valid */
         if ((PMMPTE)((ULONG_PTR)Pfn1->PteAddress & ~0x1) != PointerPte)
         {
@@ -2306,15 +2303,13 @@ MiProtectVirtualMemory(IN PEPROCESS Process,
                 {
                     KIRQL OldIrql = MiAcquirePfnLock();
 
-                    /* Remove this from the working set */
-                    MiRemoveFromWorkingSetList(AddressSpace, MiPteToAddress(PointerPte));
-
                     /* Mark the PTE as transition and change its protection */
                     PteContents.u.Hard.Valid = 0;
                     PteContents.u.Soft.Transition = 1;
                     PteContents.u.Trans.Protection = ProtectionMask;
                     /* Decrease PFN share count and write the PTE */
                     MiDecrementShareCount(Pfn1, PFN_FROM_PTE(&PteContents));
+                    // FIXME: remove the page from the WS
                     MI_WRITE_INVALID_PTE(PointerPte, PteContents);
 #ifdef CONFIG_SMP
                     // FIXME: Should invalidate entry in every CPU TLB
@@ -2452,10 +2447,8 @@ MiMakePdeExistAndMakeValid(IN PMMPDE PointerPde,
 
 VOID
 NTAPI
-MiProcessValidPteList(
-    _Inout_ PMMSUPPORT Vm,
-    _Inout_ PMMPTE *ValidPteList,
-    _In_ ULONG Count)
+MiProcessValidPteList(IN PMMPTE *ValidPteList,
+                      IN ULONG Count)
 {
     KIRQL OldIrql;
     ULONG i;
@@ -2474,11 +2467,6 @@ MiProcessValidPteList(
         //
         TempPte = *ValidPteList[i];
         ASSERT(TempPte.u.Hard.Valid == 1);
-
-        //
-        // We can now remove this addres from the working set
-        //
-        MiRemoveFromWorkingSetList(Vm, MiPteToAddress(ValidPteList[i]));
 
         //
         // Get the PFN entry for the page itself, and then for its page table
@@ -2521,6 +2509,7 @@ MiDecommitPages(IN PVOID StartingAddress,
     ULONG CommitReduction = 0;
     PMMPTE ValidPteList[256];
     ULONG PteCount = 0;
+    PMMPFN Pfn1;
     MMPTE PteContents;
     PETHREAD CurrentThread = PsGetCurrentThread();
 
@@ -2552,10 +2541,10 @@ MiDecommitPages(IN PVOID StartingAddress,
             // such, and does not flush the entire TLB all the time, but right
             // now we have bigger problems to worry about than TLB flushing.
             //
-            PointerPde = MiPteToPde(PointerPte);
+            PointerPde = MiAddressToPde(StartingAddress);
             if (PteCount)
             {
-                MiProcessValidPteList(&Process->Vm, ValidPteList, PteCount);
+                MiProcessValidPteList(ValidPteList, PteCount);
                 PteCount = 0;
             }
 
@@ -2591,12 +2580,20 @@ MiDecommitPages(IN PVOID StartingAddress,
                 if (PteContents.u.Hard.Valid)
                 {
                     //
+                    // It's valid. At this point make sure that it is not a ROS
+                    // PFN. Also, we don't support ProtoPTEs in this code path.
+                    //
+                    Pfn1 = MiGetPfnEntry(PteContents.u.Hard.PageFrameNumber);
+                    ASSERT(MI_IS_ROS_PFN(Pfn1) == FALSE);
+                    ASSERT(Pfn1->u3.e1.PrototypePte == FALSE);
+
+                    //
                     // Flush any pending PTEs that we had not yet flushed, if our
                     // list has gotten too big, then add this PTE to the flush list.
                     //
                     if (PteCount == 256)
                     {
-                        MiProcessValidPteList(&Process->Vm, ValidPteList, PteCount);
+                        MiProcessValidPteList(ValidPteList, PteCount);
                         PteCount = 0;
                     }
                     ValidPteList[PteCount++] = PointerPte;
@@ -2626,7 +2623,7 @@ MiDecommitPages(IN PVOID StartingAddress,
             // This used to be a zero PTE and it no longer is, so we must add a
             // reference to the pagetable.
             //
-            MiIncrementPageTableReferences(MiPteToAddress(PointerPte));
+            MiIncrementPageTableReferences(StartingAddress);
 
             //
             // Next, we account for decommitted PTEs and make the PTE as such
@@ -2636,16 +2633,17 @@ MiDecommitPages(IN PVOID StartingAddress,
         }
 
         //
-        // Move to the next PTE
+        // Move to the next PTE and the next address
         //
         PointerPte++;
+        StartingAddress = (PVOID)((ULONG_PTR)StartingAddress + PAGE_SIZE);
     }
 
     //
     // Flush any dangling PTEs from the loop in the last page table, and then
     // release the working set and return the commit reduction accounting.
     //
-    if (PteCount) MiProcessValidPteList(&Process->Vm, ValidPteList, PteCount);
+    if (PteCount) MiProcessValidPteList(ValidPteList, PteCount);
     MiUnlockProcessWorkingSetUnsafe(Process, CurrentThread);
     return CommitReduction;
 }

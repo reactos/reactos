@@ -697,6 +697,16 @@ MiResolveDemandZeroFault(IN PVOID Address,
     /* Increment demand zero faults */
     KeGetCurrentPrcb()->MmDemandZeroCount++;
 
+    /* Do we have the lock? */
+    if (HaveLock)
+    {
+        /* Release it */
+        MiReleasePfnLock(OldIrql);
+
+        /* Update performance counters */
+        if (Process > HYDRA_PROCESS) Process->NumberOfPrivatePages++;
+    }
+
     /* Zero the page if need be */
     if (NeedZero) MiZeroPfn(PageFrameNumber);
 
@@ -733,23 +743,6 @@ MiResolveDemandZeroFault(IN PVOID Address,
         /* Windows does these sanity checks */
         ASSERT(Pfn1->u1.Event == 0);
         ASSERT(Pfn1->u3.e1.PrototypePte == 0);
-    }
-
-    /* Add the page to our working set, if it's not a proto PTE */
-    if ((Process > HYDRA_PROCESS) && (PointerPte == MiAddressToPte(Address)))
-    {
-        /* FIXME: Also support session VM scenario */
-        MiInsertInWorkingSetList(&Process->Vm, Address, Protection);
-    }
-
-    /* Do we have the lock? */
-    if (HaveLock)
-    {
-        /* Release it */
-        MiReleasePfnLock(OldIrql);
-
-        /* Update performance counters */
-        if (Process > HYDRA_PROCESS) Process->NumberOfPrivatePages++;
     }
 
     //
@@ -906,9 +899,6 @@ MiResolvePageFileFault(_In_ BOOLEAN StoreInstruction,
     ASSERT(CurrentProcess > HYDRA_PROCESS);
     ASSERT(*OldIrql != MM_NOIRQL);
 
-    MI_SET_USAGE(MI_USAGE_PAGE_FILE);
-    MI_SET_PROCESS(CurrentProcess);
-
     /* We must hold the PFN lock */
     MI_ASSERT_PFN_LOCK_HELD();
 
@@ -969,9 +959,6 @@ MiResolvePageFileFault(_In_ BOOLEAN StoreInstruction,
         KeSetEvent(Pfn1->u1.Event, IO_NO_INCREMENT, FALSE);
     }
 
-    /* And we can insert this into the working set */
-    MiInsertInWorkingSetList(&CurrentProcess->Vm, FaultingAddress, Protection);
-
     return Status;
 }
 
@@ -989,8 +976,6 @@ MiResolveTransitionFault(IN BOOLEAN StoreInstruction,
     PMMPFN Pfn1;
     MMPTE TempPte;
     PMMPTE PointerToPteForProtoPage;
-    ULONG Protection;
-
     DPRINT("Transition fault on 0x%p with PTE 0x%p in process %s\n",
             FaultingAddress, PointerPte, CurrentProcess->ImageFileName);
 
@@ -1084,9 +1069,8 @@ MiResolveTransitionFault(IN BOOLEAN StoreInstruction,
     ASSERT(PointerPte->u.Hard.Valid == 0);
     ASSERT(PointerPte->u.Trans.Prototype == 0);
     ASSERT(PointerPte->u.Trans.Transition == 1);
-    Protection = TempPte.u.Trans.Protection;
     TempPte.u.Long = (PointerPte->u.Long & ~0xFFF) |
-                     (MmProtectToPteMask[Protection]) |
+                     (MmProtectToPteMask[PointerPte->u.Trans.Protection]) |
                      MiDetermineUserGlobalPteMask(PointerPte);
 
     /* Is the PTE writeable? */
@@ -1105,10 +1089,6 @@ MiResolveTransitionFault(IN BOOLEAN StoreInstruction,
 
     /* Write the valid PTE */
     MI_WRITE_VALID_PTE(PointerPte, TempPte);
-
-    /* If this was a user fault, add it to the working set */
-    if (CurrentProcess > HYDRA_PROCESS)
-        MiInsertInWorkingSetList(&CurrentProcess->Vm, FaultingAddress, Protection);
 
     /* Return success */
     return STATUS_PAGE_FAULT_TRANSITION;
@@ -1230,9 +1210,6 @@ MiResolveProtoPteFault(IN BOOLEAN StoreInstruction,
         ASSERT(TempPte.u.Hard.Valid == 1);
         ProtoPageFrameIndex = PFN_FROM_PTE(&TempPte);
 
-        MI_SET_USAGE(MI_USAGE_COW);
-        MI_SET_PROCESS(Process);
-
         /* Get a new page for the private copy */
         if (Process > HYDRA_PROCESS)
             Color = MI_GET_NEXT_PROCESS_COLOR(Process);
@@ -1267,13 +1244,6 @@ MiResolveProtoPteFault(IN BOOLEAN StoreInstruction,
 
         /* And finally, write the valid PTE */
         MI_WRITE_VALID_PTE(PointerPte, PteContents);
-
-        /* Add the page to our working set */
-        if (Process > HYDRA_PROCESS)
-        {
-            /* FIXME: Also support session VM scenario */
-            MiInsertInWorkingSetList(&Process->Vm, Address, Protection);
-        }
 
         /* The caller expects us to release the PFN lock */
         MiReleasePfnLock(OldIrql);
@@ -2235,14 +2205,10 @@ UserFault:
             {
                 PFN_NUMBER PageFrameIndex, OldPageFrameIndex;
                 PMMPFN Pfn1;
-                ProtectionCode = TempPte.u.Soft.Protection;
 
                 LockIrql = MiAcquirePfnLock();
 
                 ASSERT(MmAvailablePages > 0);
-
-                MI_SET_USAGE(MI_USAGE_COW);
-                MI_SET_PROCESS(CurrentProcess);
 
                 /* Allocate a new page and copy it */
                 PageFrameIndex = MiRemoveAnyPage(MI_GET_NEXT_PROCESS_COLOR(CurrentProcess));
@@ -2264,9 +2230,6 @@ UserFault:
                 TempPte.u.Hard.CopyOnWrite = 0;
 
                 MI_WRITE_VALID_PTE(PointerPte, TempPte);
-
-                /* We can now add it to our working set */
-                MiInsertInWorkingSetList(&CurrentProcess->Vm, Address, ProtectionCode);
 
                 MiReleasePfnLock(LockIrql);
 
@@ -2384,7 +2347,6 @@ UserFault:
                 TempPte.u.Soft.Protection = ProtectionCode;
                 MI_WRITE_INVALID_PTE(PointerPte, TempPte);
             }
-            ProtectionCode = PointerPte->u.Soft.Protection;
 
             /* Lock the PFN database since we're going to grab a page */
             OldIrql = MiAcquirePfnLock();
@@ -2422,6 +2384,9 @@ UserFault:
             /* One more demand-zero fault */
             KeGetCurrentPrcb()->MmDemandZeroCount++;
 
+            /* And we're done with the lock */
+            MiReleasePfnLock(OldIrql);
+
             /* Fault on user PDE, or fault on user PTE? */
             if (PointerPte <= MiHighestUserPte)
             {
@@ -2447,12 +2412,6 @@ UserFault:
             MI_WRITE_VALID_PTE(PointerPte, TempPte);
             Pfn1 = MI_PFN_ELEMENT(PageFrameIndex);
             ASSERT(Pfn1->u1.Event == NULL);
-
-            /* We can now insert it into the working set */
-            MiInsertInWorkingSetList(&CurrentProcess->Vm, Address, ProtectionCode);
-
-            /* And we're done with the lock */
-            MiReleasePfnLock(OldIrql);
 
             /* Demand zero */
             ASSERT(KeGetCurrentIrql() <= APC_LEVEL);

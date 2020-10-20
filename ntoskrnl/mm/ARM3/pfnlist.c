@@ -254,8 +254,8 @@ MiUnlinkFreeOrZeroedPage(IN PMMPFN Entry)
     ASSERT(MI_PFN_CURRENT_USAGE != MI_USAGE_NOT_SET);
     Entry->PfnUsage = MI_PFN_CURRENT_USAGE;
     memcpy(Entry->ProcessName, MI_PFN_CURRENT_PROCESS_NAME, 16);
-    MI_PFN_CURRENT_USAGE = MI_USAGE_NOT_SET;
-    MI_SET_PROCESS2("Not Set");
+//    MI_PFN_CURRENT_USAGE = MI_USAGE_NOT_SET;
+//    memcpy(MI_PFN_CURRENT_PROCESS_NAME, "Not Set", 16);
 #endif
 }
 
@@ -459,11 +459,11 @@ MiRemovePageByColor(IN PFN_NUMBER PageIndex,
     MiDecrementAvailablePages();
 
 #if MI_TRACE_PFNS
-    ASSERT(MI_PFN_CURRENT_USAGE != MI_USAGE_NOT_SET);
+    //ASSERT(MI_PFN_CURRENT_USAGE != MI_USAGE_NOT_SET);
     Pfn1->PfnUsage = MI_PFN_CURRENT_USAGE;
     memcpy(Pfn1->ProcessName, MI_PFN_CURRENT_PROCESS_NAME, 16);
-    MI_PFN_CURRENT_USAGE = MI_USAGE_NOT_SET;
-    MI_SET_PROCESS2("Not Set");
+    //MI_PFN_CURRENT_USAGE = MI_USAGE_NOT_SET;
+    //memcpy(MI_PFN_CURRENT_PROCESS_NAME, "Not Set", 16);
 #endif
 
     /* Return the page */
@@ -937,8 +937,9 @@ MiInsertPageInList(IN PMMPFNLIST ListHead,
         ColorHead->Count++;
 
 #if MI_TRACE_PFNS
-            ASSERT(MI_PFN_CURRENT_USAGE == MI_USAGE_NOT_SET);
+            //ASSERT(MI_PFN_CURRENT_USAGE == MI_USAGE_NOT_SET);
             Pfn1->PfnUsage = MI_USAGE_FREE_PAGE;
+            MI_PFN_CURRENT_USAGE = MI_USAGE_NOT_SET;
             RtlZeroMemory(Pfn1->ProcessName, 16);
 #endif
     }

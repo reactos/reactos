@@ -331,16 +331,13 @@ MmFreeMemoryArea(
                 ASSERT(AddressSpace != MmGetKernelAddressSpace());
                 if (MiQueryPageTableReferences((PVOID)Address) == 0)
                 {
-                    KIRQL OldIrql;
                     /* No PTE relies on this PDE. Release it */
-                    MiLockProcessWorkingSet(Process, PsGetCurrentThread());
-                    OldIrql = MiAcquirePfnLock();
+                    KIRQL OldIrql = MiAcquirePfnLock();
                     PMMPDE PointerPde = MiAddressToPde(Address);
                     ASSERT(PointerPde->u.Hard.Valid == 1);
                     MiDeletePte(PointerPde, MiPdeToPte(PointerPde), Process, NULL);
                     ASSERT(PointerPde->u.Hard.Valid == 0);
                     MiReleasePfnLock(OldIrql);
-                    MiUnlockProcessWorkingSet(Process, PsGetCurrentThread());
                 }
             }
 #endif

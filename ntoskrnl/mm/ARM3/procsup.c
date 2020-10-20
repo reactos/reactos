@@ -6,8 +6,6 @@
  * PROGRAMMERS:     ReactOS Portable Systems Group
  */
 
-#define GROW_WSLE 1
-
 /* INCLUDES *******************************************************************/
 
 #include <ntoskrnl.h>
@@ -864,34 +862,18 @@ MiGetFirstFreeWsleIndex(_Inout_ PMMSUPPORT Vm)
         if (WsList->LastEntry == WsList->LastInitializedWsle)
         {
             /* We must grow our array. Allocate a new page */
-            PVOID Address = &WsList->Wsle[WsList->LastInitializedWsle + 1];
-            PMMPTE PointerPte = MiAddressToPte(Address);
+            PMMPTE PointerPte = MiAddressToPte(&WsList->Wsle[WsList->LastInitializedWsle + 1]);
             MMPTE TempPte;
-
-            MI_SET_USAGE(MI_USAGE_WSLE);
-            MI_SET_PROCESS(PsGetCurrentProcess());
-
-            /* We must be at page boundary */
-            ASSERT(Address == ALIGN_DOWN_POINTER_BY(Address, PAGE_SIZE));
-
             PFN_NUMBER PageFrameIndex = MiRemoveAnyPage(MI_GET_NEXT_COLOR());
 
             MiInitializePfn(PageFrameIndex, PointerPte, TRUE);
-
-            TempPte = ValidKernelPteLocal;
-            TempPte.u.Hard.PageFrameNumber = PageFrameIndex;
+            MI_MAKE_HARDWARE_PTE_KERNEL(&TempPte, PointerPte, MM_READWRITE, PageFrameIndex);
             MI_WRITE_VALID_PTE(PointerPte, TempPte);
 
             WsList->LastInitializedWsle += PAGE_SIZE / sizeof(MMWSLE);
 
-            /* Make sure we are staying on the same page */
-            ASSERT(Address == ALIGN_DOWN_POINTER_BY(&WsList->Wsle[WsList->LastInitializedWsle], PAGE_SIZE));
-
             /* We must insert this page in our working set ! */
             MiInsertInWorkingSetList(Vm, &WsList->Wsle[WsList->LastInitializedWsle], MM_READWRITE);
-
-            /* Now the last entry is the tail of our WSLE array */
-            ASSERT(WsList->Wsle[WsList->LastEntry].u1.e1.VirtualPageNumber == ((ULONG_PTR)&WsList->Wsle[WsList->LastInitializedWsle]) >> PAGE_SHIFT);
         }
 
         /* At this point we must be good to go */
@@ -927,26 +909,18 @@ MiGetFirstFreeWsleIndex(_Inout_ PMMSUPPORT Vm)
 
 VOID
 NTAPI
-MiInsertInWorkingSetList(
-    _Inout_ PMMSUPPORT Vm,
-    _In_ PVOID Address,
-    _In_ ULONG Protection)
+MiInsertInWorkingSetList(_Inout_ PMMSUPPORT Vm, _In_ PVOID Address, _In_ ULONG Protection)
 {
     ULONG WsIndex = MiGetFirstFreeWsleIndex(Vm);
     PMMWSLE WsleEntry = &Vm->VmWorkingSetList->Wsle[WsIndex];
     PMMPTE PointerPte = MiAddressToPte(Address);
-    PMMPFN Pfn1;
+    PMMPFN Pfn1 = MiGetPfnEntry(PFN_FROM_PTE(PointerPte));
 
     /* Make sure we got a rounded address */
     Address = ALIGN_DOWN_POINTER_BY(Address, PAGE_SIZE);
 
-    /* Make sure we are locking the right things */
+    /* Make sure we are locking the right thing */
     ASSERT(MM_ANY_WS_LOCK_HELD(PsGetCurrentThread()));
-    MI_ASSERT_PFN_LOCK_HELD();
-
-    /* Make sure we are adding a paged-in address */
-    ASSERT(PointerPte->u.Hard.Valid == 1);
-    Pfn1 = MiGetPfnEntry(PFN_FROM_PTE(PointerPte));
 
     /* The Pfn must be an active one */
     ASSERT(Pfn1->u3.e1.PageLocation == ActiveAndValid);
@@ -957,11 +931,6 @@ MiInsertInWorkingSetList(
 
     /* Shared pages not supported yet */
     ASSERT(Pfn1->u1.WsIndex == 0);
-    ASSERT(Pfn1->u3.e1.PrototypePte == 0);
-
-    /* Nor are "ROS PFN" */
-    ASSERT(MI_IS_ROS_PFN(Pfn1) == FALSE);
-
     WsleEntry->u1.e1.Direct = 1;
 
     Pfn1->u1.WsIndex = WsIndex;
@@ -972,177 +941,6 @@ MiInsertInWorkingSetList(
         Vm->PeakWorkingSetSize = Vm->WorkingSetSize;
 }
 
-static
-void
-MiShrinkWorkingSet(_Inout_ PMMSUPPORT Vm)
-{
-    PMMWSL WsList = Vm->VmWorkingSetList;
-    ULONG LastValid = WsList->LastEntry;
-
-    while(WsList->Wsle[LastValid].u1.e1.Valid == 0)
-    {
-        LastValid--;
-    }
-
-    if (LastValid != WsList->LastEntry)
-    {
-        /* There was a hole behind us. Handle this */
-        PMMWSLE NextFree = &WsList->Wsle[LastValid + 1];
-        if (NextFree->u1.Free.PreviousFree == MMWSLE_PREVIOUS_FREE_INVALID)
-        {
-            /* This was actually our first free entry. */
-            ASSERT(WsList->FirstFree == LastValid + 1);
-            WsList->FirstFree = MMWSLE_NEXT_FREE_INVALID;
-        }
-        else
-        {
-            /* The previous one is now the last in the queue */
-            PMMWSLE PreviousFree = &WsList->Wsle[NextFree->u1.Free.PreviousFree];
-
-            ASSERT(PreviousFree->u1.Free.MustBeZero == 0);
-            PreviousFree->u1.Free.NextFree = MMWSLE_NEXT_FREE_INVALID;
-        }
-
-        /* Nuke everyone */
-        RtlZeroMemory(&WsList->Wsle[LastValid + 1], (WsList->LastEntry - LastValid) * sizeof(MMWSLE));
-        WsList->LastEntry = LastValid;
-    }
-
-    if (LastValid < WsList->FirstDynamic)
-    {
-        /* Do not mess around with the protected ones */
-        return;
-    }
-
-    /* See if we should shrink our array */
-    if (LastValid == (WsList->LastInitializedWsle - (PAGE_SIZE / sizeof(MMWSLE)) + 1))
-    {
-        PVOID WsleArrayQueue = ALIGN_DOWN_POINTER_BY(&WsList->Wsle[LastValid], PAGE_SIZE);
-        PEPROCESS Process = MmGetAddressSpaceOwner(Vm);
-
-        ASSERT(WsList->Wsle[WsList->LastEntry].u1.e1.VirtualPageNumber == ((ULONG_PTR)WsleArrayQueue) >> PAGE_SHIFT);
-
-        /* Kernel address space not supported yet */
-        ASSERT(Process != NULL);
-
-        /* Nuke the PTE. This will remove the virtual address from the working set */
-        MiDeletePte(MiAddressToPte(WsleArrayQueue), WsleArrayQueue, Process, NULL);
-    }
-}
-
-VOID
-NTAPI
-MiRemoveFromWorkingSetList(
-    _Inout_ PMMSUPPORT Vm,
-    _In_ PVOID Address)
-{
-    PMMWSL WsList = Vm->VmWorkingSetList;
-    ULONG WsIndex;
-    PMMWSLE WsleEntry;
-    PMMPTE PointerPte = MiAddressToPte(Address);
-    PMMPFN Pfn1;
-
-    /* Make sure we got a rounded address */
-    Address = ALIGN_DOWN_POINTER_BY(Address, PAGE_SIZE);
-
-    /* Make sure we are locking the right things */
-    ASSERT(MM_ANY_WS_LOCK_HELD(PsGetCurrentThread()));
-    MI_ASSERT_PFN_LOCK_HELD();
-
-    /* Make sure we are removing a paged-in address */
-    ASSERT(PointerPte->u.Hard.Valid == 1);
-    Pfn1 = MiGetPfnEntry(PFN_FROM_PTE(PointerPte));
-
-    /* The Pfn must be an active one */
-    ASSERT(Pfn1->u3.e1.PageLocation == ActiveAndValid);
-
-    WsIndex = Pfn1->u1.WsIndex;
-    WsleEntry = &Vm->VmWorkingSetList->Wsle[WsIndex];
-
-    /* Shared page not handled yet */
-    ASSERT(Pfn1->u3.e1.PrototypePte == 0);
-    ASSERT(WsleEntry->u1.e1.Direct == 1);
-    /* Nor are "ROS PFN" */
-    ASSERT(MI_IS_ROS_PFN(Pfn1) == FALSE);
-
-    /* Some sanity checks */
-    ASSERT(WsIndex >= WsList->FirstDynamic);
-    ASSERT(WsIndex <= WsList->LastEntry);
-    ASSERT(WsIndex <= WsList->LastInitializedWsle);
-    ASSERT(WsleEntry->u1.e1.Valid == 1);
-    ASSERT(WsleEntry->u1.e1.VirtualPageNumber == ((ULONG_PTR)Address) >> PAGE_SHIFT);
-
-    /* Let this go */
-    Pfn1->u1.WsIndex = 0;
-
-    /* Nuke it */
-    WsleEntry->u1.Long = 0;
-
-    /* Insert our entry into the free list */
-    if (WsIndex == WsList->LastEntry)
-    {
-        /* Let's shrink the active list */
-        WsList->LastEntry--;
-        MiShrinkWorkingSet(Vm);
-    }
-    else if (WsList->FirstFree > WsList->LastEntry)
-    {
-        /* We are the first free entry to be inserted */
-        WsList->FirstFree = WsIndex;
-        WsleEntry->u1.Free.PreviousFree = MMWSLE_PREVIOUS_FREE_INVALID;
-        WsleEntry->u1.Free.NextFree = MMWSLE_NEXT_FREE_INVALID;
-    }
-    else
-    {
-        /* Keep this sorted */
-        PMMWSLE NextFree = &WsList->Wsle[WsList->FirstFree];
-        PMMWSLE PreviousFree = NULL;
-
-        ASSERT(NextFree->u1.Free.MustBeZero == 0);
-
-        while (NextFree < WsleEntry)
-        {
-            PreviousFree = NextFree;
-            if (NextFree->u1.Free.NextFree != MMWSLE_NEXT_FREE_INVALID)
-            {
-                NextFree = &WsList->Wsle[NextFree->u1.Free.NextFree];
-                ASSERT(NextFree->u1.Free.MustBeZero == 0);
-            }
-            else
-            {
-                NextFree = NULL;
-                break;
-            }
-        }
-
-        ASSERT(PreviousFree || NextFree);
-
-        if (PreviousFree)
-        {
-            ASSERT((NextFree != NULL) || (PreviousFree->u1.Free.NextFree == MMWSLE_NEXT_FREE_INVALID));
-            PreviousFree->u1.Free.NextFree = WsIndex;
-            WsleEntry->u1.Free.PreviousFree = PreviousFree - WsList->Wsle;
-        }
-        else
-        {
-            WsleEntry->u1.Free.PreviousFree = MMWSLE_PREVIOUS_FREE_INVALID;
-            ASSERT(NextFree->u1.Free.PreviousFree == MMWSLE_PREVIOUS_FREE_INVALID);
-            WsList->FirstFree = WsIndex;
-        }
-
-        if (NextFree)
-        {
-            NextFree->u1.Free.PreviousFree = WsIndex;
-            WsleEntry->u1.Free.NextFree = NextFree - WsList->Wsle;
-        }
-        else
-        {
-            WsleEntry->u1.Free.NextFree = MMWSLE_NEXT_FREE_INVALID;
-        }
-    }
-
-    Vm->WorkingSetSize -= PAGE_SIZE;
-}
 
 VOID
 NTAPI
