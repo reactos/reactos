@@ -821,8 +821,9 @@ function(create_registry_hives)
     # Convert files to utf16le
     foreach(_file ${_inf_files})
         get_filename_component(_file_name ${_file} NAME_WE)
-        string(REPLACE ${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR} _converted_file "${_file}")
-        string(REPLACE ${_file_name} "${_file_name}_utf16" _converted_file ${_converted_file})
+        file(RELATIVE_PATH _subdir ${CMAKE_SOURCE_DIR} ${_file})
+        get_filename_component(_subdir ${_subdir}  DIRECTORY)
+        set(_converted_file ${CMAKE_BINARY_DIR}/${_subdir}/${_file_name}_utf16.inf)
         add_custom_command(OUTPUT ${_converted_file}
                            COMMAND native-utf16le ${_file} ${_converted_file}
                            DEPENDS native-utf16le ${_file})
