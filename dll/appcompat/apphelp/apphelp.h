@@ -24,6 +24,9 @@ extern "C" {
 #define SDB_DATABASE_MAIN_SHIM 0x80030000
 #define SDB_DATABASE_MAIN_DRIVERS 0x80040000
 
+// Shim database types
+#define SDB_DATABASE_SHIM 0x00010000
+
 typedef struct _SDB {
     PDB pdb;
     BOOL auto_loaded;
@@ -107,7 +110,7 @@ TAGID WINAPI SdbFindFirstNamedTag(PDB pdb, TAGID root, TAGID find, TAGID nametag
 DWORD WINAPI SdbQueryDataExTagID(PDB pdb, TAGID tiExe, LPCWSTR lpszDataName, LPDWORD lpdwDataType, LPVOID lpBuffer, LPDWORD lpcbBufferSize, TAGID *ptiData);
 BOOL WINAPI SdbGetDatabaseInformation(PDB pdb, PDB_INFORMATION information);
 VOID WINAPI SdbFreeDatabaseInformation(PDB_INFORMATION information);
-
+BOOL WINAPI SdbRegisterDatabaseEx(_In_ LPCWSTR pszDatabasePath, _In_ DWORD dwDatabaseType, _In_opt_ const PULONGLONG pTimeStamp);
 
 /* sdbread.c */
 BOOL WINAPI SdbpReadData(PDB pdb, PVOID dest, DWORD offset, DWORD num);
@@ -121,7 +124,7 @@ TAGID WINAPI SdbGetFirstChild(PDB pdb, TAGID parent);
 TAGID WINAPI SdbGetNextChild(PDB pdb, TAGID parent, TAGID prev_child);
 DWORD WINAPI SdbGetTagDataSize(PDB pdb, TAGID tagid);
 LPWSTR WINAPI SdbpGetString(PDB pdb, TAGID tagid, PDWORD size);
-
+BOOL WINAPI SdbReadBinaryTag(PDB pdb, TAGID tagid, PBYTE buffer, DWORD size);
 
 /* sdbfileattr.c*/
 BOOL WINAPI SdbGetFileAttributes(LPCWSTR path, PATTRINFO *attr_info_ret, LPDWORD attr_count);
