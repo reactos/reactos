@@ -193,7 +193,7 @@ static __inline LAYOUT_DATA *
 LayoutInit(HWND hwndParent, const LAYOUT_INFO *pLayouts, UINT cLayouts)
 {
     SIZE_T cb;
-    LAYOUT_DATA *pData = (LAYOUT_DATA *)SHAlloc(sizeof(LAYOUT_DATA));
+    LAYOUT_DATA *pData = (LAYOUT_DATA *)HeapAlloc(GetProcessHeap(), 0, sizeof(LAYOUT_DATA));
     if (pData == NULL)
     {
         assert(0);
@@ -202,11 +202,11 @@ LayoutInit(HWND hwndParent, const LAYOUT_INFO *pLayouts, UINT cLayouts)
 
     cb = cLayouts * sizeof(LAYOUT_INFO);
     pData->m_cLayouts = cLayouts;
-    pData->m_pLayouts = (LAYOUT_INFO *)SHAlloc(cb);
+    pData->m_pLayouts = (LAYOUT_INFO *)HeapAlloc(GetProcessHeap(), 0, cb);
     if (pData->m_pLayouts == NULL)
     {
         assert(0);
-        SHFree(pData);
+        HeapFree(GetProcessHeap(), 0, pData);
         return NULL;
     }
     memcpy(pData->m_pLayouts, pLayouts, cb);
@@ -227,6 +227,6 @@ LayoutDestroy(LAYOUT_DATA *pData)
 {
     if (!pData)
         return;
-    SHFree(pData->m_pLayouts);
-    SHFree(pData);
+    HeapFree(GetProcessHeap(), 0, pData->m_pLayouts);
+    HeapFree(GetProcessHeap(), 0, pData);
 }
