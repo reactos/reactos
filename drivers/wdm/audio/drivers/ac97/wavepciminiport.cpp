@@ -211,8 +211,7 @@ STDMETHODIMP CMiniportWaveICH::NewStream
     // Save the pointers.
     //
     *Stream = (PMINIPORTWAVEPCISTREAM)pWaveICHStream;
-    *DmaChannel_ = DmaChannel;
-
+    obj_AddRef(DmaChannel, (PVOID *)DmaChannel_);
 
     return STATUS_SUCCESS;
 }
