@@ -56,12 +56,6 @@ private:
     // both in CPU time and programming time.
     friend class CMiniportWaveICHStream;
 
-    //
-    // CMiniportWaveICH private variables
-    //
-    PDMA_ADAPTER        AdapterObject;
-
-
     /*************************************************************************
      * CMiniportWaveICH methods
      *************************************************************************

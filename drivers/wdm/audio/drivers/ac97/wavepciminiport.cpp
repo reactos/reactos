@@ -118,11 +118,6 @@ NTSTATUS CMiniportWaveICH::ProcessResources
     }
 
     //
-    // Get the DMA adapter.
-    //
-    AdapterObject = (PDMA_ADAPTER)DmaChannel->GetAdapterObject ();
-
-    //
     // On failure object is destroyed which cleans up.
     //
     return STATUS_SUCCESS;

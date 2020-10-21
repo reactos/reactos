@@ -84,21 +84,8 @@ CMiniportWaveICHStream::~CMiniportWaveICHStream ()
                    stBDList.nHead, stBDList.nTail,
                    stBDList.nBDEntries));
 
-
-
-    //
     // Release the scatter/gather table.
-    //
-    if (BDList)
-    {
-        Wave()->AdapterObject->DmaOperations->
-           FreeCommonBuffer (Wave()->AdapterObject,
-                             PAGE_SIZE,
-                             BDList_PhysAddr,
-                             (PVOID)BDList,
-                             FALSE);
-        BDList = NULL;
-    }
+    BDList_Free();
 }
 
 
