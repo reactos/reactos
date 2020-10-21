@@ -31,7 +31,9 @@ list(APPEND SOURCE
     toolsband.cpp
     travellog.cpp
     utility.cpp
-    CProgressDialog.cpp)
+    CProgressDialog.cpp
+    CUserAssist.cpp
+    CUserAssist.h)
 
 list(APPEND PCH_SKIP_SOURCE
     dllinstall.c)

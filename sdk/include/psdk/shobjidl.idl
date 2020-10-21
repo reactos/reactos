@@ -4768,4 +4768,40 @@ interface IItemNameLimits : IUnknown
         [out] int *piMaxNameLen);
 };
 
+/*****************************************************************************
+ * IUserAssist interface
+ */
+[
+    uuid(dd313e05-feff-11d1-8ecd-0000f87a470c),
+    object,
+    local,
+    pointer_default(unique)
+]
+interface IUserAssist : IUnknown
+{
+    HRESULT FireEvent(
+        GUID const *guid,
+        INT param1,
+        ULONG param2,
+        WPARAM wparam,
+        LPARAM lparam);
+
+    HRESULT QueryEvent(
+        GUID const *guid,
+        INT param,
+        WPARAM wparam,
+        LPARAM lparam,
+        PVOID ptr);
+
+    HRESULT SetEvent(
+        GUID const *guid,
+        INT param,
+        WPARAM wparam,
+        LPARAM lparam,
+        PVOID ptr);
+
+    HRESULT Enable(
+        BOOL bEnable);
+};
+
 #endif // __REACTOS__

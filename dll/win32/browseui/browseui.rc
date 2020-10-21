@@ -50,6 +50,7 @@ IDR_ACLCUSTOMMRU REGISTRY "res/custommru.rgs"
 IDR_TASKBARLIST REGISTRY "res/taskbarlist.rgs"
 IDR_FILESEARCHBAND REGISTRY "res/filesearchband.rgs"
 IDR_FINDFOLDER REGISTRY "res/findfolder.rgs"
+IDR_USERASSIST REGISTRY "res/userassist.rgs"
 
 #include <reactos/manifest_dll.rc>
 
