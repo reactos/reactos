@@ -139,8 +139,8 @@ KeBalanceSetManager(IN PVOID Context)
     KDPC ScanDpc;
     KTIMER PeriodTimer;
     LARGE_INTEGER DueTime;
-    KWAIT_BLOCK WaitBlockArray[1];
-    PVOID WaitObjects[1];
+    KWAIT_BLOCK WaitBlockArray[2];
+    PVOID WaitObjects[2];
     NTSTATUS Status;
 
     /* Set us at a low real-time priority level */
@@ -156,13 +156,13 @@ KeBalanceSetManager(IN PVOID Context)
 
     /* Setup the wait objects */
     WaitObjects[0] = &PeriodTimer;
-    //WaitObjects[1] = MmWorkingSetManagerEvent; // NO WS Management Yet!
+    WaitObjects[1] = &MmWorkingSetManagerEvent;
 
     /* Start wait loop */
     do
     {
         /* Wait on our objects */
-        Status = KeWaitForMultipleObjects(1,
+        Status = KeWaitForMultipleObjects(2,
                                           WaitObjects,
                                           WaitAny,
                                           Executive,
@@ -179,7 +179,7 @@ KeBalanceSetManager(IN PVOID Context)
                 //ExAdjustLookasideDepth();
 
                 /* Call the working set manager */
-                //MmWorkingSetManager();
+                MmWorkingSetManager();
 
                 /* FIXME: Outswap stacks */
 
@@ -190,7 +190,7 @@ KeBalanceSetManager(IN PVOID Context)
             case STATUS_WAIT_1:
 
                 /* Call the working set manager */
-                //MmWorkingSetManager();
+                MmWorkingSetManager();
                 break;
 
             /* Anything else */

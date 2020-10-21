@@ -181,6 +181,9 @@ MmInitBsmThread(VOID)
     OBJECT_ATTRIBUTES ObjectAttributes;
     HANDLE ThreadHandle;
 
+    /* Initialize the WSM event */
+    KeInitializeEvent(&MmWorkingSetManagerEvent, SynchronizationEvent, FALSE);
+
     /* Create the thread */
     InitializeObjectAttributes(&ObjectAttributes, NULL, 0, NULL, NULL);
     Status = PsCreateSystemThread(&ThreadHandle,

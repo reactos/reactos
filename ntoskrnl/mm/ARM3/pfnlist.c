@@ -108,9 +108,12 @@ MiDecrementAvailablePages(
     MmAvailablePages--;
     if (MmAvailablePages < MmMinimumFreePages)
     {
-        /* FIXME: Should wake up the MPW and working set manager, if we had one */
+        /* FIXME: Should wake up the MPW, if we had one */
 
         DPRINT1("Running low on pages: %lu remaining\n", MmAvailablePages);
+
+        /* Wake up the Working set manager */
+        KeSetEvent(&MmWorkingSetManagerEvent, IO_NO_INCREMENT, FALSE);
 
         /* Call RosMm and see if it can release any pages for us */
         MmRebalanceMemoryConsumers();
