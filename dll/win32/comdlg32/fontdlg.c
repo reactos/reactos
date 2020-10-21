@@ -1186,6 +1186,7 @@ static LRESULT CFn_WMPaint(HWND hDlg, WPARAM wParam, LPARAM lParam, const CHOOSE
         /* Draw the sample text itself */
         hOrigFont = SelectObject( hdc, CreateFontIndirectW( &lf ) );
         SetTextColor( hdc, lpcf->rgbColors );
+        SetBkMode( hdc, TRANSPARENT );
 
         DrawTextW( hdc,
                 sample_lang_text[CHARSET_ORDER[lpcf->lpLogFont->lfCharSet]],
