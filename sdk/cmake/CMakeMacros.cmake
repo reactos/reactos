@@ -567,6 +567,9 @@ function(set_module_type MODULE TYPE)
         message(FATAL_ERROR "Unknown type ${TYPE} for module ${MODULE}")
     endif()
 
+    # Set our target property
+    set_target_properties(${MODULE} PROPERTIES REACTOS_MODULE_TYPE ${TYPE})
+
     if(DEFINED __subsystem)
         set_subsystem(${MODULE} ${__subsystem})
     endif()

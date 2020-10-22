@@ -115,6 +115,13 @@ else()
     set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE NEVER)
 
     # Add our own target properties
+    # General module definitions
+    define_property(TARGET PROPERTY REACTOS_MODULE_TYPE
+        BRIEF_DOCS "The type of this module"
+        FULL_DOCS [[
+The type of this module.
+One of "nativecui", "nativedll", "kernelmodedriver", "wdmdriver", "kerneldll", "win32cui", "win32gui", "win32dll", "win32ocx", "cpl" or "module"]])
+
     # C++
     define_property(TARGET PROPERTY WITH_CXX_EXCEPTIONS
         BRIEF_DOCS "Enable C++ exceptions on this target"
