@@ -126,9 +126,6 @@ NTSTATUS CMiniportWaveCyclicStream::ResizeBuffer(void)
     DWORD bufferSize = DataFormat->WaveFormatEx.nBlockAlign * nSamples;
     DWORD totalSize = bufferSize * NBUFFERS;
 
-    DbgPrint("CMiniportWaveCyclicStream: %d, %d\n",
-        nSamples, bufferSize);
-
     // allocate buffer
     PDMACHANNEL DmaChannel = Miniport->DmaChannel;
     DWORD allocSize = DmaChannel->AllocatedBufferSize();
@@ -213,8 +210,6 @@ STDMETHODIMP_(NTSTATUS) CMiniportWaveCyclicStream::GetPosition
     nCurrentIndex = GetBuffPos((DWORD*)Position);
     nCurrentIndex %= NBUFFERS;
     *Position += nCurrentIndex * m_bufferSize;
-
-    DbgPrint("%d, %d, %d\n", nCurrentIndex, m_bufferSize, *Position);
 
     return STATUS_SUCCESS;
 }

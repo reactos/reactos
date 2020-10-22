@@ -457,8 +457,6 @@ STDMETHODIMP_(NTSTATUS) CMiniportWaveICHStream::RevokeMappings
     _Out_ PULONG    MappingsRevoked
 )
 {
-    DbgPrint("[CMiniportWaveICHStream::RevokeMappings]\n");
-
     ASSERT (MappingsRevoked);
 
     KIRQL   OldIrql;

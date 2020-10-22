@@ -144,10 +144,6 @@ STDMETHODIMP CMiniportWaveCyclic::NewStream
 
     DOUT (DBG_PRINT, ("[CMiniportWaveCyclic::NewStream]"));
 
-       DbgPrint("@@@@ CMiniportStream::NewStream: %X, %X\n", DmaChannel, *(int*)DmaChannel);
-
-
-
     //
     // Check parameters.
     //
@@ -192,10 +188,6 @@ STDMETHODIMP CMiniportWaveCyclic::NewStream
 
         return ntStatus;
     }
-
-       DbgPrint("@@@@ CMiniportStream::NewStream2: %X, %X\n", DmaChannel, *(int*)DmaChannel);
-
-
 
     //
     // Save the pointers.
