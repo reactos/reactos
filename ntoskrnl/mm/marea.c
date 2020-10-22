@@ -588,9 +588,6 @@ MmDeleteProcessAddressSpace(PEPROCESS Process)
 #endif
     MmLockAddressSpace(&Process->Vm);
 
-    /* There should not be any memory areas left! */
-    ASSERT(Process->Vm.WorkingSetExpansionLinks.Flink == NULL);
-
 #if (_MI_PAGING_LEVELS == 2)
     {
         KIRQL OldIrql;
