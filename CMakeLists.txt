@@ -95,9 +95,7 @@ if(NOT CMAKE_CROSSCOMPILING)
         list(APPEND NATIVE_TARGETS rsym pefixup)
     endif()
 
-    export(TARGETS ${NATIVE_TARGETS} FILE ${CMAKE_BINARY_DIR}/ImportExecutables.cmake NAMESPACE native- )
-    configure_file(sdk/cmake/host-tools.in ${CMAKE_BINARY_DIR}/TargetList.cmake)
-
+    install(TARGETS ${NATIVE_TARGETS})
 else()
     # Add host tools target
     include(sdk/cmake/host-tools.cmake)

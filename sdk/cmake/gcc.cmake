@@ -213,7 +213,7 @@ elseif(NO_ROSSYM)
     set(CMAKE_RC_CREATE_SHARED_LIBRARY "<CMAKE_C_COMPILER> ${CMAKE_C_FLAGS} <CMAKE_SHARED_LIBRARY_C_FLAGS> <LINK_FLAGS> <CMAKE_SHARED_LIBRARY_CREATE_C_FLAGS> -o <TARGET> <OBJECTS> <LINK_LIBRARIES>")
 else()
     # Normal rsym build
-    get_target_property(RSYM native-rsym IMPORTED_LOCATION_NOCONFIG)
+    get_target_property(RSYM native-rsym IMPORTED_LOCATION)
 
     set(CMAKE_C_LINK_EXECUTABLE
         "<CMAKE_C_COMPILER> ${CMAKE_C_FLAGS} <CMAKE_C_LINK_FLAGS> <LINK_FLAGS> <OBJECTS> -o <TARGET> <LINK_LIBRARIES>"
@@ -309,11 +309,10 @@ if(NOT ARCH STREQUAL "i386")
 endif()
 
 function(fixup_load_config _target)
-    get_target_property(PEFIXUP native-pefixup IMPORTED_LOCATION_NOCONFIG)
     add_custom_command(TARGET ${_target} POST_BUILD
-        COMMAND "${PEFIXUP}"
-                "$<TARGET_FILE:${_target}>"
-        COMMENT "Patching in LOAD_CONFIG")
+        COMMAND native-pefixup "$<TARGET_FILE:${_target}>"
+        COMMENT "Patching in LOAD_CONFIG"
+        DEPENDS native-pefixup)
 endfunction()
 
 function(generate_import_lib _libname _dllname _spec_file)
