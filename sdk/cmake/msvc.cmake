@@ -291,7 +291,7 @@ endfunction()
 
 function(generate_import_lib _libname _dllname _spec_file)
 
-    set(_def_file ${CMAKE_CURRENT_BINARY_DIR}/${_libname}_exp.def)
+    set(_def_file ${CMAKE_CURRENT_BINARY_DIR}/${_libname}_implib.def)
     set(_asm_stubs_file ${CMAKE_CURRENT_BINARY_DIR}/${_libname}_stubs.asm)
 
     # Generate the asm stub file and the def file for import library
