@@ -111,6 +111,7 @@ DWORD WINAPI SdbQueryDataExTagID(PDB pdb, TAGID tiExe, LPCWSTR lpszDataName, LPD
 BOOL WINAPI SdbGetDatabaseInformation(PDB pdb, PDB_INFORMATION information);
 VOID WINAPI SdbFreeDatabaseInformation(PDB_INFORMATION information);
 BOOL WINAPI SdbRegisterDatabaseEx(_In_ LPCWSTR pszDatabasePath, _In_ DWORD dwDatabaseType, _In_opt_ const PULONGLONG pTimeStamp);
+BOOL WINAPI SdbUnregisterDatabase(_In_ const GUID *pguidDB);
 
 /* sdbread.c */
 BOOL WINAPI SdbpReadData(PDB pdb, PVOID dest, DWORD offset, DWORD num);
