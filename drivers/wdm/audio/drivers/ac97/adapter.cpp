@@ -388,10 +388,6 @@ NTSTATUS GZCALL StartDevice
                                          NULL,
                                          &unknownWave);
 #else
-            //
-            // If creation of the RT port failed we can fall back to the WavePCI
-            // or WaveCyc port of portcls. In this case, we try the WavePCI port.
-            //
             ntStatus = InstallSubdevice (DeviceObject,
                                          Irp,
                                          L"Wave",
