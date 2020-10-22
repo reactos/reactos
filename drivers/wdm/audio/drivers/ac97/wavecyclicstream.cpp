@@ -13,7 +13,12 @@
 #define BUFFERTIME 10
 #define NBUFFERS 4
 
+#ifdef _MSC_VER
+#pragma code_seg("PAGE")
+#endif
+
 IMP_CMiniportStream_QueryInterface(CMiniportWaveCyclicStream, IMiniportWavePciStream);
+IMP_CMiniport_SetState(CMiniportWaveCyclicStream);
 
 /*****************************************************************************
  * General Info
@@ -25,9 +30,6 @@ IMP_CMiniportStream_QueryInterface(CMiniportWaveCyclicStream, IMiniportWavePciSt
  * to acquire the spin lock!
  */
 
-#ifdef _MSC_VER
-#pragma code_seg("PAGE")
-#endif
 /*****************************************************************************
  * CreateMiniportWaveCyclicStream
  *****************************************************************************
@@ -175,7 +177,6 @@ STDMETHODIMP_(ULONG) CMiniportWaveCyclicStream::SetNotificationFreq
 #pragma code_seg()
 #endif
 
-IMP_CMiniport_SetState(CMiniportWaveCyclicStream);
 IMP_CMiniport_NormalizePhysicalPosition(CMiniportWaveCyclicStream);
 
 STDMETHODIMP_(void) CMiniportWaveCyclicStream::Silence
