@@ -880,15 +880,5 @@ void CMiniportWaveICHStream::InterruptServiceRoutine()
     //
     // Request DPC service for PCM out.
     //
-    if ((Wave()->Port) && (ServiceGroup))
-    {
-        Wave()->Port->Notify (ServiceGroup);
-    }
-    else
-    {
-        //
-        // Bad, bad.  Shouldn't print in an ISR!
-        //
-        DOUT (DBG_ERROR, ("WaveOut INT fired but no stream object there."));
-    }
+    Miniport->Port->Notify (ServiceGroup);
 }

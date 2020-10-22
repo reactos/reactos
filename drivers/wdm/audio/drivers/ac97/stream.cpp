@@ -166,11 +166,6 @@ NTSTATUS CMiniportStream::Init
     m_PowerState = PowerDeviceD0;
 
     //
-    // Store the stream pointer, it is used by the ISR.
-    //
-    Miniport->Streams[Pin/2] = this;
-
-    //
     // Call miniport specific init routine
     //
     ntStatus = Init_();
@@ -188,6 +183,11 @@ NTSTATUS CMiniportStream::Init
     // Pass the ServiceGroup pointer to portcls.
     //
     obj_AddRef(ServiceGroup, (PVOID *)ServiceGroup_);
+
+    //
+    // Store the stream pointer, it is used by the ISR.
+    //
+    Miniport->Streams[Pin/2] = this;
 
     return STATUS_SUCCESS;
 }

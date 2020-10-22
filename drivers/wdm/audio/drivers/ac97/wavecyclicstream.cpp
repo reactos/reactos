@@ -220,23 +220,11 @@ void CMiniportWaveCyclicStream::InterruptServiceRoutine()
     //
     // Update the LVI so that we cycle around in the scatter gather list.
     //
-
-
     UCHAR CIV = ReadReg8(X_CIV);
     WriteReg8(X_LVI, (UCHAR)((CIV-1) & BDL_MASK));
 
     //
     // Request DPC service for PCM out.
     //
-    if ((Wave()->Port) && (ServiceGroup))
-    {
-        Wave()->Port->Notify (ServiceGroup);
-    }
-    else
-    {
-        //
-        // Bad, bad.  Shouldn't print in an ISR!
-        //
-        DOUT (DBG_ERROR, ("WaveOut INT fired but no stream object there."));
-    }
+    Miniport->Port->Notify (ServiceGroup);
 }
