@@ -2637,13 +2637,50 @@ MiDecommitPages(IN PVOID StartingAddress,
                     }
                     ValidPteList[PteCount++] = PointerPte;
                 }
+                else if (PteContents.u.Soft.Transition)
+                {
+                    PFN_NUMBER Page;
+                    PMMPFN Pfn1;
+                    KIRQL OldIrql = MiAcquirePfnLock();
+
+                    /* Get the PFN entry */
+                    Page = PteContents.u.Trans.PageFrameNumber;
+                    Pfn1 = MiGetPfnEntry(Page);
+
+                    DPRINT("Pte %p is transitional!\n", PointerPte);
+
+                    /* Make sure the saved PTE address is valid */
+                    ASSERT((PMMPTE)((ULONG_PTR)Pfn1->PteAddress & ~0x1) == PointerPte);
+
+                    ASSERT(Pfn1->u3.e1.PrototypePte == 0);
+
+                    /* There shouldn't be any reference left. */
+                    ASSERT(Pfn1->u3.e2.ReferenceCount == 0);
+                    /* And it should be in standby or modified list */
+                    ASSERT((Pfn1->u3.e1.PageLocation == ModifiedPageList) ||
+                        (Pfn1->u3.e1.PageLocation == StandbyPageList));
+
+                    /* Drop reference on the page table */
+                    MiDecrementShareCount(MiGetPfnEntry(Pfn1->u4.PteFrame), Pfn1->u4.PteFrame);
+
+                    /* Unlink it and set its reference count to one */
+                    MiUnlinkPageFromList(Pfn1);
+                    Pfn1->u3.e2.ReferenceCount++;
+
+                    /* This will put it back in free list and clean properly up */
+                    MI_SET_PFN_DELETED(Pfn1);
+                    MiDecrementReferenceCount(Pfn1, Page);
+
+                    MiReleasePfnLock(OldIrql);
+
+                    MI_WRITE_INVALID_PTE(PointerPte, MmDecommittedPte);
+                }
                 else
                 {
                     //
                     // We do not support any of these other scenarios at the moment
                     //
                     ASSERT(PteContents.u.Soft.Prototype == 0);
-                    ASSERT(PteContents.u.Soft.Transition == 0);
                     ASSERT(PteContents.u.Soft.PageFileHigh == 0);
 
                     //

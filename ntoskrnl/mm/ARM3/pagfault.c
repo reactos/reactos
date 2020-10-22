@@ -990,7 +990,7 @@ MiResolveTransitionFault(IN BOOLEAN StoreInstruction,
     DPRINT("Transition fault on 0x%p with PTE 0x%p in process %s\n",
             FaultingAddress, PointerPte, CurrentProcess->ImageFileName);
 
-    /* Windowss does this check */
+    /* Windows does this check */
     ASSERT(*InPageBlock == NULL);
 
     /* ARM3 doesn't support this path */
@@ -2171,8 +2171,8 @@ UserFault:
     /* Check if the PDE is invalid */
     if (PointerPde->u.Hard.Valid == 0)
     {
-        /* Right now, we only handle scenarios where the PDE is totally empty */
-        ASSERT(PointerPde->u.Long == 0);
+        /* Right now, we only handle scenarios where the PDE is totally empty or transitional */
+        ASSERT((PointerPde->u.Long == 0) || (PointerPde->u.Soft.Transition == 1));
 
         /* And go dispatch the fault on the PDE. This should handle the demand-zero */
 #if MI_TRACE_PFNS
@@ -2198,12 +2198,57 @@ UserFault:
             return Status;
         }
 
-        /* Resolve a demand zero fault */
-        MiResolveDemandZeroFault(PointerPte,
-                                 PointerPde,
-                                 MM_EXECUTE_READWRITE,
-                                 CurrentProcess,
-                                 MM_NOIRQL);
+        if (PointerPde->u.Soft.Transition == 1)
+        {
+            PKEVENT* InPageBlock = NULL;
+            PKEVENT PreviousPageEvent;
+            KEVENT CurrentPageEvent;
+
+            /* Lock the PFN database */
+            LockIrql = MiAcquirePfnLock();
+
+            ASSERT(PointerPde->u.Trans.Protection == MM_READWRITE);
+            /* Resolve the soft fault */
+            Status = MiResolveTransitionFault(TRUE,
+                                              PointerPte,
+                                              PointerPde,
+                                              CurrentProcess,
+                                              LockIrql,
+                                              &InPageBlock);
+            ASSERT(NT_SUCCESS(Status));
+
+            if (InPageBlock != NULL)
+            {
+                /* Another thread is reading or writing this page. Put us into the waiting queue. */
+                KeInitializeEvent(&CurrentPageEvent, NotificationEvent, FALSE);
+                PreviousPageEvent = *InPageBlock;
+                *InPageBlock = &CurrentPageEvent;
+            }
+
+            /* And now release the lock and leave*/
+            MiReleasePfnLock(LockIrql);
+
+            if (InPageBlock != NULL)
+            {
+                KeWaitForSingleObject(&CurrentPageEvent, WrPageIn, KernelMode, FALSE, NULL);
+
+                /* Let's the chain go on */
+                if (PreviousPageEvent)
+                {
+                    KeSetEvent(PreviousPageEvent, IO_NO_INCREMENT, FALSE);
+                }
+            }
+        }
+        else
+        {
+            /* Resolve a demand zero fault */
+            MiResolveDemandZeroFault(PointerPte,
+                                     PointerPde,
+                                     MM_READWRITE,
+                                     CurrentProcess,
+                                     MM_NOIRQL);
+        }
+
 #if MI_TRACE_PFNS
         UserPdeFault = FALSE;
 #endif
@@ -2383,7 +2428,6 @@ UserFault:
                 TempPte.u.Soft.Protection = ProtectionCode;
                 MI_WRITE_INVALID_PTE(PointerPte, TempPte);
             }
-            ProtectionCode = PointerPte->u.Soft.Protection;
 
             /* Lock the PFN database since we're going to grab a page */
             OldIrql = MiAcquirePfnLock();
