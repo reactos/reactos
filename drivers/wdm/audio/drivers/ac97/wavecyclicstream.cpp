@@ -185,6 +185,7 @@ STDMETHODIMP_(void) CMiniportWaveCyclicStream::Silence
     _In_ ULONG ByteCount
 )
 {
+    memset(Buffer, 0, ByteCount);
 }
 
 /*****************************************************************************
