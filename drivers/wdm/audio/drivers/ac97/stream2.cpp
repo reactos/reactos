@@ -75,7 +75,7 @@ void CMiniportStream::PowerChangeNotify_
 #endif
 
 /*****************************************************************************
- * CMiniportWaveCYCLICStream::NormalizePhysicalPosition
+ * CMiniportStream::NormalizePhysicalPosition
  *****************************************************************************
  * Given a physical position based on the actual number of bytes transferred,
  * this function converts the position to a time-based value of 100ns units.
@@ -104,7 +104,7 @@ NTSTATUS CMiniportStream::NormalizePhysicalPosition
 }
 
 /*****************************************************************************
- * CAC97MiniportWaveRTStream::SetState
+ * CMiniportStream::SetState
  *****************************************************************************
  * This routine sets/changes the DMA engine state to play, stop, or pause
  */
@@ -113,7 +113,7 @@ NTSTATUS CMiniportStream::SetState
     _In_  KSSTATE State
 )
 {
-    DOUT (DBG_PRINT, ("[CAC97MiniportWaveRTStream::SetState]"));
+    DOUT (DBG_PRINT, ("[CMiniportStream::SetState]"));
     DOUT (DBG_STREAM, ("SetState to %d", State));
 
 

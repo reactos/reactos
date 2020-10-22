@@ -5,7 +5,7 @@
 #include "miniport.h"
 
 /*****************************************************************************
- * CAC97MiniportWaveRTStream::NonDelegatingQueryInterface
+ * CMiniportStream::NonDelegatingQueryInterface
  *****************************************************************************
  * Obtains an interface.  This function works just like a COM QueryInterface
  * call and is used if the object is not being aggregated.
@@ -493,7 +493,7 @@ STDMETHODIMP_(NTSTATUS) CMiniportStream::SetFormat
     ULONG   TempRate;
     DWORD   dwControlReg;
 
-    DOUT (DBG_PRINT, ("[CAC97MiniportWaveRTStream::SetFormat]"));
+    DOUT (DBG_PRINT, ("[CMiniportStream::SetFormat]"));
 
     //
     // Change sample rate when we are in the stop or pause states - not
