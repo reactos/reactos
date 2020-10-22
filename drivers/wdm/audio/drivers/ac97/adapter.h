@@ -52,6 +52,14 @@ extern NTSTATUS CreateAC97MiniportWavePCI
     IN      POOL_TYPE   PoolType
 );
 
+extern NTSTATUS CreateAC97MiniportWaveCyclic
+(
+    OUT     PUNKNOWN *  Unknown,
+    IN      REFCLSID,
+    IN      PUNKNOWN    UnknownOuter    OPTIONAL,
+    IN      POOL_TYPE   PoolType
+);
+
 extern NTSTATUS CreateAC97MiniportTopology
 (
     OUT     PUNKNOWN *  Unknown,

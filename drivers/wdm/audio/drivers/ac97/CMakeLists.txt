@@ -12,7 +12,10 @@ list(APPEND SOURCE
     rtminiport.cpp
     rtstream.cpp
     wavepciminiport.cpp
-    wavepcistream.cpp)
+    wavepcistream.cpp
+    wavecyclicminiport.cpp
+    wavecyclicstream.cpp
+)
 
 add_library(ac97smpl MODULE
     ${SOURCE}

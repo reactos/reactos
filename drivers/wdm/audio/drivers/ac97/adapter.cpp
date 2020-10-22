@@ -375,6 +375,23 @@ NTSTATUS GZCALL StartDevice
             // If creation of the RT port failed we can fall back to the WavePCI
             // or WaveCyc port of portcls. In this case, we try the WavePCI port.
             //
+#if 1
+            ntStatus = InstallSubdevice (DeviceObject,
+                                         Irp,
+                                         L"Wave",
+                                         CLSID_PortWaveCyclic,
+                                         CLSID_PortWaveCyclic,   // not used
+                                         CreateAC97MiniportWaveCyclic,
+                                         pAdapterCommon,
+                                         ResourceList,
+                                         IID_IPortWaveCyclic,
+                                         NULL,
+                                         &unknownWave);
+#else
+            //
+            // If creation of the RT port failed we can fall back to the WavePCI
+            // or WaveCyc port of portcls. In this case, we try the WavePCI port.
+            //
             ntStatus = InstallSubdevice (DeviceObject,
                                          Irp,
                                          L"Wave",
@@ -386,6 +403,9 @@ NTSTATUS GZCALL StartDevice
                                          IID_IPortWavePci,
                                          NULL,
                                          &unknownWave);
+#endif
+
+
 #if (NTDDI_VERSION >= NTDDI_VISTA)
         }
 #endif
@@ -509,7 +529,7 @@ NTSTATUS GZCALL StartDevice
  * This function is called by the operating system when the device is added.
  * All adapter drivers can use this code without change.
  */
-// disable prefast warning 28152 because 
+// disable prefast warning 28152 because
 // DO_DEVICE_INITIALIZING is cleared in PcAddAdapterDevice
 #ifdef _MSC_VER
 #pragma warning(disable:28152)
