@@ -4,6 +4,11 @@
 #include "shared.h"
 #include "miniport.h"
 
+#ifdef _MSC_VER
+#pragma code_seg("PAGE")
+#endif
+
+
 /*****************************************************************************
  * CMiniportStream::NonDelegatingQueryInterface
  *****************************************************************************
@@ -233,134 +238,6 @@ CMiniportStream::~CMiniportStream()
     obj_Release((PVOID *)&PortStream);
 }
 
-UCHAR CMiniportStream::UpdateDMA (void)
-{
-    // get X_CR register value
-    UCHAR RegisterValue = ReadReg8(X_CR);
-    UCHAR RegisterValueNew = RegisterValue;
-    if(DMAEngineState == DMA_ENGINE_ON)
-        RegisterValueNew |= CR_RPBM;
-
-    // write X_CR register value
-    if(RegisterValue != RegisterValueNew)
-        WriteReg8(X_CR, RegisterValueNew);
-    return RegisterValueNew;
-}
-
-
-int CMiniportStream::GetBuffPos
-(
-    DWORD* buffPos
-)
-{
-    int nCurrentIndex;
-    DWORD RegisterX_PICB;
-
-    if (DMAEngineState == DMA_ENGINE_OFF)
-    {
-        *buffPos = 0;
-        return 0;
-    }
-
-    //
-    // Repeat this until we get the same reading twice.  This will prevent
-    // jumps when we are near the end of the buffer.
-    //
-    do
-    {
-        nCurrentIndex = ReadReg8(X_CIV);
-
-        RegisterX_PICB = ReadReg16 (X_PICB);
-    } while (nCurrentIndex != (int)ReadReg8(X_CIV));
-
-    *buffPos = (BDList[nCurrentIndex].wLength - RegisterX_PICB) * 2;
-    return nCurrentIndex;
-}
-
-/*****************************************************************************
- * CMiniportStream::ResetDMA
- *****************************************************************************
- * This routine resets the Run/Pause bit in the control register. In addition, it
- * resets all DMA registers contents.
-
- */
-void CMiniportStream::ResetDMA (void)
-{
-    DOUT (DBG_PRINT, ("ResetDMA"));
-
-    //
-    // Turn off DMA engine (or make sure it's turned off)
-    //
-    DMAEngineState = DMA_ENGINE_OFF;
-    UCHAR RegisterValue = UpdateDMA();
-
-    //
-    // Reset all register contents.
-    //
-    RegisterValue |= CR_RR;
-    WriteReg8(X_CR, RegisterValue);
-
-    //
-    // Wait until reset condition is cleared by HW; should not take long.
-    //
-    ULONG count = 0;
-    BOOL bTimedOut = TRUE;
-    do
-    {
-        if (!(ReadReg8(X_CR) & CR_RR))
-        {
-            bTimedOut = FALSE;
-            break;
-        }
-        KeStallExecutionProcessor (1);
-    } while (count++ < 10);
-
-    if (bTimedOut)
-    {
-        DOUT (DBG_ERROR, ("ResetDMA TIMEOUT!!"));
-    }
-
-    //
-    // We only want interrupts upon completion.
-    //
-    RegisterValue = CR_IOCE | CR_LVBIE;
-    WriteReg8(X_CR,  RegisterValue);
-
-    //
-    // Setup the Buffer Descriptor Base Address (BDBA) register.
-    //
-    WriteReg32(0,  BDList_PhysAddr.LowPart);
-}
-
-/*****************************************************************************
- * CMiniportStream::ResumeDMA
- *****************************************************************************
- * This routine sets the Run/Pause bit for the particular DMA engine to resume
- * it after it's been paused. This assumes that DMA registers content have
- * been preserved.
- */
-void CMiniportStream::ResumeDMA (ULONG state)
-{
-    DOUT (DBG_PRINT, ("ResumeDMA"));
-
-    DMAEngineState |= state;
-    UpdateDMA();
-}
-
-/*****************************************************************************
- * CMiniportStream::PauseDMA
- *****************************************************************************
- * This routine pauses a hardware stream by reseting the Run/Pause bit in the
- * control registers, leaving DMA registers content intact so that the stream
- * can later be resumed.
- */
-void CMiniportStream::PauseDMA (void)
-{
-    DOUT (DBG_PRINT, ("PauseDMA"));
-
-    DMAEngineState &= DMA_ENGINE_PAUSE;
-    UpdateDMA();
-}
 
 /*****************************************************************************
  * CMiniportStream::SetContentId
@@ -470,7 +347,6 @@ void CMiniportStream::PowerChangeNotify
                       (ULONG)m_PowerState - (ULONG)PowerDeviceD0));
 
 }
-
 
 /*
  *****************************************************************************
@@ -608,6 +484,144 @@ STDMETHODIMP_(NTSTATUS) CMiniportStream::SetFormat
     }
 
     return ntStatus;
+}
+
+/*****************************************************************************
+ * Non paged code begins here
+ *****************************************************************************
+ */
+
+#ifdef _MSC_VER
+#pragma code_seg()
+#endif
+
+UCHAR CMiniportStream::UpdateDMA (void)
+{
+    // get X_CR register value
+    UCHAR RegisterValue = ReadReg8(X_CR);
+    UCHAR RegisterValueNew = RegisterValue;
+    if(DMAEngineState == DMA_ENGINE_ON)
+        RegisterValueNew |= CR_RPBM;
+
+    // write X_CR register value
+    if(RegisterValue != RegisterValueNew)
+        WriteReg8(X_CR, RegisterValueNew);
+    return RegisterValueNew;
+}
+
+
+int CMiniportStream::GetBuffPos
+(
+    DWORD* buffPos
+)
+{
+    int nCurrentIndex;
+    DWORD RegisterX_PICB;
+
+    if (DMAEngineState == DMA_ENGINE_OFF)
+    {
+        *buffPos = 0;
+        return 0;
+    }
+
+    //
+    // Repeat this until we get the same reading twice.  This will prevent
+    // jumps when we are near the end of the buffer.
+    //
+    do
+    {
+        nCurrentIndex = ReadReg8(X_CIV);
+
+        RegisterX_PICB = ReadReg16 (X_PICB);
+    } while (nCurrentIndex != (int)ReadReg8(X_CIV));
+
+    *buffPos = (BDList[nCurrentIndex].wLength - RegisterX_PICB) * 2;
+    return nCurrentIndex;
+}
+
+/*****************************************************************************
+ * CMiniportStream::ResetDMA
+ *****************************************************************************
+ * This routine resets the Run/Pause bit in the control register. In addition, it
+ * resets all DMA registers contents.
+
+ */
+void CMiniportStream::ResetDMA (void)
+{
+    DOUT (DBG_PRINT, ("ResetDMA"));
+
+    //
+    // Turn off DMA engine (or make sure it's turned off)
+    //
+    DMAEngineState = DMA_ENGINE_OFF;
+    UCHAR RegisterValue = UpdateDMA();
+
+    //
+    // Reset all register contents.
+    //
+    RegisterValue |= CR_RR;
+    WriteReg8(X_CR, RegisterValue);
+
+    //
+    // Wait until reset condition is cleared by HW; should not take long.
+    //
+    ULONG count = 0;
+    BOOL bTimedOut = TRUE;
+    do
+    {
+        if (!(ReadReg8(X_CR) & CR_RR))
+        {
+            bTimedOut = FALSE;
+            break;
+        }
+        KeStallExecutionProcessor (1);
+    } while (count++ < 10);
+
+    if (bTimedOut)
+    {
+        DOUT (DBG_ERROR, ("ResetDMA TIMEOUT!!"));
+    }
+
+    //
+    // We only want interrupts upon completion.
+    //
+    RegisterValue = CR_IOCE | CR_LVBIE;
+    WriteReg8(X_CR,  RegisterValue);
+
+    //
+    // Setup the Buffer Descriptor Base Address (BDBA) register.
+    //
+    WriteReg32(0,  BDList_PhysAddr.LowPart);
+}
+
+/*****************************************************************************
+ * CMiniportStream::ResumeDMA
+ *****************************************************************************
+ * This routine sets the Run/Pause bit for the particular DMA engine to resume
+ * it after it's been paused. This assumes that DMA registers content have
+ * been preserved.
+ */
+void CMiniportStream::ResumeDMA (ULONG state)
+{
+    DOUT (DBG_PRINT, ("ResumeDMA"));
+
+    DMAEngineState |= state;
+    UpdateDMA();
+}
+
+/*****************************************************************************
+ * CMiniportStream::PauseDMA
+ *****************************************************************************
+ * This routine pauses a hardware stream by reseting the Run/Pause bit in the
+ * control registers, leaving DMA registers content intact so that the stream
+ * can later be resumed.
+ */
+void CMiniportStream::PauseDMA (void)
+{
+    DOUT (DBG_PRINT, ("PauseDMA"));
+
+    DMAEngineState &= DMA_ENGINE_PAUSE;
+    UpdateDMA();
 }
 
 

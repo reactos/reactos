@@ -4,6 +4,10 @@
 #include "shared.h"
 #include "miniport.h"
 
+#ifdef _MSC_VER
+#pragma code_seg("PAGE")
+#endif
+
 PVOID CMiniportStream::BDList_Alloc()
 {
     // get DMA_ADAPTER object
@@ -66,44 +70,6 @@ void CMiniportStream::PowerChangeNotify_
 
 
 /*****************************************************************************
- * Non paged code begins here
- *****************************************************************************
- */
-
-#ifdef _MSC_VER
-#pragma code_seg()
-#endif
-
-/*****************************************************************************
- * CMiniportStream::NormalizePhysicalPosition
- *****************************************************************************
- * Given a physical position based on the actual number of bytes transferred,
- * this function converts the position to a time-based value of 100ns units.
- */
-NTSTATUS CMiniportStream::NormalizePhysicalPosition
-(
-    _Inout_ PLONGLONG PhysicalPosition
-)
-{
-    ULONG SampleSize;
-
-    DOUT (DBG_PRINT, ("NormalizePhysicalPosition"));
-
-    //
-    // Determine the sample size in bytes
-    //
-    SampleSize = DataFormat->WaveFormatEx.nChannels * 2;
-
-    //
-    // Calculate the time in 100ns steps.
-    //
-    *PhysicalPosition = (_100NS_UNITS_PER_SECOND / SampleSize *
-                         *PhysicalPosition) / CurrentRate;
-
-    return STATUS_SUCCESS;
-}
-
-/*****************************************************************************
  * CMiniportStream::SetState
  *****************************************************************************
  * This routine sets/changes the DMA engine state to play, stop, or pause
@@ -149,6 +115,44 @@ NTSTATUS CMiniportStream::SetState
             ResumeDMA ();
             break;
     }
+
+    return STATUS_SUCCESS;
+}
+
+/*****************************************************************************
+ * Non paged code begins here
+ *****************************************************************************
+ */
+
+#ifdef _MSC_VER
+#pragma code_seg()
+#endif
+
+/*****************************************************************************
+ * CMiniportStream::NormalizePhysicalPosition
+ *****************************************************************************
+ * Given a physical position based on the actual number of bytes transferred,
+ * this function converts the position to a time-based value of 100ns units.
+ */
+NTSTATUS CMiniportStream::NormalizePhysicalPosition
+(
+    _Inout_ PLONGLONG PhysicalPosition
+)
+{
+    ULONG SampleSize;
+
+    DOUT (DBG_PRINT, ("NormalizePhysicalPosition"));
+
+    //
+    // Determine the sample size in bytes
+    //
+    SampleSize = DataFormat->WaveFormatEx.nChannels * 2;
+
+    //
+    // Calculate the time in 100ns steps.
+    //
+    *PhysicalPosition = (_100NS_UNITS_PER_SECOND / SampleSize *
+                         *PhysicalPosition) / CurrentRate;
 
     return STATUS_SUCCESS;
 }
