@@ -197,7 +197,7 @@ list(APPEND CRT_SOURCE
     startup/natstart.c
     startup/charmax.c
     #startup/merr.c
-    #startup/atonexit.c
+    startup/atonexit.c
     #startup/txtmode.c
     startup/pesect.c
     startup/tlsmcrt.c
