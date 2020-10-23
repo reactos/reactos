@@ -87,7 +87,6 @@ typedef ULONG_PTR SWAPENTRY;
 
 #define SEC_PHYSICALMEMORY                  (0x80000000)
 
-#define MM_PAGEFILE_SEGMENT                 (0x1)
 #define MM_DATAFILE_SEGMENT                 (0x2)
 
 #define MC_CACHE                            (0)

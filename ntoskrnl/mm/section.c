@@ -947,9 +947,7 @@ MmUnsharePageEntrySectionSegment(PROS_SECTION_OBJECT Section,
         SavedSwapEntry = MmGetSavedSwapEntryPage(Page);
         if (SavedSwapEntry == 0)
         {
-            if (!PageOut &&
-                    ((Segment->Flags & MM_PAGEFILE_SEGMENT) ||
-                     (Segment->Image.Characteristics & IMAGE_SCN_MEM_SHARED)))
+            if (!PageOut && (Segment->Image.Characteristics & IMAGE_SCN_MEM_SHARED))
             {
                 /*
                  * FIXME:
@@ -975,8 +973,7 @@ MmUnsharePageEntrySectionSegment(PROS_SECTION_OBJECT Section,
         }
         else
         {
-            if ((Segment->Flags & MM_PAGEFILE_SEGMENT) ||
-                    (Segment->Image.Characteristics & IMAGE_SCN_MEM_SHARED))
+            if (Segment->Image.Characteristics & IMAGE_SCN_MEM_SHARED)
             {
                 if (!PageOut)
                 {
@@ -1497,11 +1494,6 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
             /*
              * Sanity check
              */
-            if (Segment->Flags & MM_PAGEFILE_SEGMENT)
-            {
-                DPRINT1("Found a swaped out private page in a pagefile section.\n");
-                KeBugCheck(MEMORY_MANAGEMENT);
-            }
             MmDeletePageFileMapping(Process, Address, &SwapEntry);
         }
 
@@ -1614,9 +1606,8 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
         MmCreatePageFileMapping(Process, PAddress, MM_WAIT_ENTRY);
         MmUnlockAddressSpace(AddressSpace);
 
-        if ((Segment->Flags & MM_PAGEFILE_SEGMENT) ||
-                ((Offset.QuadPart >= (LONGLONG)PAGE_ROUND_UP(Segment->RawLength.QuadPart) &&
-                  (Section->AllocationAttributes & SEC_IMAGE))))
+        if ((Offset.QuadPart >= (LONGLONG)PAGE_ROUND_UP(Segment->RawLength.QuadPart)) &&
+                  (Section->AllocationAttributes & SEC_IMAGE))
         {
             MI_SET_USAGE(MI_USAGE_SECTION);
             if (Process) MI_SET_PROCESS2(Process->ImageFileName);
@@ -2102,8 +2093,7 @@ MmPageOutSectionView(PMMSUPPORT AddressSpace,
      */
     if (!Context.Private && Entry != 0)
     {
-        if (!(Context.Segment->Flags & MM_PAGEFILE_SEGMENT) &&
-                !(Context.Segment->Image.Characteristics & IMAGE_SCN_MEM_SHARED))
+        if (!(Context.Segment->Image.Characteristics & IMAGE_SCN_MEM_SHARED))
         {
             KeBugCheckEx(MEMORY_MANAGEMENT, Entry, (ULONG_PTR)Process, (ULONG_PTR)Address, 0);
         }
@@ -2117,26 +2107,7 @@ MmPageOutSectionView(PMMSUPPORT AddressSpace,
      * we can't free the page at this point.
      */
     SwapEntry = MmGetSavedSwapEntryPage(Page);
-    if (Context.Segment->Flags & MM_PAGEFILE_SEGMENT)
-    {
-        if (Context.Private)
-        {
-            DPRINT1("Found a %s private page (address %p) in a pagefile segment.\n",
-                    Context.WasDirty ? "dirty" : "clean", Address);
-            KeBugCheckEx(MEMORY_MANAGEMENT, SwapEntry, (ULONG_PTR)Process, (ULONG_PTR)Address, 0);
-        }
-        if (!Context.WasDirty && SwapEntry != 0)
-        {
-            MmSetSavedSwapEntryPage(Page, 0);
-            MmLockSectionSegment(Context.Segment);
-            MmSetPageEntrySectionSegment(Context.Segment, &Context.Offset, MAKE_SWAP_SSE(SwapEntry));
-            MmUnlockSectionSegment(Context.Segment);
-            MmReleasePageMemoryConsumer(MC_USER, Page);
-            MiSetPageEvent(NULL, NULL);
-            return(STATUS_SUCCESS);
-        }
-    }
-    else if (Context.Segment->Image.Characteristics & IMAGE_SCN_MEM_SHARED)
+    if (Context.Segment->Image.Characteristics & IMAGE_SCN_MEM_SHARED)
     {
         if (Context.Private)
         {
@@ -2321,8 +2292,7 @@ MmPageOutSectionView(PMMSUPPORT AddressSpace,
      */
     DPRINT("MM: Wrote section page 0x%.8X to swap!\n", Page << PAGE_SHIFT);
     MmSetSavedSwapEntryPage(Page, 0);
-    if (Context.Segment->Flags & MM_PAGEFILE_SEGMENT ||
-            Context.Segment->Image.Characteristics & IMAGE_SCN_MEM_SHARED)
+    if (Context.Segment->Image.Characteristics & IMAGE_SCN_MEM_SHARED)
     {
         MmLockSectionSegment(Context.Segment);
         MmSetPageEntrySectionSegment(Context.Segment, &Context.Offset, MAKE_SWAP_SSE(SwapEntry));
@@ -2715,17 +2685,7 @@ MmpDeleteSection(PVOID ObjectBody)
         if (Section->Segment == NULL)
             return;
 
-        if (Section->Segment->Flags & MM_PAGEFILE_SEGMENT)
-        {
-            MmpFreePageFileSegment(Section->Segment);
-            MmFreePageTablesSectionSegment(Section->Segment, NULL);
-            ExFreePool(Section->Segment);
-            Section->Segment = NULL;
-        }
-        else
-        {
-            (void)InterlockedDecrementUL(&Section->Segment->ReferenceCount);
-        }
+        (void)InterlockedDecrementUL(&Section->Segment->ReferenceCount);
     }
     if (Section->FileObject != NULL)
     {
@@ -2758,29 +2718,65 @@ MmCreatePhysicalMemorySection(VOID)
     UNICODE_STRING Name = RTL_CONSTANT_STRING(L"\\Device\\PhysicalMemory");
     LARGE_INTEGER SectionSize;
     HANDLE Handle;
+    PMM_SECTION_SEGMENT Segment;
 
     /*
      * Create the section mapping physical memory
      */
-    SectionSize.QuadPart = 0xFFFFFFFF;
+    SectionSize.QuadPart = ~((ULONG_PTR)0);
     InitializeObjectAttributes(&Obj,
                                &Name,
                                OBJ_PERMANENT | OBJ_KERNEL_EXCLUSIVE,
                                NULL,
                                NULL);
-    Status = MmCreateSection((PVOID)&PhysSection,
-                             SECTION_ALL_ACCESS,
-                             &Obj,
-                             &SectionSize,
-                             PAGE_EXECUTE_READWRITE,
-                             SEC_PHYSICALMEMORY,
-                             NULL,
-                             NULL);
+    /*
+     * Create the Object
+     */
+    Status = ObCreateObject(KernelMode,
+                            MmSectionObjectType,
+                            &Obj,
+                            ExGetPreviousMode(),
+                            NULL,
+                            sizeof(ROS_SECTION_OBJECT),
+                            0,
+                            0,
+                            (PVOID*)&PhysSection);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("Failed to create PhysicalMemory section\n");
-        KeBugCheck(MEMORY_MANAGEMENT);
+        DPRINT1("MmCreatePhysicalMemorySection: failed to create object (0x%lx)\n", Status);
+        return(Status);
     }
+
+    /*
+     * Initialize it
+     */
+    RtlZeroMemory(PhysSection, sizeof(ROS_SECTION_OBJECT));
+    PhysSection->Type = 'SC';
+    PhysSection->Size = 'TN';
+    PhysSection->InitialPageProtection = PAGE_EXECUTE_READWRITE;
+    PhysSection->AllocationAttributes = SEC_PHYSICALMEMORY;
+    PhysSection->SizeOfSection = SectionSize;
+    Segment = ExAllocatePoolWithTag(NonPagedPool, sizeof(MM_SECTION_SEGMENT),
+                                    TAG_MM_SECTION_SEGMENT);
+    if (Segment == NULL)
+    {
+        ObDereferenceObject(PhysSection);
+        return(STATUS_NO_MEMORY);
+    }
+    RtlZeroMemory(Segment, sizeof(MM_SECTION_SEGMENT));
+    PhysSection->Segment = Segment;
+    Segment->ReferenceCount = 1;
+    ExInitializeFastMutex(&Segment->Lock);
+    Segment->Image.FileOffset = 0;
+    Segment->Protection = PAGE_EXECUTE_READWRITE;
+    Segment->RawLength = SectionSize;
+    Segment->Length = SectionSize;
+    Segment->Flags = 0;
+    Segment->WriteCopy = FALSE;
+    Segment->Image.VirtualAddress = 0;
+    Segment->Image.Characteristics = 0;
+    MiInitializeSectionPageTable(Segment);
+
     Status = ObInsertObject(PhysSection,
                             NULL,
                             SECTION_ALL_ACCESS,
@@ -2792,8 +2788,6 @@ MmCreatePhysicalMemorySection(VOID)
         ObDereferenceObject(PhysSection);
     }
     ObCloseHandle(Handle, KernelMode);
-    PhysSection->AllocationAttributes |= SEC_PHYSICALMEMORY;
-    PhysSection->Segment->Flags &= ~MM_PAGEFILE_SEGMENT;
 
     return(STATUS_SUCCESS);
 }
@@ -2828,81 +2822,6 @@ MmInitSectionImplementation(VOID)
 
     MmCreatePhysicalMemorySection();
 
-    return(STATUS_SUCCESS);
-}
-
-NTSTATUS
-NTAPI
-MmCreatePageFileSection(PROS_SECTION_OBJECT *SectionObject,
-                        ACCESS_MASK DesiredAccess,
-                        POBJECT_ATTRIBUTES ObjectAttributes,
-                        PLARGE_INTEGER UMaximumSize,
-                        ULONG SectionPageProtection,
-                        ULONG AllocationAttributes)
-/*
- * Create a section which is backed by the pagefile
- */
-{
-    LARGE_INTEGER MaximumSize;
-    PROS_SECTION_OBJECT Section;
-    PMM_SECTION_SEGMENT Segment;
-    NTSTATUS Status;
-
-    if (UMaximumSize == NULL)
-    {
-        DPRINT1("MmCreatePageFileSection: (UMaximumSize == NULL)\n");
-        return(STATUS_INVALID_PARAMETER);
-    }
-    MaximumSize = *UMaximumSize;
-
-    /*
-     * Create the section
-     */
-    Status = ObCreateObject(ExGetPreviousMode(),
-                            MmSectionObjectType,
-                            ObjectAttributes,
-                            ExGetPreviousMode(),
-                            NULL,
-                            sizeof(ROS_SECTION_OBJECT),
-                            0,
-                            0,
-                            (PVOID*)(PVOID)&Section);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("MmCreatePageFileSection: failed to create object (0x%lx)\n", Status);
-        return(Status);
-    }
-
-    /*
-     * Initialize it
-     */
-    RtlZeroMemory(Section, sizeof(ROS_SECTION_OBJECT));
-    Section->Type = 'SC';
-    Section->Size = 'TN';
-    Section->InitialPageProtection = SectionPageProtection;
-    Section->AllocationAttributes = AllocationAttributes;
-    Section->SizeOfSection = MaximumSize;
-    Segment = ExAllocatePoolWithTag(NonPagedPool, sizeof(MM_SECTION_SEGMENT),
-                                    TAG_MM_SECTION_SEGMENT);
-    if (Segment == NULL)
-    {
-        ObDereferenceObject(Section);
-        return(STATUS_NO_MEMORY);
-    }
-    RtlZeroMemory(Segment, sizeof(MM_SECTION_SEGMENT));
-    Section->Segment = Segment;
-    Segment->ReferenceCount = 1;
-    ExInitializeFastMutex(&Segment->Lock);
-    Segment->Image.FileOffset = 0;
-    Segment->Protection = SectionPageProtection;
-    Segment->RawLength.QuadPart = MaximumSize.u.LowPart;
-    Segment->Length.QuadPart = PAGE_ROUND_UP(MaximumSize.u.LowPart);
-    Segment->Flags = MM_PAGEFILE_SEGMENT;
-    Segment->WriteCopy = FALSE;
-    Segment->Image.VirtualAddress = 0;
-    Segment->Image.Characteristics = 0;
-    *SectionObject = Section;
-    MiInitializeSectionPageTable(Segment);
     return(STATUS_SUCCESS);
 }
 
@@ -4026,11 +3945,6 @@ MmFreeSectionPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address,
         /*
          * Sanity check
          */
-        if (Segment->Flags & MM_PAGEFILE_SEGMENT)
-        {
-            DPRINT1("Found a swap entry for a page in a pagefile section.\n");
-            KeBugCheck(MEMORY_MANAGEMENT);
-        }
         MmFreeSwapPage(SwapEntry);
     }
     else if (Page != 0)
@@ -4038,14 +3952,6 @@ MmFreeSectionPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address,
         if (IS_SWAP_FROM_SSE(Entry) ||
                 Page != PFN_FROM_SSE(Entry))
         {
-            /*
-             * Sanity check
-             */
-            if (Segment->Flags & MM_PAGEFILE_SEGMENT)
-            {
-                DPRINT1("Found a private page in a pagefile section.\n");
-                KeBugCheck(MEMORY_MANAGEMENT);
-            }
             /*
              * Just dereference private pages
              */
@@ -5140,17 +5046,9 @@ MmCreateSection (OUT PVOID  * Section,
 #endif
     else
     {
-        if ((AllocationAttributes & SEC_PHYSICALMEMORY) == 0)
-        {
-            DPRINT1("Invalid path: %lx %p %p\n", AllocationAttributes, FileObject, FileHandle);
-        }
-//        ASSERT(AllocationAttributes & SEC_PHYSICALMEMORY);
-        Status = MmCreatePageFileSection(SectionObject,
-                                         DesiredAccess,
-                                         ObjectAttributes,
-                                         MaximumSize,
-                                         SectionPageProtection,
-                                         AllocationAttributes);
+        /* All cases should be handled above, and the Physical Memorw section was created at initialization phase */
+        ASSERT(FALSE);
+        Status = STATUS_INVALID_PARAMETER;
         if (FileObject)
             ObDereferenceObject(FileObject);
     }
