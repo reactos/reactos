@@ -132,19 +132,19 @@ MmPageOutPhysicalAddress(PFN_NUMBER Page)
     if (Type == MEMORY_AREA_SECTION_VIEW)
     {
         ULONG_PTR Entry;
-        Offset = MemoryArea->Data.SectionData.ViewOffset.QuadPart +
+        Offset = MemoryArea->SectionData.ViewOffset.QuadPart +
                  ((ULONG_PTR)Address - MA_GetStartingAddress(MemoryArea));
 
-        MmLockSectionSegment(MemoryArea->Data.SectionData.Segment);
+        MmLockSectionSegment(MemoryArea->SectionData.Segment);
 
         /*
          * Get or create a pageop
          */
-        Entry = MmGetPageEntrySectionSegment(MemoryArea->Data.SectionData.Segment,
+        Entry = MmGetPageEntrySectionSegment(MemoryArea->SectionData.Segment,
                                              (PLARGE_INTEGER)&Offset);
         if (Entry && MM_IS_WAIT_PTE(Entry))
         {
-            MmUnlockSectionSegment(MemoryArea->Data.SectionData.Segment);
+            MmUnlockSectionSegment(MemoryArea->SectionData.Segment);
             MmUnlockAddressSpace(AddressSpace);
             if (Address < MmSystemRangeStart)
             {
@@ -154,12 +154,12 @@ MmPageOutPhysicalAddress(PFN_NUMBER Page)
             return(STATUS_UNSUCCESSFUL);
         }
 
-        MmSetPageEntrySectionSegment(MemoryArea->Data.SectionData.Segment, (PLARGE_INTEGER)&Offset, MAKE_SWAP_SSE(MM_WAIT_ENTRY));
+        MmSetPageEntrySectionSegment(MemoryArea->SectionData.Segment, (PLARGE_INTEGER)&Offset, MAKE_SWAP_SSE(MM_WAIT_ENTRY));
 
         /*
          * Release locks now we have a page op.
          */
-        MmUnlockSectionSegment(MemoryArea->Data.SectionData.Segment);
+        MmUnlockSectionSegment(MemoryArea->SectionData.Segment);
         MmUnlockAddressSpace(AddressSpace);
 
         /*

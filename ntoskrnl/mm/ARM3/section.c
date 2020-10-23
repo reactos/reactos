@@ -1661,7 +1661,7 @@ MiGetFileObjectForSectionAddress(
         if (MemoryArea->Type == MEMORY_AREA_SECTION_VIEW)
         {
             /* Get the section pointer to the SECTION_OBJECT */
-            Section = MemoryArea->Data.SectionData.Section;
+            Section = MemoryArea->SectionData.Section;
             *FileObject = Section->FileObject;
         }
         else
@@ -1739,7 +1739,7 @@ MiGetFileObjectForVad(
         if (MemoryArea->Type == MEMORY_AREA_SECTION_VIEW)
         {
             /* Get the section pointer to the SECTION_OBJECT */
-            Section = MemoryArea->Data.SectionData.Section;
+            Section = MemoryArea->SectionData.Section;
             FileObject = Section->FileObject;
         }
         else

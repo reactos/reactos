@@ -1043,12 +1043,12 @@ BOOLEAN MiIsPageFromCache(PMEMORY_AREA MemoryArea,
                           LONGLONG SegOffset)
 {
 #ifndef NEWCC
-    if (!(MemoryArea->Data.SectionData.Segment->Image.Characteristics & IMAGE_SCN_MEM_SHARED))
+    if (!(MemoryArea->SectionData.Segment->Image.Characteristics & IMAGE_SCN_MEM_SHARED))
     {
         PROS_SHARED_CACHE_MAP SharedCacheMap;
         PROS_VACB Vacb;
-        SharedCacheMap = MemoryArea->Data.SectionData.Section->FileObject->SectionObjectPointer->SharedCacheMap;
-        Vacb = CcRosLookupVacb(SharedCacheMap, SegOffset + MemoryArea->Data.SectionData.Segment->Image.FileOffset);
+        SharedCacheMap = MemoryArea->SectionData.Section->FileObject->SectionObjectPointer->SharedCacheMap;
+        Vacb = CcRosLookupVacb(SharedCacheMap, SegOffset + MemoryArea->SectionData.Segment->Image.FileOffset);
         if (Vacb)
         {
             CcRosReleaseVacb(SharedCacheMap, Vacb, Vacb->Valid, FALSE, TRUE);
@@ -1106,11 +1106,11 @@ MiReadPage(PMEMORY_AREA MemoryArea,
     BOOLEAN IsImageSection;
     LONGLONG Length;
 
-    FileObject = MemoryArea->Data.SectionData.Section->FileObject;
+    FileObject = MemoryArea->SectionData.Section->FileObject;
     SharedCacheMap = FileObject->SectionObjectPointer->SharedCacheMap;
-    RawLength = MemoryArea->Data.SectionData.Segment->RawLength.QuadPart;
-    FileOffset = SegOffset + MemoryArea->Data.SectionData.Segment->Image.FileOffset;
-    IsImageSection = MemoryArea->Data.SectionData.Section->u.Flags.Image;
+    RawLength = MemoryArea->SectionData.Segment->RawLength.QuadPart;
+    FileOffset = SegOffset + MemoryArea->SectionData.Segment->Image.FileOffset;
+    IsImageSection = MemoryArea->SectionData.Section->u.Flags.Image;
 
     ASSERT(SharedCacheMap);
 
@@ -1123,7 +1123,7 @@ MiReadPage(PMEMORY_AREA MemoryArea,
      */
     if (((FileOffset % PAGE_SIZE) == 0) &&
             ((SegOffset + PAGE_SIZE <= RawLength) || !IsImageSection) &&
-            !(MemoryArea->Data.SectionData.Segment->Image.Characteristics & IMAGE_SCN_MEM_SHARED))
+            !(MemoryArea->SectionData.Segment->Image.Characteristics & IMAGE_SCN_MEM_SHARED))
     {
 
         /*
@@ -1282,9 +1282,9 @@ MiReadPage(PMEMORY_AREA MemoryArea,
 
     RtlZeroMemory(&Resources, sizeof(MM_REQUIRED_RESOURCES));
 
-    Resources.Context = MemoryArea->Data.SectionData.Section->FileObject;
+    Resources.Context = MemoryArea->SectionData.Section->FileObject;
     Resources.FileOffset.QuadPart = SegOffset +
-                                    MemoryArea->Data.SectionData.Segment->Image.FileOffset;
+                                    MemoryArea->SectionData.Segment->Image.FileOffset;
     Resources.Consumer = MC_USER;
     Resources.Amount = PAGE_SIZE;
 
@@ -1313,7 +1313,7 @@ MmAlterViewAttributes(PMMSUPPORT AddressSpace,
 
     MemoryArea = MmLocateMemoryAreaByAddress(AddressSpace, BaseAddress);
     ASSERT(MemoryArea != NULL);
-    Segment = MemoryArea->Data.SectionData.Segment;
+    Segment = MemoryArea->SectionData.Segment;
     MmLockSectionSegment(Segment);
 
     if ((Segment->WriteCopy) &&
@@ -1351,7 +1351,7 @@ MmAlterViewAttributes(PMMSUPPORT AddressSpace,
                 PFN_NUMBER Page;
 
                 Offset.QuadPart = (ULONG_PTR)Address - MA_GetStartingAddress(MemoryArea)
-                                  + MemoryArea->Data.SectionData.ViewOffset.QuadPart;
+                                  + MemoryArea->SectionData.ViewOffset.QuadPart;
                 Entry = MmGetPageEntrySectionSegment(Segment, &Offset);
                 /*
                  * An MM_WAIT_ENTRY is ok in this case...  It'll just count as
@@ -1423,12 +1423,12 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
 
     PAddress = MM_ROUND_DOWN(Address, PAGE_SIZE);
     Offset.QuadPart = (ULONG_PTR)PAddress - MA_GetStartingAddress(MemoryArea)
-                      + MemoryArea->Data.SectionData.ViewOffset.QuadPart;
+                      + MemoryArea->SectionData.ViewOffset.QuadPart;
 
-    Segment = MemoryArea->Data.SectionData.Segment;
-    Section = MemoryArea->Data.SectionData.Section;
+    Segment = MemoryArea->SectionData.Segment;
+    Section = MemoryArea->SectionData.Section;
     Region = MmFindRegion((PVOID)MA_GetStartingAddress(MemoryArea),
-                          &MemoryArea->Data.SectionData.RegionListHead,
+                          &MemoryArea->SectionData.RegionListHead,
                           Address, NULL);
     ASSERT(Region != NULL);
 
@@ -1442,7 +1442,7 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
     {
         /* Remove it */
         Status = MmAlterRegion(AddressSpace, (PVOID)MA_GetStartingAddress(MemoryArea),
-                &MemoryArea->Data.SectionData.RegionListHead,
+                &MemoryArea->SectionData.RegionListHead,
                 Address, PAGE_SIZE, Region->Type, Region->Protect & ~PAGE_GUARD,
                 MmAlterViewAttributes);
 
@@ -1844,12 +1844,12 @@ MmAccessFaultSectionView(PMMSUPPORT AddressSpace,
      */
     PAddress = MM_ROUND_DOWN(Address, PAGE_SIZE);
     Offset.QuadPart = (ULONG_PTR)PAddress - MA_GetStartingAddress(MemoryArea)
-                      + MemoryArea->Data.SectionData.ViewOffset.QuadPart;
+                      + MemoryArea->SectionData.ViewOffset.QuadPart;
 
-    Segment = MemoryArea->Data.SectionData.Segment;
-    Section = MemoryArea->Data.SectionData.Section;
+    Segment = MemoryArea->SectionData.Segment;
+    Section = MemoryArea->SectionData.Section;
     Region = MmFindRegion((PVOID)MA_GetStartingAddress(MemoryArea),
-                          &MemoryArea->Data.SectionData.RegionListHead,
+                          &MemoryArea->SectionData.RegionListHead,
                           Address, NULL);
     ASSERT(Region != NULL);
 
@@ -1997,13 +1997,13 @@ MmPageOutSectionView(PMMSUPPORT AddressSpace,
     /*
      * Get the segment and section.
      */
-    Context.Segment = MemoryArea->Data.SectionData.Segment;
-    Context.Section = MemoryArea->Data.SectionData.Section;
+    Context.Segment = MemoryArea->SectionData.Segment;
+    Context.Section = MemoryArea->SectionData.Section;
     Context.SectionEntry = Entry;
     Context.CallingProcess = Process;
 
     Context.Offset.QuadPart = (ULONG_PTR)Address - MA_GetStartingAddress(MemoryArea)
-                              + MemoryArea->Data.SectionData.ViewOffset.QuadPart;
+                              + MemoryArea->SectionData.ViewOffset.QuadPart;
 
     DirectMapped = FALSE;
 
@@ -2383,13 +2383,13 @@ MmWritePageSectionView(PMMSUPPORT AddressSpace,
     Address = (PVOID)PAGE_ROUND_DOWN(Address);
 
     Offset.QuadPart = (ULONG_PTR)Address - MA_GetStartingAddress(MemoryArea)
-                      + MemoryArea->Data.SectionData.ViewOffset.QuadPart;
+                      + MemoryArea->SectionData.ViewOffset.QuadPart;
 
     /*
      * Get the segment and section.
      */
-    Segment = MemoryArea->Data.SectionData.Segment;
-    Section = MemoryArea->Data.SectionData.Section;
+    Segment = MemoryArea->SectionData.Segment;
+    Section = MemoryArea->SectionData.Section;
     IsImageSection = Section->u.Flags.Image;
 
     FileObject = Section->FileObject;
@@ -2528,7 +2528,7 @@ MmProtectSectionView(PMMSUPPORT AddressSpace,
         Length = (ULONG)MaxLength;
 
     Region = MmFindRegion((PVOID)MA_GetStartingAddress(MemoryArea),
-                          &MemoryArea->Data.SectionData.RegionListHead,
+                          &MemoryArea->SectionData.RegionListHead,
                           BaseAddress, NULL);
     ASSERT(Region != NULL);
 
@@ -2540,7 +2540,7 @@ MmProtectSectionView(PMMSUPPORT AddressSpace,
 
     *OldProtect = Region->Protect;
     Status = MmAlterRegion(AddressSpace, (PVOID)MA_GetStartingAddress(MemoryArea),
-                           &MemoryArea->Data.SectionData.RegionListHead,
+                           &MemoryArea->SectionData.RegionListHead,
                            BaseAddress, Length, Region->Type, Protect,
                            MmAlterViewAttributes);
 
@@ -2559,17 +2559,17 @@ MmQuerySectionView(PMEMORY_AREA MemoryArea,
     PMM_SECTION_SEGMENT Segment;
 
     Region = MmFindRegion((PVOID)MA_GetStartingAddress(MemoryArea),
-                          &MemoryArea->Data.SectionData.RegionListHead,
+                          &MemoryArea->SectionData.RegionListHead,
                           Address, &RegionBaseAddress);
     if (Region == NULL)
     {
         return STATUS_UNSUCCESSFUL;
     }
 
-    Section = MemoryArea->Data.SectionData.Section;
+    Section = MemoryArea->SectionData.Section;
     if (Section->u.Flags.Image)
     {
-        Segment = MemoryArea->Data.SectionData.Segment;
+        Segment = MemoryArea->SectionData.Segment;
         Info->AllocationBase = (PUCHAR)MA_GetStartingAddress(MemoryArea) - Segment->Image.VirtualAddress;
         Info->Type = MEM_IMAGE;
     }
@@ -3899,15 +3899,15 @@ MmMapViewOfSegment(PMMSUPPORT AddressSpace,
 
     ObReferenceObject((PVOID)Section);
 
-    MArea->Data.SectionData.Segment = Segment;
-    MArea->Data.SectionData.Section = Section;
-    MArea->Data.SectionData.ViewOffset.QuadPart = ViewOffset;
+    MArea->SectionData.Segment = Segment;
+    MArea->SectionData.Section = Section;
+    MArea->SectionData.ViewOffset.QuadPart = ViewOffset;
     if (Section->u.Flags.Image)
     {
         MArea->VadNode.u.VadFlags.VadType = VadImageMap;
     }
 
-    MmInitializeRegion(&MArea->Data.SectionData.RegionListHead,
+    MmInitializeRegion(&MArea->SectionData.RegionListHead,
                        ViewSize, 0, Protect);
 
     return(STATUS_SUCCESS);
@@ -3936,10 +3936,10 @@ MmFreeSectionPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address,
     Address = (PVOID)PAGE_ROUND_DOWN(Address);
 
     Offset.QuadPart = ((ULONG_PTR)Address - MA_GetStartingAddress(MemoryArea)) +
-                      MemoryArea->Data.SectionData.ViewOffset.QuadPart;
+                      MemoryArea->SectionData.ViewOffset.QuadPart;
 
-    Section = MemoryArea->Data.SectionData.Section;
-    Segment = MemoryArea->Data.SectionData.Segment;
+    Section = MemoryArea->SectionData.Section;
+    Segment = MemoryArea->SectionData.Segment;
 
     Entry = MmGetPageEntrySectionSegment(Segment, &Offset);
     while (Entry && MM_IS_WAIT_PTE(Entry))
@@ -3963,7 +3963,7 @@ MmFreeSectionPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address,
         if (Page == PFN_FROM_SSE(Entry) && Dirty)
         {
 #ifndef NEWCC
-            FileObject = MemoryArea->Data.SectionData.Section->FileObject;
+            FileObject = MemoryArea->SectionData.Section->FileObject;
             SharedCacheMap = FileObject->SectionObjectPointer->SharedCacheMap;
             CcRosMarkDirtyFile(SharedCacheMap, Offset.QuadPart + Segment->Image.FileOffset);
 #endif
@@ -4022,8 +4022,8 @@ MmUnmapViewOfSegment(PMMSUPPORT AddressSpace,
         return(STATUS_UNSUCCESSFUL);
     }
 
-    Section = MemoryArea->Data.SectionData.Section;
-    Segment = MemoryArea->Data.SectionData.Segment;
+    Section = MemoryArea->SectionData.Section;
+    Segment = MemoryArea->SectionData.Segment;
 
 #ifdef NEWCC
     if (Segment->Flags & MM_DATAFILE_SEGMENT)
@@ -4040,7 +4040,7 @@ MmUnmapViewOfSegment(PMMSUPPORT AddressSpace,
 
     MmLockSectionSegment(Segment);
 
-    RegionListHead = &MemoryArea->Data.SectionData.RegionListHead;
+    RegionListHead = &MemoryArea->SectionData.RegionListHead;
     while (!IsListEmpty(RegionListHead))
     {
         CurrentEntry = RemoveHeadList(RegionListHead);
@@ -4103,7 +4103,7 @@ MiRosUnmapViewOfSection(IN PEPROCESS Process,
         return STATUS_NOT_MAPPED_VIEW;
     }
 
-    Section = MemoryArea->Data.SectionData.Section;
+    Section = MemoryArea->SectionData.Section;
 
     if ((Section != NULL) && Section->u.Flags.Image)
     {
@@ -4113,7 +4113,7 @@ MiRosUnmapViewOfSection(IN PEPROCESS Process,
         PMM_SECTION_SEGMENT SectionSegments;
         PMM_SECTION_SEGMENT Segment;
 
-        Segment = MemoryArea->Data.SectionData.Segment;
+        Segment = MemoryArea->SectionData.Segment;
         ImageSectionObject = Section->ImageSection;
         SectionSegments = ImageSectionObject->Segments;
         NrSegments = ImageSectionObject->NrSegments;

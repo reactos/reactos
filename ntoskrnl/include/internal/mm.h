@@ -217,20 +217,14 @@ typedef struct _MEMORY_AREA
     BOOLEAN DeleteInProgress;
     ULONG Magic;
     PVOID Vad;
-    union
+
+    struct
     {
-        struct
-        {
-            PROS_SECTION_OBJECT Section;
-            LARGE_INTEGER ViewOffset;
-            PMM_SECTION_SEGMENT Segment;
-            LIST_ENTRY RegionListHead;
-        } SectionData;
-        struct
-        {
-            LIST_ENTRY RegionListHead;
-        } VirtualMemoryData;
-    } Data;
+        PROS_SECTION_OBJECT Section;
+        LARGE_INTEGER ViewOffset;
+        PMM_SECTION_SEGMENT Segment;
+        LIST_ENTRY RegionListHead;
+    } SectionData;
 } MEMORY_AREA, *PMEMORY_AREA;
 
 typedef struct _MM_RMAP_ENTRY
