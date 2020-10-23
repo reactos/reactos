@@ -113,6 +113,7 @@ NTSTATUS CMiniportStream::SetState
 
             // Kick DMA again just in case.
             ResumeDMA ();
+            UpdateLviCyclic();
             break;
     }
 

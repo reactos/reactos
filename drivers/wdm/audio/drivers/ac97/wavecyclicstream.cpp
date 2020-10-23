@@ -221,8 +221,7 @@ void CMiniportWaveCyclicStream::InterruptServiceRoutine()
     //
     // Update the LVI so that we cycle around in the scatter gather list.
     //
-    UCHAR CIV = ReadReg8(X_CIV);
-    WriteReg8(X_LVI, (UCHAR)((CIV-1) & BDL_MASK));
+    UpdateLviCyclic();
 
     //
     // Request DPC service for PCM out.

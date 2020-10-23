@@ -419,9 +419,7 @@ void CMiniportWaveICHStream::InterruptServiceRoutine()
     //
     // Update the LVI so that we cycle around in the scatter gather list.
     //
-
-    UCHAR CIV = ReadReg8 (X_CIV);
-    WriteReg (X_LVI, (UCHAR)((CIV-1) & BDL_MASK));
+    UpdateLviCyclic();
 }
 
 #endif          // (NTDDI_VERSION >= NTDDI_VISTA)

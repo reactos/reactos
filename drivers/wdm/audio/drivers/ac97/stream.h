@@ -168,6 +168,12 @@ public:
 
     PVOID BDList_Alloc();
     void BDList_Free();
+
+    void UpdateLviCyclic() 
+    {
+        UCHAR CIV = ReadReg8(X_CIV);
+        WriteReg8(X_LVI, (CIV-1) & BDL_MASK);
+    }
 };
 
 
