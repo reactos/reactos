@@ -2879,7 +2879,7 @@ MmCreatePageFileSection(PROS_SECTION_OBJECT *SectionObject,
     RtlZeroMemory(Section, sizeof(ROS_SECTION_OBJECT));
     Section->Type = 'SC';
     Section->Size = 'TN';
-    Section->SectionPageProtection = SectionPageProtection;
+    Section->InitialPageProtection = SectionPageProtection;
     Section->AllocationAttributes = AllocationAttributes;
     Section->SizeOfSection = MaximumSize;
     Segment = ExAllocatePoolWithTag(NonPagedPool, sizeof(MM_SECTION_SEGMENT),
@@ -2949,7 +2949,7 @@ MmCreateDataFileSection(PROS_SECTION_OBJECT *SectionObject,
     RtlZeroMemory(Section, sizeof(ROS_SECTION_OBJECT));
     Section->Type = 'SC';
     Section->Size = 'TN';
-    Section->SectionPageProtection = SectionPageProtection;
+    Section->InitialPageProtection = SectionPageProtection;
     Section->AllocationAttributes = AllocationAttributes;
 
     /*
@@ -3774,7 +3774,7 @@ MmCreateImageSection(PROS_SECTION_OBJECT *SectionObject,
     RtlZeroMemory(Section, sizeof(ROS_SECTION_OBJECT));
     Section->Type = 'SC';
     Section->Size = 'TN';
-    Section->SectionPageProtection = SectionPageProtection;
+    Section->InitialPageProtection = SectionPageProtection;
     Section->AllocationAttributes = AllocationAttributes;
 
     if (FileObject->SectionObjectPointer->ImageSectionObject == NULL)
@@ -4641,21 +4641,21 @@ MmMapViewOfSection(IN PVOID SectionObject,
     {
         /* check for write access */
         if ((Protect & (PAGE_READWRITE|PAGE_EXECUTE_READWRITE)) &&
-                !(Section->SectionPageProtection & (PAGE_READWRITE|PAGE_EXECUTE_READWRITE)))
+                !(Section->InitialPageProtection & (PAGE_READWRITE|PAGE_EXECUTE_READWRITE)))
         {
             MmUnlockAddressSpace(AddressSpace);
             return STATUS_SECTION_PROTECTION;
         }
         /* check for read access */
         if ((Protect & (PAGE_READONLY|PAGE_WRITECOPY|PAGE_EXECUTE_READ|PAGE_EXECUTE_WRITECOPY)) &&
-                !(Section->SectionPageProtection & (PAGE_READONLY|PAGE_READWRITE|PAGE_WRITECOPY|PAGE_EXECUTE_READ|PAGE_EXECUTE_READWRITE|PAGE_EXECUTE_WRITECOPY)))
+                !(Section->InitialPageProtection & (PAGE_READONLY|PAGE_READWRITE|PAGE_WRITECOPY|PAGE_EXECUTE_READ|PAGE_EXECUTE_READWRITE|PAGE_EXECUTE_WRITECOPY)))
         {
             MmUnlockAddressSpace(AddressSpace);
             return STATUS_SECTION_PROTECTION;
         }
         /* check for execute access */
         if ((Protect & (PAGE_EXECUTE|PAGE_EXECUTE_READ|PAGE_EXECUTE_READWRITE|PAGE_EXECUTE_WRITECOPY)) &&
-                !(Section->SectionPageProtection & (PAGE_EXECUTE|PAGE_EXECUTE_READ|PAGE_EXECUTE_READWRITE|PAGE_EXECUTE_WRITECOPY)))
+                !(Section->InitialPageProtection & (PAGE_EXECUTE|PAGE_EXECUTE_READ|PAGE_EXECUTE_READWRITE|PAGE_EXECUTE_WRITECOPY)))
         {
             MmUnlockAddressSpace(AddressSpace);
             return STATUS_SECTION_PROTECTION;
@@ -5133,7 +5133,7 @@ MmCreateSection (OUT PVOID  * Section,
                                       DesiredAccess,
                                       ObjectAttributes,
                                       SizeOfSection,
-                                      SectionPageProtection,
+                                      InitialPageProtection,
                                       AllocationAttributes,
                                       FileObject);
     }
