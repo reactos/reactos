@@ -755,6 +755,7 @@ MmUnmapViewOfCacheSegment(PMMSUPPORT AddressSpace,
     return STATUS_SUCCESS;
 }
 
+#ifdef NEWCC
 NTSTATUS
 NTAPI
 MmExtendCacheSection(PROS_SECTION_OBJECT Section,
@@ -792,6 +793,7 @@ MmExtendCacheSection(PROS_SECTION_OBJECT Section,
     MmUnlockSectionSegment(Segment);
     return STATUS_SUCCESS;
 }
+#endif
 
 NTSTATUS
 NTAPI
