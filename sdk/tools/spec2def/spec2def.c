@@ -730,6 +730,13 @@ OutputLine_def_GCC(FILE *fileDest, EXPORT *pexp)
 int
 OutputLine_def(FILE *fileDest, EXPORT *pexp)
 {
+    /* Don't add private exports to the import lib */
+    if (gbImportLib && (pexp->uFlags & FL_PRIVATE))
+    {
+        DbgPrint("OutputLine_def: skipping private export '%.*s'...\n", pexp->strName.len, pexp->strName.buf);
+        return 1;
+    }
+
     DbgPrint("OutputLine_def: '%.*s'...\n", pexp->strName.len, pexp->strName.buf);
     fprintf(fileDest, " ");
 
