@@ -624,19 +624,6 @@ typedef struct _SEGMENT_OBJECT
 } SEGMENT_OBJECT, *PSEGMENT_OBJECT;
 
 //
-// Section Object
-//
-typedef struct _SECTION_OBJECT
-{
-    PVOID StartingVa;
-    PVOID EndingVa;
-    PVOID Parent;
-    PVOID LeftChild;
-    PVOID RightChild;
-    PSEGMENT_OBJECT Segment;
-} SECTION_OBJECT, *PSECTION_OBJECT;
-
-//
 // Generic Address Range Structure
 //
 typedef struct _ADDRESS_RANGE
