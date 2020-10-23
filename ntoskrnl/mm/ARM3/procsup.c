@@ -941,7 +941,6 @@ MmInitializeProcessAddressSpace(IN PEPROCESS Process,
     NTSTATUS Status = STATUS_SUCCESS;
     SIZE_T ViewSize = 0;
     PVOID ImageBase = 0;
-    PROS_SECTION_OBJECT SectionObject = Section;
     PMMPTE PointerPte;
     KIRQL OldIrql;
     PMMPDE PointerPde;
@@ -1048,10 +1047,11 @@ MmInitializeProcessAddressSpace(IN PEPROCESS Process,
 #endif
 
     /* Check if there's a Section Object */
-    if (SectionObject)
+    if (Section)
     {
         /* Determine the image file name and save it to EPROCESS */
-        FileName = SectionObject->FileObject->FileName;
+        PFILE_OBJECT FileObject = MmGetFileObjectForSection(Section);
+        FileName = FileObject->FileName;
         Source = (PWCHAR)((PCHAR)FileName.Buffer + FileName.Length);
         if (FileName.Buffer)
         {
@@ -1083,9 +1083,7 @@ MmInitializeProcessAddressSpace(IN PEPROCESS Process,
         if (AuditName)
         {
             /* Setup the audit name */
-            Status = SeInitializeProcessAuditName(SectionObject->FileObject,
-                                                  FALSE,
-                                                  AuditName);
+            Status = SeInitializeProcessAuditName(FileObject, FALSE, AuditName);
             if (!NT_SUCCESS(Status))
             {
                 /* Fail */

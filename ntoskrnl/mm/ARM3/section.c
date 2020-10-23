@@ -1831,19 +1831,10 @@ MmGetFileNameForSection(IN PVOID Section,
                         OUT POBJECT_NAME_INFORMATION *ModuleName)
 {
     PFILE_OBJECT FileObject;
+    PSECTION SectionObject = Section;
 
     /* Make sure it's an image section */
-    if (MiIsRosSectionObject(Section) == FALSE)
-    {
-        /* Check ARM3 Section flag */
-        if (((PSECTION)Section)->u.Flags.Image == 0)
-        {
-            /* It's not, fail */
-            DPRINT1("Not an image section\n");
-            return STATUS_SECTION_NOT_IMAGE;
-        }
-    }
-    else if (!(((PROS_SECTION_OBJECT)Section)->u.Flags.Image))
+    if (SectionObject->u.Flags.Image == 0)
     {
         /* It's not, fail */
         DPRINT1("Not an image section\n");
@@ -3594,7 +3585,7 @@ NtMapViewOfSection(IN HANDLE SectionHandle,
     PVOID SafeBaseAddress;
     LARGE_INTEGER SafeSectionOffset;
     SIZE_T SafeViewSize;
-    PROS_SECTION_OBJECT Section;
+    PSECTION Section;
     PEPROCESS Process;
     NTSTATUS Status;
     ACCESS_MASK DesiredAccess;

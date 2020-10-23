@@ -1071,7 +1071,7 @@ FORCEINLINE
 BOOLEAN
 MiIsRosSectionObject(IN PVOID Section)
 {
-    PROS_SECTION_OBJECT RosSection = Section;
+    PSECTION RosSection = Section;
     return RosSection->u.Flags.filler;
 }
 

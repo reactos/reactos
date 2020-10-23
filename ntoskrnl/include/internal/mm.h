@@ -221,7 +221,7 @@ typedef struct _MEMORY_AREA
     {
         struct
         {
-            ROS_SECTION_OBJECT* Section;
+            PROS_SECTION_OBJECT Section;
             LARGE_INTEGER ViewOffset;
             PMM_SECTION_SEGMENT Segment;
             LIST_ENTRY RegionListHead;
