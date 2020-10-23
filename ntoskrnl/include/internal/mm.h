@@ -200,7 +200,11 @@ typedef struct _ROS_SECTION_OBJECT
     CSHORT Size;
     LARGE_INTEGER SizeOfSection;
     ULONG InitialPageProtection;
-    ULONG AllocationAttributes;
+    union
+    {
+        ULONG LongFlags;
+        MMSECTION_FLAGS Flags;
+    } u;
     PFILE_OBJECT FileObject;
     union
     {

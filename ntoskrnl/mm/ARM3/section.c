@@ -1834,7 +1834,7 @@ MmGetFileNameForSection(IN PVOID Section,
             return STATUS_SECTION_NOT_IMAGE;
         }
     }
-    else if (!(((PROS_SECTION_OBJECT)Section)->AllocationAttributes & SEC_IMAGE))
+    else if (!(((PROS_SECTION_OBJECT)Section)->u.Flags.Image))
     {
         /* It's not, fail */
         DPRINT1("Not an image section\n");
@@ -3715,8 +3715,7 @@ NtMapViewOfSection(IN HANDLE SectionHandle,
         return Status;
     }
 
-    if (MiIsRosSectionObject(Section) &&
-        (Section->AllocationAttributes & SEC_PHYSICALMEMORY))
+    if (MiIsRosSectionObject(Section) && Section->u.Flags.PhysicalMemory)
     {
         if (PreviousMode == UserMode &&
             SafeSectionOffset.QuadPart + SafeViewSize > MmHighestPhysicalPage << PAGE_SHIFT)
@@ -3765,7 +3764,7 @@ NtMapViewOfSection(IN HANDLE SectionHandle,
     {
         /* Check if this is an image for the current process */
         if (MiIsRosSectionObject(Section) &&
-            (Section->AllocationAttributes & SEC_IMAGE) &&
+            (Section->u.Flags.Image) &&
             (Process == PsGetCurrentProcess()) &&
             (Status != STATUS_IMAGE_NOT_AT_BASE))
         {
@@ -3873,7 +3872,7 @@ NtExtendSection(IN HANDLE SectionHandle,
     if (!NT_SUCCESS(Status)) return Status;
 
     /* Really this should go in MmExtendSection */
-    if (!(Section->AllocationAttributes & SEC_FILE))
+    if (!Section->u.Flags.File || Section->u.Flags.Image)
     {
         DPRINT1("Not extending a file\n");
         ObDereferenceObject(Section);

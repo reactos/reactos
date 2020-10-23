@@ -914,7 +914,7 @@ MmUnsharePageEntrySectionSegment(PROS_SECTION_OBJECT Section,
         LARGE_INTEGER FileOffset;
 
         FileOffset.QuadPart = Offset->QuadPart + Segment->Image.FileOffset;
-        IsImageSection = Section->AllocationAttributes & SEC_IMAGE ? TRUE : FALSE;
+        IsImageSection = Section->u.Flags.Image;
 #endif
 
         Page = PFN_FROM_SSE(Entry);
@@ -1087,7 +1087,7 @@ MiReadPage(PMEMORY_AREA MemoryArea,
     SharedCacheMap = FileObject->SectionObjectPointer->SharedCacheMap;
     RawLength = MemoryArea->Data.SectionData.Segment->RawLength.QuadPart;
     FileOffset = SegOffset + MemoryArea->Data.SectionData.Segment->Image.FileOffset;
-    IsImageSection = MemoryArea->Data.SectionData.Section->AllocationAttributes & SEC_IMAGE ? TRUE : FALSE;
+    IsImageSection = MemoryArea->Data.SectionData.Section->u.Flags.Image;
 
     ASSERT(SharedCacheMap);
 
@@ -1557,7 +1557,7 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
     /*
      * Satisfying a page fault on a map of /Device/PhysicalMemory is easy
      */
-    if (Section->AllocationAttributes & SEC_PHYSICALMEMORY)
+    if (Section->u.Flags.PhysicalMemory)
     {
         MmUnlockSectionSegment(Segment);
         /*
@@ -1606,8 +1606,7 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
         MmCreatePageFileMapping(Process, PAddress, MM_WAIT_ENTRY);
         MmUnlockAddressSpace(AddressSpace);
 
-        if ((Offset.QuadPart >= (LONGLONG)PAGE_ROUND_UP(Segment->RawLength.QuadPart)) &&
-                  (Section->AllocationAttributes & SEC_IMAGE))
+        if ((Offset.QuadPart >= (LONGLONG)PAGE_ROUND_UP(Segment->RawLength.QuadPart)) && Section->u.Flags.Image)
         {
             MI_SET_USAGE(MI_USAGE_SECTION);
             if (Process) MI_SET_PROCESS2(Process->ImageFileName);
@@ -1989,7 +1988,7 @@ MmPageOutSectionView(PMMSUPPORT AddressSpace,
 
 #ifndef NEWCC
     FileOffset = Context.Offset.QuadPart + Context.Segment->Image.FileOffset;
-    IsImageSection = Context.Section->AllocationAttributes & SEC_IMAGE ? TRUE : FALSE;
+    IsImageSection = Context.Section->u.Flags.Image;
     FileObject = Context.Section->FileObject;
 
     if (FileObject != NULL &&
@@ -2015,7 +2014,7 @@ MmPageOutSectionView(PMMSUPPORT AddressSpace,
      * This should never happen since mappings of physical memory are never
      * placed in the rmap lists.
      */
-    if (Context.Section->AllocationAttributes & SEC_PHYSICALMEMORY)
+    if (Context.Section->u.Flags.PhysicalMemory)
     {
         DPRINT1("Trying to page out from physical memory section address 0x%p "
                 "process %p\n", Address,
@@ -2368,7 +2367,7 @@ MmWritePageSectionView(PMMSUPPORT AddressSpace,
      */
     Segment = MemoryArea->Data.SectionData.Segment;
     Section = MemoryArea->Data.SectionData.Section;
-    IsImageSection = Section->AllocationAttributes & SEC_IMAGE ? TRUE : FALSE;
+    IsImageSection = Section->u.Flags.Image;
 
     FileObject = Section->FileObject;
     DirectMapped = FALSE;
@@ -2395,7 +2394,7 @@ MmWritePageSectionView(PMMSUPPORT AddressSpace,
      * This should never happen since mappings of physical memory are never
      * placed in the rmap lists.
      */
-    if (Section->AllocationAttributes & SEC_PHYSICALMEMORY)
+    if (Section->u.Flags.PhysicalMemory)
     {
         DPRINT1("Trying to write back page from physical memory mapped at %p "
                 "process %p\n", Address,
@@ -2545,7 +2544,7 @@ MmQuerySectionView(PMEMORY_AREA MemoryArea,
     }
 
     Section = MemoryArea->Data.SectionData.Section;
-    if (Section->AllocationAttributes & SEC_IMAGE)
+    if (Section->u.Flags.Image)
     {
         Segment = MemoryArea->Data.SectionData.Segment;
         Info->AllocationBase = (PUCHAR)MA_GetStartingAddress(MemoryArea) - Segment->Image.VirtualAddress;
@@ -2621,7 +2620,7 @@ MmpDeleteSection(PVOID ObjectBody)
     }
 
     DPRINT("MmpDeleteSection(ObjectBody %p)\n", ObjectBody);
-    if (Section->AllocationAttributes & SEC_IMAGE)
+    if (Section->u.Flags.Image)
     {
         ULONG i;
         ULONG NrSegments;
@@ -2754,7 +2753,7 @@ MmCreatePhysicalMemorySection(VOID)
     PhysSection->Type = 'SC';
     PhysSection->Size = 'TN';
     PhysSection->InitialPageProtection = PAGE_EXECUTE_READWRITE;
-    PhysSection->AllocationAttributes = SEC_PHYSICALMEMORY;
+    PhysSection->u.Flags.PhysicalMemory = 1;
     PhysSection->SizeOfSection = SectionSize;
     Segment = ExAllocatePoolWithTag(NonPagedPool, sizeof(MM_SECTION_SEGMENT),
                                     TAG_MM_SECTION_SEGMENT);
@@ -2869,7 +2868,9 @@ MmCreateDataFileSection(PROS_SECTION_OBJECT *SectionObject,
     Section->Type = 'SC';
     Section->Size = 'TN';
     Section->InitialPageProtection = SectionPageProtection;
-    Section->AllocationAttributes = AllocationAttributes;
+    Section->u.Flags.File = 1;
+    if (AllocationAttributes & SEC_NO_CHANGE)
+        Section->u.Flags.NoChange = 1;
 
     /*
      * FIXME: This is propably not entirely correct. We can't look into
@@ -3694,7 +3695,10 @@ MmCreateImageSection(PROS_SECTION_OBJECT *SectionObject,
     Section->Type = 'SC';
     Section->Size = 'TN';
     Section->InitialPageProtection = SectionPageProtection;
-    Section->AllocationAttributes = AllocationAttributes;
+    Section->u.Flags.File = 1;
+    Section->u.Flags.Image = 1;
+    if (AllocationAttributes & SEC_NO_CHANGE)
+        Section->u.Flags.NoChange = 1;
 
     if (FileObject->SectionObjectPointer->ImageSectionObject == NULL)
     {
@@ -3871,7 +3875,7 @@ MmMapViewOfSegment(PMMSUPPORT AddressSpace,
     MArea->Data.SectionData.Segment = Segment;
     MArea->Data.SectionData.Section = Section;
     MArea->Data.SectionData.ViewOffset.QuadPart = ViewOffset;
-    if (Section->AllocationAttributes & SEC_IMAGE)
+    if (Section->u.Flags.Image)
     {
         MArea->VadNode.u.VadFlags.VadType = VadImageMap;
     }
@@ -4017,7 +4021,7 @@ MmUnmapViewOfSegment(PMMSUPPORT AddressSpace,
         ExFreePoolWithTag(CurrentRegion, TAG_MM_REGION);
     }
 
-    if (Section->AllocationAttributes & SEC_PHYSICALMEMORY)
+    if (Section->u.Flags.PhysicalMemory)
     {
         Status = MmFreeMemoryArea(AddressSpace,
                                   MemoryArea,
@@ -4070,7 +4074,7 @@ MiRosUnmapViewOfSection(IN PEPROCESS Process,
 
     Section = MemoryArea->Data.SectionData.Section;
 
-    if ((Section != NULL) && (Section->AllocationAttributes & SEC_IMAGE))
+    if ((Section != NULL) && Section->u.Flags.Image)
     {
         ULONG i;
         ULONG NrSegments;
@@ -4237,8 +4241,15 @@ NtQuerySection(
 
                 _SEH2_TRY
                 {
-                    Sbi->Attributes = RosSection->AllocationAttributes;
-                    if (RosSection->AllocationAttributes & SEC_IMAGE)
+                    Sbi->Attributes = 0;
+                    if (RosSection->u.Flags.Image)
+                        Sbi->Attributes |= SEC_IMAGE;
+                    if (RosSection->u.Flags.File)
+                        Sbi->Attributes |= SEC_FILE;
+                    if (RosSection->u.Flags.NoChange)
+                        Sbi->Attributes |= SEC_NO_CHANGE;
+
+                    if (RosSection->u.Flags.Image)
                     {
                         Sbi->BaseAddress = 0;
                         Sbi->Size.QuadPart = 0;
@@ -4270,7 +4281,7 @@ NtQuerySection(
 
                 _SEH2_TRY
                 {
-                    if (RosSection->AllocationAttributes & SEC_IMAGE)
+                    if (RosSection->u.Flags.Image)
                     {
                         PMM_IMAGE_SECTION_OBJECT ImageSectionObject;
                         ImageSectionObject = RosSection->ImageSection;
@@ -4448,11 +4459,12 @@ MmMapViewOfSection(IN PVOID SectionObject,
     Section = (PROS_SECTION_OBJECT)SectionObject;
     AddressSpace = &Process->Vm;
 
-    AllocationType |= (Section->AllocationAttributes & SEC_NO_CHANGE);
+    if (Section->u.Flags.NoChange)
+        AllocationType |= SEC_NO_CHANGE;
 
     MmLockAddressSpace(AddressSpace);
 
-    if (Section->AllocationAttributes & SEC_IMAGE)
+    if (Section->u.Flags.Image)
     {
         ULONG i;
         ULONG NrSegments;
