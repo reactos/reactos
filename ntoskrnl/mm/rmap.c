@@ -167,12 +167,14 @@ MmPageOutPhysicalAddress(PFN_NUMBER Page)
          */
         Status = MmPageOutSectionView(AddressSpace, MemoryArea, Address, Entry);
     }
+#ifdef NEWCC
     else if (Type == MEMORY_AREA_CACHE)
     {
         /* NEWCC does locking itself */
         MmUnlockAddressSpace(AddressSpace);
         Status = MmpPageOutPhysicalAddress(Page);
     }
+#endif
     else
     {
         KeBugCheck(MEMORY_MANAGEMENT);

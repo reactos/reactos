@@ -60,6 +60,29 @@
 
 extern MMSESSION MmSession;
 
+#ifndef NEWCC
+KEVENT MmWaitPageEvent;
+
+VOID
+NTAPI
+_MmLockSectionSegment(PMM_SECTION_SEGMENT Segment, const char *file, int line)
+{
+    //DPRINT("MmLockSectionSegment(%p,%s:%d)\n", Segment, file, line);
+    ExAcquireFastMutex(&Segment->Lock);
+    Segment->Locked = TRUE;
+}
+
+VOID
+NTAPI
+_MmUnlockSectionSegment(PMM_SECTION_SEGMENT Segment, const char *file, int line)
+{
+    ASSERT(Segment->Locked);
+    Segment->Locked = FALSE;
+    ExReleaseFastMutex(&Segment->Lock);
+    //DPRINT("MmUnlockSectionSegment(%p,%s:%d)\n", Segment, file, line);
+}
+#endif
+
 NTSTATUS
 NTAPI
 MiMapViewInSystemSpace(IN PVOID Section,
@@ -4067,9 +4090,13 @@ MiRosUnmapViewOfSection(IN PEPROCESS Process,
     MemoryArea = MmLocateMemoryAreaByAddress(AddressSpace,
                  BaseAddress);
     if (MemoryArea == NULL ||
-            ((MemoryArea->Type != MEMORY_AREA_SECTION_VIEW) &&
-             (MemoryArea->Type != MEMORY_AREA_CACHE)) ||
+#ifdef NEWCC
+            ((MemoryArea->Type != MEMORY_AREA_SECTION_VIEW) && (MemoryArea->Type != MEMORY_AREA_CACHE)) ||
+#else
+            (MemoryArea->Type != MEMORY_AREA_SECTION_VIEW) ||
+#endif
             MemoryArea->DeleteInProgress)
+
     {
         if (MemoryArea) ASSERT(MemoryArea->Type != MEMORY_AREA_OWNED_BY_ARM3);
         MmUnlockAddressSpace(AddressSpace);

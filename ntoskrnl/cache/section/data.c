@@ -112,6 +112,7 @@ _MmUnlockSectionSegment(PMM_SECTION_SEGMENT Segment, const char *file, int line)
     //DPRINT("MmUnlockSectionSegment(%p,%s:%d)\n", Segment, file, line);
 }
 
+#ifdef NEWCC
 /*
 
 MiFlushMappedSection
@@ -265,7 +266,6 @@ This deletes a segment entirely including its page map.
 It must have been unmapped in every address space.
 
  */
-
 VOID
 NTAPI
 MmFinalizeSegment(PMM_SECTION_SEGMENT Segment)
@@ -273,6 +273,8 @@ MmFinalizeSegment(PMM_SECTION_SEGMENT Segment)
     KIRQL OldIrql = 0;
 
     DPRINT("Finalize segment %p\n", Segment);
+
+    __debugbreak();
 
     MmLockSectionSegment(Segment);
     RemoveEntryList(&Segment->ListOfSegments);
@@ -303,7 +305,6 @@ MmFinalizeSegment(PMM_SECTION_SEGMENT Segment)
     ExFreePoolWithTag(Segment, TAG_MM_SECTION_SEGMENT);
 }
 
-#ifdef NEWCC
 NTSTATUS
 NTAPI
 MmCreateCacheSection(PROS_SECTION_OBJECT *SectionObject,
@@ -534,7 +535,6 @@ MmCreateCacheSection(PROS_SECTION_OBJECT *SectionObject,
     *SectionObject = Section;
     return STATUS_SUCCESS;
 }
-#endif
 
 NTSTATUS
 NTAPI
@@ -605,6 +605,7 @@ _MiMapViewOfSegment(PMMSUPPORT AddressSpace,
 
     return STATUS_SUCCESS;
 }
+#endif
 
 /*
 
@@ -620,6 +621,8 @@ MiFreeSegmentPage(PMM_SECTION_SEGMENT Segment,
 {
     ULONG_PTR Entry;
     PFILE_OBJECT FileObject = Segment->FileObject;
+
+    __debugbreak();
 
     Entry = MmGetPageEntrySectionSegment(Segment, FileOffset);
     DPRINTC("MiFreeSegmentPage(%p:%I64x -> Entry %Ix\n",
@@ -710,6 +713,7 @@ MmFreeCacheSectionPage(PVOID Context,
     }
 }
 
+#ifdef NEWCC
 NTSTATUS
 NTAPI
 MmUnmapViewOfCacheSegment(PMMSUPPORT AddressSpace,
@@ -755,7 +759,6 @@ MmUnmapViewOfCacheSegment(PMMSUPPORT AddressSpace,
     return STATUS_SUCCESS;
 }
 
-#ifdef NEWCC
 NTSTATUS
 NTAPI
 MmExtendCacheSection(PROS_SECTION_OBJECT Section,
@@ -793,7 +796,6 @@ MmExtendCacheSection(PROS_SECTION_OBJECT Section,
     MmUnlockSectionSegment(Segment);
     return STATUS_SUCCESS;
 }
-#endif
 
 NTSTATUS
 NTAPI
@@ -844,5 +846,6 @@ MmUnmapCacheViewInSystemSpace (IN PVOID MappedBase)
 
     return Status;
 }
+#endif /* NEWCC */
 
 /* EOF */

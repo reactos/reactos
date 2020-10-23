@@ -28,7 +28,11 @@ if(NEWCC)
         ${REACTOS_SOURCE_DIR}/ntoskrnl/cache/lazyrite.c
         ${REACTOS_SOURCE_DIR}/ntoskrnl/cache/logsup.c
         ${REACTOS_SOURCE_DIR}/ntoskrnl/cache/mdlsup.c
-        ${REACTOS_SOURCE_DIR}/ntoskrnl/cache/pinsup.c)
+        ${REACTOS_SOURCE_DIR}/ntoskrnl/cache/pinsup.c
+        ${REACTOS_SOURCE_DIR}/ntoskrnl/cache/section/fault.c
+        ${REACTOS_SOURCE_DIR}/ntoskrnl/cache/section/swapout.c
+        ${REACTOS_SOURCE_DIR}/ntoskrnl/cache/section/data.c
+        ${REACTOS_SOURCE_DIR}/ntoskrnl/cache/section/reqtools.c)
 else()
     list(APPEND SOURCE
         ${REACTOS_SOURCE_DIR}/ntoskrnl/cc/cacheman.c
@@ -42,11 +46,7 @@ endif()
 
 list(APPEND SOURCE
     ${REACTOS_SOURCE_DIR}/ntoskrnl/cache/section/io.c
-    ${REACTOS_SOURCE_DIR}/ntoskrnl/cache/section/data.c
-    ${REACTOS_SOURCE_DIR}/ntoskrnl/cache/section/fault.c
-    ${REACTOS_SOURCE_DIR}/ntoskrnl/cache/section/reqtools.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/cache/section/sptab.c
-    ${REACTOS_SOURCE_DIR}/ntoskrnl/cache/section/swapout.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/config/cmalloc.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/config/cmapi.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/config/cmboot.c

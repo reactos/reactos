@@ -178,7 +178,11 @@ MmInsertMemoryArea(
         ASSERT(Process != NULL);
         if (marea->Type != MEMORY_AREA_OWNED_BY_ARM3)
         {
+#ifdef NEWCC
             ASSERT(marea->Type == MEMORY_AREA_SECTION_VIEW || marea->Type == MEMORY_AREA_CACHE);
+#else
+            ASSERT(marea->Type == MEMORY_AREA_SECTION_VIEW);
+#endif
 
             /* Insert the VAD */
             MiLockProcessWorkingSetUnsafe(PsGetCurrentProcess(), PsGetCurrentThread());
@@ -353,7 +357,11 @@ MmFreeMemoryArea(
         if (MemoryArea->Vad)
         {
             ASSERT(MemoryArea->VadNode.EndingVpn + 1 < (ULONG_PTR)MmSystemRangeStart >> PAGE_SHIFT);
+#ifdef NEWCC
             ASSERT(MemoryArea->Type == MEMORY_AREA_SECTION_VIEW || MemoryArea->Type == MEMORY_AREA_CACHE);
+#else
+            ASSERT(MemoryArea->Type == MEMORY_AREA_SECTION_VIEW);
+#endif
 
             /* MmCleanProcessAddressSpace might have removed it (and this would be MmDeleteProcessAdressSpace) */
             ASSERT(MemoryArea->VadNode.u.VadFlags.Spare != 0);
@@ -545,10 +553,12 @@ MiRosCleanupMemoryArea(
     {
         Status = MiRosUnmapViewOfSection(Process, BaseAddress, Process->ProcessExiting);
     }
+#ifdef NEWCC
     else if (MemoryArea->Type == MEMORY_AREA_CACHE)
     {
         Status = MmUnmapViewOfCacheSegment(&Process->Vm, BaseAddress);
     }
+#endif
     else
     {
         /* There shouldn't be anything else! */

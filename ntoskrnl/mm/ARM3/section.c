@@ -1666,9 +1666,14 @@ MiGetFileObjectForSectionAddress(
         }
         else
         {
+#ifdef NEWCC
             ASSERT(MemoryArea->Type == MEMORY_AREA_CACHE);
             DPRINT1("Address is a cache section!\n");
             return STATUS_SECTION_NOT_IMAGE;
+#else
+            ASSERT(FALSE);
+            return STATUS_SECTION_NOT_IMAGE;
+#endif
         }
     }
     else
@@ -1739,8 +1744,12 @@ MiGetFileObjectForVad(
         }
         else
         {
+#ifdef NEWCC
             ASSERT(MemoryArea->Type == MEMORY_AREA_CACHE);
             DPRINT1("VAD is a cache section!\n");
+#else
+            ASSERT(FALSE);
+#endif
             return NULL;
         }
     }

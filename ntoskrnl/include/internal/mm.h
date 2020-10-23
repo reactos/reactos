@@ -69,7 +69,9 @@ typedef ULONG_PTR SWAPENTRY;
 #endif
 
 #define MEMORY_AREA_SECTION_VIEW            (1)
+#ifdef NEWCC
 #define MEMORY_AREA_CACHE                   (2)
+#endif
 #define MEMORY_AREA_OWNED_BY_ARM3           (15)
 #define MEMORY_AREA_STATIC                  (0x80000000)
 
