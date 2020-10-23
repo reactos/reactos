@@ -1,6 +1,4 @@
 
-set_cpp()
-
 list(APPEND SOURCE
     adapter.cpp
     common.cpp
