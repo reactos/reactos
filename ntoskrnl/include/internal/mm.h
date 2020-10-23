@@ -196,21 +196,10 @@ typedef struct _MM_IMAGE_SECTION_OBJECT
 
 typedef struct _ROS_SECTION_OBJECT
 {
-    CSHORT Type;
-    CSHORT Size;
-    LARGE_INTEGER SizeOfSection;
-    ULONG InitialPageProtection;
-    union
-    {
-        ULONG LongFlags;
-        MMSECTION_FLAGS Flags;
-    } u;
+    SECTION;
     PFILE_OBJECT FileObject;
-    union
-    {
-        PMM_IMAGE_SECTION_OBJECT ImageSection;
-        PMM_SECTION_SEGMENT Segment;
-    };
+
+    PMM_IMAGE_SECTION_OBJECT ImageSection;
 } ROS_SECTION_OBJECT, *PROS_SECTION_OBJECT;
 
 #define MA_GetStartingAddress(_MemoryArea) ((_MemoryArea)->VadNode.StartingVpn << PAGE_SHIFT)
