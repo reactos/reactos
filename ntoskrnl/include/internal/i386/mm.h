@@ -3,11 +3,11 @@
  */
 #pragma once
 
+#define _MI_PAGING_LEVELS 2
+
 #ifdef _X86PAE_
-#define _MI_PAGING_LEVELS 3
 #define _MI_HAS_NO_EXECUTE 1
 #else
-#define _MI_PAGING_LEVELS 2
 #define _MI_HAS_NO_EXECUTE 0
 #endif
 
