@@ -655,7 +655,7 @@ extern LARGE_INTEGER MmCriticalSectionTimeout;
 extern LIST_ENTRY MmWorkingSetExpansionHead;
 extern KSPIN_LOCK MmExpansionLock;
 extern PETHREAD MiExpansionLockOwner;
-#if (_MI_PAGING_LEVELS <= 3)
+#if (_MI_PAGING_LEVELS == 2)
 extern PFN_NUMBER MmSystemPageDirectory[PD_COUNT];
 extern PMMPDE MmSystemPagePtes;
 #endif
