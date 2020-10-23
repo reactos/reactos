@@ -200,8 +200,6 @@ typedef struct _ROS_SECTION_OBJECT
 {
     SECTION;
     PFILE_OBJECT FileObject;
-
-    PMM_IMAGE_SECTION_OBJECT ImageSection;
 } ROS_SECTION_OBJECT, *PROS_SECTION_OBJECT;
 
 #define MA_GetStartingAddress(_MemoryArea) ((_MemoryArea)->VadNode.StartingVpn << PAGE_SHIFT)

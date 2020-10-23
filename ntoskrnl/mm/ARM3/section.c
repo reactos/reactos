@@ -1789,8 +1789,14 @@ MmGetImageInformation (OUT PSECTION_IMAGE_INFORMATION ImageInformation)
     ASSERT(SectionObject != NULL);
     ASSERT(MiIsRosSectionObject(SectionObject) == TRUE);
 
+    if (SectionObject->u.Flags.Image == 0)
+    {
+        RtlZeroMemory(ImageInformation, sizeof(*ImageInformation));
+        return;
+    }
+
     /* Return the image information */
-    *ImageInformation = ((PROS_SECTION_OBJECT)SectionObject)->ImageSection->ImageInformation;
+    *ImageInformation = ((PMM_IMAGE_SECTION_OBJECT)SectionObject->Segment)->ImageInformation;
 }
 
 NTSTATUS
