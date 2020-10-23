@@ -303,6 +303,7 @@ MmFinalizeSegment(PMM_SECTION_SEGMENT Segment)
     ExFreePoolWithTag(Segment, TAG_MM_SECTION_SEGMENT);
 }
 
+#ifdef NEWCC
 NTSTATUS
 NTAPI
 MmCreateCacheSection(PROS_SECTION_OBJECT *SectionObject,
@@ -533,6 +534,7 @@ MmCreateCacheSection(PROS_SECTION_OBJECT *SectionObject,
     *SectionObject = Section;
     return STATUS_SUCCESS;
 }
+#endif
 
 NTSTATUS
 NTAPI
