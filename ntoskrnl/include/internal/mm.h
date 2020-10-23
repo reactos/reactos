@@ -212,7 +212,6 @@ typedef struct _MEMORY_AREA
     MMVAD VadNode;
 
     ULONG Type;
-    ULONG Protect;
     ULONG Flags;
     BOOLEAN DeleteInProgress;
     ULONG Magic;

@@ -165,12 +165,13 @@ MiMakeProtectionMask(
 static VOID
 MmInsertMemoryArea(
     PMMSUPPORT AddressSpace,
-    PMEMORY_AREA marea)
+    PMEMORY_AREA marea,
+    ULONG Protect)
 {
     PEPROCESS Process = MmGetAddressSpaceOwner(AddressSpace);
 
     marea->VadNode.u.VadFlags.Spare = 1;
-    marea->VadNode.u.VadFlags.Protection = MiMakeProtectionMask(marea->Protect);
+    marea->VadNode.u.VadFlags.Protection = MiMakeProtectionMask(Protect);
 
     /* Build a lame VAD if this is a user-space allocation */
     if (marea->VadNode.EndingVpn + 1 < (ULONG_PTR)MmSystemRangeStart >> PAGE_SHIFT)
@@ -457,7 +458,6 @@ MmCreateMemoryArea(PMMSUPPORT AddressSpace,
 
     RtlZeroMemory(MemoryArea, sizeof(MEMORY_AREA));
     MemoryArea->Type = Type & ~MEMORY_AREA_STATIC;
-    MemoryArea->Protect = Protect;
     MemoryArea->Flags = AllocationFlags;
     MemoryArea->Magic = 'erAM';
     MemoryArea->DeleteInProgress = FALSE;
@@ -478,7 +478,7 @@ MmCreateMemoryArea(PMMSUPPORT AddressSpace,
 
         MemoryArea->VadNode.StartingVpn = (ULONG_PTR)*BaseAddress >> PAGE_SHIFT;
         MemoryArea->VadNode.EndingVpn = ((ULONG_PTR)*BaseAddress + tmpLength - 1) >> PAGE_SHIFT;
-        MmInsertMemoryArea(AddressSpace, MemoryArea);
+        MmInsertMemoryArea(AddressSpace, MemoryArea, Protect);
     }
     else
     {
@@ -516,7 +516,7 @@ MmCreateMemoryArea(PMMSUPPORT AddressSpace,
 
         MemoryArea->VadNode.StartingVpn = (ULONG_PTR)*BaseAddress >> PAGE_SHIFT;
         MemoryArea->VadNode.EndingVpn = ((ULONG_PTR)*BaseAddress + tmpLength - 1) >> PAGE_SHIFT;
-        MmInsertMemoryArea(AddressSpace, MemoryArea);
+        MmInsertMemoryArea(AddressSpace, MemoryArea, Protect);
     }
 
     *Result = MemoryArea;

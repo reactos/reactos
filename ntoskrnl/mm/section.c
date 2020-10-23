@@ -2222,7 +2222,7 @@ MmPageOutSectionView(PMMSUPPORT AddressSpace,
             {
                 Status = MmCreateVirtualMapping(Process,
                                                 Address,
-                                                MemoryArea->Protect,
+                                                MmProtectToValue[MemoryArea->VadNode.u.VadFlags.Protection],
                                                 &Page,
                                                 1);
                 MmSetDirtyPage(Process, Address);
@@ -2243,7 +2243,7 @@ MmPageOutSectionView(PMMSUPPORT AddressSpace,
                  */
                 Status = MmCreateVirtualMapping(Process,
                                                 Address,
-                                                MemoryArea->Protect,
+                                                MmProtectToValue[MemoryArea->VadNode.u.VadFlags.Protection],
                                                 &Page,
                                                 1);
                 MmSetDirtyPage(Process, Address);
@@ -2280,7 +2280,7 @@ MmPageOutSectionView(PMMSUPPORT AddressSpace,
         {
             Status = MmCreateVirtualMapping(Process,
                                             Address,
-                                            MemoryArea->Protect,
+                                            MmProtectToValue[MemoryArea->VadNode.u.VadFlags.Protection],
                                             &Page,
                                             1);
             MmSetDirtyPage(Process, Address);
@@ -2293,7 +2293,7 @@ MmPageOutSectionView(PMMSUPPORT AddressSpace,
             MmLockSectionSegment(Context.Segment);
             Status = MmCreateVirtualMapping(Process,
                                             Address,
-                                            MemoryArea->Protect,
+                                            MmProtectToValue[MemoryArea->VadNode.u.VadFlags.Protection],
                                             &Page,
                                             1);
             MmSetDirtyPage(Process, Address);
@@ -2579,7 +2579,7 @@ MmQuerySectionView(PMEMORY_AREA MemoryArea,
         Info->Type = MEM_MAPPED;
     }
     Info->BaseAddress = RegionBaseAddress;
-    Info->AllocationProtect = MemoryArea->Protect;
+    Info->AllocationProtect = MmProtectToValue[MemoryArea->VadNode.u.VadFlags.Protection];
     Info->RegionSize = Region->Length;
     Info->State = MEM_COMMIT;
     Info->Protect = Region->Protect;
