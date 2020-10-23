@@ -2881,7 +2881,7 @@ MmCreatePageFileSection(PROS_SECTION_OBJECT *SectionObject,
     Section->Size = 'TN';
     Section->SectionPageProtection = SectionPageProtection;
     Section->AllocationAttributes = AllocationAttributes;
-    Section->MaximumSize = MaximumSize;
+    Section->SizeOfSection = MaximumSize;
     Segment = ExAllocatePoolWithTag(NonPagedPool, sizeof(MM_SECTION_SEGMENT),
                                     TAG_MM_SECTION_SEGMENT);
     if (Segment == NULL)
@@ -3087,7 +3087,7 @@ MmCreateDataFileSection(PROS_SECTION_OBJECT *SectionObject,
     }
     MmUnlockSectionSegment(Segment);
     Section->FileObject = FileObject;
-    Section->MaximumSize = MaximumSize;
+    Section->SizeOfSection = MaximumSize;
 #ifndef NEWCC
     CcRosReferenceCache(FileObject);
 #endif
@@ -4678,11 +4678,11 @@ MmMapViewOfSection(IN PVOID SectionObject,
 
         if ((*ViewSize) == 0)
         {
-            (*ViewSize) = Section->MaximumSize.u.LowPart - ViewOffset;
+            (*ViewSize) = Section->SizeOfSection.u.LowPart - ViewOffset;
         }
-        else if (((*ViewSize)+ViewOffset) > Section->MaximumSize.u.LowPart)
+        else if (((*ViewSize)+ViewOffset) > Section->SizeOfSection.u.LowPart)
         {
-            (*ViewSize) = Section->MaximumSize.u.LowPart - ViewOffset;
+            (*ViewSize) = Section->SizeOfSection.u.LowPart - ViewOffset;
         }
 
         *ViewSize = PAGE_ROUND_UP(*ViewSize);
@@ -4869,11 +4869,11 @@ MmMapViewInSystemSpace (IN PVOID SectionObject,
 
     if ((*ViewSize) == 0)
     {
-        (*ViewSize) = Section->MaximumSize.u.LowPart;
+        (*ViewSize) = Section->SizeOfSection.u.LowPart;
     }
-    else if ((*ViewSize) > Section->MaximumSize.u.LowPart)
+    else if ((*ViewSize) > Section->SizeOfSection.u.LowPart)
     {
-        (*ViewSize) = Section->MaximumSize.u.LowPart;
+        (*ViewSize) = Section->SizeOfSection.u.LowPart;
     }
 
     MmLockSectionSegment(Section->Segment);
@@ -5132,7 +5132,7 @@ MmCreateSection (OUT PVOID  * Section,
         Status = MmCreateCacheSection(SectionObject,
                                       DesiredAccess,
                                       ObjectAttributes,
-                                      MaximumSize,
+                                      SizeOfSection,
                                       SectionPageProtection,
                                       AllocationAttributes,
                                       FileObject);

@@ -199,7 +199,7 @@ typedef struct _ROS_SECTION_OBJECT
 {
     CSHORT Type;
     CSHORT Size;
-    LARGE_INTEGER MaximumSize;
+    LARGE_INTEGER SizeOfSection;
     ULONG SectionPageProtection;
     ULONG AllocationAttributes;
     PFILE_OBJECT FileObject;
