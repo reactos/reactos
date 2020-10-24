@@ -1283,9 +1283,11 @@ BOOL CSysPagerWnd::NotifyIcon(DWORD dwMessage, _In_ CONST NOTIFYICONDATA *iconDa
             (void)AddIconToWatcher(iconData);
         }
         break;
+
     case NIM_MODIFY:
         ret = Toolbar.UpdateButton(iconData);
         break;
+
     case NIM_DELETE:
         ret = Toolbar.RemoveButton(iconData);
         if (ret == TRUE)
@@ -1293,11 +1295,16 @@ BOOL CSysPagerWnd::NotifyIcon(DWORD dwMessage, _In_ CONST NOTIFYICONDATA *iconDa
             (void)RemoveIconFromWatcher(iconData);
         }
         break;
+
     case NIM_SETFOCUS:
         Toolbar.SetFocus();
         ret = TRUE;
+        break;
+
     case NIM_SETVERSION:
         ret = Toolbar.SwitchVersion(iconData);
+        break;
+
     default:
         TRACE("NotifyIcon received with unknown code %d.\n", dwMessage);
         return FALSE;
