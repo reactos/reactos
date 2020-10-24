@@ -737,11 +737,11 @@ LoadWindowsCore(IN USHORT OperatingSystemVersion,
         Options = strpbrk(Options, " \t");
     }
 
-    if (SafeBoot)   
-    {   
-        PaeDisabled = TRUE;   
-        NoexecuteDisabled = TRUE;   
-    }   
+    if (SafeBoot)
+    {
+        PaeDisabled = TRUE;
+        NoexecuteDisabled = TRUE;
+    }
 
     /* Load all referenced DLLs for Kernel, HAL and Kernel Debugger Transport DLL */
     Success  = PeLdrScanImportDescriptorTable(&LoaderBlock->LoadOrderListHead, DirPath, *KernelDTE);
