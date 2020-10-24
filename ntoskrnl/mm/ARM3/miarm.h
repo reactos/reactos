@@ -893,15 +893,31 @@ MI_MAKE_SUBSECTION_PTE(IN PMMPTE NewPte,
     NewPte->u.Subsect.SubsectionAddressHigh = (Offset & 0xFFFFF80) >> 7;
 }
 
+#endif
+
 FORCEINLINE
 BOOLEAN
 MI_IS_MAPPED_PTE(PMMPTE PointerPte)
 {
-    /// \todo Make this reasonable code, this is UGLY!
-    return ((PointerPte->u.Long & 0xFFFFFC01) != 0);
-}
-
+    if (PointerPte->u.Soft.Valid ||
+        PointerPte->u.Soft.Prototype ||
+        PointerPte->u.Soft.Transition ||
+#if defined(_X86PAE_)
+        PointerPte->u.Soft.Unused ||
+#elif(_M_AMD64)
+        PointerPte->u.Soft.UsedPageTableEntries ||
+        PointerPte->u.Soft.Reserved ||
 #endif
+        PointerPte->u.Soft.PageFileHigh)
+    {
+        return TRUE;
+    }
+    else
+    {
+        /* Demand zero PTE */
+        return FALSE;
+    }
+}
 
 FORCEINLINE
 VOID
