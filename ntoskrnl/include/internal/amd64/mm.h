@@ -243,27 +243,6 @@ MiPxeToAddress(PMMPTE PointerPxe)
 #define MiIsPteOnPxeBoundary(PointerPte) \
     ((((ULONG_PTR)PointerPte) & (PPE_PER_PAGE * PDE_PER_PAGE * PAGE_SIZE - 1)) == 0)
 
-//
-// Decodes a Prototype PTE into the underlying PTE
-// The 48 bit signed value gets sign-extended to 64 bits.
-//
-#define MiSubsectionPteToSubsection(x)                              \
-        (PMMPTE)((LONG64)(x)->u.Subsect.SubsectionAddress)
-
-FORCEINLINE
-VOID
-MI_MAKE_SUBSECTION_PTE(
-    _Out_ PMMPTE NewPte,
-    _In_ PVOID Segment)
-{
-    /* Mark this as a prototype */
-    NewPte->u.Long = 0;
-    NewPte->u.Subsect.Prototype = 1;
-
-    /* Store the lower 48 bits of the Segment address */
-    NewPte->u.Subsect.SubsectionAddress = ((ULONG_PTR)Segment & 0x0000FFFFFFFFFFFF);
-}
-
 INIT_FUNCTION
 FORCEINLINE
 VOID

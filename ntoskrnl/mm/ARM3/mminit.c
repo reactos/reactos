@@ -2055,6 +2055,7 @@ MmArmInitSystem(IN ULONG Phase,
     ULONG j;
     PMMPTE PointerPte, TestPte;
     MMPTE TempPte;
+    PSUBSECTION Subsection;
 #endif
 
     /* Dump memory descriptors */
@@ -2324,10 +2325,9 @@ MmArmInitSystem(IN ULONG Phase,
         }
 
         /* Subsection PTEs are always in nonpaged pool, pick a random address to try */
-        PointerPte = (PMMPTE)((ULONG_PTR)MmNonPagedPoolStart + (MmSizeOfNonPagedPoolInBytes / 2));
-        MI_MAKE_SUBSECTION_PTE(&TempPte, PointerPte);
-        TestPte = MiSubsectionPteToSubsection(&TempPte);
-        ASSERT(PointerPte == TestPte);
+        Subsection = (PSUBSECTION)((ULONG_PTR)MI_NONPAGED_POOL_END - _1MB);
+        MI_MAKE_SUBSECTION_PTE(&TempPte, Subsection);
+        ASSERT(Subsection == MiSubsectionPteToSubsection(&TempPte));
 #endif
 
         //

@@ -197,14 +197,4 @@ C_ASSERT(PD_COUNT == 1);
 /* Return TRUE if the PTE is at the beginning of the PT */
 #define MiIsPteOnPdeBoundary(_Pte) ((((ULONG_PTR)_Pte) & (PAGE_SIZE - 1)) == 0)
 
-//
-// Decodes a Prototype PTE into the underlying PTE
-//
-#define MiSubsectionPteToSubsection(x)                              \
-    ((x)->u.Subsect.WhichPool == PagedPool) ?                       \
-        (PMMPTE)((ULONG_PTR)MmSubsectionBase +                      \
-                 (((x)->u.Subsect.SubsectionAddressHigh << 7) |     \
-                   (x)->u.Subsect.SubsectionAddressLow << 3)) :     \
-        (PMMPTE)((ULONG_PTR)MmNonPagedPoolEnd -                     \
-                (((x)->u.Subsect.SubsectionAddressHigh << 7) |      \
-                  (x)->u.Subsect.SubsectionAddressLow << 3))
+/* EOF */
