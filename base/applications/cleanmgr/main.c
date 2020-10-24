@@ -1,8 +1,8 @@
 /*
- * PROJECT:         ReactOS Disk Cleanup
- * LICENSE:         GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
- * PURPOSE:         Main file
- * COPYRIGHT:       Copyright 2020 Arnav Bhatt (arnavbhatt288 at gmail dot com)
+ * PROJECT:     ReactOS Disk Cleanup
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Main file
+ * COPYRIGHT:   Copyright 2020 Arnav Bhatt (arnavbhatt288 at gmail dot com)
  */
 
 #include "precomp.h"
@@ -12,7 +12,7 @@ UINT CleanmgrWindowMsg;
 int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
     LPWSTR lpCmdLine, int nCmdShow)
 {
-    HANDLE Obj = CreateMutexW(NULL, FALSE, L"cleanmgr.exe");;
+    HANDLE hMutex = 0;
     INITCOMMONCONTROLSEX InitControls;
     INT_PTR DialogButtonSelect;
     int nArgs = 0;
@@ -20,9 +20,9 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
     UNREFERENCED_PARAMETER(hPrevInstance);
     UNREFERENCED_PARAMETER(nCmdShow);
-
+    
+    /* Registering a window message for cleanmgr */
     CleanmgrWindowMsg = RegisterWindowMessageW(L"CleanmgrCreated");
-
     if (CleanmgrWindowMsg == 0)
     {
         DPRINT("RegisterWindowMessageW(): Failed to register a window message!\n");
@@ -36,54 +36,64 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
         return FALSE;
     }
 
-    if (Obj)
+    /* Creating a mutex of this specific program to check if multiple instances are running */
+    CreateMutexW(NULL, FALSE, L"cleanmgr.exe");
+    if (hMutex)
     {
+        /* If there is another instance of the program running, then just broadcast the 
+           registered window message to all of the valid dialog boxes. */
         if (GetLastError() == ERROR_ALREADY_EXISTS)
         {
             DPRINT("An instance already exists!\n");
             SendMessageW(HWND_BROADCAST, CleanmgrWindowMsg, 0, 0);
-            CloseHandle(Obj);
+            CloseHandle(hMutex);
             return TRUE;
         }
     }
     else
     {
-        CloseHandle(Obj);
+        CloseHandle(hMutex);
     }
 
+    /* Gather the program arguments which has been provided by the user */
     ArgList = CommandLineToArgvW(GetCommandLineW(), &nArgs);
-
     if (ArgList == NULL)
     {
         return FALSE;
     }
     else if (nArgs > 1)
     {
-        if(!UseAquiredArguments(ArgList, nArgs))
+        if (!UseAcquiredArguments(ArgList, nArgs))
         {
-            return FALSE;
+            goto START;
+        }
+        return TRUE;
+    }
+    /* If no arguments or invalid arguments have been provided by the user then just spawn the IDD_START dialog box. */
+    else
+    {
+        START:DialogButtonSelect = DialogBoxParamW(hInstance, MAKEINTRESOURCEW(IDD_START), NULL, StartDlgProc, 0);
+        if (DialogButtonSelect == IDCANCEL)
+        {
+            return TRUE;
         }
     }
- 
-    DialogButtonSelect = DialogBoxParamW(hInstance, MAKEINTRESOURCEW(IDD_START), NULL, StartDlgProc, 0);
+
+    /* Spawn the IDD_PROGRESS_SCAN dialog box for scanning. */
+    DialogButtonSelect = DialogBoxParamW(hInstance, MAKEINTRESOURCEW(IDD_PROGRESS_SCAN), NULL, ProgressDlgProc, 0);
     if (DialogButtonSelect == IDCANCEL)
     {
         return TRUE;
     }
 
-    DialogButtonSelect = DialogBoxParamW(hInstance, MAKEINTRESOURCEW(IDD_PROGRESS), NULL, ProgressDlgProc, 0);
-    if (DialogButtonSelect == IDCANCEL)
-    {
-        return TRUE;
-    }
-
-    /* Setting lParam to false to tell the dialog box to start with regular procedure */
+    /* Spawn the IDD_TAB_PARENT dialog box for selection. Setting lParam to false to tell the dialog box to start with regular procedure */
     DialogButtonSelect = DialogBoxParamW(hInstance, MAKEINTRESOURCEW(IDD_TAB_PARENT), NULL, TabParentDlgProc, FALSE);
     if (DialogButtonSelect == IDCANCEL)
     {
         return TRUE;
     }
 
-    DialogBoxParamW(hInstance, MAKEINTRESOURCEW(IDD_PROGRESS_END), NULL, ProgressEndDlgProc, 0);
+    /* Finally spawn the IDD_PROGRESS_DELETION dialog box for required folder deletion. */
+    DialogBoxParamW(hInstance, MAKEINTRESOURCEW(IDD_PROGRESS_DELETION), NULL, ProgressEndDlgProc, 0);
     return TRUE;
 }

@@ -1,14 +1,14 @@
 /*
- * PROJECT:         ReactOS Disk Cleanup
- * LICENSE:         GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
- * PURPOSE:         Precompiled header file
- * COPYRIGHT:       Copyright 2020 Arnav Bhatt (arnavbhatt288 at gmail dot com)
+ * PROJECT:     ReactOS Disk Cleanup
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Precompiled header file
+ * COPYRIGHT:   Copyright 2020 Arnav Bhatt (arnavbhatt288 at gmail dot com)
  */
  
 #ifndef _CLEANMGR_PRECOMP_H
 #define _CLEANMGR_PRECOMP_H
 
-#define ARR_MAX_SIZE 512
+#define ARR_MAX_SIZE 256
 
 #include "resource.h"
 
@@ -44,8 +44,9 @@ typedef struct
 } DLGHANDLE;
 
 extern BOOL IsSystemDrive;
+extern HBITMAP BitmapMask;
 extern UINT CleanmgrWindowMsg;
-extern WCHAR DriveLetter[ARR_MAX_SIZE];
+extern WCHAR SelectedDriveLetter[3];
 extern WCHAR RappsDir[MAX_PATH];
 
 
@@ -57,7 +58,7 @@ INT_PTR CALLBACK ProgressEndDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPAR
 
 
 // For util.c
-BOOL UseAquiredArguments(LPWSTR* ArgList, int nArgs);
+BOOL UseAcquiredArguments(LPWSTR* ArgList, int nArgs);
 BOOL DrawItemCombobox(LPARAM lParam);
 
 DWORD WINAPI RemoveRequiredFolder(LPVOID lpParam);
@@ -69,7 +70,7 @@ LRESULT APIENTRY ThemeHandler(HWND hDlg, NMCUSTOMDRAW* pNmDraw);
 
 PWCHAR GetProperDriveLetter(HWND hComboCtrl, int ItemIndex);
 
-void InitStartDlg(HWND hwnd, HBITMAP hBitmap);
+void InitStartDlgComboBox(HWND hwnd, HBITMAP hBitmap);
 void InitListViewControl(HWND hList);
 void InitStageFlagListViewControl(HWND hList);
 void InitTabControl(HWND hwnd, BOOL IsStageFlagReady);

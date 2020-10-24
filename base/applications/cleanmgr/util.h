@@ -1,8 +1,8 @@
 /*
- * PROJECT:         ReactOS Disk Cleanup
- * LICENSE:         GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
- * PURPOSE:         Definations and Functions for util.c
- * COPYRIGHT:       Copyright 2020 Arnav Bhatt (arnavbhatt288 at gmail dot com)
+ * PROJECT:     ReactOS Disk Cleanup
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Definations and Functions for util.c
+ * COPYRIGHT:   Copyright 2020 Arnav Bhatt (arnavbhatt288 at gmail dot com)
  */
 
 #pragma once
@@ -10,9 +10,9 @@
 #include "precomp.h"
 
 #define KB 1024
-#define MB 1024 * KB
-#define GB 1024 * MB
-#define TB 1024 * GB
+#define MB (1024 * KB)
+#define GB (1024 * MB)
+#define TB (1024 * GB)
 
 #define ALLOW_FILE_REMOVAL 2
 #define DISALLOW_FILE_REMOVAL 0

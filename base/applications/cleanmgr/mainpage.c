@@ -1,20 +1,18 @@
 /*
- * PROJECT:         ReactOS Disk Cleanup
- * LICENSE:         GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
- * PURPOSE:         MainPage child dialog function
- * COPYRIGHT:       Copyright 2020 Arnav Bhatt (arnavbhatt288 at gmail dot com)
+ * PROJECT:     ReactOS Disk Cleanup
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     MainPage child dialog function
+ * COPYRIGHT:   Copyright 2020 Arnav Bhatt (arnavbhatt288 at gmail dot com)
  */
 
 #include "precomp.h"
 
 DIRSIZE DirectorySizes;
-WCHAR DriveLetter[ARR_MAX_SIZE];
+WCHAR SelectedDriveLetter[3];
 WCHAR RappsDir[MAX_PATH];
 
 INT_PTR CALLBACK MainPageDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
-    HWND hList = GetDlgItem(hwnd, IDC_CHOICE_LIST);
-
     switch (message)
     {
         case WM_INITDIALOG:
@@ -24,11 +22,16 @@ INT_PTR CALLBACK MainPageDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM 
             WCHAR TempText[ARR_MAX_SIZE] = { 0 };
             uint64_t TotalSize = DirectorySizes.TempDirSize + DirectorySizes.RecycleBinDirSize + DirectorySizes.ChkDskDirSize + DirectorySizes.RappsDirSize;
 
+            /* Change the child dialog box position to fit in the tab control */
             SetWindowPos(hwnd, NULL, 10, 32, 0, 0, SWP_NOACTIVATE | SWP_NOOWNERZORDER | SWP_NOSIZE | SWP_NOZORDER);
-            InitListViewControl(hList);
+
+            /* Initialize the listview control */
+            InitListViewControl(GetDlgItem(hwnd, IDC_CHOICE_LIST));
+
+            /* Set the required dialog title */
             LoadStringW(GetModuleHandleW(NULL), IDS_CLEANUP, TempText, _countof(TempText));
             StrFormatByteSizeW(TotalSize, TotalAmount, sizeof(TotalAmount));
-            StringCchPrintfW(FullText, sizeof(FullText), TempText, TotalAmount, DriveLetter);
+            StringCchPrintfW(FullText, sizeof(FullText), TempText, TotalAmount, SelectedDriveLetter);
             SetDlgItemTextW(hwnd, IDC_STATIC_DLG, FullText);
             return TRUE;
         }
@@ -36,6 +39,7 @@ INT_PTR CALLBACK MainPageDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM 
         case WM_COMMAND:
             switch (LOWORD(wParam))
             {
+                /* If the user clicks on "View Files" button, call the ShellExecuteExW function for required directory */
                 case IDC_VIEW_FILES:
                 {
                     WCHAR LoadErrorString[ARR_MAX_SIZE] = { 0 };
@@ -72,6 +76,7 @@ INT_PTR CALLBACK MainPageDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM 
             LVITEMW lvI;
             ZeroMemory(&lvI, sizeof(lvI));
 
+            /* Detect which items has been selected or checked and call the required function */
             if (lParam)
             {
                 if (header && header->idFrom == IDC_CHOICE_LIST && header->code == LVN_ITEMCHANGED)
@@ -82,11 +87,12 @@ INT_PTR CALLBACK MainPageDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM 
                     }
                     else if ((NmList->uNewState ^ NmList->uOldState) & LVIS_STATEIMAGEMASK)
                     {
-                        DirectorySizes.SizeCountOfSelDir = CheckedItem(NmList->iItem, hwnd, hList, DirectorySizes.SizeCountOfSelDir);
+                        DirectorySizes.SizeCountOfSelDir = CheckedItem(NmList->iItem, hwnd, GetDlgItem(hwnd, IDC_CHOICE_LIST), DirectorySizes.SizeCountOfSelDir);
                     }
                 }
             }
 
+            /* If no items has been checked and the total size is 0 then disable the OK button of the parent dialog box. Else enable it. */
             if (DirectorySizes.SizeCountOfSelDir == 0)
             {
                 EnableWindow(hButton, FALSE);

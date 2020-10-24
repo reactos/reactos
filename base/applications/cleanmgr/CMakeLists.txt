@@ -6,8 +6,8 @@ list(APPEND SOURCE
     main.c
     mainpage.c
     optionspage.c
-    util.c
     stageflagpage.c
+    util.c
     precomp.h)
 
 file(GLOB cleanmgr_rc_deps res/*.*)

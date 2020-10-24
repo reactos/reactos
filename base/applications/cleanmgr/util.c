@@ -1,14 +1,15 @@
 /*
- * PROJECT:         ReactOS Disk Cleanup
- * LICENSE:         GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
- * PURPOSE:         Utility functions
- * COPYRIGHT:       Copyright 2020 Arnav Bhatt (arnavbhatt288 at gmail dot com)
+ * PROJECT:     ReactOS Disk Cleanup
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Utility functions
+ * COPYRIGHT:   Copyright 2020 Arnav Bhatt (arnavbhatt288 at gmail dot com)
  */
 
 #include "util.h"
 
 BOOL IsSystemDrive;
-WCHAR DriveLetter[ARR_MAX_SIZE];
+HBITMAP BitmapMask;
+WCHAR SelectedDriveLetter[3];
 WCHAR RappsDir[MAX_PATH];
 
 void AddRequiredItem(HWND hList, UINT StringID, PWCHAR SubString, int ItemIndex)
@@ -121,7 +122,6 @@ void CleanRequiredPath(PCWSTR TempPath)
 
 BOOL CreateImageLists(HWND hList)
 {
-    HICON hbmIcon;
     HIMAGELIST hSmall;
     hSmall = ImageList_Create(16, 16, ILC_COLOR16 | ILC_MASK, 3, 3);
 
@@ -132,6 +132,7 @@ BOOL CreateImageLists(HWND hList)
 
     for (int i = 0; i < 3; i++)
     {
+        HICON hbmIcon;
         hbmIcon = LoadIconW(GetModuleHandleW(NULL), MAKEINTRESOURCE(IDI_BLANK + i));
         ImageList_AddIcon(hSmall, hbmIcon);
     }
@@ -146,31 +147,19 @@ BOOL DrawItemCombobox(LPARAM lParam)
     TEXTMETRIC tm;
     int x, y;
     size_t cch;
-    HBITMAP BitmapIcon = NULL;
-    WCHAR achTemp[ARR_MAX_SIZE] = { 0 };
-    HBITMAP BitmapMask = NULL;
-
+    HBITMAP BitmapIcon;
+    WCHAR TempText[ARR_MAX_SIZE] = { 0 };
     LPDRAWITEMSTRUCT lpdis = (LPDRAWITEMSTRUCT)lParam;
 
-    if (lpdis->itemID == -1)
-    {
-        return FALSE;
-    }
-
-    BitmapMask = LoadBitmapW(GetModuleHandleW(NULL), MAKEINTRESOURCEW(IDB_MASK));
-    if (BitmapMask == NULL)
-    {
-        DPRINT("LoadBitmapW(): Failed to load the mask bitmap!\n");
-        return FALSE;
-    }
-
+    /* Get the drive icon from the item data */
     BitmapIcon = (HBITMAP)lpdis->itemData;
     if (BitmapIcon == NULL)
     {
-        DPRINT("LoadBitmapW(): Failed to load BitmapIcon bitmap!\n");
+        DPRINT("Failed to gather drive icon from the item data!\n");
         return FALSE;
     }
 
+    /* The colors depend on whether the item is selected. */
     ClrForeground = SetTextColor(lpdis->hDC,
         GetSysColor(lpdis->itemState & ODS_SELECTED ?
             COLOR_HIGHLIGHTTEXT : COLOR_WINDOWTEXT));
@@ -179,22 +168,26 @@ BOOL DrawItemCombobox(LPARAM lParam)
         GetSysColor(lpdis->itemState & ODS_SELECTED ?
             COLOR_HIGHLIGHT : COLOR_WINDOW));
 
+    /* Calculate the vertical and horizontal position. */
     GetTextMetrics(lpdis->hDC, &tm);
     y = (lpdis->rcItem.bottom + lpdis->rcItem.top - tm.tmHeight) / 2;
     x = LOWORD(GetDialogBaseUnits()) / 4;
 
+    /* Get and display the text for the list item. */
     SendMessage(lpdis->hwndItem, CB_GETLBTEXT,
-                lpdis->itemID, (LPARAM)achTemp);
+                lpdis->itemID, (LPARAM)TempText);
 
-    StringCchLength(achTemp, sizeof(achTemp), &cch);
+    StringCchLength(TempText, sizeof(TempText), &cch);
 
     ExtTextOut(lpdis->hDC, CX_BITMAP + 2 * x, y,
         ETO_CLIPPED | ETO_OPAQUE, &lpdis->rcItem,
-        achTemp, (UINT)cch, NULL);
+        TempText, (UINT)cch, NULL);
 
+    /* Restore the previous colors */
     SetTextColor(lpdis->hDC, ClrForeground);
     SetBkColor(lpdis->hDC, ClrBackground);
 
+    /*  Draw the drive icon for the item. */
     HDC hdc = CreateCompatibleDC(lpdis->hDC);
     if (hdc == NULL)
     {
@@ -212,6 +205,7 @@ BOOL DrawItemCombobox(LPARAM lParam)
 
     DeleteDC(hdc);
 
+    /* If the item has the focus, draw the focus rectangle. */
     if (lpdis->itemState & ODS_FOCUS)
     {
         DrawFocusRect(lpdis->hDC, &lpdis->rcItem);
@@ -221,8 +215,7 @@ BOOL DrawItemCombobox(LPARAM lParam)
 
 BOOL StartDriveCleanupFromArg(LPWSTR* ArgList, PWCHAR LogicalDrives)
 {
-    WCHAR DriveArgGathered[ARR_MAX_SIZE] = { 0 };
-    WCHAR TempText[ARR_MAX_SIZE] = { 0 };
+    WCHAR DriveArgGathered[4] = { 0 };
 
     StringCbCopyW(DriveArgGathered, sizeof(DriveArgGathered), ArgList[2]);
 
@@ -234,7 +227,7 @@ BOOL StartDriveCleanupFromArg(LPWSTR* ArgList, PWCHAR LogicalDrives)
     }
 
     WCHAR* SingleDrive = LogicalDrives;
-    WCHAR RealDrive[ARR_MAX_SIZE] = { 0 };
+    WCHAR RealDrive[4] = { 0 };
     while (*SingleDrive)
     {
         if (GetDriveTypeW(SingleDrive) == ONLY_PHYSICAL_DRIVE)
@@ -243,16 +236,14 @@ BOOL StartDriveCleanupFromArg(LPWSTR* ArgList, PWCHAR LogicalDrives)
             RealDrive[wcslen(RealDrive) - 1] = '\0';
             if (wcscmp(DriveArgGathered, RealDrive) == 0)
             {
-                StringCbCopyW(DriveLetter, sizeof(DriveLetter), DriveArgGathered);
+                StringCbCopyW(SelectedDriveLetter, sizeof(SelectedDriveLetter), DriveArgGathered);
                 break;
             }
         }
             SingleDrive += wcslen(SingleDrive) + 1;
     }
-    if (wcslen(DriveLetter) == 0)
+    if (wcslen(SelectedDriveLetter) == 0)
     {
-        LoadStringW(GetModuleHandleW(NULL), IDS_ERROR_DRIVE, TempText, _countof(TempText));
-        MessageBoxW(NULL, TempText, L"Warning", MB_OK | MB_ICONERROR);
         return FALSE;
     }
     return TRUE;
@@ -312,6 +303,8 @@ DWORD WINAPI GetRemovableDirSize(LPVOID lpParam)
             DirectorySizes.TempDirSize = GetTargetedDirSize(TargetedDir);
             if (DirectorySizes.TempDirSize == -1)
             {
+                DPRINT("GetTargetedDirSize(): Failed to get required directory size!\n");
+                EndDialog(hwnd, IDCANCEL);
                 return FALSE;
             }
         }
@@ -322,22 +315,9 @@ DWORD WINAPI GetRemovableDirSize(LPVOID lpParam)
     LoadStringW(GetModuleHandleW(NULL), IDS_LABEL_RECYCLE, LoadedString, _countof(LoadedString));
     SetDlgItemTextW(hwnd, IDC_STATIC_INFO, LoadedString);
 
-    /* Hardcoding the path */
-    StringCchPrintfW(TargetedDir, sizeof(TargetedDir), L"%s\\RECYCLED", DriveLetter);
-    if (!PathIsDirectoryW(TargetedDir))
-    {
-        StringCchPrintfW(TargetedDir, sizeof(TargetedDir), L"%s\\RECYCLER", DriveLetter);
-    }
-
-    DirectorySizes.RecycleBinDirSize = GetTargetedDirSize(TargetedDir);
-    if (DirectorySizes.RecycleBinDirSize == -1)
-    {
-        return FALSE;
-    }
-
     /* Currently disabled because SHQueryRecycleBinW isn't implemented in ReactOS */
 
-    /*StringCbCopyW(TargetedDir, sizeof(TargetedDir), DriveLetter);
+    /*StringCbCopyW(TargetedDir, sizeof(TargetedDir), SelectedDriveLetter);
     StringCbCatW(TargetedDir, sizeof(TargetedDir), L"\\");
 
     if (SHQueryRecycleBinW(TargetedDir, &RecycleBinInfo) == S_OK)
@@ -347,9 +327,24 @@ DWORD WINAPI GetRemovableDirSize(LPVOID lpParam)
         SetDlgItemTextW(hwnd, IDC_STATIC_INFO, L"Recycled Files");
     }*/
 
+    /* Instead hardcode the path */
+    StringCchPrintfW(TargetedDir, sizeof(TargetedDir), L"%s\\RECYCLED", SelectedDriveLetter);
+    if (!PathIsDirectoryW(TargetedDir))
+    {
+        StringCchPrintfW(TargetedDir, sizeof(TargetedDir), L"%s\\RECYCLER", SelectedDriveLetter);
+    }
+
+    DirectorySizes.RecycleBinDirSize = GetTargetedDirSize(TargetedDir);
+    if (DirectorySizes.RecycleBinDirSize == -1)
+    {
+        DPRINT("GetTargetedDirSize(): Failed to get required directory size!\n");
+        EndDialog(hwnd, IDCANCEL);
+        return FALSE;
+    }
+
     for (int i = 0; i < 10; i++)
     {
-        StringCchPrintfW(TargetedDir, sizeof(TargetedDir), L"%s\\FOUND.%.3i", DriveLetter, i);
+        StringCchPrintfW(TargetedDir, sizeof(TargetedDir), L"%s\\FOUND.%.3i", SelectedDriveLetter, i);
         if (PathIsDirectoryW(TargetedDir))
         {
             SendMessageW(hProgressBar, PBM_SETPOS, 75, 0);
@@ -359,6 +354,8 @@ DWORD WINAPI GetRemovableDirSize(LPVOID lpParam)
             DirectorySizes.ChkDskDirSize += GetTargetedDirSize(TargetedDir);
             if (DirectorySizes.ChkDskDirSize == -1)
             {
+                DPRINT("GetTargetedDirSize(): Failed to get required directory size!\n");
+                EndDialog(hwnd, IDCANCEL);
                 return FALSE;
             }
         }
@@ -386,8 +383,6 @@ DWORD WINAPI GetRemovableDirSize(LPVOID lpParam)
                          &ArrSize) != ERROR_SUCCESS)
     {
         DPRINT("RegQueryValueExW(): Failed to query a registry key!\n");
-        EndDialog(hwnd, IDCANCEL);
-        return FALSE;
     }
 
     if (PathIsDirectoryW(TargetedDir))
@@ -399,6 +394,8 @@ DWORD WINAPI GetRemovableDirSize(LPVOID lpParam)
         DirectorySizes.RappsDirSize = GetTargetedDirSize(TargetedDir);
         if (DirectorySizes.RappsDirSize == 1)
         {
+            DPRINT("GetTargetedDirSize(): Failed to get required directory size!\n");
+            EndDialog(hwnd, IDCANCEL);
             return FALSE;
         }
         StringCbCopyW(RappsDir, sizeof(RappsDir), TargetedDir);
@@ -588,7 +585,7 @@ void InitStageFlagListViewControl(HWND hList)
     ListView_SetItemState(hList, 1, LVIS_SELECTED, LVIS_SELECTED);
 }
 
-void InitStartDlg(HWND hwnd, HBITMAP hBitmap)
+void InitStartDlgComboBox(HWND hwnd, HBITMAP hBitmap)
 {
     DWORD DwIndex = 0;
     DWORD NumOfDrives = 0;
@@ -638,7 +635,7 @@ void InitStartDlg(HWND hwnd, HBITMAP hBitmap)
     }
 
     ComboBox_SetCurSel(hComboCtrl, 0);
-    StringCbCopyW(DriveLetter, sizeof(DriveLetter), GetProperDriveLetter(hComboCtrl, 0));
+    StringCbCopyW(SelectedDriveLetter, sizeof(SelectedDriveLetter), GetProperDriveLetter(hComboCtrl, 0));
 }
 
 void InitTabControl(HWND hwnd, BOOL IsStageFlagReady)
@@ -688,24 +685,24 @@ void GetStageFlags(int nArgs, PWCHAR ArgSpecified, LPWSTR* ArgList, PWCHAR Logic
     {
         if (GetDriveTypeW(SingleDrive) == ONLY_PHYSICAL_DRIVE)
         {
-            StringCchCopyW(DriveLetter, sizeof(DriveLetter), SingleDrive);
-            DriveLetter[wcslen(DriveLetter) - 1] = '\0';
+            StringCchCopyW(SelectedDriveLetter, sizeof(SelectedDriveLetter), SingleDrive);
+            SelectedDriveLetter[wcslen(SelectedDriveLetter) - 1] = '\0';
 
-            DialogButtonSelect = DialogBoxParamW(GetModuleHandleW(NULL), MAKEINTRESOURCEW(IDD_PROGRESS), NULL, ProgressDlgProc, 0);
-
-            if (DialogButtonSelect == IDCANCEL)
-            {
-                return;
-            }
-
-            DialogButtonSelect = DialogBoxParamW(GetModuleHandleW(NULL), MAKEINTRESOURCEW(IDD_PROGRESS_END), NULL, ProgressEndDlgProc, 0);
+            DialogButtonSelect = DialogBoxParamW(GetModuleHandleW(NULL), MAKEINTRESOURCEW(IDD_PROGRESS_SCAN), NULL, ProgressDlgProc, 0);
 
             if (DialogButtonSelect == IDCANCEL)
             {
                 return;
             }
 
-            ZeroMemory(&DriveLetter, sizeof(DriveLetter));
+            DialogButtonSelect = DialogBoxParamW(GetModuleHandleW(NULL), MAKEINTRESOURCEW(IDD_PROGRESS_DELETION), NULL, ProgressEndDlgProc, 0);
+
+            if (DialogButtonSelect == IDCANCEL)
+            {
+                return;
+            }
+
+            ZeroMemory(&SelectedDriveLetter, sizeof(SelectedDriveLetter));
         }
         SingleDrive += wcslen(SingleDrive) + 1;
     }
@@ -730,7 +727,7 @@ DWORD WINAPI RemoveRequiredFolder(LPVOID lpParam)
 
     if (CleanDirectories.CleanRecycleDir)
     {   
-        StringCbCopyW(TargetedDir, sizeof(TargetedDir), DriveLetter);
+        StringCbCopyW(TargetedDir, sizeof(TargetedDir), SelectedDriveLetter);
         StringCbCatW(TargetedDir, sizeof(TargetedDir), L"\\");
 
         SHEmptyRecycleBinW(NULL, TargetedDir, SHERB_NOCONFIRMATION | SHERB_NOPROGRESSUI | SHERB_NOSOUND);
@@ -744,7 +741,7 @@ DWORD WINAPI RemoveRequiredFolder(LPVOID lpParam)
     {
         for (int i = 0; i < 10; i++)
         {
-            StringCchPrintfW(TargetedDir, sizeof(TargetedDir), L"%s\\FOUND.%.3i", DriveLetter, i);
+            StringCchPrintfW(TargetedDir, sizeof(TargetedDir), L"%s\\FOUND.%.3i", SelectedDriveLetter, i);
             if (PathIsDirectoryW(TargetedDir))
             {
                 CleanRequiredPath(TargetedDir);
@@ -996,7 +993,7 @@ LRESULT APIENTRY ThemeHandler(HWND hDlg, NMCUSTOMDRAW* pNmDraw)
     return RetValue;
 }
 
-BOOL UseAquiredArguments(LPWSTR* ArgList, int nArgs)
+BOOL UseAcquiredArguments(LPWSTR* ArgList, int nArgs)
 {
     WCHAR LogicalDrives[ARR_MAX_SIZE] = { 0 };
     WCHAR ArgSpecified[ARR_MAX_SIZE] = { 0 };
@@ -1013,7 +1010,7 @@ BOOL UseAquiredArguments(LPWSTR* ArgList, int nArgs)
     
     if (wcscmp(ArgSpecified, L"/D") == 0 && nArgs == 3)
     {
-        if(!StartDriveCleanupFromArg(ArgList, LogicalDrives))
+        if (!StartDriveCleanupFromArg(ArgList, LogicalDrives))
         {
             return FALSE;
         }
@@ -1021,27 +1018,27 @@ BOOL UseAquiredArguments(LPWSTR* ArgList, int nArgs)
     else if (wcsstr(ArgSpecified, L"/SAGERUN:") != NULL)
     {
         GetStageFlags(nArgs, ArgSpecified, ArgList, LogicalDrives);
-        return FALSE;
+        return TRUE;
     }
     else if (wcsstr(ArgSpecified, L"/SAGESET:") != NULL)
     {
         SetStageFlags(nArgs, ArgSpecified, ArgList);
-        return FALSE;
+        return TRUE;
     }
     else if (wcsstr(ArgSpecified, L"/TUNEUP:") != NULL)
     {
         SetStageFlags(nArgs, ArgSpecified, ArgList);
         GetStageFlags(nArgs, ArgSpecified, ArgList, LogicalDrives);
-        return FALSE;
+        return TRUE;
     }
     else if (wcscmp(ArgSpecified, L"/?") == 0)
     {
         MessageBoxW(NULL, L"cleanmgr [/SAGESET:n | /SAGERUN:n | /TUNEUP:n]", L"Usage", MB_OK);
-        return FALSE;
+        return TRUE;
     }
     else
     {
-        return TRUE;
+        return FALSE;
     }
     return TRUE;
 }

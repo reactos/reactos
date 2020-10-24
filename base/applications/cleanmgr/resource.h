@@ -1,15 +1,15 @@
 /*
- * PROJECT:         ReactOS Disk Cleanup
- * LICENSE:         GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
- * PURPOSE:         Resource header file
- * COPYRIGHT:       Copyright 2020 Arnav Bhatt (arnavbhatt288 at gmail dot com)
+ * PROJECT:     ReactOS Disk Cleanup
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Resource header file
+ * COPYRIGHT:   Copyright 2020 Arnav Bhatt (arnavbhatt288 at gmail dot com)
  */
 
 /* Dialog Box Resource IDs */
-#define IDD_PROGRESS                        1001
+#define IDD_PROGRESS_SCAN                   1001
 #define IDD_TAB_PARENT                      1002
 #define IDD_START                           1003
-#define IDD_PROGRESS_END                    1004
+#define IDD_PROGRESS_DELETION               1004
 
 /* Progress Bar Resource IDs */
 #define IDC_PROGRESS_1                      2001
@@ -50,8 +50,6 @@
 #define IDS_WARNING_FOLDER                  9001
 
 #define IDS_CONFIRMATION                    10001
-
-#define IDS_ERROR_DRIVE                     11001
 
 #define IDS_LABEL_CHKDSK                    12001
 #define IDS_LABEL_RECYCLE                   12002

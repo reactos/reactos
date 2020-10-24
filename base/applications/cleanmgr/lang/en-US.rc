@@ -1,8 +1,8 @@
 /*
- * PROJECT:         ReactOS Disk Cleanup
- * LICENSE:         GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
- * PURPOSE:         Disk Cleanup (American Resources)
- * COPYRIGHT:       Copyright 2020 Arnav Bhatt (arnavbhatt288 at gmail dot com)
+ * PROJECT:     ReactOS Disk Cleanup
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     Disk Cleanup (American Resources)
+ * COPYRIGHT:   Copyright 2020 Arnav Bhatt (arnavbhatt288 at gmail dot com)
  */
 
 LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
@@ -21,7 +21,7 @@ FONT 9, "MS Shell Dlg", 0, 0, 1
     LTEXT "Select the drive you want to clean up.", -1, 7, 6, 135, 14
 }
 
-IDD_PROGRESS DIALOGEX 0, 0, 210, 83
+IDD_PROGRESS_SCAN DIALOGEX 0, 0, 210, 83
 CAPTION "Disk Cleanup"
 STYLE DS_CENTER | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 FONT 8, "MS Sans Serif", 0, 0, 0
@@ -44,7 +44,7 @@ FONT 8, "MS Shell Dlg", 0, 0, 0
     PUSHBUTTON "Cancel", IDCANCEL, 185, 257, 50, 14
 }
 
-IDD_PROGRESS_END DIALOGEX 0, 0, 210, 83
+IDD_PROGRESS_DELETION DIALOGEX 0, 0, 210, 83
 CAPTION "Disk Cleanup"
 STYLE DS_CENTER | DS_MODALFRAME | WS_POPUPWINDOW | WS_CAPTION
 FONT 8, "MS Sans Serif", 0, 0, 0
@@ -116,11 +116,6 @@ BEGIN
     IDS_DETAILS_RECYCLE "The Recycle Bin contains files that you have deleted from your computer. These files are temporarily removed until you empty the Recycle Bin"
     IDS_DETAILS_CHKDSK "Old files created by ChkDsk. It is safe to remove it."
     IDS_DETAILS_RAPPS "The RAPPS program will store the downloaded files in to a temporary folder. It is safe to remove it."
-END
-
-STRINGTABLE
-BEGIN
-	IDS_ERROR_DRIVE "Invalid drive! Please try again!"
 END
 
 STRINGTABLE
