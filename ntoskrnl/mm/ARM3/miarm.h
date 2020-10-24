@@ -824,36 +824,62 @@ MI_MAKE_HARDWARE_PTE_USER(IN PMMPTE NewPte,
     NewPte->u.Long |= MmProtectToPteMask[ProtectionMask];
 }
 
-#ifndef _M_AMD64
-//
-// Builds a Prototype PTE for the address of the PTE
-//
+/* Decodes a Prototype PTE into the poiner to proto structure */
 FORCEINLINE
-VOID
-MI_MAKE_PROTOTYPE_PTE(IN PMMPTE NewPte,
-                      IN PMMPTE PointerPte)
+PMMPTE
+MiProtoPteToPte(IN PMMPTE ProtoPte)
 {
+    /* Do MI_MAKE_PROTOTYPE_PTE() in the opposite direction */
+
+#if defined(_M_AMD64) || defined(_X86PAE_)
+    return (PMMPTE)(ProtoPte->u.Proto.ProtoAddress);
+#else
     ULONG_PTR Offset;
 
-    /* Mark this as a prototype */
-    NewPte->u.Long = 0;
-    NewPte->u.Proto.Prototype = 1;
+    Offset = (ProtoPte->u.Proto.ProtoAddressHigh << 9);
+    Offset += (ProtoPte->u.Proto.ProtoAddressLow << 2);
 
+    return (PMMPTE)((ULONG_PTR)MmPagedPoolStart + Offset);
+#endif
+}
+
+/* Builds a Prototype PTE from the poiner to proto structure */
+FORCEINLINE
+VOID
+MI_MAKE_PROTOTYPE_PTE(OUT PMMPTE ProtoPte,
+                      IN PMMPTE PointerToProto)
+{
+#if !defined(_M_AMD64) && !defined(_X86PAE_)
+    ULONG_PTR Offset;
+#endif
+
+    /* Mark this as a prototype PTE */
+    ProtoPte->u.Long = 0;
+    ProtoPte->u.Proto.Prototype = 1;
+
+#if defined(_M_AMD64) || defined(_X86PAE_)
+    /* Store the pointer */
+    ProtoPte->u.Proto.ProtoAddress = (ULONG_PTR)PointerToProto;
+#else
     /*
-     * Prototype PTEs are only valid in paged pool by design, this little trick
+     * Proto structures are only valid in paged pool by design, this little trick
      * lets us only use 30 bits for the adress of the PTE, as long as the area
      * stays 1024MB At most.
      */
-    Offset = (ULONG_PTR)PointerPte - (ULONG_PTR)MmPagedPoolStart;
+    Offset = (ULONG_PTR)PointerToProto - (ULONG_PTR)MmPagedPoolStart;
 
-    /*
-     * 7 bits go in the "low" (but we assume the bottom 2 are zero)
-     * and the other 21 bits go in the "high"
-     */
-    NewPte->u.Proto.ProtoAddressLow = (Offset & 0x1FC) >> 2;
-    NewPte->u.Proto.ProtoAddressHigh = (Offset & 0x3FFFFE00) >> 9;
+    /* 9 bits go in the "low" (we assume the bottom 2 are zero and trim it) */
+    ASSERT((Offset % 4) == 0);
+    ProtoPte->u.Proto.ProtoAddressLow = (Offset & 0x1FF) >> 2;
+
+    /* and the other 21 bits go in the "high" field. */
+    ProtoPte->u.Proto.ProtoAddressHigh = (Offset & 0x3FFFFE00) >> 9;
+#endif
+
+    ASSERT(MiProtoPteToPte(ProtoPte) == PointerToProto);
 }
 
+#ifndef _M_AMD64
 //
 // Builds a Subsection PTE for the address of the Segment
 //

@@ -200,13 +200,6 @@ C_ASSERT(PD_COUNT == 1);
 //
 // Decodes a Prototype PTE into the underlying PTE
 //
-#define MiProtoPteToPte(x)                  \
-    (PMMPTE)((ULONG_PTR)MmPagedPoolStart +  \
-             (((x)->u.Proto.ProtoAddressHigh << 9) | (x)->u.Proto.ProtoAddressLow << 2))
-
-//
-// Decodes a Prototype PTE into the underlying PTE
-//
 #define MiSubsectionPteToSubsection(x)                              \
     ((x)->u.Subsect.WhichPool == PagedPool) ?                       \
         (PMMPTE)((ULONG_PTR)MmSubsectionBase +                      \
