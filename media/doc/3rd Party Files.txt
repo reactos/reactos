@@ -6,6 +6,13 @@ SPDX identifier of a license was used where possible.
 Please update this file when you port/sync an external project.
 
 
+Title: TreeList
+Path: base/setup/reactos/treelist.c
+Path: base/setup/reactos/treelist.h
+Used Version: ???
+License: GPL-3.0-or-later (https://spdx.org/licenses/GPL-3.0-or-later.html)
+URL: https://github.com/sebkirche/treelist
+
 Title: DXTN OpenGL Compression Libs
 Path: dll/3rdparty/dxtn
 Used Version: 1.1
@@ -108,6 +115,12 @@ Used Version: git commit 16022c5
 License: MS-PL (https://spdx.org/licenses/MS-PL.html)
 URL: https://github.com/microsoft/Windows-driver-samples/tree/master/filesys
 
+Title: VirtIO NetKVM Windows guest driver
+Path: drivers/network/dd/netkvm
+Used Version: git commit 5e01b36
+License: BSD-3-Clause (https://spdx.org/licenses/BSD-3-Clause.html)
+URL: https://github.com/virtio-win/kvm-guest-drivers-windows/tree/master/NetKVM/NDIS5
+
 Title: Microsoft CDROM Storage Class Driver
 Path: drivers/storage/class/cdrom_new
 Used Version: git commit 96eb96d
@@ -131,6 +144,18 @@ Path: drivers/storage/floppy_new
 Used Version: git commit 8fb512a
 License: MS-PL (https://spdx.org/licenses/MS-PL.html)
 URL: https://github.com/microsoft/Windows-driver-samples/tree/master/storage
+
+Title: Universal ATA driver for Windows
+Path: drivers/storage/ide/uniata
+Used Version: 0.47a
+License: BSD-like
+URL: http://alter.org.ua/soft/win/uni_ata/
+
+Title: Miniport driver for the Buslogic BT 958 SCSI Controller
+Path: drivers/storage/port/buslogic
+Used Version: ???
+License: GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later.html)
+URL: http://www.vmware.com/download/open_sources.html
 
 Title: DejaVu Fonts
 Path: media/fonts
@@ -216,15 +241,15 @@ Used Version: 1.2.11
 License: Zlib (https://spdx.org/licenses/Zlib.html)
 URL: http://www.zlib.net
 
-Title: Schily Tools, mkisofs
-Path: sdk/tools/mkisofs/schilytools
-Used Version: schily-2017-09-07
-License: CDDL-1.0 (https://spdx.org/licenses/CDDL-1.0.html)
-URL: https://sourceforge.net/projects/schilytools/
-
 Title: chmc and lzxcomp
 Path: sdk/tools/hhpcomp/chmc
 Path: sdk/tools/hhpcomp/lzx_compress
 Used Version: ??? (Imported on 2015.08.11.)
 License: GPL-3.0-or-later (https://spdx.org/licenses/GPL-3.0-or-later.html)
 URL: https://sourceforge.net/projects/chmc/
+
+Title: Schily Tools, mkisofs
+Path: sdk/tools/mkisofs/schilytools
+Used Version: schily-2017-09-07
+License: CDDL-1.0 (https://spdx.org/licenses/CDDL-1.0.html)
+URL: https://sourceforge.net/projects/schilytools/
