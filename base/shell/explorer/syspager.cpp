@@ -444,14 +444,14 @@ UINT WINAPI CIconWatcher::WatcherThread(_In_opt_ LPVOID lpParam)
         {
             // We've been kicked, we have updates to our list (or we're exiting the thread)
             if (This->m_Loop)
-                TRACE("Updating watched icon list");
+                TRACE("Updating watched icon list\n");
         }
         else if ((Status >= WAIT_OBJECT_0 + 1) && (Status < Size))
         {
             IconWatcherData *Icon;
             Icon = This->GetListEntry(NULL, WatchList[Status], false);
 
-            TRACE("Pid %lu owns a notification icon and has stopped without deleting it. We'll cleanup on its behalf", Icon->ProcessId);
+            TRACE("Pid %lu owns a notification icon and has stopped without deleting it. We'll cleanup on its behalf\n", Icon->ProcessId);
 
             TRAYNOTIFYDATAW tnid = {0};
             tnid.dwSignature = NI_NOTIFY_SIG;
@@ -737,6 +737,7 @@ BOOL CNotifyToolbar::AddButton(_In_ CONST NOTIFYICONDATA *iconData)
     tbBtn.dwData = (DWORD_PTR)notifyItem;
     tbBtn.iString = (INT_PTR) text;
     tbBtn.idCommand = GetButtonCount();
+    tbBtn.iBitmap = -1;
 
     if (iconData->uFlags & NIF_STATE)
     {
@@ -832,7 +833,7 @@ BOOL CNotifyToolbar::UpdateButton(_In_ CONST NOTIFYICONDATA *iconData)
     InternalIconData * notifyItem;
     TBBUTTONINFO tbbi = { 0 };
 
-    TRACE("Updating icon %d from hWnd %08x flags%s%s state%s%s",
+    TRACE("Updating icon %d from hWnd %08x flags%s%s state%s%s\n",
         iconData->uID, iconData->hWnd,
         (iconData->uFlags & NIF_ICON) ? " ICON" : "",
         (iconData->uFlags & NIF_STATE) ? " STATE" : "",
@@ -842,7 +843,7 @@ BOOL CNotifyToolbar::UpdateButton(_In_ CONST NOTIFYICONDATA *iconData)
     int index = FindItem(iconData->hWnd, iconData->uID, &notifyItem);
     if (index < 0)
     {
-        WARN("Icon %d from hWnd %08x DOES NOT EXIST!", iconData->uID, iconData->hWnd);
+        WARN("Icon %d from hWnd %08x DOES NOT EXIST!\n", iconData->uID, iconData->hWnd);
         return AddButton(iconData);
     }
 
@@ -941,7 +942,7 @@ BOOL CNotifyToolbar::RemoveButton(_In_ CONST NOTIFYICONDATA *iconData)
     int index = FindItem(iconData->hWnd, iconData->uID, &notifyItem);
     if (index < 0)
     {
-        TRACE("Icon %d from hWnd %08x ALREADY MISSING!", iconData->uID, iconData->hWnd);
+        TRACE("Icon %d from hWnd %08x ALREADY MISSING!\n", iconData->uID, iconData->hWnd);
 
         return FALSE;
     }
