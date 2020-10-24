@@ -108,9 +108,6 @@
 #define MI_IS_WRITE_ACCESS(FaultCode) BooleanFlagOn(FaultCode, 0x2)
 #define MI_IS_INSTRUCTION_FETCH(FaultCode) BooleanFlagOn(FaultCode, 0x10)
 
-/* On x86, these two are the same */
-#define MI_WRITE_VALID_PPE MI_WRITE_VALID_PTE
-
 /*  Translating virtual addresses to physical addresses
         (See: "Intel® 64 and IA-32 Architectures Software Developer’s Manual
               Volume 3A: System Programming Guide, Part 1, CHAPTER 4 PAGING")
