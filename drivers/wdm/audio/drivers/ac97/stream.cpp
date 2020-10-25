@@ -226,14 +226,9 @@ CMiniportStream::~CMiniportStream()
         {
             Miniport->Streams[Pin/2] = NULL;
         }
-
-        //
-        // Release the miniport.
-        //
-        Miniport->Release ();
-        Miniport = NULL;
     }
 
+    obj_Release((PVOID *)&Miniport);
     obj_Release((PVOID *)&ServiceGroup);
     obj_Release((PVOID *)&PortStream);
 }
