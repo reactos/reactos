@@ -499,7 +499,7 @@ UCHAR CMiniportStream::UpdateDMA (void)
 {
     // get X_CR register value
     UCHAR RegisterValue = ReadReg8(X_CR);
-    UCHAR RegisterValueNew = RegisterValue;
+    UCHAR RegisterValueNew = RegisterValue & ~CR_RPBM;
     if(DMAEngineState == DMA_ENGINE_ON)
         RegisterValueNew |= CR_RPBM;
 
