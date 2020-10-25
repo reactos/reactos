@@ -944,6 +944,9 @@ run:
             shExInfo.lpParameters = L"";
             shExInfo.nShow = SW_SHOW;
 
+            /* FIXME: Do we want to log installer status? */
+            WriteLogMessage(EVENTLOG_SUCCESS, MSG_SUCCESS_INSTALL, InfoArray[iAppId].szName);
+
             if (ShellExecuteExW(&shExInfo))
             {
                 //reflect installation progress in the titlebar
