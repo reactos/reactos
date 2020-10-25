@@ -138,6 +138,9 @@ BOOL CInstalledApplicationInfo::RetrieveIcon(ATL::CStringW& IconLocation)
 
 BOOL CInstalledApplicationInfo::UninstallApplication(BOOL bModify)
 {
+    if (!bModify)
+        WriteLogMessage(EVENTLOG_SUCCESS, MSG_SUCCESS_REMOVE, szDisplayName);
+
     return StartProcess(bModify ? szModifyPath : szUninstallString, TRUE);
 }
 
