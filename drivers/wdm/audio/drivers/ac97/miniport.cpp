@@ -1,8 +1,9 @@
 // Every debug output has "Modulname text"
 #define STR_MODULENAME "AC97 Miniport: "
 
-#include "shared.h"
-#include "miniport.h"
+//#include "shared.h"
+//#include "miniport.h"
+#include "wavepciminiport.h"
 
 /*****************************************************************************
  * PinDataRangesPCMStream
@@ -321,9 +322,11 @@ NTSTATUS CMiniport::PropertyChannelConfig
     DOUT (DBG_PRINT, ("[CMiniport::PropertyChannelConfig]"));
 
     NTSTATUS        ntStatus = STATUS_INVALID_PARAMETER;
+    
     // The major target is the object pointer to the wave miniport.
-    CMiniport *that =
-        (CMiniport *) (PMINIPORTWAVEPCI)PropertyRequest->MajorTarget;
+    // HACK ALERT - unsafe pointer cast - HACK ALERT
+    CMiniport *that = (CMiniport *)(CMiniportWaveICH*)
+        (PMINIPORTWAVEPCI)PropertyRequest->MajorTarget;
 
     ASSERT (that);
 
