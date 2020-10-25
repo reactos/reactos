@@ -32,7 +32,7 @@ int main() {
     }
     finally {
       Counter += 5;
-#ifdef _MSC_VER
+#if defined(_MSC_VER) && !defined(__clang__)
       break;
 #endif
     }

@@ -22,7 +22,7 @@ int main() {
     finally {
       /* set counter = 2 */
       Counter += 1;
-#ifdef _MSC_VER
+#if defined(_MSC_VER) && !defined(__clang__)
       goto t12; /* can't jump into a try/finally */
 #endif
     }

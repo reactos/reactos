@@ -29,7 +29,9 @@ int main() {
       finally {
         /* always add 2 to counter */
         Counter += 2;
+#if defined(_MSC_VER) && !defined(__clang__)
         continue;
+#endif
       }
       endtry
       /* never get here due to continue */

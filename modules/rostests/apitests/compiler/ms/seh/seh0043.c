@@ -34,7 +34,7 @@ int main() {
       /* set counter = 11 */
       Counter += 5;
       /* end loop */
-#ifdef _MSC_VER
+#if defined(_MSC_VER) && !defined(__clang__)
       break;
 #endif
     }

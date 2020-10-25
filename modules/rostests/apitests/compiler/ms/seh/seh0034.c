@@ -30,7 +30,9 @@ int main() {
     finally {
       /* add 2 to counter always */
       Counter += 2;
+#if defined(_MSC_VER) && !defined(__clang__)
       continue;
+#endif
     }
     endtry
     /* never gets executed due to continue in finally */

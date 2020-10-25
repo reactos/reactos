@@ -33,7 +33,9 @@ int main() {
     finally {
       /* always add 5 */
       Counter += 5;
+#if defined(_MSC_VER) && !defined(__clang__)
       continue;
+#endif
     }
     endtry
     /* never get here due to continue */

@@ -31,7 +31,7 @@ int main() {
     finally {
       /* ste counter to 3 and rbeak out of switch */
       Counter += 2;
-#ifdef _MSC_VER
+#if defined(_MSC_VER) && !defined(__clang__)
       break;
 #endif
     }
