@@ -827,7 +827,7 @@ MI_MAKE_HARDWARE_PTE_USER(IN PMMPTE NewPte,
 /* Decodes a Prototype PTE into the poiner to proto structure */
 FORCEINLINE
 PMMPTE
-MiProtoPteToPte(IN PMMPTE ProtoPte)
+MiProtoPteToPte(_In_ PMMPTE ProtoPte)
 {
     /* Do MI_MAKE_PROTOTYPE_PTE() in the opposite direction */
 
@@ -846,8 +846,8 @@ MiProtoPteToPte(IN PMMPTE ProtoPte)
 /* Builds a Prototype PTE from the poiner to proto structure */
 FORCEINLINE
 VOID
-MI_MAKE_PROTOTYPE_PTE(OUT PMMPTE ProtoPte,
-                      IN PMMPTE PointerToProto)
+MI_MAKE_PROTOTYPE_PTE(_Out_ PMMPTE ProtoPte,
+                      _In_ PMMPTE PointerToProto)
 {
 #if !defined(_M_AMD64) && !defined(_X86PAE_)
     ULONG_PTR Offset;
@@ -882,7 +882,7 @@ MI_MAKE_PROTOTYPE_PTE(OUT PMMPTE ProtoPte,
 /* Decodes a pointer to a Subsection from the Subsection PTE */
 FORCEINLINE
 PVOID
-MiSubsectionPteToSubsection(IN PMMPTE SubsectionPte)
+MiSubsectionPteToSubsection(_In_ PMMPTE SubsectionPte)
 {
     /* Do MI_MAKE_SUBSECTION_PTE() in the opposite direction. */
 
@@ -910,8 +910,8 @@ MiSubsectionPteToSubsection(IN PMMPTE SubsectionPte)
 /* Builds a Subsection PTE for the address of the Subsection */
 FORCEINLINE
 VOID
-MI_MAKE_SUBSECTION_PTE(OUT PMMPTE NewPte,
-                       IN PVOID Subsection)
+MI_MAKE_SUBSECTION_PTE(_Out_ PMMPTE NewPte,
+                       _In_ PVOID Subsection)
 {
 #if !defined(_M_AMD64) && !defined(_X86PAE_)
     ULONG_PTR Offset;
@@ -953,7 +953,7 @@ MI_MAKE_SUBSECTION_PTE(OUT PMMPTE NewPte,
 
 FORCEINLINE
 BOOLEAN
-MI_IS_MAPPED_PTE(PMMPTE PointerPte)
+MI_IS_MAPPED_PTE(_In_ PMMPTE PointerPte)
 {
     if (PointerPte->u.Soft.Valid ||
         PointerPte->u.Soft.Prototype ||
