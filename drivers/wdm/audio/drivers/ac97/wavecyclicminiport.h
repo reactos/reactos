@@ -54,19 +54,6 @@ private:
     // both in CPU time and programming time.
     friend class CMiniportWaveCyclicStream;
 
-    /*************************************************************************
-     * CMiniportWaveCyclic methods
-     *************************************************************************
-     * These are private member functions used internally by the object.  See
-     * MINWAVE.CPP for specific descriptions.
-     */
-
-    //
-    // Checks and connects the miniport to the resources.
-    //
-    NTSTATUS ProcessResources();
-
-
 public:
     /*************************************************************************
      * The following two macros are from STDUNK.H.  DECLARE_STD_UNKNOWN()
@@ -84,16 +71,6 @@ public:
     // Include IMiniportWaveCyclic (public/exported) methods
     //
     IMP_IMiniportWaveCyclic;
-
-
-    //
-    // This is the property handler for KSPROPERTY_AUDIO_CHANNEL_CONFIG of the
-    // DAC node.
-    //
-    static NTSTATUS NTAPI PropertyChannelConfig
-    (
-        IN      PPCPROPERTY_REQUEST PropertyRequest
-    );
 };
 
 #endif          // _MINWAVE_H_

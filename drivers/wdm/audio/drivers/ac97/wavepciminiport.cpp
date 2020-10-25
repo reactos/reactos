@@ -79,27 +79,10 @@ STDMETHODIMP_(NTSTATUS) CMiniportWaveICH::Init
         return ntStatus;
     }
 
-    return ProcessResources();
-}
-
-/*****************************************************************************
- * CMiniportWaveICH::ProcessResources
- *****************************************************************************
- * Processes the resource list, setting up helper objects accordingly.
- * Sets up the Interrupt + Service routine and DMA.
- */
-NTSTATUS CMiniportWaveICH::ProcessResources
-(
-)
-{
-    PAGED_CODE ();
-
-    DOUT (DBG_PRINT, ("[CMiniportWaveICH::ProcessResources]"));
-
     //
     // Create the DMA Channel object.
     //
-    NTSTATUS ntStatus = Port->NewMasterDmaChannel (&DmaChannel,      // OutDmaChannel
+    ntStatus = Port->NewMasterDmaChannel (&DmaChannel,      // OutDmaChannel
                                           NULL,             // OuterUnknown (opt)
                                           NonPagedPool,     // Pool Type
                                           NULL,             // ResourceList (opt)
@@ -120,7 +103,7 @@ NTSTATUS CMiniportWaveICH::ProcessResources
     //
     // On failure object is destroyed which cleans up.
     //
-    return STATUS_SUCCESS;
+    return ntStatus;
 }
 
 /*****************************************************************************
