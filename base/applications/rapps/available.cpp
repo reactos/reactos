@@ -67,7 +67,9 @@ VOID CAvailableApplicationInfo::RetrieveGeneralInfo(AvailableStrings& AvlbString
         CStringW ScrnshotLocation;
         if (!GetString(ScrnshotField, ScrnshotLocation))
         {
-            continue;
+            // We stop at the first screenshot not found,
+            // so screenshots _have_ to be consecutive
+            break;
         }
 
 
