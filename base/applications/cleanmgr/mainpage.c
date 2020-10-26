@@ -43,6 +43,7 @@ INT_PTR CALLBACK MainPageDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM 
                 case IDC_VIEW_FILES:
                 {
                     WCHAR LoadErrorString[ARR_MAX_SIZE] = { 0 };
+                    WCHAR WarningTitle[ARR_MAX_SIZE] = { 0 };
                     SHELLEXECUTEINFOW seI;
                     ZeroMemory(&seI, sizeof(seI));
                     seI.cbSize = sizeof(seI);
@@ -53,7 +54,8 @@ INT_PTR CALLBACK MainPageDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM 
                     if (!PathIsDirectoryW(RappsDir))
                     {
                         LoadStringW(GetModuleHandleW(NULL), IDS_WARNING_FOLDER, LoadErrorString, sizeof(LoadErrorString));
-                        MessageBoxW(hwnd, LoadErrorString, L"Warning", MB_OK | MB_ICONWARNING);
+                        LoadStringW(GetModuleHandleW(NULL), IDS_MESSAGEBOX_WARNING, WarningTitle, _countof(WarningTitle));
+                        MessageBoxW(hwnd, LoadErrorString, WarningTitle, MB_OK | MB_ICONWARNING);
                         break;
                     }
 

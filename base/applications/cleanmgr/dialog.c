@@ -120,21 +120,16 @@ INT_PTR CALLBACK ProgressDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM 
             HANDLE ThreadObj = NULL;
             WCHAR FullText[ARR_MAX_SIZE] = { 0 };
             WCHAR TempText[ARR_MAX_SIZE] = { 0 };
-            WCHAR *TempPtr = NULL;
 
             IsSystemDrive = FALSE;
             LoadStringW(GetModuleHandleW(NULL), IDS_SCAN, TempText, _countof(TempText));
             StringCchPrintfW(FullText, sizeof(FullText), TempText, SelectedDriveLetter);
             SetDlgItemTextW(hwnd, IDC_STATIC_SCAN, FullText);
 
-            /* In order to get the root drive, GetWindowsDirectoryW() function is getting
-               called and then the drive letter is extracted from the retrieved path */
+            /* In order to check whether the user has selected system drive, GetWindowsDirectoryW()
+               function is called and then it is checked if the selected drive letter is a substring of it */
             GetWindowsDirectoryW(TempText, MAX_PATH);
-            TempPtr = wcschr(TempText, L'\\');
-            TempText[wcslen(TempText) - wcslen(TempPtr)] = L'\0';
-
-            /* Checking if the drive letter specified by the user is of the root drive */
-            if (wcscmp(TempText, SelectedDriveLetter) == 0)
+            if (wcsstr(TempText, SelectedDriveLetter) != NULL)
             {
                 IsSystemDrive = TRUE;
             }
@@ -229,9 +224,10 @@ INT_PTR CALLBACK TabParentDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM
                 case IDOK:
                 {
                     WCHAR WarningText[ARR_MAX_SIZE] = { 0 };
-
+                    WCHAR WarningTitle[ARR_MAX_SIZE] = { 0 };
                     LoadStringW(GetModuleHandleW(NULL), IDS_CONFIRMATION, WarningText, _countof(WarningText));
-                    int MesgBox = MessageBoxW(hwnd, WarningText, L"Warning", MB_YESNO | MB_ICONWARNING | MB_DEFBUTTON2);
+                    LoadStringW(GetModuleHandleW(NULL), IDS_MESSAGEBOX_WARNING, WarningTitle, _countof(WarningTitle));
+                    int MesgBox = MessageBoxW(hwnd, WarningText, WarningTitle, MB_YESNO | MB_ICONWARNING | MB_DEFBUTTON2);
                     switch (MesgBox)
                     {
                         case IDYES:

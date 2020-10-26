@@ -37,7 +37,7 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
     }
 
     /* Creating a mutex of this specific program to check if multiple instances are running */
-    CreateMutexW(NULL, FALSE, L"cleanmgr.exe");
+    hMutex = CreateMutexW(NULL, FALSE, L"cleanmgr.exe");
     if (hMutex)
     {
         /* If there is another instance of the program running, then just broadcast the 
@@ -63,20 +63,16 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
     }
     else if (nArgs > 1)
     {
-        if (!UseAcquiredArguments(ArgList, nArgs))
-        {
-            goto START;
-        }
-        return TRUE;
-    }
-    /* If no arguments or invalid arguments have been provided by the user then just spawn the IDD_START dialog box. */
-    else
-    {
-        START:DialogButtonSelect = DialogBoxParamW(hInstance, MAKEINTRESOURCEW(IDD_START), NULL, StartDlgProc, 0);
-        if (DialogButtonSelect == IDCANCEL)
+        if (UseAcquiredArguments(ArgList, nArgs))
         {
             return TRUE;
         }
+    }
+    /* If no arguments or invalid arguments have been provided by the user then just spawn the IDD_START dialog box. */
+    DialogButtonSelect = DialogBoxParamW(hInstance, MAKEINTRESOURCEW(IDD_START), NULL, StartDlgProc, 0);
+    if (DialogButtonSelect == IDCANCEL)
+    {
+        return TRUE;
     }
 
     /* Spawn the IDD_PROGRESS_SCAN dialog box for scanning. */

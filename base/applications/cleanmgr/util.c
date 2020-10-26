@@ -1008,6 +1008,8 @@ BOOL UseAcquiredArguments(LPWSTR* ArgList, int nArgs)
     StringCbCopyW(ArgSpecified, sizeof(ArgSpecified), ArgList[1]);
     _wcsupr(ArgSpecified);
     
+    /* Check if available paramaters have been provided. If not then just bail out and then spawn
+       IDD_START dialog box */
     if (wcscmp(ArgSpecified, L"/D") == 0 && nArgs == 3)
     {
         if (!StartDriveCleanupFromArg(ArgList, LogicalDrives))
@@ -1033,7 +1035,9 @@ BOOL UseAcquiredArguments(LPWSTR* ArgList, int nArgs)
     }
     else if (wcscmp(ArgSpecified, L"/?") == 0)
     {
-        MessageBoxW(NULL, L"cleanmgr [/SAGESET:n | /SAGERUN:n | /TUNEUP:n]", L"Usage", MB_OK);
+        WCHAR UsageTitle[MAX_PATH] = { 0 };
+        LoadStringW(GetModuleHandleW(NULL), IDS_MESSAGEBOX_CLEANMGR_USAGE, UsageTitle, _countof(UsageTitle));
+        MessageBoxW(NULL, L"cleanmgr [/SAGESET:n | /SAGERUN:n | /TUNEUP:n]", UsageTitle, MB_OK);
         return TRUE;
     }
     else

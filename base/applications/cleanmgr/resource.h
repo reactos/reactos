@@ -47,7 +47,7 @@
 #define IDS_DETAILS_CHKDSK                  8003
 #define IDS_DETAILS_RAPPS                   8004
 
-#define IDS_WARNING_FOLDER                  9001
+#define IDS_WARNING_FOLDER                  9002
 
 #define IDS_CONFIRMATION                    10001
 
@@ -57,6 +57,9 @@
 #define IDS_LABEL_TEMP                      12004
 
 #define IDS_CHOICE_DLG_TITLE                13001
+
+#define IDS_MESSAGEBOX_WARNING              14001
+#define IDS_MESSAGEBOX_CLEANMGR_USAGE       14002
 
 /* Button Resource IDs */
 #define IDC_VIEW_FILES                      14001
