@@ -1662,7 +1662,7 @@ MiGetFileObjectForSectionAddress(
         {
             /* Get the section pointer to the SECTION_OBJECT */
             Section = MemoryArea->SectionData.Section;
-            *FileObject = Section->FileObject;
+            *FileObject = ((PMM_SECTION_SEGMENT)Section->Segment)->FileObject;
         }
         else
         {
@@ -1705,7 +1705,7 @@ PFILE_OBJECT
 NTAPI
 MmGetFileObjectForSection(IN PVOID SectionObject)
 {
-    PSECTION Section;
+    PSECTION Section = SectionObject;
     ASSERT(KeGetCurrentIrql() == PASSIVE_LEVEL);
     ASSERT(SectionObject != NULL);
 
@@ -1713,12 +1713,11 @@ MmGetFileObjectForSection(IN PVOID SectionObject)
     if (MiIsRosSectionObject(SectionObject) == FALSE)
     {
         /* Return the file pointer stored in the control area */
-        Section = SectionObject;
         return Section->Segment->ControlArea->FilePointer;
     }
 
     /* Return the file object */
-    return ((PROS_SECTION_OBJECT)SectionObject)->FileObject;
+    return ((PMM_SECTION_SEGMENT)Section->Segment)->FileObject;
 }
 
 static
@@ -1740,7 +1739,7 @@ MiGetFileObjectForVad(
         {
             /* Get the section pointer to the SECTION_OBJECT */
             Section = MemoryArea->SectionData.Section;
-            FileObject = Section->FileObject;
+            FileObject = ((PMM_SECTION_SEGMENT)Section->Segment)->FileObject;
         }
         else
         {

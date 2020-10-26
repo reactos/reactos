@@ -166,8 +166,9 @@ typedef ULONG_PTR SWAPENTRY;
 
 typedef struct _MM_SECTION_SEGMENT
 {
+    PFILE_OBJECT FileObject;
+
     FAST_MUTEX Lock;		/* lock which protects the page directory */
-	PFILE_OBJECT FileObject;
     LARGE_INTEGER RawLength;		/* length of the segment which is part of the mapped file */
     LARGE_INTEGER Length;			/* absolute length of the segment */
     ULONG ReferenceCount;
@@ -190,6 +191,8 @@ typedef struct _MM_SECTION_SEGMENT
 
 typedef struct _MM_IMAGE_SECTION_OBJECT
 {
+    PFILE_OBJECT FileObject;
+
     SECTION_IMAGE_INFORMATION ImageInformation;
     PVOID BasedAddress;
     ULONG NrSegments;
@@ -199,7 +202,6 @@ typedef struct _MM_IMAGE_SECTION_OBJECT
 typedef struct _ROS_SECTION_OBJECT
 {
     SECTION;
-    PFILE_OBJECT FileObject;
 } ROS_SECTION_OBJECT, *PROS_SECTION_OBJECT;
 
 #define MA_GetStartingAddress(_MemoryArea) ((_MemoryArea)->VadNode.StartingVpn << PAGE_SHIFT)

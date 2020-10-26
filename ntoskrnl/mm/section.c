@@ -847,6 +847,7 @@ MmFreeSectionSegments(PFILE_OBJECT FileObject)
             }
             MmFreePageTablesSectionSegment(&SectionSegments[i], NULL);
         }
+        ObDereferenceObject(ImageSectionObject->FileObject);
         ExFreePool(ImageSectionObject->Segments);
         ExFreePool(ImageSectionObject);
         FileObject->SectionObjectPointer->ImageSectionObject = NULL;
@@ -863,6 +864,7 @@ MmFreeSectionSegments(PFILE_OBJECT FileObject)
             DPRINT1("Data segment still referenced\n");
             KeBugCheck(MEMORY_MANAGEMENT);
         }
+        ObDereferenceObject(Segment->FileObject);
         MmFreePageTablesSectionSegment(Segment, NULL);
         ExFreePool(Segment);
         FileObject->SectionObjectPointer->DataSectionObject = NULL;
@@ -941,7 +943,7 @@ MmUnsharePageEntrySectionSegment(PROS_SECTION_OBJECT Section,
 #endif
 
         Page = PFN_FROM_SSE(Entry);
-        FileObject = Section->FileObject;
+        FileObject = Segment->FileObject;
         if (FileObject != NULL &&
                 !(Segment->Image.Characteristics & IMAGE_SCN_MEM_SHARED))
         {
@@ -1047,7 +1049,7 @@ BOOLEAN MiIsPageFromCache(PMEMORY_AREA MemoryArea,
     {
         PROS_SHARED_CACHE_MAP SharedCacheMap;
         PROS_VACB Vacb;
-        SharedCacheMap = MemoryArea->SectionData.Section->FileObject->SectionObjectPointer->SharedCacheMap;
+        SharedCacheMap = MemoryArea->SectionData.Segment->FileObject->SectionObjectPointer->SharedCacheMap;
         Vacb = CcRosLookupVacb(SharedCacheMap, SegOffset + MemoryArea->SectionData.Segment->Image.FileOffset);
         if (Vacb)
         {
@@ -1106,7 +1108,7 @@ MiReadPage(PMEMORY_AREA MemoryArea,
     BOOLEAN IsImageSection;
     LONGLONG Length;
 
-    FileObject = MemoryArea->SectionData.Section->FileObject;
+    FileObject = MemoryArea->SectionData.Segment->FileObject;
     SharedCacheMap = FileObject->SectionObjectPointer->SharedCacheMap;
     RawLength = MemoryArea->SectionData.Segment->RawLength.QuadPart;
     FileOffset = SegOffset + MemoryArea->SectionData.Segment->Image.FileOffset;
@@ -2012,7 +2014,7 @@ MmPageOutSectionView(PMMSUPPORT AddressSpace,
 #ifndef NEWCC
     FileOffset = Context.Offset.QuadPart + Context.Segment->Image.FileOffset;
     IsImageSection = Context.Section->u.Flags.Image;
-    FileObject = Context.Section->FileObject;
+    FileObject = Context.Segment->FileObject;
 
     if (FileObject != NULL &&
             !(Context.Segment->Image.Characteristics & IMAGE_SCN_MEM_SHARED))
@@ -2392,7 +2394,7 @@ MmWritePageSectionView(PMMSUPPORT AddressSpace,
     Section = MemoryArea->SectionData.Section;
     IsImageSection = Section->u.Flags.Image;
 
-    FileObject = Section->FileObject;
+    FileObject = Segment->FileObject;
     DirectMapped = FALSE;
     if (FileObject != NULL &&
             !(Segment->Image.Characteristics & IMAGE_SCN_MEM_SHARED))
@@ -2709,13 +2711,16 @@ MmpDeleteSection(PVOID ObjectBody)
 
         (void)InterlockedDecrementUL(&((PMM_SECTION_SEGMENT)Section->Segment)->ReferenceCount);
     }
-    if (Section->FileObject != NULL)
+
+    if (Section->Segment)
     {
-#ifndef NEWCC
-        CcRosDereferenceCache(Section->FileObject);
-#endif
-        ObDereferenceObject(Section->FileObject);
-        Section->FileObject = NULL;
+        PMM_SECTION_SEGMENT Segment = (PMM_SECTION_SEGMENT)Section->Segment;
+        if (Segment->FileObject != NULL)
+        {
+    #ifndef NEWCC
+            CcRosDereferenceCache(Segment->FileObject);
+    #endif
+        }
     }
 }
 
@@ -2986,6 +2991,7 @@ MmCreateDataFileSection(PROS_SECTION_OBJECT *SectionObject,
         Section->Segment = (PSEGMENT)Segment;
         Segment->ReferenceCount = 1;
         ExInitializeFastMutex(&Segment->Lock);
+        Segment->FileObject = FileObject;
         /*
          * Set the lock before assigning the segment to the file object
          */
@@ -3029,9 +3035,12 @@ MmCreateDataFileSection(PROS_SECTION_OBJECT *SectionObject,
             Segment->RawLength.QuadPart = MaximumSize.QuadPart;
             Segment->Length.QuadPart = PAGE_ROUND_UP(Segment->RawLength.QuadPart);
         }
+
+        /* We let the segment reference the file object */
+        ObDereferenceObject(FileObject);
+        FileObject = Segment->FileObject;
     }
     MmUnlockSectionSegment(Segment);
-    Section->FileObject = FileObject;
     Section->SizeOfSection = MaximumSize;
 #ifndef NEWCC
     CcRosReferenceCache(FileObject);
@@ -3663,7 +3672,10 @@ ExeFmtpCreateImageSection(PFILE_OBJECT FileObject,
         ExInitializeFastMutex(&ImageSectionObject->Segments[i].Lock);
         ImageSectionObject->Segments[i].ReferenceCount = 1;
         MiInitializeSectionPageTable(&ImageSectionObject->Segments[i]);
+        ImageSectionObject->Segments[i].FileObject = FileObject;
     }
+
+    ImageSectionObject->FileObject = FileObject;
 
     ASSERT(NT_SUCCESS(Status));
     return Status;
@@ -3795,6 +3807,10 @@ MmCreateImageSection(PROS_SECTION_OBJECT *SectionObject,
             {
                 (void)InterlockedIncrementUL(&SectionSegments[i].ReferenceCount);
             }
+
+            /* We let the Image Section Object hold the reference */
+            ObDereferenceObject(FileObject);
+            FileObject = ImageSectionObject->FileObject;
         }
 
         Status = StatusExeFmt;
@@ -3824,9 +3840,12 @@ MmCreateImageSection(PROS_SECTION_OBJECT *SectionObject,
             (void)InterlockedIncrementUL(&SectionSegments[i].ReferenceCount);
         }
 
+        /* We let the Image Section Object hold the reference */
+        ObDereferenceObject(FileObject);
+        FileObject = ImageSectionObject->FileObject;
+
         Status = STATUS_SUCCESS;
     }
-    Section->FileObject = FileObject;
 #ifndef NEWCC
     CcRosReferenceCache(FileObject);
 #endif
@@ -3963,7 +3982,7 @@ MmFreeSectionPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address,
         if (Page == PFN_FROM_SSE(Entry) && Dirty)
         {
 #ifndef NEWCC
-            FileObject = MemoryArea->SectionData.Section->FileObject;
+            FileObject = MemoryArea->SectionData.Segment->FileObject;
             SharedCacheMap = FileObject->SectionObjectPointer->SharedCacheMap;
             CcRosMarkDirtyFile(SharedCacheMap, Offset.QuadPart + Segment->Image.FileOffset);
 #endif
