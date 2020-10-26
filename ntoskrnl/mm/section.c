@@ -4302,13 +4302,22 @@ NtQuerySection(
 
             if (Section->u.Flags.Image)
             {
-                Sbi.BaseAddress = 0;
-                Sbi.Size.QuadPart = 0;
+                if (MiIsRosSectionObject(Section))
+                {
+                    PMM_IMAGE_SECTION_OBJECT ImageSectionObject = ((PMM_IMAGE_SECTION_OBJECT)Section->Segment);
+                    Sbi.BaseAddress = 0;
+                    Sbi.Size.QuadPart = ImageSectionObject->ImageInformation.ImageFileSize;
+                }
+                else
+                {
+                    /* Not supported yet */
+                    ASSERT(FALSE);
+                }
             }
             else if (MiIsRosSectionObject(Section))
             {
                 Sbi.BaseAddress = (PVOID)((PMM_SECTION_SEGMENT)Section->Segment)->Image.VirtualAddress;
-                Sbi.Size.QuadPart = ((PMM_SECTION_SEGMENT)Section->Segment)->Length.QuadPart;
+                Sbi.Size.QuadPart = ((PMM_SECTION_SEGMENT)Section->Segment)->RawLength.QuadPart;
             }
             else
             {
