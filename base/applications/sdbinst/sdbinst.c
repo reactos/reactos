@@ -5,22 +5,22 @@
  * COPYRIGHT:   Copyright 2020 Max Korostil (mrmks04@yandex.ru)
  */
 
+#include <tchar.h>
 
 #include <windef.h>
 #include <winbase.h>
-#include <tchar.h>
 #include <winreg.h>
 #include <strsafe.h>
 #include <objbase.h>
 #include <apphelp.h>
-
-
 
 #define APPCOMPAT_CUSTOM_REG_PATH L"Software\\Microsoft\\Windows NT\\CurrentVersion\\AppCompatFlags\\Custom"
 #define APPCOMPAT_LAYERS_REG_PATH L"Software\\Microsoft\\Windows NT\\CurrentVersion\\AppCompatFlags\\Layers"
 #define APPCOMPAT_INSTALLEDSDB_REG_PATH L"Software\\Microsoft\\Windows NT\\CurrentVersion\\AppCompatFlags\\InstalledSDB"
 #define UNINSTALL_REG_PATH L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall"
 #define DBPATH_KEY_NAME L"DatabasePath"
+#define SDB_EXT L".sdb"
+#define GUID_STR_LENGTH 38
 
 HRESULT
 RegisterSdbEntry(
@@ -30,21 +30,14 @@ RegisterSdbEntry(
     _In_ BOOL isInstall,
     _In_ BOOL isExe)
 {
-    PWCHAR regName;
-    HKEY  hKey = NULL;
+    WCHAR regName[MAX_PATH];
+    HKEY hKey = NULL;
     LSTATUS status;
     HRESULT hres;
 
-    regName = (PWCHAR)HeapAlloc(GetProcessHeap(), 0, MAX_PATH * sizeof(WCHAR));
-    if (!regName)
-    {
-        hres = HRESULT_FROM_WIN32(ERROR_NOT_ENOUGH_MEMORY);
-        goto end;
-    }
-    ZeroMemory(regName, MAX_PATH * sizeof(WCHAR));
-
-    hres = StringCchPrintf(regName, MAX_PATH, L"%ls\\%ls",
-                     isExe ? APPCOMPAT_CUSTOM_REG_PATH : APPCOMPAT_LAYERS_REG_PATH, sdbEntryName);
+    hres = StringCchPrintfW(regName, MAX_PATH, L"%ls\\%ls",
+                            isExe ? APPCOMPAT_CUSTOM_REG_PATH : APPCOMPAT_LAYERS_REG_PATH,
+                            sdbEntryName);
     if (FAILED(hres))
     {
         wprintf(L"StringCchPrintfW error: 0x%08X\n", hres);
@@ -54,12 +47,12 @@ RegisterSdbEntry(
     // Remove key
     if (!isInstall)
     {
-        status = RegDeleteKey(HKEY_LOCAL_MACHINE, regName);
+        status = RegDeleteKeyW(HKEY_LOCAL_MACHINE, regName);
         return HRESULT_FROM_WIN32(status);
     }
 
     // Create main key
-    status = RegCreateKeyEx(HKEY_LOCAL_MACHINE,
+    status = RegCreateKeyExW(HKEY_LOCAL_MACHINE,
                             regName,
                             0,
                             NULL,
@@ -68,7 +61,6 @@ RegisterSdbEntry(
                             NULL,
                             &hKey,
                             NULL);
-
     if (status != ERROR_SUCCESS)
     {
         wprintf(L"RegKeyCreateEx error: 0x%08X", status);
@@ -76,8 +68,8 @@ RegisterSdbEntry(
         goto end;
     }
 
-    // Set instlled time
-    status = RegSetValueEx(hKey,
+    // Set installed time
+    status = RegSetValueExW(hKey,
                            dbGuid,
                            0,
                            REG_QWORD,
@@ -85,7 +77,7 @@ RegisterSdbEntry(
                            sizeof(time));
     if (status != ERROR_SUCCESS)
     {
-        wprintf(L"RegSetValueEx error: 0x%08X", status);
+        wprintf(L"RegSetValueExW error: 0x%08X", status);
         hres = HRESULT_FROM_WIN32(status);
         goto end;
     }
@@ -94,11 +86,6 @@ end:
     if (hKey)
     {
         RegCloseKey(hKey);
-    }
-
-    if (regName)
-    {
-        HeapFree(GetProcessHeap(), 0, regName);
     }
 
     return hres;
@@ -110,52 +97,41 @@ AddUninstallKey(
     _In_ LPCWSTR sdbInstalledPath,
     _In_ LPCWSTR guidDbStr)
 {
-    PWCHAR sdbinstPath;
-    PWCHAR regName;
-    PWCHAR uninstString;
+    WCHAR sdbinstPath[MAX_PATH];
+    WCHAR regName[MAX_PATH];
+    WCHAR uninstString[MAX_PATH];
     HKEY hKey = NULL;
     HRESULT hres;
-
-    sdbinstPath = (PWCHAR)HeapAlloc(GetProcessHeap(), 0, MAX_PATH * sizeof(WCHAR));
-    regName = (PWCHAR)HeapAlloc(GetProcessHeap(), 0, MAX_PATH * sizeof(WCHAR));
-    uninstString = (PWCHAR)HeapAlloc(GetProcessHeap(), 0, MAX_PATH * sizeof(WCHAR));
-
-    if (!sdbinstPath || !regName || !uninstString)
-    {
-        hres = HRESULT_FROM_WIN32(ERROR_NOT_ENOUGH_MEMORY);
-        goto end;
-    }
-
-    ZeroMemory(sdbinstPath, MAX_PATH * sizeof(WCHAR));
-    ZeroMemory(regName, MAX_PATH * sizeof(WCHAR));
-    ZeroMemory(uninstString, MAX_PATH * sizeof(WCHAR));
 
     UINT count = GetSystemWindowsDirectory(sdbinstPath, MAX_PATH);
     if (sdbinstPath[count - 1] != L'\\')
     {
-        sdbinstPath[count] = L'\\';
+        hres = StringCchCatW(sdbinstPath, MAX_PATH, L"\\");
+        if (FAILED(hres))
+        {
+            wprintf(L"StringCchCatW error: 0x%08X", hres);
+            goto end;
+        }
     }
     
     // Full path to sdbinst.exe
-    hres = StringCchCat(sdbinstPath, MAX_PATH, L"System32\\sdbinst.exe");
+    hres = StringCchCatW(sdbinstPath, MAX_PATH, L"System32\\sdbinst.exe");
     if (FAILED(hres))
     {
-        wprintf(L"StringCchCat error: 0x%08X", hres);
+        wprintf(L"StringCchCatW error: 0x%08X", hres);
+        goto end;
     }
 
     // Sdb guid reg key
-    hres = StringCchPrintf(regName, MAX_PATH, L"%ls\\%ls", UNINSTALL_REG_PATH, guidDbStr);
+    hres = StringCchPrintfW(regName, MAX_PATH, L"%ls\\%ls", UNINSTALL_REG_PATH, guidDbStr);
     if (FAILED(hres))
     {
         wprintf(L"StringCchPrintfW error: 0x%08X", hres);
         goto end;
     }
 
-    wprintf(L"%ls\n", sdbinstPath);
-    wprintf(L"%ls\n", regName);
-
     // Create main key
-    LSTATUS status = RegCreateKeyEx(HKEY_LOCAL_MACHINE,
+    LSTATUS status = RegCreateKeyExW(HKEY_LOCAL_MACHINE,
                                     regName,
                                     0,
                                     NULL,
@@ -174,7 +150,7 @@ AddUninstallKey(
 
     // Set Display name
     DWORD length = wcslen(dbName) * sizeof(WCHAR);
-    status = RegSetValueEx(hKey,
+    status = RegSetValueExW(hKey,
                            L"DisplayName",
                            0,
                            REG_SZ,
@@ -182,13 +158,13 @@ AddUninstallKey(
                            length + sizeof(WCHAR));
     if (status != ERROR_SUCCESS)
     {
-        wprintf(L"RegSetValueEx error: 0x%08X", status);
+        wprintf(L"RegSetValueExW error: 0x%08X", status);
         hres = HRESULT_FROM_WIN32(status);
         goto end;
     }
 
     // Uninstall full string 
-    hres = StringCchPrintf(uninstString, MAX_PATH, L"%ls -u \"%ls\"", sdbinstPath, sdbInstalledPath);
+    hres = StringCchPrintfW(uninstString, MAX_PATH, L"%ls -u \"%ls\"", sdbinstPath, sdbInstalledPath);
     if (FAILED(hres))
     {
         wprintf(L"StringCchPrintfW error: 0x%08X", hres);
@@ -197,7 +173,7 @@ AddUninstallKey(
 
     // Set uninstall string
     length = wcslen(uninstString) * sizeof(WCHAR);
-    status = RegSetValueEx(hKey,
+    status = RegSetValueExW(hKey,
                            L"UninstallString",
                            0,
                            REG_SZ,
@@ -205,7 +181,7 @@ AddUninstallKey(
                            length + sizeof(WCHAR));
     if (status != ERROR_SUCCESS)
     {
-        wprintf(L"RegSetValueEx error: 0x%08X", status);
+        wprintf(L"RegSetValueExW error: 0x%08X", status);
         hres = HRESULT_FROM_WIN32(status);
         goto end;
     }
@@ -214,21 +190,6 @@ end:
     if (hKey)
     {
         RegCloseKey(hKey);
-    }
-
-    if (sdbinstPath)
-    {
-        HeapFree(GetProcessHeap(), 0, sdbinstPath);
-    }
-
-    if (regName)
-    {
-        HeapFree(GetProcessHeap(), 0, regName);
-    }
-
-    if (uninstString)
-    {
-        HeapFree(GetProcessHeap(), 0, uninstString);
     }
 
     return hres;
@@ -246,7 +207,6 @@ GetSdbGuid(
     TAGID tagDbId;
 
     tagDbId = SdbFindFirstTag(pdb, tagDb, TAG_DATABASE_ID);
-    
     if (!tagDbId)
     {
         wprintf(L"Can't find database id tag");
@@ -276,7 +236,7 @@ ProcessLayers(
 
     TAGID tagLayer = SdbFindFirstTag(pdb, tagDb, TAG_LAYER);
     
-    // Add all exe to registry (AppCompatFlags)
+    // Add all layers to registry (AppCompatFlags)
     while (tagLayer && (tagLayer != prevTagLayer))
     {
         tagLayerName = SdbFindFirstTag(pdb, tagLayer, TAG_NAME);
@@ -287,7 +247,6 @@ ProcessLayers(
         }
 
         LPWSTR name = SdbGetStringTagPtr(pdb, tagLayerName);
-        wprintf(L"Layer name %ls", name);
 
         res = RegisterSdbEntry(name, guidDbStr, time, isInstall, FALSE);
         if (FAILED(res))
@@ -329,7 +288,6 @@ ProcessExe(
         }
 
         LPWSTR name = SdbGetStringTagPtr(pdb, tagExeName);
-        wprintf(L"Exe name %ls\n", name);
 
         res = RegisterSdbEntry(name, guidDbStr, time, isInstall, TRUE);
         if (FAILED(res))
@@ -365,13 +323,17 @@ CopySdbToAppPatch(
     CopyMemory(sysdirPath, destSdbPath, destLen * sizeof(WCHAR));
     pTmpSysdir = sysdirPath + destLen;
 
-    while (*pTmpSysdir != L'\\')
+    while (pTmpSysdir > sysdirPath && *pTmpSysdir != L'\\')
     {
         *pTmpSysdir = L'\0';
         --pTmpSysdir;
     }
 
-    wprintf(L"%ls\n", sysdirPath);
+    if (pTmpSysdir == sysdirPath)
+    {
+        wprintf(L"Can't find directory separator\n");
+        goto end;
+    }
 
     // Create directory if need
     if (!CreateDirectory(sysdirPath, NULL))
@@ -379,7 +341,7 @@ CopySdbToAppPatch(
         error = GetLastError();
         if (error != ERROR_ALREADY_EXISTS)
         {
-            wprintf(L"Can't create folder %ls\n Error: 0x%08\n", sysdirPath, error);
+            wprintf(L"Can't create folder %ls\n Error: 0x%08X\n", sysdirPath, error);
             goto end;
         }
         error = ERROR_SUCCESS;
@@ -392,34 +354,37 @@ CopySdbToAppPatch(
         wprintf(L"Can't copy sdb file");
     }
 
-    HeapFree(GetProcessHeap(), 0, sysdirPath);
-
 end:
+    if (sysdirPath)
+    {
+        HeapFree(GetProcessHeap(), 0, sysdirPath);
+    }
+
     return HRESULT_FROM_WIN32(error);
 }
 
 HRESULT
 BuildPathToSdb(
-    _In_ PWCHAR* buffer,
+    _In_ PWCHAR buffer,
     _In_ SIZE_T bufLen,
     _In_ LPCWSTR guidDbStr)
 {
-    PWCHAR pBuffer = *buffer;
-    ZeroMemory(pBuffer, bufLen * sizeof(WCHAR));
+    ZeroMemory(buffer, bufLen * sizeof(WCHAR));
 
-    UINT count = GetSystemWindowsDirectory(pBuffer, bufLen);
-    if (pBuffer[count - 1] != L'\\')
+    // Can't use here SdbGetAppPatchDir, because Windows XP haven't this function
+    UINT count = GetSystemWindowsDirectory(buffer, bufLen);
+    if (buffer[count - 1] != L'\\')
     {
-        pBuffer[count] = L'\\';
+        buffer[count] = L'\\';
     }
 
-    HRESULT res = StringCchCatW(pBuffer, bufLen, L"AppPatch\\Custom\\");
+    HRESULT res = StringCchCatW(buffer, bufLen, L"AppPatch\\Custom\\");
     if (FAILED(res))
     {
         goto end;
     }
 
-    res = StringCchCatW(pBuffer, bufLen, guidDbStr);
+    res = StringCchCatW(buffer, bufLen, guidDbStr);
 
 end:
     return res;
@@ -436,15 +401,8 @@ SdbInstall(
     GUID dbGuid = {0};
     FILETIME systemTime = {0};
     ULARGE_INTEGER currentTime = {0};
-    PWCHAR sysdirPatchPath = NULL;
-    PWCHAR guidDbStr;
-
-    guidDbStr = (PWCHAR)HeapAlloc(GetProcessHeap(), 0, MAX_PATH * sizeof(WCHAR));
-    if (!guidDbStr)
-    {
-        goto end;
-    }
-    ZeroMemory(guidDbStr, MAX_PATH * sizeof(WCHAR));
+    WCHAR sysdirPatchPath[MAX_PATH];
+    WCHAR guidDbStr[GUID_STR_LENGTH + ARRAYSIZE(SDB_EXT) + 1];
 
     GetSystemTimeAsFileTime(&systemTime);
     currentTime.LowPart  = systemTime.dwLowDateTime;
@@ -473,7 +431,7 @@ SdbInstall(
     }
 
     StringFromGUID2(&dbGuid, guidDbStr, MAX_PATH);
-    HRESULT hres = StringCchCatW(guidDbStr, MAX_PATH, L".sdb");
+    HRESULT hres = StringCchCatW(guidDbStr, MAX_PATH, SDB_EXT);
     if (FAILED(hres))
     {
         wprintf(L"StringCchCatW error 0x%08X\n", hres);
@@ -508,11 +466,8 @@ SdbInstall(
         goto end;
     }
 
-    SIZE_T bufLen = MAX_PATH * 2;
-    sysdirPatchPath = (PWCHAR)HeapAlloc(GetProcessHeap(), 0, bufLen * sizeof(WCHAR));
-
-    // Create full path tos db in system folder
-    hres = BuildPathToSdb(&sysdirPatchPath, bufLen, guidDbStr);
+    // Create full path to sdb in system folder
+    hres = BuildPathToSdb(sysdirPatchPath, ARRAYSIZE(sysdirPatchPath), guidDbStr);
     if (FAILED(hres))
     {
         wprintf(L"Build path error\n");
@@ -533,7 +488,7 @@ SdbInstall(
     // Registration
     if (!SdbRegisterDatabaseEx(sysdirPatchPath, SDB_DATABASE_SHIM, &currentTime.QuadPart))
     {
-        wprintf(L"SdbRegisterDatabaseEx UNSUCCESS");
+        wprintf(L"SdbRegisterDatabaseEx failed");
         goto end;
     }
 
@@ -543,16 +498,6 @@ end:
     if (pdb)
     {
         SdbCloseDatabase(pdb);
-    }
-
-    if (sysdirPatchPath)
-    {
-        HeapFree(GetProcessHeap(), 0, sysdirPatchPath);
-    }
-
-    if (guidDbStr)
-    {
-        HeapFree(GetProcessHeap(), 0, guidDbStr);
     }
 
     return res;
@@ -565,7 +510,7 @@ DeleteUninstallKey(
     HKEY hKey = NULL;
     HRESULT hres = HRESULT_FROM_WIN32(ERROR_SUCCESS);
 
-    LSTATUS status = RegCreateKeyEx(HKEY_LOCAL_MACHINE,
+    LSTATUS status = RegCreateKeyExW(HKEY_LOCAL_MACHINE,
                                     UNINSTALL_REG_PATH,
                                     0,
                                     NULL,
@@ -581,7 +526,7 @@ DeleteUninstallKey(
         goto end;
     }
 
-    status = RegDeleteKey(hKey, keyName);
+    status = RegDeleteKeyW(hKey, keyName);
     if (status != ERROR_SUCCESS)
     {
         hres = HRESULT_FROM_WIN32(status);
@@ -676,8 +621,25 @@ end:
     return res;
 }
 
-#define BUFFER_SIZE (MAX_PATH * sizeof(WCHAR) + sizeof(WCHAR))
-#define STRING_LEN  (MAX_PATH + 1)
+BOOL
+ValidateGuidString(
+    _In_ PWCHAR guidStr)
+{
+    ULONG length = wcslen(guidStr);
+
+    if (length == GUID_STR_LENGTH &&
+        guidStr[0] == L'{' &&
+        guidStr[GUID_STR_LENGTH - 1] == L'}' &&
+        guidStr[9] == L'-' &&
+        guidStr[14] == L'-' &&
+        guidStr[19] == L'-' &&
+        guidStr[24] == L'-')
+    {
+        return TRUE;
+    }
+
+    return FALSE;
+}
 
 BOOL
 SdbUninstallByGuid(
@@ -687,24 +649,24 @@ SdbUninstallByGuid(
     HKEY hKey = NULL;
     HKEY guidKey = NULL;
     LSTATUS status;
-    DWORD keyValSize = BUFFER_SIZE;
-    PWCHAR dbPath = NULL;
+    WCHAR dbPath[MAX_PATH];
+    DWORD keyValSize = sizeof(dbPath);
 
-    dbPath = (PWCHAR)HeapAlloc(GetProcessHeap(), 0, BUFFER_SIZE);
-    if (!dbPath)
+    if (!ValidateGuidString(guidSdbStr))
     {
-        goto end;
+        wprintf(L"Invalid GUID: %ls\n", guidSdbStr);
+        return res;
     }
 
-    status = RegOpenKeyEx(HKEY_LOCAL_MACHINE, APPCOMPAT_INSTALLEDSDB_REG_PATH, 0, KEY_READ | KEY_QUERY_VALUE, &hKey);
+    status = RegOpenKeyExW(HKEY_LOCAL_MACHINE, APPCOMPAT_INSTALLEDSDB_REG_PATH, 0, KEY_READ | KEY_QUERY_VALUE, &hKey);
 
     if (status != ERROR_SUCCESS)
     {
-        wprintf(L"RegOpenKey error: 0x%08X", status);
+        wprintf(L"RegOpenKeyW error: 0x%08X", status);
         goto end;
     }
 
-    status = RegOpenKeyEx(hKey, guidSdbStr, 0, KEY_READ | KEY_QUERY_VALUE, &guidKey);
+    status = RegOpenKeyExW(hKey, guidSdbStr, 0, KEY_READ | KEY_QUERY_VALUE, &guidKey);
 
     if (status != ERROR_SUCCESS)
     {
@@ -712,21 +674,16 @@ SdbUninstallByGuid(
         goto end;
     }
 
-    status = RegQueryValueEx(guidKey, DBPATH_KEY_NAME, NULL, NULL, (LPBYTE)dbPath, &keyValSize);
+    status = RegQueryValueExW(guidKey, DBPATH_KEY_NAME, NULL, NULL, (LPBYTE)dbPath, &keyValSize);
     if (status != ERROR_SUCCESS)
     {
-        wprintf(L"RegQueryValueEx: 0x%08X\n", status);
+        wprintf(L"RegQueryValueExW: 0x%08X\n", status);
         goto end;
     }
 
     res = SdbUninstall(dbPath);
     
 end:
-    if (dbPath)
-    {
-        HeapFree(GetProcessHeap(), 0, dbPath);
-    }
-
     if (hKey)
     {
         RegCloseKey(hKey);
@@ -748,31 +705,18 @@ SdbUninstallByName(
     LSTATUS status;
     HKEY hKey = NULL;
     HKEY subKey = NULL;
-    DWORD index = 0;
-    DWORD keyNameLen = STRING_LEN;
-    PWCHAR keyName = NULL;
+    DWORD index = 0;    
+    WCHAR keyName[MAX_PATH];
+    DWORD keyNameLen = ARRAYSIZE(keyName);
     DWORD keyValSize;
-    PWCHAR dbDescript = NULL;
-    PWCHAR dbPath = NULL;
+    WCHAR dbDescript[MAX_PATH];
+    WCHAR dbPath[MAX_PATH];
 
-    keyName =    (PWCHAR)HeapAlloc(GetProcessHeap(), 0, BUFFER_SIZE);
-    dbDescript = (PWCHAR)HeapAlloc(GetProcessHeap(), 0, BUFFER_SIZE);
-    dbPath =     (PWCHAR)HeapAlloc(GetProcessHeap(), 0, BUFFER_SIZE);
-
-    if (!keyName || !dbDescript || !dbPath)
-    {
-        goto end;
-    }
-
-    ZeroMemory(keyName, BUFFER_SIZE);
-    ZeroMemory(dbDescript, BUFFER_SIZE);
-    ZeroMemory(dbPath, BUFFER_SIZE);
-
-    status = RegOpenKeyEx(HKEY_LOCAL_MACHINE, APPCOMPAT_INSTALLEDSDB_REG_PATH, 0, KEY_READ | KEY_QUERY_VALUE, &hKey);
+    status = RegOpenKeyExW(HKEY_LOCAL_MACHINE, APPCOMPAT_INSTALLEDSDB_REG_PATH, 0, KEY_READ | KEY_QUERY_VALUE, &hKey);
 
     if (status != ERROR_SUCCESS)
     {
-        wprintf(L"RegOpenKey error: 0x%08X", status);
+        wprintf(L"RegOpenKeyW error: 0x%08X", status);
         goto end;
     }
 
@@ -782,14 +726,14 @@ SdbUninstallByName(
     // Search db guid by name
     while (status == ERROR_SUCCESS)
     {
-        status = RegOpenKeyEx(hKey, keyName, 0, KEY_READ | KEY_QUERY_VALUE, &subKey);
+        status = RegOpenKeyExW(hKey, keyName, 0, KEY_READ | KEY_QUERY_VALUE, &subKey);
         if (status != ERROR_SUCCESS)
         {
             break;
         }
 
-        keyValSize = BUFFER_SIZE;
-        status = RegQueryValueEx(subKey, L"DatabaseDescription", NULL, NULL, (LPBYTE)dbDescript, &keyValSize);
+        keyValSize = sizeof(dbDescript);
+        status = RegQueryValueExW(subKey, L"DatabaseDescription", NULL, NULL, (LPBYTE)dbDescript, &keyValSize);
         if (status != ERROR_SUCCESS)
         {
             break;
@@ -800,8 +744,8 @@ SdbUninstallByName(
         if (_wcsnicmp(dbDescript, nameSdbStr, keyNameLen) == 0)
         {
             // Take db full path
-            keyValSize = BUFFER_SIZE;
-            status = RegQueryValueEx(subKey, DBPATH_KEY_NAME, NULL, NULL, (LPBYTE)dbPath, &keyValSize);
+            keyValSize = sizeof(dbPath);
+            status = RegQueryValueExW(subKey, DBPATH_KEY_NAME, NULL, NULL, (LPBYTE)dbPath, &keyValSize);
             if (status != ERROR_SUCCESS)
             {
                 dbPath[0] = UNICODE_NULL;
@@ -818,8 +762,8 @@ SdbUninstallByName(
         keyName[0] = UNICODE_NULL;
 
         ++index;
-        keyNameLen = STRING_LEN;
-        status = RegEnumKeyEx(hKey, index, keyName, &keyNameLen, NULL, NULL, NULL, NULL);        
+        keyNameLen = ARRAYSIZE(keyName);
+        status = RegEnumKeyExW(hKey, index, keyName, &keyNameLen, NULL, NULL, NULL, NULL);        
     }
 
     RegCloseKey(hKey);
@@ -830,21 +774,6 @@ SdbUninstallByName(
     }
 
 end:
-    if (dbPath)
-    {
-        HeapFree(GetProcessHeap(), 0, dbPath);
-    }
-
-    if (dbDescript)
-    {
-        HeapFree(GetProcessHeap(), 0, dbDescript);
-    }
-
-    if (keyName)
-    {
-        HeapFree(GetProcessHeap(), 0, keyName);
-    }
-
     return res;
 }
 
@@ -854,7 +783,6 @@ ShowHelp()
 {
     wprintf(L"Using: sdbinst [-?][-q][-u][-g][-n] foo.sdb | {guid} | \"name\" \n"
             L"-? - show help\n"
-            //L"-q - silence mode\n"
             L"-u - uninstall\n"
             L"-g - {guid} file guid (only uninstall)\n"
             L"-n - \"name\" - file name (only uninstall)\n");
