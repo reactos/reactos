@@ -91,5 +91,11 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
     /* Finally spawn the IDD_PROGRESS_DELETION dialog box for required folder deletion. */
     DialogBoxParamW(hInstance, MAKEINTRESOURCEW(IDD_PROGRESS_DELETION), NULL, ProgressEndDlgProc, 0);
+
+    /* Close the handle of the mutex */
+    if (hMutex)
+    {
+        CloseHandle(hMutex);
+    }
     return TRUE;
 }
