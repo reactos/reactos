@@ -1655,14 +1655,12 @@ MiGetFileObjectForSectionAddress(
     if (Vad->u.VadFlags.Spare != 0)
     {
         PMEMORY_AREA MemoryArea = (PMEMORY_AREA)Vad;
-        PROS_SECTION_OBJECT Section;
 
         /* Check if it's a section view (RosMm section) */
         if (MemoryArea->Type == MEMORY_AREA_SECTION_VIEW)
         {
             /* Get the section pointer to the SECTION_OBJECT */
-            Section = MemoryArea->SectionData.Section;
-            *FileObject = ((PMM_SECTION_SEGMENT)Section->Segment)->FileObject;
+            *FileObject = MemoryArea->SectionData.Segment->FileObject;
         }
         else
         {
@@ -1732,14 +1730,12 @@ MiGetFileObjectForVad(
     if (Vad->u.VadFlags.Spare != 0)
     {
         PMEMORY_AREA MemoryArea = (PMEMORY_AREA)Vad;
-        PROS_SECTION_OBJECT Section;
 
         /* Check if it's a section view (RosMm section) */
         if (MemoryArea->Type == MEMORY_AREA_SECTION_VIEW)
         {
             /* Get the section pointer to the SECTION_OBJECT */
-            Section = MemoryArea->SectionData.Section;
-            FileObject = ((PMM_SECTION_SEGMENT)Section->Segment)->FileObject;
+            FileObject = MemoryArea->SectionData.Segment->FileObject;
         }
         else
         {
@@ -3840,7 +3836,7 @@ NtExtendSection(IN HANDLE SectionHandle,
                 IN OUT PLARGE_INTEGER NewMaximumSize)
 {
     LARGE_INTEGER SafeNewMaximumSize;
-    PROS_SECTION_OBJECT Section;
+    PSECTION Section;
     NTSTATUS Status;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
 

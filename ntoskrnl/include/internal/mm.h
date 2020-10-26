@@ -199,11 +199,6 @@ typedef struct _MM_IMAGE_SECTION_OBJECT
     PMM_SECTION_SEGMENT Segments;
 } MM_IMAGE_SECTION_OBJECT, *PMM_IMAGE_SECTION_OBJECT;
 
-typedef struct _ROS_SECTION_OBJECT
-{
-    SECTION;
-} ROS_SECTION_OBJECT, *PROS_SECTION_OBJECT;
-
 #define MA_GetStartingAddress(_MemoryArea) ((_MemoryArea)->VadNode.StartingVpn << PAGE_SHIFT)
 #define MA_GetEndingAddress(_MemoryArea) (((_MemoryArea)->VadNode.EndingVpn + 1) << PAGE_SHIFT)
 
@@ -219,7 +214,7 @@ typedef struct _MEMORY_AREA
 
     struct
     {
-        PROS_SECTION_OBJECT Section;
+        PSECTION Section;
         LARGE_INTEGER ViewOffset;
         PMM_SECTION_SEGMENT Segment;
         LIST_ENTRY RegionListHead;

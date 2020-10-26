@@ -96,7 +96,7 @@ typedef struct _MM_REQUIRED_RESOURCES
 
 NTSTATUS
 NTAPI
-MmCreateCacheSection(PROS_SECTION_OBJECT *SectionObject,
+MmCreateCacheSection(PSECTION *SectionObject,
                      ACCESS_MASK DesiredAccess,
                      POBJECT_ATTRIBUTES ObjectAttributes,
                      PLARGE_INTEGER UMaximumSize,
@@ -386,7 +386,7 @@ MiSwapInSectionPage(PMMSUPPORT AddressSpace,
 
 NTSTATUS
 NTAPI
-MmExtendCacheSection(PROS_SECTION_OBJECT Section,
+MmExtendCacheSection(PSECTION Section,
                      PLARGE_INTEGER NewSize,
                      BOOLEAN ExtendFile);
 
