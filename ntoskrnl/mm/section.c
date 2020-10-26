@@ -4279,131 +4279,98 @@ NtQuerySection(
         return Status;
     }
 
-    if (MiIsRosSectionObject(Section))
+    switch(SectionInformationClass)
     {
-        switch (SectionInformationClass)
+        case SectionBasicInformation:
         {
-            case SectionBasicInformation:
+            SECTION_BASIC_INFORMATION Sbi;
+
+            Sbi.Size = Section->SizeOfSection;
+            Sbi.BaseAddress = (PVOID)Section->Address.StartingVpn;
+
+            Sbi.Attributes = 0;
+            if (Section->u.Flags.Commit)
+                Sbi.Attributes |= SEC_COMMIT;
+            if (Section->u.Flags.Reserve)
+                Sbi.Attributes |= SEC_RESERVE;
+            if (Section->u.Flags.File)
+                Sbi.Attributes |= SEC_FILE;
+            if (Section->u.Flags.Image)
+                Sbi.Attributes |= SEC_IMAGE;
+
+            /* FIXME : Complete/test the list of flags passed back from NtCreateSection */
+
+            if (Section->u.Flags.Image)
             {
-                PSECTION_BASIC_INFORMATION Sbi = (PSECTION_BASIC_INFORMATION)SectionInformation;
-
-                _SEH2_TRY
-                {
-                    Sbi->Attributes = 0;
-                    if (Section->u.Flags.Image)
-                        Sbi->Attributes |= SEC_IMAGE;
-                    if (Section->u.Flags.File)
-                        Sbi->Attributes |= SEC_FILE;
-                    if (Section->u.Flags.NoChange)
-                        Sbi->Attributes |= SEC_NO_CHANGE;
-
-                    if (Section->u.Flags.Image)
-                    {
-                        Sbi->BaseAddress = 0;
-                        Sbi->Size.QuadPart = 0;
-                    }
-                    else
-                    {
-                        Sbi->BaseAddress = (PVOID)((PMM_SECTION_SEGMENT)Section->Segment)->Image.VirtualAddress;
-                        Sbi->Size.QuadPart = ((PMM_SECTION_SEGMENT)Section->Segment)->Length.QuadPart;
-                    }
-
-                    if (ResultLength != NULL)
-                    {
-                        *ResultLength = sizeof(SECTION_BASIC_INFORMATION);
-                    }
-                    Status = STATUS_SUCCESS;
-                }
-                _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-                {
-                    Status = _SEH2_GetExceptionCode();
-                }
-                _SEH2_END;
-
-                break;
+                Sbi.BaseAddress = 0;
+                Sbi.Size.QuadPart = 0;
+            }
+            else if (MiIsRosSectionObject(Section))
+            {
+                Sbi.BaseAddress = (PVOID)((PMM_SECTION_SEGMENT)Section->Segment)->Image.VirtualAddress;
+                Sbi.Size.QuadPart = ((PMM_SECTION_SEGMENT)Section->Segment)->Length.QuadPart;
+            }
+            else
+            {
+                DPRINT1("Unimplemented code path!");
             }
 
-            case SectionImageInformation:
+            _SEH2_TRY
             {
-                PSECTION_IMAGE_INFORMATION Sii = (PSECTION_IMAGE_INFORMATION)SectionInformation;
-
-                _SEH2_TRY
-                {
-                    if (Section->u.Flags.Image)
-                    {
-                        PMM_IMAGE_SECTION_OBJECT ImageSectionObject = ((PMM_IMAGE_SECTION_OBJECT)Section->Segment);
-
-                        *Sii = ImageSectionObject->ImageInformation;
-                    }
-
-                    if (ResultLength != NULL)
-                    {
-                        *ResultLength = sizeof(SECTION_IMAGE_INFORMATION);
-                    }
-                    Status = STATUS_SUCCESS;
-                }
-                _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-                {
-                    Status = _SEH2_GetExceptionCode();
-                }
-                _SEH2_END;
-
-                break;
+                *((SECTION_BASIC_INFORMATION*)SectionInformation) = Sbi;
+                if (ResultLength)
+                    *ResultLength = sizeof(Sbi);
             }
+            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+            {
+                Status = _SEH2_GetExceptionCode();
+            }
+            _SEH2_END;
+            break;
         }
-    }
-    else
-    {
-        switch(SectionInformationClass)
+        case SectionImageInformation:
         {
-            case SectionBasicInformation:
+            if (!Section->u.Flags.Image)
             {
-                SECTION_BASIC_INFORMATION Sbi;
-
-                Sbi.Size = Section->SizeOfSection;
-                Sbi.BaseAddress = (PVOID)Section->Address.StartingVpn;
-
-                Sbi.Attributes = 0;
-                if (Section->u.Flags.Image)
-                    Sbi.Attributes |= SEC_IMAGE;
-                if (Section->u.Flags.Commit)
-                    Sbi.Attributes |= SEC_COMMIT;
-                if (Section->u.Flags.Reserve)
-                    Sbi.Attributes |= SEC_RESERVE;
-                if (Section->u.Flags.File)
-                    Sbi.Attributes |= SEC_FILE;
-                if (Section->u.Flags.Image)
-                    Sbi.Attributes |= SEC_IMAGE;
-
-                /* FIXME : Complete/test the list of flags passed back from NtCreateSection */
+                Status = STATUS_SECTION_NOT_IMAGE;
+            }
+            else if (MiIsRosSectionObject(Section))
+            {
+                PMM_IMAGE_SECTION_OBJECT ImageSectionObject = ((PMM_IMAGE_SECTION_OBJECT)Section->Segment);
 
                 _SEH2_TRY
                 {
-                    *((SECTION_BASIC_INFORMATION*)SectionInformation) = Sbi;
-                    if (ResultLength)
-                        *ResultLength = sizeof(Sbi);
+                    PSECTION_IMAGE_INFORMATION Sii = (PSECTION_IMAGE_INFORMATION)SectionInformation;
+                    *Sii = ImageSectionObject->ImageInformation;
+                    if (ResultLength != NULL)
+                        *ResultLength = sizeof(*Sii);
                 }
                 _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
                 {
                     Status = _SEH2_GetExceptionCode();
                 }
                 _SEH2_END;
-                break;
             }
-            case SectionImageInformation:
+            else
             {
-                if (!Section->u.Flags.Image)
+                _SEH2_TRY
                 {
-                    Status = STATUS_SECTION_NOT_IMAGE;
+                    PSECTION_IMAGE_INFORMATION Sii = (PSECTION_IMAGE_INFORMATION)SectionInformation;
+                    *Sii = *Section->Segment->u2.ImageInformation;
+                    if (ResultLength != NULL)
+                        *ResultLength = sizeof(*Sii);
                 }
-                else
+                _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
                 {
-                    /* Currently not supported */
-                    ASSERT(FALSE);
+                    Status = _SEH2_GetExceptionCode();
                 }
-                break;
+                _SEH2_END;
             }
+            break;
         }
+        default:
+            DPRINT1("Unknown SectionInformationClass: %d\n", SectionInformationClass);
+            Status = STATUS_NOT_SUPPORTED;
     }
 
     ObDereferenceObject(Section);

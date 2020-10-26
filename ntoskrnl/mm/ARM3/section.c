@@ -3716,7 +3716,7 @@ NtMapViewOfSection(IN HANDLE SectionHandle,
         return Status;
     }
 
-    if (MiIsRosSectionObject(Section) && Section->u.Flags.PhysicalMemory)
+    if (Section->u.Flags.PhysicalMemory)
     {
         if (PreviousMode == UserMode &&
             SafeSectionOffset.QuadPart + SafeViewSize > MmHighestPhysicalPage << PAGE_SHIFT)
@@ -3764,8 +3764,7 @@ NtMapViewOfSection(IN HANDLE SectionHandle,
     if (NT_SUCCESS(Status))
     {
         /* Check if this is an image for the current process */
-        if (MiIsRosSectionObject(Section) &&
-            (Section->u.Flags.Image) &&
+        if ((Section->u.Flags.Image) &&
             (Process == PsGetCurrentProcess()) &&
             (Status != STATUS_IMAGE_NOT_AT_BASE))
         {
