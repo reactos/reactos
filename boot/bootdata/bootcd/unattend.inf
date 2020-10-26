@@ -4,22 +4,22 @@ Signature = "$ReactOS$"
 ; Set UnattendSetupEnabled to yes in order to get unattended setup working
 ; yes - unattend setup enabled
 ; no - unattend setup disabled
-UnattendSetupEnabled = @UNATTENDED_BOOTCD@
+UnattendSetupEnabled = no
 
 ; Install to \Device\Harddisk0\Partition1\ReactOS
-DestinationDiskNumber = @UNATTENDED_BOOTCD_DestinationDiskNumber@
-DestinationPartitionNumber = @UNATTENDED_BOOTCD_DestinationPartitionNumber@
-InstallationDirectory=@UNATTENDED_BOOTCD_InstallationDirectory@
+DestinationDiskNumber = 0
+DestinationPartitionNumber = 1
+InstallationDirectory=ReactOS
 
 ; MBRInstallType=0  skips MBR installation
 ; MBRInstallType=1  install MBR on floppy
 ; MBRInstallType=2  install MBR on hdd
-MBRInstallType=@UNATTENDED_BOOTCD_MBRInstallType@
+MBRInstallType=2
 
-FullName="@UNATTENDED_BOOTCD_FullName@"
-OrgName="@UNATTENDED_BOOTCD_OrgName@"
-ComputerName="@UNATTENDED_BOOTCD_ComputerName@"
-AdminPassword="@UNATTENDED_BOOTCD_AdminPassword@"
+FullName="MyName"
+;OrgName="MyOrg"
+ComputerName="MYCOMPUTERNAME"
+;AdminPassword="MyPassword"
 
 ; TimeZone is set GMT as default
 TimeZoneIndex=85
@@ -30,33 +30,33 @@ TimeZoneIndex=85
 ; enable this setting to format the selected partition
 ; 1 - format enabled
 ; 0 - format disabled
-FormatPartition=@UNATTENDED_BOOTCD_FormatPartition@
+FormatPartition=1
 
 ; enable this setting to automatically create a partition
 ; during installation
 ; 1 - enabled
 ; 0 - disabled
-AutoPartition = @UNATTENDED_BOOTCD_AutoPartition@
+AutoPartition = 1
 
 ; choose default file system type
 ; 0 - FAT
 ; 1 - BtrFS
-FsType = @UNATTENDED_BOOTCD_FsType@
+FsType = 0
 
 ; enable this setting to disable Gecko install
 ; yes - disabled
 ; no  - enabled
-DisableGeckoInst = @UNATTENDED_BOOTCD_DisableGeckoInst@
+DisableGeckoInst = no
 
 ; set this option to automatically
 ; specify language in 2nd mode setup
 ; see hivesys.inf for available languages
-LocaleID = @UNATTENDED_BOOTCD_LocaleID@
+LocaleID = 409
 
 ; set product option
 ; 0: ReactOS Server
 ; 1: ReactOS Workstation
-ProductOption = @UNATTENDED_BOOTCD_ProductOption@
+ProductOption = 0
 
 ; enable this section to automatically launch programs
 ; after 3rd boot
