@@ -5076,4 +5076,144 @@ MmCreateSection (OUT PVOID  * Section,
     return Status;
 }
 
+BOOLEAN
+NTAPI
+MmArePagesResident(
+    _In_ PEPROCESS Process,
+    _In_ PVOID Address,
+    _In_ ULONG Length)
+{
+    PMEMORY_AREA MemoryArea;
+    BOOLEAN Ret = TRUE;
+    PMM_SECTION_SEGMENT Segment;
+    LARGE_INTEGER SegmentOffset, RangeEnd;
+
+    MmLockAddressSpace(&Process->Vm);
+
+    MemoryArea = MmLocateMemoryAreaByAddress(&Process->Vm, Address);
+    if (MemoryArea == NULL)
+    {
+        MmUnlockAddressSpace(&Process->Vm);
+        return FALSE;
+    }
+
+    /* Only supported in old Mm for now */
+    ASSERT(MemoryArea->Type == MEMORY_AREA_SECTION_VIEW);
+    /* For file mappings */
+    ASSERT(MemoryArea->VadNode.u.VadFlags.VadType != VadImageMap);
+
+    Segment = MemoryArea->SectionData.Segment;
+    MmLockSectionSegment(Segment);
+
+    SegmentOffset.QuadPart = PAGE_ROUND_DOWN(Address) - MA_GetStartingAddress(MemoryArea)
+            + MemoryArea->SectionData.ViewOffset.QuadPart;
+    RangeEnd.QuadPart = PAGE_ROUND_UP((ULONG_PTR)Address + Length) - MA_GetStartingAddress(MemoryArea)
+            + MemoryArea->SectionData.ViewOffset.QuadPart;
+
+    while (SegmentOffset.QuadPart < RangeEnd.QuadPart)
+    {
+        ULONG_PTR Entry = MmGetPageEntrySectionSegment(Segment, &SegmentOffset);
+        if ((Entry == 0) || IS_SWAP_FROM_SSE(Entry))
+        {
+            Ret = FALSE;
+            break;
+        }
+        SegmentOffset.QuadPart += PAGE_SIZE;
+    }
+
+    MmUnlockSectionSegment(Segment);
+
+    MmUnlockAddressSpace(&Process->Vm);
+    return Ret;
+}
+
+NTSTATUS
+NTAPI
+MmMakePagesResident(
+    _In_ PEPROCESS Process,
+    _In_ PVOID Address,
+    _In_ ULONG Length)
+{
+    PMEMORY_AREA MemoryArea;
+    PMM_SECTION_SEGMENT Segment;
+    LARGE_INTEGER SegmentOffset, RangeEnd;
+
+    MmLockAddressSpace(&Process->Vm);
+
+    MemoryArea = MmLocateMemoryAreaByAddress(&Process->Vm, Address);
+    if (MemoryArea == NULL)
+    {
+        MmUnlockAddressSpace(&Process->Vm);
+        return FALSE;
+    }
+
+    /* Only supported in old Mm for now */
+    ASSERT(MemoryArea->Type == MEMORY_AREA_SECTION_VIEW);
+    /* For file mappings */
+    ASSERT(MemoryArea->VadNode.u.VadFlags.VadType != VadImageMap);
+
+    Segment = MemoryArea->SectionData.Segment;
+    MmLockSectionSegment(Segment);
+
+    SegmentOffset.QuadPart = PAGE_ROUND_DOWN(Address) - MA_GetStartingAddress(MemoryArea)
+            + MemoryArea->SectionData.ViewOffset.QuadPart;
+    RangeEnd.QuadPart = PAGE_ROUND_UP((ULONG_PTR)Address + Length) - MA_GetStartingAddress(MemoryArea)
+            + MemoryArea->SectionData.ViewOffset.QuadPart;
+
+    while (SegmentOffset.QuadPart < RangeEnd.QuadPart)
+    {
+        ULONG_PTR Entry = MmGetPageEntrySectionSegment(Segment, &SegmentOffset);
+
+        /* Let any pending read proceed */
+        while (MM_IS_WAIT_PTE(Entry))
+        {
+            MmUnlockSectionSegment(Segment);
+            MmUnlockAddressSpace(&Process->Vm);
+            MiWaitForPageEvent(NULL, NULL);
+            MmLockAddressSpace(&Process->Vm);
+            MmLockSectionSegment(Segment);
+            Entry = MmGetPageEntrySectionSegment(Segment, &SegmentOffset);
+        }
+
+        /* We are called from Cc, this can't be backed by the page files */
+        ASSERT(!IS_SWAP_FROM_SSE(Entry));
+
+        /* At this point, there may be a valid page there */
+        if (Entry == 0)
+        {
+            PFN_NUMBER Page;
+            NTSTATUS Status;
+
+            /*
+             * Release all our locks and read in the page from disk
+             */
+            MmSetPageEntrySectionSegment(Segment, &SegmentOffset, MAKE_SWAP_SSE(MM_WAIT_ENTRY));
+            MmUnlockSectionSegment(Segment);
+            MmUnlockAddressSpace(&Process->Vm);
+
+            /* FIXME: Read the whole range at once instead of one page at a time */
+            Status = MiReadPage(MemoryArea, SegmentOffset.QuadPart, &Page);
+            if (!NT_SUCCESS(Status))
+            {
+                /* Reset the Segment entry and fail */
+                MmLockSectionSegment(Segment);
+                MmSetPageEntrySectionSegment(Segment, &SegmentOffset, 0);
+                MmUnlockSectionSegment(Segment);
+                MiSetPageEvent(Process, Address);
+                return Status;
+            }
+
+            MmLockAddressSpace(&Process->Vm);
+            MmLockSectionSegment(Segment);
+            MmSetPageEntrySectionSegment(Segment, &SegmentOffset, MAKE_SSE(Page << PAGE_SHIFT, 1));
+        }
+        SegmentOffset.QuadPart += PAGE_SIZE;
+    }
+
+    MmUnlockSectionSegment(Segment);
+
+    MmUnlockAddressSpace(&Process->Vm);
+    return STATUS_SUCCESS;
+}
+
 /* EOF */

@@ -1323,6 +1323,20 @@ MmMapViewInSystemSpaceEx (
     _Inout_ PLARGE_INTEGER SectionOffset
     );
 
+BOOLEAN
+NTAPI
+MmArePagesResident(
+    _In_ PEPROCESS Process,
+    _In_ PVOID BaseAddress,
+    _In_ ULONG Length);
+
+NTSTATUS
+NTAPI
+MmMakePagesResident(
+    _In_ PEPROCESS Process,
+    _In_ PVOID Address,
+    _In_ ULONG Length);
+
 /* sysldr.c ******************************************************************/
 
 VOID
