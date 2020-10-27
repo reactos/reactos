@@ -18,6 +18,8 @@ list(APPEND SOURCE
     browseui.cpp
     browseuiord.cpp
     CAutoComplete.cpp
+    CShellTaskScheduler.cpp
+    CShellTaskScheduler.h
     CTaskbarList.cpp
     CTaskbarList.h
     commonbrowser.cpp
