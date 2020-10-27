@@ -1313,6 +1313,16 @@ VOID
 NTAPI
 MmFreeSectionSegments(PFILE_OBJECT FileObject);
 
+/* Exported from NT 6.2 Onward. We keep it internal. */
+NTSTATUS
+NTAPI
+MmMapViewInSystemSpaceEx (
+    _In_ PVOID Section,
+    _Outptr_result_bytebuffer_ (*ViewSize) PVOID *MappedBase,
+    _Inout_ PSIZE_T ViewSize,
+    _Inout_ PLARGE_INTEGER SectionOffset
+    );
+
 /* sysldr.c ******************************************************************/
 
 VOID

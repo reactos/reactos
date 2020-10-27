@@ -88,7 +88,8 @@ NTAPI
 MiMapViewInSystemSpace(IN PVOID Section,
                        IN PVOID Session,
                        OUT PVOID *MappedBase,
-                       IN OUT PSIZE_T ViewSize);
+                       IN OUT PSIZE_T ViewSize,
+                       IN PLARGE_INTEGER SectionOffset);
 
 NTSTATUS
 NTAPI
@@ -3832,7 +3833,7 @@ MmMapViewOfSegment(PMMSUPPORT AddressSpace,
                    PVOID* BaseAddress,
                    SIZE_T ViewSize,
                    ULONG Protect,
-                   ULONG ViewOffset,
+                   LONGLONG ViewOffset,
                    ULONG AllocationType)
 {
     PMEMORY_AREA MArea;
@@ -4417,7 +4418,6 @@ MmMapViewOfSection(IN PVOID SectionObject,
 {
     PSECTION Section;
     PMMSUPPORT AddressSpace;
-    ULONG ViewOffset;
     NTSTATUS Status = STATUS_SUCCESS;
     BOOLEAN NotAtBase = FALSE;
 
@@ -4530,7 +4530,7 @@ MmMapViewOfSection(IN PVOID SectionObject,
                                         Section,
                                         &SectionSegments[i],
                                         &SBaseAddress,
-                                        SectionSegments[i].Length.LowPart,
+                                        SectionSegments[i].Length.QuadPart,
                                         SectionSegments[i].Protection,
                                         0,
                                         0);
@@ -4548,6 +4548,7 @@ MmMapViewOfSection(IN PVOID SectionObject,
     else
     {
         PMM_SECTION_SEGMENT Segment = (PMM_SECTION_SEGMENT)Section->Segment;
+        LONGLONG ViewOffset;
 
         /* check for write access */
         if ((Protect & (PAGE_READWRITE|PAGE_EXECUTE_READWRITE)) &&
@@ -4577,7 +4578,7 @@ MmMapViewOfSection(IN PVOID SectionObject,
         }
         else
         {
-            ViewOffset = SectionOffset->u.LowPart;
+            ViewOffset = SectionOffset->QuadPart;
         }
 
         if ((ViewOffset % PAGE_SIZE) != 0)
@@ -4588,11 +4589,11 @@ MmMapViewOfSection(IN PVOID SectionObject,
 
         if ((*ViewSize) == 0)
         {
-            (*ViewSize) = Section->SizeOfSection.u.LowPart - ViewOffset;
+            (*ViewSize) = Section->SizeOfSection.QuadPart - ViewOffset;
         }
-        else if (((*ViewSize)+ViewOffset) > Section->SizeOfSection.u.LowPart)
+        else if (((*ViewSize)+ViewOffset) > Section->SizeOfSection.QuadPart)
         {
-            (*ViewSize) = Section->SizeOfSection.u.LowPart - ViewOffset;
+            (*ViewSize) = MIN(Section->SizeOfSection.QuadPart - ViewOffset, SIZE_T_MAX - PAGE_SIZE);
         }
 
         *ViewSize = PAGE_ROUND_UP(*ViewSize);
@@ -4756,7 +4757,23 @@ MmMapViewInSystemSpace (IN PVOID SectionObject,
                         OUT PVOID * MappedBase,
                         IN OUT PSIZE_T ViewSize)
 {
-    PSECTION Section;
+    LARGE_INTEGER SectionOffset;
+
+    SectionOffset.QuadPart = 0;
+
+    return MmMapViewInSystemSpaceEx(SectionObject, MappedBase, ViewSize, &SectionOffset);
+}
+
+NTSTATUS
+NTAPI
+MmMapViewInSystemSpaceEx (
+    _In_ PVOID SectionObject,
+    _Outptr_result_bytebuffer_ (*ViewSize) PVOID *MappedBase,
+    _Inout_ PSIZE_T ViewSize,
+    _Inout_ PLARGE_INTEGER SectionOffset
+    )
+{
+    PSECTION Section = SectionObject;
     PMM_SECTION_SEGMENT Segment;
     PMMSUPPORT AddressSpace;
     NTSTATUS Status;
@@ -4767,10 +4784,11 @@ MmMapViewInSystemSpace (IN PVOID SectionObject,
         return MiMapViewInSystemSpace(SectionObject,
                                       &MmSession,
                                       MappedBase,
-                                      ViewSize);
+                                      ViewSize,
+                                      SectionOffset);
     }
 
-    DPRINT("MmMapViewInSystemSpace() called\n");
+    DPRINT("MmMapViewInSystemSpaceEx() called\n");
 
     Section = SectionObject;
     Segment = (PMM_SECTION_SEGMENT)Section->Segment;
@@ -4780,17 +4798,12 @@ MmMapViewInSystemSpace (IN PVOID SectionObject,
     MmLockAddressSpace(AddressSpace);
 
 
-    if ((*ViewSize) == 0)
+    if ((*ViewSize == 0) || ((SectionOffset->QuadPart + *ViewSize) > Section->SizeOfSection.QuadPart))
     {
-        (*ViewSize) = Section->SizeOfSection.u.LowPart;
-    }
-    else if ((*ViewSize) > Section->SizeOfSection.u.LowPart)
-    {
-        (*ViewSize) = Section->SizeOfSection.u.LowPart;
+        *ViewSize = MIN((Section->SizeOfSection.QuadPart - SectionOffset->QuadPart), SIZE_T_MAX);
     }
 
     MmLockSectionSegment(Segment);
-
 
     Status = MmMapViewOfSegment(AddressSpace,
                                 Section,
@@ -4798,7 +4811,7 @@ MmMapViewInSystemSpace (IN PVOID SectionObject,
                                 MappedBase,
                                 *ViewSize,
                                 PAGE_READWRITE,
-                                0,
+                                SectionOffset->QuadPart,
                                 0);
 
     MmUnlockSectionSegment(Segment);

@@ -416,11 +416,15 @@ NTSTATUS
 NTAPI
 MiAddMappedPtes(IN PMMPTE FirstPte,
                 IN PFN_NUMBER PteCount,
-                IN PCONTROL_AREA ControlArea)
+                IN PCONTROL_AREA ControlArea,
+                IN PLARGE_INTEGER SectionOffset)
 {
     MMPTE TempPte;
     PMMPTE PointerPte, ProtoPte, LastProtoPte, LastPte;
     PSUBSECTION Subsection;
+
+    /* Mapping at offset not supported yet */
+    ASSERT(SectionOffset->QuadPart == 0);
 
     /* ARM3 doesn't support this yet */
     ASSERT(ControlArea->u.Flags.GlobalOnlyPerSession == 0);
@@ -1052,11 +1056,13 @@ NTAPI
 MiMapViewInSystemSpace(IN PVOID Section,
                        IN PMMSESSION Session,
                        OUT PVOID *MappedBase,
-                       IN OUT PSIZE_T ViewSize)
+                       IN OUT PSIZE_T ViewSize,
+                       IN PLARGE_INTEGER SectionOffset)
 {
     PVOID Base;
     PCONTROL_AREA ControlArea;
-    ULONG Buckets, SectionSize;
+    ULONG Buckets;
+    LONGLONG SectionSize;
     NTSTATUS Status;
     PAGED_CODE();
 
@@ -1073,13 +1079,23 @@ MiMapViewInSystemSpace(IN PVOID Section,
     ASSERT(NT_SUCCESS(Status));
 
     /* Get the section size at creation time */
-    SectionSize = ((PSECTION)Section)->SizeOfSection.LowPart;
+    SectionSize = ((PSECTION)Section)->SizeOfSection.QuadPart;
 
-    /* If the caller didn't specify a view size, assume the whole section */
-    if (!(*ViewSize)) *ViewSize = SectionSize;
+    /* If the caller didn't specify a view size, assume until the end of the section */
+    if (!(*ViewSize))
+    {
+        /* Check for overflow first */
+        if ((SectionSize - SectionOffset->QuadPart) > SIZE_T_MAX)
+        {
+            DPRINT1("Section end is too far away from the specified offset.\n");
+            MiDereferenceControlArea(ControlArea);
+            return STATUS_INVALID_VIEW_SIZE;
+        }
+        *ViewSize = SectionSize - SectionOffset->QuadPart;
+    }
 
     /* Check if the caller wanted a larger section than the view */
-    if (*ViewSize > SectionSize)
+    if (SectionOffset->QuadPart + *ViewSize > SectionSize)
     {
         /* Fail */
         DPRINT1("View is too large\n");
@@ -1129,7 +1145,8 @@ MiMapViewInSystemSpace(IN PVOID Section,
     /* Create the actual prototype PTEs for this mapping */
     Status = MiAddMappedPtes(MiAddressToPte(Base),
                              BYTES_TO_PAGES(*ViewSize),
-                             ControlArea);
+                             ControlArea,
+                             SectionOffset);
     ASSERT(NT_SUCCESS(Status));
 
     /* Return the base adress of the mapping and success */
@@ -3016,6 +3033,7 @@ MmMapViewInSessionSpace(IN PVOID Section,
                         IN OUT PSIZE_T ViewSize)
 {
     PAGED_CODE();
+    LARGE_INTEGER SectionOffset;
 
     // HACK
     if (MiIsRosSectionObject(Section))
@@ -3032,10 +3050,12 @@ MmMapViewInSessionSpace(IN PVOID Section,
 
     /* Use the system space API, but with the session view instead */
     ASSERT(MmIsAddressValid(MmSessionSpace) == TRUE);
+    SectionOffset.QuadPart = 0;
     return MiMapViewInSystemSpace(Section,
                                   &MmSessionSpace->Session,
                                   MappedBase,
-                                  ViewSize);
+                                  ViewSize,
+                                  &SectionOffset);
 }
 
 /*
