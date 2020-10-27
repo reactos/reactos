@@ -325,6 +325,7 @@
 #define IDS_ABOUT_VERSION_STRING      0x3501
 #define IDC_ABOUT_VERSION             0x3502
 #define IDC_ABOUT_OTHERSTUFF          0x350D
+#define IDC_ABOUT_REG_TO              0x3506
 #define IDC_ABOUT_REG_USERNAME        0x3507
 #define IDC_ABOUT_REG_ORGNAME         0x3508
 #define IDC_ABOUT_PHYSMEM             0x3503
