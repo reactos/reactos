@@ -7,15 +7,16 @@
 
 #pragma once
 
-#include <wdm.h>
-#include <ntddk.h>
+#include <ntifs.h>
 #include <stdio.h>
 #include <scsi.h>
 #include <ntddscsi.h>
 #include <ntdddisk.h>
 #include <mountdev.h>
 
-#define VERSION "0.0.3"
+#ifdef DBG
+#include <debug/driverdbg.h>
+#endif
 
 #define TAG_SCSIPORT 'ISCS'
 
@@ -25,29 +26,29 @@
 #define MAX_SG_LIST 17
 
 /* Flags */
-#define SCSI_PORT_DEVICE_BUSY         0x0001
-#define SCSI_PORT_LU_ACTIVE           0x0002
-#define SCSI_PORT_NOTIFICATION_NEEDED 0x0004
-#define SCSI_PORT_NEXT_REQUEST_READY  0x0008
-#define SCSI_PORT_FLUSH_ADAPTERS      0x0010
-#define SCSI_PORT_MAP_TRANSFER        0x0020
-#define SCSI_PORT_RESET               0x0080
-#define SCSI_PORT_RESET_REQUEST       0x0100
-#define SCSI_PORT_RESET_REPORTED      0x0200
-#define SCSI_PORT_REQUEST_PENDING     0x0800
-#define SCSI_PORT_DISCONNECT_ALLOWED  0x1000
-#define SCSI_PORT_DISABLE_INT_REQUESET 0x2000
-#define SCSI_PORT_DISABLE_INTERRUPTS  0x4000
-#define SCSI_PORT_ENABLE_INT_REQUEST  0x8000
-#define SCSI_PORT_TIMER_NEEDED        0x10000
+#define SCSI_PORT_DEVICE_BUSY            0x00001
+#define SCSI_PORT_LU_ACTIVE              0x00002
+#define SCSI_PORT_NOTIFICATION_NEEDED    0x00004
+#define SCSI_PORT_NEXT_REQUEST_READY     0x00008
+#define SCSI_PORT_FLUSH_ADAPTERS         0x00010
+#define SCSI_PORT_MAP_TRANSFER           0x00020
+#define SCSI_PORT_RESET                  0x00080
+#define SCSI_PORT_RESET_REQUEST          0x00100
+#define SCSI_PORT_RESET_REPORTED         0x00200
+#define SCSI_PORT_REQUEST_PENDING        0x00800
+#define SCSI_PORT_DISCONNECT_ALLOWED     0x01000
+#define SCSI_PORT_DISABLE_INT_REQUESET   0x02000
+#define SCSI_PORT_DISABLE_INTERRUPTS     0x04000
+#define SCSI_PORT_ENABLE_INT_REQUEST     0x08000
+#define SCSI_PORT_TIMER_NEEDED           0x10000
 
 /* LUN Extension flags*/
-#define LUNEX_FROZEN_QUEUE        0x0001
-#define LUNEX_NEED_REQUEST_SENSE  0x0004
-#define LUNEX_BUSY                0x0008
-#define LUNEX_FULL_QUEUE          0x0010
-#define LUNEX_REQUEST_PENDING     0x0020
-#define SCSI_PORT_SCAN_IN_PROGRESS    0x8000
+#define LUNEX_FROZEN_QUEUE               0x0001
+#define LUNEX_NEED_REQUEST_SENSE         0x0004
+#define LUNEX_BUSY                       0x0008
+#define LUNEX_FULL_QUEUE                 0x0010
+#define LUNEX_REQUEST_PENDING            0x0020
+#define SCSI_PORT_SCAN_IN_PROGRESS       0x8000
 
 
 typedef enum _SCSI_PORT_TIMER_STATES
@@ -115,18 +116,27 @@ typedef struct _SCSI_REQUEST_BLOCK_INFO
     SCSI_SG_ADDRESS ScatterGatherList[MAX_SG_LIST];
 } SCSI_REQUEST_BLOCK_INFO, *PSCSI_REQUEST_BLOCK_INFO;
 
+typedef struct _SCSI_PORT_COMMON_EXTENSION
+{
+    PDEVICE_OBJECT DeviceObject;
+    PDEVICE_OBJECT LowerDevice;
+    BOOLEAN IsFDO;
+} SCSI_PORT_COMMON_EXTENSION, *PSCSI_PORT_COMMON_EXTENSION;
+
+// PDO device
 typedef struct _SCSI_PORT_LUN_EXTENSION
 {
+    SCSI_PORT_COMMON_EXTENSION Common;
+
     UCHAR PathId;
     UCHAR TargetId;
     UCHAR Lun;
 
     ULONG Flags;
 
-    struct _SCSI_PORT_LUN_EXTENSION *Next;
+    LIST_ENTRY LunEntry;
 
     BOOLEAN DeviceClaimed;
-    PDEVICE_OBJECT DeviceObject;
 
     INQUIRYDATA InquiryData;
 
@@ -146,6 +156,8 @@ typedef struct _SCSI_PORT_LUN_EXTENSION
 
     SCSI_REQUEST_BLOCK_INFO SrbInfo;
 
+    HANDLE RegistryMapKey;
+
     /* More data? */
 
     UCHAR MiniportLunExtension[1]; /* must be the last entry */
@@ -153,31 +165,14 @@ typedef struct _SCSI_PORT_LUN_EXTENSION
 
 /* Structures for inquiries support */
 
-typedef struct _SCSI_LUN_INFO
+typedef struct _SCSI_BUS_INFO
 {
-    UCHAR PathId;
-    UCHAR TargetId;
-    UCHAR Lun;
-    BOOLEAN DeviceClaimed;
-    PVOID DeviceObject;
-    struct _SCSI_LUN_INFO *Next;
-    UCHAR InquiryData[INQUIRYDATABUFFERSIZE];
-} SCSI_LUN_INFO, *PSCSI_LUN_INFO;
-
-typedef struct _SCSI_BUS_SCAN_INFO
-{
-    USHORT Length;
+    LIST_ENTRY LunsListHead;
     UCHAR LogicalUnitsCount;
+    UCHAR TargetsCount;
     UCHAR BusIdentifier;
-    PSCSI_LUN_INFO LunInfo;
-} SCSI_BUS_SCAN_INFO, *PSCSI_BUS_SCAN_INFO;
-
-typedef struct _BUSES_CONFIGURATION_INFORMATION
-{
-    UCHAR NumberOfBuses;
-    PSCSI_BUS_SCAN_INFO BusScanInfo[1];
-} BUSES_CONFIGURATION_INFORMATION, *PBUSES_CONFIGURATION_INFORMATION;
-
+    HANDLE RegistryMapKey;
+} SCSI_BUS_INFO, *PSCSI_BUS_INFO;
 
 typedef struct _SCSI_PORT_INTERRUPT_DATA
 {
@@ -201,16 +196,19 @@ typedef struct _SCSI_PORT_SAVE_INTERRUPT
  * SCSI_PORT_DEVICE_EXTENSION
  *
  * DESCRIPTION
- *	First part of the port objects device extension. The second
- *	part is the miniport-specific device extension.
+ *  First part of the port objects device extension. The second
+ *  part is the miniport-specific device extension.
  */
 
+// FDO
 typedef struct _SCSI_PORT_DEVICE_EXTENSION
 {
+    SCSI_PORT_COMMON_EXTENSION Common;
+
     ULONG Length;
     ULONG MiniPortExtensionSize;
     PPORT_CONFIGURATION_INFORMATION PortConfig;
-    PBUSES_CONFIGURATION_INFORMATION BusesConfig;
+    PSCSI_BUS_INFO Buses; // children LUNs are stored here
     PVOID NonCachedExtension;
     ULONG PortNumber;
 
@@ -218,7 +216,7 @@ typedef struct _SCSI_PORT_DEVICE_EXTENSION
     ULONG SrbFlags;
     ULONG Flags;
 
-    ULONG BusNum;
+    UCHAR NumberOfBuses;
     ULONG MaxTargedIds;
     ULONG MaxLunCount;
 
@@ -238,7 +236,6 @@ typedef struct _SCSI_PORT_DEVICE_EXTENSION
     PMAPPED_ADDRESS MappedAddressList;
 
     ULONG LunExtensionSize;
-    PSCSI_PORT_LUN_EXTENSION LunExtensionList[LUS_NUMBER];
 
     SCSI_PORT_INTERRUPT_DATA InterruptData;
 
@@ -254,7 +251,6 @@ typedef struct _SCSI_PORT_DEVICE_EXTENSION
 
     IO_SCSI_CAPABILITIES PortCapabilities;
 
-    PDEVICE_OBJECT DeviceObject;
     PCONTROLLER_OBJECT ControllerObject;
 
     PHW_INITIALIZE HwInitialize;
@@ -294,6 +290,11 @@ typedef struct _SCSI_PORT_DEVICE_EXTENSION
 
     ULONG InterruptCount;
 
+    UNICODE_STRING DeviceName;
+    UNICODE_STRING InterfaceName;
+    BOOLEAN DeviceStarted;
+    UINT8 TotalLUCount;
+
     UCHAR MiniPortDeviceExtension[1]; /* must be the last entry */
 } SCSI_PORT_DEVICE_EXTENSION, *PSCSI_PORT_DEVICE_EXTENSION;
 
@@ -303,6 +304,42 @@ typedef struct _RESETBUS_PARAMS
     PSCSI_PORT_DEVICE_EXTENSION DeviceExtension;
 } RESETBUS_PARAMS, *PRESETBUS_PARAMS;
 
+typedef struct _SCSIPORT_DRIVER_EXTENSION
+{
+    PDRIVER_OBJECT DriverObject;
+    UNICODE_STRING RegistryPath;
+    BOOLEAN IsLegacyDriver;
+} SCSI_PORT_DRIVER_EXTENSION, *PSCSI_PORT_DRIVER_EXTENSION;
+
+FORCEINLINE
+BOOLEAN
+VerifyIrpOutBufferSize(
+    _In_ PIRP Irp,
+    _In_ SIZE_T Size)
+{
+    PIO_STACK_LOCATION ioStack = IoGetCurrentIrpStackLocation(Irp);
+    if (ioStack->Parameters.DeviceIoControl.OutputBufferLength < Size)
+    {
+        Irp->IoStatus.Information = Size;
+        return FALSE;
+    }
+    return TRUE;
+}
+
+FORCEINLINE
+BOOLEAN
+VerifyIrpInBufferSize(
+    _In_ PIRP Irp,
+    _In_ SIZE_T Size)
+{
+    PIO_STACK_LOCATION ioStack = IoGetCurrentIrpStackLocation(Irp);
+    if (ioStack->Parameters.DeviceIoControl.InputBufferLength < Size)
+    {
+        Irp->IoStatus.Information = Size;
+        return FALSE;
+    }
+    return TRUE;
+}
 
 // ioctl.c
 
@@ -315,25 +352,34 @@ ScsiPortDeviceControl(
 // fdo.c
 
 VOID
-SpiScanAdapter(
+FdoScanAdapter(
     _In_ PSCSI_PORT_DEVICE_EXTENSION DeviceExtension);
 
 NTSTATUS
-CallHWInitialize(
+FdoCallHWInitialize(
     _In_ PSCSI_PORT_DEVICE_EXTENSION DeviceExtension);
 
-VOID
-SpiCleanupAfterInit(
+NTSTATUS
+FdoRemoveAdapter(
     _In_ PSCSI_PORT_DEVICE_EXTENSION DeviceExtension);
+
+NTSTATUS
+FdoStartAdapter(
+    _In_ PSCSI_PORT_DEVICE_EXTENSION DeviceExtension);
+
+NTSTATUS
+FdoDispatchPnp(
+    _In_ PDEVICE_OBJECT DeviceObject,
+    _Inout_ PIRP Irp);
 
 // pdo.c
 
-PSCSI_PORT_LUN_EXTENSION
-SpiAllocateLunExtension(
+PDEVICE_OBJECT
+PdoCreateLunDevice(
     _In_ PSCSI_PORT_DEVICE_EXTENSION DeviceExtension);
 
 PSCSI_PORT_LUN_EXTENSION
-SpiGetLunExtension(
+GetLunByPath(
     _In_ PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
     _In_ UCHAR PathId,
     _In_ UCHAR TargetId,
@@ -342,22 +388,32 @@ SpiGetLunExtension(
 PSCSI_REQUEST_BLOCK_INFO
 SpiGetSrbData(
     _In_ PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
-    _In_ UCHAR PathId,
-    _In_ UCHAR TargetId,
-    _In_ UCHAR Lun,
+    _In_ PSCSI_PORT_LUN_EXTENSION LunExtension,
     _In_ UCHAR QueueTag);
+
+NTSTATUS
+PdoDispatchPnp(
+    _In_ PDEVICE_OBJECT DeviceObject,
+    _Inout_ PIRP Irp);
+
+// power.c
+
+DRIVER_DISPATCH ScsiPortDispatchPower;
 
 // registry.c
 
 VOID
 SpiInitOpenKeys(
     _Inout_ PCONFIGURATION_INFO ConfigInfo,
-    _In_ PUNICODE_STRING RegistryPath);
+    _In_ PSCSI_PORT_DRIVER_EXTENSION DriverExtension);
 
 NTSTATUS
-SpiBuildDeviceMap(
-    _In_ PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
-    _In_ PUNICODE_STRING RegistryPath);
+RegistryInitAdapterKey(
+    _Inout_ PSCSI_PORT_DEVICE_EXTENSION DeviceExtension);
+
+NTSTATUS
+RegistryInitLunKey(
+    _Inout_ PSCSI_PORT_LUN_EXTENSION LunExtension);
 
 // scsi.c
 

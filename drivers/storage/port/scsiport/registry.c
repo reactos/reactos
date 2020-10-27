@@ -4,9 +4,11 @@
  * PURPOSE:     Registry operations
  * COPYRIGHT:   Eric Kohl (eric.kohl@reactos.org)
  *              Aleksey Bragin (aleksey@reactos.org)
+ *              2020 Victor Perevertkin (victor.perevertkin@reactos.org)
  */
 
 #include "scsiport.h"
+#include "scsitypes.h"
 
 #define NDEBUG
 #include <debug.h>
@@ -15,26 +17,28 @@
 VOID
 SpiInitOpenKeys(
     _Inout_ PCONFIGURATION_INFO ConfigInfo,
-    _In_ PUNICODE_STRING RegistryPath)
+    _In_ PSCSI_PORT_DRIVER_EXTENSION DriverExtension)
 {
     OBJECT_ATTRIBUTES ObjectAttributes;
     UNICODE_STRING KeyName;
     NTSTATUS Status;
+    HANDLE parametersKey;
+
+    DriverExtension->IsLegacyDriver = TRUE;
 
     /* Open the service key */
     InitializeObjectAttributes(&ObjectAttributes,
-                               RegistryPath,
-                               OBJ_CASE_INSENSITIVE,
+                               &DriverExtension->RegistryPath,
+                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
                                NULL,
                                NULL);
 
-    Status = ZwOpenKey(&ConfigInfo->ServiceKey,
-                       KEY_READ,
-                       &ObjectAttributes);
+    Status = ZwOpenKey(&ConfigInfo->ServiceKey, KEY_READ, &ObjectAttributes);
 
     if (!NT_SUCCESS(Status))
     {
-        DPRINT("Unable to open driver's registry key %wZ, status 0x%08x\n", RegistryPath, Status);
+        DPRINT("Unable to open driver's registry key %wZ, status 0x%08x\n",
+               DriverExtension->RegistryPath, Status);
         ConfigInfo->ServiceKey = NULL;
     }
 
@@ -44,14 +48,12 @@ SpiInitOpenKeys(
         RtlInitUnicodeString(&KeyName, L"Parameters");
         InitializeObjectAttributes(&ObjectAttributes,
                                    &KeyName,
-                                   OBJ_CASE_INSENSITIVE,
+                                   OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
                                    ConfigInfo->ServiceKey,
-                                   (PSECURITY_DESCRIPTOR) NULL);
+                                   NULL);
 
         /* Try to open it */
-        Status = ZwOpenKey(&ConfigInfo->DeviceKey,
-                           KEY_READ,
-                           &ObjectAttributes);
+        Status = ZwOpenKey(&ConfigInfo->DeviceKey, KEY_READ, &ObjectAttributes);
 
         if (NT_SUCCESS(Status))
         {
@@ -69,14 +71,32 @@ SpiInitOpenKeys(
         RtlInitUnicodeString(&KeyName, L"Device");
         InitializeObjectAttributes(&ObjectAttributes,
                                    &KeyName,
-                                   OBJ_CASE_INSENSITIVE,
+                                   OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
                                    ConfigInfo->ServiceKey,
                                    NULL);
 
         /* We don't check for failure here - not needed */
-        ZwOpenKey(&ConfigInfo->DeviceKey,
-                  KEY_READ,
-                  &ObjectAttributes);
+        ZwOpenKey(&ConfigInfo->DeviceKey, KEY_READ, &ObjectAttributes);
+
+        // Detect the driver PnP capabilities via its Parameters\PnpInterface key
+        // for example: HKLM\SYSTEM\CurrentControlSet\Services\UNIATA\Parameters\PnpInterface
+
+        RtlInitUnicodeString(&KeyName, L"PnpInterface");
+        InitializeObjectAttributes(&ObjectAttributes,
+                                   &KeyName,
+                                   OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
+                                   ConfigInfo->ServiceKey,
+                                   NULL);
+
+        Status = ZwOpenKey(&parametersKey, KEY_READ, &ObjectAttributes);
+
+        if (NT_SUCCESS(Status))
+        {
+            // if the key exists, it's enough for us for now
+            // (the proper check should iterate over INTERFACE_TYPE values)
+            DriverExtension->IsLegacyDriver = FALSE;
+            ZwClose(parametersKey);
+        }
     }
 }
 
@@ -104,34 +124,24 @@ SpiInitOpenKeys(
  */
 
 NTSTATUS
-SpiBuildDeviceMap(
-    _In_ PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
-    _In_ PUNICODE_STRING RegistryPath)
+RegistryInitAdapterKey(
+    _Inout_ PSCSI_PORT_DEVICE_EXTENSION DeviceExtension)
 {
-    PSCSI_PORT_LUN_EXTENSION LunExtension;
     OBJECT_ATTRIBUTES ObjectAttributes;
     UNICODE_STRING KeyName;
     UNICODE_STRING ValueName;
     WCHAR NameBuffer[64];
-    ULONG Disposition;
     HANDLE ScsiKey;
     HANDLE ScsiPortKey = NULL;
     HANDLE ScsiBusKey = NULL;
     HANDLE ScsiInitiatorKey = NULL;
-    HANDLE ScsiTargetKey = NULL;
-    HANDLE ScsiLunKey = NULL;
     ULONG BusNumber;
-    ULONG Target;
-    ULONG CurrentTarget;
-    ULONG Lun;
-    PWCHAR DriverName;
     ULONG UlongData;
-    PWCHAR TypeName;
     NTSTATUS Status;
 
     DPRINT("SpiBuildDeviceMap() called\n");
 
-    if (DeviceExtension == NULL || RegistryPath == NULL)
+    if (DeviceExtension == NULL)
     {
         DPRINT1("Invalid parameter\n");
         return STATUS_INVALID_PARAMETER;
@@ -151,7 +161,7 @@ SpiBuildDeviceMap(
                          0,
                          NULL,
                          REG_OPTION_VOLATILE,
-                         &Disposition);
+                         NULL);
     if (!NT_SUCCESS(Status))
     {
         DPRINT("ZwCreateKey() failed (Status %lx)\n", Status);
@@ -165,18 +175,14 @@ SpiBuildDeviceMap(
              L"Scsi Port %lu",
              DeviceExtension->PortNumber);
     RtlInitUnicodeString(&KeyName, NameBuffer);
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &KeyName,
-                               OBJ_KERNEL_HANDLE,
-                               ScsiKey,
-                               NULL);
+    InitializeObjectAttributes(&ObjectAttributes, &KeyName, OBJ_KERNEL_HANDLE, ScsiKey, NULL);
     Status = ZwCreateKey(&ScsiPortKey,
                          KEY_ALL_ACCESS,
                          &ObjectAttributes,
                          0,
                          NULL,
                          REG_OPTION_VOLATILE,
-                         &Disposition);
+                         NULL);
     ZwClose(ScsiKey);
     if (!NT_SUCCESS(Status))
     {
@@ -206,14 +212,29 @@ SpiBuildDeviceMap(
     }
 
     /* Set 'Driver' (REG_SZ) value */
-    DriverName = wcsrchr(RegistryPath->Buffer, L'\\') + 1;
+    PUNICODE_STRING driverNameU = &DeviceExtension->Common.DeviceObject->DriverObject->DriverName;
+    PWCHAR driverName = ExAllocatePoolWithTag(PagedPool,
+                                              driverNameU->Length + sizeof(UNICODE_NULL),
+                                              TAG_SCSIPORT);
+    if (!driverName)
+    {
+        DPRINT("Failed to allocate driverName!\n");
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    RtlCopyMemory(driverName, driverNameU->Buffer, driverNameU->Length);
+    driverName[driverNameU->Length / sizeof(WCHAR)] = UNICODE_NULL;
+
     RtlInitUnicodeString(&ValueName, L"Driver");
     Status = ZwSetValueKey(ScsiPortKey,
                            &ValueName,
                            0,
                            REG_SZ,
-                           DriverName,
-                           (ULONG)((wcslen(DriverName) + 1) * sizeof(WCHAR)));
+                           driverName,
+                           driverNameU->Length + sizeof(UNICODE_NULL));
+
+    ExFreePoolWithTag(driverName, TAG_SCSIPORT);
+
     if (!NT_SUCCESS(Status))
     {
         DPRINT("ZwSetValueKey('Driver') failed (Status %lx)\n", Status);
@@ -256,7 +277,7 @@ SpiBuildDeviceMap(
     }
 
     /* Enumerate buses */
-    for (BusNumber = 0; BusNumber < DeviceExtension->PortConfig->NumberOfBuses; BusNumber++)
+    for (BusNumber = 0; BusNumber < DeviceExtension->NumberOfBuses; BusNumber++)
     {
         /* Create 'Scsi Bus X' key */
         DPRINT("    Scsi Bus %lu\n", BusNumber);
@@ -266,7 +287,7 @@ SpiBuildDeviceMap(
         RtlInitUnicodeString(&KeyName, NameBuffer);
         InitializeObjectAttributes(&ObjectAttributes,
                                    &KeyName,
-                                   0,
+                                   OBJ_KERNEL_HANDLE,
                                    ScsiPortKey,
                                    NULL);
         Status = ZwCreateKey(&ScsiBusKey,
@@ -275,7 +296,7 @@ SpiBuildDeviceMap(
                              0,
                              NULL,
                              REG_OPTION_VOLATILE,
-                             &Disposition);
+                             NULL);
         if (!NT_SUCCESS(Status))
         {
             DPRINT("ZwCreateKey() failed (Status %lx)\n", Status);
@@ -291,7 +312,7 @@ SpiBuildDeviceMap(
         RtlInitUnicodeString(&KeyName, NameBuffer);
         InitializeObjectAttributes(&ObjectAttributes,
                                    &KeyName,
-                                   0,
+                                   OBJ_KERNEL_HANDLE,
                                    ScsiBusKey,
                                    NULL);
         Status = ZwCreateKey(&ScsiInitiatorKey,
@@ -300,7 +321,7 @@ SpiBuildDeviceMap(
                              0,
                              NULL,
                              REG_OPTION_VOLATILE,
-                             &Disposition);
+                             NULL);
         if (!NT_SUCCESS(Status))
         {
             DPRINT("ZwCreateKey() failed (Status %lx)\n", Status);
@@ -312,201 +333,13 @@ SpiBuildDeviceMap(
         ZwClose(ScsiInitiatorKey);
         ScsiInitiatorKey = NULL;
 
-
-        /* Enumerate targets */
-        CurrentTarget = (ULONG)-1;
-        ScsiTargetKey = NULL;
-        for (Target = 0; Target < DeviceExtension->PortConfig->MaximumNumberOfTargets; Target++)
-        {
-            for (Lun = 0; Lun < SCSI_MAXIMUM_LOGICAL_UNITS; Lun++)
-            {
-                LunExtension = SpiGetLunExtension(DeviceExtension,
-                                                  (UCHAR)BusNumber,
-                                                  (UCHAR)Target,
-                                                  (UCHAR)Lun);
-                if (LunExtension == NULL)
-                    continue;
-
-                if (Target != CurrentTarget)
-                {
-                    /* Close old target key */
-                    if (ScsiTargetKey != NULL)
-                    {
-                        ZwClose(ScsiTargetKey);
-                        ScsiTargetKey = NULL;
-                    }
-
-                    /* Create 'Target Id X' key */
-                    DPRINT("      Target Id %lu\n", Target);
-                    swprintf(NameBuffer,
-                             L"Target Id %lu",
-                             Target);
-                    RtlInitUnicodeString(&KeyName, NameBuffer);
-                    InitializeObjectAttributes(&ObjectAttributes,
-                                               &KeyName,
-                                               0,
-                                               ScsiBusKey,
-                                               NULL);
-                    Status = ZwCreateKey(&ScsiTargetKey,
-                                         KEY_ALL_ACCESS,
-                                         &ObjectAttributes,
-                                         0,
-                                         NULL,
-                                         REG_OPTION_VOLATILE,
-                                         &Disposition);
-                    if (!NT_SUCCESS(Status))
-                    {
-                        DPRINT("ZwCreateKey() failed (Status %lx)\n", Status);
-                        goto ByeBye;
-                    }
-
-                    CurrentTarget = Target;
-                }
-
-                /* Create 'Logical Unit Id X' key */
-                DPRINT("        Logical Unit Id %lu\n", Lun);
-                swprintf(NameBuffer,
-                         L"Logical Unit Id %lu",
-                         Lun);
-                RtlInitUnicodeString(&KeyName, NameBuffer);
-                InitializeObjectAttributes(&ObjectAttributes,
-                                           &KeyName,
-                                           0,
-                                           ScsiTargetKey,
-                                           NULL);
-                Status = ZwCreateKey(&ScsiLunKey,
-                                     KEY_ALL_ACCESS,
-                                     &ObjectAttributes,
-                                     0,
-                                     NULL,
-                                     REG_OPTION_VOLATILE,
-                                     &Disposition);
-                if (!NT_SUCCESS(Status))
-                {
-                    DPRINT("ZwCreateKey() failed (Status %lx)\n", Status);
-                    goto ByeBye;
-                }
-
-                /* Set 'Identifier' (REG_SZ) value */
-                swprintf(NameBuffer,
-                         L"%.8S%.16S%.4S",
-                         LunExtension->InquiryData.VendorId,
-                         LunExtension->InquiryData.ProductId,
-                         LunExtension->InquiryData.ProductRevisionLevel);
-                DPRINT("          Identifier = '%S'\n", NameBuffer);
-                RtlInitUnicodeString(&ValueName, L"Identifier");
-                Status = ZwSetValueKey(ScsiLunKey,
-                                       &ValueName,
-                                       0,
-                                       REG_SZ,
-                                       NameBuffer,
-                                       (ULONG)((wcslen(NameBuffer) + 1) * sizeof(WCHAR)));
-                if (!NT_SUCCESS(Status))
-                {
-                    DPRINT("ZwSetValueKey('Identifier') failed (Status %lx)\n", Status);
-                    goto ByeBye;
-                }
-
-                /* Set 'Type' (REG_SZ) value */
-                /*
-                 * See https://docs.microsoft.com/en-us/windows-hardware/drivers/install/identifiers-for-ide-devices
-                 * and https://docs.microsoft.com/en-us/windows-hardware/drivers/install/identifiers-for-scsi-devices
-                 * for a list of types with their human-readable forms.
-                 */
-                switch (LunExtension->InquiryData.DeviceType)
-                {
-                    case 0:
-                        TypeName = L"DiskPeripheral";
-                        break;
-                    case 1:
-                        TypeName = L"TapePeripheral";
-                        break;
-                    case 2:
-                        TypeName = L"PrinterPeripheral";
-                        break;
-                    // case 3: "ProcessorPeripheral", classified as 'other': fall back to default case.
-                    case 4:
-                        TypeName = L"WormPeripheral";
-                        break;
-                    case 5:
-                        TypeName = L"CdRomPeripheral";
-                        break;
-                    case 6:
-                        TypeName = L"ScannerPeripheral";
-                        break;
-                    case 7:
-                        TypeName = L"OpticalDiskPeripheral";
-                        break;
-                    case 8:
-                        TypeName = L"MediumChangerPeripheral";
-                        break;
-                    case 9:
-                        TypeName = L"CommunicationsPeripheral";
-                        break;
-
-                    /* New peripheral types (SCSI only) */
-                    case 10: case 11:
-                        TypeName = L"ASCPrePressGraphicsPeripheral";
-                        break;
-                    case 12:
-                        TypeName = L"ArrayPeripheral";
-                        break;
-                    case 13:
-                        TypeName = L"EnclosurePeripheral";
-                        break;
-                    case 14:
-                        TypeName = L"RBCPeripheral";
-                        break;
-                    case 15:
-                        TypeName = L"CardReaderPeripheral";
-                        break;
-                    case 16:
-                        TypeName = L"BridgePeripheral";
-                        break;
-
-                    default:
-                        TypeName = L"OtherPeripheral";
-                        break;
-                }
-                DPRINT("          Type = '%S'\n", TypeName);
-                RtlInitUnicodeString(&ValueName, L"Type");
-                Status = ZwSetValueKey(ScsiLunKey,
-                                       &ValueName,
-                                       0,
-                                       REG_SZ,
-                                       TypeName,
-                                       (ULONG)((wcslen(TypeName) + 1) * sizeof(WCHAR)));
-                if (!NT_SUCCESS(Status))
-                {
-                    DPRINT("ZwSetValueKey('Type') failed (Status %lx)\n", Status);
-                    goto ByeBye;
-                }
-
-                ZwClose(ScsiLunKey);
-                ScsiLunKey = NULL;
-            }
-
-            /* Close old target key */
-            if (ScsiTargetKey != NULL)
-            {
-                ZwClose(ScsiTargetKey);
-                ScsiTargetKey = NULL;
-            }
-        }
-
-        ZwClose(ScsiBusKey);
+        DeviceExtension->Buses[BusNumber].RegistryMapKey = ScsiBusKey;
         ScsiBusKey = NULL;
     }
 
 ByeBye:
-    if (ScsiLunKey != NULL)
-        ZwClose(ScsiLunKey);
-
     if (ScsiInitiatorKey != NULL)
         ZwClose(ScsiInitiatorKey);
-
-    if (ScsiTargetKey != NULL)
-        ZwClose(ScsiTargetKey);
 
     if (ScsiBusKey != NULL)
         ZwClose(ScsiBusKey);
@@ -517,4 +350,110 @@ ByeBye:
     DPRINT("SpiBuildDeviceMap() done\n");
 
     return Status;
+}
+
+NTSTATUS
+RegistryInitLunKey(
+    _Inout_ PSCSI_PORT_LUN_EXTENSION LunExtension)
+{
+    WCHAR nameBuffer[64];
+    UNICODE_STRING keyName;
+    UNICODE_STRING valueName;
+    OBJECT_ATTRIBUTES objectAttributes;
+    HANDLE targetKey;
+    NTSTATUS status;
+
+    // get the LUN's bus key
+    PSCSI_PORT_DEVICE_EXTENSION portExt = LunExtension->Common.LowerDevice->DeviceExtension;
+    HANDLE busKey = portExt->Buses[LunExtension->PathId].RegistryMapKey;
+
+    // create/open 'Target Id X' key
+    swprintf(nameBuffer, L"Target Id %lu", LunExtension->TargetId);
+    RtlInitUnicodeString(&keyName, nameBuffer);
+    InitializeObjectAttributes(&objectAttributes, &keyName, OBJ_KERNEL_HANDLE, busKey, NULL);
+    status = ZwCreateKey(&targetKey,
+                         KEY_ALL_ACCESS,
+                         &objectAttributes,
+                         0,
+                         NULL,
+                         REG_OPTION_VOLATILE,
+                         NULL);
+    if (!NT_SUCCESS(status))
+    {
+        DPRINT("ZwCreateKey() failed (Status %lx)\n", status);
+        return status;
+    }
+
+    // Create 'Logical Unit Id X' key
+    swprintf(nameBuffer, L"Logical Unit Id %lu", LunExtension->Lun);
+    RtlInitUnicodeString(&keyName, nameBuffer);
+    InitializeObjectAttributes(&objectAttributes, &keyName, OBJ_KERNEL_HANDLE, targetKey, NULL);
+    status = ZwCreateKey(&LunExtension->RegistryMapKey,
+                         KEY_ALL_ACCESS,
+                         &objectAttributes,
+                         0,
+                         NULL,
+                         REG_OPTION_VOLATILE,
+                         NULL);
+    if (!NT_SUCCESS(status))
+    {
+        DPRINT("ZwCreateKey() failed (Status %lx)\n", status);
+        goto ByeBye;
+    }
+
+    // Set 'Identifier' (REG_SZ) value
+    swprintf(nameBuffer,
+             L"%.8S%.16S%.4S",
+             LunExtension->InquiryData.VendorId,
+             LunExtension->InquiryData.ProductId,
+             LunExtension->InquiryData.ProductRevisionLevel);
+    RtlInitUnicodeString(&valueName, L"Identifier");
+    status = ZwSetValueKey(LunExtension->RegistryMapKey,
+                           &valueName,
+                           0,
+                           REG_SZ,
+                           nameBuffer,
+                           (wcslen(nameBuffer) + 1) * sizeof(WCHAR));
+    if (!NT_SUCCESS(status))
+    {
+        DPRINT("ZwSetValueKey('Identifier') failed (Status %lx)\n", status);
+        goto ByeBye;
+    }
+
+    // Set 'Type' (REG_SZ) value
+    PWCHAR typeName = (PWCHAR)GetPeripheralTypeW(&LunExtension->InquiryData);
+    DPRINT("          Type = '%S'\n", typeName);
+    RtlInitUnicodeString(&valueName, L"Type");
+    status = ZwSetValueKey(LunExtension->RegistryMapKey,
+                           &valueName,
+                           0,
+                           REG_SZ,
+                           typeName,
+                           (wcslen(typeName) + 1) * sizeof(WCHAR));
+    if (!NT_SUCCESS(status))
+    {
+        DPRINT("ZwSetValueKey('Type') failed (Status %lx)\n", status);
+        goto ByeBye;
+    }
+
+    // Set 'InquiryData' (REG_BINARY) value
+    RtlInitUnicodeString(&valueName, L"InquiryData");
+    status = ZwSetValueKey(LunExtension->RegistryMapKey,
+                           &valueName,
+                           0,
+                           REG_BINARY,
+                           &LunExtension->InquiryData,
+                           INQUIRYDATABUFFERSIZE);
+    if (!NT_SUCCESS(status))
+    {
+        DPRINT("ZwSetValueKey('InquiryData') failed (Status %lx)\n", status);
+        goto ByeBye;
+    }
+
+ByeBye:
+    ZwClose(targetKey);
+    // TODO: maybe we will need it in future
+    ZwClose(LunExtension->RegistryMapKey);
+
+    return status;
 }

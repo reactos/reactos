@@ -50,47 +50,17 @@ SpiStatusSrbToNt(
 static
 NTSTATUS
 SpiHandleAttachRelease(
-    _In_ PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
+    _In_ PSCSI_PORT_LUN_EXTENSION LunExtension,
     _Inout_ PIRP Irp)
 {
-    PSCSI_LUN_INFO LunInfo;
-    PIO_STACK_LOCATION IrpStack;
+    PSCSI_PORT_DEVICE_EXTENSION DeviceExtension =
+        LunExtension->Common.LowerDevice->DeviceExtension;
     PDEVICE_OBJECT DeviceObject;
-    PSCSI_REQUEST_BLOCK Srb;
     KIRQL Irql;
 
     /* Get pointer to the SRB */
-    IrpStack = IoGetCurrentIrpStackLocation(Irp);
-    Srb = (PSCSI_REQUEST_BLOCK)IrpStack->Parameters.Others.Argument1;
-
-    /* Check if PathId matches number of buses */
-    if (DeviceExtension->BusesConfig == NULL ||
-        DeviceExtension->BusesConfig->NumberOfBuses <= Srb->PathId)
-    {
-        Srb->SrbStatus = SRB_STATUS_NO_DEVICE;
-        return STATUS_DEVICE_DOES_NOT_EXIST;
-    }
-
-    /* Get pointer to LunInfo */
-    LunInfo = DeviceExtension->BusesConfig->BusScanInfo[Srb->PathId]->LunInfo;
-
-    /* Find matching LunInfo */
-    while (LunInfo)
-    {
-        if (LunInfo->PathId == Srb->PathId &&
-            LunInfo->TargetId == Srb->TargetId &&
-            LunInfo->Lun == Srb->Lun)
-        {
-            break;
-        }
-
-        LunInfo = LunInfo->Next;
-    }
-
-    /* If we couldn't find it - exit */
-    if (LunInfo == NULL)
-        return STATUS_DEVICE_DOES_NOT_EXIST;
-
+    PIO_STACK_LOCATION IrpStack = IoGetCurrentIrpStackLocation(Irp);
+    PSCSI_REQUEST_BLOCK Srb = IrpStack->Parameters.Scsi.Srb;
 
     /* Get spinlock */
     KeAcquireSpinLock(&DeviceExtension->SpinLock, &Irql);
@@ -98,7 +68,7 @@ SpiHandleAttachRelease(
     /* Release, if asked */
     if (Srb->Function == SRB_FUNCTION_RELEASE_DEVICE)
     {
-        LunInfo->DeviceClaimed = FALSE;
+        LunExtension->DeviceClaimed = FALSE;
         KeReleaseSpinLock(&DeviceExtension->SpinLock, Irql);
         Srb->SrbStatus = SRB_STATUS_SUCCESS;
 
@@ -106,7 +76,7 @@ SpiHandleAttachRelease(
     }
 
     /* Attach, if not already claimed */
-    if (LunInfo->DeviceClaimed)
+    if (LunExtension->DeviceClaimed)
     {
         KeReleaseSpinLock(&DeviceExtension->SpinLock, Irql);
         Srb->SrbStatus = SRB_STATUS_BUSY;
@@ -115,13 +85,13 @@ SpiHandleAttachRelease(
     }
 
     /* Save the device object */
-    DeviceObject = LunInfo->DeviceObject;
+    DeviceObject = LunExtension->Common.DeviceObject;
 
     if (Srb->Function == SRB_FUNCTION_CLAIM_DEVICE)
-        LunInfo->DeviceClaimed = TRUE;
+        LunExtension->DeviceClaimed = TRUE;
 
     if (Srb->Function == SRB_FUNCTION_ATTACH_DEVICE)
-        LunInfo->DeviceObject = Srb->DataBuffer;
+        LunExtension->Common.DeviceObject = Srb->DataBuffer;
 
     Srb->DataBuffer = DeviceObject;
 
@@ -154,8 +124,8 @@ ScsiPortDispatchScsi(
     _In_ PDEVICE_OBJECT DeviceObject,
     _Inout_ PIRP Irp)
 {
-    PSCSI_PORT_DEVICE_EXTENSION DeviceExtension;
-    PSCSI_PORT_LUN_EXTENSION LunExtension;
+    PSCSI_PORT_DEVICE_EXTENSION portExt;
+    PSCSI_PORT_LUN_EXTENSION lunExt;
     PIO_STACK_LOCATION Stack;
     PSCSI_REQUEST_BLOCK Srb;
     KIRQL Irql;
@@ -165,10 +135,12 @@ ScsiPortDispatchScsi(
 
     DPRINT("ScsiPortDispatchScsi(DeviceObject %p  Irp %p)\n", DeviceObject, Irp);
 
-    DeviceExtension = DeviceObject->DeviceExtension;
     Stack = IoGetCurrentIrpStackLocation(Irp);
-
     Srb = Stack->Parameters.Scsi.Srb;
+    lunExt = DeviceObject->DeviceExtension;
+    ASSERT(!lunExt->Common.IsFDO);
+    portExt = lunExt->Common.LowerDevice->DeviceExtension;
+
     if (Srb == NULL)
     {
         DPRINT1("ScsiPortDispatchScsi() called with Srb = NULL!\n");
@@ -179,15 +151,16 @@ ScsiPortDispatchScsi(
 
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
-        return (Status);
+        return Status;
     }
 
-    DPRINT("Srb: %p\n", Srb);
-    DPRINT("Srb->Function: %lu\n", Srb->Function);
-    DPRINT("PathId: %lu  TargetId: %lu  Lun: %lu\n", Srb->PathId, Srb->TargetId, Srb->Lun);
+    DPRINT("Srb: %p, Srb->Function: %lu\n", Srb, Srb->Function);
 
-    LunExtension = SpiGetLunExtension(DeviceExtension, Srb->PathId, Srb->TargetId, Srb->Lun);
-    if (LunExtension == NULL)
+    Srb->PathId = lunExt->PathId;
+    Srb->TargetId = lunExt->TargetId;
+    Srb->Lun = lunExt->Lun;
+
+    if (lunExt == NULL)
     {
         DPRINT("ScsiPortDispatchScsi() called with an invalid LUN\n");
         Status = STATUS_NO_SUCH_DEVICE;
@@ -198,7 +171,7 @@ ScsiPortDispatchScsi(
 
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
 
-        return (Status);
+        return Status;
     }
 
     switch (Srb->Function)
@@ -206,7 +179,7 @@ ScsiPortDispatchScsi(
         case SRB_FUNCTION_SHUTDOWN:
         case SRB_FUNCTION_FLUSH:
             DPRINT("  SRB_FUNCTION_SHUTDOWN or FLUSH\n");
-            if (DeviceExtension->CachesData == FALSE)
+            if (portExt->CachesData == FALSE)
             {
                 /* All success here */
                 Srb->SrbStatus = SRB_STATUS_SUCCESS;
@@ -225,7 +198,7 @@ ScsiPortDispatchScsi(
             if (Srb->SrbFlags & SRB_FLAGS_BYPASS_FROZEN_QUEUE)
             {
                 /* Start IO directly */
-                IoStartPacket(DeviceObject, Irp, NULL, NULL);
+                IoStartPacket(portExt->Common.DeviceObject, Irp, NULL, NULL);
             }
             else
             {
@@ -235,13 +208,12 @@ ScsiPortDispatchScsi(
                 KeRaiseIrql(DISPATCH_LEVEL, &oldIrql);
 
                 /* Insert IRP into the queue */
-                if (!KeInsertByKeyDeviceQueue(
-                        &LunExtension->DeviceQueue,
-                        &Irp->Tail.Overlay.DeviceQueueEntry,
-                        Srb->QueueSortKey))
+                if (!KeInsertByKeyDeviceQueue(&lunExt->DeviceQueue,
+                                              &Irp->Tail.Overlay.DeviceQueueEntry,
+                                              Srb->QueueSortKey))
                 {
                     /* It means the queue is empty, and we just start this request */
-                    IoStartPacket(DeviceObject, Irp, NULL, NULL);
+                    IoStartPacket(portExt->Common.DeviceObject, Irp, NULL, NULL);
                 }
 
                 /* Back to the old IRQL */
@@ -254,39 +226,40 @@ ScsiPortDispatchScsi(
             DPRINT("  SRB_FUNCTION_CLAIM_DEVICE or ATTACH\n");
 
             /* Reference device object and keep the device object */
-            Status = SpiHandleAttachRelease(DeviceExtension, Irp);
+            Status = SpiHandleAttachRelease(lunExt, Irp);
             break;
 
         case SRB_FUNCTION_RELEASE_DEVICE:
             DPRINT("  SRB_FUNCTION_RELEASE_DEVICE\n");
 
             /* Dereference device object and clear the device object */
-            Status = SpiHandleAttachRelease(DeviceExtension, Irp);
+            Status = SpiHandleAttachRelease(lunExt, Irp);
             break;
 
         case SRB_FUNCTION_RELEASE_QUEUE:
             DPRINT("  SRB_FUNCTION_RELEASE_QUEUE\n");
 
             /* Guard with the spinlock */
-            KeAcquireSpinLock(&DeviceExtension->SpinLock, &Irql);
+            KeAcquireSpinLock(&portExt->SpinLock, &Irql);
 
-            if (!(LunExtension->Flags & LUNEX_FROZEN_QUEUE))
+            if (!(lunExt->Flags & LUNEX_FROZEN_QUEUE))
             {
                 DPRINT("Queue is not frozen really\n");
 
-                KeReleaseSpinLock(&DeviceExtension->SpinLock, Irql);
+                KeReleaseSpinLock(&portExt->SpinLock, Irql);
                 Srb->SrbStatus = SRB_STATUS_SUCCESS;
                 Status = STATUS_SUCCESS;
                 break;
+
             }
 
             /* Unfreeze the queue */
-            LunExtension->Flags &= ~LUNEX_FROZEN_QUEUE;
+            lunExt->Flags &= ~LUNEX_FROZEN_QUEUE;
 
-            if (LunExtension->SrbInfo.Srb == NULL)
+            if (lunExt->SrbInfo.Srb == NULL)
             {
                 /* Get next logical unit request */
-                SpiGetNextRequestFromLun(DeviceExtension, LunExtension);
+                SpiGetNextRequestFromLun(portExt, lunExt);
 
                 /* SpiGetNextRequestFromLun() releases the spinlock */
                 KeLowerIrql(Irql);
@@ -294,7 +267,7 @@ ScsiPortDispatchScsi(
             else
             {
                 DPRINT("The queue has active request\n");
-                KeReleaseSpinLock(&DeviceExtension->SpinLock, Irql);
+                KeReleaseSpinLock(&portExt->SpinLock, Irql);
             }
 
             Srb->SrbStatus = SRB_STATUS_SUCCESS;
@@ -305,23 +278,23 @@ ScsiPortDispatchScsi(
             DPRINT("  SRB_FUNCTION_FLUSH_QUEUE\n");
 
             /* Guard with the spinlock */
-            KeAcquireSpinLock(&DeviceExtension->SpinLock, &Irql);
+            KeAcquireSpinLock(&portExt->SpinLock, &Irql);
 
-            if (!(LunExtension->Flags & LUNEX_FROZEN_QUEUE))
+            if (!(lunExt->Flags & LUNEX_FROZEN_QUEUE))
             {
                 DPRINT("Queue is not frozen really\n");
 
-                KeReleaseSpinLock(&DeviceExtension->SpinLock, Irql);
+                KeReleaseSpinLock(&portExt->SpinLock, Irql);
                 Status = STATUS_INVALID_DEVICE_REQUEST;
                 break;
             }
 
             /* Make sure there is no active request */
-            ASSERT(LunExtension->SrbInfo.Srb == NULL);
+            ASSERT(lunExt->SrbInfo.Srb == NULL);
 
             /* Compile a list from the device queue */
             IrpList = NULL;
-            while ((Entry = KeRemoveDeviceQueue(&LunExtension->DeviceQueue)) != NULL)
+            while ((Entry = KeRemoveDeviceQueue(&lunExt->DeviceQueue)) != NULL)
             {
                 NextIrp = CONTAINING_RECORD(Entry, IRP, Tail.Overlay.DeviceQueueEntry);
 
@@ -339,10 +312,10 @@ ScsiPortDispatchScsi(
             }
 
             /* Unfreeze the queue */
-            LunExtension->Flags &= ~LUNEX_FROZEN_QUEUE;
+            lunExt->Flags &= ~LUNEX_FROZEN_QUEUE;
 
             /* Release the spinlock */
-            KeReleaseSpinLock(&DeviceExtension->SpinLock, Irql);
+            KeReleaseSpinLock(&portExt->SpinLock, Irql);
 
             /* Complete those requests */
             while (IrpList)
@@ -415,7 +388,7 @@ SpiGetNextRequestFromLun(
             KeReleaseSpinLockFromDpcLevel(&DeviceExtension->SpinLock);
 
             /* Start the next pending request */
-            IoStartPacket(DeviceExtension->DeviceObject, NextIrp, (PULONG)NULL, NULL);
+            IoStartPacket(DeviceExtension->Common.DeviceObject, NextIrp, (PULONG)NULL, NULL);
 
             return;
         }
@@ -454,7 +427,7 @@ SpiGetNextRequestFromLun(
         KeReleaseSpinLockFromDpcLevel(&DeviceExtension->SpinLock);
 
         /* Start the next pending request */
-        IoStartPacket(DeviceExtension->DeviceObject, NextIrp, (PULONG)NULL, NULL);
+        IoStartPacket(DeviceExtension->Common.DeviceObject, NextIrp, (PULONG)NULL, NULL);
     }
     else
     {
@@ -525,7 +498,7 @@ SpiSenseCompletionRoutine(
 static
 VOID
 SpiSendRequestSense(
-    _In_ PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
+    _In_ PSCSI_PORT_LUN_EXTENSION LunExtension,
     _In_ PSCSI_REQUEST_BLOCK InitialSrb)
 {
     PSCSI_REQUEST_BLOCK Srb;
@@ -544,7 +517,7 @@ SpiSendRequestSense(
     /* Allocate IRP */
     LargeInt.QuadPart = (LONGLONG) 1;
     Irp = IoBuildAsynchronousFsdRequest(IRP_MJ_READ,
-                                        DeviceExtension->DeviceObject,
+                                        LunExtension->Common.DeviceObject,
                                         InitialSrb->SenseInfoBuffer,
                                         InitialSrb->SenseInfoBufferLength,
                                         &LargeInt,
@@ -621,7 +594,7 @@ SpiSendRequestSense(
     Srb->NextSrb = 0;
 
     /* Call the driver */
-    (VOID)IoCallDriver(DeviceExtension->DeviceObject, Irp);
+    (VOID)IoCallDriver(LunExtension->Common.DeviceObject, Irp);
 
     DPRINT("SpiSendRequestSense() done\n");
 }
@@ -642,12 +615,11 @@ SpiProcessCompletedRequest(
 
     Srb = SrbInfo->Srb;
     Irp = Srb->OriginalRequest;
+    PIO_STACK_LOCATION IoStack = IoGetCurrentIrpStackLocation(Irp);
 
     /* Get Lun extension */
-    LunExtension = SpiGetLunExtension(DeviceExtension,
-                                     Srb->PathId,
-                                     Srb->TargetId,
-                                     Srb->Lun);
+    LunExtension = IoStack->DeviceObject->DeviceExtension;
+    ASSERT(LunExtension && !LunExtension->Common.IsFDO);
 
     if (Srb->SrbFlags & SRB_FLAGS_UNSPECIFIED_DIRECTION &&
         DeviceExtension->MapBuffers &&
@@ -697,7 +669,7 @@ SpiProcessCompletedRequest(
             !(*NeedToCallStartIo))
         {
             /* We're not busy, but we have a request pending */
-            IoStartNextPacket(DeviceExtension->DeviceObject, FALSE);
+            IoStartNextPacket(DeviceExtension->Common.DeviceObject, FALSE);
         }
     }
 
@@ -931,7 +903,7 @@ Error:
             KeReleaseSpinLockFromDpcLevel(&DeviceExtension->SpinLock);
 
             /* Send RequestSense */
-            SpiSendRequestSense(DeviceExtension, Srb);
+            SpiSendRequestSense(LunExtension, Srb);
 
             /* Exit */
             return;
@@ -950,10 +922,11 @@ NTAPI
 ScsiPortStartPacket(
     _In_ PVOID Context)
 {
-    PSCSI_PORT_DEVICE_EXTENSION DeviceExtension;
     PIO_STACK_LOCATION IrpStack;
     PSCSI_REQUEST_BLOCK Srb;
     PDEVICE_OBJECT DeviceObject = (PDEVICE_OBJECT)Context;
+    PSCSI_PORT_COMMON_EXTENSION CommonExtension = DeviceObject->DeviceExtension;
+    PSCSI_PORT_DEVICE_EXTENSION DeviceExtension;
     PSCSI_PORT_LUN_EXTENSION LunExtension;
     PSCSI_REQUEST_BLOCK_INFO SrbInfo;
     BOOLEAN Result;
@@ -961,16 +934,20 @@ ScsiPortStartPacket(
 
     DPRINT("ScsiPortStartPacket() called\n");
 
-    DeviceExtension = (PSCSI_PORT_DEVICE_EXTENSION)DeviceObject->DeviceExtension;
-
     IrpStack = IoGetCurrentIrpStackLocation(DeviceObject->CurrentIrp);
     Srb = IrpStack->Parameters.Scsi.Srb;
 
-    /* Get LUN extension */
-    LunExtension = SpiGetLunExtension(DeviceExtension,
-                                      Srb->PathId,
-                                      Srb->TargetId,
-                                      Srb->Lun);
+    if (CommonExtension->IsFDO) // IsFDO
+    {
+        DeviceExtension = DeviceObject->DeviceExtension;
+        LunExtension = IrpStack->DeviceObject->DeviceExtension;
+        ASSERT(LunExtension && !LunExtension->Common.IsFDO);
+    }
+    else
+    {
+        LunExtension = DeviceObject->DeviceExtension;
+        DeviceExtension = LunExtension->Common.LowerDevice->DeviceExtension;
+    }
 
     /* Check if we are in a reset state */
     if (DeviceExtension->InterruptData.Flags & SCSI_PORT_RESET)
@@ -1006,11 +983,7 @@ ScsiPortStartPacket(
         if (Srb->Function == SRB_FUNCTION_ABORT_COMMAND)
         {
             /* Get pointer to SRB info structure */
-            SrbInfo = SpiGetSrbData(DeviceExtension,
-                                    Srb->PathId,
-                                    Srb->TargetId,
-                                    Srb->Lun,
-                                    Srb->QueueTag);
+            SrbInfo = SpiGetSrbData(DeviceExtension, LunExtension, Srb->QueueTag);
 
             /* Check if the request is still "active" */
             if (SrbInfo == NULL ||
@@ -1036,7 +1009,7 @@ ScsiPortStartPacket(
                                      DeviceExtension->MiniPortDeviceExtension);
 
                 /* They might ask for some work, so queue the DPC for them */
-                IoRequestDpc(DeviceExtension->DeviceObject, NULL, NULL);
+                IoRequestDpc(DeviceExtension->Common.DeviceObject, NULL, NULL);
 
                 /* We're done in this branch */
                 return TRUE;
@@ -1096,7 +1069,7 @@ ScsiPortStartPacket(
 
     /* If notification is needed, then request a DPC */
     if (DeviceExtension->InterruptData.Flags & SCSI_PORT_NOTIFICATION_NEEDED)
-        IoRequestDpc(DeviceExtension->DeviceObject, NULL, NULL);
+        IoRequestDpc(DeviceExtension->Common.DeviceObject, NULL, NULL);
 
     return Result;
 }
@@ -1140,10 +1113,9 @@ SpiSaveInterruptData(IN PVOID Context)
         /* Get SRB and LunExtension */
         Srb = SrbInfo->Srb;
 
-        LunExtension = SpiGetLunExtension(DeviceExtension,
-                                          Srb->PathId,
-                                          Srb->TargetId,
-                                          Srb->Lun);
+        PIO_STACK_LOCATION IoStack = IoGetCurrentIrpStackLocation(Srb->OriginalRequest);
+        LunExtension = IoStack->DeviceObject->DeviceExtension;
+        ASSERT(LunExtension && !LunExtension->Common.IsFDO);
 
         /* We have to check special cases if request is unsuccessful*/
         if (Srb->SrbStatus != SRB_STATUS_SUCCESS)
@@ -1359,7 +1331,7 @@ TryAgain:
 
     /* If we ready for next packet, start it */
     if (InterruptData.Flags & SCSI_PORT_NEXT_REQUEST_READY)
-        IoStartNextPacket(DeviceExtension->DeviceObject, FALSE);
+        IoStartNextPacket(DeviceExtension->Common.DeviceObject, FALSE);
 
     NeedToStartIo = FALSE;
 
@@ -1456,11 +1428,7 @@ SpiAllocateSrbStructures(
         /* Treat the abort request in a special way */
         if (Srb->Function == SRB_FUNCTION_ABORT_COMMAND)
         {
-            SrbInfo = SpiGetSrbData(DeviceExtension,
-                                    Srb->PathId,
-                                    Srb->TargetId,
-                                    Srb->Lun,
-                                    Srb->QueueTag);
+            SrbInfo = SpiGetSrbData(DeviceExtension, LunExtension, Srb->QueueTag);
         }
         else if (Srb->SrbFlags &
                  (SRB_FLAGS_QUEUE_ACTION_ENABLE | SRB_FLAGS_NO_QUEUE_FREEZE) &&
@@ -1606,19 +1574,17 @@ ScsiPortStartIo(
 
     DeviceExtension = DeviceObject->DeviceExtension;
     IrpStack = IoGetCurrentIrpStackLocation(Irp);
+    LunExtension = IrpStack->DeviceObject->DeviceExtension;
 
-    DPRINT("DeviceExtension %p\n", DeviceExtension);
+    ASSERT(DeviceExtension->Common.IsFDO);
+    ASSERT(!LunExtension->Common.IsFDO);
+
+    DPRINT("LunExtension %p DeviceExtension %p\n", LunExtension, DeviceExtension);
 
     Srb = IrpStack->Parameters.Scsi.Srb;
 
     /* Apply "default" flags */
     Srb->SrbFlags |= DeviceExtension->SrbFlags;
-
-    /* Get LUN extension */
-    LunExtension = SpiGetLunExtension(DeviceExtension,
-                                      Srb->PathId,
-                                      Srb->TargetId,
-                                      Srb->Lun);
 
     if (DeviceExtension->NeedSrbDataAlloc ||
         DeviceExtension->NeedSrbExtensionAlloc)
@@ -1699,7 +1665,7 @@ ScsiPortStartIo(
 
             /* Allocate adapter channel */
             Status = IoAllocateAdapterChannel(DeviceExtension->AdapterObject,
-                                              DeviceExtension->DeviceObject,
+                                              DeviceExtension->Common.DeviceObject,
                                               SrbInfo->NumberOfMapRegisters,
                                               SpiAdapterControl,
                                               SrbInfo);
@@ -1717,7 +1683,7 @@ ScsiPortStartIo(
                                      DeviceExtension + 1);
 
                 /* Request DPC for that work */
-                IoRequestDpc(DeviceExtension->DeviceObject, NULL, NULL);
+                IoRequestDpc(DeviceExtension->Common.DeviceObject, NULL, NULL);
             }
 
             /* Control goes to SpiAdapterControl */
