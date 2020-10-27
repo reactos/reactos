@@ -1,86 +1,4 @@
 
-# set_cpp
-#  Marks the current folder as containing C++ modules, additionally enabling
-#  specific C++ language features as specified (all of these default to off):
-#
-#  WITH_RUNTIME
-#   Links with the C++ runtime. Enable this for modules which use new/delete or
-#   RTTI, but do not require STL. This is the right choice if you see undefined
-#   references to operator new/delete, vector constructor/destructor iterator,
-#   type_info::vtable, ...
-#   Note: this only affects linking, so cannot be used for static libraries.
-#  WITH_RTTI
-#   Enables run-time type information. Enable this if the module uses typeid or
-#   dynamic_cast. You will probably need to enable WITH_RUNTIME as well, if
-#   you're not already using STL.
-#  WITH_EXCEPTIONS
-#   Enables C++ exception handling. Enable this if the module uses try/catch or
-#   throw. You might also need this if you use a standard operator new (the one
-#   without nothrow).
-#  WITH_STL
-#   Enables standard C++ headers and links to the Standard Template Library.
-#   Use this for modules using anything from the std:: namespace, e.g. maps,
-#   strings, vectors, etc.
-#   Note: this affects both compiling (via include directories) and
-#         linking (by adding STL). Implies WITH_RUNTIME.
-#   FIXME: WITH_STL is currently also required for runtime headers such as
-#          <new> and <exception>. This is not a big issue because in stl-less
-#          environments you usually don't want those anyway; but we might want
-#          to have modules like this in the future.
-#
-# Examples:
-#  set_cpp()
-#   Enables the C++ language, but will cause errors if any runtime or standard
-#   library features are used. This should be the default for C++ in kernel
-#   mode or otherwise restricted environments.
-#   Note: this is required to get libgcc (for multiplication/division) linked
-#         in for C++ modules, and to set the correct language for precompiled
-#         header files, so it IS required even with no features specified.
-#  set_cpp(WITH_RUNTIME)
-#   Links with the C++ runtime, so that e.g. custom operator new implementations
-#   can be used in a restricted environment. This is also required for linking
-#   with libraries (such as ATL) which have RTTI enabled, even if the module in
-#   question does not use WITH_RTTI.
-#  set_cpp(WITH_RTTI WITH_EXCEPTIONS WITH_STL)
-#   The full package. This will adjust compiler and linker so that all C++
-#   features can be used.
-macro(set_cpp)
-    cmake_parse_arguments(__cppopts "WITH_RUNTIME;WITH_RTTI;WITH_EXCEPTIONS;WITH_STL" "" "" ${ARGN})
-    if(__cppopts_UNPARSED_ARGUMENTS)
-        message(FATAL_ERROR "set_cpp: unparsed arguments ${__cppopts_UNPARSED_ARGUMENTS}")
-    endif()
-
-    if(__cppopts_WITH_RUNTIME)
-        set(CPP_USE_RT 1)
-    endif()
-    if(__cppopts_WITH_RTTI)
-        if(MSVC)
-            replace_compile_flags("/GR-" "/GR")
-        else()
-            replace_compile_flags_language("-fno-rtti" "-frtti" "CXX")
-        endif()
-    endif()
-    if(__cppopts_WITH_EXCEPTIONS)
-        if(MSVC)
-            replace_compile_flags("/EHs-c-" "/EHsc")
-        else()
-            replace_compile_flags_language("-fno-exceptions" "-fexceptions" "CXX")
-        endif()
-    endif()
-    if(__cppopts_WITH_STL)
-        set(CPP_USE_STL 1)
-        if(MSVC)
-            add_definitions(-DNATIVE_CPP_INCLUDE=${REACTOS_SOURCE_DIR}/sdk/include/c++)
-            include_directories(${REACTOS_SOURCE_DIR}/sdk/include/c++/stlport)
-        else()
-            replace_compile_flags("-nostdinc" " ")
-            add_definitions(-DPAL_STDCPP_COMPAT)
-        endif()
-    endif()
-
-    set(IS_CPP 1)
-endmacro()
-
 function(add_dependency_node _node)
     if(GENERATE_DEPENDENCY_GRAPH)
         get_target_property(_type ${_node} TYPE)
@@ -556,15 +474,17 @@ elseif(USE_FOLDER_STRUCTURE)
 
     function(add_library name)
         _add_library(${name} ${ARGN})
-        get_target_property(_target_excluded ${name} EXCLUDE_FROM_ALL)
-        if(_target_excluded AND ${name} MATCHES "^lib.*")
-            set_property(TARGET "${name}" PROPERTY FOLDER "Importlibs")
-        else()
-            string(SUBSTRING ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_SOURCE_DIR_LENGTH} -1 CMAKE_CURRENT_SOURCE_DIR_RELATIVE)
-            set_property(TARGET "${name}" PROPERTY FOLDER "${CMAKE_CURRENT_SOURCE_DIR_RELATIVE}")
+        get_target_property(_type ${name} TYPE)
+        if (NOT _type STREQUAL "INTERFACE_LIBRARY")
+            get_target_property(_target_excluded ${name} EXCLUDE_FROM_ALL)
+            if(_target_excluded AND ${name} MATCHES "^lib.*")
+                set_property(TARGET "${name}" PROPERTY FOLDER "Importlibs")
+            else()
+                string(SUBSTRING ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_SOURCE_DIR_LENGTH} -1 CMAKE_CURRENT_SOURCE_DIR_RELATIVE)
+                set_property(TARGET "${name}" PROPERTY FOLDER "${CMAKE_CURRENT_SOURCE_DIR_RELATIVE}")
+            endif()
         endif()
         # cmake adds a module_EXPORTS define when compiling a module or a shared library. We don't use that.
-        get_target_property(_type ${name} TYPE)
         if(_type MATCHES SHARED_LIBRARY|MODULE_LIBRARY)
             set_target_properties(${name} PROPERTIES DEFINE_SYMBOL "")
         endif()
@@ -611,12 +531,7 @@ endif()
 function(add_importlibs _module)
     add_dependency_node(${_module})
     foreach(LIB ${ARGN})
-        if("${LIB}" MATCHES "msvcrt")
-            target_compile_definitions(${_module} PRIVATE _DLL __USE_CRTIMP)
-            target_link_libraries(${_module} msvcrtex)
-        endif()
         target_link_libraries(${_module} lib${LIB})
-        add_dependencies(${_module} lib${LIB})
         add_dependency_edge(${_module} ${LIB})
     endforeach()
 endfunction()
@@ -646,6 +561,9 @@ function(set_module_type MODULE TYPE)
             OR (${TYPE} STREQUAL cpl) OR (${TYPE} STREQUAL module)))
         message(FATAL_ERROR "Unknown type ${TYPE} for module ${MODULE}")
     endif()
+
+    # Set our target property
+    set_target_properties(${MODULE} PROPERTIES REACTOS_MODULE_TYPE ${TYPE})
 
     if(DEFINED __subsystem)
         set_subsystem(${MODULE} ${__subsystem})
@@ -821,8 +739,9 @@ function(create_registry_hives)
     # Convert files to utf16le
     foreach(_file ${_inf_files})
         get_filename_component(_file_name ${_file} NAME_WE)
-        string(REPLACE ${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR} _converted_file "${_file}")
-        string(REPLACE ${_file_name} "${_file_name}_utf16" _converted_file ${_converted_file})
+        file(RELATIVE_PATH _subdir ${CMAKE_SOURCE_DIR} ${_file})
+        get_filename_component(_subdir ${_subdir}  DIRECTORY)
+        set(_converted_file ${CMAKE_BINARY_DIR}/${_subdir}/${_file_name}_utf16.inf)
         add_custom_command(OUTPUT ${_converted_file}
                            COMMAND native-utf16le ${_file} ${_converted_file}
                            DEPENDS native-utf16le ${_file})
@@ -987,3 +906,15 @@ else()
     macro(add_pch _target _pch _skip_list)
     endmacro()
 endif()
+
+function(set_target_cpp_properties _target)
+    cmake_parse_arguments(_CPP "WITH_EXCEPTIONS;WITH_RTTI" "" "" ${ARGN})
+
+    if (_CPP_WITH_EXCEPTIONS)
+        set_target_properties(${_target} PROPERTIES WITH_CXX_EXCEPTIONS TRUE)
+    endif()
+
+    if (_CPP_WITH_RTTI)
+        set_target_properties(${_target} PROPERTIES WITH_CXX_RTTI TRUE)
+    endif()
+endfunction()

@@ -12,11 +12,10 @@ if(MSVC)
         endif()
     endif()
 
-    # Disable warning " unary minus operator applied to unsigned type, result still unsigned"
-    add_compile_flags("/wd4146")
-
-    # Disable warning "'=': conversion from 'a' to 'b', possible loss of data"
-    add_compile_flags("/wd4244")
+    # Disable warnings
+    add_compile_options(
+        /wd4146  # "unary minus operator applied to unsigned type, result still unsigned"
+        /wd4244) # "'=': conversion from 'a' to 'b', possible loss of data"
 
 endif()
 

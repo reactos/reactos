@@ -1,6 +1,14 @@
 
 include_directories(${REACTOS_SOURCE_DIR}/sdk/lib/crt/include)
-spec2def(msvcrt.dll msvcrt.spec ADD_IMPORTLIB)
+spec2def(msvcrt.dll msvcrt.spec)
+
+# The msvcrt <-> msvcrtex trick
+generate_import_lib(libmsvcrt_real msvcrt.dll msvcrt.spec)
+add_library(libmsvcrt INTERFACE)
+target_compile_definitions(libmsvcrt INTERFACE _DLL __USE_CRTIMP)
+# if the linked module is one of win32gui;win32cui;win32dll;win32ocx;cpl link it with msvcrtex, which itself is linked to libmsvcrt_real
+# Otherwise, just link to libmsvcrt_real
+target_link_libraries(libmsvcrt INTERFACE "$<IF:$<IN_LIST:$<TARGET_PROPERTY:REACTOS_MODULE_TYPE>,win32gui;win32cui;win32dll;win32ocx;cpl>,msvcrtex,libmsvcrt_real>")
 
 add_definitions(
     -DUSE_MSVCRT_PREFIX
@@ -26,8 +34,8 @@ target_link_libraries(msvcrt crt wine ${PSEH_LIB})
 
 if(MSVC)
     # export of deleting destructor "name"
-    add_target_link_flags(msvcrt "/ignore:4102")
-    add_target_property(libmsvcrt STATIC_LIBRARY_FLAGS "/ignore:4102")
+    target_link_options(msvcrt PRIVATE "/ignore:4102")
+    set_property(TARGET libmsvcrt_real APPEND PROPERTY STATIC_LIBRARY_OPTIONS "/ignore:4102")
 endif()
 
 add_importlibs(msvcrt kernel32 ntdll)

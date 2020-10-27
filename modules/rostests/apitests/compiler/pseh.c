@@ -26,7 +26,6 @@
 extern "C" {
 #endif
 
-#define STANDALONE
 #include <wine/test.h>
 
 extern void no_op(void);
@@ -2417,7 +2416,7 @@ DEFINE_TEST(test_unvolatile)
     _SEH2_TRY
     {
         val = return_one();
-        *((char*)0xc0000000) = 0;
+        *((char*)(intptr_t)0xc0000000) = 0;
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
     {
@@ -2435,7 +2434,7 @@ DEFINE_TEST(test_unvolatile_2)
     _SEH2_TRY
     {
         val = 1;
-        *((char*)0xc0000000) = 0;
+        *((char*)(intptr_t)0xc0000000) = 0;
         val = 2;
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
@@ -2467,7 +2466,7 @@ DEFINE_TEST(test_unvolatile_3)
         _SEH2_TRY
         {
             val2 = 1;
-            *((char*)0xc0000000) = 0;
+            *((char*)(intptr_t)0xc0000000) = 0;
             val2 = 2;
         }
         _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
@@ -2477,7 +2476,7 @@ DEFINE_TEST(test_unvolatile_3)
         _SEH2_END;
 
         val1 = 2;
-        *((int*)0xc0000000) = 1;
+        *((int*)(intptr_t)0xc0000000) = 1;
         val1 = 3;
     }
     _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
@@ -2511,7 +2510,7 @@ DEFINE_TEST(test_unvolatile_4)
 
     _SEH2_TRY
     {
-        *(char*)0x80000000 = 1;
+        *(char*)(intptr_t)0x80000000 = 1;
     }
     _SEH2_EXCEPT(result == 0xdeadbeef)
     {
@@ -2539,7 +2538,7 @@ DEFINE_TEST(test_finally_goto)
         _SEH2_FINALLY
         {
             val |= 4;
-            *((char*)0xdeadc0de) = 0;
+            *((char*)(intptr_t)0xdeadc0de) = 0;
             val |= 8;
         }
         _SEH2_END;
@@ -2547,7 +2546,7 @@ DEFINE_TEST(test_finally_goto)
         val |= 16;
 next:
         val |= 32;
-        *((char*)0xdeadc0de) = 0;
+        *((char*)(intptr_t)0xdeadc0de) = 0;
         val |= 64;
     }
     _SEH2_EXCEPT(1)
@@ -2569,19 +2568,19 @@ DEFINE_TEST(test_nested_exception)
         _SEH2_TRY
         {
             val |= 2;
-            *((char*)0xdeadc0de) = 0;
+            *((char*)(intptr_t)0xdeadc0de) = 0;
             val |= 4;
         }
         _SEH2_EXCEPT(1)
         {
             val |= 8;
-            *((char*)0xdeadc0de) = 0;
+            *((char*)(intptr_t)0xdeadc0de) = 0;
             val |= 16;
         }
         _SEH2_END;
 
         val |= 32;
-        *((char*)0xdeadc0de) = 0;
+        *((char*)(intptr_t)0xdeadc0de) = 0;
         val |= 64;
     }
     _SEH2_EXCEPT(1)
@@ -2644,14 +2643,14 @@ int call_test(int (* func)(void))
 	static int ret;
 	static struct volatile_context before, after;
 	static LPTOP_LEVEL_EXCEPTION_FILTER prev_unhandled_exception;
-#ifndef _PSEH3_H_
+#if !defined(_PSEH3_H_) && !defined(_MSC_VER)
 	static _SEH2Registration_t * prev_frame;
 	_SEH2Registration_t passthrough_frame;
 #endif
 
 	prev_unhandled_exception = SetUnhandledExceptionFilter(&unhandled_exception);
 
-#if defined(_X86_) && !defined(_PSEH3_H_)
+#if defined(_X86_) && !defined(_PSEH3_H_) && !defined(_MSC_VER)
 	prev_frame = (_SEH2Registration_t *)__readfsdword(0);
 	passthrough_frame.SER_Prev = prev_frame;
 	passthrough_frame.SER_Handler = passthrough_handler;
@@ -2687,7 +2686,7 @@ int call_test(int (* func)(void))
 	ret = func();
 #endif
 
-#if defined(_X86_) && !defined(_PSEH3_H_)
+#if defined(_X86_) && !defined(_PSEH3_H_) && !defined(_MSC_VER)
 	if((_SEH2Registration_t *)__readfsdword(0) != &passthrough_frame || passthrough_frame.SER_Prev != prev_frame)
 	{
 		trace("exception registration list corrupted\n");
@@ -2760,7 +2759,7 @@ struct subtest
 	int (* func)(void);
 };
 
-void testsuite_syntax(void)
+START_TEST(pseh)
 {
 	const struct subtest testsuite[] =
 	{
@@ -2892,10 +2891,5 @@ void testsuite_syntax(void)
 	for(i = 0; i < sizeof(testsuite) / sizeof(testsuite[0]); ++ i)
 		ok(call_test(testsuite[i].func), "%s failed\n", testsuite[i].name);
 }
-
-const struct test winetest_testlist[] = {
-	{ "pseh2_syntax", testsuite_syntax },
-	{ 0, 0 }
-};
 
 /* EOF */

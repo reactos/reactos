@@ -7,11 +7,8 @@ if(SEPARATE_DBG)
 endif()
 
 if(MSVC)
-    # We don't need hotpatching
-    replace_compile_flags("/hotpatch" " ")
-
     # Explicitly use string pooling
-    add_compile_flags("/GF")
+    add_compile_options("/GF")
 endif()
 
 spec2def(freeldr_pe.exe freeldr.spec)
@@ -285,6 +282,10 @@ if(MSVC)
         add_target_link_flags(freeldr_pe_dbg "/ignore:4078 /ignore:4254 /DRIVER /FIXED /FILEALIGN:0x200 /ALIGN:0x200")
         add_linker_script(freeldr_pe_dbg freeldr_i386.msvc.lds)
     endif()
+    # We don't need hotpatching
+    remove_target_compile_option(freeldr_pe "/hotpatch")
+    remove_target_compile_option(freeldr_pe_dbg "/hotpatch")
+    remove_target_compile_option(freeldr_common "/hotpatch")
 else()
     add_target_link_flags(freeldr_pe "-Wl,--strip-all,--exclude-all-symbols,--file-alignment,0x200,--section-alignment,0x200")
     add_linker_script(freeldr_pe freeldr_i386.lds)

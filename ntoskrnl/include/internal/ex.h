@@ -171,9 +171,16 @@ typedef struct _UUID_CACHED_VALUES_STRUCT
 {
     ULONGLONG Time;
     LONG AllocatedCount;
-    UCHAR ClockSeqHiAndReserved;
-    UCHAR ClockSeqLow;
-    UCHAR NodeId [ 6 ] ;
+    union
+    {
+        struct
+        {
+            UCHAR ClockSeqHiAndReserved;
+            UCHAR ClockSeqLow;
+            UCHAR NodeId[6 /*SEED_BUFFER_SIZE*/];
+        };
+        UCHAR GuidInit[8]; /* Match GUID.Data4 */
+    };
 } UUID_CACHED_VALUES_STRUCT, *PUUID_CACHED_VALUES_STRUCT;
 
 /* INITIALIZATION FUNCTIONS *************************************************/

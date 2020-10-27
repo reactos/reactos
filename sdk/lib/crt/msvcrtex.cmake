@@ -1,13 +1,6 @@
 
 include_directories(include/internal/mingw-w64)
 
-if(NOT MSVC)
-    add_compile_flags("-Wno-main")
-    if(LTCG)
-        add_compile_flags("-fno-lto")
-    endif()
-endif()
-
 list(APPEND MSVCRTEX_SOURCE
     startup/crtexe.c
     startup/wcrtexe.c
@@ -102,6 +95,17 @@ add_asm_files(msvcrtex_asm ${MSVCRTEX_ASM_SOURCE})
 
 add_library(msvcrtex ${MSVCRTEX_SOURCE} ${msvcrtex_asm})
 target_compile_definitions(msvcrtex PRIVATE _DLL _MSVCRTEX_)
+
+# Link msvcrtex to the "real" msvcrt.dll library. See msvcrt.dll CMakeLists.txt to see what really happens here
+target_link_libraries(msvcrtex libmsvcrt_real libkernel32)
+
+if(GCC OR CLANG)
+    target_compile_options(msvcrtex PRIVATE $<$<COMPILE_LANGUAGE:C>:-Wno-main>)
+    if(LTCG)
+        target_compile_options(msvcrtex PRIVATE -fno-lto)
+    endif()
+endif()
+
 set_source_files_properties(startup/crtdll.c PROPERTIES COMPILE_DEFINITIONS CRTDLL)
 set_source_files_properties(startup/crtexe.c
                             startup/wcrtexe.c PROPERTIES COMPILE_DEFINITIONS _M_CEE_PURE)

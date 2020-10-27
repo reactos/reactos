@@ -94,8 +94,8 @@ endif()
 
 if(MSVC AND (NOT USE_CLANG_CL))
     # Disable warnings: "unreferenced local variable", "initialized, but not used variable", "benign include"
-    replace_compile_flags("/we4101" " ")
-    replace_compile_flags("/we4189" " ")
+    remove_target_compile_option(ext2fs "/we4101")
+    remove_target_compile_option(ext2fs "/we4189")
     target_compile_options(ext2fs PRIVATE /wd4189 /wd4142 /wd4101)
 else()
     target_compile_options(ext2fs PRIVATE -Wno-pointer-sign -Wno-unused-function)

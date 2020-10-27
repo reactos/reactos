@@ -23,10 +23,6 @@ add_executable(dllexport_test dllexport_test.c)
 set_module_type(dllexport_test win32cui)
 add_importlibs(dllexport_test dllexport_test_dll1 msvcrt kernel32 ntdll)
 
-if(MSVC)
-    add_compile_flags("/Zc:wchar_t-")
-endif()
-
 # framedyn is skipped in the clang-cl build
 if(NOT USE_CLANG_CL)
 
@@ -34,7 +30,9 @@ add_library(dllimport_test MODULE dllimport_framedyn.cpp)
 set_module_type(dllimport_test module)
 add_importlibs(dllimport_test framedyn)
 
-if(NOT MSVC)
+if (MSVC)
+    target_compile_options(dllimport_test PRIVATE /Zc:wchar_t-)
+else()
     target_link_libraries(dllimport_test framedynex)
 endif()
 

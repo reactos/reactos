@@ -42,7 +42,7 @@ LARGE_INTEGER ExpUuidLastTimeAllocated;
 ULONG ExpUuidSequenceNumber = 0;
 BOOLEAN ExpUuidSequenceNumberValid;
 BOOLEAN ExpUuidSequenceNumberNotSaved = FALSE;
-UUID_CACHED_VALUES_STRUCT ExpUuidCachedValues = {0ULL, 0xFFFFFFFF, 0, 0, { 0x80, 0x6E, 0x6F, 0x6E, 0x69, 0x63}};
+UUID_CACHED_VALUES_STRUCT ExpUuidCachedValues = {0ULL, 0xFFFFFFFF, {{0, 0, {0x80, 0x6E, 0x6F, 0x6E, 0x69, 0x63}}}};
 BOOLEAN ExpUuidCacheValid = FALSE;
 ULONG ExpLuidIncrement = 1;
 LARGE_INTEGER ExpLuid = {{0x3e9, 0x0}};
@@ -400,9 +400,11 @@ ExUuidCreate(OUT UUID *Uuid)
         {
             Time.QuadPart = ExpUuidCachedValues.Time;
 
-            RtlCopyMemory(&Uuid->Data4[0],
-                          &ExpUuidCachedValues.NodeId[0],
-                          SEED_BUFFER_SIZE);
+            C_ASSERT(sizeof(ExpUuidCachedValues.GuidInit) == sizeof(Uuid->Data4));
+            RtlCopyMemory(Uuid->Data4,
+                          ExpUuidCachedValues.GuidInit,
+                          sizeof(Uuid->Data4));
+
             Valid = ExpUuidCacheValid;
             AllocatedCount = InterlockedDecrement(&ExpUuidCachedValues.AllocatedCount);
         }

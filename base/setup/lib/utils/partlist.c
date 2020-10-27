@@ -10,7 +10,7 @@
 #include <ntddscsi.h>
 
 #include "partlist.h"
-#include "fsutil.h"
+#include "fsrec.h"
 #include "registry.h"
 
 #define NDEBUG

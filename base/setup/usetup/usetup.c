@@ -3510,7 +3510,7 @@ FormatPartitionPage(PINPUT_RECORD Ir)
 
             /* Format the partition */
             Status = FormatPartition(&PartitionRootPath,
-                                     SelectedFileSystem->FileSystem,
+                                     PartEntry->FileSystem,
                                      SelectedFileSystem->QuickFormat);
             if (Status == STATUS_NOT_SUPPORTED)
             {
@@ -3519,7 +3519,7 @@ FormatPartitionPage(PINPUT_RECORD Ir)
                         "\n"
                         "  \x07  Press ENTER to continue Setup.\n"
                         "  \x07  Press F3 to quit Setup.",
-                        SelectedFileSystem->FileSystem);
+                        SelectedFileSystem->FileSystem /* PartEntry->FileSystem */);
 
                 PopupError(Buffer,
                            MUIGetString(STRING_QUITCONTINUE),
@@ -4612,11 +4612,10 @@ BootLoaderHarddiskVbrPage(PINPUT_RECORD Ir)
 {
     NTSTATUS Status;
 
-    // FIXME! We must not use the partition type, but instead use the partition FileSystem!!
     Status = InstallVBRToPartition(&USetupData.SystemRootPath,
                                    &USetupData.SourceRootPath,
                                    &USetupData.DestinationArcPath,
-                                   SystemPartition->PartitionType);
+                                   SystemPartition->FileSystem);
     if (!NT_SUCCESS(Status))
     {
         MUIDisplayError(ERROR_WRITE_BOOT, Ir, POPUP_WAIT_ENTER,
@@ -4649,11 +4648,10 @@ BootLoaderHarddiskMbrPage(PINPUT_RECORD Ir)
     WCHAR DestinationDevicePathBuffer[MAX_PATH];
 
     /* Step 1: Write the VBR */
-    // FIXME! We must not use the partition type, but instead use the partition FileSystem!!
     Status = InstallVBRToPartition(&USetupData.SystemRootPath,
                                    &USetupData.SourceRootPath,
                                    &USetupData.DestinationArcPath,
-                                   SystemPartition->PartitionType);
+                                   SystemPartition->FileSystem);
     if (!NT_SUCCESS(Status))
     {
         MUIDisplayError(ERROR_WRITE_BOOT, Ir, POPUP_WAIT_ENTER,

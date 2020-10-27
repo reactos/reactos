@@ -484,14 +484,22 @@ IopLogWorker(IN PVOID Parameter)
     ExFreePoolWithTag(Message, TAG_IO);
 }
 
+static
 VOID
 NTAPI
-IopFreeApc(IN PKAPC Apc)
+IopFreeApc(IN PKAPC Apc,
+           IN OUT PKNORMAL_ROUTINE* NormalRoutine,
+           IN OUT PVOID* NormalContext,
+           IN OUT PVOID* SystemArgument1,
+           IN OUT PVOID* SystemArgument2)
 {
+    PAGED_CODE();
+
     /* Free the APC */
-    ExFreePool(Apc);
+    ExFreePoolWithTag(Apc, TAG_APC);
 }
 
+static
 VOID
 NTAPI
 IopRaiseHardError(IN PVOID NormalContext,
@@ -657,7 +665,7 @@ IoRaiseHardError(IN PIRP Irp,
                  IN PVPB Vpb,
                  IN PDEVICE_OBJECT RealDeviceObject)
 {
-    PETHREAD Thread = (PETHREAD)&Irp->Tail.Overlay.Thread;
+    PETHREAD Thread = Irp->Tail.Overlay.Thread;
     PKAPC ErrorApc;
 
     /* Don't do anything if hard errors are disabled on the thread */
@@ -669,21 +677,29 @@ IoRaiseHardError(IN PIRP Irp,
         return;
     }
 
-    /* Setup an APC */
-    ErrorApc = ExAllocatePoolWithTag(NonPagedPool,
-                                     sizeof(KAPC),
-                                     TAG_APC);
+    // TODO: In case we were called in the context of a paging I/O or for
+    // a synchronous operation, that happens with APCs disabled, queue the
+    // hard-error call for later processing (see also IofCompleteRequest).
+
+    /* Setup an APC and queue it to deal with the error (see OSR documentation) */
+    ErrorApc = ExAllocatePoolWithTag(NonPagedPool, sizeof(*ErrorApc), TAG_APC);
+    if (!ErrorApc)
+    {
+        /* Fail */
+        IoCompleteRequest(Irp, IO_DISK_INCREMENT);
+        return;
+    }
+
     KeInitializeApc(ErrorApc,
                     &Thread->Tcb,
                     Irp->ApcEnvironment,
-                    NULL,
                     IopFreeApc,
+                    NULL,
                     IopRaiseHardError,
                     KernelMode,
                     Irp);
 
-    /* Queue an APC to deal with the error (see osr documentation) */
-    KeInsertQueueApc(ErrorApc, Vpb, RealDeviceObject, 0);
+    KeInsertQueueApc(ErrorApc, Vpb, RealDeviceObject, IO_NO_INCREMENT);
 }
 
 /*

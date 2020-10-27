@@ -6,13 +6,8 @@ add_definitions(-D_WIN32_WINNT=0x600)
 
 add_definitions(
     -D__WINESRC__
-    -D_SHLWAPI_
-    -D_ATL_NO_EXCEPTIONS)
+    -D_SHLWAPI_)
 
-set_cpp(WITH_RUNTIME)
-include_directories(BEFORE
-    ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine
-    ${REACTOS_SOURCE_DIR}/sdk/lib/atl)
 spec2def(shlwapi.dll shlwapi.spec ADD_IMPORTLIB)
 
 list(APPEND SOURCE
@@ -42,8 +37,11 @@ add_library(shlwapi MODULE
     shlwapi.rc
     ${CMAKE_CURRENT_BINARY_DIR}/shlwapi.def)
 
+# our C++ atlbase.h conflicts with the one from wine, so only use wine includes for C
+target_include_directories(shlwapi BEFORE PRIVATE $<$<COMPILE_LANGUAGE:C>:${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine>)
+
 set_module_type(shlwapi win32dll UNICODE)
-target_link_libraries(shlwapi uuid wine)
+target_link_libraries(shlwapi uuid wine cpprt atl_classes)
 add_delay_importlibs(shlwapi userenv oleaut32 ole32 comdlg32 mpr mlang urlmon shell32 winmm version)
 add_importlibs(shlwapi user32 gdi32 advapi32 wininet msvcrt kernel32 ntdll)
 add_pch(shlwapi precomp.h "${PCH_SKIP_SOURCE}")

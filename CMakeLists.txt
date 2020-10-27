@@ -5,6 +5,8 @@ if(NOT CMAKE_VERSION MATCHES "ReactOS")
     message(WARNING "Building with \"${CMAKE_COMMAND}\", which is not the custom CMake included in RosBE, might cause build issues...")
 endif()
 
+include(CMakeDependentOption)
+
 project(REACTOS)
 
 # Versioning
@@ -44,16 +46,21 @@ include(sdk/cmake/compilerflags.cmake)
 
 add_definitions(-D__REACTOS__)
 
-# Double escape, since CMake unescapes before putting it on the command-line, where it's unescaped again by GCC/CL.
-add_definitions(-DREACTOS_SOURCE_DIR="${REACTOS_SOURCE_DIR}")
-add_definitions(-DREACTOS_BINARY_DIR="${REACTOS_BINARY_DIR}")
-
 # There doesn't seem to be a standard for __FILE__ being relative or absolute, so detect it at runtime.
 file(RELATIVE_PATH _PATH_PREFIX ${REACTOS_BINARY_DIR} ${REACTOS_SOURCE_DIR})
-add_compile_flags(-D__RELFILE__="&__FILE__[__FILE__[0] == '.' ? sizeof \\\"${_PATH_PREFIX}\\\" - 1 : sizeof REACTOS_SOURCE_DIR]")
+if (GCC AND (CMAKE_C_COMPILER_VERSION VERSION_GREATER_EQUAL "8.0.0"))
+    # Thankfully, GCC has this
+    add_compile_options(-ffile-prefix-map=${REACTOS_SOURCE_DIR}=)
+    add_compile_options(-ffile-prefix-map=${_PATH_PREFIX}=)
+else()
+    string(LENGTH ${_PATH_PREFIX} _PATH_PREFIX_LENGTH)
+    string(LENGTH ${REACTOS_SOURCE_DIR} REACTOS_SOURCE_DIR_LENGTH)
+    math(EXPR REACTOS_SOURCE_DIR_LENGTH "${REACTOS_SOURCE_DIR_LENGTH} + 1")
+    add_compile_definitions("__RELFILE__=&__FILE__[__FILE__[0] == '.' ? ${_PATH_PREFIX_LENGTH} : ${REACTOS_SOURCE_DIR_LENGTH}]")
+endif()
 
 if(MSVC_IDE)
-    add_compile_flags("/MP")
+    add_compile_options("/MP")
 endif()
 
 # Bison and Flex support
@@ -90,9 +97,7 @@ if(NOT CMAKE_CROSSCOMPILING)
         list(APPEND NATIVE_TARGETS rsym pefixup)
     endif()
 
-    export(TARGETS ${NATIVE_TARGETS} FILE ${CMAKE_BINARY_DIR}/ImportExecutables.cmake NAMESPACE native- )
-    configure_file(sdk/cmake/host-tools.in ${CMAKE_BINARY_DIR}/TargetList.cmake)
-
+    install(TARGETS ${NATIVE_TARGETS})
 else()
     # Add host tools target
     include(sdk/cmake/host-tools.cmake)
@@ -111,8 +116,26 @@ else()
     set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY NEVER)
     set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE NEVER)
 
-    #useful stuff!
-    include(CMakeParseArguments)
+    # Add our own target properties
+    # General module definitions
+    define_property(TARGET PROPERTY REACTOS_MODULE_TYPE
+        BRIEF_DOCS "The type of this module"
+        FULL_DOCS [[
+The type of this module.
+One of "nativecui", "nativedll", "kernelmodedriver", "wdmdriver", "kerneldll", "win32cui", "win32gui", "win32dll", "win32ocx", "cpl" or "module"]])
+
+    # C++
+    define_property(TARGET PROPERTY WITH_CXX_EXCEPTIONS
+        BRIEF_DOCS "Enable C++ exceptions on this target"
+        FULL_DOCS [[
+Enables C++ exception handling.
+Enable this if the module uses try/catch or throw. You might also need this if you use a standard operator new (the one without nothrow).]])
+    define_property(TARGET PROPERTY WITH_CXX_RTTI
+        BRIEF_DOCS "Enable C++ RTTI on this target"
+        FULL_DOCS [[
+Enables run-time type information.
+Enable this if the module uses typeid or dynamic_cast. You will probably need to link yith cpprt as well, if you are not already using STL.]])
+
 
     if(DBG)
         add_definitions(-DDBG=1 -D_SEH_ENABLE_TRACE)

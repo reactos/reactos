@@ -2,7 +2,6 @@
 add_subdirectory(cmicontrol)
 add_subdirectory(cpl)
 
-set_cpp()
 
 # for WaveRT support
 remove_definitions(-D_WIN32_WINNT=0x502)
