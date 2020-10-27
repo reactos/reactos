@@ -327,7 +327,7 @@ IntSetDIBits(
      * it causes the Lazarus pull down menus to flip on mouse touch. */
 
     DPRINT("psurfSrc->SurfObj.fjBitmap & BMF_TOPDOWN is '%d'.\n",
-        psurfSrc->SurfObj.fjBitmap & BMF_TOPDOWN);
+           psurfSrc->SurfObj.fjBitmap & BMF_TOPDOWN);
 
     result = IntEngCopyBits(&psurfDst->SurfObj,
                             &psurfSrc->SurfObj,
@@ -494,7 +494,7 @@ NtGdiSetDIBitsToDeviceInternal(
     BOOL bResult;
 
     DPRINT("XDest/YDest is '%d/%d' Width is '%d' Height is '%d' XSrc/YSrc is '%d/%d' StartScan is '%d' ScanLines is '%d'.\n",
-        XDest, YDest, Width, Height, XSrc, YSrc, StartScan, ScanLines);
+           XDest, YDest, Width, Height, XSrc, YSrc, StartScan, ScanLines);
 
     if (!Bits) return 0;
 
@@ -1037,7 +1037,7 @@ GreGetDIBitsInternal(
          * flips. It fixes the menubar icons for Double Commander too. */
 
         DPRINT("psurf->SurfObj.fjBitmap & BMF_TOPDOWN is '%d'.\n",
-            psurf->SurfObj.fjBitmap & BMF_TOPDOWN);
+               psurf->SurfObj.fjBitmap & BMF_TOPDOWN);
 
         DPRINT("Info->bmiHeader.biHeight is '%d'.\n", Info->bmiHeader.biHeight);
 

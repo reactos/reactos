@@ -14,6 +14,9 @@
 #define NDEBUG
 #include <debug.h>
 
+#define DEC_OR_INC(var, decTrue, amount) \
+    ((var) = (decTrue) ? ((var) - (amount)) : ((var) + (amount)))
+
 VOID
 DIB_24BPP_PutPixel(SURFOBJ *SurfObj, LONG x, LONG y, ULONG c)
 {
@@ -57,34 +60,21 @@ DIB_24BPP_BitBltSrcCopy(PBLTINFO BltInfo)
   BOOLEAN  bTopToBottom, bLeftToRight;
 
   DPRINT("DIB_24BPP_BitBltSrcCopy: SrcSurf cx/cy (%d/%d), DestSuft cx/cy (%d/%d) dstRect: (%d,%d)-(%d,%d)\n",
-    BltInfo->SourceSurface->sizlBitmap.cx, BltInfo->SourceSurface->sizlBitmap.cy,
-    BltInfo->DestSurface->sizlBitmap.cx, BltInfo->DestSurface->sizlBitmap.cy,
-    BltInfo->DestRect.left, BltInfo->DestRect.top, BltInfo->DestRect.right, BltInfo->DestRect.bottom);
+         BltInfo->SourceSurface->sizlBitmap.cx, BltInfo->SourceSurface->sizlBitmap.cy,
+         BltInfo->DestSurface->sizlBitmap.cx, BltInfo->DestSurface->sizlBitmap.cy,
+         BltInfo->DestRect.left, BltInfo->DestRect.top, BltInfo->DestRect.right, BltInfo->DestRect.bottom);
 
   DPRINT("SourceSurface->fjBitmap & BMF_TOPDOWN is '%d'.\n", BltInfo->SourceSurface->fjBitmap & BMF_TOPDOWN);
 
-  /* Get back flip here */
-  if (BltInfo->DestRect.left > BltInfo->DestRect.right)
-  {
-    bLeftToRight = TRUE;
-  }
-  else
-  {
-    bLeftToRight = FALSE;
-  }
+  /* Get back left to right flip here */
+  bLeftToRight = (BltInfo->DestRect.left > BltInfo->DestRect.right);
 
-  /* The OR for BltInfo->SourceSurface->fjBitmap & BMF_TOPDOWN checks for coming from dibobj.c */
-  if ((BltInfo->DestRect.top > BltInfo->DestRect.bottom) || (BltInfo->SourceSurface->fjBitmap & BMF_TOPDOWN))
-  {
-    bTopToBottom = TRUE;
-  }
-  else
-  {
-    bTopToBottom = FALSE;
-  }
+  /* Check for top to bottom flip needed. */
+  /* The OR checks for flips coming from dibobj.c. It should be removed if the dib_flip.patch from CORE-14671 is committed */ 
+  bTopToBottom = ((BltInfo->DestRect.top > BltInfo->DestRect.bottom) || (BltInfo->SourceSurface->fjBitmap & BMF_TOPDOWN));
 
   DPRINT("BltInfo->SourcePoint.x is '%d' & BltInfo->SourcePoint.y is '%d'.\n",
-    BltInfo->SourcePoint.x, BltInfo->SourcePoint.y);
+         BltInfo->SourcePoint.x, BltInfo->SourcePoint.y);
 
   /* Make WellOrdered by making top < bottom and left < right */
   RECTL_vMakeWellOrdered(&BltInfo->DestRect);
@@ -123,29 +113,15 @@ DIB_24BPP_BitBltSrcCopy(PBLTINFO BltInfo)
           } else {
             DIB_24BPP_PutPixel(BltInfo->DestSurface, i, j, XLATEOBJ_iXlate(BltInfo->XlateSourceToDest, 1));
           }
-          if (bLeftToRight)
-          {
-            sx--;
-          }
-          else
-          {
-            sx++;
-          }
+          DEC_OR_INC(sx, bLeftToRight, 1);
         }
-        if (bTopToBottom)
-        {
-          sy--;
-        }
-        else
-        {
-          sy++;
-        }
+        DEC_OR_INC(sy, bTopToBottom, 1);
       }
       break;
 
     case BMF_4BPP:
       DPRINT("4BPP Case Selected with DestRect Width of '%d'.\n",
-        BltInfo->DestRect.right - BltInfo->DestRect.left);
+             BltInfo->DestRect.right - BltInfo->DestRect.left);
 
       /* This sets SourceBits_4BPP to the top line */
       SourceBits_4BPP = (PBYTE)BltInfo->SourceSurface->pvScan0 + (BltInfo->SourcePoint.y * BltInfo->SourceSurface->lDelta) + (BltInfo->SourcePoint.x >> 1);
@@ -178,44 +154,23 @@ DIB_24BPP_BitBltSrcCopy(PBLTINFO BltInfo)
           *(PWORD)DestLine = (WORD)(xColor >> 8);
           DestLine += 2;
           if(f1 == 1) {
-            if (bLeftToRight)
-            {
-              SourceLine_4BPP--;
-            }
-            else
-            {
-              SourceLine_4BPP++;
-            }
+            DEC_OR_INC(SourceLine_4BPP, bLeftToRight, 1);
             f1 = 0;
           } 
           else
           { 
             f1 = 1;
           }
-          if (bLeftToRight)
-          {
-            sx--;
-          }
-          else
-          {
-            sx++;
-          }
+          DEC_OR_INC(sx, bLeftToRight, 1);
         }
-        if (bTopToBottom)
-        {
-          SourceBits_4BPP -= BltInfo->SourceSurface->lDelta;
-        }
-        else
-        {
-          SourceBits_4BPP += BltInfo->SourceSurface->lDelta;
-        }
+        DEC_OR_INC(SourceBits_4BPP, bTopToBottom, BltInfo->SourceSurface->lDelta);
         DestBits += BltInfo->DestSurface->lDelta;
       }
       break;
 
     case BMF_8BPP:
       DPRINT("8BPP Case Selected with DestRect Width of '%d'.\n",
-        BltInfo->DestRect.right - BltInfo->DestRect.left);
+             BltInfo->DestRect.right - BltInfo->DestRect.left);
 
       /* This sets SourceLine to the top line */
       SourceLine = (PBYTE)BltInfo->SourceSurface->pvScan0 + (BltInfo->SourcePoint.y * BltInfo->SourceSurface->lDelta) + BltInfo->SourcePoint.x;
@@ -243,32 +198,18 @@ DIB_24BPP_BitBltSrcCopy(PBLTINFO BltInfo)
           xColor = XLATEOBJ_iXlate(BltInfo->XlateSourceToDest, *SourceBits);
           *DestBits = xColor & 0xff;
           *(PWORD)(DestBits + 1) = (WORD)(xColor >> 8);
-          if (bLeftToRight)
-          {
-              SourceBits -= 1;
-          }
-          else
-          {
-              SourceBits += 1;
-          }
+          DEC_OR_INC(SourceBits, bLeftToRight, 1);
           DestBits += 3;
         }
 
-        if (bTopToBottom)
-        {
-          SourceLine -= BltInfo->SourceSurface->lDelta;
-        }
-        else
-        {
-          SourceLine += BltInfo->SourceSurface->lDelta;
-        }
+        DEC_OR_INC(SourceLine, bTopToBottom, BltInfo->SourceSurface->lDelta);
         DestLine += BltInfo->DestSurface->lDelta;
       }
       break;
 
     case BMF_16BPP:
       DPRINT("16BPP Case Selected with DestRect Width of '%d'.\n",
-        BltInfo->DestRect.right - BltInfo->DestRect.left);
+             BltInfo->DestRect.right - BltInfo->DestRect.left);
 
       /* This sets SourceBits_16BPP to the top line */
       SourceBits_16BPP = (PWORD)((PBYTE)BltInfo->SourceSurface->pvScan0 + (BltInfo->SourcePoint.y * BltInfo->SourceSurface->lDelta) + 2 * BltInfo->SourcePoint.x);
@@ -296,14 +237,7 @@ DIB_24BPP_BitBltSrcCopy(PBLTINFO BltInfo)
           *DestLine++ = xColor & 0xff;
           *(PWORD)DestLine = (WORD)(xColor >> 8);
           DestLine += 2;
-          if (bLeftToRight)
-          {
-            SourceLine_16BPP--;
-          }
-          else
-          {
-            SourceLine_16BPP++;
-          }
+          DEC_OR_INC(SourceLine_16BPP, bLeftToRight, 1);
         }
         if (bTopToBottom)
         {
@@ -319,7 +253,7 @@ DIB_24BPP_BitBltSrcCopy(PBLTINFO BltInfo)
 
     case BMF_24BPP:
       DPRINT("24BPP Case Selected with DestRect Width of '%d'.\n",
-        BltInfo->DestRect.right - BltInfo->DestRect.left);
+             BltInfo->DestRect.right - BltInfo->DestRect.left);
 
       /* Check for no flips here because we are about to use RtlMoveMemory and it can only do increasing src & dst */
       if ((BltInfo->XlateSourceToDest == NULL ||
@@ -506,7 +440,7 @@ DIB_24BPP_BitBltSrcCopy(PBLTINFO BltInfo)
 
     case BMF_32BPP:
       DPRINT("32BPP Case Selected with DestRect Width of '%d'.\n",
-        BltInfo->DestRect.right - BltInfo->DestRect.left);
+             BltInfo->DestRect.right - BltInfo->DestRect.left);
 
       SourceLine = (PBYTE)BltInfo->SourceSurface->pvScan0 + (BltInfo->SourcePoint.y * BltInfo->SourceSurface->lDelta) + 4 * BltInfo->SourcePoint.x;
 
@@ -532,25 +466,11 @@ DIB_24BPP_BitBltSrcCopy(PBLTINFO BltInfo)
           xColor = XLATEOBJ_iXlate(BltInfo->XlateSourceToDest, *((PDWORD) SourceBits));
           *DestBits = xColor & 0xff;
           *(PWORD)(DestBits + 1) = (WORD)(xColor >> 8);
-          if (bLeftToRight)
-          {
-            SourceBits -= 4;
-          }
-          else
-          {
-            SourceBits += 4;
-          }
+          DEC_OR_INC(SourceBits, bLeftToRight, 4);
           DestBits += 3;
         }
 
-        if (bTopToBottom)
-        {
-          SourceLine -= BltInfo->SourceSurface->lDelta;
-        }
-        else
-        {
-          SourceLine += BltInfo->SourceSurface->lDelta;
-        }
+        DEC_OR_INC(SourceLine, bTopToBottom, BltInfo->SourceSurface->lDelta);
         DestLine += BltInfo->DestSurface->lDelta;
       }
       break;

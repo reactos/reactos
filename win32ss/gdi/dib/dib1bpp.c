@@ -12,6 +12,9 @@
 #define NDEBUG
 #include <debug.h>
 
+#define DEC_OR_INC(var, decTrue, amount) \
+    ((var) = (decTrue) ? ((var) - (amount)) : ((var) + (amount)))
+
 VOID
 DIB_1BPP_PutPixel(SURFOBJ *SurfObj, LONG x, LONG y, ULONG c)
 {
@@ -281,46 +284,33 @@ DIB_1BPP_BitBltSrcCopy(PBLTINFO BltInfo)
   sy = BltInfo->SourcePoint.y;
 
   DPRINT("DIB_1BPP_BitBltSrcCopy: SrcSurf cx/cy (%d/%d), DestSuft cx/cy (%d/%d) dstRect: (%d,%d)-(%d,%d)\n",
-    BltInfo->SourceSurface->sizlBitmap.cx, BltInfo->SourceSurface->sizlBitmap.cy,
-    BltInfo->DestSurface->sizlBitmap.cx, BltInfo->DestSurface->sizlBitmap.cy,
-    BltInfo->DestRect.left, BltInfo->DestRect.top, BltInfo->DestRect.right, BltInfo->DestRect.bottom);
+         BltInfo->SourceSurface->sizlBitmap.cx, BltInfo->SourceSurface->sizlBitmap.cy,
+         BltInfo->DestSurface->sizlBitmap.cx, BltInfo->DestSurface->sizlBitmap.cy,
+         BltInfo->DestRect.left, BltInfo->DestRect.top, BltInfo->DestRect.right, BltInfo->DestRect.bottom);
 
   /* If we came from dibobj.c with a SourceSurface BMF_TOPDOWN bit set,
    * then we need a flip of bTopToBottom. This mostly fixes Lazarus and PeaZip. */
 
   DPRINT("SourceSurface->fjBitmap & BMF_TOPDOWN is '%d'.\n", BltInfo->SourceSurface->fjBitmap & BMF_TOPDOWN);
 
-  /* Get back flip here */
-  if (BltInfo->DestRect.left > BltInfo->DestRect.right)
-  {
-    bLeftToRight = TRUE;
-  }
-  else
-  {
-    bLeftToRight = FALSE;
-  }
+  /* Get back left to right flip here */
+  bLeftToRight = (BltInfo->DestRect.left > BltInfo->DestRect.right);
 
-  /* The OR for BltInfo->SourceSurface->fjBitmap & BMF_UMPDMEM checks for coming from dibobj.c */
-  if ((BltInfo->DestRect.top > BltInfo->DestRect.bottom) || (BltInfo->SourceSurface->fjBitmap & BMF_TOPDOWN))
-  {
-    bTopToBottom = TRUE;
-  }
-  else
-  {
-    bTopToBottom = FALSE;
-  }
+  /* Check for top to bottom flip needed. */
+  /* The OR checks for flips coming from dibobj.c. It should be removed if the dib_flip.patch from CORE-14671 is committed */ 
+  bTopToBottom = ((BltInfo->DestRect.top > BltInfo->DestRect.bottom) || (BltInfo->SourceSurface->fjBitmap & BMF_TOPDOWN));
 
   // Make WellOrdered with top < bottom and left < right
   RECTL_vMakeWellOrdered(&BltInfo->DestRect);
 
   DPRINT("BPP is '%d' & BltInfo->SourcePoint.x is '%d' & BltInfo->SourcePoint.y is '%d'.\n",
-    BltInfo->SourceSurface->iBitmapFormat, BltInfo->SourcePoint.x, BltInfo->SourcePoint.y);
+         BltInfo->SourceSurface->iBitmapFormat, BltInfo->SourcePoint.x, BltInfo->SourcePoint.y);
 
   switch ( BltInfo->SourceSurface->iBitmapFormat )
   {
   case BMF_1BPP:
     DPRINT("1BPP Case Selected with DestRect Width of '%d'.\n",
-      BltInfo->DestRect.right - BltInfo->DestRect.left);
+           BltInfo->DestRect.right - BltInfo->DestRect.left);
 
     DIB_1BPP_BitBltSrcCopy_From1BPP ( BltInfo->DestSurface, BltInfo->SourceSurface,
       BltInfo->XlateSourceToDest, &BltInfo->DestRect, &BltInfo->SourcePoint,
@@ -329,7 +319,7 @@ DIB_1BPP_BitBltSrcCopy(PBLTINFO BltInfo)
 
   case BMF_4BPP:
     DPRINT("4BPP Case Selected with DestRect Width of '%d'.\n",
-      BltInfo->DestRect.right - BltInfo->DestRect.left);
+           BltInfo->DestRect.right - BltInfo->DestRect.left);
 
     if (bTopToBottom)
     {
@@ -352,31 +342,17 @@ DIB_1BPP_BitBltSrcCopy(PBLTINFO BltInfo)
         Color = XLATEOBJ_iXlate(BltInfo->XlateSourceToDest, DIB_4BPP_GetPixel(BltInfo->SourceSurface, sx, sy));
         DIB_1BPP_PutPixel(BltInfo->DestSurface, i, j, Color);
 
-        if (bLeftToRight)
-        {
-          sx--;
-        }
-        else
-        {
-          sx++;
-        }
+        DEC_OR_INC(sx, bLeftToRight, 1);
       }
-      if (bTopToBottom)
-      {
-        sy--;
-      }
-      else
-      {
-        sy++;
-      }
+      DEC_OR_INC(sy, bTopToBottom, 1);
     }
     break;
 
   case BMF_8BPP:
     DPRINT("8BPP-dstRect: (%d,%d)-(%d,%d) and Width of '%d'.\n", 
-      BltInfo->DestRect.left, BltInfo->DestRect.top,
-      BltInfo->DestRect.right, BltInfo->DestRect.bottom,
-      BltInfo->DestRect.right - BltInfo->DestRect.left);
+           BltInfo->DestRect.left, BltInfo->DestRect.top,
+           BltInfo->DestRect.right, BltInfo->DestRect.bottom,
+           BltInfo->DestRect.right - BltInfo->DestRect.left);
  
     if (bTopToBottom)
     {
@@ -399,31 +375,17 @@ DIB_1BPP_BitBltSrcCopy(PBLTINFO BltInfo)
         Color = XLATEOBJ_iXlate(BltInfo->XlateSourceToDest, DIB_8BPP_GetPixel(BltInfo->SourceSurface, sx, sy));
         DIB_1BPP_PutPixel(BltInfo->DestSurface, i, j, Color);
 
-        if (bTopToBottom)
-        {
-          sx--;
-        }
-        else
-        {
-          sx++;
-        }
+        DEC_OR_INC(sx, bLeftToRight, 1);
       }
-      if (bTopToBottom)
-      {
-        sy--;
-      }
-      else
-      {
-        sy++;
-      }
+      DEC_OR_INC(sy, bTopToBottom, 1);
     }
     break;
 
   case BMF_16BPP:
     DPRINT("16BPP-dstRect: (%d,%d)-(%d,%d) and Width of '%d'.\n", 
-      BltInfo->DestRect.left, BltInfo->DestRect.top,
-      BltInfo->DestRect.right, BltInfo->DestRect.bottom,
-      BltInfo->DestRect.right - BltInfo->DestRect.left);
+           BltInfo->DestRect.left, BltInfo->DestRect.top,
+           BltInfo->DestRect.right, BltInfo->DestRect.bottom,
+           BltInfo->DestRect.right - BltInfo->DestRect.left);
 
     if (bTopToBottom)
     {
@@ -445,32 +407,18 @@ DIB_1BPP_BitBltSrcCopy(PBLTINFO BltInfo)
       {
         Color = XLATEOBJ_iXlate(BltInfo->XlateSourceToDest, DIB_16BPP_GetPixel(BltInfo->SourceSurface, sx, sy));
         DIB_1BPP_PutPixel(BltInfo->DestSurface, i, j, Color);
-        if (bLeftToRight)
-        {
-          sx--;
-        }
-        else
-        {
-          sx++;
-        }
+        DEC_OR_INC(sx, bLeftToRight, 1);
       }
-      if (bTopToBottom)
-      {
-        sy--;
-      }
-      else
-      {
-        sy++;
-      }
+      DEC_OR_INC(sy, bTopToBottom, 1);
     }
     break;
 
   case BMF_24BPP:
 
     DPRINT("24BPP-dstRect: (%d,%d)-(%d,%d) and Width of '%d'.\n", 
-      BltInfo->DestRect.left, BltInfo->DestRect.top,
-      BltInfo->DestRect.right, BltInfo->DestRect.bottom,
-      BltInfo->DestRect.right - BltInfo->DestRect.left);
+           BltInfo->DestRect.left, BltInfo->DestRect.top,
+           BltInfo->DestRect.right, BltInfo->DestRect.bottom,
+           BltInfo->DestRect.right - BltInfo->DestRect.left);
 
       if (bTopToBottom)
       {
@@ -492,32 +440,18 @@ DIB_1BPP_BitBltSrcCopy(PBLTINFO BltInfo)
       {
         Color = XLATEOBJ_iXlate(BltInfo->XlateSourceToDest, DIB_24BPP_GetPixel(BltInfo->SourceSurface, sx, sy));
         DIB_1BPP_PutPixel(BltInfo->DestSurface, i, j, Color);
-        if (bLeftToRight)
-        {
-          sx--;
-        }
-        else
-        {
-          sx++;
-        }
+        DEC_OR_INC(sx, bLeftToRight, 1);
       }
-      if (bTopToBottom)
-      {
-        sy--;
-      }
-      else
-      {
-        sy++;
-      }
+      DEC_OR_INC(sy, bTopToBottom, 1);
     }
     break;
 
   case BMF_32BPP:
 
     DPRINT("32BPP-dstRect: (%d,%d)-(%d,%d) and Width of '%d'.\n", 
-      BltInfo->DestRect.left, BltInfo->DestRect.top,
-      BltInfo->DestRect.right, BltInfo->DestRect.bottom,
-      BltInfo->DestRect.right - BltInfo->DestRect.left);
+           BltInfo->DestRect.left, BltInfo->DestRect.top,
+           BltInfo->DestRect.right, BltInfo->DestRect.bottom,
+           BltInfo->DestRect.right - BltInfo->DestRect.left);
 
     if (bTopToBottom)
     {
@@ -539,23 +473,9 @@ DIB_1BPP_BitBltSrcCopy(PBLTINFO BltInfo)
       {
         Color = XLATEOBJ_iXlate(BltInfo->XlateSourceToDest, DIB_32BPP_GetPixel(BltInfo->SourceSurface, sx, sy));
         DIB_1BPP_PutPixel(BltInfo->DestSurface, i, j, Color);
-        if (bLeftToRight)
-        {
-          sx--;
-        }
-        else
-        {
-          sx++;
-        }
+        DEC_OR_INC(sx, bLeftToRight, 1);
       }
-      if (bTopToBottom)
-      {
-        sy--;
-      }
-      else
-      {
-        sy++;
-      }
+      DEC_OR_INC(sy, bTopToBottom, 1);
     }
     break;
 

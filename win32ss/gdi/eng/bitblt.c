@@ -264,7 +264,7 @@ CallDibBitBlt(SURFOBJ* OutputObj,
     RECTL_vMakeWellOrdered(&BltInfo.DestRect);
 
     DPRINT("CallDibBitBlt: dstRect: (%d,%d)-(%d,%d)\n",
-      BltInfo.DestRect.left, BltInfo.DestRect.top, BltInfo.DestRect.right, BltInfo.DestRect.bottom);
+           BltInfo.DestRect.left, BltInfo.DestRect.top, BltInfo.DestRect.right, BltInfo.DestRect.bottom);
 
     Result = DibFunctionsForBitmapFormat[OutputObj->iBitmapFormat].DIB_BitBlt(&BltInfo);
 
@@ -393,10 +393,10 @@ EngBitBlt(
     RECTL_vMakeWellOrdered(&OutputRect);
 
     DPRINT("EngBitBlt: prclTrg: (%d,%d)-(%d,%d)\n",
-        prclTrg->left, prclTrg->top, prclTrg->right, prclTrg->bottom);
+           prclTrg->left, prclTrg->top, prclTrg->right, prclTrg->bottom);
 
     DPRINT("EngBitBlt: OutputRect: (%d,%d)-(%d,%d)\n",
-        OutputRect.left, OutputRect.top, OutputRect.right, OutputRect.bottom);
+           OutputRect.left, OutputRect.top, OutputRect.right, OutputRect.bottom);
 
     if (UsesSource)
     {
@@ -684,7 +684,7 @@ IntEngBitBlt(
     ASSERT(psoTrg);
 
     DPRINT("IntEngBitBlt: prclTrg: (%d,%d)-(%d,%d)\n",
-        prclTrg->left, prclTrg->top, prclTrg->right, prclTrg->bottom);
+           prclTrg->left, prclTrg->top, prclTrg->right, prclTrg->bottom);
 
     psurfTrg = CONTAINING_RECORD(psoTrg, SURFACE, SurfObj);
 

@@ -56,9 +56,9 @@ CallDibStretchBlt(SURFOBJ* psoDest,
     BOOL bResult;
 
     DPRINT("Entering CallDibStretchBlt: psoSource cx/cy (%d/%d), psoDest cx/cy (%d/%d) OutputRect: (%d,%d)-(%d,%d)\n",
-        psoSource->sizlBitmap.cx, psoSource->sizlBitmap.cy,
-        psoDest->sizlBitmap.cx, psoDest->sizlBitmap.cy,
-        OutputRect->left, OutputRect->top, OutputRect->right, OutputRect->bottom);
+           psoSource->sizlBitmap.cx, psoSource->sizlBitmap.cy,
+           psoDest->sizlBitmap.cx, psoDest->sizlBitmap.cy,
+           OutputRect->left, OutputRect->top, OutputRect->right, OutputRect->bottom);
 
     if (BrushOrigin == NULL)
     {
@@ -142,9 +142,9 @@ EngStretchBltROP(
     LONG lTmp;
 
     DPRINT("Entering EngStretchBltROP: SrcSurf cx/cy (%d/%d), DestSuft cx/cy (%d/%d) dstRect: (%d,%d)-(%d,%d)\n",
-        psoSource->sizlBitmap.cx, psoSource->sizlBitmap.cy, //SourceRect->right, SourceRect->bottom,
-        psoDest->sizlBitmap.cx, psoDest->sizlBitmap.cy,
-        prclDest->left, prclDest->top, prclDest->right, prclDest->bottom);
+           psoSource->sizlBitmap.cx, psoSource->sizlBitmap.cy, //SourceRect->right, SourceRect->bottom,
+           psoDest->sizlBitmap.cx, psoDest->sizlBitmap.cy,
+           prclDest->left, prclDest->top, prclDest->right, prclDest->bottom);
 
     cxSrc = prclSrc->right - prclSrc->left;
     cySrc = prclSrc->bottom - prclSrc->top;
@@ -310,7 +310,7 @@ EngStretchBltROP(
             }
 
             DPRINT("About to call CallDibStretchBlt?: OutputRect: (%d,%d)-(%d,%d)\n",
-                OutputRect.left, OutputRect.top, OutputRect.right, OutputRect.bottom);
+                   OutputRect.left, OutputRect.top, OutputRect.right, OutputRect.bottom);
 
             Ret = (*BltRectFunc)(psoOutput, psoInput, Mask,
                          ColorTranslation, &OutputRect, &InputRect, MaskOrigin,
@@ -344,7 +344,7 @@ EngStretchBltROP(
                 }
 
                 DPRINT("About to call CallDibStretchBlt?: CombinedRect: (%d,%d)-(%d,%d)\n",
-                    CombinedRect.left, CombinedRect.top, CombinedRect.right, CombinedRect.bottom);
+                       CombinedRect.left, CombinedRect.top, CombinedRect.right, CombinedRect.bottom);
 
                 Ret = (*BltRectFunc)(psoOutput, psoInput, Mask,
                            ColorTranslation,
@@ -407,7 +407,7 @@ EngStretchBltROP(
                         }
 
                         DPRINT("About to call CallDibStretchBlt?: CombinedRect: (%d,%d)-(%d,%d)\n",
-                            CombinedRect.left, CombinedRect.top, CombinedRect.right, CombinedRect.bottom);
+                               CombinedRect.left, CombinedRect.top, CombinedRect.right, CombinedRect.bottom);
 
                         Ret = (*BltRectFunc)(psoOutput, psoInput, Mask,
                            ColorTranslation,
@@ -513,16 +513,16 @@ IntEngStretchBlt(SURFOBJ *psoDest,
     cyDest = DestRect->bottom - DestRect->top;
 
     DPRINT("SourceRect is (%d,%d)-(%d,%d) and DestRect is (%d,%d)-(%d,%d)\n",
-        DestRect->left, DestRect->top, DestRect->right, DestRect->bottom,
-        SourceRect->left, SourceRect->top, SourceRect->right, SourceRect->bottom);
+           DestRect->left, DestRect->top, DestRect->right, DestRect->bottom,
+           SourceRect->left, SourceRect->top, SourceRect->right, SourceRect->bottom);
 
     DPRINT("cxDest(%d) cyDest(%d) cxSrc(%d) cySrc(%d)\n",
-        cxDest, cyDest, cxSrc, cySrc);
+           cxDest, cyDest, cxSrc, cySrc);
 
     /* Check if source and dest size are equal in size */
     if ((abs(cxDest) == abs(cxSrc)) && (abs(cyDest) == abs(cySrc)))
     {
-        /* if cxSrc < 0 and cxDest <0 (both negative, we change both their signs
+        /* if cxSrc < 0 and cxDest < 0 (both negative, we change both their signs
          * because the outcome is the same as if they were both positive and we
          * reverse both their top and bottom values */
         if ((cxSrc < 0) && (cxDest < 0))
@@ -533,11 +533,11 @@ IntEngStretchBlt(SURFOBJ *psoDest,
             lTmp = SourceRect->left;
             SourceRect->left = SourceRect->right;
             SourceRect->right = lTmp;
-            cxSrc = abs(cxSrc);
-            cxDest = abs(cxDest);
+            cxSrc = -cxSrc;
+            cxDest = -cxDest;
         }
 
-        /* if cySrc < 0 and cyDest <0 (both negative, we change both their signs
+        /* if cySrc < 0 and cyDest < 0 (both negative, we change both their signs
          * because the outcome is the same as if they were both positive and we
          * reverse both their top and bottom values */
         if ((cySrc < 0) && (cyDest < 0))
@@ -609,8 +609,8 @@ IntEngStretchBlt(SURFOBJ *psoDest,
         DPRINT("source and dest size are equal.\n");
 
         DPRINT("xDest(%d) yDest(%d) cxDest(%d) cyDest(%d) xSrc(%d) ySrc(%d) cxSrc(%d) cySrc(%d)\n",
-            DestRect->left, DestRect->top, cxDest, cyDest,
-            SourceRect->left, SourceRect->top, cxSrc, cySrc);
+               DestRect->left, DestRect->top, cxDest, cyDest,
+               SourceRect->left, SourceRect->top, cxSrc, cySrc);
 
         if ((cxSrc < 0) != (cxDest < 0)) // Not same sign
         {
@@ -778,9 +778,9 @@ IntEngStretchBlt(SURFOBJ *psoDest,
         }
 
         DPRINT("About to call EngStretchBltROP: SrcSurf cx/cy (%d/%d), DestSuft cx/cy (%d/%d) dstRect: (%d,%d)-(%d,%d)\n",
-            psoSource->sizlBitmap.cx, psoSource->sizlBitmap.cy, //SourceRect->right, SourceRect->bottom,
-            psoDest->sizlBitmap.cx, psoDest->sizlBitmap.cy,
-            OutputRect.left, OutputRect.top, OutputRect.right, OutputRect.bottom);
+               psoSource->sizlBitmap.cx, psoSource->sizlBitmap.cy, //SourceRect->right, SourceRect->bottom,
+               psoDest->sizlBitmap.cx, psoDest->sizlBitmap.cy,
+               OutputRect.left, OutputRect.top, OutputRect.right, OutputRect.bottom);
 
         ret = EngStretchBltROP(psoDest,
                                psoSource,

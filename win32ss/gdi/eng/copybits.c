@@ -37,10 +37,10 @@ EngCopyBits(
     BOOL      bTopToBottom;
 
     DPRINT("Entering EngCopyBits with SourcePoint (%d,%d) and DestRect (%d,%d)-(%d,%d).\n",
-        SourcePoint->x, SourcePoint->y, DestRect->left, DestRect->top, DestRect->right, DestRect->bottom);
+           SourcePoint->x, SourcePoint->y, DestRect->left, DestRect->top, DestRect->right, DestRect->bottom);
 
     DPRINT("Source cx/cy is %d/%d and Dest cx/cy is %d/%d.\n",
-        psoSource->sizlBitmap.cx, psoSource->sizlBitmap.cy, psoDest->sizlBitmap.cx, psoDest->sizlBitmap.cy);
+           psoSource->sizlBitmap.cx, psoSource->sizlBitmap.cy, psoDest->sizlBitmap.cx, psoDest->sizlBitmap.cy);
 
     if (psoSource)
     {
@@ -57,7 +57,9 @@ EngCopyBits(
         rclDest = *DestRect;
     }
     else
+    {
         bTopToBottom = FALSE;
+    }
 
     DPRINT("bTopToBottom is '%d'.\n", bTopToBottom);
 
