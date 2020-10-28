@@ -445,6 +445,9 @@ SpiSenseCompletionRoutine(
     _In_ PIRP Irp,
     _In_opt_ PVOID Context)
 {
+    PIO_STACK_LOCATION ioStack = IoGetNextIrpStackLocation(Irp);
+    PSCSI_PORT_LUN_EXTENSION lunExt = ioStack->DeviceObject->DeviceExtension;
+    PSCSI_PORT_DEVICE_EXTENSION portExt = lunExt->Common.LowerDevice->DeviceExtension;
     PSCSI_REQUEST_BLOCK Srb = (PSCSI_REQUEST_BLOCK)Context;
     PSCSI_REQUEST_BLOCK InitialSrb;
     PIRP InitialIrp;
@@ -477,6 +480,26 @@ SpiSenseCompletionRoutine(
 
     /* Make sure initial SRB's queue is frozen */
     ASSERT(InitialSrb->SrbStatus & SRB_STATUS_QUEUE_FROZEN);
+
+    // The queue is frozen, but the SRB had a SRB_FLAGS_NO_QUEUE_FREEZE => unfreeze the queue
+    if ((InitialSrb->SrbFlags & SRB_FLAGS_NO_QUEUE_FREEZE) &&
+        (InitialSrb->SrbStatus & SRB_STATUS_QUEUE_FROZEN))
+    {
+        KIRQL irql;
+
+        KeAcquireSpinLock(&portExt->SpinLock, &irql);
+
+        ASSERT(lunExt->Flags & LUNEX_FROZEN_QUEUE);
+
+        lunExt->Flags &= ~LUNEX_FROZEN_QUEUE;
+        lunExt->Flags &= ~LUNEX_NEED_REQUEST_SENSE;
+
+        // SpiGetNextRequestFromLun releases the lock
+        SpiGetNextRequestFromLun(portExt, lunExt);
+        KeLowerIrql(irql);
+
+        InitialSrb->SrbStatus &= ~SRB_STATUS_QUEUE_FROZEN;
+    }
 
     /* Complete this request */
     IoCompleteRequest(InitialIrp, IO_DISK_INCREMENT);
@@ -580,9 +603,15 @@ SpiSendRequestSense(
     Srb->SrbFlags = SRB_FLAGS_DATA_IN | SRB_FLAGS_BYPASS_FROZEN_QUEUE |
                     SRB_FLAGS_DISABLE_DISCONNECT;
 
-    /* Transfer disable synch transfer flag */
+    // pass some InitialSrb flags
     if (InitialSrb->SrbFlags & SRB_FLAGS_DISABLE_SYNCH_TRANSFER)
         Srb->SrbFlags |= SRB_FLAGS_DISABLE_SYNCH_TRANSFER;
+
+    if (InitialSrb->SrbFlags & SRB_FLAGS_BYPASS_LOCKED_QUEUE)
+        Srb->SrbFlags |= SRB_FLAGS_BYPASS_LOCKED_QUEUE;
+
+    if (InitialSrb->SrbFlags & SRB_FLAGS_NO_QUEUE_FREEZE)
+        Srb->SrbFlags |= SRB_FLAGS_NO_QUEUE_FREEZE;
 
     Srb->DataBuffer = InitialSrb->SenseInfoBuffer;
 
