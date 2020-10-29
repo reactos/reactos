@@ -498,12 +498,17 @@ DIB_32BPP_BitBltSrcCopy(PBLTINFO BltInfo)
             + (BltInfo->SourcePoint.y * BltInfo->SourceSurface->lDelta)
             + 4 * BltInfo->SourcePoint.x;
 
+          if (BltInfo->SourceSurface->lDelta < 0)
+          {
+            SourceBits -= BltInfo->SourceSurface->lDelta;
+          }
+
           /* This set DestBits to the top line */
           DestBits = (PBYTE)BltInfo->DestSurface->pvScan0
             + ((BltInfo->DestRect.top) * BltInfo->DestSurface->lDelta)
             + 4 * BltInfo->DestRect.left;
 
-          if ((BltInfo->SourceSurface->fjBitmap & BMF_TOPDOWN) == 0)
+          if (((BltInfo->SourceSurface->fjBitmap & BMF_TOPDOWN) == 0) && (BltInfo->DestSurface->lDelta > 0))
           {
             DestBits += BltInfo->DestSurface->lDelta;
           }
