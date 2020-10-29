@@ -232,7 +232,7 @@ DIB_16BPP_BitBltSrcCopy(PBLTINFO BltInfo)
 
   case BMF_4BPP:
     DPRINT("4BPP Case Selected with DestRect Width of '%d'.\n",
-      BltInfo->DestRect.right - BltInfo->DestRect.left);
+           BltInfo->DestRect.right - BltInfo->DestRect.left);
 
     /* This sets SourceBits_4BPP to the top line */
     SourceBits_4BPP = (PBYTE)BltInfo->SourceSurface->pvScan0 +
@@ -273,20 +273,13 @@ DIB_16BPP_BitBltSrcCopy(PBLTINFO BltInfo)
         }
         DEC_OR_INC(sx, bLeftToRight, 1);
       }
-      if (bTopToBottom)
-      {
-        SourceBits_4BPP -= BltInfo->SourceSurface->lDelta;
-      }
-      else
-      {
-        SourceBits_4BPP += BltInfo->SourceSurface->lDelta;
-      }
+      DEC_OR_INC(SourceBits_4BPP, bTopToBottom, BltInfo->SourceSurface->lDelta);
     }
     break;
 
   case BMF_8BPP:
     DPRINT("8BPP Case Selected with DestRect Width of '%d'.\n",
-      BltInfo->DestRect.right - BltInfo->DestRect.left);
+           BltInfo->DestRect.right - BltInfo->DestRect.left);
 
     /* This sets SourceLine to the top line */
     SourceLine = (PBYTE)BltInfo->SourceSurface->pvScan0 +
@@ -297,7 +290,8 @@ DIB_16BPP_BitBltSrcCopy(PBLTINFO BltInfo)
     if (bTopToBottom)
     {
       /* This sets SourceLine to the bottom line */
-      SourceLine += BltInfo->SourceSurface->lDelta * (BltInfo->DestRect.bottom - BltInfo->DestRect.top - 1);
+      SourceLine += BltInfo->SourceSurface->lDelta 
+        * (BltInfo->DestRect.bottom - BltInfo->DestRect.top - 1);
     }
 
     for (j = BltInfo->DestRect.top; j < BltInfo->DestRect.bottom; j++)
@@ -325,12 +319,12 @@ DIB_16BPP_BitBltSrcCopy(PBLTINFO BltInfo)
 
   case BMF_16BPP:
     DPRINT("16BPP Case Selected with DestRect Width of '%d'.\n",
-      BltInfo->DestRect.right - BltInfo->DestRect.left);
+           BltInfo->DestRect.right - BltInfo->DestRect.left);
 
     DPRINT("BMF_16BPP-dstRect: (%d,%d)-(%d,%d) and Width of '%d'.\n", 
-      BltInfo->DestRect.left, BltInfo->DestRect.top,
-      BltInfo->DestRect.right, BltInfo->DestRect.bottom,
-      BltInfo->DestRect.right - BltInfo->DestRect.left);
+           BltInfo->DestRect.left, BltInfo->DestRect.top,
+           BltInfo->DestRect.right, BltInfo->DestRect.bottom,
+           BltInfo->DestRect.right - BltInfo->DestRect.left);
 
     if ((BltInfo->XlateSourceToDest == NULL ||
       (BltInfo->XlateSourceToDest->flXlate & XO_TRIVIAL) != 0) &&
@@ -536,7 +530,7 @@ DIB_16BPP_BitBltSrcCopy(PBLTINFO BltInfo)
            + ((BltInfo->DestRect.top) * BltInfo->DestSurface->lDelta)
            + 2 * BltInfo->DestRect.left;
 
-          if (BltInfo->DestSurface->lDelta > 0)
+          if ((BltInfo->SourceSurface->fjBitmap & BMF_TOPDOWN) == 0)
           {
             DestBits += BltInfo->DestSurface->lDelta;
           }
@@ -547,10 +541,10 @@ DIB_16BPP_BitBltSrcCopy(PBLTINFO BltInfo)
             DestBits += 2;
           }
 
-          /* The OneDone flag indicates that we are flipping for bTopToBottom and bLeftToRight   */
-          /* and have already completed the bLeftToRight. So we will lose our first flip output */
-          /* unless we work with its output which is at the destination site. So in this case   */
-          /* our new Source becomes the previous outputs Destination. */
+          /* The OneDone flag indicates that we are flipping for bTopToBottom and bLeftToRight
+           * and have already completed the bLeftToRight. So we will lose our first flip output
+           * unless we work with its output which is at the destination site. So in this case
+           * our new Source becomes the previous outputs Destination. */
 
           if (OneDone)
           {
@@ -597,9 +591,9 @@ DIB_16BPP_BitBltSrcCopy(PBLTINFO BltInfo)
   case BMF_24BPP:
 
     DPRINT("BMF_24BPP-dstRect: (%d,%d)-(%d,%d) and Width of '%d'.\n", 
-      BltInfo->DestRect.left, BltInfo->DestRect.top,
-      BltInfo->DestRect.right, BltInfo->DestRect.bottom,
-      BltInfo->DestRect.right - BltInfo->DestRect.left);
+           BltInfo->DestRect.left, BltInfo->DestRect.top,
+           BltInfo->DestRect.right, BltInfo->DestRect.bottom,
+           BltInfo->DestRect.right - BltInfo->DestRect.left);
 
     /* This sets SourceLine to the top line */
     SourceLine = (PBYTE)BltInfo->SourceSurface->pvScan0 +
@@ -641,7 +635,7 @@ DIB_16BPP_BitBltSrcCopy(PBLTINFO BltInfo)
 
   case BMF_32BPP:
     DPRINT("32BPP Case Selected with DestRect Width of '%d'.\n",
-      BltInfo->DestRect.right - BltInfo->DestRect.left);
+           BltInfo->DestRect.right - BltInfo->DestRect.left);
 
     SourceLine = (PBYTE)BltInfo->SourceSurface->pvScan0 +
       (BltInfo->SourcePoint.y * BltInfo->SourceSurface->lDelta) +
@@ -681,7 +675,7 @@ DIB_16BPP_BitBltSrcCopy(PBLTINFO BltInfo)
 
   default:
     DPRINT1("DIB_16BPP_BitBltSrcCopy: Unhandled Source BPP: %u\n",
-      BitsPerFormat(BltInfo->SourceSurface->iBitmapFormat));
+            BitsPerFormat(BltInfo->SourceSurface->iBitmapFormat));
     return FALSE;
   }
 

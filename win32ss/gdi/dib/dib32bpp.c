@@ -503,7 +503,7 @@ DIB_32BPP_BitBltSrcCopy(PBLTINFO BltInfo)
             + ((BltInfo->DestRect.top) * BltInfo->DestSurface->lDelta)
             + 4 * BltInfo->DestRect.left;
 
-          if (BltInfo->DestSurface->lDelta > 0)
+          if ((BltInfo->SourceSurface->fjBitmap & BMF_TOPDOWN) == 0)
           {
             DestBits += BltInfo->DestSurface->lDelta;
           }
