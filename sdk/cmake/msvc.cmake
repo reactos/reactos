@@ -483,3 +483,75 @@ macro(add_asm_files _target)
         list(APPEND ${_target} ${ARGN})
     endif()
 endmacro()
+
+function(add_linker_script _target _linker_script_file)
+    get_filename_component(_file_full_path ${_linker_script_file} ABSOLUTE)
+    get_filename_component(_file_name ${_linker_script_file} NAME)
+    set(_generated_file_path_prefix "${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/${_target}.dir/${_file_name}")
+
+    # Generate the ASM module containing sections specifications and layout.
+    set(_generated_file "${_generated_file_path_prefix}.S")
+    add_custom_command(
+        OUTPUT ${_generated_file}
+        COMMAND "${CMAKE_COMMAND}" -E copy_if_different "${_file_full_path}" "${_generated_file}"
+        DEPENDS ${_file_full_path})
+    set_source_files_properties(${_generated_file} PROPERTIES LANGUAGE "ASM" GENERATED TRUE)
+    add_asm_files(${_target}_linker_file ${_generated_file})
+
+    # Generate the C module containing extra sections specifications and layout,
+    # as well as comment-type linker #pragma directives.
+    set(_generated_file "${_generated_file_path_prefix}.c")
+    add_custom_command(
+        OUTPUT ${_generated_file}
+        COMMAND "${CMAKE_COMMAND}" -E copy_if_different "${_file_full_path}" "${_generated_file}"
+        DEPENDS ${_file_full_path})
+    set_source_files_properties(${_generated_file} PROPERTIES LANGUAGE "C" GENERATED TRUE)
+    list(APPEND ${_target}_linker_file ${_generated_file})
+
+    # Add both files to the sources of the target.
+    target_sources(${_target} PRIVATE "${${_target}_linker_file}")
+
+    # Create the additional linker response file.
+    set(_generated_file "${_generated_file_path_prefix}.rsp")
+    if(USE_CLANG_CL)
+        set(_no_std_includes_flag "-nostdinc")
+    else()
+        set(_no_std_includes_flag "/X")
+    endif()
+    if(MSVC_IDE AND (CMAKE_VERSION MATCHES "ReactOS"))
+        # MSBuild, via the VS IDE, uses response files when calling CL or LINK.
+        # We cannot specify a custom response file on the linker command-line,
+        # since specifying response files from within response files is forbidden.
+        # We therefore have to pre-process, at configuration time, the linker
+        # script so as to retrieve the custom linker options to be appended
+        # to the linker command-line.
+        execute_process(
+            COMMAND ${CMAKE_C_COMPILER} /nologo ${_no_std_includes_flag} /D__LINKER__ /EP /c "${_file_full_path}"
+            # OUTPUT_FILE "${_generated_file}"
+            OUTPUT_VARIABLE linker_options
+            ERROR_QUIET
+            WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+            RESULT_VARIABLE linker_rsp_result
+            OUTPUT_STRIP_TRAILING_WHITESPACE)
+        if(NOT linker_rsp_result EQUAL 0)
+            message(FATAL_ERROR "Generating pre-processed linker options for target '${_target}' failed with error ${linker_rsp_result}.")
+        endif()
+        # file(STRINGS ${_generated_file} linker_options NEWLINE_CONSUME)
+        string(REGEX REPLACE "[\r\n]+" " " linker_options "${linker_options}")
+        add_target_link_flags(${_target} ${linker_options})
+    else()
+        # Generate at compile-time a linker response file and append it
+        # to the linker command-line.
+        add_custom_command(
+            # OUTPUT ${_generated_file}
+            TARGET ${_target} PRE_LINK # PRE_BUILD
+            COMMAND ${CMAKE_C_COMPILER} /nologo ${_no_std_includes_flag} /D__LINKER__ /EP /c "${_file_full_path}" > "${_generated_file}"
+            DEPENDS ${_file_full_path}
+            VERBATIM)
+        set_source_files_properties(${_generated_file} PROPERTIES GENERATED TRUE)
+        # add_custom_target("${_target}_${_file_name}" ALL DEPENDS ${_generated_file})
+        # add_dependencies(${_target} "${_target}_${_file_name}")
+        add_target_link_flags(${_target} "@${_generated_file}")
+        add_target_property(${_target} LINK_DEPENDS ${_file_full_path})
+    endif()
+endfunction()
