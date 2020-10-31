@@ -30,6 +30,7 @@ list(APPEND SOURCE
     NtQueryKey.c
     NtQuerySystemEnvironmentValue.c
     NtQuerySystemInformation.c
+    NtQueryValueKey.c
     NtQueryVolumeInformationFile.c
     NtReadFile.c
     NtSaveKey.c
