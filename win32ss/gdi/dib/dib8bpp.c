@@ -60,7 +60,8 @@ DIB_8BPP_BitBltSrcCopy(PBLTINFO BltInfo)
 {
   LONG     i, j, sx, sy, xColor, f1;
   PBYTE    SourceBits, DestBits, SourceLine, DestLine;
-  PBYTE    SourceBits_4BPP, SourceLine_4BPP;
+  PBYTE    SourceBits_4BPP, SourceLine_4BPP, Store;
+  DWORD    Count;
   BOOLEAN  bTopToBottom, bLeftToRight;
 
   DPRINT("DIB_8BPP_BitBltSrcCopy: SrcSurf cx/cy (%d/%d), DestSuft cx/cy (%d/%d) dstRect: (%d,%d)-(%d,%d)\n",
@@ -266,9 +267,9 @@ DIB_8BPP_BitBltSrcCopy(PBLTINFO BltInfo)
             DPRINT("Flip is bLeftToRight.\n");
 
             /* Allocate enough pixels for a row in BYTE's */
-            BYTE *store = ExAllocatePoolWithTag(NonPagedPool,
-              BltInfo->DestRect.right - BltInfo->DestRect.left + 1, TAG_DIB);
-            if (store == NULL)
+            Count = BltInfo->DestRect.right - BltInfo->DestRect.left + 1;
+            Store = ExAllocatePoolWithTag(NonPagedPool, Count, TAG_DIB);
+            if (Store == NULL)
             {
               DPRINT1("Storage Allocation Failed.\n");
               return FALSE;
@@ -298,7 +299,7 @@ DIB_8BPP_BitBltSrcCopy(PBLTINFO BltInfo)
 
               for (i = BltInfo->DestRect.left; i < BltInfo->DestRect.right; i++)
               {
-                store[Index] = (BYTE)XLATEOBJ_iXlate(
+                Store[Index] = (BYTE)XLATEOBJ_iXlate(
                   BltInfo->XlateSourceToDest,
                   *SourceBits);
                 SourceBits--;
@@ -309,7 +310,7 @@ DIB_8BPP_BitBltSrcCopy(PBLTINFO BltInfo)
 
               for (i = BltInfo->DestRect.left; i < BltInfo->DestRect.right; i++)
               {
-                *DestBits = store[Index];
+                *DestBits = Store[Index];
                 DestBits++;
                 Index++;
               }
@@ -317,7 +318,7 @@ DIB_8BPP_BitBltSrcCopy(PBLTINFO BltInfo)
               SourceLine += BltInfo->SourceSurface->lDelta;
               DestLine += BltInfo->DestSurface->lDelta;
             }
-            ExFreePoolWithTag(store, TAG_DIB);
+            ExFreePoolWithTag(Store, TAG_DIB);
             OneDone = TRUE;
           }
 
@@ -328,9 +329,9 @@ DIB_8BPP_BitBltSrcCopy(PBLTINFO BltInfo)
             DWORD  Index;
 
             /* Allocate enough pixels for a column in BYTE's */
-            BYTE *store = ExAllocatePoolWithTag(NonPagedPool,
-              BltInfo->DestRect.bottom - BltInfo->DestRect.top + 1, TAG_DIB);
-            if (store == NULL)
+            Count = BltInfo->DestRect.bottom - BltInfo->DestRect.top + 1;
+            Store = ExAllocatePoolWithTag(NonPagedPool, Count, TAG_DIB);
+            if (Store == NULL)
             {
               DPRINT1("Storage Allocation Failed.\n");
               return FALSE;
@@ -374,7 +375,7 @@ DIB_8BPP_BitBltSrcCopy(PBLTINFO BltInfo)
               /* Read up the column and store the pixels */
               for (j = BltInfo->DestRect.top; j < BltInfo->DestRect.bottom; j++)
               {
-                store[Index] = (BYTE)XLATEOBJ_iXlate(BltInfo->XlateSourceToDest, *SourceBits);
+                Store[Index] = (BYTE)XLATEOBJ_iXlate(BltInfo->XlateSourceToDest, *SourceBits);
                 /* Go up a line */
                 SourceBits -= BltInfo->SourceSurface->lDelta;
                 Index++;
@@ -385,7 +386,7 @@ DIB_8BPP_BitBltSrcCopy(PBLTINFO BltInfo)
               /* Get the stored pixel and copy then down the column */
               for (j = BltInfo->DestRect.top; j < BltInfo->DestRect.bottom; j++)
               {
-                *DestBits = store[Index];
+                *DestBits = Store[Index];
                 /* Go down a line */
                 DestBits += BltInfo->SourceSurface->lDelta;
                 Index++;
@@ -394,7 +395,7 @@ DIB_8BPP_BitBltSrcCopy(PBLTINFO BltInfo)
               SourceLine += 1;
               DestLine += 1;
             }
-            ExFreePoolWithTag(store, TAG_DIB);
+            ExFreePoolWithTag(Store, TAG_DIB);
           }
 
         }

@@ -32,8 +32,6 @@ DIB_24BPP_GetPixel(SURFOBJ *SurfObj, LONG x, LONG y)
   return *(PUSHORT)(addr) + (*(addr + 2) << 16);
 }
 
-
-
 VOID
 DIB_24BPP_VLine(SURFOBJ *SurfObj, LONG x, LONG y1, LONG y2, ULONG c)
 {
@@ -57,6 +55,8 @@ DIB_24BPP_BitBltSrcCopy(PBLTINFO BltInfo)
   PBYTE    SourceBits, DestBits, SourceLine, DestLine;
   PBYTE    SourceBits_4BPP, SourceLine_4BPP;
   PWORD    SourceBits_16BPP, SourceLine_16BPP;
+  PDWORD   Store;
+  DWORD    Count;
   BOOLEAN  bTopToBottom, bLeftToRight;
 
   DPRINT("DIB_24BPP_BitBltSrcCopy: SrcSurf cx/cy (%d/%d), DestSuft cx/cy (%d/%d) dstRect: (%d,%d)-(%d,%d)\n",
@@ -317,9 +317,9 @@ DIB_24BPP_BitBltSrcCopy(PBLTINFO BltInfo)
             DWORD  Index;
 
             /* Allocate enough pixels for a row in DWORD's */
-            DWORD *store = ExAllocatePoolWithTag(NonPagedPool,
-              (BltInfo->DestRect.right - BltInfo->DestRect.left + 1) * 4, TAG_DIB);
-            if (store == NULL)
+            Count = (BltInfo->DestRect.right - BltInfo->DestRect.left + 1) * 4;
+            Store = ExAllocatePoolWithTag(NonPagedPool, Count, TAG_DIB);
+            if (Store == NULL)
             {
               DPRINT1("Storage Allocation Failed.\n");
               return FALSE;
@@ -343,7 +343,7 @@ DIB_24BPP_BitBltSrcCopy(PBLTINFO BltInfo)
               // Read right to left and store
               for (i=BltInfo->DestRect.left; i<BltInfo->DestRect.right; i++)
               {
-                store[Index] = DIB_24BPP_GetPixel(BltInfo->SourceSurface, sx, sy);
+                Store[Index] = DIB_24BPP_GetPixel(BltInfo->SourceSurface, sx, sy);
                 Index++;
                 sx--;
               }
@@ -353,12 +353,12 @@ DIB_24BPP_BitBltSrcCopy(PBLTINFO BltInfo)
               // Write left to right to pixel
               for (i=BltInfo->DestRect.left; i<BltInfo->DestRect.right; i++)
               {
-                DIB_24BPP_PutPixel(BltInfo->DestSurface, i, j, XLATEOBJ_iXlate(BltInfo->XlateSourceToDest, store[Index]));
+                DIB_24BPP_PutPixel(BltInfo->DestSurface, i, j, XLATEOBJ_iXlate(BltInfo->XlateSourceToDest, Store[Index]));
                 Index++;
               }
               sy++;
             }
-            ExFreePoolWithTag(store, TAG_DIB);
+            ExFreePoolWithTag(Store, TAG_DIB);
             OneDone = TRUE;
           }
 
@@ -368,9 +368,9 @@ DIB_24BPP_BitBltSrcCopy(PBLTINFO BltInfo)
             DWORD  Index;
 
             /* Allocate enough pixels for a column in DWORD's */
-            DWORD *store = ExAllocatePoolWithTag(NonPagedPool,
-              (BltInfo->DestRect.bottom - BltInfo->DestRect.top + 1) * 4, TAG_DIB);
-            if (store == NULL)
+            Count = (BltInfo->DestRect.bottom - BltInfo->DestRect.top + 1) * 4;
+            Store = ExAllocatePoolWithTag(NonPagedPool, Count, TAG_DIB);
+            if (Store == NULL)
             {
               DPRINT1("Storage Allocation Failed.\n");
               return FALSE;
@@ -412,11 +412,11 @@ DIB_24BPP_BitBltSrcCopy(PBLTINFO BltInfo)
               {
                 if (OneDone)
                 {
-                  store[Index] = DIB_24BPP_GetPixel(BltInfo->DestSurface, sx, sy);
+                  Store[Index] = DIB_24BPP_GetPixel(BltInfo->DestSurface, sx, sy);
                 }
                 else
                 {
-                  store[Index] = DIB_24BPP_GetPixel(BltInfo->SourceSurface, sx, sy);
+                  Store[Index] = DIB_24BPP_GetPixel(BltInfo->SourceSurface, sx, sy);
                 }
                 Index++;
                 sy--;
@@ -426,12 +426,12 @@ DIB_24BPP_BitBltSrcCopy(PBLTINFO BltInfo)
 
               for (j=BltInfo->DestRect.top; j<BltInfo->DestRect.bottom; j++)
               {
-                DIB_24BPP_PutPixel(BltInfo->DestSurface, i, j, XLATEOBJ_iXlate(BltInfo->XlateSourceToDest, store[Index]));
+                DIB_24BPP_PutPixel(BltInfo->DestSurface, i, j, XLATEOBJ_iXlate(BltInfo->XlateSourceToDest, Store[Index]));
                 Index++;
               }
               sx++;
             }
-            ExFreePoolWithTag(store, TAG_DIB);
+            ExFreePoolWithTag(Store, TAG_DIB);
           }
 
         }
