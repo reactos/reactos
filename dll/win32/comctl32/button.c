@@ -526,6 +526,7 @@ LRESULT WINAPI ButtonWndProc_common(HWND hWnd, UINT uMsg,
     UINT btn_type = get_button_type( style );
     LONG state;
     HANDLE oldHbitmap;
+    HTHEME theme;
 #if defined(__REACTOS__) && defined(_USER32_)
     PWND pWnd;
 
@@ -610,7 +611,9 @@ LRESULT WINAPI ButtonWndProc_common(HWND hWnd, UINT uMsg,
                 nmhotitem.dwFlags      = HICF_LEAVING;
                 SendMessageW(GetParent(hWnd), WM_NOTIFY, nmhotitem.hdr.idFrom, (LPARAM)&nmhotitem);
 
-                InvalidateRect(hWnd, NULL, TRUE);
+                theme = GetWindowTheme( hWnd );
+                if (theme)
+                    InvalidateRect(hWnd, NULL, TRUE);
             }
             break;
         }
@@ -631,7 +634,9 @@ LRESULT WINAPI ButtonWndProc_common(HWND hWnd, UINT uMsg,
                 nmhotitem.dwFlags      = HICF_ENTERING;
                 SendMessageW(GetParent(hWnd), WM_NOTIFY, nmhotitem.hdr.idFrom, (LPARAM)&nmhotitem);
 
-                InvalidateRect(hWnd, NULL, TRUE);
+                theme = GetWindowTheme( hWnd );
+                if (theme)
+                    InvalidateRect(hWnd, NULL, TRUE);
             }
 
             mouse_event.cbSize = sizeof(TRACKMOUSEEVENT);
