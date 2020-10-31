@@ -1,3 +1,4 @@
+/* Make sure the INIT section is at the end of the module so we can reclaim the space */
 SECTIONS
 {
   INIT BLOCK(__section_alignment__) :
@@ -7,4 +8,4 @@ SECTIONS
     __init_end__ = . ;
   }
 }
-INSERT AFTER .reloc;
+INSERT AFTER .rsrc;

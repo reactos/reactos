@@ -614,9 +614,6 @@ function(add_linker_script _target _linker_script_file)
         # add_custom_target("${_target}_${_file_name}" ALL DEPENDS ${_generated_file})
         # add_dependencies(${_target} "${_target}_${_file_name}")
         add_target_link_flags(${_target} "@${_generated_file}")
-
-        # Unfortunately LINK_DEPENDS is ignored in non-Makefile generators (for now...)
-        # See also http://www.cmake.org/pipermail/cmake/2010-May/037206.html
-        add_target_property(${_target} LINK_DEPENDS ${_generated_file})
+        add_target_property(${_target} LINK_DEPENDS ${_file_full_path})
     endif()
 endfunction()
