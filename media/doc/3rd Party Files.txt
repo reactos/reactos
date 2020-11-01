@@ -6,6 +6,12 @@ SPDX identifier of a license was used where possible.
 Please update this file when you port/sync an external project.
 
 
+Title: rdesktop
+Path: base/applications/mstsc
+Used Version: 1.8.3
+License: GPL-3.0-or-later (https://spdx.org/licenses/GPL-3.0-or-later.html)
+URL: https://github.com/rdesktop/rdesktop
+
 Title: TreeList
 Path: base/setup/reactos/treelist.c
 Path: base/setup/reactos/treelist.h

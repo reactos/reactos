@@ -170,12 +170,6 @@ typedef PVOID PBCB;     //**** Bcb's are now part of the cache module
 
 #define BYTE_COUNT_EMBEDDED_NAME        (32)
 
-#ifdef __REACTOS__
-#define __volatile volatile
-#define _Unreferenced_parameter_
-#define __field_range(a,b)
-#define __analysis_assert(x)
-#endif
 
 //
 //  The CD_MCB is used to store the mapping of logical file offset to
