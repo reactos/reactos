@@ -57,10 +57,9 @@ set_module_type(gdi32
 
 target_link_libraries(gdi32
     winegdi
-    wine 
+    wine
     win32ksys
     dxguid
-    msvcrtex
     atan2
     ${PSEH_LIB})
 
