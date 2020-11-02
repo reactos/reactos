@@ -1,14 +1,12 @@
 
 include_directories(${REACTOS_SOURCE_DIR}/sdk/lib/crt/include)
-spec2def(msvcrt.dll msvcrt.spec)
+spec2def(msvcrt.dll msvcrt.spec ADD_IMPORTLIB)
 
-# The msvcrt <-> msvcrtex trick
-generate_import_lib(libmsvcrt_real msvcrt.dll msvcrt.spec)
-add_library(libmsvcrt INTERFACE)
+# Let consumers of msvcrt have the right defines
 target_compile_definitions(libmsvcrt INTERFACE _DLL __USE_CRTIMP)
-# if the linked module is one of win32gui;win32cui;win32dll;win32ocx;cpl link it with msvcrtex, which itself is linked to libmsvcrt_real
-# Otherwise, just link to libmsvcrt_real
-target_link_libraries(libmsvcrt INTERFACE "$<IF:$<IN_LIST:$<TARGET_PROPERTY:REACTOS_MODULE_TYPE>,win32gui;win32cui;win32dll;win32ocx;cpl>,msvcrtex,libmsvcrt_real>")
+# Embed msvcrtex into libmsvcrt
+target_sources(libmsvcrt PRIVATE $<TARGET_OBJECTS:msvcrtex>)
+
 
 add_definitions(
     -DUSE_MSVCRT_PREFIX
