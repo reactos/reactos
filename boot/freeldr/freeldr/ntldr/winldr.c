@@ -825,12 +825,12 @@ LoadAndBootWindows(
     ARC_STATUS Status;
     PCSTR ArgValue;
     PCSTR SystemPartition;
-    PCHAR File;
+    PCSTR FileName;
     BOOLEAN Success;
     USHORT OperatingSystemVersion;
     PLOADER_PARAMETER_BLOCK LoaderBlock;
     CHAR BootPath[MAX_PATH];
-    CHAR FileName[MAX_PATH];
+    CHAR FilePath[MAX_PATH];
     CHAR BootOptions[256];
 
     /* Retrieve the (mandatory) boot type */
@@ -883,17 +883,17 @@ LoadAndBootWindows(
     if (strrchr(BootPath, ')') == NULL)
     {
         /* Temporarily save the boot path */
-        RtlStringCbCopyA(FileName, sizeof(FileName), BootPath);
+        RtlStringCbCopyA(FilePath, sizeof(FilePath), BootPath);
 
         /* This is not a full path: prepend the SystemPartition */
         RtlStringCbCopyA(BootPath, sizeof(BootPath), SystemPartition);
 
         /* Append a path separator if needed */
-        if (*FileName != '\\' && *FileName != '/')
+        if (*FilePath != '\\' && *FilePath != '/')
             RtlStringCbCatA(BootPath, sizeof(BootPath), "\\");
 
         /* Append the remaining path */
-        RtlStringCbCatA(BootPath, sizeof(BootPath), FileName);
+        RtlStringCbCatA(BootPath, sizeof(BootPath), FilePath);
     }
 
     /* Append a path separator if needed */
@@ -946,17 +946,17 @@ LoadAndBootWindows(
 
     TRACE("BootOptions: '%s'\n", BootOptions);
 
-    /* Check if a ramdisk file was given */
-    File = strstr(BootOptions, "/RDPATH=");
-    if (File)
+    /* Check if a RAM disk file was given */
+    FileName = strstr(BootOptions, "/RDPATH=");
+    if (FileName)
     {
-        /* Load the ramdisk */
+        /* Load the RAM disk */
         Status = RamDiskInitialize(FALSE, BootOptions, SystemPartition);
         if (Status != ESUCCESS)
         {
-            File += 8;
+            FileName += 8;
             UiMessageBox("Failed to load RAM disk file '%.*s'",
-                         strcspn(File, " \t"), File);
+                         strcspn(FileName, " \t"), FileName);
             return Status;
         }
     }

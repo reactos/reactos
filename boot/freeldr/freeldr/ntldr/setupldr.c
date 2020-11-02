@@ -183,20 +183,20 @@ LoadReactOSSetup(
     ARC_STATUS Status;
     PCSTR ArgValue;
     PCSTR SystemPartition;
-    PCHAR File;
-    CHAR FileName[MAX_PATH];
-    CHAR BootPath[MAX_PATH];
-    CHAR BootOptions2[256];
-    PCSTR LoadOptions;
-    PSTR BootOptions;
+    PCSTR SystemPath;
+    PSTR FileName;
     BOOLEAN BootFromFloppy;
     BOOLEAN Success;
-    ULONG i, ErrorLine;
     HINF InfHandle;
     INFCONTEXT InfContext;
+    ULONG i, ErrorLine;
     PLOADER_PARAMETER_BLOCK LoaderBlock;
     PSETUP_LOADER_BLOCK SetupBlock;
-    PCSTR SystemPath;
+    CHAR BootPath[MAX_PATH];
+    CHAR FilePath[MAX_PATH];
+    CHAR BootOptions2[256];
+    PSTR BootOptions;
+    PCSTR LoadOptions;
 
     static PCSTR SourcePaths[] =
     {
@@ -253,17 +253,17 @@ LoadReactOSSetup(
     if (strrchr(BootPath, ')') == NULL)
     {
         /* Temporarily save the boot path */
-        RtlStringCbCopyA(FileName, sizeof(FileName), BootPath);
+        RtlStringCbCopyA(FilePath, sizeof(FilePath), BootPath);
 
         /* This is not a full path: prepend the SystemPartition */
         RtlStringCbCopyA(BootPath, sizeof(BootPath), SystemPartition);
 
         /* Append a path separator if needed */
-        if (*FileName != '\\' && *FileName != '/')
+        if (*FilePath != '\\' && *FilePath != '/')
             RtlStringCbCatA(BootPath, sizeof(BootPath), "\\");
 
         /* Append the remaining path */
-        RtlStringCbCatA(BootPath, sizeof(BootPath), FileName);
+        RtlStringCbCatA(BootPath, sizeof(BootPath), FilePath);
     }
 
     /* Append a path separator if needed */
@@ -280,17 +280,17 @@ LoadReactOSSetup(
 
     TRACE("BootOptions: '%s'\n", BootOptions2);
 
-    /* Check if a ramdisk file was given */
-    File = strstr(BootOptions2, "/RDPATH=");
-    if (File)
+    /* Check if a RAM disk file was given */
+    FileName = strstr(BootOptions2, "/RDPATH=");
+    if (FileName)
     {
-        /* Load the ramdisk */
+        /* Load the RAM disk */
         Status = RamDiskInitialize(FALSE, BootOptions2, SystemPartition);
         if (Status != ESUCCESS)
         {
-            File += 8;
+            FileName += 8;
             UiMessageBox("Failed to load RAM disk file '%.*s'",
-                         strcspn(File, " \t"), File);
+                         strcspn(FileName, " \t"), FileName);
             return Status;
         }
     }
@@ -298,8 +298,8 @@ LoadReactOSSetup(
     /* Check if we booted from floppy */
     BootFromFloppy = strstr(BootPath, "fdisk") != NULL;
 
-    /* Open 'txtsetup.sif' from any of source paths */
-    File = BootPath + strlen(BootPath);
+    /* Open 'txtsetup.sif' from any of the source paths */
+    FileName = BootPath + strlen(BootPath);
     for (i = BootFromFloppy ? 0 : 1; ; i++)
     {
         SystemPath = SourcePaths[i];
@@ -308,10 +308,10 @@ LoadReactOSSetup(
             UiMessageBox("Failed to open txtsetup.sif");
             return ENOENT;
         }
-        RtlStringCbCopyA(File, sizeof(BootPath) - (File - BootPath)*sizeof(CHAR), SystemPath);
-        RtlStringCbCopyA(FileName, sizeof(FileName), BootPath);
-        RtlStringCbCatA(FileName, sizeof(FileName), "txtsetup.sif");
-        if (InfOpenFile(&InfHandle, FileName, &ErrorLine))
+        RtlStringCbCopyA(FileName, sizeof(BootPath) - (FileName - BootPath)*sizeof(CHAR), SystemPath);
+        RtlStringCbCopyA(FilePath, sizeof(FilePath), BootPath);
+        RtlStringCbCatA(FilePath, sizeof(FilePath), "txtsetup.sif");
+        if (InfOpenFile(&InfHandle, FilePath, &ErrorLine))
         {
             break;
         }
@@ -353,14 +353,14 @@ LoadReactOSSetup(
     /* Allocate and minimally-initialize the Loader Parameter Block */
     AllocateAndInitLPB(_WIN32_WINNT_WS03, &LoaderBlock);
 
-    /* Allocate and initialize setup loader block */
+    /* Allocate and initialize the setup loader block */
     SetupBlock = &WinLdrSystemBlock->SetupBlock;
     LoaderBlock->SetupLdrBlock = SetupBlock;
 
     /* Set textmode setup flag */
     SetupBlock->Flags = SETUPLDR_TEXT_MODE;
 
-    /* Load the system hive "setupreg.hiv" for setup */
+    /* Load the "setupreg.hiv" setup system hive */
     UiDrawBackdrop();
     UiDrawProgressBarCenter(15, 100, "Loading setup system hive...");
     Success = WinLdrInitSystemHive(LoaderBlock, BootPath, TRUE);
@@ -370,9 +370,9 @@ LoadReactOSSetup(
         return ENOEXEC;
 
     /* Load NLS data, they are in the System32 directory of the installation medium */
-    RtlStringCbCopyA(FileName, sizeof(FileName), BootPath);
-    RtlStringCbCatA(FileName, sizeof(FileName), "system32\\");
-    SetupLdrLoadNlsData(LoaderBlock, InfHandle, FileName);
+    RtlStringCbCopyA(FilePath, sizeof(FilePath), BootPath);
+    RtlStringCbCatA(FilePath, sizeof(FilePath), "system32\\");
+    SetupLdrLoadNlsData(LoaderBlock, InfHandle, FilePath);
 
     /* Load the Firmware Errata file from the installation medium */
     Success = SetupLdrInitErrataInf(LoaderBlock, InfHandle, BootPath);
