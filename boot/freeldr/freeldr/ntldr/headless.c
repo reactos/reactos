@@ -300,7 +300,7 @@ WinLdrInitializeHeadlessPort(VOID)
 }
 
 VOID
-WinLdrSetupEms(IN PCHAR BootOptions)
+WinLdrSetupEms(IN PCSTR BootOptions)
 {
     PCHAR Settings, RedirectPort;
 

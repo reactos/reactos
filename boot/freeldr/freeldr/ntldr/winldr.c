@@ -22,7 +22,7 @@ extern BOOLEAN AcpiPresent;
 
 extern HEADLESS_LOADER_BLOCK LoaderRedirectionInformation;
 extern BOOLEAN WinLdrTerminalConnected;
-extern void WinLdrSetupEms(IN PCHAR BootOptions);
+extern VOID WinLdrSetupEms(IN PCSTR BootOptions);
 
 PLOADER_SYSTEM_BLOCK WinLdrSystemBlock;
 
@@ -1020,7 +1020,7 @@ LoadAndBootWindowsCommon(
 
 #ifdef _M_IX86
     /* Setup redirection support */
-    WinLdrSetupEms((PCHAR)BootOptions);
+    WinLdrSetupEms(BootOptions);
 #endif
 
     /* Convert BootPath to SystemRoot */
