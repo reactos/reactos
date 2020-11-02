@@ -998,17 +998,15 @@ LoadAndBootWindows(
     return LoadAndBootWindowsCommon(OperatingSystemVersion,
                                     LoaderBlock,
                                     BootOptions,
-                                    BootPath,
-                                    FALSE);
+                                    BootPath);
 }
 
 ARC_STATUS
 LoadAndBootWindowsCommon(
-    USHORT OperatingSystemVersion,
-    PLOADER_PARAMETER_BLOCK LoaderBlock,
-    PCSTR BootOptions,
-    PCSTR BootPath,
-    BOOLEAN Setup)
+    IN USHORT OperatingSystemVersion,
+    IN PLOADER_PARAMETER_BLOCK LoaderBlock,
+    IN PCSTR BootOptions,
+    IN PCSTR BootPath)
 {
     PLOADER_PARAMETER_BLOCK LoaderBlockVA;
     BOOLEAN Success;
