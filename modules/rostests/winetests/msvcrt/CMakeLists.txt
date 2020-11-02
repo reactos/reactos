@@ -36,9 +36,9 @@ endif()
 
 set_module_type(msvcrt_winetest win32cui)
 add_importlibs(msvcrt_winetest advapi32 msvcrt kernel32)
+target_link_libraries(msvcrt_winetest oldnames)
 
 if(MSVC)
-    target_link_libraries(msvcrt_winetest oldnames)
     add_importlibs(msvcrt_winetest ntdll)
 endif()
 
