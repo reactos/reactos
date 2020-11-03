@@ -212,6 +212,19 @@ LoadReactOSSetup(
         NULL
     };
 
+    /* Retrieve the (mandatory) boot type */
+    ArgValue = GetArgumentValue(Argc, Argv, "BootType");
+    if (!ArgValue || !*ArgValue)
+    {
+        ERR("No 'BootType' value, aborting!\n");
+        return EINVAL;
+    }
+    if (_stricmp(ArgValue, "ReactOSSetup") != 0)
+    {
+        ERR("Unknown 'BootType' value '%s', aborting!\n", ArgValue);
+        return EINVAL;
+    }
+
     /* Retrieve the (mandatory) system partition */
     SystemPartition = GetArgumentValue(Argc, Argv, "SystemPartition");
     if (!SystemPartition || !*SystemPartition)
