@@ -15,8 +15,6 @@
 #include <debug.h>
 DBG_DEFAULT_CHANNEL(WINDOWS);
 
-#define TAG_BOOT_OPTIONS 'pOtB'
-
 // TODO: Move to .h
 VOID
 AllocateAndInitLPB(
@@ -175,6 +173,264 @@ SetupLdrScanBootDrivers(PLIST_ENTRY BootDriverListHead, HINF InfHandle, PCSTR Se
 
 /* SETUP STARTER **************************************************************/
 
+/*
+ * Update the options in the buffer pointed by LoadOptions, of maximum size
+ * BufferSize, by first removing any specified options, and then adding any
+ * other ones.
+ *
+ * OptionsToAdd is a NULL-terminated array of string buffer pointers that
+ *    specify the options to be added into LoadOptions. Whether they are
+ *    prepended or appended to LoadOptions is controlled via the Append
+ *    parameter. The options are added in the order specified by the array.
+ *
+ * OptionsToRemove is a NULL-terminated array of string buffer pointers that
+ *    specify the options to remove from LoadOptions. Specifying also there
+ *    any options to add, has the effect of removing from LoadOptions any
+ *    duplicates of the options to be added, before adding them later into
+ *    LoadOptions. The options are removed in the order specified by the array.
+ *
+ * The options string buffers in the OptionsToRemove array have the format:
+ *    "/option1 /option2[=] ..."
+ *
+ * An option in the OptionsToRemove list with a trailing '=' or ':' designates
+ * an option in LoadOptions with user-specific data appended after the sign.
+ * When such an option is being removed from LoadOptions, all the appended
+ * data is also removed until the next option.
+ */
+VOID
+NtLdrUpdateLoadOptions(
+    IN OUT PSTR LoadOptions,
+    IN ULONG BufferSize,
+    IN BOOLEAN Append,
+    IN PCSTR OptionsToAdd[] OPTIONAL,
+    IN PCSTR OptionsToRemove[] OPTIONAL)
+{
+    PCSTR NextOptions, NextOpt;
+    PSTR Options, Option;
+    ULONG NextOptLength;
+    ULONG OptionLength;
+
+    if (!LoadOptions || (BufferSize == 0))
+        return;
+    // ASSERT(strlen(LoadOptions) + 1 <= BufferSize);
+
+    /* Loop over the options to remove */
+    for (; OptionsToRemove && *OptionsToRemove; ++OptionsToRemove)
+    {
+        NextOptions = *OptionsToRemove;
+        while ((NextOpt = NtLdrGetNextOption(&NextOptions, &NextOptLength)))
+        {
+            /* Scan the load options */
+            Options = LoadOptions;
+            while ((Option = (PSTR)NtLdrGetNextOption((PCSTR*)&Options, &OptionLength)))
+            {
+                /*
+                 * Check whether the option to find exactly matches the current
+                 * load option, or is a prefix thereof if this is an option with
+                 * appended data.
+                 */
+                if ((OptionLength >= NextOptLength) &&
+                    (_strnicmp(Option, NextOpt, NextOptLength) == 0))
+                {
+                    if ((OptionLength == NextOptLength) ||
+                        (NextOpt[NextOptLength-1] == '=') ||
+                        (NextOpt[NextOptLength-1] == ':'))
+                    {
+                        /* Eat any skipped option or whitespace separators */
+                        while ((Option > LoadOptions) &&
+                               (Option[-1] == '/' ||
+                                Option[-1] == ' ' ||
+                                Option[-1] == '\t'))
+                        {
+                            --Option;
+                        }
+
+                        /* If the option was not preceded by a whitespace
+                         * separator, insert one and advance the pointer. */
+                        if ((Option > LoadOptions) &&
+                            (Option[-1] != ' ') &&
+                            (Option[-1] != '\t') &&
+                            (*Options != '\0') /* &&
+                            ** Not necessary since NtLdrGetNextOption() **
+                            ** stripped any leading separators.         **
+                            (*Options != ' ') &&
+                            (*Options != '\t') */)
+                        {
+                            *Option++ = ' ';
+                        }
+
+                        /* Move the remaining options back, erasing the current one */
+                        ASSERT(Option <= Options);
+                        RtlMoveMemory(Option,
+                                      Options,
+                                      (strlen(Options) + 1) * sizeof(CHAR));
+
+                        /* Reset the iterator */
+                        Options = Option;
+                    }
+                }
+            }
+        }
+    }
+
+    /* Now loop over the options to add */
+    for (; OptionsToAdd && *OptionsToAdd; ++OptionsToAdd)
+    {
+        NtLdrAddOptions(LoadOptions,
+                        BufferSize,
+                        Append,
+                        *OptionsToAdd);
+    }
+}
+
+
+/*
+ * List of options and their corresponding higher priority ones,
+ * that are either checked before any other ones, or whose name
+ * includes another option name as a subset (e.g. NODEBUG vs. DEBUG).
+ * See also https://geoffchappell.com/notes/windows/boot/editoptions.htm
+ */
+static const struct
+{
+    PCSTR Options;
+    PCSTR ExtraOptions;
+    PCSTR HigherPriorOptions;
+} HighPriorOptionsMap[] =
+{
+    /* NODEBUG has a higher precedence than DEBUG */
+    {"/DEBUG/DEBUG=", NULL, "/NODEBUG"},
+
+    /* When using SCREEN debug port, we need boot video */
+    {"/DEBUGPORT=SCREEN", NULL, "/NOGUIBOOT"},
+
+    /* DETECTHAL has a higher precedence than HAL= or KERNEL= */
+    {"/HAL=/KERNEL=", NULL, "/DETECTHAL"},
+
+    /* NOPAE has a higher precedence than PAE */
+    {"/PAE", NULL, "/NOPAE"},
+
+    /* NOEXECUTE(=) has a higher precedence than EXECUTE */
+    {"/EXECUTE", "/NOEXECUTE=ALWAYSOFF", "/NOEXECUTE/NOEXECUTE="},
+    /* NOEXECUTE(=) options are self-excluding and
+     * some have higher precedence than others. */
+    {"/NOEXECUTE/NOEXECUTE=", NULL, "/NOEXECUTE/NOEXECUTE="},
+
+    /* SAFEBOOT(:) options are self-excluding */
+    {"/SAFEBOOT/SAFEBOOT:", NULL, "/SAFEBOOT/SAFEBOOT:"},
+};
+
+#define TAG_BOOT_OPTIONS 'pOtB'
+
+VOID
+NtLdrGetHigherPriorityOptions(
+    IN PCSTR BootOptions,
+    OUT PSTR* ExtraOptions,
+    OUT PSTR* HigherPriorityOptions)
+{
+    ULONG i;
+    PCSTR NextOptions, NextOpt;
+    ULONG NextOptLength;
+    SIZE_T ExtraOptsSize = 0;
+    SIZE_T HighPriorOptsSize = 0;
+
+    /* Masks specifying the presence (TRUE) or absence (FALSE) of the options */
+    BOOLEAN Masks[RTL_NUMBER_OF(HighPriorOptionsMap)];
+
+    /* Just return if we cannot return anything */
+    if (!ExtraOptions && !HigherPriorityOptions)
+        return;
+
+    if (ExtraOptions)
+        *ExtraOptions = NULL;
+    if (HigherPriorityOptions)
+        *HigherPriorityOptions = NULL;
+
+    /* Just return if no initial options were given */
+    if (!BootOptions || !*BootOptions)
+        return;
+
+    /* Determine the presence of the colliding options, and the
+     * maximum necessary sizes for the pointers to be allocated. */
+    RtlZeroMemory(Masks, sizeof(Masks));
+    for (i = 0; i < RTL_NUMBER_OF(HighPriorOptionsMap); ++i)
+    {
+        /* Loop over the given options to search for */
+        NextOptions = HighPriorOptionsMap[i].Options;
+        while ((NextOpt = NtLdrGetNextOption(&NextOptions, &NextOptLength)))
+        {
+            /* If any of these options are present... */
+            if (NtLdrGetOptionExN(BootOptions, NextOpt, NextOptLength, NULL))
+            {
+                /* ... set the mask, retrieve the sizes and stop looking for these options */
+                Masks[i] = TRUE;
+                if (ExtraOptions && HighPriorOptionsMap[i].ExtraOptions)
+                {
+                    ExtraOptsSize += strlen(HighPriorOptionsMap[i].ExtraOptions) * sizeof(CHAR);
+                }
+                if (HigherPriorityOptions && HighPriorOptionsMap[i].HigherPriorOptions)
+                {
+                    HighPriorOptsSize += strlen(HighPriorOptionsMap[i].HigherPriorOptions) * sizeof(CHAR);
+                }
+                break;
+            }
+        }
+    }
+    /* Count the NULL-terminator */
+    if (ExtraOptions)
+        ExtraOptsSize += sizeof(ANSI_NULL);
+    if (HigherPriorityOptions)
+        HighPriorOptsSize += sizeof(ANSI_NULL);
+
+    /* Allocate the string pointers */
+    if (ExtraOptions)
+    {
+        *ExtraOptions = FrLdrHeapAlloc(ExtraOptsSize, TAG_BOOT_OPTIONS);
+        if (!*ExtraOptions)
+            return;
+    }
+    if (HigherPriorityOptions)
+    {
+        *HigherPriorityOptions = FrLdrHeapAlloc(HighPriorOptsSize, TAG_BOOT_OPTIONS);
+        if (!*HigherPriorityOptions)
+        {
+            if (ExtraOptions)
+            {
+                FrLdrHeapFree(*ExtraOptions, TAG_BOOT_OPTIONS);
+                *ExtraOptions = NULL;
+            }
+            return;
+        }
+    }
+
+    /* Initialize the strings */
+    if (ExtraOptions)
+        *(*ExtraOptions) = '\0';
+    if (HigherPriorityOptions)
+        *(*HigherPriorityOptions) = '\0';
+
+    /* Go through the masks that determine the options to check */
+    for (i = 0; i < RTL_NUMBER_OF(HighPriorOptionsMap); ++i)
+    {
+        if (Masks[i])
+        {
+            /* Retrieve the strings */
+            if (ExtraOptions && HighPriorOptionsMap[i].ExtraOptions)
+            {
+                RtlStringCbCatA(*ExtraOptions,
+                                ExtraOptsSize,
+                                HighPriorOptionsMap[i].ExtraOptions);
+            }
+            if (HigherPriorityOptions && HighPriorOptionsMap[i].HigherPriorOptions)
+            {
+                RtlStringCbCatA(*HigherPriorityOptions,
+                                HighPriorOptsSize,
+                                HighPriorOptionsMap[i].HigherPriorOptions);
+            }
+        }
+    }
+}
+
+
 ARC_STATUS
 LoadReactOSSetup(
     IN ULONG Argc,
@@ -196,9 +452,8 @@ LoadReactOSSetup(
     PSETUP_LOADER_BLOCK SetupBlock;
     CHAR BootPath[MAX_PATH];
     CHAR FilePath[MAX_PATH];
-    CHAR BootOptions2[256];
-    PSTR BootOptions;
-    PCSTR LoadOptions;
+    CHAR UserBootOptions[256];
+    PCSTR BootOptions;
 
     static PCSTR SourcePaths[] =
     {
@@ -287,20 +542,22 @@ LoadReactOSSetup(
 
     TRACE("BootPath: '%s'\n", BootPath);
 
-    /* Retrieve the boot options */
-    *BootOptions2 = ANSI_NULL;
-    ArgValue = GetArgumentValue(Argc, Argv, "Options");
-    if (ArgValue && *ArgValue)
-        RtlStringCbCopyA(BootOptions2, sizeof(BootOptions2), ArgValue);
+    /*
+     * Retrieve the boot options. Any options present here will supplement or
+     * override those that will be specified in TXTSETUP.SIF's OsLoadOptions.
+     */
+    BootOptions = GetArgumentValue(Argc, Argv, "Options");
+    if (!BootOptions)
+        BootOptions = "";
 
-    TRACE("BootOptions: '%s'\n", BootOptions2);
+    TRACE("BootOptions: '%s'\n", BootOptions);
 
     /* Check if a RAM disk file was given */
-    FileName = (PSTR)NtLdrGetOptionEx(BootOptions2, "RDPATH=", &FileNameLength);
+    FileName = (PSTR)NtLdrGetOptionEx(BootOptions, "RDPATH=", &FileNameLength);
     if (FileName && (FileNameLength > 7))
     {
         /* Load the RAM disk */
-        Status = RamDiskInitialize(FALSE, BootOptions2, SystemPartition);
+        Status = RamDiskInitialize(FALSE, BootOptions, SystemPartition);
         if (Status != ESUCCESS)
         {
             FileName += 7; FileNameLength -= 7;
@@ -335,34 +592,138 @@ LoadReactOSSetup(
 
     TRACE("BootPath: '%s', SystemPath: '%s'\n", BootPath, SystemPath);
 
-    /* Get load options - debug and non-debug */
-    if (!InfFindFirstLine(InfHandle, "SetupData", "OsLoadOptions", &InfContext))
-    {
-        ERR("Failed to find 'SetupData/OsLoadOptions'\n");
-        return EINVAL;
-    }
+    // UseLocalSif = NtLdrGetOption(BootOptions, "USELOCALSIF");
 
-    if (!InfGetDataField(&InfContext, 1, &LoadOptions))
+    if (NtLdrGetOption(BootOptions, "SIFOPTIONSOVERRIDE"))
     {
-        ERR("Failed to get load options\n");
-        return EINVAL;
-    }
+        PCSTR OptionsToRemove[2] = {"SIFOPTIONSOVERRIDE", NULL};
 
-#if DBG
-    /* Get debug load options and use them */
-    if (InfFindFirstLine(InfHandle, "SetupData", "DbgOsLoadOptions", &InfContext))
+        /* Do not use any load options from TXTSETUP.SIF, but
+         * use instead those passed from the command line. */
+        RtlStringCbCopyA(UserBootOptions, sizeof(UserBootOptions), BootOptions);
+
+        /* Remove the private switch from the options */
+        NtLdrUpdateLoadOptions(UserBootOptions,
+                               sizeof(UserBootOptions),
+                               FALSE,
+                               NULL,
+                               OptionsToRemove);
+
+        BootOptions = UserBootOptions;
+    }
+    else // if (!*BootOptions || NtLdrGetOption(BootOptions, "SIFOPTIONSADD"))
     {
-        PCSTR DbgLoadOptions;
+        PCSTR LoadOptions = NULL;
+        PCSTR DbgLoadOptions = NULL;
+        PSTR ExtraOptions, HigherPriorityOptions;
+        PSTR OptionsToAdd[3];
+        PSTR OptionsToRemove[4];
 
-        if (InfGetDataField(&InfContext, 1, &DbgLoadOptions))
-            LoadOptions = DbgLoadOptions;
-    }
+        /* Load the options from TXTSETUP.SIF */
+        if (InfFindFirstLine(InfHandle, "SetupData", "OsLoadOptions", &InfContext))
+        {
+            if (!InfGetDataField(&InfContext, 1, &LoadOptions))
+                WARN("Failed to get load options\n");
+        }
+
+#if !DBG
+        /* Non-debug mode: get the debug load options only if /DEBUG was specified
+         * in the Argv command-line options (was e.g. added to the options when
+         * the user selected "Debugging Mode" in the advanced boot menu). */
+        if (NtLdrGetOption(BootOptions, "DEBUG") ||
+            NtLdrGetOption(BootOptions, "DEBUG="))
+        {
+#else
+        /* Debug mode: always get the debug load options */
+#endif
+        if (InfFindFirstLine(InfHandle, "SetupData", "SetupDebugOptions", &InfContext))
+        {
+            if (!InfGetDataField(&InfContext, 1, &DbgLoadOptions))
+                WARN("Failed to get debug load options\n");
+        }
+        /* If none was found, default to enabling debugging */
+        if (!DbgLoadOptions)
+            DbgLoadOptions = "/DEBUG";
+#if !DBG
+        }
 #endif
 
-    /* Copy LoadOptions (original string will be freed) */
-    BootOptions = FrLdrTempAlloc(strlen(LoadOptions) + 1, TAG_BOOT_OPTIONS);
-    ASSERT(BootOptions);
-    strcpy(BootOptions, LoadOptions);
+        /* Initialize the load options with those from TXTSETUP.SIF */
+        *UserBootOptions = ANSI_NULL;
+        if (LoadOptions && *LoadOptions)
+            RtlStringCbCopyA(UserBootOptions, sizeof(UserBootOptions), LoadOptions);
+
+        /* Merge the debug load options if any */
+        if (DbgLoadOptions)
+        {
+            RtlZeroMemory(OptionsToAdd, sizeof(OptionsToAdd));
+            RtlZeroMemory(OptionsToRemove, sizeof(OptionsToRemove));
+
+            /*
+             * Retrieve any option patterns that we should remove from the
+             * SIF load options because they are of higher precedence than
+             * those specified in the debug load options to be added.
+             * Also always remove NODEBUG (even if the debug load options
+             * do not contain explicitly the DEBUG option), since we want
+             * to have debugging enabled if possible.
+             */
+            OptionsToRemove[0] = "/NODEBUG";
+            NtLdrGetHigherPriorityOptions(DbgLoadOptions,
+                                          &ExtraOptions,
+                                          &HigherPriorityOptions);
+            OptionsToAdd[1] = (ExtraOptions ? ExtraOptions : "");
+            OptionsToRemove[1] = (HigherPriorityOptions ? HigherPriorityOptions : "");
+
+            /*
+             * Prepend the debug load options, so that in case it contains
+             * redundant options with respect to the SIF load options, the
+             * former can take precedence over the latter.
+             */
+            OptionsToAdd[0] = (PSTR)DbgLoadOptions;
+            OptionsToRemove[2] = (PSTR)DbgLoadOptions;
+            NtLdrUpdateLoadOptions(UserBootOptions,
+                                   sizeof(UserBootOptions),
+                                   FALSE,
+                                   (PCSTR*)OptionsToAdd,
+                                   (PCSTR*)OptionsToRemove);
+
+            if (ExtraOptions)
+                FrLdrHeapFree(ExtraOptions, TAG_BOOT_OPTIONS);
+            if (HigherPriorityOptions)
+                FrLdrHeapFree(HigherPriorityOptions, TAG_BOOT_OPTIONS);
+        }
+
+        RtlZeroMemory(OptionsToAdd, sizeof(OptionsToAdd));
+        RtlZeroMemory(OptionsToRemove, sizeof(OptionsToRemove));
+
+        /*
+         * Retrieve any option patterns that we should remove from the
+         * SIF load options because they are of higher precedence than
+         * those specified in the options to be added.
+         */
+        NtLdrGetHigherPriorityOptions(BootOptions,
+                                      &ExtraOptions,
+                                      &HigherPriorityOptions);
+        OptionsToAdd[1] = (ExtraOptions ? ExtraOptions : "");
+        OptionsToRemove[0] = (HigherPriorityOptions ? HigherPriorityOptions : "");
+
+        /* Finally, prepend the user-specified options that
+         * take precedence over those from TXTSETUP.SIF. */
+        OptionsToAdd[0] = (PSTR)BootOptions;
+        OptionsToRemove[1] = (PSTR)BootOptions;
+        NtLdrUpdateLoadOptions(UserBootOptions,
+                               sizeof(UserBootOptions),
+                               FALSE,
+                               (PCSTR*)OptionsToAdd,
+                               (PCSTR*)OptionsToRemove);
+
+        if (ExtraOptions)
+            FrLdrHeapFree(ExtraOptions, TAG_BOOT_OPTIONS);
+        if (HigherPriorityOptions)
+            FrLdrHeapFree(HigherPriorityOptions, TAG_BOOT_OPTIONS);
+
+        BootOptions = UserBootOptions;
+    }
 
     TRACE("BootOptions: '%s'\n", BootOptions);
 

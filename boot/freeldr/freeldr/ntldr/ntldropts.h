@@ -29,3 +29,10 @@ PCSTR
 NtLdrGetOption(
     IN PCSTR Options,
     IN PCSTR OptionName);
+
+VOID
+NtLdrAddOptions(
+    IN OUT PSTR LoadOptions,
+    IN ULONG BufferSize,
+    IN BOOLEAN Append,
+    IN PCSTR NewOptions OPTIONAL);

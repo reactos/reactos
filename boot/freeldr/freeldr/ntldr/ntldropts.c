@@ -131,3 +131,83 @@ NtLdrGetOption(
 {
     return NtLdrGetOptionEx(Options, OptionName, NULL);
 }
+
+/*
+ * Appends or prepends new options to the ones originally contained
+ * in the buffer pointed by LoadOptions, of maximum size BufferSize.
+ */
+VOID
+NtLdrAddOptions(
+    IN OUT PSTR LoadOptions,
+    IN ULONG BufferSize,
+    IN BOOLEAN Append,
+    IN PCSTR NewOptions OPTIONAL)
+{
+    ULONG OptionsLength;
+    ULONG NewOptsLength;
+    BOOLEAN AddSeparator;
+
+    if (!LoadOptions || (BufferSize == 0))
+        return;
+    // ASSERT(strlen(LoadOptions) + 1 <= BufferSize);
+
+    if (!NewOptions || !*NewOptions)
+        return;
+
+    if (Append)
+    {
+        OptionsLength = (ULONG)strlen(LoadOptions);
+        OptionsLength = min(OptionsLength, BufferSize-1);
+
+        /* Add a whitespace separator if needed */
+        if (OptionsLength != 0 &&
+            (LoadOptions[OptionsLength-1] != ' ') &&
+            (LoadOptions[OptionsLength-1] != '\t') &&
+            (*NewOptions != '\0') &&
+            (*NewOptions != ' ') &&
+            (*NewOptions != '\t'))
+        {
+            RtlStringCbCatA(LoadOptions, BufferSize * sizeof(CHAR), " ");
+        }
+
+        /* Append the options */
+        RtlStringCbCatA(LoadOptions, BufferSize * sizeof(CHAR), NewOptions);
+    }
+    else
+    {
+        NewOptsLength = (ULONG)strlen(NewOptions);
+        NewOptsLength = min(NewOptsLength, BufferSize-1);
+
+        /* Add a whitespace separator if needed */
+        AddSeparator = FALSE;
+        if (NewOptsLength != 0 &&
+            (NewOptions[NewOptsLength-1] != ' ') &&
+            (NewOptions[NewOptsLength-1] != '\t') &&
+            (*LoadOptions != '\0') &&
+            (*LoadOptions != ' ') &&
+            (*LoadOptions != '\t'))
+        {
+            AddSeparator = TRUE;
+            ++NewOptsLength;
+        }
+
+        /*
+         * Move the original load options forward (possibly truncating them
+         * at the end if the buffer is not large enough) to make place for
+         * the options to prepend.
+         */
+        OptionsLength = (ULONG)strlen(LoadOptions) + 1;
+        OptionsLength = min(OptionsLength, BufferSize - NewOptsLength);
+        RtlMoveMemory(LoadOptions + NewOptsLength,
+                      LoadOptions,
+                      OptionsLength * sizeof(CHAR));
+        /* NULL-terminate */
+        (LoadOptions + NewOptsLength)[OptionsLength-1] = '\0';
+
+        /* Restore the new options length back to its original value */
+        if (AddSeparator) --NewOptsLength;
+        /* Prepend the options and add the whitespace separator if needed */
+        strncpy(LoadOptions, NewOptions, NewOptsLength);
+        if (AddSeparator) LoadOptions[NewOptsLength] = ' ';
+    }
+}
