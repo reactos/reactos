@@ -22,6 +22,8 @@
 #include <shobjidl.h>
 #include <rpcproxy.h>
 #include <ndk/cmfuncs.h>
+#include <strsafe.h>
+#include <dbt.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -524,6 +526,116 @@ cleanup:
     return bRet;
 }
 
+static BOOL
+RegisterDevNotificationForHwnd(
+    IN HWND hWnd,
+    OUT HDEVNOTIFY* hDeviceNotify)
+{
+    DEV_BROADCAST_DEVICEINTERFACE NotificationFilter = { 0 };
+    NotificationFilter.dbcc_size = sizeof(DEV_BROADCAST_DEVICEINTERFACE);
+    NotificationFilter.dbcc_devicetype = DBT_DEVTYP_DEVICEINTERFACE;
+
+    *hDeviceNotify = RegisterDeviceNotification(hWnd,
+                                                &NotificationFilter,
+                                                DEVICE_NOTIFY_WINDOW_HANDLE | DEVICE_NOTIFY_ALL_INTERFACE_CLASSES);
+
+    return *hDeviceNotify != NULL;
+}
+
+static BOOLEAN
+GetFriendlyDeviceName(
+    IN PDEV_BROADCAST_DEVICEINTERFACE pDevice,
+    OUT LPCWSTR* pszName)
+{
+    BOOLEAN result = FALSE, DeviceInterfaceDataInitialized = FALSE;
+    HDEVINFO hList = NULL;
+    SP_DEVICE_INTERFACE_DATA DeviceInterfaceData = { 0 };
+
+    if (!pDevice
+        || ~pDevice->dbcc_devicetype & DBT_DEVTYP_DEVICEINTERFACE
+        || !pDevice->dbcc_name)
+    {
+        DPRINT1("pDevice is not initialized properly\n");
+        goto cleanup;
+    }
+
+    /* Create an empty device info set */
+    hList = SetupDiCreateDeviceInfoList(NULL, 0);
+    if (!hList)
+    {
+        DPRINT1("SetupDiCreateDeviceInfoList failed (error %d)\n", GetLastError());
+        goto cleanup;
+    }
+
+    /* Set up DeviceInterfaceData */
+    DeviceInterfaceData.cbSize = sizeof(SP_DEVICE_INTERFACE_DATA);
+
+    /* Open device interface */
+    DeviceInterfaceDataInitialized = SetupDiOpenDeviceInterface(hList,
+                                                                &pDevice->dbcc_name[0],
+                                                                0,
+                                                                &DeviceInterfaceData);
+    if (!DeviceInterfaceDataInitialized)
+    {
+        DPRINT1("SetupDiOpenDeviceInterface failed (error %d)\n", GetLastError());
+        goto cleanup;
+    }
+
+    for (INT index = 0; ; index++)
+    {
+        SP_DEVINFO_DATA devInfo = { 0 };
+
+        /* Variables for SetupDiGetDeviceRegistryProperty */
+        TCHAR szName[1024];
+        DWORD PropertyRegDataType = 0, RequiredSize = 0;
+
+        /* Init devInfo */
+        devInfo.cbSize = sizeof(SP_DEVINFO_DATA);
+
+        /* Enumerate through hList */
+        if (SetupDiEnumDeviceInfo(hList, index, &devInfo))
+        {
+            /* Get friendly name of devInfo */
+            result = SetupDiGetDeviceRegistryProperty(hList,
+                                                      &devInfo,
+                                                      SPDRP_FRIENDLYNAME,
+                                                      &PropertyRegDataType,
+                                                      (BYTE*)szName,
+                                                      sizeof(szName),
+                                                      &RequiredSize);
+
+            if (result)
+            {
+                /* We found a name - allocate buffer, break the loop */
+                *pszName = (LPWSTR)HeapAlloc(GetProcessHeap(), 0, sizeof(szName));
+                if (!*pszName)
+                {
+                    DPRINT1("HeapAlloc failed\n");
+                    result = FALSE;
+                    goto cleanup;
+                }
+
+                CopyMemory((LPWSTR)*pszName, szName, sizeof(TCHAR) + 1024);
+                break;
+            }
+        }
+        else
+        {
+            /* No more items to enumerate */
+            break;
+        }
+    }
+
+cleanup:
+    if (DeviceInterfaceDataInitialized)
+        SetupDiDeleteDeviceInterfaceData(hList, &DeviceInterfaceData);
+
+    if (hList)
+        SetupDiDestroyDeviceInfoList(hList);
+
+    return result;
+}
+
 static INT_PTR CALLBACK
 StatusMessageWindowProc(
     IN HWND hwndDlg,
@@ -531,17 +643,60 @@ StatusMessageWindowProc(
     IN WPARAM wParam,
     IN LPARAM lParam)
 {
-    UNREFERENCED_PARAMETER(wParam);
+    static WCHAR szLabel[256] = { 0 };
+    static HDEVNOTIFY hDeviceNotify;
 
     switch (uMsg)
     {
         case WM_INITDIALOG:
         {
-            WCHAR szMsg[256];
-
-            if (!LoadStringW(hDllInstance, IDS_STATUS_INSTALL_DEV, szMsg, ARRAYSIZE(szMsg)))
+            if (!LoadStringW(hDllInstance, IDS_STATUS_INSTALL_DEV, szLabel, ARRAYSIZE(szLabel)))
                 return FALSE;
-            SetDlgItemTextW(hwndDlg, IDC_STATUSLABEL, szMsg);
+            SetDlgItemTextW(hwndDlg, IDC_STATUSLABEL, szLabel);
+
+            if (!RegisterDevNotificationForHwnd(hwndDlg, &hDeviceNotify))
+                DPRINT1("RegisterDeviceNotification failed (error %d)\n", GetLastError());
+
+            return TRUE;
+        }
+
+        case WM_DEVICECHANGE:
+        {
+            PDEV_BROADCAST_DEVICEINTERFACE pDevice = NULL;
+            LPCWSTR pszFriendlyName = NULL;
+            WCHAR szLabelDev[1024] = { 0 };
+
+            if (lParam)
+            {
+                pDevice = (PDEV_BROADCAST_DEVICEINTERFACE)lParam;
+            }
+
+            switch (wParam)
+            {
+                case DBT_DEVICEARRIVAL:
+                case DBT_DEVNODES_CHANGED:
+                {
+                    if (GetFriendlyDeviceName(pDevice, &pszFriendlyName))
+                    {
+                        /*
+                         * Formatting new label buffer to get output like:
+                         * Installing devices... USB Audio Device
+                         */
+                        StringCbPrintf(szLabelDev, sizeof(szLabelDev), L"%s %s", szLabel, pszFriendlyName);
+                        SetDlgItemTextW(hwndDlg, IDC_STATUSLABEL, szLabelDev);
+
+                        /* Free buffer that was allocated in GetFriendlyDeviceName */
+                        HeapFree(GetProcessHeap(), 0, &pszFriendlyName);
+                    }
+                }
+            }
+            return TRUE;
+        }
+
+        case WM_QUIT:
+        {
+            if (hDeviceNotify)
+                UnregisterDeviceNotification(hDeviceNotify);
             return TRUE;
         }
     }
