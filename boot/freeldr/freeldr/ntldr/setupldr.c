@@ -10,6 +10,7 @@
 #include <arc/setupblk.h>
 #include "winldr.h"
 #include "inffile.h"
+#include "ntldropts.h"
 
 #include <debug.h>
 DBG_DEFAULT_CHANNEL(WINDOWS);
@@ -185,6 +186,7 @@ LoadReactOSSetup(
     PCSTR SystemPartition;
     PCSTR SystemPath;
     PSTR FileName;
+    ULONG FileNameLength;
     BOOLEAN BootFromFloppy;
     BOOLEAN Success;
     HINF InfHandle;
@@ -294,16 +296,16 @@ LoadReactOSSetup(
     TRACE("BootOptions: '%s'\n", BootOptions2);
 
     /* Check if a RAM disk file was given */
-    FileName = strstr(BootOptions2, "/RDPATH=");
-    if (FileName)
+    FileName = (PSTR)NtLdrGetOptionEx(BootOptions2, "RDPATH=", &FileNameLength);
+    if (FileName && (FileNameLength > 7))
     {
         /* Load the RAM disk */
         Status = RamDiskInitialize(FALSE, BootOptions2, SystemPartition);
         if (Status != ESUCCESS)
         {
-            FileName += 8;
+            FileName += 7; FileNameLength -= 7;
             UiMessageBox("Failed to load RAM disk file '%.*s'",
-                         strcspn(FileName, " \t"), FileName);
+                         FileNameLength, FileName);
             return Status;
         }
     }
@@ -321,7 +323,8 @@ LoadReactOSSetup(
             UiMessageBox("Failed to open txtsetup.sif");
             return ENOENT;
         }
-        RtlStringCbCopyA(FileName, sizeof(BootPath) - (FileName - BootPath)*sizeof(CHAR), SystemPath);
+        FileNameLength = (ULONG)(sizeof(BootPath) - (FileName - BootPath)*sizeof(CHAR));
+        RtlStringCbCopyA(FileName, FileNameLength, SystemPath);
         RtlStringCbCopyA(FilePath, sizeof(FilePath), BootPath);
         RtlStringCbCatA(FilePath, sizeof(FilePath), "txtsetup.sif");
         if (InfOpenFile(&InfHandle, FilePath, &ErrorLine))

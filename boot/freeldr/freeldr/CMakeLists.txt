@@ -251,6 +251,7 @@ list(APPEND FREELDR_BASE_SOURCE
                      ## otherwise we get linking errors with Rtl**Bitmap** APIs.
                      ## Do not happen on MSVC builds however...
     ntldr/inffile.c
+    ntldr/ntldropts.c
     lib/rtl/libsupp.c)
 
 if(ARCH STREQUAL "i386")

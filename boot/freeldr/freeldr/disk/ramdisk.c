@@ -10,6 +10,7 @@
 /* INCLUDES *******************************************************************/
 
 #include <freeldr.h>
+#include "../ntldr/ntldropts.h"
 
 /* GLOBALS ********************************************************************/
 
@@ -241,30 +242,31 @@ RamDiskInitialize(
         /* If we don't have any load options, initialize an empty Ramdisk */
         if (LoadOptions)
         {
-            PCHAR Option;
+            PCSTR Option;
+            ULONG FileNameLength;
 
             /* Ramdisk image file name */
-            Option = strstr(LoadOptions, "/RDPATH=");
-            if (Option)
+            Option = NtLdrGetOptionEx(LoadOptions, "RDPATH=", &FileNameLength);
+            if (Option && (FileNameLength > 7))
             {
-                /* Copy the file name - everything until the next separator */
-                Option += 8;
+                /* Copy the file name */
+                Option += 7; FileNameLength -= 7;
                 RtlStringCbCopyNA(FileName, sizeof(FileName),
-                                  Option, strcspn(Option, " \t") * sizeof(CHAR));
+                                  Option, FileNameLength * sizeof(CHAR));
             }
 
             /* Ramdisk image length */
-            Option = strstr(LoadOptions, "/RDIMAGELENGTH=");
+            Option = NtLdrGetOption(LoadOptions, "RDIMAGELENGTH=");
             if (Option)
             {
-                RamDiskImageLength = _atoi64(Option + 15);
+                RamDiskImageLength = _atoi64(Option + 14);
             }
 
             /* Ramdisk image offset */
-            Option = strstr(LoadOptions, "/RDIMAGEOFFSET=");
+            Option = NtLdrGetOption(LoadOptions, "RDIMAGEOFFSET=");
             if (Option)
             {
-                RamDiskImageOffset = atol(Option + 15);
+                RamDiskImageOffset = atol(Option + 14);
             }
         }
 
