@@ -3775,6 +3775,7 @@ ftGdiGetGlyphOutline(
     switch (iFormat)
     {
     case GGO_BITMAP:
+    {
         width = gm.gmBlackBoxX;
         height = gm.gmBlackBoxY;
         pitch = ((width + 31) >> 5) << 2;
@@ -3802,6 +3803,7 @@ ftGdiGetGlyphOutline(
         }
 
         case ft_glyph_format_outline:
+        {
             ft_bitmap.width = width;
             ft_bitmap.rows = height;
             ft_bitmap.pitch = pitch;
@@ -3819,12 +3821,15 @@ ftGdiGetGlyphOutline(
             FT_Outline_Get_Bitmap(g_FreeTypeLibrary, &ft_face->glyph->outline, &ft_bitmap);
             IntUnLockFreeType();
             break;
+        }
 
         default:
             DPRINT1("Loaded glyph format %x\n", ft_face->glyph->format);
             return GDI_ERROR;
         }
+
         break;
+    }
 
     case GGO_GRAY2_BITMAP:
     case GGO_GRAY4_BITMAP:
@@ -3910,6 +3915,8 @@ ftGdiGetGlyphOutline(
             DPRINT1("Loaded glyph format %x\n", ft_face->glyph->format);
             return GDI_ERROR;
         }
+
+        break;
     }
 
     case GGO_NATIVE:
@@ -3937,6 +3944,7 @@ ftGdiGetGlyphOutline(
         IntUnLockFreeType();
         break;
     }
+
     case GGO_BEZIER:
     {
         FT_Outline *outline = &ft_face->glyph->outline;
