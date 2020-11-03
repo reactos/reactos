@@ -254,29 +254,69 @@ IntEnableWindow( HWND hWnd, BOOL bEnable )
 HWND* FASTCALL
 IntWinListChildren(PWND Window)
 {
-   PWND Child;
-   HWND *List;
-   UINT Index, NumChildren = 0;
+    PWND Child;
+    HWND *List;
+    UINT Index, NumChildren = 0;
 
-   if (!Window) return NULL;
+    if (!Window) return NULL;
 
-   for (Child = Window->spwndChild; Child; Child = Child->spwndNext)
-      ++NumChildren;
+    for (Child = Window->spwndChild; Child; Child = Child->spwndNext)
+    {
+        ++NumChildren;
+    }
 
-   List = ExAllocatePoolWithTag(PagedPool, (NumChildren + 1) * sizeof(HWND), USERTAG_WINDOWLIST);
-   if(!List)
-   {
-      ERR("Failed to allocate memory for children array\n");
-      EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
-      return NULL;
-   }
-   for (Child = Window->spwndChild, Index = 0;
-         Child != NULL;
-         Child = Child->spwndNext, ++Index)
-      List[Index] = Child->head.h;
-   List[Index] = NULL;
+    List = ExAllocatePoolWithTag(PagedPool, (NumChildren + 1) * sizeof(HWND), USERTAG_WINDOWLIST);
+    if(!List)
+    {
+        ERR("Failed to allocate memory for children array\n");
+        EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        return NULL;
+    }
 
-   return List;
+    Index = 0;
+    for (Child = Window->spwndChild; Child; Child = Child->spwndNext)
+    {
+        List[Index++] = Child->head.h;
+    }
+    List[Index] = NULL;
+
+    return List;
+}
+
+HWND* FASTCALL
+IntWinListOwnedPopups(PWND Window)
+{
+    PWND Child, Desktop;
+    HWND *List;
+    UINT Index, NumOwned = 0;
+
+    Desktop = co_GetDesktopWindow(Window);
+    if (!Desktop)
+        return NULL;
+
+    for (Child = Desktop->spwndChild; Child; Child = Child->spwndNext)
+    {
+        if (Child->spwndOwner == Window)
+            ++NumOwned;
+    }
+
+    List = ExAllocatePoolWithTag(PagedPool, (NumOwned + 1) * sizeof(HWND), USERTAG_WINDOWLIST);
+    if (!List)
+    {
+        ERR("Failed to allocate memory for children array\n");
+        EngSetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        return NULL;
+    }
+
+    Index = 0;
+    for (Child = Desktop->spwndChild; Child; Child = Child->spwndNext)
+    {
+        if (Child->spwndOwner == Window)
+            List[Index++] = Child->head.h;
+    }
+    List[Index] = NULL;
+
+    return List;
 }
 
 PWND FASTCALL
@@ -2572,7 +2612,7 @@ BOOLEAN co_UserDestroyWindow(PVOID Object)
    hWnd = Window->head.h;
    ti = PsGetCurrentThreadWin32Thread();
 
-   TRACE("co_UserDestroyWindow \n");
+   TRACE("co_UserDestroyWindow(Window = 0x%p, hWnd = 0x%p)\n", Window, hWnd);
 
    /* Check for owner thread */
    if ( Window->head.pti != PsGetCurrentThreadWin32Thread())
@@ -2632,7 +2672,7 @@ BOOLEAN co_UserDestroyWindow(PVOID Object)
       }
    }
 
-   // Adjust last active.
+   /* Adjust last active */
    if ((pwndTemp = Window->spwndOwner))
    {
       while (pwndTemp->spwndOwner)
@@ -2683,58 +2723,41 @@ BOOLEAN co_UserDestroyWindow(PVOID Object)
       return TRUE;
    }
 
-   /* Recursively destroy owned windows */
+    /* Recursively destroy owned windows */
+    if (!(Window->style & WS_CHILD))
+    {
+        HWND* List;
+        HWND* phWnd;
+        PWND pWnd;
 
-   if (! (Window->style & WS_CHILD))
-   {
-      for (;;)
-      {
-         BOOL GotOne = FALSE;
-         HWND *Children;
-         HWND *ChildHandle;
-         PWND Child, Desktop;
-
-         Desktop = IntIsDesktopWindow(Window) ? Window :
-                   UserGetWindowObject(IntGetDesktopWindow());
-         Children = IntWinListChildren(Desktop);
-
-         if (Children)
-         {
-            for (ChildHandle = Children; *ChildHandle; ++ChildHandle)
+        List = IntWinListOwnedPopups(Window);
+        if (List)
+        {
+            for (phWnd = List; *phWnd; ++phWnd)
             {
-               Child = UserGetWindowObject(*ChildHandle);
-               if (Child == NULL)
-                  continue;
-               if (Child->spwndOwner != Window)
-               {
-                  continue;
-               }
+                pWnd = ValidateHwndNoErr(*phWnd);
+                if (pWnd == NULL)
+                    continue;
+                ASSERT(pWnd->spwndOwner == Window);
+                ASSERT(pWnd != Window);
 
-               if (IntWndBelongsToThread(Child, PsGetCurrentThreadWin32Thread()))
-               {
-                  USER_REFERENCE_ENTRY ChildRef;
-                  UserRefObjectCo(Child, &ChildRef); // Temp HACK?
-                  co_UserDestroyWindow(Child);
-                  UserDerefObjectCo(Child); // Temp HACK?
-
-                  GotOne = TRUE;
-                  continue;
-               }
-
-               if (Child->spwndOwner != NULL)
-               {
-                  Child->spwndOwner = NULL;
-               }
-
+                pWnd->spwndOwner = NULL;
+                if (IntWndBelongsToThread(pWnd, PsGetCurrentThreadWin32Thread()))
+                {
+                    USER_REFERENCE_ENTRY Ref;
+                    UserRefObjectCo(pWnd, &Ref); // Temp HACK?
+                    co_UserDestroyWindow(pWnd);
+                    UserDerefObjectCo(pWnd); // Temp HACK?
+                }
+                else
+                {
+                    ERR("IntWndBelongsToThread(0x%p) is FALSE, ignoring.\n", pWnd);
+                }
             }
-            ExFreePoolWithTag(Children, USERTAG_WINDOWLIST);
-         }
-         if (! GotOne)
-         {
-            break;
-         }
-      }
-   }
+
+            ExFreePoolWithTag(List, USERTAG_WINDOWLIST);
+        }
+    }
 
     /* Generate mouse move message for the next window */
     msg.message = WM_MOUSEMOVE;
