@@ -63,7 +63,8 @@ interface wlansvc_interface
     /* Function: 0x02 */
     DWORD _RpcEnumInterfaces(
         [in] WLANSVC_RPC_HANDLE hClientHandle,
-        [out, ref] PWLAN_INTERFACE_INFO_LIST *ppInterfaceList);
+        [in, out] LPDWORD pdwDataSize,
+        [out, ref] [size_is(,*pdwDataSize)] PWLAN_INTERFACE_INFO_LIST *ppInterfaceList);
 
     /* Function: 0x03 */ 
     DWORD _RpcSetAutoConfigParameter(

@@ -228,13 +228,14 @@ WlanEnumInterfaces(IN HANDLE hClientHandle,
                    OUT PWLAN_INTERFACE_INFO_LIST *ppInterfaceList)
 {
     DWORD dwResult = ERROR_SUCCESS;
+    DWORD DataSize = 0;
 
     if ((pReserved != NULL) || (ppInterfaceList == NULL) || (hClientHandle == NULL))
         return ERROR_INVALID_PARAMETER;
 
     RpcTryExcept
     {
-        dwResult = _RpcEnumInterfaces(hClientHandle, ppInterfaceList);
+        dwResult = _RpcEnumInterfaces(hClientHandle, &DataSize, ppInterfaceList);
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {

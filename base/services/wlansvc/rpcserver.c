@@ -113,6 +113,7 @@ DWORD _RpcCloseHandle(
 
 DWORD _RpcEnumInterfaces(
     WLANSVC_RPC_HANDLE hClientHandle,
+    LPDWORD pdwDataSize,
     PWLAN_INTERFACE_INFO_LIST *ppInterfaceList)
 {
 #if GET_IF_ENTRY2_IMPLEMENTED
@@ -171,8 +172,87 @@ DWORD _RpcEnumInterfaces(
 
     return ERROR_SUCCESS;
 #else
-    UNIMPLEMENTED;
-    return ERROR_CALL_NOT_IMPLEMENTED;
+    DWORD dwSize;
+    unsigned int i;
+    MIB_IFROW *pIfRow;
+    MIB_IFTABLE *pIfTable;
+    PWLAN_INTERFACE_INFO_LIST InterfaceList;
+    DWORD len = _countof(pIfRow->bDescr);
+    PWLANSVCHANDLE lpWlanSvcHandle;
+
+    lpWlanSvcHandle = WlanSvcGetHandleEntry(hClientHandle);
+    if (!lpWlanSvcHandle)
+    {
+        return ERROR_INVALID_HANDLE;
+    }
+
+    pIfTable = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(MIB_IFTABLE));
+    if (!pIfTable)
+    {
+        return ERROR_NOT_ENOUGH_MEMORY;
+    }
+
+    dwSize = sizeof(MIB_IFTABLE);
+    if (GetIfTable(pIfTable, &dwSize, FALSE) == ERROR_INSUFFICIENT_BUFFER)
+    {
+        HeapFree(GetProcessHeap(), 0, pIfTable);
+        pIfTable = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, dwSize);
+        if (!pIfTable)
+        {
+            return ERROR_NOT_ENOUGH_MEMORY;
+        }
+    }
+
+    if ((GetIfTable(pIfTable, &dwSize, FALSE)) == NO_ERROR)
+    {
+        dwSize = (pIfTable->dwNumEntries * sizeof(WLAN_INTERFACE_INFO));
+
+        DPRINT1("NumEntries %ld\n",pIfTable->dwNumEntries);
+        __debugbreak();
+
+        /* allocate interface list */
+        InterfaceList = midl_user_allocate(dwSize);
+        if (!InterfaceList)
+        {
+            return ERROR_NOT_ENOUGH_MEMORY;
+        }
+
+        *pdwDataSize = dwSize;
+        *ppInterfaceList = InterfaceList;
+
+        if (!pIfTable->dwNumEntries)
+        {
+            return ERROR_SUCCESS;
+        }
+
+        for (i = 0; i < pIfTable->dwNumEntries; i++)
+        {
+
+            pIfRow = &pIfTable->table[i];
+            DPRINT1("Entry %s\n",pIfRow->bDescr);
+            if (pIfRow->dwType == IF_TYPE_IEEE80211)
+            {
+                MultiByteToWideChar(CP_ACP, 0, (const char *)pIfRow->bDescr, -1, InterfaceList->InterfaceInfo[InterfaceList->dwNumberOfItems].strInterfaceDescription, len);
+                InterfaceList->InterfaceInfo[InterfaceList->dwNumberOfItems].InterfaceGuid.Data1 = pIfRow->dwIndex;
+                InterfaceList->InterfaceInfo[InterfaceList->dwNumberOfItems].isState = pIfRow->dwOperStatus;
+                InterfaceList->dwNumberOfItems++;
+            }
+        }
+    }
+    else
+    {
+        DPRINT1("No entries\n");
+        /* return an empty list */
+        InterfaceList = midl_user_allocate(sizeof(WLAN_INTERFACE_INFO));
+        if (!InterfaceList)
+        {
+            return ERROR_NOT_ENOUGH_MEMORY;
+        }
+        *pdwDataSize = sizeof(WLAN_INTERFACE_INFO);
+        *ppInterfaceList = InterfaceList;
+    }
+
+    return ERROR_SUCCESS;
 #endif
 }
 
