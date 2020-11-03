@@ -3,13 +3,13 @@
 ;
 
 [Version]
-Signature = "$WINDOWS NT$"
+Signature  = "$WINDOWS NT$"
 LayoutFile = layout.inf
-Class     = CDROM
-ClassGuid = {4D36E965-E325-11CE-BFC1-08002BE10318}
-Provider  = %MSFT%
+Class      = CDROM
+ClassGUID  = {4D36E965-E325-11CE-BFC1-08002BE10318}
+Provider   = %MSFT%
 ; Git commit 96eb96d @ https://github.com/microsoft/Windows-driver-samples
-DriverVer = 08/11/2016, 1.0
+DriverVer  = 08/11/2016, 1.0
 
 ;[SourceDisksNames]
 ;3426=windows cd
@@ -19,6 +19,18 @@ DriverVer = 08/11/2016, 1.0
 
 [DestinationDirs]
 cdrom_copyfiles   = 12
+storprop_CopyFiles.NT = 11
+
+[ClassInstall32.NT]
+AddReg = CDROMClass.NT.AddReg
+Copyfiles = storprop_CopyFiles.NT
+
+[CDROMClass.NT.AddReg]
+HKR, , ,                0, %CDROMClassName%
+HKR, , Icon,            0, "-51"
+HKR, , Installer32,     0, "storprop.dll,DvdClassInstaller"
+HKR, , NoInstallClass,  0, 1
+HKR, , SilentInstall,   0, 1
 
 [cdrom_copyfiles]
 cdrom.sys,,,0x100
@@ -27,8 +39,10 @@ cdrom.sys,,,0x100
 BasicDriverOk=*
 
 [Manufacturer]
-%MITSUMI%         = mitsumi_cdrom,NT$ARCH$
-%GenManufacturer% = cdrom_device,NT$ARCH$
+%MITSUMI%         = mitsumi_cdrom,NT
+%GenManufacturer% = cdrom_device,NT
+;%MITSUMI%         = mitsumi_cdrom,NT$ARCH$
+;%GenManufacturer% = cdrom_device,NT$ARCH$
 
 ;[mitsumi_cdrom.NT$ARCH$]
 [mitsumi_cdrom.NT]
@@ -135,13 +149,17 @@ AddReg=autorun_addreg
 [cdrom_EventLog_InstallSection]
 ;AddReg=cdrom_EventLog_AddReg
 
-;[cdrom_EventLog_AddReg]
-;HKR,,EventMessageFile,0x00020000,"%%SystemRoot%%\System32\IoLogMsg.dll"
-;HKR,,TypesSupported,0x00010001,7
+[cdrom_EventLog_AddReg]
+HKR,,EventMessageFile,0x00020000,"%%SystemRoot%%\System32\IoLogMsg.dll"
+HKR,,TypesSupported,0x00010001,7
+
+[storprop_CopyFiles.NT]
+storprop.dll
 
 
 [Strings]
-MSFT        = "Microsoft"
+MSFT           = "Microsoft"
+CDROMClassName = "DVD/CD-ROM drives"
 
 ;; Manufacturer specific strings
 MITSUMI         = "Mitsumi"
