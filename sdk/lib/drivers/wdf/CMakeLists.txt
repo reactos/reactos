@@ -50,7 +50,7 @@ list(APPEND SOURCE_SHARED
     # shared/irphandlers/pnp/devicepwrreqstatemachine.cpp
     shared/irphandlers/pnp/eventqueue.cpp
     shared/irphandlers/pnp/fdopower.cpp
-    # shared/irphandlers/pnp/fxinterruptapi.cpp
+    shared/irphandlers/pnp/fxinterruptapi.cpp
     shared/irphandlers/pnp/fxpkgfdo.cpp
     shared/irphandlers/pnp/fxpkgpdo.cpp
     shared/irphandlers/pnp/fxpkgpnp.cpp
@@ -85,7 +85,7 @@ list(APPEND SOURCE_SHARED
     shared/support/fxregistryapi.cpp
     shared/support/fxregkey.cpp
     shared/support/fxrequestbuffer.cpp
-    # shared/support/fxresourceapi.cpp
+    shared/support/fxresourceapi.cpp
     shared/support/fxresourcecollection.cpp
     shared/support/fxspinlock.cpp
     shared/support/fxspinlockapi.cpp

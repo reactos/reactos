@@ -189,29 +189,17 @@ typedef struct _WDFFUNCTIONS {
     PFN_WDFFILEOBJECTGETFLAGS                                 pfnWdfFileObjectGetFlags;
     PFN_WDFFILEOBJECTGETDEVICE                                pfnWdfFileObjectGetDevice;
     PFN_WDFFILEOBJECTWDMGETFILEOBJECT                         pfnWdfFileObjectWdmGetFileObject;
-    // PFN_WDFINTERRUPTCREATE                                    pfnWdfInterruptCreate;
-    // PFN_WDFINTERRUPTQUEUEDPCFORISR                            pfnWdfInterruptQueueDpcForIsr;
-    // PFN_WDFINTERRUPTSYNCHRONIZE                               pfnWdfInterruptSynchronize;
-    // PFN_WDFINTERRUPTACQUIRELOCK                               pfnWdfInterruptAcquireLock;
-    // PFN_WDFINTERRUPTRELEASELOCK                               pfnWdfInterruptReleaseLock;
-    // PFN_WDFINTERRUPTENABLE                                    pfnWdfInterruptEnable;
-    // PFN_WDFINTERRUPTDISABLE                                   pfnWdfInterruptDisable;
-    // PFN_WDFINTERRUPTWDMGETINTERRUPT                           pfnWdfInterruptWdmGetInterrupt;
-    // PFN_WDFINTERRUPTGETINFO                                   pfnWdfInterruptGetInfo;
-    // PFN_WDFINTERRUPTSETPOLICY                                 pfnWdfInterruptSetPolicy;
-    // PFN_WDFINTERRUPTGETDEVICE                                 pfnWdfInterruptGetDevice;
-    PFN_ROSWDFUNIMPLEMENTED                                    pfnWdfInterruptCreate;
-    PFN_ROSWDFUNIMPLEMENTED                            pfnWdfInterruptQueueDpcForIsr;
-    PFN_ROSWDFUNIMPLEMENTED                               pfnWdfInterruptSynchronize;
-    PFN_ROSWDFUNIMPLEMENTED                               pfnWdfInterruptAcquireLock;
-    PFN_ROSWDFUNIMPLEMENTED                               pfnWdfInterruptReleaseLock;
-    PFN_ROSWDFUNIMPLEMENTED                                    pfnWdfInterruptEnable;
-    PFN_ROSWDFUNIMPLEMENTED                                   pfnWdfInterruptDisable;
-    PFN_ROSWDFUNIMPLEMENTED                           pfnWdfInterruptWdmGetInterrupt;
-    PFN_ROSWDFUNIMPLEMENTED                                   pfnWdfInterruptGetInfo;
-    PFN_ROSWDFUNIMPLEMENTED                                 pfnWdfInterruptSetPolicy;
-    PFN_ROSWDFUNIMPLEMENTED                                 pfnWdfInterruptGetDevice;
-
+    PFN_WDFINTERRUPTCREATE                                    pfnWdfInterruptCreate;
+    PFN_WDFINTERRUPTQUEUEDPCFORISR                            pfnWdfInterruptQueueDpcForIsr;
+    PFN_WDFINTERRUPTSYNCHRONIZE                               pfnWdfInterruptSynchronize;
+    PFN_WDFINTERRUPTACQUIRELOCK                               pfnWdfInterruptAcquireLock;
+    PFN_WDFINTERRUPTRELEASELOCK                               pfnWdfInterruptReleaseLock;
+    PFN_WDFINTERRUPTENABLE                                    pfnWdfInterruptEnable;
+    PFN_WDFINTERRUPTDISABLE                                   pfnWdfInterruptDisable;
+    PFN_WDFINTERRUPTWDMGETINTERRUPT                           pfnWdfInterruptWdmGetInterrupt;
+    PFN_WDFINTERRUPTGETINFO                                   pfnWdfInterruptGetInfo;
+    PFN_WDFINTERRUPTSETPOLICY                                 pfnWdfInterruptSetPolicy;
+    PFN_WDFINTERRUPTGETDEVICE                                 pfnWdfInterruptGetDevice;
     PFN_WDFIOQUEUECREATE                                      pfnWdfIoQueueCreate;
     PFN_WDFIOQUEUEGETSTATE                                    pfnWdfIoQueueGetState;
     PFN_WDFIOQUEUESTART                                       pfnWdfIoQueueStart;
@@ -346,51 +334,28 @@ typedef struct _WDFFUNCTIONS {
     PFN_WDFREQUESTREQUEUE                                     pfnWdfRequestRequeue;
     PFN_WDFREQUESTSTOPACKNOWLEDGE                             pfnWdfRequestStopAcknowledge;
     PFN_WDFREQUESTWDMGETIRP                                   pfnWdfRequestWdmGetIrp;
-    // PFN_WDFIORESOURCEREQUIREMENTSLISTSETSLOTNUMBER            pfnWdfIoResourceRequirementsListSetSlotNumber;
-    // PFN_WDFIORESOURCEREQUIREMENTSLISTSETINTERFACETYPE         pfnWdfIoResourceRequirementsListSetInterfaceType;
-    // PFN_WDFIORESOURCEREQUIREMENTSLISTAPPENDIORESLIST          pfnWdfIoResourceRequirementsListAppendIoResList;
-    // PFN_WDFIORESOURCEREQUIREMENTSLISTINSERTIORESLIST          pfnWdfIoResourceRequirementsListInsertIoResList;
-    // PFN_WDFIORESOURCEREQUIREMENTSLISTGETCOUNT                 pfnWdfIoResourceRequirementsListGetCount;
-    // PFN_WDFIORESOURCEREQUIREMENTSLISTGETIORESLIST             pfnWdfIoResourceRequirementsListGetIoResList;
-    // PFN_WDFIORESOURCEREQUIREMENTSLISTREMOVE                   pfnWdfIoResourceRequirementsListRemove;
-    // PFN_WDFIORESOURCEREQUIREMENTSLISTREMOVEBYIORESLIST        pfnWdfIoResourceRequirementsListRemoveByIoResList;
-    // PFN_WDFIORESOURCELISTCREATE                               pfnWdfIoResourceListCreate;
-    // PFN_WDFIORESOURCELISTAPPENDDESCRIPTOR                     pfnWdfIoResourceListAppendDescriptor;
-    // PFN_WDFIORESOURCELISTINSERTDESCRIPTOR                     pfnWdfIoResourceListInsertDescriptor;
-    // PFN_WDFIORESOURCELISTUPDATEDESCRIPTOR                     pfnWdfIoResourceListUpdateDescriptor;
-    // PFN_WDFIORESOURCELISTGETCOUNT                             pfnWdfIoResourceListGetCount;
-    // PFN_WDFIORESOURCELISTGETDESCRIPTOR                        pfnWdfIoResourceListGetDescriptor;
-    // PFN_WDFIORESOURCELISTREMOVE                               pfnWdfIoResourceListRemove;
-    // PFN_WDFIORESOURCELISTREMOVEBYDESCRIPTOR                   pfnWdfIoResourceListRemoveByDescriptor;
-    // PFN_WDFCMRESOURCELISTAPPENDDESCRIPTOR                     pfnWdfCmResourceListAppendDescriptor;
-    // PFN_WDFCMRESOURCELISTINSERTDESCRIPTOR                     pfnWdfCmResourceListInsertDescriptor;
-    // PFN_WDFCMRESOURCELISTGETCOUNT                             pfnWdfCmResourceListGetCount;
-    // PFN_WDFCMRESOURCELISTGETDESCRIPTOR                        pfnWdfCmResourceListGetDescriptor;
-    // PFN_WDFCMRESOURCELISTREMOVE                               pfnWdfCmResourceListRemove;
-    // PFN_WDFCMRESOURCELISTREMOVEBYDESCRIPTOR                   pfnWdfCmResourceListRemoveByDescriptor;
-    PFN_ROSWDFUNIMPLEMENTED            pfnWdfIoResourceRequirementsListSetSlotNumber;
-    PFN_ROSWDFUNIMPLEMENTED         pfnWdfIoResourceRequirementsListSetInterfaceType;
-    PFN_ROSWDFUNIMPLEMENTED          pfnWdfIoResourceRequirementsListAppendIoResList;
-    PFN_ROSWDFUNIMPLEMENTED          pfnWdfIoResourceRequirementsListInsertIoResList;
-    PFN_ROSWDFUNIMPLEMENTED                 pfnWdfIoResourceRequirementsListGetCount;
-    PFN_ROSWDFUNIMPLEMENTED             pfnWdfIoResourceRequirementsListGetIoResList;
-    PFN_ROSWDFUNIMPLEMENTED                   pfnWdfIoResourceRequirementsListRemove;
-    PFN_ROSWDFUNIMPLEMENTED        pfnWdfIoResourceRequirementsListRemoveByIoResList;
-    PFN_ROSWDFUNIMPLEMENTED                               pfnWdfIoResourceListCreate;
-    PFN_ROSWDFUNIMPLEMENTED                     pfnWdfIoResourceListAppendDescriptor;
-    PFN_ROSWDFUNIMPLEMENTED                     pfnWdfIoResourceListInsertDescriptor;
-    PFN_ROSWDFUNIMPLEMENTED                     pfnWdfIoResourceListUpdateDescriptor;
-    PFN_ROSWDFUNIMPLEMENTED                             pfnWdfIoResourceListGetCount;
-    PFN_ROSWDFUNIMPLEMENTED                        pfnWdfIoResourceListGetDescriptor;
-    PFN_ROSWDFUNIMPLEMENTED                               pfnWdfIoResourceListRemove;
-    PFN_ROSWDFUNIMPLEMENTED                   pfnWdfIoResourceListRemoveByDescriptor;
-    PFN_ROSWDFUNIMPLEMENTED                     pfnWdfCmResourceListAppendDescriptor;
-    PFN_ROSWDFUNIMPLEMENTED                     pfnWdfCmResourceListInsertDescriptor;
-    PFN_ROSWDFUNIMPLEMENTED                             pfnWdfCmResourceListGetCount;
-    PFN_ROSWDFUNIMPLEMENTED                        pfnWdfCmResourceListGetDescriptor;
-    PFN_ROSWDFUNIMPLEMENTED                               pfnWdfCmResourceListRemove;
-    PFN_ROSWDFUNIMPLEMENTED                   pfnWdfCmResourceListRemoveByDescriptor;
-
+    PFN_WDFIORESOURCEREQUIREMENTSLISTSETSLOTNUMBER            pfnWdfIoResourceRequirementsListSetSlotNumber;
+    PFN_WDFIORESOURCEREQUIREMENTSLISTSETINTERFACETYPE         pfnWdfIoResourceRequirementsListSetInterfaceType;
+    PFN_WDFIORESOURCEREQUIREMENTSLISTAPPENDIORESLIST          pfnWdfIoResourceRequirementsListAppendIoResList;
+    PFN_WDFIORESOURCEREQUIREMENTSLISTINSERTIORESLIST          pfnWdfIoResourceRequirementsListInsertIoResList;
+    PFN_WDFIORESOURCEREQUIREMENTSLISTGETCOUNT                 pfnWdfIoResourceRequirementsListGetCount;
+    PFN_WDFIORESOURCEREQUIREMENTSLISTGETIORESLIST             pfnWdfIoResourceRequirementsListGetIoResList;
+    PFN_WDFIORESOURCEREQUIREMENTSLISTREMOVE                   pfnWdfIoResourceRequirementsListRemove;
+    PFN_WDFIORESOURCEREQUIREMENTSLISTREMOVEBYIORESLIST        pfnWdfIoResourceRequirementsListRemoveByIoResList;
+    PFN_WDFIORESOURCELISTCREATE                               pfnWdfIoResourceListCreate;
+    PFN_WDFIORESOURCELISTAPPENDDESCRIPTOR                     pfnWdfIoResourceListAppendDescriptor;
+    PFN_WDFIORESOURCELISTINSERTDESCRIPTOR                     pfnWdfIoResourceListInsertDescriptor;
+    PFN_WDFIORESOURCELISTUPDATEDESCRIPTOR                     pfnWdfIoResourceListUpdateDescriptor;
+    PFN_WDFIORESOURCELISTGETCOUNT                             pfnWdfIoResourceListGetCount;
+    PFN_WDFIORESOURCELISTGETDESCRIPTOR                        pfnWdfIoResourceListGetDescriptor;
+    PFN_WDFIORESOURCELISTREMOVE                               pfnWdfIoResourceListRemove;
+    PFN_WDFIORESOURCELISTREMOVEBYDESCRIPTOR                   pfnWdfIoResourceListRemoveByDescriptor;
+    PFN_WDFCMRESOURCELISTAPPENDDESCRIPTOR                     pfnWdfCmResourceListAppendDescriptor;
+    PFN_WDFCMRESOURCELISTINSERTDESCRIPTOR                     pfnWdfCmResourceListInsertDescriptor;
+    PFN_WDFCMRESOURCELISTGETCOUNT                             pfnWdfCmResourceListGetCount;
+    PFN_WDFCMRESOURCELISTGETDESCRIPTOR                        pfnWdfCmResourceListGetDescriptor;
+    PFN_WDFCMRESOURCELISTREMOVE                               pfnWdfCmResourceListRemove;
+    PFN_WDFCMRESOURCELISTREMOVEBYDESCRIPTOR                   pfnWdfCmResourceListRemoveByDescriptor;
     PFN_WDFSTRINGCREATE                                       pfnWdfStringCreate;
     PFN_WDFSTRINGGETUNICODESTRING                             pfnWdfStringGetUnicodeString;
     PFN_WDFOBJECTACQUIRELOCK                                  pfnWdfObjectAcquireLock;
@@ -535,9 +500,7 @@ typedef struct _WDFFUNCTIONS {
 
     PFN_WDFDEVICEREMOVEDEPENDENTUSAGEDEVICEOBJECT             pfnWdfDeviceRemoveDependentUsageDeviceObject;
     PFN_WDFDEVICEGETSYSTEMPOWERACTION                         pfnWdfDeviceGetSystemPowerAction;
-    // PFN_WDFINTERRUPTSETEXTENDEDPOLICY                         pfnWdfInterruptSetExtendedPolicy;
-    PFN_ROSWDFUNIMPLEMENTED                         pfnWdfInterruptSetExtendedPolicy;
-
+    PFN_WDFINTERRUPTSETEXTENDEDPOLICY                         pfnWdfInterruptSetExtendedPolicy;
     PFN_WDFIOQUEUEASSIGNFORWARDPROGRESSPOLICY                 pfnWdfIoQueueAssignForwardProgressPolicy;
     PFN_WDFPDOINITASSIGNCONTAINERID                           pfnWdfPdoInitAssignContainerID;
     PFN_WDFPDOINITALLOWFORWARDINGREQUESTTOPARENT              pfnWdfPdoInitAllowForwardingRequestToParent;
@@ -570,8 +533,6 @@ typedef struct _WDFFUNCTIONS {
     // PFN_WDFDMATRANSACTIONFREERESOURCES                        pfnWdfDmaTransactionFreeResources;
     // PFN_WDFDMATRANSACTIONCANCEL                               pfnWdfDmaTransactionCancel;
     // PFN_WDFDMATRANSACTIONWDMGETTRANSFERCONTEXT                pfnWdfDmaTransactionWdmGetTransferContext;
-    // PFN_WDFINTERRUPTQUEUEWORKITEMFORISR                       pfnWdfInterruptQueueWorkItemForIsr;
-    // PFN_WDFINTERRUPTTRYTOACQUIRELOCK                          pfnWdfInterruptTryToAcquireLock;
     PFN_ROSWDFUNIMPLEMENTED                   pfnWdfDmaEnablerConfigureSystemProfile;
     PFN_ROSWDFUNIMPLEMENTED                pfnWdfDmaTransactionInitializeUsingOffset;
     PFN_ROSWDFUNIMPLEMENTED                      pfnWdfDmaTransactionGetTransferInfo;
@@ -583,9 +544,9 @@ typedef struct _WDFFUNCTIONS {
     PFN_ROSWDFUNIMPLEMENTED                        pfnWdfDmaTransactionFreeResources;
     PFN_ROSWDFUNIMPLEMENTED                               pfnWdfDmaTransactionCancel;
     PFN_ROSWDFUNIMPLEMENTED                pfnWdfDmaTransactionWdmGetTransferContext;
-    PFN_ROSWDFUNIMPLEMENTED                       pfnWdfInterruptQueueWorkItemForIsr;
-    PFN_ROSWDFUNIMPLEMENTED                          pfnWdfInterruptTryToAcquireLock;
 
+    PFN_WDFINTERRUPTQUEUEWORKITEMFORISR                       pfnWdfInterruptQueueWorkItemForIsr;
+    PFN_WDFINTERRUPTTRYTOACQUIRELOCK                          pfnWdfInterruptTryToAcquireLock;
     PFN_WDFIOQUEUESTOPANDPURGE                                pfnWdfIoQueueStopAndPurge;
     PFN_WDFIOQUEUESTOPANDPURGESYNCHRONOUSLY                   pfnWdfIoQueueStopAndPurgeSynchronously;
     PFN_WDFIOTARGETPURGE                                      pfnWdfIoTargetPurge;
@@ -601,13 +562,11 @@ typedef struct _WDFFUNCTIONS {
     PFN_WDFDEVICEWDMASSIGNPOWERFRAMEWORKSETTINGS              pfnWdfDeviceWdmAssignPowerFrameworkSettings;
     // PFN_WDFDMATRANSACTIONSTOPSYSTEMTRANSFER                   pfnWdfDmaTransactionStopSystemTransfer;
     // PFN_WDFCXVERIFIERKEBUGCHECK                               pfnWdfCxVerifierKeBugCheck;
-    // PFN_WDFINTERRUPTREPORTACTIVE                              pfnWdfInterruptReportActive;
-    // PFN_WDFINTERRUPTREPORTINACTIVE                            pfnWdfInterruptReportInactive;
     PFN_ROSWDFUNIMPLEMENTED                   pfnWdfDmaTransactionStopSystemTransfer;
     PFN_ROSWDFUNIMPLEMENTED                               pfnWdfCxVerifierKeBugCheck;
-    PFN_ROSWDFUNIMPLEMENTED                              pfnWdfInterruptReportActive;
-    PFN_ROSWDFUNIMPLEMENTED                            pfnWdfInterruptReportInactive;
 
+    PFN_WDFINTERRUPTREPORTACTIVE                              pfnWdfInterruptReportActive;
+    PFN_WDFINTERRUPTREPORTINACTIVE                            pfnWdfInterruptReportInactive;
     PFN_WDFDEVICEINITSETRELEASEHARDWAREORDERONFAILURE         pfnWdfDeviceInitSetReleaseHardwareOrderOnFailure;
     // PFN_WDFGETTRIAGEINFO                                      pfnWdfGetTriageInfo;
     PFN_ROSWDFUNIMPLEMENTED                                      pfnWdfGetTriageInfo;
@@ -7259,29 +7218,17 @@ WDFVERSION WdfVersion = {
         WDFEXPORT(WdfFileObjectGetFlags),
         WDFEXPORT(WdfFileObjectGetDevice),
         WDFEXPORT(WdfFileObjectWdmGetFileObject),
-        // WDFEXPORT(WdfInterruptCreate),
-        // WDFEXPORT(WdfInterruptQueueDpcForIsr),
-        // WDFEXPORT(WdfInterruptSynchronize),
-        // WDFEXPORT(WdfInterruptAcquireLock),
-        // WDFEXPORT(WdfInterruptReleaseLock),
-        // WDFEXPORT(WdfInterruptEnable),
-        // WDFEXPORT(WdfInterruptDisable),
-        // WDFEXPORT(WdfInterruptWdmGetInterrupt),
-        // WDFEXPORT(WdfInterruptGetInfo),
-        // WDFEXPORT(WdfInterruptSetPolicy),
-        // WDFEXPORT(WdfInterruptGetDevice),
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-
+        WDFEXPORT(WdfInterruptCreate),
+        WDFEXPORT(WdfInterruptQueueDpcForIsr),
+        WDFEXPORT(WdfInterruptSynchronize),
+        WDFEXPORT(WdfInterruptAcquireLock),
+        WDFEXPORT(WdfInterruptReleaseLock),
+        WDFEXPORT(WdfInterruptEnable),
+        WDFEXPORT(WdfInterruptDisable),
+        WDFEXPORT(WdfInterruptWdmGetInterrupt),
+        WDFEXPORT(WdfInterruptGetInfo),
+        WDFEXPORT(WdfInterruptSetPolicy),
+        WDFEXPORT(WdfInterruptGetDevice),
         WDFEXPORT(WdfIoQueueCreate),
         WDFEXPORT(WdfIoQueueGetState),
         WDFEXPORT(WdfIoQueueStart),
@@ -7416,51 +7363,28 @@ WDFVERSION WdfVersion = {
         WDFEXPORT(WdfRequestRequeue),
         WDFEXPORT(WdfRequestStopAcknowledge),
         WDFEXPORT(WdfRequestWdmGetIrp),
-        // WDFEXPORT(WdfIoResourceRequirementsListSetSlotNumber),
-        // WDFEXPORT(WdfIoResourceRequirementsListSetInterfaceType),
-        // WDFEXPORT(WdfIoResourceRequirementsListAppendIoResList),
-        // WDFEXPORT(WdfIoResourceRequirementsListInsertIoResList),
-        // WDFEXPORT(WdfIoResourceRequirementsListGetCount),
-        // WDFEXPORT(WdfIoResourceRequirementsListGetIoResList),
-        // WDFEXPORT(WdfIoResourceRequirementsListRemove),
-        // WDFEXPORT(WdfIoResourceRequirementsListRemoveByIoResList),
-        // WDFEXPORT(WdfIoResourceListCreate),
-        // WDFEXPORT(WdfIoResourceListAppendDescriptor),
-        // WDFEXPORT(WdfIoResourceListInsertDescriptor),
-        // WDFEXPORT(WdfIoResourceListUpdateDescriptor),
-        // WDFEXPORT(WdfIoResourceListGetCount),
-        // WDFEXPORT(WdfIoResourceListGetDescriptor),
-        // WDFEXPORT(WdfIoResourceListRemove),
-        // WDFEXPORT(WdfIoResourceListRemoveByDescriptor),
-        // WDFEXPORT(WdfCmResourceListAppendDescriptor),
-        // WDFEXPORT(WdfCmResourceListInsertDescriptor),
-        // WDFEXPORT(WdfCmResourceListGetCount),
-        // WDFEXPORT(WdfCmResourceListGetDescriptor),
-        // WDFEXPORT(WdfCmResourceListRemove),
-        // WDFEXPORT(WdfCmResourceListRemoveByDescriptor),
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
-
+        WDFEXPORT(WdfIoResourceRequirementsListSetSlotNumber),
+        WDFEXPORT(WdfIoResourceRequirementsListSetInterfaceType),
+        WDFEXPORT(WdfIoResourceRequirementsListAppendIoResList),
+        WDFEXPORT(WdfIoResourceRequirementsListInsertIoResList),
+        WDFEXPORT(WdfIoResourceRequirementsListGetCount),
+        WDFEXPORT(WdfIoResourceRequirementsListGetIoResList),
+        WDFEXPORT(WdfIoResourceRequirementsListRemove),
+        WDFEXPORT(WdfIoResourceRequirementsListRemoveByIoResList),
+        WDFEXPORT(WdfIoResourceListCreate),
+        WDFEXPORT(WdfIoResourceListAppendDescriptor),
+        WDFEXPORT(WdfIoResourceListInsertDescriptor),
+        WDFEXPORT(WdfIoResourceListUpdateDescriptor),
+        WDFEXPORT(WdfIoResourceListGetCount),
+        WDFEXPORT(WdfIoResourceListGetDescriptor),
+        WDFEXPORT(WdfIoResourceListRemove),
+        WDFEXPORT(WdfIoResourceListRemoveByDescriptor),
+        WDFEXPORT(WdfCmResourceListAppendDescriptor),
+        WDFEXPORT(WdfCmResourceListInsertDescriptor),
+        WDFEXPORT(WdfCmResourceListGetCount),
+        WDFEXPORT(WdfCmResourceListGetDescriptor),
+        WDFEXPORT(WdfCmResourceListRemove),
+        WDFEXPORT(WdfCmResourceListRemoveByDescriptor),
         WDFEXPORT(WdfStringCreate),
         WDFEXPORT(WdfStringGetUnicodeString),
         WDFEXPORT(WdfObjectAcquireLock),
@@ -7605,9 +7529,7 @@ WDFVERSION WdfVersion = {
 
         WDFEXPORT(WdfDeviceRemoveDependentUsageDeviceObject),
         WDFEXPORT(WdfDeviceGetSystemPowerAction),
-        // WDFEXPORT(WdfInterruptSetExtendedPolicy),
-        WdfApiNotImplemented,
-
+        WDFEXPORT(WdfInterruptSetExtendedPolicy),
         WDFEXPORT(WdfIoQueueAssignForwardProgressPolicy),
         WDFEXPORT(WdfPdoInitAssignContainerID),
         WDFEXPORT(WdfPdoInitAllowForwardingRequestToParent),
@@ -7640,10 +7562,6 @@ WDFVERSION WdfVersion = {
         // WDFEXPORT(WdfDmaTransactionFreeResources),
         // WDFEXPORT(WdfDmaTransactionCancel),
         // WDFEXPORT(WdfDmaTransactionWdmGetTransferContext),
-        // WDFEXPORT(WdfInterruptQueueWorkItemForIsr),
-        // WDFEXPORT(WdfInterruptTryToAcquireLock),
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
         WdfApiNotImplemented,
         WdfApiNotImplemented,
         WdfApiNotImplemented,
@@ -7656,6 +7574,8 @@ WDFVERSION WdfVersion = {
         WdfApiNotImplemented,
         WdfApiNotImplemented,
 
+        WDFEXPORT(WdfInterruptQueueWorkItemForIsr),
+        WDFEXPORT(WdfInterruptTryToAcquireLock),
         WDFEXPORT(WdfIoQueueStopAndPurge),
         WDFEXPORT(WdfIoQueueStopAndPurgeSynchronously),
         WDFEXPORT(WdfIoTargetPurge),
@@ -7671,13 +7591,11 @@ WDFVERSION WdfVersion = {
         WDFEXPORT(WdfDeviceWdmAssignPowerFrameworkSettings),
         // WDFEXPORT(WdfDmaTransactionStopSystemTransfer),
         // WDFEXPORT(WdfCxVerifierKeBugCheck),
-        // WDFEXPORT(WdfInterruptReportActive),
-        // WDFEXPORT(WdfInterruptReportInactive),
-        WdfApiNotImplemented,
-        WdfApiNotImplemented,
         WdfApiNotImplemented,
         WdfApiNotImplemented,
 
+        WDFEXPORT(WdfInterruptReportActive),
+        WDFEXPORT(WdfInterruptReportInactive),
         WDFEXPORT(WdfDeviceInitSetReleaseHardwareOrderOnFailure),
         // WDFEXPORT(WdfGetTriageInfo),
         WdfApiNotImplemented,

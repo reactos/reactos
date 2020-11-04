@@ -35,6 +35,7 @@ extern "C" {
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 VOID
+STDCALL
 WDFEXPORT(WdfIoResourceRequirementsListSetSlotNumber)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -73,6 +74,7 @@ Return Value:
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 VOID
+STDCALL
 WDFEXPORT(WdfIoResourceRequirementsListSetInterfaceType)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -177,6 +179,7 @@ Return Value:
 _Must_inspect_result_
 __drv_maxIRQL(DISPATCH_LEVEL)
 NTSTATUS
+STDCALL
 WDFEXPORT(WdfIoResourceRequirementsListInsertIoResList)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -213,6 +216,7 @@ Return Value:
 _Must_inspect_result_
 __drv_maxIRQL(DISPATCH_LEVEL)
 NTSTATUS
+STDCALL
 WDFEXPORT(WdfIoResourceRequirementsListAppendIoResList)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -246,6 +250,7 @@ Return Value:
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 ULONG
+STDCALL
 WDFEXPORT(WdfIoResourceRequirementsListGetCount)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -285,6 +290,7 @@ Return Value:
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 WDFIORESLIST
+STDCALL
 WDFEXPORT(WdfIoResourceRequirementsListGetIoResList)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -331,6 +337,7 @@ Return Value:
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 VOID
+STDCALL
 WDFEXPORT(WdfIoResourceRequirementsListRemove)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -376,6 +383,7 @@ Return Value:
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 VOID
+STDCALL
 WDFEXPORT(WdfIoResourceRequirementsListRemoveByIoResList)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -456,6 +464,7 @@ Return Value:
 _Must_inspect_result_
 __drv_maxIRQL(DISPATCH_LEVEL)
 NTSTATUS
+STDCALL
 WDFEXPORT(WdfIoResourceListCreate)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -604,6 +613,7 @@ Return Value:
 _Must_inspect_result_
 __drv_maxIRQL(DISPATCH_LEVEL)
 NTSTATUS
+STDCALL
 WDFEXPORT(WdfIoResourceListInsertDescriptor)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -640,6 +650,7 @@ Return Value:
 _Must_inspect_result_
 __drv_maxIRQL(DISPATCH_LEVEL)
 NTSTATUS
+STDCALL
 WDFEXPORT(WdfIoResourceListAppendDescriptor)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -671,6 +682,7 @@ Return Value:
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 VOID
+STDCALL
 WDFEXPORT(WdfIoResourceListUpdateDescriptor)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -746,6 +758,7 @@ Return Value:
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 ULONG
+STDCALL
 WDFEXPORT(WdfIoResourceListGetCount)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -784,6 +797,7 @@ Return Value:
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 PIO_RESOURCE_DESCRIPTOR
+STDCALL
 WDFEXPORT(WdfIoResourceListGetDescriptor)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -838,6 +852,7 @@ Return Value:
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 VOID
+STDCALL
 WDFEXPORT(WdfIoResourceListRemove)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -892,6 +907,7 @@ Return Value:
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 VOID
+STDCALL
 WDFEXPORT(WdfIoResourceListRemoveByDescriptor)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1041,6 +1057,7 @@ Return Value:
 _Must_inspect_result_
 __drv_maxIRQL(DISPATCH_LEVEL)
 NTSTATUS
+STDCALL
 WDFEXPORT(WdfCmResourceListInsertDescriptor)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1079,6 +1096,7 @@ Return Value:
 _Must_inspect_result_
 __drv_maxIRQL(DISPATCH_LEVEL)
 NTSTATUS
+STDCALL
 WDFEXPORT(WdfCmResourceListAppendDescriptor)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1112,6 +1130,7 @@ Return Value:
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 ULONG
+STDCALL
 WDFEXPORT(WdfCmResourceListGetCount)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1144,6 +1163,7 @@ Return Value:
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 PCM_PARTIAL_RESOURCE_DESCRIPTOR
+STDCALL
 WDFEXPORT(WdfCmResourceListGetDescriptor)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1181,6 +1201,7 @@ Return Value:
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 VOID
+STDCALL
 WDFEXPORT(WdfCmResourceListRemove)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
@@ -1227,6 +1248,7 @@ Return Value:
 
 __drv_maxIRQL(DISPATCH_LEVEL)
 VOID
+STDCALL
 WDFEXPORT(WdfCmResourceListRemoveByDescriptor)(
     __in
     PWDF_DRIVER_GLOBALS DriverGlobals,
