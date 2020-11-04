@@ -45,6 +45,7 @@ static VIDEO_ACCESS_RANGE LegacyRangeList[] =
 
 /* FUNCTIONS ******************************************************************/
 
+static
 CODE_SEG("PAGE")
 VP_STATUS
 NTAPI
@@ -138,6 +139,7 @@ Pc98VidFindAdapter(
     return NO_ERROR;
 }
 
+static
 CODE_SEG("PAGE")
 BOOLEAN
 NTAPI
@@ -156,6 +158,7 @@ Pc98VidInitialize(
     return TRUE;
 }
 
+static
 CODE_SEG("PAGE")
 VP_STATUS
 NTAPI

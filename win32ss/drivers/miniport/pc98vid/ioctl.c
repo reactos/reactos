@@ -11,6 +11,7 @@
 
 /* FUNCTIONS ******************************************************************/
 
+static
 CODE_SEG("PAGE")
 VOID
 FASTCALL
@@ -43,6 +44,7 @@ Pc98VidQueryMode(
                                 VIDEO_MODE_PALETTE_DRIVEN | VIDEO_MODE_MANAGED_PALETTE;
 }
 
+static
 CODE_SEG("PAGE")
 VP_STATUS
 FASTCALL
@@ -70,6 +72,7 @@ Pc98VidQueryAvailModes(
     return NO_ERROR;
 }
 
+static
 CODE_SEG("PAGE")
 VP_STATUS
 FASTCALL
@@ -90,6 +93,7 @@ Pc98VidQueryNumAvailModes(
     return NO_ERROR;
 }
 
+static
 CODE_SEG("PAGE")
 VP_STATUS
 FASTCALL
@@ -110,6 +114,7 @@ Pc98VidQueryCurrentMode(
     return NO_ERROR;
 }
 
+static
 CODE_SEG("PAGE")
 VP_STATUS
 FASTCALL
@@ -150,6 +155,7 @@ Pc98VidMapVideoMemory(
     return Status;
 }
 
+static
 CODE_SEG("PAGE")
 VP_STATUS
 FASTCALL
@@ -166,6 +172,7 @@ Pc98VidUnmapVideoMemory(
                                 NULL);
 }
 
+static
 CODE_SEG("PAGE")
 VP_STATUS
 FASTCALL
@@ -178,6 +185,7 @@ Pc98VidResetDevice(VOID)
     return NO_ERROR;
 }
 
+static
 CODE_SEG("PAGE")
 VP_STATUS
 FASTCALL
