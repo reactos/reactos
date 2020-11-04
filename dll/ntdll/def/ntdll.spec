@@ -425,7 +425,7 @@
 @ stdcall NtQueryEaFile(long ptr ptr long long ptr long ptr long)
 @ stdcall NtQueryEvent(long long ptr long ptr)
 @ stdcall NtQueryFullAttributesFile(ptr ptr)
-@ stdcall NtQueryInformationAtom(ptr long ptr long ptr)
+@ stdcall NtQueryInformationAtom(long long ptr long ptr)
 @ stub -version=0x600+ NtQueryInformationEnlistment
 @ stdcall NtQueryInformationFile(ptr ptr ptr long long)
 @ stdcall NtQueryInformationJobObject(ptr long ptr long ptr)

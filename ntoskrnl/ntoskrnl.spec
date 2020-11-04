@@ -868,7 +868,7 @@
 @ stdcall NtOpenThreadTokenEx(ptr long long long ptr)
 @ stdcall NtQueryDirectoryFile(ptr ptr ptr ptr ptr ptr long long long ptr long)
 @ stdcall NtQueryEaFile(ptr ptr ptr long long ptr long ptr long)
-@ stdcall NtQueryInformationAtom(ptr long ptr long ptr)
+@ stdcall NtQueryInformationAtom(long long ptr long ptr)
 @ stdcall NtQueryInformationFile(ptr ptr ptr long long)
 @ stdcall NtQueryInformationProcess(ptr long ptr long ptr)
 @ stdcall NtQueryInformationThread(ptr long ptr long ptr)
