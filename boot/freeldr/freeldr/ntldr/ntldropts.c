@@ -119,7 +119,9 @@ NtLdrGetOptionEx(
     IN PCSTR OptionName,
     OUT PULONG OptionLength OPTIONAL)
 {
-    return NtLdrGetOptionExN(Options, OptionName, strlen(OptionName), OptionLength);
+    return NtLdrGetOptionExN(Options, OptionName,
+                             (ULONG)strlen(OptionName),
+                             OptionLength);
 }
 
 PCSTR
