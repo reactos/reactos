@@ -144,9 +144,9 @@ DoWatchDestFileName(LPCWSTR FileName)
 /* FUNCTIONS ****************************************************************/
 
 static VOID
-PrintString(char* fmt,...)
+PrintString(IN PCSTR fmt,...)
 {
-    char buffer[512];
+    CHAR buffer[512];
     va_list ap;
     UNICODE_STRING UnicodeString;
     ANSI_STRING AnsiString;
@@ -2065,7 +2065,7 @@ CreatePrimaryPartitionPage(PINPUT_RECORD Ir)
     ULONGLONG PartSize;
     ULONGLONG DiskSize;
     ULONGLONG SectorCount;
-    PCHAR Unit;
+    PCSTR Unit;
 
     if (PartitionList == NULL || CurrentPartition == NULL)
     {
@@ -2227,7 +2227,7 @@ CreateExtendedPartitionPage(PINPUT_RECORD Ir)
     ULONGLONG PartSize;
     ULONGLONG DiskSize;
     ULONGLONG SectorCount;
-    PCHAR Unit;
+    PCSTR Unit;
 
     if (PartitionList == NULL || CurrentPartition == NULL)
     {
@@ -2388,7 +2388,7 @@ CreateLogicalPartitionPage(PINPUT_RECORD Ir)
     ULONGLONG PartSize;
     ULONGLONG DiskSize;
     ULONGLONG SectorCount;
-    PCHAR Unit;
+    PCSTR Unit;
 
     if (PartitionList == NULL || CurrentPartition == NULL)
     {
@@ -2586,7 +2586,7 @@ DeletePartitionPage(PINPUT_RECORD Ir)
     PDISKENTRY DiskEntry;
     ULONGLONG DiskSize;
     ULONGLONG PartSize;
-    PCHAR Unit;
+    PCSTR Unit;
     CHAR PartTypeString[32];
 
     if (PartitionList == NULL || CurrentPartition == NULL)
@@ -2757,8 +2757,8 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
     PDISKENTRY DiskEntry;
     ULONGLONG DiskSize;
     ULONGLONG PartSize;
-    PCHAR DiskUnit;
-    PCHAR PartUnit;
+    PCSTR DiskUnit;
+    PCSTR PartUnit;
     CHAR PartTypeString[32];
     FORMATMACHINESTATE PreviousFormatState;
     PCWSTR DefaultFs;

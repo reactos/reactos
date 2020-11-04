@@ -172,10 +172,10 @@ PrintPartitionData(
     USHORT Width;
     USHORT Height;
     LARGE_INTEGER PartSize;
-    PCHAR Unit;
+    PCSTR Unit;
     UCHAR Attribute;
     CHAR PartTypeString[32];
-    PCHAR PartType = PartTypeString;
+    PCSTR PartType = PartTypeString;
 
     Width = ListUi->Right - ListUi->Left - 1;
     Height = ListUi->Bottom - ListUi->Top - 2;
@@ -308,7 +308,7 @@ PrintDiskData(
     USHORT Width;
     USHORT Height;
     ULARGE_INTEGER DiskSize;
-    PCHAR Unit;
+    PCSTR Unit;
 
     Width = ListUi->Right - ListUi->Left - 1;
     Height = ListUi->Bottom - ListUi->Top - 2;
