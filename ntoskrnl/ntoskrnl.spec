@@ -1249,7 +1249,7 @@
 @ fastcall RtlPrefetchMemoryNonTemporal(ptr long)
 @ stdcall RtlPrefixString(ptr ptr long)
 @ stdcall RtlPrefixUnicodeString(ptr ptr long)
-@ stdcall RtlQueryAtomInAtomTable(ptr ptr ptr ptr ptr ptr)
+@ stdcall RtlQueryAtomInAtomTable(ptr long ptr ptr ptr ptr)
 @ stdcall RtlQueryRegistryValues(long wstr ptr ptr ptr)
 @ stdcall RtlQueryTimeZoneInformation(ptr)
 @ stdcall RtlRaiseException(ptr)
