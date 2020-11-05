@@ -318,6 +318,15 @@ HalpUnmapVirtualAddress(
 /* sysinfo.c */
 NTSTATUS
 NTAPI
+HaliHandlePCIConfigSpaceAccess(
+    _In_ BOOLEAN IsRead,
+    _In_ ULONG Port,
+    _In_ ULONG Length,
+    _Inout_ PULONG Buffer
+);
+
+NTSTATUS
+NTAPI
 HaliQuerySystemInformation(
     IN HAL_QUERY_INFORMATION_CLASS InformationClass,
     IN ULONG BufferSize,
