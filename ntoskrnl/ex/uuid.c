@@ -394,7 +394,6 @@ ExUuidCreate(OUT UUID *Uuid)
         {
             Time.QuadPart = ExpUuidCachedValues.Time;
 
-            C_ASSERT(sizeof(ExpUuidCachedValues.GuidInit) == sizeof(Uuid->Data4));
             RtlCopyMemory(Uuid->Data4,
                           ExpUuidCachedValues.GuidInit,
                           sizeof(Uuid->Data4));
