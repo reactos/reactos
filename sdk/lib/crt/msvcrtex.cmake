@@ -58,6 +58,15 @@ if(ARCH STREQUAL "i386")
         math/i386/cipow.c
         math/i386/cisin.c
         math/i386/cisqrt.c)
+    if (GCC AND CLANG)
+        # CLang performs some optimisations requiring those funtions
+        list(APPEND MSVCRTEX_ASM_SOURCE
+            math/i386/ceilf.S
+            math/i386/exp2_asm.s
+            math/i386/floorf.S)
+        list(APPEND MSVCRTEX_SOURCE
+            math/i386/sqrtf.c)
+    endif()
 elseif(ARCH STREQUAL "amd64")
     list(APPEND MSVCRTEX_ASM_SOURCE
         except/amd64/chkstk_ms.s)
