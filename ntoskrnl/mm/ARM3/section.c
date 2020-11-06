@@ -2934,7 +2934,7 @@ MmMapViewOfArm3Section(IN PVOID SectionObject,
     if (!(*ViewSize))
     {
         /* Compute it for the caller */
-        CalculatedViewSize = Section->SizeOfSection.QuadPart - 
+        CalculatedViewSize = Section->SizeOfSection.QuadPart -
                              SectionOffset->QuadPart;
 
         /* Check if it's larger than 4GB or overflows into kernel-mode */
@@ -3891,30 +3891,24 @@ NtExtendSection(IN HANDLE SectionHandle,
                                        NULL);
     if (!NT_SUCCESS(Status)) return Status;
 
-    /* Really this should go in MmExtendSection */
-    if (!Section->u.Flags.File || Section->u.Flags.Image)
-    {
-        DPRINT1("Not extending a file\n");
-        ObDereferenceObject(Section);
-        return STATUS_SECTION_NOT_EXTENDED;
-    }
-
-    /* FIXME: Do the work */
+    Status = MmExtendSection(Section, &SafeNewMaximumSize);
 
     /* Dereference the section */
     ObDereferenceObject(Section);
 
-    /* Enter SEH */
-    _SEH2_TRY
+    if (NT_SUCCESS(Status))
     {
-        /* Write back the new size */
-        *NewMaximumSize = SafeNewMaximumSize;
+        _SEH2_TRY
+        {
+            /* Write back the new size */
+            *NewMaximumSize = SafeNewMaximumSize;
+        }
+        _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+        {
+            Status = _SEH2_GetExceptionCode();
+        }
+        _SEH2_END;
     }
-    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-    {
-        /* Nothing to do */
-    }
-    _SEH2_END;
 
     /* Return the status */
     return STATUS_NOT_IMPLEMENTED;

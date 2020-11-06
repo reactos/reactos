@@ -187,9 +187,6 @@ _MmSetPageEntrySectionSegment(PMM_SECTION_SEGMENT Segment,
     ASSERT(Segment->Locked);
     ASSERT(!IS_SWAP_FROM_SSE(Entry) || !IS_DIRTY_SSE(Entry));
 
-    if (Entry && !IS_SWAP_FROM_SSE(Entry))
-        MmGetRmapListHeadPage(PFN_FROM_SSE(Entry));
-
     PageTable = MiSectionPageTableGetOrAllocate(&Segment->PageTable, Offset);
 
     if (!PageTable) return STATUS_NO_MEMORY;

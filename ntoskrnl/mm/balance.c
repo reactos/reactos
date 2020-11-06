@@ -54,18 +54,6 @@ MmInitializeBalancer(ULONG NrAvailablePages, ULONG NrSystemPages)
     /* Set up targets. */
     MiMinimumAvailablePages = 256;
     MiMinimumPagesPerRun = 256;
-    if ((NrAvailablePages + NrSystemPages) >= 8192)
-    {
-        MiMemoryConsumers[MC_CACHE].PagesTarget = NrAvailablePages / 4 * 3;
-    }
-    else if ((NrAvailablePages + NrSystemPages) >= 4096)
-    {
-        MiMemoryConsumers[MC_CACHE].PagesTarget = NrAvailablePages / 3 * 2;
-    }
-    else
-    {
-        MiMemoryConsumers[MC_CACHE].PagesTarget = NrAvailablePages / 8;
-    }
     MiMemoryConsumers[MC_USER].PagesTarget = NrAvailablePages - MiMinimumAvailablePages;
 }
 
