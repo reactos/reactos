@@ -20,8 +20,8 @@
 
   void __cdecl _lock (int _File);
   void __cdecl _unlock (int _File);
-  
-_PVFV *__onexitbegin;
+
+_PVFV *__onexitbegin = (_PVFV *)(LONG_PTR)-1;
 _PVFV *__onexitend;
 
 extern _onexit_t __cdecl __dllonexit (_onexit_t, _PVFV**, _PVFV**);
@@ -61,7 +61,7 @@ _onexit_t __cdecl _onexit(_onexit_t func)
   {
       onexitbegin = (_PVFV *)calloc(32, sizeof(_onexit_t));
       if (onexitbegin == NULL)
-        return NULL;
+          return NULL;
       __onexitbegin = _encode_pointer(onexitbegin);
       __onexitend = _encode_pointer(onexitbegin + 32);
   }
