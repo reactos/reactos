@@ -10,8 +10,8 @@ BEGIN
     POPUP "O&rganizar ícones", FCIDM_SHVIEW_ARRANGE
     BEGIN
         MENUITEM "", -1, MFT_SEPARATOR
-        MENUITEM "Auto organi&zar", FCIDM_SHVIEW_AUTOARRANGE
-        MENUITEM "Align to &Grid", FCIDM_SHVIEW_ALIGNTOGRID
+        MENUITEM "Alinhar icones &automaticamente", FCIDM_SHVIEW_AUTOARRANGE
+        MENUITEM "Alinhar icones com a &grelha", FCIDM_SHVIEW_ALIGNTOGRID
     END
 END
 
@@ -31,8 +31,8 @@ BEGIN
         POPUP "O&rganizar ícones", FCIDM_SHVIEW_ARRANGE
         BEGIN
             MENUITEM "", -1, MFT_SEPARATOR
-            MENUITEM "Auto organi&zar", FCIDM_SHVIEW_AUTOARRANGE
-            MENUITEM "Align to &Grid", FCIDM_SHVIEW_ALIGNTOGRID
+            MENUITEM "Alinhar icones &automaticamente", FCIDM_SHVIEW_AUTOARRANGE
+            MENUITEM "Alinhar icones com a &grelha", FCIDM_SHVIEW_ALIGNTOGRID
         END
         MENUITEM "&Actualizar", FCIDM_SHVIEW_REFRESH
         MENUITEM "", -1, MFT_SEPARATOR
@@ -182,8 +182,8 @@ BEGIN
     LTEXT "", -1, 8, 31, 223, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
     LTEXT "Tipo de destino:", IDC_SHORTCUT_TYPE, 8, 38, 68, 10
     EDITTEXT IDC_SHORTCUT_TYPE_EDIT, 79, 37, 150, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "Localização do destino:", IDC_SHORTCUT_LOCATION, 8, 55, 68, 10
-    EDITTEXT IDC_SHORTCUT_LOCATION_EDIT, 79, 53, 150, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
+    LTEXT "Localização de destino:", IDC_SHORTCUT_LOCATION, 8, 50, 68, 15
+    EDITTEXT IDC_SHORTCUT_LOCATION_EDIT, 79, 55, 150, 12, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "Destino:", IDC_SHORTCUT_TARGET, 8, 71, 68, 10
     EDITTEXT IDC_SHORTCUT_TARGET_TEXT, 79, 69, 150, 14, ES_AUTOHSCROLL
     LTEXT "", -1, 8, 88, 223, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
@@ -196,8 +196,8 @@ BEGIN
     LTEXT "C&omentário:", IDC_SHORTCUT_COMMENT, 8, 154, 68, 10
     EDITTEXT IDC_SHORTCUT_COMMENT_EDIT, 79, 152, 150, 14, ES_AUTOHSCROLL
     PUSHBUTTON "&Localizar destino...", IDC_SHORTCUT_FIND, 9, 172, 70, 14, ES_LEFT
-    PUSHBUTTON "&Trocar Icone...", IDC_SHORTCUT_CHANGE_ICON, 84, 172, 70, 14, ES_LEFT
-    PUSHBUTTON "A&vançado...", IDC_SHORTCUT_ADVANCED, 159, 172, 70, 14, ES_LEFT
+    PUSHBUTTON "&Alterar Icone...", IDC_SHORTCUT_CHANGE_ICON, 84, 172, 70, 14, ES_LEFT
+    PUSHBUTTON "A&vançadas...", IDC_SHORTCUT_ADVANCED, 159, 172, 70, 14, ES_LEFT
 END
 
 IDD_SHORTCUT_EXTENDED_PROPERTIES DIALOGEX 0, 0, 230, 150
@@ -221,14 +221,14 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     ICON "", 14000, 16, 7, 32, 32, WS_VISIBLE
     EDITTEXT 14001, 58, 9, 170, 14, ES_LEFT
-    LTEXT "Tipo de ficheiro:", 14004, 8, 40, 55, 10
+    LTEXT "Tipo de ficheiro:", 14004, 8, 40, 55, 15
     CONTROL "Pasta", 14005, "edit", ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL, 58, 40, 170, 10
     LTEXT "", -1, 8, 31, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
     LTEXT "Localização:", 14008, 8, 56, 55, 10
     EDITTEXT 14009, 58, 56, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | ES_AUTOHSCROLL | NOT WS_TABSTOP
     LTEXT "Tamanho:", 14010, 8, 72, 55, 10
     EDITTEXT 14011, 58, 72, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
-    LTEXT "Tamanho no disco:", 140101, 8, 88, 55, 10
+    LTEXT "Tamanho no disco:", 140101, 8, 88, 48, 15
     EDITTEXT 14012, 58, 88, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "Contém:", 14026, 8, 104, 55, 10
     EDITTEXT 14027, 58, 104, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
@@ -236,11 +236,11 @@ BEGIN
     LTEXT "Criado:", 14014, 8, 128, 55, 10
     EDITTEXT 14015, 58, 128, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP | ES_AUTOHSCROLL
     LTEXT "", -1, 8, 144, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
-    LTEXT "Propriedades:", 14020, 8, 152, 46, 10
-    AUTOCHECKBOX "&Sómente de leitura", 14021, 58, 151, 70, 10
+    LTEXT "Atributos:", 14020, 8, 152, 46, 10
+    AUTOCHECKBOX "&Só de leitura", 14021, 58, 151, 70, 10
     AUTOCHECKBOX "&Oculto", 14022, 126, 151, 70, 10
     AUTOCHECKBOX "&Arquivo", 14023, 181, 151, 70, 10
-    PUSHBUTTON "A&vançado...", 14028, 158, 150, 70, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
+    PUSHBUTTON "A&vançadas...", 14028, 158, 150, 70, 14, WS_CHILD | WS_VISIBLE | WS_TABSTOP
 END
 
 IDD_FILE_PROPERTIES DIALOGEX 0, 0, 240, 205
@@ -251,7 +251,7 @@ BEGIN
     ICON "", 14000, 16, 7, 32, 32, WS_VISIBLE
     EDITTEXT 14001, 58, 9, 170, 14, ES_LEFT | WS_TABSTOP
     LTEXT "", -1, 8, 29, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
-    LTEXT "Tipo de ficheiro:", 14004, 8, 35, 50, 10
+    LTEXT "Tipo de ficheiro:", 14004, 8, 35, 48, 15
     CONTROL "Ficheiro", 14005, "edit", ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP, 58, 35, 170, 10
     LTEXT "Abre com::", 14006, 8, 53, 50, 10
     ICON "", 14025, 58, 52, 11, 10, NOT WS_VISIBLE
@@ -262,7 +262,7 @@ BEGIN
     EDITTEXT 14009, 58, 75, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | ES_AUTOHSCROLL | NOT WS_TABSTOP
     LTEXT "Tamanho:", 14010, 8, 91, 45, 10
     EDITTEXT 14011, 58, 91, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "Tamanho no disco:", 140112, 8, 107, 55, 10
+    LTEXT "Tamanho no disco:", 140112, 8, 107, 48, 15
     EDITTEXT 14012, 58, 107, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT "", -1, 8, 123, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
     LTEXT "Criado:", 14014, 8, 131, 45, 10
@@ -272,11 +272,11 @@ BEGIN
     LTEXT "Acedido:", 14018, 8, 163, 45, 10
     EDITTEXT 14019, 58, 163, 170, 10, ES_LEFT | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT "", -1, 8, 179, 221, 1, SS_ETCHEDHORZ | WS_CHILD | WS_VISIBLE
-    LTEXT "Propriedades:", 14020, 8, 189, 45, 10
-    AUTOCHECKBOX "&Somente de Leitura", 14021, 58, 188, 67, 10
+    LTEXT "Atributos:", 14020, 8, 189, 45, 10
+    AUTOCHECKBOX "&Só de leitura", 14021, 58, 188, 67, 10
     AUTOCHECKBOX "&Oculto", 14022, 126, 188, 50, 10
     AUTOCHECKBOX "&Arquivo", 14023, 181, 188, 49, 10
-    PUSHBUTTON "A&vançado...", 14028, 180, 185, 50, 15, WS_TABSTOP
+    PUSHBUTTON "A&vançadas...", 14028, 180, 185, 50, 15, WS_TABSTOP
 END
 
 IDD_FILE_VERSION DIALOGEX 0, 0, 235, 215
@@ -458,7 +458,7 @@ BEGIN
     LTEXT "Nome", IDC_FILETYPES_APPNAME, 100, 180, 80, 10
     PUSHBUTTON "&Alterar...", IDC_FILETYPES_CHANGE, 200, 180, 60, 14, WS_TABSTOP
     LTEXT "", IDC_FILETYPES_DESCRIPTION, 12, 195, 160, 40
-    PUSHBUTTON "A&vançado...", IDC_FILETYPES_ADVANCED, 200, 215, 60, 14, WS_TABSTOP
+    PUSHBUTTON "A&vançadas...", IDC_FILETYPES_ADVANCED, 200, 215, 60, 14, WS_TABSTOP
 END
 
 IDD_CONFIRM_FILE_REPLACE DIALOGEX 0, 0, 282, 143
@@ -710,17 +710,17 @@ BEGIN
 END
 
 IDD_LINK_PROBLEM DIALOGEX 0, 0, 250, 140
-CAPTION "Problem with Shortcut"
+CAPTION "Problemas com atalho"
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON 0, IDC_LINK_PROBLEM_ICON, 5, 5, 0, 0
-    LTEXT "The item '%s' that this shortcut refers to has been changed or moved, so this shortcut will no longer work properly.", IDC_LINK_PROBLEM_LABEL1, 35, 5, 210, 35
-    LTEXT "Nearest match based on name, type, size, and date:", IDC_LINK_PROBLEM_LABEL2, 35, 45, 210, 35
-    LTEXT "Do you want to fix this shortcut to point to this target or do you just want to delete it?", -1, 35, 85, 210, 30
-    DEFPUSHBUTTON "&Fix it", IDOK, 55, 120, 60, 15, WS_DISABLED
-    PUSHBUTTON "&Delete it", IDYES, 120, 120, 60, 15
-    PUSHBUTTON "Cancel", IDCANCEL, 185, 120, 60, 15
+    LTEXT "O item '%s' a que este atalho se refere foi alterado ou movido, assim, este atalho não mais funcionará correctamente.", IDC_LINK_PROBLEM_LABEL1, 35, 5, 210, 35
+    LTEXT "Correspondência mais próxima com base no nome, tipo, tamanho e data:", IDC_LINK_PROBLEM_LABEL2, 35, 45, 210, 35
+    LTEXT "Deseja corrigir este atalho para apontar para este destino ou apenas excluír?", -1, 35, 85, 210, 30
+    DEFPUSHBUTTON "&Corrigir", IDOK, 55, 120, 60, 15, WS_DISABLED
+    PUSHBUTTON "&Apagar", IDYES, 120, 120, 60, 15
+    PUSHBUTTON "Cancelar", IDCANCEL, 185, 120, 60, 15
 END
 
 STRINGTABLE
@@ -827,9 +827,9 @@ BEGIN
     IDS_FORMAT_COMPLETE "Formatação concluida."
 
     /* Run File dialog */
-    IDS_RUNDLG_ERROR "Não é possível exibir a caixa de diálogo Executar arquivo (erro interno)"
-    IDS_RUNDLG_BROWSE_ERROR "Unable to display Browse dialog box (internal error)"
-    IDS_RUNDLG_BROWSE_CAPTION "Browse"
+    IDS_RUNDLG_ERROR "Não é possível abrir a caixa de diálogo Executar arquivo (erro interno)"
+    IDS_RUNDLG_BROWSE_ERROR "Não é possível abrir a caixa de diálogo Procurar arquivo (erro interno)"
+    IDS_RUNDLG_BROWSE_CAPTION "Procurar"
     IDS_RUNDLG_BROWSE_FILTER "Arquivos executáveis (*.exe)\0*.exe\0Todos (*.*)\0*.*\0"
 
     /* Shell folder path default values. See also: dll/win32/userenv/lang */
@@ -997,15 +997,15 @@ BEGIN
     IDS_EDITING_ACTION "Editar acção para o tipo: "
     IDS_NO_ICONS "O arquivo '%s' não contém ícones.\n\nEscolha um ícone da lista ou especifique um arquivo diferente."
     IDS_FILE_NOT_FOUND "O arquivo '%s' não foi encontrado."
-    IDS_LINK_INVALID "The item '%s' that this shortcut refers to has been changed or moved, so this shortcut will no longer work properly."
-    IDS_COPYTOMENU "Copy to &folder..."
-    IDS_COPYTOTITLE "Select the place where you want to copy '%s'. Then click the Copy button."
-    IDS_COPYITEMS "Copy Items"
-    IDS_COPYBUTTON "Copy"
-    IDS_MOVETOMENU "Mo&ve to folder..."
-    IDS_MOVETOTITLE "Select the place where you want to move '%s' to. Then click the Move button."
-    IDS_MOVEITEMS "Move Items"
-    IDS_MOVEBUTTON "Move"
+    IDS_LINK_INVALID "O item '%s' a que este atalho se refere foi alterado ou movido, assim, este atalho não mais funcionará correctamente."
+    IDS_COPYTOMENU "Copiar para &pasta..."
+    IDS_COPYTOTITLE "Seleccione o local para onde deseja copiar '%s'. De seguida, clique no botão Copiar."
+    IDS_COPYITEMS "Copiar Items"
+    IDS_COPYBUTTON "Copiar"
+    IDS_MOVETOMENU "Mo&ver para pasta..."
+    IDS_MOVETOTITLE "Seleccione o local para onde deseja mover '%s'. De seguida, clique no botão Mover."
+    IDS_MOVEITEMS "Mover Items"
+    IDS_MOVEBUTTON "Mover"
 
-    IDS_SYSTEMFOLDER "System Folder"
+    IDS_SYSTEMFOLDER "Pasta de sistema"
 END
