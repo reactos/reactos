@@ -1075,18 +1075,21 @@ MountMgrValidateBackPointer(IN PASSOCIATED_DEVICE_ENTRY AssociatedDeviceEntry,
     PSYMLINK_INFORMATION SymlinkInformation;
 
     /* Initialize & allocate a string big enough to contain our complete mount point name */
-    FullName.Length = AssociatedDeviceEntry->String.Length + AssociatedDeviceEntry->DeviceInformation->DeviceName.Length + sizeof(WCHAR);
-    FullName.MaximumLength = FullName.Length + sizeof(UNICODE_NULL);
+    FullName.Length = 0;
+    FullName.MaximumLength = AssociatedDeviceEntry->String.Length
+                             + AssociatedDeviceEntry->DeviceInformation->DeviceName.Length
+                             + sizeof(WCHAR)
+                             + sizeof(UNICODE_NULL);
     FullName.Buffer = AllocatePool(FullName.MaximumLength);
     if (!FullName.Buffer)
     {
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    /* Create the path  */
-    RtlCopyMemory(FullName.Buffer, AssociatedDeviceEntry->DeviceInformation->DeviceName.Buffer, AssociatedDeviceEntry->DeviceInformation->DeviceName.Length);
-    FullName.Buffer[AssociatedDeviceEntry->DeviceInformation->DeviceName.Length / sizeof(WCHAR)] = L'\\';
-    RtlCopyMemory(&FullName.Buffer[AssociatedDeviceEntry->DeviceInformation->DeviceName.Length / sizeof(WCHAR) + 1], AssociatedDeviceEntry->String.Buffer, AssociatedDeviceEntry->String.Length);
+    /* Create the path */
+    RtlAppendUnicodeStringToString(&FullName, &AssociatedDeviceEntry->DeviceInformation->DeviceName);
+    FullName.Buffer[FullName.Length / sizeof(WCHAR)] = L'\\';
+    RtlAppendUnicodeStringToString(&FullName, &AssociatedDeviceEntry->String);
     FullName.Buffer[FullName.Length / sizeof(WCHAR)] = UNICODE_NULL;
 
     /* Open it to query the reparse point */

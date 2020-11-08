@@ -665,10 +665,12 @@ ReconcileThisDatabaseWithMasterWorker(IN PVOID Parameter)
     DatabaseHandle = OpenRemoteDatabase(DeviceInformation, FALSE);
 
     /* Prepare a string with reparse point index */
-    ReparseFile.Length = DeviceInformation->DeviceName.Length + ReparseIndex.Length;
-    ReparseFile.MaximumLength = ReparseFile.Length + sizeof(UNICODE_NULL);
+    ReparseFile.Length = 0;
+    ReparseFile.MaximumLength = DeviceInformation->DeviceName.Length
+                                + ReparseIndex.Length
+                                + sizeof(UNICODE_NULL);
     ReparseFile.Buffer = AllocatePool(ReparseFile.MaximumLength);
-    if (ReparseFile.Buffer == NULL)
+    if (!ReparseFile.Buffer)
     {
         if (DatabaseHandle != 0)
         {
@@ -678,10 +680,8 @@ ReconcileThisDatabaseWithMasterWorker(IN PVOID Parameter)
         goto ReleaseRDS;
     }
 
-    RtlCopyMemory(ReparseFile.Buffer, DeviceInformation->DeviceName.Buffer,
-                  DeviceInformation->DeviceName.Length);
-    RtlCopyMemory((PVOID)((ULONG_PTR)ReparseFile.Buffer + DeviceInformation->DeviceName.Length),
-                  ReparseIndex.Buffer, ReparseIndex.Length);
+    RtlAppendUnicodeStringToString(&ReparseFile, &DeviceInformation->DeviceName);
+    RtlAppendUnicodeStringToString(&ReparseFile, &ReparseIndex);
     ReparseFile.Buffer[ReparseFile.Length / sizeof(WCHAR)] = UNICODE_NULL;
 
     InitializeObjectAttributes(&ObjectAttributes,
@@ -1477,18 +1477,18 @@ OnlineMountedVolumes(IN PDEVICE_EXTENSION DeviceExtension,
     }
 
     /* Prepare a string with reparse point index */
-    ReparseFile.Length = DeviceInformation->DeviceName.Length + ReparseIndex.Length;
-    ReparseFile.MaximumLength = ReparseFile.Length + sizeof(UNICODE_NULL);
+    ReparseFile.Length = 0;
+    ReparseFile.MaximumLength = DeviceInformation->DeviceName.Length
+                                + ReparseIndex.Length
+                                + sizeof(UNICODE_NULL);
     ReparseFile.Buffer = AllocatePool(ReparseFile.MaximumLength);
     if (!ReparseFile.Buffer)
     {
         return;
     }
 
-    RtlCopyMemory(ReparseFile.Buffer, DeviceInformation->DeviceName.Buffer,
-                  DeviceInformation->DeviceName.Length);
-    RtlCopyMemory((PVOID)((ULONG_PTR)ReparseFile.Buffer + DeviceInformation->DeviceName.Length),
-                  ReparseFile.Buffer, ReparseFile.Length);
+    RtlAppendUnicodeStringToString(&ReparseFile, &DeviceInformation->DeviceName);
+    RtlAppendUnicodeStringToString(&ReparseFile, &ReparseIndex);
     ReparseFile.Buffer[ReparseFile.Length / sizeof(WCHAR)] = UNICODE_NULL;
 
     InitializeObjectAttributes(&ObjectAttributes,
@@ -1700,8 +1700,10 @@ CreateRemoteDatabaseWorker(IN PDEVICE_OBJECT DeviceObject,
     DeviceInformation = WorkItem->DeviceInformation;
 
     /* Reconstruct appropriate string */
-    DatabaseName.Length = DeviceInformation->DeviceName.Length + RemoteDatabase.Length;
-    DatabaseName.MaximumLength = DatabaseName.Length + sizeof(WCHAR);
+    DatabaseName.Length = 0;
+    DatabaseName.MaximumLength = DeviceInformation->DeviceName.Length
+                                 + RemoteDatabase.Length
+                                 + sizeof(UNICODE_NULL);
     DatabaseName.Buffer = AllocatePool(DatabaseName.MaximumLength);
     if (DatabaseName.Buffer == NULL)
     {
@@ -1719,9 +1721,8 @@ CreateRemoteDatabaseWorker(IN PDEVICE_OBJECT DeviceObject,
     }
 
     /* Finish initiating strings */
-    RtlCopyMemory(DatabaseName.Buffer, DeviceInformation->DeviceName.Buffer, DeviceInformation->DeviceName.Length);
-    RtlCopyMemory(DatabaseName.Buffer + (DeviceInformation->DeviceName.Length / sizeof(WCHAR)),
-                  RemoteDatabase.Buffer, RemoteDatabase.Length);
+    RtlAppendUnicodeStringToString(&DatabaseName, &DeviceInformation->DeviceName);
+    RtlAppendUnicodeStringToString(&DatabaseName, &RemoteDatabase);
     DatabaseName.Buffer[DatabaseName.Length / sizeof(WCHAR)] = UNICODE_NULL;
 
     /* Create database */
@@ -1846,17 +1847,18 @@ OpenRemoteDatabase(IN PDEVICE_INFORMATION DeviceInformation,
     Database = 0;
 
     /* Get database name */
-    DeviceRemoteDatabase.Length = DeviceInformation->DeviceName.Length + RemoteDatabase.Length;
-    DeviceRemoteDatabase.MaximumLength = DeviceRemoteDatabase.Length + sizeof(WCHAR);
+    DeviceRemoteDatabase.Length = 0;
+    DeviceRemoteDatabase.MaximumLength = DeviceInformation->DeviceName.Length
+                                         + RemoteDatabase.Length
+                                         + sizeof(UNICODE_NULL);
     DeviceRemoteDatabase.Buffer = AllocatePool(DeviceRemoteDatabase.MaximumLength);
     if (!DeviceRemoteDatabase.Buffer)
     {
         return 0;
     }
 
-    RtlCopyMemory(DeviceRemoteDatabase.Buffer, DeviceInformation->DeviceName.Buffer, DeviceInformation->DeviceName.Length);
-    RtlCopyMemory(DeviceRemoteDatabase.Buffer + (DeviceInformation->DeviceName.Length / sizeof(WCHAR)),
-                  RemoteDatabase.Buffer, RemoteDatabase.Length);
+    RtlAppendUnicodeStringToString(&DeviceRemoteDatabase, &DeviceInformation->DeviceName);
+    RtlAppendUnicodeStringToString(&DeviceRemoteDatabase, &RemoteDatabase);
     DeviceRemoteDatabase.Buffer[DeviceRemoteDatabase.Length / sizeof(WCHAR)] = UNICODE_NULL;
 
     /* Open database */
