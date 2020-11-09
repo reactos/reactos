@@ -12,6 +12,11 @@ set(NTKRNLMP_ASM_SOURCE ${ASM_SOURCE})
 spec2def(ntoskrnl.exe ntoskrnl.spec ADD_IMPORTLIB)
 add_asm_files(ntoskrnl_asm ${NTOSKRNL_ASM_SOURCE})
 
+if (GCC AND CLANG)
+    # Clang optimises strcmp calls to memcmp.
+    target_link_libraries(libntoskrnl INTERFACE memcmp)
+endif()
+
 list(APPEND PCH_SKIP_SOURCE
     guid.c)
 
