@@ -543,6 +543,13 @@ IoInitSystem(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     /* Initialize HAL Root Bus Driver */
     HalInitPnpDriver();
 
+    /* Reenumerate what HAL has added (synchronously)
+     * This function call should eventually become a 2nd stage of the PnP initialization */
+    PiQueueDeviceAction(IopRootDeviceNode->PhysicalDeviceObject,
+                        PiActionEnumRootDevices,
+                        NULL,
+                        NULL);
+
     /* Make loader block available for the whole kernel */
     IopLoaderBlock = LoaderBlock;
 

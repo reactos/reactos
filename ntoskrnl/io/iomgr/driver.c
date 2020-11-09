@@ -1122,6 +1122,12 @@ IopInitializeBootDrivers(VOID)
             /* Initialize it */
             IopInitializeBuiltinDriver(LdrEntry);
 
+            /* Start the devices found by a driver (if any) */
+            PiQueueDeviceAction(IopRootDeviceNode->PhysicalDeviceObject,
+                                PiActionEnumRootDevices,
+                                NULL,
+                                NULL);
+
             /* Next entry */
             NextEntry = NextEntry->Flink;
         }
