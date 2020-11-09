@@ -888,14 +888,14 @@ UserGetWindowBorders(DWORD Style, DWORD ExStyle, SIZE *Size, BOOL WithClient)
 
    if (UserHasWindowEdge(Style, ExStyle))
       Border += 2;
-   else if (ExStyle & WS_EX_STATICEDGE)
-      Border += 1;
+   else if ((ExStyle & (WS_EX_STATICEDGE|WS_EX_DLGMODALFRAME)) == WS_EX_STATICEDGE)
+      Border += 1; /* for the outer frame always present */
    if ((ExStyle & WS_EX_CLIENTEDGE) && WithClient)
       Border += 2;
    if (Style & WS_CAPTION || ExStyle & WS_EX_DLGMODALFRAME)
-      Border ++;
+      Border ++; /* The other border */
    Size->cx = Size->cy = Border;
-   if ((Style & WS_THICKFRAME) && !(Style & WS_MINIMIZE))
+   if ((Style & WS_THICKFRAME) && !(Style & WS_MINIMIZE)) /* The resize border */
    {
       Size->cx += UserGetSystemMetrics(SM_CXFRAME) - UserGetSystemMetrics(SM_CXDLGFRAME);
       Size->cy += UserGetSystemMetrics(SM_CYFRAME) - UserGetSystemMetrics(SM_CYDLGFRAME);
@@ -904,32 +904,27 @@ UserGetWindowBorders(DWORD Style, DWORD ExStyle, SIZE *Size, BOOL WithClient)
    Size->cy *= UserGetSystemMetrics(SM_CYBORDER);
 }
 
-BOOL WINAPI
-UserAdjustWindowRectEx(LPRECT lpRect,
-                       DWORD dwStyle,
-                       BOOL bMenu,
-                       DWORD dwExStyle)
+//
+// Fix CORE-5177
+// See winetests:user32:win.c:wine_AdjustWindowRectEx, 
+// Simplified version.
+//
+DWORD IntGetWindowBorders(DWORD Style, DWORD ExStyle)
 {
-   SIZE BorderSize;
+    DWORD adjust = 0;
 
-   if (bMenu)
-   {
-      lpRect->top -= UserGetSystemMetrics(SM_CYMENU);
-   }
-   if ((dwStyle & WS_CAPTION) == WS_CAPTION)
-   {
-      if (dwExStyle & WS_EX_TOOLWINDOW)
-         lpRect->top -= UserGetSystemMetrics(SM_CYSMCAPTION);
-      else
-         lpRect->top -= UserGetSystemMetrics(SM_CYCAPTION);
-   }
-   UserGetWindowBorders(dwStyle, dwExStyle, &BorderSize, TRUE);
-   RECTL_vInflateRect(
-      lpRect,
-      BorderSize.cx,
-      BorderSize.cy);
+    if ( ExStyle & WS_EX_WINDOWEDGE )      // 1st
+        adjust = 2; /* outer */
+    else if ( ExStyle & WS_EX_STATICEDGE ) // 2nd
+        adjust = 1; /* for the outer frame always present */
 
-   return TRUE;
+    if (ExStyle & WS_EX_CLIENTEDGE)
+       adjust += 2;
+
+    if ( Style & WS_CAPTION || ExStyle & WS_EX_DLGMODALFRAME )
+        adjust++; /* The other border */
+
+    return adjust;
 }
 
 UINT FASTCALL
@@ -943,6 +938,7 @@ co_WinPosGetMinMaxInfo(PWND Window, POINT* MaxSize, POINT* MaxPos,
     LONG adjustedStyle;
     LONG exstyle = Window->ExStyle;
     RECT rc;
+    DWORD adjust;
 
     ASSERT_REFS_CO(Window);
 
@@ -957,9 +953,26 @@ co_WinPosGetMinMaxInfo(PWND Window, POINT* MaxSize, POINT* MaxPos,
     else
         adjustedStyle = style;
 
-    if(Window->spwndParent)
+    if (Window->spwndParent)
         IntGetClientRect(Window->spwndParent, &rc);
-    UserAdjustWindowRectEx(&rc, adjustedStyle, ((style & WS_POPUP) && Window->IDMenu), exstyle);
+
+    adjust = IntGetWindowBorders(adjustedStyle, exstyle);
+
+    // Handle special case while maximized. CORE-15893
+    if ((adjustedStyle & WS_THICKFRAME) && !(adjustedStyle & WS_CHILD) && !(adjustedStyle & WS_MINIMIZE))
+         adjust += 1;
+
+    xinc = yinc = adjust;
+
+    if ((adjustedStyle & WS_THICKFRAME) && (adjustedStyle & WS_CHILD) && !(adjustedStyle & WS_MINIMIZE))
+    {
+        xinc += UserGetSystemMetrics(SM_CXFRAME) - UserGetSystemMetrics(SM_CXDLGFRAME);
+        yinc += UserGetSystemMetrics(SM_CYFRAME) - UserGetSystemMetrics(SM_CYDLGFRAME);
+    }
+
+    RECTL_vInflateRect( &rc,
+                        xinc * UserGetSystemMetrics(SM_CXBORDER),
+                        yinc * UserGetSystemMetrics(SM_CYBORDER) );
 
     xinc = -rc.left;
     yinc = -rc.top;
@@ -981,7 +994,7 @@ co_WinPosGetMinMaxInfo(PWND Window, POINT* MaxSize, POINT* MaxPos,
     MinMax.ptMaxPosition.x = -xinc;
     MinMax.ptMaxPosition.y = -yinc;
 
-   if (!EMPTYPOINT(Window->InternalPos.MaxPos)) MinMax.ptMaxPosition = Window->InternalPos.MaxPos;
+    if (!EMPTYPOINT(Window->InternalPos.MaxPos)) MinMax.ptMaxPosition = Window->InternalPos.MaxPos;
 
     co_IntSendMessage(Window->head.h, WM_GETMINMAXINFO, 0, (LPARAM)&MinMax);
 
@@ -995,7 +1008,7 @@ co_WinPosGetMinMaxInfo(PWND Window, POINT* MaxSize, POINT* MaxPos,
         if (style & WS_MAXIMIZEBOX)
         {
             if ((style & WS_CAPTION) == WS_CAPTION || !(style & (WS_CHILD | WS_POPUP)))
-                rc_work = monitor->rcWork;
+               rc_work = monitor->rcWork;
         }
 
         if (MinMax.ptMaxSize.x == UserGetSystemMetrics(SM_CXSCREEN) + 2 * xinc &&
@@ -1011,27 +1024,29 @@ co_WinPosGetMinMaxInfo(PWND Window, POINT* MaxSize, POINT* MaxPos,
         }
         if (MinMax.ptMaxSize.x >= (monitor->rcMonitor.right - monitor->rcMonitor.left) &&
             MinMax.ptMaxSize.y >= (monitor->rcMonitor.bottom - monitor->rcMonitor.top) )
+        {
             Window->state |= WNDS_MAXIMIZESTOMONITOR;
+        }
         else
             Window->state &= ~WNDS_MAXIMIZESTOMONITOR;
     }
 
 
-   MinMax.ptMaxTrackSize.x = max(MinMax.ptMaxTrackSize.x,
-                                 MinMax.ptMinTrackSize.x);
-   MinMax.ptMaxTrackSize.y = max(MinMax.ptMaxTrackSize.y,
-                                 MinMax.ptMinTrackSize.y);
+    MinMax.ptMaxTrackSize.x = max(MinMax.ptMaxTrackSize.x,
+                                  MinMax.ptMinTrackSize.x);
+    MinMax.ptMaxTrackSize.y = max(MinMax.ptMaxTrackSize.y,
+                                  MinMax.ptMinTrackSize.y);
 
-   if (MaxSize)
-      *MaxSize = MinMax.ptMaxSize;
-   if (MaxPos)
-      *MaxPos = MinMax.ptMaxPosition;
-   if (MinTrack)
-      *MinTrack = MinMax.ptMinTrackSize;
-   if (MaxTrack)
-      *MaxTrack = MinMax.ptMaxTrackSize;
+    if (MaxSize)
+       *MaxSize = MinMax.ptMaxSize;
+    if (MaxPos)
+       *MaxPos = MinMax.ptMaxPosition;
+    if (MinTrack)
+       *MinTrack = MinMax.ptMinTrackSize;
+    if (MaxTrack)
+       *MaxTrack = MinMax.ptMaxTrackSize;
 
-   return 0; // FIXME: What does it return?
+    return 0; // FIXME: What does it return? Wine returns MINMAXINFO.
 }
 
 static
