@@ -30,12 +30,6 @@ if(NOT DEFINED MINGW_TOOLCHAIN_SUFFIX)
     set(MINGW_TOOLCHAIN_SUFFIX "" CACHE STRING "MinGW Toolchain Suffix")
 endif()
 
-if(ENABLE_CCACHE)
-    set(CCACHE "ccache" CACHE STRING "ccache")
-else()
-    set(CCACHE "" CACHE STRING "ccache")
-endif()
-
 # The name of the target operating system
 set(CMAKE_SYSTEM_NAME Windows)
 set(CMAKE_SYSTEM_PROCESSOR i686)

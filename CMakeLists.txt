@@ -161,6 +161,7 @@ Enable this if the module uses typeid or dynamic_cast. You will probably need to
     if(ENABLE_CCACHE)
         message(WARNING "-- Disabling precompiled headers support (ccache).")
         option(PCH "Whether to use precompiled headers" OFF)
+        set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
     elseif(GCC)
         message(WARNING "-- Disabling precompiled headers on GCC by default CORE-17108.")
         option(PCH "Whether to use precompiled headers" OFF)
