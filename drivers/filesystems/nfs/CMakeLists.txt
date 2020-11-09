@@ -14,10 +14,14 @@ set_module_type(nfs41_driver kernelmodedriver)
 target_link_libraries(nfs41_driver ntoskrnl_vista rdbsslib rxce copysup memcmp ${PSEH_LIB})
 add_importlibs(nfs41_driver ntoskrnl hal)
 
-if(USE_CLANG_CL OR (NOT MSVC))
+if(GCC OR CLANG)
     target_compile_options(nfs41_driver PRIVATE "-Wno-switch")
-    if(USE_CLANG_CL)
+    if(CLANG)
         target_compile_options(nfs41_driver PRIVATE "-Wno-unused-value")
+        if(GCC)
+            # When CLang mimicks GCC, it uses C17 as default, which breaks __inline
+            target_compile_options(nfs41_driver PRIVATE "-std=gnu89")
+        endif()
     endif()
 endif()
 
