@@ -125,14 +125,14 @@ typedef struct _NDIS_HANDLE_OBJECT
   PVOID MapBuffer;
 } NDIS_HANDLE_OBJECT, *PNDIS_HANDLE_OBJECT;
 
-__inline
+FORCEINLINE
 PNDIS_HANDLE_OBJECT
 NDIS_HANDLE_TO_POBJECT ( NDIS_HANDLE handle )
 {
   return (PNDIS_HANDLE_OBJECT)handle;
 }
 
-__inline
+FORCEINLINE
 NDIS_HANDLE
 NDIS_POBJECT_TO_HANDLE ( PNDIS_HANDLE_OBJECT obj )
 {
@@ -289,7 +289,7 @@ NdisOpenFile(
     FILE_SYNCHRONOUS_IO_NONALERT, // ULONG CreateOptions
     0, // PVOID EaBuffer
     0 ); // ULONG EaLength
-  
+
   if ( !NT_SUCCESS(*Status) )
   {
     NDIS_DbgPrint(MIN_TRACE, ("ZwCreateFile failed (%x) Name %wZ\n", *Status, FileName));
@@ -346,7 +346,7 @@ NdisGetCurrentProcessorCounts(
 {
     NDIS_DbgPrint(MAX_TRACE, ("Called.\n"));
 
-    ExGetCurrentProcessorCounts( (PULONG) pIdleCount, (PULONG) pKernelAndUser, (PULONG) pIndex); 
+    ExGetCurrentProcessorCounts( (PULONG) pIdleCount, (PULONG) pKernelAndUser, (PULONG) pIndex);
 }
 
 
@@ -356,7 +356,7 @@ NdisGetCurrentProcessorCounts(
 VOID
 EXPORT
 NdisGetSystemUpTime(OUT PULONG pSystemUpTime)
-{           
+{
     ULONG Increment;
     LARGE_INTEGER TickCount;
 
