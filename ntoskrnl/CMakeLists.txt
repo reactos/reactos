@@ -43,8 +43,10 @@ if(MSVC)
     add_target_link_flags(ntoskrnl "/SECTION:.rsrc,!DP") #Accessed from bugcheck code
     add_target_link_flags(ntoskrnl "/SECTION:INIT,ERWD")
 else()
-    if(GDB)
+    if(GDB AND NOT CLANG)
         # Completely disable optimizations when debugging the kernel
+        # Not for CLang, which fails as following in _SEH2_EXCEPT macro:
+        # error: inline assembly requires more registers than available
         target_compile_options(ntoskrnl PRIVATE -O0)
         set_image_base(ntoskrnl 0x00800000)
     else()
