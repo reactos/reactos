@@ -2559,7 +2559,7 @@ RemoveQueue (
  * return SrbExtension
  *
  */
-__inline
+FORCEINLINE
 PAHCI_SRB_EXTENSION
 GetSrbExtension (
     __in PSCSI_REQUEST_BLOCK Srb
