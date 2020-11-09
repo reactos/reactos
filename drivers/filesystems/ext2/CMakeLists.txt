@@ -92,20 +92,29 @@ if(USE_CLANG_CL)
     set_property(SOURCE src/create.c src/fileinfo.c src/memory.c src/read.c APPEND_STRING PROPERTY COMPILE_FLAGS " /fallback")
 endif()
 
-if(MSVC AND (NOT USE_CLANG_CL))
+if(MSVC)
     # Disable warnings: "unreferenced local variable", "initialized, but not used variable", "benign include"
-    remove_target_compile_option(ext2fs "/we4101")
-    remove_target_compile_option(ext2fs "/we4189")
-    target_compile_options(ext2fs PRIVATE /wd4189 /wd4142 /wd4101)
+    if (NOT CLANG)
+        remove_target_compile_option(ext2fs "/we4101")
+        remove_target_compile_option(ext2fs "/we4189")
+        target_compile_options(ext2fs PRIVATE /wd4189 /wd4142 /wd4101)
+    endif()
 else()
-    target_compile_options(ext2fs PRIVATE -Wno-pointer-sign -Wno-unused-function)
-    target_compile_options(ext2fs PRIVATE -Wno-unused-variable -Wno-missing-braces)
-    if(USE_CLANG_CL)
-        target_compile_options(ext2fs PRIVATE -Wno-unused-value -Wno-parentheses-equality)
-        target_compile_options(ext2fs PRIVATE -Wno-incompatible-pointer-types-discards-qualifiers)
-        target_compile_options(ext2fs PRIVATE "-Wno-#pragma-messages;-Wno-cast-calling-convention")
-    else()
+    target_compile_options(ext2fs PRIVATE
+        -Wno-pointer-sign -Wno-unused-function
+        -Wno-unused-variable -Wno-missing-braces)
+    if (NOT CLANG)
         target_compile_options(ext2fs PRIVATE -Wno-unused-but-set-variable)
+    endif()
+endif()
+
+if(CLANG)
+    target_compile_options(ext2fs PRIVATE
+        -Wno-unused-value -Wno-parentheses-equality
+        -Wno-incompatible-pointer-types-discards-qualifiers
+        "-Wno-#pragma-messages;-Wno-cast-calling-convention")
+    if (GCC)
+        target_compile_options(ext2fs PRIVATE -std=gnu89)
     endif()
 endif()
 
