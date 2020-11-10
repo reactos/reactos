@@ -91,9 +91,11 @@
 #define MI_MAKE_WRITE_PAGE(x)      ((x)->u.Hard.ReadOnly = 0)
 
 /* Macros to identify the page fault reason from the error code */
-#define MI_IS_NOT_PRESENT_FAULT(FaultCode) TRUE
-#define MI_IS_WRITE_ACCESS(FaultCode) TRUE
-#define MI_IS_INSTRUCTION_FETCH(FaultCode) FALSE
+// TODO: Replace these x86 matching stubs with ARMv7 proper handling.
+#define MI_IS_NOT_PRESENT_FAULT(FaultCode)  TRUE
+#define MI_IS_WRITE_ACCESS(FaultCode)       TRUE
+#define MI_IS_RESERVED_BIT_FAULT(FaultCode) FALSE
+#define MI_IS_INSTRUCTION_FETCH(FaultCode)  FALSE
 
 /* Convert an address to a corresponding PTE */
 #define MiAddressToPte(x) \

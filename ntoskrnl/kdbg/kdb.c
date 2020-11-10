@@ -1571,20 +1571,20 @@ KdbEnterDebuggerException(
         {
             /* FIXME: Add noexec memory stuff */
             ULONG_PTR TrapCr2;
-            ULONG Err;
 
             TrapCr2 = __readcr2();
 
-            Err = TrapFrame->ErrCode;
-            KdbpPrint("Memory at 0x%p could not be %s: ", TrapCr2, (Err & (1 << 1)) ? "written" : "read");
+            KdbpPrint("Memory at 0x%p could not be %s: ",
+                      TrapCr2,
+                      MI_IS_WRITE_ACCESS(TrapFrame->ErrCode) ? "written" : "read");
 
-            if ((Err & (1 << 0)) == 0)
+            if (MI_IS_NOT_PRESENT_FAULT(TrapFrame->ErrCode))
             {
                 KdbpPrint("Page not present.\n");
             }
             else
             {
-                if ((Err & (1 << 3)) != 0)
+                if (MI_IS_RESERVED_BIT_FAULT(TrapFrame->ErrCode))
                     KdbpPrint("Reserved bits in page directory set.\n");
                 else
                     KdbpPrint("Page protection violation.\n");
