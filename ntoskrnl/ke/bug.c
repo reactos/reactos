@@ -40,6 +40,16 @@ UNICODE_STRING KeRosVideoBiosDate, KeRosVideoBiosVersion;
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
+/*
+ * @brief brief discription.
+ *
+ * Full discription here.
+ *
+ * @param[in] Pc
+ * @param[out] *LdrEntry
+ * @param[in] DriversOnly
+ * @param[out] InKernel
+*/
 PVOID
 NTAPI
 KiPcToFileHeader(IN PVOID Pc,
