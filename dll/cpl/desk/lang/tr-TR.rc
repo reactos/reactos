@@ -236,7 +236,7 @@ BEGIN
     IDS_COLOR_16BIT "Yüksek Renk (16 Bitlik)"
     IDS_COLOR_24BIT "Gerçek Renk (24 Bitlik)"
     IDS_COLOR_32BIT "Gerçek Renk (32 Bitlik)"
-    IDS_PIXEL "%lux%lu Noktacık"
+    IDS_PIXEL "%lux%lu Piksel"
 END
 
 STRINGTABLE
