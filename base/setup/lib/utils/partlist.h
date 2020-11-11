@@ -8,18 +8,6 @@
 
 #pragma once
 
-/* HELPERS FOR PARTITION TYPES **********************************************/
-
-typedef struct _PARTITION_TYPE
-{
-    UCHAR Type;
-    PCHAR Description;
-} PARTITION_TYPE, *PPARTITION_TYPE;
-
-#define NUM_PARTITION_TYPE_ENTRIES  143
-extern PARTITION_TYPE PartitionTypes[NUM_PARTITION_TYPE_ENTRIES];
-
-
 /* EXTRA HANDFUL MACROS *****************************************************/
 
 // NOTE: They should be moved into some global header.
