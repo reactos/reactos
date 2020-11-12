@@ -255,7 +255,10 @@ class Module(object):
             postfix = ' # should be above 0x%08x' % self.address
         elif self._reserved:
             postfix = ' # reserved'
-        output_file.write('set(baseaddress_%-30s 0x%08x)%s\n' % (name, self.address, postfix))
+        # Current longest name is: 'msvcrt_crt_dll_startup' (22).
+        if len(name) > 22:
+            print('#', name, 'is longer than current width:', len(name), '> 22')
+        output_file.write('set(baseaddress_%-22s 0x%08x)%s\n' % (name, self.address, postfix))
 
     def end(self):
         return self.address + self.size
