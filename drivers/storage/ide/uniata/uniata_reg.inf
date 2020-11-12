@@ -6,3 +6,4 @@ HKLM,"SYSTEM\CurrentControlSet\Services\UniATA","ImagePath",0x00020000,"system32
 HKLM,"SYSTEM\CurrentControlSet\Services\UniATA","Start",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\UniATA","Type",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\UniATA","Tag",0x00010001,0x00000010
+; HKLM,"SYSTEM\CurrentControlSet\Services\UniATA\Parameters\PnpInterface","5",0x00010001,0x00000001 ; Commented out until CORE-17395 is fixed.
