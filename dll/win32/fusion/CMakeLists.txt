@@ -14,6 +14,7 @@ list(APPEND COMMON_SOURCE
 
 add_library(fusion_common STATIC ${COMMON_SOURCE})
 add_dependencies(fusion_common psdk)
+add_pch(fusion_common precomp.h COMMON_SOURCE)
 
 add_library(fusion MODULE
     version.rc
@@ -22,7 +23,6 @@ add_library(fusion MODULE
 set_module_type(fusion win32dll)
 target_link_libraries(fusion fusion_common uuid wine)
 add_importlibs(fusion bcrypt advapi32 dbghelp shlwapi user32 msvcrt kernel32 ntdll)
-add_pch(fusion_common precomp.h COMMON_SOURCE)
 add_cd_file(TARGET fusion DESTINATION reactos/Microsoft.NET/Framework/v1.0.3705 FOR all)
 add_cd_file(TARGET fusion DESTINATION reactos/system32 FOR all)
 
