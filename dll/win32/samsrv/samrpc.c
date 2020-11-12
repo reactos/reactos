@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         Security Account Manager (SAM) Server
- * FILE:            reactos/dll/win32/samsrv/samrpc.c
+ * FILE:            dll/win32/samsrv/samrpc.c
  * PURPOSE:         RPC interface functions
  *
  * PROGRAMMERS:     Eric Kohl
@@ -2209,7 +2209,7 @@ SamrEnumerateGroupsInDomain(IN SAMPR_HANDLE DomainHandle,
     BOOLEAN MoreEntries = FALSE;
     NTSTATUS Status;
 
-    TRACE("SamrEnumerateUsersInDomain(%p %p %p %lu %p)\n",
+    TRACE("SamrEnumerateGroupsInDomain(%p %p %p %lu %p)\n",
           DomainHandle, EnumerationContext, Buffer,
           PreferedMaximumLength, CountReturned);
 

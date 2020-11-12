@@ -412,7 +412,7 @@ NetGroupAdd(
                                         &AdminComment);
         if (!NT_SUCCESS(Status))
         {
-            ERR("SamSetInformationAlias failed (Status %08lx)\n", Status);
+            ERR("SamSetInformationGroup() failed. Status 0x%lX\n", Status);
             ApiStatus = NetpNtStatusToApiStatus(Status);
 
             /* Delete the Alias if the Comment could not be set */
@@ -432,7 +432,7 @@ NetGroupAdd(
                                         &AttributeInfo);
         if (!NT_SUCCESS(Status))
         {
-            ERR("SamSetInformationAlias failed (Status %08lx)\n", Status);
+            ERR("SamSetInformationGroup() failed. Status 0x%lX\n", Status);
             ApiStatus = NetpNtStatusToApiStatus(Status);
 
             /* Delete the Alias if the Attributes could not be set */
@@ -876,7 +876,7 @@ NetGroupEnum(
             TRACE("SamEnumerateGroupsInDomain returned (Status %08lx)\n", Status);
             if (!NT_SUCCESS(Status))
             {
-                ERR("SamEnumerateAliasesInDomain failed (Status %08lx)\n", Status);
+                ERR("SamEnumerateGroupsInDomain() failed. Status 0x%lX\n", Status);
                 ApiStatus = NetpNtStatusToApiStatus(Status);
                 goto done;
             }
