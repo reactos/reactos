@@ -1,7 +1,7 @@
-; Floppy driver
+; Microsoft Super Floppy (sfloppy) Storage Class Driver
 [AddReg]
-HKLM,"SYSTEM\CurrentControlSet\Services\Floppy","ErrorControl",0x00010001,0x00000000
-HKLM,"SYSTEM\CurrentControlSet\Services\Floppy","Group",0x00000000,"Primary Disk"
-HKLM,"SYSTEM\CurrentControlSet\Services\Floppy","ImagePath",0x00020000,"system32\drivers\floppy.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\Floppy","Start",0x00010001,0x00000001
-HKLM,"SYSTEM\CurrentControlSet\Services\Floppy","Type",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\Sfloppy","ErrorControl",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\Sfloppy","Group",0x00000000,"Primary Disk"
+HKLM,"SYSTEM\CurrentControlSet\Services\Sfloppy","Start",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\Sfloppy","Tag",0x00010001,0x00000004
+HKLM,"SYSTEM\CurrentControlSet\Services\Sfloppy","Type",0x00010001,0x00000001
