@@ -22,9 +22,11 @@ import struct
 import sys
 
 try:
+    # Only (optionally) used by get_target_file().
     import pefile
 except ImportError:
     print('# Please install pefile from pip or https://github.com/erocarrera/pefile')
+    # Comment out to output to stdout.
     sys.exit(-1)
 
 
@@ -352,6 +354,7 @@ def get_target_file(ntdll_path):
     return None
 
 def run_dir(target):
+    print('From build directory:', target)
     layout = MemoryLayout(0x7c920000)
     layout.add_reserved('user32.dll', 0x77a20000)
     IMAGE_TYPES[IMAGE_NT_OPTIONAL_HDR64_MAGIC] = 0
@@ -365,8 +368,10 @@ def run_dir(target):
     if target_file:
         target_dir = os.path.realpath(os.path.dirname(os.path.dirname(__file__)))
         target_path = os.path.join(target_dir, 'cmake', target_file)
+        print('To source file:', target_path)
         output_file = open(target_path, "w")
     else:
+        print('To sys.stdout')
         output_file = sys.stdout
     with output_file:
         output_file.write('# Generated from {}\n'.format(target))
@@ -379,7 +384,7 @@ def main():
     if len(dirs) < 1:
         trydir = os.getcwd()
         print(USAGE)
-        print('No path specified, trying the working directory: ', trydir)
+        print('No path specified, trying the working directory:', trydir)
         dirs = [trydir]
     for onedir in dirs:
         if onedir.lower() in ['-help', '/help', '/h', '-h', '/?', '-?']:
