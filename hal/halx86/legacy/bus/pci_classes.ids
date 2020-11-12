@@ -5,8 +5,8 @@
 #
 #	List of PCI ID's
 #
-#	Version: 2019.09.28
-#	Date:    2019-09-28 03:15:02
+#	Version: 2020.11.14
+#	Date:    2020-11-14 03:15:02
 #
 #	Maintained by Albert Pool, Martin Mares, and other volunteers from
 #	the PCI ID Project at https://pci-ids.ucw.cz/.
@@ -16,6 +16,10 @@
 #
 #	This file can be distributed under either the GNU General Public License
 #	(version 2 or higher) or the 3-clause BSD License.
+#
+#	The database is a compilation of factual data, and as such the copyright
+#	only covers the aggregation and formatting. The copyright is held by
+#	Martin Mares and Albert Pool.
 #
 
 # List of known device classes, subclasses and programming interfaces
@@ -28,6 +32,7 @@
 C 00  Unclassified device
 	00  Non-VGA unclassified device
 	01  VGA compatible unclassified device
+	05  Image coprocessor
 C 01  Mass storage controller
 	00  SCSI storage controller
 	01  IDE interface
@@ -150,6 +155,9 @@ C 08  Generic system peripheral
 	05  SD Host controller
 	06  IOMMU
 	80  System peripheral
+	99  Timing Card
+# PTP Grandmaster Source Clock
+		01  TAP Timing Card
 C 09  Input device controller
 	00  Keyboard controller
 	01  Digitizer Pen
@@ -181,6 +189,7 @@ C 0c  Serial bus controller
 		10  OHCI
 		20  EHCI
 		30  XHCI
+		40  USB4 Host Interface
 		80  Unspecified
 		fe  USB Device
 	04  Fibre Channel
