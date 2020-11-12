@@ -3225,7 +3225,7 @@ BOOL WINAPI TzSpecificLocalTimeToSystemTime(LPTIME_ZONE_INFORMATION,LPSYSTEMTIME
 LONG WINAPI UnhandledExceptionFilter(LPEXCEPTION_POINTERS);
 BOOL WINAPI UnlockFile(HANDLE,DWORD,DWORD,DWORD,DWORD);
 BOOL WINAPI UnlockFileEx(HANDLE,DWORD,DWORD,DWORD,LPOVERLAPPED);
-#define UnlockResource(h) (h)
+#define UnlockResource(handle) ((handle), 0)
 #define UnlockSegment(w) GlobalUnfix((HANDLE)(w)) /* Obsolete: Has no effect. */
 BOOL WINAPI UnmapViewOfFile(LPCVOID);
 #if (_WIN32_WINNT >= 0x0500)
