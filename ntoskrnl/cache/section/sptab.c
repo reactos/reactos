@@ -205,11 +205,12 @@ _MmSetPageEntrySectionSegment(PMM_SECTION_SEGMENT Segment,
             Entry);
 
     /* Manage ref on segment */
-    if (Entry && !OldEntry)
+    if (Entry)
     {
-        InterlockedIncrement64(Segment->ReferenceCount);
+        if (!OldEntry)
+            InterlockedIncrement64(Segment->ReferenceCount);
     }
-    if (OldEntry && !Entry)
+    else if (OldEntry)
     {
         MmDereferenceSegment(Segment);
     }
