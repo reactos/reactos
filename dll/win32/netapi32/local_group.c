@@ -409,9 +409,11 @@ NetLocalGroupAdd(
     if (ApiStatus == NERR_Success)
     {
         ERR("OpenAliasByName: alias %wZ already exists!\n", &AliasName);
+        ApiStatus = ERROR_ALIAS_EXISTS;
 
         SamCloseHandle(AliasHandle);
-        ApiStatus = ERROR_ALIAS_EXISTS;
+        AliasHandle = NULL;
+
         goto done;
     }
 
@@ -460,10 +462,6 @@ NetLocalGroupAdd(
         {
             ERR("SamSetInformationAlias failed (Status %08lx)\n", Status);
             ApiStatus = NetpNtStatusToApiStatus(Status);
-
-            /* Delete the Alias if the Comment could not be set */
-            SamDeleteAlias(AliasHandle);
-
             goto done;
         }
     }
@@ -603,7 +601,10 @@ NetLocalGroupAddMembers(
     if (AliasHandle == NULL)
     {
         if (DomainHandle != NULL)
+        {
             SamCloseHandle(DomainHandle);
+            DomainHandle = NULL;
+        }
 
         /* Open the Acount Domain */
         Status = OpenAccountDomain(ServerHandle,
@@ -770,6 +771,9 @@ NetLocalGroupDel(
         goto done;
     }
 
+    /* A successful delete invalidates the handle */
+    AliasHandle = NULL;
+
 done:
     if (AliasHandle != NULL)
         SamCloseHandle(AliasHandle);
@@ -900,7 +904,10 @@ NetLocalGroupDelMembers(
     if (AliasHandle == NULL)
     {
         if (DomainHandle != NULL)
+        {
             SamCloseHandle(DomainHandle);
+            DomainHandle = NULL;
+        }
 
         /* Open the Acount Domain */
         Status = OpenAccountDomain(ServerHandle,
@@ -1283,7 +1290,10 @@ NetLocalGroupGetInfo(
     if (AliasHandle == NULL)
     {
         if (DomainHandle != NULL)
+        {
             SamCloseHandle(DomainHandle);
+            DomainHandle = NULL;
+        }
 
         /* Open the Acount Domain */
         Status = OpenAccountDomain(ServerHandle,
@@ -1438,7 +1448,10 @@ NetLocalGroupGetMembers(
         if (EnumContext->AliasHandle == NULL)
         {
             if (EnumContext->DomainHandle != NULL)
+            {
                 SamCloseHandle(EnumContext->DomainHandle);
+                EnumContext->DomainHandle = NULL;
+            }
 
             /* Open the Acount Domain */
             Status = OpenAccountDomain(EnumContext->ServerHandle,
@@ -1794,7 +1807,10 @@ NetLocalGroupSetInfo(
     if (AliasHandle == NULL)
     {
         if (DomainHandle != NULL)
+        {
             SamCloseHandle(DomainHandle);
+            DomainHandle = NULL;
+        }
 
         /* Open the Acount Domain */
         Status = OpenAccountDomain(ServerHandle,

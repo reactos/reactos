@@ -379,9 +379,11 @@ NetGroupAdd(
     if (ApiStatus == NERR_Success)
     {
         ERR("OpenGroupByName: Group %wZ already exists!\n", &GroupName);
+        ApiStatus = ERROR_GROUP_EXISTS;
 
         SamCloseHandle(GroupHandle);
-        ApiStatus = ERROR_GROUP_EXISTS;
+        GroupHandle = NULL;
+
         goto done;
     }
 
@@ -414,10 +416,6 @@ NetGroupAdd(
         {
             ERR("SamSetInformationGroup() failed. Status 0x%lX\n", Status);
             ApiStatus = NetpNtStatusToApiStatus(Status);
-
-            /* Delete the Alias if the Comment could not be set */
-            SamDeleteGroup(GroupHandle);
-
             goto done;
         }
     }
@@ -434,10 +432,6 @@ NetGroupAdd(
         {
             ERR("SamSetInformationGroup() failed. Status 0x%lX\n", Status);
             ApiStatus = NetpNtStatusToApiStatus(Status);
-
-            /* Delete the Alias if the Attributes could not be set */
-            SamDeleteGroup(GroupHandle);
-
             goto done;
         }
     }
@@ -645,6 +639,9 @@ NetGroupDel(
         ApiStatus = NetpNtStatusToApiStatus(Status);
         goto done;
     }
+
+    /* A successful delete invalidates the handle */
+    GroupHandle = NULL;
 
 done:
     if (GroupHandle != NULL)
