@@ -17,7 +17,7 @@ list(APPEND SOURCE
     zpodd.c
     cdrom.h)
 
-add_library(cdrom MODULE ${SOURCE})
+add_library(cdrom MODULE ${SOURCE} cdrom.rc)
 set_module_type(cdrom kernelmodedriver)
 
 if(GCC OR CLANG)
