@@ -283,7 +283,7 @@ INT ListBoxRefreshContents(VOID)
  *     Message parameter (in UINT_PTR).
  *
  * @param[in]   lParam
- *     Message paramater (in LONG_PTR).
+ *     Message parameter (in LONG_PTR).
  *
  * @return
  *     Returns 0 to inform the system that the procedure has been handled.
