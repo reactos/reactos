@@ -57,17 +57,14 @@ if(ARCH STREQUAL "i386")
     remove_definitions(-DSARCH_XBOX)
     remove_definitions(-DSARCH_PC98)
 
-    # hal
+    # Legacy (non-ACPI) HALs:
     add_hal(hal SOURCES pic/halpic.rc COMPONENTS generic legacy up pic)
+    add_hal(halpc98 SOURCES pc98/halpc98.rc COMPONENTS pc98 up)
+    add_hal(halxbox SOURCES xbox/halxbox.rc COMPONENTS xbox up)
+    # ACPI HALs:
     add_hal(halacpi SOURCES acpi/halacpi.rc COMPONENTS generic acpi up pic)
     add_hal(halaacpi SOURCES acpi/halacpi.rc COMPONENTS generic acpi up apic)
-    add_hal(halxbox SOURCES xbox/halxbox.rc COMPONENTS xbox up)
-    add_hal(halpc98 SOURCES pc98/halpc98.rc COMPONENTS pc98 up)
-
-    #add_hal(halmps SOURCES up/halup.rc COMPONENTS generic legacy smp pic)
-    #add_hal(halmacpi SOURCES acpi/halacpi.rc COMPONENTS generic acpi smp pic)
-    #add_hal(halmapic SOURCES acpi/halacpi.rc COMPONENTS generic legacy smp apic)
-    #add_hal(halmaacpi SOURCES acpi/halacpi.rc COMPONENTS generic acpi smp apic)
+    # add_hal(halmacpi SOURCES mp/halmp.rc COMPONENTS generic acpi mp apic)
 
 elseif(ARCH STREQUAL "amd64")
 
