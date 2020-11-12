@@ -110,6 +110,8 @@ KdpLoggerThread(PVOID Context)
     ULONG beg, end, num;
     IO_STATUS_BLOCK Iosb;
 
+    ASSERT(ExGetPreviousMode() == KernelMode);
+
     KdpLoggingEnabled = TRUE;
 
     while (TRUE)
