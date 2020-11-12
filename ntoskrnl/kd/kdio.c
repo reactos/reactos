@@ -296,6 +296,8 @@ KdpDebugLogInit(PKD_DISPATCH_TABLE DispatchTable,
                                ThreadPriority,
                                &Priority,
                                sizeof(Priority));
+
+        ZwClose(ThreadHandle);
     }
 }
 
