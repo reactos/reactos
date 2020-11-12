@@ -100,7 +100,7 @@ SetAccountsDomainSid(
     LsaClose(PolicyHandle);
 
     DomainNameInfo.DomainName.Length = wcslen(DomainName) * sizeof(WCHAR);
-    DomainNameInfo.DomainName.MaximumLength = (wcslen(DomainName) + 1) * sizeof(WCHAR);
+    DomainNameInfo.DomainName.MaximumLength = DomainNameInfo.DomainName.Length + sizeof(WCHAR);
     DomainNameInfo.DomainName.Buffer = (LPWSTR)DomainName;
 
     Status = SamConnect(NULL,
@@ -117,7 +117,7 @@ SetAccountsDomainSid(
         {
             Status = SamSetInformationDomain(DomainHandle,
                                              DomainNameInformation,
-                                             (PVOID)&DomainNameInfo);
+                                             &DomainNameInfo);
             if (!NT_SUCCESS(Status))
             {
                 DPRINT1("SamSetInformationDomain failed (Status: 0x%08lx)\n", Status);
@@ -1186,7 +1186,7 @@ EnableAccount(
 
     Status = SamQueryInformationUser(UserHandle,
                                      UserControlInformation,
-                                     (PVOID)&ControlInfo);
+                                     (PVOID*)&ControlInfo);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("SamQueryInformationUser() failed (Status: 0x%08lx)\n", Status);
@@ -1289,7 +1289,7 @@ SetNewAccountName(
 
     Status = SamSetInformationUser(UserHandle,
                                    UserNameInformation,
-                                   (PVOID)&NameInfo);
+                                   &NameInfo);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("SamSetInformationUser() failed (Status: 0x%08lx)\n", Status);
@@ -1655,7 +1655,7 @@ SetAdministratorPassword(LPCWSTR Password)
 
     Status = SamSetInformationUser(UserHandle,
                                    UserSetPasswordInformation,
-                                   (PVOID)&PasswordInfo);
+                                   &PasswordInfo);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("SamSetInformationUser() failed (Status %08lx)\n", Status);
@@ -1667,7 +1667,7 @@ SetAdministratorPassword(LPCWSTR Password)
                                      (PVOID*)&AccountNameInfo);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("SamSetInformationUser() failed (Status %08lx)\n", Status);
+        DPRINT1("SamQueryInformationUser() failed (Status 0x%08lx)\n", Status);
         goto done;
     }
 
