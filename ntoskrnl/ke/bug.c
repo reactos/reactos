@@ -47,8 +47,10 @@ UNICODE_STRING KeRosVideoBiosDate, KeRosVideoBiosVersion;
  *
  * @param[in] Pc
  * @param[out] *LdrEntry
+       The entry point of freeldr.
  * @param[in] DriversOnly
  * @param[out] InKernel
+       Used to determine if the kernel was loaded or not.
 */
 PVOID
 NTAPI
