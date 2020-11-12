@@ -10754,11 +10754,19 @@ DriverEntry(
     }
 
     if(WinVer_Id() >= WinVer_2k) {
+#ifndef __REACTOS__
         if(AtapiRegCheckParameterValue(NULL, L"Paramaters\\PnpInterface", L"1", 0)) {
+#else
+        if(AtapiRegCheckParameterValue(NULL, L"Parameters\\PnpInterface", L"1", 0)) {
+#endif
             KdPrint(("UniATA: Behave as WDM, mlia (1)\n"));
             WinVer_WDM_Model = TRUE;
         }
+#ifndef __REACTOS__
         if(AtapiRegCheckParameterValue(NULL, L"Paramaters\\PnpInterface", L"5", 0)) {
+#else
+        if(AtapiRegCheckParameterValue(NULL, L"Parameters\\PnpInterface", L"5", 0)) {
+#endif
             KdPrint(("UniATA: Behave as WDM, mlia (5)\n"));
             WinVer_WDM_Model = TRUE;
         }
