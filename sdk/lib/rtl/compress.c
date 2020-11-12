@@ -59,7 +59,15 @@ static PUCHAR lznt1_decompress_chunk(UCHAR *dst, ULONG dst_size, UCHAR *src, ULO
 
                 /* find length / displacement bits */
                 for (displacement_bits = 12; displacement_bits > 4; displacement_bits--)
+#ifndef __REACTOS__
                     if ((1 << (displacement_bits - 1)) < dst_cur - dst) break;
+#else
+// Wine is not interested in fixing this MSVC amd64 C4334 "false positive" (a.k.a. no actual bug).
+                {
+                    if (((SIZE_T)1 << (displacement_bits - 1)) < dst_cur - dst)
+                        break;
+                }
+#endif
                 length_bits       = 16 - displacement_bits;
                 code_length       = (code & ((1 << length_bits) - 1)) + 3;
                 code_displacement = (code >> length_bits) + 1;
@@ -85,7 +93,6 @@ static PUCHAR lznt1_decompress_chunk(UCHAR *dst, ULONG dst_size, UCHAR *src, ULO
             }
             flags >>= 1;
         }
-
     }
 
     return dst_cur;
