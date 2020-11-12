@@ -1035,7 +1035,8 @@ LoadAndBootWindowsCommon(
 
     /* Pass control */
     (*KiSystemStartup)(LoaderBlockVA);
-    return ESUCCESS;
+
+    UNREACHABLE; // return ESUCCESS;
 }
 
 VOID
