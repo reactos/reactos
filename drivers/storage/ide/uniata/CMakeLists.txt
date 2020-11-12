@@ -17,7 +17,7 @@ list(APPEND SOURCE
     id_queue.cpp
     id_sata.cpp
     ros_glue/ros_glue.cpp
-    stdafx.h)
+    stdafx.h) # Not stdafx.cpp (which only includes the .h), to fix PCH.
 
 add_library(uniata MODULE ${SOURCE} idedma.rc)
 
