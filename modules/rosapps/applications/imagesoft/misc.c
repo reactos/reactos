@@ -374,11 +374,11 @@ ToolbarInsertSpaceForControl(HWND hWndToolbar,
 HIMAGELIST
 InitImageList(UINT NumImages, UINT StartResource)
 {
+    UINT EndResource = StartResource + NumImages - 1;
     HBITMAP hBitmap;
     HIMAGELIST hImageList;
-    UINT i, k;
-    INT Ret;
-    DBG_UNREFERENCED_LOCAL_VARIABLE(Ret);
+    UINT i;
+    INT Ret = 0;
 
     /* Create the toolbar icon image list */
     hImageList = ImageList_Create(TB_BMP_WIDTH,
@@ -386,11 +386,11 @@ InitImageList(UINT NumImages, UINT StartResource)
                                   ILC_MASK | ILC_COLOR24,
                                   NumImages,
                                   0);
-    if (! hImageList)
+    if (hImageList == NULL)
         return NULL;
 
     /* Add all icons to the image list */
-    for (i = StartResource, k = 0; k < NumImages; i++, k++)
+    for (i = StartResource; i <= EndResource; i++)
     {
         hBitmap = LoadImage(hInstance,
                             MAKEINTRESOURCE(i),
@@ -398,12 +398,26 @@ InitImageList(UINT NumImages, UINT StartResource)
                             TB_BMP_WIDTH,
                             TB_BMP_HEIGHT,
                             LR_LOADTRANSPARENT);
+        if (hBitmap == NULL)
+        {
+            Ret = -1;
+            break;
+        }
 
         Ret = ImageList_AddMasked(hImageList,
                                   hBitmap,
                                   RGB(255, 255, 254));
 
         DeleteObject(hBitmap);
+
+        if (Ret == -1)
+            break;
+    }
+
+    if (Ret == -1)
+    {
+        ImageList_Destroy(hImageList);
+        hImageList = NULL;
     }
 
     return hImageList;
