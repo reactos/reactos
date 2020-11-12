@@ -299,9 +299,9 @@ ObpSetHandleAttributes(
 NTSTATUS
 NTAPI
 ObQueryDeviceMapInformation(
-    IN PEPROCESS Process,
-    OUT PPROCESS_DEVICEMAP_INFORMATION DeviceMapInfo,
-    IN ULONG Flags
+    _In_opt_ PEPROCESS Process,
+    _Out_ PPROCESS_DEVICEMAP_INFORMATION DeviceMapInfo,
+    _In_ ULONG Flags
 );
 
 //
