@@ -1,5 +1,5 @@
 /*
- * FILE:            hal/halx86/generic/trap.S
+ * FILE:            hal/halx86/pic/trap.S
  * COPYRIGHT:       See COPYING in the top level directory
  * PURPOSE:         System Traps, Entrypoints and Exitpoints
  * PROGRAMMER:      Timo Kreuzer (timo.kreuzer@reactos.org)

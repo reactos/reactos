@@ -1,9 +1,9 @@
 
 list(APPEND HAL_XBOX_ASM_SOURCE
-    generic/systimer.S
-    generic/trap.S
     generic/v86.S
-    pic/pic.S)
+    pic/pic.S
+    pic/systimer.S
+    pic/trap.S)
 
 list(APPEND HAL_XBOX_SOURCE
     generic/beep.c
@@ -30,8 +30,8 @@ list(APPEND HAL_XBOX_SOURCE
     legacy/bussupp.c
     legacy/halpnpdd.c
     legacy/halpcat.c
-    generic/profil.c
-    generic/timer.c
+    pic/profil.c
+    pic/timer.c
     xbox/clock.c
     xbox/part_xbox.c
     xbox/halinit.c

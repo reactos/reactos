@@ -15,10 +15,10 @@ list(APPEND MINI_HAL_SOURCE
     ../generic/nmi.c
     ../generic/spinlock.c
     ../generic/sysinfo.c
-    ../generic/timer.c
     ../generic/usage.c
     ../pic/pic.c
     ../pic/processor.c
+    ../pic/timer.c
     ../include/hal.h
     halinit.c)
 
@@ -26,7 +26,7 @@ if(SARCH STREQUAL "xbox")
     list(APPEND MINI_HAL_SOURCE
         ../generic/beep.c
         ../generic/cmos.c
-        ../generic/profil.c
+        ../pic/profil.c
         ../xbox/clock.c
         ../xbox/reboot.c)
 elseif(SARCH STREQUAL "pc98")
@@ -39,13 +39,13 @@ elseif(SARCH STREQUAL "pc98")
 else()
     list(APPEND MINI_HAL_SOURCE
         ../generic/beep.c
-        ../generic/clock.c
         ../generic/cmos.c
-        ../generic/profil.c
-        ../generic/reboot.c)
+        ../generic/reboot.c
+        ../pic/clock.c
+        ../pic/profil.c)
 endif()
 
-add_asm_files(mini_hal_asm ../generic/systimer.S)
+add_asm_files(mini_hal_asm ../pic/systimer.S)
 add_library(mini_hal ${MINI_HAL_SOURCE} ${mini_hal_asm})
 target_compile_definitions(mini_hal PRIVATE _BLDR_ _MINIHAL_)
 add_dependencies(mini_hal psdk bugcodes asm)
