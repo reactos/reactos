@@ -85,7 +85,7 @@ Title: Microsoft CDFS File System Driver
 Path: drivers/filesystems/cdfs
 Used Version: git commit f73e552
 License: MS-PL (https://spdx.org/licenses/MS-PL.html)
-URL: https://github.com/microsoft/Windows-driver-samples/tree/master/filesys
+URL: https://github.com/microsoft/Windows-driver-samples/tree/master/filesys/cdfs
 
 Title: Ext2Fsd
 Path: drivers/filesystems/ext2
@@ -119,7 +119,7 @@ Title: Microsoft fastfat File System Driver
 Path: drivers/filesystems/fastfat_new
 Used Version: git commit 16022c5
 License: MS-PL (https://spdx.org/licenses/MS-PL.html)
-URL: https://github.com/microsoft/Windows-driver-samples/tree/master/filesys
+URL: https://github.com/microsoft/Windows-driver-samples/tree/master/filesys/fastfat
 
 Title: VirtIO NetKVM Windows guest driver
 Path: drivers/network/dd/netkvm
@@ -131,25 +131,25 @@ Title: Microsoft CDROM Storage Class Driver
 Path: drivers/storage/class/cdrom_new
 Used Version: git commit 96eb96d
 License: MS-PL (https://spdx.org/licenses/MS-PL.html)
-URL: https://github.com/microsoft/Windows-driver-samples/tree/master/storage
+URL: https://github.com/microsoft/Windows-driver-samples/tree/master/storage/class/cdrom
 
 Title: Microsoft ClassPnP Storage Class Driver Library
 Path: drivers/storage/class/classpnp
 Used Version: git commit 88541f7
 License: MS-PL (https://spdx.org/licenses/MS-PL.html)
-URL: https://github.com/microsoft/Windows-driver-samples/tree/master/storage
+URL: https://github.com/microsoft/Windows-driver-samples/tree/master/storage/class/classpnp
 
 Title: Microsoft Disk Class Driver
 Path: drivers/storage/class/disk_new
 Used Version: git commit 3428c5f
 License: MS-PL (https://spdx.org/licenses/MS-PL.html)
-URL: https://github.com/microsoft/Windows-driver-samples/tree/master/storage
+URL: https://github.com/microsoft/Windows-driver-samples/tree/master/storage/class/disk
 
 Title: Microsoft Super Floppy (sfloppy) Storage Class Driver
 Path: drivers/storage/floppy_new
 Used Version: git commit 8fb512a
 License: MS-PL (https://spdx.org/licenses/MS-PL.html)
-URL: https://github.com/microsoft/Windows-driver-samples/tree/master/storage
+URL: https://github.com/microsoft/Windows-driver-samples/tree/master/storage/sfloppy
 
 Title: Universal ATA driver for Windows
 Path: drivers/storage/ide/uniata
