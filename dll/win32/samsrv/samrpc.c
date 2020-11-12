@@ -709,6 +709,12 @@ SamrEnumerateDomainsInSamServer(IN SAMPR_HANDLE ServerHandle,
     }
 
     EnumBuffer->EntriesRead = EnumCount;
+    if (EnumCount == 0)
+    {
+        Status = STATUS_NO_MORE_ENTRIES;
+        goto done;
+    }
+
     EnumBuffer->Buffer = midl_user_allocate(EnumCount * sizeof(SAMPR_RID_ENUMERATION));
     if (EnumBuffer->Buffer == NULL)
     {
