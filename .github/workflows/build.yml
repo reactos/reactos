@@ -105,7 +105,7 @@ jobs:
 
   build-clang-cl-i386:
     name: Clang-CL (i386)
-    runs-on: windows-latest
+    runs-on: windows-2016
     steps:
     - name: Install packages
       run: |
@@ -142,7 +142,7 @@ jobs:
 
   build-msvc-i386:
     name: MSVC (i386)
-    runs-on: windows-latest
+    runs-on: windows-2016
     steps:
     - name: Install packages
       run: choco install ninja -y
@@ -186,7 +186,7 @@ jobs:
 
   build-msvc-amd64:
     name: MSVC (amd64)
-    runs-on: windows-latest
+    runs-on: windows-2016
     steps:
     - name: Install packages
       run: choco install ninja -y
@@ -231,7 +231,7 @@ jobs:
 
   build-msbuild-i386:
     name: MSBuild (i386)
-    runs-on: windows-latest
+    runs-on: windows-2016
     steps:
     - name: Install Flex and Bison
       run: |
@@ -251,6 +251,6 @@ jobs:
       run: |
         mkdir build
         cd build
-        cmake -G "Visual Studio 16 2019" -A Win32 -DCMAKE_TOOLCHAIN_FILE:FILEPATH=toolchain-msvc.cmake -DARCH:STRING=i386 -DENABLE_ROSTESTS=1 -DENABLE_ROSAPPS=1 ${{github.workspace}}\src
+        cmake -G "Visual Studio 15 2017" -A Win32 -DCMAKE_TOOLCHAIN_FILE:FILEPATH=toolchain-msvc.cmake -DARCH:STRING=i386 -DENABLE_ROSTESTS=1 -DENABLE_ROSAPPS=1 ${{github.workspace}}\src
     - name: Build
       run: cmake --build ${{github.workspace}}\build --target bootcd --target livecd
