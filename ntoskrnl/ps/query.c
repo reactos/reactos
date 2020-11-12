@@ -578,13 +578,9 @@ NtQueryInformationProcess(
                 {
                     /* Get the exception code */
                     Status = _SEH2_GetExceptionCode();
+                    _SEH2_YIELD(break);
                 }
                 _SEH2_END;
-
-                if (!NT_SUCCESS(Status))
-                {
-                    break;
-                }
 
                 /* Only one flag is supported and it needs LUID mappings */
                 if ((Flags & ~PROCESS_LUID_DOSDEVICES_ONLY) != 0 ||
