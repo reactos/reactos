@@ -231,7 +231,9 @@ UniataQueueRequest(
         AtaReq->next_req = NULL;
         LunExt->first_req =
         LunExt->last_req = AtaReq;
+#ifndef __REACTOS__ // CORE-17371.
         chan->cur_cdev = GET_CDEV(Srb);
+#endif
     }
     LunExt->queue_depth++;
     chan->queue_depth++;
