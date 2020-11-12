@@ -56,11 +56,12 @@ PsReferenceProcessFilePointer(IN PEPROCESS Process,
  */
 NTSTATUS
 NTAPI
-NtQueryInformationProcess(IN HANDLE ProcessHandle,
-                          IN PROCESSINFOCLASS ProcessInformationClass,
-                          OUT PVOID ProcessInformation,
-                          IN ULONG ProcessInformationLength,
-                          OUT PULONG ReturnLength OPTIONAL)
+NtQueryInformationProcess(
+    _In_ HANDLE ProcessHandle,
+    _In_ PROCESSINFOCLASS ProcessInformationClass,
+    _Out_ PVOID ProcessInformation,
+    _In_ ULONG ProcessInformationLength,
+    _Out_opt_ PULONG ReturnLength)
 {
     PEPROCESS Process;
     KPROCESSOR_MODE PreviousMode = ExGetPreviousMode();
