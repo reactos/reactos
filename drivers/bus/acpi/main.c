@@ -349,7 +349,7 @@ AcpiRegOpenKey(IN HANDLE ParentKeyHandle,
 
     InitializeObjectAttributes(&ObjectAttributes,
                                &Name,
-                               OBJ_CASE_INSENSITIVE,
+                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
                                ParentKeyHandle,
                                NULL);
 
