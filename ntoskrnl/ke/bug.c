@@ -117,6 +117,15 @@ KiPcToFileHeader(IN PVOID Pc,
     return PcBase;
 }
 
+/*
+ * @brief Brief discription here
+ *
+ * Full discription here.
+ *
+ * @param[in]
+ *
+ * @param [out]
+*/
 PVOID
 NTAPI
 KiRosPcToUserFileHeader(IN PVOID Pc,
@@ -166,6 +175,15 @@ KiRosPcToUserFileHeader(IN PVOID Pc,
     return PcBase;
 }
 
+/*
+ * @brief Brief discription here.
+ *
+ *Full discription here.
+ *
+ * @param[in]
+ *
+ * @param[out]
+*/
 USHORT
 NTAPI
 KeRosCaptureUserStackBackTrace(IN ULONG FramesToSkip,
@@ -208,7 +226,15 @@ KeRosCaptureUserStackBackTrace(IN ULONG FramesToSkip,
     return (USHORT)i;
 }
 
-
+/*
+ *@brief brief discription here.
+ *
+ * Full discription here.
+ *
+ * @param[in]
+ *
+ * @param out[out]
+*/
 VOID
 FASTCALL
 KeRosDumpStackFrameArray(IN PULONG_PTR Frames,
@@ -270,6 +296,15 @@ KeRosDumpStackFrameArray(IN PULONG_PTR Frames,
     }
 }
 
+/*
+ * @brief Brief discription here.
+ *
+ * Full discription here.
+ *
+ * @param[in]
+ *
+ *@param[out]
+*/
 VOID
 NTAPI
 KeRosDumpStackFrames(IN PULONG_PTR Frame OPTIONAL,
@@ -307,6 +342,15 @@ KeRosDumpStackFrames(IN PULONG_PTR Frame OPTIONAL,
     }
 }
 
+/*
+ * @brief brief discription here.
+ *
+ * Full discription here.
+ *
+ * @param[in]
+ *
+ * @param[out]
+*/
 INIT_FUNCTION
 VOID
 NTAPI
@@ -346,6 +390,15 @@ KiInitializeBugCheck(VOID)
     }
 }
 
+/*
+ * @brief Brief discription here.
+ *
+ * Full discription here.
+ *
+ * @Param[in]
+ *
+ *@param [out]
+*/
 BOOLEAN
 NTAPI
 KeGetBugMessageText(IN ULONG BugCheckCode,
@@ -444,6 +497,15 @@ KeGetBugMessageText(IN ULONG BugCheckCode,
     return Result;
 }
 
+/*
+ * @brief Brief discription here.
+ *
+ * Full discription here.
+ *
+ * @param[in]
+ *
+ * @param[out]
+*/
 VOID
 NTAPI
 KiDoBugCheckCallbacks(VOID)
@@ -501,6 +563,10 @@ KiDoBugCheckCallbacks(VOID)
     }
 }
 
+/*
+ * @br Brief discription here.
+ *
+*/
 VOID
 NTAPI
 KiBugCheckDebugBreak(IN ULONG StatusCode)
