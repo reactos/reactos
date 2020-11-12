@@ -40,6 +40,7 @@ KiInitMachineDependent(VOID)
     return;
 }
 
+CODE_SEG("INIT")
 VOID
 NTAPI
 KiInitializeKernel(IN PKPROCESS InitProcess,
@@ -174,6 +175,7 @@ KiInitializeKernel(IN PKPROCESS InitProcess,
 //C_ASSERT((FIELD_OFFSET(KIPCR, FirstLevelDcacheSize) & 4) == 0);
 //C_ASSERT(sizeof(KIPCR) <= PAGE_SIZE);
 
+CODE_SEG("INIT")
 VOID
 NTAPI
 KiInitializePcr(IN ULONG ProcessorNumber,
@@ -327,6 +329,7 @@ KiInitializeMachineType(VOID)
     }
 }
 
+CODE_SEG("INIT")
 DECLSPEC_NORETURN
 VOID
 KiInitializeSystem(IN PLOADER_PARAMETER_BLOCK LoaderBlock)

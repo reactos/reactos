@@ -85,6 +85,7 @@ KiInitMachineDependent(VOID)
 
 }
 
+CODE_SEG("INIT")
 VOID
 NTAPI
 KiInitializePcr(IN PKIPCR Pcr,
@@ -234,6 +235,7 @@ KiInitializeCpu(PKIPCR Pcr)
     __writemsr(MSR_PAT, Pat);
 }
 
+CODE_SEG("INIT")
 VOID
 FASTCALL
 KiInitializeTss(IN PKTSS64 Tss,
@@ -338,7 +340,8 @@ KiInitializeKernelMachineDependent(
 
 static LDR_DATA_TABLE_ENTRY LdrCoreEntries[3];
 
-void
+CODE_SEG("INIT")
+VOID
 KiInitModuleList(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     PLDR_DATA_TABLE_ENTRY LdrEntry;

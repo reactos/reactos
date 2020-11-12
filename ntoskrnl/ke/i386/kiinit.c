@@ -687,6 +687,7 @@ KiSystemStartupBootStack(VOID)
     KiIdleLoop();
 }
 
+CODE_SEG("INIT")
 static
 VOID
 KiMarkPageAsReadOnly(
