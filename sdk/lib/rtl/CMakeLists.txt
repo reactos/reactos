@@ -122,5 +122,5 @@ list(APPEND SOURCE_VISTA
 )
 
 add_library(rtl_vista ${SOURCE_VISTA})
-add_pch(rtl rtl_vista.h SOURCE_VISTA)
+add_pch(rtl_vista rtl_vista.h SOURCE_VISTA)
 add_dependencies(rtl_vista psdk)
