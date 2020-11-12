@@ -392,7 +392,7 @@ static	DWORD	modData(MIDIMAPDATA* mom, DWORD_PTR dwParam)
 	}
 	break;
     default:
-	FIXME("ooch %lu\n", dwParam);
+	FIXME("ooch %lx\n", dwParam);
     }
 
     return ret;
@@ -471,7 +471,7 @@ DWORD WINAPI MIDIMAP_modMessage(UINT wDevID, UINT wMsg, DWORD_PTR dwUser,
 	/* FIXME: Pretend this is supported */
 	return 0;
 
-    case MODM_OPEN:	 	return modOpen		((LPDWORD)dwUser,      (LPMIDIOPENDESC)dwParam1,dwParam2);
+    case MODM_OPEN: return modOpen((DWORD_PTR *)dwUser, (LPMIDIOPENDESC)dwParam1, dwParam2);
     case MODM_CLOSE:	 	return modClose		((MIDIMAPDATA*)dwUser);
 
     case MODM_DATA:		return modData		((MIDIMAPDATA*)dwUser, dwParam1);
