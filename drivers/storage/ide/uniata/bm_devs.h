@@ -143,7 +143,11 @@ BUSMASTER_CONTROLLER_INFORMATION_BASE const BusMasterAdapters[] = {
     
     PCI_DEV_HW_SPEC_BM( 1230, 8086, 0x00, ATA_WDMA2, "Intel PIIX"       , UNIATA_CHAN_TIMINGS                     ),
     PCI_DEV_HW_SPEC_BM( 7010, 8086, 0x00, ATA_WDMA2, "Intel PIIX3"      , 0                                       ),
+#ifndef __REACTOS__
     PCI_DEV_HW_SPEC_BM( 7111, 8086, 0x00, ATA_UDMA2, "Intel PIIX3"      , 0                                       ),
+#else
+    PCI_DEV_HW_SPEC_BM( 7111, 8086, 0x00, ATA_UDMA2, "Intel PIIX4"      , 0                                       ),
+#endif
     PCI_DEV_HW_SPEC_BM( 7199, 8086, 0x00, ATA_UDMA2, "Intel PIIX4"      , 0                                       ),
     PCI_DEV_HW_SPEC_BM( 84ca, 8086, 0x00, ATA_UDMA2, "Intel PIIX4"      , 0                                       ),
     PCI_DEV_HW_SPEC_BM( 7601, 8086, 0x00, ATA_UDMA2, "Intel ICH0"       , 0                                       ),
