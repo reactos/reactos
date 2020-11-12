@@ -282,8 +282,7 @@ QueryDeviceInformation(IN PUNICODE_STRING SymbolicName,
                 Status = STATUS_SUCCESS;
             }
             /* Check if it has a drive letter */
-            else if (!(GptAttributes.GptAttributes &
-                       GPT_BASIC_DATA_ATTRIBUTE_NO_DRIVE_LETTER))
+            else if (GptAttributes.GptAttributes & GPT_BASIC_DATA_ATTRIBUTE_NO_DRIVE_LETTER)
             {
                 *GptDriveLetter = FALSE;
             }
