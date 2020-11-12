@@ -1,7 +1,7 @@
 /*
  * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         Local Security Authority (LSA) Server
- * FILE:            reactos/dll/win32/lsasrv/privileges.c
+ * FILE:            dll/win32/lsasrv/privileges.c
  * PURPOSE:         Privilege lookup functions
  *
  * PROGRAMMERS:     Eric Kohl <eric.kohl@reactos.org>
@@ -263,10 +263,8 @@ LsarpEnumeratePrivileges(DWORD *EnumerationContext,
         TRACE("Privilege Name: %S\n", WellKnownPrivileges[EnumIndex].Name);
         TRACE("Name Length: %lu\n", wcslen(WellKnownPrivileges[EnumIndex].Name));
 
-        if ((RequiredLength +
-             wcslen(WellKnownPrivileges[EnumIndex].Name) * sizeof(WCHAR) +
-             sizeof(UNICODE_NULL) +
-             sizeof(LSAPR_POLICY_PRIVILEGE_DEF)) > PreferedMaximumLength)
+        // Stop after, not before, preferred length has been reached.
+        if (RequiredLength >= PreferedMaximumLength)
         {
             MoreEntries = TRUE;
             break;
@@ -281,7 +279,13 @@ LsarpEnumeratePrivileges(DWORD *EnumerationContext,
     TRACE("RequiredLength: %lu\n", RequiredLength);
 
     if (EnumCount == 0)
+    {
+        if (!MoreEntries)
+        {
+            Status = STATUS_NO_MORE_ENTRIES;
+        }
         goto done;
+    }
 
     Privileges = MIDL_user_allocate(EnumCount * sizeof(LSAPR_POLICY_PRIVILEGE_DEF));
     if (Privileges == NULL)
