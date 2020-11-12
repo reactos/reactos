@@ -183,8 +183,7 @@ KeTryToAcquireQueuedSpinLockRaiseToSynch(IN KSPIN_LOCK_QUEUE_NUMBER LockNumber,
 #ifdef CONFIG_SMP
     ERROR_DBGBREAK("FIXME: Unused\n"); // FIXME: Unused
     return FALSE;
-#endif
-
+#else
     /* Simply raise to synch */
     KeRaiseIrql(SYNCH_LEVEL, OldIrql);
 
@@ -194,6 +193,7 @@ KeTryToAcquireQueuedSpinLockRaiseToSynch(IN KSPIN_LOCK_QUEUE_NUMBER LockNumber,
 
     /* Always return true on UP Machines */
     return TRUE;
+#endif
 }
 
 /*
@@ -207,8 +207,7 @@ KeTryToAcquireQueuedSpinLock(IN KSPIN_LOCK_QUEUE_NUMBER LockNumber,
 #ifdef CONFIG_SMP
     ERROR_DBGBREAK("FIXME: Unused\n"); // FIXME: Unused
     return FALSE;
-#endif
-
+#else
     /* Simply raise to dispatch */
     KeRaiseIrql(DISPATCH_LEVEL, OldIrql);
 
@@ -218,9 +217,10 @@ KeTryToAcquireQueuedSpinLock(IN KSPIN_LOCK_QUEUE_NUMBER LockNumber,
 
     /* Always return true on UP Machines */
     return TRUE;
+#endif
 }
 
-#endif
+#endif // _M_IX86
 
 VOID
 NTAPI
