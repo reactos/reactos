@@ -15,5 +15,5 @@ add_library(partmgr MODULE
 add_pch(partmgr partmgr.h "${PCH_SKIP_SOURCE}")
 set_module_type(partmgr kernelmodedriver)
 add_importlibs(partmgr ntoskrnl hal)
-add_registry_inf(partmgr_reg.inf)
+# add_registry_inf(partmgr_reg.inf)
 add_cd_file(TARGET partmgr DESTINATION reactos/system32/drivers NO_CAB FOR all)
