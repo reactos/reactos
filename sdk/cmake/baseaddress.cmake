@@ -1,9 +1,9 @@
+set(baseaddress_user32                 0x77a20000) # tweaked by hand to avoid conflict between user32 and msvcp71.dll CORE-12752
 set(baseaddress_ntdll                  0x7c920000) # should be above 0x7c920000
 set(baseaddress_kernel32               0x7c710000)
 set(baseaddress_msvcrt                 0x7c660000)
 set(baseaddress_advapi32               0x7c5b0000)
 set(baseaddress_gdi32                  0x7c500000)
-set(baseaddress_user32                 0x7c380000)
 set(baseaddress_dhcpcsvc               0x7c330000)
 set(baseaddress_dnsapi                 0x7c2e0000)
 set(baseaddress_icmp                   0x7c2b0000)
