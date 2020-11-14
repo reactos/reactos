@@ -506,10 +506,6 @@ KeGetBugMessageText(IN ULONG BugCheckCode,
  * @brief Brief discription here.
  *
  * Full discription here.
- *
- * @param[in]
- *
- * @param[out]
 */
 VOID
 NTAPI
@@ -573,7 +569,7 @@ KiDoBugCheckCallbacks(VOID)
  *
  * Full discription here.
  *
- * @param[in]
+ * @param[in] StatusCode
 */
 VOID
 NTAPI
