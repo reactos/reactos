@@ -122,9 +122,9 @@ KiPcToFileHeader(IN PVOID Pc,
  *
  * Full discription here.
  *
- * @param[in]
+ * @param[in] Pc
  *
- * @param [out]
+ * @param[out] *LdrEntry
 */
 PVOID
 NTAPI
@@ -180,9 +180,15 @@ KiRosPcToUserFileHeader(IN PVOID Pc,
  *
  *Full discription here.
  *
- * @param[in]
+ * @param[in] FramesToSkip
  *
- * @param[out]
+ * @param[in] FramesToCapture
+ *
+ * @param[out] *BackTrace
+ *      BackTrace used for debugging.
+ * @param[out] BackTraceHash
+ *      OPTIONAL
+        Hash of BackTrace for verifiction.
 */
 USHORT
 NTAPI
@@ -231,9 +237,9 @@ KeRosCaptureUserStackBackTrace(IN ULONG FramesToSkip,
  *
  * Full discription here.
  *
- * @param[in]
+ * @param[in] Frames
  *
- * @param out[out]
+ * @param[out] FrameCount
 */
 VOID
 FASTCALL
@@ -301,9 +307,11 @@ KeRosDumpStackFrameArray(IN PULONG_PTR Frames,
  *
  * Full discription here.
  *
- * @param[in]
- *
- *@param[out]
+ * @param[in] frame
+ *      OPTIONAL
+ * @param[out] FrameCount
+ *      OPTIONAL
+        Defaults to 32 frames
 */
 VOID
 NTAPI
@@ -346,10 +354,6 @@ KeRosDumpStackFrames(IN PULONG_PTR Frame OPTIONAL,
  * @brief brief discription here.
  *
  * Full discription here.
- *
- * @param[in]
- *
- * @param[out]
 */
 INIT_FUNCTION
 VOID
@@ -395,9 +399,10 @@ KiInitializeBugCheck(VOID)
  *
  * Full discription here.
  *
- * @Param[in]
+ * @Param[in] BugCheckCode
  *
- *@param [out]
+ *@param [out] OutputString
+ *      OPTIONAL
 */
 BOOLEAN
 NTAPI
