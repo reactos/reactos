@@ -103,6 +103,7 @@ extern int InfoMessageBox(HWND hWnd, UINT uType, LPCWSTR lpTitle, LPCWSTR lpMess
 /* find.c */
 extern void FindDialog(HWND hWnd);
 extern BOOL FindNext(HWND hWnd);
+extern void FindNextMessageBox(HWND hWnd);
 
 /* framewnd.c */
 extern LRESULT CALLBACK FrameWndProc(HWND, UINT, WPARAM, LPARAM);
