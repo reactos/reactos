@@ -1244,7 +1244,7 @@ ImageList_DrawEx (HIMAGELIST himl, INT i, HDC hdc, INT x, INT y,
 }
 
 #ifdef __REACTOS__
-static BOOL alpha_blend_image( HIMAGELIST himl, HDC srce_dc, HDC dest_dc, int dest_x, int dest_y,
+static BOOL alpha_blend_image( HIMAGELIST himl, HDC srce_dc, HDC srce_dcMask, HDC dest_dc, int dest_x, int dest_y,
 #else
 static BOOL alpha_blend_image( HIMAGELIST himl, HDC dest_dc, int dest_x, int dest_y,
 #endif
@@ -1279,7 +1279,11 @@ static BOOL alpha_blend_image( HIMAGELIST himl, HDC dest_dc, int dest_x, int des
 #endif
     SelectObject( hdc, bmp );
 #ifdef __REACTOS__
-    BitBlt( hdc, 0, 0, cx, cy, srce_dc, src_x, src_y, SRCCOPY );
+    if (!BitBlt(hdc, 0, 0, cx, cy, srce_dc, src_x, src_y, SRCCOPY))
+    {
+        TRACE("BitBlt failed\n");
+        goto done;
+    }
 #else
     BitBlt( hdc, 0, 0, cx, cy, himl->hdcImage, src_x, src_y, SRCCOPY );
 #endif
@@ -1334,11 +1338,28 @@ static BOOL alpha_blend_image( HIMAGELIST himl, HDC dest_dc, int dest_x, int des
         info->bmiColors[1].rgbGreen    = 0xff;
         info->bmiColors[1].rgbBlue     = 0xff;
         info->bmiColors[1].rgbReserved = 0;
-        if (!(mask = CreateDIBSection( himl->hdcMask, info, DIB_RGB_COLORS, &mask_bits, 0, 0 )))
+        if (!(mask = CreateDIBSection( srce_dcMask, info, DIB_RGB_COLORS, &mask_bits, 0, 0)))
+        {
+            TRACE("CreateDIBSection failed %i\n", GetLastError());
             goto done;
-        SelectObject( hdc, mask );
-        BitBlt( hdc, 0, 0, cx, cy, himl->hdcMask, src_x, src_y, SRCCOPY );
-        SelectObject( hdc, bmp );
+        }
+        if (SelectObject(hdc, mask) == NULL)
+        {
+            TRACE("SelectObject failed %i\n", GetLastError());
+            SelectObject(hdc, bmp);
+            goto done;
+        }
+        if (!BitBlt( hdc, 0, 0, cx, cy, srce_dcMask, src_x, src_y, SRCCOPY))
+        {
+            TRACE("BitBlt failed %i\n", GetLastError());
+            SelectObject(hdc, bmp);
+            goto done;
+        }
+        if (SelectObject( hdc, bmp) == NULL)
+        {
+            TRACE("SelectObject failed %i\n", GetLastError());
+            goto done;
+        }
         for (i = 0, ptr = bits; i < cy; i++)
             for (j = 0; j < cx; j++, ptr++)
                 if ((((BYTE *)mask_bits)[i * width_bytes + j / 8] << (j % 8)) & 0x80) *ptr = 0;
@@ -1356,11 +1377,12 @@ done:
 }
 
 #ifdef __REACTOS__
-HDC saturate_image( HIMAGELIST himl, HDC dest_dc, int dest_x, int dest_y,
-                    int src_x, int src_y, int cx, int cy, COLORREF rgbFg)
+BOOL saturate_image(HIMAGELIST himl, HDC dest_dc, int dest_x, int dest_y,
+                    int src_x, int src_y, int cx, int cy, COLORREF rgbFg,
+                    HDC *hdcImageListDC, HDC *hdcMaskListDC)
 {
-    HDC hdc = NULL;
-    HBITMAP bmp = 0;
+    HDC hdc = NULL, hdcMask = NULL;
+    HBITMAP bmp = 0, bmpMask = 0;
     BITMAPINFO *info;
 
     unsigned int *ptr;
@@ -1385,10 +1407,18 @@ HDC saturate_image( HIMAGELIST himl, HDC dest_dc, int dest_x, int dest_y,
     if (!(bmp = CreateDIBSection(himl->hdcImage, info, DIB_RGB_COLORS, &bits, 0, 0 ))) goto done;
 
     /* bind both surfaces */
-    SelectObject(hdc, bmp);
+    if (SelectObject(hdc, bmp) == NULL)
+    {
+        TRACE("SelectObject failed\n");
+        goto done;
+    }
 
     /* copy into our dc the section that covers just the icon we we're asked for */
-    BitBlt(hdc, 0, 0, cx, cy, himl->hdcImage, src_x, src_y, SRCCOPY);
+    if (!BitBlt(hdc, 0, 0, cx, cy, himl->hdcImage, src_x, src_y, SRCCOPY))
+    {
+        TRACE("BitBlt failed!\n");
+        goto done;
+    }
 
     /* loop every pixel of the bitmap */
     for (i = 0, ptr = bits; i < cx * cy; i++, ptr++)
@@ -1404,16 +1434,37 @@ HDC saturate_image( HIMAGELIST himl, HDC dest_dc, int dest_x, int dest_y,
         *ptr = RGBA(mixed_color, mixed_color, mixed_color, GetAValue(orig_color));
     }
 
+    if (himl->hdcMask)
+    {
+        hdcMask = CreateCompatibleDC(NULL);
+        bmpMask = CreateCompatibleBitmap(hdcMask, cx, cy);
+
+        SelectObject(hdcMask, bmpMask);
+
+        if (!BitBlt(hdcMask, 0, 0, cx, cy, himl->hdcMask, src_x, src_y, SRCCOPY))
+        {
+            ERR("BitBlt failed %i\n", GetLastError());
+            DeleteDC(hdcMask);
+            hdcMask = NULL;
+            goto done;
+        }
+        TRACE("mask ok\n");
+    }
+
 done:
 
     if (bmp)
         DeleteObject(bmp);
+    if (bmpMask)
+        DeleteObject(bmpMask);
 
     if (info)
         HeapFree(GetProcessHeap(), 0, info);
 
     /* return the handle to our desaturated dc, that will substitute its original counterpart in the next calls */
-    return hdc;
+    *hdcMaskListDC = hdcMask;
+    *hdcImageListDC = hdc;
+    return (hdc != NULL);
 }
 #endif /* __REACTOS__ */
 
@@ -1445,7 +1496,7 @@ ImageList_DrawIndirect (IMAGELISTDRAWPARAMS *pimldp)
     POINT pt;
     BOOL has_alpha;
 #ifdef __REACTOS__
-    HDC hdcSaturated = NULL;
+    HDC hdcSaturated = NULL, hdcSaturatedMask = NULL;
 #endif
 
     if (!pimldp || !(himl = pimldp->himl)) return FALSE;
@@ -1503,14 +1554,17 @@ ImageList_DrawIndirect (IMAGELISTDRAWPARAMS *pimldp)
      */
     if (fState & ILS_SATURATE)
     {
-        hdcSaturated = saturate_image(himl, pimldp->hdcDst, pimldp->x, pimldp->y,
-                                      pt.x, pt.y, cx, cy, pimldp->rgbFg);
-
-        hImageListDC = hdcSaturated;
-        /* shitty way of getting subroutines to blit at the right place (top left corner),
-           as our modified imagelist only contains a single image for performance reasons */
-        pt.x = 0;
-        pt.y = 0;
+        if (saturate_image(himl, pimldp->hdcDst, pimldp->x, pimldp->y,
+                           pt.x, pt.y, cx, cy, pimldp->rgbFg,
+                           &hdcSaturated, &hdcSaturatedMask))
+        {
+            hImageListDC = hdcSaturated;
+            hMaskListDC = hdcSaturatedMask;
+            /* shitty way of getting subroutines to blit at the right place (top left corner),
+               as our modified imagelist only contains a single image for performance reasons */
+            pt.x = 0;
+            pt.y = 0;
+        }
     }
 #endif
 
@@ -1535,7 +1589,7 @@ ImageList_DrawIndirect (IMAGELISTDRAWPARAMS *pimldp)
         if (bIsTransparent)
         {
 #ifdef __REACTOS__
-            bResult = alpha_blend_image( himl, hImageListDC, pimldp->hdcDst, pimldp->x, pimldp->y,
+            bResult = alpha_blend_image( himl, hImageListDC, hMaskListDC, pimldp->hdcDst, pimldp->x, pimldp->y,
 #else
             bResult = alpha_blend_image( himl, pimldp->hdcDst, pimldp->x, pimldp->y,
 #endif
@@ -1549,7 +1603,7 @@ ImageList_DrawIndirect (IMAGELISTDRAWPARAMS *pimldp)
         hOldBrush = SelectObject (hImageDC, CreateSolidBrush (colour));
         PatBlt( hImageDC, 0, 0, cx, cy, PATCOPY );
 #ifdef __REACTOS__
-        alpha_blend_image( himl, hImageListDC, hImageDC, 0, 0, pt.x, pt.y, cx, cy, func, fStyle, blend_col );
+        alpha_blend_image( himl, hImageListDC, hMaskListDC, hImageDC, 0, 0, pt.x, pt.y, cx, cy, func, fStyle, blend_col );
 #else
         alpha_blend_image( himl, hImageDC, 0, 0, pt.x, pt.y, cx, cy, func, fStyle, blend_col );
 #endif
@@ -1679,6 +1733,8 @@ cleanup:
 #ifdef __REACTOS__
     if (hdcSaturated)
         DeleteDC(hdcSaturated);
+    if (hdcSaturatedMask)
+        DeleteDC(hdcSaturatedMask);
 #endif
     DeleteObject(hBlendMaskBmp);
     DeleteObject(hImageBmp);
