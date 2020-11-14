@@ -821,7 +821,7 @@ void FindDialog(HWND hWnd)
 
             LoadStringW(hInst, IDS_FINISHEDFIND, msg, COUNT_OF(msg));
             LoadStringW(hInst, IDS_APP_TITLE, caption, COUNT_OF(caption));
-            MessageBoxW(0, msg, caption, MB_ICONINFORMATION);
+            MessageBoxW(hWnd, msg, caption, MB_ICONINFORMATION);
         }
     }
 }
