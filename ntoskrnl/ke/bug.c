@@ -564,8 +564,11 @@ KiDoBugCheckCallbacks(VOID)
 }
 
 /*
- * @br Brief discription here.
+ * @brief Brief discription here.
  *
+ * Full discription here.
+ *
+ * @param[in]
 */
 VOID
 NTAPI
@@ -592,6 +595,15 @@ DoBreak:
     if (StatusCode != DBG_STATUS_BUGCHECK_FIRST) goto DoBreak;
 }
 
+/*
+ * @brief Bried description here.
+ *
+ * @param[in]
+ *
+ * @param[out]
+ *
+ * @param[in]
+*/
 PCHAR
 NTAPI
 KeBugCheckUnicodeToAnsi(IN PUNICODE_STRING Unicode,
@@ -616,6 +628,19 @@ KeBugCheckUnicodeToAnsi(IN PUNICODE_STRING Unicode,
     return Ansi;
 }
 
+/*
+ * @brief Brief description here.
+ *
+ * Full discription here.
+ *
+ * @param[in]
+ *
+ * @param[in]
+ *
+ * @param[in]
+ *
+ *@patam[in]
+*/
 VOID
 NTAPI
 KiDumpParameterImages(IN PCHAR Message,
@@ -686,6 +711,21 @@ KiDumpParameterImages(IN PCHAR Message,
     }
 }
 
+/*
+ * @brief Brief discription here.
+ *
+ *Full discription here.
+ *
+ * @param[in]
+ *
+ * @param[in]
+ *
+ * @param[in]
+ *
+ * @param[in]
+ *
+ * @param[in]
+*/
 VOID
 NTAPI
 KiDisplayBlueScreen(IN ULONG MessageId,
@@ -784,6 +824,23 @@ KiDisplayBlueScreen(IN ULONG MessageId,
     }
 }
 
+/*
+ * @brief Brief discription here.
+ *
+ * Full discription here.
+ *
+ * @param[in]
+ *
+ * @param[in]
+ *
+ * @param[in]
+ *
+ * @param[in]
+ *
+ * @param[in]
+ *
+ * @praam[in]
+*/
 DECLSPEC_NORETURN
 VOID
 NTAPI
@@ -1239,6 +1296,11 @@ KeBugCheckWithTf(IN ULONG BugCheckCode,
     while (TRUE);
 }
 
+/*
+ * @brief Brief discription here.
+ *
+ * Full discription here.
+*/
 BOOLEAN
 NTAPI
 KiHandleNmi(VOID)
