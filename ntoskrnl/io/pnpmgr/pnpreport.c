@@ -242,15 +242,14 @@ IoReportDetectedDevice(IN PDRIVER_OBJECT DriverObject,
     }
 
     /* Create the device node for the new PDO */
-    Status = IopCreateDeviceNode(IopRootDeviceNode,
-                                 Pdo,
-                                 NULL,
-                                 &DeviceNode);
-    if (!NT_SUCCESS(Status))
+    DeviceNode = PipAllocateDeviceNode(Pdo);
+    if (!DeviceNode)
     {
-        DPRINT("IopCreateDeviceNode() failed (Status 0x%08lx)\n", Status);
-        return Status;
+        DPRINT("PipAllocateDeviceNode() failed\n");
+        return STATUS_INSUFFICIENT_RESOURCES;
     }
+
+    PiInsertDevNode(DeviceNode, IopRootDeviceNode);
 
     /* We're enumerated already */
     IopDeviceNodeSetFlag(DeviceNode, DNF_ENUMERATED);

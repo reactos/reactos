@@ -1079,8 +1079,10 @@ IopActionInitChildServices(PDEVICE_NODE DeviceNode,
             if (NT_SUCCESS(Status) || Status == STATUS_IMAGE_ALREADY_LOADED)
             {
                 /* Initialize the driver */
-                Status = IopInitializeDriverModule(DeviceNode, ModuleObject,
-                    &DeviceNode->ServiceName, FALSE, &DriverObject);
+                Status = IopInitializeDriverModule(ModuleObject,
+                                                   &DeviceNode->ServiceName,
+                                                   FALSE,
+                                                   &DriverObject);
                 if (!NT_SUCCESS(Status))
                     DeviceNode->Problem = CM_PROB_FAILED_DRIVER_ENTRY;
             }
@@ -2183,13 +2185,11 @@ PipEnumerateDevice(
         if (!ChildDeviceNode)
         {
             /* One doesn't exist, create it */
-            Status = IopCreateDeviceNode(
-                DeviceNode,
-                ChildDeviceObject,
-                NULL,
-                &ChildDeviceNode);
-            if (NT_SUCCESS(Status))
+            ChildDeviceNode = PipAllocateDeviceNode(ChildDeviceObject);
+            if (ChildDeviceNode)
             {
+                PiInsertDevNode(ChildDeviceNode, DeviceNode);
+
                 /* Mark the node as enumerated */
                 ChildDeviceNode->Flags |= DNF_ENUMERATED;
 

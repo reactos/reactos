@@ -615,18 +615,14 @@ IopGetSystemPowerDeviceObject(
 );
 
 PDEVICE_NODE
-NTAPI
 PipAllocateDeviceNode(
     IN PDEVICE_OBJECT PhysicalDeviceObject
 );
 
-NTSTATUS
-IopCreateDeviceNode(
-    IN PDEVICE_NODE ParentNode,
-    IN PDEVICE_OBJECT PhysicalDeviceObject,
-    IN PUNICODE_STRING ServiceName,
-    OUT PDEVICE_NODE *DeviceNode
-);
+VOID
+PiInsertDevNode(
+    _In_ PDEVICE_NODE DeviceNode,
+    _In_ PDEVICE_NODE ParentNode);
 
 NTSTATUS
 IopFreeDeviceNode(
@@ -1160,7 +1156,6 @@ IopLoadUnloadDriver(
 NTSTATUS
 FASTCALL
 IopInitializeDriverModule(
-    IN PDEVICE_NODE DeviceNode,
     IN PLDR_DATA_TABLE_ENTRY ModuleObject,
     IN PUNICODE_STRING ServiceName,
     IN BOOLEAN FileSystemDriver,

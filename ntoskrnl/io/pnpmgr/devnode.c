@@ -31,7 +31,6 @@ IopGetDeviceNode(
 }
 
 PDEVICE_NODE
-NTAPI
 PipAllocateDeviceNode(
     _In_opt_ PDEVICE_OBJECT PhysicalDeviceObject)
 {
@@ -39,19 +38,22 @@ PipAllocateDeviceNode(
     PAGED_CODE();
 
     /* Allocate it */
-    DeviceNode = ExAllocatePoolWithTag(NonPagedPool, sizeof(DEVICE_NODE), TAG_IO_DEVNODE);
-    if (!DeviceNode) return DeviceNode;
+    DeviceNode = ExAllocatePoolZero(NonPagedPool, sizeof(DEVICE_NODE), TAG_IO_DEVNODE);
+    if (!DeviceNode)
+    {
+        return NULL;
+    }
 
     /* Statistics */
     InterlockedIncrement(&IopNumberDeviceNodes);
 
     /* Set it up */
-    RtlZeroMemory(DeviceNode, sizeof(DEVICE_NODE));
     DeviceNode->InterfaceType = InterfaceTypeUndefined;
     DeviceNode->BusNumber = -1;
     DeviceNode->ChildInterfaceType = InterfaceTypeUndefined;
     DeviceNode->ChildBusNumber = -1;
     DeviceNode->ChildBusTypeIndex = -1;
+    DeviceNode->State = DeviceNodeUninitialized;
 //    KeInitializeEvent(&DeviceNode->EnumerationMutex, SynchronizationEvent, TRUE);
     InitializeListHead(&DeviceNode->DeviceArbiterList);
     InitializeListHead(&DeviceNode->DeviceTranslatorList);
@@ -72,6 +74,32 @@ PipAllocateDeviceNode(
     return DeviceNode;
 }
 
+VOID
+PiInsertDevNode(
+    _In_ PDEVICE_NODE DeviceNode,
+    _In_ PDEVICE_NODE ParentNode)
+{
+    KIRQL oldIrql;
+
+    ASSERT(DeviceNode->Parent == NULL);
+
+    KeAcquireSpinLock(&IopDeviceTreeLock, &oldIrql);
+    DeviceNode->Parent = ParentNode;
+    DeviceNode->Sibling = NULL;
+    if (ParentNode->LastChild == NULL)
+    {
+        ParentNode->Child = DeviceNode;
+        ParentNode->LastChild = DeviceNode;
+    }
+    else
+    {
+        ParentNode->LastChild->Sibling = DeviceNode;
+        ParentNode->LastChild = DeviceNode;
+    }
+    KeReleaseSpinLock(&IopDeviceTreeLock, oldIrql);
+    DeviceNode->Level = ParentNode->Level + 1;
+}
+
 /**
  * @brief      Creates a device node
  *
@@ -84,7 +112,7 @@ PipAllocateDeviceNode(
  *
  * @return     Status, indicating the result of an operation
  */
-
+#if 0
 NTSTATUS
 IopCreateDeviceNode(
     _In_ PDEVICE_NODE ParentNode,
@@ -94,7 +122,6 @@ IopCreateDeviceNode(
 {
     PDEVICE_NODE Node;
     NTSTATUS Status;
-    KIRQL OldIrql;
     UNICODE_STRING FullServiceName;
     UNICODE_STRING LegacyPrefix = RTL_CONSTANT_STRING(L"LEGACY_");
     UNICODE_STRING UnknownDeviceName = RTL_CONSTANT_STRING(L"UNKNOWN");
@@ -249,6 +276,7 @@ IopCreateDeviceNode(
 
     return STATUS_SUCCESS;
 }
+#endif
 
 NTSTATUS
 IopFreeDeviceNode(

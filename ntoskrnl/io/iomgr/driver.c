@@ -464,10 +464,6 @@ MmFreeDriverInitialization(IN PLDR_DATA_TABLE_ENTRY LdrEntry);
  *
  * Initialize a loaded driver.
  *
- * Parameters
- *    DeviceNode
- *       Pointer to device node.
- *
  *    ModuleObject
  *       Module object representing the driver. It can be retrieve by
  *       IopLoadServiceModule.
@@ -485,7 +481,6 @@ MmFreeDriverInitialization(IN PLDR_DATA_TABLE_ENTRY LdrEntry);
 NTSTATUS
 FASTCALL
 IopInitializeDriverModule(
-    IN PDEVICE_NODE DeviceNode,
     IN PLDR_DATA_TABLE_ENTRY ModuleObject,
     IN PUNICODE_STRING ServiceName,
     IN BOOLEAN FileSystemDriver,
@@ -626,8 +621,7 @@ IopAttachFilterDriversCallback(
                 return Status;
             }
 
-            Status = IopInitializeDriverModule(DeviceNode,
-                                               ModuleObject,
+            Status = IopInitializeDriverModule(ModuleObject,
                                                &ServiceName,
                                                FALSE,
                                                &DriverObject);
@@ -827,7 +821,6 @@ NTSTATUS
 NTAPI
 IopInitializeBuiltinDriver(IN PLDR_DATA_TABLE_ENTRY BootLdrEntry)
 {
-    PDEVICE_NODE DeviceNode;
     PDRIVER_OBJECT DriverObject;
     NTSTATUS Status;
     PWCHAR Buffer, FileNameWithoutPath;
@@ -885,21 +878,6 @@ IopInitializeBuiltinDriver(IN PLDR_DATA_TABLE_ENTRY BootLdrEntry)
         FileExtension[0] = UNICODE_NULL;
     }
 
-    /*
-     * Determine the right device object
-     */
-    /* Use IopRootDeviceNode for now */
-    Status = IopCreateDeviceNode(IopRootDeviceNode,
-                                 NULL,
-                                 &ServiceName,
-                                 &DeviceNode);
-    RtlFreeUnicodeString(&ServiceName);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("Driver '%wZ' load failed, status (%x)\n", ModuleName, Status);
-        return Status;
-    }
-
     /* Lookup the new Ldr entry in PsLoadedModuleList */
     NextEntry = PsLoadedModuleList.Flink;
     while (NextEntry != &PsLoadedModuleList)
@@ -919,21 +897,16 @@ IopInitializeBuiltinDriver(IN PLDR_DATA_TABLE_ENTRY BootLdrEntry)
     /*
      * Initialize the driver
      */
-    Status = IopInitializeDriverModule(DeviceNode,
-                                       LdrEntry,
-                                       &DeviceNode->ServiceName,
+    Status = IopInitializeDriverModule(LdrEntry,
+                                       &ServiceName,
                                        FALSE,
                                        &DriverObject);
+    RtlFreeUnicodeString(&ServiceName);
 
     if (!NT_SUCCESS(Status))
     {
+        DPRINT1("Driver '%wZ' load failed, status (%x)\n", ModuleName, Status);
         return Status;
-    }
-
-    Status = IopInitializeDevice(DeviceNode, DriverObject);
-    if (NT_SUCCESS(Status))
-    {
-        Status = IopStartDevice(DeviceNode);
     }
 
     /* Remove extra reference from IopInitializeDriverModule */
@@ -960,7 +933,6 @@ IopInitializeBootDrivers(VOID)
 {
     PLIST_ENTRY ListHead, NextEntry, NextEntry2;
     PLDR_DATA_TABLE_ENTRY LdrEntry;
-    PDEVICE_NODE DeviceNode;
     PDRIVER_OBJECT DriverObject;
     LDR_DATA_TABLE_ENTRY ModuleObject;
     NTSTATUS Status;
@@ -971,10 +943,6 @@ IopInitializeBootDrivers(VOID)
     PBOOT_DRIVER_LIST_ENTRY BootEntry;
     DPRINT("IopInitializeBootDrivers()\n");
 
-    /* Use IopRootDeviceNode for now */
-    Status = IopCreateDeviceNode(IopRootDeviceNode, NULL, NULL, &DeviceNode);
-    if (!NT_SUCCESS(Status)) return;
-
     /* Setup the module object for the RAW FS Driver */
     ModuleObject.DllBase = NULL;
     ModuleObject.SizeOfImage = 0;
@@ -982,32 +950,13 @@ IopInitializeBootDrivers(VOID)
     RtlInitUnicodeString(&DriverName, L"RAW");
 
     /* Initialize it */
-    Status = IopInitializeDriverModule(DeviceNode,
-                                       &ModuleObject,
+    Status = IopInitializeDriverModule(&ModuleObject,
                                        &DriverName,
                                        TRUE,
                                        &DriverObject);
     if (!NT_SUCCESS(Status))
     {
         /* Fail */
-        return;
-    }
-
-    /* Now initialize the associated device */
-    Status = IopInitializeDevice(DeviceNode, DriverObject);
-    if (!NT_SUCCESS(Status))
-    {
-        /* Fail */
-        ObDereferenceObject(DriverObject);
-        return;
-    }
-
-    /* Start it up */
-    Status = IopStartDevice(DeviceNode);
-    if (!NT_SUCCESS(Status))
-    {
-        /* Fail */
-        ObDereferenceObject(DriverObject);
         return;
     }
 
@@ -1943,7 +1892,6 @@ IopLoadUnloadDriver(
     UNICODE_STRING ServiceName;
     NTSTATUS Status;
     ULONG Type;
-    PDEVICE_NODE DeviceNode;
     PLDR_DATA_TABLE_ENTRY ModuleObject;
     PVOID BaseAddress;
     WCHAR *cur;
@@ -2069,21 +2017,10 @@ IopLoadUnloadDriver(
         /*
          * Initialize the driver module if it's loaded for the first time
          */
-        Status = IopCreateDeviceNode(IopRootDeviceNode, NULL, &ServiceName, &DeviceNode);
-        if (!NT_SUCCESS(Status))
-        {
-            DPRINT1("IopCreateDeviceNode() failed (Status %lx)\n", Status);
-            ExReleaseResourceLite(&IopDriverLoadResource);
-            KeLeaveCriticalRegion();
-            MmUnloadSystemImage(ModuleObject);
-            return Status;
-        }
+        IopDisplayLoadingMessage(&ServiceName);
 
-        IopDisplayLoadingMessage(&DeviceNode->ServiceName);
-
-        Status = IopInitializeDriverModule(DeviceNode,
-                                           ModuleObject,
-                                           &DeviceNode->ServiceName,
+        Status = IopInitializeDriverModule(ModuleObject,
+                                           &ServiceName,
                                            (Type == SERVICE_FILE_SYSTEM_DRIVER ||
                                             Type == SERVICE_RECOGNIZER_DRIVER),
                                            DriverObject);
@@ -2098,10 +2035,6 @@ IopLoadUnloadDriver(
 
         ExReleaseResourceLite(&IopDriverLoadResource);
         KeLeaveCriticalRegion();
-
-        /* Initialize and start device */
-        IopInitializeDevice(DeviceNode, *DriverObject);
-        Status = IopStartDevice(DeviceNode);
     }
     else
     {
