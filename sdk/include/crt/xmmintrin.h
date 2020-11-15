@@ -11,6 +11,16 @@
 #include <crtdefs.h>
 #include <mmintrin.h>
 
+#ifdef __clang__
+
+typedef        float __v4sf __attribute__((__vector_size__(16)));
+typedef   signed int __v4si __attribute__((__vector_size__(16)));
+typedef unsigned int __v4su __attribute__((__vector_size__(16)));
+
+typedef        float __m128 __attribute__((__vector_size__(16), __aligned__(16)));
+
+#else /* __clang__ */
+
 typedef union _DECLSPEC_INTRIN_TYPE _CRT_ALIGN(16) __m128
 {
     float m128_f32[4];
@@ -23,6 +33,8 @@ typedef union _DECLSPEC_INTRIN_TYPE _CRT_ALIGN(16) __m128
     unsigned __int16 m128_u16[8];
     unsigned __int32 m128_u32[4];
 } __m128;
+
+#endif /* __clang__ */
 
 
 #ifdef __cplusplus
@@ -39,18 +51,18 @@ unsigned int _mm_getcsr(void);
 #pragma intrinsic(_mm_getcsr)
 void _mm_setcsr(unsigned int);
 #pragma intrinsic(_mm_setcsr)
+
+#ifndef __clang__
 #pragma intrinsic(_mm_xor_ps)
 #pragma intrinsic(_mm_div_ps)
-#else
+#endif /* __clang__ */
 
-#ifndef __INTRIN_INLINE
-#ifdef __clang__
-#define __INTRIN_INLINE __forceinline
-#else
+#else /* _MSC_VER */
+
+#if !defined(__INTRIN_INLINE) && !defined(__clang__)
 #define __ATTRIBUTE_ARTIFICIAL __attribute__((artificial))
 #define __INTRIN_INLINE extern __inline__ __attribute__((__always_inline__,__gnu_inline__)) __ATTRIBUTE_ARTIFICIAL
-#endif
-#endif
+#endif /* !__INTRIN_INLINE && !__clang__ */
 
 /* 
  * We can't use __builtin_ia32_* functions,
@@ -67,7 +79,24 @@ __INTRIN_INLINE void _mm_setcsr(unsigned int val)
 {
     __asm__ __volatile__("ldmxcsr %0" : : "m"(val));
 }
-#endif
+#endif /* _MSC_VER */
+
+#ifdef __clang__
+#define __INTRIN_INLINE __forceinline
+
+/*
+ * Clang implements these as inline functions in the header instead of real builtins
+ */
+__INTRIN_INLINE __m128 _mm_xor_ps(__m128 a, __m128 b)
+{
+    return (__m128)((__v4su)a ^ (__v4su)b);
+}
+
+__INTRIN_INLINE __m128 _mm_div_ps(__m128 a, __m128 b)
+{
+    return (__m128)((__v4sf)a / (__v4sf)b);
+}
+#endif /* __clang__ */
 
 /* Alternate names */
 #define _mm_cvtss_si32 _mm_cvt_ss2si

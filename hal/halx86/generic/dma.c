@@ -77,10 +77,6 @@
 #define NDEBUG
 #include <debug.h>
 
-#if defined(ALLOC_PRAGMA) && !defined(_MINIHAL_)
-#pragma alloc_text(INIT, HalpInitDma)
-#endif
-
 #define MAX_SG_ELEMENTS 0x10
 
 #ifndef _MINIHAL_
@@ -133,8 +129,26 @@ static DMA_OPERATIONS HalpDmaOperations = {
 
 /* FUNCTIONS *****************************************************************/
 
+#if defined(SARCH_PC98)
+/*
+ * Disable I/O for safety.
+ * FIXME: Add support for PC-98 DMA controllers.
+ */
+#undef WRITE_PORT_UCHAR
+#undef READ_PORT_UCHAR
+
+#define WRITE_PORT_UCHAR(Port, Data) \
+    do { \
+        UNIMPLEMENTED; \
+        (Port); \
+        (Data); \
+    } while (0)
+
+#define READ_PORT_UCHAR(Port) 0x00
+#endif
+
 #ifndef _MINIHAL_
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 HalpInitDma(VOID)
 {

@@ -201,7 +201,7 @@ NTSTATUS
 NTAPI
 FstubAllocateDiskInformation(IN PDEVICE_OBJECT DeviceObject,
                              OUT PDISK_INFORMATION * DiskBuffer,
-                             PDISK_GEOMETRY_EX DiskGeometry OPTIONAL)
+                             IN PDISK_GEOMETRY_EX DiskGeometry OPTIONAL)
 {
     NTSTATUS Status;
     PDISK_INFORMATION DiskInformation;
@@ -340,7 +340,7 @@ FstubCreateDiskMBR(IN PDEVICE_OBJECT DeviceObject,
     ASSERT(DeviceObject);
 
     /* Allocate internal structure */
-    Status = FstubAllocateDiskInformation(DeviceObject, &Disk, 0);
+    Status = FstubAllocateDiskInformation(DeviceObject, &Disk, NULL);
     if (!NT_SUCCESS(Status))
     {
         return Status;
@@ -359,7 +359,7 @@ FstubCreateDiskMBR(IN PDEVICE_OBJECT DeviceObject,
     /* Fill the buffer with needed information, we won't overwrite boot code */
     MasterBootRecord = (PMASTER_BOOT_RECORD)Disk->Buffer;
     MasterBootRecord->Signature = DiskInfo->Signature;
-    RtlZeroMemory(MasterBootRecord->PartitionTable, sizeof(PARTITION_TABLE_ENTRY) * 4);
+    RtlZeroMemory(MasterBootRecord->PartitionTable, sizeof(PARTITION_TABLE_ENTRY) * NUM_PARTITION_TABLE_ENTRIES);
     MasterBootRecord->MasterBootRecordMagic = BOOT_RECORD_SIGNATURE;
 
     /* Finally, write MBR */
@@ -388,7 +388,7 @@ FstubCreateDiskEFI(IN PDEVICE_OBJECT DeviceObject,
     ASSERT(DiskInfo);
 
     /* Allocate internal structure */
-    Status = FstubAllocateDiskInformation(DeviceObject, &Disk, 0);
+    Status = FstubAllocateDiskInformation(DeviceObject, &Disk, NULL);
     if (!NT_SUCCESS(Status))
     {
         return Status;
@@ -454,7 +454,7 @@ FstubCreateDiskRaw(IN PDEVICE_OBJECT DeviceObject)
     ASSERT(DeviceObject);
 
     /* Allocate internal structure */
-    Status = FstubAllocateDiskInformation(DeviceObject, &Disk, 0);
+    Status = FstubAllocateDiskInformation(DeviceObject, &Disk, NULL);
     if (!NT_SUCCESS(Status))
     {
         return Status;
@@ -2030,7 +2030,7 @@ IoGetBootDiskInformation(IN OUT PBOOTDISK_INFORMATION BootDiskInformation,
                         /* If called passed a BOOTDISK_INFORMATION_EX structure, give more intel */
                         if (IsBootDiskInfoEx)
                         {
-                            /* Is PT MBR or GPT? */
+                            /* Is partition style MBR or GPT? */
                             if (DriveLayout->PartitionStyle == PARTITION_STYLE_GPT)
                             {
                                 ((PBOOTDISK_INFORMATION_EX)BootDiskInformation)->BootDeviceGuid = DriveLayout->Gpt.DiskId;
@@ -2101,7 +2101,7 @@ IoGetBootDiskInformation(IN OUT PBOOTDISK_INFORMATION BootDiskInformation,
                         /* If called passed a BOOTDISK_INFORMATION_EX structure, give more intel */
                         if (IsBootDiskInfoEx)
                         {
-                            /* Is PT MBR or GPT? */
+                            /* Is partition style MBR or GPT? */
                             if (DriveLayout->PartitionStyle == PARTITION_STYLE_GPT)
                             {
                                 ((PBOOTDISK_INFORMATION_EX)BootDiskInformation)->SystemDeviceGuid = DriveLayout->Gpt.DiskId;
@@ -2110,7 +2110,7 @@ IoGetBootDiskInformation(IN OUT PBOOTDISK_INFORMATION BootDiskInformation,
                             else
                             {
                                 ((PBOOTDISK_INFORMATION_EX)BootDiskInformation)->SystemDeviceIsGpt = FALSE;
-                           }
+                            }
                         }
 
                         /* Dereference FileObject */
@@ -2254,14 +2254,14 @@ IoReadPartitionTableEx(IN PDEVICE_OBJECT DeviceObject,
     ASSERT(DriveLayout);
 
     /* First of all, allocate internal structure */
-    Status = FstubAllocateDiskInformation(DeviceObject, &Disk, 0);
+    Status = FstubAllocateDiskInformation(DeviceObject, &Disk, NULL);
     if (!NT_SUCCESS(Status))
     {
         return Status;
     }
     ASSERT(Disk);
 
-    /* Then, detect partition style (MBR? GTP/EFI? RAW?) */
+    /* Then, detect partition style (MBR? GPT/EFI? RAW?) */
     Status = FstubDetectPartitionStyle(Disk, &PartitionStyle);
     if (!NT_SUCCESS(Status))
     {
@@ -2278,18 +2278,18 @@ IoReadPartitionTableEx(IN PDEVICE_OBJECT DeviceObject,
             break;
 
         case PARTITION_STYLE_GPT:
-             /* Read primary table */
-             Status = FstubReadPartitionTableEFI(Disk, FALSE, DriveLayout);
-             /* If it failed, try reading backup table */
-             if (!NT_SUCCESS(Status))
-             {
-                 Status = FstubReadPartitionTableEFI(Disk, TRUE, DriveLayout);
-             }
-             break;
+            /* Read primary table */
+            Status = FstubReadPartitionTableEFI(Disk, FALSE, DriveLayout);
+            /* If it failed, try reading backup table */
+            if (!NT_SUCCESS(Status))
+            {
+                Status = FstubReadPartitionTableEFI(Disk, TRUE, DriveLayout);
+            }
+            break;
 
         default:
-             DPRINT("Unknown partition type\n");
-             Status = STATUS_UNSUCCESSFUL;
+            DPRINT("Unknown partition type\n");
+            Status = STATUS_UNSUCCESSFUL;
     }
 
     /* It's over, internal structure not needed anymore */
@@ -2444,7 +2444,7 @@ IoWritePartitionTableEx(IN PDEVICE_OBJECT DeviceObject,
     FstubDbgPrintDriveLayoutEx(DriveLayout);
 
     /* Allocate internal structure */
-    Status = FstubAllocateDiskInformation(DeviceObject, &Disk, 0);
+    Status = FstubAllocateDiskInformation(DeviceObject, &Disk, NULL);
     if (!NT_SUCCESS(Status))
     {
         return Status;

@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS HAL
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            hal/halx86/generic/usage.c
  * PURPOSE:         HAL Resource Report Routines
  * PROGRAMMERS:     Stefan Ginsberg (stefan.ginsberg@reactos.org)
  */
@@ -9,47 +8,9 @@
 /* INCLUDES *******************************************************************/
 
 #include <hal.h>
+
 #define NDEBUG
 #include <debug.h>
-
-INIT_FUNCTION
-VOID
-NTAPI
-HalpGetResourceSortValue(
-    IN PCM_PARTIAL_RESOURCE_DESCRIPTOR Descriptor,
-    OUT PULONG Scale,
-    OUT PLARGE_INTEGER Value
-);
-
-INIT_FUNCTION
-VOID
-NTAPI
-HalpBuildPartialFromIdt(
-    IN ULONG Entry,
-    IN PCM_PARTIAL_RESOURCE_DESCRIPTOR RawDescriptor,
-    IN PCM_PARTIAL_RESOURCE_DESCRIPTOR TranslatedDescriptor
-);
-
-INIT_FUNCTION
-VOID
-NTAPI
-HalpBuildPartialFromAddress(
-    IN INTERFACE_TYPE Interface,
-    IN PADDRESS_USAGE CurrentAddress,
-    IN ULONG Element,
-    IN PCM_PARTIAL_RESOURCE_DESCRIPTOR RawDescriptor,
-    IN PCM_PARTIAL_RESOURCE_DESCRIPTOR TranslatedDescriptor
-);
-
-#if defined(ALLOC_PRAGMA) && !defined(_MINIHAL_)
-#pragma alloc_text(INIT, HalpBuildPartialFromAddress)
-#pragma alloc_text(INIT, HalpBuildPartialFromIdt)
-#pragma alloc_text(INIT, HalpEnableInterruptHandler)
-#pragma alloc_text(INIT, HalpGetNMICrashFlag)
-#pragma alloc_text(INIT, HalpGetResourceSortValue)
-#pragma alloc_text(INIT, HalpRegisterVector)
-#pragma alloc_text(INIT, HalpReportResourceUsage)
-#endif
 
 /* GLOBALS ********************************************************************/
 
@@ -82,6 +43,60 @@ ADDRESS_USAGE HalpDefaultIoSpace =
 {
     NULL, CmResourceTypePort, IDT_INTERNAL,
     {
+#if defined(SARCH_PC98)
+        /* PIC 1 */
+        {0x00,  1},
+        {0x02,  1},
+        /* PIC 2 */
+        {0x08,  1},
+        {0x0A,  1},
+        /* DMA */
+        {0x01,  1},
+        {0x03,  1},
+        {0x05,  1},
+        {0x07,  1},
+        {0x09,  1},
+        {0x0B,  1},
+        {0x0D,  1},
+        {0x0F,  1},
+        {0x11,  1},
+        {0x13,  1},
+        {0x15,  1},
+        {0x17,  1},
+        {0x19,  1},
+        {0x1B,  1},
+        {0x1D,  1},
+        {0x1F,  1},
+        {0x21,  1},
+        {0x23,  1},
+        {0x25,  1},
+        {0x27,  1},
+        {0x29,  1},
+        {0x2B,  1},
+        {0x2D,  1},
+        {0xE05, 1},
+        {0xE07, 1},
+        {0xE09, 1},
+        {0xE0B, 1},
+        /* RTC */
+        {0x20,  1},
+        {0x22,  1},
+        {0x128, 1},
+        /* System Control */
+        {0x33,  1},
+        {0x37,  1},
+        /* PIT */
+        {0x71,  1},
+        {0x73,  1},
+        {0x75,  1},
+        {0x77,  1},
+        {0x3FD9,1},
+        {0x3FDB,1},
+        {0x3FDD,1},
+        {0x3FDF,1},
+        /* x87 Coprocessor */
+        {0xF8,  8},
+#else
         {0x00,  0x20}, /* DMA 1 */
         {0xC0,  0x20}, /* DMA 2 */
         {0x80,  0x10}, /* DMA EPAR */
@@ -92,6 +107,7 @@ ADDRESS_USAGE HalpDefaultIoSpace =
         {0x92,  0x1},  /* System Control Port A */
         {0x70,  0x2},  /* CMOS  */
         {0xF0,  0x10}, /* x87 Coprocessor */
+#endif
         {0xCF8, 0x8},  /* PCI 0 */
         {0,0},
     }
@@ -100,7 +116,7 @@ ADDRESS_USAGE HalpDefaultIoSpace =
 /* FUNCTIONS ******************************************************************/
 
 #ifndef _MINIHAL_
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 HalpGetResourceSortValue(IN PCM_PARTIAL_RESOURCE_DESCRIPTOR Descriptor,
@@ -140,7 +156,7 @@ HalpGetResourceSortValue(IN PCM_PARTIAL_RESOURCE_DESCRIPTOR Descriptor,
     }
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 HalpBuildPartialFromIdt(IN ULONG Entry,
@@ -178,7 +194,7 @@ HalpBuildPartialFromIdt(IN ULONG Entry,
     TranslatedDescriptor->u.Interrupt.Level = HalpIDTUsage[Entry].Irql;
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 HalpBuildPartialFromAddress(IN INTERFACE_TYPE Interface,
@@ -246,7 +262,7 @@ HalpBuildPartialFromAddress(IN INTERFACE_TYPE Interface,
     }
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 HalpReportResourceUsage(IN PUNICODE_STRING HalName,
@@ -523,9 +539,9 @@ HalpReportResourceUsage(IN PUNICODE_STRING HalName,
     /* Get the machine's serial number */
     HalpReportSerialNumber();
 }
-#endif
+#endif /* !_MINIHAL_ */
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 HalpRegisterVector(IN UCHAR Flags,
@@ -542,7 +558,7 @@ HalpRegisterVector(IN UCHAR Flags,
 }
 
 #ifndef _MINIHAL_
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 HalpEnableInterruptHandler(IN UCHAR Flags,
@@ -565,7 +581,7 @@ HalpEnableInterruptHandler(IN UCHAR Flags,
     HalEnableSystemInterrupt(SystemVector, Irql, Mode);
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 HalpGetNMICrashFlag(VOID)
@@ -614,7 +630,6 @@ HalpGetNMICrashFlag(VOID)
         ZwClose(Handle);
     }
 }
-#endif
+#endif  /* !_MINIHAL_ */
 
 /* EOF */
-

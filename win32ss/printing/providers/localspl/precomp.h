@@ -22,6 +22,7 @@
 #include <winreg.h>
 #include <winspool.h>
 #include <winsplp.h>
+#include <winddiui.h>
 #include <dsrole.h>
 #include <secext.h>
 #include <ndk/rtlfuncs.h>
@@ -49,6 +50,7 @@ typedef HANDLE (WINAPI *POpenPrintProcessor)(LPWSTR, PPRINTPROCESSOROPENDATA);
 typedef BOOL (WINAPI *PPrintDocumentOnPrintProcessor)(HANDLE, LPWSTR);
 typedef LPMONITOREX(WINAPI *PInitializePrintMonitor)(PWSTR);
 typedef LPMONITOR2(WINAPI *PInitializePrintMonitor2)(PMONITORINIT, PHANDLE);
+typedef PMONITORUI(WINAPI *PInitializePrintMonitorUI)(VOID);
 
 // Forward declarations
 typedef struct _LOCAL_HANDLE            LOCAL_HANDLE, *PLOCAL_HANDLE;
@@ -69,8 +71,10 @@ typedef struct _SHD_HEADER              SHD_HEADER, *PSHD_HEADER;
 struct _LOCAL_PRINT_MONITOR
 {
     LIST_ENTRY Entry;
+    DWORD refcount;
     PWSTR pwszName;                             /** Name of the Print Monitor as read from the registry. */
     PWSTR pwszFileName;                         /** DLL File Name of the Print Monitor. */
+    HMODULE hModule;
     BOOL bIsLevel2;                             /** Whether this Print Monitor supplies an InitializePrintMonitor2 API (preferred) instead of InitializePrintMonitor. */
     PVOID pMonitor;                             /** For bIsLevel2 == TRUE:  LPMONITOR2 pointer returned by InitializePrintMonitor2.
                                                     For bIsLevel2 == FALSE: LPMONITOREX pointer returned by InitializePrintMonitor. */
@@ -241,6 +245,14 @@ struct _SHD_HEADER
     DWORD dwSPLSize;
 };
 
+// forms.c
+BOOL InitializeFormList(VOID);
+BOOL WINAPI LocalAddForm(HANDLE hPrinter, DWORD Level, PBYTE pForm);
+BOOL WINAPI LocalDeleteForm(HANDLE hPrinter, PWSTR pFormName);
+BOOL WINAPI LocalEnumForms(HANDLE hPrinter, DWORD Level, PBYTE pForm, DWORD cbBuf, PDWORD pcbNeeded, PDWORD pcReturned);
+BOOL WINAPI LocalGetForm(HANDLE hPrinter, PWSTR pFormName, DWORD Level, PBYTE pForm, DWORD cbBuf, PDWORD pcbNeeded);
+BOOL WINAPI LocalSetForm(HANDLE hPrinter, PWSTR pFormName, DWORD Level, PBYTE pForm);
+
 // jobs.c
 extern SKIPLIST GlobalJobList;
 DWORD WINAPI CreateJob(PLOCAL_PRINTER_HANDLE pPrinterHandle);
@@ -275,11 +287,19 @@ extern LIST_ENTRY PrintMonitorList;
 PLOCAL_PRINT_MONITOR FindPrintMonitor(PCWSTR pwszName);
 BOOL InitializePrintMonitorList(void);
 BOOL WINAPI LocalEnumMonitors(PWSTR pName, DWORD Level, PBYTE pMonitors, DWORD cbBuf, PDWORD pcbNeeded, PDWORD pcReturned);
+BOOL WINAPI LocalAddMonitor(PWSTR pName, DWORD Level, PBYTE pMonitors);
+BOOL WINAPI LocalDeleteMonitor(PWSTR pName, PWSTR pEnvironment, PWSTR pMonitorName);
 
 // ports.c
 PLOCAL_PORT FindPort(PCWSTR pwszName);
 BOOL InitializePortList(void);
 BOOL WINAPI LocalEnumPorts(PWSTR pName, DWORD Level, PBYTE pPorts, DWORD cbBuf, PDWORD pcbNeeded, PDWORD pcReturned);
+BOOL WINAPI LocalAddPortEx(PWSTR pName, DWORD Level, PBYTE lpBuffer, PWSTR lpMonitorName);
+BOOL WINAPI LocalAddPort(LPWSTR pName, HWND hWnd, LPWSTR pMonitorName);
+BOOL WINAPI LocalConfigurePort(PWSTR pName, HWND hWnd, PWSTR pPortName);
+BOOL WINAPI LocalDeletePort(PWSTR pName, HWND hWnd, PWSTR pPortName);
+BOOL WINAPI LocalSetPort(PWSTR pName, PWSTR pPortName, DWORD dwLevel, PBYTE pPortInfo);
+BOOL CreatePortEntry( PCWSTR pwszName, PLOCAL_PRINT_MONITOR pPrintMonitor );
 
 // printerdata.c
 DWORD WINAPI LocalGetPrinterData(HANDLE hPrinter, PWSTR pValueName, PDWORD pType, PBYTE pData, DWORD nSize, PDWORD pcbNeeded);
@@ -287,9 +307,26 @@ DWORD WINAPI LocalGetPrinterDataEx(HANDLE hPrinter, PCWSTR pKeyName, PCWSTR pVal
 DWORD WINAPI LocalSetPrinterData(HANDLE hPrinter, PWSTR pValueName, DWORD Type, PBYTE pData, DWORD cbData);
 DWORD WINAPI LocalSetPrinterDataEx(HANDLE hPrinter, LPCWSTR pKeyName, LPCWSTR pValueName, DWORD Type, LPBYTE pData, DWORD cbData);
 
-// printerdriver.c
+// printerdrivers.c
+BOOL InitializePrinterDrivers(VOID);
+BOOL WINAPI LocalAddPrinterDriver(LPWSTR pName, DWORD level, LPBYTE pDriverInfo);
+BOOL WINAPI LocalAddPrinterDriverEx(LPWSTR pName, DWORD level, LPBYTE pDriverInfo, DWORD dwFileCopyFlags);
 BOOL WINAPI LocalGetPrinterDriver(HANDLE hPrinter, LPWSTR pEnvironment, DWORD Level, LPBYTE pDriverInfo, DWORD cbBuf, LPDWORD pcbNeeded);
+BOOL WINAPI LocalGetPrinterDriverDirectory(PWSTR pName, PWSTR pEnvironment, DWORD Level, PBYTE pDriverDirectory, DWORD cbBuf, PDWORD pcbNeeded);
+BOOL WINAPI LocalGetPrinterDriverEx(HANDLE hPrinter,LPWSTR pEnvironment,DWORD Level,LPBYTE pDriverInfo,DWORD cbBuf,LPDWORD pcbNeeded,DWORD dwClientMajorVersion,DWORD dwClientMinorVersion,PDWORD pdwServerMajorVersion,PDWORD pdwServerMinorVersion );
+BOOL WINAPI LocalEnumPrinterDrivers(PWSTR pName, PWSTR pEnvironment, DWORD Level, PBYTE pDriverInfo, DWORD cbBuf, PDWORD pcbNeeded, PDWORD pcReturned);
 
+// wine codes
+typedef struct _PRINTENV_T
+{
+    LPCWSTR  envname;
+    LPCWSTR  subdir;
+    DWORD    driverversion;
+    LPCWSTR  versionregpath;
+    LPCWSTR  versionsubdir;
+} PRINTENV_T, *PPRINTENV_T;
+
+PPRINTENV_T validate_envW(LPCWSTR env);
 
 // printers.c
 extern SKIPLIST PrinterList;
@@ -297,6 +334,7 @@ BOOL InitializePrinterList(void);
 BOOL WINAPI LocalEnumPrinters(DWORD Flags, LPWSTR Name, DWORD Level, LPBYTE pPrinterEnum, DWORD cbBuf, LPDWORD pcbNeeded, LPDWORD pcReturned);
 BOOL WINAPI LocalGetPrinter(HANDLE hPrinter, DWORD Level, LPBYTE pPrinter, DWORD cbBuf, LPDWORD pcbNeeded);
 BOOL WINAPI LocalOpenPrinter(PWSTR lpPrinterName, HANDLE* phPrinter, PPRINTER_DEFAULTSW pDefault);
+DWORD WINAPI LocalPrinterMessageBox(HANDLE hPrinter, DWORD Error, HWND hWnd, LPWSTR pText, LPWSTR pCaption, DWORD dwType);
 BOOL WINAPI LocalReadPrinter(HANDLE hPrinter, PVOID pBuf, DWORD cbBuf, PDWORD pNoBytesRead);
 DWORD WINAPI LocalStartDocPrinter(HANDLE hPrinter, DWORD Level, LPBYTE pDocInfo);
 BOOL WINAPI LocalStartPagePrinter(HANDLE hPrinter);
@@ -304,6 +342,7 @@ BOOL WINAPI LocalWritePrinter(HANDLE hPrinter, LPVOID pBuf, DWORD cbBuf, LPDWORD
 BOOL WINAPI LocalEndPagePrinter(HANDLE hPrinter);
 BOOL WINAPI LocalEndDocPrinter(HANDLE hPrinter);
 BOOL WINAPI LocalClosePrinter(HANDLE hPrinter);
+VOID BroadcastChange(PLOCAL_HANDLE pHandle);
 
 // printingthread.c
 DWORD WINAPI PrintingThreadProc(PLOCAL_JOB pJob);
@@ -316,8 +355,19 @@ BOOL WINAPI LocalEnumPrintProcessorDatatypes(LPWSTR pName, LPWSTR pPrintProcesso
 BOOL WINAPI LocalEnumPrintProcessors(LPWSTR pName, LPWSTR pEnvironment, DWORD Level, LPBYTE pPrintProcessorInfo, DWORD cbBuf, LPDWORD pcbNeeded, LPDWORD pcReturned);
 BOOL WINAPI LocalGetPrintProcessorDirectory(LPWSTR pName, LPWSTR pEnvironment, DWORD Level, LPBYTE pPrintProcessorInfo, DWORD cbBuf, LPDWORD pcbNeeded);
 
+// spoolfile.c
+BOOL WINAPI LocalGetSpoolFileInfo(HANDLE hPrinter,LPWSTR *pSpoolDir,LPHANDLE phFile,HANDLE hSpoolerProcess,HANDLE hAppProcess);
+BOOL WINAPI LocalCommitSpoolData(HANDLE hPrinter,DWORD cbCommit);
+BOOL WINAPI LocalCloseSpoolFileHandle(HANDLE hPrinter);
+
 // tools.c
 PWSTR AllocAndRegQueryWSZ(HKEY hKey, PCWSTR pwszValueName);
 PDEVMODEW DuplicateDevMode(PDEVMODEW pInput);
+// wine codes
+LONG copy_servername_from_name(LPCWSTR name, LPWSTR target);
+
+// Xcv.c
+BOOL WINAPI LocalXcvData(HANDLE hXcv, const WCHAR* pszDataName, BYTE* pInputData, DWORD cbInputData, BYTE* pOutputData, DWORD cbOutputData, DWORD* pcbOutputNeeded, DWORD* pdwStatus);
+
 
 #endif

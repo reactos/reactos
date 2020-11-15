@@ -1,0 +1,91 @@
+; Copyright (c) 2002-2012 UniATA group
+
+[Version]
+Signature="$Windows NT$"
+Provider=%ALTERWARE%
+ClassGUID={4D36E97D-E325-11CE-BFC1-08002BE10318}
+Class=System
+;CatalogFile=uniata.cat
+DriverVer=08/25/2012,0.43.4.2
+
+
+[DestinationDirs]
+DefaultDestDir = 11 ; DIRID_DRIVERS
+
+[ControlFlags]
+ExcludeFromSelect = *
+
+;
+; Driver information
+;
+
+[Manufacturer]
+%ALTERWARE%=UNIATA_COMM
+
+[UNIATA_COMM]
+;Well-known adapters
+%UNIATA__MANAGEMENT_PORT.DeviceDesc%=uniata_Inst, SCSI\NetUNIATA__MANAGEMENT_PORT
+%UNIATA__MANAGEMENT_PORT.DeviceDesc%=uniata_Inst, IDE\NetUNIATA__MANAGEMENT_PORT
+%UNIATA__MANAGEMENT_PORT.DeviceDesc%=uniata_Inst, SCSI\NetUNIATA__MANAGEMENT_PORT_
+%UNIATA__MANAGEMENT_PORT.DeviceDesc%=uniata_Inst, IDE\NetUNIATA__MANAGEMENT_PORT_
+; For Win 2003
+%UNIATA__MANAGEMENT_PORT.DeviceDesc%=uniata_Inst, SCSI\NetUNIATA__Management_Port*_*
+%UNIATA__MANAGEMENT_PORT.DeviceDesc%=uniata_Inst, IDE\NetUNIATA__Management_Port*_*
+;
+; General installation section
+;
+
+[uniata_Inst]
+AddReg = uniata_Inst.AddReg
+CopyFiles =
+
+[uniata_Inst.AddReg]
+
+;
+; File sections
+;
+
+[uniata_Inst.Miniport]
+uniata.sys
+
+
+;
+; Service Installation
+;
+
+[uniata_Inst.Services]
+AddService =
+
+;
+; Source file information
+;
+
+[SourceDisksNames.x86]
+1 = %DiskId1%,,,""
+
+[SourceDisksFiles]
+; Files for disk UniATA Installation Disk #1 (SCSIAdapter)
+uniata.sys = 1,,
+
+
+[Strings]
+;Well-known adapters
+UNIATA__MANAGEMENT_PORT.DeviceDesc="UniATA virtual communication device"
+UniATA_Name = "Universal ATA Driver (Win XP)"
+ALTERWARE = "AlterWare"
+
+;*******************************************
+;
+; Non-Localizable Strings
+;
+
+REG_SZ         = 0x00000000
+REG_MULTI_SZ   = 0x00010000
+REG_EXPAND_SZ  = 0x00020000
+REG_BINARY     = 0x00000001
+REG_DWORD      = 0x00010001
+SERVICEROOT    = "System\CurrentControlSet\Services"
+
+IOLOGMSGDLL    = "\IoLogMsg.dll"
+
+DiskId1 = "UniATA Installation disk"

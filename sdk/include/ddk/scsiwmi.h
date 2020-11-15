@@ -146,7 +146,7 @@ typedef struct _SCSIWMILIB_CONTEXT {
 } SCSI_WMILIB_CONTEXT, *PSCSI_WMILIB_CONTEXT;
 
 _Must_inspect_result_
-SCSIPORTAPI
+SCSIPORT_API
 BOOLEAN
 NTAPI
 ScsiPortWmiDispatchFunction(
@@ -189,7 +189,7 @@ ScsiPortWmiDispatchFunction(
 #define ScsiPortWmiGetReturnStatus(RequestContext) \
   ((RequestContext)->ReturnStatus)
 
-SCSIPORTAPI
+SCSIPORT_API
 VOID
 NTAPI
 ScsiPortWmiPostProcess(
@@ -197,7 +197,7 @@ ScsiPortWmiPostProcess(
   _In_ UCHAR SrbStatus,
   _In_ ULONG BufferUsed);
 
-SCSIPORTAPI
+SCSIPORT_API
 VOID
 NTAPI
 ScsiPortWmiFireLogicalUnitEvent(

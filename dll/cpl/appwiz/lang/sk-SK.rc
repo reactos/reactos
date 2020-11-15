@@ -30,7 +30,7 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT "Tento sprievodca Vám pomôže vytvoriť odkazy na miestne alebo\nsieťové programy, súbory, priečinky, počítače, alebo internetové\nadresy.", -1, 120, 15, 200, 30
     LTEXT "Zadajte umiestnenie položky:", -1, 120, 50, 120, 10
-    EDITTEXT IDC_SHORTCUT_LOCATION, 120, 65, 150, 15, ES_LEFT
+    EDITTEXT IDC_SHORTCUT_LOCATION, 120, 65, 150, 15, ES_LEFT | ES_AUTOHSCROLL
     PUSHBUTTON "&Prehľadávať...", IDC_SHORTCUT_BROWSE, 272, 65, 55, 15, ES_LEFT
     LTEXT "Kliknite na tlačidlo Ďalej pre pokračovanie.", -1, 120, 97, 162, 10
 END
@@ -41,7 +41,7 @@ CAPTION "Select a Title for the Program"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT "&Napíšte názov pre tento odkaz:", -1, 120, 15, 150, 10
-    EDITTEXT IDC_SHORTCUT_NAME, 120, 35, 150, 15, ES_LEFT
+    EDITTEXT IDC_SHORTCUT_NAME, 120, 35, 150, 15, ES_LEFT | ES_AUTOHSCROLL
     LTEXT "Kliknite na tlačidlo Dokončiť pre vytvorenie odkazu.", -1, 118, 97, 178, 17
 END
 

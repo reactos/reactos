@@ -24,13 +24,13 @@ END
 
 IDD_UPDATEREPAIRPAGE DIALOGEX 0, 0, 317, 143
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "ReactOS Setup"
+CAPTION "Instalação do ReactOS"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT       "O ReactOS Setup pode actualizar uma das instalações disponíveis listadas abaixo, ou, reparar uma instalação danificada do ReactOS.", IDC_STATIC, 6, 6, 300, 18
+    LTEXT       "O instalador pode actualizar uma das instalações disponíveis listadas abaixo, ou, reparar uma instalação danificada do ReactOS.", IDC_STATIC, 6, 6, 300, 18
     CONTROL     "", IDC_NTOSLIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL | LVS_SHOWSELALWAYS | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP, 6, 30, 303, 90
     PUSHBUTTON  "&Nova inst.", IDC_SKIPUPGRADE, 230, 128, 80, 14
-    LTEXT       "Clique Avançar para actualizar a installation seleccionada, ou 'Nova instalação' para uma nova instalação.", IDC_STATIC, 7, 124, 222, 16
+    LTEXT       "Clique Avançar para actualizar a instalação seleccionada, ou 'Nova instalação' para uma nova instalação.", IDC_STATIC, 7, 124, 222, 16
 END
 
 IDD_DEVICEPAGE DIALOGEX 0, 0, 317, 143
@@ -112,7 +112,7 @@ BEGIN
     EDITTEXT IDC_DESTDRIVE, 95, 76, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT "Directório de destino:", IDC_STATIC, 18, 89, 74, 11
     EDITTEXT IDC_PATH, 95, 88, 210, 13, ES_READONLY | ES_AUTOHSCROLL | WS_VISIBLE | NOT WS_BORDER | NOT WS_TABSTOP
-    AUTOCHECKBOX "Confirmo que todas as definições de  instalação estão correctas. I also acknowledge that\nReactOS is alpha-quality software and may break on my computer or corrupt my data.",
+    AUTOCHECKBOX "Confirmo que todas as definições de  instalação estão correctas. Também reconheço que\no ReactOS é um software de qualidade Alpha e pode parar o meu computador ou corromper os meus dados.",
         IDC_CONFIRM_INSTALL, 7, 104, 303, 18, BS_MULTILINE
     LTEXT "Por favor confirme que todas as definições de  instalação estão correctas,\nde seguida clique em Instalar para iniciar o processo de instalação.", IDC_STATIC, 7, 124, 303, 18
 END
@@ -153,7 +153,7 @@ BEGIN
     IDS_RESTARTSUBTITLE "A primeira etapada da instalação foi completada, reinicie o computador para prosseguir com a segunda estapa"
     IDS_SUMMARYTITLE "Sumário de Instalação"
     IDS_SUMMARYSUBTITLE "Listar propriedades da instalação para verificação antes de aplicá-las na instalação dos despositivos"
-    IDS_ABORTSETUP "ReactOS não está totalmente instalado em seu computador. Se sair da Instalação agora, para instalar o ReactOS precisará executar o Instalador novamente . Tem certeza que deseja sair?"
+    IDS_ABORTSETUP "ReactOS não está totalmente instalado no seu computador. Se sair da Instalação agora, para instalar o ReactOS precisará executar o Instalador novamente. Tem certeza que deseja sair?"
     IDS_ABORTSETUP2 "Abortar instalação?"
     IDS_NO_TXTSETUP_SIF " 'txtsetup.sif' não foi encontrado.\n o programa de instalação não pode continuar."
     IDS_CAPTION "Instalação do ReactOS"
@@ -161,15 +161,15 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_INSTALLATION_NAME "Name"
-    IDS_INSTALLATION_PATH "Installation Path"
-    IDS_INSTALLATION_VENDOR "Vendor Name"
+    IDS_INSTALLATION_NAME "Nome"
+    IDS_INSTALLATION_PATH "Local da instalação"
+    IDS_INSTALLATION_VENDOR "Nome do fornecedor"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_PARTITION_NAME "Name"
-    IDS_PARTITION_TYPE "Type"
-    IDS_PARTITION_SIZE "Size"
-    IDS_PARTITION_STATUS "Status"
+    IDS_PARTITION_NAME "Nome"
+    IDS_PARTITION_TYPE "Tipo"
+    IDS_PARTITION_SIZE "Tamanho"
+    IDS_PARTITION_STATUS "Estado"
 END

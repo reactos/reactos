@@ -37,6 +37,7 @@ list(APPEND KMTEST_DRV_SOURCE
 
     example/Example.c
     example/KernelType.c
+    hal/HalSystemInfo.c
     npfs/NpfsConnect.c
     npfs/NpfsCreate.c
     npfs/NpfsFileInfo.c
@@ -97,6 +98,7 @@ list(APPEND KMTEST_DRV_SOURCE
     ntos_se/SeInheritance.c
     ntos_se/SeQueryInfoToken.c
     rtl/RtlIsValidOemCharacter.c
+    rtl/RtlRangeList.c
     ${COMMON_SOURCE}
 
     kmtest_drv/kmtest_drv.rc)

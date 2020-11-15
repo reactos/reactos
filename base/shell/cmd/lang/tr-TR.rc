@@ -25,7 +25,7 @@ Başka ad dizelgesinden bir başka ad silmek için:\n\
     STRING_CALL_HELP "Bir toplu iş izlencesini bir başkasından çağırır.\n\n\
 CALL [sürücü:][yol]kütük adı [toplu iş değişkeni]\n\n\
   toplu iş değişkeni  Toplu iş izlencesinin gerektirdiği bir komut yatacı\n\
-                      bilgisi belirtir."
+                      bilgisi belirtir.\n"
     STRING_CD_HELP "Şimdiki dizini değiştirir ya da onun adını görüntüler\n\n\
 CHDIR [/D][sürücü:][yol]\n\
 CHDIR[..|.]\n\
@@ -199,7 +199,7 @@ PUSHD [yol | ..]\n\n\
   ECHO [ileti]\n\
   ECHO.             boş bir yataç yazdırır\n\n\
 Şimdiki ECHO ayârını görüntülemek için bir değişken olmadan ECHO yazınız."
-    STRING_ECHO_HELP5 "ECHO %s\n"
+    STRING_ECHO_HELP5 "ECHO %s.\n"
     STRING_EXIT_HELP "Komut yatacı yorumcusundan çıkar.\n\nEXIT [/b] [çıkış kodu]\n\n\
   /B            Yalnızca bir toplu iş kütüğünden çıkar.\n\
                 Bir toplu iş kütüğünün dışında çalışırsa cmd.exe'den çıkacaktır.\n\
@@ -235,7 +235,7 @@ belirtiniz.\n"
 GOTO etiket\n\n\
   etiket  Bir metin dizgisini, kullanılan bir toplu iş betiğinde bir etiket\n\
   olarak belirtir.\n\n\
-Bir dikeçle başlayan tek başına bir yataç üzerinde bir etiket yazınız."
+Bir dikeçle başlayan tek başına bir yataç üzerinde bir etiket yazınız.\n"
     STRING_IF_HELP1 "Toplu iş izlencelerinde şartlı işlemeyi gerçekleştirir.\n\n\
   IF [NOT] ERRORLEVEL sayı komut\n\
   IF [NOT] dizgi1==dizgi2 komut\n\
@@ -272,9 +272,9 @@ MKLINK [/D | /H | /J] bağlantı adı varış\n\n\
     STRING_MOVE_HELP1 "Üzerine yaz: %s (Evet/Hayır/Tümü)? "
     STRING_MOVE_HELP2 "Kütükleri taşır ve kütükleri ve dizinleri yeniden adlandırır.\n\n\
 Bir ya da daha çok kütüğü taşımak için:\n\
-MOVE [/N][sürücü:][yol]kütük adı1[,...] varış\n\n\
+MOVE [/N][/Y|/-Y][sürücü:][yol]kütük adı1[,...] varış\n\n\
 Bir dizini yeniden adlandırmak için:\n\
-MOVE [/N][sürücü:][yol]dizin adı1 dizin adı2\n\n\
+MOVE [/N][/Y|/-Y][sürücü:][yol]dizin adı1 dizin adı2\n\n\
   [sürücü:][yol]kütük adı1  Taşımak istediğiniz kütüğün ya da kütüklerin\n\
                             konumunu ve adını belirtir.\n\
   /N                        Hiçbir şey. Tüm şeyleri yapar ama kütükleri ve dizinleri taşır.\n\n\
@@ -295,6 +295,9 @@ PATH [[sürücü:]yol[;...]]\nPATH ;\n\n\
 PATH yazınız, tüm arama yolu ayarlarını silmek ve komut kabuğunu yalnızca\n\
 şimdiki dizinde aramaya yönlendirmek için.\n\
 Şimdiki yolu görüntülemek için değişkensiz PATH yazınız.\n"
+    STRING_PAUSE_HELP1 "Bir toplu iş kütüğünün çalışmasını durdurur ve aşağıdaki iletiyi gösterir:\n\
+""Sürdürmek için bir düğmeye basınız..."" ya da kullanıcı tanımlı bir ileti.\n\n\
+PAUSE [ileti]"
     STRING_PROMPT_HELP1 "Komut istemini değiştirir.\n\n\
 PROMPT [metin]\n\n\
   metin   Yeni bir komut istemi belirtir.\n\n\
@@ -317,16 +320,13 @@ PROMPT [metin]\n\n\
   $V   OS sürüm numarası\n\
   $_   Yataç başı ve yataç sonu\n\
   $$   $ (dolar imi)\n"
-    STRING_PAUSE_HELP1 "Bir toplu iş kütüğünün çalışmasını durdurur ve aşağıdaki iletiyi gösterir:\n\
-""Sürdürmek için bir düğmeye basınız..."" ya da kullanıcı tanımlı bir ileti.\n\n\
-PAUSE [ileti]"
     STRING_PROMPT_HELP2 "  $+   Dizin yığınının şimdiki derinliğini görüntüler."
     STRING_PROMPT_HELP3 "\nÖn tanımlı ayarlamaya istemi sıfırlamak için değişkensiz PROMPT yazınız."
     STRING_REM_HELP "Bir toplu iş kütüğünde bir açıklama yatacı başlatır.\n\nREM [Açıklama]"
     STRING_RMDIR_HELP "Bir dizin siler.\n\n\
-RMDIR [sürücü:]yol\nRD [sürücü:]yol\n\
-/S          Varış içinde tüm kütükleri ve dizinleri siler.\n\
-/Q          Kullanıcı için sorma.\n"
+RMDIR [/S] [/Q] [sürücü:]yol\nRD [/S] [/Q] [sürücü:]yol\n\
+  /S    Varış içinde tüm kütükleri ve dizinleri siler.\n\
+  /Q    Kullanıcı için sorma.\n"
     STRING_RMDIR_HELP2 "Dizin boş değil!\n"
     STRING_REN_HELP1 "Bir kütüğü/dizini ya da kütükleri/dizinleri yeniden adlandırır.\n\n\
 RENAME [/E /N /P /Q /S /T] eski ad ... yeni ad\n\
@@ -473,9 +473,9 @@ başlık        Yeni başlık\n"
     STRING_ALIAS_ERROR "Başka ad açılımından sonra komut yatacı çok uzun!\n"
     STRING_ASSOC_ERROR "%s uzantısı için kütük ilişkilendirmesi bulunamadı.\n"
     STRING_BATCH_ERROR "Toplu iş kütüğünü açma yanlışlığı\n"
-    STRING_CHOICE_ERROR "Geçersiz seçenek. Beklenen biçim: /C[:]seçenekler"
-    STRING_CHOICE_ERROR_TXT "Geçersiz seçenek. Beklenen biçim: /T[:]c,nn"
-    STRING_CHOICE_ERROR_OPTION "Geçersiz seçenek: %s"
+    STRING_CHOICE_ERROR "Geçersiz seçenek. Beklenen biçim: /C[:]seçenekler\n"
+    STRING_CHOICE_ERROR_TXT "Geçersiz seçenek. Beklenen biçim: /T[:]c,nn\n"
+    STRING_CHOICE_ERROR_OPTION "Geçersiz seçenek: %s\n"
     STRING_CMD_ERROR1 "%s kütüğünden girdi yönlendirilemiyor.\n"
     STRING_CMD_ERROR2 "Boru verisi için geçici kütük oluşturma yanlışlığı\n"
     STRING_CMD_ERROR3 "%s kütüğüne yönlendirilemiyor.\n"
@@ -500,9 +500,9 @@ başlık        Yeni başlık\n"
     STRING_FOR_ERROR4 """do"" deyişinden sonra komut yok."
     STRING_FREE_ERROR1 "Geçersiz sürücü"
     STRING_FREE_ERROR2 "etiketlenmemiş"
-    STRING_GOTO_ERROR1 "GOTO için bir etiket belirlenmemiş."
+    STRING_GOTO_ERROR1 "GOTO için bir etiket belirlenmemiş.\n"
     STRING_GOTO_ERROR2 """%s"" etiketi bulunamadı.\n"
-    STRING_MD_ERROR "Bir alt dizin ya da kütük önceden var.\n"
+    STRING_MD_ERROR "Bir alt dizin ya da kütük %s önceden var.\n"
     STRING_MD_ERROR2 "Yeni dizin için yol yok.\n"
     STRING_MOVE_ERROR1 "[Tamam]\n"
     STRING_MOVE_ERROR2 "[Yanlışlık]\n"
@@ -521,9 +521,9 @@ başlık        Yeni başlık\n"
     STRING_ERROR_BADCOMMAND "Geçersiz komut ya da kütük adı - %s\n"
     STRING_ERROR_OUT_OF_MEMORY "Yetersiz bellek yanlışlığı.\n"
     STRING_ERROR_CANNOTPIPE "Yanlışlık! Borulanamıyor! Geçici kütük açılamıyor!\n"
-    STRING_ERROR_D_PAUSEMSG "Sürdürmek için bir düğmeye basınız . . ."
+    STRING_ERROR_D_PAUSEMSG "Sürdürmek için bir düğmeye basınız . . . "
     STRING_ERROR_DRIVER_NOT_READY "Sürücü anık değil."
-    STRING_PATH_ERROR "CMD: ""%s"" ortamda yok.\n"
+    STRING_SET_ENV_ERROR "Environment variable '%s' is not defined\n"
     STRING_REPLACE_ERROR1 "Geçersiz seçenek - %s\n"
     STRING_REPLACE_ERROR2 "Yol bulunamadı - %s\n"
     STRING_REPLACE_ERROR3 "Kütük adı, dizin adı ya da birim etiketi yazımı yanlış.\n"
@@ -547,8 +547,8 @@ başlık        Yeni başlık\n"
     STRING_MKLINK_CREATED_JUNCTION "%s için bağlantı oluşturuldu <<===>> %s\n"
     STRING_MORE "Daha? "
     STRING_CANCEL_BATCH_FILE "\r\nDenetim'e ve Duraklat'a birlikte basıldı. Toplu iş kütüğünü iptal et? (Evet/Hayır/Tümü) "
-    STRING_INVALID_OPERAND "Geçersiz işlenen."
-    STRING_EXPECTED_CLOSE_PAREN """)"" bekleniyordu."
-    STRING_EXPECTED_NUMBER_OR_VARIABLE "Sayı ya da değişken adı bekleniyordu."
-    STRING_SYNTAX_COMMAND_INCORRECT "Komutun yazımı yanlış."
+    STRING_INVALID_OPERAND "Geçersiz işlenen.\n"
+    STRING_EXPECTED_CLOSE_PAREN """)"" bekleniyordu.\n"
+    STRING_EXPECTED_NUMBER_OR_VARIABLE "Sayı ya da değişken adı bekleniyordu.\n"
+    STRING_SYNTAX_COMMAND_INCORRECT "Komutun yazımı yanlış.\n"
 END

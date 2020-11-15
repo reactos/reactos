@@ -101,7 +101,7 @@ BEGIN
 END
 
 IDD_BROWSE_FOR_FOLDER_NEW DIALOGEX 15, 40, 218, 196
-STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU | WS_SIZEBOX
 CAPTION "Rechercher un dossier"
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -109,7 +109,7 @@ BEGIN
     LTEXT "", IDC_BROWSE_FOR_FOLDER_STATUS, 10, 25, 198, 12
     LTEXT "Dossier :", IDC_BROWSE_FOR_FOLDER_FOLDER, 10, 152, 40, 12
     CONTROL "", IDC_BROWSE_FOR_FOLDER_TREEVIEW, "SysTreeView32", TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_EDITLABELS | WS_BORDER | WS_TABSTOP, 12, 38, 194, 105
-    EDITTEXT IDC_BROWSE_FOR_FOLDER_FOLDER_TEXT, 46, 150, 160, 14, WS_BORDER | WS_GROUP | WS_TABSTOP
+    EDITTEXT IDC_BROWSE_FOR_FOLDER_FOLDER_TEXT, 46, 150, 160, 14, ES_AUTOHSCROLL | WS_BORDER | WS_GROUP | WS_TABSTOP
     PUSHBUTTON "Créer un nouveau dossier", IDC_BROWSE_FOR_FOLDER_NEW_FOLDER, 8, 174, 90, 14, WS_GROUP | WS_TABSTOP
     DEFPUSHBUTTON "OK", IDOK, 102, 174, 50, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
     PUSHBUTTON "Annuler", IDCANCEL, 156, 174, 50, 14, WS_GROUP | WS_TABSTOP
@@ -709,6 +709,20 @@ BEGIN
     PUSHBUTTON "Modifier l'&icône...", IDC_FOLDERCUST_CHANGE_ICON, 15, 210, 75, 15
 END
 
+IDD_LINK_PROBLEM DIALOGEX 0, 0, 250, 140
+CAPTION "Problème avec le raccourci"
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+FONT 8, "MS Shell Dlg"
+BEGIN
+    ICON 0, IDC_LINK_PROBLEM_ICON, 5, 5, 0, 0
+    LTEXT "L'élément '%s' auquel ce raccourci fait référence a été modifié ou déplacé et ce raccourci ne fonctionne plus correctement.", IDC_LINK_PROBLEM_LABEL1, 35, 5, 210, 35
+    LTEXT "Elément correspondant le plus proche basé sur le nom, type, taille et date :", IDC_LINK_PROBLEM_LABEL2, 35, 45, 210, 35
+    LTEXT "Voulez-vous corriger ce raccourcis en pointant vers cette cible ou voulez-vous le supprimer ?", -1, 35, 85, 210, 30
+    DEFPUSHBUTTON "&Corriger", IDOK, 55, 120, 60, 15, WS_DISABLED
+    PUSHBUTTON "&Supprimer", IDYES, 120, 120, 60, 15
+    PUSHBUTTON "Annuler", IDCANCEL, 185, 120, 60, 15
+END
+
 STRINGTABLE
 BEGIN
     /* columns in the shellview */
@@ -726,7 +740,7 @@ BEGIN
     IDS_SHV_COLUMN_DELFROM "Localisation d'origine"
     IDS_SHV_COLUMN_DELDATE "Date de suppression"
     IDS_SHV_COLUMN_FONTTYPE "Type de police"
-    IDS_SHV_COLUMN_WORKGROUP "Workgroup"
+    IDS_SHV_COLUMN_WORKGROUP "Groupe de travail"
     IDS_SHV_COLUMN_NETLOCATION "Emplacement réseau"
     IDS_SHV_COLUMN_DOCUMENTS "Documents"
     IDS_SHV_COLUMN_STATUS "État"
@@ -983,4 +997,15 @@ BEGIN
     IDS_EDITING_ACTION "Editer l'action : "
     IDS_NO_ICONS "Le fichier '%s' ne contient pas d'icônes.\n\nVeuillez choisir une icône dans la liste ou sélectionner un fichier différent."
     IDS_FILE_NOT_FOUND "Le fichier '%s' ne peut être trouvé."
+    IDS_LINK_INVALID "L'élément '%s' auquel ce raccourci fait référence a été modifié ou déplacé et ce raccourci ne fonctionne plus correctement."
+    IDS_COPYTOMENU "Copie&r dans un dossier..."
+    IDS_COPYTOTITLE "Sélectionnez l'emplacement où vous souhaitez copier '%s', puis appuyez sur le bouton Copier."
+    IDS_COPYITEMS "Copier les éléments"
+    IDS_COPYBUTTON "Copier"
+    IDS_MOVETOMENU "&Déplacer vers un dossier..."
+    IDS_MOVETOTITLE "Sélectionnez l'emplacement où vous souhaitez déplacer '%s', puis appuyez sur le bouton Déplacer."
+    IDS_MOVEITEMS "Déplacer les éléments"
+    IDS_MOVEBUTTON "Déplacer"
+
+    IDS_SYSTEMFOLDER "Dossier système"
 END

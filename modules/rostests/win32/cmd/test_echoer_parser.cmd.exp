@@ -1,0 +1,620 @@
+--------- Testing CMD echoer ---------
+
+@pwd@>if 1 == 1 echo j1  | (echo j2 )  else echo j3@space@
+j2@space@
+
+@pwd@>(echo a  1>&2  | echo a  1>&2 ) 2>&1@space@
+a@space@
+a@space@
+
+@pwd@>echo 1@space@
+1
+2
+3
+4
+
+@pwd@>foobar
+
+@pwd@>echo
+ECHO is on.
+
+@pwd@>foobar parameter@space@
+
+@pwd@>echo parameter@space@
+parameter
+
+@pwd@>toto1>NUL@space@
+
+@pwd@>toto1>NUL@space@
+
+@pwd@>toto  1>NUL@space@
+
+@pwd@>toto  1>NUL@space@
+
+@pwd@>toto1>NUL 2>&1@space@
+
+@pwd@>toto1>NUL 2>&1@space@
+
+@pwd@>toto  1>NUL 2>&1@space@
+
+@pwd@>toto  1>NUL 2>&1@space@
+
+@pwd@>a & b
+
+@pwd@>a & b
+
+@pwd@>a   & b
+
+@pwd@>a   & b
+
+@pwd@>a || b
+
+@pwd@>a || b
+
+@pwd@>a   || b
+
+@pwd@>a   || b
+
+@pwd@>a && b
+
+@pwd@>a && b
+
+@pwd@>a   && b
+
+@pwd@>a   && b
+
+@pwd@>if 1 == 1 (echo lol )  else (echo boom )@space@
+lol
+
+@pwd@>if 1 == 1 (echo lol )  else (echo boom )@space@
+lol
+
+@pwd@>for /L %l in (1 1 5) do (echo %l )@space@
+
+@pwd@>(echo 1 )@space@
+1
+
+@pwd@>(echo 2 )@space@
+2
+
+@pwd@>(echo 3 )@space@
+3
+
+@pwd@>(echo 4 )@space@
+4
+
+@pwd@>(echo 5 )@space@
+5
+
+@pwd@>for /L %l in (1 1 5) do (echo %l )@space@
+
+@pwd@>(echo 1 )@space@
+1
+
+@pwd@>(echo 2 )@space@
+2
+
+@pwd@>(echo 3 )@space@
+3
+
+@pwd@>(echo 4 )@space@
+4
+
+@pwd@>(echo 5 )@space@
+5
+
+@pwd@>for /L %l in (1 1 5) do ()@space@
+
+@pwd@>()@space@
+1
+
+@pwd@>()@space@
+2
+
+@pwd@>()@space@
+3
+
+@pwd@>()@space@
+4
+
+@pwd@>()@space@
+5
+
+@pwd@>if 1 == 1@space@
+hi
+
+@pwd@>if 1 == 1 ()@space@
+heh
+
+@pwd@>if 1 == 0 ()  else@space@
+better
+
+@pwd@>if 1 == 0 ()  else ()@space@
+better2
+
+@pwd@>(a)@space@
+
+@pwd@>(a b )@space@
+--------- Testing Delayed Expansion ---------
+This is ReactOS! (an open-source operating system)
+Hello
+Hello
+Hello
+Hello! "!"
+"Hello^World"
+"HelloWorld"
+first second
+[Hello Developer how are you]
+[1]
+[2]
+[3]
+[4]
+Total = 4
+lol2
+lol4
+lol6
+lol8
+lol10
+OHLALA
+
+@pwd@>setlocal disabledelayedexpansion@space@
+
+@pwd@>echo @pwd@\@space@
+@pwd@\
+
+@pwd@>set test=abc@space@
+
+@pwd@>set abc=def@space@
+
+@pwd@>echo@space@@space@
+ECHO is on.
+
+@pwd@>echo %@space@
+%
+
+@pwd@>echo %@space@
+%
+
+@pwd@>echo %%@space@
+%%
+
+@pwd@>echo abc@space@
+abc
+
+@pwd@>echo abc@space@
+abc
+
+@pwd@>echo %test@space@
+%test
+
+@pwd@>echo %test%@space@
+%test%
+
+@pwd@>echo %abc%@space@
+%abc%
+
+@pwd@>echo !test!@space@
+!test!
+
+@pwd@>echo !!test!!@space@
+!!test!!
+
+@pwd@>endlocal
+
+@pwd@>setlocal enabledelayedexpansion@space@
+
+@pwd@>echo !@space@
+ECHO is on.
+
+@pwd@>echo !!@space@
+ECHO is on.
+
+@pwd@>echo !!!@space@
+ECHO is on.
+
+@pwd@>echo !!!!@space@
+ECHO is on.
+
+@pwd@>echo !a!@space@
+ECHO is on.
+
+@pwd@>echo !!a!!@space@
+ECHO is on.
+
+@pwd@>set a=b@space@
+
+@pwd@>echo !!a!!@space@
+b
+
+@pwd@>set b=c@space@
+
+@pwd@>echo !!a!!@space@
+b
+
+@pwd@>echo@space@@space@
+ECHO is on.
+
+@pwd@>echo@space@@space@
+ECHO is on.
+
+@pwd@>echo %test@space@
+%test
+
+@pwd@>echo %test%@space@
+%test%
+
+@pwd@>echo %%@space@
+%%
+
+@pwd@>echo@space@@space@
+ECHO is on.
+
+@pwd@>echo !!@space@
+ECHO is on.
+
+@pwd@>echo !!test!!@space@
+ECHO is on.
+
+@pwd@>echo !!test!!@space@
+ECHO is on.
+
+@pwd@>echo !^!test^!!@space@
+test!
+
+@pwd@>echo !test!@space@
+ECHO is on.
+
+@pwd@>echo !test!!@space@
+ECHO is on.
+
+@pwd@>echo !!test!@space@
+ECHO is on.
+
+@pwd@>echo !!test!!@space@
+ECHO is on.
+
+@pwd@>echo !!!test!!!@space@
+ECHO is on.
+
+@pwd@>set proj=XYZ@space@
+
+@pwd@>echo !XYZ_folder!@space@
+ECHO is on.
+
+@pwd@>echo !!proj!_folder!@space@
+XYZ_folder
+
+@pwd@>set XYZ_folder=\\server\folder\@space@
+
+@pwd@>echo !XYZ_folder!@space@
+\\server\folder\
+
+@pwd@>echo !!proj!_folder!@space@
+XYZ_folder
+
+@pwd@>if 1 == 1 (
+set "pc=T"@space@@space@
+ echo pc == !pc!@space@@space@
+ set i=3@space@@space@
+ set "!pc!!i!=5"@space@@space@
+ echo other pc == !pc! and !pc!!i! == !!pc!!i!!@space@@space@
+ echo other pc == !pc! and !pc!!i! == !!pc!!i!!@space@@space@
+ echo other pc == !pc! and !pc!!i! == !!pc!!i!!@space@@space@
+ echo other pc == !pc! and !pc!!i! == !!pc!!i!!@space@@space@
+ set "trol=!pc!!i!"@space@@space@
+ echo the var was !trol!@space@@space@
+ set "!pc!N=!i!"@space@@space@
+ echo updated !pc!N == !!pc!N!@space@@space@
+ echo updated !pc!N == !!pc!N!@space@@space@
+ echo updated !pc!N == !!pc!N!@space@@space@
+ echo updated !pc!N == !!pc!N!@space@@space@
+ set "trol=!pc!N"@space@@space@
+ echo updated !pc!N == !trol!@space@
+)@space@
+pc == T
+other pc == T and T3 == T3
+other pc == T and T3 == T3
+other pc == T and T3 == T3
+other pc == T and T3 == T3
+the var was T3
+updated TN == TN
+updated TN == TN
+updated TN == TN
+updated TN == TN
+updated TN == TN
+
+@pwd@>echo --------- Parsing FOR, IF and REM commands ---------@space@
+--------- Parsing FOR, IF and REM commands ---------
+
+@pwd@>fOr / %d iN (*) do eCHo %d@space@
+
+@pwd@>eCHo script_testsuite@space@
+script_testsuite
+
+@pwd@>for / %d in (*) do echo %~ed@space@
+
+@pwd@>echo %~ed@space@
+%~ed
+
+@pwd@>for / %d in (*) do echo D::@space@
+
+@pwd@>echo D::@space@
+D::
+
+@pwd@>fOr /L %c iN (1 1 5) Do echo@tab@@space@@space@@space@@space@@tab@@tab@%c@space@
+
+@pwd@>echo@tab@@space@@space@@space@@space@@tab@@tab@1@space@
+@space@@space@@space@@space@@tab@@tab@1
+
+@pwd@>echo@tab@@space@@space@@space@@space@@tab@@tab@2@space@
+@space@@space@@space@@space@@tab@@tab@2
+
+@pwd@>echo@tab@@space@@space@@space@@space@@tab@@tab@3@space@
+@space@@space@@space@@space@@tab@@tab@3
+
+@pwd@>echo@tab@@space@@space@@space@@space@@tab@@tab@4@space@
+@space@@space@@space@@space@@tab@@tab@4
+
+@pwd@>echo@tab@@space@@space@@space@@space@@tab@@tab@5@space@
+@space@@space@@space@@space@@tab@@tab@5
+
+@pwd@>iF 457 NEQ 458 (echo@space@@tab@ D:  )  eLSe (echo $~d0@space@@tab@  )@space@
+@tab@ D:@space@
+
+@pwd@>iF "2147483647" GEQ "2147483648" (Echo Larger )  Else (ecHO sMaLlEr )@space@
+sMaLlEr
+
+@pwd@>iF eRrOrlevel 0 echo hi!@space@
+hi
+
+@pwd@>rEM     /v@space@@tab@/d@space@
+
+@pwd@>REm@space@@space@@space@@tab@@tab@  /d@space@
+
+@pwd@>rEm REM2 /d@space@
+
+@pwd@>reM@space@@tab@ /d@space@@tab@ >@space@@tab@ NUL@space@
+
+@pwd@>echo --------- Parsing random commands ---------@space@
+--------- Parsing random commands ---------
+
+@pwd@>dir   1>NUL  & (b)@space@
+
+@pwd@>setlocal enabledelayedexpansion@space@
+
+@pwd@>echo @pwd@\@space@
+@pwd@\
+
+@pwd@>set SOMEVAR=C:\ReAcToS@space@
+
+@pwd@>rem C:\ReAcToS |@space@
+
+@pwd@>Set "_var=first"@space@
+
+@pwd@>Set "_var=second"   & Rem first !_var!@space@
+
+@pwd@>Set "_var=third"   & Echo second !_var!@space@
+second third
+
+@pwd@>endlocal
+
+@pwd@>echo --------- Parsing line continuations ---------@space@
+--------- Parsing line continuations ---------
+
+@pwd@>(a   & b@space@
+ c@space@
+ d)@space@
+
+@pwd@>(
+a   && b@space@
+ c@space@
+ d
+)@space@
+
+@pwd@>(a   & b)@space@
+
+@pwd@>(a   & b)@space@
+
+@pwd@>(a   & b@space@
+ c   & d)@space@
+
+@pwd@>(a   & b@space@
+ c   & d)@space@
+
+@pwd@>(a   & b@space@
+ c@space@
+ d)@space@
+
+@pwd@>(
+a   && b@space@
+ c@space@
+ d
+)@space@
+
+@pwd@>(
+a   || b@space@
+ c@space@
+ d
+)@space@
+
+@pwd@>(
+a@space@
+ b   & c@space@
+ d
+)@space@
+
+@pwd@>(
+a@space@
+ b   && c@space@
+ d
+)@space@
+
+@pwd@>(
+a@space@
+ b@space@
+ c   && d
+)@space@
+
+@pwd@>(
+a@space@
+ b@space@
+ c   & d
+)@space@
+
+@pwd@>(
+a@space@
+ b@space@
+ c@space@
+ d
+)@space@
+
+@pwd@>REMbaz trol^@space@
+
+@pwd@>if 1 == 1 (echo a )  else (echo b )@space@
+a
+
+@pwd@>if 1 == 1 (echo a )  else (echo b )@space@
+a
+
+@pwd@>if 1 == 1 (echo a )  else (echo b )@space@
+a
+
+@pwd@>if 1 == 1 (echo a )  else (echo b )@space@
+a
+
+@pwd@>REM if 1==1 (^@space@
+
+@pwd@>REM echo a@space@
+
+@pwd@>REM ) ^@space@
+
+@pwd@>REM else@space@
+
+@pwd@>REMREM echo b@space@
+
+@pwd@>REM )@space@
+
+@pwd@>REM if 1==1 (^@space@
+
+@pwd@>REM echo a@space@
+
+@pwd@>REM ) ^@space@
+
+@pwd@>REMREM (^@space@
+
+@pwd@>REM echo b@space@
+
+@pwd@>REM )@space@
+
+@pwd@>REM if 1==1 (^@space@
+
+@pwd@>REM echo a@space@
+
+@pwd@>REM ) ^@space@
+
+@pwd@>REMREM (@space@
+
+@pwd@>REM echo b@space@
+
+@pwd@>REM )@space@
+
+@pwd@>if 1 == 1 (echo a )@space@
+a
+
+@pwd@>if 1 == 1 ()@space@
+a
+
+@pwd@>(foo bar )@space@
+
+@pwd@>(foo &  & bar@space@
+ baz)@space@
+
+@pwd@>(
+foo    && bar@space@
+ baz
+)@space@
+
+@pwd@>REMREM && bar@space@
+
+@pwd@>REM baz@space@
+
+@pwd@>REM )@space@
+
+@pwd@>(
+bar@space@
+ baz
+)@space@
+
+@pwd@>(foo   & & bar@space@@space@
+ baz)@space@
+
+@pwd@>(
+foo@space@
+ bar
+)@space@
+
+@pwd@>(foo bar )@space@
+
+@pwd@>(foo &  & bar@space@
+ baz)@space@
+
+@pwd@>(
+foo    && bar@space@
+ baz
+)@space@
+
+@pwd@>REM (@space@
+
+@pwd@>REM
+
+@pwd@>REM
+
+@pwd@>REMREM && bar@space@
+
+@pwd@>REM baz@space@
+
+@pwd@>REM )@space@
+
+@pwd@>(
+bar@space@
+ baz
+)@space@
+
+@pwd@>(foo   & & bar@space@@space@
+ baz)@space@
+
+@pwd@>(
+foo@space@
+ bar
+)@space@
+
+@pwd@>("!pc::=!")@space@
+
+@pwd@>("!pc::^=^!^")@space@
+
+@pwd@>("!pc::=!")@space@
+
+@pwd@>(!")@space@
+
+@pwd@>REM  @   2>&1    (   (  dir)   )    &&     lol@space@
+
+@pwd@>echo   & & & lol
+ECHO is on.
+
+@pwd@>REM echo & ^@space@
+
+@pwd@>REMREM &&lol@space@
+
+@pwd@>trol &  & lol
+
+@pwd@>trol& & lol
+
+@pwd@>REM (echo hi)^@space@
+
+@pwd@>REM &&lol@space@
+
+@pwd@>remline@space@
+
+@pwd@>echo trolline@space@
+trolline
+--------- Finished  --------------

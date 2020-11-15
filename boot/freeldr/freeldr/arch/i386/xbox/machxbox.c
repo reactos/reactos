@@ -17,9 +17,12 @@
  */
 
 #include <freeldr.h>
+#include <drivers/xbox/superio.h>
 
 #include <debug.h>
 DBG_DEFAULT_CHANNEL(HWDETECT);
+
+#define MAX_XBOX_COM_PORTS    2
 
 extern PVOID FrameBuffer;
 extern ULONG FrameBufferSize;
@@ -51,30 +54,19 @@ XboxGetSerialPort(ULONG Index, PULONG Irq)
     static const UCHAR Device[MAX_XBOX_COM_PORTS] = {LPC_DEVICE_SERIAL_PORT_1, LPC_DEVICE_SERIAL_PORT_2};
     ULONG ComBase = 0;
 
-    // Enter Configuration
-    WRITE_PORT_UCHAR((PUCHAR)LPC_IO_BASE, LPC_ENTER_CONFIG_KEY);
+    LpcEnterConfig();
 
     // Select serial device
-    WRITE_PORT_UCHAR((PUCHAR)LPC_IO_BASE, LPC_CONFIG_DEVICE_NUMBER);
-    WRITE_PORT_UCHAR((PUCHAR)(LPC_IO_BASE + 1), Device[Index]);
+    LpcWriteRegister(LPC_CONFIG_DEVICE_NUMBER, Device[Index]);
 
     // Check if selected device is active
-    WRITE_PORT_UCHAR((PUCHAR)LPC_IO_BASE, LPC_CONFIG_DEVICE_ACTIVATE);
-    if (READ_PORT_UCHAR((PUCHAR)(LPC_IO_BASE + 1)) == 1)
+    if (LpcReadRegister(LPC_CONFIG_DEVICE_ACTIVATE) == 1)
     {
-        // Read LSB
-        WRITE_PORT_UCHAR((PUCHAR)LPC_IO_BASE, LPC_CONFIG_DEVICE_BASE_ADDRESS_LOW);
-        ComBase = READ_PORT_UCHAR((PUCHAR)(LPC_IO_BASE + 1));
-        // Read MSB
-        WRITE_PORT_UCHAR((PUCHAR)LPC_IO_BASE, LPC_CONFIG_DEVICE_BASE_ADDRESS_HIGH);
-        ComBase |= (READ_PORT_UCHAR((PUCHAR)(LPC_IO_BASE + 1)) << 8);
-        // Read IRQ
-        WRITE_PORT_UCHAR((PUCHAR)LPC_IO_BASE, LPC_CONFIG_DEVICE_INTERRUPT);
-        *Irq = READ_PORT_UCHAR((PUCHAR)(LPC_IO_BASE + 1));
+        ComBase = LpcGetIoBase();
+        *Irq = LpcGetIrqPrimary();
     }
 
-    // Exit Configuration
-    WRITE_PORT_UCHAR((PUCHAR)LPC_IO_BASE, LPC_EXIT_CONFIG_KEY);
+    LpcExitConfig();
 
     return ComBase;
 }

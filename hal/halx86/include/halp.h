@@ -189,7 +189,6 @@ typedef struct _HalAddressUsage
 PADAPTER_OBJECT NTAPI HalpAllocateAdapterEx(ULONG NumberOfMapRegisters,BOOLEAN IsMaster, BOOLEAN Dma32BitAddresses);
 
 /* sysinfo.c */
-INIT_FUNCTION
 VOID
 NTAPI
 HalpRegisterVector(IN UCHAR Flags,
@@ -197,7 +196,6 @@ HalpRegisterVector(IN UCHAR Flags,
                    IN ULONG SystemVector,
                    IN KIRQL Irql);
 
-INIT_FUNCTION
 VOID
 NTAPI
 HalpEnableInterruptHandler(IN UCHAR Flags,
@@ -219,7 +217,7 @@ DECLSPEC_NORETURN VOID FASTCALL HalpDispatchInterrupt2ndEntry(IN PKTRAP_FRAME Tr
 extern BOOLEAN HalpProfilingStopped;
 
 /* timer.c */
-INIT_FUNCTION VOID NTAPI HalpInitializeClock(VOID);
+VOID NTAPI HalpInitializeClock(VOID);
 VOID __cdecl HalpClockInterrupt(VOID);
 VOID __cdecl HalpProfileInterrupt(VOID);
 
@@ -237,7 +235,7 @@ HalpCalibrateStallExecution(VOID);
 VOID HalpInitPciBus (VOID);
 
 /* dma.c */
-INIT_FUNCTION VOID HalpInitDma (VOID);
+VOID HalpInitDma (VOID);
 
 /* Non-generic initialization */
 VOID HalpInitPhase0 (PLOADER_PARAMETER_BLOCK LoaderBlock);
@@ -256,14 +254,12 @@ HalpCheckPowerButton(
     VOID
 );
 
-INIT_FUNCTION
 VOID
 NTAPI
 HalpRegisterKdSupportFunctions(
     VOID
 );
 
-INIT_FUNCTION
 NTSTATUS
 NTAPI
 HalpSetupPciDeviceForDebugging(
@@ -271,7 +267,6 @@ HalpSetupPciDeviceForDebugging(
     IN OUT PDEBUG_DEVICE_DESCRIPTOR PciDevice
 );
 
-INIT_FUNCTION
 NTSTATUS
 NTAPI
 HalpReleasePciDeviceForDebugging(
@@ -323,6 +318,15 @@ HalpUnmapVirtualAddress(
 /* sysinfo.c */
 NTSTATUS
 NTAPI
+HaliHandlePCIConfigSpaceAccess(
+    _In_ BOOLEAN IsRead,
+    _In_ ULONG Port,
+    _In_ ULONG Length,
+    _Inout_ PULONG Buffer
+);
+
+NTSTATUS
+NTAPI
 HaliQuerySystemInformation(
     IN HAL_QUERY_INFORMATION_CLASS InformationClass,
     IN ULONG BufferSize,
@@ -371,19 +375,20 @@ HaliHaltSystem(
 //
 // CMOS Routines
 //
-INIT_FUNCTION
 VOID
 NTAPI
 HalpInitializeCmos(
     VOID
 );
 
+_Requires_lock_held_(HalpSystemHardwareLock)
 UCHAR
 NTAPI
 HalpReadCmos(
     IN UCHAR Reg
 );
 
+_Requires_lock_held_(HalpSystemHardwareLock)
 VOID
 NTAPI
 HalpWriteCmos(
@@ -394,12 +399,14 @@ HalpWriteCmos(
 //
 // Spinlock for protecting CMOS access
 //
+_Acquires_lock_(HalpSystemHardwareLock)
 VOID
 NTAPI
 HalpAcquireCmosSpinLock(
     VOID
 );
 
+_Releases_lock_(HalpSystemHardwareLock)
 VOID
 NTAPI
 HalpReleaseCmosSpinLock(
@@ -422,42 +429,36 @@ HalpOpenRegistryKey(
     IN BOOLEAN Create
 );
 
-INIT_FUNCTION
 VOID
 NTAPI
 HalpGetNMICrashFlag(
     VOID
 );
 
-INIT_FUNCTION
 BOOLEAN
 NTAPI
 HalpGetDebugPortTable(
     VOID
 );
 
-INIT_FUNCTION
 VOID
 NTAPI
 HalpReportSerialNumber(
     VOID
 );
 
-INIT_FUNCTION
 NTSTATUS
 NTAPI
 HalpMarkAcpiHal(
     VOID
 );
 
-INIT_FUNCTION
 VOID
 NTAPI
 HalpBuildAddressMap(
     VOID
 );
 
-INIT_FUNCTION
 VOID
 NTAPI
 HalpReportResourceUsage(
@@ -465,7 +466,6 @@ HalpReportResourceUsage(
     IN INTERFACE_TYPE InterfaceType
 );
 
-INIT_FUNCTION
 ULONG
 NTAPI
 HalpIs16BitPortDecodeSupported(
@@ -486,7 +486,6 @@ KeUpdateSystemTime(
     IN KIRQL OldIrql
 );
 
-INIT_FUNCTION
 VOID
 NTAPI
 HalpInitBusHandlers(
@@ -499,7 +498,6 @@ HaliInitPnpDriver(
     VOID
 );
 
-INIT_FUNCTION
 VOID
 NTAPI
 HalpDebugPciDumpBus(
@@ -516,12 +514,36 @@ HalpInitProcessor(
     IN PLOADER_PARAMETER_BLOCK LoaderBlock
 );
 
+#if defined(SARCH_PC98)
+BOOLEAN
+NTAPI
+HalpDismissIrq08(
+    _In_ KIRQL Irql,
+    _In_ ULONG Irq,
+    _Out_ PKIRQL OldIrql
+);
+
+BOOLEAN
+NTAPI
+HalpDismissIrq08Level(
+    _In_ KIRQL Irql,
+    _In_ ULONG Irq,
+    _Out_ PKIRQL OldIrql
+);
+
+VOID
+NTAPI
+HalpInitializeClockPc98(VOID);
+
+extern ULONG PIT_FREQUENCY;
+#endif /* SARCH_PC98 */
+
 #ifdef _M_AMD64
 
 VOID
 NTAPI
 HalInitializeBios(
-    _In_ ULONG Unknown,
+    _In_ ULONG Phase,
     _In_ PLOADER_PARAMETER_BLOCK LoaderBlock
 );
 

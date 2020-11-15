@@ -1,7 +1,6 @@
 /*
  * PROJECT:         ReactOS HAL
  * LICENSE:         BSD - See COPYING.ARM in the top level directory
- * FILE:            hal/halx86/legacy/halpcat.c
  * PURPOSE:         HAL Legacy Support Code
  * PROGRAMMERS:     ReactOS Portable Systems Group
  */
@@ -9,17 +8,9 @@
 /* INCLUDES *******************************************************************/
 
 #include <hal.h>
+
 #define NDEBUG
 #include <debug.h>
-
-#if defined(ALLOC_PRAGMA) && !defined(_MINIHAL_)
-//#pragma alloc_text(INIT, HaliInitPnpDriver)
-#pragma alloc_text(INIT, HalpBuildAddressMap)
-#pragma alloc_text(INIT, HalpGetDebugPortTable)
-#pragma alloc_text(INIT, HalpIs16BitPortDecodeSupported)
-#pragma alloc_text(INIT, HalpSetupAcpiPhase0)
-#pragma alloc_text(INIT, HalReportResourceUsage)
-#endif
 
 /* GLOBALS ********************************************************************/
 
@@ -28,6 +19,9 @@ BOOLEAN HalDisableFirmwareMapper = FALSE;
 #if defined(SARCH_XBOX)
 PWCHAR HalHardwareIdString = L"xbox";
 PWCHAR HalName = L"Xbox HAL";
+#elif defined(SARCH_PC98)
+PWCHAR HalHardwareIdString = L"pc98_up";
+PWCHAR HalName = L"NEC PC-98 Compatible NESA/C-Bus HAL";
 #else
 PWCHAR HalHardwareIdString = L"e_isa_up";
 PWCHAR HalName = L"PC Compatible Eisa/Isa HAL";
@@ -35,7 +29,7 @@ PWCHAR HalName = L"PC Compatible Eisa/Isa HAL";
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 NTSTATUS
 NTAPI
 HalpSetupAcpiPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
@@ -44,19 +38,19 @@ HalpSetupAcpiPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     return STATUS_NO_SUCH_DEVICE;
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 HalpBuildAddressMap(VOID)
 {
     /* FIXME: Inherit ROM blocks from the registry */
     //HalpInheritROMBlocks();
-    
+
     /* FIXME: Add the ROM blocks to our ranges */
     //HalpAddROMRanges();
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 BOOLEAN
 NTAPI
 HalpGetDebugPortTable(VOID)
@@ -65,7 +59,7 @@ HalpGetDebugPortTable(VOID)
     return FALSE;
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 ULONG
 NTAPI
 HalpIs16BitPortDecodeSupported(VOID)
@@ -75,7 +69,7 @@ HalpIs16BitPortDecodeSupported(VOID)
 }
 
 #if 0
-INIT_FUNCTION
+CODE_SEG("INIT")
 NTSTATUS
 NTAPI
 HaliInitPnpDriver(VOID)
@@ -89,7 +83,7 @@ HaliInitPnpDriver(VOID)
 /*
  * @implemented
  */
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 HalReportResourceUsage(VOID)

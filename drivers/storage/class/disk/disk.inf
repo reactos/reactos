@@ -81,6 +81,14 @@ Disk.DeviceDesc = "Unidad de disco"
 OpticalDisk.DeviceDesc = "Unidad de disco óptico"
 Disk.ServiceDesc = "Controlador de disco"
 
+[Strings.040C]
+ReactOS = "Equipe ReactOS"
+GenericMfg = "(Pilotes de disque génériques)"
+DiskClassName = "Lecteurs de disques"
+Disk.DeviceDesc = "Lecteurs de disques"
+OpticalDisk.DeviceDesc = "Lecteurs de disques optiques"
+Disk.ServiceDesc = "Pilotes de disques"
+
 [Strings.0415]
 ReactOS = "Zespół ReactOS"
 GenericMfg = "(Standardowy dysk twardy)"

@@ -23,7 +23,7 @@ ALIAS [エイリアス=[コマンド]]\n\n\
     STRING_CALL_HELP "バッチ プログラムを別のバッチ プログラムから呼び出します。\n\n\
 CALL [ドライブ:][パス]ファイル名 [バッチパラメータ]\n\n\
   バッチパラメータ  バッチ プログラムで必要なコマンド ライン情報を\n\
-                    指定します。"
+                    指定します。\n"
     STRING_CD_HELP "現在のディレクトリを変更したり、ディレクトリ名を表示したりします。\n\n\
 CHDIR [/D][ドライブ:][パス]\n\
 CHDIR[..|.]\n\
@@ -234,7 +234,7 @@ f,d,p,n,x,s,a,t,z.\n\n\
 GOTO ラベル\n\n\
   ラベル   バッチ プログラムでラベルとして使用するテキスト文字列を指定します。\n\n\
 ラベルの先頭には : (コロン) を指定し、ラベルだけを単独で 1 行に入力してくだ\n\
-さい。"
+さい。\n"
     STRING_IF_HELP1 "バッチ プログラム中で条件処理を実行します。\n\n\
   IF [NOT] ERRORLEVEL 番号 コマンド\n\
   IF [NOT] 文字列1==文字列2 コマンド\n\
@@ -273,9 +273,9 @@ If neither /H or /J is specified, a symbolic link is created."
     STRING_MOVE_HELP1 "%s を上書きしますがよろしいですか (Yes/No/All)? "
     STRING_MOVE_HELP2 "ファイルを移動およびファイルとディレクトリ名を変更します。\n\n\
 1 つまたは複数のファイルを移動するには:\n\
-MOVE [/N][ドライブ:][パス]ファイル名1[,...] 移動先\n\n\
+MOVE [/N][/Y|/-Y][ドライブ:][パス]ファイル名1[,...] 移動先\n\n\
 ディレクトリ名を変更するには:\n\
-MOVE [/N][ドライブ:][パス]変更前 変更後\n\n\
+MOVE [/N][/Y|/-Y][ドライブ:][パス]変更前 変更後\n\n\
   [ドライブ:][パス]ファイル名1\n\
             移動するファイルの場所と名前を指定します。\n\
   /N        Nothing. ファイルとディレクトリの移動以外のすべてを行います。\n\n\
@@ -297,6 +297,9 @@ PATH [[ドライブ:]パス[;...]]\nPATH ;\n\n\
 パラメータとして ; (セミコロン) だけを指定すると、すべての検索パスは\n\
 クリアされて現在のディレクトリだけが検索されます。\n\
 パラメータを指定せずに PATH と入力すると、現在のパスが表示されます。\n"
+    STRING_PAUSE_HELP1 "バッチ プログラムの処理を一時停止し、次のメッセージを表示します。:\n\
+'続行するには何かキーを押してください ...' またはユーザーが定義したメッセージ。\n\n\
+PAUSE [メッセージ]"
     STRING_PROMPT_HELP1 "コマンド プロンプトを変更します。\n\n\
 PROMPT [文字列]\n\n\
   文字列    新しいコマンド プロンプトを指定します。\n\n\
@@ -319,14 +322,11 @@ PROMPT には通常の文字と次に示す特殊コードを使用できます:
   $V   OS のバージョン番号\n\
   $_   キャリッジ リターンとラインフィード\n\
   $$   $ (ドル記号)\n"
-    STRING_PAUSE_HELP1 "バッチ プログラムの処理を一時停止し、次のメッセージを表示します。:\n\
-'続行するには何かキーを押してください ...' またはユーザーが定義したメッセージ。\n\n\
-PAUSE [メッセージ]"
     STRING_PROMPT_HELP2 "  $+   現在のディレクトリ スタックの深さを表示します"
     STRING_PROMPT_HELP3 "\nパラメータを指定せずに PROMPT と入力すると、プロンプトの設定がデフォルトにリセットされます。"
     STRING_REM_HELP "バッチ ファイルにコメント (注釈) を記録します。\n\nREM [コメント]"
     STRING_RMDIR_HELP "ディレクトリを削除します。\n\n\
-RMDIR [ドライブ:]パス\nRD [ドライブ:]パス\n\
+RMDIR [/S] [/Q] [ドライブ:]パス\nRD [/S] [/Q] [ドライブ:]パス\n\
   /S    指定されたディレクトリ内にあるファイルやフォルダもすべて削除します。\n\
   /Q    確認のメッセージを表示しません。\n"
     STRING_RMDIR_HELP2 "ディレクトリが空ではありません!\n"
@@ -475,9 +475,9 @@ RESTORE       ウィンドウを元のサイズに戻します。\n\
     STRING_ALIAS_ERROR "エイリアス展開後のコマンド ラインが長すぎます!\n"
     STRING_ASSOC_ERROR "File association not found for extension %s\n"
     STRING_BATCH_ERROR "バッチ ファイルを開くときにエラーが発生しました。\n"
-    STRING_CHOICE_ERROR "無効なオプションです。期待される書式: /C[:]オプション"
-    STRING_CHOICE_ERROR_TXT "無効なオプションです。期待される書式: /T[:]c,nn"
-    STRING_CHOICE_ERROR_OPTION "無効なオプションです: %s"
+    STRING_CHOICE_ERROR "無効なオプションです。期待される書式: /C[:]オプション\n"
+    STRING_CHOICE_ERROR_TXT "無効なオプションです。期待される書式: /T[:]c,nn\n"
+    STRING_CHOICE_ERROR_OPTION "無効なオプションです: %s\n"
     STRING_CMD_ERROR1 "ファイル %s からリダイレクト入力できません。\n"
     STRING_CMD_ERROR2 "データをパイプするための一時ファイル作成のときにエラーが発生しました。\n"
     STRING_CMD_ERROR3 "ファイル %s へとリダイレクトできません。\n"
@@ -502,9 +502,9 @@ RESTORE       ウィンドウを元のサイズに戻します。\n\
     STRING_FOR_ERROR4 "'do' の後にコマンドがありません。"
     STRING_FREE_ERROR1 "無効なドライブです。"
     STRING_FREE_ERROR2 "ラベルがありません。"
-    STRING_GOTO_ERROR1 "GOTO にラベルが指定されていません。"
+    STRING_GOTO_ERROR1 "GOTO にラベルが指定されていません。\n"
     STRING_GOTO_ERROR2 "ラベル '%s' が見つかりませんでした。\n"
-    STRING_MD_ERROR "すでにディレクトリ内にサブディレクトリかファイルが存在しています。\n"
+    STRING_MD_ERROR "%s すでにディレクトリ内にサブディレクトリかファイルが存在しています。\n"
     STRING_MD_ERROR2 "新しいフォルダへのパスが存在していません。\n"
     STRING_MOVE_ERROR1 "[OK]\n"
     STRING_MOVE_ERROR2 "[エラー]\n"
@@ -523,9 +523,9 @@ RESTORE       ウィンドウを元のサイズに戻します。\n\
     STRING_ERROR_BADCOMMAND "コマンドまたはファイル名が間違っています。 - %s\n"
     STRING_ERROR_OUT_OF_MEMORY "メモリ不足エラー。\n"
     STRING_ERROR_CANNOTPIPE "エラー!  パイプできません!  一時ファイルを開けません!\n"
-    STRING_ERROR_D_PAUSEMSG "続行するには何かキーを押してください . . ."
+    STRING_ERROR_D_PAUSEMSG "続行するには何かキーを押してください . . . "
     STRING_ERROR_DRIVER_NOT_READY "ドライブの準備ができていません。"
-    STRING_PATH_ERROR "CMD: Not in environment '%s'\n"
+    STRING_SET_ENV_ERROR "Environment variable '%s' is not defined\n"
     STRING_REPLACE_ERROR1 "Invalid switch - %s\n"
     STRING_REPLACE_ERROR2 "Path not found - %s\n"
     STRING_REPLACE_ERROR3 "The filename, directory name, or volume label syntax is incorrect.\n"
@@ -549,8 +549,8 @@ RESTORE       ウィンドウを元のサイズに戻します。\n\
     STRING_MKLINK_CREATED_JUNCTION "Junction created for %s <<===>> %s\n"
     STRING_MORE "More? "
     STRING_CANCEL_BATCH_FILE "\r\nCtrl-Break pressed.  Cancel batch file? (Yes/No/All) "
-    STRING_INVALID_OPERAND "無効なオペランドです。"
-    STRING_EXPECTED_CLOSE_PAREN "Expected ')'"
-    STRING_EXPECTED_NUMBER_OR_VARIABLE "Expected number or variable name."
-    STRING_SYNTAX_COMMAND_INCORRECT "コマンドの構文が間違っています。"
+    STRING_INVALID_OPERAND "無効なオペランドです。\n"
+    STRING_EXPECTED_CLOSE_PAREN "Expected ')'\n"
+    STRING_EXPECTED_NUMBER_OR_VARIABLE "Expected number or variable name.\n"
+    STRING_SYNTAX_COMMAND_INCORRECT "コマンドの構文が間違っています。\n"
 END

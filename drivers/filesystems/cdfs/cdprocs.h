@@ -55,6 +55,14 @@ Abstract:
 #pragma warning( pop )
 #endif
 
+#ifdef __REACTOS__
+// Downgrade unsupported NT6.2+ features.
+#undef MdlMappingNoExecute
+#define MdlMappingNoExecute 0
+#define NonPagedPoolNx NonPagedPool
+#define NonPagedPoolNxCacheAligned NonPagedPoolCacheAligned
+#endif
+
 //**** x86 compiler bug ****
 
 #if defined(_M_IX86)
@@ -372,7 +380,6 @@ CdHijackIrpAndFlushDevice (
 //      );
 //
 
-#ifndef __REACTOS__
 #define CdMapUserBuffer(IC, UB) {                                               \
             *(UB) = (PVOID) ( ((IC)->Irp->MdlAddress == NULL) ?                 \
                     (IC)->Irp->UserBuffer :                                     \
@@ -382,18 +389,6 @@ CdHijackIrpAndFlushDevice (
             }                                                                   \
         }                                                                       
         
-#else
-#define CdMapUserBuffer(IC, UB) {                                               \
-            *(UB) = (PVOID) ( ((IC)->Irp->MdlAddress == NULL) ?                 \
-                    (IC)->Irp->UserBuffer :                                     \
-                    (MmGetSystemAddressForMdlSafe( (IC)->Irp->MdlAddress, NormalPagePriority)));   \
-            if (NULL == *(UB))  {                         \
-                CdRaiseStatus( (IC), STATUS_INSUFFICIENT_RESOURCES);            \
-            }                                                                   \
-        }                                                                       
-        
-#endif
-
 
 #define CdLockUserBuffer(IC,BL,OP) {                        \
     if ((IC)->Irp->MdlAddress == NULL) {                    \
@@ -1383,13 +1378,8 @@ CdProcessToc (
 //
 
 #define CdPagedPool                 PagedPool
-#ifndef __REACTOS__
 #define CdNonPagedPool              NonPagedPoolNx
 #define CdNonPagedPoolCacheAligned  NonPagedPoolNxCacheAligned
-#else
-#define CdNonPagedPool              NonPagedPool
-#define CdNonPagedPoolCacheAligned  NonPagedPoolCacheAligned
-#endif
 
 
 //

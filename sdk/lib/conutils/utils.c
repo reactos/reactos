@@ -133,7 +133,7 @@ K32LoadStringExW(
     /*
      * If nBufferMax == 0, then return a read-only pointer
      * to the resource itself in lpBuffer it is assumed that
-     * lpBuffer is actually a (LPWSTR *).
+     * lpBuffer is actually a (LPWSTR*).
      */
     if (nBufferMax == 0)
     {

@@ -8,3 +8,6 @@ ICON_16_32_RED      ICON "16_32_red.ico"
 ICON_32_8           ICON "32_8.ico"
 ICON_32_32          ICON "32_32.ico"
 
+
+101 10 "shlwapi_resource_dll.dll"
+

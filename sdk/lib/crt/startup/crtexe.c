@@ -211,6 +211,8 @@ int __cdecl mainCRTStartup (void)
   return ret;
 }
 
+void __call_atexit();
+
 static
 __declspec(noinline)
 int __cdecl
@@ -324,6 +326,7 @@ __tmainCRTStartup (void)
 #endif
     mainret = main (argc, argv, envp);
 #endif
+    __call_atexit();
     if (!managedapp)
       exit (mainret);
 

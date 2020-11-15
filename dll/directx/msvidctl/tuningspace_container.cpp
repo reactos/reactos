@@ -205,7 +205,7 @@ CTuningSpaceContainer::Add(ITuningSpace *TuningSpace, VARIANT *NewIndex)
     TuningSpace->AddRef();
     NewIndex->vt = VT_BSTR;
     InterlockedIncrement(&m_Ref);
-    return TuningSpace->get_FriendlyName(&NewIndex->bstrVal);;
+    return TuningSpace->get_FriendlyName(&NewIndex->bstrVal);
 }
 HRESULT
 STDMETHODCALLTYPE

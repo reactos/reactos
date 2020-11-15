@@ -8,6 +8,22 @@
 #include "precomp.h"
 
 LONG WINAPI
+AdvancedSetupDialog(HWND hWnd, INT Unknown, PDEVMODEA pDevModeInput, PDEVMODEA pDevModeOutput)
+{
+   HANDLE hPrinter;
+   LONG Ret = -1;
+
+    TRACE("AdvancedSetupDialog(%p, %d, %p, %p)\n", hWnd, Unknown, pDevModeOutput, pDevModeInput);
+
+    if ( OpenPrinterA( (LPSTR)pDevModeInput->dmDeviceName, &hPrinter, NULL ) )
+    {
+        Ret = AdvancedDocumentPropertiesA( hWnd, hPrinter, (PSTR)pDevModeInput->dmDeviceName, pDevModeOutput, pDevModeInput );
+        ClosePrinter(hPrinter);
+    }
+    return Ret;
+}
+
+LONG WINAPI
 AdvancedDocumentPropertiesA(HWND hWnd, HANDLE hPrinter, PSTR pDeviceName, PDEVMODEA pDevModeOutput, PDEVMODEA pDevModeInput)
 {
     TRACE("AdvancedDocumentPropertiesA(%p, %p, %s, %p, %p)\n", hWnd, hPrinter, pDeviceName, pDevModeOutput, pDevModeInput);
@@ -26,17 +42,57 @@ AdvancedDocumentPropertiesW(HWND hWnd, HANDLE hPrinter, PWSTR pDeviceName, PDEVM
 DWORD WINAPI
 DeletePrinterDataA(HANDLE hPrinter, PSTR pValueName)
 {
+    LPWSTR  valuenameW = NULL;
+    INT     len;
+    DWORD   res;
+
     TRACE("DeletePrinterDataA(%p, %s)\n", hPrinter, pValueName);
-    UNIMPLEMENTED;
-    return ERROR_NOT_SUPPORTED;
+
+    if (pValueName)
+    {
+        len = MultiByteToWideChar(CP_ACP, 0, pValueName, -1, NULL, 0);
+        valuenameW = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+        MultiByteToWideChar(CP_ACP, 0, pValueName, -1, valuenameW, len);
+    }
+
+    res = DeletePrinterDataW( hPrinter, valuenameW );
+
+    if (valuenameW) HeapFree(GetProcessHeap(), 0, valuenameW);
+
+    return res;
+
 }
 
 DWORD WINAPI
 DeletePrinterDataExA(HANDLE hPrinter, PCSTR pKeyName, PCSTR pValueName)
 {
+    LPWSTR  keynameW = NULL;
+    LPWSTR  valuenameW = NULL;
+    INT     len;
+    DWORD   res;
+
     TRACE("DeletePrinterDataExA(%p, %s, %s)\n", hPrinter, pKeyName, pValueName);
-    UNIMPLEMENTED;
-    return ERROR_NOT_SUPPORTED;
+
+    if (pKeyName)
+    {
+        len = MultiByteToWideChar(CP_ACP, 0, pKeyName, -1, NULL, 0);
+        keynameW = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+        MultiByteToWideChar(CP_ACP, 0, pKeyName, -1, keynameW, len);
+    }
+
+    if (pValueName)
+    {
+        len = MultiByteToWideChar(CP_ACP, 0, pValueName, -1, NULL, 0);
+        valuenameW = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+        MultiByteToWideChar(CP_ACP, 0, pValueName, -1, valuenameW, len);
+    }
+
+    res = DeletePrinterDataExW( hPrinter, keynameW, valuenameW );
+
+    if (keynameW) HeapFree(GetProcessHeap(), 0, keynameW);
+    if (valuenameW) HeapFree(GetProcessHeap(), 0, valuenameW);
+
+    return res;
 }
 
 DWORD WINAPI
@@ -58,9 +114,24 @@ DeletePrinterDataW(HANDLE hPrinter, PWSTR pValueName)
 DWORD WINAPI
 DeletePrinterKeyA(HANDLE hPrinter, PCSTR pKeyName)
 {
+    LPWSTR  keynameW = NULL;
+    INT     len;
+    DWORD   res;
+
     TRACE("DeletePrinterKeyA(%p, %s)\n", hPrinter, pKeyName);
-    UNIMPLEMENTED;
-    return ERROR_NOT_SUPPORTED;
+
+    if (pKeyName)
+    {
+        len = MultiByteToWideChar(CP_ACP, 0, pKeyName, -1, NULL, 0);
+        keynameW = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+        MultiByteToWideChar(CP_ACP, 0, pKeyName, -1, keynameW, len);
+    }
+
+    res = DeletePrinterKeyW( hPrinter, keynameW );
+
+    if (keynameW) HeapFree(GetProcessHeap(), 0, keynameW);
+
+    return res;
 }
 
 DWORD WINAPI
@@ -82,9 +153,141 @@ EnumPrinterDataA(HANDLE hPrinter, DWORD dwIndex, PSTR pValueName, DWORD cbValueN
 DWORD WINAPI
 EnumPrinterDataExA(HANDLE hPrinter, PCSTR pKeyName, PBYTE pEnumValues, DWORD cbEnumValues, PDWORD pcbEnumValues, PDWORD pnEnumValues)
 {
+    INT	    len;
+    LPWSTR  pKeyNameW;
+    DWORD   ret, dwIndex, dwBufSize;
+    HANDLE  hHeap;
+    LPSTR   pBuffer;
+
     TRACE("EnumPrinterDataExA(%p, %s, %p, %lu, %p, %p)\n", hPrinter, pKeyName, pEnumValues, cbEnumValues, pcbEnumValues, pnEnumValues);
-    UNIMPLEMENTED;
-    return ERROR_NOT_SUPPORTED;
+
+    if (pKeyName == NULL || *pKeyName == 0)
+	return ERROR_INVALID_PARAMETER;
+
+    len = MultiByteToWideChar (CP_ACP, 0, pKeyName, -1, NULL, 0);
+    if (len == 0)
+    {
+	ret = GetLastError ();
+	ERR ("MultiByteToWideChar failed with code %i\n", ret);
+	return ret;
+    }
+
+    hHeap = GetProcessHeap ();
+    if (hHeap == NULL)
+    {
+	ERR ("GetProcessHeap failed\n");
+	return ERROR_OUTOFMEMORY;
+    }
+
+    pKeyNameW = HeapAlloc (hHeap, 0, len * sizeof (WCHAR));
+    if (pKeyNameW == NULL)
+    {
+	ERR ("Failed to allocate %i bytes from process heap\n",
+             (LONG)(len * sizeof (WCHAR)));
+	return ERROR_OUTOFMEMORY;
+    }
+
+    if (MultiByteToWideChar (CP_ACP, 0, pKeyName, -1, pKeyNameW, len) == 0)
+    {
+	ret = GetLastError ();
+	ERR ("MultiByteToWideChar failed with code %i\n", ret);
+	if (HeapFree (hHeap, 0, pKeyNameW) == 0)
+	    WARN ("HeapFree failed with code %i\n", GetLastError ());
+	return ret;
+    }
+
+    ret = EnumPrinterDataExW (hPrinter, pKeyNameW, pEnumValues, cbEnumValues, pcbEnumValues, pnEnumValues);
+
+    if (ret != ERROR_SUCCESS)
+    {
+	if (HeapFree (hHeap, 0, pKeyNameW) == 0)
+	    WARN ("HeapFree failed with code %i\n", GetLastError ());
+	TRACE ("EnumPrinterDataExW returned %i\n", ret);
+	return ret;
+    }
+
+    if (HeapFree (hHeap, 0, pKeyNameW) == 0)
+    {
+	ret = GetLastError ();
+	ERR ("HeapFree failed with code %i\n", ret);
+	return ret;
+    }
+
+    if (*pnEnumValues == 0)	/* empty key */
+	return ERROR_SUCCESS;
+
+    dwBufSize = 0;
+    for (dwIndex = 0; dwIndex < *pnEnumValues; ++dwIndex)
+    {
+	PPRINTER_ENUM_VALUESW ppev = &((PPRINTER_ENUM_VALUESW) pEnumValues)[dwIndex];
+
+	if (dwBufSize < ppev->cbValueName)
+	    dwBufSize = ppev->cbValueName;
+
+	if ( dwBufSize < ppev->cbData &&
+	    (ppev->dwType == REG_SZ || ppev->dwType == REG_EXPAND_SZ || ppev->dwType == REG_MULTI_SZ))
+	    dwBufSize = ppev->cbData;
+    }
+
+    FIXME ("Largest Unicode name or value is %i bytes\n", dwBufSize);
+
+    pBuffer = HeapAlloc (hHeap, 0, dwBufSize);
+    if (pBuffer == NULL)
+    {
+	ERR ("Failed to allocate %i bytes from process heap\n", dwBufSize);
+	return ERROR_OUTOFMEMORY;
+    }
+
+    for (dwIndex = 0; dwIndex < *pnEnumValues; ++dwIndex)
+    {
+	PPRINTER_ENUM_VALUESW ppev =
+		&((PPRINTER_ENUM_VALUESW) pEnumValues)[dwIndex];
+
+	len = WideCharToMultiByte (CP_ACP, 0, ppev->pValueName,
+		ppev->cbValueName / sizeof (WCHAR), pBuffer, dwBufSize, NULL,
+		NULL);
+	if (len == 0)
+	{
+	    ret = GetLastError ();
+	    ERR ("WideCharToMultiByte failed with code %i\n", ret);
+	    if (HeapFree (hHeap, 0, pBuffer) == 0)
+		WARN ("HeapFree failed with code %i\n", GetLastError ());
+	    return ret;
+	}
+
+	memcpy (ppev->pValueName, pBuffer, len);
+
+	TRACE ("Converted '%s' from Unicode to ASCII\n", pBuffer);
+
+	if (ppev->dwType != REG_SZ && ppev->dwType != REG_EXPAND_SZ &&
+		ppev->dwType != REG_MULTI_SZ)
+	    continue;
+
+	len = WideCharToMultiByte (CP_ACP, 0, (LPWSTR) ppev->pData,
+		ppev->cbData / sizeof (WCHAR), pBuffer, dwBufSize, NULL, NULL);
+	if (len == 0)
+	{
+	    ret = GetLastError ();
+	    ERR ("WideCharToMultiByte failed with code %i\n", ret);
+	    if (HeapFree (hHeap, 0, pBuffer) == 0)
+		WARN ("HeapFree failed with code %i\n", GetLastError ());
+	    return ret;
+	}
+
+	memcpy (ppev->pData, pBuffer, len);
+
+	TRACE ("Converted '%s' from Unicode to ASCII\n", pBuffer);
+	TRACE ("  (only first string of REG_MULTI_SZ printed)\n");
+    }
+
+    if (HeapFree (hHeap, 0, pBuffer) == 0)
+    {
+	ret = GetLastError ();
+	ERR ("HeapFree failed with code %i\n", ret);
+	return ret;
+    }
+
+    return ERROR_SUCCESS;
 }
 
 DWORD WINAPI

@@ -24,7 +24,7 @@ Egy alias törlése:\n\
     STRING_BEEP_HELP "Hangjelzés leadása a speakerbõl.\n\nBEEP\n"
     STRING_CALL_HELP "Kötegelt parancsfájl meghívása egy másikból.\n\n\
 CALL [kötet:][elérési_út]állomány [paraméterek]\n\n\
-  paraméterek  Itt adható meg a szükséges paraméterlista"
+  paraméterek  Itt adható meg a szükséges paraméterlista.\n"
     STRING_CD_HELP "Az aktuális mappa nevének a megjelenítése vagy váltás másikra\n\n\
 CHDIR [/D][meghajtó:][elérési_út]\n\
 CHDIR[..|.]\n\
@@ -183,7 +183,7 @@ PUSHD [elérési_út | ..]\n\n\
   ECHO [üzenet]\n\
   ECHO.             Új sor\n\n\
 Paraméter nélkül megjeleníti a visszang állapotát."
-    STRING_ECHO_HELP5 "Az ECHO %s\n"
+    STRING_ECHO_HELP5 "Az ECHO %s.\n"
     STRING_EXIT_HELP "Kilép a parancssor értelmezõbõl.\n\nEXIT\n"
     STRING_FOR_HELP1 "Végrehajt egy parancsot az összes fájlban a megadott mappákban.\n\n\
 FOR %változó IN (csoport) DO parancs [paraméterek]\n\
@@ -214,7 +214,7 @@ A batch állományban való haszálathoz %%változó kell a %változó helyett.\
     STRING_GOTO_HELP1 "Átirányít egy másik címkére a batch állományban.\n\n\
 GOTO címke\n\n\
   címke  A megadott címkére fog ugrani az értelmezõ.\n\n\
-Egy címkét egy sorban lehet megadni, ':' -tal kezdve."
+Egy címkét egy sorban lehet megadni, ':' -tal kezdve.\n"
     STRING_IF_HELP1 "Performs conditional processing in batch programs.\n\n\
   IF [NOT] ERRORLEVEL number command\n\
   IF [NOT] string1==string2 command\n\
@@ -251,9 +251,9 @@ If neither /H or /J is specified, a symbolic link is created."
     STRING_MOVE_HELP1 "Felülírja %s (Igen/Nem/Mind)? "
     STRING_MOVE_HELP2 "Áthelyezi és átnevezi az állományokat a mappákban.\n\n\
 Egy vagy több állomány áthelyezéséhez:\n\
-MOVE [/N][meghajtó:][elérési_út]állomány1[,...] cél\n\n\
+MOVE [/N][/Y|/-Y][meghajtó:][elérési_út]állomány1[,...] cél\n\n\
 Mappa átnevezése:\n\
-MOVE [/N][meghajtó:][elérési_út]mappa1 mappa2\n\n\
+MOVE [/N][/Y|/-Y][meghajtó:][elérési_út]mappa1 mappa2\n\n\
   [meghajtó:][elérési_út]állomány1  Átnevezendõ állományok forrása.\n\
   /N                    Nem helyez át semmit.\n\n\
 Hiányosságok:\n\
@@ -274,6 +274,9 @@ PATH ; Keresési útvonalak törlése\n\n\
 A PATH törléséhez a következõt írd be: PATH ;\n\
 Így csak az aktuális mappában fog keresni a CMD.\
 Paraméterek nélkül az érvényes keresési útvonalakat mutatja meg.\n"
+    STRING_PAUSE_HELP1 "Felfüggeszti a futást, és vár a felhasználóra. A következõ üzenet jelenik meg:\n\
+'A folytatáshoz nyomj meg egy billentyût . . .' vagy egy általad választott üzenet.\n\n\
+PAUSE [message]"
     STRING_PROMPT_HELP1 "Parancssor beállítása.\n\n\
 PROMPT [szöveg]\n\n\
   szöveg    Az új parancssor megadása.\n\n\
@@ -296,14 +299,13 @@ A parancssor speciális kódokat is tartalmazhat:\n\n\
   $V   OS verziószám\n\
   $_   Újsor\n\
   $$   $ (dollár jel)\n"
-    STRING_PAUSE_HELP1 "Felfüggeszti a futást, és vár a felhasználóra. A következõ üzenet jelenik meg:\n\
-'A folytatáshoz nyomj meg egy billentyût . . .' vagy egy általad választott üzenet.\n\n\
-PAUSE [message]"
     STRING_PROMPT_HELP2 "  $+   Displays the current depth of the directory stack"
     STRING_PROMPT_HELP3 "\nHa paraméter nélkül beírod a PROMPT parancsot, vissza áll az alapértelmezettre a kijelzés."
     STRING_REM_HELP "Megjegyzést jelölõ sor batch fájlokban.\n\nREM [megjegyzés]"
     STRING_RMDIR_HELP "Eltávolít egy mappát.\n\n\
-RMDIR [meghajtó:]elérési_út\nRD [meghajtó:]elérési_út"
+RMDIR [/S] [/Q] [meghajtó:]elérési_út\nRD [/S] [/Q] [meghajtó:]elérési_út\n\
+  /S    Deletes all files and folders within the target.\n\
+  /Q    Doesn't prompt for user.\n"
     STRING_RMDIR_HELP2 "Directory is not empty!\n"//FIXME
     STRING_REN_HELP1 "Átnevez egy állományt.\n\n\
 RENAME [/E /N /P /Q /S /T] régi_név ... új_név\n\
@@ -403,7 +405,7 @@ TYPE [meghajtó:][elérési_út]állománynév\n\
 Lemezre írás utáni ellenõrzést állítja be.\n\n\
 VERIFY [ON | OFF]\n\n\
 Írd be a VERIFY-t paraméterek nélkül, hogy megjelenítse aktuális állapotát.\n"
-    STRING_VERIFY_HELP2 "Az ellenõrzés jelenleg %s.\n"
+    STRING_VERIFY_HELP2 "Az VERIFY %s.\n"
     STRING_VERIFY_HELP3 "Csak az ON vagy OFF elfogadott."
     STRING_VERSION_HELP1 "A ReactOS verzióinformációit jeleníti meg\n\n\
 VER [/C][/R][/W]\n\n\
@@ -451,9 +453,9 @@ title         new title\n"
     STRING_ALIAS_ERROR "A parancssor túl hosszú az alias kibontásakor!\n"
     STRING_ASSOC_ERROR "File association not found for extension %s\n"
     STRING_BATCH_ERROR "Hiba a batch állomány megnyitásakor\n"
-    STRING_CHOICE_ERROR "Érvénytelen paraméter. Várt formátum: /C[:]választási lehetõségek"
-    STRING_CHOICE_ERROR_TXT "Érvénytelen paraméter. Várt formátum: /T[:]v,nn"
-    STRING_CHOICE_ERROR_OPTION "Érvénytelen paraméter: %s"
+    STRING_CHOICE_ERROR "Érvénytelen paraméter. Várt formátum: /C[:]választási lehetõségek\n"
+    STRING_CHOICE_ERROR_TXT "Érvénytelen paraméter. Várt formátum: /T[:]v,nn\n"
+    STRING_CHOICE_ERROR_OPTION "Érvénytelen paraméter: %s\n"
     STRING_CMD_ERROR1 "Nem lehet átirányítani a bevitelt a(z) %s állományból\n"
     STRING_CMD_ERROR2 "Hiba a csõvezetékhez tartozó ideiglenes állomány létrehozásakor\n"
     STRING_CMD_ERROR3 "Nem lehet a(z) %s állományba átirányítani\n"
@@ -478,9 +480,9 @@ title         new title\n"
     STRING_FOR_ERROR4 "nincs parancs a  'do' után."
     STRING_FREE_ERROR1 "Érvénytelen meghajtó"
     STRING_FREE_ERROR2 "nincs cimkézve"
-    STRING_GOTO_ERROR1 "Nem lett cimke megadva a  GOTO után"
+    STRING_GOTO_ERROR1 "Nem lett cimke megadva a GOTO után\n"
     STRING_GOTO_ERROR2 "A '%s' cimke nem található\n"
-    STRING_MD_ERROR "A subdirectory or file already exists.\n"//FIXME
+    STRING_MD_ERROR "A subdirectory or file %s already exists.\n"
     STRING_MD_ERROR2 "The path to the new folder does not exist.\n"
     STRING_MOVE_ERROR1 "[OK]\n"
     STRING_MOVE_ERROR2 "[HIBA]\n"
@@ -499,9 +501,9 @@ title         new title\n"
     STRING_ERROR_BADCOMMAND "Ismeretlen parancs vagy állomány név - %s\n"
     STRING_ERROR_OUT_OF_MEMORY "Nincs elég memória.\n"
     STRING_ERROR_CANNOTPIPE "Error!  Cannot pipe!  Cannot open temporary állomány!\n"
-    STRING_ERROR_D_PAUSEMSG "A folytatáshoz nyomj meg egy billentyût . . ."
+    STRING_ERROR_D_PAUSEMSG "A folytatáshoz nyomj meg egy billentyût . . . "
     STRING_ERROR_DRIVER_NOT_READY "A meghajtó nem áll készen"
-    STRING_PATH_ERROR "CMD: Not in environment '%s'\n"
+    STRING_SET_ENV_ERROR "Environment variable '%s' is not defined\n"
     STRING_REPLACE_ERROR1 "Invalid switch - %s\n"
     STRING_REPLACE_ERROR2 "Path not found - %s\n"
     STRING_REPLACE_ERROR3 "The filename, directory name, or volume label syntax is incorrect.\n"
@@ -525,8 +527,8 @@ title         new title\n"
     STRING_MKLINK_CREATED_JUNCTION "Junction created for %s <<===>> %s\n"
     STRING_MORE "More? "
     STRING_CANCEL_BATCH_FILE "\r\nCtrl-Break pressed.  Cancel batch file? (Igen/Nem/Mind) "
-    STRING_INVALID_OPERAND "Invalid operand."//FIXME
-    STRING_EXPECTED_CLOSE_PAREN "Expected ')'."
-    STRING_EXPECTED_NUMBER_OR_VARIABLE "Expected number or variable name."
-    STRING_SYNTAX_COMMAND_INCORRECT "The syntax of the command is incorrect."
+    STRING_INVALID_OPERAND "Invalid operand.\n" //FIXME
+    STRING_EXPECTED_CLOSE_PAREN "Expected ')'.\n"
+    STRING_EXPECTED_NUMBER_OR_VARIABLE "Expected number or variable name.\n"
+    STRING_SYNTAX_COMMAND_INCORRECT "The syntax of the command is incorrect.\n"
 END

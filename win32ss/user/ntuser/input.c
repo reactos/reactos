@@ -354,7 +354,7 @@ RawInputThreadMain(VOID)
  *
  * Inits input implementation
  */
-INIT_FUNCTION
+CODE_SEG("INIT")
 NTSTATUS
 NTAPI
 InitInputImpl(VOID)

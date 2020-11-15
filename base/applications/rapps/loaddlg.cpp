@@ -1,7 +1,6 @@
 /*
  * PROJECT:     ReactOS Applications Manager
- * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
- * FILE:        base/applications/rapps/loaddlg.cpp
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:     Displaying a download dialog
  * COPYRIGHT:   Copyright 2001 John R. Sheets             (for CodeWeavers)
  *              Copyright 2004 Mike McCormack             (for CodeWeavers)
@@ -150,6 +149,7 @@ public:
             UINT uiPercentage = ((ULONGLONG) ulProgress * 100) / ulProgressMax;
 
             /* send the current progress to the progress bar */
+            if (!IsWindow()) return;
             SendMessage(PBM_SETPOS, uiPercentage, 0);
 
             /* format total download size */
@@ -164,6 +164,7 @@ public:
         else
         {
             /* send the current progress to the progress bar */
+            if (!IsWindow()) return;
             SendMessage(PBM_SETPOS, 0, 0);
 
             /* total size is not known, display only current size */
@@ -171,6 +172,7 @@ public:
         }
 
         /* and finally display it */
+        if (!IsWindow()) return;
         SendMessage(WM_SETTEXT, 0, (LPARAM) ProgressText.GetString());
     }
 
@@ -303,9 +305,7 @@ public:
 };
 
 #ifdef USE_CERT_PINNING
-typedef CHeapPtr<char, CLocalAllocator> CLocalPtr;
-
-static BOOL CertGetSubjectAndIssuer(HINTERNET hFile, CLocalPtr& subjectInfo, CLocalPtr& issuerInfo)
+static BOOL CertGetSubjectAndIssuer(HINTERNET hFile, CLocalPtr<char>& subjectInfo, CLocalPtr<char>& issuerInfo)
 {
     DWORD certInfoLength;
     INTERNET_CERTIFICATE_INFOA certInfo;
@@ -358,7 +358,7 @@ inline VOID MessageBox_LoadString(HWND hMainWnd, INT StringID)
 // Download dialog (loaddlg.cpp)
 class CDownloadManager
 {
-    static ATL::CSimpleArray<DownloadInfo> AppsToInstallList;
+    static ATL::CSimpleArray<DownloadInfo> AppsDownloadList;
     static CDowloadingAppsListView DownloadsListView;
     static CDownloaderProgress ProgressBar;
     static BOOL bCancelled;
@@ -374,7 +374,7 @@ public:
 
 
 // CDownloadManager
-ATL::CSimpleArray<DownloadInfo>         CDownloadManager::AppsToInstallList;
+ATL::CSimpleArray<DownloadInfo>         CDownloadManager::AppsDownloadList;
 CDowloadingAppsListView                 CDownloadManager::DownloadsListView;
 CDownloaderProgress                     CDownloadManager::ProgressBar;
 BOOL                                    CDownloadManager::bCancelled = FALSE;
@@ -382,13 +382,13 @@ BOOL                                    CDownloadManager::bModal = FALSE;
 
 VOID CDownloadManager::Add(DownloadInfo info)
 {
-    AppsToInstallList.Add(info);
+    AppsDownloadList.Add(info);
 }
 
 VOID CDownloadManager::Download(const DownloadInfo &DLInfo, BOOL bIsModal)
 {
-    AppsToInstallList.RemoveAll();
-    AppsToInstallList.Add(DLInfo);
+    AppsDownloadList.RemoveAll();
+    AppsDownloadList.Add(DLInfo);
     LaunchDownloadDialog(bIsModal);
 }
 
@@ -431,7 +431,7 @@ INT_PTR CALLBACK CDownloadManager::DownloadDlgProc(HWND Dlg, UINT uMsg, WPARAM w
         {
             return FALSE;
         }
-        DownloadsListView.LoadList(AppsToInstallList);
+        DownloadsListView.LoadList(AppsDownloadList);
 
         // Get a dlg string for later use
         GetWindowTextW(Dlg, szCaption, _countof(szCaption));
@@ -444,7 +444,7 @@ INT_PTR CALLBACK CDownloadManager::DownloadDlgProc(HWND Dlg, UINT uMsg, WPARAM w
         ShowWindow(Dlg, SW_SHOW);
 
         // Start download process
-        DownloadParam *param = new DownloadParam(Dlg, AppsToInstallList, szCaption);
+        DownloadParam *param = new DownloadParam(Dlg, AppsDownloadList, szCaption);
         unsigned int ThreadId;
         HANDLE Thread = (HANDLE)_beginthreadex(NULL, 0, ThreadFunc, (void *) param, 0, &ThreadId);
 
@@ -454,7 +454,7 @@ INT_PTR CALLBACK CDownloadManager::DownloadDlgProc(HWND Dlg, UINT uMsg, WPARAM w
         }
 
         CloseHandle(Thread);
-        AppsToInstallList.RemoveAll();
+        AppsDownloadList.RemoveAll();
         return TRUE;
     }
 
@@ -493,8 +493,10 @@ VOID CDownloadManager::UpdateProgress(
 {
     HWND Item;
 
+    if (!IsWindow(hDlg)) return;
     ProgressBar.SetProgress(ulProgress, ulProgressMax);
 
+    if (!IsWindow(hDlg)) return;
     Item = GetDlgItem(hDlg, IDC_DOWNLOAD_STATUS);
     if (Item && szStatusText && wcslen(szStatusText) > 0 && UrlHasBeenCopied == FALSE)
     {
@@ -524,7 +526,7 @@ VOID ShowLastError(
     HWND hWndOwner,
     DWORD dwLastError)
 {
-    LPWSTR lpMsg;
+    CLocalPtr<WCHAR> lpMsg;
     
     if (!FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER |
                         FORMAT_MESSAGE_FROM_SYSTEM |
@@ -539,7 +541,6 @@ VOID ShowLastError(
     }
 
     MessageBoxW(hWndOwner, lpMsg, NULL, MB_OK | MB_ICONERROR);
-    LocalFree(lpMsg);
 }
 
 unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
@@ -562,7 +563,7 @@ unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
     HANDLE hOut = INVALID_HANDLE_VALUE;
 
     unsigned char lpBuffer[4096];
-    LPCWSTR lpszAgent = L"RApps/1.0";
+    LPCWSTR lpszAgent = L"RApps/1.1";
     URL_COMPONENTSW urlComponents;
     size_t urlLength, filenameLength;
 
@@ -581,6 +582,7 @@ unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
     for (iAppId = 0; iAppId < InfoArray.GetSize(); ++iAppId)
     {
         // Reset progress bar
+        if (!IsWindow(hDlg)) break;
         Item = GetDlgItem(hDlg, IDC_DOWNLOAD_PROGRESS);
         if (Item)
         {
@@ -617,7 +619,7 @@ unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
             break;
         }
         
-
+        if (!IsWindow(hDlg)) goto end;
         SetWindowTextW(hDlg, szNewCaption.GetString());
 
         // build the path for the download
@@ -627,7 +629,7 @@ unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
         // do we have a final slash separator?
         if (!p)
         {
-            MessageBox_LoadString(hMainWnd, IDS_UNABLE_PATH);            
+            MessageBox_LoadString(hMainWnd, IDS_UNABLE_PATH);
             goto end;
         }
 
@@ -650,8 +652,19 @@ unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
         }
 
         // append a \ to the provided file system path, and the filename portion from the URL after that
-        Path += L"\\";
-        Path += (LPWSTR) (p + 1);
+
+        PathAddBackslashW(Path.GetBuffer(MAX_PATH));
+        switch (InfoArray[iAppId].DLType)
+        {
+        case DLTYPE_DBUPDATE:
+        case DLTYPE_DBUPDATE_UNOFFICIAL:
+            PathAppendW(Path.GetBuffer(), APPLICATION_DATABASE_NAME);
+            break;
+        case DLTYPE_APPLICATION:
+            PathAppendW(Path.GetBuffer(), (LPWSTR)(p + 1)); // use the filename retrieved from URL
+            break;
+        }
+        Path.ReleaseBuffer();
 
         if ((InfoArray[iAppId].DLType == DLTYPE_APPLICATION) && InfoArray[iAppId].szSHA1[0] && GetFileAttributesW(Path.GetString()) != INVALID_FILE_ATTRIBUTES)
         {
@@ -661,6 +674,7 @@ unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
         }
 
         // Add the download URL
+        if (!IsWindow(hDlg)) goto end;
         SetDlgItemTextW(hDlg, IDC_DOWNLOAD_STATUS, InfoArray[iAppId].szUrl.GetString());
 
         DownloadsListView.SetDownloadStatus(iAppId, DLSTATUS_DOWNLOADING);
@@ -707,7 +721,8 @@ unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
 
         dwContentLen = 0;
 
-        if (urlComponents.nScheme == INTERNET_SCHEME_HTTP || urlComponents.nScheme == INTERNET_SCHEME_HTTPS)
+        if (urlComponents.nScheme == INTERNET_SCHEME_HTTP ||
+            urlComponents.nScheme == INTERNET_SCHEME_HTTPS)
         {
             hFile = InternetOpenUrlW(hOpen, InfoArray[iAppId].szUrl.GetString(), NULL, 0,
                                      dwUrlConnectFlags,
@@ -737,7 +752,7 @@ unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
         else if (urlComponents.nScheme == INTERNET_SCHEME_FTP)
         {
             // force passive mode on FTP
-            hFile = InternetOpenUrlW(hOpen, InfoArray[iAppId].szUrl.GetString(), NULL, 0,
+            hFile = InternetOpenUrlW(hOpen, InfoArray[iAppId].szUrl, NULL, 0,
                                      dwUrlConnectFlags | INTERNET_FLAG_PASSIVE,
                                      0);
             if (!hFile)
@@ -747,6 +762,31 @@ unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
             }
 
             dwContentLen = FtpGetFileSize(hFile, &dwStatus);
+        }
+        else if (urlComponents.nScheme == INTERNET_SCHEME_FILE)
+        {
+            // Add support for the file scheme so testing locally is simpler
+            WCHAR LocalFilePath[MAX_PATH];
+            DWORD cchPath = _countof(LocalFilePath);
+            // Ideally we would use PathCreateFromUrlAlloc here, but that is not exported (yet)
+            HRESULT hr = PathCreateFromUrlW(InfoArray[iAppId].szUrl, LocalFilePath, &cchPath, 0);
+            if (SUCCEEDED(hr))
+            {
+                if (CopyFileW(LocalFilePath, Path, FALSE))
+                {
+                    goto run;
+                }
+                else
+                {
+                    ShowLastError(hMainWnd, GetLastError());
+                    goto end;
+                }
+            }
+            else
+            {
+                ShowLastError(hMainWnd, hr);
+                goto end;
+            }
         }
 
         if (!dwContentLen)
@@ -770,8 +810,8 @@ unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
         if ((urlComponents.nScheme == INTERNET_SCHEME_HTTPS) &&
             (InfoArray[iAppId].DLType == DLTYPE_DBUPDATE))
         {
-            CLocalPtr subjectName, issuerName;
-            CStringW szMsgText;
+            CLocalPtr<char> subjectName, issuerName;
+            CStringA szMsgText;
             bool bAskQuestion = false;
             if (!CertGetSubjectAndIssuer(hFile, subjectName, issuerName))
             {
@@ -790,7 +830,7 @@ unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
 
             if (bAskQuestion)
             {
-                if (MessageBoxW(hMainWnd, szMsgText.GetString(), NULL, MB_YESNO | MB_ICONERROR) != IDYES)
+                if (MessageBoxA(hMainWnd, szMsgText.GetString(), NULL, MB_YESNO | MB_ICONERROR) != IDYES)
                 {
                     goto end;
                 }
@@ -822,6 +862,7 @@ unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
             }
 
             dwCurrentBytesRead += dwBytesRead;
+            if (!IsWindow(hDlg)) goto end;
             UpdateProgress(hDlg, dwCurrentBytesRead, dwContentLen, 0, InfoArray[iAppId].szUrl.GetString());
         } while (dwBytesRead && !bCancelled);
 
@@ -840,6 +881,7 @@ unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
             ProgressBar.SetMarquee(FALSE);
 
             dwContentLen = dwCurrentBytesRead;
+            if (!IsWindow(hDlg)) goto end;
             UpdateProgress(hDlg, dwCurrentBytesRead, dwContentLen, 0, InfoArray[iAppId].szUrl.GetString());
         }
 
@@ -856,6 +898,7 @@ unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
                 goto end;
             }
 
+            if (!IsWindow(hDlg)) goto end;
             SetWindowTextW(hDlg, szMsgText.GetString());
             SendMessageW(GetDlgItem(hDlg, IDC_DOWNLOAD_STATUS), WM_SETTEXT, 0, (LPARAM) Path.GetString());
 
@@ -868,6 +911,7 @@ unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
                     goto end;
                 }
 
+                if (!IsWindow(hDlg)) goto end;
                 MessageBoxW(hDlg, szMsgText.GetString(), NULL, MB_OK | MB_ICONERROR);
                 goto end;
             }
@@ -892,6 +936,7 @@ run:
                 //reflect installation progress in the titlebar
                 //TODO: make a separate string with a placeholder to include app name?
                 ATL::CStringW szMsgText = LoadStatusString(DLSTATUS_INSTALLING);
+                if (!IsWindow(hDlg)) goto end;
                 SetWindowTextW(hDlg, szMsgText.GetString());
 
                 DownloadsListView.SetDownloadStatus(iAppId, DLSTATUS_INSTALLING);
@@ -910,7 +955,8 @@ end:
         if (hOut != INVALID_HANDLE_VALUE)
             CloseHandle(hOut);
 
-        InternetCloseHandle(hFile);
+        if (hFile)
+            InternetCloseHandle(hFile);
         InternetCloseHandle(hOpen);
 
         if (bTempfile)
@@ -919,10 +965,12 @@ end:
                 DeleteFileW(Path.GetString());
         }
 
+        if (!IsWindow(hDlg)) return 0;
         DownloadsListView.SetDownloadStatus(iAppId, DLSTATUS_FINISHED);
     }
 
     delete static_cast<DownloadParam*>(param);
+    if (!IsWindow(hDlg)) return 0;
     SendMessageW(hDlg, WM_CLOSE, 0, 0);
     return 0;
 }

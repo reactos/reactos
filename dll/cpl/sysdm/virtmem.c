@@ -508,11 +508,11 @@ OnSelChange(HWND hwndDlg, PVIRTMEM pVirtMem)
     ULARGE_INTEGER FreeDiskSpace;
     UINT i, FreeMemMb, RecoMemMb, PageFileSizeMb;
     INT Index;
-    TCHAR szText[MAX_PATH];    
+    TCHAR szText[MAX_PATH], szMegabytes[8];
     WIN32_FIND_DATAW fdata = {0};
     HANDLE hFind;
     ULARGE_INTEGER pfSize;
-            
+
     Index = (INT)SendDlgItemMessage(hwndDlg,
                                     IDC_PAGEFILELIST,
                                     LB_GETCURSEL,
@@ -520,6 +520,11 @@ OnSelChange(HWND hwndDlg, PVIRTMEM pVirtMem)
                                     0);
     if (Index >= 0 && Index < pVirtMem->Count)
     {
+        LoadString(hApplet,
+                   IDS_PAGEFILE_MB,
+                   szMegabytes,
+                   ARRAYSIZE(szMegabytes));
+
         /* Set drive letter */
         SetDlgItemText(hwndDlg, IDC_DRIVE,
                        pVirtMem->Pagefile[Index].szDrive);
@@ -529,7 +534,7 @@ OnSelChange(HWND hwndDlg, PVIRTMEM pVirtMem)
                                NULL, NULL, &FreeDiskSpace))
         {
             pVirtMem->Pagefile[Index].FreeSize = (UINT)(FreeDiskSpace.QuadPart / (1024 * 1024));
-            _stprintf(szBuffer, _T("%u MB"), pVirtMem->Pagefile[Index].FreeSize);
+            _stprintf(szBuffer, szMegabytes, pVirtMem->Pagefile[Index].FreeSize);
             SetDlgItemText(hwndDlg, IDC_SPACEAVAIL, szBuffer);
         }
 
@@ -576,8 +581,9 @@ OnSelChange(HWND hwndDlg, PVIRTMEM pVirtMem)
                            BST_CHECKED);
         }
 
-        /* Set minimum pagefile size */
-        SetDlgItemText(hwndDlg, IDC_MINIMUM, _T("2 MB"));
+        /* Set minimum pagefile size (2 MB) */
+        _stprintf(szBuffer, szMegabytes, 2);
+        SetDlgItemText(hwndDlg, IDC_MINIMUM, szBuffer);
 
         /* Set recommended pagefile size */
         MemoryStatus.dwLength = sizeof(MEMORYSTATUSEX);
@@ -587,34 +593,34 @@ OnSelChange(HWND hwndDlg, PVIRTMEM pVirtMem)
             RecoMemMb = FreeMemMb + (FreeMemMb / 2); /* The recommended VM size is 150% of free memory. */
             if (RecoMemMb > 4096)
                 RecoMemMb = 4096;
-            _stprintf(szBuffer, _T("%u MB"), RecoMemMb);
+            _stprintf(szBuffer, szMegabytes, RecoMemMb);
             SetDlgItemText(hwndDlg, IDC_RECOMMENDED, szBuffer);
         }
 
         /* Set current pagefile size */
         PageFileSizeMb = 0;
-                
+
         for (i = 0; i < pVirtMem->Count; i++)
         {
             _stprintf(szText,
                       _T("%c:\\pagefile.sys"),
                       pVirtMem->Pagefile[i].szDrive[0]);
-        
+
             hFind = FindFirstFileW(szText, &fdata);
-            if (hFind == INVALID_HANDLE_VALUE) 
+            if (hFind == INVALID_HANDLE_VALUE)
             {
-                DPRINT1("Unable to read PageFile size : %ls due to error %d\n", szText,GetLastError());                
+                DPRINT1("Unable to read PageFile size : %ls due to error %d\n", szText,GetLastError());
             }
             else
             {
                 pfSize.LowPart = fdata.nFileSizeLow;
-                pfSize.HighPart = fdata.nFileSizeHigh;                
+                pfSize.HighPart = fdata.nFileSizeHigh;
                 PageFileSizeMb += pfSize.QuadPart / (1024*1024);
                 FindClose(hFind);
             }
         }
-        
-        _stprintf(szBuffer, _T("%u MB"), PageFileSizeMb);
+
+        _stprintf(szBuffer, szMegabytes, PageFileSizeMb);
         SetDlgItemText(hwndDlg, IDC_CURRENT, szBuffer);
     }
 

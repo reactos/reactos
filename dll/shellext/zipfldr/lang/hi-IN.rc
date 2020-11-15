@@ -7,28 +7,30 @@
 
 LANGUAGE LANG_HINDI, SUBLANG_HINDI_INDIA
 
-IDD_PROPPAGEDESTINATION DIALOGEX 0, 0, 235, 156
+IDD_PROPPAGEDESTINATION DIALOGEX 0, 0, 260, 156
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "एक गंतव्य चुनें"
 FONT 8, "MS Shell Dlg", 400, 0, 0x0
 BEGIN
-    LTEXT           "गंतव्य डाइरेक्टरी का चयन करें",IDC_STATIC,6,12,174,8
-    EDITTEXT        IDC_DIRECTORY,6,24,222,12,ES_AUTOHSCROLL
-    PUSHBUTTON      "ब्राउज...",IDC_BROWSE,174,42,54,14
-    PUSHBUTTON      "पासवर्ड",IDC_PASSWORD,174,66,54,14
-    LTEXT           "Click 'Next' to extract",IDC_STATUSTEXT,6,114,100,8
-    CONTROL         "",IDC_PROGRESS,"msctls_progress32",WS_BORDER,6,126,222,6
+    LTEXT           "गंतव्य डाइरेक्टरी का चयन करें",IDC_STATIC,86,12,154,8
+    EDITTEXT        IDC_DIRECTORY,86,24,157,12,ES_AUTOHSCROLL
+    PUSHBUTTON      "ब्राउज...",IDC_BROWSE,189,42,54,14
+    PUSHBUTTON      "पासवर्ड",IDC_PASSWORD,189,66,54,14
+    LTEXT           "Click 'Next' to extract",IDC_STATUSTEXT,86,114,100,8
+    CONTROL         "",IDC_PROGRESS,"msctls_progress32",WS_BORDER,86,126,157,6
+    CONTROL         IDB_ZIPFLDR,-1,"STATIC",SS_BITMAP | WS_CHILD | WS_VISIBLE,0,0,78,138
 END
 
-IDD_PROPPAGECOMPLETE DIALOGEX 0, 0, 235, 156
+IDD_PROPPAGECOMPLETE DIALOGEX 0, 0, 260, 156
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Extraction Complete"
 FONT 8, "MS Shell Dlg", 400, 0, 0x0
 BEGIN
-    LTEXT           "फाइलें निम्न निर्देशिका में निकाली गई हैं:",IDC_STATIC,6,12,222,18
-    LTEXT           "लक्ष्य दिर",IDC_DESTDIR,6,36,222,8
-    CONTROL         "निकाले गए फ़ाइल दिखाएं",IDC_SHOW_EXTRACTED,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,6,66,81,10
-    LTEXT           "जारी रखने के लिए समाप्त दबाएं।",IDC_STATIC,6,84,174,8
+    LTEXT           "फाइलें निम्न निर्देशिका में निकाली गई हैं:",IDC_STATIC,86,12,157,23
+    LTEXT           "%s",IDC_DESTDIR,86,36,157,8
+    CONTROL         "निकाले गए फ़ाइल दिखाएं",IDC_SHOW_EXTRACTED,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,86,66,81,10
+    LTEXT           "जारी रखने के लिए समाप्त दबाएं।",IDC_STATIC,86,84,169,8
+    CONTROL         IDB_ZIPFLDR,-1,"STATIC",SS_BITMAP | WS_CHILD | WS_VISIBLE,0,0,78,138
 END
 
 IDD_CONFIRM_FILE_REPLACE DIALOGEX 0, 0, 273, 56

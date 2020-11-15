@@ -143,7 +143,6 @@ BEGIN
             MENUITEM "N&iski", ID_PROCESS_PAGE_SETPRIORITY_LOW
         END
         MENUITEM "Ustaw &koligację...", ID_PROCESS_PAGE_SETAFFINITY
-        MENUITEM "Edytuj &kanały debugowania...", ID_PROCESS_PAGE_DEBUGCHANNELS
     END
 END
 

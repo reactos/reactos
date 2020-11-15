@@ -828,19 +828,19 @@ Retry:
             lastSector + 1));
 
         //
-        // Calculate media capacity in bytes.
-        //
-
-        deviceExtension->PartitionLength.QuadPart = (LONGLONG)(lastSector + 1);
-
-        //
         // Calculate number of cylinders.
         //
 
         deviceExtension->DiskGeometry->Geometry.Cylinders.QuadPart = (LONGLONG)((lastSector + 1)/(DEFAULT_SECTORS_PER_TRACK * DEFAULT_TRACKS_PER_CYLINDER));
 
+        //
+        // Calculate media capacity in bytes.
+        //
+
+        deviceExtension->PartitionLength.QuadPart = (LONGLONG)(lastSector + 1);
         deviceExtension->PartitionLength.QuadPart =
             (deviceExtension->PartitionLength.QuadPart << deviceExtension->SectorShift);
+        deviceExtension->DiskGeometry->DiskSize.QuadPart = deviceExtension->PartitionLength.QuadPart;
 
         if (DeviceObject->Characteristics & FILE_REMOVABLE_MEDIA) {
 
@@ -903,6 +903,7 @@ Retry:
         deviceExtension->DiskGeometry->Geometry.BytesPerSector = 512;
         deviceExtension->SectorShift = 9;
         deviceExtension->PartitionLength.QuadPart = (LONGLONG) 0;
+        deviceExtension->DiskGeometry->DiskSize.QuadPart = (LONGLONG) 0;
 
         if (DeviceObject->Characteristics & FILE_REMOVABLE_MEDIA) {
 

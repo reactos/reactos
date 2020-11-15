@@ -231,28 +231,28 @@ CAPTION "Memori Virtual"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT "Drive  [Label Volume]", IDC_STATIC, 12, 5, 96, 9
-    LTEXT "Ukuran halaman berkas(MB)", IDC_STATIC, 115, 5, 96, 9
+    LTEXT "Ukuran halaman berkas (MB)", IDC_STATIC, 115, 5, 96, 9
     LISTBOX IDC_PAGEFILELIST, 10, 16, 204, 52, LBS_NOTIFY | LBS_USETABSTOPS
     GROUPBOX "Ukuran halaman berkas untuk drive yang dipilih", IDC_DRIVEGROUP, 10, 70, 204, 104
     LTEXT "Drive:", IDC_STATIC, 20, 80, 20, 8
-    LTEXT "", IDC_DRIVE, 88, 81, 100, 9
+    LTEXT "%s", IDC_DRIVE, 88, 80, 100, 9
     LTEXT "Ruang tersedia:", IDC_STATIC, 20, 92, 56, 9
-    LTEXT "", IDC_SPACEAVAIL, 88, 92, 104, 9
-    LTEXT "Ukuran &awal (MB):", -1, 22, 118, 54, 9
-    LTEXT "Ukuran &Maksimum (MB):", -1, 22, 131, 64, 9
-    AUTORADIOBUTTON "Ukuran &Kustom", IDC_CUSTOM, 20, 105, 54, 9, WS_GROUP
+    LTEXT "%s", IDC_SPACEAVAIL, 88, 92, 104, 9
+    LTEXT "Ukuran &awal (MB):", -1, 22, 118, 62, 9
+    LTEXT "Ukuran &Maksimum (MB):", -1, 22, 131, 78, 9
+    AUTORADIOBUTTON "Ukuran &Kustom", IDC_CUSTOM, 20, 105, 60, 9, WS_GROUP
     AUTORADIOBUTTON "Ukuran &Diatur sistem", IDC_SYSMANSIZE, 20, 145, 88, 9
-    AUTORADIOBUTTON "&Tanpa halaman berkas", IDC_NOPAGEFILE, 20, 158, 78,9
+    AUTORADIOBUTTON "&Tanpa halaman berkas", IDC_NOPAGEFILE, 20, 158, 86, 9
     EDITTEXT IDC_INITIALSIZE, 100, 114, 44, 13, NOT WS_BORDER, WS_EX_CLIENTEDGE
     EDITTEXT IDC_MAXSIZE, 100, 129, 44, 13, NOT WS_BORDER, WS_EX_CLIENTEDGE
     PUSHBUTTON "Setel", IDC_SET, 158, 154, 50, 15
     GROUPBOX "Total ukuran halaman berkas untuk semua drive", IDC_TOTALGROUP, 10, 177, 204, 46
-    LTEXT "Minimum dibolehkan:", IDC_STATIC, 18, 188, 58, 9
-    LTEXT "", IDC_MINIMUM, 88, 188, 100, 9
-    LTEXT "Direkomendasikan:", IDC_STATIC, 18, 199, 52, 9
-    LTEXT "", IDC_RECOMMENDED, 88, 197, 100, 9
+    LTEXT "Minimum dibolehkan:", IDC_STATIC, 18, 188, 68, 9
+    LTEXT "%s", IDC_MINIMUM, 88, 188, 100, 9
+    LTEXT "Direkomendasikan:", IDC_STATIC, 18, 199, 62, 9
+    LTEXT "%s", IDC_RECOMMENDED, 88, 199, 100, 9
     LTEXT "Dialokasikan saat ini:", IDC_STATIC, 18, 210, 66, 9
-    LTEXT "", IDC_CURRENT, 88, 208, 100, 9
+    LTEXT "%s", IDC_CURRENT, 88, 210, 100, 9
     DEFPUSHBUTTON "OK", IDOK, 114, 230, 48, 15
     PUSHBUTTON "Batal", IDCANCEL, 168, 230, 48, 15
 END
@@ -335,6 +335,7 @@ BEGIN
     IDS_WARNMAXIMUMSIZE "Masukkan nilai numerik untuk ukuran maksimum halaman berkas."
     IDS_WARNINITIALRANGE "Ukuran awal halaman berkas tidak boleh lebih kecil dari 2 MB dan tidak boleh melebihi ruang yang tersedia pada drive yang dipilih."
     IDS_WARNMAXIMUMRANGE "Ukuran maksimum halaman berkas tidak boleh lebih kecil dari ukuran awal, maupun lebih besar dari 4095 MB dan tidak boleh melebihi ruang yang tersedia pada drive yang dipilih."
+    IDS_PAGEFILE_MB "%u MB"
     IDS_PAGEFILE_NONE "Tidak ada"
     IDS_PAGEFILE_SYSTEM "Diatur Sistem"
     IDS_INFOREBOOT "Anda harus memulai ulang komputer untuk menerapkan perubahan."

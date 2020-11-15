@@ -1,5 +1,7 @@
 #pragma once
 
+#define TEMP_FILE "shell-notify-temporary.txt"
+
 typedef enum TYPE
 {
     TYPE_RENAMEITEM,
@@ -9,8 +11,7 @@ typedef enum TYPE
     TYPE_RMDIR,
     TYPE_UPDATEDIR,
     TYPE_UPDATEITEM,
-    TYPE_RENAMEFOLDER,
-    TYPE_FREESPACE
+    TYPE_RENAMEFOLDER
 } TYPE;
 
 #define WM_SHELL_NOTIFY (WM_USER + 100)

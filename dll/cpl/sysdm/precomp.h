@@ -17,6 +17,7 @@
 #include <tchar.h>
 #include <shellapi.h>
 #include <shlobj.h>
+#include <shlwapi.h>
 #include <setupapi.h>
 #include <cpl.h>
 

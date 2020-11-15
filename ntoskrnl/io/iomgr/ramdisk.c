@@ -14,15 +14,13 @@
 #define NDEBUG
 #include <debug.h>
 
-/* DATA ***********************************************************************/
+/* GLOBALS *******************************************************************/
 
-#if defined (ALLOC_PRAGMA)
-#pragma alloc_text(INIT, IopStartRamdisk)
-#endif
+extern KEVENT PiEnumerationFinished;
 
 /* FUNCTIONS ******************************************************************/
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 NTSTATUS
 NTAPI
 IopStartRamdisk(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
@@ -267,6 +265,12 @@ IopStartRamdisk(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         RtlAnsiStringToUnicodeString(&NtSystemRoot, &AnsiPath, FALSE);
         IoCreateSymbolicLink(&DriveLetter, &DeviceString);
     }
+
+    //
+    // Wait for ramdisk relations being initialized
+    //
+
+    KeWaitForSingleObject(&PiEnumerationFinished, Executive, KernelMode, FALSE, NULL);
 
     //
     // We made it

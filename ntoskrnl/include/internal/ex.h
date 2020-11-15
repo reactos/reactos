@@ -171,14 +171,22 @@ typedef struct _UUID_CACHED_VALUES_STRUCT
 {
     ULONGLONG Time;
     LONG AllocatedCount;
-    UCHAR ClockSeqHiAndReserved;
-    UCHAR ClockSeqLow;
-    UCHAR NodeId [ 6 ] ;
+    union
+    {
+        struct
+        {
+            UCHAR ClockSeqHiAndReserved;
+            UCHAR ClockSeqLow;
+            UCHAR NodeId[6 /*SEED_BUFFER_SIZE*/];
+        };
+        UCHAR GuidInit[8]; /* Match GUID.Data4 */
+    };
 } UUID_CACHED_VALUES_STRUCT, *PUUID_CACHED_VALUES_STRUCT;
+
+C_ASSERT(RTL_FIELD_SIZE(UUID_CACHED_VALUES_STRUCT, GuidInit) == RTL_FIELD_SIZE(UUID, Data4));
 
 /* INITIALIZATION FUNCTIONS *************************************************/
 
-INIT_FUNCTION
 BOOLEAN
 NTAPI
 ExpWin32kInit(VOID);
@@ -193,7 +201,6 @@ Phase1Initialization(
     IN PVOID Context
 );
 
-INIT_FUNCTION
 VOID
 NTAPI
 ExpInitializePushLocks(VOID);
@@ -204,7 +211,6 @@ ExRefreshTimeZoneInformation(
     IN PLARGE_INTEGER SystemBootTime
 );
 
-INIT_FUNCTION
 VOID
 NTAPI
 ExpInitializeWorkerThreads(VOID);
@@ -213,12 +219,10 @@ VOID
 NTAPI
 ExSwapinWorkerThreads(IN BOOLEAN AllowSwap);
 
-INIT_FUNCTION
 VOID
 NTAPI
 ExpInitLookasideLists(VOID);
 
-INIT_FUNCTION
 VOID
 NTAPI
 ExInitializeSystemLookasideList(
@@ -230,22 +234,18 @@ ExInitializeSystemLookasideList(
     IN PLIST_ENTRY ListHead
 );
 
-INIT_FUNCTION
 BOOLEAN
 NTAPI
 ExpInitializeCallbacks(VOID);
 
-INIT_FUNCTION
 BOOLEAN
 NTAPI
 ExpUuidInitialization(VOID);
 
-INIT_FUNCTION
 BOOLEAN
 NTAPI
 ExLuidInitialization(VOID);
 
-INIT_FUNCTION
 VOID
 NTAPI
 ExpInitializeExecutive(
@@ -257,47 +257,38 @@ VOID
 NTAPI
 ExShutdownSystem(VOID);
 
-INIT_FUNCTION
 BOOLEAN
 NTAPI
 ExpInitializeEventImplementation(VOID);
 
-INIT_FUNCTION
 BOOLEAN
 NTAPI
 ExpInitializeKeyedEventImplementation(VOID);
 
-INIT_FUNCTION
 BOOLEAN
 NTAPI
 ExpInitializeEventPairImplementation(VOID);
 
-INIT_FUNCTION
 BOOLEAN
 NTAPI
 ExpInitializeSemaphoreImplementation(VOID);
 
-INIT_FUNCTION
 BOOLEAN
 NTAPI
 ExpInitializeMutantImplementation(VOID);
 
-INIT_FUNCTION
 BOOLEAN
 NTAPI
 ExpInitializeTimerImplementation(VOID);
 
-INIT_FUNCTION
 BOOLEAN
 NTAPI
 ExpInitializeProfileImplementation(VOID);
 
-INIT_FUNCTION
 VOID
 NTAPI
 ExpResourceInitialization(VOID);
 
-INIT_FUNCTION
 VOID
 NTAPI
 ExInitPoolLookasidePointers(VOID);
@@ -437,7 +428,6 @@ typedef BOOLEAN
     ULONG_PTR Context
 );
 
-INIT_FUNCTION
 VOID
 NTAPI
 ExpInitializeHandleTables(
@@ -1493,14 +1483,12 @@ ExTimerRundown(
     VOID
 );
 
-INIT_FUNCTION
 VOID
 NTAPI
 HeadlessInit(
     IN PLOADER_PARAMETER_BLOCK LoaderBlock
 );
 
-INIT_FUNCTION
 VOID
 NTAPI
 XIPInit(

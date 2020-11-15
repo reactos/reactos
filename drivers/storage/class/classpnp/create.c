@@ -1,6 +1,6 @@
 /*++
 
-Copyright (C) Microsoft Corporation, 1991 - 1999
+Copyright (C) Microsoft Corporation, 1991 - 2010
 
 Module Name:
 
@@ -21,41 +21,39 @@ Revision History:
 
 --*/
 
+#define CLASS_INIT_GUID 0
 #include "classp.h"
+#include "debug.h"
+
+#ifdef DEBUG_USE_WPP
+#include "create.tmh"
+#endif
 
 ULONG BreakOnClose = 0;
 
-PCSTR LockTypeStrings[] = {
+const PCSZ LockTypeStrings[] = {
     "Simple",
     "Secure",
     "Internal"
 };
 
 
-PFILE_OBJECT_EXTENSION
-NTAPI
-ClasspGetFsContext(
-    IN PCOMMON_DEVICE_EXTENSION CommonExtension,
-    IN PFILE_OBJECT FileObject
-    );
-
 VOID
-NTAPI
 ClasspCleanupDisableMcn(
     IN PFILE_OBJECT_EXTENSION FsContext
     );
-
+
 #ifdef ALLOC_PRAGMA
 #pragma alloc_text(PAGE, ClassCreateClose)
 #pragma alloc_text(PAGE, ClasspCreateClose)
 #pragma alloc_text(PAGE, ClasspCleanupProtectedLocks)
 #pragma alloc_text(PAGE, ClasspEjectionControl)
 #pragma alloc_text(PAGE, ClasspCleanupDisableMcn)
-#pragma alloc_text(PAGE, ClasspGetFsContext)
+#pragma alloc_text(PAGE, ClassGetFsContext)
 #endif
 
 NTSTATUS
-NTAPI
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 ClassCreateClose(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp
@@ -120,8 +118,8 @@ Return Value:
     return status;
 }
 
+
 NTSTATUS
-NTAPI
 ClasspCreateClose(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp
@@ -170,17 +168,17 @@ Return Value:
 
         PIO_SECURITY_CONTEXT securityContext =
             irpStack->Parameters.Create.SecurityContext;
-        DebugPrint((2,
+        TracePrint((TRACE_LEVEL_INFORMATION, TRACE_FLAG_INIT,
                     "ClasspCREATEClose: create received for device %p\n",
                     DeviceObject));
-        DebugPrint((2,
+        TracePrint((TRACE_LEVEL_INFORMATION, TRACE_FLAG_INIT,
                     "ClasspCREATEClose: desired access %lx\n",
                     securityContext->DesiredAccess));
-        DebugPrint((2,
-                    "ClasspCREATEClose: file object %lx\n",
+        TracePrint((TRACE_LEVEL_INFORMATION, TRACE_FLAG_INIT,
+                    "ClasspCREATEClose: file object %p\n",
                     irpStack->FileObject));
 
-        ASSERT(BreakOnClose == FALSE);
+        NT_ASSERT(BreakOnClose == FALSE);
 
         if(irpStack->FileObject != NULL) {
 
@@ -192,7 +190,7 @@ Return Value:
 
             status = AllocateDictionaryEntry(
                         &commonExtension->FileObjectDictionary,
-                        (ULONG_PTR)irpStack->FileObject,
+                        (ULONGLONG) irpStack->FileObject,
                         sizeof(FILE_OBJECT_EXTENSION),
                         CLASS_TAG_FILE_OBJECT_EXTENSION,
                         (PVOID *)&fsContext);
@@ -211,28 +209,28 @@ Return Value:
 
     } else {
 
-        DebugPrint((2,
+        TracePrint((TRACE_LEVEL_INFORMATION, TRACE_FLAG_INIT,
                     "ClasspCreateCLOSE: close received for device %p\n",
                     DeviceObject));
-        DebugPrint((2,
+        TracePrint((TRACE_LEVEL_INFORMATION, TRACE_FLAG_INIT,
                     "ClasspCreateCLOSE: file object %p\n",
                     fileObject));
 
         if(irpStack->FileObject != NULL) {
 
             PFILE_OBJECT_EXTENSION fsContext =
-                ClasspGetFsContext(commonExtension, irpStack->FileObject);
+                ClassGetFsContext(commonExtension, irpStack->FileObject);
 
-            DebugPrint((2,
+            TracePrint((TRACE_LEVEL_INFORMATION, TRACE_FLAG_INIT,
                         "ClasspCreateCLOSE: file extension %p\n",
                         fsContext));
 
             if(fsContext != NULL) {
 
-                DebugPrint((2,
+                TracePrint((TRACE_LEVEL_INFORMATION, TRACE_FLAG_INIT,
                             "ClasspCreateCLOSE: extension is ours - "
                             "freeing\n"));
-                ASSERT(BreakOnClose == FALSE);
+                NT_ASSERT(BreakOnClose == FALSE);
 
                 ClasspCleanupProtectedLocks(fsContext);
 
@@ -249,7 +247,7 @@ Return Value:
     // a chance to cleanup too.
     //
 
-    DebugPrint((2,
+    TracePrint((TRACE_LEVEL_INFORMATION, TRACE_FLAG_INIT,
                 "ClasspCreateClose: %s for devobj %p\n",
                 (NT_SUCCESS(status) ? "Success" : "FAILED"),
                 DeviceObject));
@@ -272,16 +270,16 @@ Return Value:
         status = IoCallDriver(commonExtension->LowerDeviceObject, Irp);
 
         if(status == STATUS_PENDING) {
-            KeWaitForSingleObject(&event,
-                                  Executive,
-                                  KernelMode,
-                                  FALSE,
-                                  NULL);
+            (VOID)KeWaitForSingleObject(&event,
+                                        Executive,
+                                        KernelMode,
+                                        FALSE,
+                                        NULL);
             status = Irp->IoStatus.Status;
         }
 
         if (!NT_SUCCESS(status)) {
-            DebugPrint((ClassDebugError,
+            TracePrint((TRACE_LEVEL_ERROR, TRACE_FLAG_INIT,
                         "ClasspCreateClose: Lower driver failed, but we "
                         "succeeded.  This is a problem, lock counts will be "
                         "out of sync between levels.\n"));
@@ -293,8 +291,8 @@ Return Value:
     return status;
 }
 
+
 VOID
-NTAPI
 ClasspCleanupProtectedLocks(
     IN PFILE_OBJECT_EXTENSION FsContext
     )
@@ -309,24 +307,24 @@ ClasspCleanupProtectedLocks(
 
     PAGED_CODE();
 
-    DebugPrint((2,
+    TracePrint((TRACE_LEVEL_INFORMATION, TRACE_FLAG_INIT,
                 "ClasspCleanupProtectedLocks called for %p\n",
                 FsContext->DeviceObject));
-    DebugPrint((2,
+    TracePrint((TRACE_LEVEL_INFORMATION, TRACE_FLAG_INIT,
                 "ClasspCleanupProtectedLocks - FsContext %p is locked "
                 "%d times\n", FsContext, FsContext->LockCount));
 
-    ASSERT(BreakOnClose == FALSE);
+    NT_ASSERT(BreakOnClose == FALSE);
 
     //
     // Synchronize with ejection and ejection control requests.
     //
 
     KeEnterCriticalRegion();
-    KeWaitForSingleObject(&(fdoExtension->EjectSynchronizationEvent),
-                          UserRequest,
-                          UserMode,
-                          FALSE,
+    (VOID)KeWaitForSingleObject(&(fdoExtension->EjectSynchronizationEvent),
+                                UserRequest,
+                                KernelMode,
+                                FALSE,
                           NULL);
 
     //
@@ -334,42 +332,74 @@ ClasspCleanupProtectedLocks(
     // for the FDO.  Keep track of the new value.
     //
 
-    if(FsContext->LockCount != 0) {
+    if (FsContext->LockCount != 0) {
 
         do {
 
-            InterlockedDecrement((PLONG)&FsContext->LockCount);
+            InterlockedDecrement((volatile LONG *)&FsContext->LockCount);
 
             newDeviceLockCount =
                 InterlockedDecrement(&fdoExtension->ProtectedLockCount);
 
-        } while(FsContext->LockCount != 0);
+        } while (FsContext->LockCount > 0);
 
         //
         // If the new lock count has been dropped to zero then issue a lock
         // command to the device.
         //
 
-        DebugPrint((2,
+        TracePrint((TRACE_LEVEL_INFORMATION, TRACE_FLAG_INIT,
                     "ClasspCleanupProtectedLocks: FDO secured lock count = %d "
                     "lock count = %d\n",
                     fdoExtension->ProtectedLockCount,
                     fdoExtension->LockCount));
 
-        if((newDeviceLockCount == 0) && (fdoExtension->LockCount == 0)) {
+        if ((newDeviceLockCount == 0) && (fdoExtension->LockCount == 0)) {
 
-            SCSI_REQUEST_BLOCK srb;
-            PCDB cdb;
+            SCSI_REQUEST_BLOCK srb = {0};
+            UCHAR srbExBuffer[CLASS_SRBEX_SCSI_CDB16_BUFFER_SIZE] = {0};
+            PSTORAGE_REQUEST_BLOCK srbEx = (PSTORAGE_REQUEST_BLOCK)srbExBuffer;
+            PCDB cdb = NULL;
             NTSTATUS status;
+            PSCSI_REQUEST_BLOCK srbPtr;
 
-            DebugPrint((2,
+            TracePrint((TRACE_LEVEL_INFORMATION, TRACE_FLAG_INIT,
                         "ClasspCleanupProtectedLocks: FDO lock count dropped "
                         "to zero\n"));
 
-            RtlZeroMemory(&srb, sizeof(SCSI_REQUEST_BLOCK));
-            cdb = (PCDB) &(srb.Cdb);
+            if (fdoExtension->AdapterDescriptor->SrbType == SRB_TYPE_STORAGE_REQUEST_BLOCK) {
+#ifdef _MSC_VER
+                #pragma prefast(suppress:26015, "InitializeStorageRequestBlock ensures buffer access is bounded")
+#endif
+                status = InitializeStorageRequestBlock(srbEx,
+                                                       STORAGE_ADDRESS_TYPE_BTL8,
+                                                       sizeof(srbExBuffer),
+                                                       1,
+                                                       SrbExDataTypeScsiCdb16);
+                if (NT_SUCCESS(status)) {
+                    srbEx->TimeOutValue = fdoExtension->TimeOutValue;
+                    SrbSetCdbLength(srbEx, 6);
+                    cdb = SrbGetCdb(srbEx);
+                    srbPtr = (PSCSI_REQUEST_BLOCK)srbEx;
+                } else {
+                    //
+                    // Should not happen. Revert to legacy SRB.
+                    //
+                    NT_ASSERT(FALSE);
+                    srb.TimeOutValue = fdoExtension->TimeOutValue;
+                    srb.CdbLength = 6;
+                    cdb = (PCDB) &(srb.Cdb);
+                    srbPtr = &srb;
+                }
 
-            srb.CdbLength = 6;
+            } else {
+
+                srb.TimeOutValue = fdoExtension->TimeOutValue;
+                srb.CdbLength = 6;
+                cdb = (PCDB) &(srb.Cdb);
+                srbPtr = &srb;
+
+            }
 
             cdb->MEDIA_REMOVAL.OperationCode = SCSIOP_MEDIUM_REMOVAL;
 
@@ -380,18 +410,13 @@ ClasspCleanupProtectedLocks(
 
             cdb->MEDIA_REMOVAL.Prevent = FALSE;
 
-            //
-            // Set timeout value.
-            //
-
-            srb.TimeOutValue = fdoExtension->TimeOutValue;
             status = ClassSendSrbSynchronous(fdoExtension->DeviceObject,
-                                             &srb,
+                                             srbPtr,
                                              NULL,
                                              0,
                                              FALSE);
 
-            DebugPrint((2,
+            TracePrint((TRACE_LEVEL_INFORMATION, TRACE_FLAG_INIT,
                         "ClasspCleanupProtectedLocks: unlock request to drive "
                         "returned status %lx\n", status));
         }
@@ -404,8 +429,8 @@ ClasspCleanupProtectedLocks(
     return;
 }
 
+
 VOID
-NTAPI
 ClasspCleanupDisableMcn(
     IN PFILE_OBJECT_EXTENSION FsContext
     )
@@ -418,10 +443,10 @@ ClasspCleanupDisableMcn(
 
     PAGED_CODE();
 
-    DebugPrint((ClassDebugTrace,
+    TracePrint((TRACE_LEVEL_INFORMATION, TRACE_FLAG_MCN,
                 "ClasspCleanupDisableMcn called for %p\n",
                 FsContext->DeviceObject));
-    DebugPrint((ClassDebugTrace,
+    TracePrint((TRACE_LEVEL_INFORMATION, TRACE_FLAG_MCN,
                 "ClasspCleanupDisableMcn - FsContext %p is disabled "
                 "%d times\n", FsContext, FsContext->McnDisableCount));
 
@@ -438,14 +463,14 @@ ClasspCleanupDisableMcn(
     return;
 }
 
+
 #if 1
 /*
- *  BUGBUG REMOVE this old function implementation as soon as the
+ *  ISSUE: REMOVE this old function implementation as soon as the
  *                  boottime pagefile problems with the new one (below)
  *                  are resolved.
  */
 NTSTATUS
-NTAPI
 ClasspEjectionControl(
     IN PDEVICE_OBJECT Fdo,
     IN PIRP Irp,
@@ -459,51 +484,39 @@ ClasspEjectionControl(
 
     PFILE_OBJECT_EXTENSION fsContext = NULL;
     NTSTATUS status;
-    volatile PSCSI_REQUEST_BLOCK srb = NULL;
+    PSCSI_REQUEST_BLOCK srb = NULL;
     BOOLEAN countChanged = FALSE;
 
     PAGED_CODE();
 
-    //
-    // Interlock with ejection and secure lock cleanup code.  This is a
-    // user request so we can allow the stack to get swapped out while we
-    // wait for synchronization.
-    //
+    /*
+     *  Ensure that the user thread is not suspended while we are holding EjectSynchronizationEvent.
+     */
+    KeEnterCriticalRegion();
 
     status = KeWaitForSingleObject(
                 &(FdoExtension->EjectSynchronizationEvent),
                 UserRequest,
-                UserMode,
+                KernelMode,
                 FALSE,
                 NULL);
 
-    ASSERT(status == STATUS_SUCCESS);
+    NT_ASSERT(status == STATUS_SUCCESS);
 
-    DebugPrint((2,
+    TracePrint((TRACE_LEVEL_INFORMATION, TRACE_FLAG_IOCTL,
                 "ClasspEjectionControl: "
                 "Received request for %s lock type\n",
                 LockTypeStrings[LockType]
                 ));
 
     _SEH2_TRY {
-        PCDB cdb;
-
-        srb = ClasspAllocateSrb(FdoExtension);
-
-        if(srb == NULL) {
-            status = STATUS_INSUFFICIENT_RESOURCES;
-            _SEH2_LEAVE;
-        }
-
-        RtlZeroMemory(srb, sizeof(SCSI_REQUEST_BLOCK));
-
-        cdb = (PCDB) srb->Cdb;
+        PCDB cdb = NULL;
 
         //
         // Determine if this is a "secured" request.
         //
 
-        if(LockType == SecureMediaLock) {
+        if (LockType == SecureMediaLock) {
 
             PIO_STACK_LOCATION irpStack = IoGetCurrentIrpStackLocation(Irp);
             PFILE_OBJECT fileObject = irpStack->FileObject;
@@ -513,8 +526,8 @@ ClasspEjectionControl(
             // proper FsContext before we try doing a secured lock.
             //
 
-            if(fileObject != NULL) {
-                fsContext = ClasspGetFsContext(commonExtension, fileObject);
+            if (fileObject != NULL) {
+                fsContext = ClassGetFsContext(commonExtension, fileObject);
             }
 
             if (fsContext == NULL) {
@@ -529,7 +542,7 @@ ClasspEjectionControl(
             }
         }
 
-        if(Lock) {
+        if (Lock) {
 
             //
             // This is a lock command.  Reissue the command in case bus or
@@ -538,7 +551,7 @@ ClasspEjectionControl(
             //       failed....
             //
 
-            switch(LockType) {
+            switch (LockType) {
 
                 case SimpleMediaLock: {
                     FdoExtension->LockCount++;
@@ -569,7 +582,7 @@ ClasspEjectionControl(
             //       operation fails....
             //
 
-            switch(LockType) {
+            switch (LockType) {
 
                 case SimpleMediaLock: {
                     if(FdoExtension->LockCount != 0) {
@@ -591,7 +604,7 @@ ClasspEjectionControl(
                 }
 
                 case InternalMediaLock: {
-                    ASSERT(FdoExtension->InternalLockCount != 0);
+                    NT_ASSERT(FdoExtension->InternalLockCount != 0);
                     FdoExtension->InternalLockCount--;
                     countChanged = TRUE;
                     break;
@@ -603,9 +616,9 @@ ClasspEjectionControl(
             // secured and unsecured lock counts have dropped to zero.
             //
 
-            if((FdoExtension->ProtectedLockCount != 0) ||
-               (FdoExtension->InternalLockCount != 0) ||
-               (FdoExtension->LockCount != 0)) {
+            if ((FdoExtension->ProtectedLockCount != 0) ||
+                (FdoExtension->InternalLockCount != 0) ||
+                (FdoExtension->LockCount != 0)) {
 
                 status = STATUS_SUCCESS;
                 _SEH2_LEAVE;
@@ -615,7 +628,37 @@ ClasspEjectionControl(
         status = STATUS_SUCCESS;
         if (TEST_FLAG(Fdo->Characteristics, FILE_REMOVABLE_MEDIA)) {
 
-            srb->CdbLength = 6;
+            srb = (PSCSI_REQUEST_BLOCK)ClasspAllocateSrb(FdoExtension);
+
+            if (srb == NULL) {
+                status = STATUS_INSUFFICIENT_RESOURCES;
+                _SEH2_LEAVE;
+            }
+
+            if (FdoExtension->AdapterDescriptor->SrbType == SRB_TYPE_STORAGE_REQUEST_BLOCK) {
+
+                //
+                // NOTE - this is based on size used in ClasspAllocateSrb
+                //
+
+                status = InitializeStorageRequestBlock((PSTORAGE_REQUEST_BLOCK)srb,
+                                                       STORAGE_ADDRESS_TYPE_BTL8,
+                                                       CLASS_SRBEX_SCSI_CDB16_BUFFER_SIZE,
+                                                       1,
+                                                       SrbExDataTypeScsiCdb16);
+                if (!NT_SUCCESS(status)) {
+                    NT_ASSERT(FALSE);
+                    _SEH2_LEAVE;
+                }
+
+            } else {
+                RtlZeroMemory(srb, sizeof(SCSI_REQUEST_BLOCK));
+            }
+
+            SrbSetCdbLength(srb, 6);
+            cdb = SrbGetCdb(srb);
+            NT_ASSERT(cdb != NULL);
+
             cdb->MEDIA_REMOVAL.OperationCode = SCSIOP_MEDIUM_REMOVAL;
 
             //
@@ -629,7 +672,7 @@ ClasspEjectionControl(
             // Set timeout value.
             //
 
-            srb->TimeOutValue = FdoExtension->TimeOutValue;
+            SrbSetTimeOutValue(srb, FdoExtension->TimeOutValue);
 
             //
             // The actual lock operation on the device isn't so important
@@ -646,7 +689,7 @@ ClasspEjectionControl(
     } _SEH2_FINALLY {
 
         if (!NT_SUCCESS(status)) {
-            DebugPrint((2,
+            TracePrint((TRACE_LEVEL_INFORMATION, TRACE_FLAG_IOCTL,
                         "ClasspEjectionControl: FAILED status %x -- "
                         "reverting lock counts\n", status));
 
@@ -657,9 +700,9 @@ ClasspEjectionControl(
                 // lock/unlock operation actually failed.
                 //
 
-                if(Lock) {
+                if (Lock) {
 
-                    switch(LockType) {
+                    switch (LockType) {
 
                         case SimpleMediaLock: {
                             FdoExtension->LockCount--;
@@ -680,7 +723,7 @@ ClasspEjectionControl(
 
                 } else {
 
-                    switch(LockType) {
+                    switch (LockType) {
 
                         case SimpleMediaLock: {
                             FdoExtension->LockCount++;
@@ -704,12 +747,12 @@ ClasspEjectionControl(
 
         } else {
 
-            DebugPrint((2,
+            TracePrint((TRACE_LEVEL_INFORMATION, TRACE_FLAG_IOCTL,
                         "ClasspEjectionControl: Succeeded\n"));
 
         }
 
-        DebugPrint((2,
+        TracePrint((TRACE_LEVEL_INFORMATION, TRACE_FLAG_IOCTL,
                     "ClasspEjectionControl: "
                     "Current Counts: Internal: %x  Secure: %x  Simple: %x\n",
                     FdoExtension->InternalLockCount,
@@ -720,6 +763,8 @@ ClasspEjectionControl(
         KeSetEvent(&(FdoExtension->EjectSynchronizationEvent),
                    IO_NO_INCREMENT,
                    FALSE);
+        KeLeaveCriticalRegion();
+
         if (srb) {
             ClassFreeOrReuseSrb(FdoExtension, srb);
         }
@@ -731,14 +776,13 @@ ClasspEjectionControl(
 #else
 
 /*
- *  BUGBUG RESTORE
+ *  ISSUE:  RESTORE this (see above)
  *      This is a new implementation of the function that doesn't thrash memory
  *      or depend on the srbLookasideList.
  *      HOWEVER, it seems to cause pagefile initialization to fail during boot
  *      for some reason.  Need to resolve this before switching to this function.
  */
 NTSTATUS
-NTAPI
 ClasspEjectionControl(
     IN PDEVICE_OBJECT Fdo,
     IN PIRP Irp,
@@ -757,10 +801,10 @@ ClasspEjectionControl(
     status = KeWaitForSingleObject(
                 &fdoExt->EjectSynchronizationEvent,
                 UserRequest,
-                UserMode,
+                KernelMode,
                 FALSE,
                 NULL);
-    ASSERT(status == STATUS_SUCCESS);
+    NT_ASSERT(status == STATUS_SUCCESS);
 
     /*
      *  If this is a "secured" request, we have to make sure
@@ -775,14 +819,14 @@ ClasspEjectionControl(
          */
         if (thisSp->FileObject){
             PCOMMON_DEVICE_EXTENSION commonExt = (PCOMMON_DEVICE_EXTENSION)fdoExt;
-            fsContext = ClasspGetFsContext(commonExt, thisSp->FileObject);
+            fsContext = ClassGetFsContext(commonExt, thisSp->FileObject);
         }
         else {
             fsContext = NULL;
         }
 
         if (!fsContext){
-            ASSERT(fsContext);
+            NT_ASSERT(fsContext);
             fileHandleOk = FALSE;
         }
     }
@@ -822,24 +866,24 @@ ClasspEjectionControl(
                         countChanged = TRUE;
                     }
                     else {
-                        ASSERT(fdoExt->LockCount > 0);
+                        NT_ASSERT(fdoExt->LockCount > 0);
                         status = STATUS_INTERNAL_ERROR;
                     }
                     break;
                 case SecureMediaLock:
                     if (fsContext->LockCount > 0){
-                        ASSERT(fdoExt->ProtectedLockCount > 0);
+                        NT_ASSERT(fdoExt->ProtectedLockCount > 0);
                         fsContext->LockCount--;
                         fdoExt->ProtectedLockCount--;
                         countChanged = TRUE;
                     }
                     else {
-                        ASSERT(fsContext->LockCount > 0);
+                        NT_ASSERT(fsContext->LockCount > 0);
                         status = STATUS_INVALID_DEVICE_STATE;
                     }
                     break;
                 case InternalMediaLock:
-                    ASSERT(fdoExt->InternalLockCount > 0);
+                    NT_ASSERT(fdoExt->InternalLockCount > 0);
                     fdoExt->InternalLockCount--;
                     countChanged = TRUE;
                     break;
@@ -892,7 +936,7 @@ ClasspEjectionControl(
                     KeInitializeEvent(&event, SynchronizationEvent, FALSE);
                     SetupEjectionTransferPacket(pkt, Lock, &event, Irp);
                     SubmitTransferPacket(pkt);
-                    KeWaitForSingleObject(&event, Executive, KernelMode, FALSE, NULL);
+                    (VOID)KeWaitForSingleObject(&event, Executive, KernelMode, FALSE, NULL);
                     status = Irp->IoStatus.Status;
                 }
                 else {
@@ -964,14 +1008,15 @@ ClasspEjectionControl(
 }
 #endif
 
+_IRQL_requires_max_(PASSIVE_LEVEL)
 PFILE_OBJECT_EXTENSION
-NTAPI
-ClasspGetFsContext(
-    IN PCOMMON_DEVICE_EXTENSION CommonExtension,
-    IN PFILE_OBJECT FileObject
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+ClassGetFsContext(
+    _In_ PCOMMON_DEVICE_EXTENSION CommonExtension,
+    _In_ PFILE_OBJECT FileObject
     )
 {
     PAGED_CODE();
     return GetDictionaryEntry(&(CommonExtension->FileObjectDictionary),
-                              (ULONG_PTR)FileObject);
+                              (ULONGLONG) FileObject);
 }

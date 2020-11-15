@@ -447,11 +447,7 @@ Return Value:
             if (!Wait) {
 
                 IrpContext->FatIoContext =
-#ifndef __REACTOS__
                     FsRtlAllocatePoolWithTag( NonPagedPoolNx,
-#else
-                    FsRtlAllocatePoolWithTag( NonPagedPool,
-#endif
                                               sizeof(FAT_IO_CONTEXT),
                                               TAG_FAT_IO_CONTEXT );
 
@@ -1175,11 +1171,7 @@ Return Value:
             if (NonCachedIo && !PagingIo &&
                 (FileObject->SectionObjectPointer->DataSectionObject != NULL)) {
 
-#ifndef __REACTOS__
                 IO_STATUS_BLOCK IoStatus = {0};
-#else
-                IO_STATUS_BLOCK IoStatus = {{0}};
-#endif
 
                 //
                 //  We need the Fcb exclsuive to do the CcPurgeCache
@@ -1666,11 +1658,7 @@ Return Value:
                         if (!FcbOrDcb->NonPaged->OutstandingAsyncEvent) {
 
                             FcbOrDcb->NonPaged->OutstandingAsyncEvent =
-#ifndef __REACTOS__
                                 FsRtlAllocatePoolWithTag( NonPagedPoolNx,
-#else
-                                FsRtlAllocatePoolWithTag( NonPagedPool,
-#endif
                                                           sizeof(KEVENT),
                                                           TAG_EVENT );
 
@@ -2424,11 +2412,7 @@ Return Value:
                             //  Get pool and initialize the timer and DPC
                             //
 
-#ifndef __REACTOS__
                             FlushContext = FsRtlAllocatePoolWithTag( NonPagedPoolNx,
-#else
-                            FlushContext = FsRtlAllocatePoolWithTag( NonPagedPool,
-#endif
                                                                      sizeof(DEFERRED_FLUSH_CONTEXT),
                                                                      TAG_DEFERRED_FLUSH_CONTEXT );
 

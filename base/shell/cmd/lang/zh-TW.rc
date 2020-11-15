@@ -25,7 +25,7 @@ ALIAS [別名=[命令]]\n\n\
     STRING_BEEP_HELP "使揚聲器發出BEEP聲。\n\nBEEP\n"
     STRING_CALL_HELP "從一個批處理程式呼叫另一個。\n\n\
 CALL [驅動器:][路徑]檔名 [批處理參數]\n\n\
-  批處理參數  指定被呼叫的批處理程式所需的命令列資訊。"
+  批處理參數  指定被呼叫的批處理程式所需的命令列資訊。\n"
     STRING_CD_HELP "改變當前目錄或者顯示當前目錄名。\n\n\
 CHDIR [/D][驅動器:][路徑]\n\
 CHDIR[..|.]\n\
@@ -185,7 +185,7 @@ PUSHD [路徑 | ..]\n\n\
   ECHO [訊息]\n\
   ECHO.             輸出空行\n\n\
 執行不帶參數的 ECHO 將會顯示當前的 ECHO 設定。"
-    STRING_ECHO_HELP5 "ECHO 為 %s\n"
+    STRING_ECHO_HELP5 "ECHO 為 %s。\n"
     STRING_EXIT_HELP "退出命令列直譯器。\n\nEXIT [/b] [ExitCode]\n\n\
   /B            僅退出一個批處理檔案。\n\
                 如果在一個批處理檔案之外運行，將會使 cmd.exe 退出。\n\
@@ -219,7 +219,7 @@ f,d,p,n,x,s,a,t,z.\n\n\
     STRING_GOTO_HELP1 "在批處理指令碼中將 CMD 定向到被標記的行執行。\n\n\
 GOTO 標籤\n\n\
   標籤    在批處理指令碼中被用作標籤的文字字元串。\n\n\
-使用冒號開頭的一行就作為一個標籤。"
+使用冒號開頭的一行就作為一個標籤。\n"
     STRING_IF_HELP1 "在批處理檔案中執行條件控制處理。\n\n\
   IF [NOT] ERRORLEVEL 數字 命令\n\
   IF [NOT] 字元串1==字元串2 命令\n\
@@ -252,9 +252,9 @@ MKLINK [/D | /H | /J] 連結名 目標\n\n\
     STRING_MOVE_HELP1 "覆蓋 %s 嗎 (Yes/No/All)？"
     STRING_MOVE_HELP2 "移動檔案並重新命名檔案和目錄。\n\n\
 移動一個或多個檔案：\n\
-MOVE [/N][驅動器:][路徑]檔名1[,...] 目標\n\n\
+MOVE [/N][/Y|/-Y][驅動器:][路徑]檔名1[,...] 目標\n\n\
 重新命名一個目錄：\n\
-MOVE [/N][驅動器:][路徑]目錄名1 目錄名2\n\n\
+MOVE [/N][/Y|/-Y][驅動器:][路徑]目錄名1 目錄名2\n\n\
   [驅動器:][路徑]檔名1     指定你想要移動的一個或多個檔案的位置和名稱。\n\
   /N                    執行除移動檔案或目錄之外的所有事情。\n\n\
 當前限制：\n\
@@ -273,6 +273,9 @@ OK   :  10    |  CANCEL  :  12\n"
 PATH [[驅動器:]路徑[;...]]\nPATH ;\n\n\
 執行 PATH ; 以清除所有的搜索路徑設定並指示命令列外殼僅在當前目錄搜索。\n\
 不帶參數執行 PATH 將會顯示當前路徑。\n"
+    STRING_PAUSE_HELP1 "停止一個批處理檔案的執行並顯示以下資訊：\n\
+'按任意鍵繼續...' 或者一條使用者定義的訊息。\n\n\
+PAUSE [訊息]"
     STRING_PROMPT_HELP1 "改變命令提示符。\n\n\
 PROMPT [文字]\n\n\
   文字      指定新的命令提示符。\n\n\
@@ -295,16 +298,13 @@ PROMPT [文字]\n\n\
   $V   作業系統版本號\n\
   $_    回車和換行符\n\
   $$   $ (美元符號)\n"
-    STRING_PAUSE_HELP1 "停止一個批處理檔案的執行並顯示以下資訊：\n\
-'按任意鍵繼續...' 或者一條使用者定義的訊息。\n\n\
-PAUSE [訊息]"
     STRING_PROMPT_HELP2 "  $+   顯示當前目錄棧的深度"
     STRING_PROMPT_HELP3 "\n執行不帶參數的 PROMPT 將會把提示符重置為默認設定。"
     STRING_REM_HELP "在批處理檔案中開始一行註釋。\n\nREM [註釋]"
     STRING_RMDIR_HELP "刪除一個目錄。\n\n\
-RMDIR [驅動器:]路徑\nRD [驅動器:]路徑\n\
-/S          刪除目標中的所有檔案和資料夾。\n\
-/Q          刪除時不要提示。\n"
+RMDIR [/S] [/Q] [驅動器:]路徑\nRD [/S] [/Q] [驅動器:]路徑\n\
+  /S    刪除目標中的所有檔案和資料夾。\n\
+  /Q    刪除時不要提示。\n"
     STRING_RMDIR_HELP2 "目錄非空！\n"
     STRING_REN_HELP1 "重新命名一個或者多個檔案或資料夾。\n\n\
 RENAME [/E /N /P /Q /S /T] 舊名稱 ... 新名稱\n\
@@ -439,9 +439,9 @@ RESTORE       恢復視窗\n\
     STRING_ALIAS_ERROR "別名展開後的命令列太長！\n"
     STRING_ASSOC_ERROR "副檔名 %s 的檔案關聯未找到！\n"
     STRING_BATCH_ERROR "開啟批處理檔案時出錯\n"
-    STRING_CHOICE_ERROR "無效選項。期望的格式：/C[:]選項"
-    STRING_CHOICE_ERROR_TXT "無效選項。期望的格式：/T[:]c,nn"
-    STRING_CHOICE_ERROR_OPTION "非法選項：%s"
+    STRING_CHOICE_ERROR "無效選項。期望的格式：/C[:]選項\n"
+    STRING_CHOICE_ERROR_TXT "無效選項。期望的格式：/T[:]c,nn\n"
+    STRING_CHOICE_ERROR_OPTION "非法選項：%s\n"
     STRING_CMD_ERROR1 "無法從檔案 %s 重定向輸入\n"
     STRING_CMD_ERROR2 "為管道資料創建臨時檔案時出錯\n"
     STRING_CMD_ERROR3 "無法重定向到檔案 %s\n"
@@ -466,9 +466,9 @@ RESTORE       恢復視窗\n\
     STRING_FOR_ERROR4 "'do' 後沒有命令。"
     STRING_FREE_ERROR1 "無效驅動器"
     STRING_FREE_ERROR2 "未標記"
-    STRING_GOTO_ERROR1 "沒有為 GOTO 指定標籤"
+    STRING_GOTO_ERROR1 "沒有為 GOTO 指定標籤\n"
     STRING_GOTO_ERROR2 "標籤 '%s' 未找到\n"
-    STRING_MD_ERROR "一個子目錄或檔案已存在。\n"
+    STRING_MD_ERROR "%s 一個子目錄或檔案已存在。\n"
     STRING_MD_ERROR2 "到新資料夾的路徑不存在。\n"
     STRING_MOVE_ERROR1 "[成功]\n"
     STRING_MOVE_ERROR2 "[錯誤]\n"
@@ -487,9 +487,9 @@ RESTORE       恢復視窗\n\
     STRING_ERROR_BADCOMMAND "非法的命令或檔名 - %s\n"
     STRING_ERROR_OUT_OF_MEMORY "內存不足。\n"
     STRING_ERROR_CANNOTPIPE "錯誤！無法創建管道！不能開啟臨時檔案！\n"
-    STRING_ERROR_D_PAUSEMSG "按任意鍵繼續..."
+    STRING_ERROR_D_PAUSEMSG "按任意鍵繼續... "
     STRING_ERROR_DRIVER_NOT_READY "驅動器未就緒"
-    STRING_PATH_ERROR "CMD: 不在環境 '%s' 中\n"
+    STRING_SET_ENV_ERROR "Environment variable '%s' is not defined\n"
     STRING_REPLACE_ERROR1 "無效開關 - %s\n"
     STRING_REPLACE_ERROR2 "路徑未找到 - %s\n"
     STRING_REPLACE_ERROR3 "檔名、目錄名或卷標語法不正確。\n"
@@ -513,8 +513,8 @@ RESTORE       恢復視窗\n\
     STRING_MKLINK_CREATED_JUNCTION "已為 %s <<===>> %s 創建接合點\n"
     STRING_MORE "更多？"
     STRING_CANCEL_BATCH_FILE "\r\nCtrl-Break 已被按下。停止批處理檔案嗎？ (Yes/No/All) "
-    STRING_INVALID_OPERAND "無效操作數。"
-    STRING_EXPECTED_CLOSE_PAREN "期望 ')'。"
-    STRING_EXPECTED_NUMBER_OR_VARIABLE "期望數值或變數名。"
-    STRING_SYNTAX_COMMAND_INCORRECT "命令語法不正確。"
+    STRING_INVALID_OPERAND "無效操作數。\n"
+    STRING_EXPECTED_CLOSE_PAREN "期望 ')'。\n"
+    STRING_EXPECTED_NUMBER_OR_VARIABLE "期望數值或變數名。\n"
+    STRING_SYNTAX_COMMAND_INCORRECT "命令語法不正確。\n"
 END 

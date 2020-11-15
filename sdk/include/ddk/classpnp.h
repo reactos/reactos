@@ -85,6 +85,9 @@
 #define CLASS_TAG_DEVICE_CONTROL            'OIcS'
 #define CLASS_TAG_MODE_DATA                 'oLcS'
 #define CLASS_TAG_MULTIPATH                 'mPcS'
+#define CLASS_TAG_LOCK_TRACKING             'TLcS'
+#define CLASS_TAG_LB_PROVISIONING           'PLcS'
+#define CLASS_TAG_MANAGE_DATASET            'MDcS'
 
 #define MAXIMUM_RETRIES 4
 
@@ -182,6 +185,7 @@
 #define GUID_CLASSPNP_QUERY_REGINFOEX {0x00e34b11, 0x2444, 0x4745, {0xa5, 0x3d, 0x62, 0x01, 0x00, 0xcd, 0x82, 0xf7}}
 #define GUID_CLASSPNP_SENSEINFO2      {0x509a8c5f, 0x71d7, 0x48f6, {0x82, 0x1e, 0x17, 0x3c, 0x49, 0xbf, 0x2f, 0x18}}
 #define GUID_CLASSPNP_WORKING_SET     {0x105701b0, 0x9e9b, 0x47cb, {0x97, 0x80, 0x81, 0x19, 0x8a, 0xf7, 0xb5, 0x24}}
+#define GUID_CLASSPNP_SRB_SUPPORT     {0x0a483941, 0xbdfd, 0x4f7b, {0xbe, 0x95, 0xce, 0xe2, 0xa2, 0x16, 0x09, 0x0c}}
 
 #define DEFAULT_FAILURE_PREDICTION_PERIOD 60 * 60 * 1
 
@@ -251,6 +255,16 @@ typedef enum {
 } CLASS_POWER_DOWN_STATE2;
 
 typedef enum {
+  PowerDownDeviceInitial3 = 0,
+  PowerDownDeviceLocked3,
+  PowerDownDeviceQuiesced3,
+  PowerDownDeviceFlushed3,
+  PowerDownDeviceStopped3,
+  PowerDownDeviceOff3,
+  PowerDownDeviceUnlocked3
+} CLASS_POWER_DOWN_STATE3;
+
+typedef enum {
   PowerUpDeviceInitial,
   PowerUpDeviceLocked,
   PowerUpDeviceOn,
@@ -272,6 +286,9 @@ typedef struct _CLASS_PRIVATE_COMMON_DATA CLASS_PRIVATE_COMMON_DATA, *PCLASS_PRI
 
 struct _MEDIA_CHANGE_DETECTION_INFO;
 typedef struct _MEDIA_CHANGE_DETECTION_INFO MEDIA_CHANGE_DETECTION_INFO, *PMEDIA_CHANGE_DETECTION_INFO;
+
+struct _DICTIONARY_HEADER;
+typedef struct _DICTIONARY_HEADER DICTIONARY_HEADER, *PDICTIONARY_HEADER;
 
 typedef struct _DICTIONARY {
   ULONGLONG Signature;
@@ -551,6 +568,10 @@ typedef struct _CLASS_INTERPRET_SENSE_INFO2 {
 
 C_ASSERT((MAXULONG - sizeof(SRB_HISTORY)) / 30000 >= sizeof(SRB_HISTORY_ITEM));
 
+// for SrbSupport
+#define CLASS_SRB_SCSI_REQUEST_BLOCK    0x1
+#define CLASS_SRB_STORAGE_REQUEST_BLOCK 0x2
+
 typedef struct _CLASS_DRIVER_EXTENSION {
   UNICODE_STRING RegistryPath;
   CLASS_INIT_DATA InitData;
@@ -565,6 +586,9 @@ typedef struct _CLASS_DRIVER_EXTENSION {
   PDRIVER_DISPATCH MpDeviceMajorFunctionTable[IRP_MJ_MAXIMUM_FUNCTION + 1];
   PCLASS_INTERPRET_SENSE_INFO2 InterpretSenseInfo;
   PCLASS_WORKING_SET WorkingSet;
+#endif
+#if (NTDDI_VERSION >= NTDDI_WIN8)
+  ULONG SrbSupport;
 #endif
 } CLASS_DRIVER_EXTENSION, *PCLASS_DRIVER_EXTENSION;
 
@@ -651,6 +675,7 @@ typedef struct _CLASS_POWER_CONTEXT {
   union {
     CLASS_POWER_DOWN_STATE PowerDown;
     CLASS_POWER_DOWN_STATE2 PowerDown2;
+    CLASS_POWER_DOWN_STATE3 PowerDown3;
     CLASS_POWER_UP_STATE PowerUp;
   } PowerChangeState;
   CLASS_POWER_OPTIONS Options;
@@ -665,14 +690,30 @@ typedef struct _CLASS_POWER_CONTEXT {
   SCSI_REQUEST_BLOCK Srb;
 } CLASS_POWER_CONTEXT, *PCLASS_POWER_CONTEXT;
 
+#if (NTDDI_VERSION >= NTDDI_WIN8)
+
+#define CLASS_SRBEX_SCSI_CDB16_BUFFER_SIZE (sizeof(STORAGE_REQUEST_BLOCK) + sizeof(STOR_ADDR_BTL8) + sizeof(SRBEX_DATA_SCSI_CDB16))
+#define CLASS_SRBEX_NO_SRBEX_DATA_BUFFER_SIZE (sizeof(STORAGE_REQUEST_BLOCK) + sizeof(STOR_ADDR_BTL8))
+
+#endif
+
 typedef struct _COMPLETION_CONTEXT {
   PDEVICE_OBJECT DeviceObject;
+#if (NTDDI_VERSION >= NTDDI_WIN8)
+  union
+  {
+    SCSI_REQUEST_BLOCK Srb;
+    STORAGE_REQUEST_BLOCK SrbEx;
+    UCHAR SrbExBuffer[CLASS_SRBEX_SCSI_CDB16_BUFFER_SIZE];
+  } Srb;
+#else
   SCSI_REQUEST_BLOCK Srb;
+#endif
 } COMPLETION_CONTEXT, *PCOMPLETION_CONTEXT;
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
 _Must_inspect_result_
-SCSIPORTAPI
+SCSIPORT_API
 ULONG
 NTAPI
 ClassInitialize(
@@ -685,6 +726,143 @@ typedef struct _CLASS_QUERY_WMI_REGINFO_EX_LIST {
   __callback PCLASS_QUERY_WMI_REGINFO_EX ClassFdoQueryWmiRegInfoEx;
   __callback PCLASS_QUERY_WMI_REGINFO_EX ClassPdoQueryWmiRegInfoEx;
 } CLASS_QUERY_WMI_REGINFO_EX_LIST, *PCLASS_QUERY_WMI_REGINFO_EX_LIST;
+
+typedef enum
+{
+  SupportUnknown = 0,
+  Supported,
+  NotSupported
+} CLASS_FUNCTION_SUPPORT;
+
+typedef struct _CLASS_VPD_B1_DATA
+{
+  NTSTATUS CommandStatus;
+  USHORT MediumRotationRate;
+  UCHAR NominalFormFactor;
+  UCHAR Zoned;
+  ULONG MediumProductType;
+  ULONG DepopulationTime;
+} CLASS_VPD_B1_DATA, *PCLASS_VPD_B1_DATA;
+
+typedef struct _CLASS_VPD_B0_DATA
+{
+  NTSTATUS CommandStatus;
+  ULONG MaxUnmapLbaCount;
+  ULONG MaxUnmapBlockDescrCount;
+  ULONG OptimalUnmapGranularity;
+  ULONG UnmapGranularityAlignment;
+  BOOLEAN UGAVALID;
+  UCHAR Reserved0;
+  USHORT OptimalTransferLengthGranularity;
+  ULONG MaximumTransferLength;
+  ULONG OptimalTransferLength;
+} CLASS_VPD_B0_DATA, *PCLASS_VPD_B0_DATA;
+
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable:4214)
+#endif
+typedef struct _CLASS_VPD_B2_DATA
+{
+  NTSTATUS CommandStatus;
+  UCHAR ThresholdExponent;
+  UCHAR DP:1;
+  UCHAR ANC_SUP:1;
+  UCHAR Reserved0:2;
+  UCHAR LBPRZ:1;
+  UCHAR LBPWS10:1;
+  UCHAR LBPWS:1;
+  UCHAR LBPU:1;
+  UCHAR ProvisioningType:3;
+  UCHAR Reserved1:5;
+  ULONG SoftThresholdEventPending;
+} CLASS_VPD_B2_DATA, *PCLASS_VPD_B2_DATA;
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
+
+typedef struct _CLASS_READ_CAPACITY16_DATA
+{
+  NTSTATUS CommandStatus;
+  ULONG BytesPerLogicalSector;
+  ULONG BytesPerPhysicalSector;
+  ULONG BytesOffsetForSectorAlignment;
+  BOOLEAN LBProvisioningEnabled;
+  BOOLEAN LBProvisioningReadZeros;
+  UCHAR Reserved0[2];
+  ULONG Reserved1;
+} CLASS_READ_CAPACITY16_DATA, *PCLASS_READ_CAPACITY16_DATA;
+
+typedef struct _CLASS_VPD_ECOP_BLOCK_DEVICE_ROD_LIMITS
+{
+  NTSTATUS CommandStatus;
+  USHORT MaximumRangeDescriptors;
+  UCHAR Restricted;
+  UCHAR Reserved;
+  ULONG MaximumInactivityTimer;
+  ULONG DefaultInactivityTimer;
+  ULONGLONG MaximumTokenTransferSize;
+  ULONGLONG OptimalTransferCount;
+} CLASS_VPD_ECOP_BLOCK_DEVICE_ROD_LIMITS, *PCLASS_VPD_ECOP_BLOCK_DEVICE_ROD_LIMITS;
+
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable:4214)
+#endif
+typedef struct _CLASS_FUNCTION_SUPPORT_INFO
+{
+  KSPIN_LOCK SyncLock;
+  ULONG GenerationCount;
+  volatile ULONG ChangeRequestCount;
+  struct
+  {
+    ULONG BlockLimits:1;
+    ULONG BlockDeviceCharacteristics:1;
+    ULONG LBProvisioning:1;
+    ULONG BlockDeviceRODLimits:1;
+    ULONG ZonedBlockDeviceCharacteristics:1;
+    ULONG Reserved:22;
+    ULONG DeviceType:5;
+  } ValidInquiryPages;
+  struct
+  {
+    CLASS_FUNCTION_SUPPORT SeekPenaltyProperty;
+    CLASS_FUNCTION_SUPPORT AccessAlignmentProperty;
+    CLASS_FUNCTION_SUPPORT TrimProperty;
+    CLASS_FUNCTION_SUPPORT TrimProcess;
+  } LowerLayerSupport;
+  BOOLEAN RegAccessAlignmentQueryNotSupported;
+  BOOLEAN AsynchronousNotificationSupported;
+#if (NTDDI_VERSION >= NTDDI_WIN10_RS2)
+  BOOLEAN UseModeSense10;
+  UCHAR Reserved;
+#else
+  UCHAR Reserved[2];
+#endif
+  CLASS_VPD_B0_DATA BlockLimitsData;
+  CLASS_VPD_B1_DATA DeviceCharacteristicsData;
+  CLASS_VPD_B2_DATA LBProvisioningData;
+  CLASS_READ_CAPACITY16_DATA ReadCapacity16Data;
+  CLASS_VPD_ECOP_BLOCK_DEVICE_ROD_LIMITS BlockDeviceRODLimitsData;
+  struct
+  {
+    ULONG D3ColdSupported:1;
+    ULONG DeviceWakeable:1;
+    ULONG IdlePowerEnabled:1;
+    ULONG D3IdleTimeoutOverridden:1;
+    ULONG NoVerifyDuringIdlePower:1;
+    ULONG Reserved2:27;
+    ULONG D3IdleTimeout;
+  } IdlePower;
+
+#if (NTDDI_VERSION >= NTDDI_WINTHRESHOLD)
+  CLASS_FUNCTION_SUPPORT HwFirmwareGetInfoSupport;
+  PSTORAGE_HW_FIRMWARE_INFO HwFirmwareInfo;
+#endif
+} CLASS_FUNCTION_SUPPORT_INFO, *PCLASS_FUNCTION_SUPPORT_INFO;
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
 
 typedef struct _FUNCTIONAL_DEVICE_EXTENSION {
   _ANONYMOUS_UNION union {
@@ -701,6 +879,12 @@ typedef struct _FUNCTIONAL_DEVICE_EXTENSION {
   ULONG DMByteSkew;
   ULONG DMSkew;
   BOOLEAN DMActive;
+#if (NTDDI_VERSION >= NTDDI_WIN8)
+  UCHAR SenseDataLength;
+#else
+  UCHAR Reserved;
+#endif
+  UCHAR Reserved0[2];
   DISK_GEOMETRY DiskGeometry;
   PSENSE_DATA SenseData;
   ULONG TimeOutValue;
@@ -755,22 +939,31 @@ typedef struct _FUNCTIONAL_DEVICE_EXTENSION {
   ULONG SavedSrbFlags;
   ULONG SavedErrorCount;
   ULONG_PTR Reserved1;
-#endif
+#endif /* (SPVER(NTDDI_VERSION) < 2) */
 
 #else /* (NTDDI_VERSION <= NTDDI_WIN2K) */
 
   PCLASS_PRIVATE_FDO_DATA PrivateFdoData;
+#if (NTDDI_VERSION >= NTDDI_WIN8)
+  PCLASS_FUNCTION_SUPPORT_INFO FunctionSupportInfo;
+  PSTORAGE_MINIPORT_DESCRIPTOR MiniportDescriptor;
+#else
   ULONG_PTR Reserved2;
   ULONG_PTR Reserved3;
-  ULONG_PTR Reserved4;
+#endif
 
+#if (NTDDI_VERSION >= NTDDI_WINTHRESHOLD)
+  PADDITIONAL_FDO_DATA AdditionalFdoData;
+#else
+  ULONG_PTR Reserved4;
+#endif
 #endif /* (NTDDI_VERSION <= NTDDI_WIN2K) */
 
 } FUNCTIONAL_DEVICE_EXTENSION, *PFUNCTIONAL_DEVICE_EXTENSION;
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
 _Must_inspect_result_
-SCSIPORTAPI
+SCSIPORT_API
 ULONG
 NTAPI
 ClassInitializeEx(
@@ -781,7 +974,7 @@ ClassInitializeEx(
 _IRQL_requires_max_(PASSIVE_LEVEL)
 _Must_inspect_result_
 _Post_satisfies_(return <= 0)
-SCSIPORTAPI
+SCSIPORT_API
 NTSTATUS
 NTAPI
 ClassCreateDeviceObject(
@@ -793,19 +986,19 @@ ClassCreateDeviceObject(
     PDEVICE_OBJECT *DeviceObject);
 
 _Must_inspect_result_
-SCSIPORTAPI
+SCSIPORT_API
 NTSTATUS
 NTAPI
 ClassReadDriveCapacity(
   _In_ PDEVICE_OBJECT DeviceObject);
 
-SCSIPORTAPI
+SCSIPORT_API
 VOID
 NTAPI
 ClassReleaseQueue(
   _In_ PDEVICE_OBJECT DeviceObject);
 
-SCSIPORTAPI
+SCSIPORT_API
 VOID
 NTAPI
 ClassSplitRequest(
@@ -813,14 +1006,14 @@ ClassSplitRequest(
   _In_ PIRP Irp,
   _In_ ULONG MaximumBytes);
 
-SCSIPORTAPI
+SCSIPORT_API
 NTSTATUS
 NTAPI
 ClassDeviceControl(
   _In_ PDEVICE_OBJECT DeviceObject,
   _Inout_ PIRP Irp);
 
-SCSIPORTAPI
+SCSIPORT_API
 NTSTATUS
 NTAPI
 ClassIoComplete(
@@ -828,7 +1021,7 @@ ClassIoComplete(
   PIRP Irp,
   PVOID Context);
 
-SCSIPORTAPI
+SCSIPORT_API
 NTSTATUS
 NTAPI
 ClassIoCompleteAssociated(
@@ -836,7 +1029,7 @@ ClassIoCompleteAssociated(
   PIRP Irp,
   PVOID Context);
 
-SCSIPORTAPI
+SCSIPORT_API
 BOOLEAN
 NTAPI
 ClassInterpretSenseInfo(
@@ -860,21 +1053,21 @@ ClassSendDeviceIoControlSynchronous(
   _In_ BOOLEAN InternalDeviceIoControl,
   _Out_ PIO_STATUS_BLOCK IoStatus);
 
-SCSIPORTAPI
+SCSIPORT_API
 NTSTATUS
 NTAPI
 ClassSendIrpSynchronous(
   _In_ PDEVICE_OBJECT TargetDeviceObject,
   _In_ PIRP Irp);
 
-SCSIPORTAPI
+SCSIPORT_API
 NTSTATUS
 NTAPI
 ClassForwardIrpSynchronous(
   _In_ PCOMMON_DEVICE_EXTENSION CommonExtension,
   _In_ PIRP Irp);
 
-SCSIPORTAPI
+SCSIPORT_API
 NTSTATUS
 NTAPI
 ClassSendSrbSynchronous(
@@ -884,7 +1077,7 @@ ClassSendSrbSynchronous(
   _In_ ULONG BufferLength,
   _In_ BOOLEAN WriteToDevice);
 
-SCSIPORTAPI
+SCSIPORT_API
 NTSTATUS
 NTAPI
 ClassSendSrbAsynchronous(
@@ -895,14 +1088,14 @@ ClassSendSrbAsynchronous(
   _In_ ULONG BufferLength,
   _In_ BOOLEAN WriteToDevice);
 
-SCSIPORTAPI
+SCSIPORT_API
 NTSTATUS
 NTAPI
 ClassBuildRequest(
   _In_ PDEVICE_OBJECT DeviceObject,
   _In_ PIRP Irp);
 
-SCSIPORTAPI
+SCSIPORT_API
 ULONG
 NTAPI
 ClassModeSense(
@@ -911,7 +1104,7 @@ ClassModeSense(
   _In_ ULONG Length,
   _In_ UCHAR PageMode);
 
-SCSIPORTAPI
+SCSIPORT_API
 PVOID
 NTAPI
 ClassFindModePage(
@@ -921,14 +1114,14 @@ ClassFindModePage(
   _In_ BOOLEAN Use6Byte);
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
-SCSIPORTAPI
+SCSIPORT_API
 NTSTATUS
 NTAPI
 ClassClaimDevice(
   _In_ PDEVICE_OBJECT LowerDeviceObject,
   _In_ BOOLEAN Release);
 
-SCSIPORTAPI
+SCSIPORT_API
 NTSTATUS
 NTAPI
 ClassInternalIoControl(
@@ -936,7 +1129,7 @@ ClassInternalIoControl(
   PIRP Irp);
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
-SCSIPORTAPI
+SCSIPORT_API
 VOID
 NTAPI
 ClassInitializeSrbLookasideList(
@@ -944,51 +1137,51 @@ ClassInitializeSrbLookasideList(
   _In_ ULONG NumberElements);
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
-SCSIPORTAPI
+SCSIPORT_API
 VOID
 NTAPI
 ClassDeleteSrbLookasideList(
   _Inout_ PCOMMON_DEVICE_EXTENSION CommonExtension);
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
-SCSIPORTAPI
+SCSIPORT_API
 ULONG
 NTAPI
 ClassQueryTimeOutRegistryValue(
   _In_ PDEVICE_OBJECT DeviceObject);
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
-SCSIPORTAPI
+SCSIPORT_API
 NTSTATUS
 NTAPI
 ClassGetDescriptor(
   _In_ PDEVICE_OBJECT DeviceObject,
   _In_ PSTORAGE_PROPERTY_ID PropertyId,
-  _Outptr_ PSTORAGE_DESCRIPTOR_HEADER *Descriptor);
+  _Outptr_ PVOID *Descriptor);
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
-SCSIPORTAPI
+SCSIPORT_API
 VOID
 NTAPI
 ClassInvalidateBusRelations(
   _In_ PDEVICE_OBJECT Fdo);
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
-SCSIPORTAPI
+SCSIPORT_API
 VOID
 NTAPI
 ClassMarkChildrenMissing(
   _In_ PFUNCTIONAL_DEVICE_EXTENSION Fdo);
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
-SCSIPORTAPI
+SCSIPORT_API
 BOOLEAN
 NTAPI
 ClassMarkChildMissing(
   _In_ PPHYSICAL_DEVICE_EXTENSION PdoExtension,
   _In_ BOOLEAN AcquireChildLock);
 
-SCSIPORTAPI
+SCSIPORT_API
 VOID
 ClassDebugPrint(
   _In_ CLASS_DEBUG_LEVEL DebugPrintLevel,
@@ -997,13 +1190,13 @@ ClassDebugPrint(
 
 __drv_aliasesMem
 _IRQL_requires_max_(DISPATCH_LEVEL)
-SCSIPORTAPI
+SCSIPORT_API
 PCLASS_DRIVER_EXTENSION
 NTAPI
 ClassGetDriverExtension(
   _In_ PDRIVER_OBJECT DriverObject);
 
-SCSIPORTAPI
+SCSIPORT_API
 VOID
 NTAPI
 ClassCompleteRequest(
@@ -1011,14 +1204,14 @@ ClassCompleteRequest(
   _In_ PIRP Irp,
   _In_ CCHAR PriorityBoost);
 
-SCSIPORTAPI
+SCSIPORT_API
 VOID
 NTAPI
 ClassReleaseRemoveLock(
   _In_ PDEVICE_OBJECT DeviceObject,
   PIRP Tag);
 
-SCSIPORTAPI
+SCSIPORT_API
 ULONG
 NTAPI
 ClassAcquireRemoveLockEx(
@@ -1028,7 +1221,7 @@ ClassAcquireRemoveLockEx(
   _In_ ULONG Line);
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
-SCSIPORTAPI
+SCSIPORT_API
 VOID
 NTAPI
 ClassUpdateInformationInRegistry(
@@ -1038,7 +1231,7 @@ ClassUpdateInformationInRegistry(
   _In_reads_bytes_opt_(InquiryDataLength) PINQUIRYDATA InquiryData,
   _In_ ULONG InquiryDataLength);
 
-SCSIPORTAPI
+SCSIPORT_API
 NTSTATUS
 NTAPI
 ClassWmiCompleteRequest(
@@ -1049,7 +1242,7 @@ ClassWmiCompleteRequest(
   _In_ CCHAR PriorityBoost);
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
-SCSIPORTAPI
+SCSIPORT_API
 NTSTATUS
 NTAPI
 ClassWmiFireEvent(
@@ -1059,14 +1252,14 @@ ClassWmiFireEvent(
   _In_ ULONG EventDataSize,
   _In_reads_bytes_(EventDataSize) PVOID EventData);
 
-SCSIPORTAPI
+SCSIPORT_API
 VOID
 NTAPI
 ClassResetMediaChangeTimer(
   _In_ PFUNCTIONAL_DEVICE_EXTENSION FdoExtension);
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
-SCSIPORTAPI
+SCSIPORT_API
 VOID
 NTAPI
 ClassInitializeMediaChangeDetection(
@@ -1074,20 +1267,20 @@ ClassInitializeMediaChangeDetection(
   _In_ PUCHAR EventPrefix);
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
-SCSIPORTAPI
+SCSIPORT_API
 NTSTATUS
 NTAPI
 ClassInitializeTestUnitPolling(
   _In_ PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
   _In_ BOOLEAN AllowDriveToSleep);
 
-SCSIPORTAPI
+SCSIPORT_API
 PVPB
 NTAPI
 ClassGetVpb(
   _In_ PDEVICE_OBJECT DeviceObject);
 
-SCSIPORTAPI
+SCSIPORT_API
 NTSTATUS
 NTAPI
 ClassSpinDownPowerHandler(
@@ -1122,13 +1315,13 @@ ClassNotifyFailurePredicted(
   _In_ UCHAR Lun);
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
-SCSIPORTAPI
+SCSIPORT_API
 VOID
 NTAPI
 ClassAcquireChildLock(
   _In_ PFUNCTIONAL_DEVICE_EXTENSION FdoExtension);
 
-SCSIPORTAPI
+SCSIPORT_API
 VOID
 NTAPI
 ClassReleaseChildLock(
@@ -1142,14 +1335,14 @@ ClassSendStartUnit(
   _In_ PDEVICE_OBJECT DeviceObject);
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
-SCSIPORTAPI
+SCSIPORT_API
 NTSTATUS
 NTAPI
 ClassRemoveDevice(
   _In_ PDEVICE_OBJECT DeviceObject,
   _In_ UCHAR RemoveType);
 
-SCSIPORTAPI
+SCSIPORT_API
 NTSTATUS
 NTAPI
 ClassAsynchronousCompletion(
@@ -1157,13 +1350,13 @@ ClassAsynchronousCompletion(
   PIRP Irp,
   PVOID Event);
 
-SCSIPORTAPI
+SCSIPORT_API
 VOID
 NTAPI
 ClassCheckMediaState(
   _In_ PFUNCTIONAL_DEVICE_EXTENSION FdoExtension);
 
-SCSIPORTAPI
+SCSIPORT_API
 NTSTATUS
 NTAPI
 ClassCheckVerifyComplete(
@@ -1172,7 +1365,7 @@ ClassCheckVerifyComplete(
   PVOID Context);
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
-SCSIPORTAPI
+SCSIPORT_API
 VOID
 NTAPI
 ClassSetMediaChangeState(
@@ -1181,21 +1374,21 @@ ClassSetMediaChangeState(
   _In_ BOOLEAN Wait);
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
-SCSIPORTAPI
+SCSIPORT_API
 VOID
 NTAPI
 ClassEnableMediaChangeDetection(
   _In_ PFUNCTIONAL_DEVICE_EXTENSION FdoExtension);
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
-SCSIPORTAPI
+SCSIPORT_API
 VOID
 NTAPI
 ClassDisableMediaChangeDetection(
   _In_ PFUNCTIONAL_DEVICE_EXTENSION FdoExtension);
 
 _IRQL_requires_max_(PASSIVE_LEVEL)
-SCSIPORTAPI
+SCSIPORT_API
 VOID
 NTAPI
 ClassCleanupMediaChangeDetection(
@@ -1238,6 +1431,33 @@ ClassSendNotification(
   _In_reads_bytes_opt_(ExtraDataSize) PVOID ExtraData);
 
 #endif /* (NTDDI_VERSION >= NTDDI_VISTA) */
+
+__inline
+UCHAR
+GET_FDO_EXTENSON_SENSE_DATA_LENGTH (
+  _In_ PFUNCTIONAL_DEVICE_EXTENSION FdoExtension)
+{
+  UCHAR SenseDataLength = 0;
+
+  if (FdoExtension->SenseData != NULL)
+  {
+#if (NTDDI_VERSION >= NTDDI_WIN8)
+    if (FdoExtension->SenseDataLength > 0)
+    {
+        SenseDataLength = FdoExtension->SenseDataLength;
+    }
+    else
+    {
+        // For backward compatibility with Windows 7 and earlier
+        SenseDataLength = SENSE_BUFFER_SIZE;
+    }
+#else
+    SenseDataLength = SENSE_BUFFER_SIZE;
+#endif
+  }
+
+  return SenseDataLength;
+}
 
 static __inline
 BOOLEAN

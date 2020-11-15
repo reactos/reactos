@@ -27,7 +27,7 @@ Për të hequr një pseudonim nga pseudonimi:\n\
     STRING_CALL_HELP "Thërret nje program batch nga një tjetër.\n\n\
 CALL [drive:][path]emri [batch-parameter]\n\n\
   batch-parameter  Specifikon ndonjë informacion qe kërkohen nga programi batch në\n\
-                   linjën e komandes."
+                   linjën e komandes.\n"
     STRING_CD_HELP "Ndryshon ose shfaq emrin e skedës aktuale\n\n\
 CHDIR [/D][drive:][rrugë]\n\
 CHDIR[..|.]\n\
@@ -197,7 +197,7 @@ PUSHD [rrugë | ..]\n\n\
   ECHO [mesazhe\n\
   ECHO.             printon një vijë e zbrazët\n\n\
 Shkruaj ECHO pa parametra qe shfaqin konfigurimin aktual te ECHO."
-    STRING_ECHO_HELP5 "ECHO është %s\n"
+    STRING_ECHO_HELP5 "ECHO është %s.\n"
     STRING_EXIT_HELP "Dalje nga interpretuesi komandues i linjes.\n\nEXIT [/b] [ExitCode]\n\n\
   /B            Dalje nga batch vetëm.\n\
                 Nëse drejtuar jashtë nga një skedar batch do të dalë nga cmd.exe\n\
@@ -232,7 +232,7 @@ të %variable.\n"
     STRING_GOTO_HELP1 "Drejton CMD në një linjë të etiketuar në një batch skript.\n\n\
 GOTO etiketa\n\n\
   label  Përcakton një varg teksti të përdorur në një batch skript, si një etiketë.\n\n\
-Ju mund të shkruani një etiketë në një linjë në vetvete, duke filluar me një rradhë."
+Ju mund të shkruani një etiketë në një linjë në vetvete, duke filluar me një rradhë.\n"
     STRING_IF_HELP1 "Kryen përpunimin e kushtëzuar në programet batch.\n\n\
     IF [NOT] ERRORLEVEL komanda e numrit\n\
   IF [NOT] string1==string2 komande\n\
@@ -269,9 +269,9 @@ Nëse anjëra nga /H ose /J nuk speficikohet, një lidhje simboli do të krijohe
     STRING_MOVE_HELP1 "Mbishkruaj %s (Po/Jo/Të Gjith)? "
     STRING_MOVE_HELP2 "Lëviz dokumentet dhe emero ato dhe skedat.\n\n\
 Për të lëvizur një ose më shumë dokumenta:\n\
-MOVE [/N][drive:][rrugë]emri1[,...] destinacioni\n\n\
+MOVE [/N][/Y|/-Y][drive:][rrugë]emri1[,...] destinacioni\n\n\
 Të emerosh skedat:\n\
-MOVE [/N][drive:][rrugë]dirname1 dirname2\n\n\
+MOVE [/N][/Y|/-Y][drive:][rrugë]dirname1 dirname2\n\n\
   [drive:][rrugë]emri1  Përcakton vendndodhjen dhe emrin e skedës\n\
                            ose dokumentave që ju dëshironi për të lëvizur.\n\
   /N                    Asgjë. Bëni gjithçka perveq zhvendosjen e dokumenta ose direktorives.\n\n\
@@ -292,6 +292,9 @@ rrugë [[drive:]rrugë[;...]]\nrrugë ;\n\n\
 Tipi rrugë ; të pastrosh të gjitha kërkimet-rrugën në parametra dhe të drejtojë komanden shell\n\
 që të kërkoj ne direktorine aktuale.\n\
 Shkruaj RRUGE pa parametra që shfaqin rrugen aktuale.\n"
+    STRING_PAUSE_HELP1 "Ndalon ekzekutimin e një dokumenti batch dhe trego mesazhin në vazhdim:\n\
+'Shtypni një buton për të vazhduar...' ose një mesazh të përcaktuar për përdoruesin.\n\n\
+PAUSE [mesazhi]"
     STRING_PROMPT_HELP1 "Ndryshimet në komandën e shpejtë.\n\n\
 PROMPT [teksti]\n\n\
   tekst    Specifiko një dritare të re komande.\n\n\
@@ -314,16 +317,13 @@ Komanda mund të përbëhet nga karaktere normale dhe Kodet e mëposhtme të ve�
   $V   Versioni i OS\n\
   $_   Rikthimi i perzgjedhjeve dhe informacionit\n\
   $$   $ (Shenja e dollarit)\n"
-    STRING_PAUSE_HELP1 "Ndalon ekzekutimin e një dokumenti batch dhe trego mesazhin në vazhdim:\n\
-'Shtypni një buton për të vazhduar...' ose një mesazh të përcaktuar për përdoruesin.\n\n\
-PAUZE [mesazhi]"
     STRING_PROMPT_HELP2 "  $+   Shfaq thellësinë aktuale të directorive në rafte"
     STRING_PROMPT_HELP3 "\nSHFAQ pa parametra për të resetuar ne konfigurimet e automatizuara."
     STRING_REM_HELP "Nis një linjë koment në një dokument batch.\n\nREM [Koment"
     STRING_RMDIR_HELP "Heq një direktori.\n\n\
-RMDIR [drive:]rrugë\nRD [drive:]rrugë\n\
-/S          Fshin të gjitha dokumentat dhe dosjet brenda objektivit\n\
-/Q          Nuk e shfaq për përdoruesin\n"
+RMDIR [/S] [/Q] [drive:]rrugë\nRD [/S] [/Q] [drive:]rrugë\n\
+  /S    Fshin të gjitha dokumentat dhe dosjet brenda objektivit.\n\
+  /Q    Nuk e shfaq për përdoruesin.\n"
     STRING_RMDIR_HELP2 "Direktoria nuk është e zbrazët!\n"
     STRING_REN_HELP1 "Emeron nje dokument/directori ose dokument/skedë.\n\n\
 RENAME [/E /N /P /Q /S /T] emrin_e_vjetër ... emrin_e_ri\n\
@@ -472,9 +472,9 @@ title         titull i ri\n"
     STRING_ALIAS_ERROR "Rreshti i komandës shumë gjatë pas pseudonimit!\n"
     STRING_ASSOC_ERROR "Dokumentit perkates nuk u gjet për zgjatjen %s\n"
     STRING_BATCH_ERROR "Gabim gjatë hapjes së dokumentit batch\n"
-    STRING_CHOICE_ERROR "Opsione invalide. Format i pritshem: /C[:]opsione"
-    STRING_CHOICE_ERROR_TXT "Opsione invalide. Format i pritshem: /T[:]c,nn"
-    STRING_CHOICE_ERROR_OPTION "Illegal Option: %s"
+    STRING_CHOICE_ERROR "Opsione invalide. Format i pritshem: /C[:]opsione\n"
+    STRING_CHOICE_ERROR_TXT "Opsione invalide. Format i pritshem: /T[:]c,nn\n"
+    STRING_CHOICE_ERROR_OPTION "Illegal Option: %s\n"
     STRING_CMD_ERROR1 "Nuk mund të përcjellim hyrjen nga dokumenti %s\n"
     STRING_CMD_ERROR2 "Error ne krijimin e dokumentit e perkohshem për informacionin ne pipe\n"
     STRING_CMD_ERROR3 "Nuk mund të përcjellim në dokument %s\n"
@@ -499,9 +499,9 @@ title         titull i ri\n"
     STRING_FOR_ERROR4 "asnjë komandë pas 'do'."
     STRING_FREE_ERROR1 "Drive Invalid"
     STRING_FREE_ERROR2 "E paetiketuar"
-    STRING_GOTO_ERROR1 "Nuk ka etiketa specifikuar për GOTO"
+    STRING_GOTO_ERROR1 "Nuk ka etiketa specifikuar për GOTO\n"
     STRING_GOTO_ERROR2 "Etikete '%s' Nuk u gjet\n"
-    STRING_MD_ERROR "Një nën-skedë ose dokument ekziston.\n"
+    STRING_MD_ERROR "Një nën-skedë ose dokument %s ekziston.\n"
     STRING_MD_ERROR2 "Rruga për tek skeda e re nuk ekziston.\n"
     STRING_MOVE_ERROR1 "[OK]\n"
     STRING_MOVE_ERROR2 "[Error]\n"
@@ -520,9 +520,9 @@ title         titull i ri\n"
     STRING_ERROR_BADCOMMAND "Komande e keqe ose dokument i keq - %s\n"
     STRING_ERROR_OUT_OF_MEMORY "Error ska memorie te mjaftueshme.\n"
     STRING_ERROR_CANNOTPIPE "Error!  Nuk mund të pipoj!  Nuk mund të hape dokumentet e perkohshem!\n"
-    STRING_ERROR_D_PAUSEMSG "Shtypni një buton për të vazhduar . . ."
+    STRING_ERROR_D_PAUSEMSG "Shtypni një buton për të vazhduar . . . "
     STRING_ERROR_DRIVER_NOT_READY "Drive nuk është gati"
-    STRING_PATH_ERROR "CMD: Jo në mjedis '%s'\n"
+    STRING_SET_ENV_ERROR "Environment variable '%s' is not defined\n"
     STRING_REPLACE_ERROR1 "Qeles invalid - %s\n"
     STRING_REPLACE_ERROR2 "Rruga nuk u gjet - %s\n"
     STRING_REPLACE_ERROR3 "Dokumenti, emri i direktorise, ose syntaksi i etiketes volumetrike eshte gabim.\n"
@@ -546,8 +546,8 @@ title         titull i ri\n"
     STRING_MKLINK_CREATED_JUNCTION "Kryqezim krijuar për %s <<===>> %s\n"
     STRING_MORE "Më shumë? "
     STRING_CANCEL_BATCH_FILE "\r\nCtrl-Break.  Anulo dokumentin batch? (Po/Jo/Të Gjith) "
-    STRING_INVALID_OPERAND "Invalid operand."
-    STRING_EXPECTED_CLOSE_PAREN "Pritej ')'."
-    STRING_EXPECTED_NUMBER_OR_VARIABLE "Numer që pritej ose emri i variables."
-    STRING_SYNTAX_COMMAND_INCORRECT "Sintaksi i komandes është gabim."
+    STRING_INVALID_OPERAND "Invalid operand.\n"
+    STRING_EXPECTED_CLOSE_PAREN "Pritej ')'.\n"
+    STRING_EXPECTED_NUMBER_OR_VARIABLE "Numer që pritej ose emri i variables.\n"
+    STRING_SYNTAX_COMMAND_INCORRECT "Sintaksi i komandes është gabim.\n"
 END

@@ -14,10 +14,6 @@
 #define NDEBUG
 #include <debug.h>
 
-#if defined (ALLOC_PRAGMA)
-#pragma alloc_text(INIT, MmInitializeRmapList)
-#endif
-
 /* TYPES ********************************************************************/
 
 /* GLOBALS ******************************************************************/
@@ -37,7 +33,7 @@ RmapListFree(
     ExFreePoolWithTag(P, TAG_RMAP);
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 MmInitializeRmapList(VOID)

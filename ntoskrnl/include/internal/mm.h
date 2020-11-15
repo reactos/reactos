@@ -149,7 +149,13 @@ typedef ULONG_PTR SWAPENTRY;
 //
 // Wait entry for marking pages that are being serviced
 //
+#ifdef _M_IX86
 #define MM_WAIT_ENTRY            0x7ffffc00
+#elif defined(_M_AMD64)
+#define MM_WAIT_ENTRY            0x7FFFFFFFFFFFFC00ULL
+#else
+#error Unsupported architecture!
+#endif
 
 #define InterlockedCompareExchangePte(PointerPte, Exchange, Comperand) \
     InterlockedCompareExchange((PLONG)(PointerPte), Exchange, Comperand)
@@ -559,7 +565,6 @@ MiCheckAllProcessMemoryAreas(VOID);
 
 /* npool.c *******************************************************************/
 
-INIT_FUNCTION
 VOID
 NTAPI
 MiInitializeNonPagedPool(VOID);
@@ -610,7 +615,6 @@ MmInit1(
     VOID
 );
 
-INIT_FUNCTION
 BOOLEAN
 NTAPI
 MmInitSystem(IN ULONG Phase,
@@ -627,7 +631,6 @@ VOID
 NTAPI
 MmFreeSwapPage(SWAPENTRY Entry);
 
-INIT_FUNCTION
 VOID
 NTAPI
 MmInitPagingFile(VOID);
@@ -796,7 +799,6 @@ MmDeleteKernelStack(PVOID Stack,
 
 /* balance.c *****************************************************************/
 
-INIT_FUNCTION
 VOID
 NTAPI
 MmInitializeMemoryConsumer(
@@ -804,7 +806,6 @@ MmInitializeMemoryConsumer(
     NTSTATUS (*Trim)(ULONG Target, ULONG Priority, PULONG NrFreed)
 );
 
-INIT_FUNCTION
 VOID
 NTAPI
 MmInitializeBalancer(
@@ -827,7 +828,6 @@ MmRequestPageMemoryConsumer(
     PPFN_NUMBER AllocatedPage
 );
 
-INIT_FUNCTION
 VOID
 NTAPI
 MiInitBalancerThread(VOID);
@@ -873,7 +873,6 @@ MmDeleteRmap(
     PVOID Address
 );
 
-INIT_FUNCTION
 VOID
 NTAPI
 MmInitializeRmapList(VOID);
@@ -1083,7 +1082,6 @@ MmIsDisabledPage(
     PVOID Address
 );
 
-INIT_FUNCTION
 VOID
 NTAPI
 MmInitGlobalKernelPageDirectory(VOID);
@@ -1186,7 +1184,6 @@ MmCreateProcessAddressSpace(
     IN PULONG_PTR DirectoryTableBase
 );
 
-INIT_FUNCTION
 NTSTATUS
 NTAPI
 MmInitializeHandBuiltProcess(
@@ -1194,7 +1191,6 @@ MmInitializeHandBuiltProcess(
     IN PULONG_PTR DirectoryTableBase
 );
 
-INIT_FUNCTION
 NTSTATUS
 NTAPI
 MmInitializeHandBuiltProcess2(
@@ -1314,7 +1310,6 @@ MmProtectSectionView(
     PULONG OldProtect
 );
 
-INIT_FUNCTION
 NTSTATUS
 NTAPI
 MmInitSectionImplementation(VOID);
@@ -1337,7 +1332,6 @@ MmPageOutSectionView(
     ULONG_PTR Entry
 );
 
-INIT_FUNCTION
 NTSTATUS
 NTAPI
 MmCreatePhysicalMemorySection(VOID);
@@ -1356,14 +1350,12 @@ MmFreeSectionSegments(PFILE_OBJECT FileObject);
 
 /* sysldr.c ******************************************************************/
 
-INIT_FUNCTION
 VOID
 NTAPI
 MiReloadBootLoadedDrivers(
     IN PLOADER_PARAMETER_BLOCK LoaderBlock
 );
 
-INIT_FUNCTION
 BOOLEAN
 NTAPI
 MiInitializeLoadedModuleList(

@@ -230,29 +230,29 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS
 CAPTION "Memoria virtuale"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    LTEXT "Disco  [Etichetta Volume]", IDC_STATIC, 12, 5, 96, 9
-    LTEXT "Dimensione del file di paginazione (MB)", IDC_STATIC, 115, 5, 96, 9
+    LTEXT "Disco  [Etichetta Volume]", IDC_STATIC, 12, 5, 82, 9
+    LTEXT "Dimensione del file di paginazione (MB)", IDC_STATIC, 98, 5, 124, 9
     LISTBOX IDC_PAGEFILELIST, 10, 16, 204, 52, LBS_NOTIFY | LBS_USETABSTOPS
     GROUPBOX "Dimensione del file di paginazione per il disco selezionato", IDC_DRIVEGROUP, 10, 70, 204, 104
     LTEXT "Disco:", IDC_STATIC, 20, 80, 20, 8
-    LTEXT "", IDC_DRIVE, 88, 81, 100, 9
-    LTEXT "Spazio disponibile:", IDC_STATIC, 20, 92, 56, 9
-    LTEXT "", IDC_SPACEAVAIL, 88, 92, 104, 9
-    LTEXT "&Dimensione iniziale (MB):", -1, 22, 118, 54, 9
-    LTEXT "Dimensione massima (MB):", -1, 22, 131, 64, 9
-    AUTORADIOBUTTON "&Dimensione personalizzata", IDC_CUSTOM, 20, 105, 54, 9, WS_GROUP
-    AUTORADIOBUTTON "Dimensione gestita dal sistema", IDC_SYSMANSIZE, 20, 145, 88, 9
-    AUTORADIOBUTTON "&Nessun file di paginazione", IDC_NOPAGEFILE, 20, 158, 78,9
-    EDITTEXT IDC_INITIALSIZE, 100, 114, 44, 13, NOT WS_BORDER, WS_EX_CLIENTEDGE
-    EDITTEXT IDC_MAXSIZE, 100, 129, 44, 13, NOT WS_BORDER, WS_EX_CLIENTEDGE
+    LTEXT "%s", IDC_DRIVE, 88, 80, 100, 9
+    LTEXT "Spazio disponibile:", IDC_STATIC, 20, 92, 62, 9
+    LTEXT "%s", IDC_SPACEAVAIL, 88, 92, 100, 9
+    LTEXT "&Dimensione iniziale (MB):", -1, 22, 118, 80, 9
+    LTEXT "Dimensione massima (MB):", -1, 22, 131, 86, 9
+    AUTORADIOBUTTON "&Dimensione personalizzata", IDC_CUSTOM, 20, 105, 96, 9, WS_GROUP
+    AUTORADIOBUTTON "Dimensione gestita dal sistema", IDC_SYSMANSIZE, 20, 145, 110, 9
+    AUTORADIOBUTTON "&Nessun file di paginazione", IDC_NOPAGEFILE, 20, 158, 94, 9
+    EDITTEXT IDC_INITIALSIZE, 110, 114, 44, 13, NOT WS_BORDER, WS_EX_CLIENTEDGE
+    EDITTEXT IDC_MAXSIZE, 110, 129, 44, 13, NOT WS_BORDER, WS_EX_CLIENTEDGE
     PUSHBUTTON "Conferma", IDC_SET, 158, 154, 50, 15
     GROUPBOX "Dimensione totale del file di paginazione per tutti i dischi", IDC_TOTALGROUP, 10, 177, 204, 46
     LTEXT "Minimo ammesso:", IDC_STATIC, 18, 188, 58, 9
-    LTEXT "", IDC_MINIMUM, 88, 188, 100, 9
+    LTEXT "%s", IDC_MINIMUM, 90, 188, 100, 9
     LTEXT "Consigliato:", IDC_STATIC, 18, 199, 52, 9
-    LTEXT "", IDC_RECOMMENDED, 88, 197, 100, 9
-    LTEXT "Attualmente allocato:", IDC_STATIC, 18, 210, 66, 9
-    LTEXT "", IDC_CURRENT, 88, 208, 100, 9
+    LTEXT "%s", IDC_RECOMMENDED, 90, 199, 100, 9
+    LTEXT "Attualmente allocato:", IDC_STATIC, 18, 210, 70, 9
+    LTEXT "%s", IDC_CURRENT, 90, 210, 100, 9
     DEFPUSHBUTTON "OK", IDOK, 114, 230, 48, 15
     PUSHBUTTON "Annulla", IDCANCEL, 168, 230, 48, 15
 END
@@ -335,6 +335,7 @@ BEGIN
     IDS_WARNMAXIMUMSIZE "Immettere la dimensione massima del file di paging."
     IDS_WARNINITIALRANGE "La dimensione iniziale del file di paging non può essere inferiore a 2 MB e non può superare lo spazio disponibile nell'unità selezionata."
     IDS_WARNMAXIMUMRANGE "La dimensione massima del file di paging non può essere inferiore a quella iniziale e non può superare lo spazio disponibile nell'unità selezionata."
+    IDS_PAGEFILE_MB "%u MB"
     IDS_PAGEFILE_NONE "None"
     IDS_PAGEFILE_SYSTEM "System Managed"
     IDS_INFOREBOOT "You have to reboot the computer in order to apply the changes."

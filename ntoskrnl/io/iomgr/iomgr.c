@@ -87,13 +87,9 @@ extern GENERAL_LOOKASIDE IoCompletionPacketLookaside;
 
 PLOADER_PARAMETER_BLOCK IopLoaderBlock;
 
-#if defined (ALLOC_PRAGMA)
-#pragma alloc_text(INIT, IoInitSystem)
-#endif
-
 /* INIT FUNCTIONS ************************************************************/
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 IopInitLookasideLists(VOID)
@@ -240,7 +236,7 @@ IopInitLookasideLists(VOID)
     }
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 BOOLEAN
 NTAPI
 IopCreateObjectTypes(VOID)
@@ -329,7 +325,7 @@ IopCreateObjectTypes(VOID)
     return TRUE;
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 BOOLEAN
 NTAPI
 IopCreateRootDirectories(VOID)
@@ -394,7 +390,7 @@ IopCreateRootDirectories(VOID)
     return TRUE;
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 BOOLEAN
 NTAPI
 IopMarkBootPartition(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
@@ -464,7 +460,7 @@ IopMarkBootPartition(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     return TRUE;
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 BOOLEAN
 NTAPI
 IoInitSystem(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
@@ -547,6 +543,13 @@ IoInitSystem(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     /* Initialize HAL Root Bus Driver */
     HalInitPnpDriver();
 
+    /* Reenumerate what HAL has added (synchronously)
+     * This function call should eventually become a 2nd stage of the PnP initialization */
+    PiQueueDeviceAction(IopRootDeviceNode->PhysicalDeviceObject,
+                        PiActionEnumRootDevices,
+                        NULL,
+                        NULL);
+
     /* Make loader block available for the whole kernel */
     IopLoaderBlock = LoaderBlock;
 
@@ -580,9 +583,6 @@ IoInitSystem(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         DPRINT1("IopMarkBootPartition failed!\n");
         return FALSE;
     }
-
-    /* Initialize PnP root relations */
-    IopEnumerateDevice(IopRootDeviceNode->PhysicalDeviceObject);
 
 #if !defined(_WINKD_) && defined(KDBG)
     /* Read KDB Data */

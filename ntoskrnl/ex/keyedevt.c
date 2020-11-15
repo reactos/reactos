@@ -42,7 +42,7 @@ GENERIC_MAPPING ExpKeyedEventMapping =
 /* FUNCTIONS *****************************************************************/
 
 _IRQL_requires_max_(APC_LEVEL)
-INIT_FUNCTION
+CODE_SEG("INIT")
 BOOLEAN
 NTAPI
 ExpInitializeKeyedEventImplementation(VOID)

@@ -1,4 +1,6 @@
 
+add_subdirectory(nt_0600)
+
 spec2def(ntdll.dll def/ntdll.spec ADD_IMPORTLIB)
 
 add_definitions(

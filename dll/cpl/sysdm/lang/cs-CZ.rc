@@ -236,16 +236,16 @@ CAPTION "Virtuální paměť"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT "Jednotka  [Jmenovka]", IDC_STATIC, 12, 5, 96, 9
-    LTEXT "Velikost stránkovacího souboru (MB)", IDC_STATIC, 115, 5, 96, 9
+    LTEXT "Velikost stránkovacího souboru (MB)", IDC_STATIC, 100, 5, 118, 9
     LISTBOX IDC_PAGEFILELIST, 10, 16, 204, 52, LBS_NOTIFY | LBS_USETABSTOPS
     GROUPBOX "Velikost stránkovacího souboru vybrané jednotky", IDC_DRIVEGROUP, 10, 70, 204, 104
-    LTEXT "Jednotka:", IDC_STATIC, 20, 80, 20, 8
-    LTEXT "", IDC_DRIVE, 88, 81, 100, 9
+    LTEXT "Jednotka:", IDC_STATIC, 20, 80, 34, 8
+    LTEXT "%s", IDC_DRIVE, 88, 80, 100, 9
     LTEXT "Volné místo:", IDC_STATIC, 20, 92, 56, 9
-    LTEXT "", IDC_SPACEAVAIL, 88, 92, 104, 9
-    LTEXT "&Počáteční velikost (MB):", -1, 22, 118, 75, 9
-    LTEXT "Ma&ximální velikost (MB):", -1, 22, 131, 75, 9
-    AUTORADIOBUTTON "&Vlastní velikost", IDC_CUSTOM, 20, 105, 54, 9, WS_GROUP
+    LTEXT "%s", IDC_SPACEAVAIL, 88, 92, 104, 9
+    LTEXT "&Počáteční velikost (MB):", -1, 22, 118, 78, 9
+    LTEXT "Ma&ximální velikost (MB):", -1, 22, 131, 78, 9
+    AUTORADIOBUTTON "&Vlastní velikost", IDC_CUSTOM, 20, 105, 60, 9, WS_GROUP
     AUTORADIOBUTTON "Velikost určí s&ystém", IDC_SYSMANSIZE, 20, 145, 88, 9
     AUTORADIOBUTTON "&Vypnout", IDC_NOPAGEFILE, 20, 158, 78,9
     EDITTEXT IDC_INITIALSIZE, 100, 114, 44, 13, NOT WS_BORDER, WS_EX_CLIENTEDGE
@@ -253,11 +253,11 @@ BEGIN
     PUSHBUTTON "N&astavit", IDC_SET, 158, 154, 50, 15
     GROUPBOX "Celková velikost stránkovacího souboru všech jednotek", IDC_TOTALGROUP, 10, 177, 204, 46
     LTEXT "Minimum:", IDC_STATIC, 18, 188, 58, 9
-    LTEXT "", IDC_MINIMUM, 88, 188, 100, 9
+    LTEXT "%s", IDC_MINIMUM, 88, 188, 100, 9
     LTEXT "Doporučeno:", IDC_STATIC, 18, 199, 52, 9
-    LTEXT "", IDC_RECOMMENDED, 88, 199, 100, 9
+    LTEXT "%s", IDC_RECOMMENDED, 88, 199, 100, 9
     LTEXT "Aktuálně přiděleno:", IDC_STATIC, 18, 210, 66, 9
-    LTEXT "", IDC_CURRENT, 88, 210, 100, 9
+    LTEXT "%s", IDC_CURRENT, 88, 210, 100, 9
     DEFPUSHBUTTON "OK", IDOK, 114, 230, 48, 15
     PUSHBUTTON "Storno", IDCANCEL, 168, 230, 48, 15
 END
@@ -340,6 +340,7 @@ BEGIN
     IDS_WARNMAXIMUMSIZE "Zadejte číselnou hodnotu pro maximální velikost stránkovacího souboru."
     IDS_WARNINITIALRANGE "Počáteční velikost stránkovacího souboru nesmí být menší než 2 MB a nesmí překročit množství volného místa na zvolené diskové jednotce."
     IDS_WARNMAXIMUMRANGE "Maximální velikost stránkovacího souboru nesmí být menší než velikost počáteční, nesmí být větší než 4095 MB a nesmí překročit množství volného místa na zvolené diskové jednotce."
+    IDS_PAGEFILE_MB "%u MB"
     IDS_PAGEFILE_NONE "Není"
     IDS_PAGEFILE_SYSTEM "Spravováno systémem"
     IDS_INFOREBOOT "Změny se projeví po restartování počítače."

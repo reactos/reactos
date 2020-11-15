@@ -22,3 +22,15 @@ test_builtins.cmd TESTCMD "test_builtins.cmd"
 
 /* @makedep: test_builtins.cmd.exp */
 test_builtins.cmd.exp TESTOUT "test_builtins.cmd.exp"
+
+/* @makedep: test_echoer_parser.cmd */
+test_echoer_parser.cmd TESTCMD "test_echoer_parser.cmd"
+
+/* @makedep: test_echoer_parser.cmd.exp */
+test_echoer_parser.cmd.exp TESTOUT "test_echoer_parser.cmd.exp"
+
+/* @makedep: test_goto_call.cmd */
+test_goto_call.cmd TESTCMD "test_goto_call.cmd"
+
+/* @makedep: test_goto_call.cmd.exp */
+test_goto_call.cmd.exp TESTOUT "test_goto_call.cmd.exp"

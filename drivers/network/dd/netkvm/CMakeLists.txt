@@ -27,12 +27,13 @@ add_cd_file(TARGET netkvm DESTINATION reactos/system32/drivers FOR all)
 add_driver_inf(netkvm netkvm.inf)
 
 if(NOT MSVC)
-    add_compile_flags("-Wno-unused-function")
-    add_compile_flags("-Wno-old-style-declaration")
-    add_compile_flags("-Wno-unknown-pragmas")
-    add_compile_flags("-Wno-unused-but-set-variable")
-    add_compile_flags("-Wno-pointer-sign")
-    add_compile_flags("-Wno-pointer-to-int-cast")
-    add_compile_flags("-Wno-int-to-pointer-cast")
-    add_compile_flags("-Wno-attributes")
+    target_compile_options(netkvm PRIVATE
+        -Wno-unused-function
+        -Wno-old-style-declaration
+        -Wno-unknown-pragmas
+        -Wno-unused-but-set-variable
+        -Wno-pointer-sign
+        -Wno-pointer-to-int-cast
+        -Wno-int-to-pointer-cast
+        -Wno-attributes)
 endif()

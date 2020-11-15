@@ -244,9 +244,9 @@ BEGIN
     LISTBOX IDC_PAGEFILELIST, 10, 16, 204, 52, LBS_NOTIFY | LBS_USETABSTOPS
     GROUPBOX "Dimensiune fișier de paginare (din selecție)", IDC_DRIVEGROUP, 10, 70, 204, 104
     LTEXT "Unitate:", IDC_STATIC, 20, 80, 50, 8
-    LTEXT "", IDC_DRIVE, 88, 81, 100, 9
+    LTEXT "%s", IDC_DRIVE, 88, 80, 100, 9
     LTEXT "Spațiu disponibil:", IDC_STATIC, 20, 92, 56, 9
-    LTEXT "", IDC_SPACEAVAIL, 88, 92, 104, 9
+    LTEXT "%s", IDC_SPACEAVAIL, 88, 92, 104, 9
     LTEXT "Di&mensiunea inițială (Mo):", -1, 32, 118, 87, 9
     LTEXT "Dimensiunea ma&ximă (Mo):", -1, 32, 131, 87, 9
     AUTORADIOBUTTON "Limite parti&cularizate:", IDC_CUSTOM, 20, 105, 154, 9, WS_GROUP
@@ -257,11 +257,11 @@ BEGIN
     PUSHBUTTON "&Aplică", IDC_SET, 158, 154, 50, 15
     GROUPBOX "Paginare", IDC_TOTALGROUP, 10, 177, 204, 46
     LTEXT "Minimă permisă:", IDC_STATIC, 18, 188, 58, 9
-    LTEXT "", IDC_MINIMUM, 88, 188, 100, 9
+    LTEXT "%s", IDC_MINIMUM, 88, 188, 100, 9
     LTEXT "Recomandată:", IDC_STATIC, 18, 199, 52, 9
-    LTEXT "", IDC_RECOMMENDED, 88, 199, 100, 9
+    LTEXT "%s", IDC_RECOMMENDED, 88, 199, 100, 9
     LTEXT "Actuală:", IDC_STATIC, 18, 210, 66, 9
-    LTEXT "", IDC_CURRENT, 88, 210, 100, 9
+    LTEXT "%s", IDC_CURRENT, 88, 210, 100, 9
     DEFPUSHBUTTON "Con&firmă", IDOK, 114, 230, 48, 15
     PUSHBUTTON "A&nulează", IDCANCEL, 168, 230, 48, 15
 END
@@ -344,6 +344,7 @@ BEGIN
     IDS_WARNMAXIMUMSIZE "Introduceți o valoare numerică pentru dimensiunea maximă a fișierului de paginare."
     IDS_WARNINITIALRANGE "Dimensiunea inițială a fișierului de paginare trebuie să fie încadrată între 2 Mo și spațiul liber disponibil al unității selectate."
     IDS_WARNMAXIMUMRANGE "Dimensiunea maximă a fișierului de paginare trebuie să fie încadrată între dimensiunea inițială și spațiul liber disponibil al unității selectate."
+    IDS_PAGEFILE_MB "%u MB"
     IDS_PAGEFILE_NONE "Nespecificat"
     IDS_PAGEFILE_SYSTEM "Gestionat de sistem"
     IDS_INFOREBOOT "Pentru aplicarea modificărilor este necesară repornirea calculatorului."

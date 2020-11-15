@@ -52,7 +52,7 @@
 #define STRING_GOTO_ERROR2         341
 #define STRING_MOVE_ERROR1         342
 #define STRING_MOVE_ERROR2         343
-#define STRING_PATH_ERROR          345
+#define STRING_SET_ENV_ERROR       345
 #define STRING_REN_ERROR1          346
 #define STRING_TIME_ERROR1         348
 #define STRING_TYPE_ERROR1         349

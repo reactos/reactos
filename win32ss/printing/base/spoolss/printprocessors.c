@@ -6,6 +6,23 @@
  */
 
 #include "precomp.h"
+#include <prtprocenv.h>
+
+BOOL WINAPI
+AddPrintProcessorW(PWSTR pName, PWSTR pEnvironment, PWSTR pPathName, PWSTR pPrintProcessorName)
+{
+    if (!pEnvironment || !*pEnvironment)
+        pEnvironment = (PWSTR)wszCurrentEnvironment;
+    return FALSE;
+}
+
+BOOL WINAPI
+DeletePrintProcessorW(PWSTR pName, PWSTR pEnvironment, PWSTR pPrintProcessorName)
+{
+    if (!pEnvironment || !*pEnvironment)
+        pEnvironment = (PWSTR)wszCurrentEnvironment;
+    return FALSE;
+}
 
 BOOL WINAPI
 EnumPrintProcessorDatatypesW(PWSTR pName, PWSTR pPrintProcessorName, DWORD Level, PBYTE pDatatypes, DWORD cbBuf, PDWORD pcbNeeded, PDWORD pcReturned)
@@ -14,6 +31,12 @@ EnumPrintProcessorDatatypesW(PWSTR pName, PWSTR pPrintProcessorName, DWORD Level
 
     // Sanity checks
     if (cbBuf && !pDatatypes)
+    {
+        SetLastError(ERROR_INVALID_USER_BUFFER);
+        return FALSE;
+    }
+
+    if ( cbBuf && !pDatatypes )
     {
         SetLastError(ERROR_INVALID_USER_BUFFER);
         return FALSE;
@@ -29,6 +52,13 @@ EnumPrintProcessorsW(PWSTR pName, PWSTR pEnvironment, DWORD Level, PBYTE pPrintP
 {
     // Always call this function on the Local Spooler.
     PSPOOLSS_PRINT_PROVIDER pPrintProvider = CONTAINING_RECORD(PrintProviderList.Flink, SPOOLSS_PRINT_PROVIDER, Entry);
+
+    if ( cbBuf && !pPrintProcessorInfo )
+    {
+        SetLastError(ERROR_INVALID_USER_BUFFER);
+        return FALSE;
+    }
+
     return pPrintProvider->PrintProvider.fpEnumPrintProcessors(pName, pEnvironment, Level, pPrintProcessorInfo, cbBuf, pcbNeeded, pcReturned);
 }
 
@@ -39,6 +69,12 @@ GetPrintProcessorDirectoryW(PWSTR pName, PWSTR pEnvironment, DWORD Level, PBYTE 
 
     // Sanity checks
     if (cbBuf && !pPrintProcessorInfo)
+    {
+        SetLastError(ERROR_INVALID_USER_BUFFER);
+        return FALSE;
+    }
+
+    if ( cbBuf && !pPrintProcessorInfo )
     {
         SetLastError(ERROR_INVALID_USER_BUFFER);
         return FALSE;

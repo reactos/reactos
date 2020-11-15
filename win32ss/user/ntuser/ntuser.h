@@ -19,7 +19,7 @@ extern ATOM gaGuiConsoleWndClass;
 extern ATOM AtomDDETrack;
 extern ATOM AtomQOS;
 
-INIT_FUNCTION NTSTATUS NTAPI InitUserImpl(VOID);
+NTSTATUS NTAPI InitUserImpl(VOID);
 VOID FASTCALL CleanupUserImpl(VOID);
 VOID FASTCALL UserEnterShared(VOID);
 VOID FASTCALL UserEnterExclusive(VOID);

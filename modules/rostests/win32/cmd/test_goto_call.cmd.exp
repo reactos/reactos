@@ -1,0 +1,277 @@
+--------- Testing GOTO ---------
+Test GOTO ok
+--------- Testing CALL within batch ---------
+Test CALL ok from :test_call
+Hi there!
+Hi there!
+Hi there!
+Hi there!
+goto with unrelated first character, and escape carets worked
+Params: ':dest1', '', '', ''
+goto with unrelated first character, and escape carets worked
+Params: ':dest1', '', '', ''
+goto with unrelated first character, and escape carets worked
+Params: ':dest1', '', '', ''
+goto with unrelated first character, and escape carets worked
+Params: ':dest1', '', '', ''
+goto with unrelated first character, and escape carets worked
+Params: ':dest1', 'a', 'b', 'c'
+goto with unrelated first character, and escape carets worked
+Params: ':dest1', '', '', ''
+OK
+OK
+CALL with escape caret worked
+GOTO with escape caret worked
+Hi there!
+Hi there!
+Hi there!
+Hi there!
+Hi there!
+Hi there!
+--------- Testing :EOF support ---------
+OK
+OK
+OK
+OK
+OK
+OK
+OK
+--------- Testing GOTO within block ---------
+Block-test 1: Single-line
+Block-test 2: Multi-line
+--------- Testing CALL within block ---------
+Block-test 3: CALL in block
+Test CALL in block OK from :test_call_block
+CALL done
+Block-test 4 OK
+--------- Testing CALL within FOR ---------
+0 IS NOT equal to 2
+1 IS NOT equal to 2
+Out of FOR 1 CALL from :out_of_loop_1, number is 2
+2 IS equal to 2
+3 IS NOT equal to 2
+--------- Testing GOTO within FOR ---------
+0 IS NOT equal to 2
+1 IS NOT equal to 2
+Out of FOR 2, number is 2
+--------- Testing FOR loop stopping with GOTO ---------
+--- FOR
+
+@pwd@>for %A in (1 2 3 4 5 6 7 8 9 10) do (
+set Number=%A@space@@space@
+ if %A == 5 goto :out_of_loop_2a@space@
+)@space@
+
+@pwd@>(
+set Number=1@space@@space@
+ if 1 == 5 goto :out_of_loop_2a@space@
+)@space@
+
+@pwd@>(
+set Number=2@space@@space@
+ if 2 == 5 goto :out_of_loop_2a@space@
+)@space@
+
+@pwd@>(
+set Number=3@space@@space@
+ if 3 == 5 goto :out_of_loop_2a@space@
+)@space@
+
+@pwd@>(
+set Number=4@space@@space@
+ if 4 == 5 goto :out_of_loop_2a@space@
+)@space@
+
+@pwd@>(
+set Number=5@space@@space@
+ if 5 == 5 goto :out_of_loop_2a@space@
+)@space@
+
+@pwd@>echo Out of FOR 2a, number is 5@space@
+Out of FOR 2a, number is 5
+--- FOR /R
+
+@pwd@\foobar>for /R %A in (1 2 3 4 5 6 7 8 9 10) do (
+set Number=%~nA@space@@space@
+ if %~nA == 5 goto :out_of_loop_2b@space@
+)@space@
+
+@pwd@\foobar>(
+set Number=1@space@@space@
+ if 1 == 5 goto :out_of_loop_2b@space@
+)@space@
+
+@pwd@\foobar>(
+set Number=2@space@@space@
+ if 2 == 5 goto :out_of_loop_2b@space@
+)@space@
+
+@pwd@\foobar>(
+set Number=3@space@@space@
+ if 3 == 5 goto :out_of_loop_2b@space@
+)@space@
+
+@pwd@\foobar>(
+set Number=4@space@@space@
+ if 4 == 5 goto :out_of_loop_2b@space@
+)@space@
+
+@pwd@\foobar>(
+set Number=5@space@@space@
+ if 5 == 5 goto :out_of_loop_2b@space@
+)@space@
+
+@pwd@\foobar>echo Out of FOR 2b, number is 5@space@
+Out of FOR 2b, number is 5
+--- FOR /L
+
+@pwd@>for /L %A in (1 1 10) do (
+set Number=%A@space@@space@
+ if %A == 5 goto :out_of_loop_2c@space@
+)@space@
+
+@pwd@>(
+set Number=1@space@@space@
+ if 1 == 5 goto :out_of_loop_2c@space@
+)@space@
+
+@pwd@>(
+set Number=2@space@@space@
+ if 2 == 5 goto :out_of_loop_2c@space@
+)@space@
+
+@pwd@>(
+set Number=3@space@@space@
+ if 3 == 5 goto :out_of_loop_2c@space@
+)@space@
+
+@pwd@>(
+set Number=4@space@@space@
+ if 4 == 5 goto :out_of_loop_2c@space@
+)@space@
+
+@pwd@>(
+set Number=5@space@@space@
+ if 5 == 5 goto :out_of_loop_2c@space@
+)@space@
+
+@pwd@>(
+set Number=6@space@@space@
+ if 6 == 5 goto :out_of_loop_2c@space@
+)@space@
+
+@pwd@>(
+set Number=7@space@@space@
+ if 7 == 5 goto :out_of_loop_2c@space@
+)@space@
+
+@pwd@>(
+set Number=8@space@@space@
+ if 8 == 5 goto :out_of_loop_2c@space@
+)@space@
+
+@pwd@>(
+set Number=9@space@@space@
+ if 9 == 5 goto :out_of_loop_2c@space@
+)@space@
+
+@pwd@>(
+set Number=10@space@@space@
+ if 10 == 5 goto :out_of_loop_2c@space@
+)@space@
+
+@pwd@>echo Out of FOR 2c, number is 5@space@
+Out of FOR 2c, number is 5
+--- FOR /F
+
+@pwd@>for %T in ("1:2:3" "4:5:6:7" "8:9:10") do (
+set "pc=%~T"@space@@space@
+ for /F "delims=" %A in ("!pc::=
+!") do (
+set Number=%A@space@@space@
+ if %A == 5 goto :out_of_loop_2d@space@
+)@space@
+)@space@
+
+@pwd@>(
+set "pc=1:2:3"@space@@space@
+ for /F "delims=" %A in ("!pc::=
+!") do (
+set Number=%A@space@@space@
+ if %A == 5 goto :out_of_loop_2d@space@
+)@space@
+)@space@
+
+@pwd@>(
+set Number=1@space@@space@
+ if 1 == 5 goto :out_of_loop_2d@space@
+)@space@
+
+@pwd@>(
+set Number=2@space@@space@
+ if 2 == 5 goto :out_of_loop_2d@space@
+)@space@
+
+@pwd@>(
+set Number=3@space@@space@
+ if 3 == 5 goto :out_of_loop_2d@space@
+)@space@
+
+@pwd@>(
+set "pc=4:5:6:7"@space@@space@
+ for /F "delims=" %A in ("!pc::=
+!") do (
+set Number=%A@space@@space@
+ if %A == 5 goto :out_of_loop_2d@space@
+)@space@
+)@space@
+
+@pwd@>(
+set Number=4@space@@space@
+ if 4 == 5 goto :out_of_loop_2d@space@
+)@space@
+
+@pwd@>(
+set Number=5@space@@space@
+ if 5 == 5 goto :out_of_loop_2d@space@
+)@space@
+
+@pwd@>echo Out of FOR 2d, number is 5@space@
+Out of FOR 2d, number is 5
+--------- Testing CALL within IF ---------
+Out of IF CALL from :out_of_if_1, number is 123
+Success IF echo 1
+--------- Testing GOTO within IF ---------
+Out of IF ok
+A
+A
+B
+--------- Testing EXIT within IF ---------
+First block
+Second block
+--------- Testing CALL (triggers GOTO /?) ---------
+--- Direct label, redirection
+Test message -- ':/?','argument'
+Arguments: 'argument'
+Test message -- '',''
+OK, GOTO help.
+--- Direct label, piping
+OK, CALL help.@space@
+Test message -- '',''
+--------- Testing CALL with escape carets (triggers GOTO /?) ---------
+--- Direct label, redirection
+Test message -- ':myLabel /?','^arg ^argument'
+Arguments: '^arg ^argument'
+Test message -- '',''
+OK, GOTO help.
+--- Direct label, piping
+OK, CALL help.@space@
+Test message -- '',''
+--------- Testing CALL (NOT triggering GOTO /? or CALL /?) ---------
+Arguments: '/?'
+OK, ECHO help.@space@
+
+ Hello World
+--------- Testing CALL double delayed expansion ---------
+It works!
+--------- Finished  --------------

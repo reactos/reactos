@@ -10,6 +10,20 @@
 DWORD
 _RpcXcvData(WINSPOOL_PRINTER_HANDLE hXcv, const WCHAR* pszDataName, BYTE* pInputData, DWORD cbInputData, BYTE* pOutputData, DWORD cbOutputData, DWORD* pcbOutputNeeded, DWORD* pdwStatus)
 {
-    UNIMPLEMENTED;
-    return ERROR_INVALID_FUNCTION;
+    DWORD dwErrorCode;
+
+    FIXME("RpcXcvData( %p, %S,,,)\n",hXcv, pszDataName);
+
+    dwErrorCode = RpcImpersonateClient(NULL);
+    if (dwErrorCode != ERROR_SUCCESS)
+    {
+        ERR("RpcImpersonateClient failed with error %lu!\n", dwErrorCode);
+        return dwErrorCode;
+    }
+
+    if (!XcvDataW(hXcv, pszDataName, pInputData, cbInputData, pOutputData, cbOutputData, pcbOutputNeeded, pdwStatus))
+        dwErrorCode = GetLastError();
+
+    RpcRevertToSelf();
+    return dwErrorCode;
 }

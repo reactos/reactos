@@ -871,6 +871,12 @@ typedef enum _POOL_TYPE {
   PagedPoolCacheAligned,
   NonPagedPoolCacheAlignedMustS,
   MaxPoolType,
+
+  NonPagedPoolBase = 0,
+  NonPagedPoolBaseMustSucceed = NonPagedPoolBase + 2,
+  NonPagedPoolBaseCacheAligned = NonPagedPoolBase + 4,
+  NonPagedPoolBaseCacheAlignedMustS = NonPagedPoolBase + 6,
+
   NonPagedPoolSession = 32,
   PagedPoolSession,
   NonPagedPoolMustSucceedSession,

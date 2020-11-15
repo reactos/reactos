@@ -2514,6 +2514,7 @@ HRESULT WINAPI UrlCreateFromPathW(LPCWSTR pszPath, LPWSTR pszUrl, LPDWORD pcchUr
     return ret;
 }
 
+#ifndef __REACTOS__
 /*************************************************************************
  *      SHAutoComplete  	[SHLWAPI.@]
  *
@@ -2532,6 +2533,7 @@ HRESULT WINAPI SHAutoComplete(HWND hwndEdit, DWORD dwFlags)
   FIXME("stub\n");
   return S_FALSE;
 }
+#endif
 
 /*************************************************************************
  *  MLBuildResURLA	[SHLWAPI.405]

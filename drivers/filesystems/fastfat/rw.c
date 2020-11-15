@@ -873,8 +873,9 @@ ByeBye:
 
 NTSTATUS
 VfatWrite(
-    PVFAT_IRP_CONTEXT IrpContext)
+    PVFAT_IRP_CONTEXT *pIrpContext)
 {
+    PVFAT_IRP_CONTEXT IrpContext = *pIrpContext;
     PVFATFCB Fcb;
     PERESOURCE Resource = NULL;
     LARGE_INTEGER ByteOffset;
@@ -999,13 +1000,15 @@ VfatWrite(
         Retrying = BooleanFlagOn(IrpContext->Flags, IRPCONTEXT_DEFERRED_WRITE);
         SetFlag(IrpContext->Flags, IRPCONTEXT_DEFERRED_WRITE);
 
+        IoMarkIrpPending(IrpContext->Irp);
         Status = STATUS_PENDING;
+
+        DPRINT1("Deferring write for Irp %p, context %p!\n", IrpContext->Irp, IrpContext);
         CcDeferWrite(IrpContext->FileObject, VfatHandleDeferredWrite,
                      IrpContext, NULL, Length, Retrying);
+        *pIrpContext = NULL;
 
-        DPRINT1("Dererring write!\n");
-
-        goto ByeBye;
+        return Status;
     }
 
     if (IsVolume)

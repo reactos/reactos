@@ -13,10 +13,6 @@
 #define NDEBUG
 #include <debug.h>
 
-#if defined (ALLOC_PRAGMA)
-#pragma alloc_text(INIT, ExpInitializeEventPairImplementation)
-#endif
-
 /* GLOBALS *******************************************************************/
 
 POBJECT_TYPE ExEventPairObjectType = NULL;
@@ -31,7 +27,7 @@ GENERIC_MAPPING ExEventPairMapping =
 
 /* FUNCTIONS *****************************************************************/
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 BOOLEAN
 NTAPI
 ExpInitializeEventPairImplementation(VOID)

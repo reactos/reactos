@@ -192,63 +192,63 @@ static MUI_ENTRY frFRIntroPageEntries[] =
     {
         6,
         8,
-        "ReactOS Version Status",
+        "Statut de version de ReactOS",
         TEXT_STYLE_HIGHLIGHT,
         TEXT_ID_STATIC
     },
     {
         6,
         11,
-        "ReactOS is in Alpha stage, meaning it is not feature-complete",
+        "ReactOS est en version Alpha, ce qui signifie qu'il n'est pas complet",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         6,
         12,
-        "and is under heavy development. It is recommended to use it only for",
+        "et est en cours de d\202veloppement. Il est recommand\202 de ne l'utiliser",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         6,
         13,
-        "evaluation and testing purposes and not as your daily-usage OS.",
+        "que pour \202valuation et test, pas pour un usage quotidien.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         6,
         15,
-        "Backup your data or test on a secondary computer if you attempt",
+        "Sauvegardez vos donn\202es ou testez sur un ordinateur secondaire",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         6,
         16,
-        "to run ReactOS on real hardware.",
+        "si vous souhaitez utiliser ReactOS sur du mat\202riel.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         19,
-        "\x07  Press ENTER to continue ReactOS Setup.",
+        "\x07  Appuyez sur ENTR\220E pour continuer l'installation de ReactOS.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         21,
-        "\x07  Press F3 to quit without installing ReactOS.",
+        "\x07  Appuyez sur F3 pour quitter sans installer ReactOS.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         0,
         0,
-        "ENTER = Continue   F3 = Quit",
+        "ENTR\220E = Continuer   F3 = Quitter",
         TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
         TEXT_ID_STATIC
     },
@@ -279,112 +279,126 @@ static MUI_ENTRY frFRLicensePageEntries[] =
     {
         8,
         8,
-        "The ReactOS System is licensed under the terms of the",
+        "Le syst\212me ReactOS est distribu\202 sous les termes de",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         9,
-        "GNU GPL with parts containing code from other compatible",
+        "la licence GNU GPL avec des parties contenant du code sous",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         10,
-        "licenses such as the X11 or BSD and GNU LGPL licenses.",
+        "d'autres licences compatibles telles que X11, BSD et GNU LGPL.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         11,
-        "All software that is part of the ReactOS system is",
+        "Tout le logiciel constituant le syst\212me ReactOS est",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         12,
-        "therefore released under the GNU GPL as well as maintaining",
+        "par cons\202quent distribu\202 sous licence GNU GPL tout en",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         13,
-        "the original license.",
+        "maintenant la licence d'origine.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         15,
-        "This software comes with NO WARRANTY or restrictions on usage",
+        "Ce logiciel vient SANS GARANTIE ou restriction d'usage",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         16,
-        "save applicable local and international law. The licensing of",
+        "sous les lois locales ou internationales applicables.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         17,
-        "ReactOS only covers distribution to third parties.",
+        "La licence de ReactOS ne couvre que la distribution",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         18,
-        "If for some reason you did not receive a copy of the",
+        "aux tierces parties.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         19,
-        "GNU General Public License with ReactOS please visit",
+        "Si vous n'avez pas obtenu une copie de la",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         20,
+        "GNU General Public License avec ReactOS veuillez visiter",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        8,
+        21,
         "http://www.gnu.org/licenses/licenses.html",
         TEXT_STYLE_HIGHLIGHT,
         TEXT_ID_STATIC
     },
     {
         8,
-        22,
+        23,
         "Garantie :",
         TEXT_STYLE_HIGHLIGHT,
         TEXT_ID_STATIC
     },
     {
         8,
-        24,
-        "This is free software; see the source for copying conditions.",
-        TEXT_STYLE_NORMAL,
-        TEXT_ID_STATIC
-    },
-    {
-        8,
         25,
-        "There is NO warranty; not even for MERCHANTABILITY or",
+        "Ce logiciel est gratuit. Voir les sources pour les",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         8,
         26,
-        "FITNESS FOR A PARTICULAR PURPOSE",
+        "conditions de copie.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        8,
+        27,
+        "Il n'y a AUCUNE garantie; pas m\210me sur la QUALIT\220 ou",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        8,
+        28,
+        "l'AD\220QUATION POUR UN USAGE EN PARTICULIER",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },

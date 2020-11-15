@@ -659,6 +659,20 @@ bar
 ---2
 bar
 ---3
+---4
+---5
+bar
+foo
+---6
+
+foobaz
+
+
+
+foobay
+
+
+---7
 ------------ Testing NUL ------------
 bar
 bar
@@ -681,6 +695,12 @@ else if seems to work
 else if seems to work
 expected1
 expected post-embedded if
+comparison operators surrounded by brackets seem to work
+comparison operators surrounded by brackets seem to work
+comparison operators surrounded by brackets seem to work
+comparison operators surrounded by brackets seem to work
+windir is defined
+windir does exist
 --- case sensitivity with and without /i option
 if seems to default to case sensitivity
 if /i seems to work

@@ -12,33 +12,89 @@
 BOOL WINAPI
 AddPrintProcessorA(PSTR pName, PSTR pEnvironment, PSTR pPathName, PSTR pPrintProcessorName)
 {
+    UNICODE_STRING NameW, EnvW, PathW, ProcessorW;
+    BOOL Ret;
+
     TRACE("AddPrintProcessorA(%s, %s, %s, %s)\n", pName, pEnvironment, pPathName, pPrintProcessorName);
-    UNIMPLEMENTED;
-    return FALSE;
+
+    AsciiToUnicode(&NameW, pName);
+    AsciiToUnicode(&EnvW, pEnvironment);
+    AsciiToUnicode(&PathW, pPathName);
+    AsciiToUnicode(&ProcessorW, pPrintProcessorName);
+
+    Ret = AddPrintProcessorW(NameW.Buffer, EnvW.Buffer, PathW.Buffer, ProcessorW.Buffer);
+
+    RtlFreeUnicodeString(&ProcessorW);
+    RtlFreeUnicodeString(&PathW);
+    RtlFreeUnicodeString(&EnvW);
+    RtlFreeUnicodeString(&NameW);
+
+    return Ret;
 }
 
 BOOL WINAPI
 AddPrintProcessorW(PWSTR pName, PWSTR pEnvironment, PWSTR pPathName, PWSTR pPrintProcessorName)
 {
+    DWORD dwErrorCode;
+
     TRACE("AddPrintProcessorW(%S, %S, %S, %S)\n", pName, pEnvironment, pPathName, pPrintProcessorName);
-    UNIMPLEMENTED;
-    return FALSE;
+
+    RpcTryExcept
+    {
+        dwErrorCode = _RpcAddPrintProcessor( pName, pEnvironment, pPathName, pPrintProcessorName );
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        dwErrorCode = RpcExceptionCode();
+        ERR("_RpcPrintProcessor failed with exception code %lu!\n", dwErrorCode);
+    }
+    RpcEndExcept;
+
+    SetLastError(dwErrorCode);
+    return (dwErrorCode == ERROR_SUCCESS);
 }
 
 BOOL WINAPI
 DeletePrintProcessorA(PSTR pName, PSTR pEnvironment, PSTR pPrintProcessorName)
 {
+    UNICODE_STRING NameW, EnvW, ProcessorW;
+    BOOL Ret;
+
     TRACE("DeletePrintProcessorA(%s, %s, %s)\n", pName, pEnvironment, pPrintProcessorName);
-    UNIMPLEMENTED;
-    return FALSE;
+
+    AsciiToUnicode(&NameW, pName);
+    AsciiToUnicode(&EnvW, pEnvironment);
+    AsciiToUnicode(&ProcessorW, pPrintProcessorName);
+
+    Ret = DeletePrintProcessorW(NameW.Buffer, EnvW.Buffer, ProcessorW.Buffer);
+
+    RtlFreeUnicodeString(&ProcessorW);
+    RtlFreeUnicodeString(&EnvW);
+    RtlFreeUnicodeString(&NameW);
+
+    return Ret;
 }
 
 BOOL WINAPI
 DeletePrintProcessorW(PWSTR pName, PWSTR pEnvironment, PWSTR pPrintProcessorName)
 {
+    DWORD dwErrorCode;
+
     TRACE("DeletePrintProcessorW(%S, %S, %S)\n", pName, pEnvironment, pPrintProcessorName);
-    UNIMPLEMENTED;
-    return FALSE;
+
+    RpcTryExcept
+    {
+        dwErrorCode = _RpcDeletePrintProcessor( pName, pEnvironment, pPrintProcessorName );
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        dwErrorCode = RpcExceptionCode();
+        ERR("_RpcDeletePrintProcessor failed with exception code %lu!\n", dwErrorCode);
+    }
+    RpcEndExcept;
+
+    SetLastError(dwErrorCode);
+    return (dwErrorCode == ERROR_SUCCESS);
 }
 
 BOOL WINAPI
@@ -89,9 +145,115 @@ Cleanup:
 BOOL WINAPI
 EnumPrintProcessorsA(PSTR pName, PSTR pEnvironment, DWORD Level, PBYTE pPrintProcessorInfo, DWORD cbBuf, PDWORD pcbNeeded, PDWORD pcReturned)
 {
-    TRACE("EnumPrintProcessorsA(%s, %s, %lu, %p, %lu, %p, %p)\n", pName, pEnvironment, Level, pPrintProcessorInfo, cbBuf, pcbNeeded, pcReturned);
-    UNIMPLEMENTED;
-    return FALSE;
+    BOOL    res;
+    LPBYTE  bufferW = NULL;
+    LPWSTR  nameW = NULL;
+    LPWSTR  envW = NULL;
+    DWORD   needed = 0;
+    DWORD   numentries = 0;
+    INT     len;
+
+    TRACE("EnumPrintProcessorsA(%s, %s, %d, %p, %d, %p, %p)\n", debugstr_a(pName), debugstr_a(pEnvironment), Level, pPrintProcessorInfo, cbBuf, pcbNeeded, pcReturned);
+
+    /* convert names to unicode */
+    if (pName)
+    {
+        len = MultiByteToWideChar(CP_ACP, 0, pName, -1, NULL, 0);
+        nameW = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+        MultiByteToWideChar(CP_ACP, 0, pName, -1, nameW, len);
+    }
+    if (pEnvironment)
+    {
+        len = MultiByteToWideChar(CP_ACP, 0, pEnvironment, -1, NULL, 0);
+        envW = HeapAlloc(GetProcessHeap(), 0, len * sizeof(WCHAR));
+        MultiByteToWideChar(CP_ACP, 0, pEnvironment, -1, envW, len);
+    }
+
+    /* alloc (userbuffersize*sizeof(WCHAR) and try to enum the monitors */
+    needed = cbBuf * sizeof(WCHAR);
+    if (needed) bufferW = HeapAlloc(GetProcessHeap(), 0, needed);
+    res = EnumPrintProcessorsW(nameW, envW, Level, bufferW, needed, pcbNeeded, pcReturned);
+
+    if (!res && (GetLastError() == ERROR_INSUFFICIENT_BUFFER))
+    {
+        if (pcbNeeded) needed = *pcbNeeded;
+        /* HeapReAlloc return NULL, when bufferW was NULL */
+        bufferW = (bufferW) ? HeapReAlloc(GetProcessHeap(), 0, bufferW, needed) :
+                              HeapAlloc(GetProcessHeap(), 0, needed);
+
+        /* Try again with the large Buffer */
+        res = EnumPrintProcessorsW(nameW, envW, Level, bufferW, needed, pcbNeeded, pcReturned);
+    }
+    numentries = pcReturned ? *pcReturned : 0;
+    needed = 0;
+
+    if (res)
+    {
+        /* EnumPrintProcessorsW collected all Data. Parse them to calculate ANSI-Size */
+        DWORD   index;
+        LPSTR   ptr;
+        PPRINTPROCESSOR_INFO_1W ppiw;
+        PPRINTPROCESSOR_INFO_1A ppia;
+
+        /* First pass: calculate the size for all Entries */
+        ppiw = (PPRINTPROCESSOR_INFO_1W) bufferW;
+        ppia = (PPRINTPROCESSOR_INFO_1A) pPrintProcessorInfo;
+        index = 0;
+        while (index < numentries)
+        {
+            index++;
+            needed += sizeof(PRINTPROCESSOR_INFO_1A);
+            TRACE("%p: parsing #%d (%s)\n", ppiw, index, debugstr_w(ppiw->pName));
+
+            needed += WideCharToMultiByte(CP_ACP, 0, ppiw->pName, -1,
+                                            NULL, 0, NULL, NULL);
+
+            ppiw = (PPRINTPROCESSOR_INFO_1W) (((LPBYTE)ppiw) + sizeof(PRINTPROCESSOR_INFO_1W));
+            ppia = (PPRINTPROCESSOR_INFO_1A) (((LPBYTE)ppia) + sizeof(PRINTPROCESSOR_INFO_1A));
+        }
+
+        /* check for errors and quit on failure */
+        if (cbBuf < needed)
+        {
+            SetLastError(ERROR_INSUFFICIENT_BUFFER);
+            res = FALSE;
+            goto epp_cleanup;
+        }
+
+        len = numentries * sizeof(PRINTPROCESSOR_INFO_1A); /* room for structs */
+        ptr = (LPSTR) &pPrintProcessorInfo[len];        /* start of strings */
+        cbBuf -= len ;                      /* free Bytes in the user-Buffer */
+        ppiw = (PPRINTPROCESSOR_INFO_1W) bufferW;
+        ppia = (PPRINTPROCESSOR_INFO_1A) pPrintProcessorInfo;
+        index = 0;
+        /* Second Pass: Fill the User Buffer (if we have one) */
+        while ((index < numentries) && pPrintProcessorInfo)
+        {
+            index++;
+            TRACE("%p: writing PRINTPROCESSOR_INFO_1A #%d\n", ppia, index);
+            ppia->pName = ptr;
+            len = WideCharToMultiByte(CP_ACP, 0, ppiw->pName, -1,
+                                            ptr, cbBuf , NULL, NULL);
+            ptr += len;
+            cbBuf -= len;
+
+            ppiw = (PPRINTPROCESSOR_INFO_1W) (((LPBYTE)ppiw) + sizeof(PRINTPROCESSOR_INFO_1W));
+            ppia = (PPRINTPROCESSOR_INFO_1A) (((LPBYTE)ppia) + sizeof(PRINTPROCESSOR_INFO_1A));
+
+        }
+    }
+epp_cleanup:
+    if (pcbNeeded)  *pcbNeeded = needed;
+    if (pcReturned) *pcReturned = (res) ? numentries : 0;
+
+    if (nameW) HeapFree(GetProcessHeap(), 0, nameW);
+    if (envW) HeapFree(GetProcessHeap(), 0, envW);
+    if (bufferW) HeapFree(GetProcessHeap(), 0, bufferW);
+
+    TRACE("returning %d with %d (%d byte for %d entries)\n", (res), GetLastError(), needed, numentries);
+
+    return (res);
+
 }
 
 BOOL WINAPI

@@ -875,7 +875,15 @@ type ."\foobaz"
 echo ---2
 type ".\foobaz"
 echo ---3
-del foobaz
+echo foo> foobay
+echo ---4
+type foobaz foobay > foobax 2> foobaw
+echo ---5
+type foobax
+echo ---6
+type foobaw
+echo ---7
+del foobaz foobay foobax foobaw
 
 echo ------------ Testing NUL ------------
 md foobar & cd foobar
@@ -984,6 +992,33 @@ if "x" == "a" (
   echo expected1
   if "y" == "b" echo broken2
   echo expected post-embedded if
+)
+if ()==() (
+  echo comparison operators surrounded by brackets seem to work
+) else (
+  echo comparison operators surrounded by brackets seem to be broken
+)
+if 1(==1( (
+  echo comparison operators surrounded by brackets seem to work
+) else (
+  echo comparison operators surrounded by brackets seem to be broken
+)
+if )==) (
+  echo comparison operators surrounded by brackets seem to work
+) else (
+  echo comparison operators surrounded by brackets seem to be broken
+)
+if /i not (a)==(b) (
+  echo comparison operators surrounded by brackets seem to work
+) else (
+  echo comparison operators surrounded by brackets seem to be broken
+)
+if defined windir echo windir is defined
+if not defined windir echo windir is defined
+if not exist %windir% (
+  echo windir does not exist
+) else (
+  echo windir does exist
 )
 echo --- case sensitivity with and without /i option
 if bar==BAR echo if does not default to case sensitivity

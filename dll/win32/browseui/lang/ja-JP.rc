@@ -1,4 +1,4 @@
-/*
+	/*
  * Copyright 2016-2020 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
@@ -156,10 +156,10 @@ FONT 9, "MS UI Gothic", 0, 0, 0x1
 BEGIN
     LTEXT "以下に指定した検索条件で検索します。", IDC_SEARCH_LABEL, 4, 2, 120, 20
 
-    LTEXT "ファイル名の一部または全部の(&O):", -1, 10, 25, 500, 10
+    LTEXT "ファイル名の一部または全部(&O):", -1, 10, 25, 500, 10
     EDITTEXT IDC_SEARCH_FILENAME, 10, 35, 100, 12, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP
 
-    LTEXT "ファイル内部の単語またはフレーズ(&W):", -1, 10, 50, 500, 10
+    LTEXT "ファイル内部の単語または句(&W):", -1, 10, 50, 500, 10
     EDITTEXT IDC_SEARCH_QUERY, 10, 60, 100, 12, ES_AUTOHSCROLL | WS_BORDER | WS_TABSTOP
 
     LTEXT "次のフォルダ内部(&L):", -1, 10, 75, 500, 10
@@ -345,7 +345,7 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_SEARCH_RESULTS "Search Results"
+    IDS_SEARCH_RESULTS "検索結果"
     IDS_SEARCHINVALID "'%1' は有効なフォルダではありません。"
     IDS_SEARCH_FOLDER "%s を検索中"
     IDS_SEARCH_FILES_FOUND "%u 個のファイルが見つかりました"
@@ -357,6 +357,6 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_PARSE_ADDR_ERR_TITLE "ReactOS Explorer"
-    IDS_PARSE_ADDR_ERR_TEXT "ReactOS Explorer cannot find '%1'. Check the spelling and try again."
+    IDS_PARSE_ADDR_ERR_TITLE "ReactOS エクスプローラ"
+    IDS_PARSE_ADDR_ERR_TEXT "ReactOS エクスプローラは '%1' を見つけられませんでした。スペルを確認してやり直して下さい。"
 END

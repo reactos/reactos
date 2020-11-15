@@ -10,13 +10,38 @@
 DWORD
 _RpcAddPrintProvidor(WINSPOOL_HANDLE pName, WINSPOOL_PROVIDOR_CONTAINER* pProvidorContainer)
 {
-    UNIMPLEMENTED;
-    return ERROR_INVALID_FUNCTION;
+    DWORD dwErrorCode;
+
+    dwErrorCode = RpcImpersonateClient(NULL);
+    if (dwErrorCode != ERROR_SUCCESS)
+    {
+        ERR("RpcImpersonateClient failed with error %lu!\n", dwErrorCode);
+        return dwErrorCode;
+    }
+
+    if (!AddPrintProvidorW(pName, pProvidorContainer->Level, (PBYTE)pProvidorContainer->ProvidorInfo.pProvidorInfo1))
+        dwErrorCode = GetLastError();
+
+    RpcRevertToSelf();
+    return dwErrorCode;
+
 }
 
 DWORD
 _RpcDeletePrintProvidor(WINSPOOL_HANDLE pName, WCHAR* pEnvironment, WCHAR* pPrintProviderName)
 {
-    UNIMPLEMENTED;
-    return ERROR_INVALID_FUNCTION;
+    DWORD dwErrorCode;
+
+    dwErrorCode = RpcImpersonateClient(NULL);
+    if (dwErrorCode != ERROR_SUCCESS)
+    {
+        ERR("RpcImpersonateClient failed with error %lu!\n", dwErrorCode);
+        return dwErrorCode;
+    }
+
+    if (!DeletePrintProvidorW(pName, pEnvironment, pPrintProviderName))
+        dwErrorCode = GetLastError();
+
+    RpcRevertToSelf();
+    return dwErrorCode;
 }

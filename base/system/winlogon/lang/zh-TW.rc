@@ -1,4 +1,5 @@
 /* Traditional Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com) */
+/* Translation improved by Aobi Chan CL (eason066@gmail.com) */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
@@ -14,24 +15,24 @@ END
 
 IDD_GINALOADFAILED DIALOGEX 58, 83, 231, 119
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "使用者介面失敗"
+CAPTION "使用者介面載入失敗"
 FONT 9, "新細明體"
 BEGIN
-    LTEXT "載入登入使用者介面的 DLL 檔案 %s 失敗。", IDC_GINALOADFAILED, 39, 16, 156, 24
-    LTEXT "請與系統管理員聯繫，以替換 DLL 檔案，或還原原 DLL。", IDC_GINALOADFAILEDCONTACT, 39, 53, 151, 25
+    LTEXT "載入登入使用者介面的 DLL 檔案 %s 載入失敗。", IDC_GINALOADFAILED, 39, 16, 156, 24
+    LTEXT "請與系統管理員聯繫，以替換 DLL 檔案，或還原初始的 DLL。", IDC_GINALOADFAILEDCONTACT, 39, 53, 151, 25
     DEFPUSHBUTTON "重新開機(&R)", 1, 80, 91, 68, 14
 END
 
 IDD_SYSSHUTDOWN DIALOGEX 50, 50, 180, 140
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_VISIBLE | WS_CAPTION | WS_POPUP
-CAPTION "System Shutdown"
-FONT 8, "MS Shell Dlg"
+CAPTION "系統關閉"
+FONT 9, "新細明體"
 BEGIN
     ICON IDI_WARNING, IDC_SYSSHUTDOWNICON, 6, 7, 18, 20
-    LTEXT "A system shutdown has been initiated. Please save all your work and terminate your session. All unsaved work will be lost when the system shuts down.", -1, 38, 7, 135, 40
-    LTEXT "The system shuts down in:", -1, 38, 50, 90, 8
+    LTEXT "系統關機程序已啟動。請儲存所有工作並登出。所有未儲存的工作都會在關機時遺失。", -1, 38, 7, 135, 40
+    LTEXT "關機前剩餘時間︰", -1, 38, 50, 90, 8
     LTEXT "00:00:00", IDC_SYSSHUTDOWNTIMELEFT, 132, 50, 41, 8
-    LTEXT "Message:", -1, 38, 65, 135, 8
+    LTEXT "附加訊息：", -1, 38, 65, 135, 8
     EDITTEXT IDC_SYSSHUTDOWNMESSAGE, 34, 75, 139, 58, ES_LEFT | ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP, WS_EX_STATICEDGE
 END
 
@@ -52,10 +53,10 @@ BEGIN
     IDS_SAVEYOURSETTINGS "正在儲存設定..."
     IDS_REACTOSISSTARTINGUP "ReactOS 正在啟動..."
     IDS_TIMEOUTSHORTFORMAT "%02d:%02d:%02d"
-    IDS_TIMEOUTLONGFORMAT "%d days"
+    IDS_TIMEOUTLONGFORMAT "%d 天"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_FAILEDACTIVATEUSERSHELL "Winlogon 啟用使用者操作介面失敗!"
+    IDS_FAILEDACTIVATEUSERSHELL "Winlogon 啟用使用者操作介面失敗！"
 END

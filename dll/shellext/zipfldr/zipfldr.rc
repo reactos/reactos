@@ -3,6 +3,9 @@
 
 #include "resource.h"
 
+164 BITMAP "res/zipfldr.bmp"
+200 BITMAP "res/header.bmp"
+201 BITMAP "res/watermark.bmp"
 1 ICON "res/zipfldr.ico"
 
 #define REACTOS_VERSION_DLL
@@ -57,4 +60,7 @@ IDR_ZIPFLDR REGISTRY "res/zipfldr.rgs"
 #endif
 #ifdef LANGUAGE_ZH_CN
     #include "lang/zh-CN.rc"
+#endif
+#ifdef LANGUAGE_ZH_TW
+    #include "lang/zh-TW.rc"
 #endif

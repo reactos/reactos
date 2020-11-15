@@ -9,7 +9,30 @@
  */
 /*
  *  Copyright (C) 2006-2015, ARM Limited, All Rights Reserved
- *  SPDX-License-Identifier: GPL-2.0
+ *  SPDX-License-Identifier: Apache-2.0 OR GPL-2.0-or-later
+ *
+ *  This file is provided under the Apache License 2.0, or the
+ *  GNU General Public License v2.0 or later.
+ *
+ *  **********
+ *  Apache License 2.0:
+ *
+ *  Licensed under the Apache License, Version 2.0 (the "License"); you may
+ *  not use this file except in compliance with the License.
+ *  You may obtain a copy of the License at
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ *
+ *  Unless required by applicable law or agreed to in writing, software
+ *  distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
+ *  WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *  See the License for the specific language governing permissions and
+ *  limitations under the License.
+ *
+ *  **********
+ *
+ *  **********
+ *  GNU General Public License v2.0 or later:
  *
  *  This program is free software; you can redistribute it and/or modify
  *  it under the terms of the GNU General Public License as published by
@@ -24,6 +47,8 @@
  *  You should have received a copy of the GNU General Public License along
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
+ *
+ *  **********
  *
  *  This file is part of mbed TLS (https://tls.mbed.org)
  */
@@ -619,6 +644,28 @@
  * Comment this macro to disable NIST curves optimisation.
  */
 #define MBEDTLS_ECP_NIST_OPTIM
+
+/**
+ * \def MBEDTLS_ECP_NO_INTERNAL_RNG
+ *
+ * When this option is disabled, mbedtls_ecp_mul() will make use of an
+ * internal RNG when called with a NULL \c f_rng argument, in order to protect
+ * against some side-channel attacks.
+ *
+ * This protection introduces a dependency of the ECP module on one of the
+ * DRBG or SHA modules (HMAC-DRBG, CTR-DRBG, SHA-512 or SHA-256.) For very
+ * constrained applications that don't require this protection (for example,
+ * because you're only doing signature verification, so not manipulating any
+ * secret, or because local/physical side-channel attacks are outside your
+ * threat model), it might be desirable to get rid of that dependency.
+ *
+ * \warning Enabling this option makes some uses of ECP vulnerable to some
+ * side-channel attacks. Only enable it if you know that's not a problem for
+ * your use case.
+ *
+ * Uncomment this macro to disable some counter-measures in ECP.
+ */
+//#define MBEDTLS_ECP_NO_INTERNAL_RNG
 
 /**
  * \def MBEDTLS_ECDSA_DETERMINISTIC

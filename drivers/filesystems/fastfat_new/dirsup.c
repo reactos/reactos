@@ -2633,18 +2633,10 @@ Return Value:
     PDIRENT Dirent;
     PBCB DirentBcb = NULL;
     ULONG NotifyFilter = 0;
-#ifndef __REACTOS__
     FAT_TIME_STAMP CurrentFatTime = {0};
-#else
-    FAT_TIME_STAMP CurrentFatTime = {{0}};
-#endif
 
     LARGE_INTEGER CurrentTime;
-#ifndef __REACTOS__
     LARGE_INTEGER CurrentDay = {0};
-#else
-    LARGE_INTEGER CurrentDay = {{0}};
-#endif
     LARGE_INTEGER LastAccessDay;
 
     PAGED_CODE();

@@ -74,6 +74,7 @@ list(APPEND SOURCE
     SetSysColors.c
     SetWindowExtEx.c
     SetWorldTransform.c
+    StretchBlt.c
     TextTransform.c
     init.c)
 

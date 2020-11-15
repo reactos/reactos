@@ -18,7 +18,6 @@
 /* FUNCTIONS *****************************************************************/
 
 static DRIVER_STARTIO i8042StartIo;
-static DRIVER_DISPATCH IrpStub;
 _Dispatch_type_(IRP_MJ_DEVICE_CONTROL)
 static DRIVER_DISPATCH i8042DeviceControl;
 _Dispatch_type_(IRP_MJ_INTERNAL_DEVICE_CONTROL)
@@ -388,21 +387,6 @@ done:
 }
 
 static NTSTATUS NTAPI
-IrpStub(
-	IN PDEVICE_OBJECT DeviceObject,
-	IN PIRP Irp)
-{
-	NTSTATUS Status = Irp->IoStatus.Status;
-
-	UNREFERENCED_PARAMETER(DeviceObject);
-
-	/* Do nothing */
-	ASSERT(FALSE);
-	IoCompleteRequest(Irp, IO_NO_INCREMENT);
-	return Status;
-}
-
-static NTSTATUS NTAPI
 i8042DeviceControl(
 	IN PDEVICE_OBJECT DeviceObject,
 	IN PIRP Irp)
@@ -416,9 +400,10 @@ i8042DeviceControl(
 	{
 		case Keyboard:
 			return i8042KbdDeviceControl(DeviceObject, Irp);
-			break;
 		default:
-			return IrpStub(DeviceObject, Irp);
+			Irp->IoStatus.Status = STATUS_INVALID_DEVICE_REQUEST;
+			IoCompleteRequest(Irp, IO_NO_INCREMENT);
+			return STATUS_INVALID_DEVICE_REQUEST;
 	}
 }
 
@@ -499,7 +484,6 @@ DriverEntry(
 	IN PUNICODE_STRING RegistryPath)
 {
 	PI8042_DRIVER_EXTENSION DriverExtension;
-	ULONG i;
 	NTSTATUS Status;
 
 	Status = IoAllocateDriverObjectExtension(
@@ -536,9 +520,6 @@ DriverEntry(
 
 	DriverObject->DriverExtension->AddDevice = i8042AddDevice;
 	DriverObject->DriverStartIo = i8042StartIo;
-
-	for (i = 0; i <= IRP_MJ_MAXIMUM_FUNCTION; i++)
-		DriverObject->MajorFunction[i] = IrpStub;
 
 	DriverObject->MajorFunction[IRP_MJ_CREATE]  = i8042Create;
 	DriverObject->MajorFunction[IRP_MJ_CLEANUP] = i8042Cleanup;

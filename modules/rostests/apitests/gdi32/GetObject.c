@@ -344,6 +344,21 @@ Test_Brush(void)
 
     ok(GetObjectW((HANDLE)GDI_OBJECT_TYPE_BRUSH, sizeof(LOGBRUSH), &logbrush) == 0, "\n");
     ok(GetLastError() == ERROR_INVALID_PARAMETER, "expected ERROR_INVALID_PARAMETER, got %ld\n", GetLastError());
+
+    /* Test handle fixup */
+    hBrush = (HBRUSH)((ULONG_PTR)GetStockObject(WHITE_BRUSH) & 0xFFFF);
+    ok(GetObjectW(hBrush, sizeof(LOGBRUSH), &logbrush) == sizeof(LOGBRUSH),
+       "GetObject(0x%p, ...) failed.\n", hBrush);
+
+#ifdef _WIN64
+    /* Test upper 32 bits */
+    hBrush = (HBRUSH)((ULONG64)GetStockObject(WHITE_BRUSH) | 0xFFFFFFFF00000000ULL);
+    ok(GetObjectW(hBrush, sizeof(LOGBRUSH), &logbrush) == sizeof(LOGBRUSH),
+       "GetObject(0x%p, ...) failed.\n", hBrush);
+    hBrush = (HBRUSH)((ULONG64)GetStockObject(WHITE_BRUSH) | 0x537F9F2F00000000ULL);
+    ok(GetObjectW(hBrush, sizeof(LOGBRUSH), &logbrush) == sizeof(LOGBRUSH),
+       "GetObject(0x%p, ...) failed.\n", hBrush);
+#endif
 }
 
 void

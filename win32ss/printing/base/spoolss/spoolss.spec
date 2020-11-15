@@ -1,18 +1,18 @@
-@ stub AbortPrinter
+@ stdcall AbortPrinter(ptr)
 @ stub AddDriverCatalog
-@ stub AddFormW
+@ stdcall AddFormW(ptr long ptr)
 @ stdcall AddJobW(long long ptr long ptr)
-@ stub AddMonitorW
+@ stdcall AddMonitorW(wstr long ptr)
 @ stub AddPerMachineConnectionW
-@ stub AddPortExW
-@ stub AddPortW
+@ stdcall AddPortExW(wstr long ptr wstr)
+@ stdcall AddPortW(wstr ptr wstr)
 @ stub AddPrinterConnectionW
-@ stub AddPrinterDriverExW
-@ stub AddPrinterDriverW
-@ stub AddPrinterExW
-@ stub AddPrinterW
-@ stub AddPrintProcessorW
-@ stub AddPrintProvidorW
+@ stdcall AddPrinterDriverExW(wstr long ptr long)
+@ stdcall AddPrinterDriverW(wstr long ptr)
+@ stdcall AddPrinterExW(wstr long ptr ptr long)
+@ stdcall AddPrinterW(wstr long ptr)
+@ stdcall AddPrintProcessorW(wstr wstr wstr wstr)
+@ stdcall AddPrintProvidorW(wstr long ptr)
 @ stub AdjustPointers
 @ stub AdjustPointersInStructuresArray
 @ stub AlignKMPtr
@@ -36,37 +36,37 @@
 @ stub ClusterSplClose
 @ stub ClusterSplIsAlive
 @ stub ClusterSplOpen
-@ stub ConfigurePortW
+@ stdcall ConfigurePortW(wstr ptr wstr)
 @ stub CreatePrinterIC
 @ stub DbgGetPointers
-@ stub DeleteFormW
-@ stub DeleteMonitorW
+@ stdcall DeleteFormW(ptr wstr)
+@ stdcall DeleteMonitorW(wstr wstr wstr)
 @ stub DeletePerMachineConnectionW
-@ stub DeletePortW
-@ stub DeletePrinter
+@ stdcall DeletePortW(wstr ptr wstr)
+@ stdcall DeletePrinter(ptr)
 @ stub DeletePrinterConnectionW
-@ stub DeletePrinterDataExW
-@ stub DeletePrinterDataW
-@ stub DeletePrinterDriverExW
-@ stub DeletePrinterDriverW
+@ stdcall DeletePrinterDataExW(ptr wstr wstr)
+@ stdcall DeletePrinterDataW(ptr wstr)
+@ stdcall DeletePrinterDriverExW(wstr wstr wstr long long)
+@ stdcall DeletePrinterDriverW(wstr wstr wstr)
 @ stub DeletePrinterIC
-@ stub DeletePrinterKeyW
-@ stub DeletePrintProcessorW
-@ stub DeletePrintProvidorW
+@ stdcall DeletePrinterKeyW(ptr wstr)
+@ stdcall DeletePrintProcessorW(wstr wstr wstr)
+@ stdcall DeletePrintProvidorW(wstr wstr wstr)
 @ stdcall DllAllocSplMem(long)
 @ stdcall DllFreeSplMem(ptr)
 @ stdcall DllFreeSplStr(ptr)
 @ stdcall EndDocPrinter(long)
 @ stdcall EndPagePrinter(long)
-@ stub EnumFormsW
+@ stdcall EnumFormsW(ptr long ptr long ptr ptr)
 @ stdcall EnumJobsW(long long long long ptr long ptr ptr)
 @ stdcall EnumMonitorsW(wstr long ptr long ptr ptr)
 @ stub EnumPerMachineConnectionsW
 @ stdcall EnumPortsW(wstr long ptr long ptr ptr)
-@ stub EnumPrinterDataExW
-@ stub EnumPrinterDataW
-@ stub EnumPrinterDriversW
-@ stub EnumPrinterKeyW
+@ stdcall EnumPrinterDataExW(ptr wstr ptr long ptr ptr)
+@ stdcall EnumPrinterDataW(ptr long wstr long ptr ptr ptr long ptr)
+@ stdcall EnumPrinterDriversW(wstr wstr long ptr long ptr ptr)
+@ stdcall EnumPrinterKeyW(ptr wstr wstr long ptr)
 @ stdcall EnumPrintersW(long wstr long ptr long ptr ptr)
 @ stdcall EnumPrintProcessorDatatypesW(wstr wstr long ptr long ptr ptr)
 @ stdcall EnumPrintProcessorsW(wstr wstr long ptr long ptr ptr)
@@ -76,14 +76,14 @@
 @ stub FormatRegistryKeyForPrinter
 @ stub FreeOtherNames
 @ stub GetClientUserHandle
-@ stub GetFormW
+@ stdcall GetFormW(ptr wstr long ptr long ptr)
 @ stub GetJobAttributes
 @ stdcall GetJobW(long long long ptr long ptr)
 @ stub GetNetworkId
 @ stdcall GetPrinterDataExW(long wstr wstr ptr ptr long ptr)
 @ stdcall GetPrinterDataW(long wstr ptr ptr long ptr)
-@ stub GetPrinterDriverDirectoryW
-@ stub GetPrinterDriverExW
+@ stdcall GetPrinterDriverDirectoryW(wstr wstr long ptr long ptr)
+@ stdcall GetPrinterDriverExW(ptr wstr long ptr long ptr long long ptr ptr)
 @ stdcall GetPrinterDriverW(long wstr long ptr long ptr)
 @ stdcall GetPrinterW(long long ptr long ptr)
 @ stdcall GetPrintProcessorDirectoryW(wstr wstr long ptr long ptr)
@@ -102,7 +102,7 @@
 @ stdcall MarshallUpStructuresArray(long ptr long ptr long long)
 @ stub MIDL_user_allocate1
 @ stub MIDL_user_free1
-@ stub OldGetPrinterDriverW
+@ stdcall OldGetPrinterDriverW(long wstr long ptr long ptr) GetPrinterDriverW
 @ stub OpenPrinterExW
 @ stub OpenPrinterPortW
 @ stdcall OpenPrinterW(wstr ptr ptr)
@@ -110,7 +110,7 @@
 @ stub PartialReplyPrinterChangeNotification
 @ stub PlayGdiScriptOnPrinterIC
 @ stub PrinterHandleRundown
-@ stub PrinterMessageBoxW
+@ stdcall PrinterMessageBoxW(ptr long ptr wstr wstr long)
 @ stub ProvidorFindClosePrinterChangeNotification
 @ stub ProvidorFindFirstPrinterChangeNotification
 @ stub pszDbgAllocMsgA
@@ -121,7 +121,7 @@
 @ stub ReplyClosePrinter
 @ stub ReplyOpenPrinter
 @ stub ReplyPrinterChangeNotification
-@ stub ResetPrinterW
+@ stdcall -stub ResetPrinterW(ptr ptr)
 @ stdcall RevertToPrinterSelf()
 @ stub RouterAllocBidiMem
 @ stub RouterAllocBidiResponseContainer
@@ -133,19 +133,19 @@
 @ stub RouterRefreshPrinterChangeNotification
 @ stub RouterReplyPrinter
 @ stdcall ScheduleJob(long long)
-@ stub SeekPrinter
+@ stdcall SeekPrinter(ptr int64 ptr long long)
 @ stub SendRecvBidiData
 @ stub SetAllocFailCount
-@ stub SetFormW
+@ stdcall SetFormW(ptr wstr long ptr)
 @ stdcall SetJobW(long long long ptr long)
-@ stub SetPortW
+@ stdcall SetPortW(wstr wstr long ptr)
 @ stdcall SetPrinterDataExW(long wstr wstr long ptr long)
 @ stdcall SetPrinterDataW(long wstr long ptr long)
-@ stub SetPrinterW
-@ stub SplCloseSpoolFileHandle
-@ stub SplCommitSpoolData
-@ stub SplDriverUnloadComplete
-@ stub SplGetSpoolFileInfo
+@ stdcall SetPrinterW(ptr long ptr long)
+@ stdcall SplCloseSpoolFileHandle(ptr)
+@ stdcall SplCommitSpoolData(ptr ptr long long ptr long ptr)
+@ stdcall -stub SplDriverUnloadComplete(wstr)
+@ stdcall SplGetSpoolFileInfo(ptr ptr long ptr long ptr)
 @ stdcall SplInitializeWinSpoolDrv(ptr)
 @ stub SplIsSessionZero
 @ stdcall SplIsUpgrade()

@@ -236,7 +236,7 @@ NDIS_STATUS ParaNdis_OidQueryCommon(PARANDIS_ADAPTER *pContext, tOidDesc *pOid)
         USHORT                                  us;
         NDIS_PNP_CAPABILITIES                   PMCaps;
     } u;
-#if defined(_MSC_VER)
+#if defined(_MSC_VER) && !defined(__clang__)
     #define CONCATFIELD(object, field) object.##field
 #else
     #define CONCATFIELD(object, field) object.field

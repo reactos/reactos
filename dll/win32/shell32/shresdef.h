@@ -296,6 +296,17 @@
 
 #define IDS_NO_ICONS                                30529
 #define IDS_FILE_NOT_FOUND                          30530
+#define IDS_LINK_INVALID                            30531
+#define IDS_COPYTOMENU                              30532
+#define IDS_COPYTOTITLE                             30533
+#define IDS_COPYITEMS                               30534
+#define IDS_COPYBUTTON                              30535
+#define IDS_MOVETOMENU                              30536
+#define IDS_MOVETOTITLE                             30537
+#define IDS_MOVEITEMS                               30538
+#define IDS_MOVEBUTTON                              30539
+
+#define IDS_SYSTEMFOLDER                            30540
 
 /* Dialogs */
 
@@ -456,6 +467,7 @@
 #define IDD_EDITTYPE     36
 #define IDD_ACTION       37
 #define IDD_FOLDER_CUSTOMIZE    38
+#define IDD_LINK_PROBLEM 39
 
 /* Control IDs for IDD_FOLDER_CUSTOMIZE dialog */
 #define IDC_FOLDERCUST_COMBOBOX             14001
@@ -465,6 +477,11 @@
 #define IDC_FOLDERCUST_PREVIEW_BITMAP       14005
 #define IDC_FOLDERCUST_ICON                 14006
 #define IDC_FOLDERCUST_CHANGE_ICON          14007
+
+/* Control IDs for IDD_LINK_PROBLEM dialog */
+#define IDC_LINK_PROBLEM_ICON               14008
+#define IDC_LINK_PROBLEM_LABEL1             14009
+#define IDC_LINK_PROBLEM_LABEL2             14010
 
 /* Not used dialogs */
 #define IDD_SHUTDOWN             29
@@ -782,6 +799,7 @@
 #define FCIDM_TB_REPORTVIEW 0xA004
 #define FCIDM_TB_DESKTOP    0xA005  /* FIXME */
 
+#define IDM_UNDO (FCIDM_SHVIEW_UNDO - 0x7000)
 #define IDM_CUT (FCIDM_SHVIEW_CUT - 0x7000)
 #define IDM_COPY (FCIDM_SHVIEW_COPY - 0x7000)
 #define IDM_INSERT (FCIDM_SHVIEW_INSERT - 0x7000)
@@ -789,6 +807,8 @@
 #define IDM_DELETE (FCIDM_SHVIEW_DELETE - 0x7000)
 #define IDM_RENAME (FCIDM_SHVIEW_RENAME - 0x7000)
 #define IDM_PROPERTIES (FCIDM_SHVIEW_PROPERTIES - 0x7000)
+#define IDM_COPYTO (FCIDM_SHVIEW_COPYTO - 0x7000)
+#define IDM_MOVETO (FCIDM_SHVIEW_MOVETO - 0x7000)
 
 #define IDM_DRAGFILE 0xce
 #define IDM_COPYHERE 0x7
@@ -829,3 +849,5 @@
 #define IDR_SHELL               156
 #define IDR_ACTIVEDESKTOP       157
 #define IDR_SENDTOMENU          158
+#define IDR_COPYTOMENU          159
+#define IDR_MOVETOMENU          160

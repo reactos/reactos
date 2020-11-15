@@ -244,9 +244,9 @@ BEGIN
     LISTBOX IDC_PAGEFILELIST, 10, 16, 234, 52, LBS_NOTIFY | LBS_USETABSTOPS
     GROUPBOX "Rozmiar pliku stronicowania dla wybranego dysku", IDC_DRIVEGROUP, 10, 70, 234, 104
     LTEXT "Dysk:", IDC_STATIC, 20, 80, 78, 8
-    LTEXT "", IDC_DRIVE, 102, 81, 104, 8
+    LTEXT "%s", IDC_DRIVE, 102, 80, 104, 8
     LTEXT "Dostępne miejsce:", IDC_STATIC, 20, 92, 78, 8
-    LTEXT "", IDC_SPACEAVAIL, 102, 92, 104, 8
+    LTEXT "%s", IDC_SPACEAVAIL, 102, 92, 104, 8
     LTEXT "R&ozmiar początkowy (MB):", -1, 22, 118, 96, 8
     LTEXT "Rozmiar &maksymalny (MB):", -1, 22, 131, 96, 8
     AUTORADIOBUTTON "&Rozmiar niestandardowy:", IDC_CUSTOM, 20, 105, 132, 8, WS_GROUP
@@ -257,11 +257,11 @@ BEGIN
     PUSHBUTTON "Ustaw", IDC_SET, 158, 154, 50, 15
     GROUPBOX "Całkowity rozmiar plików stronicowania dla wszystkich dysków", IDC_TOTALGROUP, 10, 177, 234, 46
     LTEXT "Dopuszczalne minimum:", IDC_STATIC, 18, 188, 78, 8
-    LTEXT "", IDC_MINIMUM, 102, 188, 100, 8
+    LTEXT "%s", IDC_MINIMUM, 102, 188, 100, 8
     LTEXT "Zalecane:", IDC_STATIC, 18, 199, 78, 8
-    LTEXT "", IDC_RECOMMENDED, 102, 197, 100, 8
+    LTEXT "%s", IDC_RECOMMENDED, 102, 199, 100, 8
     LTEXT "Aktualnie przydzielono:", IDC_STATIC, 18, 210, 78, 8
-    LTEXT "", IDC_CURRENT, 102, 208, 100, 8
+    LTEXT "%s", IDC_CURRENT, 102, 210, 100, 8
     DEFPUSHBUTTON "OK", IDOK, 114, 230, 48, 15
     PUSHBUTTON "Anuluj", IDCANCEL, 168, 230, 48, 15
 END
@@ -344,6 +344,7 @@ BEGIN
     IDS_WARNMAXIMUMSIZE "Wprowadź wielkość dla maksymalnego rozmiaru pliku stronicowania."
     IDS_WARNINITIALRANGE "Początkowy rozmiar pliku stronicowania nie może być mniejszy niż 2 MB i nie może przekraczać dostępnej ilości miejsca w wybranym napędzie."
     IDS_WARNMAXIMUMRANGE "Maksymalny rozmiar pliku stronicowania nie może być mniejszy niż jego rozmiar początkowy i nie może przekraczać dostępnej ilości miejsca w wybranym napędzie."
+    IDS_PAGEFILE_MB "%u MB"
     IDS_PAGEFILE_NONE "Brak"
     IDS_PAGEFILE_SYSTEM "Kontrolowany przez system"
     IDS_INFOREBOOT "Musisz ponownie uruchomić komputer, aby zastosować zmiany."

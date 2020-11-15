@@ -561,7 +561,7 @@ extern ULONG TraceDataBufferPosition;
 //
 // Debug Filter Component Table
 //
-#define MAX_KD_COMPONENT_TABLE_ENTRIES  147
+#define MAX_KD_COMPONENT_TABLE_ENTRIES  (DPFLTR_ENDOFTABLE_ID + 1)
 extern ULONG KdComponentTableSize;
 extern PULONG KdComponentTable[MAX_KD_COMPONENT_TABLE_ENTRIES];
 
@@ -718,3 +718,18 @@ extern ULONG Kd_FILETRACE_Mask;
 extern ULONG Kd_XSAVE_Mask;
 extern ULONG Kd_SE_Mask;
 extern ULONG Kd_DRIVEEXTENDER_Mask;
+//
+// Components specified in Windows 8
+//
+extern ULONG Kd_POWER_Mask;
+extern ULONG Kd_CRASHDUMPXHCI_Mask;
+extern ULONG Kd_GPIO_Mask;
+extern ULONG Kd_REFS_Mask;
+extern ULONG Kd_WER_Mask;
+//
+// Components specified in Windows 10
+//
+extern ULONG Kd_CAPIMG_Mask;
+extern ULONG Kd_VPCI_Mask;
+extern ULONG Kd_STORAGECLASSMEMORY_Mask;
+extern ULONG Kd_FSLIB_Mask;

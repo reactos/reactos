@@ -99,7 +99,7 @@ Return Value:
         //  We had some trouble trying to perform the requested
         //  operation, so we'll abort the I/O request with
         //  the error status that we get back from the
-        //  execption code
+        //  exception code
         //
 
         Status = FatProcessException( IrpContext, Irp, _SEH2_GetExceptionCode() );

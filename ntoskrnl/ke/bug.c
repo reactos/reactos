@@ -13,10 +13,6 @@
 #define NDEBUG
 #include <debug.h>
 
-#if defined (ALLOC_PRAGMA)
-#pragma alloc_text(INIT, KiInitializeBugCheck)
-#endif
-
 /* GLOBALS *******************************************************************/
 
 LIST_ENTRY KeBugcheckCallbackListHead;
@@ -356,6 +352,8 @@ KeRosDumpStackFrames(IN PULONG_PTR Frame OPTIONAL,
  * Full discription here.
 */
 INIT_FUNCTION
+=======
+CODE_SEG("INIT")
 VOID
 NTAPI
 KiInitializeBugCheck(VOID)

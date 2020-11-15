@@ -51,13 +51,13 @@ BitBlt(
     _In_ ULONG Top,
     _In_ ULONG Width,
     _In_ ULONG Height,
-    _In_ PUCHAR Buffer,
+    _In_reads_bytes_(Delta * Height) PUCHAR Buffer,
     _In_ ULONG BitsPerPixel,
     _In_ ULONG Delta)
 {
-    ULONG sx, dx, dy;
-    UCHAR color;
-    ULONG offset = 0;
+    ULONG X, Y, Pixel;
+    UCHAR Colors;
+    PUCHAR InputBuffer;
     const ULONG Bottom = Top + Height;
     const ULONG Right = Left + Width;
 
@@ -82,24 +82,28 @@ BitBlt(
     PrepareForSetPixel();
 
     /* 4bpp blitting */
-    for (dy = Top; dy < Bottom; ++dy)
+    for (Y = Top; Y < Bottom; ++Y)
     {
-        sx = 0;
-        do
+        InputBuffer = Buffer;
+
+        for (X = Left, Pixel = 0;
+             X < Right;
+             ++X, ++Pixel)
         {
-            /* Extract color */
-            color = Buffer[offset + sx];
+            if (Pixel % 2 == 0)
+            {
+                /* Extract colors at every two pixels */
+                Colors = *InputBuffer++;
 
-            /* Calc destination x */
-            dx = Left + (sx << 1);
+                SetPixel(X, Y, Colors >> 4);
+            }
+            else
+            {
+                SetPixel(X, Y, Colors & 0x0F);
+            }
+        }
 
-            /* Set two pixels */
-            SetPixel(dx, dy, color >> 4);
-            SetPixel(dx + 1, dy, color & 0x0F);
-
-            sx++;
-        } while (dx < Right);
-        offset += Delta;
+        Buffer += Delta;
     }
 }
 
@@ -318,7 +322,7 @@ VidSetTextColor(
 VOID
 NTAPI
 VidDisplayStringXY(
-    _In_ PUCHAR String,
+    _In_z_ PUCHAR String,
     _In_ ULONG Left,
     _In_ ULONG Top,
     _In_ BOOLEAN Transparent)
@@ -368,7 +372,7 @@ VidSetScrollRegion(
 VOID
 NTAPI
 VidDisplayString(
-    _In_ PUCHAR String)
+    _In_z_ PUCHAR String)
 {
     /* Start looping the string */
     for (; *String; ++String)
@@ -446,7 +450,7 @@ VidDisplayString(
 VOID
 NTAPI
 VidBufferToScreenBlt(
-    _In_ PUCHAR Buffer,
+    _In_reads_bytes_(Delta * Height) PUCHAR Buffer,
     _In_ ULONG Left,
     _In_ ULONG Top,
     _In_ ULONG Width,

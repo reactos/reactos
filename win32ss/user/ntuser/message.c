@@ -800,7 +800,7 @@ static LRESULT handle_internal_message( PWND pWnd, UINT msg, WPARAM wparam, LPAR
        }
        case WM_ASYNC_DESTROYWINDOW:
        {
-          ERR("WM_ASYNC_DESTROYWINDOW\n");
+          TRACE("WM_ASYNC_DESTROYWINDOW\n");
           if (pWnd->style & WS_CHILD)
              return co_UserFreeWindow(pWnd, PsGetCurrentProcessWin32Process(), PsGetCurrentThreadWin32Thread(), TRUE);
           else
@@ -1423,7 +1423,7 @@ UserPostMessage( HWND Wnd,
         if ( Window->state & WNDS_DESTROYED )
         {
             ERR("Attempted to post message to window %p that is being destroyed!\n", Wnd);
-            /* FIXME: Last error code? */
+            EngSetLastError(ERROR_INVALID_WINDOW_HANDLE);
             return FALSE;
         }
 
@@ -1867,8 +1867,8 @@ co_IntSendMessageWithCallBack( HWND hWnd,
 
     if(!(Message = AllocateUserMessage(FALSE)))
     {
-        ERR("MsqSendMessage(): Not enough memory to allocate a message");
-        RETURN( FALSE);
+        ERR("MsqSendMessage(): Not enough memory to allocate a message\n");
+        RETURN(FALSE);
     }
 
     Message->Msg.hwnd = hWnd;

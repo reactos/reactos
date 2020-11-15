@@ -137,7 +137,6 @@ BEGIN
             MENUITEM "&Baja", ID_PROCESS_PAGE_SETPRIORITY_LOW
         END
         MENUITEM "Establecer &afinidad...", ID_PROCESS_PAGE_SETAFFINITY
-        MENUITEM "Editar &canales de depuración...", ID_PROCESS_PAGE_DEBUGCHANNELS
     END
 END
 

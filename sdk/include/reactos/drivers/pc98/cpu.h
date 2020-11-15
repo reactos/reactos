@@ -7,12 +7,14 @@
 
 #pragma once
 
-#define CPU_IO_o_RESET          0x0F
+#define CPU_IO_o_RESET          0xF0
 #define CPU_IO_o_A20_UNMASK     0xF2
 
 #define CPU_IO_o_A20_CONTROL    0xF6
     #define CPU_A20_ENABLE          0x02
     #define CPU_A20_DISABLE         0x03
+
+#define CPU_IO_o_FPU_BUSY_LATCH 0xF8
 
 /*
  * ARTIC (A Relative Time Indication Counter) - 24-bit binary up counter

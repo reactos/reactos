@@ -8,6 +8,21 @@
 #ifndef _REACTOS_SPOOLSS_H
 #define _REACTOS_SPOOLSS_H
 
+#define RESETPRINTERDEFAULTDATATYPE 0x0001
+#define RESETPRINTERDEFAULTDEVMODE  0x0002
+
+#define PORT_IS_UNKNOWN  0
+#define PORT_IS_LPT      1
+#define PORT_IS_COM      2
+#define PORT_IS_FILE     3
+#define PORT_IS_FILENAME 4
+#define PORT_IS_WINE     5
+#define PORT_IS_UNIXNAME 5
+#define PORT_IS_PIPE     6
+#define PORT_IS_VNET     7
+#define PORT_IS_XPS      8
+
+
 // Constants
 #define MAX_PRINTER_NAME        220
 
@@ -57,6 +72,14 @@ typedef struct _PRINTER_INFO_STRESS
 }
 PRINTER_INFO_STRESS, *PPRINTER_INFO_STRESS;
 
+typedef struct _FILE_INFO_1
+{
+    BOOL   bInheritHandle;
+    HANDLE hSpoolFileHandle;
+    DWORD  dwOptions;
+} FILE_INFO_1, *PFILE_INFO_1;
+
+BOOL WINAPI AddPortExW(LPWSTR, DWORD, LPBYTE, LPWSTR);
 PVOID WINAPI AlignRpcPtr(PVOID pBuffer, PDWORD pcbBuffer);
 PWSTR WINAPI AllocSplStr(PCWSTR pwszInput);
 PVOID WINAPI DllAllocSplMem(DWORD dwBytes);
@@ -66,8 +89,13 @@ BOOL WINAPI InitializeRouter(HANDLE SpoolerStatusHandle);
 PBYTE WINAPI PackStrings(PCWSTR* pSource, PBYTE pDest, const DWORD* DestOffsets, PBYTE pEnd);
 PVOID WINAPI ReallocSplMem(PVOID pOldMem, DWORD cbOld, DWORD cbNew);
 BOOL WINAPI ReallocSplStr(PWSTR* ppwszString, PCWSTR pwszInput);
+BOOL WINAPI SeekPrinter(HANDLE hPrinter,LARGE_INTEGER liDistanceToMove,PLARGE_INTEGER pliNewPointer,DWORD dwMoveMethod,BOOL bWrite);
 BOOL WINAPI SplInitializeWinSpoolDrv(PVOID* pTable);
 BOOL WINAPI SpoolerInit(VOID);
 PDWORD WINAPI UndoAlignRpcPtr(PVOID pDestinationBuffer, PVOID pSourceBuffer, DWORD cbBuffer, PDWORD pcbNeeded);
+BOOL WINAPI SplGetSpoolFileInfo(HANDLE hPrinter,HANDLE hProcessHandle,DWORD Level,FILE_INFO_1 *pFileInfo,DWORD dwSize,DWORD* dwNeeded );
+BOOL WINAPI SplCommitSpoolData(HANDLE hPrinter,HANDLE hProcessHandle,DWORD cbCommit,DWORD Level,FILE_INFO_1 *pFileInfo,DWORD dwSize,DWORD* dwNeeded);
+BOOL WINAPI SplCloseSpoolFileHandle( HANDLE hPrinter );
+BOOL WINAPI GetPrinterDriverExW(HANDLE hPrinter,LPWSTR pEnvironment,DWORD Level,LPBYTE pDriverInfo,DWORD cbBuf,LPDWORD pcbNeeded,DWORD dwClientMajorVersion,DWORD dwClientMinorVersion,PDWORD pdwServerMajorVersion,PDWORD pdwServerMinorVersion );
 
 #endif

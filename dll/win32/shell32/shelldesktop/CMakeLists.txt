@@ -1,20 +1,17 @@
 project(SHELL)
 
-set_cpp(WITH_RUNTIME)
-
 add_definitions(
     -DUNICODE
-    -D_UNICODE
-    -D_ATL_NO_EXCEPTIONS)
+    -D_UNICODE)
 
-include_directories(${REACTOS_SOURCE_DIR}/sdk/lib/atl)
 
 list(APPEND SOURCE
     CChangeNotifyServer.cpp
     CDesktopBrowser.cpp
     CDirectoryWatcher.cpp
-    CFilePathList.cpp
+    CDirectoryList.cpp
     dde.cpp)
 
-add_library(shelldesktop ${SOURCE})
+add_library(shelldesktop OBJECT ${SOURCE})
+target_link_libraries(shelldesktop PRIVATE atl_classes)
 add_dependencies(shelldesktop xdk psdk)

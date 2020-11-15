@@ -29,6 +29,14 @@ STRINGTABLE
     IDS_TIME_INTERVAL_HOURS    " h"
     IDS_TIME_INTERVAL_MINUTES  " min"
     IDS_TIME_INTERVAL_SECONDS  " s"
+#ifdef __REACTOS__
+    IDS_KB_FORMAT "%s ko"
+    IDS_MB_FORMAT "%s Mo"
+    IDS_GB_FORMAT "%s Go"
+    IDS_TB_FORMAT "%s To"
+    IDS_PB_FORMAT "%s Po"
+    IDS_EB_FORMAT "%s Eo"
+#endif
 }
 
 IDD_ERR_DIALOG DIALOGEX 0, 0, 220, 60

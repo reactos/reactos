@@ -34,6 +34,29 @@ FindPort(PCWSTR pwszName)
 }
 
 BOOL
+CreatePortEntry( PCWSTR pwszName, PLOCAL_PRINT_MONITOR pPrintMonitor )
+{
+    PLOCAL_PORT pPort;
+    DWORD cbPortName = (wcslen( pwszName ) + 1) * sizeof(WCHAR);
+
+    // Create a new LOCAL_PORT structure for it.
+    pPort = DllAllocSplMem(sizeof(LOCAL_PORT) + cbPortName);
+    if (!pPort)
+    {
+        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        return FALSE;
+    }
+
+    pPort->pPrintMonitor = pPrintMonitor;
+    pPort->pwszName = wcscpy( (PWSTR)(pPort+1), pwszName );
+
+    // Insert it into the list and advance to the next port.
+    InsertTailList(&_PortList, &pPort->Entry);
+
+    return TRUE;
+}
+
+BOOL
 InitializePortList(void)
 {
     BOOL bReturnValue;
@@ -188,4 +211,289 @@ LocalEnumPorts(PWSTR pName, DWORD Level, PBYTE pPorts, DWORD cbBuf, PDWORD pcbNe
     }
 
     return bReturnValue;
+}
+
+BOOL WINAPI
+LocalAddPortEx(PWSTR pName, DWORD Level, PBYTE lpBuffer, PWSTR lpMonitorName)
+{
+    DWORD lres;
+    BOOL res = FALSE;
+    PLOCAL_PORT pPort;
+    PLOCAL_PRINT_MONITOR pPrintMonitor;
+    PORT_INFO_1W * pi = (PORT_INFO_1W *) lpBuffer;
+
+    FIXME("LocalAddPortEx(%S, %lu, %p, %S)\n", pName, Level, lpBuffer, lpMonitorName);
+
+    lres = copy_servername_from_name(pName, NULL);
+    if ( lres )
+    {
+        FIXME("server %s not supported\n", debugstr_w(pName));
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    if ( Level != 1 )
+    {
+        SetLastError(ERROR_INVALID_LEVEL);
+        return FALSE;
+    }
+
+    if ((!pi) || (!lpMonitorName) || (!lpMonitorName[0]))
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    pPrintMonitor = FindPrintMonitor( lpMonitorName );
+    if (!pPrintMonitor )
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    pPort = FindPort( pi->pName );
+    if ( pPort )
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    if ( pPrintMonitor->bIsLevel2 && ((PMONITOR2)pPrintMonitor->pMonitor)->pfnAddPortEx )
+    {
+        res = ((PMONITOR2)pPrintMonitor->pMonitor)->pfnAddPortEx(pPrintMonitor->hMonitor, pName, Level, lpBuffer, lpMonitorName);
+    }
+    else if ( !pPrintMonitor->bIsLevel2 && ((LPMONITOREX)pPrintMonitor->pMonitor)->Monitor.pfnAddPortEx )
+    {
+        res = ((LPMONITOREX)pPrintMonitor->pMonitor)->Monitor.pfnAddPortEx(pName, Level, lpBuffer, lpMonitorName);
+    }
+    else
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+    }
+
+    if ( res )
+    {
+        res = CreatePortEntry( pi->pName, pPrintMonitor );
+    }
+
+    return res;
+}
+
+//
+// Local (AP, CP & DP) is still around, seems to be a backup if a failure was encountered.. New way, WinSpool->LocalUI->XcvDataW.
+//
+BOOL WINAPI
+LocalAddPort(LPWSTR pName, HWND hWnd, LPWSTR pMonitorName)
+{
+    DWORD lres;
+    BOOL res = FALSE;
+    PLOCAL_PRINT_MONITOR pPrintMonitor;
+
+    FIXME("LocalAddPort(%S, %p, %s)\n", pName, hWnd, debugstr_w(pMonitorName));
+
+    lres = copy_servername_from_name(pName, NULL);
+    if (lres)
+    {
+        FIXME("server %s not supported\n", debugstr_w(pName));
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    /* an empty Monitorname is Invalid */
+    if (!pMonitorName[0])
+    {
+        SetLastError(ERROR_NOT_SUPPORTED);
+        return FALSE;
+    }
+
+    pPrintMonitor = FindPrintMonitor( pMonitorName );
+    if (!pPrintMonitor )
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    if ( pPrintMonitor->bIsLevel2 && ((PMONITOR2)pPrintMonitor->pMonitor)->pfnAddPort )
+    {
+        res = ((PMONITOR2)pPrintMonitor->pMonitor)->pfnAddPort(pPrintMonitor->hMonitor, pName, hWnd, pMonitorName);
+    }
+    else if ( !pPrintMonitor->bIsLevel2 && ((LPMONITOREX)pPrintMonitor->pMonitor)->Monitor.pfnAddPort )
+    {
+        res = ((LPMONITOREX)pPrintMonitor->pMonitor)->Monitor.pfnAddPort(pName, hWnd, pMonitorName);
+    }
+    else
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+    }
+
+    if ( res )
+    {
+        DWORD cbNeeded, cReturned, i;
+        PPORT_INFO_1 pPorts;
+
+        //
+        // Play it safe,,, we know its Monitor2.... This is ReactOS.
+        //
+        if ( LocalEnumPorts( pName, 1, NULL, 0, &cbNeeded, &cReturned ) )
+        {
+            pPorts = DllAllocSplMem( cbNeeded );
+            if (pPorts)
+            {
+                if ( LocalEnumPorts( pName, 1, (PBYTE)pPorts, cbNeeded, &cbNeeded, &cReturned ) )
+                {
+                    for ( i = 0; i < cReturned; i++ )
+                    {
+                        if ( !FindPort( pPorts[i].pName ) )
+                        {
+                            CreatePortEntry( pPorts[i].pName, pPrintMonitor );
+                        }
+                    }
+                }
+                DllFreeSplMem( pPorts );
+            }
+        }
+    }
+
+    return res;
+}
+
+BOOL WINAPI
+LocalConfigurePort(PWSTR pName, HWND hWnd, PWSTR pPortName)
+{
+    LONG lres;
+    DWORD res;
+    PLOCAL_PORT pPrintPort;
+    PLOCAL_PRINT_MONITOR pPrintMonitor;
+
+    FIXME("LocalConfigurePort(%S, %p, %S)\n", pName, hWnd, pPortName);
+
+    lres = copy_servername_from_name(pName, NULL);
+    if (lres)
+    {
+        FIXME("server %s not supported\n", debugstr_w(pName));
+        SetLastError(ERROR_INVALID_NAME);
+        return FALSE;
+    }
+
+    /* an empty Portname is Invalid, but can popup a Dialog */
+    if (!pPortName[0])
+    {
+        SetLastError(ERROR_NOT_SUPPORTED);
+        return FALSE;
+    }
+
+    pPrintPort = FindPort(pPortName);
+    if (!pPrintPort )
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    pPrintMonitor = pPrintPort->pPrintMonitor;
+
+    if ( pPrintMonitor->bIsLevel2 && ((PMONITOR2)pPrintMonitor->pMonitor)->pfnConfigurePort )
+    {
+        res = ((PMONITOR2)pPrintMonitor->pMonitor)->pfnConfigurePort(pPrintMonitor->hMonitor, pName, hWnd, pPortName);
+    }
+    else if ( !pPrintMonitor->bIsLevel2 && ((LPMONITOREX)pPrintMonitor->pMonitor)->Monitor.pfnConfigurePort )
+    {
+        res = ((LPMONITOREX)pPrintMonitor->pMonitor)->Monitor.pfnConfigurePort(pName, hWnd, pPortName);
+    }
+    else
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+    }
+
+    return res;
+}
+
+BOOL WINAPI
+LocalDeletePort(PWSTR pName, HWND hWnd, PWSTR pPortName)
+{
+    LONG lres;
+    DWORD res = FALSE;
+    PLOCAL_PORT pPrintPort;
+    PLOCAL_PRINT_MONITOR pPrintMonitor;
+
+    FIXME("LocalDeletePort(%S, %p, %S)\n", pName, hWnd, pPortName);
+
+    lres = copy_servername_from_name(pName, NULL);
+    if (lres)
+    {
+        FIXME("server %s not supported\n", debugstr_w(pName));
+        SetLastError(ERROR_INVALID_NAME);
+        return FALSE;
+    }
+
+    if (!pPortName[0])
+    {
+        SetLastError(ERROR_NOT_SUPPORTED);
+        return FALSE;
+    }
+
+    pPrintPort = FindPort(pPortName);
+    if (!pPrintPort )
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    pPrintMonitor = pPrintPort->pPrintMonitor;
+
+    if ( pPrintMonitor->bIsLevel2 && ((PMONITOR2)pPrintMonitor->pMonitor)->pfnDeletePort )
+    {
+        res = ((PMONITOR2)pPrintMonitor->pMonitor)->pfnDeletePort(pPrintMonitor->hMonitor, pName, hWnd, pPortName);
+    }
+    else if ( !pPrintMonitor->bIsLevel2 && ((LPMONITOREX)pPrintMonitor->pMonitor)->Monitor.pfnDeletePort )
+    {
+        res = ((LPMONITOREX)pPrintMonitor->pMonitor)->Monitor.pfnDeletePort(pName, hWnd, pPortName);
+    }
+
+    RemoveEntryList(&pPrintPort->Entry);
+
+    DllFreeSplMem(pPrintPort);
+
+    return res;
+}
+
+BOOL WINAPI
+LocalSetPort(PWSTR pName, PWSTR pPortName, DWORD dwLevel, PBYTE pPortInfo)
+{
+    LONG lres;
+    DWORD res = 0;
+    PPORT_INFO_3W ppi3w = (PPORT_INFO_3W)pPortInfo;
+    PLOCAL_PORT pPrintPort;
+
+    TRACE("LocalSetPort(%S, %S, %lu, %p)\n", pName, pPortName, dwLevel, pPortInfo);
+
+    lres = copy_servername_from_name(pName, NULL);
+    if (lres)
+    {
+        FIXME("server %s not supported\n", debugstr_w(pName));
+        SetLastError(ERROR_INVALID_NAME);
+        return FALSE;
+    }
+
+    if ((dwLevel < 1) || (dwLevel > 2))
+    {
+        SetLastError(ERROR_INVALID_LEVEL);
+        return FALSE;
+    }
+
+    if ( !ppi3w )
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    pPrintPort = FindPort(pPortName);
+    if ( !pPrintPort )
+    {
+        SetLastError(ERROR_UNKNOWN_PORT);
+        return FALSE;
+    }
+
+    FIXME("Add Status Support to Local Ports!\n");
+
+    return res;
 }

@@ -161,7 +161,7 @@ FdoStartDevice(IN PDEVICE_OBJECT DeviceObject,
 
                 if (DeviceExtension->BaseAddress == 0)
                 {
-                    if (PartialDescriptor->u.Port.Length < 4)
+                    if (PartialDescriptor->u.Port.Length < 3)
                         return STATUS_INSUFFICIENT_RESOURCES;
 
                     DeviceExtension->BaseAddress = PartialDescriptor->u.Port.Start.u.LowPart;

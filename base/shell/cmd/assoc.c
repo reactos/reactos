@@ -1,250 +1,313 @@
 /*
- *  Assoc.C - assoc internal command.
+ *  ASSOC.C - assoc internal command.
  *
  *
  *  History:
  *
  * 14-Mar-2009 Lee C. Baker
- * - initial implementation
+ * - initial implementation.
  *
  * 15-Mar-2009 Lee C. Baker
- * - Don't write to (or use) HKEY_CLASSES_ROOT directly
- * - Externalize strings
+ * - Don't write to (or use) HKEY_CLASSES_ROOT directly.
+ * - Externalize strings.
  *
  * TODO:
- * - PrintAllAssociations might could be optimized to not fetch all registry subkeys under 'Classes', just the ones that start with '.'
- * - Make sure that non-administrator users can list associations, and get appropriate error messages when they don't have sufficient
- *   privileges to perform an operation
+ * - PrintAllAssociations could be optimized to not fetch all registry subkeys under 'Classes', just the ones that start with '.'
  */
 
 #include "precomp.h"
 
 #ifdef INCLUDE_CMD_ASSOC
 
-static INT
-PrintAssociation(LPTSTR extension)
+static LONG
+PrintAssociationEx(
+    IN HKEY hKeyClasses,
+    IN PCTSTR pszExtension)
 {
-    DWORD return_val;
-    HKEY hKey = NULL, hInsideKey = NULL;
+    LONG lRet;
+    HKEY hKey;
+    DWORD dwFileTypeLen = 0;
+    PTSTR pszFileType;
 
-    DWORD fileTypeLength = 0;
-    LPTSTR fileType = NULL;
+    lRet = RegOpenKeyEx(hKeyClasses, pszExtension, 0, KEY_QUERY_VALUE, &hKey);
+    if (lRet != ERROR_SUCCESS)
+    {
+        if (lRet != ERROR_FILE_NOT_FOUND)
+            ErrorMessage(lRet, NULL);
+        return lRet;
+    }
 
-    return_val = RegOpenKeyEx(HKEY_LOCAL_MACHINE, _T("SOFTWARE\\Classes"), 0, KEY_READ, &hKey);
+    /* Obtain the string length */
+    lRet = RegQueryValueEx(hKey, NULL, NULL, NULL, NULL, &dwFileTypeLen);
 
-    if (return_val != ERROR_SUCCESS)
-        return -1;
+    /* If there is no default value, don't display it */
+    if (lRet == ERROR_FILE_NOT_FOUND)
+    {
+        RegCloseKey(hKey);
+        return lRet;
+    }
+    if (lRet != ERROR_SUCCESS)
+    {
+        ErrorMessage(lRet, NULL);
+        RegCloseKey(hKey);
+        return lRet;
+    }
 
-    return_val = RegOpenKeyEx(hKey, extension, 0, KEY_READ, &hInsideKey);
+    ++dwFileTypeLen;
+    pszFileType = cmd_alloc(dwFileTypeLen * sizeof(TCHAR));
+    if (!pszFileType)
+    {
+        WARN("Cannot allocate memory for pszFileType!\n");
+        RegCloseKey(hKey);
+        return ERROR_NOT_ENOUGH_MEMORY;
+    }
+
+    /* Obtain the actual file type */
+    lRet = RegQueryValueEx(hKey, NULL, NULL, NULL, (LPBYTE)pszFileType, &dwFileTypeLen);
     RegCloseKey(hKey);
 
-    if (return_val != ERROR_SUCCESS)
-        return 0;
-
-    /* obtain string length */
-    return_val = RegQueryValueEx(hInsideKey, NULL, NULL, NULL, NULL, &fileTypeLength);
-
-    if (return_val == ERROR_FILE_NOT_FOUND) /* no default value, don't display */
+    if (lRet != ERROR_SUCCESS)
     {
-        RegCloseKey(hInsideKey);
-        return 0;
+        ErrorMessage(lRet, NULL);
+        cmd_free(pszFileType);
+        return lRet;
     }
 
-    if (return_val != ERROR_SUCCESS)
+    /* If there is a default key, display the relevant information */
+    if (dwFileTypeLen != 0)
     {
-        RegCloseKey(hInsideKey);
-        return -2;
+        ConOutPrintf(_T("%s=%s\n"), pszExtension, pszFileType);
     }
 
-    fileType = cmd_alloc(fileTypeLength * sizeof(TCHAR));
-    if (!fileType)
-    {
-        WARN("Cannot allocate memory for fileType!\n");
-        RegCloseKey(hInsideKey);
-        return -2;
-    }
-
-    /* obtain actual file type */
-    return_val = RegQueryValueEx(hInsideKey, NULL, NULL, NULL, (LPBYTE)fileType, &fileTypeLength);
-    RegCloseKey(hInsideKey);
-
-    if (return_val != ERROR_SUCCESS)
-    {
-        cmd_free(fileType);
-        return -2;
-    }
-
-    if (fileTypeLength != 0)    /* if there is a default key, display relevant information */
-    {
-        ConOutPrintf(_T("%s=%s\n"), extension, fileType);
-    }
-
-    cmd_free(fileType);
-    return 1;
+    cmd_free(pszFileType);
+    return ERROR_SUCCESS;
 }
 
-static INT
+static LONG
+PrintAssociation(
+    IN PCTSTR pszExtension)
+{
+    LONG lRet;
+    HKEY hKeyClasses;
+
+    lRet = RegOpenKeyEx(HKEY_LOCAL_MACHINE, _T("SOFTWARE\\Classes"), 0,
+                        KEY_ENUMERATE_SUB_KEYS, &hKeyClasses);
+    if (lRet != ERROR_SUCCESS)
+    {
+        ErrorMessage(lRet, NULL);
+        return lRet;
+    }
+
+    lRet = PrintAssociationEx(hKeyClasses, pszExtension);
+
+    RegCloseKey(hKeyClasses);
+    return lRet;
+}
+
+static LONG
 PrintAllAssociations(VOID)
 {
-    DWORD return_val = 0;
-    HKEY hKey = NULL;
-    DWORD numKeys = 0;
+    LONG lRet;
+    HKEY hKeyClasses;
+    DWORD dwKeyCtr;
+    DWORD dwNumKeys = 0;
+    DWORD dwExtLen = 0;
+    PTSTR pszExtName;
 
-    DWORD extLength = 0;
-    LPTSTR extName = NULL;
-    DWORD keyCtr = 0;
-
-    return_val = RegOpenKeyEx(HKEY_LOCAL_MACHINE, _T("SOFTWARE\\Classes"), 0, KEY_READ, &hKey);
-
-    if (return_val != ERROR_SUCCESS)
-        return -1;
-
-    return_val = RegQueryInfoKey(hKey, NULL, NULL, NULL, &numKeys, &extLength, NULL, NULL, NULL, NULL, NULL, NULL);
-
-    if (return_val != ERROR_SUCCESS)
+    lRet = RegOpenKeyEx(HKEY_LOCAL_MACHINE, _T("SOFTWARE\\Classes"), 0,
+                        KEY_QUERY_VALUE | KEY_ENUMERATE_SUB_KEYS, &hKeyClasses);
+    if (lRet != ERROR_SUCCESS)
     {
-        RegCloseKey(hKey);
-        return -2;
+        ErrorMessage(lRet, NULL);
+        return lRet;
     }
 
-    extLength++;
-    extName = cmd_alloc(extLength * sizeof(TCHAR));
-    if (!extName)
+    lRet = RegQueryInfoKey(hKeyClasses, NULL, NULL, NULL, &dwNumKeys, &dwExtLen,
+                           NULL, NULL, NULL, NULL, NULL, NULL);
+    if (lRet != ERROR_SUCCESS)
     {
-        WARN("Cannot allocate memory for extName!\n");
-        RegCloseKey(hKey);
-        return -2;
+        ErrorMessage(lRet, NULL);
+        RegCloseKey(hKeyClasses);
+        return lRet;
     }
 
-    for (keyCtr = 0; keyCtr < numKeys; keyCtr++)
+    ++dwExtLen;
+    pszExtName = cmd_alloc(dwExtLen * sizeof(TCHAR));
+    if (!pszExtName)
     {
-        DWORD buffer_size = extLength;
-        return_val = RegEnumKeyEx(hKey, keyCtr, extName, &buffer_size, NULL, NULL, NULL, NULL);
+        WARN("Cannot allocate memory for pszExtName!\n");
+        RegCloseKey(hKeyClasses);
+        return ERROR_NOT_ENOUGH_MEMORY;
+    }
 
-        if (return_val == ERROR_SUCCESS || return_val == ERROR_MORE_DATA)
+    for (dwKeyCtr = 0; dwKeyCtr < dwNumKeys; ++dwKeyCtr)
+    {
+        DWORD dwBufSize = dwExtLen;
+        lRet = RegEnumKeyEx(hKeyClasses, dwKeyCtr, pszExtName, &dwBufSize,
+                            NULL, NULL, NULL, NULL);
+
+        if (lRet == ERROR_SUCCESS || lRet == ERROR_MORE_DATA)
         {
-            if (*extName == _T('.'))
-                PrintAssociation(extName);
+            /* Name starts with '.': this is an extension */
+            if (*pszExtName == _T('.'))
+                PrintAssociationEx(hKeyClasses, pszExtName);
         }
         else
         {
-            cmd_free(extName);
-            RegCloseKey(hKey);
-            return -1;
+            ErrorMessage(lRet, NULL);
+            cmd_free(pszExtName);
+            RegCloseKey(hKeyClasses);
+            return lRet;
         }
     }
 
-    RegCloseKey(hKey);
+    RegCloseKey(hKeyClasses);
 
-    cmd_free(extName);
-    return numKeys;
+    cmd_free(pszExtName);
+    return ERROR_SUCCESS;
 }
 
-static INT
-AddAssociation(LPTSTR extension, LPTSTR type)
+static LONG
+AddAssociation(
+    IN PCTSTR pszExtension,
+    IN PCTSTR pszType)
 {
-    DWORD return_val;
-    HKEY hKey = NULL, insideKey = NULL;
+    LONG lRet;
+    HKEY hKeyClasses, hKey;
 
-    return_val = RegOpenKeyEx(HKEY_LOCAL_MACHINE, _T("SOFTWARE\\Classes"), 0, KEY_ALL_ACCESS, &hKey);
-
-    if (return_val != ERROR_SUCCESS)
-        return -1;
-
-    return_val = RegCreateKeyEx(hKey, extension, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_ALL_ACCESS, NULL, &insideKey, NULL);
-    RegCloseKey(hKey);
-
-    if (return_val != ERROR_SUCCESS)
-        return -1;
-
-    return_val = RegSetValueEx(insideKey, NULL, 0, REG_SZ, (LPBYTE)type, (_tcslen(type) + 1) * sizeof(TCHAR));
-    RegCloseKey(insideKey);
-
-    if (return_val != ERROR_SUCCESS)
-        return -2;
-
-    return 0;
-}
-
-static int
-RemoveAssociation(LPTSTR extension)
-{
-    DWORD return_val;
-    HKEY hKey;
-
-    return_val = RegOpenKeyEx(HKEY_LOCAL_MACHINE, _T("SOFTWARE\\Classes"), 0, KEY_ALL_ACCESS, &hKey);
-
-    if (return_val != ERROR_SUCCESS)
-        return -1;
-
-    return_val = RegDeleteKey(hKey, extension);
-    RegCloseKey(hKey);
-
-    if (return_val != ERROR_SUCCESS)
-        return -2;
-
-    return 0;
-}
-
-
-INT CommandAssoc (LPTSTR param)
-{
-    /* print help */
-    if (!_tcsncmp (param, _T("/?"), 2))
+    lRet = RegOpenKeyEx(HKEY_LOCAL_MACHINE, _T("SOFTWARE\\Classes"), 0,
+                        KEY_CREATE_SUB_KEY, &hKeyClasses);
+    if (lRet != ERROR_SUCCESS)
     {
-        ConOutResPaging(TRUE,STRING_ASSOC_HELP);
+        ErrorMessage(lRet, NULL);
+        return lRet;
+    }
+
+    lRet = RegCreateKeyEx(hKeyClasses, pszExtension, 0, NULL, REG_OPTION_NON_VOLATILE,
+                          KEY_SET_VALUE, NULL, &hKey, NULL);
+    RegCloseKey(hKeyClasses);
+
+    if (lRet != ERROR_SUCCESS)
+    {
+        ErrorMessage(lRet, NULL);
+        return lRet;
+    }
+
+    lRet = RegSetValueEx(hKey, NULL, 0, REG_SZ,
+                         (LPBYTE)pszType, (DWORD)(_tcslen(pszType) + 1) * sizeof(TCHAR));
+    RegCloseKey(hKey);
+
+    if (lRet != ERROR_SUCCESS)
+    {
+        ErrorMessage(lRet, NULL);
+        return lRet;
+    }
+
+    return ERROR_SUCCESS;
+}
+
+static LONG
+RemoveAssociation(
+    IN PCTSTR pszExtension)
+{
+    LONG lRet;
+    HKEY hKeyClasses;
+
+    lRet = RegOpenKeyEx(HKEY_LOCAL_MACHINE, _T("SOFTWARE\\Classes"), 0,
+                        KEY_QUERY_VALUE, &hKeyClasses);
+    if (lRet != ERROR_SUCCESS)
+    {
+        ErrorMessage(lRet, NULL);
+        return lRet;
+    }
+
+    lRet = RegDeleteKey(hKeyClasses, pszExtension);
+    RegCloseKey(hKeyClasses);
+
+    if (lRet != ERROR_SUCCESS)
+    {
+        if (lRet != ERROR_FILE_NOT_FOUND)
+            ErrorMessage(lRet, NULL);
+        return lRet;
+    }
+
+    return ERROR_SUCCESS;
+}
+
+
+INT CommandAssoc(LPTSTR param)
+{
+    INT retval = 0;
+    PTCHAR pEqualSign;
+
+    /* Print help */
+    if (!_tcsncmp(param, _T("/?"), 2))
+    {
+        ConOutResPaging(TRUE, STRING_ASSOC_HELP);
         return 0;
     }
 
-    nErrorLevel = 0;
-
-    if (_tcslen(param) == 0)
+    /* Print all associations if no parameter has been specified */
+    if (!*param)
     {
         PrintAllAssociations();
+        goto Quit;
+    }
+
+    pEqualSign = _tcschr(param, _T('='));
+    if (pEqualSign != NULL)
+    {
+        PTSTR pszFileType = pEqualSign + 1;
+
+        /* NULL-terminate at the equals sign */
+        *pEqualSign = 0;
+
+        /* If the equals sign is the last character
+         * in the string, delete the association. */
+        if (*pszFileType == 0)
+        {
+            retval = RemoveAssociation(param);
+        }
+        else
+        /* Otherwise, add the association and print it out */
+        {
+            retval = AddAssociation(param, pszFileType);
+            PrintAssociation(param);
+        }
+
+        if (retval != ERROR_SUCCESS)
+        {
+            if (retval != ERROR_FILE_NOT_FOUND)
+            {
+                // FIXME: Localize
+                ConErrPrintf(_T("Error occurred while processing: %s.\n"), param);
+            }
+            // retval = 1; /* Fixup the error value */
+        }
     }
     else
     {
-        LPTSTR lpEqualSign = _tcschr(param, _T('='));
-        if (lpEqualSign != NULL)
+        /* No equals sign, print the association */
+        retval = PrintAssociation(param);
+        if (retval != ERROR_SUCCESS)
         {
-            LPTSTR fileType = lpEqualSign + 1;
-            LPTSTR extension = cmd_alloc((lpEqualSign - param + 1) * sizeof(TCHAR));
-            if (!extension)
-            {
-                WARN("Cannot allocate memory for extension!\n");
-                error_out_of_memory();
-                return 1;
-            }
-
-            _tcsncpy(extension, param, lpEqualSign - param);
-            extension[lpEqualSign - param] = _T('\0');
-
-            if (_tcslen(fileType) == 0)
-            /* if the equal sign is the last character
-            in the string, then delete the key */
-            {
-                RemoveAssociation(extension);
-            }
-            else
-            /* otherwise, add the key and print out the association*/
-            {
-                AddAssociation(extension, fileType);
-                PrintAssociation(extension);
-            }
-
-            cmd_free(extension);
-        }
-        else
-        {
-            /* no equal sign, print all associations */
-            INT retval = PrintAssociation(param);
-
-            if (retval == 0)    /* if nothing printed out */
-                ConOutResPrintf(STRING_ASSOC_ERROR, param);
+            ConErrResPrintf(STRING_ASSOC_ERROR, param);
+            retval = 1; /* Fixup the error value */
         }
     }
 
-    return 0;
+Quit:
+    if (BatType != CMD_TYPE)
+    {
+        if (retval != 0)
+            nErrorLevel = retval;
+    }
+    else
+    {
+        nErrorLevel = retval;
+    }
+
+    return retval;
 }
 
 #endif /* INCLUDE_CMD_ASSOC */

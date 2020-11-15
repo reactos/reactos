@@ -1,6 +1,4 @@
 
-set_cpp(WITH_RUNTIME WITH_STL WITH_EXCEPTIONS)
-
 list(APPEND SOURCE
     ArgumentParser.cpp
     Console.cpp
@@ -31,6 +29,8 @@ list(APPEND SOURCE
     Prompt.cpp)
 
 add_executable(regexpl ${SOURCE} regexpl.rc)
+target_link_libraries(regexpl cppstl)
+set_target_cpp_properties(regexpl WITH_EXCEPTIONS)
 set_module_type(regexpl win32cui)
 add_importlibs(regexpl user32 advapi32 msvcrt kernel32 ntdll)
 add_cd_file(TARGET regexpl DESTINATION reactos/system32 FOR all)

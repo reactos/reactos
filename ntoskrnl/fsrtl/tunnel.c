@@ -129,7 +129,7 @@ FsRtlPruneTunnelCache(
     }
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 FsRtlGetTunnelParameterValue(
     IN PUNICODE_STRING ParameterName,
@@ -193,7 +193,7 @@ FsRtlGetTunnelParameterValue(
     ZwClose(hKey);
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 FsRtlInitializeTunnels(VOID)

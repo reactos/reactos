@@ -156,7 +156,7 @@ LRESULT CALLBACK RosImageProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam
                     if (hDC == NULL)
                         goto Cleanup;
 
-					top = 0;
+                    top = 0;
                     offset = 0;
                     hCreditsDC = CreateCompatibleDC(hDC);
                     hLogoDC = CreateCompatibleDC(hCreditsDC);
@@ -445,6 +445,7 @@ static VOID SetProcSpeed(HWND hwnd, HKEY hKey, LPTSTR Value, UINT uID)
 static VOID GetSystemInformation(HWND hwnd)
 {
     HKEY hKey;
+    TCHAR SysKey[] = _T("HARDWARE\\DESCRIPTION\\System");
     TCHAR ProcKey[] = _T("HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0");
     MEMORYSTATUSEX MemStat;
     TCHAR Buf[32];
@@ -459,6 +460,16 @@ static VOID GetSystemInformation(HWND hwnd)
     {
         SetDlgItemText(hwnd, CurMachineLine, SMBiosName);
         CurMachineLine++;
+    }
+    else
+    {
+        /* If SMBIOS is not available, use System Identifier */
+        if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, SysKey, 0, KEY_READ, &hKey) == ERROR_SUCCESS)
+        {
+            SetRegTextData(hwnd, hKey, _T("Identifier"), CurMachineLine);
+            CurMachineLine++;
+            RegCloseKey(hKey);
+        }
     }
     /*
      * Get Processor information
@@ -479,6 +490,7 @@ static VOID GetSystemInformation(HWND hwnd)
 
         SetProcSpeed(hwnd, hKey, _T("~MHz"), CurMachineLine);
         CurMachineLine++;
+        RegCloseKey(hKey);
     }
 
     /* Get total physical RAM */

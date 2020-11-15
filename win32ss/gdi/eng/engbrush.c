@@ -25,7 +25,7 @@ HSURF gahsurfHatch[HS_DDI_MAX];
 
 /** Internal functions ********************************************************/
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 NTSTATUS
 NTAPI
 InitBrushImpl(VOID)

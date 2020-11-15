@@ -38,18 +38,17 @@
 
 #ifdef INCLUDE_CMD_SET
 
-
-/* initial size of environment variable buffer */
+/* Initial size of environment variable buffer */
 #define ENV_BUFFER_SIZE  1024
 
 static BOOL
-seta_eval ( LPCTSTR expr );
+seta_eval(LPCTSTR expr);
 
 static LPCTSTR
-skip_ws ( LPCTSTR p )
+skip_ws(LPCTSTR p)
 {
     while (*p && *p <= _T(' '))
-        p++;
+        ++p;
     return p;
 }
 
@@ -70,13 +69,14 @@ GetQuotedString(TCHAR *p)
     return p;
 }
 
-INT cmd_set (LPTSTR param)
+INT cmd_set(LPTSTR param)
 {
+    INT retval = 0;
     LPTSTR p;
     LPTSTR lpEnv;
     LPTSTR lpOutput;
 
-    if ( !_tcsncmp (param, _T("/?"), 2) )
+    if (!_tcsncmp(param, _T("/?"), 2))
     {
         ConOutResPaging(TRUE,STRING_SET_HELP);
         return 0;
@@ -84,38 +84,55 @@ INT cmd_set (LPTSTR param)
 
     param = (LPTSTR)skip_ws(param);
 
-    /* if no parameters, show the environment */
+    /* If no parameters, show the environment */
     if (param[0] == _T('\0'))
     {
-        lpEnv = (LPTSTR)GetEnvironmentStrings ();
+        lpEnv = (LPTSTR)GetEnvironmentStrings();
         if (lpEnv)
         {
             lpOutput = lpEnv;
             while (*lpOutput)
             {
+                /* Do not display the special '=X:' environment variables */
                 if (*lpOutput != _T('='))
+                {
                     ConOutPuts(lpOutput);
+                    ConOutChar(_T('\n'));
+                }
                 lpOutput += _tcslen(lpOutput) + 1;
-                ConOutChar(_T('\n'));
             }
-            FreeEnvironmentStrings (lpEnv);
+            FreeEnvironmentStrings(lpEnv);
         }
 
-        return 0;
+        retval = 0;
+        goto Quit;
     }
 
-    /* the /A does *NOT* have to be followed by a whitespace */
-    if ( !_tcsnicmp (param, _T("/A"), 2) )
+    /* The /A does *NOT* have to be followed by a whitespace */
+    if (!_tcsnicmp(param, _T("/A"), 2))
     {
         BOOL Success;
+
+        /* Save error level since seta_eval() modifies it, as
+         * we need to set it later according to specific rules. */
+        INT nOldErrorLevel = nErrorLevel;
+
         StripQuotes(param);
-        Success = seta_eval ( skip_ws(param+2) );
+        Success = seta_eval(skip_ws(param + 2));
         if (!Success)
         {
-            /* might seem random but this is what windows xp does */
-            nErrorLevel = 9165;
+#if 0
+            /* Might seem random but this is what windows xp does -- This is a message ID */
+            retval = 9165;
+#endif
+            retval = nErrorLevel;
+            nErrorLevel = nOldErrorLevel;
         }
-        return !Success;
+        else
+        {
+            retval = 0;
+        }
+        goto Quit;
     }
 
     if (!_tcsnicmp(param, _T("/P"), 2))
@@ -126,52 +143,68 @@ INT cmd_set (LPTSTR param)
         if (!p)
         {
             ConErrResPuts(STRING_SYNTAX_COMMAND_INCORRECT);
-            nErrorLevel = 1;
-            return 1;
+            retval = 1;
+            goto Quit;
         }
 
         *p++ = _T('\0');
         ConOutPrintf(_T("%s"), GetQuotedString(p));
-        ConInString(value, 1023);
+        ConInString(value, ARRAYSIZE(value));
 
         if (!*value || !SetEnvironmentVariable(param, value))
         {
-            nErrorLevel = 1;
-            return 1;
+            retval = 1;
+            goto Quit;
         }
-        return 0;
+        retval = 0;
+        goto Quit;
     }
 
     param = GetQuotedString(param);
 
-    p = _tcschr (param, _T('='));
+    p = _tcschr(param, _T('='));
     if (p)
     {
-        /* set or remove environment variable */
+        /* Set or remove the environment variable */
         if (p == param)
         {
-            /* handle set =val case */
+            /* Handle set =val case */
             ConErrResPuts(STRING_SYNTAX_COMMAND_INCORRECT);
-            nErrorLevel = 1;
-            return 1;
+            retval = 1;
+            goto Quit;
         }
 
         *p++ = _T('\0');
         if (!SetEnvironmentVariable(param, *p ? p : NULL))
         {
-            nErrorLevel = 1;
-            return 1;
+            retval = 1;
+            goto Quit;
         }
     }
     else
     {
-        /* display all environment variable with the given prefix */
-        BOOL bFound = FALSE;
+        /* Display all the environment variables with the given prefix */
+        LPTSTR pOrgParam = param;
+        BOOLEAN bFound = FALSE;
+        BOOLEAN bRestoreSpace;
 
+        /*
+         * Trim the prefix from "special" characters (only when displaying the
+         * environment variables), so that e.g. "SET ,; ,;FOO" will display all
+         * the variables starting by "FOO".
+         * The SET command allows as well to set an environment variable whose name
+         * actually contains these characters (e.g. "SET ,; ,;FOO=42"); however,
+         * by trimming the characters, doing "SET ,; ,;FOO" would not allow seeing
+         * such variables.
+         * Thus, we also save a pointer to the original variable name prefix, that
+         * we will look it up as well below.
+         */
         while (_istspace(*param) || *param == _T(',') || *param == _T(';'))
-            param++;
+            ++param;
 
+        /* Just remove the very last space, if present */
         p = _tcsrchr(param, _T(' '));
+        bRestoreSpace = (p != NULL);
         if (!p)
             p = param + _tcslen(param);
         *p = _T('\0');
@@ -182,7 +215,9 @@ INT cmd_set (LPTSTR param)
             lpOutput = lpEnv;
             while (*lpOutput)
             {
-                if (!_tcsnicmp(lpOutput, param, p - param))
+                /* Look up for both the original and truncated variable name prefix */
+                if (!_tcsnicmp(lpOutput, pOrgParam, p - pOrgParam) ||
+                    !_tcsnicmp(lpOutput, param, p - param))
                 {
                     ConOutPuts(lpOutput);
                     ConOutChar(_T('\n'));
@@ -193,61 +228,100 @@ INT cmd_set (LPTSTR param)
             FreeEnvironmentStrings(lpEnv);
         }
 
+        /* Restore the truncated space for correctly
+         * displaying the error message, if any. */
+        if (bRestoreSpace)
+            *p = _T(' ');
+
         if (!bFound)
         {
-            ConErrResPrintf (STRING_PATH_ERROR, param);
-            nErrorLevel = 1;
-            return 1;
+            ConErrResPrintf(STRING_SET_ENV_ERROR, param);
+            retval = 1;
+            goto Quit;
         }
     }
 
-    return 0;
+Quit:
+    if (BatType != CMD_TYPE)
+    {
+        if (retval != 0)
+            nErrorLevel = retval;
+    }
+    else
+    {
+        nErrorLevel = retval;
+    }
+
+    return retval;
 }
 
 static INT
 ident_len(LPCTSTR p)
 {
     LPCTSTR p2 = p;
-    if ( __iscsymf(*p) )
+    if (__iscsymf(*p))
     {
         ++p2;
-        while ( __iscsym(*p2) )
+        while (__iscsym(*p2))
             ++p2;
     }
     return (INT)(p2-p);
 }
 
-#define PARSE_IDENT(ident,identlen,p) \
+#define PARSE_IDENT(ident, identlen, p) \
+do { \
     identlen = ident_len(p); \
-    ident = (LPTSTR)alloca ( ( identlen + 1 ) * sizeof(TCHAR) ); \
-    memmove ( ident, p, identlen * sizeof(TCHAR) ); \
+    ident = (LPTSTR)alloca((identlen + 1) * sizeof(TCHAR)); \
+    memmove(ident, p, identlen * sizeof(TCHAR)); \
     ident[identlen] = 0; \
-    p += identlen;
+    p += identlen; \
+} while (0)
 
 static INT
 seta_identval(LPCTSTR ident)
 {
-    LPCTSTR identVal = GetEnvVarOrSpecial ( ident );
-    if ( !identVal )
+    LPCTSTR identVal = GetEnvVarOrSpecial(ident);
+    if (!identVal)
         return 0;
     else
-        return _tcstol ( identVal, NULL, 0 );
+        return _tcstol(identVal, NULL, 0);
 }
 
 static BOOL
 calc(INT* lval, TCHAR op, INT rval)
 {
-    switch ( op )
+    switch (op)
     {
     case '*':
         *lval *= rval;
         break;
+
     case '/':
+    {
+        if (rval == 0)
+        {
+            // FIXME: Localize
+            ConErrPuts(_T("Division by zero error.\n"));
+            nErrorLevel = 0x400023D1; // 1073750993;
+            return FALSE;
+        }
         *lval /= rval;
         break;
+    }
+
     case '%':
+    {
+        if (rval == 0)
+        {
+            // FIXME: Localize
+            ConErrPuts(_T("Division by zero error.\n"));
+            nErrorLevel = 0x400023D1; // 1073750993;
+            return FALSE;
+        }
         *lval %= rval;
         break;
+    }
+
     case '+':
         *lval += rval;
         break;
@@ -263,50 +337,78 @@ calc(INT* lval, TCHAR op, INT rval)
     case '|':
         *lval |= rval;
         break;
+
     default:
-        ConErrResPuts ( STRING_INVALID_OPERAND );
+        ConErrResPuts(STRING_INVALID_OPERAND);
+        nErrorLevel = 0x400023CE; // 1073750990;
         return FALSE;
     }
     return TRUE;
 }
 
 static BOOL
-seta_stmt (LPCTSTR* p_, INT* result);
+seta_stmt(LPCTSTR* p_, INT* result);
 
 static BOOL
 seta_unaryTerm(LPCTSTR* p_, INT* result)
 {
     LPCTSTR p = *p_;
-    if ( *p == _T('(') )
+    INT rval;
+
+    if (*p == _T('('))
     {
-        INT rval;
-        p = skip_ws ( p + 1 );
-        if ( !seta_stmt ( &p, &rval ) )
+        p = skip_ws(p + 1);
+        if (!seta_stmt(&p, &rval))
             return FALSE;
-        if ( *p++ != _T(')') )
+        if (*p++ != _T(')'))
         {
-            ConErrResPuts ( STRING_EXPECTED_CLOSE_PAREN );
+            ConErrResPuts(STRING_EXPECTED_CLOSE_PAREN);
+            nErrorLevel = 0x400023CC; // 1073750988;
             return FALSE;
         }
         *result = rval;
     }
-    else if ( isdigit(*p) )
+    else if (_istdigit(*p))
     {
-        *result = _tcstol ( p, (LPTSTR *)&p, 0 );
+        errno = 0;
+        rval = _tcstol(p, (LPTSTR*)&p, 0);
+
+        /* Check for overflow / underflow */
+        if (errno == ERANGE)
+        {
+            // FIXME: Localize
+            ConErrPuts(_T("Invalid number. Numbers are limited to 32-bits of precision.\n"));
+            nErrorLevel = 0x400023D0; // 1073750992;
+            return FALSE;
+        }
+        /*
+         * _tcstol() stopped at the first non-digit character. If it's not a whitespace,
+         * or if it's the start of a possible identifier, this means the number being
+         * interpreted was invalid.
+         */
+        else if (*p && !_istspace(*p) && __iscsymf(*p))
+        {
+            // FIXME: Localize
+            ConErrPuts(_T("Invalid number. Numeric constants are either decimal (42), hexadecimal (0x2A), or octal (052).\n"));
+            nErrorLevel = 0x400023CF; // 1073750991;
+            return FALSE;
+        }
+        *result = rval;
     }
-    else if ( __iscsymf(*p) )
+    else if (__iscsymf(*p))
     {
         LPTSTR ident;
         INT identlen;
-        PARSE_IDENT(ident,identlen,p);
-        *result = seta_identval ( ident );
+        PARSE_IDENT(ident, identlen, p);
+        *result = seta_identval(ident);
     }
     else
     {
-        ConErrResPuts ( STRING_EXPECTED_NUMBER_OR_VARIABLE );
+        ConErrResPuts(STRING_EXPECTED_NUMBER_OR_VARIABLE);
+        nErrorLevel = 0x400023CD; // 1073750989;
         return FALSE;
     }
-    *p_ = skip_ws ( p );
+    *p_ = skip_ws(p);
     return TRUE;
 }
 
@@ -316,24 +418,37 @@ seta_mulTerm(LPCTSTR* p_, INT* result)
     LPCTSTR p = *p_;
     TCHAR op = 0;
     INT rval;
-    if ( _tcschr(_T("!~-"),*p) )
+
+    if (_tcschr(_T("!~-+"), *p))
     {
         op = *p;
-        p = skip_ws ( p + 1 );
+        p = skip_ws(p + 1);
+
+        if (!seta_mulTerm(&p, &rval))
+            return FALSE;
+
+        switch (op)
+        {
+        case '!':
+            rval = !rval;
+            break;
+        case '~':
+            rval = ~rval;
+            break;
+        case '-':
+            rval = -rval;
+            break;
+#if 0
+        case '+':
+            rval = rval;
+            break;
+#endif
+        }
     }
-    if ( !seta_unaryTerm ( &p, &rval ) )
-        return FALSE;
-    switch ( op )
+    else
     {
-    case '!':
-        rval = !rval;
-        break;
-    case '~':
-        rval = ~rval;
-        break;
-    case '-':
-        rval = -rval;
-        break;
+        if (!seta_unaryTerm(&p, &rval))
+            return FALSE;
     }
 
     *result = rval;
@@ -346,19 +461,24 @@ seta_ltorTerm(LPCTSTR* p_, INT* result, LPCTSTR ops, BOOL (*subTerm)(LPCTSTR*,IN
 {
     LPCTSTR p = *p_;
     INT lval;
-    if ( !subTerm ( &p, &lval ) )
+
+    /* Evaluate the left-hand side */
+    if (!subTerm(&p, &lval))
         return FALSE;
-    while ( *p && _tcschr(ops,*p) )
+
+    while (*p && _tcschr(ops, *p))
     {
         INT rval;
         TCHAR op = *p;
 
-        p = skip_ws ( p+1 );
+        p = skip_ws(p + 1);
 
-        if ( !subTerm ( &p, &rval ) )
+        /* Evaluate the immediate right-hand side */
+        if (!subTerm(&p, &rval))
             return FALSE;
 
-        if ( !calc ( &lval, op, rval ) )
+        /* This becomes the new left-hand side for the next iteration */
+        if (!calc(&lval, op, rval))
             return FALSE;
     }
 
@@ -370,13 +490,13 @@ seta_ltorTerm(LPCTSTR* p_, INT* result, LPCTSTR ops, BOOL (*subTerm)(LPCTSTR*,IN
 static BOOL
 seta_addTerm(LPCTSTR* p_, INT* result)
 {
-    return seta_ltorTerm ( p_, result, _T("*/%"), seta_mulTerm );
+    return seta_ltorTerm(p_, result, _T("*/%"), seta_mulTerm);
 }
 
 static BOOL
 seta_logShiftTerm(LPCTSTR* p_, INT* result)
 {
-    return seta_ltorTerm ( p_, result, _T("+-"), seta_addTerm );
+    return seta_ltorTerm(p_, result, _T("+-"), seta_addTerm);
 }
 
 static BOOL
@@ -384,19 +504,31 @@ seta_bitAndTerm(LPCTSTR* p_, INT* result)
 {
     LPCTSTR p = *p_;
     INT lval;
-    if ( !seta_logShiftTerm ( &p, &lval ) )
+
+    /* Evaluate the left-hand side */
+    if (!seta_logShiftTerm(&p, &lval))
         return FALSE;
-    while ( *p && _tcschr(_T("<>"),*p) && p[0] == p[1] )
+
+    /* Handle << >> operators */
+    while (*p && _tcschr(_T("<>"), *p))
     {
         INT rval;
         TCHAR op = *p;
 
-        p = skip_ws ( p+2 );
+        /* Check whether the next non-whitespace character is the same operator */
+        p = skip_ws(p + 1);
+        if (*p != op)
+            break;
 
-        if ( !seta_logShiftTerm ( &p, &rval ) )
+        /* Skip it */
+        p = skip_ws(p + 1);
+
+        /* Evaluate the immediate right-hand side */
+        if (!seta_logShiftTerm(&p, &rval))
             return FALSE;
 
-        switch ( op )
+        /* This becomes the new left-hand side for the next iteration */
+        switch (op)
         {
         case '<':
         {
@@ -408,11 +540,14 @@ seta_bitAndTerm(LPCTSTR* p_, INT* result)
                 lval <<= rval;
             break;
         }
+
         case '>':
             lval >>= rval;
             break;
+
         default:
-            ConErrResPuts ( STRING_INVALID_OPERAND );
+            ConErrResPuts(STRING_INVALID_OPERAND);
+            nErrorLevel = 0x400023CE; // 1073750990;
             return FALSE;
         }
     }
@@ -425,19 +560,19 @@ seta_bitAndTerm(LPCTSTR* p_, INT* result)
 static BOOL
 seta_bitExclOrTerm(LPCTSTR* p_, INT* result)
 {
-    return seta_ltorTerm ( p_, result, _T("&"), seta_bitAndTerm );
+    return seta_ltorTerm(p_, result, _T("&"), seta_bitAndTerm);
 }
 
 static BOOL
 seta_bitOrTerm(LPCTSTR* p_, INT* result)
 {
-    return seta_ltorTerm ( p_, result, _T("^"), seta_bitExclOrTerm );
+    return seta_ltorTerm(p_, result, _T("^"), seta_bitExclOrTerm);
 }
 
 static BOOL
 seta_expr(LPCTSTR* p_, INT* result)
 {
-    return seta_ltorTerm ( p_, result, _T("|"), seta_bitOrTerm );
+    return seta_ltorTerm(p_, result, _T("|"), seta_bitOrTerm);
 }
 
 static BOOL
@@ -448,34 +583,79 @@ seta_assignment(LPCTSTR* p_, INT* result)
     TCHAR op = 0;
     INT identlen, exprval;
 
-    PARSE_IDENT(ident,identlen,p);
-    if ( identlen )
+    PARSE_IDENT(ident, identlen, p);
+    if (identlen)
     {
         p = skip_ws(p);
-        if ( *p == _T('=') )
-            op = *p, p = skip_ws(p+1);
-        else if ( _tcschr ( _T("*/%+-&^|"), *p ) && p[1] == _T('=') )
-            op = *p, p = skip_ws(p+2);
-        else if ( _tcschr ( _T("<>"), *p ) && *p == p[1] && p[2] == _T('=') )
-            op = *p, p = skip_ws(p+3);
+
+        /* Handle = assignment */
+        if (*p == _T('='))
+        {
+            op = *p;
+            p = skip_ws(p + 1);
+        }
+        /* Handle *= /= %= += -= &= ^= |= assignments */
+        else if (_tcschr(_T("*/%+-&^|"), *p))
+        {
+            op = *p;
+
+            /* Find the '=', there may be some spaces before it */
+            p = skip_ws(p + 1);
+            if (*p != _T('='))
+            {
+                op = 0;
+                goto evaluate;
+            }
+
+            /* Skip it */
+            p = skip_ws(p + 1);
+        }
+        /* Handle <<= >>= assignments */
+        else if (_tcschr(_T("<>"), *p))
+        {
+            op = *p;
+
+            /* Check whether the next non-whitespace character is the same operator */
+            p = skip_ws(p + 1);
+            if (*p != op)
+            {
+                op = 0;
+                goto evaluate;
+            }
+
+            /* Find the '=', there may be some spaces before it */
+            p = skip_ws(p + 1);
+            if (*p != _T('='))
+            {
+                op = 0;
+                goto evaluate;
+            }
+
+            /* Skip it */
+            p = skip_ws(p + 1);
+        }
     }
 
-    /* allow to chain multiple assignments, such as: a=b=1 */
-    if ( ident && op )
+evaluate:
+    /* Allow to chain multiple assignments, such as: a=b=1 */
+    if (ident && op)
     {
         INT identval;
         LPTSTR buf;
 
-        if ( !seta_assignment ( &p, &exprval ) )
+        if (!seta_assignment(&p, &exprval))
             return FALSE;
 
-        identval = seta_identval ( ident );
+        identval = seta_identval(ident);
 
-        switch ( op )
+        switch (op)
         {
+        /* Handle = assignment */
         case '=':
             identval = exprval;
             break;
+
+        /* Handle <<= assignment */
         case '<':
         {
             /* Shift left has to be a positive number, 0-31 otherwise 0 is returned,
@@ -486,23 +666,28 @@ seta_assignment(LPCTSTR* p_, INT* result)
                 identval <<= exprval;
             break;
         }
+
+        /* Handle >>= assignment */
         case '>':
             identval >>= exprval;
             break;
+
+        /* Other assignments */
         default:
-            if ( !calc ( &identval, op, exprval ) )
+            if (!calc(&identval, op, exprval))
                 return FALSE;
         }
-        buf = (LPTSTR)alloca ( 32 * sizeof(TCHAR) );
-        _sntprintf ( buf, 32, _T("%i"), identval );
-        SetEnvironmentVariable ( ident, buf ); // TODO FIXME - check return value
+
+        buf = (LPTSTR)alloca(32 * sizeof(TCHAR));
+        _sntprintf(buf, 32, _T("%i"), identval);
+        SetEnvironmentVariable(ident, buf); // TODO FIXME - check return value
         exprval = identval;
     }
     else
     {
-        /* restore p in case we found an ident but not an op */
+        /* Restore p in case we found an identifier but not an operator */
         p = *p_;
-        if ( !seta_expr ( &p, &exprval ) )
+        if (!seta_expr(&p, &exprval))
             return FALSE;
     }
 
@@ -517,13 +702,15 @@ seta_stmt(LPCTSTR* p_, INT* result)
     LPCTSTR p = *p_;
     INT rval;
 
-    if ( !seta_assignment ( &p, &rval ) )
+    if (!seta_assignment(&p, &rval))
         return FALSE;
-    while ( *p == _T(',') )
-    {
-        p = skip_ws ( p+1 );
 
-        if ( !seta_assignment ( &p, &rval ) )
+    /* Loop over each statement */
+    while (*p == _T(','))
+    {
+        p = skip_ws(p + 1);
+
+        if (!seta_assignment(&p, &rval))
             return FALSE;
     }
 
@@ -536,15 +723,28 @@ static BOOL
 seta_eval(LPCTSTR p)
 {
     INT rval;
-    if ( !*p )
+
+    if (!*p)
     {
-        ConErrResPuts ( STRING_SYNTAX_COMMAND_INCORRECT );
+        ConErrResPuts(STRING_SYNTAX_COMMAND_INCORRECT);
+        nErrorLevel = 1;
         return FALSE;
     }
-    if ( !seta_stmt ( &p, &rval ) )
+    if (!seta_stmt(&p, &rval))
         return FALSE;
-    if ( !bc )
-        ConOutPrintf ( _T("%i"), rval );
+
+    /* If unparsed data remains, fail and bail out */
+    if (*p)
+    {
+        ConErrResPuts(STRING_SYNTAX_COMMAND_INCORRECT); // Actually syntax error / missing operand.
+        nErrorLevel = 0x400023CE; // 1073750990;
+        return FALSE;
+    }
+
+    /* Echo the result of the evaluation only in interactive (non-batch) mode */
+    if (!bc)
+        ConOutPrintf(_T("%i"), rval);
+
     return TRUE;
 }
 

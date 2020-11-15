@@ -1,4 +1,4 @@
-/* Spanish translation by Ismael Ferreras Morezuelas (Swyter) */
+/* Spanish translation by Ismael Ferreras Morezuelas (Swyter), Catalin Gabriel Draghita (jeffbox12) */
 
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
@@ -64,7 +64,7 @@ BEGIN
     BEGIN
         MENUITEM "Í&ndice", CMD_HELP_CONTENTS
         MENUITEM SEPARATOR
-        MENUITEM "&About Notepad", CMD_HELP_ABOUT_NOTEPAD
+        MENUITEM "&Acerca de Bloc de notas", CMD_HELP_ABOUT_NOTEPAD
     END
 END
 

@@ -86,14 +86,29 @@ DlgData_LoadBitmaps(_Inout_ PDLG_DATA pDlgData)
     }
 }
 
-static void
-DlgData_Destroy(PDLG_DATA pDlgData)
+static VOID
+DlgData_Destroy(_Inout_ HWND hwndDlg)
 {
-    if (!pDlgData)
-        return;
+    PDLG_DATA pDlgData;
 
-    DeleteObject(pDlgData->hLogoBitmap);
-    DeleteObject(pDlgData->hBarBitmap);
+    pDlgData = (PDLG_DATA)GetWindowLongPtrW(hwndDlg, GWLP_USERDATA);
+    if (!pDlgData)
+    {
+        return;
+    }
+
+    SetWindowLongPtrW(hwndDlg, GWLP_USERDATA, (LONG_PTR)NULL);
+
+    if (pDlgData->hBarBitmap)
+    {
+        DeleteObject(pDlgData->hBarBitmap);
+    }
+
+    if (pDlgData->hLogoBitmap)
+    {
+        DeleteObject(pDlgData->hLogoBitmap);
+    }
+
     HeapFree(GetProcessHeap(), 0, pDlgData);
 }
 
@@ -264,7 +279,7 @@ StatusDialogProc(
             {
                 KillTimer(hwndDlg, IDT_BAR);
             }
-            DlgData_Destroy(pDlgData);
+            DlgData_Destroy(hwndDlg);
             return TRUE;
         }
     }
@@ -434,7 +449,7 @@ WelcomeDialogProc(
         }
         case WM_DESTROY:
         {
-            DlgData_Destroy(pDlgData);
+            DlgData_Destroy(hwndDlg);
             return TRUE;
         }
     }
@@ -1230,7 +1245,7 @@ LogonDialogProc(
         }
 
         case WM_DESTROY:
-            DlgData_Destroy(pDlgData);
+            DlgData_Destroy(hwndDlg);
             return TRUE;
 
         case WM_COMMAND:
@@ -1489,7 +1504,7 @@ UnlockDialogProc(
             return TRUE;
         }
         case WM_DESTROY:
-            DlgData_Destroy(pDlgData);
+            DlgData_Destroy(hwndDlg);
             return TRUE;
 
         case WM_COMMAND:
@@ -1577,7 +1592,7 @@ LockedDialogProc(
         }
         case WM_DESTROY:
         {
-            DlgData_Destroy(pDlgData);
+            DlgData_Destroy(hwndDlg);
             return TRUE;
         }
     }

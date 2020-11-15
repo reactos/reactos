@@ -32,6 +32,18 @@ DiskClassInstaller(
     return ERROR_DI_DO_DEFAULT;
 }
 
+DWORD
+WINAPI
+DvdClassInstaller(
+    _In_ DI_FUNCTION InstallFunction,
+    _In_ HDEVINFO DeviceInfoSet,
+    _In_ PSP_DEVINFO_DATA DeviceInfoData OPTIONAL)
+{
+    DPRINT("DvdClassInstaller(%u %p %p)\n",
+           InstallFunction, DeviceInfoSet, DeviceInfoData);
+
+    return ERROR_DI_DO_DEFAULT;
+}
 
 BOOL
 WINAPI

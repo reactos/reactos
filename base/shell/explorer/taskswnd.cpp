@@ -1533,6 +1533,10 @@ public:
             break;
 
         case HSHELL_ACTIVATESHELLWINDOW:
+            ::SwitchToThisWindow(m_Tray->GetHWND(), TRUE);
+            ::SetForegroundWindow(m_Tray->GetHWND());
+            break;
+
         case HSHELL_LANGUAGE:
         case HSHELL_SYSMENU:
         case HSHELL_ENDTASK:

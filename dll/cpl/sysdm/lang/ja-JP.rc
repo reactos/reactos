@@ -235,9 +235,9 @@ BEGIN
     LISTBOX IDC_PAGEFILELIST, 10, 16, 204, 52, LBS_NOTIFY | LBS_USETABSTOPS
     GROUPBOX "選択されたドライブのページング ファイル サイズ", IDC_DRIVEGROUP, 10, 70, 204, 104
     LTEXT "ドライブ:", IDC_STATIC, 20, 80, 50, 8
-    LTEXT "", IDC_DRIVE, 88, 81, 100, 9
+    LTEXT "%s", IDC_DRIVE, 88, 80, 100, 9
     LTEXT "空き領域:", IDC_STATIC, 20, 92, 56, 9
-    LTEXT "", IDC_SPACEAVAIL, 88, 92, 104, 9
+    LTEXT "%s", IDC_SPACEAVAIL, 88, 92, 104, 9
     LTEXT "初期サイズ (MB)(&I):", -1, 22, 118, 75, 9
     LTEXT "最大サイズ (MB)(&X):", -1, 22, 131, 75, 9
     AUTORADIOBUTTON "カスタム サイズ(&C)", IDC_CUSTOM, 20, 105, 79, 9, WS_GROUP
@@ -248,11 +248,11 @@ BEGIN
     PUSHBUTTON "設定", IDC_SET, 158, 154, 50, 15
     GROUPBOX "すべてのドライブの総ページング ファイル サイズ", IDC_TOTALGROUP, 10, 177, 204, 46
     LTEXT "最小限:", IDC_STATIC, 18, 188, 58, 9
-    LTEXT "", IDC_MINIMUM, 88, 188, 100, 9
+    LTEXT "%s", IDC_MINIMUM, 88, 188, 100, 9
     LTEXT "推奨:", IDC_STATIC, 18, 199, 52, 9
-    LTEXT "", IDC_RECOMMENDED, 88, 199, 100, 9
+    LTEXT "%s", IDC_RECOMMENDED, 88, 199, 100, 9
     LTEXT "現在の割り当て:", IDC_STATIC, 18, 210, 66, 9
-    LTEXT "", IDC_CURRENT, 88, 210, 100, 9
+    LTEXT "%s", IDC_CURRENT, 88, 210, 100, 9
     DEFPUSHBUTTON "OK", IDOK, 114, 230, 48, 15
     PUSHBUTTON "キャンセル", IDCANCEL, 168, 230, 48, 15
 END
@@ -335,6 +335,7 @@ BEGIN
     IDS_WARNMAXIMUMSIZE "ページングファイルの最大サイズの数値を入力して下さい。"
     IDS_WARNINITIALRANGE "ページングファイルの初期サイズは2 MB以上でなければなりません。また、選択中のドライブの利用可能なサイズを超えてはいけません。"
     IDS_WARNMAXIMUMRANGE "ページングファイルの最大サイズは初期サイズ以上でなければなりません。また、4095 MB か選択中のドライブの利用可能なサイズを超えてはいけません。"
+    IDS_PAGEFILE_MB "%u MB"
     IDS_PAGEFILE_NONE "なし"
     IDS_PAGEFILE_SYSTEM "システム管理"
     IDS_INFOREBOOT "変更を適用するには、コンピュータを再起動する必要があります。"

@@ -807,6 +807,28 @@ IsaAddDevice(
     return STATUS_SUCCESS;
 }
 
+DRIVER_DISPATCH IsaPower;
+NTSTATUS
+NTAPI
+IsaPower(
+    IN PDEVICE_OBJECT DeviceObject,
+    IN PIRP Irp)
+{
+    PISAPNP_COMMON_EXTENSION DevExt = DeviceObject->DeviceExtension;
+    NTSTATUS Status;
+
+    if (!DevExt->IsFdo)
+    {
+        Status = Irp->IoStatus.Status;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return Status;
+    }
+
+    PoStartNextPowerIrp(Irp);
+    IoSkipCurrentIrpStackLocation(Irp);
+    return PoCallDriver(((PISAPNP_FDO_EXTENSION)DevExt)->Ldo, Irp);
+}
+
 static DRIVER_DISPATCH IsaPnp;
 
 static
@@ -849,6 +871,7 @@ DriverEntry(
     DriverObject->MajorFunction[IRP_MJ_WRITE] = IsaReadWrite;
     DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = IsaIoctl;
     DriverObject->MajorFunction[IRP_MJ_PNP] = IsaPnp;
+    DriverObject->MajorFunction[IRP_MJ_POWER] = IsaPower;
     DriverObject->DriverExtension->AddDevice = IsaAddDevice;
 
     return STATUS_SUCCESS;

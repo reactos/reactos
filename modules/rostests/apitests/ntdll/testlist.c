@@ -28,6 +28,7 @@ extern void func_NtQueryInformationThread(void);
 extern void func_NtQueryKey(void);
 extern void func_NtQuerySystemEnvironmentValue(void);
 extern void func_NtQuerySystemInformation(void);
+extern void func_NtQueryValueKey(void);
 extern void func_NtQueryVolumeInformationFile(void);
 extern void func_NtReadFile(void);
 extern void func_NtSaveKey(void);
@@ -102,6 +103,7 @@ const struct test winetest_testlist[] =
     { "NtQueryKey",                     func_NtQueryKey },
     { "NtQuerySystemEnvironmentValue",  func_NtQuerySystemEnvironmentValue },
     { "NtQuerySystemInformation",       func_NtQuerySystemInformation },
+    { "NtQueryValueKey",                func_NtQueryValueKey },
     { "NtQueryVolumeInformationFile",   func_NtQueryVolumeInformationFile },
     { "NtReadFile",                     func_NtReadFile },
     { "NtSaveKey",                      func_NtSaveKey},

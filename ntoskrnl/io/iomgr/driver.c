@@ -35,6 +35,8 @@ POBJECT_TYPE IoDriverObjectType = NULL;
 
 extern BOOLEAN ExpInTextModeSetup;
 extern BOOLEAN PnpSystemInit;
+extern BOOLEAN PnPBootDriversLoaded;
+extern KEVENT PiEnumerationFinished;
 
 USHORT IopGroupIndex;
 PLIST_ENTRY IopGroupTable;
@@ -720,7 +722,7 @@ MiResolveImageReferences(IN PVOID ImageBase,
 //
 // Used for images already loaded (boot drivers)
 //
-INIT_FUNCTION
+CODE_SEG("INIT")
 NTSTATUS
 NTAPI
 LdrProcessDriverModule(PLDR_DATA_TABLE_ENTRY LdrEntry,
@@ -802,7 +804,7 @@ LdrProcessDriverModule(PLDR_DATA_TABLE_ENTRY LdrEntry,
  *
  * Initialize a driver that is already loaded in memory.
  */
-INIT_FUNCTION
+CODE_SEG("INIT")
 NTSTATUS
 NTAPI
 IopInitializeBuiltinDriver(IN PLDR_DATA_TABLE_ENTRY BootLdrEntry)
@@ -933,7 +935,7 @@ IopInitializeBuiltinDriver(IN PLDR_DATA_TABLE_ENTRY BootLdrEntry)
  * Return Value
  *    None
  */
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 FASTCALL
 IopInitializeBootDrivers(VOID)
@@ -1120,16 +1122,26 @@ IopInitializeBootDrivers(VOID)
             /* Initialize it */
             IopInitializeBuiltinDriver(LdrEntry);
 
+            /* Start the devices found by a driver (if any) */
+            PiQueueDeviceAction(IopRootDeviceNode->PhysicalDeviceObject,
+                                PiActionEnumRootDevices,
+                                NULL,
+                                NULL);
+
             /* Next entry */
             NextEntry = NextEntry->Flink;
         }
     }
 
-    /* In old ROS, the loader list became empty after this point. Simulate. */
-    InitializeListHead(&KeLoaderBlock->LoadOrderListHead);
+    /* HAL Root Bus is being initialized before loading the boot drivers so this may cause issues
+     * when some devices are not being initialized with their drivers. This flag is used to delay
+     * all actions with devices (except PnP root device) until boot drivers are loaded.
+     * See PiQueueDeviceAction function
+     */
+    PnPBootDriversLoaded = TRUE;
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 FASTCALL
 IopInitializeSystemDrivers(VOID)
@@ -1478,6 +1490,9 @@ IopReinitializeBootDrivers(VOID)
         Entry = ExInterlockedRemoveHeadList(&DriverBootReinitListHead,
                                             &DriverBootReinitListLock);
     }
+
+    /* Wait for all device actions being finished*/
+    KeWaitForSingleObject(&PiEnumerationFinished, Executive, KernelMode, FALSE, NULL);
 }
 
 NTSTATUS

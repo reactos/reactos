@@ -35,11 +35,6 @@ EXTERN _DbgBreakPoint@0:PROC
 #define PIT_MODE   HEX(43)
 #define SYSTEM_CTRL_PORT_A HEX(92)
 
-/* GLOBALS *******************************************************************/
-
-.data
-ASSUME CS:NOTHING, DS:NOTHING, ES:NOTHING, FS:NOTHING, GS:NOTHING
-
 /* FUNCTIONS *****************************************************************/
 
 .code

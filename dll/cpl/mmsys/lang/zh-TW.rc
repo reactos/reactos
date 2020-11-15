@@ -2,6 +2,7 @@
  * (Traditional Chinese resources)
  * (繁体中文资源)
  * by Henry Tang Ih 2016 (henrytang2@hotmail.com)
+ * by Aobi Chan CL 2020 (eason066@gmail.com)
  */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
@@ -20,17 +21,17 @@ BEGIN
     LTEXT "高", IDC_VOLUME_HIGH, 195, 66, 30, 17
     AUTOCHECKBOX "靜音(&M)", IDC_MUTE_CHECKBOX, 50, 78, 140, 10
     AUTOCHECKBOX "將音量圖示放入工作列(&I)", IDC_ICON_IN_TASKBAR, 50, 92, 140, 10
-    PUSHBUTTON "高階(&V)...", IDC_ADVANCED_BTN, 150, 105, 75, 15
+    PUSHBUTTON "進階(&V)...", IDC_ADVANCED_BTN, 150, 105, 75, 15
     GROUPBOX "揚聲器設定", IDC_SPEAKER_SET_BTN, 7, 140, 230, 80, WS_GROUP
     CONTROL "", IDC_SPEAKIMG, "Static", SS_OWNERDRAW, 4, 155, 70, 70
     LTEXT "用下列設定更改每個揚聲器音量和其他設定。", -1, 70, 155, 150, 36
     PUSHBUTTON "揚聲器音量(&S)...", IDC_SPEAKER_VOL_BTN, 70, 195, 75, 15
-    PUSHBUTTON "高階(&D)...", IDC_ADVANCED2_BTN, 150, 195, 75, 15
+    PUSHBUTTON "進階(&D)...", IDC_ADVANCED2_BTN, 150, 195, 75, 15
 END
 
 IDD_SOUNDS DIALOGEX 0, 0, 246, 228
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "事件方案"
+CAPTION "聲音"
 FONT 9, "新細明體"
 BEGIN
     LTEXT "聲音方案是應用於 ReactOS 和程式事件中的一組聲音。請選擇一個現有方案或儲存您已經更改的方案。", -1, 8, 7, 230, 40
@@ -57,13 +58,13 @@ BEGIN
     LTEXT "默認裝置(&D):", -1, 50, 20, 80, 17
     COMBOBOX IDC_DEVICE_PLAY_LIST, 50, 30, 180, 46, CBS_DROPDOWNLIST | WS_TABSTOP
     PUSHBUTTON "音量(&V)...", IDC_VOLUME1_BTN, 85, 47, 70, 15
-    PUSHBUTTON "高階(&D)...", IDC_ADV2_BTN, 160, 47, 70, 15
+    PUSHBUTTON "進階(&D)...", IDC_ADV2_BTN, 160, 47, 70, 15
     GROUPBOX "錄音", -1, 7, 75, 230, 60, WS_GROUP
     ICON IDI_MICROPHONE_ICON, IDI_MICROPHONE_ICON, 15, 88, 32, 32
     LTEXT "默認裝置(&E):", -1, 50, 88, 80, 17
     COMBOBOX IDC_DEVICE_REC_LIST, 50, 98, 180, 46, CBS_DROPDOWNLIST | WS_TABSTOP
     PUSHBUTTON "音量(&O)...", IDC_VOLUME2_BTN, 85, 115, 70, 15
-    PUSHBUTTON "高階(&C)...", IDC_ADV1_BTN, 160, 115, 70, 15
+    PUSHBUTTON "進階(&C)...", IDC_ADV1_BTN, 160, 115, 70, 15
     GROUPBOX "MIDI 音樂播放", -1, 7, 145, 230, 60, WS_GROUP
     ICON IDI_MIDICON, IDI_MIDICON, 15, 158, 32, 32
     LTEXT "默認裝置(&F):", -1, 50, 158, 80, 17
@@ -75,22 +76,22 @@ END
 
 IDD_VOICE DIALOGEX 0, 0, 246, 228
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "語聲"
+CAPTION "語音"
 FONT 9, "新細明體"
 BEGIN
     LTEXT "這些設定控制聲音播放或您選擇的錄音裝置的音量和高階選項。", -1, 8, 7, 230, 40
     GROUPBOX "聲音播放", -1, 7, 37, 230, 60, WS_GROUP
     ICON IDI_CPLICON, IDI_CPLICON, 15, 50, 32, 32
-    LTEXT "默認裝置(&D):", -1, 50, 50, 80, 17
+    LTEXT "預設裝置(&D):", -1, 50, 50, 80, 17
     COMBOBOX IDC_DEVICE_VOICE_LIST, 50, 60, 180, 46, CBS_DROPDOWNLIST | WS_TABSTOP
     PUSHBUTTON "音量(&V)...", IDC_VOLUME4_BTN, 85, 77, 70, 15
-    PUSHBUTTON "高階(&N)...", IDC_ADV4_BTN, 160, 77, 70, 15
+    PUSHBUTTON "進階(&N)...", IDC_ADV4_BTN, 160, 77, 70, 15
     GROUPBOX "錄音", -1, 7, 105, 230, 60, WS_GROUP
     ICON IDI_MICROPHONE_ICON, IDI_MICROPHONE_ICON, 15, 118, 32, 32
-    LTEXT "默認裝置(&E):", -1, 50, 118, 80, 17
+    LTEXT "預設裝置(&E):", -1, 50, 118, 80, 17
     COMBOBOX IDC_DEVICE_VOICE_REC_LIST, 50, 128, 180, 46, CBS_DROPDOWNLIST | WS_TABSTOP
     PUSHBUTTON "音量(&O)...", IDC_VOLUME5_BTN, 85, 145, 70, 15
-    PUSHBUTTON "高階(&C)...", IDC_ADV5_BTN, 160, 145, 70, 15
+    PUSHBUTTON "進階(&C)...", IDC_ADV5_BTN, 160, 145, 70, 15
     PUSHBUTTON "測試硬體...(&T)", IDC_TEST_HARDWARE, 160, 175, 70, 15, WS_GROUP | WS_TABSTOP
 END
 
@@ -103,10 +104,10 @@ END
 
 IDD_SAVE_SCHEME_AS DIALOGEX 9, 23, 225, 54
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "將方案存為"
+CAPTION "另存方案為"
 FONT 9, "新細明體"
 BEGIN
-    LTEXT "將此聲音方案存為(&S):", -1, 7, 7, 212, 9
+    LTEXT "將此聲音方案儲存為(&S):", -1, 7, 7, 212, 9
     EDITTEXT 8960, 7, 17, 211, 14, ES_AUTOHSCROLL
     DEFPUSHBUTTON "確定", IDOK, 93, 36, 60, 14
     PUSHBUTTON "取消", IDCANCEL, 157, 36, 60, 14
@@ -173,8 +174,8 @@ FONT 9, "新細明體"
 BEGIN
     GROUPBOX "ReactOS 音訊", 10243, 7, 5, 213, 192
     ICON 4393, 10241, 26, 26, 20, 20
-    LTEXT "因為 ReactOS 音訊服務無效因此這部電腦目前無法播放聲音", 10245, 60, 25, 150, 40
-    AUTOCHECKBOX "啟用ReactOS 音訊(&E)", 10253, 60, 68, 150, 9
+    LTEXT "由於未啟用 ReactOS 音訊服務，這部電腦目前無法播放聲音", 10245, 60, 25, 150, 40
+    AUTOCHECKBOX "啟用 ReactOS 音訊(&E)", 10253, 60, 68, 150, 9
     LTEXT "注意", 10246, 58, 87, 150, 11
     LTEXT "1. 您必須是管理員才能啟用此服務。如果您沒有以管理員身份登入，您將提示輸入管理員名稱和密碼。", 10247, 60, 100, 150, 40
     LTEXT "2. 您啟用ReactOS音訊後，必須重新啟動電腦。", 10248, 60, 140, 150, 40
@@ -229,9 +230,9 @@ FONT 9, "新細明體"
 BEGIN
     GROUPBOX "ReactOS 音訊", 10259, 7, 5, 213, 192
     ICON 4394, 10257, 25, 25, 20, 20
-    LTEXT "驅動程式設定已經更改。必須退出 ReactOS 後重新啟動，新的設定纔會生效。", 10261, 60, 25, 150, 50
-    LTEXT "點選這裡重新啟動 ReactOS", 10262, 60, 75, 150, 20
-    LTEXT "如果取消，則下次啟動ReactOS 後新的設定纔會生效。", 10263, 60, 100, 150, 40
+    LTEXT "ReactOS 音訊服務已經啟用。您必須重新啟動 ReactOS，新的設定才會生效。請確定在重新啟動之前已經儲存工作並關閉所有程式。", 10261, 60, 25, 150, 50
+    LTEXT "按 [確定] 重新啟動 ReactOS", 10262, 60, 75, 150, 20
+    LTEXT "如果取消，則需要在稍後重新啟動 ReactOS 使新的設定生效。", 10263, 60, 100, 150, 40
 END
 
 STRINGTABLE

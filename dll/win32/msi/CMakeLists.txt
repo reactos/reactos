@@ -7,14 +7,6 @@ add_definitions(-D__WINESRC__ -D__ROS_LONG64__ -DMSIRUNMODE=MSIRUNMODE_T)
 spec2def(msi.dll msi.spec ADD_IMPORTLIB)
 generate_idl_iids(msiserver.idl)
 
-if(MSVC)
-    #  error C4133: 'function': incompatible types - from 'UINT *' to 'MSIINSTALLCONTEXT *'
-    replace_compile_flags("/we4133" " ")
-
-    # error C4312: 'type cast': conversion from 'unsigned int' to 'HANDLE' of greater size
-    replace_compile_flags("/we4312" " ")
-endif()
-
 list(APPEND SOURCE
     action.c
     alter.c
@@ -70,6 +62,14 @@ add_library(msi MODULE
     ${PCH_SKIP_SOURCE}
     msi.rc
     ${CMAKE_CURRENT_BINARY_DIR}/msi.def)
+
+if(MSVC)
+    #  error C4133: 'function': incompatible types - from 'UINT *' to 'MSIINSTALLCONTEXT *'
+    remove_target_compile_option(msi "/we4133")
+
+    # error C4312: 'type cast': conversion from 'unsigned int' to 'HANDLE' of greater size
+    remove_target_compile_option(msi "/we4312")
+endif()
 
 add_idl_headers(msi_idlheader msiserver.idl)
 add_typelib(msiserver.idl)

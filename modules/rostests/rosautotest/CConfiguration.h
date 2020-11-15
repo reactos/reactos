@@ -12,8 +12,10 @@ private:
     bool m_IsInteractive;
     bool m_IsReactOS;
     bool m_PrintToConsole;
+    unsigned long m_RepeatCount;
     bool m_Shutdown;
     bool m_Submit;
+    bool m_ListModules;
     string m_Comment;
     wstring m_Module;
     string m_Test;
@@ -33,6 +35,8 @@ public:
     bool DoSubmit() const { return m_Submit; }
     bool IsInteractive() const { return m_IsInteractive; }
     bool IsReactOS() const { return m_IsReactOS; }
+    unsigned long GetRepeatCount() const { return m_RepeatCount; }
+    bool ListModulesOnly() const { return m_ListModules; }
     const string& GetComment() const { return m_Comment; }
     const wstring& GetModule() const { return m_Module; }
     const string& GetTest() const { return m_Test; }

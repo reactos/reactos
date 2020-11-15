@@ -293,7 +293,7 @@ public:
         {
             SetWizardButtons(PSWIZB_FINISH);
             CStringW Path = m_pExtract->m_Directory;
-            PWSTR Ptr = Path.GetBuffer();
+            PWSTR Ptr = Path.GetBuffer(MAX_PATH);
             RECT rc;
             ::GetWindowRect(GetDlgItem(IDC_DESTDIR), &rc);
             HDC dc = GetDC();
@@ -338,6 +338,8 @@ public:
 
         psh.phpage = hpsp;
         psh.nPages = _countof(hpsp);
+        psh.pszbmWatermark = MAKEINTRESOURCE(IDB_WATERMARK);
+        psh.pszbmHeader = MAKEINTRESOURCE(IDB_HEADER);
 
         PropertySheetW(&psh);
     }

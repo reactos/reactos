@@ -9,7 +9,8 @@
 
 // Global Variables
 HANDLE hProcessHeap;
-
+HINSTANCE hinstWinSpool = NULL;
+CRITICAL_SECTION rtlCritSec;
 
 handle_t __RPC_USER
 WINSPOOL_HANDLE_bind(WINSPOOL_HANDLE wszName)
@@ -79,6 +80,12 @@ DllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved)
         case DLL_PROCESS_ATTACH:
             DisableThreadLibraryCalls(hinstDLL);
             hProcessHeap = GetProcessHeap();
+            hinstWinSpool = hinstDLL;
+            InitializeCriticalSection(&rtlCritSec);
+            break;
+
+        case DLL_PROCESS_DETACH:
+            DeleteCriticalSection(&rtlCritSec);
             break;
     }
 

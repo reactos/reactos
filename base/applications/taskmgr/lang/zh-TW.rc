@@ -12,11 +12,11 @@ IDR_TASKMANAGER MENU
 BEGIN
     POPUP "檔案(&F)"
     BEGIN
-        MENUITEM "新工作(運行...)(&N)", ID_FILE_NEW
+        MENUITEM "新工作(執行...)(&N)", ID_FILE_NEW
         MENUITEM SEPARATOR
         MENUITEM "退出工作管理員(&X)", ID_FILE_EXIT
     END
-    POPUP "选项(&O)"
+    POPUP "選項(&O)"
     BEGIN
         MENUITEM "前端顯示(&A)", ID_OPTIONS_ALWAYSONTOP, CHECKED
         MENUITEM "使用時自動最小化(&M)", ID_OPTIONS_MINIMIZEONUSE, CHECKED
@@ -64,11 +64,11 @@ BEGIN
         MENUITEM "切換使用者(&S)\tWinKey+L",     ID_SHUTDOWN_SWITCHUSER, GRAYED
         MENUITEM "鎖定電腦(&K)\tWinKey+L",   ID_SHUTDOWN_LOCKCOMPUTER
         MENUITEM "斷開連接(&D)",                ID_SHUTDOWN_DISCONNECT, GRAYED
-        MENUITEM "彈出電腦(&E)",            ID_SHUTDOWN_EJECT_COMPUTER, GRAYED
+        MENUITEM "退出電腦(&E)",            ID_SHUTDOWN_EJECT_COMPUTER, GRAYED
     END
     POPUP "說明(&H)"
     BEGIN
-        MENUITEM "工作管理員說明主题(&H)", ID_HELP_TOPICS
+        MENUITEM "工作管理員說明主題(&H)", ID_HELP_TOPICS
         MENUITEM SEPARATOR
         MENUITEM "關於工作管理員(&A)", ID_HELP_ABOUT
     END
@@ -88,7 +88,7 @@ IDR_APPLICATION_PAGE_CONTEXT1 MENU
 BEGIN
     POPUP "DUMMY"
     BEGIN
-        MENUITEM "新工作(運行...)(&N)", ID_FILE_NEW
+        MENUITEM "新工作(執行...)(&N)", ID_FILE_NEW
         MENUITEM SEPARATOR
         MENUITEM "大圖示(&G)", ID_VIEW_LARGE
         MENUITEM "小圖示(&M)", ID_VIEW_SMALL
@@ -143,7 +143,6 @@ BEGIN
             MENUITEM "低(&L)", ID_PROCESS_PAGE_SETPRIORITY_LOW
         END
         MENUITEM "親和性設定(&A)...", ID_PROCESS_PAGE_SETAFFINITY
-        MENUITEM "編輯偵錯頻道(&C)...", ID_PROCESS_PAGE_DEBUGCHANNELS
     END
 END
 

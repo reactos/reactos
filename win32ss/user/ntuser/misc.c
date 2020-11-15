@@ -377,8 +377,7 @@ NtUserGetGUIThreadInfo(
    GUITHREADINFO SafeGui;
    PDESKTOP Desktop;
    PUSER_MESSAGE_QUEUE MsgQueue;
-   PTHREADINFO W32Thread;
-   PETHREAD Thread = NULL;
+   PTHREADINFO W32Thread, pti;
 
    DECLARE_RETURN(BOOLEAN);
 
@@ -400,23 +399,26 @@ NtUserGetGUIThreadInfo(
 
    if (idThread)
    {
-      Status = PsLookupThreadByThreadId((HANDLE)(DWORD_PTR)idThread, &Thread);
-      if(!NT_SUCCESS(Status))
+      pti = PsGetCurrentThreadWin32Thread();
+
+      // Validate Tread ID
+      W32Thread = IntTID2PTI((HANDLE)(DWORD_PTR)idThread);
+
+      if ( !W32Thread )
       {
-         EngSetLastError(ERROR_ACCESS_DENIED);
-         RETURN( FALSE);
+          EngSetLastError(ERROR_ACCESS_DENIED);
+          RETURN( FALSE);
       }
-      W32Thread = (PTHREADINFO)Thread->Tcb.Win32Thread;
+
       Desktop = W32Thread->rpdesk;
 
-      if (!Thread || !Desktop )
+      // Check Desktop and it must be the same as current.
+      if ( !Desktop || Desktop != pti->rpdesk )
       {
-        if(Thread)
-           ObDereferenceObject(Thread);
-        EngSetLastError(ERROR_ACCESS_DENIED);
-        RETURN( FALSE);
+          EngSetLastError(ERROR_ACCESS_DENIED);
+          RETURN( FALSE);
       }
-      
+
       if ( W32Thread->MessageQueue )
         MsgQueue = W32Thread->MessageQueue;
       else
@@ -479,9 +481,6 @@ NtUserGetGUIThreadInfo(
    SafeGui.rcCaret.top = CaretInfo->Pos.y;
    SafeGui.rcCaret.right = SafeGui.rcCaret.left + CaretInfo->Size.cx;
    SafeGui.rcCaret.bottom = SafeGui.rcCaret.top + CaretInfo->Size.cy;
-
-   if (idThread)
-      ObDereferenceObject(Thread);
 
    Status = MmCopyToCaller(lpgui, &SafeGui, sizeof(GUITHREADINFO));
    if(!NT_SUCCESS(Status))

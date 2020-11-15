@@ -44,7 +44,9 @@ The ReactOS project, although currently focused on Windows Server 2003 compatibi
 
 The code of ReactOS is licensed under [GNU GPL 2.0](https://github.com/reactos/reactos/blob/master/COPYING).
 
-***ReactOS is currently an Alpha quality operating system. This means that ReactOS is under heavy development, things may not work well and it can corrupt the data present on your hard disk. It is recommended to test ReactOS on a virtual machine or on a computer with no sensitive or critical data!***
+### Product quality warning
+
+**ReactOS is currently an Alpha quality operating system.** This means that ReactOS is under heavy development and you have to be ready to encounter some problems. Different things may not work well and it can corrupt the data present on your hard disk. It is HIGHLY recommended to test ReactOS on a virtual machine or on a computer with no sensitive or critical data!
 
 ## Building
 
@@ -90,6 +92,8 @@ __NOTE:__ The bug tracker is _not_ for discussions. Please use our [official cha
 ## Contributing  [![prwelcome.badge]](https://reactos.org/wiki/Commiting_Changes)
 
 We are always looking for developers! Check [how to contribute](CONTRIBUTING.md) if you are willing to participate.
+
+__Legal notice__: If you have seen proprietary Microsoft Windows source code (including but not limited to the leaked Windows NT 3.5, NT 4, 2000 source code and the Windows Research Kernel), your contribution won't be accepted because of potential copyright violation.
 
 Try out cloud-based ReactOS development using Gitpod and Docker:
 

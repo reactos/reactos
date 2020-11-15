@@ -3349,10 +3349,7 @@ NtUserGetListBoxInfo(
    {
       LB_DESCR *descr = ((PWND2LB)Wnd)->pLBiv;
       // See Controls ListBox.c:LB_GETLISTBOXINFO must match...
-      if (descr->style & LBS_MULTICOLUMN) //// ReactOS
-         Ret = descr->page_size * descr->column_width;
-      else
-         Ret = descr->page_size;
+      Ret = descr->page_size;
    }
    _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
    {
@@ -3997,6 +3994,21 @@ NtUserQueryWindow(HWND hWnd, DWORD Index)
 
       case QUERY_WINDOW_FOREGROUND:
          Result = (pWnd->head.pti->MessageQueue == gpqForeground);
+         break;
+
+      case QUERY_WINDOW_DEFAULT_IME:
+         ERR("QUERY_WINDOW_DEFAULT_IME: FIXME\n");
+         Result = 0;
+         break;
+
+      case QUERY_WINDOW_DEFAULT_ICONTEXT:
+         ERR("QUERY_WINDOW_DEFAULT_ICONTEXT: FIXME\n");
+         Result = 0;
+         break;
+
+      case QUERY_WINDOW_ACTIVE_IME:
+         ERR("QUERY_WINDOW_ACTIVE_IME: FIXME\n");
+         Result = 0;
          break;
 
       default:

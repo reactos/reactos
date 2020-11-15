@@ -62,9 +62,6 @@ static int runCmd(LPWSTR cmdline, LPCWSTR dir, BOOL wait, BOOL minimized)
     STARTUPINFOW si;
     PROCESS_INFORMATION info;
     DWORD exit_code = 0;
-    WCHAR szCmdLineExp[MAX_PATH+1] = L"\0";
-
-    ExpandEnvironmentStringsW(cmdline, szCmdLineExp, _countof(szCmdLineExp));
 
     memset(&si, 0, sizeof(si));
     si.cb = sizeof(si);
@@ -75,7 +72,7 @@ static int runCmd(LPWSTR cmdline, LPCWSTR dir, BOOL wait, BOOL minimized)
     }
     memset(&info, 0, sizeof(info));
 
-    if (!CreateProcessW(NULL, szCmdLineExp, NULL, NULL, FALSE, 0, NULL, dir, &si, &info))
+    if (!CreateProcessW(NULL, cmdline, NULL, NULL, FALSE, 0, NULL, dir, &si, &info))
     {
         TRACE("Failed to run command (%lu)\n", GetLastError());
 
@@ -232,6 +229,7 @@ static BOOL ProcessRunKeys(HKEY hkRoot, LPCWSTR szKeyName, BOOL bDelete,
 
     while (i > 0)
     {
+        WCHAR *szCmdLineExp = NULL;
         DWORD cchValLength = cchMaxValue, cbDataLength = cbMaxCmdLine;
         DWORD type;
 
@@ -260,17 +258,44 @@ static BOOL ProcessRunKeys(HKEY hkRoot, LPCWSTR szKeyName, BOOL bDelete,
             TRACE("Couldn't delete value - %lu, %ld. Running command anyways.\n", i, res);
         }
 
-        if (type != REG_SZ)
+        if (type != REG_SZ && type != REG_EXPAND_SZ)
         {
             TRACE("Incorrect type of value #%lu (%lu)\n", i, type);
 
             continue;
         }
 
-        res = runCmd(szCmdLine, NULL, bSynchronous, FALSE);
+        if (type == REG_EXPAND_SZ)
+        {
+            DWORD dwNumOfChars;
+
+            dwNumOfChars = ExpandEnvironmentStringsW(szCmdLine, NULL, 0);
+            if (dwNumOfChars)
+            {
+                szCmdLineExp = (WCHAR *)HeapAlloc(hProcessHeap, 0, dwNumOfChars * sizeof(*szCmdLineExp));
+
+                if (szCmdLineExp == NULL)
+                {
+                    TRACE("Couldn't allocate memory for the commands to be executed\n");
+
+                    res = ERROR_NOT_ENOUGH_MEMORY;
+                    goto end;
+                }
+
+                ExpandEnvironmentStringsW(szCmdLine, szCmdLineExp, dwNumOfChars);
+            }
+        }
+
+        res = runCmd(szCmdLineExp ? szCmdLineExp : szCmdLine, NULL, bSynchronous, FALSE);
         if (res == INVALID_RUNCMD_RETURN)
         {
             TRACE("Error running cmd #%lu (%lu)\n", i, GetLastError());
+        }
+
+        if (szCmdLineExp != NULL)
+        {
+            HeapFree(hProcessHeap, 0, szCmdLineExp);
+            szCmdLineExp = NULL;
         }
 
         TRACE("Done processing cmd #%lu\n", i);

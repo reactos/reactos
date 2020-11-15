@@ -235,9 +235,9 @@ BEGIN
     LISTBOX IDC_PAGEFILELIST, 10, 16, 204, 52, LBS_NOTIFY | LBS_USETABSTOPS
     GROUPBOX "Taille du fichier d'échange pour le disque sélectionné", IDC_DRIVEGROUP, 10, 70, 204, 104
     LTEXT "Lecteur :", IDC_STATIC, 20, 80, 30, 8
-    LTEXT "", IDC_DRIVE, 88, 81, 100, 9
+    LTEXT "%s", IDC_DRIVE, 88, 80, 100, 9
     LTEXT "Espace disponible :", IDC_STATIC, 20, 92, 66, 9
-    LTEXT "", IDC_SPACEAVAIL, 88, 92, 104, 9
+    LTEXT "%s", IDC_SPACEAVAIL, 88, 92, 104, 9
     LTEXT "Taille initiale (Mo) :", -1, 22, 118, 72, 9
     LTEXT "Taille maximale (Mo) :", -1, 22, 131, 72, 9
     AUTORADIOBUTTON "&Taille personnalisée", IDC_CUSTOM, 20, 105, 75, 9, WS_GROUP
@@ -248,11 +248,11 @@ BEGIN
     PUSHBUTTON "Définir", IDC_SET, 158, 154, 50, 15
     GROUPBOX "Taille totale du fichier d'échange pour tous les lecteurs", IDC_TOTALGROUP, 10, 177, 204, 46
     LTEXT "Minimum alloué :", IDC_STATIC, 18, 188, 58, 9
-    LTEXT "", IDC_MINIMUM, 88, 188, 100, 9
+    LTEXT "%s", IDC_MINIMUM, 90, 188, 100, 9
     LTEXT "Recommandée :", IDC_STATIC, 18, 199, 52, 9
-    LTEXT "", IDC_RECOMMENDED, 88, 199, 100, 9
-    LTEXT "Allouée actuellement :", IDC_STATIC, 18, 210, 70, 9
-    LTEXT "", IDC_CURRENT, 88, 210, 100, 9
+    LTEXT "%s", IDC_RECOMMENDED, 90, 199, 100, 9
+    LTEXT "Allouée actuellement :", IDC_STATIC, 18, 210, 72, 9
+    LTEXT "%s", IDC_CURRENT, 90, 210, 100, 9
     DEFPUSHBUTTON "OK", IDOK, 114, 230, 48, 15
     PUSHBUTTON "Annuler", IDCANCEL, 168, 230, 48, 15
 END
@@ -335,6 +335,7 @@ BEGIN
     IDS_WARNMAXIMUMSIZE "Entrez une valeur numérique pour la taille maximale du fichier d'échange."
     IDS_WARNINITIALRANGE "La taille initiale du fichier d'échange doit être comprise entre 2 Mo et 4096 Mo, et ne peut pas excéder la quantité d'espace libre sur le lecteur que vous avez sélectionné."
     IDS_WARNMAXIMUMRANGE "Entrez une valeur pour la taille maximale du fichier d'échange qui soit supérieure ou égale à la taille initiale du fichier d'échange, et inférieure à 4096 Mo."
+    IDS_PAGEFILE_MB "%u Mo"
     IDS_PAGEFILE_NONE "Aucun"
     IDS_PAGEFILE_SYSTEM "Géré par le système"
     IDS_INFOREBOOT "Vous devez redémarrer le système pour appliquer les changements."

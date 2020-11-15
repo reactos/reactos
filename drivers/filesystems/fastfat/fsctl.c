@@ -197,9 +197,9 @@ VfatHasFileSystem(
             }
 
             if (*RecognizedFS &&
-                Boot->BytesPerSector * Boot->SectorsPerCluster > 32 * 1024)
+                Boot->BytesPerSector * Boot->SectorsPerCluster > 64 * 1024)
             {
-                DPRINT1("ClusterSize %dx\n", Boot->BytesPerSector * Boot->SectorsPerCluster);
+                DPRINT1("ClusterSize %d\n", Boot->BytesPerSector * Boot->SectorsPerCluster);
                 *RecognizedFS = FALSE;
             }
 
@@ -599,6 +599,11 @@ VfatMount(
     DeviceExt->FcbHashTable = (HASHENTRY**)((ULONG_PTR)DeviceExt + ROUND_UP(sizeof(DEVICE_EXTENSION), sizeof(ULONG)));
     DeviceExt->HashTableSize = HashTableSize;
     DeviceExt->VolumeDevice = DeviceObject;
+
+    KeInitializeSpinLock(&DeviceExt->OverflowQueueSpinLock);
+    InitializeListHead(&DeviceExt->OverflowQueue);
+    DeviceExt->OverflowQueueCount = 0;
+    DeviceExt->PostedRequestCount = 0;
 
     /* use same vpb as device disk */
     DeviceObject->Vpb = Vpb;

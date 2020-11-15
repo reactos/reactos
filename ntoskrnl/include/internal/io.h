@@ -539,27 +539,14 @@ typedef enum _SECURITY_DESCRIPTOR_TYPE
 } SECURITY_DESCRIPTOR_TYPE, *PSECURITY_DESCRIPTOR_TYPE;
 
 //
-// Action types and data for IopQueueDeviceAction()
+// Action types and data for PiQueueDeviceAction()
 //
 typedef enum _DEVICE_ACTION
 {
-    DeviceActionInvalidateDeviceRelations,
-    MaxDeviceAction
+    PiActionEnumDeviceTree,
+    PiActionEnumRootDevices,
+    PiActionResetDevice
 } DEVICE_ACTION;
-
-typedef struct _DEVICE_ACTION_DATA
-{
-    LIST_ENTRY RequestListEntry;
-    PDEVICE_OBJECT DeviceObject;
-    DEVICE_ACTION Action;
-    union
-    {
-        struct
-        {
-            DEVICE_RELATION_TYPE Type;
-        } InvalidateDeviceRelations;
-    };
-} DEVICE_ACTION_DATA, *PDEVICE_ACTION_DATA;
 
 //
 // Resource code
@@ -600,7 +587,6 @@ PipCallDriverAddDevice(
     IN PDRIVER_OBJECT DriverObject
 );
 
-INIT_FUNCTION
 NTSTATUS
 NTAPI
 IopInitializePlugPlayServices(
@@ -702,11 +688,6 @@ IopActionInitChildServices(
 );
 
 NTSTATUS
-IopEnumerateDevice(
-    IN PDEVICE_OBJECT DeviceObject
-);
-
-NTSTATUS
 IoCreateDriverList(
     VOID
 );
@@ -716,7 +697,6 @@ IoDestroyDriverList(
     VOID
 );
 
-INIT_FUNCTION
 NTSTATUS
 IopInitPlugPlayEvents(VOID);
 
@@ -762,17 +742,22 @@ NTSTATUS
 IopTraverseDeviceTree(
     PDEVICETREE_TRAVERSE_CONTEXT Context);
 
+NTSTATUS
+NTAPI
+IopCreateDeviceKeyPath(
+    IN PCUNICODE_STRING RegistryPath,
+    IN ULONG CreateOptions,
+    OUT PHANDLE Handle);
+
 //
 // PnP Routines
 //
-INIT_FUNCTION
 NTSTATUS
 NTAPI
 IopUpdateRootKey(
     VOID
 );
 
-INIT_FUNCTION
 NTSTATUS
 NTAPI
 PiInitCacheGroupInformation(
@@ -810,14 +795,12 @@ PnpRegSzToString(
 //
 // Initialization Routines
 //
-INIT_FUNCTION
 NTSTATUS
 NTAPI
 IopCreateArcNames(
     IN PLOADER_PARAMETER_BLOCK LoaderBlock
 );
 
-INIT_FUNCTION
 NTSTATUS
 NTAPI
 IopReassignSystemRoot(
@@ -825,7 +808,6 @@ IopReassignSystemRoot(
     OUT PANSI_STRING NtBootPath
 );
 
-INIT_FUNCTION
 BOOLEAN
 NTAPI
 IoInitSystem(
@@ -1022,13 +1004,11 @@ IopShutdownBaseFileSystems(
 //
 // Boot logging support
 //
-INIT_FUNCTION
 VOID
 IopInitBootLog(
     IN BOOLEAN StartBootLog
 );
 
-INIT_FUNCTION
 VOID
 IopStartBootLog(
     VOID
@@ -1100,7 +1080,6 @@ RawFsIsRawFileSystemDeviceObject(
     IN PDEVICE_OBJECT DeviceObject
 );
 
-INIT_FUNCTION
 NTSTATUS
 NTAPI
 RawFsDriverEntry(
@@ -1133,14 +1112,12 @@ PnpRootRegisterDevice(
 //
 // Driver Routines
 //
-INIT_FUNCTION
 VOID
 FASTCALL
 IopInitializeBootDrivers(
     VOID
 );
 
-INIT_FUNCTION
 VOID
 FASTCALL
 IopInitializeSystemDrivers(
@@ -1391,13 +1368,12 @@ IoSetIoCompletion(
     IN PVOID ApcContext,
     IN NTSTATUS IoStatus,
     IN ULONG_PTR IoStatusInformation,
-    IN BOOLEAN Quota 
+    IN BOOLEAN Quota
 );
 
 //
 // Ramdisk Routines
 //
-INIT_FUNCTION
 NTSTATUS
 NTAPI
 IopStartRamdisk(
@@ -1425,9 +1401,16 @@ IopStoreSystemPartitionInformation(IN PUNICODE_STRING NtSystemPartitionDeviceNam
 // Device action
 //
 VOID
-IopQueueDeviceAction(
-    _In_ PDEVICE_ACTION_DATA ActionData
-);
+PiQueueDeviceAction(
+    _In_ PDEVICE_OBJECT DeviceObject,
+    _In_ DEVICE_ACTION Action,
+    _In_opt_ PKEVENT CompletionEvent,
+    _Out_opt_ NTSTATUS *CompletionStatus);
+
+NTSTATUS
+PiPerformSyncDeviceAction(
+    _In_ PDEVICE_OBJECT DeviceObject,
+    _In_ DEVICE_ACTION Action);
 
 //
 // Global I/O Data

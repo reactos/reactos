@@ -28,7 +28,7 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT "Bu yardımcı, yerli ya da ağdaki izlencelere, kütüklere,\ndizinlere, bilgisayarlara ve Umûmî Ağ adreslerine\nkısayollar oluşturmanıza yardım eder.", -1, 120, 15, 200, 30
     LTEXT "Öğenin konumunu yazınız:", -1, 120, 50, 120, 10
-    EDITTEXT IDC_SHORTCUT_LOCATION, 120, 65, 150, 15, ES_LEFT
+    EDITTEXT IDC_SHORTCUT_LOCATION, 120, 65, 150, 15, ES_LEFT | ES_AUTOHSCROLL
     PUSHBUTTON "&Göz At...", IDC_SHORTCUT_BROWSE, 272, 65, 55, 15, ES_LEFT
     LTEXT "Sürdürmek için ""İleri""ye tıklayınız.", -1, 120, 97, 162, 10
 END
@@ -39,7 +39,7 @@ CAPTION "İzlencenin Adını Seç"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT "&Bu kısayol için bir ad yazınız:", -1, 120, 15, 150, 10
-    EDITTEXT IDC_SHORTCUT_NAME, 120, 35, 150, 15, ES_LEFT
+    EDITTEXT IDC_SHORTCUT_NAME, 120, 35, 150, 15, ES_LEFT | ES_AUTOHSCROLL
     LTEXT "Kısayolu oluşturmak için ""Bitir""e tıklayınız.", -1, 118, 97, 178, 17
 END
 

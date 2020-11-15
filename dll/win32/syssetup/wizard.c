@@ -394,6 +394,7 @@ AckPageDlgProc(HWND hwndDlg,
 static const WCHAR s_szProductOptions[] = L"SYSTEM\\CurrentControlSet\\Control\\ProductOptions";
 static const WCHAR s_szRosVersion[] = L"SYSTEM\\CurrentControlSet\\Control\\ReactOS\\Settings\\Version";
 static const WCHAR s_szControlWindows[] = L"SYSTEM\\CurrentControlSet\\Control\\Windows";
+static const WCHAR s_szWinlogon[] = L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon";
 
 typedef struct _PRODUCT_OPTION_DATA
 {
@@ -401,12 +402,13 @@ typedef struct _PRODUCT_OPTION_DATA
     LPCWSTR ProductType;
     DWORD ReportAsWorkstation;
     DWORD CSDVersion;
+    DWORD LogonType;
 } PRODUCT_OPTION_DATA;
 
 static const PRODUCT_OPTION_DATA s_ProductOptionData[] =
 {
-    { L"Terminal Server\0", L"ServerNT", 0, 0x200 },
-    { L"\0", L"WinNT", 1, 0x300 }
+    { L"Terminal Server\0", L"ServerNT", 0, 0x200, 0 },
+    { L"\0", L"WinNT", 1, 0x300, 1 }
 };
 
 static BOOL
@@ -481,6 +483,26 @@ DoWriteProductOption(PRODUCT_OPTION nOption)
     dwValue = pData->CSDVersion;
     cbData = sizeof(dwValue);
     error = RegSetValueExW(hKey, L"CSDVersion", 0, REG_DWORD, (const BYTE *)&dwValue, cbData);
+    if (error)
+    {
+        DPRINT1("RegSetValueExW failed\n");
+        goto Error;
+    }
+
+    RegCloseKey(hKey);
+
+    /* open Winlogon key */
+    error = RegOpenKeyExW(HKEY_LOCAL_MACHINE, s_szWinlogon, 0, KEY_WRITE, &hKey);
+    if (error)
+    {
+        DPRINT1("RegOpenKeyExW failed\n");
+        goto Error;
+    }
+
+    /* write LogonType */
+    dwValue = pData->LogonType;
+    cbData = sizeof(dwValue);
+    error = RegSetValueExW(hKey, L"LogonType", 0, REG_DWORD, (const BYTE *)&dwValue, cbData);
     if (error)
     {
         DPRINT1("RegSetValueExW failed\n");

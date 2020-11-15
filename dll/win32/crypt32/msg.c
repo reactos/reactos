@@ -1574,9 +1574,8 @@ static BOOL WINAPI CRYPT_ExportKeyTrans(
     ret = CRYPT_ConstructAlgorithmId(&keyInfo.Algorithm,
         &pKeyTransEncodeInfo->KeyEncryptionAlgorithm);
     if (ret)
-        CRYPT_ConstructBitBlob(&keyInfo.PublicKey,
+        ret = CRYPT_ConstructBitBlob(&keyInfo.PublicKey,
          &pKeyTransEncodeInfo->RecipientPublicKey);
-
     if (ret)
         ret = CryptImportPublicKeyInfo(pKeyTransEncodeInfo->hCryptProv,
          X509_ASN_ENCODING, &keyInfo, &expKey);

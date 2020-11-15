@@ -433,35 +433,6 @@ GetProfileName(
 }
 
 
-static
-VOID
-FormatProfileSize(
-    _Out_ LPWSTR Buffer,
-    _In_ double size)
-{
-    const LPWSTR units[] = {L"MB", L"GB", L"TB"};
-    int i = 0, j;
-
-    size /= 1024;
-    size /= 1024;
-
-    while (size >= 1024 && i < 3)
-    {
-        size /= 1024;
-        i++;
-    }
-
-    if (size < 10)
-        j = 2;
-    else if (size < 100)
-        j = 1;
-    else
-        j = 0;
-
-    swprintf(Buffer, L"%.*f %s", j, size, units[i]);
-}
-
-
 static VOID
 AddUserProfile(
     _In_ HWND hwndListView,
@@ -585,7 +556,7 @@ AddUserProfile(
     iItem = ListView_InsertItem(hwndListView, &lvi);
 
     /* Set the profile size */
-    FormatProfileSize(szNameBuffer, (double)ullProfileSize);
+    StrFormatByteSizeW(ullProfileSize, szNameBuffer, ARRAYSIZE(szNameBuffer) - 1);
     ListView_SetItemText(hwndListView, iItem, 1, szNameBuffer);
 
     /* Set the profile type */
@@ -695,9 +666,11 @@ AddUserProfiles(
     if (!OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &hToken))
         return;
 
-    GetTokenInformation(hToken, TokenUser, NULL, 0, &dwSize);
-    if (dwSize == 0)
+    if (GetTokenInformation(hToken, TokenUser, NULL, 0, &dwSize) ||
+        GetLastError() != ERROR_INSUFFICIENT_BUFFER)
+    {
         goto done;
+    }
 
     pTokenUser = HeapAlloc(GetProcessHeap(), 0, dwSize);
     if (pTokenUser == NULL)

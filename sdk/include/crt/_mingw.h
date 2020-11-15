@@ -190,10 +190,14 @@ allow GCC to optimize away some EH unwind code, at least in DW2 case.  */
 # endif
 # define __ptr32
 # define __ptr64
-# if ( __MINGW_GNUC_PREREQ(4, 3)  &&  __STDC_VERSION__ >= 199901L)
-#  define __forceinline extern inline __attribute__((__always_inline__,__gnu_inline__))
+# ifdef __cplusplus
+#  define __forceinline inline __attribute__((__always_inline__))
 # else
-#  define __forceinline extern __inline__ __attribute__((__always_inline__))
+#  if ( __MINGW_GNUC_PREREQ(4, 3)  &&  __STDC_VERSION__ >= 199901L)
+#   define __forceinline extern inline __attribute__((__always_inline__,__gnu_inline__))
+#  else
+#   define __forceinline extern __inline__ __attribute__((__always_inline__))
+#  endif
 # endif
 #endif
 

@@ -1,4 +1,4 @@
-/* Traditional Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com) */
+/* Traditional Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com) and Aobi Chan CL 2020 (eason066@gmail.com) */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
@@ -11,7 +11,7 @@ BEGIN
     IDS_DEFAULT_TOPIC_TITLE "ReactOS"
     IDS_DEFAULT_TOPIC_DESC "歡迎使用 ReactOS 作業系統。\n\n 請點選左邊的主題。"
     IDS_FONTNAME "新細明體"
-    IDS_CHECKTEXT "&Show this dialog again"
+    IDS_CHECKTEXT "再次顯示此對話方塊(&S)"
     IDS_CLOSETEXT "退出(&Q)"
 END
 
@@ -34,7 +34,7 @@ END
 /* Topic descriptions */
 STRINGTABLE
 BEGIN
-    IDS_TOPIC_DESC0 "重新安裝 ReactOS 或 更新你的ReactOS 。"
+    IDS_TOPIC_DESC0 "重新安裝 ReactOS 或 更新您的 ReactOS 。"
     IDS_TOPIC_DESC1 "瀏覽 CD 的內容。"
-    IDS_TOPIC_DESC2 "點選退出應用程式。"
+    IDS_TOPIC_DESC2 "按下以退出應用程式。"
 END

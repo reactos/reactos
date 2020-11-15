@@ -1659,8 +1659,7 @@ typedef struct acpi_hest_ia_deferred_check
 
 /*******************************************************************************
  *
- * HMAT - Heterogeneous Memory Attributes Table (ACPI 6.2)
- *        Version 1
+ * HMAT - Heterogeneous Memory Attributes Table (ACPI 6.3)
  *
  ******************************************************************************/
 
@@ -1702,7 +1701,7 @@ typedef struct acpi_hmat_proximity_domain
     ACPI_HMAT_STRUCTURE     Header;
     UINT16                  Flags;
     UINT16                  Reserved1;
-    UINT32                  ProcessorPD;            /* Processor proximity domain */
+    UINT32                  InitiatorPD;            /* Attached Initiator proximity domain */
     UINT32                  MemoryPD;               /* Memory proximity domain */
     UINT32                  Reserved2;
     UINT64                  Reserved3;
@@ -1712,9 +1711,7 @@ typedef struct acpi_hmat_proximity_domain
 
 /* Masks for Flags field above */
 
-#define ACPI_HMAT_PROCESSOR_PD_VALID    (1)     /* 1: ProcessorPD field is valid */
-#define ACPI_HMAT_MEMORY_PD_VALID       (1<<1)  /* 1: MemoryPD field is valid */
-#define ACPI_HMAT_RESERVATION_HINT      (1<<2)  /* 1: Reservation hint */
+#define ACPI_HMAT_INITIATOR_PD_VALID    (1)     /* 1: InitiatorPD field is valid */
 
 
 /* 1: System locality latency and bandwidth information */
@@ -1739,10 +1736,9 @@ typedef struct acpi_hmat_locality
 /* Values for Memory Hierarchy flag */
 
 #define ACPI_HMAT_MEMORY            0
-#define ACPI_HMAT_LAST_LEVEL_CACHE  1
-#define ACPI_HMAT_1ST_LEVEL_CACHE   2
-#define ACPI_HMAT_2ND_LEVEL_CACHE   3
-#define ACPI_HMAT_3RD_LEVEL_CACHE   4
+#define ACPI_HMAT_1ST_LEVEL_CACHE   1
+#define ACPI_HMAT_2ND_LEVEL_CACHE   2
+#define ACPI_HMAT_3RD_LEVEL_CACHE   3
 
 /* Values for DataType field above */
 

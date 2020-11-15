@@ -93,6 +93,9 @@ FatFreeFcb (
     ExFreePool( Fcb );
 }
 
+#ifdef __REACTOS__
+static
+#endif
 INLINE
 PNON_PAGED_FCB
 FatAllocateNonPagedFcb (
@@ -101,6 +104,9 @@ FatAllocateNonPagedFcb (
     return (PNON_PAGED_FCB) ExAllocateFromNPagedLookasideList( &FatNonPagedFcbLookasideList );
 }
 
+#ifdef __REACTOS__
+static
+#endif
 INLINE
 VOID
 FatFreeNonPagedFcb (
@@ -114,6 +120,9 @@ FatFreeNonPagedFcb (
     ExFreeToNPagedLookasideList( &FatNonPagedFcbLookasideList, (PVOID) NonPagedFcb );
 }
 
+#ifdef __REACTOS__
+static
+#endif
 INLINE
 PERESOURCE
 FatAllocateResource (
@@ -128,6 +137,9 @@ FatAllocateResource (
     return Resource;
 }
 
+#ifdef __REACTOS__
+static
+#endif
 INLINE
 VOID
 FatFreeResource (
@@ -143,6 +155,9 @@ FatFreeResource (
     ExFreeToNPagedLookasideList( &FatEResourceLookasideList, (PVOID) Resource );
 }
 
+#ifdef __REACTOS__
+static
+#endif
 INLINE
 PIRP_CONTEXT
 FatAllocateIrpContext (
@@ -151,6 +166,9 @@ FatAllocateIrpContext (
     return (PIRP_CONTEXT) ExAllocateFromNPagedLookasideList( &FatIrpContextLookasideList );
 }
 
+#ifdef __REACTOS__
+static
+#endif
 INLINE
 VOID
 FatFreeIrpContext (
@@ -538,11 +556,7 @@ Return Value:
         //  Initialize the performance counters.
         //
 
-#ifndef __REACTOS__
         Vcb->Statistics = FsRtlAllocatePoolWithTag( NonPagedPoolNx,
-#else
-        Vcb->Statistics = FsRtlAllocatePoolWithTag( NonPagedPool,
-#endif
                                                     sizeof(FILE_SYSTEM_STATISTICS) * FatData.NumberProcessors,
                                                     TAG_VCB_STATS );
         UnwindStatistics = Vcb->Statistics;
@@ -561,11 +575,7 @@ Return Value:
         //  of the storage stack on demand.
         //
 
-#ifndef __REACTOS__
         Vcb->SwapVpb = FsRtlAllocatePoolWithTag( NonPagedPoolNx,
-#else
-        Vcb->SwapVpb = FsRtlAllocatePoolWithTag( NonPagedPool,
-#endif
                                                  sizeof( VPB ),
                                                  TAG_VPB );
 
@@ -1029,11 +1039,7 @@ Return Value:
         //  have to continually reference through the Vcb
         //
 
-#ifndef __REACTOS__
         UnwindStorage[0] = Dcb = Vcb->RootDcb = FsRtlAllocatePoolWithTag( NonPagedPoolNx,
-#else
-        UnwindStorage[0] = Dcb = Vcb->RootDcb = FsRtlAllocatePoolWithTag( NonPagedPool,
-#endif
                                                                           sizeof(DCB),
                                                                           TAG_FCB );
 
@@ -1126,11 +1132,7 @@ Return Value:
         //  directory is a fixed size so we can set it everything up now.
         //
 
-#ifndef __REACTOS__
         FsRtlInitializeLargeMcb( &Dcb->Mcb, NonPagedPoolNx );
-#else
-        FsRtlInitializeLargeMcb( &Dcb->Mcb, NonPagedPool );
-#endif
         UnwindMcb = &Dcb->Mcb;
 
         if (FatIsFat32(Vcb)) {
@@ -1315,13 +1317,8 @@ Return Value:
 
         if (IsPagingFile) {
 
-#ifndef __REACTOS__
             PoolType = NonPagedPoolNx;
             Fcb = UnwindStorage[0] = FsRtlAllocatePoolWithTag( NonPagedPoolNx,
-#else
-            PoolType = NonPagedPool;
-            Fcb = UnwindStorage[0] = FsRtlAllocatePoolWithTag( NonPagedPool,
-#endif
                                                                sizeof(FCB),
                                                                TAG_FCB );
         } else {
@@ -1440,11 +1437,7 @@ Return Value:
 
         if (FatData.ChicagoMode) {
 
-#ifndef __REACTOS__
             LARGE_INTEGER FatSystemJanOne1980 = {0};
-#else
-            LARGE_INTEGER FatSystemJanOne1980 = {{0}};
-#endif
 
             //
             //  If either date is possibly zero, get the system
@@ -1778,11 +1771,7 @@ Return Value:
 
         if (FatData.ChicagoMode) {
 
-#ifndef __REACTOS__
             LARGE_INTEGER FatSystemJanOne1980 = {0};
-#else
-            LARGE_INTEGER FatSystemJanOne1980 = {{0}};
-#endif
 
             //
             //  If either date is possibly zero, get the system

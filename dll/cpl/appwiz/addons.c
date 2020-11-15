@@ -59,7 +59,7 @@ static const addon_info_t addons_info[] = {
 static const addon_info_t *addon;
 
 static HWND install_dialog = NULL;
-static IBinding *download_binding;
+static IBinding *download_binding = NULL;
 
 static WCHAR GeckoUrl[] = L"https://svn.reactos.org/amine/wine_gecko-2.40-x86.msi";
 
@@ -382,7 +382,7 @@ static DWORD WINAPI download_proc(PVOID arg)
     }
 
     DeleteFileW(tmp_file);
-    EndDialog(install_dialog, 0);
+    PostMessageW(install_dialog, WM_COMMAND, IDCANCEL, 0);
     return 0;
 }
 

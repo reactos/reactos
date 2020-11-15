@@ -19,7 +19,8 @@ _1 = %cdname%,%cdtagfile%,,""
 1 = %cdname%,%cdtagfilei%,,\reactos
 
 [SourceDisksNames.amd64]
-1 = %cdname%,%cdtagfilea%,,\amd64
+;1 = %cdname%,%cdtagfilea%,,\amd64
+1 = %cdname%,%cdtagfilei%,,\reactos
 
 ;
 ; The directories listed in the [Directories] or [WinntDirectories] sections
@@ -126,7 +127,6 @@ storport.sys = 1,,,,,,x,4,,,,1,4
 fastfat.sys  = 1,,,,,,x,4,,,,1,4
 btrfs.sys    = 1,,,,,,x,4,,,,1,4
 ramdisk.sys  = 1,,,,,,x,4,,,,1,4
-classpnp.sys = 1,,,,,,,4,,,,1,4
 pciide.sys   = 1,,,,,,,4,,,,1,4
 pciidex.sys  = 1,,,,,,,4,,,,1,4
 pcix.sys     = 1,,,,,,,4,,,,1,4
@@ -174,6 +174,7 @@ GenDisk = disk
 USB\Class_03 = hidusb
 GENERIC_HID_DEVICE = hidusb
 *PNP0303 = i8042prt,{4D36E96B-E325-11CE-BFC1-08002BE10318}
+*nEC1F00 = inport,{4D36E96F-E325-11CE-BFC1-08002BE10318}
 ROOT\SWENUM = swenum
 
 [BootBusExtenders.Load]
@@ -203,15 +204,18 @@ buslogic = buslogic.sys
 storahci = storahci.sys
 disk = disk.sys
 
+[MouseDrivers.Load]
+inport = inport.sys
+
 [Cabinets]
 Cabinet=reactos.cab
 
 [SetupData]
 DefaultPath = \ReactOS
+SetupDebugOptions = "/DEBUG /KDSERIAL /DEBUGPORT=COM1 /FIRSTCHANCE"
+;SetupDebugOptions = "/DEBUG /SOS /DEBUGPORT=SCREEN"
+;SetupDebugOptions = "/DEBUG /DEBUGPORT=BOCHS"
 OsLoadOptions = "/NOGUIBOOT /NODEBUG"
-DbgOsLoadOptions = "/NOGUIBOOT /KDSERIAL /DEBUGPORT=COM1 /FIRSTCHANCE"
-;DbgOsLoadOptions = "/SOS /DEBUGPORT=SCREEN"
-;DbgOsLoadOptions = "/NOGUIBOOT /DEBUGPORT=BOCHS"
 
 [NLS]
 AnsiCodepage     = c_1252.nls
@@ -226,6 +230,7 @@ pci_up = "Standard PC Uniprocessor"
 acpi_up = "ACPI PC Uniprocessor"
 ;acpi_mp = "ACPI PC Multiprocessor"
 xbox = "Original Xbox (x86 based)"
+pc98_up = "NEC PC-98 Uniprocessor"
 
 [Computer.NTamd64]
 x64_up = "Standard x64 Uniprocessor"
@@ -237,6 +242,7 @@ pci_up = "PC UP"
 acpi_up = "ACPI UP"
 ;acpi_mp = "ACPI MP"
 xbox = "Xbox"
+pc98_up = "NEC PC-98 UP"
 
 [Map.Computer.NTamd64]
 x64_up = "ACPI UP"
@@ -260,6 +266,10 @@ halacpi.dll  = 1,,,,,,,2,,,hal.dll,1,2
 [Files.xbox]
 ntoskrnl.exe = 1,,,,,,,2,,,,1,2
 halxbox.dll  = 1,,,,,,,2,,,hal.dll,1,2
+
+[Files.pc98_up]
+ntoskrnl.exe = 1,,,,,,,2,,,,1,2
+halpc98.dll  = 1,,,,,,,2,,,hal.dll,1,2
 
 [Files.x64_up]
 ntoskrnl.exe = 1,,,,,,,2,,,,1,2

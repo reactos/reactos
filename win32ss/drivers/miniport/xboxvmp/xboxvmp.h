@@ -23,14 +23,6 @@
 #include "ioaccess.h"
 #include "video.h"
 
-#define NV2A_VIDEO_MEMORY_SIZE    (4 * 1024 * 1024)
-
-#define NV2A_CONTROL_FRAMEBUFFER_ADDRESS_OFFSET 0x600800
-#define NV2A_CRTC_REGISTER_INDEX                0x6013D4
-#define NV2A_CRTC_REGISTER_VALUE                0x6013D5
-#define NV2A_RAMDAC_FP_HVALID_END               0x680838
-#define NV2A_RAMDAC_FP_VVALID_END               0x680818
-
 typedef struct
 {
     PHYSICAL_ADDRESS PhysControlStart;

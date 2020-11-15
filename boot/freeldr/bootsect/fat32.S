@@ -260,6 +260,7 @@ ReadSectorsCHSLoop:
 
     loop ReadSectorsCHSLoop                     // Read next sector
 
+    pop es
     ret
 
 // Displays a disk error message

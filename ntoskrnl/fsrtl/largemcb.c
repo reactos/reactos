@@ -472,7 +472,7 @@ FsRtlInitializeLargeMcb(IN PLARGE_MCB Mcb,
 /*
  * @implemented
  */
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 FsRtlInitializeLargeMcbs(VOID)

@@ -1,5 +1,4 @@
 
-set_cpp()
 
 include_directories(
     BEFORE ${CMAKE_CURRENT_SOURCE_DIR}
@@ -36,3 +35,4 @@ set_module_type(uniata kernelmodedriver)
 add_importlibs(uniata scsiport ntoskrnl hal)
 add_cd_file(TARGET uniata DESTINATION reactos/system32/drivers NO_CAB FOR all)
 add_registry_inf(uniata_reg.inf)
+add_driver_inf(uniata uniata_comm.inf)

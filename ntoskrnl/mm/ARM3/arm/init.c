@@ -57,7 +57,7 @@ PVOID MmHyperSpaceEnd;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 NTSTATUS
 NTAPI
 MiInitMachineDependent(IN PLOADER_PARAMETER_BLOCK LoaderBlock)

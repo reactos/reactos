@@ -194,7 +194,7 @@ static void test_create_delete_svc(void)
     SC_HANDLE scm_handle, svc_handle1, svc_handle2;
     CHAR username[UNLEN + 1], domain[MAX_PATH];
     DWORD user_size = UNLEN + 1;
-    CHAR account[UNLEN + 3];
+    CHAR account[MAX_PATH + UNLEN + 1];
     static const CHAR servicename         [] = "Winetest";
     static const CHAR pathname            [] = "we_dont_care.exe";
     static const CHAR empty               [] = "";

@@ -1,0 +1,11 @@
+in C::~C()
+generating access violation (SEH)
+caught SEH exception in main
+in C::~C()
+throwing C++ exception
+termination handler (Terminate1) called
+in Test2
+in Bar
+in C::~C()
+throwing C++ exception
+termination handler (Terminate2) called

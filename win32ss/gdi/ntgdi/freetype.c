@@ -4560,6 +4560,7 @@ ftGdiGetTextMetricsW(
         EngSetLastError(STATUS_INVALID_PARAMETER);
         return FALSE;
     }
+    RtlZeroMemory(ptmwi, sizeof(TMW_INTERNAL));
 
     if (!(dc = DC_LockDc(hDC)))
     {
@@ -4612,7 +4613,6 @@ ftGdiGetTextMetricsW(
                 FillTM(&ptmwi->TextMetric, FontGDI, pOS2, pHori, !Error ? &Win : 0);
 
                 /* FIXME: Fill Diff member */
-                RtlZeroMemory(&ptmwi->Diff, sizeof(ptmwi->Diff));
             }
 
             IntUnLockFreeType();

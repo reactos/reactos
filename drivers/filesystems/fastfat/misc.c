@@ -130,7 +130,7 @@ VfatDispatchRequest(
             break;
 
         case IRP_MJ_WRITE:
-            Status = VfatWrite(IrpContext);
+            Status = VfatWrite(&IrpContext);
             break;
 
         case IRP_MJ_FILE_SYSTEM_CONTROL:
@@ -182,30 +182,33 @@ VfatDispatchRequest(
             Status = STATUS_DRIVER_INTERNAL_ERROR;
     }
 
-    QueueIrp = BooleanFlagOn(IrpContext->Flags, IRPCONTEXT_QUEUE);
-    CompleteIrp = BooleanFlagOn(IrpContext->Flags, IRPCONTEXT_COMPLETE);
-
-    ASSERT((!CompleteIrp && !QueueIrp) ||
-           (CompleteIrp && !QueueIrp) ||
-           (!CompleteIrp && QueueIrp));
-
-    if (CompleteIrp)
+    if (IrpContext != NULL)
     {
-        IrpContext->Irp->IoStatus.Status = Status;
-        IoCompleteRequest(IrpContext->Irp, IrpContext->PriorityBoost);
-    }
+        QueueIrp = BooleanFlagOn(IrpContext->Flags, IRPCONTEXT_QUEUE);
+        CompleteIrp = BooleanFlagOn(IrpContext->Flags, IRPCONTEXT_COMPLETE);
 
-    if (QueueIrp)
-    {
-        /* Reset our status flags before queueing the IRP */
-        IrpContext->Flags |= IRPCONTEXT_COMPLETE;
-        IrpContext->Flags &= ~IRPCONTEXT_QUEUE;
-        Status = VfatQueueRequest(IrpContext);
-    }
-    else
-    {
-        /* Unless the IRP was queued, always free the IRP context */
-        VfatFreeIrpContext(IrpContext);
+        ASSERT((!CompleteIrp && !QueueIrp) ||
+               (CompleteIrp && !QueueIrp) ||
+               (!CompleteIrp && QueueIrp));
+
+        if (CompleteIrp)
+        {
+            IrpContext->Irp->IoStatus.Status = Status;
+            IoCompleteRequest(IrpContext->Irp, IrpContext->PriorityBoost);
+        }
+
+        if (QueueIrp)
+        {
+            /* Reset our status flags before queueing the IRP */
+            IrpContext->Flags |= IRPCONTEXT_COMPLETE;
+            IrpContext->Flags &= ~IRPCONTEXT_QUEUE;
+            Status = VfatQueueRequest(IrpContext);
+        }
+        else
+        {
+            /* Unless the IRP was queued, always free the IRP context */
+            VfatFreeIrpContext(IrpContext);
+        }
     }
 
     FsRtlExitFileSystem();
@@ -333,12 +336,53 @@ static
 VOID
 NTAPI
 VfatDoRequest(
-    PVOID IrpContext)
+    PVOID Context)
 {
+    PVFAT_IRP_CONTEXT IrpContext = Context;
+    PDEVICE_EXTENSION DeviceExt;
+    KIRQL OldIrql;
+
     InterlockedDecrement(&QueueCount);
-    DPRINT("VfatDoRequest(IrpContext %p), MajorFunction %x, %d\n",
-           IrpContext, ((PVFAT_IRP_CONTEXT)IrpContext)->MajorFunction, QueueCount);
-    VfatDispatchRequest((PVFAT_IRP_CONTEXT)IrpContext);
+
+    if (IrpContext->Stack->FileObject != NULL)
+    {
+        DeviceExt = IrpContext->Stack->DeviceObject->DeviceExtension;
+        ObReferenceObject(DeviceExt->VolumeDevice);
+    }
+
+    do
+    {
+        DPRINT("VfatDoRequest(IrpContext %p), MajorFunction %x, %d\n",
+               IrpContext, IrpContext->MajorFunction, QueueCount);
+        VfatDispatchRequest(IrpContext);
+        IrpContext = NULL;
+
+        /* Now process any overflow items */
+        if (DeviceExt != NULL)
+        {
+            KeAcquireSpinLock(&DeviceExt->OverflowQueueSpinLock, &OldIrql);
+            if (DeviceExt->OverflowQueueCount != 0)
+            {
+                IrpContext = CONTAINING_RECORD(RemoveHeadList(&DeviceExt->OverflowQueue),
+                                               VFAT_IRP_CONTEXT,
+                                               WorkQueueItem.List);
+                DeviceExt->OverflowQueueCount--;
+                DPRINT("Processing overflow item for IRP %p context %p (%lu)\n",
+                       IrpContext->Irp, IrpContext, DeviceExt->OverflowQueueCount);
+            }
+            else
+            {
+                ASSERT(IsListEmpty(&DeviceExt->OverflowQueue));
+                DeviceExt->PostedRequestCount--;
+            }
+            KeReleaseSpinLock(&DeviceExt->OverflowQueueSpinLock, OldIrql);
+        }
+    } while (IrpContext != NULL);
+
+    if (DeviceExt != NULL)
+    {
+        ObDereferenceObject(DeviceExt->VolumeDevice);
+    }
 }
 
 static
@@ -346,6 +390,10 @@ NTSTATUS
 VfatQueueRequest(
     PVFAT_IRP_CONTEXT IrpContext)
 {
+    PDEVICE_EXTENSION DeviceExt;
+    KIRQL OldIrql;
+    BOOLEAN Overflow;
+
     InterlockedIncrement(&QueueCount);
     DPRINT("VfatQueueRequest(IrpContext %p), %d\n", IrpContext, QueueCount);
 
@@ -354,10 +402,41 @@ VfatQueueRequest(
     ASSERT(!(IrpContext->Flags & IRPCONTEXT_QUEUE) &&
            (IrpContext->Flags & IRPCONTEXT_COMPLETE));
 
+    Overflow = FALSE;
     IrpContext->Flags |= IRPCONTEXT_CANWAIT;
     IoMarkIrpPending(IrpContext->Irp);
-    ExInitializeWorkItem(&IrpContext->WorkQueueItem, VfatDoRequest, IrpContext);
-    ExQueueWorkItem(&IrpContext->WorkQueueItem, CriticalWorkQueue);
+
+    /* We should not block more than two worker threads per volume,
+     * or we might stop Cc from doing the work to unblock us.
+     * Add additional requests into the overflow queue instead and process
+     * them all in an existing worker thread (see VfatDoRequest above).
+     */
+    if (IrpContext->Stack->FileObject != NULL)
+    {
+        DeviceExt = IrpContext->Stack->DeviceObject->DeviceExtension;
+        KeAcquireSpinLock(&DeviceExt->OverflowQueueSpinLock, &OldIrql);
+        if (DeviceExt->PostedRequestCount > 2)
+        {
+            DeviceExt->OverflowQueueCount++;
+            DPRINT("Queue overflow. Adding IRP %p context %p to overflow queue (%lu)\n",
+                   IrpContext->Irp, IrpContext, DeviceExt->OverflowQueueCount);
+            InsertTailList(&DeviceExt->OverflowQueue,
+                           &IrpContext->WorkQueueItem.List);
+            Overflow = TRUE;
+        }
+        else
+        {
+            DeviceExt->PostedRequestCount++;
+        }
+        KeReleaseSpinLock(&DeviceExt->OverflowQueueSpinLock, OldIrql);
+    }
+
+    if (!Overflow)
+    {
+        ExInitializeWorkItem(&IrpContext->WorkQueueItem, VfatDoRequest, IrpContext);
+        ExQueueWorkItem(&IrpContext->WorkQueueItem, CriticalWorkQueue);
+    }
+
     return STATUS_PENDING;
 }
 
@@ -548,6 +627,10 @@ VfatCheckForDismount(
             DeviceExt->FATFileObject = NULL;
             vfatDestroyFCB(Fcb);
         }
+
+        ASSERT(DeviceExt->OverflowQueueCount == 0);
+        ASSERT(IsListEmpty(&DeviceExt->OverflowQueue));
+        ASSERT(DeviceExt->PostedRequestCount == 0);
 
         /*
          * Now that the closing of the internal opened meta-files has been

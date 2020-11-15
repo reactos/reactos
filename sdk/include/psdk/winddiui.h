@@ -109,6 +109,47 @@ int WINAPI DrvDocumentEvent(HANDLE,HDC,int,ULONG,PVOID,ULONG,PVOID);
 
 BOOL WINAPI DrvDriverEvent(DWORD, DWORD, LPBYTE, LPARAM);
 BOOL WINAPI DrvPrinterEvent(LPWSTR, INT, DWORD, LPARAM);
+DWORD WINAPI DrvDeviceCapabilities(HANDLE,PWSTR,WORD,PVOID,PDEVMODE);
+
+LONG WINAPI DrvDevicePropertySheets(PPROPSHEETUI_INFO,LPARAM);
+
+typedef struct _DEVICEPROPERTYHEADER {
+    WORD    cbSize;
+    WORD    Flags;
+    HANDLE  hPrinter;
+    LPTSTR  pszPrinterName;
+} DEVICEPROPERTYHEADER, *PDEVICEPROPERTYHEADER;
+
+#define DPS_NOPERMISSION    0x0001
+
+LONG WINAPI DrvDocumentPropertySheets(PPROPSHEETUI_INFO,LPARAM);
+
+typedef struct _DOCUMENTPROPERTYHEADER {
+    WORD     cbSize;
+    WORD     Reserved;
+    HANDLE   hPrinter;
+    LPTSTR   pszPrinterName;
+    PDEVMODE pdmIn;
+    PDEVMODE pdmOut;
+    DWORD    cbOut;
+    DWORD    fMode;
+} DOCUMENTPROPERTYHEADER, *PDOCUMENTPROPERTYHEADER;
+
+#define DM_ADVANCED         0x10
+#define DM_NOPERMISSION     0x20
+#define DM_USER_DEFAULT     0x40
+
+typedef struct _DEVQUERYPRINT_INFO {
+    WORD    cbSize;
+    WORD    Level;
+    HANDLE  hPrinter;
+    DEVMODE *pDevMode;
+    LPWSTR  pszErrorStr;
+    DWORD   cchErrorStr;
+    DWORD   cchNeeded;
+} DEVQUERYPRINT_INFO, *PDEVQUERYPRINT_INFO;
+
+BOOL WINAPI DevQueryPrintEx(PDEVQUERYPRINT_INFO);
 
 #ifdef __cplusplus
 } /* extern "C" */

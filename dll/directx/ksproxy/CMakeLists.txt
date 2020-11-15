@@ -1,5 +1,4 @@
 
-set_cpp(WITH_STL)
 spec2def(ksproxy.ax ksproxy.spec)
 
 list(APPEND SOURCE
@@ -25,7 +24,7 @@ list(APPEND SOURCE
 add_library(ksproxy MODULE ${SOURCE} ksproxy.rc)
 set_module_type(ksproxy win32dll)
 set_target_properties(ksproxy PROPERTIES SUFFIX ".ax")
-target_link_libraries(ksproxy strmiids)
+target_link_libraries(ksproxy strmiids cppstl)
 add_importlibs(ksproxy advapi32 ole32 setupapi ksuser msvcrt kernel32 ntdll)
 add_dependencies(ksproxy dxsdk)
 add_cd_file(TARGET ksproxy DESTINATION reactos/system32 FOR all)

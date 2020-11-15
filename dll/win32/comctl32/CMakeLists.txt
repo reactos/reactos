@@ -12,8 +12,7 @@ include_directories(BEFORE ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 spec2def(comctl32.dll comctl32.spec ADD_IMPORTLIB)
 
 if(MSVC)
-    # Disable warning C4477 (printf format warnings)
-    add_compile_flags("/wd4477")
+
 endif()
 
 list(APPEND SOURCE
@@ -64,6 +63,11 @@ add_library(comctl32 MODULE
     ${PCH_SKIP_SOURCE}
     rsrc.rc
     ${CMAKE_CURRENT_BINARY_DIR}/comctl32.def)
+
+if (MSVC)
+    # Disable warning C4477 (printf format warnings)
+    target_compile_options(comctl32 PRIVATE /wd4477)
+endif()
 
 set_module_type(comctl32 win32dll UNICODE)
 target_link_libraries(comctl32 uuid wine ${PSEH_LIB})

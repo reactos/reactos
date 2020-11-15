@@ -11,6 +11,8 @@
 
 #include <debug.h>
 
+#include <drivers/xbox/xgpu.h>
+
 /* GLOBALS ********************************************************************/
 
 static ULONG_PTR FrameBufferStart = 0;
@@ -129,7 +131,7 @@ VidInitialize(
         return FALSE;
     }
 
-    ULONG_PTR FrameBuffer = READ_REGISTER_ULONG((PULONG)(ControlStart + NV2A_CONTROL_FRAMEBUFFER_ADDRESS_OFFSET));
+    ULONG_PTR FrameBuffer = READ_REGISTER_ULONG((PULONG)(ControlStart + NV2A_CRTC_FRAMEBUFFER_START));
     FrameBufferWidth = READ_REGISTER_ULONG((PULONG)(ControlStart + NV2A_RAMDAC_FP_HVALID_END)) + 1;
     FrameBufferHeight = READ_REGISTER_ULONG((PULONG)(ControlStart + NV2A_RAMDAC_FP_VVALID_END)) + 1;
 
@@ -412,7 +414,7 @@ VidSolidColorFill(
 VOID
 NTAPI
 VidScreenToBufferBlt(
-    _Out_ PUCHAR Buffer,
+    _Out_writes_bytes_(Delta * Height) PUCHAR Buffer,
     _In_ ULONG Left,
     _In_ ULONG Top,
     _In_ ULONG Width,
@@ -430,7 +432,7 @@ VidScreenToBufferBlt(
         PUCHAR Buf = Buffer + y * Delta;
 
         /* Start the X inner loop */
-        for (ULONG x = 0; x < Width; x += 2)
+        for (ULONG x = 0; x < Width; x += sizeof(USHORT))
         {
             /* Read the current value */
             *Buf = (*Back++ & 0xF) << 4;

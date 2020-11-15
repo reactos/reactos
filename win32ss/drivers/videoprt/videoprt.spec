@@ -19,7 +19,7 @@
 @ stdcall VideoPortCreateSecondaryDisplay(ptr ptr long)
 @ stdcall VideoPortCreateSpinLock(ptr ptr)
 @ stdcall VideoPortDDCMonitorHelper(ptr ptr ptr long)
-@ cdecl VideoPortDebugPrint(long ptr)
+@ varargs VideoPortDebugPrint(long str)
 @ stdcall VideoPortDeleteEvent(ptr ptr)
 @ stdcall VideoPortDeleteSpinLock(ptr ptr)
 @ stdcall VideoPortDisableInterrupt(ptr)

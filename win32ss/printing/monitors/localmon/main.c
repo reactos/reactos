@@ -24,10 +24,10 @@ static MONITOR2 _MonitorFunctions = {
     LocalmonReadPort,               // pfnReadPort
     LocalmonEndDocPort,             // pfnEndDocPort
     LocalmonClosePort,              // pfnClosePort
-    NULL,                           // pfnAddPort
-    NULL,                           // pfnAddPortEx
-    NULL,                           // pfnConfigurePort
-    NULL,                           // pfnDeletePort
+    LocalmonAddPort,                // pfnAddPort moved to localui.dll since w2k, but~
+    LocalmonAddPortEx,              // pfnAddPortEx
+    LocalmonConfigurePort,          // pfnConfigurePort moved to localui.dll since w2k, but~
+    LocalmonDeletePort,             // pfnDeletePort moved to localui.dll since w2k, but~
     LocalmonGetPrinterDataFromPort, // pfnGetPrinterDataFromPort
     LocalmonSetPortTimeOuts,        // pfnSetPortTimeOuts
     LocalmonXcvOpenPort,            // pfnXcvOpenPort
@@ -114,32 +114,48 @@ LocalmonShutdown(HANDLE hMonitor)
     PLOCALMON_HANDLE pLocalmon;
     PLOCALMON_PORT pPort;
     PLOCALMON_XCV pXcv;
+    PLIST_ENTRY pEntry;
 
     TRACE("LocalmonShutdown(%p)\n", hMonitor);
 
     pLocalmon = (PLOCALMON_HANDLE)hMonitor;
 
-    // Close all virtual file ports.
-    while (!IsListEmpty(&pLocalmon->FilePorts))
+    if ( pLocalmon->Sig != SIGLCMMON )
     {
-        pPort = CONTAINING_RECORD(&pLocalmon->FilePorts.Flink, LOCALMON_PORT, Entry);
-        LocalmonClosePort((HANDLE)pPort);
+        ERR("LocalmonShutdown : Invalid Monitor Handle\n",hMonitor);
+        return;
+    }
+
+    // Close all virtual file ports.
+    if (!IsListEmpty(&pLocalmon->FilePorts))
+    {
+        for (pEntry = pLocalmon->FilePorts.Flink; pEntry != &pLocalmon->FilePorts; pEntry = pEntry->Flink)
+        {
+           pPort = CONTAINING_RECORD(&pLocalmon->FilePorts.Flink, LOCALMON_PORT, Entry);
+           LocalmonClosePort((HANDLE)pPort);
+        }
     }
 
     // Do the same for the open Xcv ports.
-    while (!IsListEmpty(&pLocalmon->XcvHandles))
+    if (!IsListEmpty(&pLocalmon->XcvHandles))
     {
-        pXcv = CONTAINING_RECORD(&pLocalmon->XcvHandles.Flink, LOCALMON_XCV, Entry);
-        LocalmonXcvClosePort((HANDLE)pXcv);
+        for (pEntry = pLocalmon->XcvHandles.Flink; pEntry != &pLocalmon->XcvHandles; pEntry = pEntry->Flink)
+        {
+            pXcv = CONTAINING_RECORD(pEntry, LOCALMON_XCV, Entry);
+            LocalmonXcvClosePort((HANDLE)pXcv);
+        }
     }
 
     // Now close all registry ports, remove them from the list and free their memory.
-    while (!IsListEmpty(&pLocalmon->RegistryPorts))
+    if (!IsListEmpty(&pLocalmon->RegistryPorts))
     {
-        pPort = CONTAINING_RECORD(&pLocalmon->RegistryPorts.Flink, LOCALMON_PORT, Entry);
-        LocalmonClosePort((HANDLE)pPort);
-        RemoveEntryList(&pPort->Entry);
-        DllFreeSplMem(pPort);
+        for (pEntry = pLocalmon->RegistryPorts.Flink; pEntry != &pLocalmon->RegistryPorts; pEntry = pEntry->Flink)
+        {
+            pPort = CONTAINING_RECORD(pEntry, LOCALMON_PORT, Entry);
+            if ( LocalmonClosePort((HANDLE)pPort) ) continue;
+            RemoveEntryList(&pPort->Entry);
+            DllFreeSplMem(pPort);
+        }
     }
 
     // Finally clean the LOCALMON_HANDLE structure itself.
@@ -164,6 +180,7 @@ InitializePrintMonitor2(PMONITORINIT pMonitorInit, PHANDLE phMonitor)
 
     // Create a new LOCALMON_HANDLE structure.
     pLocalmon = DllAllocSplMem(sizeof(LOCALMON_HANDLE));
+    pLocalmon->Sig = SIGLCMMON;
     InitializeCriticalSection(&pLocalmon->Section);
     InitializeListHead(&pLocalmon->FilePorts);
     InitializeListHead(&pLocalmon->RegistryPorts);
@@ -198,9 +215,10 @@ InitializePrintMonitor2(PMONITORINIT pMonitorInit, PHANDLE phMonitor)
             goto Cleanup;
         }
 
+        pPort->Sig = SIGLCMPORT;
         pPort->pLocalmon = pLocalmon;
         pPort->hFile = INVALID_HANDLE_VALUE;
-        pPort->pwszPortName = (PWSTR)((PBYTE)pPort + sizeof(LOCALMON_PORT));
+        pPort->pwszPortName = (PWSTR)(pPort+1);
 
         // Get the port name.
         cchPortName = cchMaxPortName + 1;
@@ -229,6 +247,7 @@ InitializePrintMonitor2(PMONITORINIT pMonitorInit, PHANDLE phMonitor)
 
         // Add it to the list.
         InsertTailList(&pLocalmon->RegistryPorts, &pPort->Entry);
+        TRACE("InitializePrintMonitor2 Port : %s \n",debugstr_w(pPort->pwszPortName));
 
         // Don't let the cleanup routine free this.
         pPort = NULL;

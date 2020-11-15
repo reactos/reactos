@@ -2,32 +2,29 @@
 #if(${CMAKE_BUILD_TYPE} STREQUAL "Debug")
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     # no optimization
-    add_compile_flags("/Ob0 /Od")
+    add_compile_options(/Ob0 /Od)
 elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
-    add_compile_flags("/Ox /Ob2 /Ot /Oy /GT")
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /OPT:REF /OPT:ICF")
+    add_compile_options(/Ox /Ob2 /Ot /Oy /GT)
 elseif(OPTIMIZE STREQUAL "1")
-    add_compile_flags("/O1")
+    add_compile_options(/O1)
 elseif(OPTIMIZE STREQUAL "2")
-    add_compile_flags("/O2")
+    add_compile_options(/O2)
 elseif(OPTIMIZE STREQUAL "3")
-    add_compile_flags("/Ot /Ox /GS-")
+    add_compile_options(/Ot /Ox /GS-)
 elseif(OPTIMIZE STREQUAL "4")
-    add_compile_flags("/Os /Ox /GS-")
+    add_compile_options(/Os /Ox /GS-)
 elseif(OPTIMIZE STREQUAL "5")
-    add_compile_flags("/Gy /Ob2 /Os /Ox /GS-")
+    add_compile_options(/Gy /Ob2 /Os /Ox /GS-)
 endif()
 
 # Always use string pooling: this helps reducing the binaries size since a lot
 # of redundancy come from the usage of __FILE__ / __RELFILE__ in the debugging
 # helper macros. Note also that GCC builds use string pooling by default.
-add_compile_flags("/GF")
+add_compile_options(/GF)
 
 # Enable function level linking and comdat folding
-add_compile_flags("/Gy")
-set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /OPT:REF /OPT:ICF")
-set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} /OPT:REF /OPT:ICF")
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /OPT:REF /OPT:ICF")
+add_compile_options(/Gy)
+add_link_options(/OPT:REF /OPT:ICF)
 
 if(ARCH STREQUAL "i386")
     add_definitions(/DWIN32 /D_WINDOWS)
@@ -37,12 +34,11 @@ add_definitions(/Dinline=__inline /D__STDC__=1)
 
 # Ignore any "standard" include paths, and do not use any default CRT library.
 if(NOT USE_CLANG_CL)
-    add_compile_flags("/X /Zl")
+    add_compile_options(/X /Zl)
 endif()
 
-# Disable RTTI, exception handling and buffer security checks by default.
-# These require run-time support that may not always be available.
-add_compile_flags("/GR- /EHs-c- /GS-")
+# Disable buffer security checks by default.
+add_compile_options(/GS-)
 
 if(USE_CLANG_CL)
     set(CMAKE_CL_SHOWINCLUDES_PREFIX "Note: including file: ")
@@ -51,26 +47,31 @@ endif()
 # HACK: for VS 11+ we need to explicitly disable SSE, which is off by
 # default for older compilers. See CORE-6507
 if(ARCH STREQUAL "i386")
-    add_compile_flags("/arch:IA32")
+    # Clang's IA32 means i386, which doesn't have cmpxchg8b
+    if(USE_CLANG_CL)
+        add_compile_options(-march=${OARCH})
+    else()
+        add_compile_options(/arch:IA32)
+    endif()
 endif()
 
 # VS 12+ requires /FS when used in parallel compilations
 if(NOT MSVC_IDE)
-    add_compile_flags("/FS")
+    add_compile_options(/FS)
 endif()
 
 # VS14+ tries to use thread-safe initialization
-add_compile_flags("/Zc:threadSafeInit-")
+add_compile_options(/Zc:threadSafeInit-)
 
 # HACK: Disable use of __CxxFrameHandler4 on VS 16.3+ (x64 only)
 # See https://developercommunity.visualstudio.com/content/problem/746534/visual-c-163-runtime-uses-an-unsupported-api-for-u.html
 if(ARCH STREQUAL "amd64" AND MSVC_VERSION GREATER 1922)
-    add_compile_flags("/d2FH4-")
-    add_link_options("/d2:-FH4-")
+    add_compile_options(/d2FH4-)
+    add_link_options(/d2:-FH4-)
 endif()
 
 # Generate Warnings Level 3
-add_compile_flags("/W3")
+add_compile_options(/W3)
 
 # Disable overly sensitive warnings as well as those that generally aren't
 # useful to us.
@@ -79,10 +80,10 @@ add_compile_flags("/W3")
 # - C4800: forcing value to bool 'true' or 'false' (performance warning)
 # - C4200: nonstandard extension used : zero-sized array in struct/union
 # - C4214: nonstandard extension used : bit field types other than int
-add_compile_flags("/wd4244 /wd4290 /wd4800 /wd4200 /wd4214")
+add_compile_options(/wd4244 /wd4290 /wd4800 /wd4200 /wd4214)
 
 # FIXME: Temporarily disable C4018 until we fix more of the others. CORE-10113
-add_compile_flags("/wd4018")
+add_compile_options(/wd4018)
 
 # The following warnings are treated as errors:
 # - C4013: implicit function declaration
@@ -107,30 +108,27 @@ add_compile_flags("/wd4018")
 # - C4700: uninitialized variable usage
 # - C4715: 'function': not all control paths return a value
 # - C4716: function must return a value
-add_compile_flags("/we4013 /we4020 /we4022 /we4028 /we4047 /we4098 /we4101 /we4113 /we4129 /we4133 /we4163 /we4229 /we4311 /we4312 /we4313 /we4477 /we4603 /we4700 /we4715 /we4716")
+add_compile_options(/we4013 /we4020 /we4022 /we4028 /we4047 /we4098 /we4101 /we4113 /we4129 /we4133 /we4163 /we4229 /we4311 /we4312 /we4313 /we4477 /we4603 /we4700 /we4715 /we4716)
 
 # - C4189: local variable initialized but not referenced
 # Not in Release mode
 if(NOT CMAKE_BUILD_TYPE STREQUAL "Release")
-    add_compile_flags("/we4189")
+    add_compile_options(/we4189)
 endif()
 
 # Enable warnings above the default level, but don't treat them as errors:
 # - C4115: named type definition in parentheses
-add_compile_flags("/w14115")
+add_compile_options(/w14115)
 
 if(USE_CLANG_CL)
-    add_compile_flags_language("-nostdinc -Wno-multichar -Wno-char-subscripts -Wno-microsoft-enum-forward-reference -Wno-pragma-pack -Wno-microsoft-anon-tag -Wno-parentheses-equality -Wno-unknown-pragmas" "C")
-    add_compile_flags_language("-nostdinc -Wno-multichar -Wno-char-subscripts -Wno-microsoft-enum-forward-reference -Wno-pragma-pack -Wno-microsoft-anon-tag -Wno-parentheses-equality -Wno-unknown-pragmas" "CXX")
+    add_compile_options("$<$<COMPILE_LANGUAGE:C,CXX>:-nostdinc;-Wno-multichar;-Wno-char-subscripts;-Wno-microsoft-enum-forward-reference;-Wno-pragma-pack;-Wno-microsoft-anon-tag;-Wno-parentheses-equality;-Wno-unknown-pragmas>")
 endif()
 
 # Debugging
-#if(${CMAKE_BUILD_TYPE} STREQUAL "Debug")
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     if(NOT (_PREFAST_ OR _VS_ANALYZE_))
-        add_compile_flags("/Zi")
+        add_compile_options(/Zi)
     endif()
-#elseif(${CMAKE_BUILD_TYPE} STREQUAL "Release")
 elseif(CMAKE_BUILD_TYPE STREQUAL "Release")
     add_definitions("/D NDEBUG")
 endif()
@@ -138,7 +136,7 @@ endif()
 # Hotpatchable images
 if(ARCH STREQUAL "i386")
     if(NOT USE_CLANG_CL)
-        add_compile_flags("/hotpatch")
+        add_compile_options(/hotpatch)
     endif()
     set(_hotpatch_link_flag "/FUNCTIONPADMIN:5")
 elseif(ARCH STREQUAL "amd64")
@@ -151,12 +149,12 @@ endif()
 
 if(RUNTIME_CHECKS)
     add_definitions(-D__RUNTIME_CHECKS__)
-    add_compile_flags("/RTC1")
+    add_compile_options(/RTC1)
 endif()
 
-set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /MANIFEST:NO /INCREMENTAL:NO /SAFESEH:NO /NODEFAULTLIB /RELEASE ${_hotpatch_link_flag} /IGNORE:4039")
-set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /MANIFEST:NO /INCREMENTAL:NO /SAFESEH:NO /NODEFAULTLIB /RELEASE ${_hotpatch_link_flag} /IGNORE:4104 /IGNORE:4039")
-set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} /MANIFEST:NO /INCREMENTAL:NO /SAFESEH:NO /NODEFAULTLIB /RELEASE ${_hotpatch_link_flag} /IGNORE:4039")
+add_link_options(/MANIFEST:NO /INCREMENTAL:NO /SAFESEH:NO /NODEFAULTLIB /RELEASE ${_hotpatch_link_flag} /IGNORE:4039)
+
+set(CMAKE_MSVC_RUNTIME_LIBRARY "")
 
 # HACK: Remove the /implib argument, implibs are generated separately
 string(REPLACE "/implib:<TARGET_IMPLIB>" "" CMAKE_C_LINK_EXECUTABLE "${CMAKE_C_LINK_EXECUTABLE}")
@@ -166,65 +164,48 @@ string(REPLACE "/implib:<TARGET_IMPLIB>" "" CMAKE_CXX_CREATE_SHARED_LIBRARY "${C
 string(REPLACE "/implib:<TARGET_IMPLIB>" "" CMAKE_C_CREATE_SHARED_MODULE "${CMAKE_C_CREATE_SHARED_MODULE}")
 string(REPLACE "/implib:<TARGET_IMPLIB>" "" CMAKE_CXX_CREATE_SHARED_MODULE "${CMAKE_CXX_CREATE_SHARED_MODULE}")
 
+# HACK2: CMake lacks the ability to completely remove the 'implib' argument for solution files...
+# To work around this, we just let it create a dummy file
+if(MSVC_IDE)
+    set(CMAKE_IMPORT_LIBRARY_SUFFIX ".dummy")
+endif()
+
+
 if(CMAKE_DISABLE_NINJA_DEPSLOG)
     set(cl_includes_flag "")
 else()
     set(cl_includes_flag "/showIncludes")
 endif()
 
-if(MSVC_IDE AND (CMAKE_VERSION MATCHES "ReactOS"))
+if(MSVC_IDE)
     # For VS builds we'll only have en-US in resource files
     add_definitions(/DLANGUAGE_EN_US)
 else()
-    if(CMAKE_VERSION VERSION_LESS 3.4.0)
-        set(CMAKE_RC_COMPILE_OBJECT "<CMAKE_RC_COMPILER> /nologo <FLAGS> <DEFINES> ${I18N_DEFS} /fo<OBJECT> <SOURCE>")
-        if(ARCH STREQUAL "arm")
-            set(CMAKE_ASM_COMPILE_OBJECT
-                "cl ${cl_includes_flag} /nologo /X /I${REACTOS_SOURCE_DIR}/sdk/include/asm /I${REACTOS_BINARY_DIR}/sdk/include/asm <FLAGS> <DEFINES> /D__ASM__ /D_USE_ML /EP /c <SOURCE> > <OBJECT>.tmp"
-                "<CMAKE_ASM_COMPILER> -nologo -o <OBJECT> <OBJECT>.tmp")
-        else()
-            set(CMAKE_ASM_COMPILE_OBJECT
-                "cl ${cl_includes_flag} /nologo /X /I${REACTOS_SOURCE_DIR}/sdk/include/asm /I${REACTOS_BINARY_DIR}/sdk/include/asm <FLAGS> <DEFINES> /D__ASM__ /D_USE_ML /EP /c <SOURCE> > <OBJECT>.tmp"
-                "<CMAKE_ASM_COMPILER> /nologo /Cp /Fo<OBJECT> /c /Ta <OBJECT>.tmp")
-        endif()
+    set(CMAKE_RC_COMPILE_OBJECT "<CMAKE_RC_COMPILER> /nologo <INCLUDES> <FLAGS> <DEFINES> ${I18N_DEFS} /fo <OBJECT> <SOURCE>")
+    if(ARCH STREQUAL "arm")
+        set(CMAKE_ASM_COMPILE_OBJECT
+            "cl ${cl_includes_flag} /nologo /X /I${REACTOS_SOURCE_DIR}/sdk/include/asm /I${REACTOS_BINARY_DIR}/sdk/include/asm <INCLUDES> <FLAGS> <DEFINES> /D__ASM__ /D_USE_ML /EP /c <SOURCE> > <OBJECT>.tmp"
+            "<CMAKE_ASM_COMPILER> -nologo -o <OBJECT> <OBJECT>.tmp")
     else()
-        set(CMAKE_RC_COMPILE_OBJECT "<CMAKE_RC_COMPILER> /nologo <INCLUDES> <FLAGS> <DEFINES> ${I18N_DEFS} /fo<OBJECT> <SOURCE>")
-        if(ARCH STREQUAL "arm")
-            set(CMAKE_ASM_COMPILE_OBJECT
-                "cl ${cl_includes_flag} /nologo /X /I${REACTOS_SOURCE_DIR}/sdk/include/asm /I${REACTOS_BINARY_DIR}/sdk/include/asm <INCLUDES> <FLAGS> <DEFINES> /D__ASM__ /D_USE_ML /EP /c <SOURCE> > <OBJECT>.tmp"
-                "<CMAKE_ASM_COMPILER> -nologo -o <OBJECT> <OBJECT>.tmp")
-        else()
-            set(CMAKE_ASM_COMPILE_OBJECT
-                "cl ${cl_includes_flag} /nologo /X /I${REACTOS_SOURCE_DIR}/sdk/include/asm /I${REACTOS_BINARY_DIR}/sdk/include/asm <INCLUDES> <FLAGS> <DEFINES> /D__ASM__ /D_USE_ML /EP /c <SOURCE> > <OBJECT>.tmp"
-                "<CMAKE_ASM_COMPILER> /nologo /Cp /Fo<OBJECT> /c /Ta <OBJECT>.tmp")
-        endif()
+        set(CMAKE_ASM_COMPILE_OBJECT
+            "cl ${cl_includes_flag} /nologo /X /I${REACTOS_SOURCE_DIR}/sdk/include/asm /I${REACTOS_BINARY_DIR}/sdk/include/asm <INCLUDES> <FLAGS> <DEFINES> /D__ASM__ /D_USE_ML /EP /c <SOURCE> > <OBJECT>.tmp"
+            "<CMAKE_ASM_COMPILER> /nologo /Cp /Fo<OBJECT> /c /Ta <OBJECT>.tmp")
     endif()
 endif()
 
 if(_VS_ANALYZE_)
     message("VS static analysis enabled!")
-    add_compile_flags("/analyze")
+    add_compile_options(/analyze)
 elseif(_PREFAST_)
     message("PREFAST enabled!")
-    if(CMAKE_VERSION VERSION_LESS 3.4.0)
-        set(CMAKE_C_COMPILE_OBJECT "prefast <CMAKE_C_COMPILER> ${CMAKE_START_TEMP_FILE} ${CMAKE_CL_NOLOGO} <FLAGS> <DEFINES> /Fo<OBJECT> -c <SOURCE>${CMAKE_END_TEMP_FILE}"
-        "prefast LIST")
-        set(CMAKE_CXX_COMPILE_OBJECT "prefast <CMAKE_CXX_COMPILER> ${CMAKE_START_TEMP_FILE} ${CMAKE_CL_NOLOGO} <FLAGS> <DEFINES> /TP /Fo<OBJECT> -c <SOURCE>${CMAKE_END_TEMP_FILE}"
-        "prefast LIST")
-        set(CMAKE_C_LINK_EXECUTABLE
-        "<CMAKE_C_COMPILER> ${CMAKE_CL_NOLOGO} <OBJECTS> ${CMAKE_START_TEMP_FILE} <FLAGS> /Fe<TARGET> -link /implib:<TARGET_IMPLIB> /version:<TARGET_VERSION_MAJOR>.<TARGET_VERSION_MINOR> <CMAKE_C_LINK_FLAGS> <LINK_FLAGS> <LINK_LIBRARIES>${CMAKE_END_TEMP_FILE}")
-        set(CMAKE_CXX_LINK_EXECUTABLE
-        "<CMAKE_CXX_COMPILER> ${CMAKE_CL_NOLOGO} <OBJECTS> ${CMAKE_START_TEMP_FILE} <FLAGS> /Fe<TARGET> -link /implib:<TARGET_IMPLIB> /version:<TARGET_VERSION_MAJOR>.<TARGET_VERSION_MINOR> <CMAKE_CXX_LINK_FLAGS> <LINK_FLAGS> <LINK_LIBRARIES>${CMAKE_END_TEMP_FILE}")
-    else()
-        set(CMAKE_C_COMPILE_OBJECT "prefast <CMAKE_C_COMPILER> ${CMAKE_START_TEMP_FILE} ${CMAKE_CL_NOLOGO} <INCLUDES> <FLAGS> <DEFINES> /Fo<OBJECT> -c <SOURCE>${CMAKE_END_TEMP_FILE}"
-        "prefast LIST")
-        set(CMAKE_CXX_COMPILE_OBJECT "prefast <CMAKE_CXX_COMPILER> ${CMAKE_START_TEMP_FILE} ${CMAKE_CL_NOLOGO} <INCLUDES> <FLAGS> <DEFINES> /TP /Fo<OBJECT> -c <SOURCE>${CMAKE_END_TEMP_FILE}"
-        "prefast LIST")
-        set(CMAKE_C_LINK_EXECUTABLE
-        "<CMAKE_C_COMPILER> ${CMAKE_CL_NOLOGO} <OBJECTS> ${CMAKE_START_TEMP_FILE} <INCLUDES> <FLAGS> /Fe<TARGET> -link /implib:<TARGET_IMPLIB> /version:<TARGET_VERSION_MAJOR>.<TARGET_VERSION_MINOR> <CMAKE_C_LINK_FLAGS> <LINK_FLAGS> <LINK_LIBRARIES>${CMAKE_END_TEMP_FILE}")
-        set(CMAKE_CXX_LINK_EXECUTABLE
-        "<CMAKE_CXX_COMPILER> ${CMAKE_CL_NOLOGO} <OBJECTS> ${CMAKE_START_TEMP_FILE} <INCLUDES> <FLAGS> /Fe<TARGET> -link /implib:<TARGET_IMPLIB> /version:<TARGET_VERSION_MAJOR>.<TARGET_VERSION_MINOR> <CMAKE_CXX_LINK_FLAGS> <LINK_FLAGS> <LINK_LIBRARIES>${CMAKE_END_TEMP_FILE}")
-    endif()
+    set(CMAKE_C_COMPILE_OBJECT "prefast <CMAKE_C_COMPILER> ${CMAKE_START_TEMP_FILE} ${CMAKE_CL_NOLOGO} <INCLUDES> <FLAGS> <DEFINES> /Fo<OBJECT> -c <SOURCE>${CMAKE_END_TEMP_FILE}"
+    "prefast LIST")
+    set(CMAKE_CXX_COMPILE_OBJECT "prefast <CMAKE_CXX_COMPILER> ${CMAKE_START_TEMP_FILE} ${CMAKE_CL_NOLOGO} <INCLUDES> <FLAGS> <DEFINES> /TP /Fo<OBJECT> -c <SOURCE>${CMAKE_END_TEMP_FILE}"
+    "prefast LIST")
+    set(CMAKE_C_LINK_EXECUTABLE
+    "<CMAKE_C_COMPILER> ${CMAKE_CL_NOLOGO} <OBJECTS> ${CMAKE_START_TEMP_FILE} <INCLUDES> <FLAGS> /Fe<TARGET> -link /implib:<TARGET_IMPLIB> /version:<TARGET_VERSION_MAJOR>.<TARGET_VERSION_MINOR> <CMAKE_C_LINK_FLAGS> <LINK_FLAGS> <LINK_LIBRARIES>${CMAKE_END_TEMP_FILE}")
+    set(CMAKE_CXX_LINK_EXECUTABLE
+    "<CMAKE_CXX_COMPILER> ${CMAKE_CL_NOLOGO} <OBJECTS> ${CMAKE_START_TEMP_FILE} <INCLUDES> <FLAGS> /Fe<TARGET> -link /implib:<TARGET_IMPLIB> /version:<TARGET_VERSION_MAJOR>.<TARGET_VERSION_MINOR> <CMAKE_CXX_LINK_FLAGS> <LINK_FLAGS> <LINK_LIBRARIES>${CMAKE_END_TEMP_FILE}")
 endif()
 
 set(CMAKE_RC_CREATE_SHARED_LIBRARY ${CMAKE_C_CREATE_SHARED_LIBRARY})
@@ -263,21 +244,13 @@ function(set_image_base MODULE IMAGE_BASE)
 endfunction()
 
 function(set_module_type_toolchain MODULE TYPE)
-    if(CPP_USE_STL)
-        if((${TYPE} STREQUAL "kernelmodedriver") OR (${TYPE} STREQUAL "wdmdriver"))
-            message(FATAL_ERROR "Use of STL in kernelmodedriver or wdmdriver type module prohibited")
-        endif()
-        target_link_libraries(${MODULE} cpprt stlport oldnames)
-    elseif(CPP_USE_RT)
-        target_link_libraries(${MODULE} cpprt)
-    endif()
     if((${TYPE} STREQUAL "win32dll") OR (${TYPE} STREQUAL "win32ocx") OR (${TYPE} STREQUAL "cpl"))
         add_target_link_flags(${MODULE} "/DLL")
     elseif(${TYPE} STREQUAL "kernelmodedriver")
         # Disable linker warning 4078 (multiple sections found with different attributes) for INIT section use
-        add_target_link_flags(${MODULE} "/DRIVER /IGNORE:4078 /SECTION:INIT,D")
+        add_target_link_flags(${MODULE} "/DRIVER /SECTION:INIT,ERWD")
     elseif(${TYPE} STREQUAL "wdmdriver")
-        add_target_link_flags(${MODULE} "/DRIVER:WDM /IGNORE:4078 /SECTION:INIT,D")
+        add_target_link_flags(${MODULE} "/DRIVER:WDM /SECTION:INIT,ERWD")
     endif()
 
     if(RUNTIME_CHECKS)
@@ -318,7 +291,7 @@ endfunction()
 
 function(generate_import_lib _libname _dllname _spec_file)
 
-    set(_def_file ${CMAKE_CURRENT_BINARY_DIR}/${_libname}_exp.def)
+    set(_def_file ${CMAKE_CURRENT_BINARY_DIR}/${_libname}_implib.def)
     set(_asm_stubs_file ${CMAKE_CURRENT_BINARY_DIR}/${_libname}_stubs.asm)
 
     # Generate the asm stub file and the def file for import library
@@ -466,7 +439,7 @@ function(allow_warnings __module)
 endfunction()
 
 macro(add_asm_files _target)
-    if(MSVC_IDE AND (CMAKE_VERSION MATCHES "ReactOS"))
+    if(MSVC_IDE)
         get_defines(_directory_defines)
         get_includes(_directory_includes)
         get_directory_property(_defines COMPILE_DEFINITIONS)
@@ -533,7 +506,7 @@ function(add_linker_script _target _linker_script_file)
     else()
         set(_no_std_includes_flag "/X")
     endif()
-    if(MSVC_IDE AND (CMAKE_VERSION MATCHES "ReactOS"))
+    if(MSVC_IDE)
         # MSBuild, via the VS IDE, uses response files when calling CL or LINK.
         # We cannot specify a custom response file on the linker command-line,
         # since specifying response files from within response files is forbidden.
@@ -570,3 +543,17 @@ function(add_linker_script _target _linker_script_file)
         add_target_property(${_target} LINK_DEPENDS ${_file_full_path})
     endif()
 endfunction()
+
+# handle C++ options
+# disable RTTI unless said so
+add_compile_options("$<$<COMPILE_LANGUAGE:CXX>:$<IF:$<BOOL:$<TARGET_PROPERTY:WITH_CXX_RTTI>>,/GR,/GR->>")
+# disable exceptions unless said so
+add_compile_options("$<$<COMPILE_LANGUAGE:CXX>:$<IF:$<BOOL:$<TARGET_PROPERTY:WITH_CXX_EXCEPTIONS>>,/EHsc,/EHs-c->>")
+
+# Create our interface libraries wrapping the needed library for this compiler
+add_library(cppstl INTERFACE)
+target_link_libraries(cppstl INTERFACE cpprt stlport oldnames)
+# We set this properties through our INTERFACE library
+set_target_properties(cppstl PROPERTIES INTERFACE_WITH_CXX_STL TRUE)
+# add_library(cpprt INTERFACE)
+# Our runtime library is already called cpprt
