@@ -1,7 +1,7 @@
 PROJECT(SHELL)
 
 set_cpp(WITH_RUNTIME)
-
+add_definitions(-D_ATL_NO_EXCEPTIONS)
 include_directories(${REACTOS_SOURCE_DIR}/sdk/lib/atl)
 
 list(APPEND SOURCE
@@ -16,9 +16,11 @@ list(APPEND SOURCE
     startmnucust.cpp
     startmnusite.cpp
     startup.cpp
+    syspager.cpp
     taskband.cpp
     taskswnd.cpp
     tbsite.cpp
+    trayclock.cpp
     trayntfy.cpp
     trayprop.cpp
     traywnd.cpp

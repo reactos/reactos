@@ -20,85 +20,61 @@
 
 #include "precomp.h"
 
-TASKBAR_SETTINGS TaskBarSettings;
-const WCHAR szSettingsKey[] = L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer";
-const WCHAR szAdvancedSettingsKey[] = L"Software\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Advanced";
+TaskbarSettings g_TaskbarSettings;
 
-VOID
-LoadTaskBarSettings(VOID)
+BOOL TaskbarSettings::Save()
 {
-    DWORD dwValue = NULL;
-    
-    LoadSettingDword(szAdvancedSettingsKey, L"TaskbarSizeMove", dwValue);
-    TaskBarSettings.bLock = (dwValue == 0);
-    
-    LoadSettingDword(szAdvancedSettingsKey, L"ShowSeconds", dwValue);
-    TaskBarSettings.bShowSeconds = (dwValue != 0);
-    
-    LoadSettingDword(szSettingsKey, L"EnableAutotray", dwValue);
-    TaskBarSettings.bHideInactiveIcons = (dwValue != 0); 
-    
-    LoadSettingDword(szAdvancedSettingsKey, L"TaskbarGlomming", dwValue);
-    TaskBarSettings.bGroupButtons = (dwValue != 0);
-    
-    TaskBarSettings.bShowQuickLaunch = TRUE;    //FIXME: Where is this stored, and how?
-    
-    /* FIXME: The following settings are stored in stuckrects2, do they have to be load here too? */
-    TaskBarSettings.bShowClock = TRUE;
-    TaskBarSettings.bAutoHide = FALSE;
-    TaskBarSettings.bAlwaysOnTop = FALSE;
+    SHSetValueW(hkExplorer, NULL, L"EnableAutotray", REG_DWORD, &bHideInactiveIcons, sizeof(bHideInactiveIcons));
+    SHSetValueW(hkExplorer, L"Advanced", L"ShowSeconds", REG_DWORD, &bShowSeconds, sizeof(bShowSeconds));
+    SHSetValueW(hkExplorer, L"Advanced", L"TaskbarGlomming", REG_DWORD, &bGroupButtons, sizeof(bGroupButtons));
+    BOOL bAllowSizeMove = !bLock;
+    SHSetValueW(hkExplorer, L"Advanced", L"TaskbarSizeMove", REG_DWORD, &bAllowSizeMove, sizeof(bAllowSizeMove));
+    sr.cbSize = sizeof(sr);
+    SHSetValueW(hkExplorer, L"StuckRects2", L"Settings", REG_BINARY, &sr, sizeof(sr));
 
+    /* TODO: AutoHide writes something to HKEY_CURRENT_USER\Software\Microsoft\Internet Explorer\Desktop\Components\0 figure out what and why */
+    return TRUE;
 }
 
-VOID
-SaveTaskBarSettings(VOID)
+BOOL TaskbarSettings::Load()
 {
-    SaveSettingDword(szAdvancedSettingsKey, L"TaskbarSizeMove", TaskBarSettings.bLock);
-    SaveSettingDword(szAdvancedSettingsKey, L"ShowSeconds", TaskBarSettings.bShowSeconds);
-    SaveSettingDword(szSettingsKey, L"EnableAutotray", TaskBarSettings.bHideInactiveIcons);
-    SaveSettingDword(szAdvancedSettingsKey, L"TaskbarGlomming", TaskBarSettings.bGroupButtons);
-    
-    /* FIXME: Show Clock, AutoHide and Always on top are stored in the stuckrects2 key but are not written to it with a click on apply. How is this done instead?
-       AutoHide writes something to HKEY_CURRENT_USER\Software\Microsoft\Internet Explorer\Desktop\Components\0 figure out what and why */
-}
+    DWORD dwRet, cbSize, dwValue = NULL;
 
-BOOL
-LoadSettingDword(IN LPCWSTR pszKeyName,
-                 IN LPCWSTR pszValueName,
-                 OUT DWORD &dwValue)
-{
-    BOOL ret = FALSE;
-    HKEY hKey;
+    cbSize = sizeof(dwValue);
+    dwRet = SHGetValueW(hkExplorer, L"Advanced", L"TaskbarSizeMove", NULL, &dwValue, &cbSize);
+    bLock = (dwRet == ERROR_SUCCESS) ? (dwValue == 0) : TRUE;
     
-    if (RegOpenKeyW(HKEY_CURRENT_USER, pszKeyName, &hKey) == ERROR_SUCCESS)
+    dwRet = SHGetValueW(hkExplorer, L"Advanced", L"ShowSeconds", NULL, &dwValue, &cbSize);
+    bShowSeconds = (dwRet == ERROR_SUCCESS) ? (dwValue != 0) : FALSE;
+
+    dwRet = SHGetValueW(hkExplorer, L"Advanced", L"TaskbarGlomming", NULL, &dwValue, &cbSize);
+    bGroupButtons = (dwRet == ERROR_SUCCESS) ? (dwValue != 0) : FALSE;
+
+    dwRet = SHGetValueW(hkExplorer, NULL, L"EnableAutotray", NULL, &dwValue, &cbSize);
+    bHideInactiveIcons = (dwRet == ERROR_SUCCESS) ? (dwValue != 0) : FALSE;
+
+    cbSize = sizeof(sr);
+    dwRet = SHGetValueW(hkExplorer, L"StuckRects2", L"Settings", NULL, &sr, &cbSize);
+
+    /* Make sure we have correct values here */
+    if (dwRet != ERROR_SUCCESS || sr.cbSize != sizeof(sr) || cbSize != sizeof(sr))
     {
-        DWORD dwValueLength, dwType;
-
-        dwValueLength = sizeof(dwValue);
-        ret = RegQueryValueExW(hKey, pszValueName, NULL, &dwType, (PBYTE)&dwValue, &dwValueLength) == ERROR_SUCCESS && dwType == REG_DWORD;
-        
-        RegCloseKey(hKey);
+        sr.Position = ABE_BOTTOM;
+        sr.AutoHide = FALSE;
+        sr.AlwaysOnTop = TRUE;
+        sr.SmallIcons = TRUE;
+        sr.HideClock = FALSE;
+        sr.Rect.left = sr.Rect.top = 0;
+        sr.Rect.bottom = sr.Rect.right = 1;
+        sr.Size.cx = sr.Size.cy = 0;
     }
-    
-    return ret;
-}
-
-BOOL
-SaveSettingDword(IN LPCWSTR pszKeyName,
-                 IN LPCWSTR pszValueName,
-                 IN DWORD dwValue)
-{
-    BOOL ret = FALSE;
-    HKEY hKey;
-
-    if (RegCreateKeyW(HKEY_CURRENT_USER, pszKeyName, &hKey) == ERROR_SUCCESS)
+    else
     {
-        ret = RegSetValueExW(hKey, pszValueName, 0, REG_DWORD, (PBYTE)&dwValue, sizeof(dwValue)) == ERROR_SUCCESS;
-
-        RegCloseKey(hKey);
+        if (sr.Position > ABE_BOTTOM)
+            sr.Position = ABE_BOTTOM;
     }
 
-    return ret;
+    return TRUE;
 }
 
 /* EOF */

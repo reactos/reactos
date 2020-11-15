@@ -30,10 +30,29 @@ extern "C" {
 #define DBIMF_NOMARGINS         0x2000
 #endif  // NTDDI_LONGHORN
 
+#if defined (_SHELLAPI_H) || defined (_INC_SHELLAPI)
+
+/****************************************************************************
+ * Taskbar interface WM_COPYDATA structures
+ * See http://www.geoffchappell.com/studies/windows/shell/shell32/api/shlnot/copydata.htm
+ */
+/* Data structure for Shell_NotifyIcon messages */
+typedef struct _TRAYNOTIFYDATAW
+{
+    DWORD dwSignature;
+    DWORD dwMessage;
+    NOTIFYICONDATAW nid; // Always use the latest NOTIFYICONDATAW structure version.
+} TRAYNOTIFYDATAW, *PTRAYNOTIFYDATAW;
+// Note: One could also introduce TRAYNOTIFYDATAA
+
+#define NI_NOTIFY_SIG 0x34753423 /* TRAYNOTIFYDATA */
+
+#endif /* defined (_SHELLAPI_H) || defined (_INC_SHELLAPI) */
+
+
 /****************************************************************************
  * Taskbar WM_COMMAND identifiers
  */
-
 #define TWM_DOEXITWINDOWS (WM_USER + 342)
 #define TWM_CYCLEFOCUS (WM_USER + 348)
 

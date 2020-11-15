@@ -193,7 +193,10 @@ public:
 };
 
 class CTaskSwitchWnd :
-    public CWindowImpl < CTaskSwitchWnd, CWindow, CControlWinTraits >
+    public CComCoClass<CTaskSwitchWnd>,
+    public CComObjectRootEx<CComMultiThreadModelNoCS>,
+    public CWindowImpl < CTaskSwitchWnd, CWindow, CControlWinTraits >,
+    public IOleWindow
 {
     CTaskToolbar m_TaskBar;
 
@@ -1715,24 +1718,27 @@ public:
         return Ret;
     }
 
-    LRESULT OnEnableGrouping(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
-    {
-        LRESULT Ret = m_IsGroupingEnabled;
-        if ((BOOL)wParam != m_IsGroupingEnabled)
-        {
-            m_IsGroupingEnabled = (BOOL)wParam;
-
-            /* Collapse or expand groups if necessary */
-            UpdateButtonsSize(FALSE);
-        }
-        return Ret;
-    }
-
     LRESULT OnUpdateTaskbarPos(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
     {
         /* Update the button spacing */
         m_TaskBar.UpdateTbButtonSpacing(m_Tray->IsHorizontal(), m_Theme != NULL);
         return TRUE;
+    }
+
+    LRESULT OnTaskbarSettingsChanged(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+    {
+        TaskbarSettings* newSettings = (TaskbarSettings*)lParam;
+        if (newSettings->bGroupButtons != g_TaskbarSettings.bGroupButtons)
+        {
+            g_TaskbarSettings.bGroupButtons = newSettings->bGroupButtons;
+            m_IsGroupingEnabled = g_TaskbarSettings.bGroupButtons;
+
+            /* Collapse or expand groups if necessary */
+            RefreshWindowList();
+            UpdateButtonsSize(FALSE);
+        }
+
+        return 0;
     }
 
     LRESULT OnContextMenu(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
@@ -1815,6 +1821,29 @@ public:
         return 0;
     }
 
+    HRESULT Initialize(IN HWND hWndParent, IN OUT ITrayWindow *tray)
+    {
+        m_Tray = tray;
+        m_IsGroupingEnabled = g_TaskbarSettings.bGroupButtons;
+        Create(hWndParent, 0, szRunningApps, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_TABSTOP);
+        if (!m_hWnd)
+            return E_FAIL;
+        return S_OK;
+    }
+
+    HRESULT WINAPI GetWindow(HWND* phwnd)
+    {
+        if (!phwnd)
+            return E_INVALIDARG;
+        *phwnd = m_hWnd;
+        return S_OK;
+    }
+
+    HRESULT WINAPI ContextSensitiveHelp(BOOL fEnterMode)
+    {
+        return E_NOTIMPL;
+    }
+
     DECLARE_WND_CLASS_EX(szTaskSwitchWndClass, CS_DBLCLKS, COLOR_3DFACE)
 
     BEGIN_MSG_MAP(CTaskSwitchWnd)
@@ -1826,8 +1855,8 @@ public:
         MESSAGE_HANDLER(WM_NCHITTEST, OnNcHitTest)
         MESSAGE_HANDLER(WM_COMMAND, OnCommand)
         MESSAGE_HANDLER(WM_NOTIFY, OnNotify)
-        MESSAGE_HANDLER(TSWM_ENABLEGROUPING, OnEnableGrouping)
         MESSAGE_HANDLER(TSWM_UPDATETASKBARPOS, OnUpdateTaskbarPos)
+        MESSAGE_HANDLER(TWM_SETTINGSCHANGED, OnTaskbarSettingsChanged)
         MESSAGE_HANDLER(WM_CONTEXTMENU, OnContextMenu)
         MESSAGE_HANDLER(WM_TIMER, OnTimer)
         MESSAGE_HANDLER(WM_SETFONT, OnSetFont)
@@ -1837,21 +1866,15 @@ public:
         MESSAGE_HANDLER(WM_KLUDGEMINRECT, OnKludgeItemRect)
     END_MSG_MAP()
 
-    HWND _Init(IN HWND hWndParent, IN OUT ITrayWindow *tray)
-    {
-        m_Tray = tray;
-        m_IsGroupingEnabled = TRUE; /* FIXME */
-        return Create(hWndParent, 0, szRunningApps, WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_TABSTOP);
-    }
+    DECLARE_NOT_AGGREGATABLE(CTaskSwitchWnd)
+
+    DECLARE_PROTECT_FINAL_CONSTRUCT()
+    BEGIN_COM_MAP(CTaskSwitchWnd)
+        COM_INTERFACE_ENTRY_IID(IID_IOleWindow, IOleWindow)
+    END_COM_MAP()
 };
 
-HWND
-CreateTaskSwitchWnd(IN HWND hWndParent, IN OUT ITrayWindow *Tray)
+HRESULT CTaskSwitchWnd_CreateInstance(IN HWND hWndParent, IN OUT ITrayWindow *Tray, REFIID riid, void **ppv)
 {
-    CTaskSwitchWnd * instance;
-
-    // TODO: Destroy after the window is destroyed
-    instance = new CTaskSwitchWnd();
-
-    return instance->_Init(hWndParent, Tray);
+    return ShellObjectCreatorInit<CTaskSwitchWnd>(hWndParent, Tray, riid, ppv);
 }

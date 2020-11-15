@@ -107,6 +107,7 @@
 \*******************************************************************************/
 
 /* Taskbar Page */
+#define IDC_TASKBARPROP_FIRST_CMD            1000
 #define IDC_TASKBARPROP_HIDEICONS            1000
 #define IDC_TASKBARPROP_ICONCUST             1007
 #define IDC_TASKBARPROP_ONTOP                1101
@@ -116,6 +117,7 @@
 #define IDC_TASKBARPROP_LOCK                 1105
 #define IDC_TASKBARPROP_SECONDS              1106
 #define IDC_TASKBARPROP_SHOWQL               1107
+#define IDC_TASKBARPROP_LAST_CMD             1107
 #define IDC_TASKBARPROP_TASKBARBITMAP        1111
 #define IDC_TASKBARPROP_NOTIFICATIONBITMAP   1112
 

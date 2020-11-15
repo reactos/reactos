@@ -38,6 +38,7 @@ class CTaskBand :
 {
     CComPtr<ITrayWindow> m_Tray;
     CComPtr<IUnknown> m_Site;
+    CComPtr<IUnknown> m_TasksWnd;
 
     HWND m_hWnd;
 
@@ -250,23 +251,20 @@ public:
         TRACE("CTaskBand::SetSite(0x%p)\n", pUnkSite);
 
         hRet = IUnknown_GetWindow(pUnkSite, &hwndSite);
-        if (FAILED(hRet))
-        {
-            TRACE("Querying site window failed: 0x%x\n", hRet);
+        if (FAILED_UNEXPECTEDLY(hRet))
             return hRet;
-        }
 
         TRACE("CreateTaskSwitchWnd(Parent: 0x%p)\n", hwndSite);
 
-        HWND hwndTaskSwitch = CreateTaskSwitchWnd(hwndSite, m_Tray);
-        if (!hwndTaskSwitch)
-        {
-            ERR("CreateTaskSwitchWnd failed");
-            return E_FAIL;
-        }
+        hRet = CTaskSwitchWnd_CreateInstance(hwndSite, m_Tray, IID_PPV_ARG(IUnknown, &m_TasksWnd));
+        if (FAILED_UNEXPECTEDLY(hRet))
+            return hRet;
+
+        hRet = IUnknown_GetWindow(m_TasksWnd, &m_hWnd);
+        if (FAILED_UNEXPECTEDLY(hRet))
+            return hRet;
 
         m_Site = pUnkSite;
-        m_hWnd = hwndTaskSwitch;
 
         return S_OK;
     }
