@@ -8,7 +8,7 @@
 #ifndef _DBG_DRIVERDBG_H_
 #define _DBG_DRIVERDBG_H_
 
-inline
+FORCEINLINE
 PCHAR
 GetIRPMinorFunctionString(
     UCHAR MinorFunction)
