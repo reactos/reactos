@@ -139,7 +139,7 @@ IssueSyncIoControlRequest(
     _In_ ULONG OutputBufferLength,
     _In_ BOOLEAN InternalDeviceIoControl);
 
-inline
+FORCEINLINE
 BOOLEAN
 VerifyIrpOutBufferSize(
     _In_ PIRP Irp,
@@ -154,7 +154,7 @@ VerifyIrpOutBufferSize(
     return TRUE;
 }
 
-inline
+FORCEINLINE
 BOOLEAN
 VerifyIrpInBufferSize(
     _In_ PIRP Irp,
@@ -169,7 +169,7 @@ VerifyIrpInBufferSize(
     return TRUE;
 }
 
-inline
+FORCEINLINE
 VOID
 PartMgrAcquireLayoutLock(
     _In_ PFDO_EXTENSION FDOExtension)
@@ -179,7 +179,7 @@ PartMgrAcquireLayoutLock(
     KeWaitForSingleObject(&FDOExtension->SyncEvent, Executive, KernelMode, FALSE, NULL);
 }
 
-inline
+FORCEINLINE
 VOID
 PartMgrReleaseLayoutLock(
     _In_ PFDO_EXTENSION FDOExtension)
