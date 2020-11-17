@@ -56,6 +56,7 @@ static ULONG KdbgNextApiNumber = DbgKdContinueApi;
 static CONTEXT KdbgContext;
 static EXCEPTION_RECORD64 KdbgExceptionRecord;
 static BOOLEAN KdbgFirstChanceException;
+static KPROCESSOR_MODE KdbgPreviousMode;
 static NTSTATUS KdbgContinueStatus = STATUS_SUCCESS;
 
 /* LOCKING FUNCTIONS *********************************************************/
@@ -580,6 +581,7 @@ KdSendPacket(
             KdbgNextApiNumber = DbgKdGetContextApi;
             KdbgExceptionRecord = WaitStateChange->u.Exception.ExceptionRecord;
             KdbgFirstChanceException = WaitStateChange->u.Exception.FirstChance;
+            KdbgPreviousMode = ((PKTHREAD)(ULONG_PTR)WaitStateChange->Thread)->PreviousMode;
             return;
         }
     }
@@ -599,7 +601,7 @@ KdSendPacket(
             }
 
             Result = KdbEnterDebuggerException(&KdbgExceptionRecord,
-                                               KernelMode, // FIXME
+                                               KdbgPreviousMode,
                                                &KdbgContext,
                                                KdbgFirstChanceException);
 #else
