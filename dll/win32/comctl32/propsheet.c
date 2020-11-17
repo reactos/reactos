@@ -1333,6 +1333,9 @@ static UINT GetTemplateSize(const DLGTEMPLATE* pTemplate)
   return ret;
 }
 
+#ifdef __REACTOS__
+static void PROPSHEET_UnChanged(HWND hwndDlg, HWND hwndCleanPage);
+#endif
 /******************************************************************************
  *            PROPSHEET_CreatePage
  *
@@ -1476,6 +1479,9 @@ static BOOL PROPSHEET_CreatePage(HWND hwndParent,
   if (!(psInfo->ppshheader.dwFlags & INTRNL_ANY_WIZARD))
       EnableThemeDialogTexture (hwndPage, ETDT_ENABLETAB);
 
+#ifdef __REACTOS__
+  PROPSHEET_UnChanged(hwndParent, hwndPage);
+#endif
   return TRUE;
 }
 
