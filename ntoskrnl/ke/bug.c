@@ -392,7 +392,7 @@ KiInitializeBugCheck(VOID)
 }
 
 /*
- * @brief Brief discription here.
+ * @brief Get bugcheck message.
  *
  * Full discription here.
  *
