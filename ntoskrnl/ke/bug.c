@@ -352,7 +352,7 @@ KeRosDumpStackFrames(IN PULONG_PTR Frame OPTIONAL,
  * Full discription here.
 */
 INIT_FUNCTION
-CODE_SEG("INIT")
+//CODE_SEG("INIT")
 VOID
 NTAPI
 KiInitializeBugCheck(VOID)
