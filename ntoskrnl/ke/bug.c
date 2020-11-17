@@ -352,7 +352,6 @@ KeRosDumpStackFrames(IN PULONG_PTR Frame OPTIONAL,
  * Full discription here.
 */
 INIT_FUNCTION
-=======
 CODE_SEG("INIT")
 VOID
 NTAPI
