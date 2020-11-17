@@ -225,9 +225,8 @@ MmPageOutPhysicalAddress(PFN_NUMBER Page)
 
             /* We can finally let this page go */
             MmDeleteRmap(Page, Process, Address);
-            MmReleasePageMemoryConsumer(MC_USER, Page);
-
             ASSERT(MmGetRmapListHeadPage(Page) == NULL);
+            MmReleasePageMemoryConsumer(MC_USER, Page);
 
             if (Address < MmSystemRangeStart)
             {
