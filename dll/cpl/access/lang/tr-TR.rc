@@ -76,7 +76,7 @@ CAPTION "Fare"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     GROUPBOX "Fare Düğmeleri", -1, 6, 11, 234, 62
-    LTEXT "İmleci düğme takımınızdaki sayısal klavye ile denetlemek istiyorsanız bu seçeneği kullanınız.",
+    LTEXT "İmleci klavyenizdeki sayısal klavye ile denetlemek istiyorsanız bu seçeneği kullanınız.",
           -1, 12, 20, 222, 29
     AUTOCHECKBOX "&Fare Düğmeleri'ni Kullan", IDC_MOUSE_BOX, 12, 49, 126, 14
     PUSHBUTTON "&Ayarlar", IDC_MOUSE_BUTTON, 144, 49, 90, 14
@@ -98,7 +98,7 @@ BEGIN
     AUTOCHECKBOX "B&ir özellik açıldığında ve kapatıldığında bir ses çıkar", IDC_NOTIFICATION_SOUND,
                  12, 90, 222, 14
     GROUPBOX "Seri Tuş Aygıtları", -1, 6, 115, 234, 47
-    LTEXT "Seri Tuş Aygıtları, kalvye ve fare özellikleri için seçimlik erişim sağlar.",
+    LTEXT "Seri Tuş Aygıtları, klavye ve fare özellikleri için seçimlik erişim sağlar.",
           -1, 12, 124, 222, 20
     AUTOCHECKBOX "&Seri tuş aygıtlarını destekle", IDC_SERIAL_BOX, 12, 142, 126, 14
     PUSHBUTTON "&Ayarlar", IDC_SERIAL_BUTTON, 144, 142, 90, 14
