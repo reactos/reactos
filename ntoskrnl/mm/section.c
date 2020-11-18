@@ -3343,8 +3343,12 @@ MmFreeSectionPage(PVOID Context, MEMORY_AREA* MemoryArea, PVOID Address,
         else
         {
             if (Process)
+            {
                 MmDeleteRmap(Page, Process, Address);
-            MmUnsharePageEntrySectionSegment(MemoryArea, Segment, &Offset, Dirty, FALSE, NULL);
+            }
+
+            /* We don't dirtify for System Space Maps. We let Cc manage that */
+            MmUnsharePageEntrySectionSegment(MemoryArea, Segment, &Offset, Process ? Dirty : FALSE, FALSE, NULL);
         }
     }
 }
