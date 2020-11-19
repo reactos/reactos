@@ -13,7 +13,7 @@ foreach(item ${ROSAPPS_INF_FILES})
     add_custom_command(OUTPUT "${_rosapps_converted_item}"
                        COMMAND native-utf16le "${_rosapps_source_item}" "${_rosapps_converted_item}"
                        DEPENDS native-utf16le "${_rosapps_source_item}")
-    add_cd_file(TARGET converted_inf_files2 FILE ${_rosapps_converted_item} DESTINATION reactos/inf FOR all)
     list(APPEND rosapps_converted_item ${_rosapps_converted_item})
 endforeach(item)
 add_custom_target(converted_inf_files2 DEPENDS ${rosapps_converted_item})
+add_cd_file(TARGET converted_inf_files2 FILE ${rosapps_converted_item} DESTINATION reactos/inf FOR all)

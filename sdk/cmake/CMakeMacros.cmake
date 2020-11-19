@@ -286,6 +286,18 @@ function(add_cd_file)
         endif()
     endif()
 
+    # If we use a byproduct of a target, then we can use this as a dependency specified in DEPENDS argument of
+    # add_custom_command whereas if we use a custom target, we must use target-level dependency as well as
+    # file-level dependency.
+    # See CMake documentation of add_custom_command.
+    list(APPEND _CD_DEPENDENCIES ${_CD_FILE})
+    if (_CD_TARGET)
+        get_target_property(__type ${_CD_TARGET} TYPE)
+        if (TYPE STREQUAL UTILITY)
+            list(APPEND _CD_DEPENDENCIES ${_CD_TARGET})
+        endif()
+    endif()
+
     # do we add it to all CDs?
     list(FIND _CD_FOR "all" __cd)
     if(NOT __cd EQUAL -1)
@@ -306,40 +318,30 @@ function(add_cd_file)
                 else()
                     get_filename_component(__file ${item} NAME)
                 endif()
-                set_property(GLOBAL APPEND PROPERTY BOOTCD_FILE_LIST "${_CD_DESTINATION}/${__file}=${item}")
+                # Append the files to the relevant properties
+                set_property(TARGET bootcd APPEND PROPERTY FILE_LIST "${_CD_DESTINATION}/${__file}=${item}")
+                if (NOT _CD_TARGET)
+                    set_property(TARGET bootcd APPEND PROPERTY _CD_DEPENDENCIES "${_CD_FILE}")
+                endif()
                 # add it also into the hybridcd if not specified otherwise
                 if(NOT _CD_NOT_IN_HYBRIDCD)
-                    set_property(GLOBAL APPEND PROPERTY HYBRIDCD_FILE_LIST "bootcd/${_CD_DESTINATION}/${__file}=${item}")
+                    set_property(TARGET hybridcd APPEND PROPERTY FILE_LIST "bootcd/${_CD_DESTINATION}/${__file}=${item}")
                 endif()
             endforeach()
-            # manage dependency
-            if(_CD_TARGET)
-                add_dependencies(bootcd ${_CD_TARGET} registry_inf)
-            endif()
+            set_property(TARGET bootcd APPEND PROPERTY ISO_DEPENDENCIES "${_CD_DEPENDENCIES}")
         else()
             dir_to_num(${_CD_DESTINATION} _num)
             foreach(item ${_CD_FILE})
                 # add it in reactos.cab
-                file(APPEND ${REACTOS_BINARY_DIR}/boot/bootdata/packages/reactos.dff.cmake "\"${item}\" ${_num}\n")
-
-                # manage dependency - file level
-                set_property(GLOBAL APPEND PROPERTY REACTOS_CAB_DEPENDS ${item})
+                set_property(TARGET reactos_cab APPEND PROPERTY FILE_LIST "\"${item}\" ${_num}")
             endforeach()
-
-            # manage dependency - target level
-            if(_CD_TARGET)
-                add_dependencies(reactos_cab_inf ${_CD_TARGET})
-            endif()
+            set_property(TARGET reactos_cab APPEND PROPERTY CAB_DEPENDENCIES "${_CD_DEPENDENCIES}")
         endif()
     endif() #end bootcd
 
     # do we add it to livecd?
     list(FIND _CD_FOR livecd __cd)
     if(NOT __cd EQUAL -1)
-        # manage dependency
-        if(_CD_TARGET)
-            add_dependencies(livecd ${_CD_TARGET} registry_inf)
-        endif()
         foreach(item ${_CD_FILE})
             if(_CD_NAME_ON_CD)
                 # rename it in the cd tree
@@ -347,21 +349,18 @@ function(add_cd_file)
             else()
                 get_filename_component(__file ${item} NAME)
             endif()
-            set_property(GLOBAL APPEND PROPERTY LIVECD_FILE_LIST "${_CD_DESTINATION}/${__file}=${item}")
+            set_property(TARGET livecd APPEND PROPERTY FILE_LIST "${_CD_DESTINATION}/${__file}=${item}")
             # add it also into the hybridcd if not specified otherwise
             if(NOT _CD_NOT_IN_HYBRIDCD)
-                set_property(GLOBAL APPEND PROPERTY HYBRIDCD_FILE_LIST "livecd/${_CD_DESTINATION}/${__file}=${item}")
+                set_property(TARGET hybridcd APPEND PROPERTY FILE_LIST "livecd/${_CD_DESTINATION}/${__file}=${item}")
             endif()
         endforeach()
+        set_property(TARGET livecd APPEND PROPERTY ISO_DEPENDENCIES "${_CD_DEPENDENCIES}")
     endif() #end livecd
 
     # do we need also to add it to hybridcd?
     list(FIND _CD_FOR hybridcd __cd)
     if(NOT __cd EQUAL -1)
-        # manage dependency
-        if(_CD_TARGET)
-            add_dependencies(hybridcd ${_CD_TARGET})
-        endif()
         foreach(item ${_CD_FILE})
             if(_CD_NAME_ON_CD)
                 # rename it in the cd tree
@@ -369,8 +368,18 @@ function(add_cd_file)
             else()
                 get_filename_component(__file ${item} NAME)
             endif()
-            set_property(GLOBAL APPEND PROPERTY HYBRIDCD_FILE_LIST "${_CD_DESTINATION}/${__file}=${item}")
+            set_property(TARGET hybridcd APPEND PROPERTY FILE_LIST "${_CD_DESTINATION}/${__file}=${item}")
         endforeach()
+        set_property(TARGET hybridcd APPEND PROPERTY ISO_DEPENDENCIES "${_CD_DEPENDENCIES}")
+    else()
+        # check if we should add a dependency to hybridcd because we added though bootcd or livecd
+        list(FIND _CD_FOR bootcd __cd)
+        if (__cd EQUAL -1)
+            list(FIND _CD_FOR livecd __cd)
+        endif()
+        if(NOT __cd EQUAL -1)
+            set_property(TARGET hybridcd APPEND PROPERTY ISO_DEPENDENCIES "${_CD_DEPENDENCIES}")
+        endif()
     endif() #end hybridcd
 
     # do we add it to regtest?
@@ -386,84 +395,12 @@ function(add_cd_file)
                 else()
                     get_filename_component(__file ${item} NAME)
                 endif()
-                set_property(GLOBAL APPEND PROPERTY BOOTCDREGTEST_FILE_LIST "${_CD_DESTINATION}/${__file}=${item}")
+                # Append the files to the relevant properties
+                set_property(TARGET bootcdregtest APPEND PROPERTY FILE_LIST "${_CD_DESTINATION}/${__file}=${item}")
             endforeach()
-            # manage dependency
-            if(_CD_TARGET)
-                add_dependencies(bootcdregtest ${_CD_TARGET} registry_inf)
-            endif()
-        else()
-            #add it in reactos.cab
-            #dir_to_num(${_CD_DESTINATION} _num)
-            #file(APPEND ${REACTOS_BINARY_DIR}/boot/bootdata/packages/reactos.dff.dyn "${_CD_FILE} ${_num}\n")
-            #if(_CD_TARGET)
-            #    #manage dependency
-            #    add_dependencies(reactos_cab ${_CD_TARGET})
-            #endif()
-        endif()
+            set_property(TARGET bootcdregtest APPEND PROPERTY ISO_DEPENDENCIES "${_CD_DEPENDENCIES}")
+        endif() # NO_CAB. reactos.cab is managed through te bootcd case above
     endif() #end bootcd
-endfunction()
-
-function(create_iso_lists)
-    # generate reactos.cab before anything else
-    get_property(_filelist GLOBAL PROPERTY REACTOS_CAB_DEPENDS)
-
-    # begin with reactos.inf. We want this command to be always executed, so we pretend it generates another file although it will never do.
-    add_custom_command(
-        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/reactos.inf ${CMAKE_CURRENT_BINARY_DIR}/__some_non_existent_file
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${REACTOS_BINARY_DIR}/boot/bootdata/packages/reactos.inf ${CMAKE_CURRENT_BINARY_DIR}/reactos.inf
-        DEPENDS ${REACTOS_BINARY_DIR}/boot/bootdata/packages/reactos.inf reactos_cab_inf)
-
-    add_custom_command(
-        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/reactos.cab
-        COMMAND native-cabman -C ${REACTOS_BINARY_DIR}/boot/bootdata/packages/reactos.dff -RC ${CMAKE_CURRENT_BINARY_DIR}/reactos.inf -N -P ${REACTOS_SOURCE_DIR}
-        DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/reactos.inf native-cabman ${_filelist})
-
-    add_custom_target(reactos_cab DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/reactos.cab)
-    add_dependencies(reactos_cab reactos_cab_inf)
-
-    add_cd_file(
-        TARGET reactos_cab
-        FILE ${CMAKE_CURRENT_BINARY_DIR}/reactos.cab
-        DESTINATION reactos
-        NO_CAB FOR bootcd regtest)
-
-    add_cd_file(
-        FILE ${CMAKE_CURRENT_BINARY_DIR}/livecd.iso
-        DESTINATION livecd
-        FOR hybridcd)
-
-    get_property(_filelist GLOBAL PROPERTY BOOTCD_FILE_LIST)
-    string(REPLACE ";" "\n" _filelist "${_filelist}")
-    file(APPEND ${REACTOS_BINARY_DIR}/boot/bootcd.cmake.lst "${_filelist}")
-    unset(_filelist)
-    file(GENERATE
-         OUTPUT ${REACTOS_BINARY_DIR}/boot/bootcd.$<CONFIG>.lst
-         INPUT ${REACTOS_BINARY_DIR}/boot/bootcd.cmake.lst)
-
-    get_property(_filelist GLOBAL PROPERTY LIVECD_FILE_LIST)
-    string(REPLACE ";" "\n" _filelist "${_filelist}")
-    file(APPEND ${REACTOS_BINARY_DIR}/boot/livecd.cmake.lst "${_filelist}")
-    unset(_filelist)
-    file(GENERATE
-         OUTPUT ${REACTOS_BINARY_DIR}/boot/livecd.$<CONFIG>.lst
-         INPUT ${REACTOS_BINARY_DIR}/boot/livecd.cmake.lst)
-
-    get_property(_filelist GLOBAL PROPERTY HYBRIDCD_FILE_LIST)
-    string(REPLACE ";" "\n" _filelist "${_filelist}")
-    file(APPEND ${REACTOS_BINARY_DIR}/boot/hybridcd.cmake.lst "${_filelist}")
-    unset(_filelist)
-    file(GENERATE
-         OUTPUT ${REACTOS_BINARY_DIR}/boot/hybridcd.$<CONFIG>.lst
-         INPUT ${REACTOS_BINARY_DIR}/boot/hybridcd.cmake.lst)
-
-    get_property(_filelist GLOBAL PROPERTY BOOTCDREGTEST_FILE_LIST)
-    string(REPLACE ";" "\n" _filelist "${_filelist}")
-    file(APPEND ${REACTOS_BINARY_DIR}/boot/bootcdregtest.cmake.lst "${_filelist}")
-    unset(_filelist)
-    file(GENERATE
-         OUTPUT ${REACTOS_BINARY_DIR}/boot/bootcdregtest.$<CONFIG>.lst
-         INPUT ${REACTOS_BINARY_DIR}/boot/bootcdregtest.cmake.lst)
 endfunction()
 
 # Create module_clean targets

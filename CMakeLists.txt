@@ -381,9 +381,6 @@ Enable this if the module uses typeid or dynamic_cast. You will probably need to
     # Create the registry hives
     create_registry_hives()
 
-    # Create {bootcd, livecd, bootcdregtest}.lst
-    create_iso_lists()
-
     file(MAKE_DIRECTORY ${REACTOS_BINARY_DIR}/sdk/include/reactos)
 
     add_dependency_footer()
