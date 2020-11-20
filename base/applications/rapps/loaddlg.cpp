@@ -522,25 +522,28 @@ VOID CDownloadManager::UpdateProgress(
     }
 }
 
-VOID ShowLastError(
+BOOL ShowLastError(
     HWND hWndOwner,
+    BOOL bInetError,
     DWORD dwLastError)
 {
     CLocalPtr<WCHAR> lpMsg;
     
     if (!FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER |
-                        FORMAT_MESSAGE_FROM_SYSTEM |
-                        FORMAT_MESSAGE_IGNORE_INSERTS,
-                        NULL,
+                        FORMAT_MESSAGE_IGNORE_INSERTS |
+                        (bInetError ? FORMAT_MESSAGE_FROM_HMODULE : FORMAT_MESSAGE_FROM_SYSTEM),
+                        (bInetError ? GetModuleHandleW(L"wininet.dll") : NULL),
                         dwLastError,
                         LANG_USER_DEFAULT,
                         (LPWSTR)&lpMsg,
                         0, NULL))
     {
-        return;
+        DPRINT1("FormatMessageW unexpected failure (err %d)\n", GetLastError());
+        return FALSE;
     }
 
     MessageBoxW(hWndOwner, lpMsg, NULL, MB_OK | MB_ICONERROR);
+    return TRUE;
 }
 
 unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
@@ -596,7 +599,7 @@ unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
         {
             if (!GetStorageDirectory(Path))
             {
-                ShowLastError(hMainWnd, GetLastError());
+                ShowLastError(hMainWnd, FALSE, GetLastError());
                 goto end;
             }
         }
@@ -646,7 +649,7 @@ unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
         {
             if (!CreateDirectoryW(Path.GetString(), NULL))
             {
-                ShowLastError(hMainWnd, GetLastError());
+                ShowLastError(hMainWnd, FALSE, GetLastError());
                 goto end;
             }
         }
@@ -700,7 +703,7 @@ unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
 
         if (!hOpen)
         {
-            ShowLastError(hMainWnd, GetLastError());
+            ShowLastError(hMainWnd, TRUE, GetLastError());
             goto end;
         }
 
@@ -715,7 +718,7 @@ unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
 
         if (!InternetCrackUrlW(InfoArray[iAppId].szUrl, urlLength + 1, ICU_DECODE | ICU_ESCAPE, &urlComponents))
         {
-            ShowLastError(hMainWnd, GetLastError());
+            ShowLastError(hMainWnd, TRUE, GetLastError());
             goto end;
         }
 
@@ -729,14 +732,18 @@ unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
                                      0);
             if (!hFile)
             {
-                ShowLastError(hMainWnd, GetLastError());
+                if (!ShowLastError(hMainWnd, TRUE, GetLastError()))
+                {
+                    /* Workaround for CORE-17377 */
+                    MessageBox_LoadString(hMainWnd, IDS_UNABLE_TO_DOWNLOAD2);
+                }
                 goto end;
             }
 
             // query connection
             if (!HttpQueryInfoW(hFile, HTTP_QUERY_STATUS_CODE | HTTP_QUERY_FLAG_NUMBER, &dwStatus, &dwStatusLen, NULL))
             {
-                ShowLastError(hMainWnd, GetLastError());
+                ShowLastError(hMainWnd, TRUE, GetLastError());
                 goto end;
             }
 
@@ -757,7 +764,11 @@ unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
                                      0);
             if (!hFile)
             {
-                ShowLastError(hMainWnd, GetLastError());
+                if (!ShowLastError(hMainWnd, TRUE, GetLastError()))
+                {
+                    /* Workaround for CORE-17377 */
+                    MessageBox_LoadString(hMainWnd, IDS_UNABLE_TO_DOWNLOAD2);
+                }
                 goto end;
             }
 
@@ -778,13 +789,13 @@ unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
                 }
                 else
                 {
-                    ShowLastError(hMainWnd, GetLastError());
+                    ShowLastError(hMainWnd, FALSE, GetLastError());
                     goto end;
                 }
             }
             else
             {
-                ShowLastError(hMainWnd, hr);
+                ShowLastError(hMainWnd, FALSE, hr);
                 goto end;
             }
         }
@@ -842,7 +853,7 @@ unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
 
         if (hOut == INVALID_HANDLE_VALUE)
         {
-            ShowLastError(hMainWnd, GetLastError());
+            ShowLastError(hMainWnd, FALSE, GetLastError());
             goto end;
         }
 
@@ -851,13 +862,13 @@ unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
         {
             if (!InternetReadFile(hFile, lpBuffer, _countof(lpBuffer), &dwBytesRead))
             {
-                ShowLastError(hMainWnd, GetLastError());
+                ShowLastError(hMainWnd, TRUE, GetLastError());
                 goto end;
             }
 
             if (!WriteFile(hOut, &lpBuffer[0], dwBytesRead, &dwBytesWritten, NULL))
             {
-                ShowLastError(hMainWnd, GetLastError());
+                ShowLastError(hMainWnd, FALSE, GetLastError());
                 goto end;
             }
 
@@ -947,7 +958,7 @@ run:
             }
             else
             {
-                ShowLastError(hMainWnd, GetLastError());
+                ShowLastError(hMainWnd, FALSE, GetLastError());
             }
         }
 
