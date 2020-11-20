@@ -61,9 +61,9 @@ function(add_rpcproxy_files)
         list(APPEND IDL_DEPS ${CMAKE_CURRENT_SOURCE_DIR}/${FILE} ${EXTRA_DEP})
         add_custom_command(
             OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_p.c ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_p.h
-            # We generate the two files in two passes because WIDL doesn't cope with being given two absolute paths as output
+            # We generate the two files in two passes because WIDL accepts only one custom file name as output
             COMMAND native-widl ${INCLUDES} ${DEFINES} ${IDL_FLAGS} -p -o ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_p.c -H ${NAME}_p.h ${FILE}
-            COMMAND native-widl ${INCLUDES} ${DEFINES} ${IDL_FLAGS} -p -h -H ${NAME}_p.h ${FILE}
+            COMMAND native-widl ${INCLUDES} ${DEFINES} ${IDL_FLAGS} -h -o ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_p.h ${FILE}
             DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${FILE} ${EXTRA_DEP} native-widl
             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
     endforeach()
@@ -79,24 +79,25 @@ endfunction()
 function(add_rpc_files __type)
     get_includes(INCLUDES)
     get_defines(DEFINES)
+    set(__additional_flags -Oif)
     # Is it a client or server module?
     if(__type STREQUAL "server")
-        set(__server_client -Oif -s)
+        set(__server_client -s)
         set(__suffix _s)
     elseif(__type STREQUAL "client")
-        set(__server_client -Oif -c)
+        set(__server_client -c)
         set(__suffix _c)
     else()
         message(FATAL_ERROR "Please pass either server or client as argument to add_rpc_files")
     endif()
     foreach(FILE ${ARGN})
         get_filename_component(__name ${FILE} NAME_WE)
-        set(__name ${CMAKE_CURRENT_BINARY_DIR}/${__name}${__suffix})
+        set(__name ${__name}${__suffix})
         add_custom_command(
-            OUTPUT ${__name}.c ${__name}.h
-            # We generate the two files in two passes because WIDL doesn't cope with being given two absolute paths as output
-            COMMAND native-widl ${INCLUDES} ${DEFINES} ${IDL_FLAGS} ${__server_client} -o ${__name}.c -H ${__name}.h ${FILE}
-            COMMAND native-widl ${INCLUDES} ${DEFINES} ${IDL_FLAGS} ${__server_client} -h -H ${__name}.h ${FILE}
+            OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${__name}.c ${CMAKE_CURRENT_BINARY_DIR}/${__name}.h
+            # We generate the two files in two passes because WIDL accepts only one custom file name as output
+            COMMAND native-widl ${INCLUDES} ${DEFINES} ${IDL_FLAGS} ${__additional_flags} ${__server_client} -o ${CMAKE_CURRENT_BINARY_DIR}/${__name}.c -H ${__name}.h ${FILE}
+            COMMAND native-widl ${INCLUDES} ${DEFINES} ${IDL_FLAGS} ${__additional_flags} -h -o ${CMAKE_CURRENT_BINARY_DIR}/${__name}.h ${FILE}
             DEPENDS ${FILE} native-widl
             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
     endforeach()
