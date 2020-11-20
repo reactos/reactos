@@ -1116,15 +1116,6 @@ IopInitializeSystemDrivers(
     VOID
 );
 
-NTSTATUS
-NTAPI
-IopCreateDriver(IN PUNICODE_STRING DriverName OPTIONAL,
-                IN PDRIVER_INITIALIZE InitializationFunction,
-                IN PUNICODE_STRING RegistryPath OPTIONAL,
-                IN PCUNICODE_STRING ServiceName,
-                IN PLDR_DATA_TABLE_ENTRY ModuleObject OPTIONAL,
-                OUT PDRIVER_OBJECT *pDriverObject);
-
 VOID
 NTAPI
 IopDeleteDriver(
@@ -1154,13 +1145,11 @@ IopLoadUnloadDriver(
 );
 
 NTSTATUS
-FASTCALL
 IopInitializeDriverModule(
-    IN PLDR_DATA_TABLE_ENTRY ModuleObject,
-    IN PUNICODE_STRING ServiceName,
-    IN BOOLEAN FileSystemDriver,
-    OUT PDRIVER_OBJECT *DriverObject
-);
+    _In_ PLDR_DATA_TABLE_ENTRY ModuleObject,
+    _In_ PUNICODE_STRING ServiceName,
+    _Out_ PDRIVER_OBJECT *DriverObject,
+    _Out_ NTSTATUS *DriverEntryStatus);
 
 NTSTATUS
 FASTCALL

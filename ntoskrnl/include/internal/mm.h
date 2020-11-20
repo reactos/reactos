@@ -1401,6 +1401,10 @@ MmCallDllInitialize(
     IN PLIST_ENTRY ListHead
 );
 
+VOID
+NTAPI
+MmFreeDriverInitialization(
+    IN PLDR_DATA_TABLE_ENTRY LdrEntry);
 
 /* procsup.c *****************************************************************/
 

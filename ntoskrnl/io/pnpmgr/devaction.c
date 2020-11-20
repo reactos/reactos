@@ -1079,10 +1079,11 @@ IopActionInitChildServices(PDEVICE_NODE DeviceNode,
             if (NT_SUCCESS(Status) || Status == STATUS_IMAGE_ALREADY_LOADED)
             {
                 /* Initialize the driver */
+                NTSTATUS driverEntryStatus;
                 Status = IopInitializeDriverModule(ModuleObject,
                                                    &DeviceNode->ServiceName,
-                                                   FALSE,
-                                                   &DriverObject);
+                                                   &DriverObject,
+                                                   &driverEntryStatus);
                 if (!NT_SUCCESS(Status))
                     DeviceNode->Problem = CM_PROB_FAILED_DRIVER_ENTRY;
             }
