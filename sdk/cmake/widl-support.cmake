@@ -32,8 +32,9 @@ function(add_idl_headers TARGET)
         set(HEADER ${CMAKE_CURRENT_BINARY_DIR}/${NAME}.h)
         add_custom_command(
             OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${NAME}.h
-            COMMAND native-widl ${INCLUDES} ${DEFINES} ${IDL_FLAGS} -h -o ${CMAKE_CURRENT_BINARY_DIR}/${NAME}.h ${CMAKE_CURRENT_SOURCE_DIR}/${FILE}
-            DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${FILE} native-widl)
+            COMMAND native-widl ${INCLUDES} ${DEFINES} ${IDL_FLAGS} -h -o ${CMAKE_CURRENT_BINARY_DIR}/${NAME}.h ${FILE}
+            DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${FILE} native-widl
+            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
         list(APPEND HEADERS ${HEADER})
     endforeach()
     add_custom_target(${TARGET} DEPENDS ${HEADERS})
@@ -56,18 +57,21 @@ function(add_rpcproxy_files)
                 set(EXTRA_DEP ${REACTOS_SOURCE_DIR}/sdk/include/psdk/${SPLIT_FILE})
             endif()
         endif()
-        list(APPEND IDLS ${CMAKE_CURRENT_SOURCE_DIR}/${FILE})
+        list(APPEND IDLS ${FILE})
+        list(APPEND IDL_DEPS ${CMAKE_CURRENT_SOURCE_DIR}/${FILE} ${EXTRA_DEP})
         add_custom_command(
             OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_p.c ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_p.h
-            COMMAND native-widl ${INCLUDES} ${DEFINES} ${IDL_FLAGS} -p -o ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_p.c -h -H ${NAME}_p.h ${CMAKE_CURRENT_SOURCE_DIR}/${FILE}
-            DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${FILE} ${EXTRA_DEP} native-widl)
+            COMMAND native-widl ${INCLUDES} ${DEFINES} ${IDL_FLAGS} -p -o ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_p.c -h -H ${NAME}_p.h ${FILE}
+            DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${FILE} ${EXTRA_DEP} native-widl
+            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
     endforeach()
 
     # Extra pass to generate dlldata
     add_custom_command(
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/proxy.dlldata.c
         COMMAND native-widl ${INCLUDES} ${DEFINES} ${IDL_FLAGS} --dlldata-only -o ${CMAKE_CURRENT_BINARY_DIR}/proxy.dlldata.c ${IDLS}
-        DEPENDS ${IDLS} native-widl)
+        DEPENDS ${IDL_DEPS} native-widl
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 endfunction()
 
 function(add_rpc_files __type)
@@ -86,32 +90,25 @@ function(add_rpc_files __type)
     foreach(FILE ${ARGN})
         get_filename_component(__name ${FILE} NAME_WE)
         set(__name ${CMAKE_CURRENT_BINARY_DIR}/${__name}${__suffix})
-        if(NOT IS_ABSOLUTE ${FILE})
-            set(FILE ${CMAKE_CURRENT_SOURCE_DIR}/${FILE})
-        endif()
         add_custom_command(
             OUTPUT ${__name}.c ${__name}.h
             COMMAND native-widl ${INCLUDES} ${DEFINES} ${IDL_FLAGS} -h -H ${__name}.h ${__server_client} ${__name}.c ${FILE}
-            DEPENDS ${FILE} native-widl)
+            DEPENDS ${FILE} native-widl
+            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
     endforeach()
 endfunction()
 
 function(generate_idl_iids)
     foreach(IDL_FILE ${ARGN})
         get_filename_component(FILE ${IDL_FILE} NAME)
-        if(FILE STREQUAL "${IDL_FILE}")
-            set(IDL_FILE_FULL "${CMAKE_CURRENT_SOURCE_DIR}/${IDL_FILE}")
-        else()
-            set(IDL_FILE_FULL ${IDL_FILE})
-        endif()
         get_includes(INCLUDES)
         get_defines(DEFINES)
         get_filename_component(NAME ${IDL_FILE} NAME_WE)
         add_custom_command(
             OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_i.c
-            COMMAND native-widl ${INCLUDES} ${DEFINES} ${IDL_FLAGS} -u -o ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_i.c ${IDL_FILE_FULL}
-            DEPENDS ${IDL_FILE_FULL} native-widl)
-        set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/${NAME}_i.c PROPERTIES GENERATED TRUE)
+            COMMAND native-widl ${INCLUDES} ${DEFINES} ${IDL_FLAGS} -u -o ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_i.c ${IDL_FILE}
+            DEPENDS ${IDL_FILE_FULL} native-widl
+            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
     endforeach()
 endfunction()
 
@@ -127,19 +124,14 @@ function(add_iid_library TARGET)
 endfunction()
 
 function(add_idl_reg_script IDL_FILE)
-    get_filename_component(FILE ${IDL_FILE} NAME)
-    if(FILE STREQUAL "${IDL_FILE}")
-        set(IDL_FILE_FULL "${CMAKE_CURRENT_SOURCE_DIR}/${IDL_FILE}")
-    else()
-        set(IDL_FILE_FULL ${IDL_FILE})
-    endif()
     get_includes(INCLUDES)
     get_defines(DEFINES)
     get_filename_component(NAME ${IDL_FILE} NAME_WE)
     add_custom_command(
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_r.res
-        COMMAND native-widl ${INCLUDES} ${DEFINES} ${IDL_FLAGS} -r -o ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_r.res ${IDL_FILE_FULL}
-        DEPENDS ${IDL_FILE_FULL} native-widl)
-    set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/${NAME}_r.res PROPERTIES 
+        COMMAND native-widl ${INCLUDES} ${DEFINES} ${IDL_FLAGS} -r -o ${CMAKE_CURRENT_BINARY_DIR}/${NAME}_r.res ${IDL_FILE}
+        DEPENDS ${IDL_FILE_FULL} native-widl
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+    set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/${NAME}_r.res PROPERTIES
         GENERATED TRUE EXTERNAL_OBJECT TRUE)
 endfunction()
