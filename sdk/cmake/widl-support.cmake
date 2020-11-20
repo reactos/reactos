@@ -79,10 +79,10 @@ function(add_rpc_files __type)
     get_defines(DEFINES)
     # Is it a client or server module?
     if(__type STREQUAL "server")
-        set(__server_client -Oif -s -o)
+        set(__server_client -Oif -s)
         set(__suffix _s)
     elseif(__type STREQUAL "client")
-        set(__server_client -Oif -c -o)
+        set(__server_client -Oif -c)
         set(__suffix _c)
     else()
         message(FATAL_ERROR "Please pass either server or client as argument to add_rpc_files")
@@ -92,7 +92,9 @@ function(add_rpc_files __type)
         set(__name ${CMAKE_CURRENT_BINARY_DIR}/${__name}${__suffix})
         add_custom_command(
             OUTPUT ${__name}.c ${__name}.h
-            COMMAND native-widl ${INCLUDES} ${DEFINES} ${IDL_FLAGS} -h -H ${__name}.h ${__server_client} ${__name}.c ${FILE}
+            # We generate the two files in two passes because WIDL doesn't cope with being given two absolute paths as output
+            COMMAND native-widl ${INCLUDES} ${DEFINES} ${IDL_FLAGS} ${__server_client} -o ${__name}.c -H ${__name}.h ${FILE}
+            COMMAND native-widl ${INCLUDES} ${DEFINES} ${IDL_FLAGS} ${__server_client} -h -H ${__name}.h ${FILE}
             DEPENDS ${FILE} native-widl
             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
     endforeach()
