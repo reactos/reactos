@@ -41,6 +41,24 @@ extern KEVENT PiEnumerationFinished;
 USHORT IopGroupIndex;
 PLIST_ENTRY IopGroupTable;
 
+/* TYPES *********************************************************************/
+
+// Parameters packet for Load/Unload work item's context
+typedef struct _LOAD_UNLOAD_PARAMS
+{
+    NTSTATUS Status;
+    PCUNICODE_STRING RegistryPath;
+    WORK_QUEUE_ITEM WorkItem;
+    KEVENT Event;
+    PDRIVER_OBJECT DriverObject;
+    BOOLEAN SetEvent;
+} LOAD_UNLOAD_PARAMS, *PLOAD_UNLOAD_PARAMS;
+
+NTSTATUS
+IopDoLoadUnloadDriver(
+    _In_opt_ PCUNICODE_STRING RegistryPath,
+    _Inout_ PDRIVER_OBJECT *DriverObject);
+
 /* PRIVATE FUNCTIONS **********************************************************/
 
 NTSTATUS
@@ -1395,7 +1413,9 @@ IopUnloadDriver(PUNICODE_STRING DriverServiceName, BOOLEAN UnloadPnpDrivers)
                                           PreviousMode,
                                           DriverServiceName);
     if (!NT_SUCCESS(Status))
+    {
         return Status;
+    }
 
     DPRINT("IopUnloadDriver('%wZ', %u)\n", &CapturedServiceName, UnloadPnpDrivers);
 
@@ -1562,7 +1582,7 @@ IopUnloadDriver(PUNICODE_STRING DriverServiceName, BOOLEAN UnloadPnpDrivers)
 
         /* Set the unload invoked flag and call the unload routine */
         DriverObject->Flags |= DRVO_UNLOAD_INVOKED;
-        Status = IopLoadUnloadDriver(NULL, &DriverObject);
+        Status = IopDoLoadUnloadDriver(NULL, &DriverObject);
         ASSERT(Status == STATUS_SUCCESS);
 
         /* Mark the driver object temporary, so it could be deleted later */
@@ -2028,22 +2048,8 @@ IoGetDriverObjectExtension(IN PDRIVER_OBJECT DriverObject,
     return DriverExtensions + 1;
 }
 
-VOID
-NTAPI
-IopLoadUnloadDriverWorker(
-    _Inout_ PVOID Parameter)
-{
-    PLOAD_UNLOAD_PARAMS LoadParams = Parameter;
-
-    ASSERT(PsGetCurrentProcess() == PsInitialSystemProcess);
-    LoadParams->Status = IopLoadUnloadDriver(LoadParams->RegistryPath,
-                                             &LoadParams->DriverObject);
-    KeSetEvent(&LoadParams->Event, 0, FALSE);
-}
-
 NTSTATUS
-NTAPI
-IopLoadUnloadDriver(
+IopLoadDriver(
     _In_opt_ PCUNICODE_STRING RegistryPath,
     _Inout_ PDRIVER_OBJECT *DriverObject)
 {
@@ -2055,38 +2061,6 @@ IopLoadUnloadDriver(
     PLDR_DATA_TABLE_ENTRY ModuleObject;
     PVOID BaseAddress;
     WCHAR *cur;
-
-    /* Load/Unload must be called from system process */
-    if (PsGetCurrentProcess() != PsInitialSystemProcess)
-    {
-        LOAD_UNLOAD_PARAMS LoadParams;
-
-        /* Prepare parameters block */
-        LoadParams.RegistryPath = RegistryPath;
-        LoadParams.DriverObject = *DriverObject;
-        KeInitializeEvent(&LoadParams.Event, NotificationEvent, FALSE);
-
-        /* Initialize and queue a work item */
-        ExInitializeWorkItem(&LoadParams.WorkItem,
-                             IopLoadUnloadDriverWorker,
-                             &LoadParams);
-        ExQueueWorkItem(&LoadParams.WorkItem, DelayedWorkQueue);
-
-        /* And wait till it completes */
-        KeWaitForSingleObject(&LoadParams.Event,
-                              UserRequest,
-                              KernelMode,
-                              FALSE,
-                              NULL);
-        return LoadParams.Status;
-    }
-
-    /* Check if it's an unload request */
-    if (*DriverObject)
-    {
-        (*DriverObject)->DriverUnload(*DriverObject);
-        return STATUS_SUCCESS;
-    }
 
     RtlInitUnicodeString(&ImagePath, NULL);
 
@@ -2210,6 +2184,76 @@ IopLoadUnloadDriver(
     return Status;
 }
 
+static
+VOID
+NTAPI
+IopLoadUnloadDriverWorker(
+    _Inout_ PVOID Parameter)
+{
+    PLOAD_UNLOAD_PARAMS LoadParams = Parameter;
+
+    ASSERT(PsGetCurrentProcess() == PsInitialSystemProcess);
+
+    if (LoadParams->DriverObject)
+    {
+        // unload request
+        LoadParams->DriverObject->DriverUnload(LoadParams->DriverObject);
+        LoadParams->Status = STATUS_SUCCESS;
+    }
+    else
+    {
+        // load request
+        LoadParams->Status = IopLoadDriver(LoadParams->RegistryPath, &LoadParams->DriverObject);
+    }
+
+    if (LoadParams->SetEvent)
+    {
+        KeSetEvent(&LoadParams->Event, 0, FALSE);
+    }
+}
+
+/**
+ * @brief      Process load and unload driver operations. This is mostly for NtLoadDriver
+ *             and NtUnloadDriver, because their code should run inside PsInitialSystemProcess
+ *
+ * @param[in]  RegistryPath  The registry path
+ * @param      DriverObject  The driver object
+ *
+ * @return     Status of the operation
+ */
+NTSTATUS
+IopDoLoadUnloadDriver(
+    _In_opt_ PCUNICODE_STRING RegistryPath,
+    _Inout_ PDRIVER_OBJECT *DriverObject)
+{
+    LOAD_UNLOAD_PARAMS LoadParams;
+
+    /* Prepare parameters block */
+    LoadParams.RegistryPath = RegistryPath;
+    LoadParams.DriverObject = *DriverObject;
+
+    if (PsGetCurrentProcess() != PsInitialSystemProcess)
+    {
+        LoadParams.SetEvent = TRUE;
+        KeInitializeEvent(&LoadParams.Event, NotificationEvent, FALSE);
+
+        /* Initialize and queue a work item */
+        ExInitializeWorkItem(&LoadParams.WorkItem, IopLoadUnloadDriverWorker, &LoadParams);
+        ExQueueWorkItem(&LoadParams.WorkItem, DelayedWorkQueue);
+
+        /* And wait till it completes */
+        KeWaitForSingleObject(&LoadParams.Event, UserRequest, KernelMode, FALSE, NULL);
+    }
+    else
+    {
+        /* If we're already in a system process, call it right here */
+        LoadParams.SetEvent = FALSE;
+        IopLoadUnloadDriverWorker(&LoadParams);
+    }
+
+    return LoadParams.Status;
+}
+
 /*
  * NtLoadDriver
  *
@@ -2249,7 +2293,9 @@ NtLoadDriver(IN PUNICODE_STRING DriverServiceName)
                                           PreviousMode,
                                           DriverServiceName);
     if (!NT_SUCCESS(Status))
+    {
         return Status;
+    }
 
     DPRINT("NtLoadDriver('%wZ')\n", &CapturedServiceName);
 
@@ -2262,7 +2308,7 @@ NtLoadDriver(IN PUNICODE_STRING DriverServiceName)
 
     /* Load driver and call its entry point */
     DriverObject = NULL;
-    Status = IopLoadUnloadDriver(&CapturedServiceName, &DriverObject);
+    Status = IopDoLoadUnloadDriver(&CapturedServiceName, &DriverObject);
 
     ReleaseCapturedUnicodeString(&CapturedServiceName, PreviousMode);
     return Status;

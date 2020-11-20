@@ -392,18 +392,6 @@ typedef struct _OPEN_PACKET
 } OPEN_PACKET, *POPEN_PACKET;
 
 //
-// Parameters packet for Load/Unload work item's context
-//
-typedef struct _LOAD_UNLOAD_PARAMS
-{
-    NTSTATUS Status;
-    PCUNICODE_STRING RegistryPath;
-    WORK_QUEUE_ITEM WorkItem;
-    KEVENT Event;
-    PDRIVER_OBJECT DriverObject;
-} LOAD_UNLOAD_PARAMS, *PLOAD_UNLOAD_PARAMS;
-
-//
 // Boot Driver List Entry
 //
 typedef struct _DRIVER_INFORMATION
@@ -1138,8 +1126,7 @@ IopLoadServiceModule(
 );
 
 NTSTATUS
-NTAPI
-IopLoadUnloadDriver(
+IopLoadDriver(
     _In_opt_ PCUNICODE_STRING RegistryPath,
     _Inout_ PDRIVER_OBJECT *DriverObject
 );
