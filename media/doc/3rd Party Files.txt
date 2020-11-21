@@ -168,6 +168,7 @@ Path: hal/halx86/legacy/bus/pci_classes.ids
 Path: hal/halx86/legacy/bus/pci_vendors.ids
 Used Version: 2020.11.14
 License: GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later.html)
+URL: https://pci-ids.ucw.cz/
 URL: https://github.com/pciutils/pciids
 
 Title: DejaVu Fonts
