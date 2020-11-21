@@ -277,10 +277,12 @@ static BOOL InitOpenFileName(HWND hWnd, OPENFILENAME* pofn)
     FilterPairs[0].FilterID = IDS_FLT_REGFILES_FLT;
     FilterPairs[1].DisplayID = IDS_FLT_HIVFILES;
     FilterPairs[1].FilterID = IDS_FLT_HIVFILES_FLT;
-    FilterPairs[2].DisplayID = IDS_FLT_REGEDIT4;
-    FilterPairs[2].FilterID = IDS_FLT_REGEDIT4_FLT;
-    FilterPairs[3].DisplayID = IDS_FLT_ALLFILES;
-    FilterPairs[3].FilterID = IDS_FLT_ALLFILES_FLT;
+    FilterPairs[2].DisplayID = IDS_FLT_TEXTFILES;
+    FilterPairs[2].FilterID = IDS_FLT_TEXTFILES_FLT;
+    FilterPairs[3].DisplayID = IDS_FLT_REGEDIT4;
+    FilterPairs[3].FilterID = IDS_FLT_REGEDIT4_FLT;
+    FilterPairs[4].DisplayID = IDS_FLT_ALLFILES;
+    FilterPairs[4].FilterID = IDS_FLT_ALLFILES_FLT;
     BuildFilterStrings(Filter, FilterPairs, COUNT_OF(FilterPairs));
 
     pofn->lpstrFilter = Filter;

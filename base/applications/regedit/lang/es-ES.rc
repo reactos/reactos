@@ -366,6 +366,8 @@ BEGIN
     IDS_FLT_REGFILES_FLT "*.reg"
     IDS_FLT_HIVFILES "Archivo de subárbol del registro (*.*)"
     IDS_FLT_HIVFILES_FLT "*.*"
+    IDS_FLT_TEXTFILES "Archivos de Texto (*.txt)"
+    IDS_FLT_TEXTFILES_FLT "*.txt"
     IDS_FLT_REGEDIT4 "Archivo del registro de Win9x/NT4 (REGEDIT4) (*.reg)"
     IDS_FLT_REGEDIT4_FLT "*.reg"
     IDS_FLT_ALLFILES "Todos los archivos (*.*)"
