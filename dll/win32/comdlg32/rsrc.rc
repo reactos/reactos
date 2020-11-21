@@ -146,9 +146,6 @@
 #ifdef LANGUAGE_UK_UA
     #include "lang/cdlg_Uk.rc"
 #endif
-#ifdef LANGUAGE_ZH_TW
-    #include "lang/cdlg_Tw.rc"
-#endif
 #ifdef LANGUAGE_ZH_CN
     #include "lang/cdlg_Zh.rc"
 #endif
