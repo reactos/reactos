@@ -121,7 +121,7 @@ jobs:
       run: |
         mkdir build
         cd build
-        $env:PATH = "$env:PATH;$env:VCToolsInstallDir\..\..\Llvm\bin"
+        $env:PATH = "$env:VCToolsInstallDir\..\..\Llvm\bin;$env:PATH"
         cmake -G Ninja -DCMAKE_TOOLCHAIN_FILE:FILEPATH=toolchain-msvc.cmake -DARCH:STRING=i386 -DENABLE_ROSTESTS=1 -DENABLE_ROSAPPS=1 -DUSE_CLANG_CL:BOOL=1 ${{github.workspace}}\src
     - name: Build
       working-directory: ${{github.workspace}}\build
