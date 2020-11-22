@@ -42,6 +42,7 @@ TestAMLIllegalIOPortAddresses(void)
     PHAL_AMLI_BAD_IO_ADDRESS_LIST AddressList;
     ULONG AddressListLength;
     ULONG ReturnedLength;
+    ULONG i;
 
     /* Query required size and check that it's valid */
     ReturnedLength = 0x55555555;
@@ -103,7 +104,7 @@ TestAMLIllegalIOPortAddresses(void)
 
     /* Validate the table against our expectations */
     ok_eq_ulong(ReturnedLength, sizeof(ExpectedList));
-    for (ULONG i = 0;
+    for (i = 0;
          i < min(ReturnedLength, sizeof(ExpectedList)) / sizeof(*AddressList);
          i++)
     {
