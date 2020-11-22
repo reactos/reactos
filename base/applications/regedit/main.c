@@ -194,6 +194,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
                       int       nCmdShow)
 {
     MSG msg;
+    HANDLE hMutex;
     HACCEL hAccel;
 
     UNREFERENCED_PARAMETER(hPrevInstance);
@@ -217,6 +218,29 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
         default:
             break;
     }
+
+    /* Prevent multiple instances of application */
+    hMutex = CreateMutexW(NULL, FALSE, L"Regedit");
+
+    if (hMutex)
+    {
+        if (GetLastError() == ERROR_ALREADY_EXISTS)
+        {
+            /* The application's instance is already running */
+            HWND hCurrentWnd = FindWindowW(szFrameClass, szTitle);
+
+            if (hCurrentWnd)
+            {
+                /* Activate and show the window of current instance */
+                SetForegroundWindow(hCurrentWnd);
+                ShowWindow(hCurrentWnd, nCmdShow);
+            }
+
+            CloseHandle(hMutex);
+            return 0;
+        }
+    }
+
     /* Store instance handle in our global variable */
     hInst = hInstance;
 
@@ -239,6 +263,13 @@ int APIENTRY wWinMain(HINSTANCE hInstance,
     }
 
     ExitInstance(hInstance);
+
+    if (hMutex)
+    {
+        ReleaseMutex(hMutex);
+        CloseHandle(hMutex);
+    }
+
     return (int)msg.wParam;
 }
 
