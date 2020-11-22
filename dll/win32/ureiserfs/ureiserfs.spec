@@ -1,2 +1,2 @@
-@ stdcall ChkdskEx(ptr long long long long ptr) ReiserfsChkdsk
-@ stdcall FormatEx(ptr long ptr long long ptr) ReiserfsFormat
+@ stdcall Chkdsk(ptr ptr long long long long ptr ptr ptr ptr ptr) ReiserfsChkdsk
+@ stdcall Format(ptr ptr long long long ptr long) ReiserfsFormat

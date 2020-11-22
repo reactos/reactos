@@ -152,6 +152,9 @@ FormatEx(
     IN ULONG ClusterSize,
     IN PFMIFSCALLBACK Callback);
 
+/* FormatEx2 command in FMIFS */
+// FIXME!
+
 BOOLEAN NTAPI
 QueryAvailableFileSystemFormat(
     IN DWORD Index,
@@ -194,23 +197,33 @@ SetLabel(
 
 /* Functions provided by u*.dll */
 
-typedef NTSTATUS
-(NTAPI *FORMATEX)(
+typedef BOOLEAN
+(NTAPI *PULIB_CHKDSK)(
     IN PUNICODE_STRING DriveRoot,
-    IN FMIFS_MEDIA_FLAG MediaFlag,
-    IN PUNICODE_STRING Label,
-    IN BOOLEAN QuickFormat,
-    IN ULONG ClusterSize,
-    IN PFMIFSCALLBACK Callback);
-
-typedef NTSTATUS
-(NTAPI *CHKDSKEX)(
-    IN PUNICODE_STRING DriveRoot,
+    IN PFMIFSCALLBACK Callback,
     IN BOOLEAN FixErrors,
     IN BOOLEAN Verbose,
     IN BOOLEAN CheckOnlyIfDirty,
     IN BOOLEAN ScanDrive,
-    IN PFMIFSCALLBACK Callback);
+    IN PVOID pUnknown1,
+    IN PVOID pUnknown2,
+    IN PVOID pUnknown3,
+    IN PVOID pUnknown4,
+    IN PULONG ExitStatus);
+
+// FIXME: PULIB_CHKDSKEX of u*.dll works with ChkdskEx() of FMIFS.DLL
+
+typedef BOOLEAN
+(NTAPI *PULIB_FORMAT)(
+    IN PUNICODE_STRING DriveRoot,
+    IN PFMIFSCALLBACK Callback,
+    IN BOOLEAN QuickFormat,
+    IN BOOLEAN BackwardCompatible,
+    IN MEDIA_TYPE MediaType,
+    IN PUNICODE_STRING Label,
+    IN ULONG ClusterSize);
+
+// FIXME: PULIB_FORMATEX of u*.dll works with FormatEx2() of FMIFS.DLL
 
 #ifdef __cplusplus
 }

@@ -55,24 +55,27 @@ FormatCallback(
             break;
         }
 
-        /*case OUTPUT:
+#if 0
+        case OUTPUT:
         {
             PTEXTOUTPUT Output;
             output = (PTEXTOUTPUT) Argument;
             DPRINT("%s\n", output->Output);
             break;
-        }*/
+        }
+#endif
 
         case DONE:
         {
-            /*PBOOLEAN Success;*/
+            // PBOOLEAN Success;
             DPRINT("Done\n");
-
-            /*Success = (PBOOLEAN)Argument;
+#if 0
+            Success = (PBOOLEAN)Argument;
             if (*Success == FALSE)
             {
                 DPRINT("FormatEx was unable to complete successfully.\n\n");
-            }*/
+            }
+#endif
             break;
         }
 

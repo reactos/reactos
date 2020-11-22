@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS Setup Library
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
- * PURPOSE:     Filesystem support functions
+ * PURPOSE:     Filesystem Format and ChkDsk support functions.
  * COPYRIGHT:   Copyright 2003-2019 Casper S. Hornstrup (chorns@users.sourceforge.net)
  *              Copyright 2017-2020 Hermes Belusca-Maito
  */
@@ -122,8 +122,8 @@ C_ASSERT(sizeof(BTRFS_BOOTSECTOR) == BTRFS_BOOTSECTOR_SIZE);
 typedef struct _FILE_SYSTEM
 {
     PCWSTR FileSystemName;
-    FORMATEX FormatFunc;
-    CHKDSKEX ChkdskFunc;
+    PULIB_FORMAT FormatFunc;
+    PULIB_CHKDSK ChkdskFunc;
 } FILE_SYSTEM, *PFILE_SYSTEM;
 
 /* The list of file systems on which we can install ReactOS */
@@ -137,7 +137,7 @@ static FILE_SYSTEM RegisteredFileSystems[] =
     { L"FATX" , VfatxFormat, VfatxChkdsk },
     { L"NTFS" , NtfsFormat, NtfsChkdsk },
 #endif
-    { L"BTRFS", BtrfsFormatEx, BtrfsChkdskEx },
+    { L"BTRFS", BtrfsFormat, BtrfsChkdsk },
 #if 0
     { L"EXT2" , Ext2Format, Ext2Chkdsk },
     { L"EXT3" , Ext2Format, Ext2Chkdsk },
@@ -224,22 +224,36 @@ ChkdskFileSystem_UStr(
     IN PFMIFSCALLBACK Callback)
 {
     PFILE_SYSTEM FileSystem;
+    NTSTATUS Status;
+    BOOLEAN Success;
 
     FileSystem = GetFileSystemByName(FileSystemName);
 
     if (!FileSystem || !FileSystem->ChkdskFunc)
     {
-        // BOOLEAN Argument = FALSE;
-        // Callback(DONE, 0, &Argument);
+        // Success = FALSE;
+        // Callback(DONE, 0, &Success);
         return STATUS_NOT_SUPPORTED;
     }
 
-    return FileSystem->ChkdskFunc(DriveRoot,
-                                  FixErrors,
-                                  Verbose,
-                                  CheckOnlyIfDirty,
-                                  ScanDrive,
-                                  Callback);
+    Status = STATUS_SUCCESS;
+    Success = FileSystem->ChkdskFunc(DriveRoot,
+                                     Callback,
+                                     FixErrors,
+                                     Verbose,
+                                     CheckOnlyIfDirty,
+                                     ScanDrive,
+                                     NULL,
+                                     NULL,
+                                     NULL,
+                                     NULL,
+                                     (PULONG)&Status);
+    if (!Success)
+        DPRINT1("ChkdskFunc() failed with Status 0x%lx\n", Status);
+
+    // Callback(DONE, 0, &Success);
+
+    return Status;
 }
 
 NTSTATUS
@@ -277,22 +291,58 @@ FormatFileSystem_UStr(
     IN PFMIFSCALLBACK Callback)
 {
     PFILE_SYSTEM FileSystem;
+    BOOLEAN Success;
+    BOOLEAN BackwardCompatible = FALSE; // Default to latest FS versions.
+    MEDIA_TYPE MediaType;
 
     FileSystem = GetFileSystemByName(FileSystemName);
 
     if (!FileSystem || !FileSystem->FormatFunc)
     {
-        // BOOLEAN Argument = FALSE;
-        // Callback(DONE, 0, &Argument);
+        // Success = FALSE;
+        // Callback(DONE, 0, &Success);
         return STATUS_NOT_SUPPORTED;
     }
 
-    return FileSystem->FormatFunc(DriveRoot,
-                                  MediaFlag,
-                                  Label,
-                                  QuickFormat,
-                                  ClusterSize,
-                                  Callback);
+    /* Set the BackwardCompatible flag in case we format with older FAT12/16 */
+    if (wcsicmp(FileSystemName, L"FAT") == 0)
+        BackwardCompatible = TRUE;
+    // else if (wcsicmp(FileSystemName, L"FAT32") == 0)
+        // BackwardCompatible = FALSE;
+
+    /* Convert the FMIFS MediaFlag to a NT MediaType */
+    // FIXME: Actually covert all the possible flags.
+    switch (MediaFlag)
+    {
+    case FMIFS_FLOPPY:
+        MediaType = F5_320_1024; // FIXME: This is hardfixed!
+        break;
+    case FMIFS_REMOVABLE:
+        MediaType = RemovableMedia;
+        break;
+    case FMIFS_HARDDISK:
+        MediaType = FixedMedia;
+        break;
+    default:
+        DPRINT1("Unknown FMIFS MediaFlag %d, converting 1-to-1 to NT MediaType\n",
+                MediaFlag);
+        MediaType = (MEDIA_TYPE)MediaFlag;
+        break;
+    }
+
+    Success = FileSystem->FormatFunc(DriveRoot,
+                                     Callback,
+                                     QuickFormat,
+                                     BackwardCompatible,
+                                     MediaType,
+                                     Label,
+                                     ClusterSize);
+    if (!Success)
+        DPRINT1("FormatFunc() failed\n");
+
+    // Callback(DONE, 0, &Success);
+
+    return (Success ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL);
 }
 
 NTSTATUS

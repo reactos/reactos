@@ -181,6 +181,7 @@ ULONG def_sector_size = 0, def_node_size = 0;
 uint64_t def_incompat_flags = BTRFS_INCOMPAT_FLAGS_EXTENDED_IREF | BTRFS_INCOMPAT_FLAGS_SKINNY_METADATA;
 uint16_t def_csum_type = CSUM_TYPE_CRC32C;
 
+#ifndef __REACTOS__
 // the following definitions come from fmifs.h in ReactOS
 
 typedef struct {
@@ -237,12 +238,32 @@ typedef enum {
 
 typedef BOOLEAN (NTAPI* PFMIFSCALLBACK)(CALLBACKCOMMAND Command, ULONG SubAction, PVOID ActionInfo);
 
+#else
+
+#include <fmifs/fmifs.h>
+
+#endif // __REACTOS__
+
 #ifndef __REACTOS__
 NTSTATUS WINAPI ChkdskEx(PUNICODE_STRING DriveRoot, BOOLEAN FixErrors, BOOLEAN Verbose, BOOLEAN CheckOnlyIfDirty,
-#else
-NTSTATUS NTAPI BtrfsChkdskEx(PUNICODE_STRING DriveRoot, BOOLEAN FixErrors, BOOLEAN Verbose, BOOLEAN CheckOnlyIfDirty,
-#endif
                          BOOLEAN ScanDrive, PFMIFSCALLBACK Callback) {
+#else
+BOOLEAN
+NTAPI
+BtrfsChkdsk(
+    IN PUNICODE_STRING DriveRoot,
+    IN PFMIFSCALLBACK Callback,
+    IN BOOLEAN FixErrors,
+    IN BOOLEAN Verbose,
+    IN BOOLEAN CheckOnlyIfDirty,
+    IN BOOLEAN ScanDrive,
+    IN PVOID pUnknown1,
+    IN PVOID pUnknown2,
+    IN PVOID pUnknown3,
+    IN PVOID pUnknown4,
+    IN PULONG ExitStatus)
+{
+#endif
     // STUB
 
     if (Callback) {
@@ -254,7 +275,12 @@ NTSTATUS NTAPI BtrfsChkdskEx(PUNICODE_STRING DriveRoot, BOOLEAN FixErrors, BOOLE
         Callback(OUTPUT, 0, &TextOut);
     }
 
+#ifndef __REACTOS__
     return STATUS_SUCCESS;
+#else
+    *ExitStatus = (ULONG)STATUS_SUCCESS;
+    return TRUE;
+#endif
 }
 
 static btrfs_root* add_root(LIST_ENTRY* roots, uint64_t id) {
@@ -1316,11 +1342,7 @@ static void check_cpu() {
 }
 #endif
 
-#ifndef __REACTOS__
 static NTSTATUS NTAPI FormatEx2(PUNICODE_STRING DriveRoot, FMIFS_MEDIA_FLAG MediaFlag, PUNICODE_STRING Label,
-#else
-NTSTATUS NTAPI BtrfsFormatEx(PUNICODE_STRING DriveRoot, FMIFS_MEDIA_FLAG MediaFlag, PUNICODE_STRING Label,
-#endif // __REACTOS__
                                 BOOLEAN QuickFormat, ULONG ClusterSize, PFMIFSCALLBACK Callback)
 {
     NTSTATUS Status;
@@ -1479,13 +1501,43 @@ end:
         Status = STATUS_SUCCESS;
     }
 
+#ifndef __REACTOS__
     if (Callback) {
         bool success = NT_SUCCESS(Status);
         Callback(DONE, 0, (PVOID)&success);
     }
+#endif
 
     return Status;
 }
+
+#ifdef __REACTOS__
+
+BOOLEAN
+NTAPI
+BtrfsFormat(
+    IN PUNICODE_STRING DriveRoot,
+    IN PFMIFSCALLBACK Callback,
+    IN BOOLEAN QuickFormat,
+    IN BOOLEAN BackwardCompatible,
+    IN MEDIA_TYPE MediaType,
+    IN PUNICODE_STRING Label,
+    IN ULONG ClusterSize)
+{
+    NTSTATUS Status;
+
+    if (BackwardCompatible)
+    {
+        // DPRINT1("BackwardCompatible == TRUE is unsupported!\n");
+        return FALSE;
+    }
+
+    Status = FormatEx2(DriveRoot, (FMIFS_MEDIA_FLAG)MediaType, Label, QuickFormat, ClusterSize, Callback);
+
+    return NT_SUCCESS(Status);
+}
+
+#else
 
 BOOL __stdcall FormatEx(DSTRING* root, STREAM_MESSAGE* message, options* opts, uint32_t unk1) {
     UNICODE_STRING DriveRoot, Label;
@@ -1505,14 +1557,12 @@ BOOL __stdcall FormatEx(DSTRING* root, STREAM_MESSAGE* message, options* opts, u
         Label.Buffer = NULL;
     }
 
-#ifndef __REACTOS__
     Status = FormatEx2(&DriveRoot, FMIFS_HARDDISK, &Label, opts && opts->flags & FORMAT_FLAG_QUICK_FORMAT, 0, NULL);
-#else
-    Status = BtrfsFormatEx(&DriveRoot, FMIFS_HARDDISK, &Label, opts && opts->flags & FORMAT_FLAG_QUICK_FORMAT, 0, NULL);
-#endif
 
     return NT_SUCCESS(Status);
 }
+
+#endif // __REACTOS__
 
 void __stdcall SetSizes(ULONG sector, ULONG node) {
     if (sector != 0)
