@@ -167,6 +167,16 @@ ERROR_NUMBER
 LoadSetupInf(
     IN OUT PUSETUP_DATA pSetupData);
 
+#define ERROR_SYSTEM_PARTITION_NOT_FOUND    (ERROR_LAST_ERROR_CODE + 1)
+
+BOOLEAN
+InitSystemPartition(
+    /**/_In_ PPARTLIST PartitionList,       /* HACK HACK! */
+    /**/_In_ PPARTENTRY InstallPartition,   /* HACK HACK! */
+    /**/_Out_ PPARTENTRY* pSystemPartition, /* HACK HACK! */
+    _In_opt_ PFSVOL_CALLBACK FsVolCallback,
+    _In_opt_ PVOID Context);
+
 NTSTATUS
 InitDestinationPaths(
     IN OUT PUSETUP_DATA pSetupData,

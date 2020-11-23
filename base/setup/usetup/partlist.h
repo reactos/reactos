@@ -28,19 +28,6 @@
 
 // #include "../lib/utils/partlist.h"
 
-typedef enum _FORMATMACHINESTATE
-{
-    Start,
-    FormatSystemPartition,
-    FormatInstallPartition,
-    FormatOtherPartition,
-    FormatDone,
-    // CheckSystemPartition,
-    // CheckInstallPartition,
-    // CheckOtherPartition,
-    // CheckDone
-} FORMATMACHINESTATE, *PFORMATMACHINESTATE;
-
 typedef struct _PARTLIST_UI
 {
     PPARTLIST List;
