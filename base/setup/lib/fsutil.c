@@ -666,19 +666,90 @@ Quit:
 // Formatting routines
 //
 
-BOOLEAN
-PreparePartitionForFormatting(
-    IN struct _PARTENTRY* PartEntry,
-    IN PCWSTR FileSystemName)
+NTSTATUS
+ChkdskPartition(
+    IN PPARTENTRY PartEntry,
+    IN BOOLEAN FixErrors,
+    IN BOOLEAN Verbose,
+    IN BOOLEAN CheckOnlyIfDirty,
+    IN BOOLEAN ScanDrive,
+    IN PFMIFSCALLBACK Callback)
 {
+    NTSTATUS Status;
+    PDISKENTRY DiskEntry = PartEntry->DiskEntry;
+    // UNICODE_STRING PartitionRootPath;
+    WCHAR PartitionRootPath[MAX_PATH]; // PathBuffer
+
+    ASSERT(PartEntry->IsPartitioned && PartEntry->PartitionNumber != 0);
+
+    /* HACK: Do not try to check a partition with an unknown filesystem */
+    if (!*PartEntry->FileSystem)
+    {
+        PartEntry->NeedsCheck = FALSE;
+        return STATUS_SUCCESS;
+    }
+
+    /* Set PartitionRootPath */
+    RtlStringCchPrintfW(PartitionRootPath, ARRAYSIZE(PartitionRootPath),
+                        L"\\Device\\Harddisk%lu\\Partition%lu",
+                        DiskEntry->DiskNumber,
+                        PartEntry->PartitionNumber);
+    DPRINT("PartitionRootPath: %S\n", PartitionRootPath);
+
+    /* Check the partition */
+    Status = ChkdskFileSystem(PartitionRootPath,
+                              PartEntry->FileSystem,
+                              FixErrors,
+                              Verbose,
+                              CheckOnlyIfDirty,
+                              ScanDrive,
+                              Callback);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    PartEntry->NeedsCheck = FALSE;
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+FormatPartition(
+    IN PPARTENTRY PartEntry,
+    IN PCWSTR FileSystemName,
+    IN FMIFS_MEDIA_FLAG MediaFlag,
+    IN PCWSTR Label,
+    IN BOOLEAN QuickFormat,
+    IN ULONG ClusterSize,
+    IN PFMIFSCALLBACK Callback)
+{
+    NTSTATUS Status;
+    PDISKENTRY DiskEntry = PartEntry->DiskEntry;
     UCHAR PartitionType;
+    // UNICODE_STRING PartitionRootPath;
+    WCHAR PartitionRootPath[MAX_PATH]; // PathBuffer
+
+    ASSERT(PartEntry->IsPartitioned && PartEntry->PartitionNumber != 0);
 
     if (!FileSystemName || !*FileSystemName)
     {
         DPRINT1("No file system specified?\n");
-        return FALSE;
+        return STATUS_UNRECOGNIZED_VOLUME;
     }
 
+    /*
+     * Prepare the partition for formatting (for MBR disks, reset the
+     * partition type), and adjust the filesystem name in case of FAT
+     * vs. FAT32, depending on the geometry of the partition.
+     */
+
+// FIXME: Do this only if QuickFormat == FALSE? What about FAT handling?
+
+    /*
+     * Retrieve a partition type as a hint only. It will be used to determine
+     * whether to actually use FAT12/16 or FAT32 filesystem, depending on the
+     * geometry of the partition. If the partition resides on an MBR disk,
+     * the partition style will be reset to this value as well, unless the
+     * partition is OEM.
+     */
     PartitionType = FileSystemToMBRPartitionType(FileSystemName,
                                                  PartEntry->StartSector.QuadPart,
                                                  PartEntry->SectorCount.QuadPart);
@@ -686,33 +757,70 @@ PreparePartitionForFormatting(
     {
         /* Unknown file system */
         DPRINT1("Unknown file system '%S'\n", FileSystemName);
-        return FALSE;
+        return STATUS_UNRECOGNIZED_VOLUME;
     }
 
-    SetMBRPartitionType(PartEntry, PartitionType);
+    /* Reset the MBR partition type, unless this is an OEM partition */
+    if (DiskEntry->DiskStyle == PARTITION_STYLE_MBR)
+    {
+        if (!IsOEMPartition(PartEntry->PartitionType))
+            SetMBRPartitionType(PartEntry, PartitionType);
+    }
 
     /*
      * Adjust the filesystem name in case of FAT vs. FAT32, according to
-     * the type of partition set by FileSystemToPartitionType().
+     * the type of partition returned by FileSystemToMBRPartitionType().
      */
     if (wcsicmp(FileSystemName, L"FAT") == 0)
     {
-        if ((/*PartEntry->*/PartitionType == PARTITION_FAT32) ||
-            (/*PartEntry->*/PartitionType == PARTITION_FAT32_XINT13))
+        if ((PartitionType == PARTITION_FAT32) ||
+            (PartitionType == PARTITION_FAT32_XINT13))
         {
             FileSystemName = L"FAT32";
         }
     }
 
+    /* Commit the partition changes to the disk */
+    Status = WritePartitions(DiskEntry);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("WritePartitions(disk %lu) failed, Status 0x%08lx\n",
+                DiskEntry->DiskNumber, Status);
+        return STATUS_PARTITION_FAILURE;
+    }
+
+    /* Set PartitionRootPath */
+    RtlStringCchPrintfW(PartitionRootPath, ARRAYSIZE(PartitionRootPath),
+                        L"\\Device\\Harddisk%lu\\Partition%lu",
+                        DiskEntry->DiskNumber,
+                        PartEntry->PartitionNumber);
+    DPRINT("PartitionRootPath: %S\n", PartitionRootPath);
+
+    /* Format the partition */
+    Status = FormatFileSystem(PartitionRootPath,
+                              FileSystemName,
+                              MediaFlag,
+                              Label,
+                              QuickFormat,
+                              ClusterSize,
+                              Callback);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
 //
-// FIXME: Do this now, or after the partition was actually formatted??
+// TODO: Here, call a partlist.c function that update the actual
+// FS name and the label fields of the volume.
 //
+    PartEntry->FormatState = Formatted;
+
     /* Set the new partition's file system proper */
     RtlStringCbCopyW(PartEntry->FileSystem,
                      sizeof(PartEntry->FileSystem),
                      FileSystemName);
 
-    return TRUE;
+    PartEntry->New = FALSE;
+
+    return STATUS_SUCCESS;
 }
 
 /* EOF */

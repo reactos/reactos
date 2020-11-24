@@ -101,11 +101,23 @@ InstallBtrfsBootCode(
 // Formatting routines
 //
 
-struct _PARTENTRY; // Defined in partlist.h
+NTSTATUS
+ChkdskPartition(
+    IN PPARTENTRY PartEntry,
+    IN BOOLEAN FixErrors,
+    IN BOOLEAN Verbose,
+    IN BOOLEAN CheckOnlyIfDirty,
+    IN BOOLEAN ScanDrive,
+    IN PFMIFSCALLBACK Callback);
 
-BOOLEAN
-PreparePartitionForFormatting(
-    IN struct _PARTENTRY* PartEntry,
-    IN PCWSTR FileSystemName);
+NTSTATUS
+FormatPartition(
+    IN PPARTENTRY PartEntry,
+    IN PCWSTR FileSystemName,
+    IN FMIFS_MEDIA_FLAG MediaFlag,
+    IN PCWSTR Label,
+    IN BOOLEAN QuickFormat,
+    IN ULONG ClusterSize,
+    IN PFMIFSCALLBACK Callback);
 
 /* EOF */

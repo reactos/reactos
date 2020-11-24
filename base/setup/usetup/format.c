@@ -16,7 +16,8 @@
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
-/* COPYRIGHT:       See COPYING in the top level directory
+/*
+ * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
  * FILE:            base/setup/usetup/format.c
  * PURPOSE:         Filesystem format support functions
@@ -87,10 +88,9 @@ FormatCallback(
     return TRUE;
 }
 
-
 NTSTATUS
-FormatPartition(
-    IN PUNICODE_STRING DriveRoot,
+DoFormat(
+    IN PPARTENTRY PartEntry,
     IN PCWSTR FileSystemName,
     IN BOOLEAN QuickFormat)
 {
@@ -107,13 +107,14 @@ FormatPartition(
 
     ProgressSetStepCount(FormatProgressBar, 100);
 
-    Status = FormatFileSystem_UStr(DriveRoot,
-                                   FileSystemName,
-                                   FMIFS_HARDDISK,  /* MediaFlag */
-                                   NULL,            /* Label */
-                                   QuickFormat,     /* QuickFormat */
-                                   0,               /* ClusterSize */
-                                   FormatCallback); /* Callback */
+    // TODO: Think about which values could be defaulted...
+    Status = FormatPartition(PartEntry,
+                             FileSystemName,
+                             FMIFS_HARDDISK,  /* MediaFlag */
+                             NULL,            /* Label */
+                             QuickFormat,     /* QuickFormat */
+                             0,               /* ClusterSize */
+                             FormatCallback); /* Callback */
 
     DestroyProgressBar(FormatProgressBar);
     FormatProgressBar = NULL;
