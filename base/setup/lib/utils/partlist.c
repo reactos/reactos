@@ -2881,6 +2881,9 @@ UpdateDiskLayout(
         }
     }
 
+    // HACK: See the FIXMEs in WritePartitions(): (Re)set the PartitionStyle to MBR.
+    DiskEntry->DiskStyle = PARTITION_STYLE_MBR;
+
     DiskEntry->Dirty = TRUE;
 
 #ifdef DUMP_PARTITION_TABLE
@@ -3925,6 +3928,9 @@ WritePartitions(
     // was called too, the installation test was modified by checking whether
     // DiskEntry->NoMbr was TRUE (instead of NewDisk).
     //
+
+    // HACK: Parts of FIXMEs described above: (Re)set the PartitionStyle to MBR.
+    DiskEntry->DiskStyle = PARTITION_STYLE_MBR;
 
     /* The layout has been successfully updated, the disk is not dirty anymore */
     DiskEntry->Dirty = FALSE;
