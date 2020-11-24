@@ -102,7 +102,9 @@ jobs:
     runs-on: windows-latest
     steps:
     - name: Install packages
-      run: choco install ninja -y
+      run: |
+        choco install ninja -y
+        choco install --x86 -y llvm
     - name: Install Flex and Bison
       run: |
         curl -O https://svn.reactos.org/storage/vperevertkin/flexbison.7z
@@ -121,7 +123,7 @@ jobs:
       run: |
         mkdir build
         cd build
-        $env:PATH = "$env:VCToolsInstallDir\..\..\Llvm\bin;$env:PATH"
+        $env:PATH = "${env:PROGRAMFILES(X86)}\llvm\bin;$env:PATH"
         cmake -G Ninja -DCMAKE_TOOLCHAIN_FILE:FILEPATH=toolchain-msvc.cmake -DARCH:STRING=i386 -DENABLE_ROSTESTS=1 -DENABLE_ROSAPPS=1 -DUSE_CLANG_CL:BOOL=1 ${{github.workspace}}\src
     - name: Build
       working-directory: ${{github.workspace}}\build
