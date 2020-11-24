@@ -679,9 +679,9 @@ PreparePartitionForFormatting(
         return FALSE;
     }
 
-    PartitionType = FileSystemToPartitionType(FileSystemName,
-                                              &PartEntry->StartSector,
-                                              &PartEntry->SectorCount);
+    PartitionType = FileSystemToMBRPartitionType(FileSystemName,
+                                                 PartEntry->StartSector.QuadPart,
+                                                 PartEntry->SectorCount.QuadPart);
     if (PartitionType == PARTITION_ENTRY_UNUSED)
     {
         /* Unknown file system */
@@ -689,7 +689,7 @@ PreparePartitionForFormatting(
         return FALSE;
     }
 
-    SetPartitionType(PartEntry, PartitionType);
+    SetMBRPartitionType(PartEntry, PartitionType);
 
     /*
      * Adjust the filesystem name in case of FAT vs. FAT32, according to

@@ -349,7 +349,7 @@ SetMountedDeviceValues(
     IN PPARTLIST List);
 
 VOID
-SetPartitionType(
+SetMBRPartitionType(
     IN PPARTENTRY PartEntry,
     IN UCHAR PartitionType);
 
