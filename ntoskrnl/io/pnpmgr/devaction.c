@@ -47,6 +47,7 @@ WORK_QUEUE_ITEM IopDeviceActionWorkItem;
 BOOLEAN IopDeviceActionInProgress;
 KSPIN_LOCK IopDeviceActionLock;
 KEVENT PiEnumerationFinished;
+static const WCHAR ServicesKeyName[] = L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\";
 
 /* TYPES *********************************************************************/
 
@@ -1062,8 +1063,6 @@ IopActionInitChildServices(PDEVICE_NODE DeviceNode,
         PLDR_DATA_TABLE_ENTRY ModuleObject;
         PDRIVER_OBJECT DriverObject;
 
-        KeEnterCriticalRegion();
-        ExAcquireResourceExclusiveLite(&IopDriverLoadResource, TRUE);
         /* Get existing DriverObject pointer (in case the driver has
            already been loaded and initialized) */
         Status = IopGetDriverObject(
@@ -1073,17 +1072,44 @@ IopActionInitChildServices(PDEVICE_NODE DeviceNode,
 
         if (!NT_SUCCESS(Status))
         {
+            KeEnterCriticalRegion();
+            ExAcquireResourceExclusiveLite(&IopDriverLoadResource, TRUE);
+
             /* Driver is not initialized, try to load it */
             Status = IopLoadServiceModule(&DeviceNode->ServiceName, &ModuleObject);
 
             if (NT_SUCCESS(Status) || Status == STATUS_IMAGE_ALREADY_LOADED)
             {
+                UNICODE_STRING RegistryPath;
+
+                // obtain a handle for driver's RegistryPath
+                RegistryPath.Length = 0;
+                RegistryPath.MaximumLength = sizeof(ServicesKeyName) + DeviceNode->ServiceName.Length;
+                RegistryPath.Buffer = ExAllocatePoolWithTag(PagedPool, RegistryPath.MaximumLength, TAG_IO);
+                if (RegistryPath.Buffer == NULL)
+                {
+                    Status = STATUS_INSUFFICIENT_RESOURCES;
+                    goto OpenHandleFail;
+                }
+                RtlAppendUnicodeToString(&RegistryPath, ServicesKeyName);
+                RtlAppendUnicodeStringToString(&RegistryPath, &DeviceNode->ServiceName);
+
+                HANDLE serviceHandle;
+                Status = IopOpenRegistryKeyEx(&serviceHandle, NULL, &RegistryPath, KEY_READ);
+                RtlFreeUnicodeString(&RegistryPath);
+                if (!NT_SUCCESS(Status))
+                {
+                    goto OpenHandleFail;
+                }
+
                 /* Initialize the driver */
                 NTSTATUS driverEntryStatus;
                 Status = IopInitializeDriverModule(ModuleObject,
-                                                   &DeviceNode->ServiceName,
+                                                   serviceHandle,
                                                    &DriverObject,
                                                    &driverEntryStatus);
+                ZwClose(serviceHandle);
+
                 if (!NT_SUCCESS(Status))
                     DeviceNode->Problem = CM_PROB_FAILED_DRIVER_ENTRY;
             }
@@ -1099,9 +1125,10 @@ IopActionInitChildServices(PDEVICE_NODE DeviceNode,
                 if (!BootDrivers)
                     DeviceNode->Problem = CM_PROB_DRIVER_FAILED_LOAD;
             }
+OpenHandleFail:
+            ExReleaseResourceLite(&IopDriverLoadResource);
+            KeLeaveCriticalRegion();
         }
-        ExReleaseResourceLite(&IopDriverLoadResource);
-        KeLeaveCriticalRegion();
 
         /* Driver is loaded and initialized at this point */
         if (NT_SUCCESS(Status))

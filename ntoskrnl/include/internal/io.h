@@ -1127,14 +1127,13 @@ IopLoadServiceModule(
 
 NTSTATUS
 IopLoadDriver(
-    _In_opt_ PCUNICODE_STRING RegistryPath,
-    _Inout_ PDRIVER_OBJECT *DriverObject
-);
+    _In_ HANDLE ServiceHandle,
+    _Out_ PDRIVER_OBJECT *DriverObject);
 
 NTSTATUS
 IopInitializeDriverModule(
     _In_ PLDR_DATA_TABLE_ENTRY ModuleObject,
-    _In_ PUNICODE_STRING ServiceName,
+    _In_ HANDLE ServiceHandle,
     _Out_ PDRIVER_OBJECT *DriverObject,
     _Out_ NTSTATUS *DriverEntryStatus);
 
