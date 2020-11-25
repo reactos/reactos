@@ -1,4 +1,4 @@
-/*
+﻿/*
  * COPYRIGHT:   See COPYING in the top level directory
  * PROJECT:     ReactOS WinSock 2 API
  * FILE:        dll/win32/ws2_32_new/src/startup.c
@@ -17,6 +17,18 @@
 
 PWS_SOCK_POST_ROUTINE WsSockPostRoutine = NULL;
 CRITICAL_SECTION WsStartupLock;
+
+/* Variables used to control WSAThread */
+CRITICAL_SECTION pWSAThreadLock;
+HANDLE pWSAthread;
+int WSAThreadCallId;
+LPVOID WSAThreadArg1;
+LPVOID WSAThreadArg2;
+int WSAThreadError;
+int WSAThreadReturnvalue;
+HANDLE gWSAThreadEvent;
+HANDLE gWSAThreadCompleteEvent;
+/* End variables used to control WSAThread */
 
 #define WsStartupLock()     EnterCriticalSection(&WsStartupLock)
 #define WsStartupUnlock()   LeaveCriticalSection(&WsStartupLock)
@@ -37,6 +49,22 @@ WsDestroyStartupSynchronization(VOID)
 {
     /* Destroy the startup lock */
     DeleteCriticalSection(&WsStartupLock);
+}
+
+VOID
+WSAAPI
+WsCreateWSAThreadSynchronization(VOID)
+{
+    /* Initialize the WSAThread lock */
+    InitializeCriticalSection(&pWSAThreadLock);
+}
+
+VOID
+WSAAPI
+WsDestroyWSAThreadSynchronization(VOID)
+{
+    /* Destroy the WSAThread lock */
+    DeleteCriticalSection(&pWSAThreadLock);
 }
 
 /*
@@ -74,6 +102,22 @@ WSACleanup(VOID)
         /* Decrement process reference count and check if it's zero */
         if (!(RefCount = InterlockedDecrement(&Process->RefCount)))
         {
+            /* Be sure no other thread is using WSAThread */
+            WsCreateWSAThreadSynchronization();
+
+            /* Send message to thread to shutdown */
+            WSAThreadCallId = 0;
+            SetEvent(gWSAThreadEvent);
+
+            /* Wait until the thread is closed */
+            WaitForSingleObject(gWSAThreadCompleteEvent, INFINITE);
+
+            /* Destroy WSAThread recources */
+            CloseHandle(gWSAThreadEvent);
+            CloseHandle(gWSAThreadCompleteEvent);
+            CloseHandle(pWSAthread);
+            WsDestroyWSAThreadSynchronization();
+
             /* It's zero, destroy the process structure */
             WsProcDelete(Process);
         }
@@ -103,6 +147,82 @@ WSACleanup(VOID)
 
     /* Done */
     return ErrorCode;
+}
+
+/* WSACallThread will call a WSA function in an other thread and returns the result  */
+
+INT
+WINAPI
+WSACallThread(IN int funcId,
+              IN LPVOID arg1, 
+              IN LPVOID arg2)
+{
+    int lastError;
+    int returnvalue;
+
+    /* Wait until the Thread is ready to accept commands and lock it */
+    WsCreateWSAThreadSynchronization();
+
+    /* Set WSAThread parameters */
+    WSAThreadCallId = funcId;
+    WSAThreadArg1 = arg1;
+    WSAThreadArg2 = arg2;
+
+    /* Tell WSAThread the parameters have been set and it can preform it's task */
+    SetEvent(gWSAThreadEvent);
+
+    /* Wait for the thread to complete its task */
+    WaitForSingleObject(gWSAThreadCompleteEvent, INFINITE);
+    ResetEvent(gWSAThreadCompleteEvent);
+
+    /* Receive return values */
+    returnvalue = WSAThreadReturnvalue;
+    lastError = WSAThreadError;
+    
+    /* Unlock WSAThread */
+    WsDestroyWSAThreadSynchronization();
+
+    /* Set results */
+    WSASetLastError(lastError);
+    return returnvalue;
+}
+
+/* The function is started in a new thread by WSAStartUp(), it will be used to call WSA function from a remote thread. */
+
+DWORD
+WINAPI
+WSAThread(IN LPVOID reserved)
+{
+    while(TRUE) {
+        /* Wait until all parameters have been set */
+        WaitForSingleObject(gWSAThreadEvent, INFINITE);
+        ResetEvent(gWSAThreadEvent);
+
+        /* Which WSA function shoube calling */
+        switch(WSAThreadCallId) {
+            case 0:
+                /*Close the thread */
+                WSAThreadReturnvalue = 1;
+                WSAThreadError = 0;
+
+                /* Notify the caller the function is completed */
+                SetEvent(gWSAThreadCompleteEvent);
+
+                return 1;
+            case 1:
+                /* Call listen and return the returnvalue at WSAThreadReturnvalue */
+                WSAThreadReturnvalue = listen_call((SOCKET) WSAThreadArg1, (INT) WSAThreadArg2);
+                break;
+            default:
+                break;
+        }
+
+        /* Copy the wsa error to WSAThreadError */
+        WSAThreadError = WSAGetLastError();
+
+        /* Notify the caller the function is completed */
+        SetEvent(gWSAThreadCompleteEvent);
+   }
 }
 
 /*
@@ -237,6 +357,13 @@ WSAStartup(IN WORD wVersionRequested,
     /* Check if all worked */
     if (ErrorCode == ERROR_SUCCESS)
     {
+        /* Create events for function WSAThread */
+        gWSAThreadEvent = CreateEventW(NULL, TRUE, FALSE, NULL); 
+        gWSAThreadCompleteEvent = CreateEventW(NULL, TRUE, FALSE, NULL);
+
+        /*Create Thread for WSAThread() */
+        pWSAthread = CreateThread(NULL, 0, WSAThread, (DWORD) 0, 0, NULL);
+
         /* Set the requested version */
         WsProcSetVersion(CurrentProcess, wVersionRequested);
 
