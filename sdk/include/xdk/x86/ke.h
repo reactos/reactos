@@ -336,7 +336,3 @@ KeGetCurrentProcessorNumber(VOID)
 }
 
 $endif (_NTDDK_)
-
-
-
-
