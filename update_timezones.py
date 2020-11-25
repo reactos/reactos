@@ -324,43 +324,7 @@ class Timezone:
 
 	@classmethod
 	def extract_timezones(cls, timezones_file, timezones_file_name):
-		content = timezones_file.read().decode("UTF-8")
-		assert '\r' not in content
-		lines = content.split('\n')
-		current_dst_of_rule = {}
-		timezones = {}
-		current_year = datetime.now(datetime_timezone.utc).year
-		for line_index, line in enumerate(lines):
-			if '#' in line:
-				line = line[:line.index('#')]
-			if not line:
-				continue
-			parts = line.split('\t')
-			parts = list(map(delete_surrounding_spaces, parts))
-			definition_type = parts[0][:4]
-			print(definition_type, parts)
-			continue
-			if definition_type == "Rule":
-				rule = Rule.from_definition(parts)
-				if rule.to is not None:
-					continue
-				
-			elif definition_type == "Zone":
-				timezone = Timezone.from_definition(parts, rules)
-				assert timezone.name not in timezones
-				timezones[timezone.name] = timezone
-			elif definition_type == "Link":
-				_, source, destination = parts[0].split(' ')
-				timezone = timezones[source].copy()
-				timezone.name = destination
-				assert timezone.name not in timezones
-				timezones[timezone.name] = timezone
-			else:
-				raise Exception(
-					"Unexpected definition type encountered while parsing \"%s\", line %d: %s."
-					% (timezones_file_name, line_index + 1, definition_type)
-				)
-		raise Exception()
+		pass
 
 	@classmethod
 	def extract_timezones_from_archive(cls, archive):
