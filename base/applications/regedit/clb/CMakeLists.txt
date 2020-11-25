@@ -8,3 +8,4 @@ add_library(clb MODULE
 
 set_module_type(clb win32dll UNICODE)
 add_importlibs(clb user32 comctl32 msvcrt kernel32 ntdll)
+add_cd_file(TARGET clb DESTINATION reactos/system32 FOR all)
