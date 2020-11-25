@@ -52,14 +52,6 @@ class SystemTime:
 		)
 
 
-def delete_surrounding_spaces(string):
-	while string and string[0] == ' ':
-		string = string[1:]
-	while string and string[-1] == ' ':
-		string = string[:-1]
-	return string
-
-
 # REG_TZI_FORMAT structure.
 # https://docs.microsoft.com/en-us/windows/win32/api/timezoneapi/ns-timezoneapi-time_zone_information
 class RegistryTimezoneInformation:
