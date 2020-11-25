@@ -244,6 +244,18 @@ OutputLine_stub(FILE *file, EXPORT *pexp)
     int bRelay = 0;
     int bInPrototype = 0;
 
+    /* Workaround for forwarded externs. See here for an explanation: 
+     * https://stackoverflow.com/questions/4060143/forwarding-data-in-a-dll */
+    if (gbMSComp && 
+        (pexp->nCallingConvention == CC_EXTERN) && 
+        (pexp->strTarget.buf != NULL) &&
+        (!!ScanToken(pexp->strTarget.buf, '.')))
+    {
+        fprintf(file, "#pragma comment(linker,\"/export:%s%.*s=%.*s,DATA\")\n\n",
+            gpszUnderscore, pexp->strName.len, pexp->strName.buf, pexp->strTarget.len, pexp->strTarget.buf);
+        return 0;
+    }
+
     if (pexp->nCallingConvention != CC_STUB &&
         (pexp->uFlags & FL_STUB) == 0)
     {
@@ -734,6 +746,15 @@ OutputLine_def(FILE *fileDest, EXPORT *pexp)
     if (gbImportLib && (pexp->uFlags & FL_PRIVATE))
     {
         DbgPrint("OutputLine_def: skipping private export '%.*s'...\n", pexp->strName.len, pexp->strName.buf);
+        return 1;
+    }
+    
+    /* For MS linker, forwarded externs are managed via #pragma comment(linker,"/export:_data=org.data,DATA") */
+    if (gbMSComp && !gbImportLib && (pexp->nCallingConvention == CC_EXTERN) && 
+        (pexp->strTarget.buf != NULL) && !!ScanToken(pexp->strTarget.buf, '.'))
+    {
+        DbgPrint("OutputLine_def: skipping forwarded extern export '%.*s' ->'%.*s'...\n",
+            pexp->strName.len, pexp->strName.buf, pexp->strTarget.len, pexp->strTarget.buf);
         return 1;
     }
 
