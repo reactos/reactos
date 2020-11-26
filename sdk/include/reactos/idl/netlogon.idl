@@ -988,7 +988,7 @@ cpp_quote("#endif")
 #endif
     endpoint("ncacn_np:[\\pipe\\netlogon]")
 #ifndef __midl
-    ,implicit_handle(handle_t hBinding)
+    ,implicit_handle(handle_t netlogon_hBinding)
 #endif
 ]
 interface logon
