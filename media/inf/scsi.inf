@@ -9,7 +9,7 @@ LayoutFile = layout.inf
 Class      = SCSIAdapter
 ClassGUID  = {4D36E97B-E325-11CE-BFC1-08002BE10318}
 Provider   = %ReactOS%
-DriverVer  = 11/2/2007,1.1
+DriverVer  = 11/02/2007,1.1
 
 [ClassInstall32.NT]
 AddReg = SCSIClass.NT.AddReg
