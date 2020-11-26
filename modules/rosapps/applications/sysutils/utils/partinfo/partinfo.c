@@ -410,7 +410,7 @@ int main(int argc, char *argv[])
                        GUID_ELEMENTS(&LayoutBufferEx->PartitionEntry[i].Gpt.PartitionType),
                        GUID_ELEMENTS(&LayoutBufferEx->PartitionEntry[i].Gpt.PartitionId),
                        LayoutBufferEx->PartitionEntry[i].Gpt.Attributes,
-                       _countof(LayoutBufferEx->PartitionEntry[i].Gpt.Name),
+                       (int)_countof(LayoutBufferEx->PartitionEntry[i].Gpt.Name),
                        LayoutBufferEx->PartitionEntry[i].Gpt.Name,
                        LayoutBufferEx->PartitionEntry[i].StartingOffset.QuadPart,
                        LayoutBufferEx->PartitionEntry[i].PartitionLength.QuadPart);
