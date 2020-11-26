@@ -122,64 +122,127 @@ IopDeleteDriver(IN PVOID ObjectBody)
 }
 
 NTSTATUS
-FASTCALL
-IopGetDriverObject(
-    PDRIVER_OBJECT *DriverObject,
-    PUNICODE_STRING ServiceName,
-    BOOLEAN FileSystem)
+IopGetDriverNames(
+    _In_ HANDLE ServiceHandle,
+    _Out_ PUNICODE_STRING DriverName,
+    _Out_opt_ PUNICODE_STRING ServiceName)
 {
-    PDRIVER_OBJECT Object;
-    UNICODE_STRING Prefix;
-    UNICODE_STRING DriverName;
-    NTSTATUS Status;
+    UNICODE_STRING driverName = {.Buffer = NULL}, serviceName;
+    PKEY_VALUE_FULL_INFORMATION kvInfo;
+    NTSTATUS status;
 
-    DPRINT("IopGetDriverObject(%p '%wZ' %x)\n",
-           DriverObject, ServiceName, FileSystem);
+    PAGED_CODE();
 
-    *DriverObject = NULL;
-
-    /* Create ModuleName string */
-    if (ServiceName == NULL || ServiceName->Buffer == NULL)
-        /* We don't know which DriverObject we have to open */
-        return STATUS_INVALID_PARAMETER_2;
-
-    if (FileSystem != FALSE)
-        RtlInitUnicodeString(&Prefix, FILESYSTEM_ROOT_NAME);
-    else
-        RtlInitUnicodeString(&Prefix, DRIVER_ROOT_NAME);
-
-    DriverName.Length = 0;
-    DriverName.MaximumLength = Prefix.Length + ServiceName->Length + sizeof(UNICODE_NULL);
-    ASSERT(DriverName.MaximumLength > ServiceName->Length);
-    DriverName.Buffer = ExAllocatePoolWithTag(PagedPool, DriverName.MaximumLength, TAG_IO);
-    if (DriverName.Buffer == NULL)
+    // 1. Check the "ObjectName" field in the driver's registry key (it has the priority)
+    status = IopGetRegistryValue(ServiceHandle, L"ObjectName", &kvInfo);
+    if (NT_SUCCESS(status))
     {
-        return STATUS_INSUFFICIENT_RESOURCES;
-    }
-    RtlAppendUnicodeStringToString(&DriverName, &Prefix);
-    RtlAppendUnicodeStringToString(&DriverName, ServiceName);
+        // we're got the ObjectName. Use it to create the DRIVER_OBJECT
+        if (kvInfo->Type != REG_SZ || kvInfo->DataLength == 0)
+        {
+            ExFreePool(kvInfo);
+            return STATUS_ILL_FORMED_SERVICE_ENTRY;
+        }
 
-    DPRINT("Driver name: '%wZ'\n", &DriverName);
+        driverName.Length = kvInfo->DataLength - sizeof(WCHAR),
+        driverName.MaximumLength = kvInfo->DataLength,
+        driverName.Buffer = ExAllocatePoolWithTag(NonPagedPool, driverName.MaximumLength, TAG_IO);
+        if (!driverName.Buffer)
+        {
+            ExFreePool(kvInfo);
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
 
-    /* Open driver object */
-    Status = ObReferenceObjectByName(&DriverName,
-                                     OBJ_OPENIF | OBJ_KERNEL_HANDLE | OBJ_CASE_INSENSITIVE, /* Attributes */
-                                     NULL, /* PassedAccessState */
-                                     0, /* DesiredAccess */
-                                     IoDriverObjectType,
-                                     KernelMode,
-                                     NULL, /* ParseContext */
-                                     (PVOID*)&Object);
-    ExFreePoolWithTag(DriverName.Buffer, TAG_IO);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT("Failed to reference driver object, status=0x%08x\n", Status);
-        return Status;
+        RtlMoveMemory(driverName.Buffer,
+                      (PVOID)((ULONG_PTR)kvInfo + kvInfo->DataOffset),
+                      driverName.Length);
+        ExFreePool(kvInfo);
     }
 
-    *DriverObject = Object;
+    // check if we need to get ServiceName as well
+    PKEY_BASIC_INFORMATION basicInfo;
+    if (!NT_SUCCESS(status) || ServiceName != NULL)
+    {
+        ULONG infoLength;
+        status = ZwQueryKey(ServiceHandle, KeyBasicInformation, NULL, 0, &infoLength);
+        if (status == STATUS_BUFFER_TOO_SMALL)
+        {
+            basicInfo = ExAllocatePoolWithTag(PagedPool, infoLength, TAG_IO);
+            if (!basicInfo)
+            {
+                return STATUS_INSUFFICIENT_RESOURCES;
+            }
 
-    DPRINT("Driver Object: %p\n", Object);
+            status = ZwQueryKey(ServiceHandle, KeyBasicInformation, basicInfo, infoLength, &infoLength);
+            if (!NT_SUCCESS(status))
+            {
+                ExFreePoolWithTag(basicInfo, TAG_IO);
+                return status;
+            }
+
+            serviceName.Length = basicInfo->NameLength;
+            serviceName.MaximumLength = basicInfo->NameLength;
+            serviceName.Buffer = basicInfo->Name;
+        }
+        else
+        {
+            return NT_SUCCESS(status) ? STATUS_UNSUCCESSFUL : status;
+        }
+    }
+
+    // 2. there is no "ObjectName" - construct it ourselves. Depending on a driver type,
+    // it will be either "\Driver\<ServiceName>" or "\FileSystem\<ServiceName>"
+    if (driverName.Buffer == NULL)
+    {
+        status = IopGetRegistryValue(ServiceHandle, L"Type", &kvInfo);
+        if (!NT_SUCCESS(status) || kvInfo->Type != REG_DWORD)
+        {
+            ExFreePool(kvInfo);
+            ExFreePoolWithTag(basicInfo, TAG_IO); // container for serviceName
+            return STATUS_ILL_FORMED_SERVICE_ENTRY;
+        }
+
+        UINT32 driverType;
+        RtlMoveMemory(&driverType, (PVOID)((ULONG_PTR)kvInfo + kvInfo->DataOffset), sizeof(UINT32));
+        ExFreePool(kvInfo);
+
+        driverName.Length = 0;
+        if (driverType == SERVICE_RECOGNIZER_DRIVER || driverType == SERVICE_FILE_SYSTEM_DRIVER)
+            driverName.MaximumLength = sizeof(FILESYSTEM_ROOT_NAME) + serviceName.Length;
+        else
+            driverName.MaximumLength = sizeof(DRIVER_ROOT_NAME) + serviceName.Length;
+        driverName.Buffer = ExAllocatePoolWithTag(NonPagedPool, driverName.MaximumLength, TAG_IO);
+        if (!driverName.Buffer)
+        {
+            ExFreePoolWithTag(basicInfo, TAG_IO); // container for serviceName
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
+
+        if (driverType == SERVICE_RECOGNIZER_DRIVER || driverType == SERVICE_FILE_SYSTEM_DRIVER)
+            RtlAppendUnicodeToString(&driverName, FILESYSTEM_ROOT_NAME);
+        else
+            RtlAppendUnicodeToString(&driverName, DRIVER_ROOT_NAME);
+
+        RtlAppendUnicodeStringToString(&driverName, &serviceName);
+    }
+
+    if (ServiceName)
+    {
+        PWCHAR buf = ExAllocatePoolWithTag(PagedPool, serviceName.Length, TAG_IO);
+        if (!buf)
+        {
+            ExFreePoolWithTag(basicInfo, TAG_IO); // container for serviceName
+            ExFreePoolWithTag(driverName.Buffer, TAG_IO);
+            return STATUS_INSUFFICIENT_RESOURCES;
+        }
+        RtlMoveMemory(buf, serviceName.Buffer, serviceName.Length);
+        ServiceName->MaximumLength = serviceName.Length;
+        ServiceName->Length = serviceName.Length;
+        ServiceName->Buffer = buf;
+    }
+    ExFreePoolWithTag(basicInfo, TAG_IO); // container for ServiceName
+
+    *DriverName = driverName;
 
     return STATUS_SUCCESS;
 }
@@ -317,162 +380,6 @@ IopNormalizeImagePath(
     return STATUS_SUCCESS;
 }
 
-NTSTATUS
-IopQueryServiceSettings(
-    _In_ PUNICODE_STRING ServiceName,
-    _Out_ PUNICODE_STRING ServiceImagePath,
-    _Out_ PULONG ServiceStart)
-{
-    NTSTATUS Status;
-    RTL_QUERY_REGISTRY_TABLE QueryTable[3];
-    UNICODE_STRING CCSName = RTL_CONSTANT_STRING(
-        L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Services");
-    HANDLE CCSKey, ServiceKey;
-
-    /* Open CurrentControlSet */
-    Status = IopOpenRegistryKeyEx(&CCSKey, NULL, &CCSName, KEY_READ);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("IopOpenRegistryKeyEx() failed for '%wZ' with status 0x%lx\n",
-                &CCSName, Status);
-        return Status;
-    }
-
-    /* Open service key */
-    Status = IopOpenRegistryKeyEx(&ServiceKey, CCSKey, ServiceName, KEY_READ);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("IopOpenRegistryKeyEx() failed for '%wZ' with status 0x%lx\n",
-                ServiceName, Status);
-        ZwClose(CCSKey);
-        return Status;
-    }
-
-    /*
-     * Get information about the service.
-     */
-    RtlZeroMemory(QueryTable, sizeof(QueryTable));
-
-    RtlInitUnicodeString(ServiceImagePath, NULL);
-
-    QueryTable[0].Name = L"Start";
-    QueryTable[0].Flags = RTL_QUERY_REGISTRY_DIRECT;
-    QueryTable[0].EntryContext = ServiceStart;
-
-    QueryTable[1].Name = L"ImagePath";
-    QueryTable[1].Flags = RTL_QUERY_REGISTRY_DIRECT;
-    QueryTable[1].EntryContext = ServiceImagePath;
-
-    Status = RtlQueryRegistryValues(RTL_REGISTRY_HANDLE,
-                                    (PWSTR)ServiceKey,
-                                    QueryTable,
-                                    NULL,
-                                    NULL);
-
-    ZwClose(ServiceKey);
-    ZwClose(CCSKey);
-
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("RtlQueryRegistryValues() failed for '%wZ' (Status %lx)\n", ServiceName, Status);
-        return Status;
-    }
-
-    return Status;
-}
-
-/*
- * IopLoadServiceModule
- *
- * Load a module specified by registry settings for service.
- *
- * Parameters
- *    ServiceName
- *       Name of the service to load.
- *
- * Return Value
- *    Status
- */
-NTSTATUS
-FASTCALL
-IopLoadServiceModule(
-    IN PUNICODE_STRING ServiceName,
-    OUT PLDR_DATA_TABLE_ENTRY *ModuleObject)
-{
-    ULONG ServiceStart;
-    UNICODE_STRING ServiceImagePath;
-    NTSTATUS Status;
-    PVOID BaseAddress;
-
-    ASSERT(ExIsResourceAcquiredExclusiveLite(&IopDriverLoadResource));
-    ASSERT(ServiceName->Length);
-    DPRINT("IopLoadServiceModule(%wZ, 0x%p)\n", ServiceName, ModuleObject);
-
-    if (ExpInTextModeSetup)
-    {
-        /* We have no registry, but luckily we know where all the drivers are */
-        DPRINT1("IopLoadServiceModule(%wZ, 0x%p) called in ExpInTextModeSetup mode...\n", ServiceName, ModuleObject);
-
-        /* ServiceStart < 4 is all that matters */
-        ServiceStart = 0;
-
-        /* IopNormalizeImagePath will do all of the work for us if we give it an empty string */
-        RtlInitEmptyUnicodeString(&ServiceImagePath, NULL, 0);
-    }
-    else
-    {
-        Status = IopQueryServiceSettings(ServiceName, &ServiceImagePath, &ServiceStart);
-        if (!NT_SUCCESS(Status))
-        {
-            DPRINT("IopQueryServiceSettings() failed for '%wZ' (Status %lx)\n", ServiceName, Status);
-            return Status;
-        }
-    }
-
-    /*
-     * Normalize the image path for all later processing.
-     */
-    Status = IopNormalizeImagePath(&ServiceImagePath, ServiceName);
-
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT("IopNormalizeImagePath() failed (Status %x)\n", Status);
-        return Status;
-    }
-
-    /*
-     * Case for disabled drivers
-     */
-    if (ServiceStart >= 4)
-    {
-        /* We can't load this */
-        Status = STATUS_DRIVER_UNABLE_TO_LOAD;
-    }
-    else
-    {
-        DPRINT("Loading module from %wZ\n", &ServiceImagePath);
-        Status = MmLoadSystemImage(&ServiceImagePath, NULL, NULL, 0, (PVOID)ModuleObject, &BaseAddress);
-        if (NT_SUCCESS(Status))
-        {
-            IopDisplayLoadingMessage(ServiceName);
-        }
-    }
-
-    ExFreePool(ServiceImagePath.Buffer);
-
-    /*
-     * Now check if the module was loaded successfully.
-     */
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT("Module loading failed (Status %x)\n", Status);
-    }
-
-    DPRINT("Module loading (Status %x)\n", Status);
-
-    return Status;
-}
-
 /**
  * @brief      Initialize a loaded driver
  *
@@ -504,112 +411,18 @@ IopInitializeDriverModule(
 
     PAGED_CODE();
 
-    // get the ServiceName
-    PKEY_BASIC_INFORMATION basicInfo;
-    ULONG infoLength;
-    Status = ZwQueryKey(ServiceHandle, KeyBasicInformation, NULL, 0, &infoLength);
-    if (Status == STATUS_BUFFER_TOO_SMALL)
-    {
-        basicInfo = ExAllocatePoolWithTag(PagedPool, infoLength, TAG_IO);
-        if (!basicInfo)
-        {
-            MmUnloadSystemImage(ModuleObject);
-            return STATUS_INSUFFICIENT_RESOURCES;
-        }
-
-        Status = ZwQueryKey(ServiceHandle, KeyBasicInformation, basicInfo, infoLength, &infoLength);
-        if (!NT_SUCCESS(Status))
-        {
-            ExFreePoolWithTag(basicInfo, TAG_IO);
-            MmUnloadSystemImage(ModuleObject);
-            return Status;
-        }
-
-        ServiceName.Length = basicInfo->NameLength;
-        ServiceName.MaximumLength = basicInfo->NameLength;
-        ServiceName.Buffer = basicInfo->Name;
-    }
-    else
+    Status = IopGetDriverNames(ServiceHandle, &DriverName, &ServiceName);
+    if (!NT_SUCCESS(Status))
     {
         MmUnloadSystemImage(ModuleObject);
-        return NT_SUCCESS(Status) ? STATUS_UNSUCCESSFUL : Status;
-    }
-
-    // Make the DriverName field of a DRIVER_OBJECT
-    PKEY_VALUE_FULL_INFORMATION kvInfo;
-
-    // 1. Check the "ObjectName" field in the driver's registry key (it has the priority)
-    Status = IopGetRegistryValue(ServiceHandle, L"ObjectName", &kvInfo);
-    if (NT_SUCCESS(Status))
-    {
-        // we're got the ObjectName. Use it to create the DRIVER_OBJECT
-        if (kvInfo->Type != REG_SZ || kvInfo->DataLength == 0)
-        {
-            ExFreePool(kvInfo);
-            ExFreePoolWithTag(basicInfo, TAG_IO); // container for ServiceName
-            MmUnloadSystemImage(ModuleObject);
-            return STATUS_ILL_FORMED_SERVICE_ENTRY;
-        }
-
-        DriverName.Length = kvInfo->DataLength - sizeof(WCHAR),
-        DriverName.MaximumLength = kvInfo->DataLength,
-        DriverName.Buffer = ExAllocatePoolWithTag(NonPagedPool, DriverName.MaximumLength, TAG_IO);
-        if (!DriverName.Buffer)
-        {
-            ExFreePool(kvInfo);
-            ExFreePoolWithTag(basicInfo, TAG_IO); // container for ServiceName
-            MmUnloadSystemImage(ModuleObject);
-            return STATUS_INSUFFICIENT_RESOURCES;
-        }
-
-        RtlMoveMemory(DriverName.Buffer,
-                      (PVOID)((ULONG_PTR)kvInfo + kvInfo->DataOffset),
-                      DriverName.Length);
-        ExFreePool(kvInfo);
-    }
-    else
-    {
-        // 2. there is no "ObjectName" - construct it ourselves. Depending on a driver type,
-        // it will be either "\Driver\<ServiceName>" or "\FileSystem\<ServiceName>"
-
-        Status = IopGetRegistryValue(ServiceHandle, L"Type", &kvInfo);
-        if (!NT_SUCCESS(Status) || kvInfo->Type != REG_DWORD)
-        {
-            ExFreePool(kvInfo);
-            ExFreePoolWithTag(basicInfo, TAG_IO); // container for ServiceName
-            MmUnloadSystemImage(ModuleObject);
-            return STATUS_ILL_FORMED_SERVICE_ENTRY;
-        }
-
-        UINT32 driverType;
-        RtlMoveMemory(&driverType, (PVOID)((ULONG_PTR)kvInfo + kvInfo->DataOffset), sizeof(UINT32));
-        ExFreePool(kvInfo);
-
-        DriverName.Length = 0;
-        if (driverType == SERVICE_RECOGNIZER_DRIVER || driverType == SERVICE_FILE_SYSTEM_DRIVER)
-            DriverName.MaximumLength = sizeof(FILESYSTEM_ROOT_NAME) + ServiceName.Length;
-        else
-            DriverName.MaximumLength = sizeof(DRIVER_ROOT_NAME) + ServiceName.Length;
-        DriverName.Buffer = ExAllocatePoolWithTag(NonPagedPool, DriverName.MaximumLength, TAG_IO);
-        if (!DriverName.Buffer)
-        {
-            ExFreePoolWithTag(basicInfo, TAG_IO); // container for ServiceName
-            MmUnloadSystemImage(ModuleObject);
-            return STATUS_INSUFFICIENT_RESOURCES;
-        }
-
-        if (driverType == SERVICE_RECOGNIZER_DRIVER || driverType == SERVICE_FILE_SYSTEM_DRIVER)
-            RtlAppendUnicodeToString(&DriverName, FILESYSTEM_ROOT_NAME);
-        else
-            RtlAppendUnicodeToString(&DriverName, DRIVER_ROOT_NAME);
-
-        RtlAppendUnicodeStringToString(&DriverName, &ServiceName);
+        return Status;
     }
 
     DPRINT("Driver name: '%wZ'\n", &DriverName);
 
     // obtain the registry path for the DriverInit routine
     PKEY_NAME_INFORMATION nameInfo;
+    ULONG infoLength;
     Status = ZwQueryKey(ServiceHandle, KeyNameInformation, NULL, 0, &infoLength);
     if (Status == STATUS_BUFFER_TOO_SMALL)
     {
@@ -644,7 +457,7 @@ IopInitializeDriverModule(
 
     if (!NT_SUCCESS(Status))
     {
-        ExFreePoolWithTag(basicInfo, TAG_IO); // container for ServiceName
+        RtlFreeUnicodeString(&ServiceName);
         RtlFreeUnicodeString(&DriverName);
         MmUnloadSystemImage(ModuleObject);
         return Status;
@@ -672,7 +485,7 @@ IopInitializeDriverModule(
     if (!NT_SUCCESS(Status))
     {
         ExFreePoolWithTag(nameInfo, TAG_IO); // container for RegistryPath
-        ExFreePoolWithTag(basicInfo, TAG_IO); // container for ServiceName
+        RtlFreeUnicodeString(&ServiceName);
         RtlFreeUnicodeString(&DriverName);
         MmUnloadSystemImage(ModuleObject);
         DPRINT1("Error while creating driver object \"%wZ\" status %x\n", &DriverName, Status);
@@ -706,7 +519,7 @@ IopInitializeDriverModule(
     if (!NT_SUCCESS(Status))
     {
         ExFreePoolWithTag(nameInfo, TAG_IO);
-        ExFreePoolWithTag(basicInfo, TAG_IO); // container for ServiceName
+        RtlFreeUnicodeString(&ServiceName);
         RtlFreeUnicodeString(&DriverName);
         return Status;
     }
@@ -725,7 +538,7 @@ IopInitializeDriverModule(
     if (!NT_SUCCESS(Status))
     {
         ExFreePoolWithTag(nameInfo, TAG_IO); // container for RegistryPath
-        ExFreePoolWithTag(basicInfo, TAG_IO); // container for ServiceName
+        RtlFreeUnicodeString(&ServiceName);
         RtlFreeUnicodeString(&DriverName);
         return Status;
     }
@@ -743,14 +556,14 @@ IopInitializeDriverModule(
         ObMakeTemporaryObject(driverObject);
         ObDereferenceObject(driverObject);
         ExFreePoolWithTag(nameInfo, TAG_IO); // container for RegistryPath
-        ExFreePoolWithTag(basicInfo, TAG_IO); // container for ServiceName
+        RtlFreeUnicodeString(&ServiceName);
         RtlFreeUnicodeString(&DriverName);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
     /* Copy the name and set it in the driver extension */
     RtlCopyUnicodeString(&serviceKeyName, &ServiceName);
-    ExFreePoolWithTag(basicInfo, TAG_IO); // container for ServiceName
+    RtlFreeUnicodeString(&ServiceName);
     driverObject->DriverExtension->ServiceKeyName = serviceKeyName;
 
     /* Make a copy of the driver name to store in the driver object */
@@ -832,186 +645,6 @@ IopInitializeDriverModule(
     IopReadyDeviceObjects(driverObject);
 
     if (PnpSystemInit) IopReinitializeDrivers();
-
-    return STATUS_SUCCESS;
-}
-
-/*
- * IopAttachFilterDriversCallback
- *
- * Internal routine used by IopAttachFilterDrivers.
- */
-NTSTATUS
-NTAPI
-IopAttachFilterDriversCallback(
-    PWSTR ValueName,
-    ULONG ValueType,
-    PVOID ValueData,
-    ULONG ValueLength,
-    PVOID Context,
-    PVOID EntryContext)
-{
-    PDEVICE_NODE DeviceNode = Context;
-    UNICODE_STRING ServiceName;
-    PWCHAR Filters;
-    PLDR_DATA_TABLE_ENTRY ModuleObject;
-    PDRIVER_OBJECT DriverObject;
-    NTSTATUS Status;
-
-    /* No filter value present */
-    if (ValueType == REG_NONE)
-        return STATUS_SUCCESS;
-
-    for (Filters = ValueData;
-         ((ULONG_PTR)Filters - (ULONG_PTR)ValueData) < ValueLength &&
-         *Filters != 0;
-         Filters += (ServiceName.Length / sizeof(WCHAR)) + 1)
-    {
-        DPRINT("Filter Driver: %S (%wZ)\n", Filters, &DeviceNode->InstancePath);
-
-        ServiceName.Buffer = Filters;
-        ServiceName.MaximumLength =
-        ServiceName.Length = (USHORT)wcslen(Filters) * sizeof(WCHAR);
-
-        UNICODE_STRING RegistryPath;
-
-        // Make the registry path for the driver
-        RegistryPath.Length = 0;
-        RegistryPath.MaximumLength = sizeof(ServicesKeyName) + ServiceName.Length;
-        RegistryPath.Buffer = ExAllocatePoolWithTag(PagedPool, RegistryPath.MaximumLength, TAG_IO);
-        if (RegistryPath.Buffer == NULL)
-        {
-            return STATUS_INSUFFICIENT_RESOURCES;
-        }
-        RtlAppendUnicodeToString(&RegistryPath, ServicesKeyName);
-        RtlAppendUnicodeStringToString(&RegistryPath, &ServiceName);
-
-        HANDLE serviceHandle;
-        Status = IopOpenRegistryKeyEx(&serviceHandle, NULL, &RegistryPath, KEY_READ);
-        RtlFreeUnicodeString(&RegistryPath);
-        if (!NT_SUCCESS(Status))
-        {
-            return Status;
-        }
-
-        Status = IopGetDriverObject(&DriverObject,
-                                    &ServiceName,
-                                    FALSE);
-        if (!NT_SUCCESS(Status))
-        {
-            KeEnterCriticalRegion();
-            ExAcquireResourceExclusiveLite(&IopDriverLoadResource, TRUE);
-
-            /* Load and initialize the filter driver */
-            Status = IopLoadServiceModule(&ServiceName, &ModuleObject);
-            if (!NT_SUCCESS(Status))
-            {
-                ExReleaseResourceLite(&IopDriverLoadResource);
-                KeLeaveCriticalRegion();
-                ZwClose(serviceHandle);
-                return Status;
-            }
-
-            NTSTATUS driverEntryStatus;
-            Status = IopInitializeDriverModule(ModuleObject,
-                                               serviceHandle,
-                                               &DriverObject,
-                                               &driverEntryStatus);
-
-            ExReleaseResourceLite(&IopDriverLoadResource);
-            KeLeaveCriticalRegion();
-
-            if (!NT_SUCCESS(Status))
-            {
-                ZwClose(serviceHandle);
-                return Status;
-            }
-        }
-
-        ZwClose(serviceHandle);
-
-        Status = IopInitializeDevice(DeviceNode, DriverObject);
-
-        /* Remove extra reference */
-        ObDereferenceObject(DriverObject);
-
-        if (!NT_SUCCESS(Status))
-            return Status;
-    }
-
-    return STATUS_SUCCESS;
-}
-
-/*
- * IopAttachFilterDrivers
- *
- * Load filter drivers for specified device node.
- *
- * Parameters
- *    Lower
- *       Set to TRUE for loading lower level filters or FALSE for upper
- *       level filters.
- */
-NTSTATUS
-FASTCALL
-IopAttachFilterDrivers(
-    PDEVICE_NODE DeviceNode,
-    HANDLE EnumSubKey,
-    HANDLE ClassKey,
-    BOOLEAN Lower)
-{
-    RTL_QUERY_REGISTRY_TABLE QueryTable[2] = { { NULL, 0, NULL, NULL, 0, NULL, 0 }, };
-    NTSTATUS Status;
-
-    /*
-     * First load the device filters
-     */
-    QueryTable[0].QueryRoutine = IopAttachFilterDriversCallback;
-    if (Lower)
-        QueryTable[0].Name = L"LowerFilters";
-    else
-        QueryTable[0].Name = L"UpperFilters";
-    QueryTable[0].Flags = 0;
-    QueryTable[0].DefaultType = REG_NONE;
-
-    Status = RtlQueryRegistryValues(RTL_REGISTRY_HANDLE,
-                                    (PWSTR)EnumSubKey,
-                                    QueryTable,
-                                    DeviceNode,
-                                    NULL);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("Failed to load device %s filters: %08X\n",
-                Lower ? "lower" : "upper", Status);
-        return Status;
-    }
-
-    QueryTable[0].QueryRoutine = IopAttachFilterDriversCallback;
-    if (Lower)
-        QueryTable[0].Name = L"LowerFilters";
-    else
-        QueryTable[0].Name = L"UpperFilters";
-    QueryTable[0].EntryContext = NULL;
-    QueryTable[0].Flags = 0;
-    QueryTable[0].DefaultType = REG_NONE;
-
-    if (ClassKey == NULL)
-    {
-        return STATUS_SUCCESS;
-    }
-
-    Status = RtlQueryRegistryValues(RTL_REGISTRY_HANDLE,
-                                    (PWSTR)ClassKey,
-                                    QueryTable,
-                                    DeviceNode,
-                                    NULL);
-
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("Failed to load class %s filters: %08X\n",
-                Lower ? "lower" : "upper", Status);
-        return Status;
-    }
 
     return STATUS_SUCCESS;
 }

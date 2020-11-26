@@ -568,12 +568,9 @@ IopDetectResourceConflict(
 // PNP Routines
 //
 NTSTATUS
-NTAPI
-PipCallDriverAddDevice(
-    IN PDEVICE_NODE DeviceNode,
-    IN BOOLEAN LoadDriver,
-    IN PDRIVER_OBJECT DriverObject
-);
+PiCallDriverAddDevice(
+    _In_ PDEVICE_NODE DeviceNode,
+    _In_ BOOLEAN LoadDrivers);
 
 NTSTATUS
 NTAPI
@@ -611,6 +608,15 @@ VOID
 PiInsertDevNode(
     _In_ PDEVICE_NODE DeviceNode,
     _In_ PDEVICE_NODE ParentNode);
+
+VOID
+PiSetDevNodeProblem(
+    _In_ PDEVICE_NODE DeviceNode,
+    _In_ UINT32 Problem);
+
+VOID
+PiClearDevNodeProblem(
+    _In_ PDEVICE_NODE DeviceNode);
 
 NTSTATUS
 IopFreeDeviceNode(
@@ -809,13 +815,6 @@ VOID
 NTAPI
 IopReadyDeviceObjects(
     IN PDRIVER_OBJECT Driver
-);
-
-NTSTATUS
-FASTCALL
-IopInitializeDevice(
-    IN PDEVICE_NODE DeviceNode,
-    IN PDRIVER_OBJECT DriverObject
 );
 
 NTSTATUS
@@ -1111,24 +1110,15 @@ IopDeleteDriver(
 );
 
 NTSTATUS
-FASTCALL
-IopGetDriverObject(
-    OUT PDRIVER_OBJECT *DriverObject,
-    IN PUNICODE_STRING ServiceName,
-    IN BOOLEAN FileSystem
-);
-
-NTSTATUS
-FASTCALL
-IopLoadServiceModule(
-    IN PUNICODE_STRING ServiceName,
-    OUT PLDR_DATA_TABLE_ENTRY *ModuleObject
-);
-
-NTSTATUS
 IopLoadDriver(
     _In_ HANDLE ServiceHandle,
     _Out_ PDRIVER_OBJECT *DriverObject);
+
+NTSTATUS
+IopGetDriverNames(
+    _In_ HANDLE ServiceHandle,
+    _Out_ PUNICODE_STRING DriverName,
+    _Out_opt_ PUNICODE_STRING ServiceName);
 
 NTSTATUS
 IopInitializeDriverModule(

@@ -100,6 +100,23 @@ PiInsertDevNode(
     DeviceNode->Level = ParentNode->Level + 1;
 }
 
+VOID
+PiSetDevNodeProblem(
+    _In_ PDEVICE_NODE DeviceNode,
+    _In_ UINT32 Problem)
+{
+    DeviceNode->Flags |= DNF_HAS_PROBLEM;
+    DeviceNode->Problem = Problem;
+}
+
+VOID
+PiClearDevNodeProblem(
+    _In_ PDEVICE_NODE DeviceNode)
+{
+    DeviceNode->Flags &= ~DNF_HAS_PROBLEM;
+    DeviceNode->Problem = 0;
+}
+
 /**
  * @brief      Creates a device node
  *
