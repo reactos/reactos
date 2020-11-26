@@ -2,210 +2,206 @@
  * partinfo - partition info program
  */
 
+#include <stdio.h>
+#include <stdlib.h>
+
 #define WIN32_NO_STATUS
 #include <windows.h>
-#include <stdlib.h>
 #include <ntndk.h>
-#include <stdio.h>
 
-//#define DUMP_DATA
+// #define DUMP_DATA
 #define DUMP_SIZE_INFO
 
 #ifdef DUMP_DATA
-void HexDump(char *buffer, ULONG size)
+void HexDump(
+    IN PVOID buffer,
+    IN ULONG size)
 {
-  ULONG offset = 0;
-  unsigned char *ptr;
+    ULONG_PTR offset = 0;
+    PUCHAR ptr;
 
-  while (offset < (size & ~15))
+    while (offset < (size & ~15))
     {
-      ptr = (unsigned char*)((ULONG)buffer + offset);
-      printf("%08lx  %02hx %02hx %02hx %02hx %02hx %02hx %02hx %02hx-%02hx %02hx %02hx %02hx %02hx %02hx %02hx %02hx\n",
-	     offset,
-	     ptr[0],
-	     ptr[1],
-	     ptr[2],
-	     ptr[3],
-	     ptr[4],
-	     ptr[5],
-	     ptr[6],
-	     ptr[7],
-	     ptr[8],
-	     ptr[9],
-	     ptr[10],
-	     ptr[11],
-	     ptr[12],
-	     ptr[13],
-	     ptr[14],
-	     ptr[15]);
+        ptr = (PUCHAR)((ULONG_PTR)buffer + offset);
+        printf("%08lx  %02hx %02hx %02hx %02hx %02hx %02hx %02hx %02hx-%02hx %02hx %02hx %02hx %02hx %02hx %02hx %02hx\n",
+               offset,
+               ptr[0], ptr[1], ptr[2] , ptr[3] , ptr[4] , ptr[5] , ptr[6] , ptr[7],
+               ptr[8], ptr[9], ptr[10], ptr[11], ptr[12], ptr[13], ptr[14], ptr[15]);
       offset += 16;
     }
 
-  ptr = (unsigned char*)((ULONG)buffer + offset);
-  printf("%08lx ", offset);
-  while (offset < size)
+    ptr = (PUCHAR)((ULONG_PTR)buffer + offset);
+    printf("%08lx ", offset);
+    while (offset < size)
     {
-      printf(" %02hx", *ptr);
-      offset++;
-      ptr++;
+        printf(" %02hx", *ptr);
+        offset++;
+        ptr++;
     }
 
-  printf("\n\n\n");
+    printf("\n\n\n");
 }
 #endif
-
 
 void Usage(void)
 {
-  puts("Usage: partinfo <drive number>");
+    puts("Usage: partinfo <drive number>");
 }
 
-
-int main (int argc, char *argv[])
+int main(int argc, char *argv[])
 {
-  HANDLE hDisk;
-  DWORD dwRead;
-  DWORD i;
-  char *Buffer;
-  DRIVE_LAYOUT_INFORMATION *LayoutBuffer;
-  DISK_GEOMETRY DiskGeometry;
-  ULONG ulDrive;
-  CHAR DriveName[40];
-  SYSTEM_DEVICE_INFORMATION DeviceInfo;
-  NTSTATUS Status;
+    NTSTATUS Status;
+    ULONG ulDrive;
+    HANDLE hDisk;
+    DWORD dwRead;
+    DWORD i;
+    SYSTEM_DEVICE_INFORMATION DeviceInfo;
+    DISK_GEOMETRY DiskGeometry;
+    PDRIVE_LAYOUT_INFORMATION LayoutBuffer;
+    CHAR DriveName[40];
 
-  if (argc != 2)
+    if (argc != 2)
     {
-      Usage();
-      return(0);
+        Usage();
+        return 0;
     }
 
-  ulDrive = strtoul(argv[1], NULL, 10);
-  if (errno != 0)
+    ulDrive = strtoul(argv[1], NULL, 10);
+    if (errno != 0)
     {
-      printf("Error: Malformed drive number\n");
-      return(0);
+        printf("Error: Malformed drive number\n");
+        return 0;
     }
 
-  /* Check drive number */
-  Status = NtQuerySystemInformation(SystemDeviceInformation,
-				    &DeviceInfo,
-				    sizeof(SYSTEM_DEVICE_INFORMATION),
-				    &i);
-  if (!NT_SUCCESS(Status))
+    /*
+     * Retrieve the number of disks on the system.
+     */
+    Status = NtQuerySystemInformation(SystemDeviceInformation,
+                                      &DeviceInfo,
+                                      sizeof(DeviceInfo),
+                                      &i);
+    if (!NT_SUCCESS(Status))
     {
-      printf("NtQuerySystemInformation() failed (Status %lx)\n", Status);
-      return(0);
+        printf("NtQuerySystemInformation() failed (Status %lx)\n", Status);
+        return 0;
+    }
+    if (DeviceInfo.NumberOfDisks == 0)
+    {
+        printf("No disk drive installed!\n");
+        return 0;
     }
 
-  if (DeviceInfo.NumberOfDisks == 0)
+    if (ulDrive >= DeviceInfo.NumberOfDisks)
     {
-      printf("No disk drive installed!\n");
-      return(0);
+        printf("Invalid disk drive number! Valid drive numbers [0-%lu]\n",
+               DeviceInfo.NumberOfDisks-1);
+        return 0;
     }
 
-  if (ulDrive >= DeviceInfo.NumberOfDisks)
+    /* Build the full drive name */
+    sprintf(DriveName, "\\\\.\\PHYSICALDRIVE%lu", ulDrive);
+
+    /* Open the drive */
+    hDisk = CreateFileA(DriveName,
+                        GENERIC_READ,
+                        FILE_SHARE_READ | FILE_SHARE_WRITE,
+                        NULL,
+                        OPEN_EXISTING,
+                        0,
+                        NULL);
+    if (hDisk == INVALID_HANDLE_VALUE)
     {
-      printf("Invalid disk drive number! Valid drive numbers [0-%lu]\n",
-	     DeviceInfo.NumberOfDisks-1);
-      return(0);
+        printf("Invalid disk handle!");
+        return 0;
     }
 
-  /* Build full drive name */
-  sprintf(DriveName, "\\\\.\\PHYSICALDRIVE%lu", ulDrive);
-
-  /* Open drive */
-  hDisk = CreateFileA(DriveName,
-		     GENERIC_READ,
-		     FILE_SHARE_READ | FILE_SHARE_WRITE,
-		     NULL,
-		     OPEN_EXISTING,
-		     0,
-		     NULL);
-  if (hDisk == INVALID_HANDLE_VALUE)
+    /*
+     * Get the drive geometry.
+     */
+    if (!DeviceIoControl(hDisk,
+                         IOCTL_DISK_GET_DRIVE_GEOMETRY,
+                         NULL,
+                         0,
+                         &DiskGeometry,
+                         sizeof(DiskGeometry),
+                         &dwRead,
+                         NULL))
     {
-      printf("Invalid disk handle!");
-      return 0;
-    }
-
-  /* Get drive geometry */
-  if (!DeviceIoControl(hDisk,
-		       IOCTL_DISK_GET_DRIVE_GEOMETRY,
-		       NULL,
-		       0,
-		       &DiskGeometry,
-		       sizeof(DISK_GEOMETRY),
-		       &dwRead,
-		       NULL))
-    {
-      CloseHandle(hDisk);
-      printf("DeviceIoControl failed! Error: %lu\n",
-	     GetLastError());
-      return 0;
+        printf("DeviceIoControl(IOCTL_DISK_GET_DRIVE_GEOMETRY) failed! Error: %lu\n",
+               GetLastError());
+        CloseHandle(hDisk);
+        return 0;
     }
 
 #ifdef DUMP_DATA
-  HexDump((char*)&DiskGeometry, dwRead);
+    HexDump(&DiskGeometry, dwRead);
 #endif
-  printf("Drive number: %lu\n", ulDrive);
-  printf("Cylinders: %I64u\nMediaType: %x\nTracksPerCylinder: %lu\n"
-	 "SectorsPerTrack: %lu\nBytesPerSector: %lu\n\n",
-	 DiskGeometry.Cylinders.QuadPart,
-	 DiskGeometry.MediaType,
-	 DiskGeometry.TracksPerCylinder,
-	 DiskGeometry.SectorsPerTrack,
-	 DiskGeometry.BytesPerSector);
+    printf("Drive number: %lu\n", ulDrive);
+    printf("Cylinders: %I64u\nMediaType: %x\nTracksPerCylinder: %lu\n"
+           "SectorsPerTrack: %lu\nBytesPerSector: %lu\n\n",
+           DiskGeometry.Cylinders.QuadPart,
+           DiskGeometry.MediaType,
+           DiskGeometry.TracksPerCylinder,
+           DiskGeometry.SectorsPerTrack,
+           DiskGeometry.BytesPerSector);
 
+#if 0 // TODO!
+    /* Get extended drive geometry */
+    // IOCTL_DISK_GET_DRIVE_GEOMETRY_EX
+#endif
 
-  Buffer = (char*)malloc(8192);
-  if (Buffer == NULL)
+    /*
+     * Retrieve the legacy partition layout
+     */
+    LayoutBuffer = (PDRIVE_LAYOUT_INFORMATION)malloc(8192);
+    if (LayoutBuffer == NULL)
     {
-      CloseHandle(hDisk);
-      printf("Out of memory!");
-      return 0;
+        printf("Out of memory!");
+        CloseHandle(hDisk);
+        return 0;
     }
-  memset(Buffer, 0, 8192);
+    memset(LayoutBuffer, 0, 8192);
 
-  if (!DeviceIoControl(hDisk,
-		       IOCTL_DISK_GET_DRIVE_LAYOUT,
-		       NULL,
-		       0,
-		       Buffer,
-		       8192,
-		       &dwRead,
-		       NULL))
+    if (!DeviceIoControl(hDisk,
+                         IOCTL_DISK_GET_DRIVE_LAYOUT,
+                         NULL,
+                         0,
+                         LayoutBuffer,
+                         8192,
+                         &dwRead,
+                         NULL))
     {
-      CloseHandle(hDisk);
-      printf("DeviceIoControl(IOCTL_DISK_GET_DRIVE_LAYOUT) failed! Error: %lu\n",
-	     GetLastError());
-      free(Buffer);
-      return 0;
+        printf("DeviceIoControl(IOCTL_DISK_GET_DRIVE_LAYOUT) failed! Error: %lu\n",
+               GetLastError());
+        CloseHandle(hDisk);
+        free(LayoutBuffer);
+        return 0;
     }
 
-  CloseHandle(hDisk);
+    CloseHandle(hDisk);
 
 #ifdef DUMP_DATA
-  HexDump(Buffer, dwRead);
+    HexDump(LayoutBuffer, dwRead);
 #endif
 
-  LayoutBuffer = (DRIVE_LAYOUT_INFORMATION*)Buffer;
+    printf("Partitions %lu  Signature %lx\n",
+           LayoutBuffer->PartitionCount,
+           LayoutBuffer->Signature);
 
-  printf("Partitions %lu  Signature %lx\n",
-	 LayoutBuffer->PartitionCount,
-	 LayoutBuffer->Signature);
-
-  for (i = 0; i < LayoutBuffer->PartitionCount; i++)
+    for (i = 0; i < LayoutBuffer->PartitionCount; i++)
     {
-      printf(" %ld: nr: %ld boot: %1x type: %x start: 0x%I64x count: 0x%I64x\n",
-	     i,
-	     LayoutBuffer->PartitionEntry[i].PartitionNumber,
-	     LayoutBuffer->PartitionEntry[i].BootIndicator,
-	     LayoutBuffer->PartitionEntry[i].PartitionType,
-	     LayoutBuffer->PartitionEntry[i].StartingOffset.QuadPart,
-	     LayoutBuffer->PartitionEntry[i].PartitionLength.QuadPart);
+        printf(" %ld: nr: %ld boot: %1x type: %x start: 0x%I64x count: 0x%I64x\n",
+               i,
+               LayoutBuffer->PartitionEntry[i].PartitionNumber,
+               LayoutBuffer->PartitionEntry[i].BootIndicator,
+               LayoutBuffer->PartitionEntry[i].PartitionType,
+               LayoutBuffer->PartitionEntry[i].StartingOffset.QuadPart,
+               LayoutBuffer->PartitionEntry[i].PartitionLength.QuadPart);
     }
 
-  free(Buffer);
+    free(LayoutBuffer);
 
-  return 0;
+    // TODO: Retrieve the extended partition layout
+
+    return 0;
 }
