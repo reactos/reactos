@@ -151,6 +151,12 @@ Used Version: git commit 8fb512a
 License: MS-PL (https://spdx.org/licenses/MS-PL.html)
 URL: https://github.com/microsoft/Windows-driver-samples/tree/master/storage
 
+Title: ATAPI IDE Miniport Driver
+Path: drivers/storage/ide/atapi
+Used Version: ???
+License: Windows NT4 DDK sample code license
+URL: ???
+
 Title: Universal ATA driver for Windows
 Path: drivers/storage/ide/uniata
 Used Version: 0.47a
