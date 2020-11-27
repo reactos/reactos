@@ -214,7 +214,7 @@ class Rule:
 		self.year_to = year_to
 		self.day_of_year = day_of_year
 		self.time_in_day = time_in_day
-		self.time_saved = time_saved	
+		self.time_saved = time_saved
 		self.abbriviation = abbreviation
 
 	def does_work_at(year):
