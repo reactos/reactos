@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 
-# Python 3. At least 3.2.
+# Python 3. At least 3.4.
 # Requirements: ...
 # Add argument to dump tz data to fs? And to load tz data dump from fs? It would be good for
 # debugging and manual changing of archive if something goes wrong or information in db is wrong.
 
-import requests
+from urllib import request
+import ssl
 import tarfile
 import io
 import struct
@@ -307,9 +308,11 @@ class Timezone:
 	@classmethod
 	def download_timezones_archive(cls):
 		print("Timezone.download_timezones_archive: started downloading timezones archive.")
-		response = requests.get("https://www.iana.org/time-zones/repository/tzdata-latest.tar.gz")
-		response.raise_for_status()
-		content = response.content
+		response = request.urlopen(
+			"https://www.iana.org/time-zones/repository/tzdata-latest.tar.gz",
+			context=ssl.create_default_context()
+		)
+		content = response.read()
 		archive = tarfile.open(fileobj=io.BytesIO(content), mode="r:gz")
 		print("Timezone.download_timezones_archive: done downloading timezones archive.")
 		return archive
