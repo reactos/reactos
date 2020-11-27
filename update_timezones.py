@@ -188,11 +188,11 @@ class TimeShift:
 
 class Rule:
 	NAME_CHARACTERS = (
-		character_range_to_set('a', 'z') +
-		character_range_to_set('A', 'Z') +
+		character_range_to_set('a', 'z') |
+		character_range_to_set('A', 'Z') |
 		character_range_to_set('0', '9')
 	)
-	ABBREVIATION_CHARACTERS = character_range_to_set('a', 'z') + character_range_to_set('A', 'Z')
+	ABBREVIATION_CHARACTERS = character_range_to_set('a', 'z') | character_range_to_set('A', 'Z')
 	YEAR_FIRST_CHARACTER = character_range_to_set('1', '9')
 	YEAR_CHARACTERS = character_range_to_set('0', '9')
 
@@ -277,7 +277,7 @@ class Rule:
 		reader.read_one_of(('\t',))
 		time_in_day = TimeInDay.read(reader)
 		reader.read_one_of(('\t',))
-		abbreviation_first_character = reader.read_one_of(cls.ABBREVIATION_CHARACTERS + set('-'))
+		abbreviation_first_character = reader.read_one_of(cls.ABBREVIATION_CHARACTERS | set('-'))
 		abbreviation = None
 		if abbreviation_first_character in cls.ABBREVIATION_CHARACTERS:
 			abbreviation = [abbreviation_first_character]
