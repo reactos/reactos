@@ -261,7 +261,7 @@ class Rule:
 	def read(cls, reader):
 		cls.read_definition_beginning()
 		reader.read_one_of(('\t',))
-			name = [reader.read_one_of(cls.NAME_CHARACTERS)]
+		name = [reader.read_one_of(cls.NAME_CHARACTERS)]
 		while reader.character_to_read in cls.NAME_CHARACTERS:
 			rule_name.append(reader.read())
 		reader.read_one_of(('\t',))
