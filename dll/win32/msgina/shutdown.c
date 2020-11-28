@@ -825,3 +825,14 @@ ShellShutdownDialog(
 
     return 0;
 }
+
+/*
+ * NOTES:
+ * - Undocumented, called from MS shell32.dll to show the turn off dialog.
+ * - Seems to have the same purpose as ShellShutdownDialog.
+ */
+DWORD WINAPI
+ShellTurnOffDialog(HWND hWnd)
+{
+    return ShellShutdownDialog(hWnd, NULL, FALSE);
+}

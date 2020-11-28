@@ -6,7 +6,7 @@
 6 stub -noname ShellEnableFriendlyUI    ; (long)
 7 stub -noname ShellEnableMultipleUsers ; (long)
 8 stub -noname ShellEnableRemoteConnections ; (long)
-9 stub -noname ShellTurnOffDialog ; (long)
+9 stdcall -noname ShellTurnOffDialog(ptr)
 10 stub -noname ShellIsMultipleUsersEnabled ; ()
 11 stub -noname ShellACPIPowerButtonPressed ; (long long long)
 12 stub -noname ShellIsSingleUserNoPassword ; (wstr wstr)
