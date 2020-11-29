@@ -1715,6 +1715,9 @@ static HRESULT SHELL_PidlGetIconLocationW(PCIDLIST_ABSOLUTE pidl,
 HRESULT STDMETHODCALLTYPE CShellLink::GetIconLocation(UINT uFlags, PWSTR pszIconFile, UINT cchMax, int *piIndex, UINT *pwFlags)
 {
     HRESULT hr;
+
+    pszIconFile[0] = UNICODE_NULL;
+
     /*
      * It is possible for a shell link to point to another shell link,
      * and in particular there is the possibility to point to itself.
@@ -1733,42 +1736,61 @@ HRESULT STDMETHODCALLTYPE CShellLink::GetIconLocation(UINT uFlags, PWSTR pszIcon
      */
     uFlags |= GIL_FORSHORTCUT;
 
-    if (m_pPidl || m_sPath)
+    if (uFlags & GIL_DEFAULTICON)
+        return E_FAIL;
+
+    hr = GetIconLocation(pszIconFile, cchMax, piIndex);
+    if (FAILED(hr) || pszIconFile[0] == UNICODE_NULL)
     {
-        /* first look for an icon using the PIDL (if present) */
-        if (m_pPidl)
-            hr = SHELL_PidlGetIconLocationW(m_pPidl, uFlags, pszIconFile, cchMax, piIndex, pwFlags);
-        else
-            hr = E_FAIL;
-
-#if 0 // FIXME: Analyse further whether this is needed...
-        /* if we couldn't find an icon yet, look for it using the file system path */
-        if (FAILED(hr) && m_sPath)
-        {
-            LPITEMIDLIST pidl;
-            CComPtr<IShellFolder> pdsk;
-
-            hr = SHGetDesktopFolder(&pdsk);
-
-            /* LPITEMIDLIST pidl = ILCreateFromPathW(sPath); */
-            hr = pdsk->ParseDisplayName(0, NULL, m_sPath, NULL, &pidl, NULL);
-            if (SUCCEEDED(hr))
-            {
-                hr = SHELL_PidlGetIconLocationW(pidl, uFlags, pszIconFile, cchMax, piIndex, pwFlags);
-                SHFree(pidl);
-            }
-        }
-#endif
-        return hr;
+        hr = SHELL_PidlGetIconLocationW(m_pPidl, uFlags, pszIconFile, cchMax, piIndex, pwFlags);
+    }
+    else
+    {
+        *pwFlags = GIL_NOTFILENAME | GIL_PERCLASS;
     }
 
-    return S_OK;
+    return hr;
 }
 
-HRESULT STDMETHODCALLTYPE CShellLink::Extract(PCWSTR pszFile, UINT nIconIndex, HICON *phiconLarge, HICON *phiconSmall, UINT nIconSize)
+HRESULT STDMETHODCALLTYPE
+CShellLink::Extract(PCWSTR pszFile, UINT nIconIndex, HICON *phiconLarge, HICON *phiconSmall, UINT nIconSize)
 {
-    UNIMPLEMENTED;
-    return E_FAIL;
+    HRESULT hr = NOERROR;
+    UINT cxyLarge = LOWORD(nIconSize), cxySmall = HIWORD(nIconSize);
+
+    if (phiconLarge)
+    {
+        *phiconLarge = NULL;
+        PrivateExtractIconsW(pszFile, nIconIndex, cxyLarge, cxyLarge, phiconLarge, NULL, 1, 0);
+
+        if (*phiconLarge == NULL)
+            hr = S_FALSE;
+    }
+
+    if (phiconSmall)
+    {
+        *phiconSmall = NULL;
+        PrivateExtractIconsW(pszFile, nIconIndex, cxySmall, cxySmall, phiconSmall, NULL, 1, 0);
+
+        if (*phiconSmall == NULL)
+            hr = S_FALSE;
+    }
+
+    if (hr == S_FALSE)
+    {
+        if (phiconLarge && *phiconLarge)
+        {
+            DestroyIcon(*phiconLarge);
+            *phiconLarge = NULL;
+        }
+        if (phiconSmall && *phiconSmall)
+        {
+            DestroyIcon(*phiconSmall);
+            *phiconSmall = NULL;
+        }
+    }
+
+    return hr;
 }
 
 #if 0
