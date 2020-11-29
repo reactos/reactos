@@ -1513,11 +1513,7 @@ IopSendRemoveDevice(IN PDEVICE_OBJECT DeviceObject)
     /* Drivers should never fail a IRP_MN_REMOVE_DEVICE request */
     IopSynchronousCall(DeviceObject, &Stack, &Dummy);
 
-    IopNotifyPlugPlayNotification(DeviceObject,
-                                  EventCategoryTargetDeviceChange,
-                                  &GUID_TARGET_DEVICE_REMOVE_COMPLETE,
-                                  NULL,
-                                  NULL);
+    PiNotifyTargetDeviceChange(&GUID_TARGET_DEVICE_REMOVE_COMPLETE, DeviceObject, NULL);
     ObDereferenceObject(DeviceObject);
 }
 
@@ -1592,11 +1588,7 @@ IopCancelRemoveDevice(IN PDEVICE_OBJECT DeviceObject)
     /* Drivers should never fail a IRP_MN_CANCEL_REMOVE_DEVICE request */
     IopSynchronousCall(DeviceObject, &Stack, &Dummy);
 
-    IopNotifyPlugPlayNotification(DeviceObject,
-                                  EventCategoryTargetDeviceChange,
-                                  &GUID_TARGET_DEVICE_REMOVE_CANCELLED,
-                                  NULL,
-                                  NULL);
+    PiNotifyTargetDeviceChange(&GUID_TARGET_DEVICE_REMOVE_CANCELLED, DeviceObject, NULL);
 }
 
 static
@@ -1692,11 +1684,7 @@ IopQueryRemoveDevice(IN PDEVICE_OBJECT DeviceObject)
 
     Status = IopSynchronousCall(DeviceObject, &Stack, &Dummy);
 
-    IopNotifyPlugPlayNotification(DeviceObject,
-                                  EventCategoryTargetDeviceChange,
-                                  &GUID_TARGET_DEVICE_QUERY_REMOVE,
-                                  NULL,
-                                  NULL);
+    PiNotifyTargetDeviceChange(&GUID_TARGET_DEVICE_QUERY_REMOVE, DeviceObject, NULL);
 
     if (!NT_SUCCESS(Status))
     {

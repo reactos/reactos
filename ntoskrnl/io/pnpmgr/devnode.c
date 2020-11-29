@@ -114,6 +114,7 @@ IopCreateDeviceNode(
     }
 
     RtlZeroMemory(Node, sizeof(DEVICE_NODE));
+    InitializeListHead(&Node->TargetDeviceNotify);
 
     if (!ServiceName)
         ServiceName1 = &UnknownDeviceName;
@@ -259,6 +260,8 @@ IopFreeDeviceNode(
     /* All children must be deleted before a parent is deleted */
     ASSERT(!DeviceNode->Child);
     ASSERT(DeviceNode->PhysicalDeviceObject);
+    /* No notifications should be registered for this device */
+    ASSERT(IsListEmpty(&DeviceNode->TargetDeviceNotify));
 
     KeAcquireSpinLock(&IopDeviceTreeLock, &OldIrql);
 
