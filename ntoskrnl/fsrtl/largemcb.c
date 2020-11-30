@@ -143,7 +143,7 @@ FsRtlAddBaseMcbEntry(IN PBASE_MCB OpaqueMcb,
     LARGE_MCB_MAPPING_ENTRY Node, NeedleRun;
     PLARGE_MCB_MAPPING_ENTRY LowerRun, HigherRun;
     BOOLEAN NewElement;
-    LONGLONG IntLbn;
+    LONGLONG IntLbn, IntSectorCount;
 
     DPRINT("FsRtlAddBaseMcbEntry(%p, %I64d, %I64d, %I64d)\n", OpaqueMcb, Vbn, Lbn, SectorCount);
 
@@ -159,12 +159,18 @@ FsRtlAddBaseMcbEntry(IN PBASE_MCB OpaqueMcb,
         goto quit;
     }
 
-    IntResult = FsRtlLookupBaseMcbEntry(OpaqueMcb, Vbn, &IntLbn, NULL, NULL, NULL, NULL);
+    IntResult = FsRtlLookupBaseMcbEntry(OpaqueMcb, Vbn, &IntLbn, &IntSectorCount, NULL, NULL, NULL);
     if (IntResult)
     {
         if (IntLbn != -1 && IntLbn != Lbn)
         {
             Result = FALSE;
+            goto quit;
+        }
+
+        if ((IntLbn != -1) && (IntSectorCount >= SectorCount))
+        {
+            /* This is a no-op */
             goto quit;
         }
     }
@@ -314,7 +320,7 @@ FsRtlAddLargeMcbEntry(IN PLARGE_MCB Mcb,
  * Value less or equal to %0 is forbidden; FIXME: Is the reject of %0 W32 compliant?
  *
  * Retrieves the parameters of the specified run with index @RunIndex.
- * 
+ *
  * Mapping %0 always starts at virtual block %0, either as 'hole' or as 'real' mapping.
  * libcaptive does not store 'hole' information to its #GTree.
  * Last run is always a 'real' run. 'hole' runs appear as mapping to constant @Lbn value %-1.
@@ -336,7 +342,7 @@ FsRtlGetNextBaseMcbEntry(IN PBASE_MCB OpaqueMcb,
     ULONGLONG LastVbn = 0;
     ULONGLONG LastSectorCount = 0;
 
-    // Traverse the tree 
+    // Traverse the tree
     for (Run = (PLARGE_MCB_MAPPING_ENTRY)RtlEnumerateGenericTable(&Mcb->Mapping->Table, TRUE);
     Run;
         Run = (PLARGE_MCB_MAPPING_ENTRY)RtlEnumerateGenericTable(&Mcb->Mapping->Table, FALSE))
@@ -372,11 +378,6 @@ FsRtlGetNextBaseMcbEntry(IN PBASE_MCB OpaqueMcb,
         LastVbn = Run->RunStartVbn.QuadPart;
         LastSectorCount = Run->RunEndVbn.QuadPart - Run->RunStartVbn.QuadPart;
     }
-
-    // these values are meaningless when returning false (but setting them can be helpful for debugging purposes)
-    *Vbn = 0xdeadbeef;
-    *Lbn = 0xdeadbeef;
-    *SectorCount = 0xdeadbeef;
 
 quit:
     DPRINT("FsRtlGetNextBaseMcbEntry(%p, %d, %p, %p, %p) = %d (%I64d, %I64d, %I64d)\n", Mcb, RunIndex, Vbn, Lbn, SectorCount, Result, *Vbn, *Lbn, *SectorCount);
@@ -541,11 +542,6 @@ FsRtlLookupBaseMcbEntry(IN PBASE_MCB OpaqueMcb,
             goto quit;
         }
     }
-
-    if (Lbn)
-        *Lbn = -1;
-    if (StartingLbn)
-        *StartingLbn = -1;
 
 quit:
     DPRINT("FsRtlLookupBaseMcbEntry(%p, %I64d, %p, %p, %p, %p, %p) = %d (%I64d, %I64d, %I64d, %I64d, %d)\n",
@@ -821,7 +817,7 @@ FsRtlRemoveBaseMcbEntry(IN PBASE_MCB OpaqueMcb,
 
     NeedleRun.RunStartVbn.QuadPart = Vbn;
     NeedleRun.RunEndVbn.QuadPart = Vbn + SectorCount;
-    NeedleRun.StartingLbn.QuadPart = ~0ULL;
+    NeedleRun.StartingLbn.QuadPart = -1;
 
     /* adjust/destroy all intersecting ranges */
     Mcb->Mapping->Table.CompareRoutine = McbMappingIntersectCompare;
@@ -829,13 +825,60 @@ FsRtlRemoveBaseMcbEntry(IN PBASE_MCB OpaqueMcb,
     {
         if (HaystackRun->RunStartVbn.QuadPart < NeedleRun.RunStartVbn.QuadPart)
         {
+            LONGLONG HaystackRunEnd = HaystackRun->RunEndVbn.QuadPart;
             ASSERT(HaystackRun->RunEndVbn.QuadPart > NeedleRun.RunStartVbn.QuadPart);
+
             HaystackRun->RunEndVbn.QuadPart = NeedleRun.RunStartVbn.QuadPart;
+
+            if (HaystackRunEnd > NeedleRun.RunEndVbn.QuadPart)
+            {
+                /* The run we are deleting is included in the run we just truncated.
+                 * Add the tail back. */
+                LARGE_MCB_MAPPING_ENTRY TailRun;
+                BOOLEAN NewElement;
+
+                TailRun.RunStartVbn.QuadPart = NeedleRun.RunEndVbn.QuadPart;
+                TailRun.RunEndVbn.QuadPart = HaystackRunEnd;
+                TailRun.StartingLbn.QuadPart = HaystackRun->StartingLbn.QuadPart + (NeedleRun.RunEndVbn.QuadPart - HaystackRun->RunStartVbn.QuadPart);
+
+                Mcb->Mapping->Table.CompareRoutine = McbMappingCompare;
+
+                RtlInsertElementGenericTable(&Mcb->Mapping->Table, &TailRun, sizeof(TailRun), &NewElement);
+                ++Mcb->PairCount;
+                ASSERT(NewElement);
+
+                Mcb->Mapping->Table.CompareRoutine = McbMappingIntersectCompare;
+            }
         }
         else if (HaystackRun->RunEndVbn.QuadPart > NeedleRun.RunEndVbn.QuadPart)
         {
+            LONGLONG HaystackRunStart = HaystackRun->RunStartVbn.QuadPart;
+            LONGLONG HaystackStartingLbn = HaystackRun->StartingLbn.QuadPart;
+
             ASSERT(HaystackRun->RunStartVbn.QuadPart < NeedleRun.RunEndVbn.QuadPart);
             HaystackRun->RunStartVbn.QuadPart = NeedleRun.RunEndVbn.QuadPart;
+            /* Adjust the starting LBN */
+            HaystackRun->StartingLbn.QuadPart += NeedleRun.RunEndVbn.QuadPart - HaystackRunStart;
+
+            if (HaystackRunStart < NeedleRun.RunStartVbn.QuadPart)
+            {
+                /* The run we are deleting is included in the run we just truncated.
+                 * Add the head back. */
+                LARGE_MCB_MAPPING_ENTRY HeadRun;
+                BOOLEAN NewElement;
+
+                HeadRun.RunStartVbn.QuadPart = HaystackRunStart;
+                HeadRun.RunEndVbn.QuadPart = NeedleRun.RunStartVbn.QuadPart;
+                HeadRun.StartingLbn.QuadPart = HaystackStartingLbn;
+
+                Mcb->Mapping->Table.CompareRoutine = McbMappingCompare;
+
+                RtlInsertElementGenericTable(&Mcb->Mapping->Table, &HeadRun, sizeof(HeadRun), &NewElement);
+                ++Mcb->PairCount;
+                ASSERT(NewElement);
+
+                Mcb->Mapping->Table.CompareRoutine = McbMappingIntersectCompare;
+            }
         }
         else
         {
