@@ -62,6 +62,7 @@ extern void func_RtlGetLongestNtPathLength(void);
 extern void func_RtlGetNtProductType(void);
 extern void func_RtlGetUnloadEventTrace(void);
 extern void func_RtlHandle(void);
+extern void func_RtlImageDirectoryEntryToData(void);
 extern void func_RtlImageRvaToVa(void);
 extern void func_RtlIsNameLegalDOS8Dot3(void);
 extern void func_RtlMemoryStream(void);
@@ -137,6 +138,7 @@ const struct test winetest_testlist[] =
     { "RtlGetNtProductType",            func_RtlGetNtProductType },
     { "RtlGetUnloadEventTrace",         func_RtlGetUnloadEventTrace },
     { "RtlHandle",                      func_RtlHandle },
+    { "RtlImageDirectoryEntryToData",   func_RtlImageDirectoryEntryToData },
     { "RtlImageRvaToVa",                func_RtlImageRvaToVa },
     { "RtlIsNameLegalDOS8Dot3",         func_RtlIsNameLegalDOS8Dot3 },
     { "RtlMemoryStream",                func_RtlMemoryStream },

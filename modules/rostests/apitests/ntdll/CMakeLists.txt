@@ -63,6 +63,7 @@ list(APPEND SOURCE
     RtlGetNtProductType.c
     RtlGetUnloadEventTrace.c
     RtlHandle.c
+    RtlImageDirectoryEntryToData.c
     RtlImageRvaToVa.c
     RtlIsNameLegalDOS8Dot3.c
     RtlMemoryStream.c
