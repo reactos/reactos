@@ -16,7 +16,17 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "config.h"
+#include "wine/port.h"
+
+#include <math.h>
+#include <assert.h>
+
 #include "jscript.h"
+
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(jscript);
 
 typedef struct {
     jsdisp_t dispex;
@@ -37,6 +47,7 @@ static const WCHAR spliceW[] = {'s','p','l','i','c','e',0};
 static const WCHAR toStringW[] = {'t','o','S','t','r','i','n','g',0};
 static const WCHAR toLocaleStringW[] = {'t','o','L','o','c','a','l','e','S','t','r','i','n','g',0};
 static const WCHAR unshiftW[] = {'u','n','s','h','i','f','t',0};
+static const WCHAR indexOfW[] = {'i','n','d','e','x','O','f',0};
 
 static const WCHAR default_separatorW[] = {',',0};
 
@@ -377,9 +388,10 @@ static HRESULT Array_pop(script_ctx_t *ctx, vdisp_t *vthis, WORD flags, unsigned
     hres = jsdisp_get_idx(jsthis, length, &val);
     if(SUCCEEDED(hres))
         hres = jsdisp_delete_idx(jsthis, length);
-    else if(hres == DISP_E_UNKNOWNNAME)
+    else if(hres == DISP_E_UNKNOWNNAME) {
         val = jsval_undefined();
-    else
+        hres = S_OK;
+    }else
         return hres;
 
     if(SUCCEEDED(hres))
@@ -938,6 +950,61 @@ static HRESULT Array_toLocaleString(script_ctx_t *ctx, vdisp_t *vthis, WORD flag
     return E_NOTIMPL;
 }
 
+static HRESULT Array_indexOf(script_ctx_t *ctx, vdisp_t *vthis, WORD flags, unsigned argc, jsval_t *argv,
+        jsval_t *r)
+{
+    jsdisp_t *jsthis;
+    unsigned length, i, from = 0;
+    jsval_t search, value;
+    BOOL eq;
+    HRESULT hres;
+
+    TRACE("\n");
+
+    hres = get_length(ctx, vthis, &jsthis, &length);
+    if(FAILED(hres))
+        return hres;
+    if(!length) {
+        if(r) *r = jsval_number(-1);
+        return S_OK;
+    }
+
+    search = argc ? argv[0] : jsval_undefined();
+
+    if(argc > 1) {
+        double from_arg;
+
+        hres = to_integer(ctx, argv[1], &from_arg);
+        if(FAILED(hres))
+            return hres;
+
+        if(from_arg >= 0)
+            from = min(from_arg, length);
+        else
+            from = max(from_arg + length, 0);
+    }
+
+    for(i = from; i < length; i++) {
+        hres = jsdisp_get_idx(jsthis, i, &value);
+        if(hres == DISP_E_UNKNOWNNAME)
+            continue;
+        if(FAILED(hres))
+            return hres;
+
+        hres = jsval_strict_equal(value, search, &eq);
+        jsval_release(value);
+        if(FAILED(hres))
+            return hres;
+        if(eq) {
+            if(r) *r = jsval_number(i);
+            return S_OK;
+        }
+    }
+
+    if(r) *r = jsval_number(-1);
+    return S_OK;
+}
+
 /* ECMA-262 3rd Edition    15.4.4.13 */
 static HRESULT Array_unshift(script_ctx_t *ctx, vdisp_t *vthis, WORD flags, unsigned argc, jsval_t *argv,
         jsval_t *r)
@@ -1036,6 +1103,7 @@ static void Array_on_put(jsdisp_t *dispex, const WCHAR *name)
 
 static const builtin_prop_t Array_props[] = {
     {concatW,                Array_concat,               PROPF_METHOD|1},
+    {indexOfW,               Array_indexOf,              PROPF_ES5|PROPF_METHOD|1},
     {joinW,                  Array_join,                 PROPF_METHOD|1},
     {lengthW,                NULL,0,                     Array_get_length, Array_set_length},
     {popW,                   Array_pop,                  PROPF_METHOD},
@@ -1071,6 +1139,24 @@ static const builtin_info_t ArrayInst_info = {
     Array_destructor,
     Array_on_put
 };
+
+/* ECMA-262 5.1 Edition    15.4.3.2 */
+static HRESULT ArrayConstr_isArray(script_ctx_t *ctx, vdisp_t *vthis, WORD flags, unsigned argc, jsval_t *argv, jsval_t *r)
+{
+    jsdisp_t *obj;
+
+    TRACE("\n");
+
+    if(!argc || !is_object_instance(argv[0])) {
+        if(r) *r = jsval_bool(FALSE);
+        return S_OK;
+    }
+
+    obj = iface_to_jsdisp(get_object(argv[0]));
+    if(r) *r = jsval_bool(obj && is_class(obj, JSCLASS_ARRAY));
+    if(obj) jsdisp_release(obj);
+    return S_OK;
+}
 
 static HRESULT ArrayConstr_value(script_ctx_t *ctx, vdisp_t *vthis, WORD flags, unsigned argc, jsval_t *argv,
         jsval_t *r)
@@ -1146,6 +1232,21 @@ static HRESULT alloc_array(script_ctx_t *ctx, jsdisp_t *object_prototype, ArrayI
     return S_OK;
 }
 
+static const WCHAR isArrayW[] = {'i','s','A','r','r','a','y',0};
+
+static const builtin_prop_t ArrayConstr_props[] = {
+    {isArrayW,    ArrayConstr_isArray,    PROPF_ES5|PROPF_METHOD|1}
+};
+
+static const builtin_info_t ArrayConstr_info = {
+    JSCLASS_FUNCTION,
+    DEFAULT_FUNCTION_VALUE,
+    sizeof(ArrayConstr_props)/sizeof(*ArrayConstr_props),
+    ArrayConstr_props,
+    NULL,
+    NULL
+};
+
 HRESULT create_array_constr(script_ctx_t *ctx, jsdisp_t *object_prototype, jsdisp_t **ret)
 {
     ArrayInstance *array;
@@ -1157,7 +1258,7 @@ HRESULT create_array_constr(script_ctx_t *ctx, jsdisp_t *object_prototype, jsdis
     if(FAILED(hres))
         return hres;
 
-    hres = create_builtin_constructor(ctx, ArrayConstr_value, ArrayW, NULL, PROPF_CONSTR|1, &array->dispex, ret);
+    hres = create_builtin_constructor(ctx, ArrayConstr_value, ArrayW, &ArrayConstr_info, PROPF_CONSTR|1, &array->dispex, ret);
 
     jsdisp_release(&array->dispex);
     return hres;

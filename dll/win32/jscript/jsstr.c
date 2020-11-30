@@ -16,7 +16,11 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include <assert.h>
+
 #include "jscript.h"
+
+#include "wine/debug.h"
 
 /*
  * This is the length of a string that is considered to be long enough to be

@@ -23,12 +23,13 @@
     X(and,        1, 0,0)                  \
     X(array,      1, 0,0)                  \
     X(assign,     1, 0,0)                  \
-    X(assign_call,1, ARG_UINT,   0)       \
+    X(assign_call,1, ARG_UINT,   0)        \
     X(bool,       1, ARG_INT,    0)        \
     X(bneg,       1, 0,0)                  \
     X(call,       1, ARG_UINT,   ARG_UINT) \
     X(call_member,1, ARG_UINT,   ARG_UINT) \
     X(carray,     1, ARG_UINT,   0)        \
+    X(carray_set, 1, ARG_UINT,   0)        \
     X(case,       0, ARG_ADDR,   0)        \
     X(cnd_nz,     0, ARG_ADDR,   0)        \
     X(cnd_z,      0, ARG_ADDR,   0)        \

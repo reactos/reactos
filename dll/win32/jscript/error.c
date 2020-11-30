@@ -16,7 +16,16 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include "config.h"
+#include "wine/port.h"
+
+#include <math.h>
+
 #include "jscript.h"
+
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(jscript);
 
 static const WCHAR descriptionW[] = {'d','e','s','c','r','i','p','t','i','o','n',0};
 static const WCHAR messageW[] = {'m','e','s','s','a','g','e',0};
@@ -184,15 +193,19 @@ static HRESULT create_error(script_ctx_t *ctx, jsdisp_t *constr,
     if(FAILED(hres))
         return hres;
 
-    hres = jsdisp_propput_dontenum(err, numberW, jsval_number((INT)number));
+    hres = jsdisp_define_data_property(err, numberW, PROPF_WRITABLE | PROPF_CONFIGURABLE,
+                                       jsval_number((INT)number));
     if(FAILED(hres)) {
         jsdisp_release(err);
         return hres;
     }
 
-    hres = jsdisp_propput_name(err, messageW, jsval_string(msg));
+    hres = jsdisp_define_data_property(err, messageW,
+                                       PROPF_WRITABLE | PROPF_ENUMERABLE | PROPF_CONFIGURABLE,
+                                       jsval_string(msg));
     if(SUCCEEDED(hres))
-        hres = jsdisp_propput_dontenum(err, descriptionW, jsval_string(msg));
+        hres = jsdisp_define_data_property(err, descriptionW, PROPF_WRITABLE | PROPF_CONFIGURABLE,
+                                           jsval_string(msg));
     if(FAILED(hres)) {
         jsdisp_release(err);
         return hres;
@@ -346,7 +359,8 @@ HRESULT init_error_constr(script_ctx_t *ctx, jsdisp_t *object_prototype)
             return E_OUTOFMEMORY;
         }
 
-        hres = jsdisp_propput_dontenum(err, nameW, jsval_string(str));
+        hres = jsdisp_define_data_property(err, nameW, PROPF_WRITABLE | PROPF_CONFIGURABLE,
+                                           jsval_string(str));
         jsstr_release(str);
         if(SUCCEEDED(hres))
             hres = create_builtin_constructor(ctx, constr_val[i], names[i], NULL,

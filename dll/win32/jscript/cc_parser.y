@@ -19,6 +19,12 @@
 %{
 
 #include "jscript.h"
+#include "engine.h"
+#include "parser.h"
+
+#include "wine/debug.h"
+
+WINE_DEFAULT_DEBUG_CHANNEL(jscript);
 
 %}
 

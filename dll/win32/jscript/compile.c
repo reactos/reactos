@@ -16,10 +16,17 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
+#include <math.h>
+#include <assert.h>
+
 #include "jscript.h"
+#include "engine.h"
+#include "parser.h"
 
-#include <wine/rbtree.h>
+#include "wine/rbtree.h"
+#include "wine/debug.h"
 
+WINE_DEFAULT_DEBUG_CHANNEL(jscript);
 WINE_DECLARE_DEBUG_CHANNEL(jscript_disas);
 
 typedef struct _statement_ctx_t {
@@ -854,29 +861,29 @@ static HRESULT literal_as_bstr(compiler_ctx_t *ctx, literal_t *literal, BSTR *st
 
 static HRESULT compile_array_literal(compiler_ctx_t *ctx, array_literal_expression_t *expr)
 {
-    unsigned i, elem_cnt = expr->length;
+    unsigned length = 0;
     array_element_t *iter;
+    unsigned array_instr;
     HRESULT hres;
 
-    for(iter = expr->element_list; iter; iter = iter->next) {
-        elem_cnt += iter->elision+1;
+    array_instr = push_instr(ctx, OP_carray);
 
-        for(i=0; i < iter->elision; i++) {
-            if(!push_instr(ctx, OP_undefined))
-                return E_OUTOFMEMORY;
-        }
+    for(iter = expr->element_list; iter; iter = iter->next) {
+        length += iter->elision;
 
         hres = compile_expression(ctx, iter->expr, TRUE);
         if(FAILED(hres))
             return hres;
+
+        hres = push_instr_uint(ctx, OP_carray_set, length);
+        if(FAILED(hres))
+            return hres;
+
+        length++;
     }
 
-    for(i=0; i < expr->length; i++) {
-        if(!push_instr(ctx, OP_undefined))
-            return E_OUTOFMEMORY;
-    }
-
-    return push_instr_uint(ctx, OP_carray, elem_cnt);
+    instr_ptr(ctx, array_instr)->u.arg[0].uint = length + expr->length;
+    return S_OK;
 }
 
 static HRESULT compile_object_literal(compiler_ctx_t *ctx, property_value_expression_t *expr)

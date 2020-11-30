@@ -18,6 +18,8 @@
 
 #pragma once
 
+#include <windef.h>
+
 #define JSCRIPT_MAJOR_VERSION 5
 #define JSCRIPT_MINOR_VERSION 8
 #define JSCRIPT_BUILD_VERSION 16475
@@ -56,6 +58,7 @@
 #define IDS_INVALID_DELETE                  0x1394
 #define IDS_NOT_VBARRAY                     0x1395
 #define IDS_JSCRIPT_EXPECTED                0x1396
+#define IDS_NOT_ENUMERATOR                  0x1397
 #define IDS_REGEXP_SYNTAX_ERROR             0x1399
 #define IDS_URI_INVALID_CHAR                0x13A0
 #define IDS_URI_INVALID_CODING              0x13A1
@@ -63,3 +66,9 @@
 #define IDS_PRECISION_OUT_OF_RANGE          0x13A3
 #define IDS_INVALID_LENGTH                  0x13A5
 #define IDS_ARRAY_EXPECTED                  0x13A7
+#define IDS_INVALID_WRITABLE_PROP_DESC      0x13AC
+#define IDS_NONCONFIGURABLE_REDEFINED       0x13D6
+#define IDS_NONWRITABLE_MODIFIED            0x13D7
+/* FIXME: This is not compatible with native, but we would
+ * conflict with IDS_UNSUPPORTED_ACTION otherwise */
+#define IDS_PROP_DESC_MISMATCH              0x1F00
