@@ -7,7 +7,7 @@ LANGUAGE LANG_ALBANIAN, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
-    IDS_PROFILEPATH "%SistemDrive%\\Dokumente dhe Cilësime"
+    IDS_PROFILEPATH "%SystemDrive%\\Dokumente dhe Cilësime"
     IDS_APPDATA "Aplikation Data"
     IDS_DESKTOP "Desktop"
     IDS_FAVORITES "Preferuara"
