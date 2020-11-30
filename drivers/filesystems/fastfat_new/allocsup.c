@@ -271,10 +271,12 @@ FatLogOf(
 #pragma alloc_text(PAGE, FatTruncateFileAllocation)
 #endif
 
-
+#ifdef __REACTOS__
+static
+#endif
 INLINE
 ULONG
-FatSelectBestWindow( 
+FatSelectBestWindow(
     IN PVCB Vcb
     )
 /*++
