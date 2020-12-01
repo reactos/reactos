@@ -58,6 +58,10 @@ DBG_DEFAULT_CHANNEL(UserScrollbar);
 
 /* FUNCTIONS *****************************************************************/
 
+BOOL APIENTRY
+IntEnableScrollBar(BOOL Horz, PSCROLLBARINFO Info, UINT wArrows);
+
+
 /* Ported from WINE20020904 */
 /* Compute the scroll bar rectangle, in drawing coordinates (i.e. client coords for SB_CTL, window coords for SB_VERT and
  * SB_HORZ). 'arrowSize' returns the width or height of an arrow (depending on * the orientation of the scrollbar),
@@ -202,6 +206,14 @@ IntCalculateThumb(PWND Wnd, LONG idObject, PSCROLLBARINFO psbi, PSBDATA pSBData)
       psbi->xyThumbTop = 0;
       psbi->xyThumbBottom = 0;
       ThumbPos = Thumb;
+   }
+   else if (psbi->rgstate[SBRG_TOPRIGHTBTN] == STATE_SYSTEM_UNAVAILABLE &&
+            psbi->rgstate[SBRG_BOTTOMLEFTBTN] == STATE_SYSTEM_UNAVAILABLE &&
+            pSBData->posMin >= (int)(pSBData->posMax - max(pSBData->page - 1, 0)))
+   {
+      /* Nothing to scroll */
+      psbi->xyThumbTop = 0;
+      psbi->xyThumbBottom = 0;
    }
    else
    {
@@ -525,7 +537,6 @@ co_IntSetScrollInfo(PWND Window, INT nBar, LPCSCROLLINFO lpsi, BOOL bRedraw)
          OldPos = Info->nPos;
          Info->nPos = lpsi->nPos;
          pSBData->pos = lpsi->nPos;
-         bChangeParams = TRUE;
       }
    }
 
@@ -599,10 +610,14 @@ co_IntSetScrollInfo(PWND Window, INT nBar, LPCSCROLLINFO lpsi, BOOL bRedraw)
       else /* Show and enable scroll-bar only if no page only changed. */
       if (lpsi->fMask != SIF_PAGE)
       {
-         new_flags = ESB_ENABLE_BOTH;
          if ((nBar != SB_CTL) && bChangeParams)
          {
+            new_flags = ESB_ENABLE_BOTH;
             action |= SA_SSI_SHOW;
+         }
+         else if (nBar == SB_CTL)
+         {
+            new_flags = ESB_ENABLE_BOTH;
          }
       }
 
@@ -642,6 +657,12 @@ co_IntSetScrollInfo(PWND Window, INT nBar, LPCSCROLLINFO lpsi, BOOL bRedraw)
          co_UserRedrawWindow(Window, &UpdateRect, 0, RDW_INVALIDATE | RDW_FRAME);
       }
 */   }
+
+   if (bChangeParams && (nBar == SB_HORZ || nBar == SB_VERT) && (lpsi->fMask & SIF_DISABLENOSCROLL))
+   {
+       IntEnableScrollBar(nBar == SB_HORZ, psbi, Window->pSBInfo->WSBflags);
+   }
+
    /* Return current position */
    return lpsi->fMask & SIF_PREVIOUSPOS ? OldPos : pSBData->pos;
 }
