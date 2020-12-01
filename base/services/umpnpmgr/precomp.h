@@ -53,10 +53,6 @@ extern HANDLE hDeviceInstallListNotEmpty;
 BOOL
 SetupIsActive(VOID);
 
-FORCEINLINE
-BOOL
-IsUISuppressionAllowed(VOID);
-
 DWORD
 WINAPI
 DeviceInstallThread(
