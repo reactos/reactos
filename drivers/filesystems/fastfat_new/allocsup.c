@@ -288,7 +288,7 @@ Routine Description:
     1.  First window with >50% free clusters
     2.  First empty window
     3.  Window with greatest number of free clusters.
-        
+
 Arguments:
 
     Vcb - Supplies the Vcb for the volume
@@ -305,17 +305,17 @@ Return Value:
     ULONG ClustersPerWindow = MAX_CLUSTER_BITMAP_SIZE;
 
     NT_ASSERT( 1 != Vcb->NumberOfWindows);
-    
+
     for (i = 0; i < Vcb->NumberOfWindows; i++) {
 
         if (Vcb->Windows[i].ClustersFree == ClustersPerWindow)  {
-        
+
             if (-1 == FirstEmpty)  {
-            
+
                 //
                 //  Keep note of the first empty window on the disc
                 //
-                
+
                 FirstEmpty = i;
             }
         }
@@ -324,7 +324,7 @@ Return Value:
             //
             //  This window has the most free clusters,  so far
             //
-            
+
             MaxFree = Vcb->Windows[i].ClustersFree;
             Fave = i;
 
@@ -332,9 +332,9 @@ Return Value:
             //  If this window has >50% free clusters,  then we will take it,
             //  so don't bother considering more windows.
             //
-            
+
             if (MaxFree >= (ClustersPerWindow >> 1))  {
-            
+
                 break;
             }
         }
@@ -345,7 +345,7 @@ Return Value:
     //  first empty window on the disc,  if any - otherwise we'll just go with
     //  the one with the most free clusters.
     //
-    
+
     if ((MaxFree < (ClustersPerWindow >> 1)) && (-1 != FirstEmpty))  {
 
         Fave = FirstEmpty;
@@ -354,7 +354,7 @@ Return Value:
     return Fave;
 }
 
-
+
 VOID
 FatSetupAllocationSupport (
     IN PIRP_CONTEXT IrpContext,
@@ -544,7 +544,7 @@ Arguments:
     return;
 }
 
-
+
 VOID
 FatTearDownAllocationSupport (
     IN PIRP_CONTEXT IrpContext,
@@ -613,8 +613,8 @@ Return Value:
     return;
 }
 
-
-_Requires_lock_held_(_Global_critical_region_)    
+
+_Requires_lock_held_(_Global_critical_region_)
 VOID
 FatLookupFileAllocation (
     IN PIRP_CONTEXT IrpContext,
@@ -934,7 +934,7 @@ Arguments:
                     *Allocated = FALSE;
 
                     FcbOrDcb->Header.AllocationSize.QuadPart = CurrentVbo;
-                    
+
                     DebugTrace( 0, Dbg, "New file allocation size = %08lx.\n", CurrentVbo);
                     try_return ( NOTHING );
                 }
@@ -1077,8 +1077,8 @@ Arguments:
     return;
 }
 
-
-_Requires_lock_held_(_Global_critical_region_)    
+
+_Requires_lock_held_(_Global_critical_region_)
 VOID
 FatAddFileAllocation (
     IN PIRP_CONTEXT IrpContext,
@@ -1170,7 +1170,7 @@ Arguments:
             LBO FirstLboOfFile;
 
             NT_ASSERT( FcbOrDcb->FcbCondition == FcbGood );
-            
+
             FatGetDirentFromFcbOrDcb( IrpContext,
                                       FcbOrDcb,
                                       FALSE,
@@ -1485,7 +1485,7 @@ Return Value:
     //
     //  Inspired by a Prefix complaint.
     //
-    
+
     NT_ASSERT( FcbOrDcb->FcbCondition == FcbGood );
 
     //
@@ -1538,7 +1538,7 @@ Return Value:
 
         DebugTrace(0, Dbg, "Desired size equals current allocation.\n", 0);
         DebugTrace(-1, Dbg, "FatTruncateFileAllocation -> (VOID)\n", 0);
-        return;    
+        return;
     }
 
     UnwindInitialAllocationSize = FcbOrDcb->Header.AllocationSize.LowPart;
@@ -1572,7 +1572,7 @@ Return Value:
             //
 
             NT_ASSERT( FcbOrDcb->FcbCondition == FcbGood );
-            
+
             FatGetDirentFromFcbOrDcb( IrpContext, FcbOrDcb, FALSE, &Dirent, &Bcb );
 
             Dirent->FirstClusterOfFile = 0;
@@ -1679,8 +1679,8 @@ Return Value:
     } _SEH2_END;
 }
 
-
-_Requires_lock_held_(_Global_critical_region_)    
+
+_Requires_lock_held_(_Global_critical_region_)
 VOID
 FatLookupFileAllocationSize (
     IN PIRP_CONTEXT IrpContext,
@@ -1739,8 +1739,8 @@ Arguments:
     return;
 }
 
-
-_Requires_lock_held_(_Global_critical_region_)    
+
+_Requires_lock_held_(_Global_critical_region_)
 VOID
 FatAllocateDiskSpace (
     IN PIRP_CONTEXT IrpContext,
@@ -1875,7 +1875,7 @@ Arguments:
 
     //
     //  Make sure there are enough free clusters to start with, and
-    //  take them now so that nobody else takes them from us.  
+    //  take them now so that nobody else takes them from us.
     //
 
     ExAcquireResourceSharedLite(&Vcb->ChangeBitMapResource, TRUE);
@@ -1922,8 +1922,8 @@ Arguments:
                 //  Drop our shared lock on the ChangeBitMapResource,  and pick it up again
                 //  exclusive in preparation for making the window swap.
                 //
-                
-                FatUnlockFreeClusterBitMap(Vcb);    
+
+                FatUnlockFreeClusterBitMap(Vcb);
                 ExReleaseResourceLite(&Vcb->ChangeBitMapResource);
                 ExAcquireResourceExclusiveLite(&Vcb->ChangeBitMapResource, TRUE);
                 FatLockFreeClusterBitMap(Vcb);
@@ -1932,12 +1932,12 @@ Arguments:
 
                 //
                 //  Again,  test the current window against the one we want - some other
-                //  thread could have sneaked in behind our backs and kindly set it to the one 
+                //  thread could have sneaked in behind our backs and kindly set it to the one
                 //  we need,  when we dropped and reacquired the ChangeBitMapResource above.
                 //
-                
+
                 if (Window != Vcb->CurrentWindow)  {
-                
+
                     _SEH2_TRY {
 
                         Wait = BooleanFlagOn(IrpContext->Flags, IRP_CONTEXT_FLAG_WAIT);
@@ -1947,7 +1947,7 @@ Arguments:
                         //  Change to the new window (update Vcb->CurrentWindow) and scan it
                         //  to build up a freespace bitmap etc.
                         //
-                        
+
                         FatExamineFatEntries( IrpContext, Vcb,
                                               0,
                                               0,
@@ -2004,7 +2004,7 @@ Arguments:
         //
         //  NOTE: Clusterhint in the Vcb is not guaranteed to be set (may be -1)
         //
-    
+
         WindowRelativeHint = Vcb->ClusterHint;
         AbsoluteClusterHint = 0;
 
@@ -2130,7 +2130,7 @@ Arguments:
         //  it'll get converted into a true cluster number and put in Cluster, which
         //  will be a volume relative true cluster number.
         //
-        
+
         ULONG Index = 0;
         ULONG Cluster = 0;
         ULONG CurrentVbo = 0;
@@ -2147,7 +2147,7 @@ Arguments:
         //  Drop our shared lock on the ChangeBitMapResource,  and pick it up again
         //  exclusive in preparation for making a window swap.
         //
-        
+
         FatUnlockFreeClusterBitMap(Vcb);
         ExReleaseResourceLite(&Vcb->ChangeBitMapResource);
         ExAcquireResourceExclusiveLite(&Vcb->ChangeBitMapResource, TRUE);
@@ -2279,11 +2279,11 @@ Arguments:
                     if ((0 == WindowRelativeHint) && (0 == ClustersFound)) {
 
                         if (ClustersRemaining <= Vcb->CurrentWindow->ClustersFree)  {
-                        
+
                             //
-                            //  The remaining allocation could be satisfied entirely from this 
+                            //  The remaining allocation could be satisfied entirely from this
                             //  window.  We will ask only for what we need,  to try and avoid
-                            //  unnecessarily fragmenting large runs of space by always using 
+                            //  unnecessarily fragmenting large runs of space by always using
                             //  (part of) the largest run we can find.  This call will return the
                             //  first run large enough.
                             //
@@ -2291,19 +2291,19 @@ Arguments:
                             Index = RtlFindClearBits( &Vcb->FreeClusterBitMap,  ClustersRemaining,  0);
 
                             if (-1 != Index)  {
-                            
+
                                 ClustersFound = ClustersRemaining;
                             }
                         }
 
                         if (0 == ClustersFound)  {
-                            
+
                             //
                             //  Still nothing,  so just take the largest free run we can find.
                             //
-                            
+
                             ClustersFound = RtlFindLongestRunClear( &Vcb->FreeClusterBitMap, &Index );
-                            
+
                         }
 #if DBG
                         PreviousClear = RtlNumberOfClearBits( &Vcb->FreeClusterBitMap );
@@ -2366,7 +2366,7 @@ Arguments:
                            )  {
 
                             FaveWindow = NextWindow;
-                            SelectedWindow = TRUE;                            
+                            SelectedWindow = TRUE;
                         }
                         else  {
 
@@ -2394,7 +2394,7 @@ Arguments:
                         //
                         //  Select a new window to begin allocating from
                         //
-                        
+
                         FaveWindow = FatSelectBestWindow( Vcb);
                     }
 
@@ -2403,8 +2403,8 @@ Arguments:
                     //
 
                     if (0 == Vcb->Windows[ FaveWindow].ClustersFree) {
-                      
-#ifdef _MSC_VER  
+
+#ifdef _MSC_VER
 #pragma prefast( suppress: 28159, "we bugcheck here because our internal data structures are seriously corrupted if this happens" )
 #endif
                         FatBugCheck( 0, 5, 1 );
@@ -2445,7 +2445,7 @@ Arguments:
                     FatReserveClusters( IrpContext, Vcb, (Index + 2), ClustersFound );
 
                     Cluster = Index + Window->FirstCluster;
-                    
+
                     Window->ClustersFree -= ClustersFound;
                     NT_ASSERT( PreviousClear - ClustersFound == Window->ClustersFree );
 
@@ -2593,7 +2593,7 @@ Arguments:
     return;
 }
 
-
+
 
 //
 // Limit our zeroing writes to 1 MB.
@@ -2607,7 +2607,7 @@ FatDeallocateDiskSpace (
     IN PIRP_CONTEXT IrpContext,
     IN PVCB Vcb,
     IN PLARGE_MCB Mcb,
-    IN BOOLEAN ZeroOnDeallocate    
+    IN BOOLEAN ZeroOnDeallocate
     )
 
 /*++
@@ -2697,7 +2697,7 @@ Return Value:
             KeInitializeEvent( &IoEvent,
                                NotificationEvent,
                                FALSE );
-                    
+
             for ( McbIndex = 0; McbIndex < RunsInMcb; McbIndex++ ) {
 
                 FatGetNextMcbEntry( Vcb, Mcb, McbIndex, &Vbo, &Lbo, &ByteCount );
@@ -2713,7 +2713,7 @@ Return Value:
                 //
 
                 if (ByteCount > MAX_ZERO_MDL_SIZE) {
-                    Mdl = FatBuildZeroMdl( IrpContext, MAX_ZERO_MDL_SIZE);                
+                    Mdl = FatBuildZeroMdl( IrpContext, MAX_ZERO_MDL_SIZE);
                 } else {
                     Mdl = FatBuildZeroMdl( IrpContext, ByteCount);
                 }
@@ -2765,7 +2765,7 @@ Return Value:
                                                               &Iosb );
 
                         if (IoIrp == NULL) {
-                            NT_ASSERT( FALSE );                            
+                            NT_ASSERT( FALSE );
                             ZeroingStatus = STATUS_INSUFFICIENT_RESOURCES;
                             goto try_exit2;
                         }
@@ -2792,14 +2792,14 @@ Return Value:
                         }
 
                         if (!NT_SUCCESS( ZeroingStatus )) {
-                            NT_ASSERT( FALSE );                            
+                            NT_ASSERT( FALSE );
                             goto try_exit2;
                         }
 
                         //
                         // Increment the starting offset where we will zero.
                         //
-                        
+
                         Lbo += MdlSizeMapped;
 
                         //
@@ -2811,13 +2811,13 @@ Return Value:
                         if (ByteCountToZero < MdlSizeMapped) {
                             MdlSizeMapped = ByteCountToZero;
                         }
-                        
+
                     }
-                    
+
                 try_exit2:
-                
+
                     NOTHING;
-                    
+
                 } _SEH2_FINALLY {
 
                     if (!FlagOn( Mdl->MdlFlags, MDL_SOURCE_IS_NONPAGED_POOL) &&
@@ -2827,22 +2827,22 @@ Return Value:
                     }
                     IoFreeMdl( Mdl );
                 } _SEH2_END;
-                
-            }            
+
+            }
 
         try_exit:
 
             NOTHING;
-            
+
         } _SEH2_EXCEPT(FatExceptionFilter( NULL, _SEH2_GetExceptionInformation() )) {
-        
+
             //
-            // If we failed to zero for some reason, still go ahead and deallocate 
+            // If we failed to zero for some reason, still go ahead and deallocate
             // the clusters. Otherwise we'll leak space from the volume.
             //
-            
+
             ZeroingStatus = _SEH2_GetExceptionCode();
-                                    
+
         } _SEH2_END;
 
     }
@@ -3155,7 +3155,7 @@ Return Value:
     return;
 }
 
-
+
 _Requires_lock_held_(_Global_critical_region_)
 VOID
 FatSplitAllocation (
@@ -3225,7 +3225,7 @@ Return Value:
 
     ULONG ByteCount;
 
-#if DBG    
+#if DBG
     ULONG BytesPerCluster;
 #endif
 
@@ -3237,7 +3237,7 @@ Return Value:
     DebugTrace( 0, Dbg, "  SplitAtVbo   = %8lx\n", SplitAtVbo);
     DebugTrace( 0, Dbg, "  RemainingMcb = %p\n", RemainingMcb);
 
-#if DBG    
+#if DBG
     BytesPerCluster = 1 << Vcb->AllocationSupport.LogOfBytesPerCluster;
 #endif
 
@@ -3341,8 +3341,8 @@ Return Value:
     return;
 }
 
-
-_Requires_lock_held_(_Global_critical_region_)    
+
+_Requires_lock_held_(_Global_critical_region_)
 VOID
 FatMergeAllocation (
     IN PIRP_CONTEXT IrpContext,
@@ -3464,7 +3464,7 @@ Return Value:
     return;
 }
 
-
+
 //
 //  Internal support routine
 //
@@ -3556,7 +3556,7 @@ Return Value:
     }
 }
 
-
+
 //
 //  Internal support routine
 //
@@ -3744,7 +3744,7 @@ Arguments:
     return;
 }
 
-
+
 _Requires_lock_held_(_Global_critical_region_)
 VOID
 FatSetFatEntry (
@@ -4130,7 +4130,7 @@ Arguments:
     return;
 }
 
-
+
 //
 //  Internal support routine
 //
@@ -4646,7 +4646,7 @@ Return Value:
     return;
 }
 
-
+
 //
 //  Internal support routine
 //
@@ -4705,7 +4705,7 @@ Return Value:
         DebugTrace( 0, Dbg, "Received non power of 2.\n", 0);
 
         DebugTrace(-1, Dbg, "LogOf -> %8lx\n", Log);
-    
+
 #ifdef _MSC_VER
 #pragma prefast( suppress: 28159, "we bugcheck here because our internal data structures are seriously corrupted if this happens" )
 #endif
@@ -4715,7 +4715,7 @@ Return Value:
     return Log;
 }
 
-
+
 VOID
 FatExamineFatEntries(
     IN PIRP_CONTEXT IrpContext,
@@ -4818,14 +4818,14 @@ Return Value:
 
         //
         //  FAT32: Calculate the number of FAT entries covered by a window.  This is
-        //  equal to the number of bits in the freespace bitmap,  the size of which 
+        //  equal to the number of bits in the freespace bitmap,  the size of which
         //  is hardcoded.
         //
-        
+
         EntriesPerWindow = MAX_CLUSTER_BITMAP_SIZE;
-        
+
     } else {
-    
+
         EntriesPerWindow = Vcb->AllocationSupport.NumberOfClusters;
     }
 
@@ -4924,44 +4924,44 @@ Return Value:
         //
         //  Pick up the initial chunk of the FAT and first entry.
         //
-        
+
         if (FatIndexBitSize == 12) {
-        
+
             //
             //  We read in the entire fat in the 12 bit case.
             //
-        
+
             FatReadVolumeFile( IrpContext,
                                Vcb,
                                FatReservedBytes( &Vcb->Bpb ),
                                FatBytesPerFat( &Vcb->Bpb ),
                                &Bcb,
                                (PVOID *)&FatBuffer );
-        
+
             FatLookup12BitEntry(FatBuffer, 0, &FirstFatEntry);
-        
+
         } else {
-        
+
             //
             //  Read in one page of fat at a time.  We cannot read in the
             //  all of the fat we need because of cache manager limitations.
             //
-        
+
             ULONG BytesPerEntry = FatIndexBitSize >> 3;
-        
+
             FatPages = (FatReservedBytes(&Vcb->Bpb) + FatBytesPerFat(&Vcb->Bpb) + (PAGE_SIZE - 1)) / PAGE_SIZE;
             Page = (FatReservedBytes(&Vcb->Bpb) + StartIndex * BytesPerEntry) / PAGE_SIZE;
-        
+
             Offset = Page * PAGE_SIZE;
-        
+
             //
             //  Prefetch the FAT entries in memory for optimal performance.
             //
-        
+
             PrefetchPages = FatPages - Page;
-        
+
             if (PrefetchPages > FAT_PREFETCH_PAGE_COUNT) {
-        
+
                 PrefetchPages = ALIGN_UP_BY(Page, FAT_PREFETCH_PAGE_COUNT) - Page;
             }
 
@@ -4978,33 +4978,33 @@ Return Value:
                                PAGE_SIZE,
                                &Bcb,
                                &pv);
-        
+
             if (FatIndexBitSize == 32) {
-        
+
                 FatBuffer = (PUSHORT)((PUCHAR)pv +
                             (FatReservedBytes(&Vcb->Bpb) + StartIndex * BytesPerEntry) %
                                  PAGE_SIZE);
-        
+
                 FirstFatEntry = *((PULONG)FatBuffer);
                 FirstFatEntry = FirstFatEntry & FAT32_ENTRY_MASK;
-        
+
             } else {
-        
+
                 FatBuffer = (PUSHORT)((PUCHAR)pv +
                             FatReservedBytes(&Vcb->Bpb) % PAGE_SIZE) + 2;
-        
+
                 FirstFatEntry = *FatBuffer;
             }
-        
+
         }
-        
+
         ClusterSize = 1 << (Vcb->AllocationSupport.LogOfBytesPerCluster);
-        
+
         CurrentRun = (FirstFatEntry == FAT_CLUSTER_AVAILABLE) ?
                      FreeClusters : AllocatedClusters;
-        
+
         StartIndexOfThisRun = StartIndex;
-        
+
         for (FatIndex = StartIndex; FatIndex <= EndIndex; FatIndex++) {
 
             if (FatIndexBitSize == 12) {
@@ -5105,8 +5105,8 @@ Return Value:
                     FatEntry = *((PULONG)FatBuffer)++;
                     FatEntry = FatEntry & FAT32_ENTRY_MASK;
 #else
-                    FatEntry = *FatBuffer;
-                    FatBuffer += 1;
+                    FatEntry = *((PULONG)FatBuffer);
+                    FatBuffer += 2; /* PUSHORT FatBuffer */
                     FatEntry = FatEntry & FAT32_ENTRY_MASK;
 #endif
 
@@ -5173,14 +5173,14 @@ Return Value:
             //  If the entry is marked bad, add it to the bad block MCB
             //
 
-            if ((SetupWindows || (Vcb->NumberOfWindows == 1)) && 
+            if ((SetupWindows || (Vcb->NumberOfWindows == 1)) &&
                 (FatInterpretClusterType( Vcb, FatEntry ) == FatClusterBad)) {
-                
+
                 //
                 //  This cluster is marked bad.
                 //  Add it to the BadBlockMcb.
-                //                
-                
+                //
+
                 Lbo = FatGetLboFromIndex( Vcb, FatIndex );
                 FatAddMcbEntry( Vcb, &Vcb->BadBlockMcb, BadClusterVbo, Lbo, ClusterSize );
                 BadClusterVbo += ClusterSize;
@@ -5190,9 +5190,9 @@ Return Value:
         //
         //  If we finished the scan, then we know about all the possible bad clusters.
         //
-        
+
         SetFlag( Vcb->VcbState, VCB_STATE_FLAG_BAD_BLOCKS_POPULATED);
-        
+
         //
         //  Now we have to record the final run we encountered
         //
