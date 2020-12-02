@@ -759,25 +759,25 @@ CcZeroData (
         PMDL Mdl;
         ULONG i;
         ULONG CurrentLength;
+        PPFN_NUMBER PfnArray;
 
-        Mdl = _alloca(MmSizeOfMdl(NULL, MAX_ZERO_LENGTH));
+        /* Setup our Mdl */
+        Mdl = IoAllocateMdl(NULL, min(Length, MAX_ZERO_LENGTH), FALSE, FALSE, NULL);
+        if (!Mdl)
+            ExRaiseStatus(STATUS_INSUFFICIENT_RESOURCES);
 
+        PfnArray = MmGetMdlPfnArray(Mdl);
+        for (i = 0; i < BYTES_TO_PAGES(Mdl->ByteCount); i++)
+            PfnArray[i] = CcZeroPage;
+        Mdl->MdlFlags |= MDL_PAGES_LOCKED;
+
+        /* Perform the write sequencially */
         while (Length > 0)
         {
-            if (Length + WriteOffset.QuadPart % PAGE_SIZE > MAX_ZERO_LENGTH)
-            {
-                CurrentLength = MAX_ZERO_LENGTH - WriteOffset.QuadPart % PAGE_SIZE;
-            }
-            else
-            {
-                CurrentLength = Length;
-            }
-            MmInitializeMdl(Mdl, (PVOID)(ULONG_PTR)WriteOffset.QuadPart, CurrentLength);
-            Mdl->MdlFlags |= MDL_PAGES_LOCKED;
-            for (i = 0; i < ((Mdl->Size - sizeof(MDL)) / sizeof(ULONG)); i++)
-            {
-                ((PPFN_NUMBER)(Mdl + 1))[i] = CcZeroPage;
-            }
+            CurrentLength = min(Length, MAX_ZERO_LENGTH);
+
+            Mdl->ByteCount = CurrentLength;
+
             KeInitializeEvent(&Event, NotificationEvent, FALSE);
             Status = IoSynchronousPageWrite(FileObject, Mdl, &WriteOffset, &Event, &Iosb);
             if (Status == STATUS_PENDING)
@@ -791,11 +791,14 @@ CcZeroData (
             }
             if (!NT_SUCCESS(Status))
             {
-                return FALSE;
+                IoFreeMdl(Mdl);
+                ExRaiseStatus(Status);
             }
             WriteOffset.QuadPart += CurrentLength;
             Length -= CurrentLength;
         }
+
+        IoFreeMdl(Mdl);
 
         return TRUE;
     }
