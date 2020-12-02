@@ -214,15 +214,8 @@ MiWritePage(PMM_SECTION_SEGMENT Segment,
     PMDL Mdl = (PMDL)MdlBase;
     PFILE_OBJECT FileObject = Segment->FileObject;
     LARGE_INTEGER FileOffset;
-    PFSRTL_COMMON_FCB_HEADER Fcb = FileObject->FsContext;
 
     FileOffset.QuadPart = Segment->Image.FileOffset + SegOffset;
-
-    /* Check if we are not writing off-limit */
-    if (FileOffset.QuadPart >= Fcb->AllocationSize.QuadPart)
-    {
-        return STATUS_SUCCESS;
-    }
 
     RtlZeroMemory(MdlBase, sizeof(MdlBase));
     MmInitializeMdl(Mdl, NULL, PAGE_SIZE);
@@ -1179,17 +1172,14 @@ MiReadPage(PMEMORY_AREA MemoryArea,
     PMDL Mdl = (PMDL)MdlBase;
     PFILE_OBJECT FileObject = MemoryArea->SectionData.Segment->FileObject;
     LARGE_INTEGER FileOffset;
-    PFSRTL_COMMON_FCB_HEADER Fcb = FileObject->FsContext;
 
     FileOffset.QuadPart = MemoryArea->SectionData.Segment->Image.FileOffset + SegOffset;
+
+    DPRINT("Reading file at offset %08x:%08x\n", FileOffset.HighPart, FileOffset.LowPart);
 
     Status = MmRequestPageMemoryConsumer(MC_USER, FALSE, Page);
     if (!NT_SUCCESS(Status))
         return Status;
-
-    /* Check if we are beyond the file */
-    if (FileOffset.QuadPart > Fcb->FileSize.QuadPart)
-        return STATUS_SUCCESS;
 
     RtlZeroMemory(MdlBase, sizeof(MdlBase));
     MmInitializeMdl(Mdl, NULL, PAGE_SIZE);
@@ -1204,6 +1194,7 @@ MiReadPage(PMEMORY_AREA MemoryArea,
         KeWaitForSingleObject(&Event, WrPageIn, KernelMode, FALSE, NULL);
         Status = IoStatus.Status;
     }
+
     if (Mdl->MdlFlags & MDL_MAPPED_TO_SYSTEM_VA)
     {
         MmUnmapLockedPages (Mdl->MappedSystemVa, Mdl);
@@ -4539,6 +4530,7 @@ MmMakePagesResident(
             MmUnlockAddressSpace(AddressSpace);
 
             /* FIXME: Read the whole range at once instead of one page at a time */
+            /* Ignore file size, as Cc already checked on its side. */
             Status = MiReadPage(MemoryArea, SegmentOffset.QuadPart, &Page);
             if (!NT_SUCCESS(Status))
             {
