@@ -557,8 +557,9 @@ CcCopyWrite (
         return FALSE;
 
     /* FIXME: Honor FileObject FO_WRITE_THROUGH flag */
+    ASSERT((FileOffset->QuadPart + Length) <= SharedCacheMap->SectionSize.QuadPart);
 
-    ASSERT((FileOffset->QuadPart + Length) <= SharedCacheMap->FileSize.QuadPart);
+    ASSERT((FileObject->Flags & FO_WRITE_THROUGH) == 0);
 
     CurrentOffset = FileOffset->QuadPart;
     while(CurrentOffset < WriteEnd)
@@ -577,7 +578,6 @@ CcCopyWrite (
         {
             if (!CcRosEnsureVacbResident(Vacb, Wait, FALSE, VacbOffset, VacbLength))
             {
-                CcRosReleaseVacb(SharedCacheMap, Vacb, TRUE, FALSE, FALSE);
                 return FALSE;
             }
 
@@ -589,7 +589,8 @@ CcCopyWrite (
         }
         _SEH2_FINALLY
         {
-            CcRosReleaseVacb(SharedCacheMap, Vacb, TRUE, TRUE, FALSE);
+            /* Do not mark the VACB as dirty if an exception was raised */
+            CcRosReleaseVacb(SharedCacheMap, Vacb, TRUE, !_SEH2_AbnormalTermination(), FALSE);
         }
         _SEH2_END;
     }
@@ -821,7 +822,6 @@ CcZeroData (
         {
             if (!CcRosEnsureVacbResident(Vacb, Wait, FALSE, VacbOffset, VacbLength))
             {
-                CcRosReleaseVacb(SharedCacheMap, Vacb, TRUE, FALSE, FALSE);
                 return FALSE;
             }
 
@@ -832,7 +832,8 @@ CcZeroData (
         }
         _SEH2_FINALLY
         {
-            CcRosReleaseVacb(SharedCacheMap, Vacb, TRUE, TRUE, FALSE);
+            /* Do not mark the VACB as dirty if an exception was raised */
+            CcRosReleaseVacb(SharedCacheMap, Vacb, TRUE, !_SEH2_AbnormalTermination(), FALSE);
         }
         _SEH2_END;
     }
