@@ -274,8 +274,6 @@ MmFinalizeSegment(PMM_SECTION_SEGMENT Segment)
 
     DPRINT("Finalize segment %p\n", Segment);
 
-    __debugbreak();
-
     MmLockSectionSegment(Segment);
     RemoveEntryList(&Segment->ListOfSegments);
     if (Segment->Flags & MM_DATAFILE_SEGMENT) {
@@ -621,8 +619,6 @@ MiFreeSegmentPage(PMM_SECTION_SEGMENT Segment,
 {
     ULONG_PTR Entry;
     PFILE_OBJECT FileObject = Segment->FileObject;
-
-    __debugbreak();
 
     Entry = MmGetPageEntrySectionSegment(Segment, FileOffset);
     DPRINTC("MiFreeSegmentPage(%p:%I64x -> Entry %Ix\n",

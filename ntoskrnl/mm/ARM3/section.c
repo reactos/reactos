@@ -1094,6 +1094,14 @@ MiMapViewInSystemSpace(IN PVOID Section,
         *ViewSize = SectionSize - SectionOffset->QuadPart;
     }
 
+    /* Check overflow */
+    if ((SectionOffset->QuadPart + *ViewSize) < SectionOffset->QuadPart)
+    {
+        DPRINT1("Integer overflow between size & offset!\n");
+        MiDereferenceControlArea(ControlArea);
+        return STATUS_INVALID_VIEW_SIZE;
+    }
+
     /* Check if the caller wanted a larger section than the view */
     if (SectionOffset->QuadPart + *ViewSize > SectionSize)
     {
