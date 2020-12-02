@@ -466,65 +466,6 @@ CcRosUnmarkDirtyVacb (
     }
 }
 
-NTSTATUS
-NTAPI
-CcRosMarkDirtyFile (
-    PROS_SHARED_CACHE_MAP SharedCacheMap,
-    LONGLONG FileOffset)
-{
-    PROS_VACB Vacb;
-
-    ASSERT(SharedCacheMap);
-
-    DPRINT("CcRosMarkDirtyVacb(SharedCacheMap 0x%p, FileOffset %I64u)\n",
-           SharedCacheMap, FileOffset);
-
-    Vacb = CcRosLookupVacb(SharedCacheMap, FileOffset);
-    if (Vacb == NULL)
-    {
-        KeBugCheck(CACHE_MANAGER);
-    }
-
-    CcRosReleaseVacb(SharedCacheMap, Vacb, Vacb->Valid, TRUE, FALSE);
-
-    return STATUS_SUCCESS;
-}
-
-/*
- * Note: this is not the contrary function of
- * CcRosMapVacbInKernelSpace()
- */
-NTSTATUS
-NTAPI
-CcRosUnmapVacb (
-    PROS_SHARED_CACHE_MAP SharedCacheMap,
-    LONGLONG FileOffset,
-    BOOLEAN NowDirty)
-{
-    PROS_VACB Vacb;
-
-    ASSERT(SharedCacheMap);
-
-    DPRINT("CcRosUnmapVacb(SharedCacheMap 0x%p, FileOffset %I64u, NowDirty %u)\n",
-           SharedCacheMap, FileOffset, NowDirty);
-
-    Vacb = CcRosLookupVacb(SharedCacheMap, FileOffset);
-    if (Vacb == NULL)
-    {
-        return STATUS_UNSUCCESSFUL;
-    }
-
-    ASSERT(Vacb->MappedCount != 0);
-    if (InterlockedDecrement((PLONG)&Vacb->MappedCount) == 0)
-    {
-        CcRosVacbDecRefCount(Vacb);
-    }
-
-    CcRosReleaseVacb(SharedCacheMap, Vacb, Vacb->Valid, NowDirty, FALSE);
-
-    return STATUS_SUCCESS;
-}
-
 static
 BOOLEAN
 CcRosFreeUnusedVacb (
