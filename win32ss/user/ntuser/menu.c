@@ -2154,11 +2154,10 @@ static void MENU_MenuBarCalcSize( HDC hdc, LPRECT lprect, PMENU lppop, PWND pwnd
  */
 static void MENU_DrawScrollArrows(PMENU lppop, HDC hdc)
 {
-    UINT arrow_bitmap_width, arrow_bitmap_height;
-    RECT rect, dfcrc;
+    UINT arrow_bitmap_height;
+    RECT rect;
     UINT Flags = 0;
 
-    arrow_bitmap_width  = gpsi->oembmi[OBI_DNARROW].cx;
     arrow_bitmap_height = gpsi->oembmi[OBI_DNARROW].cy;
 
     rect.left = 0;
@@ -2166,22 +2165,14 @@ static void MENU_DrawScrollArrows(PMENU lppop, HDC hdc)
     rect.right = lppop->cxMenu;
     rect.bottom = arrow_bitmap_height;
     FillRect(hdc, &rect, IntGetSysColorBrush(COLOR_MENU));
-    dfcrc.left = (lppop->cxMenu - arrow_bitmap_width) / 2;
-    dfcrc.top = 0;
-    dfcrc.right = arrow_bitmap_width;
-    dfcrc.bottom = arrow_bitmap_height;
-    DrawFrameControl(hdc, &dfcrc, DFC_MENU, (lppop->iTop ? 0 : DFCS_INACTIVE)|DFCS_MENUARROWUP);
+    DrawFrameControl(hdc, &rect, DFC_MENU, (lppop->iTop ? 0 : DFCS_INACTIVE)|DFCS_MENUARROWUP);
 
     rect.top = lppop->cyMenu - arrow_bitmap_height;
     rect.bottom = lppop->cyMenu;
     FillRect(hdc, &rect, IntGetSysColorBrush(COLOR_MENU));
     if (!(lppop->iTop < lppop->iMaxTop - (MENU_GetMaxPopupHeight(lppop) - 2 * arrow_bitmap_height)))
        Flags = DFCS_INACTIVE;
-    dfcrc.left = (lppop->cxMenu - arrow_bitmap_width) / 2;
-    dfcrc.top = lppop->cyMenu - arrow_bitmap_height;
-    dfcrc.right = arrow_bitmap_width;
-    dfcrc.bottom = lppop->cyMenu;
-    DrawFrameControl(hdc, &dfcrc, DFC_MENU, Flags|DFCS_MENUARROWDOWN);
+    DrawFrameControl(hdc, &rect, DFC_MENU, Flags|DFCS_MENUARROWDOWN);
 }
 
 /***********************************************************************
