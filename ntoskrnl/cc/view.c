@@ -388,7 +388,6 @@ CcRosMarkDirtyVacb (
 {
     KIRQL oldIrql;
     PROS_SHARED_CACHE_MAP SharedCacheMap;
-    ULONG Length = VACB_MAPPING_GRANULARITY;
 
     SharedCacheMap = Vacb->SharedCacheMap;
 
@@ -398,12 +397,9 @@ CcRosMarkDirtyVacb (
     ASSERT(!Vacb->Dirty);
 
     InsertTailList(&DirtyVacbListHead, &Vacb->DirtyVacbListEntry);
-#if 0
-    if (Vacb->FileOffset.QuadPart + Length > SharedCacheMap->SectionSize.QuadPart)
-        Length = SharedCacheMap->SectionSize.QuadPart - Vacb->FileOffset.QuadPart;
-#endif
-    CcTotalDirtyPages += PAGE_ROUND_UP(Length) / PAGE_SIZE;
-    Vacb->SharedCacheMap->DirtyPages += PAGE_ROUND_UP(Length) / PAGE_SIZE;
+    /* FIXME: There is no reason to account for the whole VACB. */
+    CcTotalDirtyPages += VACB_MAPPING_GRANULARITY / PAGE_SIZE;
+    Vacb->SharedCacheMap->DirtyPages += VACB_MAPPING_GRANULARITY / PAGE_SIZE;
     CcRosVacbIncRefCount(Vacb);
 
     /* Move to the tail of the LRU list */
@@ -430,7 +426,6 @@ CcRosUnmarkDirtyVacb (
 {
     KIRQL oldIrql;
     PROS_SHARED_CACHE_MAP SharedCacheMap;
-    ULONG Length = VACB_MAPPING_GRANULARITY;
 
     SharedCacheMap = Vacb->SharedCacheMap;
 
@@ -447,12 +442,8 @@ CcRosUnmarkDirtyVacb (
     RemoveEntryList(&Vacb->DirtyVacbListEntry);
     InitializeListHead(&Vacb->DirtyVacbListEntry);
 
-#if 0
-    if (Vacb->FileOffset.QuadPart + Length > SharedCacheMap->SectionSize.QuadPart)
-        Length = SharedCacheMap->SectionSize.QuadPart - Vacb->FileOffset.QuadPart;
-#endif
-    CcTotalDirtyPages -= PAGE_ROUND_UP(Length) / PAGE_SIZE;
-    Vacb->SharedCacheMap->DirtyPages -= PAGE_ROUND_UP(Length) / PAGE_SIZE;
+    CcTotalDirtyPages -= VACB_MAPPING_GRANULARITY / PAGE_SIZE;
+    Vacb->SharedCacheMap->DirtyPages -= VACB_MAPPING_GRANULARITY / PAGE_SIZE;
 
     CcRosVacbDecRefCount(Vacb);
 
@@ -718,8 +709,11 @@ CcRosEnsureVacbResident(
 
     ASSERT((Offset + Length) <= VACB_MAPPING_GRANULARITY);
 
-    if ((Vacb->FileOffset.QuadPart + Offset) > Vacb->SharedCacheMap->FileSize.QuadPart)
+    if ((Vacb->FileOffset.QuadPart + Offset) > Vacb->SharedCacheMap->SectionSize.QuadPart)
+    {
+        DPRINT1("Vacb read beyond the file size!\n");
         return FALSE;
+    }
 
     BaseAddress = (PVOID)((ULONG_PTR)Vacb->BaseAddress + Offset);
 
