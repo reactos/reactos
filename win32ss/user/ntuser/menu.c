@@ -5506,7 +5506,7 @@ NtUserGetSystemMenu(HWND hWnd, BOOL bRevert)
    DECLARE_RETURN(HMENU);
 
    TRACE("Enter NtUserGetSystemMenu\n");
-   UserEnterShared();
+   UserEnterExclusive();
 
    if (!(Window = UserGetWindowObject(hWnd)))
    {
