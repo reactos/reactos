@@ -555,7 +555,7 @@ InstallBootCodeToDisk(
     IN PCWSTR RootPath,
     IN PFS_INSTALL_BOOTCODE InstallBootCode)
 {
-    NTSTATUS Status;
+    NTSTATUS Status, LockStatus;
     UNICODE_STRING Name;
     OBJECT_ATTRIBUTES ObjectAttributes;
     IO_STATUS_BLOCK IoStatusBlock;
@@ -584,8 +584,31 @@ InstallBootCodeToDisk(
     if (!NT_SUCCESS(Status))
         return Status;
 
+    /* Lock the volume */
+    LockStatus = NtFsControlFile(PartitionHandle, NULL, NULL, NULL, &IoStatusBlock, FSCTL_LOCK_VOLUME, NULL, 0, NULL, 0);
+    if (!NT_SUCCESS(LockStatus))
+    {
+        DPRINT1("Unable to lock the volume before installing boot code. Status 0x%08x. Expect problems.\n", LockStatus);
+    }
+
     /* Install the bootcode (MBR, VBR) */
     Status = InstallBootCode(SrcPath, PartitionHandle, PartitionHandle);
+
+    /* dismount & Unlock the volume */
+    if (NT_SUCCESS(LockStatus))
+    {
+        LockStatus = NtFsControlFile(PartitionHandle, NULL, NULL, NULL, &IoStatusBlock, FSCTL_DISMOUNT_VOLUME, NULL, 0, NULL, 0);
+        if (!NT_SUCCESS(LockStatus))
+        {
+            DPRINT1("Unable to unlock the volume after installing boot code. Status 0x%08x. Expect problems.\n", LockStatus);
+        }
+
+        LockStatus = NtFsControlFile(PartitionHandle, NULL, NULL, NULL, &IoStatusBlock, FSCTL_UNLOCK_VOLUME, NULL, 0, NULL, 0);
+        if (!NT_SUCCESS(LockStatus))
+        {
+            DPRINT1("Unable to unlock the volume after installing boot code. Status 0x%08x. Expect problems.\n", LockStatus);
+        }
+    }
 
     /* Close the partition */
     NtClose(PartitionHandle);
@@ -1076,6 +1099,7 @@ InstallFatBootcodeToPartition(
 
                 DPRINT1("Install FAT32 bootcode: %S ==> %S\n", SrcPath, SystemRootPath->Buffer);
                 Status = InstallBootCodeToDisk(SrcPath, SystemRootPath->Buffer, InstallFat32BootCode);
+                DPRINT1("Status: 0x%08X\n", Status);
                 if (!NT_SUCCESS(Status))
                 {
                     DPRINT1("InstallBootCodeToDisk(FAT32) failed (Status %lx)\n", Status);
