@@ -4290,6 +4290,7 @@ MmCreateSection (OUT PVOID  * Section,
     NTSTATUS Status;
     ULONG Protection;
     PSECTION *SectionObject = (PSECTION *)Section;
+    BOOLEAN FileLock = FALSE;
 
     /* Check if an ARM3 section is being created instead */
     if (!(AllocationAttributes & (SEC_IMAGE | SEC_PHYSICALMEMORY)))
@@ -4343,6 +4344,24 @@ MmCreateSection (OUT PVOID  * Section,
                 DPRINT1("Failed to get a handle to the FO: %lx\n", Status);
                 return Status;
             }
+
+            /* Lock the file */
+            Status = FsRtlAcquireToCreateMappedSection(FileObject, SectionPageProtection);
+            if (!NT_SUCCESS(Status))
+            {
+                ObDereferenceObject(FileObject);
+                return Status;
+            }
+
+            FileLock = TRUE;
+
+            /* Deny access if there are writes on the file */
+            if ((AllocationAttributes & SEC_IMAGE) && (Status == STATUS_FILE_LOCKED_WITH_WRITERS))
+            {
+                DPRINT1("Cannot create image maps with writers open on the file!\n");
+                Status = STATUS_ACCESS_DENIED;
+                goto Quit;
+            }
         }
         else
         {
@@ -4365,7 +4384,6 @@ MmCreateSection (OUT PVOID  * Section,
                                       SectionPageProtection,
                                       AllocationAttributes,
                                       FileObject);
-        ObDereferenceObject(FileObject);
     }
 #ifndef NEWCC
     else if (FileObject != NULL)
@@ -4378,7 +4396,6 @@ MmCreateSection (OUT PVOID  * Section,
                                           AllocationAttributes,
                                           FileObject,
                                           FileHandle != NULL);
-        ObDereferenceObject(FileObject);
     }
 #else
     else if (FileHandle != NULL || FileObject != NULL)
@@ -4396,9 +4413,13 @@ MmCreateSection (OUT PVOID  * Section,
     {
         /* All cases should be handled above */
         Status = STATUS_INVALID_PARAMETER;
-        if (FileObject)
-            ObDereferenceObject(FileObject);
     }
+
+Quit:
+    if (FileLock)
+        FsRtlReleaseFile(FileObject);
+    if (FileObject)
+        ObDereferenceObject(FileObject);
 
     return Status;
 }
