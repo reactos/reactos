@@ -1192,6 +1192,13 @@ static INT_PTR CALLBACK AboutDlgProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM
                 {
                     SetRegTextData( hWnd, hRegKey, L"RegisteredOwner", IDC_ABOUT_REG_USERNAME );
                     SetRegTextData( hWnd, hRegKey, L"RegisteredOrganization", IDC_ABOUT_REG_ORGNAME );
+#ifdef __REACTOS__
+                    if(GetWindowTextLengthW( GetDlgItem( hWnd, IDC_ABOUT_REG_USERNAME ) ) == 0 &&
+                       GetWindowTextLengthW( GetDlgItem( hWnd, IDC_ABOUT_REG_ORGNAME ) ) == 0)
+                    {
+                        ShowWindow( GetDlgItem( hWnd, IDC_ABOUT_REG_TO ), SW_HIDE );
+                    }
+#endif
 
                     RegCloseKey( hRegKey );
                 }
