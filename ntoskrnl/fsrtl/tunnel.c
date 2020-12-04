@@ -42,7 +42,7 @@ FsRtlFreeTunnelNode(
 {
     if (PoolList)
     {
-        /* divert the linked list entry, it's not required anymore, but we need it */ 
+        /* divert the linked list entry, it's not required anymore, but we need it */
         InsertHeadList(PoolList, &CurEntry->TimerQueueEntry);
         return;
     }
@@ -124,7 +124,8 @@ FsRtlPruneTunnelCache(
     /* If we have too many entries */
     while (Cache->NumEntries > TunnelMaxEntries)
     {
-        CurEntry = CONTAINING_RECORD(Entry, TUNNEL_NODE_ENTRY, TimerQueueEntry);
+        ASSERT(!IsListEmpty(&Cache->TimerQueue));
+        CurEntry = CONTAINING_RECORD(Cache->TimerQueue.Flink, TUNNEL_NODE_ENTRY, TimerQueueEntry);
         FsRtlRemoveNodeFromTunnel(Cache, CurEntry, PoolList, &Rebalance);
     }
 }
@@ -477,7 +478,7 @@ FsRtlAddToTunnelCache(IN PTUNNEL Cache,
                   RtlInsertAsRightChild(RtlParent(CurEntry), NodeEntry);
               }
          }
-         
+
          /* remove entry */
          RemoveEntryList(&((PTUNNEL_NODE_ENTRY)CurEntry)->TimerQueueEntry);
 
