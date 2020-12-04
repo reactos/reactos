@@ -1205,7 +1205,7 @@ MiReadPage(PMEMORY_AREA MemoryArea,
         Status = STATUS_SUCCESS;
     }
 
-    if ((SegOffset + PAGE_SIZE) > MemoryArea->SectionData.Segment->RawLength.QuadPart)
+    if ((MemoryArea->VadNode.u.VadFlags.VadType == VadImageMap) && ((SegOffset + PAGE_SIZE) > MemoryArea->SectionData.Segment->RawLength.QuadPart))
     {
         KIRQL OldIrql;
         PUCHAR PageMap;
