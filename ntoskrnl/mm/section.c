@@ -3128,7 +3128,6 @@ MmCreateImageSection(PSECTION *SectionObject,
                 InterlockedExchangePointer(&FileObject->SectionObjectPointer->ImageSectionObject, NULL);
                 ExFreePoolWithTag(ImageSectionObject, TAG_MM_SECTION_SEGMENT);
                 MmDereferenceSegment(DataSectionObject);
-                ObDereferenceObject(FileObject);
                 ObDereferenceObject(Section);
                 return STATUS_ACCESS_DENIED;
             }
