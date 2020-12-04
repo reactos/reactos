@@ -172,11 +172,27 @@ CcRosFlushVacb (
     SIZE_T FlushSize = min(VACB_MAPPING_GRANULARITY,
         Vacb->SharedCacheMap->SectionSize.QuadPart - Vacb->FileOffset.QuadPart);
     NTSTATUS Status;
+    BOOLEAN HaveLock = FALSE;
 
     CcRosUnmarkDirtyVacb(Vacb, TRUE);
 
+    /* Lock for flush, if we are not already the top-level */
+    if (IoGetTopLevelIrp() != (PIRP)FSRTL_CACHE_TOP_LEVEL_IRP)
+    {
+        Status = FsRtlAcquireFileForCcFlushEx(Vacb->SharedCacheMap->FileObject);
+        if (!NT_SUCCESS(Status))
+            goto quit;
+        HaveLock = TRUE;
+    }
+
     Status = MmFlushVirtualMemory(NULL, &Vacb->BaseAddress, &FlushSize, &Iosb);
 
+    if (HaveLock)
+    {
+        FsRtlReleaseFileForCcFlush(Vacb->SharedCacheMap->FileObject);
+    }
+
+quit:
     if (!NT_SUCCESS(Status))
         CcRosMarkDirtyVacb(Vacb);
 
