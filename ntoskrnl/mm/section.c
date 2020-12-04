@@ -4685,8 +4685,15 @@ MmCheckDirtySegment(
 
         MmUnlockSectionSegment(Segment);
 
+        /* Tell the FS driver who we are */
+        if (PageOut)
+            IoSetTopLevelIrp((PIRP)FSRTL_MOD_WRITE_TOP_LEVEL_IRP);
+
         /* Go ahead and write the page */
         Status = MiWritePage(Segment, Offset->QuadPart, Page);
+
+        if (PageOut)
+            IoSetTopLevelIrp(NULL);
 
         MmLockSectionSegment(Segment);
 
