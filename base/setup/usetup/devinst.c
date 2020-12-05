@@ -71,6 +71,7 @@ InstallDriver(
     UNICODE_STRING TypeU = RTL_CONSTANT_STRING(L"Type");
     UNICODE_STRING UpperFiltersU = RTL_CONSTANT_STRING(L"UpperFilters");
     PWSTR keyboardClass = L"kbdclass\0";
+    PWSTR partMgr = L"partmgr\0";
 
     UNICODE_STRING StringU;
     OBJECT_ATTRIBUTES ObjectAttributes;
@@ -180,6 +181,7 @@ InstallDriver(
 
     INF_FreeData(ImagePath);
 
+    /* Add kbdclass and partmgr upper filters */
     if (ClassGuid &&_wcsicmp(ClassGuid, L"{4D36E96B-E325-11CE-BFC1-08002BE10318}") == 0)
     {
         DPRINT1("Installing keyboard class driver for '%S'\n", DeviceId);
@@ -189,6 +191,16 @@ InstallDriver(
                       REG_MULTI_SZ,
                       keyboardClass,
                       (wcslen(keyboardClass) + 2) * sizeof(WCHAR));
+    }
+    else if (ClassGuid && _wcsicmp(ClassGuid, L"{4D36E967-E325-11CE-BFC1-08002BE10318}") == 0)
+    {
+        DPRINT1("Installing partition manager driver for '%S'\n", DeviceId);
+        NtSetValueKey(hDeviceKey,
+                      &UpperFiltersU,
+                      0,
+                      REG_MULTI_SZ,
+                      partMgr,
+                      (wcslen(partMgr) + 2) * sizeof(WCHAR));
     }
 
     INF_FreeData(ClassGuid);
