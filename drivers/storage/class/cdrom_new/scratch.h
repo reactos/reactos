@@ -87,7 +87,7 @@ ScratchBuffer_PerformNextReadWrite(
     #define ScratchBuffer_BeginUse(context) ScratchBuffer_BeginUseX((context), NULL, (ULONG)-1)
 #endif
 
-__inline VOID ScratchBuffer_BeginUseX(_Inout_ PCDROM_DEVICE_EXTENSION DeviceExtension, _In_opt_ LPCSTR File, ULONG Line)
+FORCEINLINE VOID ScratchBuffer_BeginUseX(_Inout_ PCDROM_DEVICE_EXTENSION DeviceExtension, _In_opt_ LPCSTR File, ULONG Line)
 {
     // NOTE: these are not "real" locks.  They are simply to help
     //       avoid multiple uses of the scratch buffer. Thus, it
@@ -101,7 +101,7 @@ __inline VOID ScratchBuffer_BeginUseX(_Inout_ PCDROM_DEVICE_EXTENSION DeviceExte
     RequestClearSendTime(DeviceExtension->ScratchContext.ScratchRequest);
     return;
 }
-__inline VOID ScratchBuffer_EndUse(_Inout_ PCDROM_DEVICE_EXTENSION DeviceExtension)
+FORCEINLINE VOID ScratchBuffer_EndUse(_Inout_ PCDROM_DEVICE_EXTENSION DeviceExtension)
 {
     // NOTE: these are not "real" locks.  They are simply to help
     //       avoid multiple uses of the scratch buffer.  Thus, it
@@ -162,7 +162,7 @@ ScratchBuffer_ExecuteCdbEx(
     );
 
 _IRQL_requires_max_(APC_LEVEL)
-__inline
+FORCEINLINE // __REACTOS__
 NTSTATUS
 ScratchBuffer_ExecuteCdb(
     _Inout_ PCDROM_DEVICE_EXTENSION DeviceExtension,

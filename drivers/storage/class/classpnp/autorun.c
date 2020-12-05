@@ -56,7 +56,7 @@ const GUID StoragePredictFailureEventGuid = WMI_STORAGE_PREDICT_FAILURE_EVENT_GU
 //         would be to serialize the polling and power down irps so that
 //         only one of them is sent to the device at a time.
 //
-__inline
+static
 BOOLEAN
 ClasspCanSendPollingIrp(
     _In_ PFUNCTIONAL_DEVICE_EXTENSION fdoExtension
