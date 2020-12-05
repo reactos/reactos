@@ -18,11 +18,8 @@ if(GCC OR CLANG)
     target_compile_options(nfs41_driver PRIVATE "-Wno-switch")
     if(CLANG)
         target_compile_options(nfs41_driver PRIVATE "-Wno-unused-value")
-        if(GCC)
-            # When CLang mimicks GCC, it uses C17 as default, which breaks __inline
-            target_compile_options(nfs41_driver PRIVATE "-std=gnu89")
-        endif()
     endif()
 endif()
+set_property(TARGET nfs41_driver PROPERTY C_STANDARD 90)
 
 add_cd_file(TARGET nfs41_driver DESTINATION reactos/system32/drivers FOR all)

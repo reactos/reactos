@@ -113,15 +113,14 @@ if(CLANG)
         -Wno-unused-value -Wno-parentheses-equality
         -Wno-incompatible-pointer-types-discards-qualifiers
         "-Wno-#pragma-messages;-Wno-cast-calling-convention")
-    if (GCC)
-        target_compile_options(ext2fs PRIVATE -std=gnu89)
-    endif()
 endif()
 
 target_link_libraries(ext2fs memcmp ${PSEH_LIB})
 add_definitions(-D__KERNEL__ -D_CRT_NO_POSIX_ERROR_CODES)
 set_module_type(ext2fs kernelmodedriver)
 add_importlibs(ext2fs ntoskrnl hal)
+
+set_property(TARGET ext2fs PROPERTY C_STANDARD 90)
 
 if(NOT USE_CLANG_CL)
     # The fallback we have above prevents cl and clang-cl from using the same PCH
