@@ -99,7 +99,7 @@ c_437.nls    = 1,,,,,,,2,,,,1,2
 c_1252.nls   = 1,,,,,,,2,,,,1,2
 cdfs.sys     = 1,,,,,,x,4,,,,1,4
 cdrom.sys    = 1,,,,,,x,4,,,,1,4
-class2.sys   = 1,,,,,,x,4,,,,1,4
+classpnp.sys = 1,,,,,,x,4,,,,1,4
 isapnp.sys   = 1,,,,,,,4,,,,1,4
 kdcom.dll    = 1,,,,,,,2,,,,1,2
 kdvbox.dll   = 1,,,,,,,2,,,,1,2
@@ -135,6 +135,7 @@ ntdll.dll    = 1,,,,,,,2,,,,1,2
 wmilib.sys   = 1,,,,,,,4,,,,1,4
 ksecdd.sys   = 1,,,,,,,4,,,,1,4
 mountmgr.sys = 1,,,,,,x,4,,,,1,4
+partmgr.sys  = 1,,,,,,x,4,,,,1,4
 
 [SourceDisksFiles.x86]
 
@@ -169,7 +170,7 @@ PCI\CC_0C0320 = usbehci
 USB\Class_08&SubClass_06&Prot_50 = usbstor
 HID_DEVICE_SYSTEM_KEYBOARD = kbdhid,{4D36E96B-E325-11CE-BFC1-08002BE10318}
 USB\COMPOSITE = usbccgp
-GenDisk = disk
+GenDisk = disk,{4D36E967-E325-11CE-BFC1-08002BE10318}
 USB\Class_03 = hidusb
 GENERIC_HID_DEVICE = hidusb
 *PNP0303 = i8042prt,{4D36E96B-E325-11CE-BFC1-08002BE10318}
