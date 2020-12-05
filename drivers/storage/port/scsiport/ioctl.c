@@ -335,7 +335,7 @@ FdoHandleQueryProperty(
         goto completeIrp;
     }
 
-    if (ioStack->Parameters.DeviceIoControl.OutputBufferLength < sizeof(STORAGE_ADAPTER_DESCRIPTOR))
+    if (ioStack->Parameters.DeviceIoControl.OutputBufferLength < sizeof(STORAGE_ADAPTER_DESCRIPTOR_WIN8))
     {
         // buffer too small
         PSTORAGE_DESCRIPTOR_HEADER DescriptorHeader = Irp->AssociatedIrp.SystemBuffer;
@@ -343,8 +343,8 @@ FdoHandleQueryProperty(
                >= sizeof(STORAGE_DESCRIPTOR_HEADER));
 
         // return required size
-        DescriptorHeader->Version = sizeof(STORAGE_ADAPTER_DESCRIPTOR);
-        DescriptorHeader->Size = sizeof(STORAGE_ADAPTER_DESCRIPTOR);
+        DescriptorHeader->Version = sizeof(STORAGE_ADAPTER_DESCRIPTOR_WIN8);
+        DescriptorHeader->Size = sizeof(STORAGE_ADAPTER_DESCRIPTOR_WIN8);
 
         Irp->IoStatus.Information = sizeof(STORAGE_DESCRIPTOR_HEADER);
         status = STATUS_SUCCESS;
@@ -352,14 +352,14 @@ FdoHandleQueryProperty(
     }
 
     // get adapter descriptor, information is returned in the same buffer
-    PSTORAGE_ADAPTER_DESCRIPTOR adapterDescriptor = Irp->AssociatedIrp.SystemBuffer;
+    PSTORAGE_ADAPTER_DESCRIPTOR_WIN8 adapterDescriptor = Irp->AssociatedIrp.SystemBuffer;
 
     // fill out descriptor
-    // NOTE: STORAGE_ADAPTER_DESCRIPTOR may vary in size, so it's important to zero out
+    // NOTE: STORAGE_ADAPTER_DESCRIPTOR_WIN8 may vary in size, so it's important to zero out
     // all unused fields
-    *adapterDescriptor = (STORAGE_ADAPTER_DESCRIPTOR) {
-        .Version = sizeof(STORAGE_ADAPTER_DESCRIPTOR),
-        .Size = sizeof(STORAGE_ADAPTER_DESCRIPTOR),
+    *adapterDescriptor = (STORAGE_ADAPTER_DESCRIPTOR_WIN8) {
+        .Version = sizeof(STORAGE_ADAPTER_DESCRIPTOR_WIN8),
+        .Size = sizeof(STORAGE_ADAPTER_DESCRIPTOR_WIN8),
         .MaximumTransferLength = portExt->PortCapabilities.MaximumTransferLength,
         .MaximumPhysicalPages = portExt->PortCapabilities.MaximumPhysicalPages,
         .AlignmentMask = portExt->PortCapabilities.AlignmentMask,
@@ -373,7 +373,7 @@ FdoHandleQueryProperty(
     };
 
     // store returned length
-    Irp->IoStatus.Information = sizeof(STORAGE_ADAPTER_DESCRIPTOR);
+    Irp->IoStatus.Information = sizeof(STORAGE_ADAPTER_DESCRIPTOR_WIN8);
     status = STATUS_SUCCESS;
 
 completeIrp:
