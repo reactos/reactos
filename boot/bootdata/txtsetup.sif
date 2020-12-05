@@ -92,7 +92,6 @@ nmidebug.sys = 1,,,,,,x,4,,,,1,4
 sacdrv.sys   = 1,,,,,,x,4,,,,1,4
 uniata.sys   = 1,,,,,,x,4,,,,1,4
 buslogic.sys = 1,,,,,,x,4,,,,1,4
-storahci.sys = 1,,,,,,x,4,,,,1,4
 blue.sys     = 1,,,,,,x,4,,,,1,4
 vgafonts.cab = 1,,,,,,,1,,,,1,1
 bootvid.dll  = 1,,,,,,,2,,,,1,2
