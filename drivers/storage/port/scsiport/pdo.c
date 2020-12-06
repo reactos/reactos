@@ -185,9 +185,11 @@ PdoHandleQueryDeviceText(
     PIO_STACK_LOCATION IoStack;
     UINT32 Offset = 0;
     PINQUIRYDATA InquiryData;
-    CHAR LocalBuffer[sizeof(InquiryData->VendorId) + sizeof(InquiryData->ProductId) + 2];
+    CHAR LocalBuffer[40];
     ANSI_STRING AnsiString;
     UNICODE_STRING DeviceDescription;
+
+    DPRINT("PdoHandleQueryDeviceText\n");
 
     IoStack = IoGetCurrentIrpStackLocation(Irp);
 
@@ -196,9 +198,8 @@ PdoHandleQueryDeviceText(
     switch (IoStack->Parameters.QueryDeviceText.DeviceTextType)
     {
         case DeviceTextDescription:
-        case DeviceTextLocationInformation:
         {
-            DPRINT("PdoHandleQueryDeviceText\n");
+            DPRINT("DeviceTextDescription\n");
 
             Offset += CopyFieldTruncate(InquiryData->VendorId,
                                         &LocalBuffer[Offset],
@@ -227,6 +228,33 @@ PdoHandleQueryDeviceText(
             Irp->IoStatus.Information = (ULONG_PTR)DeviceDescription.Buffer;
             return STATUS_SUCCESS;
         }
+
+        case DeviceTextLocationInformation:
+        {
+            DPRINT("DeviceTextLocationInformation\n");
+
+            sprintf(LocalBuffer, "Bus Number %d, Target ID %d, LUN %d",
+                    DeviceExtension->PathId, DeviceExtension->TargetId, DeviceExtension->Lun);
+
+            RtlInitAnsiString(&AnsiString, (PCSZ)&LocalBuffer);
+
+            DeviceDescription.Length = 0;
+            DeviceDescription.MaximumLength = (USHORT)((strlen(LocalBuffer) + 1) * sizeof(WCHAR));
+            DeviceDescription.Buffer = ExAllocatePoolWithTag(PagedPool,
+                                                             DeviceDescription.MaximumLength,
+                                                             TAG_SCSIPORT);
+            if (!DeviceDescription.Buffer)
+            {
+                Irp->IoStatus.Information = 0;
+                return STATUS_INSUFFICIENT_RESOURCES;
+            }
+
+            RtlAnsiStringToUnicodeString(&DeviceDescription, &AnsiString, FALSE);
+
+            Irp->IoStatus.Information = (ULONG_PTR)DeviceDescription.Buffer;
+            return STATUS_SUCCESS;
+        }
+
         default:
         {
             Irp->IoStatus.Information = 0;
