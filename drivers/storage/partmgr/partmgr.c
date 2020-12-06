@@ -846,6 +846,32 @@ FdoHandleStartDevice(
     }
 
     FdoExtension->DiskData.DeviceNumber = deviceNumber.DeviceNumber;
+
+    // register the disk interface
+    // partmgr.sys from Windows 8.1 also registers a mysterious GUID_DEVINTERFACE_HIDDEN_DISK here
+    UNICODE_STRING interfaceName;
+    status = IoRegisterDeviceInterface(FdoExtension->PhysicalDiskDO,
+                                       &GUID_DEVINTERFACE_DISK,
+                                       NULL,
+                                       &interfaceName);
+
+    if(!NT_SUCCESS(status))
+    {
+        ERR("Failed to register GUID_DEVINTERFACE_DISK, status %x\n", status);
+        return status;
+    }
+
+    FdoExtension->DiskInterfaceName = interfaceName;
+    status = IoSetDeviceInterfaceState(&interfaceName, TRUE);
+
+    INFO("Disk interface %wZ\n", &interfaceName);
+
+    if (!NT_SUCCESS(status))
+    {
+        RtlFreeUnicodeString(&interfaceName);
+        RtlInitUnicodeString(&FdoExtension->DiskInterfaceName, NULL);
+    }
+
     return status;
 }
 
@@ -1000,6 +1026,13 @@ FdoHandleRemoveDevice(
                                                          ListEntry);
 
         ASSERT(partExt->DeviceRemoved);
+    }
+
+    if (FdoExtension->DiskInterfaceName.Buffer)
+    {
+        IoSetDeviceInterfaceState(&FdoExtension->DiskInterfaceName, FALSE);
+        RtlFreeUnicodeString(&FdoExtension->DiskInterfaceName);
+        RtlInitUnicodeString(&FdoExtension->DiskInterfaceName, NULL);
     }
 
     // Send the IRP down the stack

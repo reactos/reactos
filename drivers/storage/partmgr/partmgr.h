@@ -44,6 +44,7 @@ typedef struct _FDO_EXTENSION
 
     SINGLE_LIST_ENTRY PartitionList;
     UINT32 EnumeratedPartitionsTotal;
+    UNICODE_STRING DiskInterfaceName;
 
     struct {
         UINT64 DiskSize;
