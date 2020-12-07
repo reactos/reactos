@@ -189,7 +189,7 @@ NTSTATUS
 NTAPI
 MmReadFromSwapPage(SWAPENTRY SwapEntry, PFN_NUMBER Page)
 {
-    return MiReadPageFile(Page, FILE_FROM_ENTRY(SwapEntry), OFFSET_FROM_ENTRY(SwapEntry) - 1);
+    return MiReadPageFile(Page, FILE_FROM_ENTRY(SwapEntry), OFFSET_FROM_ENTRY(SwapEntry));
 }
 
 NTSTATUS
@@ -214,6 +214,9 @@ MiReadPageFile(
         KeBugCheck(MEMORY_MANAGEMENT);
         return(STATUS_UNSUCCESSFUL);
     }
+
+    /* Normalize offset. */
+    PageFileOffset--;
 
     ASSERT(PageFileIndex < MAX_PAGING_FILES);
 
