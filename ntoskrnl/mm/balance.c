@@ -28,7 +28,6 @@ MM_ALLOCATION_REQUEST, *PMM_ALLOCATION_REQUEST;
 
 MM_MEMORY_CONSUMER MiMemoryConsumers[MC_MAXIMUM];
 static ULONG MiMinimumAvailablePages;
-static ULONG MiNrTotalPages;
 static LIST_ENTRY AllocationListHead;
 static KSPIN_LOCK AllocationListLock;
 static ULONG MiMinimumPagesPerRun;
@@ -49,12 +48,10 @@ MmInitializeBalancer(ULONG NrAvailablePages, ULONG NrSystemPages)
     InitializeListHead(&AllocationListHead);
     KeInitializeSpinLock(&AllocationListLock);
 
-    MiNrTotalPages = NrAvailablePages;
-
     /* Set up targets. */
     MiMinimumAvailablePages = 256;
     MiMinimumPagesPerRun = 256;
-    MiMemoryConsumers[MC_USER].PagesTarget = NrAvailablePages - MiMinimumAvailablePages;
+    MiMemoryConsumers[MC_USER].PagesTarget = NrAvailablePages / 2;
 }
 
 CODE_SEG("INIT")
@@ -120,15 +117,12 @@ MiTrimMemoryConsumer(ULONG Consumer, ULONG InitialTarget)
         Target = (ULONG)max(Target, MiMinimumAvailablePages - MmAvailablePages);
     }
 
+    /* Don't be too greedy if we're not in a hurry */
+    if (MmAvailablePages > MiMinimumAvailablePages)
+        Target = min(Target, 256);
+
     if (Target)
     {
-        if (!InitialTarget)
-        {
-            /* If there was no initial target,
-             * swap at least MiMinimumPagesPerRun */
-            Target = max(Target, MiMinimumPagesPerRun);
-        }
-
         /* Now swap the pages out */
         Status = MiMemoryConsumers[Consumer].Trim(Target, 0, &NrFreedPages);
 
@@ -138,21 +132,10 @@ MiTrimMemoryConsumer(ULONG Consumer, ULONG InitialTarget)
         {
             KeBugCheck(MEMORY_MANAGEMENT);
         }
-
-        /* Update the target */
-        if (NrFreedPages < Target)
-            Target -= NrFreedPages;
-        else
-            Target = 0;
-
-        /* Return the remaining pages needed to meet the target */
-        return Target;
     }
-    else
-    {
-        /* Initial target is zero and we don't have anything else to add */
-        return 0;
-    }
+
+    /* Return the page count needed to be freed to meet the initial target */
+    return (InitialTarget > NrFreedPages) ? (InitialTarget - NrFreedPages) : 0;
 }
 
 NTSTATUS
