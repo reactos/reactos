@@ -242,7 +242,7 @@ xKdUnmapVirtualAddress(
 //
 #define DISK_SIGNATURE_OFFSET                       0x1B8
 #define PARTITION_TABLE_OFFSET                      0x1BE
-#define BOOT_SIGNATURE_OFFSET                       ((0x200 / sizeof(INT16)) - 1)
+#define BOOT_SIGNATURE_OFFSET                       (0x200 - 2)
 
 #define BOOT_RECORD_SIGNATURE                       0xAA55
 #define NUM_PARTITION_TABLE_ENTRIES                 4

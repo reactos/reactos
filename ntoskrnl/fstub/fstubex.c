@@ -19,7 +19,7 @@ typedef struct _DISK_INFORMATION
     PDEVICE_OBJECT DeviceObject;
     ULONG SectorSize;
     DISK_GEOMETRY_EX DiskGeometry;
-    PUSHORT Buffer;
+    PUCHAR Buffer;
     ULONGLONG SectorCount;
 } DISK_INFORMATION, *PDISK_INFORMATION;
 
@@ -122,7 +122,7 @@ NTAPI
 FstubReadSector(IN PDEVICE_OBJECT DeviceObject,
                 IN ULONG SectorSize,
                 IN ULONGLONG StartingSector OPTIONAL,
-                OUT PUSHORT Buffer
+                OUT PVOID Buffer
 );
 
 NTSTATUS
@@ -158,7 +158,7 @@ NTAPI
 FstubWriteSector(IN PDEVICE_OBJECT DeviceObject,
                  IN ULONG SectorSize,
                  IN ULONGLONG StartingSector OPTIONAL,
-                 IN PUSHORT Buffer
+                 IN PVOID Buffer
 );
 
 VOID
@@ -673,10 +673,9 @@ FstubDetectPartitionStyle(IN PDISK_INFORMATION Disk,
     }
 
     /* Get the partition descriptor array */
-    PartitionDescriptor = (PPARTITION_DESCRIPTOR)
-                          &(Disk->Buffer[PARTITION_TABLE_OFFSET / sizeof(Disk->Buffer[0])]);
+    PartitionDescriptor = (PPARTITION_DESCRIPTOR)&Disk->Buffer[PARTITION_TABLE_OFFSET];
     /* If we have not the 0xAA55 then it's raw partition */
-    if (Disk->Buffer[BOOT_SIGNATURE_OFFSET] != BOOT_RECORD_SIGNATURE)
+    if (*(PUINT16)&Disk->Buffer[BOOT_SIGNATURE_OFFSET] != BOOT_RECORD_SIGNATURE)
     {
         *PartitionStyle = PARTITION_STYLE_RAW;
     }
@@ -865,7 +864,7 @@ FstubReadHeaderEFI(IN PDISK_INFORMATION Disk,
     /* Then zero the one in EFI header. This is needed to compute header checksum */
     EFIHeader->HeaderCRC32 = 0;
     /* Compute header checksum and compare with the one present in partition table */
-    if (RtlComputeCrc32(0, (PUCHAR)Disk->Buffer, sizeof(EFI_PARTITION_HEADER)) != HeaderCRC32)
+    if (RtlComputeCrc32(0, Disk->Buffer, sizeof(EFI_PARTITION_HEADER)) != HeaderCRC32)
     {
         DPRINT("EFI::Not matching header checksum!\n");
         return STATUS_DISK_CORRUPT_ERROR;
@@ -1173,7 +1172,7 @@ NTAPI
 FstubReadSector(IN PDEVICE_OBJECT DeviceObject,
                 IN ULONG SectorSize,
                 IN ULONGLONG StartingSector OPTIONAL,
-                OUT PUSHORT Buffer)
+                OUT PVOID Buffer)
 {
     PIRP Irp;
     KEVENT Event;
@@ -1721,7 +1720,7 @@ NTAPI
 FstubWriteSector(IN PDEVICE_OBJECT DeviceObject,
                  IN ULONG SectorSize,
                  IN ULONGLONG StartingSector OPTIONAL,
-                 IN PUSHORT Buffer)
+                 IN PVOID Buffer)
 {
     PIRP Irp;
     KEVENT Event;
@@ -2220,7 +2219,7 @@ IoReadDiskSignature(IN PDEVICE_OBJECT DeviceObject,
     else
     {
         /* Compute MBR checksum */
-        for (i = 0, CheckSum = 0; i < BytesPerSector / sizeof(UINT32); i++)
+        for (i = 0, CheckSum = 0; i < 512; i += sizeof(INT32))
         {
             CheckSum += *(PUINT32)&Buffer[i];
         }

@@ -1704,7 +1704,7 @@ xHalExamineMBR(IN PDEVICE_OBJECT DeviceObject,
     if (NT_SUCCESS(Status))
     {
         /* Validate the MBR Signature */
-        if (((PUSHORT)Buffer)[BOOT_SIGNATURE_OFFSET] != BOOT_RECORD_SIGNATURE)
+        if (*(PUINT16)&Buffer[BOOT_SIGNATURE_OFFSET] != BOOT_RECORD_SIGNATURE)
         {
             /* Failed */
             ExFreePoolWithTag(Buffer, TAG_FILE_SYSTEM);
@@ -1885,7 +1885,7 @@ xHalIoReadPartitionTable(IN PDEVICE_OBJECT DeviceObject,
         if (IsEzDrive && (Offset.QuadPart == 512)) Offset.QuadPart = 0;
 
         /* Make sure this is a valid MBR */
-        if (((PUSHORT)Buffer)[BOOT_SIGNATURE_OFFSET] != BOOT_RECORD_SIGNATURE)
+        if (*(PUINT16)&Buffer[BOOT_SIGNATURE_OFFSET] != BOOT_RECORD_SIGNATURE)
         {
             /* It's not, fail */
             DPRINT1("FSTUB: (IoReadPartitionTable) No 0xaa55 found in "
@@ -2279,7 +2279,7 @@ xHalIoSetPartitionInformation(IN PDEVICE_OBJECT DeviceObject,
         if (IsEzDrive && (Offset.QuadPart == 512)) Offset.QuadPart = 0;
 
         /* Make sure this is a valid MBR */
-        if (((PUSHORT)Buffer)[BOOT_SIGNATURE_OFFSET] != BOOT_RECORD_SIGNATURE)
+        if (*(PUINT16)&Buffer[BOOT_SIGNATURE_OFFSET] != BOOT_RECORD_SIGNATURE)
         {
             /* It's not, fail */
             Status = STATUS_BAD_MASTER_BOOT_RECORD;
@@ -2395,7 +2395,7 @@ xHalIoWritePartitionTable(IN PDEVICE_OBJECT DeviceObject,
     PIRP Irp;
     NTSTATUS Status = STATUS_SUCCESS;
     ULONG BufferSize;
-    PUSHORT Buffer;
+    PUCHAR Buffer;
     PPTE Entry;
     PPARTITION_TABLE PartitionTable;
     LARGE_INTEGER Offset, NextOffset, ExtendedOffset, SectorOffset;
@@ -2515,7 +2515,7 @@ xHalIoWritePartitionTable(IN PDEVICE_OBJECT DeviceObject,
         if (!IsSuperFloppy)
         {
             /* Set the boot record signature */
-            ((PUSHORT)Buffer)[BOOT_SIGNATURE_OFFSET] = BOOT_RECORD_SIGNATURE;
+            *(PUINT16)&Buffer[BOOT_SIGNATURE_OFFSET] = BOOT_RECORD_SIGNATURE;
 
             /* By default, don't require a rewrite */
             DoRewrite = FALSE;
@@ -2524,10 +2524,10 @@ xHalIoWritePartitionTable(IN PDEVICE_OBJECT DeviceObject,
             if (!Offset.QuadPart)
             {
                 /* Check if the signature doesn't match */
-                if (*(PUINT32)&Buffer[PARTITION_TABLE_OFFSET] != PartitionBuffer->Signature)
+                if (*(PUINT32)&Buffer[DISK_SIGNATURE_OFFSET] != PartitionBuffer->Signature)
                 {
                     /* Then write the signature and now we need a rewrite */
-                    *(PUINT32)&Buffer[PARTITION_TABLE_OFFSET] = PartitionBuffer->Signature;
+                    *(PUINT32)&Buffer[DISK_SIGNATURE_OFFSET] = PartitionBuffer->Signature;
                     DoRewrite = TRUE;
                 }
             }
