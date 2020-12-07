@@ -212,13 +212,16 @@ RegistryInitAdapterKey(
     }
 
     /* Set 'Driver' (REG_SZ) value */
-    PUNICODE_STRING driverNameU = &DeviceExtension->Common.DeviceObject->DriverObject->DriverName;
+    PUNICODE_STRING driverNameU = &DeviceExtension->Common.DeviceObject->DriverObject
+                                  ->DriverExtension->ServiceKeyName;
+
     PWCHAR driverName = ExAllocatePoolWithTag(PagedPool,
                                               driverNameU->Length + sizeof(UNICODE_NULL),
                                               TAG_SCSIPORT);
     if (!driverName)
     {
         DPRINT("Failed to allocate driverName!\n");
+        ZwClose(ScsiPortKey);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
