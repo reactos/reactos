@@ -1082,7 +1082,7 @@ MmUnsharePageEntrySectionSegment(PMEMORY_AREA MemoryArea,
         return FALSE;
     }
 
-    if (IS_DIRTY_SSE(Entry) && !(Segment->Image.Characteristics & IMAGE_SCN_MEM_SHARED))
+    if (Dirty && (MemoryArea->VadNode.u.VadFlags.VadType != VadImageMap))
     {
         ASSERT(!Segment->WriteCopy);
         ASSERT(MmGetSavedSwapEntryPage(Page) == 0);
@@ -1091,6 +1091,9 @@ MmUnsharePageEntrySectionSegment(PMEMORY_AREA MemoryArea,
         MmSetPageEntrySectionSegment(Segment, Offset, Entry);
         return FALSE;
     }
+
+    /* Only valid case for shared dirty pages is shared image section */
+    ASSERT(!Dirty || (Segment->Image.Characteristics & IMAGE_SCN_MEM_SHARED));
 
     SwapEntry = MmGetSavedSwapEntryPage(Page);
     if (Dirty && !SwapEntry)
