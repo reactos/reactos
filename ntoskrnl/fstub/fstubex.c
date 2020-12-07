@@ -674,7 +674,7 @@ FstubDetectPartitionStyle(IN PDISK_INFORMATION Disk,
 
     /* Get the partition descriptor array */
     PartitionDescriptor = (PPARTITION_DESCRIPTOR)
-                          &(Disk->Buffer[PARTITION_TABLE_OFFSET]);
+                          &(Disk->Buffer[PARTITION_TABLE_OFFSET / sizeof(Disk->Buffer[0])]);
     /* If we have not the 0xAA55 then it's raw partition */
     if (Disk->Buffer[BOOT_SIGNATURE_OFFSET] != BOOT_RECORD_SIGNATURE)
     {
@@ -2140,7 +2140,7 @@ IoReadDiskSignature(IN PDEVICE_OBJECT DeviceObject,
                     IN ULONG BytesPerSector,
                     OUT PDISK_SIGNATURE Signature)
 {
-    PULONG Buffer;
+    PUCHAR Buffer;
     NTSTATUS Status;
     ULONG HeaderCRC32, i, CheckSum;
     PEFI_PARTITION_HEADER EFIHeader;
@@ -2207,7 +2207,7 @@ IoReadDiskSignature(IN PDEVICE_OBJECT DeviceObject,
         /* Then zero the one in EFI header. This is needed to compute header checksum */
         EFIHeader->HeaderCRC32 = 0;
         /* Compute header checksum and compare with the one present in partition table */
-        if (RtlComputeCrc32(0, (PUCHAR)Buffer, sizeof(EFI_PARTITION_HEADER)) != HeaderCRC32)
+        if (RtlComputeCrc32(0, Buffer, sizeof(EFI_PARTITION_HEADER)) != HeaderCRC32)
         {
             Status = STATUS_DISK_CORRUPT_ERROR;
             goto Cleanup;
@@ -2220,14 +2220,14 @@ IoReadDiskSignature(IN PDEVICE_OBJECT DeviceObject,
     else
     {
         /* Compute MBR checksum */
-        for (i = 0, CheckSum = 0; i < 512 / sizeof(ULONG) ; i++)
+        for (i = 0, CheckSum = 0; i < BytesPerSector / sizeof(UINT32); i++)
         {
-            CheckSum += Buffer[i];
+            CheckSum += *(PUINT32)&Buffer[i];
         }
 
         /* Set partition table style to MBR and return signature (offset 440) and checksum */
         Signature->PartitionStyle = PARTITION_STYLE_MBR;
-        Signature->Mbr.Signature = Buffer[PARTITION_TABLE_OFFSET / 2 - 1];
+        Signature->Mbr.Signature = *(PUINT32)&Buffer[DISK_SIGNATURE_OFFSET];
         Signature->Mbr.CheckSum = CheckSum;
     }
 
