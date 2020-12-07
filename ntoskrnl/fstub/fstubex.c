@@ -909,7 +909,7 @@ FstubReadHeaderEFI(IN PDISK_INFORMATION Disk,
         Status = FstubReadSector(Disk->DeviceObject,
                                  Disk->SectorSize,
                                  EFIHeader->PartitionEntryLBA + i,
-                                 (PUSHORT)Sector);
+                                 Sector);
         if (!NT_SUCCESS(Status))
         {
             ExFreePoolWithTag(Sector, TAG_FSTUB);
@@ -929,7 +929,7 @@ FstubReadHeaderEFI(IN PDISK_INFORMATION Disk,
         Status = FstubReadSector(Disk->DeviceObject,
                                  Disk->SectorSize,
                                  EFIHeader->PartitionEntryLBA + i,
-                                 (PUSHORT)Sector);
+                                 Sector);
         if (!NT_SUCCESS(Status))
         {
             ExFreePoolWithTag(Sector, TAG_FSTUB);
@@ -2189,7 +2189,7 @@ IoReadDiskSignature(IN PDEVICE_OBJECT DeviceObject,
     Status = FstubReadSector(DeviceObject,
                              BytesPerSector,
                              0ULL,
-                             (PUSHORT)Buffer);
+                             Buffer);
     if (!NT_SUCCESS(Status))
     {
         goto Cleanup;
@@ -2208,7 +2208,7 @@ IoReadDiskSignature(IN PDEVICE_OBJECT DeviceObject,
         Status = FstubReadSector(DeviceObject,
                                  BytesPerSector,
                                  1ULL,
-                                 (PUSHORT)Buffer);
+                                 Buffer);
         if (!NT_SUCCESS(Status))
         {
             goto Cleanup;
@@ -2245,10 +2245,11 @@ IoReadDiskSignature(IN PDEVICE_OBJECT DeviceObject,
     else
     {
         /* Compute MBR checksum */
-        for (i = 0, CheckSum = 0; i < 512; i += sizeof(INT32))
+        for (i = 0, CheckSum = 0; i < 512; i += sizeof(UINT32))
         {
             CheckSum += *(PUINT32)&Buffer[i];
         }
+        CheckSum = ~CheckSum + 1;
 
         /* Set partition table style to MBR and return signature (offset 440) and checksum */
         Signature->PartitionStyle = PARTITION_STYLE_MBR;
