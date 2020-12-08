@@ -2102,6 +2102,38 @@ static DWORD str_to_buffer(const WCHAR *str, void *buffer, DWORD *size, BOOL uni
     }
 }
 
+static DWORD get_security_cert_struct(http_request_t *req, INTERNET_CERTIFICATE_INFOA *info)
+{
+    PCCERT_CONTEXT context;
+    DWORD len;
+
+    context = (PCCERT_CONTEXT)NETCON_GetCert(req->netconn);
+    if(!context)
+        return ERROR_NOT_SUPPORTED;
+
+    memset(info, 0, sizeof(*info));
+    info->ftExpiry = context->pCertInfo->NotAfter;
+    info->ftStart = context->pCertInfo->NotBefore;
+    len = CertNameToStrA(context->dwCertEncodingType,
+             &context->pCertInfo->Subject, CERT_SIMPLE_NAME_STR|CERT_NAME_STR_CRLF_FLAG, NULL, 0);
+    info->lpszSubjectInfo = LocalAlloc(0, len);
+    if(info->lpszSubjectInfo)
+        CertNameToStrA(context->dwCertEncodingType,
+                 &context->pCertInfo->Subject, CERT_SIMPLE_NAME_STR|CERT_NAME_STR_CRLF_FLAG,
+                 info->lpszSubjectInfo, len);
+    len = CertNameToStrA(context->dwCertEncodingType,
+             &context->pCertInfo->Issuer, CERT_SIMPLE_NAME_STR|CERT_NAME_STR_CRLF_FLAG, NULL, 0);
+    info->lpszIssuerInfo = LocalAlloc(0, len);
+    if(info->lpszIssuerInfo)
+        CertNameToStrA(context->dwCertEncodingType,
+                 &context->pCertInfo->Issuer, CERT_SIMPLE_NAME_STR|CERT_NAME_STR_CRLF_FLAG,
+                 info->lpszIssuerInfo, len);
+    info->dwKeySize = NETCON_GetCipherStrength(req->netconn);
+
+    CertFreeCertificateContext(context);
+    return ERROR_SUCCESS;
+}
+
 static DWORD HTTPREQ_QueryOption(object_header_t *hdr, DWORD option, void *buffer, DWORD *size, BOOL unicode)
 {
     http_request_t *req = (http_request_t*)hdr;
@@ -2254,8 +2286,6 @@ static DWORD HTTPREQ_QueryOption(object_header_t *hdr, DWORD option, void *buffe
     }
 
     case INTERNET_OPTION_SECURITY_CERTIFICATE_STRUCT: {
-        PCCERT_CONTEXT context;
-
         if(!req->netconn)
             return ERROR_INTERNET_INVALID_OPERATION;
 
@@ -2264,33 +2294,7 @@ static DWORD HTTPREQ_QueryOption(object_header_t *hdr, DWORD option, void *buffe
             return ERROR_INSUFFICIENT_BUFFER;
         }
 
-        context = (PCCERT_CONTEXT)NETCON_GetCert(req->netconn);
-        if(context) {
-            INTERNET_CERTIFICATE_INFOA *info = (INTERNET_CERTIFICATE_INFOA*)buffer;
-            DWORD len;
-
-            memset(info, 0, sizeof(*info));
-            info->ftExpiry = context->pCertInfo->NotAfter;
-            info->ftStart = context->pCertInfo->NotBefore;
-            len = CertNameToStrA(context->dwCertEncodingType,
-                     &context->pCertInfo->Subject, CERT_SIMPLE_NAME_STR|CERT_NAME_STR_CRLF_FLAG, NULL, 0);
-            info->lpszSubjectInfo = LocalAlloc(0, len);
-            if(info->lpszSubjectInfo)
-                CertNameToStrA(context->dwCertEncodingType,
-                         &context->pCertInfo->Subject, CERT_SIMPLE_NAME_STR|CERT_NAME_STR_CRLF_FLAG,
-                         info->lpszSubjectInfo, len);
-            len = CertNameToStrA(context->dwCertEncodingType,
-                     &context->pCertInfo->Issuer, CERT_SIMPLE_NAME_STR|CERT_NAME_STR_CRLF_FLAG, NULL, 0);
-            info->lpszIssuerInfo = LocalAlloc(0, len);
-            if(info->lpszIssuerInfo)
-                CertNameToStrA(context->dwCertEncodingType,
-                         &context->pCertInfo->Issuer, CERT_SIMPLE_NAME_STR|CERT_NAME_STR_CRLF_FLAG,
-                         info->lpszIssuerInfo, len);
-            info->dwKeySize = NETCON_GetCipherStrength(req->netconn);
-            CertFreeCertificateContext(context);
-            return ERROR_SUCCESS;
-        }
-        return ERROR_NOT_SUPPORTED;
+        return get_security_cert_struct(req, (INTERNET_CERTIFICATE_INFOA*)buffer);
     }
     case INTERNET_OPTION_CONNECT_TIMEOUT:
         if (*size < sizeof(DWORD))
