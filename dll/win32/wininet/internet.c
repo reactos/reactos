@@ -4280,9 +4280,10 @@ static BOOL calc_url_length(LPURL_COMPONENTSW lpUrlComponents,
 
         if (!url_uses_default_port(nScheme, lpUrlComponents->nPort))
         {
-            char szPort[MAX_WORD_DIGITS+1];
+            WCHAR port[MAX_WORD_DIGITS + 1];
 
-            *lpdwUrlLength += sprintf(szPort, "%d", lpUrlComponents->nPort);
+            _ltow(lpUrlComponents->nPort, port, 10);
+            *lpdwUrlLength += lstrlenW(port);
             *lpdwUrlLength += strlen(":");
         }
 
@@ -4438,10 +4439,8 @@ BOOL WINAPI InternetCreateUrlW(LPURL_COMPONENTSW lpUrlComponents, DWORD dwFlags,
 {
     DWORD dwLen;
     INTERNET_SCHEME nScheme;
-    WCHAR *start = lpszUrl;
 
     static const WCHAR slashSlashW[] = {'/','/'};
-    static const WCHAR fmtW[] = {'%','u',0};
 
     TRACE("(%p,%d,%p,%p)\n", lpUrlComponents, dwFlags, lpszUrl, lpdwUrlLength);
 
@@ -4526,9 +4525,9 @@ BOOL WINAPI InternetCreateUrlW(LPURL_COMPONENTSW lpUrlComponents, DWORD dwFlags,
 
         if (!url_uses_default_port(nScheme, lpUrlComponents->nPort))
         {
-            *lpszUrl = ':';
-            lpszUrl++;
-            lpszUrl += swprintf(lpszUrl, *lpdwUrlLength - (lpszUrl - start), fmtW, lpUrlComponents->nPort);
+            *lpszUrl++ = ':';
+            _ltow(lpUrlComponents->nPort, lpszUrl, 10);
+            lpszUrl += lstrlenW(lpszUrl);
         }
 
         /* add slash between hostname and path if necessary */
