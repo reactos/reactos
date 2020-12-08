@@ -3932,7 +3932,7 @@ static DWORD FTP_SetResponseError(DWORD dwResponse)
         dwCode = ERROR_INTERNET_CANNOT_CONNECT;
         break;
 
-    case 426: /* Connection closed, transer aborted. */
+    case 426: /* Connection closed, transfer aborted. */
         dwCode = ERROR_INTERNET_CONNECTION_ABORTED;
         break;
 
