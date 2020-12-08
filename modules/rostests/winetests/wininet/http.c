@@ -5560,7 +5560,7 @@ static void test_http_read(int port)
 
     send_response_len_and_wait(20000, TRUE, &ib);
     avail = expect_data_available(req.request, -1);
-    ok(avail < 17000, "avail = %u\n", avail);
+    ok(avail <= 20000, "avail = %u\n", avail);
 
     SET_WINE_ALLOW(INTERNET_STATUS_CLOSING_CONNECTION);
     SET_WINE_ALLOW(INTERNET_STATUS_CONNECTION_CLOSED);
