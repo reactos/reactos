@@ -1,3 +1,6 @@
+#ifdef __REACTOS__
+#include "precomp.h"
+#else
 /*
  * Wininet
  *
@@ -28,14 +31,6 @@
 
 #include "config.h"
 
-#ifdef HAVE_CORESERVICES_CORESERVICES_H
-#define GetCurrentThread MacGetCurrentThread
-#define LoadResource MacLoadResource
-#include <CoreServices/CoreServices.h>
-#undef GetCurrentThread
-#undef LoadResource
-#endif
-
 #include "winsock2.h"
 #include "ws2ipdef.h"
 
@@ -56,6 +51,10 @@
 #include "winerror.h"
 #define NO_SHLWAPI_STREAM
 #include "shlwapi.h"
+#include "ws2tcpip.h"
+#include "winternl.h"
+#include "iphlpapi.h"
+#include "dhcpcsdk.h"
 
 #include "wine/exception.h"
 
@@ -63,6 +62,7 @@
 #include "resource.h"
 
 #include "wine/unicode.h"
+#endif /* defined(__REACTOS__) */
 
 WINE_DEFAULT_DEBUG_CHANNEL(wininet);
 
@@ -76,7 +76,7 @@ static DWORD g_dwTlsErrIndex = TLS_OUT_OF_INDEXES;
 HMODULE WININET_hModule;
 
 static CRITICAL_SECTION WININET_cs;
-static CRITICAL_SECTION_DEBUG WININET_cs_debug = 
+static CRITICAL_SECTION_DEBUG WININET_cs_debug =
 {
     0, 0, &WININET_cs,
     { &WININET_cs_debug.ProcessLocksList, &WININET_cs_debug.ProcessLocksList },
@@ -740,7 +740,7 @@ static BOOL INTERNET_ConfigureProxy( appinfo_t *lpwai )
  *    None
  *
  */
-static void dump_INTERNET_FLAGS(DWORD dwFlags) 
+static void dump_INTERNET_FLAGS(DWORD dwFlags)
 {
 #define FE(x) { x, #x }
     static const wininet_flag_info flag[] = {
@@ -781,7 +781,7 @@ static void dump_INTERNET_FLAGS(DWORD dwFlags)
 	    TRACE(" %s", flag[i].name);
 	    dwFlags &= ~flag[i].val;
 	}
-    }	
+    }
     if (dwFlags)
         TRACE(" Unknown flags (%08x)\n", dwFlags);
     else
@@ -1017,7 +1017,7 @@ HINTERNET WINAPI InternetOpenW(LPCWSTR lpszAgent, DWORD dwAccessType,
 #undef FE
 	DWORD i;
 	const char *access_type_str = "Unknown";
-	
+
 	TRACE("(%s, %i, %s, %s, %i)\n", debugstr_w(lpszAgent), dwAccessType,
 	      debugstr_w(lpszProxy), debugstr_w(lpszProxyBypass), dwFlags);
         for (i = 0; i < ARRAY_SIZE(access_type); i++) {
@@ -1378,7 +1378,7 @@ BOOL WINAPI InternetFindNextFileA(HINTERNET hFind, LPVOID lpvFindData)
 {
     BOOL ret;
     WIN32_FIND_DATAW fd;
-    
+
     ret = InternetFindNextFileW(hFind, lpvFindData?&fd:NULL);
     if(lpvFindData)
         WININET_find_data_WtoA(&fd, (LPWIN32_FIND_DATAA)lpvFindData);
@@ -1436,7 +1436,7 @@ BOOL WINAPI InternetFindNextFileW(HINTERNET hFind, LPVOID lpvFindData)
 BOOL WINAPI InternetCloseHandle(HINTERNET hInternet)
 {
     object_header_t *obj;
-    
+
     TRACE("%p\n", hInternet);
 
     obj = get_handle_object( hInternet );
@@ -1697,7 +1697,7 @@ BOOL WINAPI InternetCrackUrlW(const WCHAR *lpszUrl, DWORD dwUrlLength, DWORD dwF
         return ret;
     }
     lpszap = lpszUrl;
-    
+
     /* Determine if the URI is absolute. */
     while (lpszap - lpszUrl < dwUrlLength)
     {
@@ -2298,38 +2298,183 @@ BOOL WINAPI InternetReadFileExW(HINTERNET hFile, LPINTERNET_BUFFERSW lpBuffer,
     return res == ERROR_SUCCESS;
 }
 
-static WCHAR *get_proxy_autoconfig_url(void)
+static IP_ADAPTER_ADDRESSES *get_adapters(void)
 {
-#if defined(MAC_OS_X_VERSION_10_6) && MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_6
+    ULONG err, size = 1024, flags = GAA_FLAG_SKIP_ANYCAST | GAA_FLAG_SKIP_MULTICAST |
+                                    GAA_FLAG_SKIP_DNS_SERVER | GAA_FLAG_SKIP_FRIENDLY_NAME;
+    IP_ADAPTER_ADDRESSES *tmp, *ret;
 
-    CFDictionaryRef settings = CFNetworkCopySystemProxySettings();
-    WCHAR *ret = NULL;
-    SIZE_T len;
-    const void *ref;
-
-    if (!settings) return NULL;
-
-    if (!(ref = CFDictionaryGetValue( settings, kCFNetworkProxiesProxyAutoConfigURLString )))
+    if (!(ret = heap_alloc( size ))) return NULL;
+    err = GetAdaptersAddresses( AF_UNSPEC, flags, NULL, ret, &size );
+    while (err == ERROR_BUFFER_OVERFLOW)
     {
-        CFRelease( settings );
+        if (!(tmp = heap_realloc( ret, size ))) break;
+        ret = tmp;
+        err = GetAdaptersAddresses( AF_UNSPEC, flags, NULL, ret, &size );
+    }
+    if (err == ERROR_SUCCESS) return ret;
+    heap_free( ret );
+    return NULL;
+}
+
+static WCHAR *detect_proxy_autoconfig_url_dhcp(void)
+{
+    IP_ADAPTER_ADDRESSES *adapters, *ptr;
+    DHCPCAPI_PARAMS_ARRAY send_params, recv_params;
+    DHCPCAPI_PARAMS param;
+    WCHAR name[MAX_ADAPTER_NAME_LENGTH + 1], *ret = NULL;
+    DWORD err, size;
+    BYTE *tmp, *buf = NULL;
+
+    if (!(adapters = get_adapters())) return NULL;
+
+    memset( &send_params, 0, sizeof(send_params) );
+    memset( &param, 0, sizeof(param) );
+    param.OptionId = OPTION_MSFT_IE_PROXY;
+    recv_params.nParams = 1;
+    recv_params.Params  = &param;
+
+    for (ptr = adapters; ptr; ptr = ptr->Next)
+    {
+        MultiByteToWideChar( CP_ACP, 0, ptr->AdapterName, -1, name, ARRAY_SIZE(name) );
+        TRACE( "adapter '%s' type %u dhcpv4 enabled %d\n", wine_dbgstr_w(name), ptr->IfType, ptr->Dhcpv4Enabled );
+
+        if (ptr->IfType == IF_TYPE_SOFTWARE_LOOPBACK) continue;
+        /* FIXME: also skip adapters where DHCP is disabled */
+
+        size = 256;
+        if (!(buf = heap_alloc( size ))) goto done;
+        err = DhcpRequestParams( DHCPCAPI_REQUEST_SYNCHRONOUS, NULL, name, NULL, send_params, recv_params,
+                                 buf, &size, NULL );
+        while (err == ERROR_MORE_DATA)
+        {
+            if (!(tmp = heap_realloc( buf, size ))) goto done;
+            buf = tmp;
+            err = DhcpRequestParams( DHCPCAPI_REQUEST_SYNCHRONOUS, NULL, name, NULL, send_params, recv_params,
+                                     buf, &size, NULL );
+        }
+        if (err == ERROR_SUCCESS && param.nBytesData)
+        {
+            int len = MultiByteToWideChar( CP_ACP, 0, (const char *)param.Data, param.nBytesData, NULL, 0 );
+            if ((ret = heap_alloc( (len + 1) * sizeof(WCHAR) )))
+            {
+                MultiByteToWideChar( CP_ACP, 0,  (const char *)param.Data, param.nBytesData, ret, len );
+                ret[len] = 0;
+            }
+            TRACE("returning %s\n", debugstr_w(ret));
+            break;
+        }
+    }
+
+done:
+    heap_free( buf );
+    heap_free( adapters );
+    return ret;
+}
+
+static char *get_computer_name( COMPUTER_NAME_FORMAT format )
+{
+    char *ret;
+    DWORD size = 0;
+
+    GetComputerNameExA( format, NULL, &size );
+    if (GetLastError() != ERROR_MORE_DATA) return NULL;
+    if (!(ret = heap_alloc( size ))) return NULL;
+    if (!GetComputerNameExA( format, ret, &size ))
+    {
+        heap_free( ret );
         return NULL;
     }
-    len = CFStringGetLength( ref );
-    if (len)
-        ret = heap_alloc( (len+1) * sizeof(WCHAR) );
-    if (ret)
-    {
-        CFStringGetCharacters( ref, CFRangeMake(0, len), ret );
-        ret[len] = 0;
-    }
-    TRACE( "returning %s\n", debugstr_w(ret) );
-    CFRelease( settings );
     return ret;
-#else
-    static int once;
-    if (!once++) FIXME( "no support on this platform\n" );
-    return NULL;
-#endif
+}
+
+static BOOL is_domain_suffix( const char *domain, const char *suffix )
+{
+    int len_domain = strlen( domain ), len_suffix = strlen( suffix );
+
+    if (len_suffix > len_domain) return FALSE;
+    if (!_strnicmp( domain + len_domain - len_suffix, suffix, -1 )) return TRUE;
+    return FALSE;
+}
+
+static int reverse_lookup( const struct addrinfo *ai, char *hostname, size_t len )
+{
+    return getnameinfo( ai->ai_addr, ai->ai_addrlen, hostname, len, NULL, 0, 0 );
+}
+
+static WCHAR *build_wpad_url( const char *hostname, const struct addrinfo *ai )
+{
+    static const WCHAR httpW[] = {'h','t','t','p',':','/','/',0};
+    static const WCHAR wpadW[] = {'/','w','p','a','d','.','d','a','t',0};
+    char name[NI_MAXHOST];
+    WCHAR *ret, *p;
+    int len;
+
+    while (ai && ai->ai_family != AF_INET && ai->ai_family != AF_INET6) ai = ai->ai_next;
+    if (!ai) return NULL;
+
+    if (!reverse_lookup( ai, name, sizeof(name) )) hostname = name;
+
+    len = lstrlenW( httpW ) + strlen( hostname ) + lstrlenW( wpadW );
+    if (!(ret = p = GlobalAlloc( 0, (len + 1) * sizeof(WCHAR) ))) return NULL;
+    lstrcpyW( p, httpW );
+    p += lstrlenW( httpW );
+    while (*hostname) { *p++ = *hostname++; }
+    lstrcpyW( p, wpadW );
+    return ret;
+}
+
+static WCHAR *detect_proxy_autoconfig_url_dns(void)
+{
+    char *fqdn, *domain, *p;
+    WCHAR *ret;
+
+    if (!(fqdn = get_computer_name( ComputerNamePhysicalDnsFullyQualified ))) return NULL;
+    if (!(domain = get_computer_name( ComputerNamePhysicalDnsDomain )))
+    {
+        heap_free( fqdn );
+        return NULL;
+    }
+    p = fqdn;
+    while ((p = strchr( p, '.' )) && is_domain_suffix( p + 1, domain ))
+    {
+        char *name;
+        struct addrinfo *ai;
+        int res;
+
+        if (!(name = heap_alloc( sizeof("wpad") + strlen(p) )))
+        {
+            heap_free( fqdn );
+            heap_free( domain );
+            return NULL;
+        }
+        strcpy( name, "wpad" );
+        strcat( name, p );
+        res = getaddrinfo( name, NULL, NULL, &ai );
+        if (!res)
+        {
+            ret = build_wpad_url( name, ai );
+            freeaddrinfo( ai );
+            if (ret)
+            {
+                TRACE("returning %s\n", debugstr_w(ret));
+                heap_free( name );
+                break;
+            }
+        }
+       heap_free( name );
+       p++;
+    }
+    heap_free( domain );
+    heap_free( fqdn );
+    return ret;
+}
+
+static WCHAR *get_proxy_autoconfig_url(void)
+{
+    WCHAR *ret = detect_proxy_autoconfig_url_dhcp();
+    if (!ret) ret = detect_proxy_autoconfig_url_dns();
+    return ret;
 }
 
 static DWORD query_global_option(DWORD option, void *buffer, DWORD *size, BOOL unicode)
@@ -3489,10 +3634,10 @@ static HINTERNET INTERNET_InternetOpenUrlW(appinfo_t *hIC, LPCWSTR lpszUrl,
     WCHAR *host, *user = NULL, *pass = NULL, *path;
     HINTERNET client = NULL, client1 = NULL;
     DWORD res;
-    
+
     TRACE("(%p, %s, %s, %08x, %08x, %08lx)\n", hIC, debugstr_w(lpszUrl), debugstr_w(lpszHeaders),
 	  dwHeadersLength, dwFlags, dwContext);
-    
+
     urlComponents.dwHostNameLength = 1;
     urlComponents.dwUserNameLength = 1;
     urlComponents.dwPasswordLength = 1;
@@ -3527,7 +3672,7 @@ static HINTERNET INTERNET_InternetOpenUrlW(appinfo_t *hIC, LPCWSTR lpszUrl,
 	    break;
 	}
 	break;
-	
+
     case INTERNET_SCHEME_HTTP:
     case INTERNET_SCHEME_HTTPS: {
 	static const WCHAR szStars[] = { '*','/','*', 0 };
@@ -3626,7 +3771,7 @@ HINTERNET WINAPI InternetOpenUrlW(HINTERNET hInternet, LPCWSTR lpszUrl,
 	SetLastError(ERROR_INTERNET_INCORRECT_HANDLE_TYPE);
  	goto lend;
     }
-    
+
     if (hIC->hdr.dwFlags & INTERNET_FLAG_ASYNC) {
 	open_url_task_t *task;
 
@@ -3636,18 +3781,18 @@ HINTERNET WINAPI InternetOpenUrlW(HINTERNET hInternet, LPCWSTR lpszUrl,
         task->headers_len = dwHeadersLength;
         task->flags = dwFlags;
         task->context = dwContext;
-	
+
         INTERNET_AsyncCall(&task->hdr);
         SetLastError(ERROR_IO_PENDING);
     } else {
 	ret = INTERNET_InternetOpenUrlW(hIC, lpszUrl, lpszHeaders, dwHeadersLength, dwFlags, dwContext);
     }
-    
+
   lend:
     if( hIC )
         WININET_Release( &hIC->hdr );
     TRACE(" %p <--\n", ret);
-    
+
     return ret;
 }
 
@@ -3681,7 +3826,7 @@ HINTERNET WINAPI InternetOpenUrlA(HINTERNET hInternet, LPCSTR lpszUrl,
             return NULL;
         }
     }
-    
+
     rc = InternetOpenUrlW(hInternet, szUrl, headers, dwHeadersLength, dwFlags, dwContext);
 
     heap_free(szUrl);
