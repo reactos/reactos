@@ -3749,7 +3749,7 @@ static BOOL FTP_ParseNextFile(INT nSocket, LPCWSTR lpszSearchFile, LPFILEPROPERT
 
             pszToken = strtok(NULL, szSpace);
             if(!pszToken) continue;
-            if(!_strnicmp(pszToken, "<DIR>", -1)) {
+            if(!stricmp(pszToken, "<DIR>")) {
                 lpfp->bIsDirectory = TRUE;
                 lpfp->nSize = 0;
                 TRACE("Is directory\n");

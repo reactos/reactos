@@ -2378,7 +2378,7 @@ static BOOL is_domain_suffix( const char *domain, const char *suffix )
     int len_domain = strlen( domain ), len_suffix = strlen( suffix );
 
     if (len_suffix > len_domain) return FALSE;
-    if (!_strnicmp( domain + len_domain - len_suffix, suffix, -1 )) return TRUE;
+    if (!stricmp( domain + len_domain - len_suffix, suffix )) return TRUE;
     return FALSE;
 }
 
