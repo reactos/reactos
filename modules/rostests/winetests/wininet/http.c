@@ -2364,7 +2364,7 @@ static DWORD CALLBACK server_thread(LPVOID param)
         }
         if (strstr(buffer, "/testC"))
         {
-            if (strstr(buffer, "Cookie: cookie=biscuit"))
+            if (strstr(buffer, "cookie=biscuit"))
                 send(c, okmsg, sizeof okmsg-1, 0);
             else
                 send(c, notokmsg, sizeof notokmsg-1, 0);
@@ -3352,7 +3352,7 @@ static void test_header_override(int port)
     ret = HttpSendRequestA(req, NULL, 0, NULL, 0);
     ok(ret, "HttpSendRequest failed\n");
 
-    test_status_code_todo(req, 200);
+    test_status_code(req, 200);
 
     InternetCloseHandle(req);
     req = HttpOpenRequestA(con, NULL, "/test_cookie_check_host_override", NULL, NULL, NULL, INTERNET_FLAG_KEEP_CONNECTION, 0);
@@ -3361,7 +3361,7 @@ static void test_header_override(int port)
     ret = HttpSendRequestA(req, NULL, 0, NULL, 0);
     ok(ret, "HttpSendRequest failed\n");
 
-    test_status_code_todo(req, 200);
+    test_status_code(req, 200);
 
     InternetCloseHandle(req);
     InternetSetCookieA("http://test.local", "foo", "bar");
