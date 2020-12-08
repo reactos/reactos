@@ -11,8 +11,7 @@ add_definitions(
     -D_WINE
     -Dclose=_close)
 
-include_directories(BEFORE ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine
-                    ${REACTOS_SOURCE_DIR}/sdk/include/reactos/libs/zlib)
+include_directories(BEFORE ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 
 spec2def(wininet.dll wininet.spec ADD_IMPORTLIB)
 
@@ -22,6 +21,7 @@ list(APPEND SOURCE
     ftp.c
     gopher.c
     http.c
+    inflate.c
     internet.c
     netconnection.c
     urlcache.c
@@ -37,7 +37,7 @@ add_library(wininet MODULE
     ${CMAKE_CURRENT_BINARY_DIR}/wininet.def)
 
 set_module_type(wininet win32dll)
-target_link_libraries(wininet wine ${PSEH_LIB} zlib)
+target_link_libraries(wininet wine ${PSEH_LIB})
 add_delay_importlibs(wininet secur32 crypt32 cryptui iphlpapi dhcpcsvc)
 add_importlibs(wininet mpr shlwapi shell32 user32 advapi32 ws2_32 normaliz kernel32_vista msvcrt kernel32 ntdll)
 add_pch(wininet precomp.h "${PCH_SKIP_SOURCE}")

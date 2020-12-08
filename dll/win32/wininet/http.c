@@ -31,10 +31,6 @@
 
 #include <stdlib.h>
 
-#ifdef HAVE_ZLIB
-#  include <zlib.h>
-#endif
-
 #include "winsock2.h"
 #include "ws2ipdef.h"
 
@@ -59,6 +55,7 @@
 #include "winuser.h"
 
 #include "internet.h"
+#include "zlib.h"
 #include "wine/debug.h"
 #include "wine/exception.h"
 #include "wine/unicode.h"
@@ -436,8 +433,6 @@ static void remove_header( http_request_t *request, const WCHAR *str, BOOL from_
     LeaveCriticalSection( &request->headers_section );
 }
 
-#ifdef HAVE_ZLIB
-
 typedef struct {
     data_stream_t stream;
     data_stream_t *parent_stream;
@@ -585,16 +580,6 @@ static DWORD init_gzip_stream(http_request_t *req, BOOL is_gzip)
     req->data_stream = &gzip_stream->stream;
     return ERROR_SUCCESS;
 }
-
-#else
-
-static DWORD init_gzip_stream(http_request_t *req, BOOL is_gzip)
-{
-    ERR("gzip stream not supported, missing zlib.\n");
-    return ERROR_SUCCESS;
-}
-
-#endif
 
 /***********************************************************************
  *           HTTP_FreeTokens (internal)
