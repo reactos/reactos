@@ -545,7 +545,7 @@ static LONG INTERNET_LoadProxySettings( proxyinfo_t *lpwpi )
 {
     HKEY key;
     DWORD type, len;
-    LPCSTR envproxy;
+    const WCHAR *envproxy;
     LONG ret;
 
     memset( lpwpi, 0, sizeof(*lpwpi) );
@@ -577,7 +577,7 @@ static LONG INTERNET_LoadProxySettings( proxyinfo_t *lpwpi )
         }
     }
 
-    if (!(envproxy = getenv( "http_proxy" )) || lpwpi->proxyEnabled)
+    if (!(envproxy = _wgetenv( L"http_proxy" )) || lpwpi->proxyEnabled)
     {
         /* figure out how much memory the proxy setting takes */
         if (!RegQueryValueExW( key, szProxyServer, NULL, &type, NULL, &len ) && len && (type == REG_SZ))
@@ -619,18 +619,8 @@ static LONG INTERNET_LoadProxySettings( proxyinfo_t *lpwpi )
     }
     else if (envproxy)
     {
-        WCHAR *envproxyW;
-
-        len = MultiByteToWideChar( CP_UNIXCP, 0, envproxy, -1, NULL, 0 );
-        if (!(envproxyW = heap_alloc(len * sizeof(WCHAR))))
-        {
-            RegCloseKey( key );
-            return ERROR_OUTOFMEMORY;
-        }
-        MultiByteToWideChar( CP_UNIXCP, 0, envproxy, -1, envproxyW, len );
-
         FreeProxyInfo( lpwpi );
-        if (parse_proxy_url( lpwpi, envproxyW ))
+        if (parse_proxy_url( lpwpi, envproxy ))
         {
             TRACE("http proxy (from environment) = %s\n", debugstr_w(lpwpi->proxy));
             lpwpi->proxyEnabled = 1;
@@ -638,19 +628,18 @@ static LONG INTERNET_LoadProxySettings( proxyinfo_t *lpwpi )
         }
         else
         {
-            WARN("failed to parse http_proxy value %s\n", debugstr_w(envproxyW));
+            WARN("failed to parse http_proxy value %s\n", debugstr_w(envproxy));
             lpwpi->proxyEnabled = 0;
             lpwpi->proxy = NULL;
             lpwpi->proxyBypass = NULL;
         }
-        heap_free( envproxyW );
     }
 
     if (lpwpi->proxyEnabled)
     {
         TRACE("Proxy is enabled.\n");
 
-        if (!(envproxy = getenv( "no_proxy" )))
+        if (!(envproxy = _wgetenv( L"no_proxy" )))
         {
             /* figure out how much memory the proxy setting takes */
             if (!RegQueryValueExW( key, szProxyOverride, NULL, &type, NULL, &len ) && len && (type == REG_SZ))
@@ -681,13 +670,12 @@ static LONG INTERNET_LoadProxySettings( proxyinfo_t *lpwpi )
         {
             WCHAR *envproxyW;
 
-            len = MultiByteToWideChar( CP_UNIXCP, 0, envproxy, -1, NULL, 0 );
-            if (!(envproxyW = heap_alloc(len * sizeof(WCHAR))))
+            if (!(envproxyW = heap_alloc(lstrlenW(envproxy) * sizeof(WCHAR))))
             {
                 RegCloseKey( key );
                 return ERROR_OUTOFMEMORY;
             }
-            MultiByteToWideChar( CP_UNIXCP, 0, envproxy, -1, envproxyW, len );
+            lstrcpyW( envproxyW, envproxy );
 
             heap_free( lpwpi->proxyBypass );
             lpwpi->proxyBypass = envproxyW;
