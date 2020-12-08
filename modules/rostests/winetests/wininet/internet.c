@@ -510,7 +510,7 @@ static void test_complicated_cookie(void)
   len = 1024;
   ret = InternetGetCookieA("http://testing.example.com/bar/foo", NULL, buffer, &len);
   ok(ret == TRUE,"InternetGetCookie failed\n");
-  ok(len == 24, "len = %u\n", 24);
+  ok(len == 24, "len = %u\n", len);
   ok(strstr(buffer,"A=B")!=NULL,"A=B missing\n");
   ok(strstr(buffer,"C=D")!=NULL,"C=D missing\n");
   ok(strstr(buffer,"E=F")!=NULL,"E=F missing\n");
@@ -524,16 +524,26 @@ static void test_complicated_cookie(void)
   len = 1024;
   ret = InternetGetCookieA("http://testing.example.com/bar/foo", "A", buffer, &len);
   ok(ret == TRUE,"InternetGetCookie failed\n");
-  ok(len == 24, "len = %u\n", 24);
+  ok(len == 24, "len = %u\n", len);
 
   /* test persistent cookies */
   ret = InternetSetCookieA("http://testing.example.com", NULL, "A=B; expires=Fri, 01-Jan-2038 00:00:00 GMT");
   ok(ret, "InternetSetCookie failed with error %d\n", GetLastError());
 
+  /* test invalid expires parameter */
+  ret = InternetSetCookieA("http://testing.example.com", NULL, "Q=R; expires=");
+  ok(ret, "InternetSetCookie failed %#x.\n", GetLastError());
+  len = 1024;
+  memset(buffer, 0xac, sizeof(buffer));
+  ret = InternetGetCookieA("http://testing.example.com/", NULL, buffer, &len);
+  ok(ret, "InternetGetCookie failed %#x.\n", GetLastError());
+  ok(len == 29, "got len %u.\n", len);
+  ok(!!strstr(buffer, "Q=R"), "cookie is not present.\n");
+
   len = sizeof(buffer);
   ret = InternetGetCookieA("http://testing.example.com/foobar", NULL, buffer, &len);
-  ok(ret, "got error %u\n", GetLastError());
-  ok(len == 24, "got len %u\n", len);
+  ok(ret, "got error %#x\n", GetLastError());
+  ok(len == 29, "got len %u\n", len);
   ok(!!strstr(buffer, "A=B"), "cookie is not present\n");
 
   /* remove persistent cookie */
