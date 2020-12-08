@@ -42,6 +42,7 @@
 #define TEST_URL "http://test.winehq.org/tests/hello.html"
 
 static BOOL first_connection_to_test_url = TRUE;
+static BOOL https_support = TRUE;
 
 /* Adapted from dlls/urlmon/tests/protocol.c */
 
@@ -6240,6 +6241,12 @@ static void test_security_flags(void)
     char buf[100];
     BOOL res;
 
+    if (!https_support)
+    {
+        win_skip("Can't make https connections, skipping security flags test\n");
+        return;
+    }
+
     trace("Testing security flags...\n");
     reset_events();
 
@@ -6577,7 +6584,7 @@ static void test_secure_connection(void)
     static const WCHAR get[] = {'G','E','T',0};
     static const WCHAR testpage[] = {'/','t','e','s','t','s','/','h','e','l','l','o','.','h','t','m','l',0};
     HINTERNET ses, con, req;
-    DWORD size, flags;
+    DWORD size, flags, err;
     INTERNET_CERTIFICATE_INFOA *certificate_structA = NULL;
     INTERNET_CERTIFICATE_INFOW *certificate_structW = NULL;
     BOOL ret;
@@ -6595,11 +6602,13 @@ static void test_secure_connection(void)
     ok(req != NULL, "HttpOpenRequest failed\n");
 
     ret = HttpSendRequestA(req, NULL, 0, NULL, 0);
-    ok(ret || broken(GetLastError() == ERROR_INTERNET_CANNOT_CONNECT),
-                     "HttpSendRequest failed: %d\n", GetLastError());
+    err = GetLastError();
+    ok(ret || broken(err == ERROR_INTERNET_CANNOT_CONNECT) ||
+              broken(err == ERROR_INTERNET_SECURITY_CHANNEL_ERROR), "HttpSendRequest failed: %u\n", err);
     if (!ret)
     {
         win_skip("Cannot connect to https.\n");
+        if (err == ERROR_INTERNET_SECURITY_CHANNEL_ERROR) https_support = FALSE;
         goto done;
     }
 
@@ -7396,6 +7405,11 @@ static void test_default_service_port(void)
     ok(request != NULL, "HttpOpenRequest failed\n");
 
     ret = HttpSendRequestA(request, NULL, 0, NULL, 0);
+    if (!ret && GetLastError() == ERROR_INTERNET_SECURITY_CHANNEL_ERROR)
+    {
+        win_skip("Can't make https connection\n");
+        goto done;
+    }
     ok(ret, "HttpSendRequest failed with error %u\n", GetLastError());
 
     size = sizeof(buffer);
@@ -7423,6 +7437,7 @@ static void test_default_service_port(void)
     ok(ret, "HttpQueryInfo failed with error %u\n", GetLastError());
     ok(!strcmp(buffer, "test.winehq.org:443"), "Expected test.winehg.org:443, got '%s'\n", buffer);
 
+done:
     InternetCloseHandle(request);
     InternetCloseHandle(connect);
     InternetCloseHandle(session);
@@ -7557,6 +7572,7 @@ START_TEST(http)
     InternetReadFile_test(INTERNET_FLAG_ASYNC, &test_data[1]);
     InternetReadFile_test(0, &test_data[1]);
     InternetReadFile_test(INTERNET_FLAG_ASYNC, &test_data[2]);
+    test_secure_connection();
     test_security_flags();
     InternetReadFile_test(0, &test_data[2]);
     InternetReadFileExA_test(INTERNET_FLAG_ASYNC);
@@ -7571,7 +7587,6 @@ START_TEST(http)
     InternetOpenUrlA_test();
     HttpHeaders_test();
     test_http_connection();
-    test_secure_connection();
     test_user_agent_header();
     test_bogus_accept_types_array();
     InternetReadFile_chunked_test();
