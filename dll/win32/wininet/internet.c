@@ -3296,12 +3296,12 @@ BOOL WINAPI InternetSetOptionExW(HINTERNET hInternet, DWORD dwOption,
 }
 
 static const WCHAR WININET_wkday[7][4] =
-    { { 'S','u','n', 0 }, { 'M','o','n', 0 }, { 'T','u','e', 0 }, { 'W','e','d', 0 },
-      { 'T','h','u', 0 }, { 'F','r','i', 0 }, { 'S','a','t', 0 } };
+    { L"Sun", L"Mon", L"Tue", L"Wed",
+      L"Thu", L"Fri", L"Sat"};
 static const WCHAR WININET_month[12][4] =
-    { { 'J','a','n', 0 }, { 'F','e','b', 0 }, { 'M','a','r', 0 }, { 'A','p','r', 0 },
-      { 'M','a','y', 0 }, { 'J','u','n', 0 }, { 'J','u','l', 0 }, { 'A','u','g', 0 },
-      { 'S','e','p', 0 }, { 'O','c','t', 0 }, { 'N','o','v', 0 }, { 'D','e','c', 0 } };
+    { L"Jan", L"Feb", L"Mar", L"Apr",
+      L"May", L"Jun", L"Jul", L"Aug",
+      L"Sep", L"Oct", L"Nov", L"Dec"};
 
 /***********************************************************************
  *           InternetTimeFromSystemTimeA (WININET.@)
