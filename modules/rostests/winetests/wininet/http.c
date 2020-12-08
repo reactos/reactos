@@ -2574,11 +2574,26 @@ static DWORD CALLBACK server_thread(LPVOID param)
         {
             send(c, okmsg, sizeof(okmsg)-1, 0);
         }
+
         if (strstr(buffer, "HEAD /test_large_content"))
         {
             char msg[sizeof(largemsg) + 16];
             sprintf(msg, largemsg, content_length);
             send(c, msg, strlen(msg), 0);
+        }
+        if (strstr(buffer, "HEAD /test_auth_host1"))
+        {
+            if (strstr(buffer, "Authorization: Basic dGVzdDE6cGFzcw=="))
+                send(c, okmsg, sizeof okmsg-1, 0);
+            else
+                send(c, noauthmsg, sizeof noauthmsg-1, 0);
+        }
+        if (strstr(buffer, "HEAD /test_auth_host2"))
+        {
+            if (strstr(buffer, "Authorization: Basic dGVzdDE6cGFzczI="))
+                send(c, okmsg, sizeof okmsg-1, 0);
+            else
+                send(c, noauthmsg, sizeof noauthmsg-1, 0);
         }
         shutdown(c, 2);
         closesocket(c);
@@ -3274,6 +3289,84 @@ static void test_header_override(int port)
 
         test_status_code(req, 400);
     }
+
+    InternetCloseHandle(req);
+    InternetCloseHandle(con);
+    InternetCloseHandle(ses);
+
+    ses = InternetOpenA("winetest", INTERNET_OPEN_TYPE_DIRECT, NULL, NULL, 0);
+    ok(ses != NULL, "InternetOpenA failed\n");
+
+    con = InternetConnectA(ses, "localhost", port, "test1", "pass", INTERNET_SERVICE_HTTP, 0, 0);
+    ok(con != NULL, "InternetConnectA failed %u\n", GetLastError());
+
+    req = HttpOpenRequestA( con, "HEAD", "/test_auth_host1", NULL, NULL, NULL, 0, 0);
+    ok(req != NULL, "HttpOpenRequestA failed %u\n", GetLastError());
+
+    ret = HttpSendRequestA(req, NULL, 0, NULL, 0);
+    ok(ret, "HttpSendRequestA failed %u\n", GetLastError());
+
+    test_status_code(req, 200);
+
+    InternetCloseHandle(req);
+    InternetCloseHandle(con);
+    InternetCloseHandle(ses);
+
+    ses = InternetOpenA("winetest", INTERNET_OPEN_TYPE_DIRECT, NULL, NULL, 0);
+    ok(ses != NULL, "InternetOpenA failed\n");
+
+    con = InternetConnectA( ses, "localhost", port, NULL, NULL, INTERNET_SERVICE_HTTP, 0, 0);
+    ok(con != NULL, "InternetConnectA failed %u\n", GetLastError());
+
+    req = HttpOpenRequestA(con, "HEAD", "/test_auth_host1", NULL, NULL, NULL, 0, 0);
+    ok(req != NULL, "HttpOpenRequestA failed %u\n", GetLastError());
+
+    ret = HttpAddRequestHeadersA(req, host_header_override, ~0u, HTTP_ADDREQ_FLAG_ADD);
+    ok(ret, "HttpAddRequestHeaders failed\n");
+
+    ret = HttpSendRequestA( req, NULL, 0, NULL, 0 );
+    ok( ret, "HttpSendRequestA failed %u\n", GetLastError() );
+
+    test_status_code(req, 200);
+
+    InternetCloseHandle(req);
+    InternetCloseHandle(con);
+    InternetCloseHandle(ses);
+
+    ses = InternetOpenA("winetest", INTERNET_OPEN_TYPE_DIRECT, NULL, NULL, 0);
+    ok(ses != NULL, "InternetOpenA failed\n");
+
+    con = InternetConnectA(ses, "localhost", port, "test1", "pass2", INTERNET_SERVICE_HTTP, 0, 0);
+    ok(con != NULL, "InternetConnectA failed %u\n", GetLastError());
+
+    req = HttpOpenRequestA(con, "HEAD", "/test_auth_host2", NULL, NULL, NULL, 0, 0);
+    ok(req != NULL, "HttpOpenRequestA failed %u\n", GetLastError());
+
+    ret = HttpAddRequestHeadersA(req, host_header_override, ~0u, HTTP_ADDREQ_FLAG_ADD);
+    ok(ret, "HttpAddRequestHeaders failed\n");
+
+    ret = HttpSendRequestA(req, NULL, 0, NULL, 0);
+    ok(ret, "HttpSendRequestA failed %u\n", GetLastError());
+
+    test_status_code(req, 200);
+
+    InternetCloseHandle(req);
+    InternetCloseHandle(con);
+    InternetCloseHandle(ses);
+
+    ses = InternetOpenA("winetest", INTERNET_OPEN_TYPE_DIRECT, NULL, NULL, 0);
+    ok(ses != NULL, "InternetOpenA failed\n");
+
+    con = InternetConnectA(ses, "localhost", port, NULL, NULL, INTERNET_SERVICE_HTTP, 0, 0);
+    ok(con != NULL, "InternetConnectA failed %u\n", GetLastError());
+
+    req = HttpOpenRequestA(con, "HEAD", "/test_auth_host2", NULL, NULL, NULL, 0, 0);
+    ok(req != NULL, "HttpOpenRequestA failed %u\n", GetLastError());
+
+    ret = HttpSendRequestA(req, NULL, 0, NULL, 0);
+    ok(ret, "HttpSendRequestA failed %u\n", GetLastError());
+
+    test_status_code(req, 200);
 
     InternetCloseHandle(req);
     InternetCloseHandle(con);
