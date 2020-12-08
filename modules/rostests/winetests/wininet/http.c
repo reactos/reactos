@@ -6099,13 +6099,12 @@ typedef struct {
 static const cert_struct_test_t test_winehq_org_cert = {
     "US\r\n"
     "55114\r\n"
-    "MN\r\n"
+    "Minnesota\r\n"
     "Saint Paul\r\n"
     "Ste 120\r\n"
     "700 Raymond Ave\r\n"
     "CodeWeavers\r\n"
     "IT\r\n"
-    "Secure Link SSL Wildcard\r\n"
     "*.winehq.org",
 
     "US\r\n"
