@@ -25,6 +25,7 @@
 #include "winbase.h"
 #include "winuser.h"
 #include "wininet.h"
+#include "winineti.h"
 #include "winerror.h"
 #include "winreg.h"
 
@@ -1498,13 +1499,6 @@ static void test_InternetErrorDlg(void)
     req = HttpOpenRequestA(con, "GET", "/", NULL, NULL, NULL, 0, 0);
     ok(req != 0, "HttpOpenRequest failed: 0x%08x\n", GetLastError());
 
-    /* NULL hwnd and FLAGS_ERROR_UI_FLAGS_NO_UI not set */
-    for(i = INTERNET_ERROR_BASE; i < INTERNET_ERROR_LAST; i++)
-    {
-        res = InternetErrorDlg(NULL, req, i, 0, NULL);
-        ok(res == ERROR_INVALID_HANDLE, "Got %d (%d)\n", res, i);
-    }
-
     hwnd = GetDesktopWindow();
     ok(hwnd != NULL, "GetDesktopWindow failed (%d)\n", GetLastError());
 
@@ -1537,6 +1531,8 @@ static void test_InternetErrorDlg(void)
 
         if(i == ERROR_INTERNET_SEC_CERT_REVOKED)
             continue; /* Interactive (XP, Win7) */
+        if (i == ERROR_INTERNET_PROXY_ALERT)
+            continue; /* Interactive (Win10 1607+) */
 
         res = InternetErrorDlg(hwnd, req, i, FLAGS_ERROR_UI_FLAGS_NO_UI, NULL);
 
@@ -1550,13 +1546,8 @@ static void test_InternetErrorDlg(void)
                 expected = ERROR_CANCELLED;
             break;
         case ERROR_INTERNET_FORTEZZA_LOGIN_NEEDED:
-            if(res != expected)
-            {
-                /* Windows XP, W2K3 */
-                ok(res == NTE_PROV_TYPE_NOT_DEF, "Got %d\n", res);
-                win_skip("Skipping some tests for %d\n", i);
-                continue;
-            }
+            if (res == NTE_PROV_TYPE_NOT_DEF) /* XP, 2003 */
+                expected = NTE_PROV_TYPE_NOT_DEF;
             break;
         case ERROR_INTERNET_CHG_POST_IS_NON_SECURE:
             if(res == ERROR_SUCCESS) /* win10 returns ERROR_SUCCESS */
@@ -1564,6 +1555,9 @@ static void test_InternetErrorDlg(void)
             break;
         default: break;
         }
+
+        if (expected == ERROR_NOT_SUPPORTED && res == ERROR_CANCELLED) /* Win10 1607+ */
+            expected = ERROR_CANCELLED;
 
         todo_wine_if(test_flags & FLAG_TODO)
             ok(res == expected, "Got %d, expected %d (%d)\n", res, expected, i);
