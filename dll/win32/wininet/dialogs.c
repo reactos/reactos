@@ -63,7 +63,6 @@ static BOOL WININET_GetAuthRealm( HINTERNET hRequest, LPWSTR szBuf, DWORD sz, BO
 {
     LPWSTR p, q;
     DWORD index, query;
-    static const WCHAR szRealm[] = { 'r','e','a','l','m','=',0 };
 
     if (proxy)
         query = HTTP_QUERY_PROXY_AUTHENTICATE;
@@ -80,7 +79,7 @@ static BOOL WININET_GetAuthRealm( HINTERNET hRequest, LPWSTR szBuf, DWORD sz, BO
      * dealing with 'Basic' Authentication
      */
     p = wcschr( szBuf, ' ' );
-    if( !p || wcsncmp( p+1, szRealm, lstrlenW(szRealm) ) )
+    if( !p || wcsncmp( p+1, L"realm=", lstrlenW(L"realm=") ) )
     {
         ERR("response wrong? (%s)\n", debugstr_w(szBuf));
         return FALSE;
@@ -116,15 +115,13 @@ static BOOL WININET_GetSetPassword( HWND hdlg, LPCWSTR szServer,
     DWORD r, dwMagic = 19;
     UINT r_len, u_len;
     WORD sz;
-    static const WCHAR szColon[] = { ':',0 };
-    static const WCHAR szbs[] = { '/', 0 };
 
     hUserItem = GetDlgItem( hdlg, IDC_USERNAME );
     hPassItem = GetDlgItem( hdlg, IDC_PASSWORD );
 
     /* now try fetch the username and password */
     lstrcpyW( szResource, szServer);
-    lstrcatW( szResource, szbs);
+    lstrcatW( szResource, L"/");
     lstrcatW( szResource, szRealm);
 
     /*
@@ -137,7 +134,7 @@ static BOOL WININET_GetSetPassword( HWND hdlg, LPCWSTR szServer,
     {
         szUserPass[0] = 0;
         GetWindowTextW( hUserItem, szUserPass, ARRAY_SIZE( szUserPass ) - 1 );
-        lstrcatW(szUserPass, szColon);
+        lstrcatW(szUserPass, L":");
         u_len = lstrlenW( szUserPass );
         GetWindowTextW( hPassItem, szUserPass+u_len, ARRAY_SIZE( szUserPass ) - u_len );
 

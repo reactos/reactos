@@ -163,7 +163,6 @@ static const CHAR *const szFtpCommands[] = {
 };
 
 static const CHAR szMonths[] = "JANFEBMARAPRMAYJUNJULAUGSEPOCTNOVDEC";
-static const WCHAR szNoAccount[] = {'n','o','a','c','c','o','u','n','t','\0'};
 
 static BOOL FTP_SendCommand(INT nSocket, FTP_COMMAND ftpCmd, LPCWSTR lpszParam,
 	INTERNET_STATUS_CALLBACK lpfnStatusCB, object_header_t *hdr, DWORD_PTR dwContext);
@@ -2431,14 +2430,6 @@ HINTERNET FTP_Connect(appinfo_t *hIC, LPCWSTR lpszServerName,
 	LPCWSTR lpszPassword, DWORD dwFlags, DWORD_PTR dwContext,
 	DWORD dwInternalFlags)
 {
-    static const WCHAR szKey[] = {'S','o','f','t','w','a','r','e','\\',
-                                   'M','i','c','r','o','s','o','f','t','\\',
-                                   'W','i','n','d','o','w','s','\\',
-                                   'C','u','r','r','e','n','t','V','e','r','s','i','o','n','\\',
-                                   'I','n','t','e','r','n','e','t',' ','S','e','t','t','i','n','g','s',0};
-    static const WCHAR szValue[] = {'E','m','a','i','l','N','a','m','e',0};
-    static const WCHAR szDefaultUsername[] = {'a','n','o','n','y','m','o','u','s','\0'};
-    static const WCHAR szEmpty[] = {'\0'};
     struct sockaddr_in socketAddr;
     INT nsocket = -1;
     socklen_t sock_namelen;
@@ -2494,14 +2485,14 @@ HINTERNET FTP_Connect(appinfo_t *hIC, LPCWSTR lpszServerName,
         WCHAR szPassword[MAX_PATH];
         DWORD len = sizeof(szPassword);
 
-        lpwfs->lpszUserName = heap_strdupW(szDefaultUsername);
+        lpwfs->lpszUserName = heap_strdupW(L"anonymous");
 
-        RegOpenKeyW(HKEY_CURRENT_USER, szKey, &key);
-        if (RegQueryValueExW(key, szValue, NULL, NULL, (LPBYTE)szPassword, &len)) {
+        RegOpenKeyW(HKEY_CURRENT_USER, L"Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings", &key);
+        if (RegQueryValueExW(key, L"EmailName", NULL, NULL, (LPBYTE)szPassword, &len)) {
             /* Nothing in the registry, get the username and use that as the password */
             if (!GetUserNameW(szPassword, &len)) {
                 /* Should never get here, but use an empty password as failsafe */
-                lstrcpyW(szPassword, szEmpty);
+                lstrcpyW(szPassword, L"");
             }
         }
         RegCloseKey(key);
@@ -2511,7 +2502,7 @@ HINTERNET FTP_Connect(appinfo_t *hIC, LPCWSTR lpszServerName,
     }
     else {
         lpwfs->lpszUserName = heap_strdupW(lpszUserName);
-        lpwfs->lpszPassword = heap_strdupW(lpszPassword ? lpszPassword : szEmpty);
+        lpwfs->lpszPassword = heap_strdupW(lpszPassword ? lpszPassword : L"");
     }
     lpwfs->servername = heap_strdupW(lpszServerName);
 
@@ -2881,7 +2872,7 @@ static BOOL FTP_SendAccount(ftp_session_t *lpwfs)
     BOOL bSuccess = FALSE;
 
     TRACE("\n");
-    if (!FTP_SendCommand(lpwfs->sndSocket, FTP_CMD_ACCT, szNoAccount, 0, 0, 0))
+    if (!FTP_SendCommand(lpwfs->sndSocket, FTP_CMD_ACCT, L"noaccount", 0, 0, 0))
         goto lend;
 
     nResCode = FTP_ReceiveResponse(lpwfs, lpwfs->hdr.dwContext);
@@ -3015,7 +3006,7 @@ lend:
 static BOOL FTP_SendType(ftp_session_t *lpwfs, DWORD dwType)
 {
     INT nResCode;
-    WCHAR type[] = { 'I','\0' };
+    WCHAR type[] = L"I";
     BOOL bSuccess = FALSE;
 
     TRACE("\n");
@@ -3096,13 +3087,12 @@ lend:
  */
 static BOOL FTP_SendPort(ftp_session_t *lpwfs)
 {
-    static const WCHAR szIPFormat[] = {'%','d',',','%','d',',','%','d',',','%','d',',','%','d',',','%','d','\0'};
     INT nResCode;
     WCHAR szIPAddress[64];
     BOOL bSuccess = FALSE;
     TRACE("\n");
 
-    swprintf(szIPAddress, ARRAY_SIZE(szIPAddress), szIPFormat,
+    swprintf(szIPAddress, ARRAY_SIZE(szIPAddress), L"%d,%d,%d,%d,%d,%d",
 	 lpwfs->lstnSocketAddress.sin_addr.S_un.S_addr&0x000000FF,
         (lpwfs->lstnSocketAddress.sin_addr.S_un.S_addr&0x0000FF00)>>8,
         (lpwfs->lstnSocketAddress.sin_addr.S_un.S_addr&0x00FF0000)>>16,

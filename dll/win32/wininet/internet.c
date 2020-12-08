@@ -98,12 +98,7 @@ static ULONG max_conns = 2, max_1_0_conns = 4;
 static ULONG connect_timeout = 60000;
 
 static const WCHAR szInternetSettings[] =
-    { 'S','o','f','t','w','a','r','e','\\','M','i','c','r','o','s','o','f','t','\\',
-      'W','i','n','d','o','w','s','\\','C','u','r','r','e','n','t','V','e','r','s','i','o','n','\\',
-      'I','n','t','e','r','n','e','t',' ','S','e','t','t','i','n','g','s',0 };
-static const WCHAR szProxyServer[] = { 'P','r','o','x','y','S','e','r','v','e','r', 0 };
-static const WCHAR szProxyEnable[] = { 'P','r','o','x','y','E','n','a','b','l','e', 0 };
-static const WCHAR szProxyOverride[] = { 'P','r','o','x','y','O','v','e','r','r','i','d','e', 0 };
+    L"Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings";
 
 void *alloc_object(object_header_t *parent, const object_vtbl_t *vtbl, size_t size)
 {
@@ -341,7 +336,7 @@ static LONG INTERNET_SaveProxySettings( proxyinfo_t *lpwpi )
     if ((ret = RegOpenKeyW( HKEY_CURRENT_USER, szInternetSettings, &key )))
         return ret;
 
-    if ((ret = RegSetValueExW( key, szProxyEnable, 0, REG_DWORD, (BYTE*)&lpwpi->proxyEnabled, sizeof(DWORD))))
+    if ((ret = RegSetValueExW( key, L"ProxyEnable", 0, REG_DWORD, (BYTE*)&lpwpi->proxyEnabled, sizeof(DWORD))))
     {
         RegCloseKey( key );
         return ret;
@@ -349,7 +344,7 @@ static LONG INTERNET_SaveProxySettings( proxyinfo_t *lpwpi )
 
     if (lpwpi->proxy)
     {
-        if ((ret = RegSetValueExW( key, szProxyServer, 0, REG_SZ, (BYTE*)lpwpi->proxy, sizeof(WCHAR) * (lstrlenW(lpwpi->proxy) + 1))))
+        if ((ret = RegSetValueExW( key, L"ProxyServer", 0, REG_SZ, (BYTE*)lpwpi->proxy, sizeof(WCHAR) * (lstrlenW(lpwpi->proxy) + 1))))
         {
             RegCloseKey( key );
             return ret;
@@ -357,7 +352,7 @@ static LONG INTERNET_SaveProxySettings( proxyinfo_t *lpwpi )
     }
     else
     {
-        if ((ret = RegDeleteValueW( key, szProxyServer )) && ret != ERROR_FILE_NOT_FOUND)
+        if ((ret = RegDeleteValueW( key, L"ProxyServer" )) && ret != ERROR_FILE_NOT_FOUND)
         {
             RegCloseKey( key );
             return ret;
@@ -495,7 +490,6 @@ static void free_global_proxy( void )
 
 static BOOL parse_proxy_url( proxyinfo_t *info, const WCHAR *url )
 {
-    static const WCHAR fmt[] = {'%','.','*','s',':','%','u',0};
     URL_COMPONENTSW uc = {sizeof(uc)};
 
     uc.dwHostNameLength = 1;
@@ -511,7 +505,7 @@ static BOOL parse_proxy_url( proxyinfo_t *info, const WCHAR *url )
         return TRUE;
     }
     if (!(info->proxy = heap_alloc( (uc.dwHostNameLength + 12) * sizeof(WCHAR) ))) return FALSE;
-    swprintf( info->proxy, uc.dwHostNameLength + 12, fmt, uc.dwHostNameLength, uc.lpszHostName, uc.nPort );
+    swprintf( info->proxy, uc.dwHostNameLength + 12, L"%.*s:%u", uc.dwHostNameLength, uc.lpszHostName, uc.nPort );
 
     if (!uc.dwUserNameLength) info->proxyUsername = NULL;
     else if (!(info->proxyUsername = heap_strndupW( uc.lpszUserName, uc.dwUserNameLength )))
@@ -566,10 +560,10 @@ static LONG INTERNET_LoadProxySettings( proxyinfo_t *lpwpi )
     }
 
     len = sizeof(DWORD);
-    if (RegQueryValueExW( key, szProxyEnable, NULL, &type, (BYTE *)&lpwpi->proxyEnabled, &len ) || type != REG_DWORD)
+    if (RegQueryValueExW( key, L"ProxyEnable", NULL, &type, (BYTE *)&lpwpi->proxyEnabled, &len ) || type != REG_DWORD)
     {
         lpwpi->proxyEnabled = 0;
-        if((ret = RegSetValueExW( key, szProxyEnable, 0, REG_DWORD, (BYTE *)&lpwpi->proxyEnabled, sizeof(DWORD) )))
+        if((ret = RegSetValueExW( key, L"ProxyEnable", 0, REG_DWORD, (BYTE *)&lpwpi->proxyEnabled, sizeof(DWORD) )))
         {
             FreeProxyInfo( lpwpi );
             RegCloseKey( key );
@@ -580,10 +574,9 @@ static LONG INTERNET_LoadProxySettings( proxyinfo_t *lpwpi )
     if (!(envproxy = _wgetenv( L"http_proxy" )) || lpwpi->proxyEnabled)
     {
         /* figure out how much memory the proxy setting takes */
-        if (!RegQueryValueExW( key, szProxyServer, NULL, &type, NULL, &len ) && len && (type == REG_SZ))
+        if (!RegQueryValueExW( key, L"ProxyServer", NULL, &type, NULL, &len ) && len && (type == REG_SZ))
         {
             LPWSTR szProxy, p;
-            static const WCHAR szHttp[] = {'h','t','t','p','=',0};
 
             if (!(szProxy = heap_alloc(len)))
             {
@@ -591,13 +584,13 @@ static LONG INTERNET_LoadProxySettings( proxyinfo_t *lpwpi )
                 FreeProxyInfo( lpwpi );
                 return ERROR_OUTOFMEMORY;
             }
-            RegQueryValueExW( key, szProxyServer, NULL, &type, (BYTE*)szProxy, &len );
+            RegQueryValueExW( key, L"ProxyServer", NULL, &type, (BYTE*)szProxy, &len );
 
             /* find the http proxy, and strip away everything else */
-            p = wcsstr( szProxy, szHttp );
+            p = wcsstr( szProxy, L"http=" );
             if (p)
             {
-                p += lstrlenW( szHttp );
+                p += lstrlenW( L"http=" );
                 lstrcpyW( szProxy, p );
             }
             p = wcschr( szProxy, ';' );
@@ -642,7 +635,7 @@ static LONG INTERNET_LoadProxySettings( proxyinfo_t *lpwpi )
         if (!(envproxy = _wgetenv( L"no_proxy" )))
         {
             /* figure out how much memory the proxy setting takes */
-            if (!RegQueryValueExW( key, szProxyOverride, NULL, &type, NULL, &len ) && len && (type == REG_SZ))
+            if (!RegQueryValueExW( key, L"ProxyOverride", NULL, &type, NULL, &len ) && len && (type == REG_SZ))
             {
                 LPWSTR szProxy;
 
@@ -651,7 +644,7 @@ static LONG INTERNET_LoadProxySettings( proxyinfo_t *lpwpi )
                     RegCloseKey( key );
                     return ERROR_OUTOFMEMORY;
                 }
-                RegQueryValueExW( key, szProxyOverride, NULL, &type, (BYTE*)szProxy, &len );
+                RegQueryValueExW( key, L"ProxyOverride", NULL, &type, (BYTE*)szProxy, &len );
 
                 heap_free( lpwpi->proxyBypass );
                 lpwpi->proxyBypass = szProxy;
@@ -2391,8 +2384,6 @@ static int reverse_lookup( const struct addrinfo *ai, char *hostname, size_t len
 
 static WCHAR *build_wpad_url( const char *hostname, const struct addrinfo *ai )
 {
-    static const WCHAR httpW[] = {'h','t','t','p',':','/','/',0};
-    static const WCHAR wpadW[] = {'/','w','p','a','d','.','d','a','t',0};
     char name[NI_MAXHOST];
     WCHAR *ret, *p;
     int len;
@@ -2402,12 +2393,12 @@ static WCHAR *build_wpad_url( const char *hostname, const struct addrinfo *ai )
 
     if (!reverse_lookup( ai, name, sizeof(name) )) hostname = name;
 
-    len = lstrlenW( httpW ) + strlen( hostname ) + lstrlenW( wpadW );
+    len = lstrlenW( L"http://" ) + strlen( hostname ) + lstrlenW( L"/wpad.dat" );
     if (!(ret = p = GlobalAlloc( 0, (len + 1) * sizeof(WCHAR) ))) return NULL;
-    lstrcpyW( p, httpW );
-    p += lstrlenW( httpW );
+    lstrcpyW( p, L"http://" );
+    p += lstrlenW( L"http://" );
     while (*hostname) { *p++ = *hostname++; }
-    lstrcpyW( p, wpadW );
+    lstrcpyW( p, L"/wpad.dat" );
     return ret;
 }
 
@@ -3336,10 +3327,6 @@ BOOL WINAPI InternetTimeFromSystemTimeA( const SYSTEMTIME* time, DWORD format, L
  */
 BOOL WINAPI InternetTimeFromSystemTimeW( const SYSTEMTIME* time, DWORD format, LPWSTR string, DWORD size )
 {
-    static const WCHAR date[] =
-        { '%','s',',',' ','%','0','2','d',' ','%','s',' ','%','4','d',' ','%','0',
-          '2','d',':','%','0','2','d',':','%','0','2','d',' ','G','M','T', 0 };
-
     TRACE( "%p 0x%08x %p 0x%08x\n", time, format, string, size );
 
     if (!time || !string || format != INTERNET_RFC1123_FORMAT)
@@ -3354,7 +3341,7 @@ BOOL WINAPI InternetTimeFromSystemTimeW( const SYSTEMTIME* time, DWORD format, L
         return FALSE;
     }
 
-    swprintf( string, size, date,
+    swprintf( string, size, L"%s, %02d %s %4d %02d:%02d:%02d GMT",
               WININET_wkday[time->wDayOfWeek],
               time->wDay,
               WININET_month[time->wMonth - 1],
@@ -3661,8 +3648,7 @@ static HINTERNET INTERNET_InternetOpenUrlW(appinfo_t *hIC, LPCWSTR lpszUrl,
 
     case INTERNET_SCHEME_HTTP:
     case INTERNET_SCHEME_HTTPS: {
-	static const WCHAR szStars[] = { '*','/','*', 0 };
-	LPCWSTR accept[2] = { szStars, NULL };
+        LPCWSTR accept[2] = { L"*/*", NULL };
 
         if (urlComponents.nScheme == INTERNET_SCHEME_HTTPS) dwFlags |= INTERNET_FLAG_SECURE;
 
