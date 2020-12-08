@@ -486,7 +486,7 @@ static void test_pack_GROUPID(void)
     /* GROUPID */
     TEST_TYPE_SIZE   (GROUPID, 8)
     TEST_TYPE_ALIGN  (GROUPID, 8)
-    TEST_TYPE_SIGNED(GROUPID)
+    TEST_TYPE_SIGNED (GROUPID)
 }
 
 static void test_pack_HINTERNET(void)
@@ -1723,7 +1723,7 @@ static void test_pack_GROUPID(void)
     /* GROUPID */
     TEST_TYPE_SIZE   (GROUPID, 8)
     TEST_TYPE_ALIGN  (GROUPID, 8)
-    TEST_TYPE_SIGNED(GROUPID)
+    TEST_TYPE_SIGNED (GROUPID)
 }
 
 static void test_pack_HINTERNET(void)
