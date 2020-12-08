@@ -204,7 +204,7 @@ dll/win32/windowscodecsext    # Synced to WineStaging-2.9
 dll/win32/winemp3.acm         # Synced to WineStaging-4.18
 dll/win32/wing32              # Synced to WineStaging-3.3
 dll/win32/winhttp             # Synced to WineStaging-4.18
-dll/win32/wininet             # Synced to WineStaging-4.18
+dll/win32/wininet             # Synced to WineStaging-6.0rc1
 dll/win32/winmm               # Forked at Wine-20050628
 dll/win32/winmm/midimap       # Forked at Wine-20050628
 dll/win32/winmm/wavemap       # Forked at Wine-20050628
