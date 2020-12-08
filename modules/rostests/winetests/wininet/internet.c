@@ -1459,7 +1459,7 @@ static void test_Option_PerConnectionOptionA(void)
 static void test_InternetErrorDlg(void)
 {
     HINTERNET ses, con, req;
-    DWORD res, flags;
+    DWORD res;
     HWND hwnd;
     ULONG i;
     static const struct {
@@ -1486,12 +1486,9 @@ static void test_InternetErrorDlg(void)
         { ERROR_INTERNET_UNABLE_TO_DOWNLOAD_SCRIPT, ERROR_CANCELLED, FLAG_TODO },
         { ERROR_HTTP_REDIRECT_NEEDS_CONFIRMATION, ERROR_CANCELLED, FLAG_TODO },
         { ERROR_INTERNET_SEC_CERT_REVOKED       , ERROR_CANCELLED, 0 },
-        { 0, ERROR_NOT_SUPPORTED }
     };
 
-    flags = 0;
-
-    res = InternetErrorDlg(NULL, NULL, 12055, flags, NULL);
+    res = InternetErrorDlg(NULL, NULL, ERROR_INTERNET_SEC_CERT_ERRORS, 0, NULL);
     ok(res == ERROR_INVALID_HANDLE, "Got %d\n", res);
 
     ses = InternetOpenA(NULL, INTERNET_OPEN_TYPE_DIRECT, NULL, NULL, 0);
@@ -1504,27 +1501,28 @@ static void test_InternetErrorDlg(void)
     /* NULL hwnd and FLAGS_ERROR_UI_FLAGS_NO_UI not set */
     for(i = INTERNET_ERROR_BASE; i < INTERNET_ERROR_LAST; i++)
     {
-        res = InternetErrorDlg(NULL, req, i, flags, NULL);
+        res = InternetErrorDlg(NULL, req, i, 0, NULL);
         ok(res == ERROR_INVALID_HANDLE, "Got %d (%d)\n", res, i);
     }
 
     hwnd = GetDesktopWindow();
     ok(hwnd != NULL, "GetDesktopWindow failed (%d)\n", GetLastError());
 
-    flags = FLAGS_ERROR_UI_FLAGS_NO_UI;
     for(i = INTERNET_ERROR_BASE; i < INTERNET_ERROR_LAST; i++)
     {
-        DWORD expected, test_flags, j;
+        DWORD expected = ERROR_NOT_SUPPORTED, test_flags = 0, j;
 
-        for(j = 0; no_ui_res[j].error != 0; ++j)
-            if(no_ui_res[j].error == i)
-                break;
-
-        test_flags = no_ui_res[j].test_flags;
-        expected = no_ui_res[j].res;
+        for (j = 0; j < ARRAY_SIZE(no_ui_res); ++j)
+        {
+            if (no_ui_res[j].error == i)
+            {
+                test_flags = no_ui_res[j].test_flags;
+                expected = no_ui_res[j].res;
+            }
+        }
 
         /* Try an invalid request handle */
-        res = InternetErrorDlg(hwnd, (HANDLE)0xdeadbeef, i, flags, NULL);
+        res = InternetErrorDlg(hwnd, (HANDLE)0xdeadbeef, i, FLAGS_ERROR_UI_FLAGS_NO_UI, NULL);
         if(res == ERROR_CALL_NOT_IMPLEMENTED)
         {
             ok(test_flags & FLAG_UNIMPL, "%i is unexpectedly unimplemented.\n", i);
@@ -1540,7 +1538,7 @@ static void test_InternetErrorDlg(void)
         if(i == ERROR_INTERNET_SEC_CERT_REVOKED)
             continue; /* Interactive (XP, Win7) */
 
-        res = InternetErrorDlg(hwnd, req, i, flags, NULL);
+        res = InternetErrorDlg(hwnd, req, i, FLAGS_ERROR_UI_FLAGS_NO_UI, NULL);
 
         /* Handle some special cases */
         switch(i)
@@ -1571,7 +1569,7 @@ static void test_InternetErrorDlg(void)
             ok(res == expected, "Got %d, expected %d (%d)\n", res, expected, i);
 
         /* Same thing with NULL hwnd */
-        res = InternetErrorDlg(NULL, req, i, flags, NULL);
+        res = InternetErrorDlg(NULL, req, i, FLAGS_ERROR_UI_FLAGS_NO_UI, NULL);
         todo_wine_if(test_flags & FLAG_TODO)
             ok(res == expected, "Got %d, expected %d (%d)\n", res, expected, i);
 
@@ -1580,7 +1578,7 @@ static void test_InternetErrorDlg(void)
         if(test_flags & FLAG_NEEDREQ)
             expected = ERROR_INVALID_PARAMETER;
 
-        res = InternetErrorDlg(hwnd, NULL, i, flags, NULL);
+        res = InternetErrorDlg(hwnd, NULL, i, FLAGS_ERROR_UI_FLAGS_NO_UI, NULL);
         todo_wine_if( test_flags & FLAG_TODO || i == ERROR_INTERNET_INCORRECT_PASSWORD)
             ok(res == expected, "Got %d, expected %d (%d)\n", res, expected, i);
     }
