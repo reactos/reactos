@@ -57,6 +57,7 @@
 
 #include "internet.h"
 #include "zlib.h"
+#include "resource.h"
 #include "wine/debug.h"
 #include "wine/exception.h"
 #endif /* defined(__REACTOS__) */
@@ -2295,6 +2296,105 @@ static DWORD HTTPREQ_QueryOption(object_header_t *hdr, DWORD option, void *buffe
         }
 
         return get_security_cert_struct(req, (INTERNET_CERTIFICATE_INFOA*)buffer);
+    }
+    case INTERNET_OPTION_SECURITY_CERTIFICATE: {
+        DWORD err;
+        int needed;
+        char subject[64];
+        char issuer[64];
+        char effective[64];
+        char expiration[64];
+        char protocol[64];
+        char signature[64];
+        char encryption[64];
+        char privacy[64];
+        char bits[16];
+        char strength[16];
+        char start_date[32];
+        char start_time[32];
+        char expiry_date[32];
+        char expiry_time[32];
+        SYSTEMTIME start, expiry;
+        INTERNET_CERTIFICATE_INFOA info;
+
+        if(!size)
+            return ERROR_INVALID_PARAMETER;
+
+        if(!req->netconn) {
+            *size = 0;
+            return ERROR_INTERNET_INVALID_OPERATION;
+        }
+
+        if(!buffer) {
+            *size = 1;
+            return ERROR_INSUFFICIENT_BUFFER;
+        }
+
+        if((err = get_security_cert_struct(req, &info)))
+            return err;
+
+        LoadStringA(WININET_hModule, IDS_CERT_SUBJECT, subject, sizeof(subject));
+        LoadStringA(WININET_hModule, IDS_CERT_ISSUER, issuer, sizeof(issuer));
+        LoadStringA(WININET_hModule, IDS_CERT_EFFECTIVE, effective, sizeof(effective));
+        LoadStringA(WININET_hModule, IDS_CERT_EXPIRATION, expiration, sizeof(expiration));
+        LoadStringA(WININET_hModule, IDS_CERT_PROTOCOL, protocol, sizeof(protocol));
+        LoadStringA(WININET_hModule, IDS_CERT_SIGNATURE, signature, sizeof(signature));
+        LoadStringA(WININET_hModule, IDS_CERT_ENCRYPTION, encryption, sizeof(encryption));
+        LoadStringA(WININET_hModule, IDS_CERT_PRIVACY, privacy, sizeof(privacy));
+        LoadStringA(WININET_hModule, info.dwKeySize >= 128 ? IDS_CERT_HIGH : IDS_CERT_LOW,
+                    strength, sizeof(strength));
+        LoadStringA(WININET_hModule, IDS_CERT_BITS, bits, sizeof(bits));
+
+        FileTimeToSystemTime(&info.ftStart, &start);
+        FileTimeToSystemTime(&info.ftExpiry, &expiry);
+        GetDateFormatA(LOCALE_USER_DEFAULT, 0, &start, NULL, start_date, sizeof(start_date));
+        GetTimeFormatA(LOCALE_USER_DEFAULT, 0, &start, NULL, start_time, sizeof(start_time));
+        GetDateFormatA(LOCALE_USER_DEFAULT, 0, &expiry, NULL, expiry_date, sizeof(expiry_date));
+        GetTimeFormatA(LOCALE_USER_DEFAULT, 0, &expiry, NULL, expiry_time, sizeof(expiry_time));
+
+        needed = _scprintf("%s:\r\n%s\r\n"
+                           "%s:\r\n%s\r\n"
+                           "%s:\t%s %s\r\n"
+                           "%s:\t%s %s\r\n"
+                           "%s:\t(null)\r\n"
+                           "%s:\t(null)\r\n"
+                           "%s:\t(null)\r\n"
+                           "%s:\t%s (%u %s)",
+                           subject, info.lpszSubjectInfo,
+                           issuer, info.lpszIssuerInfo,
+                           effective, start_date, start_time,
+                           expiration, expiry_date, expiry_time,
+                           protocol, signature, encryption,
+                           privacy, strength, info.dwKeySize, bits);
+
+        if(needed < *size) {
+            err = ERROR_SUCCESS;
+            *size = snprintf(buffer, *size,
+                           "%s:\r\n%s\r\n"
+                           "%s:\r\n%s\r\n"
+                           "%s:\t%s %s\r\n"
+                           "%s:\t%s %s\r\n"
+                           "%s:\t(null)\r\n"
+                           "%s:\t(null)\r\n"
+                           "%s:\t(null)\r\n"
+                           "%s:\t%s (%u %s)",
+                           subject, info.lpszSubjectInfo,
+                           issuer, info.lpszIssuerInfo,
+                           effective, start_date, start_time,
+                           expiration, expiry_date, expiry_time,
+                           protocol, signature, encryption,
+                           privacy, strength, info.dwKeySize, bits);
+        }else {
+            err = ERROR_INSUFFICIENT_BUFFER;
+            *size = 1;
+        }
+
+        LocalFree(info.lpszSubjectInfo);
+        LocalFree(info.lpszIssuerInfo);
+        LocalFree(info.lpszProtocolName);
+        LocalFree(info.lpszSignatureAlgName);
+        LocalFree(info.lpszEncryptionAlgName);
+        return err;
     }
     case INTERNET_OPTION_CONNECT_TIMEOUT:
         if (*size < sizeof(DWORD))
