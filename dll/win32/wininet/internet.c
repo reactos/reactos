@@ -1579,16 +1579,19 @@ BOOL WINAPI InternetCrackUrlA(const char *url, DWORD url_length, DWORD flags, UR
     return ret;
 }
 
-static const WCHAR url_schemes[][7] =
+static const WCHAR *url_schemes[] =
 {
-    {'f','t','p',0},
-    {'g','o','p','h','e','r',0},
-    {'h','t','t','p',0},
-    {'h','t','t','p','s',0},
-    {'f','i','l','e',0},
-    {'n','e','w','s',0},
-    {'m','a','i','l','t','o',0},
-    {'r','e','s',0},
+    L"ftp",
+    L"gopher",
+    L"http",
+    L"https",
+    L"file",
+    L"news",
+    L"mailto",
+    L"socks",
+    L"javascript",
+    L"vbscript",
+    L"res"
 };
 
 /***********************************************************************
@@ -4216,7 +4219,7 @@ static LPCWSTR INTERNET_GetSchemeString(INTERNET_SCHEME scheme)
     index = scheme - INTERNET_SCHEME_FIRST;
     if (index >= ARRAY_SIZE(url_schemes))
         return NULL;
-    return (LPCWSTR)url_schemes[index];
+    return url_schemes[index];
 }
 
 /* we can calculate using ansi strings because we're just
