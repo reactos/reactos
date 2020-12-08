@@ -376,7 +376,6 @@ static void test_complicated_cookie(void)
   BOOL ret;
 
   CHAR buffer[1024];
-  CHAR user[256];
   WCHAR wbuf[1024];
 
   static const WCHAR testing_example_comW[] =
@@ -530,24 +529,15 @@ static void test_complicated_cookie(void)
   ret = InternetSetCookieA("http://testing.example.com", NULL, "A=B; expires=Fri, 01-Jan-2038 00:00:00 GMT");
   ok(ret, "InternetSetCookie failed with error %d\n", GetLastError());
 
-  len = sizeof(user);
-  ret = GetUserNameA(user, &len);
-  ok(ret, "GetUserName failed with error %d\n", GetLastError());
-  for(; len>0; len--)
-      user[len-1] = tolower(user[len-1]);
-
-  sprintf(buffer, "Cookie:%s@testing.example.com/", user);
-  ret = GetUrlCacheEntryInfoA(buffer, NULL, &len);
-  ok(!ret, "GetUrlCacheEntryInfo succeeded\n");
-  ok(GetLastError() == ERROR_INSUFFICIENT_BUFFER, "GetLastError() = %d\n", GetLastError());
+  len = sizeof(buffer);
+  ret = InternetGetCookieA("http://testing.example.com/foobar", NULL, buffer, &len);
+  ok(ret, "got error %u\n", GetLastError());
+  ok(len == 24, "got len %u\n", len);
+  ok(!!strstr(buffer, "A=B"), "cookie is not present\n");
 
   /* remove persistent cookie */
   ret = InternetSetCookieA("http://testing.example.com", NULL, "A=B");
   ok(ret, "InternetSetCookie failed with error %d\n", GetLastError());
-
-  ret = GetUrlCacheEntryInfoA(buffer, NULL, &len);
-  ok(!ret, "GetUrlCacheEntryInfo succeeded\n");
-  ok(GetLastError() == ERROR_FILE_NOT_FOUND, "GetLastError() = %d\n", GetLastError());
 
   /* try setting cookie for different domain */
   ret = InternetSetCookieA("http://www.aaa.example.com/bar",NULL,"E=F; domain=different.com");
