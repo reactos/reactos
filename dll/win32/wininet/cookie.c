@@ -151,28 +151,31 @@ static cookie_domain_t *get_cookie_domain(substr_t domain, BOOL create)
 
 static WCHAR *create_cookie_url(substr_t domain, substr_t path, substr_t *ret_path)
 {
-    WCHAR user[UNLEN], *p, *url;
+    WCHAR *p, *url;
     DWORD len, user_len, i;
 
     static const WCHAR cookie_prefix[] = {'C','o','o','k','i','e',':'};
 
-    user_len = ARRAY_SIZE(user);
-    if(!GetUserNameW(user, &user_len))
-        return FALSE;
-    user_len--;
+    user_len = 0;
+    if(GetUserNameW(NULL, &user_len) || GetLastError() != ERROR_INSUFFICIENT_BUFFER)
+        return NULL;
 
+    /* user_len already accounts for terminating NULL */
     len = ARRAY_SIZE(cookie_prefix) + user_len + 1 /* @ */ + domain.len + path.len;
-    url = heap_alloc((len+1) * sizeof(WCHAR));
+    url = heap_alloc(len * sizeof(WCHAR));
     if(!url)
         return NULL;
 
     memcpy(url, cookie_prefix, sizeof(cookie_prefix));
     p = url + ARRAY_SIZE(cookie_prefix);
 
-    memcpy(p, user, user_len*sizeof(WCHAR));
+    if(!GetUserNameW(p, &user_len)) {
+        heap_free(url);
+        return NULL;
+    }
     p += user_len;
 
-    *p++ = '@';
+    *(p - 1) = '@';
 
     memcpy(p, domain.str, domain.len*sizeof(WCHAR));
     p += domain.len;
