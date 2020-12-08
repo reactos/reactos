@@ -756,11 +756,7 @@ static void cache_container_delete_container(cache_container *pContainer)
 
 static void cache_containers_init(void)
 {
-    static const WCHAR UrlSuffix[] = {'C','o','n','t','e','n','t','.','I','E','5',0};
-    static const WCHAR HistorySuffix[] = {'H','i','s','t','o','r','y','.','I','E','5',0};
-    static const WCHAR CookieSuffix[] = {0};
     /* ReactOS r50916 */
-    static const WCHAR UserProfile[] = {'U','S','E','R','P','R','O','F','I','L','E',0};
     static const struct
     {
         int nFolder; /* CSIDL_* constant */
@@ -769,14 +765,14 @@ static void cache_containers_init(void)
         DWORD default_entry_type;
     } DefaultContainerData[] =
     {
-        { CSIDL_INTERNET_CACHE, UrlSuffix, "", NORMAL_CACHE_ENTRY },
-        { CSIDL_HISTORY, HistorySuffix, "Visited:", URLHISTORY_CACHE_ENTRY },
-        { CSIDL_COOKIES, CookieSuffix, "Cookie:", COOKIE_CACHE_ENTRY },
+        { CSIDL_INTERNET_CACHE, L"Content.IE5", "", NORMAL_CACHE_ENTRY },
+        { CSIDL_HISTORY, L"History.IE5", "Visited:", URLHISTORY_CACHE_ENTRY },
+        { CSIDL_COOKIES, L"", "Cookie:", COOKIE_CACHE_ENTRY },
     };
     DWORD i;
 
     /* ReactOS r50916 */
-    if (GetEnvironmentVariableW(UserProfile, NULL, 0) == 0 && GetLastError() == ERROR_ENVVAR_NOT_FOUND)
+    if (GetEnvironmentVariableW(L"USERPROFILE", NULL, 0) == 0 && GetLastError() == ERROR_ENVVAR_NOT_FOUND)
     {
         ERR("Environment variable 'USERPROFILE' does not exist!\n");
         return;

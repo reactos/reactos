@@ -76,58 +76,16 @@ static const WCHAR szGET[] = { 'G','E','T', 0 };
 static const WCHAR szHEAD[] = { 'H','E','A','D', 0 };
 
 static const WCHAR szAccept[] = { 'A','c','c','e','p','t',0 };
-static const WCHAR szAccept_Charset[] = { 'A','c','c','e','p','t','-','C','h','a','r','s','e','t', 0 };
-static const WCHAR szAccept_Encoding[] = { 'A','c','c','e','p','t','-','E','n','c','o','d','i','n','g',0 };
-static const WCHAR szAccept_Language[] = { 'A','c','c','e','p','t','-','L','a','n','g','u','a','g','e',0 };
-static const WCHAR szAccept_Ranges[] = { 'A','c','c','e','p','t','-','R','a','n','g','e','s',0 };
-static const WCHAR szAge[] = { 'A','g','e',0 };
-static const WCHAR szAllow[] = { 'A','l','l','o','w',0 };
 static const WCHAR szCache_Control[] = { 'C','a','c','h','e','-','C','o','n','t','r','o','l',0 };
 static const WCHAR szConnection[] = { 'C','o','n','n','e','c','t','i','o','n',0 };
-static const WCHAR szContent_Base[] = { 'C','o','n','t','e','n','t','-','B','a','s','e',0 };
-static const WCHAR szContent_Disposition[] = { 'C','o','n','t','e','n','t','-','D','i','s','p','o','s','i','t','i','o','n',0 };
 static const WCHAR szContent_Encoding[] = { 'C','o','n','t','e','n','t','-','E','n','c','o','d','i','n','g',0 };
-static const WCHAR szContent_ID[] = { 'C','o','n','t','e','n','t','-','I','D',0 };
-static const WCHAR szContent_Language[] = { 'C','o','n','t','e','n','t','-','L','a','n','g','u','a','g','e',0 };
 static const WCHAR szContent_Length[] = { 'C','o','n','t','e','n','t','-','L','e','n','g','t','h',0 };
-static const WCHAR szContent_Location[] = { 'C','o','n','t','e','n','t','-','L','o','c','a','t','i','o','n',0 };
-static const WCHAR szContent_MD5[] = { 'C','o','n','t','e','n','t','-','M','D','5',0 };
-static const WCHAR szContent_Range[] = { 'C','o','n','t','e','n','t','-','R','a','n','g','e',0 };
-static const WCHAR szContent_Transfer_Encoding[] = { 'C','o','n','t','e','n','t','-','T','r','a','n','s','f','e','r','-','E','n','c','o','d','i','n','g',0 };
 static const WCHAR szContent_Type[] = { 'C','o','n','t','e','n','t','-','T','y','p','e',0 };
-static const WCHAR szCookie[] = { 'C','o','o','k','i','e',0 };
-static const WCHAR szDate[] = { 'D','a','t','e',0 };
-static const WCHAR szFrom[] = { 'F','r','o','m',0 };
-static const WCHAR szETag[] = { 'E','T','a','g',0 };
-static const WCHAR szExpect[] = { 'E','x','p','e','c','t',0 };
 static const WCHAR szExpires[] = { 'E','x','p','i','r','e','s',0 };
-static const WCHAR szIf_Match[] = { 'I','f','-','M','a','t','c','h',0 };
-static const WCHAR szIf_Modified_Since[] = { 'I','f','-','M','o','d','i','f','i','e','d','-','S','i','n','c','e',0 };
-static const WCHAR szIf_None_Match[] = { 'I','f','-','N','o','n','e','-','M','a','t','c','h',0 };
-static const WCHAR szIf_Range[] = { 'I','f','-','R','a','n','g','e',0 };
-static const WCHAR szIf_Unmodified_Since[] = { 'I','f','-','U','n','m','o','d','i','f','i','e','d','-','S','i','n','c','e',0 };
 static const WCHAR szLast_Modified[] = { 'L','a','s','t','-','M','o','d','i','f','i','e','d',0 };
-static const WCHAR szLocation[] = { 'L','o','c','a','t','i','o','n',0 };
-static const WCHAR szMax_Forwards[] = { 'M','a','x','-','F','o','r','w','a','r','d','s',0 };
-static const WCHAR szMime_Version[] = { 'M','i','m','e','-','V','e','r','s','i','o','n',0 };
-static const WCHAR szPragma[] = { 'P','r','a','g','m','a',0 };
-static const WCHAR szProxy_Authenticate[] = { 'P','r','o','x','y','-','A','u','t','h','e','n','t','i','c','a','t','e',0 };
 static const WCHAR szProxy_Connection[] = { 'P','r','o','x','y','-','C','o','n','n','e','c','t','i','o','n',0 };
-static const WCHAR szPublic[] = { 'P','u','b','l','i','c',0 };
-static const WCHAR szRange[] = { 'R','a','n','g','e',0 };
 static const WCHAR szReferer[] = { 'R','e','f','e','r','e','r',0 };
-static const WCHAR szRetry_After[] = { 'R','e','t','r','y','-','A','f','t','e','r',0 };
-static const WCHAR szServer[] = { 'S','e','r','v','e','r',0 };
 static const WCHAR szSet_Cookie[] = { 'S','e','t','-','C','o','o','k','i','e',0 };
-static const WCHAR szTransfer_Encoding[] = { 'T','r','a','n','s','f','e','r','-','E','n','c','o','d','i','n','g',0 };
-static const WCHAR szUnless_Modified_Since[] = { 'U','n','l','e','s','s','-','M','o','d','i','f','i','e','d','-','S','i','n','c','e',0 };
-static const WCHAR szUpgrade[] = { 'U','p','g','r','a','d','e',0 };
-static const WCHAR szURI[] = { 'U','R','I',0 };
-static const WCHAR szUser_Agent[] = { 'U','s','e','r','-','A','g','e','n','t',0 };
-static const WCHAR szVary[] = { 'V','a','r','y',0 };
-static const WCHAR szVia[] = { 'V','i','a',0 };
-static const WCHAR szWarning[] = { 'W','a','r','n','i','n','g',0 };
-static const WCHAR szWWW_Authenticate[] = { 'W','W','W','-','A','u','t','h','e','n','t','i','c','a','t','e',0 };
 
 static const WCHAR emptyW[] = {0};
 
@@ -3607,77 +3565,77 @@ lend:
 }
 
 static const LPCWSTR header_lookup[] = {
-    szMime_Version,		/* HTTP_QUERY_MIME_VERSION = 0 */
-    szContent_Type,		/* HTTP_QUERY_CONTENT_TYPE = 1 */
-    szContent_Transfer_Encoding,/* HTTP_QUERY_CONTENT_TRANSFER_ENCODING = 2 */
-    szContent_ID,		/* HTTP_QUERY_CONTENT_ID = 3 */
-    NULL,			/* HTTP_QUERY_CONTENT_DESCRIPTION = 4 */
-    szContent_Length,		/* HTTP_QUERY_CONTENT_LENGTH =  5 */
-    szContent_Language,		/* HTTP_QUERY_CONTENT_LANGUAGE =  6 */
-    szAllow,			/* HTTP_QUERY_ALLOW = 7 */
-    szPublic,			/* HTTP_QUERY_PUBLIC = 8 */
-    szDate,			/* HTTP_QUERY_DATE = 9 */
-    szExpires,			/* HTTP_QUERY_EXPIRES = 10 */
-    szLast_Modified,		/* HTTP_QUERY_LAST_MODIFIED = 11 */
-    NULL,			/* HTTP_QUERY_MESSAGE_ID = 12 */
-    szURI,			/* HTTP_QUERY_URI = 13 */
-    szFrom,			/* HTTP_QUERY_DERIVED_FROM = 14 */
-    NULL,			/* HTTP_QUERY_COST = 15 */
-    NULL,			/* HTTP_QUERY_LINK = 16 */
-    szPragma,			/* HTTP_QUERY_PRAGMA = 17 */
-    NULL,			/* HTTP_QUERY_VERSION = 18 */
-    szStatus,			/* HTTP_QUERY_STATUS_CODE = 19 */
-    NULL,			/* HTTP_QUERY_STATUS_TEXT = 20 */
-    NULL,			/* HTTP_QUERY_RAW_HEADERS = 21 */
-    NULL,			/* HTTP_QUERY_RAW_HEADERS_CRLF = 22 */
-    szConnection,		/* HTTP_QUERY_CONNECTION = 23 */
-    szAccept,			/* HTTP_QUERY_ACCEPT = 24 */
-    szAccept_Charset,		/* HTTP_QUERY_ACCEPT_CHARSET = 25 */
-    szAccept_Encoding,		/* HTTP_QUERY_ACCEPT_ENCODING = 26 */
-    szAccept_Language,		/* HTTP_QUERY_ACCEPT_LANGUAGE = 27 */
-    szAuthorization,		/* HTTP_QUERY_AUTHORIZATION = 28 */
-    szContent_Encoding,		/* HTTP_QUERY_CONTENT_ENCODING = 29 */
-    NULL,			/* HTTP_QUERY_FORWARDED = 30 */
-    NULL,			/* HTTP_QUERY_FROM = 31 */
-    szIf_Modified_Since,	/* HTTP_QUERY_IF_MODIFIED_SINCE = 32 */
-    szLocation,			/* HTTP_QUERY_LOCATION = 33 */
-    NULL,			/* HTTP_QUERY_ORIG_URI = 34 */
-    szReferer,			/* HTTP_QUERY_REFERER = 35 */
-    szRetry_After,		/* HTTP_QUERY_RETRY_AFTER = 36 */
-    szServer,			/* HTTP_QUERY_SERVER = 37 */
-    NULL,			/* HTTP_TITLE = 38 */
-    szUser_Agent,		/* HTTP_QUERY_USER_AGENT = 39 */
-    szWWW_Authenticate,		/* HTTP_QUERY_WWW_AUTHENTICATE = 40 */
-    szProxy_Authenticate,	/* HTTP_QUERY_PROXY_AUTHENTICATE = 41 */
-    szAccept_Ranges,		/* HTTP_QUERY_ACCEPT_RANGES = 42 */
-    szSet_Cookie,		/* HTTP_QUERY_SET_COOKIE = 43 */
-    szCookie,			/* HTTP_QUERY_COOKIE = 44 */
-    NULL,			/* HTTP_QUERY_REQUEST_METHOD = 45 */
-    NULL,			/* HTTP_QUERY_REFRESH = 46 */
-    szContent_Disposition,	/* HTTP_QUERY_CONTENT_DISPOSITION = 47 */
-    szAge,			/* HTTP_QUERY_AGE = 48 */
-    szCache_Control,		/* HTTP_QUERY_CACHE_CONTROL = 49 */
-    szContent_Base,		/* HTTP_QUERY_CONTENT_BASE = 50 */
-    szContent_Location,		/* HTTP_QUERY_CONTENT_LOCATION = 51 */
-    szContent_MD5,		/* HTTP_QUERY_CONTENT_MD5 = 52 */
-    szContent_Range,		/* HTTP_QUERY_CONTENT_RANGE = 53 */
-    szETag,			/* HTTP_QUERY_ETAG = 54 */
-    hostW,			/* HTTP_QUERY_HOST = 55 */
-    szIf_Match,			/* HTTP_QUERY_IF_MATCH = 56 */
-    szIf_None_Match,		/* HTTP_QUERY_IF_NONE_MATCH = 57 */
-    szIf_Range,			/* HTTP_QUERY_IF_RANGE = 58 */
-    szIf_Unmodified_Since,	/* HTTP_QUERY_IF_UNMODIFIED_SINCE = 59 */
-    szMax_Forwards,		/* HTTP_QUERY_MAX_FORWARDS = 60 */
-    szProxy_Authorization,	/* HTTP_QUERY_PROXY_AUTHORIZATION = 61 */
-    szRange,			/* HTTP_QUERY_RANGE = 62 */
-    szTransfer_Encoding,	/* HTTP_QUERY_TRANSFER_ENCODING = 63 */
-    szUpgrade,			/* HTTP_QUERY_UPGRADE = 64 */
-    szVary,			/* HTTP_QUERY_VARY = 65 */
-    szVia,			/* HTTP_QUERY_VIA = 66 */
-    szWarning,			/* HTTP_QUERY_WARNING = 67 */
-    szExpect,			/* HTTP_QUERY_EXPECT = 68 */
-    szProxy_Connection,		/* HTTP_QUERY_PROXY_CONNECTION = 69 */
-    szUnless_Modified_Since,	/* HTTP_QUERY_UNLESS_MODIFIED_SINCE = 70 */
+    L"Mime-Version",              /* HTTP_QUERY_MIME_VERSION = 0 */
+    L"Content-Type",              /* HTTP_QUERY_CONTENT_TYPE = 1 */
+    L"Content-Transfer-Encoding", /* HTTP_QUERY_CONTENT_TRANSFER_ENCODING = 2 */
+    L"Content-ID",                /* HTTP_QUERY_CONTENT_ID = 3 */
+    NULL,                         /* HTTP_QUERY_CONTENT_DESCRIPTION = 4 */
+    L"Content-Length",            /* HTTP_QUERY_CONTENT_LENGTH =  5 */
+    L"Content-Language",          /* HTTP_QUERY_CONTENT_LANGUAGE =  6 */
+    L"Allow",                     /* HTTP_QUERY_ALLOW = 7 */
+    L"Public",                    /* HTTP_QUERY_PUBLIC = 8 */
+    L"Date",                      /* HTTP_QUERY_DATE = 9 */
+    L"Expires",                   /* HTTP_QUERY_EXPIRES = 10 */
+    L"Last-Modified",             /* HTTP_QUERY_LAST_MODIFIED = 11 */
+    NULL,                         /* HTTP_QUERY_MESSAGE_ID = 12 */
+    L"URI",                       /* HTTP_QUERY_URI = 13 */
+    L"From",                      /* HTTP_QUERY_DERIVED_FROM = 14 */
+    NULL,                         /* HTTP_QUERY_COST = 15 */
+    NULL,                         /* HTTP_QUERY_LINK = 16 */
+    L"Pragma",                    /* HTTP_QUERY_PRAGMA = 17 */
+    NULL,                         /* HTTP_QUERY_VERSION = 18 */
+    L"Status",                    /* HTTP_QUERY_STATUS_CODE = 19 */
+    NULL,                         /* HTTP_QUERY_STATUS_TEXT = 20 */
+    NULL,                         /* HTTP_QUERY_RAW_HEADERS = 21 */
+    NULL,                         /* HTTP_QUERY_RAW_HEADERS_CRLF = 22 */
+    L"Connection",                /* HTTP_QUERY_CONNECTION = 23 */
+    L"Accept",                    /* HTTP_QUERY_ACCEPT = 24 */
+    L"Accept-Charset",            /* HTTP_QUERY_ACCEPT_CHARSET = 25 */
+    L"Accept-Encoding",           /* HTTP_QUERY_ACCEPT_ENCODING = 26 */
+    L"Accept-Language",           /* HTTP_QUERY_ACCEPT_LANGUAGE = 27 */
+    L"Authorization",             /* HTTP_QUERY_AUTHORIZATION = 28 */
+    L"Content-Encoding",          /* HTTP_QUERY_CONTENT_ENCODING = 29 */
+    NULL,                         /* HTTP_QUERY_FORWARDED = 30 */
+    NULL,                         /* HTTP_QUERY_FROM = 31 */
+    L"If-Modified-Since",         /* HTTP_QUERY_IF_MODIFIED_SINCE = 32 */
+    L"Location",                  /* HTTP_QUERY_LOCATION = 33 */
+    NULL,                         /* HTTP_QUERY_ORIG_URI = 34 */
+    L"Referer",                   /* HTTP_QUERY_REFERER = 35 */
+    L"Retry-After",               /* HTTP_QUERY_RETRY_AFTER = 36 */
+    L"Server",                    /* HTTP_QUERY_SERVER = 37 */
+    NULL,                         /* HTTP_TITLE = 38 */
+    L"User-Agent",                /* HTTP_QUERY_USER_AGENT = 39 */
+    L"WWW-Authenticate",          /* HTTP_QUERY_WWW_AUTHENTICATE = 40 */
+    L"Proxy-Authenticate",        /* HTTP_QUERY_PROXY_AUTHENTICATE = 41 */
+    L"Accept-Ranges",             /* HTTP_QUERY_ACCEPT_RANGES = 42 */
+    L"Set-Cookie",                /* HTTP_QUERY_SET_COOKIE = 43 */
+    L"Cookie",                    /* HTTP_QUERY_COOKIE = 44 */
+    NULL,                         /* HTTP_QUERY_REQUEST_METHOD = 45 */
+    NULL,                         /* HTTP_QUERY_REFRESH = 46 */
+    L"Content-Disposition",       /* HTTP_QUERY_CONTENT_DISPOSITION = 47 */
+    L"Age",                       /* HTTP_QUERY_AGE = 48 */
+    L"Cache-Control",             /* HTTP_QUERY_CACHE_CONTROL = 49 */
+    L"Content-Base",              /* HTTP_QUERY_CONTENT_BASE = 50 */
+    L"Content-Location",          /* HTTP_QUERY_CONTENT_LOCATION = 51 */
+    L"Content-MD5",               /* HTTP_QUERY_CONTENT_MD5 = 52 */
+    L"Content-Range",             /* HTTP_QUERY_CONTENT_RANGE = 53 */
+    L"ETag",                      /* HTTP_QUERY_ETAG = 54 */
+    L"Host",                      /* HTTP_QUERY_HOST = 55 */
+    L"If-Match",                  /* HTTP_QUERY_IF_MATCH = 56 */
+    L"If-None-Match",             /* HTTP_QUERY_IF_NONE_MATCH = 57 */
+    L"If-Range",                  /* HTTP_QUERY_IF_RANGE = 58 */
+    L"If-Unmodified-Since",       /* HTTP_QUERY_IF_UNMODIFIED_SINCE = 59 */
+    L"Max-Forwards",              /* HTTP_QUERY_MAX_FORWARDS = 60 */
+    L"Proxy-Authorization",       /* HTTP_QUERY_PROXY_AUTHORIZATION = 61 */
+    L"Range",                     /* HTTP_QUERY_RANGE = 62 */
+    L"Transfer-Encoding",         /* HTTP_QUERY_TRANSFER_ENCODING = 63 */
+    L"Upgrade",                   /* HTTP_QUERY_UPGRADE = 64 */
+    L"Vary",                      /* HTTP_QUERY_VARY = 65 */
+    L"Via",                       /* HTTP_QUERY_VIA = 66 */
+    L"Warning",                   /* HTTP_QUERY_WARNING = 67 */
+    L"Expect",                    /* HTTP_QUERY_EXPECT = 68 */
+    L"Proxy-Connection",          /* HTTP_QUERY_PROXY_CONNECTION = 69 */
+    L"Unless-Modified-Since",     /* HTTP_QUERY_UNLESS_MODIFIED_SINCE = 70 */
 };
 
 /***********************************************************************
@@ -4383,13 +4341,13 @@ static void HTTP_InsertCookies(http_request_t *request)
 
 static WORD HTTP_ParseWkday(LPCWSTR day)
 {
-    static const WCHAR days[7][4] = {{ 's','u','n',0 },
-                                     { 'm','o','n',0 },
-                                     { 't','u','e',0 },
-                                     { 'w','e','d',0 },
-                                     { 't','h','u',0 },
-                                     { 'f','r','i',0 },
-                                     { 's','a','t',0 }};
+    static const WCHAR days[7][4] = {L"sun",
+                                     L"mon",
+                                     L"tue",
+                                     L"wed",
+                                     L"thu",
+                                     L"fri",
+                                     L"sat"};
     unsigned int i;
     for (i = 0; i < ARRAY_SIZE(days); i++)
         if (!wcsicmp(day, days[i]))
@@ -4401,31 +4359,18 @@ static WORD HTTP_ParseWkday(LPCWSTR day)
 
 static WORD HTTP_ParseMonth(LPCWSTR month)
 {
-    static const WCHAR jan[] = { 'j','a','n',0 };
-    static const WCHAR feb[] = { 'f','e','b',0 };
-    static const WCHAR mar[] = { 'm','a','r',0 };
-    static const WCHAR apr[] = { 'a','p','r',0 };
-    static const WCHAR may[] = { 'm','a','y',0 };
-    static const WCHAR jun[] = { 'j','u','n',0 };
-    static const WCHAR jul[] = { 'j','u','l',0 };
-    static const WCHAR aug[] = { 'a','u','g',0 };
-    static const WCHAR sep[] = { 's','e','p',0 };
-    static const WCHAR oct[] = { 'o','c','t',0 };
-    static const WCHAR nov[] = { 'n','o','v',0 };
-    static const WCHAR dec[] = { 'd','e','c',0 };
-
-    if (!wcsicmp(month, jan)) return 1;
-    if (!wcsicmp(month, feb)) return 2;
-    if (!wcsicmp(month, mar)) return 3;
-    if (!wcsicmp(month, apr)) return 4;
-    if (!wcsicmp(month, may)) return 5;
-    if (!wcsicmp(month, jun)) return 6;
-    if (!wcsicmp(month, jul)) return 7;
-    if (!wcsicmp(month, aug)) return 8;
-    if (!wcsicmp(month, sep)) return 9;
-    if (!wcsicmp(month, oct)) return 10;
-    if (!wcsicmp(month, nov)) return 11;
-    if (!wcsicmp(month, dec)) return 12;
+    if (!wcsicmp(month, L"jan")) return 1;
+    if (!wcsicmp(month, L"feb")) return 2;
+    if (!wcsicmp(month, L"mar")) return 3;
+    if (!wcsicmp(month, L"apr")) return 4;
+    if (!wcsicmp(month, L"may")) return 5;
+    if (!wcsicmp(month, L"jun")) return 6;
+    if (!wcsicmp(month, L"jul")) return 7;
+    if (!wcsicmp(month, L"aug")) return 8;
+    if (!wcsicmp(month, L"sep")) return 9;
+    if (!wcsicmp(month, L"oct")) return 10;
+    if (!wcsicmp(month, L"nov")) return 11;
+    if (!wcsicmp(month, L"dec")) return 12;
     /* Invalid */
     return 0;
 }
@@ -4643,13 +4588,13 @@ static BOOL HTTP_ParseRfc1123Date(LPCWSTR value, FILETIME *ft)
 
 static WORD HTTP_ParseWeekday(LPCWSTR day)
 {
-    static const WCHAR days[7][10] = {{ 's','u','n','d','a','y',0 },
-                                     { 'm','o','n','d','a','y',0 },
-                                     { 't','u','e','s','d','a','y',0 },
-                                     { 'w','e','d','n','e','s','d','a','y',0 },
-                                     { 't','h','u','r','s','d','a','y',0 },
-                                     { 'f','r','i','d','a','y',0 },
-                                     { 's','a','t','u','r','d','a','y',0 }};
+    static const WCHAR days[7][10] = {L"sunday",
+                                     L"monday",
+                                     L"tuesday",
+                                     L"wednesday",
+                                     L"thursday",
+                                     L"friday",
+                                     L"saturday"};
     unsigned int i;
     for (i = 0; i < ARRAY_SIZE(days); i++)
         if (!wcsicmp(day, days[i]))
