@@ -396,8 +396,6 @@ static BOOL load_persistent_cookie(substr_t domain, substr_t path)
 
 static BOOL save_persistent_cookie(cookie_container_t *container)
 {
-    static const WCHAR txtW[] = {'t','x','t',0};
-
     WCHAR cookie_file[MAX_PATH];
     HANDLE cookie_handle;
     cookie_t *cookie_container = NULL, *cookie_iter;
@@ -428,7 +426,7 @@ static BOOL save_persistent_cookie(cookie_container_t *container)
         return TRUE;
     }
 
-    if(!CreateUrlCacheEntryW(container->cookie_url, 0, txtW, cookie_file, 0))
+    if(!CreateUrlCacheEntryW(container->cookie_url, 0, L"txt", cookie_file, 0))
         return FALSE;
 
     cookie_handle = CreateFileW(cookie_file, GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
@@ -504,13 +502,12 @@ static BOOL save_persistent_cookie(cookie_container_t *container)
     }
 
     memset(&time, 0, sizeof(time));
-    return CommitUrlCacheEntryW(container->cookie_url, cookie_file, time, time, 0, NULL, 0, txtW, 0);
+    return CommitUrlCacheEntryW(container->cookie_url, cookie_file, time, time, 0, NULL, 0, L"txt", 0);
 }
 
 static BOOL cookie_parse_url(const WCHAR *url, substr_t *host, substr_t *path)
 {
     URL_COMPONENTSW comp = { sizeof(comp) };
-    static const WCHAR rootW[] = {'/',0};
 
     comp.dwHostNameLength = 1;
     comp.dwUrlPathLength = 1;
@@ -523,7 +520,7 @@ static BOOL cookie_parse_url(const WCHAR *url, substr_t *host, substr_t *path)
         comp.dwUrlPathLength--;
 
     *host = substr(comp.lpszHostName, comp.dwHostNameLength);
-    *path = comp.dwUrlPathLength ? substr(comp.lpszUrlPath, comp.dwUrlPathLength) : substr(rootW, 1);
+    *path = comp.dwUrlPathLength ? substr(comp.lpszUrlPath, comp.dwUrlPathLength) : substr(L"/", 1);
     return TRUE;
 }
 
@@ -537,8 +534,6 @@ typedef struct {
 
 static DWORD get_cookie(substr_t host, substr_t path, DWORD flags, cookie_set_t *res)
 {
-    static const WCHAR empty_path[] = { '/',0 };
-
     const WCHAR *p;
     cookie_domain_t *domain;
     cookie_container_t *container;
@@ -553,7 +548,7 @@ static DWORD get_cookie(substr_t host, substr_t path, DWORD flags, cookie_set_t 
         while(p > host.str && p[-1] != '.') p--;
         if(p == host.str) break;
 
-        load_persistent_cookie(substr(p, host.str+host.len-p), substr(empty_path, 1));
+        load_persistent_cookie(substr(p, host.str+host.len-p), substr(L"/", 1));
     }
 
     p = path.str + path.len;
