@@ -1,3 +1,7 @@
+#ifdef __REACTOS__
+#include "precomp.h"
+#include "inet_ntop.c"
+#else
 /*
  * Wininet - Utility functions
  *
@@ -36,11 +40,7 @@
 
 #include "wine/debug.h"
 #include "internet.h"
-
-#ifdef __REACTOS__
-#include <stdio.h>
-#include "inet_ntop.c"
-#endif
+#endif /* defined(__REACTOS__) */
 
 WINE_DEFAULT_DEBUG_CHANNEL(wininet);
 
@@ -268,11 +268,11 @@ void INTERNET_SendCallback(object_header_t *hdr, DWORD_PTR context, DWORD status
             break;
         }
     }
-    
+
     TRACE(" callback(%p) (%p (%p), %08lx, %d (%s), %s, %d)\n",
 	  hdr->lpfnStatusCB, hdr->hInternet, hdr, context, status, get_callback_name(status),
 	  debugstr_status_info(status, new_info), info_len);
-    
+
     hdr->lpfnStatusCB(hdr->hInternet, context, status, new_info, info_len);
 
     TRACE(" end callback().\n");

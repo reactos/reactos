@@ -1,6 +1,10 @@
 
-remove_definitions(-DWINVER=0x502)
-add_definitions(-DWINVER=0x600)
+remove_definitions(
+    -DWINVER=0x502
+    -D_WIN32_WINNT=0x502)
+add_definitions(
+    -DWINVER=0x600
+    -D_WIN32_WINNT=0x600)
 
 add_definitions(
     -D__WINESRC__
@@ -34,7 +38,7 @@ add_library(wininet MODULE
 
 set_module_type(wininet win32dll)
 target_link_libraries(wininet wine ${PSEH_LIB} zlib)
-add_delay_importlibs(wininet secur32 crypt32 cryptui)
+add_delay_importlibs(wininet secur32 crypt32 cryptui iphlpapi dhcpcsvc)
 add_importlibs(wininet mpr shlwapi shell32 user32 advapi32 ws2_32 normaliz kernel32_vista msvcrt kernel32 ntdll)
 add_pch(wininet precomp.h "${PCH_SKIP_SOURCE}")
 add_cd_file(TARGET wininet DESTINATION reactos/system32 FOR all)
