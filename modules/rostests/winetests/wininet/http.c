@@ -591,6 +591,8 @@ static void InternetReadFile_test(int flags, const test_data_t *test)
     DWORD length, length2, index, exlen = 0, post_len = 0;
     const char *types[2] = { "*", NULL };
     HINTERNET hi, hic = 0, hor = 0;
+    DWORD contents_length, accepts_ranges;
+    BOOL not_supported;
 
     trace("Starting InternetReadFile test with flags 0x%x on url %s\n",flags,test->url);
     reset_events();
@@ -817,9 +819,22 @@ static void InternetReadFile_test(int flags, const test_data_t *test)
     res = HttpQueryInfoA(hor,HTTP_QUERY_CONTENT_LENGTH,&buffer,&length,&index);
     trace("Option HTTP_QUERY_CONTENT_LENGTH -> %i  %s  (%u)\n",res,buffer,GetLastError());
     if(test->flags & TESTF_COMPRESSED)
+    {
         ok(!res && GetLastError() == ERROR_HTTP_HEADER_NOT_FOUND,
            "expected ERROR_HTTP_HEADER_NOT_FOUND, got %x (%u)\n", res, GetLastError());
+        contents_length = 0;
+    }
+    else
+    {
+        contents_length = atoi(buffer);
+    }
     ok(!res || index == 1, "Index was not incremented although result is %x (index = %u)\n", res, index);
+
+    length = 64;
+    *buffer = 0;
+    res = HttpQueryInfoA(hor,HTTP_QUERY_ACCEPT_RANGES,&buffer,&length,0x0);
+    trace("Option HTTP_QUERY_ACCEPT_RANGES -> %i  %s  (%u)\n",res,buffer,GetLastError());
+    accepts_ranges = res && !strcmp(buffer, "bytes");
 
     length = 100;
     res = HttpQueryInfoA(hor,HTTP_QUERY_CONTENT_TYPE,buffer,&length,0x0);
@@ -830,6 +845,26 @@ static void InternetReadFile_test(int flags, const test_data_t *test)
     res = HttpQueryInfoA(hor,HTTP_QUERY_CONTENT_ENCODING,buffer,&length,0x0);
     buffer[length]=0;
     trace("Option HTTP_QUERY_CONTENT_ENCODING -> %i  %s\n",res,buffer);
+
+    SetLastError(0xdeadbeef);
+    length = InternetSetFilePointer(hor, 0, NULL, FILE_END, 0);
+    not_supported = length == INVALID_SET_FILE_POINTER
+            && GetLastError() == ERROR_INTERNET_INVALID_OPERATION;
+    if (accepts_ranges)
+        todo_wine ok((length == contents_length && (GetLastError() == ERROR_SUCCESS
+                || broken(GetLastError() == 0xdeadbeef))) || broken(not_supported),
+                "Got unexpected length %#x, GetLastError() %u, contents_length %u, accepts_ranges %#x.\n",
+                length, GetLastError(), contents_length, accepts_ranges);
+    else
+        ok(not_supported, "Got unexpected length %#x, GetLastError() %u.\n", length, GetLastError());
+
+    if (length != INVALID_SET_FILE_POINTER)
+    {
+        SetLastError(0xdeadbeef);
+        length = InternetSetFilePointer(hor, 0, NULL, FILE_BEGIN, 0);
+        ok(!length && (GetLastError() == ERROR_SUCCESS || broken(GetLastError() == 0xdeadbeef)),
+                "Got unexpected length %#x, GetLastError() %u.\n", length, GetLastError());
+    }
 
     SetLastError(0xdeadbeef);
     res = InternetReadFile(NULL, buffer, 100, &length);
