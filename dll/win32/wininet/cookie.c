@@ -981,7 +981,7 @@ DWORD set_cookie(substr_t domain, substr_t path, substr_t name, substr_t data, D
 
             substr_skip(&data, len);
 
-            if(end_ptr - data.str < ARRAY_SIZE(buf)-1) {
+            if(end_ptr > data.str && (end_ptr - data.str < ARRAY_SIZE(buf) - 1)) {
                 memcpy(buf, data.str, data.len*sizeof(WCHAR));
                 buf[data.len] = 0;
 
