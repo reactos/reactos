@@ -1752,7 +1752,7 @@ static void FASTCALL MENU_DrawBitmapItem(HDC hdc, PITEM lpitem, const RECT *rect
                 drawItem.itemData = lpitem->dwItemData;
                 /* some applications make this assumption on the DC's origin */
                 GreSetViewportOrgEx( hdc, lpitem->xItem, lpitem->yItem, &origorg);
-                RECTL_vOffsetRect( &drawItem.rcItem, - lpitem->xItem, - lpitem->yItem);
+                RECTL_vOffsetRect(&drawItem.rcItem, -(LONG)lpitem->xItem, -(LONG)lpitem->yItem);
                 co_IntSendMessage( UserHMGetHandle(WndOwner), WM_DRAWITEM, 0, (LPARAM)&drawItem);
                 GreSetViewportOrgEx( hdc, origorg.x, origorg.y, NULL);
                 return;
@@ -2851,28 +2851,123 @@ static BOOL MENU_InitPopup( PWND pWndOwner, PMENU menu, UINT flags )
     return TRUE;
 }
 
+
+#define SHOW_DEBUGRECT      0
+
+#if SHOW_DEBUGRECT
+static void DebugRect(const RECT* rectl, COLORREF color)
+{
+    HBRUSH brush;
+    RECT rr;
+    HDC hdc;
+
+    if (!rectl)
+        return;
+
+    hdc = UserGetDCEx(NULL, 0, DCX_USESTYLE);
+
+    brush = IntGdiCreateSolidBrush(color);
+
+    rr = *rectl;
+    RECTL_vInflateRect(&rr, 1, 1);
+    FrameRect(hdc, rectl, brush);
+    FrameRect(hdc, &rr, brush);
+
+    NtGdiDeleteObjectApp(brush);
+    UserReleaseDC(NULL, hdc, TRUE);
+}
+
+static void DebugPoint(INT x, INT y, COLORREF color)
+{
+    RECT r1 = {x-10, y, x+10, y};
+    RECT r2 = {x, y-10, x, y+10};
+    DebugRect(&r1, color);
+    DebugRect(&r2, color);
+}
+#endif
+
+static BOOL RECTL_Intersect(const RECT* pRect, INT x, INT y, UINT width, UINT height)
+{
+    RECT other = {x, y, x + width, y + height};
+    RECT dum;
+
+    return RECTL_bIntersectRect(&dum, pRect, &other);
+}
+
+static BOOL MENU_MoveRect(UINT flags, INT* x, INT* y, INT width, INT height, const RECT* pExclude, PMONITOR monitor)
+{
+    /* Figure out if we should move vertical or horizontal */
+    if (flags & TPM_VERTICAL)
+    {
+        /* Move in the vertical direction: TPM_BOTTOMALIGN means drop it above, otherways drop it below */
+        if (flags & TPM_BOTTOMALIGN)
+        {
+            if (pExclude->top - height >= monitor->rcMonitor.top)
+            {
+                *y = pExclude->top - height;
+                return TRUE;
+            }
+        }
+        else
+        {
+            if (pExclude->bottom + height < monitor->rcMonitor.bottom)
+            {
+                *y = pExclude->bottom;
+                return TRUE;
+            }
+        }
+    }
+    else
+    {
+        /* Move in the horizontal direction: TPM_RIGHTALIGN means drop it to the left, otherways go right */
+        if (flags & TPM_RIGHTALIGN)
+        {
+            if (pExclude->left - width >= monitor->rcMonitor.left)
+            {
+                *x = pExclude->left - width;
+                return TRUE;
+            }
+        }
+        else
+        {
+            if (pExclude->right + width < monitor->rcMonitor.right)
+            {
+                *x = pExclude->right;
+                return TRUE;
+            }
+        }
+    }
+    return FALSE;
+}
+
 /***********************************************************************
  *           MenuShowPopup
  *
  * Display a popup menu.
  */
 static BOOL FASTCALL MENU_ShowPopup(PWND pwndOwner, PMENU menu, UINT id, UINT flags,
-                              INT x, INT y, INT xanchor, INT yanchor )
+                              INT x, INT y, const RECT* pExclude)
 {
-    UINT width, height;
-    POINT pt;
+    INT width, height;
+    POINT ptx;
     PMONITOR monitor;
     PWND pWnd;
     USER_REFERENCE_ENTRY Ref;
+    BOOL bIsPopup = (flags & TPM_POPUPMENU) != 0;
 
-    TRACE("owner=%p menu=%p id=0x%04x x=0x%04x y=0x%04x xa=0x%04x ya=0x%04x\n",
-          pwndOwner, menu, id, x, y, xanchor, yanchor);
+    TRACE("owner=%p menu=%p id=0x%04x x=0x%04x y=0x%04x\n",
+          pwndOwner, menu, id, x, y);
 
     if (menu->iItem != NO_SELECTED_ITEM)
     {
         menu->rgItems[menu->iItem].fState &= ~(MF_HILITE|MF_MOUSESELECT);
         menu->iItem = NO_SELECTED_ITEM;
     }
+
+#if SHOW_DEBUGRECT
+    if (pExclude)
+        DebugRect(pExclude, RGB(255, 0, 0));
+#endif
 
     menu->dwArrowsOn = 0;
     MENU_PopupMenuCalcSize(menu, pwndOwner);
@@ -2882,67 +2977,103 @@ static BOOL FASTCALL MENU_ShowPopup(PWND pwndOwner, PMENU menu, UINT id, UINT fl
     width = menu->cxMenu + UserGetSystemMetrics(SM_CXBORDER);
     height = menu->cyMenu + UserGetSystemMetrics(SM_CYBORDER);
 
-    /* FIXME: should use item rect */
-    pt.x = x;
-    pt.y = y;
-    monitor = UserMonitorFromPoint( pt, MONITOR_DEFAULTTONEAREST );
-
-    if (flags & TPM_LAYOUTRTL) 
+    if (flags & TPM_LAYOUTRTL)
         flags ^= TPM_RIGHTALIGN;
 
-    if( flags & TPM_RIGHTALIGN ) x -= width;
-    if( flags & TPM_CENTERALIGN ) x -= width / 2;
+    if (flags & TPM_RIGHTALIGN)
+        x -= width;
+    if (flags & TPM_CENTERALIGN)
+        x -= width / 2;
 
-    if( flags & TPM_BOTTOMALIGN ) y -= height;
-    if( flags & TPM_VCENTERALIGN ) y -= height / 2;
+    if (flags & TPM_BOTTOMALIGN)
+        y -= height;
+    if (flags & TPM_VCENTERALIGN)
+        y -= height / 2;
 
-    if( x + width > monitor->rcMonitor.right)
+    /* FIXME: should use item rect */
+    ptx.x = x;
+    ptx.y = y;
+#if SHOW_DEBUGRECT
+    DebugPoint(x, y, RGB(0, 0, 255));
+#endif
+    monitor = UserMonitorFromPoint( ptx, MONITOR_DEFAULTTONEAREST );
+
+    /* We are off the right side of the screen */
+    if (x + width > monitor->rcMonitor.right)
     {
-        if( xanchor && x >= width - xanchor )
-            x -= width - xanchor;
-
-        if( x + width > monitor->rcMonitor.right)
-        {
-            /* If we would flip around our origin, would we go off screen on the other side?
-               Or is our origin itself too far to the right already? */
-            if (x - width < monitor->rcMonitor.left || x > monitor->rcMonitor.right)
-                x = monitor->rcMonitor.right - width;
-            else
-                x -= width;
-        }
+        if ((x - width) < monitor->rcMonitor.left || x >= monitor->rcMonitor.right)
+            x = monitor->rcMonitor.right - width;
+        else
+            x -= width;
     }
-    if( x < monitor->rcMonitor.left )
+
+    /* We are off the left side of the screen */
+    if (x < monitor->rcMonitor.left)
     {
-        /* If we would flip around our origin, would we go off screen on the other side? */
-        if (x + width > monitor->rcMonitor.right)
+        /* Re-orient the menu around the x-axis */
+        x += width;
+
+        if (x < monitor->rcMonitor.left || x >= monitor->rcMonitor.right || bIsPopup)
             x = monitor->rcMonitor.left;
-        else
-            x += width;
     }
 
-    if( y + height > monitor->rcMonitor.bottom)
+    /* Same here, but then the top */
+    if (y < monitor->rcMonitor.top)
     {
-        if( yanchor && y >= height + yanchor )
-            y -= height + yanchor;
+        y += height;
 
-        if( y + height > monitor->rcMonitor.bottom)
+        if (y < monitor->rcMonitor.top || y >= monitor->rcMonitor.bottom || bIsPopup)
+            y = monitor->rcMonitor.top;
+    }
+
+    /* And the bottom */
+    if (y + height > monitor->rcMonitor.bottom)
+    {
+        if ((y - height) < monitor->rcMonitor.top || y >= monitor->rcMonitor.bottom)
+            y = monitor->rcMonitor.bottom - height;
+        else
+            y -= height;
+    }
+
+    if (pExclude)
+    {
+        RECT Cleaned;
+
+        if (RECTL_bIntersectRect(&Cleaned, pExclude, &monitor->rcMonitor) &&
+            RECTL_Intersect(&Cleaned, x, y, width, height))
         {
-            /* If we would flip around our origin, would we go off screen on the other side?
-               Or is our origin itself too far to the bottom already? */
-            if (y - height < monitor->rcMonitor.top || y > monitor->rcMonitor.bottom)
-                y = monitor->rcMonitor.bottom - height;
-            else
-                y -= height;
+            UINT flag_mods[] = {
+                0,                                                  /* First try the 'normal' way */
+                TPM_BOTTOMALIGN | TPM_RIGHTALIGN,                   /* Then try the opposite side */
+                TPM_VERTICAL,                                       /* Then swap horizontal / vertical */
+                TPM_BOTTOMALIGN | TPM_RIGHTALIGN | TPM_VERTICAL,    /* Then the other side again (still swapped hor/ver) */
+            };
+
+            UINT n;
+            for (n = 0; n < RTL_NUMBER_OF(flag_mods); ++n)
+            {
+                INT tx = x;
+                INT ty = y;
+
+                /* Try to move a bit around */
+                if (MENU_MoveRect(flags ^ flag_mods[n], &tx, &ty, width, height, &Cleaned, monitor) &&
+                    !RECTL_Intersect(&Cleaned, tx, ty, width, height))
+                {
+                    x = tx;
+                    y = ty;
+                    break;
+                }
+            }
+            /* If none worked, we go with the original x/y */
         }
     }
-    if( y < monitor->rcMonitor.top )
+
+#if SHOW_DEBUGRECT
     {
-        /* If we would flip around our origin, would we go off screen on the other side? */
-        if (y + height > monitor->rcMonitor.bottom)
-            y = monitor->rcMonitor.top;
-        else
-            y += height;
+        RECT rr = {x, y, x + width, y + height};
+        DebugRect(&rr, RGB(0, 255, 0));
     }
+#endif
 
     pWnd = ValidateHwndNoErr( menu->hWnd );
 
@@ -3190,7 +3321,7 @@ static void FASTCALL MENU_HideSubPopups(PWND pWndOwner, PMENU Menu,
  */
 static PMENU FASTCALL MENU_ShowSubPopup(PWND WndOwner, PMENU Menu, BOOL SelectFirst, UINT Flags)
 {
-  RECT Rect;
+  RECT Rect, ParentRect;
   ITEM *Item;
   HDC Dc;
   PWND pWnd;
@@ -3225,6 +3356,26 @@ static PMENU FASTCALL MENU_ShowSubPopup(PWND WndOwner, PMENU Menu, BOOL SelectFi
 
   pWnd = ValidateHwndNoErr(Menu->hWnd);
 
+  /* Grab the rect of our (entire) parent menu, so we can try to not overlap it */
+  if (Menu->fFlags & MNF_POPUP)
+  {
+    if (!IntGetWindowRect(pWnd, &ParentRect))
+    {
+        ERR("No pWnd\n");
+        ParentRect = Rect;
+    }
+
+    /* Ensure we can slightly overlap our parent */
+    RECTL_vInflateRect(&ParentRect, -UserGetSystemMetrics(SM_CXEDGE) * 2, 0);
+  }
+  else
+  {
+    /* Inside the menu bar, we do not want to grab the entire window... */
+    ParentRect = Rect;
+    if (pWnd)
+        RECTL_vOffsetRect(&ParentRect, pWnd->rcWindow.left, pWnd->rcWindow.top);
+  }
+
   /* correct item if modified as a reaction to WM_INITMENUPOPUP message */
   if (!(Item->fState & MF_HILITE))
   {
@@ -3254,6 +3405,8 @@ static PMENU FASTCALL MENU_ShowSubPopup(PWND WndOwner, PMENU Menu, BOOL SelectFi
       MENU_InitSysMenuPopup(Item->spSubMenu, pWnd->style, pWnd->pcls->style, HTSYSMENU);
 
       NC_GetSysPopupPos(pWnd, &Rect);
+      /* Ensure we do not overlap this */
+      ParentRect = Rect;
       if (Flags & TPM_LAYOUTRTL) Rect.left = Rect.right;
       Rect.top = Rect.bottom;
       Rect.right = UserGetSystemMetrics(SM_CXSIZE);
@@ -3267,7 +3420,7 @@ static PMENU FASTCALL MENU_ShowSubPopup(PWND WndOwner, PMENU Menu, BOOL SelectFi
           RECT rc;
           rc.left   = Item->xItem;
           rc.top    = Item->yItem;
-          rc.right  = Item->cxItem; // Do this for now......
+          rc.right  = Item->cxItem;
           rc.bottom = Item->cyItem;
 
           MENU_AdjustMenuItemRect(Menu, &rc);
@@ -3295,13 +3448,19 @@ static PMENU FASTCALL MENU_ShowSubPopup(PWND WndOwner, PMENU Menu, BOOL SelectFi
       }
   }
 
+  /* Next menu does not need to be shown vertical anymore */
+  if (Menu->fFlags & MNF_POPUP)
+      Flags &= (~TPM_VERTICAL);
+
+
+
   /* use default alignment for submenus */
   Flags &= ~(TPM_CENTERALIGN | TPM_RIGHTALIGN | TPM_VCENTERALIGN | TPM_BOTTOMALIGN);
 
   MENU_InitPopup( WndOwner, Item->spSubMenu, Flags );
 
   MENU_ShowPopup( WndOwner, Item->spSubMenu, Menu->iItem, Flags,
-                Rect.left, Rect.top, Rect.right, Rect.bottom );
+                Rect.left, Rect.top, &ParentRect);
   if (SelectFirst)
   {
       MENU_MoveSelection(WndOwner, Item->spSubMenu, ITEM_NEXT);
@@ -3901,7 +4060,7 @@ static void FASTCALL MENU_KeyRight(MTRACKER *pmt, UINT Flags, UINT msg)
  * Menu tracking code.
  */
 static INT FASTCALL MENU_TrackMenu(PMENU pmenu, UINT wFlags, INT x, INT y,
-                            PWND pwnd, const RECT *lprect )
+                            PWND pwnd)
 {
     MSG msg;
     BOOL fRemove;
@@ -3924,9 +4083,8 @@ static INT FASTCALL MENU_TrackMenu(PMENU pmenu, UINT wFlags, INT x, INT y,
     mt.Pt.x = x;
     mt.Pt.y = y;
 
-    TRACE("MTM : hmenu=%p flags=0x%08x (%d,%d) hwnd=%x (%ld,%ld)-(%ld,%ld)\n",
-         UserHMGetHandle(pmenu), wFlags, x, y, UserHMGetHandle(pwnd), lprect ? lprect->left : 0, lprect ? lprect->top : 0,
-         lprect ? lprect->right : 0, lprect ? lprect->bottom : 0);
+    TRACE("MTM : hmenu=%p flags=0x%08x (%d,%d) hwnd=%x\n",
+         UserHMGetHandle(pmenu), wFlags, x, y, UserHMGetHandle(pwnd));
 
     pti->MessageQueue->QF_flags &= ~QF_ACTIVATIONCHANGE;
 
@@ -4320,7 +4478,7 @@ static BOOL FASTCALL MENU_ExitTracking(PWND pWnd, BOOL bPopup, UINT wFlags)
 VOID MENU_TrackMouseMenuBar( PWND pWnd, ULONG ht, POINT pt)
 {
     PMENU pMenu = (ht == HTSYSMENU) ? IntGetSystemMenu(pWnd, FALSE) : IntGetMenu( UserHMGetHandle(pWnd) ); // See 74276 and CORE-12801
-    UINT wFlags = TPM_BUTTONDOWN | TPM_LEFTALIGN | TPM_LEFTBUTTON;
+    UINT wFlags = TPM_BUTTONDOWN | TPM_LEFTALIGN | TPM_LEFTBUTTON | TPM_VERTICAL;
 
     TRACE("wnd=%p ht=0x%04x (%ld,%ld)\n", pWnd, ht, pt.x, pt.y);
 
@@ -4337,7 +4495,7 @@ VOID MENU_TrackMouseMenuBar( PWND pWnd, ULONG ht, POINT pt)
         MENU_InitTracking(pWnd, pMenu, FALSE, wFlags);
         /* fetch the window menu again, it may have changed */
         pMenu = (ht == HTSYSMENU) ? get_win_sys_menu( UserHMGetHandle(pWnd) ) : IntGetMenu( UserHMGetHandle(pWnd) );
-        MENU_TrackMenu(pMenu, wFlags, pt.x, pt.y, pWnd, NULL);
+        MENU_TrackMenu(pMenu, wFlags, pt.x, pt.y, pWnd);
         MENU_ExitTracking(pWnd, FALSE, wFlags);
     }
 }
@@ -4401,7 +4559,7 @@ VOID MENU_TrackKbdMenuBar(PWND pwnd, UINT wParam, WCHAR wChar)
     }
 
 track_menu:
-    MENU_TrackMenu( TrackMenu, wFlags, 0, 0, pwnd, NULL );
+    MENU_TrackMenu( TrackMenu, wFlags, 0, 0, pwnd );
     MENU_ExitTracking( pwnd, FALSE, wFlags);
 }
 
@@ -4443,9 +4601,8 @@ BOOL WINAPI IntTrackPopupMenuEx( PMENU menu, UINT wFlags, int x, int y,
        if (menu->fFlags & MNF_SYSMENU)
           MENU_InitSysMenuPopup( menu, pWnd->style, pWnd->pcls->style, HTSYSMENU);
 
-       if (MENU_ShowPopup(pWnd, menu, 0, wFlags, x, y, 0, 0 ))
-          ret = MENU_TrackMenu( menu, wFlags | TPM_POPUPMENU, 0, 0, pWnd,
-                                lpTpm ? &lpTpm->rcExclude : NULL);
+       if (MENU_ShowPopup(pWnd, menu, 0, wFlags | TPM_POPUPMENU, x, y, lpTpm ? &lpTpm->rcExclude : NULL))
+          ret = MENU_TrackMenu( menu, wFlags | TPM_POPUPMENU, 0, 0, pWnd);
        else
        {
           MsqSetStateWindow(pti, MSQ_STATE_MENUOWNER, NULL);
