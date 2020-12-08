@@ -1841,9 +1841,9 @@ static BOOL urlcache_get_entry_info(const char *url, void *entry_info,
 
     url_entry = (const entry_url*)((LPBYTE)header + hash_entry->offset);
     if(url_entry->header.signature != URL_SIGNATURE) {
-        cache_container_unlock_index(container, header);
         FIXME("Trying to retrieve entry of unknown format %s\n",
                 debugstr_an((LPCSTR)&url_entry->header.signature, sizeof(DWORD)));
+        cache_container_unlock_index(container, header);
         SetLastError(ERROR_FILE_NOT_FOUND);
         return FALSE;
     }
@@ -2074,8 +2074,8 @@ BOOL WINAPI SetUrlCacheEntryInfoA(LPCSTR lpszUrlName,
     pEntry = (entry_header*)((LPBYTE)pHeader + pHashEntry->offset);
     if (pEntry->signature != URL_SIGNATURE)
     {
-        cache_container_unlock_index(pContainer, pHeader);
         FIXME("Trying to retrieve entry of unknown format %s\n", debugstr_an((LPSTR)&pEntry->signature, sizeof(DWORD)));
+        cache_container_unlock_index(pContainer, pHeader);
         SetLastError(ERROR_FILE_NOT_FOUND);
         return FALSE;
     }
@@ -2144,9 +2144,9 @@ static BOOL urlcache_entry_get_file(const char *url, void *entry_info, DWORD *si
 
     url_entry = (entry_url*)((LPBYTE)header + hash_entry->offset);
     if(url_entry->header.signature != URL_SIGNATURE) {
-        cache_container_unlock_index(container, header);
         FIXME("Trying to retrieve entry of unknown format %s\n",
                 debugstr_an((LPSTR)&url_entry->header.signature, sizeof(DWORD)));
+        cache_container_unlock_index(container, header);
         SetLastError(ERROR_FILE_NOT_FOUND);
         return FALSE;
     }
@@ -4037,9 +4037,9 @@ BOOL WINAPI IsUrlCacheEntryExpiredA(LPCSTR url, DWORD dwFlags, FILETIME* pftLast
     pEntry = (const entry_header*)((LPBYTE)pHeader + pHashEntry->offset);
     if (pEntry->signature != URL_SIGNATURE)
     {
+        FIXME("Trying to retrieve entry of unknown format %s\n", debugstr_an((LPCSTR)&pEntry->signature, sizeof(DWORD)));
         cache_container_unlock_index(pContainer, pHeader);
         memset(pftLastModified, 0, sizeof(*pftLastModified));
-        FIXME("Trying to retrieve entry of unknown format %s\n", debugstr_an((LPCSTR)&pEntry->signature, sizeof(DWORD)));
         return TRUE;
     }
 
