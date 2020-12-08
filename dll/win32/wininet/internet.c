@@ -1836,9 +1836,6 @@ BOOL WINAPI InternetCrackUrlW(const WCHAR *lpszUrl, DWORD dwUrlLength, DWORD dwF
                     case INTERNET_SCHEME_FTP:
                         lpUC->nPort = INTERNET_DEFAULT_FTP_PORT;
                         break;
-                    case INTERNET_SCHEME_GOPHER:
-                        lpUC->nPort = INTERNET_DEFAULT_GOPHER_PORT;
-                        break;
                     default:
                         break;
                     }
