@@ -668,9 +668,17 @@ static void HTTP_ProcessCookies( http_request_t *request )
     int HeaderIndex;
     int numCookies = 0;
     LPHTTPHEADERW setCookieHeader;
+    WCHAR *path, *tmp;
 
     if(request->hdr.dwFlags & INTERNET_FLAG_NO_COOKIES)
         return;
+
+    path = heap_strdupW(request->path);
+    if (!path)
+        return;
+
+    tmp = wcsrchr(path, '/');
+    if (tmp && tmp[1]) tmp[1] = 0;
 
     EnterCriticalSection( &request->headers_section );
 
@@ -690,10 +698,11 @@ static void HTTP_ProcessCookies( http_request_t *request )
 
         name = substr(setCookieHeader->lpszValue, data - setCookieHeader->lpszValue);
         data++;
-        set_cookie(substrz(request->server->name), substrz(request->path), name, substrz(data), INTERNET_COOKIE_HTTPONLY);
+        set_cookie(substrz(request->server->name), substrz(path), name, substrz(data), INTERNET_COOKIE_HTTPONLY);
     }
 
     LeaveCriticalSection( &request->headers_section );
+    heap_free(path);
 }
 
 static void strip_spaces(LPWSTR start)
