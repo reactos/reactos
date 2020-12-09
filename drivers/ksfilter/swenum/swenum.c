@@ -88,6 +88,7 @@ SwDispatchPnp(
     BOOLEAN ChildDevice;
     PIO_STACK_LOCATION IoStack;
     PDEVICE_OBJECT PnpDeviceObject = NULL;
+    static ULONG Count = 0;
 
     /* get current stack location */
     IoStack = IoGetCurrentIrpStackLocation(Irp);
@@ -105,6 +106,9 @@ SwDispatchPnp(
     }
 
     DPRINT("SwDispatchPnp ChildDevice %u Request %x\n", ChildDevice, IoStack->MinorFunction);
+
+    Count++;
+    ASSERT(Count <= 10);
 
     /* let ks handle it */
     Status = KsServiceBusEnumPnpRequest(DeviceObject, Irp);
