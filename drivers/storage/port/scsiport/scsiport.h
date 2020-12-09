@@ -437,7 +437,8 @@ RegistryInitLunKey(
 VOID
 SpiGetNextRequestFromLun(
     _In_ PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
-    _Inout_ PSCSI_PORT_LUN_EXTENSION LunExtension);
+    _Inout_ PSCSI_PORT_LUN_EXTENSION LunExtension,
+    _Inout_opt_ PKIRQL OldIrql);
 
 IO_DPC_ROUTINE ScsiPortDpcForIsr;
 DRIVER_DISPATCH ScsiPortDispatchScsi;

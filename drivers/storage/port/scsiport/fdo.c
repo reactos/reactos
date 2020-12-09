@@ -150,12 +150,8 @@ FdoSendInquiry(
             /* Acquire the spinlock */
             KeAcquireSpinLock(&DeviceExtension->SpinLock, &Irql);
 
-            /* Process the request */
-            SpiGetNextRequestFromLun(DeviceExtension, LunExtension);
-
-            /* SpiGetNextRequestFromLun() releases the spinlock,
-                so we just lower irql back to what it was before */
-            KeLowerIrql(Irql);
+            /* Process the request. SpiGetNextRequestFromLun will unlock for us */
+            SpiGetNextRequestFromLun(DeviceExtension, LunExtension, &Irql);
         }
 
         /* Check if data overrun happened */

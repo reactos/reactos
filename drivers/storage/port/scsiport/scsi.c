@@ -258,11 +258,8 @@ ScsiPortDispatchScsi(
 
             if (lunExt->SrbInfo.Srb == NULL)
             {
-                /* Get next logical unit request */
-                SpiGetNextRequestFromLun(portExt, lunExt);
-
-                /* SpiGetNextRequestFromLun() releases the spinlock */
-                KeLowerIrql(Irql);
+                /* Get next logical unit request. SpiGetNextRequestFromLun releases the lock. */
+                SpiGetNextRequestFromLun(portExt, lunExt, &Irql);
             }
             else
             {
@@ -344,7 +341,9 @@ ScsiPortDispatchScsi(
 VOID
 SpiGetNextRequestFromLun(
     _In_ PSCSI_PORT_DEVICE_EXTENSION DeviceExtension,
-    _Inout_ PSCSI_PORT_LUN_EXTENSION LunExtension)
+    _Inout_ PSCSI_PORT_LUN_EXTENSION LunExtension,
+    _Inout_opt_ PKIRQL OldIrql
+)
 {
     PIO_STACK_LOCATION IrpStack;
     PIRP NextIrp;
@@ -357,7 +356,10 @@ SpiGetNextRequestFromLun(
         !(LunExtension->Flags & SCSI_PORT_LU_ACTIVE))
     {
         /* Release the spinlock and exit */
-        KeReleaseSpinLockFromDpcLevel(&DeviceExtension->SpinLock);
+        if (OldIrql != NULL)
+            KeReleaseSpinLock(&DeviceExtension->SpinLock, *OldIrql);
+        else
+            KeReleaseSpinLockFromDpcLevel(&DeviceExtension->SpinLock);
         return;
     }
 
@@ -385,7 +387,10 @@ SpiGetNextRequestFromLun(
             LunExtension->AttemptCount = 0;
 
             /* Release the spinlock */
-            KeReleaseSpinLockFromDpcLevel(&DeviceExtension->SpinLock);
+            if (OldIrql != NULL)
+                KeReleaseSpinLock(&DeviceExtension->SpinLock, *OldIrql);
+            else
+                KeReleaseSpinLockFromDpcLevel(&DeviceExtension->SpinLock);
 
             /* Start the next pending request */
             IoStartPacket(DeviceExtension->Common.DeviceObject, NextIrp, (PULONG)NULL, NULL);
@@ -495,8 +500,7 @@ SpiSenseCompletionRoutine(
         lunExt->Flags &= ~LUNEX_NEED_REQUEST_SENSE;
 
         // SpiGetNextRequestFromLun releases the lock
-        SpiGetNextRequestFromLun(portExt, lunExt);
-        KeLowerIrql(irql);
+        SpiGetNextRequestFromLun(portExt, lunExt, &irql);
 
         InitialSrb->SrbStatus &= ~SRB_STATUS_QUEUE_FROZEN;
     }
@@ -774,8 +778,8 @@ SpiProcessCompletedRequest(
         if (!(Srb->SrbFlags & SRB_FLAGS_BYPASS_FROZEN_QUEUE) &&
             LunExtension->RequestTimeout == -1)
         {
-            /* Start the next packet */
-            SpiGetNextRequestFromLun(DeviceExtension, LunExtension);
+            /* Start the next packet. SpiGetNextRequestFromLun will release the lock for us */
+            SpiGetNextRequestFromLun(DeviceExtension, LunExtension, NULL);
         }
         else
         {
@@ -891,7 +895,7 @@ Error:
         && (Srb->SrbFlags & SRB_FLAGS_NO_QUEUE_FREEZE))
     {
         if (LunExtension->RequestTimeout == -1)
-            SpiGetNextRequestFromLun(DeviceExtension, LunExtension);
+            SpiGetNextRequestFromLun(DeviceExtension, LunExtension, NULL);
         else
             KeReleaseSpinLockFromDpcLevel(&DeviceExtension->SpinLock);
     }
@@ -1342,7 +1346,7 @@ TryAgain:
             LunExtension->ReadyLun = NULL;
 
             /* Get next request for this LUN */
-            SpiGetNextRequestFromLun(DeviceExtension, LunExtension);
+            SpiGetNextRequestFromLun(DeviceExtension, LunExtension, NULL);
 
             /* Still ready requests exist?
                If yes - get spinlock, if no - stop here */
