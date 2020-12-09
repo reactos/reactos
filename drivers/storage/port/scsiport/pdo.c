@@ -483,8 +483,8 @@ PdoHandleQueryCompatibleId(
     DeviceType = GetDeviceType(&PDODeviceExtension->InquiryData);
 
     // format instance id
-    Length = sprintf(Buffer, "%s", DeviceType) + 1;
-    Length += sprintf(&Buffer[Length], "%s", "RAW") + 2;
+    Length = sprintf(Buffer, "SCSI\\%s", DeviceType) + 1;
+    Length += sprintf(&Buffer[Length], "SCSI\\%s", "RAW") + 2;
 
     InstanceId = ExAllocatePoolWithTag(PagedPool, Length * sizeof(WCHAR), TAG_SCSIPORT);
     if (!InstanceId)
