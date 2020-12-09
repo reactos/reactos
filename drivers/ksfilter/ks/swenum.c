@@ -1227,7 +1227,7 @@ KspBusWorkerRoutine(
                         Diff.QuadPart);
 
                      /* deactivate interfaces */
-                     //KspEnableBusDeviceInterface(DeviceEntry, FALSE);
+                     KspEnableBusDeviceInterface(DeviceEntry, FALSE);
 
                      /* re-acquire lock */
                      KeAcquireSpinLock(&BusDeviceExtension->Lock, &OldLevel);
@@ -1968,7 +1968,7 @@ KsServiceBusEnumCreateRequest(
             Status =  KspDoReparseForIrp(Irp, DeviceEntry);
             DPRINT("REPARSE Irp %p '%wZ'\n", Irp, &IoStack->FileObject->FileName);
 
-            Irp->IoStatus.Status = Status; 
+            Irp->IoStatus.Status = Status;
             Irp->IoStatus.Information = IO_REPARSE;
             return Status;
         }
