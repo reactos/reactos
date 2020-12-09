@@ -400,7 +400,10 @@ SpiGetNextRequestFromLun(
         else
         {
             /* Release the spinlock, without clearing any flags and exit */
-            KeReleaseSpinLockFromDpcLevel(&DeviceExtension->SpinLock);
+            if (OldIrql != NULL)
+                KeReleaseSpinLock(&DeviceExtension->SpinLock, *OldIrql);
+            else
+                KeReleaseSpinLockFromDpcLevel(&DeviceExtension->SpinLock);
 
             return;
         }
@@ -429,7 +432,10 @@ SpiGetNextRequestFromLun(
         LunExtension->SortKey++;
 
         /* Release the spinlock */
-        KeReleaseSpinLockFromDpcLevel(&DeviceExtension->SpinLock);
+        if (OldIrql != NULL)
+            KeReleaseSpinLock(&DeviceExtension->SpinLock, *OldIrql);
+        else
+            KeReleaseSpinLockFromDpcLevel(&DeviceExtension->SpinLock);
 
         /* Start the next pending request */
         IoStartPacket(DeviceExtension->Common.DeviceObject, NextIrp, (PULONG)NULL, NULL);
@@ -437,7 +443,10 @@ SpiGetNextRequestFromLun(
     else
     {
         /* Release the spinlock */
-        KeReleaseSpinLockFromDpcLevel(&DeviceExtension->SpinLock);
+        if (OldIrql != NULL)
+            KeReleaseSpinLock(&DeviceExtension->SpinLock, *OldIrql);
+        else
+            KeReleaseSpinLockFromDpcLevel(&DeviceExtension->SpinLock);
     }
 }
 
