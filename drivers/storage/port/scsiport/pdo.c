@@ -354,8 +354,8 @@ PdoHandleQueryHardwareId(
     PSCSI_PORT_LUN_EXTENSION PDODeviceExtension = DeviceObject->DeviceExtension;
     LPCSTR GenericType, DeviceType;
     LPWSTR Buffer;
-    CHAR Id1[50], Id2[50], Id3[50], Id4[50], Id5[50], Id6[50], Id7[50];
-    ULONG Id1Length, Id2Length, Id3Length, Id4Length, Id5Length, Id6Length, Id7Length;
+    CHAR Id1[50], Id2[50], Id3[50], Id4[50], Id5[50], Id6[50];
+    ULONG Id1Length, Id2Length, Id3Length, Id4Length, Id5Length, Id6Length;
     ULONG Offset, TotalLength, Length;
     PINQUIRYDATA InquiryData;
 
@@ -400,11 +400,10 @@ PdoHandleQueryHardwareId(
     DPRINT("PdoHandleQueryHardwareId HardwareId3 %s\n", Id3);
 
     // generate id 4
-    // SCSI\SCSIType_VendorId(8)_ProductId(16)_Revision(1)
+    // SCSI\VendorId(8)_ProductId(16)_Revision(1)
     RtlZeroMemory(Id4, sizeof(Id4));
     Offset = 0;
     Offset = sprintf(&Id4[Offset], "SCSI\\");
-    Offset += sprintf(&Id4[Offset], DeviceType);
     Offset += CopyField(InquiryData->VendorId, &Id4[Offset], 8);
     Offset += CopyField(InquiryData->ProductId, &Id4[Offset], 16);
     Offset += CopyField(InquiryData->ProductRevisionLevel, &Id4[Offset], 1);
@@ -412,34 +411,24 @@ PdoHandleQueryHardwareId(
     DPRINT("PdoHandleQueryHardwareId HardwareId4 %s\n", Id4);
 
     // generate id 5
-    // SCSIType_VendorId(8)_ProductId(16)_Revision(1)
+    // VendorId(8)_ProductId(16)_Revision(1)
     RtlZeroMemory(Id5, sizeof(Id5));
     Offset = 0;
-    Offset = sprintf(&Id5[Offset], DeviceType);
-    Offset += CopyField(InquiryData->VendorId, &Id5[Offset], 8);
+    Offset = CopyField(InquiryData->VendorId, &Id5[Offset], 8);
     Offset += CopyField(InquiryData->ProductId, &Id5[Offset], 16);
     Offset += CopyField(InquiryData->ProductRevisionLevel, &Id5[Offset], 1);
     Id5Length = strlen(Id5) + 1;
     DPRINT("PdoHandleQueryHardwareId HardwareId5 %s\n", Id5);
 
     // generate id 6
-    // SCSI\SCSIType
+    // SCSIType
     RtlZeroMemory(Id6, sizeof(Id6));
     Offset = 0;
-    Offset = sprintf(&Id6[Offset], "SCSI\\");
-    Offset += sprintf(&Id6[Offset], GenericType);
+    Offset = sprintf(&Id6[Offset], GenericType);
     Id6Length = strlen(Id6) + 1;
     DPRINT("PdoHandleQueryHardwareId HardwareId6 %s\n", Id6);
 
-    // generate id 7
-    // SCSIType
-    RtlZeroMemory(Id7, sizeof(Id7));
-    Offset = 0;
-    Offset = sprintf(&Id7[Offset], GenericType);
-    Id7Length = strlen(Id7) + 1;
-    DPRINT("PdoHandleQueryHardwareId HardwareId7 %s\n", Id7);
-
-    TotalLength = Id1Length + Id2Length + Id3Length + Id4Length + Id5Length + Id6Length + Id7Length + 1;
+    TotalLength = Id1Length + Id2Length + Id3Length + Id4Length + Id5Length + Id6Length + 1;
 
     Buffer = ExAllocatePoolWithTag(PagedPool, TotalLength * sizeof(WCHAR), TAG_SCSIPORT);
     if (!Buffer)
@@ -458,7 +447,6 @@ PdoHandleQueryHardwareId(
     ConvertToUnicodeString(Id4, Length, Offset, Buffer, &Offset);
     ConvertToUnicodeString(Id5, Length, Offset, Buffer, &Offset);
     ConvertToUnicodeString(Id6, Length, Offset, Buffer, &Offset);
-    ConvertToUnicodeString(Id7, Length, Offset, Buffer, &Offset);
 
     Buffer[Offset] = UNICODE_NULL;
 
