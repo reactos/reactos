@@ -2052,6 +2052,26 @@ NtQueryDirectoryFile(IN HANDLE FileHandle,
         _SEH2_END;
     }
 
+    /* Check input parameters */
+
+    switch (FileInformationClass)
+    {
+#define CHECK_LENGTH(class, struct)                      \
+        case class:                                 \
+            if (Length < sizeof(struct))                         \
+                return STATUS_INFO_LENGTH_MISMATCH; \
+            break
+        CHECK_LENGTH(FileDirectoryInformation, FILE_DIRECTORY_INFORMATION);
+        CHECK_LENGTH(FileFullDirectoryInformation, FILE_FULL_DIR_INFORMATION);
+        CHECK_LENGTH(FileIdFullDirectoryInformation, FILE_ID_FULL_DIR_INFORMATION);
+        CHECK_LENGTH(FileNamesInformation, FILE_NAMES_INFORMATION);
+        CHECK_LENGTH(FileBothDirectoryInformation, FILE_BOTH_DIR_INFORMATION);
+        CHECK_LENGTH(FileIdBothDirectoryInformation, FILE_ID_BOTH_DIR_INFORMATION);
+        default:
+            break;
+#undef CHECK_LENGTH
+    }
+
     /* Get File Object */
     Status = ObReferenceObjectByHandle(FileHandle,
                                        FILE_LIST_DIRECTORY,
