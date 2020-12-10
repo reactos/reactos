@@ -596,9 +596,6 @@ IoInitSystem(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     KdInitSystem(3, LoaderBlock);
 #endif
 
-    /* Load services for devices found by PnP manager */
-    IopInitializePnpServices(IopRootDeviceNode);
-
     /* Load system start drivers */
     IopInitializeSystemDrivers();
     PnpSystemInit = TRUE;

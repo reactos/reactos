@@ -431,9 +431,8 @@ IopInitializePlugPlayServices(VOID)
     IopRootDeviceNode = PipAllocateDeviceNode(Pdo);
 
     /* Set flags */
-    IopRootDeviceNode->Flags |= DNF_STARTED + DNF_PROCESSED + DNF_ENUMERATED +
-                                DNF_MADEUP + DNF_NO_RESOURCE_REQUIRED +
-                                DNF_ADDED;
+    IopRootDeviceNode->Flags |= DNF_MADEUP | DNF_ENUMERATED |
+                                DNF_IDS_QUERIED | DNF_NO_RESOURCE_REQUIRED;
 
     /* Create instance path */
     RtlCreateUnicodeString(&IopRootDeviceNode->InstancePath,
@@ -443,18 +442,19 @@ IopInitializePlugPlayServices(VOID)
     IopRootDriverObject->DriverExtension->AddDevice(IopRootDriverObject,
                                                     IopRootDeviceNode->PhysicalDeviceObject);
 
+    PiSetDevNodeState(IopRootDeviceNode, DeviceNodeStarted);
+
     /* Initialize PnP-Event notification support */
     Status = IopInitPlugPlayEvents();
     if (!NT_SUCCESS(Status)) return Status;
-
-    /* Report the device to the user-mode pnp manager */
-    IopQueueTargetDeviceEvent(&GUID_DEVICE_ARRIVAL,
-                              &IopRootDeviceNode->InstancePath);
 
     /* Initialize the Bus Type GUID List */
     PnpBusTypeGuidList = ExAllocatePool(PagedPool, sizeof(IO_BUS_TYPE_GUID_LIST));
     RtlZeroMemory(PnpBusTypeGuidList, sizeof(IO_BUS_TYPE_GUID_LIST));
     ExInitializeFastMutex(&PnpBusTypeGuidList->Lock);
+
+    /* Initialize PnP root relations (this is a syncronous operation) */
+    PiQueueDeviceAction(IopRootDeviceNode->PhysicalDeviceObject, PiActionEnumRootDevices, NULL, NULL);
 
     /* Launch the firmware mapper */
     Status = IopUpdateRootKey();
