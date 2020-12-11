@@ -7,7 +7,7 @@
  */
 //
 // Copyright (c) Microsoft. All rights reserved.
-// Licensed under the MIT license. See LICENSE file in the project root for full license information. 
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
 //
 
 
@@ -258,7 +258,11 @@ __ANNOTATION(SAL_failureDefault(enum __SAL_failureKind));
 #define __class_code_content(typ)
 #define __analysis_assert(e)
 #define __analysis_hint(hint)
+#ifndef __clang__
 #define __analysis_noreturn
+#else
+#define __analysis_noreturn __attribute__((analyzer_noreturn))
+#endif
 /* Internal defintions */
 #define __inner_data_source(src_raw)
 #define __inner_this_data_source(src_raw)
@@ -429,7 +433,7 @@ __inner_analysis_assume_nullterminated_dec
 // A common pattern is to pass an "_Inout_ PCHAR* ppBuf" of size "_Inout_ DWORD* pSize"
 // to a function that writes to **pBuf, incrementing *ppBuf to point to one
 // past the last written byte. Thus the length of the write is
-// (*ppBuf - Old(*ppBuf)). The size of the remaining unwritten capacity 
+// (*ppBuf - Old(*ppBuf)). The size of the remaining unwritten capacity
 // is written to *pSize.
 //
 // This pattern is frequently used when progressively filling a
@@ -471,7 +475,7 @@ __inner_analysis_assume_nullterminated_dec
 // completely accurate approximation, but reasonable.
 //
 #define _Post_equals_last_error_     _Post_satisfies_(_Curr_ != 0)
-                                
+
 #ifdef  __cplusplus
 }
 #endif
@@ -533,7 +537,7 @@ void __pfx_assume(int, const char *);
  as VS11 is the minimum required for SAL 2 support.
 
  If we are in a downlevel environment, we can go ahead and include no_sal2.h
- to make all of SAL 2 no-ops to ensure no build failures. 
+ to make all of SAL 2 no-ops to ensure no build failures.
 */
 #if (!defined(_Outptr_) /* || _MSC_VER <= 1600 */) && !( defined( MIDL_PASS ) || defined(__midl) || defined(RC_INVOKED) ) && !( defined( _SDV_ ) ) /*IFSTRIP=IGN*/
 #include <no_sal2.h>
