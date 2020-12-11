@@ -4093,46 +4093,26 @@ CheckSectionPointer:
  */
 BOOLEAN NTAPI
 MmFlushImageSection (IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
-                     IN MMFLUSH_TYPE   FlushType)
+                     IN MMFLUSH_TYPE FlushType)
 {
-    BOOLEAN Result = TRUE;
-#ifdef NEWCC
-    PMM_SECTION_SEGMENT Segment;
-#endif
-
     switch(FlushType)
     {
-    case MmFlushForDelete:
-        if (SectionObjectPointer->ImageSectionObject ||
-                SectionObjectPointer->DataSectionObject)
+        case MmFlushForDelete:
+        case MmFlushForWrite:
         {
-            return FALSE;
-        }
-#ifndef NEWCC
-        CcRosRemoveIfClosed(SectionObjectPointer);
-#endif
-        return TRUE;
-    case MmFlushForWrite:
-    {
-        DPRINT("MmFlushImageSection(%d)\n", FlushType);
-#ifdef NEWCC
-        Segment = (PMM_SECTION_SEGMENT)SectionObjectPointer->DataSectionObject;
-#endif
+            BOOLEAN Ret = TRUE;
+            KIRQL OldIrql = MiAcquirePfnLock();
 
-        if (SectionObjectPointer->ImageSectionObject)
-        {
-            DPRINT1("SectionObject has ImageSection\n");
-            return FALSE;
-        }
+            if (SectionObjectPointer->ImageSectionObject)
+            {
+                PMM_IMAGE_SECTION_OBJECT ImageSectionObject = SectionObjectPointer->ImageSectionObject;
+                if (!(ImageSectionObject->SegFlags & MM_SEGMENT_INDELETE))
+                    Ret = FALSE;
+            }
 
-#ifdef NEWCC
-        CcpLock();
-        Result = !SectionObjectPointer->SharedCacheMap || (Segment->ReferenceCount == CcpCountCacheSections((PNOCC_CACHE_MAP)SectionObjectPointer->SharedCacheMap));
-        CcpUnlock();
-        DPRINT("Result %d\n", Result);
-#endif
-        return Result;
-    }
+            MiReleasePfnLock(OldIrql);
+            return Ret;
+        }
     }
     return FALSE;
 }
