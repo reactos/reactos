@@ -556,6 +556,27 @@ CcCopyRead (
     IoStatus->Status = STATUS_SUCCESS;
     IoStatus->Information = ReadLength;
 
+    /* If that was a successful sync read operation, let's handle read ahead */
+    if (Length == 0 && Wait)
+    {
+        PPRIVATE_CACHE_MAP PrivateCacheMap = FileObject->PrivateCacheMap;
+
+        /* If file isn't random access and next read may get us cross VACB boundary,
+         * schedule next read
+         */
+        if (!BooleanFlagOn(FileObject->Flags, FO_RANDOM_ACCESS) &&
+            (CurrentOffset - 1) / VACB_MAPPING_GRANULARITY != (CurrentOffset + ReadLength - 1) / VACB_MAPPING_GRANULARITY)
+        {
+            CcScheduleReadAhead(FileObject, FileOffset, ReadLength);
+        }
+
+        /* And update read history in private cache map */
+        PrivateCacheMap->FileOffset1.QuadPart = PrivateCacheMap->FileOffset2.QuadPart;
+        PrivateCacheMap->BeyondLastByte1.QuadPart = PrivateCacheMap->BeyondLastByte2.QuadPart;
+        PrivateCacheMap->FileOffset2.QuadPart = FileOffset->QuadPart;
+        PrivateCacheMap->BeyondLastByte2.QuadPart = FileOffset->QuadPart + ReadLength;
+    }
+
     return TRUE;
 }
 
