@@ -954,7 +954,8 @@ IntGdiLoadFontsFromMemory(PGDI_LOAD_FONT pLoadFont,
     Status = RtlAnsiStringToUnicodeString(&Entry->FaceName, &AnsiString, TRUE);
     if (NT_SUCCESS(Status))
     {
-        if (Face->style_name[0] && strcmp(Face->style_name, "Regular"))
+        if (Face->style_name && Face->style_name[0] &&
+            strcmp(Face->style_name, "Regular") != 0)
         {
             RtlInitAnsiString(&AnsiString, Face->style_name);
             Status = RtlAnsiStringToUnicodeString(&Entry->StyleName, &AnsiString, TRUE);
