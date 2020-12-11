@@ -3858,7 +3858,10 @@ NtGdiExtCreateRegion(
         /* Insert the rectangles one by one */
         for(i=0; i<nCount; i++)
         {
-            REGION_UnionRectWithRgn(Region, &rects[i]);
+            if ( rects[i].left < rects[i].right && rects[i].top < rects[i].bottom )
+            {
+                REGION_UnionRectWithRgn(Region, &rects[i]);
+            }
         }
 
         if (Xform != NULL)
