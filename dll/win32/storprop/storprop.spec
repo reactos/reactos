@@ -5,6 +5,6 @@
 @ stdcall DllMain(ptr long ptr)
 @ stdcall DvdClassInstaller(long ptr ptr)
 @ stub DvdLauncher
-@ stub DvdPropPageProvider
-@ stub IdePropPageProvider
-@ stub VolumePropPageProvider
+@ stdcall DvdPropPageProvider(ptr ptr long)
+@ stdcall IdePropPageProvider(ptr ptr long)
+@ stdcall VolumePropPageProvider(ptr ptr long)
