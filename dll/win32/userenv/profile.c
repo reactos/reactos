@@ -1104,6 +1104,10 @@ CreateUserProfileExW(
         bRet = FALSE;
     }
 
+    /* HACKHACKHACK: CORE-17263 -- wait for a little bit to make sure all
+     *               KCBs have been deref'd before we unload */
+    Sleep(1000);
+
     /* Unload the hive */
     AcquireRemoveRestorePrivilege(TRUE);
     RegUnLoadKeyW(HKEY_USERS, SidString);
