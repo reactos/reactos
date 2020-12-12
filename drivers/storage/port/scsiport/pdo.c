@@ -124,7 +124,9 @@ ULONG
 CopyField(
     IN PUCHAR Name,
     IN PCHAR Buffer,
-    IN ULONG MaxLength)
+    IN ULONG MaxLength,
+    IN CHAR DefaultCharacter,
+    IN BOOLEAN Trim)
 {
     ULONG Index;
 
@@ -133,7 +135,7 @@ CopyField(
         if (Name[Index] <= ' ' || Name[Index] >= 0x7F /* last printable ascii character */ ||  Name[Index] == ',')
         {
             // convert to underscore
-            Buffer[Index] = '_';
+            Buffer[Index] = DefaultCharacter;
         }
         else
         {
@@ -142,33 +144,19 @@ CopyField(
         }
     }
 
-    return MaxLength;
-}
-
-static
-ULONG
-CopyFieldTruncate(
-    IN PUCHAR Name,
-    IN PCHAR Buffer,
-    IN ULONG MaxLength)
-{
-    ULONG Index;
-
-    for (Index = 0; Index < MaxLength; Index++)
+    /* Trim trailing default characters */
+    if (Trim)
     {
-        if (Name[Index] == '\0')
+        Index = MaxLength - 1;
+        for (;;)
         {
-            break;
-        }
-        else if (Name[Index] <= ' ' || Name[Index] >= 0x7F /* last printable ascii character */ ||  Name[Index] == ',')
-        {
-            // convert to space
-            Buffer[Index] = ' ';
-        }
-        else
-        {
-            // just copy character
-            Buffer[Index] = Name[Index];
+            if (Buffer[Index] != DefaultCharacter)
+            {
+                Index++;
+                break;
+            }
+
+            Index--;
         }
     }
 
@@ -201,13 +189,17 @@ PdoHandleQueryDeviceText(
         {
             DPRINT("DeviceTextDescription\n");
 
-            Offset += CopyFieldTruncate(InquiryData->VendorId,
-                                        &LocalBuffer[Offset],
-                                        sizeof(InquiryData->VendorId));
+            Offset += CopyField(InquiryData->VendorId,
+                                &LocalBuffer[Offset],
+                                sizeof(InquiryData->VendorId),
+                                ' ',
+                                TRUE);
             LocalBuffer[Offset++] = ' ';
-            Offset += CopyFieldTruncate(InquiryData->ProductId,
-                                        &LocalBuffer[Offset],
-                                        sizeof(InquiryData->ProductId));
+            Offset += CopyField(InquiryData->ProductId,
+                                &LocalBuffer[Offset],
+                                sizeof(InquiryData->ProductId),
+                                ' ',
+                                TRUE);
             LocalBuffer[Offset++] = '\0';
 
             RtlInitAnsiString(&AnsiString, (PCSZ)&LocalBuffer);
@@ -287,11 +279,12 @@ PdoHandleQueryDeviceId(
     Offset = sprintf(&Buffer[Offset], "SCSI\\");
     Offset += sprintf(&Buffer[Offset], DeviceType);
     Offset += sprintf(&Buffer[Offset], "&Ven_");
-    Offset += CopyField(InquiryData->VendorId, &Buffer[Offset], 8);
+    Offset += CopyField(InquiryData->VendorId, &Buffer[Offset], 8, '_', TRUE);
     Offset += sprintf(&Buffer[Offset], "&Prod_");
-    Offset += CopyField(InquiryData->ProductId, &Buffer[Offset], 16);
+    Offset += CopyField(InquiryData->ProductId, &Buffer[Offset], 16, '_', TRUE);
     Offset += sprintf(&Buffer[Offset], "&Rev_");
-    Offset += CopyField(InquiryData->ProductRevisionLevel, &Buffer[Offset], 4);
+    Offset += CopyField(InquiryData->ProductRevisionLevel, &Buffer[Offset], 4, '_', TRUE);
+    Buffer[Offset] = '\0';
 
     RtlInitAnsiString(&AnsiString, (PCSZ)Buffer);
 
@@ -372,9 +365,9 @@ PdoHandleQueryHardwareId(
     Offset = 0;
     Offset = sprintf(&Id1[Offset], "SCSI\\");
     Offset += sprintf(&Id1[Offset], DeviceType);
-    Offset += CopyField(InquiryData->VendorId, &Id1[Offset], 8);
-    Offset += CopyField(InquiryData->ProductId, &Id1[Offset], 16);
-    Offset += CopyField(InquiryData->ProductRevisionLevel, &Id1[Offset], 4);
+    Offset += CopyField(InquiryData->VendorId, &Id1[Offset], 8, '_', FALSE);
+    Offset += CopyField(InquiryData->ProductId, &Id1[Offset], 16, '_', FALSE);
+    Offset += CopyField(InquiryData->ProductRevisionLevel, &Id1[Offset], 4, '_', FALSE);
     Id1Length = strlen(Id1) + 1;
     DPRINT("PdoHandleQueryHardwareId HardwareId1 %s\n", Id1);
 
@@ -384,8 +377,8 @@ PdoHandleQueryHardwareId(
     Offset = 0;
     Offset = sprintf(&Id2[Offset], "SCSI\\");
     Offset += sprintf(&Id2[Offset], DeviceType);
-    Offset += CopyField(InquiryData->VendorId, &Id2[Offset], 8);
-    Offset += CopyField(InquiryData->ProductId, &Id2[Offset], 16);
+    Offset += CopyField(InquiryData->VendorId, &Id2[Offset], 8, '_', FALSE);
+    Offset += CopyField(InquiryData->ProductId, &Id2[Offset], 16, '_', FALSE);
     Id2Length = strlen(Id2) + 1;
     DPRINT("PdoHandleQueryHardwareId HardwareId2 %s\n", Id2);
 
@@ -395,7 +388,7 @@ PdoHandleQueryHardwareId(
     Offset = 0;
     Offset = sprintf(&Id3[Offset], "SCSI\\");
     Offset += sprintf(&Id3[Offset], DeviceType);
-    Offset += CopyField(InquiryData->VendorId, &Id3[Offset], 8);
+    Offset += CopyField(InquiryData->VendorId, &Id3[Offset], 8, '_', FALSE);
     Id3Length = strlen(Id3) + 1;
     DPRINT("PdoHandleQueryHardwareId HardwareId3 %s\n", Id3);
 
@@ -404,9 +397,9 @@ PdoHandleQueryHardwareId(
     RtlZeroMemory(Id4, sizeof(Id4));
     Offset = 0;
     Offset = sprintf(&Id4[Offset], "SCSI\\");
-    Offset += CopyField(InquiryData->VendorId, &Id4[Offset], 8);
-    Offset += CopyField(InquiryData->ProductId, &Id4[Offset], 16);
-    Offset += CopyField(InquiryData->ProductRevisionLevel, &Id4[Offset], 1);
+    Offset += CopyField(InquiryData->VendorId, &Id4[Offset], 8, '_', FALSE);
+    Offset += CopyField(InquiryData->ProductId, &Id4[Offset], 16, '_', FALSE);
+    Offset += CopyField(InquiryData->ProductRevisionLevel, &Id4[Offset], 1, '_', FALSE);
     Id4Length = strlen(Id4) + 1;
     DPRINT("PdoHandleQueryHardwareId HardwareId4 %s\n", Id4);
 
@@ -414,9 +407,9 @@ PdoHandleQueryHardwareId(
     // VendorId(8)_ProductId(16)_Revision(1)
     RtlZeroMemory(Id5, sizeof(Id5));
     Offset = 0;
-    Offset = CopyField(InquiryData->VendorId, &Id5[Offset], 8);
-    Offset += CopyField(InquiryData->ProductId, &Id5[Offset], 16);
-    Offset += CopyField(InquiryData->ProductRevisionLevel, &Id5[Offset], 1);
+    Offset = CopyField(InquiryData->VendorId, &Id5[Offset], 8, '_', FALSE);
+    Offset += CopyField(InquiryData->ProductId, &Id5[Offset], 16, '_', FALSE);
+    Offset += CopyField(InquiryData->ProductRevisionLevel, &Id5[Offset], 1, '_', FALSE);
     Id5Length = strlen(Id5) + 1;
     DPRINT("PdoHandleQueryHardwareId HardwareId5 %s\n", Id5);
 
