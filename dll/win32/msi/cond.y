@@ -218,7 +218,7 @@ boolean_factor:
             }
             else if ($1.type == VALUE_LITERAL || $3.type == VALUE_LITERAL)
             {
-                $$ = FALSE;
+                $$ = ($2 == COND_NE || $2 == COND_INE );
             }
             else if ($1.type == VALUE_SYMBOL) /* symbol operator integer */
             {
