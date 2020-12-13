@@ -173,7 +173,7 @@ PdoHandleQueryDeviceText(
     PIO_STACK_LOCATION IoStack;
     UINT32 Offset = 0;
     PINQUIRYDATA InquiryData;
-    CHAR LocalBuffer[40];
+    CHAR LocalBuffer[64];
     ANSI_STRING AnsiString;
     UNICODE_STRING DeviceDescription;
 
@@ -200,6 +200,9 @@ PdoHandleQueryDeviceText(
                                 sizeof(InquiryData->ProductId),
                                 ' ',
                                 TRUE);
+            Offset += sprintf(&LocalBuffer[Offset],
+                              " SCSI %s Device",
+                              GetDeviceType(InquiryData));
             LocalBuffer[Offset++] = '\0';
 
             RtlInitAnsiString(&AnsiString, (PCSZ)&LocalBuffer);
