@@ -103,6 +103,7 @@ extern "C" {
 #define _DEVIOCTL_
 
 #define DEVICE_TYPE DWORD
+
 #define FILE_DEVICE_BEEP              1
 #define FILE_DEVICE_CD_ROM            2
 #define FILE_DEVICE_CD_ROM_FILE_SYSTEM 3
@@ -142,7 +143,7 @@ extern "C" {
 #define FILE_DEVICE_WAVE_IN           37
 #define FILE_DEVICE_WAVE_OUT          38
 #define FILE_DEVICE_8042_PORT         39
-#define FILE_DEVICE_NETWORK_REDIRECTOR  40
+#define FILE_DEVICE_NETWORK_REDIRECTOR 40
 #define FILE_DEVICE_BATTERY           41
 #define FILE_DEVICE_BUS_EXTENDER      42
 #define FILE_DEVICE_MODEM             43
@@ -160,6 +161,34 @@ extern "C" {
 #define FILE_DEVICE_SERENUM           55
 #define FILE_DEVICE_TERMSRV           56
 #define FILE_DEVICE_KSEC              57
+#define FILE_DEVICE_FIPS              58
+#define FILE_DEVICE_INFINIBAND        59
+#define FILE_DEVICE_VMBUS             62
+#define FILE_DEVICE_CRYPT_PROVIDER    63
+#define FILE_DEVICE_WPD               64
+#define FILE_DEVICE_BLUETOOTH         65
+#define FILE_DEVICE_MT_COMPOSITE      66
+#define FILE_DEVICE_MT_TRANSPORT      67
+#define FILE_DEVICE_BIOMETRIC         68
+#define FILE_DEVICE_PMI               69
+#define FILE_DEVICE_EHSTOR            70
+#define FILE_DEVICE_DEVAPI            71
+#define FILE_DEVICE_GPIO              72
+#define FILE_DEVICE_USBEX             73
+#define FILE_DEVICE_CONSOLE           80
+#define FILE_DEVICE_NFP               81
+#define FILE_DEVICE_SYSENV            82
+#define FILE_DEVICE_VIRTUAL_BLOCK     83
+#define FILE_DEVICE_POINT_OF_SERVICE  84
+#define FILE_DEVICE_STORAGE_REPLICATION 85
+#define FILE_DEVICE_TRUST_ENV         86
+#define FILE_DEVICE_UCM               87
+#define FILE_DEVICE_UCMTCPCI          88
+#define FILE_DEVICE_PERSISTENT_MEMORY 89
+#define FILE_DEVICE_NVDIMM            90
+#define FILE_DEVICE_HOLOGRAPHIC       91
+#define FILE_DEVICE_SDFXHCI           92
+#define FILE_DEVICE_UCMUCSI           93
 
 /*  Also in ddk/winddk.h */
 #define FILE_ANY_ACCESS        0x00000000
