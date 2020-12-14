@@ -46,5 +46,5 @@ set(_PREFAST_ FALSE CACHE BOOL
 "Whether to enable PREFAST while compiling.")
     # RTC are incompatible with compiler optimizations.
     cmake_dependent_option(RUNTIME_CHECKS "Whether to enable runtime checks on MSVC" ON
-                           "CMAKE_BUILD_TYPE STREQUAL \"Debug\"" OFF)
+                           "CMAKE_BUILD_TYPE STREQUAL Debug" OFF)
 endif()
