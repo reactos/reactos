@@ -202,6 +202,7 @@ typedef struct _MM_IMAGE_SECTION_OBJECT
     PMM_SECTION_SEGMENT Segments;
 } MM_IMAGE_SECTION_OBJECT, *PMM_IMAGE_SECTION_OBJECT;
 
+#define MM_PHYSICALMEMORY_SEGMENT           (0x1)
 #define MM_DATAFILE_SEGMENT                 (0x2)
 #define MM_SEGMENT_INDELETE                 (0x4)
 #define MM_SEGMENT_INCREATE                 (0x8)
@@ -222,7 +223,6 @@ typedef struct _MEMORY_AREA
 
     struct
     {
-        PSECTION Section;
         LARGE_INTEGER ViewOffset;
         PMM_SECTION_SEGMENT Segment;
         LIST_ENTRY RegionListHead;

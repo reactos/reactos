@@ -83,6 +83,14 @@ _MmUnlockSectionSegment(PMM_SECTION_SEGMENT Segment, const char *file, int line)
 }
 #endif
 
+/* Somewhat grotesque, but eh... */
+PMM_IMAGE_SECTION_OBJECT ImageSectionObjectFromSegment(PMM_SECTION_SEGMENT Segment)
+{
+    ASSERT((Segment->SegFlags & MM_DATAFILE_SEGMENT) == 0);
+
+    return CONTAINING_RECORD(Segment->ReferenceCount, MM_IMAGE_SECTION_OBJECT, RefCount);
+}
+
 NTSTATUS
 NTAPI
 MiMapViewInSystemSpace(IN PVOID Section,
@@ -1209,14 +1217,17 @@ MiReadPage(PMEMORY_AREA MemoryArea,
 
     if (Status == STATUS_END_OF_FILE)
     {
+        DPRINT1("Got STATUS_END_OF_FILE at offset %I64d for file %wZ.\n", SegOffset, &FileObject->FileName);
         Status = STATUS_SUCCESS;
     }
 
-    if (!MemoryArea->SectionData.Section->u.Flags.Reserve
+    if ((MemoryArea->VadNode.u.VadFlags.VadType == VadImageMap)
         && ((SegOffset + PAGE_SIZE) > MemoryArea->SectionData.Segment->RawLength.QuadPart))
     {
         KIRQL OldIrql;
         PUCHAR PageMap;
+
+        DPRINT("Zeroing at offset %I64d for file %wZ.\n", SegOffset, &FileObject->FileName);
 
         /* Zero out the end of it */
         PageMap = MiMapPageInHyperSpace(PsGetCurrentProcess(), *Page, &OldIrql);
@@ -1352,7 +1363,6 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
     LARGE_INTEGER Offset;
     PFN_NUMBER Page;
     NTSTATUS Status;
-    PSECTION Section;
     PMM_SECTION_SEGMENT Segment;
     ULONG_PTR Entry;
     ULONG_PTR Entry1;
@@ -1391,7 +1401,6 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
                       + MemoryArea->SectionData.ViewOffset.QuadPart;
 
     Segment = MemoryArea->SectionData.Segment;
-    Section = MemoryArea->SectionData.Section;
     Region = MmFindRegion((PVOID)MA_GetStartingAddress(MemoryArea),
                           &MemoryArea->SectionData.RegionListHead,
                           Address, NULL);
@@ -1537,7 +1546,7 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
     /*
      * Satisfying a page fault on a map of /Device/PhysicalMemory is easy
      */
-    if (Section->u.Flags.PhysicalMemory)
+    if ((*Segment->Flags) & MM_PHYSICALMEMORY_SEGMENT)
     {
         MmUnlockSectionSegment(Segment);
         /*
@@ -1600,6 +1609,7 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
         }
         else
         {
+            DPRINT("Getting fresh page for file %wZ at offset %I64d.\n", &Segment->FileObject->FileName, Offset.QuadPart);
             Status = MiReadPage(MemoryArea, Offset.QuadPart, &Page);
             if (!NT_SUCCESS(Status))
             {
@@ -2111,7 +2121,7 @@ MmCreatePhysicalMemorySection(VOID)
     Segment->Protection = PAGE_EXECUTE_READWRITE;
     Segment->RawLength = SectionSize;
     Segment->Length = SectionSize;
-    Segment->SegFlags = 0;
+    Segment->SegFlags = MM_PHYSICALMEMORY_SEGMENT;
     Segment->WriteCopy = FALSE;
     Segment->Image.VirtualAddress = 0;
     Segment->Image.Characteristics = 0;
@@ -2230,7 +2240,6 @@ MmCreateDataFileSection(PSECTION *SectionObject,
         if (!NT_SUCCESS(Status))
         {
             ObDereferenceObject(Section);
-            ObDereferenceObject(FileObject);
             return Status;
         }
 
@@ -3283,10 +3292,9 @@ MmMapViewOfSegment(PMMSUPPORT AddressSpace,
         return(Status);
     }
 
-    ObReferenceObject((PVOID)Section);
+    InterlockedIncrementUL(Segment->ReferenceCount);
 
     MArea->SectionData.Segment = Segment;
-    MArea->SectionData.Section = Section;
     MArea->SectionData.ViewOffset.QuadPart = ViewOffset;
     if (Section->u.Flags.Image)
     {
@@ -3390,7 +3398,6 @@ MmUnmapViewOfSegment(PMMSUPPORT AddressSpace,
 {
     NTSTATUS Status;
     PMEMORY_AREA MemoryArea;
-    PSECTION Section;
     PMM_SECTION_SEGMENT Segment;
     PLIST_ENTRY CurrentEntry;
     PMM_REGION CurrentRegion;
@@ -3403,7 +3410,6 @@ MmUnmapViewOfSegment(PMMSUPPORT AddressSpace,
         return(STATUS_UNSUCCESSFUL);
     }
 
-    Section = MemoryArea->SectionData.Section;
     Segment = MemoryArea->SectionData.Segment;
 
 #ifdef NEWCC
@@ -3429,7 +3435,7 @@ MmUnmapViewOfSegment(PMMSUPPORT AddressSpace,
         ExFreePoolWithTag(CurrentRegion, TAG_MM_REGION);
     }
 
-    if (Section->u.Flags.PhysicalMemory)
+    if ((*Segment->Flags) & MM_PHYSICALMEMORY_SEGMENT)
     {
         Status = MmFreeMemoryArea(AddressSpace,
                                   MemoryArea,
@@ -3444,7 +3450,7 @@ MmUnmapViewOfSegment(PMMSUPPORT AddressSpace,
                                   AddressSpace);
     }
     MmUnlockSectionSegment(Segment);
-    ObDereferenceObject(Section);
+    MmDereferenceSegment(Segment);
     return(Status);
 }
 
@@ -3457,7 +3463,6 @@ MiRosUnmapViewOfSection(IN PEPROCESS Process,
     NTSTATUS Status;
     PMEMORY_AREA MemoryArea;
     PMMSUPPORT AddressSpace;
-    PSECTION Section;
     PVOID ImageBaseAddress = 0;
 
     DPRINT("Opening memory area Process %p BaseAddress %p\n",
@@ -3484,9 +3489,7 @@ MiRosUnmapViewOfSection(IN PEPROCESS Process,
         return STATUS_NOT_MAPPED_VIEW;
     }
 
-    Section = MemoryArea->SectionData.Section;
-
-    if ((Section != NULL) && Section->u.Flags.Image)
+    if (MemoryArea->VadNode.u.VadFlags.VadType == VadImageMap)
     {
         ULONG i;
         ULONG NrSegments;
@@ -3495,7 +3498,7 @@ MiRosUnmapViewOfSection(IN PEPROCESS Process,
         PMM_SECTION_SEGMENT Segment;
 
         Segment = MemoryArea->SectionData.Segment;
-        ImageSectionObject = ((PMM_IMAGE_SECTION_OBJECT)Section->Segment);
+        ImageSectionObject = ImageSectionObjectFromSegment(Segment);
         SectionSegments = ImageSectionObject->Segments;
         NrSegments = ImageSectionObject->NrSegments;
 
@@ -3937,6 +3940,15 @@ MmMapViewOfSection(IN PVOID SectionObject,
             MmUnlockSectionSegment(&SectionSegments[i]);
             if (!NT_SUCCESS(Status))
             {
+                /* roll-back */
+                while (i--)
+                {
+                    SBaseAddress =  ((char*)ImageBase + (ULONG_PTR)SectionSegments[i].Image.VirtualAddress);
+                    MmLockSectionSegment(&SectionSegments[i]);
+                    MmUnmapViewOfSegment(AddressSpace, SBaseAddress);
+                    MmUnlockSectionSegment(&SectionSegments[i]);
+                }
+
                 MmUnlockAddressSpace(AddressSpace);
                 return(Status);
             }
@@ -4018,7 +4030,6 @@ MmMapViewOfSection(IN PVOID SectionObject,
     }
 
     MmUnlockAddressSpace(AddressSpace);
-    ASSERT(*BaseAddress == ALIGN_DOWN_POINTER_BY(*BaseAddress, MM_VIRTMEM_GRANULARITY));
 
     if (NotAtBase)
         Status = STATUS_IMAGE_NOT_AT_BASE;
@@ -4074,7 +4085,7 @@ CheckSectionPointer:
         else
         {
             /* We can't shrink, but we can extend */
-            Ret = NewFileSize->QuadPart > Segment->RawLength.QuadPart;
+            Ret = NewFileSize->QuadPart >= Segment->RawLength.QuadPart;
         }
     }
     else
@@ -4679,6 +4690,8 @@ MmCheckDirtySegment(
             IoSetTopLevelIrp((PIRP)FSRTL_MOD_WRITE_TOP_LEVEL_IRP);
 
         /* Go ahead and write the page */
+        DPRINT("Writing page at offset %I64d for file %wZ, Pageout: %s\n",
+                Offset->QuadPart, &Segment->FileObject->FileName, PageOut ? "TRUE" : "FALSE");
         Status = MiWritePage(Segment, Offset->QuadPart, Page);
 
         if (PageOut)
