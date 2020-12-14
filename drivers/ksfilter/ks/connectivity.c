@@ -284,9 +284,13 @@ KspReadMediaCategory(
 
     /* query the name size */
     Status = ZwQueryValueKey(hKey, &Name, KeyValuePartialInformation, NULL, 0, &Size);
+
+    DPRINT("ZwQueryValueKey() status 0x%08lx %wZ\n", Status, &Name);
+
     if (!NT_SUCCESS(Status) && Status != STATUS_BUFFER_TOO_SMALL)
     {
         /* failed to query for name key */
+        DPRINT1("ZwQueryValueKey() failed with status 0x%08lx\n", Status);
         ZwClose(hKey);
         return Status;
     }
@@ -303,12 +307,15 @@ KspReadMediaCategory(
     /* now read the info */
     Status = ZwQueryValueKey(hKey, &Name, KeyValuePartialInformation, (PVOID)KeyInfo, Size, &Size);
 
+    DPRINT("ZwQueryValueKey() status 0x%08lx %wZ\n", Status, &Name);
+
     /* close the key */
     ZwClose(hKey);
 
     if (!NT_SUCCESS(Status))
     {
         /* failed to read key */
+        DPRINT1("ZwQueryValueKey() failed with status 0x%08lx\n", Status);
         FreeItem(KeyInfo);
         return Status;
     }
