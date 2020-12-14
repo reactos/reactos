@@ -1505,14 +1505,15 @@ MiCreateDataFileMap(IN PFILE_OBJECT File,
     return STATUS_NOT_IMPLEMENTED;
 }
 
+static
 NTSTATUS
 NTAPI
 MiCreatePagingFileMap(OUT PSEGMENT *Segment,
-                      IN PSIZE_T MaximumSize,
+                      IN PLARGE_INTEGER MaximumSize,
                       IN ULONG ProtectionMask,
                       IN ULONG AllocationAttributes)
 {
-    SIZE_T SizeLimit;
+    ULONGLONG SizeLimit;
     PFN_COUNT PteCount;
     PMMPTE PointerPte;
     MMPTE TempPte;
@@ -1525,18 +1526,19 @@ MiCreatePagingFileMap(OUT PSEGMENT *Segment,
     ASSERT((AllocationAttributes & SEC_LARGE_PAGES) == 0);
 
     /* Pagefile-backed sections need a known size */
-    if (!(*MaximumSize)) return STATUS_INVALID_PARAMETER_4;
+    if (!MaximumSize || !MaximumSize->QuadPart || MaximumSize->QuadPart < 0)
+        return STATUS_INVALID_PARAMETER_4;
 
     /* Calculate the maximum size possible, given the Prototype PTEs we'll need */
-    SizeLimit = MAXULONG_PTR - sizeof(SEGMENT);
+    SizeLimit = MmSizeOfPagedPoolInBytes - sizeof(SEGMENT);
     SizeLimit /= sizeof(MMPTE);
     SizeLimit <<= PAGE_SHIFT;
 
     /* Fail if this size is too big */
-    if (*MaximumSize > SizeLimit) return STATUS_SECTION_TOO_BIG;
+    if (MaximumSize->QuadPart > SizeLimit) return STATUS_SECTION_TOO_BIG;
 
     /* Calculate how many Prototype PTEs will be needed */
-    PteCount = (PFN_COUNT)((*MaximumSize + PAGE_SIZE - 1) >> PAGE_SHIFT);
+    PteCount = (PFN_COUNT)((MaximumSize->QuadPart + PAGE_SIZE - 1) >> PAGE_SHIFT);
 
     /* For commited memory, we must have a valid protection mask */
     if (AllocationAttributes & SEC_COMMIT) ASSERT(ProtectionMask != 0);
@@ -1546,14 +1548,21 @@ MiCreatePagingFileMap(OUT PSEGMENT *Segment,
                                        sizeof(SEGMENT) +
                                        sizeof(MMPTE) * (PteCount - 1),
                                        'tSmM');
-    ASSERT(NewSegment);
+    if (!NewSegment)
+    {
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
     *Segment = NewSegment;
 
     /* Now allocate the control area, which has the subsection structure */
     ControlArea = ExAllocatePoolWithTag(NonPagedPool,
                                         sizeof(CONTROL_AREA) + sizeof(SUBSECTION),
                                         'tCmM');
-    ASSERT(ControlArea);
+    if (!ControlArea)
+    {
+        ExFreePoolWithTag(Segment, 'tSmM');
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
 
     /* And zero it out, filling the basic segmnet pointer and reference fields */
     RtlZeroMemory(ControlArea, sizeof(CONTROL_AREA) + sizeof(SUBSECTION));
@@ -2611,7 +2620,7 @@ MmCreateArm3Section(OUT PVOID *SectionObject,
 
         /* So this must be a pagefile-backed section, create the mappings needed */
         Status = MiCreatePagingFileMap(&NewSegment,
-                                       (PSIZE_T)InputMaximumSize,
+                                       InputMaximumSize,
                                        ProtectionMask,
                                        AllocationAttributes);
         if (!NT_SUCCESS(Status)) return Status;
