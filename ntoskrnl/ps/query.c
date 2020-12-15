@@ -460,12 +460,12 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
                 VmCounters->PageFaultCount = Process->Vm.PageFaultCount;
                 VmCounters->PeakWorkingSetSize = Process->Vm.PeakWorkingSetSize;
                 VmCounters->WorkingSetSize = Process->Vm.WorkingSetSize;
-                VmCounters->QuotaPeakPagedPoolUsage = Process->QuotaPeak[0];
-                VmCounters->QuotaPagedPoolUsage = Process->QuotaUsage[0];
-                VmCounters->QuotaPeakNonPagedPoolUsage = Process->QuotaPeak[1];
-                VmCounters->QuotaNonPagedPoolUsage = Process->QuotaUsage[1];
-                VmCounters->PagefileUsage = Process->QuotaUsage[2] << PAGE_SHIFT;
-                VmCounters->PeakPagefileUsage = Process->QuotaPeak[2] << PAGE_SHIFT;
+                VmCounters->QuotaPeakPagedPoolUsage = Process->QuotaPeak[PsPagedPool];
+                VmCounters->QuotaPagedPoolUsage = Process->QuotaUsage[PsPagedPool];
+                VmCounters->QuotaPeakNonPagedPoolUsage = Process->QuotaPeak[PsNonPagedPool];
+                VmCounters->QuotaNonPagedPoolUsage = Process->QuotaUsage[PsNonPagedPool];
+                VmCounters->PagefileUsage = Process->QuotaUsage[PsPageFile] << PAGE_SHIFT;
+                VmCounters->PeakPagefileUsage = Process->QuotaPeak[PsPageFile] << PAGE_SHIFT;
                 //VmCounters->PrivateUsage = Process->CommitCharge << PAGE_SHIFT;
                 //
 
