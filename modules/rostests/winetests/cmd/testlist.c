@@ -7,6 +7,6 @@ extern void func_batch(void);
 
 const struct test winetest_testlist[] =
 {
-    { "batch", func_batch },
+    // { "batch", func_batch },
     { 0, 0 }
 };
