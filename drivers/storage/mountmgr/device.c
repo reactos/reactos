@@ -865,7 +865,8 @@ MountMgrQueryDosVolumePath(IN PDEVICE_EXTENSION DeviceExtension,
     }
 
     /* Validate the entry structure size */
-    if (Target->DeviceNameLength + sizeof(UNICODE_NULL) > Stack->Parameters.DeviceIoControl.InputBufferLength)
+    if ((FIELD_OFFSET(MOUNTMGR_TARGET_NAME, DeviceNameLength) + Target->DeviceNameLength) >
+        Stack->Parameters.DeviceIoControl.InputBufferLength)
     {
         return STATUS_INVALID_PARAMETER;
     }
@@ -878,7 +879,7 @@ MountMgrQueryDosVolumePath(IN PDEVICE_EXTENSION DeviceExtension,
 
     /* Construct string for query */
     SymbolicName.Length = Target->DeviceNameLength;
-    SymbolicName.MaximumLength = Target->DeviceNameLength + sizeof(UNICODE_NULL);
+    SymbolicName.MaximumLength = Target->DeviceNameLength;
     SymbolicName.Buffer = Target->DeviceName;
 
     /* Find device with our info */
@@ -911,7 +912,7 @@ MountMgrQueryDosVolumePath(IN PDEVICE_EXTENSION DeviceExtension,
         /* We didn't find, break */
         if (SymlinksEntry == &(DeviceInformation->SymbolicLinksListHead))
         {
-            break;
+            return STATUS_NOT_FOUND;
         }
 
         /* It doesn't have associated device, go to fallback method */
