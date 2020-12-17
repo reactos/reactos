@@ -112,8 +112,7 @@ endif()
 
 add_asm_files(rtl_asm ${ASM_SOURCE})
 add_library(rtl ${SOURCE} ${rtl_asm})
-#disable pch to prevent macro redefinition rtl.h WIN32_NO_STATUS
-#add_pch(rtl rtl.h SOURCE)
+add_pch(rtl rtl.h SOURCE)
 add_dependencies(rtl psdk asm)
 
 list(APPEND SOURCE_VISTA
