@@ -5,11 +5,6 @@ add_definitions(
     -D_NTSYSTEM_
     -D_NTDLLBUILD_)
 
-if(MSVC)
-    # error C4101: unreferenced local variable in Release-Configuration due to debug logging
-    replace_compile_flags("/we4101" " ")
-endif()
-
 list(APPEND SOURCE
     access.c
     acl.c
