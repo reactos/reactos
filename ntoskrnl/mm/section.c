@@ -4356,12 +4356,17 @@ MmCreateSection (OUT PVOID  * Section,
             FileLock = TRUE;
 
             /* Deny access if there are writes on the file */
+#if 0
             if ((AllocationAttributes & SEC_IMAGE) && (Status == STATUS_FILE_LOCKED_WITH_WRITERS))
             {
                 DPRINT1("Cannot create image maps with writers open on the file!\n");
                 Status = STATUS_ACCESS_DENIED;
                 goto Quit;
             }
+#else
+            if ((AllocationAttributes & SEC_IMAGE) && (Status == STATUS_FILE_LOCKED_WITH_WRITERS))
+                DPRINT1("Creating image map with writers open on the file!\n");
+#endif
         }
         else
         {
@@ -4415,7 +4420,6 @@ MmCreateSection (OUT PVOID  * Section,
         Status = STATUS_INVALID_PARAMETER;
     }
 
-Quit:
     if (FileLock)
         FsRtlReleaseFile(FileObject);
     if (FileObject)
