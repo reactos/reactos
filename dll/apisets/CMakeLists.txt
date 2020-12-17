@@ -27,7 +27,7 @@ function (add_apiset apiset_name baseaddress)
     if(NOT MSVC)
         target_compile_options(${apiset_name} PRIVATE -fno-builtin)
     else()
-        target_compile_options(${apiset_name} PRIVATE /wd4026 /wd4273)
+        target_compile_options(${apiset_name} PRIVATE /wd4026 /wd4273 /Oi-)
     endif()
 
     add_importlibs(${apiset_name} ${ARGN} ntdll)

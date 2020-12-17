@@ -5,6 +5,11 @@ add_definitions(
     -D_NTSYSTEM_
     -D_NTDLLBUILD_)
 
+if(MSVC)
+    # error C4101: unreferenced local variable in Release-Configuration due to debug logging
+    replace_compile_flags("/we4101" " ")
+endif()
+
 list(APPEND SOURCE
     access.c
     acl.c
@@ -112,5 +117,6 @@ endif()
 
 add_asm_files(rtl_asm ${ASM_SOURCE})
 add_library(rtl ${SOURCE} ${rtl_asm})
-add_pch(rtl rtl.h SOURCE)
+#disable pch to prevent macro redefinition rtl.h WIN32_NO_STATUS
+#add_pch(rtl rtl.h SOURCE)
 add_dependencies(rtl psdk asm)
