@@ -1,4 +1,4 @@
-set(baseaddress_user32                 0x77a20000) # tweaked by hand to avoid conflict between user32 and msvcp71.dll CORE-12752
+set(baseaddress_user32                 0x77a20000) # tweaked by hand to avoid conflict between user32 and msvcp71.dll CORE-12752, size of user32 was 0x00180000
 set(baseaddress_ntdll                  0x7c920000) # should be above 0x7c920000
 set(baseaddress_kernel32               0x7c710000)
 set(baseaddress_msvcrt                 0x7c660000)
@@ -140,9 +140,6 @@ set(baseaddress_fontsub                0x783f0000)
 set(baseaddress_framebuf               0x783d0000)
 set(baseaddress_framedyn               0x78390000)
 set(baseaddress_genincdata             0x78360000)
-set(baseaddress_getuname               0x77a60000)
-set(baseaddress_hid                    0x77a30000)
-set(baseaddress_hlink                  0x779f0000)
 set(baseaddress_hnetcfg                0x779b0000)
 set(baseaddress_httpapi                0x77980000)
 set(baseaddress_iccvid                 0x77950000)
@@ -364,3 +361,6 @@ set(baseaddress_wshom                  0x72d70000)
 set(baseaddress_fusion                 0x72d30000)
 set(baseaddress_fusion_1_1             0x72cf0000)
 set(baseaddress_fusion_2_0             0x72cb0000)
+set(baseaddress_getuname               0x723b0000) # displaced for user32
+set(baseaddress_hid                    0x72380000) # displaced for user32
+set(baseaddress_hlink                  0x72340000) # displaced for user32
