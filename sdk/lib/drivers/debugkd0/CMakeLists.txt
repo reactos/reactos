@@ -5,5 +5,5 @@ list(APPEND SOURCE
     debugkd0.c)
 
 add_library(debugkd0 ${SOURCE})
-add_dependencies(debugkd0 xdk)
+add_dependencies(debugkd0 bugcodes xdk)
 target_link_libraries(debugkd0 cportlib)
