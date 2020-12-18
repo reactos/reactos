@@ -2,7 +2,7 @@
  * PROJECT:         ReactOS Kernel
  * COPYRIGHT:       GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * FILE:            lib/drivers/debugkd0/debugkd0.c
- * PURPOSE:         Kernel phase 0 debug library header
+ * PURPOSE:         Kernel phase 0 debug library
  * PROGRAMMERS:     Copyright 2020 Vadim Galyant <vgal@rambler.ru>
  */
 
