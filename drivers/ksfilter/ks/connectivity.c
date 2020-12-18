@@ -248,7 +248,7 @@ KspReadMediaCategory(
         return Status;
 
     /* allocate buffer for the registry key */
-    Path.Length = 0;
+    Path.Length = MediaPath.Length + GuidString.Length;
     Path.MaximumLength = MediaPath.MaximumLength + GuidString.MaximumLength;
     Path.Buffer = AllocateItem(NonPagedPool, Path.MaximumLength);
     if (!Path.Buffer)
