@@ -572,12 +572,6 @@ CcRosCreateVacb (
 
     DPRINT("CcRosCreateVacb()\n");
 
-    if (FileOffset >= SharedCacheMap->SectionSize.QuadPart)
-    {
-        *Vacb = NULL;
-        return STATUS_INVALID_PARAMETER;
-    }
-
     current = ExAllocateFromNPagedLookasideList(&VacbLookasideList);
     current->BaseAddress = NULL;
     current->Valid = FALSE;

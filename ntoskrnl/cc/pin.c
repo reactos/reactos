@@ -225,9 +225,13 @@ CcpPinData(
     BOOLEAN Result;
 
     VacbOffset = (ULONG)(FileOffset->QuadPart % VACB_MAPPING_GRANULARITY);
-    /* This seems to be valid, according to KMTests */
+
     if ((VacbOffset + Length) > VACB_MAPPING_GRANULARITY)
+    {
+        /* Complain loudly, we shoud pin the whole range */
+        DPRINT1("TRUNCATING DATA PIN FROM %lu to %lu!\n", Length, VACB_MAPPING_GRANULARITY - VacbOffset);
         Length = VACB_MAPPING_GRANULARITY - VacbOffset;
+    }
 
     KeAcquireSpinLock(&SharedCacheMap->BcbSpinLock, &OldIrql);
     NewBcb = CcpFindBcb(SharedCacheMap, FileOffset, Length, TRUE);
@@ -353,7 +357,10 @@ CcMapData (
     VacbOffset = (ULONG)(FileOffset->QuadPart % VACB_MAPPING_GRANULARITY);
     /* KMTests seem to show that it is allowed to call accross mapping granularity */
     if ((VacbOffset + Length) > VACB_MAPPING_GRANULARITY)
+    {
+        DPRINT1("TRUNCATING DATA MAP FROM %lu to %lu!\n", Length, VACB_MAPPING_GRANULARITY - VacbOffset);
         Length = VACB_MAPPING_GRANULARITY - VacbOffset;
+    }
 
     KeAcquireSpinLock(&SharedCacheMap->BcbSpinLock, &OldIrql);
     iBcb = CcpFindBcb(SharedCacheMap, FileOffset, Length, FALSE);
