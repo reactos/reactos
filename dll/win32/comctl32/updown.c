@@ -781,14 +781,8 @@ static BOOL UPDOWN_CancelMode (UPDOWN_INFO *infoPtr)
     KillTimer (infoPtr->Self, TIMER_ACCEL);
     KillTimer (infoPtr->Self, TIMER_AUTOPRESS);
 
-    if (GetCapture() == infoPtr->Self) {
-	NMHDR hdr;
-	hdr.hwndFrom = infoPtr->Self;
-	hdr.idFrom   = GetWindowLongPtrW (infoPtr->Self, GWLP_ID);
-	hdr.code = NM_RELEASEDCAPTURE;
-	SendMessageW(infoPtr->Notify, WM_NOTIFY, hdr.idFrom, (LPARAM)&hdr);
-	ReleaseCapture();
-    }
+    if (GetCapture() == infoPtr->Self)
+        ReleaseCapture();
 
     infoPtr->Flags &= ~FLAG_PRESSED;
     InvalidateRect (infoPtr->Self, NULL, FALSE);
