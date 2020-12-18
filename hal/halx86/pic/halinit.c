@@ -26,6 +26,13 @@ HalpInitProcessor(
 {
     /* Set default IDR */
     KeGetPcr()->IDR = 0xFFFFFFFF & ~(1 << PIC_CASCADE_IRQ);
+
+    /* Update the interrupt affinity */
+    InterlockedBitTestAndSet((PLONG)&HalpDefaultInterruptAffinity,
+                             ProcessorNumber);
+
+    /* Register routines for KDCOM */
+    HalpRegisterKdSupportFunctions();
 }
 
 VOID

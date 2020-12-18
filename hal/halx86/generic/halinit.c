@@ -47,19 +47,14 @@ HalInitializeProcessor(
     IN ULONG ProcessorNumber,
     IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
-    /* Hal specific initialization for this cpu */
-    HalpInitProcessor(ProcessorNumber, LoaderBlock);
-
     /* Set default stall count */
     KeGetPcr()->StallScaleFactor = INITIAL_STALL_COUNT;
 
-    /* Update the interrupt affinity and processor mask */
+    /* Update the processor mask */
     InterlockedBitTestAndSet((PLONG)&HalpActiveProcessors, ProcessorNumber);
-    InterlockedBitTestAndSet((PLONG)&HalpDefaultInterruptAffinity,
-                             ProcessorNumber);
 
-    /* Register routines for KDCOM */
-    HalpRegisterKdSupportFunctions();
+    /* Hal specific initialization for this cpu */
+    HalpInitProcessor(ProcessorNumber, LoaderBlock);
 }
 
 /*

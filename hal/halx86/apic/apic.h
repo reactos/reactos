@@ -284,3 +284,10 @@ HalInitializeProfiling(VOID);
 
 VOID __cdecl ApicSpuriousService(VOID);
 
+BOOLEAN
+NTAPI 
+DetectMP(
+    _In_ PLOADER_PARAMETER_BLOCK LoaderBlock
+);
+
+/* EOF */

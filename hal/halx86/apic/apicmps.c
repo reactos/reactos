@@ -18,5 +18,13 @@
 
 /* FUNCTIONS ******************************************************************/
 
+BOOLEAN
+NTAPI 
+DetectMP(_In_ PLOADER_PARAMETER_BLOCK LoaderBlock)
+{
+    // FIXME UNIMPLIMENTED;
+    ASSERT(FALSE);
+    return FALSE;
+}
 
 /* EOF */

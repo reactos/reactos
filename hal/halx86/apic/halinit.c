@@ -20,7 +20,25 @@ ApicInitializeLocalApic(ULONG Cpu);
 
 const USHORT HalpBuildType = HAL_BUILD_TYPE;
 
+PKPCR HalpProcessorPCR[32];
+
 /* FUNCTIONS ****************************************************************/
+
+VOID
+NTAPI
+HalInitApicInterruptHandlers()
+{
+    // FIXME UNIMPLIMENTED;
+    ASSERT(FALSE);
+}
+
+VOID
+NTAPI
+HalpInitializeLocalUnit()
+{
+    // FIXME UNIMPLIMENTED;
+    ASSERT(FALSE);
+}
 
 VOID
 NTAPI
@@ -28,16 +46,46 @@ HalpInitProcessor(
     IN ULONG ProcessorNumber,
     IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
-    /* Initialize the local APIC for this cpu */
-    ApicInitializeLocalApic(ProcessorNumber);
+    PKPCR Pcr = KeGetPcr();
 
-    /* Initialize profiling data (but don't start it) */
-    HalInitializeProfiling();
+    /* Set default IDR */
+    Pcr->IDR = 0xFFFFFFFF;
 
-    /* Initialize the timer */
-    //ApicInitializeTimer(ProcessorNumber);
+    *(PUCHAR)(Pcr->HalReserved) = ProcessorNumber; // FIXME
+    HalpProcessorPCR[ProcessorNumber] = Pcr;
 
+    // FIXME support '/INTAFFINITY' key in .ini
+
+    /* By default, the HAL allows interrupt requests to be received by all processors */
+    InterlockedBitTestAndSet((PLONG)&HalpDefaultInterruptAffinity, ProcessorNumber);
+
+    if (ProcessorNumber == 0)
+    {
+        if (!DetectMP(KeLoaderBlock))
+        {
+            __halt();
+        }
+
+        /* Register routines for KDCOM */
+        HalpRegisterKdSupportFunctions();
+
+        // FIXME HalpGlobal8259Mask
+
+        WRITE_PORT_UCHAR((PUCHAR)PIC1_DATA_PORT, 0xFF);
+        WRITE_PORT_UCHAR((PUCHAR)PIC2_DATA_PORT, 0xFF);
+    }
+
+    HalInitApicInterruptHandlers();
+    HalpInitializeLocalUnit();
+
+    /* Update the interrupt affinity */
+    InterlockedBitTestAndSet((PLONG)&HalpDefaultInterruptAffinity,
+                             ProcessorNumber);
+
+    /* Register routines for KDCOM */
+    HalpRegisterKdSupportFunctions();
 }
+
 
 VOID
 HalpInitPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
