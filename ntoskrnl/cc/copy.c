@@ -556,6 +556,7 @@ CcCopyRead (
     IoStatus->Status = STATUS_SUCCESS;
     IoStatus->Information = ReadLength;
 
+#if 0
     /* If that was a successful sync read operation, let's handle read ahead */
     if (Length == 0 && Wait)
     {
@@ -576,6 +577,7 @@ CcCopyRead (
         PrivateCacheMap->FileOffset2.QuadPart = FileOffset->QuadPart;
         PrivateCacheMap->BeyondLastByte2.QuadPart = FileOffset->QuadPart + ReadLength;
     }
+#endif
 
     return TRUE;
 }
