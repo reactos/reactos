@@ -2776,6 +2776,14 @@ NtReadFile(IN HANDLE FileHandle,
         if (Key) CapturedKey = *Key;
     }
 
+    /* Check for invalid offset */
+    if ((CapturedByteOffset.QuadPart < 0) && (CapturedByteOffset.QuadPart != -2))
+    {
+        /* -2 is FILE_USE_FILE_POINTER_POSITION */
+        ObDereferenceObject(FileObject);
+        return STATUS_INVALID_PARAMETER;
+    }
+
     /* Check for event */
     if (Event)
     {
@@ -3825,6 +3833,15 @@ NtWriteFile(IN HANDLE FileHandle,
         /* Kernel mode: capture directly */
         if (ByteOffset) CapturedByteOffset = *ByteOffset;
         if (Key) CapturedKey = *Key;
+    }
+
+    /* Check for invalid offset */
+    if (CapturedByteOffset.QuadPart < -2)
+    {
+        /* -1 is FILE_WRITE_TO_END_OF_FILE */
+        /* -2 is FILE_USE_FILE_POINTER_POSITION */
+        ObDereferenceObject(FileObject);
+        return STATUS_INVALID_PARAMETER;
     }
 
     /* Check if this is an append operation */
