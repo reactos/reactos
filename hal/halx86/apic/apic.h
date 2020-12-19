@@ -51,6 +51,7 @@
 #define APIC_ERROR_VECTOR    0xE3
 #define POWERFAIL_VECTOR     0xEF // IRQL 30
 #define APIC_PROFILE_VECTOR  0xFD // IRQL 31
+#define APIC_PERF_VECTOR     0xFE
 #define APIC_NMI_VECTOR      0xFF
 #define IrqlToTpr(Irql) (HalpIRQLtoTPR[Irql])
 #define IrqlToSoftVector(Irql) IrqlToTpr(Irql)

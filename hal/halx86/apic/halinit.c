@@ -10,7 +10,9 @@
 #include <hal.h>
 #define NDEBUG
 #include <debug.h>
+
 #include "apic.h"
+#include "apicacpi.h"
 
 VOID
 NTAPI
@@ -21,8 +23,12 @@ ApicInitializeLocalApic(ULONG Cpu);
 const USHORT HalpBuildType = HAL_BUILD_TYPE;
 
 #ifdef _M_IX86
-PKPCR HalpProcessorPCR[32];
+PKPCR HalpProcessorPCR[MAX_CPUS];
 #endif
+
+HALP_MP_INFO_TABLE HalpMpInfoTable;
+PLOCAL_APIC HalpProcLocalApicTable = NULL;
+UCHAR HalpMaxProcsPerCluster = 0;
 
 /* FUNCTIONS ****************************************************************/
 
@@ -48,12 +54,151 @@ HalInitApicInterruptHandlers()
     Idt[0x1F].ExtendedOffset = (PtrToUlong(ApicSpuriousService) >> 16);
 }
 
+UCHAR
+NTAPI
+HalpMapNtToHwProcessorId(UCHAR Number)
+{
+    // FIXME UNIMPLIMENTED;
+    ASSERT(FALSE);
+    return 0;
+}
+
+UCHAR
+NTAPI
+HalpNodeNumber(PKPCR Pcr)
+{
+    // FIXME UNIMPLIMENTED;
+    ASSERT(FALSE);
+    return 0;
+}
+
+VOID
+NTAPI
+HalpInitializeApicAddressing()
+{
+    // FIXME UNIMPLIMENTED;
+    ASSERT(FALSE);
+}
+
+VOID
+NTAPI
+HalpMarkProcessorStarted(
+    _In_ UCHAR Id,
+    _In_ ULONG PrcNumber)
+{
+    // FIXME UNIMPLIMENTED;
+    ASSERT(FALSE);
+}
+
+VOID
+NTAPI
+HalpBuildIpiDestinationMap(ULONG ProcessorNumber)
+{
+    // FIXME UNIMPLIMENTED;
+    ASSERT(FALSE);
+}
+
 VOID
 NTAPI
 HalpInitializeLocalUnit()
 {
-    // FIXME UNIMPLIMENTED;
-    ASSERT(FALSE);
+    APIC_SPURIOUS_INERRUPT_REGISTER SpIntRegister;
+    APIC_COMMAND_REGISTER CommandRegister;
+    LVT_REGISTER LvtEntry;
+    ULONG EFlags = __readeflags();
+    PKPRCB Prcb;
+    UCHAR Id;
+
+    _disable();
+
+    Prcb = KeGetPcr()->Prcb;
+
+    if (Prcb->Number == 0)
+    {
+        /* MultiProcessor Specification, Table 4-1.
+           MP Floating Pointer Structure Fields (MP FEATURE INFORMATION BYTE 2) Bit 7:IMCRP
+           If TRUE - PIC Mode, if FALSE - Virtual Wire Mode
+        */
+        if (HalpMpInfoTable.ImcrPresent)
+        {
+            /* Enable PIC mode to Processor via APIC */
+            WRITE_PORT_UCHAR(IMCR_ADDRESS_PORT, IMCR_SELECT);
+            WRITE_PORT_UCHAR(IMCR_DATA_PORT, IMCR_PIC_VIA_APIC);
+        }
+
+        if ((UCHAR)HalpMaxProcsPerCluster > 4 ||
+            (HalpMaxProcsPerCluster == 0 && HalpMpInfoTable.ProcessorCount > 8))
+        {
+            HalpMaxProcsPerCluster = 4;
+        }
+
+        if (HalpMpInfoTable.LocalApicversion == 0)
+        {
+            ASSERT(HalpMpInfoTable.ProcessorCount <= 8);
+            HalpMaxProcsPerCluster = 0;
+        }
+    }
+
+    ApicWrite(APIC_TPR, 0xFF);
+
+    HalpInitializeApicAddressing();
+    Id = (UCHAR)((ApicRead(APIC_ID)) >> 24);
+    HalpMarkProcessorStarted(Id, Prcb->Number);
+
+    KeRegisterInterruptHandler(APIC_SPURIOUS_VECTOR, ApicSpuriousService);
+
+    SpIntRegister.Long = 0;
+    SpIntRegister.Vector = APIC_SPURIOUS_VECTOR;
+    SpIntRegister.SoftwareEnable = 1;
+    ApicWrite(APIC_SIVR, SpIntRegister.Long);
+
+    if (HalpMpInfoTable.LocalApicversion)
+    {
+        // FIXME UNIMPLIMENTED;
+        ASSERT(FALSE);
+    }
+
+    LvtEntry.Long = 0;
+    LvtEntry.Vector = APIC_PROFILE_VECTOR;
+    LvtEntry.Mask = 1;
+    LvtEntry.TimerMode = 1;
+    ApicWrite(APIC_TMRLVTR, LvtEntry.Long);
+
+    LvtEntry.Long = 0;
+    LvtEntry.Vector = APIC_PERF_VECTOR;
+    LvtEntry.Mask = 1;
+    LvtEntry.TimerMode = 0;
+    ApicWrite(APIC_PCLVTR, LvtEntry.Long);
+
+    LvtEntry.Long = 0;
+    LvtEntry.Vector = APIC_SPURIOUS_VECTOR;
+    LvtEntry.Mask = 1;
+    LvtEntry.TimerMode = 0;
+    ApicWrite(APIC_LINT0, LvtEntry.Long);
+
+    LvtEntry.Long = 0;
+    LvtEntry.Vector = APIC_NMI_VECTOR;
+    LvtEntry.Mask = 1;
+    LvtEntry.TimerMode = 0;
+    LvtEntry.MessageType = APIC_MT_NMI;
+    LvtEntry.TriggerMode = APIC_TGM_Level;
+    ApicWrite(APIC_LINT1, LvtEntry.Long);
+
+    CommandRegister.Long0 = 0;
+    CommandRegister.Vector = ZERO_VECTOR;
+    CommandRegister.MessageType = APIC_MT_INIT;
+    CommandRegister.TriggerMode = APIC_TGM_Level;
+    CommandRegister.DestinationShortHand = APIC_DSH_AllIncludingSelf;
+    ApicWrite(APIC_ICR0, CommandRegister.Long0);
+
+    HalpBuildIpiDestinationMap(Prcb->Number);
+
+    ApicWrite(APIC_TPR, 0x00);
+
+    if (EFlags & EFLAGS_INTERRUPT_MASK)
+    {
+        _enable();
+    }
 }
 #endif
 
@@ -120,7 +265,6 @@ HalpInitProcessor(
     HalpRegisterKdSupportFunctions();
 }
 #endif
-
 
 VOID
 HalpInitPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)

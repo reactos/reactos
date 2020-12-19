@@ -17,22 +17,20 @@
 
 /* GLOBALS ********************************************************************/
 
-HALP_MP_INFO_TABLE HalpMpInfoTable;
 APIC_INTI_INFO HalpIntiInfo[MAX_INTI];
 LOCAL_APIC HalpStaticProcLocalApicTable[MAX_CPUS] = {{0}};
-PLOCAL_APIC HalpProcLocalApicTable = NULL;
-
 IO_APIC_VERSION_REGISTER HalpIOApicVersion[MAX_IOAPICS];
 USHORT HalpMaxApicInti[MAX_IOAPICS] = {0};
 UCHAR HalpIoApicId[MAX_IOAPICS] = {0};
-
 UCHAR HalpMaxProcs = 0;
 
-extern UCHAR HalpIRQLtoTPR[32];    // table, which sets the correspondence between IRQL levels and TPR (Task Priority Register) values.
-extern KIRQL HalpVectorToIRQL[16];
-
+extern HALP_MP_INFO_TABLE HalpMpInfoTable;
+extern PLOCAL_APIC HalpProcLocalApicTable;
 extern ULONG HalpPicVectorRedirect[16];
 extern ULONG HalpPicVectorFlags[16];
+extern UCHAR HalpMaxProcsPerCluster;
+extern UCHAR HalpIRQLtoTPR[32];    // table, which sets the correspondence between IRQL levels and TPR (Task Priority Register) values.
+extern KIRQL HalpVectorToIRQL[16];
 
 /* FUNCTIONS ******************************************************************/
 
