@@ -17,6 +17,10 @@
 
 /* GLOBALS ********************************************************************/
 
+HALP_MP_INFO_TABLE HalpMpInfoTable;
+
+/* FUNCTIONS ******************************************************************/
+
 BOOLEAN
 NTAPI 
 DetectMP(_In_ PLOADER_PARAMETER_BLOCK LoaderBlock)
@@ -25,8 +29,5 @@ DetectMP(_In_ PLOADER_PARAMETER_BLOCK LoaderBlock)
     ASSERT(FALSE);
     return FALSE;
 }
-
-/* FUNCTIONS ******************************************************************/
-
 
 /* EOF */
