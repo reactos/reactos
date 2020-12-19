@@ -1694,7 +1694,7 @@ co_WinPosSetWindowPos(
 
    ASSERT_REFS_CO(Window);
 
-   TRACE("pwnd %p, after %p, %d,%d (%dx%d), flags %s",
+   TRACE("pwnd %p, after %p, %d,%d (%dx%d), flags 0x%x",
           Window, WndInsertAfter, x, y, cx, cy, flags);
 #if DBG
    dump_winpos_flags(flags);
@@ -1856,7 +1856,11 @@ co_WinPosSetWindowPos(
            Window->spwndOwner == NULL &&
            (!(Window->ExStyle & WS_EX_TOOLWINDOW) ||
             (Window->ExStyle & WS_EX_APPWINDOW)))
-         co_IntShellHookNotify(HSHELL_WINDOWCREATED, (WPARAM)Window->head.h, 0);
+            {
+               co_IntShellHookNotify(HSHELL_WINDOWCREATED, (WPARAM)Window->head.h, 0);
+               if (!(WinPos.flags & SWP_NOACTIVATE))
+                  UpdateShellHook(Window);
+            }
 
       Window->style |= WS_VISIBLE; //IntSetStyle( Window, WS_VISIBLE, 0 );
       Window->head.pti->cVisWindows++;
