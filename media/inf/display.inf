@@ -49,7 +49,7 @@ framebuf.dll
 [VGA_Inst.NT.Services]
 AddService = , 0x00000002
 ;AddService = VGA, , VGA_Service_Inst
-;AddService = VBE, 0x00000003, VBE_Service_Inst ; SPSVCINST_TAGTOFRONT + SPSVCINST_ASSOCSERVICE
+AddService = VBE, 0x00000003, VBE_Service_Inst ; SPSVCINST_TAGTOFRONT + SPSVCINST_ASSOCSERVICE
 ;AddService = XboxVmp, 0x00000003, XBOX_Service_Inst
 
 [VGA_Service_Inst]
