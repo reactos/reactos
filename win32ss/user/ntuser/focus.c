@@ -52,7 +52,6 @@ VOID FASTCALL
 UpdateShellHook(PWND Window)
 {
    if ( Window->spwndParent == UserGetDesktopWindow() &&
-        Window->spwndOwner == NULL &&
        (!(Window->ExStyle & WS_EX_TOOLWINDOW) ||
          (Window->ExStyle & WS_EX_APPWINDOW)))
    {
@@ -511,7 +510,8 @@ co_IntSendActivateMessages(PWND WindowPrev, PWND Window, BOOL MouseActivate, BOO
                          MAKEWPARAM(MouseActivate ? WA_CLICKACTIVE : WA_ACTIVE, (Window->style & WS_MINIMIZE) != 0),
                         (LPARAM)(WindowPrev ? UserHMGetHandle(WindowPrev) : 0));
 
-      UpdateShellHook(Window);
+      if (Window->style & WS_VISIBLE)
+         UpdateShellHook(Window);
 
       Window->state &= ~WNDS_NONCPAINT;
 
