@@ -54,6 +54,10 @@ PUBLIC _ApicSpuriousService
 _ApicSpuriousService:
     iret
 
+PUBLIC _PicSpuriousService37
+_PicSpuriousService37:
+    iret
+
 // VBox APIC needs an iret more or less directly following the EOI
 PUBLIC _HackEoi
 _HackEoi:

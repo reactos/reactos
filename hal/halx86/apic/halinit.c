@@ -31,8 +31,21 @@ VOID
 NTAPI
 HalInitApicInterruptHandlers()
 {
-    // FIXME UNIMPLIMENTED;
-    ASSERT(FALSE);
+    KDESCRIPTOR IdtDescriptor;
+    PKIDTENTRY Idt;
+
+    __sidt(&IdtDescriptor.Limit);
+    Idt = (PKIDTENTRY)IdtDescriptor.Base;
+
+    Idt[0x37].Offset = PtrToUlong(PicSpuriousService37);
+    Idt[0x37].Selector = KGDT_R0_CODE;
+    Idt[0x37].Access = 0x8E00;
+    Idt[0x37].ExtendedOffset = (PtrToUlong(PicSpuriousService37) >> 16);
+
+    Idt[0x1F].Offset = PtrToUlong(ApicSpuriousService);
+    Idt[0x1F].Selector = KGDT_R0_CODE;
+    Idt[0x1F].Access = 0x8E00;
+    Idt[0x1F].ExtendedOffset = (PtrToUlong(ApicSpuriousService) >> 16);
 }
 
 VOID

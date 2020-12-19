@@ -302,6 +302,7 @@ NTAPI
 HalInitializeProfiling(VOID);
 
 VOID __cdecl ApicSpuriousService(VOID);
+VOID __cdecl PicSpuriousService37(VOID);
 
 BOOLEAN
 NTAPI 
