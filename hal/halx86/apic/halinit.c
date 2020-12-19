@@ -28,6 +28,7 @@ PKPCR HalpProcessorPCR[MAX_CPUS];
 
 HALP_MP_INFO_TABLE HalpMpInfoTable;
 PLOCAL_APIC HalpProcLocalApicTable = NULL;
+UCHAR HalpIntDestMap[MAX_CPUS] = {0};
 UCHAR HalpMaxProcsPerCluster = 0;
 BOOLEAN HalpForceApicPhysicalDestinationMode = FALSE;
 
@@ -76,8 +77,28 @@ UCHAR
 NTAPI
 HalpNodeNumber(PKPCR Pcr)
 {
-    // FIXME UNIMPLIMENTED;
-    ASSERT(FALSE);
+    UCHAR NodeNumber = 0;
+    UCHAR DestMap;
+
+    if (HalpForceApicPhysicalDestinationMode)
+    {
+        NodeNumber = Pcr->Prcb->Number;
+        return (NodeNumber + 1);
+    }
+
+    if (!HalpMaxProcsPerCluster)
+    {
+        return (NodeNumber + 1);
+    }
+
+    DestMap = HalpIntDestMap[Pcr->Prcb->Number];
+
+    if (DestMap)
+    {
+        NodeNumber = (DestMap >> 4);
+        return (NodeNumber + 1);
+    }
+
     return 0;
 }
 
