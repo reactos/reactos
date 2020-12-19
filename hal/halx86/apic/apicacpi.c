@@ -234,9 +234,28 @@ NTAPI
 HalpVerifyIOUnit(
     _In_ PIO_APIC_REGISTERS IOUnitRegs)
 {
-    // FIXME UNIMPLIMENTED;
-    ASSERT(FALSE);
-    return FALSE;
+    IO_APIC_VERSION_REGISTER IoApicVersion1;
+    IO_APIC_VERSION_REGISTER IoApicVersion2;
+
+    IOUnitRegs->IoRegisterSelect = 1;
+    IOUnitRegs->IoWindow = 0;
+
+    IOUnitRegs->IoRegisterSelect = 1;
+    IoApicVersion1.AsULONG = IOUnitRegs->IoWindow;
+
+    IOUnitRegs->IoRegisterSelect = 1;
+    IOUnitRegs->IoWindow = 0;
+
+    IOUnitRegs->IoRegisterSelect = 1;
+    IoApicVersion2.AsULONG = IOUnitRegs->IoWindow;
+
+    if (IoApicVersion1.ApicVersion != IoApicVersion2.ApicVersion ||
+        IoApicVersion1.MaxRedirectionEntry != IoApicVersion2.MaxRedirectionEntry)
+    {
+        return FALSE;
+    }
+
+    return TRUE;
 }
 
 BOOLEAN
