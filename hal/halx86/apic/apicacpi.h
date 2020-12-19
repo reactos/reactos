@@ -10,6 +10,7 @@
 #define _APICACPI_H_
 
 #define MAX_IOAPICS 64
+#define LOCAL_APIC_VERSION_MAX 0x1F
 
 typedef struct _HALP_MP_INFO_TABLE
 {

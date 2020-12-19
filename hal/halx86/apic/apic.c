@@ -85,6 +85,28 @@ HalVectorToIRQL[16] =
       29, /* E1 IPI_LEVEL / EF POWER_LEVEL */
       31, /* FF HIGH_LEVEL */
 };
+
+/* For 0x50..0xBF vectors IRQLs values saves dinamically in HalpAllocateSystemInterruptVector() */
+const KIRQL
+HalpVectorToIRQL[16] =
+{
+    0x00, /* 00 PASSIVE_LEVEL */
+    0xFF, /* 10 */
+    0xFF, /* 20 */
+    0x01, /* 3D APC_LEVEL */
+    0x02, /* 41 DISPATCH_LEVEL */
+    0xFF, /* 50 \ */
+    0xFF, /* 60  \ */
+    0xFF, /* 70  | */
+    0xFF, /* 80 DEVICE IRQL */
+    0xFF, /* 90  | */
+    0xFF, /* A0  / */
+    0xFF, /* B0 /  */
+    0x1B, /* C1 PROFILE_LEVEL */
+    0x1C, /* D1 CLOCK2_LEVEL */
+    0x1D, /* E1 IPI_LEVEL / EF POWER_LEVEL */
+    0x1F, /* FF HIGH_LEVEL */
+};
 #endif
 
 /* PRIVATE FUNCTIONS **********************************************************/
