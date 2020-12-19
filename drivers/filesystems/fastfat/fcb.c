@@ -370,7 +370,7 @@ _vfatReleaseFCB(
         ASSERT(pFCB->RefCount > 0);
         RefCount = --pFCB->RefCount;
 
-        if (RefCount == 1 && BooleanFlagOn(pFCB->Flags, FCB_CACHE_INITIALIZED))
+        if (RefCount == 0 && BooleanFlagOn(pFCB->Flags, FCB_CACHE_INITIALIZED))
         {
             PFILE_OBJECT tmpFileObject;
             tmpFileObject = pFCB->FileObject;
