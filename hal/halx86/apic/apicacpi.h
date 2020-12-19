@@ -9,7 +9,10 @@
 #ifndef _APICACPI_H_
 #define _APICACPI_H_
 
+#define MAX_CPUS 32
 #define MAX_IOAPICS 64
+#define MAX_INTI 0x800
+
 #define LOCAL_APIC_VERSION_MAX 0x1F
 
 typedef struct _HALP_MP_INFO_TABLE
@@ -30,6 +33,18 @@ typedef struct _HALP_MP_INFO_TABLE
 
 } HALP_MP_INFO_TABLE, *PHALP_MP_INFO_TABLE;
 
+typedef union _IO_APIC_VERSION_REGISTER
+{
+    struct {
+        UCHAR ApicVersion;
+        UCHAR Reserved0;
+        UCHAR MaxRedirectionEntry;
+        UCHAR Reserved2;
+    };
+    ULONG AsULONG;
+
+} IO_APIC_VERSION_REGISTER, *PIO_APIC_VERSION_REGISTER;
+
 typedef struct _IO_APIC_REGISTERS
 {
     volatile ULONG IoRegisterSelect;
@@ -38,5 +53,32 @@ typedef struct _IO_APIC_REGISTERS
 
 } IO_APIC_REGISTERS, *PIO_APIC_REGISTERS;
 
+typedef union _APIC_INTI_INFO
+{
+    struct
+    {
+        UCHAR Enabled      :1;
+        UCHAR Type         :3;
+        UCHAR TriggerMode  :2;
+        UCHAR Polarity     :2;
+        UCHAR Destinations;
+        USHORT Entry;
+    };
+    ULONG AsULONG;
+
+} APIC_INTI_INFO, *PAPIC_INTI_INFO;
+
+#include <pshpack1.h>
+typedef struct _LOCAL_APIC
+{
+    UCHAR ProcessorId;
+    UCHAR Id;
+    UCHAR ProcessorNumber;
+    BOOLEAN ProcessorStarted;
+    BOOLEAN FirstProcessor;
+
+} LOCAL_APIC, *PLOCAL_APIC;
+#define LOCAL_APIC_SIZE sizeof(LOCAL_APIC)
+#include <poppack.h>
 
 #endif /* !_APICACPI_H_ */

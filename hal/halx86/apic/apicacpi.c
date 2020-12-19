@@ -18,9 +18,21 @@
 /* GLOBALS ********************************************************************/
 
 HALP_MP_INFO_TABLE HalpMpInfoTable;
+APIC_INTI_INFO HalpIntiInfo[MAX_INTI];
+LOCAL_APIC HalpStaticProcLocalApicTable[MAX_CPUS] = {{0}};
+PLOCAL_APIC HalpProcLocalApicTable = NULL;
+
+IO_APIC_VERSION_REGISTER HalpIOApicVersion[MAX_IOAPICS];
+USHORT HalpMaxApicInti[MAX_IOAPICS] = {0};
+UCHAR HalpIoApicId[MAX_IOAPICS] = {0};
+
+UCHAR HalpMaxProcs = 0;
 
 extern UCHAR HalpIRQLtoTPR[32];    // table, which sets the correspondence between IRQL levels and TPR (Task Priority Register) values.
 extern KIRQL HalpVectorToIRQL[16];
+
+extern ULONG HalpPicVectorRedirect[16];
+extern ULONG HalpPicVectorFlags[16];
 
 /* FUNCTIONS ******************************************************************/
 
@@ -30,8 +42,191 @@ HalpInitMpInfo(_In_ PACPI_TABLE_MADT ApicTable,
                _In_ ULONG Phase,
                _In_ PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
-    // FIXME UNIMPLIMENTED;
-    ASSERT(FALSE);
+    PACPI_SUBTABLE_HEADER Header;
+    PACPI_MADT_LOCAL_APIC LocalApic;
+    PIO_APIC_REGISTERS IoApicRegs;
+    ULONG_PTR TableEnd;
+    IO_APIC_VERSION_REGISTER IoApicVersion;
+    PHYSICAL_ADDRESS PhAddress;
+    PFN_COUNT PageCount;
+    //ULONG NmiIdx = 0;
+    ULONG Size;
+    ULONG ix = 0;
+    ULONG Idx;
+    UCHAR NumberProcs = 0;
+
+    HalpMpInfoTable.LocalApicversion = 0x10;
+
+    if ((ApicTable->Flags & ACPI_MADT_DUAL_PIC) == 0)
+    {
+        KeBugCheckEx(MISMATCHED_HAL, 6, 0, 0, 0);
+    }
+
+    if (Phase == 0 && HalpProcLocalApicTable == NULL)
+    {
+        /* First initialization */
+
+        Header = (PACPI_SUBTABLE_HEADER)&ApicTable[1];
+        TableEnd = (ULONG_PTR)ApicTable + ApicTable->Header.Length;
+
+        HalpProcLocalApicTable = HalpStaticProcLocalApicTable;
+
+        if ((ULONG_PTR)Header < TableEnd)
+        {
+            do
+            {
+                LocalApic = (PACPI_MADT_LOCAL_APIC)Header;
+
+                if (LocalApic->Header.Type == ACPI_MADT_TYPE_LOCAL_APIC &&
+                    LocalApic->Header.Length == sizeof(ACPI_MADT_LOCAL_APIC) &&
+                    LocalApic->LapicFlags & ACPI_MADT_ENABLED)
+                {
+                    ix++;
+                }
+
+                Size = Header->Length;
+                Header = (PACPI_SUBTABLE_HEADER)((ULONG_PTR)Header + Header->Length);
+            }
+            while (Size != 0 && (ULONG_PTR)Header < TableEnd);
+
+            if (ix > MAX_CPUS)
+            {
+                Size = ix * LOCAL_APIC_SIZE;
+                PageCount = BYTES_TO_PAGES(Size);
+
+                PhAddress.QuadPart = HalpAllocPhysicalMemory(LoaderBlock, 0xFFFFFFFF, PageCount, FALSE);
+                if (!PhAddress.QuadPart)
+                {
+                    ASSERT(PhAddress.QuadPart != 0);
+                    KeBugCheckEx(HAL_INITIALIZATION_FAILED, 0x105, 1, Size, PageCount);
+                }
+
+                HalpProcLocalApicTable = HalpMapPhysicalMemory64(PhAddress, PageCount);
+                if (!HalpProcLocalApicTable)
+                {
+                    ASSERT(HalpProcLocalApicTable != NULL);
+                    KeBugCheckEx(HAL_INITIALIZATION_FAILED, 0x105, 2, Size, PageCount);
+                }
+
+                RtlZeroMemory(HalpProcLocalApicTable, Size);
+            }
+        }
+    }
+
+    Header = (PACPI_SUBTABLE_HEADER)&ApicTable[1];
+    TableEnd = (ULONG_PTR)ApicTable + ApicTable->Header.Length;
+
+    for (ix = 0; ((ULONG_PTR)Header < TableEnd); )
+    {
+        if (Header->Type == ACPI_MADT_TYPE_LOCAL_APIC &&
+            Header->Length == sizeof(ACPI_MADT_LOCAL_APIC))
+        {
+            LocalApic = (PACPI_MADT_LOCAL_APIC)Header;
+
+            if (Phase == 0 && (LocalApic->LapicFlags & ACPI_MADT_ENABLED))
+            {
+                Idx = HalpMpInfoTable.ProcessorCount;
+
+                HalpProcLocalApicTable[Idx].Id = LocalApic->Id;
+                HalpProcLocalApicTable[Idx].ProcessorId = LocalApic->ProcessorId;
+
+                HalpMpInfoTable.ProcessorCount++;
+            }
+
+            ix++;
+            NumberProcs = ix;
+
+            HalpMaxProcs = max(NumberProcs, HalpMaxProcs);
+
+            Header = (PACPI_SUBTABLE_HEADER)((ULONG_PTR)Header + Header->Length);
+        }
+        else if (Header->Type == ACPI_MADT_TYPE_IO_APIC &&
+                Header->Length == sizeof(ACPI_MADT_IO_APIC))
+        {
+            Idx = HalpMpInfoTable.IoApicCount;
+
+            if (Phase == 0 && Idx < MAX_IOAPICS)
+            {
+                PACPI_MADT_IO_APIC IoApic = (PACPI_MADT_IO_APIC)Header;
+
+                HalpIoApicId[Idx] = IoApic->Id;
+
+                HalpMpInfoTable.IoApicIrqBase[Idx] = IoApic->GlobalIrqBase;
+                HalpMpInfoTable.IoApicPA[Idx] = IoApic->Address;
+
+                PhAddress.QuadPart = IoApic->Address;
+                IoApicRegs = HalpMapPhysicalMemoryWriteThrough64(PhAddress, 1);
+
+                if (!IoApicRegs)
+                {
+                    ASSERT(IoApicRegs != NULL);
+                    KeBugCheckEx(HAL_INITIALIZATION_FAILED, 0x106, (ULONG_PTR)IoApic->Address, (ULONG_PTR)IoApic->Address, 0);
+                }
+
+                HalpMpInfoTable.IoApicVA[Idx] = (ULONG)IoApicRegs;
+
+                IoApicRegs->IoRegisterSelect = 1;
+                IoApicRegs->IoWindow = 0;
+
+                IoApicRegs->IoRegisterSelect = 1;
+                IoApicVersion.AsULONG = IoApicRegs->IoWindow;
+
+                HalpIOApicVersion[Idx] = IoApicVersion;
+
+                HalpMaxApicInti[Idx] = IoApicVersion.MaxRedirectionEntry + 1;
+                HalpMpInfoTable.IoApicCount++;
+
+                ASSERT(HalpMpInfoTable.IoApicPA[Idx] == IoApic->Address);
+            }
+
+            ix = NumberProcs;
+            Header = (PACPI_SUBTABLE_HEADER)((ULONG_PTR)Header + Header->Length);
+        }
+        else if (Header->Type == ACPI_MADT_TYPE_INTERRUPT_OVERRIDE &&
+                Header->Length == sizeof(ACPI_MADT_INTERRUPT_OVERRIDE))
+        {
+            if (Phase == 0)
+            {
+                PACPI_MADT_INTERRUPT_OVERRIDE InterruptOverride;
+                InterruptOverride = (PACPI_MADT_INTERRUPT_OVERRIDE)Header;
+
+                Idx = InterruptOverride->SourceIrq;
+                HalpPicVectorRedirect[Idx] = InterruptOverride->GlobalIrq;
+                HalpPicVectorFlags[Idx] = InterruptOverride->IntiFlags;
+
+                ASSERT(HalpPicVectorRedirect[Idx] == InterruptOverride->GlobalIrq);
+                ASSERT(HalpPicVectorFlags[Idx] == InterruptOverride->IntiFlags);
+            }
+
+            Header = (PACPI_SUBTABLE_HEADER)((ULONG_PTR)Header + Header->Length);
+        }
+        else if (Header->Type == ACPI_MADT_TYPE_NMI_SOURCE &&
+                Header->Length == sizeof(ACPI_MADT_NMI_SOURCE))
+        {
+            if (Phase == 1)
+            {
+                // FIXME UNIMPLIMENTED;
+                ASSERT(FALSE);
+            }
+
+            Header = (PACPI_SUBTABLE_HEADER)((ULONG_PTR)Header + Header->Length);
+        }
+        else if (Header->Type == ACPI_MADT_TYPE_LOCAL_APIC_NMI &&
+                Header->Length == sizeof(ACPI_MADT_LOCAL_APIC_NMI))
+        {
+            if (Phase == 1)
+            {
+                // FIXME UNIMPLIMENTED;
+                ASSERT(FALSE);
+            }
+
+            Header = (PACPI_SUBTABLE_HEADER)((ULONG_PTR)Header + Header->Length);
+        }
+        else
+        {
+            Header = (PACPI_SUBTABLE_HEADER)((ULONG_PTR)Header + 1);
+        }
+    }
 }
 
 BOOLEAN

@@ -60,6 +60,23 @@ enum AcpiMadtType
 
 /* MADT Subtables, correspond to Type in ACPI_SUBTABLE_HEADER */
 
+/* MADT Local APIC flags */
+#define ACPI_MADT_ENABLED  1 // Processor is usable if set
+
+/* MADT MPS INTI flags (IntiFlags) */
+
+#define ACPI_MADT_POLARITY_CONFORMS     0
+#define ACPI_MADT_POLARITY_ACTIVE_HIGH  1
+#define ACPI_MADT_POLARITY_RESERVED     2
+#define ACPI_MADT_POLARITY_ACTIVE_LOW   3
+#define ACPI_MADT_POLARITY_MASK         (3)      // Polarity of APIC I/O input signals
+
+#define ACPI_MADT_TRIGGER_CONFORMS      (0)
+#define ACPI_MADT_TRIGGER_EDGE          (1 << 2)
+#define ACPI_MADT_TRIGGER_RESERVED      (2 << 2)
+#define ACPI_MADT_TRIGGER_LEVEL         (3 << 2)
+#define ACPI_MADT_TRIGGER_MASK          (3 << 2) // Trigger mode of APIC input signals
+
 /* 0: Processor Local APIC */
 typedef struct _ACPI_MADT_LOCAL_APIC
 {
@@ -113,6 +130,11 @@ typedef struct _ACPI_MADT_LOCAL_APIC_NMI
 } ACPI_MADT_LOCAL_APIC_NMI;
 
 /* MADT - Multiple APIC Description Table */
+
+/* Values for PCATCompat flag */
+#define ACPI_MADT_MULTIPLE_APIC     0
+#define ACPI_MADT_DUAL_PIC          1
+
 typedef struct _ACPI_TABLE_MADT
 {
     ACPI_TABLE_HEADER Header;   // Common ACPI table header
