@@ -82,13 +82,6 @@ HalpInitProcessor(
 
     HalInitApicInterruptHandlers();
     HalpInitializeLocalUnit();
-
-    /* Update the interrupt affinity */
-    InterlockedBitTestAndSet((PLONG)&HalpDefaultInterruptAffinity,
-                             ProcessorNumber);
-
-    /* Register routines for KDCOM */
-    HalpRegisterKdSupportFunctions();
 }
 #else
 VOID

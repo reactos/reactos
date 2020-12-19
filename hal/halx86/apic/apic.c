@@ -86,7 +86,7 @@ HalVectorToIRQL[16] =
       31, /* FF HIGH_LEVEL */
 };
 
-/* For 0x50..0xBF vectors IRQLs values saves dinamically in HalpAllocateSystemInterruptVector() */
+/* For 0x50..0xBF vectors IRQLs values saves dynamically in HalpAllocateSystemInterruptVector() */
 const KIRQL
 HalpVectorToIRQL[16] =
 {
