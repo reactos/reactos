@@ -315,6 +315,21 @@ HalpUnmapVirtualAddress(
     IN PFN_COUNT NumberPages
 );
 
+PVOID
+NTAPI
+HalpMapPhysicalMemoryWriteThrough64(
+    _In_ PHYSICAL_ADDRESS PhysicalAddress,
+    _In_ PFN_COUNT PageCount
+);
+
+PVOID
+NTAPI
+HalpRemapVirtualAddress64(
+    _In_ PVOID VirtualAddress,
+    _In_ PHYSICAL_ADDRESS PhysicalAddress,
+    _In_ BOOLEAN IsWriteThrough
+);
+
 /* sysinfo.c */
 NTSTATUS
 NTAPI

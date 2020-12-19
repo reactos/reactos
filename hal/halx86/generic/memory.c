@@ -253,3 +253,54 @@ HalpUnmapVirtualAddressVista(IN PVOID VirtualAddress,
     if (HalpHeapStart > VirtualAddress) HalpHeapStart = VirtualAddress;
 }
 
+PVOID
+NTAPI
+HalpMapPhysicalMemoryWriteThrough64(
+    _In_ PHYSICAL_ADDRESS PhysicalAddress,
+    _In_ PFN_COUNT PageCount)
+{
+    PVOID VirtualAddress;
+    PHARDWARE_PTE Pte;
+    ULONG ix;
+
+    VirtualAddress = HalpMapPhysicalMemory64(PhysicalAddress, PageCount);
+
+    /* Loop PTEs */
+    Pte = HalAddressToPte(VirtualAddress);
+    for (ix = 0; ix < PageCount; ix++, Pte++)
+    {
+        Pte->CacheDisable = 1;
+        Pte->WriteThrough = 1;
+    }
+
+    return VirtualAddress;
+}
+
+PVOID
+NTAPI
+HalpRemapVirtualAddress64(
+    _In_ PVOID VirtualAddress,
+    _In_ PHYSICAL_ADDRESS PhysicalAddress,
+    _In_ BOOLEAN IsWriteThrough)
+{
+    PHARDWARE_PTE Pte;
+  
+    Pte = HalAddressToPte(VirtualAddress);
+
+    Pte->PageFrameNumber = (ULONG)(PhysicalAddress.QuadPart >> PAGE_SHIFT); 
+
+    Pte->Valid = 1;
+    Pte->Write = 1;
+
+    if (IsWriteThrough)
+    {
+        Pte->CacheDisable = 1;
+        Pte->WriteThrough = 1;
+    }
+
+    HalpFlushTLB();
+
+    return VirtualAddress;
+}
+
+/* EOF */
