@@ -20,10 +20,13 @@ ApicInitializeLocalApic(ULONG Cpu);
 
 const USHORT HalpBuildType = HAL_BUILD_TYPE;
 
+#ifdef _M_IX86
 PKPCR HalpProcessorPCR[32];
+#endif
 
 /* FUNCTIONS ****************************************************************/
 
+#ifdef _M_IX86
 VOID
 NTAPI
 HalInitApicInterruptHandlers()
@@ -39,7 +42,9 @@ HalpInitializeLocalUnit()
     // FIXME UNIMPLIMENTED;
     ASSERT(FALSE);
 }
+#endif
 
+#ifdef _M_IX86
 VOID
 NTAPI
 HalpInitProcessor(
@@ -85,6 +90,30 @@ HalpInitProcessor(
     /* Register routines for KDCOM */
     HalpRegisterKdSupportFunctions();
 }
+#else
+VOID
+NTAPI
+HalpInitProcessor(
+    IN ULONG ProcessorNumber,
+    IN PLOADER_PARAMETER_BLOCK LoaderBlock)
+{
+    /* Initialize the local APIC for this cpu */
+    ApicInitializeLocalApic(ProcessorNumber);
+
+    /* Initialize profiling data (but don't start it) */
+    HalInitializeProfiling();
+
+    /* Initialize the timer */
+    //ApicInitializeTimer(ProcessorNumber);
+
+    /* Update the interrupt affinity */
+    InterlockedBitTestAndSet((PLONG)&HalpDefaultInterruptAffinity,
+                             ProcessorNumber);
+
+    /* Register routines for KDCOM */
+    HalpRegisterKdSupportFunctions();
+}
+#endif
 
 
 VOID
