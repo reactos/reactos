@@ -219,6 +219,8 @@ Applet(HWND hwnd, UINT uMsg, LPARAM wParam, LPARAM lParam)
         psh.nStartPage = nPage;
 
     ret = (LONG)(PropertySheet(&psh) != -1);
+    if (ret > 0)
+        SendMessageW(HWND_BROADCAST, WM_SETTINGCHANGE, 0, (LPARAM)L"intl");
 
     HeapFree(GetProcessHeap(), 0, pGlobalData);
 
