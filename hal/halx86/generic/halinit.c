@@ -52,7 +52,10 @@ HalInitSystem(IN ULONG BootPhase,
         HalpBusType = LoaderBlock->u.I386.MachineType & 0xFF;
 
         /* Get command-line parameters */
-        HalpGetParameters(LoaderBlock);
+        if (LoaderBlock && LoaderBlock->LoadOptions)
+        {
+            HalpGetParameters(LoaderBlock->LoadOptions);
+        }
 
         /* Check for PRCB version mismatch */
         if (Prcb->MajorVersion != PRCB_MAJOR_VERSION)

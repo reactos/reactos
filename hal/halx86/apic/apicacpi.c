@@ -27,32 +27,66 @@ BOOLEAN HalpPciLockSettings;
 
 extern HALP_MP_INFO_TABLE HalpMpInfoTable;
 extern PLOCAL_APIC HalpProcLocalApicTable;
+extern ULONG HalpDefaultApicDestinationModeMask;
 extern ULONG HalpPicVectorRedirect[16];
 extern ULONG HalpPicVectorFlags[16];
 extern UCHAR HalpMaxProcsPerCluster;
 extern UCHAR HalpIRQLtoTPR[32];    // table, which sets the correspondence between IRQL levels and TPR (Task Priority Register) values.
 extern KIRQL HalpVectorToIRQL[16];
+extern BOOLEAN HalpForceApicPhysicalDestinationMode;
 
 /* FUNCTIONS ******************************************************************/
 
 CODE_SEG("INIT")
 VOID
 NTAPI
-HalpGetParameters(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
+HalpGetParameters(IN PCHAR CommandLine)
 {
-    PCHAR CommandLine;
+    /* Check if PCI is locked */
+    if (strstr(CommandLine, "PCILOCK")) HalpPciLockSettings = TRUE;
 
-    /* Make sure we have a loader block and command line */
-    if ((LoaderBlock) && (LoaderBlock->LoadOptions))
+    /* Check for initial breakpoint */
+    if (strstr(CommandLine, "BREAK")) DbgBreakPoint();
+
+    if (strstr(CommandLine, "ONECPU"))
     {
-        /* Read the command line */
-        CommandLine = LoaderBlock->LoadOptions;
+        DPRINT1("HalpGetParameters: FIXME parameters [ONECPU]\n");
+        DbgBreakPoint();
+        //HalpDontStartProcessors++;
+    }
 
-        /* Check if PCI is locked */
-        if (strstr(CommandLine, "PCILOCK")) HalpPciLockSettings = TRUE;
+  #ifdef CONFIG_SMP // halmacpi only
+    if (strstr(CommandLine, "USEPMTIMER"))
+    {
+        DPRINT1("HalpGetParameters: FIXME parameters [USEPMTIMER]\n");
+        DbgBreakPoint();
+        //HalpUsePmTimer = TRUE;
+    }
+  #endif
 
-        /* Check for initial breakpoint */
-        if (strstr(CommandLine, "BREAK")) DbgBreakPoint();
+    if (strstr(CommandLine, "INTAFFINITY"))
+    {
+        DPRINT1("HalpGetParameters: FIXME parameters [INTAFFINITY]\n");
+        DbgBreakPoint();
+        //HalpStaticIntAffinity = TRUE;
+    }
+
+    if (strstr(CommandLine, "USEPHYSICALAPIC"))
+    {
+        HalpDefaultApicDestinationModeMask = 0;
+        HalpForceApicPhysicalDestinationMode = TRUE;
+    }
+
+    if (strstr(CommandLine, "MAXPROCSPERCLUSTER"))
+    {
+        DPRINT1("HalpGetParameters: FIXME parameters [MAXPROCSPERCLUSTER]\n");
+        DbgBreakPoint();
+    }
+
+    if (strstr(CommandLine, "MAXAPICCLUSTER"))
+    {
+        DPRINT1("HalpGetParameters: FIXME parameters [MAXAPICCLUSTER]\n");
+        DbgBreakPoint();
     }
 }
 

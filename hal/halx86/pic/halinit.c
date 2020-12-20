@@ -22,22 +22,13 @@ BOOLEAN HalpPciLockSettings;
 CODE_SEG("INIT")
 VOID
 NTAPI
-HalpGetParameters(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
+HalpGetParameters(IN PCHAR CommandLine)
 {
-    PCHAR CommandLine;
+    /* Check if PCI is locked */
+    if (strstr(CommandLine, "PCILOCK")) HalpPciLockSettings = TRUE;
 
-    /* Make sure we have a loader block and command line */
-    if ((LoaderBlock) && (LoaderBlock->LoadOptions))
-    {
-        /* Read the command line */
-        CommandLine = LoaderBlock->LoadOptions;
-
-        /* Check if PCI is locked */
-        if (strstr(CommandLine, "PCILOCK")) HalpPciLockSettings = TRUE;
-
-        /* Check for initial breakpoint */
-        if (strstr(CommandLine, "BREAK")) DbgBreakPoint();
-    }
+    /* Check for initial breakpoint */
+    if (strstr(CommandLine, "BREAK")) DbgBreakPoint();
 }
 
 VOID

@@ -29,6 +29,7 @@ PKPCR HalpProcessorPCR[MAX_CPUS];
 HALP_MP_INFO_TABLE HalpMpInfoTable;
 PLOCAL_APIC HalpProcLocalApicTable = NULL;
 KAFFINITY HalpNodeProcessorAffinity[MAX_CPUS] = {0};
+ULONG HalpDefaultApicDestinationModeMask = 0x800;
 ULONG HalpHybridApicPhysicalTargets = 0;
 UCHAR HalpIntDestMap[MAX_CPUS] = {0};
 UCHAR HalpMaxProcsPerCluster = 0;
