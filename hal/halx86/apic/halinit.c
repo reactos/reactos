@@ -20,11 +20,30 @@ ApicInitializeLocalApic(ULONG Cpu);
 
 /* GLOBALS ******************************************************************/
 
-const USHORT HalpBuildType = HAL_BUILD_TYPE;
-
 #ifdef _M_IX86
 PKPCR HalpProcessorPCR[MAX_CPUS];
+
+ADDRESS_USAGE HalpDefaultIoSpace =
+{
+    NULL, CmResourceTypePort, IDT_INTERNAL,
+    {
+        {0x00,  0x20}, /* DMA 1 */
+        {0xC0,  0x20}, /* DMA 2 */
+        {0x80,  0x10}, /* DMA EPAR */
+        {0x20,  0x2},  /* PIC 1 */
+        {0xA0,  0x2},  /* PIC 2 */
+        {0x40,  0x4},  /* PIT 1 */
+        {0x48,  0x4},  /* PIT 2 */
+        {0x92,  0x1},  /* System Control Port A */
+        {0x70,  0x2},  /* CMOS  */
+        {0xF0,  0x10}, /* x87 Coprocessor */
+        {0xCF8, 0x8},  /* PCI 0 */
+        {0,0},
+    }
+};
 #endif
+
+const USHORT HalpBuildType = HAL_BUILD_TYPE;
 
 HALP_MP_INFO_TABLE HalpMpInfoTable;
 PLOCAL_APIC HalpProcLocalApicTable = NULL;
