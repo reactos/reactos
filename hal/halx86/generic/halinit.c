@@ -84,6 +84,16 @@ HalInitSystem(IN ULONG BootPhase,
         HalpDefaultIoSpace.Next = HalpAddressUsageList;
         HalpAddressUsageList = &HalpDefaultIoSpace;
 
+#if !defined(SARCH_PC98) && !defined(SARCH_XBOX)
+#ifdef _M_IX86
+        if (HalpBusType == MACHINE_TYPE_EISA)
+        {
+            DPRINT1("HalpBusType - MACHINE_TYPE_EISA\n");
+            HalpEisaIoSpace.Next = &HalpDefaultIoSpace;
+            HalpAddressUsageList = &HalpEisaIoSpace;
+        }
+#endif
+#endif
         /* Do some HAL-specific initialization */
         HalpInitPhase0(LoaderBlock);
 

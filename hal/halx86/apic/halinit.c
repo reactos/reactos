@@ -41,6 +41,32 @@ ADDRESS_USAGE HalpDefaultIoSpace =
         {0,0},
     }
 };
+
+ADDRESS_USAGE HalpEisaIoSpace =
+{
+    NULL, CmResourceTypePort, IDT_INTERNAL,
+    {
+        {0x0D0, 0x10},
+        {0x400, 0x10},
+        {0x480, 0x10},
+        {0x4C2, 0x0E},
+        {0x4D4, 0x2C},
+        {0x461, 0x02},
+        {0x464, 0x02},
+        {0x4D0, 0x02},
+        {0xC84, 0x01},
+        {0,0},
+    }
+};
+
+ADDRESS_USAGE HalpImcrIoSpace =
+{
+    NULL, CmResourceTypeMemory, IDT_INTERNAL,
+    {
+        {0x22, 0x02},
+        {0,0},
+    }
+};
 #endif
 
 const USHORT HalpBuildType = HAL_BUILD_TYPE;
@@ -385,6 +411,12 @@ HalpInitPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     /* Fill out HalDispatchTable */
     HalSetSystemInformation = HalpSetSystemInformation;
+
+    if (HalpMpInfoTable.ImcrPresent)
+    {
+        HalpImcrIoSpace.Next = HalpAddressUsageList;
+        HalpAddressUsageList = &HalpImcrIoSpace;
+    }
 
     /* Do some APIC HAL-specific initialization */
     HalpInitPhase0a(LoaderBlock);

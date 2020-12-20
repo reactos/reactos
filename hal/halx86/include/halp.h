@@ -587,6 +587,7 @@ HalInitializeBios(
 extern BOOLEAN HalpNMIInProgress;
 
 extern ADDRESS_USAGE HalpDefaultIoSpace;
+extern ADDRESS_USAGE HalpEisaIoSpace;
 
 extern KSPIN_LOCK HalpSystemHardwareLock;
 
