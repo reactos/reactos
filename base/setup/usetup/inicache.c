@@ -600,7 +600,7 @@ IniCacheLoad(
                                          &SectionName,
                                          &SectionNameSize);
 
-            DPRINT1("[%.*s]\n", SectionNameSize, SectionName);
+            DPRINT("[%.*s]\n", SectionNameSize, SectionName);
 
             Section = IniCacheAddSection(*Cache,
                                          SectionName,
@@ -629,7 +629,7 @@ IniCacheLoad(
                                       &KeyValueSize,
                                       String);
 
-            DPRINT1("'%.*s' = '%.*s'\n", KeyNameSize, KeyName, KeyValueSize, KeyValue);
+            DPRINT("'%.*s' = '%.*s'\n", KeyNameSize, KeyName, KeyValueSize, KeyValue);
 
             Key = IniCacheAddKey(Section,
                                  KeyName,
