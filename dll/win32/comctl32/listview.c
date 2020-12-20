@@ -2076,6 +2076,9 @@ static INT LISTVIEW_UpdateHScroll(LISTVIEW_INFO *infoPtr)
 
     horzInfo.fMask = SIF_RANGE | SIF_PAGE;
     horzInfo.nMax = max(horzInfo.nMax - 1, 0);
+#ifdef __REACTOS__ /* CORE-16466 part 1 of 4 */
+    horzInfo.nMax = (horzInfo.nPage == 0 ? 0 : horzInfo.nMax);
+#endif
     dx = GetScrollPos(infoPtr->hwndSelf, SB_HORZ);
     dx -= SetScrollInfo(infoPtr->hwndSelf, SB_HORZ, &horzInfo, TRUE);
     TRACE("horzInfo=%s\n", debugscrollinfo(&horzInfo));
@@ -2099,10 +2102,27 @@ static INT LISTVIEW_UpdateVScroll(LISTVIEW_INFO *infoPtr)
 
     ZeroMemory(&vertInfo, sizeof(SCROLLINFO));
     vertInfo.cbSize = sizeof(SCROLLINFO);
+#ifdef __REACTOS__ /* CORE-16466 part 2 of 4 */
+    vertInfo.nPage = max((infoPtr->rcList.bottom - infoPtr->rcList.top), 0);
+#else
     vertInfo.nPage = infoPtr->rcList.bottom - infoPtr->rcList.top;
+#endif
 
     if (infoPtr->uView == LV_VIEW_DETAILS)
     {
+#ifdef __REACTOS__ /* CORE-16466 part 3 of 4 */
+        if (vertInfo.nPage != 0)
+        {
+            vertInfo.nMax = infoPtr->nItemCount;
+
+           /* scroll by at least one page */
+           if (vertInfo.nPage < infoPtr->nItemHeight)
+               vertInfo.nPage = infoPtr->nItemHeight;
+
+          if (infoPtr->nItemHeight > 0)
+              vertInfo.nPage /= infoPtr->nItemHeight;
+        }
+#else
 	vertInfo.nMax = infoPtr->nItemCount;
 	
 	/* scroll by at least one page */
@@ -2111,6 +2131,7 @@ static INT LISTVIEW_UpdateVScroll(LISTVIEW_INFO *infoPtr)
 
         if (infoPtr->nItemHeight > 0)
             vertInfo.nPage /= infoPtr->nItemHeight;
+#endif
     }
     else if (infoPtr->uView != LV_VIEW_LIST) /* LV_VIEW_ICON, or LV_VIEW_SMALLICON */
     {
@@ -2121,6 +2142,9 @@ static INT LISTVIEW_UpdateVScroll(LISTVIEW_INFO *infoPtr)
 
     vertInfo.fMask = SIF_RANGE | SIF_PAGE;
     vertInfo.nMax = max(vertInfo.nMax - 1, 0);
+#ifdef __REACTOS__ /* CORE-16466 part 4 of 4 */
+    vertInfo.nMax = (vertInfo.nPage == 0 ? 0 : vertInfo.nMax);
+#endif
     dy = GetScrollPos(infoPtr->hwndSelf, SB_VERT);
     dy -= SetScrollInfo(infoPtr->hwndSelf, SB_VERT, &vertInfo, TRUE);
     TRACE("vertInfo=%s\n", debugscrollinfo(&vertInfo));
