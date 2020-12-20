@@ -51,6 +51,9 @@ HalpInitProcessor(
 VOID
 HalpInitPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
+    /* Fill out the dispatch tables */
+    HalSetSystemInformation = HaliSetSystemInformation;
+
     /* Initialize ACPI */
     HalpSetupAcpiPhase0(LoaderBlock);
 

@@ -349,9 +349,25 @@ HalpInitProcessor(
     HalpInitializeLocalUnit();
 }
 
+NTSTATUS
+NTAPI
+HalpSetSystemInformation(IN HAL_SET_INFORMATION_CLASS InformationClass,
+                         IN ULONG BufferSize,
+                         IN OUT PVOID Buffer)
+{
+    DPRINT1("HalpSetSystemInformation()\n");
+    UNIMPLEMENTED;
+    ASSERT(FALSE);
+    return STATUS_NOT_IMPLEMENTED;
+}
+
 VOID
 HalpInitPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
+    /* Fill out HalDispatchTable */
+    HalSetSystemInformation = HalpSetSystemInformation;
+
+    /* Do some APIC HAL-specific initialization */
     HalpInitPhase0a(LoaderBlock);
 }
 #else

@@ -73,7 +73,6 @@ HalInitSystem(IN ULONG BootPhase,
 
         /* Fill out the dispatch tables */
         HalQuerySystemInformation = HaliQuerySystemInformation;
-        HalSetSystemInformation = HaliSetSystemInformation;
         HalInitPnpDriver = HaliInitPnpDriver;
         HalGetDmaAdapter = HalpGetDmaAdapter;
 
