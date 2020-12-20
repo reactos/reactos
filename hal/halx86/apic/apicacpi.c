@@ -26,6 +26,7 @@ UCHAR HalpMaxProcs = 0;
 BOOLEAN HalpPciLockSettings;
 
 extern HALP_MP_INFO_TABLE HalpMpInfoTable;
+extern APIC_ADDRESS_USAGE HalpApicUsage;
 extern PLOCAL_APIC HalpProcLocalApicTable;
 extern ULONG HalpDefaultApicDestinationModeMask;
 extern ULONG HalpPicVectorRedirect[16];

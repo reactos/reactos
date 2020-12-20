@@ -72,6 +72,7 @@ ADDRESS_USAGE HalpImcrIoSpace =
 const USHORT HalpBuildType = HAL_BUILD_TYPE;
 
 HALP_MP_INFO_TABLE HalpMpInfoTable;
+APIC_ADDRESS_USAGE HalpApicUsage;
 PLOCAL_APIC HalpProcLocalApicTable = NULL;
 KAFFINITY HalpNodeProcessorAffinity[MAX_CPUS] = {0};
 ULONG HalpDefaultApicDestinationModeMask = 0x800;

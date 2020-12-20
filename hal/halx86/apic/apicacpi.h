@@ -81,4 +81,20 @@ typedef struct _LOCAL_APIC
 #define LOCAL_APIC_SIZE sizeof(LOCAL_APIC)
 #include <poppack.h>
 
+#include <pshpack1.h>
+typedef struct _APIC_ADDRESS_USAGE
+{
+    struct _HalAddressUsage * Next;
+    CM_RESOURCE_TYPE Type;
+    UCHAR Flags;
+    struct
+    {
+        ULONG Start;
+        ULONG Length;
+    } Element[MAX_IOAPICS + 2]; // Local APIC + null-end element
+
+} APIC_ADDRESS_USAGE, *PAPIC_ADDRESS_USAGE;
+#define APIC_ADDRESS_USAGE_SIZE sizeof(APIC_ADDRESS_USAGE)
+#include <poppack.h>
+
 #endif /* !_APICACPI_H_ */
