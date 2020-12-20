@@ -117,8 +117,23 @@ HalpMarkProcessorStarted(
     _In_ UCHAR Id,
     _In_ ULONG PrcNumber)
 {
-    // FIXME UNIMPLIMENTED;
-    ASSERT(FALSE);
+    ULONG ix;
+
+    for (ix = 0; ix < HalpMpInfoTable.ProcessorCount; ix++)
+    {
+        if (HalpProcLocalApicTable[ix].Id == Id)
+        {
+            HalpProcLocalApicTable[ix].ProcessorStarted = TRUE;
+            HalpProcLocalApicTable[ix].ProcessorNumber = PrcNumber;
+
+            if (PrcNumber == 0)
+            {
+                HalpProcLocalApicTable[ix].FirstProcessor = TRUE;
+            }
+
+            break;
+        }
+    }
 }
 
 VOID
