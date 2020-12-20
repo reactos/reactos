@@ -8,10 +8,10 @@ list(APPEND HALMPS_SOURCE
     apic/apicmps.c
     apic/apictimer.c
     apic/halinit.c
+    apic/processor.c
     apic/rtctimer.c
     apic/tsc.c
-    generic/spinlock.c
-    up/processor.c)
+    generic/spinlock.c)
 
 add_asm_files(lib_hal_halmps_asm ${HALMPS_ASM_SOURCE})
 add_object_library(lib_hal_halmps ${HALMPS_SOURCE} ${lib_hal_halmps_asm})

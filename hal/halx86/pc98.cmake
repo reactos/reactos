@@ -26,6 +26,7 @@ list(APPEND HAL_PC98_ASM_SOURCE
 # PIC
 list(APPEND HAL_PC98_SOURCE
     pc98/irql.c
+    generic/spinlock.c
     generic/timer.c
     pic/halinit.c
     pic/pic.c
