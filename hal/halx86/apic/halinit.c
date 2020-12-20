@@ -28,9 +28,12 @@ PKPCR HalpProcessorPCR[MAX_CPUS];
 
 HALP_MP_INFO_TABLE HalpMpInfoTable;
 PLOCAL_APIC HalpProcLocalApicTable = NULL;
+KAFFINITY HalpNodeProcessorAffinity[MAX_CPUS] = {0};
+ULONG HalpHybridApicPhysicalTargets = 0;
 UCHAR HalpIntDestMap[MAX_CPUS] = {0};
 UCHAR HalpMaxProcsPerCluster = 0;
 UCHAR HalpInitLevel = 0xFF;
+UCHAR HalpMaxNode = 0;
 BOOLEAN HalpForceApicPhysicalDestinationMode = FALSE;
 
 /* FUNCTIONS ****************************************************************/
@@ -107,8 +110,50 @@ VOID
 NTAPI
 HalpInitializeApicAddressing()
 {
-    // FIXME UNIMPLIMENTED;
-    ASSERT(FALSE);
+    PKPCR Pcr = KeGetPcr();
+    PKPRCB Prcb = (PKPRCB)Pcr->Prcb;
+    UCHAR PrcNumber = Prcb->Number;
+    UCHAR NodeNumber;
+    UCHAR DestMap;
+
+    if (HalpForceApicPhysicalDestinationMode)
+    {
+        ApicWrite(APIC_DFR, 0x0FFFFFFF);
+        ApicWrite(APIC_LDR, 0);
+    }
+    else
+    {
+        if (HalpMaxProcsPerCluster)
+        {
+            ApicWrite(APIC_DFR, 0x0FFFFFFF);
+        }
+        else
+        {
+            ApicWrite(APIC_DFR, 0xFFFFFFFF);
+        }
+
+        DestMap = HalpMapNtToHwProcessorId(PrcNumber);
+        HalpIntDestMap[PrcNumber] = DestMap;
+        ApicWrite(APIC_LDR, ((ULONG)DestMap << 24));
+    }
+
+    NodeNumber = HalpNodeNumber(Pcr);
+
+    if (HalpMaxNode < NodeNumber)
+    {
+        HalpMaxNode = NodeNumber;
+    }
+
+    ASSERT(HalpMaxNode);
+
+    if (NodeNumber)
+    {
+        HalpNodeProcessorAffinity[NodeNumber - 1] |= (1 << PrcNumber);
+    }
+    else
+    {
+        HalpHybridApicPhysicalTargets |= (1 << PrcNumber);
+    }
 }
 
 VOID
