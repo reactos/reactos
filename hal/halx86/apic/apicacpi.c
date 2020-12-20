@@ -361,4 +361,43 @@ DetectMP(_In_ PLOADER_PARAMETER_BLOCK LoaderBlock)
     return TRUE;
 }
 
+VOID
+HalpInitPhase0a(_In_ PLOADER_PARAMETER_BLOCK LoaderBlock)
+{
+    /* Initialize ACPI */
+    HalpSetupAcpiPhase0(LoaderBlock);
+
+    /* Initialize the PICs */
+    HalpInitializePICs(TRUE);
+
+    /* Initialize CMOS lock */
+    KeInitializeSpinLock(&HalpSystemHardwareLock);
+
+    /* Initialize CMOS */
+    HalpInitializeCmos();
+
+    /* Setup busy waiting */
+    HalpCalibrateStallExecution();
+
+    /* Initialize the clock */
+    HalpInitializeClock();
+
+    /*
+     * We could be rebooting with a pending profile interrupt,
+     * so clear it here before interrupts are enabled
+     */
+    HalStopProfileInterrupt(ProfileTime);
+
+    /* Do some HAL-specific initialization */
+    HalpInitPhase0(LoaderBlock);
+
+    /* Enable clock interrupt handler */
+    HalpEnableInterruptHandler(IDT_INTERNAL,
+                               0,
+                               APIC_CLOCK_VECTOR,
+                               CLOCK2_LEVEL,
+                               HalpClockInterrupt,
+                               Latched);
+}
+
 /* EOF */

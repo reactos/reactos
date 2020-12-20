@@ -311,4 +311,9 @@ DetectMP(
     _In_ PLOADER_PARAMETER_BLOCK LoaderBlock
 );
 
+VOID
+HalpInitPhase0a(
+    _In_ PLOADER_PARAMETER_BLOCK LoaderBlock
+);
+
 /* EOF */

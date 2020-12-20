@@ -71,18 +71,6 @@ HalInitSystem(IN ULONG BootPhase,
             KeBugCheckEx(MISMATCHED_HAL, 2, Prcb->BuildType, HalpBuildType, 0);
         }
 
-        /* Initialize ACPI */
-        HalpSetupAcpiPhase0(LoaderBlock);
-
-        /* Initialize the PICs */
-        HalpInitializePICs(TRUE);
-
-        /* Initialize CMOS lock */
-        KeInitializeSpinLock(&HalpSystemHardwareLock);
-
-        /* Initialize CMOS */
-        HalpInitializeCmos();
-
         /* Fill out the dispatch tables */
         HalQuerySystemInformation = HaliQuerySystemInformation;
         HalSetSystemInformation = HaliSetSystemInformation;
@@ -96,18 +84,6 @@ HalInitSystem(IN ULONG BootPhase,
         /* Setup I/O space */
         HalpDefaultIoSpace.Next = HalpAddressUsageList;
         HalpAddressUsageList = &HalpDefaultIoSpace;
-
-        /* Setup busy waiting */
-        HalpCalibrateStallExecution();
-
-        /* Initialize the clock */
-        HalpInitializeClock();
-
-        /*
-         * We could be rebooting with a pending profile interrupt,
-         * so clear it here before interrupts are enabled
-         */
-        HalStopProfileInterrupt(ProfileTime);
 
         /* Do some HAL-specific initialization */
         HalpInitPhase0(LoaderBlock);

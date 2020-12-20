@@ -51,6 +51,30 @@ HalpInitProcessor(
 VOID
 HalpInitPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
+    /* Initialize ACPI */
+    HalpSetupAcpiPhase0(LoaderBlock);
+
+    /* Initialize the PICs */
+    HalpInitializePICs(TRUE);
+
+    /* Initialize CMOS lock */
+    KeInitializeSpinLock(&HalpSystemHardwareLock);
+
+    /* Initialize CMOS */
+    HalpInitializeCmos();
+
+    /* Setup busy waiting */
+    HalpCalibrateStallExecution();
+
+    /* Initialize the clock */
+    HalpInitializeClock();
+
+    /*
+     * We could be rebooting with a pending profile interrupt,
+     * so clear it here before interrupts are enabled
+     */
+    HalStopProfileInterrupt(ProfileTime);
+
     /* Initialize Xbox-specific disk hacks */
     HalpXboxInitPartIo();
 }

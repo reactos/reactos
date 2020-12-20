@@ -348,6 +348,12 @@ HalpInitProcessor(
     HalInitApicInterruptHandlers();
     HalpInitializeLocalUnit();
 }
+
+VOID
+HalpInitPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
+{
+    HalpInitPhase0a(LoaderBlock);
+}
 #else
 VOID
 NTAPI
@@ -371,11 +377,36 @@ HalpInitProcessor(
     /* Register routines for KDCOM */
     HalpRegisterKdSupportFunctions();
 }
-#endif
 
 VOID
 HalpInitPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
+    /* Initialize ACPI */
+    HalpSetupAcpiPhase0(LoaderBlock);
+
+    /* Initialize the PICs */
+    HalpInitializePICs(TRUE);
+
+    /* Initialize CMOS lock */
+    KeInitializeSpinLock(&HalpSystemHardwareLock);
+
+    /* Initialize CMOS */
+    HalpInitializeCmos();
+
+    /* Setup busy waiting */
+    HalpCalibrateStallExecution();
+
+    /* Initialize the clock */
+    HalpInitializeClock();
+
+    /*
+     * We could be rebooting with a pending profile interrupt,
+     * so clear it here before interrupts are enabled
+     */
+    HalStopProfileInterrupt(ProfileTime);
+
+    /* Do some HAL-specific initialization */
+    HalpInitPhase0(LoaderBlock);
 
     /* Enable clock interrupt handler */
     HalpEnableInterruptHandler(IDT_INTERNAL,
@@ -385,6 +416,7 @@ HalpInitPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
                                HalpClockInterrupt,
                                Latched);
 }
+#endif
 
 VOID
 HalpInitPhase1(VOID)
