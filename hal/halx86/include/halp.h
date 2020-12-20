@@ -529,6 +529,13 @@ HalpInitProcessor(
     IN PLOADER_PARAMETER_BLOCK LoaderBlock
 );
 
+CODE_SEG("INIT")
+VOID
+NTAPI
+HalpGetParameters(
+    IN PLOADER_PARAMETER_BLOCK LoaderBlock
+);
+
 #if defined(SARCH_PC98)
 BOOLEAN
 NTAPI

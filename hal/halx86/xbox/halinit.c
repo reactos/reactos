@@ -15,8 +15,30 @@
 /* GLOBALS ******************************************************************/
 
 const USHORT HalpBuildType = HAL_BUILD_TYPE;
+BOOLEAN HalpPciLockSettings;
 
 /* FUNCTIONS ****************************************************************/
+
+CODE_SEG("INIT")
+VOID
+NTAPI
+HalpGetParameters(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
+{
+    PCHAR CommandLine;
+
+    /* Make sure we have a loader block and command line */
+    if ((LoaderBlock) && (LoaderBlock->LoadOptions))
+    {
+        /* Read the command line */
+        CommandLine = LoaderBlock->LoadOptions;
+
+        /* Check if PCI is locked */
+        if (strstr(CommandLine, "PCILOCK")) HalpPciLockSettings = TRUE;
+
+        /* Check for initial breakpoint */
+        if (strstr(CommandLine, "BREAK")) DbgBreakPoint();
+    }
+}
 
 VOID
 NTAPI

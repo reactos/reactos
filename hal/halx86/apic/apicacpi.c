@@ -23,6 +23,7 @@ IO_APIC_VERSION_REGISTER HalpIOApicVersion[MAX_IOAPICS];
 USHORT HalpMaxApicInti[MAX_IOAPICS] = {0};
 UCHAR HalpIoApicId[MAX_IOAPICS] = {0};
 UCHAR HalpMaxProcs = 0;
+BOOLEAN HalpPciLockSettings;
 
 extern HALP_MP_INFO_TABLE HalpMpInfoTable;
 extern PLOCAL_APIC HalpProcLocalApicTable;
@@ -33,6 +34,27 @@ extern UCHAR HalpIRQLtoTPR[32];    // table, which sets the correspondence betwe
 extern KIRQL HalpVectorToIRQL[16];
 
 /* FUNCTIONS ******************************************************************/
+
+CODE_SEG("INIT")
+VOID
+NTAPI
+HalpGetParameters(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
+{
+    PCHAR CommandLine;
+
+    /* Make sure we have a loader block and command line */
+    if ((LoaderBlock) && (LoaderBlock->LoadOptions))
+    {
+        /* Read the command line */
+        CommandLine = LoaderBlock->LoadOptions;
+
+        /* Check if PCI is locked */
+        if (strstr(CommandLine, "PCILOCK")) HalpPciLockSettings = TRUE;
+
+        /* Check for initial breakpoint */
+        if (strstr(CommandLine, "BREAK")) DbgBreakPoint();
+    }
+}
 
 VOID
 NTAPI 
