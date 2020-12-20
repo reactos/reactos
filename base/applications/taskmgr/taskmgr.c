@@ -490,8 +490,6 @@ TaskManagerWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
             TaskManagerSettings.Maximized = TRUE;
         else
             TaskManagerSettings.Maximized = FALSE;
-        /* Get rid of the allocated command line cache, if any */
-        PerfDataDeallocCommandLineCache();
         if (hWindowMenu)
             DestroyMenu(hWindowMenu);
         return DefWindowProcW(hDlg, message, wParam, lParam);

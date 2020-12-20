@@ -48,8 +48,6 @@ SYSTEM_HANDLE_INFORMATION                  SystemHandleInfo;
 PSYSTEM_PROCESSOR_PERFORMANCE_INFORMATION  SystemProcessorTimeInfo = NULL;
 PSID                                       SystemUserSid = NULL;
 
-PCMD_LINE_CACHE global_cache = NULL;
-
 #define CMD_LINE_MIN(a, b) (a < b ? a - sizeof(WCHAR) : b)
 
 typedef struct _SIDTOUSERNAME
@@ -548,8 +546,6 @@ BOOL PerfDataGetUserName(ULONG Index, LPWSTR lpUserName, ULONG nMaxCount)
 
 BOOL PerfDataGetCommandLine(ULONG Index, LPWSTR lpCommandLine, ULONG nMaxCount)
 {
-    static const LPWSTR ellipsis = L"...";
-
     PROCESS_BASIC_INFORMATION pbi = {0};
     UNICODE_STRING CommandLineStr = {0};
 
@@ -560,26 +556,9 @@ BOOL PerfDataGetCommandLine(ULONG Index, LPWSTR lpCommandLine, ULONG nMaxCount)
     NTSTATUS Status;
     BOOL result;
 
-    PCMD_LINE_CACHE new_entry;
     LPWSTR new_string;
 
-    PCMD_LINE_CACHE cache = global_cache;
-
-    /* [A] Search for a string already in cache? If so, use it */
-    while (cache && cache->pnext != NULL)
-    {
-        if (cache->idx == Index && cache->str != NULL)
-        {
-            /* Found it. Use it, and add some ellipsis at the very end to make it cute */
-            wcsncpy(lpCommandLine, cache->str, CMD_LINE_MIN(nMaxCount, cache->len));
-            wcscpy(lpCommandLine + CMD_LINE_MIN(nMaxCount, cache->len) - wcslen(ellipsis), ellipsis);
-            return TRUE;
-        }
-
-        cache = cache->pnext;
-    }
-
-    /* [B] We don't; let's allocate and load a value from the process mem... and cache it */
+    /* Let's allocate and load a value from the process mem */
     ProcessId = PerfDataGetProcessId(Index);
 
     /* Default blank command line in case things don't work out */
@@ -614,14 +593,12 @@ BOOL PerfDataGetCommandLine(ULONG Index, LPWSTR lpCommandLine, ULONG nMaxCount)
     if (!result)
         goto cleanup;
 
-    /* Allocate the next cache entry and its accompanying string in one go */
-    new_entry = HeapAlloc(GetProcessHeap(),
+    /* Allocate the string to copy with */
+    new_string = HeapAlloc(GetProcessHeap(),
                           HEAP_ZERO_MEMORY,
-                          sizeof(CMD_LINE_CACHE) + CommandLineStr.Length + sizeof(UNICODE_NULL));
-    if (!new_entry)
+                          sizeof(LPWSTR) * CommandLineStr.Length + sizeof(UNICODE_NULL));
+    if (!new_string)
         goto cleanup;
-
-    new_string = (LPWSTR)((ULONG_PTR)new_entry + sizeof(CMD_LINE_CACHE));
 
     /* Bingo, the command line should be stored there,
        copy the string from the other process */
@@ -634,40 +611,18 @@ BOOL PerfDataGetCommandLine(ULONG Index, LPWSTR lpCommandLine, ULONG nMaxCount)
     {
         /* Weird, after successfully reading the mem of that process
            various times it fails now, forget it and bail out */
-        HeapFree(GetProcessHeap(), 0, new_entry);
+        HeapFree(GetProcessHeap(), 0, new_string);
         goto cleanup;
     }
 
-    /* Add our pointer to the cache... */
-    new_entry->idx = Index;
-    new_entry->str = new_string;
-    new_entry->len = CommandLineStr.Length;
 
-    if (!global_cache)
-        global_cache = new_entry;
-    else
-        cache->pnext = new_entry;
-
-    /* ... and print the buffer for the first time */
+    /* Finally, copy the buffer */
     wcsncpy(lpCommandLine, new_string, CMD_LINE_MIN(nMaxCount, CommandLineStr.Length));
-
+    HeapFree(GetProcessHeap(), 0, new_string);
+    
 cleanup:
     if (hProcess) CloseHandle(hProcess);
     return TRUE;
-}
-
-void PerfDataDeallocCommandLineCache()
-{
-    PCMD_LINE_CACHE cache = global_cache;
-    PCMD_LINE_CACHE cache_old;
-
-    while (cache && cache->pnext != NULL)
-    {
-        cache_old = cache;
-        cache = cache->pnext;
-
-        HeapFree(GetProcessHeap(), 0, cache_old);
-    }
 }
 
 ULONG PerfDataGetSessionId(ULONG Index)

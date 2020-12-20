@@ -55,14 +55,6 @@ typedef struct _PERFDATA
 	LARGE_INTEGER		KernelTime;
 } PERFDATA, *PPERFDATA;
 
-typedef struct _CMD_LINE_CACHE
-{
-     DWORD idx;
-    LPWSTR str;
-     ULONG len;
-    struct _CMD_LINE_CACHE* pnext;
-} CMD_LINE_CACHE, *PCMD_LINE_CACHE;
-
 BOOL	PerfDataInitialize(void);
 void	PerfDataUninitialize(void);
 void	PerfDataRefresh(void);
@@ -78,7 +70,6 @@ ULONG	PerfDataGetProcessId(ULONG Index);
 BOOL	PerfDataGetUserName(ULONG Index, LPWSTR lpUserName, ULONG nMaxCount);
 
 BOOL	PerfDataGetCommandLine(ULONG Index, LPWSTR lpCommandLine, ULONG nMaxCount);
-void	PerfDataDeallocCommandLineCache();
 
 ULONG	PerfDataGetSessionId(ULONG Index);
 ULONG	PerfDataGetCPUUsage(ULONG Index);
