@@ -247,6 +247,20 @@ typedef struct _ACPI_PM_DISPATCH_TABLE
 
 } ACPI_PM_DISPATCH_TABLE, *PACPI_PM_DISPATCH_TABLE;
 
+#include <pshpack4.h>
+typedef struct _HALP_TIMER_INFO
+{
+    PULONG TimerPort;
+    LARGE_INTEGER AcpiTimeValue;
+    ULONG TimerCarry;
+    ULONG ValueExt;
+    LARGE_INTEGER PerformanceCounter;
+    ULONGLONG Reserved1;
+    ULONG Reserved2;
+
+} HALP_TIMER_INFO, *PHALP_TIMER_INFO;
+#include <poppack.h>
+
 #define ACPI_USE_PLATFORM_CLOCK  0x8000
 
 //

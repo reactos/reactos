@@ -35,6 +35,7 @@ PACPI_BIOS_MULTI_NODE HalpAcpiMultiNode;
 
 LIST_ENTRY HalpAcpiTableMatchList;
 
+PVOID HalpWakeVector = NULL;
 ULONG HalpInvalidAcpiTable;
 ULONG HalpShutdownContext = 0;
 
@@ -42,10 +43,15 @@ ULONG HalpShutdownContext = 0;
 ULONG HalpPicVectorRedirect[16] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
 ULONG HalpPicVectorFlags[16] = {0};
 
+BOOLEAN HalpBrokenAcpiTimer = FALSE;
+
 /* This determines the HAL type */
 BOOLEAN HalDisableFirmwareMapper = TRUE;
 PWCHAR HalHardwareIdString = L"acpipic_up";
 PWCHAR HalName = L"ACPI Compatible Eisa/Isa HAL";
+
+PPM_DISPATCH_TABLE PmAcpiDispatchTable;
+HALP_TIMER_INFO TimerInfo;
 
 /* DISPATCH TABLE FUNCTIONS ***************************************************/
 
@@ -880,11 +886,11 @@ HalpAcpiTableCacheInit(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 
 VOID
 NTAPI
-HaliAcpiTimerInit(IN PULONG TimerPort,
-                  IN BOOLEAN TimerValExt)
+HaliAcpiTimerInit(_In_ PULONG TimerPort,
+                  _In_ BOOLEAN TimerValExt)
 {
     PAGED_CODE();
-    DPRINT("HaliAcpiTimerInit: Port %X, ValExt %X, flags %X\n", TimerPort, TimerValExt, HalpFixedAcpiDescTable.flags);
+    DPRINT("HaliAcpiTimerInit: Port %p, ValExt %X, flags %X\n", TimerPort, TimerValExt, HalpFixedAcpiDescTable.flags);
 
     /* Is this in the init phase? */
     if (!TimerPort)
@@ -893,7 +899,7 @@ HaliAcpiTimerInit(IN PULONG TimerPort,
         TimerPort = (PULONG)HalpFixedAcpiDescTable.pm_tmr_blk_io_port; // System port address of the Power Management Timer Control Register Block
         TimerValExt = (HalpFixedAcpiDescTable.flags & ACPI_TMR_VAL_EXT) != 0; // A zero indicates TMR_VAL is implemented as a 24-bit value.
                                                                               // A one indicates TMR_VAL is implemented as a 32-bit value.
-        DPRINT1("TimerPort %X, IsTimerValExt32bit %X\n", TimerPort, TimerValExt);
+        DPRINT1("TimerPort %p, IsTimerValExt32bit %X\n", TimerPort, TimerValExt);
     }
 
     HaliAcpiSetUsePmClock();
@@ -1231,13 +1237,98 @@ HalReportResourceUsage(VOID)
     HalpRegisterPciDebuggingDeviceInfo();
 }
 
+VOID
+NTAPI
+HalAcpiTimerCarry()
+{
+    ULONG Time;
+    LARGE_INTEGER Value;
+
+    Time = READ_PORT_ULONG(TimerInfo.TimerPort);
+
+    Value.QuadPart = TimerInfo.AcpiTimeValue.QuadPart + TimerInfo.ValueExt;
+    Value.QuadPart += ((Value.LowPart ^ Time) & TimerInfo.ValueExt);
+
+    TimerInfo.TimerCarry = Value.HighPart;
+    TimerInfo.AcpiTimeValue.QuadPart = Value.QuadPart;
+}
+
+VOID
+NTAPI
+HalAcpiBrokenPiix4TimerCarry()
+{
+    DPRINT("HalAcpiBrokenPiix4TimerCarry()\n");
+    /* Nothing */
+    ;
+}
+
+VOID
+NTAPI
+HalpPowerStateCallback(_In_opt_ PVOID CallbackContext,
+                       _In_opt_ PVOID Argument1,
+                       _In_opt_ PVOID Argument2)
+{
+    DPRINT1("HalpPowerStateCallback: CallbackContext %p, Argument1 %p, Argument2 %p\n", CallbackContext, Argument1, Argument2);
+    DPRINT1("HalpPowerStateCallback: FIXME ...\n");
+}
+
 NTSTATUS
 NTAPI
 HaliInitPowerManagement(_In_ PPM_DISPATCH_TABLE PmDriverDispatchTable,
                         _Out_ PPM_DISPATCH_TABLE * PmHalDispatchTable)
 {
-    DPRINT("FIXME HaliInitPowerManagement\n");
-    ASSERT(FALSE);
+    UNICODE_STRING CallbackName = RTL_CONSTANT_STRING(L"\\Callback\\PowerState");
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    PCALLBACK_OBJECT CallbackObject;
+    PHYSICAL_ADDRESS PhysicalAddress;
+    PFACS Facs;
+
+    PAGED_CODE();
+
+    //FIXME
+    //HalpPiix4Detect(TRUE);
+    //HalpPutAcpiHacksInRegistry();
+
+    PmAcpiDispatchTable = PmDriverDispatchTable; // interface with acpi.sys
+
+    if (HalpBrokenAcpiTimer)
+    {
+        HalAcpiDispatchTable.HalAcpiTimerInterrupt = HalAcpiBrokenPiix4TimerCarry;
+    }
+    else
+    {
+        HalAcpiDispatchTable.HalAcpiTimerInterrupt = HalAcpiTimerCarry;
+    }
+
+    *PmHalDispatchTable = (PPM_DISPATCH_TABLE)&HalAcpiDispatchTable; // HAL export interface
+
+    //FIXME
+    //HalSetWakeEnable = HaliSetWakeEnable;
+    //HalSetWakeAlarm = HaliSetWakeAlarm;
+
+    /* Create a power callback */    
+    InitializeObjectAttributes(&ObjectAttributes,
+                               &CallbackName,
+                               (OBJ_CASE_INSENSITIVE | OBJ_PERMANENT),
+                               NULL,
+                               NULL);
+
+    ExCreateCallback(&CallbackObject, &ObjectAttributes, FALSE, TRUE);
+    ExRegisterCallback(CallbackObject, HalpPowerStateCallback, NULL);
+
+    if (!HalpFixedAcpiDescTable.facs)
+    {
+        return STATUS_SUCCESS;
+    }
+
+    PhysicalAddress.QuadPart = HalpFixedAcpiDescTable.facs;
+    Facs = MmMapIoSpace(PhysicalAddress, sizeof(*Facs), MmNonCached);
+
+    if (Facs && (Facs->Signature == 'SCAF'))
+    {
+        HalpWakeVector = &Facs->pFirmwareWakingVector;
+    }
+
     return STATUS_SUCCESS;
 }
 
