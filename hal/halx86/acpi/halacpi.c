@@ -1268,7 +1268,7 @@ HalReportResourceUsage(VOID)
 
 VOID
 NTAPI
-HalAcpiTimerCarry()
+HalAcpiTimerCarry(VOID)
 {
     ULONG Time;
     LARGE_INTEGER Value;
@@ -1284,7 +1284,7 @@ HalAcpiTimerCarry()
 
 VOID
 NTAPI
-HalAcpiBrokenPiix4TimerCarry()
+HalAcpiBrokenPiix4TimerCarry(VOID)
 {
     DPRINT("HalAcpiBrokenPiix4TimerCarry()\n");
     /* Nothing */
