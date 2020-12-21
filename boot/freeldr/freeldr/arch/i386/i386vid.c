@@ -205,7 +205,7 @@ USHORT BiosIsVesaSupported(VOID)
 
     if (Regs.w.ax != 0x004F)
     {
-        ERR("VESA BIOS call failed\n");
+        WARN("VESA BIOS call failed\n");
         return 0x0000;
     }
 
@@ -260,7 +260,7 @@ BiosIsVesaDdcSupported(VOID)
 
     if (Regs.w.ax != 0x004F)
     {
-        ERR("VESA/DDC installation check failed\n");
+        WARN("VESA/DDC installation check failed\n");
         return FALSE;
     }
 
@@ -290,7 +290,7 @@ BiosVesaReadEdid(VOID)
 
     if (Regs.w.ax != 0x004F)
     {
-        ERR("Read EDID function not supported!\n");
+        WARN("Read EDID function not supported!\n");
         return FALSE;
     }
 
