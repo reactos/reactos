@@ -71,15 +71,6 @@ HalInitSystem(IN ULONG BootPhase,
             KeBugCheckEx(MISMATCHED_HAL, 2, Prcb->BuildType, HalpBuildType, 0);
         }
 
-        /* Fill out the dispatch tables */
-        HalQuerySystemInformation = HaliQuerySystemInformation;
-        HalInitPnpDriver = HaliInitPnpDriver;
-        HalGetDmaAdapter = HalpGetDmaAdapter;
-
-        HalGetInterruptTranslator = NULL;  // FIXME: TODO
-        HalResetDisplay = HalpBiosDisplayReset;
-        HalHaltSystem = HaliHaltSystem;
-
         /* Setup I/O space */
         HalpDefaultIoSpace.Next = HalpAddressUsageList;
         HalpAddressUsageList = &HalpDefaultIoSpace;

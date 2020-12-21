@@ -70,9 +70,6 @@ HalpInitPhase0a(_In_ PLOADER_PARAMETER_BLOCK LoaderBlock)
      */
     HalStopProfileInterrupt(ProfileTime);
 
-    /* Do some HAL-specific initialization */
-    HalpInitPhase0(LoaderBlock);
-
     /* Enable clock interrupt handler */
     HalpEnableInterruptHandler(IDT_INTERNAL,
                                0,

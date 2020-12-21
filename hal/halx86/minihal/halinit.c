@@ -40,6 +40,16 @@ HalpInitProcessor(
 VOID
 HalpInitPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
+    /* Fill out the dispatch tables */
+    HalSetSystemInformation = HaliSetSystemInformation;
+    HalQuerySystemInformation = HaliQuerySystemInformation;
+    HalInitPnpDriver = HaliInitPnpDriver;
+    HalGetDmaAdapter = HalpGetDmaAdapter;
+
+    HalGetInterruptTranslator = NULL;  // FIXME: TODO
+    HalResetDisplay = HalpBiosDisplayReset;
+    HalHaltSystem = HaliHaltSystem;
+
     /* Initialize ACPI */
     HalpSetupAcpiPhase0(LoaderBlock);
 

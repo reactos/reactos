@@ -449,6 +449,13 @@ HalpInitPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     /* Fill out HalDispatchTable */
     HalSetSystemInformation = HalpSetSystemInformation;
+    HalQuerySystemInformation = HaliQuerySystemInformation;
+    HalInitPnpDriver = HaliInitPnpDriver;
+    HalGetDmaAdapter = HalpGetDmaAdapter;
+
+    HalGetInterruptTranslator = NULL;  // FIXME: TODO
+    HalResetDisplay = HalpBiosDisplayReset;
+    HalHaltSystem = HaliHaltSystem;
 
     if (HalpMpInfoTable.ImcrPresent)
     {
