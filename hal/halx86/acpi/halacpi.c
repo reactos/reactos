@@ -36,6 +36,7 @@ PACPI_BIOS_MULTI_NODE HalpAcpiMultiNode;
 LIST_ENTRY HalpAcpiTableMatchList;
 
 ULONG HalpInvalidAcpiTable;
+ULONG HalpShutdownContext = 0;
 
 //ULONG HalpPicVectorRedirect[] = {0, 1, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12, 13, 14, 15};
 ULONG HalpPicVectorRedirect[16] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
@@ -1132,7 +1133,12 @@ NTAPI
 HalAcpiHaltSystem(VOID)
 {
     DPRINT("HalAcpiHaltSystem()\n");
-    //ASSERT(0);
+
+    while (TRUE)
+    {
+        HalpCheckPowerButton();
+        YieldProcessor();
+    }
 }
 
 /* EOF */

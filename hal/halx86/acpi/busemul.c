@@ -14,7 +14,24 @@
 
 /* GLOBALS ********************************************************************/
 
+extern ULONG HalpShutdownContext;
+
 /* PRIVATE FUNCTIONS **********************************************************/
+
+VOID
+NTAPI
+HalpCheckPowerButton(VOID)
+{
+    if ((!KiBugCheckData[0] && !InbvCheckDisplayOwnership()) ||
+       !HalpShutdownContext)
+    {
+        return;
+    }
+
+    DPRINT1("HalpCheckPowerButton: FIXME (HalpFixedAcpiDescTable)\n");
+
+    return;
+}
 
 CODE_SEG("INIT")
 VOID
