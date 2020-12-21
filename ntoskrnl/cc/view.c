@@ -212,6 +212,7 @@ CcRosFlushDirtyPages (
     BOOLEAN Locked;
     NTSTATUS Status;
     KIRQL OldIrql;
+    BOOLEAN FlushAll = (Target == MAXULONG);
 
     DPRINT("CcRosFlushDirtyPages(Target %lu)\n", Target);
 
@@ -226,8 +227,16 @@ CcRosFlushDirtyPages (
         DPRINT("No Dirty pages\n");
     }
 
-    while ((current_entry != &DirtyVacbListHead) && (Target > 0))
+    while (((current_entry != &DirtyVacbListHead) && (Target > 0)) || FlushAll)
     {
+        if (current_entry == &DirtyVacbListHead)
+        {
+            ASSERT(FlushAll);
+            if (IsListEmpty(&DirtyVacbListHead))
+                break;
+            current_entry = DirtyVacbListHead.Flink;
+        }
+
         current = CONTAINING_RECORD(current_entry,
                                     ROS_VACB,
                                     DirtyVacbListEntry);
