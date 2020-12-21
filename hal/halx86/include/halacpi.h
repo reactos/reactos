@@ -180,4 +180,29 @@ HalAcpiGetTable(
     IN ULONG Signature
 );
 
+NTSTATUS
+NTAPI
+HalAcpiGetInterruptTranslator(
+    _In_ INTERFACE_TYPE ParentInterfaceType,
+    _In_ ULONG ParentBusNumber,
+    _In_ INTERFACE_TYPE BridgeInterfaceType,
+    _In_ USHORT Size,
+    _In_ USHORT Version,
+    _Out_ PTRANSLATOR_INTERFACE Translator,
+    _Out_ PULONG BridgeBusNumber
+);
+
+NTSTATUS
+NTAPI
+HaliInitPowerManagement(
+    _In_ PPM_DISPATCH_TABLE PmDriverDispatchTable,
+    _Out_ PPM_DISPATCH_TABLE * PmHalDispatchTable
+);
+
+VOID
+NTAPI
+HalAcpiHaltSystem(
+    VOID
+);
+
 /* EOF */

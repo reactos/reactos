@@ -448,14 +448,20 @@ VOID
 HalpInitPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     /* Fill out HalDispatchTable */
-    HalSetSystemInformation = HalpSetSystemInformation;
     HalQuerySystemInformation = HaliQuerySystemInformation;
-    HalInitPnpDriver = HaliInitPnpDriver;
-    HalGetDmaAdapter = HalpGetDmaAdapter;
+    HalSetSystemInformation = HalpSetSystemInformation;
 
-    HalGetInterruptTranslator = NULL;  // FIXME: TODO
-    HalResetDisplay = HalpBiosDisplayReset;
-    HalHaltSystem = HaliHaltSystem;
+    if (HalDispatchTableVersion >= HAL_DISPATCH_VERSION)
+    {
+        /* Fill out HalDispatchTable */
+        HalInitPnpDriver = HaliInitPnpDriver;
+        HalGetDmaAdapter = HalpGetDmaAdapter;
+
+        /* Fill out HalPrivateDispatchTable */
+        HalLocateHiberRanges = HaliLocateHiberRanges;
+        HalResetDisplay = HalpBiosDisplayReset;
+        HalAllocateMapRegisters = HalpAllocateMapRegisters;
+    }
 
     if (HalpMpInfoTable.ImcrPresent)
     {

@@ -798,6 +798,9 @@ HalpSetupAcpiPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     ULONG TableLength;
     PHYSICAL_ADDRESS PhysicalAddress;
 
+    /* Fill out HalDispatchTable */
+    HalGetInterruptTranslator = HalAcpiGetInterruptTranslator;
+
     /* Only do this once */
     if (HalpProcessedACPIPhase0) return STATUS_SUCCESS;
 
@@ -1112,6 +1115,24 @@ HalReportResourceUsage(VOID)
 
     /* Setup PCI debugging and Hibernation */
     HalpRegisterPciDebuggingDeviceInfo();
+}
+
+NTSTATUS
+NTAPI
+HaliInitPowerManagement(_In_ PPM_DISPATCH_TABLE PmDriverDispatchTable,
+                        _Out_ PPM_DISPATCH_TABLE * PmHalDispatchTable)
+{
+    DPRINT("FIXME HaliInitPowerManagement\n");
+    ASSERT(FALSE);
+    return STATUS_SUCCESS;
+}
+
+VOID
+NTAPI
+HalAcpiHaltSystem(VOID)
+{
+    DPRINT("HalAcpiHaltSystem()\n");
+    //ASSERT(0);
 }
 
 /* EOF */

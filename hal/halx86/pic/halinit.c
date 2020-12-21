@@ -163,7 +163,9 @@ HalpInitPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     HalGetDmaAdapter = HalpGetDmaAdapter;
 
     HalGetInterruptTranslator = NULL;  // FIXME: TODO
+    HalLocateHiberRanges = HaliLocateHiberRanges;
     HalResetDisplay = HalpBiosDisplayReset;
+    HalAllocateMapRegisters = HalpAllocateMapRegisters;
     HalHaltSystem = HaliHaltSystem;
 
     /* Initialize ACPI */

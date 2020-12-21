@@ -368,6 +368,15 @@ HalpInitPhase0a(_In_ PLOADER_PARAMETER_BLOCK LoaderBlock)
     /* Initialize ACPI */
     HalpSetupAcpiPhase0(LoaderBlock);
 
+    if (HalDispatchTableVersion >= HAL_DISPATCH_VERSION)
+    {
+        /* Fill out HalDispatchTable */
+        HalInitPowerManagement = HaliInitPowerManagement;
+
+        /* Fill out HalPrivateDispatchTable */
+        HalHaltSystem = HalAcpiHaltSystem;
+    }
+
     /* Initialize the PICs */
     HalpInitializePICs(TRUE);
 

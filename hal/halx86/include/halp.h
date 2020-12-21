@@ -538,6 +538,21 @@ HalpGetParameters(
     IN PCHAR CommandLine
 );
 
+NTSTATUS
+NTAPI
+HalpAllocateMapRegisters(
+    _In_ PADAPTER_OBJECT AdapterObject,
+    _In_ ULONG Unknown,
+    _In_ ULONG Unknown2,
+    PMAP_REGISTER_ENTRY Registers
+);
+
+VOID
+NTAPI
+HaliLocateHiberRanges(
+    _In_ PVOID MemoryMap
+);
+
 #if defined(SARCH_PC98)
 BOOLEAN
 NTAPI

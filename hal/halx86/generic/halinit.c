@@ -108,3 +108,23 @@ HalInitSystem(IN ULONG BootPhase,
     /* All done, return */
     return TRUE;
 }
+
+NTSTATUS
+NTAPI
+HalpAllocateMapRegisters(_In_ PADAPTER_OBJECT AdapterObject,
+                         _In_ ULONG Unknown,
+                         _In_ ULONG Unknown2,
+                         PMAP_REGISTER_ENTRY Registers)
+{
+    DPRINT1("HalpAllocateMapRegisters: FIXME. AdapterObject %X\n", AdapterObject);
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+VOID
+NTAPI
+HaliLocateHiberRanges(_In_ PVOID MemoryMap)
+{
+    DPRINT1("HaliLocateHiberRanges: FIXME. MemoryMap %X\n", MemoryMap);
+}
+
+/* EOF */

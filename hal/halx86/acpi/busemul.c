@@ -121,6 +121,20 @@ HalpFindBusAddressTranslation(IN PHYSICAL_ADDRESS BusAddress,
     return TRUE;
 }
 
+NTSTATUS
+NTAPI
+HalAcpiGetInterruptTranslator(_In_ INTERFACE_TYPE ParentInterfaceType,
+                              _In_ ULONG ParentBusNumber,
+                              _In_ INTERFACE_TYPE BridgeInterfaceType,
+                              _In_ USHORT Size,
+                              _In_ USHORT Version,
+                              _Out_ PTRANSLATOR_INTERFACE Translator,
+                              _Out_ PULONG BridgeBusNumber)
+{
+    ASSERT(FALSE);
+    return 0;
+}
+
 /* PUBLIC FUNCTIONS **********************************************************/
 
 /*
