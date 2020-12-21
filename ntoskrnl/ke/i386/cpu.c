@@ -1368,7 +1368,7 @@ KeSaveFloatingPointState(OUT PKFLOATING_SAVE Save)
 {
     PFNSAVE_FORMAT FpState;
     ASSERT(KeGetCurrentIrql() <= DISPATCH_LEVEL);
-    DPRINT1("%s is not really implemented\n", __FUNCTION__);
+    UNIMPLEMENTED_ONCE;
 
     /* check if we are doing software emulation */
     if (!KeI386NpxPresent) return STATUS_ILLEGAL_FLOAT_CONTEXT;
@@ -1400,7 +1400,7 @@ KeRestoreFloatingPointState(IN PKFLOATING_SAVE Save)
 {
     PFNSAVE_FORMAT FpState = *((PVOID *) Save);
     ASSERT(KeGetCurrentThread()->Header.NpxIrql == KeGetCurrentIrql());
-    DPRINT1("%s is not really implemented\n", __FUNCTION__);
+    UNIMPLEMENTED_ONCE;
 
 #ifdef __GNUC__
     asm volatile("fnclex\n\t");

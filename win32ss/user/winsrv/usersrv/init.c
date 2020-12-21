@@ -140,7 +140,7 @@ CSR_API(SrvGetThreadConsoleDesktop)
 {
     PUSER_GET_THREAD_CONSOLE_DESKTOP GetThreadConsoleDesktopRequest = &((PUSER_API_MESSAGE)ApiMessage)->Data.GetThreadConsoleDesktopRequest;
 
-    DPRINT1("%s not yet implemented\n", __FUNCTION__);
+    UNIMPLEMENTED_ONCE;
 
     /* Return nothing for the moment... */
     GetThreadConsoleDesktopRequest->ConsoleDesktop = NULL;
