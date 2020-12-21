@@ -143,6 +143,8 @@ typedef struct _ACPI_TABLE_MADT
 
 } ACPI_TABLE_MADT, *PACPI_TABLE_MADT;
 
+#define ACPI_USE_PLATFORM_CLOCK  0x8000
+
 //
 // Internal HAL structure
 //
@@ -204,5 +206,7 @@ NTAPI
 HalAcpiHaltSystem(
     VOID
 );
+
+extern FADT HalpFixedAcpiDescTable;
 
 /* EOF */

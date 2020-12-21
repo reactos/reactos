@@ -85,4 +85,11 @@ HalpInitPhase0a(_In_ PLOADER_PARAMETER_BLOCK LoaderBlock)
                                Latched);
 }
 
+VOID
+NTAPI
+HaliAcpiSetUsePmClock(VOID)
+{
+
+}
+
 /* EOF */

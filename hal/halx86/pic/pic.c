@@ -217,6 +217,13 @@ LONG HalpEisaELCR;
 
 VOID
 NTAPI
+HaliAcpiSetUsePmClock(VOID)
+{
+
+}
+
+VOID
+NTAPI
 HalpInitializePICs(IN BOOLEAN EnableInterrupts)
 {
     ULONG EFlags;

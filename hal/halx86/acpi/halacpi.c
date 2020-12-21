@@ -771,19 +771,23 @@ HalpAcpiTableCacheInit(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 
 VOID
 NTAPI
-HaliAcpiTimerInit(IN ULONG TimerPort,
-                  IN ULONG TimerValExt)
+HaliAcpiTimerInit(IN PULONG TimerPort,
+                  IN BOOLEAN TimerValExt)
 {
     PAGED_CODE();
+    DPRINT("HaliAcpiTimerInit: Port %X, ValExt %X, flags %X\n", TimerPort, TimerValExt, HalpFixedAcpiDescTable.flags);
 
     /* Is this in the init phase? */
     if (!TimerPort)
     {
         /* Get the data from the FADT */
-        TimerPort = HalpFixedAcpiDescTable.pm_tmr_blk_io_port;
-        TimerValExt = HalpFixedAcpiDescTable.flags & ACPI_TMR_VAL_EXT;
-        DPRINT1("ACPI Timer at: %Xh (EXT: %d)\n", TimerPort, TimerValExt);
+        TimerPort = (PULONG)HalpFixedAcpiDescTable.pm_tmr_blk_io_port; // System port address of the Power Management Timer Control Register Block
+        TimerValExt = (HalpFixedAcpiDescTable.flags & ACPI_TMR_VAL_EXT) != 0; // A zero indicates TMR_VAL is implemented as a 24-bit value.
+                                                                              // A one indicates TMR_VAL is implemented as a 32-bit value.
+        DPRINT1("TimerPort %X, IsTimerValExt32bit %X\n", TimerPort, TimerValExt);
     }
+
+    HaliAcpiSetUsePmClock();
 
     /* FIXME: Now proceed to the timer initialization */
     //HalaAcpiTimerInit(TimerPort, TimerValExt);
@@ -849,7 +853,7 @@ HalpSetupAcpiPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     }
 
     /* Setup the ACPI timer */
-    HaliAcpiTimerInit(0, 0);
+    HaliAcpiTimerInit(NULL, FALSE);
 
     /* Do we have a low stub address yet? */
     if (!HalpLowStubPhysicalAddress.QuadPart)

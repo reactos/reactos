@@ -407,4 +407,17 @@ HalpInitPhase0a(_In_ PLOADER_PARAMETER_BLOCK LoaderBlock)
                                Latched);
 }
 
+VOID
+NTAPI
+HaliAcpiSetUsePmClock(VOID)
+{
+    if (HalpFixedAcpiDescTable.flags & ACPI_USE_PLATFORM_CLOCK)
+    {
+        DPRINT1("HaliAcpiSetUsePmClock: ACPI_USE_PLATFORM_CLOCK \n");
+        DbgBreakPoint();
+        //HalpSetPmTimerFunction();
+        //HalpUsePmTimer = 1;
+    }
+}
+
 /* EOF */
