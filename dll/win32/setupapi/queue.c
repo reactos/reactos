@@ -1085,7 +1085,7 @@ static BOOL do_file_copyW( LPCWSTR source, LPCWSTR target, DWORD style,
     hSource = LZOpenFileW((LPWSTR)source, &OfStruct, OF_READ);
     if (hSource < 0)
     {
-        ERR("LZOpenFileW(1) error %d %s\n", (int)hSource, debugstr_w(source));
+        TRACE("LZOpenFileW(1) error %d %s\n", (int)hSource, debugstr_w(source));
         return FALSE;
     }
 
@@ -1822,7 +1822,7 @@ UINT WINAPI SetupDefaultQueueCallbackW( PVOID context, UINT notification,
         TRACE( "end copy %s -> %s\n", debugstr_w(paths->Source), debugstr_w(paths->Target) );
         return 0;
     case SPFILENOTIFY_COPYERROR:
-        ERR( "copy error %d %s -> %s\n", paths->Win32Error,
+        TRACE( "copy error %d %s -> %s\n", paths->Win32Error,
              debugstr_w(paths->Source), debugstr_w(paths->Target) );
         return FILEOP_SKIP;
     case SPFILENOTIFY_NEEDMEDIA:
