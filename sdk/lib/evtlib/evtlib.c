@@ -828,7 +828,7 @@ Continue:
         if (LogFile->Header.MaxSize - NextOffset.QuadPart < sizeof(EVENTLOGRECORD))
         {
             /* Wrap to the beginning of the log */
-            DPRINT1("Wrap!\n");
+            DPRINT("Wrap!\n");
             NextOffset.QuadPart = sizeof(EVENTLOGHEADER);
         }
 
@@ -838,7 +838,7 @@ Continue:
          */
         if (FileOffset.QuadPart > NextOffset.QuadPart)
         {
-            DPRINT1("Wrapping = TRUE;\n");
+            DPRINT("Wrapping = TRUE;\n");
             Wrapping = TRUE;
         }
 
@@ -1474,10 +1474,10 @@ ElfWriteRecord(
             LogFile->Header.EndOffset = WriteOffset;
         }
 
-        DPRINT1("MaxSize = 0x%x, StartOffset = 0x%x, WriteOffset = 0x%x, EndOffset = 0x%x, BufSize = 0x%x\n"
-                "OldestRecordNumber = %d\n",
-                LogFile->Header.MaxSize, LogFile->Header.StartOffset, WriteOffset, LogFile->Header.EndOffset, BufSize,
-                OldestRecordNumber);
+        EVTLTRACE("MaxSize = 0x%x, StartOffset = 0x%x, WriteOffset = 0x%x, EndOffset = 0x%x, BufSize = 0x%x\n"
+                  "OldestRecordNumber = %d\n",
+                  LogFile->Header.MaxSize, LogFile->Header.StartOffset, WriteOffset, LogFile->Header.EndOffset, BufSize,
+                  OldestRecordNumber);
     }
 
     /*
