@@ -751,7 +751,7 @@ MsqCreateMessage(LPMSG Msg)
 VOID FASTCALL
 MsqDestroyMessage(PUSER_MESSAGE Message)
 {
-   TRACE("Post Destroy %d\n",PostMsgCount)
+   TRACE("Post Destroy %d\n",PostMsgCount);
    if (Message->pti == NULL)
    {
       ERR("Double Free Message\n");
@@ -1151,7 +1151,7 @@ co_MsqSendMessage(PTHREADINFO ptirec,
    }
 
    Timeout.QuadPart = Int32x32To64(-10000,uTimeout); // Pass SMTO test with a TO of 0x80000000.
-   TRACE("Timeout val %lld\n",Timeout.QuadPart)
+   TRACE("Timeout val %lld\n",Timeout.QuadPart);
 
    Message->Msg.hwnd = Wnd;
    Message->Msg.message = Msg;
