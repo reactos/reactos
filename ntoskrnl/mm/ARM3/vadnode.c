@@ -285,7 +285,7 @@ MiInsertVadEx(
                                            &Parent);
         if (Result == TableFoundNode)
         {
-            DPRINT1("Given address conflicts with existing node\n");
+            DPRINT("Given address conflicts with existing node\n");
             KeReleaseGuardedMutex(&CurrentProcess->AddressCreationLock);
             return STATUS_CONFLICTING_ADDRESSES;
         }
