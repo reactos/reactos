@@ -47,6 +47,115 @@ BOOLEAN HalDisableFirmwareMapper = TRUE;
 PWCHAR HalHardwareIdString = L"acpipic_up";
 PWCHAR HalName = L"ACPI Compatible Eisa/Isa HAL";
 
+/* DISPATCH TABLE FUNCTIONS ***************************************************/
+
+ACPI_PM_DISPATCH_TABLE HalAcpiDispatchTable =
+{
+    0x48414C20, // "HAL "
+    2,
+    HaliAcpiTimerInit,
+    NULL,
+    HaliAcpiMachineStateInit,
+    HaliAcpiQueryFlags,
+    HalpAcpiPicStateIntact,
+    HalRestorePicState,
+    HaliPciInterfaceReadConfig,
+    HaliPciInterfaceWriteConfig,
+    HaliSetVectorState,
+    HalSystemVector,
+    HaliSetMaxLegacyPciBusNumber,
+    HaliIsVectorValid
+};
+
+VOID
+NTAPI
+HaliAcpiMachineStateInit(_In_ ULONG Unknown1,
+                         _In_ PVOID State,
+                         _Out_ ULONG * OutInterruptModel)
+{
+    //UNIMPLEMENTED;
+    DPRINT1("HaliAcpiMachineStateInit: .. \n");
+    ASSERT(FALSE);
+}
+
+NTSTATUS
+NTAPI
+HaliAcpiQueryFlags(_In_ ULONG Unknown1,
+                   _In_ ULONG Unknown2,
+                   _In_ ULONG Unknown3)
+{
+    //UNIMPLEMENTED;
+    DPRINT1("HaliAcpiQueryFlags: .. \n");
+    ASSERT(FALSE);
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+NTAPI
+HalpAcpiPicStateIntact(_In_ ULONG Unknown1,
+                       _In_ ULONG Unknown2,
+                       _In_ ULONG Unknown3)
+{
+    //UNIMPLEMENTED;
+    DPRINT1("HalpAcpiPicStateIntact: .. \n");
+    ASSERT(FALSE);
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+NTSTATUS
+NTAPI
+HalRestorePicState(_In_ ULONG Unknown1,
+                   _In_ ULONG Unknown2,
+                   _In_ ULONG Unknown3)
+{
+    //UNIMPLEMENTED;
+    DPRINT1("HalRestorePicState: .. \n");
+    ASSERT(FALSE);
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+UCHAR
+NTAPI
+HaliSetVectorState(_In_ ULONG GlobalIrq,
+                   _In_ UCHAR State)
+{
+    //UNIMPLEMENTED;
+    DPRINT1("HaliSetVectorState: GlobalIrq %X, State %X\n", GlobalIrq, State);
+    ASSERT(FALSE);
+    return 0;
+}
+
+NTSTATUS
+NTAPI
+HalSystemVector(_In_ ULONG Unknown1,
+                _In_ ULONG Unknown2,
+                _In_ ULONG Unknown3)
+{
+    //UNIMPLEMENTED;
+    DPRINT1("HalSystemVector: .. \n");
+    ASSERT(FALSE);
+    return STATUS_NOT_IMPLEMENTED;
+}
+
+VOID
+NTAPI
+HaliSetMaxLegacyPciBusNumber(_In_ ULONG MaxLegacyPciBusNumber)
+{
+    //UNIMPLEMENTED;
+    DPRINT1("HaliSetMaxLegacyPciBusNumber: MaxLegacyPciBusNumber %X\n", MaxLegacyPciBusNumber);
+    ASSERT(FALSE);
+}
+
+BOOLEAN
+NTAPI
+HaliIsVectorValid(_In_ ULONG DeviceIrq)
+{
+    //UNIMPLEMENTED;
+    DPRINT1("HaliIsVectorValid: DeviceIrq %X\n", DeviceIrq);
+    ASSERT(FALSE);
+    return FALSE;
+}
+
 /* PRIVATE FUNCTIONS **********************************************************/
 
 PDESCRIPTION_HEADER
