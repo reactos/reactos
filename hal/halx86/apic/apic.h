@@ -316,4 +316,11 @@ HalpInitPhase0a(
     _In_ PLOADER_PARAMETER_BLOCK LoaderBlock
 );
 
+BOOLEAN
+NTAPI 
+HalpGetApicInterruptDesc(
+    _In_ ULONG DeviceIrq,
+    _In_ USHORT * OutIntI
+);
+
 /* EOF */

@@ -77,6 +77,7 @@ PLOCAL_APIC HalpProcLocalApicTable = NULL;
 KAFFINITY HalpNodeProcessorAffinity[MAX_CPUS] = {0};
 ULONG HalpDefaultApicDestinationModeMask = 0x800;
 ULONG HalpHybridApicPhysicalTargets = 0;
+USHORT HalpMaxApicInti[MAX_IOAPICS] = {0};
 UCHAR HalpIntDestMap[MAX_CPUS] = {0};
 UCHAR HalpMaxProcsPerCluster = 0;
 UCHAR HalpInitLevel = 0xFF;
@@ -353,6 +354,42 @@ HalpInitializeLocalUnit()
         _enable();
     }
 }
+
+BOOLEAN
+NTAPI 
+HalpGetApicInterruptDesc(
+    _In_ ULONG DeviceIrq,
+    _In_ USHORT * OutIntI)
+{
+    ULONG IoApic;
+    ULONG IrqBase;
+    USHORT ApicInti = 0;
+
+    DPRINT("HalpGetApicInterruptDesc: Irq %X, Count %X\n", DeviceIrq, HalpMpInfoTable.IoApicCount);
+
+    //HalpDumpAcpiMadtTable();
+    //HalpDumpMpInfoTable();
+
+    for (IoApic = 0; IoApic < HalpMpInfoTable.IoApicCount; IoApic++)
+    {
+        IrqBase = HalpMpInfoTable.IoApicIrqBase[IoApic];
+        DPRINT("HalpGetApicInterruptDesc: IrqBase %X, IoApic %X, Max Inti %X\n", IrqBase, IoApic, HalpMaxApicInti[IoApic]);
+
+        if (DeviceIrq >= IrqBase &&
+            DeviceIrq < (IrqBase + HalpMaxApicInti[IoApic]))
+        {
+            *OutIntI = DeviceIrq + ApicInti - (USHORT)IrqBase;
+            DPRINT("HalpGetApicInterruptDesc: *OutIntI %X\n", *OutIntI);
+            return TRUE;
+        }
+
+        ApicInti += HalpMaxApicInti[IoApic];
+    }
+
+    DPRINT("HalpGetApicInterruptDesc: return FALSE\n");
+    return FALSE;
+}
+
 #endif
 
 #ifdef _M_IX86
