@@ -117,6 +117,7 @@ RtlAssert(
     #endif
 
     #define UNIMPLEMENTED         __NOTICE(WARNING, "is UNIMPLEMENTED!\n")
+    #define UNIMPLEMENTED_ONCE    do { static int bWarnedOnce = 0; if (!bWarnedOnce) { bWarnedOnce++; UNIMPLEMENTED; } } while (0)
 
     #define ERR_(ch, fmt, ...)    DbgPrintEx(DPFLTR_##ch##_ID, DPFLTR_ERROR_LEVEL, "(%s:%d) " fmt, __RELFILE__, __LINE__, ##__VA_ARGS__)
     #define WARN_(ch, fmt, ...)   DbgPrintEx(DPFLTR_##ch##_ID, DPFLTR_WARNING_LEVEL, "(%s:%d) " fmt, __RELFILE__, __LINE__, ##__VA_ARGS__)
@@ -131,11 +132,11 @@ RtlAssert(
 #else /* not DBG */
 
     /* On non-debug builds, we never show these */
+    #define UNIMPLEMENTED
+    #define UNIMPLEMENTED_ONCE
 #if defined(_MSC_VER)
     #define DPRINT1   __noop
     #define DPRINT    __noop
-
-    #define UNIMPLEMENTED
 
     #define ERR_(ch, ...)      __noop
     #define WARN_(ch, ...)     __noop
@@ -149,8 +150,6 @@ RtlAssert(
 #else
     #define DPRINT1(...) do { if(0) { DbgPrint(__VA_ARGS__); } } while(0)
     #define DPRINT(...) do { if(0) { DbgPrint(__VA_ARGS__); } } while(0)
-
-    #define UNIMPLEMENTED
 
     #define ERR_(ch, ...) do { if(0) { DbgPrint(__VA_ARGS__); } } while(0)
     #define WARN_(ch, ...) do { if(0) { DbgPrint(__VA_ARGS__); } } while(0)
