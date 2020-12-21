@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS user32.dll
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
- * PURPOSE:     Ghost window handling
+ * PURPOSE:     Window ghosting feature
  * COPYRIGHT:   Copyright 2018 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
@@ -13,11 +13,5 @@ BOOL FASTCALL IntGoGhost(PWND Window, BOOL bGo)
     // 1. Create a thread.
     // 2. Create a ghost window in the thread.
     // 3. Do message loop in the thread
-    static int bWarnedOnce = 0;
-    if (!bWarnedOnce)
-    {
-        bWarnedOnce++;
-        STUB;
-    }
     return FALSE;
 }
