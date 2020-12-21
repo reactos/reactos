@@ -893,7 +893,7 @@ IopResetDevice(PPLUGPLAY_CONTROL_RESET_DEVICE_DATA ResetDeviceData)
 #endif
         {
             /* A driver has already been loaded for this device */
-            DPRINT1("A reboot is required for the current driver for '%wZ' to be replaced\n", &DeviceNode->InstancePath);
+            DPRINT("A reboot is required for the current driver for '%wZ' to be replaced\n", &DeviceNode->InstancePath);
             DeviceNode->Problem = CM_PROB_NEED_RESTART;
         }
     }
@@ -909,7 +909,7 @@ IopResetDevice(PPLUGPLAY_CONTROL_RESET_DEVICE_DATA ResetDeviceData)
         if (NT_SUCCESS(Status))
         {
             /* Start the service and begin PnP initialization of the device again */
-            DPRINT1("A new driver will be loaded for '%wZ' (no FDO above)\n", &DeviceNode->InstancePath);
+            DPRINT("A new driver will be loaded for '%wZ' (no FDO above)\n", &DeviceNode->InstancePath);
             Status = IopActionInitChildServices(DeviceNode, DeviceNode->Parent);
         }
     }
