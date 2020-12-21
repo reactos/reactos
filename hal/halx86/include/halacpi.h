@@ -151,7 +151,7 @@ typedef VOID
 
 typedef VOID
 (NTAPI * PHAL_ACPI_TIMER_INTERRUPT)(
-    _In_ ULONG Unknown1
+    VOID
 );
 
 typedef VOID

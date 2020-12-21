@@ -886,6 +886,35 @@ HalpAcpiTableCacheInit(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 
 VOID
 NTAPI
+HalaAcpiTimerInit(_In_ PULONG TimerPort,
+                  _In_ BOOLEAN IsTimerValExt32bit)
+{
+    DPRINT("HalaAcpiTimerInit: Port %p, IsValExt %X\n", TimerPort, IsTimerValExt32bit);
+
+    RtlZeroMemory(&TimerInfo, sizeof(TimerInfo));
+
+    TimerInfo.TimerPort = TimerPort;
+
+    if (IsTimerValExt32bit)
+    {
+        TimerInfo.ValueExt = 0x80000000; // 32-bit
+    }
+    else
+    {
+        TimerInfo.ValueExt = 0x00800000; // 24-bit
+    }
+
+    if (!HalpBrokenAcpiTimer)
+    {
+        return;
+    }
+
+    DPRINT1("HalaAcpiTimerInit: HalpBrokenAcpiTimer\n");
+    DbgBreakPoint();
+}
+
+VOID
+NTAPI
 HaliAcpiTimerInit(_In_ PULONG TimerPort,
                   _In_ BOOLEAN TimerValExt)
 {
@@ -904,8 +933,8 @@ HaliAcpiTimerInit(_In_ PULONG TimerPort,
 
     HaliAcpiSetUsePmClock();
 
-    /* FIXME: Now proceed to the timer initialization */
-    //HalaAcpiTimerInit(TimerPort, TimerValExt);
+    /* Now proceed to the timer initialization */
+    HalaAcpiTimerInit(TimerPort, TimerValExt);
 }
 
 CODE_SEG("INIT")
