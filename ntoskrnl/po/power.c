@@ -625,7 +625,7 @@ VOID
 NTAPI
 PoStartNextPowerIrp(IN PIRP Irp)
 {
-    UNIMPLEMENTED;
+    UNIMPLEMENTED_ONCE;
 }
 
 /*
