@@ -553,6 +553,12 @@ HaliLocateHiberRanges(
     _In_ PVOID MemoryMap
 );
 
+VOID
+NTAPI
+HalpBuildIpiDestinationMap(
+    _In_ ULONG ProcessorNumber
+);
+
 #if defined(SARCH_PC98)
 BOOLEAN
 NTAPI

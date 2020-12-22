@@ -14,6 +14,8 @@
 
 /* GLOBALS *******************************************************************/
 
+UCHAR HalpInitLevel = 0xFF;
+
 /* PRIVATE FUNCTIONS *********************************************************/
 
 /* FUNCTIONS *****************************************************************/
@@ -48,6 +50,8 @@ HalInitSystem(IN ULONG BootPhase,
     /* Check the boot phase */
     if (BootPhase == 0)
     {
+        HalpInitLevel = 0;
+
         /* Phase 0... save bus type */
         HalpBusType = LoaderBlock->u.I386.MachineType & 0xFF;
 
@@ -94,6 +98,8 @@ HalInitSystem(IN ULONG BootPhase,
     }
     else if (BootPhase == 1)
     {
+        HalpInitLevel = 1;
+
         /* Initialize bus handlers */
         HalpInitBusHandlers();
 

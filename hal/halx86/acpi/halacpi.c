@@ -57,7 +57,7 @@ BOOLEAN HalpBrokenAcpiTimer = FALSE;
 
 ACPI_PM_DISPATCH_TABLE HalAcpiDispatchTable =
 {
-    0x48414C20, // "HAL "
+    'HAL ',
     2,
     HaliAcpiTimerInit,
     NULL,

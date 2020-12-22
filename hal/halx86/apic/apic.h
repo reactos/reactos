@@ -323,4 +323,10 @@ HalpGetApicInterruptDesc(
     _In_ USHORT * OutIntI
 );
 
+VOID
+NTAPI
+HalpInitializeApicAddressing(
+    VOID
+);
+
 /* EOF */

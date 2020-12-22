@@ -80,9 +80,12 @@ ULONG HalpHybridApicPhysicalTargets = 0;
 USHORT HalpMaxApicInti[MAX_IOAPICS] = {0};
 UCHAR HalpIntDestMap[MAX_CPUS] = {0};
 UCHAR HalpMaxProcsPerCluster = 0;
-UCHAR HalpInitLevel = 0xFF;
 UCHAR HalpMaxNode = 0;
 BOOLEAN HalpForceApicPhysicalDestinationMode = FALSE;
+BOOLEAN HalpUsePmTimer = FALSE;
+BOOLEAN HalpForceClusteredApicMode = FALSE;
+
+extern UCHAR HalpInitLevel;
 
 /* FUNCTIONS ****************************************************************/
 
@@ -231,7 +234,7 @@ HalpMarkProcessorStarted(
 
 VOID
 NTAPI
-HalpBuildIpiDestinationMap(ULONG ProcessorNumber)
+HalpBuildIpiDestinationMap(_In_ ULONG ProcessorNumber)
 {
     if (HalpInitLevel == 0xFF)
     {

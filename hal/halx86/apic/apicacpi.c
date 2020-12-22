@@ -35,6 +35,8 @@ extern UCHAR HalpMaxProcsPerCluster;
 extern UCHAR HalpIRQLtoTPR[32];    // table, which sets the correspondence between IRQL levels and TPR (Task Priority Register) values.
 extern KIRQL HalpVectorToIRQL[16];
 extern BOOLEAN HalpForceApicPhysicalDestinationMode;
+extern BOOLEAN HalpUsePmTimer;
+extern BOOLEAN HalpForceClusteredApicMode;
 
 /* FUNCTIONS ******************************************************************/
 
@@ -59,9 +61,7 @@ HalpGetParameters(IN PCHAR CommandLine)
   #ifdef CONFIG_SMP // halmacpi only
     if (strstr(CommandLine, "USEPMTIMER"))
     {
-        DPRINT1("HalpGetParameters: FIXME parameters [USEPMTIMER]\n");
-        DbgBreakPoint();
-        //HalpUsePmTimer = TRUE;
+        HalpUsePmTimer = TRUE;
     }
   #endif
 
@@ -363,10 +363,43 @@ DetectMP(_In_ PLOADER_PARAMETER_BLOCK LoaderBlock)
 }
 
 VOID
+NTAPI 
+HalpInitIntiInfo()
+{
+    DPRINT1("HalpMpInfoTable.IoApicIrqBase[0] %X, MAX_INTI %X\n", HalpMpInfoTable.IoApicIrqBase[0], MAX_INTI);
+    DbgBreakPoint();
+}
+
+VOID
+NTAPI 
+HalpInitializeIOUnits()
+{
+    DPRINT1("HalpInitializeIOUnits: IoApicCount %X\n", HalpMpInfoTable.IoApicCount);
+    DbgBreakPoint();
+}
+
+VOID
 HalpInitPhase0a(_In_ PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     /* Initialize ACPI */
     HalpSetupAcpiPhase0(LoaderBlock);
+
+    /* Initialize CMOS lock */
+    KeInitializeSpinLock(&HalpSystemHardwareLock);
+
+    if (HalpUsePmTimer)
+    {
+        DPRINT1("HalpInitPhase0a: HalpUsePmTimer is TRUE\n");
+        DbgBreakPoint();
+        //HalpSetPmTimerFunction();
+    }
+
+    if (HalpForceClusteredApicMode)
+    {
+        HalpMaxProcsPerCluster = 4;
+    }
+
+    HalpInitializeApicAddressing();
 
     if (HalDispatchTableVersion >= HAL_DISPATCH_VERSION)
     {
@@ -377,11 +410,15 @@ HalpInitPhase0a(_In_ PLOADER_PARAMETER_BLOCK LoaderBlock)
         HalHaltSystem = HalAcpiHaltSystem;
     }
 
+    HalpBuildIpiDestinationMap(0);
+
+    RtlZeroMemory(&HalpApicUsage, APIC_ADDRESS_USAGE_SIZE);
+
+    HalpInitIntiInfo();
+    HalpInitializeIOUnits();
+
     /* Initialize the PICs */
     HalpInitializePICs(TRUE);
-
-    /* Initialize CMOS lock */
-    KeInitializeSpinLock(&HalpSystemHardwareLock);
 
     /* Initialize CMOS */
     HalpInitializeCmos();
