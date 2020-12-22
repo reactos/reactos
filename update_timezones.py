@@ -568,7 +568,7 @@ class Rule:
 	)
 	# Abbreviation_character = '+' | '-' | '0'..'9' | 'a'..'z' | 'A'..'Z'
 	# Abbreviation = abbreviation_character {abbreviation_character}
-	# If the abbreviation is "-", then it is absent (that not checked by the syntax itself).
+	# If the abbreviation is "-", then it is absent (that is not checked by the syntax itself).
 	@classmethod
 	def read_abbreviation(cls, reader):
 		abbreviation = [reader.read_one_of(cls.ABBREVIATION_CHARACTERS)]
