@@ -137,7 +137,8 @@ class ParsingException(Exception):
 	def __init__(self, reader, message):
 		assert isinstance(reader, Reader)
 		super().__init__(
-			self.EXCEPTION_MESSAGE_FORMAT % (reader.stream_name, reader.line, reader.position, message))
+			self.EXCEPTION_MESSAGE_FORMAT % (reader.stream_name, reader.line, reader.position, message)
+		)
 
 
 class RuleReferencingException(Exception):
