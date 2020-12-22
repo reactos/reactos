@@ -35,6 +35,7 @@ extern ERESOURCE IopDriverLoadResource;
 extern BOOLEAN PnpSystemInit;
 extern PDEVICE_NODE IopRootDeviceNode;
 extern BOOLEAN PnPBootDriversLoaded;
+extern BOOLEAN PnPBootDriversInitialized;
 
 #define MAX_DEVICE_ID_LEN          200
 #define MAX_SEPARATORS_INSTANCEID  0
@@ -1560,7 +1561,7 @@ IopActionInitChildServices(PDEVICE_NODE DeviceNode,
         IopDeviceNodeHasFlag(DeviceNode, DNF_DISABLED))
         return STATUS_SUCCESS;
 
-    PiCallDriverAddDevice(DeviceNode, PnPBootDriversLoaded);
+    PiCallDriverAddDevice(DeviceNode, PnPBootDriversInitialized);
     return STATUS_SUCCESS;
 }
 

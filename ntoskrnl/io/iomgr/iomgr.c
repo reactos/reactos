@@ -77,6 +77,7 @@ extern KSPIN_LOCK IopLogListLock;
 extern KSPIN_LOCK IopTimerLock;
 
 extern PDEVICE_OBJECT IopErrorLogObject;
+extern BOOLEAN PnPBootDriversInitialized;
 
 GENERAL_LOOKASIDE IoLargeIrpLookaside;
 GENERAL_LOOKASIDE IoSmallIrpLookaside;
@@ -582,6 +583,10 @@ IoInitSystem(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         DPRINT1("IopMarkBootPartition failed!\n");
         return FALSE;
     }
+
+    // the disk subsystem is initialized here and the SystemRoot is set too
+    // we can finally load other drivers from the boot volume
+    PnPBootDriversInitialized = TRUE;
 
 #if !defined(_WINKD_) && defined(KDBG)
     /* Read KDB Data */

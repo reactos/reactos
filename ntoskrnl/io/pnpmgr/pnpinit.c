@@ -24,6 +24,7 @@ PUNICODE_STRING PiInitGroupOrderTable;
 USHORT PiInitGroupOrderTableCount;
 INTERFACE_TYPE PnpDefaultInterfaceType;
 BOOLEAN PnPBootDriversLoaded = FALSE;
+BOOLEAN PnPBootDriversInitialized = FALSE;
 
 ARBITER_INSTANCE IopRootBusNumberArbiter;
 ARBITER_INSTANCE IopRootIrqArbiter;
