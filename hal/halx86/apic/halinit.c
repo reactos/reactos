@@ -84,6 +84,7 @@ UCHAR HalpMaxNode = 0;
 BOOLEAN HalpForceApicPhysicalDestinationMode = FALSE;
 BOOLEAN HalpUsePmTimer = FALSE;
 BOOLEAN HalpForceClusteredApicMode = FALSE;
+BOOLEAN HalpHiberInProgress = FALSE;
 
 extern UCHAR HalpInitLevel;
 

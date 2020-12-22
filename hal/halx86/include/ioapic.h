@@ -25,7 +25,7 @@
 #define IOAPIC_ARB_MASK       (0xF << 24)
 #define GET_IOAPIC_ARB(x)	    (((x) & IOAPIC_ARB_MASK) >> 24)
 
-#define IOAPIC_TBL_DELMOD   (0x7 << 10) /* Delivery Mode (see APIC_DM_*) */
+#define IOAPIC_TBL_DELMOD   (0x7 << 8)  /* Delivery Mode (see APIC_DM_*) */
 #define IOAPIC_TBL_DM       (0x1 << 11) /* Destination Mode */
 #define IOAPIC_TBL_DS       (0x1 << 12) /* Delivery Status */
 #define IOAPIC_TBL_INTPOL   (0x1 << 13) /* Interrupt Input Pin Polarity */
@@ -35,6 +35,16 @@
 #define IOAPIC_TBL_DF0      (0xF << 56) /* Destination Field (physical mode) */
 #define IOAPIC_TBL_DF1      (0xFF<< 56) /* Destination Field (logical mode) */
 #define IOAPIC_TBL_VECTOR   (0xFF << 0) /* Vector (10h - FEh) */
+
+/* Delivery Modes */
+#define IOAPIC_DM_FIXED    (0x0 << 8)
+#define IOAPIC_DM_LOWEST   (0x1 << 8)
+#define IOAPIC_DM_SMI      (0x2 << 8)
+#define IOAPIC_DM_REMRD    (0x3 << 8)
+#define IOAPIC_DM_NMI      (0x4 << 8)
+#define IOAPIC_DM_INIT     (0x5 << 8)
+#define IOAPIC_DM_STARTUP  (0x6 << 8)
+#define IOAPIC_DM_EXTINT   (0x7 << 8)
 
 #include <pshpack1.h>
 typedef struct _IOAPIC_ROUTE_ENTRY {
@@ -74,6 +84,7 @@ typedef struct _IOAPIC_INFO
 } IOAPIC_INFO, *PIOAPIC_INFO;
 
 #define IOAPIC_DEFAULT_BASE   0xFEC00000    /* Default I/O APIC Base Register Address */
+#define IOAPIC_SIZE           0x400
 
 extern ULONG IRQCount;					/* Number of IRQs  */
 extern UCHAR BUSMap[MAX_BUS];				/* Map of all buses in the system */
