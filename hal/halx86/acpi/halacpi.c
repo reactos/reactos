@@ -43,15 +43,15 @@ ULONG HalpShutdownContext = 0;
 ULONG HalpPicVectorRedirect[16] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
 ULONG HalpPicVectorFlags[16] = {0};
 
-BOOLEAN HalpBrokenAcpiTimer = FALSE;
-
 /* This determines the HAL type */
 BOOLEAN HalDisableFirmwareMapper = TRUE;
 PWCHAR HalHardwareIdString = L"acpipic_up";
 PWCHAR HalName = L"ACPI Compatible Eisa/Isa HAL";
 
+#ifdef _M_IX86
 PPM_DISPATCH_TABLE PmAcpiDispatchTable;
 HALP_TIMER_INFO TimerInfo;
+BOOLEAN HalpBrokenAcpiTimer = FALSE;
 
 /* DISPATCH TABLE FUNCTIONS ***************************************************/
 
@@ -161,6 +161,7 @@ HaliIsVectorValid(_In_ ULONG DeviceIrq)
     ASSERT(FALSE);
     return FALSE;
 }
+#endif
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
@@ -884,6 +885,27 @@ HalpAcpiTableCacheInit(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     return Status;
 }
 
+#ifdef _M_AMD64
+VOID
+NTAPI
+HaliAcpiTimerInit(IN ULONG TimerPort,
+                  IN ULONG TimerValExt)
+{
+    PAGED_CODE();
+
+    /* Is this in the init phase? */
+    if (!TimerPort)
+    {
+        /* Get the data from the FADT */
+        TimerPort = HalpFixedAcpiDescTable.pm_tmr_blk_io_port;
+        TimerValExt = HalpFixedAcpiDescTable.flags & ACPI_TMR_VAL_EXT;
+        DPRINT1("ACPI Timer at: %Xh (EXT: %d)\n", TimerPort, TimerValExt);
+    }
+
+    /* FIXME: Now proceed to the timer initialization */
+    //HalaAcpiTimerInit(TimerPort, TimerValExt);
+}
+#else
 VOID
 NTAPI
 HalaAcpiTimerInit(_In_ PULONG TimerPort,
@@ -936,6 +958,7 @@ HaliAcpiTimerInit(_In_ PULONG TimerPort,
     /* Now proceed to the timer initialization */
     HalaAcpiTimerInit(TimerPort, TimerValExt);
 }
+#endif
 
 CODE_SEG("INIT")
 NTSTATUS
@@ -947,8 +970,10 @@ HalpSetupAcpiPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     ULONG TableLength;
     PHYSICAL_ADDRESS PhysicalAddress;
 
+#ifdef _M_IX86
     /* Fill out HalDispatchTable */
     HalGetInterruptTranslator = HalAcpiGetInterruptTranslator;
+#endif
 
     /* Only do this once */
     if (HalpProcessedACPIPhase0) return STATUS_SUCCESS;
@@ -997,7 +1022,11 @@ HalpSetupAcpiPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     }
 
     /* Setup the ACPI timer */
+#ifdef _M_AMD64
+    HaliAcpiTimerInit(0, 0);
+#else
     HaliAcpiTimerInit(NULL, FALSE);
+#endif
 
     /* Do we have a low stub address yet? */
     if (!HalpLowStubPhysicalAddress.QuadPart)
@@ -1266,6 +1295,7 @@ HalReportResourceUsage(VOID)
     HalpRegisterPciDebuggingDeviceInfo();
 }
 
+#ifdef _M_IX86
 VOID
 NTAPI
 HalAcpiTimerCarry(VOID)
@@ -1373,5 +1403,6 @@ HalAcpiHaltSystem(VOID)
         YieldProcessor();
     }
 }
+#endif
 
 /* EOF */

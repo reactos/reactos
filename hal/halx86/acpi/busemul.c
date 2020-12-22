@@ -138,6 +138,7 @@ HalpFindBusAddressTranslation(IN PHYSICAL_ADDRESS BusAddress,
     return TRUE;
 }
 
+#ifdef _M_IX86
 NTSTATUS
 NTAPI
 HalAcpiGetInterruptTranslator(_In_ INTERFACE_TYPE ParentInterfaceType,
@@ -151,6 +152,7 @@ HalAcpiGetInterruptTranslator(_In_ INTERFACE_TYPE ParentInterfaceType,
     ASSERT(FALSE);
     return 0;
 }
+#endif
 
 /* PUBLIC FUNCTIONS **********************************************************/
 

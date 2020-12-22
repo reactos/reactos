@@ -143,6 +143,7 @@ typedef struct _ACPI_TABLE_MADT
 
 } ACPI_TABLE_MADT, *PACPI_TABLE_MADT;
 
+#ifdef _M_IX86
 typedef VOID
 (NTAPI * PHAL_ACPI_TIMER_INIT)(
     _In_ PULONG TimerPort,
@@ -262,6 +263,7 @@ typedef struct _HALP_TIMER_INFO
 #include <poppack.h>
 
 #define ACPI_USE_PLATFORM_CLOCK  0x8000
+#endif
 
 //
 // Internal HAL structure
@@ -300,6 +302,7 @@ HalAcpiGetTable(
     IN ULONG Signature
 );
 
+#ifdef _M_IX86
 NTSTATUS
 NTAPI
 HalAcpiGetInterruptTranslator(
@@ -418,6 +421,7 @@ NTAPI
 HaliAcpiSetUsePmClock(
     VOID
 );
+#endif
 
 extern FADT HalpFixedAcpiDescTable;
 
