@@ -366,8 +366,97 @@ VOID
 NTAPI 
 HalpInitIntiInfo()
 {
-    DPRINT1("HalpMpInfoTable.IoApicIrqBase[0] %X, MAX_INTI %X\n", HalpMpInfoTable.IoApicIrqBase[0], MAX_INTI);
-    DbgBreakPoint();
+    PAPIC_INTI_INFO pIntiInfo;
+    HAL_PIC_VECTOR_FLAGS PicFlags;
+    ULONG Vector;
+    ULONG Inti;
+    ULONG ApicNo;
+    USHORT InterruptDesc;
+    USHORT SciVector;
+
+    DPRINT("HalpInitIntiInfo: IoApicIrqBase %X, MAX_INTI %X\n", HalpMpInfoTable.IoApicIrqBase[0], MAX_INTI);
+
+    for (Inti = 0; Inti < MAX_INTI; Inti++)
+    {
+        HalpIntiInfo[Inti].Type = INTI_INFO_TYPE_INT; // default type of Interrupt Source - INTR
+        HalpIntiInfo[Inti].TriggerMode = INTI_INFO_TRIGGER_LEVEL;
+        HalpIntiInfo[Inti].Polarity = INTI_INFO_POLARITY_ACTIVE_LOW;
+    }
+
+    Vector = HalpPicVectorRedirect[APIC_CLOCK_INDEX];
+
+    if (!HalpGetApicInterruptDesc(Vector, &InterruptDesc))
+    {
+        DPRINT1("HalpInitIntiInfo: KeBugCheckEx\n");
+        KeBugCheckEx(HAL_INITIALIZATION_FAILED, 0x3000, 1, Vector, 0);
+    }
+
+    DPRINT("HalpInitIntiInfo: Vector %X, InterruptDesc %X\n", Vector, InterruptDesc);
+
+    PicFlags.AsULONG = HalpPicVectorFlags[APIC_CLOCK_INDEX];
+    pIntiInfo = &HalpIntiInfo[InterruptDesc];
+
+    DPRINT("HalpInitIntiInfo: PicFlags %X, IntiInfo %X\n", PicFlags.AsULONG, pIntiInfo->AsULONG);
+
+    if (PicFlags.Polarity == PIC_FLAGS_POLARITY_CONFORMS)
+    {
+        pIntiInfo->Polarity = INTI_INFO_POLARITY_ACTIVE_HIGH;
+    }
+    else
+    {
+        pIntiInfo->Polarity = PicFlags.Polarity;
+    }
+
+    if (PicFlags.TriggerMode == PIC_FLAGS_TRIGGER_CONFORMS)
+    {
+        pIntiInfo->TriggerMode = INTI_INFO_TRIGGER_EDGE;
+    }
+    else
+    {
+        pIntiInfo->TriggerMode = INTI_INFO_TRIGGER_LEVEL;
+    }
+
+    SciVector = HalpFixedAcpiDescTable.sci_int_vector;
+    Vector = HalpPicVectorRedirect[SciVector];
+
+    if (!HalpGetApicInterruptDesc(Vector, &InterruptDesc))
+    {
+        DPRINT1("HalpInitIntiInfo: KeBugCheckEx\n");
+        KeBugCheckEx(HAL_INITIALIZATION_FAILED, 0x3000, Vector, 0, 0);
+    }
+
+    DPRINT("SciVector %X, Vector %X, InterruptDesc %X\n", SciVector, Vector, InterruptDesc);
+
+    PicFlags.AsULONG = HalpPicVectorFlags[SciVector];
+    pIntiInfo = &HalpIntiInfo[InterruptDesc];
+
+    DPRINT("HalpInitIntiInfo: PicFlags %X, IntiInfo %X\n", PicFlags.AsULONG, pIntiInfo->AsULONG);
+
+    if (PicFlags.Polarity == PIC_FLAGS_POLARITY_CONFORMS)
+    {
+        pIntiInfo->Polarity = INTI_INFO_POLARITY_ACTIVE_LOW;
+    }
+    else
+    {
+        pIntiInfo->Polarity = PicFlags.Polarity;
+    }
+
+    if (PicFlags.TriggerMode != PIC_FLAGS_TRIGGER_CONFORMS &&
+        PicFlags.TriggerMode != PIC_FLAGS_TRIGGER_LEVEL)
+    {
+        DPRINT1("HalpInitIntiInfo: KeBugCheckEx\n");
+        KeBugCheckEx(ACPI_BIOS_ERROR, 0x10008, SciVector, 0, 0);
+    }
+
+    pIntiInfo->TriggerMode = INTI_INFO_TRIGGER_LEVEL;
+
+    Inti = 0;
+    for (ApicNo = 0; ApicNo < MAX_IOAPICS; ApicNo++)
+    {
+        Inti += HalpMaxApicInti[ApicNo];
+    }
+
+    ASSERT(Inti < MAX_INTI);
 }
 
 VOID
@@ -381,6 +470,8 @@ HalpInitializeIOUnits()
 VOID
 HalpInitPhase0a(_In_ PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
+    USHORT IntI;
+
     /* Initialize ACPI */
     HalpSetupAcpiPhase0(LoaderBlock);
 
@@ -422,6 +513,15 @@ HalpInitPhase0a(_In_ PLOADER_PARAMETER_BLOCK LoaderBlock)
 
     /* Initialize CMOS */
     HalpInitializeCmos();
+
+    if (!HalpGetApicInterruptDesc(HalpPicVectorRedirect[APIC_CLOCK_INDEX], &IntI))
+    {
+        DPRINT1("HalpInitPhase0a: No RTC device interrupt\n");
+        DbgBreakPoint();
+        return;
+    }
+
+    DPRINT("HalpInitPhase0a: IntI - %X\n", IntI);
 
     /* Setup busy waiting */
     HalpCalibrateStallExecution();

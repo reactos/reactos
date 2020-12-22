@@ -63,8 +63,7 @@ enum AcpiMadtType
 /* MADT Local APIC flags */
 #define ACPI_MADT_ENABLED  1 // Processor is usable if set
 
-/* MADT MPS INTI flags (IntiFlags) */
-
+/* MADT MPS INTI flags (IntiFlags). Table 5-24 (ACPI 3.0) */
 #define ACPI_MADT_POLARITY_CONFORMS     0
 #define ACPI_MADT_POLARITY_ACTIVE_HIGH  1
 #define ACPI_MADT_POLARITY_RESERVED     2
@@ -98,7 +97,7 @@ typedef struct _ACPI_MADT_IO_APIC
 
 } ACPI_MADT_IO_APIC, *PACPI_MADT_IO_APIC;
 
-/* 2: Interrupt Override */
+/* 2: Interrupt Override. Table 5-23 (ACPI 3.0) */
 #include <pshpack1.h>
 typedef struct _ACPI_MADT_INTERRUPT_OVERRIDE
 {
@@ -129,11 +128,11 @@ typedef struct _ACPI_MADT_LOCAL_APIC_NMI
     UCHAR Lint;                 // LINTn to which NMI is connected
 } ACPI_MADT_LOCAL_APIC_NMI;
 
-/* MADT - Multiple APIC Description Table */
+/* Multiple APIC Description Table (MADT). Table 5-17 (ACPI 3.0) */
 
 /* Values for PCATCompat flag */
-#define ACPI_MADT_MULTIPLE_APIC     0
-#define ACPI_MADT_DUAL_PIC          1
+#define ACPI_MADT_MULTIPLE_APIC  0
+#define ACPI_MADT_DUAL_PIC       1
 
 typedef struct _ACPI_TABLE_MADT
 {

@@ -53,6 +53,22 @@ typedef struct _IO_APIC_REGISTERS
 
 } IO_APIC_REGISTERS, *PIO_APIC_REGISTERS;
 
+/* Type of APIC input signals */
+#define INTI_INFO_TYPE_INT     0 // vectored interrupt; vector is supplied by APIC redirection table
+#define INTI_INFO_TYPE_NMI     1 // nonmaskable interrupt
+#define INTI_INFO_TYPE_SMI     2 // system management interrupt
+#define INTI_INFO_TYPE_ExtINT  3 // vectored interrupt; vector is supplied by external PIC
+
+/* Polarity of APIC input signals */
+#define INTI_INFO_POLARITY_CONFORMS     0
+#define INTI_INFO_POLARITY_ACTIVE_HIGH  1
+#define INTI_INFO_POLARITY_RESERVED     2
+#define INTI_INFO_POLARITY_ACTIVE_LOW   3
+
+/* Trigger mode of APIC input signals */
+#define INTI_INFO_TRIGGER_EDGE   0
+#define INTI_INFO_TRIGGER_LEVEL  1
+
 typedef union _APIC_INTI_INFO
 {
     struct
@@ -96,5 +112,29 @@ typedef struct _APIC_ADDRESS_USAGE
 } APIC_ADDRESS_USAGE, *PAPIC_ADDRESS_USAGE;
 #define APIC_ADDRESS_USAGE_SIZE sizeof(APIC_ADDRESS_USAGE)
 #include <poppack.h>
+
+#define PIC_FLAGS_POLARITY_CONFORMS     0
+#define PIC_FLAGS_POLARITY_ACTIVE_HIGH  1
+#define PIC_FLAGS_POLARITY_RESERVED     2
+#define PIC_FLAGS_POLARITY_ACTIVE_LOW   3
+#define PIC_FLAGS_POLARITY_MASK         (3)
+
+#define PIC_FLAGS_TRIGGER_CONFORMS      0
+#define PIC_FLAGS_TRIGGER_EDGE          1
+#define PIC_FLAGS_TRIGGER_RESERVED      2
+#define PIC_FLAGS_TRIGGER_LEVEL         3
+#define PIC_FLAGS_TRIGGER_MASK          (3)
+
+typedef union _HAL_PIC_VECTOR_FLAGS
+{
+    struct
+    {
+        ULONG Polarity    :2;
+        ULONG TriggerMode :2;
+        ULONG Reserved    :28;
+    };
+    ULONG AsULONG;
+
+} HAL_PIC_VECTOR_FLAGS, *PHAL_PIC_VECTOR_FLAGS;
 
 #endif /* !_APICACPI_H_ */
