@@ -321,7 +321,7 @@ class Offset:
 		self.is_negative = False
 
 	BEGINNINGS = Common.NUMBER_BEGINNINGS
-	# TODO: looks like hours is still not used. And number as well.
+	# TODO: looks like "hours" is still not used.
 	# Offset = number [':' minutes_02d [':' seconds_02d]]
 	@classmethod
 	def from_stream(cls, reader):
@@ -568,7 +568,7 @@ class Rule:
 	)
 	# Abbreviation_character = '+' | '-' | '0'..'9' | 'a'..'z' | 'A'..'Z'
 	# Abbreviation = abbreviation_character {abbreviation_character}
-	# If abbreviation is "-", then it is absent (not checked by the syntax itself).
+	# If the abbreviation is "-", then it is absent (that not checked by the syntax itself).
 	@classmethod
 	def read_abbreviation(cls, reader):
 		abbreviation = [reader.read_one_of(cls.ABBREVIATION_CHARACTERS)]
