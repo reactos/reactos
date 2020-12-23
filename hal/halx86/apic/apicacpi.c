@@ -523,6 +523,15 @@ HalpInitializeIOUnits()
     HalpAddressUsageList = (PADDRESS_USAGE)&HalpApicUsage;
 }
 
+BOOLEAN
+NTAPI
+HalpPmTimerScaleTimers()
+{
+    DPRINT1("HalpPmTimerScaleTimers()\n");
+    DbgBreakPoint();
+    return FALSE;
+}
+
 VOID
 HalpInitPhase0a(_In_ PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
@@ -578,6 +587,13 @@ HalpInitPhase0a(_In_ PLOADER_PARAMETER_BLOCK LoaderBlock)
     }
 
     DPRINT("HalpInitPhase0a: IntI - %X\n", IntI);
+
+    if (!HalpPmTimerScaleTimers())
+    {
+        DbgBreakPoint();
+        //HalpScaleTimers();
+    }
+
 
     /* Setup busy waiting */
     HalpCalibrateStallExecution();
