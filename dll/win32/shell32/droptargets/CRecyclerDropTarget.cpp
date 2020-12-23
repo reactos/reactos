@@ -149,7 +149,7 @@ class CRecyclerDropTarget :
             TRACE("(%p)->(DataObject=%p)\n", this, pDataObject);
             InitFormatEtc (fmt, cfShellIDList, TYMED_HGLOBAL);
 
-            /* Handle cfShellIDList Drop objects here, otherwise send the approriate message to other software */
+            /* Handle cfShellIDList Drop objects here, otherwise send the appropriate message to other software */
             if (SUCCEEDED(pDataObject->QueryGetData(&fmt)))
             {
                 DWORD fMask = 0;
@@ -157,7 +157,7 @@ class CRecyclerDropTarget :
                 if ((dwKeyState & MK_SHIFT) == MK_SHIFT)
                     fMask |= CMIC_MASK_SHIFT_DOWN;
 
-                _DoDeleteDataObject(pDataObject, fMask);
+                _DoDeleteAsync(pDataObject, fMask);
             }
             else
             {
