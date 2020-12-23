@@ -30,8 +30,6 @@ DBG_DEFAULT_CHANNEL(UserWinpos);
 #define PLACE_MAX               0x0002
 #define PLACE_RECT              0x0004
 
-VOID FASTCALL IntLinkWindow(PWND Wnd,PWND WndInsertAfter);
-
 /* FUNCTIONS *****************************************************************/
 
 #if DBG
