@@ -535,6 +535,10 @@ HalpPmTimerScaleTimers()
 VOID
 HalpInitPhase0a(_In_ PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
+    PMEMORY_ALLOCATION_DESCRIPTOR MemDescriptor;
+    PLIST_ENTRY Entry;
+
+    PHALP_PCR_HAL_RESERVED HalReserved;
     USHORT IntI;
 
     /* Initialize ACPI */
@@ -594,12 +598,23 @@ HalpInitPhase0a(_In_ PLOADER_PARAMETER_BLOCK LoaderBlock)
         //HalpScaleTimers();
     }
 
+    //HalReserved = (PHALP_PCR_HAL_RESERVED)KeGetPcr()->HalReserved;
+    //HalpProc0TSCHz = HalReserved->HalpProc0TSCHz;
 
-    /* Setup busy waiting */
-    HalpCalibrateStallExecution();
+    KeRegisterInterruptHandler(APIC_CLOCK_VECTOR, HalpClockInterruptStub);
+
+    /* Enable clock interrupt handler */
+    HalpVectorToINTI[APIC_CLOCK_VECTOR] = IntI;
+
+    HalEnableSystemInterrupt(APIC_CLOCK_VECTOR, CLOCK_LEVEL, Latched);
 
     /* Initialize the clock */
     HalpInitializeClock();
+
+    HalpRegisterVector(IDT_INTERNAL, APIC_NMI_VECTOR, APIC_NMI_VECTOR, HIGH_LEVEL);
+    HalpRegisterVector(IDT_INTERNAL, APIC_SPURIOUS_VECTOR, APIC_SPURIOUS_VECTOR, HIGH_LEVEL);
+
+    KeSetProfileIrql(0x1F);
 
     /*
      * We could be rebooting with a pending profile interrupt,
@@ -607,13 +622,40 @@ HalpInitPhase0a(_In_ PLOADER_PARAMETER_BLOCK LoaderBlock)
      */
     HalStopProfileInterrupt(ProfileTime);
 
-    /* Enable clock interrupt handler */
-    HalpEnableInterruptHandler(IDT_INTERNAL,
-                               0,
-                               APIC_CLOCK_VECTOR,
-                               CLOCK2_LEVEL,
-                               HalpClockInterrupt,
-                               Latched);
+    /* Fill out HalPrivateDispatchTable */
+    HalFindBusAddressTranslation = HalpFindBusAddressTranslation;
+
+    for (Entry = LoaderBlock->MemoryDescriptorListHead.Flink;
+         Entry != &LoaderBlock->MemoryDescriptorListHead;
+         Entry = Entry->Flink)
+    {
+        MemDescriptor = CONTAINING_RECORD(Entry, MEMORY_ALLOCATION_DESCRIPTOR, ListEntry);
+
+        if (MemDescriptor->MemoryType != LoaderFirmwarePermanent &&
+            MemDescriptor->MemoryType != LoaderSpecialMemory)
+        {
+            if ((MemDescriptor->BasePage + MemDescriptor->PageCount) > 0x1000) // 16 Mb
+            {
+                LessThan16Mb = FALSE;
+            }
+
+            if ((MemDescriptor->BasePage + MemDescriptor->PageCount) > 0x100000) // 4 Gb
+            {
+                HalpPhysicalMemoryMayAppearAbove4GB = TRUE;
+                break;
+            }
+        }
+    }
+
+    if (LessThan16Mb)
+    {
+        DPRINT1("HalpInitPhase0a: LessThan16Mb is TRUE\n");
+    }
+
+    if (HalpPhysicalMemoryMayAppearAbove4GB)
+    {
+        DPRINT1("HalpInitPhase0a: HalpPhysicalMemoryMayAppearAbove4GB is TRUE\n");
+    }
 }
 
 VOID
