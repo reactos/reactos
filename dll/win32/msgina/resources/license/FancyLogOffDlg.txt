@@ -1,0 +1,23 @@
+The following bitmaps/icons are made by Splitwirez (Splitwirez@gmail.com
+
+).
+
+dlg_bg.bmp
+reactos_flag.bmp
+sh.ico
+sh_disabled.ico
+sh_pressed.ico
+shut_down.ico
+shut_down_pressed.ico
+reboot.ico
+reboot_pressed.ico
+
+Its source is available as the following files:
+
+svg/background.svg
+svg/flag.svg
+svg/shut_down.svg
+svg/sleep_hibernate.svg
+svg/reboot.svg
+
+These files are in the public domain.

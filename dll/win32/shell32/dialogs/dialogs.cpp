@@ -3,6 +3,7 @@
  *
  * Copyright 2000 Juergen Schmied
  * Copyright 2018 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
+ * Copyright 2020 Arnav Bhatt <arnavbhatt288@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -31,6 +32,12 @@ typedef struct
     UINT uFlags;
     BOOL bCoInited;
 } RUNFILEDLGPARAMS;
+
+typedef struct
+{
+    BOOL bFriendlyUI;
+    HFONT hfFont;
+} LOGOFF_DLG_CONTEXT, *PLOGOFF_DLG_CONTEXT;
 
 typedef BOOL (WINAPI * LPFNOFN) (OPENFILENAMEW *);
 
@@ -1063,43 +1070,284 @@ int WINAPI RestartDialogEx(HWND hWndOwner, LPCWSTR lpwstrReason, DWORD uFlags, D
     return 0;
 }
 
+/* Functions used for log off dialog box */
+
+BOOL DrawIconOnOwnerDrawnButtons(DRAWITEMSTRUCT* pdis)
+{
+    HICON hCurrIcon;
+    RECT rect;
+    
+    rect = pdis->rcItem;
+
+    /* Check the button ID for revelant icon to be used */
+    switch (pdis->CtlID)
+    {
+        case IDC_LOG_OFF_BUTTON:
+        {
+            if (pdis->itemState & ODS_SELECTED)
+            {
+                hCurrIcon = (HICON)LoadImageW(shell32_hInstance, MAKEINTRESOURCE(IDI_SHELL_BUTTON_LOG_OFF_PRESSED), IMAGE_ICON, 0, 0, LR_DEFAULTCOLOR);
+            }
+
+            else
+            {
+                hCurrIcon = (HICON)LoadImageW(shell32_hInstance, MAKEINTRESOURCE(IDI_SHELL_BUTTON_LOG_OFF), IMAGE_ICON, 0, 0, LR_DEFAULTCOLOR);
+            }
+        }
+        break;
+        
+        case IDC_SWITCH_USER_BUTTON:
+        {
+            if (pdis->itemState & ODS_SELECTED)
+            {
+                hCurrIcon = (HICON)LoadImageW(shell32_hInstance, MAKEINTRESOURCE(IDI_SHELL_BUTTON_SWITCH_USER_PRESSED), IMAGE_ICON, 0, 0, LR_DEFAULTCOLOR);
+            }
+
+            else if (pdis->itemState & ODS_DISABLED)
+            {
+                hCurrIcon = (HICON)LoadImageW(shell32_hInstance, MAKEINTRESOURCE(IDI_SHELL_BUTTON_SWITCH_USER_DISABLED), IMAGE_ICON, 0, 0, LR_DEFAULTCOLOR);
+            }
+
+            else
+            {
+                hCurrIcon = (HICON)LoadImageW(shell32_hInstance, MAKEINTRESOURCE(IDI_SHELL_BUTTON_SWITCH_USER), IMAGE_ICON, 0, 0, LR_DEFAULTCOLOR);
+            }
+        }
+        break;
+    }
+
+    if (hCurrIcon == NULL)
+    {
+        return FALSE;
+    }
+
+    /* Draw it on the button */
+    if (!DrawIconEx(
+		pdis->hDC,
+		(int) 0.5 * (rect.right - rect.left - 33),
+		(int) 0.5 * (rect.bottom - rect.top - 33),
+		(HICON) hCurrIcon,
+		0,
+		0,
+		0, NULL, DI_NORMAL))
+    {
+		return FALSE;
+	}
+
+    return TRUE;
+}
+
+VOID CreateToolTipForButtons(int controlID, int detailID, HWND hDlg, int titleID)
+{
+    HWND hwndTool, hwndTip;
+    WCHAR szBuffer[256];
+    WCHAR szBuffer2[256];
+    TTTOOLINFOW tool;
+
+    hwndTool = GetDlgItem(hDlg, controlID);
+    
+    tool.cbSize = sizeof(tool);
+    tool.hwnd = hDlg;
+    tool.uFlags = TTF_IDISHWND | TTF_SUBCLASS;
+    tool.uId = (UINT_PTR)hwndTool;
+
+    /* Create the tooltip */
+    hwndTip = CreateWindowEx(0, TOOLTIPS_CLASS, NULL,
+                              WS_POPUP |TTS_ALWAYSTIP | TTS_BALLOON,
+                              CW_USEDEFAULT, CW_USEDEFAULT,
+                              CW_USEDEFAULT, CW_USEDEFAULT,
+                              hDlg, NULL, 
+                              shell32_hInstance, NULL);
+
+    LoadStringW(shell32_hInstance, detailID, szBuffer, _countof(szBuffer));
+    LoadStringW(shell32_hInstance, titleID, szBuffer2, _countof(szBuffer2));
+
+    /* Associate the tooltip with the tool. */
+    tool.lpszText = szBuffer;
+    SendMessage(hwndTip, TTM_ADDTOOLW , 0, (LPARAM)&tool);
+    SendMessage(hwndTip, TTM_SETTITLEW, TTI_NONE, (LPARAM)szBuffer2);
+    SendMessage(hwndTip, TTM_SETMAXTIPWIDTH, 0, 250);
+}
+
+static BOOL IsFriendlyUIActive(VOID)
+{
+    DWORD dwType, dwValue, dwSize;
+    HKEY hKey;
+    LONG lRet;
+
+    lRet = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                         L"SYSTEM\\CurrentControlSet\\Control\\Windows",
+                         0,
+                         KEY_QUERY_VALUE,
+                         &hKey);
+    if (lRet != ERROR_SUCCESS)
+        return FALSE;
+
+    /* First check an optional ReactOS specific override, that Windows does not check.
+       We use this to allow users pairing 'Server'-configuration with FriendlyShutdown.
+       Otherwise users would have to change CSDVersion or LogonType (side-effects AppCompat) */
+    dwValue = 0;
+    dwSize = sizeof(dwValue);
+    lRet = RegQueryValueExW(hKey,
+                            L"EnforceFriendlyLogoff",
+                            NULL,
+                            &dwType,
+                            (LPBYTE)&dwValue,
+                            &dwSize);
+
+    if (lRet == ERROR_SUCCESS && dwType == REG_DWORD && dwValue == 0x1)
+    {
+        RegCloseKey(hKey);
+        return TRUE;
+    }
+
+    /* Check product version number */
+    dwValue = 0;
+    dwSize = sizeof(dwValue);
+    lRet = RegQueryValueExW(hKey,
+                            L"CSDVersion",
+                            NULL,
+                            &dwType,
+                            (LPBYTE)&dwValue,
+                            &dwSize);
+    RegCloseKey(hKey);
+
+    if (lRet != ERROR_SUCCESS || dwType != REG_DWORD || dwValue != 0x300)
+    {
+        /* Allow Friendly UI only on Workstation */
+        return FALSE;
+    }
+
+    /* Check LogonType value */
+    lRet = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
+                         L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion\\Winlogon",
+                         0,
+                         KEY_QUERY_VALUE,
+                         &hKey);
+    if (lRet != ERROR_SUCCESS)
+        return FALSE;
+
+    dwValue = 0;
+    dwSize = sizeof(dwValue);
+    lRet = RegQueryValueExW(hKey,
+                            L"LogonType",
+                            NULL,
+                            &dwType,
+                            (LPBYTE)&dwValue,
+                            &dwSize);
+    RegCloseKey(hKey);
+
+    if (lRet != ERROR_SUCCESS || dwType != REG_DWORD)
+        return FALSE;
+
+    return (dwValue != 0);
+}
+
+static void FancyLogoffOnInit(HWND hwnd, PLOGOFF_DLG_CONTEXT pContext)
+{
+    HDC hdc;
+    long lfHeight;
+
+    hdc = GetDC(NULL);
+    lfHeight = -MulDiv(12, GetDeviceCaps(hdc, LOGPIXELSY), 68);
+    ReleaseDC(NULL, hdc);
+    pContext->hfFont = CreateFontW(lfHeight, 0, 0, 0, 550, FALSE, 0, 0, 0, 0, 0, 0, 0, L"MS Shell Dlg");
+    SendDlgItemMessage(hwnd, IDC_LOG_OFF_TEXT_STATIC, WM_SETFONT, (WPARAM)pContext->hfFont, TRUE);
+
+    CreateToolTipForButtons(IDC_LOG_OFF_BUTTON, IDS_LOG_OFF_DESC, hwnd, IDS_LOG_OFF_TITLE);
+    CreateToolTipForButtons(IDC_SWITCH_USER_BUTTON, IDS_SWITCH_USER_DESC, hwnd, IDS_SWITCH_USER_TITLE);
+}
+
 /*************************************************************************
  * LogOffDialogProc
  *
  * NOTES: Used to make the Log Off dialog work
  */
+
 INT_PTR CALLBACK LogOffDialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+    DRAWITEMSTRUCT* pdis = (DRAWITEMSTRUCT*)lParam;
+    PLOGOFF_DLG_CONTEXT pContext;
+    pContext = (PLOGOFF_DLG_CONTEXT)GetWindowLongPtrW(hwnd, GWLP_USERDATA);
+
     switch (uMsg)
     {
         case WM_INITDIALOG:
+        {
+            pContext = (PLOGOFF_DLG_CONTEXT)lParam;
+
+            if (pContext->bFriendlyUI)
+                FancyLogoffOnInit(hwnd, pContext);
             return TRUE;
+        }
 
         case WM_CLOSE:
-            EndDialog(hwnd, IDCANCEL);
+            DestroyWindow(hwnd);
+            PostQuitMessage(IDCANCEL);
             break;
 
-#if 0
         case WM_ACTIVATE:
         {
             if (LOWORD(wParam) == WA_INACTIVE)
-                EndDialog(hwnd, 0);
+            {
+                DestroyWindow(hwnd);
+                PostQuitMessage(0);
+            }
             return FALSE;
         }
-#endif
 
         case WM_COMMAND:
             switch (LOWORD(wParam))
             {
+                case IDC_LOG_OFF_BUTTON:
                 case IDOK:
                     ExitWindowsEx(EWX_LOGOFF, 0);
                     break;
 
                 case IDCANCEL:
-                    EndDialog(hwnd, IDCANCEL);
+                    DestroyWindow(hwnd);
+                    PostQuitMessage(IDCANCEL);
                     break;
             }
             break;
+
+        case WM_DESTROY:
+            DeleteObject(pContext->hfFont);
+            return TRUE;
+
+        case WM_CTLCOLORSTATIC:
+        {
+            HDC hdcStatic = (HDC)wParam;            
+            INT_PTR StaticID = GetWindowLong((HWND)lParam, GWL_ID);
+
+            switch (StaticID)
+            {
+                case IDC_LOG_OFF_TEXT_STATIC:
+                   SetTextColor(hdcStatic, RGB(244, 244, 244));
+                   SetBkMode(hdcStatic, TRANSPARENT);
+                   return (INT_PTR)GetStockObject(HOLLOW_BRUSH);
+
+                case IDC_LOG_OFF_STATIC:
+                case IDC_SWITCH_USER_STATIC:
+                    SetTextColor(hdcStatic, RGB(38, 38, 38));
+                    SetBkMode(hdcStatic, TRANSPARENT);
+                    return (LONG)CreateSolidBrush(RGB(244, 244, 244));
+            }
+            return FALSE;
+        }
+        break;
+
+        case WM_DRAWITEM:
+        {
+            switch (pdis->CtlID)
+            {
+				case IDC_LOG_OFF_BUTTON:
+                case IDC_SWITCH_USER_BUTTON:
+					DrawIconOnOwnerDrawnButtons(pdis);
+					break;
+            }
+        }
+        break;
 
         default:
             break;
@@ -1114,12 +1362,52 @@ INT_PTR CALLBACK LogOffDialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
 EXTERN_C int WINAPI LogoffWindowsDialog(HWND hWndOwner)
 {
     CComPtr<IUnknown> fadeHandler;
+    BOOL bIsAltKeyPressed = FALSE;
+    MSG Msg;
     HWND parent;
-
+    HWND hWndChild;
+    WCHAR szBuffer[30];
+    DWORD LogoffDialogID = IDD_LOG_OFF;
+    LOGOFF_DLG_CONTEXT Context;
+    
     if (!CallShellDimScreen(&fadeHandler, &parent))
         parent = hWndOwner;
 
-    DialogBoxW(shell32_hInstance, MAKEINTRESOURCEW(IDD_LOG_OFF), parent, LogOffDialogProc);
+    Context.bFriendlyUI = IsFriendlyUIActive();
+    
+    if (Context.bFriendlyUI)
+    {
+        LogoffDialogID = IDD_LOG_OFF_FANCY;
+    }
+
+    hWndChild = CreateDialogParamW(shell32_hInstance, MAKEINTRESOURCEW(LogoffDialogID), parent, LogOffDialogProc, (LPARAM)&Context);
+    ShowWindow(hWndChild, SW_SHOW);
+
+    while (GetMessage(&Msg, NULL, 0, 0))
+    {
+        if(!IsDialogMessage(hWndChild, &Msg))
+        {
+            TranslateMessage(&Msg);
+            DispatchMessage(&Msg);
+        }
+
+        switch (Msg.message)
+        {
+            case WM_SYSKEYDOWN:
+            {
+                if (Msg.wParam == VK_MENU && !bIsAltKeyPressed && Context.bFriendlyUI)
+                {
+                    for (int i = 0; i < 2; i++)
+                    {
+                        GetDlgItemTextW(hWndChild, IDC_LOG_OFF_BUTTON + i, szBuffer, _countof(szBuffer));
+                        SetDlgItemTextW(hWndChild, IDC_LOG_OFF_STATIC + i, szBuffer);
+                    }
+                    bIsAltKeyPressed = TRUE;
+                }
+            }
+            break;
+        }
+    }
     return 0;
 }
 

@@ -36,6 +36,8 @@
 #define IDB_SHELL_EDIT_LG_HOT       226
 #define IDB_SHELL_EDIT_SM           227
 #define IDB_SHELL_EDIT_SM_HOT       228
+#define IDB_DLG_BG                  500
+#define IDB_REACTOS_FLAG            501
 
 /* Strings */
 
@@ -308,6 +310,11 @@
 
 #define IDS_SYSTEMFOLDER                            30540
 
+#define IDS_LOG_OFF_DESC                            35000
+#define IDS_SWITCH_USER_DESC                        35001
+#define IDS_LOG_OFF_TITLE                           35010
+#define IDS_SWITCH_USER_TITLE                       35011
+
 /* Dialogs */
 
 /* Run dialog */
@@ -458,6 +465,13 @@
 #define IDC_VIEW_TREEVIEW                   14003
 #define IDC_VIEW_RESTORE_DEFAULTS           14004
 
+/* Control IDs for IDD_LOG_OFF_FANCY dialog */
+#define IDC_LOG_OFF_BUTTON                  15001
+#define IDC_SWITCH_USER_BUTTON              15002
+#define IDC_LOG_OFF_STATIC                  15003
+#define IDC_SWITCH_USER_STATIC              15004
+#define IDC_LOG_OFF_TEXT_STATIC             15005
+
 /* Other dialogs */
 #define IDD_RUN_AS       23
 #define IDD_OPEN_WITH    24
@@ -492,6 +506,7 @@
 #define IDD_AUTOPLAY1            33
 #define IDD_MIXED_CONTENT1       34
 #define IDD_MIXED_CONTENT2       35
+#define IDD_LOG_OFF_FANCY        600
 
 /* Icons */
 #define IDI_SHELL_DOCUMENT           1
@@ -733,6 +748,13 @@
 #define IDI_SHELL_DELETE3 16717
 #define IDI_SHELL_DELETE4 16718
 #define IDI_SHELL_DELETE5 16721
+
+/* Icons for fancy log off dialog box */
+#define IDI_SHELL_BUTTON_LOG_OFF                20000
+#define IDI_SHELL_BUTTON_LOG_OFF_PRESSED        20001
+#define IDI_SHELL_BUTTON_SWITCH_USER            20002
+#define IDI_SHELL_BUTTON_SWITCH_USER_DISABLED   20003
+#define IDI_SHELL_BUTTON_SWITCH_USER_PRESSED    20004
 
 /*
  * AVI resources
