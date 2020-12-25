@@ -1331,7 +1331,7 @@ INT_PTR CALLBACK LogOffDialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                 case IDC_SWITCH_USER_STATIC:
                     SetTextColor(hdcStatic, RGB(38, 38, 38));
                     SetBkMode(hdcStatic, TRANSPARENT);
-                    return (LONG)CreateSolidBrush(RGB(244, 244, 244));
+                    return (LONG_PTR)CreateSolidBrush(RGB(244, 244, 244));
             }
             return FALSE;
         }

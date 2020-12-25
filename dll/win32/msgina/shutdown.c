@@ -944,7 +944,7 @@ ShutdownDialogProc(
                 case IDC_RESTART_STATIC:
                     SetTextColor(hdcStatic, RGB(38, 38, 38));
                     SetBkMode(hdcStatic, TRANSPARENT);
-                    return (LONG)CreateSolidBrush(RGB(244, 244, 244));
+                    return (LONG_PTR)CreateSolidBrush(RGB(244, 244, 244));
             }
             return FALSE;
         }
