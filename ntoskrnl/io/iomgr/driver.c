@@ -1251,7 +1251,7 @@ IopUnloadDriver(PUNICODE_STRING DriverServiceName, BOOLEAN UnloadPnpDrivers)
     DPRINT("IopUnloadDriver('%wZ', %u)\n", &CapturedServiceName, UnloadPnpDrivers);
 
     /* We need a service name */
-    if (CapturedServiceName.Length == 0)
+    if (CapturedServiceName.Length == 0 || CapturedServiceName.Buffer == NULL)
     {
         ReleaseCapturedUnicodeString(&CapturedServiceName, PreviousMode);
         return STATUS_INVALID_PARAMETER;
@@ -2160,6 +2160,13 @@ NtLoadDriver(IN PUNICODE_STRING DriverServiceName)
         return Status;
 
     DPRINT("NtLoadDriver('%wZ')\n", &CapturedServiceName);
+
+    /* We need a service name */
+    if (CapturedServiceName.Length == 0 || CapturedServiceName.Buffer == NULL)
+    {
+        ReleaseCapturedUnicodeString(&CapturedServiceName, PreviousMode);
+        return STATUS_INVALID_PARAMETER;
+    }
 
     /* Load driver and call its entry point */
     DriverObject = NULL;
