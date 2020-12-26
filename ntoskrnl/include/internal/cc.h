@@ -181,6 +181,8 @@ typedef struct _ROS_SHARED_CACHE_MAP
     ULONG Flags;
     PCACHE_MANAGER_CALLBACKS Callbacks;
     PVOID LazyWriteContext;
+    PVOID LogHandle;
+    PFLUSH_TO_LSN FlushToLsn;
     LIST_ENTRY PrivateList;
     ULONG DirtyPageThreshold;
     KSPIN_LOCK BcbSpinLock;
