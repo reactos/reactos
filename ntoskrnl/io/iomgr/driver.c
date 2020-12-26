@@ -1242,14 +1242,13 @@ IopUnloadDriver(PUNICODE_STRING DriverServiceName, BOOLEAN UnloadPnpDrivers)
     }
 
     /* Capture the service name */
-    Status = ProbeAndCaptureUnicodeString(&CapturedServiceName, PreviousMode, DriverServiceName);
+    Status = ProbeAndCaptureUnicodeString(&CapturedServiceName,
+                                          PreviousMode,
+                                          DriverServiceName);
     if (!NT_SUCCESS(Status))
-    {
         return Status;
-    }
 
     DPRINT("IopUnloadDriver('%wZ', %u)\n", &CapturedServiceName, UnloadPnpDrivers);
-
 
     /* We need a service name */
     if (CapturedServiceName.Length == 0)
@@ -2137,7 +2136,7 @@ IopLoadUnloadDriver(
 NTSTATUS NTAPI
 NtLoadDriver(IN PUNICODE_STRING DriverServiceName)
 {
-    UNICODE_STRING CapturedDriverServiceName = { 0, 0, NULL };
+    UNICODE_STRING CapturedServiceName = { 0, 0, NULL };
     KPROCESSOR_MODE PreviousMode;
     PDRIVER_OBJECT DriverObject;
     NTSTATUS Status;
@@ -2146,32 +2145,27 @@ NtLoadDriver(IN PUNICODE_STRING DriverServiceName)
 
     PreviousMode = KeGetPreviousMode();
 
-    /*
-     * Check security privileges
-     */
+    /* Need the appropriate priviliege */
     if (!SeSinglePrivilegeCheck(SeLoadDriverPrivilege, PreviousMode))
     {
-        DPRINT("Privilege not held\n");
+        DPRINT1("No load privilege!\n");
         return STATUS_PRIVILEGE_NOT_HELD;
     }
 
-    Status = ProbeAndCaptureUnicodeString(&CapturedDriverServiceName,
+    /* Capture the service name */
+    Status = ProbeAndCaptureUnicodeString(&CapturedServiceName,
                                           PreviousMode,
                                           DriverServiceName);
     if (!NT_SUCCESS(Status))
-    {
         return Status;
-    }
 
-    DPRINT("NtLoadDriver('%wZ')\n", &CapturedDriverServiceName);
+    DPRINT("NtLoadDriver('%wZ')\n", &CapturedServiceName);
 
     /* Load driver and call its entry point */
     DriverObject = NULL;
-    Status = IopLoadUnloadDriver(&CapturedDriverServiceName, &DriverObject);
+    Status = IopLoadUnloadDriver(&CapturedServiceName, &DriverObject);
 
-    ReleaseCapturedUnicodeString(&CapturedDriverServiceName,
-                                 PreviousMode);
-
+    ReleaseCapturedUnicodeString(&CapturedServiceName, PreviousMode);
     return Status;
 }
 
