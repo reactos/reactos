@@ -50,7 +50,7 @@ ConioGetShiftState(PBYTE KeyState, LPARAM lParam)
     // if (KeyState[VK_MENU] & 0x80) { ... }
 
     /* See WM_CHAR MSDN documentation for instance */
-    if (lParam & 0x01000000)
+    if (HIWORD(lParam) & KF_EXTENDED)
         ssOut |= ENHANCED_KEY;
 
     return ssOut;
@@ -68,7 +68,7 @@ ConioProcessKey(PCONSRV_CONSOLE Console, MSG* msg)
     WCHAR UnicodeChar;
     UINT VirtualKeyCode;
     UINT VirtualScanCode;
-    BOOL Down = FALSE;
+    BOOL Down;
     BOOLEAN Fake;          // Synthesized, not a real event
     BOOLEAN NotChar;       // Message should not be used to return a character
 
