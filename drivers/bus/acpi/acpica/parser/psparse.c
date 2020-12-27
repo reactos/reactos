@@ -425,7 +425,7 @@ AcpiPsNextParseState (
     default:
 
         Status = CallbackStatus;
-        if ((CallbackStatus & AE_CODE_MASK) == AE_CODE_CONTROL)
+        if (ACPI_CNTL_EXCEPTION (CallbackStatus))
         {
             Status = AE_OK;
         }
