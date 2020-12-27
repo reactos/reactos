@@ -1494,27 +1494,96 @@ IopStopDevice(
 
 /* PUBLIC FUNCTIONS **********************************************************/
 
+/**
+ * @brief      Sends one of the remove IRPs to the device stack
+ *
+ * If there is a mounted VPB attached to a one of the stack devices, the IRP
+ * should be send to a VPB's DeviceObject first (which belongs to a FS driver).
+ * FS driver will then forward it down to the volume device.
+ * While walking the device stack, the function sets (or unsets) VPB_REMOVE_PENDING flag
+ * thus blocking all further mounts on a soon-to-be-removed devices
+ */
+static
+NTSTATUS
+PiIrpSendRemoveCheckVpb(
+    _In_ PDEVICE_OBJECT DeviceObject,
+    _In_ UCHAR MinorFunction)
+{
+    KIRQL oldIrql;
+
+    ASSERT(MinorFunction == IRP_MN_QUERY_REMOVE_DEVICE ||
+           MinorFunction == IRP_MN_CANCEL_REMOVE_DEVICE ||
+           MinorFunction == IRP_MN_SURPRISE_REMOVAL ||
+           MinorFunction == IRP_MN_REMOVE_DEVICE);
+
+    PDEVICE_OBJECT vpbDevObj = DeviceObject, targetDevice = DeviceObject;
+
+    // walk the device stack down, stop on a first mounted device
+    do
+    {
+        if (vpbDevObj->Vpb)
+        {
+            // two locks are needed here
+            KeWaitForSingleObject(&vpbDevObj->DeviceLock, Executive, KernelMode, FALSE, NULL);
+            IoAcquireVpbSpinLock(&oldIrql);
+
+            if (MinorFunction == IRP_MN_CANCEL_REMOVE_DEVICE)
+            {
+                vpbDevObj->Vpb->Flags &= ~VPB_REMOVE_PENDING;
+            }
+            else
+            {
+                vpbDevObj->Vpb->Flags |= VPB_REMOVE_PENDING;
+            }
+
+            BOOLEAN isMounted = (_Bool)(vpbDevObj->Vpb->Flags & VPB_MOUNTED);
+
+            if (isMounted)
+            {
+                targetDevice = vpbDevObj->Vpb->DeviceObject;
+            }
+
+            IoReleaseVpbSpinLock(oldIrql);
+            KeSetEvent(&vpbDevObj->DeviceLock, IO_NO_INCREMENT, FALSE);
+
+            if (isMounted)
+            {
+                break;
+            }
+        }
+
+        oldIrql = KeAcquireQueuedSpinLock(LockQueueIoDatabaseLock);
+        vpbDevObj = vpbDevObj->AttachedDevice;
+        KeReleaseQueuedSpinLock(LockQueueIoDatabaseLock, oldIrql);
+    } while (vpbDevObj);
+
+    ASSERT(targetDevice);
+
+    PVOID info;
+    IO_STACK_LOCATION stack = {.MajorFunction = IRP_MJ_PNP, .MinorFunction = MinorFunction};
+
+    return IopSynchronousCall(targetDevice, &stack, &info);
+}
+
 static
 VOID
 NTAPI
 IopSendRemoveDevice(IN PDEVICE_OBJECT DeviceObject)
 {
-    IO_STACK_LOCATION Stack;
-    PVOID Dummy;
     PDEVICE_NODE DeviceNode = IopGetDeviceNode(DeviceObject);
 
     /* Drop all our state for this device in case it isn't really going away */
     DeviceNode->Flags &= DNF_ENUMERATED | DNF_PROCESSED;
 
-    RtlZeroMemory(&Stack, sizeof(IO_STACK_LOCATION));
-    Stack.MajorFunction = IRP_MJ_PNP;
-    Stack.MinorFunction = IRP_MN_REMOVE_DEVICE;
-
     /* Drivers should never fail a IRP_MN_REMOVE_DEVICE request */
-    IopSynchronousCall(DeviceObject, &Stack, &Dummy);
+    PiIrpSendRemoveCheckVpb(DeviceObject, IRP_MN_REMOVE_DEVICE);
 
     PiNotifyTargetDeviceChange(&GUID_TARGET_DEVICE_REMOVE_COMPLETE, DeviceObject, NULL);
-    ObDereferenceObject(DeviceObject);
+    LONG_PTR refCount = ObDereferenceObject(DeviceObject);
+    if (refCount != 0)
+    {
+        DPRINT1("Leaking device %wZ, refCount = %d\n", &DeviceNode->InstancePath, (INT32)refCount);
+    }
 }
 
 static
@@ -1562,15 +1631,8 @@ VOID
 NTAPI
 IopSendSurpriseRemoval(IN PDEVICE_OBJECT DeviceObject)
 {
-    IO_STACK_LOCATION Stack;
-    PVOID Dummy;
-
-    RtlZeroMemory(&Stack, sizeof(IO_STACK_LOCATION));
-    Stack.MajorFunction = IRP_MJ_PNP;
-    Stack.MinorFunction = IRP_MN_SURPRISE_REMOVAL;
-
     /* Drivers should never fail a IRP_MN_SURPRISE_REMOVAL request */
-    IopSynchronousCall(DeviceObject, &Stack, &Dummy);
+    PiIrpSendRemoveCheckVpb(DeviceObject, IRP_MN_SURPRISE_REMOVAL);
 }
 
 static
@@ -1578,15 +1640,8 @@ VOID
 NTAPI
 IopCancelRemoveDevice(IN PDEVICE_OBJECT DeviceObject)
 {
-    IO_STACK_LOCATION Stack;
-    PVOID Dummy;
-
-    RtlZeroMemory(&Stack, sizeof(IO_STACK_LOCATION));
-    Stack.MajorFunction = IRP_MJ_PNP;
-    Stack.MinorFunction = IRP_MN_CANCEL_REMOVE_DEVICE;
-
     /* Drivers should never fail a IRP_MN_CANCEL_REMOVE_DEVICE request */
-    IopSynchronousCall(DeviceObject, &Stack, &Dummy);
+    PiIrpSendRemoveCheckVpb(DeviceObject, IRP_MN_CANCEL_REMOVE_DEVICE);
 
     PiNotifyTargetDeviceChange(&GUID_TARGET_DEVICE_REMOVE_CANCELLED, DeviceObject, NULL);
 }
@@ -1669,8 +1724,6 @@ NTAPI
 IopQueryRemoveDevice(IN PDEVICE_OBJECT DeviceObject)
 {
     PDEVICE_NODE DeviceNode = IopGetDeviceNode(DeviceObject);
-    IO_STACK_LOCATION Stack;
-    PVOID Dummy;
     NTSTATUS Status;
 
     ASSERT(DeviceNode);
@@ -1678,11 +1731,7 @@ IopQueryRemoveDevice(IN PDEVICE_OBJECT DeviceObject)
     IopQueueTargetDeviceEvent(&GUID_DEVICE_REMOVE_PENDING,
                               &DeviceNode->InstancePath);
 
-    RtlZeroMemory(&Stack, sizeof(IO_STACK_LOCATION));
-    Stack.MajorFunction = IRP_MJ_PNP;
-    Stack.MinorFunction = IRP_MN_QUERY_REMOVE_DEVICE;
-
-    Status = IopSynchronousCall(DeviceObject, &Stack, &Dummy);
+    Status = PiIrpSendRemoveCheckVpb(DeviceObject, IRP_MN_QUERY_REMOVE_DEVICE);
 
     PiNotifyTargetDeviceChange(&GUID_TARGET_DEVICE_QUERY_REMOVE, DeviceObject, NULL);
 
