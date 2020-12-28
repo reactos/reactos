@@ -62,14 +62,8 @@ static int
 __cdecl
 pre_c_init (void)
 {
-    _PVFV *onexitbegin;
+    __onexitend = __onexitbegin = NULL;
 
-    onexitbegin = (_PVFV *) malloc (32 * sizeof (_PVFV));
-    __onexitend = __onexitbegin = (_PVFV *) _encode_pointer (onexitbegin);
-
-    if (onexitbegin == NULL)
-        return 1;
-    *onexitbegin = (_PVFV) NULL;
     return 0;
 }
 
@@ -136,14 +130,15 @@ WINBOOL WINAPI _CRT_INIT (HANDLE hDllHandle, DWORD dwReason, LPVOID lpreserved)
         }
         else
         {
-            _PVFV * onexitbegin = (_PVFV *) _decode_pointer (__onexitbegin);
-            if (onexitbegin)
+            if (__onexitbegin)
             {
+                _PVFV *onexitbegin = (_PVFV *) _decode_pointer (__onexitbegin);
                 _PVFV *onexitend = (_PVFV *) _decode_pointer (__onexitend);
                 while (--onexitend >= onexitbegin)
                     if (*onexitend != NULL)
                         (**onexitend) ();
-                free (onexitbegin);
+                if (!lpreserved)
+                    free(onexitbegin);
                 __onexitbegin = __onexitend = (_PVFV *) NULL;
             }
             __native_startup_state = __uninitialized;
