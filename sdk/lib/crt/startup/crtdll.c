@@ -62,95 +62,95 @@ static int
 __cdecl
 pre_c_init (void)
 {
-  _PVFV *onexitbegin;
+    _PVFV *onexitbegin;
 
-  onexitbegin = (_PVFV *) malloc (32 * sizeof (_PVFV));
-  __onexitend = __onexitbegin = (_PVFV *) _encode_pointer (onexitbegin);
+    onexitbegin = (_PVFV *) malloc (32 * sizeof (_PVFV));
+    __onexitend = __onexitbegin = (_PVFV *) _encode_pointer (onexitbegin);
 
-  if (onexitbegin == NULL)
-    return 1;
-  *onexitbegin = (_PVFV) NULL;
-  return 0;
+    if (onexitbegin == NULL)
+        return 1;
+    *onexitbegin = (_PVFV) NULL;
+    return 0;
 }
 
 WINBOOL WINAPI _CRT_INIT (HANDLE hDllHandle, DWORD dwReason, LPVOID lpreserved)
 {
-  if (dwReason == DLL_PROCESS_DETACH)
+    if (dwReason == DLL_PROCESS_DETACH)
     {
-      if (__proc_attached > 0)
-	__proc_attached--;
-      else
-	return FALSE;
+        if (__proc_attached > 0)
+            __proc_attached--;
+        else
+            return FALSE;
     }
-  if (dwReason == DLL_PROCESS_ATTACH)
+    if (dwReason == DLL_PROCESS_ATTACH)
     {
-      void *lock_free = NULL;
-      void *fiberid = ((PNT_TIB)NtCurrentTeb ())->StackBase;
-      int nested = FALSE;
-      
-      while ((lock_free = InterlockedCompareExchangePointer ((volatile PVOID *) &__native_startup_lock,
-							     fiberid, 0)) != 0)
-	{
-	  if (lock_free == fiberid)
-	    {
-	      nested = TRUE;
-	      break;
-	    }
-	  Sleep(1000);
-	}
-      if (__native_startup_state == __initializing)
-	{
-	  _amsg_exit (31);
-	}
-      else if (__native_startup_state == __uninitialized)
-	{
-	  __native_startup_state = __initializing;
-	  
-	  _initterm ((_PVFV *) (void *) __xi_a, (_PVFV *) (void *) __xi_z);
-	}
-      if (__native_startup_state == __initializing)
-	{
-	  _initterm (__xc_a, __xc_z);
-	  __native_startup_state = __initialized;
-	}
-      if (! nested)
-	{
-	  (void) InterlockedExchangePointer ((volatile PVOID *) &__native_startup_lock, 0);
-	}
-      if (__dyn_tls_init_callback != NULL)
-	{
-	  __dyn_tls_init_callback (hDllHandle, DLL_THREAD_ATTACH, lpreserved);
-	}
-      __proc_attached++;
+        void *lock_free = NULL;
+        void *fiberid = ((PNT_TIB)NtCurrentTeb ())->StackBase;
+        int nested = FALSE;
+
+        while ((lock_free = InterlockedCompareExchangePointer ((volatile PVOID *) &__native_startup_lock,
+                            fiberid, 0)) != 0)
+        {
+            if (lock_free == fiberid)
+            {
+                nested = TRUE;
+                break;
+            }
+            Sleep(1000);
+        }
+        if (__native_startup_state == __initializing)
+        {
+            _amsg_exit (31);
+        }
+        else if (__native_startup_state == __uninitialized)
+        {
+            __native_startup_state = __initializing;
+
+            _initterm ((_PVFV *) (void *) __xi_a, (_PVFV *) (void *) __xi_z);
+        }
+        if (__native_startup_state == __initializing)
+        {
+            _initterm (__xc_a, __xc_z);
+            __native_startup_state = __initialized;
+        }
+        if (! nested)
+        {
+            (void) InterlockedExchangePointer ((volatile PVOID *) &__native_startup_lock, 0);
+        }
+        if (__dyn_tls_init_callback != NULL)
+        {
+            __dyn_tls_init_callback (hDllHandle, DLL_THREAD_ATTACH, lpreserved);
+        }
+        __proc_attached++;
     }
-  else if (dwReason == DLL_PROCESS_DETACH)
+    else if (dwReason == DLL_PROCESS_DETACH)
     {
-      void *lock_free = NULL;
-      while ((lock_free = InterlockedCompareExchangePointer ((volatile PVOID *) &__native_startup_lock,(PVOID) 1, 0)) != 0)
-	{
-	  Sleep(1000);
-	}
-      if (__native_startup_state != __initialized)
-	{
-	  _amsg_exit (31);
-	}
-      else
-	{
-	  _PVFV * onexitbegin = (_PVFV *) _decode_pointer (__onexitbegin);
-	  if (onexitbegin)
-	    {
-	      _PVFV *onexitend = (_PVFV *) _decode_pointer (__onexitend);
-	      while (--onexitend >= onexitbegin)
-		if (*onexitend != NULL)
-		  (**onexitend) ();
-	      free (onexitbegin);
-	      __onexitbegin = __onexitend = (_PVFV *) NULL;
-	    }
-	  __native_startup_state = __uninitialized;
-	  (void) InterlockedExchangePointer ((volatile PVOID *) &__native_startup_lock, 0);
-	}
+        void *lock_free = NULL;
+        while ((lock_free = InterlockedCompareExchangePointer ((volatile PVOID *) &__native_startup_lock,(PVOID) 1, 0)) != 0)
+        {
+            Sleep(1000);
+        }
+        if (__native_startup_state != __initialized)
+        {
+            _amsg_exit (31);
+        }
+        else
+        {
+            _PVFV * onexitbegin = (_PVFV *) _decode_pointer (__onexitbegin);
+            if (onexitbegin)
+            {
+                _PVFV *onexitend = (_PVFV *) _decode_pointer (__onexitend);
+                while (--onexitend >= onexitbegin)
+                    if (*onexitend != NULL)
+                        (**onexitend) ();
+                free (onexitbegin);
+                __onexitbegin = __onexitend = (_PVFV *) NULL;
+            }
+            __native_startup_state = __uninitialized;
+            (void) InterlockedExchangePointer ((volatile PVOID *) &__native_startup_lock, 0);
+        }
     }
-  return TRUE;
+    return TRUE;
 }
 
 static WINBOOL __DllMainCRTStartup (HANDLE, DWORD, LPVOID);
@@ -161,59 +161,59 @@ int __mingw_init_ehandler (void);
 WINBOOL WINAPI
 DllMainCRTStartup (HANDLE hDllHandle, DWORD dwReason, LPVOID lpreserved)
 {
-  mingw_app_type = 0;
-  if (dwReason == DLL_PROCESS_ATTACH)
+    mingw_app_type = 0;
+    if (dwReason == DLL_PROCESS_ATTACH)
     {
-      __security_init_cookie ();
+        __security_init_cookie ();
 #ifdef _WIN64
-      __mingw_init_ehandler ();
+        __mingw_init_ehandler ();
 #endif
     }
-  return __DllMainCRTStartup (hDllHandle, dwReason, lpreserved);
+    return __DllMainCRTStartup (hDllHandle, dwReason, lpreserved);
 }
 
 __declspec(noinline) WINBOOL
 __DllMainCRTStartup (HANDLE hDllHandle, DWORD dwReason, LPVOID lpreserved)
 {
-  WINBOOL retcode = TRUE;
+    WINBOOL retcode = TRUE;
 
-  __native_dllmain_reason = dwReason;
-  if (dwReason == DLL_PROCESS_DETACH && __proc_attached == 0)
+    __native_dllmain_reason = dwReason;
+    if (dwReason == DLL_PROCESS_DETACH && __proc_attached == 0)
     {
-	retcode = FALSE;
-	goto i__leave;
+        retcode = FALSE;
+        goto i__leave;
     }
-  _pei386_runtime_relocator ();
-  if (dwReason == DLL_PROCESS_ATTACH || dwReason == DLL_THREAD_ATTACH)
+    _pei386_runtime_relocator ();
+    if (dwReason == DLL_PROCESS_ATTACH || dwReason == DLL_THREAD_ATTACH)
     {
         retcode = _CRT_INIT (hDllHandle, dwReason, lpreserved);
         if (!retcode)
-          goto i__leave;
+            goto i__leave;
         retcode = DllEntryPoint (hDllHandle, dwReason, lpreserved);
-	if (! retcode)
-	  {
-	    if (dwReason == DLL_PROCESS_ATTACH)
-	      _CRT_INIT (hDllHandle, DLL_PROCESS_DETACH, lpreserved);
-	    goto i__leave;
-	  }
+        if (! retcode)
+        {
+            if (dwReason == DLL_PROCESS_ATTACH)
+                _CRT_INIT (hDllHandle, DLL_PROCESS_DETACH, lpreserved);
+            goto i__leave;
+        }
     }
-  if (dwReason == DLL_PROCESS_ATTACH)
-    __main ();
-  retcode = DllMain(hDllHandle,dwReason,lpreserved);
-  if (dwReason == DLL_PROCESS_ATTACH && ! retcode)
+    if (dwReason == DLL_PROCESS_ATTACH)
+        __main ();
+    retcode = DllMain(hDllHandle,dwReason,lpreserved);
+    if (dwReason == DLL_PROCESS_ATTACH && ! retcode)
     {
-	DllMain (hDllHandle, DLL_PROCESS_DETACH, lpreserved);
-	DllEntryPoint (hDllHandle, DLL_PROCESS_DETACH, lpreserved);
-	_CRT_INIT (hDllHandle, DLL_PROCESS_DETACH, lpreserved);
+        DllMain (hDllHandle, DLL_PROCESS_DETACH, lpreserved);
+        DllEntryPoint (hDllHandle, DLL_PROCESS_DETACH, lpreserved);
+        _CRT_INIT (hDllHandle, DLL_PROCESS_DETACH, lpreserved);
     }
-  if (dwReason == DLL_PROCESS_DETACH || dwReason == DLL_THREAD_DETACH)
+    if (dwReason == DLL_PROCESS_DETACH || dwReason == DLL_THREAD_DETACH)
     {
         retcode = DllEntryPoint (hDllHandle, dwReason, lpreserved);
-	if (_CRT_INIT (hDllHandle, dwReason, lpreserved) == FALSE)
-	  retcode = FALSE;
+        if (_CRT_INIT (hDllHandle, dwReason, lpreserved) == FALSE)
+            retcode = FALSE;
     }
 i__leave:
-  __native_dllmain_reason = UINT_MAX;
-  return retcode ;
+    __native_dllmain_reason = UINT_MAX;
+    return retcode ;
 }
 #endif
