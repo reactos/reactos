@@ -543,9 +543,6 @@ MiRosCleanupMemoryArea(
             (Process->ActiveThreads == 1)) ||
            (Process->ActiveThreads == 0));
 
-    /* We are in cleanup, we don't need to synchronize */
-    MmUnlockAddressSpace(&Process->Vm);
-
     MemoryArea = (PMEMORY_AREA)Vad;
     BaseAddress = (PVOID)MA_GetStartingAddress(MemoryArea);
 
@@ -567,9 +564,6 @@ MiRosCleanupMemoryArea(
 
     /* Make sure this worked! */
     ASSERT(NT_SUCCESS(Status));
-
-    /* Lock the address space again */
-    MmLockAddressSpace(&Process->Vm);
 }
 
 VOID

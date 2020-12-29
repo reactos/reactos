@@ -3459,6 +3459,7 @@ MmUnmapViewOfSegment(PMMSUPPORT AddressSpace,
     return(Status);
 }
 
+/* This functions must be called with a locked address space */
 NTSTATUS
 NTAPI
 MiRosUnmapViewOfSection(IN PEPROCESS Process,
@@ -3477,7 +3478,6 @@ MiRosUnmapViewOfSection(IN PEPROCESS Process,
 
     AddressSpace = Process ? &Process->Vm : MmGetKernelAddressSpace();
 
-    MmLockAddressSpace(AddressSpace);
     MemoryArea = MmLocateMemoryAreaByAddress(AddressSpace,
                  BaseAddress);
     if (MemoryArea == NULL ||
@@ -3492,7 +3492,6 @@ MiRosUnmapViewOfSection(IN PEPROCESS Process,
         if (MemoryArea) ASSERT(MemoryArea->Type != MEMORY_AREA_OWNED_BY_ARM3);
 
         DPRINT1("Unable to find memory area at address %p.\n", BaseAddress);
-        MmUnlockAddressSpace(AddressSpace);
         return STATUS_NOT_MAPPED_VIEW;
     }
 
@@ -3550,8 +3549,6 @@ MiRosUnmapViewOfSection(IN PEPROCESS Process,
             ASSERT(NT_SUCCESS(Status));
         }
     }
-
-    MmUnlockAddressSpace(AddressSpace);
 
     /* Notify debugger */
     if (ImageBaseAddress && !SkipDebuggerNotify) DbgkUnMapViewOfSection(ImageBaseAddress);
@@ -4248,24 +4245,14 @@ MmMapViewInSystemSpaceEx (
     return Status;
 }
 
+/* This function must be called with adress space lock held */
 NTSTATUS
 NTAPI
 MiRosUnmapViewInSystemSpace(IN PVOID MappedBase)
 {
-    PMMSUPPORT AddressSpace;
-    NTSTATUS Status;
-
     DPRINT("MmUnmapViewInSystemSpace() called\n");
 
-    AddressSpace = MmGetKernelAddressSpace();
-
-    MmLockAddressSpace(AddressSpace);
-
-    Status = MmUnmapViewOfSegment(AddressSpace, MappedBase);
-
-    MmUnlockAddressSpace(AddressSpace);
-
-    return Status;
+    return MmUnmapViewOfSegment(MmGetKernelAddressSpace(), MappedBase);
 }
 
 /**********************************************************************
