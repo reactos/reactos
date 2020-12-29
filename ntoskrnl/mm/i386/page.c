@@ -134,12 +134,12 @@ ULONG MmProtectToValue[32] =
 
 /* FUNCTIONS ***************************************************************/
 
-static BOOLEAN MmUnmapPageTable(PULONG Pt);
+static BOOLEAN MmUnmapPageTable(PULONG Pt, KIRQL OldIrql);
 
 VOID
-MiFlushTlb(PULONG Pt, PVOID Address)
+MiFlushTlb(PULONG Pt, PVOID Address, KIRQL OldIrql)
 {
-    if ((Pt && MmUnmapPageTable(Pt)) || Address >= MmSystemRangeStart)
+    if ((Pt && MmUnmapPageTable(Pt, OldIrql)) || Address >= MmSystemRangeStart)
     {
         KeInvalidateTlbEntry(Address);
     }
@@ -203,7 +203,7 @@ MiFillSystemPageDirectory(IN PVOID Base,
                           IN SIZE_T NumberOfBytes);
 
 static PULONG
-MmGetPageTableForProcess(PEPROCESS Process, PVOID Address, BOOLEAN Create)
+MmGetPageTableForProcess(PEPROCESS Process, PVOID Address, BOOLEAN Create, PKIRQL OldIrql)
 {
     PFN_NUMBER Pfn;
     PULONG Pt;
@@ -219,7 +219,9 @@ MmGetPageTableForProcess(PEPROCESS Process, PVOID Address, BOOLEAN Create)
             PMMPDE PdeBase;
             ULONG PdeOffset = MiGetPdeOffset(Address);
 
-            PdeBase = MmCreateHyperspaceMapping(PTE_TO_PFN(Process->Pcb.DirectoryTableBase[0]));
+            PdeBase = MiMapPageInHyperSpace(PsGetCurrentProcess(),
+                                            PTE_TO_PFN(Process->Pcb.DirectoryTableBase[0]),
+                                            OldIrql);
             if (PdeBase == NULL)
             {
                 KeBugCheck(MEMORY_MANAGEMENT);
@@ -232,7 +234,7 @@ MmGetPageTableForProcess(PEPROCESS Process, PVOID Address, BOOLEAN Create)
 
                 if (!Create)
                 {
-                    MmDeleteHyperspaceMapping(PdeBase);
+                    MiUnmapPageInHyperSpace(PsGetCurrentProcess(), PdeBase, *OldIrql);
                     return NULL;
                 }
 
@@ -253,8 +255,8 @@ MmGetPageTableForProcess(PEPROCESS Process, PVOID Address, BOOLEAN Create)
             }
 
             Pfn = PointerPde->u.Hard.PageFrameNumber;
-            MmDeleteHyperspaceMapping(PdeBase);
-            Pt = MmCreateHyperspaceMapping(Pfn);
+            MiUnmapPageInHyperSpace(PsGetCurrentProcess(), PdeBase, *OldIrql);
+            Pt = MiMapPageInHyperSpace(PsGetCurrentProcess(), Pfn, OldIrql);
             if (Pt == NULL)
             {
                 KeBugCheck(MEMORY_MANAGEMENT);
@@ -308,17 +310,15 @@ MmGetPageTableForProcess(PEPROCESS Process, PVOID Address, BOOLEAN Create)
     return Pt;
 }
 
-static BOOLEAN MmUnmapPageTable(PULONG Pt)
+static BOOLEAN MmUnmapPageTable(PULONG Pt, KIRQL OldIrql)
 {
     if (!IS_HYPERSPACE(Pt))
     {
         return TRUE;
     }
 
-    if (Pt)
-    {
-        MmDeleteHyperspaceMapping((PVOID)PAGE_ROUND_DOWN(Pt));
-    }
+    MiUnmapPageInHyperSpace(PsGetCurrentProcess(), Pt, OldIrql);
+
     return FALSE;
 }
 
@@ -326,12 +326,13 @@ static ULONG MmGetPageEntryForProcess(PEPROCESS Process, PVOID Address)
 {
     ULONG Pte;
     PULONG Pt;
+    KIRQL OldIrql;
 
-    Pt = MmGetPageTableForProcess(Process, Address, FALSE);
+    Pt = MmGetPageTableForProcess(Process, Address, FALSE, &OldIrql);
     if (Pt)
     {
         Pte = *Pt;
-        MmUnmapPageTable(Pt);
+        MmUnmapPageTable(Pt, OldIrql);
         return Pte;
     }
     return 0;
@@ -363,11 +364,12 @@ MmDeleteVirtualMapping(PEPROCESS Process, PVOID Address,
     PFN_NUMBER Pfn;
     ULONG Pte;
     PULONG Pt;
+    KIRQL OldIrql;
 
     DPRINT("MmDeleteVirtualMapping(%p, %p, %p, %p)\n",
            Process, Address, WasDirty, Page);
 
-    Pt = MmGetPageTableForProcess(Process, Address, FALSE);
+    Pt = MmGetPageTableForProcess(Process, Address, FALSE, &OldIrql);
 
     if (Pt == NULL)
     {
@@ -395,7 +397,7 @@ MmDeleteVirtualMapping(PEPROCESS Process, PVOID Address,
         /* Flush the TLB since we transitioned this PTE
          * from valid to invalid so any stale translations
          * are removed from the cache */
-        MiFlushTlb(Pt, Address);
+        MiFlushTlb(Pt, Address, OldIrql);
 
 		if (Address < MmSystemRangeStart)
 		{
@@ -408,7 +410,7 @@ MmDeleteVirtualMapping(PEPROCESS Process, PVOID Address,
     }
     else
     {
-        MmUnmapPageTable(Pt);
+        MmUnmapPageTable(Pt, OldIrql);
         Pfn = 0;
     }
 
@@ -447,8 +449,9 @@ MmDeletePageFileMapping(PEPROCESS Process, PVOID Address,
 {
     ULONG Pte;
     PULONG Pt;
+    KIRQL OldIrql;
 
-    Pt = MmGetPageTableForProcess(Process, Address, FALSE);
+    Pt = MmGetPageTableForProcess(Process, Address, FALSE, &OldIrql);
 
     if (Pt == NULL)
     {
@@ -470,7 +473,7 @@ MmDeletePageFileMapping(PEPROCESS Process, PVOID Address,
 
     /* We don't need to flush here because page file entries
      * are invalid translations, so the processor won't cache them */
-    MmUnmapPageTable(Pt);
+    MmUnmapPageTable(Pt, OldIrql);
 
     if ((Pte & PA_PRESENT) || !(Pte & 0x800))
     {
@@ -512,6 +515,7 @@ MmSetCleanPage(PEPROCESS Process, PVOID Address)
 {
     PULONG Pt;
     ULONG Pte;
+    KIRQL OldIrql;
 
     if (Address < MmSystemRangeStart && Process == NULL)
     {
@@ -519,7 +523,7 @@ MmSetCleanPage(PEPROCESS Process, PVOID Address)
         KeBugCheck(MEMORY_MANAGEMENT);
     }
 
-    Pt = MmGetPageTableForProcess(Process, Address, FALSE);
+    Pt = MmGetPageTableForProcess(Process, Address, FALSE, &OldIrql);
     if (Pt == NULL)
     {
         KeBugCheck(MEMORY_MANAGEMENT);
@@ -536,11 +540,11 @@ MmSetCleanPage(PEPROCESS Process, PVOID Address)
     }
     else if (Pte & PA_DIRTY)
     {
-        MiFlushTlb(Pt, Address);
+        MiFlushTlb(Pt, Address, OldIrql);
     }
     else
     {
-        MmUnmapPageTable(Pt);
+        MmUnmapPageTable(Pt, OldIrql);
     }
 }
 
@@ -550,6 +554,7 @@ MmSetDirtyPage(PEPROCESS Process, PVOID Address)
 {
     PULONG Pt;
     ULONG Pte;
+    KIRQL OldIrql;
 
     if (Address < MmSystemRangeStart && Process == NULL)
     {
@@ -557,7 +562,7 @@ MmSetDirtyPage(PEPROCESS Process, PVOID Address)
         KeBugCheck(MEMORY_MANAGEMENT);
     }
 
-    Pt = MmGetPageTableForProcess(Process, Address, FALSE);
+    Pt = MmGetPageTableForProcess(Process, Address, FALSE, &OldIrql);
     if (Pt == NULL)
     {
         KeBugCheck(MEMORY_MANAGEMENT);
@@ -576,7 +581,7 @@ MmSetDirtyPage(PEPROCESS Process, PVOID Address)
     {
         /* The processor will never clear this bit itself, therefore
          * we do not need to flush the TLB here when setting it */
-        MmUnmapPageTable(Pt);
+        MmUnmapPageTable(Pt, OldIrql);
     }
 }
 
@@ -612,6 +617,7 @@ MmCreatePageFileMapping(PEPROCESS Process,
 {
     PULONG Pt;
     ULONG Pte;
+    KIRQL OldIrql;
 
     if (Process == NULL && Address < MmSystemRangeStart)
     {
@@ -629,7 +635,7 @@ MmCreatePageFileMapping(PEPROCESS Process,
         KeBugCheck(MEMORY_MANAGEMENT);
     }
 
-    Pt = MmGetPageTableForProcess(Process, Address, FALSE);
+    Pt = MmGetPageTableForProcess(Process, Address, FALSE, &OldIrql);
     if (Pt == NULL)
     {
         /* Nobody should page out an address that hasn't even been mapped */
@@ -638,7 +644,7 @@ MmCreatePageFileMapping(PEPROCESS Process,
         {
             KeBugCheck(MEMORY_MANAGEMENT);
         }
-        Pt = MmGetPageTableForProcess(Process, Address, TRUE);
+        Pt = MmGetPageTableForProcess(Process, Address, TRUE, &OldIrql);
     }
     Pte = InterlockedExchangePte(Pt, SwapEntry << 1);
     if (Pte != 0)
@@ -656,7 +662,7 @@ MmCreatePageFileMapping(PEPROCESS Process,
     /* We don't need to flush the TLB here because it
      * only caches valid translations and a zero PTE
      * is not a valid translation */
-    MmUnmapPageTable(Pt);
+    MmUnmapPageTable(Pt, OldIrql);
 
     return(STATUS_SUCCESS);
 }
@@ -676,6 +682,8 @@ MmCreateVirtualMappingUnsafe(PEPROCESS Process,
     ULONG oldPdeOffset, PdeOffset;
     PULONG Pt = NULL;
     ULONG Pte;
+    KIRQL OldIrql;
+
     DPRINT("MmCreateVirtualMappingUnsafe(%p, %p, %lu, %p (%x), %lu)\n",
            Process, Address, flProtect, Pages, *Pages, PageCount);
 
@@ -738,8 +746,8 @@ MmCreateVirtualMappingUnsafe(PEPROCESS Process,
         PdeOffset = ADDR_TO_PDE_OFFSET(Addr);
         if (oldPdeOffset != PdeOffset)
         {
-            if(Pt) MmUnmapPageTable(Pt);
-            Pt = MmGetPageTableForProcess(Process, Addr, TRUE);
+            if(Pt) MmUnmapPageTable(Pt, OldIrql);
+            Pt = MmGetPageTableForProcess(Process, Addr, TRUE, &OldIrql);
             if (Pt == NULL)
             {
                 KeBugCheck(MEMORY_MANAGEMENT);
@@ -772,7 +780,7 @@ MmCreateVirtualMappingUnsafe(PEPROCESS Process,
     }
 
     ASSERT(Addr > Address);
-    MmUnmapPageTable(Pt);
+    MmUnmapPageTable(Pt, OldIrql);
 
     return(STATUS_SUCCESS);
 }
@@ -852,6 +860,7 @@ MmSetPageProtect(PEPROCESS Process, PVOID Address, ULONG flProtect)
     ULONG Attributes = 0;
     PULONG Pt;
     ULONG Pte;
+    KIRQL OldIrql;
 
     DPRINT("MmSetPageProtect(Process %p  Address %p  flProtect %x)\n",
            Process, Address, flProtect);
@@ -868,7 +877,7 @@ MmSetPageProtect(PEPROCESS Process, PVOID Address, ULONG flProtect)
         Attributes |= PA_USER;
     }
 
-    Pt = MmGetPageTableForProcess(Process, Address, FALSE);
+    Pt = MmGetPageTableForProcess(Process, Address, FALSE, &OldIrql);
     if (Pt == NULL)
     {
         KeBugCheck(MEMORY_MANAGEMENT);
@@ -883,9 +892,9 @@ MmSetPageProtect(PEPROCESS Process, PVOID Address, ULONG flProtect)
     }
 
     if((Pte & Attributes) != Attributes)
-        MiFlushTlb(Pt, Address);
+        MiFlushTlb(Pt, Address, OldIrql);
     else
-        MmUnmapPageTable(Pt);
+        MmUnmapPageTable(Pt, OldIrql);
 }
 
 CODE_SEG("INIT")
