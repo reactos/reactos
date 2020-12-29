@@ -629,28 +629,24 @@ CcUnpinRepinnedBcb (
     SharedCacheMap = iBcb->Vacb->SharedCacheMap;
     IoStatus->Status = STATUS_SUCCESS;
 
+    if (WriteThrough)
+    {
+        CcFlushCache(iBcb->Vacb->SharedCacheMap->FileObject->SectionObjectPointer,
+                     &iBcb->PFCB.MappedFileOffset,
+                     iBcb->PFCB.MappedLength,
+                     IoStatus);
+    }
+    else
+    {
+        IoStatus->Status = STATUS_SUCCESS;
+        IoStatus->Information = 0;
+    }
+
     KeAcquireSpinLock(&SharedCacheMap->BcbSpinLock, &OldIrql);
     if (--iBcb->RefCount == 0)
     {
         RemoveEntryList(&iBcb->BcbEntry);
         KeReleaseSpinLock(&SharedCacheMap->BcbSpinLock, OldIrql);
-
-        IoStatus->Information = 0;
-        if (WriteThrough)
-        {
-            if (iBcb->Vacb->Dirty)
-            {
-                IoStatus->Status = CcRosFlushVacb(iBcb->Vacb);
-            }
-            else
-            {
-                IoStatus->Status = STATUS_SUCCESS;
-            }
-        }
-        else
-        {
-            IoStatus->Status = STATUS_SUCCESS;
-        }
 
         if (iBcb->PinCount != 0)
         {
