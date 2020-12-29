@@ -3,7 +3,7 @@
 
 #ifdef __GNUC__
 /* Hack, for bug in ld.  Will be removed soon.  */
-#define __ImageBase _image_base__
+#define __ImageBase __MINGW_LSYMBOL(_image_base__)
 #endif
 
 #if defined(__cplusplus)
