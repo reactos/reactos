@@ -740,11 +740,13 @@ CcRosEnsureVacbResident(
 
     ASSERT((Offset + Length) <= VACB_MAPPING_GRANULARITY);
 
+#if 0
     if ((Vacb->FileOffset.QuadPart + Offset) > Vacb->SharedCacheMap->SectionSize.QuadPart)
     {
         DPRINT1("Vacb read beyond the file size!\n");
         return FALSE;
     }
+#endif
 
     BaseAddress = (PVOID)((ULONG_PTR)Vacb->BaseAddress + Offset);
 
@@ -862,15 +864,6 @@ CcRosInternalFreeVacb (
     }
 #endif
 
-    /* Delete the mapping */
-    Status = MmUnmapViewInSystemSpace(Vacb->BaseAddress);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("Failed to unmap VACB from System address space! Status 0x%08X\n", Status);
-        ASSERT(FALSE);
-        /* Proceed with the deĺetion anyway */
-    }
-
     if (Vacb->ReferenceCount != 0)
     {
         DPRINT1("Invalid free: %ld\n", Vacb->ReferenceCount);
@@ -884,6 +877,16 @@ CcRosInternalFreeVacb (
     ASSERT(IsListEmpty(&Vacb->CacheMapVacbListEntry));
     ASSERT(IsListEmpty(&Vacb->DirtyVacbListEntry));
     ASSERT(IsListEmpty(&Vacb->VacbLruListEntry));
+
+    /* Delete the mapping */
+    Status = MmUnmapViewInSystemSpace(Vacb->BaseAddress);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to unmap VACB from System address space! Status 0x%08X\n", Status);
+        ASSERT(FALSE);
+        /* Proceed with the deĺetion anyway */
+    }
+
     RtlFillMemory(Vacb, sizeof(*Vacb), 0xfd);
     ExFreeToNPagedLookasideList(&VacbLookasideList, Vacb);
     return STATUS_SUCCESS;
