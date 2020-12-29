@@ -148,6 +148,7 @@ if(ARCH STREQUAL "i386")
     endif()
 elseif(ARCH STREQUAL "amd64")
     add_compile_options(-mpreferred-stack-boundary=4)
+    add_compile_options(-Wno-error)
 endif()
 
 # Other
