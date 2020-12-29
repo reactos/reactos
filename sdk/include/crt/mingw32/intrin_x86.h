@@ -834,7 +834,7 @@ __INTRIN_INLINE void __movsd(unsigned long * Destination, const unsigned long * 
 }
 
 #ifdef __x86_64__
-__INTRIN_INLINE void __movsq(unsigned long * Destination, const unsigned long * Source, size_t Count)
+__INTRIN_INLINE void __movsq(unsigned long long * Destination, const unsigned long long * Source, size_t Count)
 {
 	__asm__ __volatile__
 	(
@@ -927,7 +927,7 @@ __INTRIN_INLINE void __addgsword(unsigned long Offset, unsigned short Data)
 	__asm__ __volatile__("addw %w[Data], %%gs:%a[Offset]" : : [Offset] "ir" (Offset), [Data] "ir" (Data) : "memory");
 }
 
-__INTRIN_INLINE void __addgsdword(unsigned long Offset, unsigned int Data)
+__INTRIN_INLINE void __addgsdword(unsigned long Offset, unsigned long Data)
 {
 	__asm__ __volatile__("addl %k[Data], %%gs:%a[Offset]" : : [Offset] "ir" (Offset), [Data] "ir" (Data) : "memory");
 }
