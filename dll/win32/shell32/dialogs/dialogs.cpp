@@ -1292,7 +1292,7 @@ static VOID FancyLogoffOnInit(HWND hwnd, PLOGOFF_DLG_CONTEXT pContext)
     long lfHeight;
 
     hdc = GetDC(NULL);
-    lfHeight = -MulDiv(12, GetDeviceCaps(hdc, LOGPIXELSY), 68);
+    lfHeight = -MulDiv(13, GetDeviceCaps(hdc, LOGPIXELSY), 72);
     ReleaseDC(NULL, hdc);
     pContext->hfFont = CreateFontW(lfHeight, 0, 0, 0, 550, FALSE, 0, 0, 0, 0, 0, 0, 0, L"MS Shell Dlg");
     SendDlgItemMessage(hwnd, IDC_LOG_OFF_TEXT_STATIC, WM_SETFONT, (WPARAM)pContext->hfFont, TRUE);
