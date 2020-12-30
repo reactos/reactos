@@ -1,6 +1,7 @@
 /*
  * Copyright 2000 Juergen Schmied
  * Copyright 2017 Katayama Hirofumi MZ
+ * Copyright 2020 Arnav Bhatt
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -36,8 +37,11 @@
 #define IDB_SHELL_EDIT_LG_HOT       226
 #define IDB_SHELL_EDIT_SM           227
 #define IDB_SHELL_EDIT_SM_HOT       228
+
+/* Bitmaps for fancy log off dialog box */
 #define IDB_DLG_BG                  500
 #define IDB_REACTOS_FLAG            501
+#define IDB_IMAGE_STRIP             502
 
 /* Strings */
 
@@ -748,13 +752,6 @@
 #define IDI_SHELL_DELETE3 16717
 #define IDI_SHELL_DELETE4 16718
 #define IDI_SHELL_DELETE5 16721
-
-/* Icons for fancy log off dialog box */
-#define IDI_SHELL_BUTTON_LOG_OFF                20000
-#define IDI_SHELL_BUTTON_LOG_OFF_PRESSED        20001
-#define IDI_SHELL_BUTTON_SWITCH_USER            20002
-#define IDI_SHELL_BUTTON_SWITCH_USER_DISABLED   20003
-#define IDI_SHELL_BUTTON_SWITCH_USER_PRESSED    20004
 
 /*
  * AVI resources

@@ -74,8 +74,9 @@
 
 #define IDI_ROSLOGO              20000
 #define IDI_BAR                  20001
-#define IDI_ROSLOGO_FLAG        20002
+#define IDI_ROSLOGO_FLAG         20002
 #define IDI_DLG_BG               20003
+#define IDB_IMAGE_STRIP          20004
 
 #define IDI_NOT_CONNECTED            13
 #define IDI_LOGOFF                   21
@@ -83,13 +84,6 @@
 #define IDI_KEYBOARD                 109
 #define IDI_HARDWARE                 110
 #define IDI_LOCKICON                 115
-#define IDI_BUTTON_REBOOT            200
-#define IDI_BUTTON_REBOOT_PRESSED    201
-#define IDI_BUTTON_SHUTDOWN          202
-#define IDI_BUTTON_SHUTDOWN_PRESSED  203
-#define IDI_BUTTON_SH                204
-#define IDI_BUTTON_SH_DISABLED       205
-#define IDI_BUTTON_SH_PRESSED        206
 
 #define IDS_LOGGEDOUTSAS         40000
 #define IDS_LOCKEDSAS            40001

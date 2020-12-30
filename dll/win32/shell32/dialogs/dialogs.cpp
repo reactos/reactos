@@ -36,6 +36,7 @@ typedef struct
 typedef struct
 {
     BOOL bFriendlyUI;
+    HBITMAP hImageStrip;
     HFONT hfFont;
 } LOGOFF_DLG_CONTEXT, *PLOGOFF_DLG_CONTEXT;
 
@@ -1070,78 +1071,103 @@ int WINAPI RestartDialogEx(HWND hWndOwner, LPCWSTR lpwstrReason, DWORD uFlags, D
     return 0;
 }
 
-/* Functions used for log off dialog box */
+/* Functions and macros used for log off dialog box */
+#define IS_PRODUCT_VERSION_WORKSTATION  0x300
 
-BOOL DrawIconOnOwnerDrawnButtons(DRAWITEMSTRUCT* pdis)
+#define CX_BITMAP                       33
+#define CY_BITMAP                       33
+
+#define BUTTON_SWITCH_USER              0
+#define BUTTON_SWITCH_USER_PRESSED      (CY_BITMAP + BUTTON_SWITCH_USER)
+#define BUTTON_SWITCH_USER_FOCUSED      (CY_BITMAP + BUTTON_SWITCH_USER_PRESSED)
+#define BUTTON_LOG_OFF                  (CY_BITMAP + BUTTON_SWITCH_USER_FOCUSED)
+#define BUTTON_LOG_OFF_PRESSED          (CY_BITMAP + BUTTON_LOG_OFF)
+#define BUTTON_LOG_OFF_FOCUSED          (CY_BITMAP + BUTTON_LOG_OFF_PRESSED)
+
+BOOL
+DrawIconOnOwnerDrawnButtons(
+    DRAWITEMSTRUCT* pdis,
+    HBITMAP hBitmap)
 {
-    HICON hCurrIcon;
+    BOOL bRet = FALSE;
+    HDC hdcMem = NULL;
+    HBITMAP hbmOld = NULL;
+    int y = 0;
     RECT rect;
-    
+
+    hdcMem = CreateCompatibleDC(pdis->hDC);
+    hbmOld = (HBITMAP)SelectObject(hdcMem, hBitmap);
     rect = pdis->rcItem;
 
-    /* Check the button ID for revelant icon to be used */
+    /* Check the button ID for revelant image to be used */
     switch (pdis->CtlID)
     {
         case IDC_LOG_OFF_BUTTON:
         {
-            if (pdis->itemState & ODS_SELECTED)
+            if (pdis->itemAction & ODA_FOCUS)
             {
-                hCurrIcon = (HICON)LoadImageW(shell32_hInstance, MAKEINTRESOURCE(IDI_SHELL_BUTTON_LOG_OFF_PRESSED), IMAGE_ICON, 0, 0, LR_DEFAULTCOLOR);
+                if (pdis->itemState & ODS_FOCUS)
+                {
+                    y = BUTTON_LOG_OFF_FOCUSED;
+                }
             }
 
-            else
+            else if (pdis->itemAction & ODA_DRAWENTIRE)
             {
-                hCurrIcon = (HICON)LoadImageW(shell32_hInstance, MAKEINTRESOURCE(IDI_SHELL_BUTTON_LOG_OFF), IMAGE_ICON, 0, 0, LR_DEFAULTCOLOR);
+                if (pdis->itemState & ODS_SELECTED)
+                {
+                    y = BUTTON_LOG_OFF_PRESSED;
+                }
+                else
+                {
+                    y = BUTTON_LOG_OFF;
+                }
             }
+            break;
         }
-        break;
-        
+
         case IDC_SWITCH_USER_BUTTON:
         {
-            if (pdis->itemState & ODS_SELECTED)
+            if (pdis->itemAction & ODA_FOCUS)
             {
-                hCurrIcon = (HICON)LoadImageW(shell32_hInstance, MAKEINTRESOURCE(IDI_SHELL_BUTTON_SWITCH_USER_PRESSED), IMAGE_ICON, 0, 0, LR_DEFAULTCOLOR);
+                if (pdis->itemState & ODS_FOCUS)
+                {
+                    y = BUTTON_SWITCH_USER_FOCUSED;
+                }
             }
 
-            else if (pdis->itemState & ODS_DISABLED)
+            else if (pdis->itemAction & ODA_DRAWENTIRE)
             {
-                hCurrIcon = (HICON)LoadImageW(shell32_hInstance, MAKEINTRESOURCE(IDI_SHELL_BUTTON_SWITCH_USER_DISABLED), IMAGE_ICON, 0, 0, LR_DEFAULTCOLOR);
+                if (pdis->itemState & ODS_SELECTED)
+                {
+                    y = BUTTON_SWITCH_USER_PRESSED;
+                }
+                else
+                {
+                    y = BUTTON_SWITCH_USER;
+                }
             }
-
-            else
-            {
-                hCurrIcon = (HICON)LoadImageW(shell32_hInstance, MAKEINTRESOURCE(IDI_SHELL_BUTTON_SWITCH_USER), IMAGE_ICON, 0, 0, LR_DEFAULTCOLOR);
-            }
+            break;
         }
-        break;
     }
 
-    if (hCurrIcon == NULL)
-    {
-        return FALSE;
-    }
+    /* Draw it on the required button */
+    bRet = BitBlt(pdis->hDC,
+                  (rect.right - rect.left - CX_BITMAP) / 2,
+                  (rect.bottom - rect.top - CY_BITMAP) / 2, 
+                  CX_BITMAP, CY_BITMAP, hdcMem, 0, y, SRCCOPY);
 
-    /* Draw it on the button */
-    if (!DrawIconEx(
-		pdis->hDC,
-		(int) 0.5 * (rect.right - rect.left - 33),
-		(int) 0.5 * (rect.bottom - rect.top - 33),
-		(HICON) hCurrIcon,
-		0,
-		0,
-		0, NULL, DI_NORMAL))
-    {
-		return FALSE;
-	}
+    SelectObject(hdcMem, hbmOld);
+    DeleteDC(hdcMem);
 
-    return TRUE;
+    return bRet;
 }
+
 
 VOID CreateToolTipForButtons(int controlID, int detailID, HWND hDlg, int titleID)
 {
     HWND hwndTool, hwndTip;
     WCHAR szBuffer[256];
-    WCHAR szBuffer2[256];
     TTTOOLINFOW tool;
 
     hwndTool = GetDlgItem(hDlg, controlID);
@@ -1159,14 +1185,31 @@ VOID CreateToolTipForButtons(int controlID, int detailID, HWND hDlg, int titleID
                               hDlg, NULL, 
                               shell32_hInstance, NULL);
 
-    LoadStringW(shell32_hInstance, detailID, szBuffer, _countof(szBuffer));
-    LoadStringW(shell32_hInstance, titleID, szBuffer2, _countof(szBuffer2));
-
     /* Associate the tooltip with the tool. */
+    LoadStringW(shell32_hInstance, detailID, szBuffer, _countof(szBuffer));
     tool.lpszText = szBuffer;
-    SendMessage(hwndTip, TTM_ADDTOOLW , 0, (LPARAM)&tool);
-    SendMessage(hwndTip, TTM_SETTITLEW, TTI_NONE, (LPARAM)szBuffer2);
-    SendMessage(hwndTip, TTM_SETMAXTIPWIDTH, 0, 250);
+    SendMessageW(hwndTip, TTM_ADDTOOLW , 0, (LPARAM)&tool);
+    LoadStringW(shell32_hInstance, titleID, szBuffer, _countof(szBuffer));
+    SendMessageW(hwndTip, TTM_SETTITLEW, TTI_NONE, (LPARAM)szBuffer);
+    SendMessageW(hwndTip, TTM_SETMAXTIPWIDTH, 0, 250);
+}
+
+VOID
+WhenUserHoversOnOwnerDrawnButtons(
+    NMBCHOTITEM* nmb,
+    HBITMAP hBitmap)
+{
+    NMHDR nmh;
+    nmh = nmb->hdr;
+
+    if (nmb->dwFlags & HICF_ENTERING)
+    {
+        SetClassLongPtrW(nmh.hwndFrom, GCL_HCURSOR, (LONG_PTR)LoadCursorW(NULL, IDC_HAND));
+    }
+    else if (nmb->dwFlags & HICF_LEAVING)
+    {
+        SetClassLongPtrW(nmh.hwndFrom, GCL_HCURSOR, (LONG_PTR)LoadCursorW(NULL, IDC_ARROW));
+    }
 }
 
 static BOOL IsFriendlyUIActive(VOID)
@@ -1195,7 +1238,7 @@ static BOOL IsFriendlyUIActive(VOID)
                             (LPBYTE)&dwValue,
                             &dwSize);
 
-    if (lRet == ERROR_SUCCESS && dwType == REG_DWORD && dwValue == 0x1)
+    if (lRet == ERROR_SUCCESS && dwType == REG_DWORD && dwValue != 0x0)
     {
         RegCloseKey(hKey);
         return TRUE;
@@ -1212,7 +1255,7 @@ static BOOL IsFriendlyUIActive(VOID)
                             &dwSize);
     RegCloseKey(hKey);
 
-    if (lRet != ERROR_SUCCESS || dwType != REG_DWORD || dwValue != 0x300)
+    if (lRet != ERROR_SUCCESS || dwType != REG_DWORD || dwValue != IS_PRODUCT_VERSION_WORKSTATION)
     {
         /* Allow Friendly UI only on Workstation */
         return FALSE;
@@ -1243,7 +1286,7 @@ static BOOL IsFriendlyUIActive(VOID)
     return (dwValue != 0);
 }
 
-static void FancyLogoffOnInit(HWND hwnd, PLOGOFF_DLG_CONTEXT pContext)
+static VOID FancyLogoffOnInit(HWND hwnd, PLOGOFF_DLG_CONTEXT pContext)
 {
     HDC hdc;
     long lfHeight;
@@ -1253,6 +1296,8 @@ static void FancyLogoffOnInit(HWND hwnd, PLOGOFF_DLG_CONTEXT pContext)
     ReleaseDC(NULL, hdc);
     pContext->hfFont = CreateFontW(lfHeight, 0, 0, 0, 550, FALSE, 0, 0, 0, 0, 0, 0, 0, L"MS Shell Dlg");
     SendDlgItemMessage(hwnd, IDC_LOG_OFF_TEXT_STATIC, WM_SETFONT, (WPARAM)pContext->hfFont, TRUE);
+
+    pContext->hImageStrip = LoadBitmapW(shell32_hInstance, MAKEINTRESOURCEW(IDB_IMAGE_STRIP));
 
     CreateToolTipForButtons(IDC_LOG_OFF_BUTTON, IDS_LOG_OFF_DESC, hwnd, IDS_LOG_OFF_TITLE);
     CreateToolTipForButtons(IDC_SWITCH_USER_BUTTON, IDS_SWITCH_USER_DESC, hwnd, IDS_SWITCH_USER_TITLE);
@@ -1275,6 +1320,7 @@ INT_PTR CALLBACK LogOffDialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
         case WM_INITDIALOG:
         {
             pContext = (PLOGOFF_DLG_CONTEXT)lParam;
+            SetWindowLongPtrW(hwnd, GWLP_USERDATA, (LONG_PTR)pContext);
 
             if (pContext->bFriendlyUI)
                 FancyLogoffOnInit(hwnd, pContext);
@@ -1296,6 +1342,30 @@ INT_PTR CALLBACK LogOffDialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
             return FALSE;
         }
 
+        case WM_NOTIFY:
+        {
+            switch (((LPNMHDR)lParam)->code)
+            {
+                case BCN_HOTITEMCHANGE:
+                {
+                    switch (((LPNMHDR)lParam)->idFrom)
+                    {
+                        case IDC_LOG_OFF_BUTTON:
+                        case IDC_SWITCH_USER_BUTTON:
+                        {
+                            WhenUserHoversOnOwnerDrawnButtons((NMBCHOTITEM*)lParam, pContext->hImageStrip);
+                            break;
+                        }
+                    }
+                    break;
+                }
+
+                default:
+                    break;
+            }
+            break;
+        }
+
         case WM_COMMAND:
             switch (LOWORD(wParam))
             {
@@ -1312,6 +1382,7 @@ INT_PTR CALLBACK LogOffDialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
             break;
 
         case WM_DESTROY:
+            DeleteObject(pContext->hImageStrip);
             DeleteObject(pContext->hfFont);
             return TRUE;
 
@@ -1341,10 +1412,9 @@ INT_PTR CALLBACK LogOffDialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
         {
             switch (pdis->CtlID)
             {
-				case IDC_LOG_OFF_BUTTON:
+                case IDC_LOG_OFF_BUTTON:
                 case IDC_SWITCH_USER_BUTTON:
-					DrawIconOnOwnerDrawnButtons(pdis);
-					break;
+                    return DrawIconOnOwnerDrawnButtons(pdis, pContext->hImageStrip);
             }
         }
         break;

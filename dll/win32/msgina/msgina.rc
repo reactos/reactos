@@ -16,19 +16,13 @@ IDI_SHUTDOWN ICON "resources/22.ico"
 IDI_KEYBOARD ICON "resources/109.ico"
 IDI_HARDWARE ICON "resources/110.ico"
 IDI_LOCKICON ICON "resources/115.ico"
-IDI_BUTTON_REBOOT ICON "resources/reboot.ico"
-IDI_BUTTON_REBOOT_PRESSED ICON "resources/reboot_pressed.ico"
-IDI_BUTTON_SHUTDOWN ICON "resources/shut_down.ico"
-IDI_BUTTON_SHUTDOWN_PRESSED ICON "resources/shut_down_pressed.ico"
-IDI_BUTTON_SH ICON "resources/sh.ico"
-IDI_BUTTON_SH_DISABLED ICON "resources/sh_disabled.ico"
-IDI_BUTTON_SH_PRESSED ICON "resources/sh_pressed.ico"
 
 /* Bitmaps */
 IDI_ROSLOGO BITMAP "resources/reactos.bmp"
 IDI_ROSLOGO_FLAG BITMAP "resources/reactos_flag.bmp"
 IDI_BAR BITMAP "resources/line.bmp"
 IDI_DLG_BG BITMAP "resources/dlg_bg.bmp"
+IDB_IMAGE_STRIP BITMAP "resources/image_strip.bmp"
 
 /* UTF-8 */
 #pragma code_page(65001)

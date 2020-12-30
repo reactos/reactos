@@ -23,10 +23,26 @@
 #define WLX_SHUTDOWN_STATE_HIBERNATE    0x40
 // 0x80
 
+/* Macros for owner drawing button */
+#define CX_BITMAP                       33
+#define CY_BITMAP                       33
+
+#define BUTTON_SHUTDOWN                 0
+#define BUTTON_SHUTDOWN_PRESSED         (CY_BITMAP + BUTTON_SHUTDOWN)
+#define BUTTON_SHUTDOWN_FOCUSED         (CY_BITMAP + BUTTON_SHUTDOWN_PRESSED)
+#define BUTTON_REBOOT                   (CY_BITMAP + BUTTON_SHUTDOWN_FOCUSED)
+#define BUTTON_REBOOT_PRESSED           (CY_BITMAP + BUTTON_REBOOT)
+#define BUTTON_REBOOT_FOCUSED           (CY_BITMAP + BUTTON_REBOOT_PRESSED)
+#define BUTTON_SLEEP                    (CY_BITMAP + BUTTON_REBOOT_FOCUSED)
+#define BUTTON_SLEEP_PRESSED            (CY_BITMAP + BUTTON_SLEEP)
+#define BUTTON_SLEEP_FOCUSED            (CY_BITMAP + BUTTON_SLEEP_PRESSED)
+#define BUTTON_SLEEP_DISABLED           (CY_BITMAP + BUTTON_SLEEP_FOCUSED)
+
 typedef struct _SHUTDOWN_DLG_CONTEXT
 {
     PGINA_CONTEXT pgContext;
     HBITMAP hBitmap;
+    HBITMAP hImageStrip;
     DWORD ShutdownOptions;
     HFONT hfFont;
     BOOL bCloseDlg;
@@ -273,86 +289,111 @@ ForceFriendlyUI(VOID)
 }
 
 BOOL
-DrawIconOnOwnerDrawButtons(
+DrawIconOnOwnerDrawnButtons(
     DRAWITEMSTRUCT* pdis,
-    HINSTANCE hInst)
+    HBITMAP hBitmap)
 {
-    HICON hCurrIcon;
+    BOOL bRet;
+    HDC hdcMem;
+    HBITMAP hbmOld;
+    int y;
     RECT rect;
-    
+
+    hdcMem = CreateCompatibleDC(pdis->hDC);
+    hbmOld = SelectObject(hdcMem, hBitmap);
     rect = pdis->rcItem;
 
-    /* Check the button ID for revelant icon to be used */
+    /* Check the button ID for revelant image to be used */
     switch (pdis->CtlID)
     {
         case IDC_BUTTON_SHUTDOWN:
         {
-            if (pdis->itemState & ODS_SELECTED)
+            if (pdis->itemAction & ODA_FOCUS)
             {
-                hCurrIcon = LoadImageW(hInst, MAKEINTRESOURCE(IDI_BUTTON_SHUTDOWN_PRESSED), IMAGE_ICON, 0, 0, LR_DEFAULTCOLOR);
+                if (pdis->itemState & ODS_FOCUS)
+                {
+                    y = BUTTON_SHUTDOWN_FOCUSED;
+                }
             }
 
-            else
+            else if (pdis->itemAction & ODA_DRAWENTIRE)
             {
-                hCurrIcon = LoadImageW(hInst, MAKEINTRESOURCE(IDI_BUTTON_SHUTDOWN), IMAGE_ICON, 0, 0, LR_DEFAULTCOLOR);
+                if (pdis->itemState & ODS_SELECTED)
+                {
+                    y = BUTTON_SHUTDOWN_PRESSED;
+                }
+                else
+                {
+                    y = BUTTON_SHUTDOWN;
+                }
             }
+            break;
         }
-        break;
 
         case IDC_BUTTON_REBOOT:
         {
-            if (pdis->itemState & ODS_SELECTED)
+            if (pdis->itemAction & ODA_FOCUS)
             {
-                hCurrIcon = LoadImageW(hInst, MAKEINTRESOURCE(IDI_BUTTON_REBOOT_PRESSED), IMAGE_ICON, 0, 0, LR_DEFAULTCOLOR);
+                if (pdis->itemState & ODS_FOCUS)
+                {
+                    y = BUTTON_REBOOT_FOCUSED;
+                }
             }
 
-            else
+            else if (pdis->itemAction & ODA_DRAWENTIRE)
             {
-                hCurrIcon = LoadImageW(hInst, MAKEINTRESOURCE(IDI_BUTTON_REBOOT), IMAGE_ICON, 0, 0, LR_DEFAULTCOLOR);
+                if (pdis->itemState & ODS_SELECTED)
+                {
+                    y = BUTTON_REBOOT_PRESSED;
+                }
+                else
+                {
+                    y = BUTTON_REBOOT;
+                }
             }
+            break;
         }
-        break;
         
         case IDC_BUTTON_HIBERNATE:
         case IDC_BUTTON_SLEEP:
         {
-            if (pdis->itemState & ODS_SELECTED)
+            if (pdis->itemAction & ODA_FOCUS)
             {
-                hCurrIcon = LoadImageW(hInst, MAKEINTRESOURCE(IDI_BUTTON_SH_PRESSED), IMAGE_ICON, 0, 0, LR_DEFAULTCOLOR);
+                if (pdis->itemState & ODS_FOCUS)
+                {
+                    y = BUTTON_SLEEP_FOCUSED;
+                }
             }
 
-            else if (pdis->itemState & ODS_DISABLED)
+            else if (pdis->itemAction & ODA_DRAWENTIRE)
             {
-                hCurrIcon = LoadImageW(hInst, MAKEINTRESOURCE(IDI_BUTTON_SH_DISABLED), IMAGE_ICON, 0, 0, LR_DEFAULTCOLOR);
+                if (pdis->itemState & ODS_SELECTED)
+                {
+                    y = BUTTON_SLEEP_PRESSED;
+                }
+                else if (pdis->itemState & ODS_DISABLED)
+                {
+                    y = BUTTON_SLEEP_DISABLED;
+                }
+                else
+                {
+                    y = BUTTON_SLEEP;
+                }
             }
-
-            else
-            {
-                hCurrIcon = LoadImageW(hInst, MAKEINTRESOURCE(IDI_BUTTON_SH), IMAGE_ICON, 0, 0, LR_DEFAULTCOLOR);
-            }
+            break;
         }
-        break;
     }
 
-    if (hCurrIcon == NULL)
-    {
-        return FALSE;
-    }
+    /* Draw it on the required button */
+    bRet = BitBlt(pdis->hDC,
+                  (rect.right - rect.left - CX_BITMAP) / 2,
+                  (rect.bottom - rect.top - CY_BITMAP) / 2, 
+                  CX_BITMAP, CY_BITMAP, hdcMem, 0, y, SRCCOPY);
 
-    /* Draw it on the button */
-    if (!DrawIconEx(
-		pdis->hDC,
-		(int) 0.5 * (rect.right - rect.left - 33),
-		(int) 0.5 * (rect.bottom - rect.top - 33),
-		(HICON) hCurrIcon,
-		0,
-		0,
-		0, NULL, DI_NORMAL))
-    {
-		return FALSE;
-	}
+    SelectObject(hdcMem, hbmOld);
+    DeleteDC(hdcMem);
 
-    return TRUE;
+    return bRet;
 }
 
 BOOL
@@ -465,13 +506,12 @@ VOID
 CreateToolTipForButtons(
     int controlID,
     int detailID,
-    IN HWND hDlg,
+    HWND hDlg,
     int titleID,
     HINSTANCE hInst)
 {
     HWND hwndTool, hwndTip;
     WCHAR szBuffer[256];
-    WCHAR szBuffer2[256];
     TTTOOLINFOW tool;
 
     hwndTool = GetDlgItem(hDlg, controlID);
@@ -489,14 +529,13 @@ CreateToolTipForButtons(
                               hDlg, NULL, 
                               hInst, NULL);
 
-    LoadStringW(hInst, detailID, szBuffer, _countof(szBuffer));
-    LoadStringW(hInst, titleID, szBuffer2, _countof(szBuffer2));
-
     /* Associate the tooltip with the tool. */
+    LoadStringW(hInst, detailID, szBuffer, _countof(szBuffer));
     tool.lpszText = szBuffer;
-    SendMessage(hwndTip, TTM_ADDTOOLW , 0, (LPARAM)&tool);
-    SendMessage(hwndTip, TTM_SETTITLEW, TTI_NONE, (LPARAM)szBuffer2);
-    SendMessage(hwndTip, TTM_SETMAXTIPWIDTH, 0, 250);
+    SendMessageW(hwndTip, TTM_ADDTOOLW , 0, (LPARAM)&tool);
+    LoadStringW(hInst, titleID, szBuffer, _countof(szBuffer));
+    SendMessageW(hwndTip, TTM_SETTITLEW, TTI_NONE, (LPARAM)szBuffer);
+    SendMessageW(hwndTip, TTM_SETMAXTIPWIDTH, 0, 250);
 }
 
 VOID
@@ -590,6 +629,24 @@ SaveShutdownSelState(
     RegCloseKey(hKey);
 }
 
+VOID
+WhenUserHoversOnOwnerDrawnButtons(
+    NMBCHOTITEM* nmb,
+    HBITMAP hBitmap)
+{
+    NMHDR nmh;
+    nmh = nmb->hdr;
+
+    if (nmb->dwFlags & HICF_ENTERING)
+    {
+        SetClassLongPtrW(nmh.hwndFrom, GCL_HCURSOR, (LONG_PTR)LoadCursorW(NULL, IDC_HAND));
+    }
+    else if (nmb->dwFlags & HICF_LEAVING)
+    {
+        SetClassLongPtrW(nmh.hwndFrom, GCL_HCURSOR, (LONG_PTR)LoadCursorW(NULL, IDC_ARROW));
+    }
+}
+
 DWORD
 GetDefaultShutdownOptions(VOID)
 {
@@ -680,10 +737,12 @@ ShutdownOnInit(
 
     /* Create font for the IDC_TURN_OFF_STATIC static control */
     hdc = GetDC(hDlg);
-    lfHeight = -MulDiv(12, GetDeviceCaps(hdc, LOGPIXELSY), 68);
+    lfHeight = -MulDiv(13, GetDeviceCaps(hdc, LOGPIXELSY), 72);
     ReleaseDC(hDlg, hdc);
-    pContext->hfFont = CreateFontW(lfHeight, 0, 0, 0, 550, FALSE, 0, 0, 0, 0, 0, 0, 0, L"MS Shell Dlg");
+    pContext->hfFont = CreateFontW(lfHeight, 0, 0, 0, FW_MEDIUM, FALSE, 0, 0, 0, 0, 0, 0, 0, L"MS Shell Dlg");
     SendDlgItemMessage(hDlg, IDC_TURN_OFF_STATIC, WM_SETFONT, (WPARAM)pContext->hfFont, TRUE);
+ 
+    pContext->hImageStrip = LoadBitmapW(pgContext->hDllInstance, MAKEINTRESOURCEW(IDB_IMAGE_STRIP));
 
     hwndList = GetDlgItem(hDlg, IDC_SHUTDOWN_ACTION);
 
@@ -779,7 +838,7 @@ ShutdownOnInit(
         }
     }
 
-    /*Create tool tips for the buttons of fancy log off dialog */
+    /* Create tool tips for the buttons of fancy log off dialog */
     CreateToolTipForButtons(IDC_BUTTON_HIBERNATE,
                   IDS_SHUTDOWN_HIBERNATE_DESC,
                   hDlg, IDS_SHUTDOWN_HIBERNATE,
@@ -851,8 +910,35 @@ ShutdownDialogProc(
             return TRUE;
         }
 
+        case WM_NOTIFY:
+        {
+            switch (((LPNMHDR)lParam)->code)
+            {
+                case BCN_HOTITEMCHANGE:
+                {
+                    switch (((LPNMHDR)lParam)->idFrom)
+                    {
+                        case IDC_BUTTON_SHUTDOWN:
+                        case IDC_BUTTON_REBOOT:
+                        case IDC_BUTTON_SLEEP:
+                        case IDC_BUTTON_HIBERNATE:
+                        {
+                            WhenUserHoversOnOwnerDrawnButtons((NMBCHOTITEM*)lParam, pContext->hImageStrip);
+                            break;
+                        }
+                    }
+                    break;
+                }
+
+                default:
+                    break;
+            }
+            break;
+        }
+        
         case WM_DESTROY:
             DeleteObject(pContext->hBitmap);
+            DeleteObject(pContext->hImageStrip);
             DeleteObject(pContext->hfFont);
             return TRUE;
 
@@ -948,7 +1034,6 @@ ShutdownDialogProc(
             }
             return FALSE;
         }
-        break;
 
         case WM_DRAWITEM:
         {
@@ -960,12 +1045,11 @@ ShutdownDialogProc(
                 case IDC_BUTTON_REBOOT:
                 case IDC_BUTTON_SLEEP:
                 case IDC_BUTTON_HIBERNATE:
-                    DrawIconOnOwnerDrawButtons(pdis, pContext->pgContext->hDllInstance);
-                    break;
+                    return DrawIconOnOwnerDrawnButtons(pdis, pContext->hImageStrip);
             }
+            break;
         }
-        break;
-        
+
         default:
             return FALSE;
     }
