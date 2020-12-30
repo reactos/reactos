@@ -59,6 +59,7 @@ list(APPEND _keyboard_layouts
     kbdrost
     kbdru
     kbdru1
+    kbdsf
     kbdsg
     kbdsk
     kbdsk1
