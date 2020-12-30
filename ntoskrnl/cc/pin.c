@@ -126,8 +126,8 @@ CcpGetAppropriateBcb(
     }
 
     RtlZeroMemory(iBcb, sizeof(*iBcb));
-    iBcb->PFCB.NodeTypeCode = 0xDE45; /* Undocumented (CAPTIVE_PUBLIC_BCB_NODETYPECODE) */
-    iBcb->PFCB.NodeByteSize = sizeof(PUBLIC_BCB);
+    iBcb->PFCB.NodeTypeCode = 0x2FD; /* As per KMTests */
+    iBcb->PFCB.NodeByteSize = 0;
     iBcb->PFCB.MappedLength = Length;
     iBcb->PFCB.MappedFileOffset = *FileOffset;
     iBcb->Vacb = Vacb;
@@ -308,8 +308,9 @@ CcpPinData(
     }
     _SEH2_END;
 
-    *Bcb = NewBcb;
+    *Bcb = &NewBcb->PFCB;
     *Buffer = (PVOID)((ULONG_PTR)NewBcb->Vacb->BaseAddress + VacbOffset);
+
     return TRUE;
 }
 
@@ -411,7 +412,7 @@ CcMapData (
     }
     _SEH2_END;
 
-    *pBcb = iBcb;
+    *pBcb = &iBcb->PFCB;
     *pBuffer = (PVOID)((ULONG_PTR)iBcb->Vacb->BaseAddress + VacbOffset);
 
     CCTRACE(CC_API_DEBUG, "FileObject=%p FileOffset=%p Length=%lu Flags=0x%lx -> TRUE Bcb=%p, Buffer %p\n",
@@ -451,14 +452,14 @@ CcPinMappedData (
         return FALSE;
     }
 
-    iBcb = *Bcb;
+    iBcb = *Bcb ? CONTAINING_RECORD(*Bcb, INTERNAL_BCB, PFCB) : NULL;
 
     ++CcPinMappedDataCount;
 
     Result = CcpPinData(SharedCacheMap, FileOffset, Length, Flags, Bcb, &Buffer);
     if (Result)
     {
-        CcUnpinData(iBcb);
+        CcUnpinData(&iBcb->PFCB);
     }
 
     return Result;
@@ -542,10 +543,9 @@ CcSetDirtyPinnedData (
     IN PVOID Bcb,
     IN PLARGE_INTEGER Lsn)
 {
-    PINTERNAL_BCB iBcb = Bcb;
+    PINTERNAL_BCB iBcb = CONTAINING_RECORD(Bcb, INTERNAL_BCB, PFCB);
 
-    CCTRACE(CC_API_DEBUG, "Bcb=%p Lsn=%p\n",
-        Bcb, Lsn);
+    CCTRACE(CC_API_DEBUG, "Bcb=%p Lsn=%p\n", Bcb, Lsn);
 
     /* Tell Mm */
     MmMakePagesDirty(NULL,
@@ -580,7 +580,7 @@ CcUnpinDataForThread (
     IN	PVOID Bcb,
     IN	ERESOURCE_THREAD ResourceThreadId)
 {
-    PINTERNAL_BCB iBcb = Bcb;
+    PINTERNAL_BCB iBcb = CONTAINING_RECORD(Bcb, INTERNAL_BCB, PFCB);
 
     CCTRACE(CC_API_DEBUG, "Bcb=%p ResourceThreadId=%lu\n", Bcb, ResourceThreadId);
 
@@ -601,7 +601,7 @@ NTAPI
 CcRepinBcb (
     IN	PVOID Bcb)
 {
-    PINTERNAL_BCB iBcb = Bcb;
+    PINTERNAL_BCB iBcb = CONTAINING_RECORD(Bcb, INTERNAL_BCB, PFCB);
 
     CCTRACE(CC_API_DEBUG, "Bcb=%p\n", Bcb);
 
@@ -618,7 +618,7 @@ CcUnpinRepinnedBcb (
     IN	BOOLEAN WriteThrough,
     IN	PIO_STATUS_BLOCK IoStatus)
 {
-    PINTERNAL_BCB iBcb = Bcb;
+    PINTERNAL_BCB iBcb = CONTAINING_RECORD(Bcb, INTERNAL_BCB, PFCB);
     KIRQL OldIrql;
     PROS_SHARED_CACHE_MAP SharedCacheMap;
 

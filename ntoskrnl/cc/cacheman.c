@@ -308,7 +308,7 @@ CcSetBcbOwnerPointer (
 	IN	PVOID	Owner
 	)
 {
-    PINTERNAL_BCB iBcb = Bcb;
+    PINTERNAL_BCB iBcb = CONTAINING_RECORD(Bcb, INTERNAL_BCB, PFCB);
 
     CCTRACE(CC_API_DEBUG, "Bcb=%p Owner=%p\n",
         Bcb, Owner);

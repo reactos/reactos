@@ -45,7 +45,7 @@ NTAPI
 CcGetFileObjectFromBcb (
     IN PVOID Bcb)
 {
-    PINTERNAL_BCB iBcb = (PINTERNAL_BCB)Bcb;
+    PINTERNAL_BCB iBcb = CONTAINING_RECORD(Bcb, INTERNAL_BCB, PFCB);
 
     CCTRACE(CC_API_DEBUG, "Bcb=%p\n", Bcb);
 
