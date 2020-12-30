@@ -294,7 +294,7 @@ BEGIN
 END
 STRINGTABLE DISCARDABLE
 BEGIN
-  IDS_MENU_UPDATE           "Illesztőprogram firssítése..."
+  IDS_MENU_UPDATE           "Illesztőprogram frissítése..."
   IDS_MENU_ENABLE           "Engedélyezés"
   IDS_MENU_DISABLE          "Letiltás"
   IDS_MENU_UNINSTALL        "Eltávolítás"
