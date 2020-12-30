@@ -1092,24 +1092,6 @@ CcRosReferenceCache (
     KeReleaseQueuedSpinLock(LockQueueMasterLock, OldIrql);
 }
 
-VOID
-NTAPI
-CcRosRemoveIfClosed (
-    PSECTION_OBJECT_POINTERS SectionObjectPointer)
-{
-    PROS_SHARED_CACHE_MAP SharedCacheMap;
-    KIRQL OldIrql;
-
-    DPRINT("CcRosRemoveIfClosed()\n");
-    OldIrql = KeAcquireQueuedSpinLock(LockQueueMasterLock);
-    SharedCacheMap = SectionObjectPointer->SharedCacheMap;
-    if (SharedCacheMap && SharedCacheMap->OpenCount == 0)
-    {
-        CcRosDeleteFileCache(SharedCacheMap->FileObject, SharedCacheMap, &OldIrql);
-    }
-    KeReleaseQueuedSpinLock(LockQueueMasterLock, OldIrql);
-}
-
 NTSTATUS
 NTAPI
 CcRosReleaseFileCache (
