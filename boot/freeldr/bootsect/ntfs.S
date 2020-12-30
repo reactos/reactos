@@ -338,14 +338,14 @@ StartSearch:
     mov   eax, 5
     call  ReadInode
     cmp   dword ptr es:[0], HEX(454c4946)
-    jnz   PrintFileSystemError
+    jnz   near ptr PrintFileSystemError
 
     // Valid MFT, check INDEX_ROOT attribute
     xor   ax, ax
     mov   ebx, HEX(90)
     call  FindAttributeHdr
     test  ax, ax
-    jz    PrintFileSystemError
+    jz    near ptr PrintFileSystemError
     mov   si, ax
     cmp   byte ptr es:[si + 8], HEX(0)     // Checks resident flag
     jnz   PrintFileSystemError
@@ -450,8 +450,6 @@ ReadNonResidentAttribute:
         test  al, al
         jz    NotFound
         call  UnpackRun
-        push  ecx
-        call  PrintInt
         add   dword ptr [bp - 4], eax
         cmp   dword ptr [bp - 12], ecx
         jb    FoundRun
@@ -622,3 +620,7 @@ WDone:
 
 FreeLdr:
 .word 'F', 'R', 'E', 'E', 'L', 'D', 'R', '.', 'S', 'Y', 'S', NUL
+
+.endcode16
+
+END
