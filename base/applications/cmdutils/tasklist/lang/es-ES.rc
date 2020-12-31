@@ -1,0 +1,11 @@
+LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "\
+TASKLIST [/M [module]] [/FI filter] [/NH]\n\n\
+Description:\n\
+    This tool displays a list of currently running processes on\n\
+    the machine.\n"
+END
+
