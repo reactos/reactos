@@ -50,14 +50,13 @@ typedef struct tagFONTFAMILYINFO
 } FONTFAMILYINFO, *PFONTFAMILYINFO;
 
 /* Should be using NtGdiEnumFontChunk */
-INT
+LONG
 NTAPI
 NtGdiGetFontFamilyInfo(
     HDC Dc,
-    LPLOGFONTW LogFont,
+    const LOGFONTW *LogFont,
     PFONTFAMILYINFO Info,
-    DWORD Size
-);
+    LPLONG UnsafeInfoCount);
 
 /* Use NtGdiGetDCPoint with GdiGetViewPortExt */
 BOOL APIENTRY  NtGdiGetViewportExtEx(HDC  hDC, LPSIZE viewportExt);
