@@ -631,8 +631,7 @@ SaveShutdownSelState(
 
 VOID
 WhenUserHoversOnOwnerDrawnButtons(
-    NMBCHOTITEM* nmb,
-    HBITMAP hBitmap)
+    NMBCHOTITEM* nmb)
 {
     NMHDR nmh;
     nmh = nmb->hdr;
@@ -923,7 +922,7 @@ ShutdownDialogProc(
                         case IDC_BUTTON_SLEEP:
                         case IDC_BUTTON_HIBERNATE:
                         {
-                            WhenUserHoversOnOwnerDrawnButtons((NMBCHOTITEM*)lParam, pContext->hImageStrip);
+                            WhenUserHoversOnOwnerDrawnButtons((NMBCHOTITEM*)lParam);
                             break;
                         }
                     }

@@ -1196,8 +1196,7 @@ VOID CreateToolTipForButtons(int controlID, int detailID, HWND hDlg, int titleID
 
 VOID
 WhenUserHoversOnOwnerDrawnButtons(
-    NMBCHOTITEM* nmb,
-    HBITMAP hBitmap)
+    NMBCHOTITEM* nmb)
 {
     NMHDR nmh;
     nmh = nmb->hdr;
@@ -1353,7 +1352,7 @@ INT_PTR CALLBACK LogOffDialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
                         case IDC_LOG_OFF_BUTTON:
                         case IDC_SWITCH_USER_BUTTON:
                         {
-                            WhenUserHoversOnOwnerDrawnButtons((NMBCHOTITEM*)lParam, pContext->hImageStrip);
+                            WhenUserHoversOnOwnerDrawnButtons((NMBCHOTITEM*)lParam);
                             break;
                         }
                     }
