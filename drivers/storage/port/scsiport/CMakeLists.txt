@@ -1,6 +1,11 @@
 
 spec2def(scsiport.sys scsiport.spec ADD_IMPORTLIB)
 
+# Embed RTC libs
+if (STACK_PROTECTOR)
+    target_sources(libscsiport PRIVATE $<TARGET_OBJECTS:gcc_ssp_scsiport>)
+endif()
+
 list(APPEND SOURCE
     fdo.c
     ioctl.c

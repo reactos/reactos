@@ -10,11 +10,17 @@ set(NTKRNLMP_SOURCE ${SOURCE})
 set(NTKRNLMP_ASM_SOURCE ${ASM_SOURCE})
 
 spec2def(ntoskrnl.exe ntoskrnl.spec ADD_IMPORTLIB)
+
+# Embed RTC libs
+if (STACK_PROTECTOR)
+    target_sources(libntoskrnl PRIVATE $<TARGET_OBJECTS:gcc_ssp_nt>)
+endif()
+
 add_asm_files(ntoskrnl_asm ${NTOSKRNL_ASM_SOURCE})
 
 if (GCC AND CLANG)
     # Clang optimises strcmp calls to memcmp.
-    target_link_libraries(libntoskrnl INTERFACE memcmp)
+    target_sources(libntoskrnl PRIVATE $<TARGET_OBJECTS:memcmp>)
 endif()
 
 list(APPEND PCH_SKIP_SOURCE
@@ -58,7 +64,7 @@ endif()
 target_link_libraries(ntoskrnl cportlib csq ${PSEH_LIB} arbiter cmlib ntlsalib rtl ${ROSSYM_LIB} libcntpr wdmguid ioevent)
 
 if(STACK_PROTECTOR)
-    target_link_libraries(ntoskrnl gcc_ssp)
+    target_sources(ntoskrnl PRIVATE $<TARGET_OBJECTS:gcc_ssp_nt>)
 elseif(RUNTIME_CHECKS)
     target_link_libraries(ntoskrnl runtmchk)
 endif()

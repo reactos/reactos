@@ -35,7 +35,7 @@ if(USE_DUMMY_PSEH)
 endif()
 
 if(STACK_PROTECTOR)
-    add_compile_options(-fstack-protector-all)
+    add_compile_options(-fstack-protector-strong)
 endif()
 
 # Compiler Core
@@ -286,10 +286,6 @@ function(set_module_type_toolchain MODULE TYPE)
         endif()
         #Disabled due to LD bug: ROSBE-154
         #add_linker_script(${MODULE} ${REACTOS_SOURCE_DIR}/sdk/cmake/init-section.lds)
-    endif()
-
-    if(STACK_PROTECTOR)
-        target_link_libraries(${MODULE} gcc_ssp)
     endif()
 endfunction()
 

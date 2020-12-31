@@ -109,7 +109,7 @@ foreach(_keyboard_layout ${_keyboard_layouts})
 
     # dynamic analysis switches
     if(STACK_PROTECTOR)
-        target_link_libraries(${_keyboard_layout} gcc_ssp)
+        target_compile_options(${_keyboard_layout} PRIVATE -fno-stack-protector)
     endif()
 
     if(RUNTIME_CHECKS)

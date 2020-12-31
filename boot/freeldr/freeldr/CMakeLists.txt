@@ -312,8 +312,8 @@ target_link_libraries(freeldr_pe_dbg freeldr_common cportlib cmlib rtl libcntpr)
 
 # dynamic analysis switches
 if(STACK_PROTECTOR)
-    target_link_libraries(freeldr_pe gcc_ssp)
-    target_link_libraries(freeldr_pe_dbg gcc_ssp)
+    target_sources(freeldr_pe PRIVATE $<TARGET_OBJECTS:gcc_ssp_nt>)
+    target_sources(freeldr_pe_dbg PRIVATE $<TARGET_OBJECTS:gcc_ssp_nt>)
 endif()
 
 if(RUNTIME_CHECKS)
