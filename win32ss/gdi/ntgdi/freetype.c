@@ -48,7 +48,6 @@ extern const MATRIX gmxWorldToPageDefault;
 #define gmxWorldToDeviceDefault gmxWorldToPageDefault
 
 FT_Library  library;
-static const WORD gusEnglishUS = MAKELANGID(LANG_ENGLISH, SUBLANG_ENGLISH_US);
 
 /* special font names */
 static const UNICODE_STRING MarlettW = RTL_CONSTANT_STRING(L"Marlett");
