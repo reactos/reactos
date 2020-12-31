@@ -410,13 +410,7 @@ Return Value:
          Wchar < Add2Ptr( FileName->Buffer, FileName->Length, PWCHAR );
          Wchar++) {
 
-        //
-        // Check whether ASCII characters are legal.
-        // We will consider the rest of the characters
-        // (extended ASCII and unicode) as legal.
-        //
-
-        if ((*Wchar < 0x80) &&
+        if ((*Wchar < 0xff) &&
             !FsRtlIsAnsiCharacterLegalHpfs( *Wchar, FALSE ) &&
             (*Wchar != L'"') &&
             (*Wchar != L'<') &&
