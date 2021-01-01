@@ -1650,21 +1650,17 @@ FillTMEx(TEXTMETRICW *TM, PFONTGDI FontGDI,
         return;
     }
 
-    if (pOS2->usWinAscent + pOS2->usWinDescent == 0)
+    if ((FT_Short)pOS2->usWinAscent + (FT_Short)pOS2->usWinDescent == 0)
     {
         Ascent = pHori->Ascender;
         Descent = -pHori->Descender;
     }
     else
     {
-        Ascent = pOS2->usWinAscent;
-        Descent = pOS2->usWinDescent;
+        Ascent = (FT_Short)pOS2->usWinAscent;
+        Descent = (FT_Short)pOS2->usWinDescent;
     }
 
-    if (FontGDI->Magic != FONTGDI_MAGIC)
-    {
-        IntRequestFontSize(NULL, FontGDI, 0, 0);
-    }
     TM->tmAscent = FontGDI->tmAscent;
     TM->tmDescent = FontGDI->tmDescent;
     TM->tmHeight = TM->tmAscent + TM->tmDescent;
@@ -2346,10 +2342,6 @@ FontFamilyFillInfo(PFONTFAMILYINFO Info, LPCWSTR FaceName,
 
     if (0 == Ntm->ntmFlags) Ntm->ntmFlags = NTM_REGULAR;
 
-    Ntm->ntmSizeEM = Otm->otmEMSquare;
-    Ntm->ntmCellHeight = Otm->otmEMSquare;
-    Ntm->ntmAvgWidth = 0;
-
     Info->FontType = (0 != (TM->tmPitchAndFamily & TMPF_TRUETYPE)
                       ? TRUETYPE_FONTTYPE : 0);
 
@@ -2366,12 +2358,10 @@ FontFamilyFillInfo(PFONTFAMILYINFO Info, LPCWSTR FaceName,
     /* full name */
     if (!FullName)
         FullName = (WCHAR*)((ULONG_PTR) Otm + (ULONG_PTR)Otm->otmpFaceName);
-    
+
     RtlStringCbCopyW(Info->EnumLogFontEx.elfFullName,
                      sizeof(Info->EnumLogFontEx.elfFullName),
                      FullName);
-
-    ExFreePoolWithTag(Otm, GDITAG_TEXT);
 
     RtlInitAnsiString(&StyleA, Face->style_name);
     StyleW.Buffer = Info->EnumLogFontEx.elfStyle;
@@ -2379,6 +2369,7 @@ FontFamilyFillInfo(PFONTFAMILYINFO Info, LPCWSTR FaceName,
     status = RtlAnsiStringToUnicodeString(&StyleW, &StyleA, FALSE);
     if (!NT_SUCCESS(status))
     {
+        ExFreePoolWithTag(Otm, GDITAG_TEXT);
         return;
     }
     Info->EnumLogFontEx.elfScript[0] = UNICODE_NULL;
@@ -2389,8 +2380,15 @@ FontFamilyFillInfo(PFONTFAMILYINFO Info, LPCWSTR FaceName,
     if (!pOS2)
     {
         IntUnLockFreeType();
+        ExFreePoolWithTag(Otm, GDITAG_TEXT);
         return;
     }
+
+    Ntm->ntmSizeEM = Otm->otmEMSquare;
+    Ntm->ntmCellHeight = (FT_Short)pOS2->usWinAscent + (FT_Short)pOS2->usWinDescent;
+    Ntm->ntmAvgWidth = 0;
+
+    ExFreePoolWithTag(Otm, GDITAG_TEXT);
 
     fs.fsCsb[0] = pOS2->ulCodePageRange1;
     fs.fsCsb[1] = pOS2->ulCodePageRange2;
@@ -3038,11 +3036,21 @@ IntRequestFontSize(PDC dc, PFONTGDI FontGDI, LONG lfWidth, LONG lfHeight)
         return FT_Request_Size(face, &req);
     }
 
+    /*
+     * NOTE: We cast TT_OS2.usWinAscent and TT_OS2.usWinDescent to signed FT_Short.
+     * Why? See: https://docs.microsoft.com/en-us/typography/opentype/spec/os2#uswindescent
+     *
+     * > usWinDescent is "usually" a positive value ...
+     *
+     * We can read it as "not always". See CORE-14994.
+     * See also: https://docs.microsoft.com/en-us/typography/opentype/spec/os2#fsselection
+     */
+#define FM_SEL_USE_TYPO_METRICS 0x80
     if (lfHeight > 0)
     {
         /* case (A): lfHeight is positive */
-        Sum = pOS2->usWinAscent + pOS2->usWinDescent;
-        if (Sum == 0)
+        Sum = (FT_Short)pOS2->usWinAscent + (FT_Short)pOS2->usWinDescent;
+        if (Sum == 0 || (pOS2->fsSelection & FM_SEL_USE_TYPO_METRICS))
         {
             Ascent = pHori->Ascender;
             Descent = -pHori->Descender;
@@ -3050,8 +3058,8 @@ IntRequestFontSize(PDC dc, PFONTGDI FontGDI, LONG lfWidth, LONG lfHeight)
         }
         else
         {
-            Ascent = pOS2->usWinAscent;
-            Descent = pOS2->usWinDescent;
+            Ascent = (FT_Short)pOS2->usWinAscent;
+            Descent = (FT_Short)pOS2->usWinDescent;
         }
 
         FontGDI->tmAscent = FT_MulDiv(lfHeight, Ascent, Sum);
@@ -3062,21 +3070,27 @@ IntRequestFontSize(PDC dc, PFONTGDI FontGDI, LONG lfWidth, LONG lfHeight)
     else if (lfHeight < 0)
     {
         /* case (B): lfHeight is negative */
-        FontGDI->tmAscent = FT_MulDiv(-lfHeight, pOS2->usWinAscent, face->units_per_EM);
-        FontGDI->tmDescent = FT_MulDiv(-lfHeight, pOS2->usWinDescent, face->units_per_EM);
+        if (pOS2->fsSelection & FM_SEL_USE_TYPO_METRICS)
+        {
+            FontGDI->tmAscent = FT_MulDiv(-lfHeight, pHori->Ascender, face->units_per_EM);
+            FontGDI->tmDescent = FT_MulDiv(-lfHeight, -pHori->Descender, face->units_per_EM);
+        }
+        else
+        {
+            FontGDI->tmAscent = FT_MulDiv(-lfHeight, (FT_Short)pOS2->usWinAscent, face->units_per_EM);
+            FontGDI->tmDescent = FT_MulDiv(-lfHeight, (FT_Short)pOS2->usWinDescent, face->units_per_EM);
+        }
         FontGDI->tmHeight = FontGDI->tmAscent + FontGDI->tmDescent;
         FontGDI->tmInternalLeading = FontGDI->tmHeight + lfHeight;
     }
+#undef FM_SEL_USE_TYPO_METRICS
 
     FontGDI->EmHeight = FontGDI->tmHeight - FontGDI->tmInternalLeading;
     FontGDI->EmHeight = max(FontGDI->EmHeight, 1);
     FontGDI->EmHeight = min(FontGDI->EmHeight, USHORT_MAX);
     FontGDI->Magic = FONTGDI_MAGIC;
 
-    if (lfHeight > 0)
-        EmHeight64 = (FontGDI->EmHeight << 6) + 31;
-    else
-        EmHeight64 = (FontGDI->EmHeight << 6);
+    EmHeight64 = (FontGDI->EmHeight << 6);
 
     req.type           = FT_SIZE_REQUEST_TYPE_NOMINAL;
     req.width          = 0;
