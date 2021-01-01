@@ -842,6 +842,7 @@ static BOOL UITOOLS95_DrawFrameCaption(HDC dc, LPRECT r, UINT uFlags)
     lf.lfWidth = 0;
     lf.lfWeight = FW_NORMAL;
     lf.lfCharSet = DEFAULT_CHARSET;
+    lf.lfQuality = ANTIALIASED_QUALITY;
     lstrcpy(lf.lfFaceName, TEXT("Marlett"));
     hFont = CreateFontIndirect(&lf);
     /* save font and text color */
