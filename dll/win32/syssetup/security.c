@@ -595,7 +595,7 @@ InstallSecurity(VOID)
 //    if (IsServer())
 //        pszSecurityInf = L"defltsv.inf";
 //    else
-        pszSecurityInf = L"defltws.inf";
+        pszSecurityInf = L"defltwk.inf";
 
     InstallBuiltinAccounts();
 
