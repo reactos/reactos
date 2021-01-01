@@ -1,4 +1,4 @@
-; defltws.inf
+; defltwk.inf
 ; Default security settings for ReactOS Workstation
 
 [Version]

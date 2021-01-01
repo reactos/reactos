@@ -31,7 +31,7 @@ list(APPEND INF_FILES
     wmiacpi.inf)
 
 list(APPEND UTF8_INF_FILES
-    defltws.inf
+    defltwk.inf
     font.inf
     intl.inf
     layout.inf)
