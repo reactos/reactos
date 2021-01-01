@@ -1022,6 +1022,41 @@ SampInitializeSAM(VOID)
                                 szComment,
                                 DOMAIN_ALIAS_RID_POWER_USERS);
 
+    /* Create the Backup Operators alias */
+    SampLoadString(hInstance, IDS_ALIAS_BACKUP_OPS_NAME, szName, 80);
+    SampLoadString(hInstance, IDS_ALIAS_BACKUP_OPS_COMMENT, szComment, 256);
+
+    SampSetupCreateAliasAccount(hBuiltinDomainKey,
+                                szName,
+                                szComment,
+                                DOMAIN_ALIAS_RID_BACKUP_OPS);
+
+    /* Create the Replicator alias */
+    SampLoadString(hInstance, IDS_ALIAS_REPLICATOR_NAME, szName, 80);
+    SampLoadString(hInstance, IDS_ALIAS_REPLICATOR_COMMENT, szComment, 256);
+
+    SampSetupCreateAliasAccount(hBuiltinDomainKey,
+                                szName,
+                                szComment,
+                                DOMAIN_ALIAS_RID_REPLICATOR);
+
+    /* Create the Remote Desktop Users alias */
+    SampLoadString(hInstance, IDS_ALIAS_REMOTE_DESKTOP_USERS_NAME, szName, 80);
+    SampLoadString(hInstance, IDS_ALIAS_REMOTE_DESKTOP_USERS_COMMENT, szComment, 256);
+
+    SampSetupCreateAliasAccount(hBuiltinDomainKey,
+                                szName,
+                                szComment,
+                                DOMAIN_ALIAS_RID_REMOTE_DESKTOP_USERS);
+
+    /* Create the Network Configuration Operators alias */
+    SampLoadString(hInstance, IDS_ALIAS_NETWORK_CONFIGURATION_OPS_NAME, szName, 80);
+    SampLoadString(hInstance, IDS_ALIAS_NETWORK_CONFIGURATION_OPS_COMMENT, szComment, 256);
+
+    SampSetupCreateAliasAccount(hBuiltinDomainKey,
+                                szName,
+                                szComment,
+                                DOMAIN_ALIAS_RID_NETWORK_CONFIGURATION_OPS);
 
     /* Add the Administrator user to the Administrators alias */
     pSid = AppendRidToSid(AccountDomainInfo->DomainSid,
