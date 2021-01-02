@@ -4,6 +4,24 @@
 [Version]
 Signature = "$Windows NT$"
 
+[Application Log]
+MaximumLogSize = 512
+AuditLogRetentionPeriod = 1
+RetentionDays = 7
+RestrictGuestAccess = 1
+
+[Security Log]
+MaximumLogSize = 512
+AuditLogRetentionPeriod = 1
+RetentionDays = 7
+RestrictGuestAccess = 1
+
+[System Log]
+MaximumLogSize = 512
+AuditLogRetentionPeriod = 1
+RetentionDays = 7
+RestrictGuestAccess = 1
+
 [Privilege Rights]
 SeAssignPrimaryTokenPrivilege = *S-1-5-19, *S-1-5-20
 SeAuditPrivilege = *S-1-5-19, *S-1-5-20

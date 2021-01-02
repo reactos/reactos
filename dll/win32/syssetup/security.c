@@ -586,6 +586,150 @@ ApplyRegistryValues(
 }
 
 
+static
+VOID
+ApplyEventlogSettings(
+    _In_ HINF hSecurityInf,
+    _In_ PWSTR pszSectionName,
+    _In_ PWSTR pszLogName)
+{
+    INFCONTEXT InfContext;
+    HKEY hServiceKey = NULL, hLogKey = NULL;
+    DWORD dwValue, dwError;
+    BOOL bValueSet;
+
+    DPRINT("ApplyEventlogSettings(%p %S %S)\n",
+           hSecurityInf, pszSectionName, pszLogName);
+
+    dwError = RegCreateKeyExW(HKEY_LOCAL_MACHINE,
+                              L"System\\CurrentControlSet\\Services\\Eventlog",
+                              0,
+                              NULL,
+                              REG_OPTION_NON_VOLATILE,
+                              KEY_WRITE,
+                              NULL,
+                              &hServiceKey,
+                              NULL);
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT1("Failed to create the Eventlog Service key (Error %lu)\n", dwError);
+        return;
+    }
+
+    dwError = RegCreateKeyExW(hServiceKey,
+                              pszLogName,
+                              0,
+                              NULL,
+                              REG_OPTION_NON_VOLATILE,
+                              KEY_WRITE,
+                              NULL,
+                              &hLogKey,
+                              NULL);
+    if (dwError != ERROR_SUCCESS)
+    {
+        DPRINT1("Failed to create the key %S (Error %lu)\n", pszLogName, dwError);
+        RegCloseKey(hServiceKey);
+        return;
+    }
+
+    if (SetupFindFirstLineW(hSecurityInf,
+                            pszSectionName,
+                            L"MaximumLogSize",
+                            &InfContext))
+    {
+        DPRINT("MaximumLogSize\n");
+        dwValue = 0;
+        SetupGetIntField(&InfContext,
+                         1,
+                         (PINT)&dwValue);
+
+        DPRINT("MaximumLogSize: %lu (kByte)\n", dwValue);
+        if (dwValue >= 64 && dwValue <= 4194240)
+        {
+            dwValue *= 1024;
+
+            DPRINT("MaxSize: %lu\n", dwValue);
+            RegSetValueEx(hLogKey,
+                          L"MaxSize",
+                          0,
+                          REG_DWORD,
+                          (LPBYTE)&dwValue,
+                          sizeof(dwValue));
+        }
+    }
+
+    if (SetupFindFirstLineW(hSecurityInf,
+                            pszSectionName,
+                            L"AuditLogRetentionPeriod",
+                            &InfContext))
+    {
+        bValueSet = FALSE;
+        dwValue = 0;
+        SetupGetIntField(&InfContext,
+                         1,
+                         (PINT)&dwValue);
+        if (dwValue == 0)
+        {
+            bValueSet = TRUE;
+        }
+        else if (dwValue == 1)
+        {
+            if (SetupFindFirstLineW(hSecurityInf,
+                                    pszSectionName,
+                                    L"RetentionDays",
+                                    &InfContext))
+            {
+                SetupGetIntField(&InfContext,
+                                 1,
+                                 (PINT)&dwValue);
+                dwValue *= 86400;
+                bValueSet = TRUE;
+            }
+        }
+        else if (dwValue == 2)
+        {
+            dwValue = (DWORD)-1;
+            bValueSet = TRUE;
+        }
+
+        if (bValueSet)
+        {
+            DPRINT("Retention: %lu\n", dwValue);
+            RegSetValueEx(hLogKey,
+                          L"Retention",
+                          0,
+                          REG_DWORD,
+                          (LPBYTE)&dwValue,
+                          sizeof(dwValue));
+        }
+    }
+
+    if (SetupFindFirstLineW(hSecurityInf,
+                            pszSectionName,
+                            L"RestrictGuestAccess",
+                            &InfContext))
+    {
+        dwValue = 0;
+        SetupGetIntField(&InfContext,
+                         1,
+                         (PINT)&dwValue);
+        if (dwValue == 0 || dwValue == 1)
+        {
+            DPRINT("RestrictGuestAccess: %lu\n", dwValue);
+            RegSetValueEx(hLogKey,
+                          L"RestrictGuestAccess",
+                          0,
+                          REG_DWORD,
+                          (LPBYTE)&dwValue,
+                          sizeof(dwValue));
+        }
+    }
+
+    RegCloseKey(hLogKey);
+    RegCloseKey(hServiceKey);
+}
+
+
 VOID
 InstallSecurity(VOID)
 {
@@ -607,6 +751,10 @@ InstallSecurity(VOID)
     {
         InstallPrivileges(hSecurityInf);
         ApplyRegistryValues(hSecurityInf);
+
+        ApplyEventlogSettings(hSecurityInf, L"Application Log", L"Application");
+        ApplyEventlogSettings(hSecurityInf, L"Security Log", L"Security");
+        ApplyEventlogSettings(hSecurityInf, L"System Log", L"System");
 
         SetupCloseInfFile(hSecurityInf);
     }
