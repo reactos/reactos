@@ -1290,7 +1290,7 @@ static VOID FancyLogoffOnInit(HWND hwnd, PLOGOFF_DLG_CONTEXT pContext)
     hdc = GetDC(NULL);
     lfHeight = -MulDiv(13, GetDeviceCaps(hdc, LOGPIXELSY), 72);
     ReleaseDC(NULL, hdc);
-    pContext->hfFont = CreateFontW(lfHeight, 0, 0, 0, 550, FALSE, 0, 0, 0, 0, 0, 0, 0, L"MS Shell Dlg");
+    pContext->hfFont = CreateFontW(lfHeight, 0, 0, 0, FW_MEDIUM, FALSE, 0, 0, 0, 0, 0, 0, 0, L"MS Shell Dlg");
     SendDlgItemMessage(hwnd, IDC_LOG_OFF_TEXT_STATIC, WM_SETFONT, (WPARAM)pContext->hfFont, TRUE);
 
     pContext->hImageStrip = LoadBitmapW(shell32_hInstance, MAKEINTRESOURCEW(IDB_IMAGE_STRIP));
