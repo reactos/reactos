@@ -126,7 +126,7 @@ LoadExtraBootCode:
     // next sector into memory at [0000:7e00h]
     mov  eax, HEX(1)
     add  eax, dword ptr [HiddenSectors]         // Add the number of hidden sectors
-    mov  cx, 2
+    mov  cx, 4
     xor  bx, bx
     mov  es, bx                                 // Read sector to [0000:7e00h]
     mov  bx, HEX(7e00)
@@ -355,6 +355,8 @@ StartSearch:
 
     // Save our INDEX_ROOT
     mov   word ptr [bp-2], si
+
+    // Now look for INDEX_ALLOCATION attribute
     xor   ax, ax
     mov   ebx, HEX(A0)
     call  FindAttributeHdr
@@ -379,7 +381,9 @@ LoopNodes:
     mov   bp, sp
     sub   sp, HEX(10)
     mov   word ptr [bp-2], es
-    // TODO: read non-resident attribute data
+    // Check data on INDEX_ROOT stuff
+
+
     push  ax
     mov   ax, HEX(9000)
     mov   fs, ax
@@ -389,8 +393,8 @@ LoopNodes:
     call  ReadNonResidentAttribute
     test  ax, ax
     jz    PrintFileSystemError
-    cmp   dword ptr fs:[0], HEX(58444e49) // Check if valid INDX
-    jz    PrintFileSystemError
+    cmp   dword ptr fs:[0], HEX(58444e49)   // Check if valid INDX
+    jnz   PrintFileSystemError              // jump if not valid
     pop   ax
     mov   sp, bp
     pop   bp
@@ -417,6 +421,9 @@ ReadCluster:
 ReadInode:
     push  edx
     push  ecx
+    push  si
+    push  di
+
     mov   cx, word ptr [SectsPerMFT]       // Get the correct number of sectors for the FILE entry
     mul   cx
     movzx eax, ax
@@ -426,6 +433,33 @@ ReadInode:
     mov   cx, word ptr [SectsPerMFT]
     movzx ecx, cx
     call  ReadSectors
+    mov   si, bx
+    add   si, word ptr es:[bx + 4]
+
+    xor   cx, cx
+    inc   cx
+    FixupLoop:
+        cmp  cx, word ptr es:[bx + 6]
+        jz  EndFixupLoop
+        mov   si, bx
+        add   si, word ptr es:[bx + 4]
+        mov   ax, word ptr es:[si]     // Get first fixup value
+
+        mov   di, cx
+        shl   di, 9
+        add   di, bx
+        sub   di, 2
+        cmp   ax, word ptr es:[di]     // Check fixup value
+        jnz   PrintFileSystemError     // Fixup is corrupted, so print error
+        inc   cx
+        add   si, cx
+        mov   ax, word ptr es:[si]     // Apply fixup
+        mov   word ptr es:[di], ax
+
+        jmp   FixupLoop
+EndFixupLoop:
+    pop   di
+    pop   si
     pop   ecx
     pop   edx
     ret
@@ -517,6 +551,10 @@ UnpackRun:
     pop bp
     ret
 
+// Auxiliary function that unpacks n bytes in the memory
+// AL: size to unpack (max 4 bytes)
+// Returns: eax: the mask used to unpack (for negative number fixup)
+// Returns: ebx: the unpacked number
 UnpackLen:
     push cx
     movzx ax, al
@@ -549,7 +587,7 @@ FindAttributeHdr:
     push  edx
     mov   si, ax
     mov   cx, word ptr es:[si+HEX(14)]  // Get offset attribute
-    add   si, cx                        // si = offset + size
+    add   si, cx
     FindAttributeHdrLoop:
         mov   edx, dword ptr es:[si]    // Get attribute type 
         cmp   edx, ebx                
