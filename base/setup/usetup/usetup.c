@@ -948,8 +948,7 @@ RepairIntroPage(PINPUT_RECORD Ir)
         {
             return RECOVERY_PAGE;
         }
-        else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
-                 (Ir->Event.KeyEvent.wVirtualKeyCode == VK_ESCAPE))  /* ESC */
+        else if (Ir->Event.KeyEvent.wVirtualKeyCode == VK_ESCAPE)  /* ESC */
         {
             return WELCOME_PAGE;
         }
@@ -1051,16 +1050,16 @@ UpgradeRepairPage(PINPUT_RECORD Ir)
                     RedrawGenericList(&ListUi);
                 break;
             }
-            case VK_ESCAPE: /* ESC */
-            {
-                RestoreGenericListUiState(&ListUi);
-                // return nextPage;    // prevPage;
+            }
+        }
+        else if (Ir->Event.KeyEvent.wVirtualKeyCode == VK_ESCAPE) /* ESC */
+        {
+            RestoreGenericListUiState(&ListUi);
+            // return nextPage;    // prevPage;
 
-                // return INSTALL_INTRO_PAGE;
-                return DEVICE_SETTINGS_PAGE;
-                // return SCSI_CONTROLLER_PAGE;
-            }
-            }
+            // return INSTALL_INTRO_PAGE;
+            return DEVICE_SETTINGS_PAGE;
+            // return SCSI_CONTROLLER_PAGE;
         }
         else
         {
@@ -1411,8 +1410,7 @@ HandleGenericList(PGENERIC_LIST_UI ListUi,
             else
                 RedrawGenericList(ListUi);
         }
-        else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
-                 (Ir->Event.KeyEvent.wVirtualKeyCode == VK_ESCAPE))  /* ESC */
+        else if (Ir->Event.KeyEvent.wVirtualKeyCode == VK_ESCAPE)  /* ESC */
         {
             RestoreGenericListUiState(ListUi);
             return nextPage;    // Use some "prevPage;" instead?
@@ -3279,8 +3277,7 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
 
             break;
         }
-        else if ((Ir->Event.KeyEvent.uChar.AsciiChar == 0x00) &&
-                 (Ir->Event.KeyEvent.wVirtualKeyCode == VK_ESCAPE))  /* ESC */
+        else if (Ir->Event.KeyEvent.wVirtualKeyCode == VK_ESCAPE)  /* ESC */
         {
             /* Reset the formatter machine state */
             TempPartition = NULL;
