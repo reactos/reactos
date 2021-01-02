@@ -457,7 +457,7 @@ ReadInode:
         mov   word ptr es:[di], ax
 
         jmp   FixupLoop
-EndFixupLoop:
+    EndFixupLoop:
     pop   di
     pop   si
     pop   ecx
@@ -489,7 +489,7 @@ ReadNonResidentAttribute:
         jb    FoundRun
         sub   dword ptr [bp - 12], ecx  // Decrement the cluster
         jmp   RunLoop
-FoundRun:
+    FoundRun:
     mov   ebx, dword ptr [bp - 4]
     mov   ecx, dword ptr [bp - 12]
     add   ebx, ecx
@@ -502,9 +502,9 @@ FoundRun:
     call ReadCluster
     pop  es
     jmp RunSearchEnd
-NotFound:
+    NotFound:
     xor ax, ax
-RunSearchEnd:
+    RunSearchEnd:
     pop si
     pop dx
     mov sp, bp
@@ -550,6 +550,7 @@ UnpackRun:
     mov sp, bp
     pop bp
     ret
+
 
 // Auxiliary function that unpacks n bytes in the memory
 // AL: size to unpack (max 4 bytes)
@@ -649,15 +650,15 @@ PutWChars:
     lodsw
     or   al, al
     jz   short WDone
-    mov  ah, HEX(0e)
-    mov  bx, 7
-    int  HEX(10)
-    jmp  short PutWChars
-WDone:
+        mov  ah, HEX(0e)
+        mov  bx, 7
+        int  HEX(10)
+        jmp  short PutWChars
+    WDone:
     ret
 
 FreeLdr:
-.word 'F', 'R', 'E', 'E', 'L', 'D', 'R', '.', 'S', 'Y', 'S', NUL
+    .word 'F', 'R', 'E', 'E', 'L', 'D', 'R', '.', 'S', 'Y', 'S', NUL
 
 .endcode16
 
