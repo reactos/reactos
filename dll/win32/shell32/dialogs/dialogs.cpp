@@ -1072,7 +1072,8 @@ int WINAPI RestartDialogEx(HWND hWndOwner, LPCWSTR lpwstrReason, DWORD uFlags, D
 }
 
 /* Functions and macros used for log off dialog box */
-#define IS_PRODUCT_VERSION_WORKSTATION  0x300
+#define IS_PRODUCT_VERSION_WORKSTATION          0x300
+#define FRIENDLY_LOGOFF_IS_NOT_ENFORCED         0x0
 
 #define CX_BITMAP                       33
 #define CY_BITMAP                       33
@@ -1084,10 +1085,7 @@ int WINAPI RestartDialogEx(HWND hWndOwner, LPCWSTR lpwstrReason, DWORD uFlags, D
 #define BUTTON_LOG_OFF_PRESSED          (CY_BITMAP + BUTTON_LOG_OFF)
 #define BUTTON_LOG_OFF_FOCUSED          (CY_BITMAP + BUTTON_LOG_OFF_PRESSED)
 
-BOOL
-DrawIconOnOwnerDrawnButtons(
-    DRAWITEMSTRUCT* pdis,
-    HBITMAP hBitmap)
+BOOL DrawIconOnOwnerDrawnButtons(DRAWITEMSTRUCT* pdis, HBITMAP hBitmap)
 {
     BOOL bRet = FALSE;
     HDC hdcMem = NULL;
@@ -1195,8 +1193,7 @@ VOID CreateToolTipForButtons(int controlID, int detailID, HWND hDlg, int titleID
 }
 
 VOID
-WhenUserHoversOnOwnerDrawnButtons(
-    NMBCHOTITEM* nmb)
+WhenUserHoversOnOwnerDrawnButtons(NMBCHOTITEM* nmb)
 {
     NMHDR nmh;
     nmh = nmb->hdr;
@@ -1226,7 +1223,7 @@ static BOOL IsFriendlyUIActive(VOID)
         return FALSE;
 
     /* First check an optional ReactOS specific override, that Windows does not check.
-       We use this to allow users pairing 'Server'-configuration with FriendlyShutdown.
+       We use this to allow users pairing 'Server'-configuration with FriendlyLogoff.
        Otherwise users would have to change CSDVersion or LogonType (side-effects AppCompat) */
     dwValue = 0;
     dwSize = sizeof(dwValue);
@@ -1237,7 +1234,7 @@ static BOOL IsFriendlyUIActive(VOID)
                             (LPBYTE)&dwValue,
                             &dwSize);
 
-    if (lRet == ERROR_SUCCESS && dwType == REG_DWORD && dwValue != 0x0)
+    if (lRet == ERROR_SUCCESS && dwType == REG_DWORD && dwValue != FRIENDLY_LOGOFF_IS_NOT_ENFORCED)
     {
         RegCloseKey(hKey);
         return TRUE;
