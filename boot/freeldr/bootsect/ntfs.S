@@ -76,7 +76,6 @@ Checksum:
     .long 0
 
 main:
-    // int 3
     xor ax,ax               // Setup segment registers
     mov ds,ax               // Make DS correct
     mov es,ax               // Make ES correct
@@ -296,7 +295,9 @@ MFTStartSector:
 BiosCHSDriveSize:
     .long 0
 
-.org 510 // Pad to 509 bytes
+.org 509 // Pad to 509 bytes
+BootPartition:
+    .byte 1
 
 BootFlagSignature:
     .word HEX(0aa55)    // BootSector signature
@@ -368,7 +369,54 @@ StartSearch:
     mov   ax, word ptr [bp-2]
     mov   bx, si
     call  ExploreIndexRoot
-    jmp   Reboot
+
+    push  eax
+    mov   ax, HEX(A00)
+    mov   es, ax
+    pop   eax
+    call  ReadInode
+
+    xor   ax, ax
+    mov   ebx, HEX(30)
+    call  FindAttributeHdr
+    mov   si, ax
+    add   si, word ptr es:[si + HEX(14)]
+    mov   eax, dword ptr es:[si + HEX(28)]
+    mov   cl, byte ptr [SectsPerCluster]
+    xor   edx, edx
+    div   ecx
+    mov   cx, word ptr [BytesPerSector]
+    movzx ecx, cx
+    xor   edx, edx
+    div   ecx
+    push  eax
+    call  PrintInt
+    mov   edx, eax
+
+    xor   ax, ax
+    mov   ebx, HEX(80)
+    call  FindAttributeHdr
+    mov   si, ax
+    add   ax, word ptr es:[si + HEX(20)]
+    xor   ecx, ecx
+    xor   bx, bx
+    push  FREELDR_BASE / 16
+    pop   fs
+    FreeLdrLoad:
+        pushad
+        call  ReadNonResidentAttribute
+        popad
+        mov   bx, fs
+        add   bx, HEX(100)
+        mov   fs, bx
+        xor   bx, bx
+        inc   ecx
+        cmp   ecx, edx
+        jbe   FreeLdrLoad
+
+    mov    dl, byte ptr [BootDrive]
+    mov    dh, byte ptr [BootPartition]
+    ljmp16 0, FREELDR_BASE
 
 // Finds Freeldr.sys into the directory tree and returns the
 // inode index
@@ -409,8 +457,8 @@ ExploreIndexRoot:
         jmp   NodeCheck
 
         RootIndexFound:
-        mov   eax, dword ptr [si] // We found root entry, return with its MFT number
-        mov   edx, dword ptr [si + 4] // Return high part into edx
+        mov   eax, dword ptr es:[si] // We found root entry, return with its MFT number
+        mov   edx, dword ptr es:[si + 4] // Return high part into edx
         jmp   ExitIndexTree
     
     NodeCheckLastNode:
