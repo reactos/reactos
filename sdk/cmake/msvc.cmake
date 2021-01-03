@@ -317,12 +317,13 @@ function(generate_import_lib _libname _dllname _spec_file)
     set(_libfile_tmp ${CMAKE_CURRENT_BINARY_DIR}/${_libname}_tmp.lib)
     set(_static_lib_options )
 
+    set(_implib_command ${CMAKE_LINKER} /LIB /NOLOGO /MACHINE:${WINARCH}
+        $<TARGET_PROPERTY:${_libname},STATIC_LIBRARY_FLAGS> $<TARGET_PROPERTY:${_libname},STATIC_LIBRARY_OPTIONS>
+        /DEF:${_def_file} /OUT:${_libfile_tmp} ${_asm_stubs_file}.obj)
+
     add_custom_command(
         OUTPUT ${_libfile_tmp}
-        COMMAND
-            ${CMAKE_AR} /NOLOGO /MACHINE:${WINARCH}
-                $<TARGET_PROPERTY:${_libname},STATIC_LIBRARY_FLAGS> $<TARGET_PROPERTY:${_libname},STATIC_LIBRARY_OPTIONS>
-                /DEF:${_def_file} /OUT:${_libfile_tmp} ${_asm_stubs_file}.obj
+        COMMAND ${_implib_command}
         DEPENDS ${_asm_stubs_file}.obj ${_def_file})
 
     # By giving the import lib as an object input, LIB extracts the relevant object files and make a new library.
