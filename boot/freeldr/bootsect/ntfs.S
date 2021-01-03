@@ -337,10 +337,8 @@ StartSearch:
     xor   bx, bx
     mov   eax, 5
     call  ReadInode
-    cmp   dword ptr es:[0], HEX(454c4946)
-    jnz   near ptr PrintFileSystemError
 
-    // Valid MFT, check INDEX_ROOT attribute
+    // Check INDEX_ROOT attribute
     xor   ax, ax
     mov   ebx, HEX(90)
     call  FindAttributeHdr
@@ -369,36 +367,121 @@ StartSearch:
     mov   ax, es
     mov   ax, word ptr [bp-2]
     mov   bx, si
-    call  LoopNodes
+    call  ExploreIndexRoot
     jmp   Reboot
 
 // Finds Freeldr.sys into the directory tree and returns the
 // inode index
 // [ES:AX] address of the INDEX_ROOT attribute data
 // [ES:BX] address of the INDEX_ALLOCATION run list
-LoopNodes:
+ExploreIndexRoot:
     push  bp
     mov   bp, sp
+    push  bx
+    push  si
+    push  di
     sub   sp, HEX(10)
     mov   word ptr [bp-2], es
-    // Check data on INDEX_ROOT stuff
+    mov   word ptr [bp - 4], ax
+    mov   word ptr [bp - 8], bx
+    mov   si, ax
+    lea   si, [si + 32] // skip INDEX_ROOT header and go through nodes array
+    NodeCheck:
+        test  word ptr es:[si + 12], 2
+        jnz   NodeCheckLastNode
 
+        mov   cl, byte ptr es:[si + HEX(50)]
+        movzx cx, cl
+        lea   si, [si + HEX(52)]
+        mov   di, offset FreeLdr
+        call  CompareStr
+        lea   si, [si - HEX(52)]
+        test  ax, ax
+        jz    RootIndexFound
+        test  word ptr es:[si + 12], 1
+        jz    ContinueSearch
 
-    push  ax
+        test  ax, HEX(f000)
+        jnz   LookupChildNode // if result < 0 then explore child node
+
+        ContinueSearch:
+        add  si, word ptr es:[si + 8]
+        jmp NodeCheck
+
+        RootIndexFound:
+        mov eax, dword ptr [si] // We found root entry, return with its MFT number
+        mov edx, dword ptr [si + 4] // Return high part into edx
+        jmp ExitIndexTree
+    
+    NodeCheckLastNode:
+    test  word ptr es:[si + 12], 1
+    jz    PrintFreeldrError
+
+    LookupChildNode:
+    // Take the right LCN to explore
+    add   si, word ptr es:[si + 8]
+    mov   ecx, dword ptr es:[si - 8]
+
+    // Read the fixed up LCN
+    mov   bx, word ptr [bp - 8]
+    mov   ax, word ptr [bp - 2]
+    mov   es, ax
     mov   ax, HEX(9000)
     mov   fs, ax
     mov   ax, bx
-    xor   ecx, ecx
     xor   bx, bx
-    call  ReadNonResidentAttribute
-    test  ax, ax
-    jz    PrintFileSystemError
-    cmp   dword ptr fs:[0], HEX(58444e49)   // Check if valid INDX
-    jnz   PrintFileSystemError              // jump if not valid
-    pop   ax
+    call  ReadINDX
+
+    // Call again the search function with the new array
+    mov   ax, HEX(9000)
+    mov   es, ax
+    mov   si, 0
+    add   si, es:[si + HEX(18)] // Go to the first node
+    lea   si, [si + HEX(18)]
+    jmp   NodeCheck
+
+    ExitIndexTree:
+    pop   di
+    pop   si
     mov   sp, bp
     pop   bp
     ret
+
+// [ES:SI] - the source file name
+// [DS:DI] - the destination file name
+// CX - compare length
+CompareStr:
+    push bp
+    mov  bp, sp
+    push bx
+    push si
+    push di
+    movzx cx, cl
+    CmpLoop:
+        mov ax, word ptr es:[si]
+        cmp ax, 'a'
+        jl NoUpper
+        cmp ax, 'z'
+        jg NoUpper
+        sub ax, HEX(20)
+        NoUpper:
+        mov bx, word ptr ds:[di]
+        sub bx, ax
+        test bx, bx
+        jnz  CompareFail
+        add  si, 2
+        add  di, 2
+        dec cx
+        jnz CmpLoop
+    CompareFail:
+    mov ax, bx
+    pop di
+    pop si
+    pop bx
+    mov sp, bp
+    pop bp
+    ret
+
 
 // Reads a NTFS cluster
 // AX     : cluster number to read
@@ -433,6 +516,10 @@ ReadInode:
     mov   cx, word ptr [SectsPerMFT]
     movzx ecx, cx
     call  ReadSectors
+    
+    cmp   dword ptr es:[bx], HEX(454c4946) // Ensure we get a valid FILE record
+    jnz   near ptr PrintFileSystemError
+
     mov   si, bx
     add   si, word ptr es:[bx + 4]
 
@@ -578,6 +665,19 @@ UnpackLen:
     pop cx
     ret
 
+// ES:AX : Address of the data runs
+// FS:BX : Address to write to
+// ECX    : LCN to read
+ReadINDX:
+    call  ReadNonResidentAttribute
+    test  ax, ax
+    jz    PrintFileSystemError
+    cmp   dword ptr fs:[0], HEX(58444e49)   // Check if valid INDX
+    jnz   PrintFileSystemError              // jump if not valid
+
+    // TODO: apply fixups here
+    ret
+
 // Finds an attribute header
 // ES:AX : pointer to the MFT entry
 // EBX   : type to find
@@ -609,9 +709,13 @@ FindAttributeHdr:
     pop   cx
     ret
 
+PrintFreeldrError:
+    mov  si, offset msgFreeldr
+    call PutChars
+    jmp  Reboot
+
 offs:
     .ascii "0123456789abcdef"
-
 PrintInt:
     push bp
     mov  bp, sp
@@ -646,19 +750,10 @@ PrintInt:
     pop bp
     ret 4
 
-PutWChars:
-    lodsw
-    or   al, al
-    jz   short WDone
-        mov  ah, HEX(0e)
-        mov  bx, 7
-        int  HEX(10)
-        jmp  short PutWChars
-    WDone:
-    ret
-
 FreeLdr:
-    .word 'F', 'R', 'E', 'E', 'L', 'D', 'R', '.', 'S', 'Y', 'S', NUL
+    .word 'F', 'R', 'E', 'E', 'L', 'D', 'R', '.', 'S', 'Y', 'S'
+msgFreeldr:
+    .ascii "FreeLdr not found, can't boot", CR, LF, NUL
 
 .endcode16
 
