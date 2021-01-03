@@ -346,7 +346,7 @@ StartSearch:
     jz    near ptr PrintFileSystemError
     mov   si, ax
     cmp   byte ptr es:[si + 8], HEX(0)     // Checks resident flag
-    jnz   PrintFileSystemError
+    jnz   near ptr PrintFileSystemError
     add   si, word ptr es:[si + HEX(14)]   // Offset to resident data
     cmp   dword ptr es:[si], HEX(30)
     jnz   PrintFileSystemError
@@ -405,13 +405,13 @@ ExploreIndexRoot:
         jnz   LookupChildNode // if result < 0 then explore child node
 
         ContinueSearch:
-        add  si, word ptr es:[si + 8]
-        jmp NodeCheck
+        add   si, word ptr es:[si + 8]
+        jmp   NodeCheck
 
         RootIndexFound:
-        mov eax, dword ptr [si] // We found root entry, return with its MFT number
-        mov edx, dword ptr [si + 4] // Return high part into edx
-        jmp ExitIndexTree
+        mov   eax, dword ptr [si] // We found root entry, return with its MFT number
+        mov   edx, dword ptr [si + 4] // Return high part into edx
+        jmp   ExitIndexTree
     
     NodeCheckLastNode:
     test  word ptr es:[si + 12], 1
@@ -481,7 +481,6 @@ CompareStr:
     mov sp, bp
     pop bp
     ret
-
 
 // Reads a NTFS cluster
 // AX     : cluster number to read
@@ -588,14 +587,14 @@ ReadNonResidentAttribute:
     mov  bx, word ptr [bp - 8]
     call ReadCluster
     pop  es
-    jmp RunSearchEnd
+    jmp  RunSearchEnd
     NotFound:
-    xor ax, ax
+    xor  ax, ax
     RunSearchEnd:
-    pop si
-    pop dx
-    mov sp, bp
-    pop bp
+    pop  si
+    pop  dx
+    mov  sp, bp
+    pop  bp
     ret
 
 // Function to unpack a run
@@ -609,33 +608,33 @@ UnpackRun:
     push ebx
 
     // Unpack run header
-    mov bl, byte ptr es:[si]
-    inc si
+    mov  bl, byte ptr es:[si]
+    inc  si
 
-    mov bh, bl
-    shr bh, 4 
-    and bl, 7 
-    mov byte ptr [bp-2], bh     // BH contains the LCN length
-    mov byte ptr [bp-1], bl     // BL contains the number of cluster length
+    mov  bh, bl
+    shr  bh, 4 
+    and  bl, 7 
+    mov  byte ptr [bp-2], bh     // BH contains the LCN length
+    mov  byte ptr [bp-1], bl     // BL contains the number of cluster length
     
-    mov al, bl
+    mov  al, bl
     call UnpackLen
-    mov dword ptr [bp - 8], ebx
+    mov  dword ptr [bp - 8], ebx
 
-    mov al, byte ptr [bp-2]
+    mov  al, byte ptr [bp-2]
     call UnpackLen
-    mov cl, byte ptr es:[si-1]  // Fixup sign if last byte is > 255
+    mov  cl, byte ptr es:[si-1]  // Fixup sign if last byte is > 255
     test cl, HEX(80)
-    jz NoSign
-    not eax
-    add ebx, eax
+    jz   NoSign
+    not  eax
+    add  ebx, eax
 
     NoSign:
-    mov eax, ebx
-    mov ecx, dword ptr [bp - 8]
-    pop ebx
-    mov sp, bp
-    pop bp
+    mov  eax, ebx
+    mov  ecx, dword ptr [bp - 8]
+    pop  ebx
+    mov  sp, bp
+    pop  bp
     ret
 
 
@@ -644,25 +643,25 @@ UnpackRun:
 // Returns: eax: the mask used to unpack (for negative number fixup)
 // Returns: ebx: the unpacked number
 UnpackLen:
-    push cx
+    push  cx
     movzx ax, al
-    // Read length
-    // We read the whole DWORD and then compute a mask to remove
-    // unneeded bytes
-    xor ebx, ebx
-    mov ebx, dword ptr es:[si]
-    add si, ax
 
-    // Compute 2^(8*len) - 1                 
-    mov cl, al
-    shl cl, 3
-    xor eax, eax
-    inc eax
-    shl eax, cl
-    dec eax
-    // Apply this mask to what we read
-    and ebx, eax
-    pop cx
+    // Read the whole DWORD and then compute a mask to remove
+    // unneeded bytes to get correct size
+    xor   ebx, ebx
+    mov   ebx, dword ptr es:[si]
+    add   si, ax
+
+    
+    mov   cl, al    // Compute mask (2^(8*len) - 1)
+    shl   cl, 3
+    xor   eax, eax
+    inc   eax
+    shl   eax, cl
+    dec   eax
+
+    and   ebx, eax // Apply mask
+    pop   cx
     ret
 
 // ES:AX : Address of the data runs
@@ -714,6 +713,11 @@ PrintFreeldrError:
     call PutChars
     jmp  Reboot
 
+FreeLdr:
+    .word 'F', 'R', 'E', 'E', 'L', 'D', 'R', '.', 'S', 'Y', 'S'
+msgFreeldr:
+    .ascii "FreeLdr not found, can't boot", CR, LF, NUL
+
 offs:
     .ascii "0123456789abcdef"
 PrintInt:
@@ -749,11 +753,6 @@ PrintInt:
     mov sp, bp
     pop bp
     ret 4
-
-FreeLdr:
-    .word 'F', 'R', 'E', 'E', 'L', 'D', 'R', '.', 'S', 'Y', 'S'
-msgFreeldr:
-    .ascii "FreeLdr not found, can't boot", CR, LF, NUL
 
 .endcode16
 
