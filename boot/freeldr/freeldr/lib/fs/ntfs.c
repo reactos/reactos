@@ -733,6 +733,7 @@ static BOOLEAN NtfsLookupFile(PNTFS_VOLUME_INFO Volume, PCSTR FileName, PNTFS_MF
             TRACE("- Failed\n");
             return FALSE;
         }
+        CurrentMFTIndex &= NTFS_MFT_MASK;
         TRACE("- Lookup: %x\n", CurrentMFTIndex);
     }
 
