@@ -1022,6 +1022,18 @@ SampInitializeSAM(VOID)
                                 szComment,
                                 DOMAIN_ALIAS_RID_POWER_USERS);
 
+    if (SampProductType != NtProductWinNt)
+    {
+        /* Create the Print Operators alias (Server only) */
+        SampLoadString(hInstance, IDS_ALIAS_PRINT_OPS_NAME, szName, 80);
+        SampLoadString(hInstance, IDS_ALIAS_PRINT_OPS_COMMENT, szComment, 256);
+
+        SampSetupCreateAliasAccount(hBuiltinDomainKey,
+                                    szName,
+                                    szComment,
+                                    DOMAIN_ALIAS_RID_PRINT_OPS);
+    }
+
     /* Create the Backup Operators alias */
     SampLoadString(hInstance, IDS_ALIAS_BACKUP_OPS_NAME, szName, 80);
     SampLoadString(hInstance, IDS_ALIAS_BACKUP_OPS_COMMENT, szComment, 256);
@@ -1057,6 +1069,27 @@ SampInitializeSAM(VOID)
                                 szName,
                                 szComment,
                                 DOMAIN_ALIAS_RID_NETWORK_CONFIGURATION_OPS);
+
+    if (SampProductType != NtProductWinNt)
+    {
+        /* Create the Performance Monitor Users alias (Server only) */
+        SampLoadString(hInstance, IDS_ALIAS_MONITORING_USERS_NAME, szName, 80);
+        SampLoadString(hInstance, IDS_ALIAS_MONITORING_USERS_COMMENT, szComment, 256);
+
+        SampSetupCreateAliasAccount(hBuiltinDomainKey,
+                                    szName,
+                                    szComment,
+                                    DOMAIN_ALIAS_RID_MONITORING_USERS);
+
+        /* Create the Performance Log Users alias (Server only) */
+        SampLoadString(hInstance, IDS_ALIAS_LOGGING_USERS_NAME, szName, 80);
+        SampLoadString(hInstance, IDS_ALIAS_LOGGING_USERS_COMMENT, szComment, 256);
+
+        SampSetupCreateAliasAccount(hBuiltinDomainKey,
+                                    szName,
+                                    szComment,
+                                    DOMAIN_ALIAS_RID_LOGGING_USERS);
+    }
 
     /* Add the Administrator user to the Administrators alias */
     pSid = AppendRidToSid(AccountDomainInfo->DomainSid,

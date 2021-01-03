@@ -26,6 +26,7 @@
 ENCRYPTED_NT_OWF_PASSWORD EmptyNtHash;
 ENCRYPTED_LM_OWF_PASSWORD EmptyLmHash;
 RTL_RESOURCE SampResource;
+NT_PRODUCT_TYPE SampProductType;
 
 
 /* FUNCTIONS *****************************************************************/
@@ -103,6 +104,10 @@ SamIInitialize(VOID)
     NTSTATUS Status = STATUS_SUCCESS;
 
     TRACE("SamIInitialize() called\n");
+
+    Status = RtlGetNtProductType(&SampProductType);
+    if (!NT_SUCCESS(Status))
+        SampProductType = NtProductWinNt;
 
     Status = SampInitHashes();
     if (!NT_SUCCESS(Status))
