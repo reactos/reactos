@@ -50,6 +50,12 @@ PMMPTE MiKernelResourceStartPte, MiKernelResourceEndPte;
 ULONG_PTR ExPoolCodeStart, ExPoolCodeEnd, MmPoolCodeStart, MmPoolCodeEnd;
 ULONG_PTR MmPteCodeStart, MmPteCodeEnd;
 
+#ifdef _WIN64
+#define DEFAULT_SECURITY_COOKIE 0x00002B992DDFA232ll
+#else
+#define DEFAULT_SECURITY_COOKIE 0xBB40E64E
+#endif
+
 /* FUNCTIONS ******************************************************************/
 
 PVOID
@@ -2807,6 +2813,84 @@ Fail:
     return Status;
 }
 
+
+PVOID
+NTAPI
+LdrpFetchAddressOfSecurityCookie(PVOID BaseAddress, ULONG SizeOfImage)
+{
+    PIMAGE_LOAD_CONFIG_DIRECTORY ConfigDir;
+    ULONG DirSize;
+    PVOID Cookie = NULL;
+
+    /* Check NT header first */
+    if (!RtlImageNtHeader(BaseAddress)) return NULL;
+
+    /* Get the pointer to the config directory */
+    ConfigDir = RtlImageDirectoryEntryToData(BaseAddress,
+                                             TRUE,
+                                             IMAGE_DIRECTORY_ENTRY_LOAD_CONFIG,
+                                             &DirSize);
+
+    /* Check for sanity */
+    if (!ConfigDir ||
+        DirSize < FIELD_OFFSET(IMAGE_LOAD_CONFIG_DIRECTORY, SEHandlerTable) ||  /* SEHandlerTable is after SecurityCookie */
+        (ConfigDir->Size != DirSize))
+    {
+        /* Invalid directory*/
+        return NULL;
+    }
+
+    /* Now get the cookie */
+    Cookie = (PVOID)ConfigDir->SecurityCookie;
+
+    /* Check this cookie */
+    if ((PCHAR)Cookie <= (PCHAR)BaseAddress ||
+        (PCHAR)Cookie >= (PCHAR)BaseAddress + SizeOfImage)
+    {
+        Cookie = NULL;
+    }
+
+    /* Return validated security cookie */
+    return Cookie;
+}
+
+PVOID
+NTAPI
+LdrpInitSecurityCookie(PLDR_DATA_TABLE_ENTRY LdrEntry)
+{
+    PULONG_PTR Cookie;
+    ULONG_PTR NewCookie;
+
+    /* Fetch address of the cookie */
+    Cookie = LdrpFetchAddressOfSecurityCookie(LdrEntry->DllBase, LdrEntry->SizeOfImage);
+
+    if (Cookie)
+    {
+        /* Check if it's a default one */
+        if ((*Cookie == DEFAULT_SECURITY_COOKIE) ||
+            (*Cookie == 0))
+        {
+            LARGE_INTEGER Counter = KeQueryPerformanceCounter(NULL);
+            /* The address should be unique */
+            NewCookie = (ULONG_PTR)Cookie;
+
+            /* We just need a simple tick, don't care about precision and whatnot */
+            NewCookie ^= (ULONG_PTR)Counter.LowPart;
+
+            /* If the result is 0 or the same as we got, just add one to the default value */
+            if ((NewCookie == 0) || (NewCookie == *Cookie))
+            {
+                NewCookie = DEFAULT_SECURITY_COOKIE + 1;
+            }
+
+            /* Set the new cookie value */
+            *Cookie = NewCookie;
+        }
+    }
+
+    return Cookie;
+}
+
 NTSTATUS
 NTAPI
 MmLoadSystemImage(IN PUNICODE_STRING FileName,
@@ -3251,6 +3335,9 @@ LoaderScan:
 
     /* Write-protect the system image */
     MiWriteProtectSystemImage(LdrEntry->DllBase);
+
+    /* Initialize the security cookie (Win7 is not doing this yet!) */
+    LdrpInitSecurityCookie(LdrEntry);
 
     /* Check if notifications are enabled */
     if (PsImageNotifyEnabled)
