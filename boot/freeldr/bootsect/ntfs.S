@@ -779,42 +779,6 @@ FreeLdr:
 msgFreeldr:
     .ascii "FreeLdr not found, cannot boot", CR, LF, NUL
 
-offs:
-    .ascii "0123456789abcdef"
-PrintInt:
-    push bp
-    mov  bp, sp
-    sub  sp, 2
-    pushad
-    mov  word ptr [bp - 2], 32
-    IntLoop:
-        mov eax, dword ptr [bp + 4]
-        sub word ptr [bp - 2], 4
-        mov cx, word ptr [bp - 2]
-        shr eax, cl
-        and ax, HEX(f)
-        mov si, offset offs
-        add si, ax
-        mov al, [si]
-        mov ah, HEX(0e)
-        mov bx, 7
-        int HEX(10)
-        mov cx, word ptr [bp - 2]
-        test cx, cx
-        jnz IntLoop
-    mov al, HEX(0a)
-    mov ah, HEX(0e)
-    mov bx, 7
-    int HEX(10)
-    mov al, HEX(0d)
-    mov ah, HEX(0e)
-    mov bx, 7
-    int HEX(10)
-    popad
-    mov sp, bp
-    pop bp
-    ret 4
-
 .endcode16
 
 END
