@@ -54,7 +54,7 @@ uniata.sys
 ;
 
 [uniata_Inst.Services]
-AddService =
+AddService = , 0x00000002
 
 ;
 ; Source file information
