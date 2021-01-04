@@ -389,8 +389,6 @@ StartSearch:
     movzx ecx, cx
     xor   edx, edx
     div   ecx
-    push  eax
-    call  PrintInt
     mov   edx, eax
 
     xor   ax, ax
@@ -567,9 +565,19 @@ ReadInode:
     cmp   dword ptr es:[bx], HEX(454c4946) // Ensure we get a valid FILE record
     jnz   near ptr PrintFileSystemError
 
+    call  ApplyFixups
+
+    pop   di
+    pop   si
+    pop   ecx
+    pop   edx
+    ret
+
+ApplyFixups:
+    push  si
+    push  di
     mov   si, bx
     add   si, word ptr es:[bx + 4]
-
     xor   cx, cx
     inc   cx
     FixupLoop:
@@ -592,10 +600,9 @@ ReadInode:
 
         jmp   FixupLoop
     EndFixupLoop:
-    pop   di
-    pop   si
-    pop   ecx
-    pop   edx
+
+    pop di
+    pop si
     ret
 
 // Reads a non-resident attribute
@@ -716,13 +723,19 @@ UnpackLen:
 // FS:BX : Address to write to
 // ECX    : LCN to read
 ReadINDX:
+    push  es
+    push  bx
     call  ReadNonResidentAttribute
     test  ax, ax
     jz    PrintFileSystemError
     cmp   dword ptr fs:[0], HEX(58444e49)   // Check if valid INDX
     jnz   PrintFileSystemError              // jump if not valid
-
-    // TODO: apply fixups here
+    pop   bx
+    
+    mov   ax, fs
+    mov   es, ax
+    call  ApplyFixups
+    pop   es
     ret
 
 // Finds an attribute header
@@ -764,7 +777,7 @@ PrintFreeldrError:
 FreeLdr:
     .word 'F', 'R', 'E', 'E', 'L', 'D', 'R', '.', 'S', 'Y', 'S'
 msgFreeldr:
-    .ascii "FreeLdr not found, can't boot", CR, LF, NUL
+    .ascii "FreeLdr not found, cannot boot", CR, LF, NUL
 
 offs:
     .ascii "0123456789abcdef"
