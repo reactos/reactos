@@ -361,7 +361,14 @@ StartSearch:
     mov   ebx, HEX(30)
     call  FindAttributeHdr
     mov   si, ax
+    // Move to the attribute data
     add   si, word ptr es:[si + HEX(14)]
+
+    // We don't support compressed, sparse or encrypted Freeldr
+    test  dword ptr es:[si + HEX(38)], HEX(4a00)
+    jnz   CompressedFreeldr
+
+    // Compute size in clusters
     mov   eax, dword ptr es:[si + HEX(28)]
     mov   cl, byte ptr [SectsPerCluster]
     xor   edx, edx
@@ -401,6 +408,11 @@ StartSearch:
     mov    dl, byte ptr [BootDrive]
     mov    dh, byte ptr [BootPartition]
     ljmp16 0, FREELDR_BASE
+
+CompressedFreeldr:
+    mov   si, offset msgFreeldrCompressed
+    call  PutChars
+    jmp   Reboot
 
 // Finds Freeldr.sys into the directory tree and returns the
 // inode index
@@ -810,7 +822,8 @@ msgFreeldr:
     .ascii "FreeLdr not found, cannot boot", CR, LF, NUL
 msgLoading:
     .ascii "Loading FreeLoader...", CR, LF, NUL
-
+msgFreeldrCompressed:
+    .ascii "freeldr.sys is a sparse file, compressed or encrypted, cannot boot", CR, LF, NUL
 .endcode16
 
 END
