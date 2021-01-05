@@ -262,7 +262,7 @@
 @ stub D3DXSHMultiply6(ptr ptr ptr)
 @ stub D3DXSHPRTCompSplitMeshSC(ptr long long ptr long ptr long long ptr ptr long ptr ptr ptr ptr ptr)
 @ stub D3DXSHPRTCompSuperCluster(ptr ptr long long ptr ptr)
-@ stub D3DXSHProjectCubeMap(long ptr ptr ptr ptr)
+@ stdcall D3DXSHProjectCubeMap(long ptr ptr ptr ptr)
 @ stdcall D3DXSHRotate(ptr long ptr ptr)
 @ stdcall D3DXSHRotateZ(ptr long float ptr)
 @ stdcall D3DXSHScale(ptr long ptr float)

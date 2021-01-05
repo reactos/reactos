@@ -265,7 +265,7 @@
 @ stdcall D3DXSHEvalSphericalLight(long ptr float float float float ptr ptr ptr)
 @ stub D3DXSHPRTCompSplitMeshSC(ptr long long ptr long ptr long long ptr ptr long ptr ptr ptr ptr ptr)
 @ stub D3DXSHPRTCompSuperCluster(ptr ptr long long ptr ptr)
-@ stub D3DXSHProjectCubeMap(long ptr ptr ptr ptr)
+@ stdcall D3DXSHProjectCubeMap(long ptr ptr ptr ptr)
 @ stdcall D3DXSHRotate(ptr long ptr ptr)
 @ stdcall D3DXSHRotateZ(ptr long float ptr)
 @ stdcall D3DXSHScale(ptr long ptr float)
