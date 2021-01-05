@@ -587,7 +587,6 @@ static const WCHAR *read_line(HDC hdc, const WCHAR *str, unsigned int *count,
         }
         else if (format & DT_SINGLELINE)
         {
-            *dest_len = num_fit;
             *count = 0;
         }
     }
@@ -771,6 +770,21 @@ static INT WINAPI ID3DXFontImpl_DrawTextW(ID3DXFont *iface, ID3DXSprite *sprite,
             pos.x = cell_inc.x + x + results.lpCaretPos[i];
             pos.y = cell_inc.y + y;
             pos.z = 0;
+
+            if (!(format & DT_NOCLIP))
+            {
+                if (pos.x > rect->right)
+                {
+                    IDirect3DTexture9_Release(texture);
+                    continue;
+                }
+
+                if (pos.x + black_box.right - black_box.left > rect->right)
+                    black_box.right = black_box.left + rect->right - pos.x;
+
+                if (pos.y + black_box.bottom - black_box.top > rect->bottom)
+                    black_box.bottom = black_box.top + rect->bottom - pos.y;
+            }
 
             ID3DXSprite_Draw(target, texture, &black_box, NULL, &pos, color);
             IDirect3DTexture9_Release(texture);
