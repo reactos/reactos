@@ -169,8 +169,7 @@ CcRosFlushVacb (
     PROS_VACB Vacb)
 {
     IO_STATUS_BLOCK Iosb;
-    SIZE_T FlushSize = min(VACB_MAPPING_GRANULARITY,
-        Vacb->SharedCacheMap->SectionSize.QuadPart - Vacb->FileOffset.QuadPart);
+    SIZE_T FlushSize = VACB_MAPPING_GRANULARITY;
     NTSTATUS Status;
     BOOLEAN HaveLock = FALSE;
 
@@ -1024,7 +1023,7 @@ CcRosDeleteFileCache (
         /* Flush to disk, if needed */
         if (Vacb->Dirty)
         {
-            SIZE_T FlushSize = min(VACB_MAPPING_GRANULARITY, Vacb->SharedCacheMap->SectionSize.QuadPart - Vacb->FileOffset.QuadPart);
+            SIZE_T FlushSize = VACB_MAPPING_GRANULARITY;
             IO_STATUS_BLOCK Iosb;
             NTSTATUS Status;
 
