@@ -1,9 +1,9 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS Bootsector
+ * LICENSE:         GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * FILE:            boot/freeldr/bootsect/fat32.S
- * PURPOSE:
- * PROGRAMMERS:     Sylvain Deverre
+ * PURPOSE:         Implementing boot sector for NTFS
+ * COPYRIGHT:       Copyright 2020 Sylvain Deverre (deverre.sylv@gmail.com)
  */
 
 /* INCLUDES ******************************************************************/
@@ -43,10 +43,9 @@ SectorsPerTrack:
 NumberOfHeads:
     .word 0             // Should contain disk geometry
 HiddenSectors:
-    .long 0
+    .long 0             // Filled by format program
 TotalSectorsBig:
-    .long 0
-
+    .long 0             // Unused by NTFS
 // NTFS inserted info
 BootDrive:
     .byte HEX(80)
@@ -301,6 +300,12 @@ BootPartition:
 
 BootFlagSignature:
     .word HEX(0aa55)    // BootSector signature
+
+// End of Bootsector
+// Next sector starts as sector 2, since boot sector is 
+// as a file under NTFS ($Boot, which has inode number 7)
+// and takes the two first clusters of the volume (which means)
+// 8 sectors (checked on Windows and mkfs.ntfs from ntfsutils)
 
 #define ATTRIBUTE_DATA HEX(80)
 #define ATTRIBUTE_INDEX_ROOT HEX(90)
