@@ -306,6 +306,20 @@ static void test_ID3DXSprite(IDirect3DDevice9 *device)
     hr = ID3DXSprite_End(sprite);
     ok (hr == D3DERR_INVALIDCALL, "End returned %#x, expected %#x\n", hr, D3DERR_INVALIDCALL);
 
+    /* Test D3DXSPRITE_DO_NOT_ADDREF_TEXTURE */
+    hr = ID3DXSprite_Begin(sprite, D3DXSPRITE_DO_NOT_ADDREF_TEXTURE);
+    ok (hr == D3D_OK, "Begin returned %#x, expected %#x\n", hr, D3D_OK);
+    hr = ID3DXSprite_Draw(sprite, tex2, &rect, &center, &pos, D3DCOLOR_XRGB(255, 255, 255));
+    ok (hr == D3D_OK, "Draw returned %#x, expected %#x\n", hr, D3D_OK);
+    hr = ID3DXSprite_OnResetDevice(sprite);
+    ok (hr == D3D_OK, "OnResetDevice returned %#x, expected %#x\n", hr, D3D_OK);
+    check_ref((IUnknown*)tex2, 1);
+
+    hr = ID3DXSprite_Begin(sprite, D3DXSPRITE_DO_NOT_ADDREF_TEXTURE);
+    ok (hr == D3D_OK, "Begin returned %#x, expected %#x\n", hr, D3D_OK);
+    hr = ID3DXSprite_Draw(sprite, tex2, &rect, &center, &pos, D3DCOLOR_XRGB(255, 255, 255));
+    ok (hr == D3D_OK, "Draw returned %#x, expected %#x\n", hr, D3D_OK);
+
     IDirect3DDevice9_EndScene(device);
     check_release((IUnknown*)sprite, 0);
     check_release((IUnknown*)tex2, 0);

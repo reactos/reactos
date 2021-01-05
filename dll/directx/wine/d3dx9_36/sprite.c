@@ -116,10 +116,13 @@ static ULONG WINAPI d3dx9_sprite_Release(ID3DXSprite *iface)
         {
             int i;
 
-            for (i = 0; i < sprite->sprite_count; ++i)
+            if (!(sprite->flags & D3DXSPRITE_DO_NOT_ADDREF_TEXTURE))
             {
-                if (sprite->sprites[i].texture)
-                    IDirect3DTexture9_Release(sprite->sprites[i].texture);
+                for (i = 0; i < sprite->sprite_count; ++i)
+                {
+                    if (sprite->sprites[i].texture)
+                        IDirect3DTexture9_Release(sprite->sprites[i].texture);
+                }
             }
 
             HeapFree(GetProcessHeap(), 0, sprite->sprites);
@@ -522,10 +525,13 @@ static HRESULT WINAPI d3dx9_sprite_OnResetDevice(ID3DXSprite *iface)
 
     TRACE("iface %p.\n", iface);
 
-    for (i = 0; i < sprite->sprite_count; ++i)
+    if (!(sprite->flags & D3DXSPRITE_DO_NOT_ADDREF_TEXTURE))
     {
-        if (sprite->sprites[i].texture)
-            IDirect3DTexture9_Release(sprite->sprites[i].texture);
+        for (i = 0; i < sprite->sprite_count; ++i)
+        {
+            if (sprite->sprites[i].texture)
+                IDirect3DTexture9_Release(sprite->sprites[i].texture);
+        }
     }
 
     sprite->sprite_count = 0;
