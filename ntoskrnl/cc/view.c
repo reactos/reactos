@@ -342,17 +342,13 @@ NTAPI
 CcRosReleaseVacb (
     PROS_SHARED_CACHE_MAP SharedCacheMap,
     PROS_VACB Vacb,
-    BOOLEAN Valid,
     BOOLEAN Dirty,
     BOOLEAN Mapped)
 {
     ULONG Refs;
     ASSERT(SharedCacheMap);
 
-    DPRINT("CcRosReleaseVacb(SharedCacheMap 0x%p, Vacb 0x%p, Valid %u)\n",
-           SharedCacheMap, Vacb, Valid);
-
-    Vacb->Valid = Valid;
+    DPRINT("CcRosReleaseVacb(SharedCacheMap 0x%p, Vacb 0x%p)\n", SharedCacheMap, Vacb);
 
     if (Dirty && !Vacb->Dirty)
     {
@@ -595,7 +591,6 @@ CcRosCreateVacb (
 
     current = ExAllocateFromNPagedLookasideList(&VacbLookasideList);
     current->BaseAddress = NULL;
-    current->Valid = FALSE;
     current->Dirty = FALSE;
     current->PageOut = FALSE;
     current->FileOffset.QuadPart = ROUND_DOWN(FileOffset, VACB_MAPPING_GRANULARITY);
@@ -947,7 +942,7 @@ CcFlushCache (
                     }
                 }
 
-                CcRosReleaseVacb(SharedCacheMap, current, current->Valid, FALSE, FALSE);
+                CcRosReleaseVacb(SharedCacheMap, current, FALSE, FALSE);
             }
 
             Offset.QuadPart += VACB_MAPPING_GRANULARITY;
@@ -1371,14 +1366,14 @@ ExpKdbgExtFileCache(ULONG Argc, PCHAR Argv[])
     UNICODE_STRING NoName = RTL_CONSTANT_STRING(L"No name for File");
 
     KdbpPrint("  Usage Summary (in kb)\n");
-    KdbpPrint("Shared\t\tValid\tDirty\tName\n");
+    KdbpPrint("Shared\t\tMapped\tDirty\tName\n");
     /* No need to lock the spin lock here, we're in DBG */
     for (ListEntry = CcCleanSharedCacheMapList.Flink;
          ListEntry != &CcCleanSharedCacheMapList;
          ListEntry = ListEntry->Flink)
     {
         PLIST_ENTRY Vacbs;
-        ULONG Valid = 0, Dirty = 0;
+        ULONG Mapped = 0, Dirty = 0;
         PROS_SHARED_CACHE_MAP SharedCacheMap;
         PUNICODE_STRING FileName;
         PWSTR Extra = L"";
@@ -1393,13 +1388,7 @@ ExpKdbgExtFileCache(ULONG Argc, PCHAR Argv[])
              Vacbs != &SharedCacheMap->CacheMapVacbListHead;
              Vacbs = Vacbs->Flink)
         {
-            PROS_VACB Vacb;
-
-            Vacb = CONTAINING_RECORD(Vacbs, ROS_VACB, CacheMapVacbListEntry);
-            if (Vacb->Valid)
-            {
-                Valid += VACB_MAPPING_GRANULARITY / 1024;
-            }
+            Mapped += VACB_MAPPING_GRANULARITY / 1024;
         }
 
         /* Setup name */
@@ -1423,7 +1412,7 @@ ExpKdbgExtFileCache(ULONG Argc, PCHAR Argv[])
         }
 
         /* And print */
-        KdbpPrint("%p\t%d\t%d\t%wZ%S\n", SharedCacheMap, Valid, Dirty, FileName, Extra);
+        KdbpPrint("%p\t%d\t%d\t%wZ%S\n", SharedCacheMap, Mapped, Dirty, FileName, Extra);
     }
 
     return TRUE;

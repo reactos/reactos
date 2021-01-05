@@ -206,8 +206,6 @@ typedef struct _ROS_VACB
 {
     /* Base address of the region where the view's data is mapped. */
     PVOID BaseAddress;
-    /* Are the contents of the view valid. */
-    BOOLEAN Valid;
     /* Are the contents of the view newer than those on disk. */
     BOOLEAN Dirty;
     /* Page out in progress */
@@ -387,7 +385,6 @@ NTAPI
 CcRosReleaseVacb(
     PROS_SHARED_CACHE_MAP SharedCacheMap,
     PROS_VACB Vacb,
-    BOOLEAN Valid,
     BOOLEAN Dirty,
     BOOLEAN Mapped
 );

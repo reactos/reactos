@@ -91,7 +91,6 @@ CcpDereferenceBcb(
          */
         CcRosReleaseVacb(SharedCacheMap,
                          Bcb->Vacb,
-                         TRUE,
                          FALSE,
                          FALSE);
 
@@ -121,7 +120,7 @@ CcpGetAppropriateBcb(
     iBcb = ExAllocateFromNPagedLookasideList(&iBcbLookasideList);
     if (iBcb == NULL)
     {
-        CcRosReleaseVacb(SharedCacheMap, Vacb, TRUE, FALSE, FALSE);
+        CcRosReleaseVacb(SharedCacheMap, Vacb, FALSE, FALSE);
         return NULL;
     }
 
@@ -172,7 +171,7 @@ CcpGetAppropriateBcb(
         if (DupBcb != NULL)
         {
             /* Delete the loser */
-            CcRosReleaseVacb(SharedCacheMap, Vacb, TRUE, FALSE, FALSE);
+            CcRosReleaseVacb(SharedCacheMap, Vacb, FALSE, FALSE);
             ExDeleteResourceLite(&iBcb->Lock);
             ExFreeToNPagedLookasideList(&iBcbLookasideList, iBcb);
         }
@@ -282,7 +281,7 @@ CcpPinData(
         NewBcb = CcpGetAppropriateBcb(SharedCacheMap, Vacb, FileOffset, Length, Flags, TRUE);
         if (NewBcb == NULL)
         {
-            CcRosReleaseVacb(SharedCacheMap, Vacb, TRUE, FALSE, FALSE);
+            CcRosReleaseVacb(SharedCacheMap, Vacb, FALSE, FALSE);
             return FALSE;
         }
     }
@@ -383,7 +382,7 @@ CcMapData (
         iBcb = CcpGetAppropriateBcb(SharedCacheMap, Vacb, FileOffset, Length, 0, FALSE);
         if (iBcb == NULL)
         {
-            CcRosReleaseVacb(SharedCacheMap, Vacb, TRUE, FALSE, FALSE);
+            CcRosReleaseVacb(SharedCacheMap, Vacb, FALSE, FALSE);
             CCTRACE(CC_API_DEBUG, "FileObject=%p FileOffset=%p Length=%lu Flags=0x%lx -> FALSE\n",
                 SharedCacheMap->FileObject, FileOffset, Length, Flags);
             return FALSE;
@@ -660,7 +659,6 @@ CcUnpinRepinnedBcb (
          */
         CcRosReleaseVacb(iBcb->Vacb->SharedCacheMap,
                          iBcb->Vacb,
-                         TRUE,
                          FALSE,
                          FALSE);
 
