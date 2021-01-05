@@ -346,6 +346,7 @@ static HRESULT WINAPI d3dx9_sprite_Draw(ID3DXSprite *iface, IDirect3DTexture9 *t
         const RECT *rect, const D3DXVECTOR3 *center, const D3DXVECTOR3 *position, D3DCOLOR color)
 {
     struct d3dx9_sprite *This = impl_from_ID3DXSprite(iface);
+    struct sprite *new_sprites;
     D3DSURFACE_DESC texdesc;
 
     TRACE("iface %p, texture %p, rect %s, center %p, position %p, color 0x%08x.\n",
@@ -361,9 +362,12 @@ static HRESULT WINAPI d3dx9_sprite_Draw(ID3DXSprite *iface, IDirect3DTexture9 *t
     }
     else if (This->allocated_sprites <= This->sprite_count)
     {
-        This->allocated_sprites += This->allocated_sprites / 2;
-        This->sprites = HeapReAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,
-                This->sprites, This->allocated_sprites * sizeof(*This->sprites));
+        new_sprites = HeapReAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,
+                This->sprites, This->allocated_sprites * 2 * sizeof(*This->sprites));
+        if (!new_sprites)
+            return E_OUTOFMEMORY;
+        This->sprites = new_sprites;
+        This->allocated_sprites *= 2;
     }
     This->sprites[This->sprite_count].texture=texture;
     if(!(This->flags & D3DXSPRITE_DO_NOT_ADDREF_TEXTURE))
