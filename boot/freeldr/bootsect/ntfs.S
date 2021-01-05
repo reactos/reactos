@@ -302,6 +302,10 @@ BootPartition:
 BootFlagSignature:
     .word HEX(0aa55)    // BootSector signature
 
+#define ATTRIBUTE_DATA HEX(80)
+#define ATTRIBUTE_INDEX_ROOT HEX(90)
+#define ATTRIBUTE_INDEX_ALLOCATION HEX(A0)
+
 StartSearch:
     // Compute MFT start sector
     mov   eax, dword ptr [MftLocation]
@@ -339,35 +343,7 @@ StartSearch:
     mov   eax, 5
     call  ReadInode
 
-    // Check INDEX_ROOT attribute
     xor   ax, ax
-    mov   ebx, HEX(90)
-    call  FindAttributeHdr
-    test  ax, ax
-    jz    near ptr PrintFileSystemError
-    mov   si, ax
-    cmp   byte ptr es:[si + 8], HEX(0)     // Checks resident flag
-    jnz   near ptr PrintFileSystemError
-    add   si, word ptr es:[si + HEX(14)]   // Offset to resident data
-    cmp   dword ptr es:[si], HEX(30)
-    jnz   PrintFileSystemError
-
-    // Save our INDEX_ROOT
-    mov   word ptr [bp-2], si
-
-    // Now look for INDEX_ALLOCATION attribute
-    xor   ax, ax
-    mov   ebx, HEX(A0)
-    call  FindAttributeHdr
-    test  ax, ax
-    jz    PrintFileSystemError
-    mov   si, ax
-    cmp   byte ptr es:[si + 8], HEX(1)     // Check non-resident flag
-    jnz   PrintFileSystemError
-    add   si, word ptr es:[si + HEX(20)]   // Offset to run list
-    mov   ax, es
-    mov   ax, word ptr [bp-2]
-    mov   bx, si
     call  ExploreIndexRoot
 
     push  eax
@@ -418,20 +394,59 @@ StartSearch:
 
 // Finds Freeldr.sys into the directory tree and returns the
 // inode index
-// [ES:AX] address of the INDEX_ROOT attribute data
-// [ES:BX] address of the INDEX_ALLOCATION run list
+// [ES:AX] address of the MFT record
 ExploreIndexRoot:
+    #define fileRecordBase 2
+    #define fileRecord 4
+    #define indexRootData 6
+    #define allocationRunList 8
+
     push  bp
     mov   bp, sp
     push  bx
     push  si
     push  di
     sub   sp, HEX(10)
-    mov   word ptr [bp-2], es
-    mov   word ptr [bp - 4], ax
-    mov   word ptr [bp - 8], bx
+    mov   word ptr [bp - fileRecordBase], es
+    mov   word ptr [bp - fileRecord], ax
+
+    mov   ebx, ATTRIBUTE_INDEX_ROOT
+    call  FindAttributeHdr
+    test  ax, ax
+    jz    near ptr PrintFileSystemError         // fail if no INDEX_ROOT
+
     mov   si, ax
-    lea   si, [si + 32] // skip INDEX_ROOT header and go through nodes array
+    cmp   byte ptr es:[si + 8], HEX(0)
+    jnz   near ptr PrintFileSystemError         // fail if attribute is non-resident
+
+    add   si, word ptr es:[si + HEX(14)]
+    cmp   dword ptr es:[si], HEX(30)
+    jnz   PrintFileSystemError                  // fail if FILE_NAME attribute isn't indexed
+
+    mov   word ptr [bp - indexRootData], si
+    mov   ax, word ptr [bp - fileRecord]
+
+    test  byte ptr es:[si + 12], 1
+    jz    ExploreNext                          // Skip index allocation lookup if we don't have children
+    
+    mov   ebx, ATTRIBUTE_INDEX_ALLOCATION
+    call  FindAttributeHdr
+    test  ax, ax
+    jz    PrintFileSystemError                  // No INDEX_ALLOCATION found
+
+    mov   si, ax
+    cmp   byte ptr es:[si + 8], 1
+    jnz   PrintFileSystemError                  // Fail if attribute is resident (shouldn't be)
+
+    add   si, word ptr es:[si + HEX(20)]
+    mov   word ptr [bp - allocationRunList], si // save run list
+
+    ExploreNext:
+    mov   si, word ptr [bp - indexRootData]
+    lea   si, [si + 32]                         // get the first INDEX_ENTRY
+
+    // Main search loop. We browse the B-Tree which contains directory entries
+    // SI contains the current index entry.
     NodeCheck:
         test  word ptr es:[si + 12], 2
         jnz   NodeCheckLastNode
@@ -448,43 +463,43 @@ ExploreIndexRoot:
         jz    ContinueSearch
 
         test  ax, HEX(f000)
-        jnz   LookupChildNode // if result < 0 then explore child node
+        jnz   LookupChildNode                  // if result < 0 then explore child node
 
         ContinueSearch:
         add   si, word ptr es:[si + 8]
         jmp   NodeCheck
 
         RootIndexFound:
-        mov   eax, dword ptr es:[si] // We found root entry, return with its MFT number
-        mov   edx, dword ptr es:[si + 4] // Return high part into edx
+        mov   eax, dword ptr es:[si]           // We found root entry, return with its MFT number
+        mov   edx, dword ptr es:[si + 4]       // Return high part into edx
         jmp   ExitIndexTree
     
-    NodeCheckLastNode:
-    test  word ptr es:[si + 12], 1
-    jz    PrintFreeldrError
+        NodeCheckLastNode:
+        test  word ptr es:[si + 12], 1
+        jz    PrintFreeldrError
 
-    LookupChildNode:
-    // Take the right LCN to explore
-    add   si, word ptr es:[si + 8]
-    mov   ecx, dword ptr es:[si - 8]
+        LookupChildNode:
+        // Take the right LCN at the end of the index record
+        add   si, word ptr es:[si + 8]
+        mov   ecx, dword ptr es:[si - 8]
 
-    // Read the fixed up LCN
-    mov   bx, word ptr [bp - 8]
-    mov   ax, word ptr [bp - 2]
-    mov   es, ax
-    mov   ax, HEX(9000)
-    mov   fs, ax
-    mov   ax, bx
-    xor   bx, bx
-    call  ReadINDX
+        // Read the fixed up LCN
+        mov   bx, word ptr [bp - allocationRunList]
+        mov   ax, word ptr [bp - fileRecordBase]
+        mov   es, ax
+        mov   ax, HEX(9000)
+        mov   fs, ax
+        mov   ax, bx
+        xor   bx, bx
+        call  ReadINDX
 
-    // Call again the search function with the new array
-    mov   ax, HEX(9000)
-    mov   es, ax
-    mov   si, 0
-    add   si, es:[si + HEX(18)] // Go to the first node
-    lea   si, [si + HEX(18)]
-    jmp   NodeCheck
+        // Go again to the loop but with the child node list
+        mov   ax, HEX(9000)
+        mov   es, ax
+        mov   si, 0
+        add   si, es:[si + HEX(18)] // Go to the first node
+        lea   si, [si + HEX(18)]
+        jmp   NodeCheck
 
     ExitIndexTree:
     pop   di
@@ -573,18 +588,23 @@ ReadInode:
     pop   edx
     ret
 
+#define UpdateSequenceOffset 4
+#define UpdateSequenceLen 6
+
+// Apply fixups to INDX and FILE records
+// ES:BX - record to fixup
 ApplyFixups:
     push  si
     push  di
     mov   si, bx
-    add   si, word ptr es:[bx + 4]
+    add   si, word ptr es:[bx + UpdateSequenceOffset]
     xor   cx, cx
     inc   cx
     FixupLoop:
-        cmp  cx, word ptr es:[bx + 6]
+        cmp  cx, word ptr es:[bx + UpdateSequenceLen]
         jz  EndFixupLoop
         mov   si, bx
-        add   si, word ptr es:[bx + 4]
+        add   si, word ptr es:[bx + UpdateSequenceOffset]
         mov   ax, word ptr es:[si]     // Get first fixup value
 
         mov   di, cx
