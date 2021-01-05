@@ -6623,6 +6623,60 @@ static void test_fragment_linker(void)
     DestroyWindow(window);
 }
 
+static const DWORD ps_tex[] = {
+    0xffff0103,                                                             /* ps_1_3                       */
+    0x00000042, 0xb00f0000,                                                 /* tex t0                       */
+    0x00000000,                                                             /* nop                          */
+    0x0000ffff};
+
+static const DWORD ps_texld_1_4[] = {
+    0xffff0104,                                                             /* ps_1_4                       */
+    0x00000042, 0xb00f0000, 0xa0e40000,                                     /* texld t0, c0                 */
+    0x00000000,                                                             /* nop                          */
+    0x0000ffff};
+
+static const DWORD ps_texld_2_0[] = {
+    0xffff0200,                                                             /* ps_2_0                       */
+    0x00000042, 0xb00f0000, 0xa0e40000, 0xa0e40001,                         /* texld t0, c0, c1             */
+    0x00000000,                                                             /* nop                          */
+    0x0000ffff};
+
+static const DWORD ps_texcoord[] = {
+    0xffff0103,                                                             /* ps_1_4                       */
+    0x00000040, 0xb00f0000,                                                 /* texcoord t0                  */
+    0x00000000,                                                             /* nop                          */
+    0x0000ffff};
+
+static const DWORD ps_texcrd[] = {
+    0xffff0104,                                                             /* ps_2_0                       */
+    0x00000040, 0xb00f0000, 0xa0e40000,                                     /* texcrd t0, c0                */
+    0x00000000,                                                             /* nop                          */
+    0x0000ffff};
+
+static const DWORD ps_sincos_2_0[] = {
+    0xffff0200,                                                             /* ps_2_0                       */
+    0x00000025, 0xb00f0000, 0xa0e40000, 0xa0e40001, 0xa0e40002,             /* sincos t0, c0, c1, c2        */
+    0x00000000,                                                             /* nop                          */
+    0x0000ffff};
+
+static const DWORD ps_sincos_3_0[] = {
+    0xffff0300,                                                             /* ps_3_0                       */
+    0x00000025, 0xb00f0000, 0xa0e40000,                                     /* sincos t0, c0                */
+    0x00000000,                                                             /* nop                          */
+    0x0000ffff};
+
+static const DWORD vs_sincos_2_0[] = {
+    0xfffe0200,                                                             /* vs_2_0                       */
+    0x00000025, 0xb00f0000, 0xa0e40000, 0xa0e40001, 0xa0e40002,             /* sincos a0, c0, c1, c2        */
+    0x00000000,                                                             /* nop                          */
+    0x0000ffff};
+
+static const DWORD vs_sincos_3_0[] = {
+    0xfffe0300,                                                             /* vs_3_0                       */
+    0x00000025, 0xb00f0000, 0xa0e40000,                                     /* sincos a0, c0                */
+    0x00000000,                                                             /* nop                          */
+    0x0000ffff};
+
 static void test_disassemble_shader(void)
 {
     static const char disasm_vs[] = "    vs_1_1\n"
@@ -6637,6 +6691,33 @@ static void test_disassemble_shader(void)
                                     "    dp3 r0, c1, c0\n"
                                     "    mul r0, v0, r0\n"
                                     "    mul r0, t0, r0\n";
+    static const char disasm_ps_tex[] =        "    ps_1_3\n"
+                                               "    tex t0\n"
+                                               "    nop\n";
+    static const char disasm_ps_texld_1_4[] =  "    ps_1_4\n"
+                                               "    texld t0, c0\n"
+                                               "    nop\n";
+    static const char disasm_ps_texld_2_0[] =  "    ps_2_0\n"
+                                               "    texld t0, c0, c1\n"
+                                               "    nop\n";
+    static const char disasm_ps_texcoord[] =   "    ps_1_3\n"
+                                               "    texcoord t0\n"
+                                               "    nop\n";
+    static const char disasm_ps_texcrd[] =     "    ps_1_4\n"
+                                               "    texcrd t0, c0\n"
+                                               "    nop\n";
+    static const char disasm_ps_sincos_2_0[] = "    ps_2_0\n"
+                                               "    sincos t0, c0, c1, c2\n"
+                                               "    nop\n";
+    static const char disasm_ps_sincos_3_0[] = "    ps_3_0\n"
+                                               "    sincos t0, c0\n"
+                                               "    nop\n";
+    static const char disasm_vs_sincos_2_0[] = "    vs_2_0\n"
+                                               "    sincos a0, c0, c1, c2\n"
+                                               "    nop\n";
+    static const char disasm_vs_sincos_3_0[] = "    vs_3_0\n"
+                                               "    sincos a0, c0\n"
+                                               "    nop\n";
     ID3DXBuffer *disassembly;
     HRESULT ret;
     char *ptr;
@@ -6666,6 +6747,88 @@ static void test_disassemble_shader(void)
     ok(!memcmp(ptr, disasm_ps, sizeof(disasm_ps) - 1), /* compare beginning */
        "Returned '%s', expected '%s'\n", ptr, disasm_ps);
     ID3DXBuffer_Release(disassembly);
+
+    /* Test tex instruction with pixel shader 1.3 */
+    disassembly = (void *)0xdeadbeef;
+    ret = D3DXDisassembleShader(ps_tex, FALSE, NULL, &disassembly);
+    ok(ret == D3D_OK, "Failed with %#x\n", ret);
+    ptr = ID3DXBuffer_GetBufferPointer(disassembly);
+    ok(!memcmp(ptr, disasm_ps_tex, sizeof(disasm_ps_tex) - 1), /* compare beginning */
+       "Returned '%s', expected '%s'\n", ptr, disasm_ps_tex);
+    ID3DXBuffer_Release(disassembly);
+
+    /* Test texld instruction with pixel shader 1.4 */
+    disassembly = (void *)0xdeadbeef;
+    ret = D3DXDisassembleShader(ps_texld_1_4, FALSE, NULL, &disassembly);
+    ok(ret == D3D_OK, "Failed with %#x\n", ret);
+    ptr = ID3DXBuffer_GetBufferPointer(disassembly);
+    ok(!memcmp(ptr, disasm_ps_texld_1_4, sizeof(disasm_ps_texld_1_4) - 1), /* compare beginning */
+       "Returned '%s', expected '%s'\n", ptr, disasm_ps_texld_1_4);
+    ID3DXBuffer_Release(disassembly);
+
+    /* Test texld instruction with pixel shader 2.0 */
+    disassembly = (void *)0xdeadbeef;
+    ret = D3DXDisassembleShader(ps_texld_2_0, FALSE, NULL, &disassembly);
+    ok(ret == D3D_OK, "Failed with %#x\n", ret);
+    ptr = ID3DXBuffer_GetBufferPointer(disassembly);
+    ok(!memcmp(ptr, disasm_ps_texld_2_0, sizeof(disasm_ps_texld_2_0) - 1), /* compare beginning */
+       "Returned '%s', expected '%s'\n", ptr, disasm_ps_texld_2_0);
+    ID3DXBuffer_Release(disassembly);
+
+    /* Test texcoord instruction with pixel shader 1.3 */
+    disassembly = (void *)0xdeadbeef;
+    ret = D3DXDisassembleShader(ps_texcoord, FALSE, NULL, &disassembly);
+    ok(ret == D3D_OK, "Failed with %#x\n", ret);
+    ptr = ID3DXBuffer_GetBufferPointer(disassembly);
+    ok(!memcmp(ptr, disasm_ps_texcoord, sizeof(disasm_ps_texcoord) - 1), /* compare beginning */
+       "Returned '%s', expected '%s'\n", ptr, disasm_ps_texcoord);
+    ID3DXBuffer_Release(disassembly);
+
+    /* Test texcrd instruction with pixel shader 1.4 */
+    disassembly = (void *)0xdeadbeef;
+    ret = D3DXDisassembleShader(ps_texcrd, FALSE, NULL, &disassembly);
+    ok(ret == D3D_OK, "Failed with %#x\n", ret);
+    ptr = ID3DXBuffer_GetBufferPointer(disassembly);
+    ok(!memcmp(ptr, disasm_ps_texcrd, sizeof(disasm_ps_texcrd) - 1), /* compare beginning */
+       "Returned '%s', expected '%s'\n", ptr, disasm_ps_texcrd);
+    ID3DXBuffer_Release(disassembly);
+
+    /* Test sincos instruction pixel shader 2.0 */
+    disassembly = (void *)0xdeadbeef;
+    ret = D3DXDisassembleShader(ps_sincos_2_0, FALSE, NULL, &disassembly);
+    ok(ret == D3D_OK, "Failed with %#x\n", ret);
+    ptr = ID3DXBuffer_GetBufferPointer(disassembly);
+    ok(!memcmp(ptr, disasm_ps_sincos_2_0, sizeof(disasm_ps_sincos_2_0) - 1), /* compare beginning */
+       "Returned '%s', expected '%s'\n", ptr, disasm_ps_sincos_2_0);
+    ID3DXBuffer_Release(disassembly);
+
+    /* Test sincos instruction with pixel shader 3.0 */
+    disassembly = (void *)0xdeadbeef;
+    ret = D3DXDisassembleShader(ps_sincos_3_0, FALSE, NULL, &disassembly);
+    ok(ret == D3D_OK, "Failed with %#x\n", ret);
+    ptr = ID3DXBuffer_GetBufferPointer(disassembly);
+    ok(!memcmp(ptr, disasm_ps_sincos_3_0, sizeof(disasm_ps_sincos_3_0) - 1), /* compare beginning */
+       "Returned '%s', expected '%s'\n", ptr, disasm_ps_sincos_3_0);
+    ID3DXBuffer_Release(disassembly);
+
+    /* Test sincos instruction with pixel shader 2.0 */
+    disassembly = (void *)0xdeadbeef;
+    ret = D3DXDisassembleShader(vs_sincos_2_0, FALSE, NULL, &disassembly);
+    ok(ret == D3D_OK, "Failed with %#x\n", ret);
+    ptr = ID3DXBuffer_GetBufferPointer(disassembly);
+    ok(!memcmp(ptr, disasm_vs_sincos_2_0, sizeof(disasm_vs_sincos_2_0) - 1), /* compare beginning */
+       "Returned '%s', expected '%s'\n", ptr, disasm_vs_sincos_2_0);
+    ID3DXBuffer_Release(disassembly);
+
+    /* Test sincos instruction with pixel shader 3.0 */
+    disassembly = (void *)0xdeadbeef;
+    ret = D3DXDisassembleShader(vs_sincos_3_0, FALSE, NULL, &disassembly);
+    ok(ret == D3D_OK, "Failed with %#x\n", ret);
+    ptr = ID3DXBuffer_GetBufferPointer(disassembly);
+    ok(!memcmp(ptr, disasm_vs_sincos_3_0, sizeof(disasm_vs_sincos_3_0) - 1), /* compare beginning */
+       "Returned '%s', expected '%s'\n", ptr, disasm_vs_sincos_3_0);
+    ID3DXBuffer_Release(disassembly);
+
 }
 
 START_TEST(shader)
