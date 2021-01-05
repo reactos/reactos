@@ -229,7 +229,7 @@
 @ stdcall D3DXMatrixTranslation(ptr float float float)
 @ stdcall D3DXMatrixTranspose(ptr ptr)
 @ stdcall D3DXOptimizeFaces(ptr long long long ptr)
-@ stub D3DXOptimizeVertices(ptr long long long ptr)
+@ stdcall D3DXOptimizeVertices(ptr long long long ptr)
 @ stdcall D3DXPlaneFromPointNormal(ptr ptr ptr)
 @ stdcall D3DXPlaneFromPoints(ptr ptr ptr ptr)
 @ stdcall D3DXPlaneIntersectLine(ptr ptr ptr ptr)
