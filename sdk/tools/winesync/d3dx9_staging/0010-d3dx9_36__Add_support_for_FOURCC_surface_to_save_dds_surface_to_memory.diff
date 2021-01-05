@@ -1,0 +1,19 @@
+diff --git a/dll/directx/wine/d3dx9_36/surface.c b/dll/directx/wine/d3dx9_36/surface.c
+index ebec81f..8e2f2a2 100644
+--- a/dll/directx/wine/d3dx9_36/surface.c
++++ b/dll/directx/wine/d3dx9_36/surface.c
+@@ -433,6 +433,14 @@ static HRESULT d3dformat_to_dds_pixel_format(struct dds_pixel_format *pixel_form
+         }
+     }
+ 
++    /* Reuse dds_fourcc_to_d3dformat as D3DFORMAT and FOURCC are DWORD with same values */
++    if (dds_fourcc_to_d3dformat(d3dformat) != D3DFMT_UNKNOWN)
++    {
++        pixel_format->flags |= DDS_PF_FOURCC;
++        pixel_format->fourcc = d3dformat;
++        return D3D_OK;
++    }
++
+     WARN("Unknown pixel format %#x\n", d3dformat);
+     return E_NOTIMPL;
+ }
