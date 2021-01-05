@@ -730,7 +730,6 @@ static INT WINAPI ID3DXFontImpl_DrawTextW(ID3DXFont *iface, ID3DXSprite *sprite,
     {
         unsigned int line_len, i;
         GCP_RESULTSW results;
-        D3DXVECTOR3 pos;
 
         string = read_line(font->hdc, string, &count, line, &line_len, width, format, &size);
 
@@ -760,6 +759,7 @@ static INT WINAPI ID3DXFontImpl_DrawTextW(ID3DXFont *iface, ID3DXSprite *sprite,
         for (i = 0; i < results.nGlyphs; ++i)
         {
             IDirect3DTexture9 *texture;
+            D3DXVECTOR3 pos;
             POINT cell_inc;
             RECT black_box;
 
@@ -770,6 +770,7 @@ static INT WINAPI ID3DXFontImpl_DrawTextW(ID3DXFont *iface, ID3DXSprite *sprite,
 
             pos.x = cell_inc.x + x + results.lpCaretPos[i];
             pos.y = cell_inc.y + y;
+            pos.z = 0;
 
             ID3DXSprite_Draw(target, texture, &black_box, NULL, &pos, color);
             IDirect3DTexture9_Release(texture);
