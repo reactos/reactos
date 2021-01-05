@@ -899,62 +899,72 @@ CcFlushCache (
     OUT PIO_STATUS_BLOCK IoStatus)
 {
     PROS_SHARED_CACHE_MAP SharedCacheMap;
-    LARGE_INTEGER Offset;
-    LONGLONG RemainingLength;
-    PROS_VACB current;
+    LONGLONG FlushStart, FlushEnd;
     NTSTATUS Status;
 
     CCTRACE(CC_API_DEBUG, "SectionObjectPointers=%p FileOffset=0x%I64X Length=%lu\n",
         SectionObjectPointers, FileOffset ? FileOffset->QuadPart : 0LL, Length);
 
-    if (SectionObjectPointers && SectionObjectPointers->SharedCacheMap)
+    if (!SectionObjectPointers || !SectionObjectPointers->SharedCacheMap)
     {
-        SharedCacheMap = SectionObjectPointers->SharedCacheMap;
-        ASSERT(SharedCacheMap);
-        if (FileOffset)
-        {
-            Offset = *FileOffset;
-            RemainingLength = Length;
-        }
-        else
-        {
-            Offset.QuadPart = 0;
-            RemainingLength = SharedCacheMap->FileSize.QuadPart;
-        }
+        Status = STATUS_INVALID_PARAMETER;
+        goto quit;
+    }
 
-        if (IoStatus)
-        {
-            IoStatus->Status = STATUS_SUCCESS;
-            IoStatus->Information = 0;
-        }
-
-        while (RemainingLength > 0)
-        {
-            current = CcRosLookupVacb(SharedCacheMap, Offset.QuadPart);
-            if (current != NULL)
-            {
-                if (current->Dirty)
-                {
-                    Status = CcRosFlushVacb(current);
-                    if (!NT_SUCCESS(Status) && IoStatus != NULL)
-                    {
-                        IoStatus->Status = Status;
-                    }
-                }
-
-                CcRosReleaseVacb(SharedCacheMap, current, FALSE, FALSE);
-            }
-
-            Offset.QuadPart += VACB_MAPPING_GRANULARITY;
-            RemainingLength -= min(RemainingLength, VACB_MAPPING_GRANULARITY);
-        }
+    SharedCacheMap = SectionObjectPointers->SharedCacheMap;
+    ASSERT(SharedCacheMap);
+    if (FileOffset)
+    {
+        FlushStart = FileOffset->QuadPart;
+        Status = RtlLongLongAdd(FlushStart, Length, &FlushEnd);
+        if (!NT_SUCCESS(Status))
+            goto quit;
     }
     else
     {
-        if (IoStatus)
+        FlushStart = 0;
+        FlushEnd = SharedCacheMap->FileSize.QuadPart;
+    }
+
+    Status = STATUS_SUCCESS;
+
+    if (IoStatus)
+    {
+        IoStatus->Information = 0;
+    }
+
+    while (FlushStart < FlushEnd)
+    {
+        PROS_VACB vacb = CcRosLookupVacb(SharedCacheMap, FlushStart);
+
+        if (vacb != NULL)
         {
-            IoStatus->Status = STATUS_INVALID_PARAMETER;
+            if (vacb->Dirty)
+            {
+                Status = CcRosFlushVacb(vacb);
+                if (!NT_SUCCESS(Status))
+                {
+                    goto quit;
+                }
+            }
+
+            CcRosReleaseVacb(SharedCacheMap, vacb, FALSE, FALSE);
+
+            if (IoStatus)
+                IoStatus->Information += VACB_MAPPING_GRANULARITY;
         }
+
+        if (!NT_SUCCESS(RtlLongLongAdd(FlushStart, VACB_MAPPING_GRANULARITY, &FlushStart)))
+        {
+            /* We're at the end of file ! */
+            break;
+        }
+    }
+
+quit:
+    if (IoStatus)
+    {
+        IoStatus->Status = Status;
     }
 }
 
@@ -1188,7 +1198,7 @@ CcRosInitializeFileCache (
 
         FileObject->SectionObjectPointer->SharedCacheMap = SharedCacheMap;
 
-        // CcRosTraceCacheMap(SharedCacheMap, TRUE);
+        //CcRosTraceCacheMap(SharedCacheMap, TRUE);
     }
     else if (SharedCacheMap->Flags & SHARED_CACHE_MAP_IN_CREATION)
     {
