@@ -138,8 +138,8 @@ CcRosTraceCacheMap (
             current = CONTAINING_RECORD(current_entry, ROS_VACB, CacheMapVacbListEntry);
             current_entry = current_entry->Flink;
 
-            DPRINT1("  VACB 0x%p enabled, RefCount %lu, Dirty %u, PageOut %lu\n",
-                    current, current->ReferenceCount, current->Dirty, current->PageOut );
+            DPRINT1("  VACB 0x%p enabled, RefCount %lu, Dirty %u, PageOut %lu, BaseAddress %p, FileOffset %I64d\n",
+                    current, current->ReferenceCount, current->Dirty, current->PageOut, current->BaseAddress, current->FileOffset.QuadPart);
         }
 
         KeReleaseSpinLockFromDpcLevel(&SharedCacheMap->CacheMapLock);
@@ -595,12 +595,6 @@ CcRosCreateVacb (
     current->PageOut = FALSE;
     current->FileOffset.QuadPart = ROUND_DOWN(FileOffset, VACB_MAPPING_GRANULARITY);
     current->SharedCacheMap = SharedCacheMap;
-#if DBG
-    if (SharedCacheMap->Trace)
-    {
-        DPRINT1("CacheMap 0x%p: new VACB: 0x%p\n", SharedCacheMap, current);
-    }
-#endif
     current->MappedCount = 0;
     current->ReferenceCount = 0;
     InitializeListHead(&current->CacheMapVacbListEntry);
@@ -632,6 +626,14 @@ Retry:
         ExFreeToNPagedLookasideList(&VacbLookasideList, current);
         return Status;
     }
+
+#if DBG
+    if (SharedCacheMap->Trace)
+    {
+        DPRINT1("CacheMap 0x%p: new VACB: 0x%p, file offset %I64d, BaseAddress %p\n",
+                SharedCacheMap, current, current->FileOffset.QuadPart, current->BaseAddress);
+    }
+#endif
 
     oldIrql = KeAcquireQueuedSpinLock(LockQueueMasterLock);
 
