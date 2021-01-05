@@ -7755,8 +7755,6 @@ static void test_create_effect_from_file(void)
         "        VertexShader = compile vs_2_0 vs_main();\n"
         "    }\n"
         "}\n";
-    static const WCHAR effect1_filename_w[] = {'e','f','f','e','c','t','1','.','f','x',0};
-    static const WCHAR effect2_filename_w[] = {'e','f','f','e','c','t','2','.','f','x',0};
     WCHAR effect_path_w[MAX_PATH], filename_w[MAX_PATH];
     char effect_path[MAX_PATH], filename[MAX_PATH];
     D3DPRESENT_PARAMETERS present_parameters = {0};
@@ -7813,7 +7811,7 @@ static void test_create_effect_from_file(void)
     create_file("include1.h", include1_wrong, sizeof(include1_wrong) - 1, NULL);
 
     lstrcpyW(filename_w, effect_path_w);
-    lstrcatW(filename_w, effect1_filename_w);
+    lstrcatW(filename_w, L"effect1.fx");
     effect = NULL;
     messages = NULL;
     hr = D3DXCreateEffectFromFileExW(device, filename_w, NULL, NULL, NULL,
@@ -7828,7 +7826,7 @@ static void test_create_effect_from_file(void)
         effect->lpVtbl->Release(effect);
 
     lstrcpyW(filename_w, effect_path_w);
-    lstrcatW(filename_w, effect2_filename_w);
+    lstrcatW(filename_w, L"effect2.fx");
     effect = NULL;
     messages = NULL;
     /* This is apparently broken on native, it ends up using the wrong include. */
@@ -7850,7 +7848,7 @@ static void test_create_effect_from_file(void)
     delete_file("include2.h");
     delete_directory("include");
 
-    lstrcpyW(filename_w, effect2_filename_w);
+    lstrcpyW(filename_w, L"effect2.fx");
     effect = NULL;
     messages = NULL;
     include.ID3DXInclude_iface.lpVtbl = &d3dxinclude_vtbl;
