@@ -7434,29 +7434,23 @@ static void test_effect_clone(void)
     ok(hr == D3DERR_INVALIDCALL, "Got result %#x.\n", hr);
 
     hr = effect->lpVtbl->CloneEffect(effect, device, &cloned);
-todo_wine
     ok(hr == D3D_OK, "Got result %#x.\n", hr);
-if (hr == D3D_OK)
-{
-    ok(cloned != effect, "Expected new effect instance.\n");
+
+    todo_wine ok(cloned != effect, "Expected new effect instance.\n");
     cloned->lpVtbl->Release(cloned);
-}
     /* Try with different device. */
     device2 = create_device(&window2);
     hr = effect->lpVtbl->CloneEffect(effect, device2, &cloned);
-todo_wine
     ok(hr == D3D_OK, "Got result %#x.\n", hr);
-if (hr == D3D_OK)
-{
-    ok(cloned != effect, "Expected new effect instance.\n");
+    todo_wine ok(cloned != effect, "Expected new effect instance.\n");
 
     hr = cloned->lpVtbl->GetDevice(cloned, &device3);
     ok(hr == S_OK, "Failed to get effect device.\n");
-    ok(device3 == device2, "Unexpected device instance.\n");
+    todo_wine ok(device3 == device2, "Unexpected device instance, device3 %p, device2 %p.\n", device3, device2);
     IDirect3DDevice9_Release(device3);
 
     cloned->lpVtbl->Release(cloned);
-}
+
     IDirect3DDevice9_Release(device2);
     DestroyWindow(window2);
     effect->lpVtbl->Release(effect);
