@@ -372,6 +372,11 @@ StartSearch:
     div   ecx
     mov   edx, eax
 
+    push  ax
+    mov   si, offset msgLoading
+    call  PutChars
+    pop   ax
+
     xor   ax, ax
     mov   ebx, HEX(80)
     call  FindAttributeHdr
@@ -803,6 +808,8 @@ FreeLdr:
     .word 'F', 'R', 'E', 'E', 'L', 'D', 'R', '.', 'S', 'Y', 'S'
 msgFreeldr:
     .ascii "FreeLdr not found, cannot boot", CR, LF, NUL
+msgLoading:
+    .ascii "Loading FreeLoader...", CR, LF, NUL
 
 .endcode16
 
