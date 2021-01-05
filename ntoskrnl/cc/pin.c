@@ -543,6 +543,7 @@ CcSetDirtyPinnedData (
     IN PLARGE_INTEGER Lsn)
 {
     PINTERNAL_BCB iBcb = CONTAINING_RECORD(Bcb, INTERNAL_BCB, PFCB);
+    PROS_SHARED_CACHE_MAP SharedCacheMap = iBcb->Vacb->SharedCacheMap;
 
     CCTRACE(CC_API_DEBUG, "Bcb=%p Lsn=%p\n", Bcb, Lsn);
 
@@ -555,6 +556,10 @@ CcSetDirtyPinnedData (
     {
         CcRosMarkDirtyVacb(iBcb->Vacb);
     }
+
+    /* Update VDL */
+    if (SharedCacheMap->ValidDataLength.QuadPart < (iBcb->PFCB.MappedFileOffset.QuadPart + iBcb->PFCB.MappedLength))
+        SharedCacheMap->ValidDataLength.QuadPart = iBcb->PFCB.MappedFileOffset.QuadPart + iBcb->PFCB.MappedLength;
 }
 
 

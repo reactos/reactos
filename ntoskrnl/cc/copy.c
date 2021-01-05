@@ -504,6 +504,24 @@ CcCopyRead (
     CurrentOffset = FileOffset->QuadPart;
     while(CurrentOffset < ReadEnd)
     {
+        if (CurrentOffset >= SharedCacheMap->ValidDataLength.QuadPart)
+        {
+            DPRINT1("Zeroing buffer because we are beyond the VDL.\n");
+            /* We are beyond what is valid. Just zero this out */
+            _SEH2_TRY
+            {
+                RtlZeroMemory(Buffer, Length);
+            }
+            _SEH2_EXCEPT(CcpCheckInvalidUserBuffer(_SEH2_GetExceptionInformation(), Buffer, Length))
+            {
+                ExRaiseStatus(STATUS_INVALID_USER_BUFFER);
+            }
+            _SEH2_END;
+
+            ReadLength += Length;
+            break;
+        }
+
         Status = CcRosGetVacb(SharedCacheMap, CurrentOffset, &Vacb);
         if (!NT_SUCCESS(Status))
         {
@@ -598,7 +616,7 @@ CcCopyWrite (
     PROS_SHARED_CACHE_MAP SharedCacheMap = FileObject->SectionObjectPointer->SharedCacheMap;
     NTSTATUS Status;
     LONGLONG CurrentOffset;
-    LONGLONG WriteEnd = FileOffset->QuadPart + Length;
+    LONGLONG WriteEnd;
 
     CCTRACE(CC_API_DEBUG, "FileObject=%p FileOffset=%I64d Length=%lu Wait=%d Buffer=%p\n",
         FileObject, FileOffset->QuadPart, Length, Wait, Buffer);
@@ -610,7 +628,11 @@ CcCopyWrite (
     if (!SharedCacheMap)
         return FALSE;
 
-    ASSERT((FileOffset->QuadPart + Length) <= SharedCacheMap->SectionSize.QuadPart);
+    Status = RtlLongLongAdd(FileOffset->QuadPart, Length, &WriteEnd);
+    if (!NT_SUCCESS(Status))
+        ExRaiseStatus(Status);
+
+    ASSERT(WriteEnd <= SharedCacheMap->SectionSize.QuadPart);
 
     CurrentOffset = FileOffset->QuadPart;
     while(CurrentOffset < WriteEnd)
@@ -661,6 +683,10 @@ CcCopyWrite (
     /* Flush if needed */
     if (FileObject->Flags & FO_WRITE_THROUGH)
         CcFlushCache(FileObject->SectionObjectPointer, FileOffset, Length, NULL);
+
+    /* Update VDL */
+    if (WriteEnd > SharedCacheMap->ValidDataLength.QuadPart)
+        SharedCacheMap->ValidDataLength.QuadPart = WriteEnd;
 
     return TRUE;
 }
@@ -868,6 +894,14 @@ CcZeroData (
 
         IoFreeMdl(Mdl);
 
+        return TRUE;
+    }
+
+    /* See if we should simply truncate the valid data length */
+    if ((StartOffset->QuadPart < SharedCacheMap->ValidDataLength.QuadPart) && (EndOffset->QuadPart > SharedCacheMap->ValidDataLength.QuadPart))
+    {
+        DPRINT1("Truncating VDL.\n");
+        SharedCacheMap->ValidDataLength = *StartOffset;
         return TRUE;
     }
 

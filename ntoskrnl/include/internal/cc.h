@@ -175,6 +175,7 @@ typedef struct _ROS_SHARED_CACHE_MAP
     LARGE_INTEGER FileSize;
     LIST_ENTRY BcbList;
     LARGE_INTEGER SectionSize;
+    LARGE_INTEGER ValidDataLength;
     PFILE_OBJECT FileObject;
     ULONG DirtyPages;
     LIST_ENTRY SharedCacheMapLinks;
