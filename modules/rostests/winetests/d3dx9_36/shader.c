@@ -6623,6 +6623,51 @@ static void test_fragment_linker(void)
     DestroyWindow(window);
 }
 
+static void test_disassemble_shader(void)
+{
+    static const char disasm_vs[] = "    vs_1_1\n"
+                                    "    dcl_position v0\n"
+                                    "    dp4 oPos.x, v0, c0\n"
+                                    "    dp4 oPos.y, v0, c1\n"
+                                    "    dp4 oPos.z, v0, c2\n"
+                                    "    dp4 oPos.w, v0, c3\n";
+    static const char disasm_ps[] = "    ps_1_1\n"
+                                    "    def c1, 1, 0, 0, 0\n"
+                                    "    tex t0\n"
+                                    "    dp3 r0, c1, c0\n"
+                                    "    mul r0, v0, r0\n"
+                                    "    mul r0, t0, r0\n";
+    ID3DXBuffer *disassembly;
+    HRESULT ret;
+    char *ptr;
+
+    /* Check wrong parameters */
+    ret = D3DXDisassembleShader(NULL, FALSE, NULL, NULL);
+    ok(ret == D3DERR_INVALIDCALL, "Returned %#x, expected %#x\n", ret, D3DERR_INVALIDCALL);
+    ret = D3DXDisassembleShader(NULL, FALSE, NULL, &disassembly);
+    ok(ret == D3DERR_INVALIDCALL, "Returned %#x, expected %#x\n", ret, D3DERR_INVALIDCALL);
+    ret = D3DXDisassembleShader(simple_vs, FALSE, NULL, NULL);
+    ok(ret == D3DERR_INVALIDCALL, "Returned %#x, expected %#x\n", ret, D3DERR_INVALIDCALL);
+
+    /* Test with vertex shader */
+    disassembly = (void *)0xdeadbeef;
+    ret = D3DXDisassembleShader(simple_vs, FALSE, NULL, &disassembly);
+    ok(ret == D3D_OK, "Failed with %#x\n", ret);
+    ptr = ID3DXBuffer_GetBufferPointer(disassembly);
+    ok(!memcmp(ptr, disasm_vs, sizeof(disasm_vs) - 1), /* compare beginning */
+       "Returned '%s', expected '%s'\n", ptr, disasm_vs);
+    ID3DXBuffer_Release(disassembly);
+
+    /* Test with pixel shader */
+    disassembly = (void *)0xdeadbeef;
+    ret = D3DXDisassembleShader(simple_ps, FALSE, NULL, &disassembly);
+    ok(ret == D3D_OK, "Failed with %#x\n", ret);
+    ptr = ID3DXBuffer_GetBufferPointer(disassembly);
+    ok(!memcmp(ptr, disasm_ps, sizeof(disasm_ps) - 1), /* compare beginning */
+       "Returned '%s', expected '%s'\n", ptr, disasm_ps);
+    ID3DXBuffer_Release(disassembly);
+}
+
 START_TEST(shader)
 {
     test_get_shader_size();
@@ -6638,4 +6683,5 @@ START_TEST(shader)
     test_registerset_defaults();
     test_shader_semantics();
     test_fragment_linker();
+    test_disassemble_shader();
 }
