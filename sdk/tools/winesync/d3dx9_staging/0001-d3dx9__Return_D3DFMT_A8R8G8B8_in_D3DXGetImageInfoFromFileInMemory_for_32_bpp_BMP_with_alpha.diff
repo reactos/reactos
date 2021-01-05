@@ -1,0 +1,42 @@
+diff --git a/dll/directx/wine/d3dx9_36/surface.c b/dll/directx/wine/d3dx9_36/surface.c
+index 045d726..ebec81f 100644
+--- a/dll/directx/wine/d3dx9_36/surface.c
++++ b/dll/directx/wine/d3dx9_36/surface.c
+@@ -1006,6 +1006,24 @@ HRESULT WINAPI D3DXGetImageInfoFromFileInMemory(const void *data, UINT datasize,
+                 }
+             }
+ 
++            /* For 32 bpp BMP, windowscodecs.dll never returns a format with alpha while
++             * d3dx9_xx.dll returns one if at least 1 pixel has a non zero alpha component */
++            if (SUCCEEDED(hr) && (info->Format == D3DFMT_X8R8G8B8) && (info->ImageFileFormat == D3DXIFF_BMP)) {
++                DWORD size = sizeof(DWORD) * info->Width * info->Height;
++                BYTE *buffer = HeapAlloc(GetProcessHeap(), 0, size);
++                hr = IWICBitmapFrameDecode_CopyPixels(frame, NULL, sizeof(DWORD) * info->Width, size, buffer);
++                if (SUCCEEDED(hr)) {
++                    DWORD i;
++                    for (i = 0; i < info->Width * info->Height; i++) {
++                        if (buffer[i*4+3]) {
++                            info->Format = D3DFMT_A8R8G8B8;
++                            break;
++                        }
++                    }
++                }
++                HeapFree(GetProcessHeap(), 0, buffer);
++            }
++
+             if (frame)
+                  IWICBitmapFrameDecode_Release(frame);
+ 
+diff --git a/modules/rostests/winetests/d3dx9_36/surface.c b/modules/rostests/winetests/d3dx9_36/surface.c
+index 4590a75..1d32b68 100644
+--- a/modules/rostests/winetests/d3dx9_36/surface.c
++++ b/modules/rostests/winetests/d3dx9_36/surface.c
+@@ -698,7 +698,7 @@ static void test_D3DXGetImageInfo(void)
+     ok(info.Format == D3DFMT_X8R8G8B8, "Got unexpected format %u.\n", info.Format);
+     hr = D3DXGetImageInfoFromFileInMemory(bmp_32bpp_argb, sizeof(bmp_32bpp_argb), &info);
+     ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
+-    todo_wine ok(info.Format == D3DFMT_A8R8G8B8, "Got unexpected format %u.\n", info.Format);
++    ok(info.Format == D3DFMT_A8R8G8B8, "Got unexpected format %u.\n", info.Format);
+ 
+     /* Grayscale PNG */
+     hr = D3DXGetImageInfoFromFileInMemory(png_grayscale, sizeof(png_grayscale), &info);

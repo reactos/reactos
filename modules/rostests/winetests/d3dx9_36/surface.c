@@ -698,7 +698,7 @@ static void test_D3DXGetImageInfo(void)
     ok(info.Format == D3DFMT_X8R8G8B8, "Got unexpected format %u.\n", info.Format);
     hr = D3DXGetImageInfoFromFileInMemory(bmp_32bpp_argb, sizeof(bmp_32bpp_argb), &info);
     ok(hr == D3D_OK, "Got unexpected hr %#x.\n", hr);
-    todo_wine ok(info.Format == D3DFMT_A8R8G8B8, "Got unexpected format %u.\n", info.Format);
+    ok(info.Format == D3DFMT_A8R8G8B8, "Got unexpected format %u.\n", info.Format);
 
     /* Grayscale PNG */
     hr = D3DXGetImageInfoFromFileInMemory(png_grayscale, sizeof(png_grayscale), &info);
