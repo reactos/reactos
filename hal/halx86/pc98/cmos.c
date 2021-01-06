@@ -12,10 +12,6 @@
 #define NDEBUG
 #include <debug.h>
 
-#if defined(ALLOC_PRAGMA) && !defined(_MINIHAL_)
-#pragma alloc_text(INIT, HalpInitializeCmos)
-#endif
-
 /* GLOBALS *******************************************************************/
 
 /*
@@ -165,7 +161,7 @@ HalpSetCmosData(
     return 0;
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 HalpInitializeCmos(VOID)

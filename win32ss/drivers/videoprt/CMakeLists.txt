@@ -3,6 +3,11 @@ include_directories(${REACTOS_SOURCE_DIR}/ntoskrnl/include)
 add_definitions(-D_VIDEOPORT_)
 spec2def(videoprt.sys videoprt.spec ADD_IMPORTLIB)
 
+# Embed RTC libs
+if (STACK_PROTECTOR)
+    target_sources(libvideoprt PRIVATE $<TARGET_OBJECTS:gcc_ssp_videoprt>)
+endif()
+
 list(APPEND SOURCE
     agp.c
     child.c

@@ -664,7 +664,7 @@ ExecuteAsync(PARSED_COMMAND *Cmd)
 
     /* Build the parameter string to pass to cmd.exe */
     ParamsEnd = _stpcpy(CmdParams, _T("/S/D/C\""));
-    ParamsEnd = Unparse(Cmd, ParamsEnd, &CmdParams[CMDLINE_LENGTH - 2]);
+    ParamsEnd = UnparseCommand(Cmd, ParamsEnd, &CmdParams[CMDLINE_LENGTH - 2]);
     if (!ParamsEnd)
     {
         error_out_of_memory();
@@ -785,12 +785,13 @@ ExecuteCommand(
     LPTSTR First, Rest;
     INT Ret = 0;
 
+    /* If we don't have any command, or if this is REM, ignore it */
+    if (!Cmd || (Cmd->Type == C_REM))
+        return 0;
     /*
      * Do not execute any command if we are about to exit CMD, or about to
      * change batch execution context, e.g. in case of a CALL / GOTO / EXIT.
      */
-    if (!Cmd)
-        return 0;
     if (bExit || SeenGoto())
         return 0;
 
@@ -812,6 +813,8 @@ ExecuteCommand(
             }
             cmd_free(First);
         }
+        /* Fall through */
+    case C_REM:
         break;
 
     case C_QUIET:
@@ -842,12 +845,12 @@ ExecuteCommand(
         Ret = ExecutePipeline(Cmd);
         break;
 
-    case C_IF:
-        Ret = ExecuteIf(Cmd);
-        break;
-
     case C_FOR:
         Ret = ExecuteFor(Cmd);
+        break;
+
+    case C_IF:
+        Ret = ExecuteIf(Cmd);
         break;
     }
 
@@ -964,8 +967,10 @@ GetEnvVarOrSpecial(LPCTSTR varName)
 }
 
 /* Handle the %~var syntax */
-static LPTSTR
-GetEnhancedVar(TCHAR **pFormat, LPTSTR (*GetVar)(TCHAR, BOOL *))
+static PCTSTR
+GetEnhancedVar(
+    IN OUT PCTSTR* pFormat,
+    IN BOOL (*GetVar)(TCHAR, PCTSTR*, BOOL*))
 {
     static const TCHAR ModifierTable[] = _T("dpnxfsatz");
     enum {
@@ -980,28 +985,68 @@ GetEnhancedVar(TCHAR **pFormat, LPTSTR (*GetVar)(TCHAR, BOOL *))
         M_SIZE  = 256, /* Z: file size */
     } Modifiers = 0;
 
-    TCHAR *Format, *FormatEnd;
-    TCHAR *PathVarName = NULL;
-    LPTSTR Variable;
-    TCHAR *VarEnd;
+    PCTSTR Format, FormatEnd;
+    PCTSTR PathVarName = NULL;
+    PCTSTR Variable;
+    PCTSTR VarEnd;
     BOOL VariableIsParam0;
     TCHAR FullPath[MAX_PATH];
-    TCHAR FixedPath[MAX_PATH], *Filename, *Extension;
+    TCHAR FixedPath[MAX_PATH];
+    PTCHAR Filename, Extension;
     HANDLE hFind;
     WIN32_FIND_DATA w32fd;
-    TCHAR *In, *Out;
+    PTCHAR In, Out;
 
     static TCHAR Result[CMDLINE_LENGTH];
 
-    /* There is ambiguity between modifier characters and FOR variables;
-     * the rule that cmd uses is to pick the longest possible match.
-     * For example, if there is a %n variable, then out of %~anxnd,
-     * %~anxn will be substituted rather than just %~an. */
+     /* Check whether the current character is a recognized variable.
+      * If it is not, then restore the previous one: there is indeed
+      * ambiguity between modifier characters and FOR variables;
+      * the rule that CMD uses is to pick the longest possible match.
+      * This case can happen if we have a FOR-variable specification
+      * of the following form:
+      *
+      *   %~<modifiers><actual FOR variable character><other characters>
+      *
+      * where the FOR variable character is also a similar to a modifier,
+      * but should not be interpreted as is, and the following other
+      * characters are not part of the possible modifier characters, and
+      * are unrelated to the FOR variable (they can be part of a command).
+      * For example, if there is a %n variable, then out of %~anxnd,
+      * %~anxn will be substituted rather than just %~an.
+      *
+      * In the following examples, all characters 'd','p','n','x' are valid modifiers.
+      *
+      * 1. In this example, the FOR variable character is 'x' and the actual
+      *    modifiers are 'dpn'. Parsing will first determine that 'dpnx'
+      *    are modifiers, with the possible (last) valid variable being 'x',
+      *    and will stop at the letter 'g'. Since 'g' is not a valid
+      *    variable, then the actual variable is the lattest one 'x',
+      *    and the modifiers are then actually 'dpn'.
+      *    The FOR-loop will then display the %x variable formatted with 'dpn'
+      *    and will append any other characters following, 'g'.
+      *
+      *  C:\Temp>for %x in (foo.exe bar.txt) do @echo %~dpnxg
+      *  C:\Temp\foog
+      *  C:\Temp\barg
+      *
+      *
+      * 2. In this second example, the FOR variable character is 'g' and
+      *    the actual modifiers are 'dpnx'. Parsing will determine also that
+      *    the possible (last) valid variable could be 'x', but since it's
+      *    not present in the FOR-variables list, it won't be the case.
+      *    This means that the actual FOR variable character must follow,
+      *    in this case, 'g'.
+      *
+      *  C:\Temp>for %g in (foo.exe bar.txt) do @echo %~dpnxg
+      *  C:\Temp\foo.exe
+      *  C:\Temp\bar.txt
+      */
 
     /* First, go through as many modifier characters as possible */
     FormatEnd = Format = *pFormat;
     while (*FormatEnd && _tcschr(ModifierTable, _totlower(*FormatEnd)))
-        FormatEnd++;
+        ++FormatEnd;
 
     if (*FormatEnd == _T('$'))
     {
@@ -1012,48 +1057,52 @@ GetEnhancedVar(TCHAR **pFormat, LPTSTR (*GetVar)(TCHAR, BOOL *))
             return NULL;
 
         /* Must be immediately followed by the variable */
-        Variable = GetVar(*++FormatEnd, &VariableIsParam0);
-        if (!Variable)
+        if (!GetVar(*++FormatEnd, &Variable, &VariableIsParam0))
             return NULL;
     }
     else
     {
         /* Backtrack if necessary to get a variable name match */
-        while (!(Variable = GetVar(*FormatEnd, &VariableIsParam0)))
+        while (!GetVar(*FormatEnd, &Variable, &VariableIsParam0))
         {
             if (FormatEnd == Format)
                 return NULL;
-            FormatEnd--;
+            --FormatEnd;
         }
     }
 
-    for (; Format < FormatEnd && *Format != _T('$'); Format++)
-        Modifiers |= 1 << (_tcschr(ModifierTable, _totlower(*Format)) - ModifierTable);
-
     *pFormat = FormatEnd + 1;
+
+    /* If the variable is empty, return an empty string */
+    if (!Variable || !*Variable)
+        return _T("");
 
     /* Exclude the leading and trailing quotes */
     VarEnd = &Variable[_tcslen(Variable)];
     if (*Variable == _T('"'))
     {
-        Variable++;
+        ++Variable;
         if (VarEnd > Variable && VarEnd[-1] == _T('"'))
-            VarEnd--;
+            --VarEnd;
     }
 
-    if ((char *)VarEnd - (char *)Variable >= sizeof Result)
+    if ((ULONG_PTR)VarEnd - (ULONG_PTR)Variable >= sizeof(Result))
         return _T("");
-    memcpy(Result, Variable, (char *)VarEnd - (char *)Variable);
+    memcpy(Result, Variable, (ULONG_PTR)VarEnd - (ULONG_PTR)Variable);
     Result[VarEnd - Variable] = _T('\0');
+
+    /* Now determine the actual modifiers */
+    for (; Format < FormatEnd && *Format != _T('$'); ++Format)
+        Modifiers |= 1 << (_tcschr(ModifierTable, _totlower(*Format)) - ModifierTable);
 
     if (PathVarName)
     {
         /* $PATH: syntax - search the directories listed in the
          * specified environment variable for the file */
-        LPTSTR PathVar;
-        FormatEnd[-1] = _T('\0');
+        PTSTR PathVar;
+        ((PTSTR)FormatEnd)[-1] = _T('\0'); // FIXME: HACK!
         PathVar = GetEnvVar(PathVarName);
-        FormatEnd[-1] = _T(':');
+        ((PTSTR)FormatEnd)[-1] = _T(':');
         if (!PathVar ||
             !SearchPath(PathVar, Result, NULL, ARRAYSIZE(FullPath), FullPath, NULL))
         {
@@ -1070,6 +1119,7 @@ GetEnhancedVar(TCHAR **pFormat, LPTSTR (*GetVar)(TCHAR, BOOL *))
         /* Special case: If the variable is %0 and modifier characters are present,
          * use the batch file's path (which includes the .bat/.cmd extension)
          * rather than the actual %0 variable (which might not). */
+        ASSERT(bc);
         _tcscpy(FullPath, bc->BatchFilePath);
     }
     else
@@ -1103,7 +1153,7 @@ GetEnhancedVar(TCHAR **pFormat, LPTSTR (*GetVar)(TCHAR, BOOL *))
         /* If it doesn't exist, just leave the name as it was given */
         if (hFind != INVALID_HANDLE_VALUE)
         {
-            LPTSTR FixedComponent = w32fd.cFileName;
+            PTSTR FixedComponent = w32fd.cFileName;
             if (*w32fd.cAlternateFileName &&
                 ((Modifiers & M_SHORT) || !_tcsicmp(In, w32fd.cAlternateFileName)))
             {
@@ -1143,6 +1193,10 @@ GetEnhancedVar(TCHAR **pFormat, LPTSTR (*GetVar)(TCHAR, BOOL *))
                 { _T('o'), FILE_ATTRIBUTE_OFFLINE },
                 { _T('t'), FILE_ATTRIBUTE_TEMPORARY },
                 { _T('l'), FILE_ATTRIBUTE_REPARSE_POINT },
+#if (NTDDI_VERSION >= NTDDI_WIN8)
+                { _T('v'), FILE_ATTRIBUTE_INTEGRITY_STREAM },
+                { _T('x'), FILE_ATTRIBUTE_NO_SCRUB_DATA /* 0x20000 */ },
+#endif
             };
             for (Attrib = Table; Attrib != &Table[ARRAYSIZE(Table)]; Attrib++)
             {
@@ -1190,7 +1244,7 @@ GetEnhancedVar(TCHAR **pFormat, LPTSTR (*GetVar)(TCHAR, BOOL *))
     }
     if (Modifiers & (M_PATH | M_FULL))
     {
-        memcpy(Out, &FixedPath[2], (char *)Filename - (char *)&FixedPath[2]);
+        memcpy(Out, &FixedPath[2], (ULONG_PTR)Filename - (ULONG_PTR)&FixedPath[2]);
         Out += Filename - &FixedPath[2];
     }
     if (Modifiers & (M_NAME | M_FULL))
@@ -1213,18 +1267,20 @@ GetEnhancedVar(TCHAR **pFormat, LPTSTR (*GetVar)(TCHAR, BOOL *))
     return Result;
 }
 
-static LPCTSTR
-GetBatchVar(TCHAR *varName, UINT *varNameLen)
+static PCTSTR
+GetBatchVar(
+    IN PCTSTR varName,
+    OUT PUINT varNameLen)
 {
-    LPCTSTR ret;
-    TCHAR *varNameEnd;
-    BOOL dummy;
+    PCTSTR ret;
+    PCTSTR varNameEnd;
 
     *varNameLen = 1;
 
-    switch ( *varName )
+    switch (*varName)
     {
     case _T('~'):
+    {
         varNameEnd = varName + 1;
         ret = GetEnhancedVar(&varNameEnd, FindArg);
         if (!ret)
@@ -1234,6 +1290,7 @@ GetBatchVar(TCHAR *varName, UINT *varNameLen)
         }
         *varNameLen = varNameEnd - varName;
         return ret;
+    }
 
     case _T('0'):
     case _T('1'):
@@ -1245,7 +1302,13 @@ GetBatchVar(TCHAR *varName, UINT *varNameLen)
     case _T('7'):
     case _T('8'):
     case _T('9'):
-        return FindArg(*varName, &dummy);
+    {
+        BOOL dummy;
+        if (!FindArg(*varName, &ret, &dummy))
+            return NULL;
+        else
+            return ret;
+    }
 
     case _T('*'):
         /* Copy over the raw params (not including the batch file name) */
@@ -1258,198 +1321,300 @@ GetBatchVar(TCHAR *varName, UINT *varNameLen)
 }
 
 BOOL
-SubstituteVars(TCHAR *Src, TCHAR *Dest, TCHAR Delim)
+SubstituteVar(
+    IN PCTSTR Src,
+    OUT size_t* SrcIncLen, // VarNameLen
+    OUT PTCHAR Dest,
+    IN PTCHAR DestEnd,
+    OUT size_t* DestIncLen,
+    IN TCHAR Delim)
 {
-#define APPEND(From, Length) { \
+#define APPEND(From, Length) \
+do { \
     if (Dest + (Length) > DestEnd) \
         goto too_long; \
-    memcpy(Dest, From, (Length) * sizeof(TCHAR)); \
-    Dest += Length; }
-#define APPEND1(Char) { \
+    memcpy(Dest, (From), (Length) * sizeof(TCHAR)); \
+    Dest += (Length); \
+} while (0)
+
+#define APPEND1(Char) \
+do { \
     if (Dest >= DestEnd) \
         goto too_long; \
-    *Dest++ = Char; }
+    *Dest++ = (Char); \
+} while (0)
 
-    TCHAR *DestEnd = Dest + CMDLINE_LENGTH - 1;
-    const TCHAR *Var;
-    int VarLength;
-    TCHAR *SubstStart;
+    PCTSTR Var;
+    PCTSTR Start, End, SubstStart;
     TCHAR EndChr;
-    while (*Src)
+    size_t VarLength;
+
+    Start = Src;
+    End = Dest;
+    *SrcIncLen = 0;
+    *DestIncLen = 0;
+
+    if (!Delim)
+        return FALSE;
+    if (*Src != Delim)
+        return FALSE;
+
+    ++Src;
+
+    /* If we are already at the end of the string, fail the substitution */
+    SubstStart = Src;
+    if (!*Src || *Src == _T('\r') || *Src == _T('\n'))
+        goto bad_subst;
+
+    if (bc && Delim == _T('%'))
     {
-        if (*Src != Delim)
+        UINT NameLen;
+        Var = GetBatchVar(Src, &NameLen);
+        if (!Var && bParseError)
         {
-            APPEND1(*Src++)
-            continue;
+            /* Return the partially-parsed command to be
+             * echoed for error diagnostics purposes. */
+            APPEND1(Delim);
+            APPEND(Src, _tcslen(Src) + 1);
+            return FALSE;
         }
-
-        Src++;
-        if (bc && Delim == _T('%'))
+        if (Var != NULL)
         {
-            UINT NameLen;
-            Var = GetBatchVar(Src, &NameLen);
-            if (!Var && bParseError)
-            {
-                /* Return the partially-parsed command to be
-                 * echoed for error diagnostics purposes. */
-                APPEND1(Delim);
-                APPEND(Src, DestEnd-Dest);
-                return FALSE;
-            }
-            if (Var != NULL)
-            {
-                VarLength = _tcslen(Var);
-                APPEND(Var, VarLength)
-                Src += NameLen;
-                continue;
-            }
+            VarLength = _tcslen(Var);
+            APPEND(Var, VarLength);
+            Src += NameLen;
+            goto success;
         }
+    }
 
-        /* Find the end of the variable name. A colon (:) will usually
-         * end the name and begin the optional modifier, but not if it
-         * is immediately followed by the delimiter (%VAR:%). */
-        SubstStart = Src;
-        while (*Src != Delim && !(*Src == _T(':') && Src[1] != Delim))
+    /* Find the end of the variable name. A colon (:) will usually
+     * end the name and begin the optional modifier, but not if it
+     * is immediately followed by the delimiter (%VAR:%). */
+    SubstStart = Src;
+    while (*Src && *Src != Delim && !(*Src == _T(':') && Src[1] != Delim))
+    {
+        ++Src;
+    }
+    /* If we are either at the end of the string, or the delimiter
+     * has been repeated more than once, fail the substitution. */
+    if (!*Src || Src == SubstStart)
+        goto bad_subst;
+
+    EndChr = *Src;
+    *(PTSTR)Src = _T('\0'); // FIXME: HACK!
+    Var = GetEnvVarOrSpecial(SubstStart);
+    *(PTSTR)Src++ = EndChr;
+    if (Var == NULL)
+    {
+        /* In a batch context, %NONEXISTENT% "expands" to an
+         * empty string, otherwise fail the substitution. */
+        if (bc)
+            goto success;
+        goto bad_subst;
+    }
+    VarLength = _tcslen(Var);
+
+    if (EndChr == Delim)
+    {
+        /* %VAR% - use as-is */
+        APPEND(Var, VarLength);
+    }
+    else if (*Src == _T('~'))
+    {
+        /* %VAR:~[start][,length]% - Substring.
+         * Negative values are offsets from the end.
+         */
+        SSIZE_T Start = _tcstol(Src + 1, (PTSTR*)&Src, 0);
+        SSIZE_T End = (SSIZE_T)VarLength;
+        if (Start < 0)
+            Start += VarLength;
+        Start = min(max(Start, 0), VarLength);
+        if (*Src == _T(','))
         {
-            if (!*Src)
-                goto bad_subst;
+            End = _tcstol(Src + 1, (PTSTR*)&Src, 0);
+            End += (End < 0) ? VarLength : Start;
+            End = min(max(End, Start), VarLength);
+        }
+        if (*Src++ != Delim)
+            goto bad_subst;
+        APPEND(&Var[Start], End - Start);
+    }
+    else
+    {
+        /* %VAR:old=new%  - Replace all occurrences of old with new.
+         * %VAR:*old=new% - Replace first occurrence only,
+         *                  and remove everything before it.
+         */
+        PCTSTR Old, New;
+        size_t OldLength, NewLength;
+        BOOL Star = FALSE;
+        size_t LastMatch = 0, i = 0;
+
+        if (*Src == _T('*'))
+        {
+            Star = TRUE;
             Src++;
         }
 
-        EndChr = *Src;
-        *Src = _T('\0');
-        Var = GetEnvVarOrSpecial(SubstStart);
-        *Src++ = EndChr;
-        if (Var == NULL)
-        {
-            /* In a batch file, %NONEXISTENT% "expands" to an empty string */
-            if (bc)
-                continue;
+        /* The string to replace may contain the delimiter */
+        Src = _tcschr(Old = Src, _T('='));
+        if (Src == NULL)
             goto bad_subst;
-        }
-        VarLength = _tcslen(Var);
+        OldLength = Src++ - Old;
+        if (OldLength == 0)
+            goto bad_subst;
 
-        if (EndChr == Delim)
+        Src = _tcschr(New = Src, Delim);
+        if (Src == NULL)
+            goto bad_subst;
+        NewLength = Src++ - New;
+
+        while (i < VarLength)
         {
-            /* %VAR% - use as-is */
-            APPEND(Var, VarLength)
-        }
-        else if (*Src == _T('~'))
-        {
-            /* %VAR:~[start][,length]% - substring
-             * Negative values are offsets from the end */
-            int Start = _tcstol(Src + 1, &Src, 0);
-            int End = VarLength;
-            if (Start < 0)
-                Start += VarLength;
-            Start = max(Start, 0);
-            Start = min(Start, VarLength);
-            if (*Src == _T(','))
+            if (_tcsnicmp(&Var[i], Old, OldLength) == 0)
             {
-                End = _tcstol(Src + 1, &Src, 0);
-                End += (End < 0) ? VarLength : Start;
-                End = max(End, Start);
-                End = min(End, VarLength);
+                if (!Star)
+                    APPEND(&Var[LastMatch], i - LastMatch);
+                APPEND(New, NewLength);
+                i += OldLength;
+                LastMatch = i;
+                if (Star)
+                    break;
+                continue;
             }
-            if (*Src++ != Delim)
-                goto bad_subst;
-            APPEND(&Var[Start], End - Start);
+            i++;
         }
-        else
-        {
-            /* %VAR:old=new% - replace all occurrences of old with new
-             * %VAR:*old=new% - replace first occurrence only,
-             *                  and remove everything before it */
-            TCHAR *Old, *New;
-            DWORD OldLength, NewLength;
-            BOOL Star = FALSE;
-            int LastMatch = 0, i = 0;
-
-            if (*Src == _T('*'))
-            {
-                Star = TRUE;
-                Src++;
-            }
-
-            /* the string to replace may contain the delimiter */
-            Src = _tcschr(Old = Src, _T('='));
-            if (Src == NULL)
-                goto bad_subst;
-            OldLength = Src++ - Old;
-            if (OldLength == 0)
-                goto bad_subst;
-
-            Src = _tcschr(New = Src, Delim);
-            if (Src == NULL)
-                goto bad_subst;
-            NewLength = Src++ - New;
-
-            while (i < VarLength)
-            {
-                if (_tcsnicmp(&Var[i], Old, OldLength) == 0)
-                {
-                    if (!Star)
-                        APPEND(&Var[LastMatch], i - LastMatch)
-                    APPEND(New, NewLength)
-                    i += OldLength;
-                    LastMatch = i;
-                    if (Star)
-                        break;
-                    continue;
-                }
-                i++;
-            }
-            APPEND(&Var[LastMatch], VarLength - LastMatch)
-        }
-        continue;
-
-    bad_subst:
-        Src = SubstStart;
-        if (!bc)
-            APPEND1(Delim)
+        APPEND(&Var[LastMatch], VarLength - LastMatch);
     }
-    *Dest = _T('\0');
+
+success:
+    *SrcIncLen = (Src - Start);
+    *DestIncLen = (Dest - End);
     return TRUE;
+
+bad_subst:
+    Src = SubstStart;
+    /* Only if no batch context active do we echo the delimiter */
+    if (!bc)
+        APPEND1(Delim);
+    goto success;
+
 too_long:
     ConOutResPrintf(STRING_ALIAS_ERROR);
     nErrorLevel = 9023;
     return FALSE;
+
+#undef APPEND
+#undef APPEND1
+}
+
+BOOL
+SubstituteVars(
+    IN PCTSTR Src,
+    OUT PTSTR Dest,
+    IN TCHAR Delim)
+{
+#define APPEND(From, Length) \
+do { \
+    if (Dest + (Length) > DestEnd) \
+        goto too_long; \
+    memcpy(Dest, (From), (Length) * sizeof(TCHAR)); \
+    Dest += (Length); \
+} while (0)
+
+#define APPEND1(Char) \
+do { \
+    if (Dest >= DestEnd) \
+        goto too_long; \
+    *Dest++ = (Char); \
+} while (0)
+
+    PTCHAR DestEnd = Dest + CMDLINE_LENGTH - 1;
+    PCTSTR End;
+    size_t SrcIncLen, DestIncLen;
+
+    while (*Src /* && (Dest < DestEnd) */)
+    {
+        if (*Src != Delim)
+        {
+            End = _tcschr(Src, Delim);
+            if (End == NULL)
+                End = Src + _tcslen(Src);
+            APPEND(Src, End - Src);
+            Src = End;
+            continue;
+        }
+
+        if (!SubstituteVar(Src, &SrcIncLen, Dest, DestEnd, &DestIncLen, Delim))
+        {
+            return FALSE;
+        }
+        else
+        {
+            Src += SrcIncLen;
+            Dest += DestIncLen;
+        }
+    }
+    APPEND1(_T('\0'));
+    return TRUE;
+
+too_long:
+    ConOutResPrintf(STRING_ALIAS_ERROR);
+    nErrorLevel = 9023;
+    return FALSE;
+
 #undef APPEND
 #undef APPEND1
 }
 
 /* Search the list of FOR contexts for a variable */
-static LPTSTR
-FindForVar(TCHAR Var, BOOL *IsParam0)
+static BOOL
+FindForVar(
+    IN TCHAR Var,
+    OUT PCTSTR* VarPtr,
+    OUT BOOL* IsParam0)
 {
     PFOR_CONTEXT Ctx;
 
+    *VarPtr = NULL;
     *IsParam0 = FALSE;
+
     for (Ctx = fc; Ctx != NULL; Ctx = Ctx->prev)
     {
         if ((UINT)(Var - Ctx->firstvar) < Ctx->varcount)
-            return Ctx->values[Var - Ctx->firstvar];
+        {
+            *VarPtr = Ctx->values[Var - Ctx->firstvar];
+            return TRUE;
+        }
     }
-    return NULL;
+    return FALSE;
 }
 
 BOOL
-SubstituteForVars(TCHAR *Src, TCHAR *Dest)
+SubstituteForVars(
+    IN PCTSTR Src,
+    OUT PTSTR Dest)
 {
-    TCHAR *DestEnd = &Dest[CMDLINE_LENGTH - 1];
+    PTCHAR DestEnd = &Dest[CMDLINE_LENGTH - 1];
     while (*Src)
     {
         if (Src[0] == _T('%'))
         {
             BOOL Dummy;
-            LPTSTR End = &Src[2];
-            LPTSTR Value = NULL;
+            PCTSTR End = &Src[2];
+            PCTSTR Value = NULL;
 
             if (Src[1] == _T('~'))
                 Value = GetEnhancedVar(&End, FindForVar);
 
-            if (!Value)
-                Value = FindForVar(Src[1], &Dummy);
+            if (!Value && Src[1])
+            {
+                if (FindForVar(Src[1], &Value, &Dummy) && !Value)
+                {
+                    /* The variable is empty, return an empty string */
+                    Value = _T("");
+                }
+            }
 
             if (Value)
             {
@@ -1469,11 +1634,15 @@ SubstituteForVars(TCHAR *Src, TCHAR *Dest)
     return TRUE;
 }
 
-LPTSTR
-DoDelayedExpansion(LPTSTR Line)
+PTSTR
+DoDelayedExpansion(
+    IN PCTSTR Line)
 {
     TCHAR Buf1[CMDLINE_LENGTH];
     TCHAR Buf2[CMDLINE_LENGTH];
+    PTCHAR Src, Dst;
+    PTCHAR DestEnd = Buf2 + CMDLINE_LENGTH - 1;
+    size_t SrcIncLen, DestIncLen;
 
     /* First, substitute FOR variables */
     if (!SubstituteForVars(Line, Buf1))
@@ -1482,12 +1651,64 @@ DoDelayedExpansion(LPTSTR Line)
     if (!bDelayedExpansion || !_tcschr(Buf1, _T('!')))
         return cmd_dup(Buf1);
 
-    /* FIXME: Delayed substitutions actually aren't quite the same as
-     * immediate substitutions. In particular, it's possible to escape
-     * the exclamation point using ^. */
-    if (!SubstituteVars(Buf1, Buf2, _T('!')))
-        return NULL;
+    /*
+     * Delayed substitutions are not actually completely the same as
+     * immediate substitutions. In particular, it is possible to escape
+     * the exclamation point using the escape caret.
+     */
+
+    /*
+     * Perform delayed expansion: expand variables around '!',
+     * and reparse escape carets.
+     */
+
+#define APPEND1(Char) \
+do { \
+    if (Dst >= DestEnd) \
+        goto too_long; \
+    *Dst++ = (Char); \
+} while (0)
+
+    Src = Buf1;
+    Dst = Buf2;
+    while (*Src && (Src < &Buf1[CMDLINE_LENGTH]))
+    {
+        if (*Src == _T('^'))
+        {
+            ++Src;
+            if (!*Src || !(Src < &Buf1[CMDLINE_LENGTH]))
+                break;
+
+            APPEND1(*Src++);
+        }
+        else if (*Src == _T('!'))
+        {
+            if (!SubstituteVar(Src, &SrcIncLen, Dst, DestEnd, &DestIncLen, _T('!')))
+            {
+                return NULL; // Got an error during parsing.
+            }
+            else
+            {
+                Src += SrcIncLen;
+                Dst += DestIncLen;
+            }
+        }
+        else
+        {
+            APPEND1(*Src++);
+        }
+        continue;
+    }
+    APPEND1(_T('\0'));
+
     return cmd_dup(Buf2);
+
+too_long:
+    ConOutResPrintf(STRING_ALIAS_ERROR);
+    nErrorLevel = 9023;
+    return NULL;
+
+#undef APPEND1
 }
 
 

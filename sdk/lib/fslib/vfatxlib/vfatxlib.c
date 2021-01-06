@@ -15,13 +15,16 @@
 #define NDEBUG
 #include <debug.h>
 
-NTSTATUS NTAPI
-VfatxFormat(IN PUNICODE_STRING DriveRoot,
-            IN FMIFS_MEDIA_FLAG MediaFlag,
-            IN PUNICODE_STRING Label,
-            IN BOOLEAN QuickFormat,
-            IN ULONG ClusterSize,
-            IN PFMIFSCALLBACK Callback)
+BOOLEAN
+NTAPI
+VfatxFormat(
+    IN PUNICODE_STRING DriveRoot,
+    IN PFMIFSCALLBACK Callback,
+    IN BOOLEAN QuickFormat,
+    IN BOOLEAN BackwardCompatible,
+    IN MEDIA_TYPE MediaType,
+    IN PUNICODE_STRING Label,
+    IN ULONG ClusterSize)
 {
     OBJECT_ATTRIBUTES ObjectAttributes;
     DISK_GEOMETRY DiskGeometry;
@@ -32,6 +35,15 @@ VfatxFormat(IN PUNICODE_STRING DriveRoot,
     NTSTATUS Status;
 
     DPRINT("VfatxFormat(DriveRoot '%wZ')\n", DriveRoot);
+
+    // FIXME:
+    UNREFERENCED_PARAMETER(MediaType);
+
+    if (BackwardCompatible)
+    {
+        DPRINT1("BackwardCompatible == TRUE is unsupported!\n");
+        return FALSE;
+    }
 
     Context.TotalSectorCount = 0;
     Context.CurrentSectorCount = 0;
@@ -53,8 +65,8 @@ VfatxFormat(IN PUNICODE_STRING DriveRoot,
                         FILE_SYNCHRONOUS_IO_ALERT);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT("NtOpenFile() failed with status 0x%.08x\n", Status);
-        return Status;
+        DPRINT("NtOpenFile() failed with status 0x%08x\n", Status);
+        return FALSE;
     }
 
     Status = NtDeviceIoControlFile(FileHandle,
@@ -69,9 +81,9 @@ VfatxFormat(IN PUNICODE_STRING DriveRoot,
                                    sizeof(DISK_GEOMETRY));
     if (!NT_SUCCESS(Status))
     {
-        DPRINT("IOCTL_DISK_GET_DRIVE_GEOMETRY failed with status 0x%.08x\n", Status);
+        DPRINT("IOCTL_DISK_GET_DRIVE_GEOMETRY failed with status 0x%08x\n", Status);
         NtClose(FileHandle);
-        return Status;
+        return FALSE;
     }
 
     if (DiskGeometry.MediaType == FixedMedia)
@@ -98,9 +110,9 @@ VfatxFormat(IN PUNICODE_STRING DriveRoot,
                                        sizeof(PARTITION_INFORMATION));
         if (!NT_SUCCESS(Status))
         {
-            DPRINT("IOCTL_DISK_GET_PARTITION_INFO failed with status 0x%.08x\n", Status);
+            DPRINT("IOCTL_DISK_GET_PARTITION_INFO failed with status 0x%08x\n", Status);
             NtClose(FileHandle);
-            return Status;
+            return FALSE;
         }
     }
     else
@@ -141,27 +153,28 @@ VfatxFormat(IN PUNICODE_STRING DriveRoot,
                         &Context);
     NtClose(FileHandle);
 
-    if (Callback != NULL)
-    {
-        Context.Success = (BOOLEAN)(NT_SUCCESS(Status));
-        Callback(DONE, 0, (PVOID)&Context.Success);
-    }
-
-    DPRINT("VfatxFormat() done. Status 0x%.08x\n", Status);
-
-    return Status;
+    DPRINT("VfatxFormat() done. Status 0x%08x\n", Status);
+    return NT_SUCCESS(Status);
 }
 
-NTSTATUS NTAPI
-VfatxChkdsk(IN PUNICODE_STRING DriveRoot,
-            IN BOOLEAN FixErrors,
-            IN BOOLEAN Verbose,
-            IN BOOLEAN CheckOnlyIfDirty,
-            IN BOOLEAN ScanDrive,
-            IN PFMIFSCALLBACK Callback)
+BOOLEAN
+NTAPI
+VfatxChkdsk(
+    IN PUNICODE_STRING DriveRoot,
+    IN PFMIFSCALLBACK Callback,
+    IN BOOLEAN FixErrors,
+    IN BOOLEAN Verbose,
+    IN BOOLEAN CheckOnlyIfDirty,
+    IN BOOLEAN ScanDrive,
+    IN PVOID pUnknown1,
+    IN PVOID pUnknown2,
+    IN PVOID pUnknown3,
+    IN PVOID pUnknown4,
+    IN PULONG ExitStatus)
 {
     UNIMPLEMENTED;
-    return STATUS_SUCCESS;
+    *ExitStatus = (ULONG)STATUS_SUCCESS;
+    return TRUE;
 }
 
 VOID

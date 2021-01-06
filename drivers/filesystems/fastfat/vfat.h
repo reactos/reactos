@@ -330,6 +330,12 @@ typedef struct DEVICE_EXTENSION
     struct _VFATFCB *RootFcb;
     PSTATISTICS Statistics;
 
+    /* Overflow request queue */
+    KSPIN_LOCK OverflowQueueSpinLock;
+    LIST_ENTRY OverflowQueue;
+    ULONG OverflowQueueCount;
+    ULONG PostedRequestCount;
+
     /* Pointers to functions for manipulating FAT. */
     PGET_NEXT_CLUSTER GetNextCluster;
     PFIND_AND_MARK_AVAILABLE_CLUSTER FindAndMarkAvailableCluster;
@@ -818,7 +824,6 @@ VfatSetExtendedAttributes(
 
 /* fastio.c */
 
-INIT_FUNCTION
 VOID
 VfatInitFastIoRoutines(
     PFAST_IO_DISPATCH FastIoDispatch);
@@ -1123,7 +1128,6 @@ VfatFileSystemControl(
 
 /* iface.c */
 
-INIT_FUNCTION
 NTSTATUS
 NTAPI
 DriverEntry(
@@ -1189,7 +1193,7 @@ VfatRead(
 
 NTSTATUS
 VfatWrite(
-    PVFAT_IRP_CONTEXT IrpContext);
+    PVFAT_IRP_CONTEXT *pIrpContext);
 
 NTSTATUS
 NextCluster(
@@ -1220,6 +1224,10 @@ vfatSplitPathName(
 BOOLEAN
 vfatIsLongIllegal(
     WCHAR c);
+
+BOOLEAN
+IsDotOrDotDot(
+    PCUNICODE_STRING Name);
 
 /* volume.c */
 

@@ -493,3 +493,20 @@ RtlGetCurrentProcessorNumber(VOID)
     /* Forward to kernel */
     return NtGetCurrentProcessorNumber();
 }
+
+_IRQL_requires_max_(APC_LEVEL)
+ULONG
+NTAPI
+RtlRosGetAppcompatVersion(VOID)
+{
+    /* Get the current PEB */
+    PPEB Peb = RtlGetCurrentPeb();
+    if (Peb == NULL)
+    {
+        /* Default to Server 2003 */
+        return _WIN32_WINNT_WS03;
+    }
+
+    /* Calculate OS version from PEB fields */
+    return (Peb->OSMajorVersion << 8) | Peb->OSMinorVersion;
+}

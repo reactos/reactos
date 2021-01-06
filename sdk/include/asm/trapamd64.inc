@@ -97,6 +97,13 @@ MACRO(EnterTrap, Flags)
         mov [rbp + KTRAP_FRAME_SegGs], gs
     endif
 
+#if DBG
+    mov ecx, MSR_GS_BASE
+    rdmsr
+    mov [rbp + KTRAP_FRAME_GsBase], eax
+    mov [rbp + KTRAP_FRAME_GsBase + 4], edx
+#endif
+
     /* Save previous mode and check if it was user mode */
     mov ax, [rbp + KTRAP_FRAME_SegCs]
     and al, 1
@@ -142,6 +149,8 @@ ENDM
  */
 MACRO(ExitTrap, Flags)
     LOCAL kernel_mode_return
+    LOCAL IntsEnabled
+    LOCAL NoUserApc
 
 #if DBG
         /* Check previous irql */
@@ -173,9 +182,18 @@ MACRO(ExitTrap, Flags)
         /* Load current thread into r10 */
         mov r10, gs:[PcCurrentThread]
         cmp byte ptr [r10 + KTHREAD_UserApcPending], 0
-        jne KiExitToUserApc
-
+        je NoUserApc
+        call KiInitiateUserApc
+    NoUserApc:
     endif
+
+#if DBG
+    /*Make sure interrupts are enabled */
+    test dword ptr [rbp + KTRAP_FRAME_EFlags], HEX(200)
+    jnz IntsEnabled
+    int HEX(2c)
+IntsEnabled:
+#endif
 
     /* Swap gs to user mode */
     swapgs

@@ -23,7 +23,6 @@
 #ifndef _WINE_INTERNET_H_
 #define _WINE_INTERNET_H_
 
-#include "wine/unicode.h"
 #include "wine/heap.h"
 #include "wine/list.h"
 
@@ -102,7 +101,7 @@ static inline LPWSTR heap_strdupW(LPCWSTR str)
     if(str) {
         DWORD size;
 
-        size = (strlenW(str)+1)*sizeof(WCHAR);
+        size = (lstrlenW(str)+1)*sizeof(WCHAR);
         ret = heap_alloc(size);
         if(ret)
             memcpy(ret, str, size);
@@ -209,7 +208,7 @@ static inline substr_t substr(const WCHAR *str, size_t len)
 
 static inline substr_t substrz(const WCHAR *str)
 {
-    return substr(str, strlenW(str));
+    return substr(str, lstrlenW(str));
 }
 
 static inline void WININET_find_data_WtoA(LPWIN32_FIND_DATAW dataW, LPWIN32_FIND_DATAA dataA)

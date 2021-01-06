@@ -55,7 +55,7 @@ EXTERN __bss_end__:DWORD
 
 #ifdef _USE_ML
 .MBDATA SEGMENT PUBLIC 'DATA'
-ASSUME nothing
+//ASSUME nothing
 #endif
 
     /* Align to 32 bits boundary */

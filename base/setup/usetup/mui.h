@@ -4,15 +4,15 @@ typedef struct
 {
     SHORT X;
     SHORT Y;
-    LPCSTR Buffer;
+    PCSTR Buffer;
     DWORD Flags;
     INT TextID;
 } MUI_ENTRY, *PMUI_ENTRY;
 
 typedef struct
 {
-    LPCSTR ErrorText;
-    LPCSTR ErrorStatus;
+    PCSTR ErrorText;
+    PCSTR ErrorStatus;
 } MUI_ERROR;
 
 typedef struct
@@ -24,7 +24,7 @@ typedef struct
 typedef struct
 {
     LONG Number;
-    LPSTR String;
+    PCSTR String;
 } MUI_STRING;
 
 typedef struct
@@ -68,7 +68,7 @@ MUIDisplayError(
 VOID
 SetConsoleCodePage(VOID);
 
-LPSTR
+PCSTR
 MUIGetString(
     ULONG Number);
 

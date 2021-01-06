@@ -508,7 +508,7 @@ AcpiExFieldDatumIo (
          * RegionField case and write the datum to the Operation Region
          */
 
-        /*lint -fallthrough */
+        ACPI_FALLTHROUGH;
 
     case ACPI_TYPE_LOCAL_REGION_FIELD:
         /*

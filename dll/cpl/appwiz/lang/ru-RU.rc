@@ -26,7 +26,7 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT "Этот мастер поможет создать ярлык для локальных или\nсетевых программ, файлов, папок, компьютеров или\nИнтернет-адресов.", -1, 120, 15, 200, 30
     LTEXT "Выберите местоположение элемента:", -1, 120, 50, 120, 10
-    EDITTEXT IDC_SHORTCUT_LOCATION, 120, 65, 150, 15, ES_LEFT
+    EDITTEXT IDC_SHORTCUT_LOCATION, 120, 65, 150, 15, ES_LEFT | ES_AUTOHSCROLL
     PUSHBUTTON "Обзор...", IDC_SHORTCUT_BROWSE, 272, 65, 55, 15, ES_LEFT
     LTEXT "Щелкните ""Далее"" для продолжения.", -1, 120, 97, 162, 10
 END
@@ -37,7 +37,7 @@ CAPTION "Выбор заголовка для программы"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT "&Введите заголовок ярлыка:", -1, 120, 15, 150, 10
-    EDITTEXT IDC_SHORTCUT_NAME, 120, 35, 150, 15, ES_LEFT
+    EDITTEXT IDC_SHORTCUT_NAME, 120, 35, 150, 15, ES_LEFT | ES_AUTOHSCROLL
     LTEXT "Щелкните ""Завершить"" для создания ярлыка.", -1, 118, 97, 178, 17
 END
 

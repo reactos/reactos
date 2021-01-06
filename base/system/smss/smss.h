@@ -31,6 +31,8 @@
 #include <ndk/umfuncs.h>
 #include <ndk/kefuncs.h>
 
+#include <ntstrsafe.h>
+
 /* SM Protocol Header */
 #include <sm/smmsg.h>
 

@@ -4,6 +4,25 @@
 
 #pragma once
 
+/*
+ * This batch type enumeration allows us to adjust the behaviour of some commands
+ * depending on whether they are run from within a .BAT or a .CMD file.
+ * The behaviour is selected when the top-level batch file is loaded,
+ * and it remains the same for any child batch file that may be loaded later.
+ *
+ * See https://ss64.com/nt/errorlevel.html for more details.
+ */
+typedef enum _BATCH_TYPE
+{
+    NONE,
+    BAT_TYPE,   /* Old-style DOS batch file */
+    CMD_TYPE    /* New-style NT OS/2 batch file */
+} BATCH_TYPE;
+
+
+/* Enable this define for Windows' CMD batch-echo behaviour compatibility */
+#define MSCMD_BATCH_ECHO
+
 typedef struct _BATCH_CONTEXT
 {
     struct _BATCH_CONTEXT *prev;
@@ -15,7 +34,9 @@ typedef struct _BATCH_CONTEXT
     LPTSTR params;
     LPTSTR raw_params;  /* Holds the raw params given by the input */
     INT    shiftlevel[10];
+#ifndef MSCMD_BATCH_ECHO
     BOOL   bEcho;       /* Preserve echo flag across batch calls */
+#endif
     REDIRECTION *RedirList;
     PARSED_COMMAND *current;
     struct _SETLOCAL *setlocal;
@@ -34,8 +55,13 @@ typedef struct _FOR_CONTEXT
  * The stack of current batch contexts.
  * NULL when no batch is active.
  */
+extern BATCH_TYPE BatType;
 extern PBATCH_CONTEXT bc;
 extern PFOR_CONTEXT fc;
+
+#ifdef MSCMD_BATCH_ECHO
+extern BOOL bBcEcho;
+#endif
 
 extern BOOL bEcho;       /* The echo flag */
 
@@ -44,7 +70,12 @@ extern BOOL bEcho;       /* The echo flag */
 extern TCHAR textline[BATCH_BUFFSIZE]; /* Buffer for reading Batch file lines */
 
 
-LPTSTR FindArg(TCHAR, BOOL *);
+BOOL
+FindArg(
+    IN TCHAR Char,
+    OUT PCTSTR* ArgPtr,
+    OUT BOOL* IsParam0);
+
 VOID   ExitBatch(VOID);
 VOID   ExitAllBatches(VOID);
 INT    Batch(LPTSTR, LPTSTR, LPTSTR, PARSED_COMMAND *);

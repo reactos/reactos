@@ -93,5 +93,5 @@ public:
     END_COM_MAP()
 
     HRESULT DoInstallFontFile(LPCWSTR pszFontPath, LPCWSTR pszFontsDir, HKEY hkeyFonts);
-    HRESULT DoGetFontTitle(LPCWSTR pszFontPath, LPCWSTR pszFontName);
+    HRESULT DoGetFontTitle(IN LPCWSTR pszFontPath, OUT CStringW& strFontName);
 };

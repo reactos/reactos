@@ -1,86 +1,4 @@
 
-# set_cpp
-#  Marks the current folder as containing C++ modules, additionally enabling
-#  specific C++ language features as specified (all of these default to off):
-#
-#  WITH_RUNTIME
-#   Links with the C++ runtime. Enable this for modules which use new/delete or
-#   RTTI, but do not require STL. This is the right choice if you see undefined
-#   references to operator new/delete, vector constructor/destructor iterator,
-#   type_info::vtable, ...
-#   Note: this only affects linking, so cannot be used for static libraries.
-#  WITH_RTTI
-#   Enables run-time type information. Enable this if the module uses typeid or
-#   dynamic_cast. You will probably need to enable WITH_RUNTIME as well, if
-#   you're not already using STL.
-#  WITH_EXCEPTIONS
-#   Enables C++ exception handling. Enable this if the module uses try/catch or
-#   throw. You might also need this if you use a standard operator new (the one
-#   without nothrow).
-#  WITH_STL
-#   Enables standard C++ headers and links to the Standard Template Library.
-#   Use this for modules using anything from the std:: namespace, e.g. maps,
-#   strings, vectors, etc.
-#   Note: this affects both compiling (via include directories) and
-#         linking (by adding STL). Implies WITH_RUNTIME.
-#   FIXME: WITH_STL is currently also required for runtime headers such as
-#          <new> and <exception>. This is not a big issue because in stl-less
-#          environments you usually don't want those anyway; but we might want
-#          to have modules like this in the future.
-#
-# Examples:
-#  set_cpp()
-#   Enables the C++ language, but will cause errors if any runtime or standard
-#   library features are used. This should be the default for C++ in kernel
-#   mode or otherwise restricted environments.
-#   Note: this is required to get libgcc (for multiplication/division) linked
-#         in for C++ modules, and to set the correct language for precompiled
-#         header files, so it IS required even with no features specified.
-#  set_cpp(WITH_RUNTIME)
-#   Links with the C++ runtime, so that e.g. custom operator new implementations
-#   can be used in a restricted environment. This is also required for linking
-#   with libraries (such as ATL) which have RTTI enabled, even if the module in
-#   question does not use WITH_RTTI.
-#  set_cpp(WITH_RTTI WITH_EXCEPTIONS WITH_STL)
-#   The full package. This will adjust compiler and linker so that all C++
-#   features can be used.
-macro(set_cpp)
-    cmake_parse_arguments(__cppopts "WITH_RUNTIME;WITH_RTTI;WITH_EXCEPTIONS;WITH_STL" "" "" ${ARGN})
-    if(__cppopts_UNPARSED_ARGUMENTS)
-        message(FATAL_ERROR "set_cpp: unparsed arguments ${__cppopts_UNPARSED_ARGUMENTS}")
-    endif()
-
-    if(__cppopts_WITH_RUNTIME)
-        set(CPP_USE_RT 1)
-    endif()
-    if(__cppopts_WITH_RTTI)
-        if(MSVC)
-            replace_compile_flags("/GR-" "/GR")
-        else()
-            replace_compile_flags_language("-fno-rtti" "-frtti" "CXX")
-        endif()
-    endif()
-    if(__cppopts_WITH_EXCEPTIONS)
-        if(MSVC)
-            replace_compile_flags("/EHs-c-" "/EHsc")
-        else()
-            replace_compile_flags_language("-fno-exceptions" "-fexceptions" "CXX")
-        endif()
-    endif()
-    if(__cppopts_WITH_STL)
-        set(CPP_USE_STL 1)
-        if(MSVC)
-            add_definitions(-DNATIVE_CPP_INCLUDE=${REACTOS_SOURCE_DIR}/sdk/include/c++)
-            include_directories(${REACTOS_SOURCE_DIR}/sdk/include/c++/stlport)
-        else()
-            replace_compile_flags("-nostdinc" " ")
-            add_definitions(-DPAL_STDCPP_COMPAT)
-        endif()
-    endif()
-
-    set(IS_CPP 1)
-endmacro()
-
 function(add_dependency_node _node)
     if(GENERATE_DEPENDENCY_GRAPH)
         get_target_property(_type ${_node} TYPE)
@@ -309,12 +227,7 @@ macro(dir_to_num dir var)
 endmacro()
 
 function(add_cd_file)
-    cmake_parse_arguments(_CD "NO_CAB;NOT_IN_HYBRIDCD" "DESTINATION;NAME_ON_CD;TARGET;FILE" "FOR" ${ARGN})
-
-    if (_CD_UNPARSED_ARGUMENTS)
-        message(FATAL_ERROR "Unexpected arguments to add_cd_file : ${_CD_UNPARSED_ARGUMENTS}")
-    endif()
-
+    cmake_parse_arguments(_CD "NO_CAB;NOT_IN_HYBRIDCD" "DESTINATION;NAME_ON_CD;TARGET" "FILE;FOR" ${ARGN})
     if(NOT (_CD_TARGET OR _CD_FILE))
         message(FATAL_ERROR "You must provide a target or a file to install!")
     endif()
@@ -337,10 +250,6 @@ function(add_cd_file)
         endif()
     endif()
 
-    if (NOT _CD_NAME_ON_CD)
-        get_filename_component(_CD_NAME_ON_CD ${_CD_FILE} NAME)
-    endif()
-
     # do we add it to all CDs?
     list(FIND _CD_FOR all __cd)
     if(NOT __cd EQUAL -1)
@@ -348,38 +257,42 @@ function(add_cd_file)
         list(INSERT _CD_FOR __cd "bootcd;livecd;regtest")
     endif()
 
-
     # do we add it to bootcd?
     list(FIND _CD_FOR bootcd __cd)
     if(NOT __cd EQUAL -1)
         # whether or not we should put it in reactos.cab or directly on cd
         if(_CD_NO_CAB)
             # directly on cd
-            set_property(TARGET bootcd APPEND PROPERTY FILE_LIST "${_CD_DESTINATION}/${_CD_NAME_ON_CD}=${_CD_FILE}")
-            # add it also into the hybridcd if not specified otherwise
-            if(NOT _CD_NOT_IN_HYBRIDCD)
-                set_property(GLOBAL APPEND PROPERTY HYBRIDCD_FILE_LIST "bootcd/${_CD_DESTINATION}/${_CD_NAME_ON_CD}=${_CD_FILE}")
-            endif()
+            foreach(item ${_CD_FILE})
+                if(_CD_NAME_ON_CD)
+                    # rename it in the cd tree
+                    set(__file ${_CD_NAME_ON_CD})
+                else()
+                    get_filename_component(__file ${item} NAME)
+                endif()
+                set_property(GLOBAL APPEND PROPERTY BOOTCD_FILE_LIST "${_CD_DESTINATION}/${__file}=${item}")
+                # add it also into the hybridcd if not specified otherwise
+                if(NOT _CD_NOT_IN_HYBRIDCD)
+                    set_property(GLOBAL APPEND PROPERTY HYBRIDCD_FILE_LIST "bootcd/${_CD_DESTINATION}/${__file}=${item}")
+                endif()
+            endforeach()
             # manage dependency
             if(_CD_TARGET)
-                set_property(TARGET bootcd APPEND PROPERTY ISO_DEPENDENCIES ${_CD_TARGET})
-                if(NOT _CD_NOT_IN_HYBRIDCD)
-                    set_property(TARGET hybridcd APPEND PROPERTY ISO_DEPENDENCIES ${_CD_TARGET})
-                endif()
-            else()
-                set_property(TARGET bootcd APPEND PROPERTY ISO_DEPENDENCIES ${_CD_FILE})
-                if(NOT _CD_NOT_IN_HYBRIDCD)
-                    set_property(TARGET hybridcd APPEND PROPERTY ISO_DEPENDENCIES ${_CD_FILE})
-                endif()
+                add_dependencies(bootcd ${_CD_TARGET} registry_inf)
             endif()
         else()
             dir_to_num(${_CD_DESTINATION} _num)
-            file(APPEND ${REACTOS_BINARY_DIR}/boot/bootdata/packages/reactos.dff.cmake "\"${_CD_FILE}\" ${_num}\n")
-            # manage dependencies
+            foreach(item ${_CD_FILE})
+                # add it in reactos.cab
+                file(APPEND ${REACTOS_BINARY_DIR}/boot/bootdata/packages/reactos.dff.cmake "\"${item}\" ${_num}\n")
+
+                # manage dependency - file level
+                set_property(GLOBAL APPEND PROPERTY REACTOS_CAB_DEPENDS ${item})
+            endforeach()
+
+            # manage dependency - target level
             if(_CD_TARGET)
-                set_property(TARGET reactos_cab APPEND PROPERTY CAB_DEPENDENCIES ${_CD_TARGET})
-            else()
-                set_property(TARGET reactos_cab APPEND PROPERTY CAB_DEPENDENCIES ${_CD_FILE})
+                add_dependencies(reactos_cab_inf ${_CD_TARGET})
             endif()
         endif()
     endif() #end bootcd
@@ -389,36 +302,39 @@ function(add_cd_file)
     if(NOT __cd EQUAL -1)
         # manage dependency
         if(_CD_TARGET)
-            set_property(TARGET livecd APPEND PROPERTY ISO_DEPENDENCIES ${_CD_TARGET})
+            add_dependencies(livecd ${_CD_TARGET} registry_inf)
+        endif()
+        foreach(item ${_CD_FILE})
+            if(_CD_NAME_ON_CD)
+                # rename it in the cd tree
+                set(__file ${_CD_NAME_ON_CD})
+            else()
+                get_filename_component(__file ${item} NAME)
+            endif()
+            set_property(GLOBAL APPEND PROPERTY LIVECD_FILE_LIST "${_CD_DESTINATION}/${__file}=${item}")
+            # add it also into the hybridcd if not specified otherwise
             if(NOT _CD_NOT_IN_HYBRIDCD)
-                set_property(TARGET hybridcd APPEND PROPERTY ISO_DEPENDENCIES ${_CD_TARGET})
+                set_property(GLOBAL APPEND PROPERTY HYBRIDCD_FILE_LIST "livecd/${_CD_DESTINATION}/${__file}=${item}")
             endif()
-        endif()
-
-        set_property(TARGET livecd APPEND PROPERTY FILE_LIST "${_CD_DESTINATION}/${_CD_NAME_ON_CD}=${_CD_FILE}")
-        # manage dependency
-        if (NOT _CD_TARGET)
-            set_property(TARGET livecd APPEND PROPERTY ISO_DEPENDENCIES ${_CD_FILE})
-        endif()
-        # add it also into the hybridcd if not specified otherwise
-        if(NOT _CD_NOT_IN_HYBRIDCD)
-            set_property(TARGET hybridcd APPEND PROPERTY FILE_LIST "livecd/${_CD_DESTINATION}/${_CD_NAME_ON_CD}=${_CD_FILE}")
-            if (NOT _CD_TARGET)
-                set_property(TARGET hybridcd APPEND PROPERTY ISO_DEPENDENCIES ${_CD_FILE})
-            endif()
-        endif()
+        endforeach()
     endif() #end livecd
 
     # do we need also to add it to hybridcd?
     list(FIND _CD_FOR hybridcd __cd)
     if(NOT __cd EQUAL -1)
-        set_property(TARGET hybridcd APPEND PROPERTY FILE_LIST "${_CD_DESTINATION}/${_CD_NAME_ON_CD}=${_CD_FILE}")
         # manage dependency
         if(_CD_TARGET)
-            set_property(TARGET hybridcd APPEND PROPERTY ISO_DEPENDENCIES ${_CD_TARGET})
-        else()
-            set_property(TARGET hybridcd APPEND PROPERTY ISO_DEPENDENCIES ${_CD_FILE})
+            add_dependencies(hybridcd ${_CD_TARGET})
         endif()
+        foreach(item ${_CD_FILE})
+            if(_CD_NAME_ON_CD)
+                # rename it in the cd tree
+                set(__file ${_CD_NAME_ON_CD})
+            else()
+                get_filename_component(__file ${item} NAME)
+            endif()
+            set_property(GLOBAL APPEND PROPERTY HYBRIDCD_FILE_LIST "${_CD_DESTINATION}/${__file}=${item}")
+        endforeach()
     endif() #end hybridcd
 
     # do we add it to regtest?
@@ -426,12 +342,19 @@ function(add_cd_file)
     if(NOT __cd EQUAL -1)
         # whether or not we should put it in reactos.cab or directly on cd
         if(_CD_NO_CAB)
-            set_property(TARGET bootcdregtest APPEND PROPERTY FILE_LIST "${_CD_DESTINATION}/${_CD_NAME_ON_CD}=${_CD_FILE}")
+            # directly on cd
+            foreach(item ${_CD_FILE})
+                if(_CD_NAME_ON_CD)
+                    # rename it in the cd tree
+                    set(__file ${_CD_NAME_ON_CD})
+                else()
+                    get_filename_component(__file ${item} NAME)
+                endif()
+                set_property(GLOBAL APPEND PROPERTY BOOTCDREGTEST_FILE_LIST "${_CD_DESTINATION}/${__file}=${item}")
+            endforeach()
             # manage dependency
             if(_CD_TARGET)
-                set_property(TARGET bootcdregtest APPEND PROPERTY ISO_DEPENDENCIES ${_CD_TARGET})
-            else()
-                set_property(TARGET bootcdregtest APPEND PROPERTY ISO_DEPENDENCIES ${_CD_FILE})
+                add_dependencies(bootcdregtest ${_CD_TARGET} registry_inf)
             endif()
         else()
             #add it in reactos.cab
@@ -443,6 +366,68 @@ function(add_cd_file)
             #endif()
         endif()
     endif() #end bootcd
+endfunction()
+
+function(create_iso_lists)
+    # generate reactos.cab before anything else
+    get_property(_filelist GLOBAL PROPERTY REACTOS_CAB_DEPENDS)
+
+    # begin with reactos.inf. We want this command to be always executed, so we pretend it generates another file although it will never do.
+    add_custom_command(
+        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/reactos.inf ${CMAKE_CURRENT_BINARY_DIR}/__some_non_existent_file
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${REACTOS_BINARY_DIR}/boot/bootdata/packages/reactos.inf ${CMAKE_CURRENT_BINARY_DIR}/reactos.inf
+        DEPENDS ${REACTOS_BINARY_DIR}/boot/bootdata/packages/reactos.inf reactos_cab_inf)
+
+    add_custom_command(
+        OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/reactos.cab
+        COMMAND native-cabman -C ${REACTOS_BINARY_DIR}/boot/bootdata/packages/reactos.dff -RC ${CMAKE_CURRENT_BINARY_DIR}/reactos.inf -N -P ${REACTOS_SOURCE_DIR}
+        DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/reactos.inf native-cabman ${_filelist})
+
+    add_custom_target(reactos_cab DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/reactos.cab)
+    add_dependencies(reactos_cab reactos_cab_inf)
+
+    add_cd_file(
+        TARGET reactos_cab
+        FILE ${CMAKE_CURRENT_BINARY_DIR}/reactos.cab
+        DESTINATION reactos
+        NO_CAB FOR bootcd regtest)
+
+    add_cd_file(
+        FILE ${CMAKE_CURRENT_BINARY_DIR}/livecd.iso
+        DESTINATION livecd
+        FOR hybridcd)
+
+    get_property(_filelist GLOBAL PROPERTY BOOTCD_FILE_LIST)
+    string(REPLACE ";" "\n" _filelist "${_filelist}")
+    file(APPEND ${REACTOS_BINARY_DIR}/boot/bootcd.cmake.lst "${_filelist}")
+    unset(_filelist)
+    file(GENERATE
+         OUTPUT ${REACTOS_BINARY_DIR}/boot/bootcd.$<CONFIG>.lst
+         INPUT ${REACTOS_BINARY_DIR}/boot/bootcd.cmake.lst)
+
+    get_property(_filelist GLOBAL PROPERTY LIVECD_FILE_LIST)
+    string(REPLACE ";" "\n" _filelist "${_filelist}")
+    file(APPEND ${REACTOS_BINARY_DIR}/boot/livecd.cmake.lst "${_filelist}")
+    unset(_filelist)
+    file(GENERATE
+         OUTPUT ${REACTOS_BINARY_DIR}/boot/livecd.$<CONFIG>.lst
+         INPUT ${REACTOS_BINARY_DIR}/boot/livecd.cmake.lst)
+
+    get_property(_filelist GLOBAL PROPERTY HYBRIDCD_FILE_LIST)
+    string(REPLACE ";" "\n" _filelist "${_filelist}")
+    file(APPEND ${REACTOS_BINARY_DIR}/boot/hybridcd.cmake.lst "${_filelist}")
+    unset(_filelist)
+    file(GENERATE
+         OUTPUT ${REACTOS_BINARY_DIR}/boot/hybridcd.$<CONFIG>.lst
+         INPUT ${REACTOS_BINARY_DIR}/boot/hybridcd.cmake.lst)
+
+    get_property(_filelist GLOBAL PROPERTY BOOTCDREGTEST_FILE_LIST)
+    string(REPLACE ";" "\n" _filelist "${_filelist}")
+    file(APPEND ${REACTOS_BINARY_DIR}/boot/bootcdregtest.cmake.lst "${_filelist}")
+    unset(_filelist)
+    file(GENERATE
+         OUTPUT ${REACTOS_BINARY_DIR}/boot/bootcdregtest.$<CONFIG>.lst
+         INPUT ${REACTOS_BINARY_DIR}/boot/bootcdregtest.cmake.lst)
 endfunction()
 
 # Create module_clean targets
@@ -489,15 +474,17 @@ elseif(USE_FOLDER_STRUCTURE)
 
     function(add_library name)
         _add_library(${name} ${ARGN})
-        get_target_property(_target_excluded ${name} EXCLUDE_FROM_ALL)
-        if(_target_excluded AND ${name} MATCHES "^lib.*")
-            set_property(TARGET "${name}" PROPERTY FOLDER "Importlibs")
-        else()
-            string(SUBSTRING ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_SOURCE_DIR_LENGTH} -1 CMAKE_CURRENT_SOURCE_DIR_RELATIVE)
-            set_property(TARGET "${name}" PROPERTY FOLDER "${CMAKE_CURRENT_SOURCE_DIR_RELATIVE}")
+        get_target_property(_type ${name} TYPE)
+        if (NOT _type STREQUAL "INTERFACE_LIBRARY")
+            get_target_property(_target_excluded ${name} EXCLUDE_FROM_ALL)
+            if(_target_excluded AND ${name} MATCHES "^lib.*")
+                set_property(TARGET "${name}" PROPERTY FOLDER "Importlibs")
+            else()
+                string(SUBSTRING ${CMAKE_CURRENT_SOURCE_DIR} ${CMAKE_SOURCE_DIR_LENGTH} -1 CMAKE_CURRENT_SOURCE_DIR_RELATIVE)
+                set_property(TARGET "${name}" PROPERTY FOLDER "${CMAKE_CURRENT_SOURCE_DIR_RELATIVE}")
+            endif()
         endif()
         # cmake adds a module_EXPORTS define when compiling a module or a shared library. We don't use that.
-        get_target_property(_type ${name} TYPE)
         if(_type MATCHES SHARED_LIBRARY|MODULE_LIBRARY)
             set_target_properties(${name} PROPERTIES DEFINE_SYMBOL "")
         endif()
@@ -544,12 +531,7 @@ endif()
 function(add_importlibs _module)
     add_dependency_node(${_module})
     foreach(LIB ${ARGN})
-        if("${LIB}" MATCHES "msvcrt")
-            target_compile_definitions(${_module} PRIVATE _DLL __USE_CRTIMP)
-            target_link_libraries(${_module} msvcrtex)
-        endif()
         target_link_libraries(${_module} lib${LIB})
-        add_dependencies(${_module} lib${LIB})
         add_dependency_edge(${_module} ${LIB})
     endforeach()
 endfunction()
@@ -579,6 +561,9 @@ function(set_module_type MODULE TYPE)
             OR (${TYPE} STREQUAL cpl) OR (${TYPE} STREQUAL module)))
         message(FATAL_ERROR "Unknown type ${TYPE} for module ${MODULE}")
     endif()
+
+    # Set our target property
+    set_target_properties(${MODULE} PROPERTIES REACTOS_MODULE_TYPE ${TYPE})
 
     if(DEFINED __subsystem)
         set_subsystem(${MODULE} ${__subsystem})
@@ -720,7 +705,10 @@ endfunction()
 function(get_defines OUTPUT_VAR)
     get_directory_property(_defines COMPILE_DEFINITIONS)
     foreach(arg ${_defines})
-        list(APPEND __tmp_var -D${arg})
+        # Skip generator expressions
+        if (NOT arg MATCHES [[^\$<.*>$]])
+            list(APPEND __tmp_var -D${arg})
+        endif()
     endforeach()
     set(${OUTPUT_VAR} ${__tmp_var} PARENT_SCOPE)
 endfunction()
@@ -754,8 +742,9 @@ function(create_registry_hives)
     # Convert files to utf16le
     foreach(_file ${_inf_files})
         get_filename_component(_file_name ${_file} NAME_WE)
-        string(REPLACE ${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR} _converted_file "${_file}")
-        string(REPLACE ${_file_name} "${_file_name}_utf16" _converted_file ${_converted_file})
+        file(RELATIVE_PATH _subdir ${CMAKE_SOURCE_DIR} ${_file})
+        get_filename_component(_subdir ${_subdir}  DIRECTORY)
+        set(_converted_file ${CMAKE_BINARY_DIR}/${_subdir}/${_file_name}_utf16.inf)
         add_custom_command(OUTPUT ${_converted_file}
                            COMMAND native-utf16le ${_file} ${_converted_file}
                            DEPENDS native-utf16le ${_file})
@@ -776,8 +765,8 @@ function(create_registry_hives)
     # BootCD setup system hive
     add_custom_command(
         OUTPUT ${CMAKE_BINARY_DIR}/boot/bootdata/SETUPREG.HIV
-        COMMAND native-mkhive -h:SETUPREG -u -d:${CMAKE_BINARY_DIR}/boot/bootdata ${CMAKE_BINARY_DIR}/boot/bootdata/hivesys_utf16.inf ${CMAKE_SOURCE_DIR}/boot/bootdata/setupreg.inf
-        DEPENDS native-mkhive ${CMAKE_BINARY_DIR}/boot/bootdata/hivesys_utf16.inf)
+        COMMAND native-mkhive -h:SETUPREG -u -d:${CMAKE_BINARY_DIR}/boot/bootdata ${_registry_inf} ${CMAKE_SOURCE_DIR}/boot/bootdata/setupreg.inf
+        DEPENDS native-mkhive ${_registry_inf})
 
     add_custom_target(bootcd_hives
         DEPENDS ${CMAKE_BINARY_DIR}/boot/bootdata/SETUPREG.HIV)
@@ -820,11 +809,15 @@ function(create_registry_hives)
                 ${CMAKE_BINARY_DIR}/boot/bootdata/sam
                 ${CMAKE_BINARY_DIR}/boot/bootdata/security)
 
-    add_cd_file(FILE ${CMAKE_BINARY_DIR}/boot/bootdata/system TARGET livecd_hives DESTINATION reactos/system32/config FOR livecd)
-    add_cd_file(FILE ${CMAKE_BINARY_DIR}/boot/bootdata/software TARGET livecd_hives DESTINATION reactos/system32/config FOR livecd)
-    add_cd_file(FILE ${CMAKE_BINARY_DIR}/boot/bootdata/default TARGET livecd_hives DESTINATION reactos/system32/config FOR livecd)
-    add_cd_file(FILE ${CMAKE_BINARY_DIR}/boot/bootdata/sam TARGET livecd_hives DESTINATION reactos/system32/config FOR livecd)
-    add_cd_file(FILE ${CMAKE_BINARY_DIR}/boot/bootdata/security TARGET livecd_hives DESTINATION reactos/system32/config FOR livecd)
+    add_cd_file(
+        FILE ${CMAKE_BINARY_DIR}/boot/bootdata/system
+             ${CMAKE_BINARY_DIR}/boot/bootdata/software
+             ${CMAKE_BINARY_DIR}/boot/bootdata/default
+             ${CMAKE_BINARY_DIR}/boot/bootdata/sam
+             ${CMAKE_BINARY_DIR}/boot/bootdata/security
+        TARGET livecd_hives
+        DESTINATION reactos/system32/config
+        FOR livecd)
 
     # BCD Hive
     add_custom_command(
@@ -853,13 +846,10 @@ function(add_driver_inf _module)
                            COMMAND native-utf16le "${_source_item}" "${_converted_item}"
                            DEPENDS native-utf16le "${_source_item}")
         list(APPEND _converted_inf_files ${_converted_item})
-
     endforeach()
 
     add_custom_target(${_module}_inf_files DEPENDS ${_converted_inf_files})
-    foreach(item ${_converted_inf_files})
-        add_cd_file(FILE ${item} TARGET ${_module}_inf_files DESTINATION reactos/inf FOR all)
-    endforeach()
+    add_cd_file(FILE ${_converted_inf_files} TARGET ${_module}_inf_files DESTINATION reactos/inf FOR all)
 endfunction()
 
 if(KDBG)
@@ -919,3 +909,15 @@ else()
     macro(add_pch _target _pch _skip_list)
     endmacro()
 endif()
+
+function(set_target_cpp_properties _target)
+    cmake_parse_arguments(_CPP "WITH_EXCEPTIONS;WITH_RTTI" "" "" ${ARGN})
+
+    if (_CPP_WITH_EXCEPTIONS)
+        set_target_properties(${_target} PROPERTIES WITH_CXX_EXCEPTIONS TRUE)
+    endif()
+
+    if (_CPP_WITH_RTTI)
+        set_target_properties(${_target} PROPERTIES WITH_CXX_RTTI TRUE)
+    endif()
+endfunction()

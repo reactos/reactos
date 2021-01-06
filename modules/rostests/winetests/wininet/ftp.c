@@ -63,7 +63,7 @@ static void test_connect(HINTERNET hInternet)
     HINTERNET hFtp;
 
     /* Try a few username/password combinations:
-     * anonymous : NULL
+     * anonymous : IEUser@
      * NULL      : IEUser@
      * NULL      : NULL
      * ""        : IEUser@
@@ -72,16 +72,14 @@ static void test_connect(HINTERNET hInternet)
 
     SetLastError(0xdeadbeef);
     hFtp = InternetConnectA(hInternet, "ftp.winehq.org", INTERNET_DEFAULT_FTP_PORT, "anonymous", "IEUser@", INTERNET_SERVICE_FTP, INTERNET_FLAG_PASSIVE, 0);
-    if (hFtp)  /* some servers accept an empty password */
+    if (!hFtp)
     {
-        ros_skip_flaky
-        ok ( GetLastError() == ERROR_SUCCESS, "ERROR_SUCCESS, got %d\n", GetLastError());
-        InternetCloseHandle(hFtp);
+        skip("No ftp connection could be made to ftp.winehq.org %u\n", GetLastError());
+        return;
     }
-    else
-        ros_skip_flaky
-        ok ( GetLastError() == ERROR_INTERNET_LOGIN_FAILURE,
-             "Expected ERROR_INTERNET_LOGIN_FAILURE, got %d\n", GetLastError());
+    ok(GetLastError() == ERROR_SUCCESS,
+       "Expected ERROR_SUCCESS, got %d\n", GetLastError());
+    InternetCloseHandle(hFtp);
 
     SetLastError(0xdeadbeef);
     hFtp = InternetConnectA(hInternet, "ftp.winehq.org", INTERNET_DEFAULT_FTP_PORT, NULL, "IEUser@", INTERNET_SERVICE_FTP, INTERNET_FLAG_PASSIVE, 0);

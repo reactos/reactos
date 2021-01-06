@@ -101,7 +101,7 @@ BEGIN
 END
 
 IDD_BROWSE_FOR_FOLDER_NEW DIALOGEX 15, 40, 218, 196
-STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU | WS_SIZEBOX
 CAPTION "Rechercher un dossier"
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -140,7 +140,7 @@ BEGIN
     LTEXT COPYRIGHT_YEAR, IDC_STATIC, 88, 75, 17, 10
     LTEXT " ReactOS Team\0", IDC_STATIC, 105, 75, 53, 10
     LTEXT "", IDC_ABOUT_OTHERSTUFF, 35, 90, 180, 20
-    LTEXT "Cette version de ReactOS est enregistrée à :", IDC_STATIC, 35, 115, 180, 10
+    LTEXT "Cette version de ReactOS est enregistrée à :", IDC_ABOUT_REG_TO, 35, 115, 180, 10
     LTEXT "", IDC_ABOUT_REG_USERNAME, 45, 125, 180, 10
     LTEXT "", IDC_ABOUT_REG_ORGNAME, 45, 135, 180, 10
     LTEXT "", IDC_STATIC, 35, 147, 235, 1, SS_ETCHEDHORZ
@@ -740,7 +740,7 @@ BEGIN
     IDS_SHV_COLUMN_DELFROM "Localisation d'origine"
     IDS_SHV_COLUMN_DELDATE "Date de suppression"
     IDS_SHV_COLUMN_FONTTYPE "Type de police"
-    IDS_SHV_COLUMN_WORKGROUP "Workgroup"
+    IDS_SHV_COLUMN_WORKGROUP "Groupe de travail"
     IDS_SHV_COLUMN_NETLOCATION "Emplacement réseau"
     IDS_SHV_COLUMN_DOCUMENTS "Documents"
     IDS_SHV_COLUMN_STATUS "État"
@@ -1006,4 +1006,6 @@ BEGIN
     IDS_MOVETOTITLE "Sélectionnez l'emplacement où vous souhaitez déplacer '%s', puis appuyez sur le bouton Déplacer."
     IDS_MOVEITEMS "Déplacer les éléments"
     IDS_MOVEBUTTON "Déplacer"
+
+    IDS_SYSTEMFOLDER "Dossier système"
 END

@@ -6,26 +6,26 @@ STRINGTABLE
 BEGIN
     IDS_APPTITLE "ReactOS 圖片和傳真檢視器"
     IDS_SETASDESKBG "設定為桌面背景"
-    IDS_NOPREVIEW "No preview available."
+    IDS_NOPREVIEW "無法預覽。"
     IDS_PREVIEW "預覽"
     /* Tooltips */
     IDS_TOOLTIP_NEXT_PIC "下一張圖片"
     IDS_TOOLTIP_PREV_PIC "上一張圖片"
     IDS_TOOLTIP_ZOOM_IN "放大 (+)"
     IDS_TOOLTIP_ZOOM_OUT "縮小 (-)"
-    IDS_TOOLTIP_ROT_CLOCKW "旋轉順時針 (Ctrl+K)"
-    IDS_TOOLTIP_ROT_COUNCW "旋轉逆時針 (Ctrl+L)"
+    IDS_TOOLTIP_ROT_CLOCKW "順時針旋轉 (Ctrl+K)"
+    IDS_TOOLTIP_ROT_COUNCW "逆時針旋轉 (Ctrl+L)"
     IDS_TOOLTIP_PRINT "列印 (Ctrl+P)"
-    IDS_TOOLTIP_SAVEAS "另存為...(Ctrl+S)"
+    IDS_TOOLTIP_SAVEAS "另存新檔...(Ctrl+S)"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_EMF_FILE    "EMF 影象"
-    IDS_GIF_FILE    "GIF 影象"
-    IDS_JPG_FILE    "JPEG 影象"
-    IDS_BMP_FILE    "Bitmap 影象"
-    IDS_PNG_FILE    "PNG 影象"
-    IDS_TIF_FILE    "TIF 影象"
-    IDS_WMF_FILE    "WMF 影象"
+    IDS_EMF_FILE    "EMF 影像"
+    IDS_GIF_FILE    "GIF 影像"
+    IDS_JPG_FILE    "JPEG 影像"
+    IDS_BMP_FILE    "Bitmap 影像"
+    IDS_PNG_FILE    "PNG 影像"
+    IDS_TIF_FILE    "TIF 影像"
+    IDS_WMF_FILE    "WMF 影像"
 END

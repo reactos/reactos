@@ -95,9 +95,9 @@ acpipic_up.DeviceDesc = "Komputer PC z interfejsem ACPI"
 e_isa_up.DeviceDesc = "Standardowy komputer PC"
 
 MsftMfg = "Microsoft Corporation"
-xbox.DeviceDesc = "Original Xbox (x86 based)"
+xbox.DeviceDesc = "Oryginalny Xbox (oparty na procesorze x86)"
 
-pc98_up.DeviceDesc = "Uniprocessor NEC PC-98"
+pc98_up.DeviceDesc = "Komputer NEC PC-98"
 
 [Strings.0418]
 ReactOS = "Echipa ReactOS"

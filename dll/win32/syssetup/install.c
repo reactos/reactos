@@ -26,8 +26,8 @@
 #define NDEBUG
 #include <debug.h>
 
-DWORD WINAPI
-CMP_WaitNoPendingInstallEvents(DWORD dwTimeout);
+//DWORD WINAPI
+//CMP_WaitNoPendingInstallEvents(DWORD dwTimeout);
 
 DWORD WINAPI
 SetupStartService(LPCWSTR lpServiceName, BOOL bWait);

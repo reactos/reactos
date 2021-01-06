@@ -113,7 +113,7 @@ HMODULE _CrtGetUser32()
 {
     if (_CrtUser32Handle == NULL)
     {
-        HMODULE mod = LoadLibraryExW(L"user32.dll", NULL, LOAD_LIBRARY_SEARCH_SYSTEM32);
+        HMODULE mod = LoadLibraryExW(L"user32.dll", NULL, 0 /* NT6+: LOAD_LIBRARY_SEARCH_SYSTEM32 */);
         if (mod == NULL)
             mod = (HMODULE)INVALID_HANDLE_VALUE;
 

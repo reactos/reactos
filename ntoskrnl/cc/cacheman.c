@@ -22,7 +22,7 @@ static ULONG BugCheckFileId = 0x4 << 16;
 
 /* FUNCTIONS *****************************************************************/
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 CcPfInitializePrefetcher(VOID)
@@ -40,7 +40,7 @@ CcPfInitializePrefetcher(VOID)
     /* FIXME: Setup the rest of the prefetecher */
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 BOOLEAN
 NTAPI
 CcInitializeCacheManager(VOID)

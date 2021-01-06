@@ -48,7 +48,6 @@ FsdGetFsVolumeInformation(
         RtlCopyMemory(FsVolumeInfo->VolumeLabel,
                       DeviceObject->Vpb->VolumeLabel,
                       *BufferLength);
-        *BufferLength = 0;
     }
     else
     {
@@ -456,6 +455,8 @@ VfatQueryVolumeInformation(
 
     DPRINT("FsInformationClass %d\n", FsInformationClass);
     DPRINT("SystemBuffer %p\n", SystemBuffer);
+
+    RtlZeroMemory(SystemBuffer, BufferLength);
 
     switch (FsInformationClass)
     {

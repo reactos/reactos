@@ -354,7 +354,7 @@ typedef struct _NET_COMPUTER_NAME_ARRAY
     pointer_default(unique),
     endpoint("ncacn_np:[\\pipe\\wkssvc]")
 #ifndef __midl
-    ,implicit_handle(handle_t hBinding)
+    ,implicit_handle(handle_t wkssvc_hBinding)
 #endif
 
 ]

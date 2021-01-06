@@ -25,13 +25,6 @@ CPPORT DefaultPort = {0, 0, 0};
 
 /* REACTOS FUNCTIONS **********************************************************/
 
-NTSTATUS
-NTAPI
-KdDebuggerInitialize1(IN PLOADER_PARAMETER_BLOCK LoaderBlock OPTIONAL)
-{
-    return STATUS_NOT_IMPLEMENTED;
-}
-
 BOOLEAN
 NTAPI
 KdPortInitializeEx(IN PCPPORT PortInformation,

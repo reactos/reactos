@@ -1,7 +1,7 @@
 /*
  * Turkish resources for the Internet control panel applet
  *
- * Copyright: 2013, 2014 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net)
+ * Copyright: 2013, 2014, 2020 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net)
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -26,10 +26,10 @@ LANGUAGE LANG_TURKISH, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
-    IDS_CPL_NAME        "Umûmî Ağ Ayarları"
-    IDS_CPL_INFO        "ReactOS Umûmî Ağ Tarayıcısı'nı ve ilişkili ayarları yapılandırır."
-    IDS_SEC_SETTINGS    "Bölgeye Göre Güvenlik Ayarları: "
-    IDS_SEC_LEVEL0      "Husûsî"
+    IDS_CPL_NAME        "İnternet Ayarları"
+    IDS_CPL_INFO        "WINE İnternet Tarayıcısı'nı ve ilişkili ayarları yapılandırır."
+    IDS_SEC_SETTINGS    "Bölgeye göre güvenlik ayarları: "
+    IDS_SEC_LEVEL0      "Özel"
     IDS_SEC_LEVEL1      "Çok Düşük"
     IDS_SEC_LEVEL2      "Düşük"
     IDS_SEC_LEVEL3      "Orta"
@@ -41,22 +41,22 @@ END
 IDD_GENERAL DIALOGEX  0, 0, 320, 220
 STYLE DS_SHELLFONT | WS_CAPTION | WS_CHILD | WS_DISABLED
 FONT 8, "MS Shell Dlg"
-CAPTION "Umûmî"
+CAPTION "Genel"
 BEGIN
 
     GROUPBOX    "Ana Sayfa ", IDC_STATIC, 4, 4, 312, 56
     ICON ICO_HOME, ICO_HOME, 10, 15, 21, 20
-    LTEXT       "Ana sayfanız olarak kullanılacak adresi değiştirebilirsiniz.",
+    LTEXT       "Ana sayfanız olarak kullanılacak adresi seçebilirsiniz.",
                 IDC_STATIC, 40, 14, 265, 10
     EDITTEXT    IDC_HOME_EDIT, 40, 26, 270, 12, WS_VISIBLE | ES_AUTOHSCROLL
-    PUSHBUTTON  "&Şimdiki Sayfa", IDC_HOME_CURRENT, 58, 42, 80, 14
-    PUSHBUTTON  "&Ön Tanımlı Sayfa", IDC_HOME_DEFAULT, 144, 42, 80, 14
+    PUSHBUTTON  "Şi&mdiki Sayfa", IDC_HOME_CURRENT, 58, 42, 80, 14
+    PUSHBUTTON  "Ö&n Tanımlı Sayfa", IDC_HOME_DEFAULT, 144, 42, 80, 14
     PUSHBUTTON  "&Boş Sayfa", IDC_HOME_BLANK, 230, 42, 80, 14
-    GROUPBOX    "Tarama Geçmişi ", IDC_STATIC, 4, 66, 312, 42
+    GROUPBOX    "Tarama Geçmişi", IDC_STATIC, 4, 66, 312, 42
     ICON ICO_HISTORY, ICO_HISTORY, 10, 78, 80, 14
-    LTEXT       "Saklanan sayfaları, tanımlama bilgilerini ve başka verileri silebilirsiniz.",
+    LTEXT       "Ön belleklenen sayfaları, tanımlama bilgilerini ve başka verileri silebilirsiniz.",
                  IDC_STATIC, 40, 76, 270, 10
-    PUSHBUTTON  "&Kütükleri Sil...", IDC_HISTORY_DELETE, 144, 90, 80, 14
+    PUSHBUTTON  "&Dosyaları Sil...", IDC_HISTORY_DELETE, 144, 90, 80, 14
     PUSHBUTTON  "&Ayarlar...", IDC_HISTORY_SETTINGS, 230, 90, 80, 14
 
 END
@@ -68,15 +68,15 @@ FONT 8, "MS Shell Dlg"
 CAPTION "Tarama Geçmişini Sil"
 BEGIN
 
-    AUTOCHECKBOX   "&Geçici Umûmî Ağ Kütüleri:\nUmûmî Ağ sayfalarının, resimlerin ve onay belgelerinin saklanmış kopyaları.",
+    AUTOCHECKBOX   "&Geçici İnternet Dosyaları:\nİnternet sayfalarının, resimlerin ve sertifikaların ön belleklenen kopyaları.",
                     IDC_DELETE_TEMP_FILES, 10, 8, 230, 40, BS_TOP | BS_MULTILINE
-    AUTOCHECKBOX   "&Tanımlama Bilgileri:\nUmûmî Ağ siteleri eliyle bilgisayarınıza saklanmış, kullanıcı yeğlemeleri ve oturum açma bilgileri gibi şeyleri saklayan kütükler.",
+    AUTOCHECKBOX   "&Tanımlama Bilgileri:\nİnternet siteleri tarafından bilgisayarınıza kaydedilmiş, kullanıcı tercihleri ve oturum açma bilgileri gibi şeyleri saklayan dosyalar.",
                     IDC_DELETE_COOKIES, 10, 48, 230, 40, BS_TOP | BS_MULTILINE
-    AUTOCHECKBOX   "G&eçmiş:\nEriştiğiniz Umûmî Ağ sitelerinin dizelgesi.",
+    AUTOCHECKBOX   "G&eçmiş:\nEriştiğiniz İnternet sitelerinin listesi.",
                     IDC_DELETE_HISTORY, 10, 88, 230, 40, BS_TOP | BS_MULTILINE
     AUTOCHECKBOX   "&Form Verileri:\nFormlarda girdiğiniz kullanıcı adlarıyla başka bilgiler.",
                     IDC_DELETE_FORM_DATA, 10, 128, 230, 40, BS_TOP | BS_MULTILINE
-    AUTOCHECKBOX   "&Şifreler:\nFormlarda girdiğiniz saklanmış şifreler.",
+    AUTOCHECKBOX   "&Parolalar:\nFormlarda girdiğiniz kaydedilmiş parolalar.",
                     IDC_DELETE_PASSWORDS, 10, 168, 230, 40, BS_TOP | BS_MULTILINE
     DEFPUSHBUTTON  "İptal", IDCANCEL, 185, 230, 60, 15, WS_GROUP
     PUSHBUTTON     "Sil", IDOK, 120, 230, 60, 15, WS_GROUP
@@ -108,11 +108,11 @@ FONT 8, "MS Shell Dlg"
 CAPTION "İçerik"
 BEGIN
 
-    GROUPBOX    "Onay Belgeleri ", IDC_STATIC, 4, 4, 312, 50
+    GROUPBOX    "Sertifikalar ", IDC_STATIC, 4, 4, 312, 50
     ICON ICO_CERTIFICATES, ICO_CERTIFICATES, 10, 15, 21, 20
-    LTEXT       "Onay belgeleri, şahsî tanılamanızda ve onay belgesi yetkilileriyle yayımcıları tanımada kullanılır.",
+    LTEXT       "Sertifikalar, kişisel tanılamanızda ve sertifika yetkilileriyle yayımcıları tanımada kullanılır.",
                 IDC_STATIC, 40, 14, 252, 18
-    PUSHBUTTON  "&Onay Belgeleri...", IDC_CERT, 146, 34, 80, 14
+    PUSHBUTTON  "&Sertifikalar...", IDC_CERT, 146, 34, 80, 14
     PUSHBUTTON	"&Yayımcılar...", IDC_CERT_PUBLISHER, 230, 34, 80, 14
 
 END
@@ -121,17 +121,17 @@ END
 IDD_CONNECTIONS DIALOG 0, 0, 320, 220
 STYLE WS_CAPTION | WS_CHILD | WS_DISABLED
 FONT 8, "MS Shell Dlg"
-CAPTION "Connections"
+CAPTION "Bağlantılar"
 BEGIN
-    GROUPBOX        "Automatic configuration", IDC_STATIC, 4, 4, 312, 56
-    AUTOCHECKBOX    "Use Web Proxy Auto-Discovery (WPAD)", IDC_USE_WPAD, 10, 14, 200, 14, BS_TOP
-    AUTOCHECKBOX    "Use Proxy Auto-Config (PAC) script", IDC_USE_PAC_SCRIPT, 10, 28, 200, 14, BS_TOP
-    LTEXT           "Address:", IDC_STATIC, 10, 42, 40, 14
+    GROUPBOX        "Otomatik yapılandırma", IDC_STATIC, 4, 4, 312, 56
+    AUTOCHECKBOX    "Otomatik Vekil Sunucu Keşfi (WPAD) kullan", IDC_USE_WPAD, 10, 14, 200, 14, BS_TOP
+    AUTOCHECKBOX    "Vekil Sunucu Otomatik Yapılandırma (PAC) betiği kullan", IDC_USE_PAC_SCRIPT, 10, 28, 200, 14, BS_TOP
+    LTEXT           "Adres:", IDC_STATIC, 10, 42, 40, 14
     EDITTEXT        IDC_EDIT_PAC_SCRIPT, 50, 42, 160, 14, WS_VISIBLE | ES_AUTOHSCROLL | WS_DISABLED
-    GROUPBOX        "Proxy server", IDC_STATIC, 4, 66, 312, 42
-    AUTOCHECKBOX    "Use a proxy server", IDC_USE_PROXY_SERVER, 10, 76, 200, 14, BS_TOP | BS_MULTILINE
-    LTEXT           "Address:", IDC_STATIC, 10, 90, 40, 14
+    GROUPBOX        "Vekil Sunucu", IDC_STATIC, 4, 66, 312, 42
+    AUTOCHECKBOX    "Bir vekil sunucu kullan", IDC_USE_PROXY_SERVER, 10, 76, 200, 14, BS_TOP | BS_MULTILINE
+    LTEXT           "Adres:", IDC_STATIC, 10, 90, 40, 14
     EDITTEXT        IDC_EDIT_PROXY_SERVER, 50, 90, 80, 14, WS_VISIBLE | ES_AUTOHSCROLL | WS_DISABLED
-    LTEXT           "Port:", IDC_STATIC, 140, 90, 30, 14
+    LTEXT           "Bağlantı noktası:", IDC_STATIC, 140, 90, 30, 14
     EDITTEXT        IDC_EDIT_PROXY_PORT, 170, 90, 40, 14, WS_VISIBLE | ES_AUTOHSCROLL | WS_DISABLED | ES_NUMBER
 END

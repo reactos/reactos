@@ -6,7 +6,7 @@
  * PROGRAMMER:      Timo Kreuzer (timo.kreuzer@reactos.org)
  */
 
-#include "precomp.h"
+#include "scsiport.h"
 
 #include <srb.h>
 

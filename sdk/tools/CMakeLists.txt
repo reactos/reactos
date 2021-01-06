@@ -6,10 +6,10 @@ endfunction()
 
 if(MSVC)
     add_definitions(-D_CRT_SECURE_NO_WARNINGS -D_CRT_NONSTDC_NO_DEPRECATE -DHAVE_IO_H=1)
-    add_compile_flags_language("/EHsc" "CXX")
+    add_compile_options("$<$<COMPILE_LANGUAGE:CXX>:/EHsc>")
 
     # Disable warning "conversion from 'size_t' to 'int', possible loss of data"
-    add_compile_flags("/wd4267")
+    add_compile_options("/wd4267")
 endif()
 
 add_host_tool(bin2c bin2c.c)

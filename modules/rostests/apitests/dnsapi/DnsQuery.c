@@ -71,7 +71,7 @@ void TestHostName(void)
     dp = InvalidPointer;
     dns_status = DnsQuery_A(host_name, DNS_TYPE_A, DNS_QUERY_STANDARD, 0, &dp, 0);
     ok(dns_status == NO_ERROR, "DnsQuery_A failed with error %lu\n", dns_status);
-    if (dp != InvalidPointer)
+    if (dp != InvalidPointer && dp)
     {
         ok(strcmp(dp->pName, host_name) == 0, "DnsQuery_A returned wrong answer '%s' expected '%s'\n", dp->pName, host_name);
         ok(dp->wType == DNS_TYPE_A, "DnsQuery_A returned wrong type %d expected %d\n", dp->wType, DNS_TYPE_A);
@@ -84,7 +84,7 @@ void TestHostName(void)
     dp = InvalidPointer;
     dns_status = DnsQuery_A("127.0.0.1", DNS_TYPE_A, DNS_QUERY_STANDARD, 0, &dp, 0);
     ok(dns_status == NO_ERROR, "DnsQuery_A failed with error %lu\n", dns_status);
-    if (dp != InvalidPointer)
+    if (dp != InvalidPointer && dp)
     {
         ok(strcmp(dp->pName, "127.0.0.1") == 0, "DnsQuery_A returned wrong answer '%s' expected '%s'\n", dp->pName, "127.0.0.1");
         ok(dp->wType == DNS_TYPE_A, "DnsQuery_A returned wrong type %d expected %d\n", dp->wType, DNS_TYPE_A);
@@ -98,7 +98,7 @@ void TestHostName(void)
     dp = InvalidPointer;
     dns_status = DnsQuery_A("LocalHost", DNS_TYPE_A, DNS_QUERY_STANDARD, 0, &dp, 0);
     ok(dns_status == NO_ERROR, "DnsQuery_A failed with error %lu\n", dns_status);
-    if (dp != InvalidPointer)
+    if (dp != InvalidPointer && dp)
     {
         /* On Windows 7 is unchanged on XP is lowercased */
         ok(strcmp(dp->pName, "localhost") == 0 || broken(strcmp(dp->pName, "LocalHost") == 0), "DnsQuery_A returned wrong answer '%s' expected '%s'\n", dp->pName, "localhost");
@@ -112,7 +112,7 @@ void TestHostName(void)
     dp = InvalidPointer;
     dns_status = DnsQuery_A("Localhost", DNS_TYPE_A, DNS_QUERY_STANDARD, 0, &dp, 0);
     ok(dns_status == NO_ERROR, "DnsQuery_A failed with error %lu\n", dns_status);
-    if (dp != InvalidPointer)
+    if (dp != InvalidPointer && dp)
     {
         /* On Windows 7 is unchanged on XP is lowercased */
         ok(strcmp(dp->pName, "localhost") == 0 || broken(strcmp(dp->pName, "Localhost") == 0), "DnsQuery_A returned wrong answer '%s' expected '%s'\n", dp->pName, "localhost");
@@ -126,7 +126,7 @@ void TestHostName(void)
     dp = InvalidPointer;
     dns_status = DnsQuery_A("localhost", DNS_TYPE_A, DNS_QUERY_STANDARD, 0, &dp, 0);
     ok(dns_status == NO_ERROR, "DnsQuery_A failed with error %lu\n", dns_status);
-    if (dp != InvalidPointer)
+    if (dp != InvalidPointer && dp)
     {
         ok(strcmp(dp->pName, "localhost") == 0, "DnsQuery_A returned wrong answer '%s' expected '%s'\n", dp->pName, "localhost");
         ok(dp->wType == DNS_TYPE_A, "DnsQuery_A returned wrong type %d expected %d\n", dp->wType, DNS_TYPE_A);
@@ -139,7 +139,7 @@ void TestHostName(void)
     dp = InvalidPointer;
     dns_status = DnsQuery_A("", DNS_TYPE_A, DNS_QUERY_STANDARD, 0, &dp, 0);
     ok(dns_status == NO_ERROR, "DnsQuery_A failed with error %lu\n", dns_status);
-    if (dp != InvalidPointer)
+    if (dp != InvalidPointer && dp)
     {
         /* On Windows 7 is the host on XP is dot ??? */
         ok(strcmp(dp->pName, ".") == 0 || broken(strcmp(dp->pName, host_name) == 0), "DnsQuery_A returned wrong answer '%s' expected '%s' or '.'\n", dp->pName, host_name);
@@ -165,7 +165,7 @@ void TestHostName(void)
     dp = InvalidPointer;
     dns_status = DnsQuery_A("0.0.0.0", DNS_TYPE_A, DNS_QUERY_STANDARD, 0, &dp, 0);
     ok(dns_status == NO_ERROR, "DnsQuery_A failed with error %lu\n", dns_status);
-    if (dp != InvalidPointer)
+    if (dp != InvalidPointer && dp)
     {
         ok(strcmp(dp->pName, "0.0.0.0") == 0, "DnsQuery_A returned wrong answer '%s' expected '%s'\n", dp->pName, "0.0.0.0");
         ok(dp->wType == DNS_TYPE_A, "DnsQuery_A returned wrong type %d expected %d\n", dp->wType, DNS_TYPE_A);
@@ -284,7 +284,7 @@ void TestHostName(void)
     dp = InvalidPointer;
     dns_status = DnsQuery_UTF8(host_nameUTF8, DNS_TYPE_A, DNS_QUERY_STANDARD, 0, &dp, 0);
     ok(dns_status == NO_ERROR, "DnsQuery_UTF8 failed with error %lu\n", dns_status);
-    if (dp != InvalidPointer)
+    if (dp != InvalidPointer && dp)
     {
         ok(strcmp(dp->pName, host_name) == 0, "DnsQuery_UTF8 returned wrong answer '%s' expected '%s'\n", dp->pName, host_name);
         ok(dp->wType == DNS_TYPE_A, "DnsQuery_UTF8 returned wrong type %d expected %d\n", dp->wType, DNS_TYPE_A);
@@ -299,7 +299,7 @@ void TestHostName(void)
     wcstombs(test_nameUTF8, test_nameW, 255);
     dns_status = DnsQuery_UTF8(test_nameUTF8, DNS_TYPE_A, DNS_QUERY_STANDARD, 0, &dp, 0);
     ok(dns_status == NO_ERROR, "DnsQuery_UTF8 failed with error %lu\n", dns_status);
-    if (dp != InvalidPointer)
+    if (dp != InvalidPointer && dp)
     {
         ok(strcmp(dp->pName, "127.0.0.1") == 0, "DnsQuery_UTF8 returned wrong answer '%s' expected '%s'\n", dp->pName, "127.0.0.1");
         ok(dp->wType == DNS_TYPE_A, "DnsQuery_UTF8 returned wrong type %d expected %d\n", dp->wType, DNS_TYPE_A);
@@ -315,7 +315,7 @@ void TestHostName(void)
     wcstombs(test_nameUTF8, test_nameW, 255);
     dns_status = DnsQuery_UTF8(test_nameUTF8, DNS_TYPE_A, DNS_QUERY_STANDARD, 0, &dp, 0);
     ok(dns_status == NO_ERROR, "DnsQuery_UTF8 failed with error %lu\n", dns_status);
-    if (dp != InvalidPointer)
+    if (dp != InvalidPointer && dp)
     {
         /* On Windows 7 is unchanged on XP is lowercased */
         ok(strcmp(dp->pName, "localhost") == 0 || broken(strcmp(dp->pName, "LocalHost") == 0), "DnsQuery_UTF8 returned wrong answer '%s' expected '%s'\n", dp->pName, "localhost");
@@ -331,7 +331,7 @@ void TestHostName(void)
     wcstombs(test_nameUTF8, test_nameW, 255);
     dns_status = DnsQuery_UTF8(test_nameUTF8, DNS_TYPE_A, DNS_QUERY_STANDARD, 0, &dp, 0);
     ok(dns_status == NO_ERROR, "DnsQuery_UTF8 failed with error %lu\n", dns_status);
-    if (dp != InvalidPointer)
+    if (dp != InvalidPointer && dp)
     {
         /* On Windows 7 is unchanged on XP is lowercased */
         ok(strcmp(dp->pName, "localhost") == 0 || broken(strcmp(dp->pName, "Localhost") == 0), "DnsQuery_UTF8 returned wrong answer '%s' expected '%s'\n", dp->pName, "localhost");
@@ -347,7 +347,7 @@ void TestHostName(void)
     wcstombs(test_nameUTF8, test_nameW, 255);
     dns_status = DnsQuery_UTF8(test_nameUTF8, DNS_TYPE_A, DNS_QUERY_STANDARD, 0, &dp, 0);
     ok(dns_status == NO_ERROR, "DnsQuery_UTF8 failed with error %lu\n", dns_status);
-    if (dp != InvalidPointer)
+    if (dp != InvalidPointer && dp)
     {
         ok(strcmp(dp->pName, "localhost") == 0, "DnsQuery_UTF8 returned wrong answer '%s' expected '%s'\n", dp->pName, "localhost");
         ok(dp->wType == DNS_TYPE_A, "DnsQuery_UTF8 returned wrong type %d expected %d\n", dp->wType, DNS_TYPE_A);
@@ -362,7 +362,7 @@ void TestHostName(void)
     wcstombs(test_nameUTF8, test_nameW, 255);
     dns_status = DnsQuery_UTF8(test_nameUTF8, DNS_TYPE_A, DNS_QUERY_STANDARD, 0, &dp, 0);
     ok(dns_status == NO_ERROR, "DnsQuery_UTF8 failed with error %lu\n", dns_status);
-    if (dp != InvalidPointer)
+    if (dp != InvalidPointer && dp)
     {
         /* On Windows 7 is the host on XP is dot ??? */
         ok(strcmp(dp->pName, ".") == 0 || broken(strcmp(dp->pName, host_name) == 0), "DnsQuery_UTF8 returned wrong answer '%s' expected '%s' or '.'\n", dp->pName, host_name);
@@ -392,7 +392,7 @@ void TestHostName(void)
     wcstombs(test_nameUTF8, test_nameW, 255);
     dns_status = DnsQuery_UTF8(test_nameUTF8, DNS_TYPE_A, DNS_QUERY_STANDARD, 0, &dp, 0);
     ok(dns_status == NO_ERROR, "DnsQuery_UTF8 failed with error %lu\n", dns_status);
-    if (dp != InvalidPointer)
+    if (dp != InvalidPointer && dp)
     {
         ok(strcmp(dp->pName, "0.0.0.0") == 0, "DnsQuery_UTF8 returned wrong answer '%s' expected '%s'\n", dp->pName, "0.0.0.0");
         ok(dp->wType == DNS_TYPE_A, "DnsQuery_UTF8 returned wrong type %d expected %d\n", dp->wType, DNS_TYPE_A);
@@ -534,7 +534,7 @@ void TestHostName(void)
     //Testing HostName
     dns_status = DnsQuery_W(host_nameW, DNS_TYPE_A, DNS_QUERY_STANDARD, 0, &dp, 0);
     ok(dns_status == NO_ERROR, "DnsQuery_W failed with error %lu\n", dns_status);
-    if (dp != InvalidPointer)
+    if (dp != InvalidPointer && dp)
     {
         ok(wcscmp((LPCWSTR)dp->pName, host_nameW) == 0, "DnsQuery_w returned wrong answer '%ls' expected '%ls'\n", (LPCWSTR)dp->pName, host_nameW);
         ok(dp->wType == DNS_TYPE_A, "DnsQuery_W returned wrong type %d expected %d\n", dp->wType, DNS_TYPE_A);
@@ -546,7 +546,7 @@ void TestHostName(void)
     //127.0.0.1
     dns_status = DnsQuery_W(L"127.0.0.1", DNS_TYPE_A, DNS_QUERY_STANDARD, 0, &dp, 0);
     ok(dns_status == NO_ERROR, "DnsQuery_W failed with error %lu\n", dns_status);
-    if (dp != InvalidPointer)
+    if (dp != InvalidPointer && dp)
     {
         ok(wcscmp((LPCWSTR)dp->pName, L"127.0.0.1") == 0, "DnsQuery_W returned wrong answer '%ls' expected '%ls'\n", (LPCWSTR)dp->pName, L"127.0.0.1");
         ok(dp->wType == DNS_TYPE_A, "DnsQuery_W returned wrong type %d expected %d\n", dp->wType, DNS_TYPE_A);
@@ -559,7 +559,7 @@ void TestHostName(void)
     //Localhost strings
     dns_status = DnsQuery_W(L"LocalHost", DNS_TYPE_A, DNS_QUERY_STANDARD, 0, &dp, 0);
     ok(dns_status == NO_ERROR, "DnsQuery_W failed with error %lu\n", dns_status);
-    if (dp != InvalidPointer)
+    if (dp != InvalidPointer && dp)
     {
         ok(wcscmp((LPCWSTR)dp->pName, L"localhost") == 0 || broken(wcscmp((LPCWSTR)dp->pName, L"LocalHost") == 0), "DnsQuery_W returned wrong answer '%ls' expected '%ls'\n", (LPCWSTR)dp->pName, L"localhost");
         ok(dp->wType == DNS_TYPE_A, "DnsQuery_W returned wrong type %d expected %d\n", dp->wType, DNS_TYPE_A);
@@ -571,7 +571,7 @@ void TestHostName(void)
 
     dns_status = DnsQuery_W(L"Localhost", DNS_TYPE_A, DNS_QUERY_STANDARD, 0, &dp, 0);
     ok(dns_status == NO_ERROR, "DnsQuery_W failed with error %lu\n", dns_status);
-    if (dp != InvalidPointer)
+    if (dp != InvalidPointer && dp)
     {
         ok(wcscmp((LPCWSTR)dp->pName, L"localhost") == 0 || broken(wcscmp((LPCWSTR)dp->pName, L"Localhost") == 0), "DnsQuery_W returned wrong answer '%ls' expected '%ls'\n", (LPCWSTR)dp->pName, L"localhost");
         ok(dp->wType == DNS_TYPE_A, "DnsQuery_W returned wrong type %d expected %d\n", dp->wType, DNS_TYPE_A);
@@ -583,7 +583,7 @@ void TestHostName(void)
 
     dns_status = DnsQuery_W(L"localhost", DNS_TYPE_A, DNS_QUERY_STANDARD, 0, &dp, 0);
     ok(dns_status == NO_ERROR, "DnsQuery_W failed with error %lu\n", dns_status);
-    if (dp != InvalidPointer)
+    if (dp != InvalidPointer && dp)
     {
         ok(wcscmp((LPCWSTR)dp->pName, L"localhost") == 0, "DnsQuery_W returned wrong answer '%ls' expected '%ls'\n", (LPCWSTR)dp->pName, L"localhost");
         ok(dp->wType == DNS_TYPE_A, "DnsQuery_W returned wrong type %d expected %d\n", dp->wType, DNS_TYPE_A);
@@ -595,7 +595,7 @@ void TestHostName(void)
 
     dns_status = DnsQuery_W(L"", DNS_TYPE_A, DNS_QUERY_STANDARD, 0, &dp, 0);
     ok(dns_status == NO_ERROR, "DnsQuery_W failed with error %lu\n", dns_status);
-    if (dp != InvalidPointer)
+    if (dp != InvalidPointer && dp)
     {
         /* On Windows 7 is the host on XP is dot ??? */
         ok(wcscmp((LPCWSTR)dp->pName, L".") == 0 || broken(wcscmp((LPCWSTR)dp->pName, host_nameW) == 0), "DnsQuery_W returned wrong answer '%ls' expected '%ls'\n", (LPCWSTR)dp->pName, host_nameW);
@@ -620,7 +620,7 @@ void TestHostName(void)
 
     dns_status = DnsQuery_W(L"0.0.0.0", DNS_TYPE_A, DNS_QUERY_STANDARD, 0, &dp, 0);
     ok(dns_status == NO_ERROR, "DnsQuery_W failed with error %lu\n", dns_status);
-    if (dp != InvalidPointer)
+    if (dp != InvalidPointer && dp)
     {
         ok(wcscmp((LPCWSTR)dp->pName, L"0.0.0.0") == 0, "DnsQuery_W returned wrong answer '%ls' expected '%ls'\n", (LPCWSTR)dp->pName, L"0.0.0.0");
         ok(dp->wType == DNS_TYPE_A, "DnsQuery_W returned wrong type %d expected %d\n", dp->wType, DNS_TYPE_A);

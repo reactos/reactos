@@ -3,6 +3,7 @@
  *
  *    Copyright 2004    Maxime Bellengé <maxime.bellenge@laposte.net>
  *    Copyright 2009  Andrew Hill
+ *    Copyright 2020  Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -279,6 +280,47 @@ HRESULT WINAPI CAutoComplete::SetOptions(DWORD dwFlag)
     return hr;
 }
 
+/* Edit_BackWord --- Delete previous word in text box */
+static void Edit_BackWord(HWND hwndEdit)
+{
+    INT iStart, iEnd;
+    iStart = iEnd = 0;
+    SendMessageW(hwndEdit, EM_GETSEL, (WPARAM)&iStart, (LPARAM)&iEnd);
+
+    if (iStart != iEnd || iStart < 0)
+        return;
+
+    size_t cchText = GetWindowTextLengthW(hwndEdit);
+    if (cchText < (size_t)iStart || (INT)cchText <= 0)
+        return;
+
+    CComHeapPtr<WCHAR> pszText;
+    if (!pszText.Allocate(cchText + 1))
+        return;
+
+    if (GetWindowTextW(hwndEdit, pszText, cchText + 1) <= 0)
+        return;
+
+    WORD types[2];
+    for (--iStart; 0 < iStart; --iStart)
+    {
+        GetStringTypeW(CT_CTYPE1, &pszText[iStart - 1], 2, types);
+        if (((types[0] & C1_PUNCT) && !(types[1] & C1_SPACE)) ||
+            ((types[0] & C1_SPACE) && (types[1] & (C1_ALPHA | C1_DIGIT))))
+        {
+            SendMessageW(hwndEdit, EM_SETSEL, iStart, iEnd);
+            SendMessageW(hwndEdit, EM_REPLACESEL, TRUE, (LPARAM)L"");
+            return;
+        }
+    }
+
+    if (iStart == 0)
+    {
+        SendMessageW(hwndEdit, EM_SETSEL, iStart, iEnd);
+        SendMessageW(hwndEdit, EM_REPLACESEL, TRUE, (LPARAM)L"");
+    }
+}
+
 /*
   Window procedure for autocompletion
  */
@@ -407,6 +449,14 @@ LRESULT APIENTRY CAutoComplete::ACEditSubclassProc(HWND hwnd, UINT uMsg, WPARAM 
                 }; break;
                 
                 case VK_BACK:
+                {
+                    if (GetKeyState(VK_CONTROL) < 0) // Ctrl+Backspace
+                    {
+                        Edit_BackWord(hwnd);
+                        return 0;
+                    }
+                }
+                // FALL THROUGH
                 case VK_DELETE:
                 {
                     if ((! *hwndText) && (pThis->options & ACO_AUTOSUGGEST))

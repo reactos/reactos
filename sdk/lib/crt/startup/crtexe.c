@@ -115,6 +115,10 @@ _CRTALLOC(".CRT$XCAA") _PVFV mingw_pcppinit = pre_cpp_init;
 
 extern int _MINGW_INSTALL_DEBUG_MATHERR;
 
+#ifdef __GNUC__
+extern void __do_global_dtors(void);
+#endif
+
 static int __cdecl
 pre_c_init (void)
 {
@@ -123,7 +127,7 @@ pre_c_init (void)
     __set_app_type(_GUI_APP);
   else
     __set_app_type (_CONSOLE_APP);
-  __onexitbegin = __onexitend = (_PVFV *) _encode_pointer ((_PVFV *)(-1));
+  __onexitbegin = __onexitend = (_PVFV *)(-1);
 
   * __MINGW_IMP_SYMBOL(_fmode) = _fmode;
   * __MINGW_IMP_SYMBOL(_commode) = _commode;
@@ -324,6 +328,11 @@ __tmainCRTStartup (void)
 #endif
     mainret = main (argc, argv, envp);
 #endif
+
+#ifdef __GNUC__
+    __do_global_dtors();
+#endif
+
     if (!managedapp)
       exit (mainret);
 

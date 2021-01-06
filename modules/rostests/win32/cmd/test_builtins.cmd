@@ -33,6 +33,45 @@ N,
 O
 ) do echo %%j
 
+echo --- FOR /F token parsing
+:: This test requires extensions being enabled
+setlocal enableextensions
+
+set TEST_STRING="_ ` a b c d e f g h i j k l m n o p q r s t u v w x y z { | } ~ ? @ [ \ ] _ ` a b c d e f g h i j k l m n o p q r s t u v w x y z { | } ~ ? @ [ \ ]"
+set "ECHO_STRING=?=%%? @=%%@ A=%%A B=%%B C=%%C D=%%D E=%%E F=%%F G=%%G H=%%H I=%%I J=%%J K=%%K L=%%L M=%%M N=%%N O=%%O P=%%P Q=%%Q R=%%R S=%%S T=%%T U=%%U V=%%V W=%%W X=%%X Y=%%Y Z=%%Z [=%%[ \=%%\ ]=%%] ^^=%%^^ _=%%_ `=%%` a=%%a b=%%b c=%%c d=%%d e=%%e f=%%f g=%%g h=%%h i=%%i j=%%j k=%%k l=%%l m=%%m n=%%n o=%%o p=%%p q=%%q r=%%r s=%%s t=%%t u=%%u v=%%v w=%%w x=%%x y=%%y z=%%z {=%%{ ^|=%%^| }=%%} ^~=%%^~"
+
+echo.
+
+:: Bug 1: Ranges that are not specified in increasing order are ignored.
+:: Token numbers strictly greater than 31 are just ignored, and if they
+:: appear in a range, the whole range is ignored.
+
+for /f "tokens=30-32" %%? in (%TEST_STRING%) do echo %ECHO_STRING%
+echo.
+for /f "tokens=5-1" %%? in (%TEST_STRING%) do echo %ECHO_STRING%
+echo.
+
+:: Bug 2: Ranges that partially overlap: too many variables are being allocated,
+:: while only a subset is actually used. This leads to the extra variables returning
+:: empty strings.
+
+for /f "tokens=1-31,31,31" %%? in (%TEST_STRING%) do echo %ECHO_STRING%
+echo.
+for /f "tokens=1-31,1-31" %%? in (%TEST_STRING%) do echo %ECHO_STRING%
+echo.
+for /f "tokens=1-5,3,5,6" %%? in (%TEST_STRING%) do echo %ECHO_STRING%
+echo.
+for /f "tokens=1-31,* tokens=1-31 tokens=1-20,*" %%? in (%TEST_STRING%) do echo %ECHO_STRING%
+echo.
+
+:: For comparison, this works:
+for /f "tokens=1-5,6" %%? in (%TEST_STRING%) do echo %ECHO_STRING%
+echo.
+for /f "tokens=1-5,6-10" %%? in (%TEST_STRING%) do echo %ECHO_STRING%
+echo.
+
+endlocal
+
 
 echo ---------- Testing AND operator ----------
 :: Test for TRUE condition - Should be displayed
@@ -355,6 +394,164 @@ call :checkErrorLevel 42
 :: Cleanup
 del tmp.cmd
 cd .. & rmdir /s/q foobar
+
+
+::
+:: ERRORLEVEL tests for special commands.
+::
+:: For some commands, the errorlevel is set differently,
+:: whether or not they are run within a .BAT, a .CMD, or
+:: directly from the command-line.
+::
+:: These commands are:
+:: APPEND/DPATH, ASSOC, FTYPE, PATH, PROMPT, SET.
+::
+:: See https://ss64.com/nt/errorlevel.html for more details.
+::
+
+echo ---------- Testing ERRORLEVEL in .BAT and .CMD ----------
+
+:: Use an auxiliary CMD file
+mkdir foobar && cd foobar
+
+echo --- In .BAT file
+call :outputErrLvlTestToBatch tmp.bat
+cmd /c tmp.bat
+del tmp.bat
+
+echo --- In .CMD file
+call :outputErrLvlTestToBatch tmp.cmd
+cmd /c tmp.cmd
+del tmp.cmd
+
+:: Cleanup
+cd .. & rmdir /s/q foobar
+
+:: Go to the next tests below.
+goto :continue
+
+:: ERRORLEVEL test helper function
+:outputErrLvlTestToBatch (filename)
+
+echo @echo off> %1
+echo setlocal enableextensions>> %1
+
+:: Reset the errorlevel
+echo call :zeroErrLvl>> %1
+
+:: dpath
+:: echo %errorlevel%
+:: dpath xxx
+:: echo %errorlevel%
+:: dpath
+:: echo %errorlevel%
+
+echo assoc^>NUL>> %1
+echo echo %%errorlevel%%>> %1
+echo assoc .nonexisting^>NUL>> %1
+echo echo %%errorlevel%%>> %1
+echo assoc .nonexisting^=^>NUL>> %1
+echo echo %%errorlevel%%>> %1
+
+:: ftype
+:: echo %errorlevel%
+:: ftype xxx
+:: echo %errorlevel%
+:: ftype
+:: echo %errorlevel%
+
+echo path^>NUL>> %1
+echo echo %%errorlevel%%>> %1
+echo path^;^>NUL>> %1
+echo echo %%errorlevel%%>> %1
+
+echo prompt^>NUL>> %1
+echo echo %%errorlevel%%>> %1
+echo prompt ^$p^$g^>NUL>> %1
+echo echo %%errorlevel%%>> %1
+echo prompt foobar^>NUL>> %1
+echo echo %%errorlevel%%>> %1
+
+echo set^>NUL>> %1
+echo echo %%errorlevel%%>> %1
+echo set nonexisting^>NUL>> %1
+echo echo %%errorlevel%%>> %1
+echo set nonexisting^=^>NUL>> %1
+echo echo %%errorlevel%%>> %1
+echo set nonexisting^=trololol^>NUL>> %1
+echo echo %%errorlevel%%>> %1
+echo set nonexisting^=^>NUL>> %1
+echo echo %%errorlevel%%>> %1
+
+echo goto :eof>> %1
+
+:: Zero ERRORLEVEL
+echo :zeroErrLvl>> %1
+echo exit /B 0 >> %1
+
+goto :eof
+
+
+::
+:: Next suite of tests.
+::
+:continue
+
+
+:: Testing different ERRORLEVELs from the SET command.
+:: See https://ss64.com/nt/set.html for more details.
+
+echo ---------- Testing SET /A ERRORLEVELs ----------
+
+echo --- Success
+call :setError 0
+set /a "total=1+1"
+call :checkErrorLevel 0
+echo %errorlevel%
+echo %total%
+
+echo --- Unbalanced parentheses
+call :setError 0
+set /a "total=(2+1"
+call :checkErrorLevel 1073750988
+echo %errorlevel%
+echo %total%
+
+echo --- Missing operand
+call :setError 0
+set /a "total=5*"
+call :checkErrorLevel 1073750989
+echo %errorlevel%
+echo %total%
+
+echo --- Syntax error
+call :setError 0
+set /a "total=7$3"
+call :checkErrorLevel 1073750990
+echo %errorlevel%
+echo %total%
+
+echo --- Invalid number
+call :setError 0
+set /a "total=0xdeadbeeg"
+call :checkErrorLevel 1073750991
+echo %errorlevel%
+echo %total%
+
+echo --- Number larger than 32-bits
+call :setError 0
+set /a "total=999999999999999999999999"
+call :checkErrorLevel 1073750992
+echo %errorlevel%
+echo %total%
+
+echo --- Division by zero
+call :setError 0
+set /a "total=1/0"
+call :checkErrorLevel 1073750993
+echo %errorlevel%
+echo %total%
+
 
 
 ::

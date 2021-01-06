@@ -1,6 +1,6 @@
 
-if(GCC)
-  add_compile_flags("-fno-builtin")
+if (GCC)
+    add_compile_options(-fno-builtin)
 endif()
 
 include(ntdll_crt_apitest.cmake)

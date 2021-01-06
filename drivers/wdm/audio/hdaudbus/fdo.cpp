@@ -176,11 +176,20 @@ HDA_SendVerbs(
 
     while (Queued--)
     {
-        KeWaitForSingleObject(&Codec->ResponseSemaphore,
-                              Executive,
-                              KernelMode,
-                              FALSE,
-                              NULL);
+        LARGE_INTEGER Timeout;
+        Timeout.QuadPart = -1000LL * 10000; // 1 sec
+
+        NTSTATUS waitStatus = KeWaitForSingleObject(&Codec->ResponseSemaphore,
+                                                    Executive,
+                                                    KernelMode,
+                                                    FALSE,
+                                                    &Timeout);
+
+        if (waitStatus == STATUS_TIMEOUT)
+        {
+            DPRINT1("HDA_SendVerbs: timeout! Queued: %u\n", Queued);
+            break;
+        }
     }
 
     if (Responses != NULL) {

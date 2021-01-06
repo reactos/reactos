@@ -17,7 +17,7 @@ jobs:
         with:
           path: src
       - name: Set up cache for ccache
-        uses: actions/cache@v1
+        uses: actions/cache@v2
         with:
           path: ccache
           key: ccache-gcc-i386-${{github.sha}}
@@ -25,10 +25,10 @@ jobs:
             ccache-gcc-i386-
       - name: Set ccache settings
         run: |
-          echo "::set-env name=CCACHE_BASEDIR::${{github.workspace}}"
-          echo "::set-env name=CCACHE_DIR::${{github.workspace}}/ccache"
-          echo "::set-env name=CCACHE_MAXSIZE::1G"
-          echo "::set-env name=CCACHE_SLOPPINESS::time_macros"
+          echo "CCACHE_BASEDIR=${{github.workspace}}" >> $GITHUB_ENV
+          echo "CCACHE_DIR=${{github.workspace}}/ccache" >> $GITHUB_ENV
+          echo "CCACHE_MAXSIZE=1G" >> $GITHUB_ENV
+          echo "CCACHE_SLOPPINESS=time_macros" >> $GITHUB_ENV
       - name: Configure
         run: |
           mkdir build
@@ -45,29 +45,73 @@ jobs:
       - name: Print ccache statistics
         run: ccache -s
       - name: Upload bootcd
-        uses: actions/upload-artifact@v1
+        uses: actions/upload-artifact@v2
         with:
           name: reactos-gcc-i386-${{github.sha}}
           path: build/bootcd.iso
       - name: Upload livecd
-        uses: actions/upload-artifact@v1
+        uses: actions/upload-artifact@v2
         with:
           name: reactos-gcc-i386-${{github.sha}}
           path: build/livecd.iso
+
+  build-clang-i386:
+    name: Clang (i386)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install RosBE
+        run: |
+          wget https://svn.reactos.org/storage/vperevertkin/rosbe-ci.tar.zst
+          mkdir ${{github.workspace}}/rosbe
+          tar -I zstd -xvf rosbe-ci.tar.zst --directory ${{github.workspace}}/rosbe
+      - name: Install other packages
+        run: |
+          sudo apt install ccache
+          sudo bash -c "$(wget -O - https://apt.llvm.org/llvm.sh)"
+          sudo apt install clang-11
+      - uses: actions/checkout@v2
+        with:
+          path: src
+      - name: Set up cache for ccache
+        uses: actions/cache@v2
+        with:
+          path: ccache
+          key: ccache-clang-i386-${{github.sha}}
+          restore-keys: |
+            ccache-clang-i386-
+      - name: Set ccache settings
+        run: |
+          echo "CCACHE_BASEDIR=${{github.workspace}}" >> $GITHUB_ENV
+          echo "CCACHE_DIR=${{github.workspace}}/ccache" >> $GITHUB_ENV
+          echo "CCACHE_MAXSIZE=1G" >> $GITHUB_ENV
+          echo "CCACHE_SLOPPINESS=time_macros" >> $GITHUB_ENV
+      - name: Configure
+        run: |
+          mkdir build
+          echo 'cd ${{github.workspace}}/build && cmake ${{github.workspace}}/src -G Ninja -DCMAKE_TOOLCHAIN_FILE:FILEPATH=toolchain-clang.cmake -DARCH:STRING=i386 -DENABLE_CCACHE=1 -DENABLE_ROSTESTS=1 -DENABLE_ROSAPPS=1 -DCLANG_VERSION=11' > commands
+          ${{github.workspace}}/rosbe/RosBE.sh < commands
+      - name: Build
+        run: |
+          echo 'cd ${{github.workspace}}/build && cmake --build .' > commands
+          ${{github.workspace}}/rosbe/RosBE.sh < commands
+      - name: Print ccache statistics
+        run: ccache -s
 
   build-clang-cl-i386:
     name: Clang-CL (i386)
     runs-on: windows-latest
     steps:
     - name: Install packages
-      run: choco install ninja -y
+      run: |
+        choco install ninja -y
+        choco install --x86 -y llvm
     - name: Install Flex and Bison
       run: |
         curl -O https://svn.reactos.org/storage/vperevertkin/flexbison.7z
         7z x flexbison.7z -O${{github.workspace}}\bin
-        echo "::add-path::${{github.workspace}}\bin"
-        echo "::set-env name=BISON_PKGDATADIR::${{github.workspace}}\bin\share\bison"
-        echo "::set-env name=M4::${{github.workspace}}\bin\m4.exe"
+        echo "${{github.workspace}}\bin" >> $GITHUB_PATH
+        echo "BISON_PKGDATADIR=${{github.workspace}}\bin\share\bison" >> $GITHUB_ENV
+        echo "M4=${{github.workspace}}\bin\m4.exe" >> $GITHUB_ENV
     - name: Add CL to PATH
       uses: ilammy/msvc-dev-cmd@v1
       with:
@@ -79,7 +123,7 @@ jobs:
       run: |
         mkdir build
         cd build
-        $env:PATH = "$env:PATH;$env:VCToolsInstallDir\..\..\Llvm\bin"
+        $env:PATH = "${env:PROGRAMFILES(X86)}\llvm\bin;$env:PATH"
         cmake -G Ninja -DCMAKE_TOOLCHAIN_FILE:FILEPATH=toolchain-msvc.cmake -DARCH:STRING=i386 -DENABLE_ROSTESTS=1 -DENABLE_ROSAPPS=1 -DUSE_CLANG_CL:BOOL=1 ${{github.workspace}}\src
     - name: Build
       working-directory: ${{github.workspace}}\build
@@ -100,9 +144,9 @@ jobs:
       run: |
         curl -O https://svn.reactos.org/storage/vperevertkin/flexbison.7z
         7z x flexbison.7z -O${{github.workspace}}\bin
-        echo "::add-path::${{github.workspace}}\bin"
-        echo "::set-env name=BISON_PKGDATADIR::${{github.workspace}}\bin\share\bison"
-        echo "::set-env name=M4::${{github.workspace}}\bin\m4.exe"
+        echo "${{github.workspace}}\bin" >> $GITHUB_PATH
+        echo "BISON_PKGDATADIR=${{github.workspace}}\bin\share\bison" >> $GITHUB_ENV
+        echo "M4=${{github.workspace}}\bin\m4.exe" >> $GITHUB_ENV
     - name: Add CL to PATH
       uses: ilammy/msvc-dev-cmd@v1
       with:
@@ -124,12 +168,12 @@ jobs:
         cmake --build . --target bootcd
         cmake --build . --target livecd
     - name: Upload bootcd
-      uses: actions/upload-artifact@v1
+      uses: actions/upload-artifact@v2
       with:
         name: reactos-msvc-i386-${{github.sha}}
         path: build/bootcd.iso
     - name: Upload livecd
-      uses: actions/upload-artifact@v1
+      uses: actions/upload-artifact@v2
       with:
         name: reactos-msvc-i386-${{github.sha}}
         path: build/livecd.iso
@@ -144,9 +188,9 @@ jobs:
       run: |
         curl -O https://svn.reactos.org/storage/vperevertkin/flexbison.7z
         7z x flexbison.7z -O${{github.workspace}}\bin
-        echo "::add-path::${{github.workspace}}\bin"
-        echo "::set-env name=BISON_PKGDATADIR::${{github.workspace}}\bin\share\bison"
-        echo "::set-env name=M4::${{github.workspace}}\bin\m4.exe"
+        echo "${{github.workspace}}\bin" >> $GITHUB_PATH
+        echo "BISON_PKGDATADIR=${{github.workspace}}\bin\share\bison" >> $GITHUB_ENV
+        echo "M4=${{github.workspace}}\bin\m4.exe" >> $GITHUB_ENV
     - name: Add CL to PATH
       uses: ilammy/msvc-dev-cmd@v1
       with:
@@ -168,13 +212,13 @@ jobs:
       run: |
         cmake --build . --target bootcd
         cmake --build . --target livecd
-    # - name: Upload bootcd
-    #   uses: actions/upload-artifact@v1
-    #   with:
-    #     name: reactos-msvc-amd64-${{github.sha}}
-    #     path: build/bootcd.iso
-    # - name: Upload livecd
-    #   uses: actions/upload-artifact@v1
-    #   with:
-    #     name: reactos-msvc-amd64-${{github.sha}}
-    #     path: build/livecd.iso
+    - name: Upload bootcd
+      uses: actions/upload-artifact@v2
+      with:
+        name: reactos-msvc-amd64-${{github.sha}}
+        path: build/bootcd.iso
+    - name: Upload livecd
+      uses: actions/upload-artifact@v2
+      with:
+        name: reactos-msvc-amd64-${{github.sha}}
+        path: build/livecd.iso

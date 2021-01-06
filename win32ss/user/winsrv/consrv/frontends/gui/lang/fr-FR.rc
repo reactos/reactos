@@ -20,7 +20,7 @@ BEGIN
     IDS_SCROLLUP "Défiler en haut"
     IDS_SCROLLDOWN "Défiler en bas"
 */
-    IDS_TERMINAL_TITLE "ReactOS Console"
+    IDS_TERMINAL_TITLE "Console ReactOS"
 END
 
 STRINGTABLE

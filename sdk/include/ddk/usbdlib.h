@@ -89,10 +89,23 @@ typedef struct _USBD_INTERFACE_LIST_ENTRY {
   (urb)->UrbOSFeatureDescriptorRequest.TransferBuffer = (transferBuffer);                                                                  \
   (urb)->UrbOSFeatureDescriptorRequest.InterfaceNumber = (interface);                                                                      \
   (urb)->UrbOSFeatureDescriptorRequest.MS_FeatureDescriptorIndex = (index);                                                                \
-  urb)->UrbOSFeatureDescriptorRequest.UrbLink = (link);                                                                                    \
+  (urb)->UrbOSFeatureDescriptorRequest.UrbLink = (link);                                                                                    \
 }
 
 #endif /* NTDDI_VERSION >= NTDDI_WINXP */
+
+#if (NTDDI_VERSION >= NTDDI_VISTA)
+
+#define USBD_CLIENT_CONTRACT_VERSION_INVALID 0xFFFFFFFF
+#define USBD_CLIENT_CONTRACT_VERSION_602 0x602
+
+#define USBD_INTERFACE_VERSION_600 0x600
+#define USBD_INTERFACE_VERSION_602 0x602
+#define USBD_INTERFACE_VERSION_603 0x603
+
+DECLARE_HANDLE(USBD_HANDLE);
+
+#endif // NTDDI_VISTA
 
 #define URB_STATUS(urb)                      ((urb)->UrbHeader.Status)
 
@@ -230,4 +243,3 @@ USBD_ValidateConfigurationDescriptor(
 #endif
 
 #endif /* ! _USBD_ */
-

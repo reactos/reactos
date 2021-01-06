@@ -360,9 +360,7 @@ VfatOpenFile(
         return STATUS_CANNOT_DELETE;
     }
 
-    if ((vfatFCBIsRoot(Fcb) ||
-         (Fcb->LongNameU.Length == sizeof(WCHAR) && Fcb->LongNameU.Buffer[0] == L'.') ||
-         (Fcb->LongNameU.Length == 2 * sizeof(WCHAR) && Fcb->LongNameU.Buffer[0] == L'.' && Fcb->LongNameU.Buffer[1] == L'.')) &&
+    if ((vfatFCBIsRoot(Fcb) || IsDotOrDotDot(&Fcb->LongNameU)) &&
         BooleanFlagOn(RequestedOptions, FILE_DELETE_ON_CLOSE))
     {
         // we cannot delete a '.', '..' or the root directory
@@ -791,6 +789,13 @@ VfatCreateFile(
                 Attributes |= FILE_ATTRIBUTE_ARCHIVE;
             }
             vfatSplitPathName(&PathNameU, NULL, &FileNameU);
+
+            if (IsDotOrDotDot(&FileNameU))
+            {
+                vfatReleaseFCB(DeviceExt, ParentFcb);
+                vfatAddToStat(DeviceExt, Fat.FailedCreates, 1);
+                return STATUS_OBJECT_NAME_INVALID;
+            }
             Status = VfatAddEntry(DeviceExt, &FileNameU, &pFcb, ParentFcb, RequestedOptions,
                                   Attributes, NULL);
             vfatReleaseFCB(DeviceExt, ParentFcb);

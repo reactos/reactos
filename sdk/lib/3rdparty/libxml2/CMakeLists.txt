@@ -66,10 +66,10 @@ add_library(libxml2 ${SOURCE})
 
 if(MSVC AND (NOT USE_CLANG_CL))
     # Unreferenced local variable
-    replace_compile_flags("/we4101" " ")
+    remove_target_compile_option(libxml2 "/we4101")
     target_compile_options(libxml2 PRIVATE "/wd4101")
     # Local variable initialized but not referenced
-    replace_compile_flags("/we4189" " ")
+    remove_target_compile_option(libxml2 "/we4189")
 else()
     target_compile_options(libxml2 PRIVATE "-w")
 endif()

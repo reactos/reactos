@@ -35,8 +35,8 @@
 
 typedef struct
 {
-    SLIST_ENTRY ListEntry;
-    WCHAR DeviceIds[1];
+    LIST_ENTRY ListEntry;
+    WCHAR DeviceIds[ANYSIZE_ARRAY];
 } DeviceInstallParams;
 
 /* install.c */
@@ -45,15 +45,13 @@ extern HANDLE hUserToken;
 extern HANDLE hInstallEvent;
 extern HANDLE hNoPendingInstalls;
 
-extern SLIST_HEADER DeviceInstallListHead;
+/* Device-install event list */
+extern HANDLE hDeviceInstallListMutex;
+extern LIST_ENTRY DeviceInstallListHead;
 extern HANDLE hDeviceInstallListNotEmpty;
 
 BOOL
 SetupIsActive(VOID);
-
-FORCEINLINE
-BOOL
-IsUISuppressionAllowed(VOID);
 
 DWORD
 WINAPI

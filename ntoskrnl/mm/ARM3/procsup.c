@@ -840,6 +840,62 @@ MmCreateTeb(IN PEPROCESS Process,
     return Status;
 }
 
+#ifdef _M_AMD64
+static
+NTSTATUS
+MiInsertSharedUserPageVad(VOID)
+{
+    PMMVAD_LONG Vad;
+    ULONG_PTR BaseAddress;
+    NTSTATUS Status;
+
+    /* Allocate a VAD */
+    Vad = ExAllocatePoolWithTag(NonPagedPool, sizeof(MMVAD_LONG), 'ldaV');
+    if (Vad == NULL)
+    {
+        DPRINT1("Failed to allocate VAD for shared user page\n");
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    /* Setup the primary flags with the size, and make it private, RO */
+    Vad->u.LongFlags = 0;
+    Vad->u.VadFlags.CommitCharge = 0;
+    Vad->u.VadFlags.NoChange = TRUE;
+    Vad->u.VadFlags.VadType = VadNone;
+    Vad->u.VadFlags.MemCommit = FALSE;
+    Vad->u.VadFlags.Protection = MM_READONLY;
+    Vad->u.VadFlags.PrivateMemory = TRUE;
+    Vad->u1.Parent = NULL;
+
+    /* Setup the secondary flags to make it a secured, readonly, long VAD */
+    Vad->u2.LongFlags2 = 0;
+    Vad->u2.VadFlags2.OneSecured = TRUE;
+    Vad->u2.VadFlags2.LongVad = TRUE;
+    Vad->u2.VadFlags2.ReadOnly = FALSE;
+
+    Vad->ControlArea = NULL; // For Memory-Area hack
+    Vad->FirstPrototypePte = NULL;
+
+    /* Insert it into the process VAD table */
+    BaseAddress = MM_SHARED_USER_DATA_VA;
+    Status = MiInsertVadEx((PMMVAD)Vad,
+                            &BaseAddress,
+                            PAGE_SIZE,
+                            (ULONG_PTR)MM_HIGHEST_VAD_ADDRESS,
+                            PAGE_SIZE,
+                            MEM_TOP_DOWN);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("Failed to insert shared user VAD\n");
+        ExFreePoolWithTag(Vad, 'ldaV');
+        return Status;
+    }
+
+    /* Success */
+    return STATUS_SUCCESS;
+}
+#endif
+
 VOID
 NTAPI
 MiInitializeWorkingSetList(IN PEPROCESS CurrentProcess)
@@ -895,6 +951,12 @@ MmInitializeProcessAddressSpace(IN PEPROCESS Process,
     PCHAR Destination;
     USHORT Length = 0;
     MMPTE TempPte;
+#if (_MI_PAGING_LEVELS >= 3)
+    PMMPPE PointerPpe;
+#endif
+#if (_MI_PAGING_LEVELS == 4)
+    PMMPXE PointerPxe;
+#endif
 
     /* We should have a PDE */
     ASSERT(Process->Pcb.DirectoryTableBase[0] != 0);
@@ -915,12 +977,19 @@ MmInitializeProcessAddressSpace(IN PEPROCESS Process,
     ASSERT(Process->VadRoot.NumberGenericTableElements == 0);
     Process->VadRoot.BalancedRoot.u1.Parent = &Process->VadRoot.BalancedRoot;
 
+#ifdef _M_AMD64
+    /* On x64 the PFNs for the initial process are already set up */
+    if (Process != &KiInitialProcess) {
+#endif
+
     /* Lock PFN database */
     OldIrql = MiAcquirePfnLock();
 
     /* Setup the PFN for the PDE base of this process */
-#ifdef _M_AMD64
+#if (_MI_PAGING_LEVELS == 4)
     PointerPte = MiAddressToPte(PXE_BASE);
+#elif (_MI_PAGING_LEVELS == 3)
+    PointerPte = MiAddressToPte(PPE_BASE);
 #else
     PointerPte = MiAddressToPte(PDE_BASE);
 #endif
@@ -929,14 +998,21 @@ MmInitializeProcessAddressSpace(IN PEPROCESS Process,
     MiInitializePfn(PageFrameNumber, PointerPte, TRUE);
 
     /* Do the same for hyperspace */
-#ifdef _M_AMD64
-    PointerPde = MiAddressToPxe((PVOID)HYPER_SPACE);
-#else
-    PointerPde = MiAddressToPde(HYPER_SPACE);
-#endif
+    PointerPde = MiAddressToPde((PVOID)HYPER_SPACE);
     PageFrameNumber = PFN_FROM_PTE(PointerPde);
     //ASSERT(Process->Pcb.DirectoryTableBase[0] == PageFrameNumber * PAGE_SIZE); // we're not lucky
     MiInitializePfn(PageFrameNumber, (PMMPTE)PointerPde, TRUE);
+
+#if (_MI_PAGING_LEVELS >= 3)
+    PointerPpe = MiAddressToPpe((PVOID)HYPER_SPACE);
+    PageFrameNumber = PFN_FROM_PTE(PointerPpe);
+    MiInitializePfn(PageFrameNumber, PointerPpe, TRUE);
+#endif
+#if (_MI_PAGING_LEVELS == 4)
+    PointerPxe = MiAddressToPxe((PVOID)HYPER_SPACE);
+    PageFrameNumber = PFN_FROM_PTE(PointerPxe);
+    MiInitializePfn(PageFrameNumber, PointerPxe, TRUE);
+#endif
 
     /* Setup the PFN for the PTE for the working set */
     PointerPte = MiAddressToPte(MI_WORKING_SET_LIST);
@@ -956,6 +1032,20 @@ MmInitializeProcessAddressSpace(IN PEPROCESS Process,
 
     /* Release PFN lock */
     MiReleasePfnLock(OldIrql);
+
+#ifdef _M_AMD64
+   } /* On x64 the PFNs for the initial process are already set up */
+#endif
+
+#ifdef _M_AMD64
+    /* On x64 we need a VAD for the shared user page */
+    Status = MiInsertSharedUserPageVad();
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("MiCreateSharedUserPageVad() failed: 0x%lx\n", Status);
+        return Status;
+    }
+#endif
 
     /* Check if there's a Section Object */
     if (SectionObject)
@@ -1027,7 +1117,7 @@ MmInitializeProcessAddressSpace(IN PEPROCESS Process,
     return Status;
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 NTSTATUS
 NTAPI
 MmInitializeHandBuiltProcess(IN PEPROCESS Process,
@@ -1052,7 +1142,7 @@ MmInitializeHandBuiltProcess(IN PEPROCESS Process,
     return STATUS_SUCCESS;
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 NTSTATUS
 NTAPI
 MmInitializeHandBuiltProcess2(IN PEPROCESS Process)

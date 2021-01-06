@@ -59,7 +59,7 @@ extern PATTACHINFO gpai;
 #define LP_DO_NOT_CARE_BIT (1<<25) // For GetKeyNameText
 
 /* General */
-INIT_FUNCTION NTSTATUS NTAPI InitInputImpl(VOID);
+NTSTATUS NTAPI InitInputImpl(VOID);
 VOID NTAPI RawInputThreadMain(VOID);
 BOOL FASTCALL IntBlockInput(PTHREADINFO W32Thread, BOOL BlockIt);
 NTSTATUS FASTCALL UserAttachThreadInput(PTHREADINFO,PTHREADINFO,BOOL);
@@ -68,7 +68,7 @@ VOID FASTCALL DoTheScreenSaver(VOID);
 #define ThreadHasInputAccess(W32Thread) (TRUE)
 
 /* Keyboard */
-INIT_FUNCTION NTSTATUS NTAPI InitKeyboardImpl(VOID);
+NTSTATUS NTAPI InitKeyboardImpl(VOID);
 VOID NTAPI UserInitKeyboard(HANDLE hKeyboardDevice);
 PKL W32kGetDefaultKeyLayout(VOID);
 VOID NTAPI UserProcessKeyboardInput(PKEYBOARD_INPUT_DATA pKeyInput);

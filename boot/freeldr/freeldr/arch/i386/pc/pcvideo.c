@@ -108,6 +108,8 @@ typedef struct
 } SVGA_MODE_INFORMATION, *PSVGA_MODE_INFORMATION;
 #include <poppack.h>
 
+UCHAR MachDefaultTextColor = COLOR_GRAY;
+
 static USHORT BiosVideoMode;                             /* Current video mode as known by BIOS */
 static ULONG ScreenWidth = 80;                           /* Screen Width in characters */
 static ULONG ScreenHeight = 25;                          /* Screen Height in characters */

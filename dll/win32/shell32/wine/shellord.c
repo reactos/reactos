@@ -331,12 +331,28 @@ BOOL WINAPI RegisterShellHook(
  *
  * See ShellMessageBoxA.
  *
+ */
+#ifdef __REACTOS__
+/*
+ * shell32.ShellMessageBoxW directly redirects to shlwapi.ShellMessageBoxWrapW,
+ * while shell32.ShellMessageBoxA is a copy-paste ANSI adaptation of the
+ * shlwapi.ShellMessageBoxWrapW function.
+ *
+ * From Vista+ onwards, all the implementation of ShellMessageBoxA/W that
+ * were existing in shell32 has been completely moved to shlwapi, so that
+ * shell32.ShellMessageBoxA and shell32.ShellMessageBoxW are redirections
+ * to the corresponding shlwapi functions.
+ *
+ */
+#else // !__REACTOS__
+/*
  * NOTE:
  * shlwapi.ShellMessageBoxWrapW is a duplicate of shell32.ShellMessageBoxW
  * because we can't forward to it in the .spec file since it's exported by
  * ordinal. If you change the implementation here please update the code in
  * shlwapi as well.
  */
+// Wine version, broken.
 int ShellMessageBoxW(
 	HINSTANCE hInstance,
 	HWND hWnd,
@@ -358,12 +374,12 @@ int ShellMessageBoxW(
 	    hInstance,hWnd,lpText,lpCaption,uType);
 
 	if (IS_INTRESOURCE(lpCaption))
-	  LoadStringW(hInstance, LOWORD(lpCaption), szTitle, sizeof(szTitle)/sizeof(szTitle[0]));
+	  LoadStringW(hInstance, LOWORD(lpCaption), szTitle, ARRAY_SIZE(szTitle));
 	else
 	  pszTitle = lpCaption;
 
 	if (IS_INTRESOURCE(lpText))
-	  LoadStringW(hInstance, LOWORD(lpText), szText, sizeof(szText)/sizeof(szText[0]));
+	  LoadStringW(hInstance, LOWORD(lpText), szText, ARRAY_SIZE(szText));
 	else
 	  pszText = lpText;
 
@@ -376,6 +392,7 @@ int ShellMessageBoxW(
         LocalFree(pszTemp);
 	return ret;
 }
+#endif
 
 /*************************************************************************
  * ShellMessageBoxA				[SHELL32.183]
@@ -395,6 +412,18 @@ int ShellMessageBoxW(
  * NOTES
  *     Exported by ordinal
  */
+#ifdef __REACTOS__
+/*
+ * Note that we cannot straightforwardly implement ShellMessageBoxA around
+ * ShellMessageBoxW, by converting some parameters from ANSI to UNICODE,
+ * because there may be some variadic ANSI strings, associated with '%s'
+ * printf-like formatters inside the format string, that would also need
+ * to be converted; however there is no way for us to find these and perform
+ * the conversion ourselves.
+ * Therefore, we re-implement ShellMessageBoxA by doing a copy-paste ANSI
+ * adaptation of the shlwapi.ShellMessageBoxWrapW function.
+ */
+#endif
 int ShellMessageBoxA(
 	HINSTANCE hInstance,
 	HWND hWnd,
@@ -403,6 +432,62 @@ int ShellMessageBoxA(
 	UINT uType,
 	...)
 {
+#ifdef __REACTOS__
+    CHAR *szText = NULL, szTitle[100];
+    LPCSTR pszText, pszTitle = szTitle;
+    LPSTR pszTemp;
+    __ms_va_list args;
+    int ret;
+
+    __ms_va_start(args, uType);
+
+    TRACE("(%p,%p,%p,%p,%08x)\n", hInstance, hWnd, lpText, lpCaption, uType);
+
+    if (IS_INTRESOURCE(lpCaption))
+        LoadStringA(hInstance, LOWORD(lpCaption), szTitle, ARRAY_SIZE(szTitle));
+    else
+        pszTitle = lpCaption;
+
+    if (IS_INTRESOURCE(lpText))
+    {
+        /* Retrieve the length of the Unicode string and obtain the maximum
+         * possible length for the corresponding ANSI string (not counting
+         * any possible NULL-terminator). */
+        const WCHAR *ptr;
+        UINT len = LoadStringW(hInstance, LOWORD(lpText), (LPWSTR)&ptr, 0);
+
+        len = WideCharToMultiByte(CP_ACP, 0, ptr, len,
+                                  NULL, 0, NULL, NULL);
+
+        if (len)
+        {
+            szText = HeapAlloc(GetProcessHeap(), 0, (len + 1) * sizeof(CHAR));
+            if (szText) LoadStringA(hInstance, LOWORD(lpText), szText, len + 1);
+        }
+        pszText = szText;
+        if (!pszText) {
+            WARN("Failed to load id %d\n", LOWORD(lpText));
+            __ms_va_end(args);
+            return 0;
+        }
+    }
+    else
+        pszText = lpText;
+
+    FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_STRING,
+                   pszText, 0, 0, (LPSTR)&pszTemp, 0, &args);
+
+    __ms_va_end(args);
+
+    ret = MessageBoxA(hWnd, pszTemp, pszTitle, uType | MB_SETFOREGROUND);
+
+    HeapFree(GetProcessHeap(), 0, szText);
+    LocalFree(pszTemp);
+    return ret;
+
+#else // __REACTOS__
+
+// Wine version, broken.
 	char	szText[100],szTitle[100];
 	LPCSTR  pszText = szText, pszTitle = szTitle;
 	LPSTR   pszTemp;
@@ -433,6 +518,7 @@ int ShellMessageBoxA(
 	ret = MessageBoxA(hWnd,pszTemp,pszTitle,uType);
         LocalFree(pszTemp);
 	return ret;
+#endif
 }
 
 /*************************************************************************
@@ -1386,10 +1472,29 @@ HRESULT WINAPI SHWinHelp(HWND hwnd, LPCWSTR pszHelp, UINT uCommand, ULONG_PTR dw
  *  SHRunControlPanel [SHELL32.161]
  *
  */
-BOOL WINAPI SHRunControlPanel (LPCWSTR commandLine, HWND parent)
+BOOL WINAPI SHRunControlPanel (_In_ LPCWSTR commandLine, _In_opt_ HWND parent)
 {
+#ifdef __REACTOS__
+    /*
+     * TODO: Run in-process when possible, using
+     * HKLM\Software\Microsoft\Windows\CurrentVersion\Explorer\ControlPanel\InProcCPLs
+     * and possibly some extra rules.
+     * See also https://docs.microsoft.com/en-us/windows/win32/api/shlobj/nf-shlobj-shruncontrolpanel
+     * "If the specified Control Panel item is already running, SHRunControlPanel
+     *  attempts to switch to that instance rather than opening a new instance."
+     * This function is not supported as of Windows Vista, where it always returns FALSE.
+     * However we need to keep it "alive" even when ReactOS is compliled as NT6+
+     * in order to keep control panel elements launch commands.
+     */
+    WCHAR parameters[MAX_PATH] = L"shell32.dll,Control_RunDLL ";
+    TRACE("(%s, %p)n", debugstr_w(commandLine), parent);
+    wcscat(parameters, commandLine);
+
+    return ((INT_PTR)ShellExecuteW(parent, L"open", L"rundll32.exe", parameters, NULL, SW_SHOWNORMAL) > 32);
+#else
 	FIXME("(%s, %p): stub\n", debugstr_w(commandLine), parent);
 	return FALSE;
+#endif
 }
 
 static LPUNKNOWN SHELL32_IExplorerInterface=0;

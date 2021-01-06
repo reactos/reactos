@@ -1,13 +1,8 @@
 project(SHELL)
 
-set_cpp(WITH_RUNTIME)
-
 add_definitions(
     -DUNICODE
-    -D_UNICODE
-    -D_ATL_NO_EXCEPTIONS)
-
-include_directories(${REACTOS_SOURCE_DIR}/sdk/lib/atl)
+    -D_UNICODE)
 
 list(APPEND SOURCE
     CMenuBand.cpp
@@ -18,5 +13,6 @@ list(APPEND SOURCE
     CMergedFolder.cpp
     CStartMenu.cpp)
 
-add_library(shellmenu ${SOURCE})
+add_library(shellmenu OBJECT ${SOURCE})
+target_link_libraries(shellmenu PRIVATE atl_classes)
 add_dependencies(shellmenu xdk psdk)

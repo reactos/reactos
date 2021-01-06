@@ -133,7 +133,7 @@ typedef struct _BROWSER_STATISTICS_STRUCT
 #endif
     endpoint("ncacn_np:[\\pipe\\browser]")
 #ifndef __midl
-    ,implicit_handle(handle_t hBinding)
+    ,implicit_handle(handle_t browser_hBinding)
 #endif
 ]
 interface browser

@@ -343,6 +343,7 @@ AppCpuInit:
                        (PVOID)LoaderBlock);
 }
 
+CODE_SEG("INIT")
 VOID
 NTAPI
 KiInitMachineDependent(VOID)

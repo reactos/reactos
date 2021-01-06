@@ -479,14 +479,29 @@ static VOID GetSystemInformation(HWND hwnd)
      */
     if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, ProcKey, 0, KEY_READ, &hKey) == ERROR_SUCCESS)
     {
+        INT PrevMachineLine;
+
         SetRegTextData(hwnd, hKey, _T("VendorIdentifier"), CurMachineLine);
         CurMachineLine++;
 
+        PrevMachineLine = CurMachineLine;
         CurMachineLine += SetProcNameString(hwnd,
                                             hKey,
                                             _T("ProcessorNameString"),
                                             CurMachineLine,
                                             CurMachineLine + 1);
+
+        if (CurMachineLine == PrevMachineLine)
+        {
+            /* TODO: Try obtaining CPU name from WMI (i.e. CIM_Processor) */
+
+            /* Brand String is not available, use Identifier instead */
+            CurMachineLine += SetProcNameString(hwnd,
+                                                hKey,
+                                                _T("Identifier"),
+                                                CurMachineLine,
+                                                CurMachineLine + 1);
+        }
 
         SetProcSpeed(hwnd, hKey, _T("~MHz"), CurMachineLine);
         CurMachineLine++;

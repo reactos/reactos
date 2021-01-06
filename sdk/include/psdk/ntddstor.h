@@ -80,6 +80,17 @@ DEFINE_GUID(GUID_DEVINTERFACE_HIDDEN_VOLUME,
 
 #endif /* defined(DEFINE_GUID) */
 
+#if defined(DEFINE_DEVPROPKEY)
+DEFINE_DEVPROPKEY(DEVPKEY_Storage_Portable,           0x4d1ebee8, 0x803, 0x4774, 0x98, 0x42, 0xb7, 0x7d, 0xb5, 0x2, 0x65, 0xe9, 2);
+DEFINE_DEVPROPKEY(DEVPKEY_Storage_Removable_Media,    0x4d1ebee8, 0x803, 0x4774, 0x98, 0x42, 0xb7, 0x7d, 0xb5, 0x2, 0x65, 0xe9, 3);
+DEFINE_DEVPROPKEY(DEVPKEY_Storage_System_Critical,    0x4d1ebee8, 0x803, 0x4774, 0x98, 0x42, 0xb7, 0x7d, 0xb5, 0x2, 0x65, 0xe9, 4);
+DEFINE_DEVPROPKEY(DEVPKEY_Storage_Disk_Number,        0x4d1ebee8, 0x803, 0x4774, 0x98, 0x42, 0xb7, 0x7d, 0xb5, 0x2, 0x65, 0xe9, 5);
+DEFINE_DEVPROPKEY(DEVPKEY_Storage_Partition_Number,   0x4d1ebee8, 0x803, 0x4774, 0x98, 0x42, 0xb7, 0x7d, 0xb5, 0x2, 0x65, 0xe9, 6);
+DEFINE_DEVPROPKEY(DEVPKEY_Storage_Mbr_Type,           0x4d1ebee8, 0x803, 0x4774, 0x98, 0x42, 0xb7, 0x7d, 0xb5, 0x2, 0x65, 0xe9, 7);
+DEFINE_DEVPROPKEY(DEVPKEY_Storage_Gpt_Type,           0x4d1ebee8, 0x803, 0x4774, 0x98, 0x42, 0xb7, 0x7d, 0xb5, 0x2, 0x65, 0xe9, 8);
+DEFINE_DEVPROPKEY(DEVPKEY_Storage_Gpt_Name,           0x4d1ebee8, 0x803, 0x4774, 0x98, 0x42, 0xb7, 0x7d, 0xb5, 0x2, 0x65, 0xe9, 9);
+#endif
+
 #ifndef _WINIOCTL_
 
 #define IOCTL_STORAGE_BASE                FILE_DEVICE_MASS_STORAGE
@@ -808,7 +819,7 @@ typedef struct _STORAGE_PRIORITY_HINT_SUPPORT {
 #pragma warning(disable:4200)
 #endif
 
-#if defined(_MSC_EXTENSIONS)
+// #if defined(_MSC_EXTENSIONS)
 
 typedef struct _STORAGE_MEDIA_SERIAL_NUMBER_DATA {
   USHORT Reserved;
@@ -835,7 +846,7 @@ typedef struct _PERSISTENT_RESERVE_COMMAND {
   } DUMMYUNIONNAME;
 } PERSISTENT_RESERVE_COMMAND, *PPERSISTENT_RESERVE_COMMAND;
 
-#endif /* defined(_MSC_EXTENSIONS) */
+// #endif /* defined(_MSC_EXTENSIONS) */
 
 #ifdef _MSC_VER
 #pragma warning(pop) /* disable:4200 */
@@ -1074,6 +1085,24 @@ typedef struct _STORAGE_IDLE_POWER {
   ULONG Reserved:30;
   ULONG D3IdleTimeout;
 } STORAGE_IDLE_POWER, *PSTORAGE_IDLE_POWER;
+
+
+// for IOCTL_STORAGE_GET_IDLE_POWERUP_REASON
+
+typedef enum _STORAGE_POWERUP_REASON_TYPE {
+  StoragePowerupUnknown = 0,
+  StoragePowerupIO,
+  StoragePowerupDeviceAttention
+} STORAGE_POWERUP_REASON_TYPE, *PSTORAGE_POWERUP_REASON_TYPE;
+
+typedef struct _STORAGE_IDLE_POWERUP_REASON
+{
+  ULONG Version;
+  ULONG Size;
+  STORAGE_POWERUP_REASON_TYPE PowerupReason;
+} STORAGE_IDLE_POWERUP_REASON, *PSTORAGE_IDLE_POWERUP_REASON;
+
+#define STORAGE_IDLE_POWERUP_REASON_VERSION_V1 1
 
 #ifdef __cplusplus
 }

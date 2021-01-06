@@ -1646,7 +1646,7 @@ LdrpInitializeProcessCompat(PVOID pProcessActctx, PVOID* pOldShimData)
     {
         for (n = 0; n < ContextCompatInfo->ElementCount; ++n)
         {
-            if (ContextCompatInfo->Elements[n].Type == ACTCX_COMPATIBILITY_ELEMENT_TYPE_OS &&
+            if (ContextCompatInfo->Elements[n].Type == ACTCTX_COMPATIBILITY_ELEMENT_TYPE_OS &&
                 RtlCompareMemory(&ContextCompatInfo->Elements[n].Id, KnownCompatGuids[cur].Guid, sizeof(GUID)) == sizeof(GUID))
             {
                 if (LdrpDisableProcessCompatGuidDetection())

@@ -98,21 +98,21 @@ $if (_WDMDDK_)
 #if (NTDDI_VERSION >= NTDDI_VISTA)
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
-NTKERNELAPI
+NTKRNLVISTAAPI
 VOID
 NTAPI
 PoSetSystemWake(
   _Inout_ struct _IRP *Irp);
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
-NTKERNELAPI
+NTKRNLVISTAAPI
 BOOLEAN
 NTAPI
 PoGetSystemWake(
   _In_ struct _IRP *Irp);
 
 _IRQL_requires_max_(APC_LEVEL)
-// NTKERNELAPI // HACK: ntoskrnl_vista functions are statically linked thus don't need DECLSPEC_IMPORT
+NTKRNLVISTAAPI
 NTSTATUS
 NTAPI
 PoRegisterPowerSettingCallback(
@@ -123,7 +123,7 @@ PoRegisterPowerSettingCallback(
   _Outptr_opt_ PVOID *Handle);
 
 _IRQL_requires_max_(APC_LEVEL)
-// NTKERNELAPI // HACK: ntoskrnl_vista functions are statically linked thus don't need DECLSPEC_IMPORT
+NTKRNLVISTAAPI
 NTSTATUS
 NTAPI
 PoUnregisterPowerSettingCallback(
@@ -154,7 +154,7 @@ PoEndDeviceBusy(
   _Inout_ PULONG IdlePointer);
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
-// NTKERNELAPI // HACK: ntoskrnl_vista functions are statically linked thus don't need DECLSPEC_IMPORT
+NTKRNLVISTAAPI
 BOOLEAN
 NTAPI
 PoQueryWatchdogTime(

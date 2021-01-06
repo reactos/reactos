@@ -28,6 +28,15 @@ UCHAR TextLines;
 #define SCREEN_HEIGHT 400
 #define BYTES_PER_SCANLINE (SCREEN_WIDTH / 8)
 
+/* Use BIOS font; set to FALSE for built-in VGA font. */
+static BOOLEAN UseCGFont = TRUE;
+/* Hardware accelerated text drawing; set to FALSE for non-accelerated
+ * self-drawing, which will allow more than 8 colors for text though.
+ * This option is possible only with BIOS fonts enabled. */
+static BOOLEAN CGAccelDraw = TRUE;
+
+UCHAR MachDefaultTextColor = COLOR_WHITE;
+
 ULONG VramText;
 static ULONG VramPlaneB;
 static ULONG VramPlaneG;
@@ -232,6 +241,77 @@ Pc98VideoHideShowTextCursor(BOOLEAN Show)
     WRITE_GDC_CSRFORM((PUCHAR)GDC1_IO_o_PARAM, &CursorParameters);
 }
 
+static
+UCHAR
+Pc98VideoAttrToGdcAttr(UCHAR Attr)
+{
+    switch (Attr & 0xF)
+    {
+        case COLOR_BLACK:
+            return GDC_ATTR_BLACK;
+        case COLOR_BLUE:
+            return GDC_ATTR_BLUE;
+        case COLOR_GREEN:
+        case COLOR_LIGHTGREEN:
+            return GDC_ATTR_GREEN;
+        case COLOR_CYAN:
+        case COLOR_GRAY:
+        case COLOR_DARKGRAY:
+        case COLOR_WHITE:
+            return GDC_ATTR_WHITE;
+        case COLOR_RED:
+        case COLOR_LIGHTRED:
+            return GDC_ATTR_RED;
+        case COLOR_MAGENTA:
+        case COLOR_LIGHTMAGENTA:
+            return GDC_ATTR_PURPLE;
+        case COLOR_BROWN:
+        case COLOR_YELLOW:
+            return GDC_ATTR_YELLOW;
+        case COLOR_LIGHTBLUE:
+        case COLOR_LIGHTCYAN:
+            return GDC_ATTR_LIGHTBLUE;
+        default:
+            return GDC_ATTR_BLACK;
+    }
+}
+
+static
+USHORT
+Pc98AsciiToJisX(int Ch)
+{
+    switch (Ch)
+    {
+        /* Only characters required for pseudographic are handled here */
+        case 0x18: return 0x1E;
+        case 0x19: return 0x1F;
+        case 0xB3: return 0x260B;
+        case 0xB6: return 0x4C0B;
+        case 0xBA: return 0x270B;
+        case 0xBB: return 0x370B;
+        case 0xBC: return 0x3F0B;
+        case 0xBF: return 0x340B;
+        case 0xC0: return 0x380B;
+        case 0xC4: return 0x240B;
+        case 0xC7: return 0x440B;
+        case 0xC8: return 0x3B0B;
+        case 0xC9: return 0x330B;
+        case 0xCD: return 0x250B;
+        case 0xD9: return 0x3C0B;
+        case 0xDA: return 0x300B;
+        case 0xDB: return 0x87;
+        default: return Ch;
+    }
+}
+
+static
+VOID
+Pc98VideoTextRamPutChar(int Ch, UCHAR Attr, unsigned X, unsigned Y)
+{
+    *(PUSHORT)(VramText + (X + Y * TextCols) * TEXT_CHAR_SIZE) = Ch;
+    *(PUCHAR)(VramText + VRAM_TEXT_ATTR_OFFSET + (X + Y * TextCols) * TEXT_CHAR_SIZE) = Pc98VideoAttrToGdcAttr(Attr) | GDC_ATTR_VISIBLE;
+}
+
 VOID
 Pc98VideoPutChar(int Ch, UCHAR Attr, unsigned X, unsigned Y)
 {
@@ -242,9 +322,46 @@ Pc98VideoPutChar(int Ch, UCHAR Attr, unsigned X, unsigned Y)
     UCHAR I = (Attr & 0x80) ? 0xFF : 0;
     ULONG VramOffset = X + (Y * CHAR_HEIGHT) * BYTES_PER_SCANLINE;
     PUCHAR FontPtr = BitmapFont8x16 + Ch * 16;
+    BOOLEAN CGFont = UseCGFont && (Ch != LIGHT_FILL && Ch != MEDIUM_FILL && Ch != DARK_FILL);
+
+    if (CGFont)
+    {
+        Ch = Pc98AsciiToJisX(Ch);
+
+        if (CGAccelDraw)
+        {
+            Pc98VideoTextRamPutChar(Ch, Attr, X, Y);
+        }
+        else
+        {
+            /* Set needed character code to obtain glyph from CG Window */
+            WRITE_PORT_UCHAR((PUCHAR)KCG_IO_o_CHARCODE_LOW, Ch);
+            WRITE_PORT_UCHAR((PUCHAR)KCG_IO_o_CHARCODE_HIGH, Ch >> 8);
+        }
+    }
+    else if (UseCGFont && CGAccelDraw)
+    {
+        /* Clear character at this place in Text RAM */
+        Pc98VideoTextRamPutChar(' ', Attr, X, Y);
+    }
 
     for (Line = 0; Line < CHAR_HEIGHT; Line++)
     {
+        if (CGFont)
+        {
+            if (CGAccelDraw)
+            {
+                /* Character is already displayed by GDC (Text RAM),
+                 * so display only background for it. */
+                FontPtr[Line] = 0;
+            }
+            else
+            {
+                /* Obtain glyph data from CG Window */
+                WRITE_PORT_UCHAR((PUCHAR)KCG_IO_o_LINE, Line | 0x20);
+                FontPtr[Line] = READ_PORT_UCHAR((PUCHAR)KCG_IO_i_PATTERN);
+            }
+        }
         if (Attr & 0x0F)
         {
             *(PUCHAR)(VramPlaneB + VramOffset + Line * BYTES_PER_SCANLINE) = B | ((Attr & 0x01) ? FontPtr[Line] : 0);
@@ -336,4 +453,14 @@ Pc98VideoPrepareForReactOS(VOID)
     Int386(0x18, &Regs, &Regs);
 
     Pc98VideoHideShowTextCursor(FALSE);
+
+    if (UseCGFont && CGAccelDraw)
+    {
+        /* Clear the text screen, resetting to default attributes */
+        for (USHORT i = 0; i < VRAM_TEXT_SIZE; i += TEXT_CHAR_SIZE)
+        {
+            *(PUSHORT)(VramText + i) = ' ';
+            *(PUCHAR)(VramText + VRAM_TEXT_ATTR_OFFSET + i) = GDC_ATTR_WHITE | GDC_ATTR_VISIBLE;
+        }
+    }
 }

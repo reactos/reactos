@@ -25,9 +25,9 @@ const DWORD dwSpoolerMinorVersion = 0;
 const WCHAR wszDefaultDocumentName[] = L"Local Downlevel Document";
 
 PCWSTR wszPrintProviderInfo[3] = {
-    L"Windows NT Local Printers",           // Description
     L"Windows NT Local Print Providor",     // Name
-    L"Locally connected Printers"           // Comment
+    L"Locally connected Printers",          // Comment
+    L"Windows NT Local Printers"            // Description
 };
 
 // Local Constants

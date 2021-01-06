@@ -145,7 +145,7 @@ static ISR_TABLE IsrTable[NR_TRAPS][1];
 
 /* FUNCTIONS ****************************************************************/
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 KeInitInterrupts (VOID)

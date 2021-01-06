@@ -1,9 +1,9 @@
 /*
  * PROJECT:     ReactOS Setup Library
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
- * PURPOSE:     Filesystem support functions
+ * PURPOSE:     Filesystem Format and ChkDsk support functions.
  * COPYRIGHT:   Copyright 2003-2019 Casper S. Hornstrup (chorns@users.sourceforge.net)
- *              Copyright 2017-2019 Hermes Belusca-Maito
+ *              Copyright 2017-2020 Hermes Belusca-Maito
  */
 
 #pragma once
@@ -15,38 +15,6 @@ BOOLEAN
 GetRegisteredFileSystems(
     IN ULONG Index,
     OUT PCWSTR* FileSystemName);
-
-NTSTATUS
-GetFileSystemNameByHandle(
-    IN HANDLE PartitionHandle,
-    IN OUT PWSTR FileSystemName,
-    IN SIZE_T FileSystemNameSize);
-
-NTSTATUS
-GetFileSystemName_UStr(
-    IN PUNICODE_STRING PartitionPath,
-    IN OUT PWSTR FileSystemName,
-    IN SIZE_T FileSystemNameSize);
-
-NTSTATUS
-GetFileSystemName(
-    IN PCWSTR Partition,
-    IN OUT PWSTR FileSystemName,
-    IN SIZE_T FileSystemNameSize);
-
-NTSTATUS
-InferFileSystemByHandle(
-    IN HANDLE PartitionHandle,
-    IN UCHAR PartitionType,
-    IN OUT PWSTR FileSystemName,
-    IN SIZE_T FileSystemNameSize);
-
-NTSTATUS
-InferFileSystem(
-    IN PCWSTR Partition,
-    IN UCHAR PartitionType,
-    IN OUT PWSTR FileSystemName,
-    IN SIZE_T FileSystemNameSize);
 
 
 /** ChkdskEx() **/
@@ -93,22 +61,63 @@ FormatFileSystem(
     IN PFMIFSCALLBACK Callback);
 
 
-UCHAR
-FileSystemToPartitionType(
-    IN PCWSTR FileSystem,
-    IN PULARGE_INTEGER StartSector,
-    IN PULARGE_INTEGER SectorCount);
+//
+// Bootsector routines
+//
+
+#define FAT_BOOTSECTOR_SIZE     (1 * SECTORSIZE)
+#define FAT32_BOOTSECTOR_SIZE   (1 * SECTORSIZE) // Counts only the primary sector.
+#define BTRFS_BOOTSECTOR_SIZE   (3 * SECTORSIZE)
+
+typedef NTSTATUS
+(/*NTAPI*/ *PFS_INSTALL_BOOTCODE)(
+    IN PCWSTR SrcPath,          // Bootsector source file (on the installation medium)
+    IN HANDLE DstPath,          // Where to save the bootsector built from the source + partition information
+    IN HANDLE RootPartition);   // Partition holding the (old) bootsector data information
+
+NTSTATUS
+InstallFatBootCode(
+    IN PCWSTR SrcPath,
+    IN HANDLE DstPath,
+    IN HANDLE RootPartition);
+
+#define InstallFat12BootCode    InstallFatBootCode
+#define InstallFat16BootCode    InstallFatBootCode
+
+NTSTATUS
+InstallFat32BootCode(
+    IN PCWSTR SrcPath,
+    IN HANDLE DstPath,
+    IN HANDLE RootPartition);
+
+NTSTATUS
+InstallBtrfsBootCode(
+    IN PCWSTR SrcPath,
+    IN HANDLE DstPath,
+    IN HANDLE RootPartition);
 
 
 //
 // Formatting routines
 //
 
-struct _PARTENTRY; // Defined in partlist.h
+NTSTATUS
+ChkdskPartition(
+    IN PPARTENTRY PartEntry,
+    IN BOOLEAN FixErrors,
+    IN BOOLEAN Verbose,
+    IN BOOLEAN CheckOnlyIfDirty,
+    IN BOOLEAN ScanDrive,
+    IN PFMIFSCALLBACK Callback);
 
-BOOLEAN
-PreparePartitionForFormatting(
-    IN struct _PARTENTRY* PartEntry,
-    IN PCWSTR FileSystemName);
+NTSTATUS
+FormatPartition(
+    IN PPARTENTRY PartEntry,
+    IN PCWSTR FileSystemName,
+    IN FMIFS_MEDIA_FLAG MediaFlag,
+    IN PCWSTR Label,
+    IN BOOLEAN QuickFormat,
+    IN ULONG ClusterSize,
+    IN PFMIFSCALLBACK Callback);
 
 /* EOF */

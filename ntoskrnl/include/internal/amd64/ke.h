@@ -229,11 +229,7 @@ FORCEINLINE
 VOID
 KiRundownThread(IN PKTHREAD Thread)
 {
-#ifndef CONFIG_SMP
-    DbgPrint("KiRundownThread is unimplemented\n");
-#else
     /* Nothing to do */
-#endif
 }
 
 /* Registers an interrupt handler with an IDT vector */
@@ -386,6 +382,13 @@ HalAllocateAdapterChannel(
   IN PWAIT_CONTEXT_BLOCK  Wcb,
   IN ULONG  NumberOfMapRegisters,
   IN PDRIVER_CONTROL  ExecutionRoutine);
+
+FORCEINLINE
+PULONG_PTR
+KiGetUserModeStackAddress(void)
+{
+    return &PsGetCurrentThread()->Tcb.TrapFrame->Rsp;
+}
 
 #endif /* __NTOSKRNL_INCLUDE_INTERNAL_AMD64_KE_H */
 

@@ -513,7 +513,7 @@ LocalmonXcvClosePort(HANDLE hXcv)
     }
 
     // Remove it from the list and free the memory.
-    LeaveCriticalSection(&pXcv->pLocalmon->Section);
+    EnterCriticalSection(&pXcv->pLocalmon->Section);
     RemoveEntryList(&pXcv->Entry);
     LeaveCriticalSection(&pXcv->pLocalmon->Section);
     DllFreeSplMem(pXcv);
@@ -570,7 +570,7 @@ LocalmonXcvOpenPort(HANDLE hMonitor, PCWSTR pwszObject, ACCESS_MASK GrantedAcces
     PLOCALMON_HANDLE pLocalmon = (PLOCALMON_HANDLE)hMonitor;
     PLOCALMON_XCV pXcv;
 
-    TRACE("LocalmonXcvOpenPort(%p, %S, %lu, %p)\n", hMonitor, pwszObject, GrantedAccess, phXcv);
+    FIXME("LocalmonXcvOpenPort(%p, %S, %lu, %p)\n", hMonitor, pwszObject, GrantedAccess, phXcv);
 
     // Sanity checks
     if (!pLocalmon || !phXcv)

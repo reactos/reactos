@@ -33,7 +33,7 @@ FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT "Selle viisardi abil saate luua otseteid kohalike või\nvõrguprogrammide, failide, kaustada, arvutite või\nInterneti-aadresside juurde.", -1, 120, 15, 200, 30
     LTEXT "Tippige üksuse asukoht:", -1, 120, 50, 120, 10
-    EDITTEXT IDC_SHORTCUT_LOCATION, 120, 65, 150, 15, ES_LEFT
+    EDITTEXT IDC_SHORTCUT_LOCATION, 120, 65, 150, 15, ES_LEFT | ES_AUTOHSCROLL
     PUSHBUTTON "Sirvi...", IDC_SHORTCUT_BROWSE, 272, 65, 55, 15, ES_LEFT
     LTEXT "Jätkamiseks klõpsake nuppu Edasi.", -1, 120, 97, 162, 10
 END
@@ -44,7 +44,7 @@ CAPTION "Programmi jaoks tiitli valimine"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
     LTEXT "&Tippige selle otsetee nimi:", -1, 120, 15, 150, 10
-    EDITTEXT IDC_SHORTCUT_NAME, 120, 35, 150, 15, ES_LEFT
+    EDITTEXT IDC_SHORTCUT_NAME, 120, 35, 150, 15, ES_LEFT | ES_AUTOHSCROLL
     LTEXT "Otsetee loomiseks klõpsake nuppu Valmis.", -1, 118, 97, 178, 17
 END
 

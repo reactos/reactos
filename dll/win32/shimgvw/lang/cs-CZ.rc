@@ -1,15 +1,15 @@
-/* FILE:       dll/win32/shimgvw/lang/cs-CZ.rc
- * TRANSLATOR: Radek Liska aka Black_Fox (radekliska at gmail dot com)
- * UPDATED:    2008-06-24
+/* Translators:
+ * 2008-06-24, Radek Liska aka Black_Fox (radekliska at gmail dot com)
+ * 2020-12-30, Václav Zouzalík aka Venca24 (vaclav.zouzalik at seznam dot cz)
  */
- 
+
 LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
     IDS_APPTITLE "ReactOS prohlížeč obrázků a faxů"
     IDS_SETASDESKBG "Nastavit jako pozadí plochy"
-    IDS_NOPREVIEW "No preview available."
+    IDS_NOPREVIEW "Náhled není k dispozici."
     IDS_PREVIEW "Náhled"
     /* Tooltips */
     IDS_TOOLTIP_NEXT_PIC "Další obrázek"

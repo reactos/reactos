@@ -213,13 +213,7 @@
 
 /* Inlines */
 #ifndef FORCEINLINE
- #if defined(_MSC_VER)
-  #define FORCEINLINE __forceinline
- #elif ( __MINGW_GNUC_PREREQ(4, 3)  &&  __STDC_VERSION__ >= 199901L)
-  #define FORCEINLINE extern inline __attribute__((__always_inline__,__gnu_inline__))
- #else
-  #define FORCEINLINE extern __inline__ __attribute__((__always_inline__))
- #endif
+ #define FORCEINLINE __forceinline
 #endif /* FORCEINLINE */
 
 #ifndef DECLSPEC_NOINLINE
@@ -804,6 +798,14 @@ $endif(_WINNT_)
  #define DEFAULT_UNREACHABLE default: __builtin_unreachable()
 #else
  #define DEFAULT_UNREACHABLE default: break
+#endif
+
+#if defined(__GNUC__) || defined(__clang__)
+ #define UNREACHABLE __builtin_unreachable()
+#elif defined(_MSC_VER)
+ #define UNREACHABLE __assume(0)
+#else
+ #define UNREACHABLE
 #endif
 
 #define VER_WORKSTATION_NT                  0x40000000

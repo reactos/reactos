@@ -178,7 +178,7 @@ PerformTest(
             Fcb->Header.FileSize.QuadPart = VACB_MAPPING_GRANULARITY - PAGE_SIZE;
             Fcb->Header.ValidDataLength.QuadPart = VACB_MAPPING_GRANULARITY - PAGE_SIZE;
 
-            if ((TestId > 1 && TestId < 4) || TestId == 5)
+            if ((TestId > 1 && TestId < 4) || TestId >= 5)
             {
                 Fcb->Header.AllocationSize.QuadPart = VACB_MAPPING_GRANULARITY - PAGE_SIZE;
             }
@@ -315,6 +315,25 @@ PerformTest(
                         }
                     }
                 }
+                else if (TestId == 6)
+                {
+                    Offset.QuadPart = 0;
+                    KmtStartSeh();
+                    Ret = CcMapData(TestFileObject, &Offset, VACB_MAPPING_GRANULARITY - PAGE_SIZE, MAP_WAIT, &Bcb, (PVOID *)&Buffer);
+                    KmtEndSeh(STATUS_SUCCESS);
+
+                    if (!skip(Ret == TRUE, "CcMapData failed\n"))
+                    {
+                        ok_eq_ulong(Buffer[(VACB_MAPPING_GRANULARITY - PAGE_SIZE - sizeof(ULONG)) / sizeof(ULONG)], 0xBABABABA);
+                    }
+
+                    KmtStartSeh();
+                    CcSetFileSizes(TestFileObject, &NewFileSizes);
+                    KmtEndSeh(STATUS_SUCCESS);
+
+                    if (Ret == TRUE)
+                        CcUnpinData(Bcb);
+                }
             }
         }
     }
@@ -379,7 +398,7 @@ TestMessageHandler(
             ok_eq_ulong((ULONG)InLength, sizeof(ULONG));
             PerformTest(*(PULONG)Buffer, DeviceObject);
             break;
-            
+
         case IOCTL_FINISH_TEST:
             ok_eq_ulong((ULONG)InLength, sizeof(ULONG));
             CleanupTest(*(PULONG)Buffer, DeviceObject);

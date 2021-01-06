@@ -69,11 +69,13 @@ list(APPEND SOURCE
     SetDCPenColor.c
     SetDIBits.c
     SetDIBitsToDevice.c
+    SetLayout.c
     SetMapMode.c
     SetPixel.c
     SetSysColors.c
     SetWindowExtEx.c
     SetWorldTransform.c
+    StretchBlt.c
     TextTransform.c
     init.c)
 
