@@ -707,14 +707,14 @@ BEGIN
 END
 
 IDD_LINK_PROBLEM DIALOGEX 0, 0, 250, 140
-CAPTION "Masahah pada Pintasan"
+CAPTION "Masalah pada Pintasan"
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON 0, IDC_LINK_PROBLEM_ICON, 5, 5, 0, 0
     LTEXT "Item '%s' yang menjadi rujukan pintasan telah berubah atau berpindah, pintasan ini akan bekerja tidak semestinya.", IDC_LINK_PROBLEM_LABEL1, 35, 5, 210, 35
     LTEXT "Kecocokan terdekat yang didasarkan pada nama, jenis, ukuran, dan tanggal:", IDC_LINK_PROBLEM_LABEL2, 35, 45, 210, 35
-    LTEXT "Do you want to fix this shortcut to point to this target or do you just want to delete it?", -1, 35, 85, 210, 30
+    LTEXT "Apakah anda ingin mempernaiki rujukan dari pintasan atau hanya ingin menghapusnya?", -1, 35, 85, 210, 30
     DEFPUSHBUTTON "&Perbaiki", IDOK, 55, 120, 60, 15, WS_DISABLED
     PUSHBUTTON "&Hapus", IDYES, 120, 120, 60, 15
     PUSHBUTTON "Batal", IDCANCEL, 185, 120, 60, 15
