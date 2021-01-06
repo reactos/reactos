@@ -537,7 +537,7 @@ RESTORE       восстанавливает окно\n\
     STRING_REPLACE_ERROR6 "Не найдено файлов - %s\n"
     STRING_REPLACE_ERROR7 "Расширенная ошибка 32\n"
     STRING_CMD_INFOLINE "  ReactOS Командная строка                            Введите HELP для Справки  "
-    STRING_REACTOS_VERSION "Операционная система ReactOS [Версия %s %s]\n"
+    STRING_REACTOS_VERSION "ReactOS [Версия %s %s]\n"
     STRING_CMD_SHELLINFO "\nИнтерпретатор командной строки ReactOS\nВерсия %s %s"
     STRING_VERSION_RUNNING_ON "Запущен на: "
     STRING_VERSION_RUNVER "%s [Версия %d.%d.%d] %s"
