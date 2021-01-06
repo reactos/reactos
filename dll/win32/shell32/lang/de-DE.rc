@@ -11,7 +11,7 @@ BEGIN
     BEGIN
         MENUITEM "", -1, MFT_SEPARATOR
         MENUITEM "&Automatisch anordnen", FCIDM_SHVIEW_AUTOARRANGE
-        MENUITEM "Align to &Grid", FCIDM_SHVIEW_ALIGNTOGRID
+        MENUITEM "Am &Raster ausrichten", FCIDM_SHVIEW_ALIGNTOGRID
     END
 END
 
@@ -32,7 +32,7 @@ BEGIN
         BEGIN
             MENUITEM "", -1, MFT_SEPARATOR
             MENUITEM "&Automatisch anordnen", FCIDM_SHVIEW_AUTOARRANGE
-            MENUITEM "Align to &Grid", FCIDM_SHVIEW_ALIGNTOGRID
+            MENUITEM "Am &Raster ausrichten", FCIDM_SHVIEW_ALIGNTOGRID
         END
         MENUITEM "Aktualisieren", FCIDM_SHVIEW_REFRESH
         MENUITEM "", -1, MFT_SEPARATOR
@@ -384,7 +384,7 @@ BEGIN
     CONTROL "", 14000, "SysListView32", LVS_REPORT | LVS_SHOWSELALWAYS | LVS_SHAREIMAGELISTS | WS_BORDER | WS_TABSTOP, 10, 10, 220, 50
     GROUPBOX "Einstellungen für gewählten Ort", -1, 10, 72, 220, 70
     RADIOBUTTON "&Definierte Größe:", 14001, 20, 90, 80, 10, WS_TABSTOP
-    EDITTEXT 14002, 106, 87, 50, 14, WS_TABSTOP | ES_NUMBER
+    EDITTEXT 14002, 116, 103, 50, 14, WS_TABSTOP | ES_NUMBER
     LTEXT "M&aximale Größe (MB):", -1, 20, 105, 70, 10
     RADIOBUTTON "Dateien nicht in den Papie&rkorb verschieben, sondern sofort löschen", 14003, 20, 117, 170, 20, BS_MULTILINE | WS_TABSTOP
     AUTOCHECKBOX "Bestätigungs&dialog nach erfolgreichem Löschvorgang anzeigen", 14004, 20, 155, 215, 10, WS_TABSTOP
@@ -702,7 +702,7 @@ BEGIN
     LTEXT "Wählen Sie eine Datei aus, die auf diesem Ordnersymbol angezeigt wird.", IDC_STATIC, 15, 87, 115, 33
     PUSHBUTTON "&Datei auswählen...", IDC_FOLDERCUST_CHOOSE_PIC, 15, 125, 115, 15
     PUSHBUTTON "&Wiederherstellen", IDC_FOLDERCUST_RESTORE_DEFAULTS, 15, 144, 115, 15
-    LTEXT "Preview:", IDC_STATIC, 139, 85, 81, 11
+    LTEXT "Vorschau:", IDC_STATIC, 139, 85, 81, 11
     CONTROL "", IDC_FOLDERCUST_PREVIEW_BITMAP, "STATIC", SS_BITMAP | WS_GROUP, 150, 100, 60, 60
     GROUPBOX "Ordnersymbole", IDC_STATIC, 5, 170, 230, 65, WS_TABSTOP
     LTEXT "Sie können das Ordnersymbol ändern. Wenn Sie das Symbol ändern, wird keine Vorschau der Ordnerinhalte mehr angezeigt.", IDC_STATIC, 15, 180, 210, 25
@@ -882,7 +882,7 @@ BEGIN
     IDS_CANTEJECTMEDIA "Auswerfen des Mediums nicht möglich (Fehlercode: %lu)."
     IDS_CANTSHOWPROPERTIES "Anzeigen der Eigenschaften nicht möglich (Fehlercode: %lu)."
     IDS_CANTDISCONNECT "Trennen nicht möglich (Fehlercode: %lu)."
-    IDS_NONE "(None)"
+    IDS_NONE "(Leer)"
 
     /* Friendly File Type Names */
     IDS_DIRECTORY "Dateiordner"
@@ -919,7 +919,7 @@ BEGIN
     IDS_EDIT_VERB "Bearbeiten"
     IDS_FIND_VERB "Finden"
     IDS_PRINT_VERB "Drucken"
-    IDS_CMD_VERB "Command Prompt here"
+    IDS_CMD_VERB "Command Prompt hier"
 
     IDS_FILE_FOLDER "%u Dateien, %u Ordner"
     IDS_PRINTERS "Drucker"
