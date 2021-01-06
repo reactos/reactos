@@ -825,7 +825,7 @@ no_user_apc_pending:
     /* Swap gs back to user */
     swapgs
 
-    ; Zero out volatiles
+    /* Zero out volatiles */
     pxor xmm0, xmm0
     pxor xmm1, xmm1
     pxor xmm2, xmm2
@@ -965,7 +965,7 @@ FUNC KiConvertToGuiThread
     test rax, rax
     jz KiConvertToGuiThreadFailed
 
-    ; OldStack = KeSwitchKernelStack((PVOID)NewStack, (PVOID)(NewStack - KERNEL_STACK_SIZE));
+    /* OldStack = KeSwitchKernelStack((PVOID)NewStack, (PVOID)(NewStack - KERNEL_STACK_SIZE)); */
     mov rcx, rax
     mov rdx, rax
     sub rdx, KERNEL_STACK_SIZE
@@ -1011,44 +1011,45 @@ KiConvertToGuiThreadFailed:
 
 ENDFUNC
 
-;
-; VOID
-; KiDeliverApc(
-;     _In_ KPROCESSOR_MODE DeliveryMode,
-;     _In_ PKEXCEPTION_FRAME ExceptionFrame,
-;     _In_ PKTRAP_FRAME TrapFrame);
-;
+/*
+ * VOID
+ * KiDeliverApc(
+ *     _In_ KPROCESSOR_MODE DeliveryMode,
+ *     _In_ PKEXCEPTION_FRAME ExceptionFrame,
+ *     _In_ PKTRAP_FRAME TrapFrame);
+ *
+ */
 EXTERN KiDeliverApc:PROC
 
 PUBLIC KiInitiateUserApc
 .PROC KiInitiateUserApc
 
-    ; Generate a KEXCEPTION_FRAME on the stack
+    /* Generate a KEXCEPTION_FRAME on the stack */
     GENERATE_EXCEPTION_FRAME
 
-    ; Raise IRQL to APC_LEVEL
+    /* Raise IRQL to APC_LEVEL */
     mov rax, APC_LEVEL
     mov cr8, rax
 
-    ; Enable interrupts
+    /* Enable interrupts */
     sti
 
-    ; Get the current trap frame
+    /* Get the current trap frame */
     mov rax, gs:[PcCurrentThread]
     mov r8, [rax + KTHREAD_TrapFrame]
 
-    ; Call the C function
+    /* Call the C function */
     mov ecx, 1
     mov rdx, rsp
     call KiDeliverApc
 
-    ; Disable interrupts again
+    /* Disable interrupts again */
     cli
 
-    ; Restore the registers from the KEXCEPTION_FRAME
+    /* Restore the registers from the KEXCEPTION_FRAME */
     RESTORE_EXCEPTION_STATE
 
-    ; Return
+    /* Return */
     ret
 
 .ENDP
@@ -1092,22 +1093,22 @@ FUNC KeSwitchKernelStack
     sub rsp, 40
     .allocstack 40
 
-    ; Save rcx
+    /* Save rcx */
     mov [rsp], rcx
     .savereg rcx, 0
     .endprolog
 
-    ; Call the C handler, which returns the old stack in rax
-   call KiSwitchKernelStack
+    /* Call the C handler, which returns the old stack in rax */
+    call KiSwitchKernelStack
 
-    ; Restore rcx (StackBase)
+    /* Restore rcx (StackBase) */
     mov rcx, [rsp]
 
-    ; Switch to new stack: RSP += (StackBase - OldStackBase)
+    /* Switch to new stack: RSP += (StackBase - OldStackBase) */
     sub rcx, rax
     add rsp, rcx
 
-    ; Deallocate the home frame
+    /* Deallocate the home frame */
     add rsp, 40
     ret
 

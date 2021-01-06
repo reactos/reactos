@@ -11,11 +11,13 @@
 
 #include <ksamd64.inc>
 
-; BOOLEAN
-; KiSwapContextResume(
-;    _In_ KIRQL WaitIrql,
-;    _In_ PKTHREAD OldThread,
-;    _In_ PKTHREAD NewThread)
+/*
+ * BOOLEAN
+ * KiSwapContextResume(
+ *    _In_ KIRQL WaitIrql,
+ *    _In_ PKTHREAD OldThread,
+ *    _In_ PKTHREAD NewThread)
+ */
 EXTERN KiSwapContextResume:PROC
 
 /* FUNCTIONS ****************************************************************/
