@@ -109,6 +109,7 @@ if(MSVC AND (ARCH STREQUAL "i386"))
     add_asm_files(ftol2_asm math/i386/ftol2_asm.s)
     add_library(ftol2_sse OBJECT ${ftol2_asm})
     target_compile_definitions(ftol2_sse PRIVATE $<TARGET_PROPERTY:msvcrtex,COMPILE_DEFINITIONS>)
+    set_target_properties(ftol2_sse PROPERTIES LINKER_LANGUAGE C)
 endif()
 
 
