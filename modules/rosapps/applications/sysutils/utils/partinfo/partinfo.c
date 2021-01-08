@@ -270,7 +270,7 @@ int main(int argc, char *argv[])
                pDiskGeometry->BytesPerSector,
                DiskGeometry.InfoEx.DiskSize.QuadPart);
 
-        printf("SizeOfDetectInfo: %lu  DetectionType: %lu (%s)\n",
+        printf("SizeOfDetectInfo: %lu  DetectionType: %u (%s)\n",
                DiskGeometry.InfoEx.Detection.SizeOfDetectInfo,
                DiskGeometry.InfoEx.Detection.DetectionType,
                DETECT_TYPE_NAME(DiskGeometry.InfoEx.Detection.DetectionType));
@@ -304,7 +304,7 @@ int main(int argc, char *argv[])
             break;
         }
 
-        printf("SizeOfPartitionInfo: %lu  PartitionStyle: %lu [%s]\n",
+        printf("SizeOfPartitionInfo: %lu  PartitionStyle: %u [%s]\n",
                DiskGeometry.InfoEx.Partition.SizeOfPartitionInfo,
                DiskGeometry.InfoEx.Partition.PartitionStyle,
                PARTITION_STYLE_NAME(DiskGeometry.InfoEx.Partition.PartitionStyle));
