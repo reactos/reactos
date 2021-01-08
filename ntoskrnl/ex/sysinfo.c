@@ -657,7 +657,7 @@ QSI_DEF(SystemProcessorInformation)
     Spi->ProcessorArchitecture = KeProcessorArchitecture;
     Spi->ProcessorLevel = KeProcessorLevel;
     Spi->ProcessorRevision = KeProcessorRevision;
-    Spi->Reserved = 0;
+    Spi->MaximumProcessors = 0;
     Spi->ProcessorFeatureBits = KeFeatureBits;
 
     DPRINT("Arch %u Level %u Rev 0x%x\n", Spi->ProcessorArchitecture,
