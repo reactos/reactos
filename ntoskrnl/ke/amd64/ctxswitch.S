@@ -146,7 +146,7 @@ PUBLIC KiThreadStartup
     push rbp
     .pushreg rbp
     sub rsp, 6 * 8
-    .allocstack 6 * 8
+    .allocstack (6 * 8)
     .endprolog
 
     /* Save WaitIrql as KSWITCH_FRAME::ApcBypass */
