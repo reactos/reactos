@@ -657,7 +657,11 @@ QSI_DEF(SystemProcessorInformation)
     Spi->ProcessorArchitecture = KeProcessorArchitecture;
     Spi->ProcessorLevel = KeProcessorLevel;
     Spi->ProcessorRevision = KeProcessorRevision;
+#if (NTDDI_VERSION < NTDDI_WIN8)
     Spi->Reserved = 0;
+#else
+    Spi->MaximumProcessors = 0;
+#endif
     Spi->ProcessorFeatureBits = KeFeatureBits;
 
     DPRINT("Arch %u Level %u Rev 0x%x\n", Spi->ProcessorArchitecture,
