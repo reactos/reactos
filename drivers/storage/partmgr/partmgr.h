@@ -77,7 +77,6 @@ typedef struct _PARTITION_EXTENSION
     UINT32 OnDiskNumber; // partition number for issuing Io requests to the kernel
     BOOLEAN IsEnumerated; // reported via IRP_MN_QUERY_DEVICE_RELATIONS
     BOOLEAN SymlinkCreated;
-    BOOLEAN DeviceRemoved; // !!!
     BOOLEAN Attached; // attached to PartitionList of the FDO
     union
     {

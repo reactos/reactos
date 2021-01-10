@@ -1017,17 +1017,6 @@ FdoHandleRemoveDevice(
 {
     PAGED_CODE();
 
-    for (PSINGLE_LIST_ENTRY curEntry = FdoExtension->PartitionList.Next;
-         curEntry != NULL;
-         curEntry = curEntry->Next)
-    {
-        PPARTITION_EXTENSION partExt = CONTAINING_RECORD(curEntry,
-                                                         PARTITION_EXTENSION,
-                                                         ListEntry);
-
-        ASSERT(partExt->DeviceRemoved);
-    }
-
     if (FdoExtension->DiskInterfaceName.Buffer)
     {
         IoSetDeviceInterfaceState(&FdoExtension->DiskInterfaceName, FALSE);

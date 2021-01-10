@@ -94,13 +94,6 @@ PartitionHandleStartDevice(
 {
     PAGED_CODE();
 
-    // fix the damn kernel!
-    if (PartExt->DeviceRemoved)
-    {
-        DPRINT1("IRP_MN_START_DEVICE after IRP_MN_REMOVE_DEVICE!\n");
-        return STATUS_SUCCESS;
-    }
-
     // first, create a symbolic link for our device
     WCHAR nameBuf[64];
     UNICODE_STRING partitionSymlink, interfaceName;
@@ -235,15 +228,6 @@ PartitionHandleRemove(
 
     if (FinalRemove)
     {
-        // fix the damn kernel!
-        if (PartExt->DeviceRemoved)
-        {
-            DPRINT1("Double IRP_MN_REMOVE_DEVICE!\n");
-            return STATUS_SUCCESS;
-        }
-
-        PartExt->DeviceRemoved = TRUE;
-
         ASSERT(PartExt->DeviceName.Buffer);
         if (PartExt->DeviceName.Buffer)
         {
@@ -265,13 +249,6 @@ PartitionHandleDeviceRelations(
     _In_ PIRP Irp)
 {
     PAGED_CODE();
-
-    // fix the damn kernel!
-    if (PartExt->DeviceRemoved)
-    {
-        DPRINT1("QDR after device removal!\n");
-        return STATUS_DEVICE_DOES_NOT_EXIST;
-    }
 
     PIO_STACK_LOCATION ioStack = IoGetCurrentIrpStackLocation(Irp);
     DEVICE_RELATION_TYPE type = ioStack->Parameters.QueryDeviceRelations.Type;
