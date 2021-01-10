@@ -13,9 +13,6 @@
 /* CODE **********************************************************************/
 .code64
 
-MsgUnimplemented:
-    .ascii "Unimplemented", CR, LF, NUL
-
 FUNC __chkstk
     .endprolog
     UNIMPLEMENTED chkstk
