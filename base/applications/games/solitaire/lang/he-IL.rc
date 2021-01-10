@@ -73,6 +73,7 @@ BEGIN
     BEGIN
         MENUITEM "&חלק\tF2", IDM_GAME_NEW
         MENUITEM SEPARATOR
+        MENUITEM "&Undo", IDM_GAME_UNDO, GRAYED
         MENUITEM "ח&פיסה...", IDM_GAME_DECK
         MENUITEM "&אפשרויות", IDM_GAME_OPTIONS
         MENUITEM SEPARATOR

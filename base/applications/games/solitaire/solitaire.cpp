@@ -12,6 +12,7 @@ DWORD        dwAppStartTime;
 HWND        hwndMain;
 HWND        hwndStatus;
 HINSTANCE    hInstance;
+HMENU        hGameMenu;
 
 TCHAR szAppName[128];
 TCHAR szScore[64];
@@ -178,6 +179,16 @@ void SetPlayTimer(void)
     }
 }
 
+void EnableUndoMenu(void)
+{
+    EnableMenuItem(hGameMenu, IDM_GAME_UNDO, MF_BYCOMMAND | MF_ENABLED);
+}
+
+void DisableUndoMenu(void)
+{
+    EnableMenuItem(hGameMenu, IDM_GAME_UNDO, MF_BYCOMMAND | MF_DISABLED | MF_GRAYED);
+}
+
 //
 //    Main entry point
 //
@@ -247,6 +258,8 @@ int WINAPI _tWinMain(HINSTANCE hInst, HINSTANCE hPrev, LPTSTR szCmdLine, int iCm
         return 1;
 
     hwndMain = hwnd;
+
+    hGameMenu = GetSubMenu(GetMenu(hwndMain), 0);
 
     UpdateStatusBar();
 
@@ -704,6 +717,10 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
             case IDM_GAME_NEW:
                 //simulate a button click on the new button..
                 NewGame();
+                return 0;
+
+            case IDM_GAME_UNDO:
+                Undo();
                 return 0;
 
             case IDM_GAME_DECK:

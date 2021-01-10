@@ -63,6 +63,8 @@ extern CardRegion *pRowStack[];
 extern void UpdateStatusBar(void);
 extern void SetPlayTimer(void);
 extern int GetScoreMode(void);
+extern void EnableUndoMenu(void);
+extern void DisableUndoMenu(void);
 
 bool CARDLIBPROC RowStackDragProc(CardRegion &stackobj, int iNumCards);
 bool CARDLIBPROC RowStackDropProc(CardRegion &stackobj,  CardStack &dragcards);
@@ -80,5 +82,8 @@ void CARDLIBPROC PileClickProc(CardRegion &stackobj, int iNumClicked);
 
 void CARDLIBPROC PileRemoveProc(CardRegion &stackobj, int iRemoved);
 
+void SetUndo(int set_source_id, int set_destination_id, int set_number_of_cards, int set_prev_score, int set_prev_visible_pile_cards);
+void ClearUndo(void);
+void Undo(void);
 
 #endif /* _SOL_PCH_ */

@@ -10,6 +10,7 @@ extern TCHAR MsgWin[128];
 extern TCHAR MsgDeal[128];
 
 CardStack activepile;
+int visible_pile_cards;
 int LastId;
 bool fGameStarted = false;
 bool bAutoroute = false;
@@ -53,6 +54,7 @@ void NewGame(void)
     deck.NewDeck();
     deck.Shuffle();
     activepile.Clear();
+    visible_pile_cards = 0;
 
     //deal to each row stack..
     for(i = 0; i < NUM_ROW_STACKS; i++)
@@ -85,6 +87,7 @@ void NewGame(void)
     dwPrevMode = GetScoreMode();
 
     UpdateStatusBar();
+    ClearUndo();
 
     TRACE("EXIT NewGame()\n");
 
@@ -159,6 +162,8 @@ bool CARDLIBPROC RowStackDropProc(CardRegion &stackobj, CardStack &dragcards)
     }
 
     fGameStarted = true;
+
+    SetUndo(LastId, stackobj.Id(), dragcards.NumCards(), lScore, visible_pile_cards);
 
     if (LastId == PILE_ID)
     {
@@ -245,6 +250,8 @@ bool CARDLIBPROC SuitStackDropProc(CardRegion &stackobj, CardStack &dragcards)
 
     if (b)
     {
+        SetUndo(LastId, stackobj.Id(), 1, lScore, visible_pile_cards);
+
         if ((LastId == PILE_ID) || (LastId >= ROW_ID))
         {
             if (GetScoreMode() == SCORE_VEGAS)
@@ -300,6 +307,7 @@ void CARDLIBPROC RowStackClickProc(CardRegion &stackobj, int iNumClicked)
             lScore = lScore + 5;
             UpdateStatusBar();
         }
+        ClearUndo();
     }
 
     LastId = stackobj.Id();
@@ -363,6 +371,7 @@ void CARDLIBPROC SuitStackAddProc(CardRegion &stackobj, const CardStack &added)
         }
 
         UpdateStatusBar();
+        ClearUndo();
 
         MessageBox(SolWnd, MsgWin, szAppName, MB_OK | MB_ICONINFORMATION);
 
@@ -462,6 +471,8 @@ void CARDLIBPROC PileRemoveProc(CardRegion &stackobj, int iItems)
     //modify our "virtual" pile by removing the same card
     //that was removed from the physical card stack
     activepile.Pop(iItems);
+    if((dwOptions & OPTION_THREE_CARDS) && visible_pile_cards > 1)
+        --visible_pile_cards;
 
     //if there is just 1 card left, then modify the
     //stack to contain ALL the face-up cards..the effect
@@ -506,10 +517,13 @@ void CARDLIBPROC DeckClickProc(CardRegion &stackobj, int iNumClicked)
                 activepile.Reverse();
                 cardstack.Push(activepile);
                 activepile.Clear();
+                SetUndo(PILE_ID, DECK_ID, cardstack.NumCards(), lScore, visible_pile_cards);
+                visible_pile_cards = 0;
             }
         }
         else if (GetScoreMode() == SCORE_STD)
         {
+            SetUndo(PILE_ID, DECK_ID, activepile.NumCards(), lScore, visible_pile_cards);
             if ((dwWasteCount >= dwWasteTreshold) && (activepile.NumCards() != 0))
             {
                 if (dwOptions & OPTION_THREE_CARDS)
@@ -523,6 +537,7 @@ void CARDLIBPROC DeckClickProc(CardRegion &stackobj, int iNumClicked)
             activepile.Reverse();
             cardstack.Push(activepile);
             activepile.Clear();
+            visible_pile_cards = 0;
 
             UpdateStatusBar();
         }
@@ -533,6 +548,8 @@ void CARDLIBPROC DeckClickProc(CardRegion &stackobj, int iNumClicked)
             activepile.Reverse();
             cardstack.Push(activepile);
             activepile.Clear();
+            SetUndo(PILE_ID, DECK_ID, cardstack.NumCards(), lScore, visible_pile_cards);
+            visible_pile_cards = 0;
         }
 
         dwWasteCount++;
@@ -540,6 +557,8 @@ void CARDLIBPROC DeckClickProc(CardRegion &stackobj, int iNumClicked)
     else
     {
         int numcards = min((dwOptions & OPTION_THREE_CARDS) ? 3 : 1, cardstack.NumCards());
+
+        SetUndo(DECK_ID, PILE_ID, numcards, lScore, visible_pile_cards);
 
         //make a "visible" copy of these cards
         CardStack temp;
@@ -553,6 +572,8 @@ void CARDLIBPROC DeckClickProc(CardRegion &stackobj, int iNumClicked)
 
         //remove the top 3 from deck
         activepile.Push(temp);
+
+        visible_pile_cards = numcards;
     }
 
     activepile.Print();

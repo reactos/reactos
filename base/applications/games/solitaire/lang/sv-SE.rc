@@ -63,6 +63,7 @@ BEGIN
     BEGIN
         MENUITEM "&Ge\tF2", IDM_GAME_NEW
         MENUITEM SEPARATOR
+        MENUITEM "&Undo", IDM_GAME_UNDO, GRAYED
         MENUITEM "&Kortlek...", IDM_GAME_DECK
         MENUITEM "&Alternativ...", IDM_GAME_OPTIONS
         MENUITEM SEPARATOR

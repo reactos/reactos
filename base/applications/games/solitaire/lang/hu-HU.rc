@@ -71,6 +71,7 @@ BEGIN
     BEGIN
         MENUITEM "&Osztás\tF2", IDM_GAME_NEW
         MENUITEM SEPARATOR
+        MENUITEM "&Visszavonás", IDM_GAME_UNDO, GRAYED
         MENUITEM "&Hátlap...", IDM_GAME_DECK
         MENUITEM "&Beállítások...", IDM_GAME_OPTIONS
         MENUITEM SEPARATOR
