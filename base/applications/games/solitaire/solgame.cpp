@@ -460,6 +460,21 @@ void CARDLIBPROC PileDblClickProc(CardRegion &stackobj, int iNumClicked)
 }
 
 //
+//    Fix for the 3-card play when only 1 card left on the pile.
+//
+void FixIfOneCardLeft(void)
+{
+    // If there is just 1 card left, then modify the
+    // stack to contain ALL the face-up cards. The effect
+    // will be, the next time a card is dragged, all the
+    // previous card-triplets will be available underneath.
+    if ((dwOptions & OPTION_THREE_CARDS) && pPile->NumCards() == 1) {
+        pPile->SetOffsets(0,0);
+        pPile->SetCardStack(activepile);
+    }
+}
+
+//
 //    What happens when a card is removed from face-up pile?
 //
 void CARDLIBPROC PileRemoveProc(CardRegion &stackobj, int iItems)
@@ -474,15 +489,8 @@ void CARDLIBPROC PileRemoveProc(CardRegion &stackobj, int iItems)
     if((dwOptions & OPTION_THREE_CARDS) && visible_pile_cards > 1)
         --visible_pile_cards;
 
-    //if there is just 1 card left, then modify the
-    //stack to contain ALL the face-up cards..the effect
-    //will be, the next time a card is dragged, all the
-    //previous card-triplets will be available underneath
-    if(stackobj.NumCards() == 1)
-    {
-        stackobj.SetOffsets(0,0);
-        stackobj.SetCardStack(activepile);
-    }
+    FixIfOneCardLeft();
+
     TRACE("EXIT PileRemoveProc()\n");
 }
 
@@ -580,6 +588,9 @@ void CARDLIBPROC DeckClickProc(CardRegion &stackobj, int iNumClicked)
 
     pDeck->SetCardStack(cardstack);
     pPile->SetCardStack(pile);
+
+    // Fix for CORE-11148
+    FixIfOneCardLeft();
 
     SolWnd.Redraw();
     TRACE("EXIT DeckClickProc()\n");
