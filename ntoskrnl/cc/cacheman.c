@@ -137,8 +137,16 @@ CcGetFlushedValidData (
 	return i;
 }
 
-/*
- * @implemented
+/**
+ * @brief Remaps a buffer control block (BCB).
+ * 
+ * Maps data in a cache file for reading, similarly to CcMapData.
+ * This makes the data mapped, but not pinned, so it can't be modified.
+ * 
+ * @param [in] Bcb
+ * Pointer to the BCB.
+ * 
+ * @return Read-only BCB pointer.
  */
 PVOID
 NTAPI

@@ -346,8 +346,20 @@ CcSetFileSizes (
     KeReleaseSpinLock(&SharedCacheMap->CacheMapLock, oldirql);
 }
 
-/*
- * @implemented
+/**
+ * @brief Sets a log handle for file.
+ * 
+ * @param [in] FileObject
+ * Pointer to the file object of file for which will be stored a log handle.
+ * 
+ * @param [in] LogHandle
+ * Pointer to the log handle which will be stored.
+ * 
+ * @param [in] FlushToLsnRoutine
+ * Pointer to a flush callback routine of the log file, which should be called
+ * before flushing buffers of the file.
+ * 
+ * @return None
  */
 VOID
 NTAPI
