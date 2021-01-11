@@ -49,7 +49,8 @@
 #include "misc.h"
 
 #ifdef USE_CERT_PINNING
-#define CERT_ISSUER_INFO "US\r\nLet's Encrypt\r\nLet's Encrypt Authority X3"
+#define CERT_ISSUER_INFO_OLD "US\r\nLet's Encrypt\r\nLet's Encrypt Authority X3"
+#define CERT_ISSUER_INFO_NEW "US\r\nLet's Encrypt\r\nR3"
 #define CERT_SUBJECT_INFO "rapps.reactos.org"
 #endif
 
@@ -720,7 +721,7 @@ unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
             (wcscmp(InfoArray[iAppId].szUrl, APPLICATION_DATABASE_URL) == 0))
         {
             CLocalPtr subjectName, issuerName;
-            CStringW szMsgText;
+            CStringA szMsgText;
             bool bAskQuestion = false;
             if (!CertGetSubjectAndIssuer(hFile, subjectName, issuerName))
             {
@@ -730,7 +731,8 @@ unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
             else
             {
                 if (strcmp(subjectName, CERT_SUBJECT_INFO) ||
-                    strcmp(issuerName, CERT_ISSUER_INFO))
+                    (strcmp(issuerName, CERT_ISSUER_INFO_OLD) &&
+                    strcmp(issuerName, CERT_ISSUER_INFO_NEW)))
                 {
                     szMsgText.Format(IDS_MISMATCH_CERT_INFO, (char*)subjectName, (const char*)issuerName);
                     bAskQuestion = true;
@@ -739,7 +741,7 @@ unsigned int WINAPI CDownloadManager::ThreadFunc(LPVOID param)
 
             if (bAskQuestion)
             {
-                if (MessageBoxW(hMainWnd, szMsgText.GetString(), NULL, MB_YESNO | MB_ICONERROR) != IDYES)
+                if (MessageBoxA(hMainWnd, szMsgText.GetString(), NULL, MB_YESNO | MB_ICONERROR) != IDYES)
                 {
                     goto end;
                 }
