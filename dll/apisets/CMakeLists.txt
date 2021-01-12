@@ -27,7 +27,7 @@ function (add_apiset apiset_name baseaddress)
     if(NOT MSVC)
         add_target_compile_flags(${apiset_name} "-fno-builtin")
     else()
-        add_target_compile_flags(${apiset_name} "/wd4026 /wd4273")
+        add_target_compile_flags(${apiset_name} "/wd4026 /wd4273 /Oi-")
     endif()
 
     add_importlibs(${apiset_name} ${ARGN} ntdll)
