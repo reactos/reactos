@@ -13,7 +13,7 @@ void SetUndo(
     int set_prev_score,
     int set_prev_visible_pile_cards)
 {
-    if (set_source_id == set_destination_id)
+    if ((set_source_id == set_destination_id) || (set_number_of_cards == 0))
         return;
 
     source_id = set_source_id;
