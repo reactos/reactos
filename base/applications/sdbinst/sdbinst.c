@@ -13,14 +13,18 @@
 #include <strsafe.h>
 #include <objbase.h>
 #include <apphelp.h>
+#include <shlwapi.h>
 
 #define APPCOMPAT_CUSTOM_REG_PATH L"Software\\Microsoft\\Windows NT\\CurrentVersion\\AppCompatFlags\\Custom"
-#define APPCOMPAT_LAYERS_REG_PATH L"Software\\Microsoft\\Windows NT\\CurrentVersion\\AppCompatFlags\\Layers"
+#define APPCOMPAT_LAYERS_REG_PATH L"Software\\Microsoft\\Windows NT\\CurrentVersion\\AppCompatFlags\\Custom\\Layers"
 #define APPCOMPAT_INSTALLEDSDB_REG_PATH L"Software\\Microsoft\\Windows NT\\CurrentVersion\\AppCompatFlags\\InstalledSDB"
 #define UNINSTALL_REG_PATH L"Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall"
 #define DBPATH_KEY_NAME L"DatabasePath"
 #define SDB_EXT L".sdb"
 #define GUID_STR_LENGTH 38
+#define GUID_SBD_NAME_LENGTH (GUID_STR_LENGTH + ARRAYSIZE(SDB_EXT))
+
+BOOL SdbUninstallByGuid(_In_ LPWSTR guidSdbStr);
 
 HRESULT
 RegisterSdbEntry(
@@ -48,6 +52,11 @@ RegisterSdbEntry(
     if (!isInstall)
     {
         status = RegDeleteKeyW(HKEY_LOCAL_MACHINE, regName);
+        if (status == ERROR_FILE_NOT_FOUND)
+        {
+            status = ERROR_SUCCESS;
+        }
+
         return HRESULT_FROM_WIN32(status);
     }
 
@@ -321,18 +330,15 @@ CopySdbToAppPatch(
 
     // Get parent folder fo sdb file
     CopyMemory(sysdirPath, destSdbPath, destLen * sizeof(WCHAR));
-    pTmpSysdir = sysdirPath + destLen;
-
-    while (pTmpSysdir > sysdirPath && *pTmpSysdir != L'\\')
-    {
-        *pTmpSysdir = L'\0';
-        --pTmpSysdir;
-    }
-
-    if (pTmpSysdir == sysdirPath)
+    pTmpSysdir = StrRChrW(sysdirPath, sysdirPath + destLen, L'\\');
+    if (pTmpSysdir == NULL)
     {
         wprintf(L"Can't find directory separator\n");
         goto end;
+    }
+    else
+    {
+        *pTmpSysdir = UNICODE_NULL;
     }
 
     // Create directory if need
@@ -402,7 +408,7 @@ SdbInstall(
     FILETIME systemTime = {0};
     ULARGE_INTEGER currentTime = {0};
     WCHAR sysdirPatchPath[MAX_PATH];
-    WCHAR guidDbStr[GUID_STR_LENGTH + ARRAYSIZE(SDB_EXT) + 1];
+    WCHAR guidDbStr[GUID_SBD_NAME_LENGTH];
 
     GetSystemTimeAsFileTime(&systemTime);
     currentTime.LowPart  = systemTime.dwLowDateTime;
@@ -430,8 +436,8 @@ SdbInstall(
         goto end;
     }
 
-    StringFromGUID2(&dbGuid, guidDbStr, MAX_PATH);
-    HRESULT hres = StringCchCatW(guidDbStr, MAX_PATH, SDB_EXT);
+    StringFromGUID2(&dbGuid, guidDbStr, GUID_SBD_NAME_LENGTH);
+    HRESULT hres = StringCchCatW(guidDbStr, GUID_SBD_NAME_LENGTH, SDB_EXT);
     if (FAILED(hres))
     {
         wprintf(L"StringCchCatW error 0x%08X\n", hres);
@@ -550,17 +556,21 @@ SdbUninstall(
     PDB pdb;
     TAGID tagDb;
     GUID dbGuid = {0};
+    WCHAR guidDbStr[GUID_SBD_NAME_LENGTH];
 
     SIZE_T sdbPathLen = wcslen(sdbPath);
     sdbName = sdbPath + sdbPathLen;
 
-    wprintf(L"uninstall name %ls\n", sdbPath);
-    while (*sdbName != L'\\' && sdbPathLen > 0)
+    wprintf(L"uninstall path %ls\n", sdbPath);
+    sdbName = StrRChrW(sdbPath, sdbPath + sdbPathLen, L'\\');
+    if (sdbName == NULL)
     {
-        --sdbName;
-        --sdbPathLen;
+        sdbName = sdbPath;
     }
-    sdbName++;
+    else
+    {
+        sdbName++;
+    }
 
     wprintf(L"uninstall name %ls\n", sdbName);
 
@@ -586,6 +596,14 @@ SdbUninstall(
         goto end;
     }
 
+    // Database name must be GUID string
+    if (wcslen(sdbName) + 1 != GUID_SBD_NAME_LENGTH)
+    {
+        StringFromGUID2(&dbGuid, guidDbStr, GUID_SBD_NAME_LENGTH);
+        SdbCloseDatabase(pdb);
+        return SdbUninstallByGuid(guidDbStr);
+    }
+
     //remove regkey in appatch/custom
     HRESULT hres = ProcessExe(pdb, tagDb, NULL, 0, FALSE);
     if (FAILED(hres))
@@ -594,12 +612,19 @@ SdbUninstall(
         goto end;
     }
 
+    hres = ProcessLayers(pdb, tagDb, NULL, 0, FALSE);
+    if (FAILED(hres))
+    {
+        wprintf(L"Process layers fail\n");
+        goto end;
+    }
+
     SdbCloseDatabase(pdb);
 
     hres = DeleteUninstallKey(sdbName);
     if (FAILED(hres))
     {
-        wprintf(L"Remove key fail\n");
+        wprintf(L"Remove uninstall key fail\n");
         //goto end;
     }
 
@@ -877,7 +902,7 @@ int _tmain(int argc, LPWSTR argv[])
 
     if (!success)
     {
-        wprintf(L"Sdb install failed\n");
+        wprintf(isInstall ? L"Sdb install failed\n" : L"Sdb uninstall failed\n");
         return -1;
     }
 
