@@ -179,14 +179,16 @@ void SetPlayTimer(void)
     }
 }
 
-void EnableUndoMenu(void)
+void SetUndoMenuState(bool enable)
 {
-    EnableMenuItem(hGameMenu, IDM_GAME_UNDO, MF_BYCOMMAND | MF_ENABLED);
-}
-
-void DisableUndoMenu(void)
-{
-    EnableMenuItem(hGameMenu, IDM_GAME_UNDO, MF_BYCOMMAND | MF_DISABLED | MF_GRAYED);
+    if (enable)
+    {
+        EnableMenuItem(hGameMenu, IDM_GAME_UNDO, MF_BYCOMMAND | MF_ENABLED);
+    }
+    else
+    {
+        EnableMenuItem(hGameMenu, IDM_GAME_UNDO, MF_BYCOMMAND | MF_DISABLED | MF_GRAYED);
+    }
 }
 
 //

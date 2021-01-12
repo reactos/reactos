@@ -5,8 +5,6 @@ CardRegion *pPile;
 CardRegion *pSuitStack[4];
 CardRegion *pRowStack[NUM_ROW_STACKS];
 
-extern CardStack activepile;
-
 HBITMAP hbmBitmap;
 HDC     hdcBitmap;
 int     yRowStackCardOffset;
