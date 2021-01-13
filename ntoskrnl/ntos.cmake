@@ -164,6 +164,13 @@ list(APPEND SOURCE
     ${REACTOS_SOURCE_DIR}/ntoskrnl/io/pnpmgr/pnproot.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/io/pnpmgr/pnputil.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/io/debug.c
+    ${REACTOS_SOURCE_DIR}/ntoskrnl/kd64/kdapi.c
+    ${REACTOS_SOURCE_DIR}/ntoskrnl/kd64/kdbreak.c
+    ${REACTOS_SOURCE_DIR}/ntoskrnl/kd64/kddata.c
+    ${REACTOS_SOURCE_DIR}/ntoskrnl/kd64/kdinit.c
+    ${REACTOS_SOURCE_DIR}/ntoskrnl/kd64/kdlock.c
+    ${REACTOS_SOURCE_DIR}/ntoskrnl/kd64/kdprint.c
+    ${REACTOS_SOURCE_DIR}/ntoskrnl/kd64/kdtrap.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/apc.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/balmgr.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/bug.c
@@ -291,6 +298,7 @@ if(ARCH STREQUAL "i386")
         ${REACTOS_SOURCE_DIR}/ntoskrnl/rtl/i386/stack.S)
     list(APPEND SOURCE
         ${REACTOS_SOURCE_DIR}/ntoskrnl/config/i386/cmhardwr.c
+        ${REACTOS_SOURCE_DIR}/ntoskrnl/kd64/i386/kdx86.c
         ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/i386/abios.c
         ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/i386/cpu.c
         ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/i386/context.c
@@ -318,6 +326,7 @@ elseif(ARCH STREQUAL "amd64")
         ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/amd64/usercall_asm.S)
     list(APPEND SOURCE
         ${REACTOS_SOURCE_DIR}/ntoskrnl/config/i386/cmhardwr.c
+        ${REACTOS_SOURCE_DIR}/ntoskrnl/kd64/amd64/kdx64.c
         ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/amd64/context.c
         ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/amd64/cpu.c
         ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/amd64/except.c
@@ -342,6 +351,7 @@ elseif(ARCH STREQUAL "arm")
     list(APPEND SOURCE
         ${REACTOS_SOURCE_DIR}/ntoskrnl/config/arm/cmhardwr.c
         ${REACTOS_SOURCE_DIR}/ntoskrnl/kd/arm/kdbg.c
+        ${REACTOS_SOURCE_DIR}/ntoskrnl/kd64/arm/kdarm.c
         ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/arm/cpu.c
         ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/arm/exp.c
         ${REACTOS_SOURCE_DIR}/ntoskrnl/ke/arm/interrupt.c
@@ -374,26 +384,13 @@ endif()
 if(NOT _WINKD_)
     if(ARCH STREQUAL "i386")
         list(APPEND SOURCE
-            ${REACTOS_SOURCE_DIR}/ntoskrnl/kd/i386/kdbg.c
-            ${REACTOS_SOURCE_DIR}/ntoskrnl/kd/wrappers/gdbstub.c)
+            ${REACTOS_SOURCE_DIR}/ntoskrnl/kd/i386/kdbg.c)
         if(KDBG)
             list(APPEND ASM_SOURCE ${REACTOS_SOURCE_DIR}/ntoskrnl/kdbg/i386/kdb_help.S)
             list(APPEND SOURCE ${REACTOS_SOURCE_DIR}/ntoskrnl/kdbg/i386/i386-dis.c)
         endif()
-    elseif(ARCH STREQUAL "amd64")
-        list(APPEND SOURCE
-            ${REACTOS_SOURCE_DIR}/ntoskrnl/kd/i386/kdbg.c  # Use the x86 file
-            ${REACTOS_SOURCE_DIR}/ntoskrnl/kd/amd64/kd.c)
-        if(KDBG)
-            list(APPEND ASM_SOURCE ${REACTOS_SOURCE_DIR}/ntoskrnl/kdbg/amd64/kdb_help.S)
-            list(APPEND SOURCE
-                ${REACTOS_SOURCE_DIR}/ntoskrnl/kdbg/amd64/i386-dis.c
-                ${REACTOS_SOURCE_DIR}/ntoskrnl/kdbg/amd64/kdb.c)
-        endif()
     elseif(ARCH STREQUAL "arm")
         list(APPEND SOURCE ${REACTOS_SOURCE_DIR}/ntoskrnl/kd/arm/kdbg.c)
-    elseif(ARCH STREQUAL "powerpc")
-        list(APPEND SOURCE ${REACTOS_SOURCE_DIR}/ntoskrnl/kd/wrappers/gdbstub_powerpc.c)
     endif()
 
     if(KDBG)
@@ -407,32 +404,8 @@ if(NOT _WINKD_)
     endif()
 
     list(APPEND SOURCE
-        ${REACTOS_SOURCE_DIR}/ntoskrnl/kd/wrappers/bochs.c
         ${REACTOS_SOURCE_DIR}/ntoskrnl/kd/wrappers/kdbg.c
-        ${REACTOS_SOURCE_DIR}/ntoskrnl/kd/kdinit.c
         ${REACTOS_SOURCE_DIR}/ntoskrnl/kd/kdio.c
-        ${REACTOS_SOURCE_DIR}/ntoskrnl/kd/kdmain.c
-        ${REACTOS_SOURCE_DIR}/ntoskrnl/kd64/kdapi.c
-        ${REACTOS_SOURCE_DIR}/ntoskrnl/kd64/kddata.c
-        ${REACTOS_SOURCE_DIR}/ntoskrnl/kd64/kdprint.c)
-
-else() # _WINKD_
-
-    list(APPEND SOURCE
-        ${REACTOS_SOURCE_DIR}/ntoskrnl/kd64/kdapi.c
-        ${REACTOS_SOURCE_DIR}/ntoskrnl/kd64/kdbreak.c
-        ${REACTOS_SOURCE_DIR}/ntoskrnl/kd64/kddata.c
-        ${REACTOS_SOURCE_DIR}/ntoskrnl/kd64/kdinit.c
-        ${REACTOS_SOURCE_DIR}/ntoskrnl/kd64/kdlock.c
-        ${REACTOS_SOURCE_DIR}/ntoskrnl/kd64/kdprint.c
-        ${REACTOS_SOURCE_DIR}/ntoskrnl/kd64/kdtrap.c)
-
-    if(ARCH STREQUAL "i386")
-        list(APPEND SOURCE ${REACTOS_SOURCE_DIR}/ntoskrnl/kd64/i386/kdx86.c)
-    elseif(ARCH STREQUAL "amd64")
-        list(APPEND SOURCE ${REACTOS_SOURCE_DIR}/ntoskrnl/kd64/amd64/kdx64.c)
-    elseif(ARCH STREQUAL "arm")
-        list(APPEND SOURCE ${REACTOS_SOURCE_DIR}/ntoskrnl/kd64/arm/kdarm.c)
-    endif()
+        ${REACTOS_SOURCE_DIR}/ntoskrnl/kd/kdmain.c)
 
 endif()

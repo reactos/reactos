@@ -409,11 +409,13 @@ INT Batch(LPTSTR fullname, LPTSTR firstword, LPTSTR param, PARSED_COMMAND *Cmd)
     /* Perform top-level batch initialization */
     if (bTopLevel)
     {
+        TCHAR *dot;
+
         /* Default the top-level batch context type to .BAT */
         BatType = BAT_TYPE;
 
         /* If this is a .CMD file, adjust the type */
-        TCHAR *dot = _tcsrchr(bc->BatchFilePath, _T('.'));
+        dot = _tcsrchr(bc->BatchFilePath, _T('.'));
         if (dot && (!_tcsicmp(dot, _T(".cmd"))))
         {
             BatType = CMD_TYPE;

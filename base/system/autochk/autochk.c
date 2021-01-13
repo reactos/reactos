@@ -27,11 +27,12 @@
 #include <fmifs/fmifs.h>
 
 #include <fslib/vfatlib.h>
+#include <fslib/vfatxlib.h>
 #include <fslib/ntfslib.h>
-#include <fslib/ext2lib.h>
 #include <fslib/btrfslib.h>
-#include <fslib/reiserfslib.h>
+#include <fslib/ext2lib.h>
 #include <fslib/ffslib.h>
+#include <fslib/reiserfslib.h>
 #include <fslib/cdfslib.h>
 
 #define NDEBUG
@@ -42,20 +43,21 @@
 typedef struct _FILESYSTEM_CHKDSK
 {
     WCHAR Name[10];
-    CHKDSKEX ChkdskFunc;
+    PULIB_CHKDSK ChkdskFunc;
 } FILESYSTEM_CHKDSK, *PFILESYSTEM_CHKDSK;
 
-FILESYSTEM_CHKDSK FileSystems[10] =
+FILESYSTEM_CHKDSK FileSystems[] =
 {
     { L"FAT", VfatChkdsk },
     { L"FAT32", VfatChkdsk },
+    { L"FATX" , VfatxChkdsk },
     { L"NTFS", NtfsChkdsk },
+    { L"BTRFS", BtrfsChkdsk },
     { L"EXT2", Ext2Chkdsk },
     { L"EXT3", Ext2Chkdsk },
     { L"EXT4", Ext2Chkdsk },
-    { L"Btrfs", BtrfsChkdskEx },
-    { L"RFSD", ReiserfsChkdsk },
     { L"FFS", FfsChkdsk },
+    { L"RFSD", ReiserfsChkdsk },
     { L"CDFS", CdfsChkdsk },
 };
 
@@ -379,7 +381,7 @@ ChkdskCallback(
 
     case DONE:
         Status = (PBOOLEAN)Argument;
-        if (*Status != FALSE)
+        if (*Status == FALSE)
         {
             PrintString("The file system check was unable to complete successfully.\r\n\r\n");
             // Error = TRUE;
@@ -396,6 +398,7 @@ CheckVolume(
     IN BOOLEAN CheckOnlyIfDirty)
 {
     NTSTATUS Status;
+    BOOLEAN Success;
     PCWSTR DisplayName;
     UNICODE_STRING VolumePathU;
     ULONG Count;
@@ -450,15 +453,21 @@ CheckVolume(
     }
 
     /* Check whether the volume is dirty */
-    Status = FileSystems[Count].ChkdskFunc(&VolumePathU,
-                                           FALSE, // FixErrors
-                                           TRUE,  // Verbose
-                                           TRUE,  // CheckOnlyIfDirty
-                                           FALSE, // ScanDrive
-                                           ChkdskCallback);
+    Status = STATUS_SUCCESS;
+    Success = FileSystems[Count].ChkdskFunc(&VolumePathU,
+                                            ChkdskCallback,
+                                            FALSE, // FixErrors
+                                            TRUE,  // Verbose
+                                            TRUE,  // CheckOnlyIfDirty
+                                            FALSE, // ScanDrive
+                                            NULL,
+                                            NULL,
+                                            NULL,
+                                            NULL,
+                                            (PULONG)&Status);
 
     /* Perform the check either when the volume is dirty or a check is forced */
-    if ((Status == STATUS_DISK_CORRUPT_ERROR) || !CheckOnlyIfDirty)
+    if (Success && ((Status == STATUS_DISK_CORRUPT_ERROR) || !CheckOnlyIfDirty))
     {
         /* Let the user decide whether to repair */
         if (Status == STATUS_DISK_CORRUPT_ERROR)
@@ -474,12 +483,18 @@ CheckVolume(
         if (!KeyboardHandle || WaitForKeyboard(KeyboardHandle, TimeOut) == STATUS_TIMEOUT)
         {
             PrintString("The system will now check the file system.\r\n\r\n");
-            Status = FileSystems[Count].ChkdskFunc(&VolumePathU,
-                                                   TRUE,  // FixErrors
-                                                   TRUE,  // Verbose
-                                                   CheckOnlyIfDirty,
-                                                   FALSE, // ScanDrive
-                                                   ChkdskCallback);
+            Status = STATUS_SUCCESS;
+            Success = FileSystems[Count].ChkdskFunc(&VolumePathU,
+                                                    ChkdskCallback,
+                                                    TRUE,  // FixErrors
+                                                    TRUE,  // Verbose
+                                                    CheckOnlyIfDirty,
+                                                    FALSE, // ScanDrive
+                                                    NULL,
+                                                    NULL,
+                                                    NULL,
+                                                    NULL,
+                                                    (PULONG)&Status);
         }
         else
         {

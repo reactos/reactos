@@ -82,6 +82,12 @@
 #define NOEXTAPI
 #include <windbgkd.h>
 #include <wdbgexts.h>
+#ifdef KDBG
+#define KdDebuggerInitialize0 KdpDebuggerInitialize0
+#define KdDebuggerInitialize1 KdpDebuggerInitialize1
+#define KdSendPacket KdpSendPacket
+#define KdReceivePacket KdpReceivePacket
+#endif
 #include <kddll.h>
 #ifdef __ROS_ROSSYM__
 #include <reactos/rossym.h>

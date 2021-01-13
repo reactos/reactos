@@ -1060,7 +1060,7 @@ typedef [switch_type(unsigned long)] union _SERVER_ALIAS_INFO
     pointer_default(unique),
     endpoint("ncacn_np:[\\pipe\\srvsvc]")
 #ifndef __midl
-    ,implicit_handle(handle_t hBinding)
+    ,implicit_handle(handle_t srvsvc_hBinding)
 #endif
 ]
 interface srvsvc

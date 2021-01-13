@@ -807,7 +807,7 @@ VOID
 #define CLEAR_FLAG(Flags, Bit)  ((Flags) &= ~(Bit))
 #define TEST_FLAG(Flags, Bit)   (((Flags) & (Bit)) != 0)
 
-__inline
+FORCEINLINE // __REACTOS__
 BOOLEAN
 ValidChar(UCHAR Ch)
 {
@@ -821,7 +821,7 @@ ValidChar(UCHAR Ch)
 }
 
 // could be #define, but this allows typechecking
-__inline
+FORCEINLINE // __REACTOS__
 BOOLEAN
 PORT_ALLOCATED_SENSE(
     _In_ PCDROM_DEVICE_EXTENSION  DeviceExtension,
@@ -834,7 +834,7 @@ PORT_ALLOCATED_SENSE(
             );
 }
 
-__inline
+FORCEINLINE // __REACTOS__
 VOID
 FREE_PORT_ALLOCATED_SENSE_BUFFER(
     _In_ PCDROM_DEVICE_EXTENSION  DeviceExtension,
@@ -1497,19 +1497,19 @@ DvdSendKey(
 //
 // neat little hacks to count number of bits set efficiently
 //
-__inline ULONG CountOfSetBitsUChar(UCHAR _X)
+FORCEINLINE ULONG CountOfSetBitsUChar(UCHAR _X)
                     { ULONG i = 0; while (_X) { _X &= _X - 1; i++; } return i; }
-__inline ULONG CountOfSetBitsULong(ULONG _X)
+FORCEINLINE ULONG CountOfSetBitsULong(ULONG _X)
                     { ULONG i = 0; while (_X) { _X &= _X - 1; i++; } return i; }
-__inline ULONG CountOfSetBitsULong32(ULONG32 _X)
+FORCEINLINE ULONG CountOfSetBitsULong32(ULONG32 _X)
                     { ULONG i = 0; while (_X) { _X &= _X - 1; i++; } return i; }
-__inline ULONG CountOfSetBitsULong64(ULONG64 _X)
+FORCEINLINE ULONG CountOfSetBitsULong64(ULONG64 _X)
                     { ULONG i = 0; while (_X) { _X &= _X - 1; i++; } return i; }
-__inline ULONG CountOfSetBitsUlongPtr(ULONG_PTR _X)
+FORCEINLINE ULONG CountOfSetBitsUlongPtr(ULONG_PTR _X)
                     { ULONG i = 0; while (_X) { _X &= _X - 1; i++; } return i; }
 
 
-__inline
+FORCEINLINE // __REACTOS__
 BOOLEAN
 IsVolumeMounted(
     _In_ PDEVICE_OBJECT DeviceObject
@@ -1523,7 +1523,7 @@ IsVolumeMounted(
 }
 
 
-__inline _Ret_range_(0,MAXIMUM_RETRY_FOR_SINGLE_IO_IN_100NS_UNITS)
+FORCEINLINE _Ret_range_(0,MAXIMUM_RETRY_FOR_SINGLE_IO_IN_100NS_UNITS)
 LONGLONG
 ConvertSectorsPerSecondTo100nsUnitsFor64kWrite(
     _In_range_(1,0xFFFFFFFF) ULONG SectorsPerSecond // zero would cause divide-by-zero
@@ -1549,7 +1549,7 @@ ConvertSectorsPerSecondTo100nsUnitsFor64kWrite(
     return 320000000 / SectorsPerSecond;
 }
 
-__inline
+FORCEINLINE // __REACTOS__
 UCHAR
 RequestGetCurrentStackLocationFlags(
     _In_ WDFREQUEST Request
@@ -1564,7 +1564,7 @@ RequestGetCurrentStackLocationFlags(
     return currentStack->Flags;
 }
 
-__inline
+FORCEINLINE // __REACTOS__
 ULONG
 TimeOutValueGetCapValue(
     _In_ ULONG  TimeOutValue,

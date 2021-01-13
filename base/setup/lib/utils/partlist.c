@@ -906,7 +906,10 @@ InitializePartitionEntry(
     PartEntry->New = TRUE;
     PartEntry->IsPartitioned = TRUE;
 
-    PartEntry->PartitionType = FileSystemToPartitionType(L"RAW", &PartEntry->StartSector, &PartEntry->SectorCount);
+// FIXME: Use FileSystemToMBRPartitionType() only for MBR, otherwise use PARTITION_BASIC_DATA_GUID.
+    PartEntry->PartitionType = FileSystemToMBRPartitionType(L"RAW",
+                                                            PartEntry->StartSector.QuadPart,
+                                                            PartEntry->SectorCount.QuadPart);
     ASSERT(PartEntry->PartitionType != PARTITION_ENTRY_UNUSED);
 
     PartEntry->FormatState = Unformatted;
@@ -1018,12 +1021,11 @@ AddPartitionToDisk(
             ASSERT(NT_SUCCESS(Status));
 
             /* We don't have a FS, try to guess one */
-            Status = InferFileSystemByHandle(PartitionHandle,
-                                             PartEntry->PartitionType,
-                                             PartEntry->FileSystem,
-                                             sizeof(PartEntry->FileSystem));
+            Status = InferFileSystem(NULL, PartitionHandle,
+                                     PartEntry->FileSystem,
+                                     sizeof(PartEntry->FileSystem));
             if (!NT_SUCCESS(Status))
-                DPRINT1("InferFileSystemByHandle() failed, Status 0x%08lx\n", Status);
+                DPRINT1("InferFileSystem() failed, Status 0x%08lx\n", Status);
         }
         if (*PartEntry->FileSystem)
         {
@@ -2879,6 +2881,9 @@ UpdateDiskLayout(
         }
     }
 
+    // HACK: See the FIXMEs in WritePartitions(): (Re)set the PartitionStyle to MBR.
+    DiskEntry->DiskStyle = PARTITION_STYLE_MBR;
+
     DiskEntry->Dirty = TRUE;
 
 #ifdef DUMP_PARTITION_TABLE
@@ -3924,6 +3929,9 @@ WritePartitions(
     // DiskEntry->NoMbr was TRUE (instead of NewDisk).
     //
 
+    // HACK: Parts of FIXMEs described above: (Re)set the PartitionStyle to MBR.
+    DiskEntry->DiskStyle = PARTITION_STYLE_MBR;
+
     /* The layout has been successfully updated, the disk is not dirty anymore */
     DiskEntry->Dirty = FALSE;
 
@@ -4105,11 +4113,13 @@ SetMountedDeviceValues(
 }
 
 VOID
-SetPartitionType(
+SetMBRPartitionType(
     IN PPARTENTRY PartEntry,
     IN UCHAR PartitionType)
 {
     PDISKENTRY DiskEntry = PartEntry->DiskEntry;
+
+    ASSERT(DiskEntry->DiskStyle == PARTITION_STYLE_MBR);
 
     PartEntry->PartitionType = PartitionType;
 

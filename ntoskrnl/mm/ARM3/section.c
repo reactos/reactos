@@ -1299,6 +1299,14 @@ MiMapViewOfDataSection(IN PCONTROL_AREA ControlArea,
     {
         /* The caller did not, so pick a 64K aligned view size based on the offset */
         SectionOffset->LowPart &= ~(_64K - 1);
+
+        /* Make sure that we will not overflow */
+        if ((Section->SizeOfSection.QuadPart - SectionOffset->QuadPart) > MAXLONG_PTR)
+        {
+            MiDereferenceControlArea(ControlArea);
+            return STATUS_INVALID_VIEW_SIZE;
+        }
+
         *ViewSize = (SIZE_T)(Section->SizeOfSection.QuadPart - SectionOffset->QuadPart);
     }
     else
@@ -1306,19 +1314,19 @@ MiMapViewOfDataSection(IN PCONTROL_AREA ControlArea,
         /* A size was specified, align it to a 64K boundary */
         *ViewSize += SectionOffset->LowPart & (_64K - 1);
 
+        /* Check for overflow or huge value */
+        if ((*ViewSize < (SectionOffset->LowPart & (_64K - 1))) || ((*ViewSize) > MAXLONG_PTR))
+        {
+            MiDereferenceControlArea(ControlArea);
+            return STATUS_INVALID_VIEW_SIZE;
+        }
+
         /* Align the offset as well to make this an aligned map */
         SectionOffset->LowPart &= ~((ULONG)_64K - 1);
     }
 
     /* We must be dealing with a 64KB aligned offset. This is a Windows ASSERT */
     ASSERT((SectionOffset->LowPart & ((ULONG)_64K - 1)) == 0);
-
-    /* It's illegal to try to map more than overflows a LONG_PTR */
-    if (*ViewSize >= MAXLONG_PTR)
-    {
-        MiDereferenceControlArea(ControlArea);
-        return STATUS_INVALID_VIEW_SIZE;
-    }
 
     /* Windows ASSERTs for this flag */
     ASSERT(ControlArea->u.Flags.GlobalOnlyPerSession == 0);
@@ -1505,14 +1513,15 @@ MiCreateDataFileMap(IN PFILE_OBJECT File,
     return STATUS_NOT_IMPLEMENTED;
 }
 
+static
 NTSTATUS
 NTAPI
 MiCreatePagingFileMap(OUT PSEGMENT *Segment,
-                      IN PSIZE_T MaximumSize,
+                      IN PLARGE_INTEGER MaximumSize,
                       IN ULONG ProtectionMask,
                       IN ULONG AllocationAttributes)
 {
-    SIZE_T SizeLimit;
+    ULONGLONG SizeLimit;
     PFN_COUNT PteCount;
     PMMPTE PointerPte;
     MMPTE TempPte;
@@ -1525,18 +1534,22 @@ MiCreatePagingFileMap(OUT PSEGMENT *Segment,
     ASSERT((AllocationAttributes & SEC_LARGE_PAGES) == 0);
 
     /* Pagefile-backed sections need a known size */
-    if (!(*MaximumSize)) return STATUS_INVALID_PARAMETER_4;
+    if (!MaximumSize || !MaximumSize->QuadPart || MaximumSize->QuadPart < 0)
+        return STATUS_INVALID_PARAMETER_4;
 
     /* Calculate the maximum size possible, given the Prototype PTEs we'll need */
-    SizeLimit = MAXULONG_PTR - sizeof(SEGMENT);
+    SizeLimit = MmSizeOfPagedPoolInBytes - sizeof(SEGMENT);
     SizeLimit /= sizeof(MMPTE);
     SizeLimit <<= PAGE_SHIFT;
 
     /* Fail if this size is too big */
-    if (*MaximumSize > SizeLimit) return STATUS_SECTION_TOO_BIG;
+    if (MaximumSize->QuadPart > SizeLimit)
+    {
+        return STATUS_SECTION_TOO_BIG;
+    }
 
     /* Calculate how many Prototype PTEs will be needed */
-    PteCount = (PFN_COUNT)((*MaximumSize + PAGE_SIZE - 1) >> PAGE_SHIFT);
+    PteCount = (PFN_COUNT)((MaximumSize->QuadPart + PAGE_SIZE - 1) >> PAGE_SHIFT);
 
     /* For commited memory, we must have a valid protection mask */
     if (AllocationAttributes & SEC_COMMIT) ASSERT(ProtectionMask != 0);
@@ -1546,14 +1559,21 @@ MiCreatePagingFileMap(OUT PSEGMENT *Segment,
                                        sizeof(SEGMENT) +
                                        sizeof(MMPTE) * (PteCount - 1),
                                        'tSmM');
-    ASSERT(NewSegment);
+    if (!NewSegment)
+    {
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
     *Segment = NewSegment;
 
     /* Now allocate the control area, which has the subsection structure */
     ControlArea = ExAllocatePoolWithTag(NonPagedPool,
                                         sizeof(CONTROL_AREA) + sizeof(SUBSECTION),
                                         'tCmM');
-    ASSERT(ControlArea);
+    if (!ControlArea)
+    {
+        ExFreePoolWithTag(Segment, 'tSmM');
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
 
     /* And zero it out, filling the basic segmnet pointer and reference fields */
     RtlZeroMemory(ControlArea, sizeof(CONTROL_AREA) + sizeof(SUBSECTION));
@@ -1583,7 +1603,7 @@ MiCreatePagingFileMap(OUT PSEGMENT *Segment,
 
     /* Save some extra accounting data for the segment as well */
     NewSegment->u1.CreatingProcess = PsGetCurrentProcess();
-    NewSegment->SizeOfSegment = PteCount * PAGE_SIZE;
+    NewSegment->SizeOfSegment = ((ULONGLONG)PteCount) * PAGE_SIZE;
     NewSegment->TotalNumberOfPtes = PteCount;
     NewSegment->NonExtendedPtes = PteCount;
 
@@ -2611,7 +2631,7 @@ MmCreateArm3Section(OUT PVOID *SectionObject,
 
         /* So this must be a pagefile-backed section, create the mappings needed */
         Status = MiCreatePagingFileMap(&NewSegment,
-                                       (PSIZE_T)InputMaximumSize,
+                                       InputMaximumSize,
                                        ProtectionMask,
                                        AllocationAttributes);
         if (!NT_SUCCESS(Status)) return Status;

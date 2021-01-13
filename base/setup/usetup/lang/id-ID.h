@@ -461,21 +461,21 @@ static MUI_ENTRY idIDDevicePageEntries[] =
     {
         6,
         19,
-        "Anda dapat mengubah pengaturan perangkat keras dengan menekan tombol ATAS atau",
+        "Anda dapat mengubah pengaturan perangkat keras dengan menekan tombol",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         6,
         20,
-        "BAWAH untuk menunjuk daftar. Kemudian tekan tombol ENTER untuk memilih pengaturan",
+        "ATAS atau BAWAH untuk menunjuk daftar. Kemudian tekan tombol ENTER",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         6,
         21,
-        "alternatif.",
+        "untuk memilih pengaturan alternatif.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -593,21 +593,21 @@ static MUI_ENTRY idIDUpgradePageEntries[] =
     {
         6,
         8,
-        "Penyetelan ReactOS dapat meningkatkan salah satu dari pemasangan ReactOS yang",
+        "Penyetelan ReactOS dapat meningkatkan salah satu dari pemasangan",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         6,
         9,
-        "tersedia di bawah ini, atau, jika pemasangan ReactOS ini rusak, program",
+        "ReactOS yang tersedia di bawah ini, atau, jika pemasangan ReactOS",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         6,
         10,
-        "penyetelan ini dapat mengupayakan perbaikan.",
+        "ini rusak, program penyetelan ini dapat mengupayakan perbaikan.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1355,21 +1355,21 @@ static MUI_ENTRY idIDInstallDirectoryEntries[] =
     {
         6,
         14,
-        "Untuk mengubah direktori yang disarankan, tekan BACKSPACE untuk menghapus",
+        "Untuk mengubah direktori yang disarankan, tekan BACKSPACE untuk",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         6,
         15,
-        "beberapa karakter dan kemudian ketikkan direktori yang anda inginkan untuk",
+        "menghapus beberapa karakter dan kemudian ketikkan direktori yang",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
     {
         6,
         16,
-        "memasang ReactOS.",
+        "anda inginkan untuk memasang ReactOS.",
         TEXT_STYLE_NORMAL,
         TEXT_ID_STATIC
     },
@@ -1414,7 +1414,7 @@ static MUI_ENTRY idIDFileCopyEntries[] =
     {
         0,
         14,
-        "This may take several minutes to complete.",
+        "Mungkin butuh beberapa waktu untuk penyelesaiannya.",
         TEXT_STYLE_NORMAL | TEXT_ALIGN_CENTER,
         TEXT_ID_STATIC
     },
@@ -2231,7 +2231,7 @@ MUI_STRING idIDStrings[] =
     {STRING_CHECKINGDISK,
     "Penyetelan sedang memeriksa cakram anda"},
     {STRING_FORMATDISK1,
-    " Format partiti sebagai sistem berkas %S (format cepat) "},
+    " Format partisi sebagai sistem berkas %S (format cepat) "},
     {STRING_FORMATDISK2,
     " Format partisi sebagai sistem berkas %S  "},
     {STRING_KEEPFORMAT,

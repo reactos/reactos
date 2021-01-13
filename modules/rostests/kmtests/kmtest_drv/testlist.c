@@ -26,6 +26,7 @@ KMT_TESTFUNC Test_FsRtlLegal;
 KMT_TESTFUNC Test_FsRtlMcb;
 KMT_TESTFUNC Test_FsRtlRemoveDotsFromPath;
 KMT_TESTFUNC Test_FsRtlTunnel;
+KMT_TESTFUNC Test_HalSystemInfo;
 KMT_TESTFUNC Test_IoCreateFile;
 KMT_TESTFUNC Test_IoDeviceInterface;
 KMT_TESTFUNC Test_IoEvent;
@@ -102,6 +103,7 @@ const KMT_TEST TestList[] =
     { "FsRtlMcb",                           Test_FsRtlMcb },
     { "FsRtlRemoveDotsFromPath",            Test_FsRtlRemoveDotsFromPath },
     { "FsRtlTunnel",                        Test_FsRtlTunnel },
+    { "HalSystemInfo",                      Test_HalSystemInfo },
     { "IoCreateFile",                       Test_IoCreateFile },
     { "IoDeviceInterface",                  Test_IoDeviceInterface },
     { "IoEvent",                            Test_IoEvent },

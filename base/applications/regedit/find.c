@@ -810,18 +810,23 @@ static INT_PTR CALLBACK FindDialogProc(HWND hDlg, UINT uMsg, WPARAM wParam, LPAR
     return iResult;
 }
 
+void FindNextMessageBox(HWND hWnd)
+{
+    if (!FindNext(hWnd))
+    {
+        WCHAR msg[128], caption[128];
+
+        LoadStringW(hInst, IDS_FINISHEDFIND, msg, COUNT_OF(msg));
+        LoadStringW(hInst, IDS_APP_TITLE, caption, COUNT_OF(caption));
+        MessageBoxW(hWnd, msg, caption, MB_ICONINFORMATION);
+    }
+}
+
 void FindDialog(HWND hWnd)
 {
     if (DialogBoxParamW(GetModuleHandle(NULL), MAKEINTRESOURCEW(IDD_FIND),
                        hWnd, FindDialogProc, 0) != 0)
     {
-        if (!FindNext(hWnd))
-        {
-            WCHAR msg[128], caption[128];
-
-            LoadStringW(hInst, IDS_FINISHEDFIND, msg, COUNT_OF(msg));
-            LoadStringW(hInst, IDS_APP_TITLE, caption, COUNT_OF(caption));
-            MessageBoxW(0, msg, caption, MB_ICONINFORMATION);
-        }
+        FindNextMessageBox(hWnd);
     }
 }

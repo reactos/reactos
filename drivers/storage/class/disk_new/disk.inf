@@ -1,10 +1,9 @@
-; DISK.INF
-
-; Installation of DISK DRIVESs
+;
+; Copyright (c) Microsoft Corporation.  All rights reserved.
+;
 
 [Version]
-Signature  = "$Windows NT$"
-;Signature  = "$ReactOS$"
+Signature  = "$WINDOWS NT$"
 LayoutFile = layout.inf
 Class      = DiskDrive
 ClassGUID  = {4D36E967-E325-11CE-BFC1-08002BE10318}
@@ -12,8 +11,27 @@ Provider   = %MSFT%
 ; Git commit 3428c5f @ https://github.com/microsoft/Windows-driver-samples
 DriverVer  = 08/29/2018, 1.0
 
+;[SourceDisksNames]
+;3426=windows cd
+
+;[SourceDisksFiles]
+;disk.sys 		= 3426
+
+;;
+;; The AutoRunAlwaysDisable key is only for use when the hardware cannot
+;; accepts  TEST_UNIT_READY  commands.  Disabling 'AutoRun' or including
+;; devices in this list will prevent removable media services from being
+;; able to properly handle these devices.
+;;
+
+[autorun_addreg]
+HKLM,"System\CurrentControlSet\Services\disk","AutoRunAlwaysDisable", 0x00010008, "Brother RemovableDisk(U)"
+
+[disk_copyfiles]
+disk.sys,,,0x100
+
 [DestinationDirs]
-disk_CopyFiles.NT = 12
+disk_copyfiles=12
 storprop_CopyFiles.NT = 11
 
 [ClassInstall32.NT]
@@ -22,108 +40,149 @@ Copyfiles = storprop_CopyFiles.NT
 
 [DiskClass.NT.AddReg]
 HKR, , ,               0, %DiskClassName%
-HKR, , Installer32,    0, "storprop.dll,DiskClassInstaller"
 HKR, , Icon,           0, "-53"
+HKR, , Installer32,    0, "storprop.dll,DiskClassInstaller"
 HKR, , NoInstallClass, 0, 1
 HKR, , SilentInstall,  0, 1
 
+[ControlFlags]
+BasicDriverOk=*
+
 [Manufacturer]
-%GenericMfg% = GenericMfg
+%GenManufacturer%=disk_device,NT
+%Compaq%=compaq,NT
+%Mylex%=mylex,NT
+;%GenManufacturer%=disk_device,NT$ARCH$
+;%Compaq%=compaq,NT$ARCH$
+;%Mylex%=mylex,NT$ARCH$
 
-[GenericMfg]
-%Disk.DeviceDesc% = disk_Inst,GenDisk
-%OpticalDisk.DeviceDesc% = disk_Inst,GenOptical
+;[disk_device.NT$ARCH$]
+[disk_device.NT]
+%disk_devdesc% = disk_install, GenDisk
+%opticaldisk_devdesc% = disk_install, GenOptical
+%disk_devdesc% = disk_install, USBSTOR\DiskSony____MSC-U01_________
+%disk_devdesc% = disk_install, USBSTOR\DiskSony____MSC-U01N________
+%disk_devdesc% = media_unlockable_disk_install, IDE\DiskIOMEGA_ZIP_100__________________________
+%disk_devdesc% = media_unlockable_disk_install, SCSI\DiskIOMEGA__ZIP_100_________
+%disk_devdesc% = expect_orderly_removal_disk_install, SBP2\FUJITSU&DynaMO-FE_OPTICAL_DRIVE&CmdSetId104d8&GenDisk
+%disk_devdesc% = expect_orderly_removal_disk_install, SBP2\&SYM13FW500-DISK_DRIVE&CmdSetId104d8&GenDisk
+%disk_devdesc% = expect_orderly_removal_disk_install, SBP2\&WDxxxA001RTL-Disk_Drive&CmdSetId104d8&GenDisk
+%disk_devdesc% = expect_orderly_removal_disk_install, SBP2\MAC_TECHNOLOGIESINC.&MAC_THIN_FIREWIRE_DRIVE&CmdSetId104d8&GenDisk
+%disk_devdesc% = expect_orderly_removal_disk_install, SBP2\VST_TECHNOLOGIESINC.&VST_THIN_FIREWIRE_DRIVE&CmdSetId104d8&GenDisk
+%disk_devdesc% = expect_orderly_removal_disk_install, SBP2\Sony&PCVA-HD04&CmdSetId104d8&GenDisk
+%disk_devdesc% = expect_orderly_removal_disk_install, SBP2\LSI_Logic&SYM13FW500-DISK_DRIVE&CmdSetId104d8&GenDisk
+%disk_devdesc% = expect_orderly_removal_disk_install, SBP2\MELCO_INC&1394MEL-HD_DRIVE_&CmdSetId104d8&GenDisk
+%disk_devdesc% = expect_orderly_removal_disk_install, SBP2\MELCO_INC&1394MEL-HD_DRIVE&CmdSetId104d8&GenDisk
+%disk_devdesc% = expect_orderly_removal_disk_install, SBP2\MELCO_INC&1394MEL-MO_DRIVE_&CmdSetId104d8&GenDisk
+%disk_devdesc% = expect_orderly_removal_disk_install, SBP2\LOGITEC&LMO-PFU&CmdSetId104d8&GenDisk
+%disk_devdesc% = expect_orderly_removal_disk_install, SBP2\LOGITEC&LMO-AF&CmdSetId104d8&GenDisk
+%disk_devdesc% = expect_orderly_removal_disk_install, SBP2\OXFW900_&LHD-SF__&CmdSetId104d8&GenDisk
+%disk_devdesc% = expect_orderly_removal_disk_install, SBP2\LOGITEC&LHD-PFU&CmdSetId104d8&GenDisk
+%disk_devdesc% = expect_orderly_removal_disk_install, SBP2\LOGITEC&LHD_AF&CmdSetId104d8&GenDisk
+%disk_devdesc% = expect_orderly_removal_disk_install, SBP2\I-O_DATA_DEVICE_INC.&1394_Converter__&CmdSetId104d8&GenDisk
+%disk_devdesc% = expect_orderly_removal_disk_install, SBP2\API-903-95__&1394_Storage_+_Repeater_&CmdSetId104d8&GenDisk
+%disk_devdesc% = expect_orderly_removal_disk_install, SBP2\Sony&PCVA-HD08A&CmdSetId104d8&GenDisk
+%disk_devdesc% = expect_surprise_removal_disk_install, LEXARUSB\GenDisk
+%disk_devdesc% = expect_surprise_removal_disk_install, SCSI\DiskToshiba_SD_Mem_Driver___
+%disk_devdesc% = disk_install_VHD_drive, SCSI\DiskMsft____Virtual_Disk____
 
-;----------------------------- DISK DRIVER -----------------------------
+;[compaq.NT$ARCH$]
+[compaq.NT]
+%compaq_array.DeviceDesc% = disk_install, SCSI\DiskCompaq__Disk_Array______
 
-[disk_Inst.NT]
-CopyFiles = disk_CopyFiles.NT
+;[mylex.NT$ARCH$]
+[mylex.NT]
+%mylex_array.DeviceDesc% = disk_install, SCSI\DiskMYLEX___
 
-[disk_Inst.NT.Services]
-AddService = disk, 2, disk_Service_Inst
+[media_unlockable_disk_install.NT]
+CopyFiles=disk_copyfiles
 
-[disk_Service_Inst]
-DisplayName    = %Disk.ServiceDesc%
-ServiceType    = 1
-StartType      = 0
-ErrorControl   = 1
-ServiceBinary  = %12%\disk.sys
+[media_unlockable_disk_install.NT.Services]
+AddService=disk,2,disk_ServiceInstallSection,disk_EventLog_InstallSection
 
-[disk_CopyFiles.NT]
-disk.sys
+[media_unlockable_disk_install.NT.HW]
+AddReg=media_unlockable_disk_install_HW.AddReg
 
-;---------------------------- DISK INSTALLER ----------------------------
+[media_unlockable_disk_install_HW.AddReg]
+HKR,"Classpnp","HackMask",0x00010001,0x1 ; Device cannot lock media
+
+[expect_orderly_removal_disk_install.NT]
+CopyFiles=disk_copyfiles
+
+[expect_orderly_removal_disk_install.NT.Services]
+AddService=disk,2,disk_ServiceInstallSection,disk_EventLog_InstallSection
+
+[expect_orderly_removal_disk_install.NT.HW]
+AddReg=expect_orderly_removal_disk_install_HW.AddReg
+
+[expect_orderly_removal_disk_install_HW.AddReg]
+HKR,,"RemovalPolicy",0x00010001,0x2    ; ExpectOrderlyRemoval
+
+[expect_surprise_removal_disk_install.NT]
+CopyFiles=disk_copyfiles
+
+[expect_surprise_removal_disk_install.NT.Services]
+AddService=disk,2,disk_ServiceInstallSection,disk_EventLog_InstallSection
+
+[expect_surprise_removal_disk_install.NT.HW]
+AddReg=expect_surprise_removal_disk_install_HW.AddReg
+
+[expect_surprise_removal_disk_install_HW.AddReg]
+HKR,,"RemovalPolicy",0x00010001,0x3    ; ExpectSurpriseRemoval
+
+[disk_install_VHD_drive.NT]
+CopyFiles=disk_copyfiles
+
+[disk_install_VHD_drive.NT.Services]
+AddService=disk,2,disk_ServiceInstallSection,disk_EventLog_InstallSection
+
+[disk_install_VHD_drive.NT.HW]
+AddReg=disk_install_VHD_drive.AddReg
+
+[disk_install_VHD_drive.AddReg]
+HKR,,"FriendlyName",,%VHD_Generic_FriendlyName% ; Give VHD drives a more friendly name
+
+[disk_install.NT]
+CopyFiles=disk_copyfiles
+ExcludeId=GenSFloppy,SCSI\DiskMATSHITALS-120_COSM___04,SCSI\DiskCOMPAQ__LS-120_VER5___AB
+ExcludeId=SCSI\DiskCOMPAQ__LS-120_HIMA___01,SCSI\DiskMATSHITALS-120_VER5___00
+ExcludeId=SCSI\DiskMATSHITALS-120/240____00
+DiskCiPrivateData=4
+
+[disk_install.NT.Services]
+AddService=disk,2,disk_ServiceInstallSection,disk_EventLog_InstallSection
+
+[disk_ServiceInstallSection]
+DisplayName=%disk_ServiceDesc%
+ServiceType=1
+StartType=0
+ErrorControl=1
+ServiceBinary = %12%\disk.sys
+AddReg=autorun_addreg
+
+[disk_EventLog_InstallSection]
+;AddReg=disk_EventLog_AddReg
+
+[disk_EventLog_AddReg]
+HKR,,EventMessageFile,0x00020000,"%%SystemRoot%%\System32\IoLogMsg.dll"
+HKR,,TypesSupported,0x00010001,7
 
 [storprop_CopyFiles.NT]
 storprop.dll
 
-;-------------------------------- STRINGS -------------------------------
 
 [Strings]
-ReactOS = "ReactOS Team"
-GenericMfg = "(Generic Disk Drives)"
-DiskClassName = "Disk Drives"
-Disk.DeviceDesc = "Disk Drive"
-OpticalDisk.DeviceDesc = "Optical Disk Drive"
-Disk.ServiceDesc = "Disk Driver"
+MSFT="Microsoft"
+DiskClassName="Disk drives"
+GenManufacturer="(Standard disk drives)"
+Compaq="Compaq"
+Mylex="Mylex"
 
-[Strings.0405]
-GenericMfg = "(Obecné diskové jednotky)"
-DiskClassName = "Diskové jednotky"
-Disk.DeviceDesc = "Disková jednotka"
-OpticalDisk.DeviceDesc = "Optická disková jednotka"
-Disk.ServiceDesc = "Ovladač disku"
+disk_devdesc="Disk drive"
+opticaldisk_devdesc="Optical disk drive"
 
-[Strings.0a]
-ReactOS = "Equipo de ReactOS"
-GenericMfg = "(Unidades de disco genéricas)"
-DiskClassName = "Unidades de disco"
-Disk.DeviceDesc = "Unidad de disco"
-OpticalDisk.DeviceDesc = "Unidad de disco óptico"
-Disk.ServiceDesc = "Controlador de disco"
+disk_ServiceDesc="Disk Driver"
+compaq_array.DeviceDesc = "Compaq SCSI Drive Array"
+mylex_array.DeviceDesc = "Mylex RAID Disk Device"
 
-[Strings.0415]
-ReactOS = "Zespół ReactOS"
-GenericMfg = "(Standardowy dysk twardy)"
-DiskClassName = "Dyski twarde"
-Disk.DeviceDesc = "Dysk twardy"
-OpticalDisk.DeviceDesc = "Dysk optyczny"
-Disk.ServiceDesc = "Sterownik dysku"
-
-[Strings.0418]
-ReactOS = "Echipa ReactOS"
-GenericMfg = "(dispozitiv disc generic)"
-DiskClassName = "Dispozitive disc"
-Disk.DeviceDesc = "Dispozitiv disc"
-OpticalDisk.DeviceDesc = "Dispozitiv disc optic"
-Disk.ServiceDesc = "Modúl-pilot de disc"
-
-[Strings.0419]
-ReactOS = "Команда ReactOS"
-GenericMfg = "(Стандартные дисковые накопители)"
-DiskClassName = "Дисковые устройства"
-Disk.DeviceDesc = "Дисковое устройство"
-OpticalDisk.DeviceDesc = "Оптическое дисковое устройство"
-Disk.ServiceDesc = "Драйвер диска"
-
-[Strings.041f]
-ReactOS = "ReactOS Takımı"
-GenericMfg = "(Umûmî Disk Sürücüleri)"
-DiskClassName = "Disk Sürücüleri"
-Disk.DeviceDesc = "Disk Sürücüsü"
-OpticalDisk.DeviceDesc = "Optik Disk Sürücüsü"
-Disk.ServiceDesc = "Disk Sürücüsü"
-
-[Strings.0422]
-ReactOS = "Команда ReactOS"
-GenericMfg = "(Стандартні приводи дисків)"
-DiskClassName = "Дискові приводи"
-Disk.DeviceDesc = "Дисковий привід"
-OpticalDisk.DeviceDesc = "Оптичний привід дисків"
-Disk.ServiceDesc = "Драйвер диску"
-
-[Strings.0804]
-GenericMfg = "(通用磁盘驱动器)"
-Disk.DeviceDesc = "磁盘驱动器"
-OpticalDisk.DeviceDesc = "光盘驱动器"
-Disk.ServiceDesc = "磁盘驱动器"
+VHD_Generic_FriendlyName = "Microsoft Virtual Disk"

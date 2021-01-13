@@ -191,7 +191,7 @@ NetpUnbind(
 
     FIXME("NetpUnbind(%p)\n", BindingHandle);
 
-    status = RpcBindingFree(&hBinding);
+    status = RpcBindingFree(&wkssvc_hBinding);
     if (status)
     {
         TRACE("RpcBindingFree returned 0x%x\n", status);

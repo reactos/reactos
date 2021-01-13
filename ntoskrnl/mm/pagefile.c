@@ -32,10 +32,6 @@
 #define NDEBUG
 #include <debug.h>
 
-#if defined (ALLOC_PRAGMA)
-#pragma alloc_text(INIT, MmInitPagingFile)
-#endif
-
 /* GLOBALS *******************************************************************/
 
 #define PAIRS_PER_RUN (1024)
@@ -253,7 +249,7 @@ MiReadPageFile(
     return(Status);
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 MmInitPagingFile(VOID)

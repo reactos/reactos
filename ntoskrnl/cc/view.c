@@ -36,10 +36,6 @@
 #define NDEBUG
 #include <debug.h>
 
-#if defined (ALLOC_PRAGMA)
-#pragma alloc_text(INIT, CcInitView)
-#endif
-
 /* GLOBALS *******************************************************************/
 
 LIST_ENTRY DirtyVacbListHead;
@@ -248,8 +244,12 @@ CcRosFlushDirtyPages (
         current->SharedCacheMap->Callbacks->ReleaseFromLazyWrite(
             current->SharedCacheMap->LazyWriteContext);
 
-        OldIrql = KeAcquireQueuedSpinLock(LockQueueMasterLock);
+        /* We release the VACB before acquiring the lock again, because
+         * CcRosVacbDecRefCount might free the VACB, as CcRosFlushVacb dropped a
+         * Refcount. Freeing must be done outside of the lock.
+         * The refcount is decremented atomically. So this is OK. */
         CcRosVacbDecRefCount(current);
+        OldIrql = KeAcquireQueuedSpinLock(LockQueueMasterLock);
 
         if (!NT_SUCCESS(Status) && (Status != STATUS_END_OF_FILE) &&
             (Status != STATUS_MEDIA_WRITE_PROTECTED))
@@ -1529,7 +1529,7 @@ CcGetFileObjectFromSectionPtrs (
     return NULL;
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 CcInitView (

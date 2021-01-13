@@ -1,3 +1,8 @@
+#ifdef __REACTOS__
+#define NONAMELESSUNION
+#define NONAMELESSSTRUCT
+#include "precomp.h"
+#else
 /*
  * Wininet - Url Cache functions
  *
@@ -45,9 +50,8 @@
 #include "shellapi.h"
 
 #include "internet.h"
-
-#include "wine/unicode.h"
 #include "wine/debug.h"
+#endif /* defined(__REACTOS__) */
 
 WINE_DEFAULT_DEBUG_CHANNEL(wininet);
 
@@ -398,12 +402,10 @@ static void cache_container_create_object_name(LPWSTR lpszPath, WCHAR replace)
 /* Caller must hold container lock */
 static HANDLE cache_container_map_index(HANDLE file, const WCHAR *path, DWORD size, BOOL *validate)
 {
-    static const WCHAR mapping_name_format[]
-        = {'%','s','i','n','d','e','x','.','d','a','t','_','%','l','u',0};
     WCHAR mapping_name[MAX_PATH];
     HANDLE mapping;
 
-    wsprintfW(mapping_name, mapping_name_format, path, size);
+    wsprintfW(mapping_name, L"%sindex.dat_%lu", path, size);
     cache_container_create_object_name(mapping_name, '_');
 
     mapping = OpenFileMappingW(FILE_MAP_WRITE, FALSE, mapping_name);
@@ -419,13 +421,6 @@ static HANDLE cache_container_map_index(HANDLE file, const WCHAR *path, DWORD si
 /* Caller must hold container lock */
 static DWORD cache_container_set_size(cache_container *container, HANDLE file, DWORD blocks_no)
 {
-    static const WCHAR cache_content_key[] = {'S','o','f','t','w','a','r','e','\\',
-        'M','i','c','r','o','s','o','f','t','\\','W','i','n','d','o','w','s','\\',
-        'C','u','r','r','e','n','t','V','e','r','s','i','o','n','\\',
-        'I','n','t','e','r','n','e','t',' ','S','e','t','t','i','n','g','s','\\',
-        'C','a','c','h','e','\\','C','o','n','t','e','n','t',0};
-    static const WCHAR cache_limit[] = {'C','a','c','h','e','L','i','m','i','t',0};
-
     DWORD file_size = FILE_SIZE(blocks_no);
     WCHAR dir_path[MAX_PATH], *dir_name;
     entry_hash_table *hashtable_entry;
@@ -476,10 +471,11 @@ static DWORD cache_container_set_size(cache_container *container, HANDLE file, D
     header->dirs_no = container->default_entry_type==NORMAL_CACHE_ENTRY ? 4 : 0;
 
     /* If the registry has a cache size set, use the registry value */
-    if(RegOpenKeyW(HKEY_CURRENT_USER, cache_content_key, &key) == ERROR_SUCCESS) {
+    if(RegOpenKeyW(HKEY_CURRENT_USER,
+                L"Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\\Cache\\Content", &key) == ERROR_SUCCESS) {
         DWORD dw, len = sizeof(dw), keytype;
 
-        if(RegQueryValueExW(key, cache_limit, NULL, &keytype, (BYTE*)&dw, &len) == ERROR_SUCCESS &&
+        if(RegQueryValueExW(key, L"CacheLimit", NULL, &keytype, (BYTE*)&dw, &len) == ERROR_SUCCESS &&
                 keytype == REG_DWORD)
             header->cache_limit.QuadPart = (ULONGLONG)dw * 1024;
         RegCloseKey(key);
@@ -488,8 +484,8 @@ static DWORD cache_container_set_size(cache_container *container, HANDLE file, D
     urlcache_create_hash_table(header, NULL, &hashtable_entry);
 
     /* Last step - create the directories */
-    strcpyW(dir_path, container->path);
-    dir_name = dir_path + strlenW(dir_path);
+    lstrcpyW(dir_path, container->path);
+    dir_name = dir_path + lstrlenW(dir_path);
     dir_name[8] = 0;
 
     GetSystemTimeAsFileTime(&ft);
@@ -599,8 +595,6 @@ static BOOL cache_container_is_valid(urlcache_header *header, DWORD file_size)
  */
 static DWORD cache_container_open_index(cache_container *container, DWORD blocks_no)
 {
-    static const WCHAR index_dat[] = {'i','n','d','e','x','.','d','a','t',0};
-
     HANDLE file;
     WCHAR index_path[MAX_PATH];
     DWORD file_size;
@@ -613,8 +607,8 @@ static DWORD cache_container_open_index(cache_container *container, DWORD blocks
         return ERROR_SUCCESS;
     }
 
-    strcpyW(index_path, container->path);
-    strcatW(index_path, index_dat);
+    lstrcpyW(index_path, container->path);
+    lstrcatW(index_path, L"index.dat");
 
     file = CreateFileW(index_path, GENERIC_READ|GENERIC_WRITE, FILE_SHARE_READ|FILE_SHARE_WRITE, NULL, OPEN_ALWAYS, 0, NULL);
     if(file == INVALID_HANDLE_VALUE) {
@@ -752,27 +746,23 @@ static void cache_container_delete_container(cache_container *pContainer)
 
 static void cache_containers_init(void)
 {
-    static const WCHAR UrlSuffix[] = {'C','o','n','t','e','n','t','.','I','E','5',0};
-    static const WCHAR HistorySuffix[] = {'H','i','s','t','o','r','y','.','I','E','5',0};
-    static const WCHAR CookieSuffix[] = {0};
     /* ReactOS r50916 */
-    static const WCHAR UserProfile[] = {'U','S','E','R','P','R','O','F','I','L','E',0};
     static const struct
     {
         int nFolder; /* CSIDL_* constant */
         const WCHAR *shpath_suffix; /* suffix on path returned by SHGetSpecialFolderPath */
         const char *cache_prefix; /* prefix used to reference the container */
         DWORD default_entry_type;
-    } DefaultContainerData[] = 
+    } DefaultContainerData[] =
     {
-        { CSIDL_INTERNET_CACHE, UrlSuffix, "", NORMAL_CACHE_ENTRY },
-        { CSIDL_HISTORY, HistorySuffix, "Visited:", URLHISTORY_CACHE_ENTRY },
-        { CSIDL_COOKIES, CookieSuffix, "Cookie:", COOKIE_CACHE_ENTRY },
+        { CSIDL_INTERNET_CACHE, L"Content.IE5", "", NORMAL_CACHE_ENTRY },
+        { CSIDL_HISTORY, L"History.IE5", "Visited:", URLHISTORY_CACHE_ENTRY },
+        { CSIDL_COOKIES, L"", "Cookie:", COOKIE_CACHE_ENTRY },
     };
     DWORD i;
 
     /* ReactOS r50916 */
-    if (GetEnvironmentVariableW(UserProfile, NULL, 0) == 0 && GetLastError() == ERROR_ENVVAR_NOT_FOUND)
+    if (GetEnvironmentVariableW(L"USERPROFILE", NULL, 0) == 0 && GetLastError() == ERROR_ENVVAR_NOT_FOUND)
     {
         ERR("Environment variable 'USERPROFILE' does not exist!\n");
         return;
@@ -790,8 +780,8 @@ static void cache_containers_init(void)
             ERR("Couldn't get path for default container %u\n", i);
             continue;
         }
-        path_len = strlenW(wszCachePath);
-        suffix_len = strlenW(DefaultContainerData[i].shpath_suffix);
+        path_len = lstrlenW(wszCachePath);
+        suffix_len = lstrlenW(DefaultContainerData[i].shpath_suffix);
 
         if (path_len + suffix_len + 2 > MAX_PATH)
         {
@@ -802,8 +792,8 @@ static void cache_containers_init(void)
         wszCachePath[path_len] = '\\';
         wszCachePath[path_len+1] = 0;
 
-        strcpyW(wszMutexName, wszCachePath);
-        
+        lstrcpyW(wszMutexName, wszCachePath);
+
         if (suffix_len)
         {
             memcpy(wszCachePath + path_len + 1, DefaultContainerData[i].shpath_suffix, (suffix_len + 1) * sizeof(WCHAR));
@@ -974,7 +964,7 @@ static urlcache_header* cache_container_lock_index(cache_container *pContainer)
     {
         TRACE("Directory[%d] = \"%.8s\"\n", index, pHeader->directory_data[index].name);
     }
-    
+
     return pHeader;
 }
 
@@ -1011,7 +1001,7 @@ static BOOL urlcache_create_file_pathW(
     BOOL trunc_name)
 {
     LONG nRequired;
-    int path_len = strlenW(pContainer->path);
+    int path_len = lstrlenW(pContainer->path);
     int file_name_len = MultiByteToWideChar(CP_ACP, 0, szLocalFileName, -1, NULL, 0);
     if (Directory!=CACHE_CONTAINER_NO_SUBDIR && Directory>=pHeader->dirs_no)
     {
@@ -1468,7 +1458,7 @@ static DWORD urlcache_hash_key(LPCSTR lpszKey)
     /* NOTE: this uses the same lookup table as SHLWAPI.UrlHash{A,W}
      * but the algorithm and result are not the same!
      */
-    static const unsigned char lookupTable[256] = 
+    static const unsigned char lookupTable[256] =
     {
         0x01, 0x0E, 0x6E, 0x19, 0x61, 0xAE, 0x84, 0x77,
         0x8A, 0xAA, 0x7D, 0x76, 0x1B, 0xE9, 0x8C, 0x33,
@@ -1749,10 +1739,10 @@ static BOOL cache_container_delete_dir(LPCWSTR lpszPath)
     SHFILEOPSTRUCTW shfos;
     int ret;
 
-    path_len = strlenW(lpszPath);
+    path_len = lstrlenW(lpszPath);
     if (path_len >= MAX_PATH)
         return FALSE;
-    strcpyW(path, lpszPath);
+    lstrcpyW(path, lpszPath);
     path[path_len + 1] = 0;  /* double-NUL-terminate path */
 
     shfos.hwnd = NULL;
@@ -1837,9 +1827,9 @@ static BOOL urlcache_get_entry_info(const char *url, void *entry_info,
 
     url_entry = (const entry_url*)((LPBYTE)header + hash_entry->offset);
     if(url_entry->header.signature != URL_SIGNATURE) {
-        cache_container_unlock_index(container, header);
         FIXME("Trying to retrieve entry of unknown format %s\n",
                 debugstr_an((LPCSTR)&url_entry->header.signature, sizeof(DWORD)));
+        cache_container_unlock_index(container, header);
         SetLastError(ERROR_FILE_NOT_FOUND);
         return FALSE;
     }
@@ -2070,8 +2060,8 @@ BOOL WINAPI SetUrlCacheEntryInfoA(LPCSTR lpszUrlName,
     pEntry = (entry_header*)((LPBYTE)pHeader + pHashEntry->offset);
     if (pEntry->signature != URL_SIGNATURE)
     {
-        cache_container_unlock_index(pContainer, pHeader);
         FIXME("Trying to retrieve entry of unknown format %s\n", debugstr_an((LPSTR)&pEntry->signature, sizeof(DWORD)));
+        cache_container_unlock_index(pContainer, pHeader);
         SetLastError(ERROR_FILE_NOT_FOUND);
         return FALSE;
     }
@@ -2140,9 +2130,9 @@ static BOOL urlcache_entry_get_file(const char *url, void *entry_info, DWORD *si
 
     url_entry = (entry_url*)((LPBYTE)header + hash_entry->offset);
     if(url_entry->header.signature != URL_SIGNATURE) {
-        cache_container_unlock_index(container, header);
         FIXME("Trying to retrieve entry of unknown format %s\n",
                 debugstr_an((LPSTR)&url_entry->header.signature, sizeof(DWORD)));
+        cache_container_unlock_index(container, header);
         SetLastError(ERROR_FILE_NOT_FOUND);
         return FALSE;
     }
@@ -2358,7 +2348,7 @@ static DWORD urlcache_rate_entry(entry_url *url_entry, FILETIME *cur_time)
     return rating;
 }
 
-static int dword_cmp(const void *p1, const void *p2)
+static int __cdecl dword_cmp(const void *p1, const void *p2)
 {
     return *(const DWORD*)p1 - *(const DWORD*)p2;
 }
@@ -2394,7 +2384,7 @@ BOOL WINAPI FreeUrlCacheSpaceW(LPCWSTR cache_path, DWORD size, DWORD filter)
     }
 
     if(cache_path) {
-        path_len = strlenW(cache_path);
+        path_len = lstrlenW(cache_path);
         if(cache_path[path_len-1] == '\\')
             path_len--;
     }else {
@@ -2406,7 +2396,7 @@ BOOL WINAPI FreeUrlCacheSpaceW(LPCWSTR cache_path, DWORD size, DWORD filter)
         {
             /* When cache_path==NULL only clean Temporary Internet Files */
             if((!path_len && container->cache_prefix[0]==0) ||
-                    (path_len && !strncmpiW(container->path, cache_path, path_len) &&
+                    (path_len && !wcsnicmp(container->path, cache_path, path_len) &&
                      (container->path[path_len]=='\0' || container->path[path_len]=='\\')))
             {
                 BOOL ret_del;
@@ -2439,7 +2429,7 @@ BOOL WINAPI FreeUrlCacheSpaceW(LPCWSTR cache_path, DWORD size, DWORD filter)
         FILETIME cur_time;
 
         if((path_len || container->cache_prefix[0]!=0) &&
-                (!path_len || strncmpiW(container->path, cache_path, path_len) ||
+                (!path_len || wcsnicmp(container->path, cache_path, path_len) ||
                  (container->path[path_len]!='\0' && container->path[path_len]!='\\')))
             continue;
 
@@ -2757,9 +2747,7 @@ static BOOL urlcache_entry_create(const char *url, const char *ext, WCHAR *full_
     }
 
     for(i=0; i<255 && !generate_name; i++) {
-        static const WCHAR format[] = {'[','%','u',']','%','s',0};
-
-        wsprintfW(full_path+full_path_len, format, i, extW);
+        wsprintfW(full_path+full_path_len, L"[%u]%s", i, extW);
 
         TRACE("Trying: %s\n", debugstr_w(full_path));
         file = CreateFileW(full_path, GENERIC_READ, 0, NULL, CREATE_NEW, 0, NULL);
@@ -2774,7 +2762,7 @@ static BOOL urlcache_entry_create(const char *url, const char *ext, WCHAR *full_
 
     /* Try to generate random name */
     GetSystemTimeAsFileTime(&ft);
-    strcpyW(full_path+full_path_len+8, extW);
+    lstrcpyW(full_path+full_path_len+8, extW);
 
     for(i=0; i<255; i++) {
         int j;
@@ -2930,7 +2918,7 @@ static BOOL urlcache_entry_commit(const char *url, const WCHAR *file_name,
     if(file_name) {
         BOOL bFound = FALSE;
 
-        if(strncmpW(file_name, container->path, lstrlenW(container->path))) {
+        if(wcsncmp(file_name, container->path, lstrlenW(container->path))) {
             ERR("path %s must begin with cache content path %s\n", debugstr_w(file_name), debugstr_w(container->path));
             cache_container_unlock_index(container, header);
             SetLastError(ERROR_INVALID_PARAMETER);
@@ -4033,9 +4021,9 @@ BOOL WINAPI IsUrlCacheEntryExpiredA(LPCSTR url, DWORD dwFlags, FILETIME* pftLast
     pEntry = (const entry_header*)((LPBYTE)pHeader + pHashEntry->offset);
     if (pEntry->signature != URL_SIGNATURE)
     {
+        FIXME("Trying to retrieve entry of unknown format %s\n", debugstr_an((LPCSTR)&pEntry->signature, sizeof(DWORD)));
         cache_container_unlock_index(pContainer, pHeader);
         memset(pftLastModified, 0, sizeof(*pftLastModified));
-        FIXME("Trying to retrieve entry of unknown format %s\n", debugstr_an((LPCSTR)&pEntry->signature, sizeof(DWORD)));
         return TRUE;
     }
 

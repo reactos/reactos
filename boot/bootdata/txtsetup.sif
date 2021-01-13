@@ -92,7 +92,6 @@ nmidebug.sys = 1,,,,,,x,4,,,,1,4
 sacdrv.sys   = 1,,,,,,x,4,,,,1,4
 uniata.sys   = 1,,,,,,x,4,,,,1,4
 buslogic.sys = 1,,,,,,x,4,,,,1,4
-storahci.sys = 1,,,,,,x,4,,,,1,4
 blue.sys     = 1,,,,,,x,4,,,,1,4
 vgafonts.cab = 1,,,,,,,1,,,,1,1
 bootvid.dll  = 1,,,,,,,2,,,,1,2
@@ -100,7 +99,7 @@ c_437.nls    = 1,,,,,,,2,,,,1,2
 c_1252.nls   = 1,,,,,,,2,,,,1,2
 cdfs.sys     = 1,,,,,,x,4,,,,1,4
 cdrom.sys    = 1,,,,,,x,4,,,,1,4
-class2.sys   = 1,,,,,,x,4,,,,1,4
+classpnp.sys = 1,,,,,,,4,,,,1,4
 isapnp.sys   = 1,,,,,,,4,,,,1,4
 kdcom.dll    = 1,,,,,,,2,,,,1,2
 kdvbox.dll   = 1,,,,,,,2,,,,1,2
@@ -112,9 +111,9 @@ hidparse.sys = 1,,,,,,,4,,,,1,4
 hidusb.sys   = 1,,,,,,,4,,,,1,4
 usbaudio.sys = 1,,,,,,,4,,,,1,4
 usbccgp.sys  = 1,,,,,,x,4,,,,1,4
-usbd.sys     = 1,,,,,,x,4,,,,1,4
+usbd.sys     = 1,,,,,,,4,,,,1,4
 usbhub.sys   = 1,,,,,,x,4,,,,1,4
-usbport.sys  = 1,,,,,,x,4,,,,1,4
+usbport.sys  = 1,,,,,,,4,,,,1,4
 usbuhci.sys  = 1,,,,,,x,4,,,,1,4
 usbohci.sys  = 1,,,,,,x,4,,,,1,4
 usbehci.sys  = 1,,,,,,x,4,,,,1,4
@@ -122,9 +121,9 @@ usbstor.sys  = 1,,,,,,x,4,,,,1,4
 kbdhid.sys   = 1,,,,,,,4,,,,1,4
 kbdclass.sys = 1,,,,,,x,4,,,,1,4
 l_intl.nls   = 1,,,,,,,2,,,,1,2
-pci.sys      = 1,,,,,,,4,,,,1,4
-scsiport.sys = 1,,,,,,x,4,,,,1,4
-storport.sys = 1,,,,,,x,4,,,,1,4
+pci.sys      = 1,,,,,,x,4,,,,1,4
+scsiport.sys = 1,,,,,,,4,,,,1,4
+storport.sys = 1,,,,,,,4,,,,1,4
 fastfat.sys  = 1,,,,,,x,4,,,,1,4
 btrfs.sys    = 1,,,,,,x,4,,,,1,4
 ramdisk.sys  = 1,,,,,,x,4,,,,1,4
@@ -137,6 +136,7 @@ ntdll.dll    = 1,,,,,,,2,,,,1,2
 wmilib.sys   = 1,,,,,,,4,,,,1,4
 ksecdd.sys   = 1,,,,,,,4,,,,1,4
 mountmgr.sys = 1,,,,,,x,4,,,,1,4
+partmgr.sys  = 1,,,,,,x,4,,,,1,4
 
 [SourceDisksFiles.x86]
 
@@ -171,7 +171,7 @@ PCI\CC_0C0320 = usbehci
 USB\Class_08&SubClass_06&Prot_50 = usbstor
 HID_DEVICE_SYSTEM_KEYBOARD = kbdhid,{4D36E96B-E325-11CE-BFC1-08002BE10318}
 USB\COMPOSITE = usbccgp
-GenDisk = disk
+GenDisk = disk,{4D36E967-E325-11CE-BFC1-08002BE10318}
 USB\Class_03 = hidusb
 GENERIC_HID_DEVICE = hidusb
 *PNP0303 = i8042prt,{4D36E96B-E325-11CE-BFC1-08002BE10318}
@@ -213,10 +213,10 @@ Cabinet=reactos.cab
 
 [SetupData]
 DefaultPath = \ReactOS
+SetupDebugOptions = "/DEBUG /KDSERIAL /DEBUGPORT=COM1 /FIRSTCHANCE"
+;SetupDebugOptions = "/DEBUG /SOS /DEBUGPORT=SCREEN"
+;SetupDebugOptions = "/DEBUG /DEBUGPORT=BOCHS"
 OsLoadOptions = "/NOGUIBOOT /NODEBUG"
-DbgOsLoadOptions = "/NOGUIBOOT /KDSERIAL /DEBUGPORT=COM1 /FIRSTCHANCE"
-;DbgOsLoadOptions = "/SOS /DEBUGPORT=SCREEN"
-;DbgOsLoadOptions = "/NOGUIBOOT /DEBUGPORT=BOCHS"
 
 [NLS]
 AnsiCodepage     = c_1252.nls

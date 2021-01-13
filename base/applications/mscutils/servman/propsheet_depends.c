@@ -185,7 +185,6 @@ DependenciesPageProc(HWND hwndDlg,
                      WPARAM wParam,
                      LPARAM lParam)
 {
-    
     PDEPENDDATA pDependData;
 
     /* Get the window context */

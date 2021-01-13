@@ -39,7 +39,7 @@ endif()
 
 # dynamic analysis switches
 if(STACK_PROTECTOR)
-    target_link_libraries(ntkrnlmp gcc_ssp)
+    target_sources(ntkrnlmp PRIVATE $<TARGET_OBJECTS:gcc_ssp_nt>)
 endif()
 
 if(RUNTIME_CHECKS)

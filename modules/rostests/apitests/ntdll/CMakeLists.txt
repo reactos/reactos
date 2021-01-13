@@ -30,6 +30,7 @@ list(APPEND SOURCE
     NtQueryKey.c
     NtQuerySystemEnvironmentValue.c
     NtQuerySystemInformation.c
+    NtQueryValueKey.c
     NtQueryVolumeInformationFile.c
     NtReadFile.c
     NtSaveKey.c
@@ -62,6 +63,7 @@ list(APPEND SOURCE
     RtlGetNtProductType.c
     RtlGetUnloadEventTrace.c
     RtlHandle.c
+    RtlImageDirectoryEntryToData.c
     RtlImageRvaToVa.c
     RtlIsNameLegalDOS8Dot3.c
     RtlMemoryStream.c

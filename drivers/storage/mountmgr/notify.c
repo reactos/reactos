@@ -231,21 +231,19 @@ MountMgrTargetDeviceNotification(IN PVOID NotificationStructure,
 {
     PDEVICE_EXTENSION DeviceExtension;
     PDEVICE_INFORMATION DeviceInformation;
-    PDEVICE_INTERFACE_CHANGE_NOTIFICATION Notification;
+    PTARGET_DEVICE_CUSTOM_NOTIFICATION Notification;
 
     DeviceInformation = Context;
     DeviceExtension = DeviceInformation->DeviceExtension;
     Notification = NotificationStructure;
 
-    /* If it's to signal that removal is complete, then, execute the function */
-    if (IsEqualGUID(&(Notification->Event), &GUID_TARGET_DEVICE_REMOVE_COMPLETE))
-    {
-        MountMgrMountedDeviceRemoval(DeviceExtension, Notification->SymbolicLinkName);
-    }
+    /* The notification have to be unregistered already (in device interface change handler) */
+    ASSERT(!IsEqualGUID(&Notification->Event, &GUID_TARGET_DEVICE_REMOVE_COMPLETE));
+
     /* It it's to signal that a volume has been mounted
      * Verify if a database sync is required and execute it
      */
-    else if (IsEqualGUID(&(Notification->Event), &GUID_IO_VOLUME_MOUNT))
+    if (IsEqualGUID(&(Notification->Event), &GUID_IO_VOLUME_MOUNT))
     {
         /* If we were already mounted, then mark us unmounted */
         if (InterlockedCompareExchange(&(DeviceInformation->MountState),

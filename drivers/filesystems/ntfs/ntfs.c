@@ -49,7 +49,7 @@ PNTFS_GLOBAL_DATA NtfsGlobalData = NULL;
  *           RegistryPath = path to our configuration entries
  * RETURNS: Success or failure
  */
-INIT_FUNCTION
+CODE_SEG("INIT")
 NTSTATUS
 NTAPI
 DriverEntry(PDRIVER_OBJECT DriverObject,
@@ -169,7 +169,7 @@ DriverEntry(PDRIVER_OBJECT DriverObject,
  *           DriverObject = object describing this driver
  * RETURNS: Nothing
  */
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 NtfsInitializeFunctionPointers(PDRIVER_OBJECT DriverObject)

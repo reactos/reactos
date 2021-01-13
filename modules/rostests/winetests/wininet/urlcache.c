@@ -877,9 +877,8 @@ static void test_urlcacheW(void)
             "", {0}, {0}
         },
         {
-            0, {'C','o','o','k','i','e',':',' ','u','s','e','r','@','h','t','t','p',
-                ':','/','/','t',0x15b,0x107,'.','o','r','g','/',0},
-            "Cookie: user@http://t\xc5\x9b\xc4\x87.org/", {0}, {0}
+            0, {'C','o','o','k','i','e',':',' ','u','s','e','r','@','t','e','s','t','.','o','r','g','/',0},
+            "Cookie: user@test.org/", {0}, {0}
         }
     };
     static const FILETIME filetime_zero;
@@ -893,23 +892,10 @@ static void test_urlcacheW(void)
         return;
     }
 
-    if(ie10_cache) {
-        if(!MultiByteToWideChar(CP_ACP, 0, urls[6].encoded_url, -1,
-                    urls[6].url, ARRAY_SIZE(urls[6].url)))
-            urls[6].url[0] = 0;
-
-        trace("converted url in test 6: %s\n", wine_dbgstr_w(urls[6].url));
-    }
-
     for(i=0; i<ARRAY_SIZE(urls); i++) {
         INTERNET_CACHE_ENTRY_INFOA *entry_infoA;
         INTERNET_CACHE_ENTRY_INFOW *entry_infoW;
         DWORD size;
-
-        if(!urls[i].url[0]) {
-            win_skip("No UTF16 version of url (%d)\n", i);
-            continue;
-        }
 
         SetLastError(0xdeadbeef);
         ret = CreateUrlCacheEntryW(urls[i].url, 0, NULL, bufW, 0);
@@ -937,10 +923,6 @@ static void test_urlcacheW(void)
         ret = GetUrlCacheEntryInfoA(urls[i].encoded_url, NULL, &size);
         ok(!ret && GetLastError()==ERROR_INSUFFICIENT_BUFFER,
                 "%d) GetLastError() = %d\n", i, GetLastError());
-        if(!ret && GetLastError()!=ERROR_INSUFFICIENT_BUFFER) {
-            win_skip("ANSI version of url is incorrect\n");
-            continue;
-        }
         entry_infoA = HeapAlloc(GetProcessHeap(), 0, size);
         ret = GetUrlCacheEntryInfoA(urls[i].encoded_url, entry_infoA, &size);
         ok(ret, "%d) GetUrlCacheEntryInfoA failed: %d\n", i, GetLastError());

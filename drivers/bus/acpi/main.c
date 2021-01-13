@@ -349,7 +349,7 @@ AcpiRegOpenKey(IN HANDLE ParentKeyHandle,
 
     InitializeObjectAttributes(&ObjectAttributes,
                                &Name,
-                               OBJ_CASE_INSENSITIVE,
+                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
                                ParentKeyHandle,
                                NULL);
 
@@ -520,32 +520,29 @@ GetProcessorInformation(VOID)
                                NULL,
                                NULL,
                                &Length);
-    if (!NT_SUCCESS(Status))
+    if (NT_SUCCESS(Status))
     {
-        DPRINT1("Failed to query ProcessorNameString value: 0x%lx\n", Status);
-        goto done;
-    }
+        /* Allocate a buffer large enough to be zero terminated */
+        Length += sizeof(UNICODE_NULL);
+        ProcessorNameString = ExAllocatePoolWithTag(PagedPool, Length, 'IpcA');
+        if (ProcessorNameString == NULL)
+        {
+            DPRINT1("Failed to allocate 0x%lx bytes\n", Length);
+            Status = STATUS_INSUFFICIENT_RESOURCES;
+            goto done;
+        }
 
-    /* Allocate a buffer large enough to be zero terminated */
-    Length += sizeof(UNICODE_NULL);
-    ProcessorNameString = ExAllocatePoolWithTag(PagedPool, Length, 'IpcA');
-    if (ProcessorNameString == NULL)
-    {
-        DPRINT1("Failed to allocate 0x%lx bytes\n", Length);
-        Status = STATUS_INSUFFICIENT_RESOURCES;
-        goto done;
-    }
-
-    /* Query the processor name string */
-    Status = AcpiRegQueryValue(ProcessorHandle,
-                               L"ProcessorNameString",
-                               NULL,
-                               ProcessorNameString,
-                               &Length);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("Failed to query ProcessorNameString value: 0x%lx\n", Status);
-        goto done;
+        /* Query the processor name string */
+        Status = AcpiRegQueryValue(ProcessorHandle,
+                                   L"ProcessorNameString",
+                                   NULL,
+                                   ProcessorNameString,
+                                   &Length);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("Failed to query ProcessorNameString value: 0x%lx\n", Status);
+            goto done;
+        }
     }
 
     /* Query the vendor identifier length */

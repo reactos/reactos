@@ -41,6 +41,7 @@ IDR_COMMONBROWSER REGISTRY "res/commonbrowser.rgs"
 IDR_GLOBALFOLDERSETTINGS REGISTRY "res/globalfoldersettings.rgs"
 IDR_INTERNETTOOLBAR REGISTRY "res/internettoolbar.rgs"
 IDR_REGTREEOPTIONS REGISTRY "res/regtreeoptions.rgs"
+IDR_SHELLTASKSCHEDULER REGISTRY "res/shelltaskscheduler.rgs"
 IDR_EXPLORERBAND REGISTRY "res/explorerband.rgs"
 IDR_PROGRESSDIALOG REGISTRY "res/progressdialog.rgs"
 IDR_AUTOCOMPLETE REGISTRY "res/autocomplete.rgs"
@@ -50,6 +51,7 @@ IDR_ACLCUSTOMMRU REGISTRY "res/custommru.rgs"
 IDR_TASKBARLIST REGISTRY "res/taskbarlist.rgs"
 IDR_FILESEARCHBAND REGISTRY "res/filesearchband.rgs"
 IDR_FINDFOLDER REGISTRY "res/findfolder.rgs"
+IDR_USERASSIST REGISTRY "res/userassist.rgs"
 
 #include <reactos/manifest_dll.rc>
 

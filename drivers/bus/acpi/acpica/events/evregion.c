@@ -56,8 +56,10 @@ extern UINT8        AcpiGbl_DefaultAddressSpaces[];
 /* Local prototypes */
 
 static void
-AcpiEvOrphanEcRegMethod (
-    ACPI_NAMESPACE_NODE     *EcDeviceNode);
+AcpiEvExecuteOrphanRegMethod (
+    ACPI_NAMESPACE_NODE     *DeviceNode,
+    ACPI_ADR_SPACE_TYPE     SpaceId);
+
 
 static ACPI_STATUS
 AcpiEvRegRun (
@@ -761,11 +763,13 @@ AcpiEvExecuteRegMethods (
     (void) AcpiNsWalkNamespace (ACPI_TYPE_ANY, Node, ACPI_UINT32_MAX,
         ACPI_NS_WALK_UNLOCK, AcpiEvRegRun, NULL, &Info, NULL);
 
-    /* Special case for EC: handle "orphan" _REG methods with no region */
-
-    if (SpaceId == ACPI_ADR_SPACE_EC)
+    /*
+     * Special case for EC and GPIO: handle "orphan" _REG methods with
+     * no region.
+     */
+    if (SpaceId == ACPI_ADR_SPACE_EC || SpaceId == ACPI_ADR_SPACE_GPIO)
     {
-        AcpiEvOrphanEcRegMethod (Node);
+        AcpiEvExecuteOrphanRegMethod (Node, SpaceId);
     }
 
     ACPI_DEBUG_PRINT_RAW ((ACPI_DB_NAMES,
@@ -846,32 +850,29 @@ AcpiEvRegRun (
 
 /*******************************************************************************
  *
- * FUNCTION:    AcpiEvOrphanEcRegMethod
+ * FUNCTION:    AcpiEvExecuteOrphanRegMethod
  *
- * PARAMETERS:  EcDeviceNode        - Namespace node for an EC device
+ * PARAMETERS:  DeviceNode          - Namespace node for an ACPI device
+ *              SpaceId             - The address space ID
  *
  * RETURN:      None
  *
- * DESCRIPTION: Execute an "orphan" _REG method that appears under the EC
+ * DESCRIPTION: Execute an "orphan" _REG method that appears under an ACPI
  *              device. This is a _REG method that has no corresponding region
- *              within the EC device scope. The orphan _REG method appears to
- *              have been enabled by the description of the ECDT in the ACPI
- *              specification: "The availability of the region space can be
- *              detected by providing a _REG method object underneath the
- *              Embedded Controller device."
- *
- *              To quickly access the EC device, we use the EcDeviceNode used
- *              during EC handler installation. Otherwise, we would need to
- *              perform a time consuming namespace walk, executing _HID
- *              methods to find the EC device.
+ *              within the device's scope. ACPI tables depending on these
+ *              "orphan" _REG methods have been seen for both EC and GPIO
+ *              Operation Regions. Presumably the Windows ACPI implementation
+ *              always calls the _REG method independent of the presence of
+ *              an actual Operation Region with the correct address space ID.
  *
  *  MUTEX:      Assumes the namespace is locked
  *
  ******************************************************************************/
 
 static void
-AcpiEvOrphanEcRegMethod (
-    ACPI_NAMESPACE_NODE     *EcDeviceNode)
+AcpiEvExecuteOrphanRegMethod (
+    ACPI_NAMESPACE_NODE     *DeviceNode,
+    ACPI_ADR_SPACE_TYPE     SpaceId)
 {
     ACPI_HANDLE             RegMethod;
     ACPI_NAMESPACE_NODE     *NextNode;
@@ -880,10 +881,10 @@ AcpiEvOrphanEcRegMethod (
     ACPI_OBJECT             Objects[2];
 
 
-    ACPI_FUNCTION_TRACE (EvOrphanEcRegMethod);
+    ACPI_FUNCTION_TRACE (EvExecuteOrphanRegMethod);
 
 
-    if (!EcDeviceNode)
+    if (!DeviceNode)
     {
         return_VOID;
     }
@@ -894,7 +895,7 @@ AcpiEvOrphanEcRegMethod (
 
     /* Get a handle to a _REG method immediately under the EC device */
 
-    Status = AcpiGetHandle (EcDeviceNode, METHOD_NAME__REG, &RegMethod);
+    Status = AcpiGetHandle (DeviceNode, METHOD_NAME__REG, &RegMethod);
     if (ACPI_FAILURE (Status))
     {
         goto Exit; /* There is no _REG method present */
@@ -907,25 +908,25 @@ AcpiEvOrphanEcRegMethod (
      * with other space IDs to be present; but the code below will then
      * execute the _REG method with the EmbeddedControl SpaceID argument.
      */
-    NextNode = AcpiNsGetNextNode (EcDeviceNode, NULL);
+    NextNode = AcpiNsGetNextNode (DeviceNode, NULL);
     while (NextNode)
     {
         if ((NextNode->Type == ACPI_TYPE_REGION) &&
             (NextNode->Object) &&
-            (NextNode->Object->Region.SpaceId == ACPI_ADR_SPACE_EC))
+            (NextNode->Object->Region.SpaceId == SpaceId))
         {
             goto Exit; /* Do not execute the _REG */
         }
 
-        NextNode = AcpiNsGetNextNode (EcDeviceNode, NextNode);
+        NextNode = AcpiNsGetNextNode (DeviceNode, NextNode);
     }
 
-    /* Evaluate the _REG(EmbeddedControl,Connect) method */
+    /* Evaluate the _REG(SpaceId,Connect) method */
 
     Args.Count = 2;
     Args.Pointer = Objects;
     Objects[0].Type = ACPI_TYPE_INTEGER;
-    Objects[0].Integer.Value = ACPI_ADR_SPACE_EC;
+    Objects[0].Integer.Value = SpaceId;
     Objects[1].Type = ACPI_TYPE_INTEGER;
     Objects[1].Integer.Value = ACPI_REG_CONNECT;
 

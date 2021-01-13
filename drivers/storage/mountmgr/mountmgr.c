@@ -282,8 +282,7 @@ QueryDeviceInformation(IN PUNICODE_STRING SymbolicName,
                 Status = STATUS_SUCCESS;
             }
             /* Check if it has a drive letter */
-            else if (!(GptAttributes.GptAttributes &
-                       GPT_BASIC_DATA_ATTRIBUTE_NO_DRIVE_LETTER))
+            else if (GptAttributes.GptAttributes & GPT_BASIC_DATA_ATTRIBUTE_NO_DRIVE_LETTER)
             {
                 *GptDriveLetter = FALSE;
             }
@@ -899,7 +898,7 @@ MountMgrUnload(IN struct _DRIVER_OBJECT *DriverObject)
 /*
  * @implemented
  */
-INIT_FUNCTION
+CODE_SEG("INIT")
 BOOLEAN
 MountmgrReadNoAutoMount(IN PUNICODE_STRING RegistryPath)
 {
@@ -1793,7 +1792,7 @@ MountMgrShutdown(IN PDEVICE_OBJECT DeviceObject,
 
 /* FUNCTIONS ****************************************************************/
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 NTSTATUS
 NTAPI
 DriverEntry(IN PDRIVER_OBJECT DriverObject,

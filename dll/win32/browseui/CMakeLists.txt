@@ -18,6 +18,8 @@ list(APPEND SOURCE
     browseui.cpp
     browseuiord.cpp
     CAutoComplete.cpp
+    CShellTaskScheduler.cpp
+    CShellTaskScheduler.h
     CTaskbarList.cpp
     CTaskbarList.h
     commonbrowser.cpp
@@ -31,7 +33,9 @@ list(APPEND SOURCE
     toolsband.cpp
     travellog.cpp
     utility.cpp
-    CProgressDialog.cpp)
+    CProgressDialog.cpp
+    CUserAssist.cpp
+    CUserAssist.h)
 
 list(APPEND PCH_SKIP_SOURCE
     dllinstall.c)

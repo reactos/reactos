@@ -29,12 +29,6 @@
 /* 10000 in 100-ns model = 0.1 microsecond */
 #define TIME_FRAME 10000
 
-#if defined (ALLOC_PRAGMA)
-#pragma alloc_text(INIT, ExpUuidInitialization)
-#pragma alloc_text(INIT, ExLuidInitialization)
-#endif
-
-
 /* GLOBALS ****************************************************************/
 
 FAST_MUTEX ExpUuidLock;
@@ -52,7 +46,7 @@ LARGE_INTEGER ExpLuid = {{0x3e9, 0x0}};
 /*
  * @implemented
  */
-INIT_FUNCTION
+CODE_SEG("INIT")
 BOOLEAN
 NTAPI
 ExpUuidInitialization(VOID)
@@ -324,7 +318,7 @@ ExpUuidGetValues(PUUID_CACHED_VALUES_STRUCT CachedValues)
 /*
  * @implemented
  */
-INIT_FUNCTION
+CODE_SEG("INIT")
 BOOLEAN
 NTAPI
 ExLuidInitialization(VOID)
@@ -400,7 +394,6 @@ ExUuidCreate(OUT UUID *Uuid)
         {
             Time.QuadPart = ExpUuidCachedValues.Time;
 
-            C_ASSERT(sizeof(ExpUuidCachedValues.GuidInit) == sizeof(Uuid->Data4));
             RtlCopyMemory(Uuid->Data4,
                           ExpUuidCachedValues.GuidInit,
                           sizeof(Uuid->Data4));

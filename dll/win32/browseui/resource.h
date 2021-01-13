@@ -107,6 +107,8 @@
 #define IDR_TASKBARLIST          145
 #define IDR_FILESEARCHBAND       146
 #define IDR_FINDFOLDER           147
+#define IDR_USERASSIST           148
+#define IDR_SHELLTASKSCHEDULER   149
 
 #define IDS_SMALLICONS           12301
 #define IDS_LARGEICONS           12302

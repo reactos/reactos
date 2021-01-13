@@ -20,9 +20,9 @@ DEFINE_GUID(WmiScsiAddressGuid,0x53f5630fL,0xb6bf,0x11d0,0x94,0xf2,0x00,0xa0,0xc
 extern "C" {
 #endif
 
-#define IOCTL_SCSI_BASE		FILE_DEVICE_CONTROLLER
+#define IOCTL_SCSI_BASE     FILE_DEVICE_CONTROLLER
 
-#define DD_SCSI_DEVICE_NAME	"\\Device\\ScsiPort"
+#define DD_SCSI_DEVICE_NAME "\\Device\\ScsiPort"
 #define DD_SCSI_DEVICE_NAME_U  L"\\Device\\ScsiPort"
 
 #define IOCTL_SCSI_PASS_THROUGH CTL_CODE(IOCTL_SCSI_BASE,0x0401,METHOD_BUFFERED,FILE_READ_ACCESS | FILE_WRITE_ACCESS)
@@ -125,6 +125,68 @@ extern "C" {
     ULONG_PTR DataInBufferOffset;
     UCHAR Cdb[ANYSIZE_ARRAY];
   } SCSI_PASS_THROUGH_EX, *PSCSI_PASS_THROUGH_EX;
+
+typedef struct _SCSI_PASS_THROUGH_DIRECT_EX
+{
+  ULONG Version;
+  ULONG Length;
+  ULONG CdbLength;
+  ULONG StorAddressLength;
+  UCHAR ScsiStatus;
+  UCHAR SenseInfoLength;
+  UCHAR DataDirection;
+  UCHAR Reserved;
+  ULONG TimeOutValue;
+  ULONG StorAddressOffset;
+  ULONG SenseInfoOffset;
+  ULONG DataOutTransferLength;
+  ULONG DataInTransferLength;
+  PVOID DataOutBuffer;
+  PVOID DataInBuffer;
+  UCHAR Cdb[ANYSIZE_ARRAY];
+} SCSI_PASS_THROUGH_DIRECT_EX, *PSCSI_PASS_THROUGH_DIRECT_EX;
+
+#if defined(_WIN64)
+typedef struct _SCSI_PASS_THROUGH32_EX
+{
+  ULONG Version;
+  ULONG Length;
+  ULONG CdbLength;
+  ULONG StorAddressLength;
+  UCHAR ScsiStatus;
+  UCHAR SenseInfoLength;
+  UCHAR DataDirection;
+  UCHAR Reserved;
+  ULONG TimeOutValue;
+  ULONG StorAddressOffset;
+  ULONG SenseInfoOffset;
+  ULONG DataOutTransferLength;
+  ULONG DataInTransferLength;
+  ULONG32 DataOutBufferOffset;
+  ULONG32 DataInBufferOffset;
+  UCHAR Cdb[ANYSIZE_ARRAY];
+} SCSI_PASS_THROUGH32_EX, *PSCSI_PASS_THROUGH32_EX;
+
+typedef struct _SCSI_PASS_THROUGH_DIRECT32_EX
+{
+  ULONG Version;
+  ULONG Length;
+  ULONG CdbLength;
+  ULONG StorAddressLength;
+  UCHAR ScsiStatus;
+  UCHAR SenseInfoLength;
+  UCHAR DataDirection;
+  UCHAR Reserved;
+  ULONG TimeOutValue;
+  ULONG StorAddressOffset;
+  ULONG SenseInfoOffset;
+  ULONG DataOutTransferLength;
+  ULONG DataInTransferLength;
+  VOID * POINTER_32 DataOutBuffer;
+  VOID * POINTER_32 DataInBuffer;
+  UCHAR Cdb[ANYSIZE_ARRAY];
+} SCSI_PASS_THROUGH_DIRECT32_EX, *PSCSI_PASS_THROUGH_DIRECT32_EX;
+#endif
 
   typedef struct _ATA_PASS_THROUGH_EX {
     USHORT Length;

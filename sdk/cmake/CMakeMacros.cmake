@@ -705,7 +705,10 @@ endfunction()
 function(get_defines OUTPUT_VAR)
     get_directory_property(_defines COMPILE_DEFINITIONS)
     foreach(arg ${_defines})
-        list(APPEND __tmp_var -D${arg})
+        # Skip generator expressions
+        if (NOT arg MATCHES [[^\$<.*>$]])
+            list(APPEND __tmp_var -D${arg})
+        endif()
     endforeach()
     set(${OUTPUT_VAR} ${__tmp_var} PARENT_SCOPE)
 endfunction()
@@ -762,8 +765,8 @@ function(create_registry_hives)
     # BootCD setup system hive
     add_custom_command(
         OUTPUT ${CMAKE_BINARY_DIR}/boot/bootdata/SETUPREG.HIV
-        COMMAND native-mkhive -h:SETUPREG -u -d:${CMAKE_BINARY_DIR}/boot/bootdata ${CMAKE_BINARY_DIR}/boot/bootdata/hivesys_utf16.inf ${CMAKE_SOURCE_DIR}/boot/bootdata/setupreg.inf
-        DEPENDS native-mkhive ${CMAKE_BINARY_DIR}/boot/bootdata/hivesys_utf16.inf)
+        COMMAND native-mkhive -h:SETUPREG -u -d:${CMAKE_BINARY_DIR}/boot/bootdata ${_registry_inf} ${CMAKE_SOURCE_DIR}/boot/bootdata/setupreg.inf
+        DEPENDS native-mkhive ${_registry_inf})
 
     add_custom_target(bootcd_hives
         DEPENDS ${CMAKE_BINARY_DIR}/boot/bootdata/SETUPREG.HIV)

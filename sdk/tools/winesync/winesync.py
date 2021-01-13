@@ -187,7 +187,8 @@ class wine_sync:
 
                 if delta.status == pygit2.GIT_DELTA_DELETED:
                     self.reactos_index.remove(old_reactos_path)
-                else:
+                # here we check if the file exists. We don't complain, because applying the patch already failed anyway
+                elif os.path.isfile(os.path.join(self.reactos_src, new_reactos_path)):
                     self.reactos_index.add(new_reactos_path)
 
                 complete_patch += blob_patch.text

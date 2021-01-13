@@ -574,16 +574,23 @@ CmpQueryKeyValueData(IN PCM_KEY_CONTROL_BLOCK Kcb,
 
         /* Partial information requested (no name or alignment!) */
         case KeyValuePartialInformation:
+        case KeyValuePartialInformationAlign64:
 
             /* Check if this is a small key and compute key size */
             IsSmall = CmpIsKeyValueSmall(&KeySize,
                                          CellData->u.KeyValue.DataLength);
 
-            /* Calculate the total size required */
-            Size = FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION, Data) + KeySize;
-
-            /* And this is the least we can work with */
-            MinimumSize = FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION, Data);
+            /* Calculate the total size required and the least we can work with */
+            if (KeyValueInformationClass == KeyValuePartialInformationAlign64)
+            {
+                Size = FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION_ALIGN64, Data) + KeySize;
+                MinimumSize = FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION_ALIGN64, Data);
+            }
+            else
+            {
+                Size = FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION, Data) + KeySize;
+                MinimumSize = FIELD_OFFSET(KEY_VALUE_PARTIAL_INFORMATION, Data);
+            }
 
             /* Tell the caller the size we'll finally need, and set success */
             *ResultLength = Size;
@@ -598,9 +605,17 @@ CmpQueryKeyValueData(IN PCM_KEY_CONTROL_BLOCK Kcb,
             }
 
             /* Fill out the basic information */
-            Info->KeyValuePartialInformation.TitleIndex = 0;
-            Info->KeyValuePartialInformation.Type = CellData->u.KeyValue.Type;
-            Info->KeyValuePartialInformation.DataLength = KeySize;
+            if (KeyValueInformationClass == KeyValuePartialInformationAlign64)
+            {
+                Info->KeyValuePartialInformationAlign64.Type = CellData->u.KeyValue.Type;
+                Info->KeyValuePartialInformationAlign64.DataLength = KeySize;
+            }
+            else
+            {
+                Info->KeyValuePartialInformation.TitleIndex = 0;
+                Info->KeyValuePartialInformation.Type = CellData->u.KeyValue.Type;
+                Info->KeyValuePartialInformation.DataLength = KeySize;
+            }
 
             /* Now check if the key had any data */
             if (KeySize > 0)
@@ -649,9 +664,18 @@ CmpQueryKeyValueData(IN PCM_KEY_CONTROL_BLOCK Kcb,
                 if (Buffer)
                 {
                     /* Copy the data into the aligned offset */
-                    RtlCopyMemory(Info->KeyValuePartialInformation.Data,
-                                  Buffer,
-                                  Size);
+                    if (KeyValueInformationClass == KeyValuePartialInformationAlign64)
+                    {
+                        RtlCopyMemory(Info->KeyValuePartialInformationAlign64.Data,
+                                      Buffer,
+                                      Size);
+                    }
+                    else
+                    {
+                        RtlCopyMemory(Info->KeyValuePartialInformation.Data,
+                                      Buffer,
+                                      Size);
+                    }
                 }
             }
 

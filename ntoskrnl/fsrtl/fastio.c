@@ -1561,14 +1561,54 @@ FsRtlAcquireFileExclusiveCommon(IN PFILE_OBJECT FileObject,
     PFSRTL_COMMON_FCB_HEADER FcbHeader;
     PDEVICE_OBJECT DeviceObject;
     PFAST_IO_DISPATCH FastDispatch;
+    PEXTENDED_DRIVER_EXTENSION DriverExtension;
+    PFS_FILTER_CALLBACKS FilterCallbacks;
 
     /* Get Device Object and Fast Calls */
     FcbHeader = (PFSRTL_COMMON_FCB_HEADER)FileObject->FsContext;
     DeviceObject = IoGetRelatedDeviceObject(FileObject);
-    FastDispatch = DeviceObject->DriverObject->FastIoDispatch;
 
     /* Get master FsRtl lock */
     FsRtlEnterFileSystem();
+
+    DriverExtension = (PEXTENDED_DRIVER_EXTENSION)DeviceObject->DriverObject->DriverExtension;
+    FilterCallbacks = DriverExtension->FsFilterCallbacks;
+
+    /* Check if Filter Cllbacks are supported */
+    if (FilterCallbacks && FilterCallbacks->PreAcquireForSectionSynchronization)
+    {
+        NTSTATUS Status;
+        PVOID CompletionContext;
+
+        FS_FILTER_CALLBACK_DATA CbData;
+
+        RtlZeroMemory(&CbData, sizeof(CbData));
+
+        CbData.SizeOfFsFilterCallbackData = sizeof(CbData);
+        CbData.Operation = FS_FILTER_ACQUIRE_FOR_SECTION_SYNCHRONIZATION;
+        CbData.DeviceObject = DeviceObject;
+        CbData.FileObject = FileObject;
+        CbData.Parameters.AcquireForSectionSynchronization.PageProtection = Reserved;
+        CbData.Parameters.AcquireForSectionSynchronization.SyncType = SyncType;
+
+        Status = FilterCallbacks->PreAcquireForSectionSynchronization(&CbData, &CompletionContext);
+        if (!NT_SUCCESS(Status))
+        {
+            FsRtlExitFileSystem();
+            return Status;
+        }
+
+        /* Should we do something in-between ? */
+
+        if (FilterCallbacks->PostAcquireForSectionSynchronization)
+        {
+            FilterCallbacks->PostAcquireForSectionSynchronization(&CbData, Status, CompletionContext);
+        }
+
+        return Status;
+    }
+
+    FastDispatch = DeviceObject->DriverObject->FastIoDispatch;
 
     /* Check if Fast Calls are supported, and check AcquireFileForNtCreateSection */
     if (FastDispatch &&
@@ -1599,6 +1639,18 @@ FsRtlAcquireFileExclusive(IN PFILE_OBJECT FileObject)
     (VOID)FsRtlAcquireFileExclusiveCommon(FileObject, SyncTypeOther, 0);
 }
 
+/*
+ * @implemented
+ */
+NTSTATUS
+NTAPI
+FsRtlAcquireToCreateMappedSection(_In_ PFILE_OBJECT FileObject,
+                                  _In_ ULONG SectionPageProtection)
+{
+    PAGED_CODE();
+
+    return FsRtlAcquireFileExclusiveCommon(FileObject, SyncTypeCreateSection, SectionPageProtection);
+}
 /*
 * @implemented
 */

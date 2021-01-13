@@ -12,11 +12,6 @@
 #include <ntoskrnl.h>
 #define NDEBUG
 #include <debug.h>
-
-#if defined (ALLOC_PRAGMA)
-#pragma alloc_text(INIT, SepInitializeTokenImplementation)
-#endif
-
 #include <ntlsa.h>
 
 typedef struct _TOKEN_AUDIT_POLICY_INFORMATION
@@ -830,7 +825,7 @@ SepDeleteToken(PVOID ObjectBody)
 }
 
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 SepInitializeTokenImplementation(VOID)

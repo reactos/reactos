@@ -1075,6 +1075,7 @@ IopTranslateDeviceResources(
 
             case CmResourceTypeDma:
             case CmResourceTypeBusNumber:
+            case CmResourceTypeDevicePrivate:
             case CmResourceTypeDeviceSpecific:
                /* Nothing to do */
                break;

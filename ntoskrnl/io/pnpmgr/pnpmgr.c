@@ -391,75 +391,6 @@ IopInstallCriticalDevice(PDEVICE_NODE DeviceNode)
 }
 
 NTSTATUS
-FASTCALL
-IopInitializeDevice(PDEVICE_NODE DeviceNode,
-                    PDRIVER_OBJECT DriverObject)
-{
-    PDEVICE_OBJECT Fdo;
-    NTSTATUS Status;
-
-    if (!DriverObject)
-    {
-        /* Special case for bus driven devices */
-        DeviceNode->Flags |= DNF_ADDED;
-        return STATUS_SUCCESS;
-    }
-
-    if (!DriverObject->DriverExtension->AddDevice)
-    {
-        DeviceNode->Flags |= DNF_LEGACY_DRIVER;
-    }
-
-    if (DeviceNode->Flags & DNF_LEGACY_DRIVER)
-    {
-        DeviceNode->Flags |= (DNF_ADDED | DNF_STARTED);
-        return STATUS_SUCCESS;
-    }
-
-    /* This is a Plug and Play driver */
-    DPRINT("Plug and Play driver found\n");
-    ASSERT(DeviceNode->PhysicalDeviceObject);
-
-    DPRINT("Calling %wZ->AddDevice(%wZ)\n",
-           &DriverObject->DriverName,
-           &DeviceNode->InstancePath);
-    Status = DriverObject->DriverExtension->AddDevice(DriverObject,
-                                                      DeviceNode->PhysicalDeviceObject);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("%wZ->AddDevice(%wZ) failed with status 0x%x\n",
-                &DriverObject->DriverName,
-                &DeviceNode->InstancePath,
-                Status);
-        IopDeviceNodeSetFlag(DeviceNode, DNF_DISABLED);
-        DeviceNode->Problem = CM_PROB_FAILED_ADD;
-        return Status;
-    }
-
-    Fdo = IoGetAttachedDeviceReference(DeviceNode->PhysicalDeviceObject);
-
-    /* Check if we have a ACPI device (needed for power management) */
-    if (Fdo->DeviceType == FILE_DEVICE_ACPI)
-    {
-        static BOOLEAN SystemPowerDeviceNodeCreated = FALSE;
-
-        /* There can be only one system power device */
-        if (!SystemPowerDeviceNodeCreated)
-        {
-            PopSystemPowerDeviceNode = DeviceNode;
-            ObReferenceObject(PopSystemPowerDeviceNode->PhysicalDeviceObject);
-            SystemPowerDeviceNodeCreated = TRUE;
-        }
-    }
-
-    ObDereferenceObject(Fdo);
-
-    IopDeviceNodeSetFlag(DeviceNode, DNF_ADDED);
-
-    return STATUS_SUCCESS;
-}
-
-NTSTATUS
 IopGetSystemPowerDeviceObject(PDEVICE_OBJECT *DeviceObject)
 {
     KIRQL OldIrql;
@@ -599,6 +530,8 @@ IopSynchronousCall(IN PDEVICE_OBJECT DeviceObject,
 
     /* Call the driver */
     Status = IoCallDriver(TopDeviceObject, Irp);
+    /* Otherwise we may get stuck here or have IoStatusBlock not populated */
+    ASSERT(!KeAreAllApcsDisabled());
     if (Status == STATUS_PENDING)
     {
         /* Wait for it */
@@ -1025,7 +958,7 @@ cleanup:
 }
 
 static
-INIT_FUNCTION
+CODE_SEG("INIT")
 NTSTATUS
 IopEnumerateDetectedDevices(
    IN HANDLE hBaseKey,
@@ -1466,7 +1399,7 @@ cleanup:
 }
 
 static
-INIT_FUNCTION
+CODE_SEG("INIT")
 BOOLEAN
 IopIsFirmwareMapperDisabled(VOID)
 {
@@ -1535,7 +1468,7 @@ IopIsFirmwareMapperDisabled(VOID)
     return (KeyValue != 0) ? TRUE : FALSE;
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 NTSTATUS
 NTAPI
 IopUpdateRootKey(VOID)
