@@ -533,7 +533,8 @@ typedef enum _DEVICE_ACTION
 {
     PiActionEnumDeviceTree,
     PiActionEnumRootDevices,
-    PiActionResetDevice
+    PiActionResetDevice,
+    PiActionAddBootDevices
 } DEVICE_ACTION;
 
 //

@@ -2480,6 +2480,8 @@ ActionToStr(
             return "PiActionEnumRootDevices";
         case PiActionResetDevice:
             return "PiActionResetDevice";
+        case PiActionAddBootDevices:
+            return "PiActionAddBootDevices";
         default:
             return "(request unknown)";
     }
@@ -2517,6 +2519,15 @@ PipDeviceActionWorker(
 
         switch (Request->Action)
         {
+            case PiActionAddBootDevices:
+            {
+                if (deviceNode->State == DeviceNodeInitialized && 
+                    !(deviceNode->Flags & DNF_HAS_PROBLEM))
+                {
+                    status = PiCallDriverAddDevice(deviceNode, PnPBootDriversInitialized);
+                }
+                break;
+            }
             case PiActionEnumRootDevices:
             case PiActionEnumDeviceTree:
                 deviceNode->Flags |= DNF_REENUMERATE;
@@ -2589,7 +2600,7 @@ PiQueueDeviceAction(
     KeAcquireSpinLock(&IopDeviceActionLock, &OldIrql);
     InsertTailList(&IopDeviceActionRequestList, &Request->RequestListEntry);
 
-    if (Action == PiActionEnumRootDevices)
+    if (Action == PiActionEnumRootDevices || Action == PiActionAddBootDevices)
     {
         ASSERT(!IopDeviceActionInProgress);
 
