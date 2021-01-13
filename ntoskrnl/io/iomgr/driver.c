@@ -1047,6 +1047,13 @@ IopInitializeBootDrivers(VOID)
      * See PiQueueDeviceAction function
      */
     PnPBootDriversLoaded = TRUE;
+
+    DbgPrint("BOOT DRIVERS LOADED\n");
+
+    PiQueueDeviceAction(IopRootDeviceNode->PhysicalDeviceObject,
+                        PiActionEnumDeviceTree,
+                        NULL,
+                        NULL);
 }
 
 CODE_SEG("INIT")
@@ -1055,6 +1062,8 @@ FASTCALL
 IopInitializeSystemDrivers(VOID)
 {
     PUNICODE_STRING *DriverList, *SavedList;
+
+    PiPerformSyncDeviceAction(IopRootDeviceNode->PhysicalDeviceObject, PiActionEnumDeviceTree);
 
     /* No system drivers on the boot cd */
     if (KeLoaderBlock->SetupLdrBlock) return; // ExpInTextModeSetup
@@ -1080,6 +1089,11 @@ IopInitializeSystemDrivers(VOID)
 
     /* Free the list */
     ExFreePool(SavedList);
+
+    PiQueueDeviceAction(IopRootDeviceNode->PhysicalDeviceObject,
+                        PiActionEnumDeviceTree,
+                        NULL,
+                        NULL);
 }
 
 /*
