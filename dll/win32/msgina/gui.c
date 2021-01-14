@@ -2,7 +2,8 @@
  * PROJECT:         ReactOS msgina.dll
  * FILE:            dll/win32/msgina/gui.c
  * PURPOSE:         ReactOS Logon GINA DLL
- * PROGRAMMER:      Hervé Poussineau (hpoussin@reactos.org)
+ * PROGRAMMERS:     Hervé Poussineau (hpoussin@reactos.org)
+ *                  Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
 #include "msgina.h"
@@ -27,16 +28,68 @@ typedef struct _LEGALNOTICEDATA
     LPWSTR pszText;
 } LEGALNOTICEDATA, *PLEGALNOTICEDATA;
 
+// Timer ID for the animated dialog bar.
+#define IDT_BAR 1
+
 typedef struct _DLG_DATA
 {
     PGINA_CONTEXT pgContext;
-    HBITMAP hBitmap;
+    HBITMAP hLogoBitmap;
     HBITMAP hBarBitmap;
-    UINT_PTR TimerID;
+    HWND hWndBarCtrl;
     DWORD BarCounter;
+    DWORD LogoWidth;
+    DWORD LogoHeight;
     DWORD BarWidth;
     DWORD BarHeight;
 } DLG_DATA, *PDLG_DATA;
+
+static PDLG_DATA
+DlgData_Create(HWND hwndDlg, PGINA_CONTEXT pgContext)
+{
+    PDLG_DATA pDlgData = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*pDlgData));
+    if (pDlgData)
+    {
+        pDlgData->pgContext = pgContext;
+        SetWindowLongPtrW(hwndDlg, GWLP_USERDATA, (LONG_PTR)pDlgData);
+    }
+    return pDlgData;
+}
+
+static BOOL
+DlgData_LoadBitmaps(PDLG_DATA pDlgData)
+{
+    BITMAP bm;
+
+    if (!pDlgData)
+        return FALSE;
+
+    pDlgData->hLogoBitmap = LoadImageW(pDlgData->pgContext->hDllInstance,
+                                       MAKEINTRESOURCEW(IDI_ROSLOGO), IMAGE_BITMAP,
+                                       0, 0, LR_DEFAULTCOLOR);
+    GetObject(pDlgData->hLogoBitmap, sizeof(bm), &bm);
+    pDlgData->LogoWidth = bm.bmWidth;
+    pDlgData->LogoHeight = bm.bmHeight;
+
+    pDlgData->hBarBitmap = LoadImageW(hDllInstance, MAKEINTRESOURCEW(IDI_BAR),
+                                      IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
+    GetObject(pDlgData->hBarBitmap, sizeof(bm), &bm);
+    pDlgData->BarWidth = bm.bmWidth;
+    pDlgData->BarHeight = bm.bmHeight;
+
+    return (pDlgData->hLogoBitmap != NULL && pDlgData->hBarBitmap != NULL);
+}
+
+static void
+DlgData_Destroy(PDLG_DATA pDlgData)
+{
+    if (!pDlgData)
+        return;
+
+    DeleteObject(pDlgData->hLogoBitmap);
+    DeleteObject(pDlgData->hBarBitmap);
+    HeapFree(GetProcessHeap(), 0, pDlgData);
+}
 
 static BOOL
 GUIInitialize(
@@ -45,7 +98,6 @@ GUIInitialize(
     TRACE("GUIInitialize(%p)\n", pgContext);
     return TRUE;
 }
-
 
 static
 VOID
@@ -136,37 +188,34 @@ StatusDialogProc(
             SetDlgItemTextW(hwndDlg, IDC_STATUS_MESSAGE, msg->pMessage);
             SetEvent(msg->StartupEvent);
 
-            pDlgData = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(DLG_DATA));
-            SetWindowLongPtrW(hwndDlg, GWLP_USERDATA, (LONG_PTR)pDlgData);
-
+            pDlgData = DlgData_Create(hwndDlg, msg->Context);
             if (pDlgData == NULL)
                 return FALSE;
 
-            /* Load the bar bitmap */
-            pDlgData->hBarBitmap = LoadImageW(hDllInstance, MAKEINTRESOURCEW(IDI_BAR), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
-            if (pDlgData->hBarBitmap)
+            if (DlgData_LoadBitmaps(pDlgData))
             {
-                BITMAP bm;
+                if (SetTimer(hwndDlg, IDT_BAR, 20, NULL) == 0)
+                {
+                    ERR("SetTimer(IDT_BAR) failed: %d\n", GetLastError());
+                }
 
-                GetObject(pDlgData->hBarBitmap, sizeof(BITMAP), &bm);
-                pDlgData->BarWidth = bm.bmWidth;
-                pDlgData->BarHeight = bm.bmHeight;
-                pDlgData->TimerID = SetTimer(hwndDlg, -1, 20, NULL);
+                /* Get the animation bar control */
+                pDlgData->hWndBarCtrl = GetDlgItem(hwndDlg, IDC_BAR);
             }
             return TRUE;
         }
 
         case WM_TIMER:
         {
-            if (pDlgData)
+            if (pDlgData && pDlgData->hBarBitmap)
             {
                 /*
                  * Default rotation bar image width is 413 (same as logo)
                  * We can divide 413 by 7 without remainder
                  */
                 pDlgData->BarCounter = (pDlgData->BarCounter + 7) % pDlgData->BarWidth;
-                InvalidateRect(hwndDlg, NULL, FALSE);
-                UpdateWindow(hwndDlg);
+                InvalidateRect(pDlgData->hWndBarCtrl, NULL, FALSE);
+                UpdateWindow(pDlgData->hWndBarCtrl);
             }
             return TRUE;
         }
@@ -202,15 +251,11 @@ StatusDialogProc(
 
         case WM_DESTROY:
         {
-            if (pDlgData)
+            if (pDlgData && pDlgData->hBarBitmap)
             {
-                if (pDlgData->hBarBitmap)
-                {
-                    KillTimer(hwndDlg, pDlgData->TimerID);
-                    DeleteObject(pDlgData->hBarBitmap);
-                }
-                HeapFree(GetProcessHeap(), 0, pDlgData);
+                KillTimer(hwndDlg, IDT_BAR);
             }
+            DlgData_Destroy(pDlgData);
             return TRUE;
         }
     }
@@ -359,34 +404,28 @@ WelcomeDialogProc(
     {
         case WM_INITDIALOG:
         {
-            pDlgData = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(DLG_DATA));
+            pDlgData = DlgData_Create(hwndDlg, (PGINA_CONTEXT)lParam);
             if (pDlgData == NULL)
                 return FALSE;
 
-            SetWindowLongPtrW(hwndDlg, GWLP_USERDATA, (LONG_PTR)pDlgData);
-
-            pDlgData->pgContext = (PGINA_CONTEXT)lParam;
-
-            /* Load the logo bitmap */
-            pDlgData->hBitmap = LoadImageW(pDlgData->pgContext->hDllInstance, MAKEINTRESOURCEW(IDI_ROSLOGO), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
+            DlgData_LoadBitmaps(pDlgData);
             return TRUE;
         }
 
         case WM_PAINT:
         {
             PAINTSTRUCT ps;
-            if (pDlgData->hBitmap)
+            if (pDlgData && pDlgData->hLogoBitmap)
             {
                 BeginPaint(hwndDlg, &ps);
-                DrawStateW(ps.hdc, NULL, NULL, (LPARAM)pDlgData->hBitmap, (WPARAM)0, 0, 0, 0, 0, DST_BITMAP);
+                DrawStateW(ps.hdc, NULL, NULL, (LPARAM)pDlgData->hLogoBitmap, (WPARAM)0, 0, 0, 0, 0, DST_BITMAP);
                 EndPaint(hwndDlg, &ps);
             }
             return TRUE;
         }
         case WM_DESTROY:
         {
-            DeleteObject(pDlgData->hBitmap);
-            HeapFree(GetProcessHeap(), 0, pDlgData);
+            DlgData_Destroy(pDlgData);
             return TRUE;
         }
     }
@@ -1120,17 +1159,12 @@ LogonDialogProc(
     {
         case WM_INITDIALOG:
         {
-            pDlgData = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(DLG_DATA));
+            /* FIXME: take care of NoDomainUI */
+            pDlgData = DlgData_Create(hwndDlg, (PGINA_CONTEXT)lParam);
             if (pDlgData == NULL)
                 return FALSE;
 
-            SetWindowLongPtrW(hwndDlg, GWLP_USERDATA, (LONG_PTR)pDlgData);
-
-            /* FIXME: take care of NoDomainUI */
-            pDlgData->pgContext = (PGINA_CONTEXT)lParam;
-
-            /* Draw the logo bitmap */
-            pDlgData->hBitmap = LoadImageW(pDlgData->pgContext->hDllInstance, MAKEINTRESOURCEW(IDI_ROSLOGO), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
+            DlgData_LoadBitmaps(pDlgData);
 
             SetWelcomeText(hwndDlg);
 
@@ -1160,18 +1194,17 @@ LogonDialogProc(
         case WM_PAINT:
         {
             PAINTSTRUCT ps;
-            if (pDlgData->hBitmap)
+            if (pDlgData && pDlgData->hLogoBitmap)
             {
                 BeginPaint(hwndDlg, &ps);
-                DrawStateW(ps.hdc, NULL, NULL, (LPARAM)pDlgData->hBitmap, (WPARAM)0, 0, 0, 0, 0, DST_BITMAP);
+                DrawStateW(ps.hdc, NULL, NULL, (LPARAM)pDlgData->hLogoBitmap, (WPARAM)0, 0, 0, 0, 0, DST_BITMAP);
                 EndPaint(hwndDlg, &ps);
             }
             return TRUE;
         }
 
         case WM_DESTROY:
-            DeleteObject(pDlgData->hBitmap);
-            HeapFree(GetProcessHeap(), 0, pDlgData);
+            DlgData_Destroy(pDlgData);
             return TRUE;
 
         case WM_COMMAND:
@@ -1400,13 +1433,9 @@ UnlockDialogProc(
     {
         case WM_INITDIALOG:
         {
-            pDlgData = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(DLG_DATA));
+            pDlgData = DlgData_Create(hwndDlg, (PGINA_CONTEXT)lParam);
             if (pDlgData == NULL)
                 return FALSE;
-
-            SetWindowLongPtrW(hwndDlg, GWLP_USERDATA, (LONG_PTR)pDlgData);
-
-            pDlgData->pgContext = (PGINA_CONTEXT)lParam;
 
             SetWelcomeText(hwndDlg);
 
@@ -1418,25 +1447,23 @@ UnlockDialogProc(
             if (pDlgData->pgContext->bDisableCAD)
                 EnableWindow(GetDlgItem(hwndDlg, IDCANCEL), FALSE);
 
-            /* Load the logo bitmap */
-            pDlgData->hBitmap = LoadImageW(pDlgData->pgContext->hDllInstance, MAKEINTRESOURCEW(IDI_ROSLOGO), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
+            DlgData_LoadBitmaps(pDlgData);
             return TRUE;
         }
 
         case WM_PAINT:
         {
             PAINTSTRUCT ps;
-            if (pDlgData->hBitmap)
+            if (pDlgData && pDlgData->hLogoBitmap)
             {
                 BeginPaint(hwndDlg, &ps);
-                DrawStateW(ps.hdc, NULL, NULL, (LPARAM)pDlgData->hBitmap, (WPARAM)0, 0, 0, 0, 0, DST_BITMAP);
+                DrawStateW(ps.hdc, NULL, NULL, (LPARAM)pDlgData->hLogoBitmap, (WPARAM)0, 0, 0, 0, 0, DST_BITMAP);
                 EndPaint(hwndDlg, &ps);
             }
             return TRUE;
         }
         case WM_DESTROY:
-            DeleteObject(pDlgData->hBitmap);
-            HeapFree(GetProcessHeap(), 0, pDlgData);
+            DlgData_Destroy(pDlgData);
             return TRUE;
 
         case WM_COMMAND:
@@ -1500,16 +1527,11 @@ LockedDialogProc(
     {
         case WM_INITDIALOG:
         {
-            pDlgData = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(DLG_DATA));
+            pDlgData = DlgData_Create(hwndDlg, (PGINA_CONTEXT)lParam);
             if (pDlgData == NULL)
                 return FALSE;
 
-            SetWindowLongPtrW(hwndDlg, GWLP_USERDATA, (LONG_PTR)pDlgData);
-
-            pDlgData->pgContext = (PGINA_CONTEXT)lParam;
-
-            /* Load the logo bitmap */
-            pDlgData->hBitmap = LoadImageW(pDlgData->pgContext->hDllInstance, MAKEINTRESOURCEW(IDI_ROSLOGO), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
+            DlgData_LoadBitmaps(pDlgData);
 
             SetWelcomeText(hwndDlg);
 
@@ -1519,18 +1541,17 @@ LockedDialogProc(
         case WM_PAINT:
         {
             PAINTSTRUCT ps;
-            if (pDlgData->hBitmap)
+            if (pDlgData && pDlgData->hLogoBitmap)
             {
                 BeginPaint(hwndDlg, &ps);
-                DrawStateW(ps.hdc, NULL, NULL, (LPARAM)pDlgData->hBitmap, (WPARAM)0, 0, 0, 0, 0, DST_BITMAP);
+                DrawStateW(ps.hdc, NULL, NULL, (LPARAM)pDlgData->hLogoBitmap, (WPARAM)0, 0, 0, 0, 0, DST_BITMAP);
                 EndPaint(hwndDlg, &ps);
             }
             return TRUE;
         }
         case WM_DESTROY:
         {
-            DeleteObject(pDlgData->hBitmap);
-            HeapFree(GetProcessHeap(), 0, pDlgData);
+            DlgData_Destroy(pDlgData);
             return TRUE;
         }
     }
