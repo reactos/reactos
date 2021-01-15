@@ -1,8 +1,8 @@
 /*
  * PROJECT:         ReactOS api tests
  * LICENSE:         GPL - See COPYING in the top level directory
- * PURPOSE:         Test for recv
- * PROGRAMMERS:     Colin Finck
+ * PURPOSE:         Test for recv with MSG_PEEK
+ * PROGRAMMERS:     Copyright 2008 Colin Finck <colin@reactos.org>
  */
 
 #include "ws2_32.h"
@@ -113,6 +113,21 @@ int Test_recv()
     ok(readIosb.Information == RECV_BUF, "Short read\n");
 
     NtClose(readEvent);
+
+    /* Now keep reading until the end (CORE-17425) */
+    int ret;
+    char recv_data[100] = { 0 };
+    while ((ret = recv(sck, recv_data, sizeof(recv_data), 0)) >= 0)
+    {
+        if (ret == 0)
+        {
+            ret = recv(sck, recv_data, 100, 0);
+            trace("recv again %i bytes, err %i\n", ret, WSAGetLastError());
+            ok_int(ret, 0);
+            break;
+        }
+    }
+
     closesocket(sck);
     WSACleanup();
     return 1;
