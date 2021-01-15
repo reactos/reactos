@@ -68,12 +68,12 @@ static HANDLE hUserToken = NULL;
 static HANDLE hInstallEvent = NULL;
 static HANDLE hNoPendingInstalls = NULL;
 
-static SLIST_HEADER DeviceInstallListHead;
+static LIST_ENTRY DeviceInstallListHead;
 static HANDLE hDeviceInstallListNotEmpty;
 
 typedef struct
 {
-    SLIST_ENTRY ListEntry;
+    LIST_ENTRY ListEntry;
     WCHAR DeviceIds[1];
 } DeviceInstallParams;
 
@@ -4097,7 +4097,7 @@ cleanup:
 static DWORD WINAPI
 DeviceInstallThread(LPVOID lpParameter)
 {
-    PSLIST_ENTRY ListEntry;
+    PLIST_ENTRY ListEntry;
     DeviceInstallParams* Params;
     BOOL showWizard;
 
@@ -4109,7 +4109,10 @@ DeviceInstallThread(LPVOID lpParameter)
 
     while (TRUE)
     {
-        ListEntry = InterlockedPopEntrySList(&DeviceInstallListHead);
+        if ((BOOL)IsListEmpty(&DeviceInstallListHead))
+            ListEntry = NULL;
+        else
+            ListEntry = RemoveHeadList(&DeviceInstallListHead);
 
         if (ListEntry == NULL)
         {
@@ -4191,7 +4194,7 @@ PnpEventThread(LPVOID lpParameter)
                 if (Params)
                 {
                     wcscpy(Params->DeviceIds, PnpEvent->TargetDevice.DeviceIds);
-                    InterlockedPushEntrySList(&DeviceInstallListHead, &Params->ListEntry);
+                    InsertTailList(&DeviceInstallListHead, &Params->ListEntry);
                     SetEvent(hDeviceInstallListNotEmpty);
                 }
             }
@@ -4435,7 +4438,7 @@ InitializePnPManager(VOID)
         return dwError;
     }
 
-    InitializeSListHead(&DeviceInstallListHead);
+    InitializeListHead(&DeviceInstallListHead);
 
     dwError = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
                             L"System\\CurrentControlSet\\Enum",
