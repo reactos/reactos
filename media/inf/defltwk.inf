@@ -85,3 +85,6 @@ SceInfGuest = "Guest"
 
 [Strings.0407]
 SceInfGuest = "Gast"
+
+[Strings.0419]
+SceInfGuest = "Гость"
