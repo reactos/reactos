@@ -34,8 +34,8 @@ SeCreatePermanentPrivilege =
 SeCreateTokenPrivilege =
 SeDebugPrivilege = *S-1-5-32-544
 SeDenyBatchLogonRight =
-SeDenyInteractiveLogonRight =
-SeDenyNetworkLogonRight =
+SeDenyInteractiveLogonRight = %SceInfGuest%
+SeDenyNetworkLogonRight = %SceInfGuest%
 SeDenyRemoteInteractiveLogonRight =
 SeDenyServiceLogonRight =
 SeEnableDelegationPrivilege =
@@ -63,6 +63,9 @@ SeTakeOwnershipPrivilege = *S-1-5-32-544
 SeTcbPrivilege =
 SeUndockPrivilege = *S-1-5-32-544, *S-1-5-32-545
 
+[Group Membership]
+%SceInfUsers%__Memberof =
+%SceInfUsers%__Members = %SceInfAuthUsers%, %SceInfInteractive%
 
 [Registry Values]
 ; Full registry path = Type, Value
@@ -81,10 +84,67 @@ MACHINE\Software\Microsoft\Windows\CurrentVersion\Policies\System\ShutdownWithou
 MACHINE\Software\Microsoft\Windows\CurrentVersion\Policies\System\UndockWithoutLogon = 4, 1
 
 [Strings]
+SceInfAuthUsers = "Authenticated Users"
+ScsInfInteractive = "INTERACTIVE"
 SceInfGuest = "Guest"
+SceInfUsers = "Users"
+
+[Strings.0404]
+SceInfAuthUsers = "經過身份驗證的使用者"
+ScsInfInteractive = "INTERACTIVE"
+SceInfGuest = "來賓"
+SceInfUsers = "使用者"
 
 [Strings.0407]
+SceInfAuthUsers = "Authentifizierte Benutzer"
+ScsInfInteractive = "INTERAKTIV"
 SceInfGuest = "Gast"
+SceInfUsers = "Benutzer"
+
+[Strings.0410]
+SceInfAuthUsers = "Utenti autenticati"
+ScsInfInteractive = "INTERATTIVO"
+SceInfGuest = "Guest"
+SceInfUsers = "Utenti"
+
+[Strings.0415]
+SceInfAuthUsers = "Użytkownicy uwierzytelnieni"
+ScsInfInteractive = "INTERAKTYWNA"
+SceInfGuest = "Gość"
+SceInfUsers = "Użytkownicy"
+
+[Strings.0418]
+SceInfAuthUsers = "Utilizatori autentificați"
+ScsInfInteractive = "INTERACTIV"
+SceInfGuest = "Oaspete"
+SceInfUsers = "Utilizatori"
 
 [Strings.0419]
+SceInfAuthUsers = "Авторизованные пользователи"
+ScsInfInteractive = "INTERACTIVE"
 SceInfGuest = "Гость"
+SceInfUsers = "Пользователи"
+
+[Strings.041c]
+SceInfAuthUsers = "Përdorues vërtetuar"
+ScsInfInteractive = "INTERAKTIVE"
+SceInfGuest = "Vizitorë"
+SceInfUsers = "Përdoruesit"
+
+[Strings.041f]
+SceInfAuthUsers = "Kimliği Doğrulanmış Kullanıcılar"
+ScsInfInteractive = "ETKLİEŞİMLİ"
+SceInfGuest = "Konuk"
+SceInfUsers = "Kullanıcılar"
+
+[Strings.0804]
+SceInfAuthUsers = "经过身份验证的用户"
+ScsInfInteractive = "INTERACTIVE"
+SceInfGuest = "来宾"
+SceInfUsers = "用户"
+
+[Strings.0816]
+SceInfAuthUsers = "Utilizadores autenticados"
+ScsInfInteractive = "INTERACTIVE"
+SceInfGuest = "Convidado"
+SceInfUsers = "Utilizadores"
