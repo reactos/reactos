@@ -282,7 +282,8 @@ InstallPrivileges(
     PSID AccountSid = NULL;
     NTSTATUS Status;
     LSA_HANDLE PolicyHandle = NULL;
-    LSA_UNICODE_STRING RightString;
+    LSA_UNICODE_STRING RightString, AccountName;
+    PLSA_REFERENCED_DOMAIN_LIST ReferencedDomains = NULL;
     PLSA_TRANSLATED_SID2 Sids = NULL;
 
     DPRINT("InstallPrivileges()\n");
@@ -351,8 +352,33 @@ InstallPrivileges(
             else
             {
                 DPRINT("Account name: %S\n", szSidString);
-                continue;
- 
+
+                ReferencedDomains = NULL;
+                Sids = NULL;
+                RtlInitUnicodeString(&AccountName, szSidString);
+                Status = LsaLookupNames2(PolicyHandle,
+                                         0,
+                                         1,
+                                         &AccountName,
+                                         &ReferencedDomains,
+                                         &Sids);
+                if (ReferencedDomains != NULL)
+                {
+                    LsaFreeMemory(ReferencedDomains);
+                }
+
+                if (!NT_SUCCESS(Status))
+                {
+                    DPRINT1("LsaLookupNames2() failed (Status 0x%08lx)\n", Status);
+
+                    if (Sids != NULL)
+                    {
+                        LsaFreeMemory(Sids);
+                        Sids = NULL;
+                    }
+
+                    continue;
+                }
             }
 
             RtlInitUnicodeString(&RightString, szPrivilegeString);
