@@ -217,6 +217,12 @@ typedef struct _SCSI_PORT_SAVE_INTERRUPT
  *  part is the miniport-specific device extension.
  */
 
+#ifdef _WIN64
+#define ALIGNAS_PTR DECLSPEC_ALIGN(8)
+#else
+#define ALIGNAS_PTR DECLSPEC_ALIGN(4)
+#endif
+
 // FDO
 typedef struct _SCSI_PORT_DEVICE_EXTENSION
 {
@@ -312,7 +318,9 @@ typedef struct _SCSI_PORT_DEVICE_EXTENSION
     BOOLEAN DeviceStarted;
     UINT8 TotalLUCount;
 
-    UCHAR MiniPortDeviceExtension[1]; /* must be the last entry */
+    // use the pointer alignment here, some miniport drivers rely on this
+    // moreover, it has to be the last member
+    ALIGNAS_PTR UCHAR MiniPortDeviceExtension[];
 } SCSI_PORT_DEVICE_EXTENSION, *PSCSI_PORT_DEVICE_EXTENSION;
 
 typedef struct _RESETBUS_PARAMS
