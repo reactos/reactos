@@ -359,6 +359,9 @@ UserClipboardRelease(PWND pWindow)
 {
     PWINSTATION_OBJECT pWinStaObj;
 
+    if (!pWindow)
+        return;
+
     pWinStaObj = IntGetWinStaForCbAccess();
     if (!pWinStaObj)
         return;
