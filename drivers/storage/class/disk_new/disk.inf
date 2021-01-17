@@ -186,3 +186,16 @@ compaq_array.DeviceDesc = "Compaq SCSI Drive Array"
 mylex_array.DeviceDesc = "Mylex RAID Disk Device"
 
 VHD_Generic_FriendlyName = "Microsoft Virtual Disk"
+
+[Strings.0419]
+DiskClassName="Дисковые устройства"
+GenManufacturer="(Стандартные дисковые накопители)"
+
+disk_devdesc="Дисковый накопитель"
+opticaldisk_devdesc="Привод оптических дисков"
+
+disk_ServiceDesc="Драйвер дисковых накопителей"
+compaq_array.DeviceDesc = "Compaq SCSI дисковый массив"
+mylex_array.DeviceDesc = "Mylex RAID дисковое устройство"
+
+VHD_Generic_FriendlyName = "Microsoft виртуальный диск"
