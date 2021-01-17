@@ -135,12 +135,173 @@ SepDeleteTokenLock(
     ExFreePoolWithTag(Token->TokenLock, TAG_SE_TOKEN_LOCK);
 }
 
-static NTSTATUS
-SepCompareTokens(IN PTOKEN FirstToken,
-                 IN PTOKEN SecondToken,
-                 OUT PBOOLEAN Equal)
+/**
+ * @brief
+ * Compares the elements of SID arrays provided by tokens.
+ * The elements that are being compared for equality are
+ * the SIDs and their attributes.
+ *
+ * @param[in] SidArrayToken1
+ * SID array from the first token.
+ *
+ * @param[in] CountSidArray1
+ * SID count array from the first token.
+ *
+ * @param[in] SidArrayToken2
+ * SID array from the second token.
+ *
+ * @param[in] CountSidArray2
+ * SID count array from the second token.
+ * 
+ * @return
+ * Returns TRUE if the elements match from either arrays,
+ * FALSE otherwise.
+ */
+static
+BOOLEAN
+SepCompareSidAndAttributesFromTokens(
+    _In_ PSID_AND_ATTRIBUTES SidArrayToken1,
+    _In_ ULONG CountSidArray1,
+    _In_ PSID_AND_ATTRIBUTES SidArrayToken2,
+    _In_ ULONG CountSidArray2)
+{
+    ULONG FirstCount, SecondCount;
+    PSID_AND_ATTRIBUTES FirstSidArray, SecondSidArray;
+    PAGED_CODE();
+
+    /* Bail out if index counters provided are not equal */
+    if (CountSidArray1 != CountSidArray2)
+    {
+        DPRINT("SepCompareSidAndAttributesFromTokens(): Index counters are not the same!\n");
+        return FALSE;
+    }
+
+    /* Loop over the SID arrays and compare them */
+    for (FirstCount = 0; FirstCount < CountSidArray1; FirstCount++)
+    {
+        for (SecondCount = 0; SecondCount < CountSidArray2; SecondCount++)
+        {
+            FirstSidArray = &SidArrayToken1[FirstCount];
+            SecondSidArray = &SidArrayToken2[SecondCount];
+
+            if (RtlEqualSid(FirstSidArray->Sid, SecondSidArray->Sid) &&
+                FirstSidArray->Attributes == SecondSidArray->Attributes)
+            {
+                break;
+            }
+        }
+
+        /* We've exhausted the array of the second token without finding this one */
+        if (SecondCount == CountSidArray2)
+        {
+            DPRINT("SepCompareSidAndAttributesFromTokens(): No matching elements could be found in either token!\n");
+            return FALSE;
+        }
+    }
+
+    return TRUE;
+}
+
+/**
+ * @brief
+ * Compares the elements of privilege arrays provided by tokens.
+ * The elements that are being compared for equality are
+ * the privileges and their attributes.
+ *
+ * @param[in] PrivArrayToken1
+ * Privilege array from the first token.
+ *
+ * @param[in] CountPrivArray1
+ * Privilege count array from the first token.
+ *
+ * @param[in] PrivArrayToken2
+ * Privilege array from the second token.
+ *
+ * @param[in] CountPrivArray2
+ * Privilege count array from the second token.
+ *
+ * @return
+ * Returns TRUE if the elements match from either arrays,
+ * FALSE otherwise.
+ */
+static
+BOOLEAN
+SepComparePrivilegeAndAttributesFromTokens(
+    _In_ PLUID_AND_ATTRIBUTES PrivArrayToken1,
+    _In_ ULONG CountPrivArray1,
+    _In_ PLUID_AND_ATTRIBUTES PrivArrayToken2,
+    _In_ ULONG CountPrivArray2)
+{
+    ULONG FirstCount, SecondCount;
+    PLUID_AND_ATTRIBUTES FirstPrivArray, SecondPrivArray;
+    PAGED_CODE();
+
+    /* Bail out if index counters provided are not equal */
+    if (CountPrivArray1 != CountPrivArray2)
+    {
+        DPRINT("SepComparePrivilegeAndAttributesFromTokens(): Index counters are not the same!\n");
+        return FALSE;
+    }
+
+    /* Loop over the privilege arrays and compare them */
+    for (FirstCount = 0; FirstCount < CountPrivArray1; FirstCount++)
+    {
+        for (SecondCount = 0; SecondCount < CountPrivArray2; SecondCount++)
+        {
+            FirstPrivArray = &PrivArrayToken1[FirstCount];
+            SecondPrivArray = &PrivArrayToken2[SecondCount];
+
+            if (RtlEqualLuid(&FirstPrivArray->Luid, &SecondPrivArray->Luid) &&
+                FirstPrivArray->Attributes == SecondPrivArray->Attributes)
+            {
+                break;
+            }
+        }
+
+        /* We've exhausted the array of the second token without finding this one */
+        if (SecondCount == CountPrivArray2)
+        {
+            DPRINT("SepComparePrivilegeAndAttributesFromTokens(): No matching elements could be found in either token!\n");
+            return FALSE;
+        }
+    }
+
+    return TRUE;
+}
+
+/**
+ * @brief
+ * Compares tokens if they're equal based on all the following properties. If all
+ * of the said conditions are met then the tokens are deemed as equal.
+ *
+ * - Every SID that is present in either token is also present in the other one.
+ * - Both or none of the tokens are restricted.
+ * - If both tokens are restricted, every SID that is restricted in either token is
+ *   also restricted in the other one.
+ * - Every privilege present in either token is also present in the other one.
+ * 
+ * @param[in] FirstToken
+ * The first token.
+ *
+ * @param[in] SecondToken
+ * The second token.
+ *
+ * @param[out] Equal
+ * The retrieved value which determines if the tokens are
+ * equal or not.
+ *
+ * @return
+ * Returns STATUS_SUCCESS.
+ */
+static
+NTSTATUS
+SepCompareTokens(
+    _In_ PTOKEN FirstToken,
+    _In_ PTOKEN SecondToken,
+    _Out_ PBOOLEAN Equal)
 {
     BOOLEAN Restricted, IsEqual = FALSE;
+    PAGED_CODE();
 
     ASSERT(FirstToken != SecondToken);
 
@@ -148,21 +309,53 @@ SepCompareTokens(IN PTOKEN FirstToken,
     SepAcquireTokenLockShared(FirstToken);
     SepAcquireTokenLockShared(SecondToken);
 
-    /* FIXME: Check if every SID that is present in either token is also present in the other one */
-
-    Restricted = SeTokenIsRestricted(FirstToken);
-    if (Restricted == SeTokenIsRestricted(SecondToken))
+    /* Check if every SID that is present in either token is also present in the other one */
+    if (!SepCompareSidAndAttributesFromTokens(FirstToken->UserAndGroups,
+                                              FirstToken->UserAndGroupCount,
+                                              SecondToken->UserAndGroups,
+                                              SecondToken->UserAndGroupCount))
     {
-        if (Restricted)
-        {
-            /* FIXME: Check if every SID that is restricted in either token is also restricted in the other one */
-        }
-
-        /* FIXME: Check if every privilege that is present in either token is also present in the other one */
-        DPRINT1("FIXME: Pretending tokens are equal!\n");
-        IsEqual = TRUE;
+        goto Quit;
     }
 
+    /* Is one token restricted but the other isn't? */
+    Restricted = SeTokenIsRestricted(FirstToken);
+    if (Restricted != SeTokenIsRestricted(SecondToken))
+    {
+        /* If that's the case then bail out */
+        goto Quit;
+    }
+
+    /*
+     * If both tokens are restricted check if every SID
+     * that is restricted in either token is also restricted
+     * in the other one.
+     */
+    if (Restricted)
+    {
+        if (!SepCompareSidAndAttributesFromTokens(FirstToken->RestrictedSids,
+                                                  FirstToken->RestrictedSidCount,
+                                                  SecondToken->RestrictedSids,
+                                                  SecondToken->RestrictedSidCount))
+        {
+            goto Quit;
+        }
+    }
+
+    /* Check if every privilege present in either token is also present in the other one */
+    if (!SepComparePrivilegeAndAttributesFromTokens(FirstToken->Privileges,
+                                                    FirstToken->PrivilegeCount,
+                                                    SecondToken->Privileges,
+                                                    SecondToken->PrivilegeCount))
+    {
+        goto Quit;
+    }
+
+    /* If we're here then the tokens are equal */
+    IsEqual = TRUE;
+    DPRINT("SepCompareTokens(): Tokens are equal!\n");
+
+Quit:
     /* Unlock the tokens */
     SepReleaseTokenLock(SecondToken);
     SepReleaseTokenLock(FirstToken);
@@ -3921,14 +4114,29 @@ NtOpenThreadToken(IN HANDLE ThreadHandle,
                                TokenHandle);
 }
 
-/*
- * @unimplemented
+/**
+ * @brief
+ * Compares tokens if they're equal or not.
+ *
+ * @param[in] FirstToken
+ * The first token.
+ *
+ * @param[in] SecondToken
+ * The second token.
+ *
+ * @param[out] Equal
+ * The retrieved value which determines if the tokens are
+ * equal or not.
+ *
+ * @return
+ * Returns STATUS_SUCCESS, otherwise it returns a failure NTSTATUS code.
  */
 NTSTATUS
 NTAPI
-NtCompareTokens(IN HANDLE FirstTokenHandle,
-                IN HANDLE SecondTokenHandle,
-                OUT PBOOLEAN Equal)
+NtCompareTokens(
+    _In_ HANDLE FirstTokenHandle,
+    _In_ HANDLE SecondTokenHandle,
+    _Out_ PBOOLEAN Equal)
 {
     KPROCESSOR_MODE PreviousMode;
     PTOKEN FirstToken, SecondToken;
@@ -3960,7 +4168,10 @@ NtCompareTokens(IN HANDLE FirstTokenHandle,
                                        (PVOID*)&FirstToken,
                                        NULL);
     if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("ObReferenceObjectByHandle() failed (Status 0x%lx)\n", Status);
         return Status;
+    }
 
     Status = ObReferenceObjectByHandle(SecondTokenHandle,
                                        TOKEN_QUERY,
@@ -3970,6 +4181,7 @@ NtCompareTokens(IN HANDLE FirstTokenHandle,
                                        NULL);
     if (!NT_SUCCESS(Status))
     {
+        DPRINT1("ObReferenceObjectByHandle() failed (Status 0x%lx)\n", Status);
         ObDereferenceObject(FirstToken);
         return Status;
     }
