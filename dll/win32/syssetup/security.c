@@ -756,6 +756,146 @@ ApplyEventlogSettings(
 }
 
 
+static
+VOID
+ApplyAuditEvents(
+    _In_ HINF hSecurityInf)
+{
+    LSA_OBJECT_ATTRIBUTES ObjectAttributes;
+    INFCONTEXT InfContext;
+    WCHAR szOptionName[256];
+    INT nValue;
+    LSA_HANDLE PolicyHandle = NULL;
+    POLICY_AUDIT_EVENTS_INFO AuditInfo;
+    PULONG AuditOptions = NULL;
+    NTSTATUS Status;
+
+    DPRINT("ApplyAuditEvents(%p)\n", hSecurityInf);
+
+    if (!SetupFindFirstLineW(hSecurityInf,
+                             L"Event Audit",
+                             NULL,
+                             &InfContext))
+    {
+        DPRINT1("SetupFindFirstLineW failed\n");
+        return;
+    }
+
+    ZeroMemory(&ObjectAttributes, sizeof(LSA_OBJECT_ATTRIBUTES));
+
+    Status = LsaOpenPolicy(NULL,
+                           &ObjectAttributes,
+                           POLICY_SET_AUDIT_REQUIREMENTS,
+                           &PolicyHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("LsaOpenPolicy failed (Status %08lx)\n", Status);
+        return;
+    }
+
+    AuditOptions = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,
+                             (AuditCategoryAccountLogon + 1) * sizeof(ULONG));
+    if (AuditOptions == NULL)
+    {
+        DPRINT1("Failed to allocate the auditiing options array!\n");
+        goto done;
+    }
+
+    AuditInfo.AuditingMode = TRUE;
+    AuditInfo.EventAuditingOptions = AuditOptions;
+    AuditInfo.MaximumAuditEventCount = AuditCategoryAccountLogon + 1;
+
+    do
+    {
+        /* Retrieve the group name */
+        if (!SetupGetStringFieldW(&InfContext,
+                                  0,
+                                  szOptionName,
+                                  ARRAYSIZE(szOptionName),
+                                  NULL))
+        {
+            DPRINT1("SetupGetStringFieldW() failed\n");
+            continue;
+        }
+
+        DPRINT("Option: '%S'\n", szOptionName);
+
+        if (!SetupGetIntField(&InfContext,
+                              1,
+                              &nValue))
+        {
+            DPRINT1("SetupGetStringFieldW() failed\n");
+            continue;
+        }
+
+        DPRINT("Value: %d\n", nValue);
+
+        if ((nValue < POLICY_AUDIT_EVENT_UNCHANGED) || (nValue > POLICY_AUDIT_EVENT_NONE))
+        {
+            DPRINT1("Invalid audit option!\n");
+            continue;
+        }
+
+        if (_wcsicmp(szOptionName, L"AuditSystemEvents") == 0)
+        {
+            AuditOptions[AuditCategorySystem] = (ULONG)nValue;
+        }
+        else if (_wcsicmp(szOptionName, L"AuditLogonEvents") == 0)
+        {
+            AuditOptions[AuditCategoryLogon] = (ULONG)nValue;
+        }
+        else if (_wcsicmp(szOptionName, L"AuditObjectAccess") == 0)
+        {
+            AuditOptions[AuditCategoryObjectAccess] = (ULONG)nValue;
+        }
+        else if (_wcsicmp(szOptionName, L"AuditPrivilegeUse") == 0)
+        {
+            AuditOptions[AuditCategoryPrivilegeUse] = (ULONG)nValue;
+        }
+        else if (_wcsicmp(szOptionName, L"AuditProcessTracking") == 0)
+        {
+            AuditOptions[AuditCategoryDetailedTracking] = (ULONG)nValue;
+        }
+        else if (_wcsicmp(szOptionName, L"AuditPolicyChange") == 0)
+        {
+            AuditOptions[AuditCategoryPolicyChange] = (ULONG)nValue;
+        }
+        else if (_wcsicmp(szOptionName, L"AuditAccountManage") == 0)
+        {
+            AuditOptions[AuditCategoryAccountManagement] = (ULONG)nValue;
+        }
+        else if (_wcsicmp(szOptionName, L"AuditDSAccess") == 0)
+        {
+            AuditOptions[AuditCategoryDirectoryServiceAccess] = (ULONG)nValue;
+        }
+        else if (_wcsicmp(szOptionName, L"AuditAccountLogon") == 0)
+        {
+            AuditOptions[AuditCategoryAccountLogon] = (ULONG)nValue;
+        }
+        else
+        {
+            DPRINT1("Invalid auditing option '%S'\n", szOptionName);
+        }
+    }
+    while (SetupFindNextLine(&InfContext, &InfContext));
+
+    Status = LsaSetInformationPolicy(PolicyHandle,
+                                     PolicyAuditEventsInformation,
+                                     (PVOID)&AuditInfo);
+    if (Status != STATUS_SUCCESS)
+    {
+        DPRINT1("LsaSetInformationPolicy() failed (Status 0x%08lx)\n", Status);
+    }
+
+done:
+    if (AuditOptions != NULL)
+        HeapFree(GetProcessHeap(), 0, AuditOptions);
+
+    if (PolicyHandle != NULL)
+        LsaClose(PolicyHandle);
+}
+
+
 VOID
 InstallSecurity(VOID)
 {
@@ -781,6 +921,8 @@ InstallSecurity(VOID)
         ApplyEventlogSettings(hSecurityInf, L"Application Log", L"Application");
         ApplyEventlogSettings(hSecurityInf, L"Security Log", L"Security");
         ApplyEventlogSettings(hSecurityInf, L"System Log", L"System");
+
+        ApplyAuditEvents(hSecurityInf);
 
         SetupCloseInfFile(hSecurityInf);
     }

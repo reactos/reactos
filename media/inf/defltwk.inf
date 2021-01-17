@@ -22,6 +22,16 @@ AuditLogRetentionPeriod = 1
 RetentionDays = 7
 RestrictGuestAccess = 1
 
+[Event Audit]
+AuditSystemEvents = 0;
+AuditObjectAccess = 0;
+AuditPrivilegeUse = 0;
+AuditPolicyChange = 0;
+AuditAccountManage = 0;
+AuditProcessTracking = 0;
+AuditAccountLogon = 0;
+AuditLogonEvents = 0;
+
 [Privilege Rights]
 SeAssignPrimaryTokenPrivilege = *S-1-5-19, *S-1-5-20
 SeAuditPrivilege = *S-1-5-19, *S-1-5-20
