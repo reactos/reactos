@@ -85,66 +85,66 @@ MACHINE\Software\Microsoft\Windows\CurrentVersion\Policies\System\UndockWithoutL
 
 [Strings]
 SceInfAuthUsers = "Authenticated Users"
-ScsInfInteractive = "INTERACTIVE"
+SceInfInteractive = "INTERACTIVE"
 SceInfGuest = "Guest"
 SceInfUsers = "Users"
 
 [Strings.0404]
 SceInfAuthUsers = "經過身份驗證的使用者"
-ScsInfInteractive = "INTERACTIVE"
+SceInfInteractive = "INTERACTIVE"
 SceInfGuest = "來賓"
 SceInfUsers = "使用者"
 
 [Strings.0407]
 SceInfAuthUsers = "Authentifizierte Benutzer"
-ScsInfInteractive = "INTERAKTIV"
+SceInfInteractive = "INTERAKTIV"
 SceInfGuest = "Gast"
 SceInfUsers = "Benutzer"
 
 [Strings.0410]
 SceInfAuthUsers = "Utenti autenticati"
-ScsInfInteractive = "INTERATTIVO"
+SceInfInteractive = "INTERATTIVO"
 SceInfGuest = "Guest"
 SceInfUsers = "Utenti"
 
 [Strings.0415]
 SceInfAuthUsers = "Użytkownicy uwierzytelnieni"
-ScsInfInteractive = "INTERAKTYWNA"
+SceInfInteractive = "INTERAKTYWNA"
 SceInfGuest = "Gość"
 SceInfUsers = "Użytkownicy"
 
 [Strings.0418]
 SceInfAuthUsers = "Utilizatori autentificați"
-ScsInfInteractive = "INTERACTIV"
+SceInfInteractive = "INTERACTIV"
 SceInfGuest = "Oaspete"
 SceInfUsers = "Utilizatori"
 
 [Strings.0419]
 SceInfAuthUsers = "Авторизованные пользователи"
-ScsInfInteractive = "INTERACTIVE"
+SceInfInteractive = "INTERACTIVE"
 SceInfGuest = "Гость"
 SceInfUsers = "Пользователи"
 
 [Strings.041c]
 SceInfAuthUsers = "Përdorues vërtetuar"
-ScsInfInteractive = "INTERAKTIVE"
+SceInfInteractive = "INTERAKTIVE"
 SceInfGuest = "Vizitorë"
 SceInfUsers = "Përdoruesit"
 
 [Strings.041f]
 SceInfAuthUsers = "Kimliği Doğrulanmış Kullanıcılar"
-ScsInfInteractive = "ETKLİEŞİMLİ"
+SceInfInteractive = "ETKLİEŞİMLİ"
 SceInfGuest = "Konuk"
 SceInfUsers = "Kullanıcılar"
 
 [Strings.0804]
 SceInfAuthUsers = "经过身份验证的用户"
-ScsInfInteractive = "INTERACTIVE"
+SceInfInteractive = "INTERACTIVE"
 SceInfGuest = "来宾"
 SceInfUsers = "用户"
 
 [Strings.0816]
 SceInfAuthUsers = "Utilizadores autenticados"
-ScsInfInteractive = "INTERACTIVE"
+SceInfInteractive = "INTERACTIVE"
 SceInfGuest = "Convidado"
 SceInfUsers = "Utilizadores"
