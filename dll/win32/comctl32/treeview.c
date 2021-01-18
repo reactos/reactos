@@ -5806,7 +5806,9 @@ TREEVIEW_WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 	return TREEVIEW_HScroll(infoPtr, wParam);
 
     case WM_KEYDOWN:
+#ifndef __REACTOS__
     case WM_SYSKEYDOWN:
+#endif
 	return TREEVIEW_KeyDown(infoPtr, wParam);
 
     case WM_KILLFOCUS:
