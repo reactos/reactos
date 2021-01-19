@@ -1,8 +1,9 @@
 /*
- * wordpad (Simplified and Traditional Chinese Resource)
+ * wordpad (Traditional Chinese Resource)
  *
  * Copyright 2008 Hongbo Ni <hongbo.at.njstar.com>
  * Copyright 2010 Cheer Xiao <xiaqqaix.at.gmail.com>
+ * Sync to Wine by 2020 Aobi Chan CL <eason066.at.gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -28,7 +29,7 @@ IDM_MAINMENU MENU
 BEGIN
     POPUP "檔案(&F)"
     BEGIN
-        MENUITEM "新建(&N)...\tCtrl+N", ID_FILE_NEW
+        MENUITEM "新增(&N)...\tCtrl+N", ID_FILE_NEW
         MENUITEM "開啟(&O)...\tCtrl+O", ID_FILE_OPEN
         MENUITEM "儲存(&S)\tCtrl+S", ID_FILE_SAVE
         MENUITEM "另存為(&A)...", ID_FILE_SAVEAS
@@ -50,7 +51,7 @@ BEGIN
         MENUITEM "刪除(&D)\tDEL", ID_EDIT_CLEAR
         MENUITEM "全選(&S)\tCtrl+A", ID_EDIT_SELECTALL
         MENUITEM SEPARATOR
-        MENUITEM "查找(&F)...\tCtrl+F", ID_FIND
+        MENUITEM "搜尋(&F)...\tCtrl+F", ID_FIND
         MENUITEM "找下一個(&N)\tF3", ID_FIND_NEXT
         MENUITEM "替換(&R)...\tCtrl+H", ID_REPLACE
         MENUITEM SEPARATOR
@@ -61,23 +62,23 @@ BEGIN
         BEGIN
             MENUITEM "選擇資訊(&I)", ID_EDIT_SELECTIONINFO
             MENUITEM "文字格式(&F)", ID_EDIT_CHARFORMAT
-            MENUITEM "默認格式(&D)", ID_EDIT_DEFCHARFORMAT
+            MENUITEM "預設格式(&D)", ID_EDIT_DEFCHARFORMAT
             MENUITEM "段落格式(&H)", ID_EDIT_PARAFORMAT
             MENUITEM "獲取文字(&G)", ID_EDIT_GETTEXT
         END
     END
     POPUP "檢視(&V)"
     BEGIN
-        MENUITEM "工具欄(&T)", ID_TOGGLE_TOOLBAR
-        MENUITEM "格式工具欄(&F)", ID_TOGGLE_FORMATBAR
+        MENUITEM "工具列(&T)", ID_TOGGLE_TOOLBAR
+        MENUITEM "格式工具列(&F)", ID_TOGGLE_FORMATBAR
         MENUITEM "標尺(&R)", ID_TOGGLE_RULER
-        MENUITEM "狀態欄(&S)", ID_TOGGLE_STATUSBAR
+        MENUITEM "狀態列(&S)", ID_TOGGLE_STATUSBAR
         MENUITEM SEPARATOR
         MENUITEM "選項(&O)...", ID_VIEWPROPERTIES
     END
     POPUP "插入(&I)"
     BEGIN
-        MENUITEM "日期時間(&D)...", ID_DATETIME
+        MENUITEM "日期和時間(&D)...", ID_DATETIME
     END
     POPUP "格式(&O)"
     BEGIN
@@ -93,7 +94,7 @@ BEGIN
     END
     POPUP "說明(&H)"
     BEGIN
-        MENUITEM "關於 &Wine 寫字板", ID_ABOUT
+        MENUITEM "關於 Wine Wordpad(&W)", ID_ABOUT
     END
 END
 
@@ -137,13 +138,13 @@ END
 STRINGTABLE
 BEGIN
     STRING_ALL_FILES,              "所有檔案 (*.*)"
-    STRING_TEXT_FILES_TXT,         "文本檔案 (*.txt)"
-    STRING_TEXT_FILES_UNICODE_TXT, "統一碼文本檔案 (*.txt)"
-    STRING_RICHTEXT_FILES_RTF,     "RTF豐富格式 (*.rtf)"
-    STRING_NEWFILE_RICHTEXT,       "RTF豐富格式檔案"
-    STRING_NEWFILE_TXT,            "文本檔案 "
-    STRING_NEWFILE_TXT_UNICODE,    "統一碼文本檔案"
-    STRING_PRINTER_FILES_PRN,      "列印檔案 (*.prn)"
+    STRING_TEXT_FILES_TXT,         "純文字文件 (*.txt)"
+    STRING_TEXT_FILES_UNICODE_TXT, "萬國碼文字文件 (*.txt)"
+    STRING_RICHTEXT_FILES_RTF,     "豐富文字格式 (*.rtf)"
+    STRING_NEWFILE_RICHTEXT,       "豐富文字格式檔案"
+    STRING_NEWFILE_TXT,            "純文字文件 "
+    STRING_NEWFILE_TXT_UNICODE,    "萬國碼文字文件"
+    STRING_PRINTER_FILES_PRN,      "印表機檔案 (*.prn)"
 END
 
 STRINGTABLE
@@ -156,7 +157,7 @@ END
 STRINGTABLE
 BEGIN
     STRING_VIEWPROPS_TITLE,          "選項"
-    STRING_VIEWPROPS_TEXT,           "文本文字"
+    STRING_VIEWPROPS_TEXT,           "純文字"
     STRING_VIEWPROPS_RICHTEXT,       "豐富格式文字"
 END
 
@@ -172,27 +173,27 @@ BEGIN
     STRING_PREVIEW_CLOSE,            "關閉"
     STRING_PREVIEW_PAGE,             "頁"
     STRING_PREVIEW_PAGES,            "頁"
-    STRING_UNITS_CM,                 "cm"
-    STRING_UNITS_IN,                 "in"
-    STRING_UNITS_INCH,               "inch"
-    STRING_UNITS_PT,                 "pt"
+    STRING_UNITS_CM,                 "釐米"
+    STRING_UNITS_IN,                 "英吋"
+    STRING_UNITS_INCH,               "英吋"
+    STRING_UNITS_PT,                 "英吋"
 END
 
 STRINGTABLE
 BEGIN
-    STRING_DEFAULT_FILENAME,     "文檔"
-    STRING_PROMPT_SAVE_CHANGES,  "儲存改動到 '%s'?"
-    STRING_SEARCH_FINISHED,      "檔案查找結束."
-    STRING_LOAD_RICHED_FAILED,   "RichEdit 裝載失敗."
-    STRING_SAVE_LOSEFORMATTING,  "你已經選擇儲存為文本檔案, 這可能導致格式丟失. 你確定要這麼做嗎?"
-    STRING_INVALID_NUMBER,       "數字格式無效"
-    STRING_OLE_STORAGE_NOT_SUPPORTED, "不支援OLE 儲存檔案"
-    STRING_WRITE_FAILED,              "不能儲存檔案."
-    STRING_WRITE_ACCESS_DENIED,       "你沒有儲存檔案的權力."
-    STRING_OPEN_FAILED,               "不能開啟檔案."
-    STRING_OPEN_ACCESS_DENIED,        "你沒有開啟檔案的權力."
-    STRING_PRINTING_NOT_IMPLEMENTED,  "列印未實現。"
-    STRING_MAX_TAB_STOPS,             "不能添加超過 32 的定位停駐點。"
+    STRING_DEFAULT_FILENAME,     "文件"
+    STRING_PROMPT_SAVE_CHANGES,  "儲存變更到 '%s'?"
+    STRING_SEARCH_FINISHED,      "檔案搜尋結束。"
+    STRING_LOAD_RICHED_FAILED,   "RichEdit 載入失敗。"
+    STRING_SAVE_LOSEFORMATTING,  "您已經選擇儲存為純文字格式, 這可能導致格式遺失。 您確定要這麼做嗎？"
+    STRING_INVALID_NUMBER,       "無效的數字格式。"
+    STRING_OLE_STORAGE_NOT_SUPPORTED, "OLE 儲存體文件未被支援。"
+    STRING_WRITE_FAILED,              "無法儲存檔案。"
+    STRING_WRITE_ACCESS_DENIED,       "您沒有儲存檔案的權限。"
+    STRING_OPEN_FAILED,               "無法開啟檔案。"
+    STRING_OPEN_ACCESS_DENIED,        "您沒有開啟檔案的權限。"
+    STRING_PRINTING_NOT_IMPLEMENTED,  "列印功能尚未實作。"
+    STRING_MAX_TAB_STOPS,             "無法加入超過 32 個定位停駐點。"
 END
 
 IDD_DATETIME DIALOGEX 30, 20, 130, 80
@@ -208,10 +209,10 @@ END
 
 IDD_NEWFILE DIALOGEX 30, 20, 140, 80
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-CAPTION "新建"
+CAPTION "新增"
 FONT 9, "新細明體"
 BEGIN
-    LTEXT        "新檔案類型",-1,3,2,100,15
+    LTEXT        "新文件類型",-1,3,2,100,15
     LISTBOX      IDC_NEWFILE,3,12,90,65,LBS_NOINTEGRALHEIGHT
     DEFPUSHBUTTON "確定(&O)",IDOK,97,12,40,12
     PUSHBUTTON   "取消(&C)",IDCANCEL,97,26,40,12
@@ -258,10 +259,10 @@ BEGIN
     RADIOBUTTON "不換行(&N)", IDC_PAGEFMT_WN, 10, 25, 138, 15
     RADIOBUTTON "按視窗寬度(&W)", IDC_PAGEFMT_WW, 10, 45, 138, 15
     RADIOBUTTON "按紙張寬度(&M)", IDC_PAGEFMT_WM, 10, 65, 138, 15
-    GROUPBOX "工具欄", -1, 150, 10, 115, 85
-    CHECKBOX "工具欄(&T)", IDC_PAGEFMT_TB, 165, 20, 80, 15
-    CHECKBOX "格式工具欄(&F)", IDC_PAGEFMT_FB, 165, 38, 80, 15
+    GROUPBOX "工具列", -1, 150, 10, 115, 85
+    CHECKBOX "工具列(&T)", IDC_PAGEFMT_TB, 165, 20, 80, 15
+    CHECKBOX "格式工具列(&F)", IDC_PAGEFMT_FB, 165, 38, 80, 15
     CHECKBOX "標尺(&R)", IDC_PAGEFMT_RU, 165, 56, 80, 15
-    CHECKBOX "狀態欄(&S)", IDC_PAGEFMT_SB, 165, 74, 80, 15
+    CHECKBOX "狀態列(&S)", IDC_PAGEFMT_SB, 165, 74, 80, 15
     LTEXT "", IDC_PAGEFMT_ID, 0,0,0,0
 END

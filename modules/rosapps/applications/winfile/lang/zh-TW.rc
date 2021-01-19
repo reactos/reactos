@@ -1,10 +1,11 @@
 /*
  * WineFile
- * Simplified and Traditional Chinese Language Support
+ * Traditional Chinese Language Support
  *
  * Copyright 2002 liuspider <liuspider@yahoo.com>
  * Copyright 2008 Hongbo Ni <hongbo.at.njstar.com>
  * Copyright 2018 Luo Yufan <njlyf2011@hotmail.com>
+ * Translation imported from Wine by 2021 Aobi Chan CL <eason066@gmail.com>
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -36,9 +37,9 @@ IDM_WINEFILE MENU
         MENUITEM "開啟(&O)\tEnter",           ID_ACTIVATE
         MENUITEM "移動(&M)...\tF7",           ID_FILE_MOVE
         MENUITEM "複製(&C)...\tF8",           ID_FILE_COPY
-        MENUITEM "位於剪貼板(&I)...\tF9",     118
+        MENUITEM "位於剪貼簿(&I)...\tF9",     118
         MENUITEM "刪除(&D)\tDel",             ID_FILE_DELETE
-        MENUITEM "改名(&N)...",               109
+        MENUITEM "重新命名(&N)...",               109
         MENUITEM "屬性(&I)...\tAlt+Enter",    ID_EDIT_PROPERTIES
         MENUITEM SEPARATOR
         MENUITEM "壓縮(&O)...",               119
@@ -49,7 +50,7 @@ IDM_WINEFILE MENU
         MENUITEM "配置檔案相關...",             103
         MENUITEM SEPARATOR
         MENUITEM "建立目錄(&E)...",           111
-        MENUITEM "查找(&H)...",               104
+        MENUITEM "搜尋(&H)...",               104
         MENUITEM "選擇檔案(&S)...",           116
         MENUITEM SEPARATOR
 #ifndef _NO_EXTENSIONS
@@ -65,16 +66,16 @@ IDM_WINEFILE MENU
         MENUITEM SEPARATOR
         MENUITEM "格式化(&)...",              ID_FORMAT_DISK
 #ifdef _WIN95
-        MENUITEM "建立系統盤(&M)...", -1  /*TODO*/
+        MENUITEM "建立系統磁碟(&M)...", -1  /*TODO*/
 #endif
         MENUITEM SEPARATOR
-        MENUITEM "連接網路磁碟機(&N)",        ID_CONNECT_NETWORK_DRIVE
-        MENUITEM "中斷網路磁碟機(&D)",    ID_DISCONNECT_NETWORK_DRIVE
+        MENUITEM "連線至網路儲存裝置(&N)",        ID_CONNECT_NETWORK_DRIVE
+        MENUITEM "從網路儲存裝置離線(&D)",    ID_DISCONNECT_NETWORK_DRIVE
         MENUITEM SEPARATOR
         MENUITEM "共享為...",                   254
         MENUITEM "刪除共享(&R)...",           255
         MENUITEM SEPARATOR
-        MENUITEM "選擇儲存槽(&S)...",         251
+        MENUITEM "選擇儲存裝置(&S)...",         251
     }
 
     POPUP "目錄(&D)"  {
@@ -102,19 +103,19 @@ IDM_WINEFILE MENU
         MENUITEM "按大小排列(&Z)",            ID_VIEW_SORT_SIZE
         MENUITEM "按日期排列(&D)",            ID_VIEW_SORT_DATE
         MENUITEM SEPARATOR
-        MENUITEM "定製排列...",                 ID_VIEW_FILTER
+        MENUITEM "篩選依據...(&.)",                 ID_VIEW_FILTER
     }
 
     POPUP "選項(&O)"  {
         MENUITEM "確定方式(&C)...",           501
         MENUITEM "字型(&F)...",               ID_SELECT_FONT
-        MENUITEM "定製工具條(&B)...",         512
+        MENUITEM "定製工具列(&B)...",         512
         MENUITEM SEPARATOR
-        MENUITEM "工具條(&T)",                ID_VIEW_TOOL_BAR, CHECKED
-        MENUITEM "儲存槽列表(&D)",            ID_VIEW_DRIVE_BAR, CHECKED
-        MENUITEM "狀態欄(&S)",                ID_VIEW_STATUSBAR, CHECKED
+        MENUITEM "工具列(&T)",                ID_VIEW_TOOL_BAR, CHECKED
+        MENUITEM "儲存裝置列表(&D)",            ID_VIEW_DRIVE_BAR, CHECKED
+        MENUITEM "狀態列(&S)",                ID_VIEW_STATUSBAR, CHECKED
 #ifndef _NO_EXTENSIONS
-        MENUITEM "全屏(&U)\tCtrl+Shift+S",    ID_VIEW_FULLSCREEN
+        MENUITEM "全螢幕(&U)\tCtrl+Shift+S",    ID_VIEW_FULLSCREEN
 #endif
         MENUITEM SEPARATOR
         MENUITEM "啟動後最小化(&M)",          504
@@ -122,29 +123,132 @@ IDM_WINEFILE MENU
     }
 
 
-    POPUP "安全(&S)"  {
+    POPUP "安全性(&S)"  {
         MENUITEM "訪問(&A)...",               605
-        MENUITEM "登錄(&L)...",               606
+        MENUITEM "登入(&L)...",               606
         MENUITEM "所有者(&O)...",             607
     }
 
-    POPUP "窗口(&W)"  {
+    POPUP "視窗(&W)"  {
         MENUITEM "新增(&W)",                   ID_WINDOW_NEW
         MENUITEM "層疊\tCtrl+F5",               ID_WINDOW_CASCADE
-        MENUITEM "水平平鋪(&H)",              ID_WINDOW_TILE_HORZ
-        MENUITEM "垂直平鋪(&)\tCtrl+F4",      ID_WINDOW_TILE_VERT
+        MENUITEM "水平排列(&H)",              ID_WINDOW_TILE_HORZ
+        MENUITEM "縱向排列(&)\tCtrl+F4",      ID_WINDOW_TILE_VERT
 #ifndef _NO_EXTENSIONS
         MENUITEM "自動排列",                    ID_WINDOW_AUTOSORT
 #endif
         MENUITEM "自動排列圖示(&S)",          ID_WINDOW_ARRANGE
-        MENUITEM "刷新(&R)\tF5",              ID_REFRESH
+        MENUITEM "重新整理(&R)\tF5",              ID_REFRESH
     }
 
     POPUP "&?"  {
         MENUITEM "說明主題(&H)\tF1",          ID_HELP
-        MENUITEM "搜索說明(&S)...\tF1",       ID_HELP
+        MENUITEM "搜尋說明(&S)...\tF1",       ID_HELP
         MENUITEM "使用說明(&U)\tF1",          ID_HELP_USING
         MENUITEM SEPARATOR
         MENUITEM "關於 Winefile(&A)...",           ID_ABOUT
     }
+}
+
+IDD_SELECT_DESTINATION DIALOGEX 15, 13, 210, 63
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "選擇目的地"
+FONT 9, "新細明體"
+{
+    CONTROL         "", 101, "Static", SS_SIMPLE|SS_NOPREFIX, 3, 6, 162, 10
+    CONTROL         "路徑(&P):", -1, "Static", SS_LEFTNOWORDWRAP|WS_GROUP, 3, 18, 60, 10
+    EDITTEXT        201, 3, 29, 134, 12, ES_AUTOHSCROLL
+    DEFPUSHBUTTON   "確定", 1, 158, 6, 47, 14
+    PUSHBUTTON      "取消", 2, 158, 23, 47, 14
+    PUSHBUTTON      "瀏覽(&B)", 254, 158, 43, 47, 14
+}
+
+IDD_DIALOG_VIEW_TYPE DIALOGEX 15, 13, 161, 97
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "依類型"
+FONT 9, "新細明體"
+BEGIN
+    LTEXT           "名稱(&N):",-1,7,8,22,10
+    EDITTEXT        IDC_VIEW_PATTERN,31,7,63,12,ES_AUTOHSCROLL
+    GROUPBOX        "檔案類型",-1,7,23,87,56
+    CONTROL         "目錄(&D)",IDC_VIEW_TYPE_DIRECTORIES,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,32,70,10
+    CONTROL         "程式(&P)",IDC_VIEW_TYPE_PROGRAMS,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,43,70,10
+    CONTROL         "我的文件(&M)",IDC_VIEW_TYPE_DOCUMENTS,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,54,70,10
+    CONTROL         "其他檔案(&O)",IDC_VIEW_TYPE_OTHERS,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,13,65,70,10
+    CONTROL         "顯示隱藏或系統檔(&S)",IDC_VIEW_TYPE_HIDDEN,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,7,81,106,9
+    DEFPUSHBUTTON   "確定",IDOK,104,7,50,14
+    PUSHBUTTON      "取消",IDCANCEL,104,24,50,14
+END
+
+IDD_DIALOG_PROPERTIES DIALOGEX  0, 0, 248, 215
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "屬性 %s"
+FONT 9, "新細明體"
+BEGIN
+    DEFPUSHBUTTON   "確定",IDOK,191,7,50,14
+    PUSHBUTTON      "取消",IDCANCEL,191,29,50,14
+    LTEXT           "檔案名稱(&F):",-1,7,7,59,9
+    EDITTEXT        IDC_STATIC_PROP_FILENAME,71,7,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
+    LTEXT           "完整路徑(&P):",-1,7,18,59,9
+    EDITTEXT        IDC_STATIC_PROP_PATH,71,18,120,9, ES_READONLY | NOT WS_BORDER | WS_TABSTOP
+    LTEXT           "最後修改:",-1,7,29,59,9
+    EDITTEXT        IDC_STATIC_PROP_LASTCHANGE,71,29,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
+    LTEXT           "版本:",-1,7,40,59,9
+    EDITTEXT        IDC_STATIC_PROP_VERSION,71,40,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
+    LTEXT           "著作權(&Y):",-1,7,51,59,9
+    EDITTEXT        IDC_STATIC_PROP_COPYRIGHT,71,51,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
+    LTEXT           "大小:",-1,7,62,59,9
+    EDITTEXT        IDC_STATIC_PROP_SIZE,71,62,120,9,ES_READONLY | NOT WS_BORDER | WS_TABSTOP
+    GROUPBOX        "屬性",-1,7,79,158,46
+    CONTROL         "唯讀(&R)",IDC_CHECK_READONLY,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,17,91,68,9
+    CONTROL         "隱藏(&I)",IDC_CHECK_HIDDEN,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,92,91,68,9
+    CONTROL         "保存(&A)",IDC_CHECK_ARCHIVE,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,17,101,68,9
+    CONTROL         "系統(&S)",IDC_CHECK_SYSTEM,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,92,101,68,9
+    CONTROL         "壓縮(&C)",IDC_CHECK_COMPRESSED,"Button", BS_AUTOCHECKBOX | WS_TABSTOP,17,111,68,9
+    GROUPBOX        "版本(&V) Information",-1,7,129,234,79
+    LISTBOX         IDC_LIST_PROP_VERSION_TYPES,13,139,107,63,LBS_SORT | LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
+    EDITTEXT        IDC_LIST_PROP_VERSION_VALUES,123,139,111,63,ES_MULTILINE | ES_READONLY | WS_VSCROLL
+END
+
+
+STRINGTABLE
+{
+    IDS_FONT_SEL_DLG_NAME   "字型設定套用中"
+    IDS_FONT_SEL_ERROR      "選取新字型時發生錯誤。"
+}
+
+STRINGTABLE
+{
+    IDS_WINEFILE            "Wine 檔案管理員"
+    IDS_ERROR               "錯誤"
+    IDS_ROOT_FS             "根檔案系統"
+    IDS_UNIXFS              "unixfs"
+    IDS_DESKTOP             "桌面"
+    IDS_SHELL               "命令殼"
+    IDS_TITLEFMT            "%s - %s"
+    IDS_NO_IMPL             "尚未實作"
+    IDS_WINE_FILE           "Wine 檔案"
+}
+
+STRINGTABLE
+{
+    IDS_COL_NAME            "名稱"
+    IDS_COL_SIZE            "大小"
+    IDS_COL_CDATE           "建立日期"
+    IDS_COL_ADATE           "Date Added"
+    IDS_COL_MDATE           "變更日期"
+    IDS_COL_IDX             "索引/Inode"
+    IDS_COL_LINKS           "連結"
+    IDS_COL_ATTR            "屬性"
+    IDS_COL_SEC             "安全性"
+
+    IDS_FREE_SPACE_FMT      "%2 中剩下 %1"
+    IDS_UNIT_KB             "kB"
+    IDS_UNIT_MB             "MB"
+    IDS_UNIT_GB             "GB"
 }
