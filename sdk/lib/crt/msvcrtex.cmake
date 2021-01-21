@@ -50,13 +50,6 @@ if(ARCH STREQUAL "i386")
         except/i386/chkstk_asm.s
         except/i386/chkstk_ms.s
         math/i386/alldiv_asm.s)
-    list(APPEND MSVCRTEX_SOURCE
-        math/i386/ci.c
-        math/i386/cicos.c
-        math/i386/cilog.c
-        math/i386/cipow.c
-        math/i386/cisin.c
-        math/i386/cisqrt.c)
     if (GCC AND CLANG)
         # CLang performs some optimisations requiring those funtions
         list(APPEND MSVCRTEX_ASM_SOURCE
