@@ -13,7 +13,7 @@ BEGIN
             [-w timeout] [-4] [-6] target\n\
 \n\
 選項:\n\
-    -t          Ping 指定的主機直至要求停止。\n\
+    -t          Ping 指定的主機直至停止。\n\
                 要查看統計資料並繼續，請按 Control-Break;\n\
                 如要停止，請按 Control-C。\n\
     -a          將位址解析為主機名稱。\n\
@@ -21,9 +21,9 @@ BEGIN
     -l size     傳送緩衝區的大小。\n\
     -f          在封包中設定 “Don't Fragment” 旗標 (僅限 IPv4)。\n\
     -i TTL      生存時間。\n\
-    -v TOS      服務類型 (僅限 IPv4。此設定已過時，\n\
-				且不會影響 IP 標頭中的服務類型欄位)。\n\
-    -w timeout  每個回覆的等候逾時 (毫秒)。\n\
+    -v TOS      服務類型 (僅限 IPv4。此設定已棄用，\n\
+                且不會影響 IP 標頭中的服務類型欄位)。\n\
+    -w timeout  等待每個回覆的逾時 (毫秒)。\n\
     -4          強制使用 IPv4。\n\
     -6          強制使用 IPv6。\n\
 \n"
@@ -48,8 +48,8 @@ BEGIN
     IDS_REPLY_TIME_0MS "時間<1ms "
     IDS_REPLY_TTL "TTL=%d\n"
     IDS_REPLY_STATUS "回應已返回 %lu。\n"
-    IDS_DEST_HOST_UNREACHABLE "無法到達目標主機。\n"
-    IDS_DEST_NET_UNREACHABLE "無法到達目標網路。\n"
+    IDS_DEST_HOST_UNREACHABLE "無法連接到目標主機。\n"
+    IDS_DEST_NET_UNREACHABLE "無法連接到目標網路。\n"
     IDS_REQUEST_TIMED_OUT "要求已逾時。\n"
     IDS_TTL_EXPIRED "TTL 在傳輸途中過期。\n"
     IDS_TRANSMIT_FAILED "PING: 傳輸失敗。(Error %u)\n"

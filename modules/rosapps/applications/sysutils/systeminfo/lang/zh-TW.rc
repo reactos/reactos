@@ -1,6 +1,6 @@
-LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
-
 /* Translated by Aobi Chan CL (eason066@gmail.com) on 2021-01-19 */
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
 STRINGTABLE DISCARDABLE
 BEGIN
@@ -8,10 +8,10 @@ BEGIN
 IDS_USAGE, "SYSTEMINFO [/S system [/U username [/P [password]]]] [/FO format] [/NH]\n\n\
 描述:\n\
   此命令行工具允許管理員查詢基本系統配置資訊。\n\n\
-参数列表:\n\
+參數列表:\n\
   /S      system           指定要連接的遠端系統。\n\n\
-  /U      [domain\\]user   指定執行命令的使用者的內容。\n\n\
-  /P      [password]       指定給執行命令的使用者的密碼。\n\
+  /U      [domain\\]user   指定執行命令的使用者。\n\n\
+  /P      [password]       指定執行命令的使用者的密碼。\n\
                            如果省略，則會出現輸入提示。\n\n\
   /FO     format           指定結果的顯示格式。\n\
                            有效值: ""TABLE"", ""LIST"", ""CSV""。\n\n\
@@ -32,8 +32,8 @@ IDS_OS_NAME,                 "OS 名稱"
 IDS_OS_VERSION,              "OS 版本"
 IDS_BUILD,                   "組建"
 IDS_OS_BUILD_TYPE,           "OS 組建類型"
-IDS_REG_OWNER,               "註册的擁有者"
-IDS_REG_ORG,                 "註册的組織"
+IDS_REG_OWNER,               "註冊的擁有者"
+IDS_REG_ORG,                 "註冊的組織"
 IDS_PRODUCT_ID,              "產品識別碼"
 IDS_INST_DATE,               "安裝日期"
 IDS_UP_TIME,                 "系統開機時間"
@@ -42,7 +42,7 @@ IDS_SYS_MANUFACTURER,        "系統製造商"
 IDS_SYS_MODEL,               "系統型號"
 IDS_SYS_TYPE,                "系統類型"
 IDS_PROCESSORS,              "處理器"
-IDS_PROCESSORS_FORMAT,       "已安装 %u 個處理器。"
+IDS_PROCESSORS_FORMAT,       "已安裝 %u 個處理器。"
 IDS_BIOS_DATE,               "BIOS 日期"
 IDS_BIOS_VERSION,            "BIOS 版本"
 IDS_ROS_DIR,                 "ReactOS 目錄"
