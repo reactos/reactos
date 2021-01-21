@@ -213,7 +213,12 @@ Enable this if the module uses typeid or dynamic_cast. You will probably need to
     endif()
 
     # Activate support for assembly source files
-    enable_language(ASM)
+    if (MSVC)
+        set(CMAKE_ASM_MASM_SOURCE_FILE_EXTENSIONS s;S)
+        enable_language(ASM_MASM)
+    else()
+        enable_language(ASM)
+    endif()
 
     # Activate language support for resource files
     enable_language(RC)
