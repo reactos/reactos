@@ -64,7 +64,6 @@ else()
     set(CMAKE_ASM_MASM_FLAGS_INIT "/Cp")
 endif()
 
-
 set(CMAKE_C_STANDARD_LIBRARIES "" CACHE INTERNAL "")
 
 set(CMAKE_USER_MAKE_RULES_OVERRIDE "${CMAKE_CURRENT_LIST_DIR}/overrides-msvc.cmake")
