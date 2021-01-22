@@ -219,10 +219,6 @@ MmGetPageTableForProcess(PEPROCESS Process, PVOID Address, BOOLEAN Create)
             PMMPDE PdeBase;
             ULONG PdeOffset = MiGetPdeOffset(Address);
 
-            /* Nobody but page fault should ask for creating the PDE,
-             * Which imples that Process is the current one */
-            ASSERT(Create == FALSE);
-
             PdeBase = MmCreateHyperspaceMapping(PTE_TO_PFN(Process->Pcb.DirectoryTableBase[0]));
             if (PdeBase == NULL)
             {
@@ -231,13 +227,32 @@ MmGetPageTableForProcess(PEPROCESS Process, PVOID Address, BOOLEAN Create)
             PointerPde = PdeBase + PdeOffset;
             if (PointerPde->u.Hard.Valid == 0)
             {
-                MmDeleteHyperspaceMapping(PdeBase);
-                return NULL;
+                KAPC_STATE ApcState;
+                NTSTATUS Status;
+
+                if (!Create)
+                {
+                    MmDeleteHyperspaceMapping(PdeBase);
+                    return NULL;
+                }
+
+                KeStackAttachProcess(&Process->Pcb, &ApcState);
+
+                Status = MiDispatchFault(0x1,
+                                     MiAddressToPte(Address),
+                                     MiAddressToPde(Address),
+                                     NULL,
+                                     FALSE,
+                                     Process,
+                                     NULL,
+                                     NULL);
+
+                KeUnstackDetachProcess(&ApcState);
+                if (!NT_SUCCESS(Status))
+                    return NULL;
             }
-            else
-            {
-                Pfn = PointerPde->u.Hard.PageFrameNumber;
-            }
+
+            Pfn = PointerPde->u.Hard.PageFrameNumber;
             MmDeleteHyperspaceMapping(PdeBase);
             Pt = MmCreateHyperspaceMapping(Pfn);
             if (Pt == NULL)
