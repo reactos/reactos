@@ -70,7 +70,7 @@ MmPageOutPhysicalAddress(PFN_NUMBER Page)
     if (entry == NULL)
     {
         MiReleasePfnLock(OldIrql);
-        return STATUS_UNSUCCESSFUL;
+        goto WriteSegment;
     }
 
     Process = entry->Process;
@@ -176,6 +176,12 @@ MmPageOutPhysicalAddress(PFN_NUMBER Page)
                     MmSetDirtyPage(Process, Address);
 
                     MmUnlockAddressSpace(AddressSpace);
+                    if (Address < MmSystemRangeStart)
+                    {
+                        ExReleaseRundownProtection(&Process->RundownProtect);
+                        ObDereferenceObject(Process);
+                    }
+
                     return STATUS_UNSUCCESSFUL;
                 }
             }
@@ -199,6 +205,11 @@ MmPageOutPhysicalAddress(PFN_NUMBER Page)
                     MmSetDirtyPage(Process, Address);
 
                     MmUnlockAddressSpace(AddressSpace);
+                    if (Address < MmSystemRangeStart)
+                    {
+                        ExReleaseRundownProtection(&Process->RundownProtect);
+                        ObDereferenceObject(Process);
+                    }
                     return STATUS_UNSUCCESSFUL;
                 }
             }
@@ -256,12 +267,7 @@ MmPageOutPhysicalAddress(PFN_NUMBER Page)
         KeBugCheck(MEMORY_MANAGEMENT);
     }
 
-    if (Address < MmSystemRangeStart)
-    {
-        ExReleaseRundownProtection(&Process->RundownProtect);
-        ObDereferenceObject(Process);
-    }
-
+WriteSegment:
     /* Now write this page to file, if needed */
     Segment = MmGetSectionAssociation(Page, &SegmentOffset);
     if (Segment)
