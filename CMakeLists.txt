@@ -214,7 +214,6 @@ Enable this if the module uses typeid or dynamic_cast. You will probably need to
 
     # Activate support for assembly source files
     if (MSVC)
-        set(CMAKE_ASM_MASM_SOURCE_FILE_EXTENSIONS s;S)
         enable_language(ASM_MASM)
     else()
         enable_language(ASM)
