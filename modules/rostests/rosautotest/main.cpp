@@ -108,13 +108,13 @@ wmain(int argc, wchar_t* argv[])
 
         /* Show the beginning time */
         ss << "[ROSAUTOTEST] System uptime at start was " << setprecision(2) << fixed;
-        ss << ((float)TestStartTime/1000) << " seconds" << endl;
+        ss << ((float)TestStartTime / 1000) << " seconds" << endl;
 
         /* Show the time now so that we can see how long it took. */
         ss << endl
            << "[ROSAUTOTEST] System uptime at end was " << setprecision(2) << fixed;
         ss << ((float)GetTickCount()/1000) << " seconds" << endl;
-        ss << "Duration was " << (((float)GetTickCount()/1000) - ((float)TestStartTime/1000))/60;
+        ss << "[ROSAUTOTEST] Duration was " << (((float)GetTickCount() / 1000) - ((float)TestStartTime / 1000)) / 60;
         ss << " minutes" << endl;
         StringOut(ss.str());
 
