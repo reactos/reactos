@@ -4,6 +4,15 @@
 [Version]
 Signature = "$Windows NT$"
 
+[System Access]
+MinimumPasswordAge = 0
+MaximumPasswordAge = 42
+MinimumPasswordLength = 0
+PasswordComplexity = 0
+PasswordHistorySize = 0
+RequireLogonToChangePassword = 0
+ClearTextPassword = 0
+
 [Application Log]
 MaximumLogSize = 16384
 AuditLogRetentionPeriod = 0

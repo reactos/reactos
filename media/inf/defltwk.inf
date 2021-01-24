@@ -4,6 +4,15 @@
 [Version]
 Signature = "$Windows NT$"
 
+[System Access]
+MinimumPasswordAge = 0
+MaximumPasswordAge = 42
+MinimumPasswordLength = 0
+PasswordComplexity = 0
+PasswordHistorySize = 0
+RequireLogonToChangePassword = 0
+ClearTextPassword = 0
+
 [Application Log]
 MaximumLogSize = 512
 AuditLogRetentionPeriod = 1
@@ -38,8 +47,8 @@ SeAuditPrivilege = *S-1-5-19, *S-1-5-20
 SeBackupPrivilege = *S-1-5-32-544, *S-1-5-32-551
 SeBatchLogonRight = 
 SeChangeNotifyPrivilege = *S-1-1-0, *S-1-5-32-544, *S-1-5-32-545, *S-1-5-32-551
-SeCreatePagefilePrivilege = *S-1-5-32-544
 SeCreateGlobalPrivilege = *S-1-5-4, *S-1-5-6, *S-1-5-32-544
+SeCreatePagefilePrivilege = *S-1-5-32-544
 SeCreatePermanentPrivilege =
 SeCreateTokenPrivilege =
 SeDebugPrivilege = *S-1-5-32-544
