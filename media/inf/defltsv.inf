@@ -5,6 +5,7 @@
 Signature = "$Windows NT$"
 
 [System Access]
+; Password Options
 MinimumPasswordAge = 0
 MaximumPasswordAge = 42
 MinimumPasswordLength = 0
@@ -12,6 +13,11 @@ PasswordComplexity = 0
 PasswordHistorySize = 0
 RequireLogonToChangePassword = 0
 ClearTextPassword = 0
+
+; Lockout Options
+LockoutBadCount = 0
+;ResetLockoutCount = 30
+;LockoutDuration = 30
 
 [Application Log]
 MaximumLogSize = 16384

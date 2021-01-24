@@ -19,6 +19,7 @@
 #include <debug.h>
 
 #define TICKS_PER_DAY -864000000000LL
+#define TICKS_PER_SECOND -600000000LL
 
 /* FUNCTIONS ****************************************************************/
 
@@ -964,6 +965,145 @@ done:
 
 static
 VOID
+ApplyLockoutSettings(
+    _In_ HINF hSecurityInf,
+    _In_ PWSTR pszSectionName)
+{
+    INFCONTEXT InfContext;
+    DOMAIN_LOCKOUT_INFORMATION LockoutInfo;
+    PPOLICY_ACCOUNT_DOMAIN_INFO OrigInfo = NULL;
+    LSA_OBJECT_ATTRIBUTES ObjectAttributes;
+    LSA_HANDLE PolicyHandle = NULL;
+    SAM_HANDLE ServerHandle = NULL;
+    SAM_HANDLE DomainHandle = NULL;
+    INT nValue;
+    NTSTATUS Status;
+
+    DPRINT("ApplyLockoutSettings()\n");
+
+    memset(&ObjectAttributes, 0, sizeof(LSA_OBJECT_ATTRIBUTES));
+    ObjectAttributes.Length = sizeof(LSA_OBJECT_ATTRIBUTES);
+
+    Status = LsaOpenPolicy(NULL,
+                           &ObjectAttributes,
+                           POLICY_VIEW_LOCAL_INFORMATION | POLICY_TRUST_ADMIN,
+                           &PolicyHandle);
+    if (Status != STATUS_SUCCESS)
+    {
+        DPRINT1("LsaOpenPolicy() failed (Status: 0x%08lx)\n", Status);
+        return;
+    }
+
+    Status = LsaQueryInformationPolicy(PolicyHandle,
+                                       PolicyAccountDomainInformation,
+                                       (PVOID *)&OrigInfo);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("LsaQueryInformationPolicy() failed (Status: 0x%08lx)\n", Status);
+        goto done;
+    }
+
+    Status = SamConnect(NULL,
+                        &ServerHandle,
+                        SAM_SERVER_CONNECT | SAM_SERVER_LOOKUP_DOMAIN,
+                        NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("SamConnect() failed (Status: 0x%08lx)\n", Status);
+        goto done;
+    }
+
+    Status = SamOpenDomain(ServerHandle,
+                           DOMAIN_READ_PASSWORD_PARAMETERS | DOMAIN_WRITE_PASSWORD_PARAMS,
+                           OrigInfo->DomainSid,
+                           &DomainHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("SamOpenDomain() failed (Status: 0x%08lx)\n", Status);
+        goto done;
+    }
+
+    Status = SamQueryInformationDomain(DomainHandle,
+                                       DomainLockoutInformation,
+                                       (PVOID*)&LockoutInfo);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("SamQueryInformationDomain() failed (Status %08lx)\n", Status);
+        goto done;
+    }
+
+    if (SetupFindFirstLineW(hSecurityInf,
+                            pszSectionName,
+                            L"LockoutBadCount",
+                            &InfContext))
+    {
+        if (SetupGetIntField(&InfContext, 1, &nValue))
+        {
+            if (nValue >= 0)
+            {
+                LockoutInfo.LockoutThreshold = nValue;
+            }
+        }
+    }
+
+    if (SetupFindFirstLineW(hSecurityInf,
+                            pszSectionName,
+                            L"ResetLockoutCount",
+                            &InfContext))
+    {
+        if (SetupGetIntField(&InfContext, 1, &nValue))
+        {
+            if (nValue >= 0)
+            {
+                LockoutInfo.LockoutObservationWindow.QuadPart = (LONGLONG)nValue * TICKS_PER_SECOND;
+            }
+        }
+    }
+
+    if (SetupFindFirstLineW(hSecurityInf,
+                            pszSectionName,
+                            L"LockoutDuration",
+                            &InfContext))
+    {
+        if (SetupGetIntField(&InfContext, 1, &nValue))
+        {
+            if (nValue == -1)
+            {
+                LockoutInfo.LockoutDuration.QuadPart = 0x8000000000000000LL;
+            }
+            else if ((nValue >= 0) && (nValue < 100000))
+            {
+                LockoutInfo.LockoutDuration.QuadPart = (LONGLONG)nValue * TICKS_PER_SECOND;
+            }
+        }
+    }
+
+    Status = SamSetInformationDomain(DomainHandle,
+                                     DomainLockoutInformation,
+                                     (PVOID*)&LockoutInfo);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("SamSetInformationDomain() failed (Status %08lx)\n", Status);
+        goto done;
+    }
+
+done:
+    if (DomainHandle != NULL)
+        SamCloseHandle(DomainHandle);
+
+    if (ServerHandle != NULL)
+        SamCloseHandle(ServerHandle);
+
+    if (OrigInfo != NULL)
+        LsaFreeMemory(OrigInfo);
+
+    if (PolicyHandle != NULL)
+        LsaClose(PolicyHandle);
+}
+
+
+static
+VOID
 ApplyAuditEvents(
     _In_ HINF hSecurityInf)
 {
@@ -1129,6 +1269,7 @@ InstallSecurity(VOID)
         ApplyEventlogSettings(hSecurityInf, L"System Log", L"System");
 
         ApplyPasswordSettings(hSecurityInf, L"System Access");
+        ApplyLockoutSettings(hSecurityInf, L"System Access");
 
         ApplyAuditEvents(hSecurityInf);
 
