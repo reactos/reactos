@@ -1,0 +1,29 @@
+name: Cppcheck
+on: [push, pull_request]
+
+jobs:
+  cppcheck:
+    name: Cppcheck
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Install Cppcheck
+        run: |
+          sudo apt update
+          sudo apt install -y cppcheck
+          sudo apt install -y python3 python3-pip zip wget
+          pip3 install pygments
+          wget https://raw.githubusercontent.com/danmar/cppcheck/main/htmlreport/cppcheck-htmlreport
+
+      - name: Code Check
+        run: |
+          cppcheck -q -j2 -itoolchain -idll/3rdparty -imodules/rostests -idll/directx/wine -isdk/lib/3rdparty -ibase/applications/mstsc -ibase/services/nfsd -ibase/setup/reactos/treelist.c -ibase/setup/reactos/treelist.h -idll/3rdparty -idll/3rdparty/libtirpc -idll/np/nfs -idll/opengl/glu32 -idll/opengl/mesa -idll/shellext/shellbtrfs -idrivers/bus/acpi/acpica -idrivers/filesystems/btrfs -idrivers/filesystems/cdfs -idrivers/filesystems/ext2 -idrivers/filesystems/fastfat_new -idrivers/filesystems/ffs -idrivers/filesystems/nfs -idrivers/filesystems/reiserfs -idrivers/network/dd/netkvm -idrivers/storage/class/cdrom_new -idrivers/storage/class/classpnp -idrivers/storage/class/disk_new -idrivers/storage/floppy_new -idrivers/storage/ide/uniata -idrivers/storage/port/buslogic -ihal/halx86/legacy/bus/pci_classes.ids -ihal/halx86/legacy/bus/pci_vendors.ids -imedia/fonts -isdk/lib/adns -isdk/lib/cardlib -isdk/lib/drivers/lwip -isdk/lib/freetype -isdk/lib/fslib/btrfslib -isdk/lib/fslib/ext2lib -isdk/lib/fslib/vfatlib/check -isdk/lib/libmpg123 -isdk/lib/libsamplerate -isdk/lib/libwin-iconv -isdk/lib/libxml2 -isdk/lib/stlport -isdk/lib/zlib -isdk/tools/hhpcomp/chmc -isdk/tools/hhpcomp/lzx_compress -isdk/tools/mkisofs/schilytools --suppress=variableScope --suppress=ConfigurationNotChecked --suppress=noValidConfiguration --suppress=preprocessorErrorDirective --suppress=syntaxError --suppress=unreadVariable --suppress=shadowVariable --suppress=unknownMacro --suppress=clarifyCalculation --suppress=incorrectStringBooleanError --suppress=missingOverride --suppress=cstyleCast --suppress=clarifyCondition --suppress=unusedLabel --suppress=cstyleCast --suppress=noExplicitConstructor --suppress=useInitializationList --suppress=unmatchedSuppression --suppress=constArgument --suppress=constStatement --suppress=unmatchedSuppression --enable=all --force --output-file=cppcheck.xml --xml --xml-version=2 .;
+          python3 cppcheck-htmlreport --source-dir=. --title=project --file=cppcheck.xml --report-dir=report;
+          zip -r cppcheck_report.zip report/
+
+      - name: Store Linux Cppcheck report
+        uses: actions/upload-artifact@v2
+        with:
+          name: cppcheck_report
+          path: cppcheck_report.zip
