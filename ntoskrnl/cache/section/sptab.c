@@ -204,27 +204,30 @@ _MmSetPageEntrySectionSegment(PMM_SECTION_SEGMENT Segment,
             OldEntry,
             Entry);
 
-    if (PFN_FROM_SSE(Entry) == PFN_FROM_SSE(OldEntry)) {
-        /* Nothing */
-    } else if (Entry && !IS_SWAP_FROM_SSE(Entry)) {
-        ASSERT(!OldEntry || IS_SWAP_FROM_SSE(OldEntry));
-        MmSetSectionAssociation(PFN_FROM_SSE(Entry), Segment, Offset);
-    } else if (OldEntry && !IS_SWAP_FROM_SSE(OldEntry)) {
-        ASSERT(!Entry || IS_SWAP_FROM_SSE(Entry));
-        MmDeleteSectionAssociation(PFN_FROM_SSE(OldEntry));
-    } else if (IS_SWAP_FROM_SSE(Entry)) {
-        ASSERT(!IS_SWAP_FROM_SSE(OldEntry) ||
-               SWAPENTRY_FROM_SSE(OldEntry) == MM_WAIT_ENTRY);
-        if (OldEntry && SWAPENTRY_FROM_SSE(OldEntry) != MM_WAIT_ENTRY)
-            MmDeleteSectionAssociation(PFN_FROM_SSE(OldEntry));
-    } else if (IS_SWAP_FROM_SSE(OldEntry)) {
-        ASSERT(!IS_SWAP_FROM_SSE(Entry));
-        if (Entry)
-            MmSetSectionAssociation(PFN_FROM_SSE(OldEntry), Segment, Offset);
-    } else {
-        /* We should not be replacing a page like this */
-        ASSERT(FALSE);
+    if (Entry && !IS_SWAP_FROM_SSE(Entry))
+    {
+        /* We have a valid entry. See if we must do something */
+        if (OldEntry && !IS_SWAP_FROM_SSE(OldEntry))
+        {
+            /* The previous entry was valid. Shall we swap the Rmaps ? */
+            if (PFN_FROM_SSE(Entry) != PFN_FROM_SSE(OldEntry))
+            {
+                MmDeleteSectionAssociation(PFN_FROM_SSE(OldEntry));
+                MmSetSectionAssociation(PFN_FROM_SSE(Entry), Segment, Offset);
+            }
+        }
+        else
+        {
+            /* We're switching to a valid entry from an invalid one. Add the Rmap */
+            MmSetSectionAssociation(PFN_FROM_SSE(Entry), Segment, Offset);
+        }
     }
+    else if (OldEntry && !IS_SWAP_FROM_SSE(OldEntry))
+    {
+        /* We're switching to an invalid entry from a valid one */
+        MmDeleteSectionAssociation(PFN_FROM_SSE(OldEntry));
+    }
+
     PageTable->PageEntries[PageIndex] = Entry;
     return STATUS_SUCCESS;
 }
@@ -332,13 +335,13 @@ MmGetSectionAssociation(PFN_NUMBER Page,
     PMM_SECTION_SEGMENT Segment = NULL;
     PCACHE_SECTION_PAGE_TABLE PageTable;
 
-    PageTable = (PCACHE_SECTION_PAGE_TABLE)MmGetSegmentRmap(Page,
-                                                            &RawOffset);
+    PageTable = MmGetSegmentRmap(Page, &RawOffset);
     if (PageTable)
     {
         Segment = PageTable->Segment;
         Offset->QuadPart = PageTable->FileOffset.QuadPart +
                            ((ULONG64)RawOffset << PAGE_SHIFT);
+        ASSERT(PFN_FROM_SSE(PageTable->PageEntries[RawOffset]) == Page);
     }
 
     return Segment;
