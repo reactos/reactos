@@ -1243,6 +1243,8 @@ MiLoadUserSymbols(IN PCONTROL_AREA ControlArea,
             _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
             {
                 ExFreePoolWithTag(LdrEntry, 'bDmM');
+                ExReleaseResourceLite(&PsLoadedModuleResource);
+                KeLeaveCriticalRegion();
                 _SEH2_YIELD(return);
             }
             _SEH2_END;
