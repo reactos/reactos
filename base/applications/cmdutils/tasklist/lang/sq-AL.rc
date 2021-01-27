@@ -2,10 +2,12 @@ LANGUAGE LANG_ALBANIAN, SUBLANG_NEUTRAL
 
 STRINGTABLE
 BEGIN
-    IDS_USAGE "\
-TASKLIST [/M [module]] [/FI filter] [/NH]\n\n\
-Description:\n\
+    IDS_USAGE "Usage: TASKLIST [/?] [/V]\n"
+    IDS_DESCRIPTION "\n\
     This tool displays a list of currently running processes on\n\
     the machine.\n"
+    IDS_PARAM_TOO_MUCH, "Error: Invalid syntax. '%1' option is not allowed more than '%2!d!' time(s).\n"
+    IDS_INVALID_SYNTAX, "Error: Invalid syntax.\n"
+    IDS_INVALID_OPTION, "Error: Unknown or invalid command line option specified.\n"
 END
 

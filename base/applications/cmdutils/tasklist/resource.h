@@ -1,4 +1,8 @@
 #pragma once
 
-#define IDS_USAGE           1000
+#define IDS_USAGE          1000
+#define IDS_DESCRIPTION    1001
+#define IDS_PARAM_TOO_MUCH 1002
+#define IDS_INVALID_SYNTAX 1003
+#define IDS_INVALID_OPTION 1004
 

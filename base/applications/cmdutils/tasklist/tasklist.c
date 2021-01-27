@@ -15,20 +15,16 @@
 #include "resource.h"
 
 static WCHAR opHelp[] = L"?";
-static WCHAR opModule[] = L"m";
-static WCHAR opFormat[] = L"fo";
-
-static PWCHAR opList[] = {opHelp, opModule, opFormat};
+static WCHAR opVerbose[] = L"v";
+static PWCHAR opList[] = {opHelp, opVerbose};
 
 
 #define OP_PARAM_INVALID -1
 
 #define OP_PARAM_HELP 0
-#define OP_PARAM_MODULE 1
-#define OP_PARAM_FORMAT 2
+#define OP_PARAM_VERBOSE 1
 
-
-static int get_argument_type(WCHAR* argument)
+int GetArgumentType(WCHAR* argument)
 {
     int i;
 
@@ -40,7 +36,7 @@ static int get_argument_type(WCHAR* argument)
 
     for (i = 0; i < _countof(opList); i++)
     {
-        if (!wcscmp(opList[i], argument))
+        if (!wcsicmp(opList[i], argument))
         {
             return i;
         }
@@ -48,30 +44,45 @@ static int get_argument_type(WCHAR* argument)
     return OP_PARAM_INVALID;
 }
 
-static BOOL process_arguments(int argc, WCHAR *argv[])
+BOOL ProcessArguments(int argc, WCHAR *argv[])
 {
     int i;
+    BOOL bHasHelp = FALSE, bHasVerbose = FALSE;
     for (i = 1; i < argc; i++)
     {
-        int argument = get_argument_type(argv[i]);
+        int Argument = GetArgumentType(argv[i]);
 
-        switch (argument)
+        switch (Argument)
         {
         case OP_PARAM_HELP:
         {
+            if (bHasHelp)
+            {
+                // -? already specified
+                ConResMsgPrintf(StdOut, 0, IDS_PARAM_TOO_MUCH, argv[i], 1);
+                ConResMsgPrintf(StdOut, 0, IDS_USAGE);
+                return FALSE;
+            }
+            bHasHelp = TRUE;
             break;
         }
-        case OP_PARAM_MODULE:
+        case OP_PARAM_VERBOSE:
         {
-            break;
-        }
-        case OP_PARAM_FORMAT:
-        {
+            if (bHasVerbose)
+            {
+                // -V already specified
+                ConResMsgPrintf(StdOut, 0, IDS_PARAM_TOO_MUCH, argv[i], 1);
+                ConResMsgPrintf(StdOut, 0, IDS_USAGE);
+                return FALSE;
+            }
+            bHasVerbose = TRUE;
             break;
         }
         case OP_PARAM_INVALID:
         default:
         {
+            ConResMsgPrintf(StdOut, 0, IDS_INVALID_OPTION);
+            ConResMsgPrintf(StdOut, 0, IDS_USAGE);
             return FALSE;
         }
         }
@@ -86,7 +97,7 @@ int wmain(int argc, WCHAR *argv[])
     /* Initialize the Console Standard Streams */
     ConInitStdStreams();
 
-    if(!process_arguments(argc, argv))
+    if(!ProcessArguments(argc, argv))
     {
         return 1;
     }
