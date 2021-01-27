@@ -1241,10 +1241,14 @@ MmFindRegion(
 #define DIRTY_SSE(E)             ((E) | 2)
 #define CLEAN_SSE(E)             ((E) & ~2)
 #define IS_DIRTY_SSE(E)          ((E) & 2)
+#define WRITE_SSE(E)             ((E) | 4)
+#define IS_WRITE_SSE(E)          ((E) & 4)
 #define PAGE_FROM_SSE(E)         ((E) & 0xFFFFF000)
-#define SHARE_COUNT_FROM_SSE(E)  (((E) & 0x00000FFC) >> 2)
-#define MAX_SHARE_COUNT          0x3FF
-#define MAKE_SSE(P, C)           ((ULONG_PTR)((P) | ((C) << 2)))
+#define SHARE_COUNT_FROM_SSE(E)  (((E) & 0x00000FFC) >> 3)
+#define MAX_SHARE_COUNT          0x1FF
+#define MAKE_SSE(P, C)           ((ULONG_PTR)((P) | ((C) << 3)))
+#define BUMPREF_SSE(E)           (PAGE_FROM_SSE(E) | ((SHARE_COUNT_FROM_SSE(E) + 1) << 3) | ((E) & 0x7))
+#define DECREF_SSE(E)            (PAGE_FROM_SSE(E) | ((SHARE_COUNT_FROM_SSE(E) - 1) << 3) | ((E) & 0x7))
 
 VOID
 NTAPI
@@ -1374,6 +1378,21 @@ MmRosFlushVirtualMemory(
     _Inout_ PVOID* Address,
     _Inout_ PSIZE_T Length,
     _Out_ PIO_STATUS_BLOCK Iosb);
+
+NTSTATUS
+NTAPI
+MmFlushSegment(
+    _In_ PSECTION_OBJECT_POINTERS SectionObjectPointer,
+    _In_opt_ PLARGE_INTEGER Offset,
+    _In_ ULONG Length,
+    _In_opt_ PIO_STATUS_BLOCK Iosb);
+
+BOOLEAN
+NTAPI
+MmPurgeSegment(
+    _In_ PSECTION_OBJECT_POINTERS SectionObjectPointer,
+    _In_opt_ PLARGE_INTEGER Offset,
+    _In_ ULONG Length);
 
 BOOLEAN
 NTAPI

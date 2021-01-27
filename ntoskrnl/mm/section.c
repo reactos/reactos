@@ -60,6 +60,8 @@
 
 extern MMSESSION MmSession;
 
+static LARGE_INTEGER TinyTime = {{-1L, -1L}};
+
 #ifndef NEWCC
 KEVENT MmWaitPageEvent;
 
@@ -82,6 +84,37 @@ _MmUnlockSectionSegment(PMM_SECTION_SEGMENT Segment, const char *file, int line)
     //DPRINT("MmUnlockSectionSegment(%p,%s:%d)\n", Segment, file, line);
 }
 #endif
+
+static
+PMM_SECTION_SEGMENT
+MiGrabDataSection(PSECTION_OBJECT_POINTERS SectionObjectPointer)
+{
+    KIRQL OldIrql = MiAcquirePfnLock();
+    PMM_SECTION_SEGMENT Segment = NULL;
+
+    while (TRUE)
+    {
+        Segment = SectionObjectPointer->DataSectionObject;
+        if (!Segment)
+            break;
+
+        if (Segment->SegFlags & (MM_SEGMENT_INCREATE | MM_SEGMENT_INDELETE))
+        {
+            MiReleasePfnLock(OldIrql);
+            KeDelayExecutionThread(KernelMode, FALSE, &TinyTime);
+            OldIrql = MiAcquirePfnLock();
+            continue;
+        }
+
+        ASSERT(Segment->SegFlags & MM_DATAFILE_SEGMENT);
+        InterlockedIncrementUL(&Segment->RefCount);
+        break;
+    }
+
+    MiReleasePfnLock(OldIrql);
+
+    return Segment;
+}
 
 /* Somewhat grotesque, but eh... */
 PMM_IMAGE_SECTION_OBJECT ImageSectionObjectFromSegment(PMM_SECTION_SEGMENT Segment)
@@ -1028,7 +1061,6 @@ MmSharePageEntrySectionSegment(PMM_SECTION_SEGMENT Segment,
                                PLARGE_INTEGER Offset)
 {
     ULONG_PTR Entry;
-    BOOLEAN Dirty;
 
     Entry = MmGetPageEntrySectionSegment(Segment, Offset);
     if (Entry == 0)
@@ -1045,11 +1077,7 @@ MmSharePageEntrySectionSegment(PMM_SECTION_SEGMENT Segment,
     {
         KeBugCheck(MEMORY_MANAGEMENT);
     }
-    Dirty = IS_DIRTY_SSE(Entry);
-    Entry = MAKE_SSE(PAGE_FROM_SSE(Entry), SHARE_COUNT_FROM_SSE(Entry) + 1);
-    if (Dirty)
-        Entry = DIRTY_SSE(Entry);
-    MmSetPageEntrySectionSegment(Segment, Offset, Entry);
+    MmSetPageEntrySectionSegment(Segment, Offset, BUMPREF_SSE(Entry));
 }
 
 BOOLEAN
@@ -1080,8 +1108,7 @@ MmUnsharePageEntrySectionSegment(PMEMORY_AREA MemoryArea,
     {
         KeBugCheck(MEMORY_MANAGEMENT);
     }
-    Dirty = Dirty || IS_DIRTY_SSE(Entry);
-    Entry = MAKE_SSE(PAGE_FROM_SSE(Entry), SHARE_COUNT_FROM_SSE(Entry) - 1);
+    Entry = DECREF_SSE(Entry);
     if (Dirty) Entry = DIRTY_SSE(Entry);
 
     if (SHARE_COUNT_FROM_SSE(Entry) > 0)
@@ -1094,7 +1121,7 @@ MmUnsharePageEntrySectionSegment(PMEMORY_AREA MemoryArea,
         return FALSE;
     }
 
-    if (Dirty && (MemoryArea->VadNode.u.VadFlags.VadType != VadImageMap))
+    if (IS_DIRTY_SSE(Entry) && (MemoryArea->VadNode.u.VadFlags.VadType != VadImageMap))
     {
         ASSERT(!Segment->WriteCopy);
         ASSERT(MmGetSavedSwapEntryPage(Page) == 0);
@@ -1105,10 +1132,10 @@ MmUnsharePageEntrySectionSegment(PMEMORY_AREA MemoryArea,
     }
 
     /* Only valid case for shared dirty pages is shared image section */
-    ASSERT(!Dirty || (Segment->Image.Characteristics & IMAGE_SCN_MEM_SHARED));
+    ASSERT(!IS_DIRTY_SSE(Entry) || (Segment->Image.Characteristics & IMAGE_SCN_MEM_SHARED));
 
     SwapEntry = MmGetSavedSwapEntryPage(Page);
-    if (Dirty && !SwapEntry)
+    if (IS_DIRTY_SSE(Entry) && !SwapEntry)
     {
         SwapEntry = MmAllocSwapPage();
         if (!SwapEntry)
@@ -1119,7 +1146,7 @@ MmUnsharePageEntrySectionSegment(PMEMORY_AREA MemoryArea,
         }
     }
 
-    if (Dirty)
+    if (IS_DIRTY_SSE(Entry))
     {
         NTSTATUS Status = MmWriteToSwapPage(SwapEntry, Page);
         if (!NT_SUCCESS(Status))
@@ -4703,6 +4730,185 @@ MmRosFlushVirtualMemory(
     return STATUS_SUCCESS;
 }
 
+/* Like CcPurgeCache but for the in-memory segment */
+BOOLEAN
+NTAPI
+MmPurgeSegment(
+    _In_ PSECTION_OBJECT_POINTERS SectionObjectPointer,
+    _In_opt_ PLARGE_INTEGER Offset,
+    _In_ ULONG Length)
+{
+    LARGE_INTEGER PurgeStart, PurgeEnd;
+    PMM_SECTION_SEGMENT Segment;
+
+    Segment = MiGrabDataSection(SectionObjectPointer);
+    if (!Segment)
+    {
+        /* Nothing to purge */
+        return STATUS_SUCCESS;
+    }
+
+    PurgeStart.QuadPart = Offset ? Offset->QuadPart : 0LL;
+    if (Length && Offset)
+    {
+        if (!NT_SUCCESS(RtlLongLongAdd(PurgeStart.QuadPart, Length, &PurgeEnd.QuadPart)))
+            return FALSE;
+    }
+
+    MmLockSectionSegment(Segment);
+
+    if (!Length || !Offset)
+    {
+        /* We must calculate the length for ourselves */
+        /* FIXME: All of this is suboptimal */
+        ULONG ElemCount = RtlNumberGenericTableElements(&Segment->PageTable);
+        /* No page. Nothing to purge */
+        if (!ElemCount)
+        {
+            MmUnlockSectionSegment(Segment);
+            MmDereferenceSegment(Segment);
+            return TRUE;
+        }
+
+        PCACHE_SECTION_PAGE_TABLE PageTable = RtlGetElementGenericTable(&Segment->PageTable, ElemCount - 1);
+        PurgeEnd.QuadPart = PageTable->FileOffset.QuadPart + _countof(PageTable->PageEntries) * PAGE_SIZE;
+    }
+
+    while (PurgeStart.QuadPart < PurgeEnd.QuadPart)
+    {
+        ULONG_PTR Entry = MmGetPageEntrySectionSegment(Segment, &PurgeStart);
+
+        if (Entry == 0)
+        {
+            PurgeStart.QuadPart += PAGE_SIZE;
+            continue;
+        }
+
+        if (IS_SWAP_FROM_SSE(Entry))
+        {
+            ASSERT(SWAPENTRY_FROM_SSE(Entry) == MM_WAIT_ENTRY);
+            /* The page is currently being read. Meaning someone will need it soon. Bad luck */
+            MmUnlockSectionSegment(Segment);
+            MmDereferenceSegment(Segment);
+            return FALSE;
+        }
+
+        if (IS_WRITE_SSE(Entry))
+        {
+            /* We're trying to purge an entry which is being written. Restart this loop iteration */
+            MmUnlockSectionSegment(Segment);
+            KeDelayExecutionThread(KernelMode, FALSE, &TinyTime);
+            MmLockSectionSegment(Segment);
+            continue;
+        }
+
+        if (SHARE_COUNT_FROM_SSE(Entry) > 0)
+        {
+            /* This page is currently in use. Bad luck */
+            MmUnlockSectionSegment(Segment);
+            MmDereferenceSegment(Segment);
+            return FALSE;
+        }
+
+        /* We can let this page go */
+        MmSetPageEntrySectionSegment(Segment, &PurgeStart, 0);
+        MmReleasePageMemoryConsumer(MC_USER, PFN_FROM_SSE(Entry));
+
+        PurgeStart.QuadPart += PAGE_SIZE;
+    }
+
+    /* This page is currently in use. Bad luck */
+    MmUnlockSectionSegment(Segment);
+    MmDereferenceSegment(Segment);
+    return TRUE;
+}
+
+NTSTATUS
+NTAPI
+MmFlushSegment(
+    _In_ PSECTION_OBJECT_POINTERS SectionObjectPointer,
+    _In_opt_ PLARGE_INTEGER Offset,
+    _In_ ULONG Length,
+    _In_opt_ PIO_STATUS_BLOCK Iosb)
+{
+    LARGE_INTEGER FlushStart, FlushEnd;
+    NTSTATUS Status;
+
+    if (Offset)
+    {
+        FlushStart = *Offset;
+        Status = RtlLongLongAdd(FlushStart.QuadPart, Length, &FlushEnd.QuadPart);
+        if (!NT_SUCCESS(Status))
+            return Status;
+    }
+
+    if (Iosb)
+        Iosb->Information = 0;
+
+    PMM_SECTION_SEGMENT Segment = MiGrabDataSection(SectionObjectPointer);
+    if (!Segment)
+    {
+        /* Nothing to flush */
+        if (Iosb)
+            Iosb->Status = STATUS_SUCCESS;
+        return STATUS_SUCCESS;
+    }
+
+    ASSERT(*Segment->Flags & MM_DATAFILE_SEGMENT);
+
+    MmLockSectionSegment(Segment);
+
+    if (!Offset)
+    {
+        FlushStart.QuadPart = 0;
+
+        /* FIXME: All of this is suboptimal */
+        ULONG ElemCount = RtlNumberGenericTableElements(&Segment->PageTable);
+        /* No page. Nothing to flush */
+        if (!ElemCount)
+        {
+            MmUnlockSectionSegment(Segment);
+            MmDereferenceSegment(Segment);
+            if (Iosb)
+            {
+                Iosb->Status = STATUS_SUCCESS;
+                Iosb->Information = 0;
+            }
+            return STATUS_SUCCESS;
+        }
+
+        PCACHE_SECTION_PAGE_TABLE PageTable = RtlGetElementGenericTable(&Segment->PageTable, ElemCount - 1);
+        FlushEnd.QuadPart = PageTable->FileOffset.QuadPart + _countof(PageTable->PageEntries) * PAGE_SIZE;
+    }
+
+    FlushStart.QuadPart >>= PAGE_SHIFT;
+    FlushStart.QuadPart <<= PAGE_SHIFT;
+
+    while (FlushStart.QuadPart < FlushEnd.QuadPart)
+    {
+        ULONG_PTR Entry = MmGetPageEntrySectionSegment(Segment, &FlushStart);
+
+        if (IS_DIRTY_SSE(Entry))
+        {
+            MmCheckDirtySegment(Segment, &FlushStart, FALSE, FALSE);
+
+            if (Iosb)
+                Iosb->Information += PAGE_SIZE;
+        }
+
+        FlushStart.QuadPart += PAGE_SIZE;
+    }
+
+    MmUnlockSectionSegment(Segment);
+
+    MmDereferenceSegment(Segment);
+
+    if (Iosb)
+        Iosb->Status = STATUS_SUCCESS;
+
+    return STATUS_SUCCESS;
+}
+
 _Requires_exclusive_lock_held_(Segment->Lock)
 BOOLEAN
 NTAPI
@@ -4717,6 +4923,8 @@ MmCheckDirtySegment(
     PFN_NUMBER Page;
 
     ASSERT(Segment->Locked);
+
+    ASSERT((Offset->QuadPart % PAGE_SIZE) == 0);
 
     DPRINT("Checking segment for file %wZ at offset 0x%I64X.\n", &Segment->FileObject->FileName, Offset->QuadPart);
 
@@ -4733,9 +4941,10 @@ MmCheckDirtySegment(
         ASSERT(!Segment->WriteCopy);
         ASSERT(Segment->SegFlags & MM_DATAFILE_SEGMENT);
 
-        /* Insert the cleaned entry back. Keep one ref to the page so nobody pages it out again behind us */
-        MmSetPageEntrySectionSegment(Segment, Offset,
-                MAKE_SSE(Page << PAGE_SHIFT, SHARE_COUNT_FROM_SSE(Entry) + 1));
+        /* Insert the cleaned entry back. Mark it as write in progress, and clear the dirty bit. */
+        Entry = MAKE_SSE(PAGE_FROM_SSE(Entry), SHARE_COUNT_FROM_SSE(Entry) + 1);
+        Entry = WRITE_SSE(Entry);
+        MmSetPageEntrySectionSegment(Segment, Offset, Entry);
 
         /* Tell the other users that we are clean again */
         MmSetCleanAllRmaps(Page);
@@ -4772,7 +4981,7 @@ MmCheckDirtySegment(
             DirtyAgain = IS_DIRTY_SSE(Entry) || MmIsDirtyPageRmap(Page);
         }
 
-        /* Drop the reference we got */
+        /* Drop the reference we got, deleting the write altogether. */
         Entry = MAKE_SSE(Page << PAGE_SHIFT, SHARE_COUNT_FROM_SSE(Entry) - 1);
         if (DirtyAgain)
         {
