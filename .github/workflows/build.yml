@@ -222,3 +222,30 @@ jobs:
       with:
         name: reactos-msvc-amd64-${{github.sha}}
         path: build/livecd.iso
+
+  build-msbuild-i386:
+    name: MSBuild (i386)
+    runs-on: windows-latest
+    steps:
+    - name: Install Flex and Bison
+      run: |
+        curl -O https://svn.reactos.org/storage/vperevertkin/flexbison.7z
+        7z x flexbison.7z -O${{github.workspace}}\bin
+        echo "${{github.workspace}}\bin" >> $GITHUB_PATH
+        echo "BISON_PKGDATADIR=${{github.workspace}}\bin\share\bison" >> $GITHUB_ENV
+        echo "M4=${{github.workspace}}\bin\m4.exe" >> $GITHUB_ENV
+    - name: Add CL to PATH
+      uses: ilammy/msvc-dev-cmd@v1
+      with:
+        arch: amd64_x86
+    - uses: actions/checkout@v2
+      with:
+        path: src
+    - name: Configure
+      run: |
+        mkdir build
+        cd build
+        cmake -G "Visual Studio 16 2019" -A Win32 -DCMAKE_TOOLCHAIN_FILE:FILEPATH=toolchain-msvc.cmake -DARCH:STRING=i386 ${{github.workspace}}\src
+    - name: Build RAPPS
+      working-directory: ${{github.workspace}}\build
+      run: cmake --build . --target rapps
