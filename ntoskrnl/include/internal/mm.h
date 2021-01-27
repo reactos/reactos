@@ -357,6 +357,8 @@ typedef struct _MMPFN
 
     // HACK until WS lists are supported
     MMWSLE Wsle;
+    struct _MMPFN* NextLRU;
+    struct _MMPFN* PreviousLRU;
 } MMPFN, *PMMPFN;
 
 extern PMMPFN MmPfnDatabase;
@@ -877,6 +879,11 @@ NTSTATUS
 NTAPI
 MmPageOutPhysicalAddress(PFN_NUMBER Page);
 
+PMM_SECTION_SEGMENT
+NTAPI
+MmGetSectionAssociation(PFN_NUMBER Page,
+                        PLARGE_INTEGER Offset);
+
 /* freelist.c **********************************************************/
 
 FORCEINLINE
@@ -950,19 +957,11 @@ MiGetPfnEntryIndex(IN PMMPFN Pfn1)
 
 PFN_NUMBER
 NTAPI
-MmGetLRUNextUserPage(PFN_NUMBER PreviousPage);
+MmGetLRUNextUserPage(PFN_NUMBER PreviousPage, BOOLEAN MoveToLast);
 
 PFN_NUMBER
 NTAPI
 MmGetLRUFirstUserPage(VOID);
-
-VOID
-NTAPI
-MmInsertLRULastUserPage(PFN_NUMBER Page);
-
-VOID
-NTAPI
-MmRemoveLRUUserPage(PFN_NUMBER Page);
 
 VOID
 NTAPI
@@ -1232,6 +1231,37 @@ MmFindRegion(
 
 /* section.c *****************************************************************/
 
+#define PFN_FROM_SSE(E)          ((PFN_NUMBER)((E) >> PAGE_SHIFT))
+#define IS_SWAP_FROM_SSE(E)      ((E) & 0x00000001)
+#define MM_IS_WAIT_PTE(E)        \
+    (IS_SWAP_FROM_SSE(E) && SWAPENTRY_FROM_SSE(E) == MM_WAIT_ENTRY)
+#define MAKE_PFN_SSE(P)          ((ULONG_PTR)((P) << PAGE_SHIFT))
+#define SWAPENTRY_FROM_SSE(E)    ((E) >> 1)
+#define MAKE_SWAP_SSE(S)         (((ULONG_PTR)(S) << 1) | 0x1)
+#define DIRTY_SSE(E)             ((E) | 2)
+#define CLEAN_SSE(E)             ((E) & ~2)
+#define IS_DIRTY_SSE(E)          ((E) & 2)
+#define PAGE_FROM_SSE(E)         ((E) & 0xFFFFF000)
+#define SHARE_COUNT_FROM_SSE(E)  (((E) & 0x00000FFC) >> 2)
+#define MAX_SHARE_COUNT          0x3FF
+#define MAKE_SSE(P, C)           ((ULONG_PTR)((P) | ((C) << 2)))
+
+VOID
+NTAPI
+_MmLockSectionSegment(PMM_SECTION_SEGMENT Segment,
+                      const char *file,
+                      int line);
+
+#define MmLockSectionSegment(x) _MmLockSectionSegment(x,__FILE__,__LINE__)
+
+VOID
+NTAPI
+_MmUnlockSectionSegment(PMM_SECTION_SEGMENT Segment,
+                        const char *file,
+                        int line);
+
+#define MmUnlockSectionSegment(x) _MmUnlockSectionSegment(x,__FILE__,__LINE__)
+
 VOID
 NTAPI
 MmGetImageInformation(
@@ -1371,6 +1401,27 @@ NTAPI
 MmExtendSection(
     _In_ PVOID Section,
     _Inout_ PLARGE_INTEGER NewSize);
+
+/* sptab.c *******************************************************************/
+
+NTSTATUS
+NTAPI
+_MmSetPageEntrySectionSegment(PMM_SECTION_SEGMENT Segment,
+                              PLARGE_INTEGER Offset,
+                              ULONG_PTR Entry,
+                              const char *file,
+                              int line);
+
+ULONG_PTR
+NTAPI
+_MmGetPageEntrySectionSegment(PMM_SECTION_SEGMENT Segment,
+                              PLARGE_INTEGER Offset,
+                              const char *file,
+                              int line);
+
+#define MmSetPageEntrySectionSegment(S,O,E) _MmSetPageEntrySectionSegment(S,O,E,__FILE__,__LINE__)
+
+#define MmGetPageEntrySectionSegment(S,O) _MmGetPageEntrySectionSegment(S,O,__FILE__,__LINE__)
 
 /* sysldr.c ******************************************************************/
 

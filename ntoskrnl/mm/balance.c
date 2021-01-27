@@ -80,11 +80,7 @@ MmReleasePageMemoryConsumer(ULONG Consumer, PFN_NUMBER Page)
         KeBugCheck(MEMORY_MANAGEMENT);
     }
 
-    if (MmGetReferenceCountPage(Page) == 1)
-    {
-        if(Consumer == MC_USER) MmRemoveLRUUserPage(Page);
-        (void)InterlockedDecrementUL(&MiMemoryConsumers[Consumer].PagesUsed);
-    }
+    (void)InterlockedDecrementUL(&MiMemoryConsumers[Consumer].PagesUsed);
 
     MmDereferencePage(Page);
 
@@ -142,7 +138,6 @@ NTSTATUS
 MmTrimUserMemory(ULONG Target, ULONG Priority, PULONG NrFreedPages)
 {
     PFN_NUMBER CurrentPage;
-    PFN_NUMBER NextPage;
     NTSTATUS Status;
 
     (*NrFreedPages) = 0;
@@ -158,13 +153,14 @@ MmTrimUserMemory(ULONG Target, ULONG Priority, PULONG NrFreedPages)
             (*NrFreedPages)++;
         }
 
-        NextPage = MmGetLRUNextUserPage(CurrentPage);
-        if (NextPage <= CurrentPage)
-        {
-            /* We wrapped around, so we're done */
-            break;
-        }
-        CurrentPage = NextPage;
+        CurrentPage = MmGetLRUNextUserPage(CurrentPage, TRUE);
+    }
+
+    if (CurrentPage)
+    {
+        KIRQL OldIrql = MiAcquirePfnLock();
+        MmDereferencePage(CurrentPage);
+        MiReleasePfnLock(OldIrql);
     }
 
     return STATUS_SUCCESS;
@@ -209,14 +205,13 @@ MmRequestPageMemoryConsumer(ULONG Consumer, BOOLEAN CanWait,
     /*
      * Allocate always memory for the non paged pool and for the pager thread.
      */
-    if ((Consumer == MC_SYSTEM) /* || MiIsBalancerThread() */)
+    if (Consumer == MC_SYSTEM)
     {
         Page = MmAllocPage(Consumer);
         if (Page == 0)
         {
             KeBugCheck(NO_PAGES_AVAILABLE);
         }
-        if (Consumer == MC_USER) MmInsertLRULastUserPage(Page);
         *AllocatedPage = Page;
         if (MmAvailablePages < MiMinimumAvailablePages)
             MmRebalanceMemoryConsumers();
@@ -257,7 +252,6 @@ MmRequestPageMemoryConsumer(ULONG Consumer, BOOLEAN CanWait,
             KeBugCheck(NO_PAGES_AVAILABLE);
         }
 
-        if(Consumer == MC_USER) MmInsertLRULastUserPage(Page);
         *AllocatedPage = Page;
 
         if (MmAvailablePages < MiMinimumAvailablePages)
@@ -276,7 +270,6 @@ MmRequestPageMemoryConsumer(ULONG Consumer, BOOLEAN CanWait,
     {
         KeBugCheck(NO_PAGES_AVAILABLE);
     }
-    if(Consumer == MC_USER) MmInsertLRULastUserPage(Page);
     *AllocatedPage = Page;
 
     if (MmAvailablePages < MiMinimumAvailablePages)
