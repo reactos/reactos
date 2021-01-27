@@ -218,14 +218,35 @@ _MmSetPageEntrySectionSegment(PMM_SECTION_SEGMENT Segment,
         }
         else
         {
-            /* We're switching to a valid entry from an invalid one. Add the Rmap */
+            /*
+             * We're switching to a valid entry from an invalid one.
+             * Add the Rmap and take a ref on the segment.
+             */
             MmSetSectionAssociation(PFN_FROM_SSE(Entry), Segment, Offset);
+            InterlockedIncrement64(Segment->ReferenceCount);
+
+            if ((Offset->QuadPart > (Segment->LastPage << PAGE_SHIFT)) || !Segment->LastPage)
+                Segment->LastPage = (Offset->QuadPart >> PAGE_SHIFT) + 1;
         }
     }
     else if (OldEntry && !IS_SWAP_FROM_SSE(OldEntry))
     {
         /* We're switching to an invalid entry from a valid one */
         MmDeleteSectionAssociation(PFN_FROM_SSE(OldEntry));
+        MmDereferenceSegment(Segment);
+
+        if (Offset->QuadPart == ((Segment->LastPage - 1ULL) << PAGE_SHIFT))
+        {
+            /* We are unsetting the last page */
+            while (--Segment->LastPage)
+            {
+                LARGE_INTEGER CheckOffset;
+                CheckOffset.QuadPart = (Segment->LastPage - 1) << PAGE_SHIFT;
+                ULONG_PTR Entry = MmGetPageEntrySectionSegment(Segment, &CheckOffset);
+                if ((Entry != 0) && !IS_SWAP_FROM_SSE(Entry))
+                    break;
+            }
+        }
     }
 
     PageTable->PageEntries[PageIndex] = Entry;
