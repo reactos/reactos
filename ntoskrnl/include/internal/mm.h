@@ -168,7 +168,7 @@ typedef struct _MM_SECTION_SEGMENT
     FAST_MUTEX Lock;		/* lock which protects the page directory */
     LARGE_INTEGER RawLength;		/* length of the segment which is part of the mapped file */
     LARGE_INTEGER Length;			/* absolute length of the segment */
-    PULONG ReferenceCount;
+    PLONG64 ReferenceCount;
 	ULONG SectionCount;
     ULONG Protection;
     PULONG Flags;
@@ -182,8 +182,10 @@ typedef struct _MM_SECTION_SEGMENT
 		ULONG Characteristics;
 	} Image;
 
-	ULONG RefCount;
+	LONG64 RefCount;
 	ULONG SegFlags;
+
+    ULONGLONG LastPage;
 
 	RTL_GENERIC_TABLE PageTable;
 } MM_SECTION_SEGMENT, *PMM_SECTION_SEGMENT;
@@ -192,7 +194,7 @@ typedef struct _MM_IMAGE_SECTION_OBJECT
 {
     PFILE_OBJECT FileObject;
 
-    ULONG RefCount;
+    LONG64 RefCount;
     ULONG SegFlags;
 
     SECTION_IMAGE_INFORMATION ImageInformation;

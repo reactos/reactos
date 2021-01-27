@@ -525,7 +525,7 @@ MmGetSegmentRmap(PFN_NUMBER Page, PULONG RawOffset)
                 return NULL;
             }
 
-            InterlockedIncrementUL(Result->Segment->ReferenceCount);
+            InterlockedIncrement64(Result->Segment->ReferenceCount);
             MiReleasePfnLock(OldIrql);
             return Result;
         }
