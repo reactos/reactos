@@ -109,9 +109,9 @@ jobs:
       run: |
         curl -O https://svn.reactos.org/storage/vperevertkin/flexbison.7z
         7z x flexbison.7z -O${{github.workspace}}\bin
-        echo "${{github.workspace}}\bin" >> $GITHUB_PATH
-        echo "BISON_PKGDATADIR=${{github.workspace}}\bin\share\bison" >> $GITHUB_ENV
-        echo "M4=${{github.workspace}}\bin\m4.exe" >> $GITHUB_ENV
+        echo "${{github.workspace}}\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+        echo "BISON_PKGDATADIR=${{github.workspace}}\bin\share\bison" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+        echo "M4=${{github.workspace}}\bin\m4.exe" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
     - name: Add CL to PATH
       uses: ilammy/msvc-dev-cmd@v1
       with:
@@ -144,9 +144,9 @@ jobs:
       run: |
         curl -O https://svn.reactos.org/storage/vperevertkin/flexbison.7z
         7z x flexbison.7z -O${{github.workspace}}\bin
-        echo "${{github.workspace}}\bin" >> $GITHUB_PATH
-        echo "BISON_PKGDATADIR=${{github.workspace}}\bin\share\bison" >> $GITHUB_ENV
-        echo "M4=${{github.workspace}}\bin\m4.exe" >> $GITHUB_ENV
+        echo "${{github.workspace}}\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+        echo "BISON_PKGDATADIR=${{github.workspace}}\bin\share\bison" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+        echo "M4=${{github.workspace}}\bin\m4.exe" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
     - name: Add CL to PATH
       uses: ilammy/msvc-dev-cmd@v1
       with:
@@ -188,9 +188,9 @@ jobs:
       run: |
         curl -O https://svn.reactos.org/storage/vperevertkin/flexbison.7z
         7z x flexbison.7z -O${{github.workspace}}\bin
-        echo "${{github.workspace}}\bin" >> $GITHUB_PATH
-        echo "BISON_PKGDATADIR=${{github.workspace}}\bin\share\bison" >> $GITHUB_ENV
-        echo "M4=${{github.workspace}}\bin\m4.exe" >> $GITHUB_ENV
+        echo "${{github.workspace}}\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+        echo "BISON_PKGDATADIR=${{github.workspace}}\bin\share\bison" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+        echo "M4=${{github.workspace}}\bin\m4.exe" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
     - name: Add CL to PATH
       uses: ilammy/msvc-dev-cmd@v1
       with:
