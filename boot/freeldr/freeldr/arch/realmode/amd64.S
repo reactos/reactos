@@ -67,7 +67,7 @@ Msg_LongModeSupported:
     call writestr
 
     /* Load the GDT */
-    lgdt fword ptr [gdtptr]
+    lgdt cs:[gdtptr]
 
     /* Build the startup page tables */
     call BuildPageTables
@@ -265,7 +265,7 @@ RealModeEntryPoint:
     mov cr0, eax
 
     /* Clear prefetch queue & correct CS */
-    ljmp16 0, offset InRealMode
+    ljmp16 0, InRealMode
 
 InRealMode:
 
