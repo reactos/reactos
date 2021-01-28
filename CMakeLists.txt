@@ -74,7 +74,8 @@ if(MSVC_IDE)
 endif()
 
 # Bison and Flex support
-# include(sdk/cmake/bison-flex.cmake)
+find_package(BISON REQUIRED)
+find_package(FLEX REQUIRED)
 
 if(NOT CMAKE_CROSSCOMPILING)
     set(TOOLS_FOLDER ${CMAKE_CURRENT_BINARY_DIR})
