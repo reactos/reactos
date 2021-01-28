@@ -301,7 +301,7 @@ CcpPinData(
         {
             CCTRACE(CC_API_DEBUG, "FileObject=%p FileOffset=%p Length=%lu Flags=0x%lx -> FALSE\n",
                             SharedCacheMap->FileObject, FileOffset, Length, Flags);
-            CcUnpinData(NewBcb);
+            CcUnpinData(&NewBcb->PFCB);
             return FALSE;
         }
     }
