@@ -1091,8 +1091,7 @@ MmUnsharePageEntrySectionSegment(PMEMORY_AREA MemoryArea,
 {
     ULONG_PTR Entry = InEntry ? *InEntry : MmGetPageEntrySectionSegment(Segment, Offset);
     PFN_NUMBER Page = PFN_FROM_SSE(Entry);
-    ULONG_PTR NewEntry = 0;
-    SWAPENTRY SwapEntry;
+    BOOLEAN IsDataMap = BooleanFlagOn(*Segment->Flags, MM_DATAFILE_SEGMENT);
 
     if (Entry == 0)
     {
@@ -1111,64 +1110,53 @@ MmUnsharePageEntrySectionSegment(PMEMORY_AREA MemoryArea,
     Entry = DECREF_SSE(Entry);
     if (Dirty) Entry = DIRTY_SSE(Entry);
 
-    if (SHARE_COUNT_FROM_SSE(Entry) > 0)
+    /* If we are paging-out, pruning the page for real will be taken care of in MmCheckDirtySegment */
+    if ((SHARE_COUNT_FROM_SSE(Entry) > 0) || PageOut)
     {
         /* Update the page mapping in the segment and we're done */
-        if (InEntry)
-            *InEntry = Entry;
-        else
-            MmSetPageEntrySectionSegment(Segment, Offset, Entry);
-        return FALSE;
-    }
-
-    if (IS_DIRTY_SSE(Entry) && (MemoryArea->VadNode.u.VadFlags.VadType != VadImageMap))
-    {
-        ASSERT(!Segment->WriteCopy);
-        ASSERT(MmGetSavedSwapEntryPage(Page) == 0);
-
-        /* The entry must be written back to the disk, so let this in the segment, the page-out thread will take care of this */
         MmSetPageEntrySectionSegment(Segment, Offset, Entry);
         return FALSE;
     }
 
-    /* Only valid case for shared dirty pages is shared image section */
-    ASSERT(!IS_DIRTY_SSE(Entry) || (Segment->Image.Characteristics & IMAGE_SCN_MEM_SHARED));
+    /* We are pruning the last mapping on this page. See if we can keep it a bit more. */
+    ASSERT(!PageOut);
 
-    SwapEntry = MmGetSavedSwapEntryPage(Page);
-    if (IS_DIRTY_SSE(Entry) && !SwapEntry)
+    if (IsDataMap)
     {
-        SwapEntry = MmAllocSwapPage();
-        if (!SwapEntry)
-        {
-            /* We can't have a swap entry for this page. Let the segment keep it */
-            MmSetPageEntrySectionSegment(Segment, Offset, Entry);
-            return FALSE;
-        }
+        /* We can always keep memory in for data maps */
+        MmSetPageEntrySectionSegment(Segment, Offset, Entry);
+        return FALSE;
     }
 
-    if (IS_DIRTY_SSE(Entry))
+    if (!BooleanFlagOn(Segment->Image.Characteristics, IMAGE_SCN_MEM_SHARED))
     {
-        NTSTATUS Status = MmWriteToSwapPage(SwapEntry, Page);
-        if (!NT_SUCCESS(Status))
-        {
-            /* We failed. Clean up */
-            MmSetSavedSwapEntryPage(Page, 0);
-            MmFreeSwapPage(SwapEntry);
-            MmSetPageEntrySectionSegment(Segment, Offset, Entry);
-            return FALSE;
-        }
+        /* So this must have been a read-only page. Keep it ! */
+        ASSERT(Segment->WriteCopy);
+        ASSERT(!IS_DIRTY_SSE(Entry));
+        ASSERT(MmGetSavedSwapEntryPage(Page) == 0);
+        MmSetPageEntrySectionSegment(Segment, Offset, Entry);
+        return FALSE;
     }
 
+    /*
+     * So this is a page for a shared section of a DLL.
+     * We can keep it if it is not dirty.
+     */
+    SWAPENTRY SwapEntry = MmGetSavedSwapEntryPage(Page);
+    if ((SwapEntry == 0) && !IS_DIRTY_SSE(Entry))
+    {
+        MmSetPageEntrySectionSegment(Segment, Offset, Entry);
+        return FALSE;
+    }
+
+    /* No more processes are referencing this shared dirty page. Ditch it. */
     if (SwapEntry)
     {
-        NewEntry = MAKE_SWAP_SSE(SwapEntry);
         MmSetSavedSwapEntryPage(Page, 0);
+        MmFreeSwapPage(SwapEntry);
     }
-
-    /* We can let this go */
-    MmSetPageEntrySectionSegment(Segment, Offset, NewEntry);
+    MmSetPageEntrySectionSegment(Segment, Offset, 0);
     MmReleasePageMemoryConsumer(MC_USER, Page);
-    MiSetPageEvent(NULL, NULL);
     return TRUE;
 }
 
@@ -4849,9 +4837,12 @@ MmCheckDirtySegment(
     {
         BOOLEAN DirtyAgain;
 
-        /* We got a dirty entry. Is this segment copy on write */
+        /*
+         * We got a dirty entry. This path is for the shared data,
+         * be-it regular file maps or shared sections of DLLs
+         */
         ASSERT(!Segment->WriteCopy);
-        ASSERT(Segment->SegFlags & MM_DATAFILE_SEGMENT);
+        ASSERT(FlagOn(*Segment->Flags, MM_DATAFILE_SEGMENT) || FlagOn(Segment->Image.Characteristics, IMAGE_SCN_MEM_SHARED));
 
         /* Insert the cleaned entry back. Mark it as write in progress, and clear the dirty bit. */
         Entry = MAKE_SSE(PAGE_FROM_SSE(Entry), SHARE_COUNT_FROM_SSE(Entry) + 1);
@@ -4863,17 +4854,52 @@ MmCheckDirtySegment(
 
         MmUnlockSectionSegment(Segment);
 
-        /* Tell the FS driver who we are */
-        if (PageOut)
-            IoSetTopLevelIrp((PIRP)FSRTL_MOD_WRITE_TOP_LEVEL_IRP);
+        if (FlagOn(*Segment->Flags, MM_DATAFILE_SEGMENT))
+        {
+            /* We have to write it back to the file. Tell the FS driver who we are */
+            if (PageOut)
+                IoSetTopLevelIrp((PIRP)FSRTL_MOD_WRITE_TOP_LEVEL_IRP);
 
-        /* Go ahead and write the page */
-        DPRINT("Writing page at offset %I64d for file %wZ, Pageout: %s\n",
-                Offset->QuadPart, &Segment->FileObject->FileName, PageOut ? "TRUE" : "FALSE");
-        Status = MiWritePage(Segment, Offset->QuadPart, Page);
+            /* Go ahead and write the page */
+            DPRINT("Writing page at offset %I64d for file %wZ, Pageout: %s\n",
+                    Offset->QuadPart, &Segment->FileObject->FileName, PageOut ? "TRUE" : "FALSE");
+            Status = MiWritePage(Segment, Offset->QuadPart, Page);
 
-        if (PageOut)
-            IoSetTopLevelIrp(NULL);
+            if (PageOut)
+                IoSetTopLevelIrp(NULL);
+        }
+        else
+        {
+            /* This must only be called by the page-out path */
+            ASSERT(PageOut);
+
+            /* And this must be for a shared section in a DLL */
+            ASSERT(Segment->Image.Characteristics & IMAGE_SCN_MEM_SHARED);
+
+            SWAPENTRY SwapEntry = MmGetSavedSwapEntryPage(Page);
+            if (!SwapEntry)
+            {
+                SwapEntry = MmAllocSwapPage();
+            }
+
+            if (SwapEntry)
+            {
+                Status = MmWriteToSwapPage(SwapEntry, Page);
+                if (NT_SUCCESS(Status))
+                {
+                    MmSetSavedSwapEntryPage(Page, SwapEntry);
+                }
+                else
+                {
+                    MmFreeSwapPage(SwapEntry);
+                }
+            }
+            else
+            {
+                DPRINT1("Failed to allocate a swap page!\n");
+                Status = STATUS_INSUFFICIENT_RESOURCES;
+            }
+        }
 
         MmLockSectionSegment(Segment);
 
@@ -4905,8 +4931,17 @@ MmCheckDirtySegment(
     /* Were this page hanging there just for the sake of being present ? */
     if (!IS_DIRTY_SSE(Entry) && (SHARE_COUNT_FROM_SSE(Entry) == 0) && PageOut)
     {
+        ULONG_PTR NewEntry = 0;
+        /* Restore the swap entry here */
+        if (!FlagOn(*Segment->Flags, MM_DATAFILE_SEGMENT))
+        {
+            SWAPENTRY SwapEntry = MmGetSavedSwapEntryPage(Page);
+            if (SwapEntry)
+                NewEntry = MAKE_SWAP_SSE(SwapEntry);
+        }
+
         /* Yes. Release it */
-        MmSetPageEntrySectionSegment(Segment, Offset, 0);
+        MmSetPageEntrySectionSegment(Segment, Offset, NewEntry);
         MmReleasePageMemoryConsumer(MC_USER, Page);
         /* Tell the caller we released the page */
         return TRUE;

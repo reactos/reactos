@@ -53,19 +53,30 @@ MmPageOutPhysicalAddress(PFN_NUMBER Page)
     PMM_RMAP_ENTRY entry;
     PMEMORY_AREA MemoryArea;
     PMMSUPPORT AddressSpace;
-    PVOID Address;
-    PEPROCESS Process;
+    PVOID Address = NULL;
+    PEPROCESS Process = NULL;
     NTSTATUS Status = STATUS_SUCCESS;
     PMM_SECTION_SEGMENT Segment;
     LARGE_INTEGER SegmentOffset;
     KIRQL OldIrql;
 
+GetEntry:
     OldIrql = MiAcquirePfnLock();
 
     entry = MmGetRmapListHeadPage(Page);
 
     while (entry && RMAP_IS_SEGMENT(entry->Address))
         entry = entry->Next;
+
+    /* See if we are retrying because the page is actively used */
+    while (entry && ((entry->Address < Address) || RMAP_IS_SEGMENT(entry->Address)))
+        entry = entry->Next;
+
+    if (entry && (entry->Address == Address))
+    {
+        while (entry && ((entry->Process <= Process) || RMAP_IS_SEGMENT(entry->Address)))
+            entry = entry->Next;
+    }
 
     if (entry == NULL)
     {
@@ -81,41 +92,42 @@ MmPageOutPhysicalAddress(PFN_NUMBER Page)
         KeBugCheck(MEMORY_MANAGEMENT);
     }
 
-    if (Address < MmSystemRangeStart)
-    {
-        if (!ExAcquireRundownProtection(&Process->RundownProtect))
-        {
-            MiReleasePfnLock(OldIrql);
-            return STATUS_PROCESS_IS_TERMINATING;
-        }
+    /* This is for user-mode address only */
+    ASSERT(Address < MmSystemRangeStart);
 
-        Status = ObReferenceObjectByPointer(Process, PROCESS_ALL_ACCESS, NULL, KernelMode);
-        MiReleasePfnLock(OldIrql);
-        if (!NT_SUCCESS(Status))
-        {
-            ExReleaseRundownProtection(&Process->RundownProtect);
-            return Status;
-        }
-        AddressSpace = &Process->Vm;
-    }
-    else
+    if (!ExAcquireRundownProtection(&Process->RundownProtect))
     {
         MiReleasePfnLock(OldIrql);
-        AddressSpace = MmGetKernelAddressSpace();
+        return STATUS_PROCESS_IS_TERMINATING;
     }
+
+    Status = ObReferenceObjectByPointer(Process, PROCESS_ALL_ACCESS, NULL, KernelMode);
+    MiReleasePfnLock(OldIrql);
+    if (!NT_SUCCESS(Status))
+    {
+        ExReleaseRundownProtection(&Process->RundownProtect);
+        return Status;
+    }
+    AddressSpace = &Process->Vm;
 
     MmLockAddressSpace(AddressSpace);
+
+    if ((MmGetPfnForProcess(Process, Address) != Page) || MmIsPageAccessed(Process, Address))
+    {
+        /* This changed in the short window where we didn't have any locks */
+        MmUnlockAddressSpace(AddressSpace);
+        ExReleaseRundownProtection(&Process->RundownProtect);
+        ObDereferenceObject(Process);
+        goto GetEntry;
+    }
 
     MemoryArea = MmLocateMemoryAreaByAddress(AddressSpace, Address);
     if (MemoryArea == NULL || MemoryArea->DeleteInProgress)
     {
         MmUnlockAddressSpace(AddressSpace);
-        if (Address < MmSystemRangeStart)
-        {
-            ExReleaseRundownProtection(&Process->RundownProtect);
-            ObDereferenceObject(Process);
-        }
-        return(STATUS_UNSUCCESSFUL);
+        ExReleaseRundownProtection(&Process->RundownProtect);
+        ObDereferenceObject(Process);
+        goto GetEntry;
     }
 
     if (MemoryArea->Type == MEMORY_AREA_SECTION_VIEW)
@@ -269,7 +281,7 @@ MmPageOutPhysicalAddress(PFN_NUMBER Page)
         MmDeleteRmap(Page, Process, Address);
 
         /* One less mapping referencing this segment */
-        Released = MmUnsharePageEntrySectionSegment(MemoryArea, Segment, &Offset, Dirty, FALSE, NULL);
+        Released = MmUnsharePageEntrySectionSegment(MemoryArea, Segment, &Offset, Dirty, TRUE, NULL);
 
         MmUnlockSectionSegment(Segment);
         MmUnlockAddressSpace(AddressSpace);
@@ -396,11 +408,7 @@ MmInsertRmap(PFN_NUMBER Page, PEPROCESS Process,
     new_entry->Address = Address;
     new_entry->Process = (PEPROCESS)Process;
 #if DBG
-#ifdef __GNUC__
-    new_entry->Caller = __builtin_return_address(0);
-#else
     new_entry->Caller = _ReturnAddress();
-#endif
 #endif
 
     if (
@@ -417,24 +425,39 @@ MmInsertRmap(PFN_NUMBER Page, PEPROCESS Process,
 
     OldIrql = MiAcquirePfnLock();
     current_entry = MmGetRmapListHeadPage(Page);
-    new_entry->Next = current_entry;
-#if DBG
-    while (current_entry)
+
+    PMM_RMAP_ENTRY previous_entry = NULL;
+    /* Keep the list sorted */
+    while (current_entry && (current_entry->Address < Address))
     {
-        if (current_entry->Address == new_entry->Address && current_entry->Process == new_entry->Process)
-        {
-            DbgPrint("MmInsertRmap tries to add a second rmap entry for address %p\n    current caller ",
-                     current_entry->Address);
-            DbgPrint("%p", new_entry->Caller);
-            DbgPrint("\n    previous caller ");
-            DbgPrint("%p", current_entry->Caller);
-            DbgPrint("\n");
-            KeBugCheck(MEMORY_MANAGEMENT);
-        }
+        previous_entry = current_entry;
         current_entry = current_entry->Next;
     }
-#endif
-    MmSetRmapListHeadPage(Page, new_entry);
+
+    /* In case of clash in the address, sort by process */
+    if (current_entry && (current_entry->Address == Address))
+    {
+        while (current_entry && (current_entry->Process < Process))
+        {
+            previous_entry = current_entry;
+            current_entry = current_entry->Next;
+        }
+    }
+
+    if (current_entry && (current_entry->Address == Address) && (current_entry->Process == Process))
+    {
+        DbgPrint("MmInsertRmap tries to add a second rmap entry for address %p\n", current_entry->Address);
+        DbgPrint("    current caller  %p\n", new_entry->Caller);
+        DbgPrint("    previous caller %p\n", current_entry->Caller);
+        KeBugCheck(MEMORY_MANAGEMENT);
+    }
+
+    new_entry->Next = current_entry;
+    if (previous_entry)
+        previous_entry->Next = new_entry;
+    else
+        MmSetRmapListHeadPage(Page, new_entry);
+
     MiReleasePfnLock(OldIrql);
 
     if (!RMAP_IS_SEGMENT(Address))

@@ -113,14 +113,13 @@ MiTrimMemoryConsumer(ULONG Consumer, ULONG InitialTarget)
         Target = (ULONG)max(Target, MiMinimumAvailablePages - MmAvailablePages);
     }
 
-    /* Don't be too greedy if we're not in a hurry */
-    if (MmAvailablePages > MiMinimumAvailablePages)
-        Target = min(Target, 256);
+    /* Don't be too greedy in one run */
+    Target = min(Target, 256);
 
     if (Target)
     {
         /* Now swap the pages out */
-        Status = MiMemoryConsumers[Consumer].Trim(Target, 0, &NrFreedPages);
+        Status = MiMemoryConsumers[Consumer].Trim(Target, MmAvailablePages < MiMinimumAvailablePages, &NrFreedPages);
 
         DPRINT("Trimming consumer %lu: Freed %lu pages with a target of %lu pages\n", Consumer, NrFreedPages, Target);
 
@@ -142,15 +141,104 @@ MmTrimUserMemory(ULONG Target, ULONG Priority, PULONG NrFreedPages)
 
     (*NrFreedPages) = 0;
 
+    DPRINT1("MM BALANCER: %s\n", Priority ? "Paging out!" : "Removing access bit!");
+
     CurrentPage = MmGetLRUFirstUserPage();
     while (CurrentPage != 0 && Target > 0)
     {
-        Status = MmPageOutPhysicalAddress(CurrentPage);
-        if (NT_SUCCESS(Status))
+        if (Priority)
         {
-            DPRINT("Succeeded\n");
+            Status = MmPageOutPhysicalAddress(CurrentPage);
+            if (NT_SUCCESS(Status))
+            {
+                DPRINT("Succeeded\n");
+                Target--;
+                (*NrFreedPages)++;
+            }
+        }
+        else
+        {
+            /* When not paging-out agressively, just reset the accessed bit */
+            PEPROCESS Process = NULL;
+            PVOID Address = NULL;
+            BOOLEAN Accessed = FALSE;
+
+            /*
+             * We have a lock-ordering problem here. We cant lock the PFN DB before the Process address space.
+             * So we must use circonvoluted loops.
+             * Well...
+             */
+            while (TRUE)
+            {
+                KAPC_STATE ApcState;
+                KIRQL OldIrql = MiAcquirePfnLock();
+                PMM_RMAP_ENTRY Entry = MmGetRmapListHeadPage(CurrentPage);
+                while (Entry)
+                {
+                    if (RMAP_IS_SEGMENT(Entry->Address))
+                    {
+                        Entry = Entry->Next;
+                        continue;
+                    }
+
+                    /* Check that we didn't treat this entry before */
+                    if (Entry->Address < Address)
+                    {
+                        Entry = Entry->Next;
+                        continue;
+                    }
+
+                    if ((Entry->Address == Address) && (Entry->Process <= Process))
+                    {
+                        Entry = Entry->Next;
+                        continue;
+                    }
+
+                    break;
+                }
+
+                if (!Entry)
+                {
+                    MiReleasePfnLock(OldIrql);
+                    break;
+                }
+
+                Process = Entry->Process;
+                Address = Entry->Address;
+
+                MiReleasePfnLock(OldIrql);
+
+                KeStackAttachProcess(&Process->Pcb, &ApcState);
+
+                MmLockAddressSpace(&Process->Vm);
+
+                /* Be sure this is still valid. */
+                PMMPTE Pte = MiAddressToPte(Address);
+                if (Pte->u.Hard.Valid)
+                {
+                    Accessed = Accessed || Pte->u.Hard.Accessed;
+                    Pte->u.Hard.Accessed = 0;
+
+                    /* There is no need to invalidate, the balancer thread is never on a user process */
+                    //KeInvalidateTlbEntry(Address);
+                }
+
+                MmUnlockAddressSpace(&Process->Vm);
+
+                KeUnstackDetachProcess(&ApcState);
+            }
+
+            if (!Accessed)
+            {
+                /* Nobody accessed this page since the last time we check. Time to clean up */
+
+                Status = MmPageOutPhysicalAddress(CurrentPage);
+                // DPRINT1("Paged-out one page: %s\n", NT_SUCCESS(Status) ? "Yes" : "No");
+                (void)Status;
+            }
+
+            /* Done for this page. */
             Target--;
-            (*NrFreedPages)++;
         }
 
         CurrentPage = MmGetLRUNextUserPage(CurrentPage, TRUE);
@@ -189,78 +277,10 @@ NTAPI
 MmRequestPageMemoryConsumer(ULONG Consumer, BOOLEAN CanWait,
                             PPFN_NUMBER AllocatedPage)
 {
-    ULONG PagesUsed;
     PFN_NUMBER Page;
 
-    /*
-     * Make sure we don't exceed our individual target.
-     */
-    PagesUsed = InterlockedIncrementUL(&MiMemoryConsumers[Consumer].PagesUsed);
-    if (PagesUsed > MiMemoryConsumers[Consumer].PagesTarget &&
-            !MiIsBalancerThread())
-    {
-        MmRebalanceMemoryConsumers();
-    }
-
-    /*
-     * Allocate always memory for the non paged pool and for the pager thread.
-     */
-    if (Consumer == MC_SYSTEM)
-    {
-        Page = MmAllocPage(Consumer);
-        if (Page == 0)
-        {
-            KeBugCheck(NO_PAGES_AVAILABLE);
-        }
-        *AllocatedPage = Page;
-        if (MmAvailablePages < MiMinimumAvailablePages)
-            MmRebalanceMemoryConsumers();
-        return(STATUS_SUCCESS);
-    }
-
-    /*
-     * Make sure we don't exceed global targets.
-     */
-    if (((MmAvailablePages < MiMinimumAvailablePages) && !MiIsBalancerThread())
-            || (MmAvailablePages < (MiMinimumAvailablePages / 2)))
-    {
-        MM_ALLOCATION_REQUEST Request;
-
-        if (!CanWait)
-        {
-            (void)InterlockedDecrementUL(&MiMemoryConsumers[Consumer].PagesUsed);
-            MmRebalanceMemoryConsumers();
-            return(STATUS_NO_MEMORY);
-        }
-
-        /* Insert an allocation request. */
-        Request.Page = 0;
-        KeInitializeEvent(&Request.Event, NotificationEvent, FALSE);
-
-        ExInterlockedInsertTailList(&AllocationListHead, &Request.ListEntry, &AllocationListLock);
-        MmRebalanceMemoryConsumers();
-
-        KeWaitForSingleObject(&Request.Event,
-                              0,
-                              KernelMode,
-                              FALSE,
-                              NULL);
-
-        Page = Request.Page;
-        if (Page == 0)
-        {
-            KeBugCheck(NO_PAGES_AVAILABLE);
-        }
-
-        *AllocatedPage = Page;
-
-        if (MmAvailablePages < MiMinimumAvailablePages)
-        {
-            MmRebalanceMemoryConsumers();
-        }
-
-        return(STATUS_SUCCESS);
-    }
+    /* Update the target */
+    InterlockedIncrementUL(&MiMemoryConsumers[Consumer].PagesUsed);
 
     /*
      * Actually allocate the page.
@@ -271,11 +291,6 @@ MmRequestPageMemoryConsumer(ULONG Consumer, BOOLEAN CanWait,
         KeBugCheck(NO_PAGES_AVAILABLE);
     }
     *AllocatedPage = Page;
-
-    if (MmAvailablePages < MiMinimumAvailablePages)
-    {
-        MmRebalanceMemoryConsumers();
-    }
 
     return(STATUS_SUCCESS);
 }
@@ -407,22 +422,14 @@ MiInitBalancerThread(VOID)
 {
     KPRIORITY Priority;
     NTSTATUS Status;
-#if !defined(__GNUC__)
-
-    LARGE_INTEGER dummyJunkNeeded;
-    dummyJunkNeeded.QuadPart = -20000000; /* 2 sec */
-    ;
-#endif
-
+    LARGE_INTEGER Timeout;
 
     KeInitializeEvent(&MiBalancerEvent, SynchronizationEvent, FALSE);
     KeInitializeTimerEx(&MiBalancerTimer, SynchronizationTimer);
+
+    Timeout.QuadPart = -20000000; /* 2 sec */
     KeSetTimerEx(&MiBalancerTimer,
-#if defined(__GNUC__)
-                 (LARGE_INTEGER)(LONGLONG)-20000000LL,     /* 2 sec */
-#else
-                 dummyJunkNeeded,
-#endif
+                 Timeout,
                  2000,         /* 2 sec */
                  NULL);
 

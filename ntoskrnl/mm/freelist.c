@@ -139,7 +139,7 @@ MmGetLRUNextUserPage(PFN_NUMBER PreviousPage, BOOLEAN MoveToLast)
      * If it's not, then it means it is still hanging in some process address space.
      * This avoids paging-out e.g. ntdll early just because it's mapped first time.
      */
-    if (MoveToLast)
+    if ((MoveToLast) && (MmGetReferenceCountPage(PreviousPage) > 1))
     {
         MmRemoveLRUUserPage(PreviousPage);
         MmInsertLRULastUserPage(PreviousPage);
@@ -424,10 +424,11 @@ VOID
 NTAPI
 MmSetRmapListHeadPage(PFN_NUMBER Pfn, PMM_RMAP_ENTRY ListHead)
 {
-    KIRQL oldIrql;
     PMMPFN Pfn1;
 
-    oldIrql = MiAcquirePfnLock();
+    /* PFN database must be locked */
+    MI_ASSERT_PFN_LOCK_HELD();
+
     Pfn1 = MiGetPfnEntry(Pfn);
     ASSERT(Pfn1);
     ASSERT_IS_ROS_PFN(Pfn1);
@@ -450,8 +451,6 @@ MmSetRmapListHeadPage(PFN_NUMBER Pfn, PMM_RMAP_ENTRY ListHead)
 
         /* ReactOS semantics will now release the page, which will make it free and enter a colored list */
     }
-
-    MiReleasePfnLock(oldIrql);
 }
 
 PMM_RMAP_ENTRY

@@ -830,6 +830,8 @@ NTAPI
 MmRebalanceMemoryConsumers(VOID);
 
 /* rmap.c **************************************************************/
+#define RMAP_SEGMENT_MASK ~((ULONG_PTR)0xff)
+#define RMAP_IS_SEGMENT(x) (((ULONG_PTR)(x) & RMAP_SEGMENT_MASK) == RMAP_SEGMENT_MASK)
 
 VOID
 NTAPI
@@ -1188,6 +1190,14 @@ MmIsDirtyPage(
     struct _EPROCESS *Process,
     PVOID Address
 );
+
+VOID
+NTAPI
+MmClearPageAccessedBit(PEPROCESS Process, PVOID Address);
+
+BOOLEAN
+NTAPI
+MmIsPageAccessed(PEPROCESS Process, PVOID Address);
 
 /* wset.c ********************************************************************/
 
