@@ -1079,11 +1079,9 @@ PiInitializeDevNode(
     _In_ PDEVICE_NODE DeviceNode)
 {
     IO_STATUS_BLOCK IoStatusBlock;
-    PWSTR DeviceDescription;
     PWSTR LocationInformation;
     IO_STACK_LOCATION Stack;
     NTSTATUS Status;
-    ULONG RequiredLength;
     LCID LocaleId;
     HANDLE InstanceKey = NULL;
     UNICODE_STRING ValueName;
@@ -1155,55 +1153,7 @@ PiInitializeDevNode(
 
     DeviceNode->Flags |= DNF_IDS_QUERIED;
 
-    DPRINT("Sending IRP_MN_QUERY_DEVICE_TEXT.DeviceTextDescription to device stack\n");
-
-    Stack.Parameters.QueryDeviceText.DeviceTextType = DeviceTextDescription;
-    Stack.Parameters.QueryDeviceText.LocaleId = LocaleId;
-    Status = IopInitiatePnpIrp(DeviceNode->PhysicalDeviceObject,
-                               &IoStatusBlock,
-                               IRP_MN_QUERY_DEVICE_TEXT,
-                               &Stack);
-    DeviceDescription = NT_SUCCESS(Status) ? (PWSTR)IoStatusBlock.Information
-                                           : NULL;
-    /* This key is mandatory, so even if the Irp fails, we still write it */
-    RtlInitUnicodeString(&ValueName, L"DeviceDesc");
-    if (ZwQueryValueKey(InstanceKey, &ValueName, KeyValueBasicInformation, NULL, 0, &RequiredLength) == STATUS_OBJECT_NAME_NOT_FOUND)
-    {
-        if (DeviceDescription &&
-            *DeviceDescription != UNICODE_NULL)
-        {
-            /* This key is overriden when a driver is installed. Don't write the
-             * new description if another one already exists */
-            Status = ZwSetValueKey(InstanceKey,
-                                   &ValueName,
-                                   0,
-                                   REG_SZ,
-                                   DeviceDescription,
-                                   ((ULONG)wcslen(DeviceDescription) + 1) * sizeof(WCHAR));
-        }
-        else
-        {
-            UNICODE_STRING DeviceDesc = RTL_CONSTANT_STRING(L"Unknown device");
-            DPRINT("Driver didn't return DeviceDesc (Status 0x%08lx), so place unknown device there\n", Status);
-
-            Status = ZwSetValueKey(InstanceKey,
-                                   &ValueName,
-                                   0,
-                                   REG_SZ,
-                                   DeviceDesc.Buffer,
-                                   DeviceDesc.MaximumLength);
-            if (!NT_SUCCESS(Status))
-            {
-                DPRINT1("ZwSetValueKey() failed (Status 0x%lx)\n", Status);
-            }
-
-        }
-    }
-
-    if (DeviceDescription)
-    {
-        ExFreePoolWithTag(DeviceDescription, 0);
-    }
+    Status = IopInitializeDeviceDescription(DeviceNode, InstanceKey);
 
     DPRINT("Sending IRP_MN_QUERY_DEVICE_TEXT.DeviceTextLocation to device stack\n");
 
@@ -2647,4 +2597,77 @@ PiPerformSyncDeviceAction(
     KeWaitForSingleObject(&opFinished, Executive, KernelMode, FALSE, NULL);
 
     return status;
+}
+
+NTSTATUS
+IopInitializeDeviceDescription(
+    _In_ PDEVICE_NODE DeviceNode,
+    _In_ HANDLE InstanceKey)
+{
+    NTSTATUS Status;
+    LCID LocaleId;
+    IO_STACK_LOCATION Stack;
+    IO_STATUS_BLOCK IoStatusBlock;
+    PWSTR DeviceDescription;
+    UNICODE_STRING ValueName;
+    ULONG RequiredLength;
+
+    /* Get Locale ID */
+    Status = ZwQueryDefaultLocale(FALSE, &LocaleId);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("ZwQueryDefaultLocale() failed with status 0x%lx\n", Status);
+        return Status;
+    }
+
+    DPRINT("Sending IRP_MN_QUERY_DEVICE_TEXT.DeviceTextDescription to device stack\n");
+
+    Stack.Parameters.QueryDeviceText.DeviceTextType = DeviceTextDescription;
+    Stack.Parameters.QueryDeviceText.LocaleId = LocaleId;
+    Status = IopInitiatePnpIrp(DeviceNode->PhysicalDeviceObject,
+                               &IoStatusBlock,
+                               IRP_MN_QUERY_DEVICE_TEXT,
+                               &Stack);
+    DeviceDescription = NT_SUCCESS(Status) ? (PWSTR)IoStatusBlock.Information
+                                           : NULL;
+    /* This key is mandatory, so even if the Irp fails, we still write it */
+    RtlInitUnicodeString(&ValueName, L"DeviceDesc");
+    if (ZwQueryValueKey(InstanceKey, &ValueName, KeyValueBasicInformation, NULL, 0, &RequiredLength) == STATUS_OBJECT_NAME_NOT_FOUND)
+    {
+        if (DeviceDescription &&
+            *DeviceDescription != UNICODE_NULL)
+        {
+            /* This key is overriden when a driver is installed. Don't write the
+             * new description if another one already exists */
+            Status = ZwSetValueKey(InstanceKey,
+                                   &ValueName,
+                                   0,
+                                   REG_SZ,
+                                   DeviceDescription,
+                                   ((ULONG)wcslen(DeviceDescription) + 1) * sizeof(WCHAR));
+        }
+        else
+        {
+            UNICODE_STRING DeviceDesc = RTL_CONSTANT_STRING(L"Unknown device");
+            DPRINT("Driver didn't return DeviceDesc (Status 0x%08lx), so place unknown device there\n", Status);
+
+            Status = ZwSetValueKey(InstanceKey,
+                                   &ValueName,
+                                   0,
+                                   REG_SZ,
+                                   DeviceDesc.Buffer,
+                                   DeviceDesc.MaximumLength);
+            if (!NT_SUCCESS(Status))
+            {
+                DPRINT1("ZwSetValueKey() failed (Status 0x%lx)\n", Status);
+            }
+        }
+    }
+
+    if (DeviceDescription)
+    {
+        ExFreePoolWithTag(DeviceDescription, 0);
+    }
+
+    return Status;
 }

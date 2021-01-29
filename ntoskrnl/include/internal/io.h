@@ -1337,6 +1337,11 @@ PiPerformSyncDeviceAction(
     _In_ PDEVICE_OBJECT DeviceObject,
     _In_ DEVICE_ACTION Action);
 
+NTSTATUS
+IopInitializeDeviceDescription(
+    _In_ PDEVICE_NODE DeviceNode,
+    _In_ HANDLE InstanceKey);
+
 //
 // PnP notifications
 //

@@ -294,6 +294,15 @@ IoReportDetectedDevice(
         return Status;
     }
 
+    /* Store the value for device description (required by user-mode New device installer) */
+    Status = IopInitializeDeviceDescription(DeviceNode, InstanceKey);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT("Failed to write the device description: 0x%x\n", Status);
+        ZwClose(InstanceKey);
+        return Status;
+    }
+
     /* Assign the resources to the device node */
     DeviceNode->BootResources = ResourceList;
     DeviceNode->ResourceRequirements = ResourceRequirements;
@@ -332,6 +341,9 @@ IoReportDetectedDevice(
     PiInsertDevNode(DeviceNode, IopRootDeviceNode);
     DeviceNode->Flags |= DNF_MADEUP | DNF_ENUMERATED;
 
+    /* Tell user-mode PnP Manager to process installation for this device */
+    IopQueueTargetDeviceEvent(&GUID_DEVICE_ENUMERATED,
+                              &DeviceNode->InstancePath);
     // we still need to query IDs, send events and reenumerate this node
     PiSetDevNodeState(DeviceNode, DeviceNodeStartPostWork);
 
