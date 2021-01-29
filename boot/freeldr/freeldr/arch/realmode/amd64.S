@@ -67,7 +67,11 @@ Msg_LongModeSupported:
     call writestr
 
     /* Load the GDT */
+#ifdef _USE_ML
+    lgdt fword ptr [gdtptr]
+#else
     lgdt cs:[gdtptr]
+#endif
 
     /* Build the startup page tables */
     call BuildPageTables
