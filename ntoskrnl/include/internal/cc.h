@@ -310,7 +310,7 @@ CcMdlWriteComplete2(
 
 NTSTATUS
 NTAPI
-CcRosFlushVacb(PROS_VACB Vacb);
+CcRosFlushVacb(PROS_VACB Vacb, PIO_STATUS_BLOCK Iosb);
 
 NTSTATUS
 NTAPI

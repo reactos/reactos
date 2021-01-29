@@ -504,24 +504,6 @@ CcCopyRead (
     CurrentOffset = FileOffset->QuadPart;
     while(CurrentOffset < ReadEnd)
     {
-        if (CurrentOffset >= SharedCacheMap->ValidDataLength.QuadPart)
-        {
-            DPRINT1("Zeroing buffer because we are beyond the VDL.\n");
-            /* We are beyond what is valid. Just zero this out */
-            _SEH2_TRY
-            {
-                RtlZeroMemory(Buffer, Length);
-            }
-            _SEH2_EXCEPT(CcpCheckInvalidUserBuffer(_SEH2_GetExceptionInformation(), Buffer, Length))
-            {
-                ExRaiseStatus(STATUS_INVALID_USER_BUFFER);
-            }
-            _SEH2_END;
-
-            ReadLength += Length;
-            break;
-        }
-
         Status = CcRosGetVacb(SharedCacheMap, CurrentOffset, &Vacb);
         if (!NT_SUCCESS(Status))
         {
@@ -538,25 +520,15 @@ CcCopyRead (
             if (!CcRosEnsureVacbResident(Vacb, Wait, FALSE, VacbOffset, VacbLength))
                 return FALSE;
 
-            /* Do not copy past the section */
-            if (CurrentOffset + VacbLength > SharedCacheMap->SectionSize.QuadPart)
-                CopyLength = SharedCacheMap->SectionSize.QuadPart - CurrentOffset;
-            if (CopyLength != 0)
+            _SEH2_TRY
             {
-                _SEH2_TRY
-                {
-                    RtlCopyMemory(Buffer, (PUCHAR)Vacb->BaseAddress + VacbOffset, CopyLength);
-                }
-                _SEH2_EXCEPT(CcpCheckInvalidUserBuffer(_SEH2_GetExceptionInformation(), Buffer, VacbLength))
-                {
-                    ExRaiseStatus(STATUS_INVALID_USER_BUFFER);
-                }
-                _SEH2_END;
+                RtlCopyMemory(Buffer, (PUCHAR)Vacb->BaseAddress + VacbOffset, CopyLength);
             }
-
-            /* Zero-out the buffer tail if needed */
-            if (CopyLength < VacbLength)
-                RtlZeroMemory((PUCHAR)Buffer + CopyLength, VacbLength - CopyLength);
+            _SEH2_EXCEPT(CcpCheckInvalidUserBuffer(_SEH2_GetExceptionInformation(), Buffer, VacbLength))
+            {
+                ExRaiseStatus(STATUS_INVALID_USER_BUFFER);
+            }
+            _SEH2_END;
 
             ReadLength += VacbLength;
 
@@ -683,10 +655,6 @@ CcCopyWrite (
     /* Flush if needed */
     if (FileObject->Flags & FO_WRITE_THROUGH)
         CcFlushCache(FileObject->SectionObjectPointer, FileOffset, Length, NULL);
-
-    /* Update VDL */
-    if (WriteEnd > SharedCacheMap->ValidDataLength.QuadPart)
-        SharedCacheMap->ValidDataLength.QuadPart = WriteEnd;
 
     return TRUE;
 }
@@ -898,7 +866,7 @@ CcZeroData (
     }
 
     /* See if we should simply truncate the valid data length */
-    if ((StartOffset->QuadPart < SharedCacheMap->ValidDataLength.QuadPart) && (EndOffset->QuadPart > SharedCacheMap->ValidDataLength.QuadPart))
+    if ((StartOffset->QuadPart < SharedCacheMap->ValidDataLength.QuadPart) && (EndOffset->QuadPart >= SharedCacheMap->ValidDataLength.QuadPart))
     {
         DPRINT1("Truncating VDL.\n");
         SharedCacheMap->ValidDataLength = *StartOffset;

@@ -166,12 +166,12 @@ MmFlushVirtualMemory(IN PEPROCESS Process,
 NTSTATUS
 NTAPI
 CcRosFlushVacb (
-    PROS_VACB Vacb)
+    _In_ PROS_VACB Vacb,
+    _In_ PIO_STATUS_BLOCK Iosb)
 {
-    IO_STATUS_BLOCK Iosb;
-    SIZE_T FlushSize = VACB_MAPPING_GRANULARITY;
     NTSTATUS Status;
     BOOLEAN HaveLock = FALSE;
+    PROS_SHARED_CACHE_MAP SharedCacheMap = Vacb->SharedCacheMap;
 
     CcRosUnmarkDirtyVacb(Vacb, TRUE);
 
@@ -184,7 +184,10 @@ CcRosFlushVacb (
         HaveLock = TRUE;
     }
 
-    Status = MmFlushVirtualMemory(NULL, &Vacb->BaseAddress, &FlushSize, &Iosb);
+    Status = MmFlushSegment(SharedCacheMap->FileObject->SectionObjectPointer,
+                            &Vacb->FileOffset,
+                            VACB_MAPPING_GRANULARITY,
+                            Iosb);
 
     if (HaveLock)
     {
@@ -194,6 +197,14 @@ CcRosFlushVacb (
 quit:
     if (!NT_SUCCESS(Status))
         CcRosMarkDirtyVacb(Vacb);
+    else
+    {
+        /* Update VDL */
+        if (SharedCacheMap->ValidDataLength.QuadPart < (Vacb->FileOffset.QuadPart + VACB_MAPPING_GRANULARITY))
+        {
+            SharedCacheMap->ValidDataLength.QuadPart = Vacb->FileOffset.QuadPart + VACB_MAPPING_GRANULARITY;
+        }
+    }
 
     return Status;
 }
@@ -285,7 +296,8 @@ CcRosFlushDirtyPages (
             continue;
         }
 
-        Status = CcRosFlushVacb(current);
+        IO_STATUS_BLOCK Iosb;
+        Status = CcRosFlushVacb(current, &Iosb);
 
         SharedCacheMap->Callbacks->ReleaseFromLazyWrite(SharedCacheMap->LazyWriteContext);
 
@@ -308,7 +320,7 @@ CcRosFlushDirtyPages (
             ULONG PagesFreed;
 
             /* How many pages did we free? */
-            PagesFreed = VACB_MAPPING_GRANULARITY / PAGE_SIZE;
+            PagesFreed = Iosb.Information / PAGE_SIZE;
             (*Count) += PagesFreed;
 
             if (!Wait)
@@ -756,7 +768,11 @@ CcRosEnsureVacbResident(
 
         if (!NoRead)
         {
-            NTSTATUS Status = MmMakePagesResident(NULL, BaseAddress, Length);
+            PROS_SHARED_CACHE_MAP SharedCacheMap = Vacb->SharedCacheMap;
+            NTSTATUS Status = MmMakeDataSectionResident(SharedCacheMap->FileObject->SectionObjectPointer,
+                                                        Vacb->FileOffset.QuadPart + Offset,
+                                                        Length,
+                                                        &SharedCacheMap->ValidDataLength);
             if (!NT_SUCCESS(Status))
                 ExRaiseStatus(Status);
         }
@@ -935,7 +951,6 @@ CcFlushCache (
     }
 
     Status = STATUS_SUCCESS;
-
     if (IoStatus)
     {
         IoStatus->Information = 0;
@@ -953,9 +968,10 @@ CcFlushCache (
 
         if (vacb != NULL)
         {
+            IO_STATUS_BLOCK VacbIosb;
             if (vacb->Dirty)
             {
-                Status = CcRosFlushVacb(vacb);
+                Status = CcRosFlushVacb(vacb, &VacbIosb);
                 if (!NT_SUCCESS(Status))
                 {
                     goto quit;
@@ -966,7 +982,7 @@ CcFlushCache (
             CcRosReleaseVacb(SharedCacheMap, vacb, FALSE, FALSE);
 
             if (IoStatus)
-                IoStatus->Information += VACB_MAPPING_GRANULARITY;
+                IoStatus->Information += VacbIosb.Information;
         }
 
         if (!DirtyVacb)
@@ -992,6 +1008,10 @@ CcFlushCache (
 
             if (IoStatus)
                 IoStatus->Information += MmIosb.Information;
+
+            /* Update VDL */
+            if (SharedCacheMap->ValidDataLength.QuadPart < FlushEnd)
+                SharedCacheMap->ValidDataLength.QuadPart = FlushEnd;
         }
 
         if (!NT_SUCCESS(RtlLongLongAdd(FlushStart, VACB_MAPPING_GRANULARITY, &FlushStart)))

@@ -1181,126 +1181,234 @@ MiCopyFromUserPage(PFN_NUMBER DestPage, const VOID *SrcAddress)
     return(STATUS_SUCCESS);
 }
 
-#ifndef NEWCC
 static
 NTSTATUS
 NTAPI
-MiReadPage(PMEMORY_AREA MemoryArea,
-           LONGLONG SegOffset,
-           PPFN_NUMBER Page,
-           BOOLEAN IgnoreSize)
-/*
- * FUNCTION: Read a page for a section backed memory area.
- * PARAMETERS:
- *       MemoryArea - Memory area to read the page for.
- *       Offset - Offset of the page to read.
- *       Page - Variable that receives a page contains the read data.
- */
+MmMakeSegmentResident(
+    _In_ PMM_SECTION_SEGMENT Segment,
+    _In_ LONGLONG Offset,
+    _In_ ULONG Length,
+    _In_opt_ PLARGE_INTEGER ValidDataLength)
 {
+    /* Let's use a 64K granularity. */
+    LONGLONG RangeStart, RangeEnd;
     NTSTATUS Status;
-    IO_STATUS_BLOCK IoStatus;
-    KEVENT Event;
-    UCHAR MdlBase[sizeof(MDL) + sizeof(PFN_NUMBER)];
-    PMDL Mdl = (PMDL)MdlBase;
-    PFILE_OBJECT FileObject = MemoryArea->SectionData.Segment->FileObject;
-    LARGE_INTEGER FileOffset;
-    KIRQL OldIrql;
-    PFSRTL_ADVANCED_FCB_HEADER FcbHeader = FileObject->FsContext;
+    PFILE_OBJECT FileObject = Segment->FileObject;
 
-    FileOffset.QuadPart = MemoryArea->SectionData.Segment->Image.FileOffset + SegOffset;
-
-    DPRINT("Reading file at offset %08x:%08x\n", FileOffset.HighPart, FileOffset.LowPart);
-
-    Status = MmRequestPageMemoryConsumer(MC_USER, FALSE, Page);
+    /* Calculate our range, aligned on 64K if possible. */
+    Status = RtlLongLongAdd(Offset, Length, &RangeEnd);
+    ASSERT(NT_SUCCESS(Status));
     if (!NT_SUCCESS(Status))
         return Status;
 
-    if ((FileOffset.QuadPart > FcbHeader->ValidDataLength.QuadPart) && !IgnoreSize)
+    RangeStart = Offset - (Offset % _64K);
+    if (RangeEnd % _64K)
+        RangeEnd += _64K - (RangeEnd % _64K);
+
+    /* Clamp if needed */
+    if (!FlagOn(*Segment->Flags, MM_DATAFILE_SEGMENT))
     {
-        /* Quick path : data is not valid; return a zero-page */
-        return STATUS_SUCCESS;
+        if (RangeEnd > Segment->RawLength.QuadPart)
+            RangeEnd = Segment->RawLength.QuadPart;
     }
 
-    RtlZeroMemory(MdlBase, sizeof(MdlBase));
-    MmInitializeMdl(Mdl, NULL, PAGE_SIZE);
-    MmBuildMdlFromPages(Mdl, Page);
-    Mdl->MdlFlags |= MDL_PAGES_LOCKED | MDL_IO_PAGE_READ;
-
-    KeInitializeEvent(&Event, NotificationEvent, FALSE);
-
-    /* Disable APCs */
-    KeRaiseIrql(APC_LEVEL, &OldIrql);
-
-    Status = IoPageRead(FileObject, Mdl, &FileOffset, &Event, &IoStatus);
-    if (Status == STATUS_PENDING)
+    /* Let's gooooooooo */
+    for ( ; RangeStart < RangeEnd; RangeStart += _64K)
     {
-        KeWaitForSingleObject(&Event, WrPageIn, KernelMode, FALSE, NULL);
-        Status = IoStatus.Status;
+        /* First take a look at where we miss pages */
+        ULONG ToReadPageBits = 0;
+        LONGLONG ChunkEnd = RangeStart + _64K;
+
+        if (ChunkEnd > RangeEnd)
+            ChunkEnd = RangeEnd;
+
+        MmLockSectionSegment(Segment);
+        for (LONGLONG ChunkOffset = RangeStart; ChunkOffset < ChunkEnd; ChunkOffset += PAGE_SIZE)
+        {
+            LARGE_INTEGER CurrentOffset;
+
+            CurrentOffset.QuadPart = ChunkOffset;
+            ULONG_PTR Entry = MmGetPageEntrySectionSegment(Segment, &CurrentOffset);
+
+            /* Let any pending read proceed */
+            while (MM_IS_WAIT_PTE(Entry))
+            {
+                MmUnlockSectionSegment(Segment);
+
+                KeDelayExecutionThread(KernelMode, FALSE, &TinyTime);
+
+                MmLockSectionSegment(Segment);
+                Entry = MmGetPageEntrySectionSegment(Segment, &CurrentOffset);
+            }
+
+            if (Entry != 0)
+            {
+                /* There is a page here. Or a swap entry. Or whatever... */
+                continue;
+            }
+
+            ToReadPageBits |= 1UL << ((ChunkOffset - RangeStart) >> PAGE_SHIFT);
+
+            /* Put a wait entry here */
+            MmSetPageEntrySectionSegment(Segment, &CurrentOffset, MAKE_SWAP_SSE(MM_WAIT_ENTRY));
+        }
+        MmUnlockSectionSegment(Segment);
+
+        if (ToReadPageBits == 0)
+        {
+            /* Nothing to do for this chunk */
+            continue;
+        }
+
+        /* Now perform the actual read */
+        LONGLONG ChunkOffset = RangeStart;
+        while (ChunkOffset < ChunkEnd)
+        {
+            /* Move forward if there is a hole */
+            ULONG BitSet;
+            if (!_BitScanForward(&BitSet, ToReadPageBits))
+            {
+                /* Nothing more to read */
+                break;
+            }
+            ToReadPageBits >>= BitSet;
+            ChunkOffset += BitSet * PAGE_SIZE;
+            ASSERT(ChunkOffset < ChunkEnd);
+
+            /* Get the range we have to read */
+            _BitScanForward(&BitSet, ~ToReadPageBits);
+            ULONG ReadLength = BitSet * PAGE_SIZE;
+
+            ASSERT(ReadLength <= _64K);
+
+            /* Clamp (This is for image mappings */
+            if ((ChunkOffset + ReadLength) > ChunkEnd)
+                ReadLength = ChunkEnd - ChunkOffset;
+
+            ASSERT(ReadLength != 0);
+
+            /* Allocate a MDL */
+            PMDL Mdl = IoAllocateMdl(NULL, ReadLength, FALSE, FALSE, NULL);
+            if (!Mdl)
+            {
+                /* Damn. Roll-back. */
+                MmLockSectionSegment(Segment);
+                while (ChunkOffset < ChunkEnd)
+                {
+                    if (ToReadPageBits & 1)
+                    {
+                        LARGE_INTEGER CurrentOffset;
+                        CurrentOffset.QuadPart = ChunkOffset;
+                        ASSERT(MM_IS_WAIT_PTE(MmGetPageEntrySectionSegment(Segment, &CurrentOffset)));
+                        MmSetPageEntrySectionSegment(Segment, &CurrentOffset, 0);
+                    }
+                    ToReadPageBits >>= 1;
+                    ChunkOffset += PAGE_SIZE;
+                }
+                MmUnlockSectionSegment(Segment);
+                return STATUS_INSUFFICIENT_RESOURCES;
+            }
+
+            /* Get our pages */
+            PPFN_NUMBER Pages = MmGetMdlPfnArray(Mdl);
+            RtlZeroMemory(Pages, BYTES_TO_PAGES(ReadLength) * sizeof(PFN_NUMBER));
+            for (UINT i = 0; i < BYTES_TO_PAGES(ReadLength); i++)
+            {
+                /* MmRequestPageMemoryConsumer succeeds or bugchecks */
+                (void)MmRequestPageMemoryConsumer(MC_USER, FALSE, &Pages[i]);
+            }
+            Mdl->MdlFlags |= MDL_PAGES_LOCKED | MDL_IO_PAGE_READ;
+
+            LARGE_INTEGER FileOffset;
+            FileOffset.QuadPart = Segment->Image.FileOffset + ChunkOffset;
+
+            /* Clamp to VDL */
+            if (ValidDataLength && ((FileOffset.QuadPart + ReadLength) > ValidDataLength->QuadPart))
+            {
+                if (FileOffset.QuadPart > ValidDataLength->QuadPart)
+                {
+                    /* Great, nothing to read. */
+                    goto AssignPagesToSegment;
+                }
+
+                Mdl->Size = (FileOffset.QuadPart + ReadLength) - ValidDataLength->QuadPart;
+            }
+
+            KEVENT Event;
+            KeInitializeEvent(&Event, NotificationEvent, FALSE);
+
+            /* Disable APCs */
+            KIRQL OldIrql;
+            KeRaiseIrql(APC_LEVEL, &OldIrql);
+
+            IO_STATUS_BLOCK Iosb;
+            Status = IoPageRead(FileObject, Mdl, &FileOffset, &Event, &Iosb);
+            if (Status == STATUS_PENDING)
+            {
+                KeWaitForSingleObject(&Event, WrPageIn, KernelMode, FALSE, NULL);
+                Status = Iosb.Status;
+            }
+
+            if (Mdl->MdlFlags & MDL_MAPPED_TO_SYSTEM_VA)
+            {
+                MmUnmapLockedPages(Mdl->MappedSystemVa, Mdl);
+            }
+
+            KeLowerIrql(OldIrql);
+
+            if (Status == STATUS_END_OF_FILE)
+            {
+                DPRINT1("Got STATUS_END_OF_FILE at offset %I64d for file %wZ.\n", FileOffset.QuadPart, &FileObject->FileName);
+                Status = STATUS_SUCCESS;
+            }
+
+            if (!NT_SUCCESS(Status))
+            {
+                /* Damn. Roll back. */
+                for (UINT i = 0; i < BYTES_TO_PAGES(ReadLength); i++)
+                    MmReleasePageMemoryConsumer(MC_USER, Pages[i]);
+
+                MmLockSectionSegment(Segment);
+                while (ChunkOffset < ChunkEnd)
+                {
+                    if (ToReadPageBits & 1)
+                    {
+                        LARGE_INTEGER CurrentOffset;
+                        CurrentOffset.QuadPart = ChunkOffset;
+                        ASSERT(MM_IS_WAIT_PTE(MmGetPageEntrySectionSegment(Segment, &CurrentOffset)));
+                        MmSetPageEntrySectionSegment(Segment, &CurrentOffset, 0);
+                    }
+                    ToReadPageBits >>= 1;
+                    ChunkOffset += PAGE_SIZE;
+                }
+                MmUnlockSectionSegment(Segment);
+                IoFreeMdl(Mdl);;
+                return Status;
+            }
+
+AssignPagesToSegment:
+            MmLockSectionSegment(Segment);
+
+            for (UINT i = 0; i < BYTES_TO_PAGES(ReadLength); i++)
+            {
+                LARGE_INTEGER CurrentOffset;
+                CurrentOffset.QuadPart = ChunkOffset + (i * PAGE_SIZE);
+
+                ASSERT(MM_IS_WAIT_PTE(MmGetPageEntrySectionSegment(Segment, &CurrentOffset)));
+
+                MmSetPageEntrySectionSegment(Segment, &CurrentOffset, MAKE_SSE(Pages[i] << PAGE_SHIFT, 0));
+            }
+
+            MmUnlockSectionSegment(Segment);
+
+            IoFreeMdl(Mdl);
+            ToReadPageBits >>= BitSet;
+            ChunkOffset += BitSet * PAGE_SIZE;
+        }
     }
 
-    if (Mdl->MdlFlags & MDL_MAPPED_TO_SYSTEM_VA)
-    {
-        MmUnmapLockedPages (Mdl->MappedSystemVa, Mdl);
-    }
-
-    KeLowerIrql(OldIrql);
-
-    if (Status == STATUS_END_OF_FILE)
-    {
-        DPRINT1("Got STATUS_END_OF_FILE at offset %I64d for file %wZ.\n", SegOffset, &FileObject->FileName);
-        Status = STATUS_SUCCESS;
-    }
-
-    if ((MemoryArea->VadNode.u.VadFlags.VadType == VadImageMap)
-        && ((SegOffset + PAGE_SIZE) > MemoryArea->SectionData.Segment->RawLength.QuadPart))
-    {
-        KIRQL OldIrql;
-        PUCHAR PageMap;
-
-        DPRINT("Zeroing at offset %I64d for file %wZ.\n", SegOffset, &FileObject->FileName);
-
-        /* Zero out the end of it */
-        PageMap = MiMapPageInHyperSpace(PsGetCurrentProcess(), *Page, &OldIrql);
-        RtlZeroMemory(PageMap + MemoryArea->SectionData.Segment->RawLength.QuadPart - SegOffset,
-                      PAGE_SIZE - (MemoryArea->SectionData.Segment->RawLength.QuadPart - SegOffset));
-        MiUnmapPageInHyperSpace(PsGetCurrentProcess(), PageMap, OldIrql);
-    }
-
-    return Status;
+    return STATUS_SUCCESS;
 }
-
-#else
-NTSTATUS
-NTAPI
-MiReadPage(PMEMORY_AREA MemoryArea,
-           LONGLONG SegOffset,
-           PPFN_NUMBER Page)
-/*
- * FUNCTION: Read a page for a section backed memory area.
- * PARAMETERS:
- *       MemoryArea - Memory area to read the page for.
- *       Offset - Offset of the page to read.
- *       Page - Variable that receives a page contains the read data.
- */
-{
-    MM_REQUIRED_RESOURCES Resources;
-    NTSTATUS Status;
-
-    RtlZeroMemory(&Resources, sizeof(MM_REQUIRED_RESOURCES));
-
-    Resources.Context = MemoryArea->SectionData.Section->FileObject;
-    Resources.FileOffset.QuadPart = SegOffset +
-                                    MemoryArea->SectionData.Segment->Image.FileOffset;
-    Resources.Consumer = MC_USER;
-    Resources.Amount = PAGE_SIZE;
-
-    DPRINT("%S, offset 0x%x, len 0x%x, page 0x%x\n", ((PFILE_OBJECT)Resources.Context)->FileName.Buffer, Resources.FileOffset.LowPart, Resources.Amount, Resources.Page[0]);
-
-    Status = MiReadFilePage(MmGetKernelAddressSpace(), MemoryArea, &Resources);
-    *Page = Resources.Page[0];
-    return Status;
-}
-#endif
 
 static VOID
 MmAlterViewAttributes(PMMSUPPORT AddressSpace,
@@ -1610,85 +1718,57 @@ MmNotPresentFaultSectionView(PMMSUPPORT AddressSpace,
 
     if (Entry == 0)
     {
-        SWAPENTRY FakeSwapEntry;
-
         /*
-         * If the entry is zero (and it can't change because we have
-         * locked the segment) then we need to load the page.
+         * If the entry is zero, then we need to load the page.
          */
-
-        /*
-         * Release all our locks and read in the page from disk
-         */
-        MmSetPageEntrySectionSegment(Segment, &Offset, MAKE_SWAP_SSE(MM_WAIT_ENTRY));
-        MmUnlockSectionSegment(Segment);
-        MmCreatePageFileMapping(Process, PAddress, MM_WAIT_ENTRY);
-        MmUnlockAddressSpace(AddressSpace);
-
         if ((Offset.QuadPart >= (LONGLONG)PAGE_ROUND_UP(Segment->RawLength.QuadPart)) && (MemoryArea->VadNode.u.VadFlags.VadType == VadImageMap))
         {
+            /* We are beyond the data which is on file. Just get a new page. */
             MI_SET_USAGE(MI_USAGE_SECTION);
             if (Process) MI_SET_PROCESS2(Process->ImageFileName);
             if (!Process) MI_SET_PROCESS2("Kernel Section");
-            Status = MmRequestPageMemoryConsumer(MC_USER, TRUE, &Page);
-            if (!NT_SUCCESS(Status))
-            {
-                DPRINT1("MmRequestPageMemoryConsumer failed (Status %x)\n", Status);
-            }
+            MmRequestPageMemoryConsumer(MC_USER, FALSE, &Page);
+            MmSetPageEntrySectionSegment(Segment, &Offset, MAKE_SSE(Page << PAGE_SHIFT, 1));
+            MmUnlockSectionSegment(Segment);
 
-        }
-        else
-        {
-            DPRINT("Getting fresh page for file %wZ at offset %I64d.\n", &Segment->FileObject->FileName, Offset.QuadPart);
-            Status = MiReadPage(MemoryArea, Offset.QuadPart, &Page, FALSE);
+            Status = MmCreateVirtualMapping(Process, PAddress, Attributes, &Page, 1);
             if (!NT_SUCCESS(Status))
             {
-                DPRINT1("MiReadPage failed (Status %x)\n", Status);
+                DPRINT1("Unable to create virtual mapping\n");
+                KeBugCheck(MEMORY_MANAGEMENT);
             }
-        }
-        if (!NT_SUCCESS(Status))
-        {
-            /*
-             * FIXME: What do we know in this case?
-             */
-            /*
-             * Cleanup and release locks
-             */
-            MmLockAddressSpace(AddressSpace);
+            ASSERT(MmIsPagePresent(Process, PAddress));
+            if (Process)
+                MmInsertRmap(Page, Process, Address);
+
             MiSetPageEvent(Process, Address);
             DPRINT("Address 0x%p\n", Address);
-            return(Status);
+            return(STATUS_SUCCESS);
         }
 
-        /* Lock both segment and process address space while we proceed. */
-        MmLockAddressSpace(AddressSpace);
-        MmLockSectionSegment(Segment);
+        MmUnlockSectionSegment(Segment);
+        MmUnlockAddressSpace(AddressSpace);
 
-        MmDeletePageFileMapping(Process, PAddress, &FakeSwapEntry);
-        DPRINT("CreateVirtualMapping Page %x Process %p PAddress %p Attributes %x\n",
-               Page, Process, PAddress, Attributes);
-        Status = MmCreateVirtualMapping(Process,
-                                        PAddress,
-                                        Attributes,
-                                        &Page,
-                                        1);
+        /* The data must be paged in. Lock the file, so that the VDL doesn't get updated behind us. */
+        FsRtlAcquireFileExclusive(Segment->FileObject);
+
+        PFSRTL_COMMON_FCB_HEADER FcbHeader = Segment->FileObject->FsContext;
+
+        Status = MmMakeSegmentResident(Segment, Offset.QuadPart, PAGE_SIZE, &FcbHeader->ValidDataLength);
+
+        FsRtlReleaseFile(Segment->FileObject);
+
+        /* Lock address space again */
+        MmLockAddressSpace(AddressSpace);
         if (!NT_SUCCESS(Status))
         {
-            DPRINT1("Unable to create virtual mapping\n");
-            KeBugCheck(MEMORY_MANAGEMENT);
+            /* Damn */
+            DPRINT1("Failed to page data in!\n");
+            return STATUS_IN_PAGE_ERROR;
         }
-        ASSERT(MmIsPagePresent(Process, PAddress));
-        if (Process)
-            MmInsertRmap(Page, Process, Address);
 
-        /* Set this section offset has being backed by our new page. */
-        Entry = MAKE_SSE(Page << PAGE_SHIFT, 1);
-        MmSetPageEntrySectionSegment(Segment, &Offset, Entry);
-        MmUnlockSectionSegment(Segment);
-
-        MiSetPageEvent(Process, Address);
-        DPRINT("Address 0x%p\n", Address);
-        return(STATUS_SUCCESS);
+        /* Everything went fine. Restart the operation */
+        return STATUS_MM_RESTART_OPERATION;
     }
     else if (IS_SWAP_FROM_SSE(Entry))
     {
@@ -4460,103 +4540,6 @@ MmArePagesResident(
 
 NTSTATUS
 NTAPI
-MmMakePagesResident(
-    _In_ PEPROCESS Process,
-    _In_ PVOID Address,
-    _In_ ULONG Length)
-{
-    PMEMORY_AREA MemoryArea;
-    PMM_SECTION_SEGMENT Segment;
-    LARGE_INTEGER SegmentOffset, RangeEnd;
-    PMMSUPPORT AddressSpace = Process ? &Process->Vm : MmGetKernelAddressSpace();
-
-    MmLockAddressSpace(AddressSpace);
-
-    MemoryArea = MmLocateMemoryAreaByAddress(AddressSpace, Address);
-    if (MemoryArea == NULL)
-    {
-        DPRINT1("Unable to find memory area at address %p.\n", Address);
-        MmUnlockAddressSpace(AddressSpace);
-        return STATUS_NOT_MAPPED_VIEW;
-    }
-
-    /* Only supported in old Mm for now */
-    ASSERT(MemoryArea->Type == MEMORY_AREA_SECTION_VIEW);
-    /* For file mappings */
-    ASSERT(MemoryArea->VadNode.u.VadFlags.VadType != VadImageMap);
-
-    Segment = MemoryArea->SectionData.Segment;
-    MmLockSectionSegment(Segment);
-
-    SegmentOffset.QuadPart = PAGE_ROUND_DOWN(Address) - MA_GetStartingAddress(MemoryArea)
-            + MemoryArea->SectionData.ViewOffset.QuadPart;
-    RangeEnd.QuadPart = PAGE_ROUND_UP((ULONG_PTR)Address + Length) - MA_GetStartingAddress(MemoryArea)
-            + MemoryArea->SectionData.ViewOffset.QuadPart;
-
-    DPRINT("MmMakePagesResident: Segment %p, 0x%I64x -> 0x%I64x\n", Segment, SegmentOffset.QuadPart, RangeEnd.QuadPart);
-
-    while (SegmentOffset.QuadPart < RangeEnd.QuadPart)
-    {
-        ULONG_PTR Entry = MmGetPageEntrySectionSegment(Segment, &SegmentOffset);
-
-        /* Let any pending read proceed */
-        while (MM_IS_WAIT_PTE(Entry))
-        {
-            MmUnlockSectionSegment(Segment);
-            MmUnlockAddressSpace(AddressSpace);
-            MiWaitForPageEvent(NULL, NULL);
-            MmLockAddressSpace(AddressSpace);
-            MmLockSectionSegment(Segment);
-            Entry = MmGetPageEntrySectionSegment(Segment, &SegmentOffset);
-        }
-
-        /* We are called from Cc, this can't be backed by the page files */
-        ASSERT(!IS_SWAP_FROM_SSE(Entry));
-
-        /* At this point, there may be a valid page there */
-        if (Entry == 0)
-        {
-            PFN_NUMBER Page;
-            NTSTATUS Status;
-
-            /*
-             * Release all our locks and read in the page from disk
-             */
-            MmSetPageEntrySectionSegment(Segment, &SegmentOffset, MAKE_SWAP_SSE(MM_WAIT_ENTRY));
-            MmUnlockSectionSegment(Segment);
-            MmUnlockAddressSpace(AddressSpace);
-
-            /* FIXME: Read the whole range at once instead of one page at a time */
-            /* Ignore file size, as Cc already checked on its side. */
-            Status = MiReadPage(MemoryArea, SegmentOffset.QuadPart, &Page, TRUE);
-            if (!NT_SUCCESS(Status))
-            {
-                /* Reset the Segment entry and fail */
-                MmLockSectionSegment(Segment);
-                MmSetPageEntrySectionSegment(Segment, &SegmentOffset, 0);
-                MmUnlockSectionSegment(Segment);
-                MiSetPageEvent(Process, Address);
-                return Status;
-            }
-
-            MmLockAddressSpace(AddressSpace);
-            MmLockSectionSegment(Segment);
-
-            /* We set it with 0 ref count, nobody maps this page yet. */
-            MmSetPageEntrySectionSegment(Segment, &SegmentOffset, MAKE_SSE(Page << PAGE_SHIFT, 0));
-            MiSetPageEvent(Process, Address);
-        }
-        SegmentOffset.QuadPart += PAGE_SIZE;
-    }
-
-    MmUnlockSectionSegment(Segment);
-
-    MmUnlockAddressSpace(AddressSpace);
-    return STATUS_SUCCESS;
-}
-
-NTSTATUS
-NTAPI
 MmRosFlushVirtualMemory(
     _In_ PEPROCESS Process,
     _Inout_ PVOID* Address,
@@ -4721,6 +4704,26 @@ MmPurgeSegment(
     MmUnlockSectionSegment(Segment);
     MmDereferenceSegment(Segment);
     return TRUE;
+}
+
+NTSTATUS
+NTAPI
+MmMakeDataSectionResident(
+    _In_ PSECTION_OBJECT_POINTERS SectionObjectPointer,
+    _In_ LONGLONG Offset,
+    _In_ ULONG Length,
+    _In_ PLARGE_INTEGER ValidDataLength)
+{
+    PMM_SECTION_SEGMENT Segment = MiGrabDataSection(SectionObjectPointer);
+
+    /* There must be a segment for this call */
+    ASSERT(Segment);
+
+    NTSTATUS Status = MmMakeSegmentResident(Segment, Offset, Length, ValidDataLength);
+
+    MmDereferenceSegment(Segment);
+
+    return Status;
 }
 
 NTSTATUS
