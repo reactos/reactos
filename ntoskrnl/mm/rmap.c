@@ -68,16 +68,6 @@ GetEntry:
     while (entry && RMAP_IS_SEGMENT(entry->Address))
         entry = entry->Next;
 
-    /* See if we are retrying because the page is actively used */
-    while (entry && ((entry->Address < Address) || RMAP_IS_SEGMENT(entry->Address)))
-        entry = entry->Next;
-
-    if (entry && (entry->Address == Address))
-    {
-        while (entry && ((entry->Process <= Process) || RMAP_IS_SEGMENT(entry->Address)))
-            entry = entry->Next;
-    }
-
     if (entry == NULL)
     {
         MiReleasePfnLock(OldIrql);
