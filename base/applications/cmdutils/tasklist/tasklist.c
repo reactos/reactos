@@ -280,7 +280,7 @@ BOOL EnumProcessAndPrint(BOOL bVerbose)
     pSPI = (PSYSTEM_PROCESS_INFORMATION)ProcessInfoBuffer;
     while (pSPI)
     {
-        PrintString(pSPI->ImageName.Buffer, COLUMNWIDTH_IMAGENAME);
+        PrintString(pSPI->UniqueProcessId ? pSPI->ImageName.Buffer : L"System Idle Process", COLUMNWIDTH_IMAGENAME);
         PrintSpace(1);
         PrintNum((int)pSPI->UniqueProcessId, COLUMNWIDTH_PID);
         PrintSpace(1);
