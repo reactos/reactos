@@ -106,11 +106,11 @@ INT PrintString(LPCWSTR String, int MaxWidth)
 // Print a string, aligned to right.
 // MaxWidth is the width for printing.
 // return FALSE if number length is longer than MaxWidth
-BOOL PrintNum(int Number, int MaxWidth)
+BOOL PrintNum(long long Number, int MaxWidth)
 {
     // calculate the length needed to print.
     int PrintLength = 0;
-    int Tmp = Number;
+    long long Tmp = Number;
     do
     {
         Tmp /= 10;
@@ -121,7 +121,7 @@ BOOL PrintNum(int Number, int MaxWidth)
     {
         return FALSE;
     }
-    ConPrintf(StdOut, L"%*d", MaxWidth, Number);
+    ConPrintf(StdOut, L"%*lld", MaxWidth, Number);
 
     return TRUE;
 }
@@ -282,9 +282,9 @@ BOOL EnumProcessAndPrint(BOOL bVerbose)
     {
         PrintString(pSPI->UniqueProcessId ? pSPI->ImageName.Buffer : L"System Idle Process", COLUMNWIDTH_IMAGENAME);
         PrintSpace(1);
-        PrintNum((int)pSPI->UniqueProcessId, COLUMNWIDTH_PID);
+        PrintNum((long long)(long)pSPI->UniqueProcessId, COLUMNWIDTH_PID);
         PrintSpace(1);
-        PrintNum((int)pSPI->SessionId, COLUMNWIDTH_SESSION);
+        PrintNum((long long)pSPI->SessionId, COLUMNWIDTH_SESSION);
         PrintSpace(1);
         PrintMemory(pSPI->WorkingSetSize, COLUMNWIDTH_MEMUSAGE, 1);
 
