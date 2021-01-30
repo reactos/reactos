@@ -5,19 +5,18 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Общие"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    CONTROL "", IDC_ROSIMG, "Static", SS_OWNERDRAW, 4, 5, 248, 111
-    LTEXT "Операционная система:", IDC_STATIC, 4, 132, 87, 9
-    LTEXT REACTOS_STR_PRODUCT_NAME, IDC_STATIC, 10, 144, 116, 9
-    LTEXT "Версия ", IDC_STATIC, 10, 153, 25, 9
-    LTEXT REACTOS_STR_PRODUCT_VERSION, IDC_STATIC, 35, 153, 91, 9
-    LTEXT REACTOS_STR_PRODUCT_BUILD, IDC_STATIC, 10, 162, 110, 9
-    LTEXT "Компьютер:", IDC_STATIC, 124, 132, 40, 9
-    LTEXT "", IDC_MACHINELINE1, 130, 144, 118, 9
-    LTEXT "", IDC_MACHINELINE2, 130, 153, 118, 9
-    LTEXT "", IDC_MACHINELINE3, 130, 162, 118, 9
-    LTEXT "", IDC_MACHINELINE4, 130, 171, 118, 9
-    LTEXT "", IDC_MACHINELINE5, 130, 180, 118, 9
-    CONTROL "Посетите <A HREF=""http://www.reactos.org/"">домашнюю страницу ReactOS</A>.", IDC_ROSHOMEPAGE_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 10, 200, 140, 10
+    CONTROL "", IDC_ROSIMG, "Static", SS_OWNERDRAW, 8, 18, 100, 111
+    LTEXT "Операционная система:", IDC_STATIC, 114, 16, 80, 9
+    LTEXT REACTOS_STR_PRODUCT_NAME, IDC_STATIC, 120, 28, 116, 9
+    LTEXT "Версия", IDC_ROSVERSION, 120, 37, 116, 9
+    LTEXT REACTOS_STR_PRODUCT_BUILD, IDC_STATIC, 120, 46, 135, 9
+    LTEXT "Компьютер:", IDC_STATIC, 114, 75, 44, 9
+    LTEXT "", IDC_MACHINELINE1, 120, 87, 118, 9
+    LTEXT "", IDC_MACHINELINE2, 120, 96, 118, 9
+    LTEXT "", IDC_MACHINELINE3, 120, 105, 118, 9
+    LTEXT "", IDC_MACHINELINE4, 120, 114, 118, 9
+    LTEXT "", IDC_MACHINELINE5, 120, 123, 118, 9
+    CONTROL "Посетите <A HREF=""https://reactos.org/"">домашнюю страницу ReactOS</A>.", IDC_ROSHOMEPAGE_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 10, 200, 140, 10
     PUSHBUTTON "&Лицензия...", IDC_LICENCE, 170, 200, 78, 14
 END
 
@@ -298,7 +297,6 @@ BEGIN
     IDS_PAGEFILE_NONE "Нет"
     IDS_PAGEFILE_SYSTEM "По выбору системы"
     IDS_INFOREBOOT "Необходимо перезагрузить компьютер для применения изменений."
-    IDS_DEVS "\nКоманда ReactOS\n\nКоординатор проекта\n\nАлексей Брагин\n\nКоллектив разработчиков\n\nАлексей Брагин\nЭндрю Гринвуд\nАндрей Коротаев\nАрт Йеркс\nКристоф фон Виттих\nКолин Финк\nДаниэль Раймер\nДмитрий Чапышев\nЭрик Коль\nГед Мёрфи\nГрегор Брюнмар\nЭрве Поссино\nДжеймс Тэбор\nДжеффри Морлан\nЙоханнес Андервальд\nKamil Horníček\nKJK::Гиперион\nМаартен Босма\nМагнус Олсен\nМарк Пиулахс\nМаттиас Купфер\nМайк Норделл\nПитер Вард\nПьер Швейцер\nСавелий Третьяков\nСтефан Гинсберг\nСильвейн Петреоль\nТомас Блюмель\nТимо Кройцер\n\nАлекс Ионеску\nФилип Навара\nГуннар Далснес\nМартин Фукс\nРойс Митчелл III\nБрэндон Тёрнер\nБрайан Палмер\nКаспер Хорнструп\nДэвид Велч\nЭмануэль Алиберти\nГе ван Гельдорп\nГрегор Анич\nДжейсон Филби\nЙенс Коллин\nМихаэль Вирт\nНатан Вудс\nРоберт Дикенсон\nРекс Джоллифф\nVizzini\n\nРелиз-инженеры\n\nКолин Финк\nЦзылян Гуо\n\nРазработка веб-сайта\n\nКолин Финк\nЯн Блумквист Кинандер\nКлеменс Фридл\nЦзылян Гуо\n\nГрафический дизайн\n\nMindflyer\nWierd_W\n\nБлагодарности\n\nвсем участникам проекта\nКоманде Wine\n\n"
     IDS_HWPROFILE_CONFIRM_DELETE_TITLE "Подтверждение удаления профиля"
     IDS_HWPROFILE_CONFIRM_DELETE "Вы уверены что хотите удалить профиль оборудования ""%s""?"
     IDS_HWPROFILE_ALREADY_IN_USE "Профиль с таким названием уже существует."
