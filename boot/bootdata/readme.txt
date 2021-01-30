@@ -1,6 +1,6 @@
 ﻿========================
 ReactOS™ Version 0.4.x
-Updated August 31, 2016
+Updated January 20, 2021
 ========================
 
 1. What is ReactOS?
@@ -10,7 +10,7 @@ ReactOS™ is an Open Source effort to develop a quality operating system that i
 compatible with applications and drivers written for the Microsoft® Windows™ NT
 family of operating systems (NT4, 2000, XP, 2003, Vista, Seven).
 
-More information is available at: https://www.reactos.org
+More information is available at: https://reactos.org/
 
 
 2. Relationship with the WINE project
@@ -56,7 +56,7 @@ exposed by the operating system.
 6. Tutorials
 ------------
 
-Developer and User Tutorials: https://www.reactos.org/wiki
+Developer and User Tutorials: https://reactos.org/wiki
 
 The tutorials contain more information on the project, compiling and testing
 ReactOS - amongst other topics. Contributors to the project are always welcome.
@@ -65,13 +65,82 @@ ReactOS - amongst other topics. Contributors to the project are always welcome.
 7. Frequently Asked Questions
 -----------------------------
 
-Some of your questions may be answered in: https://www.reactos.org/joining/faqs
-In addition, the ReactOS forum: https://www.reactos.org/forum/ may contain
+Some of your questions may be answered in: https://reactos.org/faq/
+In addition, the ReactOS forum: https://reactos.org/forum/ may contain
 complementary, yet non-official, information.
 
 
-8. Authors
-----------
+8. Authors and Credits
+----------------------
 
-This document was originally written by Jason Filby (jasonfilby@yahoo.com)
-and is now occasionally updated by various contributors.
+Aleksandar Andrejevic
+Aleksey Bragin
+Alex Ionescu
+Alexander Shaposhnikov
+Amine Khaldi
+Andrew Greenwood
+Andrey Korotaev
+Art Yerkes
+Benedikt Freisen
+Brandon Turner
+Brian Palmer
+Cameron Gutman
+Casper Hornstrup
+Christoph von Wittich
+Colin Finck
+Daniel Reimer
+David Quintana
+David Welch
+Dmitry Chapyshev
+Emanuele Aliberti
+Eric Kohl
+Filip Navara
+Ged Murphy
+Gé van Geldorp
+Giannis Adamopoulos
+Gregor Anich
+Gregor Brunmar
+Gunnar Dalsnes
+Hermès Bélusca-Maïto
+Hervé Poussineau
+Jaix Bly
+James Tabor
+Jason Filby
+Jeffrey Morlan
+Jens Collin
+Jérôme Gardou
+Joachim Henze
+Johannes Anderwald
+Kamil Hornícek
+Katayama Hirofumi MZ
+KJK::Hyperion
+Klemens Friedl
+Maarten Bosma
+Magnus Olsen
+Marc Piulachs
+Mark Jansen
+Martin Fuchs
+Matthias Kupfer
+Michael Wirth
+Mike Nordell
+Mindflyer
+Nathan Woods
+Peter Hater
+Peter Ward
+Pierre Schweitzer
+Rex Jolliff
+Robert Dickenson
+Royce Mitchell III
+Saveliy Tretiakov
+Stanislav Motylkov
+Stefan Ginsberg
+Sylvain Petreolle
+Thomas Blümel
+Thomas Faber
+Timo Kreuzer
+Vadim Galyant
+Vizzini
+Wierd_W
+Z98
+
+Further thanks go to all Contributors and the Wine Team
