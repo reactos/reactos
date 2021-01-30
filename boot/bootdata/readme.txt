@@ -1,6 +1,6 @@
 ﻿========================
 ReactOS™ Version 0.4.x
-Updated August 31, 2016
+Updated January 20, 2021
 ========================
 
 1. What is ReactOS?
@@ -70,8 +70,77 @@ In addition, the ReactOS forum: https://reactos.org/forum/ may contain
 complementary, yet non-official, information.
 
 
-8. Authors
-----------
+8. Authors and Credits
+----------------------
 
-This document was originally written by Jason Filby (jasonfilby@yahoo.com)
-and is now occasionally updated by various contributors.
+Aleksandar Andrejevic
+Aleksey Bragin
+Alex Ionescu
+Alexander Shaposhnikov
+Amine Khaldi
+Andrew Greenwood
+Andrey Korotaev
+Art Yerkes
+Benedikt Freisen
+Brandon Turner
+Brian Palmer
+Cameron Gutman
+Casper Hornstrup
+Christoph von Wittich
+Colin Finck
+Daniel Reimer
+David Quintana
+David Welch
+Dmitry Chapyshev
+Emanuele Aliberti
+Eric Kohl
+Filip Navara
+Ged Murphy
+Gé van Geldorp
+Giannis Adamopoulos
+Gregor Anich
+Gregor Brunmar
+Gunnar Dalsnes
+Hermès Bélusca-Maïto
+Hervé Poussineau
+Jaix Bly
+James Tabor
+Jason Filby
+Jeffrey Morlan
+Jens Collin
+Jérôme Gardou
+Joachim Henze
+Johannes Anderwald
+Kamil Hornícek
+Katayama Hirofumi MZ
+KJK::Hyperion
+Klemens Friedl
+Maarten Bosma
+Magnus Olsen
+Marc Piulachs
+Mark Jansen
+Martin Fuchs
+Matthias Kupfer
+Michael Wirth
+Mike Nordell
+Mindflyer
+Nathan Woods
+Peter Hater
+Peter Ward
+Pierre Schweitzer
+Rex Jolliff
+Robert Dickenson
+Royce Mitchell III
+Saveliy Tretiakov
+Stanislav Motylkov
+Stefan Ginsberg
+Sylvain Petreolle
+Thomas Blümel
+Thomas Faber
+Timo Kreuzer
+Vadim Galyant
+Vizzini
+Wierd_W
+Z98
+
+Further thanks go to all Contributors and the Wine Team
