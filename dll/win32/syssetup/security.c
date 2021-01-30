@@ -1104,19 +1104,208 @@ done:
 
 static
 VOID
+SetLsaAnonymousNameLookup(
+    _In_ HINF hSecurityInf,
+    _In_ PWSTR pszSectionName)
+{
+#if 0
+    INFCONTEXT InfContext;
+    INT nValue = 0;
+
+    DPRINT1("SetLsaAnonymousNameLookup()\n");
+
+    if (!SetupFindFirstLineW(hSecurityInf,
+                             pszSectionName,
+                             L"LSAAnonymousNameLookup",
+                             &InfContext))
+    {
+        return;
+    }
+
+    if (!SetupGetIntField(&InfContext, 1, &nValue))
+    {
+        return;
+    }
+
+    if (nValue == 0)
+    {
+    }
+    else
+    {
+    }
+#endif
+}
+
+
+static
+VOID
+EnableAccount(
+    _In_ HINF hSecurityInf,
+    _In_ PWSTR pszSectionName,
+    _In_ PWSTR pszValueName,
+    _In_ SAM_HANDLE DomainHandle,
+    _In_ DWORD dwAccountRid)
+{
+    INFCONTEXT InfContext;
+    SAM_HANDLE UserHandle = NULL;
+    USER_CONTROL_INFORMATION ControlInfo;
+    INT nValue = 0;
+    NTSTATUS Status;
+
+    DPRINT("EnableAccount()\n");
+
+    if (!SetupFindFirstLineW(hSecurityInf,
+                            pszSectionName,
+                            pszValueName,
+                            &InfContext))
+        return;
+
+    if (!SetupGetIntField(&InfContext, 1, &nValue))
+    {
+        DPRINT1("No valid integer value\n");
+        goto done;
+    }
+
+    DPRINT("Value: %d\n", nValue);
+
+    Status = SamOpenUser(DomainHandle,
+                         USER_READ_ACCOUNT | USER_WRITE_ACCOUNT,
+                         dwAccountRid,
+                         &UserHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("SamOpenUser() failed (Status: 0x%08lx)\n", Status);
+        goto done;
+    }
+
+    Status = SamQueryInformationUser(UserHandle,
+                                     UserControlInformation,
+                                     (PVOID)&ControlInfo);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("SamQueryInformationUser() failed (Status: 0x%08lx)\n", Status);
+        goto done;
+    }
+
+    if (nValue == 0)
+    {
+        ControlInfo.UserAccountControl |= USER_ACCOUNT_DISABLED;
+    }
+    else
+    {
+        ControlInfo.UserAccountControl &= ~USER_ACCOUNT_DISABLED;
+    }
+
+    Status = SamSetInformationUser(UserHandle,
+                                   UserControlInformation,
+                                   (PVOID)&ControlInfo);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("SamSetInformationUser() failed (Status: 0x%08lx)\n", Status);
+    }
+
+done:
+    if (UserHandle != NULL)
+        SamCloseHandle(UserHandle);
+}
+
+
+static
+VOID
+SetNewAccountName(
+    _In_ HINF hSecurityInf,
+    _In_ PWSTR pszSectionName,
+    _In_ PWSTR pszValueName,
+    _In_ SAM_HANDLE DomainHandle,
+    _In_ DWORD dwAccountRid)
+{
+    INFCONTEXT InfContext;
+    DWORD dwLength = 0;
+    PWSTR pszName = NULL;
+    SAM_HANDLE UserHandle = NULL;
+    USER_NAME_INFORMATION NameInfo;
+    NTSTATUS Status;
+
+    DPRINT("SetNewAccountName()\n");
+
+    if (!SetupFindFirstLineW(hSecurityInf,
+                            pszSectionName,
+                            pszValueName,
+                            &InfContext))
+        return;
+
+    SetupGetStringFieldW(&InfContext,
+                         1,
+                         NULL,
+                         0,
+                         &dwLength);
+    if (dwLength == 0)
+        return;
+
+    pszName = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, dwLength * sizeof(WCHAR));
+    if (pszName == NULL)
+    {
+        DPRINT1("HeapAlloc() failed\n");
+        return;
+    }
+
+    if (!SetupGetStringFieldW(&InfContext,
+                              1,
+                              pszName,
+                              dwLength,
+                              &dwLength))
+    {
+        DPRINT1("No valid string value\n");
+        goto done;
+    }
+
+    DPRINT("NewAccountName: '%S'\n", pszName);
+
+    Status = SamOpenUser(DomainHandle,
+                         USER_WRITE_ACCOUNT,
+                         dwAccountRid,
+                         &UserHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("SamOpenUser() failed (Status: 0x%08lx)\n", Status);
+        goto done;
+    }
+
+    NameInfo.UserName.Length = wcslen(pszName) * sizeof(WCHAR);
+    NameInfo.UserName.MaximumLength = NameInfo.UserName.Length + sizeof(WCHAR);
+    NameInfo.UserName.Buffer = pszName;
+    NameInfo.FullName.Length = 0;
+    NameInfo.FullName.MaximumLength = 0;
+    NameInfo.FullName.Buffer = NULL;
+
+    Status = SamSetInformationUser(UserHandle,
+                                   UserNameInformation,
+                                   (PVOID)&NameInfo);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("SamSetInformationUser() failed (Status: 0x%08lx)\n", Status);
+    }
+
+done:
+    if (UserHandle != NULL)
+        SamCloseHandle(UserHandle);
+
+    if (pszName != NULL)
+        HeapFree(GetProcessHeap(), 0, pszName);
+}
+
+
+static
+VOID
 ApplyAccountSettings(
     _In_ HINF hSecurityInf,
     _In_ PWSTR pszSectionName)
 {
-    INFCONTEXT InfContext;
     PPOLICY_ACCOUNT_DOMAIN_INFO OrigInfo = NULL;
     LSA_OBJECT_ATTRIBUTES ObjectAttributes;
     LSA_HANDLE PolicyHandle = NULL;
     SAM_HANDLE ServerHandle = NULL;
     SAM_HANDLE DomainHandle = NULL;
-    SAM_HANDLE UserHandle = NULL;
-    USER_CONTROL_INFORMATION ControlInfo;
-    INT nValue;
     NTSTATUS Status;
 
     DPRINT("ApplyAccountSettings()\n");
@@ -1163,114 +1352,32 @@ ApplyAccountSettings(
         goto done;
     }
 
-#if 0
-    if (SetupFindFirstLineW(hSecurityInf,
-                            pszSectionName,
-                            L"LSAAnonymousNameLookup",
-                            &InfContext))
-    {
-        if (SetupGetIntField(&InfContext, 1, &nValue))
-        {
-            if (nValue == 0)
-            {
-            }
-            else
-            {
-            }
-            
-        }
-    }
-#endif
+    SetLsaAnonymousNameLookup(hSecurityInf,
+                              pszSectionName);
 
-    if (SetupFindFirstLineW(hSecurityInf,
-                            pszSectionName,
-                            L"EnableAdminAccount",
-                            &InfContext))
-    {
-        if (SetupGetIntField(&InfContext, 1, &nValue))
-        {
-            Status = SamOpenUser(DomainHandle,
-                                 USER_READ_ACCOUNT | USER_WRITE_ACCOUNT,
-                                 DOMAIN_USER_RID_ADMIN,
-                                 &UserHandle);
-            if (NT_SUCCESS(Status))
-            {
-                Status = SamQueryInformationUser(UserHandle,
-                                                 UserControlInformation,
-                                                 (PVOID)&ControlInfo);
-                if (NT_SUCCESS(Status))
-                {
-                    if (nValue == 0)
-                    {
-                        ControlInfo.UserAccountControl |= USER_ACCOUNT_DISABLED;
-                    }
-                    else
-                    {
-                        ControlInfo.UserAccountControl &= ~USER_ACCOUNT_DISABLED;
-                    }
+    EnableAccount(hSecurityInf,
+                  pszSectionName,
+                  L"EnableAdminAccount",
+                  DomainHandle,
+                  DOMAIN_USER_RID_ADMIN);
 
-                    SamSetInformationUser(UserHandle,
-                                          UserControlInformation,
-                                          (PVOID)&ControlInfo);
-                }
+    EnableAccount(hSecurityInf,
+                  pszSectionName,
+                  L"EnableGuestAccount",
+                  DomainHandle,
+                  DOMAIN_USER_RID_GUEST);
 
-                SamCloseHandle(UserHandle);
-            }
-        }
-    }
+    SetNewAccountName(hSecurityInf,
+                      pszSectionName,
+                      L"NewAdministratorName",
+                      DomainHandle,
+                      DOMAIN_USER_RID_ADMIN);
 
-    if (SetupFindFirstLineW(hSecurityInf,
-                            pszSectionName,
-                            L"EnableGuestAccount",
-                            &InfContext))
-    {
-        if (SetupGetIntField(&InfContext, 1, &nValue))
-        {
-            Status = SamOpenUser(DomainHandle,
-                                 USER_READ_ACCOUNT | USER_WRITE_ACCOUNT,
-                                 DOMAIN_USER_RID_GUEST,
-                                 &UserHandle);
-            if (NT_SUCCESS(Status))
-            {
-                Status = SamQueryInformationUser(UserHandle,
-                                                 UserControlInformation,
-                                                 (PVOID)&ControlInfo);
-                if (NT_SUCCESS(Status))
-                {
-                    if (nValue == 0)
-                    {
-                        ControlInfo.UserAccountControl |= USER_ACCOUNT_DISABLED;
-                    }
-                    else
-                    {
-                        ControlInfo.UserAccountControl &= ~USER_ACCOUNT_DISABLED;
-                    }
-
-                    SamSetInformationUser(UserHandle,
-                                          UserControlInformation,
-                                          (PVOID)&ControlInfo);
-                }
-
-                SamCloseHandle(UserHandle);
-            }
-        }
-    }
-
-#if 0
-    if (SetupFindFirstLineW(hSecurityInf,
-                            pszSectionName,
-                            L"NewAdministratorName",
-                            &InfContext))
-    {
-    }
-
-    if (SetupFindFirstLineW(hSecurityInf,
-                            pszSectionName,
-                            L"NewGuestName",
-                            &InfContext))
-    {
-    }
-#endif
+    SetNewAccountName(hSecurityInf,
+                      pszSectionName,
+                      L"NewGuestName",
+                      DomainHandle,
+                      DOMAIN_USER_RID_GUEST);
 
 done:
     if (DomainHandle != NULL)
