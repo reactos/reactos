@@ -20,7 +20,7 @@ OnInitDialog(HWND hDlg, PLIC_CONTEXT pLicInfo)
 {
     HRSRC hResInfo;
     HGLOBAL hResMem;
-    WCHAR *LicenseText;
+    PCSTR LicenseText;
 
     pLicInfo->hIcon = LoadImage(hApplet,
                                 MAKEINTRESOURCE(IDI_CPLSYSTEM),
@@ -45,10 +45,10 @@ OnInitDialog(HWND hDlg, PLIC_CONTEXT pLicInfo)
         return FALSE;
     }
 
-    /* Insert the license into the edit control (unicode!) */
-    SetDlgItemText(hDlg,
-                   IDC_LICENCEEDIT,
-                   LicenseText);
+    /* Insert the license into the edit control */
+    SetDlgItemTextA(hDlg,
+                    IDC_LICENCEEDIT,
+                    LicenseText);
 
     PostMessage(GetDlgItem(hDlg, IDC_LICENCEEDIT),
                 EM_SETSEL,
