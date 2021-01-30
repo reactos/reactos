@@ -16,9 +16,6 @@
 #include <buildno.h>
 #include <strsafe.h>
 
-#define ANIM_STEP 2
-#define ANIM_TIME 50
-
 typedef struct _IMGINFO
 {
     HBITMAP hBitmap;
