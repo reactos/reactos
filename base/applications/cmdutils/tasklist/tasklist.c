@@ -213,7 +213,7 @@ BOOL EnumProcessAndPrint(BOOL bVerbose)
         return FALSE;
     }
 
-    // call NtQuerySystemInformation for the process information
+    // Call NtQuerySystemInformation for the process information
     ULONG ProcessInfoBufferLength = 0;
     ULONG ResultLength = 0;
     PBYTE ProcessInfoBuffer = 0;
