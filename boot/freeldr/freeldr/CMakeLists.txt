@@ -225,6 +225,10 @@ if(NOT MSVC AND ARCH STREQUAL "i386" AND SARCH STREQUAL "xbox")
   # Prevent a warning when doing a memcmp with address 0
   set_source_files_properties(arch/i386/xbox/xboxmem.c PROPERTIES COMPILE_FLAGS "-Wno-nonnull")
 endif()
+if(ARCH STREQUAL "amd64" AND NOT MSVC)
+    # Prevent using SSE (not support in freeldr)
+    target_compile_options(freeldr_common PUBLIC -mno-sse)
+endif()
 
 set(PCH_SOURCE
     ${FREELDR_BOOTLIB_SOURCE}
