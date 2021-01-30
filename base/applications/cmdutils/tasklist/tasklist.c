@@ -86,6 +86,76 @@ VOID PrintHeader()
     ConPrintf(StdOut, L"\n");
 }
 
+// Print memory size using appropriate unit, with comma-separated number, aligned to right.
+// MaxWidth is the width for printing
+// StartingUnit is the minimum memory unit used, 0 for Byte, 1 for KB, 2 for MB ...
+// return FALSE when failed to format.
+BOOL PrintMemory(SIZE_T MemorySizeByte, int MaxWidth, int StartingUnit)
+{
+    WCHAR *MemoryUnit[] = {L"B", L"K", L"M", L"G", L"T", L"P"};
+
+    MaxWidth -= 2; // a space and a unit will occupy 2 length.
+    if (MaxWidth <= 0)
+    {
+        return FALSE;
+    }
+
+    SIZE_T MemorySize = MemorySizeByte;
+
+    for (int i = 0; i < _countof(MemoryUnit); i++)
+    {
+        if (i >= StartingUnit)
+        {
+            // calculate the length needed to print.
+            int PrintLength = 0;
+            SIZE_T Tmp = MemorySize;
+            do
+            {
+                Tmp /= 10;
+                PrintLength += 1;
+            } while (Tmp);
+
+            if (PrintLength + (PrintLength - 1) / 3 <= MaxWidth) // (PrintLength - 1) / 3 is the length comma will take.
+            {
+                // enough to hold
+
+                // print padding space
+                for (int i = 0; i < MaxWidth - (PrintLength + (PrintLength - 1) / 3); i++)
+                {
+                    ConPrintf(StdOut, L" ");
+                }
+
+                int Mod = 1;
+                for (int i = 0; i < PrintLength - 1; i++)
+                {
+                    Mod *= 10;
+                }
+
+                for (int i = PrintLength - 1; i >= 0; i--)
+                {
+                    ConPrintf(StdOut, L"%d", MemorySize / Mod);
+                    MemorySize %= Mod;
+                    if (i && i % 3 == 0)
+                    {
+                        ConPrintf(StdOut, L",");
+                    }
+                    Mod /= 10;
+                }
+
+                // print the unit.
+                ConPrintf(StdOut, L" %ls", MemoryUnit[i]);
+
+                return TRUE;
+            }
+        }
+        
+        MemorySize >>= 10; // MemorySize /= 1024;
+    }
+
+    // out of MemoryUnit range.
+    return FALSE;
+}
+
 BOOL EnumProcessAndPrint(BOOL bVerbose)
 {
     // Load ntdll.dll in order to use NtQuerySystemInformation
@@ -175,11 +245,15 @@ BOOL EnumProcessAndPrint(BOOL bVerbose)
     {
         // TODO: refactor code printing information
         ConPrintf(
-            StdOut, L"%-*.*ls %*d %*d %*d K\n",
+            StdOut, L"%-*.*ls %*d %*d ",
             COLUMNWIDTH_IMAGENAME, COLUMNWIDTH_IMAGENAME, pSPI->ImageName.Buffer,
             COLUMNWIDTH_PID, pSPI->UniqueProcessId,
-            COLUMNWIDTH_SESSION, pSPI->SessionId,
-            COLUMNWIDTH_MEMUSAGE - 2, pSPI->WorkingSetSize / 1024);
+            COLUMNWIDTH_SESSION, pSPI->SessionId);
+
+        PrintMemory(pSPI->WorkingSetSize, COLUMNWIDTH_MEMUSAGE, 1);
+
+        ConPrintf(StdOut, L"\n");
+
         if (pSPI->NextEntryOffset == 0)
             break;
         pSPI = (PSYSTEM_PROCESS_INFORMATION)((LPBYTE)pSPI + pSPI->NextEntryOffset);
