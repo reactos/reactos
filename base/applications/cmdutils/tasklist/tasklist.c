@@ -86,8 +86,48 @@ VOID PrintHeader()
     ConPrintf(StdOut, L"\n");
 }
 
+// Print spaces
+BOOL PrintSpace(int SpaceNum)
+{
+    for (; SpaceNum; SpaceNum--)
+    {
+        ConPrintf(StdOut, L" ");
+    }
+    return TRUE;
+}
+
+// Print a string, aligned to left.
+// MaxWidth is the width for printing.
+INT PrintString(LPCWSTR String, int MaxWidth)
+{
+    return ConPrintf(StdOut, L"%-*.*ls", MaxWidth, MaxWidth, String);
+}
+
+// Print a string, aligned to right.
+// MaxWidth is the width for printing.
+// return FALSE if number length is longer than MaxWidth
+BOOL PrintNum(int Number, int MaxWidth)
+{
+    // calculate the length needed to print.
+    int PrintLength = 0;
+    int Tmp = Number;
+    do
+    {
+        Tmp /= 10;
+        PrintLength += 1;
+    } while (Tmp);
+
+    if (PrintLength > MaxWidth)
+    {
+        return FALSE;
+    }
+    ConPrintf(StdOut, L"%*d", MaxWidth, Number);
+
+    return TRUE;
+}
+
 // Print memory size using appropriate unit, with comma-separated number, aligned to right.
-// MaxWidth is the width for printing
+// MaxWidth is the width for printing.
 // StartingUnit is the minimum memory unit used, 0 for Byte, 1 for KB, 2 for MB ...
 // return FALSE when failed to format.
 BOOL PrintMemory(SIZE_T MemorySizeByte, int MaxWidth, int StartingUnit)
@@ -120,10 +160,7 @@ BOOL PrintMemory(SIZE_T MemorySizeByte, int MaxWidth, int StartingUnit)
                 // enough to hold
 
                 // print padding space
-                for (int i = 0; i < MaxWidth - (PrintLength + (PrintLength - 1) / 3); i++)
-                {
-                    ConPrintf(StdOut, L" ");
-                }
+                PrintSpace(MaxWidth - (PrintLength + (PrintLength - 1) / 3));
 
                 int Mod = 1;
                 for (int i = 0; i < PrintLength - 1; i++)
@@ -243,13 +280,12 @@ BOOL EnumProcessAndPrint(BOOL bVerbose)
     pSPI = (PSYSTEM_PROCESS_INFORMATION)ProcessInfoBuffer;
     while (pSPI)
     {
-        // TODO: refactor code printing information
-        ConPrintf(
-            StdOut, L"%-*.*ls %*d %*d ",
-            COLUMNWIDTH_IMAGENAME, COLUMNWIDTH_IMAGENAME, pSPI->ImageName.Buffer,
-            COLUMNWIDTH_PID, pSPI->UniqueProcessId,
-            COLUMNWIDTH_SESSION, pSPI->SessionId);
-
+        PrintString(pSPI->ImageName.Buffer, COLUMNWIDTH_IMAGENAME);
+        PrintSpace(1);
+        PrintNum((int)pSPI->UniqueProcessId, COLUMNWIDTH_PID);
+        PrintSpace(1);
+        PrintNum((int)pSPI->SessionId, COLUMNWIDTH_SESSION);
+        PrintSpace(1);
         PrintMemory(pSPI->WorkingSetSize, COLUMNWIDTH_MEMUSAGE, 1);
 
         ConPrintf(StdOut, L"\n");
