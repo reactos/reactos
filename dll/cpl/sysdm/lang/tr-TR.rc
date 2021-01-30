@@ -7,19 +7,18 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Umûmî"
 FONT 8, "MS Shell Dlg", 0, 0, 0x0
 BEGIN
-    CONTROL "", IDC_ROSIMG, "Static", SS_OWNERDRAW, 4, 5, 248, 111
-    LTEXT "Dizge:", IDC_STATIC, 4, 132, 32, 9
-    LTEXT REACTOS_STR_PRODUCT_NAME, IDC_STATIC, 10, 144, 116, 9
-    LTEXT "Sürüm:", IDC_STATIC, 10, 153, 25, 9
-    LTEXT REACTOS_STR_PRODUCT_VERSION, IDC_STATIC, 35, 153, 91, 9
-    LTEXT REACTOS_STR_PRODUCT_BUILD, IDC_STATIC, 10, 162, 110, 9
-    LTEXT "Makine:", IDC_STATIC, 124, 132, 34, 9
-    LTEXT "", IDC_MACHINELINE1, 130, 144, 118, 9
-    LTEXT "", IDC_MACHINELINE2, 130, 153, 118, 9
-    LTEXT "", IDC_MACHINELINE3, 130, 162, 118, 9
-    LTEXT "", IDC_MACHINELINE4, 130, 171, 118, 9
-    LTEXT "", IDC_MACHINELINE5, 130, 180, 118, 9
-    CONTROL "<A HREF=""http://www.reactos.org/"">ReactOS Ana Sayfa</A>", IDC_ROSHOMEPAGE_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 10, 200, 140, 10
+    CONTROL "", IDC_ROSIMG, "Static", SS_OWNERDRAW, 8, 18, 100, 111
+    LTEXT "Sistem:", IDC_STATIC, 114, 16, 80, 9
+    LTEXT REACTOS_STR_PRODUCT_NAME, IDC_STATIC, 120, 28, 116, 9
+    LTEXT "Sürüm:", IDC_ROSVERSION, 120, 37, 116, 9
+    LTEXT REACTOS_STR_PRODUCT_BUILD, IDC_STATIC, 120, 46, 135, 9
+    LTEXT "Makine:", IDC_STATIC, 114, 75, 44, 9
+    LTEXT "", IDC_MACHINELINE1, 120, 87, 118, 9
+    LTEXT "", IDC_MACHINELINE2, 120, 96, 118, 9
+    LTEXT "", IDC_MACHINELINE3, 120, 105, 118, 9
+    LTEXT "", IDC_MACHINELINE4, 120, 114, 118, 9
+    LTEXT "", IDC_MACHINELINE5, 120, 123, 118, 9
+    CONTROL "<A HREF=""https://reactos.org/"">ReactOS Ana Sayfa</A>", IDC_ROSHOMEPAGE_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 10, 200, 140, 10
     PUSHBUTTON "&Ruhsatı Göster...", IDC_LICENCE, 170, 199, 78, 13
 END
 
@@ -300,7 +299,6 @@ BEGIN
     IDS_PAGEFILE_NONE "Yok"
     IDS_PAGEFILE_SYSTEM "Dizge Yönetimli"
     IDS_INFOREBOOT "Değişiklikleri uygulamak için bilgisayarı yeniden başlatmalısınız."
-    IDS_DEVS "\nReactOS Takımı\n\nTasarı Eş Güdümcüsü:\n\nAleksey Bragin\n\nGeliştirme Takımı:\n\nAleksey Bragin\nAndrew Greenwood\nAndrey Korotaev\nArt Yerkes\nChristoph von Wittich\nColin Finck\nDaniel Reimer\nDmitry Chapyshev\nEric Kohl\nGed Murphy\nGregor Brunmar\nHervé Poussineau\nJames Tabor\nJeffrey Morlan\nJohannes Anderwald\nKamil Horníček\nKJK::Hyperion\nMaarten Bosma\nMagnus Olsen\nMarc Piulachs\nMatthias Kupfer\nMike Nordell\nPeter Ward\nPierre Schweitzer\nSaveliy Tretiakov\nStefan Ginsberg\nSylvain Petreolle\nThomas Blümel\nTimo Kreuzer\n\nAlex Ionescu\nFilip Navara\nGunnar Dalsnes\nMartin Fuchs\nRoyce Mitchell III\nBrandon Turner\nBrian Palmer\nCasper Hornstrup\nDavid Welch\nEmanuele Aliberti\nGé van Geldorp\nGregor Anich\nJason Filby\nJens Collin\nMichael Wirth\nNathan Woods\nRobert Dickenson\nRex Jolliff\nVizzini\n\nSürüm Mühendisleri:\n\nColin Finck\nZ98\n\nUmûmî Ağ Sitesi Takımı:\n\nColin Finck\nJaix Bly\nKlemens Friedl\nZ98\n\nOrtam Takımı:\n\nMindflyer\nWierd_W\n\nAyrıca, tüm katkıda bulunanlara teşekkürler:\nWine Takımı\n\n"
     IDS_HWPROFILE_CONFIRM_DELETE_TITLE "Profil Silmeyi Onayla"
     IDS_HWPROFILE_CONFIRM_DELETE """%s"" donanım profilini silmeyi istemekten emin misiniz?"
     IDS_HWPROFILE_ALREADY_IN_USE "Profil adı önceden kullanımda."
