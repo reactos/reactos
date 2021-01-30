@@ -24,7 +24,7 @@ LSAAnonymousNameLookup = 0
 ;EnableAdminAccount = 0
 EnableGuestAccount = 0
 ;NewAdministratorName =
-NewGuestName = Guestore
+;NewGuestName =
 
 [Application Log]
 MaximumLogSize = 512
