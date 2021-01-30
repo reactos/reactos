@@ -19,6 +19,13 @@ LockoutBadCount = 0
 ;ResetLockoutCount = 30
 ;LockoutDuration = 30
 
+; Account Options
+LSAAnonymousLookup = 0
+;EnableAdminAccount = 0
+EnableGuestAccount = 0
+;NewAdministratorName =
+;NewGuestName =
+
 [Application Log]
 MaximumLogSize = 16384
 AuditLogRetentionPeriod = 0

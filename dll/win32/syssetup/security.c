@@ -19,7 +19,7 @@
 #include <debug.h>
 
 #define TICKS_PER_DAY -864000000000LL
-#define TICKS_PER_SECOND -600000000LL
+#define TICKS_PER_MINUTE -600000000LL
 
 /* FUNCTIONS ****************************************************************/
 
@@ -1055,7 +1055,7 @@ ApplyLockoutSettings(
         {
             if (nValue >= 0)
             {
-                LockoutInfo.LockoutObservationWindow.QuadPart = (LONGLONG)nValue * TICKS_PER_SECOND;
+                LockoutInfo.LockoutObservationWindow.QuadPart = (LONGLONG)nValue * TICKS_PER_MINUTE;
             }
         }
     }
@@ -1073,7 +1073,7 @@ ApplyLockoutSettings(
             }
             else if ((nValue >= 0) && (nValue < 100000))
             {
-                LockoutInfo.LockoutDuration.QuadPart = (LONGLONG)nValue * TICKS_PER_SECOND;
+                LockoutInfo.LockoutDuration.QuadPart = (LONGLONG)nValue * TICKS_PER_MINUTE;
             }
         }
     }
@@ -1086,6 +1086,191 @@ ApplyLockoutSettings(
         DPRINT1("SamSetInformationDomain() failed (Status %08lx)\n", Status);
         goto done;
     }
+
+done:
+    if (DomainHandle != NULL)
+        SamCloseHandle(DomainHandle);
+
+    if (ServerHandle != NULL)
+        SamCloseHandle(ServerHandle);
+
+    if (OrigInfo != NULL)
+        LsaFreeMemory(OrigInfo);
+
+    if (PolicyHandle != NULL)
+        LsaClose(PolicyHandle);
+}
+
+
+static
+VOID
+ApplyAccountSettings(
+    _In_ HINF hSecurityInf,
+    _In_ PWSTR pszSectionName)
+{
+    INFCONTEXT InfContext;
+    PPOLICY_ACCOUNT_DOMAIN_INFO OrigInfo = NULL;
+    LSA_OBJECT_ATTRIBUTES ObjectAttributes;
+    LSA_HANDLE PolicyHandle = NULL;
+    SAM_HANDLE ServerHandle = NULL;
+    SAM_HANDLE DomainHandle = NULL;
+    SAM_HANDLE UserHandle = NULL;
+    USER_CONTROL_INFORMATION ControlInfo;
+    INT nValue;
+    NTSTATUS Status;
+
+    DPRINT("ApplyAccountSettings()\n");
+
+    memset(&ObjectAttributes, 0, sizeof(LSA_OBJECT_ATTRIBUTES));
+    ObjectAttributes.Length = sizeof(LSA_OBJECT_ATTRIBUTES);
+
+    Status = LsaOpenPolicy(NULL,
+                           &ObjectAttributes,
+                           POLICY_VIEW_LOCAL_INFORMATION | POLICY_TRUST_ADMIN,
+                           &PolicyHandle);
+    if (Status != STATUS_SUCCESS)
+    {
+        DPRINT1("LsaOpenPolicy() failed (Status: 0x%08lx)\n", Status);
+        return;
+    }
+
+    Status = LsaQueryInformationPolicy(PolicyHandle,
+                                       PolicyAccountDomainInformation,
+                                       (PVOID *)&OrigInfo);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("LsaQueryInformationPolicy() failed (Status: 0x%08lx)\n", Status);
+        goto done;
+    }
+
+    Status = SamConnect(NULL,
+                        &ServerHandle,
+                        SAM_SERVER_CONNECT | SAM_SERVER_LOOKUP_DOMAIN,
+                        NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("SamConnect() failed (Status: 0x%08lx)\n", Status);
+        goto done;
+    }
+
+    Status = SamOpenDomain(ServerHandle,
+                           DOMAIN_LOOKUP,
+                           OrigInfo->DomainSid,
+                           &DomainHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("SamOpenDomain() failed (Status: 0x%08lx)\n", Status);
+        goto done;
+    }
+
+#if 0
+    if (SetupFindFirstLineW(hSecurityInf,
+                            pszSectionName,
+                            L"LSAAnonymousNameLookup",
+                            &InfContext))
+    {
+        if (SetupGetIntField(&InfContext, 1, &nValue))
+        {
+            if (nValue == 0)
+            {
+            }
+            else
+            {
+            }
+            
+        }
+    }
+#endif
+
+    if (SetupFindFirstLineW(hSecurityInf,
+                            pszSectionName,
+                            L"EnableAdminAccount",
+                            &InfContext))
+    {
+        if (SetupGetIntField(&InfContext, 1, &nValue))
+        {
+            Status = SamOpenUser(DomainHandle,
+                                 USER_READ_ACCOUNT | USER_WRITE_ACCOUNT,
+                                 DOMAIN_USER_RID_ADMIN,
+                                 &UserHandle);
+            if (NT_SUCCESS(Status))
+            {
+                Status = SamQueryInformationUser(UserHandle,
+                                                 UserControlInformation,
+                                                 (PVOID)&ControlInfo);
+                if (NT_SUCCESS(Status))
+                {
+                    if (nValue == 0)
+                    {
+                        ControlInfo.UserAccountControl |= USER_ACCOUNT_DISABLED;
+                    }
+                    else
+                    {
+                        ControlInfo.UserAccountControl &= ~USER_ACCOUNT_DISABLED;
+                    }
+
+                    SamSetInformationUser(UserHandle,
+                                          UserControlInformation,
+                                          (PVOID)&ControlInfo);
+                }
+
+                SamCloseHandle(UserHandle);
+            }
+        }
+    }
+
+    if (SetupFindFirstLineW(hSecurityInf,
+                            pszSectionName,
+                            L"EnableGuestAccount",
+                            &InfContext))
+    {
+        if (SetupGetIntField(&InfContext, 1, &nValue))
+        {
+            Status = SamOpenUser(DomainHandle,
+                                 USER_READ_ACCOUNT | USER_WRITE_ACCOUNT,
+                                 DOMAIN_USER_RID_GUEST,
+                                 &UserHandle);
+            if (NT_SUCCESS(Status))
+            {
+                Status = SamQueryInformationUser(UserHandle,
+                                                 UserControlInformation,
+                                                 (PVOID)&ControlInfo);
+                if (NT_SUCCESS(Status))
+                {
+                    if (nValue == 0)
+                    {
+                        ControlInfo.UserAccountControl |= USER_ACCOUNT_DISABLED;
+                    }
+                    else
+                    {
+                        ControlInfo.UserAccountControl &= ~USER_ACCOUNT_DISABLED;
+                    }
+
+                    SamSetInformationUser(UserHandle,
+                                          UserControlInformation,
+                                          (PVOID)&ControlInfo);
+                }
+
+                SamCloseHandle(UserHandle);
+            }
+        }
+    }
+
+#if 0
+    if (SetupFindFirstLineW(hSecurityInf,
+                            pszSectionName,
+                            L"NewAdministratorName",
+                            &InfContext))
+    {
+    }
+
+    if (SetupFindFirstLineW(hSecurityInf,
+                            pszSectionName,
+                            L"NewGuestName",
+                            &InfContext))
+    {
+    }
+#endif
 
 done:
     if (DomainHandle != NULL)
@@ -1270,6 +1455,7 @@ InstallSecurity(VOID)
 
         ApplyPasswordSettings(hSecurityInf, L"System Access");
         ApplyLockoutSettings(hSecurityInf, L"System Access");
+        ApplyAccountSettings(hSecurityInf, L"System Access");
 
         ApplyAuditEvents(hSecurityInf);
 

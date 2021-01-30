@@ -19,6 +19,13 @@ LockoutBadCount = 0
 ;ResetLockoutCount = 30
 ;LockoutDuration = 30
 
+; Account Options
+LSAAnonymousNameLookup = 0
+;EnableAdminAccount = 0
+EnableGuestAccount = 0
+;NewAdministratorName =
+NewGuestName = Guestore
+
 [Application Log]
 MaximumLogSize = 512
 AuditLogRetentionPeriod = 1
