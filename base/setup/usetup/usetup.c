@@ -3873,8 +3873,6 @@ RegistryPage(PINPUT_RECORD Ir)
 static PAGE_NUMBER
 BootLoaderPage(PINPUT_RECORD Ir)
 {
-    UCHAR PartitionType;
-    BOOLEAN InstallOnFloppy;
     USHORT Line = 12;
     WCHAR PathBuffer[MAX_PATH];
 
@@ -3891,8 +3889,6 @@ BootLoaderPage(PINPUT_RECORD Ir)
     RtlCreateUnicodeString(&USetupData.SystemRootPath, PathBuffer);
     DPRINT1("SystemRootPath: %wZ\n", &USetupData.SystemRootPath);
 
-    PartitionType = SystemPartition->PartitionType;
-
     /* For unattended setup, skip MBR installation or install on floppy if needed */
     if (IsUnattendedSetup)
     {
@@ -3905,52 +3901,11 @@ BootLoaderPage(PINPUT_RECORD Ir)
 
     /*
      * We may install an MBR or VBR, but before that, check whether
-     * we need to actually install the VBR on floppy.
+     * we need to actually install the VBR on floppy/removable media
+     * if the system partition is not recognized.
      */
-    if (PartitionType == PARTITION_ENTRY_UNUSED)
-    {
-        DPRINT("Error: system partition invalid (unused)\n");
-        InstallOnFloppy = TRUE;
-    }
-    else if (PartitionType == PARTITION_OS2BOOTMGR)
-    {
-        /* OS/2 boot manager partition */
-        DPRINT("Found OS/2 boot manager partition\n");
-        InstallOnFloppy = TRUE;
-    }
-    else if (PartitionType == PARTITION_LINUX)
-    {
-        /* Linux partition */
-        DPRINT("Found Linux native partition (ext2/ext3/ReiserFS/BTRFS/etc)\n");
-        InstallOnFloppy = FALSE;
-    }
-    else if (PartitionType == PARTITION_IFS)
-    {
-        /* NTFS partition */
-        DPRINT("Found NTFS partition\n");
-
-        // FIXME: Make it FALSE when we'll support NTFS installation!
-        InstallOnFloppy = TRUE;
-    }
-    else if ((PartitionType == PARTITION_FAT_12) ||
-             (PartitionType == PARTITION_FAT_16) ||
-             (PartitionType == PARTITION_HUGE)   ||
-             (PartitionType == PARTITION_XINT13) ||
-             (PartitionType == PARTITION_FAT32)  ||
-             (PartitionType == PARTITION_FAT32_XINT13))
-    {
-        DPRINT("Found FAT partition\n");
-        InstallOnFloppy = FALSE;
-    }
-    else
-    {
-        /* Unknown partition */
-        DPRINT("Unknown partition found\n");
-        InstallOnFloppy = TRUE;
-    }
-
-    /* We should install on floppy */
-    if (InstallOnFloppy)
+    if ((SystemPartition->DiskEntry->DiskStyle != PARTITION_STYLE_MBR) ||
+        !IsRecognizedPartition(SystemPartition->PartitionType))
     {
         USetupData.MBRInstallType = 1;
         goto Quit;
