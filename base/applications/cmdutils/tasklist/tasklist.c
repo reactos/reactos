@@ -46,9 +46,9 @@ typedef NTSTATUS (NTAPI *NT_QUERY_SYSTEM_INFORMATION) (
     ULONG InformationLength,
     PULONG ResultLength);
 
-VOID PrintSplitLine(int Length)
+VOID PrintSplitLine(INT Length)
 {
-    for (int i = 0; i < Length; i++)
+    for (INT i = 0; i < Length; i++)
     {
         ConPrintf(StdOut, L"=");
     }
@@ -87,7 +87,7 @@ VOID PrintHeader()
 }
 
 // Print spaces
-BOOL PrintSpace(int SpaceNum)
+BOOL PrintSpace(INT SpaceNum)
 {
     for (; SpaceNum; SpaceNum--)
     {
@@ -98,7 +98,7 @@ BOOL PrintSpace(int SpaceNum)
 
 // Print a string, aligned to left.
 // MaxWidth is the width for printing.
-INT PrintString(LPCWSTR String, int MaxWidth)
+INT PrintString(LPCWSTR String, INT MaxWidth)
 {
     return ConPrintf(StdOut, L"%-*.*ls", MaxWidth, MaxWidth, String);
 }
@@ -106,11 +106,11 @@ INT PrintString(LPCWSTR String, int MaxWidth)
 // Print a string, aligned to right.
 // MaxWidth is the width for printing.
 // return FALSE if number length is longer than MaxWidth
-BOOL PrintNum(long long Number, int MaxWidth)
+BOOL PrintNum(LONGLONG Number, INT MaxWidth)
 {
     // calculate the length needed to print.
-    int PrintLength = 0;
-    long long Tmp = Number;
+    INT PrintLength = 0;
+    LONGLONG Tmp = Number;
     do
     {
         Tmp /= 10;
@@ -130,7 +130,7 @@ BOOL PrintNum(long long Number, int MaxWidth)
 // MaxWidth is the width for printing.
 // StartingUnit is the minimum memory unit used, 0 for Byte, 1 for KB, 2 for MB ...
 // return FALSE when failed to format.
-BOOL PrintMemory(SIZE_T MemorySizeByte, int MaxWidth, int StartingUnit)
+BOOL PrintMemory(SIZE_T MemorySizeByte, INT MaxWidth, INT StartingUnit)
 {
     WCHAR *MemoryUnit[] = {L"B", L"K", L"M", L"G", L"T", L"P"};
 
@@ -142,12 +142,12 @@ BOOL PrintMemory(SIZE_T MemorySizeByte, int MaxWidth, int StartingUnit)
 
     SIZE_T MemorySize = MemorySizeByte;
 
-    for (int i = 0; i < _countof(MemoryUnit); i++)
+    for (INT i = 0; i < _countof(MemoryUnit); i++)
     {
         if (i >= StartingUnit)
         {
             // calculate the length needed to print.
-            int PrintLength = 0;
+            INT PrintLength = 0;
             SIZE_T Tmp = MemorySize;
             do
             {
@@ -162,13 +162,13 @@ BOOL PrintMemory(SIZE_T MemorySizeByte, int MaxWidth, int StartingUnit)
                 // print padding space
                 PrintSpace(MaxWidth - (PrintLength + (PrintLength - 1) / 3));
 
-                int Mod = 1;
-                for (int i = 0; i < PrintLength - 1; i++)
+                INT Mod = 1;
+                for (INT i = 0; i < PrintLength - 1; i++)
                 {
                     Mod *= 10;
                 }
 
-                for (int i = PrintLength - 1; i >= 0; i--)
+                for (INT i = PrintLength - 1; i >= 0; i--)
                 {
                     ConPrintf(StdOut, L"%d", MemorySize / Mod);
                     MemorySize %= Mod;
@@ -221,7 +221,7 @@ BOOL EnumProcessAndPrint(BOOL bVerbose)
     // Get the buffer size we need
     NTSTATUS Status = PtrNtQuerySystemInformation(SystemProcessInformation, NULL, 0, &ResultLength);
 
-    for (int Retry = 0; Retry < NT_SYSTEM_QUERY_MAX_RETRY; Retry++)
+    for (INT Retry = 0; Retry < NT_SYSTEM_QUERY_MAX_RETRY; Retry++)
     {
         // (Re)allocate buffer
         ProcessInfoBufferLength = ResultLength;
@@ -282,9 +282,9 @@ BOOL EnumProcessAndPrint(BOOL bVerbose)
     {
         PrintString(pSPI->UniqueProcessId ? pSPI->ImageName.Buffer : L"System Idle Process", COLUMNWIDTH_IMAGENAME);
         PrintSpace(1);
-        PrintNum((long long)(long)pSPI->UniqueProcessId, COLUMNWIDTH_PID);
+        PrintNum((LONGLONG)(INT_PTR)pSPI->UniqueProcessId, COLUMNWIDTH_PID);
         PrintSpace(1);
-        PrintNum((long long)pSPI->SessionId, COLUMNWIDTH_SESSION);
+        PrintNum((ULONGLONG)pSPI->SessionId, COLUMNWIDTH_SESSION);
         PrintSpace(1);
         PrintMemory(pSPI->WorkingSetSize, COLUMNWIDTH_MEMUSAGE, 1);
 
@@ -299,9 +299,9 @@ BOOL EnumProcessAndPrint(BOOL bVerbose)
     return TRUE;
 }
 
-int GetArgumentType(WCHAR* argument)
+INT GetArgumentType(WCHAR* argument)
 {
-    int i;
+    INT i;
 
     if (argument[0] != L'/' && argument[0] != L'-')
     {
@@ -319,13 +319,13 @@ int GetArgumentType(WCHAR* argument)
     return OP_PARAM_INVALID;
 }
 
-BOOL ProcessArguments(int argc, WCHAR *argv[])
+BOOL ProcessArguments(INT argc, WCHAR *argv[])
 {
-    int i;
+    INT i;
     BOOL bHasHelp = FALSE, bHasVerbose = FALSE;
     for (i = 1; i < argc; i++)
     {
-        int Argument = GetArgumentType(argv[i]);
+        INT Argument = GetArgumentType(argv[i]);
 
         switch (Argument)
         {
