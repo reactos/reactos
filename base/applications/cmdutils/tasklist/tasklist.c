@@ -385,7 +385,7 @@ BOOL ProcessArguments(INT argc, WCHAR *argv[])
         {
             ConResMsgPrintf(StdOut, 0, IDS_USAGE);
             ConResMsgPrintf(StdOut, 0, IDS_DESCRIPTION);
-            exit(0);
+            return FALSE;
         }
     }
     else
