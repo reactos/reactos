@@ -169,7 +169,7 @@ BOOL PrintMemory(SIZE_T MemorySizeByte, INT MaxWidth, INT StartingUnit)
     return FALSE;
 }
 
-VOID PrintHeader()
+VOID PrintHeader(VOID)
 {
     WCHAR lpstrImageName[HEADER_STR_MAXLEN];
     WCHAR lpstrPID[HEADER_STR_MAXLEN];
@@ -230,6 +230,8 @@ BOOL EnumProcessAndPrint(BOOL bVerbose)
     // Get the buffer size we need
     NTSTATUS Status = PtrNtQuerySystemInformation(SystemProcessInformation, NULL, 0, &ResultLength);
 
+    // New process/thread might appear before we call for the actual data.
+    // Try to avoid this by retrying several times.
     for (INT Retry = 0; Retry < NT_SYSTEM_QUERY_MAX_RETRY; Retry++)
     {
         // (Re)allocate buffer
