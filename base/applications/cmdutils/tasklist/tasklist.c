@@ -336,37 +336,37 @@ BOOL ProcessArguments(INT argc, WCHAR *argv[])
 
         switch (Argument)
         {
-        case OP_PARAM_HELP:
-        {
-            if (bHasHelp)
+            case OP_PARAM_HELP:
             {
-                // -? already specified
-                ConResMsgPrintf(StdOut, 0, IDS_PARAM_TOO_MUCH, argv[i], 1);
+                if (bHasHelp)
+                {
+                    // -? already specified
+                    ConResMsgPrintf(StdOut, 0, IDS_PARAM_TOO_MUCH, argv[i], 1);
+                    ConResMsgPrintf(StdOut, 0, IDS_USAGE);
+                    return FALSE;
+                }
+                bHasHelp = TRUE;
+                break;
+            }
+            case OP_PARAM_VERBOSE:
+            {
+                if (bHasVerbose)
+                {
+                    // -V already specified
+                    ConResMsgPrintf(StdOut, 0, IDS_PARAM_TOO_MUCH, argv[i], 1);
+                    ConResMsgPrintf(StdOut, 0, IDS_USAGE);
+                    return FALSE;
+                }
+                bHasVerbose = TRUE;
+                break;
+            }
+            case OP_PARAM_INVALID:
+            default:
+            {
+                ConResMsgPrintf(StdOut, 0, IDS_INVALID_OPTION);
                 ConResMsgPrintf(StdOut, 0, IDS_USAGE);
                 return FALSE;
             }
-            bHasHelp = TRUE;
-            break;
-        }
-        case OP_PARAM_VERBOSE:
-        {
-            if (bHasVerbose)
-            {
-                // -V already specified
-                ConResMsgPrintf(StdOut, 0, IDS_PARAM_TOO_MUCH, argv[i], 1);
-                ConResMsgPrintf(StdOut, 0, IDS_USAGE);
-                return FALSE;
-            }
-            bHasVerbose = TRUE;
-            break;
-        }
-        case OP_PARAM_INVALID:
-        default:
-        {
-            ConResMsgPrintf(StdOut, 0, IDS_INVALID_OPTION);
-            ConResMsgPrintf(StdOut, 0, IDS_USAGE);
-            return FALSE;
-        }
         }
     }
 
