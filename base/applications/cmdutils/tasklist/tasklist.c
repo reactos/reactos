@@ -237,7 +237,9 @@ BOOL EnumProcessAndPrint(BOOL bVerbose)
         ResultLength = 0;
         if (ProcessInfoBuffer)
         {
-            PBYTE NewProcessInfoBuffer = HeapReAlloc(GetProcessHeap(), 0, ProcessInfoBuffer, ProcessInfoBufferLength);
+            PBYTE NewProcessInfoBuffer = HeapReAlloc(GetProcessHeap(), 0,
+                                                     ProcessInfoBuffer,
+                                                     ProcessInfoBufferLength);
             if (NewProcessInfoBuffer)
             {
                 ProcessInfoBuffer = NewProcessInfoBuffer;
