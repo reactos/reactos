@@ -16,6 +16,9 @@
 #include <buildno.h>
 #include <strsafe.h>
 
+#define ANIM_STEP 2
+#define ANIM_TIME 50
+
 typedef struct _IMGINFO
 {
     HBITMAP hBitmap;
@@ -132,8 +135,135 @@ Cleanup:
 
 LRESULT CALLBACK RosImageProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+    static UINT timerid = 0, top = 0, offset;
+    static HBITMAP hCreditsBitmap;
+
     switch (uMsg)
     {
+        case WM_LBUTTONDBLCLK:
+            if (wParam & (MK_CONTROL | MK_SHIFT))
+            {
+                if (timerid == 0)
+                {
+                    HDC hCreditsDC, hLogoDC;
+                    HDC hDC = GetDC(NULL);
+                    HFONT hFont = NULL;
+                    NONCLIENTMETRICS ncm;
+                    RECT rcCredits;
+                    TCHAR szCredits[2048];
+                    INT iDevsHeight;
+
+                    if (hDC == NULL)
+                        goto Cleanup;
+
+                    top = 0;
+                    offset = 0;
+                    hCreditsDC = CreateCompatibleDC(hDC);
+                    hLogoDC = CreateCompatibleDC(hCreditsDC);
+
+                    if (hCreditsDC == NULL || hLogoDC == NULL)
+                        goto Cleanup;
+
+                    SetRect(&rcCredits, 0, 0, 0, 0);
+
+                    ncm.cbSize = sizeof(NONCLIENTMETRICS);
+                    SystemParametersInfo(SPI_GETNONCLIENTMETRICS, sizeof(NONCLIENTMETRICS), &ncm, 0);
+
+                    hFont = CreateFontIndirect(&ncm.lfMessageFont);
+                    if (!hFont)
+                        goto Cleanup;
+                    SelectObject(hCreditsDC, hFont);
+
+                    LoadString(hApplet, IDS_DEVS, szCredits, sizeof(szCredits) / sizeof(TCHAR));
+                    DrawText(hCreditsDC, szCredits, -1, &rcCredits, DT_CALCRECT);
+
+                    iDevsHeight = rcCredits.bottom - rcCredits.top;
+
+                    hCreditsBitmap = CreateBitmap(pImgInfo->cxSource, (2 * pImgInfo->cySource) + iDevsHeight + 1, pImgInfo->iPlanes, pImgInfo->iBits, NULL);
+
+                    if (!hCreditsBitmap)
+                        goto Cleanup;
+
+                    SelectObject(hLogoDC, pImgInfo->hBitmap);
+                    SelectObject(hCreditsDC, hCreditsBitmap);
+
+                    offset += pImgInfo->cySource;
+
+                    SetRect(&rcCredits, 0, 0, pImgInfo->cxSource, (2 * pImgInfo->cySource) + iDevsHeight + 1);
+                    FillRect(hCreditsDC, &rcCredits, GetSysColorBrush(COLOR_3DFACE));
+
+                    SetRect(&rcCredits, 0, offset, pImgInfo->cxSource, offset + iDevsHeight + 1);
+                    SetBkMode(hCreditsDC, TRANSPARENT);
+
+                    OffsetRect(&rcCredits, 1, 1);
+                    SetTextColor(hCreditsDC, GetSysColor(COLOR_BTNSHADOW));
+                    DrawText(hCreditsDC, szCredits, -1, &rcCredits, DT_CENTER);
+
+                    OffsetRect(&rcCredits, -1, -1);
+                    SetTextColor(hCreditsDC, GetSysColor(COLOR_WINDOWTEXT));
+                    DrawText(hCreditsDC, szCredits, -1, &rcCredits, DT_CENTER);
+
+                    offset += iDevsHeight;
+
+                    AlphaBlend(hCreditsDC, 0, 0, pImgInfo->cxSource, pImgInfo->cySource, hLogoDC, 0,  0, pImgInfo->cxSource, pImgInfo->cySource, BlendFunc);
+                    AlphaBlend(hCreditsDC, 0, offset, pImgInfo->cxSource, pImgInfo->cySource, hLogoDC, 0,  0, pImgInfo->cxSource, pImgInfo->cySource, BlendFunc);
+
+                    timerid = SetTimer(hwnd, 1, ANIM_TIME, NULL);
+
+Cleanup:
+                    if (hFont != NULL) DeleteObject(hFont);
+                    if (hLogoDC != NULL) DeleteDC(hLogoDC);
+                    if (hCreditsDC != NULL) DeleteDC(hCreditsDC);
+                    if (hDC != NULL) ReleaseDC(NULL, hDC);
+                }
+            }
+            break;
+        case WM_LBUTTONDOWN:
+            if (timerid)
+            {
+                RECT rcCredits;
+                HDC hDC = GetDC(hwnd);
+                if (hDC != NULL)
+                {
+                    GetClientRect(hwnd, &rcCredits);
+                    SetRect(&rcCredits, 0, 0, rcCredits.right, pImgInfo->cySource);
+                    FillRect(hDC, &rcCredits, GetSysColorBrush(COLOR_3DFACE));
+                    ReleaseDC(hwnd, hDC);
+                }
+                KillTimer(hwnd, timerid);
+                if (hCreditsBitmap != NULL)
+                    DeleteObject(hCreditsBitmap);
+
+                top = 0;
+                timerid = 0;
+            }
+            
+            InvalidateRect(hwnd, NULL, FALSE);
+            break;
+        case WM_TIMER:
+            top += ANIM_STEP;
+
+            if (top > offset)
+            {
+                RECT rcCredits;
+                HDC hDC = GetDC(hwnd);
+                if (hDC != NULL)
+                {
+                    GetClientRect(hwnd, &rcCredits);
+                    SetRect(&rcCredits, 0, 0, rcCredits.right, pImgInfo->cySource);
+                    FillRect(hDC, &rcCredits, GetSysColorBrush(COLOR_3DFACE));
+                    ReleaseDC(hwnd, hDC);
+                }
+                KillTimer(hwnd, timerid);
+                if (hCreditsBitmap != NULL)
+                    DeleteObject(hCreditsBitmap);
+
+                top = 0;
+                timerid = 0;
+            }
+
+            InvalidateRect(hwnd, NULL, FALSE);
+            break;
         case WM_PAINT:
         {
             PAINTSTRUCT PS;
@@ -150,9 +280,17 @@ LRESULT CALLBACK RosImageProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam
 
             if (hdcMem != NULL)
             {
-                SelectObject(hdcMem, pImgInfo->hBitmap);
-                /* FIXME: We should not rely on AlphaBlend and we should not import MSIMG32 solely for that function */
-                AlphaBlend(hdc, left, PS.rcPaint.top, pImgInfo->cxSource, pImgInfo->cySource, hdcMem, 0, 0, pImgInfo->cxSource, pImgInfo->cySource, BlendFunc);
+                if(timerid != 0)
+                {
+                    SelectObject(hdcMem, hCreditsBitmap);
+                    BitBlt(hdc, left, PS.rcPaint.top, PS.rcPaint.right - PS.rcPaint.left, PS.rcPaint.top + pImgInfo->cySource, hdcMem, 0, top, SRCCOPY);
+                }
+                else
+                {
+                    SelectObject(hdcMem, pImgInfo->hBitmap);
+                    AlphaBlend(hdc, left, PS.rcPaint.top, pImgInfo->cxSource, pImgInfo->cySource, hdcMem, 0, 0, pImgInfo->cxSource, pImgInfo->cySource, BlendFunc);
+                }
+
                 DeleteDC(hdcMem);
             }
 
