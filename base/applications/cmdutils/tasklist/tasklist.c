@@ -54,38 +54,6 @@ VOID PrintSplitLine(INT Length)
     }
 }
 
-VOID PrintHeader()
-{
-    WCHAR lpstrImageName[HEADER_STR_MAXLEN];
-    WCHAR lpstrPID[HEADER_STR_MAXLEN];
-    WCHAR lpstrSession[HEADER_STR_MAXLEN];
-    WCHAR lpstrMemUsage[HEADER_STR_MAXLEN];
-
-    LoadStringW(GetModuleHandle(NULL), IDS_HEADER_IMAGENAME, lpstrImageName, HEADER_STR_MAXLEN);
-    LoadStringW(GetModuleHandle(NULL), IDS_HEADER_PID, lpstrPID, HEADER_STR_MAXLEN);
-    LoadStringW(GetModuleHandle(NULL), IDS_HEADER_SESSION, lpstrSession, HEADER_STR_MAXLEN);
-    LoadStringW(GetModuleHandle(NULL), IDS_HEADER_MEMUSAGE, lpstrMemUsage, HEADER_STR_MAXLEN);
-
-    ConPrintf(
-        StdOut, L"%-*.*ls %*.*ls %*.*ls %*.*ls",
-        COLUMNWIDTH_IMAGENAME, COLUMNWIDTH_IMAGENAME, lpstrImageName,
-        COLUMNWIDTH_PID, COLUMNWIDTH_PID, lpstrPID,
-        COLUMNWIDTH_SESSION, COLUMNWIDTH_SESSION, lpstrSession,
-        COLUMNWIDTH_MEMUSAGE, COLUMNWIDTH_MEMUSAGE, lpstrMemUsage);
-
-    ConPrintf(StdOut, L"\n");
-
-    PrintSplitLine(COLUMNWIDTH_IMAGENAME);
-    ConPrintf(StdOut, L" ");
-    PrintSplitLine(COLUMNWIDTH_PID);
-    ConPrintf(StdOut, L" ");
-    PrintSplitLine(COLUMNWIDTH_SESSION);
-    ConPrintf(StdOut, L" ");
-    PrintSplitLine(COLUMNWIDTH_MEMUSAGE);
-
-    ConPrintf(StdOut, L"\n");
-}
-
 // Print spaces
 BOOL PrintSpace(INT SpaceNum)
 {
@@ -96,11 +64,12 @@ BOOL PrintSpace(INT SpaceNum)
     return TRUE;
 }
 
-// Print a string, aligned to left.
+// Print a string.
+// if bAlignLeft == TRUE then aligned to left, otherwise aligned to right
 // MaxWidth is the width for printing.
-INT PrintString(LPCWSTR String, INT MaxWidth)
+INT PrintString(LPCWSTR String, INT MaxWidth, BOOL bAlignLeft)
 {
-    return ConPrintf(StdOut, L"%-*.*ls", MaxWidth, MaxWidth, String);
+    return ConPrintf(StdOut, bAlignLeft ? L"%-*.*ls" : L"%*.*ls", MaxWidth, MaxWidth, String);
 }
 
 // Print a string, aligned to right.
@@ -200,6 +169,39 @@ BOOL PrintMemory(SIZE_T MemorySizeByte, INT MaxWidth, INT StartingUnit)
     return FALSE;
 }
 
+VOID PrintHeader()
+{
+    WCHAR lpstrImageName[HEADER_STR_MAXLEN];
+    WCHAR lpstrPID[HEADER_STR_MAXLEN];
+    WCHAR lpstrSession[HEADER_STR_MAXLEN];
+    WCHAR lpstrMemUsage[HEADER_STR_MAXLEN];
+
+    LoadStringW(GetModuleHandle(NULL), IDS_HEADER_IMAGENAME, lpstrImageName, HEADER_STR_MAXLEN);
+    LoadStringW(GetModuleHandle(NULL), IDS_HEADER_PID, lpstrPID, HEADER_STR_MAXLEN);
+    LoadStringW(GetModuleHandle(NULL), IDS_HEADER_SESSION, lpstrSession, HEADER_STR_MAXLEN);
+    LoadStringW(GetModuleHandle(NULL), IDS_HEADER_MEMUSAGE, lpstrMemUsage, HEADER_STR_MAXLEN);
+
+    PrintString(lpstrImageName, COLUMNWIDTH_IMAGENAME, TRUE);
+    PrintSpace(1);
+    PrintString(lpstrPID, COLUMNWIDTH_PID, FALSE);
+    PrintSpace(1);
+    PrintString(lpstrSession, COLUMNWIDTH_SESSION, FALSE);
+    PrintSpace(1);
+    PrintString(lpstrMemUsage, COLUMNWIDTH_MEMUSAGE, FALSE);
+
+    ConPrintf(StdOut, L"\n");
+
+    PrintSplitLine(COLUMNWIDTH_IMAGENAME);
+    ConPrintf(StdOut, L" ");
+    PrintSplitLine(COLUMNWIDTH_PID);
+    ConPrintf(StdOut, L" ");
+    PrintSplitLine(COLUMNWIDTH_SESSION);
+    ConPrintf(StdOut, L" ");
+    PrintSplitLine(COLUMNWIDTH_MEMUSAGE);
+
+    ConPrintf(StdOut, L"\n");
+}
+
 BOOL EnumProcessAndPrint(BOOL bVerbose)
 {
     // Load ntdll.dll in order to use NtQuerySystemInformation
@@ -287,7 +289,7 @@ BOOL EnumProcessAndPrint(BOOL bVerbose)
     pSPI = (PSYSTEM_PROCESS_INFORMATION)ProcessInfoBuffer;
     while (pSPI)
     {
-        PrintString(pSPI->UniqueProcessId ? pSPI->ImageName.Buffer : L"System Idle Process", COLUMNWIDTH_IMAGENAME);
+        PrintString(pSPI->UniqueProcessId ? pSPI->ImageName.Buffer : L"System Idle Process", COLUMNWIDTH_IMAGENAME, TRUE);
         PrintSpace(1);
         PrintNum((LONGLONG)(INT_PTR)pSPI->UniqueProcessId, COLUMNWIDTH_PID);
         PrintSpace(1);
