@@ -111,6 +111,13 @@ BOOL PrintNum(LONGLONG Number, INT MaxWidth)
     // calculate the length needed to print.
     INT PrintLength = 0;
     LONGLONG Tmp = Number;
+
+    if (Tmp < 0)
+    {
+        Tmp = -Tmp;
+        PrintLength++;
+    }
+
     do
     {
         Tmp /= 10;
