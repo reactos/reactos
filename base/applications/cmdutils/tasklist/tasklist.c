@@ -133,6 +133,8 @@ BOOL PrintMemory(SIZE_T MemorySizeByte, INT MaxWidth, INT StartingUnit)
 
 VOID PrintHeader(VOID)
 {
+    ConPrintf(StdOut, L"\n");
+
     WCHAR lpstrImageName[HEADER_STR_MAXLEN];
     WCHAR lpstrPID[HEADER_STR_MAXLEN];
     WCHAR lpstrSession[HEADER_STR_MAXLEN];
