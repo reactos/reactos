@@ -264,9 +264,10 @@ BOOL EnumProcessAndPrint(BOOL bVerbose)
         }
 
         // Query information
-        Status = PtrNtQuerySystemInformation(
-            SystemProcessInformation, ProcessInfoBuffer, ProcessInfoBufferLength, &ResultLength);
-
+        Status = PtrNtQuerySystemInformation(SystemProcessInformation,
+                                             ProcessInfoBuffer,
+                                             ProcessInfoBufferLength,
+                                             &ResultLength);
         if (Status != STATUS_INFO_LENGTH_MISMATCH)
         {
             break;
