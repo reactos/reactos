@@ -400,7 +400,7 @@ int wmain(int argc, WCHAR *argv[])
     /* Initialize the Console Standard Streams */
     ConInitStdStreams();
 
-    if(!ProcessArguments(argc, argv))
+    if (!ProcessArguments(argc, argv))
     {
         return 1;
     }
