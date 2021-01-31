@@ -5,46 +5,8 @@
  * COPYRIGHT:   Copyright 2020 He Yang (1160386205@qq.com)
  */
 
-#include <stdio.h>
-#include <stdlib.h>
+#include "tasklist.h"
 
-#define WIN32_NO_STATUS
-#include <windows.h>
-#include <ndk/psfuncs.h>
-
-#include <conutils.h>
-
-#include "resource.h"
-
-
-#define NT_SYSTEM_QUERY_MAX_RETRY 5
-
-
-#define COLUMNWIDTH_IMAGENAME     25
-#define COLUMNWIDTH_PID           8
-#define COLUMNWIDTH_SESSION       11
-#define COLUMNWIDTH_MEMUSAGE      12
-
-
-#define HEADER_STR_MAXLEN 64
-
-
-static WCHAR opHelp[] = L"?";
-static WCHAR opVerbose[] = L"v";
-static PWCHAR opList[] = {opHelp, opVerbose};
-
-
-#define OP_PARAM_INVALID -1
-
-#define OP_PARAM_HELP 0
-#define OP_PARAM_VERBOSE 1
-
-
-typedef NTSTATUS (NTAPI *NT_QUERY_SYSTEM_INFORMATION) (
-    SYSTEM_INFORMATION_CLASS SystemInformationClass,
-    PVOID SystemInformation,
-    ULONG InformationLength,
-    PULONG ResultLength);
 
 VOID PrintSplitLine(INT Length)
 {
@@ -287,7 +249,6 @@ BOOL EnumProcessAndPrint(BOOL bVerbose)
         return FALSE;
     }
 
-    // print header
     PrintHeader();
 
     PSYSTEM_PROCESS_INFORMATION pSPI;
