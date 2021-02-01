@@ -33,10 +33,6 @@ If you don't use GDB, don't enable this.")
 set(_WINKD_ TRUE CACHE BOOL
 "Whether to compile with the KD protocol.")
 
-set(_ELF_ FALSE CACHE BOOL
-"Whether to compile support for ELF files.
-Do not enable unless you know what you're doing.")
-
 set(USERMODE TRUE CACHE BOOL
 "Whether to compile any usermode parts. This is while kernel mode is under
  heavy development and usermode part not relevant for bootcd.")
