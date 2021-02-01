@@ -4,8 +4,8 @@
 #include <stdlib.h>
 
 #define WIN32_NO_STATUS
-#include <ndk/psfuncs.h>
 #include <windows.h>
+#include <ntndk.h>
 
 #include <conutils.h>
 

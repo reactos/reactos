@@ -168,31 +168,13 @@ VOID PrintHeader(VOID)
 
 BOOL EnumProcessAndPrint(BOOL bVerbose)
 {
-    // Load ntdll.dll in order to use NtQuerySystemInformation
-    HMODULE hNtDLL = LoadLibraryW(L"Ntdll.dll");
-    if (!hNtDLL)
-    {
-        ConResMsgPrintf(StdOut, 0, IDS_ENUM_FAILED);
-        return FALSE;
-    }
-
-    NT_QUERY_SYSTEM_INFORMATION PtrNtQuerySystemInformation =
-        (NT_QUERY_SYSTEM_INFORMATION)GetProcAddress(hNtDLL, "NtQuerySystemInformation");
-
-    if (!PtrNtQuerySystemInformation)
-    {
-        ConResMsgPrintf(StdOut, 0, IDS_ENUM_FAILED);
-        FreeLibrary(hNtDLL);
-        return FALSE;
-    }
-
     // Call NtQuerySystemInformation for the process information
     ULONG ProcessInfoBufferLength = 0;
     ULONG ResultLength = 0;
     PBYTE ProcessInfoBuffer = 0;
 
     // Get the buffer size we need
-    NTSTATUS Status = PtrNtQuerySystemInformation(SystemProcessInformation, NULL, 0, &ResultLength);
+    NTSTATUS Status = NtQuerySystemInformation(SystemProcessInformation, NULL, 0, &ResultLength);
 
     // New process/thread might appear before we call for the actual data.
     // Try to avoid this by retrying several times.
@@ -215,7 +197,6 @@ BOOL EnumProcessAndPrint(BOOL bVerbose)
                 // out of memory ?
                 ConResMsgPrintf(StdOut, 0, IDS_OUT_OF_MEMORY);
                 HeapFree(GetProcessHeap(), 0, ProcessInfoBuffer);
-                FreeLibrary(hNtDLL);
                 return FALSE;
             }
         }
@@ -226,16 +207,15 @@ BOOL EnumProcessAndPrint(BOOL bVerbose)
             {
                 // out of memory ?
                 ConResMsgPrintf(StdOut, 0, IDS_OUT_OF_MEMORY);
-                FreeLibrary(hNtDLL);
                 return FALSE;
             }
         }
 
         // Query information
-        Status = PtrNtQuerySystemInformation(SystemProcessInformation,
-                                             ProcessInfoBuffer,
-                                             ProcessInfoBufferLength,
-                                             &ResultLength);
+        Status = NtQuerySystemInformation(SystemProcessInformation,
+                                          ProcessInfoBuffer,
+                                          ProcessInfoBufferLength,
+                                          &ResultLength);
         if (Status != STATUS_INFO_LENGTH_MISMATCH)
         {
             break;
@@ -247,7 +227,6 @@ BOOL EnumProcessAndPrint(BOOL bVerbose)
         // tried NT_SYSTEM_QUERY_MAX_RETRY times, or failed with some other reason
         ConResMsgPrintf(StdOut, 0, IDS_ENUM_FAILED);
         HeapFree(GetProcessHeap(), 0, ProcessInfoBuffer);
-        FreeLibrary(hNtDLL);
         return FALSE;
     }
 
