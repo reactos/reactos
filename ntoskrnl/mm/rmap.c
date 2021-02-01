@@ -102,7 +102,7 @@ GetEntry:
 
     MmLockAddressSpace(AddressSpace);
 
-    if ((MmGetPfnForProcess(Process, Address) != Page) || MmIsPageAccessed(Process, Address))
+    if (MmGetPfnForProcess(Process, Address) != Page)
     {
         /* This changed in the short window where we didn't have any locks */
         MmUnlockAddressSpace(AddressSpace);
@@ -152,31 +152,8 @@ GetEntry:
         /* Delete this virtual mapping in the process */
         MmDeleteVirtualMapping(Process, Address, &Dirty, &MapPage);
 
-        /* There is a window betwwen the start of this function and now,
-         * where it's possible that the process changed its memory layout,
-         * because of copy-on-write, unmapping memory, or whatsoever.
-         * Just go away if that is the case */
-        if (MapPage != Page)
-        {
-            PMM_REGION Region = MmFindRegion((PVOID)MA_GetStartingAddress(MemoryArea),
-                            &MemoryArea->SectionData.RegionListHead,
-                            Address, NULL);
-            /* Restore the mapping */
-            MmCreateVirtualMapping(Process, Address, Region->Protect, &MapPage, 1);
-            if (Dirty)
-                MmSetDirtyPage(Process, Address);
-
-            MmUnlockSectionSegment(Segment);
-            MmUnlockAddressSpace(AddressSpace);
-            if (Address < MmSystemRangeStart)
-            {
-                ExReleaseRundownProtection(&Process->RundownProtect);
-                ObDereferenceObject(Process);
-            }
-
-            /* We can still try to flush it to disk, though */
-            goto WriteSegment;
-        }
+        /* We checked this earlier */
+        ASSERT(MapPage == Page);
 
         if (Page != PFN_FROM_SSE(Entry))
         {
@@ -232,11 +209,9 @@ GetEntry:
                     MmSetDirtyPage(Process, Address);
 
                     MmUnlockAddressSpace(AddressSpace);
-                    if (Address < MmSystemRangeStart)
-                    {
-                        ExReleaseRundownProtection(&Process->RundownProtect);
-                        ObDereferenceObject(Process);
-                    }
+                    ExReleaseRundownProtection(&Process->RundownProtect);
+                    ObDereferenceObject(Process);
+
                     return STATUS_UNSUCCESSFUL;
                 }
             }
@@ -259,11 +234,9 @@ GetEntry:
 #endif
             MmReleasePageMemoryConsumer(MC_USER, Page);
 
-            if (Address < MmSystemRangeStart)
-            {
-                ExReleaseRundownProtection(&Process->RundownProtect);
-                ObDereferenceObject(Process);
-            }
+            ExReleaseRundownProtection(&Process->RundownProtect);
+            ObDereferenceObject(Process);
+
             return STATUS_SUCCESS;
         }
 
@@ -276,11 +249,8 @@ GetEntry:
         MmUnlockSectionSegment(Segment);
         MmUnlockAddressSpace(AddressSpace);
 
-        if (Address < MmSystemRangeStart)
-        {
-            ExReleaseRundownProtection(&Process->RundownProtect);
-            ObDereferenceObject(Process);
-        }
+        ExReleaseRundownProtection(&Process->RundownProtect);
+        ObDereferenceObject(Process);
 
         if (Released) return STATUS_SUCCESS;
     }
