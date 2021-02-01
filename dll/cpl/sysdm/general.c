@@ -234,11 +234,10 @@ Cleanup:
                 if (hCreditsBitmap != NULL)
                     DeleteObject(hCreditsBitmap);
 
+                InvalidateRect(hwnd, NULL, FALSE);
                 top = 0;
                 timerid = 0;
             }
-            
-            InvalidateRect(hwnd, NULL, FALSE);
             break;
         case WM_TIMER:
             top += ANIM_STEP;
