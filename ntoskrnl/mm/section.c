@@ -4115,7 +4115,7 @@ MmCanFileBeTruncated (IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
     }
 
     MmLockSectionSegment(Segment);
-    if ((Segment->SectionCount == 1) && (SectionObjectPointer->SharedCacheMap != NULL))
+    if ((Segment->SectionCount == 0) || ((Segment->SectionCount == 1) && (SectionObjectPointer->SharedCacheMap != NULL)))
     {
         /* If the cache is the only one holding a reference to the segment, then it's fine to resize */
         Ret = TRUE;
@@ -4124,6 +4124,12 @@ MmCanFileBeTruncated (IN PSECTION_OBJECT_POINTERS SectionObjectPointer,
     {
         /* We can't shrink, but we can extend */
         Ret = NewFileSize->QuadPart >= Segment->RawLength.QuadPart;
+#if DBG
+        if (!Ret)
+        {
+            DPRINT1("Cannot truncate data: New Size %I64d, Segment Size %I64d\n", NewFileSize->QuadPart, Segment->RawLength.QuadPart);
+        }
+#endif
     }
     MmUnlockSectionSegment(Segment);
     MmDereferenceSegment(Segment);
