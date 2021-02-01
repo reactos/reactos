@@ -227,10 +227,10 @@ KiDebugHandler(IN PKTRAP_FRAME TrapFrame,
     /* Enable interrupts if the trap came from user-mode */
     if (KiUserTrap(TrapFrame)) _enable();
 
-    /* Dispatch the exception  */
+    /* Dispatch the exception. Fix EIP in case its a break breakpoint (sic) */
     KiDispatchExceptionFromTrapFrame(STATUS_BREAKPOINT,
                                      0,
-                                     TrapFrame->Eip - 1,
+                                     TrapFrame->Eip - (Parameter1 == BREAKPOINT_BREAK),
                                      3,
                                      Parameter1,
                                      Parameter2,
