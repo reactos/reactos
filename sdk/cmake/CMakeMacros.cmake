@@ -717,16 +717,6 @@ function(get_defines OUTPUT_VAR)
     set(${OUTPUT_VAR} ${__tmp_var} PARENT_SCOPE)
 endfunction()
 
-if(NOT MSVC)
-    function(add_object_library _target)
-        add_library(${_target} OBJECT ${ARGN})
-    endfunction()
-else()
-    function(add_object_library _target)
-        add_library(${_target} ${ARGN})
-    endfunction()
-endif()
-
 function(add_registry_inf)
     # Add to the inf files list
     foreach(_file ${ARGN})

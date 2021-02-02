@@ -15,30 +15,12 @@ function(add_hal _halname)
     spec2def(${_halname}.dll ../hal.spec ADD_IMPORTLIB)
 
     # Create the actual target
-    if(NOT MSVC)
-        foreach(_component ${_haldata_COMPONENTS})
-            list(APPEND _haldata_SOURCES "$<TARGET_OBJECTS:lib_hal_${_component}>")
-        endforeach()
-        add_library(${_halname} MODULE
-            ${_haldata_SOURCES}
-            ${CMAKE_CURRENT_BINARY_DIR}/hal.def)
-    else()
-        foreach(_component ${_haldata_COMPONENTS})
-            list(APPEND _haldata_LIBS "lib_hal_${_component}")
-        endforeach()
-        add_library(${_halname} MODULE
-            ${_haldata_SOURCES}
-            ${CMAKE_CURRENT_BINARY_DIR}/hal.def)
-        target_link_libraries(${_halname} ${_haldata_LIBS})
-    endif()
-
-    if(${_halname} STREQUAL "halpc98")
-        target_compile_definitions(lib_hal_pc98 PRIVATE SARCH_PC98)
-    endif()
-
-    if(${_halname} STREQUAL "halxbox")
-        target_compile_definitions(lib_hal_xbox PRIVATE SARCH_XBOX)
-    endif()
+    foreach(_component ${_haldata_COMPONENTS})
+        list(APPEND _haldata_SOURCES "$<TARGET_OBJECTS:lib_hal_${_component}>")
+    endforeach()
+    add_library(${_halname} MODULE
+        ${_haldata_SOURCES}
+        ${CMAKE_CURRENT_BINARY_DIR}/hal.def)
 
     if(${_halname} STREQUAL "hal")
         target_link_libraries(${_halname} libcntpr arbiter)

@@ -40,10 +40,7 @@ list(APPEND HAL_XBOX_SOURCE
     up/pic.c)
 
 add_asm_files(lib_hal_xbox_asm ${HAL_XBOX_ASM_SOURCE})
-add_object_library(lib_hal_xbox ${HAL_XBOX_SOURCE} ${lib_hal_xbox_asm})
+add_library(lib_hal_xbox OBJECT ${HAL_XBOX_SOURCE} ${lib_hal_xbox_asm})
 add_dependencies(lib_hal_xbox bugcodes xdk asm)
 #add_pch(lib_hal_xbox xbox/halxbox.h)
-
-if(MSVC)
-    target_link_libraries(lib_hal_xbox)
-endif()
+target_compile_definitions(lib_hal_xbox PRIVATE SARCH_XBOX)
