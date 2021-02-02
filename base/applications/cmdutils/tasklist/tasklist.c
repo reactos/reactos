@@ -34,7 +34,18 @@ INT PrintString(LPCWSTR String, INT MaxWidth, BOOL bAlignLeft)
     return ConPrintf(StdOut, bAlignLeft ? L"%-*.*ls" : L"%*.*ls", MaxWidth, MaxWidth, String);
 }
 
-// Print a string, aligned to right.
+// Print a string from resource
+// if bAlignLeft == TRUE then aligned to left, otherwise aligned to right
+// MaxWidth is the width for printing.
+// The string will be truncated if it's longer than RES_STR_MAXLEN
+INT PrintResString(HINSTANCE hInstance, UINT uid, INT MaxWidth, BOOL bAlignLeft)
+{
+    WCHAR StringBuffer[RES_STR_MAXLEN];
+    LoadStringW(hInstance, uid, StringBuffer, RES_STR_MAXLEN);
+    return PrintString(StringBuffer, MaxWidth, bAlignLeft);
+}
+
+// Print a number, aligned to right.
 // MaxWidth is the width for printing.
 // return FALSE if number length is longer than MaxWidth
 BOOL PrintNum(LONGLONG Number, INT MaxWidth)
@@ -135,32 +146,23 @@ VOID PrintHeader(VOID)
 {
     ConPrintf(StdOut, L"\n");
 
-    WCHAR lpstrImageName[HEADER_STR_MAXLEN];
-    WCHAR lpstrPID[HEADER_STR_MAXLEN];
-    WCHAR lpstrSession[HEADER_STR_MAXLEN];
-    WCHAR lpstrMemUsage[HEADER_STR_MAXLEN];
-
-    LoadStringW(GetModuleHandle(NULL), IDS_HEADER_IMAGENAME, lpstrImageName, HEADER_STR_MAXLEN);
-    LoadStringW(GetModuleHandle(NULL), IDS_HEADER_PID, lpstrPID, HEADER_STR_MAXLEN);
-    LoadStringW(GetModuleHandle(NULL), IDS_HEADER_SESSION, lpstrSession, HEADER_STR_MAXLEN);
-    LoadStringW(GetModuleHandle(NULL), IDS_HEADER_MEMUSAGE, lpstrMemUsage, HEADER_STR_MAXLEN);
-
-    PrintString(lpstrImageName, COLUMNWIDTH_IMAGENAME, TRUE);
+    HINSTANCE hInstance = GetModuleHandle(NULL);
+    PrintResString(hInstance, IDS_HEADER_IMAGENAME, COLUMNWIDTH_IMAGENAME, TRUE);
     PrintSpace(1);
-    PrintString(lpstrPID, COLUMNWIDTH_PID, FALSE);
+    PrintResString(hInstance, IDS_HEADER_PID,       COLUMNWIDTH_PID,       FALSE);
     PrintSpace(1);
-    PrintString(lpstrSession, COLUMNWIDTH_SESSION, FALSE);
+    PrintResString(hInstance, IDS_HEADER_SESSION,   COLUMNWIDTH_SESSION,   FALSE);
     PrintSpace(1);
-    PrintString(lpstrMemUsage, COLUMNWIDTH_MEMUSAGE, FALSE);
+    PrintResString(hInstance, IDS_HEADER_MEMUSAGE,  COLUMNWIDTH_MEMUSAGE,  FALSE);
 
     ConPrintf(StdOut, L"\n");
 
     PrintSplitLine(COLUMNWIDTH_IMAGENAME);
-    ConPrintf(StdOut, L" ");
+    PrintSpace(1);
     PrintSplitLine(COLUMNWIDTH_PID);
-    ConPrintf(StdOut, L" ");
+    PrintSpace(1);
     PrintSplitLine(COLUMNWIDTH_SESSION);
-    ConPrintf(StdOut, L" ");
+    PrintSpace(1);
     PrintSplitLine(COLUMNWIDTH_MEMUSAGE);
 
     ConPrintf(StdOut, L"\n");

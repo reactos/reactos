@@ -18,7 +18,7 @@
 #define COLUMNWIDTH_SESSION 11
 #define COLUMNWIDTH_MEMUSAGE 12
 
-#define HEADER_STR_MAXLEN 64
+#define RES_STR_MAXLEN 64
 
 static WCHAR opHelp[] = L"?";
 static WCHAR opVerbose[] = L"v";
