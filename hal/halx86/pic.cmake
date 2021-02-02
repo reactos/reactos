@@ -13,5 +13,5 @@ list(APPEND HAL_PIC_SOURCE
     up/pic.c)
 
 add_asm_files(lib_hal_pic_asm ${HAL_PIC_ASM_SOURCE})
-add_object_library(lib_hal_pic ${HAL_PIC_SOURCE} ${lib_hal_pic_asm})
+add_library(lib_hal_pic OBJECT ${HAL_PIC_SOURCE} ${lib_hal_pic_asm})
 add_dependencies(lib_hal_pic asm)
