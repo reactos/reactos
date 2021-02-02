@@ -146,7 +146,7 @@ VOID PrintHeader(VOID)
 {
     ConPrintf(StdOut, L"\n");
 
-    HINSTANCE hInstance = GetModuleHandle(NULL);
+    HINSTANCE hInstance = GetModuleHandleW(NULL);
     PrintResString(hInstance, IDS_HEADER_IMAGENAME, COLUMNWIDTH_IMAGENAME, TRUE);
     PrintSpace(1);
     PrintResString(hInstance, IDS_HEADER_PID,       COLUMNWIDTH_PID,       FALSE);
