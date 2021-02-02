@@ -224,7 +224,7 @@ typedef struct _MEMORY_AREA
 
     struct
     {
-        LARGE_INTEGER ViewOffset;
+        LONGLONG ViewOffset;
         PMM_SECTION_SEGMENT Segment;
         LIST_ENTRY RegionListHead;
     } SectionData;
@@ -768,15 +768,6 @@ MmAccessFault(
     IN PVOID Address,
     IN KPROCESSOR_MODE Mode,
     IN PVOID TrapInformation
-);
-
-/* kmap.c ********************************************************************/
-
-NTSTATUS
-NTAPI
-MiCopyFromUserPage(
-    PFN_NUMBER DestPage,
-    const VOID *SrcAddress
 );
 
 /* process.c *****************************************************************/
@@ -1359,7 +1350,8 @@ MmMapViewInSystemSpaceEx (
     _In_ PVOID Section,
     _Outptr_result_bytebuffer_ (*ViewSize) PVOID *MappedBase,
     _Inout_ PSIZE_T ViewSize,
-    _Inout_ PLARGE_INTEGER SectionOffset
+    _Inout_ PLARGE_INTEGER SectionOffset,
+    _In_ ULONG_PTR Flags
     );
 
 BOOLEAN

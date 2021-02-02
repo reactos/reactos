@@ -110,7 +110,6 @@ ULONG CcRosVacbGetRefCount_(PROS_VACB vacb, PCSTR file, INT line)
 /* FUNCTIONS *****************************************************************/
 
 VOID
-NTAPI
 CcRosTraceCacheMap (
     PROS_SHARED_CACHE_MAP SharedCacheMap,
     BOOLEAN Trace )
@@ -157,14 +156,6 @@ CcRosTraceCacheMap (
 }
 
 NTSTATUS
-NTAPI
-MmFlushVirtualMemory(IN PEPROCESS Process,
-                     IN OUT PVOID *BaseAddress,
-                     IN OUT PSIZE_T RegionSize,
-                     OUT PIO_STATUS_BLOCK IoStatusBlock);
-
-NTSTATUS
-NTAPI
 CcRosFlushVacb (
     _In_ PROS_VACB Vacb,
     _In_ PIO_STATUS_BLOCK Iosb)
@@ -210,7 +201,6 @@ quit:
 }
 
 NTSTATUS
-NTAPI
 CcRosFlushDirtyPages (
     ULONG Target,
     PULONG Count,
@@ -349,7 +339,6 @@ CcRosFlushDirtyPages (
 }
 
 NTSTATUS
-NTAPI
 CcRosReleaseVacb (
     PROS_SHARED_CACHE_MAP SharedCacheMap,
     PROS_VACB Vacb,
@@ -382,7 +371,6 @@ CcRosReleaseVacb (
 
 /* Returns with VACB Lock Held! */
 PROS_VACB
-NTAPI
 CcRosLookupVacb (
     PROS_SHARED_CACHE_MAP SharedCacheMap,
     LONGLONG FileOffset)
@@ -426,7 +414,6 @@ CcRosLookupVacb (
 }
 
 VOID
-NTAPI
 CcRosMarkDirtyVacb (
     PROS_VACB Vacb)
 {
@@ -463,7 +450,6 @@ CcRosMarkDirtyVacb (
 }
 
 VOID
-NTAPI
 CcRosUnmarkDirtyVacb (
     PROS_VACB Vacb,
     BOOLEAN LockViews)
@@ -617,7 +603,7 @@ CcRosCreateVacb (
     Retried = FALSE;
 Retry:
     /* Map VACB in system space */
-    Status = MmMapViewInSystemSpaceEx(SharedCacheMap->Section, &current->BaseAddress, &ViewSize, &current->FileOffset);
+    Status = MmMapViewInSystemSpaceEx(SharedCacheMap->Section, &current->BaseAddress, &ViewSize, &current->FileOffset, 0);
 
     if (!NT_SUCCESS(Status))
     {
@@ -735,7 +721,6 @@ Retry:
 }
 
 BOOLEAN
-NTAPI
 CcRosEnsureVacbResident(
     _In_ PROS_VACB Vacb,
     _In_ BOOLEAN Wait,
@@ -783,7 +768,6 @@ CcRosEnsureVacbResident(
 
 
 NTSTATUS
-NTAPI
 CcRosGetVacb (
     PROS_SHARED_CACHE_MAP SharedCacheMap,
     LONGLONG FileOffset,
@@ -835,7 +819,6 @@ CcRosGetVacb (
 }
 
 NTSTATUS
-NTAPI
 CcRosRequestVacb (
     PROS_SHARED_CACHE_MAP SharedCacheMap,
     LONGLONG FileOffset,
@@ -1032,7 +1015,6 @@ quit:
 }
 
 NTSTATUS
-NTAPI
 CcRosDeleteFileCache (
     PFILE_OBJECT FileObject,
     PROS_SHARED_CACHE_MAP SharedCacheMap,
@@ -1085,11 +1067,10 @@ CcRosDeleteFileCache (
         /* Flush to disk, if needed */
         if (Vacb->Dirty)
         {
-            SIZE_T FlushSize = VACB_MAPPING_GRANULARITY;
             IO_STATUS_BLOCK Iosb;
             NTSTATUS Status;
 
-            Status = MmFlushVirtualMemory(NULL, &Vacb->BaseAddress, &FlushSize, &Iosb);
+            Status = MmFlushSegment(FileObject->SectionObjectPointer, &Vacb->FileOffset, VACB_MAPPING_GRANULARITY, &Iosb);
             if (!NT_SUCCESS(Status))
             {
                 /* Complain. There's not much we can do */
@@ -1134,7 +1115,6 @@ CcRosDeleteFileCache (
 }
 
 VOID
-NTAPI
 CcRosReferenceCache (
     PFILE_OBJECT FileObject)
 {
@@ -1150,7 +1130,6 @@ CcRosReferenceCache (
 }
 
 NTSTATUS
-NTAPI
 CcRosReleaseFileCache (
     PFILE_OBJECT FileObject)
 /*
@@ -1207,7 +1186,6 @@ CcRosReleaseFileCache (
 }
 
 NTSTATUS
-NTAPI
 CcRosInitializeFileCache (
     PFILE_OBJECT FileObject,
     PCC_FILE_SIZES FileSizes,

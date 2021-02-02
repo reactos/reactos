@@ -3,7 +3,7 @@
 //
 // Define this if you want debugging support
 //
-#define _CC_DEBUG_                                      0x0
+#define _CC_DEBUG_                                      0x00
 
 //
 // These define the Debug Masks Supported
@@ -309,11 +309,9 @@ CcMdlWriteComplete2(
 );
 
 NTSTATUS
-NTAPI
 CcRosFlushVacb(PROS_VACB Vacb, PIO_STATUS_BLOCK Iosb);
 
 NTSTATUS
-NTAPI
 CcRosGetVacb(
     PROS_SHARED_CACHE_MAP SharedCacheMap,
     LONGLONG FileOffset,
@@ -321,7 +319,6 @@ CcRosGetVacb(
 );
 
 BOOLEAN
-NTAPI
 CcRosEnsureVacbResident(
     _In_ PROS_VACB Vacb,
     _In_ BOOLEAN Wait,
@@ -339,11 +336,9 @@ NTAPI
 CcShutdownLazyWriter(VOID);
 
 BOOLEAN
-NTAPI
 CcInitializeCacheManager(VOID);
 
 PROS_VACB
-NTAPI
 CcRosLookupVacb(
     PROS_SHARED_CACHE_MAP SharedCacheMap,
     LONGLONG FileOffset
@@ -354,18 +349,15 @@ NTAPI
 CcInitCacheZeroPage(VOID);
 
 VOID
-NTAPI
 CcRosMarkDirtyVacb(
     PROS_VACB Vacb);
 
 VOID
-NTAPI
 CcRosUnmarkDirtyVacb(
     PROS_VACB Vacb,
     BOOLEAN LockViews);
 
 NTSTATUS
-NTAPI
 CcRosFlushDirtyPages(
     ULONG Target,
     PULONG Count,
@@ -374,15 +366,12 @@ CcRosFlushDirtyPages(
 );
 
 VOID
-NTAPI
 CcRosDereferenceCache(PFILE_OBJECT FileObject);
 
 VOID
-NTAPI
 CcRosReferenceCache(PFILE_OBJECT FileObject);
 
 NTSTATUS
-NTAPI
 CcRosReleaseVacb(
     PROS_SHARED_CACHE_MAP SharedCacheMap,
     PROS_VACB Vacb,
@@ -391,7 +380,6 @@ CcRosReleaseVacb(
 );
 
 NTSTATUS
-NTAPI
 CcRosRequestVacb(
     PROS_SHARED_CACHE_MAP SharedCacheMap,
     LONGLONG FileOffset,
@@ -399,7 +387,6 @@ CcRosRequestVacb(
 );
 
 NTSTATUS
-NTAPI
 CcRosInitializeFileCache(
     PFILE_OBJECT FileObject,
     PCC_FILE_SIZES FileSizes,
@@ -409,7 +396,6 @@ CcRosInitializeFileCache(
 );
 
 NTSTATUS
-NTAPI
 CcRosReleaseFileCache(
     PFILE_OBJECT FileObject
 );

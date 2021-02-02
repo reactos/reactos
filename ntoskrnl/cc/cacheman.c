@@ -42,7 +42,6 @@ CcPfInitializePrefetcher(VOID)
 
 CODE_SEG("INIT")
 BOOLEAN
-NTAPI
 CcInitializeCacheManager(VOID)
 {
     ULONG Thread;

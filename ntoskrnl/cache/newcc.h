@@ -62,10 +62,6 @@ NTAPI
 CcpUnpinData(PNOCC_BCB Bcb,
              BOOLEAN ActuallyRelease);
 
-BOOLEAN
-NTAPI
-CcInitializeCacheManager(VOID);
-
 VOID
 NTAPI
 CcShutdownSystem(VOID);
