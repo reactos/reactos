@@ -150,6 +150,7 @@ extern "C" {
     _In_z_ const char *_Str1,
     _In_z_ const char *_Str2);
 
+  _CRTIMP
   size_t
   __cdecl
   strlen(

@@ -1929,6 +1929,7 @@ _CRTIMP int __cdecl iswblank(wint_t _C);
     _In_z_ const wchar_t *_Str,
     _In_z_ const wchar_t *_Control);
 
+  _CRTIMP
   size_t
   __cdecl
   wcslen(
