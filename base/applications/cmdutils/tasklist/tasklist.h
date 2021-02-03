@@ -20,9 +20,7 @@
 
 #define RES_STR_MAXLEN 64
 
-static WCHAR opHelp[] = L"?";
-static WCHAR opVerbose[] = L"v";
-static PWCHAR opList[] = {opHelp, opVerbose};
+static PCWSTR opList[] = {L"?", L"v"};
 
 #define OP_PARAM_INVALID -1
 
