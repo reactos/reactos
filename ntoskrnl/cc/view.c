@@ -951,21 +951,21 @@ CcFlushCache (
 
         if (vacb != NULL)
         {
-            IO_STATUS_BLOCK VacbIosb;
             if (vacb->Dirty)
             {
+                IO_STATUS_BLOCK VacbIosb;
                 Status = CcRosFlushVacb(vacb, &VacbIosb);
                 if (!NT_SUCCESS(Status))
                 {
                     goto quit;
                 }
                 DirtyVacb = TRUE;
+
+                if (IoStatus)
+                    IoStatus->Information += VacbIosb.Information;
             }
 
             CcRosReleaseVacb(SharedCacheMap, vacb, FALSE, FALSE);
-
-            if (IoStatus)
-                IoStatus->Information += VacbIosb.Information;
         }
 
         if (!DirtyVacb)
