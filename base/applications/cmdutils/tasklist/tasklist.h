@@ -27,6 +27,8 @@
 
 #define RES_STR_MAXLEN 64
 
+// the strings in opList are the command-line options.
+// should always correspond with the defines below, in sequence (except OP_PARAM_INVALID)
 static PCWSTR opList[] = {L"?", L"v"};
 
 #define OP_PARAM_INVALID    -1
