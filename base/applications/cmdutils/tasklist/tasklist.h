@@ -22,7 +22,6 @@
 
 static PCWSTR opList[] = {L"?", L"v"};
 
-#define OP_PARAM_INVALID -1
-
-#define OP_PARAM_HELP 0
-#define OP_PARAM_VERBOSE 1
+#define OP_PARAM_INVALID    -1
+#define OP_PARAM_HELP       0
+#define OP_PARAM_VERBOSE    1
