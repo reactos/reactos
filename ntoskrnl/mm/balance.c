@@ -264,7 +264,7 @@ VOID
 NTAPI
 MmRebalanceMemoryConsumers(VOID)
 {
-    if (InterlockedCompareExchange(&PageOutThreadActive, 0, 1) == 0)
+    // if (InterlockedCompareExchange(&PageOutThreadActive, 0, 1) == 0)
     {
         KeSetEvent(&MiBalancerEvent, IO_NO_INCREMENT, FALSE);
     }
