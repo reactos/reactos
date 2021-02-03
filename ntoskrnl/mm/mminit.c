@@ -17,8 +17,6 @@
 
 /* GLOBALS *******************************************************************/
 
-VOID NTAPI MiInitializeUserPfnBitmap(VOID);
-
 BOOLEAN Mm64BitPhysicalAddress = FALSE;
 ULONG MmReadClusterSize;
 //
@@ -214,12 +212,17 @@ MmInitSystem(IN ULONG Phase,
     /* Initialize the kernel address space */
     ASSERT(Phase == 1);
 
+#ifdef NEWCC
     InitializeListHead(&MiSegmentList);
     ExInitializeFastMutex(&MiGlobalPageOperation);
     KeInitializeEvent(&MmWaitPageEvent, SynchronizationEvent, FALSE);
     // Until we're fully demand paged, we can do things the old way through
     // the balance manager
+    // CcInitView will override this...
     MmInitializeMemoryConsumer(MC_CACHE, MiRosTrimCache);
+#else
+    KeInitializeEvent(&MmWaitPageEvent, SynchronizationEvent, FALSE);
+#endif
 
     MmKernelAddressSpace = &PsIdleProcess->Vm;
 
@@ -230,7 +233,6 @@ MmInitSystem(IN ULONG Phase,
     MiDbgDumpAddressSpace();
 
     MmInitGlobalKernelPageDirectory();
-    MiInitializeUserPfnBitmap();
     MmInitializeMemoryConsumer(MC_USER, MmTrimUserMemory);
     MmInitializeRmapList();
     MmInitSectionImplementation();

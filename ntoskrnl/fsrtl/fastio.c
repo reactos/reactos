@@ -1714,9 +1714,13 @@ FsRtlAcquireFileForCcFlushEx(IN PFILE_OBJECT FileObject)
 
         /* Return either success or inability to wait.
            In case of other failure - fall through */
-        if (Status == STATUS_SUCCESS ||
-            Status == STATUS_CANT_WAIT)
+        if (NT_SUCCESS(Status))
+            return Status;
+
+        if (Status == STATUS_CANT_WAIT)
         {
+            DPRINT1("STATUS_CANT_WAIT\n");
+            FsRtlExitFileSystem();
             return Status;
         }
     }

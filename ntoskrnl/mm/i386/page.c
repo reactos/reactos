@@ -585,6 +585,46 @@ MmSetDirtyPage(PEPROCESS Process, PVOID Address)
     }
 }
 
+VOID
+NTAPI
+MmClearPageAccessedBit(PEPROCESS Process, PVOID Address)
+{
+    PULONG Pt;
+    LONG Pte;
+    KIRQL OldIrql;
+
+    if (Address < MmSystemRangeStart && Process == NULL)
+    {
+        DPRINT1("MmClearPageAccessedBit is called for user space without a process.\n");
+        KeBugCheck(MEMORY_MANAGEMENT);
+    }
+
+    Pt = MmGetPageTableForProcess(Process, Address, FALSE, &OldIrql);
+    if (Pt == NULL)
+    {
+        KeBugCheck(MEMORY_MANAGEMENT);
+    }
+
+    do
+    {
+        Pte = *Pt;
+    } while (Pte != InterlockedCompareExchangePte(Pt, Pte & ~PA_ACCESSED, Pte));
+
+    if (!(Pte & PA_PRESENT))
+    {
+        KeBugCheck(MEMORY_MANAGEMENT);
+    }
+
+    MiFlushTlb(Pt, Address, OldIrql);
+}
+
+BOOLEAN
+NTAPI
+MmIsPageAccessed(PEPROCESS Process, PVOID Address)
+{
+    return BooleanFlagOn(MmGetPageEntryForProcess(Process, Address), PA_ACCESSED);
+}
+
 BOOLEAN
 NTAPI
 MmIsPagePresent(PEPROCESS Process, PVOID Address)

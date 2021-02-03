@@ -94,9 +94,6 @@ NTAPI
 MmBuildMdlFromPages(PMDL Mdl, PPFN_NUMBER Pages)
 {
     memcpy(Mdl + 1, Pages, sizeof(PFN_NUMBER) * (PAGE_ROUND_UP(Mdl->ByteOffset+Mdl->ByteCount)/PAGE_SIZE));
-
-    /* FIXME: this flag should be set by the caller perhaps? */
-    Mdl->MdlFlags |= MDL_IO_PAGE_READ;
 }
 
 
@@ -230,7 +227,7 @@ MiReadPageFile(
 
     MmInitializeMdl(Mdl, NULL, PAGE_SIZE);
     MmBuildMdlFromPages(Mdl, &Page);
-    Mdl->MdlFlags |= MDL_PAGES_LOCKED;
+    Mdl->MdlFlags |= MDL_PAGES_LOCKED | MDL_IO_PAGE_READ;
 
     file_offset.QuadPart = PageFileOffset * PAGE_SIZE;
 

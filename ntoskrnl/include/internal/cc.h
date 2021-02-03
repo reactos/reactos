@@ -175,10 +175,13 @@ typedef struct _ROS_SHARED_CACHE_MAP
     LARGE_INTEGER FileSize;
     LIST_ENTRY BcbList;
     LARGE_INTEGER SectionSize;
+    LARGE_INTEGER ValidDataLength;
     PFILE_OBJECT FileObject;
     ULONG DirtyPages;
     LIST_ENTRY SharedCacheMapLinks;
     ULONG Flags;
+    PVOID Section;
+    PKEVENT CreateEvent;
     PCACHE_MANAGER_CALLBACKS Callbacks;
     PVOID LazyWriteContext;
     LIST_ENTRY PrivateList;
@@ -197,15 +200,13 @@ typedef struct _ROS_SHARED_CACHE_MAP
 
 #define READAHEAD_DISABLED 0x1
 #define WRITEBEHIND_DISABLED 0x2
+#define SHARED_CACHE_MAP_IN_CREATION 0x4
+#define SHARED_CACHE_MAP_IN_LAZYWRITE 0x8
 
 typedef struct _ROS_VACB
 {
     /* Base address of the region where the view's data is mapped. */
     PVOID BaseAddress;
-    /* Memory area representing the region where the view's data is mapped. */
-    struct _MEMORY_AREA* MemoryArea;
-    /* Are the contents of the view valid. */
-    BOOLEAN Valid;
     /* Are the contents of the view newer than those on disk. */
     BOOLEAN Dirty;
     /* Page out in progress */
@@ -308,18 +309,22 @@ CcMdlWriteComplete2(
 );
 
 NTSTATUS
-NTAPI
-CcRosFlushVacb(PROS_VACB Vacb);
+CcRosFlushVacb(PROS_VACB Vacb, PIO_STATUS_BLOCK Iosb);
 
 NTSTATUS
-NTAPI
 CcRosGetVacb(
     PROS_SHARED_CACHE_MAP SharedCacheMap,
     LONGLONG FileOffset,
-    PLONGLONG BaseOffset,
-    PVOID *BaseAddress,
-    PBOOLEAN UptoDate,
     PROS_VACB *Vacb
+);
+
+BOOLEAN
+CcRosEnsureVacbResident(
+    _In_ PROS_VACB Vacb,
+    _In_ BOOLEAN Wait,
+    _In_ BOOLEAN NoRead,
+    _In_ ULONG Offset,
+    _In_ ULONG Length
 );
 
 VOID
@@ -330,28 +335,10 @@ VOID
 NTAPI
 CcShutdownLazyWriter(VOID);
 
-NTSTATUS
-NTAPI
-CcReadVirtualAddress(PROS_VACB Vacb);
-
-NTSTATUS
-NTAPI
-CcWriteVirtualAddress(PROS_VACB Vacb);
-
 BOOLEAN
-NTAPI
 CcInitializeCacheManager(VOID);
 
-NTSTATUS
-NTAPI
-CcRosUnmapVacb(
-    PROS_SHARED_CACHE_MAP SharedCacheMap,
-    LONGLONG FileOffset,
-    BOOLEAN NowDirty
-);
-
 PROS_VACB
-NTAPI
 CcRosLookupVacb(
     PROS_SHARED_CACHE_MAP SharedCacheMap,
     LONGLONG FileOffset
@@ -361,26 +348,16 @@ VOID
 NTAPI
 CcInitCacheZeroPage(VOID);
 
-NTSTATUS
-NTAPI
-CcRosMarkDirtyFile(
-    PROS_SHARED_CACHE_MAP SharedCacheMap,
-    LONGLONG FileOffset
-);
-
 VOID
-NTAPI
 CcRosMarkDirtyVacb(
     PROS_VACB Vacb);
 
 VOID
-NTAPI
 CcRosUnmarkDirtyVacb(
     PROS_VACB Vacb,
     BOOLEAN LockViews);
 
 NTSTATUS
-NTAPI
 CcRosFlushDirtyPages(
     ULONG Target,
     PULONG Count,
@@ -389,39 +366,27 @@ CcRosFlushDirtyPages(
 );
 
 VOID
-NTAPI
 CcRosDereferenceCache(PFILE_OBJECT FileObject);
 
 VOID
-NTAPI
 CcRosReferenceCache(PFILE_OBJECT FileObject);
 
-VOID
-NTAPI
-CcRosRemoveIfClosed(PSECTION_OBJECT_POINTERS SectionObjectPointer);
-
 NTSTATUS
-NTAPI
 CcRosReleaseVacb(
     PROS_SHARED_CACHE_MAP SharedCacheMap,
     PROS_VACB Vacb,
-    BOOLEAN Valid,
     BOOLEAN Dirty,
     BOOLEAN Mapped
 );
 
 NTSTATUS
-NTAPI
 CcRosRequestVacb(
     PROS_SHARED_CACHE_MAP SharedCacheMap,
     LONGLONG FileOffset,
-    PVOID* BaseAddress,
-    PBOOLEAN UptoDate,
     PROS_VACB *Vacb
 );
 
 NTSTATUS
-NTAPI
 CcRosInitializeFileCache(
     PFILE_OBJECT FileObject,
     PCC_FILE_SIZES FileSizes,
@@ -431,7 +396,6 @@ CcRosInitializeFileCache(
 );
 
 NTSTATUS
-NTAPI
 CcRosReleaseFileCache(
     PFILE_OBJECT FileObject
 );

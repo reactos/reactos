@@ -1071,9 +1071,8 @@ FORCEINLINE
 BOOLEAN
 MiIsRosSectionObject(IN PVOID Section)
 {
-    PROS_SECTION_OBJECT RosSection = Section;
-    if ((RosSection->Type == 'SC') && (RosSection->Size == 'TN')) return TRUE;
-    return FALSE;
+    PSECTION RosSection = Section;
+    return RosSection->u.Flags.filler;
 }
 
 #define MI_IS_ROS_PFN(x)     ((x)->u4.AweAllocation == TRUE)
