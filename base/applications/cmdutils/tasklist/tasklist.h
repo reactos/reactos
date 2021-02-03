@@ -28,9 +28,3 @@ static PWCHAR opList[] = {opHelp, opVerbose};
 
 #define OP_PARAM_HELP 0
 #define OP_PARAM_VERBOSE 1
-
-typedef NTSTATUS(NTAPI *NT_QUERY_SYSTEM_INFORMATION)(
-    SYSTEM_INFORMATION_CLASS SystemInformationClass,
-    PVOID SystemInformation,
-    ULONG InformationLength,
-    PULONG ResultLength);
