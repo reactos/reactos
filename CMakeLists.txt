@@ -127,9 +127,10 @@ else()
     # Print build type
     message("-- Build Type: ${CMAKE_BUILD_TYPE}")
 
-    # Always add /MT in VS CMAKE_GENERATOR
+    # Always add /MT in VS CMAKE_GENERATOR and define _SBCS otherwise VS thinks it's a multi-byte or whatever project
     if (MSVC_IDE)
         add_compile_options("/MT")
+        add_compile_definitions(_SBCS)
     endif()
 
 
