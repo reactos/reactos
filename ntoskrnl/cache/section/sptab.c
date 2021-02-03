@@ -225,7 +225,7 @@ _MmSetPageEntrySectionSegment(PMM_SECTION_SEGMENT Segment,
             MmSetSectionAssociation(PFN_FROM_SSE(Entry), Segment, Offset);
             InterlockedIncrement64(Segment->ReferenceCount);
 
-            if ((Offset->QuadPart > (Segment->LastPage << PAGE_SHIFT)) || !Segment->LastPage)
+            if (Offset->QuadPart >= (Segment->LastPage << PAGE_SHIFT))
                 Segment->LastPage = (Offset->QuadPart >> PAGE_SHIFT) + 1;
         }
     }
