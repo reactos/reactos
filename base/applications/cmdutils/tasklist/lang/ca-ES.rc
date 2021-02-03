@@ -2,7 +2,7 @@ LANGUAGE LANG_CATALAN, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    IDS_USAGE, "Usage: TASKLIST [/?] [/V]\n"
+    IDS_USAGE, "Usage: TASKLIST [/?] [/NH]\n"
     IDS_DESCRIPTION, "\n\
 Desciption:\
     This tool displays a list of currently running processes on\n\

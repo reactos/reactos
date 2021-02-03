@@ -144,8 +144,6 @@ BOOL PrintMemory(SIZE_T MemorySizeByte, INT MaxWidth, INT StartingUnit)
 
 VOID PrintHeader(VOID)
 {
-    ConPrintf(StdOut, L"\n");
-
     HINSTANCE hInstance = GetModuleHandleW(NULL);
     PrintResString(hInstance, IDS_HEADER_IMAGENAME, COLUMNWIDTH_IMAGENAME, TRUE);
     PrintSpace(1);
@@ -168,7 +166,7 @@ VOID PrintHeader(VOID)
     ConPrintf(StdOut, L"\n");
 }
 
-BOOL EnumProcessAndPrint(BOOL bVerbose)
+BOOL EnumProcessAndPrint(BOOL bNoHeader)
 {
     // Call NtQuerySystemInformation for the process information
     ULONG ProcessInfoBufferLength = 0;
@@ -232,7 +230,12 @@ BOOL EnumProcessAndPrint(BOOL bVerbose)
         return FALSE;
     }
 
-    PrintHeader();
+    ConPrintf(StdOut, L"\n");
+
+    if (!bNoHeader)
+    {
+        PrintHeader();
+    }
 
     PSYSTEM_PROCESS_INFORMATION pSPI;
     pSPI = (PSYSTEM_PROCESS_INFORMATION)ProcessInfoBuffer;
@@ -280,7 +283,7 @@ INT GetArgumentType(WCHAR* argument)
 BOOL ProcessArguments(INT argc, WCHAR *argv[])
 {
     INT i;
-    BOOL bHasHelp = FALSE, bHasVerbose = FALSE;
+    BOOL bHasHelp = FALSE, bHasNoHeader = FALSE;
     for (i = 1; i < argc; i++)
     {
         INT Argument = GetArgumentType(argv[i]);
@@ -299,16 +302,16 @@ BOOL ProcessArguments(INT argc, WCHAR *argv[])
                 bHasHelp = TRUE;
                 break;
             }
-            case OP_PARAM_VERBOSE:
+            case OP_PARAM_NOHEADER:
             {
-                if (bHasVerbose)
+                if (bHasNoHeader)
                 {
-                    // -V already specified
+                    // -nh already specified
                     ConResMsgPrintf(StdOut, 0, IDS_PARAM_TOO_MUCH, argv[i], 1);
                     ConResMsgPrintf(StdOut, 0, IDS_USAGE);
                     return FALSE;
                 }
-                bHasVerbose = TRUE;
+                bHasNoHeader = TRUE;
                 break;
             }
             case OP_PARAM_INVALID:
@@ -338,7 +341,7 @@ BOOL ProcessArguments(INT argc, WCHAR *argv[])
     }
     else
     {
-        EnumProcessAndPrint(bHasVerbose);
+        EnumProcessAndPrint(bHasNoHeader);
     }
     return TRUE;
 }
