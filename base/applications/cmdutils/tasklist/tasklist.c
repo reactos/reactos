@@ -41,7 +41,7 @@ INT PrintString(LPCWSTR String, INT MaxWidth, BOOL bAlignLeft)
 INT PrintResString(HINSTANCE hInstance, UINT uid, INT MaxWidth, BOOL bAlignLeft)
 {
     WCHAR StringBuffer[RES_STR_MAXLEN];
-    LoadStringW(hInstance, uid, StringBuffer, RES_STR_MAXLEN);
+    LoadStringW(hInstance, uid, StringBuffer, _countof(StringBuffer));
     return PrintString(StringBuffer, MaxWidth, bAlignLeft);
 }
 
