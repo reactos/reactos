@@ -188,7 +188,7 @@ typedef struct _TOKEN
     LUID AuthenticationId;                            /* 0x18 */
     LUID ParentTokenId;                               /* 0x20 */
     LARGE_INTEGER ExpirationTime;                     /* 0x28 */
-    struct _ERESOURCE *TokenLock;                     /* 0x30 */
+    PERESOURCE TokenLock;                             /* 0x30 */
     SEP_AUDIT_POLICY  AuditPolicy;                    /* 0x38 */
     LUID ModifiedId;                                  /* 0x40 */
     ULONG SessionId;                                  /* 0x48 */
