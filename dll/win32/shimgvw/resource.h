@@ -8,15 +8,15 @@
 #define IDI_PNG_ICON 5
 
 /* Toolbar images */
-#define IDB_PREV        50
-#define IDB_NEXT        51
+#define IDB_PREV_PIC    50
+#define IDB_NEXT_PIC    51
 #define IDB_BEST_FIT    52
 #define IDB_REAL_SIZE   53
 #define IDB_SLIDE_SHOW  54
-#define IDB_ZOOMP       55
-#define IDB_ZOOMM       56
-#define IDB_ROT1        57
-#define IDB_ROT2        58
+#define IDB_ZOOM_IN     55
+#define IDB_ZOOM_OUT    56
+#define IDB_ROT_CLOCKW  57
+#define IDB_ROT_COUNCW  58
 #define IDB_DELETE      59
 #define IDB_PRINT       60
 #define IDB_SAVEAS      61
@@ -26,30 +26,30 @@
 /* ToolBar buttons */
 #define IDC_TOOL_BASE   500
 
-#define IDC_PREV        (IDC_TOOL_BASE + 0)
-#define IDC_NEXT        (IDC_TOOL_BASE + 1)
+#define IDC_PREV_PIC    (IDC_TOOL_BASE + 0)
+#define IDC_NEXT_PIC    (IDC_TOOL_BASE + 1)
 #define IDC_BEST_FIT    (IDC_TOOL_BASE + 2)
 #define IDC_REAL_SIZE   (IDC_TOOL_BASE + 3)
 #define IDC_SLIDE_SHOW  (IDC_TOOL_BASE + 4)
-#define IDC_ZOOMP       (IDC_TOOL_BASE + 5)
-#define IDC_ZOOMM       (IDC_TOOL_BASE + 6)
-#define IDC_ROT1        (IDC_TOOL_BASE + 7)
-#define IDC_ROT2        (IDC_TOOL_BASE + 8)
+#define IDC_ZOOM_IN     (IDC_TOOL_BASE + 5)
+#define IDC_ZOOM_OUT    (IDC_TOOL_BASE + 6)
+#define IDC_ROT_CLOCKW  (IDC_TOOL_BASE + 7)
+#define IDC_ROT_COUNCW  (IDC_TOOL_BASE + 8)
 #define IDC_DELETE      (IDC_TOOL_BASE + 9)
 #define IDC_PRINT       (IDC_TOOL_BASE + 10)
 #define IDC_SAVEAS      (IDC_TOOL_BASE + 11)
 #define IDC_MODIFY      (IDC_TOOL_BASE + 12)
 #define IDC_HELP_TOC    (IDC_TOOL_BASE + 13)
 
-#define TBICON_PREV         0
-#define TBICON_NEXT         1
+#define TBICON_PREV_PIC     0
+#define TBICON_NEXT_PIC     1
 #define TBICON_BEST_FIT     2
 #define TBICON_REAL_SIZE    3
 #define TBICON_SLIDE_SHOW   4
-#define TBICON_ZOOMP        5
-#define TBICON_ZOOMM        6
-#define TBICON_ROT1         7
-#define TBICON_ROT2         8
+#define TBICON_ZOOM_IN      5
+#define TBICON_ZOOM_OUT     6
+#define TBICON_ROT_CLOCKW   7
+#define TBICON_ROT_COUNCW   8
 #define TBICON_DELETE       9
 #define TBICON_PRINT        10
 #define TBICON_SAVEAS       11
@@ -72,20 +72,20 @@
 #define IDS_WMF_FILE    307
 
 /* Tooltips strings */
-#define IDS_TOOLTIP_PREV        400
-#define IDS_TOOLTIP_NEXT        401
-#define IDS_TOOLTIP_BEST_FIT    402
-#define IDS_TOOLTIP_REAL_SIZE   403
-#define IDS_TOOLTIP_SLIDE_SHOW  404
-#define IDS_TOOLTIP_ZOOMP       405
-#define IDS_TOOLTIP_ZOOMM       406
-#define IDS_TOOLTIP_ROT1        407
-#define IDS_TOOLTIP_ROT2        408
-#define IDS_TOOLTIP_DELETE      409
-#define IDS_TOOLTIP_PRINT       410
-#define IDS_TOOLTIP_SAVEAS      411
-#define IDS_TOOLTIP_MODIFY      412
-#define IDS_TOOLTIP_HELP_TOC    413
+#define IDS_TOOLTIP_PREV_PIC   400
+#define IDS_TOOLTIP_NEXT_PIC   401
+#define IDS_TOOLTIP_BEST_FIT   402
+#define IDS_TOOLTIP_REAL_SIZE  403
+#define IDS_TOOLTIP_SLIDE_SHOW 404
+#define IDS_TOOLTIP_ZOOM_IN    405
+#define IDS_TOOLTIP_ZOOM_OUT   406
+#define IDS_TOOLTIP_ROT_CLOCKW 407
+#define IDS_TOOLTIP_ROT_COUNCW 408
+#define IDS_TOOLTIP_DELETE     409
+#define IDS_TOOLTIP_PRINT      410
+#define IDS_TOOLTIP_SAVEAS     411
+#define IDS_TOOLTIP_MODIFY     412
+#define IDS_TOOLTIP_HELP_TOC   413
 
 /* Keyboard accelerators */
 #define IDR_ACCELERATOR 600

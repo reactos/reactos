@@ -69,18 +69,18 @@ typedef struct {
 /* ToolBar Buttons */
 static const TBBUTTON Buttons [] =
 {
-    DECLARE_BTN_INFO(PREV),
-    DECLARE_BTN_INFO(NEXT),
+    DECLARE_BTN_INFO(PREV_PIC),
+    DECLARE_BTN_INFO(NEXT_PIC),
     DECLARE_BTN_SEPARATOR,
     DECLARE_BTN_INFO(BEST_FIT),
     DECLARE_BTN_INFO(REAL_SIZE),
     DECLARE_BTN_INFO(SLIDE_SHOW),
     DECLARE_BTN_SEPARATOR,
-    DECLARE_BTN_INFO(ZOOMP),
-    DECLARE_BTN_INFO(ZOOMM),
+    DECLARE_BTN_INFO(ZOOM_IN),
+    DECLARE_BTN_INFO(ZOOM_OUT),
     DECLARE_BTN_SEPARATOR,
-    DECLARE_BTN_INFO(ROT1),
-    DECLARE_BTN_INFO(ROT2),
+    DECLARE_BTN_INFO(ROT_CLOCKW),
+    DECLARE_BTN_INFO(ROT_COUNCW),
     DECLARE_BTN_SEPARATOR,
     DECLARE_BTN_INFO(DELETE),
     DECLARE_BTN_INFO(PRINT),
@@ -93,15 +93,15 @@ static const TBBUTTON Buttons [] =
 #define DECLARE_BTN_CONFIG(_name) { IDB_##_name, IDS_TOOLTIP_##_name }
 
 static const TB_BUTTON_CONFIG BtnConfig[] = {
-    DECLARE_BTN_CONFIG(PREV),
-    DECLARE_BTN_CONFIG(NEXT),
+    DECLARE_BTN_CONFIG(PREV_PIC),
+    DECLARE_BTN_CONFIG(NEXT_PIC),
     DECLARE_BTN_CONFIG(BEST_FIT),
     DECLARE_BTN_CONFIG(REAL_SIZE),
     DECLARE_BTN_CONFIG(SLIDE_SHOW),
-    DECLARE_BTN_CONFIG(ZOOMP),
-    DECLARE_BTN_CONFIG(ZOOMM),
-    DECLARE_BTN_CONFIG(ROT1),
-    DECLARE_BTN_CONFIG(ROT2),
+    DECLARE_BTN_CONFIG(ZOOM_IN),
+    DECLARE_BTN_CONFIG(ZOOM_OUT),
+    DECLARE_BTN_CONFIG(ROT_CLOCKW),
+    DECLARE_BTN_CONFIG(ROT_COUNCW),
     DECLARE_BTN_CONFIG(DELETE),
     DECLARE_BTN_CONFIG(PRINT),
     DECLARE_BTN_CONFIG(SAVEAS),
@@ -261,11 +261,11 @@ static void ZoomInOrOut(BOOL bZoomIn)
             ZoomPercents = ZoomSteps[i];
 
         /* update tool bar buttons */
-        SendMessage(hToolBar, TB_ENABLEBUTTON, IDC_ZOOMM, TRUE);
+        SendMessage(hToolBar, TB_ENABLEBUTTON, IDC_ZOOM_OUT, TRUE);
         if (ZoomPercents >= MAX_ZOOM)
-            SendMessage(hToolBar, TB_ENABLEBUTTON, IDC_ZOOMP, FALSE);
+            SendMessage(hToolBar, TB_ENABLEBUTTON, IDC_ZOOM_IN, FALSE);
         else
-            SendMessage(hToolBar, TB_ENABLEBUTTON, IDC_ZOOMP, TRUE);
+            SendMessage(hToolBar, TB_ENABLEBUTTON, IDC_ZOOM_IN, TRUE);
     }
     else            /* zoom out */
     {
@@ -282,11 +282,11 @@ static void ZoomInOrOut(BOOL bZoomIn)
             ZoomPercents = ZoomSteps[i];
 
         /* update tool bar buttons */
-        SendMessage(hToolBar, TB_ENABLEBUTTON, IDC_ZOOMP, TRUE);
+        SendMessage(hToolBar, TB_ENABLEBUTTON, IDC_ZOOM_IN, TRUE);
         if (ZoomPercents <= MIN_ZOOM)
-            SendMessage(hToolBar, TB_ENABLEBUTTON, IDC_ZOOMM, FALSE);
+            SendMessage(hToolBar, TB_ENABLEBUTTON, IDC_ZOOM_OUT, FALSE);
         else
-            SendMessage(hToolBar, TB_ENABLEBUTTON, IDC_ZOOMM, TRUE);
+            SendMessage(hToolBar, TB_ENABLEBUTTON, IDC_ZOOM_OUT, TRUE);
     }
 
     /* redraw */
@@ -978,12 +978,12 @@ ImageView_WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
         {
             switch (LOWORD(wParam))
             {
-                case IDC_PREV:
+                case IDC_PREV_PIC:
                     currentFile = currentFile->Prev;
                     pLoadImageFromNode(currentFile, hwnd);
                     break;
 
-                case IDC_NEXT:
+                case IDC_NEXT_PIC:
                     currentFile = currentFile->Next;
                     pLoadImageFromNode(currentFile, hwnd);
                     break;
@@ -997,11 +997,11 @@ ImageView_WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
                 case IDC_SLIDE_SHOW:
                     break;
 
-                case IDC_ZOOMP:
+                case IDC_ZOOM_IN:
                     ZoomInOrOut(TRUE);
                     break;
 
-                case IDC_ZOOMM:
+                case IDC_ZOOM_OUT:
                     ZoomInOrOut(FALSE);
                     break;
 
@@ -1013,7 +1013,7 @@ ImageView_WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
                     pPrintImage(hwnd);
                     break;
 
-                case IDC_ROT1:
+                case IDC_ROT_CLOCKW:
                     if (image)
                     {
                         GdipImageRotateFlip(image, Rotate270FlipNone);
@@ -1021,7 +1021,7 @@ ImageView_WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
                     }
                     break;
     
-                case IDC_ROT2:
+                case IDC_ROT_COUNCW:
                     if (image)
                     {
                         GdipImageRotateFlip(image, Rotate90FlipNone);
