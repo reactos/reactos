@@ -128,6 +128,12 @@ SceInfInteractive = "INTERACTIVE"
 SceInfGuest = "來賓"
 SceInfUsers = "使用者"
 
+[Strings.0405]
+SceInfAuthUsers = "Autentizovaní uživatelé"
+SceInfInteractive = "INTERACTIVE"
+SceInfGuest = "Host"
+SceInfUsers = "Uživatelé"
+
 [Strings.0407]
 SceInfAuthUsers = "Authentifizierte Benutzer"
 SceInfInteractive = "INTERAKTIV"
@@ -158,6 +164,12 @@ SceInfInteractive = "INTERACTIVE"
 SceInfGuest = "Гость"
 SceInfUsers = "Пользователи"
 
+[Strings.041b]
+SceInfAuthUsers = "Autentizovaní používatelia"
+SceInfInteractive = "INTERACTIVE"
+SceInfGuest = "Hosť"
+SceInfUsers = "Používatelia"
+
 [Strings.041c]
 SceInfAuthUsers = "Përdorues vërtetuar"
 SceInfInteractive = "INTERAKTIVE"
@@ -169,6 +181,12 @@ SceInfAuthUsers = "Kimliği Doğrulanmış Kullanıcılar"
 SceInfInteractive = "ETKLİEŞİMLİ"
 SceInfGuest = "Konuk"
 SceInfUsers = "Kullanıcılar"
+
+[Strings.048f]
+SceInfAuthUsers = "Aŭtentikigitaj uzantoj"
+SceInfInteractive = "INTERACTIVE"
+SceInfGuest = "Gasto"
+SceInfUsers = "Uzantoj"
 
 [Strings.0804]
 SceInfAuthUsers = "经过身份验证的用户"
