@@ -24,13 +24,3 @@
 #define COLUMNWIDTH_PID         8
 #define COLUMNWIDTH_SESSION     11
 #define COLUMNWIDTH_MEMUSAGE    12
-
-#define RES_STR_MAXLEN 64
-
-// the strings in opList are the command-line options.
-// should always correspond with the defines below, in sequence (except OP_PARAM_INVALID)
-static PCWSTR opList[] = {L"?", L"nh"};
-
-#define OP_PARAM_INVALID    -1
-#define OP_PARAM_HELP       0
-#define OP_PARAM_NOHEADER    1

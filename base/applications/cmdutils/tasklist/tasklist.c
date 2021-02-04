@@ -8,6 +8,17 @@
 #include "tasklist.h"
 
 
+// the strings in opList are the command-line options.
+// should always correspond with the defines below, in sequence (except OP_PARAM_INVALID)
+static PCWSTR opList[] = { L"?", L"nh" };
+
+#define OP_PARAM_INVALID    -1
+#define OP_PARAM_HELP       0
+#define OP_PARAM_NOHEADER    1
+
+// the max string length PrintResString can handle
+#define RES_STR_MAXLEN 64
+
 VOID PrintSplitLine(INT Length)
 {
     for (INT i = 0; i < Length; i++)
