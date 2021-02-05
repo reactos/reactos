@@ -17,16 +17,6 @@
 
 #define SEC_CACHE                           (0x20000000)
 
-#define MiWaitForPageEvent(Process,Address) do {                         \
-    DPRINT("MiWaitForPageEvent %p:%p #\n", Process, Address);            \
-    KeWaitForSingleObject(&MmWaitPageEvent, 0, KernelMode, FALSE, NULL); \
-} while(0)
-
-#define MiSetPageEvent(Process,Address) do {              \
-    DPRINT("MiSetPageEvent %p:%p #\n",Process, (PVOID)(Address));  \
-    KeSetEvent(&MmWaitPageEvent, IO_NO_INCREMENT, FALSE); \
-} while(0)
-
 /* We store 8 bits of location with a page association */
 #define ENTRIES_PER_ELEMENT 256
 
