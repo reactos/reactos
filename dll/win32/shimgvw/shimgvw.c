@@ -43,9 +43,6 @@ WNDPROC PrevProc = NULL;
 HWND hDispWnd, hToolBar;
 
 /* zooming */
-#define MIN_ZOOM ZoomSteps[0]
-#define MAX_ZOOM ZoomSteps[_countof(ZoomSteps)-1]
-
 UINT ZoomPercents = 100;
 
 static const UINT ZoomSteps[] =
@@ -53,60 +50,64 @@ static const UINT ZoomSteps[] =
     10, 25, 50, 100, 200, 400, 800, 1600
 };
 
+#define MIN_ZOOM ZoomSteps[0]
+#define MAX_ZOOM ZoomSteps[_countof(ZoomSteps)-1]
+
 /* ToolBar Buttons */
 typedef struct {
     DWORD idb;  /* Index to bitmap */
     DWORD ids;  /* Index to tooltip */
 } TB_BUTTON_CONFIG;
 
-    /* iBitmap,       idCommand,   fsState,         fsStyle,     bReserved[2], dwData, iString */ \
-#define DECLARE_BTN_INFO(_name) \
+    /* iBitmap,       idCommand,   fsState,         fsStyle,     bReserved[2], dwData, iString */
+#define DEFINE_BTN_INFO(_name) \
     { TBICON_##_name, IDC_##_name, TBSTATE_ENABLED, BTNS_BUTTON, {0}, 0, 0 }
 
-#define DECLARE_BTN_SEPARATOR \
+#define DEFINE_BTN_SEPARATOR \
     { 15,             0,           TBSTATE_ENABLED, BTNS_SEP,    {0}, 0, 0 }
 
 /* ToolBar Buttons */
-static const TBBUTTON Buttons [] =
+static const TBBUTTON Buttons[] =
 {
-    DECLARE_BTN_INFO(PREV_PIC),
-    DECLARE_BTN_INFO(NEXT_PIC),
-    DECLARE_BTN_SEPARATOR,
-    DECLARE_BTN_INFO(BEST_FIT),
-    DECLARE_BTN_INFO(REAL_SIZE),
-    DECLARE_BTN_INFO(SLIDE_SHOW),
-    DECLARE_BTN_SEPARATOR,
-    DECLARE_BTN_INFO(ZOOM_IN),
-    DECLARE_BTN_INFO(ZOOM_OUT),
-    DECLARE_BTN_SEPARATOR,
-    DECLARE_BTN_INFO(ROT_CLOCKW),
-    DECLARE_BTN_INFO(ROT_COUNCW),
-    DECLARE_BTN_SEPARATOR,
-    DECLARE_BTN_INFO(DELETE),
-    DECLARE_BTN_INFO(PRINT),
-    DECLARE_BTN_INFO(SAVEAS),
-    DECLARE_BTN_INFO(MODIFY),
-    DECLARE_BTN_SEPARATOR,
-    DECLARE_BTN_INFO(HELP_TOC)
+    DEFINE_BTN_INFO(PREV_PIC),
+    DEFINE_BTN_INFO(NEXT_PIC),
+    DEFINE_BTN_SEPARATOR,
+    DEFINE_BTN_INFO(BEST_FIT),
+    DEFINE_BTN_INFO(REAL_SIZE),
+    DEFINE_BTN_INFO(SLIDE_SHOW),
+    DEFINE_BTN_SEPARATOR,
+    DEFINE_BTN_INFO(ZOOM_IN),
+    DEFINE_BTN_INFO(ZOOM_OUT),
+    DEFINE_BTN_SEPARATOR,
+    DEFINE_BTN_INFO(ROT_CLOCKW),
+    DEFINE_BTN_INFO(ROT_COUNCW),
+    DEFINE_BTN_SEPARATOR,
+    DEFINE_BTN_INFO(DELETE),
+    DEFINE_BTN_INFO(PRINT),
+    DEFINE_BTN_INFO(SAVEAS),
+    DEFINE_BTN_INFO(MODIFY),
+    DEFINE_BTN_SEPARATOR,
+    DEFINE_BTN_INFO(HELP_TOC)
 };
- 
-#define DECLARE_BTN_CONFIG(_name) { IDB_##_name, IDS_TOOLTIP_##_name }
 
-static const TB_BUTTON_CONFIG BtnConfig[] = {
-    DECLARE_BTN_CONFIG(PREV_PIC),
-    DECLARE_BTN_CONFIG(NEXT_PIC),
-    DECLARE_BTN_CONFIG(BEST_FIT),
-    DECLARE_BTN_CONFIG(REAL_SIZE),
-    DECLARE_BTN_CONFIG(SLIDE_SHOW),
-    DECLARE_BTN_CONFIG(ZOOM_IN),
-    DECLARE_BTN_CONFIG(ZOOM_OUT),
-    DECLARE_BTN_CONFIG(ROT_CLOCKW),
-    DECLARE_BTN_CONFIG(ROT_COUNCW),
-    DECLARE_BTN_CONFIG(DELETE),
-    DECLARE_BTN_CONFIG(PRINT),
-    DECLARE_BTN_CONFIG(SAVEAS),
-    DECLARE_BTN_CONFIG(MODIFY),
-    DECLARE_BTN_CONFIG(HELP_TOC)
+#define DEFINE_BTN_CONFIG(_name) { IDB_##_name, IDS_TOOLTIP_##_name }
+
+static const TB_BUTTON_CONFIG BtnConfig[] =
+{
+    DEFINE_BTN_CONFIG(PREV_PIC),
+    DEFINE_BTN_CONFIG(NEXT_PIC),
+    DEFINE_BTN_CONFIG(BEST_FIT),
+    DEFINE_BTN_CONFIG(REAL_SIZE),
+    DEFINE_BTN_CONFIG(SLIDE_SHOW),
+    DEFINE_BTN_CONFIG(ZOOM_IN),
+    DEFINE_BTN_CONFIG(ZOOM_OUT),
+    DEFINE_BTN_CONFIG(ROT_CLOCKW),
+    DEFINE_BTN_CONFIG(ROT_COUNCW),
+    DEFINE_BTN_CONFIG(DELETE),
+    DEFINE_BTN_CONFIG(PRINT),
+    DEFINE_BTN_CONFIG(SAVEAS),
+    DEFINE_BTN_CONFIG(MODIFY),
+    DEFINE_BTN_CONFIG(HELP_TOC)
 };
 
 /* animation */
@@ -866,7 +867,7 @@ ImageView_CreateToolBar(HWND hwnd)
         for (n = 0; n < _countof(BtnConfig); n++)
         {
             ImageList_AddMasked(hImageList, LoadImage(hInstance, MAKEINTRESOURCE(BtnConfig[n].idb), IMAGE_BITMAP,
-                    TB_IMAGE_WIDTH, TB_IMAGE_HEIGHT, LR_DEFAULTCOLOR), RGB(255, 255, 255));
+                                TB_IMAGE_WIDTH, TB_IMAGE_HEIGHT, LR_DEFAULTCOLOR), RGB(255, 255, 255));
         }
 
         ImageList_Destroy((HIMAGELIST)SendMessage(hToolBar, TB_SETIMAGELIST,
@@ -1046,12 +1047,12 @@ ImageView_WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
             {
                 case TTN_GETDISPINFO:
                 {
-                    LPTOOLTIPTEXT lpttt;
+                    LPTOOLTIPTEXTW lpttt;
 
-                    lpttt = (LPTOOLTIPTEXT)lParam;
+                    lpttt = (LPTOOLTIPTEXTW)lParam;
                     lpttt->hinst = hInstance;
 
-                    lpttt->lpszText = MAKEINTRESOURCE(BtnConfig[lpttt->hdr.idFrom - IDC_TOOL_BASE].ids);
+                    lpttt->lpszText = MAKEINTRESOURCEW(BtnConfig[lpttt->hdr.idFrom - IDC_TOOL_BASE].ids);
                     return TRUE;
                 }
             }
@@ -1124,7 +1125,7 @@ ImageView_CreateWindow(HWND hwnd, LPWSTR szFileName)
     WndClass.lpfnWndProc    = ImageView_WndProc;
     WndClass.hInstance      = hInstance;
     WndClass.style          = CS_HREDRAW | CS_VREDRAW;
-    WndClass.hIcon          = LoadIcon(hInstance, MAKEINTRESOURCE(IDI_APP_ICON));
+    WndClass.hIcon          = LoadIconW(hInstance, MAKEINTRESOURCEW(IDI_APP_ICON));
     WndClass.hCursor        = LoadCursor(NULL, IDC_ARROW);
     WndClass.hbrBackground  = NULL;   /* less flicker */
 
@@ -1156,7 +1157,7 @@ ImageView_CreateWindow(HWND hwnd, LPWSTR szFileName)
     // Message Loop
     for (;;)
     {
-        if (GetMessage(&msg,NULL,0,0) <= 0)
+        if (GetMessage(&msg, NULL, 0, 0) <= 0)
             break;
 
         if (!TranslateAccelerator(hMainWnd, hKbdAccel, &msg))
