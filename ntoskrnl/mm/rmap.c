@@ -406,9 +406,11 @@ MmInsertRmap(PFN_NUMBER Page, PEPROCESS Process,
 
     if (current_entry && (current_entry->Address == Address) && (current_entry->Process == Process))
     {
+#if DBG
         DbgPrint("MmInsertRmap tries to add a second rmap entry for address %p\n", current_entry->Address);
         DbgPrint("    current caller  %p\n", new_entry->Caller);
         DbgPrint("    previous caller %p\n", current_entry->Caller);
+#endif
         KeBugCheck(MEMORY_MANAGEMENT);
     }
 
