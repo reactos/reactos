@@ -935,7 +935,7 @@ HalaAcpiTimerInit(_In_ PULONG TimerPort,
         return;
     }
 
-    DPRINT1("HalaAcpiTimerInit: HalpBrokenAcpiTimer\n");
+    DPRINT1("HalaAcpiTimerInit: HalpBrokenAcpiTimer. DbgBreakPoint()\n");
     DbgBreakPoint();
 }
 

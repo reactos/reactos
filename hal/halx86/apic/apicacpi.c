@@ -16,6 +16,8 @@
 #include "apicacpi.h"
 #include <ioapic.h>
 
+/* DATA ***********************************************************************/
+
 LOCAL_APIC HalpStaticProcLocalApicTable[MAX_CPUS] = {{0}};
 IO_APIC_VERSION_REGISTER HalpIOApicVersion[MAX_IOAPICS];
 UCHAR HalpIoApicId[MAX_IOAPICS] = {0};
@@ -48,22 +50,28 @@ extern ULONG HalpPicVectorFlags[16];
 extern BOOLEAN LessThan16Mb;
 extern BOOLEAN HalpPhysicalMemoryMayAppearAbove4GB;
 
+extern UCHAR HalpCmosCenturyOffset;
+
 /* FUNCTIONS ******************************************************************/
 
 CODE_SEG("INIT")
 VOID
 NTAPI
-HalpGetParameters(IN PCHAR CommandLine)
+HalpGetParameters(_In_ PCHAR CommandLine)
 {
     /* Check if PCI is locked */
     if (strstr(CommandLine, "PCILOCK")) HalpPciLockSettings = TRUE;
 
     /* Check for initial breakpoint */
-    if (strstr(CommandLine, "BREAK")) DbgBreakPoint();
+    if (strstr(CommandLine, "BREAK"))
+    {
+        DPRINT1("HalpGetParameters: FIXME parameters [BREAK]. DbgBreakPoint()\n");
+        DbgBreakPoint();
+    }
 
     if (strstr(CommandLine, "ONECPU"))
     {
-        DPRINT1("HalpGetParameters: FIXME parameters [ONECPU]\n");
+        DPRINT1("HalpGetParameters: FIXME parameters [ONECPU]. DbgBreakPoint()\n");
         DbgBreakPoint();
         //HalpDontStartProcessors++;
     }
@@ -77,7 +85,7 @@ HalpGetParameters(IN PCHAR CommandLine)
 
     if (strstr(CommandLine, "INTAFFINITY"))
     {
-        DPRINT1("HalpGetParameters: FIXME parameters [INTAFFINITY]\n");
+        DPRINT1("HalpGetParameters: FIXME parameters [INTAFFINITY]. DbgBreakPoint()\n");
         DbgBreakPoint();
         //HalpStaticIntAffinity = TRUE;
     }
@@ -90,13 +98,13 @@ HalpGetParameters(IN PCHAR CommandLine)
 
     if (strstr(CommandLine, "MAXPROCSPERCLUSTER"))
     {
-        DPRINT1("HalpGetParameters: FIXME parameters [MAXPROCSPERCLUSTER]\n");
+        DPRINT1("HalpGetParameters: FIXME parameters [MAXPROCSPERCLUSTER]. DbgBreakPoint()\n");
         DbgBreakPoint();
     }
 
     if (strstr(CommandLine, "MAXAPICCLUSTER"))
     {
-        DPRINT1("HalpGetParameters: FIXME parameters [MAXAPICCLUSTER]\n");
+        DPRINT1("HalpGetParameters: FIXME parameters [MAXAPICCLUSTER]. DbgBreakPoint()\n");
         DbgBreakPoint();
     }
 }
@@ -126,6 +134,7 @@ HalpMarkProcessorStarted(_In_ UCHAR Id,
     }
 }
 
+CODE_SEG("INIT")
 VOID
 NTAPI 
 HalpInitMpInfo(_In_ PACPI_TABLE_MADT ApicTable,
@@ -319,10 +328,10 @@ HalpInitMpInfo(_In_ PACPI_TABLE_MADT ApicTable,
     }
 }
 
+CODE_SEG("INIT")
 BOOLEAN
 NTAPI 
-HalpVerifyIOUnit(
-    _In_ PIO_APIC_REGISTERS IOUnitRegs)
+HalpVerifyIOUnit(_In_ PIO_APIC_REGISTERS IOUnitRegs)
 {
     IO_APIC_VERSION_REGISTER IoApicVersion1;
     IO_APIC_VERSION_REGISTER IoApicVersion2;
@@ -348,6 +357,7 @@ HalpVerifyIOUnit(
     return TRUE;
 }
 
+CODE_SEG("INIT")
 BOOLEAN
 NTAPI 
 DetectMP(_In_ PLOADER_PARAMETER_BLOCK LoaderBlock)
@@ -397,6 +407,7 @@ DetectMP(_In_ PLOADER_PARAMETER_BLOCK LoaderBlock)
     return TRUE;
 }
 
+CODE_SEG("INIT")
 VOID
 NTAPI 
 HalpInitIntiInfo()
@@ -494,6 +505,7 @@ HalpInitIntiInfo()
     ASSERT(Inti < MAX_INTI);
 }
 
+CODE_SEG("INIT")
 VOID
 NTAPI 
 HalpInitializeIOUnits()
@@ -556,13 +568,30 @@ HalpInitializeIOUnits()
     HalpAddressUsageList = (PADDRESS_USAGE)&HalpApicUsage;
 }
 
+CODE_SEG("INIT")
 BOOLEAN
 NTAPI
 HalpPmTimerScaleTimers()
 {
-    DPRINT1("HalpPmTimerScaleTimers()\n");
+    DPRINT1("HalpPmTimerScaleTimers(). DbgBreakPoint()\n");
     DbgBreakPoint();
     return FALSE;
+}
+
+CODE_SEG("INIT")
+VOID
+NTAPI
+HaliInitializeCmos(VOID)
+{
+    /* Set default century offset byte */
+    if (HalpFixedAcpiDescTable.century_alarm_index)
+    {
+        HalpCmosCenturyOffset = HalpFixedAcpiDescTable.century_alarm_index;
+    }
+    else
+    {
+        HalpCmosCenturyOffset = 50;
+    }
 }
 
 VOID
@@ -581,7 +610,7 @@ HalpInitPhase0a(_In_ PLOADER_PARAMETER_BLOCK LoaderBlock)
 
     if (HalpUsePmTimer)
     {
-        DPRINT1("HalpInitPhase0a: HalpUsePmTimer is TRUE\n");
+        DPRINT1("HalpInitPhase0a: HalpUsePmTimer is TRUE. DbgBreakPoint()\n");
         DbgBreakPoint();
         //HalpSetPmTimerFunction();
     }
@@ -613,11 +642,11 @@ HalpInitPhase0a(_In_ PLOADER_PARAMETER_BLOCK LoaderBlock)
     HalpInitializePICs(TRUE);
 
     /* Initialize CMOS */
-    HalpInitializeCmos();
+    HaliInitializeCmos();
 
     if (!HalpGetApicInterruptDesc(HalpPicVectorRedirect[APIC_CLOCK_INDEX], &IntI))
     {
-        DPRINT1("HalpInitPhase0a: No RTC device interrupt\n");
+        DPRINT1("HalpInitPhase0a: No RTC device interrupt. DbgBreakPoint()\n");
         DbgBreakPoint();
         return;
     }
@@ -647,7 +676,7 @@ HalpInitPhase0a(_In_ PLOADER_PARAMETER_BLOCK LoaderBlock)
     HalpRegisterVector(IDT_INTERNAL, APIC_NMI_VECTOR, APIC_NMI_VECTOR, HIGH_LEVEL);
     HalpRegisterVector(IDT_INTERNAL, APIC_SPURIOUS_VECTOR, APIC_SPURIOUS_VECTOR, HIGH_LEVEL);
 
-    KeSetProfileIrql(0x1F);
+    KeSetProfileIrql(HIGH_LEVEL);
 
     /*
      * We could be rebooting with a pending profile interrupt,
@@ -689,6 +718,8 @@ HalpInitPhase0a(_In_ PLOADER_PARAMETER_BLOCK LoaderBlock)
     {
         DPRINT1("HalpInitPhase0a: HalpPhysicalMemoryMayAppearAbove4GB is TRUE\n");
     }
+
+    DPRINT("HalpInitPhase0a: FIXME MasterAdapter24:32\n");
 }
 
 VOID
@@ -697,7 +728,7 @@ HaliAcpiSetUsePmClock(VOID)
 {
     if (HalpFixedAcpiDescTable.flags & ACPI_USE_PLATFORM_CLOCK)
     {
-        DPRINT1("HaliAcpiSetUsePmClock: ACPI_USE_PLATFORM_CLOCK \n");
+        DPRINT1("HaliAcpiSetUsePmClock: ACPI_USE_PLATFORM_CLOCK. DbgBreakPoint()\n");
         DbgBreakPoint();
         //HalpSetPmTimerFunction();
         //HalpUsePmTimer = 1;

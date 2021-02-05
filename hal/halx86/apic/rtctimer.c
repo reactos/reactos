@@ -131,7 +131,7 @@ VOID
 FASTCALL
 HalpClockInterruptStubHandler(_In_ PKTRAP_FRAME TrapFrame)
 {
-    DPRINT1("HalpClockInterruptStubHandler: TrapFrame %X\n", TrapFrame);
+    DPRINT1("HalpClockInterruptStubHandler: TrapFrame %X. DbgBreakPoint()\n", TrapFrame);
     DbgBreakPoint();
 }
 #endif
