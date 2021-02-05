@@ -50,11 +50,8 @@ PWCHAR HalHardwareIdString = L"acpipic_up";
 PWCHAR HalName = L"ACPI Compatible Eisa/Isa HAL";
 
 #ifdef _M_IX86
-extern ULONG HalpDefaultApicDestinationModeMask;
-
 HALP_TIMER_INFO TimerInfo;
 BOOLEAN HalpBrokenAcpiTimer = FALSE;
-
 PPM_DISPATCH_TABLE PmAcpiDispatchTable;
 
 /* DISPATCH TABLE FUNCTIONS ***************************************************/
@@ -1001,6 +998,10 @@ HalpSetupAcpiPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 
     /* Copy it in the HAL static buffer */
     RtlCopyMemory(&HalpFixedAcpiDescTable, Fadt, TableLength);
+
+#ifdef _M_IX86
+    HalpAcpiApplyFadtSettings(&HalpFixedAcpiDescTable);
+#endif
 
     /* Anything special this HAL needs to do? */
     HalpAcpiDetectMachineSpecificActions(LoaderBlock, &HalpFixedAcpiDescTable);

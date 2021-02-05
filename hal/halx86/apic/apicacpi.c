@@ -112,6 +112,28 @@ HalpGetParameters(_In_ PCHAR CommandLine)
 CODE_SEG("INIT")
 VOID
 NTAPI
+HalpAcpiApplyFadtSettings(_In_ PFADT Fadt)
+{
+    /* FADT Fixed Feature Flags */
+    DPRINT1("HalpAcpiApplyFadtSettings: flags %08X\n", Fadt, Fadt->flags);
+
+    if (Fadt->flags & FADT_FORCE_APIC_CLUSTER_MODEL) // FORCE_APIC_CLUSTER_MODEL
+    {
+        DPRINT1("HalpAcpiApplyFadtSettings: ACPI_APIC_CLUSTER_MODEL\n");
+        HalpForceClusteredApicMode = TRUE;
+    }
+
+    if (Fadt->flags & FADT_FORCE_APIC_PHYSICAL_DESTINATION_MODE) // FORCE_APIC_PHYSICAL_DESTINATION_MODE
+    {
+        DPRINT1("HalpAcpiApplyFadtSettings: ACPI_PHYSICAL_DEST_MODE\n");
+        HalpForceApicPhysicalDestinationMode = TRUE;
+        HalpDefaultApicDestinationModeMask = 0;
+    }
+}
+
+CODE_SEG("INIT")
+VOID
+NTAPI
 HalpMarkProcessorStarted(_In_ UCHAR Id,
                          _In_ ULONG PrcNumber)
 {

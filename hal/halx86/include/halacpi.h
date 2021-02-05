@@ -36,6 +36,9 @@ typedef struct _ACPI_SUBTABLE_HEADER
 
 } ACPI_SUBTABLE_HEADER, *PACPI_SUBTABLE_HEADER;
 
+#define FADT_FORCE_APIC_CLUSTER_MODEL              0x00040000
+#define FADT_FORCE_APIC_PHYSICAL_DESTINATION_MODE  0x00080000
+
 /* Values for MADT subtable type in ACPI_SUBTABLE_HEADER */
 enum AcpiMadtType
 {
@@ -420,6 +423,14 @@ NTAPI
 HaliAcpiSetUsePmClock(
     VOID
 );
+
+CODE_SEG("INIT")
+VOID
+NTAPI
+HalpAcpiApplyFadtSettings(
+    _In_ PFADT Fadt
+);
+
 #endif
 
 extern FADT HalpFixedAcpiDescTable;

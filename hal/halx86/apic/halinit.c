@@ -81,9 +81,9 @@ USHORT HalpMaxApicInti[MAX_IOAPICS] = {0};
 UCHAR HalpIntDestMap[MAX_CPUS] = {0};
 UCHAR HalpMaxProcsPerCluster = 0;
 UCHAR HalpMaxNode = 0;
-BOOLEAN HalpForceApicPhysicalDestinationMode = FALSE;
-BOOLEAN HalpForceClusteredApicMode = FALSE;
 BOOLEAN HalpHiberInProgress = FALSE;
+
+extern BOOLEAN HalpForceApicPhysicalDestinationMode;
 #endif
 
 extern UCHAR HalpInitLevel;

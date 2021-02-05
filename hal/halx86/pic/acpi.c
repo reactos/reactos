@@ -13,5 +13,14 @@
 #define NDEBUG
 #include <debug.h>
 
+/* FUNCTIONS ******************************************************************/
+
+CODE_SEG("INIT")
+VOID
+NTAPI
+HalpAcpiApplyFadtSettings(_In_ PFADT Fadt)
+{
+    ;
+}
 
 /* EOF */

@@ -112,6 +112,8 @@ ULONGLONG HalpProc0TSCHz;
 USHORT HalpVectorToINTI[MAX_CPUS * MAX_INT_VECTORS] = {0xFFFF};
 APIC_INTI_INFO HalpIntiInfo[MAX_INTI];
 ULONG HalpDefaultApicDestinationModeMask = 0x800;
+BOOLEAN HalpForceApicPhysicalDestinationMode = FALSE;
+BOOLEAN HalpForceClusteredApicMode = FALSE;
 #endif
 
 /* PRIVATE FUNCTIONS **********************************************************/
