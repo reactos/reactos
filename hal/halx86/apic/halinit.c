@@ -12,7 +12,10 @@
 #include <debug.h>
 
 #include "apic.h"
+
+#ifdef _M_IX86
 #include "apicacpi.h"
+#endif
 
 VOID
 NTAPI

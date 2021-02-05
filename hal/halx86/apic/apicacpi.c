@@ -101,6 +101,7 @@ HalpGetParameters(IN PCHAR CommandLine)
     }
 }
 
+CODE_SEG("INIT")
 VOID
 NTAPI
 HalpMarkProcessorStarted(_In_ UCHAR Id,

@@ -25,7 +25,7 @@ void __cdecl HackEoi(void);
 /* GLOBALS ********************************************************************/
 
 ULONG ApicVersion;
-UCHAR HalpVectorToIndex[MAX_INT_VECTORS];
+UCHAR HalpVectorToIndex[256];
 
 #ifndef _M_AMD64
 const UCHAR
