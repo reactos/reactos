@@ -1,13 +1,11 @@
 # Labelling by the files touched
 drivers:
-  - drivers/*
-  - sdk/lib/drivers/*
-  - win32ss/drivers/*
-  - "!win32ss/drivers/font/*"
+  - any: ["drivers/**", "sdk/lib/drivers/**"]
+  - any: ["win32ss/drivers/**", "!win32ss/drivers/font/**"]
 
 freeldr:
-  - boot/freeldr/*
+  - boot/freeldr/**
 
 "kernel&hal":
-  - hal/*
-  - ntoskrnl/*
+  - hal/**
+  - ntoskrnl/**
