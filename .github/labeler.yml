@@ -3,7 +3,7 @@ drivers:
   - drivers/*
   - sdk/lib/drivers/*
   - win32ss/drivers/*
-  - !win32ss/drivers/font/*
+  - "!win32ss/drivers/font/*"
 
 freeldr:
   - boot/freeldr/*
