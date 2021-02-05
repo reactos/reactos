@@ -32,10 +32,6 @@
 #define NDEBUG
 #include <debug.h>
 
-#if defined (ALLOC_PRAGMA)
-#pragma alloc_text(INIT, MmInitPagingFile)
-#endif
-
 /* GLOBALS *******************************************************************/
 
 #define PAIRS_PER_RUN (1024)
@@ -98,9 +94,6 @@ NTAPI
 MmBuildMdlFromPages(PMDL Mdl, PPFN_NUMBER Pages)
 {
     memcpy(Mdl + 1, Pages, sizeof(PFN_NUMBER) * (PAGE_ROUND_UP(Mdl->ByteOffset+Mdl->ByteCount)/PAGE_SIZE));
-
-    /* FIXME: this flag should be set by the caller perhaps? */
-    Mdl->MdlFlags |= MDL_IO_PAGE_READ;
 }
 
 
@@ -193,7 +186,7 @@ NTSTATUS
 NTAPI
 MmReadFromSwapPage(SWAPENTRY SwapEntry, PFN_NUMBER Page)
 {
-    return MiReadPageFile(Page, FILE_FROM_ENTRY(SwapEntry), OFFSET_FROM_ENTRY(SwapEntry) - 1);
+    return MiReadPageFile(Page, FILE_FROM_ENTRY(SwapEntry), OFFSET_FROM_ENTRY(SwapEntry));
 }
 
 NTSTATUS
@@ -219,6 +212,9 @@ MiReadPageFile(
         return(STATUS_UNSUCCESSFUL);
     }
 
+    /* Normalize offset. */
+    PageFileOffset--;
+
     ASSERT(PageFileIndex < MAX_PAGING_FILES);
 
     PagingFile = MmPagingFile[PageFileIndex];
@@ -231,7 +227,7 @@ MiReadPageFile(
 
     MmInitializeMdl(Mdl, NULL, PAGE_SIZE);
     MmBuildMdlFromPages(Mdl, &Page);
-    Mdl->MdlFlags |= MDL_PAGES_LOCKED;
+    Mdl->MdlFlags |= MDL_PAGES_LOCKED | MDL_IO_PAGE_READ;
 
     file_offset.QuadPart = PageFileOffset * PAGE_SIZE;
 
@@ -253,7 +249,7 @@ MiReadPageFile(
     return(Status);
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 MmInitPagingFile(VOID)

@@ -3,7 +3,7 @@
 HKLM,"SYSTEM\CurrentControlSet\Services\VBE","ErrorControl",0x00010001,0x00000000
 HKLM,"SYSTEM\CurrentControlSet\Services\VBE","Group",0x00000000,"Video Save"
 HKLM,"SYSTEM\CurrentControlSet\Services\VBE","ImagePath",0x00020000,"system32\drivers\vbemp.sys"
-HKLM,"SYSTEM\CurrentControlSet\Services\VBE","Start",0x00010001,0x00000004
+HKLM,"SYSTEM\CurrentControlSet\Services\VBE","Start",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\VBE","Type",0x00010001,0x00000001
 HKLM,"SYSTEM\CurrentControlSet\Services\VBE","Tag",0x00010001,0x00000001
 

@@ -96,9 +96,13 @@ public:
 
     BOOL RemoveAt(INT i)
     {
-        T* ptr = (T*) DPA_GetPtr(m_hDpa, i);
-        OnRemoveItem(ptr);
-        return DPA_DeletePtr(m_hDpa, i);
+        PVOID ptr = DPA_DeletePtr(m_hDpa, i);
+        if (ptr != NULL)
+        {
+            OnRemoveItem(reinterpret_cast<T*>(ptr));
+            return TRUE;
+        }
+        return FALSE;
     }
 
     BOOL Clear()
@@ -493,9 +497,18 @@ public:
         }
     };
 
+    virtual VOID AppendTabOrderWindow(int Direction, ATL::CSimpleArray<HWND> & TabOrderList)
+    {
+        TabOrderList.Add(T::m_hWnd);
+        return;
+    }
+
     virtual ~CUiWindow()
     {
-        T::DestroyWindow();
+        if (T::IsWindow())
+        {
+            T::DestroyWindow();
+        }
     }
 
     VOID GetWindowTextW(ATL::CStringW& szText)

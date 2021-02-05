@@ -564,12 +564,6 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
         /* DOS Device Map */
         case ProcessDeviceMap:
 
-            if (ProcessInformationLength < sizeof(PROCESS_DEVICEMAP_INFORMATION))
-            {
-                Status = STATUS_INFO_LENGTH_MISMATCH;
-                break;
-            }
-
             if (ProcessInformationLength == sizeof(PROCESS_DEVICEMAP_INFORMATION_EX))
             {
                 /* Protect read in SEH */
@@ -601,7 +595,8 @@ NtQueryInformationProcess(IN HANDLE ProcessHandle,
             }
             else
             {
-                if (ProcessInformationLength != sizeof(PROCESS_DEVICEMAP_INFORMATION))
+                /* This has to be the size of the Query union field for x64 compatibility! */
+                if (ProcessInformationLength != RTL_FIELD_SIZE(PROCESS_DEVICEMAP_INFORMATION, Query))
                 {
                     Status = STATUS_INFO_LENGTH_MISMATCH;
                     break;
@@ -1902,6 +1897,15 @@ NtSetInformationProcess(IN HANDLE ProcessHandle,
             /* Only supported on x86 */
 #if defined (_X86_)
             Ke386SetIOPL();
+#elif defined(_M_AMD64)
+            /* On x64 this function isn't implemented.
+               On Windows 2003 it returns success.
+               On Vista+ it returns STATUS_NOT_IMPLEMENTED. */
+            if ((ExGetPreviousMode() != KernelMode) &&
+                (RtlRosGetAppcompatVersion() > _WIN32_WINNT_WS03))
+            {
+                Status = STATUS_NOT_IMPLEMENTED;
+            }
 #else
             Status = STATUS_NOT_IMPLEMENTED;
 #endif

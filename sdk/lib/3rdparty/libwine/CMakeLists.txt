@@ -1,6 +1,5 @@
 
 include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
-add_definitions(-D__WINESRC__)
 
 list(APPEND SOURCE
     config.c
@@ -10,12 +9,15 @@ list(APPEND SOURCE
     isnan.c
     loader.c
     ${REACTOS_SOURCE_DIR}/sdk/lib/crt/string/wctype.c
+    path.c
     register.c
 #    string.c implements _stricmp, already shipped with crt
 )
 
 add_library(wine ${SOURCE})
 add_dependencies(wine psdk)
+target_compile_definitions(wine PRIVATE __WINESRC__ _WINE)
 
 add_library(wineldr loader.c)
 add_dependencies(wineldr xdk)
+target_compile_definitions(wineldr PRIVATE __WINESRC__)

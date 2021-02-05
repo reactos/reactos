@@ -8,27 +8,40 @@
 #include "precomp.h"
 #include <marshalling/ports.h>
 
+typedef struct _MONITORUIDATA
+{
+    HMODULE hLibrary;
+    HANDLE hActCtx;
+    ULONG_PTR ulpCookie;
+    PWSTR pModuleName;
+    BOOL Activeated;
+} MONITORUIDATA, *PMONITORUIDATA;
+
+typedef DWORD (*PPfpFunction)(LPWSTR, ULONG_PTR, LPWSTR);
+
 typedef struct _PORTTHREADINFO
 {
-  LPWSTR pName;
-  HWND hWnd;
-  LPWSTR pPortName;
-  FARPROC fpFunction;
-  DWORD dwErrorCode;
-  HANDLE hEvent;
+    LPWSTR pName;
+    ULONG_PTR hWnd;
+    LPWSTR pPortName;
+    PPfpFunction fpFunction;
+    DWORD dwErrorCode;
+    HANDLE hEvent;
 } PORTTHREADINFO, *PPORTTHREADINFO;
 
 VOID WINAPI
 IntPortThread( PPORTTHREADINFO pPortThreadInfo )
 {
+    FIXME("IPT : %s\n",debugstr_w( pPortThreadInfo->pPortName ));
     // Do the RPC call
     RpcTryExcept
     {
-        pPortThreadInfo->dwErrorCode = (*pPortThreadInfo->fpFunction)( pPortThreadInfo->pName, pPortThreadInfo->hWnd, pPortThreadInfo->pPortName);
+        pPortThreadInfo->dwErrorCode = pPortThreadInfo->fpFunction( pPortThreadInfo->pName, pPortThreadInfo->hWnd, pPortThreadInfo->pPortName );
     }
     RpcExcept(EXCEPTION_EXECUTE_HANDLER)
     {
         pPortThreadInfo->dwErrorCode = RpcExceptionCode();
+        ERR("IPT : _RpcXyzPort failed with exception code %lu!\n", pPortThreadInfo->dwErrorCode);
     }
     RpcEndExcept;
 
@@ -39,7 +52,7 @@ IntPortThread( PPORTTHREADINFO pPortThreadInfo )
 // Start a thread to wait on a printer port.
 //
 BOOL WINAPI
-StartPortThread( LPWSTR pName, HWND hWnd, LPWSTR pPortName, FARPROC fpFunction )
+StartPortThread( LPWSTR pName, HWND hWnd, LPWSTR pPortName, PPfpFunction fpFunction )
 {
     PORTTHREADINFO PortThreadInfo;
     HANDLE htHandle;
@@ -49,7 +62,7 @@ StartPortThread( LPWSTR pName, HWND hWnd, LPWSTR pPortName, FARPROC fpFunction )
     if ( hWnd ) EnableWindow( hWnd, FALSE );
 
     PortThreadInfo.pName = pName;
-    PortThreadInfo.hWnd = hWnd;
+    PortThreadInfo.hWnd = (ULONG_PTR)hWnd;
     PortThreadInfo.pPortName = pPortName;
     PortThreadInfo.fpFunction = fpFunction;
     PortThreadInfo.dwErrorCode = ERROR_SUCCESS;
@@ -86,6 +99,322 @@ StartPortThread( LPWSTR pName, HWND hWnd, LPWSTR pPortName, FARPROC fpFunction )
     return (PortThreadInfo.dwErrorCode == ERROR_SUCCESS);
 }
 
+BOOL WINAPI
+GetMonitorUIFullName( PWSTR pDeviceName, PWSTR *pModuleName )
+{
+    STRSAFE_LPWSTR SysDir;
+    UINT length;
+    HRESULT hr;
+
+   *pModuleName = NULL;
+
+    SysDir = HeapAlloc(hProcessHeap, 0, MAX_PATH*sizeof(WCHAR));
+
+    if ( SysDir )
+    {
+        memset( SysDir, 0, MAX_PATH*sizeof(WCHAR) );
+
+        length = GetSystemDirectoryW( SysDir, MAX_PATH*sizeof(WCHAR) );
+
+        if ( length > 0 )
+        {
+            StringCbCatW(SysDir, MAX_PATH*sizeof(WCHAR), L"\\");
+
+            hr = StringCchCatW( SysDir, MAX_PATH*sizeof(WCHAR), pDeviceName );
+            if ( !FAILED(hr) )
+            {
+                *pModuleName = SysDir;
+                return TRUE;
+            }
+            SetLastError(HRESULT_CODE(hr));
+        }
+
+        HeapFree(hProcessHeap, 0, SysDir);
+    }
+    return FALSE;
+}
+
+BOOL WINAPI
+GetMonitorUIActivationContext( PWSTR pDeviceName, PMONITORUIDATA pmuid )
+{
+   // ACTCTXW actctx;
+   // HANDLE handle;
+    BOOL Ret = FALSE;
+
+    FIXME("GMUIAC : Module pDeviceName %S\n",pDeviceName);
+
+    if ( !GetMonitorUIFullName( pDeviceName, &pmuid->pModuleName ) )
+    {
+        ERR("GetMonitorUIFullName Failed\n");
+        return Ret;
+    }
+/*    OMG! SxS again?
+    memset(&actctx, 0, sizeof(ACTCTXW));
+    actctx.cbSize = sizeof(ACTCTXW);
+    actctx.dwFlags = ACTCTX_FLAG_RESOURCE_NAME_VALID;
+    actctx.lpResourceName = MAKEINTRESOURCEW(123); This might be the reason....
+    actctx.lpSource = pmuid->pModuleName;
+
+    handle = CreateActCtxW(&actctx);
+
+    if ( handle != INVALID_HANDLE_VALUE )
+    {
+        pmuid->hActCtx = handle;
+        if ( ActivateActCtx( handle, &pmuid->ulpCookie ) )
+        {
+            pmuid->Activeated = TRUE;
+            Ret = TRUE;
+        }
+        else
+        {
+            pmuid->Activeated = FALSE;
+        }
+    }
+    else
+    {
+        ERR("GetMonitorUIActivationContext Failed %S\n",pmuid->pModuleName);
+    }*/
+    pmuid->hActCtx = INVALID_HANDLE_VALUE;
+    Ret = TRUE;
+    return Ret;
+}
+
+VOID FASTCALL
+FreeMonitorUI( PMONITORUIDATA pmuid )
+{
+    if ( pmuid )
+    {
+        if ( pmuid->hLibrary )
+        {
+            FreeLibrary( pmuid->hLibrary );
+        }
+        if ( pmuid->Activeated )
+        {
+            DeactivateActCtx( 0, pmuid->ulpCookie );
+        }
+        if ( pmuid->hActCtx != INVALID_HANDLE_VALUE )
+        {
+            ReleaseActCtx( pmuid->hActCtx );
+        }
+        if ( pmuid->pModuleName )
+        {
+            DllFreeSplMem( pmuid->pModuleName );
+        }
+        DllFreeSplMem( pmuid );
+    }
+}
+
+BOOL FASTCALL
+StrNCatBuff( PWSTR ptr, size_t Size, PWSTR args, ...)
+{
+    va_list Args;
+    PWSTR pwstr;
+    HRESULT hr;
+    BOOL Ret = TRUE;
+
+    va_start(Args, args );
+
+   for ( pwstr = args ; pwstr ; pwstr = va_arg( Args, PWSTR ) )
+   {
+       hr = StringCchCatNW( ptr, Size, pwstr, wcslen(pwstr) );
+       if ( FAILED(hr) )
+       {
+           SetLastError(HRESULT_CODE(hr));
+           Ret = FALSE;
+           break;
+        }
+    }
+
+    va_end(Args);
+
+    return Ret;
+}
+
+PWSTR WINAPI
+ConstructXcvName( PWSTR pName, PWSTR pMonitorPortName, PWSTR pXcvName )
+{
+    BOOL Ret = FALSE;
+    PWSTR pwstr = NULL;
+    size_t sXcv, smpn = 0, Size = 0;
+
+    if ( pName )
+    {
+        Size = wcslen( pName ) + 1;
+    }
+
+    sXcv = wcslen( pXcvName ) + Size;
+
+    if ( pMonitorPortName )
+    {
+        smpn = wcslen( pMonitorPortName );
+    }
+
+    Size = sXcv + smpn + 3;
+
+    pwstr = DllAllocSplMem( Size * sizeof(WCHAR) );
+
+    memset( pwstr, 0, Size );
+
+    if ( pwstr )
+    {
+        // The caller wants an Xcv handle and provided a string like:
+        //    ", XcvMonitor Local Port"
+        //    "\\COMPUTERNAME\, XcvMonitor Local Port"
+        //    ", XcvPort LPT1:"
+        //    "\\COMPUTERNAME\, XcvPort LPT1:"
+        //
+        //    This produces; !pName ",XcvMonitor " or pName "\\COMPUTERNAME\XcvMonitor "
+        //
+        Ret = StrNCatBuff( pwstr,
+                           Size,
+                           pName ? pName : L"",
+                           pName ? L"\\" : L",",
+                           pXcvName,
+                           L" ",
+                           pMonitorPortName ? pMonitorPortName : L"",
+                           NULL );
+    }
+
+    if ( !Ret )
+    {
+        DllFreeSplMem( pwstr );
+        pwstr = NULL;
+    }
+
+    return pwstr;
+}
+
+DWORD WINAPI
+GetMonitorUI( PWSTR pName, PWSTR pMonitorPortName, PWSTR pXcvName, PMONITORUI *pmui, PMONITORUIDATA *ppmuid )
+{
+    DWORD dwErrorCode = ERROR_SUCCESS, cbOutputNeeded, dwStatus;
+    HANDLE hPrinter = NULL;
+    HMODULE hModule;
+    PSPOOLER_HANDLE pHandle = (PSPOOLER_HANDLE)hPrinter;
+    PWSTR pDevice = NULL, pOutputString = NULL;
+    PMONITORUIDATA pmuid = NULL;
+    PRINTER_DEFAULTSW wDefault = { 0, 0, PRINTER_ATTRIBUTE_QUEUED };
+    BYTE OutputData[1024], InputData[4];
+
+    *pmui = NULL;
+    *ppmuid = NULL;
+
+    pDevice = ConstructXcvName( pName, pMonitorPortName, pXcvName );
+
+    if ( !pDevice )
+    {
+        return GetLastError();
+    }
+
+    FIXME("GMUI : XcvName : %S\n",pDevice);
+
+    if ( OpenPrinterW( (LPWSTR)pDevice, &hPrinter, &wDefault ) )
+    {
+        pHandle = (PSPOOLER_HANDLE)hPrinter;
+
+        // Do the RPC call
+        RpcTryExcept
+        {
+            dwErrorCode = _RpcXcvData( pHandle->hPrinter,
+                                       L"MonitorUI",
+                                       (PBYTE)&InputData,
+                                       0,
+                                       (PBYTE)&OutputData,
+                                       1024,
+                                       &cbOutputNeeded,
+                                       &dwStatus );
+        }
+        RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+        {
+            dwErrorCode = RpcExceptionCode();
+            ERR("GMUI : _RpcXcvData failed with exception code %lu!\n", dwErrorCode);
+        }
+        RpcEndExcept;
+
+        if ( dwErrorCode == ERROR_INSUFFICIENT_BUFFER )
+        {
+            pOutputString = DllAllocSplMem( cbOutputNeeded );
+
+            // Do the RPC call
+            RpcTryExcept
+            {
+                dwErrorCode = _RpcXcvData( pHandle->hPrinter,
+                                           L"MonitorUI",
+                                           (PBYTE)&InputData,
+                                           0,
+                                           (PBYTE)pOutputString,
+                                           cbOutputNeeded,
+                                           &cbOutputNeeded,
+                                           &dwStatus );
+            }
+            RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+            {
+                dwErrorCode = RpcExceptionCode();
+                ERR("GMUI : _RpcXcvData failed with exception code %lu!\n", dwErrorCode);
+            }
+            RpcEndExcept;
+        }
+
+        if ( dwErrorCode != ERROR_SUCCESS || dwStatus != ERROR_SUCCESS )
+        {
+            goto Cleanup;
+        }
+
+        pmuid = DllAllocSplMem( sizeof(MONITORUIDATA) );
+        if ( pmuid )
+        {
+            memset( pmuid, 0, sizeof(MONITORUIDATA) );
+            pmuid->hActCtx = INVALID_HANDLE_VALUE;
+        }
+        else
+        {
+            ERR("GMUI : Memory error\n");
+            dwErrorCode = GetLastError();
+            goto Cleanup;
+        }
+
+        if ( GetMonitorUIActivationContext( pOutputString ? pOutputString : (PWSTR)&OutputData, pmuid ) )
+        {
+            FIXME("GMUI : MonitorUI Path : %S\n",pmuid->pModuleName);
+
+            hModule = LoadLibraryW( pmuid->pModuleName );
+            if ( hModule )
+            {
+                FARPROC fpInitializePrintMonitorUI = (PVOID) GetProcAddress( hModule, "InitializePrintMonitorUI" );
+                if ( fpInitializePrintMonitorUI )
+                {
+                    pmuid->hLibrary = hModule;
+                    *pmui = (PMONITORUI)(*fpInitializePrintMonitorUI)();
+                    *ppmuid = pmuid;
+                }
+                else
+                {
+                   ERR("GMUI : Failed to get MUI %S\n",pmuid->pModuleName);
+                   FreeMonitorUI( pmuid );
+                }
+            }
+            else
+            {
+                ERR("GMUI : Failed to load library %S\n",pmuid->pModuleName);
+            }
+        }
+    }
+    else
+    {
+        ERR("GMUI : Failed to open printer handle\n");
+    }
+
+    dwErrorCode = GetLastError();
+
+Cleanup:
+    if ( hPrinter ) ClosePrinter( hPrinter );
+    if ( pOutputString ) DllFreeSplMem( pOutputString );
+    if ( pDevice ) DllFreeSplMem( pDevice );
+
+    FIXME("GMUI : Error Code Exit %d\n",dwErrorCode);
+
+    return dwErrorCode;
+}
 
 BOOL WINAPI
 AddPortA(PSTR pName, HWND hWnd, PSTR pMonitorName)
@@ -113,8 +442,8 @@ AddPortA(PSTR pName, HWND hWnd, PSTR pMonitorName)
 
     res = AddPortW(nameW, hWnd, monitorW);
 
-    HeapFree(GetProcessHeap(), 0, nameW);
-    HeapFree(GetProcessHeap(), 0, monitorW);
+    if (nameW) HeapFree(GetProcessHeap(), 0, nameW);
+    if (monitorW) HeapFree(GetProcessHeap(), 0, monitorW);
 
     return res;
 }
@@ -127,12 +456,12 @@ AddPortExW(PWSTR pName, DWORD Level, PBYTE lpBuffer, PWSTR lpMonitorName)
     WINSPOOL_PORT_VAR_CONTAINER PortVarContainer;
     WINSPOOL_PORT_INFO_FF *pPortInfoFF;
 
-    TRACE("AddPortExW(%S, %lu, %p, %S)\n", pName, Level, lpBuffer, lpMonitorName);
+    FIXME("AddPortExW(%S, %lu, %p, %S)\n", pName, Level, lpBuffer, lpMonitorName);
 
     switch (Level)
     {
         case 1:
-           // FIXME!!!! Only Level 1 is supported? See note in wine winspool test info.c : line 575.
+           // FIXME!!!! Only Level 1 is supported? See note in wine winspool test info.c : line 575. It's just not supported here.
            PortInfoContainer.PortInfo.pPortInfo1 = (WINSPOOL_PORT_INFO_1*)lpBuffer;
            PortInfoContainer.Level = Level;
            PortVarContainer.cbMonitorData = 0;
@@ -182,7 +511,7 @@ AddPortExA(PSTR pName, DWORD Level, PBYTE lpBuffer, PSTR lpMonitorName)
     pi1A = (PORT_INFO_1A *)lpBuffer;
     pPortInfoFF = (WINSPOOL_PORT_INFO_FF*)lpBuffer;
 
-    TRACE("AddPortExA(%s, %d, %p, %s): %s\n", debugstr_a(pName), Level, lpBuffer, debugstr_a(lpMonitorName), debugstr_a(pi1A ? pi1A->pName : NULL));
+    FIXME("AddPortExA(%s, %d, %p, %s): %s\n", debugstr_a(pName), Level, lpBuffer, debugstr_a(lpMonitorName), debugstr_a(pi1A ? pi1A->pName : NULL));
 
     if ( !lpBuffer || !lpMonitorName )
     {
@@ -256,8 +585,44 @@ Cleanup:
 BOOL WINAPI
 AddPortW(PWSTR pName, HWND hWnd, PWSTR pMonitorName)
 {
-    TRACE("AddPortW(%S, %p, %S)\n", pName, hWnd, pMonitorName);
-    return StartPortThread(pName, hWnd, pMonitorName, (FARPROC)_RpcAddPort);
+    DWORD SessionId, dwErrorCode = 0;
+    PMONITORUIDATA pmuid;
+    PMONITORUI pmui = NULL;
+    BOOL Ret = FALSE;
+
+    FIXME("AddPortW(%S, %p, %S)\n", pName, hWnd, pMonitorName);
+
+    dwErrorCode = GetMonitorUI( pName, pMonitorName, L"XcvMonitor", &pmui, &pmuid );
+    FIXME("AddPortW Error %d\n",dwErrorCode);
+    if (dwErrorCode != ERROR_SUCCESS )
+    {
+        if ( dwErrorCode == ERROR_NOT_SUPPORTED          ||
+             dwErrorCode == ERROR_MOD_NOT_FOUND          ||
+             dwErrorCode == ERROR_INVALID_PRINT_MONITOR  ||
+             dwErrorCode == ERROR_UNKNOWN_PORT           ||
+             dwErrorCode == ERROR_INVALID_PRINTER_NAME )
+        {
+            if ( ProcessIdToSessionId( GetCurrentProcessId(), &SessionId ) && SessionId ) // Looking if this is remote.
+            {
+                dwErrorCode = ERROR_NOT_SUPPORTED;
+            }
+            else
+            {
+                Ret = StartPortThread( pName, hWnd, pMonitorName, (PPfpFunction)_RpcAddPort );
+                FIXME("AddPortW return StartPortThread\n");
+                dwErrorCode = GetLastError();
+            }
+        }
+    }
+    else
+    {
+        Ret = (*pmui->pfnAddPortUI)( pName, hWnd, pMonitorName, NULL );
+    }
+
+    SetLastError(dwErrorCode);
+    FreeMonitorUI( pmuid );
+
+    return Ret;
 }
 
 BOOL WINAPI
@@ -288,8 +653,8 @@ ConfigurePortA(PSTR pName, HWND hWnd, PSTR pPortName)
 
     res = ConfigurePortW(nameW, hWnd, portW);
 
-    HeapFree(GetProcessHeap(), 0, nameW);
-    HeapFree(GetProcessHeap(), 0, portW);
+    if (nameW) HeapFree(GetProcessHeap(), 0, nameW);
+    if (portW) HeapFree(GetProcessHeap(), 0, portW);
 
     return res;
 }
@@ -297,8 +662,43 @@ ConfigurePortA(PSTR pName, HWND hWnd, PSTR pPortName)
 BOOL WINAPI
 ConfigurePortW(PWSTR pName, HWND hWnd, PWSTR pPortName)
 {
-    TRACE("ConfigurePortW(%S, %p, %S)\n", pName, hWnd, pPortName);
-    return StartPortThread(pName, hWnd, pPortName, (FARPROC)_RpcConfigurePort);
+    DWORD SessionId, dwErrorCode = 0;
+    PMONITORUIDATA pmuid;
+    PMONITORUI pmui = NULL;
+    BOOL Ret = FALSE;
+
+    FIXME("ConfigurePortW(%S, %p, %S)\n", pName, hWnd, pPortName);
+
+    dwErrorCode = GetMonitorUI( pName, pPortName, L"XcvPort", &pmui, &pmuid );
+
+    if (dwErrorCode != ERROR_SUCCESS )
+    {
+        if ( dwErrorCode == ERROR_NOT_SUPPORTED          ||
+             dwErrorCode == ERROR_MOD_NOT_FOUND          ||
+             dwErrorCode == ERROR_INVALID_PRINT_MONITOR  ||
+             dwErrorCode == ERROR_UNKNOWN_PORT           ||
+             dwErrorCode == ERROR_INVALID_PRINTER_NAME )
+        {
+            if ( ProcessIdToSessionId( GetCurrentProcessId(), &SessionId ) && SessionId ) // Looking if this is remote.
+            {
+                dwErrorCode = ERROR_NOT_SUPPORTED;
+            }
+            else
+            {
+                Ret = StartPortThread(pName, hWnd, pPortName, (PPfpFunction)_RpcConfigurePort );
+                dwErrorCode = GetLastError();
+            }
+        }
+    }
+    else
+    {
+        Ret = (*pmui->pfnConfigurePortUI)( pName, hWnd, pPortName );
+    }
+
+    SetLastError(dwErrorCode);
+    FreeMonitorUI( pmuid );
+
+    return Ret;
 }
 
 BOOL WINAPI
@@ -309,7 +709,7 @@ DeletePortA(PSTR pName, HWND hWnd, PSTR pPortName)
     INT     len;
     DWORD   res;
 
-    TRACE("DeletePortA(%s, %p, %s)\n", debugstr_a(pName), hWnd, debugstr_a(pPortName));
+    FIXME("DeletePortA(%s, %p, %s)\n", debugstr_a(pName), hWnd, debugstr_a(pPortName));
 
     /* convert servername to unicode */
     if (pName)
@@ -329,8 +729,8 @@ DeletePortA(PSTR pName, HWND hWnd, PSTR pPortName)
 
     res = DeletePortW(nameW, hWnd, portW);
 
-    HeapFree(GetProcessHeap(), 0, nameW);
-    HeapFree(GetProcessHeap(), 0, portW);
+    if (nameW) HeapFree(GetProcessHeap(), 0, nameW);
+    if (portW) HeapFree(GetProcessHeap(), 0, portW);
 
     return res;
 }
@@ -338,8 +738,36 @@ DeletePortA(PSTR pName, HWND hWnd, PSTR pPortName)
 BOOL WINAPI
 DeletePortW(PWSTR pName, HWND hWnd, PWSTR pPortName)
 {
-    TRACE("DeletePortW(%S, %p, %S)\n", pName, hWnd, pPortName);
-    return StartPortThread(pName, hWnd, pPortName, (FARPROC)_RpcDeletePort);
+    DWORD dwErrorCode = 0;
+    PMONITORUIDATA pmuid;
+    PMONITORUI pmui = NULL;
+    BOOL Ret = FALSE;
+
+    FIXME("DeletePortW(%S, %p, %S)\n", pName, hWnd, pPortName);
+
+    dwErrorCode = GetMonitorUI( pName, pPortName, L"XcvPort", &pmui, &pmuid );
+    FIXME("DeletePortW Error %d\n",dwErrorCode);
+    if (dwErrorCode != ERROR_SUCCESS )
+    {
+        if ( dwErrorCode == ERROR_NOT_SUPPORTED          ||
+             dwErrorCode == ERROR_MOD_NOT_FOUND          ||
+             dwErrorCode == ERROR_INVALID_PRINT_MONITOR  ||
+             dwErrorCode == ERROR_UNKNOWN_PORT           ||
+             dwErrorCode == ERROR_INVALID_PRINTER_NAME )
+        {
+            Ret = StartPortThread(pName, hWnd, pPortName, (PPfpFunction)_RpcDeletePort );
+            dwErrorCode = GetLastError();
+        }
+    }
+    else
+    {
+        Ret = (*pmui->pfnDeletePortUI)( pName, hWnd, pPortName );
+    }
+
+    SetLastError(dwErrorCode);
+    FreeMonitorUI( pmuid );
+
+    return Ret;
 }
 
 BOOL WINAPI
@@ -353,6 +781,13 @@ EnumPortsA(PSTR pName, DWORD Level, PBYTE pPorts, DWORD cbBuf, PDWORD pcbNeeded,
     INT     len;
 
     TRACE("EnumPortsA(%s, %d, %p, %d, %p, %p)\n", debugstr_a(pName), Level, pPorts, cbBuf, pcbNeeded, pcReturned);
+
+    if ((Level < 1) || (Level > 2))
+    {
+        ERR("Level = %d, unsupported!\n", Level);
+        SetLastError(ERROR_INVALID_LEVEL);
+        return FALSE;
+    }
 
     /* convert servername to unicode */
     if (pName)
@@ -470,8 +905,8 @@ cleanup:
     if (pcbNeeded)  *pcbNeeded = needed;
     if (pcReturned) *pcReturned = (res) ? numentries : 0;
 
-    HeapFree(GetProcessHeap(), 0, nameW);
-    HeapFree(GetProcessHeap(), 0, bufferW);
+    if (nameW) HeapFree(GetProcessHeap(), 0, nameW);
+    if (bufferW) HeapFree(GetProcessHeap(), 0, bufferW);
 
     TRACE("returning %d with %d (%d byte for %d of %d entries)\n",
             (res), GetLastError(), needed, (res)? numentries : 0, numentries);
@@ -485,6 +920,13 @@ EnumPortsW(PWSTR pName, DWORD Level, PBYTE pPorts, DWORD cbBuf, PDWORD pcbNeeded
     DWORD dwErrorCode;
 
     TRACE("EnumPortsW(%S, %lu, %p, %lu, %p, %p)\n", pName, Level, pPorts, cbBuf, pcbNeeded, pcReturned);
+
+    if ((Level < 1) || (Level > 2))
+    {
+        ERR("Level = %d, unsupported!\n", Level);
+        SetLastError(ERROR_INVALID_LEVEL);
+        return FALSE;
+    }
 
     // Do the RPC call
     RpcTryExcept

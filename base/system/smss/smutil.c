@@ -380,7 +380,7 @@ SmpParseCommandLine(IN PUNICODE_STRING CommandLine,
         else
         {
             /* Caller doesn't want flags, probably wants the image itself */
-            wcscpy(PathBuffer, Token.Buffer);
+            RtlStringCbCopyW(PathBuffer, sizeof(PathBuffer), Token.Buffer);
         }
     }
 
@@ -427,9 +427,9 @@ SmpQueryRegistrySosOption(VOID)
     UNICODE_STRING KeyName, ValueName;
     OBJECT_ATTRIBUTES ObjectAttributes;
     HANDLE KeyHandle;
+    ULONG Length;
     WCHAR ValueBuffer[VALUE_BUFFER_SIZE];
     PKEY_VALUE_PARTIAL_INFORMATION PartialInfo = (PVOID)ValueBuffer;
-    ULONG Length;
 
     /* Open the key */
     RtlInitUnicodeString(&KeyName,
@@ -442,7 +442,7 @@ SmpQueryRegistrySosOption(VOID)
     Status = NtOpenKey(&KeyHandle, KEY_READ, &ObjectAttributes);
     if (!NT_SUCCESS(Status))
     {
-        DPRINT1("SMSS: can't open control key: 0x%x\n", Status);
+        DPRINT1("SMSS: Cannot open control key (Status 0x%x)\n", Status);
         return FALSE;
     }
 
@@ -456,9 +456,11 @@ SmpQueryRegistrySosOption(VOID)
                              &Length);
     ASSERT(Length < VALUE_BUFFER_SIZE);
     NtClose(KeyHandle);
-    if (!NT_SUCCESS(Status))
+    if (!NT_SUCCESS(Status) ||
+        ((PartialInfo->Type != REG_SZ) && (PartialInfo->Type != REG_EXPAND_SZ)))
     {
-        DPRINT1("SMSS: can't query value key: 0x%x\n", Status);
+        DPRINT1("SMSS: Cannot query value key (Type %lu, Status 0x%x)\n",
+                PartialInfo->Type, Status);
         return FALSE;
     }
 

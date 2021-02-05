@@ -75,3 +75,56 @@ DuplicateDevMode(PDEVMODEW pInput)
 
     return pOutput;
 }
+
+/******************************************************************
+ * copy_servername_from_name  (internal)
+ *
+ * for an external server, the serverpart from the name is copied.
+ *
+ * RETURNS
+ *  the length (in WCHAR) of the serverpart (0 for the local computer)
+ *  (-length), when the name is too long
+ *
+ */
+LONG copy_servername_from_name(LPCWSTR name, LPWSTR target)
+{
+    LPCWSTR server;
+    LPWSTR  ptr;
+    WCHAR   buffer[MAX_COMPUTERNAME_LENGTH +1];
+    DWORD   len;
+    DWORD   serverlen;
+
+    if (target) *target = '\0';
+
+    if (name == NULL) return 0;
+    if ((name[0] != '\\') || (name[1] != '\\')) return 0;
+
+    server = &name[2];
+    /* skip over both backslash, find separator '\' */
+    ptr = wcschr(server, '\\');
+    serverlen = (ptr) ? ptr - server : lstrlenW(server);
+
+    /* servername is empty */
+    if (serverlen == 0) return 0;
+
+    FIXME("found %s\n", debugstr_wn(server, serverlen));
+
+    if (serverlen > MAX_COMPUTERNAME_LENGTH) return -serverlen;
+
+    if (target)
+    {
+        memcpy(target, server, serverlen * sizeof(WCHAR));
+        target[serverlen] = '\0';
+    }
+
+    len = ARRAYSIZE(buffer);
+    if (GetComputerNameW(buffer, &len))
+    {
+        if ((serverlen == len) && (_wcsnicmp(server, buffer, len) == 0))
+        {
+            /* The requested Servername is our computername */
+            return 0;
+        }
+    }
+    return serverlen;
+}

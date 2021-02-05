@@ -125,6 +125,12 @@ typedef enum _POOL_TYPE
     PagedPoolCacheAligned,
     NonPagedPoolCacheAlignedMustS,
     MaxPoolType,
+
+    NonPagedPoolBase = 0,
+    NonPagedPoolBaseMustSucceed = NonPagedPoolBase + 2,
+    NonPagedPoolBaseCacheAligned = NonPagedPoolBase + 4,
+    NonPagedPoolBaseCacheAlignedMustS = NonPagedPoolBase + 6,
+
     NonPagedPoolSession = 32,
     PagedPoolSession,
     NonPagedPoolMustSucceedSession,
@@ -616,19 +622,6 @@ typedef struct _SEGMENT_OBJECT
     PMMSECTION_FLAGS MmSectionFlags;
     PMMSUBSECTION_FLAGS MmSubSectionFlags;
 } SEGMENT_OBJECT, *PSEGMENT_OBJECT;
-
-//
-// Section Object
-//
-typedef struct _SECTION_OBJECT
-{
-    PVOID StartingVa;
-    PVOID EndingVa;
-    PVOID Parent;
-    PVOID LeftChild;
-    PVOID RightChild;
-    PSEGMENT_OBJECT Segment;
-} SECTION_OBJECT, *PSECTION_OBJECT;
 
 //
 // Generic Address Range Structure

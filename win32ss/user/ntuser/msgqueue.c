@@ -24,7 +24,7 @@ LIST_ENTRY usmList;
 
 /* FUNCTIONS *****************************************************************/
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 NTSTATUS
 NTAPI
 MsqInitializeImpl(VOID)

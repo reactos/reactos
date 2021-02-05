@@ -1230,7 +1230,7 @@ static BOOL _CmdWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
         FindDialog(hWnd);
         break;
     case ID_EDIT_FINDNEXT:
-        FindNext(hWnd);
+        FindNextMessageBox(hWnd);
         break;
     case ID_EDIT_COPYKEYNAME:
         CopyKeyName(hWnd, hKeyRoot, keyPath);

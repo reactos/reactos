@@ -950,6 +950,56 @@ ExLocalTimeToSystemTime(
   _In_ PLARGE_INTEGER LocalTime,
   _Out_ PLARGE_INTEGER SystemTime);
 
+#if (NTDDI_VERSION >= NTDDI_WINBLUE)
+
+#define EX_TIMER_HIGH_RESOLUTION 0x4
+#define EX_TIMER_NO_WAKE 0x8
+#define EX_TIMER_UNLIMITED_TOLERANCE ((LONGLONG)-1)
+#define EX_TIMER_NOTIFICATION (1UL << 31)
+
+NTKERNELAPI
+PEX_TIMER
+NTAPI
+ExAllocateTimer(
+  _In_opt_ PEXT_CALLBACK Callback,
+  _In_opt_ PVOID CallbackContext,
+  _In_ ULONG Attributes);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+ExSetTimer(
+  _In_ PEX_TIMER Timer,
+  _In_ LONGLONG DueTime,
+  _In_ LONGLONG Period,
+  _In_opt_ PEXT_SET_PARAMETERS Parameters);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+ExCancelTimer(
+  _Inout_ PEX_TIMER Timer,
+  _In_opt_ PEXT_CANCEL_PARAMETERS Parameters);
+
+NTKERNELAPI
+BOOLEAN
+NTAPI
+ExDeleteTimer(
+  _In_ PEX_TIMER Timer,
+  _In_ BOOLEAN Cancel,
+  _In_ BOOLEAN Wait,
+  _In_opt_ PEXT_DELETE_PARAMETERS Parameters);
+
+FORCEINLINE
+VOID
+ExInitializeSetTimerParameters(
+  _Out_ PEXT_SET_PARAMETERS Parameters)
+{
+  ASSERT(FALSE);
+}
+
+#endif // NTDDI_WINBLUE
+
 _IRQL_requires_max_(DISPATCH_LEVEL)
 NTKERNELAPI
 VOID

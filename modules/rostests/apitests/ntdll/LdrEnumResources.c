@@ -172,6 +172,7 @@ InitializeTestImage(
     TestImage->NtHeaders.OptionalHeader.ImageBase = (DWORD_PTR)TestImage;
     TestImage->NtHeaders.OptionalHeader.SizeOfImage = sizeof(TEST_IMAGE);
     TestImage->NtHeaders.OptionalHeader.SizeOfHeaders = sizeof(IMAGE_DOS_HEADER) + sizeof(IMAGE_NT_HEADERS);
+    TestImage->NtHeaders.OptionalHeader.NumberOfRvaAndSizes = ARRAYSIZE(TestImage->NtHeaders.OptionalHeader.DataDirectory);
 
     ResourceDirectory = &TestImage->NtHeaders.OptionalHeader.DataDirectory[IMAGE_DIRECTORY_ENTRY_RESOURCE];
     ResourceDirectory->VirtualAddress = FIELD_OFFSET(TEST_IMAGE, Resources);
@@ -359,6 +360,7 @@ Test_Parameters(PTEST_IMAGE TestImage)
 START_TEST(LdrEnumResources)
 {
     TEST_IMAGE TestImage;
+    RtlZeroMemory(&TestImage, sizeof(TestImage));
 
     Test_Parameters(&TestImage);
     Test_Data(&TestImage);

@@ -22,6 +22,11 @@ static PFILE_OBJECT TestFileObject;
 static PDEVICE_OBJECT TestDeviceObject;
 static KMT_IRP_HANDLER TestIrpHandler;
 static FAST_IO_DISPATCH TestFastIoDispatch;
+static BOOLEAN InBehaviourTest;
+
+BOOLEAN ReadCalledNonCached;
+LARGE_INTEGER ReadOffset;
+ULONG ReadLength;
 
 static
 BOOLEAN
@@ -149,6 +154,126 @@ MapAndLockUserBuffer(
     return MmGetSystemAddressForMdlSafe(Irp->MdlAddress, NormalPagePriority);
 }
 
+static
+void
+reset_read(void)
+{
+    ReadCalledNonCached = FALSE;
+    ReadOffset.QuadPart = MAXLONGLONG;
+    ReadLength = MAXULONG;
+}
+
+#define ok_read_called(_Offset, _Length) do {                                               \
+    ok(ReadCalledNonCached, "CcCopyRead should have triggerred a  non-cached read.\n");     \
+    ok_eq_longlong(ReadOffset.QuadPart, _Offset);                                           \
+    ok_eq_ulong(ReadLength, _Length);                                                       \
+}while(0)
+
+#define ok_read_not_called() ok(!ReadCalledNonCached, "CcCopyRead shouldn't have triggered a read.\n")
+
+static
+VOID
+Test_CcCopyRead(PFILE_OBJECT FileObject)
+{
+
+    BOOLEAN Ret;
+    LARGE_INTEGER Offset;
+    CHAR Buffer[10];
+    IO_STATUS_BLOCK IoStatus;
+
+    memset(Buffer, 0xAC, 10);
+
+    /* Test bogus file object & file offset */
+    Ret = 'x';
+    KmtStartSeh()
+        Ret = CcCopyRead(FileObject, NULL, 0, FALSE, NULL, &IoStatus);
+    KmtEndSeh(STATUS_ACCESS_VIOLATION);
+    ok_eq_char(Ret, 'x');
+
+    Ret = 'x';
+    Offset.QuadPart = 0;
+    KmtStartSeh()
+        Ret = CcCopyRead(NULL, &Offset, 10, FALSE, Buffer, &IoStatus);
+    KmtEndSeh(STATUS_ACCESS_VIOLATION);
+    ok_eq_char(Ret, 'x');
+
+    /* What happens on invalid buffer */
+    Ret = 'x';
+    Offset.QuadPart = 0;
+    memset(&IoStatus, 0xAB, sizeof(IoStatus));
+    reset_read();
+    KmtStartSeh()
+        Ret = CcCopyRead(FileObject, &Offset, 0, TRUE, NULL, &IoStatus);
+    KmtEndSeh(STATUS_SUCCESS);
+    ok_bool_true(Ret, "CcCopyRead(0, NULL) should succeed\n");
+    /* When there is nothing to write, there is no reason to read */
+    ok_read_not_called();
+    ok_eq_hex(IoStatus.Status, STATUS_SUCCESS);
+    ok_eq_ulongptr(IoStatus.Information, 0);
+
+    Ret = 'x';
+    Offset.QuadPart = 0;
+    memset(&IoStatus, 0xAB, sizeof(IoStatus));
+    reset_read();
+    KmtStartSeh()
+        Ret = CcCopyRead(FileObject, &Offset, 10, TRUE, NULL, &IoStatus);
+    KmtEndSeh(STATUS_INVALID_USER_BUFFER);
+    ok_eq_char(Ret, 'x');
+    /* This raises an exception, but it actually triggered a read */
+    ok_read_called(0, PAGE_SIZE);
+    ok_eq_hex(IoStatus.Status, 0xABABABAB);
+    ok_eq_ulongptr(IoStatus.Information, (ULONG_PTR)0xABABABABABABABAB);
+
+    /* So this one succeeds, as the page is now resident */
+    Ret = 'x';
+    Offset.QuadPart = 0;
+    memset(&IoStatus, 0xAB, sizeof(IoStatus));
+    reset_read();
+    KmtStartSeh()
+        Ret = CcCopyRead(FileObject, &Offset, 10, FALSE, Buffer, &IoStatus);
+    KmtEndSeh(STATUS_SUCCESS);
+    ok_bool_true(Ret, "CcCopyRead should succeed\n");
+    /* But there was no read triggered, as the page is already resident. */
+    ok_read_not_called();
+    ok_eq_hex(IoStatus.Status, STATUS_SUCCESS);
+    ok_eq_ulongptr(IoStatus.Information, 10);
+
+    /* But this one doesn't */
+    Ret = 'x';
+    Offset.QuadPart = PAGE_SIZE;
+    memset(&IoStatus, 0xAB, sizeof(IoStatus));
+    reset_read();
+    KmtStartSeh()
+        Ret = CcCopyRead(FileObject, &Offset, 10, FALSE, Buffer, &IoStatus);
+    KmtEndSeh(STATUS_SUCCESS);
+    ok_bool_false(Ret, "CcCopyRead should fail\n");
+    /* But it triggered a read anyway. */
+    ok_read_called(PAGE_SIZE, PAGE_SIZE);
+    ok_eq_hex(IoStatus.Status, 0xABABABAB);
+    ok_eq_ulongptr(IoStatus.Information, (ULONG_PTR)0xABABABABABABABAB);
+
+    /* Of course, waiting for it succeeds and triggers the read */
+    Ret = 'x';
+    Offset.QuadPart = PAGE_SIZE * 2;
+    memset(&IoStatus, 0xAB, sizeof(IoStatus));
+    reset_read();
+    KmtStartSeh()
+        Ret = CcCopyRead(FileObject, &Offset, 10, TRUE, Buffer, &IoStatus);
+    KmtEndSeh(STATUS_SUCCESS);
+    ok_bool_true(Ret, "CcCopyRead should succeed\n");
+    ok_read_called(PAGE_SIZE * 2, PAGE_SIZE);
+    ok_eq_hex(IoStatus.Status, STATUS_SUCCESS);
+    ok_eq_ulongptr(IoStatus.Information, 10);
+
+    /* Try the same without a status block */
+    Ret = 'x';
+    Offset.QuadPart = PAGE_SIZE * 2;
+    KmtStartSeh()
+        Ret = CcCopyRead(FileObject, &Offset, 10, TRUE, Buffer, NULL);
+    KmtEndSeh(STATUS_ACCESS_VIOLATION);
+    ok_eq_char(Ret, 'x');
+}
+
 
 static
 NTSTATUS
@@ -225,7 +350,7 @@ TestIrpHandler(
         IoStack->FileObject->FsContext = Fcb;
         IoStack->FileObject->SectionObjectPointer = &Fcb->SectionObjectPointers;
 
-        CcInitializeCacheMap(IoStack->FileObject, 
+        CcInitializeCacheMap(IoStack->FileObject,
                              (PCC_FILE_SIZES)&Fcb->Header.AllocationSize,
                              FALSE, &Callbacks, NULL);
 
@@ -238,6 +363,7 @@ TestIrpHandler(
         ULONG Length;
         PVOID Buffer;
         LARGE_INTEGER Offset;
+        static const UNICODE_STRING BehaviourTestFileName = RTL_CONSTANT_STRING(L"\\BehaviourTestFile");
 
         Offset = IoStack->Parameters.Read.ByteOffset;
         Length = IoStack->Parameters.Read.Length;
@@ -246,49 +372,64 @@ TestIrpHandler(
         ok_eq_pointer(DeviceObject, TestDeviceObject);
         ok_eq_pointer(IoStack->FileObject, TestFileObject);
 
+        /* Check special file name */
+        InBehaviourTest = RtlCompareUnicodeString(&IoStack->FileObject->FileName, &BehaviourTestFileName, TRUE) == 0;
+
         if (!FlagOn(Irp->Flags, IRP_NOCACHE))
         {
             ok_irql(PASSIVE_LEVEL);
 
-            /* We don't want to test alignement for big files (not the purpose of the test) */
-            if (!Fcb->BigFile)
+            if (InBehaviourTest)
             {
-                ok(Offset.QuadPart % PAGE_SIZE != 0, "Offset is aligned: %I64i\n", Offset.QuadPart);
-                ok(Length % PAGE_SIZE != 0, "Length is aligned: %I64i\n", Length);
+                Test_CcCopyRead(IoStack->FileObject);
+                Status = Irp->IoStatus.Status = STATUS_SUCCESS;
             }
-
-            Buffer = Irp->AssociatedIrp.SystemBuffer;
-            ok(Buffer != NULL, "Null pointer!\n");
-
-            _SEH2_TRY
+            else
             {
-                Ret = CcCopyRead(IoStack->FileObject, &Offset, Length, TRUE, Buffer,
-                                 &Irp->IoStatus);
-                ok_bool_true(Ret, "CcCopyRead");
-            }
-            _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
-            {
-                Irp->IoStatus.Status = _SEH2_GetExceptionCode();
-            }
-            _SEH2_END;
-
-            Status = Irp->IoStatus.Status;
-
-            if (NT_SUCCESS(Status))
-            {
-                if (Offset.QuadPart <= 1000LL && Offset.QuadPart + Length > 1000LL)
+                /* We don't want to test alignement for big files (not the purpose of the test) */
+                if (!Fcb->BigFile)
                 {
-                    ok_eq_hex(*(PUSHORT)((ULONG_PTR)Buffer + (ULONG_PTR)(1000LL - Offset.QuadPart)), 0xFFFF);
+                    ok(Offset.QuadPart % PAGE_SIZE != 0, "Offset is aligned: %I64i\n", Offset.QuadPart);
+                    ok(Length % PAGE_SIZE != 0, "Length is aligned: %I64i\n", Length);
                 }
-                else
+
+                Buffer = Irp->AssociatedIrp.SystemBuffer;
+                ok(Buffer != NULL, "Null pointer!\n");
+
+                _SEH2_TRY
                 {
-                    ok_eq_hex(*(PUSHORT)Buffer, 0xBABA);
+                    Ret = CcCopyRead(IoStack->FileObject, &Offset, Length, TRUE, Buffer,
+                                    &Irp->IoStatus);
+                    ok_bool_true(Ret, "CcCopyRead");
+                }
+                _SEH2_EXCEPT(EXCEPTION_EXECUTE_HANDLER)
+                {
+                    Irp->IoStatus.Status = _SEH2_GetExceptionCode();
+                }
+                _SEH2_END;
+
+                Status = Irp->IoStatus.Status;
+
+                if (NT_SUCCESS(Status))
+                {
+                    if (Offset.QuadPart <= 1000LL && Offset.QuadPart + Length > 1000LL)
+                    {
+                        ok_eq_hex(*(PUSHORT)((ULONG_PTR)Buffer + (ULONG_PTR)(1000LL - Offset.QuadPart)), 0xFFFF);
+                    }
+                    else
+                    {
+                        ok_eq_hex(*(PUSHORT)Buffer, 0xBABA);
+                    }
                 }
             }
         }
         else
         {
             PMDL Mdl;
+
+            ReadCalledNonCached = TRUE;
+            ReadOffset = Offset;
+            ReadLength = Length;
 
             ok_irql(APC_LEVEL);
             ok((Offset.QuadPart % PAGE_SIZE == 0 || Offset.QuadPart == 0), "Offset is not aligned: %I64i\n", Offset.QuadPart);
@@ -318,6 +459,8 @@ TestIrpHandler(
             Irp->IoStatus.Information = Length;
             IoStack->FileObject->CurrentByteOffset.QuadPart = Offset.QuadPart + Length;
         }
+
+        InBehaviourTest = FALSE;
     }
     else if (IoStack->MajorFunction == IRP_MJ_CLEANUP)
     {

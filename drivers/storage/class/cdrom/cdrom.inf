@@ -75,7 +75,10 @@ GenCdRom.DeviceDesc = "Unidad CD-ROM"
 GenericMfg = "(Unidades de DVD/CD-ROM genéricas)"
 
 [Strings.040C]
-CDROMClassName = "Lecteurs de DVD/CD-ROM"
+ReactOS = "Equipe ReactOS"
+CDROMClassName = "Lecteurs DVD/CD-ROM"
+GenCdRom.DeviceDesc = "Lecteur CD-ROM"
+GenericMfg = "(Lecteurs DVD/CD-ROM génériques)"
 
 [Strings.041B]
 CDROMClassName = "DVD/CD-ROM mechaniky"

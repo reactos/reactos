@@ -26,7 +26,7 @@ class wine_sync:
     def __init__(self, module):
         if os.path.isfile('winesync.cfg'):
             with open('winesync.cfg', 'r') as file_input:
-                config = yaml.load(file_input, Loader=yaml.FullLoader)
+                config = yaml.safe_load(file_input)
             self.reactos_src = config['repos']['reactos']
             self.wine_src = config['repos']['wine']
             self.wine_staging_src = config['repos']['wine-staging']
@@ -52,7 +52,7 @@ class wine_sync:
         # get the actual state for the asked module
         self.module = module
         with open(module + '.cfg', 'r') as file_input:
-            self.module_cfg = yaml.load(file_input, Loader=yaml.FullLoader)
+            self.module_cfg = yaml.safe_load(file_input)
 
         self.staged_patch_dir = os.path.join('sdk', 'tools', 'winesync', self.module + '_staging')
 
@@ -112,7 +112,7 @@ class wine_sync:
         # Get the diff object
         diff = self.wine_repo.diff(wine_commit.parents[0], wine_commit)
 
-        modified_files = []
+        modified_files = False
         ignored_files = []
         warning_message = ''
         complete_patch = ''
@@ -126,7 +126,7 @@ class wine_sync:
                 return True, ''
 
         for delta in diff.deltas:
-            if delta.old_file.path == '/dev/null':
+            if delta.status == pygit2.GIT_DELTA_ADDED:
                 # check if we should care
                 new_reactos_path = self.wine_to_reactos_path(delta.new_file.path)
                 if not new_reactos_path is None:
@@ -134,7 +134,7 @@ class wine_sync:
                     old_reactos_path = '/dev/null'
                 else:
                     old_reactos_path = None
-            elif delta.new_file.path == '/dev/null':
+            elif delta.status == pygit2.GIT_DELTA_DELETED:
                 # check if we should care
                 old_reactos_path = self.wine_to_reactos_path(delta.old_file.path)
                 if not old_reactos_path is None:
@@ -152,14 +152,27 @@ class wine_sync:
 
             if (new_reactos_path is not None) or (old_reactos_path is not None):
                 # print('Must apply diff: ' + old_reactos_path + ' --> ' + new_reactos_path)
-                new_blob = self.wine_repo.get(wine_commit.tree[delta.new_file.path].id)
-                old_blob = self.wine_repo.get(wine_commit.parents[0].tree[delta.old_file.path].id)
+                if delta.status == pygit2.GIT_DELTA_ADDED:
+                    new_blob = self.wine_repo.get(delta.new_file.id)
+                    blob_patch = pygit2.Patch.create_from(
+                        old=None,
+                        new=new_blob,
+                        new_as_path=new_reactos_path)
+                elif delta.status == pygit2.GIT_DELTA_DELETED:
+                    old_blob = self.wine_repo.get(delta.old_file.id)
+                    blob_patch = pygit2.Patch.create_from(
+                        old=old_blob,
+                        new=None,
+                        old_as_path=old_reactos_path)
+                else:
+                    new_blob = self.wine_repo.get(delta.new_file.id)
+                    old_blob = self.wine_repo.get(delta.old_file.id)
 
-                blob_patch = pygit2.Patch.create_from(
-                    old=old_blob,
-                    new=new_blob,
-                    old_as_path=old_reactos_path,
-                    new_as_path=new_reactos_path)
+                    blob_patch = pygit2.Patch.create_from(
+                        old=old_blob,
+                        new=new_blob,
+                        old_as_path=old_reactos_path,
+                        new_as_path=new_reactos_path)
 
                 # print(str(wine_commit.id))
                 # print(blob_patch.text)
@@ -171,11 +184,16 @@ class wine_sync:
                     subprocess.run(['git', '-C', self.reactos_src, 'apply', '--reject'], input=blob_patch.data, check=True)
                 except subprocess.CalledProcessError as err:
                     warning_message += 'Error while applying patch to ' + new_reactos_path + '\n'
-                self.reactos_index.add(new_reactos_path)
+
+                if delta.status == pygit2.GIT_DELTA_DELETED:
+                    self.reactos_index.remove(old_reactos_path)
+                # here we check if the file exists. We don't complain, because applying the patch already failed anyway
+                elif os.path.isfile(os.path.join(self.reactos_src, new_reactos_path)):
+                    self.reactos_index.add(new_reactos_path)
 
                 complete_patch += blob_patch.text
 
-                modified_files += [delta.old_file.path, delta.new_file.path]
+                modified_files = True
             else:
                 ignored_files += [delta.old_file.path, delta.new_file.path]
 
@@ -221,13 +239,16 @@ class wine_sync:
             warning_message += 'If needed, amend the current commit in your reactos tree and start this script again'
 
             if not in_staging:
-                warning_message += f'You can see the details of the wine commit here: https://source.winehq.org/git/wine.git/commit/{str(wine_commit.id)}'
+                warning_message += f'\n' \
+                    f'You can see the details of the wine commit here:\n' \
+                    f'    https://source.winehq.org/git/wine.git/commit/{str(wine_commit.id)}\n'
             else:
-                warning_message += 'Do not forget to run\n'
-                warning_message += f'git diff HEAD^ \':(exclude)sdk/tools/winesync/{patch_file_name}\' > sdk/tools/winesync/{patch_file_name}\n'
-                warning_message += 'after your correction and then\n'
-                warning_message += f'git add sdk/tools/winesync/{patch_file_name}\n'
-                warning_message += 'before running "git commit --amend"'
+                warning_message += f'\n' \
+                    f'Do not forget to run\n' \
+                    f'    git diff HEAD^ \':(exclude)sdk/tools/winesync/{patch_file_name}\' > sdk/tools/winesync/{patch_file_name}\n' \
+                    f'after your correction and then\n' \
+                    f'    git add sdk/tools/winesync/{patch_file_name}\n' \
+                    f'before running "git commit --amend"'
 
         return True, warning_message
 
@@ -314,7 +335,9 @@ class wine_sync:
                 staging_patch_index += 1
 
             if warning_message != '':
+                print("THERE WERE SOME ISSUES WHEN APPLYING THE PATCH\n\n")
                 print(warning_message)
+                print("\n")
                 finished_sync = False
                 break
 

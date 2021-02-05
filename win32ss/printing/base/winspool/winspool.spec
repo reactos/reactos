@@ -172,7 +172,7 @@
 271 stdcall ResetPrinterA(ptr ptr)
 272 stdcall ResetPrinterW(ptr ptr)
 273 stdcall ScheduleJob(ptr long)
-274 stdcall -stub SeekPrinter(ptr int64 ptr long long)
+274 stdcall SeekPrinter(ptr int64 ptr long long)
 275 stub SetAllocFailCount
 276 stdcall SetFormA(ptr str long str)
 277 stdcall SetFormW(ptr str long str)

@@ -11,29 +11,101 @@
 DWORD
 _RpcAddPort(WINSPOOL_HANDLE pName, ULONG_PTR hWnd, WCHAR* pMonitorName)
 {
-    UNIMPLEMENTED;
-    return ERROR_INVALID_FUNCTION;
+    DWORD dwErrorCode;
+
+    FIXME("AddPort(%S, %p, %s)\n", pName, hWnd, debugstr_w(pMonitorName));
+
+    dwErrorCode = RpcImpersonateClient(NULL);
+    if (dwErrorCode != ERROR_SUCCESS)
+    {
+        ERR("RpcImpersonateClient failed with error %lu!\n", dwErrorCode);
+        return dwErrorCode;
+    }
+
+    if (!AddPortW( pName, (HWND)hWnd, pMonitorName ))
+        dwErrorCode = GetLastError();
+
+    RpcRevertToSelf();
+    return dwErrorCode;
 }
 
 DWORD
 _RpcAddPortEx(WINSPOOL_HANDLE pName, WINSPOOL_PORT_CONTAINER* pPortContainer, WINSPOOL_PORT_VAR_CONTAINER* pPortVarContainer, WCHAR* pMonitorName)
 {
-    UNIMPLEMENTED;
-    return ERROR_INVALID_FUNCTION;
+    DWORD dwErrorCode, Level = pPortContainer->Level;
+    WINSPOOL_PORT_INFO_FF PortInfoFF;
+    PBYTE lpBuffer;
+
+    FIXME("AddPortEx(%S, %lu, %s)\n", pName, Level, debugstr_w(pMonitorName));
+
+    switch (Level)
+    {
+        case 1:
+           lpBuffer = (PBYTE)pPortContainer->PortInfo.pPortInfo1;
+           break;
+
+        case 0xFFFFFFFF:
+           PortInfoFF.pPortName = pPortContainer->PortInfo.pPortInfoFF->pPortName;
+           PortInfoFF.cbMonitorData = pPortVarContainer->cbMonitorData;
+           PortInfoFF.pMonitorData =  pPortVarContainer->pMonitorData;
+           lpBuffer = (PBYTE)&PortInfoFF;
+           break;
+
+        default:
+           ERR("Level = %d, unsupported!\n", Level);
+           return ERROR_INVALID_LEVEL;
+    }
+
+    dwErrorCode = RpcImpersonateClient(NULL);
+    if (dwErrorCode != ERROR_SUCCESS)
+    {
+        ERR("RpcImpersonateClient failed with error %lu!\n", dwErrorCode);
+        return dwErrorCode;
+    }
+
+    if (!AddPortExW(pName, Level, lpBuffer, pMonitorName ))
+        dwErrorCode = GetLastError();
+
+    RpcRevertToSelf();
+    return dwErrorCode;
 }
 
 DWORD
 _RpcConfigurePort(WINSPOOL_HANDLE pName, ULONG_PTR hWnd, WCHAR* pPortName)
 {
-    UNIMPLEMENTED;
-    return ERROR_INVALID_FUNCTION;
+    DWORD dwErrorCode;
+
+    dwErrorCode = RpcImpersonateClient(NULL);
+    if (dwErrorCode != ERROR_SUCCESS)
+    {
+        ERR("RpcImpersonateClient failed with error %lu!\n", dwErrorCode);
+        return dwErrorCode;
+    }
+
+    if (!ConfigurePortW( pName, (HWND)hWnd, pPortName ))
+        dwErrorCode = GetLastError();
+
+    RpcRevertToSelf();
+    return dwErrorCode;
 }
 
 DWORD
 _RpcDeletePort(WINSPOOL_HANDLE pName, ULONG_PTR hWnd, WCHAR* pPortName)
 {
-    UNIMPLEMENTED;
-    return ERROR_INVALID_FUNCTION;
+    DWORD dwErrorCode;
+
+    dwErrorCode = RpcImpersonateClient(NULL);
+    if (dwErrorCode != ERROR_SUCCESS)
+    {
+        ERR("RpcImpersonateClient failed with error %lu!\n", dwErrorCode);
+        return dwErrorCode;
+    }
+
+    if (!DeletePortW( pName, (HWND)hWnd, pPortName ))
+        dwErrorCode = GetLastError();
+
+    RpcRevertToSelf();
+    return dwErrorCode;
 }
 
 DWORD
@@ -71,6 +143,18 @@ _RpcEnumPorts(WINSPOOL_HANDLE pName, DWORD Level, BYTE* pPort, DWORD cbBuf, DWOR
 DWORD
 _RpcSetPort(WINSPOOL_HANDLE pName, WCHAR* pPortName, WINSPOOL_PORT_CONTAINER* pPortContainer)
 {
-    UNIMPLEMENTED;
-    return ERROR_INVALID_FUNCTION;
+    DWORD dwErrorCode;
+
+    dwErrorCode = RpcImpersonateClient(NULL);
+    if (dwErrorCode != ERROR_SUCCESS)
+    {
+        ERR("RpcImpersonateClient failed with error %lu!\n", dwErrorCode);
+        return dwErrorCode;
+    }
+
+    if (!SetPortW(pName, pPortName, pPortContainer->Level, (PBYTE)pPortContainer->PortInfo.pPortInfo3))
+        dwErrorCode = GetLastError();
+
+    RpcRevertToSelf();
+    return dwErrorCode;
 }

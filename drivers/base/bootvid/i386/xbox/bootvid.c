@@ -11,6 +11,8 @@
 
 #include <debug.h>
 
+#include <drivers/xbox/xgpu.h>
+
 /* GLOBALS ********************************************************************/
 
 static ULONG_PTR FrameBufferStart = 0;
@@ -129,7 +131,7 @@ VidInitialize(
         return FALSE;
     }
 
-    ULONG_PTR FrameBuffer = READ_REGISTER_ULONG((PULONG)(ControlStart + NV2A_CONTROL_FRAMEBUFFER_ADDRESS_OFFSET));
+    ULONG_PTR FrameBuffer = READ_REGISTER_ULONG((PULONG)(ControlStart + NV2A_CRTC_FRAMEBUFFER_START));
     FrameBufferWidth = READ_REGISTER_ULONG((PULONG)(ControlStart + NV2A_RAMDAC_FP_HVALID_END)) + 1;
     FrameBufferHeight = READ_REGISTER_ULONG((PULONG)(ControlStart + NV2A_RAMDAC_FP_VVALID_END)) + 1;
 

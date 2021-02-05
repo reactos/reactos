@@ -509,7 +509,7 @@ LoadPrinterDriver( HANDLE hspool )
 
             hLibrary = LoadLibrary(pdi->pConfigFile);
 
-            FIXME("IGPD : Get Printer Driver %S\n",pdi->pConfigFile);
+            FIXME("IGPD : Get Printer Driver Config File : %S\n",pdi->pConfigFile);
 
             RtlFreeHeap( GetProcessHeap(), 0, pdi);
             return hLibrary;
@@ -582,7 +582,7 @@ DeviceCapabilitiesW(LPCWSTR pDevice, LPCWSTR pPort, WORD fwCapability, LPWSTR pO
     {
         if (!IsValidDevmodeNoSizeW( (PDEVMODEW)pDevMode ) )
         {
-            ERR("DeviceCapabilitiesW : Devode Invalid");
+            ERR("DeviceCapabilitiesW : Devode Invalid\n");
             return -1;
         }
     }
@@ -657,7 +657,7 @@ DevQueryPrintEx( PDEVQUERYPRINT_INFO pDQPInfo )
 INT WINAPI
 DocumentEvent( HANDLE hPrinter, HDC hdc, int iEsc, ULONG cbIn, PVOID pvIn, ULONG cbOut, PVOID pvOut)
 {
-    TRACE("DocumentEvent(%p, %p, %lu, %lu, %p, %lu, %p)\n", hPrinter, hdc, iEsc, cbIn, pvIn, cbOut, pvOut);
+    FIXME("DocumentEvent(%p, %p, %lu, %lu, %p, %lu, %p)\n", hPrinter, hdc, iEsc, cbIn, pvIn, cbOut, pvOut);
     UNIMPLEMENTED;
     return DOCUMENTEVENT_UNSUPPORTED;
 }
@@ -668,7 +668,7 @@ DocumentPropertiesA(HWND hWnd, HANDLE hPrinter, LPSTR pDeviceName, PDEVMODEA pDe
     PWSTR pwszDeviceName = NULL;
     PDEVMODEW pdmwInput = NULL;
     PDEVMODEW pdmwOutput = NULL;
-    BOOL bReturnValue = -1;
+    LONG lReturnValue = -1;
     DWORD cch;
 
     FIXME("DocumentPropertiesA(%p, %p, %s, %p, %p, %lu)\n", hWnd, hPrinter, pDeviceName, pDevModeOutput, pDevModeInput, fMode);
@@ -716,15 +716,10 @@ DocumentPropertiesA(HWND hWnd, HANDLE hPrinter, LPSTR pDeviceName, PDEVMODEA pDe
         }
     }
 
-    bReturnValue = DocumentPropertiesW(hWnd, hPrinter, pwszDeviceName, pdmwOutput, pdmwInput, fMode);
-    FIXME("bReturnValue from DocumentPropertiesW is '%ld'.\n", bReturnValue);
+    lReturnValue = DocumentPropertiesW(hWnd, hPrinter, pwszDeviceName, pdmwOutput, pdmwInput, fMode);
+    FIXME("lReturnValue from DocumentPropertiesW is '%ld'.\n", lReturnValue);
 
-    if (pwszDeviceName)
-    {
-        HeapFree(hProcessHeap, 0, pwszDeviceName);
-    }
-
-    if (bReturnValue < 0)
+    if (lReturnValue < 0)
     {
         FIXME("DocumentPropertiesW failed!\n");
         goto Cleanup;
@@ -745,7 +740,7 @@ Cleanup:
     if (pdmwOutput)
         HeapFree(hProcessHeap, 0, pdmwOutput);
 
-    return bReturnValue;
+    return lReturnValue;
 }
 
 PRINTER_INFO_9W * get_devmodeW(HANDLE hprn)
@@ -921,7 +916,9 @@ DocumentPropertySheets( PPROPSHEETUI_INFO pCPSUIInfo, LPARAM lparam )
 
                 if ( fpDocumentPropertySheets )
                 {
+                    FIXME("DPS : fpDocumentPropertySheets(%p, 0x%lx) pdmOut %p\n", pCPSUIInfo, lparam, pdphdr->pdmOut);
                     Result = fpDocumentPropertySheets( pCPSUIInfo, lparam );
+                    FIXME("DPS : fpDocumentPropertySheets result %d cbOut %d\n",Result, pdphdr->cbOut);
                 }
                 else
                 {
@@ -2939,6 +2936,38 @@ ResetPrinterW(HANDLE hPrinter, PPRINTER_DEFAULTSW pDefault)
 }
 
 BOOL WINAPI
+SeekPrinter( HANDLE hPrinter, LARGE_INTEGER liDistanceToMove, PLARGE_INTEGER pliNewPointer, DWORD dwMoveMethod, BOOL bWrite )
+{
+    DWORD dwErrorCode;
+    PSPOOLER_HANDLE pHandle = (PSPOOLER_HANDLE)hPrinter;
+
+    FIXME("SeekPrinter(%p, %I64u, %p, %lu, %d)\n", hPrinter, liDistanceToMove.QuadPart, pliNewPointer, dwMoveMethod, bWrite);
+
+    // Sanity checks.
+    if (!pHandle)
+    {
+        dwErrorCode = ERROR_INVALID_HANDLE;
+        goto Cleanup;
+    }
+
+    // Do the RPC call
+    RpcTryExcept
+    {
+        dwErrorCode = _RpcSeekPrinter(pHandle->hPrinter, liDistanceToMove, pliNewPointer, dwMoveMethod, bWrite);
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        dwErrorCode = RpcExceptionCode();
+        ERR("_RpcSeekPrinter failed with exception code %lu!\n", dwErrorCode);
+    }
+    RpcEndExcept;
+
+Cleanup:
+    SetLastError(dwErrorCode);
+    return (dwErrorCode == ERROR_SUCCESS);
+}
+
+BOOL WINAPI
 SetDefaultPrinterA(LPCSTR pszPrinter)
 {
     BOOL bReturnValue = FALSE;
@@ -3802,7 +3831,7 @@ StartDocPrinterW(HANDLE hPrinter, DWORD Level, PBYTE pDocInfo)
         dwReturnValue = pHandle->dwJobID;
         if ( !pHandle->bTrayIcon )
         {
-            FIXME("Notify Tray Icon\n");
+            UpdateTrayIcon( hPrinter, pHandle->dwJobID );
         }
     }
 
@@ -3905,6 +3934,65 @@ Cleanup:
 BOOL WINAPI
 XcvDataW(HANDLE hXcv, PCWSTR pszDataName, PBYTE pInputData, DWORD cbInputData, PBYTE pOutputData, DWORD cbOutputData, PDWORD pcbOutputNeeded, PDWORD pdwStatus)
 {
+    DWORD dwErrorCode, Bogus = 0;
+    PSPOOLER_HANDLE pHandle = (PSPOOLER_HANDLE)hXcv;
+
     TRACE("XcvDataW(%p, %S, %p, %lu, %p, %lu, %p, %p)\n", hXcv, pszDataName, pInputData, cbInputData, pOutputData, cbOutputData, pcbOutputNeeded, pdwStatus);
-    return FALSE;
+
+    if ( pcbOutputNeeded == NULL )
+    {
+        dwErrorCode = ERROR_INVALID_PARAMETER;
+        goto Cleanup;
+    }
+
+    // Sanity checks.
+    if (!pHandle) // ( IntProtectHandle( hXcv, FALSE ) )
+    {
+        dwErrorCode = ERROR_INVALID_HANDLE;
+        goto Cleanup;
+    }
+
+    //
+    // Do fixups.
+    //
+    if ( pInputData == NULL )
+    {
+        if ( !cbInputData )
+        {
+             pInputData = (PBYTE)&Bogus;
+        }
+    }
+
+    if ( pOutputData == NULL )
+    {
+        if ( !cbOutputData )
+        {
+            pOutputData = (PBYTE)&Bogus;
+        }
+    }
+
+    // Do the RPC call
+    RpcTryExcept
+    {
+        dwErrorCode = _RpcXcvData( pHandle->hPrinter,
+                                   pszDataName,
+                                   pInputData,
+                                   cbInputData,
+                                   pOutputData,
+                                   cbOutputData,
+                                   pcbOutputNeeded,
+                                   pdwStatus );
+    }
+    RpcExcept(EXCEPTION_EXECUTE_HANDLER)
+    {
+        dwErrorCode = RpcExceptionCode();
+        ERR("_RpcXcvData failed with exception code %lu!\n", dwErrorCode);
+    }
+    RpcEndExcept;
+
+    //IntUnprotectHandle( hXcv );
+
+Cleanup:
+    SetLastError(dwErrorCode);
+    return (dwErrorCode == ERROR_SUCCESS);
 }

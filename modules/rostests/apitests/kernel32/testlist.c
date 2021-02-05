@@ -3,6 +3,7 @@
 #define STANDALONE
 #include <apitest.h>
 
+extern void func_ActCtxWithXmlNamespaces(void);
 extern void func_ConsoleCP(void);
 extern void func_CreateProcess(void);
 extern void func_DefaultActCtx(void);
@@ -70,5 +71,6 @@ const struct test winetest_testlist[] =
     { "TerminateProcess",            func_TerminateProcess },
     { "TunnelCache",                 func_TunnelCache },
     { "WideCharToMultiByte",         func_WideCharToMultiByte },
+    { "ActCtxWithXmlNamespaces",     func_ActCtxWithXmlNamespaces },
     { 0, 0 }
 };

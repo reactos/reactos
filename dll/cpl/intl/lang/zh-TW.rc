@@ -10,7 +10,7 @@ FONT 9, "新細明體"
 BEGIN
     GROUPBOX "標準和格式", -1, 5, 5, 234, 162
     LTEXT "這個選項將會影響一些程式的數字、貨幣、日期和時間格式。", -1, 14, 17, 220, 25
-    LTEXT "選擇一個與其首選項匹配的項或點選 [自訂] 選擇您自己的格式(&S):", -1, 14, 37, 220, 22
+    LTEXT "選擇一個項目以符合您的程式所使用的格式，或按 [自訂] 選擇您自己的格式(&S):", -1, 14, 37, 220, 22
     COMBOBOX IDC_LANGUAGELIST, 14, 56, 160, 160, CBS_DROPDOWNLIST | CBS_NOINTEGRALHEIGHT | CBS_SORT | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
     PUSHBUTTON "自訂(&Z)...", IDC_SETUP_BUTTON, 178, 56, 52, 13
     LTEXT "示例", -1, 14, 73, 70, 10
@@ -35,12 +35,12 @@ CAPTION "語言"
 FONT 9, "新細明體"
 BEGIN
     GROUPBOX "文字服務和輸入語言", -1, 5, 5, 234, 52
-    LTEXT "要檢視用來輸入文字的語言和方法，請點選 [詳細資訊]。", -1, 12, 15, 220, 18
+    LTEXT "要檢視或更改您可用來輸入文字的語言和方法，請按 [詳細資訊]。", -1, 12, 15, 220, 18
     PUSHBUTTON "詳細資訊(&T)...", IDC_DETAIL_BUTTON, 177, 34, 54, 14
     GROUPBOX "附加的語言支援", -1, 5, 62, 234, 82
-    LTEXT "大多數語言都會在默認情況下得到安裝。要安裝其他語言，選擇下面相應的覈取方塊。", -1, 12, 72, 220, 18
-    CHECKBOX "為複雜文字和從右到左的語言安裝檔案(包括泰文)(&N)", IDC_INST_FILES_FOR_RTOL_LANG, 12, 92, 215, 22, BS_MULTILINE | BS_TOP
-    CHECKBOX "為東亞語言安裝檔案(&S)", IDC_INST_FILES_FOR_ASIAN, 12, 114, 180, 22, BS_MULTILINE | BS_TOP
+    LTEXT "大多數語言都會預設安裝。要安裝其他語言，請選取下面相應的核取方塊。", -1, 12, 72, 220, 18
+    CHECKBOX "為複雜字集和從右到左的語言安裝檔案(包括泰文)(&N)", IDC_INST_FILES_FOR_RTOL_LANG, 12, 92, 215, 22, BS_MULTILINE | BS_TOP
+    CHECKBOX "安裝東亞語言檔案(&S)", IDC_INST_FILES_FOR_ASIAN, 12, 114, 180, 22, BS_MULTILINE | BS_TOP
 END
 
 IDD_ADVANCEDPAGE DIALOGEX 0, 0, 246, 230
@@ -50,12 +50,12 @@ FONT 9, "新細明體"
 BEGIN
     GROUPBOX "非 Unicode 程式的語言", -1, 5, 5, 234, 90
     COMBOBOX IDC_LANGUAGE_COMBO, 14, 75, 217, 160, CBS_DROPDOWNLIST | CBS_NOINTEGRALHEIGHT | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | CBS_SORT
-    LTEXT "這個設定啟動某些非 Unicode 程式以便用母語顯示選單和對話。這不會影響到 Unicode 的程式，但是會應用在這部電腦上的所有使用者。", -1, 14, 18, 223, 33
-    LTEXT "選擇一種語言，使之與您想使用的非 Unicode 程式的語言版本相匹配(&S):", -1, 14, 55, 223, 18
+    LTEXT "這個設定讓某些非 Unicode 程式用它們的原始母語顯示功能表和對話方塊。這不會影響到 Unicode 的程式，但是會套用到這部電腦上的所有使用者。", -1, 14, 18, 223, 33
+    LTEXT "選擇一種符合您想使用的非 Unicode 程式的語言版本的語言(&S):", -1, 14, 55, 223, 18
     GROUPBOX "內碼表轉換表(&C)", -1, 5, 101, 234, 88
     CONTROL "", IDC_CONV_TABLES, "SysListView32", LVS_REPORT | LVS_SORTASCENDING | LVS_NOCOLUMNHEADER | WS_BORDER | WS_TABSTOP, 14, 114, 217, 70
-    GROUPBOX "默認使用者帳戶設定", -1, 5, 193, 234, 32
-    CHECKBOX "將所有設定應用於當前使用者帳戶和默認使用者配置檔案(&D)", IDC_APPLY_CUR_USER_DEF_PROFILE, 12, 200, 220, 22, BS_MULTILINE | BS_TOP
+    GROUPBOX "預設使用者帳戶設定", -1, 5, 193, 234, 32
+    CHECKBOX "將所有設定套用於目前的使用者帳戶和預設使用者配置檔案(&D)", IDC_APPLY_CUR_USER_DEF_PROFILE, 12, 200, 220, 22, BS_MULTILINE | BS_TOP
 END
 
 IDD_NUMBERSPAGE DIALOGEX 0, 0, 246, 234

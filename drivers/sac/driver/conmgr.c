@@ -507,7 +507,7 @@ ConMgrProcessInputLine(VOID)
                                   &EnablePaging,
                                   sizeof(EnablePaging),
                                   NULL,
-                                  0);
+                                  NULL);
         if (!NT_SUCCESS(Status)) SAC_DBG(SAC_DBG_INIT, "SAC Display Log failed.\n");
     }
     else if (!strncmp(InputBuffer, "cmd", 3))

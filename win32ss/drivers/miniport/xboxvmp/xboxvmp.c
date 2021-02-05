@@ -19,6 +19,8 @@
 #include <debug.h>
 #include <dpfilter.h>
 
+#include <drivers/xbox/xgpu.h>
+
 /* PUBLIC AND PRIVATE FUNCTIONS ***********************************************/
 
 ULONG
@@ -393,7 +395,7 @@ XboxVmpMapVideoMemory(
     StatusBlock->Information = sizeof(VIDEO_MEMORY_INFORMATION);
 
     /* Reuse framebuffer that was set up by firmware */
-    FrameBuffer.QuadPart = READ_REGISTER_ULONG((ULONG_PTR)DeviceExtension->VirtControlStart + NV2A_CONTROL_FRAMEBUFFER_ADDRESS_OFFSET);
+    FrameBuffer.QuadPart = READ_REGISTER_ULONG((ULONG_PTR)DeviceExtension->VirtControlStart + NV2A_CRTC_FRAMEBUFFER_START);
     /* Framebuffer address offset value is coming from the GPU within
      * memory mapped I/O address space, so we're comparing only low
      * 28 bits of the address within actual RAM address space */
@@ -423,7 +425,7 @@ XboxVmpMapVideoMemory(
     MapInformation->FrameBufferLength = MapInformation->VideoRamLength;
 
     /* Tell the nVidia controller about the framebuffer */
-    WRITE_REGISTER_ULONG((ULONG_PTR)DeviceExtension->VirtControlStart + NV2A_CONTROL_FRAMEBUFFER_ADDRESS_OFFSET, FrameBuffer.u.LowPart);
+    WRITE_REGISTER_ULONG((ULONG_PTR)DeviceExtension->VirtControlStart + NV2A_CRTC_FRAMEBUFFER_START, FrameBuffer.u.LowPart);
 
     INFO_(IHVVIDEO, "Mapped 0x%x bytes of phys mem at 0x%lx to virt addr 0x%p\n",
         MapInformation->VideoRamLength, FrameBuffer.u.LowPart, MapInformation->VideoRamBase);

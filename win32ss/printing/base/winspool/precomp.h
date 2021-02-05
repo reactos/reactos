@@ -62,9 +62,10 @@ extern CRITICAL_SECTION rtlCritSec;
 // utils.c
 DWORD UnicodeToAnsiInPlace(PWSTR pwszField);
 DWORD UnicodeToAnsiZZInPlace(PWSTR pwszzField);
-SECURITY_DESCRIPTOR * get_sd( SECURITY_DESCRIPTOR *sd, DWORD *size );
+SECURITY_DESCRIPTOR * get_sd(SECURITY_DESCRIPTOR *sd, DWORD *size);
 LONG WINAPI IntProtectHandle(HANDLE,BOOL);
 BOOL WINAPI IntUnprotectHandle(HANDLE);
+VOID UpdateTrayIcon(HANDLE hPrinter, DWORD JobId);
 
 // devmode.c
 extern void RosConvertAnsiDevModeToUnicodeDevmode(PDEVMODEA pDevModeInput, PDEVMODEW *pDevModeOutput);

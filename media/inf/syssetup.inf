@@ -24,6 +24,7 @@ ports.inf
 scsi.inf
 unknown.inf
 usbport.inf
+volume.inf
 audio.inf
 ks.inf
 c_image.inf

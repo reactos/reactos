@@ -114,12 +114,6 @@ RtlpWaitForCriticalSection(PRTL_CRITICAL_SECTION CriticalSection)
     EXCEPTION_RECORD ExceptionRecord;
     BOOLEAN LastChance = FALSE;
 
-    /* Do we have an Event yet? */
-    if (!CriticalSection->LockSemaphore)
-    {
-        RtlpCreateCriticalSectionSem(CriticalSection);
-    }
-
     /* Increase the Debug Entry count */
     DPRINT("Waiting on Critical Section Event: %p %p\n",
             CriticalSection,
@@ -136,8 +130,13 @@ RtlpWaitForCriticalSection(PRTL_CRITICAL_SECTION CriticalSection)
         LdrpShutdownThreadId == NtCurrentTeb()->RealClientId.UniqueThread)
     {
         DPRINT("Forcing ownership of critical section %p\n", CriticalSection);
-        CriticalSection->LockCount = 0;
         return STATUS_SUCCESS;
+    }
+
+    /* Do we have an Event yet? */
+    if (!CriticalSection->LockSemaphore)
+    {
+        RtlpCreateCriticalSectionSem(CriticalSection);
     }
 
     for (;;)
@@ -715,9 +714,13 @@ RtlLeaveCriticalSection(PRTL_CRITICAL_SECTION CriticalSection)
      */
     if (--CriticalSection->RecursionCount)
     {
+        if (CriticalSection->RecursionCount < 0)
+        {
+            DPRINT1("CRITICAL SECTION MESS: Section %p is not acquired!\n", CriticalSection);
+            return STATUS_UNSUCCESSFUL;
+        }
         /* Someone still owns us, but we are free. This needs to be done atomically. */
         InterlockedDecrement(&CriticalSection->LockCount);
-
     }
     else
     {

@@ -1393,12 +1393,13 @@ HalpGetFullGeometry(IN PDEVICE_OBJECT DeviceObject,
     IO_STATUS_BLOCK IoStatusBlock;
     PKEVENT Event;
     NTSTATUS Status;
+
     PAGED_CODE();
 
     /* Allocate a non-paged event */
     Event = ExAllocatePoolWithTag(NonPagedPool,
-                                     sizeof(KEVENT),
-                                     TAG_FILE_SYSTEM);
+                                  sizeof(KEVENT),
+                                  TAG_FILE_SYSTEM);
     if (!Event) return STATUS_INSUFFICIENT_RESOURCES;
 
     /* Initialize it */
@@ -1406,14 +1407,14 @@ HalpGetFullGeometry(IN PDEVICE_OBJECT DeviceObject,
 
     /* Build the IRP */
     Irp = IoBuildDeviceIoControlRequest(IOCTL_DISK_GET_DRIVE_GEOMETRY_EX,
-                                             DeviceObject,
-                                             NULL,
-                                             0UL,
-                                             Geometry,
-                                             sizeof(DISK_GEOMETRY_EX),
-                                             FALSE,
-                                             Event,
-                                             &IoStatusBlock);
+                                        DeviceObject,
+                                        NULL,
+                                        0UL,
+                                        Geometry,
+                                        sizeof(DISK_GEOMETRY_EX),
+                                        FALSE,
+                                        Event,
+                                        &IoStatusBlock);
     if (!Irp)
     {
         /* Fail, free the event */
@@ -1448,7 +1449,7 @@ HalpIsValidPartitionEntry(IN PPARTITION_DESCRIPTOR Entry,
     if (Entry->PartitionType == PARTITION_ENTRY_UNUSED) return TRUE;
 
     /* Get the last sector of the partition */
-    EndingSector = GET_STARTING_SECTOR(Entry) +  GET_PARTITION_LENGTH(Entry);
+    EndingSector = GET_STARTING_SECTOR(Entry) + GET_PARTITION_LENGTH(Entry);
 
     /* Check if it's more then the maximum sector */
     if (EndingSector > MaxSector)
@@ -1461,7 +1462,7 @@ HalpIsValidPartitionEntry(IN PPARTITION_DESCRIPTOR Entry,
         DPRINT1("FSTUB: max %#I64x\n", MaxSector);
         return FALSE;
     }
-    else if(GET_STARTING_SECTOR(Entry) > MaxOffset)
+    else if (GET_STARTING_SECTOR(Entry) > MaxOffset)
     {
         /* Invalid partition */
         DPRINT1("FSTUB: entry is invalid\n");
@@ -1653,19 +1654,19 @@ xHalExamineMBR(IN PDEVICE_OBJECT DeviceObject,
     PPARTITION_DESCRIPTOR PartitionDescriptor;
     NTSTATUS Status;
     PIO_STACK_LOCATION IoStackLocation;
+
     Offset.QuadPart = 0;
 
     /* Assume failure */
     *MbrBuffer = NULL;
 
     /* Normalize the buffer size */
-    BufferSize = max(SectorSize, 512);
+    BufferSize = max(512, SectorSize);
 
     /* Allocate the buffer */
     Buffer = ExAllocatePoolWithTag(NonPagedPool,
-                                       PAGE_SIZE > BufferSize ?
-                                       PAGE_SIZE : BufferSize,
-                                       TAG_FILE_SYSTEM);
+                                   max(PAGE_SIZE, BufferSize),
+                                   TAG_FILE_SYSTEM);
     if (!Buffer) return;
 
     /* Initialize the Event */
@@ -1703,7 +1704,7 @@ xHalExamineMBR(IN PDEVICE_OBJECT DeviceObject,
     if (NT_SUCCESS(Status))
     {
         /* Validate the MBR Signature */
-        if (((PUSHORT)Buffer)[BOOT_SIGNATURE_OFFSET] != BOOT_RECORD_SIGNATURE)
+        if (*(PUINT16)&Buffer[BOOT_SIGNATURE_OFFSET] != BOOT_RECORD_SIGNATURE)
         {
             /* Failed */
             ExFreePoolWithTag(Buffer, TAG_FILE_SYSTEM);
@@ -1711,8 +1712,7 @@ xHalExamineMBR(IN PDEVICE_OBJECT DeviceObject,
         }
 
         /* Get the partition entry */
-        PartitionDescriptor = (PPARTITION_DESCRIPTOR)
-                               &(((PUSHORT)Buffer)[PARTITION_TABLE_OFFSET]);
+        PartitionDescriptor = (PPARTITION_DESCRIPTOR)&Buffer[PARTITION_TABLE_OFFSET];
 
         /* Make sure it's what the caller wanted */
         if (PartitionDescriptor->PartitionType != MbrTypeIdentifier)
@@ -1722,22 +1722,23 @@ xHalExamineMBR(IN PDEVICE_OBJECT DeviceObject,
         }
         else
         {
-            /* Check if this is a secondary entry */
-            if (PartitionDescriptor->PartitionType == 0x54)
+            /* Check for OnTrack Disk Manager 6.0 / EZ-Drive partitions */
+
+            if (PartitionDescriptor->PartitionType == PARTITION_DM)
             {
                 /* Return our buffer, but at sector 63 */
                 *(PULONG)Buffer = 63;
                 *MbrBuffer = Buffer;
             }
-            else if (PartitionDescriptor->PartitionType == 0x55)
+            else if (PartitionDescriptor->PartitionType == PARTITION_EZDRIVE)
             {
-                /* EZ Drive, return the buffer directly */
+                /* EZ-Drive, return the buffer directly */
                 *MbrBuffer = Buffer;
             }
             else
             {
                 /* Otherwise crash on debug builds */
-                ASSERT(PartitionDescriptor->PartitionType == 0x55);
+                ASSERT(PartitionDescriptor->PartitionType == PARTITION_EZDRIVE);
             }
         }
     }
@@ -1789,8 +1790,10 @@ xHalIoReadPartitionTable(IN PDEVICE_OBJECT DeviceObject,
     PIO_STACK_LOCATION IoStackLocation;
     UCHAR PartitionType;
     LARGE_INTEGER HiddenSectors64;
-    VolumeOffset.QuadPart = Offset.QuadPart = 0;
+
     PAGED_CODE();
+
+    VolumeOffset.QuadPart = Offset.QuadPart = 0;
 
     /* Allocate the buffer */
     *PartitionBuffer = ExAllocatePoolWithTag(NonPagedPool,
@@ -1801,11 +1804,11 @@ xHalIoReadPartitionTable(IN PDEVICE_OBJECT DeviceObject,
     /* Normalize the buffer size */
     InputSize = max(512, SectorSize);
 
-    /* Check for EZ Drive */
-    HalExamineMBR(DeviceObject, InputSize, 0x55, &MbrBuffer);
+    /* Check for EZ-Drive */
+    HalExamineMBR(DeviceObject, InputSize, PARTITION_EZDRIVE, &MbrBuffer);
     if (MbrBuffer)
     {
-        /* EZ Drive found, bias the offset */
+        /* EZ-Drive found, bias the offset */
         IsEzDrive = TRUE;
         ExFreePoolWithTag(MbrBuffer, TAG_FILE_SYSTEM);
         Offset.QuadPart = 512;
@@ -1827,7 +1830,7 @@ xHalIoReadPartitionTable(IN PDEVICE_OBJECT DeviceObject,
             DiskGeometryEx.DiskSize, MaxSector);
 
     /* Allocate our buffer */
-    Buffer = ExAllocatePoolWithTag(NonPagedPool, InputSize, TAG_FILE_SYSTEM);
+    Buffer = ExAllocatePoolWithTag(NonPagedPoolCacheAligned, InputSize, TAG_FILE_SYSTEM);
     if (!Buffer)
     {
         /* Fail, free the input buffer */
@@ -1882,7 +1885,7 @@ xHalIoReadPartitionTable(IN PDEVICE_OBJECT DeviceObject,
         if (IsEzDrive && (Offset.QuadPart == 512)) Offset.QuadPart = 0;
 
         /* Make sure this is a valid MBR */
-        if (((PUSHORT)Buffer)[BOOT_SIGNATURE_OFFSET] != BOOT_RECORD_SIGNATURE)
+        if (*(PUINT16)&Buffer[BOOT_SIGNATURE_OFFSET] != BOOT_RECORD_SIGNATURE)
         {
             /* It's not, fail */
             DPRINT1("FSTUB: (IoReadPartitionTable) No 0xaa55 found in "
@@ -1897,17 +1900,16 @@ xHalIoReadPartitionTable(IN PDEVICE_OBJECT DeviceObject,
         if (!Offset.QuadPart)
         {
             /* Then read the signature off the disk */
-            (*PartitionBuffer)->Signature = ((PULONG)Buffer)[PARTITION_TABLE_OFFSET / 2 - 1];
+            (*PartitionBuffer)->Signature = *(PUINT32)&Buffer[DISK_SIGNATURE_OFFSET];
         }
 
         /* Get the partition descriptor array */
-        PartitionDescriptor = (PPARTITION_DESCRIPTOR)
-                               &(((PUSHORT)Buffer)[PARTITION_TABLE_OFFSET]);
+        PartitionDescriptor = (PPARTITION_DESCRIPTOR)&Buffer[PARTITION_TABLE_OFFSET];
 
         /* Start looping partitions */
         j++;
         DPRINT("FSTUB: Partition Table %d:\n", j);
-        for (Entry = 1, k = 0; Entry <= 4; Entry++, PartitionDescriptor++)
+        for (Entry = 1, k = 0; Entry <= NUM_PARTITION_TABLE_ENTRIES; Entry++, PartitionDescriptor++)
         {
             /* Get the partition type */
             PartitionType = PartitionDescriptor->PartitionType;
@@ -1989,7 +1991,7 @@ xHalIoReadPartitionTable(IN PDEVICE_OBJECT DeviceObject,
                                                         TAG_FILE_SYSTEM);
                 if (!DriveLayoutInfo)
                 {
-                    /* Out of memory, unto this extra structure */
+                    /* Out of memory, undo this extra structure */
                     --i;
                     Status = STATUS_INSUFFICIENT_RESOURCES;
                     break;
@@ -2054,6 +2056,7 @@ xHalIoReadPartitionTable(IN PDEVICE_OBJECT DeviceObject,
                                   SectorSize);
 
                 /* Get the partition number */
+                /* FIXME: REACTOS HACK -- Needed for xHalIoAssignDriveLetters() */
                 PartitionInfo->PartitionNumber = (!IsContainerPartition(PartitionType)) ? i + 1 : 0;
             }
             else
@@ -2065,6 +2068,7 @@ xHalIoReadPartitionTable(IN PDEVICE_OBJECT DeviceObject,
                 PartitionInfo->PartitionLength.QuadPart = 0;
                 PartitionInfo->HiddenSectors = 0;
 
+                /* FIXME: REACTOS HACK -- Needed for xHalIoAssignDriveLetters() */
                 PartitionInfo->PartitionNumber = 0;
             }
         }
@@ -2085,9 +2089,8 @@ xHalIoReadPartitionTable(IN PDEVICE_OBJECT DeviceObject,
         Offset.QuadPart = 0;
 
         /* Go back to the descriptor array and loop it */
-        PartitionDescriptor = (PPARTITION_DESCRIPTOR)
-                               &(((PUSHORT)Buffer)[PARTITION_TABLE_OFFSET]);
-        for (Entry = 1; Entry <= 4; Entry++, PartitionDescriptor++)
+        PartitionDescriptor = (PPARTITION_DESCRIPTOR)&Buffer[PARTITION_TABLE_OFFSET];
+        for (Entry = 1; Entry <= NUM_PARTITION_TABLE_ENTRIES; Entry++, PartitionDescriptor++)
         {
             /* Check if this is a container partition, since we skipped them */
             if (IsContainerPartition(PartitionDescriptor->PartitionType))
@@ -2159,7 +2162,7 @@ xHalIoReadPartitionTable(IN PDEVICE_OBJECT DeviceObject,
                 PartitionInfo->StartingOffset.QuadPart = 0;
                 PartitionInfo->PartitionLength = DiskGeometryEx.DiskSize;
 
-                /* FIXME: REACTOS HACK */
+                /* FIXME: REACTOS HACK -- Needed for xHalIoAssignDriveLetters() */
                 PartitionInfo->PartitionNumber = 0;
 
                 /* Set the signature and set the count back to 0 */
@@ -2212,24 +2215,26 @@ xHalIoSetPartitionInformation(IN PDEVICE_OBJECT DeviceObject,
     BOOLEAN IsPrimary = TRUE, IsEzDrive = FALSE;
     PVOID MbrBuffer;
     PIO_STACK_LOCATION IoStackLocation;
-    VolumeOffset.QuadPart = Offset.QuadPart = 0;
+
     PAGED_CODE();
+
+    VolumeOffset.QuadPart = Offset.QuadPart = 0;
 
     /* Normalize the buffer size */
     BufferSize = max(512, SectorSize);
 
-    /* Check for EZ Drive */
-    HalExamineMBR(DeviceObject, BufferSize, 0x55, &MbrBuffer);
+    /* Check for EZ-Drive */
+    HalExamineMBR(DeviceObject, BufferSize, PARTITION_EZDRIVE, &MbrBuffer);
     if (MbrBuffer)
     {
-        /* EZ Drive found, bias the offset */
+        /* EZ-Drive found, bias the offset */
         IsEzDrive = TRUE;
         ExFreePoolWithTag(MbrBuffer, TAG_FILE_SYSTEM);
         Offset.QuadPart = 512;
     }
 
     /* Allocate our partition buffer */
-    Buffer = ExAllocatePoolWithTag(NonPagedPool, PAGE_SIZE, TAG_FILE_SYSTEM);
+    Buffer = ExAllocatePoolWithTag(NonPagedPoolCacheAligned, PAGE_SIZE, TAG_FILE_SYSTEM);
     if (!Buffer) return STATUS_INSUFFICIENT_RESOURCES;
 
     /* Initialize the event we'll use and loop partitions */
@@ -2274,7 +2279,7 @@ xHalIoSetPartitionInformation(IN PDEVICE_OBJECT DeviceObject,
         if (IsEzDrive && (Offset.QuadPart == 512)) Offset.QuadPart = 0;
 
         /* Make sure this is a valid MBR */
-        if (((PUSHORT)Buffer)[BOOT_SIGNATURE_OFFSET] != BOOT_RECORD_SIGNATURE)
+        if (*(PUINT16)&Buffer[BOOT_SIGNATURE_OFFSET] != BOOT_RECORD_SIGNATURE)
         {
             /* It's not, fail */
             Status = STATUS_BAD_MASTER_BOOT_RECORD;
@@ -2282,13 +2287,11 @@ xHalIoSetPartitionInformation(IN PDEVICE_OBJECT DeviceObject,
         }
 
         /* Get the partition descriptors and loop them */
-        PartitionDescriptor = (PPARTITION_DESCRIPTOR)
-                              &(((PUSHORT)Buffer)[PARTITION_TABLE_OFFSET]);
-        for (Entry = 1; Entry <= 4; Entry++, PartitionDescriptor++)
+        PartitionDescriptor = (PPARTITION_DESCRIPTOR)&Buffer[PARTITION_TABLE_OFFSET];
+        for (Entry = 1; Entry <= NUM_PARTITION_TABLE_ENTRIES; Entry++, PartitionDescriptor++)
         {
             /* Check if it's unused or a container partition */
-            if ((PartitionDescriptor->PartitionType ==
-                 PARTITION_ENTRY_UNUSED) ||
+            if ((PartitionDescriptor->PartitionType == PARTITION_ENTRY_UNUSED) ||
                 (IsContainerPartition(PartitionDescriptor->PartitionType)))
             {
                 /* Go to the next one */
@@ -2345,9 +2348,8 @@ xHalIoSetPartitionInformation(IN PDEVICE_OBJECT DeviceObject,
         if (Entry <= NUM_PARTITION_TABLE_ENTRIES) break;
 
         /* Nothing found yet, get the partition array again */
-        PartitionDescriptor = (PPARTITION_DESCRIPTOR)
-                               &(((PUSHORT)Buffer)[PARTITION_TABLE_OFFSET]);
-        for (Entry = 1; Entry <= 4; Entry++, PartitionDescriptor++)
+        PartitionDescriptor = (PPARTITION_DESCRIPTOR)&Buffer[PARTITION_TABLE_OFFSET];
+        for (Entry = 1; Entry <= NUM_PARTITION_TABLE_ENTRIES; Entry++, PartitionDescriptor++)
         {
             /* Check if this was a container partition (we skipped these) */
             if (IsContainerPartition(PartitionDescriptor->PartitionType))
@@ -2393,7 +2395,7 @@ xHalIoWritePartitionTable(IN PDEVICE_OBJECT DeviceObject,
     PIRP Irp;
     NTSTATUS Status = STATUS_SUCCESS;
     ULONG BufferSize;
-    PUSHORT Buffer;
+    PUCHAR Buffer;
     PPTE Entry;
     PPARTITION_TABLE PartitionTable;
     LARGE_INTEGER Offset, NextOffset, ExtendedOffset, SectorOffset;
@@ -2409,8 +2411,10 @@ xHalIoWritePartitionTable(IN PDEVICE_OBJECT DeviceObject,
     PIO_STACK_LOCATION IoStackLocation;
     PPARTITION_INFORMATION PartitionInfo = PartitionBuffer->PartitionEntry;
     PPARTITION_INFORMATION TableEntry;
-    ExtendedOffset.QuadPart = NextOffset.QuadPart = Offset.QuadPart = 0;
+
     PAGED_CODE();
+
+    ExtendedOffset.QuadPart = NextOffset.QuadPart = Offset.QuadPart = 0;
 
     /* Normalize the buffer size */
     BufferSize = max(512, SectorSize);
@@ -2418,11 +2422,11 @@ xHalIoWritePartitionTable(IN PDEVICE_OBJECT DeviceObject,
     /* Get the partial drive geometry */
     xHalGetPartialGeometry(DeviceObject, &ConventionalCylinders, &DiskSize);
 
-    /* Check for EZ Drive */
-    HalExamineMBR(DeviceObject, BufferSize, 0x55, &MbrBuffer);
+    /* Check for EZ-Drive */
+    HalExamineMBR(DeviceObject, BufferSize, PARTITION_EZDRIVE, &MbrBuffer);
     if (MbrBuffer)
     {
-        /* EZ Drive found, bias the offset */
+        /* EZ-Drive found, bias the offset */
         IsEzDrive = TRUE;
         ExFreePoolWithTag(MbrBuffer, TAG_FILE_SYSTEM);
         Offset.QuadPart = 512;
@@ -2450,17 +2454,17 @@ xHalIoWritePartitionTable(IN PDEVICE_OBJECT DeviceObject,
                 return STATUS_INVALID_PARAMETER;
             }
 
-            /* Check if it needs a rewrite, and disable EZ drive for sure */
+            /* Check if it needs a rewrite, and disable EZ-Drive for sure */
             if (PartitionInfo->RewritePartition) DoRewrite = TRUE;
             IsEzDrive = FALSE;
         }
     }
 
     /* Count the number of partition tables */
-    DiskLayout->TableCount = (PartitionBuffer->PartitionCount + 4 - 1) / 4;
+    DiskLayout->TableCount = (PartitionBuffer->PartitionCount + NUM_PARTITION_TABLE_ENTRIES - 1) / NUM_PARTITION_TABLE_ENTRIES;
 
     /* Allocate our partition buffer */
-    Buffer = ExAllocatePoolWithTag(NonPagedPool, PAGE_SIZE, TAG_FILE_SYSTEM);
+    Buffer = ExAllocatePoolWithTag(NonPagedPoolCacheAligned, PAGE_SIZE, TAG_FILE_SYSTEM);
     if (!Buffer) return STATUS_INSUFFICIENT_RESOURCES;
 
     /* Loop the entries */
@@ -2511,7 +2515,7 @@ xHalIoWritePartitionTable(IN PDEVICE_OBJECT DeviceObject,
         if (!IsSuperFloppy)
         {
             /* Set the boot record signature */
-            Buffer[BOOT_SIGNATURE_OFFSET] = BOOT_RECORD_SIGNATURE;
+            *(PUINT16)&Buffer[BOOT_SIGNATURE_OFFSET] = BOOT_RECORD_SIGNATURE;
 
             /* By default, don't require a rewrite */
             DoRewrite = FALSE;
@@ -2520,19 +2524,17 @@ xHalIoWritePartitionTable(IN PDEVICE_OBJECT DeviceObject,
             if (!Offset.QuadPart)
             {
                 /* Check if the signature doesn't match */
-                if (((PULONG)Buffer)[PARTITION_TABLE_OFFSET / 2 - 1] !=
-                    PartitionBuffer->Signature)
+                if (*(PUINT32)&Buffer[DISK_SIGNATURE_OFFSET] != PartitionBuffer->Signature)
                 {
                     /* Then write the signature and now we need a rewrite */
-                    ((PULONG)Buffer)[PARTITION_TABLE_OFFSET / 2 - 1] =
-                        PartitionBuffer->Signature;
+                    *(PUINT32)&Buffer[DISK_SIGNATURE_OFFSET] = PartitionBuffer->Signature;
                     DoRewrite = TRUE;
                 }
             }
 
             /* Loop the partition table entries */
             PartitionTable = &DiskLayout->PartitionTable[i];
-            for (j = 0; j < 4; j++)
+            for (j = 0; j < NUM_PARTITION_TABLE_ENTRIES; j++)
             {
                 /* Get the current entry and type */
                 TableEntry = &PartitionTable->PartitionEntry[j];
@@ -2618,7 +2620,7 @@ xHalIoWritePartitionTable(IN PDEVICE_OBJECT DeviceObject,
             KeInitializeEvent(&Event, NotificationEvent, FALSE);
 
             /* If we unbiased for EZ-Drive, rebias now */
-            if ((IsEzDrive) && !(Offset.QuadPart)) Offset.QuadPart = 512;
+            if (IsEzDrive && !Offset.QuadPart) Offset.QuadPart = 512;
 
             /* Build the write IRP */
             Irp = IoBuildSynchronousFsdRequest(IRP_MJ_WRITE,

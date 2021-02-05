@@ -11,8 +11,6 @@
 
 WINE_DEFAULT_DEBUG_CHANNEL(shcn);
 
-// TODO: SHCNRF_RecursiveInterrupt
-
 //////////////////////////////////////////////////////////////////////////////
 
 // notification target item
@@ -188,10 +186,6 @@ CreateDirectoryWatcherFromRegEntry(LPREGENTRY pRegEntry)
     if (pRegEntry->ibPidl == 0)
         return NULL;
 
-    // it must be interrupt level if pRegEntry is a filesystem watch
-    if (!(pRegEntry->fSources & SHCNRF_InterruptLevel))
-        return NULL;
-
     // get the path
     WCHAR szPath[MAX_PATH];
     LPITEMIDLIST pidl = (LPITEMIDLIST)((LPBYTE)pRegEntry + pRegEntry->ibPidl);
@@ -249,13 +243,18 @@ LRESULT CChangeNotifyServer::OnRegister(UINT uMsg, WPARAM wParam, LPARAM lParam,
     }
 
     // create a directory watch if necessary
-    CDirectoryWatcher *pDirWatch = CreateDirectoryWatcherFromRegEntry(pRegEntry);
-    if (pDirWatch && !pDirWatch->RequestAddWatcher())
+    CDirectoryWatcher *pDirWatch = NULL;
+    if (pRegEntry->ibPidl && (pRegEntry->fSources & SHCNRF_InterruptLevel))
     {
-        pRegEntry->nRegID = INVALID_REG_ID;
-        SHUnlockShared(pRegEntry);
-        delete pDirWatch;
-        return FALSE;
+        pDirWatch = CreateDirectoryWatcherFromRegEntry(pRegEntry);
+        if (pDirWatch && !pDirWatch->RequestAddWatcher())
+        {
+            ERR("RequestAddWatcher failed: %u\n", pRegEntry->nRegID);
+            pRegEntry->nRegID = INVALID_REG_ID;
+            SHUnlockShared(pRegEntry);
+            delete pDirWatch;
+            return FALSE;
+        }
     }
 
     // unlock the registry entry
@@ -386,6 +385,7 @@ BOOL CChangeNotifyServer::DeliverNotification(HANDLE hTicket, DWORD dwOwnerPID)
             TRACE("Notifying: %p, 0x%x, %p, %lu\n",
                   pRegEntry->hwnd, pRegEntry->uMsg, hTicket, dwOwnerPID);
             SendMessageW(pRegEntry->hwnd, pRegEntry->uMsg, (WPARAM)hTicket, dwOwnerPID);
+            TRACE("GetLastError(): %ld\n", ::GetLastError());
         }
 
         // unlock the registration entry
@@ -400,91 +400,58 @@ BOOL CChangeNotifyServer::DeliverNotification(HANDLE hTicket, DWORD dwOwnerPID)
 
 BOOL CChangeNotifyServer::ShouldNotify(LPDELITICKET pTicket, LPREGENTRY pRegEntry)
 {
-    LPITEMIDLIST pidl, pidl1 = NULL, pidl2 = NULL;
-    WCHAR szPath[MAX_PATH], szPath1[MAX_PATH], szPath2[MAX_PATH];
-    INT cch, cch1, cch2;
+#define RETURN(x) do { \
+    TRACE("ShouldNotify return %d\n", (x)); \
+    return (x); \
+} while (0)
 
-    // check fSources
-    if (pTicket->uFlags & SHCNE_INTERRUPT)
+    if (pTicket->wEventId & SHCNE_INTERRUPT)
     {
         if (!(pRegEntry->fSources & SHCNRF_InterruptLevel))
-            return FALSE;
+            RETURN(FALSE);
+        if (!pRegEntry->ibPidl)
+            RETURN(FALSE);
     }
     else
     {
         if (!(pRegEntry->fSources & SHCNRF_ShellLevel))
-            return FALSE;
+            RETURN(FALSE);
     }
 
-    if (pRegEntry->ibPidl == 0)
-        return TRUE; // there is no PIDL
+    if (!(pTicket->wEventId & pRegEntry->fEvents))
+        RETURN(FALSE);
 
-    // get the stored pidl
-    pidl = (LPITEMIDLIST)((LPBYTE)pRegEntry + pRegEntry->ibPidl);
-    if (pidl->mkid.cb == 0 && pRegEntry->fRecursive)
-        return TRUE;    // desktop is the root
-
-    // check pidl1
+    LPITEMIDLIST pidl = NULL, pidl1 = NULL, pidl2 = NULL;
+    if (pRegEntry->ibPidl)
+        pidl = (LPITEMIDLIST)((LPBYTE)pRegEntry + pRegEntry->ibPidl);
     if (pTicket->ibOffset1)
-    {
         pidl1 = (LPITEMIDLIST)((LPBYTE)pTicket + pTicket->ibOffset1);
-        if (ILIsEqual(pidl, pidl1) || ILIsParent(pidl, pidl1, !pRegEntry->fRecursive))
-            return TRUE;
-    }
-
-    // check pidl2
     if (pTicket->ibOffset2)
-    {
         pidl2 = (LPITEMIDLIST)((LPBYTE)pTicket + pTicket->ibOffset2);
-        if (ILIsEqual(pidl, pidl2) || ILIsParent(pidl, pidl2, !pRegEntry->fRecursive))
-            return TRUE;
-    }
 
-    // The paths:
-    //   "C:\\Path\\To\\File1"
-    //   "C:\\Path\\To\\File1Test"
-    // should be distinguished in comparison, so we add backslash at last as follows:
-    //   "C:\\Path\\To\\File1\\"
-    //   "C:\\Path\\To\\File1Test\\"
-    if (SHGetPathFromIDListW(pidl, szPath))
+    if (pidl == NULL || (pTicket->wEventId & SHCNE_GLOBALEVENTS))
+        RETURN(TRUE);
+
+    if (pRegEntry->fRecursive)
     {
-        PathAddBackslashW(szPath);
-        cch = lstrlenW(szPath);
-
-        if (pidl1 && SHGetPathFromIDListW(pidl1, szPath1))
+        if (ILIsParent(pidl, pidl1, FALSE) ||
+            (pidl2 && ILIsParent(pidl, pidl2, FALSE)))
         {
-            PathAddBackslashW(szPath1);
-            cch1 = lstrlenW(szPath1);
-
-            // Is szPath1 a subfile or subdirectory of szPath?
-            if (cch < cch1 &&
-                (pRegEntry->fRecursive ||
-                 wcschr(&szPath1[cch], L'\\') == &szPath1[cch1 - 1]))
-            {
-                szPath1[cch] = 0;
-                if (lstrcmpiW(szPath, szPath1) == 0)
-                    return TRUE;
-            }
+            RETURN(TRUE);
         }
-
-        if (pidl2 && SHGetPathFromIDListW(pidl2, szPath2))
+    }
+    else
+    {
+        if (ILIsEqual(pidl, pidl1) ||
+            ILIsParent(pidl, pidl1, TRUE) ||
+            (pidl2 && ILIsParent(pidl, pidl2, TRUE)))
         {
-            PathAddBackslashW(szPath2);
-            cch2 = lstrlenW(szPath2);
-
-            // Is szPath2 a subfile or subdirectory of szPath?
-            if (cch < cch2 &&
-                (pRegEntry->fRecursive ||
-                 wcschr(&szPath2[cch], L'\\') == &szPath2[cch2 - 1]))
-            {
-                szPath2[cch] = 0;
-                if (lstrcmpiW(szPath, szPath2) == 0)
-                    return TRUE;
-            }
+            RETURN(TRUE);
         }
     }
 
-    return FALSE;
+    RETURN(FALSE);
+#undef RETURN
 }
 
 HRESULT WINAPI CChangeNotifyServer::GetWindow(HWND* phwnd)

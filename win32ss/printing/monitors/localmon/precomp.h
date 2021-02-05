@@ -27,6 +27,9 @@ WINE_DEFAULT_DEBUG_CHANNEL(localmon);
 
 #include "resource.h"
 
+#define SIGLCMMON  'FrCN'
+#define SIGLCMPORT 'FrHK'
+
 // Structures
 /**
  * Describes the monitor handle returned by InitializePrintMonitor2.
@@ -35,6 +38,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(localmon);
 typedef struct _LOCALMON_HANDLE
 {
     CRITICAL_SECTION Section;       /** Critical Section for modifying or reading the ports. */
+    DWORD Sig;
     LIST_ENTRY FilePorts;           /** Ports created when a document is printed on FILE: and the user entered a file name. */
     LIST_ENTRY RegistryPorts;       /** Valid ports loaded from the local registry. */
     LIST_ENTRY XcvHandles;          /** Xcv handles created with LocalmonXcvOpenPort. */
@@ -48,6 +52,9 @@ LOCALMON_HANDLE, *PLOCALMON_HANDLE;
 typedef struct _LOCALMON_PORT
 {
     LIST_ENTRY Entry;
+    PWSTR pwszPortName;             /** The name of this port including the trailing colon. Empty for virtual file ports. */
+    PLOCALMON_HANDLE pLocalmon;     /** Pointer to the parent LOCALMON_HANDLE structure. */
+    DWORD Sig;
     enum {
         PortType_Other = 0,         /** Any port that doesn't belong into the other categories (default). */
         PortType_FILE,              /** A port created when a document is printed on FILE: and the user entered a file name. */
@@ -59,9 +66,7 @@ typedef struct _LOCALMON_PORT
     DWORD dwJobID;                  /** ID of the printing job we are processing (for later reporting progress using SetJobW). */
     HANDLE hFile;                   /** Handle to the opened port or INVALID_HANDLE_VALUE if it isn't currently opened. */
     HANDLE hPrinter;                /** Handle to the printer for the job on this port (for using SetJobW). */
-    PLOCALMON_HANDLE pLocalmon;     /** Pointer to the parent LOCALMON_HANDLE structure. */
     PWSTR pwszMapping;              /** The current mapping of the DOS Device corresponding to this port at the time _CreateNonspooledPort has been called. */
-    PWSTR pwszPortName;             /** The name of this port including the trailing colon. Empty for virtual file ports. */
 }
 LOCALMON_PORT, *PLOCALMON_PORT;
 
@@ -95,11 +100,16 @@ BOOL WINAPI LocalmonReadPort(HANDLE hPort, PBYTE pBuffer, DWORD cbBuffer, PDWORD
 BOOL WINAPI LocalmonSetPortTimeOuts(HANDLE hPort, LPCOMMTIMEOUTS lpCTO, DWORD Reserved);
 BOOL WINAPI LocalmonStartDocPort(HANDLE hPort, PWSTR pPrinterName, DWORD JobId, DWORD Level, PBYTE pDocInfo);
 BOOL WINAPI LocalmonWritePort(HANDLE hPort, PBYTE pBuffer, DWORD cbBuf, PDWORD pcbWritten);
+BOOL WINAPI LocalmonAddPort( HANDLE hMonitor, LPWSTR pName, HWND hWnd, LPWSTR pMonitorName );
+BOOL WINAPI LocalmonAddPortEx( HANDLE hMonitor, LPWSTR pName, DWORD Level, LPBYTE lpBuffer, LPWSTR lpMonitorName );
+BOOL WINAPI LocalmonConfigurePort( HANDLE hMonitor, LPWSTR pName, HWND hWnd, LPWSTR pPortName );
+BOOL WINAPI LocalmonDeletePort( HANDLE hMonitor, LPWSTR pName, HWND hWnd, LPWSTR pPortName );
 
 // tools.c
 BOOL DoesPortExist(PCWSTR pwszPortName);
 DWORD GetLPTTransmissionRetryTimeout(VOID);
 DWORD GetPortNameWithoutColon(PCWSTR pwszPortName, PWSTR* ppwszPortNameWithoutColon);
+DWORD GetTypeFromName(LPCWSTR name);
 
 // xcv.c
 BOOL WINAPI LocalmonXcvClosePort(HANDLE hXcv);

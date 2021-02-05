@@ -12,7 +12,9 @@ WINE_DEFAULT_DEBUG_CHANNEL(shell);
 CMoveToMenu::CMoveToMenu() :
     m_idCmdFirst(0),
     m_idCmdLast(0),
-    m_idCmdMoveTo(-1)
+    m_idCmdMoveTo(-1),
+    m_fnOldWndProc(NULL),
+    m_bIgnoreTextBoxChange(FALSE)
 {
 }
 
@@ -20,19 +22,44 @@ CMoveToMenu::~CMoveToMenu()
 {
 }
 
-#define WM_ENABLEOK (WM_USER + 0x2000)
-
 static LRESULT CALLBACK
 WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
+    WCHAR szPath[MAX_PATH];
     CMoveToMenu *this_ =
         reinterpret_cast<CMoveToMenu *>(GetWindowLongPtr(hwnd, GWLP_USERDATA));
 
     switch (uMsg)
     {
-        case WM_ENABLEOK:
-            SendMessageW(hwnd, BFFM_ENABLEOK, 0, (BOOL)lParam);
-            return 0;
+        case WM_COMMAND:
+        {
+            switch (LOWORD(wParam))
+            {
+                case IDC_BROWSE_FOR_FOLDER_FOLDER_TEXT:
+                {
+                    if (HIWORD(wParam) == EN_CHANGE)
+                    {
+                        if (!this_->m_bIgnoreTextBoxChange)
+                        {
+                            // get the text
+                            GetDlgItemTextW(hwnd, IDC_BROWSE_FOR_FOLDER_FOLDER_TEXT, szPath, _countof(szPath));
+                            StrTrimW(szPath, L" \t");
+
+                            // update OK button
+                            BOOL bValid = !PathIsRelative(szPath) && PathIsDirectoryW(szPath);
+                            SendMessageW(hwnd, BFFM_ENABLEOK, 0, bValid);
+
+                            return 0;
+                        }
+
+                        // reset flag
+                        this_->m_bIgnoreTextBoxChange = FALSE;
+                    }
+                    break;
+                }
+            }
+            break;
+        }
     }
     return CallWindowProcW(this_->m_fnOldWndProc, hwnd, uMsg, wParam, lParam);
 }
@@ -68,7 +95,7 @@ BrowseCallbackProc(HWND hwnd, UINT uMsg, LPARAM lParam, LPARAM lpData)
                     SetWindowLongPtr(hwnd, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(WindowProc)));
 
             // Disable OK
-            PostMessageW(hwnd, WM_ENABLEOK, 0, FALSE);
+            PostMessageW(hwnd, BFFM_ENABLEOK, 0, FALSE);
             break;
         }
         case BFFM_SELCHANGED:
@@ -80,11 +107,14 @@ BrowseCallbackProc(HWND hwnd, UINT uMsg, LPARAM lParam, LPARAM lpData)
             SHGetPathFromIDListW(pidl, szPath);
 
             if (ILIsEqual(pidl, this_->m_pidlFolder))
-                PostMessageW(hwnd, WM_ENABLEOK, 0, FALSE);
+                PostMessageW(hwnd, BFFM_ENABLEOK, 0, FALSE);
             else if (PathFileExistsW(szPath) || _ILIsDesktop(pidl))
-                PostMessageW(hwnd, WM_ENABLEOK, 0, TRUE);
+                PostMessageW(hwnd, BFFM_ENABLEOK, 0, TRUE);
             else
-                PostMessageW(hwnd, WM_ENABLEOK, 0, FALSE);
+                PostMessageW(hwnd, BFFM_ENABLEOK, 0, FALSE);
+
+            // the text box will be updated later soon, ignore it
+            this_->m_bIgnoreTextBoxChange = TRUE;
             break;
         }
     }
@@ -148,7 +178,13 @@ HRESULT CMoveToMenu::DoRealMove(LPCMINVOKECOMMANDINFO lpici, LPCITEMIDLIST pidl)
     op.pFrom = strFiles;
     op.pTo = szPath;
     op.fFlags = FOF_ALLOWUNDO;
-    return ((SHFileOperation(&op) == 0) ? S_OK : E_FAIL);
+    int res = SHFileOperationW(&op);
+    if (res)
+    {
+        ERR("SHFileOperationW failed with 0x%x\n", res);
+        return E_FAIL;
+    }
+    return S_OK;
 }
 
 CStringW CMoveToMenu::DoGetFileTitle()

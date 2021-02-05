@@ -6,13 +6,13 @@ CAPTION "全般"
 FONT 9, "MS UI Gothic", 0, 0, 0x0
 BEGIN
     CONTROL "", IDC_ROSIMG, "Static", SS_OWNERDRAW, 4, 5, 248, 111
-    LTEXT "システム:", IDC_STATIC, 4, 116, 32, 9
+    LTEXT "システム:", IDC_STATIC, 4, 116, 100, 9
     LTEXT REACTOS_STR_PRODUCT_NAME, IDC_STATIC, 10, 128, 116, 9
     LTEXT "バージョン", IDC_ROSVERSION, 10, 137, 116, 9
-    LTEXT REACTOS_STR_PRODUCT_BUILD, IDC_STATIC, 10, 146, 110, 9
-    LTEXT "起動してからの時間:", IDC_STATIC, 4, 148, 95, 9
-    LTEXT "", IDC_UPTIME, 10, 170, 116, 9
-    LTEXT "マシン:", IDC_STATIC, 124, 116, 34, 9
+    LTEXT KERNEL_VERSION_REVISION_RC, IDC_STATIC, 10, 146, 110, 9
+    LTEXT "起動してからの時間:", IDC_STATIC, 4, 161, 100, 9
+    LTEXT "", IDC_UPTIME, 10, 173, 116, 9
+    LTEXT "マシン:", IDC_STATIC, 124, 116, 100, 9
     LTEXT "", IDC_MACHINELINE1, 130, 128, 118, 9
     LTEXT "", IDC_MACHINELINE2, 130, 137, 118, 9
     LTEXT "", IDC_MACHINELINE3, 130, 146, 118, 9
@@ -339,7 +339,6 @@ BEGIN
     IDS_PAGEFILE_NONE "なし"
     IDS_PAGEFILE_SYSTEM "システム管理"
     IDS_INFOREBOOT "変更を適用するには、コンピュータを再起動する必要があります。"
-    IDS_DEVS "\nReactOS Team\n\nProject Coordinator\n\nAleksey Bragin\n\nDevelopment Team\n\nAleksandar Andrejevic\nAleksey Bragin\nAlexander Shaposhnikov\nAmine Khaldi\nAndrew Greenwood\nAndrey Korotaev\nArt Yerkes\nBenedikt Freisen\nCameron Gutman\nChristoph von Wittich\nColin Finck\nDaniel Reimer\nDavid Quintana\nDmitry Chapyshev\nEric Kohl\nGed Murphy\nGiannis Adamopoulos\nGregor Brunmar\nHermès Bélusca-Maïto\nHervé Poussineau\nJames Tabor\nJeffrey Morlan\nJérôme Gardou\nJohannes Anderwald\nKamil Horníček\nKatayama Hirofumi MZ\nKJK::Hyperion\nMaarten Bosma\nMagnus Olsen\nMarc Piulachs\nMark Jansen\nMatthias Kupfer\nMike Nordell\nPeter Hater\nPeter Ward\nPierre Schweitzer\nSaveliy Tretiakov\nStanislav Motylkov\nStefan Ginsberg\nSylvain Petreolle\nThomas Blümel\nThomas Faber\nTimo Kreuzer\nVadim Galyant\n\nAlex Ionescu\nFilip Navara\nGunnar Dalsnes\nMartin Fuchs\nRoyce Mitchell III\nBrandon Turner\nBrian Palmer\nCasper Hornstrup\nDavid Welch\nEmanuele Aliberti\nGé van Geldorp\nGregor Anich\nJason Filby\nJens Collin\nMichael Wirth\nNathan Woods\nRobert Dickenson\nRex Jolliff\nVizzini\n\nRelease Engineers\n\nAmine Khaldi\nColin Finck\nJoachim Henze\nThomas Faber\nZ98\n\nWebsite Team\n\nColin Finck\nJaix Bly\nKlemens Friedl\nZ98\n\nMedia Team\n\nMindflyer\nWierd_W\n\nfurther thanks go to\n\nall Contributors\nWine Team\n\n"
     IDS_HWPROFILE_CONFIRM_DELETE_TITLE "プロファイル削除の確認"
     IDS_HWPROFILE_CONFIRM_DELETE "ハードウェア プロファイル ""%s"" を削除してもよいですか?"
     IDS_HWPROFILE_ALREADY_IN_USE "プロファイル名は使用中です。"

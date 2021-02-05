@@ -11,6 +11,7 @@
 #endif
 
 #if (defined(_X86_) && !defined(__x86_64))
+  __declspec(noreturn) __MINGW_NOTHROW void __cdecl _longjmpex(jmp_buf _Buf,int _Value);
 #define setjmp _setjmp
 #define longjmp _longjmpex
 #else

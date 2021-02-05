@@ -294,7 +294,7 @@ CreateRegistrationParam(ULONG nRegID, HWND hwnd, UINT wMsg, INT fSources, LONG f
 // It creates a delivery ticket and send CN_DELIVER_NOTIFICATION message to
 // transport the change.
 static void
-CreateNotificationParamAndSend(LONG wEventId, UINT uFlags, LPITEMIDLIST pidl1, LPITEMIDLIST pidl2,
+CreateNotificationParamAndSend(LONG wEventId, UINT uFlags, LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2,
                                DWORD dwTick)
 {
     // get server window
@@ -314,10 +314,79 @@ CreateNotificationParamAndSend(LONG wEventId, UINT uFlags, LPITEMIDLIST pidl1, L
     TRACE("hTicket: %p, 0x%lx\n", hTicket, pid);
 
     // send the ticket by using CN_DELIVER_NOTIFICATION
-    if ((uFlags & (SHCNF_FLUSH | SHCNF_FLUSHNOWAIT)) == SHCNF_FLUSH)
+    if (pid != GetCurrentProcessId() ||
+        (uFlags & (SHCNF_FLUSH | SHCNF_FLUSHNOWAIT)) == SHCNF_FLUSH)
+    {
         SendMessageW(hwndServer, CN_DELIVER_NOTIFICATION, (WPARAM)hTicket, pid);
+    }
     else
+    {
         SendNotifyMessageW(hwndServer, CN_DELIVER_NOTIFICATION, (WPARAM)hTicket, pid);
+    }
+}
+
+struct ALIAS_PIDL
+{
+    INT csidl1; // from
+    INT csidl2; // to
+    LPITEMIDLIST pidl1; // from
+    LPITEMIDLIST pidl2; // to
+    WCHAR szPath1[MAX_PATH]; // from
+    WCHAR szPath2[MAX_PATH]; // to
+};
+
+static ALIAS_PIDL AliasPIDLs[] =
+{
+    { CSIDL_PERSONAL, CSIDL_PERSONAL },
+    { CSIDL_DESKTOP, CSIDL_COMMON_DESKTOPDIRECTORY, },
+    { CSIDL_DESKTOP, CSIDL_DESKTOPDIRECTORY },
+};
+
+static VOID DoInitAliasPIDLs(void)
+{
+    static BOOL s_bInit = FALSE;
+    if (!s_bInit)
+    {
+        for (SIZE_T i = 0; i < _countof(AliasPIDLs); ++i)
+        {
+            ALIAS_PIDL *alias = &AliasPIDLs[i];
+
+            SHGetSpecialFolderLocation(NULL, alias->csidl1, &alias->pidl1);
+            SHGetPathFromIDListW(alias->pidl1, alias->szPath1);
+
+            SHGetSpecialFolderLocation(NULL, alias->csidl2, &alias->pidl2);
+            SHGetPathFromIDListW(alias->pidl2, alias->szPath2);
+        }
+        s_bInit = TRUE;
+    }
+}
+
+static BOOL DoGetAliasPIDLs(LPITEMIDLIST apidls[2], PCIDLIST_ABSOLUTE pidl)
+{
+    DoInitAliasPIDLs();
+
+    apidls[0] = apidls[1] = NULL;
+
+    INT k = 0;
+    for (SIZE_T i = 0; i < _countof(AliasPIDLs); ++i)
+    {
+        const ALIAS_PIDL *alias = &AliasPIDLs[i];
+        if (ILIsEqual(pidl, alias->pidl1))
+        {
+            if (alias->csidl1 == alias->csidl2)
+            {
+                apidls[k++] = ILCreateFromPathW(alias->szPath2);
+            }
+            else
+            {
+                apidls[k++] = ILClone(alias->pidl2);
+            }
+            if (k >= 2)
+                break;
+        }
+    }
+
+    return k > 0;
 }
 
 /*************************************************************************
@@ -349,11 +418,10 @@ SHChangeNotifyRegister(HWND hwnd, INT fSources, LONG wEventMask, UINT uMsg,
     if (hwndServer == NULL)
         return INVALID_REG_ID;
 
-    // disable new delivery method in specific condition
-    if ((fSources & SHCNRF_RecursiveInterrupt) != 0 &&
-        (fSources & SHCNRF_InterruptLevel) == 0)
+    // disable recursive interrupt in specific condition
+    if ((fSources & SHCNRF_RecursiveInterrupt) && !(fSources & SHCNRF_InterruptLevel))
     {
-        fSources &= ~SHCNRF_NewDelivery;
+        fSources &= ~SHCNRF_RecursiveInterrupt;
     }
 
     // if it is old delivery method, then create a broker window
@@ -393,12 +461,61 @@ SHChangeNotifyRegister(HWND hwnd, INT fSources, LONG wEventMask, UINT uMsg,
             SHFreeShared(hRegEntry, dwOwnerPID);
         }
 
-        // if failed, then destroy the broker
-        if (nRegID == INVALID_REG_ID && (fSources & SHCNRF_NewDelivery) == 0)
+        if (nRegID == INVALID_REG_ID)
         {
             ERR("Delivery failed\n");
-            DestroyWindow(hwndBroker);
+
+            if (hwndBroker)
+            {
+                // destroy the broker
+                DestroyWindow(hwndBroker);
+            }
             break;
+        }
+
+        // PIDL alias
+        LPITEMIDLIST apidlAlias[2];
+        if (DoGetAliasPIDLs(apidlAlias, lpItems[iItem].pidl))
+        {
+            if (apidlAlias[0])
+            {
+                // create another registration entry
+                hRegEntry = CreateRegistrationParam(nRegID, hwnd, uMsg, fSources, wEventMask,
+                                                    lpItems[iItem].fRecursive, apidlAlias[0],
+                                                    dwOwnerPID, hwndBroker);
+                if (hRegEntry)
+                {
+                    TRACE("CN_REGISTER: hwnd:%p, hRegEntry:%p, pid:0x%lx\n",
+                          hwndServer, hRegEntry, dwOwnerPID);
+
+                    // send CN_REGISTER to the server
+                    SendMessageW(hwndServer, CN_REGISTER, (WPARAM)hRegEntry, dwOwnerPID);
+
+                    // free registration entry
+                    SHFreeShared(hRegEntry, dwOwnerPID);
+                }
+                ILFree(apidlAlias[0]);
+            }
+
+            if (apidlAlias[1])
+            {
+                // create another registration entry
+                hRegEntry = CreateRegistrationParam(nRegID, hwnd, uMsg, fSources, wEventMask,
+                                                    lpItems[iItem].fRecursive, apidlAlias[1],
+                                                    dwOwnerPID, hwndBroker);
+                if (hRegEntry)
+                {
+                    TRACE("CN_REGISTER: hwnd:%p, hRegEntry:%p, pid:0x%lx\n",
+                          hwndServer, hRegEntry, dwOwnerPID);
+
+                    // send CN_REGISTER to the server
+                    SendMessageW(hwndServer, CN_REGISTER, (WPARAM)hRegEntry, dwOwnerPID);
+
+                    // free registration entry
+                    SHFreeShared(hRegEntry, dwOwnerPID);
+                }
+                ILFree(apidlAlias[1]);
+            }
         }
     }
     LeaveCriticalSection(&SHELL32_ChangenotifyCS);
@@ -473,6 +590,39 @@ static LPCSTR DumpEvent(LONG event)
 }
 
 /*************************************************************************
+ * SHChangeRegistrationReceive      [SHELL32.646]
+ */
+EXTERN_C BOOL WINAPI
+SHChangeRegistrationReceive(LPVOID lpUnknown1, DWORD dwUnknown2)
+{
+    FIXME("SHChangeRegistrationReceive() stub\n");
+    return FALSE;
+}
+
+EXTERN_C VOID WINAPI
+SHChangeNotifyReceiveEx(LONG lEvent, UINT uFlags,
+                        LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2, DWORD dwTick)
+{
+    // TODO: Queueing notifications
+    CreateNotificationParamAndSend(lEvent, uFlags, pidl1, pidl2, dwTick);
+}
+
+/*************************************************************************
+ * SHChangeNotifyReceive        [SHELL32.643]
+ */
+EXTERN_C VOID WINAPI
+SHChangeNotifyReceive(LONG lEvent, UINT uFlags, LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2)
+{
+    SHChangeNotifyReceiveEx(lEvent, uFlags, pidl1, pidl2, GetTickCount());
+}
+
+EXTERN_C VOID WINAPI
+SHChangeNotifyTransmit(LONG lEvent, UINT uFlags, LPCITEMIDLIST pidl1, LPCITEMIDLIST pidl2, DWORD dwTick)
+{
+    SHChangeNotifyReceiveEx(lEvent, uFlags, pidl1, pidl2, dwTick);
+}
+
+/*************************************************************************
  * SHChangeNotify               [SHELL32.@]
  */
 EXTERN_C void WINAPI
@@ -532,7 +682,7 @@ SHChangeNotify(LONG wEventId, UINT uFlags, LPCVOID dwItem1, LPCVOID dwItem2)
     if (wEventId == 0 || (wEventId & SHCNE_ASSOCCHANGED) || pidl1 != NULL)
     {
         TRACE("notifying event %s(%x)\n", DumpEvent(wEventId), wEventId);
-        CreateNotificationParamAndSend(wEventId, uFlags, pidl1, pidl2, dwTick);
+        SHChangeNotifyTransmit(wEventId, uFlags, pidl1, pidl2, dwTick);
     }
 
     if (pidlTemp1)
@@ -609,4 +759,18 @@ NTSHChangeNotifyDeregister(ULONG hNotify)
 {
     FIXME("(0x%08x):semi stub.\n", hNotify);
     return SHChangeNotifyDeregister(hNotify);
+}
+
+/*************************************************************************
+ * SHChangeNotifySuspendResume          [SHELL32.277]
+ */
+EXTERN_C BOOL
+WINAPI
+SHChangeNotifySuspendResume(BOOL bSuspend,
+                            LPITEMIDLIST pidl,
+                            BOOL bRecursive,
+                            DWORD dwReserved)
+{
+    FIXME("SHChangeNotifySuspendResume() stub\n");
+    return FALSE;
 }

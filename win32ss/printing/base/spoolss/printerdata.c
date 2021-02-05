@@ -8,6 +8,96 @@
 #include "precomp.h"
 
 DWORD WINAPI
+DeletePrinterDataExW(HANDLE hPrinter, PCWSTR pKeyName, PCWSTR pValueName)
+{
+    PSPOOLSS_PRINTER_HANDLE pHandle = (PSPOOLSS_PRINTER_HANDLE)hPrinter;
+
+    // Sanity checks.
+    if (!pHandle)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    return pHandle->pPrintProvider->PrintProvider.fpDeletePrinterDataEx(pHandle->hPrinter, pKeyName, pValueName);
+}
+
+DWORD WINAPI
+DeletePrinterDataW(HANDLE hPrinter, PWSTR pValueName)
+{
+    PSPOOLSS_PRINTER_HANDLE pHandle = (PSPOOLSS_PRINTER_HANDLE)hPrinter;
+
+    // Sanity checks.
+    if (!pHandle)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    return pHandle->pPrintProvider->PrintProvider.fpDeletePrinterData(pHandle->hPrinter, pValueName);
+}
+
+DWORD WINAPI
+DeletePrinterKeyW(HANDLE hPrinter, PCWSTR pKeyName)
+{
+    PSPOOLSS_PRINTER_HANDLE pHandle = (PSPOOLSS_PRINTER_HANDLE)hPrinter;
+
+    // Sanity checks.
+    if (!pHandle)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    return pHandle->pPrintProvider->PrintProvider.fpDeletePrinterKey(pHandle->hPrinter, pKeyName);
+}
+
+DWORD WINAPI
+EnumPrinterDataExW(HANDLE hPrinter, PCWSTR pKeyName, PBYTE pEnumValues, DWORD cbEnumValues, PDWORD pcbEnumValues, PDWORD pnEnumValues)
+{
+    PSPOOLSS_PRINTER_HANDLE pHandle = (PSPOOLSS_PRINTER_HANDLE)hPrinter;
+
+    // Sanity checks.
+    if (!pHandle)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    return pHandle->pPrintProvider->PrintProvider.fpEnumPrinterDataEx(pHandle->hPrinter, pKeyName, pEnumValues, cbEnumValues, pcbEnumValues, pnEnumValues);
+}
+
+DWORD WINAPI
+EnumPrinterDataW(HANDLE hPrinter, DWORD dwIndex, PWSTR pValueName, DWORD cbValueName, PDWORD pcbValueName, PDWORD pType, PBYTE pData, DWORD cbData, PDWORD pcbData)
+{
+    PSPOOLSS_PRINTER_HANDLE pHandle = (PSPOOLSS_PRINTER_HANDLE)hPrinter;
+
+    // Sanity checks.
+    if (!pHandle)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    return pHandle->pPrintProvider->PrintProvider.fpEnumPrinterData(pHandle->hPrinter, dwIndex, pValueName, cbValueName, pcbValueName, pType, pData, cbData, pcbData);
+}
+
+DWORD WINAPI
+EnumPrinterKeyW(HANDLE hPrinter, PCWSTR pKeyName, PWSTR pSubkey, DWORD cbSubkey, PDWORD pcbSubkey)
+{
+    PSPOOLSS_PRINTER_HANDLE pHandle = (PSPOOLSS_PRINTER_HANDLE)hPrinter;
+
+    // Sanity checks.
+    if (!pHandle)
+    {
+        SetLastError(ERROR_INVALID_PARAMETER);
+        return FALSE;
+    }
+
+    return pHandle->pPrintProvider->PrintProvider.fpEnumPrinterKey(pHandle->hPrinter, pKeyName, pSubkey, cbSubkey, pcbSubkey);
+}
+
+DWORD WINAPI
 GetPrinterDataExW(HANDLE hPrinter, LPCWSTR pKeyName, LPCWSTR pValueName, LPDWORD pType, LPBYTE pData, DWORD nSize, LPDWORD pcbNeeded)
 {
     PSPOOLSS_PRINTER_HANDLE pHandle = (PSPOOLSS_PRINTER_HANDLE)hPrinter;

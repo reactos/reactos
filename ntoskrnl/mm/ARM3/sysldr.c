@@ -81,13 +81,13 @@ MiCacheImageSymbols(IN PVOID BaseAddress)
 
 NTSTATUS
 NTAPI
-MiLoadImageSection(IN OUT PVOID *SectionPtr,
-                   OUT PVOID *ImageBase,
-                   IN PUNICODE_STRING FileName,
-                   IN BOOLEAN SessionLoad,
-                   IN PLDR_DATA_TABLE_ENTRY LdrEntry)
+MiLoadImageSection(_Inout_ PSECTION *SectionPtr,
+                   _Out_ PVOID *ImageBase,
+                   _In_ PUNICODE_STRING FileName,
+                   _In_ BOOLEAN SessionLoad,
+                   _In_ PLDR_DATA_TABLE_ENTRY LdrEntry)
 {
-    PROS_SECTION_OBJECT Section = *SectionPtr;
+    PSECTION Section = *SectionPtr;
     NTSTATUS Status;
     PEPROCESS Process;
     PVOID Base = NULL;
@@ -158,7 +158,7 @@ MiLoadImageSection(IN OUT PVOID *SectionPtr,
     }
 
     /* Reserve system PTEs needed */
-    PteCount = ROUND_TO_PAGES(Section->ImageSection->ImageInformation.ImageFileSize) >> PAGE_SHIFT;
+    PteCount = ROUND_TO_PAGES(((PMM_IMAGE_SECTION_OBJECT)Section->Segment)->ImageInformation.ImageFileSize) >> PAGE_SHIFT;
     PointerPte = MiReserveSystemPtes(PteCount, SystemPteSpace);
     if (!PointerPte)
     {
@@ -587,7 +587,7 @@ MiProcessLoaderEntry(IN PLDR_DATA_TABLE_ENTRY LdrEntry,
     KeLeaveCriticalRegion();
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 MiUpdateThunks(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
@@ -991,7 +991,7 @@ MmUnloadSystemImage(IN PVOID ImageHandle)
 
     /* Release the system lock and return */
 Done:
-    KeReleaseMutant(&MmSystemLoadLock, 1, FALSE, FALSE);
+    KeReleaseMutant(&MmSystemLoadLock, MUTANT_INCREMENT, FALSE, FALSE);
     KeLeaveCriticalRegion();
     return STATUS_SUCCESS;
 }
@@ -1445,7 +1445,7 @@ MiFreeInitializationCode(IN PVOID InitStart,
                                           NULL);
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 MiFindInitializationCode(OUT PVOID *StartVa,
@@ -1466,8 +1466,14 @@ MiFindInitializationCode(OUT PVOID *StartVa,
     /* Assume failure */
     *StartVa = NULL;
 
-    /* Enter a critical region while we loop the list */
+    /* Acquire the necessary locks while we loop the list */
     KeEnterCriticalRegion();
+    KeWaitForSingleObject(&MmSystemLoadLock,
+                          WrVirtualMemory,
+                          KernelMode,
+                          FALSE,
+                          NULL);
+    ExAcquireResourceExclusiveLite(&PsLoadedModuleResource, TRUE);
 
     /* Loop all loaded modules */
     NextEntry = PsLoadedModuleList.Flink;
@@ -1615,7 +1621,9 @@ MiFindInitializationCode(OUT PVOID *StartVa,
         NextEntry = NextEntry->Flink;
     }
 
-    /* Leave the critical region and return */
+    /* Release the locks and return */
+    ExReleaseResourceLite(&PsLoadedModuleResource);
+    KeReleaseMutant(&MmSystemLoadLock, MUTANT_INCREMENT, FALSE, FALSE);
     KeLeaveCriticalRegion();
 }
 
@@ -1680,7 +1688,7 @@ MmFreeDriverInitialization(IN PLDR_DATA_TABLE_ENTRY LdrEntry)
     MiDeleteSystemPageableVm(StartPte, PageCount, 0, NULL);
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 MiReloadBootLoadedDrivers(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
@@ -1869,7 +1877,7 @@ MiReloadBootLoadedDrivers(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     }
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 NTSTATUS
 NTAPI
 MiBuildImportsForBootDrivers(VOID)
@@ -2134,7 +2142,7 @@ MiBuildImportsForBootDrivers(VOID)
     return STATUS_SUCCESS;
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 MiLocateKernelSections(IN PLDR_DATA_TABLE_ENTRY LdrEntry)
@@ -2191,7 +2199,7 @@ MiLocateKernelSections(IN PLDR_DATA_TABLE_ENTRY LdrEntry)
     }
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 BOOLEAN
 NTAPI
 MiInitializeLoadedModuleList(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
@@ -2409,7 +2417,14 @@ MiSetSystemCodeProtection(
         TempPte = *PointerPte;
 
         /* Make sure it's valid */
-        ASSERT(TempPte.u.Hard.Valid == 1);
+        if (TempPte.u.Hard.Valid != 1)
+        {
+            DPRINT1("CORE-16449: FirstPte=%p, LastPte=%p, Protection=%lx\n", FirstPte, LastPte, Protection);
+            DPRINT1("CORE-16449: PointerPte=%p, TempPte=%lx\n", PointerPte, TempPte.u.Long);
+            DPRINT1("CORE-16449: Please issue the 'mod' and 'bt' (KDBG) or 'lm' and 'kp' (WinDbg) commands. Then report this in Jira.\n");
+            ASSERT(TempPte.u.Hard.Valid == 1);
+            break;
+        }
 
         /* Update the protection */
         TempPte.u.Hard.Write = BooleanFlagOn(Protection, IMAGE_SCN_MEM_WRITE);
@@ -2822,7 +2837,7 @@ MmLoadSystemImage(IN PUNICODE_STRING FileName,
     PWCHAR MissingDriverName;
     HANDLE SectionHandle;
     ACCESS_MASK DesiredAccess;
-    PVOID Section = NULL;
+    PSECTION Section = NULL;
     BOOLEAN LockOwned = FALSE;
     PLIST_ENTRY NextEntry;
     IMAGE_INFO ImageInfo;
@@ -2957,7 +2972,7 @@ LoaderScan:
     else if (!Section)
     {
         /* It wasn't loaded, and we didn't have a previous attempt */
-        KeReleaseMutant(&MmSystemLoadLock, 1, FALSE, FALSE);
+        KeReleaseMutant(&MmSystemLoadLock, MUTANT_INCREMENT, FALSE, FALSE);
         KeLeaveCriticalRegion();
         LockOwned = FALSE;
 
@@ -3039,7 +3054,7 @@ LoaderScan:
                                            SECTION_MAP_EXECUTE,
                                            MmSectionObjectType,
                                            KernelMode,
-                                           &Section,
+                                           (PVOID*)&Section,
                                            NULL);
         ZwClose(SectionHandle);
         if (!NT_SUCCESS(Status)) goto Quickie;
@@ -3070,7 +3085,7 @@ LoaderScan:
     ASSERT(Status != STATUS_ALREADY_COMMITTED);
 
     /* Get the size of the driver */
-    DriverSize = ((PROS_SECTION_OBJECT)Section)->ImageSection->ImageInformation.ImageFileSize;
+    DriverSize = ((PMM_IMAGE_SECTION_OBJECT)Section->Segment)->ImageInformation.ImageFileSize;
 
     /* Make sure we're not being loaded into session space */
     if (!Flags)
@@ -3309,7 +3324,7 @@ Quickie:
     if (LockOwned)
     {
         /* Release the lock */
-        KeReleaseMutant(&MmSystemLoadLock, 1, FALSE, FALSE);
+        KeReleaseMutant(&MmSystemLoadLock, MUTANT_INCREMENT, FALSE, FALSE);
         KeLeaveCriticalRegion();
         LockOwned = FALSE;
     }

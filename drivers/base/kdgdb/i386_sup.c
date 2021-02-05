@@ -100,6 +100,7 @@ thread_to_reg(PETHREAD Thread, enum reg_name reg_name, unsigned short* size)
                 return NULL;
         }
     }
+#if 0
     else if (Thread->Tcb.TrapFrame)
     {
         PKTRAP_FRAME TrapFrame = Thread->Tcb.TrapFrame;
@@ -128,6 +129,7 @@ thread_to_reg(PETHREAD Thread, enum reg_name reg_name, unsigned short* size)
                 KDDBGPRINT("Unhandled regname: %d.\n", reg_name);
         }
     }
+#endif
     else
     {
         static PULONG Esp;
@@ -213,7 +215,7 @@ gdb_send_registers(void)
             }
         }
     }
-    
+
     return finish_gdb_packet();
 }
 

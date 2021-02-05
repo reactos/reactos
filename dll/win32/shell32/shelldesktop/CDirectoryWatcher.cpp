@@ -15,7 +15,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(shcn);
 static inline void
 NotifyFileSystemChange(LONG wEventId, LPCWSTR path1, LPCWSTR path2)
 {
-    SHChangeNotify(wEventId | SHCNE_INTERRUPT, SHCNF_PATHW, path1, path2);
+    SHChangeNotify(wEventId | SHCNE_INTERRUPT, SHCNF_PATHW | SHCNF_FLUSH, path1, path2);
 }
 
 // The handle of the APC thread
@@ -138,6 +138,7 @@ void CDirectoryWatcher::ProcessNotification()
     WCHAR szName[MAX_PATH], szPath[MAX_PATH], szTempPath[MAX_PATH];
     DWORD dwEvent, cbName;
     BOOL fDir;
+    TRACE("CDirectoryWatcher::ProcessNotification: enter\n");
 
     // for each entry in s_buffer
     szPath[0] = szTempPath[0] = 0;
@@ -225,6 +226,8 @@ void CDirectoryWatcher::ProcessNotification()
         // go next entry
         pInfo = (PFILE_NOTIFY_INFORMATION)((LPBYTE)pInfo + pInfo->NextEntryOffset);
     }
+
+    TRACE("CDirectoryWatcher::ProcessNotification: leave\n");
 }
 
 void CDirectoryWatcher::ReadCompletion(DWORD dwErrorCode, DWORD dwNumberOfBytesTransfered)

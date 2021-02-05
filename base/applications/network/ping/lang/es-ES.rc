@@ -2,6 +2,7 @@
  * FILE:        base/applications/network/ping/lang/es-ES.rc
  * PURPOSE:     Spanish translations for ReactOS Ping Command
  * TRANSLATORS: Ismael Ferreras Morezuelas
+ *              Catalin Gabriel Draghita
  */
 
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
@@ -13,47 +14,47 @@ Uso: ping [-t] [-a] [-n cuenta] [-l tamaño] [-f] [-i TTL] [-v TOS]\n\
           [-w tiempo_de_espera] [-4] [-6] nombre_de_destino\n\
 \n\
 Opciones:\n\
-    -t          Ping the specified host until stopped.\n\
-                To see statistics and continue - type Control-Break;\n\
-                To stop - type Control-C.\n\
-    -a          Resolve addresses to hostnames.\n\
+    -t          Hacer ping al host especificado hasta que se detenga.\n\
+                Para ver estadísticas y continuar - pulse Control-Break;\n\
+                Para detener - pulse Control-C.\n\
+    -a          Resuelve direcciones a nombres del host.\n\
     -n cuenta   Número de solicitudes de eco a enviar.\n\
     -l tamaño   Tamaño de búfer a enviar.\n\
-    -f          Set Don't Fragment flag in packet (IPv4-only).\n\
-    -i TTL      Time To Live.\n\
-    -v TOS      Type Of Service (IPv4-only. This setting has been deprecated\n\
-                and has no effect on the type of service field in the IP\n\
-                Header).\n\
+    -f          Establecer marca No Fragmentar en paquetes (solo IPv4).\n\
+    -i TTL      Periodo de vida.\n\
+    -v TOS      Tipo de Servicio (solo IPv4. Esta opción esta desusada\n\
+                y no tiene ningún efecto sobre el campo de tipo de servicio\n\
+                del encabezado IP).\n\
     -w t_espera Tiempo de espera en milisegundos para cada respuesta.\n\
-    -4          Force using IPv4.\n\
-    -6          Force using IPv6.\n\
+    -4          Forzar el uso de IPv4.\n\
+    -6          Forzar el uso de IPv6.\n\
 \n"
 
     IDS_CTRL_BREAK "Control-Break\n"
     IDS_CTRL_C "Control-C\n"
     IDS_NO_RESOURCES "No hay suficientes recursos libres disponibles.\n"
-    IDS_MISSING_ADDRESS "IP address must be specified.\n"
-    IDS_MISSING_VALUE "Value must be supplied for option %s.\n"
+    IDS_MISSING_ADDRESS "Debe especificar una dirección IP.\n"
+    IDS_MISSING_VALUE "Debe introducir un valor para la opción %s.\n"
     IDS_BAD_OPTION "La opción %s no es válida.\n"
     IDS_BAD_PARAMETER "El parámetro %s no es válido.\n"
     IDS_BAD_VALUE "El valor para la opción %s no es válido, debe de estar entre %u y %u.\n"
-    IDS_WRONG_FAMILY "The option %s is only supported for %s.\n"
-    IDS_UNKNOWN_HOST "Ping could not find host %s. Please check the name and try again.\n"
+    IDS_WRONG_FAMILY "La opción %s solo funciona con %s.\n"
+    IDS_UNKNOWN_HOST "La solicitud de ping no ha podido encontrar el host %s. Por favor, compruebe el nombre y vuelva a intentarlo.\n"
     IDS_PINGING_ADDRESS "\nHaciendo ping a %s "
     IDS_PINGING_HOSTNAME "\nHaciendo ping a %s [%s] "
-    IDS_SOURCE_ADDRESS "from %s %s"
+    IDS_SOURCE_ADDRESS "de %s %s"
     IDS_PING_SIZE "con %lu bytes de datos:\n\n"
     IDS_REPLY_FROM "Respuesta desde %s: "
     IDS_REPLY_BYTES "bytes=%d "
     IDS_REPLY_TIME_MS "tiempo=%lums "
     IDS_REPLY_TIME_0MS "tiempo<1ms "
     IDS_REPLY_TTL "TTL=%d\n"
-    IDS_REPLY_STATUS "Echo reply returned %lu.\n"
-    IDS_DEST_HOST_UNREACHABLE "Destination host unreachable.\n"
-    IDS_DEST_NET_UNREACHABLE "Destination network unreachable.\n"
+    IDS_REPLY_STATUS "La respuesta de echo devolvió %lu.\n"
+    IDS_DEST_HOST_UNREACHABLE "Host destino inalcanzable.\n"
+    IDS_DEST_NET_UNREACHABLE "Red destino inalcanzable.\n"
     IDS_REQUEST_TIMED_OUT "La petición ha caducado.\n"
-    IDS_TTL_EXPIRED "TTL expired in transit.\n"
-    IDS_TRANSMIT_FAILED "PING: transmit failed. (Error %u)\n"
+    IDS_TTL_EXPIRED "TTL expiró durante el tránsito.\n"
+    IDS_TRANSMIT_FAILED "PING: trasmisión fallida. (Error %u)\n"
 
     IDS_STATISTICS "\n\
 Estadísticas de ping para %s:\n\
@@ -62,5 +63,5 @@ Estadísticas de ping para %s:\n\
     IDS_APPROXIMATE_RTT "Tiempos aproximados de ida y vuelta en milisegundos:\n\
     Mínimo = %lums, Máximo = %lums, Media = %lums\n"
 
-    IDS_WINSOCK_FAIL "Failed to initialize WinSock: %i\n"
+    IDS_WINSOCK_FAIL "No se ha podido inicializar WinSock: %i\n"
 END

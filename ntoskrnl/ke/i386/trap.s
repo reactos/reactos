@@ -30,7 +30,7 @@ ENDM
 /* GLOBALS *******************************************************************/
 
 .data
-ASSUME nothing
+ASSUME CS:nothing
 
 .align 16
 

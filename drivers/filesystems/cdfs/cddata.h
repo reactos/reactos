@@ -173,7 +173,7 @@ extern CDFS_TELEMETRY_DATA_CONTEXT CdTelemetryData;
 
 #if DBG
 #undef CD_SANITY
-#define CD_SANITY
+//#define CD_SANITY
 #endif
 
 #ifdef CD_SANITY
@@ -241,7 +241,6 @@ extern CDFS_TELEMETRY_DATA_CONTEXT CdTelemetryData;
 #define ASSERT_VCB(V)                   { NOTHING; }
 #define ASSERT_OPTIONAL_VCB(V)          { NOTHING; }
 #define ASSERT_FCB(F)                   { NOTHING; }
-#define ASSERT_OPTIONAL_FCB(F)          { NOTHING; }
 #define ASSERT_FCB_NONPAGED(FN)         { NOTHING; }
 #define ASSERT_OPTIONAL_FCB(FN)         { NOTHING; }
 #define ASSERT_CCB(C)                   { NOTHING; }

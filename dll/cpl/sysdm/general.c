@@ -156,7 +156,7 @@ LRESULT CALLBACK RosImageProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam
                     if (hDC == NULL)
                         goto Cleanup;
 
-					top = 0;
+                    top = 0;
                     offset = 0;
                     hCreditsDC = CreateCompatibleDC(hDC);
                     hLogoDC = CreateCompatibleDC(hCreditsDC);
@@ -234,11 +234,10 @@ Cleanup:
                 if (hCreditsBitmap != NULL)
                     DeleteObject(hCreditsBitmap);
 
+                InvalidateRect(hwnd, NULL, FALSE);
                 top = 0;
                 timerid = 0;
             }
-            
-            InvalidateRect(hwnd, NULL, FALSE);
             break;
         case WM_TIMER:
             top += ANIM_STEP;
@@ -445,6 +444,7 @@ static VOID SetProcSpeed(HWND hwnd, HKEY hKey, LPTSTR Value, UINT uID)
 static VOID GetSystemInformation(HWND hwnd)
 {
     HKEY hKey;
+    TCHAR SysKey[] = _T("HARDWARE\\DESCRIPTION\\System");
     TCHAR ProcKey[] = _T("HARDWARE\\DESCRIPTION\\System\\CentralProcessor\\0");
     MEMORYSTATUSEX MemStat;
     TCHAR Buf[32];
@@ -460,6 +460,16 @@ static VOID GetSystemInformation(HWND hwnd)
         SetDlgItemText(hwnd, CurMachineLine, SMBiosName);
         CurMachineLine++;
     }
+    else
+    {
+        /* If SMBIOS is not available, use System Identifier */
+        if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, SysKey, 0, KEY_READ, &hKey) == ERROR_SUCCESS)
+        {
+            SetRegTextData(hwnd, hKey, _T("Identifier"), CurMachineLine);
+            CurMachineLine++;
+            RegCloseKey(hKey);
+        }
+    }
     /*
      * Get Processor information
      * although undocumented, this information is being pulled
@@ -468,17 +478,33 @@ static VOID GetSystemInformation(HWND hwnd)
      */
     if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, ProcKey, 0, KEY_READ, &hKey) == ERROR_SUCCESS)
     {
+        INT PrevMachineLine;
+
         SetRegTextData(hwnd, hKey, _T("VendorIdentifier"), CurMachineLine);
         CurMachineLine++;
 
+        PrevMachineLine = CurMachineLine;
         CurMachineLine += SetProcNameString(hwnd,
                                             hKey,
                                             _T("ProcessorNameString"),
                                             CurMachineLine,
                                             CurMachineLine + 1);
 
+        if (CurMachineLine == PrevMachineLine)
+        {
+            /* TODO: Try obtaining CPU name from WMI (i.e. CIM_Processor) */
+
+            /* Brand String is not available, use Identifier instead */
+            CurMachineLine += SetProcNameString(hwnd,
+                                                hKey,
+                                                _T("Identifier"),
+                                                CurMachineLine,
+                                                CurMachineLine + 1);
+        }
+
         SetProcSpeed(hwnd, hKey, _T("~MHz"), CurMachineLine);
         CurMachineLine++;
+        RegCloseKey(hKey);
     }
 
     /* Get total physical RAM */

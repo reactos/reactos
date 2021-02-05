@@ -4,14 +4,17 @@ spec2def(spoolss.dll spoolss.spec ADD_IMPORTLIB)
 list(APPEND SOURCE
     ../marshalling.c
     context.c
+    forms.c
     jobs.c
     main.c
     memory.c
     monitors.c
     ports.c
     printerdata.c
+    printerdrivers.c
     printers.c
     printprocessors.c
+    printproviders.c
     spoolfile.c
     tools.c)
 

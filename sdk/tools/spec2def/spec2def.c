@@ -227,6 +227,13 @@ OutputHeader_stub(FILE *file)
         fprintf(file, "WINE_DECLARE_DEBUG_CHANNEL(relay);\n");
     }
 
+    /* __int128 is not supported on x86, so use a custom type */
+    fprintf(file, "\n"
+                  "typedef struct {\n"
+                  "    __int64 lower;\n"
+                  "    __int64 upper;\n"
+                  "} MyInt128;\n");
+
     fprintf(file, "\n");
 }
 
@@ -236,6 +243,18 @@ OutputLine_stub(FILE *file, EXPORT *pexp)
     int i;
     int bRelay = 0;
     int bInPrototype = 0;
+
+    /* Workaround for forwarded externs. See here for an explanation: 
+     * https://stackoverflow.com/questions/4060143/forwarding-data-in-a-dll */
+    if (gbMSComp && 
+        (pexp->nCallingConvention == CC_EXTERN) && 
+        (pexp->strTarget.buf != NULL) &&
+        (!!ScanToken(pexp->strTarget.buf, '.')))
+    {
+        fprintf(file, "#pragma comment(linker,\"/export:%s%.*s=%.*s,DATA\")\n\n",
+            gpszUnderscore, pexp->strName.len, pexp->strName.buf, pexp->strTarget.len, pexp->strTarget.buf);
+        return 0;
+    }
 
     if (pexp->nCallingConvention != CC_STUB &&
         (pexp->uFlags & FL_STUB) == 0)
@@ -297,15 +316,15 @@ OutputLine_stub(FILE *file, EXPORT *pexp)
             if (i != 0) fprintf(file, ", ");
             switch (pexp->anArgs[i])
             {
-                case ARG_LONG: fprintf(file, "long"); break;
-                case ARG_PTR:  fprintf(file, "void*"); break;
-                case ARG_STR:  fprintf(file, "char*"); break;
-                case ARG_WSTR: fprintf(file, "wchar_t*"); break;
-                case ARG_DBL:  fprintf(file, "double"); break;
-                case ARG_INT64 :  fprintf(file, "__int64"); break;
-                /* __int128 is not supported on x86, and int128 in spec files most often represents a GUID */
-                case ARG_INT128 :  fprintf(file, "GUID"); break;
-                case ARG_FLOAT: fprintf(file, "float"); break;
+                case ARG_LONG:   fprintf(file, "long");     break;
+                case ARG_PTR:    fprintf(file, "void*");    break;
+                case ARG_STR:    fprintf(file, "char*");    break;
+                case ARG_WSTR:   fprintf(file, "wchar_t*"); break;
+                case ARG_DBL:    fprintf(file, "double");   break;
+                case ARG_INT64:  fprintf(file, "__int64");  break;
+                /* __int128 is not supported on x86, so use a custom type */
+                case ARG_INT128: fprintf(file, "MyInt128"); break;
+                case ARG_FLOAT:  fprintf(file, "float");    break;
             }
             fprintf(file, " a%d", i);
         }
@@ -345,14 +364,14 @@ OutputLine_stub(FILE *file, EXPORT *pexp)
         if (i != 0) fprintf(file, ",");
         switch (pexp->anArgs[i])
         {
-            case ARG_LONG: fprintf(file, "0x%%lx"); break;
-            case ARG_PTR:  fprintf(file, "0x%%p"); break;
-            case ARG_STR:  fprintf(file, "'%%s'"); break;
-            case ARG_WSTR: fprintf(file, "'%%ws'"); break;
-            case ARG_DBL:  fprintf(file, "%%f"); break;
-            case ARG_INT64: fprintf(file, "%%\"PRIx64\""); break;
-            case ARG_INT128: fprintf(file, "'%%s'"); break;
-            case ARG_FLOAT: fprintf(file, "%%f"); break;
+            case ARG_LONG:   fprintf(file, "0x%%lx"); break;
+            case ARG_PTR:    fprintf(file, "0x%%p");  break;
+            case ARG_STR:    fprintf(file, "'%%s'");  break;
+            case ARG_WSTR:   fprintf(file, "'%%ws'"); break;
+            case ARG_DBL:    fprintf(file, "%%f");    break;
+            case ARG_INT64:  fprintf(file, "0x%%\"PRIx64\""); break;
+            case ARG_INT128: fprintf(file, "0x%%\"PRIx64\"-0x%%\"PRIx64\""); break;
+            case ARG_FLOAT:  fprintf(file, "%%f");    break;
         }
     }
     fprintf(file, ")\\n\"");
@@ -362,14 +381,13 @@ OutputLine_stub(FILE *file, EXPORT *pexp)
         fprintf(file, ", ");
         switch (pexp->anArgs[i])
         {
-            case ARG_LONG: fprintf(file, "(long)a%d", i); break;
-            case ARG_PTR:  fprintf(file, "(void*)a%d", i); break;
-            case ARG_STR:  fprintf(file, "(char*)a%d", i); break;
-            case ARG_WSTR: fprintf(file, "(wchar_t*)a%d", i); break;
-            case ARG_DBL:  fprintf(file, "(double)a%d", i); break;
-            case ARG_INT64: fprintf(file, "(__int64)a%d", i); break;
-            case ARG_INT128: fprintf(file, "wine_dbgstr_guid(&a%d)", i); break;
-            case ARG_FLOAT: fprintf(file, "(float)a%d", i); break;
+            case ARG_LONG: case ARG_PTR: case ARG_STR:
+            case ARG_WSTR: case ARG_DBL: case ARG_INT64:
+                fprintf(file, "a%d", i); break;
+            case ARG_INT128:
+                fprintf(file, "a%d.lower, a%d.upper", i, i); break;
+            case ARG_FLOAT:
+                fprintf(file, "a%d", i); break;
         }
     }
     fprintf(file, ");\n");
@@ -404,7 +422,7 @@ OutputLine_stub(FILE *file, EXPORT *pexp)
     {
         if (pexp->uFlags & FL_RET64)
         {
-            fprintf(file, "\tif (TRACE_ON(relay))\n\t\tDPRINTF(\"%s: %.*s: retval = %%\"PRIx64\"\\n\", retval);\n",
+            fprintf(file, "\tif (TRACE_ON(relay))\n\t\tDPRINTF(\"%s: %.*s: retval = 0x%%\"PRIx64\"\\n\", retval);\n",
                     pszDllName, pexp->strName.len, pexp->strName.buf);
         }
         else
@@ -471,7 +489,7 @@ OutputLine_asmstub(FILE *fileDest, EXPORT *pexp)
     {
         /* Does the string already have stdcall decoration? */
         const char *pcAt = ScanToken(pexp->strName.buf, '@');
-        if (pcAt && (pcAt < (pexp->strName.buf + pexp->strName.len)) && 
+        if (pcAt && (pcAt < (pexp->strName.buf + pexp->strName.len)) &&
             (pexp->strName.buf[0] == '_'))
         {
             /* Skip leading underscore and remove trailing decoration */
@@ -704,7 +722,7 @@ OutputLine_def_GCC(FILE *fileDest, EXPORT *pexp)
         {
             /* Is the name in the spec file decorated? */
             const char* pcDeco = ScanToken(pexp->strName.buf, '@');
-            if (pcDeco && 
+            if (pcDeco &&
                 (pexp->strName.len > 1) &&
                 (pcDeco < pexp->strName.buf + pexp->strName.len))
             {
@@ -724,6 +742,22 @@ OutputLine_def_GCC(FILE *fileDest, EXPORT *pexp)
 int
 OutputLine_def(FILE *fileDest, EXPORT *pexp)
 {
+    /* Don't add private exports to the import lib */
+    if (gbImportLib && (pexp->uFlags & FL_PRIVATE))
+    {
+        DbgPrint("OutputLine_def: skipping private export '%.*s'...\n", pexp->strName.len, pexp->strName.buf);
+        return 1;
+    }
+    
+    /* For MS linker, forwarded externs are managed via #pragma comment(linker,"/export:_data=org.data,DATA") */
+    if (gbMSComp && !gbImportLib && (pexp->nCallingConvention == CC_EXTERN) && 
+        (pexp->strTarget.buf != NULL) && !!ScanToken(pexp->strTarget.buf, '.'))
+    {
+        DbgPrint("OutputLine_def: skipping forwarded extern export '%.*s' ->'%.*s'...\n",
+            pexp->strName.len, pexp->strName.buf, pexp->strTarget.len, pexp->strTarget.buf);
+        return 1;
+    }
+
     DbgPrint("OutputLine_def: '%.*s'...\n", pexp->strName.len, pexp->strName.buf);
     fprintf(fileDest, " ");
 
@@ -1114,15 +1148,15 @@ ParseFile(char* pcStart, FILE *fileDest, unsigned *cExports)
 
         /* Handle parameters */
         exp.nStackBytes = 0;
-        if (exp.nCallingConvention != CC_EXTERN &&
-            exp.nCallingConvention != CC_STUB)
+        pc = NextToken(pc);
+        /* Extern can't have parameters, and it's optional to provide ones for stubs. All other exports must have them */
+        if (!pc && (exp.nCallingConvention != CC_EXTERN && exp.nCallingConvention != CC_STUB))
         {
-            /* Go to next token */
-            if (!(pc = NextToken(pc)))
-            {
-                Fatal(pszSourceFileName, nLine, pcLine, pc, 1, "Unexpected end of line");
-            }
+            Fatal(pszSourceFileName, nLine, pcLine, pc, 1, "Unexpected end of line");
+        }
 
+        if (pc && (exp.nCallingConvention != CC_EXTERN))
+        {
             /* Verify syntax */
             if (*pc++ != '(')
             {
@@ -1194,13 +1228,23 @@ ParseFile(char* pcStart, FILE *fileDest, unsigned *cExports)
             {
                 Fatal(pszSourceFileName, nLine, pcLine, pc - 1, 0, "Expected ')'");
             }
+
+            /* Go to next token */
+            pc = NextToken(pc);
         }
 
         /* Handle special stub cases */
         if (exp.nCallingConvention == CC_STUB)
         {
+            /* If we got parameters, assume STDCALL */
+            if (exp.nArgCount != 0)
+            {
+                exp.nCallingConvention = CC_STDCALL;
+                exp.uFlags |= FL_STUB;
+            }
+
             /* Check for c++ mangled name */
-            if (pc[0] == '?')
+            if (exp.strName.buf[0] == '?')
             {
                 //printf("Found c++ mangled name...\n");
                 //
@@ -1208,13 +1252,13 @@ ParseFile(char* pcStart, FILE *fileDest, unsigned *cExports)
             else
             {
                 /* Check for stdcall name */
-                const char *p = ScanToken(pc, '@');
-                if (p && (p - pc < exp.strName.len))
+                const char *p = ScanToken(exp.strName.buf, '@');
+                if (p && (p - exp.strName.buf < exp.strName.len))
                 {
                     int i;
 
                     /* Truncate the name to before the @ */
-                    exp.strName.len = (int)(p - pc);
+                    exp.strName.len = (int)(p - exp.strName.buf);
                     if (exp.strName.len < 1)
                     {
                         Fatal(pszSourceFileName, nLine, pcLine, p, 1, "Unexpected @");
@@ -1229,8 +1273,7 @@ ParseFile(char* pcStart, FILE *fileDest, unsigned *cExports)
             }
         }
 
-        /* Get optional redirection */
-        pc = NextToken(pc);
+        /* Check optional redirection */
         if (pc)
         {
             exp.strTarget.buf = pc;

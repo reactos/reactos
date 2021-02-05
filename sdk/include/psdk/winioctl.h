@@ -103,6 +103,7 @@ extern "C" {
 #define _DEVIOCTL_
 
 #define DEVICE_TYPE DWORD
+
 #define FILE_DEVICE_BEEP              1
 #define FILE_DEVICE_CD_ROM            2
 #define FILE_DEVICE_CD_ROM_FILE_SYSTEM 3
@@ -142,7 +143,7 @@ extern "C" {
 #define FILE_DEVICE_WAVE_IN           37
 #define FILE_DEVICE_WAVE_OUT          38
 #define FILE_DEVICE_8042_PORT         39
-#define FILE_DEVICE_NETWORK_REDIRECTOR  40
+#define FILE_DEVICE_NETWORK_REDIRECTOR 40
 #define FILE_DEVICE_BATTERY           41
 #define FILE_DEVICE_BUS_EXTENDER      42
 #define FILE_DEVICE_MODEM             43
@@ -160,6 +161,34 @@ extern "C" {
 #define FILE_DEVICE_SERENUM           55
 #define FILE_DEVICE_TERMSRV           56
 #define FILE_DEVICE_KSEC              57
+#define FILE_DEVICE_FIPS              58
+#define FILE_DEVICE_INFINIBAND        59
+#define FILE_DEVICE_VMBUS             62
+#define FILE_DEVICE_CRYPT_PROVIDER    63
+#define FILE_DEVICE_WPD               64
+#define FILE_DEVICE_BLUETOOTH         65
+#define FILE_DEVICE_MT_COMPOSITE      66
+#define FILE_DEVICE_MT_TRANSPORT      67
+#define FILE_DEVICE_BIOMETRIC         68
+#define FILE_DEVICE_PMI               69
+#define FILE_DEVICE_EHSTOR            70
+#define FILE_DEVICE_DEVAPI            71
+#define FILE_DEVICE_GPIO              72
+#define FILE_DEVICE_USBEX             73
+#define FILE_DEVICE_CONSOLE           80
+#define FILE_DEVICE_NFP               81
+#define FILE_DEVICE_SYSENV            82
+#define FILE_DEVICE_VIRTUAL_BLOCK     83
+#define FILE_DEVICE_POINT_OF_SERVICE  84
+#define FILE_DEVICE_STORAGE_REPLICATION 85
+#define FILE_DEVICE_TRUST_ENV         86
+#define FILE_DEVICE_UCM               87
+#define FILE_DEVICE_UCMTCPCI          88
+#define FILE_DEVICE_PERSISTENT_MEMORY 89
+#define FILE_DEVICE_NVDIMM            90
+#define FILE_DEVICE_HOLOGRAPHIC       91
+#define FILE_DEVICE_SDFXHCI           92
+#define FILE_DEVICE_UCMUCSI           93
 
 /*  Also in ddk/winddk.h */
 #define FILE_ANY_ACCESS        0x00000000
@@ -237,82 +266,7 @@ typedef struct _BIN_RESULTS {
     DWORD NumberOfBins;
     BIN_COUNT BinCounts[1];
 } BIN_RESULTS,*PBIN_RESULTS;
-typedef enum _PARTITION_STYLE {
-  PARTITION_STYLE_MBR,
-  PARTITION_STYLE_GPT,
-  PARTITION_STYLE_RAW
-} PARTITION_STYLE;
-typedef struct {
-  GUID DiskId;
-  DWORD MaxPartitionCount;
-} CREATE_DISK_GPT,*PCREATE_DISK_GPT;
-typedef struct {
-  DWORD Signature;
-} CREATE_DISK_MBR,*PCREATE_DISK_MBR;
-typedef struct {
-  PARTITION_STYLE PartitionStyle;
-  _ANONYMOUS_UNION union {
-    CREATE_DISK_MBR Mbr;
-    CREATE_DISK_GPT Gpt;
-  };
-} CREATE_DISK,*PCREATE_DISK;
-typedef enum {
-  EqualPriority,
-  KeepPrefetchedData,
-  KeepReadData
-} DISK_CACHE_RETENTION_PRIORITY;
-typedef struct _DISK_CACHE_INFORMATION {
-  BOOLEAN ParametersSavable;
-  BOOLEAN ReadCacheEnabled;
-  BOOLEAN WriteCacheEnabled;
-  DISK_CACHE_RETENTION_PRIORITY ReadRetentionPriority;
-  DISK_CACHE_RETENTION_PRIORITY WriteRetentionPriority;
-  WORD DisablePrefetchTransferLength;
-  BOOLEAN PrefetchScalar;
-  _ANONYMOUS_UNION union {
-    struct {
-      WORD Minimum;
-      WORD Maximum;
-      WORD MaximumBlocks;
-    } ScalarPrefetch;
-    struct {
-      WORD Minimum;
-      WORD Maximum;
-    } BlockPrefetch;
-  };
-} DISK_CACHE_INFORMATION,*PDISK_CACHE_INFORMATION;
-typedef enum _DETECTION_TYPE {
-  DetectNone,
-  DetectInt13,
-  DetectExInt13
-} DETECTION_TYPE;
-typedef struct _DISK_INT13_INFO {
-  WORD DriveSelect;
-  DWORD MaxCylinders;
-  WORD SectorsPerTrack;
-  WORD MaxHeads;
-  WORD NumberDrives;
-} DISK_INT13_INFO,*PDISK_INT13_INFO;
-typedef struct _DISK_EX_INT13_INFO {
-  WORD ExBufferSize;
-  WORD ExFlags;
-  DWORD ExCylinders;
-  DWORD ExHeads;
-  DWORD ExSectorsPerTrack;
-  DWORD64 ExSectorsPerDrive;
-  WORD ExSectorSize;
-  WORD ExReserved;
-} DISK_EX_INT13_INFO,*PDISK_EX_INT13_INFO;
-typedef struct _DISK_DETECTION_INFO {
-  DWORD SizeOfDetectInfo;
-  DETECTION_TYPE DetectionType;
-  _ANONYMOUS_UNION union {
-    _ANONYMOUS_STRUCT struct {
-      DISK_INT13_INFO Int13;
-      DISK_EX_INT13_INFO ExInt13;
-    };
-  };
-} DISK_DETECTION_INFO,*PDISK_DETECTION_INFO;
+
 typedef enum _MEDIA_TYPE {
   Unknown,
   F5_1Pt2_512,
@@ -340,35 +294,218 @@ typedef enum _MEDIA_TYPE {
   F3_200Mb_512,
   F3_240M_512,
   F3_32M_512
-} MEDIA_TYPE,*PMEDIA_TYPE;
+} MEDIA_TYPE, *PMEDIA_TYPE;
+
 typedef struct _DISK_GEOMETRY {
   LARGE_INTEGER Cylinders;
   MEDIA_TYPE MediaType;
   DWORD TracksPerCylinder;
   DWORD SectorsPerTrack;
   DWORD BytesPerSector;
-} DISK_GEOMETRY,*PDISK_GEOMETRY;
-typedef struct _DISK_GEOMETRY_EX {
-  DISK_GEOMETRY Geometry;
-  LARGE_INTEGER DiskSize;
-  BYTE Data[1];
-} DISK_GEOMETRY_EX,*PDISK_GEOMETRY_EX;
-typedef struct _DISK_GROW_PARTITION {
+} DISK_GEOMETRY, *PDISK_GEOMETRY;
+typedef struct _PARTITION_INFORMATION {
+  LARGE_INTEGER StartingOffset;
+  LARGE_INTEGER PartitionLength;
+  DWORD HiddenSectors;
   DWORD PartitionNumber;
-  LARGE_INTEGER BytesToGrow;
-} DISK_GROW_PARTITION, *PDISK_GROW_PARTITION;
+  BYTE PartitionType;
+  BOOLEAN BootIndicator;
+  BOOLEAN RecognizedPartition;
+  BOOLEAN RewritePartition;
+} PARTITION_INFORMATION, *PPARTITION_INFORMATION;
+typedef struct _DRIVE_LAYOUT_INFORMATION {
+  DWORD PartitionCount;
+  DWORD Signature;
+  PARTITION_INFORMATION PartitionEntry[1];
+} DRIVE_LAYOUT_INFORMATION, *PDRIVE_LAYOUT_INFORMATION;
+typedef struct _SET_PARTITION_INFORMATION {
+  BYTE PartitionType;
+} SET_PARTITION_INFORMATION, *PSET_PARTITION_INFORMATION;
+
+#if (_WIN32_WINNT >= 0x0500)
+/* Actually it should be > 0x0500, since this is not present in Windows 2000;
+ * however we keep >= 0x0500 for compatibility with MS PSDK. */
+
+typedef enum _PARTITION_STYLE {
+  PARTITION_STYLE_MBR,
+  PARTITION_STYLE_GPT,
+  PARTITION_STYLE_RAW
+} PARTITION_STYLE;
+
+typedef struct _CREATE_DISK_GPT {
+  GUID DiskId;
+  DWORD MaxPartitionCount;
+} CREATE_DISK_GPT, *PCREATE_DISK_GPT;
+typedef struct _CREATE_DISK_MBR {
+  DWORD Signature;
+} CREATE_DISK_MBR, *PCREATE_DISK_MBR;
+typedef struct _CREATE_DISK {
+  PARTITION_STYLE PartitionStyle;
+  _ANONYMOUS_UNION union {
+    CREATE_DISK_MBR Mbr;
+    CREATE_DISK_GPT Gpt;
+  };
+} CREATE_DISK, *PCREATE_DISK;
+
+typedef enum _DETECTION_TYPE {
+  DetectNone,
+  DetectInt13,
+  DetectExInt13
+} DETECTION_TYPE;
+typedef struct _DISK_INT13_INFO {
+  WORD DriveSelect;
+  DWORD MaxCylinders;
+  WORD SectorsPerTrack;
+  WORD MaxHeads;
+  WORD NumberDrives;
+} DISK_INT13_INFO, *PDISK_INT13_INFO;
+typedef struct _DISK_EX_INT13_INFO {
+  WORD ExBufferSize;
+  WORD ExFlags;
+  DWORD ExCylinders;
+  DWORD ExHeads;
+  DWORD ExSectorsPerTrack;
+  DWORD64 ExSectorsPerDrive;
+  WORD ExSectorSize;
+  WORD ExReserved;
+} DISK_EX_INT13_INFO, *PDISK_EX_INT13_INFO;
+typedef struct _DISK_DETECTION_INFO {
+  DWORD SizeOfDetectInfo;
+  DETECTION_TYPE DetectionType;
+  _ANONYMOUS_UNION union {
+    _ANONYMOUS_STRUCT struct {
+      DISK_INT13_INFO Int13;
+      DISK_EX_INT13_INFO ExInt13;
+    };
+  };
+} DISK_DETECTION_INFO, *PDISK_DETECTION_INFO;
 typedef struct _DISK_PARTITION_INFO {
   DWORD SizeOfPartitionInfo;
   PARTITION_STYLE PartitionStyle;
   _ANONYMOUS_UNION union {
     struct {
       DWORD Signature;
+      DWORD CheckSum;
     } Mbr;
     struct {
       GUID DiskId;
     } Gpt;
   };
-} DISK_PARTITION_INFO,*PDISK_PARTITION_INFO;
+} DISK_PARTITION_INFO, *PDISK_PARTITION_INFO;
+typedef struct _DISK_GEOMETRY_EX {
+  DISK_GEOMETRY Geometry;
+  LARGE_INTEGER DiskSize;
+  BYTE Data[1];
+} DISK_GEOMETRY_EX, *PDISK_GEOMETRY_EX;
+
+#if (NTDDI_VERSION < NTDDI_WS03)
+#define DiskGeometryGetPartition(Geometry) \
+   ((PDISK_PARTITION_INFO)((Geometry) + 1))
+
+#define DiskGeometryGetDetect(Geometry)\
+ ((PDISK_DETECTION_INFO)(((PBYTE)DiskGeometryGetPartition(Geometry) + \
+  DiskGeometryGetPartition(Geometry)->SizeOfPartitionInfo)))
+#else
+#define DiskGeometryGetPartition(Geometry) \
+   ((PDISK_PARTITION_INFO)((Geometry)->Data))
+
+#define DiskGeometryGetDetect(Geometry)\
+ ((PDISK_DETECTION_INFO)(((ULONG_PTR)DiskGeometryGetPartition(Geometry) + \
+  DiskGeometryGetPartition(Geometry)->SizeOfPartitionInfo)))
+#endif
+
+typedef struct _PARTITION_INFORMATION_GPT {
+  GUID PartitionType;
+  GUID PartitionId;
+  DWORD64 Attributes;
+  WCHAR Name[36];
+} PARTITION_INFORMATION_GPT, *PPARTITION_INFORMATION_GPT;
+typedef struct _PARTITION_INFORMATION_MBR {
+  BYTE PartitionType;
+  BOOLEAN BootIndicator;
+  BOOLEAN RecognizedPartition;
+  DWORD HiddenSectors;
+} PARTITION_INFORMATION_MBR, *PPARTITION_INFORMATION_MBR;
+typedef struct _PARTITION_INFORMATION_EX {
+  PARTITION_STYLE PartitionStyle;
+  LARGE_INTEGER StartingOffset;
+  LARGE_INTEGER PartitionLength;
+  DWORD PartitionNumber;
+  BOOLEAN RewritePartition;
+#if (NTDDI_VERSION >= NTDDI_WIN10_RS3)
+  BOOLEAN  IsServicePartition;
+#endif
+  _ANONYMOUS_UNION union {
+    PARTITION_INFORMATION_MBR Mbr;
+    PARTITION_INFORMATION_GPT Gpt;
+  };
+} PARTITION_INFORMATION_EX, *PPARTITION_INFORMATION_EX;
+
+typedef struct _DRIVE_LAYOUT_INFORMATION_GPT {
+  GUID DiskId;
+  LARGE_INTEGER StartingUsableOffset;
+  LARGE_INTEGER UsableLength;
+  DWORD MaxPartitionCount;
+} DRIVE_LAYOUT_INFORMATION_GPT, *PDRIVE_LAYOUT_INFORMATION_GPT;
+typedef struct _DRIVE_LAYOUT_INFORMATION_MBR {
+  DWORD Signature;
+#if (NTDDI_VERSION >= NTDDI_WIN10_RS1)
+  DWORD CheckSum;
+#endif
+} DRIVE_LAYOUT_INFORMATION_MBR, *PDRIVE_LAYOUT_INFORMATION_MBR;
+typedef struct _DRIVE_LAYOUT_INFORMATION_EX {
+  DWORD PartitionStyle;
+  DWORD PartitionCount;
+  _ANONYMOUS_UNION union {
+    DRIVE_LAYOUT_INFORMATION_MBR Mbr;
+    DRIVE_LAYOUT_INFORMATION_GPT Gpt;
+  };
+  PARTITION_INFORMATION_EX PartitionEntry[1];
+} DRIVE_LAYOUT_INFORMATION_EX, *PDRIVE_LAYOUT_INFORMATION_EX;
+
+typedef SET_PARTITION_INFORMATION SET_PARTITION_INFORMATION_MBR;
+typedef PARTITION_INFORMATION_GPT SET_PARTITION_INFORMATION_GPT;
+
+typedef struct _SET_PARTITION_INFORMATION_EX {
+  PARTITION_STYLE  PartitionStyle;
+  _ANONYMOUS_UNION union {
+    SET_PARTITION_INFORMATION_MBR  Mbr;
+    SET_PARTITION_INFORMATION_GPT  Gpt;
+  } DUMMYUNIONNAME;
+} SET_PARTITION_INFORMATION_EX, *PSET_PARTITION_INFORMATION_EX;
+
+#endif // (_WIN32_WINNT >= 0x0500)
+
+typedef struct _DISK_GROW_PARTITION {
+  DWORD PartitionNumber;
+  LARGE_INTEGER BytesToGrow;
+} DISK_GROW_PARTITION, *PDISK_GROW_PARTITION;
+typedef enum {
+  EqualPriority,
+  KeepPrefetchedData,
+  KeepReadData
+} DISK_CACHE_RETENTION_PRIORITY;
+typedef struct _DISK_CACHE_INFORMATION {
+  BOOLEAN ParametersSavable;
+  BOOLEAN ReadCacheEnabled;
+  BOOLEAN WriteCacheEnabled;
+  DISK_CACHE_RETENTION_PRIORITY ReadRetentionPriority;
+  DISK_CACHE_RETENTION_PRIORITY WriteRetentionPriority;
+  WORD DisablePrefetchTransferLength;
+  BOOLEAN PrefetchScalar;
+  _ANONYMOUS_UNION union {
+    struct {
+      WORD Minimum;
+      WORD Maximum;
+      WORD MaximumBlocks;
+    } ScalarPrefetch;
+    struct {
+      WORD Minimum;
+      WORD Maximum;
+    } BlockPrefetch;
+  };
+} DISK_CACHE_INFORMATION,*PDISK_CACHE_INFORMATION;
+
 typedef struct _DISK_PERFORMANCE {
     LARGE_INTEGER BytesRead;
     LARGE_INTEGER BytesWritten;
@@ -448,62 +585,6 @@ typedef struct _VOLUME_DISK_EXTENTS {
   DWORD NumberOfDiskExtents;
   DISK_EXTENT Extents[1];
 } VOLUME_DISK_EXTENTS,*PVOLUME_DISK_EXTENTS;
-typedef struct _PARTITION_INFORMATION {
-  LARGE_INTEGER StartingOffset;
-  LARGE_INTEGER PartitionLength;
-  DWORD HiddenSectors;
-  DWORD PartitionNumber;
-  BYTE PartitionType;
-  BOOLEAN BootIndicator;
-  BOOLEAN RecognizedPartition;
-  BOOLEAN RewritePartition;
-} PARTITION_INFORMATION,*PPARTITION_INFORMATION;
-typedef struct _DRIVE_LAYOUT_INFORMATION {
-  DWORD PartitionCount;
-  DWORD Signature;
-  PARTITION_INFORMATION PartitionEntry[1];
-} DRIVE_LAYOUT_INFORMATION, *PDRIVE_LAYOUT_INFORMATION;
-typedef struct _DRIVE_LAYOUT_INFORMATION_GPT {
-  GUID DiskId;
-  LARGE_INTEGER StartingUsableOffset;
-  LARGE_INTEGER UsableLength;
-  ULONG MaxPartitionCount;
-} DRIVE_LAYOUT_INFORMATION_GPT,*PDRIVE_LAYOUT_INFORMATION_GPT;
-typedef struct _DRIVE_LAYOUT_INFORMATION_MBR {
-  ULONG Signature;
-} DRIVE_LAYOUT_INFORMATION_MBR, *PDRIVE_LAYOUT_INFORMATION_MBR;
-typedef struct _PARTITION_INFORMATION_MBR {
-  BYTE PartitionType;
-  BOOLEAN BootIndicator;
-  BOOLEAN RecognizedPartition;
-  DWORD HiddenSectors;
-} PARTITION_INFORMATION_MBR;
-typedef struct _PARTITION_INFORMATION_GPT {
-  GUID PartitionType;
-  GUID PartitionId;
-  DWORD64 Attributes;
-  WCHAR Name[36];
-} PARTITION_INFORMATION_GPT;
-typedef struct _PARTITION_INFORMATION_EX {
-  PARTITION_STYLE PartitionStyle;
-  LARGE_INTEGER StartingOffset;
-  LARGE_INTEGER PartitionLength;
-  DWORD PartitionNumber;
-  BOOLEAN RewritePartition;
-  _ANONYMOUS_UNION union {
-    PARTITION_INFORMATION_MBR Mbr;
-    PARTITION_INFORMATION_GPT Gpt;
-  };
-} PARTITION_INFORMATION_EX;
-typedef struct _DRIVE_LAYOUT_INFORMATION_EX {
-  DWORD PartitionStyle;
-  DWORD PartitionCount;
-  _ANONYMOUS_UNION union {
-    DRIVE_LAYOUT_INFORMATION_MBR Mbr;
-    DRIVE_LAYOUT_INFORMATION_GPT Gpt;
-  };
-  PARTITION_INFORMATION_EX PartitionEntry[1];
-} DRIVE_LAYOUT_INFORMATION_EX,*PDRIVE_LAYOUT_INFORMATION_EX;
 typedef struct {
   HANDLE FileHandle;
   LARGE_INTEGER StartingVcn;
@@ -535,9 +616,6 @@ typedef struct _REASSIGN_BLOCKS {
   WORD Count;
   DWORD BlockNumber[1];
 } REASSIGN_BLOCKS,*PREASSIGN_BLOCKS;
-typedef struct _SET_PARTITION_INFORMATION {
-  BYTE PartitionType;
-} SET_PARTITION_INFORMATION,*PSET_PARTITION_INFORMATION;
 typedef struct {
   LARGE_INTEGER StartingLcn;
 } STARTING_LCN_INPUT_BUFFER,*PSTARTING_LCN_INPUT_BUFFER;

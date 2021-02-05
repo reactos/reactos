@@ -33,6 +33,14 @@ BOOLEAN KdbpSymbolsInitialized = FALSE;
 
 /* FUNCTIONS ****************************************************************/
 
+static NTSTATUS
+KdbSymGetAddressInformation(
+    IN PROSSYM_INFO RosSymInfo,
+    IN ULONG_PTR RelativeAddress,
+    OUT PULONG LineNumber  OPTIONAL,
+    OUT PCH FileName  OPTIONAL,
+    OUT PCH FunctionName  OPTIONAL);
+
 static BOOLEAN
 KdbpSymSearchModuleList(
     IN PLIST_ENTRY current_entry,
@@ -147,7 +155,7 @@ KdbpSymUnicodeToAnsi(IN PUNICODE_STRING Unicode,
 BOOLEAN
 KdbSymPrintAddress(
     IN PVOID Address,
-    IN PKTRAP_FRAME Context)
+    IN PCONTEXT Context)
 {
     PLDR_DATA_TABLE_ENTRY LdrEntry;
     ULONG_PTR RelativeAddress;
@@ -200,7 +208,7 @@ KdbSymPrintAddress(
  * \retval STATUS_SUCCESS  At least one of the requested informations was found.
  * \retval STATUS_UNSUCCESSFUL  None of the requested information was found.
  */
-NTSTATUS
+static NTSTATUS
 KdbSymGetAddressInformation(
     IN PROSSYM_INFO RosSymInfo,
     IN ULONG_PTR RelativeAddress,
@@ -363,6 +371,7 @@ KdbpSymLoadModuleSymbols(
     HANDLE FileHandle;
     NTSTATUS Status;
     IO_STATUS_BLOCK IoStatusBlock;
+    BOOLEAN Result;
 
     /* Allow KDB to break on module load */
     KdbModuleLoaded(FileName);
@@ -384,7 +393,7 @@ KdbpSymLoadModuleSymbols(
     /*  Open the file  */
     InitializeObjectAttributes(&ObjectAttributes,
                                FileName,
-                               0,
+                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
                                NULL,
                                NULL);
 
@@ -404,13 +413,14 @@ KdbpSymLoadModuleSymbols(
 
     DPRINT("Loading symbols from %wZ...\n", FileName);
 
-    if (!RosSymCreateFromFile(&FileHandle, RosSymInfo))
+    Result = RosSymCreateFromFile(&FileHandle, RosSymInfo);
+    ZwClose(FileHandle);
+    
+    if (!Result)
     {
         DPRINT("Failed to load symbols from %wZ\n", FileName);
         return;
     }
-
-    ZwClose(FileHandle);
 
     DPRINT("Symbols loaded.\n");
 

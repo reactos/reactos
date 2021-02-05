@@ -141,6 +141,7 @@ BEGIN
     IDS_INFO_UNINSTALLSTR   "\nアンインストールに使用する文字列: "
     IDS_INFO_MODIFYPATH     "\n変更に使用するパス: "
     IDS_INFO_INSTALLDATE    "\nインストールした日付: "
+    IDS_AINFO_PACKAGE_NAME "\nPackage Name: "
 END
 
 STRINGTABLE
@@ -210,6 +211,9 @@ BEGIN
     IDS_SELECTEDFORINST "インストールを選択済み"
     IDS_MISMATCH_CERT_INFO "証明書は未知のものです:\nSubject: %s\nIssuer: %s\nそれでも続けますか？"
     IDS_UNABLE_PATH "Incorrect path format."
+    IDS_APP_DISPLAY_DETAILS "details"
+    IDS_APP_DISPLAY_LIST "list"
+    IDS_APP_DISPLAY_TILE "tile"
 END
 
 STRINGTABLE
@@ -246,4 +250,16 @@ BEGIN
     IDS_DL_DIALOG_DB_DISP "アプリのデータベース"
     IDS_DL_DIALOG_DB_DOWNLOAD_DISP "データベースを更新中..."
     IDS_DL_DIALOG_DB_UNOFFICIAL_DOWNLOAD_DISP "Updating Database… (Unofficial source)"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_CMD_USAGE "Usage: "
+    IDS_CMD_NEED_PACKAGE_NAME "Error: option %1 expects one or more package name.\n"
+    IDS_CMD_NEED_FILE_NAME "Error: option %1 expects a file name.\n"
+    IDS_CMD_NEED_PARAMS "Error: option %1 expects one or more parameters.\n"
+    IDS_CMD_INVALID_OPTION "Error: Unknown or invalid command line option specified.\n"
+    IDS_CMD_FIND_RESULT_FOR "Find result for %1:\n"
+    IDS_CMD_PACKAGE_NOT_FOUND "Failed to find package %1.\n"
+    IDS_CMD_PACKAGE_INFO "Information about package %1:\n"
 END

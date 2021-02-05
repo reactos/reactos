@@ -40,7 +40,12 @@ if(CMAKE_C_COMPILER_ID STREQUAL "GNU")
     set(GCC TRUE CACHE BOOL "The compiler is GCC")
     set(CLANG FALSE CACHE BOOL "The compiler is LLVM Clang")
 elseif(CMAKE_C_COMPILER_ID STREQUAL "Clang")
-    set(GCC FALSE CACHE BOOL "The compiler is GCC")
+    # We can use LLVM Clang mimicking CL or GCC. Account for this
+    if (MSVC)
+        set(GCC FALSE CACHE BOOL "The compiler is GCC")
+    else()
+        set(GCC TRUE CACHE BOOL "The compiler is GCC")
+    endif()
     set(CLANG TRUE CACHE BOOL "The compiler is LLVM Clang")
 elseif(MSVC) # aka CMAKE_C_COMPILER_ID STEQUAL "MSVC"
     set(GCC FALSE CACHE BOOL "The compiler is GCC")
@@ -68,10 +73,6 @@ else()
     set(_WINKD_ FALSE CACHE BOOL "Whether to compile with the KD protocol.")
 endif()
 
-set(_ELF_ FALSE CACHE BOOL
-"Whether to compile support for ELF files.
-Do not enable unless you know what you're doing.")
-
 set(BUILD_MP TRUE CACHE BOOL
 "Whether to build the multiprocessor versions of NTOSKRNL and HAL.")
 
@@ -83,8 +84,9 @@ set(_PREFAST_ FALSE CACHE BOOL
 "Whether to enable PREFAST while compiling.")
 set(_VS_ANALYZE_ FALSE CACHE BOOL
 "Whether to enable static analysis while compiling.")
-
-    option(RUNTIME_CHECKS "Whether to enable runtime checks on MSVC" ON)
+    # RTC are incompatible with compiler optimizations.
+    cmake_dependent_option(RUNTIME_CHECKS "Whether to enable runtime checks on MSVC" ON
+                           "CMAKE_BUILD_TYPE STREQUAL Debug" OFF)
 endif()
 
 if(GCC)

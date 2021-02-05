@@ -4803,11 +4803,25 @@ DWORD WINAPI GetUIVersion(void)
  *
  * See shell32.ShellMessageBoxW
  *
+#ifndef __REACTOS__
+ *
  * NOTE:
  * shlwapi.ShellMessageBoxWrapW is a duplicate of shell32.ShellMessageBoxW
  * because we can't forward to it in the .spec file since it's exported by
  * ordinal. If you change the implementation here please update the code in
  * shell32 as well.
+ *
+#else // __REACTOS__
+ *
+ * From Vista+ onwards, all the implementation of ShellMessageBoxA/W that
+ * were existing in shell32 has been completely moved to shlwapi, so that
+ * shell32.ShellMessageBoxA and shell32.ShellMessageBoxW are redirections
+ * to the corresponding shlwapi functions.
+ *
+ * For Win2003 compatibility, if you change the implementation here please
+ * update the code of ShellMessageBoxA in shell32 as well.
+ *
+#endif
  */
 INT WINAPIV ShellMessageBoxWrapW(HINSTANCE hInstance, HWND hWnd, LPCWSTR lpText,
                                  LPCWSTR lpCaption, UINT uType, ...)
@@ -4823,7 +4837,7 @@ INT WINAPIV ShellMessageBoxWrapW(HINSTANCE hInstance, HWND hWnd, LPCWSTR lpText,
     TRACE("(%p,%p,%p,%p,%08x)\n", hInstance, hWnd, lpText, lpCaption, uType);
 
     if (IS_INTRESOURCE(lpCaption))
-        LoadStringW(hInstance, LOWORD(lpCaption), szTitle, sizeof(szTitle)/sizeof(szTitle[0]));
+        LoadStringW(hInstance, LOWORD(lpCaption), szTitle, ARRAY_SIZE(szTitle));
     else
         pszTitle = lpCaption;
 
@@ -4852,6 +4866,9 @@ INT WINAPIV ShellMessageBoxWrapW(HINSTANCE hInstance, HWND hWnd, LPCWSTR lpText,
 
     __ms_va_end(args);
 
+#ifdef __REACTOS__
+    uType |= MB_SETFOREGROUND;
+#endif
     ret = MessageBoxW(hWnd, pszTemp, pszTitle, uType);
 
     HeapFree(GetProcessHeap(), 0, szText);

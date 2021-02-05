@@ -40,3 +40,14 @@
 #define IDS_CERT_DATE_INVALID 0x502
 #define IDS_CERT_CN_INVALID   0x503
 #define IDS_CERT_ERRORS       0x504
+#define IDS_CERT_SUBJECT      0x505
+#define IDS_CERT_ISSUER       0x506
+#define IDS_CERT_EFFECTIVE    0x507
+#define IDS_CERT_EXPIRATION   0x508
+#define IDS_CERT_PROTOCOL     0x509
+#define IDS_CERT_SIGNATURE    0x50a
+#define IDS_CERT_ENCRYPTION   0x50b
+#define IDS_CERT_PRIVACY      0x50c
+#define IDS_CERT_HIGH         0x50d
+#define IDS_CERT_LOW          0x50e
+#define IDS_CERT_BITS         0x50f

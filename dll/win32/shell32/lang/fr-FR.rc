@@ -101,7 +101,7 @@ BEGIN
 END
 
 IDD_BROWSE_FOR_FOLDER_NEW DIALOGEX 15, 40, 218, 196
-STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU | WS_SIZEBOX
 CAPTION "Rechercher un dossier"
 FONT 8, "MS Shell Dlg"
 BEGIN
@@ -109,7 +109,7 @@ BEGIN
     LTEXT "", IDC_BROWSE_FOR_FOLDER_STATUS, 10, 25, 198, 12
     LTEXT "Dossier :", IDC_BROWSE_FOR_FOLDER_FOLDER, 10, 152, 40, 12
     CONTROL "", IDC_BROWSE_FOR_FOLDER_TREEVIEW, "SysTreeView32", TVS_HASBUTTONS | TVS_HASLINES | TVS_LINESATROOT | TVS_EDITLABELS | WS_BORDER | WS_TABSTOP, 12, 38, 194, 105
-    EDITTEXT IDC_BROWSE_FOR_FOLDER_FOLDER_TEXT, 46, 150, 160, 14, WS_BORDER | WS_GROUP | WS_TABSTOP
+    EDITTEXT IDC_BROWSE_FOR_FOLDER_FOLDER_TEXT, 46, 150, 160, 14, ES_AUTOHSCROLL | WS_BORDER | WS_GROUP | WS_TABSTOP
     PUSHBUTTON "Créer un nouveau dossier", IDC_BROWSE_FOR_FOLDER_NEW_FOLDER, 8, 174, 90, 14, WS_GROUP | WS_TABSTOP
     DEFPUSHBUTTON "OK", IDOK, 102, 174, 50, 14, BS_DEFPUSHBUTTON | WS_GROUP | WS_TABSTOP
     PUSHBUTTON "Annuler", IDCANCEL, 156, 174, 50, 14, WS_GROUP | WS_TABSTOP
@@ -140,7 +140,7 @@ BEGIN
     LTEXT COPYRIGHT_YEAR, IDC_STATIC, 88, 75, 17, 10
     LTEXT " ReactOS Team\0", IDC_STATIC, 105, 75, 53, 10
     LTEXT "", IDC_ABOUT_OTHERSTUFF, 35, 90, 180, 20
-    LTEXT "Cette version de ReactOS est enregistrée à :", IDC_STATIC, 35, 115, 180, 10
+    LTEXT "Cette version de ReactOS est enregistrée à :", IDC_ABOUT_REG_TO, 35, 115, 180, 10
     LTEXT "", IDC_ABOUT_REG_USERNAME, 45, 125, 180, 10
     LTEXT "", IDC_ABOUT_REG_ORGNAME, 45, 135, 180, 10
     LTEXT "", IDC_STATIC, 35, 147, 235, 1, SS_ETCHEDHORZ
@@ -740,7 +740,7 @@ BEGIN
     IDS_SHV_COLUMN_DELFROM "Localisation d'origine"
     IDS_SHV_COLUMN_DELDATE "Date de suppression"
     IDS_SHV_COLUMN_FONTTYPE "Type de police"
-    IDS_SHV_COLUMN_WORKGROUP "Workgroup"
+    IDS_SHV_COLUMN_WORKGROUP "Groupe de travail"
     IDS_SHV_COLUMN_NETLOCATION "Emplacement réseau"
     IDS_SHV_COLUMN_DOCUMENTS "Documents"
     IDS_SHV_COLUMN_STATUS "État"
@@ -998,12 +998,14 @@ BEGIN
     IDS_NO_ICONS "Le fichier '%s' ne contient pas d'icônes.\n\nVeuillez choisir une icône dans la liste ou sélectionner un fichier différent."
     IDS_FILE_NOT_FOUND "Le fichier '%s' ne peut être trouvé."
     IDS_LINK_INVALID "L'élément '%s' auquel ce raccourci fait référence a été modifié ou déplacé et ce raccourci ne fonctionne plus correctement."
-    IDS_COPYTOMENU "Copy to &folder..."
-    IDS_COPYTOTITLE "Select the place where you want to copy '%s'. Then click the Copy button."
-    IDS_COPYITEMS "Copy Items"
-    IDS_COPYBUTTON "Copy"
-    IDS_MOVETOMENU "Mo&ve to folder..."
-    IDS_MOVETOTITLE "Select the place where you want to move '%s' to. Then click the Move button."
-    IDS_MOVEITEMS "Move Items"
-    IDS_MOVEBUTTON "Move"
+    IDS_COPYTOMENU "Copie&r dans un dossier..."
+    IDS_COPYTOTITLE "Sélectionnez l'emplacement où vous souhaitez copier '%s', puis appuyez sur le bouton Copier."
+    IDS_COPYITEMS "Copier les éléments"
+    IDS_COPYBUTTON "Copier"
+    IDS_MOVETOMENU "&Déplacer vers un dossier..."
+    IDS_MOVETOTITLE "Sélectionnez l'emplacement où vous souhaitez déplacer '%s', puis appuyez sur le bouton Déplacer."
+    IDS_MOVEITEMS "Déplacer les éléments"
+    IDS_MOVEBUTTON "Déplacer"
+
+    IDS_SYSTEMFOLDER "Dossier système"
 END

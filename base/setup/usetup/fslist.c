@@ -29,6 +29,9 @@
 #define NDEBUG
 #include <debug.h>
 
+/* Enable this define to hide FAT32 choice in case FAT is already present */
+#define HIDE_FAT32_CHOICE
+
 /* FUNCTIONS ****************************************************************/
 
 static VOID
@@ -60,14 +63,38 @@ AddProvider(
 
 static VOID
 InitializeFileSystemList(
-    IN PFILE_SYSTEM_LIST List,
+    IN OUT PFILE_SYSTEM_LIST List,
     IN BOOLEAN ForceFormat)
 {
-    ULONG Index = 0;
     PCWSTR FileSystemName;
+    ULONG Index;
 
+#ifdef HIDE_FAT32_CHOICE
+    BOOLEAN FatPresent = FALSE;
+
+    /* Check whether the FAT filesystem is present */
+    Index = 0;
     while (GetRegisteredFileSystems(Index++, &FileSystemName))
     {
+        if (wcsicmp(FileSystemName, L"FAT") == 0)
+        {
+            FatPresent = TRUE;
+            break;
+        }
+    }
+
+#endif
+
+    Index = 0;
+    while (GetRegisteredFileSystems(Index++, &FileSystemName))
+    {
+#ifdef HIDE_FAT32_CHOICE
+        /* USETUP only: If the FAT filesystem is present, show it, but
+         * don't display FAT32. The FAT formatter will automatically
+         * determine whether to use FAT12/16 or FAT32. */
+        if (FatPresent && wcsicmp(FileSystemName, L"FAT32") == 0)
+            continue;
+#endif
         AddProvider(List, FileSystemName);
     }
 

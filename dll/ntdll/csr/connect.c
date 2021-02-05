@@ -407,7 +407,7 @@ CsrClientCallServer(IN OUT PCSR_API_MESSAGE ApiMessage,
             ApiMessage->CsrCaptureData = (PCSR_CAPTURE_BUFFER)
                 ((ULONG_PTR)CaptureBuffer + CsrPortMemoryDelta);
 
-            /* Lock the buffer. */
+            /* Lock the buffer */
             CaptureBuffer->BufferEnd = NULL;
 
             /*

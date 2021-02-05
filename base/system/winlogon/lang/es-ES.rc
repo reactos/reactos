@@ -1,4 +1,4 @@
-/* Spanish translation by Lucio Diaz-Flores Varela. Reviewed by Jose Pedro Fernandez Pascual. */
+/* Spanish translation by Lucio Diaz-Flores Varela & Catalin Gabriel Draghita. Reviewed by Jose Pedro Fernandez Pascual. */
 
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
@@ -24,14 +24,14 @@ END
 
 IDD_SYSSHUTDOWN DIALOGEX 50, 50, 180, 140
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_VISIBLE | WS_CAPTION | WS_POPUP
-CAPTION "System Shutdown"
+CAPTION "Apagar el Sistema"
 FONT 8, "MS Shell Dlg"
 BEGIN
     ICON IDI_WARNING, IDC_SYSSHUTDOWNICON, 6, 7, 18, 20
-    LTEXT "A system shutdown has been initiated. Please save all your work and terminate your session. All unsaved work will be lost when the system shuts down.", -1, 38, 7, 135, 40
-    LTEXT "The system shuts down in:", -1, 38, 50, 90, 8
+    LTEXT "Se ha iniciado el apagado del sistema. Por favor, guarda todo tu trabajo y cierra la sesión. Se perderá todo el trabajo no guardado.", -1, 38, 7, 135, 40
+    LTEXT "El sistema se apagará en:", -1, 38, 50, 90, 8
     LTEXT "00:00:00", IDC_SYSSHUTDOWNTIMELEFT, 132, 50, 41, 8
-    LTEXT "Message:", -1, 38, 65, 135, 8
+    LTEXT "Mensaje:", -1, 38, 65, 135, 8
     EDITTEXT IDC_SYSSHUTDOWNMESSAGE, 34, 75, 139, 58, ES_LEFT | ES_MULTILINE | ES_AUTOVSCROLL | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP, WS_EX_STATICEDGE
 END
 

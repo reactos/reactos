@@ -566,7 +566,7 @@ NpTransceive(IN PDEVICE_OBJECT DeviceObject,
             goto Quickie;
         }
 
-        IoSetCompletionRoutine(Irp, NpCompleteTransceiveIrp, NULL, TRUE, TRUE, TRUE);
+        IoSetCompletionRoutine(NewIrp, NpCompleteTransceiveIrp, NULL, TRUE, TRUE, TRUE);
 
         if (BytesWritten)
         {

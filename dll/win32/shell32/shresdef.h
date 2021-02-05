@@ -306,6 +306,8 @@
 #define IDS_MOVEITEMS                               30538
 #define IDS_MOVEBUTTON                              30539
 
+#define IDS_SYSTEMFOLDER                            30540
+
 /* Dialogs */
 
 /* Run dialog */
@@ -323,6 +325,7 @@
 #define IDS_ABOUT_VERSION_STRING      0x3501
 #define IDC_ABOUT_VERSION             0x3502
 #define IDC_ABOUT_OTHERSTUFF          0x350D
+#define IDC_ABOUT_REG_TO              0x3506
 #define IDC_ABOUT_REG_USERNAME        0x3507
 #define IDC_ABOUT_REG_ORGNAME         0x3508
 #define IDC_ABOUT_PHYSMEM             0x3503
@@ -797,6 +800,7 @@
 #define FCIDM_TB_REPORTVIEW 0xA004
 #define FCIDM_TB_DESKTOP    0xA005  /* FIXME */
 
+#define IDM_UNDO (FCIDM_SHVIEW_UNDO - 0x7000)
 #define IDM_CUT (FCIDM_SHVIEW_CUT - 0x7000)
 #define IDM_COPY (FCIDM_SHVIEW_COPY - 0x7000)
 #define IDM_INSERT (FCIDM_SHVIEW_INSERT - 0x7000)

@@ -34,12 +34,12 @@ list(APPEND SOURCE
     string.c
     vbarray.c)
 
-list(APPEND PCH_SKIP_SOURCE
-    cc_parser.tab.c
-    parser.tab.c)
+BISON_TARGET(cc_parser cc_parser.y ${CMAKE_CURRENT_BINARY_DIR}/cc_parser.tab.c COMPILE_FLAGS "-p cc_parser_")
+BISON_TARGET(parser parser.y ${CMAKE_CURRENT_BINARY_DIR}/parser.tab.c COMPILE_FLAGS "-p parser_")
 
-# cc_parser.tab.c/parser.tab.c have been generated with relative file paths...
-set_source_files_properties(cc_parser.tab.c parser.tab.c PROPERTIES COMPILE_FLAGS "-UREACTOS_SOURCE_DIR -DREACTOS_SOURCE_DIR=\"\\\".\\\"\"")
+list(APPEND PCH_SKIP_SOURCE
+    ${BISON_cc_parser_OUTPUTS}
+    ${BISON_parser_OUTPUTS})
 
 list(APPEND jscript_rc_deps
     ${CMAKE_CURRENT_SOURCE_DIR}/jscript.rgs

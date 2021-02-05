@@ -125,11 +125,11 @@ MiIsHyperspaceAddress(PVOID Address)
 }
 
 VOID
-MiFlushTlb(PMMPTE Pte, PVOID Address)
+MiFlushTlb(PMMPTE Pte, PVOID Address, KIRQL OldIrql)
 {
     if (MiIsHyperspaceAddress(Pte))
     {
-        MmDeleteHyperspaceMapping((PVOID)PAGE_ROUND_DOWN(Pte));
+        MiUnmapPageInHyperSpace(PsGetCurrentProcess(), (PVOID)PAGE_ROUND_DOWN(Pte), OldIrql);
     }
     else
     {
@@ -142,77 +142,71 @@ PMMPTE
 MiGetPteForProcess(
     PEPROCESS Process,
     PVOID Address,
-    BOOLEAN Create)
+    BOOLEAN Create,
+    PKIRQL OldIrql
+)
 {
-    MMPTE TmplPte, *Pte;
+    PMMPTE Pte;
+    PMMPDE Pde;
+    PMMPPE Ppe;
+    PMMPXE Pxe;
 
-    /* Check if we need hypersapce mapping */
-    if (Address < MmSystemRangeStart &&
-        Process && Process != PsGetCurrentProcess())
+    *OldIrql = 0;
+    /* Make sure the process is correct */
+    if (Address < MmSystemRangeStart)
     {
-        UNIMPLEMENTED;
-        __debugbreak();
-        return NULL;
-    }
-    else if (Create)
-    {
-        KIRQL OldIrql;
-        TmplPte.u.Long = 0;
-        TmplPte.u.Flush.Valid = 1;
-        TmplPte.u.Flush.Write = 1;
-
-        /* All page table levels of user pages are user owned */
-        TmplPte.u.Flush.Owner = (Address < MmHighestUserAddress) ? 1 : 0;
-
-        /* Lock the PFN database */
-        OldIrql = MiAcquirePfnLock();
-
-        /* Get the PXE */
-        Pte = MiAddressToPxe(Address);
-        if (!Pte->u.Hard.Valid)
-        {
-            TmplPte.u.Hard.PageFrameNumber = MiRemoveZeroPage(0);
-            MI_WRITE_VALID_PTE(Pte, TmplPte);
-        }
-
-        /* Get the PPE */
-        Pte = MiAddressToPpe(Address);
-        if (!Pte->u.Hard.Valid)
-        {
-            TmplPte.u.Hard.PageFrameNumber = MiRemoveZeroPage(1);
-            MI_WRITE_VALID_PTE(Pte, TmplPte);
-        }
-
-        /* Get the PDE */
-        Pte = MiAddressToPde(Address);
-        if (!Pte->u.Hard.Valid)
-        {
-            TmplPte.u.Hard.PageFrameNumber = MiRemoveZeroPage(2);
-            MI_WRITE_VALID_PTE(Pte, TmplPte);
-        }
-
-        /* Unlock PFN database */
-        MiReleasePfnLock(OldIrql);
+        /* FIXME: Implement this case */
+        ASSERT(Process == PsGetCurrentProcess());
     }
     else
     {
-        /* Get the PXE */
-        Pte = MiAddressToPxe(Address);
-        if (!Pte->u.Hard.Valid)
+        ASSERT((Process == NULL) || (Process == PsGetCurrentProcess()));
+    }
+
+    Pxe = MiAddressToPxe(Address);
+    Ppe = MiAddressToPpe(Address);
+    Pde = MiAddressToPde(Address);
+    Pte = MiAddressToPte(Address);
+
+    if (Create)
+    {
+        /* Check the PXE */
+        if (Pxe->u.Long == 0)
+        {
+            /* Make it demand zero */
+            MI_WRITE_INVALID_PDE(Pxe, DemandZeroPde);
+        }
+
+        /* Check the PPE */
+        if (Ppe->u.Long == 0)
+        {
+            /* Make it demand zero */
+            MI_WRITE_INVALID_PDE(Ppe, DemandZeroPde);
+        }
+
+        /* Check the PDE */
+        if (Pde->u.Long == 0)
+        {
+            /* Make it demand zero */
+            MI_WRITE_INVALID_PDE(Pde, DemandZeroPde);
+        }
+    }
+    else
+    {
+        /* Check the PXE */
+        if (!Pxe->u.Hard.Valid)
             return NULL;
 
-        /* Get the PPE */
-        Pte = MiAddressToPpe(Address);
-        if (!Pte->u.Hard.Valid)
+        /* Check the PPE */
+        if (!Ppe->u.Hard.Valid)
             return NULL;
 
-        /* Get the PDE */
-        Pte = MiAddressToPde(Address);
-        if (!Pte->u.Hard.Valid)
+        /* Check the PDE */
+        if (!Pde->u.Hard.Valid)
             return NULL;
     }
 
-    return MiAddressToPte(Address);
+    return Pte;
 }
 
 static
@@ -223,12 +217,13 @@ MiGetPteValueForProcess(
 {
     PMMPTE Pte;
     ULONG64 PteValue;
+    KIRQL OldIrql;
 
-    Pte = MiGetPteForProcess(Process, Address, FALSE);
+    Pte = MiGetPteForProcess(Process, Address, FALSE, &OldIrql);
     PteValue = Pte ? Pte->u.Long : 0;
 
     if (MiIsHyperspaceAddress(Pte))
-        MmDeleteHyperspaceMapping((PVOID)PAGE_ROUND_DOWN(Pte));
+        MiUnmapPageInHyperSpace(PsGetCurrentProcess(), (PVOID)PAGE_ROUND_DOWN(Pte), OldIrql);
 
     return PteValue;
 }
@@ -272,8 +267,8 @@ MiGetPteProtection(MMPTE Pte)
     return Protect;
 }
 
+static
 VOID
-NTAPI
 MiSetPteProtection(PMMPTE Pte, ULONG Protection)
 {
     Pte->u.Flush.CopyOnWrite = (Protection & PAGE_WRITECOPY_ANY) ? 1 : 0;
@@ -282,7 +277,7 @@ MiSetPteProtection(PMMPTE Pte, ULONG Protection)
     Pte->u.Flush.WriteThrough = (Protection & PAGE_WRITETHROUGH) ? 1 : 0;
 
     // FIXME: This doesn't work. Why?
-//    Pte->u.Flush.NoExecute = (Protection & PAGE_EXECUTE_ANY) ? 0 : 1;
+    Pte->u.Flush.NoExecute = (Protection & PAGE_EXECUTE_ANY) ? 0 : 1;
 }
 
 /* FUNCTIONS ***************************************************************/
@@ -313,7 +308,7 @@ MmIsDisabledPage(PEPROCESS Process, PVOID Address)
     MMPTE Pte;
     Pte.u.Long = MiGetPteValueForProcess(Process, Address);
 
-    return (Pte.u.Hard.Valid == 0) && 
+    return (Pte.u.Hard.Valid == 0) &&
            (Pte.u.Trans.Transition == 0) &&
            (Pte.u.Hard.PageFrameNumber != 0);
 }
@@ -324,34 +319,7 @@ MmIsPageSwapEntry(PEPROCESS Process, PVOID Address)
 {
     MMPTE Pte;
     Pte.u.Long = MiGetPteValueForProcess(Process, Address);
-    return Pte.u.Hard.Valid && Pte.u.Soft.Transition;
-}
-
-static PMMPTE
-MmGetPageTableForProcess(PEPROCESS Process, PVOID Address, BOOLEAN Create)
-{
-    __debugbreak();
-    return 0;
-}
-
-BOOLEAN MmUnmapPageTable(PMMPTE Pt)
-{
-    ASSERT(FALSE);
-    return 0;
-}
-
-static ULONG64 MmGetPageEntryForProcess(PEPROCESS Process, PVOID Address)
-{
-    MMPTE Pte, *PointerPte;
-
-    PointerPte = MmGetPageTableForProcess(Process, Address, FALSE);
-    if (PointerPte)
-    {
-        Pte = *PointerPte;
-        MmUnmapPageTable(PointerPte);
-        return Pte.u.Long;
-    }
-    return 0;
+    return !Pte.u.Hard.Valid && Pte.u.Soft.Transition;
 }
 
 VOID
@@ -361,8 +329,12 @@ MmGetPageFileMapping(
     PVOID Address,
     SWAPENTRY* SwapEntry)
 {
-	ULONG64 Entry = MmGetPageEntryForProcess(Process, Address);
-	*SwapEntry = Entry >> 1;
+    PMMPTE PointerPte;
+
+    ASSERT(Process == PsGetCurrentProcess());
+
+    PointerPte = MiAddressToPte(Address);
+    *SwapEntry = PointerPte->u.Long >> 1;
 }
 
 BOOLEAN
@@ -391,8 +363,9 @@ MmSetPageProtect(PEPROCESS Process, PVOID Address, ULONG flProtect)
 {
     PMMPTE Pte;
     MMPTE NewPte;
+    KIRQL OldIrql;
 
-    Pte = MiGetPteForProcess(Process, Address, FALSE);
+    Pte = MiGetPteForProcess(Process, Address, FALSE, &OldIrql);
     ASSERT(Pte != NULL);
 
     NewPte = *Pte;
@@ -401,7 +374,7 @@ MmSetPageProtect(PEPROCESS Process, PVOID Address, ULONG flProtect)
 
     InterlockedExchangePte(Pte, NewPte);
 
-    MiFlushTlb(Pte, Address);
+    MiFlushTlb(Pte, Address, OldIrql);
 }
 
 VOID
@@ -409,8 +382,9 @@ NTAPI
 MmSetCleanPage(PEPROCESS Process, PVOID Address)
 {
     PMMPTE Pte;
+    KIRQL OldIrql;
 
-    Pte = MiGetPteForProcess(Process, Address, FALSE);
+    Pte = MiGetPteForProcess(Process, Address, FALSE, &OldIrql);
     if (!Pte)
     {
         KeBugCheckEx(MEMORY_MANAGEMENT, 0x1234, (ULONG64)Address, 0, 0);
@@ -423,7 +397,7 @@ MmSetCleanPage(PEPROCESS Process, PVOID Address)
             __invlpg(Address);
     }
 
-    MiFlushTlb(Pte, Address);
+    MiFlushTlb(Pte, Address, OldIrql);
 }
 
 VOID
@@ -431,8 +405,9 @@ NTAPI
 MmSetDirtyPage(PEPROCESS Process, PVOID Address)
 {
     PMMPTE Pte;
+    KIRQL OldIrql;
 
-    Pte = MiGetPteForProcess(Process, Address, FALSE);
+    Pte = MiGetPteForProcess(Process, Address, FALSE, &OldIrql);
     if (!Pte)
     {
         KeBugCheckEx(MEMORY_MANAGEMENT, 0x1234, (ULONG64)Address, 0, 0);
@@ -445,7 +420,7 @@ MmSetDirtyPage(PEPROCESS Process, PVOID Address)
             __invlpg(Address);
     }
 
-    MiFlushTlb(Pte, Address);
+    MiFlushTlb(Pte, Address, OldIrql);
 }
 
 VOID
@@ -459,8 +434,9 @@ MmDeleteVirtualMapping(
     PFN_NUMBER Pfn;
     PMMPTE Pte;
     MMPTE OldPte;
+    KIRQL OldIrql;
 
-    Pte = MiGetPteForProcess(Process, Address, FALSE);
+    Pte = MiGetPteForProcess(Process, Address, FALSE, &OldIrql);
 
     if (Pte)
     {
@@ -487,7 +463,7 @@ MmDeleteVirtualMapping(
     if (Page)
         *Page = Pfn;
 
-    MiFlushTlb(Pte, Address);
+    MiFlushTlb(Pte, Address, OldIrql);
 }
 
 VOID
@@ -495,7 +471,27 @@ NTAPI
 MmDeletePageFileMapping(PEPROCESS Process, PVOID Address,
                         SWAPENTRY* SwapEntry)
 {
-    UNIMPLEMENTED;
+    PMMPTE Pte;
+    KIRQL OldIrql;
+
+    Pte = MiGetPteForProcess(Process, Address, FALSE, &OldIrql);
+    if (Pte == NULL)
+    {
+        *SwapEntry = 0;
+        return;
+    }
+
+    if (Pte->u.Trans.Valid || !Pte->u.Trans.Transition)
+    {
+        DPRINT1("Pte %x (want not 1 and 0x800)\n", Pte);
+        KeBugCheck(MEMORY_MANAGEMENT);
+    }
+
+    *SwapEntry = Pte->u.Long >> 1;
+    MI_ERASE_PTE(Pte);
+
+    if (MiIsHyperspaceAddress(Pte))
+        MiUnmapPageInHyperSpace(PsGetCurrentProcess(), (PVOID)PAGE_ROUND_DOWN(Pte), OldIrql);
 }
 
 NTSTATUS
@@ -504,7 +500,40 @@ MmCreatePageFileMapping(PEPROCESS Process,
                         PVOID Address,
                         SWAPENTRY SwapEntry)
 {
-    UNIMPLEMENTED;
+    PMMPTE Pte;
+    MMPTE PteValue;
+    KIRQL OldIrql;
+
+    if (Process == NULL && Address < MmSystemRangeStart)
+    {
+        DPRINT1("No process\n");
+        KeBugCheck(MEMORY_MANAGEMENT);
+    }
+    if (Process != NULL && Address >= MmSystemRangeStart)
+    {
+        DPRINT1("Setting kernel address with process context\n");
+        KeBugCheck(MEMORY_MANAGEMENT);
+    }
+
+    if (SwapEntry & (1ull << 63))
+    {
+        KeBugCheck(MEMORY_MANAGEMENT);
+    }
+
+    /* Allocate a PTE */
+    Pte = MiGetPteForProcess(Process, Address, TRUE, &OldIrql);
+    if (Pte == NULL)
+    {
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    NT_ASSERT(Pte->u.Long == 0);
+    PteValue.u.Long = SwapEntry << 1;
+    MI_WRITE_INVALID_PTE(Pte, PteValue);
+
+    if (MiIsHyperspaceAddress(Pte))
+        MiUnmapPageInHyperSpace(PsGetCurrentProcess(), (PVOID)PAGE_ROUND_DOWN(Pte), OldIrql);
+
     return STATUS_UNSUCCESSFUL;
 }
 
@@ -541,9 +570,11 @@ MmCreateVirtualMappingUnsafe(
 
     for (i = 0; i < PageCount; i++)
     {
+        KIRQL OldIrql;
+
         TmplPte.u.Hard.PageFrameNumber = Pages[i];
 
-        Pte = MiGetPteForProcess(Process, Address, TRUE);
+        Pte = MiGetPteForProcess(Process, Address, TRUE, &OldIrql);
 
 DPRINT("MmCreateVirtualMappingUnsafe, Address=%p, TmplPte=%p, Pte=%p\n",
         Address, TmplPte.u.Long, Pte);
@@ -554,7 +585,7 @@ DPRINT("MmCreateVirtualMappingUnsafe, Address=%p, TmplPte=%p, Pte=%p\n",
         }
 
         if (MiIsHyperspaceAddress(Pte))
-            MmDeleteHyperspaceMapping((PVOID)PAGE_ROUND_DOWN(Pte));
+            MiUnmapPageInHyperSpace(PsGetCurrentProcess(), (PVOID)PAGE_ROUND_DOWN(Pte), OldIrql);
 
         Address = (PVOID)((ULONG64)Address + PAGE_SIZE);
     }
@@ -626,8 +657,11 @@ MmCreateProcessAddressSpace(IN ULONG MinWs,
     /* Release PFN lock */
     MiReleasePfnLock(OldIrql);
 
-    /* Zero pages */ /// FIXME:
+    /* Zero pages */
+    MiZeroPhysicalPage(TableBasePfn);
     MiZeroPhysicalPage(HyperPfn);
+    MiZeroPhysicalPage(HyperPdPfn);
+    MiZeroPhysicalPage(HyperPtPfn);
     MiZeroPhysicalPage(WorkingSetPfn);
 
     /* Set the base directory pointers */
@@ -710,6 +744,8 @@ MmCreateProcessAddressSpace(IN ULONG MinWs,
     ASSERT(Process->AddressSpaceInitialized == 0);
     Process->AddressSpaceInitialized = 1;
 
+    /* Add the process to the session */
+    MiSessionAddProcess(Process);
     return TRUE;
 }
 

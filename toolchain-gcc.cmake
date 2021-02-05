@@ -16,11 +16,7 @@ if(NOT DEFINED MINGW_TOOLCHAIN_PREFIX)
         if(CMAKE_HOST_WIN32)
             set(MINGW_TOOLCHAIN_PREFIX "" CACHE STRING "MinGW Toolchain Prefix")
         else()
-            if(NOT $ENV{_ROSBE_VERSION} VERSION_LESS 2.1)
-                set(MINGW_TOOLCHAIN_PREFIX "i686-w64-mingw32-" CACHE STRING "MinGW-W64 Toolchain Prefix")
-            else()
-                set(MINGW_TOOLCHAIN_PREFIX "mingw32-" CACHE STRING "MinGW Toolchain Prefix")
-            endif()
+            set(MINGW_TOOLCHAIN_PREFIX "i686-w64-mingw32-" CACHE STRING "MinGW-W64 Toolchain Prefix")
         endif()
 
     elseif(ARCH STREQUAL "amd64")
@@ -32,12 +28,6 @@ endif()
 
 if(NOT DEFINED MINGW_TOOLCHAIN_SUFFIX)
     set(MINGW_TOOLCHAIN_SUFFIX "" CACHE STRING "MinGW Toolchain Suffix")
-endif()
-
-if(ENABLE_CCACHE)
-    set(CCACHE "ccache" CACHE STRING "ccache")
-else()
-    set(CCACHE "" CACHE STRING "ccache")
 endif()
 
 # The name of the target operating system

@@ -851,8 +851,8 @@ SmpCreateVolumeDescriptors(VOID)
     wcscpy(Buffer, L"\\??\\A:\\");
     RtlInitUnicodeString(&VolumePath, Buffer);
 
-    /* Start with the C drive except on weird Japanese NECs... */
-    StartChar = SharedUserData->AlternativeArchitecture ? L'A' : L'C';
+    /* Start with the C drive, except on NEC PC-98 */
+    StartChar = IsNEC_98 ? L'A' : L'C';
     for (Drive = StartChar, DriveDiff = StartChar - L'A'; Drive <= L'Z'; Drive++, DriveDiff++)
     {
         /* Skip the disk if it's not in the drive map */

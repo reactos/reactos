@@ -38,17 +38,23 @@
 #include "pidl.h"
 #include "shell32_main.h"
 #include "shresdef.h"
+#ifdef __REACTOS__
+    #include <shlwapi.h>
+    #include "layout.h" /* Resizable window */
+#endif
 
 WINE_DEFAULT_DEBUG_CHANNEL(shell);
 
 #define SHV_CHANGE_NOTIFY (WM_USER + 0x1111)
 
+#ifndef __REACTOS__ /* Defined in "layout.h" */
 /* original margins and control size */
 typedef struct tagLAYOUT_DATA
 {
     LONG left, width, right;
     LONG top, height, bottom;
 } LAYOUT_DATA;
+#endif
 
 typedef struct tagbrowse_info
 {
@@ -69,17 +75,21 @@ typedef struct tagTV_ITEMDATA
    IEnumIDList*  pEnumIL;    /* Children iterator */ 
 } TV_ITEMDATA, *LPTV_ITEMDATA;
 
+#ifndef __REACTOS__ /* Defined in "layout.h" */
 typedef struct tagLAYOUT_INFO
 {
     int iItemId;          /* control id */
     DWORD dwAnchor;       /* BF_* flags specifying which margins should remain constant */
 } LAYOUT_INFO;
+#endif
 
 static const LAYOUT_INFO g_layout_info[] =
 {
     {IDC_BROWSE_FOR_FOLDER_TITLE,         BF_TOP|BF_LEFT|BF_RIGHT},
     {IDC_BROWSE_FOR_FOLDER_STATUS,        BF_TOP|BF_LEFT|BF_RIGHT},
+#ifndef __REACTOS__ /* Duplicated */
     {IDC_BROWSE_FOR_FOLDER_FOLDER,        BF_TOP|BF_LEFT|BF_RIGHT},
+#endif
     {IDC_BROWSE_FOR_FOLDER_TREEVIEW,      BF_TOP|BF_BOTTOM|BF_LEFT|BF_RIGHT},
     {IDC_BROWSE_FOR_FOLDER_FOLDER,        BF_BOTTOM|BF_LEFT},
     {IDC_BROWSE_FOR_FOLDER_FOLDER_TEXT,    BF_BOTTOM|BF_LEFT|BF_RIGHT},
@@ -122,6 +132,7 @@ static void browsefolder_callback( LPBROWSEINFOW lpBrowseInfo, HWND hWnd,
     lpBrowseInfo->lpfn( hWnd, msg, param, lpBrowseInfo->lParam );
 }
 
+#ifndef __REACTOS__ /* Defined in "layout.h" */
 static LAYOUT_DATA *LayoutInit(HWND hwnd, const LAYOUT_INFO *layout_info, int layout_count)
 {
     LAYOUT_DATA *data;
@@ -182,6 +193,7 @@ static void LayoutUpdate(HWND hwnd, LAYOUT_DATA *data, const LAYOUT_INFO *layout
         SetWindowPos(hItem, NULL, r.left, r.top, r.right - r.left, r.bottom - r.top, SWP_NOZORDER);
     }
 }
+#endif
 
 
 /******************************************************************************
@@ -961,13 +973,28 @@ cleanup:
 static BOOL BrsFolder_OnCommand( browse_info *info, UINT id )
 {
     LPBROWSEINFOW lpBrowseInfo = info->lpBrowseInfo;
+#ifdef __REACTOS__
+    WCHAR szPath[MAX_PATH];
+#endif
 
     switch (id)
     {
     case IDOK:
 #ifdef __REACTOS__
+        /* Get the text */
+        GetDlgItemTextW(info->hWnd, IDC_BROWSE_FOR_FOLDER_FOLDER_TEXT, szPath, _countof(szPath));
+        StrTrimW(szPath, L" \t");
+
         /* The original pidl is owned by the treeview and will be free'd. */
-        info->pidlRet = ILClone(info->pidlRet);
+        if (!PathIsRelativeW(szPath) && PathIsDirectoryW(szPath))
+        {
+            /* It's valid path */
+            info->pidlRet = ILCreateFromPathW(szPath);
+        }
+        else
+        {
+            info->pidlRet = ILClone(info->pidlRet);
+        }
 #endif
         if (info->pidlRet == NULL) /* A null pidl would mean a cancel */
             info->pidlRet = _ILCreateDesktop();
@@ -1013,6 +1040,14 @@ static BOOL BrsFolder_OnSetExpanded(browse_info *info, LPVOID selection,
         if (FAILED(hr)) 
             goto done;
     }
+#ifdef __REACTOS__
+    if (_ILIsDesktop(pidlSelection))
+    {
+        item.hItem = TVI_ROOT;
+        bResult = TRUE;
+        goto done;
+    }
+#endif
 
     /* Move pidlCurrent behind the SHITEMIDs in pidlSelection, which are the root of
      * the sub-tree currently displayed. */
@@ -1101,6 +1136,7 @@ static BOOL BrsFolder_OnSetSelectionA(browse_info *info, LPVOID selection, BOOL 
     return result;
 }
 
+#ifndef __REACTOS__ /* This is a buggy way (resize on title bar) */
 static LRESULT BrsFolder_OnWindowPosChanging(browse_info *info, WINDOWPOS *pos)
 {
     if ((info->lpBrowseInfo->ulFlags & BIF_NEWDIALOGSTYLE) && !(pos->flags & SWP_NOSIZE))
@@ -1112,12 +1148,17 @@ static LRESULT BrsFolder_OnWindowPosChanging(browse_info *info, WINDOWPOS *pos)
     }
     return 0;
 }
+#endif
 
 static INT BrsFolder_OnDestroy(browse_info *info)
 {
     if (info->layout)
     {
+#ifdef __REACTOS__
+        LayoutDestroy(info->layout);
+#else
         SHFree(info->layout);
+#endif
         info->layout = NULL;
     }
 
@@ -1200,8 +1241,15 @@ static INT_PTR CALLBACK BrsFolderDlgProc( HWND hWnd, UINT msg, WPARAM wParam,
     case WM_COMMAND:
         return BrsFolder_OnCommand( info, wParam );
 
+#ifdef __REACTOS__
+    case WM_GETMINMAXINFO:
+        ((LPMINMAXINFO)lParam)->ptMinTrackSize.x = info->szMin.cx;
+        ((LPMINMAXINFO)lParam)->ptMinTrackSize.y = info->szMin.cy;
+        return 0;
+#else /* This is a buggy way (resize on title bar) */
     case WM_WINDOWPOSCHANGING:
         return BrsFolder_OnWindowPosChanging( info, (WINDOWPOS *)lParam);
+#endif
 
     case WM_SIZE:
         if (info->layout)  /* new style dialogs */

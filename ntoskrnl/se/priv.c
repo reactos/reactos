@@ -13,10 +13,6 @@
 #define NDEBUG
 #include <debug.h>
 
-#if defined (ALLOC_PRAGMA)
-#pragma alloc_text(INIT, SepInitPrivileges)
-#endif
-
 /* GLOBALS ********************************************************************/
 
 #define CONST_LUID(x1, x2) {x1, x2}
@@ -58,7 +54,7 @@ const LUID SeCreateSymbolicLinkPrivilege = CONST_LUID(SE_CREATE_SYMBOLIC_LINK_PR
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 SepInitPrivileges(VOID)

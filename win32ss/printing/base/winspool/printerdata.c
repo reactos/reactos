@@ -57,7 +57,7 @@ DeletePrinterDataA(HANDLE hPrinter, PSTR pValueName)
 
     res = DeletePrinterDataW( hPrinter, valuenameW );
 
-    HeapFree(GetProcessHeap(), 0, valuenameW);
+    if (valuenameW) HeapFree(GetProcessHeap(), 0, valuenameW);
 
     return res;
 
@@ -89,8 +89,8 @@ DeletePrinterDataExA(HANDLE hPrinter, PCSTR pKeyName, PCSTR pValueName)
 
     res = DeletePrinterDataExW( hPrinter, keynameW, valuenameW );
 
-    HeapFree(GetProcessHeap(), 0, keynameW);
-    HeapFree(GetProcessHeap(), 0, valuenameW);
+    if (keynameW) HeapFree(GetProcessHeap(), 0, keynameW);
+    if (valuenameW) HeapFree(GetProcessHeap(), 0, valuenameW);
 
     return res;
 }
@@ -129,7 +129,7 @@ DeletePrinterKeyA(HANDLE hPrinter, PCSTR pKeyName)
 
     res = DeletePrinterKeyW( hPrinter, keynameW );
 
-    HeapFree(GetProcessHeap(), 0, keynameW);
+    if (keynameW) HeapFree(GetProcessHeap(), 0, keynameW);
 
     return res;
 }
@@ -219,18 +219,17 @@ EnumPrinterDataExA(HANDLE hPrinter, PCSTR pKeyName, PBYTE pEnumValues, DWORD cbE
     dwBufSize = 0;
     for (dwIndex = 0; dwIndex < *pnEnumValues; ++dwIndex)
     {
-	PPRINTER_ENUM_VALUESW ppev =
-		&((PPRINTER_ENUM_VALUESW) pEnumValues)[dwIndex];
+	PPRINTER_ENUM_VALUESW ppev = &((PPRINTER_ENUM_VALUESW) pEnumValues)[dwIndex];
 
 	if (dwBufSize < ppev->cbValueName)
 	    dwBufSize = ppev->cbValueName;
 
-	if (dwBufSize < ppev->cbData && (ppev->dwType == REG_SZ ||
-		ppev->dwType == REG_EXPAND_SZ || ppev->dwType == REG_MULTI_SZ))
+	if ( dwBufSize < ppev->cbData &&
+	    (ppev->dwType == REG_SZ || ppev->dwType == REG_EXPAND_SZ || ppev->dwType == REG_MULTI_SZ))
 	    dwBufSize = ppev->cbData;
     }
 
-    TRACE ("Largest Unicode name or value is %i bytes\n", dwBufSize);
+    FIXME ("Largest Unicode name or value is %i bytes\n", dwBufSize);
 
     pBuffer = HeapAlloc (hHeap, 0, dwBufSize);
     if (pBuffer == NULL)

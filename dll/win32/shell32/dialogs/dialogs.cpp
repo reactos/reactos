@@ -29,6 +29,7 @@ typedef struct
     LPCWSTR lpstrTitle;
     LPCWSTR lpstrDescription;
     UINT uFlags;
+    BOOL bCoInited;
 } RUNFILEDLGPARAMS;
 
 typedef BOOL (WINAPI * LPFNOFN) (OPENFILENAMEW *);
@@ -500,6 +501,8 @@ static void EnableOkButtonFromEditContents(HWND hwnd)
 static INT_PTR CALLBACK RunDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
     RUNFILEDLGPARAMS *prfdp = (RUNFILEDLGPARAMS *)GetWindowLongPtrW(hwnd, DWLP_USER);
+    HWND hwndCombo, hwndEdit;
+    COMBOBOXINFO ComboInfo;
 
     switch (message)
     {
@@ -538,10 +541,27 @@ static INT_PTR CALLBACK RunDlgProc(HWND hwnd, UINT message, WPARAM wParam, LPARA
             // SendMessageW(hwnd, WM_SETICON, ICON_SMALL, (LPARAM)prfdp->hIcon);
             SendMessageW(GetDlgItem(hwnd, IDC_RUNDLG_ICON), STM_SETICON, (WPARAM)prfdp->hIcon, 0);
 
-            FillList(GetDlgItem(hwnd, IDC_RUNDLG_EDITPATH), NULL, 0, (prfdp->uFlags & RFF_NODEFAULT) == 0);
+            hwndCombo = GetDlgItem(hwnd, IDC_RUNDLG_EDITPATH);
+            FillList(hwndCombo, NULL, 0, (prfdp->uFlags & RFF_NODEFAULT) == 0);
             EnableOkButtonFromEditContents(hwnd);
-            SetFocus(GetDlgItem(hwnd, IDC_RUNDLG_EDITPATH));
+
+            ComboInfo.cbSize = sizeof(ComboInfo);
+            GetComboBoxInfo(hwndCombo, &ComboInfo);
+            hwndEdit = ComboInfo.hwndItem;
+            ASSERT(::IsWindow(hwndEdit));
+
+            // SHAutoComplete needs co init
+            prfdp->bCoInited = SUCCEEDED(CoInitializeEx(NULL, COINIT_APARTMENTTHREADED));
+
+            SHAutoComplete(hwndEdit, SHACF_FILESYSTEM | SHACF_FILESYS_ONLY | SHACF_URLALL);
+
+            SetFocus(hwndCombo);
             return TRUE;
+
+        case WM_DESTROY:
+            if (prfdp->bCoInited)
+                CoUninitialize();
+            break;
 
         case WM_COMMAND:
             switch (LOWORD(wParam))

@@ -1,6 +1,6 @@
 /*++
 
-Copyright (C) Microsoft Corporation, 1991 - 1999
+Copyright (C) Microsoft Corporation, 1991 - 2010
 
 Module Name:
 
@@ -24,19 +24,29 @@ Revision History:
 --*/
 
 #include "classp.h"
+#include "debug.h"
 
-PIRP NTAPI ClassRemoveCScanList(IN PCSCAN_LIST List);
-VOID NTAPI ClasspInitializeCScanList(IN PCSCAN_LIST List);
+#ifdef DEBUG_USE_WPP
+#include "obsolete.tmh"
+#endif
+
+PIRP ClassRemoveCScanList(IN PCSCAN_LIST List);
+VOID ClasspInitializeCScanList(IN PCSCAN_LIST List);
 
 #ifdef ALLOC_PRAGMA
     #pragma alloc_text(PAGE, ClassDeleteSrbLookasideList)
     #pragma alloc_text(PAGE, ClassInitializeSrbLookasideList)
+    #pragma alloc_text(PAGE, ClasspInitializeCScanList)
 #endif
 
 typedef struct _CSCAN_LIST_ENTRY {
     LIST_ENTRY Entry;
     ULONGLONG BlockNumber;
 } CSCAN_LIST_ENTRY, *PCSCAN_LIST_ENTRY;
+
+
+
+
 
 /*
  *  ClassSplitRequest
@@ -46,24 +56,27 @@ typedef struct _CSCAN_LIST_ENTRY {
  *      StartIo routine when the transfer size is too large for the hardware.
  *      We map it to our new read/write handler.
  */
-VOID NTAPI ClassSplitRequest(IN PDEVICE_OBJECT Fdo, IN PIRP Irp, IN ULONG MaximumBytes)
+VOID
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+ClassSplitRequest(_In_ PDEVICE_OBJECT Fdo, _In_ PIRP Irp, _In_ ULONG MaximumBytes)
 {
     PFUNCTIONAL_DEVICE_EXTENSION fdoExt = Fdo->DeviceExtension;
     PCLASS_PRIVATE_FDO_DATA fdoData = fdoExt->PrivateFdoData;
 
     if (MaximumBytes > fdoData->HwMaxXferLen) {
-        DBGERR(("ClassSplitRequest - driver requesting split to size that "
+        TracePrint((TRACE_LEVEL_ERROR, TRACE_FLAG_RW, "ClassSplitRequest - driver requesting split to size that "
                 "hardware is unable to handle!\n"));
     }
 
     if (MaximumBytes < fdoData->HwMaxXferLen){
-        DBGWARN(("ClassSplitRequest - driver requesting smaller HwMaxXferLen "
+        TracePrint((TRACE_LEVEL_WARNING, TRACE_FLAG_RW, "ClassSplitRequest - driver requesting smaller HwMaxXferLen "
                  "than required"));
         fdoData->HwMaxXferLen = MAX(MaximumBytes, PAGE_SIZE);
     }
 
-    ServiceTransferRequest(Fdo, Irp);
-} 
+    ServiceTransferRequest(Fdo, Irp, FALSE);
+}
+
 
 /*++////////////////////////////////////////////////////////////////////////////
 
@@ -94,7 +107,7 @@ Return Value:
 
 --*/
 NTSTATUS
-NTAPI
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 ClassIoCompleteAssociated(
     IN PDEVICE_OBJECT Fdo,
     IN PIRP Irp,
@@ -112,17 +125,16 @@ ClassIoCompleteAssociated(
     NTSTATUS status;
     BOOLEAN retry;
 
-    DBGWARN(("ClassIoCompleteAssociated is OBSOLETE !"));
+    TracePrint((TRACE_LEVEL_WARNING, TRACE_FLAG_GENERAL, "ClassIoCompleteAssociated is OBSOLETE !"));
 
     //
     // Check SRB status for success of completing request.
     //
-
     if (SRB_STATUS(srb->SrbStatus) != SRB_STATUS_SUCCESS) {
 
-        ULONG retryInterval;
+        LONGLONG retryInterval;
 
-        DebugPrint((2,"ClassIoCompleteAssociated: IRP %p, SRB %p", Irp, srb));
+        TracePrint((TRACE_LEVEL_INFORMATION, TRACE_FLAG_GENERAL, "ClassIoCompleteAssociated: IRP %p, SRB %p", Irp, srb));
 
         //
         // Release the queue if it is frozen.
@@ -132,8 +144,9 @@ ClassIoCompleteAssociated(
             ClassReleaseQueue(Fdo);
         }
 
-        retry = ClassInterpretSenseInfo(
+        retry = InterpretSenseInfoWithoutHistory(
                     Fdo,
+                    Irp,
                     srb,
                     irpStack->MajorFunction,
                     irpStack->MajorFunction == IRP_MJ_DEVICE_CONTROL ?
@@ -156,14 +169,19 @@ ClassIoCompleteAssociated(
             retry = TRUE;
         }
 
-        if (retry && ((*(PCHAR*)&irpStack->Parameters.Others.Argument4)--)) {
+#ifndef __REACTOS__
+#pragma warning(suppress:4213) // okay to cast Arg4 as a ulong for this use case
+        if (retry && ((ULONG)(ULONG_PTR)irpStack->Parameters.Others.Argument4)--) {
+#else
+        if (retry && (*(ULONG *)&irpStack->Parameters.Others.Argument4)--) {
+#endif
 
             //
             // Retry request. If the class driver has supplied a StartIo,
             // call it directly for retries.
             //
 
-            DebugPrint((1, "Retry request %p\n", Irp));
+            TracePrint((TRACE_LEVEL_INFORMATION, TRACE_FLAG_GENERAL,  "Retry request %p\n", Irp));
 
             if (PORT_ALLOCATED_SENSE(fdoExtension, srb)) {
                 FREE_PORT_ALLOCATED_SENSE_BUFFER(fdoExtension, srb);
@@ -200,7 +218,7 @@ ClassIoCompleteAssociated(
 
     Irp->IoStatus.Status = status;
 
-    DebugPrint((2, "ClassIoCompleteAssociated: Partial xfer IRP %p\n", Irp));
+    TracePrint((TRACE_LEVEL_INFORMATION, TRACE_FLAG_GENERAL,  "ClassIoCompleteAssociated: Partial xfer IRP %p\n", Irp));
 
     //
     // Get next stack location. This original request is unused
@@ -227,7 +245,8 @@ ClassIoCompleteAssociated(
         // Set the hard error if necessary.
         //
 
-        if (IoIsErrorUserInduced(status)) {
+        if (IoIsErrorUserInduced(status) &&
+            (originalIrp->Tail.Overlay.Thread != NULL)) {
 
             //
             // Store DeviceObject for filesystem.
@@ -244,7 +263,7 @@ ClassIoCompleteAssociated(
     irpCount = InterlockedDecrement(
                     (PLONG)&irpStack->Parameters.Others.Argument1);
 
-    DebugPrint((2, "ClassIoCompleteAssociated: Partial IRPs left %d\n",
+    TracePrint((TRACE_LEVEL_INFORMATION, TRACE_FLAG_GENERAL,  "ClassIoCompleteAssociated: Partial IRPs left %d\n",
                 irpCount));
 
     //
@@ -253,7 +272,7 @@ ClassIoCompleteAssociated(
     // splitting the request.
     //
 
-    ASSERT(irpCount >= 0);
+    NT_ASSERT(irpCount >= 0);
 
     if (irpCount == 0) {
 
@@ -261,7 +280,7 @@ ClassIoCompleteAssociated(
         // All partial IRPs have completed.
         //
 
-        DebugPrint((2,
+        TracePrint((TRACE_LEVEL_INFORMATION, TRACE_FLAG_GENERAL,
                  "ClassIoCompleteAssociated: All partial IRPs complete %p\n",
                  originalIrp));
 
@@ -274,13 +293,13 @@ ClassIoCompleteAssociated(
             //
 
             KIRQL oldIrql;
-            UCHAR uniqueAddress;
+            UCHAR uniqueAddress = 0;
             ClassAcquireRemoveLock(Fdo, (PIRP)&uniqueAddress);
             ClassReleaseRemoveLock(Fdo, originalIrp);
             ClassCompleteRequest(Fdo, originalIrp, IO_DISK_INCREMENT);
 
             KeRaiseIrql(DISPATCH_LEVEL, &oldIrql);
-            IoStartNextPacket(Fdo, FALSE);
+            IoStartNextPacket(Fdo, TRUE); // yes, some IO is now cancellable
             KeLowerIrql(oldIrql);
 
             ClassReleaseRemoveLock(Fdo, (PIRP)&uniqueAddress);
@@ -308,6 +327,7 @@ ClassIoCompleteAssociated(
 
 } // end ClassIoCompleteAssociated()
 
+
 /*++////////////////////////////////////////////////////////////////////////////
 
 RetryRequest()
@@ -315,7 +335,7 @@ RetryRequest()
 Routine Description:
 
     This is a wrapper around the delayed retry DPC routine, RetryRequestDPC.
-    This reinitializes the necessary fields, queues the request, and sets
+    This reinitalizes the necessary fields, queues the request, and sets
     a timer to call the DPC if someone hasn't already done so.
 
 Arguments:
@@ -326,9 +346,9 @@ Arguments:
 
     Srb - Supplies a Pointer to the SCSI request block to be retied.
 
-    Associated - Indicates this is an associated Irp created by split request.
+    Assocaiated - Indicates this is an assocatied Irp created by split request.
 
-    RetryInterval - How long, in seconds, before retrying the request.
+    TimeDelta100ns - How long, in 100ns units, before retrying the request.
 
 Return Value:
 
@@ -336,21 +356,22 @@ Return Value:
 
 --*/
 VOID
-NTAPI
 RetryRequest(
     PDEVICE_OBJECT DeviceObject,
     PIRP Irp,
     PSCSI_REQUEST_BLOCK Srb,
     BOOLEAN Associated,
-    ULONG RetryInterval
+    LONGLONG TimeDelta100ns
     )
 {
     PIO_STACK_LOCATION currentIrpStack = IoGetCurrentIrpStackLocation(Irp);
     PIO_STACK_LOCATION nextIrpStack = IoGetNextIrpStackLocation(Irp);
     ULONG transferByteCount;
+    ULONG dataTransferLength;
+    PSTORAGE_REQUEST_BLOCK_HEADER srbHeader = (PSTORAGE_REQUEST_BLOCK_HEADER)Srb;
 
     // This function is obsolete but is still used by some of our class drivers.
-    // DBGWARN(("RetryRequest is OBSOLETE !"));
+    // TracePrint((TRACE_LEVEL_WARNING, TRACE_FLAG_GENERAL, "RetryRequest is OBSOLETE !"));
 
     //
     // Determine the transfer count of the request.  If this is a read or a
@@ -359,9 +380,11 @@ RetryRequest(
     // transfer length must be zero.
     //
 
+    dataTransferLength = SrbGetDataTransferLength(srbHeader);
     if (currentIrpStack->MajorFunction == IRP_MJ_READ ||
         currentIrpStack->MajorFunction == IRP_MJ_WRITE) {
 
+        _Analysis_assume_(currentIrpStack->Parameters.Read.Length <= dataTransferLength);
         transferByteCount = currentIrpStack->Parameters.Read.Length;
 
     } else if (Irp->MdlAddress != NULL) {
@@ -373,7 +396,8 @@ RetryRequest(
         // likely incorrect.
         //
 
-        ASSERT(Srb->DataBuffer == MmGetMdlVirtualAddress(Irp->MdlAddress));
+        NT_ASSERT(SrbGetDataBuffer(srbHeader) == MmGetMdlVirtualAddress(Irp->MdlAddress));
+    _Analysis_assume_(Irp->MdlAddress->ByteCount <= dataTransferLength);
         transferByteCount = Irp->MdlAddress->ByteCount;
 
     } else {
@@ -386,31 +410,39 @@ RetryRequest(
     // not guaranteed to be an fdoExtension
     //
 
-    ASSERT(!TEST_FLAG(Srb->SrbFlags, SRB_FLAGS_FREE_SENSE_BUFFER));
+    NT_ASSERT(!TEST_FLAG(SrbGetSrbFlags(srbHeader), SRB_FLAGS_FREE_SENSE_BUFFER));
 
     //
     // Reset byte count of transfer in SRB Extension.
     //
 
-    Srb->DataTransferLength = transferByteCount;
+    SrbSetDataTransferLength(srbHeader, transferByteCount);
 
     //
     // Zero SRB statuses.
     //
 
-    Srb->SrbStatus = Srb->ScsiStatus = 0;
+    srbHeader->SrbStatus = 0;
+    SrbSetScsiStatus(srbHeader, 0);
 
     //
-    // Set the no disconnect flag, disable synchronous data transfers and
-    // disable tagged queuing. This fixes some errors.
-    // NOTE: Cannot clear these flags, just add to them
+    // If this is the last retry, then disable all the special flags.
     //
 
-    SET_FLAG(Srb->SrbFlags, SRB_FLAGS_DISABLE_DISCONNECT);
-    SET_FLAG(Srb->SrbFlags, SRB_FLAGS_DISABLE_SYNCH_TRANSFER);
-    CLEAR_FLAG(Srb->SrbFlags, SRB_FLAGS_QUEUE_ACTION_ENABLE);
+    if ( 0 == (ULONG)(ULONG_PTR)currentIrpStack->Parameters.Others.Argument4 ) {
+        //
+        // Set the no disconnect flag, disable synchronous data transfers and
+        // disable tagged queuing. This fixes some errors.
+        // NOTE: Cannot clear these flags, just add to them
+        //
 
-    Srb->QueueTag = SP_UNTAGGED;
+        SrbSetSrbFlags(srbHeader,
+                          SRB_FLAGS_DISABLE_DISCONNECT | SRB_FLAGS_DISABLE_SYNCH_TRANSFER);
+        SrbClearSrbFlags(srbHeader, SRB_FLAGS_QUEUE_ACTION_ENABLE);
+
+        SrbSetQueueTag(srbHeader, SP_UNTAGGED);
+    }
+
 
     //
     // Set up major SCSI function.
@@ -424,19 +456,18 @@ RetryRequest(
 
     nextIrpStack->Parameters.Scsi.Srb = Srb;
 
-
-    IoSetCompletionRoutine(Irp, ClassIoComplete, Srb, TRUE, TRUE, TRUE);
-
-    {
-        LARGE_INTEGER retry100ns;
-        retry100ns.QuadPart = RetryInterval;  // seconds
-        retry100ns.QuadPart *= (LONGLONG)1000 * 1000 * 10;
-
-        ClassRetryRequest(DeviceObject, Irp, retry100ns);
+    if (Associated){
+        IoSetCompletionRoutine(Irp, ClassIoCompleteAssociated, Srb, TRUE, TRUE, TRUE);
     }
+    else {
+        IoSetCompletionRoutine(Irp, ClassIoComplete, Srb, TRUE, TRUE, TRUE);
+    }
+
+    ClassRetryRequest(DeviceObject, Irp, TimeDelta100ns);
     return;
 } // end RetryRequest()
 
+
 /*++
 
 ClassBuildRequest()
@@ -470,10 +501,10 @@ Return Value:
 
 --*/
 NTSTATUS
-NTAPI
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
 ClassBuildRequest(
-    PDEVICE_OBJECT Fdo,
-    PIRP Irp
+    _In_ PDEVICE_OBJECT Fdo,
+    _In_ PIRP Irp
     )
 {
     PFUNCTIONAL_DEVICE_EXTENSION fdoExtension = Fdo->DeviceExtension;
@@ -481,7 +512,7 @@ ClassBuildRequest(
     PSCSI_REQUEST_BLOCK srb;
 
     // This function is obsolete, but still called by CDROM.SYS .
-    // DBGWARN(("ClassBuildRequest is OBSOLETE !"));
+    // TracePrint((TRACE_LEVEL_WARNING, TRACE_FLAG_GENERAL, "ClassBuildRequest is OBSOLETE !"));
 
     //
     // Allocate an Srb.
@@ -489,7 +520,7 @@ ClassBuildRequest(
 
     srb = ClasspAllocateSrb(fdoExtension);
 
-    if(srb == NULL) {
+    if (srb == NULL) {
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
@@ -498,12 +529,15 @@ ClassBuildRequest(
 
 } // end ClassBuildRequest()
 
+
 VOID
-NTAPI
+#ifdef _MSC_VER
+#pragma prefast(suppress:28194) // Srb may not be aliased if it is NULL
+#endif
 ClasspBuildRequestEx(
-    IN PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
-    IN PIRP Irp,
-    IN PSCSI_REQUEST_BLOCK Srb
+    _In_ PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
+    _In_ PIRP Irp,
+    _In_ __drv_aliasesMem PSCSI_REQUEST_BLOCK Srb
     )
 
 /*++
@@ -547,15 +581,16 @@ Return Value:
     PCDB                cdb;
     ULONG               logicalBlockAddress;
     USHORT              transferBlocks;
+    NTSTATUS            status;
+    PSTORAGE_REQUEST_BLOCK_HEADER srbHeader = (PSTORAGE_REQUEST_BLOCK_HEADER)Srb;
 
     // This function is obsolete, but still called by CDROM.SYS .
-    // DBGWARN(("ClasspBuildRequestEx is OBSOLETE !"));
+    // TracePrint((TRACE_LEVEL_WARNING, TRACE_FLAG_GENERAL, "ClasspBuildRequestEx is OBSOLETE !"));
 
-    //
-    // Prepare the SRB.
-    //
-
-    RtlZeroMemory(Srb, sizeof(SCSI_REQUEST_BLOCK));
+    if (Srb == NULL) {
+        NT_ASSERT(FALSE);
+        return;
+    }
 
     //
     // Calculate relative sector address.
@@ -566,74 +601,94 @@ Return Value:
                                FdoExtension->SectorShift));
 
     //
-    // Write length to SRB.
+    // Prepare the SRB.
+    // NOTE - for extended SRB, size used is based on allocation in ClasspAllocateSrb.
     //
 
-    Srb->Length = sizeof(SCSI_REQUEST_BLOCK);
+    if (FdoExtension->AdapterDescriptor->SrbType == SRB_TYPE_STORAGE_REQUEST_BLOCK) {
+        status = InitializeStorageRequestBlock((PSTORAGE_REQUEST_BLOCK)Srb,
+                                               STORAGE_ADDRESS_TYPE_BTL8,
+                                               CLASS_SRBEX_SCSI_CDB16_BUFFER_SIZE,
+                                               1,
+                                               SrbExDataTypeScsiCdb16);
+        if (!NT_SUCCESS(status)) {
+            NT_ASSERT(FALSE);
+            return;
+        }
+
+        ((PSTORAGE_REQUEST_BLOCK)Srb)->SrbFunction = SRB_FUNCTION_EXECUTE_SCSI;
+    } else {
+        RtlZeroMemory(Srb, sizeof(SCSI_REQUEST_BLOCK));
+
+        //
+        // Write length to SRB.
+        //
+
+        Srb->Length = sizeof(SCSI_REQUEST_BLOCK);
+
+        Srb->Function = SRB_FUNCTION_EXECUTE_SCSI;
+    }
+
 
     //
     // Set up IRP Address.
     //
 
-    Srb->OriginalRequest = Irp;
+    SrbSetOriginalRequest(srbHeader, Irp);
 
     //
-    // Set up target ID and logical unit number.
+    // Set up data buffer
     //
 
-    Srb->Function = SRB_FUNCTION_EXECUTE_SCSI;
-    Srb->DataBuffer = MmGetMdlVirtualAddress(Irp->MdlAddress);
+    SrbSetDataBuffer(srbHeader,
+                           MmGetMdlVirtualAddress(Irp->MdlAddress));
 
     //
     // Save byte count of transfer in SRB Extension.
     //
 
-    Srb->DataTransferLength = currentIrpStack->Parameters.Read.Length;
+    SrbSetDataTransferLength(srbHeader,
+                                   currentIrpStack->Parameters.Read.Length);
 
     //
     // Initialize the queue actions field.
     //
 
-    Srb->QueueAction = SRB_SIMPLE_TAG_REQUEST;
+    SrbSetRequestAttribute(srbHeader, SRB_SIMPLE_TAG_REQUEST);
 
     //
     // Queue sort key is Relative Block Address.
     //
 
-    Srb->QueueSortKey = logicalBlockAddress;
+    SrbSetQueueSortKey(srbHeader, logicalBlockAddress);
 
     //
     // Indicate auto request sense by specifying buffer and size.
     //
 
-    Srb->SenseInfoBuffer = FdoExtension->SenseData;
-    Srb->SenseInfoBufferLength = SENSE_BUFFER_SIZE;
+    SrbSetSenseInfoBuffer(srbHeader, FdoExtension->SenseData);
+    SrbSetSenseInfoBufferLength(srbHeader, GET_FDO_EXTENSON_SENSE_DATA_LENGTH(FdoExtension));
 
     //
     // Set timeout value of one unit per 64k bytes of data.
     //
 
-    Srb->TimeOutValue = ((Srb->DataTransferLength + 0xFFFF) >> 16) *
-                        FdoExtension->TimeOutValue;
-
-    //
-    // Zero statuses.
-    //
-
-    Srb->SrbStatus = Srb->ScsiStatus = 0;
-    Srb->NextSrb = 0;
+    SrbSetTimeOutValue(srbHeader,
+                             ((SrbGetDataTransferLength(srbHeader) + 0xFFFF) >> 16) *
+                              FdoExtension->TimeOutValue);
 
     //
     // Indicate that 10-byte CDB's will be used.
     //
 
-    Srb->CdbLength = 10;
+    SrbSetCdbLength(srbHeader, 10);
 
     //
     // Fill in CDB fields.
     //
 
-    cdb = (PCDB)Srb->Cdb;
+    cdb = SrbGetCdb(srbHeader);
+    NT_ASSERT(cdb != NULL);
 
     transferBlocks = (USHORT)(currentIrpStack->Parameters.Read.Length >>
                               FdoExtension->SectorShift);
@@ -656,17 +711,18 @@ Return Value:
 
     if (currentIrpStack->MajorFunction == IRP_MJ_READ) {
 
-        DebugPrint((3, "ClassBuildRequest: Read Command\n"));
+        TracePrint((TRACE_LEVEL_INFORMATION, TRACE_FLAG_RW,  "ClassBuildRequest: Read Command\n"));
 
-        SET_FLAG(Srb->SrbFlags, SRB_FLAGS_DATA_IN);
+        SrbSetSrbFlags(srbHeader, SRB_FLAGS_DATA_IN);
         cdb->CDB10.OperationCode = SCSIOP_READ;
 
     } else {
 
-        DebugPrint((3, "ClassBuildRequest: Write Command\n"));
+        TracePrint((TRACE_LEVEL_INFORMATION, TRACE_FLAG_RW,  "ClassBuildRequest: Write Command\n"));
 
-        SET_FLAG(Srb->SrbFlags, SRB_FLAGS_DATA_OUT);
+        SrbSetSrbFlags(srbHeader, SRB_FLAGS_DATA_OUT);
         cdb->CDB10.OperationCode = SCSIOP_WRITE;
+
     }
 
     //
@@ -675,7 +731,7 @@ Return Value:
 
     if (!(currentIrpStack->Flags & SL_WRITE_THROUGH)) {
 
-        SET_FLAG(Srb->SrbFlags, SRB_FLAGS_ADAPTER_CACHE_ENABLE);
+        SrbSetSrbFlags(srbHeader, SRB_FLAGS_ADAPTER_CACHE_ENABLE);
 
     } else {
 
@@ -684,20 +740,18 @@ Return Value:
         // cdb.
         //
 
-        if (FdoExtension->DeviceFlags & DEV_WRITE_CACHE) {
-            cdb->CDB10.ForceUnitAccess = TRUE;
-        }
+        cdb->CDB10.ForceUnitAccess = FdoExtension->CdbForceUnitAccess;
     }
 
-    if(TEST_FLAG(Irp->Flags, (IRP_PAGING_IO | IRP_SYNCHRONOUS_PAGING_IO))) {
-        SET_FLAG(Srb->SrbFlags, SRB_CLASS_FLAGS_PAGING);
+    if (TEST_FLAG(Irp->Flags, (IRP_PAGING_IO | IRP_SYNCHRONOUS_PAGING_IO))) {
+        SrbSetSrbFlags(srbHeader, SRB_CLASS_FLAGS_PAGING);
     }
 
     //
     // OR in the default flags from the device object.
     //
 
-    SET_FLAG(Srb->SrbFlags, FdoExtension->SrbFlags);
+    SrbSetSrbFlags(srbHeader, FdoExtension->SrbFlags);
 
     //
     // Set up major SCSI function.
@@ -725,20 +779,21 @@ Return Value:
 
 }
 
-VOID NTAPI ClasspInsertCScanList(IN PLIST_ENTRY ListHead, IN PCSCAN_LIST_ENTRY Entry)
+
+VOID ClasspInsertCScanList(IN PLIST_ENTRY ListHead, IN PCSCAN_LIST_ENTRY Entry)
 {
     PCSCAN_LIST_ENTRY t;
 
-    DBGWARN(("ClasspInsertCScanList is OBSOLETE !"));
+    TracePrint((TRACE_LEVEL_WARNING, TRACE_FLAG_GENERAL, "ClasspInsertCScanList is OBSOLETE !"));
 
     //
-    // Iterate through the list.  Insert this entry in the sorted list in 
-    // order (after other requests for the same block).  At each stop if 
+    // Iterate through the list.  Insert this entry in the sorted list in
+    // order (after other requests for the same block).  At each stop if
     // blockNumber(Entry) >= blockNumber(t) then move on.
     //
 
-    for(t = (PCSCAN_LIST_ENTRY) ListHead->Flink; 
-        t != (PCSCAN_LIST_ENTRY) ListHead; 
+    for(t = (PCSCAN_LIST_ENTRY) ListHead->Flink;
+        t != (PCSCAN_LIST_ENTRY) ListHead;
         t = (PCSCAN_LIST_ENTRY) t->Entry.Flink) {
 
         if(Entry->BlockNumber < t->BlockNumber) {
@@ -761,7 +816,7 @@ VOID NTAPI ClasspInsertCScanList(IN PLIST_ENTRY ListHead, IN PCSCAN_LIST_ENTRY E
     }
 
     //
-    // Insert this entry at the tail of the list.  If the list was empty this 
+    // Insert this entry at the tail of the list.  If the list was empty this
     // will also be the head of the list.
     //
 
@@ -769,7 +824,8 @@ VOID NTAPI ClasspInsertCScanList(IN PLIST_ENTRY ListHead, IN PCSCAN_LIST_ENTRY E
 
 }
 
-VOID NTAPI ClassInsertCScanList(IN PCSCAN_LIST List, IN PIRP Irp, IN ULONGLONG BlockNumber, IN BOOLEAN LowPriority)
+
+VOID ClassInsertCScanList(IN PCSCAN_LIST List, IN PIRP Irp, IN ULONGLONG BlockNumber, IN BOOLEAN LowPriority)
 /*++
 
 Routine Description:
@@ -779,29 +835,29 @@ Routine Description:
     to the access of the list.
 
     Low priority requests are always scheduled to run on the next sweep across
-    the disk.  Normal priority requests will be inserted into the current or 
+    the disk.  Normal priority requests will be inserted into the current or
     next sweep based on the standard C-SCAN algorithm.
 
 Arguments:
 
     List - the list to insert into
-    
+
     Irp - the irp to be inserted.
-    
+
     BlockNumber - the block number for this request.
-    
-    LowPriority - indicates that the request is lower priority and should be 
-                  done on the next sweep across the disk.    
+
+    LowPriority - indicates that the request is lower priority and should be
+                  done on the next sweep across the disk.
 
 Return Value:
 
     none
-    
---*/                      
+
+--*/
 {
     PCSCAN_LIST_ENTRY entry = (PCSCAN_LIST_ENTRY)Irp->Tail.Overlay.DriverContext;
 
-    DBGWARN(("ClassInsertCScanList is OBSOLETE !"));
+    TracePrint((TRACE_LEVEL_WARNING, TRACE_FLAG_GENERAL, "ClassInsertCScanList is OBSOLETE !"));
 
     //
     // Set the block number in the entry.  We need this to keep the list sorted.
@@ -809,11 +865,11 @@ Return Value:
     entry->BlockNumber = BlockNumber;
 
     //
-    // If it's a normal priority request and further down the disk than our 
+    // If it's a normal priority request and further down the disk than our
     // current position then insert this entry into the current sweep.
     //
 
-    if ((LowPriority == FALSE) && (BlockNumber > List->BlockNumber)) {
+    if((LowPriority != TRUE) && (BlockNumber > List->BlockNumber)) {
         ClasspInsertCScanList(&(List->CurrentSweep), entry);
     } else {
         ClasspInsertCScanList(&(List->NextSweep), entry);
@@ -821,48 +877,48 @@ Return Value:
     return;
 }
 
-VOID NTAPI ClassFreeOrReuseSrb(IN PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
-                               IN PSCSI_REQUEST_BLOCK Srb)
+
+
+VOID ClassFreeOrReuseSrb(   IN PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
+                            IN __drv_freesMem(mem) PSCSI_REQUEST_BLOCK Srb)
 /*++
 
 Routine Description:
 
-    This routine will attempt to reuse the provided SRB to start a blocked 
-    read/write request.  
+    This routine will attempt to reuse the provided SRB to start a blocked
+    read/write request.
     If there is no need to reuse the request it will be returned
     to the SRB lookaside list.
 
 Arguments:
 
     Fdo - the device extension
-    
+
     Srb - the SRB which is to be reused or freed.
-    
+
 Return Value:
 
     none.
-    
---*/            
+
+--*/
 
 {
     PCOMMON_DEVICE_EXTENSION commonExt = &FdoExtension->CommonExtension;
-    //KIRQL oldIrql;
-    //PIRP blockedIrp;
 
     // This function is obsolete, but still called by DISK.SYS .
-    // DBGWARN(("ClassFreeOrReuseSrb is OBSOLETE !"));
+    // TracePrint((TRACE_LEVEL_WARNING, TRACE_FLAG_GENERAL, "ClassFreeOrReuseSrb is OBSOLETE !"));
 
     //
     // safety net.  this should never occur.  if it does, it's a potential
     // memory leak.
     //
-    ASSERT(!TEST_FLAG(Srb->SrbFlags, SRB_FLAGS_FREE_SENSE_BUFFER));
-   
+    NT_ASSERT(!TEST_FLAG(SrbGetSrbFlags(Srb), SRB_FLAGS_FREE_SENSE_BUFFER));
+
     if (commonExt->IsSrbLookasideListInitialized){
         /*
          *  Put the SRB back in our lookaside list.
          *
-         *  BUGBUG - Some class drivers use ClassIoComplete
+         *  Note:   Some class drivers use ClassIoComplete
          *            to complete SRBs that they themselves allocated.
          *            So we may be putting a "foreign" SRB
          *            (e.g. with a different pool tag) into our lookaside list.
@@ -870,10 +926,11 @@ Return Value:
         ClasspFreeSrb(FdoExtension, Srb);
     }
     else {
-        DBGERR(("ClassFreeOrReuseSrb: someone is trying to use an uninitialized SrbLookasideList !!!"));
-        ExFreePool(Srb);
+        TracePrint((TRACE_LEVEL_ERROR, TRACE_FLAG_GENERAL,"ClassFreeOrReuseSrb: someone is trying to use an uninitialized SrbLookasideList !!!"));
+        FREE_POOL(Srb);
     }
 }
+
 
 /*++////////////////////////////////////////////////////////////////////////////
 
@@ -883,7 +940,7 @@ Routine Description:
 
     This routine deletes a lookaside listhead for srbs, and should be called
     only during the final removal.
-    
+
     If called at other times, the caller is responsible for
     synchronization and removal issues.
 
@@ -896,21 +953,25 @@ Return Value:
     None
 
 --*/
-VOID NTAPI ClassDeleteSrbLookasideList(IN PCOMMON_DEVICE_EXTENSION CommonExtension)
+_IRQL_requires_max_(PASSIVE_LEVEL)
+VOID
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+ClassDeleteSrbLookasideList(_Inout_ PCOMMON_DEVICE_EXTENSION CommonExtension)
 {
     PAGED_CODE();
 
     // This function is obsolete, but is still called by some of our code.
-    // DBGWARN(("ClassDeleteSrbLookasideList is OBSOLETE !"));
+    // TracePrint((TRACE_LEVEL_WARNING, TRACE_FLAG_GENERAL, "ClassDeleteSrbLookasideList is OBSOLETE !"));
 
     if (CommonExtension->IsSrbLookasideListInitialized){
         CommonExtension->IsSrbLookasideListInitialized = FALSE;
         ExDeleteNPagedLookasideList(&CommonExtension->SrbLookasideList);
     }
     else {
-        DBGWARN(("ClassDeleteSrbLookasideList: attempt to delete uninitialized or freed srblookasidelist"));
+        TracePrint((TRACE_LEVEL_WARNING, TRACE_FLAG_GENERAL, "ClassDeleteSrbLookasideList: attempt to delete uninitialized or freed srblookasidelist"));
     }
-} 
+}
+
 
 /*++////////////////////////////////////////////////////////////////////////////
 
@@ -920,7 +981,7 @@ Routine Description:
 
     This routine sets up a lookaside listhead for srbs, and should be called
     only from the ClassInitDevice() routine to prevent race conditions.
-    
+
     If called from other locations, the caller is responsible for
     synchronization and removal issues.
 
@@ -930,7 +991,7 @@ Arguments:
 
     NumberElements  - Supplies the maximum depth of the lookaside list.
 
-    
+
 Note:
 
     The Windows 2000 version of classpnp did not return any status value from
@@ -938,31 +999,67 @@ Note:
 
 --*/
 
-VOID NTAPI ClassInitializeSrbLookasideList(IN PCOMMON_DEVICE_EXTENSION CommonExtension,
-                                           IN ULONG NumberElements)
+_IRQL_requires_max_(PASSIVE_LEVEL)
+VOID
+NTAPI /* ReactOS Change: GCC Does not support STDCALL by default */
+ClassInitializeSrbLookasideList(   _Inout_ PCOMMON_DEVICE_EXTENSION CommonExtension,
+                                        _In_ ULONG NumberElements)
 {
+    size_t sizeNeeded;
+    PFUNCTIONAL_DEVICE_EXTENSION fdo;
+
     PAGED_CODE();
 
     // This function is obsolete, but still called by DISK.SYS .
-    // DBGWARN(("ClassInitializeSrbLookasideList is OBSOLETE !"));
+    // TracePrint((TRACE_LEVEL_WARNING, TRACE_FLAG_GENERAL, "ClassInitializeSrbLookasideList is OBSOLETE !"));
 
-    ASSERT(!CommonExtension->IsSrbLookasideListInitialized);
+    NT_ASSERT(!CommonExtension->IsSrbLookasideListInitialized);
     if (!CommonExtension->IsSrbLookasideListInitialized){
+
+        if (CommonExtension->IsFdo == TRUE) {
+            fdo = (PFUNCTIONAL_DEVICE_EXTENSION)CommonExtension;
+
+            //
+            // Check FDO extension on the SRB type supported
+            //
+            if (fdo->AdapterDescriptor->SrbType == SRB_TYPE_STORAGE_REQUEST_BLOCK) {
+
+                //
+                // It's 16 byte CDBs for now. Need to change when classpnp uses >16
+                // byte CDBs or support new address types.
+                //
+                sizeNeeded = CLASS_SRBEX_SCSI_CDB16_BUFFER_SIZE;
+
+            } else {
+                sizeNeeded = sizeof(SCSI_REQUEST_BLOCK);
+            }
+
+        } else {
+
+            //
+            // For PDO, use the max of old and new SRB as can't guarantee we can get
+            // corresponding FDO to determine SRB support.
+            //
+            sizeNeeded = max(sizeof(SCSI_REQUEST_BLOCK), CLASS_SRBEX_SCSI_CDB16_BUFFER_SIZE);
+        }
 
         ExInitializeNPagedLookasideList(&CommonExtension->SrbLookasideList,
                                         NULL,
                                         NULL,
-                                        NonPagedPool,
-                                        sizeof(SCSI_REQUEST_BLOCK),
+                                        POOL_NX_ALLOCATION,
+                                        sizeNeeded,
                                         '$scS',
                                         (USHORT)NumberElements);
 
         CommonExtension->IsSrbLookasideListInitialized = TRUE;
     }
-    
-} 
 
-VOID NTAPI ClasspInitializeCScanList(IN PCSCAN_LIST List)
+}
+
+
+
+
+VOID ClasspInitializeCScanList(IN PCSCAN_LIST List)
 {
     PAGED_CODE();
     RtlZeroMemory(List, sizeof(CSCAN_LIST));
@@ -970,9 +1067,11 @@ VOID NTAPI ClasspInitializeCScanList(IN PCSCAN_LIST List)
     InitializeListHead(&(List->NextSweep));
 }
 
-VOID NTAPI ClasspStartNextSweep(PCSCAN_LIST List)
+
+
+VOID ClasspStartNextSweep(PCSCAN_LIST List)
 {
-    ASSERT(IsListEmpty(&(List->CurrentSweep)) == TRUE);
+    NT_ASSERT(IsListEmpty(&(List->CurrentSweep)) == TRUE);
 
     //
     // If the next sweep is empty then there's nothing to do.
@@ -989,7 +1088,7 @@ VOID NTAPI ClasspStartNextSweep(PCSCAN_LIST List)
     List->CurrentSweep = List->NextSweep;
 
     //
-    // Unlink the next sweep list from the list head now that we have a copy 
+    // Unlink the next sweep list from the list head now that we have a copy
     // of it.
     //
 
@@ -1005,7 +1104,9 @@ VOID NTAPI ClasspStartNextSweep(PCSCAN_LIST List)
     return;
 }
 
-PIRP NTAPI ClassRemoveCScanList(IN PCSCAN_LIST List)
+
+
+PIRP ClassRemoveCScanList(IN PCSCAN_LIST List)
 {
     PCSCAN_LIST_ENTRY entry;
 

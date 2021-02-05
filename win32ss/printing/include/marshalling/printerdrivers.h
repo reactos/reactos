@@ -125,5 +125,6 @@ static const MARSHALLING* pPrinterDriverMarshalling[] = {
     &PrinterDriver4Marshalling,
     &PrinterDriver5Marshalling,
     &PrinterDriver6Marshalling,
+    NULL,
     &PrinterDriver8Marshalling,
 };

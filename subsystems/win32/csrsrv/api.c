@@ -1240,7 +1240,7 @@ CsrCaptureArguments(IN PCSR_THREAD CsrThread,
     BufferDistance = (ULONG_PTR)ServerCaptureBuffer - (ULONG_PTR)ClientCaptureBuffer;
 
     /*
-     * All the pointer offsets correspond to pointers which point
+     * All the pointer offsets correspond to pointers that point
      * to the server data buffer instead of the client one.
      */
     // PointerCount  = ServerCaptureBuffer->PointerCount;
@@ -1355,7 +1355,7 @@ CsrReleaseCapturedArguments(IN PCSR_API_MESSAGE ApiMessage)
     BufferDistance = (ULONG_PTR)ServerCaptureBuffer - (ULONG_PTR)ClientCaptureBuffer;
 
     /*
-     * All the pointer offsets correspond to pointers which point
+     * All the pointer offsets correspond to pointers that point
      * to the client data buffer instead of the server one (reverse
      * the logic of CsrCaptureArguments()).
      */
@@ -1438,7 +1438,7 @@ CsrValidateMessageBuffer(IN PCSR_API_MESSAGE ApiMessage,
      * of non-trivial size and that we don't overflow.
      */
     if (!Buffer || ElementSize == 0 ||
-        (ULONGLONG)ElementCount * ElementSize > (ULONGLONG)0xFFFFFFFF)
+        (ULONGLONG)ElementCount * ElementSize > (ULONGLONG)MAXULONG)
     {
         return FALSE;
     }
@@ -1451,10 +1451,7 @@ CsrValidateMessageBuffer(IN PCSR_API_MESSAGE ApiMessage,
     /* Check if we have no capture buffer */
     if (!CaptureBuffer)
     {
-        /*
-         * In this case, check only the Process ID
-         * and if there is a match, we succeed.
-         */
+        /* In this case, succeed only if the caller is CSRSS */
         if (NtCurrentTeb()->ClientId.UniqueProcess ==
             ApiMessage->Header.ClientId.UniqueProcess)
         {
@@ -1463,7 +1460,7 @@ CsrValidateMessageBuffer(IN PCSR_API_MESSAGE ApiMessage,
     }
     else
     {
-        /* Make sure that there is still space left in the buffer */
+        /* Make sure that there is still space left in the capture buffer */
         if ((CaptureBuffer->Size - (ULONG_PTR)*Buffer + (ULONG_PTR)CaptureBuffer) >=
             (ElementCount * ElementSize))
         {
@@ -1473,8 +1470,8 @@ CsrValidateMessageBuffer(IN PCSR_API_MESSAGE ApiMessage,
             while (PointerCount--)
             {
                 /*
-                 * The pointer offset must be equal to the delta between
-                 * the addresses of the buffer and of the API message.
+                 * Find in the array, the pointer offset (from the
+                 * API message) that corresponds to the buffer.
                  */
                 if (*OffsetPointer == BufferDistance)
                 {

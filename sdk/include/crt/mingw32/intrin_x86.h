@@ -133,15 +133,19 @@ __INTRIN_INLINE void __faststorefence(void)
 
 #if (__GNUC__ * 10000 + __GNUC_MINOR__ * 100 + __GNUC_PATCHLEVEL__) > 40100
 
+#if !HAS_BUILTIN(_InterlockedCompareExchange8)
 __INTRIN_INLINE char _InterlockedCompareExchange8(volatile char * Destination, char Exchange, char Comperand)
 {
 	return __sync_val_compare_and_swap(Destination, Comperand, Exchange);
 }
+#endif
 
+#if !HAS_BUILTIN(_InterlockedCompareExchange16)
 __INTRIN_INLINE short _InterlockedCompareExchange16(volatile short * Destination, short Exchange, short Comperand)
 {
 	return __sync_val_compare_and_swap(Destination, Comperand, Exchange);
 }
+#endif
 
 #if !HAS_BUILTIN(_InterlockedCompareExchange)
 __INTRIN_INLINE long __cdecl _InterlockedCompareExchange(volatile long * Destination, long Exchange, long Comperand)
@@ -157,19 +161,23 @@ __INTRIN_INLINE void * _InterlockedCompareExchangePointer(void * volatile * Dest
 }
 #endif
 
+#if !HAS_BUILTIN(_InterlockedExchange8)
 __INTRIN_INLINE char _InterlockedExchange8(volatile char * Target, char Value)
 {
 	/* NOTE: __sync_lock_test_and_set would be an acquire barrier, so we force a full barrier */
 	__sync_synchronize();
 	return __sync_lock_test_and_set(Target, Value);
 }
+#endif
 
+#if !HAS_BUILTIN(_InterlockedExchange16)
 __INTRIN_INLINE short _InterlockedExchange16(volatile short * Target, short Value)
 {
 	/* NOTE: __sync_lock_test_and_set would be an acquire barrier, so we force a full barrier */
 	__sync_synchronize();
 	return __sync_lock_test_and_set(Target, Value);
 }
+#endif
 
 #if !HAS_BUILTIN(_InterlockedExchange)
 __INTRIN_INLINE long __cdecl _InterlockedExchange(volatile long * Target, long Value)
@@ -198,15 +206,19 @@ __INTRIN_INLINE long long _InterlockedExchange64(volatile long long * Target, lo
 }
 #endif
 
+#if !HAS_BUILTIN(_InterlockedExchangeAdd8)
 __INTRIN_INLINE char _InterlockedExchangeAdd8(char volatile * Addend, char Value)
 {
 	return __sync_fetch_and_add(Addend, Value);
 }
+#endif
 
+#if !HAS_BUILTIN(_InterlockedExchangeAdd16)
 __INTRIN_INLINE short _InterlockedExchangeAdd16(volatile short * Addend, short Value)
 {
 	return __sync_fetch_and_add(Addend, Value);
 }
+#endif
 
 #if !HAS_BUILTIN(_InterlockedExchangeAdd)
 __INTRIN_INLINE long __cdecl _InterlockedExchangeAdd(volatile long * Addend, long Value)
@@ -222,20 +234,26 @@ __INTRIN_INLINE long long _InterlockedExchangeAdd64(volatile long long * Addend,
 }
 #endif
 
+#if !HAS_BUILTIN(_InterlockedAnd8)
 __INTRIN_INLINE char _InterlockedAnd8(volatile char * value, char mask)
 {
 	return __sync_fetch_and_and(value, mask);
 }
+#endif
 
+#if !HAS_BUILTIN(_InterlockedAnd16)
 __INTRIN_INLINE short _InterlockedAnd16(volatile short * value, short mask)
 {
 	return __sync_fetch_and_and(value, mask);
 }
+#endif
 
+#if !HAS_BUILTIN(_InterlockedAnd)
 __INTRIN_INLINE long _InterlockedAnd(volatile long * value, long mask)
 {
 	return __sync_fetch_and_and(value, mask);
 }
+#endif
 
 #if defined(__x86_64__)
 __INTRIN_INLINE long long _InterlockedAnd64(volatile long long * value, long long mask)
@@ -244,20 +262,26 @@ __INTRIN_INLINE long long _InterlockedAnd64(volatile long long * value, long lon
 }
 #endif
 
+#if !HAS_BUILTIN(_InterlockedOr8)
 __INTRIN_INLINE char _InterlockedOr8(volatile char * value, char mask)
 {
 	return __sync_fetch_and_or(value, mask);
 }
+#endif
 
+#if !HAS_BUILTIN(_InterlockedOr16)
 __INTRIN_INLINE short _InterlockedOr16(volatile short * value, short mask)
 {
 	return __sync_fetch_and_or(value, mask);
 }
+#endif
 
+#if !HAS_BUILTIN(_InterlockedOr)
 __INTRIN_INLINE long _InterlockedOr(volatile long * value, long mask)
 {
 	return __sync_fetch_and_or(value, mask);
 }
+#endif
 
 #if defined(__x86_64__)
 __INTRIN_INLINE long long _InterlockedOr64(volatile long long * value, long long mask)
@@ -266,20 +290,26 @@ __INTRIN_INLINE long long _InterlockedOr64(volatile long long * value, long long
 }
 #endif
 
+#if !HAS_BUILTIN(_InterlockedXor8)
 __INTRIN_INLINE char _InterlockedXor8(volatile char * value, char mask)
 {
 	return __sync_fetch_and_xor(value, mask);
 }
+#endif
 
+#if !HAS_BUILTIN(_InterlockedXor16)
 __INTRIN_INLINE short _InterlockedXor16(volatile short * value, short mask)
 {
 	return __sync_fetch_and_xor(value, mask);
 }
+#endif
 
+#if !HAS_BUILTIN(_InterlockedXor)
 __INTRIN_INLINE long _InterlockedXor(volatile long * value, long mask)
 {
 	return __sync_fetch_and_xor(value, mask);
 }
+#endif
 
 #if defined(__x86_64__)
 __INTRIN_INLINE long long _InterlockedXor64(volatile long long * value, long long mask)
@@ -302,15 +332,19 @@ __INTRIN_INLINE long __cdecl _InterlockedIncrement(volatile long * lpAddend)
 }
 #endif
 
+#if !HAS_BUILTIN(_InterlockedDecrement16)
 __INTRIN_INLINE short _InterlockedDecrement16(volatile short * lpAddend)
 {
 	return __sync_sub_and_fetch(lpAddend, 1);
 }
+#endif
 
+#if !HAS_BUILTIN(_InterlockedIncrement16)
 __INTRIN_INLINE short _InterlockedIncrement16(volatile short * lpAddend)
 {
 	return __sync_add_and_fetch(lpAddend, 1);
 }
+#endif
 
 #if defined(__x86_64__)
 __INTRIN_INLINE long long _InterlockedDecrement64(volatile long long * lpAddend)
@@ -686,12 +720,14 @@ __INTRIN_INLINE long _InterlockedAddLargeStatistic(volatile long long * Addend, 
 }
 #endif /* __i386__ */
 
+#if !HAS_BUILTIN(_interlockedbittestandreset)
 __INTRIN_INLINE unsigned char _interlockedbittestandreset(volatile long * a, long b)
 {
 	unsigned char retval;
 	__asm__("lock; btrl %[b], %[a]; setb %b[retval]" : [retval] "=q" (retval), [a] "+m" (*a) : [b] "Ir" (b) : "memory");
 	return retval;
 }
+#endif
 
 #if defined(__x86_64__)
 __INTRIN_INLINE unsigned char _interlockedbittestandreset64(volatile long long * a, long long b)
@@ -798,7 +834,7 @@ __INTRIN_INLINE void __movsd(unsigned long * Destination, const unsigned long * 
 }
 
 #ifdef __x86_64__
-__INTRIN_INLINE void __movsq(unsigned long * Destination, const unsigned long * Source, size_t Count)
+__INTRIN_INLINE void __movsq(unsigned long long * Destination, const unsigned long long * Source, size_t Count)
 {
 	__asm__ __volatile__
 	(
@@ -891,7 +927,7 @@ __INTRIN_INLINE void __addgsword(unsigned long Offset, unsigned short Data)
 	__asm__ __volatile__("addw %w[Data], %%gs:%a[Offset]" : : [Offset] "ir" (Offset), [Data] "ir" (Data) : "memory");
 }
 
-__INTRIN_INLINE void __addgsdword(unsigned long Offset, unsigned int Data)
+__INTRIN_INLINE void __addgsdword(unsigned long Offset, unsigned long Data)
 {
 	__asm__ __volatile__("addl %k[Data], %%gs:%a[Offset]" : : [Offset] "ir" (Offset), [Data] "ir" (Data) : "memory");
 }
@@ -1008,6 +1044,7 @@ __INTRIN_INLINE unsigned char _BitScanReverse(unsigned long * Index, unsigned lo
 }
 #endif
 
+#if !HAS_BUILTIN(_bittest)
 /* NOTE: again, the bizarre implementation follows Visual C++ */
 __INTRIN_INLINE unsigned char _bittest(const long * a, long b)
 {
@@ -1020,6 +1057,7 @@ __INTRIN_INLINE unsigned char _bittest(const long * a, long b)
 
 	return retval;
 }
+#endif
 
 #ifdef __x86_64__
 __INTRIN_INLINE unsigned char _BitScanForward64(unsigned long * Index, unsigned long long Mask)
@@ -1051,6 +1089,7 @@ __INTRIN_INLINE unsigned char _bittest64(const long long * a, long long b)
 }
 #endif
 
+#if !HAS_BUILTIN(_bittestandcomplement)
 __INTRIN_INLINE unsigned char _bittestandcomplement(long * a, long b)
 {
 	unsigned char retval;
@@ -1062,7 +1101,9 @@ __INTRIN_INLINE unsigned char _bittestandcomplement(long * a, long b)
 
 	return retval;
 }
+#endif
 
+#if !HAS_BUILTIN(_bittestandreset)
 __INTRIN_INLINE unsigned char _bittestandreset(long * a, long b)
 {
 	unsigned char retval;
@@ -1074,7 +1115,9 @@ __INTRIN_INLINE unsigned char _bittestandreset(long * a, long b)
 
 	return retval;
 }
+#endif
 
+#if !HAS_BUILTIN(_bittestandset)
 __INTRIN_INLINE unsigned char _bittestandset(long * a, long b)
 {
 	unsigned char retval;
@@ -1086,6 +1129,7 @@ __INTRIN_INLINE unsigned char _bittestandset(long * a, long b)
 
 	return retval;
 }
+#endif
 
 #ifdef __x86_64__
 
@@ -1321,15 +1365,19 @@ __INTRIN_INLINE unsigned long long __cdecl _byteswap_uint64(unsigned long long v
 }
 #endif
 
+#if !HAS_BUILTIN(__lzcnt)
 __INTRIN_INLINE unsigned int __lzcnt(unsigned int value)
 {
 	return __builtin_clz(value);
 }
+#endif
 
+#if !HAS_BUILTIN(__lzcnt16)
 __INTRIN_INLINE unsigned short __lzcnt16(unsigned short value)
 {
 	return __builtin_clz(value);
 }
+#endif
 
 #if !HAS_BUILTIN(__popcnt)
 __INTRIN_INLINE unsigned int __popcnt(unsigned int value)
@@ -1682,13 +1730,6 @@ __INTRIN_INLINE void __writecr4(unsigned int Data)
 	__asm__("mov %[Data], %%cr4" : : [Data] "r" (Data) : "memory");
 }
 
-#if !HAS_BUILTIN(__writecr8)
-__INTRIN_INLINE void __writecr8(unsigned int Data)
-{
-	__asm__("mov %[Data], %%cr8" : : [Data] "r" (Data) : "memory");
-}
-#endif
-
 __INTRIN_INLINE unsigned long __readcr0(void)
 {
 	unsigned long value;
@@ -1716,15 +1757,6 @@ __INTRIN_INLINE unsigned long __readcr4(void)
 	__asm__ __volatile__("mov %%cr4, %[value]" : [value] "=r" (value));
 	return value;
 }
-
-#if !HAS_BUILTIN(__readcr8)
-__INTRIN_INLINE unsigned long __readcr8(void)
-{
-	unsigned long value;
-	__asm__ __volatile__("mov %%cr8, %[value]" : [value] "=r" (value));
-	return value;
-}
-#endif
 
 #endif /* __x86_64__ */
 

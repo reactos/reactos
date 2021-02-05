@@ -164,44 +164,53 @@ extern POBJECT_TYPE NTSYSAPI IoDriverObjectType;
 //
 // Device Node Flags
 //
-#define DNF_PROCESSED                           0x00000001
-#define DNF_STARTED                             0x00000002
-#define DNF_START_FAILED                        0x00000004
-#define DNF_ENUMERATED                          0x00000008
-#define DNF_DELETED                             0x00000010
-#define DNF_MADEUP                              0x00000020
-#define DNF_START_REQUEST_PENDING               0x00000040
-#define DNF_NO_RESOURCE_REQUIRED                0x00000080
-#define DNF_INSUFFICIENT_RESOURCES              0x00000100
-#define DNF_RESOURCE_ASSIGNED                   0x00000200
-#define DNF_RESOURCE_REPORTED                   0x00000400
-#define DNF_HAL_NODE                            0x00000800 // ???
-#define DNF_ADDED                               0x00001000
-#define DNF_ADD_FAILED                          0x00002000
-#define DNF_LEGACY_DRIVER                       0x00004000
-#define DNF_STOPPED                             0x00008000
-#define DNF_WILL_BE_REMOVED                     0x00010000
+
+// this set of flags is relevant for w2k3 and newer
+// w2k has a completely different set of flags
+#define DNF_MADEUP                              0x00000001
+#define DNF_DUPLICATE                           0x00000002
+#define DNF_HAL_NODE                            0x00000004
+#define DNF_REENUMERATE                         0x00000008
+#define DNF_ENUMERATED                          0x00000010
+#define DNF_IDS_QUERIED                         0x00000020
+#define DNF_HAS_BOOT_CONFIG                     0x00000040
+#define DNF_BOOT_CONFIG_RESERVED                0x00000080
+#define DNF_NO_RESOURCE_REQUIRED                0x00000100
+#define DNF_RESOURCE_REQUIREMENTS_NEED_FILTERED 0x00000200
+#define DNF_RESOURCE_REQUIREMENTS_CHANGED       0x00000400
+#define DNF_NON_STOPPED_REBALANCE               0x00000800
+#define DNF_LEGACY_DRIVER                       0x00001000
+#define DNF_HAS_PROBLEM                         0x00002000
+#define DNF_HAS_PRIVATE_PROBLEM                 0x00004000
+#define DNF_HARDWARE_VERIFICATION               0x00008000
+#define DNF_DEVICE_GONE                         0x00010000
 #define DNF_LEGACY_RESOURCE_DEVICENODE          0x00020000
-#define DNF_NOT_CONFIGURED                      0x00040000
-#define DNF_REINSTALL                           0x00080000
-#define DNF_RESOURCE_REQUIREMENTS_NEED_FILTERED 0x00100000 // ???
-#define DNF_DISABLED                            0x00200000
-#define DNF_RESTART_OK                          0x00400000
-#define DNF_NEED_RESTART                        0x00800000
-#define DNF_VISITED                             0x01000000
-#define DNF_ASSIGNING_RESOURCES                 0x02000000
-#define DNF_BEEING_ENUMERATED                   0x04000000
-#define DNF_NEED_ENUMERATION_ONLY               0x08000000
-#define DNF_LOCKED                              0x10000000
-#define DNF_HAS_BOOT_CONFIG                     0x20000000
-#define DNF_BOOT_CONFIG_RESERVED                0x40000000
-#define DNF_HAS_PROBLEM                         0x80000000 // ???
+#define DNF_NEEDS_REBALANCE                     0x00040000
+#define DNF_LOCKED_FOR_EJECT                    0x00080000
+#define DNF_DRIVER_BLOCKED                      0x00100000
+#define DNF_CHILD_WITH_INVALID_ID               0x00200000
+
+// these flags were added in Vista or later
+#define DNF_ASYNC_START_NOT_SUPPORTED           0x00400000
+#define DNF_ASYNC_ENUMERATION_NOT_SUPPORTED     0x00800000
+#define DNF_LOCKED_FOR_REBALANCE                0x01000000
+#define DNF_UNINSTALLED                         0x02000000
+#define DNF_NO_LOWER_DEVICE_FILTERS             0x04000000
+#define DNF_NO_LOWER_CLASS_FILTERS              0x08000000
+#define DNF_NO_SERVICE                          0x10000000
+#define DNF_NO_UPPER_DEVICE_FILTERS             0x20000000
+#define DNF_NO_UPPER_CLASS_FILTERS              0x40000000
+#define DNF_WAITING_FOR_FDO                     0x80000000
 
 //
 // Device Node User Flags
 //
+#define DNUF_WILL_BE_REMOVED                    0x0001
 #define DNUF_DONT_SHOW_IN_UI                    0x0002
+#define DNUF_NEED_RESTART                       0x0004
 #define DNUF_NOT_DISABLEABLE                    0x0008
+#define DNUF_SHUTDOWN_QUERIED                   0x0010
+#define DNUF_SHUTDOWN_SUBTREE_DONE              0x0020
 
 //
 // Internal Option Flags
@@ -815,6 +824,8 @@ typedef struct _IO_CLIENT_EXTENSION
     PVOID ClientIdentificationAddress;
 } IO_CLIENT_EXTENSION, *PIO_CLIENT_EXTENSION;
 
+#define DEVNODE_HISTORY_SIZE 20
+
 //
 // Device Node
 //
@@ -829,7 +840,7 @@ typedef struct _DEVICE_NODE
     PO_IRP_MANAGER PoIrpManager;
     PNP_DEVNODE_STATE State;
     PNP_DEVNODE_STATE PreviousState;
-    PNP_DEVNODE_STATE StateHistory[20];
+    PNP_DEVNODE_STATE StateHistory[DEVNODE_HISTORY_SIZE];
     ULONG StateHistoryEntry;
     NTSTATUS CompletionStatus;
     PIRP PendingIrp;

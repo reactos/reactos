@@ -16,7 +16,8 @@
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
-/* COPYRIGHT:       See COPYING in the top level directory
+/*
+ * COPYRIGHT:       See COPYING in the top level directory
  * PROJECT:         ReactOS text-mode setup
  * FILE:            base/setup/usetup/chkdsk.h
  * PURPOSE:         Filesystem chkdsk support functions
@@ -26,8 +27,7 @@
 #pragma once
 
 NTSTATUS
-ChkdskPartition(
-    IN PUNICODE_STRING DriveRoot,
-    IN PCWSTR FileSystemName);
+DoChkdsk(
+    IN PPARTENTRY PartEntry);
 
 /* EOF */

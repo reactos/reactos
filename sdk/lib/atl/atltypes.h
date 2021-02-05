@@ -212,7 +212,7 @@ public:
 };
 
 
-CSize CPoint::operator-(POINT point) const throw()
+inline CSize CPoint::operator-(POINT point) const throw()
 {
     return CSize(x - point.x, y - point.y);
 }
@@ -539,28 +539,28 @@ public:
     }
 };
 
-CRect CPoint::operator+(const RECT* lpRect) const throw()
+inline CRect CPoint::operator+(const RECT* lpRect) const throw()
 {
     CRect r(lpRect);
     r += *this;
     return r;
 }
 
-CRect CPoint::operator-(const RECT* lpRect) const throw()
+inline CRect CPoint::operator-(const RECT* lpRect) const throw()
 {
     CRect r(lpRect);
     r -= *this;
     return r;
 }
 
-CRect CSize::operator+(const RECT* lpRect) const throw()
+inline CRect CSize::operator+(const RECT* lpRect) const throw()
 {
     CRect r(lpRect);
     r += *this;
     return r;
 }
 
-CRect CSize::operator-(const RECT* lpRect) const throw()
+inline CRect CSize::operator-(const RECT* lpRect) const throw()
 {
     CRect r(lpRect);
     r -= *this;

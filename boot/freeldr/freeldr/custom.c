@@ -36,7 +36,8 @@ const CHAR BootDrivePrompt[] = "Enter the boot drive.\n\nExamples:\nfd0 - first 
 const CHAR BootPartitionPrompt[] = "Enter the boot partition.\n\nEnter 0 for the active (bootable) partition.";
 const CHAR ARCPathPrompt[] = "Enter the boot ARC path.\n\nExamples:\nmulti(0)disk(0)rdisk(0)partition(1)\nmulti(0)disk(0)fdisk(0)";
 const CHAR ReactOSSystemPathPrompt[] = "Enter the path to your ReactOS system directory.\n\nExamples:\n\\REACTOS\n\\ROS";
-const CHAR ReactOSOptionsPrompt[] = "Enter the options you want passed to the kernel.\n\nExamples:\n/DEBUG /DEBUGPORT=COM1 /BAUDRATE=115200\n/FASTDETECT /SOS /NOGUIBOOT\n/BASEVIDEO /MAXMEM=64\n/KERNEL=NTKRNLMP.EXE /HAL=HALMPS.DLL";
+const CHAR ReactOSOptionsPrompt[] = "Enter the load options you want passed to the kernel.\n\nExamples:\n/DEBUG /DEBUGPORT=COM1 /BAUDRATE=115200\n/FASTDETECT /SOS /NOGUIBOOT\n/BASEVIDEO /MAXMEM=64\n/KERNEL=NTKRNLMP.EXE /HAL=HALMPS.DLL";
+const CHAR ReactOSSetupOptionsPrompt[] = "Enter additional load options you want passed to the ReactOS Setup.\nThese options will supplement those obtained from the TXTSETUP.SIF\nfile, unless you also specify the /SIFOPTIONSOVERRIDE option switch.\n\nExample:\n/NOGUIBOOT /DEBUG /DEBUGPORT=COM1 /BAUDRATE=115200";
 const CHAR CustomBootPrompt[] = "Press ENTER to boot your custom boot setup.";
 
 /* FUNCTIONS ******************************************************************/
@@ -659,7 +660,7 @@ EditCustomBootReactOS(
             return;
     }
 
-    if (!UiEditBox(ReactOSOptionsPrompt, ReactOSOptions, sizeof(ReactOSOptions)))
+    if (!UiEditBox(IsSetup ? ReactOSSetupOptionsPrompt : ReactOSOptionsPrompt, ReactOSOptions, sizeof(ReactOSOptions)))
         return;
 
     /* Modify the settings values and return if we were in edit mode */
@@ -686,7 +687,9 @@ EditCustomBootReactOS(
         return;
 
     /* Construct the ReactOS ARC system path */
-    ConstructArcPath(ReactOSARCPath, ReactOSSystemPath, DriveMapGetBiosDriveNumber(BootDriveString), atoi(BootPartitionString));
+    ConstructArcPath(ReactOSARCPath, ReactOSSystemPath,
+                     DriveMapGetBiosDriveNumber(BootDriveString),
+                     atoi(BootPartitionString));
 
     /* Add the system path */
     if (!IniAddSettingValueToSection(SectionId, "SystemPath", ReactOSARCPath))

@@ -5,6 +5,7 @@
  * PURPOSE:     Spanish Language resource file
  * TRANSLATORS: Gabriel Ilardi
  *              Ismael Ferreras Morezuelas
+ *              Catalin Gabriel Draghita
  */
 
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
@@ -18,19 +19,19 @@ BEGIN
         MENUITEM "&Guardar\tCtrl+G", IDM_FILESAVE
         MENUITEM "Guardar &como...", IDM_FILESAVEAS
         MENUITEM SEPARATOR
-        MENUITEM "From Scanner or Camera...", IDM_FILEFROMSCANNERORCAMERA
+        MENUITEM "Desde un Escáner o Cámara...", IDM_FILEFROMSCANNERORCAMERA
         MENUITEM SEPARATOR
         MENUITEM "Vista de página", IDM_FILEPAGEVIEW
         MENUITEM "Configurar página...", IDM_FILEPAGESETUP
         MENUITEM "&Imprimir...\tCtrl+P", IDM_FILEPRINT
         MENUITEM SEPARATOR
-        MENUITEM "Send...", IDM_FILESEND
+        MENUITEM "Enviar...", IDM_FILESEND
         MENUITEM SEPARATOR
         MENUITEM "Fondo de pantalla (normal)", IDM_FILEASWALLPAPERPLANE
         MENUITEM "Fondo de pantalla (centrado)", IDM_FILEASWALLPAPERCENTERED
         MENUITEM "Fondo de pantalla (extendido)", IDM_FILEASWALLPAPERSTRETCHED
         MENUITEM SEPARATOR
-        MENUITEM "Most recently used file", IDM_FILEMOSTRECENTLYUSEDFILE, GRAYED
+        MENUITEM "Archivos recientes", IDM_FILEMOSTRECENTLYUSEDFILE, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "Sa&lir\tAlt+F4", IDM_FILEEXIT
     END
@@ -218,7 +219,7 @@ BEGIN
     IDS_TOOLTIP15 "Elipse"
     IDS_TOOLTIP16 "Rectángulo redondeado"
     IDS_ALLFILES "Todos los archivos"
-    IDS_ALLPICTUREFILES "All Picture Files"
+    IDS_ALLPICTUREFILES "Todos los archivos de imagen"
     IDS_FILESIZE "%d bytes"
     IDS_PRINTRES "%d x %d píxeles/m"
     IDS_INTNUMBERS "Sólo se admiten números sin decimales."

@@ -9,7 +9,7 @@ LayoutFile = layout.inf
 Class      = SCSIAdapter
 ClassGUID  = {4D36E97B-E325-11CE-BFC1-08002BE10318}
 Provider   = %ReactOS%
-DriverVer  = 11/2/2007,1.1
+DriverVer  = 11/02/2007,1.1
 
 [ClassInstall32.NT]
 AddReg = SCSIClass.NT.AddReg
@@ -26,6 +26,7 @@ DefaultDestDir = 12
 %GenericMfg% = GenericMfg
 
 [GenericMfg]
+%GEN_SCSIADAPTER.DeviceDesc% = NO_DRV,,GEN_SCSIADAPTER
 %PCI\VEN_104B&CC_0100.DeviceDesc% = BusLogic_Inst,PCI\VEN_104B&CC_0100
 
 ;----------------------------- ScsiPort Driver ----------------------------
@@ -39,6 +40,13 @@ StartType     = 0
 ErrorControl  = 0
 ServiceBinary = %12%\scsiport.sys
 LoadOrderGroup = SCSI Port
+
+;---------------------------- NO DRIVER REQ -----------------------------
+
+[NO_DRV]
+
+[NO_DRV.Services]
+AddService = , 0x00000002
 
 ;----------------------------- BusLogic Driver ----------------------------
 
@@ -66,6 +74,7 @@ ReactOS = "ReactOS Team"
 SCSIClassName = "SCSI and RAID Controllers"
 
 GenericMfg = "(Standard SCSI and RAID controllers)"
+GEN_SCSIADAPTER.DeviceDesc = "SCSI/RAID Host Controller"
 PCI\VEN_104B&CC_0100.DeviceDesc = "BusLogic SCSI Controller"
 
 [Strings.0405]
@@ -120,6 +129,7 @@ ReactOS = "Команда ReactOS"
 SCSIClassName = "SCSI и RAID контроллеры"
 
 GenericMfg = "(Стандартные SCSI и RAID контроллеры)"
+GEN_SCSIADAPTER.DeviceDesc = "SCSI/RAID хост-контроллер"
 PCI\VEN_104B&CC_0100.DeviceDesc = "Контроллер BusLogic SCSI"
 
 [Strings.041B]

@@ -18,7 +18,7 @@ AddMonitorA(PSTR pName, DWORD Level, PBYTE pMonitors)
     MONITOR_INFO_2W mi2w;
 
     mi2a = (LPMONITOR_INFO_2A) pMonitors;
-    TRACE("AddMonitorA(%s, %d, %p) :  %s %s %s\n", debugstr_a(pName), Level, pMonitors,
+    FIXME("AddMonitorA(%s, %d, %p) :  %s %s %s\n", debugstr_a(pName), Level, pMonitors,
           debugstr_a(mi2a ? mi2a->pName : NULL),
           debugstr_a(mi2a ? mi2a->pEnvironment : NULL),
           debugstr_a(mi2a ? mi2a->pDLLName : NULL));
@@ -65,10 +65,10 @@ AddMonitorA(PSTR pName, DWORD Level, PBYTE pMonitors)
 
     res = AddMonitorW(nameW, Level, (LPBYTE) &mi2w);
 
-    HeapFree(GetProcessHeap(), 0, mi2w.pName);
-    HeapFree(GetProcessHeap(), 0, mi2w.pEnvironment);
-    HeapFree(GetProcessHeap(), 0, mi2w.pDLLName);
-    HeapFree(GetProcessHeap(), 0, nameW);
+    if (mi2w.pName) HeapFree(GetProcessHeap(), 0, mi2w.pName);
+    if (mi2w.pEnvironment) HeapFree(GetProcessHeap(), 0, mi2w.pEnvironment);
+    if (mi2w.pDLLName) HeapFree(GetProcessHeap(), 0, mi2w.pDLLName);
+    if (nameW) HeapFree(GetProcessHeap(), 0, nameW);
 
     return (res);
 }
@@ -78,7 +78,8 @@ AddMonitorW(PWSTR pName, DWORD Level, PBYTE pMonitors)
 {
     DWORD dwErrorCode;
     WINSPOOL_MONITOR_CONTAINER MonitorInfoContainer;
-    TRACE("AddMonitorW(%S, %lu, %p)\n", pName, Level, pMonitors);
+
+    FIXME("AddMonitorW(%S, %lu, %p)\n", pName, Level, pMonitors);
 
     if (Level != 2)
     {
@@ -101,7 +102,7 @@ AddMonitorW(PWSTR pName, DWORD Level, PBYTE pMonitors)
         ERR("_RpcAddMonitor failed with exception code %lu!\n", dwErrorCode);
     }
     RpcEndExcept;
-
+FIXME("AddMonitorW Error Code %lu\n", dwErrorCode);
     SetLastError(dwErrorCode);
     return (dwErrorCode == ERROR_SUCCESS);
 }
@@ -136,9 +137,9 @@ DeleteMonitorA(PSTR pName, PSTR pEnvironment, PSTR pMonitorName)
 
     res = DeleteMonitorW(nameW, EnvironmentW, MonitorNameW);
 
-    HeapFree(GetProcessHeap(), 0, MonitorNameW);
-    HeapFree(GetProcessHeap(), 0, EnvironmentW);
-    HeapFree(GetProcessHeap(), 0, nameW);
+    if (MonitorNameW) HeapFree(GetProcessHeap(), 0, MonitorNameW);
+    if (EnvironmentW) HeapFree(GetProcessHeap(), 0, EnvironmentW);
+    if (nameW) HeapFree(GetProcessHeap(), 0, nameW);
 
     return (res);
 }
@@ -148,7 +149,7 @@ DeleteMonitorW(PWSTR pName, PWSTR pEnvironment, PWSTR pMonitorName)
 {
     DWORD dwErrorCode;
 
-    TRACE("DeleteMonitorW(%S, %S, %S)\n", pName, pEnvironment, pMonitorName);
+    FIXME("DeleteMonitorW(%S, %S, %S)\n", pName, pEnvironment, pMonitorName);
 
     // Do the RPC call
     RpcTryExcept
@@ -296,8 +297,8 @@ emA_cleanup:
     if (pcbNeeded)  *pcbNeeded = needed;
     if (pcReturned) *pcReturned = (res) ? numentries : 0;
 
-    HeapFree(GetProcessHeap(), 0, nameW);
-    HeapFree(GetProcessHeap(), 0, bufferW);
+    if (nameW) HeapFree(GetProcessHeap(), 0, nameW);
+    if (bufferW) HeapFree(GetProcessHeap(), 0, bufferW);
 
     FIXME("returning %d with %d (%d byte for %d entries)\n", (res), GetLastError(), needed, numentries);
 

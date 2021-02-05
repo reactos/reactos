@@ -16,14 +16,12 @@ START_TEST(load)
     BOOL Ret;
     DWORD Error;
     PPEB Peb = NtCurrentPeb();
-    PTEB Teb = NtCurrentTeb();
 
     /* Before init */
     hUser32 = GetModuleHandleW(L"user32");
     ok(hUser32 == NULL, "hUser32 = %p\n", hUser32);
     ok(Peb->KernelCallbackTable == NULL, "KernelCallbackTable = %p\n", Peb->KernelCallbackTable);
     ok(Peb->PostProcessInitRoutine == NULL, "PostProcessInitRoutine = %p\n", Peb->PostProcessInitRoutine);
-    ok(Teb->Win32ClientInfo != NULL, "Win32ClientInfo = %p\n", Teb->Win32ClientInfo);
 
     SetLastError(12345);
     hUser32 = LoadLibraryW(L"user32");
@@ -36,7 +34,6 @@ START_TEST(load)
     ok(hUser32_2 == hUser32, "hUser32 = %p\n", hUser32);
     ok(Peb->KernelCallbackTable != NULL, "KernelCallbackTable = %p\n", Peb->KernelCallbackTable);
     ok(Peb->PostProcessInitRoutine == NULL, "PostProcessInitRoutine = %p\n", Peb->PostProcessInitRoutine);
-    ok(Teb->Win32ClientInfo != NULL, "Win32ClientInfo = %p\n", Teb->Win32ClientInfo);
 
     SetLastError(12345);
     hUser32_2 = LoadLibraryW(L"user32");
@@ -49,7 +46,6 @@ START_TEST(load)
     ok(hUser32_2 == hUser32, "hUser32 = %p\n", hUser32);
     ok(Peb->KernelCallbackTable != NULL, "KernelCallbackTable = %p\n", Peb->KernelCallbackTable);
     ok(Peb->PostProcessInitRoutine == NULL, "PostProcessInitRoutine = %p\n", Peb->PostProcessInitRoutine);
-    ok(Teb->Win32ClientInfo != NULL, "Win32ClientInfo = %p\n", Teb->Win32ClientInfo);
 
     SetLastError(12345);
     Ret = FreeLibrary(hUser32);
@@ -62,7 +58,6 @@ START_TEST(load)
     ok(hUser32_2 == hUser32, "hUser32 = %p\n", hUser32);
     ok(Peb->KernelCallbackTable != NULL, "KernelCallbackTable = %p\n", Peb->KernelCallbackTable);
     ok(Peb->PostProcessInitRoutine == NULL, "PostProcessInitRoutine = %p\n", Peb->PostProcessInitRoutine);
-    ok(Teb->Win32ClientInfo != NULL, "Win32ClientInfo = %p\n", Teb->Win32ClientInfo);
 
     SetLastError(12345);
     Ret = FreeLibrary(hUser32);
@@ -75,7 +70,6 @@ START_TEST(load)
     ok(hUser32_2 == hUser32, "hUser32 = %p\n", hUser32);
     ok(Peb->KernelCallbackTable != NULL, "KernelCallbackTable = %p\n", Peb->KernelCallbackTable);
     ok(Peb->PostProcessInitRoutine == NULL, "PostProcessInitRoutine = %p\n", Peb->PostProcessInitRoutine);
-    ok(Teb->Win32ClientInfo != NULL, "Win32ClientInfo = %p\n", Teb->Win32ClientInfo);
 
     SetLastError(12345);
     Ret = FreeLibrary(hUser32);
@@ -88,7 +82,6 @@ START_TEST(load)
     ok(hUser32 == NULL, "hUser32 = %p\n", hUser32);
     ok(Peb->KernelCallbackTable != NULL, "KernelCallbackTable = %p\n", Peb->KernelCallbackTable);
     ok(Peb->PostProcessInitRoutine == NULL, "PostProcessInitRoutine = %p\n", Peb->PostProcessInitRoutine);
-    ok(Teb->Win32ClientInfo != NULL, "Win32ClientInfo = %p\n", Teb->Win32ClientInfo);
 
     SetLastError(12345);
     hUser32 = LoadLibraryW(L"user32");
@@ -101,7 +94,6 @@ START_TEST(load)
     ok(hUser32_2 == hUser32, "hUser32 = %p\n", hUser32);
     ok(Peb->KernelCallbackTable != NULL, "KernelCallbackTable = %p\n", Peb->KernelCallbackTable);
     ok(Peb->PostProcessInitRoutine == NULL, "PostProcessInitRoutine = %p\n", Peb->PostProcessInitRoutine);
-    ok(Teb->Win32ClientInfo != NULL, "Win32ClientInfo = %p\n", Teb->Win32ClientInfo);
 
     SetLastError(12345);
     Ret = FreeLibrary(hUser32);
@@ -114,7 +106,6 @@ START_TEST(load)
     ok(hUser32_2 == hUser32, "hUser32 = %p\n", hUser32);
     ok(Peb->KernelCallbackTable != NULL, "KernelCallbackTable = %p\n", Peb->KernelCallbackTable);
     ok(Peb->PostProcessInitRoutine == NULL, "PostProcessInitRoutine = %p\n", Peb->PostProcessInitRoutine);
-    ok(Teb->Win32ClientInfo != NULL, "Win32ClientInfo = %p\n", Teb->Win32ClientInfo);
 
     SetLastError(12345);
     Ret = FreeLibrary(hUser32);
@@ -127,5 +118,4 @@ START_TEST(load)
     ok(hUser32 == NULL, "hUser32 = %p\n", hUser32);
     ok(Peb->KernelCallbackTable != NULL, "KernelCallbackTable = %p\n", Peb->KernelCallbackTable);
     ok(Peb->PostProcessInitRoutine == NULL, "PostProcessInitRoutine = %p\n", Peb->PostProcessInitRoutine);
-    ok(Teb->Win32ClientInfo != NULL, "Win32ClientInfo = %p\n", Teb->Win32ClientInfo);
 }

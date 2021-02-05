@@ -390,6 +390,12 @@ HRESULT STDMETHODCALLTYPE CAddressEditBox::Invoke(DISPID dispIdMember, REFIID ri
         if (FAILED_UNEXPECTEDLY(hr))
             return hr;
 
+        if (!absolutePIDL)
+        {
+            ERR("Got no PIDL, investigate me!\n");
+            return S_OK;
+        }
+
         /* Fill the combobox */
         PopulateComboBox(absolutePIDL);
 

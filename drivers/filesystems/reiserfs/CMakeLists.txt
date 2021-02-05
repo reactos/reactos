@@ -87,8 +87,8 @@ if(USE_CLANG_CL OR (NOT MSVC))
     endif()
 else()
     #disable warnings: "unreferenced local variable", "initialized, but not used variable", "benign include"
-    replace_compile_flags("/we4101" " ")
-    replace_compile_flags("/we4189" " ")
+    remove_target_compile_option(reiserfs "/we4101")
+    remove_target_compile_option(reiserfs "/we4189")
     target_compile_options(reiserfs PRIVATE /wd4189 /wd4142 /wd4101)
 endif()
 

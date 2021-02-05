@@ -1,3 +1,6 @@
+#ifdef __REACTOS__
+#include "precomp.h"
+#else
 /*
  * Copyright (C) 2008 Tony Wasserka
  *
@@ -17,10 +20,9 @@
  *
  */
 
-#include "config.h"
-#include "wine/port.h"
 
 #include "d3dx9_private.h"
+#endif /* __REACTOS__ */
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3dx);
 
@@ -114,10 +116,13 @@ static ULONG WINAPI d3dx9_sprite_Release(ID3DXSprite *iface)
         {
             int i;
 
-            for (i = 0; i < sprite->sprite_count; ++i)
+            if (!(sprite->flags & D3DXSPRITE_DO_NOT_ADDREF_TEXTURE))
             {
-                if (sprite->sprites[i].texture)
-                    IDirect3DTexture9_Release(sprite->sprites[i].texture);
+                for (i = 0; i < sprite->sprite_count; ++i)
+                {
+                    if (sprite->sprites[i].texture)
+                        IDirect3DTexture9_Release(sprite->sprites[i].texture);
+                }
             }
 
             HeapFree(GetProcessHeap(), 0, sprite->sprites);
@@ -341,6 +346,7 @@ static HRESULT WINAPI d3dx9_sprite_Draw(ID3DXSprite *iface, IDirect3DTexture9 *t
         const RECT *rect, const D3DXVECTOR3 *center, const D3DXVECTOR3 *position, D3DCOLOR color)
 {
     struct d3dx9_sprite *This = impl_from_ID3DXSprite(iface);
+    struct sprite *new_sprites;
     D3DSURFACE_DESC texdesc;
 
     TRACE("iface %p, texture %p, rect %s, center %p, position %p, color 0x%08x.\n",
@@ -356,9 +362,12 @@ static HRESULT WINAPI d3dx9_sprite_Draw(ID3DXSprite *iface, IDirect3DTexture9 *t
     }
     else if (This->allocated_sprites <= This->sprite_count)
     {
-        This->allocated_sprites += This->allocated_sprites / 2;
-        This->sprites = HeapReAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,
-                This->sprites, This->allocated_sprites * sizeof(*This->sprites));
+        new_sprites = HeapReAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,
+                This->sprites, This->allocated_sprites * 2 * sizeof(*This->sprites));
+        if (!new_sprites)
+            return E_OUTOFMEMORY;
+        This->sprites = new_sprites;
+        This->allocated_sprites *= 2;
     }
     This->sprites[This->sprite_count].texture=texture;
     if(!(This->flags & D3DXSPRITE_DO_NOT_ADDREF_TEXTURE))
@@ -520,10 +529,13 @@ static HRESULT WINAPI d3dx9_sprite_OnResetDevice(ID3DXSprite *iface)
 
     TRACE("iface %p.\n", iface);
 
-    for (i = 0; i < sprite->sprite_count; ++i)
+    if (!(sprite->flags & D3DXSPRITE_DO_NOT_ADDREF_TEXTURE))
     {
-        if (sprite->sprites[i].texture)
-            IDirect3DTexture9_Release(sprite->sprites[i].texture);
+        for (i = 0; i < sprite->sprite_count; ++i)
+        {
+            if (sprite->sprites[i].texture)
+                IDirect3DTexture9_Release(sprite->sprites[i].texture);
+        }
     }
 
     sprite->sprite_count = 0;

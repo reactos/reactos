@@ -21,6 +21,7 @@
 #include <winbase.h>
 #include <winreg.h>
 #define NTOS_MODE_USER
+#include <ndk/ketypes.h>
 #include <ndk/kefuncs.h>
 #include <ndk/obfuncs.h>
 #include <ndk/rtlfuncs.h>
@@ -119,7 +120,7 @@ extern PGENERIC_MAPPING pServerMapping;
 extern ENCRYPTED_NT_OWF_PASSWORD EmptyNtHash;
 extern ENCRYPTED_LM_OWF_PASSWORD EmptyLmHash;
 extern RTL_RESOURCE SampResource;
-
+extern NT_PRODUCT_TYPE SampProductType;
 
 /* alias.c */
 

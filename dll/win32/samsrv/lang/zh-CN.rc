@@ -16,6 +16,20 @@ BEGIN
     IDS_ALIAS_POWER_USERS_COMMENT "高级用户拥有大多数管理权限，但存在一些限制。"
     IDS_ALIAS_USERS_NAME "用户"
     IDS_ALIAS_USERS_COMMENT "防止用户进行对系统进行全面更改。"
+    IDS_ALIAS_PRINT_OPS_NAME "Print Operators"
+    IDS_ALIAS_PRINT_OPS_COMMENT "Members can administer domain printers"
+    IDS_ALIAS_BACKUP_OPS_NAME "Backup Operators"
+    IDS_ALIAS_BACKUP_OPS_COMMENT "Backup Operators can override security restrictions for the sole purpose of backing up or resoring files"
+    IDS_ALIAS_REPLICATOR_NAME "Replicator"
+    IDS_ALIAS_REPLICATOR_COMMENT "Supports file replication in a domain"
+    IDS_ALIAS_REMOTE_DESKTOP_USERS_NAME "Remote Desktop Users"
+    IDS_ALIAS_REMOTE_DESKTOP_USERS_COMMENT "Members in this group are granted the right to logon remotely"
+    IDS_ALIAS_NETWORK_CONFIGURATION_OPS_NAME "Network Configuration Operators"
+    IDS_ALIAS_NETWORK_CONFIGURATION_OPS_COMMENT "Members in this group can have some administrative privileges to manage configuration of networking features"
+    IDS_ALIAS_MONITORING_USERS_NAME "Performance Monitor Users"
+    IDS_ALIAS_MONITORING_USERS_COMMENT "Members of this group have remote access to monitor this computer"
+    IDS_ALIAS_LOGGING_USERS_NAME "Performance Log Users"
+    IDS_ALIAS_LOGGING_USERS_COMMENT "Members of this group have remote access to schedule logging of performance counters on this computer"
     /*
      * ATTENTION: 
      *   If you translate the administrator account name, keep IDS_USER_ADMINISTRATOR_NAME and

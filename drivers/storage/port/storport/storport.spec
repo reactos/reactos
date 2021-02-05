@@ -6,7 +6,7 @@
 @ stdcall StorPortCompleteRequest(ptr long long long long)
 @ stdcall StorPortConvertPhysicalAddressToUlong(long long)
 @ stdcall StorPortConvertUlongToPhysicalAddress(long)
-@ cdecl StorPortDebugPrint()
+@ varargs StorPortDebugPrint(long str)
 @ stdcall StorPortDeviceBusy(ptr long long long long)
 @ stdcall StorPortDeviceReady(ptr long long long)
 @ cdecl StorPortExtendedFunction()

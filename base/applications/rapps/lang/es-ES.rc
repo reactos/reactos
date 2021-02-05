@@ -1,5 +1,5 @@
 /* Spanish Language resource file.
- * Translated by: ?? and Ismael Ferreras Morezuelas (Swyter) <2014-11-07> and Julen Urizar Compains 2020-04-14 */
+ * Translated by: ?? and Ismael Ferreras Morezuelas (Swyter) <2014-11-07> and Julen Urizar Compains 2020-04-14 and Catalin Gabriel Draghita 2020-08-22 */
 
 LANGUAGE LANG_SPANISH, SUBLANG_NEUTRAL
 
@@ -69,9 +69,9 @@ BEGIN
     EDITTEXT IDC_DOWNLOAD_DIR_EDIT, 15, 86, 166, 12, WS_CHILD | WS_VISIBLE | WS_GROUP | ES_AUTOHSCROLL
     PUSHBUTTON "&Seleccionar", IDC_CHOOSE, 187, 85, 50, 14
     AUTOCHECKBOX "&Borrar el instalador del programa tras su instalación", IDC_DEL_AFTER_INSTALL, 16, 100, 218, 12
-    GROUPBOX "Software source", -1, 4, 118, 240, 46
-    CONTROL "Use default", IDC_SOURCE_DEFAULT, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 15, 132, 74, 10
-    CONTROL "Specified source", IDC_USE_SOURCE, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 147, 74, 10
+    GROUPBOX "Origen del Software", -1, 4, 118, 240, 46
+    CONTROL "Usar predeterminado", IDC_SOURCE_DEFAULT, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 15, 132, 74, 10
+    CONTROL "Origen especificado", IDC_USE_SOURCE, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 147, 74, 10
     EDITTEXT IDC_SOURCE_URL, 97, 147, 140, 12, ES_AUTOHSCROLL | WS_DISABLED
     GROUPBOX "Proxy", -1, 4, 166, 240, 76
     CONTROL "Utilizar el proxy del sistema", IDC_PROXY_DEFAULT, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 15, 180, 210, 10
@@ -144,6 +144,7 @@ BEGIN
     IDS_INFO_UNINSTALLSTR "\nComando de desinstalación: "
     IDS_INFO_MODIFYPATH "\nRuta de modificación: "
     IDS_INFO_INSTALLDATE "\nFecha de instalación: "
+    IDS_AINFO_PACKAGE_NAME "\nPackage Name: "
 END
 
 STRINGTABLE
@@ -155,7 +156,7 @@ BEGIN
     IDS_AINFO_URLSITE "\nPágina Web: "
     IDS_AINFO_LICENSE "\nLicencia: "
     IDS_AINFO_URLDOWNLOAD "\nDescargar: "
-    IDS_AINFO_LANGUAGES "\nLanguages: "
+    IDS_AINFO_LANGUAGES "\nIdiomas: "
 END
 
 STRINGTABLE
@@ -175,7 +176,7 @@ BEGIN
     IDS_CAT_SCIENCE "Ciencia"
     IDS_CAT_TOOLS "Herramientas"
     IDS_CAT_VIDEO "Vídeo"
-    IDS_CAT_THEMES "Themes"
+    IDS_CAT_THEMES "Temas"
 END
 
 STRINGTABLE
@@ -196,7 +197,7 @@ BEGIN
     IDS_APPLICATIONS "Aplicaciones"
     IDS_CHOOSE_FOLDER_TEXT "Seleccione una carpeta de donde se descargarán los programas:"
     IDS_CHOOSE_FOLDER_ERROR "La carpeta especificada no existe."
-    IDS_URL_INVALID "The URL you have specified is invalid or not supported. Please correct it!"
+    IDS_URL_INVALID "La URL que ha especificado es inválido o no esta disponible. Por favor, corrígelo."
     IDS_APP_REG_REMOVE "¿Está seguro de querer borrar del Registro los datos de instalación del programa?"
     IDS_INFORMATION "Información"
     IDS_UNABLE_TO_DOWNLOAD "No se pudo descargar el paquete. No se ha encontrado la dirección de Internet."
@@ -212,7 +213,10 @@ BEGIN
     IDS_INSTALL_SELECTED "Instalar selección"
     IDS_SELECTEDFORINST "Seleccionados para instalar"
     IDS_MISMATCH_CERT_INFO "El certificado que usa es desconocido:\nSujeto: %s\nEmisor: %s\n¿Quiere continuar a pesar de ello?"
-    IDS_UNABLE_PATH "Incorrect path format."
+    IDS_UNABLE_PATH "Formato de ruta incorrecto."
+    IDS_APP_DISPLAY_DETAILS "details"
+    IDS_APP_DISPLAY_LIST "list"
+    IDS_APP_DISPLAY_TILE "tile"
 END
 
 STRINGTABLE
@@ -248,5 +252,17 @@ STRINGTABLE
 BEGIN
     IDS_DL_DIALOG_DB_DISP "Base de datos de aplicaciones"
     IDS_DL_DIALOG_DB_DOWNLOAD_DISP "Actualizando listado…"
-    IDS_DL_DIALOG_DB_UNOFFICIAL_DOWNLOAD_DISP "Updating Database… (Unofficial source)"
+    IDS_DL_DIALOG_DB_UNOFFICIAL_DOWNLOAD_DISP "Actualizando listado… (Origen no oficial)"
+END
+
+STRINGTABLE
+BEGIN
+    IDS_CMD_USAGE "Usage: "
+    IDS_CMD_NEED_PACKAGE_NAME "Error: option %1 expects one or more package name.\n"
+    IDS_CMD_NEED_FILE_NAME "Error: option %1 expects a file name.\n"
+    IDS_CMD_NEED_PARAMS "Error: option %1 expects one or more parameters.\n"
+    IDS_CMD_INVALID_OPTION "Error: Unknown or invalid command line option specified.\n"
+    IDS_CMD_FIND_RESULT_FOR "Find result for %1:\n"
+    IDS_CMD_PACKAGE_NOT_FOUND "Failed to find package %1.\n"
+    IDS_CMD_PACKAGE_INFO "Information about package %1:\n"
 END

@@ -2681,7 +2681,8 @@ RtlReAllocateHeap(HANDLE HeapPtr,
     {
         RtlEnterHeapLock(Heap->LockVariable, TRUE);
         HeapLocked = TRUE;
-        Flags &= ~HEAP_NO_SERIALIZE;
+        /* Do not acquire the lock anymore for re-entrant call */
+        Flags |= HEAP_NO_SERIALIZE;
     }
 
     /* Get the pointer to the in-use entry */
@@ -3656,7 +3657,7 @@ BOOLEAN NTAPI RtlValidateHeap(
     }
 
     /* Force flags */
-    Flags = Heap->ForceFlags;
+    Flags |= Heap->ForceFlags;
 
     /* Acquire the lock if necessary */
     if (!(Flags & HEAP_NO_SERIALIZE))
@@ -3744,7 +3745,7 @@ RtlSetUserValueHeap(IN PVOID HeapHandle,
     BOOLEAN HeapLocked = FALSE, ValueSet = FALSE;
 
     /* Force flags */
-    Flags |= Heap->Flags;
+    Flags |= Heap->ForceFlags;
 
     /* Call special heap */
     if (RtlpHeapIsSpecial(Flags))
@@ -3806,14 +3807,14 @@ RtlSetUserFlagsHeap(IN PVOID HeapHandle,
     BOOLEAN HeapLocked = FALSE;
 
     /* Force flags */
-    Flags |= Heap->Flags;
+    Flags |= Heap->ForceFlags;
 
     /* Call special heap */
     if (RtlpHeapIsSpecial(Flags))
         return RtlDebugSetUserFlagsHeap(Heap, Flags, BaseAddress, UserFlagsReset, UserFlagsSet);
 
     /* Lock if it's lockable */
-    if (!(Heap->Flags & HEAP_NO_SERIALIZE))
+    if (!(Flags & HEAP_NO_SERIALIZE))
     {
         RtlEnterHeapLock(Heap->LockVariable, TRUE);
         HeapLocked = TRUE;
@@ -3862,14 +3863,14 @@ RtlGetUserInfoHeap(IN PVOID HeapHandle,
     BOOLEAN HeapLocked = FALSE;
 
     /* Force flags */
-    Flags |= Heap->Flags;
+    Flags |= Heap->ForceFlags;
 
     /* Call special heap */
     if (RtlpHeapIsSpecial(Flags))
         return RtlDebugGetUserInfoHeap(Heap, Flags, BaseAddress, UserValue, UserFlags);
 
     /* Lock if it's lockable */
-    if (!(Heap->Flags & HEAP_NO_SERIALIZE))
+    if (!(Flags & HEAP_NO_SERIALIZE))
     {
         RtlEnterHeapLock(Heap->LockVariable, TRUE);
         HeapLocked = TRUE;

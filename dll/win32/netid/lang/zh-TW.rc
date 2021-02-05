@@ -1,5 +1,5 @@
 /* Traditional Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com) */
-/* Translation has been changed by Luo Yufan (njlyf2011@hotmail.com) */
+/* Translation has been changed by Luo Yufan (njlyf2011@hotmail.com) and Aobi Chan CL (eason066@gmail.com) */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
@@ -16,13 +16,13 @@ BEGIN
     EDITTEXT IDC_COMPUTERNAME, 98, 68, 144, 12, ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
     LTEXT "工作群組:", IDC_WORKGROUPDOMAIN, 7, 84, 64, 9
     EDITTEXT IDC_WORKGROUPDOMAIN_NAME, 98, 84, 144, 12, ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
-    LTEXT "要使用網路識別精靈去加入域並建立本地使用者，請點選 [網路 ID]。", IDC_STATIC, 7, 113, 172, 24
+    LTEXT "要使用網路識別精靈去加入網域並建立本地使用者，請按 [網路 ID]。", IDC_STATIC, 7, 113, 172, 24
     PUSHBUTTON "網路 ID...(&N)", IDC_NETWORK_ID, 190, 114, 58, 15
-    LTEXT "若要重新命名此電腦或加入域，請點選 [更改]。", IDC_STATIC, 7, 149, 170, 17
+    LTEXT "若要重新命名此電腦或加入網域，請按 [更改]。", IDC_STATIC, 7, 149, 170, 17
     PUSHBUTTON "更改...(&C)", IDC_NETWORK_PROPERTY, 190, 149, 58, 15
     LTEXT "", IDC_MESSAGETEXT, 7, 179, 242, 46
     ICON IDI_WARNINGICO, IDC_RESTARTICON, 7, 194, 20, 20, SS_ICON | SS_REALSIZEIMAGE
-    LTEXT "Changes will take effect after you restart this computer.", IDC_RESTARTTEXT, 25, 195, 209, 8
+    LTEXT "您必須重新啟動這部電腦，更改才會生效。", IDC_RESTARTTEXT, 25, 195, 209, 8
 END
 
 IDD_PROPPAGECOMPNAMECHENGE DIALOGEX 0, 0, 232, 222
@@ -37,10 +37,10 @@ BEGIN
     EDITTEXT 1001, 7, 82, 219, 14, ES_AUTOHSCROLL | ES_READONLY | NOT WS_BORDER | NOT WS_TABSTOP
     PUSHBUTTON "更多...(&M)", 1003, 150, 102, 75, 14
     GROUPBOX "成員", 1018, 7, 119, 219, 73
-    AUTORADIOBUTTON "域:(&D)", 1008, 17, 132, 192, 10, WS_GROUP
+    AUTORADIOBUTTON "網域:(&D)", 1008, 17, 132, 192, 10, WS_GROUP
     AUTORADIOBUTTON "工作群組:(&W)", 1004, 17, 161, 191, 10
     EDITTEXT 116, 28, 144, 181, 14, ES_AUTOHSCROLL | WS_GROUP
-    PUSHBUTTON "查找我的域名(&F)", 1010, 7, 203, 109, 14, NOT WS_VISIBLE | WS_DISABLED
+    PUSHBUTTON "查找我的網域(&F)", 1010, 7, 203, 109, 14, NOT WS_VISIBLE | WS_DISABLED
     EDITTEXT 1007, 28, 172, 181, 14, ES_UPPERCASE | ES_AUTOHSCROLL | ES_OEMCONVERT
     DEFPUSHBUTTON "確定", 1, 121, 203, 50, 14, WS_GROUP
     PUSHBUTTON "取消", 2, 176, 203, 50, 14
@@ -48,12 +48,12 @@ END
 
 IDD_PROPPAGEDNSANDNETBIOS DIALOGEX 0, 0, 266, 125
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_CAPTION
-CAPTION "DNS 字尾和 NetBIOS 電腦名"
+CAPTION "DNS 尾碼和 NetBIOS 電腦名稱"
 FONT 9, "新細明體"
 BEGIN
-    LTEXT "此電腦的主 DNS 字尾(&P):", -1, 7, 5, 253, 8
+    LTEXT "此電腦的主要 DNS 尾碼(&P):", -1, 7, 5, 253, 8
     EDITTEXT 1011, 7, 17, 252, 14, ES_AUTOHSCROLL
-    AUTOCHECKBOX "域成員身份變化時，更改主 DNS 字尾(&C)", 115, 11, 39, 250, 10
+    AUTOCHECKBOX "網域成員身份變化時，更改主要 DNS 尾碼(&C)", 115, 11, 39, 250, 10
     LTEXT "電腦的 NetBIOS 名稱(&N):", -1, 7, 57, 148, 8
     EDITTEXT 1013, 7, 69, 150, 14, ES_UPPERCASE | ES_AUTOHSCROLL | ES_READONLY
     DEFPUSHBUTTON "確定", 1, 153, 104, 50, 14
@@ -65,23 +65,23 @@ STRINGTABLE
 BEGIN
     1 "* 未知 *"
     2 "WORKGROUP"
-    3 "嘗試讀取域成員身份資訊時出現以下錯誤:"
+    3 "嘗試讀取網域成員身份資訊時出現以下錯誤:"
     4 "電腦名稱更改"
     5 "工作群組:"
-    6 "域:"
-    22 "歡迎到 %1 工作群組。"
-    23 "歡迎到域 %1。"
+    6 "網域:"
+    22 "歡迎加入 %1 工作群組。"
+    23 "歡迎加入 %1 網域。"
     24 "您必須重新啟動該電腦以使更改生效。"
-    25 "您可以更改名稱和這部電腦的會員。更改可能會影響對網路資源的訪問。"
-    1021 "注意: 只有管理員纔可以更改此電腦的標識。"
-    1022 "注意: 不能更改電腦的標識，因為:"
-    1029 "The new computer name ""%1"" is a number. The name may not be a number."
-    1030 "新的電腦名稱 ""%1"" 包含不允許使用的字元。不允許使用的字元包括 ` ~ ! @ # $ %% ^ & * ( ) = + [ ] { } \\ | ; : ' "" , < > / and ?"
-    1031 "The first domain of the domain name ""%1"" is a number. The first domain may not be a number."
-    1032 "The domain name ""%1"" contains characters which are not allowed. Standard DNS names may contain letters (a-z, A-Z), numbers (0-9), and hyphens, but no spaces. Periods (.) are used to separate domains. Example: domain-1.reactos.org."
+    25 "您可以更改這部電腦的名稱和成員資格。更改可能會影響對網路資源的訪問。"
+    1021 "注意: 只有系統管理員才能變更這部電腦的識別碼。"
+    1022 "注意: 不能更改電腦的識別碼，因為:"
+    1029 "新的電腦名稱 ""%1"" 是一個數字。名稱不可以是一個數字。"
+    1030 "新的電腦名稱 ""%1"" 包含了不允許使用的字元。不允許使用的字元包括 ` ~ ! @ # $ %% ^ & * ( ) = + [ ] { } \\ | ; : ' "" , < > / 和 ?"
+    1031 "網域名稱 ""%1"" 的第一個網域是一個數字。第一個網域不可以是數字。"
+    1032 "網域名稱 ""%1"" 包含了不允許使用的字元。標準的 DNS 名稱可以包含字母 (a-z, A-Z)、數字 (0-9)、和連字號，但不可以有空格。句點 (.) 則是用來分隔網域。例如: domain-1.reactos.org。"
     3210 "詳細資訊(&D) >>"
     3220 "<< 詳細資訊(&D)"
     4000 "資訊"
-    4001 "不能設定新電腦名稱!"
+    4001 "無法設定新的電腦名稱！"
 END
 

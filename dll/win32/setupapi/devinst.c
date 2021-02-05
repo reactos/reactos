@@ -3410,7 +3410,7 @@ BOOL WINAPI IntSetupDiSetDeviceRegistryPropertyAW(
                 hKey, PropertyMap[Property].nameA, 0,
                     PropertyMap[Property].regType, PropertyBuffer,
                     PropertyBufferSize);
-        } 
+        }
         else
         {
             l = RegSetValueExW(
@@ -5435,7 +5435,7 @@ SetupDiInstallDevice(
             SetLastError(ERROR_GEN_FAILURE);
             goto cleanup;
         }
-        ConfigFlags |= DNF_DISABLED;
+        ConfigFlags |= CONFIGFLAG_FAILEDINSTALL;
         Result = SetupDiSetDeviceRegistryPropertyW(
             DeviceInfoSet,
             DeviceInfoData,

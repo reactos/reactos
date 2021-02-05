@@ -1,12 +1,5 @@
 
-add_definitions(
-    -D_ATL_NO_EXCEPTIONS)
-
-set_cpp(WITH_RUNTIME)
-
 spec2def(shell32_apitest.exe shell32_apitest.spec)
-
-include_directories(${REACTOS_SOURCE_DIR}/sdk/lib/atl)
 
 list(APPEND SOURCE
     AddCommas.cpp
@@ -31,6 +24,7 @@ list(APPEND SOURCE
     ShellExecCmdLine.cpp
     ShellExecuteEx.cpp
     ShellExecuteW.cpp
+    ShellHook.cpp
     ShellState.cpp
     SHLimitInputEdit.cpp
     menu.cpp
@@ -45,7 +39,7 @@ add_executable(shell32_apitest
     resource.rc
     ${CMAKE_CURRENT_BINARY_DIR}/shell32_apitest.def)
 
-target_link_libraries(shell32_apitest wine uuid ${PSEH_LIB})
+target_link_libraries(shell32_apitest wine uuid ${PSEH_LIB} cpprt atl_classes)
 set_module_type(shell32_apitest win32cui)
 add_importlibs(shell32_apitest user32 gdi32 shell32 ole32 oleaut32 advapi32 shlwapi msvcrt kernel32 ntdll)
 add_pch(shell32_apitest shelltest.h "${PCH_SKIP_SOURCE}")
@@ -53,6 +47,7 @@ add_rostests_file(TARGET shell32_apitest)
 
 # shell-notify.exe
 add_executable(shell-notify shell-notify.cpp)
+target_link_libraries(shell-notify cpprt atl_classes)
 set_module_type(shell-notify win32gui UNICODE)
 add_importlibs(shell-notify msvcrt kernel32 user32 shell32 shlwapi ole32)
 add_rostests_file(TARGET shell-notify SUBDIR testdata)

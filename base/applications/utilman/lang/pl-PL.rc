@@ -1,0 +1,13 @@
+/*
+ * PROJECT:         ReactOS Utility Manager (Accessibility)
+ * LICENSE:         GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:         Polish translation resource
+ */
+
+LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
+
+STRINGTABLE
+BEGIN
+    IDS_FAIL_INIT "Nie można zainicjować biblioteki Menedżera narzędzi! Kod błędu to %lu."
+    IDS_FAIL_INIT_TITLE "Błąd inicjowania"
+END

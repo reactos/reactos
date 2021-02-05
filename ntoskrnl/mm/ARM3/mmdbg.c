@@ -15,9 +15,7 @@
 #define MODULE_INVOLVED_IN_ARM3
 #include <mm/ARM3/miarm.h>
 
-#ifndef _WINKD_
-#define KdpDprintf DPRINT
-#elif defined(NDEBUG)
+#ifdef NDEBUG
 #define KdpDprintf(...)
 #endif
 

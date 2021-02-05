@@ -11,7 +11,6 @@
 
 /* GLOBALS ********************************************************************/
 
-UTILMAN_GLOBALS Globals;
 REGISTRY_DATA RegData;
 REGISTRY_SETTINGS Settings;
 

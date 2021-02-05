@@ -1,10 +1,4 @@
 
-add_definitions(-DUSE_WINE_TODOS)
-
-if(GCC)
-    add_compile_flags("-Wno-format-overflow")
-endif()
-
 list(APPEND SOURCE
     info.c
     install.c
@@ -14,7 +8,11 @@ add_executable(version_winetest ${SOURCE} version.rc)
 set_module_type(version_winetest win32cui)
 add_importlibs(version_winetest shell32 version msvcrt kernel32)
 
-if(MSVC)
+target_compile_definitions(version_winetest PRIVATE USE_WINE_TODOS)
+
+if (NOT MSVC)
+    target_compile_options(version_winetest PRIVATE -Wno-format-overflow)
+else()
     add_importlibs(version_winetest ntdll)
 endif()
 

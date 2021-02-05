@@ -631,8 +631,8 @@
 @ stdcall SystemFunction041(ptr long long) # RtlDecryptMemory
 @ stdcall TraceEvent(double ptr) ntdll.EtwTraceEvent
 @ stdcall TraceEventInstance(double ptr ptr ptr) ntdll.EtwTraceEventInstance
-@ varargs TraceMessage(ptr long ptr long) ntdll.EtwTraceMessage
-@ stdcall TraceMessageVa(double long ptr long ptr) ntdll.EtwTraceMessageVa
+@ varargs TraceMessage() ntdll.EtwTraceMessage
+@ stdcall TraceMessageVa() ntdll.EtwTraceMessageVa
 @ stdcall TreeResetNamedSecurityInfoA(str ptr ptr ptr ptr ptr ptr long ptr ptr ptr)
 @ stdcall TreeResetNamedSecurityInfoW(wstr long long ptr ptr ptr ptr long ptr long ptr)
 @ stub TrusteeAccessToObjectA

@@ -27,6 +27,7 @@ DBG_DEFAULT_CHANNEL(MEMORY);
 static ULONG InstalledMemoryMb = 0;
 static ULONG AvailableMemoryMb = 0;
 extern multiboot_info_t * MultibootInfoPtr;
+extern ULONG NvBase;
 extern PVOID FrameBuffer;
 extern ULONG FrameBufferSize;
 
@@ -60,8 +61,8 @@ XboxMemInit(VOID)
     PVOID MembaseTop = (PVOID)(64 * 1024 * 1024);
     PVOID MembaseLow = (PVOID)0;
 
-    WRITE_REGISTER_ULONG((PULONG)NV2A_FB_CFG0, 0x03070103);
-    WRITE_REGISTER_ULONG((PULONG)(NV2A_FB_CFG0 + 4), 0x11448000);
+    WRITE_REGISTER_ULONG((PULONG)(NvBase + NV2A_FB_CFG0), 0x03070103);
+    WRITE_REGISTER_ULONG((PULONG)(NvBase + NV2A_FB_CFG0 + 4), 0x11448000);
 
     /* Prep hardware for 128 Mb */
     WRITE_PORT_ULONG((PULONG)0xCF8, CONFIG_CMD(0, 0, 0x84));

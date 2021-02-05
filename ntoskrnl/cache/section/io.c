@@ -50,11 +50,6 @@
 #include <debug.h>
 #include <reactos/exeformat.h>
 
-#if defined (ALLOC_PRAGMA)
-#pragma alloc_text(INIT, MmCreatePhysicalMemorySection)
-#pragma alloc_text(INIT, MmInitSectionImplementation)
-#endif
-
 KEVENT CcpLazyWriteEvent;
 
 PDEVICE_OBJECT
@@ -193,6 +188,7 @@ MiSimpleRead(PFILE_OBJECT FileObject,
     return Status;
 }
 
+#ifdef NEWCC
 /*
 
 Convenience function for writing from kernel space.  This issues a paging
@@ -339,3 +335,4 @@ _MiWriteBackPage(PFILE_OBJECT FileObject,
 
     return Status;
 }
+#endif

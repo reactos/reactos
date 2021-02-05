@@ -25,11 +25,11 @@
 VOID
 ErrorMessage(
     IN DWORD dwErrorCode,
-    IN LPTSTR szFormat OPTIONAL,
+    IN PCTSTR szFormat OPTIONAL,
     ...)
 {
     va_list arg_ptr;
-    LPTSTR szError;
+    PTSTR szError;
     TCHAR szMsg[RC_STRING_MAX_SIZE];
     TCHAR szMessage[1024];
 
@@ -46,7 +46,7 @@ ErrorMessage(
 
     if (FormatMessage(FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_ALLOCATE_BUFFER,
                       NULL, dwErrorCode, MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
-                      (LPTSTR)&szError, 0, NULL))
+                      (PTSTR)&szError, 0, NULL))
     {
         ConErrPrintf(_T("%s%s%s"), szError, szMessage, (*szMessage ? _T("\n") : _T("")));
         if (szError)
@@ -69,87 +69,87 @@ VOID error_parameter_format(TCHAR ch)
 }
 
 
-VOID error_invalid_switch (TCHAR ch)
+VOID error_invalid_switch(TCHAR ch)
 {
     ConErrResPrintf(STRING_ERROR_INVALID_SWITCH, ch);
     nErrorLevel = 1;
 }
 
 
-VOID error_too_many_parameters (LPTSTR s)
+VOID error_too_many_parameters(PCTSTR s)
 {
     ConErrResPrintf(STRING_ERROR_TOO_MANY_PARAMETERS, s);
     nErrorLevel = 1;
 }
 
 
-VOID error_path_not_found (VOID)
+VOID error_path_not_found(VOID)
 {
     ConErrResPuts(STRING_ERROR_PATH_NOT_FOUND);
     nErrorLevel = 1;
 }
 
 
-VOID error_file_not_found (VOID)
+VOID error_file_not_found(VOID)
 {
     ConErrResPuts(STRING_ERROR_FILE_NOT_FOUND);
     nErrorLevel = 1;
 }
 
 
-VOID error_sfile_not_found (LPTSTR f)
+VOID error_sfile_not_found(PCTSTR s)
 {
     TCHAR szMsg[RC_STRING_MAX_SIZE];
 
     LoadString(CMD_ModuleHandle, STRING_ERROR_FILE_NOT_FOUND, szMsg, ARRAYSIZE(szMsg));
-    ConErrPrintf(_T("%s - %s\n"), szMsg, f);
+    ConErrPrintf(_T("%s - %s\n"), szMsg, s);
     nErrorLevel = 1;
 }
 
 
-VOID error_req_param_missing (VOID)
+VOID error_req_param_missing(VOID)
 {
     ConErrResPuts(STRING_ERROR_REQ_PARAM_MISSING);
     nErrorLevel = 1;
 }
 
 
-VOID error_invalid_drive (VOID)
+VOID error_invalid_drive(VOID)
 {
     ConErrResPuts(STRING_ERROR_INVALID_DRIVE);
     nErrorLevel = 1;
 }
 
 
-VOID error_bad_command (LPTSTR s)
+VOID error_bad_command(PCTSTR s)
 {
     ConErrResPrintf(STRING_ERROR_BADCOMMAND, s);
     nErrorLevel = 9009;
 }
 
 
-VOID error_no_pipe (VOID)
+VOID error_no_pipe(VOID)
 {
     ConErrResPuts(STRING_ERROR_CANNOTPIPE);
     nErrorLevel = 1;
 }
 
 
-VOID error_out_of_memory (VOID)
+VOID error_out_of_memory(VOID)
 {
     ConErrResPuts(STRING_ERROR_OUT_OF_MEMORY);
     nErrorLevel = 1;
 }
 
 
-VOID error_invalid_parameter_format (LPTSTR s)
+VOID error_invalid_parameter_format(PCTSTR s)
 {
     ConErrResPrintf(STRING_ERROR_INVALID_PARAM_FORMAT, s);
     nErrorLevel = 1;
 }
 
 
-VOID error_syntax (LPTSTR s)
+VOID error_syntax(PCTSTR s)
 {
     TCHAR szMsg[RC_STRING_MAX_SIZE];
 
@@ -164,7 +164,7 @@ VOID error_syntax (LPTSTR s)
 }
 
 
-VOID msg_pause (VOID)
+VOID msg_pause(VOID)
 {
     ConOutResPuts(STRING_ERROR_D_PAUSEMSG);
 }

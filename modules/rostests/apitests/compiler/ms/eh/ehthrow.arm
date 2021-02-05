@@ -1,0 +1,676 @@
+
+Test #1
+A ctor.  i = 0
+B ctor.  i = 1
+A ctor.  i = 2
+B ctor.  i = 3
+B ctor.  i = 4
+A copy ctor.  i = 5
+B dtor.  i = 4
+B dtor.  i = 3
+Throwing
+B ctor.  i = 6
+B ctor.  i = 7
+A copy ctor.  i = 8
+B dtor.  i = 7
+B dtor.  i = 6
+B ctor.  i = 9
+B ctor.  i = 10
+A copy ctor.  i = 11
+B dtor.  i = 10
+B dtor.  i = 9
+B ctor.  i = 12
+B ctor.  i = 13
+A dtor.  i = 5
+B dtor.  i = 13
+B dtor.  i = 12
+B ctor.  i = 14
+B ctor.  i = 15
+A dtor.  i = 2
+B dtor.  i = 15
+B dtor.  i = 14
+B dtor.  i = 1
+B ctor.  i = 16
+B ctor.  i = 17
+A dtor.  i = 0
+B dtor.  i = 17
+B dtor.  i = 16
+In main's catch
+B ctor.  i = 18
+B ctor.  i = 19
+A dtor.  i = 11
+B dtor.  i = 19
+B dtor.  i = 18
+B ctor.  i = 20
+B ctor.  i = 21
+A dtor.  i = 8
+B dtor.  i = 21
+B dtor.  i = 20
+
+
+Test #2
+A ctor.  i = 0
+B ctor.  i = 1
+A ctor.  i = 2
+A ctor.  i = 3
+B ctor.  i = 4
+B ctor.  i = 5
+A copy ctor.  i = 6
+B dtor.  i = 5
+B dtor.  i = 4
+Throwing
+B ctor.  i = 7
+B ctor.  i = 8
+A copy ctor.  i = 9
+B dtor.  i = 8
+B dtor.  i = 7
+B ctor.  i = 10
+B ctor.  i = 11
+A copy ctor.  i = 12
+B dtor.  i = 11
+B dtor.  i = 10
+B ctor.  i = 13
+B ctor.  i = 14
+A dtor.  i = 6
+B dtor.  i = 14
+B dtor.  i = 13
+B ctor.  i = 15
+B ctor.  i = 16
+A dtor.  i = 3
+B dtor.  i = 16
+B dtor.  i = 15
+B ctor.  i = 17
+B ctor.  i = 18
+A dtor.  i = 2
+B dtor.  i = 18
+B dtor.  i = 17
+In catch;
+A ctor.  i = 19
+Rethrowing
+B ctor.  i = 20
+B ctor.  i = 21
+A dtor.  i = 19
+B dtor.  i = 21
+B dtor.  i = 20
+B ctor.  i = 22
+B ctor.  i = 23
+A dtor.  i = 12
+B dtor.  i = 23
+B dtor.  i = 22
+B ctor.  i = 24
+B ctor.  i = 25
+A copy ctor.  i = 26
+B dtor.  i = 25
+B dtor.  i = 24
+B dtor.  i = 1
+B ctor.  i = 27
+B ctor.  i = 28
+A dtor.  i = 0
+B dtor.  i = 28
+B dtor.  i = 27
+In main's catch
+B ctor.  i = 29
+B ctor.  i = 30
+A dtor.  i = 26
+B dtor.  i = 30
+B dtor.  i = 29
+B ctor.  i = 31
+B ctor.  i = 32
+A dtor.  i = 9
+B dtor.  i = 32
+B dtor.  i = 31
+
+
+Test #3
+A ctor.  i = 0
+B ctor.  i = 1
+A ctor.  i = 2
+A ctor.  i = 3
+B ctor.  i = 4
+B ctor.  i = 5
+A copy ctor.  i = 6
+B dtor.  i = 5
+B dtor.  i = 4
+Throwing
+B ctor.  i = 7
+B ctor.  i = 8
+A copy ctor.  i = 9
+B dtor.  i = 8
+B dtor.  i = 7
+B ctor.  i = 10
+B ctor.  i = 11
+A copy ctor.  i = 12
+B dtor.  i = 11
+B dtor.  i = 10
+B ctor.  i = 13
+B ctor.  i = 14
+A dtor.  i = 6
+B dtor.  i = 14
+B dtor.  i = 13
+B ctor.  i = 15
+B ctor.  i = 16
+A dtor.  i = 3
+B dtor.  i = 16
+B dtor.  i = 15
+B ctor.  i = 17
+B ctor.  i = 18
+A dtor.  i = 2
+B dtor.  i = 18
+B dtor.  i = 17
+In catch
+A ctor.  i = 19
+Throwing new a
+B ctor.  i = 20
+B ctor.  i = 21
+A copy ctor.  i = 22
+B dtor.  i = 21
+B dtor.  i = 20
+B ctor.  i = 23
+B ctor.  i = 24
+A copy ctor.  i = 25
+B dtor.  i = 24
+B dtor.  i = 23
+B ctor.  i = 26
+B ctor.  i = 27
+A dtor.  i = 19
+B dtor.  i = 27
+B dtor.  i = 26
+B ctor.  i = 28
+B ctor.  i = 29
+A dtor.  i = 12
+B dtor.  i = 29
+B dtor.  i = 28
+B ctor.  i = 30
+B ctor.  i = 31
+A dtor.  i = 9
+B dtor.  i = 31
+B dtor.  i = 30
+B dtor.  i = 1
+B ctor.  i = 32
+B ctor.  i = 33
+A dtor.  i = 0
+B dtor.  i = 33
+B dtor.  i = 32
+In main's catch
+B ctor.  i = 34
+B ctor.  i = 35
+A dtor.  i = 25
+B dtor.  i = 35
+B dtor.  i = 34
+B ctor.  i = 36
+B ctor.  i = 37
+A dtor.  i = 22
+B dtor.  i = 37
+B dtor.  i = 36
+
+
+Test #4
+A ctor.  i = 0
+B ctor.  i = 1
+B ctor.  i = 2
+A ctor.  i = 3
+A ctor.  i = 4
+A ctor.  i = 5
+A ctor.  i = 6
+B ctor.  i = 7
+A ctor.  i = 8
+A ctor.  i = 9
+B ctor.  i = 10
+B ctor.  i = 11
+A copy ctor.  i = 12
+B dtor.  i = 11
+B dtor.  i = 10
+Throwing
+B ctor.  i = 13
+B ctor.  i = 14
+A copy ctor.  i = 15
+B dtor.  i = 14
+B dtor.  i = 13
+B ctor.  i = 16
+B ctor.  i = 17
+A copy ctor.  i = 18
+B dtor.  i = 17
+B dtor.  i = 16
+B ctor.  i = 19
+B ctor.  i = 20
+A dtor.  i = 12
+B dtor.  i = 20
+B dtor.  i = 19
+B ctor.  i = 21
+B ctor.  i = 22
+A dtor.  i = 9
+B dtor.  i = 22
+B dtor.  i = 21
+B ctor.  i = 23
+B ctor.  i = 24
+A dtor.  i = 8
+B dtor.  i = 24
+B dtor.  i = 23
+In catch;
+A ctor.  i = 25
+Rethrowing
+B ctor.  i = 26
+B ctor.  i = 27
+A dtor.  i = 25
+B dtor.  i = 27
+B dtor.  i = 26
+B ctor.  i = 28
+B ctor.  i = 29
+A dtor.  i = 18
+B dtor.  i = 29
+B dtor.  i = 28
+B ctor.  i = 30
+B ctor.  i = 31
+A copy ctor.  i = 32
+B dtor.  i = 31
+B dtor.  i = 30
+B dtor.  i = 7
+B ctor.  i = 33
+B ctor.  i = 34
+A dtor.  i = 6
+B dtor.  i = 34
+B dtor.  i = 33
+B ctor.  i = 35
+B ctor.  i = 36
+A dtor.  i = 5
+B dtor.  i = 36
+B dtor.  i = 35
+In catch #1
+B ctor.  i = 37
+Rethrowing
+B dtor.  i = 37
+B ctor.  i = 38
+B ctor.  i = 39
+A dtor.  i = 32
+B dtor.  i = 39
+B dtor.  i = 38
+B ctor.  i = 40
+B ctor.  i = 41
+A dtor.  i = 4
+B dtor.  i = 41
+B dtor.  i = 40
+B ctor.  i = 42
+B ctor.  i = 43
+A dtor.  i = 3
+B dtor.  i = 43
+B dtor.  i = 42
+In catch #2
+A ctor.  i = 44
+Throwing new a
+B ctor.  i = 45
+B ctor.  i = 46
+A copy ctor.  i = 47
+B dtor.  i = 46
+B dtor.  i = 45
+B ctor.  i = 48
+B ctor.  i = 49
+A copy ctor.  i = 50
+B dtor.  i = 49
+B dtor.  i = 48
+B ctor.  i = 51
+B ctor.  i = 52
+A dtor.  i = 44
+B dtor.  i = 52
+B dtor.  i = 51
+B ctor.  i = 53
+B ctor.  i = 54
+A dtor.  i = 15
+B dtor.  i = 54
+B dtor.  i = 53
+B dtor.  i = 2
+In catch #3
+B ctor.  i = 55
+Rethrowing
+B dtor.  i = 55
+B ctor.  i = 56
+B ctor.  i = 57
+A dtor.  i = 50
+B dtor.  i = 57
+B dtor.  i = 56
+B ctor.  i = 58
+B ctor.  i = 59
+A copy ctor.  i = 60
+B dtor.  i = 59
+B dtor.  i = 58
+B dtor.  i = 1
+B ctor.  i = 61
+B ctor.  i = 62
+A dtor.  i = 0
+B dtor.  i = 62
+B dtor.  i = 61
+In main's catch
+B ctor.  i = 63
+B ctor.  i = 64
+A dtor.  i = 60
+B dtor.  i = 64
+B dtor.  i = 63
+B ctor.  i = 65
+B ctor.  i = 66
+A dtor.  i = 47
+B dtor.  i = 66
+B dtor.  i = 65
+
+
+Test #5
+A ctor.  i = 0
+B ctor.  i = 1
+B ctor.  i = 2
+B ctor.  i = 3
+B ctor.  i = 4
+A ctor.  i = 5
+B ctor.  i = 6
+B ctor.  i = 7
+A copy ctor.  i = 8
+B dtor.  i = 7
+B dtor.  i = 6
+Throwing
+B ctor.  i = 9
+B ctor.  i = 10
+A copy ctor.  i = 11
+B dtor.  i = 10
+B dtor.  i = 9
+B ctor.  i = 12
+B ctor.  i = 13
+A copy ctor.  i = 14
+B dtor.  i = 13
+B dtor.  i = 12
+B ctor.  i = 15
+B ctor.  i = 16
+A dtor.  i = 8
+B dtor.  i = 16
+B dtor.  i = 15
+B ctor.  i = 17
+B ctor.  i = 18
+A dtor.  i = 5
+B dtor.  i = 18
+B dtor.  i = 17
+B dtor.  i = 4
+B dtor.  i = 3
+B dtor.  i = 2
+A ctor.  i = 19
+In catch #2
+B ctor.  i = 20
+Throwing a new b
+B copy ctor.  i = 21
+B copy ctor.  i = 22
+B dtor.  i = 20
+B ctor.  i = 23
+B ctor.  i = 24
+A dtor.  i = 19
+B dtor.  i = 24
+B dtor.  i = 23
+B ctor.  i = 25
+B ctor.  i = 26
+A dtor.  i = 14
+B dtor.  i = 26
+B dtor.  i = 25
+B ctor.  i = 27
+B ctor.  i = 28
+A dtor.  i = 11
+B dtor.  i = 28
+B dtor.  i = 27
+B dtor.  i = 1
+In catch #3
+Throwing a new a
+A ctor.  i = 29
+B ctor.  i = 30
+B ctor.  i = 31
+A copy ctor.  i = 32
+B dtor.  i = 31
+B dtor.  i = 30
+B dtor.  i = 22
+B dtor.  i = 21
+B ctor.  i = 33
+B ctor.  i = 34
+A dtor.  i = 0
+B dtor.  i = 34
+B dtor.  i = 33
+In main's catch
+B ctor.  i = 35
+B ctor.  i = 36
+A dtor.  i = 32
+B dtor.  i = 36
+B dtor.  i = 35
+B ctor.  i = 37
+B ctor.  i = 38
+A dtor.  i = 29
+B dtor.  i = 38
+B dtor.  i = 37
+
+
+Test #6
+B ctor.  i = 0
+B ctor.  i = 1
+B ctor.  i = 2
+Throwing a b
+B copy ctor.  i = 3
+B copy ctor.  i = 4
+B dtor.  i = 2
+B ctor.  i = 5
+In catch #1
+Throwing a new b
+B copy ctor.  i = 6
+B copy ctor.  i = 7
+B dtor.  i = 5
+B dtor.  i = 4
+B dtor.  i = 3
+B dtor.  i = 1
+B ctor.  i = 8
+In catch #2
+Throwing a new b
+B copy ctor.  i = 9
+B copy ctor.  i = 10
+B dtor.  i = 8
+B dtor.  i = 7
+B dtor.  i = 6
+B dtor.  i = 0
+A ctor.  i = 11
+In catch #3
+Throwing a new a
+B ctor.  i = 12
+B ctor.  i = 13
+A copy ctor.  i = 14
+B dtor.  i = 13
+B dtor.  i = 12
+B ctor.  i = 15
+B ctor.  i = 16
+A copy ctor.  i = 17
+B dtor.  i = 16
+B dtor.  i = 15
+B ctor.  i = 18
+B ctor.  i = 19
+A dtor.  i = 11
+B dtor.  i = 19
+B dtor.  i = 18
+B dtor.  i = 10
+B dtor.  i = 9
+In main's catch
+B ctor.  i = 20
+B ctor.  i = 21
+A dtor.  i = 17
+B dtor.  i = 21
+B dtor.  i = 20
+B ctor.  i = 22
+B ctor.  i = 23
+A dtor.  i = 14
+B dtor.  i = 23
+B dtor.  i = 22
+
+
+Test #7
+B ctor.  i = 0
+B ctor.  i = 1
+B ctor.  i = 2
+Throwing a b
+B ctor.  i = 3
+B copy ctor.  i = 4
+B dtor.  i = 2
+B ctor.  i = 5
+In catch #1
+B ctor.  i = 6
+Rethrowing b
+B copy ctor.  i = 7
+B dtor.  i = 6
+B ctor.  i = 8
+In catch #1 of catch#1
+Rethrowing b
+B dtor.  i = 8
+B dtor.  i = 7
+B dtor.  i = 5
+B dtor.  i = 4
+B copy ctor.  i = 9
+B dtor.  i = 1
+B ctor.  i = 10
+In catch #2
+Throwing a new A
+A ctor.  i = 11
+B ctor.  i = 12
+B ctor.  i = 13
+A copy ctor.  i = 14
+B dtor.  i = 13
+B dtor.  i = 12
+B dtor.  i = 10
+B dtor.  i = 9
+B dtor.  i = 3
+B dtor.  i = 0
+In main's catch
+B ctor.  i = 15
+B ctor.  i = 16
+A dtor.  i = 14
+B dtor.  i = 16
+B dtor.  i = 15
+B ctor.  i = 17
+B ctor.  i = 18
+A dtor.  i = 11
+B dtor.  i = 18
+B dtor.  i = 17
+
+
+Test #8
+B ctor.  i = 0
+B ctor.  i = 1
+B ctor.  i = 2
+B ctor.  i = 3
+Throwing a b
+B ctor.  i = 4
+B ctor.  i = 5
+B copy ctor.  i = 6
+B dtor.  i = 4
+B dtor.  i = 3
+B ctor.  i = 7
+In catch #1
+B ctor.  i = 8
+Rethrowing b
+A ctor.  i = 9
+Rethrowing
+B copy ctor.  i = 10
+B ctor.  i = 11
+B ctor.  i = 12
+A dtor.  i = 9
+B dtor.  i = 12
+B dtor.  i = 11
+B dtor.  i = 8
+B ctor.  i = 13
+In catch #1 of catch#1
+Rethrowing b
+A ctor.  i = 14
+Rethrowing
+B ctor.  i = 15
+B ctor.  i = 16
+A dtor.  i = 14
+B dtor.  i = 16
+B dtor.  i = 15
+B dtor.  i = 13
+B dtor.  i = 10
+B copy ctor.  i = 17
+B dtor.  i = 7
+B dtor.  i = 6
+B dtor.  i = 2
+B dtor.  i = 1
+B ctor.  i = 18
+In catch #2
+Throwing a new A
+A ctor.  i = 19
+B ctor.  i = 20
+B ctor.  i = 21
+A copy ctor.  i = 22
+B dtor.  i = 21
+B dtor.  i = 20
+B dtor.  i = 18
+B dtor.  i = 17
+B dtor.  i = 5
+B dtor.  i = 0
+In main's catch
+B ctor.  i = 23
+B ctor.  i = 24
+A dtor.  i = 22
+B dtor.  i = 24
+B dtor.  i = 23
+B ctor.  i = 25
+B ctor.  i = 26
+A dtor.  i = 19
+B dtor.  i = 26
+B dtor.  i = 25
+
+
+Test #9
+B ctor.  i = 0
+Throwing B
+B copy ctor.  i = 1
+B dtor.  i = 0
+In catch #1
+Rethrow
+In catch #2
+B dtor.  i = 1
+End of test9, throwing a A
+A ctor.  i = 2
+B ctor.  i = 3
+B ctor.  i = 4
+A copy ctor.  i = 5
+B dtor.  i = 4
+B dtor.  i = 3
+In main's catch
+B ctor.  i = 6
+B ctor.  i = 7
+A dtor.  i = 5
+B dtor.  i = 7
+B dtor.  i = 6
+B ctor.  i = 8
+B ctor.  i = 9
+A dtor.  i = 2
+B dtor.  i = 9
+B dtor.  i = 8
+
+
+Test #10
+B ctor.  i = 0
+Throwing B
+B copy ctor.  i = 1
+B dtor.  i = 0
+In catch #1
+Throwing a new B()
+B ctor.  i = 2
+In catch #2
+B dtor.  i = 2
+B dtor.  i = 1
+End of test10, throwing a A
+A ctor.  i = 3
+B ctor.  i = 4
+B ctor.  i = 5
+A copy ctor.  i = 6
+B dtor.  i = 5
+B dtor.  i = 4
+In main's catch
+B ctor.  i = 7
+B ctor.  i = 8
+A dtor.  i = 6
+B dtor.  i = 8
+B dtor.  i = 7
+B ctor.  i = 9
+B ctor.  i = 10
+A dtor.  i = 3
+B dtor.  i = 10
+B dtor.  i = 9
+
+
+Passed
