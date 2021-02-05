@@ -11,6 +11,7 @@ list(APPEND HAL_SOURCE
     generic/timer.c
     pic/halinit.c
     pic/irql.c
+    pic/legacy.c
     pic/pic.c
     pic/processor.c)
 

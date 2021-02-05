@@ -29,6 +29,7 @@ list(APPEND HAL_PC98_SOURCE
     generic/spinlock.c
     generic/timer.c
     pic/halinit.c
+    pic/legacy.c
     pic/pic.c
     pic/processor.c)
 

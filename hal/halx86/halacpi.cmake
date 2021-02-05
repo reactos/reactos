@@ -9,6 +9,7 @@ list(APPEND HALACPI_SOURCE
     generic/profil.c
     generic/spinlock.c
     generic/timer.c
+    pic/acpi.c
     pic/halinit.c
     pic/irql.c
     pic/pic.c
