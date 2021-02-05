@@ -34,6 +34,15 @@ HalpGetParameters(IN PCHAR CommandLine)
     // FIXME parameters: "INTAFFINITY", "MAXAPICCLUSTER", "MAXPROCSPERCLUSTER", "USEPHYSICALAPIC" "CLKLVL", "TIMERES", "USE8254"
 }
 
+CODE_SEG("INIT")
+VOID
+NTAPI
+HalpMarkProcessorStarted(_In_ UCHAR Id,
+                         _In_ ULONG PrcNumber)
+{
+    UNIMPLEMENTED;
+}
+
 BOOLEAN
 NTAPI 
 DetectMP(_In_ PLOADER_PARAMETER_BLOCK LoaderBlock)

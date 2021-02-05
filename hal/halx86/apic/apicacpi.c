@@ -9,36 +9,44 @@
 /* INCLUDES *******************************************************************/
 
 #include <hal.h>
-#define NDEBUG
+//#define NDEBUG
 #include <debug.h>
 
 #include "apic.h"
 #include "apicacpi.h"
 #include <ioapic.h>
 
-/* GLOBALS ********************************************************************/
-
-APIC_INTI_INFO HalpIntiInfo[MAX_INTI];
 LOCAL_APIC HalpStaticProcLocalApicTable[MAX_CPUS] = {{0}};
 IO_APIC_VERSION_REGISTER HalpIOApicVersion[MAX_IOAPICS];
 UCHAR HalpIoApicId[MAX_IOAPICS] = {0};
 UCHAR HalpMaxProcs = 0;
 BOOLEAN HalpPciLockSettings;
+PLOCAL_APIC HalpProcLocalApicTable = NULL;
+BOOLEAN HalpUsePmTimer = FALSE;
+PVOID * HalpLocalNmiSources = NULL;
 
+/* GLOBALS ********************************************************************/
+
+/* APIC */
 extern HALP_MP_INFO_TABLE HalpMpInfoTable;
+extern APIC_INTI_INFO HalpIntiInfo[MAX_INTI];
 extern APIC_ADDRESS_USAGE HalpApicUsage;
-extern PLOCAL_APIC HalpProcLocalApicTable;
 extern ULONG HalpDefaultApicDestinationModeMask;
-extern ULONG HalpPicVectorRedirect[16];
-extern ULONG HalpPicVectorFlags[16];
 extern USHORT HalpMaxApicInti[MAX_IOAPICS];
 extern UCHAR HalpMaxProcsPerCluster;
 extern UCHAR HalpIRQLtoTPR[32];    // table, which sets the correspondence between IRQL levels and TPR (Task Priority Register) values.
 extern KIRQL HalpVectorToIRQL[16];
 extern BOOLEAN HalpForceApicPhysicalDestinationMode;
-extern BOOLEAN HalpUsePmTimer;
 extern BOOLEAN HalpForceClusteredApicMode;
 extern BOOLEAN HalpHiberInProgress;
+extern USHORT HalpVectorToINTI[MAX_CPUS * MAX_INT_VECTORS];
+extern ULONGLONG HalpProc0TSCHz;
+
+/* ACPI */
+extern ULONG HalpPicVectorRedirect[16];
+extern ULONG HalpPicVectorFlags[16];
+extern BOOLEAN LessThan16Mb;
+extern BOOLEAN HalpPhysicalMemoryMayAppearAbove4GB;
 
 /* FUNCTIONS ******************************************************************/
 
@@ -90,6 +98,30 @@ HalpGetParameters(IN PCHAR CommandLine)
     {
         DPRINT1("HalpGetParameters: FIXME parameters [MAXAPICCLUSTER]\n");
         DbgBreakPoint();
+    }
+}
+
+VOID
+NTAPI
+HalpMarkProcessorStarted(_In_ UCHAR Id,
+                         _In_ ULONG PrcNumber)
+{
+    ULONG ix;
+
+    for (ix = 0; ix < HalpMpInfoTable.ProcessorCount; ix++)
+    {
+        if (HalpProcLocalApicTable[ix].Id == Id)
+        {
+            HalpProcLocalApicTable[ix].ProcessorStarted = TRUE;
+            HalpProcLocalApicTable[ix].ProcessorNumber = PrcNumber;
+
+            if (PrcNumber == 0)
+            {
+                HalpProcLocalApicTable[ix].FirstProcessor = TRUE;
+            }
+
+            break;
+        }
     }
 }
 
@@ -536,9 +568,8 @@ VOID
 HalpInitPhase0a(_In_ PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     PMEMORY_ALLOCATION_DESCRIPTOR MemDescriptor;
-    PLIST_ENTRY Entry;
-
     PHALP_PCR_HAL_RESERVED HalReserved;
+    PLIST_ENTRY Entry;
     USHORT IntI;
 
     /* Initialize ACPI */
@@ -594,12 +625,13 @@ HalpInitPhase0a(_In_ PLOADER_PARAMETER_BLOCK LoaderBlock)
 
     if (!HalpPmTimerScaleTimers())
     {
+        DPRINT1("HalpInitPhase0a: FIXME HalpScaleTimers(). DbgBreakPoint()\n");
         DbgBreakPoint();
         //HalpScaleTimers();
     }
 
-    //HalReserved = (PHALP_PCR_HAL_RESERVED)KeGetPcr()->HalReserved;
-    //HalpProc0TSCHz = HalReserved->HalpProc0TSCHz;
+    HalReserved = (PHALP_PCR_HAL_RESERVED)KeGetPcr()->HalReserved;
+    HalpProc0TSCHz = HalReserved->TscHz;
 
     KeRegisterInterruptHandler(APIC_CLOCK_VECTOR, HalpClockInterruptStub);
 

@@ -221,6 +221,7 @@ extern BOOLEAN HalpProfilingStopped;
 /* timer.c */
 VOID NTAPI HalpInitializeClock(VOID);
 VOID __cdecl HalpClockInterrupt(VOID);
+VOID __cdecl HalpClockInterruptStub(VOID);
 VOID __cdecl HalpProfileInterrupt(VOID);
 
 typedef struct _HALP_ROLLOVER

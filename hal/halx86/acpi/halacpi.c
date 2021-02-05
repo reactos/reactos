@@ -19,6 +19,7 @@ FAST_MUTEX HalpAcpiTableCacheLock;
 
 BOOLEAN HalpProcessedACPIPhase0;
 BOOLEAN HalpPhysicalMemoryMayAppearAbove4GB;
+BOOLEAN LessThan16Mb = TRUE;
 
 FADT HalpFixedAcpiDescTable;
 PDEBUG_PORT_TABLE HalpDebugPortTable;
@@ -49,9 +50,12 @@ PWCHAR HalHardwareIdString = L"acpipic_up";
 PWCHAR HalName = L"ACPI Compatible Eisa/Isa HAL";
 
 #ifdef _M_IX86
-PPM_DISPATCH_TABLE PmAcpiDispatchTable;
+extern ULONG HalpDefaultApicDestinationModeMask;
+
 HALP_TIMER_INFO TimerInfo;
 BOOLEAN HalpBrokenAcpiTimer = FALSE;
+
+PPM_DISPATCH_TABLE PmAcpiDispatchTable;
 
 /* DISPATCH TABLE FUNCTIONS ***************************************************/
 

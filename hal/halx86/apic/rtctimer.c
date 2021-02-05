@@ -126,6 +126,16 @@ HalpInitializeClock(VOID)
     DPRINT1("Clock initialized\n");
 }
 
+#ifndef _M_AMD64
+VOID
+FASTCALL
+HalpClockInterruptStubHandler(_In_ PKTRAP_FRAME TrapFrame)
+{
+    DPRINT1("HalpClockInterruptStubHandler: TrapFrame %X\n", TrapFrame);
+    DbgBreakPoint();
+}
+#endif
+
 VOID
 FASTCALL
 HalpClockInterruptHandler(IN PKTRAP_FRAME TrapFrame)

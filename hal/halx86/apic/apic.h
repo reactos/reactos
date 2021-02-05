@@ -56,6 +56,11 @@
 #define IrqlToTpr(Irql) (HalpIRQLtoTPR[Irql])
 #define IrqlToSoftVector(Irql) IrqlToTpr(Irql)
 #define TprToIrql(Tpr)  (HalVectorToIRQL[Tpr >> 4])
+
+#define MAX_CPUS         32
+#define MAX_INT_VECTORS  256
+#define MAX_IOAPICS      64
+#define MAX_INTI         (32 * MAX_IOAPICS)
 #endif
 
 #define MSR_APIC_BASE 0x0000001B
@@ -280,6 +285,61 @@ typedef union _IOAPIC_REDIRECTION_REGISTER
     };
 } IOAPIC_REDIRECTION_REGISTER;
 
+typedef struct _HALP_PCR_HAL_RESERVED
+{
+    UCHAR ProcessorNumber;
+    UCHAR Reserved1;
+    BOOLEAN ApcRequested;
+    BOOLEAN DpcRequested;
+    ULONG ApicHz;
+    ULONG Reserved2;
+    ULONG ProfileCount;
+    ULONGLONG TscHz;
+    ULONG Reserved3;
+    ULONG Reserved4;
+    ULONG Reserved[8];
+
+} HALP_PCR_HAL_RESERVED, *PHALP_PCR_HAL_RESERVED;
+
+typedef struct _IO_APIC_REGISTERS
+{
+    volatile ULONG IoRegisterSelect;
+    volatile ULONG Reserved[3];
+    volatile ULONG IoWindow;
+
+} IO_APIC_REGISTERS, *PIO_APIC_REGISTERS;
+
+/* Type of APIC input signals */
+#define INTI_INFO_TYPE_INT     0 // vectored interrupt; vector is supplied by APIC redirection table
+#define INTI_INFO_TYPE_NMI     1 // nonmaskable interrupt
+#define INTI_INFO_TYPE_SMI     2 // system management interrupt
+#define INTI_INFO_TYPE_ExtINT  3 // vectored interrupt; vector is supplied by external PIC
+
+/* Polarity of APIC input signals */
+#define INTI_INFO_POLARITY_CONFORMS     0
+#define INTI_INFO_POLARITY_ACTIVE_HIGH  1
+#define INTI_INFO_POLARITY_RESERVED     2
+#define INTI_INFO_POLARITY_ACTIVE_LOW   3
+
+/* Trigger mode of APIC input signals */
+#define INTI_INFO_TRIGGER_EDGE   0
+#define INTI_INFO_TRIGGER_LEVEL  1
+
+typedef union _APIC_INTI_INFO
+{
+    struct
+    {
+        UCHAR Enabled      :1;
+        UCHAR Type         :3;
+        UCHAR TriggerMode  :2;
+        UCHAR Polarity     :2;
+        UCHAR Destinations;
+        USHORT Entry;
+    };
+    ULONG AsULONG;
+
+} APIC_INTI_INFO, *PAPIC_INTI_INFO;
+
 FORCEINLINE
 ULONG
 ApicRead(ULONG Offset)
@@ -327,6 +387,14 @@ VOID
 NTAPI
 HalpInitializeApicAddressing(
     VOID
+);
+
+CODE_SEG("INIT")
+VOID
+NTAPI
+HalpMarkProcessorStarted(
+    _In_ UCHAR Id,
+    _In_ ULONG PrcNumber
 );
 
 /* EOF */

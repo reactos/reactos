@@ -20,6 +20,8 @@ ApicInitializeLocalApic(ULONG Cpu);
 
 /* GLOBALS ******************************************************************/
 
+const USHORT HalpBuildType = HAL_BUILD_TYPE;
+
 #ifdef _M_IX86
 PKPCR HalpProcessorPCR[MAX_CPUS];
 
@@ -67,24 +69,19 @@ ADDRESS_USAGE HalpImcrIoSpace =
         {0,0},
     }
 };
-#endif
-
-const USHORT HalpBuildType = HAL_BUILD_TYPE;
 
 HALP_MP_INFO_TABLE HalpMpInfoTable;
 APIC_ADDRESS_USAGE HalpApicUsage;
-PLOCAL_APIC HalpProcLocalApicTable = NULL;
 KAFFINITY HalpNodeProcessorAffinity[MAX_CPUS] = {0};
-ULONG HalpDefaultApicDestinationModeMask = 0x800;
 ULONG HalpHybridApicPhysicalTargets = 0;
 USHORT HalpMaxApicInti[MAX_IOAPICS] = {0};
 UCHAR HalpIntDestMap[MAX_CPUS] = {0};
 UCHAR HalpMaxProcsPerCluster = 0;
 UCHAR HalpMaxNode = 0;
 BOOLEAN HalpForceApicPhysicalDestinationMode = FALSE;
-BOOLEAN HalpUsePmTimer = FALSE;
 BOOLEAN HalpForceClusteredApicMode = FALSE;
 BOOLEAN HalpHiberInProgress = FALSE;
+#endif
 
 extern UCHAR HalpInitLevel;
 
@@ -205,31 +202,6 @@ HalpInitializeApicAddressing()
     else
     {
         HalpHybridApicPhysicalTargets |= (1 << PrcNumber);
-    }
-}
-
-VOID
-NTAPI
-HalpMarkProcessorStarted(
-    _In_ UCHAR Id,
-    _In_ ULONG PrcNumber)
-{
-    ULONG ix;
-
-    for (ix = 0; ix < HalpMpInfoTable.ProcessorCount; ix++)
-    {
-        if (HalpProcLocalApicTable[ix].Id == Id)
-        {
-            HalpProcLocalApicTable[ix].ProcessorStarted = TRUE;
-            HalpProcLocalApicTable[ix].ProcessorNumber = PrcNumber;
-
-            if (PrcNumber == 0)
-            {
-                HalpProcLocalApicTable[ix].FirstProcessor = TRUE;
-            }
-
-            break;
-        }
     }
 }
 

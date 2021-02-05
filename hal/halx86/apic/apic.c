@@ -25,7 +25,7 @@ void __cdecl HackEoi(void);
 /* GLOBALS ********************************************************************/
 
 ULONG ApicVersion;
-UCHAR HalpVectorToIndex[256];
+UCHAR HalpVectorToIndex[MAX_INT_VECTORS];
 
 #ifndef _M_AMD64
 const UCHAR
@@ -107,6 +107,11 @@ HalpVectorToIRQL[16] =
     0x1D, /* E1 IPI_LEVEL / EF POWER_LEVEL */
     0x1F, /* FF HIGH_LEVEL */
 };
+
+ULONGLONG HalpProc0TSCHz;
+USHORT HalpVectorToINTI[MAX_CPUS * MAX_INT_VECTORS] = {0xFFFF};
+APIC_INTI_INFO HalpIntiInfo[MAX_INTI];
+ULONG HalpDefaultApicDestinationModeMask = 0x800;
 #endif
 
 /* PRIVATE FUNCTIONS **********************************************************/

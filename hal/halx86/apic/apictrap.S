@@ -45,6 +45,7 @@ HackEoiReturn:
 .code
 
 TRAP_ENTRY HalpClockInterrupt, KI_PUSH_FAKE_ERROR_CODE
+TRAP_ENTRY HalpClockInterruptStub, KI_PUSH_FAKE_ERROR_CODE
 TRAP_ENTRY HalpProfileInterrupt, KI_PUSH_FAKE_ERROR_CODE
 TRAP_ENTRY HalpTrap0D, 0
 TRAP_ENTRY HalpApcInterrupt, KI_PUSH_FAKE_ERROR_CODE
