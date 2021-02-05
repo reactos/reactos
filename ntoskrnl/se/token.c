@@ -27,7 +27,6 @@ typedef struct _TOKEN_AUDIT_POLICY_INFORMATION
 /* GLOBALS ********************************************************************/
 
 POBJECT_TYPE SeTokenObjectType = NULL;
-ERESOURCE SepTokenLock; // FIXME: Global lock!
 
 TOKEN_SOURCE SeSystemTokenSource = {"*SYSTEM*", {0}};
 LUID SeSystemAuthenticationId = SYSTEM_LUID;
@@ -82,6 +81,59 @@ static const INFORMATION_CLASS_INFO SeTokenInformationClass[] = {
 };
 
 /* FUNCTIONS *****************************************************************/
+
+/**
+ * @brief
+ * Creates a lock for the token.
+ * 
+ * @param[in,out] Token
+ * A token which lock has to be created.
+ *
+ * @return
+ * STATUS_SUCCESS if the pool allocation and resource initialisation have
+ * completed successfully, otherwise STATUS_INSUFFICIENT_RESOURCES on a
+ * pool allocation failure.
+ */
+static
+NTSTATUS
+SepCreateTokenLock(
+    _Inout_ PTOKEN Token)
+{
+    PAGED_CODE();
+
+    Token->TokenLock = ExAllocatePoolWithTag(NonPagedPool,
+                                             sizeof(ERESOURCE),
+                                             TAG_SE_TOKEN_LOCK);
+    if (Token->TokenLock == NULL)
+    {
+        DPRINT1("SepCreateTokenLock(): Failed to allocate memory!\n");
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    ExInitializeResourceLite(Token->TokenLock);
+    return STATUS_SUCCESS;
+}
+
+/**
+ * @brief
+ * Deletes a lock of a token.
+ *
+ * @param[in,out] Token
+ * A token which contains the lock.
+ *
+ * @return
+ * Nothing.
+ */
+static
+VOID
+SepDeleteTokenLock(
+    _Inout_ PTOKEN Token)
+{
+    PAGED_CODE();
+
+    ExDeleteResourceLite(Token->TokenLock);
+    ExFreePoolWithTag(Token->TokenLock, TAG_SE_TOKEN_LOCK);
+}
 
 static NTSTATUS
 SepCompareTokens(IN PTOKEN FirstToken,
@@ -477,7 +529,13 @@ SepDuplicateToken(
     AccessToken->TokenType = TokenType;
     AccessToken->ImpersonationLevel = Level;
 
-    AccessToken->TokenLock = &SepTokenLock; // FIXME: Global lock!
+    /* Initialise the lock for the access token */
+    Status = SepCreateTokenLock(AccessToken);
+    if (!NT_SUCCESS(Status))
+    {
+        ObDereferenceObject(AccessToken);
+        return Status;
+    }
 
     /* Copy the immutable fields */
     RtlCopyLuid(&AccessToken->TokenSource.SourceIdentifier,
@@ -490,7 +548,6 @@ SepDuplicateToken(
     AccessToken->ParentTokenId = Token->ParentTokenId;
     AccessToken->ExpirationTime = Token->ExpirationTime;
     AccessToken->OriginatingLogonSession = Token->OriginatingLogonSession;
-
 
     /* Lock the source token and copy the mutable fields */
     SepAcquireTokenLockExclusive(Token);
@@ -819,6 +876,10 @@ SepDeleteToken(PVOID ObjectBody)
     if ((AccessToken->TokenFlags & TOKEN_SESSION_NOT_REFERENCED) == 0)
         SepRmDereferenceLogonSession(&AccessToken->AuthenticationId);
 
+    /* Delete the token lock */
+    if (AccessToken->TokenLock)
+        SepDeleteTokenLock(AccessToken);
+
     /* Delete the dynamic information area */
     if (AccessToken->DynamicPart)
         ExFreePoolWithTag(AccessToken->DynamicPart, TAG_TOKEN_DYNAMIC);
@@ -832,8 +893,6 @@ SepInitializeTokenImplementation(VOID)
 {
     UNICODE_STRING Name;
     OBJECT_TYPE_INITIALIZER ObjectTypeInitializer;
-
-    ExInitializeResource(&SepTokenLock); // FIXME: Global lock!
 
     DPRINT("Creating Token Object Type\n");
 
@@ -976,7 +1035,10 @@ SepCreateToken(
     AccessToken->TokenType = TokenType;
     AccessToken->ImpersonationLevel = ImpersonationLevel;
 
-    AccessToken->TokenLock = &SepTokenLock; // FIXME: Global lock!
+    /* Initialise the lock for the access token */
+    Status = SepCreateTokenLock(AccessToken);
+    if (!NT_SUCCESS(Status))
+        goto Quit;
 
     RtlCopyLuid(&AccessToken->TokenSource.SourceIdentifier,
                 &TokenSource->SourceIdentifier);
