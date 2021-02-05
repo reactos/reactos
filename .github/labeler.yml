@@ -1,6 +1,7 @@
 # Labelling by the files touched
 drivers:
-  - any: ["drivers/**", "sdk/lib/drivers/**"]
+  - drivers/**
+  - sdk/lib/drivers/**
   - any: ["win32ss/drivers/**", "!win32ss/drivers/font/**"]
 
 freeldr:
