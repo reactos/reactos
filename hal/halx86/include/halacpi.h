@@ -39,6 +39,29 @@ typedef struct _ACPI_SUBTABLE_HEADER
 #define FADT_FORCE_APIC_CLUSTER_MODEL              0x00040000
 #define FADT_FORCE_APIC_PHYSICAL_DESTINATION_MODE  0x00080000
 
+#define FADT_TMR_VAL_EXT_32BIT  0x80000000
+#define FADT_TMR_VAL_EXT_24BIT  0x00800000
+
+/* WAET - Windows ACPI Emulated Devices Table */
+typedef struct _ACPI_TABLE_WAET
+{
+    ACPI_TABLE_HEADER Header;
+    ULONG Flags;
+} ACPI_TABLE_WAET, *PACPI_TABLE_WAET;
+
+/* WAET Flags */
+
+/* Indicates whether the RTC has been enhanced not to require acknowledgment after it asserts an interrupt.
+   With this bit set, an interrupt handler can bypass reading the RTC register C to unlatch the pending interrupt.
+*/
+#define ACPI_WAET_RTC_GOOD            (1 << 0)
+
+/* Indicates whether the ACPI PM timer has been enhanced not to require multiple reads.
+   With this bit set, only one read of the ACPI PM timer is necessary to obtain a reliable value.
+*/
+#define ACPI_WAET_ACPI_PM_TIMER_GOOD  (1 << 1)
+
+
 /* Values for MADT subtable type in ACPI_SUBTABLE_HEADER */
 enum AcpiMadtType
 {

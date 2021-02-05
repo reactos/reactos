@@ -51,6 +51,7 @@ PWCHAR HalName = L"ACPI Compatible Eisa/Isa HAL";
 
 #ifdef _M_IX86
 HALP_TIMER_INFO TimerInfo;
+ULONG HalpWAETDeviceFlags;
 BOOLEAN HalpBrokenAcpiTimer = FALSE;
 PPM_DISPATCH_TABLE PmAcpiDispatchTable;
 
@@ -920,11 +921,11 @@ HalaAcpiTimerInit(_In_ PULONG TimerPort,
 
     if (IsTimerValExt32bit)
     {
-        TimerInfo.ValueExt = 0x80000000; // 32-bit
+        TimerInfo.ValueExt = FADT_TMR_VAL_EXT_32BIT;
     }
     else
     {
-        TimerInfo.ValueExt = 0x00800000; // 24-bit
+        TimerInfo.ValueExt = FADT_TMR_VAL_EXT_24BIT;
     }
 
     if (!HalpBrokenAcpiTimer)
@@ -939,25 +940,30 @@ HalaAcpiTimerInit(_In_ PULONG TimerPort,
 VOID
 NTAPI
 HaliAcpiTimerInit(_In_ PULONG TimerPort,
-                  _In_ BOOLEAN TimerValExt)
+                  _In_ BOOLEAN IsTimerValExt32bit)
 {
     PAGED_CODE();
-    DPRINT("HaliAcpiTimerInit: Port %p, ValExt %X, flags %X\n", TimerPort, TimerValExt, HalpFixedAcpiDescTable.flags);
+    DPRINT("HaliAcpiTimerInit: Port %p, ValExt %X, flags %X\n", TimerPort, IsTimerValExt32bit, HalpFixedAcpiDescTable.flags);
 
     /* Is this in the init phase? */
     if (!TimerPort)
     {
         /* Get the data from the FADT */
-        TimerPort = (PULONG)HalpFixedAcpiDescTable.pm_tmr_blk_io_port; // System port address of the Power Management Timer Control Register Block
-        TimerValExt = (HalpFixedAcpiDescTable.flags & ACPI_TMR_VAL_EXT) != 0; // A zero indicates TMR_VAL is implemented as a 24-bit value.
-                                                                              // A one indicates TMR_VAL is implemented as a 32-bit value.
-        DPRINT1("TimerPort %p, IsTimerValExt32bit %X\n", TimerPort, TimerValExt);
+
+        /* System port address of the Power Management (PM) Timer Control Register Block */
+        TimerPort = (PULONG)HalpFixedAcpiDescTable.pm_tmr_blk_io_port;
+
+        /* A zero flags bit indicates TMR_VAL is implemented as a 24-bit value.
+           A one indicates TMR_VAL is implemented as a 32-bit value. 
+        */
+        IsTimerValExt32bit = ((HalpFixedAcpiDescTable.flags & ACPI_TMR_VAL_EXT) != 0);
+        DPRINT1("TimerPort %p, IsTimerValExt32bit %X\n", TimerPort, IsTimerValExt32bit);
     }
 
     HaliAcpiSetUsePmClock();
 
     /* Now proceed to the timer initialization */
-    HalaAcpiTimerInit(TimerPort, TimerValExt);
+    HalaAcpiTimerInit(TimerPort, IsTimerValExt32bit);
 }
 #endif
 
@@ -970,8 +976,9 @@ HalpSetupAcpiPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     PFADT Fadt;
     ULONG TableLength;
     PHYSICAL_ADDRESS PhysicalAddress;
-
 #ifdef _M_IX86
+    PACPI_TABLE_WAET EmulatedDevicesTable = NULL;
+
     /* Fill out HalDispatchTable */
     HalGetInterruptTranslator = HalAcpiGetInterruptTranslator;
 #endif
@@ -981,7 +988,11 @@ HalpSetupAcpiPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 
     /* Setup the ACPI table cache */
     Status = HalpAcpiTableCacheInit(LoaderBlock);
-    if (!NT_SUCCESS(Status)) return Status;
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("HalpSetupAcpiPhase0: Status %X\n", Status);
+        return Status;
+    }
 
     /* Grab the FADT */
     Fadt = HalAcpiGetTable(LoaderBlock, FADT_SIGNATURE);
@@ -1008,6 +1019,10 @@ HalpSetupAcpiPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 
     /* Get the debug table for KD */
     HalpDebugPortTable = HalAcpiGetTable(LoaderBlock, DBGP_SIGNATURE);
+    if (HalpDebugPortTable)
+    {
+        DPRINT1("HalpDebugPortTable %X\n", HalpDebugPortTable);
+    }
 
     /* Initialize NUMA through the SRAT */
     HalpNumaInitializeStaticConfiguration(LoaderBlock);
@@ -1019,11 +1034,21 @@ HalpSetupAcpiPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         DPRINT1("Your machine has a SRAT, but NUMA/HotPlug are not supported!\n");
     }
 
+#ifdef _M_IX86
+    EmulatedDevicesTable = HalAcpiGetTable(LoaderBlock, 'TEAW');
+    if (EmulatedDevicesTable)
+    {
+        HalpWAETDeviceFlags = EmulatedDevicesTable->Flags;
+        DPRINT1("HalpWAETDeviceFlags %X\n", HalpWAETDeviceFlags);
+    }
+#endif
+
     /* Can there be memory higher than 4GB? */
     if (HalpMaxHotPlugMemoryAddress.HighPart >= 1)
     {
         /* We'll need this for DMA later */
         HalpPhysicalMemoryMayAppearAbove4GB = TRUE;
+        DPRINT1("HalpPhysicalMemoryMayAppearAbove4GB - TRUE\n");
     }
 
     /* Setup the ACPI timer */

@@ -136,6 +136,7 @@ HalpClockInterruptStubHandler(_In_ PKTRAP_FRAME TrapFrame)
 }
 #endif
 
+#ifdef _M_AMD64
 VOID
 FASTCALL
 HalpClockInterruptHandler(IN PKTRAP_FRAME TrapFrame)
@@ -176,6 +177,9 @@ HalpClockInterruptHandler(IN PKTRAP_FRAME TrapFrame)
     /* Update the system time -- on x86 the kernel will exit this trap  */
     KeUpdateSystemTime(TrapFrame, LastIncrement, Irql);
 }
+#else
+    // FIXME test 0-bit from HalpWAETDeviceFlags
+#endif
 
 VOID
 FASTCALL
