@@ -288,11 +288,12 @@ KiSendEOI(VOID)
 
 FORCEINLINE
 VOID
-KiEndInterrupt(IN KIRQL Irql,
-               IN PKTRAP_FRAME TrapFrame)
+KiEndInterrupt(_In_ PHAL_INTERRUPT_CONTEXT IntContext,
+               _In_ BOOLEAN HalCtrlIsPIC,
+               _In_ BOOLEAN Spurious)
 {
     /* Make sure this is from the clock handler */
-    ASSERT(TrapFrame->ErrorCode == 0xc10c4);
+    ASSERT(IntContext->TrapFrame->ErrorCode == 0xc10c4);
     //KeLowerIrql(Irql);
 }
 
