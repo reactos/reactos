@@ -17,6 +17,7 @@
 LONG KiTickOffset;
 ULONG KeTimeAdjustment;
 BOOLEAN KiTimeAdjustmentEnabled = FALSE;
+BOOLEAN HalCtrlPIC = FALSE;
 
 /* FUNCTIONS ******************************************************************/
 
@@ -59,15 +60,25 @@ KiCheckForTimerExpiration(
     }
 }
 
+#ifdef __REACTOS__
 VOID
 FASTCALL
-KeUpdateSystemTime(IN PKTRAP_FRAME TrapFrame,
-                   IN ULONG Increment,
-                   IN KIRQL Irql)
+RosKeUpdateSystemTime(_In_ PKTRAP_FRAME TrapFrame,
+                      _In_ ULONG Increment,
+                      _In_ UCHAR Vector,
+                      _In_ KIRQL Irql)
 {
     PKPRCB Prcb = KeGetCurrentPrcb();
     ULARGE_INTEGER CurrentTime, InterruptTime;
     LONG OldTickOffset;
+    HAL_INTERRUPT_CONTEXT IntContext = {0};
+
+    DPRINT1("RosKeUpdateSystemTime: TrapFrame %X, Increment %X, Vector %X, Irql %X\n", TrapFrame, Increment, Vector, Irql);
+
+    if (Vector == 0xFF)
+    {
+        HalCtrlPIC = TRUE;
+    }
 
     /* Check if this tick is being skipped */
     if (Prcb->SkipTick)
@@ -77,7 +88,12 @@ KeUpdateSystemTime(IN PKTRAP_FRAME TrapFrame,
 
         /* Increase interrupt count and end the interrupt */
         Prcb->InterruptCount++;
-        KiEndInterrupt(Irql, TrapFrame);
+
+        IntContext.Irql = Irql;
+        IntContext.Vector = Vector;
+        IntContext.TrapFrame = TrapFrame;
+
+        KiEndInterrupt(&IntContext, HalCtrlPIC, FALSE);
 
         /* Note: non-x86 return back to the caller! */
         return;
@@ -132,8 +148,34 @@ KeUpdateSystemTime(IN PKTRAP_FRAME TrapFrame,
     }
 
     /* Disable interrupts and end the interrupt */
-    KiEndInterrupt(Irql, TrapFrame);
+    IntContext.Irql = Irql;
+    IntContext.Vector = Vector;
+    IntContext.TrapFrame = TrapFrame;
+
+    KiEndInterrupt(&IntContext, HalCtrlPIC, FALSE);
 }
+#else
+#ifdef _M_IX86
+/* NT uses non-standard call parameters... */
+VOID
+NTAPI
+KeUpdateSystemTime(VOID
+//                 IN PKTRAP_FRAME TrapFrame,
+//                 IN ULONG Increment,
+//                 IN UCHAR Vector,
+//                 IN KIRQL Irql
+                  )
+{
+    DPRINT1("KeUpdateSystemTime: DbgBreakPoint()\n");
+    DbgBreakPoint();
+
+    //DPRINT1("KeUpdateSystemTime: TrapFrame %X, Increment %X, Vector %X, Irql %X\n", TrapFrame, Increment, Vector, Irql);
+    //RosKeUpdateSystemTime(TrapFrame, Increment, Vector, Irql);
+}
+#else
+#error FIXME
+#endif
+#endif
 
 VOID
 NTAPI

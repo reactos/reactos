@@ -152,20 +152,34 @@ HalEnableSystemInterrupt(
 );
 
 #ifdef __REACTOS__
+/* For APIC, the interrupt vector must also be transmitted. */
+typedef struct _HAL_INTERRUPT_CONTEXT
+{
+    PKTRAP_FRAME TrapFrame;
+    KIRQL Irql;
+    UCHAR Vector;
+    UCHAR Reserved[2];
+} HAL_INTERRUPT_CONTEXT, *PHAL_INTERRUPT_CONTEXT;
+
 NTHALAPI
 VOID
 NTAPI
 HalEndSystemInterrupt(
     _In_ KIRQL Irql,
-    _In_ PKTRAP_FRAME TrapFrame
+    _In_ PHAL_INTERRUPT_CONTEXT IntContext
 );
 #else
+/* NT actually uses the stack to place the pointer to the TrapFrame (really the third parameter),
+   but ... HalEndSystemInterrupt() is defined with only two parameters ...
+*/
 NTHALAPI
+//__declspec(naked) ??
 VOID
 NTAPI
 HalEndSystemInterrupt(
     _In_ KIRQL Irql,
     _In_ UCHAR Vector
+    //_In_ PKTRAP_FRAME TrapFrame)
 );
 #endif
 

@@ -766,19 +766,51 @@ HalBeginSystemInterrupt(
     return TRUE;
 }
 
+static
 VOID
 NTAPI
-HalEndSystemInterrupt(
-    IN KIRQL OldIrql,
-    IN PKTRAP_FRAME TrapFrame)
+HalpEndSystemInterrupt(_In_ PHAL_INTERRUPT_CONTEXT IntContext,
+                       _In_ KIRQL OldIrql)
 {
-    /* Send an EOI */
-    ApicSendEOI();
-
-    /* Restore the old IRQL */
-    ApicLowerIrql(OldIrql);
+    DPRINT1("HalpEndSystemInterrupt: OldIrql %X,  SystemVector %X,  TrapFrame %X. DbgBreakPoint()\n", IntContext->Irql,  IntContext->Vector, IntContext->TrapFrame);
+    DbgBreakPoint();
 }
 
+#ifdef __REACTOS__ // RosHalEndSystemInterrupt?
+VOID
+NTAPI
+HalEndSystemInterrupt(_In_ KIRQL OldIrql,
+                      _In_ PHAL_INTERRUPT_CONTEXT IntContext)
+{
+    DPRINT1("HalEndSystemInterrupt: OldIrql %X, IntContext %X\n", OldIrql,  IntContext);
+    HalpEndSystemInterrupt(IntContext, OldIrql);
+}
+#else
+/* NT use non-standard parameters calling */
+__declspec(naked)
+VOID
+NTAPI
+HalEndSystemInterrupt(_In_ KIRQL OldIrql,
+                      _In_ UCHAR Vector)
+//                    _In_ PKTRAP_FRAME TrapFrame)
+{
+    HAL_INTERRUPT_CONTEXT IntContext
+
+    DPRINT1("HalEndSystemInterrupt: FIXME !!! OldIrql %X,  Vector %X\n", OldIrql, Vector);
+    //DPRINT1("HalEndSystemInterrupt: OldIrql %X,  Vector %X,  TrapFrame %X\n", OldIrql, Vector, TrapFrame);
+    DbgBreakPoint();
+
+    /* NT really use stack for pointer TrapFrame (us third parameter),
+       but ... HalEndSystemInterrupt() defined with two parameters.
+    */
+
+    IntContext.Irql = OldIrql;
+    IntContext.Vector = Vector;
+    IntContext.TrapFrame = 0;//TrapFrame; ? FIXME!
+
+    HalpEndSystemInterrupt(&IntContext, OldIrql);
+}
+#endif
 
 /* IRQL MANAGEMENT ************************************************************/
 

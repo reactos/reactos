@@ -14,10 +14,11 @@
 
 VOID
 FASTCALL
-KeUpdateSystemTime(
-    IN PKTRAP_FRAME TrapFrame,
-    IN ULONG Increment,
-    IN KIRQL OldIrql
+RosKeUpdateSystemTime(
+    _In_ PKTRAP_FRAME TrapFrame,
+    _In_ ULONG Increment,
+    _In_ UCHAR Vector,
+    _In_ KIRQL Irql
 );
 
 /* GLOBALS ********************************************************************/
@@ -38,9 +39,10 @@ HalpClockInterrupt(VOID)
     /* FIXME: Check if someone changed the clockrate */
     
     /* Call the kernel */
-    KeUpdateSystemTime(KeGetCurrentThread()->TrapFrame,
-                       HalpCurrentTimeIncrement,
-                       CLOCK2_LEVEL);
+    RosKeUpdateSystemTime(KeGetCurrentThread()->TrapFrame,
+                          HalpCurrentTimeIncrement,
+                          0xFF,
+                          CLOCK2_LEVEL);
 }
 
 VOID

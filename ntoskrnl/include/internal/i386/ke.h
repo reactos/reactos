@@ -858,15 +858,55 @@ KiIret(VOID)
 //
 FORCEINLINE
 VOID
-KiEndInterrupt(IN KIRQL Irql,
-               IN PKTRAP_FRAME TrapFrame)
+KiEndInterrupt(_In_ PHAL_INTERRUPT_CONTEXT IntContext,
+               _In_ BOOLEAN HalCtrlIsPIC,
+               _In_ BOOLEAN Spurious)
 {
-    /* Disable interrupts and end the interrupt */
-    _disable();
-    HalEndSystemInterrupt(Irql, TrapFrame);
+    /* Check if this was a real interrupt */
+    if (!Spurious)
+    {
+        /* Disable interrupts and end the interrupt */
+        _disable();
+
+      #ifdef __REACTOS__
+        if (HalCtrlIsPIC)
+        {
+            HalEndSystemInterrupt(IntContext->Irql, (PHAL_INTERRUPT_CONTEXT)IntContext->TrapFrame); // PIC
+        }
+        else
+        {
+            HalEndSystemInterrupt(IntContext->Irql, IntContext); // APIC
+        }
+      #else
+        DPRINT1("KiEndInterrupt: FIXME !!! Irql %X, Vector %X, TrapFrame %X\n", IntContext->Irql, IntContext->Vector, IntContext->TrapFrame);
+        DbgBreakPoint();
+
+        //FIXME!
+        /* NT actually uses the stack to place the pointer to the TrapFrame (really the third parameter),
+           but ... HalEndSystemInterrupt() is defined with only two parameters ...
+        */
+        // ?add before?:
+        // _asm push (IntContext->TrapFrame)
+        HalEndSystemInterrupt(IntContext->Irql, IntContext->Vector);
+      #endif
+    }
+
+  #ifdef __REACTOS__
+    /* Exit the interrupt */
+    KiEoiHelper(IntContext->TrapFrame);
+  #else
+    DPRINT1("KiEndInterrupt: FIXME before calling Kei386EoiHelper()\n");
+    DbgBreakPoint();
 
     /* Exit the interrupt */
-    KiEoiHelper(TrapFrame);
+
+    //FIXME!
+    /* NT uses non-standard call parameters */
+    // ?? add before:
+    // _asm mov ebp, (IntContext->TrapFrame)
+    // _asm push ebp
+    Kei386EoiHelper();
+  #endif
 }
 
 //

@@ -20,6 +20,7 @@
 ULONG KiISRTimeout = 55;
 USHORT KiISROverflow = 30000;
 extern ULONG NTAPI KiChainedDispatch2ndLvl(VOID);
+extern BOOLEAN HalCtrlPIC;
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
@@ -129,25 +130,6 @@ KiConnectVectorToInterrupt(IN PKINTERRUPT Interrupt,
     KeRegisterInterruptHandler(Interrupt->Vector, Handler);
 }
 
-FORCEINLINE
-DECLSPEC_NORETURN
-VOID
-KiExitInterrupt(IN PKTRAP_FRAME TrapFrame,
-                IN KIRQL OldIrql,
-                IN BOOLEAN Spurious)
-{
-    /* Check if this was a real interrupt */
-    if (!Spurious)
-    {
-        /* It was, disable interrupts and restore the IRQL */
-        _disable();
-        HalEndSystemInterrupt(OldIrql, TrapFrame);
-    }
-
-    /* Now exit the trap */
-    KiEoiHelper(TrapFrame);
-}
-
 DECLSPEC_NORETURN
 VOID
 __cdecl
@@ -159,15 +141,21 @@ KiUnexpectedInterrupt(VOID)
 
 VOID
 FASTCALL
-KiUnexpectedInterruptTailHandler(IN PKTRAP_FRAME TrapFrame)
+KiUnexpectedInterruptTailHandler(_In_ PKTRAP_FRAME TrapFrame)
 {
+    HAL_INTERRUPT_CONTEXT IntContext = {0};
     KIRQL OldIrql;
+
+    DPRINT1("KiUnexpectedInterruptTailHandler: Interrupt 0x%02lx !!!\n", TrapFrame->ErrCode);
 
     /* Enter trap */
     KiEnterInterruptTrap(TrapFrame);
 
     /* Increase interrupt count */
     KeGetCurrentPrcb()->InterruptCount++;
+
+    IntContext.Vector = (UCHAR)TrapFrame->ErrCode;
+    IntContext.TrapFrame = TrapFrame;
 
     /* Start the interrupt */
     if (HalBeginSystemInterrupt(HIGH_LEVEL, TrapFrame->ErrCode, &OldIrql))
@@ -176,31 +164,39 @@ KiUnexpectedInterruptTailHandler(IN PKTRAP_FRAME TrapFrame)
         DPRINT1("\n\x7\x7!!! Unexpected Interrupt 0x%02lx !!!\n", TrapFrame->ErrCode);
 
         /* Now call the epilogue code */
-        KiExitInterrupt(TrapFrame, OldIrql, FALSE);
+        IntContext.Irql = OldIrql;
+        KiEndInterrupt(&IntContext, HalCtrlPIC, FALSE);
     }
     else
     {
         /* Now call the epilogue code */
-        KiExitInterrupt(TrapFrame, OldIrql, TRUE);
+        IntContext.Irql = 0xFF;
+        KiEndInterrupt(&IntContext, HalCtrlPIC, TRUE);
     }
 }
 
 typedef
 VOID
 (FASTCALL *PKI_INTERRUPT_DISPATCH)(
-    IN PKTRAP_FRAME TrapFrame,
-    IN PKINTERRUPT Interrupt
+    _In_ PKTRAP_FRAME TrapFrame,
+    _In_ PKINTERRUPT Interrupt
 );
 
 VOID
 FASTCALL
-KiInterruptDispatch(IN PKTRAP_FRAME TrapFrame,
-                    IN PKINTERRUPT Interrupt)
+KiInterruptDispatch(_In_ PKTRAP_FRAME TrapFrame,
+                    _In_ PKINTERRUPT Interrupt)
 {
+    HAL_INTERRUPT_CONTEXT IntContext = {0};
     KIRQL OldIrql;
+
+    DPRINT1("KiInterruptDispatch: Interrupt 0x%02lx !!!\n", Interrupt->Vector);
 
     /* Increase interrupt count */
     KeGetCurrentPrcb()->InterruptCount++;
+
+    IntContext.Vector = Interrupt->Vector;
+    IntContext.TrapFrame = TrapFrame;
 
     /* Begin the interrupt, making sure it's not spurious */
     if (HalBeginSystemInterrupt(Interrupt->SynchronizeIrql,
@@ -217,26 +213,34 @@ KiInterruptDispatch(IN PKTRAP_FRAME TrapFrame,
         KxReleaseSpinLock(Interrupt->ActualLock);
 
         /* Now call the epilogue code */
-        KiExitInterrupt(TrapFrame, OldIrql, FALSE);
+        IntContext.Irql = OldIrql;
+        KiEndInterrupt(&IntContext, HalCtrlPIC, FALSE);
     }
     else
     {
         /* Now call the epilogue code */
-        KiExitInterrupt(TrapFrame, OldIrql, TRUE);
+        IntContext.Irql = 0xFF;
+        KiEndInterrupt(&IntContext, HalCtrlPIC, TRUE);
     }
 }
 
 VOID
 FASTCALL
-KiChainedDispatch(IN PKTRAP_FRAME TrapFrame,
-                  IN PKINTERRUPT Interrupt)
+KiChainedDispatch(_In_ PKTRAP_FRAME TrapFrame,
+                  _In_ PKINTERRUPT Interrupt)
 {
+    HAL_INTERRUPT_CONTEXT IntContext = {0};
     KIRQL OldIrql, OldInterruptIrql = 0;
     BOOLEAN Handled;
     PLIST_ENTRY NextEntry, ListHead;
 
     /* Increase interrupt count */
     KeGetCurrentPrcb()->InterruptCount++;
+
+    DPRINT1("KiChainedDispatch: Interrupt->Irql %X !!!\n", Interrupt->Irql);
+
+    IntContext.Vector = Interrupt->Vector;
+    IntContext.TrapFrame = TrapFrame;
 
     /* Begin the interrupt, making sure it's not spurious */
     if (HalBeginSystemInterrupt(Interrupt->Irql,
@@ -294,12 +298,14 @@ KiChainedDispatch(IN PKTRAP_FRAME TrapFrame,
         }
 
         /* Now call the epilogue code */
-        KiExitInterrupt(TrapFrame, OldIrql, FALSE);
+        IntContext.Irql = OldIrql;
+        KiEndInterrupt(&IntContext, HalCtrlPIC, FALSE);
     }
     else
     {
         /* Now call the epilogue code */
-        KiExitInterrupt(TrapFrame, OldIrql, TRUE);
+        IntContext.Irql = 0xFF;
+        KiEndInterrupt(&IntContext, HalCtrlPIC, TRUE);
     }
 }
 

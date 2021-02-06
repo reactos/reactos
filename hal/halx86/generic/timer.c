@@ -152,7 +152,7 @@ HalpClockInterruptHandler(IN PKTRAP_FRAME TrapFrame)
         }
 
         /* Update the system time -- the kernel will exit this trap  */
-        KeUpdateSystemTime(TrapFrame, LastIncrement, Irql);
+        RosKeUpdateSystemTime(TrapFrame, LastIncrement, 0xFF, Irql);
     }
 
     /* Spurious, just end the interrupt */
@@ -192,7 +192,7 @@ HalpProfileInterruptHandler(IN PKTRAP_FRAME TrapFrame)
 
         /* Finish the interrupt */
         _disable();
-        HalEndSystemInterrupt(Irql, TrapFrame);
+        HalEndSystemInterrupt(Irql, (PVOID)TrapFrame);
     }
 
     /* Spurious, just end the interrupt */

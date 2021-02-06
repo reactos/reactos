@@ -241,7 +241,7 @@ HalpClockInterruptHandler(IN PKTRAP_FRAME TrapFrame)
     }
 
     /* Update the system time -- on x86 the kernel will exit this trap  */
-    KeUpdateSystemTime(TrapFrame, LastIncrement, Irql);
+    RosKeUpdateSystemTime(TrapFrame, LastIncrement, 0xFF, Irql);
 }
 #else
 CODE_SEG("INIT")
