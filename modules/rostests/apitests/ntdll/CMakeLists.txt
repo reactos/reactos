@@ -10,6 +10,7 @@ list(APPEND SOURCE
     NtAcceptConnectPort.c
     NtAllocateVirtualMemory.c
     NtApphelpCacheControl.c
+    NtCompareTokens.c
     NtContinue.c
     NtCreateFile.c
     NtCreateKey.c
