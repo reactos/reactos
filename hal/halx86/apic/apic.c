@@ -507,7 +507,6 @@ HalpInitializePICs(IN BOOLEAN EnableInterrupts)
     __writeeflags(EFlags);
 }
 
-
 /* SOFTWARE INTERRUPT TRAPS ***************************************************/
 
 #ifndef _M_AMD64
@@ -600,11 +599,34 @@ HalpDispatchInterruptHandler(IN PKTRAP_FRAME TrapFrame)
     /* Exit the interrupt */
     KiEoiHelper(TrapFrame);
 }
+
+DECLSPEC_NORETURN
+VOID
+FASTCALL
+HalpLocalApicErrorServiceHandler(_In_ PKTRAP_FRAME TrapFrame)
+{
+    /* Enter trap */
+    KiEnterInterruptTrap(TrapFrame);
+
+    // FIXME HalpApicErrorLog and HalpLocalApicErrorCount
+
+    ApicWrite(APIC_EOI, 0);
+
+    if (KeGetCurrentPrcb()->CpuType >= 6)
+    {
+        ApicWrite(APIC_ESR, 0);
+    }
+
+  #ifdef __REACTOS__
+    KiEoiHelper(TrapFrame);
+  #else
+    //Kei386EoiHelper()
+    #error FIXME
+  #endif
+}
 #endif
 
-
 /* SOFTWARE INTERRUPTS ********************************************************/
-
 
 VOID
 FASTCALL
@@ -621,7 +643,6 @@ HalClearSoftwareInterrupt(
 {
     /* Nothing to do */
 }
-
 
 /* SYSTEM INTERRUPTS **********************************************************/
 

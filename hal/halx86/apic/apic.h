@@ -61,6 +61,8 @@
 #define MAX_INT_VECTORS  256
 #define MAX_IOAPICS      64
 #define MAX_INTI         (32 * MAX_IOAPICS)
+
+#define APIC_MAX_CPU_PER_CLUSTER  4
 #endif
 
 #define MSR_APIC_BASE 0x0000001B

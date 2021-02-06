@@ -639,7 +639,7 @@ HalpInitPhase0a(_In_ PLOADER_PARAMETER_BLOCK LoaderBlock)
 
     if (HalpForceClusteredApicMode)
     {
-        HalpMaxProcsPerCluster = 4;
+        HalpMaxProcsPerCluster = APIC_MAX_CPU_PER_CLUSTER;
     }
 
     HalpInitializeApicAddressing();

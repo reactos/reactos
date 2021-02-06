@@ -259,10 +259,10 @@ HalpInitializeLocalUnit()
             WRITE_PORT_UCHAR(IMCR_DATA_PORT, IMCR_PIC_VIA_APIC);
         }
 
-        if ((UCHAR)HalpMaxProcsPerCluster > 4 ||
+        if (HalpMaxProcsPerCluster > APIC_MAX_CPU_PER_CLUSTER ||
             (HalpMaxProcsPerCluster == 0 && HalpMpInfoTable.ProcessorCount > 8))
         {
-            HalpMaxProcsPerCluster = 4;
+            HalpMaxProcsPerCluster = APIC_MAX_CPU_PER_CLUSTER;
         }
 
         if (HalpMpInfoTable.LocalApicversion == 0)
@@ -287,8 +287,8 @@ HalpInitializeLocalUnit()
 
     if (HalpMpInfoTable.LocalApicversion)
     {
-        // FIXME UNIMPLIMENTED;
-        ASSERT(FALSE);
+        KeRegisterInterruptHandler(APIC_ERROR_VECTOR, HalpLocalApicErrorService);
+        ApicWrite(APIC_ERRLVTR, APIC_ERROR_VECTOR);
     }
 
     LvtEntry.Long = 0;
@@ -329,9 +329,7 @@ HalpInitializeLocalUnit()
     ApicWrite(APIC_TPR, 0x00);
 
     if (EFlags & EFLAGS_INTERRUPT_MASK)
-    {
         _enable();
-    }
 }
 
 BOOLEAN
