@@ -56,21 +56,17 @@ BootSignature:
 Unused:
     .byte 0
 VolumeSectorCount:
-    .long 0
-    .long 0             // Must be patched by format program !
+    .quad 0            // Must be patched by format program !
 MftLocation:
-    .long 0
-    .long 0             // Must be patched by format program !
+    .quad 0            // Must be patched by format program !
 MftMirrorLocation:
-    .long 0
-    .long 0             // Must be patched by format program !
+    .quad 0            // Must be patched by format program !
 ClustersPerMftRecord:
     .long 0
 ClustersPerIndexRecord:
     .long 0
 VolumeSerialNumber:
-    .long 0
-    .long 0
+    .quad 0
 Checksum:
     .long 0
 
@@ -289,7 +285,7 @@ SectsPerMFT:
     .word 0
     
 MFTStartSector:
-    .long 0
+    .quad 0
 
 BiosCHSDriveSize:
     .long 0
@@ -310,20 +306,21 @@ BootFlagSignature:
 #define ATTRIBUTE_DATA HEX(80)
 #define ATTRIBUTE_INDEX_ROOT HEX(90)
 #define ATTRIBUTE_INDEX_ALLOCATION HEX(A0)
-
+#define FILE_MAGIC HEX(454c4946)
+#define INDX_MAGIC HEX(58444e49)
 StartSearch:
     // Compute MFT start sector
     mov   eax, dword ptr [MftLocation]
     mov   cl, byte ptr [SectsPerCluster]
     movzx ecx, cx
     mul   ecx
-    mov   dword ptr MFTStartSector, eax
+    mov   dword ptr [MFTStartSector], eax
 
     // Compute size of MFT entry in sectors
+    xor   ax, ax
     mov   al, byte ptr [ClustersPerMftRecord]
-    movzx ax, al
-    test  al, HEX(80)
-    jnz   NegativeOffset
+    test  al, al
+    js    NegativeOffset
     mov   cx, word ptr [SectsPerCluster]
     mul   cx
     mov   word ptr [SectsPerMFT], cx
@@ -409,6 +406,7 @@ StartSearch:
     mov    dh, byte ptr [BootPartition]
     ljmp16 0, FREELDR_BASE
 
+// Error message if Freeldr is compressed, encrypted or sparse
 CompressedFreeldr:
     mov   si, offset msgFreeldrCompressed
     call  PutChars
@@ -416,7 +414,10 @@ CompressedFreeldr:
 
 // Finds Freeldr.sys into the directory tree and returns the
 // inode index
-// [ES:AX] address of the MFT record
+// INPUT:
+//  - ES:[AX] address of the MFT record
+// OUTPUT:
+//  - EDX:EAX MFT number of the found file
 ExploreIndexRoot:
     #define fileRecordBase 2
     #define fileRecord 4
@@ -477,7 +478,7 @@ ExploreIndexRoot:
         movzx cx, cl
         lea   si, [si + HEX(52)]
         mov   di, offset FreeLdr
-        call  CompareStr
+        call  CompareStrInsensitive
         lea   si, [si - HEX(52)]
         test  ax, ax
         jz    RootIndexFound
@@ -530,12 +531,11 @@ ExploreIndexRoot:
     pop   bp
     ret
 
+// Compare case-insensitive strings
 // [ES:SI] - the source file name
 // [DS:DI] - the destination file name
 // CX - compare length
-CompareStr:
-    push bp
-    mov  bp, sp
+CompareStrInsensitive:
     push bx
     push si
     push di
@@ -561,13 +561,13 @@ CompareStr:
     pop di
     pop si
     pop bx
-    mov sp, bp
-    pop bp
     ret
 
 // Reads a NTFS cluster
-// AX     : cluster number to read
-// ES:BX  : address to read
+// INPUT:
+//  - AX     : cluster number to read
+// OUTPUT:
+//  - ES:BX  : address to read
 ReadCluster:
     push  edx
     push  ecx
@@ -581,8 +581,10 @@ ReadCluster:
     ret
 
 // Reads a MFT entry
-// AX     : MFT inode
-// ES:BX  : address to read
+// INPUT:
+//  - AX      : MFT inode
+// OUTPUT:
+//  - ES:[BX] : address to read
 ReadInode:
     push  edx
     push  ecx
@@ -592,14 +594,13 @@ ReadInode:
     mov   cx, word ptr [SectsPerMFT]       // Get the correct number of sectors for the FILE entry
     mul   cx
     movzx eax, ax
-    mov   ecx, dword ptr [MFTStartSector]  // Add it to the start of the MFT
-    add   eax, ecx
+    add   eax, dword ptr [MFTStartSector]  // Add it to the start of the MFT
     add   eax, dword ptr [HiddenSectors]   // Add disk offset
     mov   cx, word ptr [SectsPerMFT]
     movzx ecx, cx
     call  ReadSectors
     
-    cmp   dword ptr es:[bx], HEX(454c4946) // Ensure we get a valid FILE record
+    cmp   dword ptr es:[bx], FILE_MAGIC // Ensure we get a valid FILE record
     jnz   near ptr PrintFileSystemError
 
     call  ApplyFixups
@@ -612,9 +613,9 @@ ReadInode:
 
 #define UpdateSequenceOffset 4
 #define UpdateSequenceLen 6
-
 // Apply fixups to INDX and FILE records
-// ES:BX - record to fixup
+// INPUT:
+//  - ES:[BX] - pointer to the record to fixup
 ApplyFixups:
     push  si
     push  di
@@ -648,18 +649,23 @@ ApplyFixups:
     ret
 
 // Reads a non-resident attribute
-// ES:AX : Address of the data runs
-// FS:BX : Address to write to
-// ECX    : LCN to read
+// INPUT:
+//  - ES:[AX] : Address of the data runs
+//  - ECX     : LCN to read
+// OUTPUT:
+//  - FS:[BX] : Address to write to
 ReadNonResidentAttribute:
+    #define currentLCN 4
+    #define offsetWrite 8
+    #define startReadLCN HEX(0C)
     push  bp
     mov   bp, sp
     sub   sp, HEX(10)
     push  dx
     push  si
-    mov   dword ptr [bp - 4], 0          // Store the current LCN
-    mov   word ptr [bp - 8], bx
-    mov   dword ptr [bp - 12], ecx
+    mov   dword ptr [bp - currentLCN], 0          // Store the current LCN
+    mov   word ptr [bp - offsetWrite], bx
+    mov   dword ptr [bp - startReadLCN], ecx
     mov   si, ax
     xor   dx, dx
     RunLoop:
@@ -667,21 +673,21 @@ ReadNonResidentAttribute:
         test  al, al
         jz    NotFound
         call  UnpackRun
-        add   dword ptr [bp - 4], eax
-        cmp   dword ptr [bp - 12], ecx
+        add   dword ptr [bp - currentLCN], eax
+        cmp   dword ptr [bp - startReadLCN], ecx
         jb    FoundRun
-        sub   dword ptr [bp - 12], ecx  // Decrement the cluster
+        sub   dword ptr [bp - startReadLCN], ecx  // Decrement the cluster
         jmp   RunLoop
     FoundRun:
-    mov   ebx, dword ptr [bp - 4]
-    mov   ecx, dword ptr [bp - 12]
+    mov   ebx, dword ptr [bp - currentLCN]
+    mov   ecx, dword ptr [bp - startReadLCN]
     add   ebx, ecx
 
     push es
     mov  ax, fs
     mov  es, ax
     mov  eax, ebx
-    mov  bx, word ptr [bp - 8]
+    mov  bx, word ptr [bp - offsetWrite]
     call ReadCluster
     pop  es
     jmp  RunSearchEnd
@@ -694,10 +700,13 @@ ReadNonResidentAttribute:
     pop  bp
     ret
 
-// Function to unpack a run
-// ES:SI   : address of the run
-// returns unpacked LCN in EAX, unpaked len in ECX
-// SI points to the next run
+// Decodes a run in the runlist
+// INPUT:
+//  - ES:[SI] : address of the run
+// OUTPUT:
+//  - EAX : Unpacked LCN
+//  - ECX : Unpacked run length (in sectors)
+//  - SI  : Next run in the run list
 UnpackRun:
     push bp
     mov  bp, sp
@@ -736,9 +745,12 @@ UnpackRun:
 
 
 // Auxiliary function that unpacks n bytes in the memory
-// AL: size to unpack (max 4 bytes)
-// Returns: eax: the mask used to unpack (for negative number fixup)
-// Returns: ebx: the unpacked number
+// INPUT:
+//  - AL  : size to unpack (max 4 bytes)
+// OUTPUT:
+//  - EAX : the mask used to unpack (for negative number fixup)
+//  - EBX : the unpacked number
+//  - SI  : Next byte to read
 UnpackLen:
     push  cx
     movzx ax, al
@@ -761,17 +773,20 @@ UnpackLen:
     pop   cx
     ret
 
-// ES:AX : Address of the data runs
-// FS:BX : Address to write to
-// ECX    : LCN to read
+// Reads an INDX sector and applies fixups
+// INPUT:
+//  - ES:[AX] : Address of the data runs
+//  - ECX     : LCN to read
+// OUTPUT:
+//  - FS:[BX] : Address to write to
 ReadINDX:
     push  es
     push  bx
     call  ReadNonResidentAttribute
     test  ax, ax
     jz    PrintFileSystemError
-    cmp   dword ptr fs:[0], HEX(58444e49)   // Check if valid INDX
-    jnz   PrintFileSystemError              // jump if not valid
+    cmp   dword ptr fs:[0], INDX_MAGIC
+    jnz   PrintFileSystemError  // jump if not valid
     pop   bx
     
     mov   ax, fs
@@ -780,10 +795,12 @@ ReadINDX:
     pop   es
     ret
 
-// Finds an attribute header
-// ES:AX : pointer to the MFT entry
-// EBX   : type to find
-// returns: offset to the attribute header or 0 if not found
+// Finds an attribute header intho the MFT
+// INPUT:
+//  - ES:[AX] : pointer to the MFT entry
+//  - EBX     : type to find
+// OUTPUT:
+//  - ES:[AX] : Pointer to the attribute header in the MFT entry
 FindAttributeHdr:
     push  cx
     push  si
@@ -823,7 +840,7 @@ msgFreeldr:
 msgLoading:
     .ascii "Loading FreeLoader...", CR, LF, NUL
 msgFreeldrCompressed:
-    .ascii "freeldr.sys is a sparse file, compressed or encrypted, cannot boot", CR, LF, NUL
+    .ascii "freeldr.sys is a sparse, compressed or encrypted file, cannot boot", CR, LF, NUL
 .endcode16
 
 END
