@@ -757,4 +757,13 @@ HaliAcpiSetUsePmClock(VOID)
     }
 }
 
+#ifndef _MINIHAL_
+VOID
+FASTCALL
+HalpClockInterruptHandler(_In_ PKTRAP_FRAME TrapFrame)
+{
+    HaliClockInterrupt(TrapFrame, TRUE);
+}
+#endif
+
 /* EOF */

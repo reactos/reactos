@@ -114,6 +114,7 @@ APIC_INTI_INFO HalpIntiInfo[MAX_INTI];
 ULONG HalpDefaultApicDestinationModeMask = 0x800;
 BOOLEAN HalpForceApicPhysicalDestinationMode = FALSE;
 BOOLEAN HalpForceClusteredApicMode = FALSE;
+BOOLEAN HalpUse8254 = FALSE;
 #endif
 
 /* PRIVATE FUNCTIONS **********************************************************/

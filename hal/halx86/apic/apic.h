@@ -365,6 +365,7 @@ HalInitializeProfiling(VOID);
 VOID __cdecl ApicSpuriousService(VOID);
 VOID __cdecl PicSpuriousService37(VOID);
 
+#ifdef _M_IX86
 BOOLEAN
 NTAPI 
 DetectMP(
@@ -396,5 +397,13 @@ HalpMarkProcessorStarted(
     _In_ UCHAR Id,
     _In_ ULONG PrcNumber
 );
+
+VOID
+FASTCALL
+HaliClockInterrupt(
+    _In_ PKTRAP_FRAME TrapFrame,
+    _In_ BOOLEAN IsAcpi
+);
+#endif
 
 /* EOF */
