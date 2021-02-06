@@ -8,6 +8,7 @@ extern void func_load_notifications(void);
 extern void func_NtAcceptConnectPort(void);
 extern void func_NtAllocateVirtualMemory(void);
 extern void func_NtApphelpCacheControl(void);
+extern void func_NtCompareTokens(void);
 extern void func_NtContinue(void);
 extern void func_NtCreateFile(void);
 extern void func_NtCreateKey(void);
@@ -84,6 +85,7 @@ const struct test winetest_testlist[] =
     { "NtAcceptConnectPort",            func_NtAcceptConnectPort },
     { "NtAllocateVirtualMemory",        func_NtAllocateVirtualMemory },
     { "NtApphelpCacheControl",          func_NtApphelpCacheControl },
+    { "NtCompareTokens",                func_NtCompareTokens },
     { "NtContinue",                     func_NtContinue },
     { "NtCreateFile",                   func_NtCreateFile },
     { "NtCreateKey",                    func_NtCreateKey },
