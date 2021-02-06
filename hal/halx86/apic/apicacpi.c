@@ -592,17 +592,48 @@ HalpInitializeIOUnits()
     HalpAddressUsageList = (PADDRESS_USAGE)&HalpApicUsage;
 }
 
+VOID
+NTAPI
+HaliPmTimerQueryPerfCount(_Out_ LARGE_INTEGER * OutPerfCount)
+{
+    DPRINT1("HaliPmTimerQueryPerfCount: FIXME. DbgBreakPoint()\n");
+    DbgBreakPoint();
+}
+
 CODE_SEG("INIT")
 BOOLEAN
 FASTCALL
 HalpPmTimerSpecialStall(_In_ ULONG StallValue)
 {
-    BOOLEAN Result;
+    LARGE_INTEGER OldValue;
+    LARGE_INTEGER NewValue;
+    LARGE_INTEGER EndValue;
+    ULONG ix = 0;
 
-    DPRINT1("HalpPmTimerSpecialStall(). DbgBreakPoint()\n");
-    DbgBreakPoint();Result = 0;
+    HaliPmTimerQueryPerfCount(&OldValue);
+    EndValue.QuadPart = (OldValue.QuadPart + StallValue);
 
-    return Result;
+    while (OldValue.QuadPart < EndValue.QuadPart)
+    {
+        HaliPmTimerQueryPerfCount(&NewValue);
+
+        ASSERT(NewValue.QuadPart >= OldValue.QuadPart);
+
+        if (NewValue.QuadPart == OldValue.QuadPart)
+        {
+            ix++;
+        }
+
+        if (ix > 1000)
+        {
+            DPRINT1("HalpPmTimerSpecialStall: return FALSE\n");
+            return FALSE;
+        }
+
+        OldValue = NewValue;
+    }
+
+    return TRUE;
 }
 
 #define HALP_SPECIAL_STALL_VALUE  0x6D3D3
