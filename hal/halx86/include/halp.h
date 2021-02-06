@@ -614,6 +614,16 @@ HalInitializeBios(
 #endif // !CONFIG_SMP
 #endif // _M_AMD64
 
+#ifdef _M_IX86
+FORCEINLINE
+VOID
+WRMSR(_In_ ULONG Register,
+      _In_ ULONGLONG Value)
+{
+    __writemsr(Register, Value);
+}
+#endif
+
 extern BOOLEAN HalpNMIInProgress;
 
 extern ADDRESS_USAGE HalpDefaultIoSpace;

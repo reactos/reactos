@@ -454,6 +454,13 @@ HalpAcpiApplyFadtSettings(
     _In_ PFADT Fadt
 );
 
+CODE_SEG("INIT")
+BOOLEAN
+NTAPI
+HalpPmTimerScaleTimers(
+    VOID
+);
+
 #endif
 
 extern FADT HalpFixedAcpiDescTable;
