@@ -19,6 +19,7 @@
 void __cdecl HackEoi(void);
 
 #ifndef _M_AMD64
+#include <ioapic.h>
 #define APIC_LAZY_IRQL
 #endif
 
@@ -87,8 +88,7 @@ HalVectorToIRQL[16] =
 };
 
 /* For 0x50..0xBF vectors IRQLs values saves dynamically in HalpAllocateSystemInterruptVector() */
-const KIRQL
-HalpVectorToIRQL[16] =
+KIRQL HalpVectorToIRQL[16] =
 {
     0x00, /* 00 PASSIVE_LEVEL */
     0xFF, /* 10 */
@@ -107,6 +107,20 @@ HalpVectorToIRQL[16] =
     0x1D, /* E1 IPI_LEVEL / EF POWER_LEVEL */
     0x1F, /* FF HIGH_LEVEL */
 };
+
+UCHAR HalpDevLevel[2][4] =
+{
+    {0x00, 0x00, 0x00, 0x81},
+    {0x01, 0x01, 0x80, 0x01}
+}; 
+
+UCHAR HalpDevPolarity[4][2] =
+{
+    {0x01, 0x00},
+    {0x01, 0x01},
+    {0x01, 0x00},
+    {0x00, 0x00}
+}; 
 
 ULONGLONG HalpProc0TSCHz;
 USHORT HalpVectorToINTI[MAX_CPUS * MAX_INT_VECTORS] = {0xFFFF};
