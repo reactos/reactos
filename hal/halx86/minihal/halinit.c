@@ -88,9 +88,10 @@ HalpSetupAcpiPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     return STATUS_SUCCESS;
 }
 
+CODE_SEG("INIT")
 VOID
 NTAPI
-HalpInitializePICs(IN BOOLEAN EnableInterrupts)
+HalpInitializePICs(_In_ BOOLEAN EnableInterrupts)
 {
 }
 

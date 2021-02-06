@@ -208,7 +208,13 @@ HalpEnableInterruptHandler(IN UCHAR Flags,
                            IN KINTERRUPT_MODE Mode);
 
 /* pic.c */
-VOID NTAPI HalpInitializePICs(IN BOOLEAN EnableInterrupts);
+CODE_SEG("INIT")
+VOID
+NTAPI
+HalpInitializePICs(
+    _In_ BOOLEAN EnableInterrupts
+);
+
 VOID __cdecl HalpApcInterrupt(VOID);
 VOID __cdecl HalpDispatchInterrupt(VOID);
 PHAL_SW_INTERRUPT_HANDLER __cdecl HalpDispatchInterrupt2(VOID);
@@ -435,7 +441,7 @@ HalpReleaseCmosSpinLock(
 VOID
 NTAPI
 HalpInitializeLegacyPICs(
-    VOID
+    _In_ BOOLEAN InterruptMode
 );
 
 NTSTATUS

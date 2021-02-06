@@ -222,9 +222,10 @@ HaliAcpiSetUsePmClock(VOID)
 
 }
 
+CODE_SEG("INIT")
 VOID
 NTAPI
-HalpInitializePICs(IN BOOLEAN EnableInterrupts)
+HalpInitializePICs(_In_ BOOLEAN EnableInterrupts)
 {
     ULONG EFlags;
     EISA_ELCR Elcr;
@@ -236,7 +237,7 @@ HalpInitializePICs(IN BOOLEAN EnableInterrupts)
     _disable();
 
     /* Initialize and mask the PIC */
-    HalpInitializeLegacyPICs();
+    HalpInitializeLegacyPICs(TRUE);
 
     /* Read EISA Edge/Level Register for master and slave */
     Elcr.Bits = (__inbyte(EISA_ELCR_SLAVE) << 8) | __inbyte(EISA_ELCR_MASTER);

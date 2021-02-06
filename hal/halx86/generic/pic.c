@@ -15,7 +15,7 @@
 
 VOID
 NTAPI
-HalpInitializeLegacyPICs(VOID)
+HalpInitializeLegacyPICs(_In_ BOOLEAN InterruptMode)
 {
     I8259_ICW1 Icw1;
     I8259_ICW2 Icw2;
@@ -28,7 +28,7 @@ HalpInitializeLegacyPICs(VOID)
     Icw1.NeedIcw4 = TRUE;
     Icw1.OperatingMode = Cascade;
     Icw1.Interval = Interval8;
-    Icw1.InterruptMode = EdgeTriggered;
+    Icw1.InterruptMode = InterruptMode ? LevelTriggered : EdgeTriggered;
     Icw1.Init = TRUE;
     Icw1.InterruptVectorAddress = 0;
     __outbyte(PIC1_CONTROL_PORT, Icw1.Bits);

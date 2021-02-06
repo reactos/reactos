@@ -484,6 +484,8 @@ ApicInitializeIOApic(VOID)
     IOApicWrite(IOAPIC_REDTBL + 2 * APIC_CLOCK_INDEX, ReDirReg.Long0);
 }
 
+#ifdef _M_AMD64
+CODE_SEG("INIT")
 VOID
 NTAPI
 HalpInitializePICs(IN BOOLEAN EnableInterrupts)
@@ -495,7 +497,7 @@ HalpInitializePICs(IN BOOLEAN EnableInterrupts)
     _disable();
 
     /* Initialize and mask the PIC */
-    HalpInitializeLegacyPICs();
+    HalpInitializeLegacyPICs(TRUE);
 
     /* Initialize the I/O APIC */
     ApicInitializeIOApic();
@@ -520,10 +522,35 @@ HalpInitializePICs(IN BOOLEAN EnableInterrupts)
     if (EnableInterrupts) EFlags |= EFLAGS_INTERRUPT_MASK;
     __writeeflags(EFlags);
 }
+#else
+CODE_SEG("INIT")
+VOID
+NTAPI
+HalpInitializePICs(_In_ BOOLEAN EnableInterrupts)
+{
+    ULONG_PTR EFlags;
+
+    DPRINT1("HalpInitializePICs: EnableInterrupts %X\n", EnableInterrupts);
+
+    /* Save EFlags and disable interrupts */
+    EFlags = __readeflags();
+    _disable();
+
+    /* Initialize and mask the PIC */
+    HalpInitializeLegacyPICs(TRUE);
+
+    DPRINT("HalpInitializePICs: FIXME HalpGlobal8259Mask\n");
+
+    /* Restore interrupt state */
+    if (EnableInterrupts) EFlags |= EFLAGS_INTERRUPT_MASK;
+    __writeeflags(EFlags);
+}
+#endif
 
 /* SOFTWARE INTERRUPT TRAPS ***************************************************/
 
 #ifndef _M_AMD64
+#if 0
 VOID
 DECLSPEC_NORETURN
 FASTCALL
@@ -613,6 +640,7 @@ HalpDispatchInterruptHandler(IN PKTRAP_FRAME TrapFrame)
     /* Exit the interrupt */
     KiEoiHelper(TrapFrame);
 }
+#endif
 
 DECLSPEC_NORETURN
 VOID
