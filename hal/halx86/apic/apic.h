@@ -20,6 +20,8 @@
 #define IMCR_PIC_DIRECT    0x00
 #define IMCR_PIC_VIA_APIC  0x01
 
+#define MAX_IOAPICS      64
+
 #ifdef _M_AMD64
 #define IOAPIC_BASE 0xFFFFFFFFFFFE1000ULL // checkme
 #define ZERO_VECTOR          0x00 // IRQL 00
@@ -59,7 +61,6 @@
 
 #define MAX_CPUS         32
 #define MAX_INT_VECTORS  256
-#define MAX_IOAPICS      64
 #define MAX_INTI         (32 * MAX_IOAPICS)
 
 #define APIC_MAX_CPU_PER_CLUSTER  4

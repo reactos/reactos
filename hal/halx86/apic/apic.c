@@ -243,6 +243,7 @@ ApicSetIrql(KIRQL Irql)
 }
 #define ApicRaiseIrql ApicSetIrql
 
+#if 0
 #ifdef APIC_LAZY_IRQL
 FORCEINLINE
 VOID
@@ -262,6 +263,7 @@ ApicLowerIrql(KIRQL Irql)
 }
 #else
 #define ApicLowerIrql ApicSetIrql
+#endif
 #endif
 
 UCHAR
@@ -298,6 +300,7 @@ HalpSendEOI(VOID)
     ApicSendEOI();
 }
 
+#ifdef _M_AMD64
 VOID
 NTAPI
 ApicInitializeLocalApic(ULONG Cpu)
@@ -484,7 +487,6 @@ ApicInitializeIOApic(VOID)
     IOApicWrite(IOAPIC_REDTBL + 2 * APIC_CLOCK_INDEX, ReDirReg.Long0);
 }
 
-#ifdef _M_AMD64
 CODE_SEG("INIT")
 VOID
 NTAPI
@@ -766,6 +768,157 @@ HalDisableSystemInterrupt(
 }
 
 #ifndef _M_AMD64
+FORCEINLINE
+VOID
+KeSetCurrentIrql(_In_ KIRQL NewIrql)
+{
+    /* Set new current IRQL */
+    KeGetPcr()->Irql = NewIrql;
+}
+
+VOID
+FASTCALL
+HalpGenerateInterrupt(_In_ UCHAR Vector)
+{
+    DPRINT1("HalpGenerateInterrupt: Vector %X\n", Vector);
+    DbgBreakPoint();
+}
+
+VOID
+FASTCALL
+HalpLowerIrqlHardwareInterrupts(_In_ KIRQL NewIrql)
+{
+    PUCHAR pPrcbVector;
+    ULONG EFlags;
+    UCHAR Vector;
+    UCHAR Irql;
+    UCHAR Idx;
+
+    if (KeGetCurrentIrql() <= DISPATCH_LEVEL)
+    {
+        KeSetCurrentIrql(NewIrql);
+        return;
+    }
+
+    pPrcbVector = (PUCHAR)KeGetCurrentPrcb()->HalReserved;
+    if (pPrcbVector[0] == 0)
+    {
+        KeSetCurrentIrql(NewIrql);
+
+        if (pPrcbVector[0] == 0)
+            return;
+
+        KeSetCurrentIrql(HIGH_LEVEL);
+    }
+
+    EFlags = __readeflags();
+    _disable();
+
+    while (pPrcbVector[0])
+    {
+        Idx = pPrcbVector[0];
+        Vector = pPrcbVector[Idx];
+        Irql = HalpVectorToIRQL[(UCHAR)Vector >> 4];
+
+        if (Irql <= NewIrql)
+            break;
+
+        pPrcbVector[0] = Idx - 1;
+        KeSetCurrentIrql(Irql - 1);
+
+        HalpGenerateInterrupt(Vector);
+        //HalpTotalReplayed++;
+    }
+
+    KeSetCurrentIrql(NewIrql);
+
+    if (EFlags & EFLAGS_INTERRUPT_MASK)
+        _enable();
+}
+
+VOID
+NTAPI
+HalpDispatchSoftwareInterrupt(_In_ KIRQL Irql,
+                              _In_ PKTRAP_FRAME TrapFrame)
+{
+    PHALP_PCR_HAL_RESERVED HalReserved;
+    ULONG EFlags;
+
+    EFlags = __readeflags();
+    KeGetPcr()->Irql = Irql;
+
+    if (!(EFlags & EFLAGS_INTERRUPT_MASK))
+        _enable();
+
+    HalReserved = (PHALP_PCR_HAL_RESERVED)KeGetPcr()->HalReserved;
+    if (Irql == APC_LEVEL)
+    {
+        HalReserved->ApcRequested = FALSE;
+        KiDeliverApc(0, 0, (PKTRAP_FRAME)TrapFrame);
+    }
+    else if (Irql == DISPATCH_LEVEL)
+    {
+        HalReserved->DpcRequested = FALSE;
+        KiDispatchInterrupt();
+    }
+    else
+    {
+        DbgBreakPoint();
+    }
+
+    if (!(EFlags & EFLAGS_INTERRUPT_MASK))
+        _disable();
+}
+
+VOID
+FASTCALL
+HalpCheckForSoftwareInterrupt(_In_ KIRQL NewIrql,
+                              _In_ PKTRAP_FRAME TrapFrame)
+{
+    PHALP_PCR_HAL_RESERVED HalReserved;
+    BOOLEAN ApcRequested;
+    BOOLEAN DpcRequested;
+
+    HalReserved = (PHALP_PCR_HAL_RESERVED)KeGetPcr()->HalReserved;
+
+    ApcRequested = HalReserved->ApcRequested;
+    DpcRequested = HalReserved->DpcRequested;
+
+    if (NewIrql)
+    {
+        if (NewIrql == APC_LEVEL && HalReserved->DpcRequested)
+        {
+            do
+            {
+                HalpDispatchSoftwareInterrupt(DISPATCH_LEVEL, TrapFrame);
+                KeSetCurrentIrql(APC_LEVEL);
+                HalReserved = (PHALP_PCR_HAL_RESERVED)KeGetPcr()->HalReserved;
+            }
+            while (HalReserved->DpcRequested);
+        }
+
+        return;
+    }
+
+    while (ApcRequested | DpcRequested)
+    {
+        if (DpcRequested)
+        {
+            HalpDispatchSoftwareInterrupt(DISPATCH_LEVEL, TrapFrame);
+        }
+        else
+        {
+            HalpDispatchSoftwareInterrupt(APC_LEVEL, TrapFrame);
+        }
+
+        KeSetCurrentIrql(PASSIVE_LEVEL);
+
+        HalReserved = (PHALP_PCR_HAL_RESERVED)KeGetPcr()->HalReserved;
+        ApcRequested = HalReserved->ApcRequested;
+        DpcRequested = HalReserved->DpcRequested;
+    }
+}
+
 BOOLEAN
 NTAPI
 HalBeginSystemInterrupt(
@@ -877,6 +1030,7 @@ HalEndSystemInterrupt(_In_ KIRQL OldIrql,
 
 /* IRQL MANAGEMENT ************************************************************/
 
+#if 0
 KIRQL
 NTAPI
 KeGetCurrentIrql(VOID)
@@ -923,6 +1077,36 @@ KfRaiseIrql(
     ApicRaiseIrql(NewIrql);
 
     /* Return old IRQL */
+    return OldIrql;
+}
+#endif
+
+KIRQL
+NTAPI
+KeGetCurrentIrql(VOID)
+{
+    /* Return the IRQL */
+    return KeGetPcr()->Irql;
+}
+
+VOID
+FASTCALL
+KfLowerIrql(_In_ KIRQL NewIrql)
+{
+    HalpLowerIrqlHardwareInterrupts(NewIrql);
+    HalpCheckForSoftwareInterrupt(NewIrql, 0);
+}
+
+KIRQL
+FASTCALL
+KfRaiseIrql(_In_ KIRQL NewIrql)
+{
+    PKPCR Pcr = KeGetPcr();
+    KIRQL OldIrql;
+
+    OldIrql = Pcr->Irql;
+    Pcr->Irql = NewIrql;
+
     return OldIrql;
 }
 

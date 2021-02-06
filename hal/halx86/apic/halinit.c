@@ -17,9 +17,11 @@
 #include "apicacpi.h"
 #endif
 
+#ifdef _M_AMD64
 VOID
 NTAPI
 ApicInitializeLocalApic(ULONG Cpu);
+#endif
 
 /* GLOBALS ******************************************************************/
 
