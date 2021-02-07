@@ -33,6 +33,7 @@
 #include <debug.h>
 
 #include "shimgvw.h"
+#include "wine/debug.h"
 
 HINSTANCE hInstance;
 SHIMGVW_SETTINGS shiSettings;
@@ -1094,7 +1095,7 @@ ImageView_CreateWindow(HWND hwnd, LPWSTR szFileName)
     struct GdiplusStartupInput gdiplusStartupInput;
     ULONG_PTR gdiplusToken;
     WNDCLASS WndClass = {0};
-    TCHAR szBuf[512];
+    WCHAR szBuf[512];
     WCHAR szInitialFile[MAX_PATH];
     HWND hMainWnd;
     MSG msg;
