@@ -1152,65 +1152,33 @@ HalpCheckForSoftwareInterrupt(_In_ KIRQL NewIrql,
 
 BOOLEAN
 NTAPI
-HalBeginSystemInterrupt(
-    IN KIRQL Irql,
-    IN ULONG Vector,
-    OUT PKIRQL OldIrql)
+HalBeginSystemInterrupt(_In_ KIRQL NewIrql,
+                        _In_ ULONG SystemVector,
+                        _Out_ PKIRQL OutOldIrql)
 {
-    KIRQL CurrentIrql;
+    PUCHAR pPrcbVector;
+    UCHAR Idx;
+    KIRQL OldIrql;
 
-    /* Get the current IRQL */
-    CurrentIrql = ApicGetCurrentIrql();
+    OldIrql = KeGetCurrentIrql();
 
-#ifdef APIC_LAZY_IRQL
-    /* Check if this interrupt is allowed */
-    if (CurrentIrql >= Irql)
+    if (OldIrql < HalpVectorToIRQL[(UCHAR)SystemVector >> 4])
     {
-        IOAPIC_REDIRECTION_REGISTER RedirReg;
-        UCHAR Index;
+        *OutOldIrql = OldIrql;
+        KeSetCurrentIrql(NewIrql);
 
-        /* It is not, set the real Irql in the TPR! */
-        ApicWrite(APIC_TPR, IrqlToTpr(CurrentIrql));
-
-        /* Save the new hard IRQL in the IRR field */
-        KeGetPcr()->IRR = CurrentIrql;
-
-        /* End this interrupt */
-        ApicSendEOI();
-
-        /* Get the irq for this vector */
-        Index = HalpVectorToIndex[Vector];
-
-        /* Check if its valid */
-        if (Index != 0xff)
-        {
-            /* Read the I/O redirection entry */
-            RedirReg = ApicReadIORedirectionEntry(Index);
-
-            /* Re-request the interrupt to be handled later */
-            ApicRequestInterrupt(Vector, (UCHAR)RedirReg.TriggerMode);
-       }
-       else
-       {
-            /* Re-request the interrupt to be handled later */
-            ApicRequestInterrupt(Vector, APIC_TGM_Edge);
-       }
-
-        /* Pretend it was a spurious interrupt */
-        return FALSE;
+        _enable();
+        return TRUE;
     }
-#endif
-    /* Save the current IRQL */
-    *OldIrql = CurrentIrql;
 
-    /* Set the new IRQL */
-    ApicRaiseIrql(Irql);
+    pPrcbVector = (PUCHAR)KeGetCurrentPrcb()->HalReserved;
 
-    /* Turn on interrupts */
+    Idx = pPrcbVector[0];
+    pPrcbVector[Idx + 1] = SystemVector;
+    pPrcbVector[0] = Idx + 1;
+
     _enable();
-
-    /* Success */
-    return TRUE;
+    return FALSE;
 }
 
 static
