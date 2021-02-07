@@ -262,11 +262,11 @@ static void ZoomInOrOut(BOOL bZoomIn)
             ZoomPercents = ZoomSteps[i];
 
         /* update tool bar buttons */
-        SendMessage(hToolBar, TB_ENABLEBUTTON, IDC_ZOOM_OUT, TRUE);
+        SendMessageW(hToolBar, TB_ENABLEBUTTON, IDC_ZOOM_OUT, TRUE);
         if (ZoomPercents >= MAX_ZOOM)
-            SendMessage(hToolBar, TB_ENABLEBUTTON, IDC_ZOOM_IN, FALSE);
+            SendMessageW(hToolBar, TB_ENABLEBUTTON, IDC_ZOOM_IN, FALSE);
         else
-            SendMessage(hToolBar, TB_ENABLEBUTTON, IDC_ZOOM_IN, TRUE);
+            SendMessageW(hToolBar, TB_ENABLEBUTTON, IDC_ZOOM_IN, TRUE);
     }
     else            /* zoom out */
     {
@@ -283,11 +283,11 @@ static void ZoomInOrOut(BOOL bZoomIn)
             ZoomPercents = ZoomSteps[i];
 
         /* update tool bar buttons */
-        SendMessage(hToolBar, TB_ENABLEBUTTON, IDC_ZOOM_IN, TRUE);
+        SendMessageW(hToolBar, TB_ENABLEBUTTON, IDC_ZOOM_IN, TRUE);
         if (ZoomPercents <= MIN_ZOOM)
-            SendMessage(hToolBar, TB_ENABLEBUTTON, IDC_ZOOM_OUT, FALSE);
+            SendMessageW(hToolBar, TB_ENABLEBUTTON, IDC_ZOOM_OUT, FALSE);
         else
-            SendMessage(hToolBar, TB_ENABLEBUTTON, IDC_ZOOM_OUT, TRUE);
+            SendMessageW(hToolBar, TB_ENABLEBUTTON, IDC_ZOOM_OUT, TRUE);
     }
 
     /* redraw */
@@ -482,8 +482,8 @@ pPrintImage(HWND hwnd)
 static VOID
 EnableToolBarButtons(BOOL bEnable)
 {
-    SendMessage(hToolBar, TB_ENABLEBUTTON, IDC_SAVEAS, bEnable);
-    SendMessage(hToolBar, TB_ENABLEBUTTON, IDC_PRINT, bEnable);
+    SendMessageW(hToolBar, TB_ENABLEBUTTON, IDC_SAVEAS, bEnable);
+    SendMessageW(hToolBar, TB_ENABLEBUTTON, IDC_PRINT, bEnable);
 }
 
 static VOID
@@ -855,25 +855,25 @@ ImageView_CreateToolBar(HWND hwnd)
     {
         HIMAGELIST hImageList;
 
-        SendMessage(hToolBar, TB_SETEXTENDEDSTYLE,
-                    0, TBSTYLE_EX_HIDECLIPPEDBUTTONS);
+        SendMessageW(hToolBar, TB_SETEXTENDEDSTYLE,
+                     0, TBSTYLE_EX_HIDECLIPPEDBUTTONS);
 
-        SendMessage(hToolBar, TB_BUTTONSTRUCTSIZE,
-                    sizeof(Buttons[0]), 0);
+        SendMessageW(hToolBar, TB_BUTTONSTRUCTSIZE,
+                     sizeof(Buttons[0]), 0);
 
         hImageList = ImageList_Create(TB_IMAGE_WIDTH, TB_IMAGE_HEIGHT, ILC_MASK | ILC_COLOR24, 1, 1);
         if (hImageList == NULL) return FALSE;
 
         for (n = 0; n < _countof(BtnConfig); n++)
         {
-            ImageList_AddMasked(hImageList, LoadImage(hInstance, MAKEINTRESOURCE(BtnConfig[n].idb), IMAGE_BITMAP,
+            ImageList_AddMasked(hImageList, LoadImageW(hInstance, MAKEINTRESOURCEW(BtnConfig[n].idb), IMAGE_BITMAP,
                                 TB_IMAGE_WIDTH, TB_IMAGE_HEIGHT, LR_DEFAULTCOLOR), RGB(255, 255, 255));
         }
 
-        ImageList_Destroy((HIMAGELIST)SendMessage(hToolBar, TB_SETIMAGELIST,
-                                                  0, (LPARAM)hImageList));
+        ImageList_Destroy((HIMAGELIST)SendMessageW(hToolBar, TB_SETIMAGELIST,
+                                                   0, (LPARAM)hImageList));
 
-        SendMessage(hToolBar, TB_ADDBUTTONS, _countof(Buttons), (LPARAM)Buttons);
+        SendMessageW(hToolBar, TB_ADDBUTTONS, _countof(Buttons), (LPARAM)Buttons);
 
         return TRUE;
     }
@@ -950,7 +950,7 @@ ImageView_OnSize(HWND hwnd, UINT state, INT cx, INT cy)
 {
     RECT rc;
 
-    SendMessage(hToolBar, TB_AUTOSIZE, 0, 0);
+    SendMessageW(hToolBar, TB_AUTOSIZE, 0, 0);
 
     GetWindowRect(hToolBar, &rc);
 
@@ -990,12 +990,15 @@ ImageView_WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
                     break;
 
                 case IDC_BEST_FIT:
+                    WARN("IDC_BEST_FIT\n");
                     break;
 
                 case IDC_REAL_SIZE:
+                    WARN("IDC_REAL_SIZE\n");
                     break;
 
                 case IDC_SLIDE_SHOW:
+                    WARN("IDC_SLIDE_SHOW\n");
                     break;
 
                 case IDC_ZOOM_IN:
@@ -1096,10 +1099,8 @@ ImageView_CreateWindow(HWND hwnd, LPWSTR szFileName)
     HWND hMainWnd;
     MSG msg;
     HACCEL hKbdAccel;
-    INITCOMMONCONTROLSEX Icc;
+    INITCOMMONCONTROLSEX Icc = { .dwSize = sizeof(Icc), .dwICC = ICC_WIN95_CLASSES };
 
-    Icc.dwSize = sizeof(INITCOMMONCONTROLSEX);
-    Icc.dwICC = ICC_WIN95_CLASSES;
     InitCommonControlsEx(&Icc);
 
     if (!ImageView_LoadSettings())
@@ -1131,7 +1132,7 @@ ImageView_CreateWindow(HWND hwnd, LPWSTR szFileName)
 
     if (!RegisterClass(&WndClass)) return -1;
 
-    LoadString(hInstance, IDS_APPTITLE, szBuf, sizeof(szBuf) / sizeof(TCHAR));
+    LoadStringW(hInstance, IDS_APPTITLE, szBuf, sizeof(szBuf) / sizeof(TCHAR));
     hMainWnd = CreateWindow(_T("shimgvw_window"), szBuf,
                             WS_OVERLAPPEDWINDOW | WS_VISIBLE | WS_CAPTION,
                             CW_USEDEFAULT, CW_USEDEFAULT,
@@ -1157,10 +1158,10 @@ ImageView_CreateWindow(HWND hwnd, LPWSTR szFileName)
     // Message Loop
     for (;;)
     {
-        if (GetMessage(&msg, NULL, 0, 0) <= 0)
+        if (GetMessageW(&msg, NULL, 0, 0) <= 0)
             break;
 
-        if (!TranslateAccelerator(hMainWnd, hKbdAccel, &msg))
+        if (!TranslateAcceleratorW(hMainWnd, hKbdAccel, &msg))
         {
             TranslateMessage(&msg);
             DispatchMessageW(&msg);
