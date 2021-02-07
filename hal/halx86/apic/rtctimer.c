@@ -275,8 +275,62 @@ VOID
 NTAPI
 HalpInitializeClock(VOID)
 {
-    DPRINT1("HalpInitializeClock: FIXME. DbgBreakPoint()\n");
-    DbgBreakPoint();
+    ULONG EFlags;
+    ULONG ix;
+    UCHAR RegisterB;
+    UCHAR NewRegisterB;
+    UCHAR RegisterC;
+    UCHAR RegisterD;
+
+    DPRINT("HalpInitializeClock()\n");
+
+    if (HalpTimerWatchdogEnabled)
+    {
+        DPRINT1("HalpInitializeClock: FIXME. DbgBreakPoint()\n");
+        DbgBreakPoint();
+    }
+
+    /* Save EFlags and disable interrupts */
+    EFlags = __readeflags();
+    _disable();
+
+    HalpSetInitialClockRate();
+
+    /* Acquire CMOS lock */
+    HalpAcquireCmosSpinLock();
+
+    HalpWriteCmos(RTC_REGISTER_A, HalpCurrentRTCRegisterA);
+
+    RegisterB = HalpReadCmos(RTC_REGISTER_B);
+    NewRegisterB = (RTC_REG_B_PI | RTC_REG_B_HM | (RegisterB & RTC_REG_B_DS));
+    HalpWriteCmos(RTC_REGISTER_B, NewRegisterB);
+
+    RegisterC = HalpReadCmos(RTC_REGISTER_C);
+    RegisterD = HalpReadCmos(RTC_REGISTER_D);
+
+    DPRINT1("HalpInitializeClock: A %X, B %X, C %X, D %X\n", HalpCurrentRTCRegisterA, RegisterB, RegisterC, RegisterD);
+
+    for (ix = 0; ix < 10; ix++)
+    {
+        RegisterC = HalpReadCmos(RTC_REGISTER_C);
+        if ((RegisterC & RTC_REG_C_IRQ) == 0)
+        {
+            break;
+        }
+    }
+
+    /* Release CMOS lock */
+    HalpReleaseCmosSpinLock();
+
+    if (HalpUse8254)
+    {
+        DPRINT1("HalpInitializeClock: FIXME. DbgBreakPoint()\n");
+        DbgBreakPoint();
+    }
+
+    __writeeflags(EFlags);
+
+    DPRINT("HalpInitializeClock: Clock initialized\n");
 }
 
 #ifndef _MINIHAL_
