@@ -86,6 +86,7 @@ UCHAR HalpMaxNode = 0;
 BOOLEAN HalpHiberInProgress = FALSE;
 
 extern BOOLEAN HalpForceApicPhysicalDestinationMode;
+extern KSPIN_LOCK HalpAccountingLock;
 #endif
 
 extern UCHAR HalpInitLevel;
@@ -447,6 +448,8 @@ HalpInitPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         HalpImcrIoSpace.Next = HalpAddressUsageList;
         HalpAddressUsageList = &HalpImcrIoSpace;
     }
+
+    KeInitializeSpinLock(&HalpAccountingLock);
 
     /* Do some APIC HAL-specific initialization */
     HalpInitPhase0a(LoaderBlock);

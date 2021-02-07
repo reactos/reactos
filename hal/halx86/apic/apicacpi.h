@@ -62,6 +62,7 @@ typedef struct _APIC_ADDRESS_USAGE
 #define PIC_FLAGS_TRIGGER_LEVEL         3
 #define PIC_FLAGS_TRIGGER_MASK          (3)
 
+/* MPS INTI Flags for Interrupt Source Overrides */
 typedef union _HAL_PIC_VECTOR_FLAGS
 {
     struct

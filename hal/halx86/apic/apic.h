@@ -287,7 +287,7 @@ typedef union _IOAPIC_REDIRECTION_REGISTER
         ULONGLONG Reserved:39;
         ULONGLONG Destination:8;
     };
-} IOAPIC_REDIRECTION_REGISTER;
+} IOAPIC_REDIRECTION_REGISTER, *PIOAPIC_REDIRECTION_REGISTER;
 
 typedef struct _HALP_PCR_HAL_RESERVED
 {
@@ -348,6 +348,8 @@ typedef struct _IO_APIC_REGISTERS
 /* Trigger mode of APIC input signals */
 #define INTI_INFO_TRIGGER_EDGE   0
 #define INTI_INFO_TRIGGER_LEVEL  1
+//? #define INTI_INFO_TRIGGER_       2
+//? #define INTI_INFO_TRIGGER_       3
 
 typedef union _APIC_INTI_INFO
 {
