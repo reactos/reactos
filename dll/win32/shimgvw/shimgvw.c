@@ -1133,7 +1133,7 @@ ImageView_CreateWindow(HWND hwnd, LPWSTR szFileName)
     if (!RegisterClassW(&WndClass)) return -1;
 
     LoadStringW(hInstance, IDS_APPTITLE, szBuf, sizeof(szBuf) / sizeof(TCHAR));
-    hMainWnd = CreateWindowExW(0, L"shimgvw_window"), szBuf,
+    hMainWnd = CreateWindowExW(0, L"shimgvw_window", szBuf,
                                WS_OVERLAPPEDWINDOW | WS_VISIBLE | WS_CAPTION,
                                CW_USEDEFAULT, CW_USEDEFAULT,
                                0, 0, NULL, NULL, hInstance, NULL);
