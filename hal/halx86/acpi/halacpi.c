@@ -50,6 +50,11 @@ PWCHAR HalHardwareIdString = L"acpipic_up";
 PWCHAR HalName = L"ACPI Compatible Eisa/Isa HAL";
 
 #ifdef _M_IX86
+PHALP_STALL_EXEC_PROC TimerStallExecProc = HalpPmTimerStallExecProc;
+PHALP_CALIBRATE_PERF_COUNT TimerCalibratePerfCount = HalpPmTimerCalibratePerfCount;
+PHALP_QUERY_PERF_COUNT TimerQueryPerfCount = HalpPmTimerQueryPerfCount;
+PHALP_SET_TIME_INCREMENT TimerSetTimeIncrement = HalpPmTimerSetTimeIncrement;
+
 HALP_TIMER_INFO TimerInfo;
 ULONG HalpWAETDeviceFlags;
 BOOLEAN HalpBrokenAcpiTimer = FALSE;
@@ -162,6 +167,78 @@ HaliIsVectorValid(_In_ ULONG DeviceIrq)
     DPRINT1("HaliIsVectorValid: DeviceIrq %X\n", DeviceIrq);
     ASSERT(FALSE);
     return FALSE;
+}
+
+
+/* PUBLIC PM TIMER FUNCTIONS **************************************************/
+
+VOID
+NTAPI
+HalpCalibrateStallExecution(VOID)
+{
+    ;
+}
+
+VOID
+NTAPI 
+KeStallExecutionProcessor(_In_ ULONG MicroSeconds)
+{
+    TimerStallExecProc(MicroSeconds);
+}
+VOID
+NTAPI
+HalpPmTimerStallExecProc(_In_ ULONG MicroSeconds)
+{
+    UNIMPLEMENTED;
+    ASSERT(FALSE);
+}
+
+VOID
+NTAPI 
+HalCalibratePerformanceCounter(_In_ volatile PLONG Count,
+                               _In_ ULONGLONG NewCount)
+{
+    TimerCalibratePerfCount(Count, NewCount);
+}
+VOID
+NTAPI
+HalpPmTimerCalibratePerfCount(_In_ volatile PLONG Count,
+                              _In_ ULONGLONG NewCount)
+{
+    UNIMPLEMENTED;
+    ASSERT(FALSE);
+}
+
+LARGE_INTEGER
+NTAPI 
+KeQueryPerformanceCounter(_Out_opt_ LARGE_INTEGER * OutPerformanceFrequency)
+{
+    return TimerQueryPerfCount(OutPerformanceFrequency);
+}
+LARGE_INTEGER
+NTAPI
+HalpPmTimerQueryPerfCount(_Out_opt_ LARGE_INTEGER * OutPerformanceFrequency)
+{
+    LARGE_INTEGER Result;
+    UNIMPLEMENTED;
+    ASSERT(FALSE);Result.QuadPart = 0;
+    return Result;
+}
+
+ULONG
+NTAPI 
+HalSetTimeIncrement(_In_ ULONG Increment)
+{
+    return TimerSetTimeIncrement(Increment);
+}
+ULONG
+NTAPI
+HalpPmTimerSetTimeIncrement(_In_ ULONG Increment)
+{
+    ULONG Result;
+    UNIMPLEMENTED;
+    ASSERT(FALSE);Result = 0;
+    return Result;
 }
 #endif
 

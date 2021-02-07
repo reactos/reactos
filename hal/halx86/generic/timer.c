@@ -207,33 +207,9 @@ HalpProfileInterruptHandler(IN PKTRAP_FRAME TrapFrame)
 /*
  * @implemented
  */
-VOID
-NTAPI
-HalCalibratePerformanceCounter(IN volatile PLONG Count,
-                               IN ULONGLONG NewCount)
-{
-    ULONG_PTR Flags;
-
-    /* Disable interrupts */
-    Flags = __readeflags();
-    _disable();
-
-    /* Do a decrement for this CPU */
-    _InterlockedDecrement(Count);
-
-    /* Wait for other CPUs */
-    while (*Count);
-
-    /* Restore interrupts if they were previously enabled */
-    __writeeflags(Flags);
-}
-
-/*
- * @implemented
- */
 ULONG
 NTAPI
-HalSetTimeIncrement(IN ULONG Increment)
+HaliTimerSetTimeIncrement(_In_ ULONG Increment)
 {
     /* Round increment to ms */
     Increment /= 10000;
@@ -252,14 +228,14 @@ HalSetTimeIncrement(IN ULONG Increment)
 
 LARGE_INTEGER
 NTAPI
-KeQueryPerformanceCounter(PLARGE_INTEGER PerformanceFrequency)
+HalpTimerQueryPerfCount(_Out_opt_ LARGE_INTEGER * OutPerformanceFrequency)
 {
     LARGE_INTEGER CurrentPerfCounter;
     ULONG CounterValue, ClockDelta;
     KIRQL OldIrql;
 
     /* If caller wants performance frequency, return hardcoded value */
-    if (PerformanceFrequency) PerformanceFrequency->QuadPart = PIT_FREQUENCY;
+    if (OutPerformanceFrequency) OutPerformanceFrequency->QuadPart = PIT_FREQUENCY;
 
     /* Check if we were called too early */
     if (HalpCurrentRollOver == 0) return HalpPerfCounter;

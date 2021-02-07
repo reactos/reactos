@@ -26,8 +26,10 @@ BOOLEAN HalpClockSetMSRate;
 UCHAR HalpNextMSRate;
 UCHAR HalpCurrentRate = 9;  /* Initial rate  9: 128 Hz / 7.8 ms */
 ULONG HalpCurrentTimeIncrement;
+#ifdef _M_AMD64
 static UCHAR RtcMinimumClockRate = 8;  /* Minimum rate  8: 256 Hz / 3.9 ms */
 static UCHAR RtcMaximumClockRate = 12; /* Maximum rate 12: 16 Hz / 62.5 ms */
+#endif
 
 #ifndef _M_AMD64
 
@@ -304,11 +306,14 @@ HalpProfileInterruptHandler(IN PKTRAP_FRAME TrapFrame)
     __debugbreak();
 }
 
+#ifdef _M_AMD64
 ULONG
 NTAPI
-HalSetTimeIncrement(IN ULONG Increment)
+HalSetTimeIncrement(_In_ ULONG Increment,
+                    _In_ BOOLEAN IsAcpi)
 {
     UCHAR Rate;
+
 
     /* Lookup largest value below given Increment */
     for (Rate = RtcMinimumClockRate; Rate <= RtcMaximumClockRate; Rate++)
@@ -324,4 +329,6 @@ HalSetTimeIncrement(IN ULONG Increment)
     /* Return the real increment */
     return RtcClockRateToIncrement(Rate);
 }
+#endif
 
+/* EOF */

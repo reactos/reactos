@@ -24,6 +24,7 @@ ULONGLONG HalMaxProfileInterval = 10000000;
 
 /* TIMER FUNCTIONS ************************************************************/
 
+#ifdef _M_AMD64
 VOID
 NTAPI
 ApicSetTimerInterval(ULONG MicroSeconds)
@@ -62,7 +63,6 @@ ApicInitializeTimer(ULONG Cpu)
 // KeSetTimeIncrement
 }
 
-
 /* PUBLIC FUNCTIONS ***********************************************************/
 
 VOID
@@ -72,6 +72,7 @@ HalInitializeProfiling(VOID)
     KeGetPcr()->HalReserved[HAL_PROFILING_INTERVAL] = HalCurProfileInterval;
     KeGetPcr()->HalReserved[HAL_PROFILING_MULTIPLIER] = 1; /* TODO: HACK */
 }
+#endif
 
 VOID
 NTAPI

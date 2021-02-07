@@ -110,4 +110,43 @@ HalpClockInterruptHandler(_In_ PKTRAP_FRAME TrapFrame)
 }
 #endif
 
+/* PUBLIC TIMER FUNCTIONS *****************************************************/
+
+VOID
+NTAPI
+KeStallExecutionProcessor(_In_ ULONG MicroSeconds)
+{
+    UNIMPLEMENTED;
+    ASSERT(FALSE);
+}
+
+VOID
+NTAPI
+HalCalibratePerformanceCounter(_In_ volatile PLONG Count,
+                               _In_ ULONGLONG NewCount)
+{
+    UNIMPLEMENTED;
+    ASSERT(FALSE);
+}
+
+LARGE_INTEGER
+NTAPI
+KeQueryPerformanceCounter(_Out_opt_ LARGE_INTEGER * OutPerformanceFrequency)
+{
+    LARGE_INTEGER Result;
+    UNIMPLEMENTED;
+    ASSERT(FALSE);Result.QuadPart = 0;
+    return Result;
+}
+
+ULONG
+NTAPI
+HalSetTimeIncrement(_In_ ULONG Increment)
+{
+    ULONG Result;
+    UNIMPLEMENTED;
+    ASSERT(FALSE);Result = 0;
+    return Result;
+}
+
 /* EOF */

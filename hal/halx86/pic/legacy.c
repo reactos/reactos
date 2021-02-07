@@ -13,5 +13,51 @@
 #define NDEBUG
 #include <debug.h>
 
+/* PUBLIC TIMER FUNCTIONS *****************************************************/
+
+#if 0 // generic/systimer.S
+VOID
+NTAPI
+KeStallExecutionProcessor(_In_ ULONG MicroSeconds)
+{
+    ;
+}
+#endif
+
+VOID
+NTAPI
+HalCalibratePerformanceCounter(_In_ volatile PLONG Count,
+                               _In_ ULONGLONG NewCount)
+{
+    ULONG_PTR Flags;
+
+    /* Disable interrupts */
+    Flags = __readeflags();
+    _disable();
+
+    /* Do a decrement for this CPU */
+    _InterlockedDecrement(Count);
+
+    /* Wait for other CPUs */
+    while (*Count);
+
+    /* Restore interrupts if they were previously enabled */
+    __writeeflags(Flags);
+}
+
+LARGE_INTEGER
+NTAPI
+KeQueryPerformanceCounter(_Out_opt_ LARGE_INTEGER * OutPerformanceFrequency)
+{
+    return HalpTimerQueryPerfCount(OutPerformanceFrequency);
+}
+
+ULONG
+NTAPI
+HalSetTimeIncrement(_In_ ULONG Increment)
+{
+    return HaliTimerSetTimeIncrement(Increment);
+}
+
 
 /* EOF */

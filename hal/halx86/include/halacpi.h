@@ -461,6 +461,30 @@ HalpPmTimerScaleTimers(
     VOID
 );
 
+VOID
+NTAPI
+HalpPmTimerStallExecProc(
+    _In_ ULONG MicroSeconds
+);
+
+VOID
+NTAPI
+HalpPmTimerCalibratePerfCount(
+    _In_ volatile PLONG Count,
+    _In_ ULONGLONG NewCount
+);
+
+LARGE_INTEGER
+NTAPI
+HalpPmTimerQueryPerfCount(
+    _Out_opt_ LARGE_INTEGER * OutPerformanceFrequency
+);
+
+ULONG
+NTAPI
+HalpPmTimerSetTimeIncrement(
+    _In_ ULONG Increment
+);
 #endif
 
 extern FADT HalpFixedAcpiDescTable;

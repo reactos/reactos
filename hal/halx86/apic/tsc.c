@@ -132,6 +132,7 @@ HalpCalibrateStallExecution(VOID)
 
 /* PUBLIC FUNCTIONS ***********************************************************/
 
+#ifdef _M_AMD64
 LARGE_INTEGER
 NTAPI
 KeQueryPerformanceCounter(
@@ -179,4 +180,7 @@ HalCalibratePerformanceCounter(
     UNIMPLEMENTED;
     ASSERT(FALSE);
 }
+#endif
+
+/* EOF */
 

@@ -1,7 +1,6 @@
 
 list(APPEND HALMACPI_ASM_SOURCE
-    apic/apictrap.S
-    apic/tsccal.S)
+    apic/apictrap.S)
 
 list(APPEND HALMACPI_SOURCE
     apic/apic.c
@@ -10,7 +9,6 @@ list(APPEND HALMACPI_SOURCE
     apic/halinit.c
     apic/processor.c
     apic/rtctimer.c
-    apic/tsc.c
     generic/spinlock.c)
 
 add_asm_files(lib_hal_halmacpi_asm ${HALMACPI_ASM_SOURCE})

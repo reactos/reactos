@@ -622,6 +622,53 @@ WRMSR(_In_ ULONG Register,
 {
     __writemsr(Register, Value);
 }
+
+typedef
+ULONGLONG
+(__cdecl * PHALP_QUERY_TIMER)(
+    VOID
+);
+
+ULONGLONG
+__cdecl
+HalpQueryPerformanceCounter(
+    VOID
+);
+
+typedef
+VOID
+(NTAPI * PHALP_STALL_EXEC_PROC)(
+    _In_ ULONG MicroSeconds
+);
+
+typedef
+VOID
+(NTAPI * PHALP_CALIBRATE_PERF_COUNT)(
+    _In_ volatile PLONG Count,
+    _In_ ULONGLONG NewCount
+);
+
+typedef
+LARGE_INTEGER
+(NTAPI * PHALP_QUERY_PERF_COUNT)(
+    _Out_opt_ LARGE_INTEGER * OutPerformanceFrequency
+);
+
+LARGE_INTEGER
+NTAPI
+HalpTimerQueryPerfCount(
+    _Out_opt_ LARGE_INTEGER * OutPerformanceFrequency
+);
+
+typedef ULONG (NTAPI * PHALP_SET_TIME_INCREMENT)(
+    _In_ ULONG Increment
+);
+
+ULONG
+NTAPI
+HaliTimerSetTimeIncrement(
+    _In_ ULONG Increment
+);
 #endif
 
 extern BOOLEAN HalpNMIInProgress;

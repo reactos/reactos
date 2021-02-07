@@ -1,6 +1,6 @@
 
 list(APPEND HALACPI_ASM_SOURCE
-    generic/systimer.S
+#    generic/systimer.S
     generic/trap.S
     pic/pic.S)
 
