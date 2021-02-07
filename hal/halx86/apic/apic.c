@@ -1187,8 +1187,37 @@ NTAPI
 HalpEndSystemInterrupt(_In_ PHAL_INTERRUPT_CONTEXT IntContext,
                        _In_ KIRQL OldIrql)
 {
-    DPRINT1("HalpEndSystemInterrupt: OldIrql %X,  SystemVector %X,  TrapFrame %X. DbgBreakPoint()\n", IntContext->Irql,  IntContext->Vector, IntContext->TrapFrame);
-    DbgBreakPoint();
+    KIRQL Irql = HalpVectorToIRQL[IntContext->Vector >> 4];
+
+    if (Irql < KeGetCurrentIrql())
+    {
+        HalpLowerIrqlHardwareInterrupts(Irql);
+    }
+
+    if (ApicRead(APIC_PPR) != (IntContext->Vector & 0xF0))
+    {
+        DPRINT1("HalpEndSystemInterrupt: SystemVector %X, APIC_PPR %X\n", IntContext->Vector, ApicRead(APIC_PPR));
+        DbgBreakPoint();
+    }
+
+    ApicWrite(APIC_EOI, 0);
+
+    KeSetCurrentIrql(IntContext->Irql);
+
+    if (IntContext->Irql < DISPATCH_LEVEL)
+    {
+        PHALP_PCR_HAL_RESERVED HalReserved;
+        HalReserved = (PHALP_PCR_HAL_RESERVED)KeGetPcr()->HalReserved;
+
+        if (IntContext->Irql == PASSIVE_LEVEL &&
+            HalReserved->ApcRequested &&
+            ((UCHAR)(KeGetCurrentPrcb()->HalReserved[0]) == 0))
+        {
+            HalpCheckForSoftwareInterrupt(IntContext->Irql, IntContext->TrapFrame);
+        }
+    }
+
+    //FIXME KiCheckForSListAddress(TrapFrame);
 }
 
 #ifdef __REACTOS__ // RosHalEndSystemInterrupt?
