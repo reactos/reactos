@@ -222,4 +222,12 @@ RtlPrefetchMemoryNonTemporal(IN PVOID Source,
 }
 #endif
 
+VOID NTAPI
+AVrfInternalHeapFreeNotification(PVOID AllocationBase, SIZE_T AllocationSize)
+{
+    /* Stub for linking against rtl */
+}
+
+
+
 /* EOF */

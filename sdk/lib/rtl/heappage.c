@@ -15,6 +15,7 @@
 
 #include <rtl.h>
 #include <heap.h>
+#include <reactos/verifier.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -196,6 +197,10 @@ RtlpDphReportCorruptedBlock(PDPH_HEAP_ROOT DphRoot, ULONG Reserved, PVOID Block,
 
 BOOLEAN NTAPI
 RtlpDphNormalHeapValidate(PDPH_HEAP_ROOT DphRoot, ULONG Flags, PVOID BaseAddress);
+
+/* verifier.c */
+VOID NTAPI
+AVrfInternalHeapFreeNotification(PVOID AllocationBase, SIZE_T AllocationSize);
 
 
 VOID NTAPI
@@ -1621,7 +1626,12 @@ RtlpPageHeapDestroy(HANDLE HeapPtr)
     /* Check if it's not a process heap */
     if (HeapPtr == RtlGetProcessHeap())
     {
-        DbgBreakPoint();
+        VERIFIER_STOP(APPLICATION_VERIFIER_DESTROY_PROCESS_HEAP,
+                      "attempt to destroy process heap",
+                      HeapPtr, "Heap handle",
+                      0, "",
+                      0, "",
+                      0, "");
         return NULL;
     }
 
@@ -1651,8 +1661,7 @@ RtlpPageHeapDestroy(HANDLE HeapPtr)
             }
         }
 
-        /* FIXME: Call AV notification */
-        //AVrfInternalHeapFreeNotification();
+        AVrfInternalHeapFreeNotification(Node->pUserAllocation, Node->nUserRequestedSize);
 
         /* Go to the next node */
         Ptr = RtlEnumerateGenericTableAvl(&DphRoot->BusyNodesTable, FALSE);
