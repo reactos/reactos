@@ -485,6 +485,13 @@ NTAPI
 HalpPmTimerSetTimeIncrement(
     _In_ ULONG Increment
 );
+
+VOID
+NTAPI
+HaliPmTimerQueryPerfCount(
+    _Out_ LARGE_INTEGER * OutPerfCount,
+    _Out_ LARGE_INTEGER * OutPerfFrequency
+);
 #endif
 
 extern FADT HalpFixedAcpiDescTable;

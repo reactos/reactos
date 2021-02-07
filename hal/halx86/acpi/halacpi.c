@@ -55,6 +55,13 @@ PHALP_CALIBRATE_PERF_COUNT TimerCalibratePerfCount = HalpPmTimerCalibratePerfCou
 PHALP_QUERY_PERF_COUNT TimerQueryPerfCount = HalpPmTimerQueryPerfCount;
 PHALP_SET_TIME_INCREMENT TimerSetTimeIncrement = HalpPmTimerSetTimeIncrement;
 
+PHALP_QUERY_TIMER QueryTimer = HalpQueryPerformanceCounter;
+ULONG PMTimerFreq = 3579545;
+
+/* Stall execute */
+ULONG StallLoopValue = 42;
+UCHAR StallExecCounter = 0;
+
 HALP_TIMER_INFO TimerInfo;
 ULONG HalpWAETDeviceFlags;
 BOOLEAN HalpBrokenAcpiTimer = FALSE;
@@ -169,6 +176,47 @@ HaliIsVectorValid(_In_ ULONG DeviceIrq)
     return FALSE;
 }
 
+/* PM TIMER FUNCTIONS *********************************************************/
+
+VOID
+NTAPI
+HaliPmTimerQueryPerfCount(_Out_ LARGE_INTEGER * OutPerfCount,
+                          _Out_ LARGE_INTEGER * OutPerfFrequency)
+{
+    OutPerfCount->QuadPart = TimerInfo.PerformanceCounter.QuadPart + QueryTimer();
+
+    if (OutPerfFrequency) {
+        OutPerfFrequency->QuadPart = PMTimerFreq;
+    }
+}
+
+ULONGLONG
+__cdecl
+HalpQueryPerformanceCounter(VOID)
+{
+    LARGE_INTEGER TimeValue;
+    LARGE_INTEGER PerfCounter;
+    ULONG CurrentTime;
+    ULONG ValueExt;
+
+    do
+    {
+        YieldProcessor();
+    }
+    while (TimerInfo.AcpiTimeValue.HighPart != TimerInfo.TimerCarry);
+
+    CurrentTime = READ_PORT_ULONG(TimerInfo.TimerPort);
+
+    TimeValue = TimerInfo.AcpiTimeValue;
+    ValueExt = TimerInfo.ValueExt;
+
+    PerfCounter.HighPart = TimeValue.HighPart;
+    PerfCounter.LowPart = ((CurrentTime & (~ValueExt)) | (TimeValue.LowPart & (~(ValueExt - 1))));
+
+    PerfCounter.QuadPart += ((CurrentTime ^ TimeValue.LowPart) & ValueExt);
+
+    return PerfCounter.QuadPart;
+}
 
 /* PUBLIC PM TIMER FUNCTIONS **************************************************/
 
@@ -189,8 +237,90 @@ VOID
 NTAPI
 HalpPmTimerStallExecProc(_In_ ULONG MicroSeconds)
 {
-    UNIMPLEMENTED;
-    ASSERT(FALSE);
+    INT CpuInfo[4];
+    ULONGLONG Start;
+    ULONG StallValue;
+    LARGE_INTEGER Current;
+    LARGE_INTEGER Next;
+    ULONG TotalStall;
+    ULONG StallCounter;
+
+    //DPRINT1("HalpPmTimerStallExecProc: MicroSeconds %X\n", MicroSeconds);
+    //DPRINT1("HalpPmTimerStallExecProc: FIXME\n");
+    //DbgBreakPoint(); // ASSERT(FALSE);
+
+    /* Serializing instruction execution */
+    __cpuid(CpuInfo, 0);
+
+    if (!MicroSeconds)
+    {
+        goto Exit;
+    }
+
+    //HalpStallExecCounter++; // Statistics
+
+    StallValue = (PMTimerFreq * (ULONGLONG)MicroSeconds) / 1000000 - 1; // ~2,579545 * MicroSeconds
+    Start = QueryTimer();
+
+    TotalStall = 0;
+    StallCounter = StallLoopValue;
+
+    while (TRUE)
+    {
+        while (TRUE)
+        {
+            TotalStall += StallCounter;
+
+            _mm_pause();
+
+            do
+            {
+                StallCounter--;
+            }
+            while (StallCounter);
+
+            Current.QuadPart = (QueryTimer() - Start);
+
+            if (Current.HighPart)
+            {
+                Current.LowPart = 0x7FFFFFFF;
+            }
+
+            if (Current.LowPart >= 3)
+            {
+                break;
+            }
+
+            StallLoopValue += 42;
+            StallCounter = StallLoopValue;
+        }
+
+        if (!Current.LowPart)
+        {
+            KeBugCheckEx(0xA5, 0x20000, Current.HighPart, 0, 0);
+        }
+
+        if (Current.LowPart >= StallValue)
+        {
+            break;
+        }
+
+        Next.LowPart = (StallValue - Current.LowPart) * TotalStall;
+        Next.HighPart = (((ULONGLONG)(StallValue - Current.LowPart) * TotalStall) >> 32);
+        Next.HighPart &= 3;
+
+        StallCounter = ((ULONGLONG)Next.QuadPart / Current.LowPart + 1);
+    }
+
+Exit:
+
+    /* StallExecCounter 0-255 */
+    StallExecCounter++;
+
+    if (!StallExecCounter && (StallLoopValue > 42))
+    {
+        StallLoopValue -= 42;
+    }
 }
 
 VOID
@@ -211,18 +341,17 @@ HalpPmTimerCalibratePerfCount(_In_ volatile PLONG Count,
 
 LARGE_INTEGER
 NTAPI 
-KeQueryPerformanceCounter(_Out_opt_ LARGE_INTEGER * OutPerformanceFrequency)
+KeQueryPerformanceCounter(_Out_opt_ LARGE_INTEGER * OutPerfFrequency)
 {
-    return TimerQueryPerfCount(OutPerformanceFrequency);
+    return TimerQueryPerfCount(OutPerfFrequency);
 }
 LARGE_INTEGER
 NTAPI
-HalpPmTimerQueryPerfCount(_Out_opt_ LARGE_INTEGER * OutPerformanceFrequency)
+HalpPmTimerQueryPerfCount(_Out_opt_ LARGE_INTEGER * OutPerfFrequency)
 {
-    LARGE_INTEGER Result;
-    UNIMPLEMENTED;
-    ASSERT(FALSE);Result.QuadPart = 0;
-    return Result;
+    LARGE_INTEGER PerfCount;
+    HaliPmTimerQueryPerfCount(&PerfCount, OutPerfFrequency);
+    return PerfCount;
 }
 
 ULONG

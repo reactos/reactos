@@ -27,7 +27,6 @@ PLOCAL_APIC HalpProcLocalApicTable = NULL;
 BOOLEAN HalpUsePmTimer = FALSE;
 BOOLEAN IsPmTimerCorrect = TRUE;
 PVOID * HalpLocalNmiSources = NULL;
-ULONG PMTimerFreq = 3579545;
 
 /* GLOBALS ********************************************************************/
 
@@ -592,14 +591,6 @@ HalpInitializeIOUnits()
     HalpAddressUsageList = (PADDRESS_USAGE)&HalpApicUsage;
 }
 
-VOID
-NTAPI
-HaliPmTimerQueryPerfCount(_Out_ LARGE_INTEGER * OutPerfCount)
-{
-    DPRINT1("HaliPmTimerQueryPerfCount: FIXME. DbgBreakPoint()\n");
-    DbgBreakPoint();
-}
-
 CODE_SEG("INIT")
 BOOLEAN
 FASTCALL
@@ -610,12 +601,12 @@ HalpPmTimerSpecialStall(_In_ ULONG StallValue)
     LARGE_INTEGER EndValue;
     ULONG ix = 0;
 
-    HaliPmTimerQueryPerfCount(&OldValue);
+    HaliPmTimerQueryPerfCount(&OldValue, NULL);
     EndValue.QuadPart = (OldValue.QuadPart + StallValue);
 
     while (OldValue.QuadPart < EndValue.QuadPart)
     {
-        HaliPmTimerQueryPerfCount(&NewValue);
+        HaliPmTimerQueryPerfCount(&NewValue, NULL);
 
         ASSERT(NewValue.QuadPart >= OldValue.QuadPart);
 
