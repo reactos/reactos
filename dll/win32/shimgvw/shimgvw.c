@@ -990,15 +990,15 @@ ImageView_WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
                     break;
 
                 case IDC_BEST_FIT:
-//                    WARN("IDC_BEST_FIT\n");
+                    DPRINT1("IDC_BEST_FIT unimplemented\n");
                     break;
 
                 case IDC_REAL_SIZE:
-//                    WARN("IDC_REAL_SIZE\n");
+                    DPRINT1("IDC_REAL_SIZE unimplemented\n");
                     break;
 
                 case IDC_SLIDE_SHOW:
-//                    WARN("IDC_SLIDE_SHOW\n");
+                    DPRINT1("IDC_SLIDE_SHOW unimplemented\n");
                     break;
 
                 case IDC_ZOOM_IN:
