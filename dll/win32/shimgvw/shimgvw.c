@@ -1133,10 +1133,10 @@ ImageView_CreateWindow(HWND hwnd, LPWSTR szFileName)
     if (!RegisterClassW(&WndClass)) return -1;
 
     LoadStringW(hInstance, IDS_APPTITLE, szBuf, sizeof(szBuf) / sizeof(TCHAR));
-    hMainWnd = CreateWindowW(L"shimgvw_window"), szBuf,
-                             WS_OVERLAPPEDWINDOW | WS_VISIBLE | WS_CAPTION,
-                             CW_USEDEFAULT, CW_USEDEFAULT,
-                             0, 0, NULL, NULL, hInstance, NULL);
+    hMainWnd = CreateWindowExW(0, L"shimgvw_window"), szBuf,
+                               WS_OVERLAPPEDWINDOW | WS_VISIBLE | WS_CAPTION,
+                               CW_USEDEFAULT, CW_USEDEFAULT,
+                               0, 0, NULL, NULL, hInstance, NULL);
 
     // make sure the path has no quotes on it
     StringCbCopyW(szInitialFile, sizeof(szInitialFile), szFileName);
