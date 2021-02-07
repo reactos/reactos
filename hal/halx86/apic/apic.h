@@ -428,6 +428,19 @@ HaliClockInterrupt(
     _In_ PKTRAP_FRAME TrapFrame,
     _In_ BOOLEAN IsAcpi
 );
+
+ULONG
+FASTCALL
+HalpAcquireHighLevelLock(
+    _In_ volatile PKSPIN_LOCK SpinLock
+);
+
+VOID
+FASTCALL
+HalpReleaseHighLevelLock(
+    _In_ volatile PKSPIN_LOCK SpinLock,
+    _In_ ULONG EFlags
+);
 #endif
 
 /* EOF */

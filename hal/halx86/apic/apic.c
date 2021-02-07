@@ -1124,5 +1124,62 @@ KeRaiseIrqlToSynchLevel(VOID)
     return KfRaiseIrql(SYNCH_LEVEL);
 }
 
+
+VOID NTAPI Kii386SpinOnSpinLock(_In_ PKSPIN_LOCK SpinLock, _In_ ULONG Flags);
+
+ULONG
+FASTCALL
+HalpAcquireHighLevelLock(_In_ volatile PKSPIN_LOCK SpinLock)
+{
+    ULONG EFlags;
+
+    EFlags = __readeflags();
+
+    while (TRUE)
+    {
+        _disable();
+
+        if (InterlockedBitTestAndSet((volatile PLONG)SpinLock, 0) == 0)
+        {
+            break;
+        }
+
+      #if defined(_M_IX86) && DBG
+        /* On x86 debug builds, we use a much slower but useful routine */
+        Kii386SpinOnSpinLock(SpinLock, 5);
+      #else
+        /* It's locked... spin until it's unlocked */
+        while (*(volatile PKSPIN_LOCK)SpinLock & 1)
+        {
+            /* Yield and keep looping */
+            YieldProcessor();
+        }
+      #endif
+    }
+
+  #if DBG
+    /* On debug builds, we OR in the KTHREAD */
+    *SpinLock = ((KSPIN_LOCK)KeGetCurrentThread() | 1);
+  #endif
+
+    return EFlags;
+}
+
+VOID
+FASTCALL
+HalpReleaseHighLevelLock(_In_ volatile PKSPIN_LOCK SpinLock,
+                         _In_ ULONG EFlags)
+{
+  #if DBG
+    if (*SpinLock != ((KSPIN_LOCK)KeGetCurrentThread() | 1))
+    {
+        KeBugCheckEx(SPIN_LOCK_NOT_OWNED, (ULONG_PTR)SpinLock, 0, 0, 0);
+    }
+  #endif
+
+    InterlockedAnd((volatile PLONG)SpinLock, 0);
+
+    __writeeflags(EFlags);
+}
 #endif /* !_M_AMD64 */
 
