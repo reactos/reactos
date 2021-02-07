@@ -86,6 +86,34 @@ typedef struct _IOAPIC_INFO
 #define IOAPIC_DEFAULT_BASE   0xFEC00000    /* Default I/O APIC Base Register Address */
 #define IOAPIC_SIZE           0x400
 
+#ifndef _M_AMD64
+FORCEINLINE
+ULONG
+IoApicRead(_In_ PIO_APIC_REGISTERS IoApicRegs,
+           _In_ UCHAR RegisterIdx)
+{
+    ULONG Result;
+
+    *(volatile PUCHAR)((ULONG_PTR)IoApicRegs + IOAPIC_IOREGSEL) = RegisterIdx;
+    Result = *(volatile PULONG)((ULONG_PTR)IoApicRegs + IOAPIC_IOWIN); 
+
+    //DbgPrint("IoApicRead: RegisterIdx %X, Result %X\n", RegisterIdx, Result);
+    return Result;
+}
+
+FORCEINLINE
+VOID
+IoApicWrite(_In_ PIO_APIC_REGISTERS IoApicRegs,
+            _In_ UCHAR RegisterIdx,
+            _In_ ULONG Value)
+{
+    //DbgPrint("IoApicWrite: RegisterIdx %X, Value %X\n", RegisterIdx, Value);
+
+    *(volatile PUCHAR)((ULONG_PTR)IoApicRegs + IOAPIC_IOREGSEL) = RegisterIdx;
+    *(volatile PULONG)((ULONG_PTR)IoApicRegs + IOAPIC_IOWIN) = Value;
+}
+#endif
+
 extern ULONG IRQCount;					/* Number of IRQs  */
 extern UCHAR BUSMap[MAX_BUS];				/* Map of all buses in the system */
 extern UCHAR PCIBUSMap[MAX_BUS];			/* Map of all PCI buses in the system */
