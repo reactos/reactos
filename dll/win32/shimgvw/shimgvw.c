@@ -33,7 +33,6 @@
 #include <debug.h>
 
 #include "shimgvw.h"
-#include "wine/debug.h"
 
 HINSTANCE hInstance;
 SHIMGVW_SETTINGS shiSettings;
@@ -991,15 +990,15 @@ ImageView_WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
                     break;
 
                 case IDC_BEST_FIT:
-                    WARN("IDC_BEST_FIT\n");
+//                    WARN("IDC_BEST_FIT\n");
                     break;
 
                 case IDC_REAL_SIZE:
-                    WARN("IDC_REAL_SIZE\n");
+//                    WARN("IDC_REAL_SIZE\n");
                     break;
 
                 case IDC_SLIDE_SHOW:
-                    WARN("IDC_SLIDE_SHOW\n");
+//                    WARN("IDC_SLIDE_SHOW\n");
                     break;
 
                 case IDC_ZOOM_IN:
@@ -1094,7 +1093,7 @@ ImageView_CreateWindow(HWND hwnd, LPWSTR szFileName)
 {
     struct GdiplusStartupInput gdiplusStartupInput;
     ULONG_PTR gdiplusToken;
-    WNDCLASS WndClass = {0};
+    WNDCLASSW WndClass = {0};
     WCHAR szBuf[512];
     WCHAR szInitialFile[MAX_PATH];
     HWND hMainWnd;
@@ -1123,7 +1122,7 @@ ImageView_CreateWindow(HWND hwnd, LPWSTR szFileName)
     pLoadImage(szFileName);
 
     // Create the window
-    WndClass.lpszClassName  = _T("shimgvw_window");
+    WndClass.lpszClassName  = L"shimgvw_window";
     WndClass.lpfnWndProc    = ImageView_WndProc;
     WndClass.hInstance      = hInstance;
     WndClass.style          = CS_HREDRAW | CS_VREDRAW;
@@ -1131,13 +1130,13 @@ ImageView_CreateWindow(HWND hwnd, LPWSTR szFileName)
     WndClass.hCursor        = LoadCursor(NULL, IDC_ARROW);
     WndClass.hbrBackground  = NULL;   /* less flicker */
 
-    if (!RegisterClass(&WndClass)) return -1;
+    if (!RegisterClassW(&WndClass)) return -1;
 
     LoadStringW(hInstance, IDS_APPTITLE, szBuf, sizeof(szBuf) / sizeof(TCHAR));
-    hMainWnd = CreateWindow(_T("shimgvw_window"), szBuf,
-                            WS_OVERLAPPEDWINDOW | WS_VISIBLE | WS_CAPTION,
-                            CW_USEDEFAULT, CW_USEDEFAULT,
-                            0, 0, NULL, NULL, hInstance, NULL);
+    hMainWnd = CreateWindowW(L"shimgvw_window"), szBuf,
+                             WS_OVERLAPPEDWINDOW | WS_VISIBLE | WS_CAPTION,
+                             CW_USEDEFAULT, CW_USEDEFAULT,
+                             0, 0, NULL, NULL, hInstance, NULL);
 
     // make sure the path has no quotes on it
     StringCbCopyW(szInitialFile, sizeof(szInitialFile), szFileName);
