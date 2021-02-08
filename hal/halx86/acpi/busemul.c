@@ -102,6 +102,7 @@ HalpTranslateBusAddress(IN INTERFACE_TYPE InterfaceType,
     return TRUE;
 }
 
+#ifdef _M_AMD64
 ULONG
 NTAPI
 HalpGetSystemInterruptVector_Acpi(IN ULONG BusNumber,
@@ -115,6 +116,7 @@ HalpGetSystemInterruptVector_Acpi(IN ULONG BusNumber,
     *Affinity = 0xFFFFFFFF;
     return Vector;
 }
+#endif
 
 BOOLEAN
 NTAPI
@@ -274,6 +276,7 @@ HalGetBusDataByOffset(IN BUS_DATA_TYPE BusDataType,
     return 0;
 }
 
+#ifdef _M_AMD64
 /*
  * @implemented
  */
@@ -293,6 +296,22 @@ HalGetInterruptVector(IN INTERFACE_TYPE InterfaceType,
                                              Irql,
                                              Affinity);
 }
+#else
+ULONG
+NTAPI
+HalGetInterruptVector(_In_ INTERFACE_TYPE InterfaceType,
+                      _In_ ULONG BusNumber,
+                      _In_ ULONG BusInterruptLevel,
+                      _In_ ULONG BusInterruptVector,
+                      _Out_ PKIRQL OutIrql,
+                      _Out_ PKAFFINITY OutAffinity)
+{
+    DPRINT1("HalGetInterruptVector: FIXME. DbgBreakPoint()\n");
+    DbgBreakPoint();
+    //call HalpGetSystemInterruptVector() -> different for PIC and APIC. FIXME!;
+    return 0;
+}
+#endif
 
 /*
  * @implemented
