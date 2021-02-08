@@ -13,6 +13,10 @@
 #define NDEBUG
 #include <debug.h>
 
+#ifndef _MINIHAL_
+extern BOOLEAN HalpBrokenAcpiTimer;
+#endif
+
 /* FUNCTIONS ******************************************************************/
 
 CODE_SEG("INIT")
@@ -22,5 +26,14 @@ HalpAcpiApplyFadtSettings(_In_ PFADT Fadt)
 {
     ;
 }
+
+#ifndef _MINIHAL_
+VOID
+FASTCALL
+HalpClockInterruptHandler(IN PKTRAP_FRAME TrapFrame)
+{
+    HaliClockInterrupt(TrapFrame, TRUE, HalpBrokenAcpiTimer);
+}
+#endif
 
 /* EOF */

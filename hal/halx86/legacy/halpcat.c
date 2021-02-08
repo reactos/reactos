@@ -15,7 +15,6 @@
 /* GLOBALS ********************************************************************/
 
 /* This determines the HAL type */
-BOOLEAN HalDisableFirmwareMapper = FALSE;
 #if defined(SARCH_XBOX)
 PWCHAR HalHardwareIdString = L"xbox";
 PWCHAR HalName = L"Xbox HAL";
@@ -26,6 +25,9 @@ PWCHAR HalName = L"NEC PC-98 Compatible NESA/C-Bus HAL";
 PWCHAR HalHardwareIdString = L"e_isa_up";
 PWCHAR HalName = L"PC Compatible Eisa/Isa HAL";
 #endif
+
+ULONG HalpWAETDeviceFlags = 0;
+BOOLEAN HalDisableFirmwareMapper = FALSE;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 

@@ -669,6 +669,16 @@ NTAPI
 HaliTimerSetTimeIncrement(
     _In_ ULONG Increment
 );
+
+#ifndef _MINIHAL_
+VOID
+FASTCALL
+HaliClockInterrupt(
+    _In_ PKTRAP_FRAME TrapFrame,
+    _In_ BOOLEAN IsAcpi,
+    _In_ BOOLEAN IsBrokenTimer
+);
+#endif
 #endif
 
 extern BOOLEAN HalpNMIInProgress;

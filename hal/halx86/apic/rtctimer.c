@@ -337,8 +337,72 @@ HalpInitializeClock(VOID)
 VOID
 FASTCALL
 HaliClockInterrupt(_In_ PKTRAP_FRAME TrapFrame,
-                   _In_ BOOLEAN IsAcpi)
+                   _In_ BOOLEAN IsAcpi,
+                   _In_ BOOLEAN IsBrokenTimer)
 {
+    ULONG LastIncrement;
+    KIRQL OldIrql = 0;
+
+    /* Enter trap */
+    KiEnterInterruptTrap(TrapFrame);
+
+    /* Start the interrupt */
+    if (!HalBeginSystemInterrupt(CLOCK_LEVEL, HalpClockVector, &OldIrql))
+    {
+        /* Spurious, just end the interrupt */
+      #ifdef __REACTOS__
+        KiEoiHelper(TrapFrame);
+      #else
+        #error FIXME call Kei386EoiHelper()
+      #endif
+    }
+
+    if (!IsAcpi)
+    {
+        /* Only legacy systems */
+        if (HalpUse8254)
+        {
+            DPRINT1("HaliClockInterrupt: FIXME. DbgBreakPoint()\n");
+            DbgBreakPoint();
+        }
+    }
+
+    if (!(HalpWAETDeviceFlags & 1))
+    {
+        HalpAcquireCmosSpinLock();
+        HalpReadCmos(RTC_REGISTER_C);
+        HalpReadCmos(RTC_REGISTER_C);
+        HalpReleaseCmosSpinLock();
+    }
+
+    HalpRateAdjustment += (UCHAR)HalpCurrentClockRateAdjustment;
+    if (HalpRateAdjustment < (UCHAR)HalpCurrentClockRateAdjustment)
+    {
+        LastIncrement = HalpCurrentClockRateIn100ns - 1;
+    }
+    else
+    {
+        LastIncrement = HalpCurrentClockRateIn100ns;
+    }
+
+    if (HalpIpiClock)
+    {
+        DPRINT1("HaliClockInterrupt:  IsCarryIpiRate && HalpIpiClock \n");
+        DbgBreakPoint();
+    }
+
+    if (HalpTimerWatchdogEnabled)
+    {
+        DPRINT1("HaliClockInterrupt: HalpTimerWatchdogEnabled. DbgBreakPoint()\n");
+        DbgBreakPoint();
+    }
+
+  #ifdef __REACTOS__
+    RosKeUpdateSystemTime(TrapFrame, LastIncrement, HalpClockVector, OldIrql);
+  #else
+    #error FIXME call KeUpdateSystemTime()
+  #endif
+
     DPRINT1("HaliClockInterrupt: DbgBreakPoint()\n");
     DbgBreakPoint();
 }

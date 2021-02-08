@@ -879,7 +879,7 @@ VOID
 FASTCALL
 HalpClockInterruptHandler(_In_ PKTRAP_FRAME TrapFrame)
 {
-    HaliClockInterrupt(TrapFrame, TRUE);
+    HaliClockInterrupt(TrapFrame, TRUE, FALSE);
 }
 #endif
 

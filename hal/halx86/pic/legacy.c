@@ -13,6 +13,17 @@
 #define NDEBUG
 #include <debug.h>
 
+/* FUNCTIONS ******************************************************************/
+
+#ifndef _MINIHAL_
+VOID
+FASTCALL
+HalpClockInterruptHandler(IN PKTRAP_FRAME TrapFrame)
+{
+    HaliClockInterrupt(TrapFrame, FALSE, FALSE);
+}
+#endif
+
 /* PUBLIC TIMER FUNCTIONS *****************************************************/
 
 #if 0 // generic/systimer.S

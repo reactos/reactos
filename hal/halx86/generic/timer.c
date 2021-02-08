@@ -119,7 +119,9 @@ HalpInitializeClock(VOID)
 #ifndef _MINIHAL_
 VOID
 FASTCALL
-HalpClockInterruptHandler(IN PKTRAP_FRAME TrapFrame)
+HaliClockInterrupt(_In_ PKTRAP_FRAME TrapFrame,
+                   _In_ BOOLEAN IsAcpi,
+                   _In_ BOOLEAN IsBrokenTimer)
 {
     ULONG LastIncrement;
     KIRQL Irql;
@@ -128,35 +130,53 @@ HalpClockInterruptHandler(IN PKTRAP_FRAME TrapFrame)
     KiEnterInterruptTrap(TrapFrame);
 
     /* Start the interrupt */
-    if (HalBeginSystemInterrupt(CLOCK2_LEVEL, PRIMARY_VECTOR_BASE + PIC_TIMER_IRQ, &Irql))
+    if (!HalBeginSystemInterrupt(CLOCK2_LEVEL, (PRIMARY_VECTOR_BASE + PIC_TIMER_IRQ), &Irql))
     {
-        /* Update the performance counter */
-        HalpPerfCounter.QuadPart += HalpCurrentRollOver;
-        HalpPerfCounterCutoff = KiEnableTimerWatchdog;
-
-        /* Save increment */
-        LastIncrement = HalpCurrentTimeIncrement;
-
-        /* Check if someone changed the time rate */
-        if (HalpClockSetMSRate)
-        {
-            /* Update the global values */
-            HalpCurrentTimeIncrement = HalpRolloverTable[HalpNextMSRate - 1].Increment;
-            HalpCurrentRollOver = HalpRolloverTable[HalpNextMSRate - 1].RollOver;
-
-            /* Set new timer rollover */
-            HalpSetTimerRollOver((USHORT)HalpCurrentRollOver);
-
-            /* We're done */
-            HalpClockSetMSRate = FALSE;
-        }
-
-        /* Update the system time -- the kernel will exit this trap  */
-        RosKeUpdateSystemTime(TrapFrame, LastIncrement, 0xFF, Irql);
+        /* Spurious, just end the interrupt */
+      #ifdef __REACTOS__
+        KiEoiHelper(TrapFrame);
+      #else
+        #error FIXME call Kei386EoiHelper()
+      #endif
     }
 
-    /* Spurious, just end the interrupt */
-    KiEoiHelper(TrapFrame);
+    if (IsAcpi && IsBrokenTimer)
+    {
+        DPRINT1("HaliClockInterrupt: FIXME. DbgBreakPoint()\n");
+        DbgBreakPoint();
+        //HalpBrokenPiix4TimerTick();
+    }
+
+    /* Update the performance counter */
+    HalpPerfCounter.QuadPart += HalpCurrentRollOver;
+    HalpPerfCounterCutoff = KiEnableTimerWatchdog;
+
+    /* Save increment */
+    LastIncrement = HalpCurrentTimeIncrement;
+
+    /* Check if someone changed the time rate */
+    if (HalpClockSetMSRate)
+    {
+        /* Update the global values */
+        HalpCurrentTimeIncrement = HalpRolloverTable[HalpNextMSRate - 1].Increment;
+        HalpCurrentRollOver = HalpRolloverTable[HalpNextMSRate - 1].RollOver;
+
+        /* Set new timer rollover */
+        HalpSetTimerRollOver((USHORT)HalpCurrentRollOver);
+
+        /* We're done */
+        HalpClockSetMSRate = FALSE;
+    }
+
+    /* Update the system time -- the kernel will exit this trap  */
+  #ifdef __REACTOS__
+    RosKeUpdateSystemTime(TrapFrame, LastIncrement, 0xFF, Irql);
+  #else
+    #error FIXME call KeUpdateSystemTime()
+  #endif
+
+    DPRINT1("HaliClockInterrupt: DbgBreakPoint()\n");
+    DbgBreakPoint();
 }
 
 VOID
@@ -199,7 +219,6 @@ HalpProfileInterruptHandler(IN PKTRAP_FRAME TrapFrame)
     KiEoiHelper(TrapFrame);
 }
 #endif /* !_MINIHAL_ */
-
 #endif /* _M_IX86 */
 
 /* PUBLIC FUNCTIONS ***********************************************************/

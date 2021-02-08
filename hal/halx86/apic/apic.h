@@ -424,13 +424,6 @@ HalpMarkProcessorStarted(
     _In_ ULONG PrcNumber
 );
 
-VOID
-FASTCALL
-HaliClockInterrupt(
-    _In_ PKTRAP_FRAME TrapFrame,
-    _In_ BOOLEAN IsAcpi
-);
-
 ULONG
 FASTCALL
 HalpAcquireHighLevelLock(
