@@ -375,9 +375,8 @@ HalpGetApicInterruptDesc(
 #ifdef _M_IX86
 VOID
 NTAPI
-HalpInitProcessor(
-    IN ULONG ProcessorNumber,
-    IN PLOADER_PARAMETER_BLOCK LoaderBlock)
+HalpInitProcessor(_In_ ULONG ProcessorNumber,
+                  _In_ PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     PKPCR Pcr = KeGetPcr();
 
@@ -414,9 +413,9 @@ HalpInitProcessor(
 
 NTSTATUS
 NTAPI
-HalpSetSystemInformation(IN HAL_SET_INFORMATION_CLASS InformationClass,
-                         IN ULONG BufferSize,
-                         IN OUT PVOID Buffer)
+HalpSetSystemInformation(_In_ HAL_SET_INFORMATION_CLASS InformationClass,
+                         _In_ ULONG BufferSize,
+                         _In_ OUT PVOID Buffer)
 {
     DPRINT1("HalpSetSystemInformation()\n");
     UNIMPLEMENTED;
@@ -425,7 +424,7 @@ HalpSetSystemInformation(IN HAL_SET_INFORMATION_CLASS InformationClass,
 }
 
 VOID
-HalpInitPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
+HalpInitPhase0(_In_ PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
     /* Fill out HalDispatchTable */
     HalQuerySystemInformation = HaliQuerySystemInformation;
@@ -453,6 +452,40 @@ HalpInitPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
 
     /* Do some APIC HAL-specific initialization */
     HalpInitPhase0a(LoaderBlock);
+}
+
+VOID
+HalpInitPhase1(VOID)
+{
+    PKPRCB Prcb = KeGetCurrentPrcb();
+
+    DPRINT1("HalpInitPhase1()\n");
+
+    if (Prcb->Number == 0)
+    {
+        //HalpInitReservedPages()
+
+        /* Initialize DMA. NT does this in Phase 0 */
+        HalpInitDma();
+
+        /* Initialize bus handlers */
+        HalpInitBusHandlers();
+
+        KeRegisterInterruptHandler(APIC_CLOCK_VECTOR, HalpClockInterrupt);
+
+        //HalpGetFeatureBits()
+    }
+    else
+    {
+        DPRINT1("ProcessorNumber %X. DbgBreakPoint()\n", Prcb->Number);
+        DbgBreakPoint();
+    }
+
+    DPRINT1("HalInitSystem: FIXME HalpInitMP()\n");
+    //HalpInitMP(1, LoaderBlock);
+
+    DPRINT1("HalInitSystem: FIXME HalpEnableNMI()\n");
+    //HalpEnableNMI();
 }
 #else
 VOID
@@ -516,7 +549,6 @@ HalpInitPhase0(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
                                HalpClockInterrupt,
                                Latched);
 }
-#endif
 
 VOID
 HalpInitPhase1(VOID)
@@ -524,5 +556,6 @@ HalpInitPhase1(VOID)
     /* Initialize DMA. NT does this in Phase 0 */
     HalpInitDma();
 }
+#endif
 
 /* EOF */
