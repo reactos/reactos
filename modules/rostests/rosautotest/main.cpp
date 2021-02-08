@@ -8,6 +8,7 @@
 #include "precomp.h"
 #include <cstdio>
 DWORD TestStartTime;
+WCHAR TestName[];
 
 CConfiguration Configuration;
 
@@ -51,6 +52,9 @@ extern "C" int
 wmain(int argc, wchar_t* argv[])
 {
     int ReturnValue = 1;
+
+    wcscpy(TestName, argv[0]);
+    wcsncat (TestName, L".exe", 4);
 
     try
     {

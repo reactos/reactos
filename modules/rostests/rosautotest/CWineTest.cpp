@@ -8,7 +8,6 @@
 #include "precomp.h"
 
 static const DWORD ListTimeout = 10000;
-static WCHAR TestName[] = L"rosautotest.exe";
 
 // This value needs to be lower than the <timeout> configured in sysreg.xml! (usually 180000)
 // Otherwise, sysreg2 kills the VM before we can kill the process.
