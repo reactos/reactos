@@ -699,6 +699,7 @@ HalpLocalApicErrorServiceHandler(_In_ PKTRAP_FRAME TrapFrame)
 
 /* SOFTWARE INTERRUPTS ********************************************************/
 
+#ifdef _M_AMD64
 VOID
 FASTCALL
 HalRequestSoftwareInterrupt(IN KIRQL Irql)
@@ -714,6 +715,57 @@ HalClearSoftwareInterrupt(
 {
     /* Nothing to do */
 }
+#else
+VOID
+FASTCALL
+HalRequestSoftwareInterrupt(_In_ KIRQL Irql)
+{
+    PHALP_PCR_HAL_RESERVED HalReserved;
+    KIRQL CurrentIrql;
+
+    HalReserved = (PHALP_PCR_HAL_RESERVED)KeGetPcr()->HalReserved;
+
+    if (Irql == DISPATCH_LEVEL)
+    {
+        HalReserved->DpcRequested = TRUE;
+    }
+    else if (Irql == APC_LEVEL)
+    {
+        HalReserved->ApcRequested = TRUE;
+    }
+    else
+    {
+        DbgBreakPoint();
+    }
+
+    CurrentIrql = KeGetPcr()->Irql;
+
+    if (CurrentIrql < Irql)
+        KfLowerIrql(CurrentIrql);
+}
+
+VOID
+FASTCALL
+HalClearSoftwareInterrupt(_In_ KIRQL Irql)
+{
+    PHALP_PCR_HAL_RESERVED HalReserved;
+
+    HalReserved = (PHALP_PCR_HAL_RESERVED)KeGetPcr()->HalReserved;
+
+    if (Irql == DISPATCH_LEVEL)
+    {
+        HalReserved->DpcRequested = FALSE;
+    }
+    else if (Irql == APC_LEVEL)
+    {
+        HalReserved->ApcRequested = FALSE;
+    }
+    else
+    {
+        DbgBreakPoint();
+    }
+}
+#endif
 
 /* SYSTEM INTERRUPTS **********************************************************/
 
