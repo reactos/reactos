@@ -7,6 +7,7 @@
 
 #include "precomp.h"
 #include <cstdio>
+#include <strsafe.h>
 DWORD TestStartTime;
 WCHAR TestName[];
 
@@ -53,8 +54,11 @@ wmain(int argc, wchar_t* argv[])
 {
     int ReturnValue = 1;
 
-    wcscpy(TestName, argv[0]);
-    wcsncat (TestName, L".exe", 4);
+    GetModuleFileNameW(NULL, TestName, _countof(TestName));
+    WCHAR* Name = wcsrchr(TestName, '\\');
+    Name++;
+    StringCchCopyW(TestName, _countof(TestName), Name);
+//    printf("TestName is '%S'.\n", TestName);
 
     try
     {
