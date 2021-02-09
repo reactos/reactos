@@ -1,7 +1,7 @@
 /*
  * PROJECT:     ReactOS Setup Library
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
- * PURPOSE:     Filesystem support functions
+ * PURPOSE:     Filesystem Format and ChkDsk support functions.
  * COPYRIGHT:   Copyright 2003-2019 Casper S. Hornstrup (chorns@users.sourceforge.net)
  *              Copyright 2017-2020 Hermes Belusca-Maito
  */
@@ -122,8 +122,8 @@ C_ASSERT(sizeof(BTRFS_BOOTSECTOR) == BTRFS_BOOTSECTOR_SIZE);
 typedef struct _FILE_SYSTEM
 {
     PCWSTR FileSystemName;
-    FORMATEX FormatFunc;
-    CHKDSKEX ChkdskFunc;
+    PULIB_FORMAT FormatFunc;
+    PULIB_CHKDSK ChkdskFunc;
 } FILE_SYSTEM, *PFILE_SYSTEM;
 
 /* The list of file systems on which we can install ReactOS */
@@ -137,7 +137,7 @@ static FILE_SYSTEM RegisteredFileSystems[] =
     { L"FATX" , VfatxFormat, VfatxChkdsk },
     { L"NTFS" , NtfsFormat, NtfsChkdsk },
 #endif
-    { L"BTRFS", BtrfsFormatEx, BtrfsChkdskEx },
+    { L"BTRFS", BtrfsFormat, BtrfsChkdsk },
 #if 0
     { L"EXT2" , Ext2Format, Ext2Chkdsk },
     { L"EXT3" , Ext2Format, Ext2Chkdsk },
@@ -224,22 +224,36 @@ ChkdskFileSystem_UStr(
     IN PFMIFSCALLBACK Callback)
 {
     PFILE_SYSTEM FileSystem;
+    NTSTATUS Status;
+    BOOLEAN Success;
 
     FileSystem = GetFileSystemByName(FileSystemName);
 
     if (!FileSystem || !FileSystem->ChkdskFunc)
     {
-        // BOOLEAN Argument = FALSE;
-        // Callback(DONE, 0, &Argument);
+        // Success = FALSE;
+        // Callback(DONE, 0, &Success);
         return STATUS_NOT_SUPPORTED;
     }
 
-    return FileSystem->ChkdskFunc(DriveRoot,
-                                  FixErrors,
-                                  Verbose,
-                                  CheckOnlyIfDirty,
-                                  ScanDrive,
-                                  Callback);
+    Status = STATUS_SUCCESS;
+    Success = FileSystem->ChkdskFunc(DriveRoot,
+                                     Callback,
+                                     FixErrors,
+                                     Verbose,
+                                     CheckOnlyIfDirty,
+                                     ScanDrive,
+                                     NULL,
+                                     NULL,
+                                     NULL,
+                                     NULL,
+                                     (PULONG)&Status);
+    if (!Success)
+        DPRINT1("ChkdskFunc() failed with Status 0x%lx\n", Status);
+
+    // Callback(DONE, 0, &Success);
+
+    return Status;
 }
 
 NTSTATUS
@@ -277,22 +291,58 @@ FormatFileSystem_UStr(
     IN PFMIFSCALLBACK Callback)
 {
     PFILE_SYSTEM FileSystem;
+    BOOLEAN Success;
+    BOOLEAN BackwardCompatible = FALSE; // Default to latest FS versions.
+    MEDIA_TYPE MediaType;
 
     FileSystem = GetFileSystemByName(FileSystemName);
 
     if (!FileSystem || !FileSystem->FormatFunc)
     {
-        // BOOLEAN Argument = FALSE;
-        // Callback(DONE, 0, &Argument);
+        // Success = FALSE;
+        // Callback(DONE, 0, &Success);
         return STATUS_NOT_SUPPORTED;
     }
 
-    return FileSystem->FormatFunc(DriveRoot,
-                                  MediaFlag,
-                                  Label,
-                                  QuickFormat,
-                                  ClusterSize,
-                                  Callback);
+    /* Set the BackwardCompatible flag in case we format with older FAT12/16 */
+    if (wcsicmp(FileSystemName, L"FAT") == 0)
+        BackwardCompatible = TRUE;
+    // else if (wcsicmp(FileSystemName, L"FAT32") == 0)
+        // BackwardCompatible = FALSE;
+
+    /* Convert the FMIFS MediaFlag to a NT MediaType */
+    // FIXME: Actually covert all the possible flags.
+    switch (MediaFlag)
+    {
+    case FMIFS_FLOPPY:
+        MediaType = F5_320_1024; // FIXME: This is hardfixed!
+        break;
+    case FMIFS_REMOVABLE:
+        MediaType = RemovableMedia;
+        break;
+    case FMIFS_HARDDISK:
+        MediaType = FixedMedia;
+        break;
+    default:
+        DPRINT1("Unknown FMIFS MediaFlag %d, converting 1-to-1 to NT MediaType\n",
+                MediaFlag);
+        MediaType = (MEDIA_TYPE)MediaFlag;
+        break;
+    }
+
+    Success = FileSystem->FormatFunc(DriveRoot,
+                                     Callback,
+                                     QuickFormat,
+                                     BackwardCompatible,
+                                     MediaType,
+                                     Label,
+                                     ClusterSize);
+    if (!Success)
+        DPRINT1("FormatFunc() failed\n");
+
+    // Callback(DONE, 0, &Success);
+
+    return (Success ? STATUS_SUCCESS : STATUS_UNSUCCESSFUL);
 }
 
 NTSTATUS
@@ -616,53 +666,161 @@ Quit:
 // Formatting routines
 //
 
-BOOLEAN
-PreparePartitionForFormatting(
-    IN struct _PARTENTRY* PartEntry,
-    IN PCWSTR FileSystemName)
+NTSTATUS
+ChkdskPartition(
+    IN PPARTENTRY PartEntry,
+    IN BOOLEAN FixErrors,
+    IN BOOLEAN Verbose,
+    IN BOOLEAN CheckOnlyIfDirty,
+    IN BOOLEAN ScanDrive,
+    IN PFMIFSCALLBACK Callback)
 {
+    NTSTATUS Status;
+    PDISKENTRY DiskEntry = PartEntry->DiskEntry;
+    // UNICODE_STRING PartitionRootPath;
+    WCHAR PartitionRootPath[MAX_PATH]; // PathBuffer
+
+    ASSERT(PartEntry->IsPartitioned && PartEntry->PartitionNumber != 0);
+
+    /* HACK: Do not try to check a partition with an unknown filesystem */
+    if (!*PartEntry->FileSystem)
+    {
+        PartEntry->NeedsCheck = FALSE;
+        return STATUS_SUCCESS;
+    }
+
+    /* Set PartitionRootPath */
+    RtlStringCchPrintfW(PartitionRootPath, ARRAYSIZE(PartitionRootPath),
+                        L"\\Device\\Harddisk%lu\\Partition%lu",
+                        DiskEntry->DiskNumber,
+                        PartEntry->PartitionNumber);
+    DPRINT("PartitionRootPath: %S\n", PartitionRootPath);
+
+    /* Check the partition */
+    Status = ChkdskFileSystem(PartitionRootPath,
+                              PartEntry->FileSystem,
+                              FixErrors,
+                              Verbose,
+                              CheckOnlyIfDirty,
+                              ScanDrive,
+                              Callback);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    PartEntry->NeedsCheck = FALSE;
+    return STATUS_SUCCESS;
+}
+
+NTSTATUS
+FormatPartition(
+    IN PPARTENTRY PartEntry,
+    IN PCWSTR FileSystemName,
+    IN FMIFS_MEDIA_FLAG MediaFlag,
+    IN PCWSTR Label,
+    IN BOOLEAN QuickFormat,
+    IN ULONG ClusterSize,
+    IN PFMIFSCALLBACK Callback)
+{
+    NTSTATUS Status;
+    PDISKENTRY DiskEntry = PartEntry->DiskEntry;
     UCHAR PartitionType;
+    // UNICODE_STRING PartitionRootPath;
+    WCHAR PartitionRootPath[MAX_PATH]; // PathBuffer
+
+    ASSERT(PartEntry->IsPartitioned && PartEntry->PartitionNumber != 0);
 
     if (!FileSystemName || !*FileSystemName)
     {
         DPRINT1("No file system specified?\n");
-        return FALSE;
+        return STATUS_UNRECOGNIZED_VOLUME;
     }
 
-    PartitionType = FileSystemToPartitionType(FileSystemName,
-                                              &PartEntry->StartSector,
-                                              &PartEntry->SectorCount);
+    /*
+     * Prepare the partition for formatting (for MBR disks, reset the
+     * partition type), and adjust the filesystem name in case of FAT
+     * vs. FAT32, depending on the geometry of the partition.
+     */
+
+// FIXME: Do this only if QuickFormat == FALSE? What about FAT handling?
+
+    /*
+     * Retrieve a partition type as a hint only. It will be used to determine
+     * whether to actually use FAT12/16 or FAT32 filesystem, depending on the
+     * geometry of the partition. If the partition resides on an MBR disk,
+     * the partition style will be reset to this value as well, unless the
+     * partition is OEM.
+     */
+    PartitionType = FileSystemToMBRPartitionType(FileSystemName,
+                                                 PartEntry->StartSector.QuadPart,
+                                                 PartEntry->SectorCount.QuadPart);
     if (PartitionType == PARTITION_ENTRY_UNUSED)
     {
         /* Unknown file system */
         DPRINT1("Unknown file system '%S'\n", FileSystemName);
-        return FALSE;
+        return STATUS_UNRECOGNIZED_VOLUME;
     }
 
-    SetPartitionType(PartEntry, PartitionType);
+    /* Reset the MBR partition type, unless this is an OEM partition */
+    if (DiskEntry->DiskStyle == PARTITION_STYLE_MBR)
+    {
+        if (!IsOEMPartition(PartEntry->PartitionType))
+            SetMBRPartitionType(PartEntry, PartitionType);
+    }
 
     /*
      * Adjust the filesystem name in case of FAT vs. FAT32, according to
-     * the type of partition set by FileSystemToPartitionType().
+     * the type of partition returned by FileSystemToMBRPartitionType().
      */
     if (wcsicmp(FileSystemName, L"FAT") == 0)
     {
-        if ((/*PartEntry->*/PartitionType == PARTITION_FAT32) ||
-            (/*PartEntry->*/PartitionType == PARTITION_FAT32_XINT13))
+        if ((PartitionType == PARTITION_FAT32) ||
+            (PartitionType == PARTITION_FAT32_XINT13))
         {
             FileSystemName = L"FAT32";
         }
     }
 
+    /* Commit the partition changes to the disk */
+    Status = WritePartitions(DiskEntry);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("WritePartitions(disk %lu) failed, Status 0x%08lx\n",
+                DiskEntry->DiskNumber, Status);
+        return STATUS_PARTITION_FAILURE;
+    }
+
+    /* Set PartitionRootPath */
+    RtlStringCchPrintfW(PartitionRootPath, ARRAYSIZE(PartitionRootPath),
+                        L"\\Device\\Harddisk%lu\\Partition%lu",
+                        DiskEntry->DiskNumber,
+                        PartEntry->PartitionNumber);
+    DPRINT("PartitionRootPath: %S\n", PartitionRootPath);
+
+    /* Format the partition */
+    Status = FormatFileSystem(PartitionRootPath,
+                              FileSystemName,
+                              MediaFlag,
+                              Label,
+                              QuickFormat,
+                              ClusterSize,
+                              Callback);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
 //
-// FIXME: Do this now, or after the partition was actually formatted??
+// TODO: Here, call a partlist.c function that update the actual
+// FS name and the label fields of the volume.
 //
+    PartEntry->FormatState = Formatted;
+
     /* Set the new partition's file system proper */
     RtlStringCbCopyW(PartEntry->FileSystem,
                      sizeof(PartEntry->FileSystem),
                      FileSystemName);
 
-    return TRUE;
+    PartEntry->New = FALSE;
+
+    return STATUS_SUCCESS;
 }
 
 /* EOF */

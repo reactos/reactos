@@ -1,3 +1,6 @@
+#ifdef __REACTOS__
+#include "precomp.h"
+#else
 /*
  * Copyright 2016 Paul Gofman
  *
@@ -16,13 +19,13 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-#include "wine/port.h"
 
 #include "d3dx9_private.h"
 
 #include <float.h>
+#include <math.h>
 #include <assert.h>
+#endif /* __REACTOS__ */
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3dx);
 
@@ -131,11 +134,7 @@ static double pres_log(double *args, int n)
     if (v == 0.0)
         return 0.0;
     else
-#ifdef HAVE_LOG2
         return log2(v);
-#else
-        return log(v) / log(2);
-#endif
 }
 static double pres_asin(double *args, int n) {return to_signed_nan(asin(args[0]));}
 static double pres_acos(double *args, int n) {return to_signed_nan(acos(args[0]));}
@@ -651,7 +650,7 @@ static void append_pres_const_sets_for_shader_input(struct d3dx_const_tab *const
     }
 }
 
-static int compare_const_set(const void *a, const void *b)
+static int __cdecl compare_const_set(const void *a, const void *b)
 {
     const struct d3dx_const_param_eval_output *r1 = a;
     const struct d3dx_const_param_eval_output *r2 = b;
@@ -861,7 +860,7 @@ static HRESULT init_set_constants_param(struct d3dx_const_tab *const_tab, ID3DXC
 }
 
 static HRESULT get_constants_desc(unsigned int *byte_code, struct d3dx_const_tab *out,
-        struct d3dx9_base_effect *base, const char **skip_constants,
+        struct d3dx_effect *effect, const char **skip_constants,
         unsigned int skip_constants_count, struct d3dx_preshader *pres)
 {
     ID3DXConstantTable *ctab;
@@ -906,7 +905,7 @@ static HRESULT get_constants_desc(unsigned int *byte_code, struct d3dx_const_tab
         }
         if (FAILED(hr = get_ctab_constant_desc(ctab, hc, &cdesc[index], &constantinfo_reserved)))
             goto cleanup;
-        inputs_param[index] = get_parameter_by_name(base, NULL, cdesc[index].Name);
+        inputs_param[index] = get_parameter_by_name(effect, NULL, cdesc[index].Name);
         if (!inputs_param[index])
         {
             WARN("Could not find parameter %s in effect.\n", cdesc[index].Name);
@@ -1111,7 +1110,7 @@ static void dump_preshader(struct d3dx_preshader *pres)
         dump_ins(&pres->regs, &pres->ins[i]);
 }
 
-static HRESULT parse_preshader(struct d3dx_preshader *pres, unsigned int *ptr, unsigned int count, struct d3dx9_base_effect *base)
+static HRESULT parse_preshader(struct d3dx_preshader *pres, unsigned int *ptr, unsigned int count, struct d3dx_effect *effect)
 {
     unsigned int *p;
     unsigned int i, j, const_count;
@@ -1178,7 +1177,7 @@ static HRESULT parse_preshader(struct d3dx_preshader *pres, unsigned int *ptr, u
 
     saved_word = *ptr;
     *ptr = 0xfffe0000;
-    hr = get_constants_desc(ptr, &pres->inputs, base, NULL, 0, NULL);
+    hr = get_constants_desc(ptr, &pres->inputs, effect, NULL, 0, NULL);
     *ptr = saved_word;
     if (FAILED(hr))
         return hr;
@@ -1231,7 +1230,7 @@ static HRESULT parse_preshader(struct d3dx_preshader *pres, unsigned int *ptr, u
     return D3D_OK;
 }
 
-HRESULT d3dx_create_param_eval(struct d3dx9_base_effect *base_effect, void *byte_code, unsigned int byte_code_size,
+HRESULT d3dx_create_param_eval(struct d3dx_effect *effect, void *byte_code, unsigned int byte_code_size,
         D3DXPARAMETER_TYPE type, struct d3dx_param_eval **peval_out, ULONG64 *version_counter,
         const char **skip_constants, unsigned int skip_constants_count)
 {
@@ -1242,8 +1241,8 @@ HRESULT d3dx_create_param_eval(struct d3dx9_base_effect *base_effect, void *byte
     unsigned int count, pres_size;
     HRESULT ret;
 
-    TRACE("base_effect %p, byte_code %p, byte_code_size %u, type %u, peval_out %p.\n",
-            base_effect, byte_code, byte_code_size, type, peval_out);
+    TRACE("effect %p, byte_code %p, byte_code_size %u, type %u, peval_out %p.\n",
+            effect, byte_code, byte_code_size, type, peval_out);
 
     count = byte_code_size / sizeof(unsigned int);
     if (!byte_code || !count)
@@ -1293,7 +1292,7 @@ HRESULT d3dx_create_param_eval(struct d3dx9_base_effect *base_effect, void *byte
         pres_size = count;
     }
 
-    if (ptr && FAILED(ret = parse_preshader(&peval->pres, ptr, pres_size, base_effect)))
+    if (ptr && FAILED(ret = parse_preshader(&peval->pres, ptr, pres_size, effect)))
     {
         FIXME("Failed parsing preshader, byte code for analysis follows.\n");
         dump_bytecode(byte_code, byte_code_size);
@@ -1302,7 +1301,7 @@ HRESULT d3dx_create_param_eval(struct d3dx9_base_effect *base_effect, void *byte
 
     if (shader)
     {
-        if (FAILED(ret = get_constants_desc(shader_ptr, &peval->shader_inputs, base_effect,
+        if (FAILED(ret = get_constants_desc(shader_ptr, &peval->shader_inputs, effect,
                 skip_constants, skip_constants_count, &peval->pres)))
         {
             TRACE("Could not get shader constant table, hr %#x.\n", ret);

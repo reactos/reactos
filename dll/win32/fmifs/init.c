@@ -66,9 +66,11 @@ AddProvider(
     RtlZeroMemory(Provider, RequiredSize);
 
     /* Get function pointers */
-    Provider->ChkdskEx = (CHKDSKEX)GetProcAddress(hMod, "ChkdskEx");
-    //Provider->Extend = (EXTEND)GetProcAddress(hMod, "Extend");
-    Provider->FormatEx = (FORMATEX)GetProcAddress(hMod, "FormatEx");
+    Provider->Chkdsk = (PULIB_CHKDSK)GetProcAddress(hMod, "Chkdsk");
+    //Provider->ChkdskEx = (PULIB_CHKDSKEX)GetProcAddress(hMod, "ChkdskEx");
+    //Provider->Extend = (PULIB_EXTEND)GetProcAddress(hMod, "Extend");
+    Provider->Format = (PULIB_FORMAT)GetProcAddress(hMod, "Format");
+    //Provider->FormatEx = (PULIB_FORMATEX)GetProcAddress(hMod, "FormatEx");
 
     RtlCopyMemory(Provider->Name, FileSystem->Buffer, FileSystem->Length);
 

@@ -9,11 +9,12 @@
 #include <winbase.h>
 #include <strsafe.h>
 
-
 int run_rapps(LPWSTR cmdline)
 {
+    DWORD dwExit;
     STARTUPINFOW si = { sizeof(si) };
     PROCESS_INFORMATION pi = { 0 };
+
     SetLastError(0);
     if (!CreateProcessW(NULL, cmdline, NULL, NULL, FALSE, 0, NULL, NULL, &si, &pi))
     {
@@ -22,18 +23,21 @@ int run_rapps(LPWSTR cmdline)
     }
     CloseHandle(pi.hThread);
     WaitForSingleObject(pi.hProcess, INFINITE);
-    DWORD dwExit;
     GetExitCodeProcess(pi.hProcess, &dwExit);
     CloseHandle(pi.hProcess);
-    return dwExit;
+    return (int)dwExit;
 }
 
 int wmain(int argc, wchar_t* argv[])
 {
+    int iRet;
+    int n;
+    size_t arglen;
     WCHAR RappsExe[MAX_PATH] = { 0 };
+    wchar_t* cmdline;
 
     GetModuleFileNameW(NULL, RappsExe, ARRAYSIZE(RappsExe));
-    size_t arglen = wcslen(RappsExe);
+    arglen = wcslen(RappsExe);
     if (arglen > 4 && !wcsicmp(RappsExe + arglen - 4, L".com"))
     {
         wcscpy(RappsExe + arglen - 4, L".exe");
@@ -41,18 +45,18 @@ int wmain(int argc, wchar_t* argv[])
     else
     {
         fprintf(stderr, "Unable to build rapps.exe path...\n");
-        return - 1;
+        return -1;
     }
 
-    arglen += (1 + 2);  // nullterminator + 2 quotes
+    arglen += (1 + 2);  // NULL terminator + 2 quotes
 
-    for (int n = 1; n < argc; ++n)
+    for (n = 1; n < argc; ++n)
     {
         arglen += wcslen(argv[n]);
         arglen += 3;    // Surrounding quotes + space
     }
 
-    wchar_t* cmdline = LocalAlloc(LMEM_ZEROINIT, arglen * sizeof(WCHAR));
+    cmdline = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, arglen * sizeof(WCHAR));
     if (cmdline)
     {
         wchar_t* ptr = cmdline;
@@ -60,14 +64,14 @@ int wmain(int argc, wchar_t* argv[])
 
         StringCchPrintfExW(ptr, cchRemaining, &ptr, &cchRemaining, 0, L"\"%s\"", RappsExe);
 
-        for (int n = 1; n < argc; ++n)
+        for (n = 1; n < argc; ++n)
         {
             StringCchPrintfExW(ptr, cchRemaining, &ptr, &cchRemaining, 0, L" \"%s\"", argv[n]);
         }
     }
 
-    int iRet = run_rapps(cmdline);
+    iRet = run_rapps(cmdline);
     if (cmdline)
-        LocalFree(cmdline);
+        HeapFree(GetProcessHeap(), 0, cmdline);
     return iRet;
 }

@@ -11,11 +11,13 @@
 
 #include <ksamd64.inc>
 
-; BOOLEAN
-; KiSwapContextResume(
-;    _In_ KIRQL WaitIrql,
-;    _In_ PKTHREAD OldThread,
-;    _In_ PKTHREAD NewThread)
+/*
+ * BOOLEAN
+ * KiSwapContextResume(
+ *    _In_ KIRQL WaitIrql,
+ *    _In_ PKTHREAD OldThread,
+ *    _In_ PKTHREAD NewThread)
+ */
 EXTERN KiSwapContextResume:PROC
 
 /* FUNCTIONS ****************************************************************/
@@ -144,7 +146,7 @@ PUBLIC KiThreadStartup
     push rbp
     .pushreg rbp
     sub rsp, 6 * 8
-    .allocstack 6 * 8
+    .allocstack (6 * 8)
     .endprolog
 
     /* Save WaitIrql as KSWITCH_FRAME::ApcBypass */

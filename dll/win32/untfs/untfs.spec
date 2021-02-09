@@ -1,2 +1,2 @@
-@ stdcall ChkdskEx(ptr long long long long ptr) NtfsChkdsk
-@ stdcall FormatEx(ptr long ptr long long ptr) NtfsFormat
+@ stdcall Chkdsk(ptr ptr long long long long ptr ptr ptr ptr ptr) NtfsChkdsk
+@ stdcall Format(ptr ptr long long long ptr long) NtfsFormat

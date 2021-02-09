@@ -146,7 +146,7 @@ BEGIN
     LTEXT COPYRIGHT_YEAR, IDC_STATIC, 88, 75, 17, 10
     LTEXT " ReactOS Team\0", IDC_STATIC, 105, 75, 53, 10
     LTEXT "", IDC_ABOUT_OTHERSTUFF, 35, 90, 180, 20
-    LTEXT "Ta kopia systemu ReactOS jest zarejestrowana na:", IDC_STATIC, 35, 115, 180, 10
+    LTEXT "Ta kopia systemu ReactOS jest zarejestrowana na:", IDC_ABOUT_REG_TO, 35, 115, 180, 10
     LTEXT "", IDC_ABOUT_REG_USERNAME, 45, 125, 180, 10
     LTEXT "", IDC_ABOUT_REG_ORGNAME, 45, 135, 180, 10
     LTEXT "", IDC_STATIC, 35, 147, 235, 1, SS_ETCHEDHORZ
@@ -733,12 +733,12 @@ STRINGTABLE
 BEGIN
     /* columns in the shellview */
     IDS_SHV_COLUMN_NAME "Nazwa"
-    IDS_SHV_COLUMN_SIZE "Wielkość"
+    IDS_SHV_COLUMN_SIZE "Rozmiar"
     IDS_SHV_COLUMN_TYPE "Typ"
-    IDS_SHV_COLUMN_MODIFIED "Modyfikacja"
+    IDS_SHV_COLUMN_MODIFIED "Data modyfikacji"
     IDS_SHV_COLUMN_ATTRIBUTES "Atrybuty"
-    IDS_SHV_COLUMN_DISK_CAPACITY "Wielkość"
-    IDS_SHV_COLUMN_DISK_AVAILABLE "Dostępna wielkość"
+    IDS_SHV_COLUMN_DISK_CAPACITY "Całkowity rozmiar"
+    IDS_SHV_COLUMN_DISK_AVAILABLE "Wolne miejsce"
     IDS_SHV_COLUMN_OWNER "Właściciel"
     IDS_SHV_COLUMN_GROUP "Grupa"
     IDS_SHV_COLUMN_FILENAME "Nazwa pliku"
@@ -765,7 +765,7 @@ BEGIN
     IDS_ADMINISTRATIVETOOLS_DESCRIPTION "Konfiguruje ustawienia administracyjne dla tego komputeratera."
     IDS_FOLDER_OPTIONS_DESCRIPTION "Dostosowuje wygląd plików i folderów, zmienia skojarzenia plików."
     IDS_FONTS_DESCRIPTION "Dodaj lub zmień czcionki zainstalowane na tym komputerze oraz zarządzaj nimi."
-    IDS_PRINTERS_DESCRIPTION "Pokazuje zainstalowane drukarki i faks-drukarki oraz pomaga w dodawaniu nowych."
+    IDS_PRINTERS_DESCRIPTION "Dodawaj lub usuwaj drukarki, wyświetlaj kolejki wydruku lub zarządzaj nimi, zmieniaj ustawienia drukarek i preferencje drukowania."
 
     /* About shell dialog version string */
     IDS_ABOUT_VERSION_STRING "Wersja %S (%S)"
@@ -814,35 +814,35 @@ BEGIN
     IDS_OVERWRITEFILE_CAPTION "Potwierdź zastąpienie pliku"
     IDS_OVERWRITEFOLDER_TEXT "Ten folder zawiera już katalog o nazwie '%1'.\n\nJeżeli w docelowym folderze wystąpią pliki o takich samych nazwach jak\nw wybranym folderze, to zostaną one zastąpione. Czy chcesz mimo to przenieść\nlub skopiować folder?"
 
-    IDS_FILEOOP_COPYING "Kopiowanie..."
-    IDS_FILEOOP_MOVING "Przenoszenie..."
-    IDS_FILEOOP_DELETING "Usuwanie..."
+    IDS_FILEOOP_COPYING "Trwa kopiowanie..."
+    IDS_FILEOOP_MOVING "Trwa przenoszenie..."
+    IDS_FILEOOP_DELETING "Trwa usuwanie..."
     IDS_FILEOOP_FROM_TO "Z %1 do %2"
     IDS_FILEOOP_FROM "Z %1"
-    IDS_FILEOOP_PREFLIGHT "Przygotowywanie"
+    IDS_FILEOOP_PREFLIGHT "Przygotowywanie operacji"
 
     /* message box strings */
     IDS_RESTART_TITLE "Uruchom ponownie"
     IDS_RESTART_PROMPT "Czy chcesz ponownie uruchomić system?"
-    IDS_SHUTDOWN_TITLE "Zamknij"
+    IDS_SHUTDOWN_TITLE "Zamknij system"
     IDS_SHUTDOWN_PROMPT "Czy chcesz zamknąć system?"
     
     /* Format Dialog Strings */
     IDS_FORMAT_TITLE "Formatuj dysk lokalny"
-    IDS_FORMAT_WARNING "OSTRZEŻENIE: Formatowanie wymaże WSZYSTKIE dane na tym dysku.\nNaciśnij przycisk OK, aby sformatować dysk lub przycisk ANULUJ, aby pozostawić dysk bez zmian."
+    IDS_FORMAT_WARNING "OSTRZEŻENIE: Formatowanie wymaże WSZYSTKIE dane na tym dysku.\nWybierz przycisk OK, aby sformatować dysk lub przycisk ANULUJ, aby zamknąć."
     IDS_FORMAT_COMPLETE "Formatowanie zakończone."
 
     /* Run File dialog */
     IDS_RUNDLG_ERROR "Nie można wyświetlić okna Uruchom (błąd wewnętrzny)"
     IDS_RUNDLG_BROWSE_ERROR "Nie można wyświetlić okna Przeglądaj (błąd wewnętrzny)"
-    IDS_RUNDLG_BROWSE_CAPTION "Przeglądaj"
+    IDS_RUNDLG_BROWSE_CAPTION "Przeglądanie"
     IDS_RUNDLG_BROWSE_FILTER "Programy (*.exe)\0*.exe\0Wszystkie pliki (*.*)\0*.*\0"
 
     /* Shell folder path default values. See also: dll/win32/userenv/lang */
     IDS_PROGRAMS "Menu Start\\Programy"
     IDS_PERSONAL "Moje dokumenty"
     IDS_FAVORITES "Ulubione"
-    IDS_STARTUP "Menu Start\\Programy\\AutoStart"
+    IDS_STARTUP "Menu Start\\Programy\\Autostart"
     IDS_RECENT "Ostatnie"
     IDS_SENDTO "Wyślij do"
     IDS_STARTMENU "Menu Start"
@@ -868,7 +868,7 @@ BEGIN
     IDS_CDBURN_AREA "Ustawienia lokalne\\Dane aplikacji\\Microsoft\\Nagrywanie dysków CD"
     IDS_NETWORKPLACE "Moje miejsca sieciowe"
 
-    IDS_NEWFOLDER "Nowy katalog"
+    IDS_NEWFOLDER "Nowy folder"
 
     IDS_DRIVE_FIXED "Dysk lokalny"
     IDS_DRIVE_CDROM "Stacja dysków CD"
@@ -904,7 +904,7 @@ BEGIN
     IDS_NONE "(brak)"
 
     /* Friendly File Type Names */
-    IDS_DIRECTORY "Katalog"
+    IDS_DIRECTORY "Folder"
     IDS_BAT_FILE "Plik wsadowy ReactOS"
     IDS_CMD_FILE "Skrypt konsoli ReactOS"
     IDS_COM_FILE "Aplikacja DOS"
@@ -923,7 +923,7 @@ BEGIN
     IDS_OTF_FILE "Plik czcionki OpenType"
     IDS_HLP_FILE "Plik pomocy"
     IDS_ICO_FILE "Ikona"
-    IDS_INI_FILE "Ustawienia konfiguracji"
+    IDS_INI_FILE "Ustawienia konfiguracyjne"
     IDS_LNK_FILE "Skrót"
     IDS_NT__FILE "Plik konfiguracji NT DOS32"
     IDS_PIF_FILE "Plik informacyjny o programie NT VDM"
@@ -964,8 +964,8 @@ BEGIN
     IDS_EXE_DESCRIPTION "Opis:"
 
     IDS_MENU_EMPTY "(Puste)"
-    IDS_OBJECTS "%d Obiekty"
-    IDS_OBJECTS_SELECTED "%d Wybrane obiekty"
+    IDS_OBJECTS "%d Obiektów"
+    IDS_OBJECTS_SELECTED "%d Zaznaczonych obiektów"
 
     IDS_ADVANCED_FOLDER "Pliki i Foldery"
     IDS_ADVANCED_NET_CRAWLER "Automatycznie wyszukuj foldery sieciowe i drukarki"

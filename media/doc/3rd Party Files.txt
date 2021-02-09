@@ -69,7 +69,7 @@ URL: https://gitlab.freedesktop.org/mesa/glu, ftp://ftp.freedesktop.org/pub/mesa
 
 Title: ACPICA
 Path: drivers/bus/acpi/acpica
-Used Version: 20200925
+Used Version: 20201217
 License: GPL-2.0 (https://spdx.org/licenses/GPL-2.0.html)
 URL: https://acpica.org/
 
@@ -162,6 +162,20 @@ Path: drivers/storage/port/buslogic
 Used Version: ???
 License: GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later.html)
 URL: http://www.vmware.com/download/open_sources.html
+
+Title: Open Source WDM Drivers for C-Media 8738/8768 based soundcards
+Path: drivers/wdm/audio/drivers/CMIDriver
+Used Version: 1.2.6
+License: BSD-3-Clause (https://opensource.org/licenses/BSD-3-Clause)
+URL: https://code.google.com/archive/p/cmediadrivers/
+
+Title: PCI hardware IDs database
+Path: hal/halx86/legacy/bus/pci_classes.ids
+Path: hal/halx86/legacy/bus/pci_vendors.ids
+Used Version: 2020.11.14
+License: GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later.html)
+URL: https://pci-ids.ucw.cz/
+URL: https://github.com/pciutils/pciids
 
 Title: DejaVu Fonts
 Path: media/fonts

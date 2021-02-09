@@ -9,41 +9,30 @@
 #pragma once
 
 NTSTATUS
-GetFileSystemNameByHandle(
-    IN HANDLE PartitionHandle,
-    IN OUT PWSTR FileSystemName,
-    IN SIZE_T FileSystemNameSize);
-
-NTSTATUS
 GetFileSystemName_UStr(
-    IN PUNICODE_STRING PartitionPath,
+    IN PUNICODE_STRING PartitionPath OPTIONAL,
+    IN HANDLE PartitionHandle OPTIONAL,
     IN OUT PWSTR FileSystemName,
     IN SIZE_T FileSystemNameSize);
 
 NTSTATUS
 GetFileSystemName(
-    IN PCWSTR Partition,
-    IN OUT PWSTR FileSystemName,
-    IN SIZE_T FileSystemNameSize);
-
-NTSTATUS
-InferFileSystemByHandle(
-    IN HANDLE PartitionHandle,
-    IN UCHAR PartitionType,
+    IN PCWSTR PartitionPath OPTIONAL,
+    IN HANDLE PartitionHandle OPTIONAL,
     IN OUT PWSTR FileSystemName,
     IN SIZE_T FileSystemNameSize);
 
 NTSTATUS
 InferFileSystem(
-    IN PCWSTR Partition,
-    IN UCHAR PartitionType,
+    IN PCWSTR PartitionPath OPTIONAL,
+    IN HANDLE PartitionHandle OPTIONAL,
     IN OUT PWSTR FileSystemName,
     IN SIZE_T FileSystemNameSize);
 
 UCHAR
-FileSystemToPartitionType(
+FileSystemToMBRPartitionType(
     IN PCWSTR FileSystem,
-    IN PULARGE_INTEGER StartSector,
-    IN PULARGE_INTEGER SectorCount);
+    IN ULONGLONG StartSector,
+    IN ULONGLONG SectorCount);
 
 /* EOF */

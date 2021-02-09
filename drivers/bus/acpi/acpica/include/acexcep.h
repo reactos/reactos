@@ -96,11 +96,11 @@ typedef struct acpi_exception_info
 
 #define AE_OK                           (ACPI_STATUS) 0x0000
 
-#define ACPI_ENV_EXCEPTION(Status)      (Status & AE_CODE_ENVIRONMENTAL)
-#define ACPI_AML_EXCEPTION(Status)      (Status & AE_CODE_AML)
-#define ACPI_PROG_EXCEPTION(Status)     (Status & AE_CODE_PROGRAMMER)
-#define ACPI_TABLE_EXCEPTION(Status)    (Status & AE_CODE_ACPI_TABLES)
-#define ACPI_CNTL_EXCEPTION(Status)     (Status & AE_CODE_CONTROL)
+#define ACPI_ENV_EXCEPTION(Status)      (((Status) & AE_CODE_MASK) == AE_CODE_ENVIRONMENTAL)
+#define ACPI_AML_EXCEPTION(Status)      (((Status) & AE_CODE_MASK) == AE_CODE_AML)
+#define ACPI_PROG_EXCEPTION(Status)     (((Status) & AE_CODE_MASK) == AE_CODE_PROGRAMMER)
+#define ACPI_TABLE_EXCEPTION(Status)    (((Status) & AE_CODE_MASK) == AE_CODE_ACPI_TABLES)
+#define ACPI_CNTL_EXCEPTION(Status)     (((Status) & AE_CODE_MASK) == AE_CODE_CONTROL)
 
 
 /*

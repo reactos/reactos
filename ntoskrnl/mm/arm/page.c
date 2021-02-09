@@ -272,6 +272,7 @@ MmSetPageProtect(IN PEPROCESS Process,
     return;
 }
 
+CODE_SEG("INIT")
 VOID
 NTAPI
 MmInitGlobalKernelPageDirectory(VOID)
@@ -312,7 +313,7 @@ MmIsDisabledPage(PEPROCESS Process, PVOID Address)
     return FALSE;
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 MiInitializeSessionSpaceLayout(VOID)

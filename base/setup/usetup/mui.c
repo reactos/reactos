@@ -226,7 +226,7 @@ MUIDisplayError(
     va_end(arg_ptr);
 }
 
-LPSTR
+PCSTR
 MUIGetString(
     ULONG Number)
 {

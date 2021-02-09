@@ -31,7 +31,6 @@ IopGetDeviceNode(
 }
 
 PDEVICE_NODE
-NTAPI
 PipAllocateDeviceNode(
     _In_opt_ PDEVICE_OBJECT PhysicalDeviceObject)
 {
@@ -39,19 +38,22 @@ PipAllocateDeviceNode(
     PAGED_CODE();
 
     /* Allocate it */
-    DeviceNode = ExAllocatePoolWithTag(NonPagedPool, sizeof(DEVICE_NODE), TAG_IO_DEVNODE);
-    if (!DeviceNode) return DeviceNode;
+    DeviceNode = ExAllocatePoolZero(NonPagedPool, sizeof(DEVICE_NODE), TAG_IO_DEVNODE);
+    if (!DeviceNode)
+    {
+        return NULL;
+    }
 
     /* Statistics */
     InterlockedIncrement(&IopNumberDeviceNodes);
 
     /* Set it up */
-    RtlZeroMemory(DeviceNode, sizeof(DEVICE_NODE));
     DeviceNode->InterfaceType = InterfaceTypeUndefined;
     DeviceNode->BusNumber = -1;
     DeviceNode->ChildInterfaceType = InterfaceTypeUndefined;
     DeviceNode->ChildBusNumber = -1;
     DeviceNode->ChildBusTypeIndex = -1;
+    DeviceNode->State = DeviceNodeUninitialized;
 //    KeInitializeEvent(&DeviceNode->EnumerationMutex, SynchronizationEvent, TRUE);
     InitializeListHead(&DeviceNode->DeviceArbiterList);
     InitializeListHead(&DeviceNode->DeviceTranslatorList);
@@ -68,8 +70,79 @@ PipAllocateDeviceNode(
         PhysicalDeviceObject->Flags &= ~DO_DEVICE_INITIALIZING;
     }
 
+    DPRINT("Allocated devnode 0x%p\n", DeviceNode);
+
     /* Return the node */
     return DeviceNode;
+}
+
+VOID
+PiInsertDevNode(
+    _In_ PDEVICE_NODE DeviceNode,
+    _In_ PDEVICE_NODE ParentNode)
+{
+    KIRQL oldIrql;
+
+    ASSERT(DeviceNode->Parent == NULL);
+
+    KeAcquireSpinLock(&IopDeviceTreeLock, &oldIrql);
+    DeviceNode->Parent = ParentNode;
+    DeviceNode->Sibling = NULL;
+    if (ParentNode->LastChild == NULL)
+    {
+        ParentNode->Child = DeviceNode;
+        ParentNode->LastChild = DeviceNode;
+    }
+    else
+    {
+        ParentNode->LastChild->Sibling = DeviceNode;
+        ParentNode->LastChild = DeviceNode;
+    }
+    KeReleaseSpinLock(&IopDeviceTreeLock, oldIrql);
+    DeviceNode->Level = ParentNode->Level + 1;
+
+    DPRINT("Inserted devnode 0x%p to parent 0x%p\n", DeviceNode, ParentNode);
+}
+
+PNP_DEVNODE_STATE
+PiSetDevNodeState(
+    _In_ PDEVICE_NODE DeviceNode,
+    _In_ PNP_DEVNODE_STATE NewState)
+{
+    KIRQL oldIrql;
+
+    KeAcquireSpinLock(&IopDeviceTreeLock, &oldIrql);
+
+    PNP_DEVNODE_STATE prevState = DeviceNode->State;
+    if (prevState != NewState)
+    {
+        DeviceNode->State = NewState;
+        DeviceNode->PreviousState = prevState;
+        DeviceNode->StateHistory[DeviceNode->StateHistoryEntry++] = prevState;
+        DeviceNode->StateHistoryEntry %= DEVNODE_HISTORY_SIZE;
+    }
+
+    KeReleaseSpinLock(&IopDeviceTreeLock, oldIrql);
+
+    DPRINT("%wZ Changed state 0x%x => 0x%x\n", &DeviceNode->InstancePath, prevState, NewState);
+    return prevState;
+}
+
+VOID
+PiSetDevNodeProblem(
+    _In_ PDEVICE_NODE DeviceNode,
+    _In_ UINT32 Problem)
+{
+    DeviceNode->Flags |= DNF_HAS_PROBLEM;
+    DeviceNode->Problem = Problem;
+}
+
+VOID
+PiClearDevNodeProblem(
+    _In_ PDEVICE_NODE DeviceNode)
+{
+    DeviceNode->Flags &= ~DNF_HAS_PROBLEM;
+    DeviceNode->Problem = 0;
 }
 
 /**
@@ -84,7 +157,7 @@ PipAllocateDeviceNode(
  *
  * @return     Status, indicating the result of an operation
  */
-
+#if 0
 NTSTATUS
 IopCreateDeviceNode(
     _In_ PDEVICE_NODE ParentNode,
@@ -94,7 +167,6 @@ IopCreateDeviceNode(
 {
     PDEVICE_NODE Node;
     NTSTATUS Status;
-    KIRQL OldIrql;
     UNICODE_STRING FullServiceName;
     UNICODE_STRING LegacyPrefix = RTL_CONSTANT_STRING(L"LEGACY_");
     UNICODE_STRING UnknownDeviceName = RTL_CONSTANT_STRING(L"UNKNOWN");
@@ -114,6 +186,7 @@ IopCreateDeviceNode(
     }
 
     RtlZeroMemory(Node, sizeof(DEVICE_NODE));
+    InitializeListHead(&Node->TargetDeviceNotify);
 
     if (!ServiceName)
         ServiceName1 = &UnknownDeviceName;
@@ -248,6 +321,7 @@ IopCreateDeviceNode(
 
     return STATUS_SUCCESS;
 }
+#endif
 
 NTSTATUS
 IopFreeDeviceNode(
@@ -256,9 +330,13 @@ IopFreeDeviceNode(
     KIRQL OldIrql;
     PDEVICE_NODE PrevSibling = NULL;
 
-    /* All children must be deleted before a parent is deleted */
-    ASSERT(!DeviceNode->Child);
     ASSERT(DeviceNode->PhysicalDeviceObject);
+    /* All children must be deleted before a parent is deleted */
+    ASSERT(DeviceNode->Child == NULL);
+    /* This is the only state where we are allowed to remove the node */
+    ASSERT(DeviceNode->State == DeviceNodeRemoved);
+    /* No notifications should be registered for this device */
+    ASSERT(IsListEmpty(&DeviceNode->TargetDeviceNotify));
 
     KeAcquireSpinLock(&IopDeviceTreeLock, &OldIrql);
 
@@ -321,56 +399,36 @@ IopFreeDeviceNode(
 
 static
 NTSTATUS
-IopTraverseDeviceTreeNode(
+IopFindNextDeviceNodeForTraversal(
     _In_ PDEVICETREE_TRAVERSE_CONTEXT Context)
 {
-    PDEVICE_NODE ParentDeviceNode;
-    PDEVICE_NODE ChildDeviceNode;
-    PDEVICE_NODE NextDeviceNode;
-    NTSTATUS Status;
-
-    /* Copy context data so we don't overwrite it in subsequent calls to this function */
-    ParentDeviceNode = Context->DeviceNode;
-
-    /* HACK: Keep a reference to the PDO so we can keep traversing the tree
-     * if the device is deleted. In a perfect world, children would have to be
-     * deleted before their parents, and we'd restart the traversal after
-     * deleting a device node. */
-    ObReferenceObject(ParentDeviceNode->PhysicalDeviceObject);
-
-    /* Call the action routine */
-    Status = (Context->Action)(ParentDeviceNode, Context->Context);
-    if (!NT_SUCCESS(Status))
+    /* If we have a child, simply go down the tree */
+    if (Context->DeviceNode->Child != NULL)
     {
-        ObDereferenceObject(ParentDeviceNode->PhysicalDeviceObject);
-        return Status;
+        ASSERT(Context->DeviceNode->Child->Parent == Context->DeviceNode);
+        Context->DeviceNode = Context->DeviceNode->Child;
+        return STATUS_SUCCESS;
     }
 
-    /* Traversal of all children nodes */
-    for (ChildDeviceNode = ParentDeviceNode->Child;
-         ChildDeviceNode != NULL;
-         ChildDeviceNode = NextDeviceNode)
+    while (Context->DeviceNode != Context->FirstDeviceNode)
     {
-        /* HACK: We need this reference to ensure we can get Sibling below. */
-        ObReferenceObject(ChildDeviceNode->PhysicalDeviceObject);
-
-        /* Pass the current device node to the action routine */
-        Context->DeviceNode = ChildDeviceNode;
-
-        Status = IopTraverseDeviceTreeNode(Context);
-        if (!NT_SUCCESS(Status))
+        /* All children processed -- go sideways */
+        if (Context->DeviceNode->Sibling != NULL)
         {
-            ObDereferenceObject(ChildDeviceNode->PhysicalDeviceObject);
-            ObDereferenceObject(ParentDeviceNode->PhysicalDeviceObject);
-            return Status;
+            ASSERT(Context->DeviceNode->Sibling->Parent == Context->DeviceNode->Parent);
+            Context->DeviceNode = Context->DeviceNode->Sibling;
+            return STATUS_SUCCESS;
         }
 
-        NextDeviceNode = ChildDeviceNode->Sibling;
-        ObDereferenceObject(ChildDeviceNode->PhysicalDeviceObject);
+        /* We're the last sibling -- go back up */
+        ASSERT(Context->DeviceNode->Parent->LastChild == Context->DeviceNode);
+        Context->DeviceNode = Context->DeviceNode->Parent;
+
+        /* We already visited the parent and all its children, so keep looking */
     }
 
-    ObDereferenceObject(ParentDeviceNode->PhysicalDeviceObject);
-    return Status;
+    /* Done with all children of the start node -- stop enumeration */
+    return STATUS_UNSUCCESSFUL;
 }
 
 NTSTATUS
@@ -378,6 +436,7 @@ IopTraverseDeviceTree(
     _In_ PDEVICETREE_TRAVERSE_CONTEXT Context)
 {
     NTSTATUS Status;
+    PDEVICE_NODE DeviceNode;
 
     DPRINT("Context 0x%p\n", Context);
 
@@ -387,8 +446,32 @@ IopTraverseDeviceTree(
     /* Start from the specified device node */
     Context->DeviceNode = Context->FirstDeviceNode;
 
-    /* Recursively traverse the device tree */
-    Status = IopTraverseDeviceTreeNode(Context);
+    /* Traverse the device tree */
+    do
+    {
+        DeviceNode = Context->DeviceNode;
+
+        /* HACK: Keep a reference to the PDO so we can keep traversing the tree
+         * if the device is deleted. In a perfect world, children would have to be
+         * deleted before their parents, and we'd restart the traversal after
+         * deleting a device node. */
+        ObReferenceObject(DeviceNode->PhysicalDeviceObject);
+
+        /* Call the action routine */
+        Status = (Context->Action)(DeviceNode, Context->Context);
+        if (NT_SUCCESS(Status))
+        {
+            /* Find next device node */
+            ASSERT(Context->DeviceNode == DeviceNode);
+            Status = IopFindNextDeviceNodeForTraversal(Context);
+        }
+
+        /* We need to either abort or make progress */
+        ASSERT(!NT_SUCCESS(Status) || Context->DeviceNode != DeviceNode);
+
+        ObDereferenceObject(DeviceNode->PhysicalDeviceObject);
+    } while (NT_SUCCESS(Status));
+
     if (Status == STATUS_UNSUCCESSFUL)
     {
         /* The action routine just wanted to terminate the traversal with status

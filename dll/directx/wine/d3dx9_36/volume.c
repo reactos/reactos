@@ -1,3 +1,6 @@
+#ifdef __REACTOS__
+#include "precomp.h"
+#else
 /*
  * Copyright 2010 Christian Costa
  *
@@ -16,10 +19,9 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-#include "config.h"
-#include "wine/port.h"
 
 #include "d3dx9_private.h"
+#endif /* __REACTOS__ */
 
 WINE_DEFAULT_DEBUG_CHANNEL(d3dx);
 
@@ -186,7 +188,6 @@ HRESULT WINAPI D3DXLoadVolumeFromMemory(IDirect3DVolume9 *dst_volume,
     else
     {
         const BYTE *src_addr;
-
 
         if (!is_conversion_from_supported(src_format_desc)
                 || !is_conversion_to_supported(dst_format_desc))

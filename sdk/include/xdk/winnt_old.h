@@ -4262,7 +4262,7 @@ VOID
 MemoryBarrier(VOID)
 {
     LONG Barrier, *Dummy = &Barrier;
-    UNREFERENCED_LOCAL_VARIABLE(Dummy);
+    (VOID)Dummy;
     __asm__ __volatile__("xchgl %%eax, %[Barrier]" : : [Barrier] "m" (Barrier) : "memory");
 }
 #endif

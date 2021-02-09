@@ -14,7 +14,6 @@
 
 /* DATA **********************************************************************/
 
-// #ifdef _WINKD_
 /*
  * WinDBG Debugger Worker State Machine data
  */
@@ -27,11 +26,9 @@ WINKD_WORKER_STATE ExpDebuggerWork;
 PEPROCESS ExpDebuggerProcessAttach;
 PEPROCESS ExpDebuggerProcessKill;
 ULONG_PTR ExpDebuggerPageIn;
-// #endif /* _WINKD_ */
 
 /* FUNCTIONS *****************************************************************/
 
-// #ifdef _WINKD_
 /*
  * WinDBG Debugger Worker State Machine
  *
@@ -142,7 +139,6 @@ ExpDebuggerWorker(IN PVOID Context)
         ObDereferenceObject(Process);
     }
 }
-// #endif /* _WINKD_ */
 
 /*++
  * @name NtSystemDebugControl

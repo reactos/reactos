@@ -1208,16 +1208,16 @@ typedef struct _IO_RETRIED_LOG_MESSAGE_CONTEXT {
 /*
  *  Simple singly-linked-list queuing macros, with no synchronization.
  */
-__inline VOID SimpleInitSlistHdr(SINGLE_LIST_ENTRY *SListHdr)
+FORCEINLINE VOID SimpleInitSlistHdr(SINGLE_LIST_ENTRY *SListHdr)
 {
     SListHdr->Next = NULL;
 }
-__inline VOID SimplePushSlist(SINGLE_LIST_ENTRY *SListHdr, SINGLE_LIST_ENTRY *SListEntry)
+FORCEINLINE VOID SimplePushSlist(SINGLE_LIST_ENTRY *SListHdr, SINGLE_LIST_ENTRY *SListEntry)
 {
     SListEntry->Next = SListHdr->Next;
     SListHdr->Next = SListEntry;
 }
-__inline SINGLE_LIST_ENTRY *SimplePopSlist(SINGLE_LIST_ENTRY *SListHdr)
+FORCEINLINE SINGLE_LIST_ENTRY *SimplePopSlist(SINGLE_LIST_ENTRY *SListHdr)
 {
     SINGLE_LIST_ENTRY *sListEntry = SListHdr->Next;
     if (sListEntry){
@@ -1226,12 +1226,12 @@ __inline SINGLE_LIST_ENTRY *SimplePopSlist(SINGLE_LIST_ENTRY *SListHdr)
     }
     return sListEntry;
 }
-__inline BOOLEAN SimpleIsSlistEmpty(SINGLE_LIST_ENTRY *SListHdr)
+FORCEINLINE BOOLEAN SimpleIsSlistEmpty(SINGLE_LIST_ENTRY *SListHdr)
 {
     return (SListHdr->Next == NULL);
 }
 
-__inline
+FORCEINLINE
 BOOLEAN
 ClasspIsIdleRequestSupported(
     PCLASS_PRIVATE_FDO_DATA FdoData,
@@ -1246,7 +1246,7 @@ ClasspIsIdleRequestSupported(
 #endif
 }
 
-__inline
+FORCEINLINE
 VOID
 ClasspMarkIrpAsIdle(
     PIRP Irp,
@@ -1263,7 +1263,7 @@ ClasspMarkIrpAsIdle(
 #endif
 }
 
-__inline
+FORCEINLINE
 BOOLEAN
 ClasspIsIdleRequest(
     PIRP Irp
@@ -1275,7 +1275,7 @@ ClasspIsIdleRequest(
     return ((BOOLEAN)Irp->Tail.Overlay.DriverContext[1]);
 }
 
-__inline
+FORCEINLINE
 LARGE_INTEGER
 ClasspGetCurrentTime(
     VOID
@@ -1292,7 +1292,7 @@ ClasspGetCurrentTime(
     return currentTime;
 }
 
-__inline
+FORCEINLINE
 ULONGLONG
 ClasspTimeDiffToMs(
     ULONGLONG TimeDiff
@@ -1303,7 +1303,7 @@ ClasspTimeDiffToMs(
     return TimeDiff;
 }
 
-__inline
+FORCEINLINE
 BOOLEAN
 ClasspSupportsUnmap(
     _In_ PCLASS_FUNCTION_SUPPORT_INFO SupportInfo
@@ -1312,7 +1312,7 @@ ClasspSupportsUnmap(
     return SupportInfo->LBProvisioningData.LBPU;
 }
 
-__inline
+FORCEINLINE
 BOOLEAN
 ClasspIsThinProvisioned(
     _In_ PCLASS_FUNCTION_SUPPORT_INFO SupportInfo
@@ -1330,7 +1330,7 @@ ClasspIsThinProvisioned(
     return FALSE;
 }
 
-__inline
+FORCEINLINE
 BOOLEAN
 ClasspIsObsoletePortDriver(
     _In_ PFUNCTIONAL_DEVICE_EXTENSION FdoExtension
@@ -2018,7 +2018,7 @@ ClasspBinaryToAscii(
     _Inout_ PULONG UpdateLength
     );
 
-__inline
+FORCEINLINE
 BOOLEAN
 ClasspIsTokenOperationComplete(
     _In_ ULONG CurrentStatus
@@ -2039,7 +2039,7 @@ ClasspIsTokenOperationComplete(
     return operationCompleted;
 }
 
-__inline
+FORCEINLINE
 BOOLEAN
 ClasspIsTokenOperation(
     _In_ PCDB Cdb
@@ -2061,7 +2061,7 @@ ClasspIsTokenOperation(
     return tokenOperation;
 }
 
-__inline
+FORCEINLINE
 BOOLEAN
 ClasspIsReceiveTokenInformation(
     _In_ PCDB Cdb
@@ -2082,7 +2082,7 @@ ClasspIsReceiveTokenInformation(
     return receiveTokenInformation;
 }
 
-__inline
+FORCEINLINE
 BOOLEAN
 ClasspIsOffloadDataTransferCommand(
     _In_ PCDB Cdb
@@ -2441,7 +2441,7 @@ ClasspConvertToScsiRequestBlock(
     _In_ PSTORAGE_REQUEST_BLOCK SrbEx
     );
 
-__inline PCDB
+FORCEINLINE PCDB
 ClasspTransferPacketGetCdb(
     _In_ PTRANSFER_PACKET Pkt
     )
@@ -2455,7 +2455,7 @@ ClasspTransferPacketGetCdb(
 //
 // For unknown operation codes this function will return false and will set TimesAlreadyRetried with zero
 //
-__inline BOOLEAN
+FORCEINLINE BOOLEAN
 ClasspTransferPacketGetNumberOfRetriesDone(
     _In_ PTRANSFER_PACKET Pkt,
     _In_ PCDB Cdb,
@@ -2509,7 +2509,7 @@ ClasspTransferPacketGetNumberOfRetriesDone(
 }
 
 
-__inline PVOID
+FORCEINLINE PVOID
 ClasspTransferPacketGetSenseInfoBuffer(
     _In_ PTRANSFER_PACKET Pkt
     )
@@ -2517,7 +2517,7 @@ ClasspTransferPacketGetSenseInfoBuffer(
     return SrbGetSenseInfoBuffer(Pkt->Srb);
 }
 
-__inline UCHAR
+FORCEINLINE UCHAR
 ClasspTransferPacketGetSenseInfoBufferLength(
     _In_ PTRANSFER_PACKET Pkt
     )
@@ -2526,7 +2526,7 @@ ClasspTransferPacketGetSenseInfoBufferLength(
 }
 
 
-__inline VOID
+FORCEINLINE VOID
 ClasspSrbSetOriginalIrp(
     _In_ PSTORAGE_REQUEST_BLOCK_HEADER Srb,
     _In_ PIRP Irp
@@ -2542,7 +2542,7 @@ ClasspSrbSetOriginalIrp(
     }
 }
 
-__inline
+FORCEINLINE
 BOOLEAN
 PORT_ALLOCATED_SENSE_EX(
     _In_ PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
@@ -2555,7 +2555,7 @@ PORT_ALLOCATED_SENSE_EX(
             );
 }
 
-__inline
+FORCEINLINE
 VOID
 FREE_PORT_ALLOCATED_SENSE_BUFFER_EX(
     _In_ PFUNCTIONAL_DEVICE_EXTENSION FdoExtension,
@@ -2580,7 +2580,7 @@ ClasspFailurePredictionPeriodMissed(
     _In_ PFUNCTIONAL_DEVICE_EXTENSION FdoExtension
     );
 
-__inline
+FORCEINLINE
 ULONG
 ClasspGetMaxUsableBufferLengthFromOffset(
     _In_ PVOID BaseAddress,
@@ -2633,7 +2633,7 @@ ClasspIsThinProvisioningError (
     _In_ PSCSI_REQUEST_BLOCK _Srb
     );
 
-__inline
+FORCEINLINE
 BOOLEAN
 ClasspLowerLayerNotSupport (
     _In_ NTSTATUS Status
@@ -2646,7 +2646,7 @@ ClasspLowerLayerNotSupport (
 }
 
 #if defined(__REACTOS__) && (NTDDI_VERSION >= NTDDI_WINBLUE)
-__inline
+FORCEINLINE
 BOOLEAN
 ClasspSrbTimeOutStatus (
     _In_ PSTORAGE_REQUEST_BLOCK_HEADER Srb

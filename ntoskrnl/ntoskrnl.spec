@@ -630,7 +630,7 @@
 @ stdcall KeLeaveCriticalRegion() _KeLeaveCriticalRegion
 @ stdcall KeLeaveGuardedRegion() _KeLeaveGuardedRegion
 @ extern KeLoaderBlock
-@ cdecl -arch=x86_64 -private KeLowerIrql(long)
+@ cdecl -arch=x86_64 -private KeLowerIrql(long) KxLowerIrql
 @ extern KeNumberProcessors
 @ stdcall -arch=i386,arm KeProfileInterrupt(ptr)
 @ stdcall KeProfileInterruptWithSource(ptr long)
@@ -644,7 +644,7 @@
 @ stdcall -arch=i386,arm KeQuerySystemTime(ptr)
 @ stdcall -arch=i386,arm KeQueryTickCount(ptr)
 @ stdcall KeQueryTimeIncrement()
-@ cdecl -arch=x86_64 -private KeRaiseIrqlToDpcLevel()
+@ cdecl -arch=x86_64 -private KeRaiseIrqlToDpcLevel() KxRaiseIrqlToDpcLevel
 @ stdcall KeRaiseUserException(long)
 @ stdcall KeReadStateEvent(ptr)
 @ stdcall KeReadStateMutant(ptr)
@@ -720,7 +720,7 @@
 @ fastcall -arch=i386,arm KefAcquireSpinLockAtDpcLevel(ptr)
 @ fastcall -arch=i386,arm KefReleaseSpinLockFromDpcLevel(ptr)
 @ stdcall -arch=i386 Kei386EoiHelper()
-@ cdecl -arch=x86_64 -private KfRaiseIrql(long)
+@ cdecl -arch=x86_64 -private KfRaiseIrql(long) KxRaiseIrql
 @ fastcall -arch=i386 KiEoiHelper(ptr) #ReactOS-Specific
 @ fastcall -arch=i386,arm KiAcquireSpinLock(ptr)
 @ extern KiBugCheckData

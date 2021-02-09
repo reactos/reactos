@@ -158,7 +158,7 @@ AcpiUtDeleteInternalObj (
             (void) AcpiEvDeleteGpeBlock (Object->Device.GpeBlock);
         }
 
-        /*lint -fallthrough */
+        ACPI_FALLTHROUGH;
 
     case ACPI_TYPE_PROCESSOR:
     case ACPI_TYPE_THERMAL:

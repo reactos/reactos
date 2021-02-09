@@ -29,7 +29,7 @@ Abstract:
 #pragma alloc_text(PAGE, FatFsdPostRequest)
 #endif
 
-
+
 VOID
 NTAPI
 FatOplockComplete (
@@ -85,7 +85,7 @@ Return Value:
     return;
 }
 
-
+
 VOID
 NTAPI
 FatPrePostIrp (
@@ -224,7 +224,7 @@ Return Value:
     return;
 }
 
-
+
 NTSTATUS
 FatFsdPostRequest(
     IN PIRP_CONTEXT IrpContext,
@@ -268,12 +268,15 @@ Return Value:
     return STATUS_PENDING;
 }
 
-
+
 //
 //  Local support routine.
 //
 
 VOID
+#ifdef __REACTOS__
+NTAPI
+#endif
 FatAddToWorkque (
     IN PIRP_CONTEXT IrpContext,
     IN PIRP Irp

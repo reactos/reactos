@@ -355,7 +355,10 @@ extern "C" {
     ((PartitionType) == PARTITION_XINT13))
 #endif
 
-#if(_WIN32_WINNT >= 0x0500)
+#if (_WIN32_WINNT >= 0x0500)
+/* Actually it should be > 0x0500, since this is not present in Windows 2000;
+ * however we keep >= 0x0500 for compatibility with MS PSDK. */
+
 #define GPT_ATTRIBUTE_PLATFORM_REQUIRED          0x00000001
 #define GPT_BASIC_DATA_ATTRIBUTE_READ_ONLY       0x10000000
 #define GPT_BASIC_DATA_ATTRIBUTE_SHADOW_COPY     0x20000000
@@ -398,6 +401,69 @@ typedef enum _MEDIA_TYPE {
   F3_32M_512
 } MEDIA_TYPE, *PMEDIA_TYPE;
 
+typedef struct _DISK_GEOMETRY {
+  LARGE_INTEGER  Cylinders;
+  MEDIA_TYPE  MediaType;
+  ULONG  TracksPerCylinder;
+  ULONG  SectorsPerTrack;
+  ULONG  BytesPerSector;
+} DISK_GEOMETRY, *PDISK_GEOMETRY;
+
+typedef struct _PARTITION_INFORMATION {
+  LARGE_INTEGER  StartingOffset;
+  LARGE_INTEGER  PartitionLength;
+  ULONG  HiddenSectors;
+  ULONG  PartitionNumber;
+  UCHAR  PartitionType;
+  BOOLEAN  BootIndicator;
+  BOOLEAN  RecognizedPartition;
+  BOOLEAN  RewritePartition;
+} PARTITION_INFORMATION, *PPARTITION_INFORMATION;
+
+typedef struct _DRIVE_LAYOUT_INFORMATION {
+  ULONG  PartitionCount;
+  ULONG  Signature;
+  PARTITION_INFORMATION  PartitionEntry[1];
+} DRIVE_LAYOUT_INFORMATION, *PDRIVE_LAYOUT_INFORMATION;
+
+typedef struct _SET_PARTITION_INFORMATION {
+  UCHAR  PartitionType;
+} SET_PARTITION_INFORMATION, *PSET_PARTITION_INFORMATION;
+
+#if (_WIN32_WINNT >= 0x0500)
+/* Actually it should be > 0x0500, since this is not present in Windows 2000;
+ * however we keep >= 0x0500 for compatibility with MS PSDK. */
+
+typedef enum _PARTITION_STYLE {
+  PARTITION_STYLE_MBR,
+  PARTITION_STYLE_GPT,
+  PARTITION_STYLE_RAW,
+#ifdef __REACTOS__
+  /* ReactOS custom partition handlers */
+  PARTITION_STYLE_BRFR = 128 /* Xbox-BRFR partitioning scheme */
+#endif
+} PARTITION_STYLE;
+
+typedef struct _CREATE_DISK_GPT
+{
+  GUID DiskId;
+  ULONG MaxPartitionCount;
+} CREATE_DISK_GPT, *PCREATE_DISK_GPT;
+
+typedef struct _CREATE_DISK_MBR
+{
+  ULONG Signature;
+} CREATE_DISK_MBR, *PCREATE_DISK_MBR;
+
+typedef struct _CREATE_DISK
+{
+  PARTITION_STYLE PartitionStyle;
+  union {
+    CREATE_DISK_MBR Mbr;
+    CREATE_DISK_GPT Gpt;
+  };
+} CREATE_DISK, *PCREATE_DISK;
+
 typedef enum _DETECTION_TYPE {
   DetectNone,
   DetectInt13,
@@ -434,13 +500,19 @@ typedef struct _DISK_DETECTION_INFO {
   } DUMMYUNIONNAME;
 } DISK_DETECTION_INFO, *PDISK_DETECTION_INFO;
 
-typedef struct _DISK_GEOMETRY {
-  LARGE_INTEGER  Cylinders;
-  MEDIA_TYPE  MediaType;
-  ULONG  TracksPerCylinder;
-  ULONG  SectorsPerTrack;
-  ULONG  BytesPerSector;
-} DISK_GEOMETRY, *PDISK_GEOMETRY;
+typedef struct _DISK_PARTITION_INFO {
+  ULONG  SizeOfPartitionInfo;
+  PARTITION_STYLE  PartitionStyle;
+  _ANONYMOUS_UNION union {
+    struct {
+      ULONG  Signature;
+      ULONG  CheckSum;
+    } Mbr;
+    struct {
+      GUID  DiskId;
+    } Gpt;
+  } DUMMYUNIONNAME;
+} DISK_PARTITION_INFO, *PDISK_PARTITION_INFO;
 
 typedef struct _DISK_GEOMETRY_EX {
   DISK_GEOMETRY  Geometry;
@@ -464,62 +536,12 @@ typedef struct _DISK_GEOMETRY_EX {
   DiskGeometryGetPartition(Geometry)->SizeOfPartitionInfo)))
 #endif
 
-typedef struct _PARTITION_INFORMATION {
-  LARGE_INTEGER  StartingOffset;
-  LARGE_INTEGER  PartitionLength;
-  ULONG  HiddenSectors;
-  ULONG  PartitionNumber;
-  UCHAR  PartitionType;
-  BOOLEAN  BootIndicator;
-  BOOLEAN  RecognizedPartition;
-  BOOLEAN  RewritePartition;
-} PARTITION_INFORMATION, *PPARTITION_INFORMATION;
-
 typedef struct _PARTITION_INFORMATION_GPT {
   GUID  PartitionType;
   GUID  PartitionId;
   ULONG64  Attributes;
   WCHAR Name  [36];
 } PARTITION_INFORMATION_GPT, *PPARTITION_INFORMATION_GPT;
-
-typedef enum _PARTITION_STYLE {
-  PARTITION_STYLE_MBR,
-  PARTITION_STYLE_GPT,
-  PARTITION_STYLE_RAW,
-#ifdef __REACTOS__
-  /* ReactOS custom partition handlers */
-  PARTITION_STYLE_BRFR = 128 /* Xbox-BRFR partitioning scheme */
-#endif
-} PARTITION_STYLE;
-
-typedef struct _DISK_PARTITION_INFO {
-  ULONG  SizeOfPartitionInfo;
-  PARTITION_STYLE  PartitionStyle;
-  _ANONYMOUS_UNION union {
-    struct {
-      ULONG  Signature;
-      ULONG  CheckSum;
-    } Mbr;
-    struct {
-      GUID  DiskId;
-    } Gpt;
-  } DUMMYUNIONNAME;
-} DISK_PARTITION_INFO, *PDISK_PARTITION_INFO;
-
-typedef struct _DISK_PERFORMANCE {
-  LARGE_INTEGER  BytesRead;
-  LARGE_INTEGER  BytesWritten;
-  LARGE_INTEGER  ReadTime;
-  LARGE_INTEGER  WriteTime;
-  LARGE_INTEGER  IdleTime;
-  ULONG  ReadCount;
-  ULONG  WriteCount;
-  ULONG  QueueDepth;
-  ULONG  SplitCount;
-  LARGE_INTEGER  QueryTime;
-  ULONG  StorageDeviceNumber;
-  WCHAR  StorageManagerName[8];
-} DISK_PERFORMANCE, *PDISK_PERFORMANCE;
 
 typedef struct _PARTITION_INFORMATION_MBR {
   UCHAR  PartitionType;
@@ -543,25 +565,19 @@ typedef struct _PARTITION_INFORMATION_EX {
   } DUMMYUNIONNAME;
 } PARTITION_INFORMATION_EX, *PPARTITION_INFORMATION_EX;
 
-typedef struct _DRIVE_LAYOUT_INFORMATION {
-  ULONG  PartitionCount;
-  ULONG  Signature;
-  PARTITION_INFORMATION  PartitionEntry[1];
-} DRIVE_LAYOUT_INFORMATION, *PDRIVE_LAYOUT_INFORMATION;
-
-typedef struct _DRIVE_LAYOUT_INFORMATION_MBR {
-  ULONG  Signature;
-#if (NTDDI_VERSION >= NTDDI_WIN10_RS1)
-    ULONG CheckSum;
-#endif
-} DRIVE_LAYOUT_INFORMATION_MBR, *PDRIVE_LAYOUT_INFORMATION_MBR;
-
 typedef struct _DRIVE_LAYOUT_INFORMATION_GPT {
   GUID  DiskId;
   LARGE_INTEGER  StartingUsableOffset;
   LARGE_INTEGER  UsableLength;
   ULONG  MaxPartitionCount;
 } DRIVE_LAYOUT_INFORMATION_GPT, *PDRIVE_LAYOUT_INFORMATION_GPT;
+
+typedef struct _DRIVE_LAYOUT_INFORMATION_MBR {
+  ULONG  Signature;
+#if (NTDDI_VERSION >= NTDDI_WIN10_RS1)
+  ULONG CheckSum;
+#endif
+} DRIVE_LAYOUT_INFORMATION_MBR, *PDRIVE_LAYOUT_INFORMATION_MBR;
 
 typedef struct _DRIVE_LAYOUT_INFORMATION_EX {
   ULONG  PartitionStyle;
@@ -572,6 +588,34 @@ typedef struct _DRIVE_LAYOUT_INFORMATION_EX {
   };
   PARTITION_INFORMATION_EX  PartitionEntry[1];
 } DRIVE_LAYOUT_INFORMATION_EX, *PDRIVE_LAYOUT_INFORMATION_EX;
+
+typedef SET_PARTITION_INFORMATION SET_PARTITION_INFORMATION_MBR;
+typedef PARTITION_INFORMATION_GPT SET_PARTITION_INFORMATION_GPT;
+
+typedef struct _SET_PARTITION_INFORMATION_EX {
+  PARTITION_STYLE  PartitionStyle;
+  _ANONYMOUS_UNION union {
+    SET_PARTITION_INFORMATION_MBR  Mbr;
+    SET_PARTITION_INFORMATION_GPT  Gpt;
+  } DUMMYUNIONNAME;
+} SET_PARTITION_INFORMATION_EX, *PSET_PARTITION_INFORMATION_EX;
+
+#endif // (_WIN32_WINNT >= 0x0500)
+
+typedef struct _DISK_PERFORMANCE {
+  LARGE_INTEGER  BytesRead;
+  LARGE_INTEGER  BytesWritten;
+  LARGE_INTEGER  ReadTime;
+  LARGE_INTEGER  WriteTime;
+  LARGE_INTEGER  IdleTime;
+  ULONG  ReadCount;
+  ULONG  WriteCount;
+  ULONG  QueueDepth;
+  ULONG  SplitCount;
+  LARGE_INTEGER  QueryTime;
+  ULONG  StorageDeviceNumber;
+  WCHAR  StorageManagerName[8];
+} DISK_PERFORMANCE, *PDISK_PERFORMANCE;
 
 typedef struct _FORMAT_EX_PARAMETERS {
   MEDIA_TYPE  MediaType;
@@ -607,21 +651,6 @@ typedef struct _REASSIGN_BLOCKS_EX {
   USHORT Count;
   LARGE_INTEGER BlockNumber[1];
 } REASSIGN_BLOCKS_EX, *PREASSIGN_BLOCKS_EX;
-
-typedef struct _SET_PARTITION_INFORMATION {
-  UCHAR  PartitionType;
-} SET_PARTITION_INFORMATION, *PSET_PARTITION_INFORMATION;
-
-typedef SET_PARTITION_INFORMATION SET_PARTITION_INFORMATION_MBR;
-typedef PARTITION_INFORMATION_GPT SET_PARTITION_INFORMATION_GPT;
-
-typedef struct _SET_PARTITION_INFORMATION_EX {
-  PARTITION_STYLE  PartitionStyle;
-  _ANONYMOUS_UNION union {
-    SET_PARTITION_INFORMATION_MBR  Mbr;
-    SET_PARTITION_INFORMATION_GPT  Gpt;
-  } DUMMYUNIONNAME;
-} SET_PARTITION_INFORMATION_EX, *PSET_PARTITION_INFORMATION_EX;
 
 typedef struct _VERIFY_INFORMATION {
   LARGE_INTEGER  StartingOffset;
@@ -733,30 +762,7 @@ typedef struct _MAPPED_ADDRESS {
 } MAPPED_ADDRESS, *PMAPPED_ADDRESS;
 
 
-
-#if(_WIN32_WINNT >= 0x0500)
-
-typedef struct _CREATE_DISK_GPT
-{
-    GUID DiskId;
-    ULONG MaxPartitionCount;
-} CREATE_DISK_GPT, *PCREATE_DISK_GPT;
-
-typedef struct _CREATE_DISK_MBR
-{
-    ULONG Signature;
-} CREATE_DISK_MBR, *PCREATE_DISK_MBR;
-
-
-typedef struct _CREATE_DISK
-{
-    PARTITION_STYLE PartitionStyle;
-    union {
-        CREATE_DISK_MBR Mbr;
-        CREATE_DISK_GPT Gpt;
-    };
-} CREATE_DISK, *PCREATE_DISK;
-
+#if (_WIN32_WINNT >= 0x0500)
 
 typedef enum {
     EqualPriority,

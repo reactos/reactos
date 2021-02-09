@@ -35,6 +35,7 @@ extern HANDLE ProcessHeap;
 #include "utils/fsrec.h"
 #include "utils/genlist.h"
 #include "utils/inicache.h"
+#include "utils/partinfo.h"
 #include "utils/partlist.h"
 #include "utils/arcname.h"
 #include "utils/osdetect.h"

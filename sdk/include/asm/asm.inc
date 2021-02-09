@@ -246,6 +246,10 @@ ENDM
 /* Macro values need to be marked */
 #define VAL(x) \x
 
+#define CR  "\r"
+#define LF  "\n"
+#define NUL "\0"
+
 /* Due to MASM's reverse syntax, we are forced to use a precompiler macro */
 #define MACRO(...) .macro __VA_ARGS__
 #define ENDM .endm
@@ -383,14 +387,15 @@ code = 1
 .endm
 
 .macro UNIMPLEMENTED2 file, line, func
-    jmp 3f
-1:  .asciz "\func"
-2:  .asciz \file
-3:
+    jmp 4f
+1:  .ascii "Unimplemented", CR, LF, NUL
+2:  .asciz "\func"
+3:  .asciz \file
+4:
     sub rsp, 0x20
-    lea rcx, MsgUnimplemented[rip]
-    lea rdx, 1b[rip]
-    lea r8, 2b[rip]
+    lea rcx, 1b[rip]
+    lea rdx, 2b[rip]
+    lea r8, 3b[rip]
     mov r9, \line
     call DbgPrint
     add rsp, 0x20
@@ -403,10 +408,6 @@ code = 1
 #define endif .endif
 #define else .else
 #define elseif .elseif
-
-#define CR  "\r"
-#define LF  "\n"
-#define NUL "\0"
 
 /* CFI annotations */
 #define CFI_STARTPROC .cfi_startproc

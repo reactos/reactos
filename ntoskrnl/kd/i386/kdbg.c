@@ -46,14 +46,6 @@ const ULONG BaseArray[] = {0, 0xF1012000};
 
 /* REACTOS FUNCTIONS **********************************************************/
 
-NTSTATUS
-NTAPI
-KdDebuggerInitialize1(
-    IN PLOADER_PARAMETER_BLOCK LoaderBlock OPTIONAL)
-{
-    return STATUS_NOT_IMPLEMENTED;
-}
-
 BOOLEAN
 NTAPI
 KdPortInitializeEx(

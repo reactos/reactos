@@ -166,7 +166,7 @@ AcpiUtConvertDecimalString (
          * 1) Runtime: terminate with no error, per the ACPI spec
          * 2) Compiler: return an error
          */
-        if (!isdigit (*String))
+        if (!isdigit ((int) *String))
         {
 #ifdef ACPI_ASL_COMPILER
             Status = AE_BAD_DECIMAL_CONSTANT;
@@ -228,7 +228,7 @@ AcpiUtConvertHexString (
          * 1) Runtime: terminate with no error, per the ACPI spec
          * 2) Compiler: return an error
          */
-        if (!isxdigit (*String))
+        if (!isxdigit ((int) *String))
         {
 #ifdef ACPI_ASL_COMPILER
             Status = AE_BAD_HEX_CONSTANT;

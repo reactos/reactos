@@ -5,32 +5,45 @@
  * PURPOSE:     FFS lib
  * PROGRAMMERS: Pierre Schweitzer
  */
-#include "ffslib.h"
+
+#define NTOS_MODE_USER
+#include <ndk/umtypes.h>
+#include <fmifs/fmifs.h>
 
 #define NDEBUG
 #include <debug.h>
 
-NTSTATUS NTAPI
-FfsFormat(IN PUNICODE_STRING DriveRoot,
-          IN FMIFS_MEDIA_FLAG MediaFlag,
-          IN PUNICODE_STRING Label,
-          IN BOOLEAN QuickFormat,
-          IN ULONG ClusterSize,
-          IN PFMIFSCALLBACK Callback)
+BOOLEAN
+NTAPI
+FfsFormat(
+    IN PUNICODE_STRING DriveRoot,
+    IN PFMIFSCALLBACK Callback,
+    IN BOOLEAN QuickFormat,
+    IN BOOLEAN BackwardCompatible,
+    IN MEDIA_TYPE MediaType,
+    IN PUNICODE_STRING Label,
+    IN ULONG ClusterSize)
 {
     UNIMPLEMENTED;
-    return STATUS_SUCCESS;
+    return TRUE;
 }
 
-
-NTSTATUS NTAPI
-FfsChkdsk(IN PUNICODE_STRING DriveRoot,
-          IN BOOLEAN FixErrors,
-          IN BOOLEAN Verbose,
-          IN BOOLEAN CheckOnlyIfDirty,
-          IN BOOLEAN ScanDrive,
-          IN PFMIFSCALLBACK Callback)
+BOOLEAN
+NTAPI
+FfsChkdsk(
+    IN PUNICODE_STRING DriveRoot,
+    IN PFMIFSCALLBACK Callback,
+    IN BOOLEAN FixErrors,
+    IN BOOLEAN Verbose,
+    IN BOOLEAN CheckOnlyIfDirty,
+    IN BOOLEAN ScanDrive,
+    IN PVOID pUnknown1,
+    IN PVOID pUnknown2,
+    IN PVOID pUnknown3,
+    IN PVOID pUnknown4,
+    IN PULONG ExitStatus)
 {
     UNIMPLEMENTED;
-    return STATUS_SUCCESS;
+    *ExitStatus = (ULONG)STATUS_SUCCESS;
+    return TRUE;
 }

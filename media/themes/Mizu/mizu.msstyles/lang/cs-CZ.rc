@@ -2,12 +2,12 @@ LANGUAGE LANG_CZECH, SUBLANG_DEFAULT
 
 STRINGTABLE
 {
-1000, "Light"
+1000, "Světlé"
 }
 
 STRINGTABLE
 {
-2000, "Mizu Light"
+2000, "Mizu světlé"
 }
 
 STRINGTABLE

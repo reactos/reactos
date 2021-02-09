@@ -1,0 +1,17 @@
+; Kernel Mode Driver Frameworks (wdf01000.sys)
+[AddReg]
+HKLM,"SYSTEM\CurrentControlSet\Services\Wdf01000","ErrorControl",0x00010001,0x00000000
+HKLM,"SYSTEM\CurrentControlSet\Services\Wdf01000","Group",0x00000000,"WdfLoadGroup"
+HKLM,"SYSTEM\CurrentControlSet\Services\Wdf01000","DisplayName",0x00000000,"Kernel Mode Driver Frameworks service"
+HKLM,"SYSTEM\CurrentControlSet\Services\Wdf01000","ImagePath",0x00020000,"system32\drivers\wdf01000.sys"
+HKLM,"SYSTEM\CurrentControlSet\Services\Wdf01000","Start",0x00010001,0x00000003
+HKLM,"SYSTEM\CurrentControlSet\Services\Wdf01000","Type",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\Wdf01000\Enum","0",0x00000000,"Root\LEGACY_WDF01000\0000"
+HKLM,"SYSTEM\CurrentControlSet\Services\Wdf01000\Enum","Count",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\Wdf01000\Enum","NextInstance",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\Wdf01000\Parameters","BuildNumber",0x00010001,0x00001db0
+HKLM,"SYSTEM\CurrentControlSet\Services\Wdf01000\Parameters","MajorVersion",0x00010001,0x00000001
+HKLM,"SYSTEM\CurrentControlSet\Services\Wdf01000\Parameters","MinorVersion",0x00010001,0x00000009
+HKLM,"SYSTEM\CurrentControlSet\Control\Wdf\Kmdf\KmdfLibrary\Versions\1","Service",0x00000000,"Wdf01000"
+HKLM,"SYSTEM\ControlSet001\Enum\Root\LEGACY_WDF01000","NextInstance",0x00010001,0x00000001
+HKLM,"SYSTEM\ControlSet001\Enum\Root\LEGACY_WDF01000\0000","ActiveService",0x00000000,"Wdf01000"

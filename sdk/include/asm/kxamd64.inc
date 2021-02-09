@@ -1,20 +1,20 @@
-;++
-; PROJECT:     ReactOS SDK
-; LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
-; PURPOSE:     ReactOS AMD64 architecture asm macros
-; COPYRIGHT:   Timo Kreuzer (timo.kreuzer@reactos.org)
-;--
+/*
+ * PROJECT:     ReactOS SDK
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     ReactOS AMD64 architecture asm macros
+ * COPYRIGHT:   Timo Kreuzer (timo.kreuzer@reactos.org)
+ */
 
 #include <macamd64.inc>
 
 MACRO(GENERATE_EXCEPTION_FRAME)
 
-    ; Allocate a KEXCEPTION_FRAME on the stack
-    ; -8 because the last field is the return address
+    /* Allocate a KEXCEPTION_FRAME on the stack */
+    /* -8 because the last field is the return address */
     sub rsp, KEXCEPTION_FRAME_LENGTH - 8
-    .allocstack KEXCEPTION_FRAME_LENGTH - 8
+    .allocstack (KEXCEPTION_FRAME_LENGTH - 8)
 
-    ; Save non-volatiles in KEXCEPTION_FRAME
+    /* Save non-volatiles in KEXCEPTION_FRAME */
     mov [rsp + ExRbp], rbp
     .savereg rbp, ExRbp
     mov [rsp + ExRbx], rbx
@@ -56,7 +56,7 @@ ENDM
 
 MACRO(RESTORE_EXCEPTION_STATE)
 
-    ; Restore non-volatile registers
+    /* Restore non-volatile registers */
     mov rbp, [rsp + ExRbp]
     mov rbx, [rsp + ExRbx]
     mov rdi, [rsp + ExRdi]
@@ -76,7 +76,7 @@ MACRO(RESTORE_EXCEPTION_STATE)
     movaps xmm14, [rsp + ExXmm14]
     movaps xmm15, [rsp + ExXmm15]
 
-    ; Clean stack and return
+    /* Clean stack and return */
     add rsp, KEXCEPTION_FRAME_LENGTH - 8
 
 ENDM

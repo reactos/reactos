@@ -22,7 +22,7 @@ EX_PUSH_LOCK HandleTableListLock;
 
 /* PRIVATE FUNCTIONS *********************************************************/
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 VOID
 NTAPI
 ExpInitializeHandleTables(VOID)

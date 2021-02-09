@@ -26,7 +26,7 @@ dll/directx/wine/d3d8           # Synced to WineStaging-3.3
 dll/directx/wine/d3d9           # Synced to WineStaging-3.3
 dll/directx/wine/d3dcompiler_43 # Synced to WineStaging-4.18
 dll/directx/wine/d3drm          # Synced to WineStaging-4.18
-dll/directx/wine/d3dx9_24 => 43 # Synced to WineStaging-4.0
+dll/directx/wine/d3dx9_24 => 43 # Synced to WineStaging-6.0-rc5
 dll/directx/wine/d3dxof         # Synced to WineStaging-4.18
 dll/directx/wine/ddraw          # Synced to WineStaging-3.3
 dll/directx/wine/devenum        # Synced to WineStaging-4.18
@@ -204,7 +204,7 @@ dll/win32/windowscodecsext    # Synced to WineStaging-2.9
 dll/win32/winemp3.acm         # Synced to WineStaging-4.18
 dll/win32/wing32              # Synced to WineStaging-3.3
 dll/win32/winhttp             # Synced to WineStaging-4.18
-dll/win32/wininet             # Synced to WineStaging-4.18
+dll/win32/wininet             # Synced to WineStaging-6.0rc1
 dll/win32/winmm               # Forked at Wine-20050628
 dll/win32/winmm/midimap       # Forked at Wine-20050628
 dll/win32/winmm/wavemap       # Forked at Wine-20050628
@@ -362,6 +362,3 @@ win32k -
 
 winmm -
   modules/rostests/winetests/winmm      # Synced to WineStaging-4.18
-
-ws2_32 -
-  dll/win32/ws2_32/wine/async.c         # Synced to WineStaging-1.9.4

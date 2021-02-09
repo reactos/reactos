@@ -18,12 +18,16 @@ function(add_dependency_edge _source _target)
 endfunction()
 
 function(add_dependency_header)
-    file(WRITE ${REACTOS_BINARY_DIR}/dependencies.graphml "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<graphml>\n  <graph id=\"ReactOS dependencies\" edgedefault=\"directed\">\n")
+    if(GENERATE_DEPENDENCY_GRAPH)
+        file(WRITE ${REACTOS_BINARY_DIR}/dependencies.graphml "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<graphml>\n  <graph id=\"ReactOS dependencies\" edgedefault=\"directed\">\n")
+    endif()
 endfunction()
 
 function(add_dependency_footer)
-    add_dependency_node(ntdll)
-    file(APPEND ${REACTOS_BINARY_DIR}/dependencies.graphml "  </graph>\n</graphml>\n")
+    if(GENERATE_DEPENDENCY_GRAPH)
+        add_dependency_node(ntdll)
+        file(APPEND ${REACTOS_BINARY_DIR}/dependencies.graphml "  </graph>\n</graphml>\n")
+    endif()
 endfunction()
 
 function(add_message_headers _type)
@@ -705,7 +709,10 @@ endfunction()
 function(get_defines OUTPUT_VAR)
     get_directory_property(_defines COMPILE_DEFINITIONS)
     foreach(arg ${_defines})
-        list(APPEND __tmp_var -D${arg})
+        # Skip generator expressions
+        if (NOT arg MATCHES [[^\$<.*>$]])
+            list(APPEND __tmp_var -D${arg})
+        endif()
     endforeach()
     set(${OUTPUT_VAR} ${__tmp_var} PARENT_SCOPE)
 endfunction()
@@ -762,8 +769,8 @@ function(create_registry_hives)
     # BootCD setup system hive
     add_custom_command(
         OUTPUT ${CMAKE_BINARY_DIR}/boot/bootdata/SETUPREG.HIV
-        COMMAND native-mkhive -h:SETUPREG -u -d:${CMAKE_BINARY_DIR}/boot/bootdata ${CMAKE_BINARY_DIR}/boot/bootdata/hivesys_utf16.inf ${CMAKE_SOURCE_DIR}/boot/bootdata/setupreg.inf
-        DEPENDS native-mkhive ${CMAKE_BINARY_DIR}/boot/bootdata/hivesys_utf16.inf)
+        COMMAND native-mkhive -h:SETUPREG -u -d:${CMAKE_BINARY_DIR}/boot/bootdata ${_registry_inf} ${CMAKE_SOURCE_DIR}/boot/bootdata/setupreg.inf
+        DEPENDS native-mkhive ${_registry_inf})
 
     add_custom_target(bootcd_hives
         DEPENDS ${CMAKE_BINARY_DIR}/boot/bootdata/SETUPREG.HIV)

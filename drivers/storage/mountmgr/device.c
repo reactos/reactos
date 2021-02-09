@@ -865,7 +865,8 @@ MountMgrQueryDosVolumePath(IN PDEVICE_EXTENSION DeviceExtension,
     }
 
     /* Validate the entry structure size */
-    if (Target->DeviceNameLength + sizeof(UNICODE_NULL) > Stack->Parameters.DeviceIoControl.InputBufferLength)
+    if ((FIELD_OFFSET(MOUNTMGR_TARGET_NAME, DeviceNameLength) + Target->DeviceNameLength) >
+        Stack->Parameters.DeviceIoControl.InputBufferLength)
     {
         return STATUS_INVALID_PARAMETER;
     }
@@ -878,7 +879,7 @@ MountMgrQueryDosVolumePath(IN PDEVICE_EXTENSION DeviceExtension,
 
     /* Construct string for query */
     SymbolicName.Length = Target->DeviceNameLength;
-    SymbolicName.MaximumLength = Target->DeviceNameLength + sizeof(UNICODE_NULL);
+    SymbolicName.MaximumLength = Target->DeviceNameLength;
     SymbolicName.Buffer = Target->DeviceName;
 
     /* Find device with our info */
@@ -911,7 +912,7 @@ MountMgrQueryDosVolumePath(IN PDEVICE_EXTENSION DeviceExtension,
         /* We didn't find, break */
         if (SymlinksEntry == &(DeviceInformation->SymbolicLinksListHead))
         {
-            break;
+            return STATUS_NOT_FOUND;
         }
 
         /* It doesn't have associated device, go to fallback method */
@@ -1075,18 +1076,21 @@ MountMgrValidateBackPointer(IN PASSOCIATED_DEVICE_ENTRY AssociatedDeviceEntry,
     PSYMLINK_INFORMATION SymlinkInformation;
 
     /* Initialize & allocate a string big enough to contain our complete mount point name */
-    FullName.Length = AssociatedDeviceEntry->String.Length + AssociatedDeviceEntry->DeviceInformation->DeviceName.Length + sizeof(WCHAR);
-    FullName.MaximumLength = FullName.Length + sizeof(UNICODE_NULL);
+    FullName.Length = 0;
+    FullName.MaximumLength = AssociatedDeviceEntry->String.Length
+                             + AssociatedDeviceEntry->DeviceInformation->DeviceName.Length
+                             + sizeof(WCHAR)
+                             + sizeof(UNICODE_NULL);
     FullName.Buffer = AllocatePool(FullName.MaximumLength);
     if (!FullName.Buffer)
     {
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
-    /* Create the path  */
-    RtlCopyMemory(FullName.Buffer, AssociatedDeviceEntry->DeviceInformation->DeviceName.Buffer, AssociatedDeviceEntry->DeviceInformation->DeviceName.Length);
-    FullName.Buffer[AssociatedDeviceEntry->DeviceInformation->DeviceName.Length / sizeof(WCHAR)] = L'\\';
-    RtlCopyMemory(&FullName.Buffer[AssociatedDeviceEntry->DeviceInformation->DeviceName.Length / sizeof(WCHAR) + 1], AssociatedDeviceEntry->String.Buffer, AssociatedDeviceEntry->String.Length);
+    /* Create the path */
+    RtlAppendUnicodeStringToString(&FullName, &AssociatedDeviceEntry->DeviceInformation->DeviceName);
+    FullName.Buffer[FullName.Length / sizeof(WCHAR)] = L'\\';
+    RtlAppendUnicodeStringToString(&FullName, &AssociatedDeviceEntry->String);
     FullName.Buffer[FullName.Length / sizeof(WCHAR)] = UNICODE_NULL;
 
     /* Open it to query the reparse point */

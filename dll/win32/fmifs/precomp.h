@@ -33,9 +33,11 @@ typedef struct _IFS_PROVIDER
 {
     LIST_ENTRY ListEntry;
 
-    CHKDSKEX ChkdskEx;
+    PULIB_CHKDSK Chkdsk;
+    PVOID ChkdskEx;
     PVOID Extend;
-    FORMATEX FormatEx;
+    PULIB_FORMAT Format;
+    PVOID FormatEx;
 
     WCHAR Name[1];
 } IFS_PROVIDER, *PIFS_PROVIDER;

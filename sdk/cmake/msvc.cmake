@@ -55,6 +55,11 @@ if(ARCH STREQUAL "i386")
     endif()
 endif()
 
+# CLang default to -fno-common from version 11 onward. We are not rady for this now
+if (USE_CLANG_CL)
+    add_compile_options(-fcommon)
+endif()
+
 # VS 12+ requires /FS when used in parallel compilations
 if(NOT MSVC_IDE)
     add_compile_options(/FS)
@@ -248,9 +253,9 @@ function(set_module_type_toolchain MODULE TYPE)
         add_target_link_flags(${MODULE} "/DLL")
     elseif(${TYPE} STREQUAL "kernelmodedriver")
         # Disable linker warning 4078 (multiple sections found with different attributes) for INIT section use
-        add_target_link_flags(${MODULE} "/DRIVER /IGNORE:4078 /SECTION:INIT,D")
+        add_target_link_flags(${MODULE} "/DRIVER /SECTION:INIT,ERWD")
     elseif(${TYPE} STREQUAL "wdmdriver")
-        add_target_link_flags(${MODULE} "/DRIVER:WDM /IGNORE:4078 /SECTION:INIT,D")
+        add_target_link_flags(${MODULE} "/DRIVER:WDM /SECTION:INIT,ERWD")
     endif()
 
     if(RUNTIME_CHECKS)
@@ -258,9 +263,6 @@ function(set_module_type_toolchain MODULE TYPE)
     endif()
 
 endfunction()
-
-# Define those for having real libraries
-set(CMAKE_IMPLIB_CREATE_STATIC_LIBRARY "LINK /LIB /NOLOGO <LINK_FLAGS> /OUT:<TARGET> <OBJECTS>")
 
 if(ARCH STREQUAL "arm")
     set(CMAKE_STUB_ASM_COMPILE_OBJECT "<CMAKE_ASM_COMPILER> -nologo -o <OBJECT> <SOURCE>")
@@ -294,41 +296,42 @@ function(generate_import_lib _libname _dllname _spec_file)
     set(_def_file ${CMAKE_CURRENT_BINARY_DIR}/${_libname}_implib.def)
     set(_asm_stubs_file ${CMAKE_CURRENT_BINARY_DIR}/${_libname}_stubs.asm)
 
-    # Generate the asm stub file and the def file for import library
+    # Generate the def and asm stub files
     add_custom_command(
         OUTPUT ${_asm_stubs_file} ${_def_file}
         COMMAND native-spec2def --ms -a=${SPEC2DEF_ARCH} --implib -n=${_dllname} -d=${_def_file} -l=${_asm_stubs_file} ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file}
         DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file} native-spec2def)
 
-    if(MSVC_IDE)
-        # Compile the generated asm stub file
-        if(ARCH STREQUAL "arm")
-            set(_asm_stub_command ${CMAKE_ASM_COMPILER} -nologo -o ${_asm_stubs_file}.obj ${_asm_stubs_file})
-        else()
-            set(_asm_stub_command ${CMAKE_ASM_COMPILER} /Cp /Fo${_asm_stubs_file}.obj /c /Ta ${_asm_stubs_file})
-        endif()
-        add_custom_command(
-            OUTPUT ${_asm_stubs_file}.obj
-            COMMAND ${_asm_stub_command}
-            DEPENDS ${_asm_stubs_file})
+    # Compile the generated asm stub file
+    if(ARCH STREQUAL "arm")
+        set(_asm_stub_command ${CMAKE_ASM_COMPILER} -nologo -o ${_asm_stubs_file}.obj ${_asm_stubs_file})
     else()
-        # Be clear about the "language"
-        # Thanks MS for creating a stupid linker
-        set_source_files_properties(${_asm_stubs_file} PROPERTIES LANGUAGE "STUB_ASM")
+        set(_asm_stub_command ${CMAKE_ASM_COMPILER} /nologo /Cp /Fo${_asm_stubs_file}.obj /c /Ta ${_asm_stubs_file})
     endif()
+    add_custom_command(
+        OUTPUT ${_asm_stubs_file}.obj
+        COMMAND ${_asm_stub_command}
+        DEPENDS ${_asm_stubs_file})
 
-    # Add our library
-    if(MSVC_IDE)
-        add_library(${_libname} STATIC EXCLUDE_FROM_ALL ${_asm_stubs_file}.obj)
-        set_source_files_properties(${_asm_stubs_file}.obj PROPERTIES EXTERNAL_OBJECT TRUE)
-        set_target_properties(${_libname} PROPERTIES LINKER_LANGUAGE "C")
-    else()
-        # NOTE: as stub file and def file are generated in one pass, depending on one is like depending on the other
-        add_library(${_libname} STATIC EXCLUDE_FROM_ALL ${_asm_stubs_file})
-        # set correct "link rule"
-        set_target_properties(${_libname} PROPERTIES LINKER_LANGUAGE "IMPLIB")
-    endif()
-    set_target_properties(${_libname} PROPERTIES STATIC_LIBRARY_FLAGS "/DEF:${_def_file}")
+    # generate the intermediate import lib
+    set(_libfile_tmp ${CMAKE_CURRENT_BINARY_DIR}/${_libname}_tmp.lib)
+    set(_static_lib_options )
+
+    set(_implib_command ${CMAKE_LINKER} /LIB /NOLOGO /MACHINE:${WINARCH}
+        $<TARGET_PROPERTY:${_libname},STATIC_LIBRARY_FLAGS> $<TARGET_PROPERTY:${_libname},STATIC_LIBRARY_OPTIONS>
+        /DEF:${_def_file} /OUT:${_libfile_tmp} ${_asm_stubs_file}.obj)
+
+    add_custom_command(
+        OUTPUT ${_libfile_tmp}
+        COMMAND ${_implib_command}
+        DEPENDS ${_asm_stubs_file}.obj ${_def_file})
+
+    # By giving the import lib as an object input, LIB extracts the relevant object files and make a new library.
+    # This allows us to treat the implib as a regular static library
+    set_source_files_properties(${_libfile_tmp} PROPERTIES EXTERNAL_OBJECT TRUE)
+    add_library(${_libname} STATIC ${_libfile_tmp})
+
+    set_target_properties(${_libname} PROPERTIES LINKER_LANGUAGE "C")
 endfunction()
 
 if(ARCH STREQUAL "amd64")
@@ -371,7 +374,7 @@ function(spec2def _dllname _spec_file)
     if(__spec2def_ADD_IMPORTLIB)
         generate_import_lib(lib${_file} ${_dllname} ${_spec_file})
         if(__spec2def_NO_PRIVATE_WARNINGS)
-            add_target_property(lib${_file} STATIC_LIBRARY_FLAGS "/ignore:4104")
+            set_property(TARGET lib${_file} APPEND PROPERTY STATIC_LIBRARY_OPTIONS /ignore:4104)
         endif()
     endif()
 endfunction()

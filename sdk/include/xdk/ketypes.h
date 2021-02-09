@@ -892,6 +892,7 @@ typedef enum _ALTERNATIVE_ARCHITECTURE_TYPE {
   EndAlternatives
 } ALTERNATIVE_ARCHITECTURE_TYPE;
 
+/* Correctly define these run-time definitions for non X86 machines */
 #ifndef _X86_
 
 #ifndef IsNEC_98

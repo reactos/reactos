@@ -1,30 +1,30 @@
-/* TRANSLATOR: 2013-2015 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net) */
+/* TRANSLATOR: 2013-2015, 2020 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net) */
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
 IDD_GENERALPAGE DIALOGEX 0, 0, 246, 230
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Bölgelik Seçenekler"
+CAPTION "Bölgesel Seçenekler"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Ölçünler ve Biçimler", -1, 5, 5, 234, 162
-    LTEXT "Bu seçenek, birtakım izlencelerin sayı, para birimi, târih ve saat biçimlerini etkiler.", -1, 14, 17, 220, 25
-    LTEXT "Husûsiyetleri karşılaştırmak için bir öğe seçiniz veyâ kendi biçiminizi seçmek için Husûsileştir'e tıklayınız.", -1, 14, 37, 220, 22
+    GROUPBOX "Standartlar ve Biçimler", -1, 5, 5, 234, 162
+    LTEXT "Bu seçenek, bazı programların sayıları, para birimlerini, tarihleri ve saati nasıl biçimlendireceğini etkiler.", -1, 14, 17, 220, 25
+    LTEXT "Özellikleri karşılaştırmak için bir öge seçiniz ya da kendi biçiminizi seçmek için Özelleştir'e tıklayınız.", -1, 14, 37, 220, 22
     COMBOBOX IDC_LANGUAGELIST, 14, 56, 160, 160, CBS_DROPDOWNLIST | CBS_NOINTEGRALHEIGHT | CBS_SORT | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    PUSHBUTTON "&Husûsileştir...", IDC_SETUP_BUTTON, 178, 56, 52, 13
+    PUSHBUTTON "Ö&zelleştir...", IDC_SETUP_BUTTON, 178, 56, 52, 13
     LTEXT "Örnekler", -1, 14, 73, 70, 10
     LTEXT "Sayı:", -1, 16, 86, 48, 10
-    LTEXT "Paralık:", -1, 16, 101, 48, 10
+    LTEXT "Parasal:", -1, 16, 101, 48, 10
     LTEXT "Saat:", -1, 16, 116, 48, 10
-    LTEXT "Kısa Târih:", -1, 16, 131, 48, 10
-    LTEXT "Uzun Târih:", -1, 16, 146, 48, 10
+    LTEXT "Kısa tarih:", -1, 16, 131, 48, 10
+    LTEXT "Uzun tarih:", -1, 16, 146, 48, 10
     EDITTEXT IDC_NUMSAMPLE_EDIT, 89, 86, 140, 12, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
     EDITTEXT IDC_MONEYSAMPLE_EDIT, 89, 101, 140, 12, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
     EDITTEXT IDC_TIMESAMPLE_EDIT, 89, 116, 140, 12, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
     EDITTEXT IDC_SHORTTIMESAMPLE_EDIT, 89, 131, 140, 12, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
     EDITTEXT IDC_FULLTIMESAMPLE_EDIT, 89, 146, 140, 12, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
-    GROUPBOX "Coğrâfî Konum", -1, 5, 172, 234, 55
-    LTEXT "Konumunuzu belirleyiniz, böylece birtakım hizmetler size haberler ve hava durumları gibi yerli bilgiler sağlayabilir.", -1, 14, 184, 210, 24
+    GROUPBOX "Coğrafi Konum", -1, 5, 172, 234, 55
+    LTEXT "Konumunuzu belirleyiniz, böylece bazı hizmetler size yerel bilgiler (örneğin haberler ve hava durumları) sağlayabilir.", -1, 14, 184, 210, 24
     COMBOBOX IDC_LOCATION_COMBO, 14, 207, 217, 160, CBS_DROPDOWNLIST | CBS_NOINTEGRALHEIGHT | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | CBS_SORT
 END
 
@@ -34,12 +34,12 @@ CAPTION "Diller"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Metin Giriş Dilleri ve Hizmetleri", -1, 5, 5, 234, 52
-    LTEXT "Dil veyâ metin giriş yöntemlerini görüntülemek veyâ değiştirmek için ""Ayrıntılar...""a tıklayınız.", -1, 12, 15, 220, 18
+    LTEXT "Dil veya metin giriş yöntemlerini görüntülemek veya değiştirmek için ""Ayrıntılar...""a tıklayınız.", -1, 12, 15, 220, 18
     PUSHBUTTON "&Ayrıntılar...", IDC_DETAIL_BUTTON, 177, 34, 54, 14
     GROUPBOX "Ek Dil Desteği", -1, 5, 62, 234, 82
     LTEXT "Birçok dil ön tanımlı olarak yüklenmiştir. Ek diller yüklemek için aşağıdaki uygun kutucuğu seçiniz.", -1, 12, 72, 220, 18
-    CHECKBOX "&Karmaşık El Yazısı ve Sağdan Sola Diller İçin Kütükleri Yükle", IDC_INST_FILES_FOR_RTOL_LANG, 12, 92, 215, 22, BS_MULTILINE | BS_TOP
-    CHECKBOX "&Doğu Asya Dilleri İçin Kütükleri Yükle", IDC_INST_FILES_FOR_ASIAN, 12, 114, 180, 22, BS_MULTILINE | BS_TOP
+    CHECKBOX "&Karmaşık el yazısı ve sağdan sola diller için dosyaları yükle", IDC_INST_FILES_FOR_RTOL_LANG, 12, 92, 215, 22, BS_MULTILINE | BS_TOP
+    CHECKBOX "&Doğu Asya dilleri için dosyaları yükle", IDC_INST_FILES_FOR_ASIAN, 12, 114, 180, 22, BS_MULTILINE | BS_TOP
 END
 
 IDD_ADVANCEDPAGE DIALOGEX 0, 0, 246, 230
@@ -47,14 +47,14 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "Gelişmiş"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Evrenlik Kodlu Olmayan İzlenceler İçin Dil", -1, 5, 5, 234, 90
+    GROUPBOX "Unicode Olmayan Programlar İçin Dil", -1, 5, 5, 234, 90
     COMBOBOX IDC_LANGUAGE_COMBO, 14, 75, 217, 160, CBS_DROPDOWNLIST | CBS_NOINTEGRALHEIGHT | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | CBS_SORT
-    LTEXT "Bu dizge ayârı, Evrenlik Kodlu olmayan izlenceleri, kendi dillerinde seçkeleri ve iletişim pencerelerini görüntülemeyle etkinleştirir. Evrenlik Kodlu izlenceleri etkilemez ancak bu bilgisayarın tüm kullanıcılarına uygular.", -1, 14, 18, 223, 33
-    LTEXT "&Kullanmak istediğiniz Evrenlik Kodlu olmayan izlencelerin dil sürümünü karşılaştırmak için bir dil seçiniz:", -1, 14, 55, 223, 18
-    GROUPBOX "Kod Sayfası Dönüştürme Çizelgesi", -1, 5, 101, 234, 88
+    LTEXT "Bu sistem ayarı, Unicode olmayan programları, kendi dillerinde menüleri ve iletişim pencerelerini görüntülemeyle etkinleştirir. Unicode programları etkilemez ancak bu bilgisayarın tüm kullanıcılarına uygular.", -1, 14, 18, 223, 33
+    LTEXT "&Kullanmak istediğiniz Unicode olmayan programların dil sürümüyle eşleştirmek için bir dil seçiniz:", -1, 14, 55, 223, 18
+    GROUPBOX "Kod Sayfası Dönüştürme Tablosu", -1, 5, 101, 234, 88
     CONTROL "", IDC_CONV_TABLES, "SysListView32", LVS_REPORT | LVS_SORTASCENDING | LVS_NOCOLUMNHEADER | WS_BORDER | WS_TABSTOP, 14, 114, 217, 70
-    GROUPBOX "Ön Tanımlı Kullanıcı Hesâbı Ayarları", -1, 5, 193, 234, 32
-    CHECKBOX "&Tüm Ayarları Şimdiki Kullanıcı Hesâbına Ön Tanımlılara Uygula", IDC_APPLY_CUR_USER_DEF_PROFILE, 12, 201, 220, 22, BS_MULTILINE | BS_TOP
+    GROUPBOX "Ön Tanımlı Kullanıcı Hesabı Ayarları", -1, 5, 193, 234, 32
+    CHECKBOX "&Tüm ayarları şimdiki kullanıcı hesâbına ve ön tanımlılara uygula", IDC_APPLY_CUR_USER_DEF_PROFILE, 12, 201, 220, 22, BS_MULTILINE | BS_TOP
 END
 
 IDD_NUMBERSPAGE DIALOGEX 0, 0, 246, 234
@@ -63,27 +63,27 @@ CAPTION "Sayılar"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Görünüm Örneği", -1, 7, 7, 230, 53, WS_CHILD | WS_VISIBLE
-    LTEXT "Artı:", -1, 13, 21, 31, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "Pozitif:", -1, 13, 21, 31, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     EDITTEXT IDC_NUMBERSPOSSAMPLE, 43, 19, 72, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
-    LTEXT "Eksi:", -1, 120, 21, 31, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "Negatif:", -1, 120, 21, 31, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     EDITTEXT IDC_NUMBERSNEGSAMPLE, 154, 19, 72, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
-    LTEXT "&Ondalık Simgesi:", -1, 8, 67, 96, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "&Ondalık simgesi:", -1, 8, 67, 96, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_NUMBERDSYMBOL, 137, 65, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    LTEXT "O&ndalıktan Sonraki Basamak Sayısı:", -1, 8, 83, 96, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "O&ndalıktan sonraki basamak sayısı:", -1, 8, 83, 96, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_NUMBERSNDIGDEC, 137, 81, 100, 83, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    LTEXT "&Basamak Ayırma Simgesi:", -1, 8, 100, 96, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "&Basamak ayırma simgesi:", -1, 8, 100, 96, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_NUMBERSDIGITGRSYM, 137, 97, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    LTEXT "B&asamak Ayrılması:", -1, 8, 117, 96, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "B&asamak ayırma:", -1, 8, 117, 96, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_NUMBERSDGROUPING, 137, 113, 100, 83, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    LTEXT "&Eksi İmi Simgesi:", -1, 8, 134, 96, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "N&egatif işareti simgesi:", -1, 8, 134, 96, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_NUMBERSNSIGNSYM, 137, 129, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    LTEXT "E&ksi Sayı Biçimi:", -1, 8, 149, 100, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "Nega&tif sayı biçimi:", -1, 8, 149, 100, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_NUMBERSNNUMFORMAT, 137, 145, 100, 83, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    LTEXT "&Öncü Sıfırların Görünümü:", -1, 8, 166, 96, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "Ön&cü sıfırların görünümü:", -1, 8, 166, 96, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_NUMBERSDISPLEADZER, 137, 161, 100, 83, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    LTEXT "&Dizelge Ayırıcısı:", -1, 8, 181, 96, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "&Liste ayırıcısı:", -1, 8, 181, 96, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_NUMBERSLSEP, 137, 177, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    LTEXT "Ö&lçü Dizgesi:", -1, 8, 197, 96, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "Ölçü &sistemi:", -1, 8, 197, 96, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_NUMBERSMEASSYS, 137, 193, 100, 83, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
 END
 
@@ -93,23 +93,23 @@ CAPTION "Para Birimi"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Görünüm Örneği", -1, 7, 7, 230, 33, WS_CHILD | WS_VISIBLE
-    LTEXT "Artı:", -1, 13, 21, 27, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "Pozitif:", -1, 13, 21, 27, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     EDITTEXT IDC_CURRENCYPOSSAMPLE, 43, 19, 72, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
-    LTEXT "Eksi:", -1, 120, 21, 30, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "Negatif:", -1, 120, 21, 30, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     EDITTEXT IDC_CURRENCYNEGSAMPLE, 154, 19, 72, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
-    LTEXT "&Para Birimi Simgesi:", -1, 10, 51, 121, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "P&ara birimi simgesi:", -1, 10, 51, 121, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_CURRENCYSYMBOL, 134, 49, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    LTEXT "&Artı Nicelik:", -1, 10, 68, 121, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "&Pozitif nicelik:", -1, 10, 68, 121, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_CURRENCYPOSVALUE, 134, 66, 100, 83, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    LTEXT "&Eksi Nicelik:", -1, 10, 85, 121, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "&Negatif nicelik:", -1, 10, 85, 121, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_CURRENCYNEGVALUE, 134, 83, 100, 83, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    LTEXT "&Ondalık Ayırıcısı:", -1, 10, 111, 121, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "&Ondalık ayırıcısı:", -1, 10, 111, 121, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_CURRENCYDECSEP, 134, 109, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    LTEXT "&Kesirli Basamakların Sayısı:", -1, 10, 128, 121, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "&Kesirli basamakların sayısı:", -1, 10, 128, 121, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_CURRENCYDECNUM, 134, 126, 100, 83, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    LTEXT "A&yırma Simgesi:", -1, 10, 156, 121, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "Ayı&rma simgesi:", -1, 10, 156, 121, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_CURRENCYGRPSEP, 134, 154, 100, 83, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
-    LTEXT "&Basamak Ayrılması:", -1, 10, 173, 121, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "&Basamak ayırma:", -1, 10, 173, 121, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_CURRENCYGRPNUM, 134, 171, 100, 83, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
 END
 
@@ -119,101 +119,101 @@ CAPTION "Saat"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Görünüm Örneği", -1, 7, 7, 230, 33, WS_CHILD | WS_VISIBLE
-    LTEXT "Saat Örneği:", -1, 13, 21, 54, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "Saat örneği:", -1, 13, 21, 54, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     EDITTEXT IDC_TIMESAMPLE, 68, 19, 84, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
-    LTEXT "S&aat Biçimi:", -1, 13, 52, 130, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "&Saat biçimi:", -1, 13, 52, 130, 10, WS_CHILD | WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_TIMEFORMAT, 149, 50, 84, 100, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_CHILD | WS_VISIBLE | WS_TABSTOP
-    LTEXT "Saa&t Ayırıcısı:", -1, 13, 70, 130, 10, WS_VISIBLE | WS_GROUP
+    LTEXT "Saa&t ayırıcısı:", -1, 13, 70, 130, 10, WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_TIMESEPARATOR, 149, 68, 84, 100, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP
-    LTEXT "&ÖÖ Simgesi:", -1, 13, 88, 130, 10, WS_VISIBLE | WS_GROUP
+    LTEXT "&AM simgesi:", -1, 13, 88, 130, 10, WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_TIMEAMSYMBOL, 149, 86, 84, 100, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP
-    LTEXT "Ö&S Simgesi:", -1, 13, 106, 130, 10, WS_VISIBLE | WS_GROUP
+    LTEXT "&PM simgesi:", -1, 13, 106, 130, 10, WS_VISIBLE | WS_GROUP
     COMBOBOX IDC_TIMEPMSYMBOL, 149, 104, 84, 100, CBS_DROPDOWN | WS_CHILD | WS_VISIBLE | WS_TABSTOP
     GROUPBOX "", -1, 7, 140, 230, 80, WS_VISIBLE
-    LTEXT "Saat Biçimi Gösterimi:\n\n\
-h = Saat    m = Dakîka    s = Sâniye    t = ÖÖ veyâ ÖS\n\n\
-h = 12 Saatlik   H = 24 Saatlik\n\
-hh, mm, ss = Öncü Sıfır Var   h, m, s = Öncü Sıfır Yok", -1, 13, 150, 214, 50, WS_CHILD | WS_VISIBLE | WS_GROUP
+    LTEXT "Saat biçimi gösterimi:\n\n\
+h = Saat    m = Dakika    s = Saniye    t = AM veya PM\n\n\
+h = 12 saatlik   H = 24 saatlik\n\
+hh, mm, ss = Öncü sıfır var   h, m, s = Öncü sıfır yok", -1, 13, 150, 214, 50, WS_CHILD | WS_VISIBLE | WS_GROUP
 END
 
 IDD_DATEPAGE DIALOGEX 0, 0, 246, 234
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Târih"
+CAPTION "Tarih"
 FONT 8, "MS Shell Dlg"
 BEGIN
     GROUPBOX "Takvim", -1, 7, 7, 230, 74
     LTEXT "Eğer yıl iki basamakla gösterilmişse şunlar arsında bir yıl olduğu varsayılır:", -1, 13, 18, 215, 8
     EDITTEXT IDC_FIRSTYEAR_EDIT, 13, 30, 36, 12, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | WS_DISABLED
-    LTEXT "&ve", -1, 55, 32, 17, 8
+    LTEXT "ve", -1, 55, 32, 17, 8
     EDITTEXT IDC_SECONDYEAR_EDIT, 77, 30, 36, 12, ES_LEFT | ES_NUMBER | WS_GROUP
     CONTROL "",IDC_SCR_MAX_YEAR, "msctls_updown32", UDS_NOTHOUSANDS | UDS_WRAP | UDS_SETBUDDYINT | UDS_AUTOBUDDY | UDS_ARROWKEYS | WS_CHILD | WS_VISIBLE, 113, 30, 10, 12
-    LTEXT "Takvim Türü:", -1, 13, 48, 56, 10
+    LTEXT "&Takvim türü:", -1, 13, 48, 56, 10
     COMBOBOX IDC_CALTYPE_COMBO, 77, 46, 153, 100, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | WS_DISABLED
-    LTEXT "Hicrî Takvim:", -1, 13, 65, 60, 12
+    LTEXT "&Hicri takvim:", -1, 13, 65, 60, 12
     COMBOBOX IDC_HIJCHRON_COMBO, 77, 64, 153, 100, CBS_DROPDOWNLIST | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | WS_DISABLED
-    GROUPBOX "Kısa Târih Biçimi", -1, 7, 83, 230, 81
+    GROUPBOX "Kısa Tarih Biçimi", -1, 7, 83, 230, 81
     LTEXT "Örnek:", -1, 13, 95, 63, 10
     EDITTEXT IDC_SHRTDATESAMPLE_EDIT, 77, 93, 153, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
-    LTEXT "Örnek (Sağdan Sola Okunuş):", -1, 13, 109, 60, 16
+    LTEXT "Örnek (sağdan sola okunuş):", -1, 13, 109, 60, 16
     EDITTEXT IDC_SHRTDATERTOL_EDIT, 77, 111, 153, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP | WS_DISABLED
-    LTEXT "&Kısa Biçim:", -1, 13, 131, 60, 10
+    LTEXT "&Kısa biçim:", -1, 13, 131, 60, 10
     COMBOBOX IDC_SHRTDATEFMT_COMBO, 77, 129, 153, 100, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | WS_VISIBLE
-    LTEXT "&Târih Bileşenleri Ayırıcısı:", -1, 13, 148, 113, 10
+    LTEXT "Tarih &bileşenleri ayırıcısı:", -1, 13, 148, 113, 10
     COMBOBOX IDC_SHRTDATESEP_COMBO, 180, 146, 51, 100, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | WS_VISIBLE
-    GROUPBOX "Uzun Târih Biçimi", -1, 7, 167, 230, 64
+    GROUPBOX "Uzun Tarih Biçimi", -1, 7, 167, 230, 64
     LTEXT "Örnek:", -1, 13, 179, 61, 10
     EDITTEXT IDC_LONGDATESAMPLE_EDIT, 77, 177, 153, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP
-    LTEXT "Örnek (Sağdan Sola Okunuş):", -1, 13, 193, 61, 16
+    LTEXT "Örnek (sağdan sola okunuş):", -1, 13, 193, 61, 16
     EDITTEXT IDC_LONGDATERTOL_EDIT, 77, 195, 153, 14, ES_READONLY | WS_CHILD | WS_VISIBLE | WS_GROUP | NOT WS_TABSTOP | WS_DISABLED
-    LTEXT "&Uzun Biçim:", -1, 13, 215, 60, 10
+    LTEXT "&Uzun biçim:", -1, 13, 215, 60, 10
     COMBOBOX IDC_LONGDATEFMT_COMBO, 77, 213, 153, 100, CBS_DROPDOWN | CBS_AUTOHSCROLL | WS_VSCROLL | WS_TABSTOP | WS_VISIBLE
 END
 
 IDD_SORTPAGE DIALOGEX 0, 0, 246, 234
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "Dizme"
+CAPTION "Sıralama"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    GROUPBOX "Dizme", -1, 7, 7, 230, 74
-    LTEXT "Dizme yöntemleri; damgaların, sözcüklerin, kütüklerin ve dizinlerin dizme düzenini tanımlar.", -1, 14, 17, 220, 25
-    LTEXT "Diliniz için bir dizme yöntemi seçiniz:", -1, 14, 37, 220, 22
+    GROUPBOX "Sıralama", -1, 7, 7, 230, 74
+    LTEXT "Sıralama yöntemleri; karakterlerin, sözcüklerin, dosyaların ve klasörlerin sıralama düzenini tanımlar.", -1, 14, 17, 220, 25
+    LTEXT "Diliniz için bir sıralama yöntemi seçiniz:", -1, 14, 37, 220, 22
     COMBOBOX IDC_SORTLIST_COMBO, 14, 56, 217, 83, CBS_DROPDOWNLIST | WS_CHILD | WS_VISIBLE | WS_TABSTOP | WS_VSCROLL
 END
 
 STRINGTABLE
 BEGIN
-    IDS_CUSTOMIZE_TITLE "Bölgelik Ayarları Husûsileştir"
+    IDS_CUSTOMIZE_TITLE "Bölgesel Ayarları Özelleştir"
     IDS_SPAIN "İspanyol (İspanya)"
-    IDS_METRIC "Ölçümlü"
-    IDS_IMPERIAL "İlhanlık"
+    IDS_METRIC "Metrik"
+    IDS_IMPERIAL "İmperyal"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_CPLNAME "Bölgelik Ayarlar"
-    IDS_CPLDESCRIPTION "Dilleri ve sayı, para birimi, saat ve târih biçimlerini seçer."
+    IDS_CPLNAME "Bölgesel Ayarlar"
+    IDS_CPLDESCRIPTION "Dilleri ve sayı, para birimi, saat ve tarih biçimlerini seçer."
 END
 
 STRINGTABLE
 BEGIN
     IDS_APPLY_DEFAULT_TITLE "Ön Tanımlı Ayarları Değiştir"
-    IDS_APPLY_DEFAULT_TEXT "Ayarlar ön tanımlı kullanıcı hesâbına uygulanacaktır.\n\n\
-Bu değişiklikler oturum açma görüntülüğüne ve yeni kullanıcı hesaplarına uygulanır.\n\
-Değişikliklerin birtakım dizge hizmetlerine uygulanması için bilgisayar yeniden başlatılmalıdır."
+    IDS_APPLY_DEFAULT_TEXT "Ayarlar ön tanımlı kullanıcı hesabına uygulanacaktır.\n\n\
+Bu değişiklikler oturum açma ekranına ve yeni kullanıcı hesaplarına uygulanır.\n\
+Bazı sistem hizmetlerinedeğişikliklerin uygulanması için bilgisayar yeniden başlatılmalıdır."
 END
 
 STRINGTABLE
 BEGIN
-    IDS_ERROR "Yanlışlık"
-    IDS_ERROR_SYMBOL_SEPARATE "Kısa târih bileşenleri ayıracı yanlış simge(ler) içeriyor."
-    IDS_ERROR_SYMBOL_FORMAT_SHORT "Kısa târih biçimi yanlış simge(ler) içeriyor."
-    IDS_ERROR_SYMBOL_FORMAT_LONG "Uzun târih biçimi yanlış simge(ler) içeriyor."
-    IDS_ERROR_OEM_CODE_PAGE "OEM kod sayfasını okumada bir sorun oldu."
-    IDS_ERROR_ANSI_CODE_PAGE "ANSI kod sayfasını okumada bir sorun oldu."
-    IDS_ERROR_INT_KEY_REG "HKCU\\Control Panel\\International dizinini açmada bir sorun oldu."
-    IDS_ERROR_DEF_INT_KEY_REG "HKU\\.DEFAULT\\Control Panel\\International dizinini açmada bir sorun oldu."
-    IDS_ERROR_NLS_KEY_REG "HKU\\.DEFAULT\\Control Panel\\International dizinini açmada bir sorun oldu."
-    IDS_ERROR_NLS_CODE_REG "HKU\\.DEFAULT\\Control Panel\\International dizinini açmada bir sorun oldu."
+    IDS_ERROR "Hata"
+    IDS_ERROR_SYMBOL_SEPARATE "Kısa tarih bileşenleri ayırıcısı yanlış simge(ler) içeriyor."
+    IDS_ERROR_SYMBOL_FORMAT_SHORT "Kısa tarih biçimi yanlış simge(ler) içeriyor."
+    IDS_ERROR_SYMBOL_FORMAT_LONG "Uzun tarih biçimi yanlış simge(ler) içeriyor."
+    IDS_ERROR_OEM_CODE_PAGE "OEM kod sayfasını okumada bir sorun var."
+    IDS_ERROR_ANSI_CODE_PAGE "ANSI kod sayfasını okumada bir sorun var."
+    IDS_ERROR_INT_KEY_REG "HKCU\\Control Panel\\International anahtarını açmada bir sorun oldu."
+    IDS_ERROR_DEF_INT_KEY_REG "HKU\\.DEFAULT\\Control Panel\\International anahtarını açmada bir sorun oldu."
+    IDS_ERROR_NLS_KEY_REG "HKU\\.DEFAULT\\Control Panel\\International anahtarını açmada bir sorun oldu."
+    IDS_ERROR_NLS_CODE_REG "HKU\\.DEFAULT\\Control Panel\\International anahtarını açmada bir sorun oldu."
     IDS_ERROR_INPUT_DLL "input.dll başlatılamaz."
-    IDS_ERROR_UNICODE "Unable to install a new language for programs that don't support Unicode!"
+    IDS_ERROR_UNICODE "Unicode'u desteklemeyen programlar için yeni bir dil yüklenemez!"
 END

@@ -13,10 +13,6 @@
 #define NDEBUG
 #include <debug.h>
 
-#if defined (ALLOC_PRAGMA)
-#pragma alloc_text(INIT, SepInitDACLs)
-#endif
-
 /* GLOBALS ********************************************************************/
 
 PACL SePublicDefaultDacl = NULL;
@@ -28,7 +24,7 @@ PACL SeUnrestrictedDacl = NULL;
 
 /* FUNCTIONS ******************************************************************/
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 BOOLEAN
 NTAPI
 SepInitDACLs(VOID)

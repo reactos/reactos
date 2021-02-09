@@ -1,9 +1,9 @@
-;++
-; PROJECT:     ReactOS SDK
-; LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
-; PURPOSE:     ReactOS AMD64 architecture asm macros
-; COPYRIGHT:   Timo Kreuzer (timo.kreuzer@reactos.org)
-;--
+/*
+ * PROJECT:     ReactOS SDK
+ * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
+ * PURPOSE:     ReactOS AMD64 architecture asm macros
+ * COPYRIGHT:   Timo Kreuzer (timo.kreuzer@reactos.org)
+ */
 
 #include <asm.inc>
 
@@ -156,4 +156,4 @@ MACRO(Yield)
     pause
 ENDM
 
-; EOF
+/* EOF */

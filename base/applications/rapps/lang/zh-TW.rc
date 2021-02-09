@@ -1,4 +1,5 @@
 /* Translated by Song Fuchang (0xfc) <sfc_0@yahoo.com.cn> */
+/* Translation improved by Aobi Chan CL <eason066@gmail.com> */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
@@ -8,7 +9,7 @@ BEGIN
     BEGIN
         MENUITEM "設定(&S)", ID_SETTINGS
         MENUITEM SEPARATOR
-        MENUITEM "退出(&X)", ID_EXIT
+        MENUITEM "結束(&X)", ID_EXIT
     END
     POPUP "程式(&P)"
     BEGIN
@@ -22,9 +23,9 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "更新資料庫(&A)\tCtrl+F5", ID_RESETDB
     END
-    POPUP "幫助"
+    POPUP "說明"
     BEGIN
-        MENUITEM "幫助內容\tF1", ID_HELP, GRAYED
+        MENUITEM "說明內容\tF1", ID_HELP, GRAYED
         MENUITEM "關於", ID_ABOUT
     END
 END
@@ -59,7 +60,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYS
 CAPTION "設定"
 FONT 9, "新細明體"
 BEGIN
-    GROUPBOX "普通", -1, 4, 2, 240, 61
+    GROUPBOX "一般", -1, 4, 2, 240, 61
     AUTOCHECKBOX "儲存視窗位置(&S)", IDC_SAVE_WINDOW_POS, 15, 12, 219, 12
     AUTOCHECKBOX "啟動時更新可獲得的程式列表(&U)", IDC_UPDATE_AVLIST, 15, 29, 222, 12
     AUTOCHECKBOX "將程式的安裝和解除安裝記錄到日誌(&L)", IDC_LOG_ENABLED, 15, 46, 219, 12
@@ -69,15 +70,15 @@ BEGIN
     PUSHBUTTON "選擇(&C)", IDC_CHOOSE, 187, 85, 50, 14
     AUTOCHECKBOX "在安裝完程式後刪除安裝程式(&D)", IDC_DEL_AFTER_INSTALL, 16, 100, 218, 12
     GROUPBOX "指定軟件列表源", -1, 4, 118, 240, 46
-    CONTROL "使用默認軟件列表源", IDC_SOURCE_DEFAULT, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 15, 132, 74, 10
+    CONTROL "使用預設來源", IDC_SOURCE_DEFAULT, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 15, 132, 74, 10
     CONTROL "指定軟件列表源", IDC_USE_SOURCE, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 147, 74, 10
     EDITTEXT IDC_SOURCE_URL, 97, 147, 140, 12, ES_AUTOHSCROLL | WS_DISABLED
-    GROUPBOX "代理", -1, 4, 166, 240, 76
-    CONTROL "系統代理設置", IDC_PROXY_DEFAULT, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 15, 180, 210, 10
-    CONTROL "直接 (無代理)", IDC_NO_PROXY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 195, 210, 10
-    CONTROL "代理", IDC_USE_PROXY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 210, 74, 10
+    GROUPBOX "代理伺服器", -1, 4, 166, 240, 76
+    CONTROL "使用系統代理設定", IDC_PROXY_DEFAULT, "Button", BS_AUTORADIOBUTTON | WS_GROUP | WS_TABSTOP, 15, 180, 210, 10
+    CONTROL "直接（無代理）", IDC_NO_PROXY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 195, 210, 10
+    CONTROL "代理伺服器", IDC_USE_PROXY, "Button", BS_AUTORADIOBUTTON | WS_TABSTOP, 15, 210, 71, 10
     EDITTEXT IDC_PROXY_SERVER, 90, 210, 147, 12, ES_AUTOHSCROLL | WS_DISABLED
-    LTEXT "沒有代理", -1, 27, 225, 64, 10
+    LTEXT "不使用代理的情況", -1, 25, 226, 64, 10
     EDITTEXT IDC_NO_PROXY_FOR, 90, 225, 147, 12, ES_AUTOHSCROLL | WS_DISABLED
     PUSHBUTTON "預設", IDC_DEFAULT_SETTINGS, 8, 245, 60, 14
     DEFPUSHBUTTON "確定", IDOK, 116, 245, 60, 14
@@ -90,7 +91,7 @@ CAPTION "安裝程式"
 FONT 9, "新細明體"
 BEGIN
     LTEXT "…", IDC_INSTALL_TEXT, 4, 5, 209, 35
-    AUTORADIOBUTTON "從存儲裝置安裝 (CD 或 DVD)(&I)", IDC_CD_INSTALL, 10, 46, 197, 11, WS_GROUP
+    AUTORADIOBUTTON "從儲存裝置安裝 (CD 或 DVD)(&I)", IDC_CD_INSTALL, 10, 46, 197, 11, WS_GROUP
     AUTORADIOBUTTON "下載並安裝(&D)", IDC_DOWNLOAD_INSTALL, 10, 59, 197, 11, NOT WS_TABSTOP
     DEFPUSHBUTTON "確定", IDOK, 86, 78, 60, 14
     PUSHBUTTON "取消", IDCANCEL, 150, 78, 60, 14
@@ -114,7 +115,7 @@ BEGIN
     IDS_TOOLTIP_SETTINGS "設定"
     IDS_TOOLTIP_REFRESH "重新整理"
     IDS_TOOLTIP_UPDATE_DB "更新資料庫"
-    IDS_TOOLTIP_EXIT "退出"
+    IDS_TOOLTIP_EXIT "結束"
 END
 
 STRINGTABLE
@@ -126,36 +127,36 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_INFO_VERSION "版本:"
-    IDS_INFO_DESCRIPTION "描述:"
-    IDS_INFO_PUBLISHER "\n釋出者:"
-    IDS_INFO_HELPLINK "\n幫助連結:"
-    IDS_INFO_HELPPHONE "\n幫助電話:"
-    IDS_INFO_README "\n必讀:"
-    IDS_INFO_REGOWNER "\n註冊所有者:"
-    IDS_INFO_PRODUCTID "\n產品 ID:"
-    IDS_INFO_CONTACT "\n聯繫方式:"
-    IDS_INFO_UPDATEINFO "\n更新資訊:"
-    IDS_INFO_INFOABOUT "\n關於資訊:"
-    IDS_INFO_COMMENTS "\n註釋:"
-    IDS_INFO_INSTLOCATION "\n安裝位置:"
-    IDS_INFO_INSTALLSRC "\n安裝源:"
-    IDS_INFO_UNINSTALLSTR "\n解除安裝字元串:"
-    IDS_INFO_MODIFYPATH "\n修改路徑:"
-    IDS_INFO_INSTALLDATE "\n安裝日期:"
-    IDS_AINFO_PACKAGE_NAME "\nPackage Name: "
+    IDS_INFO_VERSION "版本："
+    IDS_INFO_DESCRIPTION "描述："
+    IDS_INFO_PUBLISHER "\n發布者："
+    IDS_INFO_HELPLINK "\n說明連結："
+    IDS_INFO_HELPPHONE "\n幫助電話："
+    IDS_INFO_README "\n說明檔案："
+    IDS_INFO_REGOWNER "\n註冊所有者："
+    IDS_INFO_PRODUCTID "\n產品 ID："
+    IDS_INFO_CONTACT "\n聯繫方式："
+    IDS_INFO_UPDATEINFO "\n更新資訊："
+    IDS_INFO_INFOABOUT "\n關於資訊："
+    IDS_INFO_COMMENTS "\n註釋："
+    IDS_INFO_INSTLOCATION "\n安裝位置："
+    IDS_INFO_INSTALLSRC "\n安裝來源："
+    IDS_INFO_UNINSTALLSTR "\n解除安裝字元串："
+    IDS_INFO_MODIFYPATH "\n修改路徑："
+    IDS_INFO_INSTALLDATE "\n安裝日期："
+    IDS_AINFO_PACKAGE_NAME "\n軟件包名稱："
 END
 
 STRINGTABLE
 BEGIN
-    IDS_AINFO_VERSION "\n版本:"
-    IDS_AINFO_AVAILABLEVERSION "\n可用版本: "
-    IDS_AINFO_DESCRIPTION "\n描述:"
-    IDS_AINFO_SIZE "\n大小:"
-    IDS_AINFO_URLSITE "\n主頁:"
-    IDS_AINFO_LICENSE "\n協議:"
-    IDS_AINFO_URLDOWNLOAD "\n下載:"
-    IDS_AINFO_LANGUAGES "\n語言: "
+    IDS_AINFO_VERSION "\n版本："
+    IDS_AINFO_AVAILABLEVERSION "\n可用版本："
+    IDS_AINFO_DESCRIPTION "\n描述："
+    IDS_AINFO_SIZE "\n大小："
+    IDS_AINFO_URLSITE "\n主頁："
+    IDS_AINFO_LICENSE "\n協議："
+    IDS_AINFO_URLDOWNLOAD "\n下載："
+    IDS_AINFO_LANGUAGES "\n語言："
 END
 
 STRINGTABLE
@@ -182,40 +183,40 @@ STRINGTABLE
 BEGIN
     IDS_APPTITLE "ReactOS 程式管理員"
     IDS_APP_AUTHORS "Copyright 2009 Dmitry Chapyshev"
-    IDS_SEARCH_TEXT "搜索…"
+    IDS_SEARCH_TEXT "搜尋…"
     IDS_INSTALL "安裝"
     IDS_UNINSTALL "解除安裝"
     IDS_MODIFY "修改"
-    IDS_APPS_COUNT "程式個數：%d； 已選: %d"
+    IDS_APPS_COUNT "程式數量：%d； 已選：%d"
     IDS_WELCOME_TITLE "歡迎來到 ReactOS 程式管理員！\n\n"
-    IDS_WELCOME_TEXT "從左欄選擇一個類別，然後選擇要安裝或解除安裝的程式。\nReactOS 網站:"
+    IDS_WELCOME_TEXT "從左側欄目選擇一個類別，然後選擇要安裝或解除安裝的程式。\nReactOS 網站︰"
     IDS_WELCOME_URL "https://reactos.org/"
     IDS_INSTALLED "已安裝"
     IDS_AVAILABLEFORINST "可安裝"
     IDS_UPDATES "更新"
     IDS_APPLICATIONS "應用程式"
-    IDS_CHOOSE_FOLDER_TEXT "請選擇用來儲存下載檔案的資料夾:"
-    IDS_CHOOSE_FOLDER_ERROR "您選擇的資料夾不存在。創建嗎？"
-    IDS_URL_INVALID "您指定的URL無效或不支持。請更正！"
+    IDS_CHOOSE_FOLDER_TEXT "請選擇用來儲存下載檔案的資料夾︰"
+    IDS_CHOOSE_FOLDER_ERROR "您選擇的資料夾不存在。要創建嗎？"
+    IDS_URL_INVALID "您指定的 URL 無效或不支持。請更正！"
     IDS_APP_REG_REMOVE "您確定要從登錄檔刪除該程式的資料嗎？"
     IDS_INFORMATION "資訊"
-    IDS_UNABLE_TO_DOWNLOAD "無法下載包!找不到的位址!"
-    IDS_UNABLE_TO_DOWNLOAD2 "無法下載包!請檢查網絡連接!"
+    IDS_UNABLE_TO_DOWNLOAD "無法下載軟件包！找不到網路位址！"
+    IDS_UNABLE_TO_DOWNLOAD2 "無法下載軟件包！請檢查網路連接！"
     IDS_UNABLE_TO_REMOVE "無法從登錄檔刪除該程式的資料！"
-    IDS_UNABLE_TO_INSTALL "無法打開安裝程式!"
-    IDS_UNABLE_TO_QUERY_CERT "無法獲取證書資訊。\n\n您是否仍然想繼續？"
+    IDS_UNABLE_TO_INSTALL "無法打開安裝程式！"
+    IDS_UNABLE_TO_QUERY_CERT "無法獲取證書資訊。\n\n您是否仍要繼續？"
     IDS_INTEG_CHECK_TITLE "驗證套裝軟體的完整性…"
     IDS_INTEG_CHECK_FAIL "包沒有通過完整性檢查，它可能已損壞，或者在下載過程中篡改。建議您不要運行該軟體。"
-    IDS_INTERRUPTED_DOWNLOAD "下載中斷。請檢查網絡連接。"
-    IDS_UNABLE_TO_WRITE "無法寫入存儲裝置。存儲裝置可能已滿。"
+    IDS_INTERRUPTED_DOWNLOAD "下載中斷。請檢查網路連接。"
+    IDS_UNABLE_TO_WRITE "無法寫入儲存裝置。儲存裝置可能已滿。"
     IDS_SELECT_ALL "全選/全反選"
     IDS_INSTALL_SELECTED "安裝已選中的"
     IDS_SELECTEDFORINST "選中以安裝"
-    IDS_MISMATCH_CERT_INFO "所使用的證書未知：\n主題：%s\n發行方：%s\n您是否仍然想繼續？"
-    IDS_UNABLE_PATH "不正確的URL格式。"
-    IDS_APP_DISPLAY_DETAILS "details"
-    IDS_APP_DISPLAY_LIST "list"
-    IDS_APP_DISPLAY_TILE "tile"
+    IDS_MISMATCH_CERT_INFO "使用了未知的證書：\n主題：%s\n發行方：%s\n您是否仍然想繼續？"
+    IDS_UNABLE_PATH "不正確的 URL 格式。"
+    IDS_APP_DISPLAY_DETAILS "詳情"
+    IDS_APP_DISPLAY_LIST "列表"
+    IDS_APP_DISPLAY_TILE "卡片"
 END
 
 STRINGTABLE
@@ -223,7 +224,7 @@ BEGIN
     IDS_STATUS_INSTALLED "已安裝"
     IDS_STATUS_NOTINSTALLED "未安裝"
     IDS_STATUS_DOWNLOADED "下載"
-    IDS_STATUS_UPDATE_AVAILABLE "可用更新"
+    IDS_STATUS_UPDATE_AVAILABLE "有可用更新"
     IDS_STATUS_DOWNLOADING "正在下載…"
     IDS_STATUS_INSTALLING "正在安裝…"
     IDS_STATUS_WAITING "正在等待安裝…"
@@ -251,17 +252,17 @@ STRINGTABLE
 BEGIN
     IDS_DL_DIALOG_DB_DISP "應用程式資料庫"
     IDS_DL_DIALOG_DB_DOWNLOAD_DISP "更新資料庫…"
-    IDS_DL_DIALOG_DB_UNOFFICIAL_DOWNLOAD_DISP "正在更新資料庫… (非官方源)"
+    IDS_DL_DIALOG_DB_UNOFFICIAL_DOWNLOAD_DISP "正在更新資料庫… (非官方來源)"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_CMD_USAGE "Usage: "
-    IDS_CMD_NEED_PACKAGE_NAME "Error: option %1 expects one or more package name.\n"
-    IDS_CMD_NEED_FILE_NAME "Error: option %1 expects a file name.\n"
-    IDS_CMD_NEED_PARAMS "Error: option %1 expects one or more parameters.\n"
-    IDS_CMD_INVALID_OPTION "Error: Unknown or invalid command line option specified.\n"
-    IDS_CMD_FIND_RESULT_FOR "Find result for %1:\n"
-    IDS_CMD_PACKAGE_NOT_FOUND "Failed to find package %1.\n"
-    IDS_CMD_PACKAGE_INFO "Information about package %1:\n"
+    IDS_CMD_USAGE "用法："
+    IDS_CMD_NEED_PACKAGE_NAME "錯誤：選項 %1 需要一個或多個軟件包名稱。\n"
+    IDS_CMD_NEED_FILE_NAME "錯誤：選項 %1 需要一個檔案名稱。\n"
+    IDS_CMD_NEED_PARAMS "錯誤：選項 %1 需要一個或多個參數。\n"
+    IDS_CMD_INVALID_OPTION "錯誤：指定了未知或錯誤的命令行參數。\n"
+    IDS_CMD_FIND_RESULT_FOR "%1 的搜尋結果：\n"
+    IDS_CMD_PACKAGE_NOT_FOUND "無法找到軟件包 %1。\n"
+    IDS_CMD_PACKAGE_INFO "有關軟件包 %1 的資訊：\n"
 END

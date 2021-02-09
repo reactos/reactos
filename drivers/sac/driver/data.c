@@ -247,7 +247,7 @@ InitializeDeviceData(IN PDEVICE_OBJECT DeviceObject)
                               &EnableData,
                               sizeof(EnableData),
                               NULL,
-                              0);
+                              NULL);
     if (!NT_SUCCESS(Status))
     {
         /* Bail out if we couldn't even get this far */
@@ -332,7 +332,7 @@ InitializeDeviceData(IN PDEVICE_OBJECT DeviceObject)
                                   &EnableData,
                                   sizeof(EnableData),
                                   NULL,
-                                  0);
+                                  NULL);
         if (!NT_SUCCESS(Status)) SAC_DBG(SAC_DBG_INIT, "Failed dispatch\n");
 
         /* Bail out */

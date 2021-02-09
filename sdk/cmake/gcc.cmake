@@ -35,7 +35,7 @@ if(USE_DUMMY_PSEH)
 endif()
 
 if(STACK_PROTECTOR)
-    add_compile_options(-fstack-protector-all)
+    add_compile_options(-fstack-protector-strong)
 endif()
 
 # Compiler Core
@@ -45,10 +45,18 @@ add_compile_options(-pipe -fms-extensions -fno-strict-aliasing)
 # The case for C++ is handled through the reactos_c++ INTERFACE library
 add_compile_options("$<$<NOT:$<COMPILE_LANGUAGE:CXX>>:-nostdinc>")
 
-add_compile_options(-mstackrealign -fno-aggressive-loop-optimizations)
+add_compile_options(-mstackrealign)
 
-if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
-    add_compile_options("$<$<COMPILE_LANGUAGE:C>:-std=gnu99;-Wno-microsoft>")
+if(NOT CMAKE_C_COMPILER_ID STREQUAL "Clang")
+    add_compile_options(-fno-aggressive-loop-optimizations)
+    if (DBG)
+        add_compile_options("$<$<COMPILE_LANGUAGE:C>:-Wold-style-declaration>")
+    endif()
+else()
+    add_compile_options("$<$<COMPILE_LANGUAGE:C>:-Wno-microsoft>")
+    add_compile_options(-Wno-pragma-pack)
+    add_compile_options(-fno-associative-math)
+    add_compile_options(-fcommon)
     set(CMAKE_LINK_DEF_FILE_FLAG "")
     set(CMAKE_STATIC_LIBRARY_SUFFIX ".a")
     set(CMAKE_LINK_LIBRARY_SUFFIX "")
@@ -60,12 +68,6 @@ if(CMAKE_C_COMPILER_ID STREQUAL "Clang")
     set(CMAKE_ASM_FLAGS_DEBUG "")
     set(CMAKE_C_FLAGS_DEBUG "")
     set(CMAKE_CXX_FLAGS_DEBUG "")
-endif()
-
-if(DBG)
-    if(NOT CMAKE_C_COMPILER_ID STREQUAL "Clang")
-        add_compile_options("$<$<COMPILE_LANGUAGE:C>:-Wold-style-declaration>")
-    endif()
 endif()
 
 # Debugging
@@ -146,6 +148,7 @@ if(ARCH STREQUAL "i386")
     endif()
 elseif(ARCH STREQUAL "amd64")
     add_compile_options(-mpreferred-stack-boundary=4)
+    add_compile_options(-Wno-error)
 endif()
 
 # Other
@@ -239,20 +242,19 @@ set(CMAKE_EXE_LINKER_FLAGS "-nostdlib -Wl,--enable-auto-image-base,--disable-aut
 set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS_INIT} -Wl,--disable-stdcall-fixup")
 set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS_INIT} -Wl,--disable-stdcall-fixup")
 
-if((CMAKE_C_COMPILER_ID STREQUAL "GNU") AND
-   (NOT CMAKE_BUILD_TYPE STREQUAL "Release") AND
-   (NOT CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 7.0))
-    # FIXME: Set this once Clang toolchain works with it
-    set(_compress_debug_sections_flag "-Wa,--compress-debug-sections")
-endif()
-
-set(CMAKE_C_COMPILE_OBJECT "${CCACHE} <CMAKE_C_COMPILER> <DEFINES> ${_compress_debug_sections_flag} <INCLUDES> <FLAGS> -o <OBJECT> -c <SOURCE>")
+set(CMAKE_C_COMPILE_OBJECT "<CMAKE_C_COMPILER> <DEFINES> ${_compress_debug_sections_flag} <INCLUDES> <FLAGS> -o <OBJECT> -c <SOURCE>")
 # FIXME: Once the GCC toolchain bugs are fixed, add _compress_debug_sections_flag to CXX too
-set(CMAKE_CXX_COMPILE_OBJECT "${CCACHE} <CMAKE_CXX_COMPILER> <DEFINES> <INCLUDES> <FLAGS> -o <OBJECT> -c <SOURCE>")
+set(CMAKE_CXX_COMPILE_OBJECT "<CMAKE_CXX_COMPILER> <DEFINES> <INCLUDES> <FLAGS> -o <OBJECT> -c <SOURCE>")
 set(CMAKE_ASM_COMPILE_OBJECT "<CMAKE_ASM_COMPILER> ${_compress_debug_sections_flag} -x assembler-with-cpp -o <OBJECT> -I${REACTOS_SOURCE_DIR}/sdk/include/asm -I${REACTOS_BINARY_DIR}/sdk/include/asm <INCLUDES> <FLAGS> <DEFINES> -D__ASM__ -c <SOURCE>")
 
 set(CMAKE_RC_COMPILE_OBJECT "<CMAKE_RC_COMPILER> -O coff <INCLUDES> <FLAGS> -DRC_INVOKED -D__WIN32__=1 -D__FLAT__=1 ${I18N_DEFS} <DEFINES> <SOURCE> <OBJECT>")
-set(CMAKE_DEPFILE_FLAGS_RC "--preprocessor \"${MINGW_TOOLCHAIN_PREFIX}gcc${MINGW_TOOLCHAIN_SUFFIX} -E -xc-header -MMD -MF <DEPFILE> -MT <OBJECT>\" ")
+if (CLANG)
+    set(GCC_EXECUTABLE ${CMAKE_C_COMPILER_TARGET}-gcc)
+else()
+    set(GCC_EXECUTABLE ${CMAKE_C_COMPILER})
+endif()
+
+set(CMAKE_DEPFILE_FLAGS_RC "--preprocessor \"${GCC_EXECUTABLE} -E -xc-header -MMD -MF <DEPFILE> -MT <OBJECT>\" ")
 
 # Optional 3rd parameter: stdcall stack bytes
 function(set_entrypoint MODULE ENTRYPOINT)
@@ -286,10 +288,6 @@ function(set_module_type_toolchain MODULE TYPE)
         #Disabled due to LD bug: ROSBE-154
         #add_linker_script(${MODULE} ${REACTOS_SOURCE_DIR}/sdk/cmake/init-section.lds)
     endif()
-
-    if(STACK_PROTECTOR)
-        target_link_libraries(${MODULE} gcc_ssp)
-    endif()
 endfunction()
 
 function(add_delay_importlibs _module)
@@ -321,20 +319,52 @@ function(generate_import_lib _libname _dllname _spec_file)
         OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/${_libname}_implib.def
         COMMAND native-spec2def -n=${_dllname} -a=${ARCH2} ${ARGN} --implib -d=${CMAKE_CURRENT_BINARY_DIR}/${_libname}_implib.def ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file}
         DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/${_spec_file} native-spec2def)
-    set_source_files_properties(${CMAKE_CURRENT_BINARY_DIR}/${_libname}_implib.def PROPERTIES EXTERNAL_OBJECT TRUE)
 
-    # Create normal importlib
-    _add_library(${_libname} STATIC EXCLUDE_FROM_ALL ${CMAKE_CURRENT_BINARY_DIR}/${_libname}_implib.def)
-    set_target_properties(${_libname} PROPERTIES LINKER_LANGUAGE "IMPLIB" PREFIX "")
+    # With this, we let DLLTOOL create an import library
+    set(LIBRARY_PRIVATE_DIR ${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/${_libname}.dir)
+    add_custom_command(
+        OUTPUT ${LIBRARY_PRIVATE_DIR}/${_libname}.a
+        # ar just puts stuff into the archive, without looking twice. Just delete the lib, we're going to rebuild it anyway
+        COMMAND ${CMAKE_COMMAND} -E rm -f $<TARGET_FILE:${_libname}>
+        COMMAND ${CMAKE_DLLTOOL} --def ${CMAKE_CURRENT_BINARY_DIR}/${_libname}_implib.def --kill-at --output-lib=${_libname}.a -t ${_libname}
+        DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/${_libname}_implib.def
+        WORKING_DIRECTORY ${LIBRARY_PRIVATE_DIR})
 
-    # Create delayed importlib
-    _add_library(${_libname}_delayed STATIC EXCLUDE_FROM_ALL ${CMAKE_CURRENT_BINARY_DIR}/${_libname}_implib.def)
-    set_target_properties(${_libname}_delayed PROPERTIES LINKER_LANGUAGE "IMPLIB_DELAYED" PREFIX "")
+    # We create a static library with the importlib thus created as object. AR will extract the obj files and archive it again as a thin lib
+    set_source_files_properties(
+        ${LIBRARY_PRIVATE_DIR}/${_libname}.a
+        PROPERTIES
+        EXTERNAL_OBJECT TRUE)
+    _add_library(${_libname} STATIC EXCLUDE_FROM_ALL
+        ${LIBRARY_PRIVATE_DIR}/${_libname}.a)
+    set_target_properties(${_libname}
+        PROPERTIES
+        LINKER_LANGUAGE "C"
+        PREFIX "")
+
+    # Do the same with delay-import libs
+    set(LIBRARY_PRIVATE_DIR ${CMAKE_CURRENT_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/${_libname}_delayed.dir)
+    add_custom_command(
+        OUTPUT ${LIBRARY_PRIVATE_DIR}/${_libname}_delayed.a
+        # ar just puts stuff into the archive, without looking twice. Just delete the lib, we're going to rebuild it anyway
+        COMMAND ${CMAKE_COMMAND} -E rm -f $<TARGET_FILE:${_libname}_delayed>
+        COMMAND ${CMAKE_DLLTOOL} --def ${CMAKE_CURRENT_BINARY_DIR}/${_libname}_implib.def --kill-at --output-delaylib=${_libname}_delayed.a -t ${_libname}_delayed
+        DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/${_libname}_implib.def
+        WORKING_DIRECTORY ${LIBRARY_PRIVATE_DIR})
+
+    # We create a static library with the importlib thus created. AR will extract the obj files and archive it again as a thin lib
+    set_source_files_properties(
+        ${LIBRARY_PRIVATE_DIR}/${_libname}_delayed.a
+        PROPERTIES
+        EXTERNAL_OBJECT TRUE)
+    _add_library(${_libname}_delayed STATIC EXCLUDE_FROM_ALL
+        ${LIBRARY_PRIVATE_DIR}/${_libname}_delayed.a)
+    set_target_properties(${_libname}_delayed
+        PROPERTIES
+        LINKER_LANGUAGE "C"
+        PREFIX "")
 endfunction()
 
-# Cute little hack to produce import libs
-set(CMAKE_IMPLIB_CREATE_STATIC_LIBRARY "${CMAKE_DLLTOOL} --def <OBJECTS> --kill-at --output-lib=<TARGET>")
-set(CMAKE_IMPLIB_DELAYED_CREATE_STATIC_LIBRARY "${CMAKE_DLLTOOL} --def <OBJECTS> --kill-at --output-delaylib=<TARGET>")
 function(spec2def _dllname _spec_file)
 
     cmake_parse_arguments(__spec2def "ADD_IMPORTLIB;NO_PRIVATE_WARNINGS;WITH_RELAY" "VERSION" "" ${ARGN})
@@ -423,30 +453,41 @@ add_compile_options("$<$<COMPILE_LANGUAGE:CXX>:$<IF:$<BOOL:$<TARGET_PROPERTY:WIT
 # We disable exceptions, unless said so
 add_compile_options("$<$<COMPILE_LANGUAGE:CXX>:$<IF:$<BOOL:$<TARGET_PROPERTY:WITH_CXX_EXCEPTIONS>>,-fexceptions,-fno-exceptions>>")
 
+# G++ shipped with ROSBE uses sjlj exceptions. Tell Clang it is so
+if (CLANG)
+    add_compile_options("$<$<AND:$<COMPILE_LANGUAGE:CXX>,$<BOOL:$<TARGET_PROPERTY:WITH_CXX_EXCEPTIONS>>>:-fsjlj-exceptions>")
+endif()
+
 # Find default G++ libraries
+if (CLANG)
+    set(GXX_EXECUTABLE ${CMAKE_CXX_COMPILER_TARGET}-g++)
+else()
+    set(GXX_EXECUTABLE ${CMAKE_CXX_COMPILER})
+endif()
+
 add_library(libgcc STATIC IMPORTED)
-execute_process(COMMAND ${CMAKE_CXX_COMPILER} -print-file-name=libgcc.a OUTPUT_VARIABLE LIBGCC_LOCATION)
+execute_process(COMMAND ${GXX_EXECUTABLE} -print-file-name=libgcc.a OUTPUT_VARIABLE LIBGCC_LOCATION)
 string(STRIP ${LIBGCC_LOCATION} LIBGCC_LOCATION)
 set_target_properties(libgcc PROPERTIES IMPORTED_LOCATION ${LIBGCC_LOCATION})
 # libgcc needs kernel32 imports, a CRT and msvcrtex
 target_link_libraries(libgcc INTERFACE libkernel32 libmsvcrt msvcrtex)
 
 add_library(libsupc++ STATIC IMPORTED GLOBAL)
-execute_process(COMMAND ${CMAKE_CXX_COMPILER} -print-file-name=libsupc++.a OUTPUT_VARIABLE LIBSUPCXX_LOCATION)
+execute_process(COMMAND ${GXX_EXECUTABLE} -print-file-name=libsupc++.a OUTPUT_VARIABLE LIBSUPCXX_LOCATION)
 string(STRIP ${LIBSUPCXX_LOCATION} LIBSUPCXX_LOCATION)
 set_target_properties(libsupc++ PROPERTIES IMPORTED_LOCATION ${LIBSUPCXX_LOCATION})
 # libsupc++ requires libgcc
 target_link_libraries(libsupc++ INTERFACE libgcc)
 
 add_library(libmingwex STATIC IMPORTED)
-execute_process(COMMAND ${CMAKE_CXX_COMPILER} -print-file-name=libmingwex.a OUTPUT_VARIABLE LIBMINGWEX_LOCATION)
+execute_process(COMMAND ${GXX_EXECUTABLE} -print-file-name=libmingwex.a OUTPUT_VARIABLE LIBMINGWEX_LOCATION)
 string(STRIP ${LIBMINGWEX_LOCATION} LIBMINGWEX_LOCATION)
 set_target_properties(libmingwex PROPERTIES IMPORTED_LOCATION ${LIBMINGWEX_LOCATION})
 # libmingwex requires a CRT and imports from kernel32
 target_link_libraries(libmingwex INTERFACE libmsvcrt libkernel32)
 
 add_library(libstdc++ STATIC IMPORTED GLOBAL)
-execute_process(COMMAND ${CMAKE_CXX_COMPILER} -print-file-name=libstdc++.a OUTPUT_VARIABLE LIBSTDCCXX_LOCATION)
+execute_process(COMMAND ${GXX_EXECUTABLE} -print-file-name=libstdc++.a OUTPUT_VARIABLE LIBSTDCCXX_LOCATION)
 string(STRIP ${LIBSTDCCXX_LOCATION} LIBSTDCCXX_LOCATION)
 set_target_properties(libstdc++ PROPERTIES IMPORTED_LOCATION ${LIBSTDCCXX_LOCATION})
 # libstdc++ requires libsupc++ and mingwex provided by GCC

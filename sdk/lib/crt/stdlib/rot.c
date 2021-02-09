@@ -19,8 +19,16 @@
 #pragma function(_rotr, _rotl, _rotr, _lrotl, _lrotr)
 #endif
 
-unsigned int _rotr( unsigned int value, int shift );
-unsigned long _lrotr(unsigned long value, int shift);
+#if defined (__clang__) && !defined(_MSC_VER)
+#define ASM_ALIAS __asm__
+#else
+#define ASM_ALIAS(x)
+#endif
+
+unsigned int _rotr( unsigned int value, int shift ) ASM_ALIAS("__rotr");
+unsigned long _lrotr(unsigned long value, int shift) ASM_ALIAS("__lrotr");
+unsigned int _rotl( unsigned int value, int shift ) ASM_ALIAS("__rotl");
+unsigned long _lrotl( unsigned long value, int shift ) ASM_ALIAS("__lrotl");
 
 /*
  * @implemented

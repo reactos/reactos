@@ -1,17 +1,17 @@
 /*
  * PROJECT:         ReactOS Kernel
  * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            base/applications/osk/lang/zh-CN.rc
+ * FILE:            base/applications/osk/lang/zh-TW.rc
  * PURPOSE:         On screen keyboard (American resources).
  * PROGRAMMERS:     Denis ROBERT
+ * TRANSLATORS:     Henry Tang Ih 2016 (henrytang2@hotmail.com)
+ *                  Aobi Chan CL (eason066@gmail.com)
  */
-
-/* Traditional Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com) */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
 MAIN_DIALOG_ENHANCED_KB DIALOGEX DISCARDABLE 0, 0, 608, 164
-CAPTION "螢幕鍵盤"
+CAPTION "螢幕小鍵盤"
 FONT 9, "新細明體"
 MENU IDR_OSK_MENU
 STYLE WS_SYSMENU | WS_MINIMIZEBOX
@@ -130,8 +130,8 @@ BEGIN
 END
 
 MAIN_DIALOG_STANDARD_KB DIALOGEX DISCARDABLE 0, 0, 362, 115
-CAPTION "On screen keyboard"
-FONT 8, "MS Shell Dlg"
+CAPTION "螢幕小鍵盤"
+FONT 9, "新細明體"
 MENU IDR_OSK_MENU
 STYLE WS_SYSMENU | WS_MINIMIZEBOX
 EXSTYLE WS_EX_TOPMOST | WS_EX_NOACTIVATE | WS_EX_APPWINDOW
@@ -250,59 +250,59 @@ END
 
 IDR_OSK_MENU MENU DISCARDABLE
 BEGIN
-    POPUP "File"
+    POPUP "檔案"
     BEGIN
-        MENUITEM "&Exit", IDM_EXIT
+        MENUITEM "結束(&E)", IDM_EXIT
     END
 
-    POPUP "Keyboard"
+    POPUP "鍵盤"
     BEGIN
-        MENUITEM "Enhanced Keyboard", IDM_ENHANCED_KB, CHECKED
-        MENUITEM "Standard Keyboard", IDM_STANDARD_KB
+        MENUITEM "增強型鍵盤", IDM_ENHANCED_KB, CHECKED
+        MENUITEM "標準鍵盤", IDM_STANDARD_KB
         MENUITEM SEPARATOR
-        MENUITEM "Regular Layout", IDM_REG_LAYOUT, CHECKED, GRAYED
-        MENUITEM "Block Layout", IDM_BLOCK_LAYOUT, GRAYED
+        MENUITEM "標準配置", IDM_REG_LAYOUT, CHECKED, GRAYED
+        MENUITEM "區塊配置", IDM_BLOCK_LAYOUT, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "101 keys", IDM_101_KEYS, CHECKED, GRAYED
-        MENUITEM "102 keys", IDM_102_KEYS, GRAYED
-        MENUITEM "106 keys", IDM_106_KEYS, GRAYED
+        MENUITEM "101 鍵", IDM_101_KEYS, CHECKED, GRAYED
+        MENUITEM "102 鍵", IDM_102_KEYS, GRAYED
+        MENUITEM "106 鍵", IDM_106_KEYS, GRAYED
     END
 
-    POPUP "Settings"
+    POPUP "設定"
     BEGIN
-        MENUITEM "Always on Top", IDM_ON_TOP, CHECKED
+        MENUITEM "總是在最上層顯示", IDM_ON_TOP, CHECKED
         MENUITEM SEPARATOR
-        MENUITEM "&Use Click Sound", IDM_CLICK_SOUND
+        MENUITEM "使用按鍵音效(&U)", IDM_CLICK_SOUND
         MENUITEM SEPARATOR
-        MENUITEM "&Typing Mode...", IDM_TYPE_MODE, GRAYED
+        MENUITEM "輸入模式(&T)...", IDM_TYPE_MODE, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "&Font...", IDM_FONT, GRAYED
+        MENUITEM "字型(&F)...", IDM_FONT, GRAYED
     END
 
-    POPUP "Help"
+    POPUP "說明"
     BEGIN
-        MENUITEM "&Help Topics", IDM_HELP_TOPICS, GRAYED
+        MENUITEM "說明主題(&H)", IDM_HELP_TOPICS, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "&About On-Screen Keyboard...", IDM_ABOUT
+        MENUITEM "關於螢幕小鍵盤(&A)...", IDM_ABOUT
     END
 END
 
 IDD_WARNINGDIALOG_OSK DIALOGEX 0, 0, 250, 97
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CENTER | WS_POPUP | WS_CAPTION
-CAPTION "On-Screen Keyboard"
-FONT 8, "MS Shell Dlg", 400, 0, 0x1
+CAPTION "螢幕小鍵盤"
+FONT 9, "新細明體", 400, 0, 0x1
 BEGIN
-    DEFPUSHBUTTON "OK", IDOK, 193, 76, 50, 14
+    DEFPUSHBUTTON "確定", IDOK, 193, 76, 50, 14
     ICON IDI_OSK, IDC_STATIC, 7, 17, 20, 20
-    LTEXT "On-Screen Keyboard provides a minimum level of functionality for mobility-impaired users. Mobility-impaired users will need a utility program with higher functionality for daily use.", IDC_STATIC, 36, 7, 207, 33
-    CONTROL "Do not show this message again", IDC_SHOWWARNINGCHECK, "Button",
+    LTEXT "螢幕小鍵盤是為行動不便的使用者提供基本的輔助功能。行動不便的使用者大多需要一個功能較強的協助工具應用程式作日常工作。", IDC_STATIC, 36, 7, 207, 33
+    CONTROL "不要再顯示這個訊息", IDC_SHOWWARNINGCHECK, "Button",
             BS_AUTOCHECKBOX | WS_TABSTOP, 43, 80, 137, 10
 END
 
 STRINGTABLE
 BEGIN
-    STRING_OSK "On-Screen Keyboard"
-    STRING_AUTHORS "Copyright Denis Robert"
+    STRING_OSK "螢幕小鍵盤"
+    STRING_AUTHORS "Denis Robert 版權所有"
 END
 
 /* EOF */

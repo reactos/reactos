@@ -9,9 +9,6 @@ include(CMakeDependentOption)
 
 project(REACTOS)
 
-# Versioning
-include(sdk/include/reactos/version.cmake)
-
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_INCLUDE_DIRECTORIES_PROJECT_BEFORE ON)
 set(CMAKE_SHARED_LIBRARY_PREFIX "")
@@ -20,6 +17,8 @@ set(CMAKE_SKIP_PREPROCESSED_SOURCE_RULES TRUE)
 set(CMAKE_SKIP_ASSEMBLY_SOURCE_RULES TRUE)
 set(CMAKE_COLOR_MAKEFILE OFF)
 set(CMAKE_POSITION_INDEPENDENT_CODE OFF)
+set(CMAKE_C_STANDARD 99)
+set(CMAKE_CXX_STANDARD 11)
 #set_property(GLOBAL PROPERTY RULE_MESSAGES OFF)
 
 if(NOT ARCH)
@@ -31,6 +30,16 @@ endif()
 # See http://cmake.3232098.n2.nabble.com/Case-insensitive-string-compare-td7580269.html
 # for more information.
 string(TOLOWER ${ARCH} ARCH)
+
+# Alternative WinNT-compatible architecture string
+if(ARCH STREQUAL "i386")
+    set(WINARCH "x86")
+else()
+    set(WINARCH ${ARCH})
+endif()
+
+# Versioning
+include(sdk/include/reactos/version.cmake)
 
 # Compile options
 if(ARCH STREQUAL "i386")
@@ -48,7 +57,8 @@ add_definitions(-D__REACTOS__)
 
 # There doesn't seem to be a standard for __FILE__ being relative or absolute, so detect it at runtime.
 file(RELATIVE_PATH _PATH_PREFIX ${REACTOS_BINARY_DIR} ${REACTOS_SOURCE_DIR})
-if (GCC AND (CMAKE_C_COMPILER_VERSION VERSION_GREATER_EQUAL "8.0.0"))
+if (GCC AND ((CMAKE_C_COMPILER_ID STREQUAL "GNU") AND (CMAKE_C_COMPILER_VERSION VERSION_GREATER_EQUAL "8.0.0")
+    OR ((CMAKE_C_COMPILER_ID STREQUAL "Clang") AND (CMAKE_C_COMPILER_VERSION VERSION_GREATER_EQUAL "10.0.0"))))
     # Thankfully, GCC has this
     add_compile_options(-ffile-prefix-map=${REACTOS_SOURCE_DIR}=)
     add_compile_options(-ffile-prefix-map=${_PATH_PREFIX}=)
@@ -56,7 +66,7 @@ else()
     string(LENGTH ${_PATH_PREFIX} _PATH_PREFIX_LENGTH)
     string(LENGTH ${REACTOS_SOURCE_DIR} REACTOS_SOURCE_DIR_LENGTH)
     math(EXPR REACTOS_SOURCE_DIR_LENGTH "${REACTOS_SOURCE_DIR_LENGTH} + 1")
-    add_compile_definitions("__RELFILE__=&__FILE__[__FILE__[0] == '.' ? ${_PATH_PREFIX_LENGTH} : ${REACTOS_SOURCE_DIR_LENGTH}]")
+    add_compile_definitions("$<$<COMPILE_LANGUAGE:C,CXX>:__RELFILE__=&__FILE__[__FILE__[0] == '.' ? ${_PATH_PREFIX_LENGTH} : ${REACTOS_SOURCE_DIR_LENGTH}]>")
 endif()
 
 if(MSVC_IDE)
@@ -64,7 +74,8 @@ if(MSVC_IDE)
 endif()
 
 # Bison and Flex support
-# include(sdk/cmake/bison-flex.cmake)
+find_package(BISON REQUIRED)
+find_package(FLEX REQUIRED)
 
 if(NOT CMAKE_CROSSCOMPILING)
     set(TOOLS_FOLDER ${CMAKE_CURRENT_BINARY_DIR})
@@ -154,6 +165,7 @@ Enable this if the module uses typeid or dynamic_cast. You will probably need to
     if(ENABLE_CCACHE)
         message(WARNING "-- Disabling precompiled headers support (ccache).")
         option(PCH "Whether to use precompiled headers" OFF)
+        set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
     elseif(GCC)
         message(WARNING "-- Disabling precompiled headers on GCC by default CORE-17108.")
         option(PCH "Whether to use precompiled headers" OFF)

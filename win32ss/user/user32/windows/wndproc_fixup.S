@@ -14,9 +14,9 @@
 
 .code
 
-/* 
+/*
  * LRESULT
- * __cdecl 
+ * __cdecl
  * CALL_EXTERN_WNDPROC(
  *     WNDPROC WndProc,
  *     HWND hWnd,
@@ -33,7 +33,7 @@ FUNC _CALL_EXTERN_WNDPROC
 
     push edi
     push esi
-    push ebp
+    push ebx
 
     sub esp, 12
 

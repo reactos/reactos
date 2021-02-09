@@ -63,21 +63,19 @@ InstallDriver(
     IN LPCWSTR DeviceId,
     IN LPCWSTR HardwareId)
 {
-    UNICODE_STRING PathPrefix = RTL_CONSTANT_STRING(L"System32\\DRIVERS\\");
     UNICODE_STRING ServiceU = RTL_CONSTANT_STRING(L"Service");
     UNICODE_STRING ErrorControlU = RTL_CONSTANT_STRING(L"ErrorControl");
-    UNICODE_STRING ImagePathU = RTL_CONSTANT_STRING(L"ImagePath");
     UNICODE_STRING StartU = RTL_CONSTANT_STRING(L"Start");
     UNICODE_STRING TypeU = RTL_CONSTANT_STRING(L"Type");
     UNICODE_STRING UpperFiltersU = RTL_CONSTANT_STRING(L"UpperFilters");
     PWSTR keyboardClass = L"kbdclass\0";
+    PWSTR partMgr = L"partmgr\0";
 
     UNICODE_STRING StringU;
     OBJECT_ATTRIBUTES ObjectAttributes;
     HANDLE hService;
     INFCONTEXT Context;
     PCWSTR Driver, ClassGuid, ImagePath;
-    PWSTR FullImagePath;
     ULONG dwValue;
     ULONG Disposition;
     NTSTATUS Status;
@@ -113,20 +111,6 @@ InstallDriver(
         return FALSE;
     }
 
-    /* Prepare full driver path */
-    dwValue = PathPrefix.MaximumLength + wcslen(ImagePath) * sizeof(WCHAR);
-    FullImagePath = (PWSTR)RtlAllocateHeap(ProcessHeap, 0, dwValue);
-    if (!FullImagePath)
-    {
-        DPRINT1("RtlAllocateHeap() failed\n");
-        INF_FreeData(ImagePath);
-        INF_FreeData(ClassGuid);
-        INF_FreeData(Driver);
-        return FALSE;
-    }
-    RtlCopyMemory(FullImagePath, PathPrefix.Buffer, PathPrefix.MaximumLength);
-    ConcatPaths(FullImagePath, dwValue / sizeof(WCHAR), 1, ImagePath);
-
     DPRINT1("Using driver '%S' for device '%S'\n", ImagePath, DeviceId);
 
     /* Create service key */
@@ -136,7 +120,6 @@ InstallDriver(
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("NtCreateKey('%wZ') failed with status 0x%08x\n", &StringU, Status);
-        RtlFreeHeap(ProcessHeap, 0, FullImagePath);
         INF_FreeData(ImagePath);
         INF_FreeData(ClassGuid);
         INF_FreeData(Driver);
@@ -170,16 +153,11 @@ InstallDriver(
                       &dwValue,
                       sizeof(dwValue));
     }
-    /* HACK: don't put any path in registry */
-    NtSetValueKey(hService,
-                  &ImagePathU,
-                  0,
-                  REG_SZ,
-                  (PVOID)ImagePath,
-                  (wcslen(ImagePath) + 1) * sizeof(WCHAR));
 
     INF_FreeData(ImagePath);
+    NtClose(hService);
 
+    /* Add kbdclass and partmgr upper filters */
     if (ClassGuid &&_wcsicmp(ClassGuid, L"{4D36E96B-E325-11CE-BFC1-08002BE10318}") == 0)
     {
         DPRINT1("Installing keyboard class driver for '%S'\n", DeviceId);
@@ -189,6 +167,16 @@ InstallDriver(
                       REG_MULTI_SZ,
                       keyboardClass,
                       (wcslen(keyboardClass) + 2) * sizeof(WCHAR));
+    }
+    else if (ClassGuid && _wcsicmp(ClassGuid, L"{4D36E967-E325-11CE-BFC1-08002BE10318}") == 0)
+    {
+        DPRINT1("Installing partition manager driver for '%S'\n", DeviceId);
+        NtSetValueKey(hDeviceKey,
+                      &UpperFiltersU,
+                      0,
+                      REG_MULTI_SZ,
+                      partMgr,
+                      (wcslen(partMgr) + 2) * sizeof(WCHAR));
     }
 
     INF_FreeData(ClassGuid);
@@ -207,17 +195,6 @@ InstallDriver(
     }
 
     INF_FreeData(Driver);
-
-    /* HACK: Update driver path */
-    NtSetValueKey(hService,
-                  &ImagePathU,
-                  0,
-                  REG_SZ,
-                  FullImagePath,
-                  (wcslen(FullImagePath) + 1) * sizeof(WCHAR));
-    RtlFreeHeap(ProcessHeap, 0, FullImagePath);
-
-    NtClose(hService);
 
     return deviceInstalled;
 }

@@ -282,7 +282,6 @@ extern PCI_CONFIG_HANDLER PCIConfigHandler;
 extern PCI_CONFIG_HANDLER PCIConfigHandlerType1;
 extern PCI_CONFIG_HANDLER PCIConfigHandlerType2;
 
-INIT_FUNCTION
 PPCI_REGISTRY_INFO_INTERNAL
 NTAPI
 HalpQueryPciRegistryInfo(
@@ -426,14 +425,12 @@ HalpSetCmosData(
     IN ULONG Length
 );
 
-INIT_FUNCTION
 VOID
 NTAPI
 HalpInitializePciBus(
     VOID
 );
 
-INIT_FUNCTION
 VOID
 NTAPI
 HalpInitializePciStubs(
@@ -473,7 +470,6 @@ HalpFindBusAddressTranslation(
     IN BOOLEAN NextBus
 );
 
-INIT_FUNCTION
 VOID
 NTAPI
 HalpRegisterPciDebuggingDeviceInfo(

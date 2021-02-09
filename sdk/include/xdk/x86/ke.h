@@ -52,7 +52,7 @@ VOID
 KeMemoryBarrier(VOID)
 {
   LONG Barrier, *Dummy = &Barrier;
-  UNREFERENCED_LOCAL_VARIABLE(Dummy);
+  (VOID)Dummy;
 
 #if defined(__GNUC__)
   __asm__ __volatile__ ("xchg %%eax, %0" : : "m" (Barrier) : "%eax");
@@ -335,8 +335,25 @@ KeGetCurrentProcessorNumber(VOID)
     return (ULONG)__readfsbyte(FIELD_OFFSET(KPCR, Number));
 }
 
+/* Macros for kernel-mode run-time checks of X86 system architecture */
+#ifdef IsNEC_98
+#undef IsNEC_98
+#endif
+#define IsNEC_98     (SharedUserData->AlternativeArchitecture == NEC98x86)
+
+#ifdef IsNotNEC_98
+#undef IsNotNEC_98
+#endif
+#define IsNotNEC_98  (SharedUserData->AlternativeArchitecture != NEC98x86)
+
+#ifdef SetNEC_98
+#undef SetNEC_98
+#endif
+#define SetNEC_98    (SharedUserData->AlternativeArchitecture = NEC98x86)
+
+#ifdef SetNotNEC_98
+#undef SetNotNEC_98
+#endif
+#define SetNotNEC_98 (SharedUserData->AlternativeArchitecture = StandardDesign)
+
 $endif (_NTDDK_)
-
-
-
-

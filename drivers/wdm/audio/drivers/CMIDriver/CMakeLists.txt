@@ -3,9 +3,10 @@ add_subdirectory(cmicontrol)
 add_subdirectory(cpl)
 
 
-# for WaveRT support
-remove_definitions(-D_WIN32_WINNT=0x502)
-add_definitions(-D_WIN32_WINNT=0x600)
+# For (NT6+) WaveRT support.
+# See WAVERT define in debug.hpp.
+# remove_definitions(-D_WIN32_WINNT=0x502)
+# add_definitions(-D_WIN32_WINNT=0x600)
 
 list(APPEND SOURCE
     adapter.cpp

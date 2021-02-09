@@ -38,11 +38,11 @@ BEGIN
     COMBOBOX IDC_SERVERLIST, 65, 22, 117, 136, CBS_DROPDOWN | WS_VSCROLL | WS_TABSTOP
     AUTOCHECKBOX "Szinkronizálja a számítógép óráját egy internetes kiszolgálóval",
                  IDC_AUTOSYNC, 11, 7, 241, 10, BS_AUTOCHECKBOX | WS_GROUP | WS_TABSTOP
-    LTEXT "Kiszolgáló:", IDC_SERVERTEXT, 34, 22, 28, 13
-    PUSHBUTTON "Szinkronizáljon most", IDC_UPDATEBUTTON, 187, 22, 49, 14
+    LTEXT "Kiszolgáló:", IDC_SERVERTEXT, 28, 22, 34, 13
+    PUSHBUTTON "Szinkronizálás", IDC_UPDATEBUTTON, 187, 22, 55, 14
     LTEXT "", IDC_SUCSYNC, 16, 54, 214, 23
     LTEXT "", IDC_NEXTSYNC, 12, 96, 137, 12
-    LTEXT "A szinkronizálás csak akkör történhet meg, ha az internetre fel van csatlakozva a gép.", -1, 12, 114, 225, 25
+    LTEXT "A szinkronizálás csak akkor történhet meg, ha az internetre fel van csatlakozva a számítógép.", -1, 12, 114, 225, 25
 END
 
 STRINGTABLE
@@ -52,10 +52,10 @@ BEGIN
     IDS_TIMEZONETEXT "Használt időzóna: %s"
     IDS_TIMEZONEINVALID "Érvénytelen"
     IDS_TIMEZONEUNKNOWN "Ismeretlen"
-    IDS_INETTIMESUCSYNC "A számítógép órája sikeresen szinkronizálva lett: %s (%s %s-kor)"
+    IDS_INETTIMESUCSYNC "A számítógép órája sikeresen szinkronizálva lett ezzel: %s (%s %s-kor)"
     IDS_INETTIMENEXTSYNC "A következő szinkronizálás: %s %s-kor"
-    IDS_INETTIMESYNCING "Please wait while ReactOS synchronizes the time with %s"
-    IDS_INETTIMEERROR "An error occured while ReactOS was synchronizing with %s"
-    IDS_INETTIMESUCFILL "Please type a NTP server name in order to synchronize the time"
-    IDS_INETTIMEWELCOME "Select a NTP server from the list or type a NTP server name to synchronize the computer's time"
+    IDS_INETTIMESYNCING "Kérem várjon amíg a ReactOS szinkronizálja az időt ezzel: %s"
+    IDS_INETTIMEERROR "Hiba történt az alábbi kiszolgálóval történő szinkronizálás közben: %s"
+    IDS_INETTIMESUCFILL "Kérem adja meg egy NTP szerver nevét az idő szinkronizálásához"
+    IDS_INETTIMEWELCOME "Jelöljön ki egy NTP szervert a listából vagy írja be egy NTP szerver nevét hogy szinkronizálni tudja a számítógép óráját."
 END

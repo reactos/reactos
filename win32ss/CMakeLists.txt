@@ -18,6 +18,11 @@ add_subdirectory(user/winsrv)
 
 spec2def(win32k.sys win32k.spec ADD_IMPORTLIB)
 
+# embed RTC libs
+if (STACK_PROTECTOR)
+    target_sources(libwin32k PRIVATE $<TARGET_OBJECTS:gcc_ssp_win32k>)
+endif()
+
 include_directories(
     .
     include

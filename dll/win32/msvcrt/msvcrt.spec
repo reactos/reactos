@@ -883,7 +883,7 @@
 @ stub -version=0x600+ -arch=i386 _msize_debug
 @ cdecl _nextafter(double double)
 @ stub -arch=x86_64 _nextafterf
-@ cdecl _onexit(ptr)
+@ extern _onexit # Declaring it as extern let us use the symbol from msvcrtex while having the __imp_ symbol defined in the import lib
 @ varargs _open(str long)
 @ cdecl _open_osfhandle(long long)
 @ extern _osplatform
@@ -1293,7 +1293,7 @@
 @ cdecl atan2(double double)
 @ cdecl -arch=x86_64,arm atan2f(long)
 @ cdecl -arch=x86_64,arm atanf(long)
-@ extern atexit # <-- keep this as an extern, thank you
+@ extern atexit # Declaring it as extern let us use the symbol from msvcrtex while having the __imp_ symbol defined in the import lib for those who really need it
 @ cdecl atof(str)
 @ cdecl atoi(str)
 @ cdecl atol(str)

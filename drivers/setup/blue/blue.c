@@ -1455,6 +1455,14 @@ ScrIoControl(
                 break;
             }
 
+            Irp->IoStatus.Information = 0;
+
+            /* Set the cursor position, clipping it to the screen */
+            DeviceExtension->CursorX = min(max(ConsoleDraw.CursorX, 0), DeviceExtension->Columns - 1);
+            DeviceExtension->CursorY = min(max(ConsoleDraw.CursorY, 0), DeviceExtension->Rows    - 1);
+            if (DeviceExtension->Enabled)
+                ScrSetCursor(DeviceExtension);
+
             // TODO: For the moment if the ConsoleDraw rectangle has borders
             // out of the screen-buffer we just bail out. Would it be better
             // to actually clip the rectangle within its borders instead?
@@ -1464,8 +1472,8 @@ ScrIoControl(
                 Status = STATUS_SUCCESS;
                 break;
             }
-            if ( ConsoleDraw.SizeX >= DeviceExtension->Columns - ConsoleDraw.X ||
-                 ConsoleDraw.SizeY >= DeviceExtension->Rows    - ConsoleDraw.Y )
+            if ( ConsoleDraw.SizeX > DeviceExtension->Columns - ConsoleDraw.X ||
+                 ConsoleDraw.SizeY > DeviceExtension->Rows    - ConsoleDraw.Y )
             {
                 Status = STATUS_SUCCESS;
                 break;
@@ -1489,13 +1497,6 @@ ScrIoControl(
                 }
             }
 
-            /* Set the cursor position, clipping it to the screen */
-            DeviceExtension->CursorX = min(max(ConsoleDraw.CursorX, 0), DeviceExtension->Columns - 1);
-            DeviceExtension->CursorY = min(max(ConsoleDraw.CursorY, 0), DeviceExtension->Rows    - 1);
-            if (DeviceExtension->Enabled)
-                ScrSetCursor(DeviceExtension);
-
-            Irp->IoStatus.Information = 0;
             Status = STATUS_SUCCESS;
             break;
         }

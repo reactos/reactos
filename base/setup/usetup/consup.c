@@ -33,8 +33,8 @@
 
 /* GLOBALS ******************************************************************/
 
-HANDLE StdInput  = INVALID_HANDLE_VALUE;
-HANDLE StdOutput = INVALID_HANDLE_VALUE;
+HANDLE StdInput  = NULL;
+HANDLE StdOutput = NULL;
 
 SHORT xScreen = 0;
 SHORT yScreen = 0;
@@ -45,15 +45,24 @@ BOOLEAN
 CONSOLE_Init(VOID)
 {
     CONSOLE_SCREEN_BUFFER_INFO csbi;
+
+    /* Allocate a new console */
     if (!AllocConsole())
         return FALSE;
 
-    StdInput = GetStdHandle(STD_INPUT_HANDLE);
+    /* Get the standard handles */
+    StdInput  = GetStdHandle(STD_INPUT_HANDLE);
     StdOutput = GetStdHandle(STD_OUTPUT_HANDLE);
+
+    /* Retrieve the size of the console */
     if (!GetConsoleScreenBufferInfo(StdOutput, &csbi))
+    {
+        FreeConsole();
         return FALSE;
+    }
     xScreen = csbi.dwSize.X;
     yScreen = csbi.dwSize.Y;
+
     return TRUE;
 }
 
@@ -175,7 +184,7 @@ CONSOLE_GetCursorXY(
 {
     CONSOLE_SCREEN_BUFFER_INFO csbi;
 
-    GetConsoleScreenBufferInfo(GetStdHandle(STD_OUTPUT_HANDLE), &csbi);
+    GetConsoleScreenBufferInfo(StdOutput, &csbi);
 
     *x = csbi.dwCursorPosition.X;
     *y = csbi.dwCursorPosition.Y;

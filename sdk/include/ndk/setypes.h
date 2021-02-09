@@ -109,6 +109,17 @@ typedef struct _TOKEN_ACCESS_INFORMATION
      SE_GROUP_INTEGRITY_ENABLED)
 
 //
+// Proxy Class enumeration
+//
+typedef enum _PROXY_CLASS
+{
+    ProxyFull = 0,
+    ProxyService,
+    ProxyTree,
+    ProxyDirectory
+} PROXY_CLASS;
+
+//
 // Audit and Policy Structures
 //
 typedef struct _SEP_AUDIT_POLICY_CATEGORIES
@@ -146,6 +157,28 @@ typedef struct _SE_AUDIT_PROCESS_CREATION_INFO
 } SE_AUDIT_PROCESS_CREATION_INFO, *PSE_AUDIT_PROCESS_CREATION_INFO;
 
 //
+// Token Audit Data
+//
+typedef struct _SECURITY_TOKEN_AUDIT_DATA
+{
+    ULONG Length;
+    ULONG GrantMask;
+    ULONG DenyMask;
+} SECURITY_TOKEN_AUDIT_DATA, *PSECURITY_TOKEN_AUDIT_DATA;
+
+//
+// Token Proxy Data
+//
+typedef struct _SECURITY_TOKEN_PROXY_DATA
+{
+    ULONG Length;
+    PROXY_CLASS ProxyClass;
+    UNICODE_STRING PathInfo;
+    ULONG ContainerMask;
+    ULONG ObjectMask;
+} SECURITY_TOKEN_PROXY_DATA, *PSECURITY_TOKEN_PROXY_DATA;
+
+//
 // Token and auxiliary data
 //
 typedef struct _TOKEN
@@ -155,7 +188,7 @@ typedef struct _TOKEN
     LUID AuthenticationId;                            /* 0x18 */
     LUID ParentTokenId;                               /* 0x20 */
     LARGE_INTEGER ExpirationTime;                     /* 0x28 */
-    struct _ERESOURCE *TokenLock;                     /* 0x30 */
+    PERESOURCE TokenLock;                             /* 0x30 */
     SEP_AUDIT_POLICY  AuditPolicy;                    /* 0x38 */
     LUID ModifiedId;                                  /* 0x40 */
     ULONG SessionId;                                  /* 0x48 */
@@ -176,8 +209,8 @@ typedef struct _TOKEN
     SECURITY_IMPERSONATION_LEVEL ImpersonationLevel;  /* 0x84 */
     ULONG TokenFlags;                                 /* 0x88 */
     BOOLEAN TokenInUse;                               /* 0x8C */
-    PVOID ProxyData;                                  /* 0x90 */
-    PVOID AuditData;                                  /* 0x94 */
+    PSECURITY_TOKEN_PROXY_DATA ProxyData;             /* 0x90 */
+    PSECURITY_TOKEN_AUDIT_DATA AuditData;             /* 0x94 */
     LUID OriginatingLogonSession;                     /* 0x98 */
     ULONG VariablePart;                               /* 0xA0 */
 } TOKEN, *PTOKEN;

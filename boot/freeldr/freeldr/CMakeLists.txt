@@ -225,6 +225,10 @@ if(NOT MSVC AND ARCH STREQUAL "i386" AND SARCH STREQUAL "xbox")
   # Prevent a warning when doing a memcmp with address 0
   set_source_files_properties(arch/i386/xbox/xboxmem.c PROPERTIES COMPILE_FLAGS "-Wno-nonnull")
 endif()
+if(ARCH STREQUAL "amd64" AND NOT MSVC)
+    # Prevent using SSE (not support in freeldr)
+    target_compile_options(freeldr_common PUBLIC -mno-sse)
+endif()
 
 set(PCH_SOURCE
     ${FREELDR_BOOTLIB_SOURCE}
@@ -251,6 +255,7 @@ list(APPEND FREELDR_BASE_SOURCE
                      ## otherwise we get linking errors with Rtl**Bitmap** APIs.
                      ## Do not happen on MSVC builds however...
     ntldr/inffile.c
+    ntldr/ntldropts.c
     lib/rtl/libsupp.c)
 
 if(ARCH STREQUAL "i386")
@@ -311,8 +316,8 @@ target_link_libraries(freeldr_pe_dbg freeldr_common cportlib cmlib rtl libcntpr)
 
 # dynamic analysis switches
 if(STACK_PROTECTOR)
-    target_link_libraries(freeldr_pe gcc_ssp)
-    target_link_libraries(freeldr_pe_dbg gcc_ssp)
+    target_sources(freeldr_pe PRIVATE $<TARGET_OBJECTS:gcc_ssp_nt>)
+    target_sources(freeldr_pe_dbg PRIVATE $<TARGET_OBJECTS:gcc_ssp_nt>)
 endif()
 
 if(RUNTIME_CHECKS)

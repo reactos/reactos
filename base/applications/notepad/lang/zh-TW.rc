@@ -165,6 +165,6 @@ BEGIN
     STRING_PRINTERROR """%s"" 檔案列印失敗。\n\
 請檢查印表機是否已經開機和正確設定。"
 
-    STRING_TEXT_DOCUMENT "Text Document"
+    STRING_TEXT_DOCUMENT "純文字檔案"
     STRING_NOTEPAD_AUTHORS "Copyright 1997,98 Marcel Baur, 2000 Mike McCormack, 2002 Sylvain Petreolle, 2002 Andriy Palamarchuk\r\n"
 END

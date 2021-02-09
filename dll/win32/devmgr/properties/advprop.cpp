@@ -3035,6 +3035,37 @@ Cleanup:
         }
     }
 
+    if (Ret != 1)
+    {
+        SP_DEVINSTALL_PARAMS_W DeviceInstallParams;
+
+        DeviceInstallParams.cbSize = sizeof(DeviceInstallParams);
+        if (SetupDiGetDeviceInstallParamsW(DeviceInfoSet,
+                                           DeviceInfoData,
+                                           &DeviceInstallParams))
+        {
+            SP_PROPCHANGE_PARAMS PropChangeParams;
+            PropChangeParams.ClassInstallHeader.cbSize = sizeof(PropChangeParams.ClassInstallHeader);
+            PropChangeParams.ClassInstallHeader.InstallFunction = DIF_PROPERTYCHANGE;
+            PropChangeParams.Scope = DICS_FLAG_GLOBAL;
+            PropChangeParams.StateChange = DICS_PROPCHANGE;
+
+            SetupDiSetClassInstallParamsW(DeviceInfoSet,
+                                          DeviceInfoData,
+                                          (PSP_CLASSINSTALL_HEADER)&PropChangeParams,
+                                          sizeof(PropChangeParams));
+
+            SetupDiCallClassInstaller(DIF_PROPERTYCHANGE,
+                                      DeviceInfoSet,
+                                      DeviceInfoData);
+
+            DeviceInstallParams.FlagsEx &= ~DI_FLAGSEX_PROPCHANGE_PENDING;
+            SetupDiSetDeviceInstallParamsW(DeviceInfoSet,
+                                           DeviceInfoData,
+                                           &DeviceInstallParams);
+        }
+    }
+
     if (DevAdvPropInfo != NULL)
     {
         if (DevAdvPropInfo->FreeDevPropSheets)

@@ -798,16 +798,18 @@ Ext2TotalBlocks(PEXT2_FILESYS Ext2Sys, ULONG DataBlocks)
 }
 
 
-NTSTATUS
+BOOLEAN
 NTAPI
-Ext2Format(IN PUNICODE_STRING DriveRoot,
-           IN FMIFS_MEDIA_FLAG MediaFlag,
-           IN PUNICODE_STRING Label,
-           IN BOOLEAN QuickFormat,
-           IN ULONG ClusterSize,
-           IN PFMIFSCALLBACK Callback)
+Ext2Format(
+    IN PUNICODE_STRING DriveRoot,
+    IN PFMIFSCALLBACK Callback,
+    IN BOOLEAN QuickFormat,
+    IN BOOLEAN BackwardCompatible,
+    IN MEDIA_TYPE MediaType,
+    IN PUNICODE_STRING Label,
+    IN ULONG ClusterSize)
 {
-    BOOLEAN    bRet = FALSE;
+    BOOLEAN    bRet;
     NTSTATUS   Status = STATUS_UNSUCCESSFUL;
     /* Super Block: 1024 bytes long */
     EXT2_SUPER_BLOCK Ext2Sb;
@@ -819,6 +821,9 @@ Ext2Format(IN PUNICODE_STRING DriveRoot,
     ULONG start;
     ULONG ret_blk;
 
+    // FIXME:
+    UNREFERENCED_PARAMETER(BackwardCompatible);
+    UNREFERENCED_PARAMETER(MediaType);
 
     if (Callback != NULL)
     {
@@ -868,6 +873,7 @@ Ext2Format(IN PUNICODE_STRING DriveRoot,
         bLocked = TRUE;
     }
 
+    Status = STATUS_UNSUCCESSFUL;
 
     // Initialize 
     if (!ext2_initialize_sb(&FileSys))
@@ -917,7 +923,6 @@ Ext2Format(IN PUNICODE_STRING DriveRoot,
     ext2_print_super(&Ext2Sb);
 
     bRet = ext2_allocate_tables(&FileSys);
-
     if (!bRet)
     {
         goto clean_up;
@@ -942,6 +947,7 @@ Ext2Format(IN PUNICODE_STRING DriveRoot,
     if (start > rsv)
         start -= rsv;
 
+    bRet = TRUE;
     if (start > 0)
         bRet = zero_blocks(&FileSys, start, blocks - start, &ret_blk, NULL);
 
@@ -969,14 +975,12 @@ Ext2Format(IN PUNICODE_STRING DriveRoot,
 
     if (!ext2_flush(&FileSys))
     {
-        bRet = false;
         DPRINT1("Mke2fs: Warning, had trouble writing out superblocks.\n");
         goto clean_up;
     }
 
     DPRINT("Mke2fs: Writing superblocks and filesystem accounting information done!\n");
 
-    bRet = true;
     Status = STATUS_SUCCESS;
 
 clean_up:
@@ -995,23 +999,25 @@ clean_up:
 
     Ext2CloseDevice(&FileSys);
 
-    if (Callback != NULL)
-    {
-        Callback(DONE, 0, (PVOID)&bRet);
-    }
-
-    return Status;
+    return NT_SUCCESS(Status);
 }
 
-NTSTATUS
+BOOLEAN
 NTAPI
-Ext2Chkdsk(IN PUNICODE_STRING DriveRoot,
-           IN BOOLEAN FixErrors,
-           IN BOOLEAN Verbose,
-           IN BOOLEAN CheckOnlyIfDirty,
-           IN BOOLEAN ScanDrive,
-           IN PFMIFSCALLBACK Callback)
+Ext2Chkdsk(
+    IN PUNICODE_STRING DriveRoot,
+    IN PFMIFSCALLBACK Callback,
+    IN BOOLEAN FixErrors,
+    IN BOOLEAN Verbose,
+    IN BOOLEAN CheckOnlyIfDirty,
+    IN BOOLEAN ScanDrive,
+    IN PVOID pUnknown1,
+    IN PVOID pUnknown2,
+    IN PVOID pUnknown3,
+    IN PVOID pUnknown4,
+    IN PULONG ExitStatus)
 {
     UNIMPLEMENTED;
-    return STATUS_SUCCESS;
+    *ExitStatus = (ULONG)STATUS_SUCCESS;
+    return TRUE;
 }

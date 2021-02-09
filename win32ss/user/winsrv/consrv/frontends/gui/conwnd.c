@@ -1903,7 +1903,7 @@ OnMouse(PGUI_CONSOLE_DATA GuiData, UINT msg, WPARAM wParam, LPARAM lParam)
             if (GetKeyState(VK_CAPITAL) & KEY_TOGGLED)
                 dwControlKeyState |= CAPSLOCK_ON;
             /* See WM_CHAR MSDN documentation for instance */
-            if (lParam & 0x01000000)
+            if (HIWORD(lParam) & KF_EXTENDED)
                 dwControlKeyState |= ENHANCED_KEY;
 
             /* Send a mouse event */

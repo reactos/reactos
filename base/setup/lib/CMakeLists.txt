@@ -14,6 +14,7 @@ list(APPEND SOURCE
     utils/inicache.c
     utils/ntverrsrc.c
     utils/osdetect.c
+    utils/partinfo.c
     utils/partlist.c
     utils/regutil.c
     bootcode.c

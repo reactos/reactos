@@ -330,6 +330,7 @@ KiSystemCallHandler(
         {
             GdiBatchCount = 0;
         }
+        _SEH2_END;
 
         /* Flush batch, if there are entries */
         if (GdiBatchCount != 0)
@@ -363,7 +364,7 @@ KiSystemCallHandler(
     /* Get stack bytes and calculate argument count */
     Count = DescriptorTable->Number[ServiceNumber] / 8;
 
-    __try
+    _SEH2_TRY
     {
         switch (Count)
         {
@@ -391,12 +392,12 @@ KiSystemCallHandler(
                 break;
         }
     }
-    __except(1)
+    _SEH2_EXCEPT(1)
     {
         TrapFrame->Rax = _SEH2_GetExceptionCode();
         return (PVOID)NtSyscallFailure;
     }
-
+    _SEH2_END;
 
     return (PVOID)DescriptorTable->Base[ServiceNumber];
 }

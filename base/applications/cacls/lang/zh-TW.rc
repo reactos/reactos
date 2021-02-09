@@ -23,7 +23,7 @@ CACLS filename [/T] [/E] [/C] [/G user:perm [...]] [/R user [...]]\n\
                               W  寫入\n\
                               C  更改(寫入)\n\
                               F  完全控制\n\
-   /R user       撤銷指定使用者的訪問權限(僅在与 /E 一起使用時合法)。\n\
+   /R user       撤銷指定使用者的訪問權限(僅在與 /E 一起使用時才有效)。\n\
    /P user:perm  替換指定使用者的訪問權限。\n\
                  Perm 可以是: N  無\n\
                               R  讀取\n\

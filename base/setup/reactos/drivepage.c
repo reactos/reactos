@@ -234,37 +234,64 @@ TreeListAddItem(IN HWND hTreeList,
 
 
 VOID
-GetPartTypeStringFromPartitionType(
-    IN UCHAR partitionType,
-    OUT PCHAR strPartType,
-    IN ULONG cchPartType)
+GetPartitionTypeString(
+    IN PPARTENTRY PartEntry,
+    OUT PSTR strBuffer,
+    IN ULONG cchBuffer)
 {
-    /* Determine partition type */
-
-    if (IsContainerPartition(partitionType))
+    if (PartEntry->PartitionType == PARTITION_ENTRY_UNUSED)
     {
-        StringCchCopyA(strPartType, cchPartType, "Extended Partition" /* MUIGetString(STRING_EXTENDED_PARTITION) */);
+        StringCchCopyA(strBuffer, cchBuffer,
+                       "Unused" /* MUIGetString(STRING_FORMATUNUSED) */);
     }
-    else if (partitionType == PARTITION_ENTRY_UNUSED)
+    else if (IsContainerPartition(PartEntry->PartitionType))
     {
-        StringCchCopyA(strPartType, cchPartType, "Unused" /* MUIGetString(STRING_FORMATUNUSED) */);
+        StringCchCopyA(strBuffer, cchBuffer,
+                       "Extended Partition" /* MUIGetString(STRING_EXTENDED_PARTITION) */);
     }
     else
     {
         UINT i;
 
         /* Do the table lookup */
-        for (i = 0; i < ARRAYSIZE(PartitionTypes); i++)
+        if (PartEntry->DiskEntry->DiskStyle == PARTITION_STYLE_MBR)
         {
-            if (partitionType == PartitionTypes[i].Type)
+            for (i = 0; i < ARRAYSIZE(MbrPartitionTypes); ++i)
             {
-                StringCchCopyA(strPartType, cchPartType, PartitionTypes[i].Description);
-                return;
+                if (PartEntry->PartitionType == MbrPartitionTypes[i].Type)
+                {
+                    StringCchCopyA(strBuffer, cchBuffer,
+                                   MbrPartitionTypes[i].Description);
+                    return;
+                }
             }
         }
+#if 0 // TODO: GPT support!
+        else if (PartEntry->DiskEntry->DiskStyle == PARTITION_STYLE_GPT)
+        {
+            for (i = 0; i < ARRAYSIZE(GptPartitionTypes); ++i)
+            {
+                if (IsEqualPartitionType(PartEntry->PartitionType,
+                                         GptPartitionTypes[i].Guid))
+                {
+                    StringCchCopyA(strBuffer, cchBuffer,
+                                   GptPartitionTypes[i].Description);
+                    return;
+                }
+            }
+        }
+#endif
 
         /* We are here because the partition type is unknown */
-        StringCchCopyA(strPartType, cchPartType, "Unknown" /* MUIGetString(STRING_FORMATUNKNOWN) */);
+        if (cchBuffer > 0) *strBuffer = '\0';
+    }
+
+    if ((cchBuffer > 0) && (*strBuffer == '\0'))
+    {
+        StringCchPrintfA(strBuffer, cchBuffer,
+                         // MUIGetString(STRING_PARTTYPE),
+                         "Type 0x%02x",
+                         PartEntry->PartitionType);
     }
 }
 
@@ -315,25 +342,15 @@ PrintPartitionData(
         }
         else if (PartEntry->IsPartitioned == TRUE)
         {
-           GetPartTypeStringFromPartitionType(PartEntry->PartitionType,
-                                              PartTypeString,
-                                              ARRAYSIZE(PartTypeString));
-           PartType = PartTypeString;
+            GetPartitionTypeString(PartEntry,
+                                   PartTypeString,
+                                   ARRAYSIZE(PartTypeString));
+            PartType = PartTypeString;
         }
 
-        if (strcmp(PartType, "Unknown" /* MUIGetString(STRING_FORMATUNKNOWN) */) == 0)
-        {
-            StringCchPrintfW(LineBuffer, ARRAYSIZE(LineBuffer),
-                             // MUIGetString(STRING_HDDINFOUNK5),
-                             L"Type 0x%02x",
-                             PartEntry->PartitionType);
-        }
-        else
-        {
-            StringCchPrintfW(LineBuffer, ARRAYSIZE(LineBuffer),
-                             L"%S",
-                             PartType);
-        }
+        StringCchPrintfW(LineBuffer, ARRAYSIZE(LineBuffer),
+                         L"%S",
+                         PartType);
     }
     TreeList_SetItemText(hWndList, htiPart, 1, LineBuffer);
 
@@ -453,7 +470,7 @@ PrintDiskData(
         if (DiskEntry->DriverName.Length > 0)
         {
             StringCchPrintfW(LineBuffer, ARRAYSIZE(LineBuffer),
-                             // MUIGetString(STRING_HDINFOPARTSELECT_1),
+                             // MUIGetString(STRING_HDDINFO_1),
                              L"Harddisk %lu (%S) (Port=%hu, Bus=%hu, Id=%hu) on %wZ",
                              DiskEntry->DiskNumber,
                              DiskName,
@@ -465,7 +482,7 @@ PrintDiskData(
         else
         {
             StringCchPrintfW(LineBuffer, ARRAYSIZE(LineBuffer),
-                             // MUIGetString(STRING_HDINFOPARTSELECT_2),
+                             // MUIGetString(STRING_HDDINFO_2),
                              L"Harddisk %lu (%S) (Port=%hu, Bus=%hu, Id=%hu)",
                              DiskEntry->DiskNumber,
                              DiskName,
@@ -479,7 +496,7 @@ PrintDiskData(
         if (DiskEntry->DriverName.Length > 0)
         {
             StringCchPrintfW(LineBuffer, ARRAYSIZE(LineBuffer),
-                             // MUIGetString(STRING_HDINFOPARTSELECT_1),
+                             // MUIGetString(STRING_HDDINFO_1),
                              L"Harddisk %lu (Port=%hu, Bus=%hu, Id=%hu) on %wZ",
                              DiskEntry->DiskNumber,
                              DiskEntry->Port,
@@ -490,7 +507,7 @@ PrintDiskData(
         else
         {
             StringCchPrintfW(LineBuffer, ARRAYSIZE(LineBuffer),
-                             // MUIGetString(STRING_HDINFOPARTSELECT_2),
+                             // MUIGetString(STRING_HDDINFO_2),
                              L"Harddisk %lu (Port=%hu, Bus=%hu, Id=%hu)",
                              DiskEntry->DiskNumber,
                              DiskEntry->Port,

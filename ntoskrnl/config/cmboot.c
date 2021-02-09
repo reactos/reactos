@@ -19,7 +19,7 @@ extern ULONG InitSafeBootMode;
 
 /* FUNCTIONS ******************************************************************/
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 HCELL_INDEX
 NTAPI
 CmpFindControlSet(IN PHHIVE SystemHive,
@@ -129,7 +129,7 @@ CmpFindControlSet(IN PHHIVE SystemHive,
     return ControlSetCell;
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 ULONG
 NTAPI
 CmpFindTagIndex(IN PHHIVE Hive,
@@ -179,7 +179,7 @@ CmpFindTagIndex(IN PHHIVE Hive,
     return -2;
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 BOOLEAN
 NTAPI
 CmpAddDriverToList(IN PHHIVE Hive,
@@ -346,7 +346,7 @@ CmpAddDriverToList(IN PHHIVE Hive,
     return TRUE;
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 BOOLEAN
 NTAPI
 CmpIsLoadType(IN PHHIVE Hive,
@@ -377,7 +377,7 @@ CmpIsLoadType(IN PHHIVE Hive,
     return (*Data == LoadType);
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 BOOLEAN
 NTAPI
 CmpFindDrivers(IN PHHIVE Hive,
@@ -499,7 +499,7 @@ CmpFindDrivers(IN PHHIVE Hive,
     return TRUE;
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 BOOLEAN
 NTAPI
 CmpDoSort(IN PLIST_ENTRY DriverListHead,
@@ -556,7 +556,7 @@ CmpDoSort(IN PLIST_ENTRY DriverListHead,
     return TRUE;
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 BOOLEAN
 NTAPI
 CmpSortDriverList(IN PHHIVE Hive,
@@ -605,7 +605,7 @@ CmpSortDriverList(IN PHHIVE Hive,
     return CmpDoSort(DriverListHead, &DependList);
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 BOOLEAN
 NTAPI
 CmpOrderGroup(IN PBOOT_DRIVER_NODE StartNode,
@@ -668,7 +668,7 @@ CmpOrderGroup(IN PBOOT_DRIVER_NODE StartNode,
     return TRUE;
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 BOOLEAN
 NTAPI
 CmpResolveDriverDependencies(IN PLIST_ENTRY DriverListHead)
@@ -718,7 +718,7 @@ CmpResolveDriverDependencies(IN PLIST_ENTRY DriverListHead)
     return TRUE;
 }
 
-INIT_FUNCTION
+CODE_SEG("INIT")
 BOOLEAN
 NTAPI
 CmpIsSafe(IN PHHIVE Hive,

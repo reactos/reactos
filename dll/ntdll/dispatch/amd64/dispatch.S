@@ -62,44 +62,44 @@ PUBLIC KiRaiseUserExceptionDispatcher
 PUBLIC KiUserCallbackDispatcher
 .PROC KiUserCallbackDispatcher
 
-    ; The stack is set up with a UCALLOUT_FRAME
-    ; The frame ends with a MACHINE_FRAME.
+    /* The stack is set up with a UCALLOUT_FRAME */
+    /* The frame ends with a MACHINE_FRAME. */
     .PUSHFRAME
 
-    ; This is for the Home space, Buffer, Length and ApiNumber
-    .ALLOCSTACK 6 * 8
+    /* This is for the Home space, Buffer, Length and ApiNumber */
+    .ALLOCSTACK (6 * 8)
     .ENDPROLOG
 
 #if DBG
-    ; We enter the function with a fully setup stack, so it must be aligned!
+    /* We enter the function with a fully setup stack, so it must be aligned! */
     test rsp, 15
     jz AlignmentOk
     int HEX(2C)
 AlignmentOk:
 #endif
 
-    ; Get the parameters from the callout frame
+    /* Get the parameters from the callout frame */
     mov rcx, [rsp + CkBuffer]
     mov edx, [rsp + CkLength]
     mov r8d, [rsp + CkApiNumber]
 
-    ; Get the callback table
+    /* Get the callback table */
     mov rax, gs:[TePeb]
     mov r9, [rax + PeKernelCallbackTable]
 
-    ; Call the routine
+    /* Call the routine */
     call qword ptr [r9 + r8 * 8]
 
-    ; Return from callback
+    /* Return from callback */
     xor ecx, ecx
     xor edx, edx
     mov r8d, eax
     call ZwCallbackReturn
 
-    ; Save callback return value
+    /* Save callback return value */
     mov esi, eax
 
-    ; Raise status
+    /* Raise status */
 StatusRaise:
     mov ecx, esi
     call RtlRaiseStatus
@@ -158,11 +158,11 @@ EXTERN RtlRaiseException:PROC
 PUBLIC KiUserExceptionDispatcher
 .PROC KiUserExceptionDispatcher
 
-    ; The stack is set up with a KUSER_EXCEPTION_STACK
-    ; The frame ends with a MACHINE_FRAME.
+    /* The stack is set up with a KUSER_EXCEPTION_STACK */
+    /* The frame ends with a MACHINE_FRAME. */
     .PUSHFRAME
 
-    ; This is for the alignment, EXCEPTION_RECORD and CONTEXT
+    /* This is for the alignment, EXCEPTION_RECORD and CONTEXT */
     .ALLOCSTACK 8 + EXCEPTION_RECORD_LENGTH + CONTEXT_FRAME_LENGTH
     .ENDPROLOG
 
@@ -177,8 +177,8 @@ PUBLIC KiUserExceptionDispatcher
     jz RaiseException
 
     /* We're fine, continue execution */
-    lea rcx, [rsp] ; ContextRecord
-    mov dl, 0 ; TestAlert
+    lea rcx, [rsp] /* ContextRecord */
+    mov dl, 0 /* TestAlert */
     call ZwContinue
 
     /* Exit */
@@ -187,13 +187,13 @@ PUBLIC KiUserExceptionDispatcher
 RaiseException:
 
     /* Raise the exception */
-    lea rcx, [rsp + CONTEXT_FRAME_LENGTH] ; ExceptionRecord
-    lea rdx, [rsp] ; ContextRecord
+    lea rcx, [rsp + CONTEXT_FRAME_LENGTH] /* ExceptionRecord */
+    lea rdx, [rsp] /* ContextRecord */
     xor r8, r8
     call ZwRaiseException
 
 Exit:
-    lea rcx, [rsp + CONTEXT_FRAME_LENGTH] ; ExceptionRecord
+    lea rcx, [rsp + CONTEXT_FRAME_LENGTH] /* ExceptionRecord */
     mov rdx, rax
     call KiUserExceptionDispatcherNested
     ret
