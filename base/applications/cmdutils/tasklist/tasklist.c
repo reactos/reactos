@@ -19,6 +19,7 @@ static PCWSTR opList[] = { L"?", L"nh" };
 // the max string length PrintResString can handle
 #define RES_STR_MAXLEN 64
 
+// Print split line
 VOID PrintSplitLine(INT Length)
 {
     for (INT i = 0; i < Length; i++)
@@ -28,13 +29,12 @@ VOID PrintSplitLine(INT Length)
 }
 
 // Print spaces
-BOOL PrintSpace(INT SpaceNum)
+VOID PrintSpace(INT Length)
 {
-    for (; SpaceNum; SpaceNum--)
+    for (; Length; Length--)
     {
         ConPrintf(StdOut, L" ");
     }
-    return TRUE;
 }
 
 // Print a string.
@@ -92,7 +92,7 @@ BOOL PrintNum(LONGLONG Number, INT MaxWidth)
 // return FALSE when failed to format.
 BOOL PrintMemory(SIZE_T MemorySizeByte, INT MaxWidth, INT StartingUnit)
 {
-    WCHAR *MemoryUnit[] = {L"B", L"K", L"M", L"G", L"T", L"P"};
+    LPCWSTR MemoryUnit[] = {L"B", L"K", L"M", L"G", L"T", L"P"};
 
     MaxWidth -= 2; // a space and a unit will occupy 2 length.
     if (MaxWidth <= 0)
@@ -271,17 +271,15 @@ BOOL EnumProcessAndPrint(BOOL bNoHeader)
     return TRUE;
 }
 
-INT GetArgumentType(WCHAR* argument)
+INT GetArgumentType(LPCWSTR argument)
 {
-    INT i;
-
     if (argument[0] != L'/' && argument[0] != L'-')
     {
         return OP_PARAM_INVALID;
     }
     argument++;
 
-    for (i = 0; i < _countof(opList); i++)
+    for (INT i = 0; i < _countof(opList); i++)
     {
         if (!wcsicmp(opList[i], argument))
         {
@@ -291,11 +289,10 @@ INT GetArgumentType(WCHAR* argument)
     return OP_PARAM_INVALID;
 }
 
-BOOL ProcessArguments(INT argc, WCHAR *argv[])
+BOOL ProcessArguments(INT argc, WCHAR **argv)
 {
-    INT i;
     BOOL bHasHelp = FALSE, bHasNoHeader = FALSE;
-    for (i = 1; i < argc; i++)
+    for (INT i = 1; i < argc; i++)
     {
         INT Argument = GetArgumentType(argv[i]);
 
@@ -357,7 +354,7 @@ BOOL ProcessArguments(INT argc, WCHAR *argv[])
     return TRUE;
 }
 
-int wmain(int argc, WCHAR *argv[])
+int wmain(int argc, WCHAR **argv)
 {
     /* Initialize the Console Standard Streams */
     ConInitStdStreams();
