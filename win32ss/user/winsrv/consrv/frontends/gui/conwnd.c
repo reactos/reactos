@@ -51,8 +51,8 @@ SetConWndConsoleLeaderCID(IN PGUI_CONSOLE_DATA GuiData)
 
     ProcessData = ConSrvGetConsoleLeaderProcess(GuiData->Console);
 
-    DPRINT("ProcessData: %p, ProcessData->Process %p.\n", ProcessData, ProcessData->Process);
     ASSERT(ProcessData != NULL);
+    DPRINT("ProcessData: %p, ProcessData->Process %p.\n", ProcessData, ProcessData->Process);
 
     if (ProcessData->Process)
     {
