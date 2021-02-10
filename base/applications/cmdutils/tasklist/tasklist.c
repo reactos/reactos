@@ -75,6 +75,7 @@ BOOL PrintMemory(SIZE_T MemorySizeByte, INT MaxWidth, INT StartingUnit)
     MaxWidth -= 2; // a space and a unit will occupy 2 length.
     if (MaxWidth <= 0)
     {
+        assert(0);
         return FALSE;
     }
 
@@ -128,6 +129,7 @@ BOOL PrintMemory(SIZE_T MemorySizeByte, INT MaxWidth, INT StartingUnit)
     }
 
     // out of MemoryUnit range.
+    assert(0);
     return FALSE;
 }
 
