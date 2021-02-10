@@ -5035,7 +5035,7 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
             if (PointerPte->u.Soft.Valid == 0)
             {
                 ASSERT(PointerPte->u.Soft.Prototype == 0);
-                ASSERT(PointerPte->u.Soft.PageFileHigh == 0);
+                ASSERT((PointerPte->u.Soft.PageFileHigh == 0) || (PointerPte->u.Soft.Transition == 1));
             }
 
             //
