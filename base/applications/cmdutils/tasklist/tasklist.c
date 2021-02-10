@@ -48,7 +48,7 @@ INT PrintString(LPCWSTR String, INT MaxWidth, BOOL bAlignLeft)
 // Print a string from resource
 // if bAlignLeft == TRUE then aligned to left, otherwise aligned to right
 // MaxWidth is the width for printing.
-// The string will be truncated if it's longer than RES_STR_MAXLEN
+// The string WILL be truncated if it's longer than RES_STR_MAXLEN
 INT PrintResString(HINSTANCE hInstance, UINT uid, INT MaxWidth, BOOL bAlignLeft)
 {
     WCHAR StringBuffer[RES_STR_MAXLEN];
@@ -58,32 +58,10 @@ INT PrintResString(HINSTANCE hInstance, UINT uid, INT MaxWidth, BOOL bAlignLeft)
 
 // Print a number, aligned to right.
 // MaxWidth is the width for printing.
-// return FALSE if number length is longer than MaxWidth
-BOOL PrintNum(LONGLONG Number, INT MaxWidth)
+// the number WILL NOT be truncated if it's longer than MaxWidth
+VOID PrintNum(LONGLONG Number, INT MaxWidth)
 {
-    // calculate the length needed to print.
-    INT PrintLength = 0;
-    LONGLONG Tmp = Number;
-
-    if (Tmp < 0)
-    {
-        Tmp = -Tmp;
-        PrintLength++;
-    }
-
-    do
-    {
-        Tmp /= 10;
-        PrintLength += 1;
-    } while (Tmp);
-
-    if (PrintLength > MaxWidth)
-    {
-        return FALSE;
-    }
     ConPrintf(StdOut, L"%*lld", MaxWidth, Number);
-
-    return TRUE;
 }
 
 // Print memory size using appropriate unit, with comma-separated number, aligned to right.
