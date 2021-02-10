@@ -24,8 +24,20 @@ MiShutdownSystem(VOID)
     PFN_NUMBER Page;
     BOOLEAN Dirty;
 
+    /* Loop through all the paging files */
+    for (i = 0; i < MmNumberOfPagingFiles; i++)
+    {
+        /* Free page file name */
+        ASSERT(MmPagingFile[i]->PageFileName.Buffer != NULL);
+        ExFreePoolWithTag(MmPagingFile[i]->PageFileName.Buffer, TAG_MM);
+        MmPagingFile[i]->PageFileName.Buffer = NULL;
+
+        /* And close them */
+        ZwClose(MmPagingFile[i]->FileHandle);
+    }
+
     /* Loop through all the pages owned by the legacy Mm and page them out, if needed. */
-    /* We do it twice, since flushing can cause the FS to dirtify new pages */
+    /* We do it as long as there are dirty pages, since flushing can cause the FS to dirtify new ones. */
     do
     {
         Dirty = FALSE;
@@ -59,20 +71,6 @@ MiShutdownSystem(VOID)
             Page = MmGetLRUNextUserPage(Page, FALSE);
         }
     } while (Dirty);
-
-    /* Loop through all the paging files */
-    for (i = 0; i < MmNumberOfPagingFiles; i++)
-    {
-        /* Free page file name */
-        ASSERT(MmPagingFile[i]->PageFileName.Buffer != NULL);
-        ExFreePoolWithTag(MmPagingFile[i]->PageFileName.Buffer, TAG_MM);
-        MmPagingFile[i]->PageFileName.Buffer = NULL;
-
-        /* And close them */
-        ZwClose(MmPagingFile[i]->FileHandle);
-    }
-
-    UNIMPLEMENTED;
 }
 
 VOID
