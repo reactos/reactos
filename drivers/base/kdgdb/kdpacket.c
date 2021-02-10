@@ -378,10 +378,12 @@ KdReceivePacket(
 
     if (PacketType == PACKET_TYPE_KD_DEBUG_IO)
     {
+        static BOOLEAN ignore = 0;
         KDDBGPRINT("Debug prompt.\n");
-        /* HACK ! RtlAssert asks for (boipt), always say "o" --> break once. */
+        /* HACK ! Debug prompt asks for break or ignore. First break, then ignore. */
         MessageData->Length = 1;
-        MessageData->Buffer[0] = 'o';
+        MessageData->Buffer[0] = ignore ? 'i' : 'b';
+        ignore = !ignore;
         return KdPacketReceived;
     }
 
