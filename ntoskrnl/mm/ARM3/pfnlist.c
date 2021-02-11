@@ -349,9 +349,6 @@ MiUnlinkPageFromList(IN PMMPFN Pfn)
         ListHead->Flink = OldFlink;
     }
 
-    /* ReactOS Hack */
-    Pfn->OriginalPte.u.Long = 0;
-
     /* We are not on a list anymore */
     Pfn->u1.Flink = Pfn->u2.Blink = 0;
 
