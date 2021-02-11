@@ -1102,8 +1102,8 @@ MiResolveTransitionFault(IN BOOLEAN StoreInstruction,
     /* Write the valid PTE */
     MI_WRITE_VALID_PTE(PointerPte, TempPte);
 
-    /* If this was a user fault, add it to the working set */
-    if (CurrentProcess > HYDRA_PROCESS)
+    /* If this was a user fault (no prototype), add it to the working set */
+    if ((CurrentProcess > HYDRA_PROCESS) && (PointerPte == MiAddressToPte(FaultingAddress)))
         MiInsertInWorkingSetList(&CurrentProcess->Vm, FaultingAddress, Protection);
 
     /* Return success */
