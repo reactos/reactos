@@ -675,6 +675,11 @@ MiAllocSwapEntry(
     _Out_ PULONG PageFileLow,
     _Out_ PULONG_PTR PageFileHigh);
 
+VOID
+MiFreeSwapEntry(
+    _In_ ULONG PageFileLow,
+    _In_ ULONG_PTR PageFileHigh);
+
 SWAPENTRY
 NTAPI
 MmAllocSwapPage(VOID);

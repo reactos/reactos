@@ -1283,6 +1283,12 @@ MiDecrementShareCount(IN PMMPFN Pfn1,
                 Pfn1->u3.e2.ReferenceCount = 0;
                 ASSERT(Pfn1->OriginalPte.u.Soft.Prototype == 0);
 
+                /* Free the page file entry, if any */
+                if (Pfn1->OriginalPte.u.Soft.PageFileHigh != 0)
+                {
+                    MiFreeSwapEntry(Pfn1->OriginalPte.u.Soft.PageFileLow, Pfn1->OriginalPte.u.Soft.PageFileHigh);
+                }
+
                 /* Mark the page temporarily as valid, we're going to make it free soon */
                 Pfn1->u3.e1.PageLocation = ActiveAndValid;
 
@@ -1342,6 +1348,12 @@ MiDecrementReferenceCount(IN PMMPFN Pfn1,
     /* Did someone set the delete flag? */
     if (MI_IS_PFN_DELETED(Pfn1))
     {
+        /* Free the page file entry, if any */
+        if (Pfn1->OriginalPte.u.Soft.PageFileHigh != 0)
+        {
+            MiFreeSwapEntry(Pfn1->OriginalPte.u.Soft.PageFileLow, Pfn1->OriginalPte.u.Soft.PageFileHigh);
+        }
+
         /* Insert it into the free list, there's nothing left to do */
         MiInsertPageInFreeList(PageFrameIndex);
         return;

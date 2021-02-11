@@ -404,9 +404,8 @@ MiDeletePte(IN PMMPTE PointerPte,
     /* See if the PTE is valid */
     if (TempPte.u.Hard.Valid == 0)
     {
-        /* Prototype and paged out PTEs not supported yet */
+        /* Prototype not supported yet */
         ASSERT(TempPte.u.Soft.Prototype == 0);
-        ASSERT((TempPte.u.Soft.PageFileHigh == 0) || (TempPte.u.Soft.Transition == 1));
 
         if (TempPte.u.Soft.Transition)
         {
@@ -446,6 +445,14 @@ MiDeletePte(IN PMMPTE PointerPte,
 
             MiReleasePfnLock(OldIrql);
             return;
+        }
+
+        if (TempPte.u.Soft.PageFileHigh != 0)
+        {
+            /* Simply free the page file entry */
+            MiFreeSwapEntry(TempPte.u.Soft.PageFileLow, TempPte.u.Soft.PageFileLow);
+
+            MI_ERASE_PTE(PointerPte);
         }
     }
 
@@ -5074,7 +5081,6 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
             if (PointerPte->u.Soft.Valid == 0)
             {
                 ASSERT(PointerPte->u.Soft.Prototype == 0);
-                ASSERT((PointerPte->u.Soft.PageFileHigh == 0) || (PointerPte->u.Soft.Transition == 1));
             }
 
             //

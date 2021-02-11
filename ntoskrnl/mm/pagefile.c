@@ -323,25 +323,21 @@ MmInitPagingFile(VOID)
 }
 
 VOID
-NTAPI
-MmFreeSwapPage(SWAPENTRY Entry)
+MiFreeSwapEntry(
+    _In_ ULONG PageFileLow,
+    _In_ ULONG_PTR PageFileHigh)
 {
-    ULONG i;
-    ULONG_PTR off;
     PMMPAGING_FILE PagingFile;
-
-    i = FILE_FROM_ENTRY(Entry);
-    off = OFFSET_FROM_ENTRY(Entry) - 1;
 
     KeAcquireGuardedMutex(&MmPageFileCreationLock);
 
-    PagingFile = MmPagingFile[i];
+    PagingFile = MmPagingFile[PageFileLow];
     if (PagingFile == NULL)
     {
         KeBugCheck(MEMORY_MANAGEMENT);
     }
 
-    RtlClearBit(PagingFile->Bitmap, off >> 5);
+    RtlClearBit(PagingFile->Bitmap, PageFileHigh - 1);
 
     PagingFile->FreeSpace++;
     PagingFile->CurrentUsage--;
@@ -350,6 +346,13 @@ MmFreeSwapPage(SWAPENTRY Entry)
     MiUsedSwapPages--;
 
     KeReleaseGuardedMutex(&MmPageFileCreationLock);
+}
+
+VOID
+NTAPI
+MmFreeSwapPage(SWAPENTRY Entry)
+{
+    MiFreeSwapEntry(FILE_FROM_ENTRY(Entry), OFFSET_FROM_ENTRY(Entry));
 }
 
 NTSTATUS
