@@ -6,6 +6,14 @@
 extern "C" {
 #endif
 
+/* Takes the PTE index (for one PD page) from a PTE address */
+FORCEINLINE
+ULONG
+MiPteToPteOffset(PMMPTE Pte)
+{
+    return ((ULONG_PTR)Pte / sizeof(MMPTE)) % PTE_PER_PAGE;
+}
+
 /* TYPES *********************************************************************/
 
 struct _EPROCESS;

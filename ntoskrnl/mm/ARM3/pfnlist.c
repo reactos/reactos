@@ -262,6 +262,36 @@ MiUnlinkFreeOrZeroedPage(IN PMMPFN Entry)
 #endif
 }
 
+static
+VOID
+MiRestoreOriginalPte(_In_ PMMPFN Pfn)
+{
+    ASSERT((Pfn->u3.e1.PageLocation == ModifiedPageList) || (Pfn->u3.e1.PageLocation == StandbyPageList));
+
+    DPRINT("Restoring PTE %p to %lx\n", Pfn->PteAddress, Pfn->OriginalPte.u.Long);
+
+    if (Pfn->u3.e1.PrototypePte)
+    {
+        /* Easy. The PTE lives in global space */
+        *Pfn->PteAddress = Pfn->OriginalPte;
+    }
+    else
+    {
+        KIRQL OldIrql;
+        /* We need to map the PDE to get to the PTE. */
+        PMMPTE PteFrame = MiMapPageInHyperSpace(PsGetCurrentProcess(), Pfn->u4.PteFrame, &OldIrql);
+
+        PteFrame[MiPteToPteOffset(Pfn->PteAddress)] = Pfn->OriginalPte;
+
+        MiUnmapPageInHyperSpace(PsGetCurrentProcess(), PteFrame, OldIrql);
+    }
+
+    /* Kill whatever was a reference to the now restored PTE */
+    Pfn->PteAddress = NULL;
+    Pfn->OriginalPte.u.Long = 0;
+    Pfn->u3.e1.PrototypePte = 0;
+}
+
 VOID
 NTAPI
 MiUnlinkPageFromList(IN PMMPFN Pfn)
@@ -499,24 +529,54 @@ MiRemoveAnyPage(IN ULONG Color)
                 /* Check the zero list */
                 ASSERT_LIST_INVARIANT(&MmZeroedPageListHead);
                 PageIndex = MmZeroedPageListHead.Flink;
-                Color = PageIndex & MmSecondaryColorMask;
-                ASSERT(PageIndex != LIST_HEAD);
                 if (PageIndex == LIST_HEAD)
                 {
-                    /* FIXME: Should check the standby list */
                     ASSERT(MmZeroedPageListHead.Total == 0);
+                    /* Take it from the back of the standby list */
+                    for (UINT i = 0; i < _countof(MmStandbyPageListByPriority); i++)
+                    {
+                        ASSERT_LIST_INVARIANT(&MmStandbyPageListByPriority[i]);
+                        if (MmStandbyPageListByPriority[i].Total != 0)
+                        {
+                            PageIndex = MmStandbyPageListByPriority[i].Blink;
+                            DPRINT("Taking page %lx from Stand-by list.\n", PageIndex);
+                            break;
+                        }
+                    }
                 }
+                ASSERT(PageIndex != LIST_HEAD);
+
+                Color = PageIndex & MmSecondaryColorMask;
             }
         }
     }
 
-    /* Remove the page from its list */
-    PageIndex = MiRemovePageByColor(PageIndex, Color);
-
     /* Sanity checks */
     Pfn1 = MI_PFN_ELEMENT(PageIndex);
-    ASSERT((Pfn1->u3.e1.PageLocation == FreePageList) ||
-           (Pfn1->u3.e1.PageLocation == ZeroedPageList));
+    if (Pfn1->u3.e1.PageLocation == StandbyPageList)
+    {
+        MiRestoreOriginalPte(Pfn1);
+
+        MiUnlinkPageFromList(Pfn1);
+
+#if MI_TRACE_PFNS
+        ASSERT(MI_PFN_CURRENT_USAGE != MI_USAGE_NOT_SET);
+        Pfn1->PfnUsage = MI_PFN_CURRENT_USAGE;
+        memcpy(Pfn1->ProcessName, MI_PFN_CURRENT_PROCESS_NAME, 16);
+        MI_PFN_CURRENT_USAGE = MI_USAGE_NOT_SET;
+        MI_SET_PROCESS2("Not Set");
+#endif
+    }
+    else
+    {
+        ASSERT((Pfn1->u3.e1.PageLocation == FreePageList) ||
+            (Pfn1->u3.e1.PageLocation == ZeroedPageList));
+
+        /* Remove the page from its list */
+        PageIndex = MiRemovePageByColor(PageIndex, Color);
+        ASSERT(Pfn1 == MI_PFN_ELEMENT(PageIndex));
+    }
+
     ASSERT(Pfn1->u3.e2.ReferenceCount == 0);
     ASSERT(Pfn1->u2.ShareCount == 0);
     ASSERT_LIST_INVARIANT(&MmFreePageListHead);
@@ -559,13 +619,24 @@ MiRemoveZeroPage(IN ULONG Color)
                 /* Check the free list */
                 ASSERT_LIST_INVARIANT(&MmFreePageListHead);
                 PageIndex = MmFreePageListHead.Flink;
-                Color = PageIndex & MmSecondaryColorMask;
-                ASSERT(PageIndex != LIST_HEAD);
                 if (PageIndex == LIST_HEAD)
                 {
-                    /* FIXME: Should check the standby list */
-                    ASSERT(MmZeroedPageListHead.Total == 0);
+                    ASSERT(MmFreePageListHead.Total == 0);
+                    /* Take it from the back of the standby list */
+                    for (UINT i = 0; i < _countof(MmStandbyPageListByPriority); i++)
+                    {
+                        ASSERT_LIST_INVARIANT(&MmStandbyPageListByPriority[i]);
+                        if (MmStandbyPageListByPriority[i].Total != 0)
+                        {
+                            PageIndex = MmStandbyPageListByPriority[i].Blink;
+                            DPRINT("Taking page %lx from Stand-by list.\n", PageIndex);
+                            break;
+                        }
+                    }
                 }
+
+                ASSERT(PageIndex != LIST_HEAD);
+                Color = PageIndex & MmSecondaryColorMask;
             }
         }
         else
@@ -576,12 +647,28 @@ MiRemoveZeroPage(IN ULONG Color)
 
     /* Sanity checks */
     Pfn1 = MI_PFN_ELEMENT(PageIndex);
-    ASSERT((Pfn1->u3.e1.PageLocation == FreePageList) ||
-           (Pfn1->u3.e1.PageLocation == ZeroedPageList));
+    if (Pfn1->u3.e1.PageLocation == StandbyPageList)
+    {
+        MiRestoreOriginalPte(Pfn1);
+        MiUnlinkPageFromList(Pfn1);
 
-    /* Remove the page from its list */
-    PageIndex = MiRemovePageByColor(PageIndex, Color);
-    ASSERT(Pfn1 == MI_PFN_ELEMENT(PageIndex));
+#if MI_TRACE_PFNS
+        ASSERT(MI_PFN_CURRENT_USAGE != MI_USAGE_NOT_SET);
+        Pfn1->PfnUsage = MI_PFN_CURRENT_USAGE;
+        memcpy(Pfn1->ProcessName, MI_PFN_CURRENT_PROCESS_NAME, 16);
+        MI_PFN_CURRENT_USAGE = MI_USAGE_NOT_SET;
+        MI_SET_PROCESS2("Not Set");
+#endif
+    }
+    else
+    {
+        ASSERT((Pfn1->u3.e1.PageLocation == FreePageList) ||
+            (Pfn1->u3.e1.PageLocation == ZeroedPageList));
+
+        /* Remove the page from its list */
+        PageIndex = MiRemovePageByColor(PageIndex, Color);
+        ASSERT(Pfn1 == MI_PFN_ELEMENT(PageIndex));
+    }
 
     /* Zero it, if needed */
     if (Zero) MiZeroPhysicalPage(PageIndex);
