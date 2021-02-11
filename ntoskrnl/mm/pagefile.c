@@ -244,6 +244,7 @@ NTSTATUS
 NTAPI
 MmReadFromSwapPage(SWAPENTRY SwapEntry, PFN_NUMBER Page)
 {
+    ASSERT(SwapEntry & 0x400);
     return MiReadPageFile(Page, FILE_FROM_ENTRY(SwapEntry), OFFSET_FROM_ENTRY(SwapEntry));
 }
 
@@ -264,16 +265,10 @@ MiReadPageFile(
 
     DPRINT("MiReadSwapFile\n");
 
-    if (PageFileOffset == 0)
-    {
-        KeBugCheck(MEMORY_MANAGEMENT);
-        return(STATUS_UNSUCCESSFUL);
-    }
-
-    /* Normalize offset. */
-    PageFileOffset--;
-
     ASSERT(PageFileIndex < MAX_PAGING_FILES);
+
+    /* Normalize offset */
+    PageFileOffset--;
 
     PagingFile = MmPagingFile[PageFileIndex];
 
@@ -357,46 +352,57 @@ MmFreeSwapPage(SWAPENTRY Entry)
     KeReleaseGuardedMutex(&MmPageFileCreationLock);
 }
 
-SWAPENTRY
-NTAPI
-MmAllocSwapPage(VOID)
+NTSTATUS
+MiAllocSwapEntry(
+    _Out_ PULONG PageFileLow,
+    _Out_ PULONG_PTR PageFileHigh)
 {
     ULONG i;
-    ULONG off;
-    SWAPENTRY entry;
+    ULONG_PTR Offset;
 
     KeAcquireGuardedMutex(&MmPageFileCreationLock);
 
     if (MiFreeSwapPages == 0)
     {
         KeReleaseGuardedMutex(&MmPageFileCreationLock);
-        return(0);
+        return STATUS_INSUFFICIENT_RESOURCES;
     }
 
     for (i = 0; i < MAX_PAGING_FILES; i++)
     {
-        if (MmPagingFile[i] != NULL &&
-                MmPagingFile[i]->FreeSpace >= 1)
+        if ((MmPagingFile[i] != NULL) && (MmPagingFile[i]->FreeSpace >= 1))
         {
-            off = RtlFindClearBitsAndSet(MmPagingFile[i]->Bitmap, 1, 0);
-            if (off == 0xFFFFFFFF)
+            Offset = RtlFindClearBitsAndSet(MmPagingFile[i]->Bitmap, 1, 0);
+            if (Offset == 0xFFFFFFFF)
             {
                 KeBugCheck(MEMORY_MANAGEMENT);
-                KeReleaseGuardedMutex(&MmPageFileCreationLock);
-                return(STATUS_UNSUCCESSFUL);
             }
             MiUsedSwapPages++;
             MiFreeSwapPages--;
             KeReleaseGuardedMutex(&MmPageFileCreationLock);
 
-            entry = ENTRY_FROM_FILE_OFFSET(i, off + 1);
-            return(entry);
+            *PageFileLow = i;
+            *PageFileHigh = Offset + 1;
+            return STATUS_SUCCESS;
         }
     }
 
     KeReleaseGuardedMutex(&MmPageFileCreationLock);
     KeBugCheck(MEMORY_MANAGEMENT);
     return(0);
+}
+
+SWAPENTRY
+NTAPI
+MmAllocSwapPage(VOID)
+{
+    ULONG PageFileLow;
+    ULONG_PTR PageFileHigh;
+
+    if (!NT_SUCCESS(MiAllocSwapEntry(&PageFileLow, &PageFileHigh)))
+        return 0;
+
+    return ENTRY_FROM_FILE_OFFSET(PageFileLow, PageFileHigh);
 }
 
 NTSTATUS NTAPI

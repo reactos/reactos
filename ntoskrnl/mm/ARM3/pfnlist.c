@@ -63,6 +63,8 @@ PMMPFNLIST MmPageLocationList[] =
 ULONG MI_PFN_CURRENT_USAGE;
 CHAR MI_PFN_CURRENT_PROCESS_NAME[16] = "None yet";
 
+static KGATE MiModifiedPageWriterGate;
+
 /* FUNCTIONS ******************************************************************/
 static
 VOID
@@ -108,9 +110,10 @@ MiDecrementAvailablePages(
     MmAvailablePages--;
     if (MmAvailablePages < MmMinimumFreePages)
     {
-        /* FIXME: Should wake up the MPW, if we had one */
-
         DPRINT1("Running low on pages: %lu remaining\n", MmAvailablePages);
+
+        /* Wake the MPW */
+        KeSignalGateBoostPriority(&MiModifiedPageWriterGate);
 
         /* Wake up the Working set manager */
         KeSetEvent(&MmWorkingSetManagerEvent, IO_NO_INCREMENT, FALSE);
@@ -322,7 +325,6 @@ MiUnlinkPageFromList(IN PMMPFN Pfn)
         MiDecrementAvailablePages();
 
         /* Decrease transition page counter */
-        ASSERT(Pfn->u3.e1.PrototypePte == 1); /* Only supported ARM3 case */
         MmTransitionSharedPages--;
     }
     else if (ListHead == &MmModifiedPageListHead)
@@ -821,7 +823,6 @@ MiInsertStandbyListAtFront(IN PFN_NUMBER PageFrameIndex)
     Pfn1 = MI_PFN_ELEMENT(PageFrameIndex);
     ASSERT(Pfn1->u4.MustBeCached == 0);
     ASSERT(Pfn1->u3.e2.ReferenceCount == 0);
-    ASSERT(Pfn1->u3.e1.PrototypePte == 1);
     ASSERT(Pfn1->u3.e1.Rom != 1);
 
     /* One more transition page on a list */
@@ -1031,9 +1032,8 @@ MiInsertPageInList(IN PMMPFNLIST ListHead,
     }
     else if (ListName == ModifiedPageList)
     {
-        /* In ARM3, page must be destined for page file, and not yet written out */
+        /* In ARM3, page must be destined for page file. */
         ASSERT(Pfn1->OriginalPte.u.Soft.Prototype == 0);
-        ASSERT(Pfn1->OriginalPte.u.Soft.PageFileHigh == 0);
 
         /* One more transition page */
         MmTransitionSharedPages++;
@@ -1444,6 +1444,113 @@ MmCompletePageWrite(
         MiInsertStandbyListAtFront(Page);
 
     MiReleasePfnLock(OldIrql);
+}
+
+static KSTART_ROUTINE MiModifiedPageWriter;
+static
+VOID
+NTAPI
+MiModifiedPageWriter(_Unreferenced_parameter_ PVOID Context)
+{
+    /* Set our priority */
+    KeSetPriorityThread(KeGetCurrentThread(), LOW_REALTIME_PRIORITY + 1);
+
+    while (TRUE)
+    {
+        KeWaitForGate(&MiModifiedPageWriterGate, WrPageOut, KernelMode);
+
+        /* Do not do anything if there is no pagefile */
+        if (!MmNumberOfPagingFiles)
+            continue;
+
+        KIRQL OldIrql = MiAcquirePfnLock();
+        PFN_NUMBER Page = MmModifiedPageListByColor[0].Flink;
+
+        while ((Page = MmModifiedPageListByColor[0].Flink) != LIST_HEAD)
+        {
+            NTSTATUS Status;
+
+            PMMPFN Pfn = MiGetPfnEntry(Page);
+
+            ASSERT(Pfn->u3.e1.PageLocation == ModifiedPageList);
+            ASSERT(Pfn->u3.e1.Modified == 1);
+
+            /* Put this page in transition & write state and unlock */
+            MiUnlinkPageFromList(Pfn);
+
+            Pfn->u3.e1.PageLocation = TransitionPage;
+            Pfn->u3.e1.WriteInProgress = 1;
+            Pfn->u3.e1.Modified = 0;
+
+            MiReleasePfnLock(OldIrql);
+
+            /* Check if we have an entry in the page file. */
+            ASSERT(Pfn->OriginalPte.u.Soft.PageFileHigh != MI_PTE_LOOKUP_NEEDED);
+            if (Pfn->OriginalPte.u.Soft.PageFileHigh == 0)
+            {
+                ULONG PageFileLow;
+                ULONG_PTR PageFileHigh;
+
+                Status = MiAllocSwapEntry(&PageFileLow, &PageFileHigh);
+                if (!NT_SUCCESS(Status))
+                {
+                    DPRINT1("No space left in swap file!\n");
+                    goto DoneForThisPage;
+                }
+
+                Pfn->OriginalPte.u.Soft.PageFileLow = PageFileLow;
+                Pfn->OriginalPte.u.Soft.PageFileHigh = PageFileHigh;
+            }
+
+            DPRINT1("Writing page %lx to pagefile (%u - %lu). PTE is %p.\n",
+                    Page, Pfn->OriginalPte.u.Soft.PageFileLow, Pfn->OriginalPte.u.Soft.PageFileHigh,
+                    Pfn->PteAddress);
+
+            Status = MiWriteSwapEntry(Pfn->OriginalPte.u.Soft.PageFileLow, Pfn->OriginalPte.u.Soft.PageFileHigh, Page);
+DoneForThisPage:
+            if (!NT_SUCCESS(Status))
+            {
+                /* No way to write it. Bail out. */
+                DPRINT1("Failed writing to Swap page. Status: 0x%08x.\n", Status);
+                Pfn->u3.e1.WriteInProgress = 0;
+                Pfn->u3.e1.Modified = 1;
+
+                OldIrql = MiAcquirePfnLock();
+
+                MiInsertPageInList(&MmModifiedPageListHead, Page);
+
+                MiReleasePfnLock(OldIrql);
+                break;
+            }
+
+            OldIrql = MiAcquirePfnLock();
+        }
+
+        MiReleasePfnLock(OldIrql);
+    }
+}
+
+CODE_SEG("INIT")
+NTSTATUS
+MiStartModifiedPageWriterThread(VOID)
+{
+    HANDLE Thread;
+
+    KeInitializeGate(&MiModifiedPageWriterGate);
+
+    NTSTATUS Status = PsCreateSystemThread(&Thread,
+                                           THREAD_ALL_ACCESS,
+                                           NULL,
+                                           NULL,
+                                           NULL,
+                                           MiModifiedPageWriter,
+                                           NULL);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    ObCloseHandle(Thread, KernelMode);
+
+    return STATUS_SUCCESS;
 }
 
 /* EOF */

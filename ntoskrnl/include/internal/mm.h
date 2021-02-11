@@ -670,6 +670,11 @@ MmInitSystem(IN ULONG Phase,
 
 /* pagefile.c ****************************************************************/
 
+NTSTATUS
+MiAllocSwapEntry(
+    _Out_ PULONG PageFileLow,
+    _Out_ PULONG_PTR PageFileHigh);
+
 SWAPENTRY
 NTAPI
 MmAllocSwapPage(VOID);
@@ -693,6 +698,11 @@ MmReadFromSwapPage(
     SWAPENTRY SwapEntry,
     PFN_NUMBER Page
 );
+
+NTSTATUS
+MiWriteSwapEntry(_In_ ULONG PageFileLow,
+                 _In_ ULONG_PTR PageFileHigh,
+                 _In_ PFN_NUMBER Page);
 
 NTSTATUS
 NTAPI

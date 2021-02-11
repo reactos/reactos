@@ -2551,6 +2551,17 @@ MmArmInitSystem(IN ULONG Phase,
         MiInitializeLoadedModuleList(LoaderBlock);
     }
 
+    if (Phase == 2)
+    {
+        /* Start the modified page writer thread */
+        NTSTATUS Status = MiStartModifiedPageWriterThread();
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("Failed to start the MPW thread: Status 0x%08x\n", Status);
+            return FALSE;
+        }
+    }
+
     //
     // Always return success for now
     //
