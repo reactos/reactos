@@ -1239,6 +1239,12 @@ MiArchCreateProcessAddressSpace(
     _In_ PEPROCESS Process,
     _In_ PULONG_PTR DirectoryTableBase);
 
+/* pfnlist.c *****************************************************************/
+VOID
+MmCompletePageWrite(
+    _Inout_ PMDL Mdl,
+    _In_ NTSTATUS Status);
+
 /* wset.c ********************************************************************/
 
 NTSTATUS

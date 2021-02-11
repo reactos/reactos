@@ -32,6 +32,8 @@
 #define NDEBUG
 #include <debug.h>
 
+#include "ARM3/miarm.h"
+
 /* GLOBALS *******************************************************************/
 
 #define PAIRS_PER_RUN (1024)
@@ -123,6 +125,62 @@ MmShowOutOfSpaceMessagePagingFile(VOID)
         DPRINT1("MM: Out of swap space.\n");
         MmSwapSpaceMessage = TRUE;
     }
+}
+
+NTSTATUS
+MiWriteSwapEntry(_In_ ULONG PageFileLow,
+                 _In_ ULONG_PTR PageFileHigh,
+                 _In_ PFN_NUMBER Page)
+{
+    /* Get the file object, ensure we're not given bogus page file number. */
+    ASSERT(PageFileLow < MAX_PAGING_FILES);
+    PFILE_OBJECT FileObject = MmPagingFile[PageFileLow]->FileObject;
+    ASSERT(FileObject != NULL);
+    ASSERT(PageFileHigh != 0);
+    ASSERT(PageFileHigh != MI_PTE_LOOKUP_NEEDED);
+
+    /* Normalize offset */
+    PageFileHigh--;
+
+    /* Get the Device Object */
+    PDEVICE_OBJECT DeviceObject = IoGetRelatedDeviceObject(FileObject);
+
+    /* Allocate IRP & MDL */
+    PIRP Irp = IoAllocateIrp(DeviceObject->StackSize, FALSE);
+    if (!Irp)
+    {
+        DPRINT1("Failed allocating the IRP!\n");
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    PMDL Mdl = IoAllocateMdl(NULL, PAGE_SIZE, FALSE, FALSE, Irp);
+    if (!Mdl)
+    {
+        DPRINT1("Failed allocating the MDL!\n");
+        IoFreeIrp(Irp);
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+    MmGetMdlPfnArray(Mdl)[0] = Page;
+    Mdl->MdlFlags |= MDL_PAGES_LOCKED;
+
+    /* Get the Stack */
+    PIO_STACK_LOCATION StackPtr = IoGetNextIrpStackLocation(Irp);
+
+    /* Create the IRP Settings. Making it asynchronous will make the IO manager fire an APC for us,
+     * which will call MmCompleteWritePage above. */
+    Irp->RequestorMode = KernelMode;
+    Irp->Flags = IRP_PAGING_IO | IRP_NOCACHE;
+    Irp->Tail.Overlay.OriginalFileObject = FileObject;
+    Irp->Tail.Overlay.Thread = PsGetCurrentThread();
+
+    /* Set the Stack Settings */
+    StackPtr->Parameters.Write.Length = PAGE_SIZE;
+    StackPtr->Parameters.Write.ByteOffset.QuadPart = PageFileHigh << PAGE_SHIFT;
+    StackPtr->MajorFunction = IRP_MJ_WRITE;
+    StackPtr->FileObject = FileObject;
+
+    /* Call the Driver */
+    return IoCallDriver(DeviceObject, Irp);
 }
 
 NTSTATUS

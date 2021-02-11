@@ -1300,6 +1300,28 @@ IopClearStackLocation(IN PIO_STACK_LOCATION IoStackLocation)
     IoStackLocation->FileObject = NULL;
 }
 
+static
+VOID
+NTAPI
+IopCompletePageWrite(
+    _In_ PKAPC Apc,
+    _In_opt_ PKNORMAL_ROUTINE *NormalRoutine,
+    _Inout_opt_ PVOID *NormalContext,
+    _Inout_opt_ PVOID *SystemArgument1,
+    _Inout_opt_ PVOID *SystemArgument2
+)
+{
+    /* Get the IRP */
+    PIRP Irp = CONTAINING_RECORD(Apc, IRP, Tail.Apc);
+    PMDL Mdl = Irp->MdlAddress;
+    NTSTATUS Status = Irp->IoStatus.Status;
+
+    /* Free the IRP. Mm wil take care of the Mdl */
+    IoFreeIrp(Irp);
+
+    MmCompletePageWrite(Mdl, Status);
+}
+
 /*
  * @implemented
  */
@@ -1504,9 +1526,8 @@ IofCompleteRequest(IN PIRP Irp,
         }
         else
         {
-#if 0
             /* Page 166 */
-            KeInitializeApc(&Irp->Tail.Apc
+            KeInitializeApc(&Irp->Tail.Apc,
                             &Irp->Tail.Overlay.Thread->Tcb,
                             Irp->ApcEnvironment,
                             IopCompletePageWrite,
@@ -1518,10 +1539,6 @@ IofCompleteRequest(IN PIRP Irp,
                              NULL,
                              NULL,
                              PriorityBoost);
-#else
-            /* Not implemented yet. */
-            UNIMPLEMENTED_DBGBREAK("Not supported!\n");
-#endif
         }
 
         /* Get out of here */

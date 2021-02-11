@@ -1396,4 +1396,54 @@ MiInitializePfnForOtherProcess(IN PFN_NUMBER PageFrameIndex,
     }
 }
 
+/* This routine is called after an asynchronous page write */
+VOID
+MmCompletePageWrite(
+    _Inout_ PMDL Mdl,
+    _In_ NTSTATUS Status)
+{
+    /* Get back our page */
+    PFN_NUMBER Page = MmGetMdlPfnArray(Mdl)[0];
+
+    /* Clean the MDL */
+    if (Mdl->MdlFlags & MDL_MAPPED_TO_SYSTEM_VA)
+    {
+        MmUnmapLockedPages (Mdl->MappedSystemVa, Mdl);
+    }
+    IoFreeMdl(Mdl);
+
+    KIRQL OldIrql = MiAcquirePfnLock();
+
+    PMMPFN Pfn = MiGetPfnEntry(Page);
+
+    /* The write is not in progress anymore */
+    Pfn->u3.e1.WriteInProgress = 0;
+
+    /* We're still dirty if we didn't succeed */
+    if (!NT_SUCCESS(Status))
+        Pfn->u3.e1.Modified = 1;
+
+    /* Does someone use this page now ? */
+    if (Pfn->u3.e1.PageLocation == ActiveAndValid)
+    {
+        /* Yes. Let it live its new life. */
+        ASSERT(Pfn->u3.ReferenceCount != 0);
+
+        MiReleasePfnLock(OldIrql);
+        return;
+    }
+
+    /* If the page is not active, then it still must be in transition */
+    ASSERT(Pfn->u3.e1.PageLocation == TransitionPage);
+
+    /* Put this page in the standby list. You are freeeeeeeee!
+     * Well, that is, if nobody failed ! */
+    if (Pfn->u3.e1.Modified)
+        MiInsertPageInList(&MmModifiedPageListHead, Page);
+    else
+        MiInsertStandbyListAtFront(Page);
+
+    MiReleasePfnLock(OldIrql);
+}
+
 /* EOF */
