@@ -21,6 +21,7 @@
 #pragma once
 
 VOID DIALOG_FileNew(VOID);
+VOID DIALOG_FileNewWindow(VOID);
 VOID DIALOG_FileOpen(VOID);
 BOOL DIALOG_FileSave(VOID);
 BOOL DIALOG_FileSaveAs(VOID);

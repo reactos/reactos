@@ -415,6 +415,13 @@ VOID DIALOG_FileNew(VOID)
     }
 }
 
+VOID DIALOG_FileNewWindow(VOID)
+{
+    TCHAR pszNotepadExe[MAX_PATH];
+    GetModuleFileName(NULL, pszNotepadExe, ARRAYSIZE(pszNotepadExe));
+    ShellExecute(NULL, NULL, pszNotepadExe, NULL, NULL, SW_SHOWNORMAL);
+}
+
 VOID DIALOG_FileOpen(VOID)
 {
     OPENFILENAME openfilename;
