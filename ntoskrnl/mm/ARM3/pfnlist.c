@@ -1497,8 +1497,6 @@ MiModifiedPageWriter(_Unreferenced_parameter_ PVOID Context)
             Pfn->u3.e1.WriteInProgress = 1;
             Pfn->u3.e1.Modified = 0;
 
-            MiReleasePfnLock(OldIrql);
-
             /* Check if we have an entry in the page file. */
             ASSERT(Pfn->OriginalPte.u.Soft.PageFileHigh != MI_PTE_LOOKUP_NEEDED);
             if (Pfn->OriginalPte.u.Soft.PageFileHigh == 0)
@@ -1516,6 +1514,8 @@ MiModifiedPageWriter(_Unreferenced_parameter_ PVOID Context)
                 Pfn->OriginalPte.u.Soft.PageFileLow = PageFileLow;
                 Pfn->OriginalPte.u.Soft.PageFileHigh = PageFileHigh;
             }
+
+            MiReleasePfnLock(OldIrql);
 
             DPRINT1("Writing page %lx to pagefile (%u - %lu). PTE is %p.\n",
                     Page, Pfn->OriginalPte.u.Soft.PageFileLow, Pfn->OriginalPte.u.Soft.PageFileHigh,
