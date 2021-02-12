@@ -107,6 +107,11 @@ MiLoadImageSection(_Inout_ PSECTION *SectionPtr,
     MMPTE TempPte;
     KIRQL OldIrql;
     PFN_NUMBER PageFrameIndex;
+#if MI_TRACE_PFNS
+    /* File name is in paged pool. So get a local copy */
+    CHAR CURRENT_FILE_NAME[_countof(MI_PFN_CURRENT_PROCESS_NAME)];
+#endif
+
     PAGED_CODE();
 
     /* Detect session load */
@@ -181,6 +186,14 @@ MiLoadImageSection(_Inout_ PSECTION *SectionPtr,
     *ImageBase = DriverBase;
     DPRINT1("Loading: %wZ at %p with %lx pages\n", FileName, DriverBase, PteCount);
 
+#if MI_TRACE_PFNS
+    ULONG i = 0;
+    for (i = 0; (i < sizeof(CURRENT_FILE_NAME)) && (i < FileName->Length / sizeof(WCHAR)); i++)
+        CURRENT_FILE_NAME[i] = (CHAR)FileName->Buffer[i];
+    if (i < _countof(CURRENT_FILE_NAME))
+        CURRENT_FILE_NAME[i] = '\0';
+#endif
+
     /* Lock the PFN database */
     OldIrql = MiAcquirePfnLock();
 
@@ -192,9 +205,9 @@ MiLoadImageSection(_Inout_ PSECTION *SectionPtr,
         ASSERT(PointerPte->u.Hard.Valid == 0);
 
         /* Some debug stuff */
-        MI_SET_USAGE(MI_USAGE_DRIVER_PAGE);
 #if MI_TRACE_PFNS
-        MI_SET_PROCESS_USTR(FileName);
+        MI_SET_USAGE(MI_USAGE_DRIVER_PAGE);
+        MI_SET_PROCESS2(CURRENT_FILE_NAME);
 #endif
 
         /* Grab a page */
