@@ -1045,17 +1045,12 @@ MiResolveTransitionFault(IN BOOLEAN StoreInstruction,
         ASSERT(Pfn1->u2.ShareCount != 0);
         ASSERT(Pfn1->u3.e2.ReferenceCount != 0);
     }
-    else if (Pfn1->u3.e1.PageLocation == TransitionPage)
-    {
-        /* Some checks */
-        ASSERT(Pfn1->u2.ShareCount == 0);
-        ASSERT(Pfn1->u3.e2.ReferenceCount != 0);
-    }
     else
     {
         /* Otherwise, the page is removed from its list */
-        DPRINT("Transition page in free/zero list\n");
-        MiUnlinkPageFromList(Pfn1);
+        DPRINT("Transition page in free/zero or transition list\n");
+        if (Pfn1->u3.e1.PageLocation != TransitionPage)
+            MiUnlinkPageFromList(Pfn1);
         MiReferenceUnusedPageAndBumpLockCount(Pfn1);
     }
 
