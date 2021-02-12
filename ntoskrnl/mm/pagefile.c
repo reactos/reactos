@@ -41,9 +41,6 @@
 /* List of paging files, both used and free */
 PMMPAGING_FILE MmPagingFile[MAX_PAGING_FILES];
 
-/* Lock for examining the list of paging files */
-KGUARDED_MUTEX MmPageFileCreationLock;
-
 /* Number of paging files */
 ULONG MmNumberOfPagingFiles;
 
@@ -309,8 +306,6 @@ MmInitPagingFile(VOID)
 {
     ULONG i;
 
-    KeInitializeGuardedMutex(&MmPageFileCreationLock);
-
     MiFreeSwapPages = 0;
     MiUsedSwapPages = 0;
     MiReservedSwapPages = 0;
@@ -329,7 +324,9 @@ MiFreeSwapEntry(
 {
     PMMPAGING_FILE PagingFile;
 
-    KeAcquireGuardedMutex(&MmPageFileCreationLock);
+    MI_ASSERT_PFN_LOCK_HELD();
+
+    MI_ASSERT_PFN_LOCK_HELD();
 
     PagingFile = MmPagingFile[PageFileLow];
     if (PagingFile == NULL)
@@ -344,15 +341,15 @@ MiFreeSwapEntry(
 
     MiFreeSwapPages++;
     MiUsedSwapPages--;
-
-    KeReleaseGuardedMutex(&MmPageFileCreationLock);
 }
 
 VOID
 NTAPI
 MmFreeSwapPage(SWAPENTRY Entry)
 {
+    KIRQL OldIrql = MiAcquirePfnLock();
     MiFreeSwapEntry(FILE_FROM_ENTRY(Entry), OFFSET_FROM_ENTRY(Entry));
+    MiReleasePfnLock(OldIrql);
 }
 
 NTSTATUS
@@ -363,11 +360,10 @@ MiAllocSwapEntry(
     ULONG i;
     ULONG_PTR Offset;
 
-    KeAcquireGuardedMutex(&MmPageFileCreationLock);
+    MI_ASSERT_PFN_LOCK_HELD();
 
     if (MiFreeSwapPages == 0)
     {
-        KeReleaseGuardedMutex(&MmPageFileCreationLock);
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
@@ -382,7 +378,6 @@ MiAllocSwapEntry(
             }
             MiUsedSwapPages++;
             MiFreeSwapPages--;
-            KeReleaseGuardedMutex(&MmPageFileCreationLock);
 
             *PageFileLow = i;
             *PageFileHigh = Offset + 1;
@@ -390,7 +385,6 @@ MiAllocSwapEntry(
         }
     }
 
-    KeReleaseGuardedMutex(&MmPageFileCreationLock);
     KeBugCheck(MEMORY_MANAGEMENT);
     return(0);
 }
@@ -401,11 +395,14 @@ MmAllocSwapPage(VOID)
 {
     ULONG PageFileLow;
     ULONG_PTR PageFileHigh;
+    NTSTATUS Status;
+    KIRQL OldIrql = MiAcquirePfnLock();
 
-    if (!NT_SUCCESS(MiAllocSwapEntry(&PageFileLow, &PageFileHigh)))
-        return 0;
+    Status = MiAllocSwapEntry(&PageFileLow, &PageFileHigh);
 
-    return ENTRY_FROM_FILE_OFFSET(PageFileLow, PageFileHigh);
+    MiReleasePfnLock(OldIrql);
+
+    return NT_SUCCESS(Status) ? ENTRY_FROM_FILE_OFFSET(PageFileLow, PageFileHigh) : 0;
 }
 
 NTSTATUS NTAPI
@@ -430,6 +427,7 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
     PACL Dacl;
     PWSTR Buffer;
     DEVICE_TYPE DeviceType;
+    KIRQL OldIrql;
 
     PAGED_CODE();
 
@@ -662,10 +660,7 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
         /* Find if it matches a previous page file */
         PagingFile = NULL;
 
-        /* FIXME: should be calling unsafe instead,
-         * we should already be in a guarded region
-         */
-        KeAcquireGuardedMutex(&MmPageFileCreationLock);
+        OldIrql = MiAcquirePfnLock();
         if (MmNumberOfPagingFiles > 0)
         {
             i = 0;
@@ -682,11 +677,11 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
             /* This is the matching page file */
             PagingFile = MmPagingFile[i];
         }
+        MiReleasePfnLock(OldIrql);
 
         /* If we didn't find the page file, fail */
         if (PagingFile == NULL)
         {
-            KeReleaseGuardedMutex(&MmPageFileCreationLock);
             ObDereferenceObject(FileObject);
             ZwClose(FileHandle);
             ExFreePoolWithTag(Dacl, 'lcaD');
@@ -697,7 +692,6 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
         /* Don't allow page file shrinking */
         if (PagingFile->MinimumSize > (SafeMinimumSize.QuadPart >> PAGE_SHIFT))
         {
-            KeReleaseGuardedMutex(&MmPageFileCreationLock);
             ObDereferenceObject(FileObject);
             ZwClose(FileHandle);
             ExFreePoolWithTag(Dacl, 'lcaD');
@@ -707,7 +701,6 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
 
         if ((SafeMaximumSize.QuadPart >> PAGE_SHIFT) < PagingFile->MaximumSize)
         {
-            KeReleaseGuardedMutex(&MmPageFileCreationLock);
             ObDereferenceObject(FileObject);
             ZwClose(FileHandle);
             ExFreePoolWithTag(Dacl, 'lcaD');
@@ -718,7 +711,6 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
         /* FIXME: implement parameters checking and page file extension */
         UNIMPLEMENTED;
 
-        KeReleaseGuardedMutex(&MmPageFileCreationLock);
         ObDereferenceObject(FileObject);
         ZwClose(FileHandle);
         ExFreePoolWithTag(Dacl, 'lcaD');
@@ -851,15 +843,12 @@ NtCreatePagingFile(IN PUNICODE_STRING FileName,
                         (ULONG)(PagingFile->MaximumSize));
     RtlClearAllBits(PagingFile->Bitmap);
 
-    /* FIXME: should be calling unsafe instead,
-     * we should already be in a guarded region
-     */
-    KeAcquireGuardedMutex(&MmPageFileCreationLock);
+    OldIrql = MiAcquirePfnLock();
     ASSERT(MmPagingFile[MmNumberOfPagingFiles] == NULL);
     MmPagingFile[MmNumberOfPagingFiles] = PagingFile;
     MmNumberOfPagingFiles++;
     MiFreeSwapPages = MiFreeSwapPages + PagingFile->FreeSpace;
-    KeReleaseGuardedMutex(&MmPageFileCreationLock);
+    MiReleasePfnLock(OldIrql);
 
     MmSwapSpaceMessage = FALSE;
 
