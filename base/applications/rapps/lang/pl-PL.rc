@@ -2,6 +2,7 @@
  *    Translated by Caemyr - Olaf Siejka (Aug, 2009)
  *    Use ReactOS forum PM or IRC to contact me
  *    Updated by Saibamen - Adam Stachowicz (saibamenppl@gmail.com) (May, 2020)
+ *    Updated by pithwz - Piotr Hetnarowicz (piotrhwz@gmail.com) (February, 2021)
  *    https://reactos.org/
  *    IRC: irc.freenode.net #reactos-pl;
  */
@@ -104,7 +105,7 @@ END
 
 IDD_DOWNLOAD_DIALOG DIALOGEX 0, 0, 220, 220
 STYLE DS_SHELLFONT | DS_CENTER | WS_BORDER | WS_CAPTION | WS_POPUP | WS_SYSMENU | WS_VISIBLE
-CAPTION "Pobierz %ls…"
+CAPTION "Pobieranie %ls…"
 FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL "Progress1", IDC_DOWNLOAD_PROGRESS, "msctls_progress32", WS_BORDER | PBS_SMOOTH, 10, 10, 200, 12
@@ -192,7 +193,7 @@ BEGIN
     IDS_INSTALL "Instaluj"
     IDS_UNINSTALL "Odinstaluj"
     IDS_MODIFY "Modyfikuj"
-    IDS_APPS_COUNT "Licznik aplikacji: %d"
+    IDS_APPS_COUNT "Liczba aplikacji: %d; Wybranych: %d"
     IDS_WELCOME_TITLE "Witamy w Menedżerze aplikacji ReactOS!\n\n"
     IDS_WELCOME_TEXT "Z listy po lewej wybierz kategorię, a następnie aplikację, by ją zainstalować lub odinstalować.\nStrona projektu ReactOS: "
     IDS_WELCOME_URL "https://reactos.org/"
