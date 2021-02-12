@@ -290,6 +290,9 @@ MiRestoreOriginalPte(_In_ PMMPFN Pfn)
     }
 
     /* Kill whatever was a reference to the now restored PTE */
+    MiDecrementShareCount(MiGetPfnEntry(Pfn->u4.PteFrame), Pfn->u4.PteFrame);
+    Pfn->u4.PteFrame = 0;
+
     Pfn->PteAddress = NULL;
     Pfn->OriginalPte.u.Long = 0;
     Pfn->u3.e1.PrototypePte = 0;
