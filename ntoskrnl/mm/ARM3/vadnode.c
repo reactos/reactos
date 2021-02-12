@@ -300,8 +300,34 @@ MiInsertVadEx(
         (!Vad->u.VadFlags.PrivateMemory &&
          (Vad->u.VadFlags.Protection & PAGE_WRITECOPY)))
     {
+        KIRQL OldIrql;
+
         /* Set the commit charge */
         Vad->u.VadFlags.CommitCharge = ViewSize / PAGE_SIZE;
+
+#if 0
+        /* Check if we're going beyond the commitment limit */
+        OldIrql = MiAcquirePfnLock();
+
+        if (((MmTotalCommittedPages + Vad->u.VadFlags.CommitCharge) > MmTotalCommitLimit)
+            || (CurrentProcess->CommitChargeLimit && ((CurrentProcess->CommitCharge + Vad->u.VadFlags.CommitCharge) > CurrentProcess->CommitChargeLimit)))
+        {
+            MiReleasePfnLock(OldIrql);
+            KeReleaseGuardedMutex(&CurrentProcess->AddressCreationLock);
+            return STATUS_COMMITMENT_LIMIT;
+        }
+
+        MmTotalCommittedPages += Vad->u.VadFlags.CommitCharge;
+        MiReleasePfnLock(OldIrql);
+#else
+        (void)OldIrql;
+#endif
+
+        CurrentProcess->CommitCharge += Vad->u.VadFlags.CommitCharge;
+        if (CurrentProcess->CommitCharge > CurrentProcess->CommitChargePeak)
+        {
+            CurrentProcess->CommitChargePeak = CurrentProcess->CommitCharge;
+        }
     }
 
     /* Check if the VAD is to be secured */
@@ -675,7 +701,7 @@ MiFindEmptyAddressRangeDownTree(IN SIZE_T Length,
                    with, thus we already have an OldNode! */
                 ASSERT(OldNode != NULL);
 
-                /* The node we had before is the most left grandchild of 
+                /* The node we had before is the most left grandchild of
                    that right child, use it as parent. */
                 ASSERT(RtlLeftChildAvl(OldNode) == NULL);
                 *Parent = OldNode;

@@ -701,8 +701,8 @@ MiSegmentDelete(IN PSEGMENT Segment)
             }
             else if (TempPte.u.Soft.PageFileHigh != 0)
             {
-                /* Should not happen for now */
-                ASSERT(FALSE);
+                /* Nothing more to do than free the entry */
+                MiFreeSwapEntry(TempPte.u.Soft.PageFileLow, TempPte.u.Soft.PageFileHigh);
             }
         }
         else
@@ -1276,8 +1276,8 @@ MiLoadUserSymbols(IN PCONTROL_AREA ControlArea,
     }
 }
 
+static
 NTSTATUS
-NTAPI
 MiMapViewOfDataSection(IN PCONTROL_AREA ControlArea,
                        IN PEPROCESS Process,
                        IN PVOID *BaseAddress,
@@ -1297,10 +1297,11 @@ MiMapViewOfDataSection(IN PCONTROL_AREA ControlArea,
     PSEGMENT Segment;
     PFN_NUMBER PteOffset;
     NTSTATUS Status;
-    ULONG QuotaCharge = 0, QuotaExcess = 0;
+    PFN_NUMBER QuotaCharge = 0, QuotaExcess = 0;
     PMMPTE PointerPte, LastPte;
-    MMPTE TempPte;
     ULONG Granularity = MM_VIRTMEM_GRANULARITY;
+    PVOID CommitBitmapBuffer = NULL;
+    RTL_BITMAP CommitBitmap;
 
     DPRINT("Mapping ARM3 data section\n");
 
@@ -1385,10 +1386,15 @@ MiMapViewOfDataSection(IN PCONTROL_AREA ControlArea,
     ASSERT(Subsection->SubsectionBase != NULL);
 
     /* Compute how much commit space the segment will take */
-    if ((CommitSize) && (Segment->NumberOfCommittedPages < Segment->TotalNumberOfPtes))
+    if (CommitSize)
     {
         /* Charge for the maximum pages */
         QuotaCharge = BYTES_TO_PAGES(CommitSize);
+
+        /* Optimize this case a bit */
+        ASSERT(Segment->TotalNumberOfPtes >= Segment->NumberOfCommittedPages);
+        if (QuotaCharge > (Segment->TotalNumberOfPtes - Segment->NumberOfCommittedPages))
+            QuotaCharge = Segment->TotalNumberOfPtes - Segment->NumberOfCommittedPages;
     }
 
     /* ARM3 does not currently support large pages */
@@ -1432,45 +1438,98 @@ MiMapViewOfDataSection(IN PCONTROL_AREA ControlArea,
     /* Make sure the prototype PTE ranges make sense, this is a Windows ASSERT */
     ASSERT(Vad->FirstPrototypePte <= Vad->LastContiguousPte);
 
-    /* FIXME: Should setup VAD bitmap */
-    Status = STATUS_SUCCESS;
-
-    /* Check if anything was committed */
+    /* Check if anything is to be committed */
     if (QuotaCharge)
     {
+        PMMPTE LastZeroPte;
         /* Set the start and end PTE addresses, and pick the template PTE */
         PointerPte = Vad->FirstPrototypePte;
         LastPte = PointerPte + BYTES_TO_PAGES(CommitSize);
-        TempPte = Segment->SegmentPteTemplate;
 
         /* Acquire the commit lock and loop all prototype PTEs to be committed */
         KeAcquireGuardedMutex(&MmSectionCommitMutex);
         while (PointerPte < LastPte)
         {
             /* Make sure the PTE is already invalid */
-            if (PointerPte->u.Long == 0)
-            {
-                /* And write the invalid PTE */
-                MI_WRITE_INVALID_PTE(PointerPte, TempPte);
-            }
-            else
+            if (PointerPte->u.Long != 0)
             {
                 /* The PTE is valid, so skip it */
                 QuotaExcess++;
             }
-
+            else
+            {
+                /* Small optimization for when we commit for real. */
+                LastZeroPte = PointerPte;
+            }
             /* Move to the next PTE */
             PointerPte++;
         }
 
-        /* Now check how many pages exactly we committed, and update accounting */
+        /* See if we really have to commit something */
         ASSERT(QuotaCharge >= QuotaExcess);
         QuotaCharge -= QuotaExcess;
-        Segment->NumberOfCommittedPages += QuotaCharge;
-        ASSERT(Segment->NumberOfCommittedPages <= Segment->TotalNumberOfPtes);
 
-        /* Now that we're done, release the lock */
-        KeReleaseGuardedMutex(&MmSectionCommitMutex);
+        if (QuotaCharge)
+        {
+            /* Check global counter & update it. */
+            KIRQL OldIrql = MiAcquirePfnLock();
+
+            if ((MmTotalCommittedPages + QuotaCharge) > MmTotalCommitLimit)
+            {
+                Status = STATUS_COMMITMENT_LIMIT;
+                MiReleasePfnLock(OldIrql);
+                KeReleaseGuardedMutex(&MmSectionCommitMutex);
+                goto Fail;
+            }
+
+            MmTotalCommittedPages += QuotaCharge;
+            MiReleasePfnLock(OldIrql);
+
+            /* From now, use the last PTE we saw as being zero */
+            LastPte = LastZeroPte + 1;
+
+            /*
+             * We must commit the pages before inserting the VAD into the process address space.
+             * Unfortunately, the latter can fail, so we must be able to roll this back, but we don't want to
+             * decommit pages which may have been committed before.
+             * Thus we allocate a bitmap to keep track of what we are committing, and we do the whole thing
+             * while holding the section commit mutex
+             */
+            CommitBitmapBuffer = ExAllocatePoolZero(PagedPool, (ALIGN_UP_BY(LastPte - Vad->FirstPrototypePte, 32) / 32) * sizeof(ULONG), ' pmT');
+            if (!CommitBitmapBuffer)
+            {
+                DPRINT1("Failed to allocate the bitmap for section commitment!\n");
+
+                /* Put global counter where it was */
+                OldIrql = MiAcquirePfnLock();
+                MmTotalCommittedPages -= QuotaCharge;
+                MiReleasePfnLock(OldIrql);
+
+                ExFreePoolWithTag(Vad, 'ldaV');
+                MiDereferenceControlArea(ControlArea);
+                Status = STATUS_INSUFFICIENT_RESOURCES;
+                goto Fail;
+            }
+            RtlInitializeBitMap(&CommitBitmap, CommitBitmapBuffer, LastPte - Vad->FirstPrototypePte);
+
+            /* Now commit all of this for real */
+            MMPTE TempPte = Segment->SegmentPteTemplate;
+            PointerPte = Vad->FirstPrototypePte;
+            while (PointerPte < LastPte)
+            {
+                if (PointerPte->u.Long == 0)
+                {
+                    /* And write the invalid PTE */
+                    MI_WRITE_INVALID_PTE(PointerPte, TempPte);
+                    RtlSetBit(&CommitBitmap, PointerPte - Vad->FirstPrototypePte);
+                }
+            }
+        }
+        else
+        {
+            /* There's nothing to charge. Release the lock now. */
+            KeReleaseGuardedMutex(&MmSectionCommitMutex);
+        }
     }
 
     /* Is it SEC_BASED, or did the caller manually specify an address? */
@@ -1496,8 +1555,42 @@ MiMapViewOfDataSection(IN PCONTROL_AREA ControlArea,
                            MAXULONG_PTR >> ZeroBits,
                            Granularity,
                            AllocationType);
+
+    if (QuotaCharge)
+    {
+        /* So we committed things. Did we fail inserting this VAD ? */
+        if (!NT_SUCCESS(Status))
+        {
+            /* Damn. Fall back to uncommitted PTEs where we should */
+            KIRQL OldIrql = MiAcquirePfnLock();
+            MmTotalCommittedPages -= QuotaCharge;
+            MiReleasePfnLock(OldIrql);
+
+            while (QuotaCharge)
+            {
+                PteOffset = RtlFindSetBitsAndClear(&CommitBitmap, 1, PteOffset);
+                ASSERT(PteOffset != 0xFFFFFFFF);
+                Vad->FirstPrototypePte[PteOffset].u.Long = 0;
+                QuotaCharge--;
+            }
+        }
+        else
+        {
+            /* Update the segment counter */
+            Segment->NumberOfCommittedPages += QuotaCharge;
+            ASSERT(Segment->NumberOfCommittedPages <= Segment->TotalNumberOfPtes);
+        }
+
+        /* Release commit lock and free the buffer */
+        KeReleaseGuardedMutex(&MmSectionCommitMutex);
+        ExFreePoolWithTag(CommitBitmapBuffer, ' pmT');
+    }
+
+Fail:
     if (!NT_SUCCESS(Status))
     {
+        MiDereferenceControlArea(ControlArea);
+        ExFreePoolWithTag(Vad, 'ldaV');
         return Status;
     }
 
