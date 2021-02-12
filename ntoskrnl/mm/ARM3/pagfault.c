@@ -1045,6 +1045,12 @@ MiResolveTransitionFault(IN BOOLEAN StoreInstruction,
         ASSERT(Pfn1->u2.ShareCount != 0);
         ASSERT(Pfn1->u3.e2.ReferenceCount != 0);
     }
+    else if (Pfn1->u3.e1.PageLocation == TransitionPage)
+    {
+        /* Some checks */
+        ASSERT(Pfn1->u2.ShareCount == 0);
+        ASSERT(Pfn1->u3.e2.ReferenceCount != 0);
+    }
     else
     {
         /* Otherwise, the page is removed from its list */
