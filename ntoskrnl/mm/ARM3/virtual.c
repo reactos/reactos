@@ -2682,13 +2682,21 @@ MiDecommitPages(IN PVOID StartingAddress,
 
                     MI_WRITE_INVALID_PTE(PointerPte, MmDecommittedPte);
                 }
+                else if (PteContents.u.Soft.PageFileHigh != 0)
+                {
+                    /* Release the swap page & write the PTE */
+                    KIRQL OldIrql = MiAcquirePfnLock();
+                    MiFreeSwapEntry(PteContents.u.Soft.PageFileLow, PteContents.u.Soft.PageFileHigh);
+                    MiReleasePfnLock(OldIrql);
+
+                    MI_WRITE_INVALID_PTE(PointerPte, MmDecommittedPte);
+                }
                 else
                 {
                     //
                     // We do not support any of these other scenarios at the moment
                     //
                     ASSERT(PteContents.u.Soft.Prototype == 0);
-                    ASSERT(PteContents.u.Soft.PageFileHigh == 0);
 
                     //
                     // So the only other possibility is that it is still a demand
