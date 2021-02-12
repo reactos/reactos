@@ -1481,7 +1481,9 @@ MiModifiedPageWriter(_Unreferenced_parameter_ PVOID Context)
         KIRQL OldIrql = MiAcquirePfnLock();
         PFN_NUMBER Page = MmModifiedPageListByColor[0].Flink;
 
-        while ((Page = MmModifiedPageListByColor[0].Flink) != LIST_HEAD)
+        /* Limit ourselves so that we don't write everything in. */
+        while (((Page = MmModifiedPageListByColor[0].Flink) != LIST_HEAD)
+            && (MmAvailablePages < (MmMinimumFreePages * 3)))
         {
             NTSTATUS Status;
 
@@ -1517,9 +1519,9 @@ MiModifiedPageWriter(_Unreferenced_parameter_ PVOID Context)
 
             MiReleasePfnLock(OldIrql);
 
-            DPRINT1("Writing page %lx to pagefile (%u - %lu). PTE is %p.\n",
-                    Page, Pfn->OriginalPte.u.Soft.PageFileLow, Pfn->OriginalPte.u.Soft.PageFileHigh,
-                    Pfn->PteAddress);
+            DPRINT("Writing page %lx to pagefile (%u - %lu). PTE is %p.\n",
+                   Page, Pfn->OriginalPte.u.Soft.PageFileLow, Pfn->OriginalPte.u.Soft.PageFileHigh,
+                   Pfn->PteAddress);
 
             Status = MiWriteSwapEntry(Pfn->OriginalPte.u.Soft.PageFileLow, Pfn->OriginalPte.u.Soft.PageFileHigh, Page);
 DoneForThisPage:
