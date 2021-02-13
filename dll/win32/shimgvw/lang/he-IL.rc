@@ -9,12 +9,18 @@ BEGIN
     /* Tooltips */
     IDS_TOOLTIP_NEXT_PIC "התמונה הבאה"
     IDS_TOOLTIP_PREV_PIC "התמונה הקודמת"
+    IDS_TOOLTIP_BEST_FIT "Best fit to window (Ctrl+B)"
+    IDS_TOOLTIP_REAL_SIZE "Actual size (Ctrl+A)"
+    IDS_TOOLTIP_SLIDE_SHOW "Start slideshow (F11)"
     IDS_TOOLTIP_ZOOM_IN "הגדלה (+)"
     IDS_TOOLTIP_ZOOM_OUT "הרחקה (-)"
     IDS_TOOLTIP_ROT_CLOCKW "סובב עם כיוון השעון (Ctrl+K)"
     IDS_TOOLTIP_ROT_COUNCW "סובב כנגד כיוון השעון (Ctrl+L)"
+    IDS_TOOLTIP_DELETE "Delete (DEL)"
     IDS_TOOLTIP_PRINT "הדפס (Ctrl+P)"
     IDS_TOOLTIP_SAVEAS "שמירה בשם... (Ctrl+S)"
+    IDS_TOOLTIP_MODIFY "Modify (Ctrl+E)"
+    IDS_TOOLTIP_HELP_TOC "Help topics (F1)"
 END
 
 STRINGTABLE
