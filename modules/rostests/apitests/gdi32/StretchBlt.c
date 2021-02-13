@@ -537,7 +537,7 @@ static void test_StretchBlt_TopDownOptions(BOOL SrcTopDown, BOOL DstTopDown)
     }
 
     test_StretchBlt_stretch(hdcDst, hdcSrc, &biDst, dstBuffer, srcBuffer,
-                             0, 0, 2, 2, 0, 1, 2, -2, expected, __LINE__, SrcTopDown, DstTopDown); // Case 1110 (14) - Vertical flip
+                             0, 0, 2, 2, 0, 1, 2, -2, expected, __LINE__, SrcTopDown, DstTopDown); // Case 1110 (14) - Vertical flip.
 
     if ((SrcTopDown || DstTopDown) && !(SrcTopDown && DstTopDown))
     {
@@ -573,7 +573,7 @@ static void test_StretchBlt_TopDownOptions(BOOL SrcTopDown, BOOL DstTopDown)
     }
 
     test_StretchBlt_stretch(hdcDst, hdcSrc, &biDst, dstBuffer, srcBuffer,
-                             0, 0, 2, 2, 1, 1, -2, -2, expected, __LINE__, SrcTopDown, DstTopDown); // Case 1100 (12) - Both flip
+                             0, 0, 2, 2, 1, 1, -2, -2, expected, __LINE__, SrcTopDown, DstTopDown); // Case 1100 (12) - Both flip.
 
     if ((SrcTopDown || DstTopDown) && !(SrcTopDown && DstTopDown))
     {
@@ -591,7 +591,7 @@ static void test_StretchBlt_TopDownOptions(BOOL SrcTopDown, BOOL DstTopDown)
     }
 
     test_StretchBlt_stretch(hdcDst, hdcSrc, &biDst, dstBuffer, srcBuffer,
-                             0, 1, 2, -2, 0, 0, 2, 2, expected, __LINE__, SrcTopDown, DstTopDown); // Case 1011 (11) - Vertical Flip
+                             0, 1, 2, -2, 0, 0, 2, 2, expected, __LINE__, SrcTopDown, DstTopDown); // Case 1011 (11) - Vertical Flip.
 
     if ((SrcTopDown || DstTopDown) && !(SrcTopDown && DstTopDown))
     {
@@ -609,7 +609,7 @@ static void test_StretchBlt_TopDownOptions(BOOL SrcTopDown, BOOL DstTopDown)
     }
 
     test_StretchBlt_stretch(hdcDst, hdcSrc, &biDst, dstBuffer, srcBuffer,
-                             0, 2, 2, -2, 0, 2, 2, -2, expected, __LINE__, SrcTopDown, DstTopDown); // Case 1010 (10) - No Flip. Special
+                             0, 2, 2, -2, 0, 2, 2, -2, expected, __LINE__, SrcTopDown, DstTopDown); // Case 1010 (10) - No Flip. Special Case.
 
     if ((SrcTopDown || DstTopDown) && !(SrcTopDown && DstTopDown))
     {
@@ -627,7 +627,7 @@ static void test_StretchBlt_TopDownOptions(BOOL SrcTopDown, BOOL DstTopDown)
     }
 
     test_StretchBlt_stretch(hdcDst, hdcSrc, &biDst, dstBuffer, srcBuffer,
-                             0, 1, 2, -2, 1, 0, -2, 2, expected, __LINE__, SrcTopDown, DstTopDown); // Case 1001 (9) - Both Flip  - ROS Failed Test
+                             0, 1, 2, -2, 1, 0, -2, 2, expected, __LINE__, SrcTopDown, DstTopDown); // Case 1001 (9) - Both Flip.
 
     if ((SrcTopDown || DstTopDown) && !(SrcTopDown && DstTopDown))
     {
@@ -681,7 +681,7 @@ static void test_StretchBlt_TopDownOptions(BOOL SrcTopDown, BOOL DstTopDown)
     }
 
     test_StretchBlt_stretch(hdcDst, hdcSrc, &biDst, dstBuffer, srcBuffer,
-                             1, 0, -2, 2, 0, 1, 2, -2, expected, __LINE__, SrcTopDown, DstTopDown); // Case 0110 (6) - Both Flip  - ROS Failed Test
+                             1, 0, -2, 2, 0, 1, 2, -2, expected, __LINE__, SrcTopDown, DstTopDown); // Case 0110 (6) - Both Flip.
 
     if ((SrcTopDown || DstTopDown) && !(SrcTopDown && DstTopDown))
     {
@@ -790,7 +790,7 @@ static void test_StretchBlt_TopDownOptions(BOOL SrcTopDown, BOOL DstTopDown)
     }
 
     test_StretchBlt_stretch(hdcDst, hdcSrc, &biDst, dstBuffer, srcBuffer,
-                             2, 2, -2, -2, 2, 2, -2, -2, expected, __LINE__, SrcTopDown, DstTopDown); // Case 0000 (0) - No Flip. Special
+                             2, 2, -2, -2, 2, 2, -2, -2, expected, __LINE__, SrcTopDown, DstTopDown); // Case 0000 (0) - No Flip. Special Case.
 
 
     SelectObject(hdcSrc, oldSrc);
