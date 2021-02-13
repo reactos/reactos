@@ -7,6 +7,8 @@
  */
 
 #include <win32k.h>
+#define NDEBUG
+#include <debug.h>
 DBG_DEFAULT_CHANNEL(GdiBlt);
 
 BOOL APIENTRY
@@ -480,6 +482,29 @@ NtGdiMaskBlt(
         XlateObj = &exlo.xlo;
     }
 
+    DPRINT("DestRect: (%d,%d)-(%d,%d) and SourcePoint is (%d,%d)\n",
+        DestRect.left, DestRect.top, DestRect.right, DestRect.bottom,
+        SourcePoint.x, SourcePoint.y);
+
+    DPRINT("nWidth is '%d' and nHeight is '%d'.\n", nWidth, nHeight);
+
+    /* Fix BitBlt so that it will not flip left to right */
+    if ((DestRect.left > DestRect.right) && (nWidth < 0))
+    {
+        SourcePoint.x += nWidth;
+        nWidth = -nWidth;
+    }
+
+    /* Fix BitBlt so that it will not flip top to bottom */
+    if ((DestRect.top > DestRect.bottom) && (nHeight < 0))
+    {
+        SourcePoint.y += nHeight;
+        nHeight = -nHeight;
+    }
+
+    /* Make Well Ordered so that we don't flip either way */
+    RECTL_vMakeWellOrdered(&DestRect);
+
     /* Perform the bitblt operation */
     Status = IntEngBitBlt(&BitmapDest->SurfObj,
                           BitmapSrc ? &BitmapSrc->SurfObj : NULL,
@@ -563,6 +588,7 @@ GreStretchBltMask(
     BOOL UsesSource;
     BOOL UsesMask;
     ROP4 rop4;
+    BOOL Case0000, Case0101, Case1010, CaseExcept;
 
     rop4 = WIN32_ROP4_TO_ENG_ROP4(dwRop4);
 
@@ -615,12 +641,31 @@ GreStretchBltMask(
         }
     }
 
+
+    Case0000 = ((WidthDest < 0) && (HeightDest < 0) && (WidthSrc < 0) && (HeightSrc < 0));
+    Case0101 = ((WidthDest < 0) && (HeightDest > 0) && (WidthSrc < 0) && (HeightSrc > 0));
+    Case1010 = ((WidthDest > 0) && (HeightDest < 0) && (WidthSrc > 0) && (HeightSrc < 0));
+    CaseExcept = (Case0000 || Case0101 || Case1010);
+
     pdcattr = DCDest->pdcattr;
 
     DestRect.left   = XOriginDest;
     DestRect.top    = YOriginDest;
     DestRect.right  = XOriginDest+WidthDest;
     DestRect.bottom = YOriginDest+HeightDest;
+
+    /* Account for possible negative span values */
+    if ((WidthDest < 0) && !CaseExcept)
+    {
+        DestRect.left++;
+        DestRect.right++;
+    }
+    if ((HeightDest < 0) && !CaseExcept)
+    {
+        DestRect.top++;
+        DestRect.bottom++;
+    }
+
     IntLPtoDP(DCDest, (LPPOINT)&DestRect, 2);
 
     DestRect.left   += DCDest->ptlDCOrig.x;
@@ -637,6 +682,18 @@ GreStretchBltMask(
     SourceRect.top    = YOriginSrc;
     SourceRect.right  = XOriginSrc+WidthSrc;
     SourceRect.bottom = YOriginSrc+HeightSrc;
+
+    /* Account for possible negative span values */
+    if ((WidthSrc < 0) && !CaseExcept)
+    {
+        SourceRect.left++;
+        SourceRect.right++;
+    }
+    if ((HeightSrc < 0) && !CaseExcept)
+    {
+        SourceRect.top++;
+        SourceRect.bottom++;
+    }
 
     if (UsesSource)
     {
@@ -697,6 +754,10 @@ GreStretchBltMask(
         MaskPoint.x += DCMask->ptlDCOrig.x;
         MaskPoint.y += DCMask->ptlDCOrig.y;
     }
+
+    DPRINT("Calling IntEngStrethBlt SourceRect: (%d,%d)-(%d,%d) and DestRect: (%d,%d)-(%d,%d).\n",
+           SourceRect.left, SourceRect.top, SourceRect.right, SourceRect.bottom,
+           DestRect.left, DestRect.top, DestRect.right, DestRect.bottom);
 
     /* Perform the bitblt operation */
     Status = IntEngStretchBlt(&BitmapDest->SurfObj,

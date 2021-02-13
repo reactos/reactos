@@ -3,7 +3,8 @@
  * PROJECT:          ReactOS kernel
  * PURPOSE:          GDI EngCopyBits Function
  * FILE:             win32ss/gdi/eng/copybits.c
- * PROGRAMER:        Jason Filby
+ * PROGRAMERS:       Jason Filby
+ *                   Doug Lyons
  */
 
 #include <win32k.h>
@@ -32,6 +33,30 @@ EngCopyBits(
     SURFACE *psurfSource;
     RECTL rclDest = *DestRect;
     POINTL ptlSrc = *SourcePoint;
+    LONG      lTmp;
+    BOOL      bTopToBottom;
+
+    DPRINT("Entering EngCopyBits with SourcePoint (%d,%d) and DestRect (%d,%d)-(%d,%d).\n",
+           SourcePoint->x, SourcePoint->y, DestRect->left, DestRect->top, DestRect->right, DestRect->bottom);
+
+    DPRINT("psoSource cx/cy is %d/%d and psoDest cx/cy is %d/%d.\n",
+           psoSource->sizlBitmap.cx, psoSource->sizlBitmap.cy, psoDest->sizlBitmap.cx, psoDest->sizlBitmap.cy);
+
+    /* Retrieve Top Down/flip here and then make Well-Ordered again */
+    if (DestRect->top > DestRect->bottom)
+    {
+        bTopToBottom = TRUE;
+        lTmp = DestRect->top;
+        DestRect->top = DestRect->bottom;
+        DestRect->bottom = lTmp;
+        rclDest = *DestRect;
+    }
+    else
+    {
+        bTopToBottom = FALSE;
+    }
+
+    DPRINT("bTopToBottom is '%d'.\n", bTopToBottom);
 
     ASSERT(psoDest != NULL && psoSource != NULL && DestRect != NULL && SourcePoint != NULL);
 
@@ -113,24 +138,42 @@ EngCopyBits(
     switch (clippingType)
     {
         case DC_TRIVIAL:
+            DPRINT("DC_TRIVIAL.\n");
             BltInfo.DestRect = *DestRect;
             BltInfo.SourcePoint = *SourcePoint;
+
+            /* Now we set the Dest Rect top and bottom based on Top Down/flip */
+            if (bTopToBottom)
+            {
+                lTmp = BltInfo.DestRect.top;
+                BltInfo.DestRect.top = BltInfo.DestRect.bottom;
+                BltInfo.DestRect.bottom = lTmp;
+            }
 
             ret = DibFunctionsForBitmapFormat[psoDest->iBitmapFormat].DIB_BitBltSrcCopy(&BltInfo);
             break;
 
         case DC_RECT:
+            DPRINT("DC_RECT.\n");
             // Clip the blt to the clip rectangle
             RECTL_bIntersectRect(&BltInfo.DestRect, DestRect, &Clip->rclBounds);
 
             BltInfo.SourcePoint.x = SourcePoint->x + BltInfo.DestRect.left - DestRect->left;
             BltInfo.SourcePoint.y = SourcePoint->y + BltInfo.DestRect.top  - DestRect->top;
 
+            /* Now we set the Dest Rect top and bottom based on Top Down/flip */
+            if (bTopToBottom)
+            {
+                lTmp = BltInfo.DestRect.top;
+                BltInfo.DestRect.top = BltInfo.DestRect.bottom;
+                BltInfo.DestRect.bottom = lTmp;
+            }
+
             ret = DibFunctionsForBitmapFormat[psoDest->iBitmapFormat].DIB_BitBltSrcCopy(&BltInfo);
             break;
 
         case DC_COMPLEX:
-
+            DPRINT("DC_COMPLEX.\n");
             CLIPOBJ_cEnumStart(Clip, FALSE, CT_RECTANGLES, CD_ANY, 0);
 
             do
@@ -148,6 +191,14 @@ EngCopyBits(
 
                         BltInfo.SourcePoint.x = SourcePoint->x + BltInfo.DestRect.left - DestRect->left;
                         BltInfo.SourcePoint.y = SourcePoint->y + BltInfo.DestRect.top - DestRect->top;
+
+                        /* Now we set the Dest Rect top and bottom based on Top Down/flip */
+                        if (bTopToBottom)
+                        {
+                            lTmp = BltInfo.DestRect.top;
+                            BltInfo.DestRect.top = BltInfo.DestRect.bottom;
+                            BltInfo.DestRect.bottom = lTmp;
+                        }
 
                         if (!DibFunctionsForBitmapFormat[psoDest->iBitmapFormat].DIB_BitBltSrcCopy(&BltInfo))
                         {

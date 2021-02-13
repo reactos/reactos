@@ -628,9 +628,17 @@ NtGdiSetDIBitsToDeviceInternal(
     pDestSurf = &pSurf->SurfObj;
 
     /* Copy the bits */
-    DPRINT("BitsToDev with dstsurf=(%d|%d) (%d|%d), src=(%d|%d) w=%d h=%d\n",
+    DPRINT("BitsToDev with rcDest=(%d|%d) (%d|%d), ptSource=(%d|%d) w=%d h=%d\n",
            rcDest.left, rcDest.top, rcDest.right, rcDest.bottom,
            ptSource.x, ptSource.y, SourceSize.cx, SourceSize.cy);
+
+    /* This fixes the large Google text on Google.com from being upside down */
+    if (rcDest.top > rcDest.bottom)
+    {
+        RECTL_vMakeWellOrdered(&rcDest);
+        ptSource.y -= SourceSize.cy;
+    }
+
     bResult = IntEngBitBlt(pDestSurf,
                           pSourceSurf,
                           pMaskSurf,
@@ -722,7 +730,7 @@ GreGetDIBitsInternal(
                                     &size);
     if(bitmap_type == -1)
     {
-        DPRINT("Wrong bitmap format\n");
+        DPRINT1("Wrong bitmap format\n");
         EngSetLastError(ERROR_INVALID_PARAMETER);
         ScanLines = 0;
         goto done;
