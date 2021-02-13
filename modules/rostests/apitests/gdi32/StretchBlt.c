@@ -17,8 +17,8 @@
 #include "winerror.h"
 #include "wingdi.h"
 #include "winuser.h"
-#include "wine/winternl.h"
 #include "wine/test.h"
+#include <debug.h>
 
 static inline int get_dib_stride( int width, int bpp )
 {
@@ -91,7 +91,7 @@ static void test_StretchBlt(void)
     biDst.bmiHeader.biCompression = BI_RGB;
     memcpy(&biSrc, &biDst, sizeof(BITMAPINFO));
 
-    hdcScreen = CreateCompatibleDC(0);
+    hdcScreen = CreateCompatibleDC(NULL);
     hdcDst = CreateCompatibleDC(hdcScreen);
     hdcSrc = CreateCompatibleDC(hdcDst);
 
@@ -278,8 +278,8 @@ static void test_StretchBlt(void)
     SetPixel( hdcSrc, 2, 0, 0xffffff );
     SetPixel( hdcSrc, 3, 0, 0 );
     memset(dstBuffer, 0xcc, 4 * sizeof(*dstBuffer));
-    SetTextColor( hdcDst, RGB(0x22,0x44,0x66) );
-    SetBkColor( hdcDst, RGB(0x65,0x43,0x21) );
+    SetTextColor(hdcDst, RGB(0x22, 0x44, 0x66));
+    SetBkColor(hdcDst, RGB(0x65, 0x43, 0x21));
     StretchBlt(hdcDst, 0, 0, 4, 1, hdcSrc, 0, 0, 4, 1, SRCCOPY );
     expected[0] = expected[3] = 0x00224466;
     expected[1] = expected[2] = 0x00654321;
@@ -807,18 +807,18 @@ static void test_StretchBlt_TopDownOptions(BOOL SrcTopDown, BOOL DstTopDown)
 
 START_TEST(StretchBlt)
 {
-    DbgPrintEx(-1, 0, "\n\nStart of Generalized StretchBlt tests.\n");
+    DPRINT1("\nStart of Generalized StretchBlt tests.\n");
     test_StretchBlt();
 
-    DbgPrintEx(-1, 0, "\n\nStart of Source Top Down and Destination Top Down tests.\n");
+    DPRINT1("\n\r\nStart of Source Top Down and Destination Top Down tests.\n");
     test_StretchBlt_TopDownOptions(TRUE, TRUE);
 
-    DbgPrintEx(-1, 0, "\n\nStart of Source Top Down and Destination Bottom Up tests.\n");
+    DPRINT1("\n\r\nStart of Source Top Down and Destination Bottom Up tests.\n");
     test_StretchBlt_TopDownOptions(TRUE, FALSE);
 
-    DbgPrintEx(-1, 0, "\n\nStart of Source Bottom Up and Destination Top Down tests.\n");
+    DPRINT1("\n\r\nStart of Source Bottom Up and Destination Top Down tests.\n");
     test_StretchBlt_TopDownOptions(FALSE, TRUE);
 
-    DbgPrintEx(-1, 0, "\n\nStart of Source Bottom Up and Destination Bottom Up tests.\n");
+    DPRINT1("\n\r\nStart of Source Bottom Up and Destination Bottom Up tests.\n");
     test_StretchBlt_TopDownOptions(FALSE, FALSE);
 }
