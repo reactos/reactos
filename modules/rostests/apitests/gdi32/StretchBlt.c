@@ -331,7 +331,7 @@ static void test_StretchBlt(void)
     expected[3] = 0x0000FF00;
 
     check_StretchBlt_stretch(hdcDst, hdcSrc, &biDst, dstBuffer, srcBuffer,
-                             0, 0, 2, 2, 0, 1, 2, -2, expected, __LINE__); // Case 1110 (14) - Vertical flip
+                             0, 0, 2, 2, 0, 1, 2, -2, expected, __LINE__); // Case 1110 (14) - Vertical flip.
 
     expected[0] = 0x0000FF00;
     expected[1] = 0x000000FF;
@@ -347,7 +347,7 @@ static void test_StretchBlt(void)
     expected[3] = 0x000000FF;
 
     check_StretchBlt_stretch(hdcDst, hdcSrc, &biDst, dstBuffer, srcBuffer,
-                             0, 0, 2, 2, 1, 1, -2, -2, expected, __LINE__); // Case 1100 (12) - Both flip
+                             0, 0, 2, 2, 1, 1, -2, -2, expected, __LINE__); // Case 1100 (12) - Both flip.
 
     expected[0] = 0x00FF0000;
     expected[1] = 0xFF000000;
@@ -355,7 +355,7 @@ static void test_StretchBlt(void)
     expected[3] = 0x0000FF00;
 
     check_StretchBlt_stretch(hdcDst, hdcSrc, &biDst, dstBuffer, srcBuffer,
-                             0, 1, 2, -2, 0, 0, 2, 2, expected, __LINE__); // Case 1011 (11) - Vertical Flip
+                             0, 1, 2, -2, 0, 0, 2, 2, expected, __LINE__); // Case 1011 (11) - Vertical Flip.
 
     expected[0] = 0x000000FF;
     expected[1] = 0x0000FF00;
@@ -363,7 +363,7 @@ static void test_StretchBlt(void)
     expected[3] = 0xFF000000;
 
     check_StretchBlt_stretch(hdcDst, hdcSrc, &biDst, dstBuffer, srcBuffer,
-                             0, 2, 2, -2, 0, 2, 2, -2, expected, __LINE__); // Case 1010 (10) - No Flip. Special
+                             0, 2, 2, -2, 0, 2, 2, -2, expected, __LINE__); // Case 1010 (10) - No Flip. Special Case.
 
     expected[0] = 0xFF000000;
     expected[1] = 0x00FF0000;
@@ -371,7 +371,7 @@ static void test_StretchBlt(void)
     expected[3] = 0x000000FF;
 
     check_StretchBlt_stretch(hdcDst, hdcSrc, &biDst, dstBuffer, srcBuffer,
-                             0, 1, 2, -2, 1, 0, -2, 2, expected, __LINE__); // Case 1001 (9) - Both Flip  - ROS Failed Test
+                             0, 1, 2, -2, 1, 0, -2, 2, expected, __LINE__); // Case 1001 (9) - Both Flip.
 
     expected[0] = 0x0000FF00;
     expected[1] = 0x000000FF;
@@ -379,7 +379,7 @@ static void test_StretchBlt(void)
     expected[3] = 0x00FF0000;
 
     check_StretchBlt_stretch(hdcDst, hdcSrc, &biDst, dstBuffer, srcBuffer,
-                             0, 1, 2, -2, 1, 1, -2, -2, expected, __LINE__); // Case 1000 (8) - Horizontal Flip
+                             0, 1, 2, -2, 1, 1, -2, -2, expected, __LINE__); // Case 1000 (8) - Horizontal Flip.
 
     expected[0] = 0x0000FF00;
     expected[1] = 0x000000FF;
@@ -387,7 +387,7 @@ static void test_StretchBlt(void)
     expected[3] = 0x00FF0000;
 
     check_StretchBlt_stretch(hdcDst, hdcSrc, &biDst, dstBuffer, srcBuffer,
-                             1, 0, -2, 2, 0, 0, 2, 2, expected, __LINE__); // Case 0111 (7) - Horizontal Flip
+                             1, 0, -2, 2, 0, 0, 2, 2, expected, __LINE__); // Case 0111 (7) - Horizontal Flip.
 
     expected[0] = 0xFF000000;
     expected[1] = 0x00FF0000;
@@ -395,7 +395,7 @@ static void test_StretchBlt(void)
     expected[3] = 0x000000FF;
 
     check_StretchBlt_stretch(hdcDst, hdcSrc, &biDst, dstBuffer, srcBuffer,
-                             1, 0, -2, 2, 0, 1, 2, -2, expected, __LINE__); // Case 0110 (6) - Both Flip  - ROS Failed Test
+                             1, 0, -2, 2, 0, 1, 2, -2, expected, __LINE__); // Case 0110 (6) - Both Flip.
 
     expected[0] = 0x000000FF;
     expected[1] = 0x0000FF00;
@@ -443,7 +443,7 @@ static void test_StretchBlt(void)
     expected[3] = 0xFF000000;
 
     check_StretchBlt_stretch(hdcDst, hdcSrc, &biDst, dstBuffer, srcBuffer,
-                             2, 2, -2, -2, 2, 2, -2, -2, expected, __LINE__); // Case 0000 (0) - No Flip. Special
+                             2, 2, -2, -2, 2, 2, -2, -2, expected, __LINE__); // Case 0000 (0) - No Flip. Special Case.
 
     DeleteDC(hdcSrc);
 
