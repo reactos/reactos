@@ -3014,10 +3014,8 @@ NtReadFile(IN HANDLE FileHandle,
 
     /* Now set the deferred read flags */
     Irp->Flags |= (IRP_READ_OPERATION | IRP_DEFER_IO_COMPLETION);
-#if 0
-    /* FIXME: VFAT SUCKS */
+
     if (FileObject->Flags & FO_NO_INTERMEDIATE_BUFFERING) Irp->Flags |= IRP_NOCACHE;
-#endif
 
     /* Perform the call */
     return IopPerformSynchronousRequest(DeviceObject,
@@ -4082,10 +4080,8 @@ NtWriteFile(IN HANDLE FileHandle,
 
     /* Now set the deferred read flags */
     Irp->Flags |= (IRP_WRITE_OPERATION | IRP_DEFER_IO_COMPLETION);
-#if 0
-    /* FIXME: VFAT SUCKS */
+
     if (FileObject->Flags & FO_NO_INTERMEDIATE_BUFFERING) Irp->Flags |= IRP_NOCACHE;
-#endif
 
     /* Perform the call */
     return IopPerformSynchronousRequest(DeviceObject,

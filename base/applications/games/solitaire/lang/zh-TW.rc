@@ -59,8 +59,8 @@ BEGIN
     IDS_SOL_QUIT "退出目前遊戲？"
     IDS_SOL_WIN "恭喜你，你嬴了！！"
     IDS_SOL_DEAL "再玩一次？"
-    IDS_SOL_SCORE "Score: %d"
-    IDS_SOL_TIME "Time: %d"
+    IDS_SOL_SCORE "分數: %d"
+    IDS_SOL_TIME "時間: %d"
 END
 
 /* Menus */

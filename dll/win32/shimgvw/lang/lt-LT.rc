@@ -11,12 +11,18 @@ BEGIN
     /* Tooltips */
     IDS_TOOLTIP_NEXT_PIC "Tolesnis paveikslėlis"
     IDS_TOOLTIP_PREV_PIC "Ankstesnis paveikslėlis"
+    IDS_TOOLTIP_BEST_FIT "Best fit to window (Ctrl+B)"
+    IDS_TOOLTIP_REAL_SIZE "Actual size (Ctrl+A)"
+    IDS_TOOLTIP_SLIDE_SHOW "Start slideshow (F11)"
     IDS_TOOLTIP_ZOOM_IN "Didinti (+)"
     IDS_TOOLTIP_ZOOM_OUT "Mažinti (-)"
     IDS_TOOLTIP_ROT_CLOCKW "Pasukti pagal laikrodžio rodyklę (Ctrl+K)"
     IDS_TOOLTIP_ROT_COUNCW "Pasukti prieš laikrodžio rodyklę (Ctrl+L)"
+    IDS_TOOLTIP_DELETE "Delete (DEL)"
     IDS_TOOLTIP_PRINT "Spausdinti (Ctrl+P)"
     IDS_TOOLTIP_SAVEAS "Įrašyti kaip... (Ctrl+S)"
+    IDS_TOOLTIP_MODIFY "Modify (Ctrl+E)"
+    IDS_TOOLTIP_HELP_TOC "Help topics (F1)"
 END
 
 STRINGTABLE

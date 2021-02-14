@@ -4,17 +4,23 @@ STRINGTABLE
 BEGIN
     IDS_APPTITLE "ReactOS-Bild- und Faxansicht"
     IDS_SETASDESKBG "Als Desktophintergrund setzen"
-    IDS_NOPREVIEW "No preview available."
+    IDS_NOPREVIEW "Keine Vorschau vorhanden."
     IDS_PREVIEW "Vorschau"
     /* Tooltips */
     IDS_TOOLTIP_NEXT_PIC "Nächstes Bild"
     IDS_TOOLTIP_PREV_PIC "Vorheriges Bild"
+    IDS_TOOLTIP_BEST_FIT "An Fenster anpassen (Ctrl+B)"
+    IDS_TOOLTIP_REAL_SIZE "Tatsächliche Größe (Ctrl+A)"
+    IDS_TOOLTIP_SLIDE_SHOW "Diashow starten (F11)"
     IDS_TOOLTIP_ZOOM_IN "Vergrößern (+)"
     IDS_TOOLTIP_ZOOM_OUT "Verkleinern (-)"
     IDS_TOOLTIP_ROT_CLOCKW "Drehen im Uhrzeigersinn (Strg+K)"
     IDS_TOOLTIP_ROT_COUNCW "Drehen gegen den Uhrzeigersinn (Strg+L)"
+    IDS_TOOLTIP_DELETE "Löschen (Entf)"
     IDS_TOOLTIP_PRINT "Drucken (Strg+P)"
     IDS_TOOLTIP_SAVEAS "Speichern unter... (Strg+S)"
+    IDS_TOOLTIP_MODIFY "Bearbeiten (Ctrl+E)"
+    IDS_TOOLTIP_HELP_TOC "Hilfethemen (F1)"
 END
 
 STRINGTABLE

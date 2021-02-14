@@ -781,24 +781,19 @@ PeLdrLoadImage(
 
     TRACE("Base PA: 0x%X, VA: 0x%X\n", PhysicalBase, VirtualBase);
 
-    /* Set to 0 position and fully load the file image */
-    Position.QuadPart = 0;
-    Status = ArcSeek(FileId, &Position, SeekAbsolute);
-    if (Status != ESUCCESS)
+    /* Copy headers from already read data */
+    RtlCopyMemory(PhysicalBase, HeadersBuffer, min(NtHeaders->OptionalHeader.SizeOfHeaders, sizeof(HeadersBuffer)));
+    /* If headers are quite big, request next bytes from file */
+    if (NtHeaders->OptionalHeader.SizeOfHeaders > sizeof(HeadersBuffer))
     {
-        ERR("ArcSeek(File: '%s') failed. Status: 0x%lx\n", FileName, Status);
-        UiMessageBox("Error seeking the start of a file.");
-        ArcClose(FileId);
-        return FALSE;
-    }
-
-    Status = ArcRead(FileId, PhysicalBase, NtHeaders->OptionalHeader.SizeOfHeaders, &BytesRead);
-    if (Status != ESUCCESS)
-    {
-        ERR("ArcRead(File: '%s') failed. Status: %u\n", FileName, Status);
-        UiMessageBox("Error reading headers.");
-        ArcClose(FileId);
-        return FALSE;
+        Status = ArcRead(FileId, (PUCHAR)PhysicalBase + sizeof(HeadersBuffer), NtHeaders->OptionalHeader.SizeOfHeaders - sizeof(HeadersBuffer), &BytesRead);
+        if (Status != ESUCCESS)
+        {
+            ERR("ArcRead(File: '%s') failed. Status: %u\n", FileName, Status);
+            UiMessageBox("Error reading headers.");
+            ArcClose(FileId);
+            return FALSE;
+        }
     }
 
     /*
@@ -843,7 +838,7 @@ PeLdrLoadImage(
         if (SizeOfRawData != 0)
         {
             /* Seek to the correct position */
-            Position.LowPart = SectionHeader->PointerToRawData;
+            Position.QuadPart = SectionHeader->PointerToRawData;
             Status = ArcSeek(FileId, &Position, SeekAbsolute);
 
             TRACE("SH->VA: 0x%X\n", SectionHeader->VirtualAddress);

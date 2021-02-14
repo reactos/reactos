@@ -1606,12 +1606,11 @@ FatalAppExitW(IN UINT uAction,
 #endif
                               &Response);
 
-#if DBG
     /* Give the user a chance to abort */
-    if ((NT_SUCCESS(Status)) && (Response == ResponseCancel)) return;
-#else
-    UNREFERENCED_LOCAL_VARIABLE(Status);
-#endif
+    if ((NT_SUCCESS(Status)) && (Response == ResponseCancel))
+    {
+        return;
+    }
 
     /* Otherwise kill the process */
     ExitProcess(0);

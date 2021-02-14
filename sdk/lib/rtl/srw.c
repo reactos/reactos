@@ -25,21 +25,23 @@
 #define InterlockedAddPointer(ptr,val) InterlockedAdd64((PLONGLONG)ptr,(LONGLONG)val)
 #define InterlockedAndPointer(ptr,val) InterlockedAnd64((PLONGLONG)ptr,(LONGLONG)val)
 #define InterlockedOrPointer(ptr,val) InterlockedOr64((PLONGLONG)ptr,(LONGLONG)val)
+#define _ONE 1LL
 #else
 #define InterlockedBitTestAndSetPointer(ptr,val) InterlockedBitTestAndSet((PLONG)ptr,(LONG)val)
 #define InterlockedAddPointer(ptr,val) InterlockedAdd((PLONG)ptr,(LONG)val)
 #define InterlockedAndPointer(ptr,val) InterlockedAnd((PLONG)ptr,(LONG)val)
 #define InterlockedOrPointer(ptr,val) InterlockedOr((PLONG)ptr,(LONG)val)
+#define _ONE 1L
 #endif
 
 #define RTL_SRWLOCK_OWNED_BIT   0
 #define RTL_SRWLOCK_CONTENDED_BIT   1
 #define RTL_SRWLOCK_SHARED_BIT  2
 #define RTL_SRWLOCK_CONTENTION_LOCK_BIT 3
-#define RTL_SRWLOCK_OWNED   (1 << RTL_SRWLOCK_OWNED_BIT)
-#define RTL_SRWLOCK_CONTENDED   (1 << RTL_SRWLOCK_CONTENDED_BIT)
-#define RTL_SRWLOCK_SHARED  (1 << RTL_SRWLOCK_SHARED_BIT)
-#define RTL_SRWLOCK_CONTENTION_LOCK (1 << RTL_SRWLOCK_CONTENTION_LOCK_BIT)
+#define RTL_SRWLOCK_OWNED   (_ONE << RTL_SRWLOCK_OWNED_BIT)
+#define RTL_SRWLOCK_CONTENDED   (_ONE << RTL_SRWLOCK_CONTENDED_BIT)
+#define RTL_SRWLOCK_SHARED  (_ONE << RTL_SRWLOCK_SHARED_BIT)
+#define RTL_SRWLOCK_CONTENTION_LOCK (_ONE << RTL_SRWLOCK_CONTENTION_LOCK_BIT)
 #define RTL_SRWLOCK_MASK    (RTL_SRWLOCK_OWNED | RTL_SRWLOCK_CONTENDED | \
                              RTL_SRWLOCK_SHARED | RTL_SRWLOCK_CONTENTION_LOCK)
 #define RTL_SRWLOCK_BITS    4
@@ -762,4 +764,32 @@ RtlReleaseSRWLockExclusive(IN OUT PRTL_SRWLOCK SRWLock)
 
         YieldProcessor();
     }
+}
+
+BOOLEAN
+NTAPI
+RtlTryAcquireSRWLockShared(PRTL_SRWLOCK SRWLock)
+{
+
+    LONG_PTR CompareValue, NewValue, GotValue;
+
+    do
+    {
+        CompareValue = *(volatile LONG_PTR *)&SRWLock->Ptr;
+        NewValue = ((CompareValue >> RTL_SRWLOCK_BITS) + 1) | RTL_SRWLOCK_SHARED | RTL_SRWLOCK_OWNED;
+
+        /* Only increment shared count if there is no waiter */
+        CompareValue &= ~RTL_SRWLOCK_MASK | RTL_SRWLOCK_SHARED | RTL_SRWLOCK_OWNED;
+    } while (
+        ((GotValue = (LONG_PTR)InterlockedCompareExchangePointer(&SRWLock->Ptr, (LONG_PTR*)NewValue, (LONG_PTR*)CompareValue)) != CompareValue)
+        && (((GotValue & RTL_SRWLOCK_MASK) == (RTL_SRWLOCK_SHARED | RTL_SRWLOCK_OWNED)) || (GotValue == 0)));
+
+    return ((GotValue & RTL_SRWLOCK_MASK) == (RTL_SRWLOCK_SHARED | RTL_SRWLOCK_OWNED)) || (GotValue == 0);
+}
+
+BOOLEAN
+NTAPI
+RtlTryAcquireSRWLockExclusive(PRTL_SRWLOCK SRWLock)
+{
+    return InterlockedCompareExchangePointer(&SRWLock->Ptr, (ULONG_PTR*)RTL_SRWLOCK_OWNED, 0) == 0;
 }

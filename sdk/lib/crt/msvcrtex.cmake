@@ -50,13 +50,6 @@ if(ARCH STREQUAL "i386")
         except/i386/chkstk_asm.s
         except/i386/chkstk_ms.s
         math/i386/alldiv_asm.s)
-    list(APPEND MSVCRTEX_SOURCE
-        math/i386/ci.c
-        math/i386/cicos.c
-        math/i386/cilog.c
-        math/i386/cipow.c
-        math/i386/cisin.c
-        math/i386/cisqrt.c)
     if (GCC AND CLANG)
         # CLang performs some optimisations requiring those funtions
         list(APPEND MSVCRTEX_ASM_SOURCE
@@ -109,6 +102,7 @@ if(MSVC AND (ARCH STREQUAL "i386"))
     add_asm_files(ftol2_asm math/i386/ftol2_asm.s)
     add_library(ftol2_sse OBJECT ${ftol2_asm})
     target_compile_definitions(ftol2_sse PRIVATE $<TARGET_PROPERTY:msvcrtex,COMPILE_DEFINITIONS>)
+    set_target_properties(ftol2_sse PROPERTIES LINKER_LANGUAGE C)
 endif()
 
 

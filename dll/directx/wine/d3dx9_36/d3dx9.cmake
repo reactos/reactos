@@ -20,6 +20,8 @@ function(add_d3dx9_target __version)
         ../d3dx9_36/sprite.c
         ../d3dx9_36/surface.c
         ../d3dx9_36/texture.c
+        ../d3dx9_36/txc_compress_dxtn.c
+        ../d3dx9_36/txc_fetch_dxtn.c
         ../d3dx9_36/util.c
         ../d3dx9_36/volume.c
         ../d3dx9_36/xfile.c)
@@ -33,16 +35,15 @@ function(add_d3dx9_target __version)
         ${PCH_SKIP_SOURCE}
         version.rc
         ${CMAKE_CURRENT_BINARY_DIR}/${module}.def)
-    
+
     add_definitions(-D__ROS_LONG64__)
     set_module_type(${module} win32dll)
     add_dependencies(${module} d3d_idl_headers)
     target_link_libraries(${module} dxguid wine)
-    add_importlibs(${module} d3dcompiler_43 d3dxof d3dwine user32 ole32 gdi32 msvcrt kernel32 ntdll)
+    add_importlibs(${module} d3dcompiler_43 d3dxof usp10 user32 ole32 gdi32 msvcrt kernel32 ntdll)
     add_delay_importlibs(${module} windowscodecs)
     add_pch(${module} ../d3dx9_36/precomp.h "${PCH_SKIP_SOURCE}")
     add_cd_file(TARGET ${module} DESTINATION reactos/system32 FOR all)
-    
+
     target_compile_definitions(${module} PRIVATE -DD3DX_SDK_VERSION=${__version} -D__WINESRC__ -Dcopysignf=_copysignf)
-    target_include_directories(${module} PRIVATE ${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 endfunction()

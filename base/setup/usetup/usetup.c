@@ -419,66 +419,6 @@ PopupError(PCCH Text,
 }
 
 
-/** See also usetup:partlist.c!PrintDiskData() **/
-VOID
-PrettifySize1(
-    IN OUT PULONGLONG Size,
-    OUT PCSTR* Unit)
-{
-    ULONGLONG DiskSize = *Size;
-
-#if 0
-    if (DiskSize >= 10 * GB) /* 10 GB */
-    {
-        DiskSize = DiskSize / GB;
-        *Unit = MUIGetString(STRING_GB);
-    }
-    else
-#endif
-    {
-        DiskSize = DiskSize / MB;
-        if (DiskSize == 0)
-            DiskSize = 1;
-
-        *Unit = MUIGetString(STRING_MB);
-    }
-
-    *Size = DiskSize;
-}
-
-/** See also usetup:partlist.c!PrintPartitionData() **/
-VOID
-PrettifySize2(
-    IN OUT PULONGLONG Size,
-    OUT PCSTR* Unit)
-{
-    ULONGLONG PartSize = *Size;
-
-#if 0
-    if (PartSize >= 10 * GB) /* 10 GB */
-    {
-        PartSize = PartSize / GB;
-        *Unit = MUIGetString(STRING_GB);
-    }
-    else
-#endif
-    if (PartSize >= 10 * MB) /* 10 MB */
-    {
-        PartSize = PartSize / MB;
-        *Unit = MUIGetString(STRING_MB);
-    }
-    else
-    {
-        PartSize = PartSize / KB;
-        *Unit = MUIGetString(STRING_KB);
-    }
-
-    // if (PartSize == 0)
-        // PartSize = 1;
-    *Size = PartSize;
-}
-
-
 /*
  * Confirm quit setup
  * RETURNS
@@ -2137,12 +2077,11 @@ CreatePrimaryPartitionPage(PINPUT_RECORD Ir)
     PDISKENTRY DiskEntry;
     BOOLEAN Quit;
     BOOLEAN Cancel;
-    WCHAR InputBuffer[50];
     ULONG MaxSize;
     ULONGLONG PartSize;
-    ULONGLONG DiskSize;
     ULONGLONG SectorCount;
-    PCSTR Unit;
+    WCHAR InputBuffer[50];
+    CHAR LineBuffer[100];
 
     if (PartitionList == NULL || CurrentPartition == NULL)
     {
@@ -2157,38 +2096,9 @@ CreatePrimaryPartitionPage(PINPUT_RECORD Ir)
 
     CONSOLE_SetTextXY(6, 8, MUIGetString(STRING_CHOOSENEWPARTITION));
 
-    DiskSize = DiskEntry->SectorCount.QuadPart * DiskEntry->BytesPerSector;
-    PrettifySize1(&DiskSize, &Unit);
-
-    if (DiskEntry->DriverName.Length > 0)
-    {
-        CONSOLE_PrintTextXY(6, 10,
-                            MUIGetString(STRING_HDINFOPARTCREATE_1),
-                            DiskSize,
-                            Unit,
-                            DiskEntry->DiskNumber,
-                            DiskEntry->Port,
-                            DiskEntry->Bus,
-                            DiskEntry->Id,
-                            &DiskEntry->DriverName,
-                            DiskEntry->DiskStyle == PARTITION_STYLE_MBR ? "MBR" :
-                            DiskEntry->DiskStyle == PARTITION_STYLE_GPT ? "GPT" :
-                                                                          "RAW");
-    }
-    else
-    {
-        CONSOLE_PrintTextXY(6, 10,
-                            MUIGetString(STRING_HDINFOPARTCREATE_2),
-                            DiskSize,
-                            Unit,
-                            DiskEntry->DiskNumber,
-                            DiskEntry->Port,
-                            DiskEntry->Bus,
-                            DiskEntry->Id,
-                            DiskEntry->DiskStyle == PARTITION_STYLE_MBR ? "MBR" :
-                            DiskEntry->DiskStyle == PARTITION_STYLE_GPT ? "GPT" :
-                                                                          "RAW");
-    }
+    DiskDescription(DiskEntry, LineBuffer, ARRAYSIZE(LineBuffer));
+    CONSOLE_PrintTextXY(6, 10, MUIGetString(STRING_HDINFOPARTCREATE_1),
+                        LineBuffer);
 
     CONSOLE_SetTextXY(6, 12, MUIGetString(STRING_HDDSIZE));
 
@@ -2285,12 +2195,11 @@ CreateExtendedPartitionPage(PINPUT_RECORD Ir)
     PDISKENTRY DiskEntry;
     BOOLEAN Quit;
     BOOLEAN Cancel;
-    WCHAR InputBuffer[50];
     ULONG MaxSize;
     ULONGLONG PartSize;
-    ULONGLONG DiskSize;
     ULONGLONG SectorCount;
-    PCSTR Unit;
+    WCHAR InputBuffer[50];
+    CHAR LineBuffer[100];
 
     if (PartitionList == NULL || CurrentPartition == NULL)
     {
@@ -2305,38 +2214,9 @@ CreateExtendedPartitionPage(PINPUT_RECORD Ir)
 
     CONSOLE_SetTextXY(6, 8, MUIGetString(STRING_CHOOSE_NEW_EXTENDED_PARTITION));
 
-    DiskSize = DiskEntry->SectorCount.QuadPart * DiskEntry->BytesPerSector;
-    PrettifySize1(&DiskSize, &Unit);
-
-    if (DiskEntry->DriverName.Length > 0)
-    {
-        CONSOLE_PrintTextXY(6, 10,
-                            MUIGetString(STRING_HDINFOPARTCREATE_1),
-                            DiskSize,
-                            Unit,
-                            DiskEntry->DiskNumber,
-                            DiskEntry->Port,
-                            DiskEntry->Bus,
-                            DiskEntry->Id,
-                            &DiskEntry->DriverName,
-                            DiskEntry->DiskStyle == PARTITION_STYLE_MBR ? "MBR" :
-                            DiskEntry->DiskStyle == PARTITION_STYLE_GPT ? "GPT" :
-                                                                          "RAW");
-    }
-    else
-    {
-        CONSOLE_PrintTextXY(6, 10,
-                            MUIGetString(STRING_HDINFOPARTCREATE_2),
-                            DiskSize,
-                            Unit,
-                            DiskEntry->DiskNumber,
-                            DiskEntry->Port,
-                            DiskEntry->Bus,
-                            DiskEntry->Id,
-                            DiskEntry->DiskStyle == PARTITION_STYLE_MBR ? "MBR" :
-                            DiskEntry->DiskStyle == PARTITION_STYLE_GPT ? "GPT" :
-                                                                          "RAW");
-    }
+    DiskDescription(DiskEntry, LineBuffer, ARRAYSIZE(LineBuffer));
+    CONSOLE_PrintTextXY(6, 10, MUIGetString(STRING_HDINFOPARTCREATE_1),
+                        LineBuffer);
 
     CONSOLE_SetTextXY(6, 12, MUIGetString(STRING_HDDSIZE));
 
@@ -2432,12 +2312,11 @@ CreateLogicalPartitionPage(PINPUT_RECORD Ir)
     PDISKENTRY DiskEntry;
     BOOLEAN Quit;
     BOOLEAN Cancel;
-    WCHAR InputBuffer[50];
     ULONG MaxSize;
     ULONGLONG PartSize;
-    ULONGLONG DiskSize;
     ULONGLONG SectorCount;
-    PCSTR Unit;
+    WCHAR InputBuffer[50];
+    CHAR LineBuffer[100];
 
     if (PartitionList == NULL || CurrentPartition == NULL)
     {
@@ -2452,38 +2331,9 @@ CreateLogicalPartitionPage(PINPUT_RECORD Ir)
 
     CONSOLE_SetTextXY(6, 8, MUIGetString(STRING_CHOOSE_NEW_LOGICAL_PARTITION));
 
-    DiskSize = DiskEntry->SectorCount.QuadPart * DiskEntry->BytesPerSector;
-    PrettifySize1(&DiskSize, &Unit);
-
-    if (DiskEntry->DriverName.Length > 0)
-    {
-        CONSOLE_PrintTextXY(6, 10,
-                            MUIGetString(STRING_HDINFOPARTCREATE_1),
-                            DiskSize,
-                            Unit,
-                            DiskEntry->DiskNumber,
-                            DiskEntry->Port,
-                            DiskEntry->Bus,
-                            DiskEntry->Id,
-                            &DiskEntry->DriverName,
-                            DiskEntry->DiskStyle == PARTITION_STYLE_MBR ? "MBR" :
-                            DiskEntry->DiskStyle == PARTITION_STYLE_GPT ? "GPT" :
-                                                                          "RAW");
-    }
-    else
-    {
-        CONSOLE_PrintTextXY(6, 10,
-                            MUIGetString(STRING_HDINFOPARTCREATE_2),
-                            DiskSize,
-                            Unit,
-                            DiskEntry->DiskNumber,
-                            DiskEntry->Port,
-                            DiskEntry->Bus,
-                            DiskEntry->Id,
-                            DiskEntry->DiskStyle == PARTITION_STYLE_MBR ? "MBR" :
-                            DiskEntry->DiskStyle == PARTITION_STYLE_GPT ? "GPT" :
-                                                                          "RAW");
-    }
+    DiskDescription(DiskEntry, LineBuffer, ARRAYSIZE(LineBuffer));
+    CONSOLE_PrintTextXY(6, 10, MUIGetString(STRING_HDINFOPARTCREATE_1),
+                        LineBuffer);
 
     CONSOLE_SetTextXY(6, 12, MUIGetString(STRING_HDDSIZE));
 
@@ -2619,10 +2469,7 @@ DeletePartitionPage(PINPUT_RECORD Ir)
 {
     PPARTENTRY PartEntry;
     PDISKENTRY DiskEntry;
-    ULONGLONG DiskSize;
-    ULONGLONG PartSize;
-    PCSTR Unit;
-    CHAR PartTypeString[32];
+    CHAR LineBuffer[100];
 
     if (PartitionList == NULL || CurrentPartition == NULL)
     {
@@ -2635,67 +2482,12 @@ DeletePartitionPage(PINPUT_RECORD Ir)
 
     MUIDisplayPage(DELETE_PARTITION_PAGE);
 
-    /* Adjust partition type */
-    GetPartTypeStringFromPartitionType(PartEntry->PartitionType,
-                                       PartTypeString,
-                                       ARRAYSIZE(PartTypeString));
+    PartitionDescription(PartEntry, LineBuffer, ARRAYSIZE(LineBuffer));
+    CONSOLE_PrintTextXY(6, 10, "   %s", LineBuffer);
 
-    PartSize = PartEntry->SectorCount.QuadPart * DiskEntry->BytesPerSector;
-    PrettifySize2(&PartSize, &Unit);
-
-    if (*PartTypeString == '\0') // STRING_FORMATUNKNOWN ??
-    {
-        CONSOLE_PrintTextXY(6, 10,
-                            MUIGetString(STRING_HDDINFOUNK2),
-                            (PartEntry->DriveLetter == 0) ? '-' : (CHAR)PartEntry->DriveLetter,
-                            (PartEntry->DriveLetter == 0) ? '-' : ':',
-                            PartEntry->PartitionType,
-                            PartSize,
-                            Unit);
-    }
-    else
-    {
-        CONSOLE_PrintTextXY(6, 10,
-                            "   %c%c  %s    %I64u %s",
-                            (PartEntry->DriveLetter == 0) ? '-' : (CHAR)PartEntry->DriveLetter,
-                            (PartEntry->DriveLetter == 0) ? '-' : ':',
-                            PartTypeString,
-                            PartSize,
-                            Unit);
-    }
-
-    DiskSize = DiskEntry->SectorCount.QuadPart * DiskEntry->BytesPerSector;
-    PrettifySize1(&DiskSize, &Unit);
-
-    if (DiskEntry->DriverName.Length > 0)
-    {
-        CONSOLE_PrintTextXY(6, 12,
-                            MUIGetString(STRING_HDINFOPARTDELETE_1),
-                            DiskSize,
-                            Unit,
-                            DiskEntry->DiskNumber,
-                            DiskEntry->Port,
-                            DiskEntry->Bus,
-                            DiskEntry->Id,
-                            &DiskEntry->DriverName,
-                            DiskEntry->DiskStyle == PARTITION_STYLE_MBR ? "MBR" :
-                            DiskEntry->DiskStyle == PARTITION_STYLE_GPT ? "GPT" :
-                                                                          "RAW");
-    }
-    else
-    {
-        CONSOLE_PrintTextXY(6, 12,
-                            MUIGetString(STRING_HDINFOPARTDELETE_2),
-                            DiskSize,
-                            Unit,
-                            DiskEntry->DiskNumber,
-                            DiskEntry->Port,
-                            DiskEntry->Bus,
-                            DiskEntry->Id,
-                            DiskEntry->DiskStyle == PARTITION_STYLE_MBR ? "MBR" :
-                            DiskEntry->DiskStyle == PARTITION_STYLE_GPT ? "GPT" :
-                                                                          "RAW");
-    }
+    DiskDescription(DiskEntry, LineBuffer, ARRAYSIZE(LineBuffer));
+    CONSOLE_PrintTextXY(6, 12, MUIGetString(STRING_HDINFOPARTDELETE_1),
+                        LineBuffer);
 
     while (TRUE)
     {
@@ -2759,13 +2551,9 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
 {
     PPARTENTRY PartEntry;
     PDISKENTRY DiskEntry;
-    ULONGLONG DiskSize;
-    ULONGLONG PartSize;
-    PCSTR DiskUnit;
-    PCSTR PartUnit;
-    CHAR PartTypeString[32];
     FORMATMACHINESTATE PreviousFormatState;
     PCWSTR DefaultFs;
+    CHAR LineBuffer[100];
 
     DPRINT("SelectFileSystemPage()\n");
 
@@ -2805,114 +2593,19 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
                 PartEntry = PartitionList->SystemPartition;
                 DiskEntry = PartEntry->DiskEntry;
 
-                /* Adjust partition size */
-                PartSize = PartEntry->SectorCount.QuadPart * DiskEntry->BytesPerSector;
-                if (PartSize >= 10 * GB) /* 10 GB */
-                {
-                    PartSize = PartSize / GB;
-                    PartUnit = MUIGetString(STRING_GB);
-                }
-                else
-                {
-                    PartSize = PartSize / MB;
-                    PartUnit = MUIGetString(STRING_MB);
-                }
+                PartitionDescription(PartEntry, LineBuffer, ARRAYSIZE(LineBuffer));
+                CONSOLE_SetTextXY(8, 10, LineBuffer);
 
-                /* Adjust partition type */
-                GetPartTypeStringFromPartitionType(PartEntry->PartitionType,
-                                                   PartTypeString,
-                                                   ARRAYSIZE(PartTypeString));
-
-                if (*PartTypeString == '\0') // STRING_FORMATUNKNOWN ??
-                {
-                    CONSOLE_PrintTextXY(8, 10,
-                                        MUIGetString(STRING_HDDINFOUNK4),
-                                        (PartEntry->DriveLetter == 0) ? '-' : (CHAR)PartEntry->DriveLetter,
-                                        (PartEntry->DriveLetter == 0) ? '-' : ':',
-                                        PartEntry->PartitionType,
-                                        PartSize,
-                                        PartUnit);
-                }
-                else
-                {
-                    CONSOLE_PrintTextXY(8, 10,
-                                        "%c%c  %s    %I64u %s",
-                                        (PartEntry->DriveLetter == 0) ? '-' : (CHAR)PartEntry->DriveLetter,
-                                        (PartEntry->DriveLetter == 0) ? '-' : ':',
-                                        PartTypeString,
-                                        PartSize,
-                                        PartUnit);
-                }
-
-
-                /* Adjust disk size */
-                DiskSize = DiskEntry->SectorCount.QuadPart * DiskEntry->BytesPerSector;
-                if (DiskSize >= 10 * GB) /* 10 GB */
-                {
-                    DiskSize = DiskSize / GB;
-                    DiskUnit = MUIGetString(STRING_GB);
-                }
-                else
-                {
-                    DiskSize = DiskSize / MB;
-                    DiskUnit = MUIGetString(STRING_MB);
-                }
-
-                CONSOLE_PrintTextXY(8, 14, MUIGetString(STRING_HDINFOPARTZEROED_1),
-                                    DiskEntry->DiskNumber,
-                                    DiskSize,
-                                    DiskUnit,
-                                    DiskEntry->Port,
-                                    DiskEntry->Bus,
-                                    DiskEntry->Id,
-                                    &DiskEntry->DriverName,
-                                    DiskEntry->DiskStyle == PARTITION_STYLE_MBR ? "MBR" :
-                                    DiskEntry->DiskStyle == PARTITION_STYLE_GPT ? "GPT" :
-                                                                                  "RAW");
+                DiskDescription(DiskEntry, LineBuffer, ARRAYSIZE(LineBuffer));
+                CONSOLE_PrintTextXY(8, 14, MUIGetString(STRING_HDINFOPARTCREATE_1),
+                                    LineBuffer);
 
 
                 PartEntry = SystemPartition;
                 DiskEntry = PartEntry->DiskEntry;
 
-                /* Adjust partition size */
-                PartSize = PartEntry->SectorCount.QuadPart * DiskEntry->BytesPerSector;
-                if (PartSize >= 10 * GB) /* 10 GB */
-                {
-                    PartSize = PartSize / GB;
-                    PartUnit = MUIGetString(STRING_GB);
-                }
-                else
-                {
-                    PartSize = PartSize / MB;
-                    PartUnit = MUIGetString(STRING_MB);
-                }
-
-                /* Adjust partition type */
-                GetPartTypeStringFromPartitionType(PartEntry->PartitionType,
-                                                   PartTypeString,
-                                                   ARRAYSIZE(PartTypeString));
-
-                if (*PartTypeString == '\0') // STRING_FORMATUNKNOWN ??
-                {
-                    CONSOLE_PrintTextXY(8, 23,
-                                        MUIGetString(STRING_HDDINFOUNK4),
-                                        (PartEntry->DriveLetter == 0) ? '-' : (CHAR)PartEntry->DriveLetter,
-                                        (PartEntry->DriveLetter == 0) ? '-' : ':',
-                                        PartEntry->PartitionType,
-                                        PartSize,
-                                        PartUnit);
-                }
-                else
-                {
-                    CONSOLE_PrintTextXY(8, 23,
-                                        "%c%c  %s    %I64u %s",
-                                        (PartEntry->DriveLetter == 0) ? '-' : (CHAR)PartEntry->DriveLetter,
-                                        (PartEntry->DriveLetter == 0) ? '-' : ':',
-                                        PartTypeString,
-                                        PartSize,
-                                        PartUnit);
-                }
-
+                PartitionDescription(PartEntry, LineBuffer, ARRAYSIZE(LineBuffer));
+                CONSOLE_SetTextXY(8, 23, LineBuffer);
                 }
 
                 while (TRUE)
@@ -3119,19 +2812,6 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
 
     ASSERT(PartEntry->IsPartitioned && PartEntry->PartitionNumber != 0);
 
-    /* Adjust disk size */
-    DiskSize = DiskEntry->SectorCount.QuadPart * DiskEntry->BytesPerSector;
-    PrettifySize1(&DiskSize, &DiskUnit);
-
-    /* Adjust partition size */
-    PartSize = PartEntry->SectorCount.QuadPart * DiskEntry->BytesPerSector;
-    PrettifySize2(&PartSize, &PartUnit);
-
-    /* Adjust partition type */
-    GetPartTypeStringFromPartitionType(PartEntry->PartitionType,
-                                       PartTypeString,
-                                       ARRAYSIZE(PartTypeString));
-
     MUIDisplayPage(SELECT_FILE_SYSTEM_PAGE);
 
     if (PartEntry->AutoCreate)
@@ -3139,24 +2819,13 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
         CONSOLE_SetTextXY(6, 8, MUIGetString(STRING_NEWPARTITION));
 
 #if 0
-        CONSOLE_PrintTextXY(8, 10, "Partition %lu (%I64u %s) %s of",
-                            PartEntry->PartitionNumber,
-                            PartSize,
-                            PartUnit,
-                            PartTypeString);
+        PartitionDescription(PartEntry, LineBuffer, ARRAYSIZE(LineBuffer));
+        CONSOLE_SetTextXY(8, 10, LineBuffer);
 #endif
 
-        CONSOLE_PrintTextXY(8, 10, MUIGetString(STRING_HDINFOPARTZEROED_1),
-                            DiskEntry->DiskNumber,
-                            DiskSize,
-                            DiskUnit,
-                            DiskEntry->Port,
-                            DiskEntry->Bus,
-                            DiskEntry->Id,
-                            &DiskEntry->DriverName,
-                            DiskEntry->DiskStyle == PARTITION_STYLE_MBR ? "MBR" :
-                            DiskEntry->DiskStyle == PARTITION_STYLE_GPT ? "GPT" :
-                                                                          "RAW");
+        DiskDescription(DiskEntry, LineBuffer, ARRAYSIZE(LineBuffer));
+        CONSOLE_PrintTextXY(8, 10, MUIGetString(STRING_HDINFOPARTCREATE_1),
+                            LineBuffer);
 
         CONSOLE_SetTextXY(6, 12, MUIGetString(STRING_PARTFORMAT));
 
@@ -3183,17 +2852,9 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
                 break;
         }
 
-        CONSOLE_PrintTextXY(8, 10, MUIGetString(STRING_HDINFOPARTZEROED_1),
-                            DiskEntry->DiskNumber,
-                            DiskSize,
-                            DiskUnit,
-                            DiskEntry->Port,
-                            DiskEntry->Bus,
-                            DiskEntry->Id,
-                            &DiskEntry->DriverName,
-                            DiskEntry->DiskStyle == PARTITION_STYLE_MBR ? "MBR" :
-                            DiskEntry->DiskStyle == PARTITION_STYLE_GPT ? "GPT" :
-                                                                          "RAW");
+        DiskDescription(DiskEntry, LineBuffer, ARRAYSIZE(LineBuffer));
+        CONSOLE_PrintTextXY(8, 10, MUIGetString(STRING_HDINFOPARTCREATE_1),
+                            LineBuffer);
 
         CONSOLE_SetTextXY(6, 12, MUIGetString(STRING_PARTFORMAT));
     }
@@ -3201,38 +2862,12 @@ SelectFileSystemPage(PINPUT_RECORD Ir)
     {
         CONSOLE_SetTextXY(6, 8, MUIGetString(STRING_INSTALLONPART));
 
-        if (*PartTypeString == '\0') // STRING_FORMATUNKNOWN ??
-        {
-            CONSOLE_PrintTextXY(8, 10,
-                                MUIGetString(STRING_HDDINFOUNK4),
-                                (PartEntry->DriveLetter == 0) ? '-' : (CHAR)PartEntry->DriveLetter,
-                                (PartEntry->DriveLetter == 0) ? '-' : ':',
-                                PartEntry->PartitionType,
-                                PartSize,
-                                PartUnit);
-        }
-        else
-        {
-            CONSOLE_PrintTextXY(8, 10,
-                                "%c%c  %s    %I64u %s",
-                                (PartEntry->DriveLetter == 0) ? '-' : (CHAR)PartEntry->DriveLetter,
-                                (PartEntry->DriveLetter == 0) ? '-' : ':',
-                                PartTypeString,
-                                PartSize,
-                                PartUnit);
-        }
+        PartitionDescription(PartEntry, LineBuffer, ARRAYSIZE(LineBuffer));
+        CONSOLE_SetTextXY(8, 10, LineBuffer);
 
-        CONSOLE_PrintTextXY(6, 12, MUIGetString(STRING_HDINFOPARTEXISTS_1),
-                            DiskEntry->DiskNumber,
-                            DiskSize,
-                            DiskUnit,
-                            DiskEntry->Port,
-                            DiskEntry->Bus,
-                            DiskEntry->Id,
-                            &DiskEntry->DriverName,
-                            DiskEntry->DiskStyle == PARTITION_STYLE_MBR ? "MBR" :
-                            DiskEntry->DiskStyle == PARTITION_STYLE_GPT ? "GPT" :
-                                                                          "RAW");
+        DiskDescription(DiskEntry, LineBuffer, ARRAYSIZE(LineBuffer));
+        CONSOLE_PrintTextXY(6, 12, MUIGetString(STRING_HDINFOPARTDELETE_1),
+                            LineBuffer);
     }
 
     ASSERT(FileSystemList == NULL);
@@ -4238,8 +3873,6 @@ RegistryPage(PINPUT_RECORD Ir)
 static PAGE_NUMBER
 BootLoaderPage(PINPUT_RECORD Ir)
 {
-    UCHAR PartitionType;
-    BOOLEAN InstallOnFloppy;
     USHORT Line = 12;
     WCHAR PathBuffer[MAX_PATH];
 
@@ -4256,8 +3889,6 @@ BootLoaderPage(PINPUT_RECORD Ir)
     RtlCreateUnicodeString(&USetupData.SystemRootPath, PathBuffer);
     DPRINT1("SystemRootPath: %wZ\n", &USetupData.SystemRootPath);
 
-    PartitionType = SystemPartition->PartitionType;
-
     /* For unattended setup, skip MBR installation or install on floppy if needed */
     if (IsUnattendedSetup)
     {
@@ -4270,52 +3901,11 @@ BootLoaderPage(PINPUT_RECORD Ir)
 
     /*
      * We may install an MBR or VBR, but before that, check whether
-     * we need to actually install the VBR on floppy.
+     * we need to actually install the VBR on floppy/removable media
+     * if the system partition is not recognized.
      */
-    if (PartitionType == PARTITION_ENTRY_UNUSED)
-    {
-        DPRINT("Error: system partition invalid (unused)\n");
-        InstallOnFloppy = TRUE;
-    }
-    else if (PartitionType == PARTITION_OS2BOOTMGR)
-    {
-        /* OS/2 boot manager partition */
-        DPRINT("Found OS/2 boot manager partition\n");
-        InstallOnFloppy = TRUE;
-    }
-    else if (PartitionType == PARTITION_LINUX)
-    {
-        /* Linux partition */
-        DPRINT("Found Linux native partition (ext2/ext3/ReiserFS/BTRFS/etc)\n");
-        InstallOnFloppy = FALSE;
-    }
-    else if (PartitionType == PARTITION_IFS)
-    {
-        /* NTFS partition */
-        DPRINT("Found NTFS partition\n");
-
-        // FIXME: Make it FALSE when we'll support NTFS installation!
-        InstallOnFloppy = TRUE;
-    }
-    else if ((PartitionType == PARTITION_FAT_12) ||
-             (PartitionType == PARTITION_FAT_16) ||
-             (PartitionType == PARTITION_HUGE)   ||
-             (PartitionType == PARTITION_XINT13) ||
-             (PartitionType == PARTITION_FAT32)  ||
-             (PartitionType == PARTITION_FAT32_XINT13))
-    {
-        DPRINT("Found FAT partition\n");
-        InstallOnFloppy = FALSE;
-    }
-    else
-    {
-        /* Unknown partition */
-        DPRINT("Unknown partition found\n");
-        InstallOnFloppy = TRUE;
-    }
-
-    /* We should install on floppy */
-    if (InstallOnFloppy)
+    if ((SystemPartition->DiskEntry->DiskStyle != PARTITION_STYLE_MBR) ||
+        !IsRecognizedPartition(SystemPartition->PartitionType))
     {
         USetupData.MBRInstallType = 1;
         goto Quit;

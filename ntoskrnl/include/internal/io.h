@@ -533,7 +533,8 @@ typedef enum _DEVICE_ACTION
 {
     PiActionEnumDeviceTree,
     PiActionEnumRootDevices,
-    PiActionResetDevice
+    PiActionResetDevice,
+    PiActionAddBootDevices
 } DEVICE_ACTION;
 
 //
@@ -567,11 +568,6 @@ IopDetectResourceConflict(
 //
 // PNP Routines
 //
-NTSTATUS
-PiCallDriverAddDevice(
-    _In_ PDEVICE_NODE DeviceNode,
-    _In_ BOOLEAN LoadDrivers);
-
 NTSTATUS
 NTAPI
 IopInitializePlugPlayServices(
@@ -609,6 +605,11 @@ PiInsertDevNode(
     _In_ PDEVICE_NODE DeviceNode,
     _In_ PDEVICE_NODE ParentNode);
 
+PNP_DEVNODE_STATE
+PiSetDevNodeState(
+    _In_ PDEVICE_NODE DeviceNode,
+    _In_ PNP_DEVNODE_STATE NewState);
+
 VOID
 PiSetDevNodeProblem(
     _In_ PDEVICE_NODE DeviceNode,
@@ -629,7 +630,6 @@ IopQueryDeviceCapabilities(PDEVICE_NODE DeviceNode,
                            PDEVICE_CAPABILITIES DeviceCaps);
 
 NTSTATUS
-NTAPI
 IopSynchronousCall(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIO_STACK_LOCATION IoStackLocation,
@@ -652,18 +652,6 @@ IopGetDeviceNode(
 );
 
 NTSTATUS
-IopActionConfigureChildServices(
-    IN PDEVICE_NODE DeviceNode,
-    IN PVOID Context
-);
-
-NTSTATUS
-IopActionInitChildServices(
-    IN PDEVICE_NODE DeviceNode,
-    IN PVOID Context
-);
-
-NTSTATUS
 IoCreateDriverList(
     VOID
 );
@@ -681,10 +669,6 @@ IopQueueTargetDeviceEvent(
     const GUID *Guid,
     PUNICODE_STRING DeviceIds
 );
-
-NTSTATUS
-IopInitializePnpServices(
-    IN PDEVICE_NODE DeviceNode);
 
 NTSTATUS
 NTAPI
@@ -815,21 +799,6 @@ VOID
 NTAPI
 IopReadyDeviceObjects(
     IN PDRIVER_OBJECT Driver
-);
-
-NTSTATUS
-IopStartDevice(
-    IN PDEVICE_NODE DeviceNode
-);
-
-NTSTATUS
-IopStopDevice(
-    IN PDEVICE_NODE DeviceNode
-);
-
-NTSTATUS
-IopRemoveDevice(
-    IN PDEVICE_NODE DeviceNode
 );
 
 PVPB
@@ -1386,6 +1355,35 @@ PiNotifyTargetDeviceChange(
     _In_ LPCGUID Event,
     _In_ PDEVICE_OBJECT DeviceObject,
     _In_opt_ PTARGET_DEVICE_CUSTOM_NOTIFICATION CustomNotification);
+
+//
+// PnP IRPs
+//
+NTSTATUS
+PiIrpStartDevice(
+    _In_ PDEVICE_NODE DeviceNode);
+
+NTSTATUS
+PiIrpStopDevice(
+    _In_ PDEVICE_NODE DeviceNode);
+
+NTSTATUS
+PiIrpQueryStopDevice(
+    _In_ PDEVICE_NODE DeviceNode);
+
+NTSTATUS
+PiIrpCancelStopDevice(
+    _In_ PDEVICE_NODE DeviceNode);
+
+NTSTATUS
+PiIrpQueryDeviceRelations(
+    _In_ PDEVICE_NODE DeviceNode,
+    _In_ DEVICE_RELATION_TYPE Type);
+
+NTSTATUS
+PiIrpQueryPnPDeviceState(
+    _In_ PDEVICE_NODE DeviceNode,
+    _Out_ PPNP_DEVICE_STATE DeviceState);
 
 //
 // Global I/O Data

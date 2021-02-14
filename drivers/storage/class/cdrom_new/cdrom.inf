@@ -175,3 +175,16 @@ ISO_Generic_FriendlyName = "Microsoft Virtual DVD-ROM"
 
 ;; Service descriptions
 cdrom_ServiceDesc   = "CD-ROM Driver"
+
+[Strings.0419]
+CDROMClassName = "DVD/CD-ROM дисководы"
+
+GenManufacturer = "(Стандартные CD-ROM устройства)"
+
+Mitsumi_cdrom_devdesc    = "Mitsumi CD-ROM дисковод"
+gencdrom_devdesc         = "CD-ROM дисковод"
+
+Mitsumi_Generic_FriendlyName = "Mitsumi CD-ROM дисковод"
+ISO_Generic_FriendlyName = "Microsoft виртуальный DVD-ROM дисковод"
+
+cdrom_ServiceDesc   = "CD-ROM дисковод"

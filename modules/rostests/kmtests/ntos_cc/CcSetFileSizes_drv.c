@@ -467,7 +467,7 @@ TestIrpHandler(
 
             if (Length > (Fcb->Header.FileSize.QuadPart - Offset.QuadPart))
             {
-                RtlFillMemory(Buffer, Length - Fcb->Header.FileSize.QuadPart, 0xBD);
+                RtlFillMemory(Buffer, Length - (Fcb->Header.FileSize.QuadPart - Offset.QuadPart), 0xBD);
             }
         }
         else

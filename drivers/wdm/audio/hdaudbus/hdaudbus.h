@@ -143,7 +143,7 @@ HDA_FDOQueryBusRelations(
     IN PDEVICE_OBJECT DeviceObject,
     IN PIRP Irp);
 
-VOID
+NTSTATUS
 HDA_SendVerbs(
     IN PDEVICE_OBJECT DeviceObject,
     IN PHDA_CODEC_ENTRY Codec,

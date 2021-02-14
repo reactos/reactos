@@ -114,6 +114,12 @@ NTSTATUS
 IopPrepareDeviceForRemoval(PDEVICE_OBJECT DeviceObject, BOOLEAN Force);
 
 static
+NTSTATUS
+IopSetServiceEnumData(
+    _In_ PDEVICE_NODE DeviceNode,
+    _In_ HANDLE InstanceHandle);
+
+static
 BOOLEAN
 IopValidateID(
     _In_ PWCHAR Id,
@@ -256,13 +262,8 @@ IopCreateDeviceInstancePath(
     if (DeviceCapabilities.HardwareDisabled)
     {
         /* FIXME: Cleanup device */
-        DeviceNode->Flags |= DNF_DISABLED;
         RtlFreeUnicodeString(&DeviceId);
         return STATUS_PLUGPLAY_NO_DEVICE;
-    }
-    else
-    {
-        DeviceNode->Flags &= ~DNF_DISABLED;
     }
 
     if (!DeviceCapabilities.UniqueID)
@@ -584,6 +585,7 @@ PiAttachFilterDrivers(
  * @param[in]  LoadDrivers  Whether to load drivers if they are not loaded yet
  *                          (used when storage subsystem is not yet initialized)
  */
+static
 NTSTATUS
 PiCallDriverAddDevice(
     _In_ PDEVICE_NODE DeviceNode,
@@ -636,7 +638,7 @@ PiCallDriverAddDevice(
         }
         else
         {
-            // open the CCS\Constol\Class\<ClassGUID> key
+            // open the CCS\Control\Class\<ClassGUID> key
             Status = IopOpenRegistryKeyEx(&ClassKey, ccsControlHandle, &classGUID, KEY_READ);
             ZwClose(ccsControlHandle);
             if (!NT_SUCCESS(Status))
@@ -794,15 +796,13 @@ PiCallDriverAddDevice(
                 }
 
                 ObDereferenceObject(fdo);
-
-                IopDeviceNodeSetFlag(DeviceNode, DNF_ADDED);
+                PiSetDevNodeState(DeviceNode, DeviceNodeDriversAdded);
             }
             else
             {
                 // lower filters (if already started) will be removed upon this request
                 PiSetDevNodeProblem(DeviceNode, CM_PROB_FAILED_ADD);
-                IopDeviceNodeSetFlag(DeviceNode, DNF_DISABLED);
-                IopRemoveDevice(DeviceNode);
+                PiSetDevNodeState(DeviceNode, DeviceNodeAwaitingQueuedRemoval);
                 break;
             }
         }
@@ -835,11 +835,6 @@ Cleanup:
     if (ClassKey != NULL)
     {
         ZwClose(ClassKey);
-    }
-
-    if (DeviceNode->Flags & DNF_ADDED)
-    {
-        IopStartDevice(DeviceNode);
     }
 
     return Status;
@@ -1078,30 +1073,14 @@ IopQueryCompatibleIds(PDEVICE_NODE DeviceNode,
     return Status;
 }
 
-/*
- * IopActionInterrogateDeviceStack
- *
- * Retrieve information for all (direct) child nodes of a parent node.
- *
- * Parameters
- *    DeviceNode
- *       Pointer to device node.
- *    Context
- *       Pointer to parent node to retrieve child node information for.
- *
- * Remarks
- *    Any errors that occur are logged instead so that all child services have a chance
- *    of being interrogated.
- */
-
+static
 NTSTATUS
-IopActionInterrogateDeviceStack(PDEVICE_NODE DeviceNode,
-                                PVOID Context)
+PiInitializeDevNode(
+    _In_ PDEVICE_NODE DeviceNode)
 {
     IO_STATUS_BLOCK IoStatusBlock;
     PWSTR DeviceDescription;
     PWSTR LocationInformation;
-    PDEVICE_NODE ParentDeviceNode;
     IO_STACK_LOCATION Stack;
     NTSTATUS Status;
     ULONG RequiredLength;
@@ -1111,37 +1090,8 @@ IopActionInterrogateDeviceStack(PDEVICE_NODE DeviceNode,
     UNICODE_STRING InstancePathU;
     PDEVICE_OBJECT OldDeviceObject;
 
-    DPRINT("IopActionInterrogateDeviceStack(%p, %p)\n", DeviceNode, Context);
+    DPRINT("PiProcessNewDevNode(%p)\n", DeviceNode);
     DPRINT("PDO 0x%p\n", DeviceNode->PhysicalDeviceObject);
-
-    ParentDeviceNode = (PDEVICE_NODE)Context;
-
-    /*
-     * We are called for the parent too, but we don't need to do special
-     * handling for this node
-     */
-    if (DeviceNode == ParentDeviceNode)
-    {
-        DPRINT("Success\n");
-        return STATUS_SUCCESS;
-    }
-
-    /*
-     * Make sure this device node is a direct child of the parent device node
-     * that is given as an argument
-     */
-    if (DeviceNode->Parent != ParentDeviceNode)
-    {
-        DPRINT("Skipping 2+ level child\n");
-        return STATUS_SUCCESS;
-    }
-
-    /* Skip processing if it was already completed before */
-    if (DeviceNode->Flags & DNF_PROCESSED)
-    {
-        /* Nothing to do */
-        return STATUS_SUCCESS;
-    }
 
     /* Get Locale ID */
     Status = ZwQueryDefaultLocale(FALSE, &LocaleId);
@@ -1163,9 +1113,7 @@ IopActionInterrogateDeviceStack(PDEVICE_NODE DeviceNode,
         {
             DPRINT1("IopCreateDeviceInstancePath() failed with status 0x%lx\n", Status);
         }
-
-        /* We have to return success otherwise we abort the traverse operation */
-        return STATUS_SUCCESS;
+        return Status;
     }
 
     /* Verify that this is not a duplicate */
@@ -1204,6 +1152,8 @@ IopActionInterrogateDeviceStack(PDEVICE_NODE DeviceNode,
     IopQueryHardwareIds(DeviceNode, InstanceKey);
 
     IopQueryCompatibleIds(DeviceNode, InstanceKey);
+
+    DeviceNode->Flags |= DNF_IDS_QUERIED;
 
     DPRINT("Sending IRP_MN_QUERY_DEVICE_TEXT.DeviceTextDescription to device stack\n");
 
@@ -1348,9 +1298,15 @@ IopActionInterrogateDeviceStack(PDEVICE_NODE DeviceNode,
         IopSetDeviceInstanceData(InstanceKey, DeviceNode);
     }
 
+    // Try installing a critical device, so its Service key is populated
+    // then call IopSetServiceEnumData to populate service's Enum key.
+    // That allows us to start devices during an early boot
+    IopInstallCriticalDevice(DeviceNode);
+    IopSetServiceEnumData(DeviceNode, InstanceKey);
+
     ZwClose(InstanceKey);
 
-    IopDeviceNodeSetFlag(DeviceNode, DNF_PROCESSED);
+    PiSetDevNodeState(DeviceNode, DeviceNodeInitialized);
 
     if (!IopDeviceNodeHasFlag(DeviceNode, DNF_LEGACY_DRIVER))
     {
@@ -1362,235 +1318,46 @@ IopActionInterrogateDeviceStack(PDEVICE_NODE DeviceNode,
     return STATUS_SUCCESS;
 }
 
-/*
- * IopActionConfigureChildServices
- *
- * Retrieve configuration for all (direct) child nodes of a parent node.
- *
- * Parameters
- *    DeviceNode
- *       Pointer to device node.
- *    Context
- *       Pointer to parent node to retrieve child node configuration for.
- *
- * Remarks
- *    Any errors that occur are logged instead so that all child services have a chance of beeing
- *    configured.
- */
-
-NTSTATUS
-IopActionConfigureChildServices(PDEVICE_NODE DeviceNode,
-                                PVOID Context)
-{
-    RTL_QUERY_REGISTRY_TABLE QueryTable[3];
-    PDEVICE_NODE ParentDeviceNode;
-    PUNICODE_STRING Service;
-    UNICODE_STRING ClassGUID;
-    NTSTATUS Status;
-    DEVICE_CAPABILITIES DeviceCaps;
-
-    DPRINT("IopActionConfigureChildServices(%p, %p)\n", DeviceNode, Context);
-
-    ParentDeviceNode = (PDEVICE_NODE)Context;
-
-    /*
-     * We are called for the parent too, but we don't need to do special
-     * handling for this node
-     */
-    if (DeviceNode == ParentDeviceNode)
-    {
-        DPRINT("Success\n");
-        return STATUS_SUCCESS;
-    }
-
-    /*
-     * Make sure this device node is a direct child of the parent device node
-     * that is given as an argument
-     */
-
-    if (DeviceNode->Parent != ParentDeviceNode)
-    {
-        DPRINT("Skipping 2+ level child\n");
-        return STATUS_SUCCESS;
-    }
-
-    if (!(DeviceNode->Flags & DNF_PROCESSED))
-    {
-        DPRINT1("Child not ready to be configured\n");
-        return STATUS_SUCCESS;
-    }
-
-    if (!(DeviceNode->Flags & (DNF_DISABLED | DNF_STARTED | DNF_ADDED)))
-    {
-        UNICODE_STRING RegKey;
-
-        /* Install the service for this if it's in the CDDB */
-        IopInstallCriticalDevice(DeviceNode);
-
-        /*
-         * Retrieve configuration from Enum key
-         */
-
-        Service = &DeviceNode->ServiceName;
-
-        RtlZeroMemory(QueryTable, sizeof(QueryTable));
-        RtlInitUnicodeString(Service, NULL);
-        RtlInitUnicodeString(&ClassGUID, NULL);
-
-        QueryTable[0].Name = L"Service";
-        QueryTable[0].Flags = RTL_QUERY_REGISTRY_DIRECT;
-        QueryTable[0].EntryContext = Service;
-
-        QueryTable[1].Name = L"ClassGUID";
-        QueryTable[1].Flags = RTL_QUERY_REGISTRY_DIRECT;
-        QueryTable[1].EntryContext = &ClassGUID;
-        QueryTable[1].DefaultType = REG_SZ;
-        QueryTable[1].DefaultData = L"";
-        QueryTable[1].DefaultLength = 0;
-
-        RegKey.Length = 0;
-        RegKey.MaximumLength = sizeof(ENUM_ROOT) + sizeof(WCHAR) + DeviceNode->InstancePath.Length;
-        RegKey.Buffer = ExAllocatePoolWithTag(PagedPool,
-                                              RegKey.MaximumLength,
-                                              TAG_IO);
-        if (RegKey.Buffer == NULL)
-        {
-            IopDeviceNodeSetFlag(DeviceNode, DNF_DISABLED);
-            return STATUS_INSUFFICIENT_RESOURCES;
-        }
-
-        RtlAppendUnicodeToString(&RegKey, ENUM_ROOT);
-        RtlAppendUnicodeToString(&RegKey, L"\\");
-        RtlAppendUnicodeStringToString(&RegKey, &DeviceNode->InstancePath);
-
-        Status = RtlQueryRegistryValues(RTL_REGISTRY_ABSOLUTE,
-            RegKey.Buffer, QueryTable, NULL, NULL);
-        ExFreePoolWithTag(RegKey.Buffer, TAG_IO);
-
-        if (!NT_SUCCESS(Status))
-        {
-            /* FIXME: Log the error */
-            DPRINT("Could not retrieve configuration for device %wZ (Status 0x%08x)\n",
-                   &DeviceNode->InstancePath, Status);
-            IopDeviceNodeSetFlag(DeviceNode, DNF_DISABLED);
-            return STATUS_SUCCESS;
-        }
-
-        if (Service->Buffer == NULL)
-        {
-            if (NT_SUCCESS(IopQueryDeviceCapabilities(DeviceNode, &DeviceCaps)) &&
-                DeviceCaps.RawDeviceOK)
-            {
-                DPRINT("%wZ is using parent bus driver (%wZ)\n", &DeviceNode->InstancePath, &ParentDeviceNode->ServiceName);
-                RtlInitEmptyUnicodeString(&DeviceNode->ServiceName, NULL, 0);
-            }
-            else if (ClassGUID.Length != 0)
-            {
-                /* Device has a ClassGUID value, but no Service value.
-                 * Suppose it is using the NULL driver, so state the
-                 * device is started */
-                DPRINT("%wZ is using NULL driver\n", &DeviceNode->InstancePath);
-                IopDeviceNodeSetFlag(DeviceNode, DNF_STARTED);
-            }
-            else
-            {
-                DeviceNode->Problem = CM_PROB_FAILED_INSTALL;
-                IopDeviceNodeSetFlag(DeviceNode, DNF_DISABLED);
-            }
-            return STATUS_SUCCESS;
-        }
-
-        DPRINT("Got Service %S\n", Service->Buffer);
-    }
-
-    return STATUS_SUCCESS;
-}
-
-/*
- * IopActionInitChildServices
- *
- * Initialize the service for all (direct) child nodes of a parent node
- *
- * Parameters
- *    DeviceNode
- *       Pointer to device node.
- *    Context
- *       Pointer to parent node to initialize child node services for.
- *
- * Remarks
- *    If the driver image for a service is not loaded and initialized
- *    it is done here too. Any errors that occur are logged instead so
- *    that all child services have a chance of being initialized.
- */
-
-NTSTATUS
-IopActionInitChildServices(PDEVICE_NODE DeviceNode,
-                           PVOID Context)
-{
-    PDEVICE_NODE ParentDeviceNode;
-
-    DPRINT("IopActionInitChildServices(%p, %p)\n", DeviceNode, Context);
-
-    ParentDeviceNode = Context;
-
-    /*
-     * We are called for the parent too, but we don't need to do special
-     * handling for this node
-     */
-    if (DeviceNode == ParentDeviceNode)
-    {
-        DPRINT("Success\n");
-        return STATUS_SUCCESS;
-    }
-
-    /*
-     * We don't want to check for a direct child because
-     * this function is called during boot to reinitialize
-     * devices with drivers that couldn't load yet due to
-     * stage 0 limitations (ie can't load from disk yet).
-     */
-
-    if (!(DeviceNode->Flags & DNF_PROCESSED))
-    {
-        DPRINT1("Child not ready to be added\n");
-        return STATUS_SUCCESS;
-    }
-
-    if (IopDeviceNodeHasFlag(DeviceNode, DNF_STARTED) ||
-        IopDeviceNodeHasFlag(DeviceNode, DNF_ADDED) ||
-        IopDeviceNodeHasFlag(DeviceNode, DNF_DISABLED))
-        return STATUS_SUCCESS;
-
-    PiCallDriverAddDevice(DeviceNode, PnPBootDriversInitialized);
-    return STATUS_SUCCESS;
-}
-
 static
 NTSTATUS
-IopSetServiceEnumData(PDEVICE_NODE DeviceNode)
+IopSetServiceEnumData(
+    _In_ PDEVICE_NODE DeviceNode,
+    _In_ HANDLE InstanceHandle)
 {
     UNICODE_STRING ServicesKeyPath = RTL_CONSTANT_STRING(L"\\Registry\\Machine\\System\\CurrentControlSet\\Services\\");
     UNICODE_STRING ServiceKeyName;
     UNICODE_STRING EnumKeyName;
     UNICODE_STRING ValueName;
-    PKEY_VALUE_FULL_INFORMATION KeyValueInformation;
+    UNICODE_STRING ServiceName;
+    PKEY_VALUE_FULL_INFORMATION KeyValueInformation, kvInfo2;
     HANDLE ServiceKey = NULL, ServiceEnumKey = NULL;
     ULONG Disposition;
     ULONG Count = 0, NextInstance = 0;
     WCHAR ValueBuffer[6];
     NTSTATUS Status = STATUS_SUCCESS;
 
-    DPRINT("IopSetServiceEnumData(%p)\n", DeviceNode);
-    DPRINT("Instance: %wZ\n", &DeviceNode->InstancePath);
-    DPRINT("Service: %wZ\n", &DeviceNode->ServiceName);
-
-    if (DeviceNode->ServiceName.Buffer == NULL)
+    // obtain the device node's ServiceName
+    Status = IopGetRegistryValue(InstanceHandle, L"Service", &kvInfo2);
+    if (!NT_SUCCESS(Status))
     {
-        DPRINT1("No service!\n");
-        return STATUS_SUCCESS;
+        return Status;
     }
 
-    ServiceKeyName.MaximumLength = ServicesKeyPath.Length + DeviceNode->ServiceName.Length + sizeof(UNICODE_NULL);
+    if (kvInfo2->Type != REG_SZ || kvInfo2->DataLength <= sizeof(WCHAR))
+    {
+        ExFreePool(kvInfo2);
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    ServiceName.MaximumLength = kvInfo2->DataLength;
+    ServiceName.Length = kvInfo2->DataLength - sizeof(UNICODE_NULL);
+    ServiceName.Buffer = (PVOID)((ULONG_PTR)kvInfo2 + kvInfo2->DataOffset);
+
+    DPRINT("IopSetServiceEnumData(%p)\n", DeviceNode);
+    DPRINT("Instance: %wZ\n", &DeviceNode->InstancePath);
+    DPRINT("Service: %wZ\n", &ServiceName);
+
+    ServiceKeyName.MaximumLength = ServicesKeyPath.Length + ServiceName.Length + sizeof(UNICODE_NULL);
     ServiceKeyName.Length = 0;
     ServiceKeyName.Buffer = ExAllocatePool(PagedPool, ServiceKeyName.MaximumLength);
     if (ServiceKeyName.Buffer == NULL)
@@ -1600,7 +1367,7 @@ IopSetServiceEnumData(PDEVICE_NODE DeviceNode)
     }
 
     RtlAppendUnicodeStringToString(&ServiceKeyName, &ServicesKeyPath);
-    RtlAppendUnicodeStringToString(&ServiceKeyName, &DeviceNode->ServiceName);
+    RtlAppendUnicodeStringToString(&ServiceKeyName, &ServiceName);
 
     DPRINT("ServiceKeyName: %wZ\n", &ServiceKeyName);
 
@@ -1694,6 +1461,10 @@ IopSetServiceEnumData(PDEVICE_NODE DeviceNode)
                                sizeof(NextInstance));
     }
 
+    RtlDuplicateUnicodeString(RTL_DUPLICATE_UNICODE_STRING_ALLOCATE_NULL_STRING,
+                              &ServiceName,
+                              &DeviceNode->ServiceName);
+
 done:
     if (ServiceEnumKey != NULL)
         ZwClose(ServiceEnumKey);
@@ -1702,50 +1473,52 @@ done:
         ZwClose(ServiceKey);
 
     ExFreePool(ServiceKeyName.Buffer);
+    ExFreePool(kvInfo2);
 
     return Status;
 }
 
 static
-VOID
-NTAPI
-IopStartDevice2(IN PDEVICE_OBJECT DeviceObject)
+NTSTATUS
+PiStartDeviceFinal(
+    _In_ PDEVICE_NODE DeviceNode)
 {
-    IO_STACK_LOCATION Stack;
-    PDEVICE_NODE DeviceNode;
-    NTSTATUS Status;
-    PVOID Dummy;
     DEVICE_CAPABILITIES DeviceCapabilities;
+    NTSTATUS Status;
 
-    /* Get the device node */
-    DeviceNode = IopGetDeviceNode(DeviceObject);
-
-    ASSERT(!(DeviceNode->Flags & DNF_DISABLED));
-
-    /* Build the I/O stack location */
-    RtlZeroMemory(&Stack, sizeof(IO_STACK_LOCATION));
-    Stack.MajorFunction = IRP_MJ_PNP;
-    Stack.MinorFunction = IRP_MN_START_DEVICE;
-
-    Stack.Parameters.StartDevice.AllocatedResources =
-         DeviceNode->ResourceList;
-    Stack.Parameters.StartDevice.AllocatedResourcesTranslated =
-         DeviceNode->ResourceListTranslated;
-
-    /* Do the call */
-    Status = IopSynchronousCall(DeviceObject, &Stack, &Dummy);
-    if (!NT_SUCCESS(Status))
+    if (!(DeviceNode->Flags & DNF_IDS_QUERIED))
     {
-        /* Send an IRP_MN_REMOVE_DEVICE request */
-        IopRemoveDevice(DeviceNode);
+        // query ids (for reported devices)
+        UNICODE_STRING enumRoot = RTL_CONSTANT_STRING(ENUM_ROOT);
+        HANDLE enumRootHandle, instanceHandle;
 
-        /* Set the appropriate flag */
-        DeviceNode->Flags |= DNF_START_FAILED;
-        DeviceNode->Problem = CM_PROB_FAILED_START;
+        // open the enumeration root key
+        Status = IopOpenRegistryKeyEx(&enumRootHandle, NULL, &enumRoot, KEY_READ);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("IopOpenRegistryKeyEx() failed for \"%wZ\" (status %x)\n", &enumRoot, Status);
+            return Status;
+        }
 
-        DPRINT1("Warning: PnP Start failed (%wZ) [Status: 0x%x]\n", &DeviceNode->InstancePath, Status);
-        return;
+        // open an instance subkey
+        Status = IopOpenRegistryKeyEx(&instanceHandle, enumRootHandle, &DeviceNode->InstancePath, KEY_READ);
+        ZwClose(enumRootHandle);
+        if (!NT_SUCCESS(Status))
+        {
+            DPRINT1("Failed to open a devnode instance key for \"%wZ\" (status %x)\n",
+                    &DeviceNode->InstancePath, Status);
+            return Status;
+        }
+
+        IopQueryHardwareIds(DeviceNode, instanceHandle);
+        IopQueryCompatibleIds(DeviceNode, instanceHandle);
+
+        DeviceNode->Flags |= DNF_IDS_QUERIED;
+        ZwClose(instanceHandle);
     }
+
+    // we're about to start - needs enumeration
+    DeviceNode->Flags |= DNF_REENUMERATE;
 
     DPRINT("Sending IRP_MN_QUERY_CAPABILITIES to device stack (after start)\n");
 
@@ -1756,181 +1529,14 @@ IopStartDevice2(IN PDEVICE_OBJECT DeviceObject)
     }
 
     /* Invalidate device state so IRP_MN_QUERY_PNP_DEVICE_STATE is sent */
-    IoInvalidateDeviceState(DeviceObject);
+    IoInvalidateDeviceState(DeviceNode->PhysicalDeviceObject);
 
-    /* Otherwise, mark us as started */
-    DeviceNode->Flags |= DNF_STARTED;
-    DeviceNode->Flags &= ~DNF_STOPPED;
+    DPRINT("Sending GUID_DEVICE_ARRIVAL %wZ\n", &DeviceNode->InstancePath);
+    IopQueueTargetDeviceEvent(&GUID_DEVICE_ARRIVAL, &DeviceNode->InstancePath);
 
-    /* We now need enumeration */
-    DeviceNode->Flags |= DNF_NEED_ENUMERATION_ONLY;
-}
+    PiSetDevNodeState(DeviceNode, DeviceNodeStarted);
 
-static
-NTSTATUS
-NTAPI
-IopStartAndEnumerateDevice(IN PDEVICE_NODE DeviceNode)
-{
-    PDEVICE_OBJECT DeviceObject;
-    NTSTATUS Status;
-    PAGED_CODE();
-
-    /* Sanity check */
-    ASSERT((DeviceNode->Flags & DNF_ADDED));
-    ASSERT((DeviceNode->Flags & (DNF_RESOURCE_ASSIGNED |
-                                 DNF_RESOURCE_REPORTED |
-                                 DNF_NO_RESOURCE_REQUIRED)));
-
-    /* Get the device object */
-    DeviceObject = DeviceNode->PhysicalDeviceObject;
-
-    /* Check if we're not started yet */
-    if (!(DeviceNode->Flags & DNF_STARTED))
-    {
-        /* Start us */
-        IopStartDevice2(DeviceObject);
-    }
-
-    /* Do we need to query IDs? This happens in the case of manual reporting */
-#if 0
-    if (DeviceNode->Flags & DNF_NEED_QUERY_IDS)
-    {
-        DPRINT1("Warning: Device node has DNF_NEED_QUERY_IDS\n");
-        /* And that case shouldn't happen yet */
-        ASSERT(FALSE);
-    }
-#endif
-
-    IopSetServiceEnumData(DeviceNode);
-
-    /* Make sure we're started, and check if we need enumeration */
-    if ((DeviceNode->Flags & DNF_STARTED) &&
-        (DeviceNode->Flags & DNF_NEED_ENUMERATION_ONLY))
-    {
-        /* Enumerate us */
-        IoInvalidateDeviceRelations(DeviceObject, BusRelations);
-        Status = STATUS_SUCCESS;
-    }
-    else
-    {
-        /* Nothing to do */
-        Status = STATUS_SUCCESS;
-    }
-
-    /* Return */
-    return Status;
-}
-
-NTSTATUS
-IopStartDevice(
-    PDEVICE_NODE DeviceNode)
-{
-    NTSTATUS Status;
-    HANDLE InstanceHandle = NULL, ControlHandle = NULL;
-    UNICODE_STRING KeyName, ValueString;
-    OBJECT_ATTRIBUTES ObjectAttributes;
-
-    if (DeviceNode->Flags & DNF_DISABLED)
-        return STATUS_SUCCESS;
-
-    Status = IopAssignDeviceResources(DeviceNode);
-    if (!NT_SUCCESS(Status))
-        goto ByeBye;
-
-    /* New PnP ABI */
-    IopStartAndEnumerateDevice(DeviceNode);
-
-    /* FIX: Should be done in new device instance code */
-    Status = IopCreateDeviceKeyPath(&DeviceNode->InstancePath, REG_OPTION_NON_VOLATILE, &InstanceHandle);
-    if (!NT_SUCCESS(Status))
-        goto ByeBye;
-
-    /* FIX: Should be done in IoXxxPrepareDriverLoading */
-    // {
-    RtlInitUnicodeString(&KeyName, L"Control");
-    InitializeObjectAttributes(&ObjectAttributes,
-                               &KeyName,
-                               OBJ_CASE_INSENSITIVE | OBJ_KERNEL_HANDLE,
-                               InstanceHandle,
-                               NULL);
-    Status = ZwCreateKey(&ControlHandle,
-                         KEY_SET_VALUE,
-                         &ObjectAttributes,
-                         0,
-                         NULL,
-                         REG_OPTION_VOLATILE,
-                         NULL);
-    if (!NT_SUCCESS(Status))
-        goto ByeBye;
-
-    RtlInitUnicodeString(&KeyName, L"ActiveService");
-    ValueString = DeviceNode->ServiceName;
-    if (!ValueString.Buffer)
-        RtlInitUnicodeString(&ValueString, L"");
-    Status = ZwSetValueKey(ControlHandle, &KeyName, 0, REG_SZ, ValueString.Buffer, ValueString.Length + sizeof(UNICODE_NULL));
-    // }
-
-ByeBye:
-    if (ControlHandle != NULL)
-        ZwClose(ControlHandle);
-
-    if (InstanceHandle != NULL)
-        ZwClose(InstanceHandle);
-
-    return Status;
-}
-
-static
-NTSTATUS
-NTAPI
-IopQueryStopDevice(IN PDEVICE_OBJECT DeviceObject)
-{
-    IO_STACK_LOCATION Stack;
-    PVOID Dummy;
-
-    RtlZeroMemory(&Stack, sizeof(IO_STACK_LOCATION));
-    Stack.MajorFunction = IRP_MJ_PNP;
-    Stack.MinorFunction = IRP_MN_QUERY_STOP_DEVICE;
-
-    return IopSynchronousCall(DeviceObject, &Stack, &Dummy);
-}
-
-static
-VOID
-NTAPI
-IopSendStopDevice(IN PDEVICE_OBJECT DeviceObject)
-{
-    IO_STACK_LOCATION Stack;
-    PVOID Dummy;
-
-    RtlZeroMemory(&Stack, sizeof(IO_STACK_LOCATION));
-    Stack.MajorFunction = IRP_MJ_PNP;
-    Stack.MinorFunction = IRP_MN_STOP_DEVICE;
-
-    /* Drivers should never fail a IRP_MN_STOP_DEVICE request */
-    IopSynchronousCall(DeviceObject, &Stack, &Dummy);
-}
-
-NTSTATUS
-IopStopDevice(
-    PDEVICE_NODE DeviceNode)
-{
-    NTSTATUS Status;
-
-    DPRINT("Stopping device: %wZ\n", &DeviceNode->InstancePath);
-
-    Status = IopQueryStopDevice(DeviceNode->PhysicalDeviceObject);
-    if (NT_SUCCESS(Status))
-    {
-        IopSendStopDevice(DeviceNode->PhysicalDeviceObject);
-
-        DeviceNode->Flags &= ~(DNF_STARTED | DNF_START_REQUEST_PENDING);
-        DeviceNode->Flags |= DNF_STOPPED;
-
-        return STATUS_SUCCESS;
-    }
-
-    return Status;
+    return STATUS_SUCCESS;
 }
 
 /* PUBLIC FUNCTIONS **********************************************************/
@@ -2013,12 +1619,12 @@ IopSendRemoveDevice(IN PDEVICE_OBJECT DeviceObject)
 {
     PDEVICE_NODE DeviceNode = IopGetDeviceNode(DeviceObject);
 
-    /* Drop all our state for this device in case it isn't really going away */
-    DeviceNode->Flags &= DNF_ENUMERATED | DNF_PROCESSED;
+    ASSERT(DeviceNode->State == DeviceNodeAwaitingQueuedRemoval);
 
     /* Drivers should never fail a IRP_MN_REMOVE_DEVICE request */
     PiIrpSendRemoveCheckVpb(DeviceObject, IRP_MN_REMOVE_DEVICE);
 
+    PiSetDevNodeState(DeviceNode, DeviceNodeRemoved);
     PiNotifyTargetDeviceChange(&GUID_TARGET_DEVICE_REMOVE_COMPLETE, DeviceObject, NULL);
     LONG_PTR refCount = ObDereferenceObject(DeviceObject);
     if (refCount != 0)
@@ -2072,6 +1678,7 @@ VOID
 NTAPI
 IopSendSurpriseRemoval(IN PDEVICE_OBJECT DeviceObject)
 {
+    ASSERT(IopGetDeviceNode(DeviceObject)->State == DeviceNodeAwaitingQueuedRemoval);
     /* Drivers should never fail a IRP_MN_SURPRISE_REMOVAL request */
     PiIrpSendRemoveCheckVpb(DeviceObject, IRP_MN_SURPRISE_REMOVAL);
 }
@@ -2200,6 +1807,7 @@ IopQueryRemoveChildDevices(PDEVICE_NODE ParentDeviceNode, BOOLEAN Force)
     {
         NextDeviceNode = ChildDeviceNode->Sibling;
         KeReleaseSpinLock(&IopDeviceTreeLock, OldIrql);
+        PiSetDevNodeState(ChildDeviceNode, DeviceNodeAwaitingQueuedRemoval);
 
         Status = IopPrepareDeviceForRemoval(ChildDeviceNode->PhysicalDeviceObject, Force);
         if (!NT_SUCCESS(Status))
@@ -2344,65 +1952,35 @@ IopPrepareDeviceForRemoval(IN PDEVICE_OBJECT DeviceObject, BOOLEAN Force)
 }
 
 static
-VOID
-IopHandleDeviceRemoval(
-    IN PDEVICE_NODE DeviceNode,
-    IN PDEVICE_RELATIONS DeviceRelations)
-{
-    PDEVICE_NODE Child = DeviceNode->Child, NextChild;
-    ULONG i;
-    BOOLEAN Found;
-
-    if (DeviceNode == IopRootDeviceNode)
-        return;
-
-    while (Child != NULL)
-    {
-        NextChild = Child->Sibling;
-        Found = FALSE;
-
-        for (i = 0; DeviceRelations && i < DeviceRelations->Count; i++)
-        {
-            if (IopGetDeviceNode(DeviceRelations->Objects[i]) == Child)
-            {
-                Found = TRUE;
-                break;
-            }
-        }
-
-        if (!Found && !(Child->Flags & DNF_WILL_BE_REMOVED))
-        {
-            /* Send removal IRPs to all of its children */
-            IopPrepareDeviceForRemoval(Child->PhysicalDeviceObject, TRUE);
-
-            /* Send the surprise removal IRP */
-            IopSendSurpriseRemoval(Child->PhysicalDeviceObject);
-
-            /* Tell the user-mode PnP manager that a device was removed */
-            IopQueueTargetDeviceEvent(&GUID_DEVICE_SURPRISE_REMOVAL,
-                                      &Child->InstancePath);
-
-            /* Send the remove device IRP */
-            IopSendRemoveDevice(Child->PhysicalDeviceObject);
-        }
-
-        Child = NextChild;
-    }
-}
-
 NTSTATUS
 IopRemoveDevice(PDEVICE_NODE DeviceNode)
 {
     NTSTATUS Status;
 
+    // This function removes the device subtree, with the root in DeviceNode
+    // atm everyting is in fact done inside this function, which is completely wrong.
+    // The right implementation should have a separate removal worker thread and
+    // properly do device node state transitions
+
     DPRINT("Removing device: %wZ\n", &DeviceNode->InstancePath);
 
-    Status = IopPrepareDeviceForRemoval(DeviceNode->PhysicalDeviceObject, FALSE);
+    BOOLEAN surpriseRemoval = (_Bool)(DeviceNode->Flags & DNF_DEVICE_GONE);
+
+    Status = IopPrepareDeviceForRemoval(DeviceNode->PhysicalDeviceObject, surpriseRemoval);
+
+    if (surpriseRemoval)
+    {
+        IopSendSurpriseRemoval(DeviceNode->PhysicalDeviceObject);
+        IopQueueTargetDeviceEvent(&GUID_DEVICE_SURPRISE_REMOVAL, &DeviceNode->InstancePath);
+    }
+
     if (NT_SUCCESS(Status))
     {
         IopSendRemoveDevice(DeviceNode->PhysicalDeviceObject);
-        IopQueueTargetDeviceEvent(&GUID_DEVICE_SAFE_REMOVAL,
-                                  &DeviceNode->InstancePath);
+        if (surpriseRemoval)
+        {
+            IopQueueTargetDeviceEvent(&GUID_DEVICE_SAFE_REMOVAL, &DeviceNode->InstancePath);
+        }
         return STATUS_SUCCESS;
     }
 
@@ -2417,16 +1995,10 @@ NTAPI
 IoInvalidateDeviceState(IN PDEVICE_OBJECT PhysicalDeviceObject)
 {
     PDEVICE_NODE DeviceNode = IopGetDeviceNode(PhysicalDeviceObject);
-    IO_STACK_LOCATION Stack;
-    ULONG_PTR PnPFlags;
+    PNP_DEVICE_STATE PnPFlags;
     NTSTATUS Status;
-    IO_STATUS_BLOCK IoStatusBlock;
 
-    RtlZeroMemory(&Stack, sizeof(IO_STACK_LOCATION));
-    Stack.MajorFunction = IRP_MJ_PNP;
-    Stack.MinorFunction = IRP_MN_QUERY_PNP_DEVICE_STATE;
-
-    Status = IopSynchronousCall(PhysicalDeviceObject, &Stack, (PVOID*)&PnPFlags);
+    Status = PiIrpQueryPnPDeviceState(DeviceNode, &PnPFlags);
     if (!NT_SUCCESS(Status))
     {
         if (Status != STATUS_NOT_SUPPORTED)
@@ -2450,20 +2022,16 @@ IoInvalidateDeviceState(IN PDEVICE_OBJECT PhysicalDeviceObject)
         ((PnPFlags & PNP_DEVICE_FAILED) && !(PnPFlags & PNP_DEVICE_RESOURCE_REQUIREMENTS_CHANGED)))
     {
         /* Flag it if it's failed */
-        if (PnPFlags & PNP_DEVICE_FAILED) DeviceNode->Problem = CM_PROB_FAILED_POST_START;
+        if (PnPFlags & PNP_DEVICE_FAILED)
+        {
+            PiSetDevNodeProblem(DeviceNode, CM_PROB_FAILED_POST_START);
+        }
 
-        /* Send removal IRPs to all of its children */
-        IopPrepareDeviceForRemoval(PhysicalDeviceObject, TRUE);
-
-        /* Send surprise removal */
-        IopSendSurpriseRemoval(PhysicalDeviceObject);
-
-        /* Tell the user-mode PnP manager that a device was removed */
-        IopQueueTargetDeviceEvent(&GUID_DEVICE_SURPRISE_REMOVAL,
-                                  &DeviceNode->InstancePath);
-
-        IopSendRemoveDevice(PhysicalDeviceObject);
+        DeviceNode->Flags |= DNF_DEVICE_GONE;
+        PiSetDevNodeState(DeviceNode, DeviceNodeAwaitingQueuedRemoval);
     }
+    // it doesn't work anyway. A real resource rebalancing should be implemented
+#if 0
     else if ((PnPFlags & PNP_DEVICE_FAILED) && (PnPFlags & PNP_DEVICE_RESOURCE_REQUIREMENTS_CHANGED))
     {
         /* Stop for resource rebalance */
@@ -2526,95 +2094,47 @@ IoInvalidateDeviceState(IN PDEVICE_OBJECT PhysicalDeviceObject)
             IopRemoveDevice(DeviceNode);
         }
     }
-}
-
-/*
- * IopInitializePnpServices
- *
- * Initialize services for discovered children
- *
- * Parameters
- *    DeviceNode
- *       Top device node to start initializing services.
- *
- * Return Value
- *    Status
- */
-NTSTATUS
-IopInitializePnpServices(IN PDEVICE_NODE DeviceNode)
-{
-    DEVICETREE_TRAVERSE_CONTEXT Context;
-
-    DPRINT("IopInitializePnpServices(%p)\n", DeviceNode);
-
-    IopInitDeviceTreeTraverseContext(
-        &Context,
-        DeviceNode,
-        IopActionInitChildServices,
-        DeviceNode);
-
-    return IopTraverseDeviceTree(&Context);
+#endif
 }
 
 static
 NTSTATUS
-PipEnumerateDevice(
+PiEnumerateDevice(
     _In_ PDEVICE_NODE DeviceNode)
 {
-    DEVICETREE_TRAVERSE_CONTEXT Context;
-    PDEVICE_RELATIONS DeviceRelations;
     PDEVICE_OBJECT ChildDeviceObject;
-    IO_STATUS_BLOCK IoStatusBlock;
     PDEVICE_NODE ChildDeviceNode;
-    IO_STACK_LOCATION Stack;
-    NTSTATUS Status;
     ULONG i;
 
-    if (DeviceNode->Flags & DNF_NEED_ENUMERATION_ONLY)
-    {
-        DeviceNode->Flags &= ~DNF_NEED_ENUMERATION_ONLY;
+    // bus relations are already obtained for this device node
 
-        DPRINT("Sending GUID_DEVICE_ARRIVAL %wZ\n", &DeviceNode->InstancePath);
-        IopQueueTargetDeviceEvent(&GUID_DEVICE_ARRIVAL,
-                                  &DeviceNode->InstancePath);
+    if (!NT_SUCCESS(DeviceNode->CompletionStatus))
+    {
+        DPRINT("QDR request failed for %wZ, status %x\n",
+            &DeviceNode->InstancePath, DeviceNode->CompletionStatus);
+        // treat as if there are no child objects
     }
 
-    DPRINT("Sending IRP_MN_QUERY_DEVICE_RELATIONS to device stack\n");
+    PDEVICE_RELATIONS DeviceRelations = DeviceNode->OverUsed1.PendingDeviceRelations;
+    DeviceNode->OverUsed1.PendingDeviceRelations = NULL;
 
-    Stack.Parameters.QueryDeviceRelations.Type = BusRelations;
-
-    Status = IopInitiatePnpIrp(
-        DeviceNode->PhysicalDeviceObject,
-        &IoStatusBlock,
-        IRP_MN_QUERY_DEVICE_RELATIONS,
-        &Stack);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT("IopInitiatePnpIrp() failed with status 0x%08lx\n", Status);
-        return Status;
-    }
-
-    DeviceRelations = (PDEVICE_RELATIONS)IoStatusBlock.Information;
-
-    /*
-     * Send removal IRPs for devices that have disappeared
-     * NOTE: This code handles the case where no relations are specified
-     */
-    IopHandleDeviceRemoval(DeviceNode, DeviceRelations);
-
-    /* Now we bail if nothing was returned */
+    // it's acceptable not to have PDOs
     if (!DeviceRelations)
     {
-        /* We're all done */
+        PiSetDevNodeState(DeviceNode, DeviceNodeStarted);
         DPRINT("No PDOs\n");
         return STATUS_SUCCESS;
     }
 
-    DPRINT("Got %u PDOs\n", DeviceRelations->Count);
+    // mark children nodes as non-present (those not returned in DR request will be removed)
+    for (PDEVICE_NODE child = DeviceNode->Child; child != NULL; child = child->Sibling)
+    {
+        child->Flags &= ~DNF_ENUMERATED;
+    }
 
-    /*
-     * Create device nodes for all discovered devices
-     */
+    DPRINT("PiEnumerateDevice: enumerating %u children\n", DeviceRelations->Count);
+
+    // create device nodes for all new children and set DNF_ENUMERATED back for old ones
     for (i = 0; i < DeviceRelations->Count; i++)
     {
         ChildDeviceObject = DeviceRelations->Objects[i];
@@ -2638,7 +2158,7 @@ PipEnumerateDevice(
             else
             {
                 /* Ignore this DO */
-                DPRINT1("IopCreateDeviceNode() failed with status 0x%08x. Skipping PDO %u\n", Status, i);
+                DPRINT1("PipAllocateDeviceNode() failed. Skipping PDO %u\n", i);
                 ObDereferenceObject(ChildDeviceObject);
             }
         }
@@ -2651,49 +2171,18 @@ PipEnumerateDevice(
     }
     ExFreePool(DeviceRelations);
 
-    /*
-     * Retrieve information about all discovered children from the bus driver
-     */
-    IopInitDeviceTreeTraverseContext(
-        &Context,
-        DeviceNode,
-        IopActionInterrogateDeviceStack,
-        DeviceNode);
-
-    Status = IopTraverseDeviceTree(&Context);
-    if (!NT_SUCCESS(Status))
+    // time to remove non-reported devices
+    for (PDEVICE_NODE child = DeviceNode->Child; child != NULL; child = child->Sibling)
     {
-        DPRINT("IopTraverseDeviceTree() failed with status 0x%08lx\n", Status);
-        return Status;
+        if (!(child->Flags & (DNF_ENUMERATED|DNF_DEVICE_GONE)))
+        {
+            // this flag indicates that this is a surprise removal
+            child->Flags |= DNF_DEVICE_GONE;
+            PiSetDevNodeState(child, DeviceNodeAwaitingQueuedRemoval);
+        }
     }
 
-    /*
-     * Retrieve configuration from the registry for discovered children
-     */
-    IopInitDeviceTreeTraverseContext(
-        &Context,
-        DeviceNode,
-        IopActionConfigureChildServices,
-        DeviceNode);
-
-    Status = IopTraverseDeviceTree(&Context);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT("IopTraverseDeviceTree() failed with status 0x%08lx\n", Status);
-        return Status;
-    }
-
-    /*
-     * Initialize services for discovered children.
-     */
-    Status = IopInitializePnpServices(DeviceNode);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT("IopInitializePnpServices() failed with status 0x%08lx\n", Status);
-        return Status;
-    }
-
-    DPRINT("IopEnumerateDevice() finished\n");
+    PiSetDevNodeState(DeviceNode, DeviceNodeStarted);
     return STATUS_SUCCESS;
 }
 
@@ -2787,7 +2276,7 @@ IoRequestDeviceEject(IN PDEVICE_OBJECT PhysicalDeviceObject)
     }
     else
     {
-        DeviceNode->Flags |= DNF_DISABLED;
+        // DeviceNode->Flags |= DNF_DISABLED;
     }
 
     IopQueueTargetDeviceEvent(&GUID_DEVICE_EJECT,
@@ -2801,54 +2290,180 @@ cleanup:
 }
 
 static
-NTSTATUS
-PipResetDevice(
-    _In_ PDEVICE_NODE DeviceNode)
+VOID
+PiDevNodeStateMachine(
+    _In_ PDEVICE_NODE RootNode)
 {
-    NTSTATUS Status = STATUS_SUCCESS;
+    NTSTATUS status;
+    BOOLEAN doProcessAgain;
+    PDEVICE_NODE currentNode = RootNode;
+    PDEVICE_OBJECT referencedObject;
 
-    ASSERT(DeviceNode->Flags & DNF_ENUMERATED);
-    ASSERT(DeviceNode->Flags & DNF_PROCESSED);
-
-    /* Check if there's already a driver loaded for this device */
-    if (DeviceNode->Flags & DNF_ADDED)
+    do
     {
-        /* FIXME: our drivers do not handle device removal well enough */
-#if 0
-        /* Remove the device node */
-        Status = IopRemoveDevice(DeviceNode);
-        if (NT_SUCCESS(Status))
-        {
-            /* Invalidate device relations for the parent to reenumerate the device */
-            DPRINT1("A new driver will be loaded for '%wZ' (FDO above removed)\n", &DeviceNode->InstancePath);
-            Status = IoInvalidateDeviceRelations(DeviceNode->Parent->PhysicalDeviceObject, BusRelations);
-        }
-        else
-#endif
-        {
-            /* A driver has already been loaded for this device */
-            DPRINT("A reboot is required for the current driver for '%wZ' to be replaced\n", &DeviceNode->InstancePath);
-            DeviceNode->Problem = CM_PROB_NEED_RESTART;
-        }
-    }
-    else
-    {
-        /* FIXME: What if the device really is disabled? */
-        DeviceNode->Flags &= ~DNF_DISABLED;
-        DeviceNode->Problem = 0;
+        doProcessAgain = FALSE;
 
-        /* Load service data from the registry */
-        Status = IopActionConfigureChildServices(DeviceNode, DeviceNode->Parent);
+        // The device can be removed during processing, but we still need its Parent and Sibling
+        // links to continue the tree traversal. So keep the link till the and of a cycle
+        referencedObject = currentNode->PhysicalDeviceObject;
+        ObReferenceObject(referencedObject);
 
-        if (NT_SUCCESS(Status))
+        // Devices with problems are skipped (unless they are not being removed)
+        if (currentNode->Flags & DNF_HAS_PROBLEM &&
+            currentNode->State != DeviceNodeAwaitingQueuedRemoval)
         {
-            /* Start the service and begin PnP initialization of the device again */
-            DPRINT("A new driver will be loaded for '%wZ' (no FDO above)\n", &DeviceNode->InstancePath);
-            Status = IopActionInitChildServices(DeviceNode, DeviceNode->Parent);
+            goto skipEnum;
         }
-    }
 
-    return Status;
+        switch (currentNode->State)
+        {
+            case DeviceNodeUnspecified: // this state is not used
+                break;
+            case DeviceNodeUninitialized:
+                DPRINT("DeviceNodeUninitialized %wZ\n", &currentNode->InstancePath);
+                status = PiInitializeDevNode(currentNode);
+                doProcessAgain = NT_SUCCESS(status);
+                break;
+            case DeviceNodeInitialized:
+                DPRINT("DeviceNodeInitialized %wZ\n", &currentNode->InstancePath);
+                status = PiCallDriverAddDevice(currentNode, PnPBootDriversInitialized);
+                doProcessAgain = NT_SUCCESS(status);
+                break;
+            case DeviceNodeDriversAdded:
+                DPRINT("DeviceNodeDriversAdded %wZ\n", &currentNode->InstancePath);
+                status = IopAssignDeviceResources(currentNode);
+                doProcessAgain = NT_SUCCESS(status);
+                break;
+            case DeviceNodeResourcesAssigned:
+                DPRINT("DeviceNodeResourcesAssigned %wZ\n", &currentNode->InstancePath);
+                // send IRP_MN_START_DEVICE
+                PiIrpStartDevice(currentNode);
+
+                // skip DeviceNodeStartPending, it is probably used for an async IRP_MN_START_DEVICE
+                PiSetDevNodeState(currentNode, DeviceNodeStartCompletion);
+                doProcessAgain = TRUE;
+                break;
+            case DeviceNodeStartPending: // skipped on XP/2003
+                break;
+            case DeviceNodeStartCompletion:
+                DPRINT("DeviceNodeStartCompletion %wZ\n", &currentNode->InstancePath);
+                status = currentNode->CompletionStatus;
+                doProcessAgain = TRUE;
+                if (!NT_SUCCESS(status))
+                {
+                    UINT32 problem = (status == STATUS_PNP_REBOOT_REQUIRED)
+                                     ? CM_PROB_NEED_RESTART
+                                     : CM_PROB_FAILED_START;
+
+                    PiSetDevNodeProblem(currentNode, problem);
+                    PiSetDevNodeState(currentNode, DeviceNodeAwaitingQueuedRemoval);
+                }
+                else
+                {
+                    // TODO: IopDoDeferredSetInterfaceState and IopAllocateLegacyBootResources
+                    // are called here too
+
+                    PiSetDevNodeState(currentNode, DeviceNodeStartPostWork);
+                }
+                break;
+            case DeviceNodeStartPostWork:
+                DPRINT("DeviceNodeStartPostWork %wZ\n", &currentNode->InstancePath);
+                status = PiStartDeviceFinal(currentNode);
+                doProcessAgain = TRUE;
+                break;
+            case DeviceNodeStarted:
+                if (currentNode->Flags & DNF_REENUMERATE)
+                {
+                    DPRINT("DeviceNodeStarted REENUMERATE %wZ\n", &currentNode->InstancePath);
+                    currentNode->Flags &= ~DNF_REENUMERATE;
+                    status = PiIrpQueryDeviceRelations(currentNode, BusRelations);
+
+                    // again, skip DeviceNodeEnumeratePending as with the starting sequence
+                    PiSetDevNodeState(currentNode, DeviceNodeEnumerateCompletion);
+                    doProcessAgain = TRUE;
+                }
+                break;
+            case DeviceNodeQueryStopped:
+                // we're here after sending IRP_MN_QUERY_STOP_DEVICE
+                status = currentNode->CompletionStatus;
+                if (NT_SUCCESS(status))
+                {
+                    PiSetDevNodeState(currentNode, DeviceNodeStopped);
+                }
+                else
+                {
+                    PiIrpCancelStopDevice(currentNode);
+                    PiSetDevNodeState(currentNode, DeviceNodeStarted);
+                }
+                break;
+            case DeviceNodeStopped:
+                // TODO: do resource rebalance (not implemented)
+                ASSERT(FALSE);
+                break;
+            case DeviceNodeRestartCompletion:
+                break;
+            case DeviceNodeEnumeratePending: // skipped on XP/2003
+                break;
+            case DeviceNodeEnumerateCompletion:
+                DPRINT("DeviceNodeEnumerateCompletion %wZ\n", &currentNode->InstancePath);
+                status = PiEnumerateDevice(currentNode);
+                doProcessAgain = TRUE;
+                break;
+            case DeviceNodeAwaitingQueuedDeletion:
+                break;
+            case DeviceNodeAwaitingQueuedRemoval:
+                DPRINT("DeviceNodeAwaitingQueuedRemoval %wZ\n", &currentNode->InstancePath);
+                status = IopRemoveDevice(currentNode);
+                break;
+            case DeviceNodeQueryRemoved:
+                break;
+            case DeviceNodeRemovePendingCloses:
+                break;
+            case DeviceNodeRemoved:
+                break;
+            case DeviceNodeDeletePendingCloses:
+                break;
+            case DeviceNodeDeleted:
+                break;
+            default:
+                break;
+        }
+
+skipEnum:
+        if (!doProcessAgain)
+        {
+            KIRQL OldIrql;
+            KeAcquireSpinLock(&IopDeviceTreeLock, &OldIrql);
+            /* If we have a child, simply go down the tree */
+            if (currentNode->State != DeviceNodeRemoved && currentNode->Child != NULL)
+            {
+                ASSERT(currentNode->Child->Parent == currentNode);
+                currentNode = currentNode->Child;
+            }
+            else
+            {
+                while (currentNode != RootNode)
+                {
+                    /* All children processed -- go sideways */
+                    if (currentNode->Sibling != NULL)
+                    {
+                        ASSERT(currentNode->Sibling->Parent == currentNode->Parent);
+                        currentNode = currentNode->Sibling;
+                        break;
+                    }
+                    else
+                    {
+                        /* We're the last sibling -- go back up */
+                        ASSERT(currentNode->Parent->LastChild == currentNode);
+                        currentNode = currentNode->Parent;
+                    }
+                    /* We already visited the parent and all its children, so keep looking */
+                }
+            }
+            KeReleaseSpinLock(&IopDeviceTreeLock, OldIrql);
+        }
+        ObDereferenceObject(referencedObject);
+    } while (doProcessAgain || currentNode != RootNode);
 }
 
 #ifdef DBG
@@ -2865,6 +2480,8 @@ ActionToStr(
             return "PiActionEnumRootDevices";
         case PiActionResetDevice:
             return "PiActionResetDevice";
+        case PiActionAddBootDevices:
+            return "PiActionAddBootDevices";
         default:
             return "(request unknown)";
     }
@@ -2902,13 +2519,25 @@ PipDeviceActionWorker(
 
         switch (Request->Action)
         {
+            case PiActionAddBootDevices:
+            {
+                if (deviceNode->State == DeviceNodeInitialized && 
+                    !(deviceNode->Flags & DNF_HAS_PROBLEM))
+                {
+                    status = PiCallDriverAddDevice(deviceNode, PnPBootDriversInitialized);
+                }
+                break;
+            }
             case PiActionEnumRootDevices:
             case PiActionEnumDeviceTree:
-                status = PipEnumerateDevice(deviceNode);
+                deviceNode->Flags |= DNF_REENUMERATE;
+                PiDevNodeStateMachine(deviceNode);
                 break;
 
             case PiActionResetDevice:
-                status = PipResetDevice(deviceNode);
+                // TODO: the operation is a no-op for everything except removed nodes
+                // for removed nodes, it returns them back to DeviceNodeUninitialized
+                status = STATUS_SUCCESS;
                 break;
 
             default:
@@ -2971,7 +2600,7 @@ PiQueueDeviceAction(
     KeAcquireSpinLock(&IopDeviceActionLock, &OldIrql);
     InsertTailList(&IopDeviceActionRequestList, &Request->RequestListEntry);
 
-    if (Action == PiActionEnumRootDevices)
+    if (Action == PiActionEnumRootDevices || Action == PiActionAddBootDevices)
     {
         ASSERT(!IopDeviceActionInProgress);
 

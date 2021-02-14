@@ -156,9 +156,17 @@ MACRO(ExitTrap, Flags)
         /* Check previous irql */
         mov rax, cr8
         cmp [rbp + KTRAP_FRAME_PreviousIrql], al
+#ifdef _USE_ML
         je .irql_ok
+#else
+        je 1f
+#endif
         int 3
+#ifdef _USE_ML
     .irql_ok:
+#else
+    1:
+#endif
 #endif
 
     if (Flags AND TF_SEGMENTS)

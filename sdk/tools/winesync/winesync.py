@@ -26,7 +26,7 @@ class wine_sync:
     def __init__(self, module):
         if os.path.isfile('winesync.cfg'):
             with open('winesync.cfg', 'r') as file_input:
-                config = yaml.load(file_input, Loader=yaml.FullLoader)
+                config = yaml.safe_load(file_input)
             self.reactos_src = config['repos']['reactos']
             self.wine_src = config['repos']['wine']
             self.wine_staging_src = config['repos']['wine-staging']
@@ -52,7 +52,7 @@ class wine_sync:
         # get the actual state for the asked module
         self.module = module
         with open(module + '.cfg', 'r') as file_input:
-            self.module_cfg = yaml.load(file_input, Loader=yaml.FullLoader)
+            self.module_cfg = yaml.safe_load(file_input)
 
         self.staged_patch_dir = os.path.join('sdk', 'tools', 'winesync', self.module + '_staging')
 

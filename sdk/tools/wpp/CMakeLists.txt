@@ -30,15 +30,17 @@ if(CMAKE_CROSSCOMPILING)
     include_directories(${REACTOS_SOURCE_DIR}/sdk/include/reactos/wine)
 endif()
 
+FLEX_TARGET(pp_scanner ppl.l ${CMAKE_CURRENT_BINARY_DIR}/ppl.yy.c)
+BISON_TARGET(pp_parser ppy.y ${CMAKE_CURRENT_BINARY_DIR}/ppy.tab.c COMPILE_FLAGS "-p ppy_")
+ADD_FLEX_BISON_DEPENDENCY(pp_scanner pp_parser)
+
 list(APPEND SOURCE
     preproc.c
-    wpp.c
-    ppl.yy.c
-    ppy.tab.c)
+    wpp.c)
 
 if(CMAKE_CROSSCOMPILING)
-    add_library(wpp ${SOURCE})
+    add_library(wpp ${SOURCE} ${FLEX_pp_scanner_OUTPUT_SOURCE} ${BISON_pp_parser_OUTPUT_SOURCE})
 else()
-    add_library(wpphost ${SOURCE})
+    add_library(wpphost ${SOURCE} ${FLEX_pp_scanner_OUTPUTS} ${BISON_pp_parser_OUTPUTS})
     target_link_libraries(wpphost PRIVATE host_includes)
 endif()

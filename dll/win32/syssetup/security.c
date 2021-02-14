@@ -18,6 +18,9 @@
 #define NDEBUG
 #include <debug.h>
 
+#define TICKS_PER_DAY -864000000000LL
+#define TICKS_PER_MINUTE -600000000LL
+
 /* FUNCTIONS ****************************************************************/
 
 NTSTATUS
@@ -282,7 +285,8 @@ InstallPrivileges(
     PSID AccountSid = NULL;
     NTSTATUS Status;
     LSA_HANDLE PolicyHandle = NULL;
-    LSA_UNICODE_STRING RightString;
+    LSA_UNICODE_STRING RightString, AccountName;
+    PLSA_REFERENCED_DOMAIN_LIST ReferencedDomains = NULL;
     PLSA_TRANSLATED_SID2 Sids = NULL;
 
     DPRINT("InstallPrivileges()\n");
@@ -351,8 +355,33 @@ InstallPrivileges(
             else
             {
                 DPRINT("Account name: %S\n", szSidString);
-                continue;
- 
+
+                ReferencedDomains = NULL;
+                Sids = NULL;
+                RtlInitUnicodeString(&AccountName, szSidString);
+                Status = LsaLookupNames2(PolicyHandle,
+                                         0,
+                                         1,
+                                         &AccountName,
+                                         &ReferencedDomains,
+                                         &Sids);
+                if (ReferencedDomains != NULL)
+                {
+                    LsaFreeMemory(ReferencedDomains);
+                }
+
+                if (!NT_SUCCESS(Status))
+                {
+                    DPRINT1("LsaLookupNames2() failed (Status 0x%08lx)\n", Status);
+
+                    if (Sids != NULL)
+                    {
+                        LsaFreeMemory(Sids);
+                        Sids = NULL;
+                    }
+
+                    continue;
+                }
             }
 
             RtlInitUnicodeString(&RightString, szPrivilegeString);
@@ -730,6 +759,781 @@ ApplyEventlogSettings(
 }
 
 
+static
+VOID
+ApplyPasswordSettings(
+    _In_ HINF hSecurityInf,
+    _In_ PWSTR pszSectionName)
+{
+    INFCONTEXT InfContext;
+    DOMAIN_PASSWORD_INFORMATION PasswordInfo;
+    PPOLICY_ACCOUNT_DOMAIN_INFO OrigInfo = NULL;
+    LSA_OBJECT_ATTRIBUTES ObjectAttributes;
+    LSA_HANDLE PolicyHandle = NULL;
+    SAM_HANDLE ServerHandle = NULL;
+    SAM_HANDLE DomainHandle = NULL;
+    INT nValue;
+    NTSTATUS Status;
+
+    DPRINT("ApplyPasswordSettings()\n");
+
+    memset(&ObjectAttributes, 0, sizeof(LSA_OBJECT_ATTRIBUTES));
+    ObjectAttributes.Length = sizeof(LSA_OBJECT_ATTRIBUTES);
+
+    Status = LsaOpenPolicy(NULL,
+                           &ObjectAttributes,
+                           POLICY_VIEW_LOCAL_INFORMATION | POLICY_TRUST_ADMIN,
+                           &PolicyHandle);
+    if (Status != STATUS_SUCCESS)
+    {
+        DPRINT1("LsaOpenPolicy() failed (Status: 0x%08lx)\n", Status);
+        return;
+    }
+
+    Status = LsaQueryInformationPolicy(PolicyHandle,
+                                       PolicyAccountDomainInformation,
+                                       (PVOID *)&OrigInfo);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("LsaQueryInformationPolicy() failed (Status: 0x%08lx)\n", Status);
+        goto done;
+    }
+
+    Status = SamConnect(NULL,
+                        &ServerHandle,
+                        SAM_SERVER_CONNECT | SAM_SERVER_LOOKUP_DOMAIN,
+                        NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("SamConnect() failed (Status: 0x%08lx)\n", Status);
+        goto done;
+    }
+
+    Status = SamOpenDomain(ServerHandle,
+                           DOMAIN_READ_PASSWORD_PARAMETERS | DOMAIN_WRITE_PASSWORD_PARAMS,
+                           OrigInfo->DomainSid,
+                           &DomainHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("SamOpenDomain() failed (Status: 0x%08lx)\n", Status);
+        goto done;
+    }
+
+    Status = SamQueryInformationDomain(DomainHandle,
+                                       DomainPasswordInformation,
+                                       (PVOID*)&PasswordInfo);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("SamQueryInformationDomain() failed (Status %08lx)\n", Status);
+        goto done;
+    }
+
+    DPRINT("MaximumPasswordAge (OldValue) : 0x%I64x\n", PasswordInfo.MaxPasswordAge.QuadPart);
+    if (SetupFindFirstLineW(hSecurityInf,
+                            pszSectionName,
+                            L"MaximumPasswordAge",
+                            &InfContext))
+    {
+        if (SetupGetIntField(&InfContext, 1, &nValue))
+        {
+            DPRINT("Value: %ld\n", nValue);
+            if (nValue == -1)
+            {
+                PasswordInfo.MaxPasswordAge.QuadPart = 0x8000000000000000;
+            }
+            else if ((nValue >= 1) && (nValue < 1000))
+            {
+                PasswordInfo.MaxPasswordAge.QuadPart = (LONGLONG)nValue * TICKS_PER_DAY;
+            }
+            DPRINT("MaximumPasswordAge (NewValue) : 0x%I64x\n", PasswordInfo.MaxPasswordAge.QuadPart);
+        }
+    }
+
+    DPRINT("MinimumPasswordAge (OldValue) : 0x%I64x\n", PasswordInfo.MinPasswordAge.QuadPart);
+    if (SetupFindFirstLineW(hSecurityInf,
+                            pszSectionName,
+                            L"MinimumPasswordAge",
+                            &InfContext))
+    {
+        if (SetupGetIntField(&InfContext, 1, &nValue))
+        {
+            DPRINT("Wert: %ld\n", nValue);
+            if ((nValue >= 0) && (nValue < 1000))
+            {
+                if (PasswordInfo.MaxPasswordAge.QuadPart < (LONGLONG)nValue * TICKS_PER_DAY)
+                    PasswordInfo.MinPasswordAge.QuadPart = (LONGLONG)nValue * TICKS_PER_DAY;
+            }
+            DPRINT("MinimumPasswordAge (NewValue) : 0x%I64x\n", PasswordInfo.MinPasswordAge.QuadPart);
+        }
+    }
+
+    DPRINT("MinimumPasswordLength (OldValue) : %lu\n", PasswordInfo.MinPasswordLength);
+    if (SetupFindFirstLineW(hSecurityInf,
+                            pszSectionName,
+                            L"MinimumPasswordLength",
+                            &InfContext))
+    {
+        if (SetupGetIntField(&InfContext, 1, &nValue))
+        {
+            DPRINT("Value: %ld\n", nValue);
+            if ((nValue >= 0) && (nValue <= 65535))
+            {
+                PasswordInfo.MinPasswordLength = nValue;
+            }
+            DPRINT("MinimumPasswordLength (NewValue) : %lu\n", PasswordInfo.MinPasswordLength);
+        }
+    }
+
+    DPRINT("PasswordHistoryLength (OldValue) : %lu\n", PasswordInfo.PasswordHistoryLength);
+    if (SetupFindFirstLineW(hSecurityInf,
+                            pszSectionName,
+                            L"PasswordHistorySize",
+                            &InfContext))
+    {
+        if (SetupGetIntField(&InfContext, 1, &nValue))
+        {
+            DPRINT("Value: %ld\n", nValue);
+            if ((nValue >= 0) && (nValue <= 65535))
+            {
+                PasswordInfo.PasswordHistoryLength = nValue;
+            }
+            DPRINT("PasswordHistoryLength (NewValue) : %lu\n", PasswordInfo.PasswordHistoryLength);
+        }
+    }
+
+    if (SetupFindFirstLineW(hSecurityInf,
+                            pszSectionName,
+                            L"PasswordComplexity",
+                            &InfContext))
+    {
+        if (SetupGetIntField(&InfContext, 1, &nValue))
+        {
+            if (nValue == 0)
+            {
+                PasswordInfo.PasswordProperties &= ~DOMAIN_PASSWORD_COMPLEX;
+            }
+            else
+            {
+                PasswordInfo.PasswordProperties |= DOMAIN_PASSWORD_COMPLEX;
+            }
+        }
+    }
+
+    if (SetupFindFirstLineW(hSecurityInf,
+                            pszSectionName,
+                            L"ClearTextPassword",
+                            &InfContext))
+    {
+        if (SetupGetIntField(&InfContext, 1, &nValue))
+        {
+            if (nValue == 0)
+            {
+                PasswordInfo.PasswordProperties &= ~DOMAIN_PASSWORD_STORE_CLEARTEXT;
+            }
+            else
+            {
+                PasswordInfo.PasswordProperties |= DOMAIN_PASSWORD_STORE_CLEARTEXT;
+            }
+        }
+    }
+
+    /* Windows ignores the RequireLogonToChangePassword option */
+
+    Status = SamSetInformationDomain(DomainHandle,
+                                     DomainPasswordInformation,
+                                     (PVOID*)&PasswordInfo);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("SamSetInformationDomain() failed (Status %08lx)\n", Status);
+        goto done;
+    }
+
+done:
+    if (DomainHandle != NULL)
+        SamCloseHandle(DomainHandle);
+
+    if (ServerHandle != NULL)
+        SamCloseHandle(ServerHandle);
+
+    if (OrigInfo != NULL)
+        LsaFreeMemory(OrigInfo);
+
+    if (PolicyHandle != NULL)
+        LsaClose(PolicyHandle);
+}
+
+
+static
+VOID
+ApplyLockoutSettings(
+    _In_ HINF hSecurityInf,
+    _In_ PWSTR pszSectionName)
+{
+    INFCONTEXT InfContext;
+    DOMAIN_LOCKOUT_INFORMATION LockoutInfo;
+    PPOLICY_ACCOUNT_DOMAIN_INFO OrigInfo = NULL;
+    LSA_OBJECT_ATTRIBUTES ObjectAttributes;
+    LSA_HANDLE PolicyHandle = NULL;
+    SAM_HANDLE ServerHandle = NULL;
+    SAM_HANDLE DomainHandle = NULL;
+    INT nValue;
+    NTSTATUS Status;
+
+    DPRINT("ApplyLockoutSettings()\n");
+
+    memset(&ObjectAttributes, 0, sizeof(LSA_OBJECT_ATTRIBUTES));
+    ObjectAttributes.Length = sizeof(LSA_OBJECT_ATTRIBUTES);
+
+    Status = LsaOpenPolicy(NULL,
+                           &ObjectAttributes,
+                           POLICY_VIEW_LOCAL_INFORMATION | POLICY_TRUST_ADMIN,
+                           &PolicyHandle);
+    if (Status != STATUS_SUCCESS)
+    {
+        DPRINT1("LsaOpenPolicy() failed (Status: 0x%08lx)\n", Status);
+        return;
+    }
+
+    Status = LsaQueryInformationPolicy(PolicyHandle,
+                                       PolicyAccountDomainInformation,
+                                       (PVOID *)&OrigInfo);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("LsaQueryInformationPolicy() failed (Status: 0x%08lx)\n", Status);
+        goto done;
+    }
+
+    Status = SamConnect(NULL,
+                        &ServerHandle,
+                        SAM_SERVER_CONNECT | SAM_SERVER_LOOKUP_DOMAIN,
+                        NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("SamConnect() failed (Status: 0x%08lx)\n", Status);
+        goto done;
+    }
+
+    Status = SamOpenDomain(ServerHandle,
+                           DOMAIN_READ_PASSWORD_PARAMETERS | DOMAIN_WRITE_PASSWORD_PARAMS,
+                           OrigInfo->DomainSid,
+                           &DomainHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("SamOpenDomain() failed (Status: 0x%08lx)\n", Status);
+        goto done;
+    }
+
+    Status = SamQueryInformationDomain(DomainHandle,
+                                       DomainLockoutInformation,
+                                       (PVOID*)&LockoutInfo);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("SamQueryInformationDomain() failed (Status %08lx)\n", Status);
+        goto done;
+    }
+
+    if (SetupFindFirstLineW(hSecurityInf,
+                            pszSectionName,
+                            L"LockoutBadCount",
+                            &InfContext))
+    {
+        if (SetupGetIntField(&InfContext, 1, &nValue))
+        {
+            if (nValue >= 0)
+            {
+                LockoutInfo.LockoutThreshold = nValue;
+            }
+        }
+    }
+
+    if (SetupFindFirstLineW(hSecurityInf,
+                            pszSectionName,
+                            L"ResetLockoutCount",
+                            &InfContext))
+    {
+        if (SetupGetIntField(&InfContext, 1, &nValue))
+        {
+            if (nValue >= 0)
+            {
+                LockoutInfo.LockoutObservationWindow.QuadPart = (LONGLONG)nValue * TICKS_PER_MINUTE;
+            }
+        }
+    }
+
+    if (SetupFindFirstLineW(hSecurityInf,
+                            pszSectionName,
+                            L"LockoutDuration",
+                            &InfContext))
+    {
+        if (SetupGetIntField(&InfContext, 1, &nValue))
+        {
+            if (nValue == -1)
+            {
+                LockoutInfo.LockoutDuration.QuadPart = 0x8000000000000000LL;
+            }
+            else if ((nValue >= 0) && (nValue < 100000))
+            {
+                LockoutInfo.LockoutDuration.QuadPart = (LONGLONG)nValue * TICKS_PER_MINUTE;
+            }
+        }
+    }
+
+    Status = SamSetInformationDomain(DomainHandle,
+                                     DomainLockoutInformation,
+                                     (PVOID*)&LockoutInfo);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("SamSetInformationDomain() failed (Status %08lx)\n", Status);
+        goto done;
+    }
+
+done:
+    if (DomainHandle != NULL)
+        SamCloseHandle(DomainHandle);
+
+    if (ServerHandle != NULL)
+        SamCloseHandle(ServerHandle);
+
+    if (OrigInfo != NULL)
+        LsaFreeMemory(OrigInfo);
+
+    if (PolicyHandle != NULL)
+        LsaClose(PolicyHandle);
+}
+
+
+static
+VOID
+SetLsaAnonymousNameLookup(
+    _In_ HINF hSecurityInf,
+    _In_ PWSTR pszSectionName)
+{
+#if 0
+    INFCONTEXT InfContext;
+    INT nValue = 0;
+
+    DPRINT1("SetLsaAnonymousNameLookup()\n");
+
+    if (!SetupFindFirstLineW(hSecurityInf,
+                             pszSectionName,
+                             L"LSAAnonymousNameLookup",
+                             &InfContext))
+    {
+        return;
+    }
+
+    if (!SetupGetIntField(&InfContext, 1, &nValue))
+    {
+        return;
+    }
+
+    if (nValue == 0)
+    {
+    }
+    else
+    {
+    }
+#endif
+}
+
+
+static
+VOID
+EnableAccount(
+    _In_ HINF hSecurityInf,
+    _In_ PWSTR pszSectionName,
+    _In_ PWSTR pszValueName,
+    _In_ SAM_HANDLE DomainHandle,
+    _In_ DWORD dwAccountRid)
+{
+    INFCONTEXT InfContext;
+    SAM_HANDLE UserHandle = NULL;
+    USER_CONTROL_INFORMATION ControlInfo;
+    INT nValue = 0;
+    NTSTATUS Status;
+
+    DPRINT("EnableAccount()\n");
+
+    if (!SetupFindFirstLineW(hSecurityInf,
+                            pszSectionName,
+                            pszValueName,
+                            &InfContext))
+        return;
+
+    if (!SetupGetIntField(&InfContext, 1, &nValue))
+    {
+        DPRINT1("No valid integer value\n");
+        goto done;
+    }
+
+    DPRINT("Value: %d\n", nValue);
+
+    Status = SamOpenUser(DomainHandle,
+                         USER_READ_ACCOUNT | USER_WRITE_ACCOUNT,
+                         dwAccountRid,
+                         &UserHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("SamOpenUser() failed (Status: 0x%08lx)\n", Status);
+        goto done;
+    }
+
+    Status = SamQueryInformationUser(UserHandle,
+                                     UserControlInformation,
+                                     (PVOID)&ControlInfo);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("SamQueryInformationUser() failed (Status: 0x%08lx)\n", Status);
+        goto done;
+    }
+
+    if (nValue == 0)
+    {
+        ControlInfo.UserAccountControl |= USER_ACCOUNT_DISABLED;
+    }
+    else
+    {
+        ControlInfo.UserAccountControl &= ~USER_ACCOUNT_DISABLED;
+    }
+
+    Status = SamSetInformationUser(UserHandle,
+                                   UserControlInformation,
+                                   (PVOID)&ControlInfo);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("SamSetInformationUser() failed (Status: 0x%08lx)\n", Status);
+    }
+
+done:
+    if (UserHandle != NULL)
+        SamCloseHandle(UserHandle);
+}
+
+
+static
+VOID
+SetNewAccountName(
+    _In_ HINF hSecurityInf,
+    _In_ PWSTR pszSectionName,
+    _In_ PWSTR pszValueName,
+    _In_ SAM_HANDLE DomainHandle,
+    _In_ DWORD dwAccountRid)
+{
+    INFCONTEXT InfContext;
+    DWORD dwLength = 0;
+    PWSTR pszName = NULL;
+    SAM_HANDLE UserHandle = NULL;
+    USER_NAME_INFORMATION NameInfo;
+    NTSTATUS Status;
+
+    DPRINT("SetNewAccountName()\n");
+
+    if (!SetupFindFirstLineW(hSecurityInf,
+                            pszSectionName,
+                            pszValueName,
+                            &InfContext))
+        return;
+
+    SetupGetStringFieldW(&InfContext,
+                         1,
+                         NULL,
+                         0,
+                         &dwLength);
+    if (dwLength == 0)
+        return;
+
+    pszName = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, dwLength * sizeof(WCHAR));
+    if (pszName == NULL)
+    {
+        DPRINT1("HeapAlloc() failed\n");
+        return;
+    }
+
+    if (!SetupGetStringFieldW(&InfContext,
+                              1,
+                              pszName,
+                              dwLength,
+                              &dwLength))
+    {
+        DPRINT1("No valid string value\n");
+        goto done;
+    }
+
+    DPRINT("NewAccountName: '%S'\n", pszName);
+
+    Status = SamOpenUser(DomainHandle,
+                         USER_WRITE_ACCOUNT,
+                         dwAccountRid,
+                         &UserHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("SamOpenUser() failed (Status: 0x%08lx)\n", Status);
+        goto done;
+    }
+
+    NameInfo.UserName.Length = wcslen(pszName) * sizeof(WCHAR);
+    NameInfo.UserName.MaximumLength = NameInfo.UserName.Length + sizeof(WCHAR);
+    NameInfo.UserName.Buffer = pszName;
+    NameInfo.FullName.Length = 0;
+    NameInfo.FullName.MaximumLength = 0;
+    NameInfo.FullName.Buffer = NULL;
+
+    Status = SamSetInformationUser(UserHandle,
+                                   UserNameInformation,
+                                   (PVOID)&NameInfo);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("SamSetInformationUser() failed (Status: 0x%08lx)\n", Status);
+    }
+
+done:
+    if (UserHandle != NULL)
+        SamCloseHandle(UserHandle);
+
+    if (pszName != NULL)
+        HeapFree(GetProcessHeap(), 0, pszName);
+}
+
+
+static
+VOID
+ApplyAccountSettings(
+    _In_ HINF hSecurityInf,
+    _In_ PWSTR pszSectionName)
+{
+    PPOLICY_ACCOUNT_DOMAIN_INFO OrigInfo = NULL;
+    LSA_OBJECT_ATTRIBUTES ObjectAttributes;
+    LSA_HANDLE PolicyHandle = NULL;
+    SAM_HANDLE ServerHandle = NULL;
+    SAM_HANDLE DomainHandle = NULL;
+    NTSTATUS Status;
+
+    DPRINT("ApplyAccountSettings()\n");
+
+    memset(&ObjectAttributes, 0, sizeof(LSA_OBJECT_ATTRIBUTES));
+    ObjectAttributes.Length = sizeof(LSA_OBJECT_ATTRIBUTES);
+
+    Status = LsaOpenPolicy(NULL,
+                           &ObjectAttributes,
+                           POLICY_VIEW_LOCAL_INFORMATION | POLICY_TRUST_ADMIN,
+                           &PolicyHandle);
+    if (Status != STATUS_SUCCESS)
+    {
+        DPRINT1("LsaOpenPolicy() failed (Status: 0x%08lx)\n", Status);
+        return;
+    }
+
+    Status = LsaQueryInformationPolicy(PolicyHandle,
+                                       PolicyAccountDomainInformation,
+                                       (PVOID *)&OrigInfo);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("LsaQueryInformationPolicy() failed (Status: 0x%08lx)\n", Status);
+        goto done;
+    }
+
+    Status = SamConnect(NULL,
+                        &ServerHandle,
+                        SAM_SERVER_CONNECT | SAM_SERVER_LOOKUP_DOMAIN,
+                        NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("SamConnect() failed (Status: 0x%08lx)\n", Status);
+        goto done;
+    }
+
+    Status = SamOpenDomain(ServerHandle,
+                           DOMAIN_LOOKUP,
+                           OrigInfo->DomainSid,
+                           &DomainHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("SamOpenDomain() failed (Status: 0x%08lx)\n", Status);
+        goto done;
+    }
+
+    SetLsaAnonymousNameLookup(hSecurityInf,
+                              pszSectionName);
+
+    EnableAccount(hSecurityInf,
+                  pszSectionName,
+                  L"EnableAdminAccount",
+                  DomainHandle,
+                  DOMAIN_USER_RID_ADMIN);
+
+    EnableAccount(hSecurityInf,
+                  pszSectionName,
+                  L"EnableGuestAccount",
+                  DomainHandle,
+                  DOMAIN_USER_RID_GUEST);
+
+    SetNewAccountName(hSecurityInf,
+                      pszSectionName,
+                      L"NewAdministratorName",
+                      DomainHandle,
+                      DOMAIN_USER_RID_ADMIN);
+
+    SetNewAccountName(hSecurityInf,
+                      pszSectionName,
+                      L"NewGuestName",
+                      DomainHandle,
+                      DOMAIN_USER_RID_GUEST);
+
+done:
+    if (DomainHandle != NULL)
+        SamCloseHandle(DomainHandle);
+
+    if (ServerHandle != NULL)
+        SamCloseHandle(ServerHandle);
+
+    if (OrigInfo != NULL)
+        LsaFreeMemory(OrigInfo);
+
+    if (PolicyHandle != NULL)
+        LsaClose(PolicyHandle);
+}
+
+
+static
+VOID
+ApplyAuditEvents(
+    _In_ HINF hSecurityInf)
+{
+    LSA_OBJECT_ATTRIBUTES ObjectAttributes;
+    INFCONTEXT InfContext;
+    WCHAR szOptionName[256];
+    INT nValue;
+    LSA_HANDLE PolicyHandle = NULL;
+    POLICY_AUDIT_EVENTS_INFO AuditInfo;
+    PULONG AuditOptions = NULL;
+    NTSTATUS Status;
+
+    DPRINT("ApplyAuditEvents(%p)\n", hSecurityInf);
+
+    if (!SetupFindFirstLineW(hSecurityInf,
+                             L"Event Audit",
+                             NULL,
+                             &InfContext))
+    {
+        DPRINT1("SetupFindFirstLineW failed\n");
+        return;
+    }
+
+    ZeroMemory(&ObjectAttributes, sizeof(LSA_OBJECT_ATTRIBUTES));
+
+    Status = LsaOpenPolicy(NULL,
+                           &ObjectAttributes,
+                           POLICY_SET_AUDIT_REQUIREMENTS,
+                           &PolicyHandle);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("LsaOpenPolicy failed (Status %08lx)\n", Status);
+        return;
+    }
+
+    AuditOptions = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,
+                             (AuditCategoryAccountLogon + 1) * sizeof(ULONG));
+    if (AuditOptions == NULL)
+    {
+        DPRINT1("Failed to allocate the auditiing options array!\n");
+        goto done;
+    }
+
+    AuditInfo.AuditingMode = TRUE;
+    AuditInfo.EventAuditingOptions = AuditOptions;
+    AuditInfo.MaximumAuditEventCount = AuditCategoryAccountLogon + 1;
+
+    do
+    {
+        /* Retrieve the group name */
+        if (!SetupGetStringFieldW(&InfContext,
+                                  0,
+                                  szOptionName,
+                                  ARRAYSIZE(szOptionName),
+                                  NULL))
+        {
+            DPRINT1("SetupGetStringFieldW() failed\n");
+            continue;
+        }
+
+        DPRINT("Option: '%S'\n", szOptionName);
+
+        if (!SetupGetIntField(&InfContext,
+                              1,
+                              &nValue))
+        {
+            DPRINT1("SetupGetStringFieldW() failed\n");
+            continue;
+        }
+
+        DPRINT("Value: %d\n", nValue);
+
+        if ((nValue < POLICY_AUDIT_EVENT_UNCHANGED) || (nValue > POLICY_AUDIT_EVENT_NONE))
+        {
+            DPRINT1("Invalid audit option!\n");
+            continue;
+        }
+
+        if (_wcsicmp(szOptionName, L"AuditSystemEvents") == 0)
+        {
+            AuditOptions[AuditCategorySystem] = (ULONG)nValue;
+        }
+        else if (_wcsicmp(szOptionName, L"AuditLogonEvents") == 0)
+        {
+            AuditOptions[AuditCategoryLogon] = (ULONG)nValue;
+        }
+        else if (_wcsicmp(szOptionName, L"AuditObjectAccess") == 0)
+        {
+            AuditOptions[AuditCategoryObjectAccess] = (ULONG)nValue;
+        }
+        else if (_wcsicmp(szOptionName, L"AuditPrivilegeUse") == 0)
+        {
+            AuditOptions[AuditCategoryPrivilegeUse] = (ULONG)nValue;
+        }
+        else if (_wcsicmp(szOptionName, L"AuditProcessTracking") == 0)
+        {
+            AuditOptions[AuditCategoryDetailedTracking] = (ULONG)nValue;
+        }
+        else if (_wcsicmp(szOptionName, L"AuditPolicyChange") == 0)
+        {
+            AuditOptions[AuditCategoryPolicyChange] = (ULONG)nValue;
+        }
+        else if (_wcsicmp(szOptionName, L"AuditAccountManage") == 0)
+        {
+            AuditOptions[AuditCategoryAccountManagement] = (ULONG)nValue;
+        }
+        else if (_wcsicmp(szOptionName, L"AuditDSAccess") == 0)
+        {
+            AuditOptions[AuditCategoryDirectoryServiceAccess] = (ULONG)nValue;
+        }
+        else if (_wcsicmp(szOptionName, L"AuditAccountLogon") == 0)
+        {
+            AuditOptions[AuditCategoryAccountLogon] = (ULONG)nValue;
+        }
+        else
+        {
+            DPRINT1("Invalid auditing option '%S'\n", szOptionName);
+        }
+    }
+    while (SetupFindNextLine(&InfContext, &InfContext));
+
+    Status = LsaSetInformationPolicy(PolicyHandle,
+                                     PolicyAuditEventsInformation,
+                                     (PVOID)&AuditInfo);
+    if (Status != STATUS_SUCCESS)
+    {
+        DPRINT1("LsaSetInformationPolicy() failed (Status 0x%08lx)\n", Status);
+    }
+
+done:
+    if (AuditOptions != NULL)
+        HeapFree(GetProcessHeap(), 0, AuditOptions);
+
+    if (PolicyHandle != NULL)
+        LsaClose(PolicyHandle);
+}
+
+
 VOID
 InstallSecurity(VOID)
 {
@@ -755,6 +1559,12 @@ InstallSecurity(VOID)
         ApplyEventlogSettings(hSecurityInf, L"Application Log", L"Application");
         ApplyEventlogSettings(hSecurityInf, L"Security Log", L"Security");
         ApplyEventlogSettings(hSecurityInf, L"System Log", L"System");
+
+        ApplyPasswordSettings(hSecurityInf, L"System Access");
+        ApplyLockoutSettings(hSecurityInf, L"System Access");
+        ApplyAccountSettings(hSecurityInf, L"System Access");
+
+        ApplyAuditEvents(hSecurityInf);
 
         SetupCloseInfFile(hSecurityInf);
     }

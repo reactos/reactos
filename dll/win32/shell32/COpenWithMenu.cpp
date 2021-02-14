@@ -155,7 +155,7 @@ COpenWithList::SApp *COpenWithList::Add(LPCWSTR pwszPath)
 
     if (pApp)
     {
-        StringCbPrintfW(pApp->wszCmd, sizeof(pApp->wszCmd), L"\"%s\" %%1", pwszPath);
+        StringCbPrintfW(pApp->wszCmd, sizeof(pApp->wszCmd), L"\"%s\" \"%%1\"", pwszPath);
         SaveApp(pApp);
     }
 

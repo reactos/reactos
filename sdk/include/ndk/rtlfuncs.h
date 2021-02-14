@@ -4888,6 +4888,49 @@ RtlGetNativeSystemInformation(
     _Out_opt_ PULONG ReturnLength
 );
 
+#if (_WIN32_WINNT >= _WIN32_WINNT_VISTA) || (defined(__REACTOS__) && defined(_NTDLLBUILD_))
+/* Put NTSYSAPI back when this will be really exported. Only statically linked for now */
+// NTSYSAPI
+VOID
+NTAPI
+RtlInitializeSRWLock(OUT PRTL_SRWLOCK SRWLock);
+
+// NTSYSAPI
+VOID
+NTAPI
+RtlAcquireSRWLockShared(IN OUT PRTL_SRWLOCK SRWLock);
+
+// NTSYSAPI
+VOID
+NTAPI
+RtlAcquireSRWLockExclusive(IN OUT PRTL_SRWLOCK SRWLock);
+
+// NTSYSAPI
+VOID
+NTAPI
+RtlReleaseSRWLockShared(IN OUT PRTL_SRWLOCK SRWLock);
+
+// NTSYSAPI
+VOID
+NTAPI
+RtlReleaseSRWLockExclusive(IN OUT PRTL_SRWLOCK SRWLock);
+
+#endif /* Win vista or Reactos Ntdll build */
+
+#if (_WIN32_WINNT >= _WIN32_WINNT_WIN7) || (defined(__REACTOS__) && defined(_NTDLLBUILD_))
+
+// NTSYSAPI
+BOOLEAN
+NTAPI
+RtlTryAcquireSRWLockShared(PRTL_SRWLOCK SRWLock);
+
+// NTSYSAPI
+BOOLEAN
+NTAPI
+RtlTryAcquireSRWLockExclusive(PRTL_SRWLOCK SRWLock);
+
+#endif /* Win7 or Reactos Ntdll build */
+
 #endif // NTOS_MODE_USER
 
 NTSYSAPI

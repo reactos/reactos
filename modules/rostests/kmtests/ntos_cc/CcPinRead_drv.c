@@ -186,13 +186,13 @@ MapAndLockUserBuffer(
     return MmGetSystemAddressForMdlSafe(Irp->MdlAddress, NormalPagePriority);
 }
 
-#define ok_bcb(B, L, O)                                                                 \
-{                                                                                       \
-    PPUBLIC_BCB public_bcb = (B);                                                       \
-    ok(public_bcb->NodeTypeCode == 0x2FD, "Not a BCB: %x\n", public_bcb->NodeTypeCode); \
-    ok(public_bcb->NodeByteSize == 0, "Invalid size: %d\n", public_bcb->NodeByteSize);  \
-    ok_eq_ulong(public_bcb->MappedLength, (L));                                         \
-    ok_eq_longlong(public_bcb->MappedFileOffset.QuadPart, (O));                         \
+#define ok_bcb(B, L, O)                                                                   \
+{                                                                                         \
+    PPUBLIC_BCB public_bcb = (B);                                                         \
+    ok(public_bcb->NodeTypeCode == 0x2FD, "Not a BCB: %04x\n", public_bcb->NodeTypeCode); \
+    ok(public_bcb->NodeByteSize == 0, "Invalid size: %d\n", public_bcb->NodeByteSize);    \
+    ok_eq_ulong(public_bcb->MappedLength, (L));                                           \
+    ok_eq_longlong(public_bcb->MappedFileOffset.QuadPart, (O));                           \
 }
 
 static

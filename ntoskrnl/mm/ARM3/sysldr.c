@@ -81,13 +81,13 @@ MiCacheImageSymbols(IN PVOID BaseAddress)
 
 NTSTATUS
 NTAPI
-MiLoadImageSection(IN OUT PVOID *SectionPtr,
-                   OUT PVOID *ImageBase,
-                   IN PUNICODE_STRING FileName,
-                   IN BOOLEAN SessionLoad,
-                   IN PLDR_DATA_TABLE_ENTRY LdrEntry)
+MiLoadImageSection(_Inout_ PSECTION *SectionPtr,
+                   _Out_ PVOID *ImageBase,
+                   _In_ PUNICODE_STRING FileName,
+                   _In_ BOOLEAN SessionLoad,
+                   _In_ PLDR_DATA_TABLE_ENTRY LdrEntry)
 {
-    PROS_SECTION_OBJECT Section = *SectionPtr;
+    PSECTION Section = *SectionPtr;
     NTSTATUS Status;
     PEPROCESS Process;
     PVOID Base = NULL;
@@ -158,7 +158,7 @@ MiLoadImageSection(IN OUT PVOID *SectionPtr,
     }
 
     /* Reserve system PTEs needed */
-    PteCount = ROUND_TO_PAGES(Section->ImageSection->ImageInformation.ImageFileSize) >> PAGE_SHIFT;
+    PteCount = ROUND_TO_PAGES(((PMM_IMAGE_SECTION_OBJECT)Section->Segment)->ImageInformation.ImageFileSize) >> PAGE_SHIFT;
     PointerPte = MiReserveSystemPtes(PteCount, SystemPteSpace);
     if (!PointerPte)
     {
@@ -2837,7 +2837,7 @@ MmLoadSystemImage(IN PUNICODE_STRING FileName,
     PWCHAR MissingDriverName;
     HANDLE SectionHandle;
     ACCESS_MASK DesiredAccess;
-    PVOID Section = NULL;
+    PSECTION Section = NULL;
     BOOLEAN LockOwned = FALSE;
     PLIST_ENTRY NextEntry;
     IMAGE_INFO ImageInfo;
@@ -3054,7 +3054,7 @@ LoaderScan:
                                            SECTION_MAP_EXECUTE,
                                            MmSectionObjectType,
                                            KernelMode,
-                                           &Section,
+                                           (PVOID*)&Section,
                                            NULL);
         ZwClose(SectionHandle);
         if (!NT_SUCCESS(Status)) goto Quickie;
@@ -3085,7 +3085,7 @@ LoaderScan:
     ASSERT(Status != STATUS_ALREADY_COMMITTED);
 
     /* Get the size of the driver */
-    DriverSize = ((PROS_SECTION_OBJECT)Section)->ImageSection->ImageInformation.ImageFileSize;
+    DriverSize = ((PMM_IMAGE_SECTION_OBJECT)Section->Segment)->ImageInformation.ImageFileSize;
 
     /* Make sure we're not being loaded into session space */
     if (!Flags)

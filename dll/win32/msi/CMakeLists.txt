@@ -48,9 +48,12 @@ list(APPEND SOURCE
     upgrade.c
     where.c)
 
+BISON_TARGET(cond cond.y ${CMAKE_CURRENT_BINARY_DIR}/cond.tab.c COMPILE_FLAGS "-p cond_")
+BISON_TARGET(sql sql.y ${CMAKE_CURRENT_BINARY_DIR}/sql.tab.c COMPILE_FLAGS "-p sql_")
+
 list(APPEND PCH_SKIP_SOURCE
-    cond.tab.c
-    sql.tab.c
+    ${BISON_cond_OUTPUTS}
+    ${BISON_sql_OUTPUTS}
     ${CMAKE_CURRENT_BINARY_DIR}/msiserver_i.c
     ${CMAKE_CURRENT_BINARY_DIR}/msi_stubs.c)
 

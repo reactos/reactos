@@ -134,7 +134,7 @@ HDA_DpcForIsr(
 }
 
 
-VOID
+NTSTATUS
 HDA_SendVerbs(
     IN PDEVICE_OBJECT DeviceObject,
     IN PHDA_CODEC_ENTRY Codec,
@@ -188,13 +188,15 @@ HDA_SendVerbs(
         if (waitStatus == STATUS_TIMEOUT)
         {
             DPRINT1("HDA_SendVerbs: timeout! Queued: %u\n", Queued);
-            break;
+            return STATUS_INVALID_DEVICE_REQUEST;
         }
     }
 
     if (Responses != NULL) {
         memcpy(Responses, Codec->Responses, Codec->ResponseCount * sizeof(ULONG));
     }
+
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
@@ -234,7 +236,13 @@ HDA_InitCodec(
     verbs[2] = MAKE_VERB(codecAddress, 0, VID_GET_PARAMETER, PID_SUB_NODE_COUNT);
 
     /* get basic info */
-    HDA_SendVerbs(DeviceObject, Entry, verbs, (PULONG)&Response, 3);
+    Status = HDA_SendVerbs(DeviceObject, Entry, verbs, (PULONG)&Response, 3);
+    if (!NT_SUCCESS(Status))
+    {
+        FreeItem(Entry);
+        DeviceExtension->Codecs[codecAddress] = NULL;
+        return Status;
+    }
 
     /* store codec details */
     Entry->Major = Response.major;
@@ -252,10 +260,13 @@ HDA_InitCodec(
         /* get function type */
         verbs[0] = MAKE_VERB(codecAddress, NodeId, VID_GET_PARAMETER, PID_FUNCTION_GROUP_TYPE);
 
-        HDA_SendVerbs(DeviceObject, Entry, verbs, &GroupType, 1);
-        DPRINT1("NodeId %u GroupType %x\n", NodeId, GroupType);
+        Status = HDA_SendVerbs(DeviceObject, Entry, verbs, &GroupType, 1);
+        DPRINT1("Status %x NodeId %u GroupType %x\n", Status, NodeId, GroupType);
 
-        if ((GroupType & FUNCTION_GROUP_NODETYPE_MASK) == FUNCTION_GROUP_NODETYPE_AUDIO) {
+
+        if (NT_SUCCESS(Status) &&
+            (GroupType & FUNCTION_GROUP_NODETYPE_MASK) == FUNCTION_GROUP_NODETYPE_AUDIO)
+        {
             if (Entry->AudioGroupCount >= HDA_MAX_AUDIO_GROUPS)
             {
                 DPRINT1("Too many audio groups in node %u. Skipping.\n", NodeId);

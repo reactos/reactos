@@ -73,10 +73,6 @@ else()
     set(_WINKD_ FALSE CACHE BOOL "Whether to compile with the KD protocol.")
 endif()
 
-set(_ELF_ FALSE CACHE BOOL
-"Whether to compile support for ELF files.
-Do not enable unless you know what you're doing.")
-
 set(BUILD_MP TRUE CACHE BOOL
 "Whether to build the multiprocessor versions of NTOSKRNL and HAL.")
 

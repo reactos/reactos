@@ -1356,12 +1356,8 @@ MmFlushVirtualMemory(IN PEPROCESS Process,
                      OUT PIO_STATUS_BLOCK IoStatusBlock)
 {
     PAGED_CODE();
-    UNIMPLEMENTED;
-
-    //
-    // Fake success
-    //
-    return STATUS_SUCCESS;
+    /* For now we call the old Mm */
+    return MmRosFlushVirtualMemory(Process, BaseAddress, RegionSize, IoStatusBlock);
 }
 
 ULONG
@@ -5039,7 +5035,7 @@ NtAllocateVirtualMemory(IN HANDLE ProcessHandle,
             if (PointerPte->u.Soft.Valid == 0)
             {
                 ASSERT(PointerPte->u.Soft.Prototype == 0);
-                ASSERT(PointerPte->u.Soft.PageFileHigh == 0);
+                ASSERT((PointerPte->u.Soft.PageFileHigh == 0) || (PointerPte->u.Soft.Transition == 1));
             }
 
             //

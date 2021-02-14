@@ -14,12 +14,18 @@ BEGIN
     /* Tooltips */
     IDS_TOOLTIP_NEXT_PIC "Następny obraz"
     IDS_TOOLTIP_PREV_PIC "Poprzedni obraz"
+    IDS_TOOLTIP_BEST_FIT "Rozmiar dopasowany optymalnie (Ctrl+B)"
+    IDS_TOOLTIP_REAL_SIZE "Rozmiar rzeczywisty (Ctrl+A)"
+    IDS_TOOLTIP_SLIDE_SHOW "Rozpocznij pokaz slajdów (F11)"
     IDS_TOOLTIP_ZOOM_IN "Powiększ (+)"
     IDS_TOOLTIP_ZOOM_OUT "Pomniejsz (-)"
     IDS_TOOLTIP_ROT_CLOCKW "Obróć zgodnie z ruchem wskazówek zegara (Ctrl+K)"
     IDS_TOOLTIP_ROT_COUNCW "Obróć przeciwnie do ruchu wskazówek zegara (Ctrl+L)"
+    IDS_TOOLTIP_DELETE "Usuń (Delete)"
     IDS_TOOLTIP_PRINT "Drukuj (Ctrl+P)"
     IDS_TOOLTIP_SAVEAS "Zapisz jako... (Ctrl+S)"
+    IDS_TOOLTIP_MODIFY "Zamyka ten program i otwiera obraz w celu edycji (Ctrl+E)"
+    IDS_TOOLTIP_HELP_TOC "Pomoc (F1)"
 END
 
 STRINGTABLE

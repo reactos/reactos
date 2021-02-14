@@ -67,7 +67,7 @@ PUBLIC KiUserCallbackDispatcher
     .PUSHFRAME
 
     /* This is for the Home space, Buffer, Length and ApiNumber */
-    .ALLOCSTACK 6 * 8
+    .ALLOCSTACK (6 * 8)
     .ENDPROLOG
 
 #if DBG

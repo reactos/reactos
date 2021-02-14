@@ -738,14 +738,16 @@ LdrProcessDriverModule(PLDR_DATA_TABLE_ENTRY LdrEntry,
     return STATUS_SUCCESS;
 }
 
+PDEVICE_OBJECT
+IopGetDeviceObjectFromDeviceInstance(PUNICODE_STRING DeviceInstance);
+
 /*
  * IopInitializeBuiltinDriver
  *
  * Initialize a driver that is already loaded in memory.
  */
 CODE_SEG("INIT")
-NTSTATUS
-NTAPI
+BOOLEAN
 IopInitializeBuiltinDriver(IN PLDR_DATA_TABLE_ENTRY BootLdrEntry)
 {
     PDRIVER_OBJECT DriverObject;
@@ -769,7 +771,7 @@ IopInitializeBuiltinDriver(IN PLDR_DATA_TABLE_ENTRY BootLdrEntry)
                                    TAG_IO);
     if (Buffer == NULL)
     {
-        return STATUS_INSUFFICIENT_RESOURCES;
+        return FALSE;
     }
 
     RtlCopyMemory(Buffer, ModuleName->Buffer, ModuleName->Length);
@@ -795,7 +797,7 @@ IopInitializeBuiltinDriver(IN PLDR_DATA_TABLE_ENTRY BootLdrEntry)
     ExFreePoolWithTag(Buffer, TAG_IO);
     if (!Success)
     {
-        return STATUS_INSUFFICIENT_RESOURCES;
+        return FALSE;
     }
 
     FileExtension = wcsrchr(ServiceName.Buffer, L'.');
@@ -813,7 +815,7 @@ IopInitializeBuiltinDriver(IN PLDR_DATA_TABLE_ENTRY BootLdrEntry)
     RegistryPath.Buffer = ExAllocatePoolWithTag(PagedPool, RegistryPath.MaximumLength, TAG_IO);
     if (RegistryPath.Buffer == NULL)
     {
-        return STATUS_INSUFFICIENT_RESOURCES;
+        return FALSE;
     }
     RtlAppendUnicodeToString(&RegistryPath, ServicesKeyName);
     RtlAppendUnicodeStringToString(&RegistryPath, &ServiceName);
@@ -824,7 +826,7 @@ IopInitializeBuiltinDriver(IN PLDR_DATA_TABLE_ENTRY BootLdrEntry)
     RtlFreeUnicodeString(&RegistryPath);
     if (!NT_SUCCESS(Status))
     {
-        return Status;
+        return FALSE;
     }
 
     /* Lookup the new Ldr entry in PsLoadedModuleList */
@@ -851,18 +853,94 @@ IopInitializeBuiltinDriver(IN PLDR_DATA_TABLE_ENTRY BootLdrEntry)
                                        serviceHandle,
                                        &DriverObject,
                                        &driverEntryStatus);
-    ZwClose(serviceHandle);
 
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("Driver '%wZ' load failed, status (%x)\n", ModuleName, Status);
-        return Status;
+        return FALSE;
     }
 
+    // The driver has been loaded, now check if where are any PDOs
+    // for that driver, and queue AddDevice call for them.
+    // The check is possible because HKLM/SYSTEM/CCS/Services/<ServiceName>/Enum directory
+    // is populated upon a new device arrival based on a (critical) device database
+    
+    // Legacy drivers may add devices inside DriverEntry.
+    // We're lazy and always assume that they are doing so
+    BOOLEAN deviceAdded = (_Bool)(DriverObject->Flags & DRVO_LEGACY_DRIVER);
+
+    HANDLE enumServiceHandle;
+    UNICODE_STRING enumName = RTL_CONSTANT_STRING(L"Enum");
+
+    Status = IopOpenRegistryKeyEx(&enumServiceHandle, serviceHandle, &enumName, KEY_READ);
+    ZwClose(serviceHandle);
+
+    if (NT_SUCCESS(Status))
+    {
+        UINT32 instanceCount = 0;
+        PKEY_VALUE_FULL_INFORMATION kvInfo;
+        Status = IopGetRegistryValue(enumServiceHandle, L"Count", &kvInfo);
+        if (!NT_SUCCESS(Status))
+        {
+            goto Cleanup;
+        }
+        if (kvInfo->Type != REG_DWORD)
+        {
+            ExFreePool(kvInfo);
+            goto Cleanup;
+        }
+
+        RtlMoveMemory(&instanceCount,
+                      (PVOID)((ULONG_PTR)kvInfo + kvInfo->DataOffset),
+                      sizeof(UINT32));
+        ExFreePool(kvInfo);
+
+        DPRINT("Processing %u instances for %wZ module\n", instanceCount, ModuleName);
+
+        for (UINT32 i = 0; i < instanceCount; i++)
+        {
+            WCHAR num[11];
+            UNICODE_STRING instancePath;
+            RtlStringCchPrintfW(num, sizeof(num), L"%u", i);
+
+            Status = IopGetRegistryValue(enumServiceHandle, num, &kvInfo);
+            if (!NT_SUCCESS(Status))
+            {
+                continue;
+            }
+            if (kvInfo->Type != REG_SZ || kvInfo->DataLength == 0)
+            {
+                ExFreePool(kvInfo);
+                continue;
+            }
+
+            instancePath.Length = kvInfo->DataLength - sizeof(WCHAR),
+            instancePath.MaximumLength = kvInfo->DataLength,
+            instancePath.Buffer = ExAllocatePoolWithTag(NonPagedPool,
+                                                        instancePath.MaximumLength,
+                                                        TAG_IO);
+            if (instancePath.Buffer)
+            {
+                RtlMoveMemory(instancePath.Buffer,
+                          (PVOID)((ULONG_PTR)kvInfo + kvInfo->DataOffset),
+                          instancePath.Length);
+
+                PDEVICE_OBJECT pdo = IopGetDeviceObjectFromDeviceInstance(&instancePath);
+                PiQueueDeviceAction(pdo, PiActionAddBootDevices, NULL, NULL);
+                ObDereferenceObject(pdo);
+                deviceAdded = TRUE;
+            }
+
+            ExFreePool(kvInfo);            
+        }
+
+        ZwClose(enumServiceHandle);
+    }
+Cleanup:
     /* Remove extra reference from IopInitializeDriverModule */
     ObDereferenceObject(DriverObject);
 
-    return Status;
+    return deviceAdded;
 }
 
 /*
@@ -1028,13 +1106,14 @@ IopInitializeBootDrivers(VOID)
             LdrEntry = DriverInfo->DataTableEntry->LdrEntry;
 
             /* Initialize it */
-            IopInitializeBuiltinDriver(LdrEntry);
-
-            /* Start the devices found by a driver (if any) */
-            PiQueueDeviceAction(IopRootDeviceNode->PhysicalDeviceObject,
-                                PiActionEnumRootDevices,
-                                NULL,
-                                NULL);
+            if (IopInitializeBuiltinDriver(LdrEntry))
+            {
+                // it does not make sense to enumerate the tree if there are no new devices added
+                PiQueueDeviceAction(IopRootDeviceNode->PhysicalDeviceObject,
+                                    PiActionEnumRootDevices,
+                                    NULL,
+                                    NULL);
+            }           
 
             /* Next entry */
             NextEntry = NextEntry->Flink;
@@ -1047,6 +1126,13 @@ IopInitializeBootDrivers(VOID)
      * See PiQueueDeviceAction function
      */
     PnPBootDriversLoaded = TRUE;
+
+    DbgPrint("BOOT DRIVERS LOADED\n");
+
+    PiQueueDeviceAction(IopRootDeviceNode->PhysicalDeviceObject,
+                        PiActionEnumDeviceTree,
+                        NULL,
+                        NULL);
 }
 
 CODE_SEG("INIT")
@@ -1055,6 +1141,8 @@ FASTCALL
 IopInitializeSystemDrivers(VOID)
 {
     PUNICODE_STRING *DriverList, *SavedList;
+
+    PiPerformSyncDeviceAction(IopRootDeviceNode->PhysicalDeviceObject, PiActionEnumDeviceTree);
 
     /* No system drivers on the boot cd */
     if (KeLoaderBlock->SetupLdrBlock) return; // ExpInTextModeSetup
@@ -1080,6 +1168,11 @@ IopInitializeSystemDrivers(VOID)
 
     /* Free the list */
     ExFreePool(SavedList);
+
+    PiQueueDeviceAction(IopRootDeviceNode->PhysicalDeviceObject,
+                        PiActionEnumDeviceTree,
+                        NULL,
+                        NULL);
 }
 
 /*

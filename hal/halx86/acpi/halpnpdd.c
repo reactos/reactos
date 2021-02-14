@@ -561,10 +561,6 @@ HalpQueryIdFdo(IN PDEVICE_OBJECT DeviceObject,
     switch (IdType)
     {
         case BusQueryDeviceID:
-            /* HACK */
-            Id = L"Root\\ACPI_HAL";
-            break;
-
         case BusQueryHardwareIDs:
 
             /* This is our hardware ID */
@@ -676,11 +672,26 @@ HalpDispatchPnp(IN PDEVICE_OBJECT DeviceObject,
             default:
 
                 DPRINT("Other IRP: %lx\n", Minor);
-                Status = Irp->IoStatus.Status;
+                Status = STATUS_NOT_SUPPORTED;
                 break;
         }
 
-        /* Nowhere for the IRP to go since we also own the PDO */
+        /* What happpened? */
+        if ((NT_SUCCESS(Status)) || (Status == STATUS_NOT_SUPPORTED))
+        {
+            /* Set the IRP status, unless this isn't understood */
+            if (Status != STATUS_NOT_SUPPORTED)
+            {
+                Irp->IoStatus.Status = Status;
+            }
+
+            /* Pass it on */
+            IoSkipCurrentIrpStackLocation(Irp);
+            return IoCallDriver(FdoExtension->AttachedDeviceObject, Irp);
+        }
+
+        /* Otherwise, we failed, so set the status and complete the request */
+        DPRINT1("IRP failed with status: %lx\n", Status);
         Irp->IoStatus.Status = Status;
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
         return Status;

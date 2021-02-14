@@ -163,6 +163,12 @@ Used Version: ???
 License: GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later.html)
 URL: http://www.vmware.com/download/open_sources.html
 
+Title: Open Source WDM Drivers for C-Media 8738/8768 based soundcards
+Path: drivers/wdm/audio/drivers/CMIDriver
+Used Version: 1.2.6
+License: BSD-3-Clause (https://opensource.org/licenses/BSD-3-Clause)
+URL: https://code.google.com/archive/p/cmediadrivers/
+
 Title: PCI hardware IDs database
 Path: hal/halx86/legacy/bus/pci_classes.ids
 Path: hal/halx86/legacy/bus/pci_vendors.ids

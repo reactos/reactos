@@ -13,12 +13,18 @@ BEGIN
     /* Tooltips */
     IDS_TOOLTIP_NEXT_PIC "Fotoja Tjetër"
     IDS_TOOLTIP_PREV_PIC "Fotoja Mëparshme"
+    IDS_TOOLTIP_BEST_FIT "Best fit to window (Ctrl+B)"
+    IDS_TOOLTIP_REAL_SIZE "Actual size (Ctrl+A)"
+    IDS_TOOLTIP_SLIDE_SHOW "Start slideshow (F11)"
     IDS_TOOLTIP_ZOOM_IN "Zoom Brënda (+)"
     IDS_TOOLTIP_ZOOM_OUT "Zoom Jashtë (-)"
     IDS_TOOLTIP_ROT_CLOCKW "Rrotullo KrahAkrepave (Ctrl+K)"
     IDS_TOOLTIP_ROT_COUNCW "Rrotullo kundërKrahAkrepave (Ctrl+L)"
+    IDS_TOOLTIP_DELETE "Delete (DEL)"
     IDS_TOOLTIP_PRINT "Printo (Ctrl+P)"
     IDS_TOOLTIP_SAVEAS "Ruaj Si... (Ctrl+S)"
+    IDS_TOOLTIP_MODIFY "Modify (Ctrl+E)"
+    IDS_TOOLTIP_HELP_TOC "Help topics (F1)"
 END
 
 STRINGTABLE

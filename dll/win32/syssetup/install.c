@@ -37,6 +37,16 @@ SetupStartService(LPCWSTR lpServiceName, BOOL bWait);
 HINF hSysSetupInf = INVALID_HANDLE_VALUE;
 ADMIN_INFO AdminInfo;
 
+typedef struct _DLG_DATA
+{
+    HBITMAP hLogoBitmap;
+    HBITMAP hBarBitmap;
+    HWND hWndBarCtrl;
+    DWORD BarCounter;
+    DWORD BarWidth;
+    DWORD BarHeight;
+} DLG_DATA, *PDLG_DATA;
+
 /* FUNCTIONS ****************************************************************/
 
 static VOID
@@ -531,17 +541,112 @@ StatusMessageWindowProc(
     IN WPARAM wParam,
     IN LPARAM lParam)
 {
+    PDLG_DATA pDlgData;
     UNREFERENCED_PARAMETER(wParam);
+
+    pDlgData = (PDLG_DATA)GetWindowLongPtrW(hwndDlg, GWLP_USERDATA);
+
+    /* pDlgData is required for each case except WM_INITDIALOG */
+    if (uMsg != WM_INITDIALOG && pDlgData == NULL) return FALSE;
 
     switch (uMsg)
     {
         case WM_INITDIALOG:
         {
+            BITMAP bm;
             WCHAR szMsg[256];
 
+            /* Allocate pDlgData */
+            pDlgData = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*pDlgData));
+            if (pDlgData)
+            {
+                /* Set pDlgData to GWLP_USERDATA, so we can get it for new messages */
+                SetWindowLongPtrW(hwndDlg, GWLP_USERDATA, (LONG_PTR)pDlgData);
+
+                /* Load bitmaps */
+                pDlgData->hLogoBitmap = LoadImageW(hDllInstance,
+                                                    MAKEINTRESOURCEW(IDB_REACTOS), IMAGE_BITMAP,
+                                                    0, 0, LR_DEFAULTCOLOR);
+
+                pDlgData->hBarBitmap = LoadImageW(hDllInstance, MAKEINTRESOURCEW(IDB_LINE),
+                                                IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
+                GetObject(pDlgData->hBarBitmap, sizeof(bm), &bm);
+                pDlgData->BarWidth = bm.bmWidth;
+                pDlgData->BarHeight = bm.bmHeight;
+
+                if (pDlgData->hLogoBitmap && pDlgData->hBarBitmap)
+                {
+                    if (SetTimer(hwndDlg, IDT_BAR, 20, NULL) == 0)
+                    {
+                        DPRINT1("SetTimer(IDT_BAR) failed: %lu\n", GetLastError());
+                    }
+
+                    /* Get the animation bar control */
+                    pDlgData->hWndBarCtrl = GetDlgItem(hwndDlg, IDC_BAR);
+                }
+            }
+
+            /* Get and set status text */
             if (!LoadStringW(hDllInstance, IDS_STATUS_INSTALL_DEV, szMsg, ARRAYSIZE(szMsg)))
                 return FALSE;
             SetDlgItemTextW(hwndDlg, IDC_STATUSLABEL, szMsg);
+
+            return TRUE;
+        }
+
+        case WM_TIMER:
+        {
+            if (pDlgData->hBarBitmap)
+            {
+                /*
+                 * Default rotation bar image width is 413 (same as logo)
+                 * We can divide 413 by 7 without remainder
+                 */
+                pDlgData->BarCounter = (pDlgData->BarCounter + 7) % pDlgData->BarWidth;
+                InvalidateRect(pDlgData->hWndBarCtrl, NULL, FALSE);
+                UpdateWindow(pDlgData->hWndBarCtrl);
+            }
+            return TRUE;
+        }
+
+        case WM_DRAWITEM:
+        {
+            LPDRAWITEMSTRUCT lpDis = (LPDRAWITEMSTRUCT)lParam;
+
+            if (lpDis->CtlID != IDC_BAR)
+            {
+                return FALSE;
+            }
+
+            if (pDlgData->hBarBitmap)
+            {
+                HDC hdcMem;
+                HGDIOBJ hOld;
+                DWORD off = pDlgData->BarCounter;
+                DWORD iw = pDlgData->BarWidth;
+                DWORD ih = pDlgData->BarHeight;
+
+                hdcMem = CreateCompatibleDC(lpDis->hDC);
+                hOld = SelectObject(hdcMem, pDlgData->hBarBitmap);
+                BitBlt(lpDis->hDC, off, 0, iw - off, ih, hdcMem, 0, 0, SRCCOPY);
+                BitBlt(lpDis->hDC, 0, 0, off, ih, hdcMem, iw - off, 0, SRCCOPY);
+                SelectObject(hdcMem, hOld);
+                DeleteDC(hdcMem);
+                return TRUE;
+            }
+            return FALSE;
+        }
+
+        case WM_DESTROY:
+        {
+            if (pDlgData->hBarBitmap)
+            {
+                KillTimer(hwndDlg, IDT_BAR);
+            }
+
+            DeleteObject(pDlgData->hLogoBitmap);
+            DeleteObject(pDlgData->hBarBitmap);
+            HeapFree(GetProcessHeap(), 0, pDlgData);
             return TRUE;
         }
     }
@@ -552,7 +657,7 @@ static DWORD WINAPI
 ShowStatusMessageThread(
     IN LPVOID lpParameter)
 {
-    HWND hWnd, hItem;
+    HWND hWnd;
     MSG Msg;
     UNREFERENCED_PARAMETER(lpParameter);
 
@@ -565,12 +670,6 @@ ShowStatusMessageThread(
         return 0;
 
     ShowWindow(hWnd, SW_SHOW);
-
-    hItem = GetDlgItem(hWnd, IDC_STATUSPROGRESS);
-    if (hItem)
-    {
-        PostMessage(hItem, PBM_SETMARQUEE, TRUE, 40);
-    }
 
     /* Message loop for the Status window */
     while (GetMessage(&Msg, NULL, 0, 0))

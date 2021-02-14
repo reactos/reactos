@@ -45,14 +45,15 @@ list(APPEND SOURCE
     xmlparser.c
     xmlview.c)
 
+FLEX_TARGET(xslpattern_scanner xslpattern.l ${CMAKE_CURRENT_BINARY_DIR}/xslpattern.yy.c)
+BISON_TARGET(xslpattern_parser xslpattern.y ${CMAKE_CURRENT_BINARY_DIR}/xslpattern.tab.c COMPILE_FLAGS "-p xslpattern_")
+ADD_FLEX_BISON_DEPENDENCY(xslpattern_scanner xslpattern_parser)
+
 list(APPEND PCH_SKIP_SOURCE
     factory.c
     uuid.c
-    xslpattern.tab.c
-    xslpattern.yy.c)
-
-# xslpattern.tab.c/xslpattern.yy.c have been generated with relative file paths...
-set_source_files_properties(xslpattern.tab.c xslpattern.yy.c PROPERTIES COMPILE_FLAGS "-UREACTOS_SOURCE_DIR -DREACTOS_SOURCE_DIR=\"\\\".\\\"\"")
+    ${FLEX_xslpattern_scanner_OUTPUTS}
+    ${BISON_xslpattern_parser_OUTPUTS})
 
 list(APPEND msxml3_rc_deps
     ${CMAKE_CURRENT_SOURCE_DIR}/msxml3.manifest

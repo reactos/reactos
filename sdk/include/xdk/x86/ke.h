@@ -52,7 +52,7 @@ VOID
 KeMemoryBarrier(VOID)
 {
   LONG Barrier, *Dummy = &Barrier;
-  UNREFERENCED_LOCAL_VARIABLE(Dummy);
+  (VOID)Dummy;
 
 #if defined(__GNUC__)
   __asm__ __volatile__ ("xchg %%eax, %0" : : "m" (Barrier) : "%eax");

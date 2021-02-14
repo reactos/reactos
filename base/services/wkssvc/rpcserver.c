@@ -83,11 +83,145 @@ __stdcall
 NetrWkstaGetInfo(
     WKSSVC_IDENTIFY_HANDLE ServerName,
     unsigned long Level,
-    LPWKSTA_INFO WkstaInfo)
+    LPWKSTA_INFO *WkstaInfo)
 {
+    WCHAR szComputerName[MAX_COMPUTERNAME_LENGTH + 1];
+    DWORD dwComputerNameLength;
+    LPCWSTR pszLanRoot = L"";
+    PWKSTA_INFO pWkstaInfo = NULL;
+    OSVERSIONINFOW VersionInfo;
+    LSA_OBJECT_ATTRIBUTES ObjectAttributes;
+    LSA_HANDLE PolicyHandle;
+    PPOLICY_PRIMARY_DOMAIN_INFO DomainInfo = NULL;
+    NTSTATUS NtStatus;
+    DWORD dwResult = NERR_Success;
+
     TRACE("NetrWkstaGetInfo level %lu\n", Level);
 
-    return 0;
+    dwComputerNameLength = MAX_COMPUTERNAME_LENGTH + 1;
+    GetComputerNameW(szComputerName, &dwComputerNameLength);
+    dwComputerNameLength++; /* include NULL terminator */
+
+    VersionInfo.dwOSVersionInfoSize = sizeof(VersionInfo);
+    GetVersionExW(&VersionInfo);
+
+    ZeroMemory(&ObjectAttributes, sizeof(ObjectAttributes));
+    NtStatus = LsaOpenPolicy(NULL,
+                             &ObjectAttributes,
+                             POLICY_VIEW_LOCAL_INFORMATION,
+                             &PolicyHandle);
+    if (NtStatus != STATUS_SUCCESS)
+    {
+        WARN("LsaOpenPolicy() failed (Status 0x%08lx)\n", NtStatus);
+        return LsaNtStatusToWinError(NtStatus);
+    }
+
+    NtStatus = LsaQueryInformationPolicy(PolicyHandle,
+                                         PolicyPrimaryDomainInformation,
+                                         (PVOID*)&DomainInfo);
+
+    LsaClose(PolicyHandle);
+
+    if (NtStatus != STATUS_SUCCESS)
+    {
+        WARN("LsaQueryInformationPolicy() failed (Status 0x%08lx)\n", NtStatus);
+        return LsaNtStatusToWinError(NtStatus);
+    }
+
+    switch (Level)
+    {
+        case 100:
+            pWkstaInfo = midl_user_allocate(sizeof(WKSTA_INFO_100));
+            if (pWkstaInfo == NULL)
+            {
+                dwResult = ERROR_NOT_ENOUGH_MEMORY;
+                break;
+            }
+
+            pWkstaInfo->WkstaInfo100.wki100_platform_id = PLATFORM_ID_NT;
+
+            pWkstaInfo->WkstaInfo100.wki100_computername = midl_user_allocate(dwComputerNameLength * sizeof(WCHAR));
+            if (pWkstaInfo->WkstaInfo100.wki100_computername != NULL)
+                wcscpy(pWkstaInfo->WkstaInfo100.wki100_computername, szComputerName);
+
+            pWkstaInfo->WkstaInfo100.wki100_langroup = midl_user_allocate((wcslen(DomainInfo->Name.Buffer) + 1) * sizeof(WCHAR));
+            if (pWkstaInfo->WkstaInfo100.wki100_langroup != NULL)
+                wcscpy(pWkstaInfo->WkstaInfo100.wki100_langroup, DomainInfo->Name.Buffer);
+
+            pWkstaInfo->WkstaInfo100.wki100_ver_major = VersionInfo.dwMajorVersion;
+            pWkstaInfo->WkstaInfo100.wki100_ver_minor = VersionInfo.dwMinorVersion;
+
+            *WkstaInfo = pWkstaInfo;
+            break;
+
+        case 101:
+            pWkstaInfo = midl_user_allocate(sizeof(WKSTA_INFO_101));
+            if (pWkstaInfo == NULL)
+            {
+                dwResult = ERROR_NOT_ENOUGH_MEMORY;
+                break;
+            }
+
+            pWkstaInfo->WkstaInfo101.wki101_platform_id = PLATFORM_ID_NT;
+
+            pWkstaInfo->WkstaInfo101.wki101_computername = midl_user_allocate(dwComputerNameLength * sizeof(WCHAR));
+            if (pWkstaInfo->WkstaInfo101.wki101_computername != NULL)
+                wcscpy(pWkstaInfo->WkstaInfo101.wki101_computername, szComputerName);
+
+            pWkstaInfo->WkstaInfo101.wki101_langroup = midl_user_allocate((wcslen(DomainInfo->Name.Buffer) + 1) * sizeof(WCHAR));
+            if (pWkstaInfo->WkstaInfo101.wki101_langroup != NULL)
+                wcscpy(pWkstaInfo->WkstaInfo101.wki101_langroup, DomainInfo->Name.Buffer);
+
+            pWkstaInfo->WkstaInfo101.wki101_ver_major = VersionInfo.dwMajorVersion;
+            pWkstaInfo->WkstaInfo101.wki101_ver_minor = VersionInfo.dwMinorVersion;
+
+            pWkstaInfo->WkstaInfo101.wki101_lanroot = midl_user_allocate((wcslen(pszLanRoot) + 1) * sizeof(WCHAR));
+            if (pWkstaInfo->WkstaInfo101.wki101_lanroot != NULL)
+                wcscpy(pWkstaInfo->WkstaInfo101.wki101_lanroot, pszLanRoot);
+
+            *WkstaInfo = pWkstaInfo;
+            break;
+
+        case 102:
+            pWkstaInfo = midl_user_allocate(sizeof(WKSTA_INFO_102));
+            if (pWkstaInfo == NULL)
+            {
+                dwResult = ERROR_NOT_ENOUGH_MEMORY;
+                break;
+            }
+
+            pWkstaInfo->WkstaInfo102.wki102_platform_id = PLATFORM_ID_NT;
+
+            pWkstaInfo->WkstaInfo102.wki102_computername = midl_user_allocate(dwComputerNameLength * sizeof(WCHAR));
+            if (pWkstaInfo->WkstaInfo102.wki102_computername != NULL)
+                wcscpy(pWkstaInfo->WkstaInfo102.wki102_computername, szComputerName);
+
+            pWkstaInfo->WkstaInfo102.wki102_langroup = midl_user_allocate((wcslen(DomainInfo->Name.Buffer) + 1) * sizeof(WCHAR));
+            if (pWkstaInfo->WkstaInfo102.wki102_langroup != NULL)
+                wcscpy(pWkstaInfo->WkstaInfo102.wki102_langroup, DomainInfo->Name.Buffer);
+
+            pWkstaInfo->WkstaInfo102.wki102_ver_major = VersionInfo.dwMajorVersion;
+            pWkstaInfo->WkstaInfo102.wki102_ver_minor = VersionInfo.dwMinorVersion;
+
+            pWkstaInfo->WkstaInfo102.wki102_lanroot = midl_user_allocate((wcslen(pszLanRoot) + 1) * sizeof(WCHAR));
+            if (pWkstaInfo->WkstaInfo102.wki102_lanroot != NULL)
+                wcscpy(pWkstaInfo->WkstaInfo102.wki102_lanroot, pszLanRoot);
+
+            pWkstaInfo->WkstaInfo102.wki102_logged_on_users = 1; /* FIXME */
+
+            *WkstaInfo = pWkstaInfo;
+            break;
+
+        default:
+            FIXME("Level %d unimplemented\n", Level);
+            dwResult = ERROR_INVALID_LEVEL;
+            break;
+    }
+
+    if (DomainInfo != NULL)
+        LsaFreeMemory(DomainInfo);
+
+    return dwResult;
 }
 
 

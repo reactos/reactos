@@ -28,7 +28,11 @@ if(NEWCC)
         ${REACTOS_SOURCE_DIR}/ntoskrnl/cache/lazyrite.c
         ${REACTOS_SOURCE_DIR}/ntoskrnl/cache/logsup.c
         ${REACTOS_SOURCE_DIR}/ntoskrnl/cache/mdlsup.c
-        ${REACTOS_SOURCE_DIR}/ntoskrnl/cache/pinsup.c)
+        ${REACTOS_SOURCE_DIR}/ntoskrnl/cache/pinsup.c
+        ${REACTOS_SOURCE_DIR}/ntoskrnl/cache/section/fault.c
+        ${REACTOS_SOURCE_DIR}/ntoskrnl/cache/section/swapout.c
+        ${REACTOS_SOURCE_DIR}/ntoskrnl/cache/section/data.c
+        ${REACTOS_SOURCE_DIR}/ntoskrnl/cache/section/reqtools.c)
 else()
     list(APPEND SOURCE
         ${REACTOS_SOURCE_DIR}/ntoskrnl/cc/cacheman.c
@@ -42,11 +46,7 @@ endif()
 
 list(APPEND SOURCE
     ${REACTOS_SOURCE_DIR}/ntoskrnl/cache/section/io.c
-    ${REACTOS_SOURCE_DIR}/ntoskrnl/cache/section/data.c
-    ${REACTOS_SOURCE_DIR}/ntoskrnl/cache/section/fault.c
-    ${REACTOS_SOURCE_DIR}/ntoskrnl/cache/section/reqtools.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/cache/section/sptab.c
-    ${REACTOS_SOURCE_DIR}/ntoskrnl/cache/section/swapout.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/config/cmalloc.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/config/cmapi.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/config/cmboot.c
@@ -157,6 +157,7 @@ list(APPEND SOURCE
     ${REACTOS_SOURCE_DIR}/ntoskrnl/io/pnpmgr/plugplay.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/io/pnpmgr/pnpdma.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/io/pnpmgr/pnpinit.c
+    ${REACTOS_SOURCE_DIR}/ntoskrnl/io/pnpmgr/pnpirp.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/io/pnpmgr/pnpmgr.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/io/pnpmgr/pnpnotify.c
     ${REACTOS_SOURCE_DIR}/ntoskrnl/io/pnpmgr/pnpreport.c
@@ -389,6 +390,9 @@ if(NOT _WINKD_)
             list(APPEND ASM_SOURCE ${REACTOS_SOURCE_DIR}/ntoskrnl/kdbg/i386/kdb_help.S)
             list(APPEND SOURCE ${REACTOS_SOURCE_DIR}/ntoskrnl/kdbg/i386/i386-dis.c)
         endif()
+    elseif(ARCH STREQUAL "amd64")
+        list(APPEND SOURCE
+            ${REACTOS_SOURCE_DIR}/ntoskrnl/kd/i386/kdbg.c)
     elseif(ARCH STREQUAL "arm")
         list(APPEND SOURCE ${REACTOS_SOURCE_DIR}/ntoskrnl/kd/arm/kdbg.c)
     endif()
