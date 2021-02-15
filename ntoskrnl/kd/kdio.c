@@ -19,6 +19,7 @@
 
 #define KdpBufferSize  (1024 * 512)
 static BOOLEAN KdpLoggingEnabled = FALSE;
+static BOOLEAN KdpLoggingStarting = FALSE;
 static PCHAR KdpDebugBuffer = NULL;
 static volatile ULONG KdpCurrentPosition = 0;
 static volatile ULONG KdpFreeBytes = 0;
@@ -26,6 +27,7 @@ static KSPIN_LOCK KdpDebugLogSpinLock;
 static KEVENT KdpLoggerThreadEvent;
 static HANDLE KdpLogFileHandle;
 ANSI_STRING KdpLogFileName = RTL_CONSTANT_STRING("\\SystemRoot\\debug.log");
+extern ULONG ExpInitializationPhase;
 
 static KSPIN_LOCK KdpSerialSpinLock;
 ULONG  SerialPortNumber = DEFAULT_DEBUG_PORT;
@@ -155,6 +157,7 @@ KdpPrintToLogFile(PCHAR String,
 {
     KIRQL OldIrql;
     ULONG beg, end, num;
+    BOOLEAN DoReinit = FALSE;
 
     if (KdpDebugBuffer == NULL) return;
 
@@ -184,7 +187,17 @@ KdpPrintToLogFile(PCHAR String,
     }
 
     /* Release the spinlock */
+    if (OldIrql == PASSIVE_LEVEL && !KdpLoggingStarting && !KdpLoggingEnabled && ExpInitializationPhase >= 2)
+    {
+        DoReinit = TRUE;
+    }
     KdpReleaseLock(&KdpDebugLogSpinLock, OldIrql);
+
+    if (DoReinit)
+    {
+        KdpLoggingStarting = TRUE;
+        KdpDebugLogInit(NULL, 3);
+    }
 
     /* Signal the logger thread */
     if (OldIrql <= DISPATCH_LEVEL && KdpLoggingEnabled)
@@ -224,9 +237,7 @@ KdpDebugLogInit(PKD_DISPATCH_TABLE DispatchTable,
 
         /* Initialize spinlock */
         KeInitializeSpinLock(&KdpDebugLogSpinLock);
-    }
-    else if (BootPhase == 2)
-    {
+
         HalDisplayString("\r\n   File log debugging enabled\r\n\r\n");
     }
     else if (BootPhase == 3)
@@ -338,7 +349,7 @@ KdpSerialInit(PKD_DISPATCH_TABLE DispatchTable,
         /* Register as a Provider */
         InsertTailList(&KdProviders, &DispatchTable->KdProvidersList);
     }
-    else if (BootPhase == 2)
+    else if (BootPhase == 1)
     {
         HalDisplayString("\r\n   Serial debugging enabled\r\n\r\n");
     }
@@ -508,9 +519,7 @@ KdpScreenInit(PKD_DISPATCH_TABLE DispatchTable,
 
         /* Initialize spinlock */
         KeInitializeSpinLock(&KdpDmesgLogSpinLock);
-    }
-    else if (BootPhase == 2)
-    {
+
         HalDisplayString("\r\n   Screen debugging enabled\r\n\r\n");
     }
 }
