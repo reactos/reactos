@@ -117,18 +117,21 @@ DrawClock(HDC hdc, PCLOCKDATA pClockData)
     /* Draw dots */
     for (INT iAngle = 0; iAngle < 360; iAngle += 6)
     {
-        SetClockCoodinates(&Points[0], Center, Radius - 7, iAngle);
         if (iAngle % 5 == 0)
         {
+            SetClockCoodinates(&Points[0], Center, Radius - 7, iAngle);
             SetClockCoodinates(&Points[1], Center, Radius - 13, iAngle);
             SelectObject(hdc, pClockData->hBoldPen);
+            Line(hdc, Points[0], Points[1]);
         }
         else
         {
-            SetClockCoodinates(&Points[1], Center, Radius - 10, iAngle);
-            SelectObject(hdc, pClockData->hGreyPen);
+            SetClockCoodinates(&Points[1], Center, Radius - 8, iAngle);
+            SelectObject(hdc, GetStockObject(NULL_PEN));
+            SelectObject(hdc, pClockData->hGreyBrush);
+            const INT cxy = 2;
+            Ellipse(hdc, Points[1].x - cxy, Points[1].y - cxy, Points[1].x + cxy, Points[1].y + cxy);
         }
-        Line(hdc, Points[0], Points[1]);
     }
 
     SelectObject(hdc, hOldPen);
