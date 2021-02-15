@@ -436,7 +436,7 @@ DIB_16BPP_BitBltSrcCopy(PBLTINFO BltInfo)
       else
       {
         /* Buffering for source and destination flip overlaps. Fixes KHMZ MirrorTest CORE-16642 */
-        BOOL OneDone = FALSE;
+        BOOL TopToBottomDone = FALSE;
 
         if (bLeftToRight)
         {
@@ -464,7 +464,6 @@ DIB_16BPP_BitBltSrcCopy(PBLTINFO BltInfo)
 
           for (j = BltInfo->DestRect.bottom - 1; BltInfo->DestRect.top <= j; j--)
           {
-
             /* Set Dest32 to right pixel */
             Dest32 = (WORD *) DestBits + (BltInfo->DestRect.right - BltInfo->DestRect.left - 1);
             Source32 = (WORD *) SourceBits;
@@ -491,7 +490,7 @@ DIB_16BPP_BitBltSrcCopy(PBLTINFO BltInfo)
             DestBits -= BltInfo->DestSurface->lDelta;
           }
           ExFreePoolWithTag(store, TAG_DIB);
-          OneDone = TRUE;
+          TopToBottomDone = TRUE;
         }
 
         if (bTopToBottom)
@@ -528,12 +527,12 @@ DIB_16BPP_BitBltSrcCopy(PBLTINFO BltInfo)
             DestBits += 2;
           }
 
-          /* The OneDone flag indicates that we are flipping for bTopToBottom and bLeftToRight
+          /* The TopToBottomDone flag indicates that we are flipping for bTopToBottom and bLeftToRight
            * and have already completed the bLeftToRight. So we will lose our first flip output
            * unless we work with its output which is at the destination site. So in this case
            * our new Source becomes the previous outputs Destination. */
 
-          if (OneDone)
+          if (TopToBottomDone)
           {
             /* This sets SourceBits to the top line */
             SourceBits = DestBits;

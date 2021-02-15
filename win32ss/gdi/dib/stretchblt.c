@@ -189,7 +189,7 @@ BOOLEAN DIB_XXBPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf, SURFOBJ *Ma
         }
         else
         {
-          sx = SourceRect->left+(DesX - DestRect->left) * SrcWidth / DstWidth;
+          sx = SourceRect->left + (DesX - DestRect->left) * SrcWidth / DstWidth;
         }
         if (sx >= 0 && sy >= 0 &&
           SourceSurf->sizlBitmap.cx > sx && SourceCy > sy)

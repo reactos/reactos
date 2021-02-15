@@ -76,7 +76,7 @@ DIB_32BPP_BitBltSrcCopy(PBLTINFO BltInfo)
   DPRINT("iBitmapFormat is %d and width,height is (%d,%d).\n", BltInfo->SourceSurface->iBitmapFormat,
          BltInfo->DestRect.right - BltInfo->DestRect.left, BltInfo->DestRect.bottom - BltInfo->DestRect.top);
 
-  DPRINT("BltInfo->SourcePoint.x is '%d' & BltInfo->SourcePoint.y is '%d'.\n",
+  DPRINT("BltInfo->SourcePoint.x is '%d' and BltInfo->SourcePoint.y is '%d'.\n",
          BltInfo->SourcePoint.x, BltInfo->SourcePoint.y);
 
   /* Do not deal with negative numbers for these values */
@@ -119,7 +119,7 @@ DIB_32BPP_BitBltSrcCopy(PBLTINFO BltInfo)
 
     sx = BltInfo->SourcePoint.x;
 
-   /* This sets sy to the top line */
+    /* This sets sy to the top line */
     sy = BltInfo->SourcePoint.y;
 
     if (bTopToBottom)
@@ -496,7 +496,7 @@ DIB_32BPP_BitBltSrcCopy(PBLTINFO BltInfo)
       else
       {
         /* Buffering for source and destination flip overlaps. Fixes KHMZ MirrorTest CORE-16642 */
-        BOOL OneDone = FALSE;
+        BOOL TopToBottomDone = FALSE;
 
         /* Left to Right Handling if bitmap more than one pixel wide */
         if ((bLeftToRight) && ((BltInfo->DestRect.right - BltInfo->DestRect.left) > 1))
@@ -546,16 +546,16 @@ DIB_32BPP_BitBltSrcCopy(PBLTINFO BltInfo)
                 *Dest32-- = store[Index];
                 Index++;
               }
-            SourceBits -= BltInfo->SourceSurface->lDelta;
-            DestBits -= BltInfo->DestSurface->lDelta;
+              SourceBits -= BltInfo->SourceSurface->lDelta;
+              DestBits -= BltInfo->DestSurface->lDelta;
           }
           ExFreePoolWithTag(store, TAG_DIB);
-          OneDone = TRUE;
+          TopToBottomDone = TRUE;
         }
 
         /* Top to Botoom Handling if bitmap more than one pixel high */
         if ((bTopToBottom) && ((BltInfo->DestRect.bottom - BltInfo->DestRect.top) > 1))
-        {
+         {
           /* Note: It is very important that this code remain optimized for time used.
            *   Otherwise you will have random crashes in ReactOS that are undesirable.
            *   For an example of this just try executing the code here two times.
@@ -582,7 +582,7 @@ DIB_32BPP_BitBltSrcCopy(PBLTINFO BltInfo)
            + (BltInfo->DestRect.bottom - 1) * BltInfo->DestSurface->lDelta
            + 4 * BltInfo->DestRect.left;
 
-          /* The OneDone flag indicates that we are flipping for bTopToBottom and bLeftToRight
+          /* The TopToBottomDone flag indicates that we are flipping for bTopToBottom and bLeftToRight
            * and have already completed the bLeftToRight. So we will lose our first flip output
            * unless we work with its output which is at the destination site. So in this case
            * our new Source becomes the previous outputs Destination.
@@ -590,7 +590,7 @@ DIB_32BPP_BitBltSrcCopy(PBLTINFO BltInfo)
            * and already completed a flip from Source to Destination for the first step 
            */
 
-          if (OneDone || blDeltaAdjustDone)
+          if (TopToBottomDone || blDeltaAdjustDone)
           {
             /* This sets SourceBitsB to the bottom line */
             SourceBitsB = DestBitsB;
@@ -613,13 +613,13 @@ DIB_32BPP_BitBltSrcCopy(PBLTINFO BltInfo)
           for (j = 0; j < (BltInfo->DestRect.bottom - BltInfo->DestRect.top) / 2 ; j++)
           {
             /* Store bottom row of Source pixels */
-            RtlMoveMemory(&store[0], SourceBitsB, 4 * (BltInfo->DestRect.right - BltInfo->DestRect.left));
+            RtlMoveMemory(store, SourceBitsB, 4 * (BltInfo->DestRect.right - BltInfo->DestRect.left));
 
             /* Copy top Source row to bottom Destination row overwriting it */
             RtlMoveMemory(DestBitsB, SourceBitsT, 4 * (BltInfo->DestRect.right - BltInfo->DestRect.left));
 
             /* Copy stored bottom row of Source pixels to Destination top row of pixels */
-            RtlMoveMemory(DestBitsT, &store[0], 4 * (BltInfo->DestRect.right - BltInfo->DestRect.left));
+            RtlMoveMemory(DestBitsT, store, 4 * (BltInfo->DestRect.right - BltInfo->DestRect.left));
 
             /* Index top rows down and bottom rows up */
             SourceBitsT += BltInfo->SourceSurface->lDelta;

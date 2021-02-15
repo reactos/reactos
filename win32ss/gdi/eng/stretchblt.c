@@ -635,8 +635,9 @@ IntEngStretchBlt(SURFOBJ *psoDest,
            SourceRect->left, SourceRect->top, SourceRect->right, SourceRect->bottom,
            DestRect->left, DestRect->top, DestRect->right, DestRect->bottom);
 
-    /* if cxSrc < 0 then we change the signs for both cxSrc and cxDest and */
-    /* we reverse their coordinates, because these outcomes are the same.  */
+    /* if cxSrc < 0 then we change the signs for both cxSrc and cxDest and
+     * we reverse their coordinates, because these outcomes are the same.
+     */
     if (cxSrc < 0)
     {
         lTmp = SourceRect->left;
@@ -649,7 +650,8 @@ IntEngStretchBlt(SURFOBJ *psoDest,
         cxDest = -cxDest;
     }
     /* if cySrc < 0 then we change the signs for both cySrc and cyDest and
-     * we reverse their coordinates, because these outcomes are the same. */
+     * we reverse their coordinates, because these outcomes are the same.
+      */
     if (cySrc < 0)
     {
         lTmp = DestRect->top;
@@ -739,8 +741,8 @@ IntEngStretchBlt(SURFOBJ *psoDest,
     }
 
     DPRINT("InputRect: (%d,%d)-(%d,%d) and InputClippedRect: (%d,%d)-(%d,%d)\n",
-                InputRect.left, InputRect.top, InputRect.right, InputRect.bottom,
-                InputClippedRect.left, InputClippedRect.top, InputClippedRect.right, InputClippedRect.bottom);
+        InputRect.left, InputRect.top, InputRect.right, InputRect.bottom,
+        InputClippedRect.left, InputClippedRect.top, InputClippedRect.right, InputClippedRect.bottom);
 
     if (ClipRegion->iDComplexity != DC_TRIVIAL)
     {

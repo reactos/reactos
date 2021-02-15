@@ -70,7 +70,7 @@ DIB_24BPP_BitBltSrcCopy(PBLTINFO BltInfo)
   /* Check for top to bottom flip needed. */
   bTopToBottom = BltInfo->DestRect.top > BltInfo->DestRect.bottom;
 
-  DPRINT("BltInfo->SourcePoint.x is '%d' & BltInfo->SourcePoint.y is '%d'.\n",
+  DPRINT("BltInfo->SourcePoint.x is '%d' and BltInfo->SourcePoint.y is '%d'.\n",
          BltInfo->SourcePoint.x, BltInfo->SourcePoint.y);
 
   /* Make WellOrdered by making top < bottom and left < right */
@@ -306,7 +306,7 @@ DIB_24BPP_BitBltSrcCopy(PBLTINFO BltInfo)
         else
         {
           /* Buffering for source and destination flip overlaps. Fixes KHMZ MirrorTest CORE-16642 */
-          BOOL OneDone = FALSE;
+          BOOL ToptoBottomDone = FALSE;
 
           if (bLeftToRight)
           {
@@ -329,7 +329,7 @@ DIB_24BPP_BitBltSrcCopy(PBLTINFO BltInfo)
             /* This sets sx to the rightmost pixel */
             sx = BltInfo->SourcePoint.x + (BltInfo->DestRect.right - BltInfo->DestRect.left - 1);
 
-            for (j=BltInfo->DestRect.top; j<BltInfo->DestRect.bottom; j++)
+            for (j = BltInfo->DestRect.top; j < BltInfo->DestRect.bottom; j++)
             {
 
               /* This sets sx to the rightmost pixel */
@@ -338,7 +338,7 @@ DIB_24BPP_BitBltSrcCopy(PBLTINFO BltInfo)
               Index = 0;
 
               // Read right to left and store
-              for (i=BltInfo->DestRect.left; i<BltInfo->DestRect.right; i++)
+              for (i = BltInfo->DestRect.left; i < BltInfo->DestRect.right; i++)
               {
                 store[Index] = DIB_24BPP_GetPixel(BltInfo->SourceSurface, sx, sy);
                 Index++;
@@ -348,7 +348,7 @@ DIB_24BPP_BitBltSrcCopy(PBLTINFO BltInfo)
               Index = 0;
 
               // Write left to right to pixel
-              for (i=BltInfo->DestRect.left; i<BltInfo->DestRect.right; i++)
+              for (i = BltInfo->DestRect.left; i < BltInfo->DestRect.right; i++)
               {
                 DIB_24BPP_PutPixel(BltInfo->DestSurface, i, j, XLATEOBJ_iXlate(BltInfo->XlateSourceToDest, store[Index]));
                 Index++;
@@ -356,7 +356,7 @@ DIB_24BPP_BitBltSrcCopy(PBLTINFO BltInfo)
               sy++;
             }
             ExFreePoolWithTag(store, TAG_DIB);
-            OneDone = TRUE;
+            TopToBottomDone = TRUE;
           }
 
           if (bTopToBottom)
@@ -373,14 +373,15 @@ DIB_24BPP_BitBltSrcCopy(PBLTINFO BltInfo)
               return FALSE;
             }
 
-            /* The OneDone flag indicates that we are flipping for bTopToBottom and bLeftToRight   */
-            /* and have already completed the bLeftToRight. So we will lose our first flip output */
-            /* unless we work with its output which is at the destination site. So in this case   */
-            /* our new Source becomes the previous outputs Destination. */
+            /* The TopToBottomDone flag indicates that we are flipping for bTopToBottom and bLeftToRight
+             * and have already completed the bLeftToRight. So we will lose our first flip output
+             * unless we work with its output which is at the destination site. So in this case
+             * our new Source becomes the previous outputs Destination.
+             */
 
-            if (OneDone)
+            if (TopToBottomDone)
             {
-              sx = BltInfo->DestRect.left;
+             sx = BltInfo->DestRect.left;
               sy = BltInfo->DestRect.top;
 
               /* This sets sy to the bottom line */
@@ -397,7 +398,7 @@ DIB_24BPP_BitBltSrcCopy(PBLTINFO BltInfo)
               sy = BltInfo->SourcePoint.y + (BltInfo->DestRect.bottom - BltInfo->DestRect.top - 1);
             }
 
-            for (i=BltInfo->DestRect.left; i<BltInfo->DestRect.right; i++)
+            for (i = BltInfo->DestRect.left; i < BltInfo->DestRect.right; i++)
             {
 
               /* This sets sy to the bottom line */
@@ -405,9 +406,9 @@ DIB_24BPP_BitBltSrcCopy(PBLTINFO BltInfo)
               Index = 0;
 
               /* Read bottom to top and store */
-              for (j=BltInfo->DestRect.top; j<BltInfo->DestRect.bottom; j++)
+              for (j = BltInfo->DestRect.top; j < BltInfo->DestRect.bottom; j++)
               {
-                if (OneDone)
+                if (TopToBottomDone)
                 {
                   store[Index] = DIB_24BPP_GetPixel(BltInfo->DestSurface, sx, sy);
                 }
@@ -421,7 +422,7 @@ DIB_24BPP_BitBltSrcCopy(PBLTINFO BltInfo)
 
               Index = 0;
 
-              for (j=BltInfo->DestRect.top; j<BltInfo->DestRect.bottom; j++)
+              for (j = BltInfo->DestRect.top; j < BltInfo->DestRect.bottom; j++)
               {
                 DIB_24BPP_PutPixel(BltInfo->DestSurface, i, j, XLATEOBJ_iXlate(BltInfo->XlateSourceToDest, store[Index]));
                 Index++;
