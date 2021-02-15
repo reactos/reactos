@@ -548,7 +548,7 @@ static void test_StretchBlt_TopDownOptions(BOOL SrcTopDown, BOOL DstTopDown)
     srcBuffer[0] = 0x000000FF;   // BLUE
     srcBuffer[1] = 0x0000FF00;   // GREEN
     srcBuffer[2] = 0x00FF0000;   // RED
-    srcBuffer[3] = 0xFF000000;   // ALPHA (No Opacity)
+    srcBuffer[3] = 0xFF000000;   // ALPHA (Opacity)
 
     if ((SrcTopDown || DstTopDown) && !(SrcTopDown && DstTopDown))
     {
