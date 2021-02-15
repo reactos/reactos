@@ -20,6 +20,54 @@
 #include "wine/test.h"
 #include <debug.h>
 
+/* Notes on using the StretchBlt function's general flip ability.
+ *
+ * The critical values for flipping are the signs of the values for DestWidth, DestHeight, SourceWidth and SourceHeight.
+ * If we assign a '0' to values having a negative sign and a '1' to values having a positive sign these can be CaseWXYZ's.
+ * Where the W, X, Y, and Z are replaced with the '0's and '1's representing the signs of the values in sequential order.
+ *
+ * If we take the normal StretchBlt function's copy/scaling with no flips, the generalized code can be represented as follows:
+ *
+ * StretchBlt(DestDC,   DestX,   DestY,   (DestWidth),   (DestHeight),
+ *            SourceDC, SourceX, SourceY, (SourceWidth), (SourceHeight), SRCCOPY); // Case1111 (15) (all positive signs)
+ *
+ * For Horizontal flipping then the generalized form on the Destination side can be represented as follows:
+ *
+ * StretchBlt(DestDC,   DestX + DestWidth - 1,  DestY,   -DestWidth,   DestHeight,
+ *            SourceDC, SourceX,                SourceY, SourceWidth,  SourceHeight, SRCCOPY);  // Case 0111 (7)
+ *
+ * and for Horizontal flipping the generalized form on the Source side can be represented as follows:
+ *
+ * StretchBlt(DestDC,   DestX,                     DestY,   DestWidth,    DestHeight,
+ *            SourceDC, SourceX + SourceWidth - 1, SourceY, -SourceWidth, SourceHeight, SRCCOPY); // Case 1101 (13)
+ *
+ * I believe that the "- 1" is used because we are moving from the rightmost position back to the 0th position.
+ *
+ * But there are three "special" cases where no flip is done (there is a copy/scale only) and the "-1" is not used.
+ * These are as follows:
+ * 1) 
+ * StretchBlt(DestDC,   DestX + DestWidth,     DestY,   -DestWidth,   DestHeight,  // Both Widths negative
+ *            SourceDC, SourceX + SourceWidth, SourceY, -SourceWidth, SourceHeight, SRCCOPY); // Case0101 (5)
+ * 2)
+ * StretchBlt(DestDC,   DestX,   DestY + DestHeight,     DestWidth,   -DestHeight, // Both heights negative
+ *            SourceDC, SourceX, SourceY + SourceHeight, SourceWidth, -SourceHeight, SRCCOPY); // Case1010 (10)
+ * 3)
+ * StretchBlt(DestDC,   DestX + DestWidth,     DestY + DestHeight,     -DestWidth,   -DestHeight, // widths AND heights neg
+ *            SourceDC, SourceX + SourceWidth, SourceY + SourceHeight, -SourceWidth, -SourceHeight, SRCCOPY); // Case0000 (0)
+ *
+ * I suspect that these are like this because of legacy reasons when StretchBlt did not support so many flip options.
+ *
+ * For Vertical flipping the generalized form on the Destination side can be represented as follows:
+ *
+ * StretchBlt(DestDC,   DestX,   DestY + DestHeight - 1,  DestWidth,   -DestHeight,
+ *            SourceDC, SourceX, SourceY,                 SourceWidth, SourceHeight, SRCCOPY); // Case1011 (11)
+ *
+ * and for Vertical on the Source Side as folows:
+ *
+ * StretchBlt(DestDC,   DestX,   DestY,                      DestWidth,   -DestHeight,
+ *            SourceDC, SourceX, SourceY + SourceHeight - 1, SourceWidth, -SourceHeight, SRCCOPY); // Case 1010 (10)
+ */
+
 static inline int get_dib_stride( int width, int bpp )
 {
     return ((width * bpp + 31) >> 3) & ~3;
@@ -51,9 +99,9 @@ static void check_StretchBlt_stretch(HDC hdcDst, HDC hdcSrc, BITMAPINFO *dst_inf
 }
 
 static void test_StretchBlt_stretch(HDC hdcDst, HDC hdcSrc, BITMAPINFO *dst_info, UINT32 *dstBuffer, UINT32 *srcBuffer,
-                                     int nXOriginDest, int nYOriginDest, int nWidthDest, int nHeightDest,
-                                     int nXOriginSrc, int nYOriginSrc, int nWidthSrc, int nHeightSrc,
-                                     UINT32 *expected, int line, BOOL SrcTopDown, BOOL DstTopDown )
+                                    int nXOriginDest, int nYOriginDest, int nWidthDest, int nHeightDest,
+                                    int nXOriginSrc, int nYOriginSrc, int nWidthSrc, int nHeightSrc,
+                                    UINT32 *expected, int line, BOOL SrcTopDown, BOOL DstTopDown )
 {
     int dst_size = get_dib_image_size( dst_info );
 
@@ -792,7 +840,6 @@ static void test_StretchBlt_TopDownOptions(BOOL SrcTopDown, BOOL DstTopDown)
     test_StretchBlt_stretch(hdcDst, hdcSrc, &biDst, dstBuffer, srcBuffer,
                              2, 2, -2, -2, 2, 2, -2, -2, expected, __LINE__, SrcTopDown, DstTopDown); // Case 0000 (0) - No Flip. Special Case.
 
-
     SelectObject(hdcSrc, oldSrc);
     DeleteObject(bmpSrc);
     DeleteDC(hdcSrc);
@@ -804,21 +851,24 @@ static void test_StretchBlt_TopDownOptions(BOOL SrcTopDown, BOOL DstTopDown)
     DeleteDC(hdcScreen);
 }
 
-
 START_TEST(StretchBlt)
 {
-    DPRINT1("\nStart of Generalized StretchBlt tests.\n");
-    test_StretchBlt();
+    trace("\n\r\nStart of Generalized StretchBlt tests.\n\n");
+    test_StretchBlt();  // Without the delay in the next statement, the heading below is written in the middle of these tests fails.
+    Sleep(100);         // This allows the heading below to be written after this block of tests completes.
 
-    DPRINT1("\n\r\nStart of Source Top Down and Destination Top Down tests.\n");
+    trace("\n\r\nStart of Source Top Down and Destination Top Down tests.\n\n");
     test_StretchBlt_TopDownOptions(TRUE, TRUE);
+    Sleep(100);
 
-    DPRINT1("\n\r\nStart of Source Top Down and Destination Bottom Up tests.\n");
+    trace("\n\r\nStart of Source Top Down and Destination Bottom Up tests.\n\n");
     test_StretchBlt_TopDownOptions(TRUE, FALSE);
+    Sleep(100);
 
-    DPRINT1("\n\r\nStart of Source Bottom Up and Destination Top Down tests.\n");
+    trace("\n\r\nStart of Source Bottom Up and Destination Top Down tests.\n\n");
     test_StretchBlt_TopDownOptions(FALSE, TRUE);
+    Sleep(100);
 
-    DPRINT1("\n\r\nStart of Source Bottom Up and Destination Bottom Up tests.\n");
+    trace("\n\r\nStart of Source Bottom Up and Destination Bottom Up tests.\n\n");
     test_StretchBlt_TopDownOptions(FALSE, FALSE);
 }
