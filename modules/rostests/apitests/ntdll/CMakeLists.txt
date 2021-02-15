@@ -69,6 +69,7 @@ list(APPEND SOURCE
     RtlMemoryStream.c
     RtlMultipleAllocateHeap.c
     RtlNtPathNameToDosPathName.c
+    RtlpApplyLengthFunction.c
     RtlpEnsureBufferSize.c
     RtlQueryTimeZoneInfo.c
     RtlReAllocateHeap.c

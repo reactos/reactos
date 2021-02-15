@@ -446,10 +446,49 @@ NTAPI
 RtlpApplyLengthFunction(IN ULONG Flags,
                         IN ULONG Type,
                         IN PVOID UnicodeStringOrUnicodeStringBuffer,
-                        IN PVOID LengthFunction)
+                        IN NTSTATUS(NTAPI* LengthFunction)(ULONG, PUNICODE_STRING, PULONG))
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    NTSTATUS Status;
+    PUNICODE_STRING String;
+    ULONG Length;
+
+    if (Flags || UnicodeStringOrUnicodeStringBuffer == NULL || LengthFunction == NULL)
+    {
+        DPRINT1("ERROR: Flags=0x%x, UnicodeStringOrUnicodeStringBuffer=%p, LengthFunction=%p\n",
+            Flags, UnicodeStringOrUnicodeStringBuffer, LengthFunction);
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    if (Type == sizeof(UNICODE_STRING))
+    {
+        String = (PUNICODE_STRING)UnicodeStringOrUnicodeStringBuffer;
+    }
+    else if (Type == sizeof(RTL_UNICODE_STRING_BUFFER))
+    {
+        String = &((PRTL_UNICODE_STRING_BUFFER)UnicodeStringOrUnicodeStringBuffer)->String;
+    }
+    else
+    {
+        DPRINT1("ERROR: Type = %u\n", Type);
+        return STATUS_INVALID_PARAMETER;
+    }
+
+    Length = 0;
+    Status = LengthFunction(0, String, &Length);
+    if (!NT_SUCCESS(Status))
+        return Status;
+
+    if (Length > UNICODE_STRING_MAX_CHARS)
+        return STATUS_NAME_TOO_LONG;
+
+    String->Length = (USHORT)(Length * sizeof(WCHAR));
+
+    if (Type == sizeof(RTL_UNICODE_STRING_BUFFER))
+    {
+        String->Buffer[Length] = UNICODE_NULL;
+    }
+
+    return STATUS_SUCCESS;
 }
 
 NTSTATUS
