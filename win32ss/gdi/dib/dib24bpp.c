@@ -306,7 +306,7 @@ DIB_24BPP_BitBltSrcCopy(PBLTINFO BltInfo)
         else
         {
           /* Buffering for source and destination flip overlaps. Fixes KHMZ MirrorTest CORE-16642 */
-          BOOL ToptoBottomDone = FALSE;
+          BOOL TopToBottomDone = FALSE;
 
           if (bLeftToRight)
           {
