@@ -16,18 +16,16 @@
 
 typedef struct _CLOCKDATA
 {
-    HWND hwnd;
-
-    HPEN hNormalPen, hBoldPen, hHeavyPen, hGreyPen;
-    HBRUSH hGreyBrush;
-    HBITMAP hbmBackScreen;
-
-    INT cxClient, cyClient;
+    INT cxClient;
+    INT cyClient;
     BOOL bTimer;
     INT Radius;
     POINT Center;
-
-    SYSTEMTIME stCurrent, stPrevious;
+    HPEN hHourPen, hMinutePen, hSecondPen, hBoldPen;
+    HBRUSH hGreenBrush, hGreyBrush;
+    HBITMAP hbmBackScreen;
+    SYSTEMTIME stCurrent;
+    SYSTEMTIME stPrevious;
 } CLOCKDATA, *PCLOCKDATA;
 
 #ifndef M_PI
@@ -146,29 +144,25 @@ DrawHands(HDC hdc, PCLOCKDATA pClockData)
     POINT Point, Center = pClockData->Center;
 
     /* The hour hand */
-    HGDIOBJ hOldPen = SelectObject(hdc, pClockData->hHeavyPen);
+    HGDIOBJ hOldPen = SelectObject(hdc, pClockData->hHourPen);
     iAngle = (pst->wHour * 30) % 360 + pst->wMinute / 2;
     SetClockCoodinates(&Point, Center, Radius * 1 / 2, iAngle);
     Line(hdc, Center, Point);
-    SelectObject(hdc, pClockData->hGreyPen);
-    Line(hdc, Center, Point);
 
     /* The minute hand */
-    SelectObject(hdc, pClockData->hBoldPen);
+    SelectObject(hdc, pClockData->hMinutePen);
     iAngle = pst->wMinute * 6;
     SetClockCoodinates(&Point, Center, Radius * 3 / 4, iAngle);
     Line(hdc, Center, Point);
-    SelectObject(hdc, pClockData->hGreyPen);
-    Line(hdc, Center, Point);
 
     /* The second hand */
-    SelectObject(hdc, pClockData->hGreyPen);
+    SelectObject(hdc, pClockData->hSecondPen);
     iAngle = pst->wSecond * 6;
     SetClockCoodinates(&Point, Center, Radius * 5 / 6, iAngle);
     Line(hdc, Center, Point);
 
     /* The center disc */
-    HGDIOBJ hOldBrush = SelectObject(hdc, GetStockObject(BLACK_BRUSH));
+    HGDIOBJ hOldBrush = SelectObject(hdc, pClockData->hGreenBrush);
     const INT cxy = 5;
     Ellipse(hdc, Center.x - cxy, Center.y - cxy, Center.x + cxy, Center.y + cxy);
     SelectObject(hdc, hOldBrush);
@@ -203,12 +197,12 @@ ClockWnd_CreateData(HWND hwnd)
     if (!pClockData)
         return NULL;
 
-    pClockData->hwnd = hwnd;
-    pClockData->hGreyPen = CreatePen(PS_SOLID, 1, RGB(128, 128, 128));
-    pClockData->hGreyBrush = CreateSolidBrush(RGB(128, 128, 128));
-    pClockData->hNormalPen = CreatePen(PS_SOLID, 1, RGB(0, 0, 0));
-    pClockData->hBoldPen = CreatePen(PS_SOLID, 3, RGB(0, 0, 0));
-    pClockData->hHeavyPen = CreatePen(PS_SOLID, 5, RGB(0, 0, 0));
+    pClockData->hHourPen = CreatePen(PS_SOLID, 7, RGB(255, 0, 0)); /* Red */
+    pClockData->hMinutePen = CreatePen(PS_SOLID, 5, RGB(0, 0, 255)); /* Blue */
+    pClockData->hSecondPen = CreatePen(PS_SOLID, 2, RGB(0, 100, 0)); /* DarkGreen */
+    pClockData->hBoldPen = CreatePen(PS_SOLID, 3, RGB(0, 0, 0)); /* Black */
+    pClockData->hGreenBrush = CreateSolidBrush(RGB(0, 100, 0)); /* DarkGreen */
+    pClockData->hGreyBrush = CreateSolidBrush(RGB(128, 128, 128)); /* Gray */
 
     SetTimer(hwnd, ID_TIMER, 1000, NULL);
     pClockData->bTimer = TRUE;
@@ -222,13 +216,13 @@ ClockWnd_CreateData(HWND hwnd)
 static VOID
 ClockWnd_DestroyData(HWND hwnd, PCLOCKDATA pClockData)
 {
-    pClockData->hwnd = NULL;
-    DeleteObject(pClockData->hGreyPen);
+    DeleteObject(pClockData->hHourPen);
+    DeleteObject(pClockData->hMinutePen);
+    DeleteObject(pClockData->hSecondPen);
+    DeleteObject(pClockData->hBoldPen);
+    DeleteObject(pClockData->hGreenBrush);
     DeleteObject(pClockData->hGreyBrush);
     DeleteObject(pClockData->hbmBackScreen);
-    DeleteObject(pClockData->hNormalPen);
-    DeleteObject(pClockData->hBoldPen);
-    DeleteObject(pClockData->hHeavyPen);
 
     if (pClockData->bTimer)
         KillTimer(hwnd, ID_TIMER);
