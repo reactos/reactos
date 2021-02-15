@@ -48,7 +48,7 @@ SetClockCoodinates(LPPOINT pPoint, POINT Center, INT Radius, INT Angle)
 }
 
 static inline VOID
-Line(HDC hDC, POINT pt0, POINT pt1)
+Line(HDC hDC, POINT pt0, POINT pt1, BOOL Stroke)
 {
 #if 1 /* FIXME: CORE-2527 workaround */
     BeginPath(hDC);
@@ -56,15 +56,21 @@ Line(HDC hDC, POINT pt0, POINT pt1)
     LineTo(hDC, pt1.x, pt1.y);
     EndPath(hDC);
     WidenPath(hDC);
+    HRGN hRgn = PathToRegion(hDC);
 
     LOGPEN LogPen;
     GetObject(GetCurrentObject(hDC, OBJ_PEN), sizeof(LogPen), &LogPen);
 
     HBRUSH hbr = CreateSolidBrush(LogPen.lopnColor);
-    HGDIOBJ hbrOld = SelectObject(hDC, hbr);
-    FillPath(hDC);
-    SelectObject(hDC, hbrOld);
+    FillRgn(hDC, hRgn, hbr);
     DeleteObject(hbr);
+
+    if (Stroke)
+    {
+        FrameRgn(hDC, hRgn, GetStockObject(BLACK_BRUSH), 1, 1);
+    }
+
+    DeleteObject(hRgn);
 #else
     MoveToEx(hDC, pt0.x, pt0.y, NULL);
     LineTo(hDC, pt1.x, pt1.y);
@@ -118,7 +124,7 @@ DrawClock(HDC hdc, PCLOCKDATA pClockData)
             SetClockCoodinates(&Points[0], Center, Radius - 7, iAngle);
             SetClockCoodinates(&Points[1], Center, Radius - 13, iAngle);
             SelectObject(hdc, pClockData->hBoldPen);
-            Line(hdc, Points[0], Points[1]);
+            Line(hdc, Points[0], Points[1], FALSE);
         }
         else
         {
@@ -145,19 +151,19 @@ DrawHands(HDC hdc, PCLOCKDATA pClockData)
     HGDIOBJ hOldPen = SelectObject(hdc, pClockData->hHourPen);
     iAngle = (pst->wHour * 30) % 360 + pst->wMinute / 2;
     SetClockCoodinates(&Point, Center, Radius * 1 / 2, iAngle);
-    Line(hdc, Center, Point);
+    Line(hdc, Center, Point, TRUE);
 
     /* The minute hand */
     SelectObject(hdc, pClockData->hMinutePen);
     iAngle = pst->wMinute * 6;
     SetClockCoodinates(&Point, Center, Radius * 3 / 4, iAngle);
-    Line(hdc, Center, Point);
+    Line(hdc, Center, Point, TRUE);
 
     /* The second hand */
     SelectObject(hdc, pClockData->hSecondPen);
     iAngle = pst->wSecond * 6;
     SetClockCoodinates(&Point, Center, Radius * 5 / 6, iAngle);
-    Line(hdc, Center, Point);
+    Line(hdc, Center, Point, FALSE);
 
     /* The center disc */
     HGDIOBJ hOldBrush = SelectObject(hdc, pClockData->hBlueBrush);
@@ -194,11 +200,11 @@ ClockWnd_CreateData(HWND hwnd)
     if (!pClockData)
         return NULL;
 
-    pClockData->hHourPen = CreatePen(PS_SOLID, 7, RGB(255, 0, 0)); /* Red */
-    pClockData->hMinutePen = CreatePen(PS_SOLID, 4, RGB(0, 100, 0)); /* DarkGreen */
+    pClockData->hHourPen = CreatePen(PS_SOLID, 12, RGB(255, 0, 0)); /* Red */
+    pClockData->hMinutePen = CreatePen(PS_SOLID, 8, RGB(0, 255, 0)); /* Green */
     pClockData->hSecondPen = CreatePen(PS_SOLID, 2, RGB(0, 0, 255)); /* Blue */
     pClockData->hBoldPen = CreatePen(PS_SOLID, 3, RGB(0, 0, 0)); /* Black */
-    pClockData->hBlueBrush = CreateSolidBrush(RGB(0, 0, 2555)); /* Blue */
+    pClockData->hBlueBrush = CreateSolidBrush(RGB(0, 0, 255)); /* Blue */
     pClockData->hGreyBrush = CreateSolidBrush(RGB(128, 128, 128)); /* Gray */
 
     SetTimer(hwnd, ID_TIMER, 1000, NULL);
