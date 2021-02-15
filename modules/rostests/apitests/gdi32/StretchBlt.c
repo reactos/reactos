@@ -852,18 +852,18 @@ static void test_StretchBlt_TopDownOptions(BOOL SrcTopDown, BOOL DstTopDown)
 
 START_TEST(StretchBlt)
 {
-    trace("\n\r\nStart of Generalized StretchBlt tests.\n\n");
+    trace("\n\n## Start of generalized StretchBlt tests.\n\n");
     test_StretchBlt();
 
-    trace("\n\r\nStart of Source Top Down and Destination Top Down tests.\n\n");
+    trace("\n\n## Start of source top-down and destination top-down tests.\n\n");
     test_StretchBlt_TopDownOptions(TRUE, TRUE);
 
-    trace("\n\r\nStart of Source Top Down and Destination Bottom Up tests.\n\n");
+    trace("\n\n## Start of source top-down and destination bottom-up tests.\n\n");
     test_StretchBlt_TopDownOptions(TRUE, FALSE);
 
-    trace("\n\r\nStart of Source Bottom Up and Destination Top Down tests.\n\n");
+    trace("\n\n## Start of source bottom-up and destination top-down tests.\n\n");
     test_StretchBlt_TopDownOptions(FALSE, TRUE);
 
-    trace("\n\r\nStart of Source Bottom Up and Destination Bottom Up tests.\n\n");
+    trace("\n\n## Start of source bottom-up and destination bottom-up tests.\n\n");
     test_StretchBlt_TopDownOptions(FALSE, FALSE);
 }
