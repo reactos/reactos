@@ -3,9 +3,9 @@ if(ENABLE_ROSAPPS)
     add_subdirectory(rosapps)
 endif()
 
-if(ENABLE_ROSTESTS)
+
     add_subdirectory(rostests)
-endif()
+
 
 if(ENABLE_WALLPAPERS)
     add_subdirectory(wallpapers)
