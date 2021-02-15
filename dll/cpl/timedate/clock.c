@@ -22,7 +22,7 @@ typedef struct _CLOCKDATA
     INT Radius;
     POINT Center;
     HPEN hHourPen, hMinutePen, hSecondPen, hBoldPen;
-    HBRUSH hGreenBrush, hGreyBrush;
+    HBRUSH hBlueBrush, hGreyBrush;
     HBITMAP hbmBackScreen;
     SYSTEMTIME stCurrent;
     SYSTEMTIME stPrevious;
@@ -162,7 +162,7 @@ DrawHands(HDC hdc, PCLOCKDATA pClockData)
     Line(hdc, Center, Point);
 
     /* The center disc */
-    HGDIOBJ hOldBrush = SelectObject(hdc, pClockData->hGreenBrush);
+    HGDIOBJ hOldBrush = SelectObject(hdc, pClockData->hBlueBrush);
     const INT cxy = 5;
     Ellipse(hdc, Center.x - cxy, Center.y - cxy, Center.x + cxy, Center.y + cxy);
     SelectObject(hdc, hOldBrush);
@@ -198,10 +198,10 @@ ClockWnd_CreateData(HWND hwnd)
         return NULL;
 
     pClockData->hHourPen = CreatePen(PS_SOLID, 7, RGB(255, 0, 0)); /* Red */
-    pClockData->hMinutePen = CreatePen(PS_SOLID, 5, RGB(0, 0, 255)); /* Blue */
-    pClockData->hSecondPen = CreatePen(PS_SOLID, 2, RGB(0, 100, 0)); /* DarkGreen */
+    pClockData->hMinutePen = CreatePen(PS_SOLID, 4, RGB(0, 100, 0)); /* DarkGreen */
+    pClockData->hSecondPen = CreatePen(PS_SOLID, 2, RGB(0, 0, 255)); /* Blue */
     pClockData->hBoldPen = CreatePen(PS_SOLID, 3, RGB(0, 0, 0)); /* Black */
-    pClockData->hGreenBrush = CreateSolidBrush(RGB(0, 100, 0)); /* DarkGreen */
+    pClockData->hBlueBrush = CreateSolidBrush(RGB(0, 0, 2555)); /* Blue */
     pClockData->hGreyBrush = CreateSolidBrush(RGB(128, 128, 128)); /* Gray */
 
     SetTimer(hwnd, ID_TIMER, 1000, NULL);
@@ -220,7 +220,7 @@ ClockWnd_DestroyData(HWND hwnd, PCLOCKDATA pClockData)
     DeleteObject(pClockData->hMinutePen);
     DeleteObject(pClockData->hSecondPen);
     DeleteObject(pClockData->hBoldPen);
-    DeleteObject(pClockData->hGreenBrush);
+    DeleteObject(pClockData->hBlueBrush);
     DeleteObject(pClockData->hGreyBrush);
     DeleteObject(pClockData->hbmBackScreen);
 
