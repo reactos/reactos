@@ -167,7 +167,7 @@ BOOLEAN DIB_XXBPP_StretchBlt(SURFOBJ *DestSurf, SURFOBJ *SourceSurf, SURFOBJ *Ma
       {
         if (bLeftToRight)
         {
-          sx = SourceRect->right-(DesX - DestRect->left) * SrcWidth / DstWidth;  // flips about the y-axis
+          sx = SourceRect->right - (DesX - DestRect->left) * SrcWidth / DstWidth;  // flips about the y-axis
         }
         else
         {
