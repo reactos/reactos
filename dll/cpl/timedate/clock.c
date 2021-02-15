@@ -18,7 +18,6 @@ typedef struct _CLOCKDATA
 {
     INT cxClient;
     INT cyClient;
-    BOOL bTimer;
     INT Radius;
     POINT Center;
     HPEN hHourPen, hMinutePen, hSecondPen, hBoldPen;
@@ -26,6 +25,7 @@ typedef struct _CLOCKDATA
     HBITMAP hbmBackScreen;
     SYSTEMTIME stCurrent;
     SYSTEMTIME stPrevious;
+    BOOL bTimer;
 } CLOCKDATA, *PCLOCKDATA;
 
 #ifndef M_PI
@@ -62,9 +62,7 @@ Line(HDC hDC, POINT pt0, POINT pt1)
 
     HBRUSH hbr = CreateSolidBrush(LogPen.lopnColor);
     HGDIOBJ hbrOld = SelectObject(hDC, hbr);
-
     FillPath(hDC);
-
     SelectObject(hDC, hbrOld);
     DeleteObject(hbr);
 #else
@@ -192,8 +190,7 @@ ClockWnd_OnDraw(HWND hwnd, HDC hdc, PCLOCKDATA pClockData)
 static PCLOCKDATA
 ClockWnd_CreateData(HWND hwnd)
 {
-    PCLOCKDATA pClockData;
-    pClockData = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(CLOCKDATA));
+    PCLOCKDATA pClockData = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(CLOCKDATA));
     if (!pClockData)
         return NULL;
 
