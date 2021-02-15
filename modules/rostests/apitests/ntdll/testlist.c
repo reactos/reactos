@@ -70,6 +70,7 @@ extern void func_RtlIsNameLegalDOS8Dot3(void);
 extern void func_RtlMemoryStream(void);
 extern void func_RtlMultipleAllocateHeap(void);
 extern void func_RtlNtPathNameToDosPathName(void);
+extern void func_RtlpApplyLengthFunction(void);
 extern void func_RtlpEnsureBufferSize(void);
 extern void func_RtlQueryTimeZoneInformation(void);
 extern void func_RtlReAllocateHeap(void);
@@ -148,6 +149,7 @@ const struct test winetest_testlist[] =
     { "RtlMemoryStream",                func_RtlMemoryStream },
     { "RtlMultipleAllocateHeap",        func_RtlMultipleAllocateHeap },
     { "RtlNtPathNameToDosPathName",     func_RtlNtPathNameToDosPathName },
+    { "RtlpApplyLengthFunction",        func_RtlpApplyLengthFunction },
     { "RtlpEnsureBufferSize",           func_RtlpEnsureBufferSize },
     { "RtlQueryTimeZoneInformation",    func_RtlQueryTimeZoneInformation },
     { "RtlReAllocateHeap",              func_RtlReAllocateHeap },
