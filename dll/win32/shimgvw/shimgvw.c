@@ -420,7 +420,7 @@ static void pSaveImageAs(HWND hwnd)
     sfn.lpstrFile   = szSaveFileName;
     sfn.lpstrFilter = szFilterMask;
     sfn.nMaxFile    = MAX_PATH;
-    sfn.Flags       = OFN_OVERWRITEPROMPT | OFN_HIDEREADONLY;
+    sfn.Flags       = OFN_EXPLORER | OFN_OVERWRITEPROMPT | OFN_HIDEREADONLY;
 
     c = szFilterMask;
 
