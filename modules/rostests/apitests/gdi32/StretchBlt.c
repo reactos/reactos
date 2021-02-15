@@ -566,7 +566,7 @@ static void test_StretchBlt_TopDownOptions(BOOL SrcTopDown, BOOL DstTopDown)
     }
 
     test_StretchBlt_stretch(hdcDst, hdcSrc, &biDst, dstBuffer, srcBuffer,
-                             0, 0, 2, 2, 0, 0, 2, 2, expected, __LINE__, SrcTopDown, DstTopDown); // Case 1111 (15) - No flip. Just copy.
+                            0, 0, 2, 2, 0, 0, 2, 2, expected, __LINE__, SrcTopDown, DstTopDown); // Case 1111 (15) - No flip. Just copy.
 
     if ((SrcTopDown || DstTopDown) && !(SrcTopDown && DstTopDown))
     {
