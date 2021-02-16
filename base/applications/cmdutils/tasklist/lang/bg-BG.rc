@@ -16,4 +16,5 @@ Desciption:\
     IDS_HEADER_PID, "PID"
     IDS_HEADER_SESSION, "Session#"
     IDS_HEADER_MEMUSAGE, "Mem Usage"
+    IDS_MEMORY_STR, "%s K"
 END

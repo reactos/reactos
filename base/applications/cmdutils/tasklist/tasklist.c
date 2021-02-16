@@ -51,6 +51,12 @@ INT PrintString(LPCWSTR String, INT MaxWidth, BOOL bAlignLeft)
 // The string WILL be truncated if it's longer than RES_STR_MAXLEN
 INT PrintResString(HINSTANCE hInstance, UINT uid, INT MaxWidth, BOOL bAlignLeft)
 {
+    if (!hInstance)
+    {
+        assert(0);
+        return 0;
+    }
+    
     WCHAR StringBuffer[RES_STR_MAXLEN];
     LoadStringW(hInstance, uid, StringBuffer, _countof(StringBuffer));
     return PrintString(StringBuffer, MaxWidth, bAlignLeft);
@@ -64,78 +70,71 @@ VOID PrintNum(LONGLONG Number, INT MaxWidth)
     ConPrintf(StdOut, L"%*lld", MaxWidth, Number);
 }
 
-// Print memory size using appropriate unit, with comma-separated number, aligned to right.
+// Print memory size using KB as unit, with comma-separated number, aligned to right.
 // MaxWidth is the width for printing.
-// StartingUnit is the minimum memory unit used, 0 for Byte, 1 for KB, 2 for MB ...
-// return FALSE when failed to format.
-BOOL PrintMemory(SIZE_T MemorySizeByte, INT MaxWidth, INT StartingUnit)
+// the number WILL be truncated if it's longer than MaxWidth
+BOOL PrintMemory(SIZE_T MemorySizeByte, INT MaxWidth, HINSTANCE hInstance)
 {
-    LPCWSTR MemoryUnit[] = {L"B", L"K", L"M", L"G", L"T", L"P"};
-
-    MaxWidth -= 2; // a space and a unit will occupy 2 length.
-    if (MaxWidth <= 0)
+    if (MaxWidth <= 0 || !hInstance)
     {
         assert(0);
         return FALSE;
     }
 
-    SIZE_T MemorySize = MemorySizeByte;
+    SIZE_T MemorySize = MemorySizeByte >> 10;
 
-    for (INT i = 0; i < _countof(MemoryUnit); i++)
+    WCHAR NumberString[27] = { 0 }; // length 26 is enough to display ULLONG_MAX in decimal with comma, one more for zero-terminated.
+    assert(sizeof(SIZE_T) <= 8);
+
+    PWCHAR pNumberStr = NumberString;
+
+    // calculate the length
+    INT PrintLength = 0;
+    SIZE_T Tmp = MemorySize;
+    do
     {
-        if (i >= StartingUnit)
-        {
-            // calculate the length needed to print.
-            INT PrintLength = 0;
-            SIZE_T Tmp = MemorySize;
-            do
-            {
-                Tmp /= 10;
-                PrintLength += 1;
-            } while (Tmp);
+        Tmp /= 10;
+        PrintLength += 1;
+    } while (Tmp);
 
-            if (PrintLength + (PrintLength - 1) / 3 <= MaxWidth) // (PrintLength - 1) / 3 is the length comma will take.
-            {
-                // enough to hold
-
-                // print padding space
-                PrintSpace(MaxWidth - (PrintLength + (PrintLength - 1) / 3));
-
-                INT Mod = 1;
-                for (INT i = 0; i < PrintLength - 1; i++)
-                {
-                    Mod *= 10;
-                }
-
-                for (INT i = PrintLength - 1; i >= 0; i--)
-                {
-                    ConPrintf(StdOut, L"%d", MemorySize / Mod);
-                    MemorySize %= Mod;
-                    if (i && i % 3 == 0)
-                    {
-                        ConPrintf(StdOut, L",");
-                    }
-                    Mod /= 10;
-                }
-
-                // print the unit.
-                ConPrintf(StdOut, L" %ls", MemoryUnit[i]);
-
-                return TRUE;
-            }
-        }
-        
-        MemorySize >>= 10; // MemorySize /= 1024;
+    INT Mod = 1;
+    for (INT i = 0; i < PrintLength - 1; i++)
+    {
+        Mod *= 10;
     }
 
-    // out of MemoryUnit range.
-    assert(0);
-    return FALSE;
+    for (INT i = PrintLength - 1; i >= 0; i--)
+    {
+        *pNumberStr = L'0' + (MemorySize / Mod);
+        MemorySize %= Mod;
+        pNumberStr++;
+        
+        if (i && i % 3 == 0)
+        {
+            *pNumberStr = L',';
+            pNumberStr++;
+        }
+        Mod /= 10;
+    }
+
+    WCHAR FormatStr[RES_STR_MAXLEN];
+    LoadStringW(hInstance, IDS_MEMORY_STR, FormatStr, _countof(FormatStr));
+
+    WCHAR String[RES_STR_MAXLEN + _countof(NumberString)];
+    
+    swprintf(String, FormatStr, NumberString);
+    PrintString(String, MaxWidth, FALSE);
+
+    return TRUE;
 }
 
-VOID PrintHeader(VOID)
+VOID PrintHeader(HINSTANCE hInstance)
 {
-    HINSTANCE hInstance = GetModuleHandleW(NULL);
+    if (!hInstance)
+    {
+        assert(0);
+        return;
+    }
     PrintResString(hInstance, IDS_HEADER_IMAGENAME, COLUMNWIDTH_IMAGENAME, TRUE);
     PrintSpace(1);
     PrintResString(hInstance, IDS_HEADER_PID,       COLUMNWIDTH_PID,       FALSE);
@@ -221,11 +220,13 @@ BOOL EnumProcessAndPrint(BOOL bNoHeader)
         return FALSE;
     }
 
+    HINSTANCE hInstance = GetModuleHandleW(NULL);
+
     ConPrintf(StdOut, L"\n");
 
     if (!bNoHeader)
     {
-        PrintHeader();
+        PrintHeader(hInstance);
     }
 
     PSYSTEM_PROCESS_INFORMATION pSPI;
@@ -238,7 +239,7 @@ BOOL EnumProcessAndPrint(BOOL bNoHeader)
         PrintSpace(1);
         PrintNum((ULONGLONG)pSPI->SessionId, COLUMNWIDTH_SESSION);
         PrintSpace(1);
-        PrintMemory(pSPI->WorkingSetSize, COLUMNWIDTH_MEMUSAGE, 1);
+        PrintMemory(pSPI->WorkingSetSize, COLUMNWIDTH_MEMUSAGE, hInstance);
 
         ConPrintf(StdOut, L"\n");
 
