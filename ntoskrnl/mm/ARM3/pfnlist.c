@@ -1438,28 +1438,8 @@ MmCompletePageWrite(
     if (!NT_SUCCESS(Status))
         Pfn->u3.e1.Modified = 1;
 
-    /* Dereference it now */
+    /* Dereference it now. This will put it back in the right list. */
     MiDereferencePfnAndDropLockCount(Pfn);
-
-    /* Does someone use this page now ? */
-    if (Pfn->u3.e1.PageLocation == ActiveAndValid)
-    {
-        /* Yes. Let it live its new life. */
-        ASSERT(Pfn->u3.ReferenceCount != 0);
-
-        MiReleasePfnLock(OldIrql);
-        return;
-    }
-
-    /* If the page is not active, then it still must be in transition */
-    ASSERT(Pfn->u3.e1.PageLocation == TransitionPage);
-
-    /* Put this page in the standby list. You are freeeeeeeee!
-     * Well, that is, if nobody failed ! */
-    if (Pfn->u3.e1.Modified)
-        MiInsertPageInList(&MmModifiedPageListHead, Page);
-    else
-        MiInsertStandbyListAtFront(Page);
 
     MiReleasePfnLock(OldIrql);
 }
@@ -1542,8 +1522,6 @@ DoneForThisPage:
                 OldIrql = MiAcquirePfnLock();
 
                 MiDereferencePfnAndDropLockCount(Pfn);
-
-                MiInsertPageInList(&MmModifiedPageListHead, Page);
 
                 MiReleasePfnLock(OldIrql);
                 break;
