@@ -1462,14 +1462,16 @@ MiModifiedPageWriter(_Unreferenced_parameter_ PVOID Context)
             continue;
 
         KIRQL OldIrql = MiAcquirePfnLock();
-        PFN_NUMBER Page;
 
         /* Limit ourselves so that we don't write everything in,
-         * but free enough pages so that Cc can move ahead in case it is in need. */
-        while (((Page = MmModifiedPageListByColor[0].Flink) != LIST_HEAD)
-            && (MmAvailablePages < (MmThrottleTop * 2)))
+         * but free enough pages so that Cc can move ahead in case it is in need.
+         * See CcCanIWrite implementation about why this is so. */
+        while (MmModifiedPageListHead.Total > 900)
         {
+            PFN_NUMBER Page = MmModifiedPageListByColor[0].Flink;
             NTSTATUS Status;
+
+            ASSERT(Page != LIST_HEAD);
 
             PMMPFN Pfn = MiGetPfnEntry(Page);
 
