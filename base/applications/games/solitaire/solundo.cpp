@@ -1,9 +1,27 @@
+/*
+ * PROJECT:      Solitaire
+ * LICENSE:      See COPYING in top level directory
+ * FILE:         base/applications/games/solitaire/solundo.cpp
+ * PURPOSE:      Undo module for Solitaire
+ * PROGRAMMER:   Tibor Lajos Füzi
+ */
+
 #include "solitaire.h"
 
+// source_id and destination_id store the source and destination of the cards
+// that were moved. These ids are defined in solitaire.h and can be DECK_ID, PILE_ID,
+// [SUIT_ID..SUIT_ID + 3], [ROW_ID..ROW_ID + NUM_ROW_STACKS - 1].
+// -1 means that there is no action stored in the undo module.
 static int source_id = -1;
 static int destination_id = -1;
+
+// Number of cards that were moved.
 static int number_of_cards = 0;
+
+// The score before the action was taken.
 static int prev_score = 0;
+
+// The number of visible pile cards before the action was taken.
 static int prev_visible_pile_cards = 0;
 
 void SetUndo(

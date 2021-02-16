@@ -187,7 +187,7 @@ void SetUndoMenuState(bool enable)
     }
     else
     {
-        EnableMenuItem(hGameMenu, IDM_GAME_UNDO, MF_BYCOMMAND | MF_DISABLED | MF_GRAYED);
+        EnableMenuItem(hGameMenu, IDM_GAME_UNDO, MF_BYCOMMAND | MF_GRAYED);
     }
 }
 
@@ -770,6 +770,5 @@ LRESULT CALLBACK WndProc (HWND hwnd, UINT iMsg, WPARAM wParam, LPARAM lParam)
 
     return DefWindowProc (hwnd, iMsg, wParam, lParam);
 }
-
 
 

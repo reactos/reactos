@@ -470,7 +470,7 @@ void FixIfOneCardLeft(void)
     // previous card-triplets will be available underneath.
     if ((dwOptions & OPTION_THREE_CARDS) && pPile->NumCards() == 1)
     {
-        pPile->SetOffsets(0,0);
+        pPile->SetOffsets(0, 0);
         pPile->SetCardStack(activepile);
     }
 }
@@ -592,7 +592,6 @@ void CARDLIBPROC DeckClickProc(CardRegion &stackobj, int iNumClicked)
     pDeck->SetCardStack(cardstack);
     pPile->SetCardStack(pile);
 
-    // Fix for CORE-11148
     FixIfOneCardLeft();
 
     SolWnd.Redraw();
