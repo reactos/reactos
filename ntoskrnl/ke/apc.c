@@ -214,7 +214,7 @@ KiInsertQueueApc(IN PKAPC Apc,
                 {
                     /* Lock the thread */
                     KiAcquireThreadLock(Thread);
-                    
+
                     /* Essentially do the same check as above */
                     if ((Thread->State == GateWait) &&
                         (Thread->WaitIrql == PASSIVE_LEVEL) &&
@@ -224,28 +224,28 @@ KiInsertQueueApc(IN PKAPC Apc,
                           !(Thread->ApcState.KernelApcInProgress))))
                     {
                         /* We were in a gate wait. Handle this. */
-                        DPRINT1("A thread was in a gate wait\n");
-                        
+                        DPRINT("A thread was in a gate wait\n");
+
                         /* Get the gate */
                         Gate = Thread->GateObject;
 
                         /* Lock the gate */
                         KiAcquireDispatcherObject(&Gate->Header);
-                        
+
                         /* Remove it from the waiters list */
                         RemoveEntryList(&Thread->WaitBlock[0].WaitListEntry);
-                        
+
                         /* Unlock the gate */
                         KiReleaseDispatcherObject(&Gate->Header);
-                        
+
                         /* Increase the queue counter if needed */
                         if (Thread->Queue) Thread->Queue->CurrentCount++;
-                        
+
                         /* Put into deferred ready list with this status */
                         Thread->WaitStatus = STATUS_KERNEL_APC;
                         KiInsertDeferredReadyList(Thread);
                     }
-                    
+
                     /* Release the thread lock */
                     KiReleaseThreadLock(Thread);
                 }
