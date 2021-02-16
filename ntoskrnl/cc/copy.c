@@ -418,7 +418,18 @@ CcCanIWrite (
                                     &CcDeferredWriteSpinLock);
     }
 
+#if DBG
     DPRINT1("Actively deferring write for: %p\n", FileObject);
+    DPRINT1("Because:\n");
+    if (CcTotalDirtyPages + Pages >= CcDirtyPageThreshold)
+        DPRINT1("    There are too many cache dirty pages: %x + %x >= %x\n", CcTotalDirtyPages, Pages, CcDirtyPageThreshold);
+    if (MmAvailablePages <= MmThrottleTop)
+        DPRINT1("    Available pages are below throttle top: %lx <= %lx\n", MmAvailablePages, MmThrottleTop);
+    if (MmModifiedPageListHead.Total >= 1000)
+        DPRINT1("    There are too many modified pages: %lu >= 1000\n", MmModifiedPageListHead.Total);
+    if (MmAvailablePages <= MmThrottleBottom)
+        DPRINT1("    Available pages are below throttle bottom: %lx <= %lx\n", MmAvailablePages, MmThrottleBottom);
+#endif
     /* Now, we'll loop until our event is set. When it is set, it means that caller
      * can immediately write, and has to
      */
