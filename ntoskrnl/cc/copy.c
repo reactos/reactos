@@ -414,6 +414,12 @@ CcCanIWrite (
         CcScheduleLazyWriteScan(TRUE);
     KeReleaseQueuedSpinLock(LockQueueMasterLock, OldIrql);
 
+    /* If we are hard on modified page, wake up the MPW */
+    if (MmModifiedNoWritePageListHead.Total >= 1000)
+    {
+        MmWakeModifiedWriterThread();
+    }
+
 #if DBG
     DPRINT1("Actively deferring write for: %p\n", FileObject);
     DPRINT1("Because:\n");

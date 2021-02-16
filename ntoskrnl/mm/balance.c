@@ -107,10 +107,10 @@ MiTrimMemoryConsumer(ULONG Consumer, ULONG InitialTarget)
         return InitialTarget;
     }
 
-    if (MmAvailablePages < MiMinimumAvailablePages)
+    if (MmAvailablePages < MmThrottleTop)
     {
         /* Global page limit exceeded */
-        Target = (ULONG)max(Target, MiMinimumAvailablePages - MmAvailablePages);
+        Target = (ULONG)max(Target, MmThrottleTop - MmAvailablePages + 30);
     }
     else if (MiMemoryConsumers[Consumer].PagesUsed > MiMemoryConsumers[Consumer].PagesTarget)
     {
@@ -121,7 +121,7 @@ MiTrimMemoryConsumer(ULONG Consumer, ULONG InitialTarget)
     if (Target)
     {
         /* Now swap the pages out */
-        Status = MiMemoryConsumers[Consumer].Trim(Target, MmAvailablePages < MiMinimumAvailablePages, &NrFreedPages);
+        Status = MiMemoryConsumers[Consumer].Trim(Target, MmAvailablePages < MmThrottleTop, &NrFreedPages);
 
         DPRINT("Trimming consumer %lu: Freed %lu pages with a target of %lu pages\n", Consumer, NrFreedPages, Target);
 
