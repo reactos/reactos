@@ -32,6 +32,7 @@ static ULONG MiMinimumAvailablePages;
 static LIST_ENTRY AllocationListHead;
 static KSPIN_LOCK AllocationListLock;
 static ULONG MiMinimumPagesPerRun;
+KEVENT MmBalancerIdleEvent;
 
 static CLIENT_ID MiBalancerThreadId;
 static HANDLE MiBalancerThreadHandle = NULL;
@@ -50,6 +51,7 @@ MmInitializeBalancer(ULONG NrAvailablePages, ULONG NrSystemPages)
     memset(MiMemoryConsumers, 0, sizeof(MiMemoryConsumers));
     InitializeListHead(&AllocationListHead);
     KeInitializeSpinLock(&AllocationListLock);
+    KeInitializeEvent(&MmBalancerIdleEvent, NotificationEvent, TRUE);
 
     /* Set up targets. */
     MiMinimumAvailablePages = 256;
@@ -320,6 +322,12 @@ MiBalancerThread(PVOID Unused)
         {
             ULONG InitialTarget = 0;
 
+                /* Don't try anything if we are shutting down */
+                if (MmShutdownInProgress)
+                    continue;
+
+                KeClearEvent(&MmBalancerIdleEvent);
+
 #if (_MI_PAGING_LEVELS == 2)
             if (!MiIsBalancerThread())
             {
@@ -365,6 +373,8 @@ MiBalancerThread(PVOID Unused)
                 }
             }
             while (InitialTarget != 0);
+
+            KeSetEvent(&MmBalancerIdleEvent, IO_NO_INCREMENT, FALSE);
 
             if (Status == STATUS_WAIT_0)
                 InterlockedDecrement(&PageOutThreadActive);

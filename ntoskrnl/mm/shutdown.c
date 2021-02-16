@@ -15,6 +15,9 @@
 #define MODULE_INVOLVED_IN_ARM3
 #include "ARM3/miarm.h"
 
+/* GLOBALS ********************************************************************/
+BOOLEAN MmShutdownInProgress;
+
 /* PRIVATE FUNCTIONS *********************************************************/
 
 VOID
@@ -23,6 +26,12 @@ MiShutdownSystem(VOID)
     ULONG i;
     PFN_NUMBER Page;
     BOOLEAN Dirty;
+
+    /* Tell everyone about us being down */
+    MmShutdownInProgress = TRUE;
+
+    /* Wait for the legacy balancer, if needed */
+    KeWaitForSingleObject(&MmBalancerIdleEvent, Executive, KernelMode,  FALSE, NULL);
 
     /* Loop through all the paging files */
     for (i = 0; i < MmNumberOfPagingFiles; i++)
