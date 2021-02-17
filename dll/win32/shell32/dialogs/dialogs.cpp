@@ -1091,10 +1091,10 @@ int WINAPI RestartDialogEx(HWND hWndOwner, LPCWSTR lpwstrReason, DWORD uFlags, D
 
 BOOL DrawIconOnOwnerDrawnButtons(DRAWITEMSTRUCT* pdis, PLOGOFF_DLG_CONTEXT pContext)
 {
-    BOOL bRet;
-    HDC hdcMem;
-    HBITMAP hbmOld;
-    int y;
+    BOOL bRet = FALSE;
+    HDC hdcMem = NULL;
+    HBITMAP hbmOld = NULL;
+    int y = 0;
     RECT rect;
 
     hdcMem = CreateCompatibleDC(pdis->hDC);
