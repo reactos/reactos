@@ -36,8 +36,10 @@ typedef struct
 typedef struct
 {
     BOOL bFriendlyUI;
+    BOOL bIsButtonHot[2];
     HBITMAP hImageStrip;
     HFONT hfFont;
+    WNDPROC OldButtonsProc;
 } LOGOFF_DLG_CONTEXT, *PLOGOFF_DLG_CONTEXT;
 
 typedef BOOL (WINAPI * LPFNOFN) (OPENFILENAMEW *);
@@ -1078,6 +1080,8 @@ int WINAPI RestartDialogEx(HWND hWndOwner, LPCWSTR lpwstrReason, DWORD uFlags, D
 #define CX_BITMAP                       33
 #define CY_BITMAP                       33
 
+#define NUMBER_OF_BUTTONS               2
+
 #define BUTTON_SWITCH_USER              0
 #define BUTTON_SWITCH_USER_PRESSED      (CY_BITMAP + BUTTON_SWITCH_USER)
 #define BUTTON_SWITCH_USER_FOCUSED      (CY_BITMAP + BUTTON_SWITCH_USER_PRESSED)
@@ -1085,40 +1089,39 @@ int WINAPI RestartDialogEx(HWND hWndOwner, LPCWSTR lpwstrReason, DWORD uFlags, D
 #define BUTTON_LOG_OFF_PRESSED          (CY_BITMAP + BUTTON_LOG_OFF)
 #define BUTTON_LOG_OFF_FOCUSED          (CY_BITMAP + BUTTON_LOG_OFF_PRESSED)
 
-BOOL DrawIconOnOwnerDrawnButtons(DRAWITEMSTRUCT* pdis, HBITMAP hBitmap)
+BOOL DrawIconOnOwnerDrawnButtons(DRAWITEMSTRUCT* pdis, PLOGOFF_DLG_CONTEXT pContext)
 {
-    BOOL bRet = FALSE;
-    HDC hdcMem = NULL;
-    HBITMAP hbmOld = NULL;
-    int y = 0;
+    BOOL bRet;
+    HDC hdcMem;
+    HBITMAP hbmOld;
+    int y;
     RECT rect;
 
     hdcMem = CreateCompatibleDC(pdis->hDC);
-    hbmOld = (HBITMAP)SelectObject(hdcMem, hBitmap);
+    hbmOld = (HBITMAP)SelectObject(hdcMem, pContext->hImageStrip);
     rect = pdis->rcItem;
 
-    /* Check the button ID for revelant image to be used */
+    /* Check the button ID for revelant bitmap to be used */
     switch (pdis->CtlID)
     {
         case IDC_LOG_OFF_BUTTON:
         {
-            if (pdis->itemAction & ODA_FOCUS)
+            switch (pdis->itemAction)
             {
-                if (pdis->itemState & ODS_FOCUS)
-                {
-                    y = BUTTON_LOG_OFF_FOCUSED;
-                }
-            }
-
-            else if (pdis->itemAction & ODA_DRAWENTIRE)
-            {
-                if (pdis->itemState & ODS_SELECTED)
-                {
-                    y = BUTTON_LOG_OFF_PRESSED;
-                }
-                else
-                {
+                case ODA_DRAWENTIRE:
+                case ODA_FOCUS:
+                case ODA_SELECT:
+                {    
                     y = BUTTON_LOG_OFF;
+                    if (pdis->itemState & ODS_SELECTED)
+                    {
+                        y = BUTTON_LOG_OFF_PRESSED;
+                    }
+                    else if (pContext->bIsButtonHot[0] || (pdis->itemState & ODS_FOCUS))
+                    {
+                        y = BUTTON_LOG_OFF_FOCUSED;
+                    }
+                    break;
                 }
             }
             break;
@@ -1126,29 +1129,28 @@ BOOL DrawIconOnOwnerDrawnButtons(DRAWITEMSTRUCT* pdis, HBITMAP hBitmap)
 
         case IDC_SWITCH_USER_BUTTON:
         {
-            if (pdis->itemAction & ODA_FOCUS)
+            switch (pdis->itemAction)
             {
-                if (pdis->itemState & ODS_FOCUS)
-                {
-                    y = BUTTON_SWITCH_USER_FOCUSED;
-                }
-            }
-
-            else if (pdis->itemAction & ODA_DRAWENTIRE)
-            {
-                if (pdis->itemState & ODS_SELECTED)
-                {
-                    y = BUTTON_SWITCH_USER_PRESSED;
-                }
-                else
-                {
+                case ODA_DRAWENTIRE:
+                case ODA_FOCUS:
+                case ODA_SELECT:
+                {    
                     y = BUTTON_SWITCH_USER;
+                    if (pdis->itemState & ODS_SELECTED)
+                    {
+                        y = BUTTON_SWITCH_USER_PRESSED;
+                    }
+                    else if (pContext->bIsButtonHot[1] || (pdis->itemState & ODS_FOCUS))
+                    {
+                        y = BUTTON_SWITCH_USER_FOCUSED;
+                    }
+                    break;
                 }
             }
             break;
         }
     }
-
+    
     /* Draw it on the required button */
     bRet = BitBlt(pdis->hDC,
                   (rect.right - rect.left - CX_BITMAP) / 2,
@@ -1161,6 +1163,57 @@ BOOL DrawIconOnOwnerDrawnButtons(DRAWITEMSTRUCT* pdis, HBITMAP hBitmap)
     return bRet;
 }
 
+INT_PTR CALLBACK HotButtonSubclass(HWND hButton, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    PLOGOFF_DLG_CONTEXT pContext;
+    pContext = (PLOGOFF_DLG_CONTEXT)GetWindowLongPtrW(hButton, GWLP_USERDATA);
+
+    int buttonID = GetDlgCtrlID(hButton);
+
+    switch (uMsg)
+    {
+        case WM_MOUSEMOVE:
+        {
+            POINT pt;
+
+            if (GetCapture() != hButton)
+            {
+                SetCapture(hButton);
+                if (buttonID == IDC_LOG_OFF_BUTTON)
+                {
+                    pContext->bIsButtonHot[0] = TRUE;
+                }
+                else if (buttonID == IDC_SWITCH_USER_BUTTON)
+                {
+                    pContext->bIsButtonHot[1] = TRUE;
+                }
+                SetCursor(LoadCursorW(NULL, MAKEINTRESOURCEW(IDC_HAND)));
+            }
+
+            pt = (POINT){GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)};
+            ClientToScreen(hButton, &pt);
+            if(WindowFromPoint(pt) != hButton)
+            {
+                ReleaseCapture();
+                if (buttonID == IDC_LOG_OFF_BUTTON)
+                {
+                    pContext->bIsButtonHot[0] = FALSE;
+                }
+                else if (buttonID == IDC_SWITCH_USER_BUTTON)
+                {
+                    pContext->bIsButtonHot[1] = FALSE;
+                }
+            }
+            InvalidateRect(hButton, NULL, FALSE);
+            break;
+        }
+    }
+    return CallWindowProc(pContext->OldButtonsProc,
+                          hButton,
+                          uMsg,
+                          wParam,
+                          lParam);
+}
 
 VOID CreateToolTipForButtons(int controlID, int detailID, HWND hDlg, int titleID)
 {
@@ -1190,22 +1243,6 @@ VOID CreateToolTipForButtons(int controlID, int detailID, HWND hDlg, int titleID
     LoadStringW(shell32_hInstance, titleID, szBuffer, _countof(szBuffer));
     SendMessageW(hwndTip, TTM_SETTITLEW, TTI_NONE, (LPARAM)szBuffer);
     SendMessageW(hwndTip, TTM_SETMAXTIPWIDTH, 0, 250);
-}
-
-VOID
-WhenUserHoversOnOwnerDrawnButtons(NMBCHOTITEM* nmb)
-{
-    NMHDR nmh;
-    nmh = nmb->hdr;
-
-    if (nmb->dwFlags & HICF_ENTERING)
-    {
-        SetClassLongPtrW(nmh.hwndFrom, GCL_HCURSOR, (LONG_PTR)LoadCursorW(NULL, IDC_HAND));
-    }
-    else if (nmb->dwFlags & HICF_LEAVING)
-    {
-        SetClassLongPtrW(nmh.hwndFrom, GCL_HCURSOR, (LONG_PTR)LoadCursorW(NULL, IDC_ARROW));
-    }
 }
 
 static BOOL IsFriendlyUIActive(VOID)
@@ -1286,7 +1323,7 @@ static VOID FancyLogoffOnInit(HWND hwnd, PLOGOFF_DLG_CONTEXT pContext)
 {
     HDC hdc;
     long lfHeight;
-
+    
     hdc = GetDC(NULL);
     lfHeight = -MulDiv(13, GetDeviceCaps(hdc, LOGPIXELSY), 72);
     ReleaseDC(NULL, hdc);
@@ -1297,6 +1334,15 @@ static VOID FancyLogoffOnInit(HWND hwnd, PLOGOFF_DLG_CONTEXT pContext)
 
     CreateToolTipForButtons(IDC_LOG_OFF_BUTTON, IDS_LOG_OFF_DESC, hwnd, IDS_LOG_OFF_TITLE);
     CreateToolTipForButtons(IDC_SWITCH_USER_BUTTON, IDS_SWITCH_USER_DESC, hwnd, IDS_SWITCH_USER_TITLE);
+
+    pContext->OldButtonsProc = (WNDPROC)GetWindowLongPtrW(GetDlgItem(hwnd, IDC_LOG_OFF_BUTTON), GWLP_WNDPROC);
+
+    for (int i = 0; i < NUMBER_OF_BUTTONS; i++)
+    {
+        pContext->bIsButtonHot[i] = FALSE;
+        SetWindowLongPtrW(GetDlgItem(hwnd, IDC_LOG_OFF_BUTTON + i), GWLP_USERDATA, (LONG_PTR)pContext);
+        SetWindowLongPtrW(GetDlgItem(hwnd, IDC_LOG_OFF_BUTTON + i), GWLP_WNDPROC, (LONG_PTR)HotButtonSubclass);
+    }
 }
 
 /*************************************************************************
@@ -1338,30 +1384,6 @@ INT_PTR CALLBACK LogOffDialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
             return FALSE;
         }
 
-        case WM_NOTIFY:
-        {
-            switch (((LPNMHDR)lParam)->code)
-            {
-                case BCN_HOTITEMCHANGE:
-                {
-                    switch (((LPNMHDR)lParam)->idFrom)
-                    {
-                        case IDC_LOG_OFF_BUTTON:
-                        case IDC_SWITCH_USER_BUTTON:
-                        {
-                            WhenUserHoversOnOwnerDrawnButtons((NMBCHOTITEM*)lParam);
-                            break;
-                        }
-                    }
-                    break;
-                }
-
-                default:
-                    break;
-            }
-            break;
-        }
-
         case WM_COMMAND:
             switch (LOWORD(wParam))
             {
@@ -1380,6 +1402,10 @@ INT_PTR CALLBACK LogOffDialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
         case WM_DESTROY:
             DeleteObject(pContext->hImageStrip);
             DeleteObject(pContext->hfFont);
+            for (int i = 0; i < NUMBER_OF_BUTTONS; i++)
+            {
+                SetWindowLongPtrW(GetDlgItem(hwnd, IDC_LOG_OFF_BUTTON + i), GWLP_WNDPROC, (LONG_PTR)pContext->OldButtonsProc);
+            }
             return TRUE;
 
         case WM_CTLCOLORSTATIC:
@@ -1410,7 +1436,7 @@ INT_PTR CALLBACK LogOffDialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
             {
                 case IDC_LOG_OFF_BUTTON:
                 case IDC_SWITCH_USER_BUTTON:
-                    return DrawIconOnOwnerDrawnButtons(pdis, pContext->hImageStrip);
+                    return DrawIconOnOwnerDrawnButtons(pdis, pContext);
             }
         }
         break;
@@ -1463,7 +1489,7 @@ EXTERN_C int WINAPI LogoffWindowsDialog(HWND hWndOwner)
             {
                 if (Msg.wParam == VK_MENU && !bIsAltKeyPressed && Context.bFriendlyUI)
                 {
-                    for (int i = 0; i < 2; i++)
+                    for (int i = 0; i < NUMBER_OF_BUTTONS; i++)
                     {
                         GetDlgItemTextW(hWndChild, IDC_LOG_OFF_BUTTON + i, szBuffer, _countof(szBuffer));
                         SetDlgItemTextW(hWndChild, IDC_LOG_OFF_STATIC + i, szBuffer);
