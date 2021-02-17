@@ -598,11 +598,11 @@ CreateToolTipForButtons(
 
     /* Create the tooltip */
     hwndTip = CreateWindowEx(0, TOOLTIPS_CLASS, NULL,
-                              WS_POPUP |TTS_ALWAYSTIP | TTS_BALLOON,
-                              CW_USEDEFAULT, CW_USEDEFAULT,
-                              CW_USEDEFAULT, CW_USEDEFAULT,
-                              hDlg, NULL, 
-                              hInst, NULL);
+                             WS_POPUP | TTS_ALWAYSTIP | TTS_BALLOON,
+                             CW_USEDEFAULT, CW_USEDEFAULT,
+                             CW_USEDEFAULT, CW_USEDEFAULT,
+                             hDlg, NULL, 
+                             hInst, NULL);
 
     /* Associate the tooltip with the tool. */
     LoadStringW(hInst, detailID, szBuffer, _countof(szBuffer));
@@ -1167,7 +1167,7 @@ ShutdownDialog(
 
         while (GetMessage(&Msg, NULL, 0, 0))
         {
-            if(!IsDialogMessage(hDlg, &Msg))
+            if (!IsDialogMessage(hDlg, &Msg))
             {
                 TranslateMessage(&Msg);
                 DispatchMessage(&Msg);

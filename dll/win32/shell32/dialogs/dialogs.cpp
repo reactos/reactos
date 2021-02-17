@@ -1230,11 +1230,11 @@ VOID CreateToolTipForButtons(int controlID, int detailID, HWND hDlg, int titleID
 
     /* Create the tooltip */
     hwndTip = CreateWindowEx(0, TOOLTIPS_CLASS, NULL,
-                              WS_POPUP |TTS_ALWAYSTIP | TTS_BALLOON,
-                              CW_USEDEFAULT, CW_USEDEFAULT,
-                              CW_USEDEFAULT, CW_USEDEFAULT,
-                              hDlg, NULL, 
-                              shell32_hInstance, NULL);
+                             WS_POPUP | TTS_ALWAYSTIP | TTS_BALLOON,
+                             CW_USEDEFAULT, CW_USEDEFAULT,
+                             CW_USEDEFAULT, CW_USEDEFAULT,
+                             hDlg, NULL, 
+                             shell32_hInstance, NULL);
 
     /* Associate the tooltip with the tool. */
     LoadStringW(shell32_hInstance, detailID, szBuffer, _countof(szBuffer));
@@ -1477,7 +1477,7 @@ EXTERN_C int WINAPI LogoffWindowsDialog(HWND hWndOwner)
 
     while (GetMessage(&Msg, NULL, 0, 0))
     {
-        if(!IsDialogMessage(hWndChild, &Msg))
+        if (!IsDialogMessage(hWndChild, &Msg))
         {
             TranslateMessage(&Msg);
             DispatchMessage(&Msg);
