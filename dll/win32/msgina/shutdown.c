@@ -374,7 +374,7 @@ DrawIconOnOwnerDrawnButtons(
                     {
                         y = BUTTON_SLEEP_PRESSED;
                     }
-                    else if (pContext->bIsButtonHot[2] || pContext->bIsButtonHot[3] || (pdis->itemState & ODS_FOCUS))
+                    else if ((pdis->CtlID == IDC_BUTTON_SLEEP && pContext->bIsButtonHot[2]) || (pdis->CtlID == IDC_BUTTON_HIBERNATE && pContext->bIsButtonHot[3]) || (pdis->itemState & ODS_FOCUS))
                     {
                         y = BUTTON_SLEEP_FOCUSED;
                     }
