@@ -932,13 +932,15 @@ MiResolvePageFileFault(_In_ BOOLEAN StoreInstruction,
 
     MI_WRITE_INVALID_PTE(PointerPte, TempPte);
 
-    /* Release the PFN lock while we proceed */
+    /* Release the locks while we proceed */
     MiReleasePfnLock(*OldIrql);
+    MiUnlockProcessWorkingSet(CurrentProcess, PsGetCurrentThread());
 
     /* Do the paging IO */
     Status = MiReadPageFile(Page, PageFileIndex, PageFileOffset);
 
-    /* Lock the PFN database again */
+    /* Acquire our locks like they were when we were called. */
+    MiLockProcessWorkingSet(CurrentProcess, PsGetCurrentThread());
     *OldIrql = MiAcquirePfnLock();
 
     /* Nobody should have changed that while we were not looking */
