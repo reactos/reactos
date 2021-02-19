@@ -72,10 +72,7 @@ VOID PrintNum(LONGLONG Number, INT MaxWidth)
 BOOL PrintMemory(SIZE_T MemorySizeByte, INT MaxWidth, HINSTANCE hInstance)
 {
     if (MaxWidth <= 0 || !hInstance)
-    {
-        assert(0);
         return FALSE;
-    }
 
     SIZE_T MemorySize = MemorySizeByte >> 10;
 
