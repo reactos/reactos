@@ -11,18 +11,55 @@
 #include "lsasrv.h"
 #include <winsvc.h>
 
+typedef VOID (WINAPI *PNETLOGONMAIN)(INT ArgCount, PWSTR *ArgVector);
+
 VOID WINAPI I_ScIsSecurityProcess(VOID);
 
+static VOID WINAPI NetlogonServiceMain(DWORD dwArgc, PWSTR *pszArgv);
 static VOID WINAPI SamSsServiceMain(DWORD dwArgc, PWSTR *pszArgv);
 
 SERVICE_TABLE_ENTRYW ServiceTable[] =
 {
+    {L"NETLOGON", NetlogonServiceMain},
     {L"SAMSS", SamSsServiceMain},
     {NULL, NULL}
 };
 
 
 /* FUNCTIONS ***************************************************************/
+
+static
+VOID
+WINAPI
+NetlogonServiceMain(
+    _In_ DWORD dwArgc,
+    _In_ PWSTR *pszArgv)
+{
+    HINSTANCE hNetlogon = NULL;
+    PNETLOGONMAIN pNetlogonMain = NULL;
+
+    TRACE("NetlogonServiceMain(%lu %p)\n", dwArgc, pszArgv);
+
+    hNetlogon = LoadLibraryW(L"Netlogon.dll");
+    if (hNetlogon == NULL)
+    {
+        ERR("LoadLibrary() failed!\n");
+        return;
+    }
+
+    pNetlogonMain = (PNETLOGONMAIN)GetProcAddress(hNetlogon, "NlNetlogonMain");
+    if (pNetlogonMain == NULL)
+    {
+        ERR("GetProcAddress(NlNetlogonMain) failed!\n");
+        FreeLibrary(hNetlogon);
+        return;
+    }
+
+    TRACE("NlNetlogonMain %p\n", pNetlogonMain);
+
+    pNetlogonMain(dwArgc, pszArgv);
+}
+
 
 static
 VOID
