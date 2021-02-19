@@ -277,8 +277,8 @@ BOOL ProcessArguments(INT argc, WCHAR **argv)
                 if (bHasHelp)
                 {
                     // -? already specified
-                    ConResMsgPrintf(StdOut, 0, IDS_PARAM_TOO_MUCH, argv[i], 1);
-                    ConResMsgPrintf(StdOut, 0, IDS_USAGE);
+                    ConResMsgPrintf(StdErr, 0, IDS_PARAM_TOO_MUCH, argv[i], 1);
+                    ConResMsgPrintf(StdErr, 0, IDS_USAGE);
                     return FALSE;
                 }
                 bHasHelp = TRUE;
