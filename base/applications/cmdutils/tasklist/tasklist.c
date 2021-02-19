@@ -33,7 +33,7 @@ VOID PrintSpace(INT Length)
 {
     for (; Length; Length--)
     {
-        ConPrintf(StdOut, L" ");
+        ConPuts(StdOut, L" ");
     }
 }
 
