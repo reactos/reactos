@@ -214,7 +214,7 @@ BOOL EnumProcessAndPrint(BOOL bNoHeader)
     HINSTANCE hInstance = GetModuleHandleW(NULL);
     assert(hInstance);
 
-    ConPrintf(StdOut, L"\n");
+    ConPuts(StdOut, L"\n");
 
     if (!bNoHeader)
     {
