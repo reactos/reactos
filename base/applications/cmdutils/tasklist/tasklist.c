@@ -187,7 +187,7 @@ BOOL EnumProcessAndPrint(BOOL bNoHeader)
             if (!ProcessInfoBuffer)
             {
                 // out of memory
-                ConResMsgPrintf(StdOut, 0, IDS_OUT_OF_MEMORY);
+                ConResMsgPrintf(StdErr, 0, IDS_OUT_OF_MEMORY);
                 return FALSE;
             }
         }
