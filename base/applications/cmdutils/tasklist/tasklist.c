@@ -186,7 +186,7 @@ BOOL EnumProcessAndPrint(BOOL bNoHeader)
             ProcessInfoBuffer = HeapAlloc(GetProcessHeap(), 0, ProcessInfoBufferLength);
             if (!ProcessInfoBuffer)
             {
-                // out of memory ?
+                // out of memory
                 ConResMsgPrintf(StdOut, 0, IDS_OUT_OF_MEMORY);
                 return FALSE;
             }
