@@ -310,8 +310,8 @@ BOOL ProcessArguments(INT argc, WCHAR **argv)
     {
         if (argc > 2) // any parameters other than -? is specified
         {
-            ConResMsgPrintf(StdOut, 0, IDS_INVALID_SYNTAX);
-            ConResMsgPrintf(StdOut, 0, IDS_USAGE);
+            ConResMsgPrintf(StdErr, 0, IDS_INVALID_SYNTAX);
+            ConResMsgPrintf(StdErr, 0, IDS_USAGE);
             return FALSE;
         }
         else
