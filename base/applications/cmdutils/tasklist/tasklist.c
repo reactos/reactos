@@ -7,7 +7,6 @@
 
 #include "tasklist.h"
 
-
 // the strings in opList are the command-line options.
 // should always correspond with the defines below, in sequence (except OP_PARAM_INVALID)
 static PCWSTR opList[] = { L"?", L"nh" };
