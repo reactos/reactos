@@ -233,7 +233,7 @@ BOOL EnumProcessAndPrint(BOOL bNoHeader)
         PrintSpace(1);
         PrintMemory(pSPI->WorkingSetSize, COLUMNWIDTH_MEMUSAGE, hInstance);
 
-        ConPrintf(StdOut, L"\n");
+        ConPuts(StdOut, L"\n");
 
         if (pSPI->NextEntryOffset == 0)
             break;
