@@ -273,6 +273,7 @@ INT GetArgumentType(LPCWSTR argument)
 BOOL ProcessArguments(INT argc, WCHAR **argv)
 {
     BOOL bHasHelp = FALSE, bHasNoHeader = FALSE;
+
     for (INT i = 1; i < argc; i++)
     {
         INT Argument = GetArgumentType(argv[i]);
