@@ -148,7 +148,7 @@ VOID PrintHeader(HINSTANCE hInstance)
     PrintSpace(1);
     PrintSplitLine(COLUMNWIDTH_MEMUSAGE);
 
-    ConPrintf(StdOut, L"\n");
+    ConPuts(StdOut, L"\n");
 }
 
 BOOL EnumProcessAndPrint(BOOL bNoHeader)
