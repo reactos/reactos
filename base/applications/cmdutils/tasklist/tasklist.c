@@ -138,7 +138,7 @@ VOID PrintHeader(HINSTANCE hInstance)
     PrintSpace(1);
     PrintResString(hInstance, IDS_HEADER_MEMUSAGE,  COLUMNWIDTH_MEMUSAGE,  FALSE);
 
-    ConPrintf(StdOut, L"\n");
+    ConPuts(StdOut, L"\n");
 
     PrintSplitLine(COLUMNWIDTH_IMAGENAME);
     PrintSpace(1);
