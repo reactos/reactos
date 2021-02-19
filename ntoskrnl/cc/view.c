@@ -200,6 +200,107 @@ quit:
     return Status;
 }
 
+static
+NTSTATUS
+CcRosDeleteFileCache (
+    PFILE_OBJECT FileObject,
+    PROS_SHARED_CACHE_MAP SharedCacheMap,
+    PKIRQL OldIrql)
+/*
+ * FUNCTION: Releases the shared cache map associated with a file object
+ */
+{
+    PLIST_ENTRY current_entry;
+
+    ASSERT(SharedCacheMap);
+    ASSERT(SharedCacheMap == FileObject->SectionObjectPointer->SharedCacheMap);
+    ASSERT(SharedCacheMap->OpenCount == 0);
+
+    /* Remove all VACBs from the global lists */
+    KeAcquireSpinLockAtDpcLevel(&SharedCacheMap->CacheMapLock);
+    current_entry = SharedCacheMap->CacheMapVacbListHead.Flink;
+    while (current_entry != &SharedCacheMap->CacheMapVacbListHead)
+    {
+        PROS_VACB Vacb = CONTAINING_RECORD(current_entry, ROS_VACB, CacheMapVacbListEntry);
+
+        RemoveEntryList(&Vacb->VacbLruListEntry);
+        InitializeListHead(&Vacb->VacbLruListEntry);
+
+        if (Vacb->Dirty)
+        {
+            CcRosUnmarkDirtyVacb(Vacb, FALSE);
+            /* Mark it as dirty again so we know that we have to flush before freeing it */
+            Vacb->Dirty = TRUE;
+        }
+
+        current_entry = current_entry->Flink;
+    }
+
+    /* Make sure there is no trace anymore of this map */
+    FileObject->SectionObjectPointer->SharedCacheMap = NULL;
+    RemoveEntryList(&SharedCacheMap->SharedCacheMapLinks);
+
+    KeReleaseSpinLockFromDpcLevel(&SharedCacheMap->CacheMapLock);
+    KeReleaseQueuedSpinLock(LockQueueMasterLock, *OldIrql);
+
+    /* Now that we're out of the locks, free everything for real */
+    while (!IsListEmpty(&SharedCacheMap->CacheMapVacbListHead))
+    {
+        PROS_VACB Vacb = CONTAINING_RECORD(RemoveHeadList(&SharedCacheMap->CacheMapVacbListHead), ROS_VACB, CacheMapVacbListEntry);
+        ULONG RefCount;
+
+        InitializeListHead(&Vacb->CacheMapVacbListEntry);
+
+        /* Flush to disk, if needed */
+        if (Vacb->Dirty)
+        {
+            IO_STATUS_BLOCK Iosb;
+            NTSTATUS Status;
+
+            Status = MmFlushSegment(FileObject->SectionObjectPointer, &Vacb->FileOffset, VACB_MAPPING_GRANULARITY, &Iosb);
+            if (!NT_SUCCESS(Status))
+            {
+                /* Complain. There's not much we can do */
+                DPRINT1("Failed to flush VACB to disk while deleting the cache entry. Status: 0x%08x\n", Status);
+            }
+            Vacb->Dirty = FALSE;
+        }
+
+        RefCount = CcRosVacbDecRefCount(Vacb);
+#if DBG // CORE-14578
+        if (RefCount != 0)
+        {
+            DPRINT1("Leaking VACB %p attached to %p (%I64d)\n", Vacb, FileObject, Vacb->FileOffset.QuadPart);
+            DPRINT1("There are: %d references left\n", RefCount);
+            DPRINT1("Map: %d\n", Vacb->MappedCount);
+            DPRINT1("Dirty: %d\n", Vacb->Dirty);
+            if (FileObject->FileName.Length != 0)
+            {
+                DPRINT1("File was: %wZ\n", &FileObject->FileName);
+            }
+            else
+            {
+                DPRINT1("No name for the file\n");
+            }
+        }
+#else
+        (void)RefCount;
+#endif
+    }
+
+    /* Release the references we own */
+    if(SharedCacheMap->Section)
+        ObDereferenceObject(SharedCacheMap->Section);
+    ObDereferenceObject(SharedCacheMap->FileObject);
+
+    ExFreeToNPagedLookasideList(&SharedCacheMapLookasideList, SharedCacheMap);
+
+    /* Acquire the lock again for our caller */
+    *OldIrql = KeAcquireQueuedSpinLock(LockQueueMasterLock);
+
+    return STATUS_SUCCESS;
+}
+
 NTSTATUS
 CcRosFlushDirtyPages (
     ULONG Target,
@@ -273,6 +374,9 @@ CcRosFlushDirtyPages (
 
         SharedCacheMap->Flags |= SHARED_CACHE_MAP_IN_LAZYWRITE;
 
+        /* Keep a ref on the shared cache map */
+        SharedCacheMap->OpenCount++;
+
         KeReleaseQueuedSpinLock(LockQueueMasterLock, OldIrql);
 
         Locked = SharedCacheMap->Callbacks->AcquireForLazyWrite(SharedCacheMap->LazyWriteContext, Wait);
@@ -283,6 +387,10 @@ CcRosFlushDirtyPages (
             CcRosVacbDecRefCount(current);
             OldIrql = KeAcquireQueuedSpinLock(LockQueueMasterLock);
             SharedCacheMap->Flags &= ~SHARED_CACHE_MAP_IN_LAZYWRITE;
+
+            if (--SharedCacheMap->OpenCount == 0)
+                CcRosDeleteFileCache(SharedCacheMap->FileObject, SharedCacheMap, &OldIrql);
+
             continue;
         }
 
@@ -299,6 +407,9 @@ CcRosFlushDirtyPages (
         OldIrql = KeAcquireQueuedSpinLock(LockQueueMasterLock);
 
         SharedCacheMap->Flags &= ~SHARED_CACHE_MAP_IN_LAZYWRITE;
+
+        if (--SharedCacheMap->OpenCount == 0)
+            CcRosDeleteFileCache(SharedCacheMap->FileObject, SharedCacheMap, &OldIrql);
 
         if (!NT_SUCCESS(Status) && (Status != STATUS_END_OF_FILE) &&
             (Status != STATUS_MEDIA_WRITE_PROTECTED))
@@ -1012,121 +1123,6 @@ quit:
     {
         IoStatus->Status = Status;
     }
-}
-
-NTSTATUS
-CcRosDeleteFileCache (
-    PFILE_OBJECT FileObject,
-    PROS_SHARED_CACHE_MAP SharedCacheMap,
-    PKIRQL OldIrql)
-/*
- * FUNCTION: Releases the shared cache map associated with a file object
- */
-{
-    PLIST_ENTRY current_entry;
-
-    ASSERT(SharedCacheMap);
-    ASSERT(SharedCacheMap == FileObject->SectionObjectPointer->SharedCacheMap);
-    ASSERT(SharedCacheMap->OpenCount == 0);
-
-    /* Remove all VACBs from the global lists */
-    KeAcquireSpinLockAtDpcLevel(&SharedCacheMap->CacheMapLock);
-    current_entry = SharedCacheMap->CacheMapVacbListHead.Flink;
-    while (current_entry != &SharedCacheMap->CacheMapVacbListHead)
-    {
-        PROS_VACB Vacb = CONTAINING_RECORD(current_entry, ROS_VACB, CacheMapVacbListEntry);
-
-        RemoveEntryList(&Vacb->VacbLruListEntry);
-        InitializeListHead(&Vacb->VacbLruListEntry);
-
-        if (Vacb->Dirty)
-        {
-            CcRosUnmarkDirtyVacb(Vacb, FALSE);
-            /* Mark it as dirty again so we know that we have to flush before freeing it */
-            Vacb->Dirty = TRUE;
-        }
-
-        current_entry = current_entry->Flink;
-    }
-
-    /* Make sure there is no trace anymore of this map */
-    FileObject->SectionObjectPointer->SharedCacheMap = NULL;
-    RemoveEntryList(&SharedCacheMap->SharedCacheMapLinks);
-
-    KeReleaseSpinLockFromDpcLevel(&SharedCacheMap->CacheMapLock);
-    KeReleaseQueuedSpinLock(LockQueueMasterLock, *OldIrql);
-
-    /* Now that we're out of the locks, free everything for real */
-    while (!IsListEmpty(&SharedCacheMap->CacheMapVacbListHead))
-    {
-        PROS_VACB Vacb = CONTAINING_RECORD(RemoveHeadList(&SharedCacheMap->CacheMapVacbListHead), ROS_VACB, CacheMapVacbListEntry);
-        ULONG RefCount;
-
-        InitializeListHead(&Vacb->CacheMapVacbListEntry);
-
-        /* Flush to disk, if needed */
-        if (Vacb->Dirty)
-        {
-            IO_STATUS_BLOCK Iosb;
-            NTSTATUS Status;
-
-            Status = MmFlushSegment(FileObject->SectionObjectPointer, &Vacb->FileOffset, VACB_MAPPING_GRANULARITY, &Iosb);
-            if (!NT_SUCCESS(Status))
-            {
-                /* Complain. There's not much we can do */
-                DPRINT1("Failed to flush VACB to disk while deleting the cache entry. Status: 0x%08x\n", Status);
-            }
-            Vacb->Dirty = FALSE;
-        }
-
-        RefCount = CcRosVacbDecRefCount(Vacb);
-#if DBG // CORE-14578
-        if (RefCount != 0)
-        {
-            DPRINT1("Leaking VACB %p attached to %p (%I64d)\n", Vacb, FileObject, Vacb->FileOffset.QuadPart);
-            DPRINT1("There are: %d references left\n", RefCount);
-            DPRINT1("Map: %d\n", Vacb->MappedCount);
-            DPRINT1("Dirty: %d\n", Vacb->Dirty);
-            if (FileObject->FileName.Length != 0)
-            {
-                DPRINT1("File was: %wZ\n", &FileObject->FileName);
-            }
-            else
-            {
-                DPRINT1("No name for the file\n");
-            }
-        }
-#else
-        (void)RefCount;
-#endif
-    }
-
-    /* Release the references we own */
-    if(SharedCacheMap->Section)
-        ObDereferenceObject(SharedCacheMap->Section);
-    ObDereferenceObject(SharedCacheMap->FileObject);
-
-    ExFreeToNPagedLookasideList(&SharedCacheMapLookasideList, SharedCacheMap);
-
-    /* Acquire the lock again for our caller */
-    *OldIrql = KeAcquireQueuedSpinLock(LockQueueMasterLock);
-
-    return STATUS_SUCCESS;
-}
-
-VOID
-CcRosReferenceCache (
-    PFILE_OBJECT FileObject)
-{
-    PROS_SHARED_CACHE_MAP SharedCacheMap;
-    KIRQL OldIrql;
-
-    OldIrql = KeAcquireQueuedSpinLock(LockQueueMasterLock);
-    SharedCacheMap = FileObject->SectionObjectPointer->SharedCacheMap;
-    ASSERT(SharedCacheMap);
-    ASSERT(SharedCacheMap->OpenCount != 0);
-    SharedCacheMap->OpenCount++;
-    KeReleaseQueuedSpinLock(LockQueueMasterLock, OldIrql);
 }
 
 NTSTATUS
