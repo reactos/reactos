@@ -19,7 +19,7 @@ static PCWSTR opList[] = { L"?", L"nh" };
 #define RES_STR_MAXLEN 64
 
 // Print split line
-VOID PrintSplitLine(INT Length)
+VOID PrintSplitLine(UINT Length)
 {
     for (; Length; Length--)
     {
@@ -28,9 +28,9 @@ VOID PrintSplitLine(INT Length)
 }
 
 // Print spaces
-VOID PrintSpace(INT Length)
+VOID PrintSpace(UINT Length)
 {
-    ConPrintf(StdOut, L"%*ls", Length, L"");
+    ConPrintf(StdOut, L"%*ls", (INT)Length, L"");
 }
 
 // Print a string.
