@@ -179,7 +179,7 @@ BOOL EnumProcessAndPrint(BOOL bNoHeader)
             else
             {
                 // out of memory ?
-                ConResMsgPrintf(StdOut, 0, IDS_OUT_OF_MEMORY);
+                ConResMsgPrintf(StdErr, 0, IDS_OUT_OF_MEMORY);
                 HeapFree(GetProcessHeap(), 0, ProcessInfoBuffer);
                 return FALSE;
             }
