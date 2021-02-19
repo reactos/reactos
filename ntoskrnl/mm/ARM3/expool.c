@@ -1919,6 +1919,11 @@ ExAllocatePoolWithTag(IN POOL_TYPE PoolType,
     ASSERT(NumberOfBytes != 0);
     ExpCheckPoolIrqlLevel(PoolType, NumberOfBytes, NULL);
 
+#if DBG
+    if (PoolType & PagedPool)
+        ASSERT(MmSystemCacheWs.VmWorkingSetList != NULL);
+#endif
+
     //
     // Not supported in ReactOS
     //

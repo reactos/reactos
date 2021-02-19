@@ -242,7 +242,7 @@ MmDeleteVirtualMapping(PEPROCESS Process, PVOID Address,
         if (MiQueryPageTableReferences(Address) == 0)
         {
             KIRQL OldIrql = MiAcquirePfnLock();
-            MiDeletePte(MiAddressToPte(PointerPte), PointerPte, Process, NULL);
+            MiDeletePte(MiAddressToPte(PointerPte), PointerPte, &Process->Vm, NULL);
             MiReleasePfnLock(OldIrql);
         }
 
@@ -298,7 +298,7 @@ MmDeletePageFileMapping(
     {
         /* We can let it go */
         KIRQL OldIrql = MiAcquirePfnLock();
-        MiDeletePte(MiAddressToPte(PointerPte), PointerPte, Process, NULL);
+        MiDeletePte(MiAddressToPte(PointerPte), PointerPte, &Process->Vm, NULL);
         MiReleasePfnLock(OldIrql);
     }
 

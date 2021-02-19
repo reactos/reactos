@@ -359,7 +359,7 @@ MiUnmapLockedPagesInUserSpace(
                 ASSERT(PointerPde->u.Long != 0);
                 MiDeletePte(PointerPde,
                             MiPteToAddress(PointerPde),
-                            Process,
+                            &Process->Vm,
                             NULL);
             }
         }

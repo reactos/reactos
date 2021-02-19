@@ -599,7 +599,7 @@ MmDeleteProcessAddressSpace(PEPROCESS Process)
             /* Unlike in ARM3, we don't necesarrily free the PDE page as soon as reference reaches 0,
              * so we must clean up a bit when process closes */
             if (pointerPde->u.Hard.Valid)
-                MiDeletePte(pointerPde, MiPdeToPte(pointerPde), Process, NULL);
+                MiDeletePte(pointerPde, MiPdeToPte(pointerPde), &Process->Vm, NULL);
             ASSERT(pointerPde->u.Hard.Valid == 0);
         }
 

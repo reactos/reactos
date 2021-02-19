@@ -236,13 +236,6 @@ extern const ULONG MmProtectToValue[32];
 #define MM_NOIRQL (KIRQL)0xFFFFFFFF
 
 //
-// Returns the color of a page
-//
-#define MI_GET_PAGE_COLOR(x)                ((x) & MmSecondaryColorMask)
-#define MI_GET_NEXT_COLOR()                 (MI_GET_PAGE_COLOR(++MmSystemPageColor))
-#define MI_GET_NEXT_PROCESS_COLOR(x)        (MI_GET_PAGE_COLOR(++(x)->NextPageColor))
-
-//
 // Prototype PTEs that don't yet have a pagefile association
 //
 #ifdef _WIN64
@@ -671,6 +664,46 @@ BOOLEAN
 MI_IS_PROCESS_WORKING_SET(PMMSUPPORT WorkingSet)
 {
     return (WorkingSet != &MmSystemCacheWs) && !WorkingSet->Flags.SessionSpace;
+}
+
+#if MI_TRACE_PFNS
+FORCEINLINE
+void
+MI_SET_WORKING_SET(PMMSUPPORT WorkingSet)
+{
+    if (MI_IS_PROCESS_WORKING_SET(WorkingSet))
+    {
+        MI_SET_PROCESS(CONTAINING_RECORD(WorkingSet, EPROCESS, Vm));
+        return;
+    }
+
+    if (WorkingSet->Flags.SessionSpace)
+    {
+        MI_SET_PROCESS2("Session Space");
+        return;
+    }
+
+    MI_SET_PROCESS2("Kernel Space");
+}
+#else
+#define MI_SET_WORKING_SET(x) NOTHING
+#endif
+
+//
+// Returns the color of a page
+//
+#define MI_GET_PAGE_COLOR(x)                ((x) & MmSecondaryColorMask)
+#define MI_GET_NEXT_COLOR()                 (MI_GET_PAGE_COLOR(++MmSystemPageColor))
+#define MI_GET_NEXT_PROCESS_COLOR(x)        (MI_GET_PAGE_COLOR(++(x)->NextPageColor))
+
+FORCEINLINE
+ULONG
+MI_GET_NEXT_WORKING_SET_COLOR(PMMSUPPORT WorkingSet)
+{
+    if (!MI_IS_PROCESS_WORKING_SET(WorkingSet))
+        return MI_GET_NEXT_COLOR();
+
+    return MI_GET_NEXT_PROCESS_COLOR(CONTAINING_RECORD(WorkingSet, EPROCESS, Vm));
 }
 
 FORCEINLINE
@@ -2360,14 +2393,14 @@ MiDeleteVirtualAddresses(
     IN PMMVAD Vad
 );
 
+_Requires_exclusive_lock_held_(WorkingSet->WorkingSetMutex)
 VOID
 NTAPI
 MiDeletePte(
-    IN PMMPTE PointerPte,
-    IN PVOID VirtualAddress,
-    IN PEPROCESS CurrentProcess,
-    IN PMMPTE PrototypePte
-);
+    _Inout_ PMMPTE PointerPte,
+    _In_ PVOID VirtualAddress,
+    _In_ PMMSUPPORT WorkingSet,
+    _In_ PMMPTE PrototypePte);
 
 ULONG
 NTAPI

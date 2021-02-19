@@ -273,7 +273,7 @@ MiRestoreOriginalPte(_In_ PMMPFN Pfn)
 
     DPRINT("Restoring PTE %p to %lx\n", Pfn->PteAddress, Pfn->OriginalPte.u.Long);
 
-    if (Pfn->u3.e1.PrototypePte)
+    if (Pfn->PteAddress > MiHighestUserPte)
     {
         /* Easy. The PTE lives in global space */
         *Pfn->PteAddress = Pfn->OriginalPte;

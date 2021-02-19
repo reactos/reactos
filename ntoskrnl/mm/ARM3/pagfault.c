@@ -15,13 +15,6 @@
 #define MODULE_INVOLVED_IN_ARM3
 #include <mm/ARM3/miarm.h>
 
-/* GLOBALS ********************************************************************/
-
-#define HYDRA_PROCESS (PEPROCESS)1
-#if MI_TRACE_PFNS
-BOOLEAN UserPdeFault = FALSE;
-#endif
-
 /* PRIVATE FUNCTIONS **********************************************************/
 
 static
@@ -595,7 +588,7 @@ NTAPI
 MiResolveDemandZeroFault(IN PVOID Address,
                          IN PMMPTE PointerPte,
                          IN ULONG Protection,
-                         IN PEPROCESS Process,
+                         IN PMMSUPPORT WorkingSet,
                          IN KIRQL OldIrql)
 {
     PFN_NUMBER PageFrameNumber = 0;
@@ -603,13 +596,13 @@ MiResolveDemandZeroFault(IN PVOID Address,
     BOOLEAN NeedZero = FALSE, HaveLock = FALSE;
     ULONG Color;
     PMMPFN Pfn1;
-    DPRINT("ARM3 Demand Zero Page Fault Handler for address: %p in process: %p\n",
-            Address,
-            Process);
+    DPRINT("ARM3 Demand Zero Page Fault Handler for address: %p\n", Address);
 
     /* Must currently only be called by paging path */
-    if ((Process > HYDRA_PROCESS) && (OldIrql == MM_NOIRQL))
+    if (MI_IS_PROCESS_WORKING_SET(WorkingSet) && (OldIrql == MM_NOIRQL))
     {
+        PEPROCESS Process = CONTAINING_RECORD(WorkingSet, EPROCESS, Vm);
+
         /* Sanity check */
         ASSERT(MI_IS_PAGE_TABLE_ADDRESS(PointerPte));
 
@@ -629,7 +622,7 @@ MiResolveDemandZeroFault(IN PVOID Address,
         NeedZero = (OldIrql != MM_NOIRQL);
 
         /* Session-backed image views must be zeroed */
-        if ((Process == HYDRA_PROCESS) &&
+        if (WorkingSet->Flags.SessionSpace &&
             ((MI_IS_SESSION_IMAGE_ADDRESS(Address)) ||
              ((Address >= MiSessionViewStart) && (Address < MiSessionSpaceWs))))
         {
@@ -656,12 +649,12 @@ MiResolveDemandZeroFault(IN PVOID Address,
     ASSERT(MmAvailablePages >= 32);
 
 #if MI_TRACE_PFNS
-    if (UserPdeFault) MI_SET_USAGE(MI_USAGE_PAGE_TABLE);
-    if (!UserPdeFault) MI_SET_USAGE(MI_USAGE_DEMAND_ZERO);
+    if (MI_IS_PAGE_TABLE_ADDRESS(Address))
+        MI_SET_USAGE(MI_USAGE_PAGE_TABLE);
+    else
+        MI_SET_USAGE(MI_USAGE_DEMAND_ZERO);
+    MI_SET_WORKING_SET(WorkingSet);
 #endif
-    if (Process == HYDRA_PROCESS) MI_SET_PROCESS2("Hydra");
-    else if (Process) MI_SET_PROCESS2(Process->ImageFileName);
-    else MI_SET_PROCESS2("Kernel Demand 0");
 
     /* Do we need a zero page? */
     if (Color != 0xFFFFFFFF)
@@ -738,14 +731,17 @@ MiResolveDemandZeroFault(IN PVOID Address,
         MiReleasePfnLock(OldIrql);
 
         /* Update performance counters */
-        if (Process > HYDRA_PROCESS) Process->NumberOfPrivatePages++;
+        if (MI_IS_PROCESS_WORKING_SET(WorkingSet))
+        {
+            PEPROCESS Process = CONTAINING_RECORD(WorkingSet, EPROCESS, Vm);
+            Process->NumberOfPrivatePages++;
+        }
     }
 
     /* Add the page to our working set, if it's not a proto PTE */
-    if ((Process > HYDRA_PROCESS) && (PointerPte == MiAddressToPte(Address)))
+    if (PointerPte == MiAddressToPte(Address))
     {
-        /* FIXME: Also support session VM scenario */
-        MiInsertInWorkingSetList(&Process->Vm, Address, Protection);
+        MiInsertInWorkingSetList(WorkingSet, Address, Protection);
     }
 
     //
@@ -886,7 +882,7 @@ NTAPI
 MiResolvePageFileFault(_In_ BOOLEAN StoreInstruction,
                        _In_ PVOID FaultingAddress,
                        _In_ PMMPTE PointerPte,
-                       _In_ PEPROCESS CurrentProcess,
+                       _In_ PMMSUPPORT WorkingSet,
                        _Inout_ KIRQL *OldIrql)
 {
     ULONG Color;
@@ -899,11 +895,10 @@ MiResolvePageFileFault(_In_ BOOLEAN StoreInstruction,
     ULONG Protection = TempPte.u.Soft.Protection;
 
     /* Things we don't support yet */
-    ASSERT(CurrentProcess > HYDRA_PROCESS);
     ASSERT(*OldIrql != MM_NOIRQL);
 
     MI_SET_USAGE(MI_USAGE_PAGE_FILE);
-    MI_SET_PROCESS(CurrentProcess);
+    MI_SET_WORKING_SET(WorkingSet);
 
     /* We must hold the PFN lock */
     MI_ASSERT_PFN_LOCK_HELD();
@@ -914,7 +909,7 @@ MiResolvePageFileFault(_In_ BOOLEAN StoreInstruction,
     ASSERT(TempPte.u.Soft.PageFileHigh != MI_PTE_LOOKUP_NEEDED);
 
     /* Get any page, it will be overwritten */
-    Color = MI_GET_NEXT_PROCESS_COLOR(CurrentProcess);
+    Color = MI_GET_NEXT_WORKING_SET_COLOR(WorkingSet);
     Page = MiRemoveAnyPage(Color);
 
     /* Initialize this PFN */
@@ -934,13 +929,13 @@ MiResolvePageFileFault(_In_ BOOLEAN StoreInstruction,
 
     /* Release the locks while we proceed */
     MiReleasePfnLock(*OldIrql);
-    MiUnlockProcessWorkingSet(CurrentProcess, PsGetCurrentThread());
+    MiUnlockWorkingSet(PsGetCurrentThread(), WorkingSet);
 
     /* Do the paging IO */
     Status = MiReadPageFile(Page, PageFileIndex, PageFileOffset);
 
     /* Acquire our locks like they were when we were called. */
-    MiLockProcessWorkingSet(CurrentProcess, PsGetCurrentThread());
+    MiLockWorkingSet(PsGetCurrentThread(), WorkingSet);
     *OldIrql = MiAcquirePfnLock();
 
     /* Nobody should have changed that while we were not looking */
@@ -968,8 +963,8 @@ MiResolvePageFileFault(_In_ BOOLEAN StoreInstruction,
     }
 
     /* And we can insert this into the working set */
-    if ((CurrentProcess > HYDRA_PROCESS) && (PointerPte == MiAddressToPte(FaultingAddress)))
-        MiInsertInWorkingSetList(&CurrentProcess->Vm, FaultingAddress, Protection);
+    if (PointerPte == MiAddressToPte(FaultingAddress))
+        MiInsertInWorkingSetList(WorkingSet, FaultingAddress, Protection);
 
     return Status;
 }
@@ -980,7 +975,7 @@ NTAPI
 MiResolveTransitionFault(IN BOOLEAN StoreInstruction,
                          IN PVOID FaultingAddress,
                          IN PMMPTE PointerPte,
-                         IN PEPROCESS CurrentProcess,
+                         IN PMMSUPPORT WorkingSet,
                          IN KIRQL OldIrql,
                          OUT PKEVENT **InPageBlock)
 {
@@ -990,8 +985,7 @@ MiResolveTransitionFault(IN BOOLEAN StoreInstruction,
     PMMPTE PointerToPteForProtoPage;
     ULONG Protection;
 
-    DPRINT("Transition fault on 0x%p with PTE 0x%p in process %s\n",
-            FaultingAddress, PointerPte, CurrentProcess->ImageFileName);
+    DPRINT("Transition fault on 0x%p with PTE 0x%p\n", FaultingAddress, PointerPte);
 
     /* Windows does this check */
     ASSERT(*InPageBlock == NULL);
@@ -1022,12 +1016,7 @@ MiResolveTransitionFault(IN BOOLEAN StoreInstruction,
     {
         DPRINT1("The page is currently in a page transition !\n");
         *InPageBlock = &Pfn1->u1.Event;
-        if (PointerPte == Pfn1->PteAddress)
-        {
-            DPRINT1("And this if for this particular PTE.\n");
-            /* The PTE will be made valid by the thread serving the fault */
-            return STATUS_SUCCESS; // FIXME: Maybe something more descriptive
-        }
+        return STATUS_SUCCESS;
     }
 
     /* Windows checks there's some free pages and this isn't an in-page error */
@@ -1107,8 +1096,8 @@ MiResolveTransitionFault(IN BOOLEAN StoreInstruction,
     MI_WRITE_VALID_PTE(PointerPte, TempPte);
 
     /* If this was a user fault (no prototype), add it to the working set */
-    if ((CurrentProcess > HYDRA_PROCESS) && (PointerPte == MiAddressToPte(FaultingAddress)))
-        MiInsertInWorkingSetList(&CurrentProcess->Vm, FaultingAddress, Protection);
+    if (PointerPte == MiAddressToPte(FaultingAddress))
+        MiInsertInWorkingSetList(WorkingSet, FaultingAddress, Protection);
 
     /* Return success */
     return STATUS_PAGE_FAULT_TRANSITION;
@@ -1124,7 +1113,7 @@ MiResolveProtoPteFault(IN BOOLEAN StoreInstruction,
                        IN OUT PMMPFN *OutPfn,
                        OUT PVOID *PageFileData,
                        OUT PMMPTE PteValue,
-                       IN PEPROCESS Process,
+                       IN PMMSUPPORT WorkingSet,
                        IN KIRQL OldIrql,
                        IN PVOID TrapInformation)
 {
@@ -1213,7 +1202,7 @@ MiResolveProtoPteFault(IN BOOLEAN StoreInstruction,
                                         OutPfn,
                                         PageFileData,
                                         PteValue,
-                                        Process,
+                                        WorkingSet,
                                         OldIrql,
                                         TrapInformation);
 
@@ -1231,13 +1220,10 @@ MiResolveProtoPteFault(IN BOOLEAN StoreInstruction,
         ProtoPageFrameIndex = PFN_FROM_PTE(&TempPte);
 
         MI_SET_USAGE(MI_USAGE_COW);
-        MI_SET_PROCESS(Process);
+        MI_SET_WORKING_SET(WorkingSet);
 
         /* Get a new page for the private copy */
-        if (Process > HYDRA_PROCESS)
-            Color = MI_GET_NEXT_PROCESS_COLOR(Process);
-        else
-            Color = MI_GET_NEXT_COLOR();
+        Color = MI_GET_NEXT_WORKING_SET_COLOR(WorkingSet);
 
         PageFrameIndex = MiRemoveAnyPage(Color);
 
@@ -1245,7 +1231,7 @@ MiResolveProtoPteFault(IN BOOLEAN StoreInstruction,
         MiCopyPfn(PageFrameIndex, ProtoPageFrameIndex);
 
         /* This will drop everything MiResolveProtoPteFault referenced */
-        MiDeletePte(PointerPte, Address, Process, PointerProtoPte);
+        MiDeletePte(PointerPte, Address, WorkingSet, PointerProtoPte);
 
         /* Because now we use this */
         Pfn1 = MI_PFN_ELEMENT(PageFrameIndex);
@@ -1257,7 +1243,7 @@ MiResolveProtoPteFault(IN BOOLEAN StoreInstruction,
         /* Fix the protection */
         Protection &= ~MM_WRITECOPY;
         Protection |= MM_READWRITE;
-        if (Address < MmSystemRangeStart)
+        if (Address <= MmHighestUserAddress)
         {
             /* Build the user PTE */
             MI_MAKE_HARDWARE_PTE_USER(&PteContents, PointerPte, Protection, PageFrameIndex);
@@ -1272,16 +1258,22 @@ MiResolveProtoPteFault(IN BOOLEAN StoreInstruction,
         MI_WRITE_VALID_PTE(PointerPte, PteContents);
 
         /* Add the page to our working set */
-        if (Process > HYDRA_PROCESS)
-        {
-            /* FIXME: Also support session VM scenario */
-            MiInsertInWorkingSetList(&Process->Vm, Address, Protection);
-        }
+        MiInsertInWorkingSetList(WorkingSet, Address, Protection);
+
         return Status;
     }
 
     /* Check for clone PTEs */
-    if (PointerPte <= MiHighestUserPte) ASSERT(Process->CloneRoot == NULL);
+    if (PointerPte <= MiHighestUserPte)
+    {
+        PEPROCESS Process = CONTAINING_RECORD(WorkingSet, EPROCESS, Vm);
+
+        if (Process->CloneRoot != NULL)
+        {
+            /* Unsupported */
+            ASSERT(FALSE);
+        }
+    }
 
     /* We don't support mapped files yet */
     ASSERT(TempPte.u.Soft.Prototype == 0);
@@ -1294,7 +1286,7 @@ MiResolveProtoPteFault(IN BOOLEAN StoreInstruction,
         Status = MiResolveTransitionFault(StoreInstruction,
                                           Address,
                                           PointerProtoPte,
-                                          Process,
+                                          WorkingSet,
                                           OldIrql,
                                           &InPageBlock);
         ASSERT(NT_SUCCESS(Status));
@@ -1305,7 +1297,7 @@ MiResolveProtoPteFault(IN BOOLEAN StoreInstruction,
         Status = MiResolvePageFileFault(StoreInstruction,
                                         Address,
                                         PointerProtoPte,
-                                        Process,
+                                        WorkingSet,
                                         &OldIrql);
     }
     else
@@ -1314,7 +1306,7 @@ MiResolveProtoPteFault(IN BOOLEAN StoreInstruction,
         Status = MiResolveDemandZeroFault(Address,
                                           PointerProtoPte,
                                           (ULONG)TempPte.u.Soft.Protection,
-                                          Process,
+                                          WorkingSet,
                                           OldIrql);
         ASSERT(NT_SUCCESS(Status));
     }
@@ -1329,16 +1321,16 @@ MiResolveProtoPteFault(IN BOOLEAN StoreInstruction,
                                    OutPfn);
 }
 
+static
 NTSTATUS
-NTAPI
-MiDispatchFault(IN ULONG FaultCode,
-                IN PVOID Address,
-                IN PMMPTE PointerPte,
-                IN PMMPTE PointerProtoPte,
-                IN BOOLEAN Recursive,
-                IN PEPROCESS Process,
-                IN PVOID TrapInformation,
-                IN PMMVAD Vad)
+MiDispatchFault(
+    _In_ ULONG FaultCode,
+    _In_ PVOID Address,
+    _In_ PMMPTE PointerPte,
+    _In_ PMMPTE PointerProtoPte,
+    _In_ PMMSUPPORT WorkingSet,
+    _In_ PVOID TrapInformation,
+    _In_ PMMVAD Vad)
 {
     MMPTE TempPte;
     KIRQL OldIrql, LockIrql;
@@ -1347,9 +1339,7 @@ MiDispatchFault(IN ULONG FaultCode,
     PMMPFN Pfn1, OutPfn = NULL;
     PFN_NUMBER PageFrameIndex;
     PFN_COUNT PteCount, ProcessedPtes;
-    DPRINT("ARM3 Page Fault Dispatcher for address: %p in process: %p\n",
-             Address,
-             Process);
+    DPRINT("ARM3 Page Fault Dispatcher for address: %p for working set: %p\n", Address, WorkingSet);
 
     /* Make sure the addresses are ok */
     ASSERT(PointerPte == MiAddressToPte(Address));
@@ -1397,7 +1387,7 @@ MiDispatchFault(IN ULONG FaultCode,
                                             &OutPfn,
                                             NULL,
                                             NULL,
-                                            Process,
+                                            WorkingSet,
                                             LockIrql,
                                             TrapInformation);
             ASSERT(Status == STATUS_SUCCESS);
@@ -1553,7 +1543,7 @@ MiDispatchFault(IN ULONG FaultCode,
                                             &OutPfn,
                                             NULL,
                                             NULL,
-                                            Process,
+                                            WorkingSet,
                                             LockIrql,
                                             TrapInformation);
             //ASSERT(Status != STATUS_ISSUE_PAGING_IO);
@@ -1594,7 +1584,7 @@ MiDispatchFault(IN ULONG FaultCode,
         LockIrql = MiAcquirePfnLock();
 
         /* Resolve */
-        Status = MiResolveTransitionFault(!MI_IS_NOT_PRESENT_FAULT(FaultCode), Address, PointerPte, Process, LockIrql, &InPageBlock);
+        Status = MiResolveTransitionFault(!MI_IS_NOT_PRESENT_FAULT(FaultCode), Address, PointerPte, WorkingSet, LockIrql, &InPageBlock);
 
         ASSERT(NT_SUCCESS(Status));
 
@@ -1633,7 +1623,7 @@ MiDispatchFault(IN ULONG FaultCode,
         LockIrql = MiAcquirePfnLock();
 
         /* Resolve */
-        Status = MiResolvePageFileFault(!MI_IS_NOT_PRESENT_FAULT(FaultCode), Address, PointerPte, Process, &LockIrql);
+        Status = MiResolvePageFileFault(!MI_IS_NOT_PRESENT_FAULT(FaultCode), Address, PointerPte, WorkingSet, &LockIrql);
 
         /* And now release the lock and leave*/
         MiReleasePfnLock(LockIrql);
@@ -1662,7 +1652,7 @@ MiDispatchFault(IN ULONG FaultCode,
     Status = MiResolveDemandZeroFault(Address,
                                       PointerPte,
                                       (ULONG)TempPte.u.Soft.Protection,
-                                      Process,
+                                      WorkingSet,
                                       MM_NOIRQL);
     ASSERT(KeAreAllApcsDisabled() == TRUE);
     if (NT_SUCCESS(Status))
@@ -1921,7 +1911,7 @@ _WARN("Session space stuff is not implemented yet!")
         else
         {
             /* Use the session process and working set */
-            CurrentProcess = HYDRA_PROCESS;
+            CurrentProcess = NULL;
             WorkingSet = &MmSessionSpace->GlobalVirtualAddress->Vm;
 
             /* Make sure we don't have a recursive working set lock */
@@ -2089,8 +2079,7 @@ _WARN("Session space stuff is not implemented yet!")
                                  Address,
                                  PointerPte,
                                  ProtoPte,
-                                 FALSE,
-                                 CurrentProcess,
+                                 WorkingSet,
                                  TrapInformation,
                                  NULL);
 
@@ -2136,7 +2125,7 @@ UserFault:
         MiResolveDemandZeroFault(PointerPpe,
                                  PointerPxe,
                                  MM_EXECUTE_READWRITE,
-                                 CurrentProcess,
+                                 &CurrentProcess->Vm,
                                  MM_NOIRQL);
 
         /* We should come back with a valid PXE */
@@ -2170,7 +2159,7 @@ UserFault:
         MiResolveDemandZeroFault(PointerPde,
                                  PointerPpe,
                                  MM_EXECUTE_READWRITE,
-                                 CurrentProcess,
+                                 &CurrentProcess->Vm,
                                  MM_NOIRQL);
 
         /* We should come back with a valid PPE */
@@ -2185,9 +2174,6 @@ UserFault:
         ASSERT((PointerPde->u.Long == 0) || (PointerPde->u.Soft.Transition == 1));
 
         /* And go dispatch the fault on the PDE. This should handle the demand-zero */
-#if MI_TRACE_PFNS
-        UserPdeFault = TRUE;
-#endif
         /* Check if we have a VAD, unless we did this already */
         if (ProtectionCode == MM_INVALID_PROTECTION)
         {
@@ -2222,7 +2208,7 @@ UserFault:
             Status = MiResolveTransitionFault(TRUE,
                                               PointerPte,
                                               PointerPde,
-                                              CurrentProcess,
+                                              &CurrentProcess->Vm,
                                               LockIrql,
                                               &InPageBlock);
             ASSERT(NT_SUCCESS(Status));
@@ -2255,13 +2241,10 @@ UserFault:
             MiResolveDemandZeroFault(PointerPte,
                                      PointerPde,
                                      MM_READWRITE,
-                                     CurrentProcess,
+                                     &CurrentProcess->Vm,
                                      MM_NOIRQL);
         }
 
-#if MI_TRACE_PFNS
-        UserPdeFault = FALSE;
-#endif
         /* We should come back with APCs enabled, and with a valid PDE */
         ASSERT(KeAreAllApcsDisabled() == TRUE);
         ASSERT(PointerPde->u.Hard.Valid == 1);
@@ -2306,7 +2289,7 @@ UserFault:
                 ASSERT(Pfn1->u3.e1.PrototypePte == 1);
                 ASSERT(!MI_IS_PFN_DELETED(Pfn1));
                 ProtoPte = Pfn1->PteAddress;
-                MiDeletePte(PointerPte, Address, CurrentProcess, ProtoPte);
+                MiDeletePte(PointerPte, Address, WorkingSet, ProtoPte);
 
                 /* And make a new shiny one with our page */
                 MiInitializePfn(PageFrameIndex, PointerPte, TRUE);
@@ -2359,7 +2342,7 @@ UserFault:
         MiResolveDemandZeroFault(Address,
                                  PointerPte,
                                  TempPte.u.Soft.Protection,
-                                 CurrentProcess,
+                                 &CurrentProcess->Vm,
                                  MM_NOIRQL);
 
         /* Return the status */
@@ -2599,8 +2582,7 @@ UserFault:
                              Address,
                              PointerPte,
                              ProtoPte,
-                             FALSE,
-                             CurrentProcess,
+                             &CurrentProcess->Vm,
                              TrapInformation,
                              Vad);
 

@@ -326,9 +326,6 @@ MiDeleteSystemPageableVm(IN PMMPTE PointerPte,
                 PageFrameIndex = PFN_FROM_PTE(PointerPte);
                 Pfn1 = MiGetPfnEntry(PageFrameIndex);
 
-                /* Should not have any working set data yet */
-                ASSERT(Pfn1->u1.WsIndex == 0);
-
                 /* Actual valid, legitimate, pages */
                 if (ValidPages) (*ValidPages)++;
 
@@ -338,6 +335,9 @@ MiDeleteSystemPageableVm(IN PMMPTE PointerPte,
 
                 /* Lock the PFN database */
                 OldIrql = MiAcquirePfnLock();
+
+                /* Remove from the WS */
+                MiRemoveFromWorkingSetList(&MmSystemCacheWs, MiPteToAddress(PointerPte));
 
                 /* Delete it the page */
                 MI_SET_PFN_DELETED(Pfn1);
@@ -386,12 +386,14 @@ MiDeleteSystemPageableVm(IN PMMPTE PointerPte,
     return ActualPages;
 }
 
+_Requires_exclusive_lock_held_(WorkingSet->WorkingSetMutex)
 VOID
 NTAPI
-MiDeletePte(IN PMMPTE PointerPte,
-            IN PVOID VirtualAddress,
-            IN PEPROCESS CurrentProcess,
-            IN PMMPTE PrototypePte)
+MiDeletePte(
+	_Inout_ PMMPTE PointerPte,
+	_In_ PVOID VirtualAddress,
+	_In_ PMMSUPPORT WorkingSet,
+	_In_ PMMPTE PrototypePte)
 {
     PMMPFN Pfn1;
     MMPTE TempPte;
@@ -517,7 +519,7 @@ MiDeletePte(IN PMMPTE PointerPte,
     else
     {
         /* Remove this address from the WS list */
-        MiRemoveFromWorkingSetList(&CurrentProcess->Vm, VirtualAddress);
+        MiRemoveFromWorkingSetList(WorkingSet, VirtualAddress);
 
         /* Make sure the saved PTE address is valid */
         if ((PMMPTE)((ULONG_PTR)Pfn1->PteAddress & ~0x1) != PointerPte)
@@ -728,7 +730,7 @@ MiDeleteVirtualAddresses(IN ULONG_PTR Va,
                         /* Delete the PTE proper */
                         MiDeletePte(PointerPte,
                                     (PVOID)Va,
-                                    CurrentProcess,
+                                    &CurrentProcess->Vm,
                                     PrototypePte);
                     }
                 }
@@ -760,7 +762,7 @@ MiDeleteVirtualAddresses(IN ULONG_PTR Va,
                 /* Delete the PTE proper */
                 MiDeletePte(PointerPde,
                             MiPteToAddress(PointerPde),
-                            CurrentProcess,
+                            &CurrentProcess->Vm,
                             NULL);
             }
         }

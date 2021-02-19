@@ -2041,6 +2041,53 @@ MiDbgDumpMemoryDescriptors(VOID)
 }
 
 CODE_SEG("INIT")
+static
+VOID
+MiInitializeSystemCache(VOID)
+{
+    PFN_NUMBER WsListPage;
+    PMMPTE PointerPte;
+    MMPTE TempPte;
+    KIRQL OldIrql;
+    SIZE_T WsListSize;
+
+    /* Calculate the space we will need for this WS */
+    WsListSize = sizeof(*MmSystemCacheWs.VmWorkingSetList);
+    /* One entry per page, plus the size needed for each extension of the WSLE array */
+    WsListSize += MmSizeOfPagedPoolInPages * sizeof(MMWSLE) + MmSizeOfPagedPoolInPages / (PAGE_SIZE/sizeof(MMWSLE));
+    WsListSize += MmSizeOfSystemCacheInPages * sizeof(MMWSLE) + MmSizeOfSystemCacheInPages / (PAGE_SIZE/sizeof(MMWSLE));
+
+    PointerPte = MiReserveSystemPtes(BYTES_TO_PAGES(WsListSize), SystemPteSpace);
+    if (!PointerPte)
+        KeBugCheck(MEMORY_MANAGEMENT);
+
+    MiLockWorkingSet(PsGetCurrentThread(), &MmSystemCacheWs);
+
+    OldIrql = MiAcquirePfnLock();
+
+    MI_SET_PROCESS2("Kernel WS list");
+    MI_SET_USAGE(MI_USAGE_WSLE);
+
+    /* Reserve a page for the list */
+    WsListPage = MiRemoveZeroPage(MI_GET_NEXT_COLOR());
+
+    MI_WRITE_INVALID_PTE(PointerPte, DemandZeroPte);
+    MiInitializePfn(WsListPage, PointerPte, TRUE);
+
+    TempPte = ValidKernelPte;
+    TempPte.u.Hard.PageFrameNumber = WsListPage;
+    MI_WRITE_VALID_PTE(PointerPte, TempPte);
+
+    MmSystemCacheWs.VmWorkingSetList = MiPteToAddress(PointerPte);
+
+    MiInitializeWorkingSetList(&MmSystemCacheWs);
+
+    MiReleasePfnLock(OldIrql);
+
+    MiUnlockWorkingSet(PsGetCurrentThread(), &MmSystemCacheWs);
+}
+
+CODE_SEG("INIT")
 BOOLEAN
 NTAPI
 MmArmInitSystem(IN ULONG Phase,
@@ -2534,7 +2581,7 @@ MmArmInitSystem(IN ULONG Phase,
 #endif
 
         /* Initialize the system cache */
-        //MiInitializeSystemCache(MmSystemCacheWsMinimum, MmAvailablePages);
+        MiInitializeSystemCache();
 
         /* Update the commit limit */
         MmTotalCommitLimit = MmAvailablePages;

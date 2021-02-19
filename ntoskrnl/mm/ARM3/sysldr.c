@@ -50,6 +50,26 @@ PMMPTE MiKernelResourceStartPte, MiKernelResourceEndPte;
 ULONG_PTR ExPoolCodeStart, ExPoolCodeEnd, MmPoolCodeStart, MmPoolCodeEnd;
 ULONG_PTR MmPteCodeStart, MmPteCodeEnd;
 
+static ULONG SectionCharacteristicsToMmProtect[16] =
+{
+    MM_NOACCESS,            /* 0 = NONE */
+    MM_NOACCESS,            /* 1 = SHARED */
+    MM_EXECUTE,             /* 2 = EXECUTABLE */
+    MM_EXECUTE,             /* 3 = EXECUTABLE, SHARED */
+    MM_READONLY,            /* 4 = READABLE */
+    MM_READONLY,            /* 5 = READABLE, SHARED */
+    MM_EXECUTE_READ,        /* 6 = READABLE, EXECUTABLE */
+    MM_EXECUTE_READ,        /* 7 = READABLE, EXECUTABLE, SHARED */
+    MM_READWRITE,           /* 8 = WRITABLE */
+    MM_WRITECOPY,           /* 9 = WRITABLE, SHARED */
+    MM_EXECUTE_READWRITE,   /* 10 = WRITABLE, EXECUTABLE */
+    MM_EXECUTE_WRITECOPY,   /* 11 = WRITABLE, EXECUTABLE, SHARED */
+    MM_READWRITE,           /* 12 = WRITABLE, READABLE */
+    MM_WRITECOPY,           /* 13 = WRITABLE, READABLE, SHARED */
+    MM_EXECUTE_WRITECOPY,   /* 14 = WRITABLE, READABLE, EXECUTABLE */
+    MM_EXECUTE_WRITECOPY,   /* 15 = WRITABLE, READABLE, EXECUTABLE, SHARED */
+};
+
 #ifdef _WIN64
 #define DEFAULT_SECURITY_COOKIE 0x00002B992DDFA232ll
 #else
@@ -1716,7 +1736,7 @@ MiReloadBootLoadedDrivers(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     NTSTATUS Status;
     PMMPTE PointerPte, StartPte, LastPte;
     PFN_COUNT PteCount;
-    PMMPFN Pfn1;
+    KIRQL OldIrql;
     MMPTE TempPte, OldPte;
 
     /* Loop driver list */
@@ -1745,6 +1765,8 @@ MiReloadBootLoadedDrivers(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         /* Loop the PTEs */
         while (PointerPte < LastPte)
         {
+            PMMPFN Pfn1;
+
             ULONG len;
             ASSERT(PointerPte->u.Hard.Valid == 1);
             Pfn1 = MiGetPfnEntry(PFN_FROM_PTE(PointerPte));
@@ -1792,21 +1814,7 @@ MiReloadBootLoadedDrivers(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         /* Remember the original address */
         DllBase = LdrEntry->DllBase;
 
-        /* Loop the PTEs */
-        PointerPte = StartPte;
-        while (PointerPte < LastPte)
-        {
-            /* Mark the page modified in the PFN database */
-            ASSERT(PointerPte->u.Hard.Valid == 1);
-            Pfn1 = MiGetPfnEntry(PFN_FROM_PTE(PointerPte));
-            ASSERT(Pfn1->u3.e1.Rom == 0);
-            Pfn1->u3.e1.Modified = TRUE;
-
-            /* Next */
-            PointerPte++;
-        }
-
-        /* Now reserve system PTEs for the image */
+        /* Reserve system PTEs for the image */
         PointerPte = MiReserveSystemPtes(PteCount, SystemPteSpace);
         if (!PointerPte)
         {
@@ -1823,24 +1831,34 @@ MiReloadBootLoadedDrivers(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
         DPRINT("[Mm0]: Copying from: %p to: %p\n", DllBase, NewImageAddress);
         ASSERT(ExpInitializationPhase == 0);
 
+        OldIrql = MiAcquirePfnLock();
         /* Loop the new driver PTEs */
         TempPte = ValidKernelPte;
         while (PointerPte < LastPte)
         {
+            PFN_NUMBER PageFrameNumber;
+            PMMPFN Pfn;
+
             /* Copy the old data */
             OldPte = *StartPte;
             ASSERT(OldPte.u.Hard.Valid == 1);
 
-            /* Set page number from the loader's memory */
-            TempPte.u.Hard.PageFrameNumber = OldPte.u.Hard.PageFrameNumber;
+            PageFrameNumber = PFN_FROM_PTE(&OldPte);
+            Pfn = MiGetPfnEntry(PageFrameNumber);
 
-            /* Write it */
-            MI_WRITE_VALID_PTE(PointerPte, TempPte);
+            /* Unlink and relink the PFN */
+            MiDecrementShareCount(Pfn, PageFrameNumber);
+            MiUnlinkPageFromList(Pfn);
+            TempPte.u.Hard.PageFrameNumber = PageFrameNumber;
+            MiInitializePfnAndMakePteValid(PageFrameNumber, PointerPte, TempPte);
+            ASSERT(Pfn->u2.ShareCount == 1);
+            ASSERT(Pfn->u1.WsIndex == 0);
 
             /* Move on */
             PointerPte++;
             StartPte++;
         }
+        MiReleasePfnLock(OldIrql);
 
         /* Update position */
         PointerPte -= PteCount;
@@ -2421,6 +2439,10 @@ MiSetSystemCodeProtection(
 {
     PMMPTE PointerPte;
     MMPTE TempPte;
+    KIRQL OldIrql;
+
+    MiLockWorkingSet(PsGetCurrentThread(), &MmSystemCacheWs);
+    OldIrql = MiAcquirePfnLock();
 
     /* Loop the PTEs */
     for (PointerPte = FirstPte; PointerPte <= LastPte; PointerPte++)
@@ -2445,7 +2467,29 @@ MiSetSystemCodeProtection(
 #endif
 
         MI_UPDATE_VALID_PTE(PointerPte, TempPte);
+
+        /* Add it to the system working set in case this is pageable, or remove it in case of overlap. */
+        PMMPFN Pfn = MiGetPfnEntry(PFN_FROM_PTE(&TempPte));
+        if (FlagOn(Protection, IMAGE_SCN_MEM_NOT_PAGED))
+        {
+            ASSERT(!FlagOn(Protection, IMAGE_SCN_MEM_DISCARDABLE));
+            if (Pfn->u1.WsIndex != 0)
+                MiRemoveFromWorkingSetList(&MmSystemCacheWs, MiPteToAddress(PointerPte));
+        }
+        else if (Pfn->u1.WsIndex == 0)
+        {
+            MiInsertInWorkingSetList(&MmSystemCacheWs, MiPteToAddress(PointerPte), SectionCharacteristicsToMmProtect[(Protection & IMAGE_SCN_PROTECTION_MASK) >> 28]) ;
+        }
+
+        /* Update the original protection */
+        ASSERT(Pfn->OriginalPte.u.Hard.Valid == 0);
+        ASSERT(Pfn->OriginalPte.u.Soft.Prototype == 0);
+        ASSERT(Pfn->OriginalPte.u.Soft.Transition == 0);
+        Pfn->OriginalPte.u.Soft.Protection = SectionCharacteristicsToMmProtect[(Protection & IMAGE_SCN_PROTECTION_MASK) >> 28];
     }
+
+    MiReleasePfnLock(OldIrql);
+    MiUnlockWorkingSet(PsGetCurrentThread(), &MmSystemCacheWs);
 
     /* Flush it all */
     KeFlushEntireTb(TRUE, TRUE);
@@ -2463,13 +2507,10 @@ MiWriteProtectSystemImage(
     ULONG SectionSize;
     ULONG Protection;
     PMMPTE FirstPte, LastPte;
+    BOOLEAN EnforceProtect;
 
     /* Check if the registry setting is on or not */
-    if (MmEnforceWriteProtection == FALSE)
-    {
-        /* Ignore section protection */
-        return;
-    }
+    EnforceProtect = MmEnforceWriteProtection;
 
     /* Large page mapped images are not supported */
     NT_ASSERT(!MI_IS_PHYSICAL_ADDRESS(ImageBase));
@@ -2490,7 +2531,7 @@ MiWriteProtectSystemImage(
         (NtHeaders->OptionalHeader.MajorSubsystemVersion < 5))
     {
         DPRINT1("Skipping NT 4 driver @ %p\n", ImageBase);
-        return;
+        EnforceProtect = FALSE;
     }
 
     /* Get the section headers */
@@ -2502,10 +2543,13 @@ MiWriteProtectSystemImage(
     /* Start protecting the image header as R/O */
     FirstPte = MiAddressToPte(ImageBase);
     LastPte = MiAddressToPte(SectionBase) - 1;
-    Protection = IMAGE_SCN_MEM_READ;
-    if (LastPte >= FirstPte)
+    if (EnforceProtect)
     {
-        MiSetSystemCodeProtection(FirstPte, LastPte, IMAGE_SCN_MEM_READ);
+        Protection = IMAGE_SCN_MEM_READ;
+        if (LastPte >= FirstPte)
+        {
+            MiSetSystemCodeProtection(FirstPte, LastPte, IMAGE_SCN_MEM_READ);
+        }
     }
 
     /* Loop the sections */
@@ -2522,11 +2566,14 @@ MiWriteProtectSystemImage(
         /* Check for overlap with the previous range */
         if (FirstPte == LastPte)
         {
-            /* Combine the old and new protection by ORing them */
-            Protection |= (Section->Characteristics & IMAGE_SCN_PROTECTION_MASK);
+            if (EnforceProtect)
+            {
+                /* Combine the old and new protection by ORing them */
+                Protection |= Section->Characteristics;
 
-            /* Update the protection for this PTE */
-            MiSetSystemCodeProtection(FirstPte, FirstPte, Protection);
+                /* Update the protection for this PTE */
+                MiSetSystemCodeProtection(FirstPte, FirstPte, Protection);
+            }
 
             /* Skip this PTE */
             FirstPte++;
@@ -2548,7 +2595,7 @@ MiWriteProtectSystemImage(
         }
 
         /* Get the section protection */
-        Protection = (Section->Characteristics & IMAGE_SCN_PROTECTION_MASK);
+        Protection = Section->Characteristics;
 
         /* Update the protection for this section */
         MiSetSystemCodeProtection(FirstPte, LastPte, Protection);
