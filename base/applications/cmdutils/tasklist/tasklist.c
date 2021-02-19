@@ -206,7 +206,7 @@ BOOL EnumProcessAndPrint(BOOL bNoHeader)
     if (!NT_SUCCESS(Status))
     {
         // tried NT_SYSTEM_QUERY_MAX_RETRY times, or failed with some other reason
-        ConResMsgPrintf(StdOut, 0, IDS_ENUM_FAILED);
+        ConResMsgPrintf(StdErr, 0, IDS_ENUM_FAILED);
         HeapFree(GetProcessHeap(), 0, ProcessInfoBuffer);
         return FALSE;
     }
