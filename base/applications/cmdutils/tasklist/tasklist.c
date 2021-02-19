@@ -21,7 +21,7 @@ static PCWSTR opList[] = { L"?", L"nh" };
 // Print split line
 VOID PrintSplitLine(INT Length)
 {
-    for (INT i = 0; i < Length; i++)
+    for (; Length; Length--)
     {
         ConPuts(StdOut, L"=");
     }
