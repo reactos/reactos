@@ -30,10 +30,7 @@ VOID PrintSplitLine(INT Length)
 // Print spaces
 VOID PrintSpace(INT Length)
 {
-    for (; Length; Length--)
-    {
-        ConPuts(StdOut, L" ");
-    }
+    ConPrintf(StdOut, L"%*ls", Length, L"");
 }
 
 // Print a string.
