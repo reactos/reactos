@@ -84,7 +84,7 @@ BOOL PrintMemory(SIZE_T MemorySizeByte, INT MaxWidth, HINSTANCE hInstance)
     SIZE_T MemorySize = MemorySizeByte >> 10;
 
     WCHAR NumberString[27] = { 0 }; // length 26 is enough to display ULLONG_MAX in decimal with comma, one more for zero-terminated.
-    assert(sizeof(SIZE_T) <= 8);
+    C_ASSERT(sizeof(SIZE_T) <= 8);
 
     PWCHAR pNumberStr = NumberString;
 
