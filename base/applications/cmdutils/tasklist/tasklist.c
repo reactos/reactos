@@ -302,8 +302,8 @@ BOOL ProcessArguments(INT argc, WCHAR **argv)
             case OP_PARAM_INVALID:
             default:
             {
-                ConResMsgPrintf(StdOut, 0, IDS_INVALID_OPTION);
-                ConResMsgPrintf(StdOut, 0, IDS_USAGE);
+                ConResMsgPrintf(StdErr, 0, IDS_INVALID_OPTION);
+                ConResMsgPrintf(StdErr, 0, IDS_USAGE);
                 return FALSE;
             }
         }
