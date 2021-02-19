@@ -128,10 +128,8 @@ BOOL PrintMemory(SIZE_T MemorySizeByte, INT MaxWidth, HINSTANCE hInstance)
 VOID PrintHeader(HINSTANCE hInstance)
 {
     if (!hInstance)
-    {
-        assert(0);
         return;
-    }
+
     PrintResString(hInstance, IDS_HEADER_IMAGENAME, COLUMNWIDTH_IMAGENAME, TRUE);
     PrintSpace(1);
     PrintResString(hInstance, IDS_HEADER_PID,       COLUMNWIDTH_PID,       FALSE);
