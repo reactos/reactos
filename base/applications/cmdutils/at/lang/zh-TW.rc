@@ -1,0 +1,51 @@
+// Chinese Traditional (zh-TW) resources by Aobi Chan CL <eason066@gmail.com> 2021
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
+
+STRINGTABLE
+BEGIN
+    IDS_USAGE "AT 命令可安排電腦在特定的時間和日期執行命令和程序。\n\
+在使用 AT 命令前，請確保 Schedule 服務正在運行。\n\n\
+AT [\\\\computername] [ [id] [/DELETE] | /DELETE [/YES]]\n\
+AT [\\\\computername] time [/INTERACTIVE]\n\
+    [ /EVERY:date[,...] | /NEXT:date[,...]] ""command""\n\n\
+\\\\computername     指定一個遠端電腦。若省略這個參數，命令將在本地電腦上執行\n\
+id                   分配給安排命令的識別碼。\n\
+/DELETE              取消一個安排中的命令。若省略 id，電腦上所有被安排的\n\
+                     命令都會被取消。\n\
+/YES                 取消任務時使用將不再請求確認。\n\
+time                 指定命令執行的時間。\n\
+/INTERACTIVE         允許在執行任務時與登入中的使用者的桌面互動。\n\
+/EVERY:date[,...]    在每周或每月的特定日子執行指定命令。\n\
+                     若省略 date，則認定是每個月的今天。\n\
+/NEXT:date[,...]     在來到下一個日期的時候 (例如: 下星期四) 執行指定命令。\n\
+                     若省略 date，則認定是每個月的今天。\n\
+""command""          將被執行的命令或批量程序。\n"
+
+    IDS_DELETE_ALL "這個操作將刪除所有安排好的任務。\n"
+    IDS_NEW_JOB "以任務 ID %lu 新增一項新任務\n"
+    IDS_JOBS_LIST "狀態 ID   日                     時間          命令行\n"
+    IDS_NO_ENTRIES "列表中沒有項目。\n"
+
+    IDS_CONFIRM_QUESTION "您想繼續操作嗎？(Y/N) [N]: "
+    IDS_CONFIRM_INVALID  "\n這是一個無效的回應。\n"
+    IDS_CONFIRM_YES "Y"
+    IDS_CONFIRM_NO "N"
+
+    IDS_TODAY "今天"
+    IDS_TOMORROW "明天"
+    IDS_EVERY "每次"
+    IDS_NEXT "下次"
+
+    IDS_YES "是"
+    IDS_NO "否"
+    IDS_ERROR "錯誤"
+    IDS_OK "確定"
+
+    IDS_TASKID      "任務 ID:       %lu\n"
+    IDS_STATUS      "狀態:    %s\n"
+    IDS_SCHEDULE    "安排:    %s\n"
+    IDS_TIME        "今日時間:      %s\n"
+    IDS_INTERACTIVE "互動:    %s\n"
+    IDS_COMMAND     "命令:    %s\n"
+END

@@ -28,6 +28,9 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Class\{4D36E972-E325-11CE-BFC1-08002BE103
 ReactOS = "ReactOS Team"
 DisplayClassName = "Network Adapters"
 
+[Strings.0404]
+DisplayClassName = "網路配接器"
+
 [Strings.0405]
 DisplayClassName = "Síťové adaptéry"
 

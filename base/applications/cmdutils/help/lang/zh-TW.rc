@@ -1,15 +1,18 @@
-/* Traditional Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com) */
+/* 
+ * Traditional Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com) 
+ * modified by Aobi Chan CL 2021 (eason066@gmail.com)
+*/
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
 STRINGTABLE
 BEGIN
-    IDS_NO_ENTRY "通過説明實用程式不支援此命令。\n試 ""%s /?""。\n"
+    IDS_NO_ENTRY "通過説明實用程式不支援此命令。\n請嘗試 ""%s /?""。\n"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_USAGE "提供ReactOS命令的説明資訊。\n\n\
+    IDS_USAGE "提供 ReactOS 命令的説明資訊。\n\n\
 HELP [command]\n\n\
   command - 顯示此命令的説明資訊。\n"
     IDS_HELP1 "列出所有可用命令 (+ 它們的描述)\n\n\
@@ -17,21 +20,21 @@ HELP [command]\n\n\
   命令 /?         得到特定命令的更多資訊\n\n\
 ?        列出所有可用命令 (沒有描述)。\n\
 ALIAS    設置、刪除或顯示別名。\n\
-ATTRIB   顯示或改變檔案屬性。\n\
+ATTRIB   顯示或更改檔案屬性。\n\
 BEEP     使揚聲器發聲。\n\
 CALL     從一個批次程式中調用另一個。\n\
 CD       顯示目前的目錄的名稱或更改目前的目錄。\n\
 CHCP     顯示或設置活動字碼頁。\n\
 CHOICE   等待使用者在一組選項中做出選擇。\n\
 CLS      清除螢幕。\n\
-CMD      啟動 ReactOS 命令列解譯器的一個新實例。\n\
-COLOR    設置主控台預設的前景和背景顏色。\n\
+CMD      啟動新的 ReactOS 命令直譯器實例。\n\
+COLOR    設定主控台預設的前景和背景顏色。\n\
 COPY     將一個或多個檔案複製到另一個位置。\n\
-DATE     顯示或設置日期。\n\
-DELETE   刪除一個或多個檔。\n\
+DATE     顯示或設定日期。\n\
+DELETE   刪除一個或多個檔案。\n\
 DIR      顯示一個目錄中的檔案清單和子目錄。\n\
-ECHO     顯示消息，或開啟/關閉命令回顯。\n\
-ERASE    刪除一個或多個檔。\n\
+ECHO     顯示訊息，或開啟/關閉命令回顯。\n\
+ERASE    刪除一個或多個檔案。\n\
 EXIT     退出 CMD.EXE 程式 (命令直譯器)。\n\
 FOR      為一組檔中的每一個檔執行指定命令。\n\
 FREE     (空閒的) 磁碟空間。\n\
@@ -39,32 +42,32 @@ GOTO     在批次程式中指示 ReactOS 命令直譯器跳轉到被標記的�
 HELP     為 ReactOS 命令提供説明資訊。\n\
 HISTORY  列出所有曾被使用的命令。\n\
 IF       在批次程式中執行條件控制。\n\
-LABEL    創建、更改或刪除磁片標籤。\n\
-MD       創建一個目錄。\n\
-MKDIR    創建一個目錄。\n\
-MKLINK   創建一個檔案系統連結化物件。\n\
-MOVE     將一個或多個檔從一個資料夾移動到另一個資料夾。\n\
-PATH     顯示或設置可執行檔的搜索路徑。\n\
+LABEL    建立、更改或刪除磁碟代號。\n\
+MD       建立一個目錄。\n\
+MKDIR    建立一個目錄。\n\
+MKLINK   建立一個檔案系統連結化物件。\n\
+MOVE     將一個或多個檔案從一個資料夾移動到另一個資料夾。\n\
+PATH     顯示或設定可執行檔的搜尋路徑。\n\
 PAUSE    掛起批次檔的執行並顯示一條消息。\n\
 POPD     恢復由 PUSHD 存儲的前一個目前的目錄的值。\n\
 PROMPT   更改命令提示字元。\n\
-PUSHD    保存目前的目錄然後更改。\n\
+PUSHD    保存目前的目錄，然後更改它。\n\
 RD       刪除一個目錄。\n\
 REM      在批次檔中記錄注釋 (評論)。\n\
-REN      重命名一個或多個檔。\n\
-RENAME   重命名一個或多個檔。\n\
-REPLACE  替換檔。\n\
+REN      重新命名一個或多個檔案。\n\
+RENAME   重新命名一個或多個檔案。\n\
+REPLACE  替換檔案。\n\
 RMDIR    刪除一個目錄。\n\
 SCREEN   移動游標並可選地輸出文本。\n\
-SET      顯示、設置或刪除 ReactOS 環境變數。\n\
+SET      顯示、設定或刪除 ReactOS 環境變數。\n\
 SHIFT    在批次檔中移動可替換參數的位置。\n"
     IDS_HELP2 "START    啟動一個分隔的視窗來運行指定的程式或命令。\n\
          執行命令。\n\
-TIME     顯示或設置系統時間。\n\
-TIMER    允許使用至多十個停錶。\n\
-TITLE    設置一個 CMD.EXE 會話的視窗標題。\n\
-TYPE     顯示一個文字檔的內容。\n\
+TIME     顯示或設定系統時間。\n\
+TIMER    允許使用最多十個計時器。\n\
+TITLE    設定一個 CMD.EXE 會話的視窗標題。\n\
+TYPE     顯示一個文字檔案的內容。\n\
 VER      顯示 ReactOS 版本。\n\
-VERIFY   決定 ReactOS 是否檢驗您的檔已被正確地寫入磁片。\n\
-VOL      顯示磁片標籤和序號。\n"
+VERIFY   告訴 ReactOS 是否驗證您的檔案已正確地寫入至磁碟。\n\
+VOL      顯示磁碟代號和序號。\n"
 END

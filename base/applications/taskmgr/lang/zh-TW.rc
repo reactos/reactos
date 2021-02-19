@@ -331,7 +331,7 @@ STRINGTABLE
 BEGIN
     IDS_APP_TITLE "工作管理員"
     IDC_TASKMGR "工作管理員"
-    IDS_IDLE_PROCESS "系統空閒處理序"
+    IDS_IDLE_PROCESS "系統空閒處理程序"
 END
 
 STRINGTABLE

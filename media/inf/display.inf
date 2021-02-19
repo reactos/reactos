@@ -82,6 +82,12 @@ DisplayClassName = "Display Adapters"
 StdMfg = "(Standard display adapters)"
 VGA.DeviceDesc = "VGA-compatible graphics card"
 
+[Strings.0404]
+DisplayClassName = "顯示配接器"
+
+StdMfg = "(標準顯示配接器)"
+VGA.DeviceDesc = "VGA 相容顯示卡"
+
 [Strings.0405]
 DisplayClassName = "Grafické adaptéry"
 

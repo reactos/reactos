@@ -7,29 +7,29 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "設定"
 FONT 9, "新細明體"
 BEGIN
-    LTEXT "為列表中顯示的每個輸入語言選擇服務。\n使用“添加”和“刪除”按鈕來修改這個列表。", -1, 9, 6, 238, 25
+    LTEXT "為列表中顯示的每個輸入語言選擇服務。\n請按 [新增] 和 [刪除] 按鈕來修改這個列表。", -1, 9, 6, 238, 25
     CONTROL "TEXT", IDC_KEYLAYOUT_LIST, "SYSLISTVIEW32", WS_BORDER | WS_VSCROLL | WS_TABSTOP | LVS_SINGLESEL | LVS_NOSORTHEADER | LVS_SHOWSELALWAYS | LVS_REPORT, 8, 36, 237, 101
     PUSHBUTTON "設為預設值(&S)", IDC_SET_DEFAULT, 101, 159, 144, 14
-    PUSHBUTTON "添加(&D)...", IDC_ADD_BUTTON, 27, 142, 70, 14
+    PUSHBUTTON "新增(&D)...", IDC_ADD_BUTTON, 27, 142, 70, 14
     PUSHBUTTON "刪除(&R)", IDC_REMOVE_BUTTON, 101, 142, 70, 14
     PUSHBUTTON "屬性(&P)...", IDC_PROP_BUTTON, 175, 142, 70, 14
     GROUPBOX "首選項", -1, 7, 185, 240, 36
-    PUSHBUTTON "鍵設定(&K)...", IDC_KEY_SET_BTN, 14, 198, 110, 14
+    PUSHBUTTON "按鍵設定(&K)...", IDC_KEY_SET_BTN, 14, 198, 110, 14
 END
 
 IDD_PROPPAGEADVANCEDSETTINGS DIALOGEX 0, 0, 254, 228
 STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
-CAPTION "高階設定"
+CAPTION "進階設定"
 FONT 9, "新細明體"
 BEGIN
     GROUPBOX "系統配置", -1, 7, 7, 240, 70
-    AUTOCHECKBOX "關閉高階的文字服務(&T)", IDC_TURNOFFTEXTSVCS_CB, 14, 20, 220, 12
-    LTEXT "選擇此覈取方塊以關閉所有程式中的高階的文字服務。\n這不是推薦東亞使用者因為這個命令將關閉語言欄。", -1, 14, 40, 230, 35
+    AUTOCHECKBOX "關閉進階的文字服務(&T)", IDC_TURNOFFTEXTSVCS_CB, 14, 20, 220, 12
+    LTEXT "選擇此核取方塊以關閉所有程式中的進階的文字服務。\n不推薦東亞使用者使用，因為這個命令將關閉語言欄。", -1, 14, 40, 230, 35
 END
 
 IDD_KEYSETTINGS DIALOGEX 0, 0, 272, 163
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "高階鍵設定"
+CAPTION "進階按鍵設定"
 FONT 9, "新細明體"
 BEGIN
     GROUPBOX "要關閉 Caps Lock", -1, 7, 7, 258, 26
@@ -46,7 +46,7 @@ END
 
 IDD_ADD DIALOGEX 20, 20, 227, 90
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_NOIDLEMSG | DS_CONTEXTHELP | WS_POPUPWINDOW | WS_VISIBLE | WS_CAPTION
-CAPTION "添加輸入語言"
+CAPTION "新增輸入語言"
 FONT 9, "新細明體"
 BEGIN
     LTEXT "輸入語言(&I):", -1, 7, 7, 61, 10
@@ -101,14 +101,14 @@ BEGIN
     IDS_WHATS_THIS "這是什麼?"
     IDS_LANGUAGE "語言"
     IDS_LAYOUT "鍵盤佈局"
-    IDS_REM_QUESTION "確實要刪除選擇的鍵盤佈局嗎?"
+    IDS_REM_QUESTION "確定要刪除選擇的鍵盤佈局嗎?"
     IDS_CONFIRMATION "確認"
     IDS_LAYOUT_EXISTS "此佈局已經存在。"
-    IDS_LAYOUT_EXISTS2 "此佈局已經存在且無法被添加"
+    IDS_LAYOUT_EXISTS2 "此佈局已經存在且無法新增"
     IDS_CTRL_SHIFT "Ctrl+Shift"
     IDS_LEFT_ALT_SHIFT "左 Alt+Shift"
     IDS_SWITCH_BET_INLANG "在輸入語言間切換"
-    IDS_REBOOT_NOW, "Reboot now?"
+    IDS_REBOOT_NOW, "要立即重新啟動嗎?"
 END
 
 STRINGTABLE

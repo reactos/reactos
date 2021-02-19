@@ -66,7 +66,7 @@ BEGIN
 
     IDS_ERROR_SHUTDOWN_REBOOT "錯誤: 在同一時間無法關機和重新開機。\n"
     IDS_ERROR_TIMEOUT "錯誤: 等候逾時的值 %u 超出範圍 (0-315360000)。\n"
-    IDS_ERROR_ABORT "錯誤: 無法中止的系統關閉。\n"
+    IDS_ERROR_ABORT "錯誤: 無法終止的系統關閉。\n"
     IDS_ERROR_LOGOFF "錯誤: 無法登出系統。\n"
     IDS_ERROR_SHUTDOWN "錯誤: 無法關閉系統。\n"
     IDS_ERROR_RESTART "錯誤: 無法重新啟動系統。\n"

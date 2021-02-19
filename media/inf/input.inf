@@ -92,6 +92,13 @@ USB\VID_045E&PID_0039.DeviceDesc="Microsoft IntelliMouse Optical (USB)"
 USB\VID_045E&PID_0040.DeviceDesc="Microsoft Wheel Mouse Optical (USB)"
 USB\VID_045E&PID_0047.DeviceDesc="Microsoft IntelliMouse Explorer 3.0 (USB)"
 
+[Strings.0404]
+HID.ClassName         = "人體學介面裝置"
+HID.DeviceDesc        = "USB 人體學介面裝置"
+
+HID_DEVICE            = "HID 相容裝置"
+StdMfg                = "(標準人體學介面裝置)"
+
 [Strings.0405]
 HID.ClassName         = "Zařízení standardu HID"
 HID.DeviceDesc        = "USB zařízení standardu HID"

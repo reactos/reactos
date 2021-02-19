@@ -1,0 +1,32 @@
+// Chinese Traditional (zh-TW) resources by Aobi Chan CL <eason066@gmail.com> 2021
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
+
+STRINGTABLE DISCARDABLE
+BEGIN
+   IDS_APP_TITLE           "主控台工作管理員，由 Aleksey Bragin <aleksey@reactos.org> 開發"
+
+   IDS_COLUMN_NUMBER       "# "
+   IDS_COLUMN_IMAGENAME    "映像名稱                  "
+   IDS_COLUMN_PID          "PID  "
+   IDS_COLUMN_CPU          "CPU"
+   IDS_COLUMN_MEM          "記憶體使用量"
+   IDS_COLUMN_MEM_UNIT		"KB"
+   IDS_COLUMN_PF           "分頁錯誤"
+
+   IDS_IDLE_PROCESS        "系統空閒處理程序"
+   IDS_YES                 "Y"
+   IDS_NO                  "N"
+
+   IDS_MENU                "按鍵: Q - 退出, K - 終止程序"
+   IDS_MENU_QUIT           "Q"
+   IDS_MENU_KILL_PROCESS   "K"
+
+   IDS_KILL_PROCESS        "您確定要終止這個處理程序嗎? (Y/N)"
+   IDS_KILL_PROCESS_ERR1   "無法終止這個處理程序..."
+   IDS_KILL_PROCESS_ERR2   "無法終止處理程序 %d (無法執行 OpenProcess)"
+
+   IDS_CTM_GENERAL_ERR1    "ctm: 無法使用主控台。"
+   IDS_CTM_GENERAL_ERR2    "ctm: 輸入主控台無法執行 GetConsoleMode()。"
+   IDS_CTM_GENERAL_ERR3    "ctm: 輸出主控台無法執行 GetConsoleMode()。"
+END

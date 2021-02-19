@@ -86,7 +86,7 @@ STRINGTABLE
 BEGIN
     IDS_DOWNLOADING "下載中..."
     IDS_INSTALLING "安裝中..."
-    IDS_INVALID_SHA "下載的檔案總和檢查碼錯誤。正在中止安裝已損毀的檔案。"
+    IDS_INVALID_SHA "下載的檔案總和檢查碼錯誤。正在終止安裝已損毀的檔案。"
     IDS_NEW_INTERNET_SHORTCUT "新增網際網路捷徑"
     IDS_DWL_FAILED "無法下載 Gecko 套件。請確保在您有網際網路連線的情況下才能進行下載。安裝程式將在不安裝 Gecko 的情況下繼續。"
     IDS_CANTMAKEINETSHORTCUT "無法建立網際網路捷徑。"

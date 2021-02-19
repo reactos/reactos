@@ -36,6 +36,10 @@ ReactOS = "ReactOS Team"
 GenericMfg = "(Generic system devices)"
 *PNP0C14.DeviceDesc = "WMI for ACPI"
 
+[Strings.0404]
+GenericMfg = "(標準系統裝置)"
+*PNP0C14.DeviceDesc = "ACPI 的 WMI"
+
 [Strings.0405]
 GenericMfg = "(Generická systémová zařízení)"
 

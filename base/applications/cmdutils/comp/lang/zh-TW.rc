@@ -1,0 +1,25 @@
+// Chinese Traditional (zh-TW) resources by Aobi Chan CL <eason066@gmail.com> 2021
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
+
+STRINGTABLE
+BEGIN
+    IDS_HELP "比較兩個或兩組檔案的内容。\n\n\
+COMP [/L] [/A] [data1] [data2]\n\n\
+  data1      指定要比較的第一個檔案的位置和名稱。\n\
+  data2      指定要比較的第二個檔案的位置和名稱。\n\
+  /A         以 ASCII 字符形式顯示區別 (預設: 十六進制)。\n\
+  /L         顯示行數區別。\n"
+    IDS_INVALIDSWITCH "無效的選項 - /%c\n"
+    IDS_BADSYNTAX "命令行語法錯誤\n"
+    IDS_FILEERROR "無法找到/ 開啟檔案: %s\n"
+    IDS_COMPARING "正在比較 %s 和 %s...\n"
+    IDS_FILESIZEERROR "無法判斷該檔案的大小: %s\n"
+    IDS_SIZEDIFFERS "檔案大小不一致。\n"
+    IDS_READERROR "讀取檔案時發生錯誤。\n"
+    IDS_MISMATCHLINE "在行 %d 處比較時發生錯誤\n"
+    IDS_MISMATCHOFFSET "在偏移 0x%X 處比較時發生錯誤\n"
+    IDS_ASCIIDIFF "檔案%d = %c\n"
+    IDS_HEXADECIMALDIFF "檔案%d = %X\n"
+    IDS_MATCH "檔案比较完成\n"
+END

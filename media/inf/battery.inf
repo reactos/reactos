@@ -77,6 +77,13 @@ GenericMfg = "(Generic batteries)"
 ACPI\PNP0C0A.DeviceDesc = "ACPI-compliant control method battery"
 ACPI\ACPI0003.DeviceDesc = "AC adapter"
 
+[Strings.0404]
+BatteryClassName = "電池"
+
+GenericMfg = "(標準電池)"
+ACPI\PNP0C0A.DeviceDesc = "ACPI 相容控制模式電池"
+ACPI\ACPI0003.DeviceDesc = "交流配接器"
+
 [Strings.0405]
 BatteryClassName = "Baterie"
 GenericMfg = "(Generické baterie)"
@@ -110,6 +117,7 @@ BatteryClassName = "סוללות"
 GenericMfg = "(סוללות כלליות)"
 ACPI\PNP0C0A.DeviceDesc = "ACPI-compliant control method battery"
 ACPI\ACPI0003.DeviceDesc = "AC adapter"
+
 [Strings.0415]
 ReactOS = "Zespół ReactOS"
 BatteryClassName = "Baterie"
