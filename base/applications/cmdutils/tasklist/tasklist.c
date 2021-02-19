@@ -24,7 +24,7 @@ VOID PrintSplitLine(INT Length)
 {
     for (INT i = 0; i < Length; i++)
     {
-        ConPrintf(StdOut, L"=");
+        ConPuts(StdOut, L"=");
     }
 }
 
