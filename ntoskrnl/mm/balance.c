@@ -243,7 +243,7 @@ MmTrimUserMemory(ULONG Target, ULONG Priority, PULONG NrFreedPages)
             Target--;
         }
 
-        CurrentPage = MmGetLRUNextUserPage(CurrentPage, TRUE);
+        CurrentPage = MmGetLRUNextUserPage(CurrentPage, Priority == 0);
     }
 
     if (CurrentPage)
