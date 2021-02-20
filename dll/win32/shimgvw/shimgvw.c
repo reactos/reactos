@@ -243,7 +243,7 @@ BOOL Anime_Step(DWORD *pdwDelay)
 
 static void ZoomInOrOut(BOOL bZoomIn)
 {
-    INT i;
+    SIZE_T i;
 
     if (image == NULL)
         return;
@@ -251,12 +251,12 @@ static void ZoomInOrOut(BOOL bZoomIn)
     if (bZoomIn)    /* zoom in */
     {
         /* find next step */
-        for (i = 0; i < ARRAYSIZE(ZoomSteps); ++i)
+        for (i = 0; i < _countof(ZoomSteps); ++i)
         {
             if (ZoomPercents < ZoomSteps[i])
                 break;
         }
-        if (i == ARRAYSIZE(ZoomSteps))
+        if (i == _countof(ZoomSteps))
             ZoomPercents = MAX_ZOOM;
         else
             ZoomPercents = ZoomSteps[i];
@@ -271,7 +271,7 @@ static void ZoomInOrOut(BOOL bZoomIn)
     else            /* zoom out */
     {
         /* find previous step */
-        for (i = ARRAYSIZE(ZoomSteps); i > 0; )
+        for (i = _countof(ZoomSteps); i > 0; )
         {
             --i;
             if (ZoomSteps[i] < ZoomPercents)
@@ -507,7 +507,7 @@ pLoadImageFromNode(SHIMGVW_FILENODE *node, HWND hwnd)
 
     pLoadImage(node->FileName);
 
-    LoadStringW(hInstance, IDS_APPTITLE, szResStr, ARRAYSIZE(szResStr));
+    LoadStringW(hInstance, IDS_APPTITLE, szResStr, _countof(szResStr));
     if (image != NULL)
     {
         pchFileTitle = PathFindFileNameW(node->FileName);
@@ -718,7 +718,7 @@ ImageView_DrawImage(HWND hwnd)
     {
         FillRect(hdc, &rect, white);
 
-        LoadStringW(hInstance, IDS_NOPREVIEW, szText, ARRAYSIZE(szText));
+        LoadStringW(hInstance, IDS_NOPREVIEW, szText, _countof(szText));
 
         SetTextColor(hdc, RGB(0, 0, 0));
         SetBkMode(hdc, TRANSPARENT);
@@ -859,7 +859,7 @@ ImageView_CreateToolBar(HWND hwnd)
         hImageList = ImageList_Create(TB_IMAGE_WIDTH, TB_IMAGE_HEIGHT, ILC_MASK | ILC_COLOR24, 1, 1);
         if (hImageList == NULL) return FALSE;
 
-        for (INT n = 0; n < _countof(BtnConfig); n++)
+        for (SIZE_T n = 0; n < _countof(BtnConfig); n++)
         {
             ImageList_AddMasked(hImageList, LoadImageW(hInstance, MAKEINTRESOURCEW(BtnConfig[n].idb), IMAGE_BITMAP,
                                 TB_IMAGE_WIDTH, TB_IMAGE_HEIGHT, LR_DEFAULTCOLOR), RGB(255, 255, 255));
@@ -1127,7 +1127,7 @@ ImageView_CreateWindow(HWND hwnd, LPCWSTR szFileName)
 
     if (!RegisterClassW(&WndClass)) return -1;
 
-    LoadStringW(hInstance, IDS_APPTITLE, szBuf, ARRAYSIZE(szBuf));
+    LoadStringW(hInstance, IDS_APPTITLE, szBuf, _countof(szBuf));
     hMainWnd = CreateWindowExW(0, L"shimgvw_window", szBuf,
                                WS_OVERLAPPEDWINDOW | WS_VISIBLE | WS_CAPTION,
                                CW_USEDEFAULT, CW_USEDEFAULT,
@@ -1197,7 +1197,7 @@ ImageView_FullscreenA(HWND hwnd, HINSTANCE hInst, LPCSTR path, int nShow)
 {
     WCHAR szFile[MAX_PATH];
 
-    if (MultiByteToWideChar(CP_ACP, 0, path, -1, szFile, ARRAYSIZE(szFile)))
+    if (MultiByteToWideChar(CP_ACP, 0, path, -1, szFile, _countof(szFile)))
     {
         ImageView_CreateWindow(hwnd, szFile);
     }
