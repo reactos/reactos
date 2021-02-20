@@ -886,7 +886,7 @@ ShutdownOnInit(
         ReplaceSleepButtonWithHibernateButton(hDlg, pgContext->hDllInstance, FALSE);
         pContext->bIsSleepButtonReplaced = TRUE;
     }
-    
+
     // if (pContext->ShutdownOptions & 0x80) {}
 
     /* Set the default shut down selection */
@@ -1163,6 +1163,13 @@ ShutdownDialog(
                                   hwndDlg,
                                   ShutdownDialogProc,
                                   (LPARAM)&Context);
+        
+        /* If both sleep and hibernate button are enabled and the dialog box is IDD_SHUTDOWN_FANCY, give the keyboard focus to sleep button */
+        if (ShutdownDialogId == IDD_SHUTDOWN_FANCY && IsPwrHibernateAllowed() && IsPwrSuspendAllowed())
+        {
+            PostMessageW(hDlg, WM_NEXTDLGCTL, 0, 0);
+        }
+        
         ShowWindow(hDlg, SW_SHOW);
 
         while (GetMessage(&Msg, NULL, 0, 0))
