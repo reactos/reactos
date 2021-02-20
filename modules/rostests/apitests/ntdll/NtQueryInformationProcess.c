@@ -119,7 +119,6 @@ Test_ProcessTimes(void)
                                        sizeof(KERNEL_USER_TIMES),
                                        NULL);
     ok_hex(Status, STATUS_SUCCESS);
-    ros_skip_flaky
     ok(Times1.CreateTime.QuadPart < TestStartTime.QuadPart,
        "CreateTime is %I64u, expected < %I64u\n", Times1.CreateTime.QuadPart, TestStartTime.QuadPart);
     ok(Times1.CreateTime.QuadPart > TestStartTime.QuadPart - 100000000LL,
@@ -326,6 +325,9 @@ Test_ProcessWx86Information(void)
 START_TEST(NtQueryInformationProcess)
 {
     NTSTATUS Status;
+
+    /* Make sure that some time has passed since process creation, even if the resolution of our NtQuerySystemTime is low. */
+    Sleep(1);
 
     Status = NtQuerySystemTime(&TestStartTime);
     ok_hex(Status, STATUS_SUCCESS);
