@@ -58,7 +58,7 @@ INT PrintResString(HINSTANCE hInstance, UINT uID, UINT MaxWidth, BOOL bAlignLeft
 // Print a number, aligned to right.
 // MaxWidth is the width for printing.
 // the number WILL NOT be truncated if it's longer than MaxWidth
-VOID PrintNum(LONGLONG Number, INT MaxWidth)
+VOID PrintNum(LONGLONG Number, UINT MaxWidth)
 {
     ConPrintf(StdOut, L"%*lld", MaxWidth, Number);
 }
