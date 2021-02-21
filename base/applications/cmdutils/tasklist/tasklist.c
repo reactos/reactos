@@ -36,7 +36,7 @@ VOID PrintSpace(UINT Length)
 // Print a string.
 // if bAlignLeft == TRUE then aligned to left, otherwise aligned to right
 // MaxWidth is the width for printing.
-INT PrintString(LPCWSTR String, INT MaxWidth, BOOL bAlignLeft)
+INT PrintString(LPCWSTR String, UINT MaxWidth, BOOL bAlignLeft)
 {
     return ConPrintf(StdOut, bAlignLeft ? L"%-*.*ls" : L"%*.*ls", MaxWidth, MaxWidth, String);
 }
