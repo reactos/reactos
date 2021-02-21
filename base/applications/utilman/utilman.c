@@ -2,7 +2,7 @@
  * PROJECT:         ReactOS Utility Manager (Accessibility)
  * LICENSE:         GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:         Main dialog code file
- * COPYRIGHT:       Copyright 2019-2020 Bișoc George (fraizeraust99 at gmail dot com)
+ * COPYRIGHT:       Copyright 2019-2020 George Bișoc (george.bisoc@reactos.org)
  */
 
 /* INCLUDES *******************************************************************/

@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS Character Map
  * LICENSE:     GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * PURPOSE:     Italian Translation for ReactOS Character Map
- * COPYRIGHT:   Bișoc George (fraizeraust99 at gmail dot com)
+ * COPYRIGHT:   George Bișoc (george.bisoc@reactos.org)
  */
 
 LANGUAGE LANG_ITALIAN, SUBLANG_NEUTRAL
