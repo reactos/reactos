@@ -25,7 +25,7 @@
 // 0x80
 
 /* Macros for fancy shut down dialog */
-#define FONT_SIZE                       13
+#define FONT_POINT_SIZE                 13
 
 #define DARK_GREY_COLOR                 RGB(244, 244, 244)
 #define LIGHT_GREY_COLOR                RGB(38, 38, 38)
@@ -382,7 +382,9 @@ DrawIconOnOwnerDrawnButtons(
                     {
                         y = BUTTON_SLEEP_PRESSED;
                     }
-                    else if ((pdis->CtlID == IDC_BUTTON_SLEEP && pContext->bIsButtonHot[2]) || (pdis->CtlID == IDC_BUTTON_HIBERNATE && pContext->bIsButtonHot[3]) || (pdis->itemState & ODS_FOCUS))
+                    else if ((pdis->CtlID == IDC_BUTTON_SLEEP && pContext->bIsButtonHot[2]) ||
+                             (pdis->CtlID == IDC_BUTTON_HIBERNATE && pContext->bIsButtonHot[3]) ||
+                             (pdis->itemState & ODS_FOCUS))
                     {
                         y = BUTTON_SLEEP_FOCUSED;
                     }
@@ -536,7 +538,7 @@ HotButtonSubclass(
             ClientToScreen(hButton, &pt);
             hwndTarget = WindowFromPoint(pt);
 
-            if(hwndTarget != hButton)
+            if (hwndTarget != hButton)
             {
                 ReleaseCapture();
                 if (buttonID == IDC_BUTTON_SHUTDOWN)
@@ -560,11 +562,7 @@ HotButtonSubclass(
             break;
         }
     }
-    return CallWindowProcW(pContext->OldButtonProc,
-                          hButton,
-                          uMsg,
-                          wParam,
-                          lParam);
+    return CallWindowProcW(pContext->OldButtonProc, hButton, uMsg, wParam, lParam);
 }
 
 VOID
@@ -600,7 +598,7 @@ CreateToolTipForButtons(
     TTTOOLINFOW tool;
 
     hwndTool = GetDlgItem(hDlg, controlID);
-    
+
     tool.cbSize = sizeof(tool);
     tool.hwnd = hDlg;
     tool.uFlags = TTF_IDISHWND | TTF_SUBCLASS;
@@ -611,13 +609,12 @@ CreateToolTipForButtons(
                              WS_POPUP | TTS_ALWAYSTIP | TTS_BALLOON,
                              CW_USEDEFAULT, CW_USEDEFAULT,
                              CW_USEDEFAULT, CW_USEDEFAULT,
-                             hDlg, NULL, 
-                             hInst, NULL);
+                             hDlg, NULL, hInst, NULL);
 
     /* Associate the tooltip with the tool. */
     LoadStringW(hInst, detailID, szBuffer, _countof(szBuffer));
     tool.lpszText = szBuffer;
-    SendMessageW(hwndTip, TTM_ADDTOOLW , 0, (LPARAM)&tool);
+    SendMessageW(hwndTip, TTM_ADDTOOLW, 0, (LPARAM)&tool);
     LoadStringW(hInst, titleID, szBuffer, _countof(szBuffer));
     SendMessageW(hwndTip, TTM_SETTITLEW, TTI_NONE, (LPARAM)szBuffer);
     SendMessageW(hwndTip, TTM_SETMAXTIPWIDTH, 0, 250);
@@ -804,7 +801,7 @@ ShutdownOnInit(
 
     /* Create font for the IDC_TURN_OFF_STATIC static control */
     hdc = GetDC(hDlg);
-    lfHeight = -MulDiv(FONT_SIZE, GetDeviceCaps(hdc, LOGPIXELSY), 72);
+    lfHeight = -MulDiv(FONT_POINT_SIZE, GetDeviceCaps(hdc, LOGPIXELSY), 72);
     ReleaseDC(hDlg, hdc);
     pContext->hfFont = CreateFontW(lfHeight, 0, 0, 0, FW_MEDIUM, FALSE, 0, 0, 0, 0, 0, 0, 0, L"MS Shell Dlg");
     SendDlgItemMessageW(hDlg, IDC_TURN_OFF_STATIC, WM_SETFONT, (WPARAM)pContext->hfFont, TRUE);
@@ -1107,7 +1104,7 @@ ShutdownDialogProc(
             DRAWITEMSTRUCT* pdis = (DRAWITEMSTRUCT*)lParam;
             switch (pdis->CtlID)
             {
-				case IDC_BUTTON_SHUTDOWN:
+                case IDC_BUTTON_SHUTDOWN:
                 case IDC_BUTTON_REBOOT:
                 case IDC_BUTTON_SLEEP:
                 case IDC_BUTTON_HIBERNATE:

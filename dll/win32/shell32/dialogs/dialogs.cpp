@@ -1078,7 +1078,7 @@ int WINAPI RestartDialogEx(HWND hWndOwner, LPCWSTR lpwstrReason, DWORD uFlags, D
 #define IS_PRODUCT_VERSION_WORKSTATION          0x300
 #define FRIENDLY_LOGOFF_IS_NOT_ENFORCED         0x0
 
-#define FONT_SIZE                       13
+#define FONT_POINT_SIZE                 13
 
 #define DARK_GREY_COLOR                 RGB(244, 244, 244)
 #define LIGHT_GREY_COLOR                RGB(38, 38, 38)
@@ -1202,7 +1202,7 @@ INT_PTR CALLBACK HotButtonSubclass(HWND hButton, UINT uMsg, WPARAM wParam, LPARA
             ClientToScreen(hButton, &pt);
             hwndTarget = WindowFromPoint(pt);
 
-            if(hwndTarget != hButton)
+            if (hwndTarget != hButton)
             {
                 ReleaseCapture();
                 if (buttonID == IDC_LOG_OFF_BUTTON)
@@ -1218,11 +1218,7 @@ INT_PTR CALLBACK HotButtonSubclass(HWND hButton, UINT uMsg, WPARAM wParam, LPARA
             break;
         }
     }
-    return CallWindowProcW(pContext->OldButtonProc,
-                          hButton,
-                          uMsg,
-                          wParam,
-                          lParam);
+    return CallWindowProcW(pContext->OldButtonProc, hButton, uMsg, wParam, lParam);
 }
 
 VOID CreateToolTipForButtons(int controlID, int detailID, HWND hDlg, int titleID)
@@ -1232,7 +1228,7 @@ VOID CreateToolTipForButtons(int controlID, int detailID, HWND hDlg, int titleID
     TTTOOLINFOW tool;
 
     hwndTool = GetDlgItem(hDlg, controlID);
-    
+
     tool.cbSize = sizeof(tool);
     tool.hwnd = hDlg;
     tool.uFlags = TTF_IDISHWND | TTF_SUBCLASS;
@@ -1243,8 +1239,7 @@ VOID CreateToolTipForButtons(int controlID, int detailID, HWND hDlg, int titleID
                               WS_POPUP | TTS_ALWAYSTIP | TTS_BALLOON,
                               CW_USEDEFAULT, CW_USEDEFAULT,
                               CW_USEDEFAULT, CW_USEDEFAULT,
-                              hDlg, NULL, 
-                              shell32_hInstance, NULL);
+                              hDlg, NULL, shell32_hInstance, NULL);
 
     /* Associate the tooltip with the tool. */
     LoadStringW(shell32_hInstance, detailID, szBuffer, _countof(szBuffer));
@@ -1335,7 +1330,7 @@ static VOID FancyLogoffOnInit(HWND hwnd, PLOGOFF_DLG_CONTEXT pContext)
     LONG lfHeight = NULL;
 
     hdc = GetDC(NULL);
-    lfHeight = -MulDiv(FONT_SIZE, GetDeviceCaps(hdc, LOGPIXELSY), 72);
+    lfHeight = -MulDiv(FONT_POINT_SIZE, GetDeviceCaps(hdc, LOGPIXELSY), 72);
     ReleaseDC(NULL, hdc);
     pContext->hfFont = CreateFontW(lfHeight, 0, 0, 0, FW_MEDIUM, FALSE, 0, 0, 0, 0, 0, 0, 0, L"MS Shell Dlg");
     SendDlgItemMessageW(hwnd, IDC_LOG_OFF_TEXT_STATIC, WM_SETFONT, (WPARAM)pContext->hfFont, TRUE);
