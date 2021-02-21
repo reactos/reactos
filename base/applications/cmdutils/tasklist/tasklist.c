@@ -45,7 +45,7 @@ INT PrintString(LPCWSTR String, UINT MaxWidth, BOOL bAlignLeft)
 // if bAlignLeft == TRUE then aligned to left, otherwise aligned to right
 // MaxWidth is the width for printing.
 // The string WILL be truncated if it's longer than RES_STR_MAXLEN
-INT PrintResString(HINSTANCE hInstance, UINT uid, INT MaxWidth, BOOL bAlignLeft)
+INT PrintResString(HINSTANCE hInstance, UINT uID, UINT MaxWidth, BOOL bAlignLeft)
 {
     if (!hInstance)
         return 0;
