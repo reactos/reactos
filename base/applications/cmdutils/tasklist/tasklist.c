@@ -51,7 +51,7 @@ INT PrintResString(HINSTANCE hInstance, UINT uid, INT MaxWidth, BOOL bAlignLeft)
         return 0;
     
     WCHAR StringBuffer[RES_STR_MAXLEN];
-    LoadStringW(hInstance, uid, StringBuffer, _countof(StringBuffer));
+    LoadStringW(hInstance, uID, StringBuffer, _countof(StringBuffer));
     return PrintString(StringBuffer, MaxWidth, bAlignLeft);
 }
 
