@@ -1099,10 +1099,10 @@ int WINAPI RestartDialogEx(HWND hWndOwner, LPCWSTR lpwstrReason, DWORD uFlags, D
 
 BOOL DrawIconOnOwnerDrawnButtons(DRAWITEMSTRUCT* pdis, PLOGOFF_DLG_CONTEXT pContext)
 {
-    BOOL bRet;
-    HDC hdcMem;
-    HBITMAP hbmOld;
-    int y;
+    BOOL bRet = FALSE;
+    HDC hdcMem = NULL;
+    HBITMAP hbmOld = NULL;
+    int y = 0;
     RECT rect;
 
     hdcMem = CreateCompatibleDC(pdis->hDC);
@@ -1227,7 +1227,7 @@ INT_PTR CALLBACK HotButtonSubclass(HWND hButton, UINT uMsg, WPARAM wParam, LPARA
 
 VOID CreateToolTipForButtons(int controlID, int detailID, HWND hDlg, int titleID)
 {
-    HWND hwndTool, hwndTip;
+    HWND hwndTool = NULL, hwndTip = NULL;
     WCHAR szBuffer[256];
     TTTOOLINFOW tool;
 
@@ -1257,9 +1257,9 @@ VOID CreateToolTipForButtons(int controlID, int detailID, HWND hDlg, int titleID
 
 static BOOL IsFriendlyUIActive(VOID)
 {
-    DWORD dwType, dwValue, dwSize;
-    HKEY hKey;
-    LONG lRet;
+    DWORD dwType = 0, dwValue = 0, dwSize = 0;
+    HKEY hKey = NULL;
+    LONG lRet = 0;
 
     lRet = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
                          L"SYSTEM\\CurrentControlSet\\Control\\Windows",
@@ -1331,8 +1331,8 @@ static BOOL IsFriendlyUIActive(VOID)
 
 static VOID FancyLogoffOnInit(HWND hwnd, PLOGOFF_DLG_CONTEXT pContext)
 {
-    HDC hdc;
-    long lfHeight;
+    HDC hdc = NULL;
+    LONG lfHeight = NULL;
 
     hdc = GetDC(NULL);
     lfHeight = -MulDiv(FONT_SIZE, GetDeviceCaps(hdc, LOGPIXELSY), 72);
@@ -1480,8 +1480,8 @@ EXTERN_C int WINAPI LogoffWindowsDialog(HWND hWndOwner)
     CComPtr<IUnknown> fadeHandler;
     BOOL bIsAltKeyPressed = FALSE;
     MSG Msg;
-    HWND parent;
-    HWND hWndChild;
+    HWND parent = NULL;
+    HWND hWndChild = NULL;
     WCHAR szBuffer[30];
     DWORD LogoffDialogID = IDD_LOG_OFF;
     LOGOFF_DLG_CONTEXT Context;

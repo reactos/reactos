@@ -800,7 +800,7 @@ ShutdownOnInit(
     WCHAR szBuffer[256];
     WCHAR szBuffer2[256];
     HDC hdc;
-    long lfHeight;
+    LONG lfHeight;
 
     /* Create font for the IDC_TURN_OFF_STATIC static control */
     hdc = GetDC(hDlg);
