@@ -243,7 +243,7 @@ BOOL Anime_Step(DWORD *pdwDelay)
 
 static void ZoomInOrOut(BOOL bZoomIn)
 {
-    SIZE_T i;
+    UINT i;
 
     if (image == NULL)
         return;
@@ -859,7 +859,7 @@ ImageView_CreateToolBar(HWND hwnd)
         hImageList = ImageList_Create(TB_IMAGE_WIDTH, TB_IMAGE_HEIGHT, ILC_MASK | ILC_COLOR24, 1, 1);
         if (hImageList == NULL) return FALSE;
 
-        for (SIZE_T n = 0; n < _countof(BtnConfig); n++)
+        for (UINT n = 0; n < _countof(BtnConfig); n++)
         {
             ImageList_AddMasked(hImageList, LoadImageW(hInstance, MAKEINTRESOURCEW(BtnConfig[n].idb), IMAGE_BITMAP,
                                 TB_IMAGE_WIDTH, TB_IMAGE_HEIGHT, LR_DEFAULTCOLOR), RGB(255, 255, 255));
