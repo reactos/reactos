@@ -939,7 +939,7 @@ ImageView_InitControls(HWND hwnd)
 
     if (shiSettings.Maximized) ShowWindow(hwnd, SW_MAXIMIZE);
 
-    hDispWnd = CreateWindowExW(WS_EX_CLIENTEDGE, WC_STATIC, _T(""),
+    hDispWnd = CreateWindowExW(WS_EX_CLIENTEDGE, WC_STATIC, L"",
                                WS_CHILD | WS_VISIBLE,
                                0, 0, 0, 0, hwnd, NULL, hInstance, NULL);
 
