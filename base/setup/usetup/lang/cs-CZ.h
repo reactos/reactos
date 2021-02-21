@@ -1337,6 +1337,37 @@ static MUI_ENTRY csCZFormatPartitionEntries[] =
     }
 };
 
+static MUI_ENTRY csCZCheckFSEntries[] =
+{
+    {
+        4,
+        3,
+        " Instalace ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        8,
+        "Instalace nyn\241 kontroluje zvolen\354 odd\241l.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "\254ekejte, pros\241m...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
 static MUI_ENTRY csCZInstallDirectoryEntries[] =
 {
     {
@@ -2109,6 +2140,10 @@ MUI_PAGE csCZPages[] =
         csCZFormatPartitionEntries
     },
     {
+        CHECK_FILE_SYSTEM_PAGE,
+        csCZCheckFSEntries
+    },
+    {
         DELETE_PARTITION_PAGE,
         csCZDeletePartitionEntries
     },
@@ -2192,8 +2227,6 @@ MUI_STRING csCZStrings[] =
     "The new partition is not formatted yet."},
     {STRING_INSTALLONPART,
     "Instalace nakop\241ruje ReactOS na odd\241l"},
-    {STRING_CHECKINGPART,
-    "Instalace nyn\241 kontroluje zvolen\354 odd\241l."},
     {STRING_CONTINUE,
     "ENTER = Pokra\237ovat"},
     {STRING_QUITCONTINUE,

@@ -1331,6 +1331,37 @@ static MUI_ENTRY deDEFormatPartitionEntries[] =
     }
 };
 
+static MUI_ENTRY deDECheckFSEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        8,
+        "Die ausgew\204hlte Partition wird \201berpr\201ft.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "Bitte warten...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
 static MUI_ENTRY deDEInstallDirectoryEntries[] =
 {
     {
@@ -2106,6 +2137,10 @@ MUI_PAGE deDEPages[] =
         deDEFormatPartitionEntries
     },
     {
+        CHECK_FILE_SYSTEM_PAGE,
+        deDECheckFSEntries
+    },
+    {
         DELETE_PARTITION_PAGE,
         deDEDeletePartitionEntries
     },
@@ -2189,8 +2224,6 @@ MUI_STRING deDEStrings[] =
     "Die neue Partition ist noch nicht formatiert."},
     {STRING_INSTALLONPART,
     "ReactOS wird auf dieser Partition installiert."},
-    {STRING_CHECKINGPART,
-    "Die ausgew\204hlte Partition wird \201berpr\201ft."},
     {STRING_CONTINUE,
     "EINGABETASTE = Fortsetzen"},
     {STRING_QUITCONTINUE,

@@ -1340,6 +1340,37 @@ static MUI_ENTRY ltLTFormatPartitionEntries[] =
     }
 };
 
+static MUI_ENTRY ltLTCheckFSEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " diegimo programa ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        8,
+        "Setup is now checking the selected partition.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "Please wait...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
 static MUI_ENTRY ltLTInstallDirectoryEntries[] =
 {
     {
@@ -2112,6 +2143,10 @@ MUI_PAGE ltLTPages[] =
         ltLTFormatPartitionEntries
     },
     {
+        CHECK_FILE_SYSTEM_PAGE,
+        ltLTCheckFSEntries
+    },
+    {
         DELETE_PARTITION_PAGE,
         ltLTDeletePartitionEntries
     },
@@ -2195,8 +2230,6 @@ MUI_STRING ltLTStrings[] =
     "The new partition is not formatted yet."},
     {STRING_INSTALLONPART,
     "Setup installs ReactOS onto Partition"},
-    {STRING_CHECKINGPART,
-    "Setup is now checking the selected partition."},
     {STRING_CONTINUE,
     "ENTER = Continue"},
     {STRING_QUITCONTINUE,

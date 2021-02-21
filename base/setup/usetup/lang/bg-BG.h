@@ -1339,6 +1339,36 @@ static MUI_ENTRY bgBGFormatPartitionEntries[] =
     }
 };
 
+static MUI_ENTRY bgBGCheckFSEntries[] =
+{
+    {
+        4,
+        3, " \221\253\240\243\240\255\245 \255\240 \220\245\240\252\342\216\221 " KERNEL_VERSION_STR " .",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        8,
+        "\222\245\347\245 \257\340\256\242\245\340\252\240 \255\240 \250\247\241\340\240\255\250\357 \244\357\253.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "\217\256\347\240\252\240\251\342\245...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
 static MUI_ENTRY bgBGInstallDirectoryEntries[] =
 {
     {
@@ -2114,6 +2144,10 @@ MUI_PAGE bgBGPages[] =
         bgBGFormatPartitionEntries
     },
     {
+        CHECK_FILE_SYSTEM_PAGE,
+        bgBGCheckFSEntries
+    },
+    {
         DELETE_PARTITION_PAGE,
         bgBGDeletePartitionEntries
     },
@@ -2199,8 +2233,6 @@ MUI_STRING bgBGStrings[] =
     "The new partition is not formatted yet."},
     {STRING_INSTALLONPART,
     "\221\253\240\243\240\255\245 \255\240 \220\245\240\252\342\216\221 \242\352\340\345\343 \244\357\253"},
-    {STRING_CHECKINGPART,
-    "\222\245\347\245 \257\340\256\242\245\340\252\240 \255\240 \250\247\241\340\240\255\250\357 \244\357\253."},
     {STRING_CONTINUE,
     "ENTER = \217\340\256\244\352\253\246\240\242\240\255\245"},
     {STRING_QUITCONTINUE,

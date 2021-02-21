@@ -1366,6 +1366,37 @@ static MUI_ENTRY frFRFormatPartitionEntries[] =
     }
 };
 
+static MUI_ENTRY frFRCheckFSEntries[] =
+{
+    {
+        4,
+        3,
+        " Installation de ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        8,
+        "Setup v\202rifie la partition s\202lectionn\202e.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "Veuillez patienter...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
 static MUI_ENTRY frFRInstallDirectoryEntries[] =
 {
     {
@@ -2138,6 +2169,10 @@ MUI_PAGE frFRPages[] =
         frFRFormatPartitionEntries
     },
     {
+        CHECK_FILE_SYSTEM_PAGE,
+        frFRCheckFSEntries
+    },
+    {
         DELETE_PARTITION_PAGE,
         frFRDeletePartitionEntries
     },
@@ -2221,8 +2256,6 @@ MUI_STRING frFRStrings[] =
     "La nouvelle partition n'est pas encore format\202e."},
     {STRING_INSTALLONPART,
     "Setup installe ReactOS sur la partition"},
-    {STRING_CHECKINGPART,
-    "Setup v\202rifie la partition s\202lectionn\202e."},
     {STRING_CONTINUE,
     "ENTR\220E = Continuer"},
     {STRING_QUITCONTINUE,

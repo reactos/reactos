@@ -1335,6 +1335,37 @@ static MUI_ENTRY esESFormatPartitionEntries[] =
     }
 };
 
+static MUI_ENTRY esESCheckFSEntries[] =
+{
+    {
+        4,
+        3,
+        " Instalaci\242n de ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        8,
+        "El instalador est\240 comprobando la Partici\242n seleccionada.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "Espere un momento...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
 static MUI_ENTRY esESInstallDirectoryEntries[] =
 {
     {
@@ -2107,6 +2138,10 @@ MUI_PAGE esESPages[] =
         esESFormatPartitionEntries
     },
     {
+        CHECK_FILE_SYSTEM_PAGE,
+        esESCheckFSEntries
+    },
+    {
         DELETE_PARTITION_PAGE,
         esESDeletePartitionEntries
     },
@@ -2190,8 +2225,6 @@ MUI_STRING esESStrings[] =
     "La Partici\242n nueva todav\241a no ha sido formateada."},
     {STRING_INSTALLONPART,
     "El instalador est\240 instalando ReactOS en la Partici\242n"},
-    {STRING_CHECKINGPART,
-    "El instalador est\240 comprobando la Partici\242n seleccionada."},
     {STRING_CONTINUE,
     "INTRO = Continuar"},
     {STRING_QUITCONTINUE,

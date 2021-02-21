@@ -1338,6 +1338,37 @@ static MUI_ENTRY skSKFormatPartitionEntries[] =
     }
 };
 
+static MUI_ENTRY skSKCheckFSEntries[] =
+{
+    {
+        4,
+        3,
+        " In\347tal\240tor syst\202mu ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        8,
+        "In\347tal\240tor teraz skontroluje vybran\243 oblas\234.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "Po\237kajte, pros\241m ...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
 static MUI_ENTRY skSKInstallDirectoryEntries[] =
 {
     {
@@ -2113,6 +2144,10 @@ MUI_PAGE skSKPages[] =
         skSKFormatPartitionEntries
     },
     {
+        CHECK_FILE_SYSTEM_PAGE,
+        skSKCheckFSEntries
+    },
+    {
         DELETE_PARTITION_PAGE,
         skSKDeletePartitionEntries
     },
@@ -2198,8 +2233,6 @@ MUI_STRING skSKStrings[] =
     "The new partition is not formatted yet."},
     {STRING_INSTALLONPART,
     "In\347tal\240tor nain\347taluje syst\202m ReactOS na oblas\234"},
-    {STRING_CHECKINGPART,
-    "In\347tal\240tor teraz skontroluje vybran\243 oblas\234."},
     {STRING_CONTINUE,
     "ENTER = Pokra\237ova\234"},
     {STRING_QUITCONTINUE,

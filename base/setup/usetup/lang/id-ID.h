@@ -1329,6 +1329,37 @@ static MUI_ENTRY idIDFormatPartitionEntries[] =
     }
 };
 
+static MUI_ENTRY idIDCheckFSEntries[] =
+{
+    {
+        4,
+        3,
+        " Penyetelan ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        8,
+        "Penyetelan sekarang memeriksa partisi terpilih.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "Mohon tunggu...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
 static MUI_ENTRY idIDInstallDirectoryEntries[] =
 {
     {
@@ -2101,6 +2132,10 @@ MUI_PAGE idIDPages[] =
         idIDFormatPartitionEntries
     },
     {
+        CHECK_FILE_SYSTEM_PAGE,
+        idIDCheckFSEntries
+    },
+    {
         DELETE_PARTITION_PAGE,
         idIDDeletePartitionEntries
     },
@@ -2184,8 +2219,6 @@ MUI_STRING idIDStrings[] =
     "Partisi baru ini belum diformat."},
     {STRING_INSTALLONPART,
     "Penyetelan memasang ReactOS pada Partisi"},
-    {STRING_CHECKINGPART,
-    "Penyetelan sekarang memeriksa partisi terpilih."},
     {STRING_CONTINUE,
     "ENTER = Lanjut"},
     {STRING_QUITCONTINUE,
