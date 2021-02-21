@@ -81,30 +81,27 @@ BOOL PrintMemory(SIZE_T MemorySizeByte, UINT MaxWidth, HINSTANCE hInstance)
     // calculate the length
     UINT PrintLength = 0;
     SIZE_T Tmp = MemorySize;
+    UINT Mod = 1;
+
     do
     {
         Tmp /= 10;
         PrintLength++;
+        Mod *= 10;
     } while (Tmp);
 
-    INT Mod = 1;
-    for (INT i = 0; i < PrintLength - 1; i++)
+    for (UINT i = PrintLength; i; i--)
     {
-        Mod *= 10;
-    }
-
-    for (INT i = PrintLength - 1; i >= 0; i--)
-    {
+        Mod /= 10;
         *pNumberStr = L'0' + (MemorySize / Mod);
         MemorySize %= Mod;
         pNumberStr++;
         
-        if (i && i % 3 == 0)
+        if (i != 1 && i % 3 == 1)
         {
             *pNumberStr = L',';
             pNumberStr++;
         }
-        Mod /= 10;
     }
 
     WCHAR FormatStr[RES_STR_MAXLEN];
@@ -156,7 +153,7 @@ BOOL EnumProcessAndPrint(BOOL bNoHeader)
 
     // New process/thread might appear before we call for the actual data.
     // Try to avoid this by retrying several times.
-    for (INT Retry = 0; Retry < NT_SYSTEM_QUERY_MAX_RETRY; Retry++)
+    for (UINT Retry = 0; Retry < NT_SYSTEM_QUERY_MAX_RETRY; Retry++)
     {
         // (Re)allocate buffer
         ProcessInfoBufferLength = ResultLength;
