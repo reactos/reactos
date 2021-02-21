@@ -241,17 +241,17 @@ BOOL EnumProcessAndPrint(BOOL bNoHeader)
     return TRUE;
 }
 
-INT GetArgumentType(LPCWSTR argument)
+INT GetArgumentType(LPCWSTR Argument)
 {
-    if (argument[0] != L'/' && argument[0] != L'-')
+    if (Argument[0] != L'/' && Argument[0] != L'-')
     {
         return OP_PARAM_INVALID;
     }
-    argument++;
+    Argument++;
 
     for (INT i = 0; i < _countof(opList); i++)
     {
-        if (!_wcsicmp(opList[i], argument))
+        if (!_wcsicmp(opList[i], Argument))
         {
             return i;
         }
