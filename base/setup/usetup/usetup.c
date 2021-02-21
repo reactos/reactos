@@ -3157,6 +3157,8 @@ CheckFileSystemPage(PINPUT_RECORD Ir)
     PPARTENTRY PartEntry;
     CHAR Buffer[MAX_PATH];
 
+    MUIDisplayPage(CHECK_FILE_SYSTEM_PAGE);
+
     if (PartitionList == NULL)
     {
         /* FIXME: show an error dialog */
@@ -3169,9 +3171,6 @@ CheckFileSystemPage(PINPUT_RECORD Ir)
     }
 
     ASSERT(PartEntry->IsPartitioned && PartEntry->PartitionNumber != 0);
-
-    CONSOLE_SetTextXY(6, 8, MUIGetString(STRING_CHECKINGPART));
-    CONSOLE_SetStatusText(MUIGetString(STRING_PLEASEWAIT));
 
     DPRINT1("CheckFileSystemPage -- PartitionType: 0x%02X ; FileSystem: %S\n",
             PartEntry->PartitionType, (*PartEntry->FileSystem ? PartEntry->FileSystem : L"n/a"));
