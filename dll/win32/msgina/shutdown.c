@@ -24,12 +24,19 @@
 #define WLX_SHUTDOWN_STATE_HIBERNATE    0x40
 // 0x80
 
-/* Macros for owner drawing button */
+/* Macros for fancy shut down dialog */
+#define FONT_SIZE                       13
+
+#define DARK_GREY_COLOR                 RGB(244, 244, 244)
+#define LIGHT_GREY_COLOR                RGB(38, 38, 38)
+
+/* Bitmap's size for buttons */
 #define CX_BITMAP                       33
 #define CY_BITMAP                       33
 
 #define NUMBER_OF_BUTTONS               4
 
+/* After determining the button as well as its state paint the image strip bitmap using these predefined positions */
 #define BUTTON_SHUTDOWN                 0
 #define BUTTON_SHUTDOWN_PRESSED         (CY_BITMAP + BUTTON_SHUTDOWN)
 #define BUTTON_SHUTDOWN_FOCUSED         (CY_BITMAP + BUTTON_SHUTDOWN_PRESSED)
@@ -47,13 +54,14 @@ typedef struct _SHUTDOWN_DLG_CONTEXT
     HBITMAP hBitmap;
     HBITMAP hImageStrip;
     DWORD ShutdownOptions;
+    HBRUSH hBrush;
     HFONT hfFont;
     BOOL bCloseDlg;
     BOOL bIsSleepButtonReplaced;
     BOOL bReasonUI;
     BOOL bFriendlyUI;
     BOOL bIsButtonHot[NUMBER_OF_BUTTONS];
-    WNDPROC OldButtonsProc;
+    WNDPROC OldButtonProc;
 } SHUTDOWN_DLG_CONTEXT, *PSHUTDOWN_DLG_CONTEXT;
 
 static
@@ -500,7 +508,8 @@ HotButtonSubclass(
     {
         case WM_MOUSEMOVE:
         {
-            POINT pt;
+            HWND hwndTarget;
+            POINT pt = {GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)};
 
             if (GetCapture() != hButton)
             {
@@ -524,9 +533,10 @@ HotButtonSubclass(
                 SetCursor(LoadCursorW(NULL, MAKEINTRESOURCEW(IDC_HAND)));
             }
 
-            pt = (POINT){GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam)};
             ClientToScreen(hButton, &pt);
-            if(WindowFromPoint(pt) != hButton)
+            hwndTarget = WindowFromPoint(pt);
+
+            if(hwndTarget != hButton)
             {
                 ReleaseCapture();
                 if (buttonID == IDC_BUTTON_SHUTDOWN)
@@ -550,7 +560,7 @@ HotButtonSubclass(
             break;
         }
     }
-    return CallWindowProc(pContext->OldButtonsProc,
+    return CallWindowProcW(pContext->OldButtonProc,
                           hButton,
                           uMsg,
                           wParam,
@@ -597,7 +607,7 @@ CreateToolTipForButtons(
     tool.uId = (UINT_PTR)hwndTool;
 
     /* Create the tooltip */
-    hwndTip = CreateWindowEx(0, TOOLTIPS_CLASS, NULL,
+    hwndTip = CreateWindowExW(0, TOOLTIPS_CLASSW, NULL,
                              WS_POPUP | TTS_ALWAYSTIP | TTS_BALLOON,
                              CW_USEDEFAULT, CW_USEDEFAULT,
                              CW_USEDEFAULT, CW_USEDEFAULT,
@@ -794,11 +804,14 @@ ShutdownOnInit(
 
     /* Create font for the IDC_TURN_OFF_STATIC static control */
     hdc = GetDC(hDlg);
-    lfHeight = -MulDiv(13, GetDeviceCaps(hdc, LOGPIXELSY), 72);
+    lfHeight = -MulDiv(FONT_SIZE, GetDeviceCaps(hdc, LOGPIXELSY), 72);
     ReleaseDC(hDlg, hdc);
     pContext->hfFont = CreateFontW(lfHeight, 0, 0, 0, FW_MEDIUM, FALSE, 0, 0, 0, 0, 0, 0, 0, L"MS Shell Dlg");
-    SendDlgItemMessage(hDlg, IDC_TURN_OFF_STATIC, WM_SETFONT, (WPARAM)pContext->hfFont, TRUE);
+    SendDlgItemMessageW(hDlg, IDC_TURN_OFF_STATIC, WM_SETFONT, (WPARAM)pContext->hfFont, TRUE);
  
+    /* Create a brush for static controls for fancy shut down dialog */
+    pContext->hBrush = CreateSolidBrush(DARK_GREY_COLOR);
+
     pContext->hImageStrip = LoadBitmapW(pgContext->hDllInstance, MAKEINTRESOURCEW(IDB_IMAGE_STRIP));
 
     hwndList = GetDlgItem(hDlg, IDC_SHUTDOWN_ACTION);
@@ -919,7 +932,7 @@ ShutdownOnInit(
                   pContext->pgContext->hDllInstance);
 
     /* Gather old button func */
-    pContext->OldButtonsProc = (WNDPROC)GetWindowLongPtrW(GetDlgItem(hDlg, IDC_BUTTON_HIBERNATE), GWLP_WNDPROC);
+    pContext->OldButtonProc = (WNDPROC)GetWindowLongPtrW(GetDlgItem(hDlg, IDC_BUTTON_HIBERNATE), GWLP_WNDPROC);
     
     /* Make buttons to remember pContext and subclass the buttons */
     for (int i = 0; i < NUMBER_OF_BUTTONS; i++)
@@ -966,7 +979,7 @@ ShutdownDialogProc(
     PSHUTDOWN_DLG_CONTEXT pContext;
 
     pContext = (PSHUTDOWN_DLG_CONTEXT)GetWindowLongPtrW(hDlg, GWLP_USERDATA);
-    
+
     switch (uMsg)
     {
         case WM_INITDIALOG:
@@ -984,13 +997,14 @@ ShutdownDialogProc(
         
         case WM_DESTROY:
             DeleteObject(pContext->hBitmap);
+            DeleteObject(pContext->hBrush);
             DeleteObject(pContext->hImageStrip);
             DeleteObject(pContext->hfFont);
 
             /* Remove the subclass from the buttons */
             for (int i = 0; i < NUMBER_OF_BUTTONS; i++)
             {
-                SetWindowLongPtrW(GetDlgItem(hDlg, IDC_BUTTON_HIBERNATE + i), GWLP_WNDPROC, (LONG_PTR)pContext->OldButtonsProc);
+                SetWindowLongPtrW(GetDlgItem(hDlg, IDC_BUTTON_HIBERNATE + i), GWLP_WNDPROC, (LONG_PTR)pContext->OldButtonProc);
             }
             return TRUE;
 
@@ -1072,7 +1086,7 @@ ShutdownDialogProc(
             switch (StaticID)
             {
                 case IDC_TURN_OFF_STATIC:
-                   SetTextColor(hdcStatic, RGB(244, 244, 244));
+                   SetTextColor(hdcStatic, DARK_GREY_COLOR);
                    SetBkMode(hdcStatic, TRANSPARENT);
                    return (INT_PTR)GetStockObject(HOLLOW_BRUSH);
 
@@ -1080,9 +1094,9 @@ ShutdownDialogProc(
                 case IDC_SHUTDOWN_STATIC:
                 case IDC_SLEEP_STATIC:
                 case IDC_RESTART_STATIC:
-                    SetTextColor(hdcStatic, RGB(38, 38, 38));
+                    SetTextColor(hdcStatic, LIGHT_GREY_COLOR);
                     SetBkMode(hdcStatic, TRANSPARENT);
-                    return (LONG_PTR)CreateSolidBrush(RGB(244, 244, 244));
+                    return (LONG_PTR)pContext->hBrush;
             }
             return FALSE;
         }
@@ -1172,18 +1186,20 @@ ShutdownDialog(
         
         ShowWindow(hDlg, SW_SHOW);
 
-        while (GetMessage(&Msg, NULL, 0, 0))
+        /* Detect either Alt or Shift key have been pressed */
+        while (GetMessageW(&Msg, NULL, 0, 0))
         {
-            if (!IsDialogMessage(hDlg, &Msg))
+            if (!IsDialogMessageW(hDlg, &Msg))
             {
                 TranslateMessage(&Msg);
-                DispatchMessage(&Msg);
+                DispatchMessageW(&Msg);
             }
 
             switch (Msg.message)
             {
                 case WM_SYSKEYDOWN:
                 {
+                    /* If the Alt key has been pressed once, add prefix to static controls */
                     if (Msg.wParam == VK_MENU && !bIsAltKeyPressed)
                     {
                         AddPrefixToStaticTexts(hDlg, Context.bIsSleepButtonReplaced);
@@ -1194,6 +1210,10 @@ ShutdownDialog(
 
                 case WM_KEYDOWN:
                 {
+                    /* 
+                     * If the Shift key has been pressed once, and both hibernate button and sleep button are enabled
+                     * replace the sleep button with hibernate button
+                     */
                     if (Msg.wParam == VK_SHIFT)
                     {
                         if (ShutdownDialogId == IDD_SHUTDOWN_FANCY && !Context.bIsSleepButtonReplaced)
