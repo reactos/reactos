@@ -7,13 +7,13 @@
 
 #include "tasklist.h"
 
-// the strings in opList are the command-line options.
-// should always correspond with the defines below, in sequence (except OP_PARAM_INVALID)
-static PCWSTR opList[] = { L"?", L"nh" };
+// the strings in OptionList are the command-line options.
+// should always correspond with the defines below, in sequence (except OPTION_INVALID)
+static PCWSTR OptionList[] = { L"?", L"nh" };
 
-#define OP_PARAM_INVALID    -1
-#define OP_PARAM_HELP       0
-#define OP_PARAM_NOHEADER    1
+#define OPTION_INVALID    -1
+#define OPTION_HELP       0
+#define OPTION_NOHEADER    1
 
 // the max string length PrintResString can handle
 #define RES_STR_MAXLEN 64
@@ -238,22 +238,22 @@ BOOL EnumProcessAndPrint(BOOL bNoHeader)
     return TRUE;
 }
 
-INT GetArgumentType(LPCWSTR Argument)
+INT GetOptionType(LPCWSTR szOption)
 {
-    if (Argument[0] != L'/' && Argument[0] != L'-')
+    if (szOption[0] != L'/' && szOption[0] != L'-')
     {
-        return OP_PARAM_INVALID;
+        return OPTION_INVALID;
     }
-    Argument++;
+    szOption++;
 
-    for (INT i = 0; i < _countof(opList); i++)
+    for (INT i = 0; i < _countof(OptionList); i++)
     {
-        if (!_wcsicmp(opList[i], Argument))
+        if (!_wcsicmp(OptionList[i], szOption))
         {
             return i;
         }
     }
-    return OP_PARAM_INVALID;
+    return OPTION_INVALID;
 }
 
 BOOL ProcessArguments(INT argc, WCHAR **argv)
@@ -262,35 +262,35 @@ BOOL ProcessArguments(INT argc, WCHAR **argv)
 
     for (INT i = 1; i < argc; i++)
     {
-        INT Argument = GetArgumentType(argv[i]);
+        INT Option = GetOptionType(argv[i]);
 
-        switch (Argument)
+        switch (Option)
         {
-            case OP_PARAM_HELP:
+            case OPTION_HELP:
             {
                 if (bHasHelp)
                 {
                     // -? already specified
-                    ConResMsgPrintf(StdErr, 0, IDS_PARAM_TOO_MUCH, argv[i], 1);
+                    ConResMsgPrintf(StdErr, 0, IDS_OPTION_TOO_MUCH, argv[i], 1);
                     ConResMsgPrintf(StdErr, 0, IDS_USAGE);
                     return FALSE;
                 }
                 bHasHelp = TRUE;
                 break;
             }
-            case OP_PARAM_NOHEADER:
+            case OPTION_NOHEADER:
             {
                 if (bHasNoHeader)
                 {
                     // -nh already specified
-                    ConResMsgPrintf(StdErr, 0, IDS_PARAM_TOO_MUCH, argv[i], 1);
+                    ConResMsgPrintf(StdErr, 0, IDS_OPTION_TOO_MUCH, argv[i], 1);
                     ConResMsgPrintf(StdErr, 0, IDS_USAGE);
                     return FALSE;
                 }
                 bHasNoHeader = TRUE;
                 break;
             }
-            case OP_PARAM_INVALID:
+            case OPTION_INVALID:
             default:
             {
                 ConResMsgPrintf(StdErr, 0, IDS_INVALID_OPTION);
@@ -302,7 +302,7 @@ BOOL ProcessArguments(INT argc, WCHAR **argv)
 
     if (bHasHelp)
     {
-        if (argc > 2) // any parameters other than -? is specified
+        if (argc > 2) // any arguments other than -? exists
         {
             ConResMsgPrintf(StdErr, 0, IDS_INVALID_SYNTAX);
             ConResMsgPrintf(StdErr, 0, IDS_USAGE);
