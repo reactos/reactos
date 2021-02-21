@@ -77,7 +77,11 @@ Msg_LongModeSupported:
     call BuildPageTables
 
     /* Store real mode entry point in shared memory */
+#ifdef _USE_ML
     mov dword ptr ds:[BSS_RealModeEntry], offset RealModeEntryPoint
+#else
+    mov dword ptr ds:[BSS_RealModeEntry], (FREELDR_BASE + RealModeEntryPoint - (Startup - 512))
+#endif
 
     /* Address the image with es segment */
     mov ax, FREELDR_PE_BASE / 16
@@ -120,7 +124,11 @@ gdt:
 /* GDT table pointer */
 gdtptr:
     .word HEX(37)       /* Limit */
+#ifdef _USE_ML
     .long offset gdt    /* Base Address */
+#else
+    .long (FREELDR_BASE + gdt - (Startup - 512))   /* Base Address */
+#endif
 
 
 CheckFor64BitSupport:
