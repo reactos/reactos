@@ -66,7 +66,7 @@ VOID PrintNum(LONGLONG Number, UINT MaxWidth)
 // Print memory size using KB as unit, with comma-separated number, aligned to right.
 // MaxWidth is the width for printing.
 // the number WILL be truncated if it's longer than MaxWidth
-BOOL PrintMemory(SIZE_T MemorySizeByte, INT MaxWidth, HINSTANCE hInstance)
+BOOL PrintMemory(SIZE_T MemorySizeByte, UINT MaxWidth, HINSTANCE hInstance)
 {
     if (MaxWidth <= 0 || !hInstance)
         return FALSE;
