@@ -79,7 +79,7 @@ BOOL PrintMemory(SIZE_T MemorySizeByte, INT MaxWidth, HINSTANCE hInstance)
     PWCHAR pNumberStr = NumberString;
 
     // calculate the length
-    INT PrintLength = 0;
+    UINT PrintLength = 0;
     SIZE_T Tmp = MemorySize;
     do
     {
