@@ -379,6 +379,12 @@ CmpDoCreateChild(IN PHHIVE Hive,
     /* Now that the security descriptor is copied in the hive, we can free the original */
     SeDeassignSecurity(&NewDescriptor);
 
+    if (NT_SUCCESS(Status))
+    {
+        /* Send notification to registered callbacks */
+        CmpReportNotify(Kcb, Hive, Kcb->KeyCell, REG_NOTIFY_CHANGE_NAME);
+    }
+
 Quickie:
     /* Check if we got here because of failure */
     if (!NT_SUCCESS(Status))
