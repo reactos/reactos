@@ -253,15 +253,13 @@ static void UpdateZoom(UINT NewZoom)
     ZoomPercents = NewZoom;
 
     /* Check if a zoom button of the toolbar must be grayed */
-    bEnableZoomIn = TRUE;
-    bEnableZoomOut = TRUE;
+    bEnableZoomIn = bEnableZoomOut = TRUE;
 
     if (NewZoom >= MAX_ZOOM)
     {
         bEnableZoomIn = FALSE;
     }
-    else
-    if (NewZoom <= MIN_ZOOM)
+    else if (NewZoom <= MIN_ZOOM)
     {
         bEnableZoomOut = FALSE;
     }
@@ -977,18 +975,18 @@ ImageView_OnSize(HWND hwnd, UINT state, INT cx, INT cy)
     }
 }
 
-static LRESULT CALLBACK
+static LRESULT
 ImageView_Delete(HWND hwnd)
 {
     DPRINT1("ImageView_Delete: unimplemented.\n");
     return 0;
 }
 
-static LRESULT CALLBACK
+static LRESULT
 ImageView_Modify(HWND hwnd)
 {
     int nChars = GetFullPathNameW(currentFile->FileName, 0, NULL, NULL);
-    WCHAR *lpFPN;
+    LPWSTR pszPathName;
     SHELLEXECUTEINFOW sei;
 
     if (!nChars)
@@ -997,23 +995,20 @@ ImageView_Modify(HWND hwnd)
         return 1;
     }
 
-    lpFPN = (WCHAR *)malloc(nChars * sizeof(WCHAR));
-    if (lpFPN == NULL)
+    pszPathName = (LPWSTR)HeapAlloc(GetProcessHeap(), 0, nChars * sizeof(WCHAR));
+    if (pszPathName == NULL)
     {
-        DPRINT1("malloc() failed in ImageView_Modify()\n");
+        DPRINT1("HeapAlloc() failed in ImageView_Modify()\n");
         return 1;
     }
 
-    GetFullPathNameW(currentFile->FileName,
-                     nChars,
-                     lpFPN,
-                     NULL);
+    GetFullPathNameW(currentFile->FileName, nChars, pszPathName, NULL);
 
     sei.cbSize = sizeof(sei);
     sei.fMask = 0;
     sei.hwnd = NULL;
     sei.lpVerb = L"edit";
-    sei.lpFile = lpFPN;
+    sei.lpFile = pszPathName;
     sei.lpParameters = NULL;
     sei.lpDirectory = NULL;
     sei.nShow = SW_SHOWNORMAL;
@@ -1024,7 +1019,7 @@ ImageView_Modify(HWND hwnd)
         DPRINT1("ImageView_Modify: ShellExecuteExW() failed with code %08X\n", (int)GetLastError());
     }
 
-    free(lpFPN);
+    HeapFree(GetProcessHeap(), 0, pszPathName);
 
     return 0;
 }
