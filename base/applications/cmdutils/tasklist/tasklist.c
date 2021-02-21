@@ -68,7 +68,7 @@ VOID PrintNum(LONGLONG Number, UINT MaxWidth)
 // the number WILL be truncated if it's longer than MaxWidth
 BOOL PrintMemory(SIZE_T MemorySizeByte, UINT MaxWidth, HINSTANCE hInstance)
 {
-    if (MaxWidth <= 0 || !hInstance)
+    if (!hInstance)
         return FALSE;
 
     SIZE_T MemorySize = MemorySizeByte >> 10;
