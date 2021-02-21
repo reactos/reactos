@@ -149,7 +149,7 @@ BOOL EnumProcessAndPrint(BOOL bNoHeader)
     // Call NtQuerySystemInformation for the process information
     ULONG ProcessInfoBufferLength = 0;
     ULONG ResultLength = 0;
-    PBYTE ProcessInfoBuffer = 0;
+    PBYTE ProcessInfoBuffer = NULL;
 
     // Get the buffer size we need
     NTSTATUS Status = NtQuerySystemInformation(SystemProcessInformation, NULL, 0, &ResultLength);
