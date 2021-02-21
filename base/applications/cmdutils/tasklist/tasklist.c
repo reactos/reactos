@@ -84,7 +84,7 @@ BOOL PrintMemory(SIZE_T MemorySizeByte, INT MaxWidth, HINSTANCE hInstance)
     do
     {
         Tmp /= 10;
-        PrintLength += 1;
+        PrintLength++;
     } while (Tmp);
 
     INT Mod = 1;
