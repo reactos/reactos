@@ -251,7 +251,7 @@ INT GetArgumentType(LPCWSTR argument)
 
     for (INT i = 0; i < _countof(opList); i++)
     {
-        if (!wcsicmp(opList[i], argument))
+        if (!_wcsicmp(opList[i], argument))
         {
             return i;
         }
