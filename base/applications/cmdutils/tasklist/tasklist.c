@@ -36,23 +36,23 @@ VOID PrintSpace(UINT Length)
 // Print a string.
 // if bAlignLeft == TRUE then aligned to left, otherwise aligned to right
 // MaxWidth is the width for printing.
-INT PrintString(LPCWSTR String, UINT MaxWidth, BOOL bAlignLeft)
+VOID PrintString(LPCWSTR String, UINT MaxWidth, BOOL bAlignLeft)
 {
-    return ConPrintf(StdOut, bAlignLeft ? L"%-*.*ls" : L"%*.*ls", MaxWidth, MaxWidth, String);
+    ConPrintf(StdOut, bAlignLeft ? L"%-*.*ls" : L"%*.*ls", MaxWidth, MaxWidth, String);
 }
 
 // Print a string from resource
 // if bAlignLeft == TRUE then aligned to left, otherwise aligned to right
 // MaxWidth is the width for printing.
 // The string WILL be truncated if it's longer than RES_STR_MAXLEN
-INT PrintResString(HINSTANCE hInstance, UINT uID, UINT MaxWidth, BOOL bAlignLeft)
+VOID PrintResString(HINSTANCE hInstance, UINT uID, UINT MaxWidth, BOOL bAlignLeft)
 {
     if (!hInstance)
-        return 0;
+        return;
     
     WCHAR StringBuffer[RES_STR_MAXLEN];
     LoadStringW(hInstance, uID, StringBuffer, _countof(StringBuffer));
-    return PrintString(StringBuffer, MaxWidth, bAlignLeft);
+    PrintString(StringBuffer, MaxWidth, bAlignLeft);
 }
 
 // Print a number, aligned to right.
