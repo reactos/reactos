@@ -991,7 +991,7 @@ ShutdownDialogProc(
                 LoadImageW(pContext->pgContext->hDllInstance, MAKEINTRESOURCEW(IDI_ROSLOGO), IMAGE_BITMAP, 0, 0, LR_DEFAULTCOLOR);
             return TRUE;
         }
-        
+
         case WM_DESTROY:
             DeleteObject(pContext->hBitmap);
             DeleteObject(pContext->hBrush);
