@@ -1244,7 +1244,7 @@ static void read_color_span_##__bpp(GLcontext* ctx,                             
                 &red[n], &green[n], &blue[n]);                                  \
         alpha[n] = 0;                                                           \
     }                                                                           \
-} // CORE-16221 - Fixed by swap at Line #1244.
+}
 READ_COLOR_SPAN(8, BYTE, 1)
 READ_COLOR_SPAN(16, USHORT, 2)
 READ_COLOR_SPAN(24, ULONG, 3)
