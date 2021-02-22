@@ -54,6 +54,11 @@
                                                          OBJ_AUDIT_OBJECT_CLOSE)
 
 //
+// Handle Access Protection Close Flag
+//
+#define ObpAccessProtectCloseBit 0x02000000L
+
+//
 // Identifies a Kernel Handle
 //
 #ifdef _WIN64
