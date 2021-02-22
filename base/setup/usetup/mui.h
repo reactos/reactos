@@ -124,7 +124,6 @@ MUISetStyledText(
 #define STRING_NONFORMATTEDSYSTEMPART    62
 #define STRING_NONFORMATTEDOTHERPART     63
 #define STRING_INSTALLONPART             10
-#define STRING_CHECKINGPART              11
 #define STRING_CONTINUE                  12
 #define STRING_QUITCONTINUE              13
 #define STRING_REBOOTCOMPUTER            14

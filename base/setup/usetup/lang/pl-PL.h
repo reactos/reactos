@@ -1340,6 +1340,37 @@ static MUI_ENTRY plPLFormatPartitionEntries[] =
     }
 };
 
+static MUI_ENTRY plPLCheckFSEntries[] =
+{
+    {
+        4,
+        3,
+        " Instalator ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        8,
+        "Instalator sprawdza wybran\245 partycj\251.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "Prosz\251 czeka\206...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
 static MUI_ENTRY plPLInstallDirectoryEntries[] =
 {
     {
@@ -2109,6 +2140,10 @@ MUI_PAGE plPLPages[] =
         plPLFormatPartitionEntries
     },
     {
+        CHECK_FILE_SYSTEM_PAGE,
+        plPLCheckFSEntries
+    },
+    {
         DELETE_PARTITION_PAGE,
         plPLDeletePartitionEntries
     },
@@ -2192,8 +2227,6 @@ MUI_STRING plPLStrings[] =
     "Nowa partycja nie jest jeszcze sformatowana."},
     {STRING_INSTALLONPART,
     "Instalator kopiuje pliki systemu na wybran\245 partycj\251."},
-    {STRING_CHECKINGPART,
-    "Instalator sprawdza wybran\245 partycj\251."},
     {STRING_CONTINUE,
     "ENTER = Kontynuacja"},
     {STRING_QUITCONTINUE,

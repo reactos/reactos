@@ -1332,6 +1332,37 @@ static MUI_ENTRY jaJPFormatPartitionEntries[] =
     }
 };
 
+static MUI_ENTRY jaJPCheckFSEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " \276\257\304\261\257\314\337 ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        8,
+        "\276\257\304\261\257\314\337\312 \276\335\300\270 \273\332\300 \312\337\260\303\250\274\256\335\246 \271\335\273 \274\303\262\317\275\241",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "\265\317\301 \270\300\336\273\262...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
 static MUI_ENTRY jaJPInstallDirectoryEntries[] =
 {
     {
@@ -2104,6 +2135,10 @@ MUI_PAGE jaJPPages[] =
         jaJPFormatPartitionEntries
     },
     {
+        CHECK_FILE_SYSTEM_PAGE,
+        jaJPCheckFSEntries
+    },
+    {
         DELETE_PARTITION_PAGE,
         jaJPDeletePartitionEntries
     },
@@ -2189,8 +2224,6 @@ MUI_STRING jaJPStrings[] =
     "\261\300\327\274\262 \312\337\260\303\250\274\256\335 \312 \317\300\336 \314\253\260\317\257\304 \273\332\303 \262\317\276\335\241"},
     {STRING_INSTALLONPART,
     "\276\257\304\261\257\314\337\312 ReactOS\246 \312\337\260\303\250\274\256\335 \274\336\256\263\306 \262\335\275\304\260\331\274\317\275\241"},
-    {STRING_CHECKINGPART,
-    "\276\257\304\261\257\314\337\312 \276\335\300\270 \273\332\300 \312\337\260\303\250\274\256\335\246 \271\335\273 \274\303\262\317\275\241"},
     {STRING_CONTINUE,
     "ENTER = \277\336\257\272\263"},
     {STRING_QUITCONTINUE,

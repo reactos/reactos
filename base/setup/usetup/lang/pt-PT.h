@@ -1346,6 +1346,37 @@ static MUI_ENTRY ptPTFormatPartitionEntries[] =
     }
 };
 
+static MUI_ENTRY ptPTCheckFSEntries[] =
+{
+    {
+        4,
+        3,
+        " Instala\207\306o do ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        8,
+        "O instalador est\240 a verificar a parti\207\306o seleccionada.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "Por favor, aguarde...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
 static MUI_ENTRY ptPTInstallDirectoryEntries[] =
 {
     {
@@ -2124,6 +2155,10 @@ MUI_PAGE ptPTPages[] =
         ptPTFormatPartitionEntries
     },
     {
+        CHECK_FILE_SYSTEM_PAGE,
+        ptPTCheckFSEntries
+    },
+    {
         DELETE_PARTITION_PAGE,
         ptPTDeletePartitionEntries
     },
@@ -2208,8 +2243,6 @@ MUI_STRING ptPTStrings[] =
     "A nova parti\207\306o ainda n\306o est\240 formatada."},
     {STRING_INSTALLONPART,
     "O instalador instala o ReactOS na parti\207\306o"},
-    {STRING_CHECKINGPART,
-    "O instalador est\240 a verificar a parti\207\306o seleccionada."},
     {STRING_CONTINUE,
     "ENTER=Continuar"},
     {STRING_QUITCONTINUE,

@@ -1313,6 +1313,37 @@ static MUI_ENTRY trTRFormatPartitionEntries[] =
     }
 };
 
+static MUI_ENTRY trTRCheckFSEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Kur ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        8,
+        "Kur, \237imdi se\207ili b\224l\201m\201 g\224zden ge\207iriyor.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "L\201tfen bekleyiniz...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
 static MUI_ENTRY trTRInstallDirectoryEntries[] =
 {
     {
@@ -2078,6 +2109,10 @@ MUI_PAGE trTRPages[] =
         trTRFormatPartitionEntries
     },
     {
+        CHECK_FILE_SYSTEM_PAGE,
+        trTRCheckFSEntries
+    },
+    {
         DELETE_PARTITION_PAGE,
         trTRDeletePartitionEntries
     },
@@ -2161,8 +2196,6 @@ MUI_STRING trTRStrings[] =
     "Yeni b\224l\201m daha bi\207imlendirilmemi\237."},
     {STRING_INSTALLONPART,
     "Kur, ReactOS'u b\224l\201m \201zerine kurar."},
-    {STRING_CHECKINGPART,
-    "Kur, \237imdi se\207ili b\224l\201m\201 g\224zden ge\207iriyor."},
     {STRING_CONTINUE,
     "ENTER = S\201rd\201r"},
     {STRING_QUITCONTINUE,

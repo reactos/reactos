@@ -1335,6 +1335,37 @@ static MUI_ENTRY itITFormatPartitionEntries[] =
     }
 };
 
+static MUI_ENTRY itITCheckFSEntries[] =
+{
+    {
+        4,
+        3,
+        " Installazione di ReactOS " KERNEL_VERSION_STR " ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        8,
+        "Setup sta controllando la partizione selezionata.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "Attendere...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
 static MUI_ENTRY itITInstallDirectoryEntries[] =
 {
     {
@@ -2107,6 +2138,10 @@ MUI_PAGE itITPages[] =
         itITFormatPartitionEntries
     },
     {
+        CHECK_FILE_SYSTEM_PAGE,
+        itITCheckFSEntries
+    },
+    {
         DELETE_PARTITION_PAGE,
         itITDeletePartitionEntries
     },
@@ -2190,8 +2225,6 @@ MUI_STRING itITStrings[] =
     "La nuova partizione non \x8A stata ancora formattata."},
     {STRING_INSTALLONPART,
     "Il setup installer\x85 ReactOS sulla partitione"},
-    {STRING_CHECKINGPART,
-    "Setup sta controllando la partizione selezionata."},
     {STRING_CONTINUE,
     "INVIO = Continua"},
     {STRING_QUITCONTINUE,

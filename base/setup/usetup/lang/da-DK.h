@@ -1331,6 +1331,37 @@ static MUI_ENTRY daDKFormatPartitionEntries[] =
     }
 };
 
+static MUI_ENTRY daDKCheckFSEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " installationen ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        8,
+        "Installationen tjekker den valgte partition.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "Vent...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
 static MUI_ENTRY daDKInstallDirectoryEntries[] =
 {
     {
@@ -2104,6 +2135,10 @@ MUI_PAGE daDKPages[] =
         daDKFormatPartitionEntries
     },
     {
+        CHECK_FILE_SYSTEM_PAGE,
+        daDKCheckFSEntries
+    },
+    {
         DELETE_PARTITION_PAGE,
         daDKDeletePartitionEntries
     },
@@ -2187,8 +2222,6 @@ MUI_STRING daDKStrings[] =
     "Den nye partition er endnu ikke blevet formateret."},
     {STRING_INSTALLONPART,
     "Installationen installere ReactOS p\206 partitionen"},
-    {STRING_CHECKINGPART,
-    "Installationen tjekker den valgte partition."},
     {STRING_CONTINUE,
     "ENTER = Forts\221t"},
     {STRING_QUITCONTINUE,

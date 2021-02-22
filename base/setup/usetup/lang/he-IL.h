@@ -1333,6 +1333,37 @@ static MUI_ENTRY heILFormatPartitionEntries[] =
     }
 };
 
+static MUI_ENTRY heILCheckFSEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " \232\220\227\232\204 ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        8,
+        ".\204\230\207\201\220\231 \204\226\211\207\216\204 \232\200 \232\227\203\205\201 \205\211\231\213\222 \204\220\227\232\204\204 \232\211\220\213\232",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "...\217\211\232\216\204\214 \200\220",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
 static MUI_ENTRY heILInstallDirectoryEntries[] =
 {
     {
@@ -2103,6 +2134,10 @@ MUI_PAGE heILPages[] =
         heILFormatPartitionEntries
     },
     {
+        CHECK_FILE_SYSTEM_PAGE,
+        heILCheckFSEntries
+    },
+    {
         DELETE_PARTITION_PAGE,
         heILDeletePartitionEntries
     },
@@ -2186,8 +2221,6 @@ MUI_STRING heILStrings[] =
     ".\232\214\207\232\205\200\216 \200\214 \217\211\211\203\222 \204\231\203\207\204 \204\226\211\207\216\204"},
     {STRING_INSTALLONPART,
     "\204\226\211\207\216 \214\222 ReactOS \232\200 \204\220\211\227\232\216 \204\220\227\232\204\204 \232\211\220\213\232"},
-    {STRING_CHECKINGPART,
-    ".\204\230\207\201\220\231 \204\226\211\207\216\204 \232\200 \232\227\203\205\201 \205\211\231\213\222 \204\220\227\232\204\204 \232\211\220\213\232"},
     {STRING_CONTINUE,
     "\212\231\216\204 = ENTER"},
     {STRING_QUITCONTINUE,

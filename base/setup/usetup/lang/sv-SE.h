@@ -1338,6 +1338,37 @@ static MUI_ENTRY svSEFormatPartitionEntries[] =
     }
 };
 
+static MUI_ENTRY svSECheckFSEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        8,
+        "Setup unders\224ker nu den valda partitionen.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "Var v\204nlig v\204nta...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
 static MUI_ENTRY svSEInstallDirectoryEntries[] =
 {
     {
@@ -2110,6 +2141,10 @@ MUI_PAGE svSEPages[] =
         svSEFormatPartitionEntries
     },
     {
+        CHECK_FILE_SYSTEM_PAGE,
+        svSECheckFSEntries
+    },
+    {
         DELETE_PARTITION_PAGE,
         svSEDeletePartitionEntries
     },
@@ -2195,8 +2230,6 @@ MUI_STRING svSEStrings[] =
     "The new partition is not formatted yet."},
     {STRING_INSTALLONPART,
     "Setup installerar ReactOS till Partitionen"},
-    {STRING_CHECKINGPART,
-    "Setup unders\224ker nu den valda partitionen."},
     {STRING_CONTINUE,
     "ENTER = Forts\204tt"},
     {STRING_QUITCONTINUE,

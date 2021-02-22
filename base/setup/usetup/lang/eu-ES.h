@@ -1330,6 +1330,37 @@ static MUI_ENTRY euESFormatPartitionEntries[] =
     }
 };
 
+static MUI_ENTRY euESCheckFSEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Instalazioa ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        6,
+        8,
+        "Instalazioa ikusi du partizio aukertatutan.",
+        TEXT_STYLE_NORMAL,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "Itxaron mesedez...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
 static MUI_ENTRY euESInstallDirectoryEntries[] =
 {
     {
@@ -2102,6 +2133,10 @@ MUI_PAGE euESPages[] =
         euESFormatPartitionEntries
     },
     {
+        CHECK_FILE_SYSTEM_PAGE,
+        euESCheckFSEntries
+    },
+    {
         DELETE_PARTITION_PAGE,
         euESDeletePartitionEntries
     },
@@ -2185,8 +2220,6 @@ MUI_STRING euESStrings[] =
     "Oraindik partizio berria ez dago formatuta."},
     {STRING_INSTALLONPART,
     "Instalazioa ReactOS instalatu du partizio barruan"},
-    {STRING_CHECKINGPART,
-    "Instalazioa ikusi du partizio aukertatutan."},
     {STRING_CONTINUE,
     "SARTU = Jarraitu"},
     {STRING_QUITCONTINUE,
