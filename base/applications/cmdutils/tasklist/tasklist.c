@@ -246,7 +246,7 @@ INT GetOptionType(LPCWSTR szOption)
     }
     szOption++;
 
-    for (INT i = 0; i < _countof(OptionList); i++)
+    for (UINT i = 0; i < _countof(OptionList); i++)
     {
         if (!_wcsicmp(OptionList[i], szOption))
         {
