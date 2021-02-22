@@ -108,8 +108,8 @@ BOOL PrintMemory(SIZE_T MemorySizeByte, UINT MaxWidth, HINSTANCE hInstance)
     LoadStringW(hInstance, IDS_MEMORY_STR, FormatStr, _countof(FormatStr));
 
     WCHAR String[RES_STR_MAXLEN + _countof(NumberString)] = { 0 };
-    
-    swprintf_s(String, _countof(String) - 1, FormatStr, NumberString);
+
+    StringCchPrintfW(String, _countof(String), FormatStr, NumberString);
     PrintString(String, MaxWidth, FALSE);
 
     return TRUE;

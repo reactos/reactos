@@ -15,6 +15,7 @@
 #define WIN32_NO_STATUS
 #include <windows.h>
 #include <ntndk.h>
+#include <strsafe.h>
 
 #include <conutils.h>
 
