@@ -13,7 +13,7 @@ Usage(void)
 }
 
 static
-void
+int
 RelocateSection(
     char *pData,
     IMAGE_SECTION_HEADER *pSectionHeader,
@@ -46,6 +46,11 @@ RelocateSection(
                 *p16 += (WORD)(pSymbols[pReloc->SymbolTableIndex].Value + iOffset);
                 break;
 
+            case IMAGE_REL_I386_REL16:
+                p16 = (void*)(pSection + nOffset);
+                *p16 += (WORD)(pSymbols[pReloc->SymbolTableIndex].Value + iOffset);
+                break;
+
             case IMAGE_REL_I386_DIR32:
                 p32 = (void*)(pSection + nOffset);
                 *p32 += (DWORD)(pSymbols[pReloc->SymbolTableIndex].Value + iOffset);
@@ -54,10 +59,13 @@ RelocateSection(
             default:
                 printf("Unknown relocation type %u, address 0x%x\n",
                        pReloc->Type, (unsigned)pReloc->VirtualAddress);
+                return 0;
         }
 
         pReloc++;
     }
+
+    return 1;
 }
 
 int main(int argc, char *argv[])
@@ -136,10 +144,15 @@ int main(int argc, char *argv[])
         if ((strcmp((char*)pSectionHeader->Name, ".text") == 0) &&
             (pSectionHeader->SizeOfRawData != 0))
         {
-            RelocateSection(pData,
-                            pSectionHeader,
-                            pSymbols,
-                            nBaseAddress);
+            if (!RelocateSection(pData,
+                                 pSectionHeader,
+                                 pSymbols,
+                                 nBaseAddress))
+            {
+                free(pData);
+                fclose(pDestFile);
+                return -7;
+            }
 
             /* Write the section to the destination file */
             if (!fwrite(pData + pSectionHeader->PointerToRawData,
