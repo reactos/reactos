@@ -327,7 +327,9 @@ static void Edit_BackWord(HWND hwndEdit)
 LRESULT CALLBACK CAutoComplete::ACEditSubclassProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     CAutoComplete *pThis = static_cast<CAutoComplete *>(GetPropW(hwnd, autocomplete_propertyW));
-    return pThis->ACEditSubclassProcInner(hwnd, uMsg, wParam, lParam);
+    if (pThis)
+        return pThis->ACEditSubclassProcInner(hwnd, uMsg, wParam, lParam);
+    return 0;
 }
 
 LRESULT CAutoComplete::ACEditSubclassProcInner(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
@@ -583,7 +585,9 @@ LRESULT CAutoComplete::ACEditSubclassProcInner(HWND hwnd, UINT uMsg, WPARAM wPar
 LRESULT CALLBACK CAutoComplete::ACLBoxSubclassProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     CAutoComplete *pThis = reinterpret_cast<CAutoComplete *>(GetWindowLongPtrW(hwnd, GWLP_USERDATA));
-    return pThis->ACLBoxSubclassProcInner(hwnd, uMsg, wParam, lParam);
+    if (pThis)
+        return pThis->ACLBoxSubclassProcInner(hwnd, uMsg, wParam, lParam);
+    return 0;
 }
 
 LRESULT CAutoComplete::ACLBoxSubclassProcInner(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
