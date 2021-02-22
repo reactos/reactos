@@ -2,7 +2,7 @@
  * PROJECT:         ReactOS API tests
  * LICENSE:         GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:         Tests for the NtSetInformationProcess API
- * COPYRIGHT:       Copyright 2020 Bișoc George <fraizeraust99 at gmail dot com>
+ * COPYRIGHT:       Copyright 2020 George Bișoc <george.bisoc@reactos.org>
  */
 
 #include "precomp.h"

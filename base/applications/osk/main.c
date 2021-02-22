@@ -3,7 +3,7 @@
  * LICENSE:         GPL - See COPYING in the top level directory
  * PURPOSE:         On-screen keyboard.
  * COPYRIGHT:       Denis ROBERT
- *                  Copyright 2019 Bișoc George (fraizeraust99 at gmail dot com)
+ *                  Copyright 2019 George Bișoc (george.bisoc@reactos.org)
  */
 
 /* INCLUDES *******************************************************************/
