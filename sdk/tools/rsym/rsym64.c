@@ -769,12 +769,6 @@ ParsePEHeaders(PFILE_INFO File)
                        + sizeof(IMAGE_FILE_HEADER)
                        + File->FileHeader->SizeOfOptionalHeader;
 
-    if (!File->FileHeader->PointerToSymbolTable)
-    {
-        fprintf(stderr, "No symbol table.\n");
-        return -1;
-    }
-
     /* Create some shortcuts */
     File->ImageBase = File->OptionalHeader->ImageBase;
     File->Symbols = File->FilePtr + File->FileHeader->PointerToSymbolTable;
