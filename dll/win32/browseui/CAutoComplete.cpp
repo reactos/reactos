@@ -324,9 +324,14 @@ static void Edit_BackWord(HWND hwndEdit)
 /*
   Window procedure for autocompletion
  */
-LRESULT APIENTRY CAutoComplete::ACEditSubclassProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+LRESULT CALLBACK CAutoComplete::ACEditSubclassProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     CAutoComplete *pThis = static_cast<CAutoComplete *>(GetPropW(hwnd, autocomplete_propertyW));
+    return pThis->ACEditSubclassProcInner(hwnd, uMsg, wParam, lParam);
+}
+
+LRESULT CAutoComplete::ACEditSubclassProcInner(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
     HRESULT hr;
     WCHAR hwndText[255];
     WCHAR *hwndQCText;
@@ -335,25 +340,25 @@ LRESULT APIENTRY CAutoComplete::ACEditSubclassProc(HWND hwnd, UINT uMsg, WPARAM 
     int cpt, height, sel;
     ULONG fetched;
 
-    if (!pThis->m_enabled)
+    if (!m_enabled)
     {
-        return CallWindowProcW(pThis->m_wpOrigEditProc, hwnd, uMsg, wParam, lParam);
+        return CallWindowProcW(m_wpOrigEditProc, hwnd, uMsg, wParam, lParam);
     }
 
     switch (uMsg)
     {
         case CB_SHOWDROPDOWN:
         {
-            ShowWindow(pThis->m_hwndListBox, SW_HIDE);
+            ShowWindow(m_hwndListBox, SW_HIDE);
         }; break;
 
         case WM_KILLFOCUS:
         {
-            if ((pThis->m_options & ACO_AUTOSUGGEST) && ((HWND)wParam != pThis->m_hwndListBox))
+            if ((m_options & ACO_AUTOSUGGEST) && ((HWND)wParam != m_hwndListBox))
             {
-                ShowWindow(pThis->m_hwndListBox, SW_HIDE);
+                ShowWindow(m_hwndListBox, SW_HIDE);
             }
-            return CallWindowProcW(pThis->m_wpOrigEditProc, hwnd, uMsg, wParam, lParam);
+            return CallWindowProcW(m_wpOrigEditProc, hwnd, uMsg, wParam, lParam);
         }; break;
 
         case WM_KEYUP:
@@ -366,17 +371,17 @@ LRESULT APIENTRY CAutoComplete::ACEditSubclassProc(HWND hwnd, UINT uMsg, WPARAM 
                 {
                     /* If quickComplete is set and control is pressed, replace the string */
                     control = GetKeyState(VK_CONTROL) & 0x8000;
-                    if (control && pThis->m_quickComplete)
+                    if (control && m_quickComplete)
                     {
                         hwndQCText = (WCHAR *)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY,
-                                           (wcslen(pThis->m_quickComplete)+wcslen(hwndText))*sizeof(WCHAR));
-                        sel = swprintf(hwndQCText, pThis->m_quickComplete, hwndText);
+                                           (wcslen(m_quickComplete)+wcslen(hwndText))*sizeof(WCHAR));
+                        sel = swprintf(hwndQCText, m_quickComplete, hwndText);
                         SendMessageW(hwnd, WM_SETTEXT, 0, (LPARAM)hwndQCText);
                         SendMessageW(hwnd, EM_SETSEL, 0, sel);
                         HeapFree(GetProcessHeap(), 0, hwndQCText);
                     }
 
-                    ShowWindow(pThis->m_hwndListBox, SW_HIDE);
+                    ShowWindow(m_hwndListBox, SW_HIDE);
                     return 0;
                 }; break;
 
@@ -395,39 +400,39 @@ LRESULT APIENTRY CAutoComplete::ACEditSubclassProc(HWND hwnd, UINT uMsg, WPARAM 
                        is present but does not select anything.
                        - if the listbox is visible, change the selection
                     */
-                    if ( (pThis->m_options & (ACO_AUTOSUGGEST | ACO_UPDOWNKEYDROPSLIST))
-                     && (!IsWindowVisible(pThis->m_hwndListBox) && (! *hwndText)) )
+                    if ( (m_options & (ACO_AUTOSUGGEST | ACO_UPDOWNKEYDROPSLIST))
+                     && (!IsWindowVisible(m_hwndListBox) && (! *hwndText)) )
                     {
                         /* We must display all the entries */
                         displayall = TRUE;
                     }
                     else
                     {
-                        if (IsWindowVisible(pThis->m_hwndListBox))
+                        if (IsWindowVisible(m_hwndListBox))
                         {
                             int count;
 
-                            count = SendMessageW(pThis->m_hwndListBox, LB_GETCOUNT, 0, 0);
+                            count = SendMessageW(m_hwndListBox, LB_GETCOUNT, 0, 0);
                             /* Change the selection */
-                            sel = SendMessageW(pThis->m_hwndListBox, LB_GETCURSEL, 0, 0);
+                            sel = SendMessageW(m_hwndListBox, LB_GETCURSEL, 0, 0);
                             if (wParam == VK_UP)
                                 sel = ((sel-1) < 0) ? count-1 : sel-1;
                             else
                                 sel = ((sel+1) >= count) ? -1 : sel+1;
                             
-                            SendMessageW(pThis->m_hwndListBox, LB_SETCURSEL, sel, 0);
+                            SendMessageW(m_hwndListBox, LB_SETCURSEL, sel, 0);
                             
                             if (sel != -1)
                             {
                                 WCHAR *msg;
                                 int len;
 
-                                len = SendMessageW(pThis->m_hwndListBox, LB_GETTEXTLEN, sel, (LPARAM)NULL);
+                                len = SendMessageW(m_hwndListBox, LB_GETTEXTLEN, sel, (LPARAM)NULL);
                                 msg = (WCHAR *)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (len + 1) * sizeof(WCHAR));
                                 
                                 if (msg)
                                 {
-                                    SendMessageW(pThis->m_hwndListBox, LB_GETTEXT, sel, (LPARAM)msg);
+                                    SendMessageW(m_hwndListBox, LB_GETTEXT, sel, (LPARAM)msg);
                                     SendMessageW(hwnd, WM_SETTEXT, 0, (LPARAM)msg);
                                     SendMessageW(hwnd, EM_SETSEL, wcslen(msg), wcslen(msg));
                                 
@@ -440,8 +445,8 @@ LRESULT APIENTRY CAutoComplete::ACEditSubclassProc(HWND hwnd, UINT uMsg, WPARAM 
                             }
                             else
                             {
-                                SendMessageW(hwnd, WM_SETTEXT, 0, (LPARAM)pThis->m_txtbackup);
-                                SendMessageW(hwnd, EM_SETSEL, wcslen(pThis->m_txtbackup), wcslen(pThis->m_txtbackup));
+                                SendMessageW(hwnd, WM_SETTEXT, 0, (LPARAM)m_txtbackup);
+                                SendMessageW(hwnd, EM_SETSEL, wcslen(m_txtbackup), wcslen(m_txtbackup));
                             }
                         }
                         return 0;
@@ -459,13 +464,13 @@ LRESULT APIENTRY CAutoComplete::ACEditSubclassProc(HWND hwnd, UINT uMsg, WPARAM 
                 // FALL THROUGH
                 case VK_DELETE:
                 {
-                    if ((! *hwndText) && (pThis->m_options & ACO_AUTOSUGGEST))
+                    if ((! *hwndText) && (m_options & ACO_AUTOSUGGEST))
                     {
-                        ShowWindow(pThis->m_hwndListBox, SW_HIDE);
-                        return CallWindowProcW(pThis->m_wpOrigEditProc, hwnd, uMsg, wParam, lParam);
+                        ShowWindow(m_hwndListBox, SW_HIDE);
+                        return CallWindowProcW(m_wpOrigEditProc, hwnd, uMsg, wParam, lParam);
                     }
                     
-                    if (pThis->m_options & ACO_AUTOAPPEND)
+                    if (m_options & ACO_AUTOAPPEND)
                     {
                         DWORD b;
                         SendMessageW(hwnd, EM_GETSEL, (WPARAM)&b, (LPARAM)NULL);
@@ -485,15 +490,15 @@ LRESULT APIENTRY CAutoComplete::ACEditSubclassProc(HWND hwnd, UINT uMsg, WPARAM 
                     ;
             }
 
-            SendMessageW(pThis->m_hwndListBox, LB_RESETCONTENT, 0, 0);
+            SendMessageW(m_hwndListBox, LB_RESETCONTENT, 0, 0);
 
-            HeapFree(GetProcessHeap(), 0, pThis->m_txtbackup);
+            HeapFree(GetProcessHeap(), 0, m_txtbackup);
 
-            pThis->m_txtbackup = (WCHAR *)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (wcslen(hwndText)+1)*sizeof(WCHAR));
+            m_txtbackup = (WCHAR *)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (wcslen(hwndText)+1)*sizeof(WCHAR));
 
-            if (pThis->m_txtbackup)
+            if (m_txtbackup)
             {
-                wcscpy(pThis->m_txtbackup, hwndText);
+                wcscpy(m_txtbackup, hwndText);
             }
             else
             {
@@ -504,56 +509,56 @@ LRESULT APIENTRY CAutoComplete::ACEditSubclassProc(HWND hwnd, UINT uMsg, WPARAM 
             if ((!displayall) && (! *hwndText) )
                 break;
 
-            pThis->m_enumstr->Reset();
+            m_enumstr->Reset();
             filled = FALSE;
             size_t curlen = wcslen(hwndText);
 
             for(cpt = 0;;)
             {
                 CComHeapPtr<OLECHAR> strs;
-                hr = pThis->m_enumstr->Next(1, &strs, &fetched);
+                hr = m_enumstr->Next(1, &strs, &fetched);
                 if (hr != S_OK)
                     break;
 
                 if (!_wcsnicmp(hwndText, strs, curlen))
                 {
 
-                    if (pThis->m_options & ACO_AUTOAPPEND && *hwndText)
+                    if (m_options & ACO_AUTOAPPEND && *hwndText)
                     {
                         CComBSTR str((PCWSTR)strs);
                         memcpy(str.m_str, hwndText, curlen * sizeof(WCHAR));
                         SetWindowTextW(hwnd, str);
                         SendMessageW(hwnd, EM_SETSEL, curlen, str.Length());
-                        if (!(pThis->m_options & ACO_AUTOSUGGEST))
+                        if (!(m_options & ACO_AUTOSUGGEST))
                             break;
                     }
 
-                    if (pThis->m_options & ACO_AUTOSUGGEST)
+                    if (m_options & ACO_AUTOSUGGEST)
                     {
-                        SendMessageW(pThis->m_hwndListBox, LB_ADDSTRING, 0, (LPARAM)(LPOLESTR)strs);
+                        SendMessageW(m_hwndListBox, LB_ADDSTRING, 0, (LPARAM)(LPOLESTR)strs);
                         filled = TRUE;
                         cpt++;
                     }
                 }
             }
 
-            if (pThis->m_options & ACO_AUTOSUGGEST)
+            if (m_options & ACO_AUTOSUGGEST)
             {
                 if (filled)
                 {
-                    height = SendMessageW(pThis->m_hwndListBox, LB_GETITEMHEIGHT, 0, 0);
-                    SendMessageW(pThis->m_hwndListBox, LB_CARETOFF, 0, 0);
+                    height = SendMessageW(m_hwndListBox, LB_GETITEMHEIGHT, 0, 0);
+                    SendMessageW(m_hwndListBox, LB_CARETOFF, 0, 0);
                     GetWindowRect(hwnd, &r);
-                    SetParent(pThis->m_hwndListBox, HWND_DESKTOP);
+                    SetParent(m_hwndListBox, HWND_DESKTOP);
                     /* It seems that Windows XP displays 7 lines at most
                        and otherwise displays a vertical scroll bar */
-                    SetWindowPos(pThis->m_hwndListBox, HWND_TOP,
+                    SetWindowPos(m_hwndListBox, HWND_TOP,
                          r.left, r.bottom + 1, r.right - r.left, min(height * 7, height * (cpt + 1)),
                          SWP_SHOWWINDOW );
                 }
                 else
                 {
-                    ShowWindow(pThis->m_hwndListBox, SW_HIDE);
+                    ShowWindow(m_hwndListBox, SW_HIDE);
                 }
             }
 
@@ -562,24 +567,27 @@ LRESULT APIENTRY CAutoComplete::ACEditSubclassProc(HWND hwnd, UINT uMsg, WPARAM 
         case WM_DESTROY:
         {
             /* Release our reference that we had since ->Init() */
-            pThis->Release();
+            Release();
             return 0;
         }
 
-
         default:
         {
-            return CallWindowProcW(pThis->m_wpOrigEditProc, hwnd, uMsg, wParam, lParam);
+            return CallWindowProcW(m_wpOrigEditProc, hwnd, uMsg, wParam, lParam);
         }
-
     }
 
     return 0;
 }
 
-LRESULT APIENTRY CAutoComplete::ACLBoxSubclassProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+LRESULT CALLBACK CAutoComplete::ACLBoxSubclassProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     CAutoComplete *pThis = reinterpret_cast<CAutoComplete *>(GetWindowLongPtrW(hwnd, GWLP_USERDATA));
+    return pThis->ACLBoxSubclassProcInner(hwnd, uMsg, wParam, lParam);
+}
+
+LRESULT CAutoComplete::ACLBoxSubclassProcInner(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
     WCHAR *msg;
     int sel, len;
 
@@ -598,14 +606,14 @@ LRESULT APIENTRY CAutoComplete::ACLBoxSubclassProc(HWND hwnd, UINT uMsg, WPARAM 
             if (sel < 0)
                 break;
             
-            len = SendMessageW(pThis->m_hwndListBox, LB_GETTEXTLEN, sel, 0);
+            len = SendMessageW(m_hwndListBox, LB_GETTEXTLEN, sel, 0);
             msg = (WCHAR *)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, (len + 1) * sizeof(WCHAR));
             
             if (msg)
             {
                 SendMessageW(hwnd, LB_GETTEXT, sel, (LPARAM)msg);
-                SendMessageW(pThis->m_hwndEdit, WM_SETTEXT, 0, (LPARAM)msg);
-                SendMessageW(pThis->m_hwndEdit, EM_SETSEL, 0, wcslen(msg));
+                SendMessageW(m_hwndEdit, WM_SETTEXT, 0, (LPARAM)msg);
+                SendMessageW(m_hwndEdit, EM_SETSEL, 0, wcslen(msg));
                 ShowWindow(hwnd, SW_HIDE);
             
                 HeapFree(GetProcessHeap(), 0, msg);
@@ -618,7 +626,7 @@ LRESULT APIENTRY CAutoComplete::ACLBoxSubclassProc(HWND hwnd, UINT uMsg, WPARAM 
         }; break;
         
         default:
-            return CallWindowProcW(pThis->m_wpOrigLBoxProc, hwnd, uMsg, wParam, lParam);
+            return CallWindowProcW(m_wpOrigLBoxProc, hwnd, uMsg, wParam, lParam);
     }
     return 0;
 }

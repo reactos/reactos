@@ -46,8 +46,11 @@ public:
     CAutoComplete();
     ~CAutoComplete();
 
-    static LRESULT APIENTRY ACEditSubclassProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
-    static LRESULT APIENTRY ACLBoxSubclassProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+    static LRESULT CALLBACK ACEditSubclassProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+    static LRESULT CALLBACK ACLBoxSubclassProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+
+    LRESULT ACEditSubclassProcInner(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
+    LRESULT ACLBoxSubclassProcInner(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
     void CreateListbox();
 
