@@ -19,6 +19,7 @@
 #include <shlguid_undoc.h>
 #include <shdeprecated.h>
 #include <tchar.h>
+#include <assert.h>
 #include <atlbase.h>
 #include <atlcom.h>
 #include <atlwin.h>
