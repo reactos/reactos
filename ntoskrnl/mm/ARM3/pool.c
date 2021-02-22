@@ -849,6 +849,19 @@ MiAllocatePoolPages(IN POOL_TYPE PoolType,
     //
     MiAcquirePfnLockAtDpcLevel();
 
+    /* Check that we have enough available pages for this request */
+    if (MmAvailablePages < SizeInPages)
+    {
+        MiReleasePfnLockFromDpcLevel();
+        KeReleaseQueuedSpinLock(LockQueueMmNonPagedPoolLock, OldIrql);
+
+        MiReleaseSystemPtes(StartPte, SizeInPages, NonPagedPoolExpansion);
+
+        DPRINT1("OUT OF AVAILABLE PAGES! Required %lu, Available %lu\n", SizeInPages, MmAvailablePages);
+
+        return NULL;
+    }
+
     //
     // Loop the pages
     //
