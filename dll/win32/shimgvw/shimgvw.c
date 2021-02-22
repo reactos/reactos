@@ -1165,11 +1165,16 @@ ImageView_CreateWindow(HWND hwnd, LPCWSTR szFileName)
     HWND hMainWnd;
     MSG msg;
     HACCEL hKbdAccel;
+    HRESULT hComRes;
     INITCOMMONCONTROLSEX Icc = { .dwSize = sizeof(Icc), .dwICC = ICC_WIN95_CLASSES };
 
     InitCommonControlsEx(&Icc);
 
-    CoInitializeEx(NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
+    hComRes = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
+    if (hComRes != S_OK && hComRes != S_FALSE)
+    {
+        DPRINT1("Warning, CoInitializeEx failed with code=%08X\n", (int)hComRes);
+    }
 
     if (!ImageView_LoadSettings())
     {
@@ -1250,6 +1255,10 @@ ImageView_CreateWindow(HWND hwnd, LPCWSTR szFileName)
     Anime_FreeInfo();
 
     GdiplusShutdown(gdiplusToken);
+
+    /* Release COM resources */
+    CoUninitialize();
+
     return -1;
 }
 
