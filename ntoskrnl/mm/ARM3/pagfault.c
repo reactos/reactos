@@ -1023,9 +1023,6 @@ MiResolveTransitionFault(IN BOOLEAN StoreInstruction,
     ASSERT(MmAvailablePages > 0);
     ASSERT(Pfn1->u4.InPageError == 0);
 
-    /* ReactOS checks for this */
-    ASSERT(MmAvailablePages > 32);
-
     /* Was this a transition page in the valid list, or free/zero list? */
     if (Pfn1->u3.e1.PageLocation == ActiveAndValid)
     {
