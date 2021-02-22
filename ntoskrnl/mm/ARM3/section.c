@@ -1523,6 +1523,7 @@ MiMapViewOfDataSection(IN PCONTROL_AREA ControlArea,
                     MI_WRITE_INVALID_PTE(PointerPte, TempPte);
                     RtlSetBit(&CommitBitmap, PointerPte - Vad->FirstPrototypePte);
                 }
+                PointerPte++;
             }
         }
         else
