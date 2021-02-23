@@ -285,8 +285,8 @@ function(set_module_type_toolchain MODULE TYPE)
         if(${TYPE} STREQUAL "wdmdriver")
             add_target_link_flags(${MODULE} "-Wl,--wdmdriver")
         endif()
-        #Disabled due to LD bug: ROSBE-154
-        #add_linker_script(${MODULE} ${REACTOS_SOURCE_DIR}/sdk/cmake/init-section.lds)
+        # Place INIT section at the tail of the module
+        add_linker_script(${MODULE} ${REACTOS_SOURCE_DIR}/sdk/cmake/init-section.lds)
     endif()
 endfunction()
 
