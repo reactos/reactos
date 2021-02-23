@@ -3081,7 +3081,7 @@ static CONFIGRET
 EnableDeviceInstance(
     _In_ LPWSTR pszDeviceInstance)
 {
-    PLUGPLAY_CONTROL_RESET_DEVICE_DATA ResetDeviceData;
+    PLUGPLAY_CONTROL_DEVICE_CONTROL_DATA ResetDeviceData;
     CONFIGRET ret = CR_SUCCESS;
     NTSTATUS Status;
 
@@ -3091,7 +3091,7 @@ EnableDeviceInstance(
                          pszDeviceInstance);
     Status = NtPlugPlayControl(PlugPlayControlResetDevice,
                                &ResetDeviceData,
-                               sizeof(PLUGPLAY_CONTROL_RESET_DEVICE_DATA));
+                               sizeof(PLUGPLAY_CONTROL_DEVICE_CONTROL_DATA));
     if (!NT_SUCCESS(Status))
         ret = NtStatusToCrError(Status);
 

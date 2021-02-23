@@ -1044,7 +1044,7 @@ IopGetDeviceDepth(PPLUGPLAY_CONTROL_DEPTH_DATA DepthData)
 
 
 static NTSTATUS
-IopResetDevice(PPLUGPLAY_CONTROL_RESET_DEVICE_DATA ResetDeviceData)
+IopResetDevice(PPLUGPLAY_CONTROL_DEVICE_CONTROL_DATA ResetDeviceData)
 {
     PDEVICE_OBJECT DeviceObject;
     NTSTATUS Status;
@@ -1364,9 +1364,9 @@ NtPlugPlayControl(IN PLUGPLAY_CONTROL_CLASS PlugPlayControlClass,
 //        case PlugPlayControlRetrieveDock:
 
         case PlugPlayControlResetDevice:
-            if (!Buffer || BufferLength < sizeof(PLUGPLAY_CONTROL_RESET_DEVICE_DATA))
+            if (!Buffer || BufferLength < sizeof(PLUGPLAY_CONTROL_DEVICE_CONTROL_DATA))
                 return STATUS_INVALID_PARAMETER;
-            return IopResetDevice((PPLUGPLAY_CONTROL_RESET_DEVICE_DATA)Buffer);
+            return IopResetDevice((PPLUGPLAY_CONTROL_DEVICE_CONTROL_DATA)Buffer);
 
 //        case PlugPlayControlHaltDevice:
 //        case PlugPlayControlGetBlockedDriverList:

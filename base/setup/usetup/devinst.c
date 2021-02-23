@@ -42,11 +42,11 @@ static BOOLEAN
 ResetDevice(
     IN LPCWSTR DeviceId)
 {
-    PLUGPLAY_CONTROL_RESET_DEVICE_DATA ResetDeviceData;
+    PLUGPLAY_CONTROL_DEVICE_CONTROL_DATA ResetDeviceData;
     NTSTATUS Status;
 
     RtlInitUnicodeString(&ResetDeviceData.DeviceInstance, DeviceId);
-    Status = NtPlugPlayControl(PlugPlayControlResetDevice, &ResetDeviceData, sizeof(PLUGPLAY_CONTROL_RESET_DEVICE_DATA));
+    Status = NtPlugPlayControl(PlugPlayControlResetDevice, &ResetDeviceData, sizeof(PLUGPLAY_CONTROL_DEVICE_CONTROL_DATA));
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("NtPlugPlayControl() failed with status 0x%08x\n", Status);
