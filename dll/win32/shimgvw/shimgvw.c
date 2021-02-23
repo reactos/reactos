@@ -1257,7 +1257,8 @@ ImageView_CreateWindow(HWND hwnd, LPCWSTR szFileName)
     GdiplusShutdown(gdiplusToken);
 
     /* Release COM resources */
-    CoUninitialize();
+    if (SUCCEEDED(hComRes))
+        CoUninitialize();
 
     return -1;
 }
