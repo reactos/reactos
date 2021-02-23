@@ -163,27 +163,6 @@ extern const ULONG_PTR MmProtectToPteMask[32];
 extern const ULONG MmProtectToValue[32];
 
 //
-// Assertions for session images, addresses, and PTEs
-//
-#define MI_IS_SESSION_IMAGE_ADDRESS(Address) \
-    (((Address) >= MiSessionImageStart) && ((Address) < MiSessionImageEnd))
-
-#define MI_IS_SESSION_ADDRESS(Address) \
-    (((Address) >= MmSessionBase) && ((Address) < MiSessionSpaceEnd))
-
-#define MI_IS_SESSION_PTE(Pte) \
-    ((((PMMPTE)Pte) >= MiSessionBasePte) && (((PMMPTE)Pte) < MiSessionLastPte))
-
-#define MI_IS_PAGE_TABLE_ADDRESS(Address) \
-    (((PVOID)(Address) >= (PVOID)PTE_BASE) && ((PVOID)(Address) <= (PVOID)PTE_TOP))
-
-#define MI_IS_SYSTEM_PAGE_TABLE_ADDRESS(Address) \
-    (((Address) >= (PVOID)MiAddressToPte(MmSystemRangeStart)) && ((Address) <= (PVOID)PTE_TOP))
-
-#define MI_IS_PAGE_TABLE_OR_HYPER_ADDRESS(Address) \
-    (((PVOID)(Address) >= (PVOID)PTE_BASE) && ((PVOID)(Address) <= (PVOID)MmHyperSpaceEnd))
-
-//
 // Creates a software PTE with the given protection
 //
 #define MI_MAKE_SOFTWARE_PTE(p, x)          ((p)->u.Long = (x << MM_PTE_SOFTWARE_PROTECTION_BITS))
@@ -658,6 +637,58 @@ extern LARGE_INTEGER MmCriticalSectionTimeout;
 extern LIST_ENTRY MmWorkingSetExpansionHead;
 extern KSPIN_LOCK MmExpansionLock;
 extern PETHREAD MiExpansionLockOwner;
+
+//
+// Assertions for session images, addresses, and PTEs
+//
+FORCEINLINE
+BOOLEAN
+MI_IS_SESSION_IMAGE_ADDRESS(PVOID Address)
+{
+    return (Address >= MiSessionImageStart) && (Address < MiSessionImageEnd);
+}
+
+FORCEINLINE
+BOOLEAN
+MI_IS_SESSION_ADDRESS(PVOID Address)
+{
+    return (Address >= MmSessionBase) && (Address < MiSessionSpaceEnd);
+}
+
+FORCEINLINE
+BOOLEAN
+MI_IS_SESSION_PTE(PMMPTE Pte)
+{
+    return (Pte >= MiSessionBasePte) && (Pte < MiSessionLastPte);
+}
+
+FORCEINLINE
+BOOLEAN
+MI_IS_PAGE_TABLE_ADDRESS(PVOID Address)
+{
+    ULONG_PTR AddressAsUlong = (ULONG_PTR)Address;
+    return (AddressAsUlong >= PTE_BASE) && (AddressAsUlong <= PTE_TOP);
+}
+
+FORCEINLINE
+BOOLEAN
+MI_IS_SYSTEM_PAGE_TABLE_ADDRESS(PVOID Address)
+{
+    ULONG_PTR AddressAsUlong = (ULONG_PTR)Address;
+    return (AddressAsUlong >= (ULONG_PTR)MiAddressToPte(MmSystemRangeStart)) && (AddressAsUlong <= PTE_TOP);
+}
+
+FORCEINLINE
+BOOLEAN
+MI_IS_PAGE_TABLE_OR_HYPER_ADDRESS(PVOID Address)
+{
+    ULONG_PTR AddressAsUlong = (ULONG_PTR)Address;
+    return (AddressAsUlong >= PTE_BASE) && (AddressAsUlong <= (ULONG_PTR)MmHyperSpaceEnd);
+}
+
+//
+// Working set manipulation
+//
 
 FORCEINLINE
 BOOLEAN
