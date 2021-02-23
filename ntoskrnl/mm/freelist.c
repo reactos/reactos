@@ -606,9 +606,8 @@ MmAllocPage(ULONG Type)
 {
     PFN_NUMBER PfnOffset;
     PMMPFN Pfn1;
-    KIRQL OldIrql;
 
-    OldIrql = MiAcquirePfnLock();
+    MI_ASSERT_PFN_LOCK_HELD();
 
 #if MI_TRACE_PFNS
     switch(Type)
@@ -651,7 +650,6 @@ MmAllocPage(ULONG Type)
         MmInsertLRULastUserPage(PfnOffset);
     }
 
-    MiReleasePfnLock(OldIrql);
     return PfnOffset;
 }
 
