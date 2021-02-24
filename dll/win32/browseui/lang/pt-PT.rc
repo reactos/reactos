@@ -329,18 +329,18 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_SEARCH_RESULTS "Search Results"
-    IDS_SEARCHINVALID "'%1' is not a valid folder."
-    IDS_SEARCH_FOLDER "Searching %s"
-    IDS_SEARCH_FILES_FOUND "%u files found"
-    IDS_SEARCH_OPEN_FOLDER "Open Containing &Folder"
-    IDS_COL_NAME "Name"
-    IDS_COL_LOCATION "In Folder"
-    IDS_COL_RELEVANCE "Relevance"
+    IDS_SEARCH_RESULTS "Resultados da procura"
+    IDS_SEARCHINVALID "'%1' não é uma pasta válida."
+    IDS_SEARCH_FOLDER "A procurar %s"
+    IDS_SEARCH_FILES_FOUND "%u ficheiros encontrados"
+    IDS_SEARCH_OPEN_FOLDER "Abrir &pasta de destino"
+    IDS_COL_NAME "Nome"
+    IDS_COL_LOCATION "na pasta"
+    IDS_COL_RELEVANCE "Relevância"
 END
 
 STRINGTABLE
 BEGIN
-    IDS_PARSE_ADDR_ERR_TITLE "ReactOS Explorer"
-    IDS_PARSE_ADDR_ERR_TEXT "ReactOS Explorer cannot find '%1'. Check the spelling and try again."
+    IDS_PARSE_ADDR_ERR_TITLE "Explorador do ReactOS"
+    IDS_PARSE_ADDR_ERR_TEXT "O explorador do ReactOS não encontrou '%1'. Verifique a ortografia e tente novamente."
 END
