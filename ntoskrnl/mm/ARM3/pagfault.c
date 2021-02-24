@@ -818,7 +818,7 @@ MiCompleteProtoPteFault(IN BOOLEAN StoreInstruction,
         DirtyPage = TRUE;
 
         /* ReactOS check */
-        ASSERT(Pfn1->OriginalPte.u.Soft.Prototype != 0);
+        ASSERT(Pfn1->OriginalPte.u.Soft.Prototype == 0);
     }
 
     /* Did we get a locked incoming PFN? */
@@ -1378,7 +1378,7 @@ MiDispatchFault(
             }
 
             /* Resolve the fault -- this will release the PFN lock */
-            Status = MiResolveProtoPteFault(!MI_IS_NOT_PRESENT_FAULT(FaultCode),
+            Status = MiResolveProtoPteFault(MI_IS_WRITE_ACCESS(FaultCode),
                                             Address,
                                             PointerPte,
                                             PointerProtoPte,
@@ -1495,7 +1495,7 @@ MiDispatchFault(
                 if (++ProcessedPtes == PteCount)
                 {
                     /* Complete the fault */
-                    MiCompleteProtoPteFault(!MI_IS_NOT_PRESENT_FAULT(FaultCode),
+                    MiCompleteProtoPteFault(MI_IS_WRITE_ACCESS(FaultCode),
                                             Address,
                                             PointerPte,
                                             PointerProtoPte,
@@ -1534,7 +1534,7 @@ MiDispatchFault(
             ASSERT(PointerPte->u.Hard.Valid == 0);
 
             /* Resolve the fault -- this will release the PFN lock */
-            Status = MiResolveProtoPteFault(!MI_IS_NOT_PRESENT_FAULT(FaultCode),
+            Status = MiResolveProtoPteFault(MI_IS_WRITE_ACCESS(FaultCode),
                                             Address,
                                             PointerPte,
                                             PointerProtoPte,
@@ -1582,7 +1582,7 @@ MiDispatchFault(
         LockIrql = MiAcquirePfnLock();
 
         /* Resolve */
-        Status = MiResolveTransitionFault(!MI_IS_NOT_PRESENT_FAULT(FaultCode), Address, PointerPte, WorkingSet, LockIrql, &InPageBlock);
+        Status = MiResolveTransitionFault(MI_IS_WRITE_ACCESS(FaultCode), Address, PointerPte, WorkingSet, LockIrql, &InPageBlock);
 
         ASSERT(NT_SUCCESS(Status));
 
@@ -1625,7 +1625,7 @@ MiDispatchFault(
         LockIrql = MiAcquirePfnLock();
 
         /* Resolve */
-        Status = MiResolvePageFileFault(!MI_IS_NOT_PRESENT_FAULT(FaultCode), Address, PointerPte, WorkingSet, &LockIrql);
+        Status = MiResolvePageFileFault(MI_IS_WRITE_ACCESS(FaultCode), Address, PointerPte, WorkingSet, &LockIrql);
 
         /* And now release the lock and leave*/
         MiReleasePfnLock(LockIrql);
@@ -1750,7 +1750,7 @@ MmArmAccessFault(IN ULONG FaultCode,
 
         /* Not yet implemented in ReactOS */
         ASSERT(MI_IS_PAGE_LARGE(PointerPde) == FALSE);
-        ASSERT((!MI_IS_NOT_PRESENT_FAULT(FaultCode) && MI_IS_PAGE_COPY_ON_WRITE(PointerPte)) == FALSE);
+        ASSERT(!(MI_IS_WRITE_ACCESS(FaultCode) && MI_IS_PAGE_COPY_ON_WRITE(PointerPte)));
 
         /* Check if this was a write */
         if (MI_IS_WRITE_ACCESS(FaultCode))
@@ -2553,7 +2553,7 @@ UserFault:
     {
         /* Run a software access check first, including to detect guard pages */
         Status = MiAccessCheck(PointerPte,
-                               !MI_IS_NOT_PRESENT_FAULT(FaultCode),
+                               MI_IS_WRITE_ACCESS(FaultCode),
                                Mode,
                                ProtectionCode,
                                TrapInformation,

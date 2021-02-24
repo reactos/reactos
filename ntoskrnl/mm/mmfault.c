@@ -253,7 +253,7 @@ MmAccessFault(IN ULONG FaultCode,
     }
 
     /* Keep same old ReactOS Behaviour */
-    if (!MI_IS_NOT_PRESENT_FAULT(FaultCode))
+    if (MI_IS_WRITE_ACCESS(FaultCode))
     {
         /* Call access fault */
         return MmpAccessFault(Mode, (ULONG_PTR)Address, TrapInformation ? FALSE : TRUE);
