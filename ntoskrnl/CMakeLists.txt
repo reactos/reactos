@@ -32,46 +32,26 @@ add_executable(ntoskrnl
     ${PCH_SKIP_SOURCE}
     ntoskrnl.rc
     ${CMAKE_CURRENT_BINARY_DIR}/ntoskrnl.def)
-set_property(TARGET ntoskrnl PROPERTY ENABLE_EXPORTS TRUE)
-set_target_properties(ntoskrnl PROPERTIES DEFINE_SYMBOL "")
+set_module_type(ntoskrnl kernel)
 
 source_group(TREE ${REACTOS_SOURCE_DIR}/ntoskrnl PREFIX "Source Files" FILES ${NTOSKRNL_SOURCE})
 
-if(ARCH STREQUAL "i386")
-    set_entrypoint(ntoskrnl KiSystemStartup 4)
-else()
-    set_entrypoint(ntoskrnl KiSystemStartup)
-endif()
-set_subsystem(ntoskrnl native)
-
-if(MSVC)
-    set_image_base(ntoskrnl 0x00400000)
-    add_target_link_flags(ntoskrnl "/SECTION:.rsrc,!DP") #Accessed from bugcheck code
-    add_target_link_flags(ntoskrnl "/SECTION:INIT,ERWD")
-else()
-    if(GDB AND NOT CLANG)
-        # Completely disable optimizations when debugging the kernel
-        # Not for CLang, which fails as following in _SEH2_EXCEPT macro:
-        # error: inline assembly requires more registers than available
-        target_compile_options(ntoskrnl PRIVATE -O0)
-        set_image_base(ntoskrnl 0x00800000)
-    else()
-        set_image_base(ntoskrnl 0x80800000)
-    endif()
-    add_linker_script(ntoskrnl ${REACTOS_SOURCE_DIR}/sdk/cmake/init-section.lds)
+if(GDB AND NOT CLANG)
+    # Completely disable optimizations when debugging the kernel
+    # Not for CLang, which fails as following in _SEH2_EXCEPT macro:
+    # error: inline assembly requires more registers than available
+    target_compile_options(ntoskrnl PRIVATE -O0)
 endif()
 
 target_link_libraries(ntoskrnl cportlib csq ${PSEH_LIB} arbiter cmlib ntlsalib rtl ${ROSSYM_LIB} libcntpr wdmguid ioevent)
 
 if(STACK_PROTECTOR)
     target_sources(ntoskrnl PRIVATE $<TARGET_OBJECTS:gcc_ssp_nt>)
-elseif(RUNTIME_CHECKS)
-    target_link_libraries(ntoskrnl runtmchk)
 endif()
 
 add_importlibs(ntoskrnl hal kdcom bootvid)
 add_pch(ntoskrnl ${REACTOS_SOURCE_DIR}/ntoskrnl/include/ntoskrnl.h "${PCH_SKIP_SOURCE}")
-add_dependencies(ntoskrnl psdk bugcodes asm)
+add_dependencies(ntoskrnl psdk asm)
 add_cd_file(TARGET ntoskrnl DESTINATION reactos/system32 NO_CAB FOR all)
 
 if(BUILD_MP)
