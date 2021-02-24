@@ -1,8 +1,12 @@
+/* 
+ *    Polish translation by pithwz - Piotr Hetnarowicz (piotrhwz@gmail.com) (February, 2021)
+ */
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
     IDS_USAGE, "Usage: TASKLIST [/?] [/NH]\n"
+    IDS_USAGE, "Użycie: TASKLIST [/?] [/NH]\n"
     IDS_DESCRIPTION, "\n\
 Desciption:\
     This tool displays a list of currently running processes on\n\
@@ -13,8 +17,19 @@ Desciption:\
     IDS_ENUM_FAILED, "Error: Unable to enumerate the process list.\n"
     IDS_OUT_OF_MEMORY, "Error: Out of memory.\n"
     IDS_HEADER_IMAGENAME, "Image Name"
+Opis:\
+    To narzędzie wyświetla listę aktualnie uruchomionych procesów na\n\
+    komputerze.\n"
+    IDS_OPTION_TOO_MUCH, "Błąd: Nieprawidłowa składnia. Opcja '%1' nie jest dozwolona więcej niż '%2!d!' razy.\n"
+    IDS_INVALID_SYNTAX, "Błąd: Nieprawidłowa składnia.\n"
+    IDS_INVALID_OPTION, "Błąd: Określono nieznaną lub nieprawidłową opcję wiersza polecenia.\n"
+    IDS_ENUM_FAILED, "Błąd: Nie można wyliczyć listy procesów.\n"
+    IDS_OUT_OF_MEMORY, "Błąd: Brak pamięci.\n"
+    IDS_HEADER_IMAGENAME, "Nazwa obrazu"
     IDS_HEADER_PID, "PID"
     IDS_HEADER_SESSION, "Session#"
     IDS_HEADER_MEMUSAGE, "Mem Usage"
+    IDS_HEADER_SESSION, "Nazwa sesji"
+    IDS_HEADER_MEMUSAGE, "Użycie pam."
     IDS_MEMORY_STR, "%s K"
 END
