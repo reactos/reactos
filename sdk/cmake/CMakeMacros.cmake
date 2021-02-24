@@ -541,7 +541,10 @@ function(add_importlibs _module)
 endfunction()
 
 # Some helper lists
-list(APPEND KERNEL_MODULE_TYPES kerneldll kernelmodedriver wdmdriver)
+list(APPEND VALID_MODULE_TYPES kernel kerneldll kernelmodedriver wdmdriver nativecui nativedll win32cui win32gui win32dll win32ocx cpl module)
+list(APPEND KERNEL_MODULE_TYPES kernel kerneldll kernelmodedriver wdmdriver)
+list(APPEND NATIVE_MODULE_TYPES kernel kerneldll kernelmodedriver wdmdriver nativecui nativedll)
+
 function(set_module_type MODULE TYPE)
     cmake_parse_arguments(__module "UNICODE" "IMAGEBASE" "ENTRYPOINT" ${ARGN})
 
@@ -549,38 +552,34 @@ function(set_module_type MODULE TYPE)
         message(STATUS "set_module_type : unparsed arguments ${__module_UNPARSED_ARGUMENTS}, module : ${MODULE}")
     endif()
 
-    # Add the module to the module group list, if it is defined
-    if(DEFINED CURRENT_MODULE_GROUP)
-        set_property(GLOBAL APPEND PROPERTY ${CURRENT_MODULE_GROUP}_MODULE_LIST "${MODULE}")
-    endif()
-
-    # Set subsystem. Also take this as an occasion
-    # to error out if someone gave a non existing type
-    if((${TYPE} STREQUAL nativecui) OR (${TYPE} STREQUAL nativedll)
-            OR (${TYPE} STREQUAL kernelmodedriver) OR (${TYPE} STREQUAL wdmdriver) OR (${TYPE} STREQUAL kerneldll))
-        set(__subsystem native)
-    elseif(${TYPE} STREQUAL win32cui)
-        set(__subsystem console)
-    elseif(${TYPE} STREQUAL win32gui)
-        set(__subsystem windows)
-    elseif(NOT ((${TYPE} STREQUAL win32dll) OR (${TYPE} STREQUAL win32ocx)
-            OR (${TYPE} STREQUAL cpl) OR (${TYPE} STREQUAL module)))
+    # Check this is a type that we know
+    if (NOT TYPE IN_LIST VALID_MODULE_TYPES)
         message(FATAL_ERROR "Unknown type ${TYPE} for module ${MODULE}")
     endif()
 
     # Set our target property
     set_target_properties(${MODULE} PROPERTIES REACTOS_MODULE_TYPE ${TYPE})
 
-    if(DEFINED __subsystem)
-        set_subsystem(${MODULE} ${__subsystem})
+    # Add the module to the module group list, if it is defined
+    if(DEFINED CURRENT_MODULE_GROUP)
+        set_property(GLOBAL APPEND PROPERTY ${CURRENT_MODULE_GROUP}_MODULE_LIST "${MODULE}")
+    endif()
+
+    # Set subsystem.
+    if(TYPE IN_LIST NATIVE_MODULE_TYPES)
+        set_subsystem(${MODULE} native)
+    elseif(${TYPE} STREQUAL win32cui)
+        set_subsystem(${MODULE} console)
+    elseif(${TYPE} STREQUAL win32gui)
+        set_subsystem(${MODULE} windows)
     endif()
 
     # Set the PE image version numbers from the NT OS version ReactOS is based on
     if(MSVC)
-        add_target_link_flags(${MODULE} "/VERSION:5.01")
+        target_link_options(${MODULE} PRIVATE "/VERSION:5.01")
     else()
-        add_target_link_flags(${MODULE} "-Wl,--major-image-version,5 -Wl,--minor-image-version,01")
-        add_target_link_flags(${MODULE} "-Wl,--major-os-version,5 -Wl,--minor-os-version,01")
+        target_link_options(${MODULE} PRIVATE
+            -Wl,--major-image-version,5 -Wl,--minor-image-version,01 -Wl,--major-os-version,5 -Wl,--minor-os-version,01)
     endif()
 
     # Set unicode definitions
@@ -590,49 +589,32 @@ function(set_module_type MODULE TYPE)
 
     # Set entry point
     if(__module_ENTRYPOINT OR (__module_ENTRYPOINT STREQUAL "0"))
-        list(GET __module_ENTRYPOINT 0 __entrypoint)
-        list(LENGTH __module_ENTRYPOINT __length)
-        if(${__length} EQUAL 2)
-            list(GET __module_ENTRYPOINT 1 __entrystack)
-        elseif(NOT ${__length} EQUAL 1)
-            message(FATAL_ERROR "Wrong arguments for ENTRYPOINT parameter of set_module_type : ${__module_ENTRYPOINT}")
-        endif()
-        unset(__length)
+        set_entrypoint(${MODULE} ${__module_ENTRYPOINT})
     elseif(${TYPE} STREQUAL nativecui)
-        set(__entrypoint NtProcessStartup)
-        set(__entrystack 4)
+        set_entrypoint(${MODULE} NtProcessStartup 4)
     elseif(${TYPE} STREQUAL win32cui)
         if(__module_UNICODE)
-            set(__entrypoint wmainCRTStartup)
+            set_entrypoint(${MODULE} wmainCRTStartup)
         else()
-            set(__entrypoint mainCRTStartup)
+            set_entrypoint(${MODULE} mainCRTStartup)
         endif()
     elseif(${TYPE} STREQUAL win32gui)
         if(__module_UNICODE)
-            set(__entrypoint wWinMainCRTStartup)
+            set_entrypoint(${MODULE} wWinMainCRTStartup)
         else()
-            set(__entrypoint WinMainCRTStartup)
+            set_entrypoint(${MODULE} WinMainCRTStartup)
         endif()
     elseif((${TYPE} STREQUAL win32dll) OR (${TYPE} STREQUAL win32ocx)
             OR (${TYPE} STREQUAL cpl))
-        set(__entrypoint DllMainCRTStartup)
-        set(__entrystack 12)
+        set_entrypoint(${MODULE} DllMainCRTStartup 12)
     elseif((${TYPE} STREQUAL kernelmodedriver) OR (${TYPE} STREQUAL wdmdriver))
-        set(__entrypoint DriverEntry)
-        set(__entrystack 8)
+        set_entrypoint(${MODULE} DriverEntry 8)
     elseif(${TYPE} STREQUAL nativedll)
-        set(__entrypoint DllMain)
-        set(__entrystack 12)
+        set_entrypoint(${MODULE} DllMain 12)
+    elseif(TYPE STREQUAL kernel)
+        set_entrypoint(${MODULE} KiSystemStartup 4)
     elseif(${TYPE} STREQUAL module)
-        set(__entrypoint 0)
-    endif()
-
-    if(DEFINED __entrypoint)
-        if(DEFINED __entrystack)
-            set_entrypoint(${MODULE} ${__entrypoint} ${__entrystack})
-        else()
-            set_entrypoint(${MODULE} ${__entrypoint})
-        endif()
+        set_entrypoint(${MODULE} 0)
     endif()
 
     # Set base address
@@ -644,16 +626,27 @@ function(set_module_type MODULE TYPE)
         else()
             message(STATUS "${MODULE} has no base address")
         endif()
-    elseif((${TYPE} STREQUAL kernelmodedriver) OR (${TYPE} STREQUAL wdmdriver) OR (${TYPE} STREQUAL kerneldll))
-        set_image_base(${MODULE} 0x00010000)
+    elseif(TYPE IN_LIST KERNEL_MODULE_TYPES)
+        # special case for kernel
+        if (TYPE STREQUAL kernel)
+            set_image_base(${MODULE} 0x00400000)
+        else()
+            set_image_base(${MODULE} 0x00010000)
+        endif()
     endif()
 
     # Now do some stuff which is specific to each type
-    if((${TYPE} STREQUAL kernelmodedriver) OR (${TYPE} STREQUAL wdmdriver) OR (${TYPE} STREQUAL kerneldll))
+    if(TYPE IN_LIST KERNEL_MODULE_TYPES)
         add_dependencies(${MODULE} bugcodes xdk)
         if((${TYPE} STREQUAL kernelmodedriver) OR (${TYPE} STREQUAL wdmdriver))
             set_target_properties(${MODULE} PROPERTIES SUFFIX ".sys")
         endif()
+    endif()
+
+    if (TYPE STREQUAL kernel)
+        # Kernels are executables with exports
+        set_property(TARGET ${MODULE} PROPERTY ENABLE_EXPORTS TRUE)
+        set_target_properties(${MODULE} PROPERTIES DEFINE_SYMBOL "")
     endif()
 
     if(${TYPE} STREQUAL win32ocx)
