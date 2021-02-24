@@ -26,9 +26,7 @@ Opis:\
     IDS_OUT_OF_MEMORY, "Błąd: Brak pamięci.\n"
     IDS_HEADER_IMAGENAME, "Nazwa obrazu"
     IDS_HEADER_PID, "PID"
-    IDS_HEADER_SESSION, "Session#"
-    IDS_HEADER_MEMUSAGE, "Mem Usage"
-    IDS_HEADER_SESSION, "Nazwa sesji"
+    IDS_HEADER_SESSION, "Numer sesji"
     IDS_HEADER_MEMUSAGE, "Użycie pam."
     IDS_MEMORY_STR, "%s K"
 END
