@@ -308,7 +308,7 @@ endif()
 
 function(fixup_load_config _target)
     add_custom_command(TARGET ${_target} POST_BUILD
-        COMMAND native-pefixup "$<TARGET_FILE:${_target}>"
+        COMMAND native-pefixup --loadconfig "$<TARGET_FILE:${_target}>"
         COMMENT "Patching in LOAD_CONFIG"
         DEPENDS native-pefixup)
 endfunction()
