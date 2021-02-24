@@ -249,13 +249,20 @@ function(set_image_base MODULE IMAGE_BASE)
 endfunction()
 
 function(set_module_type_toolchain MODULE TYPE)
-    if((${TYPE} STREQUAL "win32dll") OR (${TYPE} STREQUAL "win32ocx") OR (${TYPE} STREQUAL "cpl"))
-        add_target_link_flags(${MODULE} "/DLL")
-    elseif(${TYPE} STREQUAL "kernelmodedriver")
-        # Disable linker warning 4078 (multiple sections found with different attributes) for INIT section use
-        add_target_link_flags(${MODULE} "/DRIVER /SECTION:INIT,ERWD")
-    elseif(${TYPE} STREQUAL "wdmdriver")
-        add_target_link_flags(${MODULE} "/DRIVER:WDM /SECTION:INIT,ERWD")
+    if((TYPE STREQUAL win32dll) OR (TYPE STREQUAL win32ocx) OR (TYPE STREQUAL cpl))
+        target_link_options(${MODULE} PRIVATE /DLL)
+    elseif(TYPE IN_LIST KERNEL_MODULE_TYPES)
+        # Mark INIT section as Executable Read Write Discardable
+        target_link_options(${MODULE} PRIVATE /SECTION:INIT,ERWD)
+
+        if(TYPE STREQUAL kernelmodedriver)
+            target_link_options(${MODULE} PRIVATE /DRIVER)
+        elseif(TYPE STREQUAL wdmdriver)
+            target_link_options(${MODULE} PRIVATE /DRIVER:WDM)
+        elseif (TYPE STREQUAL kernel)
+            # Mark .rsrc section as non-disposable non-pageable, as bugcheck code needs to access it
+            target_link_options(${MODULE} PRIVATE /SECTION:.rsrc,!DP )
+        endif()
     endif()
 
     if(RUNTIME_CHECKS)
