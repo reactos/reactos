@@ -540,6 +540,8 @@ function(add_importlibs _module)
     endforeach()
 endfunction()
 
+# Some helper lists
+list(APPEND KERNEL_MODULE_TYPES kerneldll kernelmodedriver wdmdriver)
 function(set_module_type MODULE TYPE)
     cmake_parse_arguments(__module "UNICODE" "IMAGEBASE" "ENTRYPOINT" ${ARGN})
 
