@@ -5,7 +5,6 @@ LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
 
 STRINGTABLE
 BEGIN
-    IDS_USAGE, "Usage: TASKLIST [/?] [/NH]\n"
     IDS_USAGE, "Użycie: TASKLIST [/?] [/NH]\n"
     IDS_DESCRIPTION, "\n\
 Desciption:\
