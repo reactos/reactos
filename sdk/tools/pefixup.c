@@ -24,6 +24,12 @@
 static const char* g_ApplicationName;
 static const char* g_Target;
 
+enum fixup_mode
+{
+    MODE_LOADCONFIG,
+    MODE_DRIVER
+};
+
 void *rva_to_ptr(unsigned char *buffer, PIMAGE_NT_HEADERS nt_header, DWORD rva)
 {
     unsigned int i;
@@ -121,6 +127,47 @@ static int add_loadconfig(unsigned char *buffer, PIMAGE_NT_HEADERS nt_header)
     return 1;
 }
 
+static int driver_fixup(unsigned char *buffer, PIMAGE_NT_HEADERS nt_header)
+{
+    /* GNU LD just doesn't know what a driver is, and has notably no idea of paged vs non-paged sections */
+    for (unsigned i = 0; i < nt_header->FileHeader.NumberOfSections; i++)
+    {
+        PIMAGE_SECTION_HEADER Section = IMAGE_FIRST_SECTION(nt_header) + i;
+
+        /* Known sections which can be discarded */
+        if (strncasecmp((char*)Section->Name, "INIT", 4) == 0)
+        {
+            Section->Characteristics |= IMAGE_SCN_MEM_DISCARDABLE;
+            continue;
+        }
+
+        /* Known sections which can be paged */
+        if ((strncasecmp((char*)Section->Name, "PAGE", 4) == 0)
+            || (strncasecmp((char*)Section->Name, ".reloc", 6) == 0))
+        {
+            continue;
+        }
+
+        /* If it's discardable, don't set the flag */
+        if (Section->Characteristics & IMAGE_SCN_MEM_DISCARDABLE)
+            continue;
+
+        Section->Characteristics |= IMAGE_SCN_MEM_NOT_PAGED;
+    }
+
+    return 0;
+}
+
+static
+void
+print_usage(void)
+{
+    printf("Usage: %s <mode> <filename>\n", g_ApplicationName);
+    printf("Where <mode> is on of the following:\n");
+    printf("  --loadconfig  Fix the LOAD_CONFIG directory entry\n");
+    printf("  --driver      Fix code and data sections for driver images\n");
+}
+
 int main(int argc, char **argv)
 {
     FILE* file;
@@ -128,19 +175,34 @@ int main(int argc, char **argv)
     unsigned char *buffer;
     PIMAGE_DOS_HEADER dos_header;
     int result = 1;
+    enum fixup_mode mode;
 
     g_ApplicationName = argv[0];
 
-    if (argc < 2)
+    if (argc != 3)
     {
-        printf("Usage: %s <filename>\n", g_ApplicationName);
+        print_usage();
         return 1;
     }
 
-    g_Target = argv[1];
+    if (strcmp(argv[1], "--loadconfig") == 0)
+    {
+        mode = MODE_LOADCONFIG;
+    }
+    else if (strcmp(argv[1], "--driver") == 0)
+    {
+        mode = MODE_DRIVER;
+    }
+    else
+    {
+        print_usage();
+        return 1;
+    }
+
+    g_Target = argv[2];
 
     /* Read the whole file to memory. */
-    file = fopen(argv[1], "r+b");
+    file = fopen(g_Target, "r+b");
     if (!file)
     {
         fprintf(stderr, "%s ERROR: Can't open '%s'.\n", g_ApplicationName, g_Target);
@@ -180,20 +242,19 @@ int main(int argc, char **argv)
 
         if (nt_header->Signature == IMAGE_NT_SIGNATURE)
         {
-            if (!add_loadconfig(buffer, nt_header))
+            if (mode == MODE_LOADCONFIG)
+                result = add_loadconfig(buffer, nt_header);
+            else
+                result = driver_fixup(buffer, nt_header);
+
+            if (!result)
             {
+                /* Success. Fix checksum and write to file */
                 fix_checksum(buffer, len, nt_header);
 
                 /* We could 'optimize by only writing the changed parts, but keep it simple for now */
                 fseek(file, 0, SEEK_SET);
                 fwrite(buffer, 1, len, file);
-
-                /* Success */
-                result = 0;
-            }
-            else
-            {
-                /* Error already printed inside add_loadconfig */
             }
         }
         else
