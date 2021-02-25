@@ -134,14 +134,14 @@ HRESULT WINAPI CAutoComplete::Init(HWND hwndEdit, IUnknown *punkACL, LPCOLESTR p
     if (m_options & ACO_RTLREADING)
         FIXME(" ACO_RTLREADING not supported\n");
 
-    if (!m_hwndEdit || !punkACL)
+    if (!hwndEdit || !punkACL)
         return E_INVALIDARG;
 
-    if (this->m_initialized)
+    if (m_initialized)
     {
         WARN("Autocompletion object is already initialized\n");
         /* This->hwndEdit is set to NULL when the edit window is destroyed. */
-        return this->m_hwndEdit ? E_FAIL : E_UNEXPECTED;
+        return m_hwndEdit ? E_FAIL : E_UNEXPECTED;
     }
 
     if (!SUCCEEDED(punkACL->QueryInterface(IID_PPV_ARG(IEnumString, &m_enumstr))))
@@ -150,11 +150,11 @@ HRESULT WINAPI CAutoComplete::Init(HWND hwndEdit, IUnknown *punkACL, LPCOLESTR p
         return  E_NOINTERFACE;
     }
 
-    this->m_hwndEdit = hwndEdit;
-    this->m_initialized = TRUE;
+    m_hwndEdit = hwndEdit;
+    m_initialized = TRUE;
 
     /* Keep at least one reference to the object until the edit window is destroyed. */
-    this->AddRef();
+    AddRef();
 
     /* If another AutoComplete object was previously assigned to this edit control,
        release it but keep the same callback on the control, to avoid an infinite
@@ -163,20 +163,20 @@ HRESULT WINAPI CAutoComplete::Init(HWND hwndEdit, IUnknown *punkACL, LPCOLESTR p
 
     if (prev && prev->m_initialized)
     {
-        this->m_wpOrigEditProc = prev->m_wpOrigEditProc;
+        m_wpOrigEditProc = prev->m_wpOrigEditProc;
         SetPropW(m_hwndEdit, autocomplete_propertyW, this);
         prev->m_wpOrigEditProc = NULL;
         prev->Release();
     }
     else
     {
-        SetPropW(this->m_hwndEdit, autocomplete_propertyW, (HANDLE)this);
-        this->m_wpOrigEditProc = (WNDPROC)SetWindowLongPtrW(m_hwndEdit, GWLP_WNDPROC, (LONG_PTR)ACEditSubclassProc);
+        SetPropW(m_hwndEdit, autocomplete_propertyW, (HANDLE)this);
+        m_wpOrigEditProc = (WNDPROC)SetWindowLongPtrW(m_hwndEdit, GWLP_WNDPROC, (LONG_PTR)ACEditSubclassProc);
     }
 
     if (m_options & ACO_AUTOSUGGEST)
     {
-        this->CreateListbox();
+        CreateListbox();
     }
 
     if (pwzsRegKeyPath)
