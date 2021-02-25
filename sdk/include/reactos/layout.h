@@ -2,7 +2,7 @@
  * PROJECT:     ReactOS headers
  * LICENSE:     LGPL-2.0-or-later (https://spdx.org/licenses/LGPL-2.0-or-later)
  * PURPOSE:     The layout engine of resizable dialog boxes / windows
- * COPYRIGHT:   Copyright 2020 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
+ * COPYRIGHT:   Copyright 2020-2021 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 #pragma once
 #include <assert.h>
@@ -41,6 +41,9 @@ _layout_ModifySystemMenu(LAYOUT_DATA *pData, BOOL bEnableResize)
 static __inline HDWP
 _layout_MoveGrip(LAYOUT_DATA *pData, HDWP hDwp OPTIONAL)
 {
+    if (!IsWindowVisible(pData->m_hwndGrip))
+        return hDwp;
+
     SIZE size = { GetSystemMetrics(SM_CXVSCROLL), GetSystemMetrics(SM_CYHSCROLL) };
     const UINT uFlags = SWP_NOACTIVATE | SWP_NOOWNERZORDER | SWP_NOZORDER;
     RECT rcClient;
@@ -62,7 +65,7 @@ _layout_MoveGrip(LAYOUT_DATA *pData, HDWP hDwp OPTIONAL)
 }
 
 static __inline void
-_layout_ShowGrip(LAYOUT_DATA *pData, BOOL bShow)
+LayoutShowGrip(LAYOUT_DATA *pData, BOOL bShow)
 {
     if (!bShow)
     {
@@ -135,6 +138,18 @@ _layout_ArrangeLayout(LAYOUT_DATA *pData)
 
     hDwp = _layout_MoveGrip(pData, hDwp);
     EndDeferWindowPos(hDwp);
+
+    /* STATIC controls need refreshing. */
+    for (iItem = 0; iItem < pData->m_cLayouts; ++iItem)
+    {
+        HWND hwndCtrl = pData->m_pLayouts[iItem].m_hwndCtrl;
+        WCHAR szClass[8];
+        GetClassNameW(hwndCtrl, szClass, _countof(szClass));
+        if (lstrcmpiW(szClass, L"STATIC") == 0)
+        {
+            InvalidateRect(hwndCtrl, NULL, TRUE);
+        }
+    }
 }
 
 static __inline void
@@ -185,19 +200,30 @@ LayoutUpdate(HWND ignored1, LAYOUT_DATA *pData, LPCVOID ignored2, UINT ignored3)
 static __inline void
 LayoutEnableResize(LAYOUT_DATA *pData, BOOL bEnable)
 {
-    _layout_ShowGrip(pData, bEnable);
+    LayoutShowGrip(pData, bEnable);
     _layout_ModifySystemMenu(pData, bEnable);
 }
 
 static __inline LAYOUT_DATA *
-LayoutInit(HWND hwndParent, const LAYOUT_INFO *pLayouts, UINT cLayouts)
+LayoutInit(HWND hwndParent, const LAYOUT_INFO *pLayouts, INT cLayouts)
 {
+    BOOL bShowGrip;
     SIZE_T cb;
     LAYOUT_DATA *pData = (LAYOUT_DATA *)HeapAlloc(GetProcessHeap(), 0, sizeof(LAYOUT_DATA));
     if (pData == NULL)
     {
         assert(0);
         return NULL;
+    }
+
+    if (cLayouts < 0) /* NOTE: If cLayouts was negative, then don't show size grip */
+    {
+        cLayouts = -cLayouts;
+        bShowGrip = FALSE;
+    }
+    else
+    {
+        bShowGrip = TRUE;
     }
 
     cb = cLayouts * sizeof(LAYOUT_INFO);
@@ -216,8 +242,11 @@ LayoutInit(HWND hwndParent, const LAYOUT_INFO *pLayouts, UINT cLayouts)
     assert(GetWindowLongPtrW(hwndParent, GWL_STYLE) & WS_SIZEBOX);
 
     pData->m_hwndParent = hwndParent;
+
     pData->m_hwndGrip = NULL;
-    LayoutEnableResize(pData, TRUE);
+    if (bShowGrip)
+        LayoutShowGrip(pData, bShowGrip);
+
     _layout_InitLayouts(pData);
     return pData;
 }
