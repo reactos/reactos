@@ -1437,6 +1437,12 @@ MmCompletePageWrite(
     /* The write is not in progress anymore */
     Pfn->u3.e1.WriteInProgress = 0;
 
+    if (Pfn->u1.Event != NULL)
+    {
+        KeSetEvent(Pfn->u1.Event, IO_NO_INCREMENT, FALSE);
+        Pfn->u1.Event = NULL;
+    }
+
     /* We're still dirty if we didn't succeed */
     if (!NT_SUCCESS(Status))
         Pfn->u3.e1.Modified = 1;
