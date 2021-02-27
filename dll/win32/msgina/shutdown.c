@@ -225,7 +225,7 @@ IsShowHibernateButtonActive(VOID)
     DWORD dwValue, dwSize;
 
     lRet = RegOpenKeyExW(HKEY_LOCAL_MACHINE,
-                         L"SOFTWARE\\Policies\\Microsoft\\Windows\\System",
+                         L"SOFTWARE\\Policies\\Microsoft\\Windows\\System\\Shutdown",
                          0, KEY_QUERY_VALUE, &hKey); 
     if (lRet == ERROR_SUCCESS)
     {
@@ -334,6 +334,8 @@ DrawIconOnOwnerDrawnButtons(
                     else if (pContext->bIsButtonHot[0] || (pdis->itemState & ODS_FOCUS))
                     {
                         y = BUTTON_SHUTDOWN_FOCUSED;
+                        /* If the owner draw button has keyboard focus or if it is hot make it the default button */
+                        SendMessageW(GetParent(pdis->hwndItem), DM_SETDEFID, pdis->CtlID, 0);
                     }
                     break;
                 }
@@ -357,6 +359,7 @@ DrawIconOnOwnerDrawnButtons(
                     else if (pContext->bIsButtonHot[1] || (pdis->itemState & ODS_FOCUS))
                     {
                         y = BUTTON_REBOOT_FOCUSED;
+                        SendMessageW(GetParent(pdis->hwndItem), DM_SETDEFID, pdis->CtlID, 0);
                     }
                     break;
                 }
@@ -387,6 +390,7 @@ DrawIconOnOwnerDrawnButtons(
                              (pdis->itemState & ODS_FOCUS))
                     {
                         y = BUTTON_SLEEP_FOCUSED;
+                        SendMessageW(GetParent(pdis->hwndItem), DM_SETDEFID, pdis->CtlID, 0);
                     }
                     break;
                 }
@@ -658,6 +662,73 @@ ReplaceSleepButtonWithHibernateButton(
 }
 
 VOID
+ReplaceRequiredButton(
+    HWND hDlg,
+    HINSTANCE hInstance,
+    BOOL bIsAltKeyPressed,
+    BOOL bIsSleepButtonReplaced)
+{
+    int destID = IDC_BUTTON_SLEEP;
+    int targetedID = IDC_BUTTON_HIBERNATE;
+    RECT rect;
+    WCHAR szBuffer[30];
+
+    /* If the sleep button has been already replaced earlier, bring sleep button back to its original position */
+    if (bIsSleepButtonReplaced)
+    {
+        destID = IDC_BUTTON_HIBERNATE;
+        targetedID = IDC_BUTTON_SLEEP;
+    }
+    
+    /* Get the position of the destination button */
+    GetWindowRect(GetDlgItem(hDlg, destID), &rect);
+
+    /* Get the corrected translated coordinates which is relative to the client window */  
+    MapWindowPoints(HWND_DESKTOP, hDlg, (LPPOINT)&rect, sizeof(RECT)/sizeof(POINT));
+
+    /* Set the position of targeted button and hide the destination button */
+    SetWindowPos(GetDlgItem(hDlg, targetedID),
+                 HWND_TOP,
+                 rect.left,
+                 rect.top,
+                 0, 0,
+                 SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
+
+    EnableWindow(GetDlgItem(hDlg, destID), FALSE);
+    ShowWindow(GetDlgItem(hDlg, destID), SW_HIDE);
+    EnableWindow(GetDlgItem(hDlg, targetedID), TRUE);
+    ShowWindow(GetDlgItem(hDlg, targetedID), SW_SHOW);
+    SetFocus(GetDlgItem(hDlg, targetedID));
+    
+    if (bIsAltKeyPressed)
+    {
+        if (!bIsSleepButtonReplaced)
+        {
+            GetDlgItemTextW(hDlg, IDC_BUTTON_HIBERNATE, szBuffer, _countof(szBuffer));
+            SetDlgItemTextW(hDlg, IDC_SLEEP_STATIC, szBuffer);
+        }
+        else
+        {
+            GetDlgItemTextW(hDlg, IDC_BUTTON_SLEEP, szBuffer, _countof(szBuffer));
+            SetDlgItemTextW(hDlg, IDC_SLEEP_STATIC, szBuffer);
+        }
+    }
+    else
+    {
+        if (!bIsSleepButtonReplaced)
+        {
+            LoadStringW(hInstance, IDS_SHUTDOWN_HIBERNATE, szBuffer, _countof(szBuffer));
+            SetDlgItemTextW(hDlg, IDC_SLEEP_STATIC, szBuffer);
+        }
+        else
+        {
+            LoadStringW(hInstance, IDS_SHUTDOWN_SLEEP, szBuffer, _countof(szBuffer));
+            SetDlgItemTextW(hDlg, IDC_SLEEP_STATIC, szBuffer);
+        }
+    }
+}
+
+VOID
 SaveShutdownSelState(
     IN DWORD ShutdownCode)
 {
@@ -887,14 +958,7 @@ ShutdownOnInit(
     }
     else if (pContext->bFriendlyUI)
     {
-        EnableWindow(GetDlgItem(hDlg, IDC_BUTTON_HIBERNATE), IsPwrHibernateAllowed());
-    }
-
-    /* Replace the disabled sleep button with hibernate button if it is enabled */
-    if (IsPwrHibernateAllowed() && !IsPwrSuspendAllowed())
-    {
-        ReplaceSleepButtonWithHibernateButton(hDlg, pgContext->hDllInstance, FALSE);
-        pContext->bIsSleepButtonReplaced = TRUE;
+        EnableWindow(GetDlgItem(hDlg, IDC_BUTTON_HIBERNATE), FALSE);
     }
 
     // if (pContext->ShutdownOptions & 0x80) {}
@@ -1174,16 +1238,10 @@ ShutdownDialog(
                                   hwndDlg,
                                   ShutdownDialogProc,
                                   (LPARAM)&Context);
-        
-        /* If both sleep and hibernate button are enabled and the dialog box is IDD_SHUTDOWN_FANCY, give the keyboard focus to sleep button */
-        if (ShutdownDialogId == IDD_SHUTDOWN_FANCY && IsPwrHibernateAllowed() && IsPwrSuspendAllowed())
-        {
-            PostMessageW(hDlg, WM_NEXTDLGCTL, 0, 0);
-        }
-        
+
         ShowWindow(hDlg, SW_SHOW);
 
-        /* Detect either Alt or Shift key have been pressed */
+        /* Detect either Alt or Shift key have been pressed or released */
         while (GetMessageW(&Msg, NULL, 0, 0))
         {
             if (!IsDialogMessageW(hDlg, &Msg))
@@ -1217,8 +1275,28 @@ ShutdownDialog(
                         {
                             if (IsPwrHibernateAllowed() && IsPwrSuspendAllowed())
                             {
-                                ReplaceSleepButtonWithHibernateButton(hDlg, pgContext->hDllInstance, bIsAltKeyPressed);
+                                ReplaceRequiredButton(hDlg, pgContext->hDllInstance, bIsAltKeyPressed, Context.bIsSleepButtonReplaced);
                                 Context.bIsSleepButtonReplaced = TRUE;
+                            }
+                        }
+                    }
+                }
+                break;
+
+                case WM_KEYUP:
+                {
+                    /*  If the Shift key has been released after being pressed, replace the hibernate button with sleep button again */
+                    if (Msg.wParam == VK_SHIFT)
+                    {
+                        if (ShutdownDialogId == IDD_SHUTDOWN_FANCY && Context.bIsSleepButtonReplaced)
+                        {
+                            if (IsPwrHibernateAllowed() && IsPwrSuspendAllowed())
+                            {
+                                ReplaceRequiredButton(hDlg,
+                                                      pgContext->hDllInstance,
+                                                      bIsAltKeyPressed,
+                                                      Context.bIsSleepButtonReplaced);
+                                Context.bIsSleepButtonReplaced = FALSE;
                             }
                         }
                     }

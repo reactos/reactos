@@ -1096,6 +1096,7 @@ int WINAPI RestartDialogEx(HWND hWndOwner, LPCWSTR lpwstrReason, DWORD uFlags, D
 #define BUTTON_LOG_OFF                  (CY_BITMAP + BUTTON_SWITCH_USER_FOCUSED)
 #define BUTTON_LOG_OFF_PRESSED          (CY_BITMAP + BUTTON_LOG_OFF)
 #define BUTTON_LOG_OFF_FOCUSED          (CY_BITMAP + BUTTON_LOG_OFF_PRESSED)
+#define BUTTON_SWITCH_USER_DISABLED     (CY_BITMAP + BUTTON_LOG_OFF_FOCUSED) // Temporary
 
 BOOL DrawIconOnOwnerDrawnButtons(DRAWITEMSTRUCT* pdis, PLOGOFF_DLG_CONTEXT pContext)
 {
@@ -1128,6 +1129,7 @@ BOOL DrawIconOnOwnerDrawnButtons(DRAWITEMSTRUCT* pdis, PLOGOFF_DLG_CONTEXT pCont
                     else if (pContext->bIsButtonHot[0] || (pdis->itemState & ODS_FOCUS))
                     {
                         y = BUTTON_LOG_OFF_FOCUSED;
+                        SendMessageW(GetParent(pdis->hwndItem), DM_SETDEFID, pdis->CtlID, 0);
                     }
                     break;
                 }
@@ -1151,6 +1153,16 @@ BOOL DrawIconOnOwnerDrawnButtons(DRAWITEMSTRUCT* pdis, PLOGOFF_DLG_CONTEXT pCont
                     else if (pContext->bIsButtonHot[1] || (pdis->itemState & ODS_FOCUS))
                     {
                         y = BUTTON_SWITCH_USER_FOCUSED;
+                        SendMessageW(GetParent(pdis->hwndItem), DM_SETDEFID, pdis->CtlID, 0);
+                    }
+
+                    /* 
+                     * Since switch user functionality isn't implemented yet therefore the button has been disabled
+                     * temporarily hence show the disabled state
+                     */
+                    else if (pdis->itemState & ODS_DISABLED)
+                    {
+                        y = BUTTON_SWITCH_USER_DISABLED;
                     }
                     break;
                 }
