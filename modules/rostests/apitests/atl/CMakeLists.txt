@@ -16,7 +16,8 @@ list(APPEND SOURCE
     CRegKey.cpp
     CSimpleArray.cpp
     CSimpleMap.cpp
-    CString.cpp)
+    CString.cpp
+    SubclassWindow.cpp)
 
 list(APPEND PCH_SKIP_SOURCE
     testlist.c)

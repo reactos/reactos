@@ -1,0 +1,16 @@
+*.opendb
+*.db
+x64/
+.vs/
+CAtlArray/
+CAtlFileMapping/
+CAtlList/
+CComHeapPtr/
+CComObject/
+CComQIPtr/
+CHeapPtrList/
+CImage/
+CSimpleArray/
+CSimpleMap/
+CString/
+SubclassWindow/

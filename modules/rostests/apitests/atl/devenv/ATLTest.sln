@@ -25,6 +25,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CHeapPtrList", "CHeapPtrLis
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "CComHeapPtr", "CComHeapPtr.vcxproj", "{F10E34E3-FB53-4650-985A-28BD1905D65C}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "SubclassWindow", "SubclassWindow.vcxproj", "{ABACDAE7-3936-17E1-7525-96C4A7DA4CD2}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -121,6 +123,14 @@ Global
 		{F10E34E3-FB53-4650-985A-28BD1905D65C}.Release|x64.Build.0 = Release|x64
 		{F10E34E3-FB53-4650-985A-28BD1905D65C}.Release|x86.ActiveCfg = Release|Win32
 		{F10E34E3-FB53-4650-985A-28BD1905D65C}.Release|x86.Build.0 = Release|Win32
+		{ABACDAE7-3936-17E1-7525-96C4A7DA4CD2}.Debug|x64.ActiveCfg = Debug|x64
+		{ABACDAE7-3936-17E1-7525-96C4A7DA4CD2}.Debug|x64.Build.0 = Debug|x64
+		{ABACDAE7-3936-17E1-7525-96C4A7DA4CD2}.Debug|x86.ActiveCfg = Debug|Win32
+		{ABACDAE7-3936-17E1-7525-96C4A7DA4CD2}.Debug|x86.Build.0 = Debug|Win32
+		{ABACDAE7-3936-17E1-7525-96C4A7DA4CD2}.Release|x64.ActiveCfg = Release|x64
+		{ABACDAE7-3936-17E1-7525-96C4A7DA4CD2}.Release|x64.Build.0 = Release|x64
+		{ABACDAE7-3936-17E1-7525-96C4A7DA4CD2}.Release|x86.ActiveCfg = Release|Win32
+		{ABACDAE7-3936-17E1-7525-96C4A7DA4CD2}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
