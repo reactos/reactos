@@ -237,9 +237,7 @@ LayoutInit(HWND hwndParent, const LAYOUT_INFO *pLayouts, INT cLayouts)
     }
     memcpy(pData->m_pLayouts, pLayouts, cb);
 
-    /* NOTE: The parent window must have initially WS_SIZEBOX style. */
     assert(IsWindow(hwndParent));
-    assert(GetWindowLongPtrW(hwndParent, GWL_STYLE) & WS_SIZEBOX);
 
     pData->m_hwndParent = hwndParent;
 
