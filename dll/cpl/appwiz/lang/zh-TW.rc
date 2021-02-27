@@ -1,10 +1,8 @@
 /* 
  * Traditional Chinese resource for appwiz (dll/cpl/appwiz/lang/zh-TW.rc)
- * TRANSLATOR:  Henry Tang Ih (henrytang2 [at] hotmail [dot] com)
- *              Luo Yufan (njlyf2011 [at] hotmail [dot] com)
- *              Aobi Chan CL (eason066 [at] gmail [dot] com)
- * CREATED:     2016
- * MODIFIED:    2018, 2020
+ * TRANSLATOR:  2016 Henry Tang Ih (henrytang2 [at] hotmail [dot] com)
+ *              2018 Luo Yufan (njlyf2011 [at] hotmail [dot] com)
+ *              2020 - 2021 Chan CL (eason066 [at] gmail [dot] com)
  */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
