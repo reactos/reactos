@@ -2095,6 +2095,7 @@ static INT LISTVIEW_UpdateHScroll(LISTVIEW_INFO *infoPtr)
     dx -= SetScrollInfo(infoPtr->hwndSelf, SB_HORZ, &horzInfo, TRUE);
     TRACE("horzInfo=%s\n", debugscrollinfo(&horzInfo));
 
+#ifndef __REACTOS__
     /* Update the Header Control */
     if (infoPtr->hwndHeader)
     {
@@ -2104,6 +2105,7 @@ static INT LISTVIEW_UpdateHScroll(LISTVIEW_INFO *infoPtr)
     }
 
     LISTVIEW_UpdateSize(infoPtr);
+#endif
     return dx;
 }
 
@@ -2154,7 +2156,9 @@ static INT LISTVIEW_UpdateVScroll(LISTVIEW_INFO *infoPtr)
     dy -= SetScrollInfo(infoPtr->hwndSelf, SB_VERT, &vertInfo, TRUE);
     TRACE("vertInfo=%s\n", debugscrollinfo(&vertInfo));
 
+#ifndef __REACTOS__
     LISTVIEW_UpdateSize(infoPtr);
+#endif
     return dy;
 }
 
