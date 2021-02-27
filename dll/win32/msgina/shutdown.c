@@ -625,43 +625,6 @@ CreateToolTipForButtons(
 }
 
 VOID
-ReplaceSleepButtonWithHibernateButton(
-    HWND hDlg,
-    HINSTANCE hInstance,
-    BOOL bIsAltKeyPressed)
-{
-    RECT rect;
-    WCHAR szBuffer[30];
-
-    /* Get the position of the sleep button */
-    GetWindowRect(GetDlgItem(hDlg, IDC_BUTTON_SLEEP), &rect);
-
-    /* Get the corrected translated coordinates which is relative to the client window */  
-    MapWindowPoints(HWND_DESKTOP, hDlg, (LPPOINT)&rect, sizeof(RECT)/sizeof(POINT));
-
-    /* Set the position of hibernate button and hide the sleep button */
-    SetWindowPos(GetDlgItem(hDlg, IDC_BUTTON_HIBERNATE),
-                 HWND_TOP,
-                 rect.left,
-                 rect.top,
-                 0, 0,
-                 SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
-
-    ShowWindow(GetDlgItem(hDlg, IDC_BUTTON_SLEEP), SW_HIDE);
-    
-    if (bIsAltKeyPressed)
-    {
-        GetDlgItemTextW(hDlg, IDC_BUTTON_HIBERNATE, szBuffer, _countof(szBuffer));
-        SetDlgItemTextW(hDlg, IDC_SLEEP_STATIC, szBuffer);
-    }
-    else
-    {
-        LoadStringW(hInstance, IDS_SHUTDOWN_HIBERNATE, szBuffer, _countof(szBuffer));
-        SetDlgItemTextW(hDlg, IDC_SLEEP_STATIC, szBuffer);
-    }
-}
-
-VOID
 ReplaceRequiredButton(
     HWND hDlg,
     HINSTANCE hInstance,
@@ -1275,7 +1238,10 @@ ShutdownDialog(
                         {
                             if (IsPwrHibernateAllowed() && IsPwrSuspendAllowed())
                             {
-                                ReplaceRequiredButton(hDlg, pgContext->hDllInstance, bIsAltKeyPressed, Context.bIsSleepButtonReplaced);
+                                ReplaceRequiredButton(hDlg,
+                                                      pgContext->hDllInstance, 
+                                                      bIsAltKeyPressed, 
+                                                      Context.bIsSleepButtonReplaced);
                                 Context.bIsSleepButtonReplaced = TRUE;
                             }
                         }
