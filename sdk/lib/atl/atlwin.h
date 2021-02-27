@@ -1504,6 +1504,16 @@ public:
         return TRUE;
     }
 
+    HWND UnsubclassWindow()
+    {
+        CWindowImplBaseT<TBase, TWinTraits> *pThis;
+        pThis = reinterpret_cast<CWindowImplBaseT<TBase, TWinTraits>*>(this);
+        HWND hwndOld = pThis->m_hWnd;
+        pThis->m_hWnd = NULL;
+        m_pfnSuperWindowProc = ::DefWindowProc;
+        return hwndOld;
+    }
+
     virtual WNDPROC GetWindowProc()
     {
         return WindowProc;
@@ -1717,6 +1727,21 @@ public:
         m_pfnSuperWindowProc = oldWindowProc;
         pThis->m_hWnd = hWnd;
         return TRUE;
+    }
+
+    HWND UnsubclassWindow(BOOL bForce = FALSE)
+    {
+        if (!bForce)
+        {
+            // TODO:
+            return NULL;
+        }
+        CContainedWindowT<TBase> *pThis;
+        pThis = reinterpret_cast<CContainedWindowT<TBase> *>(this);
+        HWND hwndOld = pThis->m_hWnd;
+        pThis->m_hWnd = NULL;
+        m_pfnSuperWindowProc = ::DefWindowProc;
+        return hwndOld;
     }
 
     static LRESULT CALLBACK StartWindowProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
