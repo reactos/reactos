@@ -1,7 +1,7 @@
 /*
  *      Updated by Saibamen (July, 2015)
  *      Updated by BlackDragonDv (January, 2018)
- *      Updated by Piotr Hetnarowicz <piotrhwz@gmail.com> (August, 2020)
+ *      Updated by Piotr Hetnarowicz <piotrhwz@gmail.com> (February, 2021)
  */
 
 LANGUAGE LANG_POLISH, SUBLANG_DEFAULT
@@ -505,11 +505,11 @@ FONT 8, "MS Shell Dlg"
 BEGIN
     CONTROL IDB_DLG_BG, IDC_STATIC, "STATIC", SS_BITMAP | SS_REALSIZECONTROL, 0, 0, 208, 122
     CONTROL IDB_REACTOS_FLAG, IDC_STATIC, "STATIC", SS_BITMAP, 176, 1, 32, 26
-    PUSHBUTTON "&Switch User", IDC_SWITCH_USER_BUTTON, 55, 46, 22, 20, BS_OWNERDRAW | WS_DISABLED | WS_GROUP
+    PUSHBUTTON "&Przełącz użytkownika", IDC_SWITCH_USER_BUTTON, 55, 46, 22, 20, BS_OWNERDRAW | WS_DISABLED | WS_GROUP
     PUSHBUTTON "&Wyloguj", IDC_LOG_OFF_BUTTON, 132, 46, 22, 20, BS_OWNERDRAW
     PUSHBUTTON "Anuluj", IDCANCEL, 162, 103, 40, 12, WS_GROUP | BS_FLAT
     LTEXT "Wylogowywanie z systemu ReactOS", IDC_LOG_OFF_TEXT_STATIC, 4, 7, 170, 19
-    CTEXT "Switch User", IDC_SWITCH_USER_STATIC, 41, 70, 51, 11
+    CTEXT "Przełącz użytkownika", IDC_SWITCH_USER_STATIC, 41, 70, 51, 11
     CTEXT "Wyloguj", IDC_LOG_OFF_STATIC, 118, 70, 51, 11
 END
 
@@ -1030,8 +1030,8 @@ BEGIN
     IDS_SYSTEMFOLDER "Folder systemowy"
 
     /* For IDD_LOG_OFF_FANCY */
-    IDS_LOG_OFF_DESC "Closes your programs and ends your ReactOS session."
-    IDS_SWITCH_USER_DESC "Lets another user log on while your programs and files remain open.\r\n\r\n(You can also switch users by pressing the Windows logo key + L.)"
+    IDS_LOG_OFF_DESC "Zamyka programy i kończy sesję systemu ReactOS."
+    IDS_SWITCH_USER_DESC "Umożliwia innemu użytkownikowi zalogowanie się, podczas gdy Twoje programy i pliki są otwarte.\r\n\r\n(Możesz także przełączać użytkowników naciskając klawisze logo + L.)"
     IDS_LOG_OFF_TITLE "Wyloguj"
     IDS_SWITCH_USER_TITLE "Switch User"
 END
