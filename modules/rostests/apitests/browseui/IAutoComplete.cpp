@@ -172,7 +172,7 @@ static VOID DoWordBreakProc(EDITWORDBREAKPROC fn)
 {
 #ifdef OUTPUT_TABLE
     WORD wType1, wType2, wType3;
-    for (DWORD i = 1; i <= 0xFFFF; ++i)
+    for (DWORD i = 0; i <= 0xFFFF; ++i)
     {
         WCHAR ch = (WCHAR)i;
         GetStringTypeW(CT_CTYPE1, &ch, 1, &wType1);
@@ -203,7 +203,7 @@ static VOID DoWordBreakProc(EDITWORDBREAKPROC fn)
         { 0xff3d, 0xff3d }, { 0xff40, 0xff40 }, { 0xff5b, 0xff5e }, { 0xff61, 0xff64 },
         { 0xff67, 0xff70 }, { 0xff9e, 0xff9f }, { 0xffe9, 0xffe9 }, { 0xffeb, 0xffeb },
     };
-    for (DWORD i = 1; i <= 0xFFFF; ++i)
+    for (DWORD i = 0; i <= 0xFFFF; ++i)
     {
         WCHAR ch = (WCHAR)i;
         RANGE range = { ch, ch };
