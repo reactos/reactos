@@ -246,7 +246,7 @@ static VOID DoTestCase(INT x, INT y, INT cx, INT cy, LPWSTR *pList, UINT nCount)
     ok_hr(hr, S_OK);
 
     IUnknown *punk = static_cast<IUnknown *>(static_cast<IEnumString *>(pEnum));
-    hr = pAC->Init(hwndEdit, punk, NULL, NULL); // IAutoComplete::Init 0x80004002
+    hr = pAC->Init(hwndEdit, punk, NULL, NULL); // IAutoComplete::Init
     ok_hr(hr, S_OK);
 
     PostMessageW(hwndEdit, WM_CHAR, L't', 0);
