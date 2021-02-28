@@ -356,7 +356,7 @@ START_TEST(SubclassWindow)
         hwnd2 = Ctrl2.UnsubclassWindow(TRUE);
         ok(hwnd2 == NULL, "hwnd2 was %p\n", hwnd2);
         fn2 = Ctrl2.m_pfnSuperWindowProc;
-        ok(fn2 == fn1, "fn2 was %p\n", fn2);
+        ok(fn2 == DefWindowProc, "fn2 was %p\n", fn2);
         ok(Ctrl2.m_hWnd == NULL, "Ctrl2.m_hWnd was %p\n", Ctrl2.m_hWnd);
         DestroyWindow(hwnd2);
         ok(Ctrl2.m_hWnd == NULL, "Ctrl2.m_hWnd was %p\n", Ctrl2.m_hWnd);
@@ -400,7 +400,7 @@ START_TEST(SubclassWindow)
         hwnd2 = Ctrl2.UnsubclassWindow(TRUE);
         ok(hwnd2 == NULL, "hwnd2 was %p\n", hwnd2);
         fn2 = Ctrl2.m_pfnSuperWindowProc;
-        ok(fn2 != DefWindowProc, "fn2 was %p\n", fn2); // ntdll.dll!NtdllEditWndProc_W
+        ok(fn2 == DefWindowProc, "fn2 was %p\n", fn2);
         ok(Ctrl2.m_hWnd == NULL, "Ctrl2.m_hWnd was %p\n", Ctrl2.m_hWnd);
         DestroyWindow(hwnd2);
         ok(Ctrl2.m_hWnd == NULL, "Ctrl2.m_hWnd was %p\n", Ctrl2.m_hWnd);
