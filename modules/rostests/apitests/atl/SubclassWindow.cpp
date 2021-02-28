@@ -94,6 +94,8 @@ START_TEST(SubclassWindow)
     HWND hwnd1, hwnd2;
     WNDPROC fn1, fn2;
     BOOL b;
+    trace("DefWindowProc: %p\n", DefWindowProc);
+    trace("MyWindowProc: %p\n", MyWindowProc);
 
     //
     // Ctrl1
