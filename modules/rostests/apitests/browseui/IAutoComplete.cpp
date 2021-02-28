@@ -148,9 +148,99 @@ protected:
     LPWSTR *m_pList;
 };
 
+struct RANGE
+{
+    WCHAR from, to;
+};
+
+//#define OUTPUT_TABLE
+
+#ifndef OUTPUT_TABLE
+static int __cdecl RangeCompare(const void *x, const void *y)
+{
+    const RANGE *a = (const RANGE *)x;
+    const RANGE *b = (const RANGE *)y;
+    if (a->to < b->from)
+        return -1;
+    if (b->to < a->from)
+        return 1;
+    return 0;
+}
+#endif
+
 static VOID DoWordBreakProc(EDITWORDBREAKPROC fn)
 {
-    // TODO:
+#ifdef OUTPUT_TABLE
+    WORD wType1, wType2, wType3;
+    for (DWORD i = 1; i <= 0xDFFF; ++i)
+    {
+        WCHAR ch = (WCHAR)i;
+        GetStringTypeW(CT_CTYPE1, &ch, 1, &wType1);
+        GetStringTypeW(CT_CTYPE2, &ch, 1, &wType2);
+        GetStringTypeW(CT_CTYPE3, &ch, 1, &wType3);
+        BOOL b = fn(&ch, 0, 1, WB_ISDELIMITER);
+        trace("%u\t0x%04x\t0x%04x\t0x%04x\t0x%04x\n", b, wType1, wType2, wType3, ch);
+    }
+    for (DWORD i = 0xF900; i <= 0xFFFF; ++i)
+    {
+        WCHAR ch = (WCHAR)i;
+        GetStringTypeW(CT_CTYPE1, &ch, 1, &wType1);
+        GetStringTypeW(CT_CTYPE2, &ch, 1, &wType2);
+        GetStringTypeW(CT_CTYPE3, &ch, 1, &wType3);
+        BOOL b = fn(&ch, 0, 1, WB_ISDELIMITER);
+        trace("%u\t0x%04x\t0x%04x\t0x%04x\t0x%04x\n", b, wType1, wType2, wType3, ch);
+    }
+#else
+    static const RANGE s_ranges[] =
+    {
+        { 0x0009, 0x0009 }, { 0x0020, 0x002f }, { 0x003a, 0x0040 }, { 0x005b, 0x0060 },
+        { 0x007b, 0x007e }, { 0x00ab, 0x00ab }, { 0x00ad, 0x00ad }, { 0x00bb, 0x00bb },
+        { 0x02c7, 0x02c7 }, { 0x02c9, 0x02c9 }, { 0x055d, 0x055d }, { 0x060c, 0x060c },
+        { 0x2002, 0x200b }, { 0x2013, 0x2014 }, { 0x2016, 0x2016 }, { 0x2018, 0x2018 },
+        { 0x201c, 0x201d }, { 0x2022, 0x2022 }, { 0x2025, 0x2027 }, { 0x2039, 0x203a },
+        { 0x2045, 0x2046 }, { 0x207d, 0x207e }, { 0x208d, 0x208e }, { 0x226a, 0x226b },
+        { 0x2574, 0x2574 }, { 0x3001, 0x3003 }, { 0x3005, 0x3005 }, { 0x3008, 0x3011 },
+        { 0x3014, 0x301b }, { 0x301d, 0x301e }, { 0x3041, 0x3041 }, { 0x3043, 0x3043 },
+        { 0x3045, 0x3045 }, { 0x3047, 0x3047 }, { 0x3049, 0x3049 }, { 0x3063, 0x3063 },
+        { 0x3083, 0x3083 }, { 0x3085, 0x3085 }, { 0x3087, 0x3087 }, { 0x308e, 0x308e },
+        { 0x309b, 0x309e }, { 0x30a1, 0x30a1 }, { 0x30a3, 0x30a3 }, { 0x30a5, 0x30a5 },
+        { 0x30a7, 0x30a7 }, { 0x30a9, 0x30a9 }, { 0x30c3, 0x30c3 }, { 0x30e3, 0x30e3 },
+        { 0x30e5, 0x30e5 }, { 0x30e7, 0x30e7 }, { 0x30ee, 0x30ee }, { 0x30f5, 0x30f6 },
+        { 0x30fc, 0x30fe }, { 0xfd3e, 0xfd3f }, { 0xfe30, 0xfe31 }, { 0xfe33, 0xfe44 },
+        { 0xfe4f, 0xfe51 }, { 0xfe59, 0xfe5e }, { 0xff08, 0xff09 }, { 0xff0c, 0xff0c },
+        { 0xff0e, 0xff0e }, { 0xff1c, 0xff1c }, { 0xff1e, 0xff1e }, { 0xff3b, 0xff3b },
+        { 0xff3d, 0xff3d }, { 0xff40, 0xff40 }, { 0xff5b, 0xff5e }, { 0xff61, 0xff64 },
+        { 0xff67, 0xff70 }, { 0xff9e, 0xff9f }, { 0xffe9, 0xffe9 }, { 0xffeb, 0xffeb },
+    };
+    for (DWORD i = 1; i <= 0xDFFF; ++i)
+    {
+        WCHAR ch = (WCHAR)i;
+        RANGE range = { ch, ch };
+        BOOL b = fn(&ch, 0, 1, WB_ISDELIMITER);
+        if (bsearch(&range, s_ranges, _countof(s_ranges), sizeof(RANGE), RangeCompare))
+        {
+            ok(b, "ch: 0x%04x\n", ch);
+        }
+        else
+        {
+            ok(!b, "ch: 0x%04x\n", ch);
+        }
+    }
+    for (DWORD i = 0xF900; i <= 0xFFFF; ++i)
+    {
+        WCHAR ch = (WCHAR)i;
+        RANGE range = { ch, ch };
+        BOOL b = fn(&ch, 0, 1, WB_ISDELIMITER);
+        if (bsearch(&range, s_ranges, _countof(s_ranges), sizeof(RANGE), RangeCompare))
+        {
+            ok(b, "ch: 0x%04x\n", ch);
+        }
+        else
+        {
+            ok(!b, "ch: 0x%04x\n", ch);
+        }
+    }
+#endif
 }
 
 static VOID DoTest1(VOID)
@@ -217,7 +307,7 @@ static VOID DoTest1(VOID)
     style = (LONG)GetWindowLongPtrW(hwndDropDown, GWL_STYLE);
     exstyle = (LONG)GetWindowLongPtrW(hwndDropDown, GWL_EXSTYLE);
     id = GetWindowLongPtrW(hwndDropDown, GWLP_ID);
-    ok_long(style, 0x86800000);
+    ok(style == 0x86800000 || style == 0x96800000, "style was 0x%08lx\n", style);
     ok_long(exstyle, 0x8c);
     ok_long((LONG)id, 0);
 
