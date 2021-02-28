@@ -79,7 +79,7 @@ typedef struct _LSAP_LOGON_CONTEXT
     LIST_ENTRY Entry;
     HANDLE ClientProcessHandle;
     HANDLE ConnectionHandle;
-    BOOL Untrusted;
+    BOOL TrustedCaller;
 } LSAP_LOGON_CONTEXT, *PLSAP_LOGON_CONTEXT;
 
 typedef struct _SAMPR_ULONG_ARRAY
