@@ -172,16 +172,7 @@ static VOID DoWordBreakProc(EDITWORDBREAKPROC fn)
 {
 #ifdef OUTPUT_TABLE
     WORD wType1, wType2, wType3;
-    for (DWORD i = 1; i <= 0xDFFF; ++i)
-    {
-        WCHAR ch = (WCHAR)i;
-        GetStringTypeW(CT_CTYPE1, &ch, 1, &wType1);
-        GetStringTypeW(CT_CTYPE2, &ch, 1, &wType2);
-        GetStringTypeW(CT_CTYPE3, &ch, 1, &wType3);
-        BOOL b = fn(&ch, 0, 1, WB_ISDELIMITER);
-        trace("%u\t0x%04x\t0x%04x\t0x%04x\t0x%04x\n", b, wType1, wType2, wType3, ch);
-    }
-    for (DWORD i = 0xF900; i <= 0xFFFF; ++i)
+    for (DWORD i = 1; i <= 0xFFFF; ++i)
     {
         WCHAR ch = (WCHAR)i;
         GetStringTypeW(CT_CTYPE1, &ch, 1, &wType1);
@@ -212,32 +203,18 @@ static VOID DoWordBreakProc(EDITWORDBREAKPROC fn)
         { 0xff3d, 0xff3d }, { 0xff40, 0xff40 }, { 0xff5b, 0xff5e }, { 0xff61, 0xff64 },
         { 0xff67, 0xff70 }, { 0xff9e, 0xff9f }, { 0xffe9, 0xffe9 }, { 0xffeb, 0xffeb },
     };
-    for (DWORD i = 1; i <= 0xDFFF; ++i)
+    for (DWORD i = 1; i <= 0xFFFF; ++i)
     {
         WCHAR ch = (WCHAR)i;
         RANGE range = { ch, ch };
         BOOL b = fn(&ch, 0, 1, WB_ISDELIMITER);
         if (bsearch(&range, s_ranges, _countof(s_ranges), sizeof(RANGE), RangeCompare))
         {
-            ok(b, "ch: 0x%04x\n", ch);
+            ok(b, "ch: %d, 0x%04x\n", b, ch);
         }
         else
         {
-            ok(!b, "ch: 0x%04x\n", ch);
-        }
-    }
-    for (DWORD i = 0xF900; i <= 0xFFFF; ++i)
-    {
-        WCHAR ch = (WCHAR)i;
-        RANGE range = { ch, ch };
-        BOOL b = fn(&ch, 0, 1, WB_ISDELIMITER);
-        if (bsearch(&range, s_ranges, _countof(s_ranges), sizeof(RANGE), RangeCompare))
-        {
-            ok(b, "ch: 0x%04x\n", ch);
-        }
-        else
-        {
-            ok(!b, "ch: 0x%04x\n", ch);
+            ok(!b, "ch: %d, 0x%04x\n", b, ch);
         }
     }
 #endif
