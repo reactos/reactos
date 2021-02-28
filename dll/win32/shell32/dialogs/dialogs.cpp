@@ -1129,7 +1129,6 @@ BOOL DrawIconOnOwnerDrawnButtons(DRAWITEMSTRUCT* pdis, PLOGOFF_DLG_CONTEXT pCont
                     else if (pContext->bIsButtonHot[0] || (pdis->itemState & ODS_FOCUS))
                     {
                         y = BUTTON_LOG_OFF_FOCUSED;
-                        SendMessageW(GetParent(pdis->hwndItem), DM_SETDEFID, pdis->CtlID, 0);
                     }
                     break;
                 }
@@ -1153,7 +1152,6 @@ BOOL DrawIconOnOwnerDrawnButtons(DRAWITEMSTRUCT* pdis, PLOGOFF_DLG_CONTEXT pCont
                     else if (pContext->bIsButtonHot[1] || (pdis->itemState & ODS_FOCUS))
                     {
                         y = BUTTON_SWITCH_USER_FOCUSED;
-                        SendMessageW(GetParent(pdis->hwndItem), DM_SETDEFID, pdis->CtlID, 0);
                     }
 
                     /* 
@@ -1170,7 +1168,13 @@ BOOL DrawIconOnOwnerDrawnButtons(DRAWITEMSTRUCT* pdis, PLOGOFF_DLG_CONTEXT pCont
             break;
         }
     }
-    
+
+    /* If the owner draw button has keyboard focus make it the default button */
+    if (pdis->itemState & ODS_FOCUS)
+    {
+        SendMessageW(GetParent(pdis->hwndItem), DM_SETDEFID, pdis->CtlID, 0);
+    }
+
     /* Draw it on the required button */
     bRet = BitBlt(pdis->hDC,
                   (rect.right - rect.left - CX_BITMAP) / 2,
@@ -1441,7 +1445,7 @@ INT_PTR CALLBACK LogOffDialogProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lP
         {
             /* Either make background transparent or fill it with color for required static controls */
             HDC hdcStatic = (HDC)wParam;            
-            INT_PTR StaticID = GetWindowLong((HWND)lParam, GWL_ID);
+            UINT StaticID = (UINT)GetWindowLongPtrW((HWND)lParam, GWL_ID);
 
             switch (StaticID)
             {
@@ -1504,7 +1508,7 @@ EXTERN_C int WINAPI LogoffWindowsDialog(HWND hWndOwner)
     }
 
     hWndChild = CreateDialogParamW(shell32_hInstance, MAKEINTRESOURCEW(LogoffDialogID), parent, LogOffDialogProc, (LPARAM)&Context);
-    ShowWindow(hWndChild, SW_SHOW);
+    ShowWindow(hWndChild, SW_SHOWNORMAL);
 
      /* Detect either Alt key has been pressed */
     while (GetMessageW(&Msg, NULL, 0, 0))

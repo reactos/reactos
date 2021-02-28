@@ -300,6 +300,7 @@ ForceFriendlyUI(VOID)
     return FALSE;
 }
 
+static
 BOOL
 DrawIconOnOwnerDrawnButtons(
     DRAWITEMSTRUCT* pdis,
@@ -334,8 +335,6 @@ DrawIconOnOwnerDrawnButtons(
                     else if (pContext->bIsButtonHot[0] || (pdis->itemState & ODS_FOCUS))
                     {
                         y = BUTTON_SHUTDOWN_FOCUSED;
-                        /* If the owner draw button has keyboard focus or if it is hot make it the default button */
-                        SendMessageW(GetParent(pdis->hwndItem), DM_SETDEFID, pdis->CtlID, 0);
                     }
                     break;
                 }
@@ -359,7 +358,6 @@ DrawIconOnOwnerDrawnButtons(
                     else if (pContext->bIsButtonHot[1] || (pdis->itemState & ODS_FOCUS))
                     {
                         y = BUTTON_REBOOT_FOCUSED;
-                        SendMessageW(GetParent(pdis->hwndItem), DM_SETDEFID, pdis->CtlID, 0);
                     }
                     break;
                 }
@@ -390,7 +388,6 @@ DrawIconOnOwnerDrawnButtons(
                              (pdis->itemState & ODS_FOCUS))
                     {
                         y = BUTTON_SLEEP_FOCUSED;
-                        SendMessageW(GetParent(pdis->hwndItem), DM_SETDEFID, pdis->CtlID, 0);
                     }
                     break;
                 }
@@ -398,7 +395,13 @@ DrawIconOnOwnerDrawnButtons(
             break;
         }
     }
-    
+
+    /* If the owner draw button has keyboard focus make it the default button */
+    if (pdis->itemState & ODS_FOCUS)
+    {
+        SendMessageW(GetParent(pdis->hwndItem), DM_SETDEFID, pdis->CtlID, 0);
+    }
+
     /* Draw it on the required button */
     bRet = BitBlt(pdis->hDC,
                   (rect.right - rect.left - CX_BITMAP) / 2,
@@ -633,6 +636,7 @@ ReplaceRequiredButton(
 {
     int destID = IDC_BUTTON_SLEEP;
     int targetedID = IDC_BUTTON_HIBERNATE;
+    HWND hwndDest, hwndTarget;
     RECT rect;
     WCHAR szBuffer[30];
 
@@ -643,25 +647,27 @@ ReplaceRequiredButton(
         targetedID = IDC_BUTTON_SLEEP;
     }
     
+    hwndDest = GetDlgItem(hDlg, destID);
+    hwndTarget = GetDlgItem(hDlg, targetedID);
+    
     /* Get the position of the destination button */
-    GetWindowRect(GetDlgItem(hDlg, destID), &rect);
+    GetWindowRect(hwndDest, &rect);
 
     /* Get the corrected translated coordinates which is relative to the client window */  
     MapWindowPoints(HWND_DESKTOP, hDlg, (LPPOINT)&rect, sizeof(RECT)/sizeof(POINT));
 
     /* Set the position of targeted button and hide the destination button */
-    SetWindowPos(GetDlgItem(hDlg, targetedID),
+    SetWindowPos(hwndTarget,
                  HWND_TOP,
-                 rect.left,
-                 rect.top,
+                 rect.left, rect.top,
                  0, 0,
                  SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE);
 
-    EnableWindow(GetDlgItem(hDlg, destID), FALSE);
-    ShowWindow(GetDlgItem(hDlg, destID), SW_HIDE);
-    EnableWindow(GetDlgItem(hDlg, targetedID), TRUE);
-    ShowWindow(GetDlgItem(hDlg, targetedID), SW_SHOW);
-    SetFocus(GetDlgItem(hDlg, targetedID));
+    EnableWindow(hwndDest, FALSE);
+    ShowWindow(hwndDest, SW_HIDE);
+    EnableWindow(hwndTarget, TRUE);
+    ShowWindow(hwndTarget, SW_SHOW);
+    SetFocus(hwndTarget);
     
     if (bIsAltKeyPressed)
     {
@@ -1105,7 +1111,7 @@ ShutdownDialogProc(
         {
             /* Either make background transparent or fill it with color for required static controls */
             HDC hdcStatic = (HDC)wParam;            
-            INT_PTR StaticID = GetWindowLong((HWND)lParam, GWL_ID);
+            UINT StaticID = (UINT)GetWindowLongPtrW((HWND)lParam, GWL_ID);
 
             switch (StaticID)
             {

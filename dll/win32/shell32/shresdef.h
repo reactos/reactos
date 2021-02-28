@@ -1,7 +1,7 @@
 /*
  * Copyright 2000 Juergen Schmied
  * Copyright 2017 Katayama Hirofumi MZ
- * Copyright 2020 Arnav Bhatt
+ * Copyright 2021 Arnav Bhatt
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
