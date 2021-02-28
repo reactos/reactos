@@ -1,10 +1,9 @@
 /*
- * PROJECT:         ReactOS api tests
- * LICENSE:         GPLv2+ - See COPYING in the top level directory
- * PURPOSE:         Test for IAutoComplete objects
- * PROGRAMMER:      Katayama Hirofumi MZ
+ * PROJECT:   ReactOS api tests
+ * LICENSE:   GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:   Test for IAutoComplete objects
+ * COPYRIGHT: Copyright 2021 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
-
 #define _UNICODE
 #define UNICODE
 #include <apitest.h>
