@@ -1,6 +1,7 @@
 /*
  * Copyright 2000 Juergen Schmied
  * Copyright 2017 Katayama Hirofumi MZ
+ * Copyright 2021 Arnav Bhatt
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
@@ -36,6 +37,11 @@
 #define IDB_SHELL_EDIT_LG_HOT       226
 #define IDB_SHELL_EDIT_SM           227
 #define IDB_SHELL_EDIT_SM_HOT       228
+
+/* Bitmaps for fancy log off dialog box */
+#define IDB_DLG_BG                  500
+#define IDB_REACTOS_FLAG            501
+#define IDB_IMAGE_STRIP             502
 
 /* Strings */
 
@@ -308,6 +314,11 @@
 
 #define IDS_SYSTEMFOLDER                            30540
 
+#define IDS_LOG_OFF_DESC                            35000
+#define IDS_SWITCH_USER_DESC                        35001
+#define IDS_LOG_OFF_TITLE                           35010
+#define IDS_SWITCH_USER_TITLE                       35011
+
 /* Dialogs */
 
 /* Run dialog */
@@ -458,6 +469,13 @@
 #define IDC_VIEW_TREEVIEW                   14003
 #define IDC_VIEW_RESTORE_DEFAULTS           14004
 
+/* Control IDs for IDD_LOG_OFF_FANCY dialog */
+#define IDC_LOG_OFF_BUTTON                  15001
+#define IDC_SWITCH_USER_BUTTON              15002
+#define IDC_LOG_OFF_STATIC                  15003
+#define IDC_SWITCH_USER_STATIC              15004
+#define IDC_LOG_OFF_TEXT_STATIC             15005
+
 /* Other dialogs */
 #define IDD_RUN_AS       23
 #define IDD_OPEN_WITH    24
@@ -492,6 +510,7 @@
 #define IDD_AUTOPLAY1            33
 #define IDD_MIXED_CONTENT1       34
 #define IDD_MIXED_CONTENT2       35
+#define IDD_LOG_OFF_FANCY        600
 
 /* Icons */
 #define IDI_SHELL_DOCUMENT           1

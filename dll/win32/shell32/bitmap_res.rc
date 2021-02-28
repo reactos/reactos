@@ -1,6 +1,10 @@
 IDB_REACTOS BITMAP "res/bitmaps/reactos.bmp"
 IDB_LINEBAR BITMAP "res/bitmaps/line.bmp"
 
+IDB_DLG_BG BITMAP "res/bitmaps/dlg_bg.bmp"
+IDB_REACTOS_FLAG BITMAP "res/bitmaps/reactos_flag.bmp"
+IDB_IMAGE_STRIP BITMAP "res/bitmaps/image_strip.bmp"
+
 IDB_SHELL_IEXPLORE_LG        BITMAP "res/bitmaps/204.bmp"
 IDB_SHELL_IEXPLORE_LG_HOT    BITMAP "res/bitmaps/205.bmp"
 IDB_SHELL_IEXPLORE_SM        BITMAP "res/bitmaps/206.bmp"
