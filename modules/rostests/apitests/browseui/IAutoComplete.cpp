@@ -363,18 +363,21 @@ START_TEST(IAutoComplete)
     INT cyScreen = GetSystemMetrics(SM_CYSCREEN);
     WCHAR szText[64];
 
+    trace("Testcase #1\n");
     nCount = 2;
     pList = (LPWSTR *)CoTaskMemAlloc(nCount * sizeof(LPWSTR));
     SHStrDupW(L"test\\AA", &pList[0]);
     SHStrDupW(L"test\\BBB", &pList[1]);
     DoTestCase(0, 0, 100, 16, pList, nCount);
 
+    trace("Testcase #2\n");
     nCount = 2;
     pList = (LPWSTR *)CoTaskMemAlloc(nCount * sizeof(LPWSTR));
     SHStrDupW(L"test\\AA", &pList[0]);
     SHStrDupW(L"test\\BBB", &pList[1]);
     DoTestCase(cxScreen - 100, cyScreen - 30, 80, 18, pList, nCount);
 
+    trace("Testcase #3\n");
     nCount = 100;
     pList = (LPWSTR *)CoTaskMemAlloc(nCount * sizeof(LPWSTR));
     for (UINT i = 0; i < nCount; ++i)
@@ -384,6 +387,7 @@ START_TEST(IAutoComplete)
     }
     DoTestCase(100, 100, 100, 16, pList, nCount);
 
+    trace("Testcase #4\n");
     nCount = 100;
     pList = (LPWSTR *)CoTaskMemAlloc(nCount * sizeof(LPWSTR));
     for (UINT i = 0; i < nCount; ++i)
