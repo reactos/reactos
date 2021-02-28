@@ -143,11 +143,11 @@ public:
     }
     STDMETHODIMP GetOptions(DWORD *pdwFlag) override
     {
-        return E_NOTIMPL;
+        return S_OK;
     }
     STDMETHODIMP SetOptions(DWORD dwFlag) override
     {
-        return E_NOTIMPL;
+        return S_OK;
     }
 
 protected:
@@ -175,9 +175,12 @@ static VOID DoTest1(VOID)
     CComPtr<CEnumString> pEnum = new CEnumString();
     pEnum->SetList(nCount, pList);
 
-    CComPtr<IAutoComplete> pAC;
+    CComPtr<IAutoComplete2> pAC;
     HRESULT hr = CoCreateInstance(CLSID_AutoComplete, NULL, CLSCTX_INPROC_SERVER,
-                                  IID_IAutoComplete, (VOID **)&pAC);
+                                  IID_IAutoComplete2, (VOID **)&pAC);
+    ok_hr(hr, S_OK);
+
+    hr = pAC->SetOptions(ACO_AUTOSUGGEST);
     ok_hr(hr, S_OK);
 
     IUnknown *punk = static_cast<IUnknown *>(static_cast<IEnumString *>(pEnum));
@@ -191,15 +194,22 @@ static VOID DoTest1(VOID)
         DispatchMessageW(&msg);
     }
 
-    EDITWORDBREAKPROC fn =
-        (EDITWORDBREAKPROC)SendMessageW(hwndEdit, EM_GETWORDBREAKPROC, 0, 0);
-    ok(fn != NULL, "fn was NULL\n");
-    DoWordBreakProc(fn);
+    PostMessageW(hwndEdit, WM_CHAR, L't', 0);
+    PostMessageW(hwndEdit, WM_CHAR, L'e', 0);
+    PostMessageW(hwndEdit, WM_CHAR, L's', 0);
+    PostMessageW(hwndEdit, WM_CHAR, L't', 0);
+    PostMessageW(hwndEdit, WM_CHAR, L'\\', 0);
 
     DWORD style, exstyle;
     HWND hwndDropDown;
+    LONG_PTR id;
     for (INT i = 0; i < 100; ++i)
     {
+        while (PeekMessageW(&msg, NULL, 0, 0, PM_REMOVE))
+        {
+            TranslateMessage(&msg);
+            DispatchMessageW(&msg);
+        }
         hwndDropDown = FindWindowW(L"Auto-Suggest Dropdown", L"");
         if (hwndDropDown)
             break;
@@ -207,10 +217,17 @@ static VOID DoTest1(VOID)
     }
     ok(hwndDropDown != NULL, "hwndDropDown was NULL\n");
 
+    EDITWORDBREAKPROC fn =
+        (EDITWORDBREAKPROC)SendMessageW(hwndEdit, EM_GETWORDBREAKPROC, 0, 0);
+    ok(fn != NULL, "fn was NULL\n");
+    DoWordBreakProc(fn);
+
     style = (LONG)GetWindowLongPtrW(hwndDropDown, GWL_STYLE);
     exstyle = (LONG)GetWindowLongPtrW(hwndDropDown, GWL_EXSTYLE);
+    id = GetWindowLongPtrW(hwndDropDown, GWLP_ID);
     ok_long(style, 0x86800000);
     ok_long(exstyle, 0x8c);
+    ok_long((LONG)id, 0);
 
     style = (LONG)GetClassLongPtrW(hwndDropDown, GCL_STYLE);
     ok(style == 0x20800 /* Win10 */ || style == 0 /* Win2k3 */,
@@ -225,8 +242,10 @@ static VOID DoTest1(VOID)
     ok_wstri(szClass, L"ScrollBar");
     style = (LONG)GetWindowLongPtrW(hwndChild, GWL_STYLE);
     exstyle = (LONG)GetWindowLongPtrW(hwndChild, GWL_EXSTYLE);
-    ok_long(style, 0x40000005);
+    id = GetWindowLongPtrW(hwndDropDown, GWLP_ID);
+    ok(style == 0x50000005 || style == 0x40000005, "style was 0x%08lx\n", style);
     ok_long(exstyle, 0);
+    ok_long((LONG)id, 0);
 
     hwndChild = GetNextWindow(hwndChild, GW_HWNDNEXT);
     ok(hwndChild != NULL, "hwndChild was NULL\n");
@@ -234,8 +253,10 @@ static VOID DoTest1(VOID)
     ok_wstri(szClass, L"ScrollBar");
     style = (LONG)GetWindowLongPtrW(hwndChild, GWL_STYLE);
     exstyle = (LONG)GetWindowLongPtrW(hwndChild, GWL_EXSTYLE);
+    id = GetWindowLongPtrW(hwndDropDown, GWLP_ID);
     ok_long(style, 0x5000000c);
     ok_long(exstyle, 0);
+    ok_long((LONG)id, 0);
 
     hwndChild = GetNextWindow(hwndChild, GW_HWNDNEXT);
     ok(hwndChild != NULL, "hwndChild was NULL\n");
@@ -243,8 +264,10 @@ static VOID DoTest1(VOID)
     ok_wstri(szClass, L"SysListView32");
     style = (LONG)GetWindowLongPtrW(hwndChild, GWL_STYLE);
     exstyle = (LONG)GetWindowLongPtrW(hwndChild, GWL_EXSTYLE);
+    id = GetWindowLongPtrW(hwndDropDown, GWLP_ID);
     ok_long(style, 0x54005405);
     ok_long(exstyle, 0);
+    ok_long((LONG)id, 0);
 
     hwndChild = GetNextWindow(hwndChild, GW_HWNDNEXT);
     ok(hwndChild == NULL, "hwndChild was %p\n", hwndChild);
