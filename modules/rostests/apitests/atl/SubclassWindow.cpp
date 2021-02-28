@@ -43,7 +43,8 @@ public:
     END_MSG_MAP()
 };
 
-class CMyCtrl2 : public CContainedWindow
+class CMyCtrl2
+    : public CContainedWindowT<CWindowImpl<CMyCtrl2, CWindow> >
 {
 public:
     static LPCWSTR GetWndClassName()
@@ -54,7 +55,7 @@ public:
             return L"STATIC";
     }
 
-    CMyCtrl2()
+    CMyCtrl2() : CContainedWindowT<CWindowImpl<CMyCtrl2, CWindow> >(this)
     {
     }
     virtual ~CMyCtrl2()
