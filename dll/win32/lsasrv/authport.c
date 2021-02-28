@@ -138,7 +138,7 @@ LsapCheckLogonProcess(PLSA_API_MSG RequestMsg,
     Context->Untrusted = RequestMsg->ConnectInfo.Untrusted;
 
     if (Context->Untrusted == FALSE)
-        Context->Untrusted = LsapIsTrustedClient(ProcessHandle);
+        Context->Untrusted = !LsapIsTrustedClient(ProcessHandle);
 
     *LogonContext = Context;
 
