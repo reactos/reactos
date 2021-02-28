@@ -585,6 +585,9 @@ CcUnpinDataForThread (
 
     if (iBcb->PinCount != 0)
     {
+        /* Assign resource thread to BCB */
+        iBcb->Lock.OwnerEntry.OwnerThread = ResourceThreadId;
+
         ExReleaseResourceForThreadLite(&iBcb->Lock, ResourceThreadId);
         iBcb->PinCount--;
     }
