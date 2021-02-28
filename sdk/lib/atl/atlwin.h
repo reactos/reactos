@@ -1482,36 +1482,46 @@ public:
 
     BOOL SubclassWindow(HWND hWnd)
     {
-        CWindowImplBaseT<TBase, TWinTraits> *pThis;
-        WNDPROC newWindowProc;
-        WNDPROC oldWindowProc;
-        BOOL result;
-
         ATLASSERT(m_hWnd == NULL);
         ATLASSERT(::IsWindow(hWnd));
 
+        CWindowImplBaseT<TBase, TWinTraits> *pThis;
         pThis = reinterpret_cast<CWindowImplBaseT<TBase, TWinTraits>*>(this);
 
-        result = m_thunk.Init(GetWindowProc(), this);
+        BOOL result = m_thunk.Init(GetWindowProc(), this);
         if (result == FALSE)
             return FALSE;
-        newWindowProc = m_thunk.GetWNDPROC();
-        oldWindowProc = reinterpret_cast<WNDPROC>(::SetWindowLongPtr(hWnd, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(newWindowProc)));
+
+        WNDPROC newWindowProc = m_thunk.GetWNDPROC();
+        WNDPROC oldWindowProc = reinterpret_cast<WNDPROC>(
+            ::SetWindowLongPtr(hWnd, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(newWindowProc)));
         if (oldWindowProc == NULL)
             return FALSE;
-        m_pfnSuperWindowProc = oldWindowProc;
+
+        pThis->m_pfnSuperWindowProc = oldWindowProc;
         pThis->m_hWnd = hWnd;
         return TRUE;
     }
 
-    HWND UnsubclassWindow()
+    HWND UnsubclassWindow(BOOL bForce = FALSE)
     {
-        CWindowImplBaseT<TBase, TWinTraits> *pThis;
+        ATLASSERT(m_hWnd != NULL);
+        ATLASSERT(::IsWindow(m_hWnd));
+
+        CWindowImplBaseT<TBase, TWinTraits>* pThis;
         pThis = reinterpret_cast<CWindowImplBaseT<TBase, TWinTraits>*>(this);
+
         HWND hwndOld = pThis->m_hWnd;
+        WNDPROC oldWindowProc = m_thunk.GetWNDPROC();
+        WNDPROC subclassedProc = reinterpret_cast<WNDPROC>(
+            ::GetWindowLongPtr(hwndOld, GWLP_WNDPROC));
+        if (!bForce && oldWindowProc != subclassedProc)
+            return NULL;
+
+        ::SetWindowLongPtr(hwndOld, GWLP_WNDPROC,
+                           (LONG_PTR)pThis->m_pfnSuperWindowProc);
+        pThis->m_pfnSuperWindowProc = ::DefWindowProc;
         pThis->m_hWnd = NULL;
-        ::SetWindowLongPtr(hwndOld, GWLP_WNDPROC, (LONG_PTR)m_pfnSuperWindowProc);
-        m_pfnSuperWindowProc = ::DefWindowProc;
         return hwndOld;
     }
 
@@ -1708,41 +1718,45 @@ public:
 
     BOOL SubclassWindow(HWND hWnd)
     {
-        CContainedWindowT<TBase> *pThis;
-        WNDPROC newWindowProc;
-        WNDPROC oldWindowProc;
-        BOOL result;
-
         ATLASSERT(m_hWnd == NULL);
         ATLASSERT(::IsWindow(hWnd));
 
+        CContainedWindowT<TBase> *pThis;
         pThis = reinterpret_cast<CContainedWindowT<TBase> *>(this);
 
-        result = m_thunk.Init(WindowProc, pThis);
+        BOOL result = m_thunk.Init(WindowProc, pThis);
         if (result == FALSE)
             return FALSE;
-        newWindowProc = m_thunk.GetWNDPROC();
-        oldWindowProc = reinterpret_cast<WNDPROC>(::SetWindowLongPtr(hWnd, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(newWindowProc)));
+
+        WNDPROC newWindowProc = m_thunk.GetWNDPROC();
+        WNDPROC oldWindowProc = reinterpret_cast<WNDPROC>(
+            ::SetWindowLongPtr(hWnd, GWLP_WNDPROC, reinterpret_cast<LONG_PTR>(newWindowProc)));
         if (oldWindowProc == NULL)
             return FALSE;
-        m_pfnSuperWindowProc = oldWindowProc;
+
+        pThis->m_pfnSuperWindowProc = oldWindowProc;
         pThis->m_hWnd = hWnd;
         return TRUE;
     }
 
     HWND UnsubclassWindow(BOOL bForce = FALSE)
     {
-        if (!bForce)
-        {
-            // TODO:
-            return NULL;
-        }
-        CContainedWindowT<TBase> *pThis;
-        pThis = reinterpret_cast<CContainedWindowT<TBase> *>(this);
+        ATLASSERT(m_hWnd != NULL);
+        ATLASSERT(::IsWindow(m_hWnd));
+
+        CContainedWindowT<TBase>* pThis;
+        pThis = reinterpret_cast<CContainedWindowT<TBase>*>(this);
         HWND hwndOld = pThis->m_hWnd;
+
+        WNDPROC subclassedProc = reinterpret_cast<WNDPROC>(
+            ::GetWindowLongPtr(hwndOld, GWLP_WNDPROC));
+        if (!bForce && m_thunk.GetWNDPROC() != subclassedProc)
+            return NULL;
+
+        ::SetWindowLongPtr(hwndOld, GWLP_WNDPROC,
+                           (LONG_PTR)pThis->m_pfnSuperWindowProc);
+        pThis->m_pfnSuperWindowProc = ::DefWindowProc;
         pThis->m_hWnd = NULL;
-        ::SetWindowLongPtr(hwndOld, GWLP_WNDPROC, (LONG_PTR)m_pfnSuperWindowProc);
-        m_pfnSuperWindowProc = ::DefWindowProc;
         return hwndOld;
     }
 
