@@ -1510,7 +1510,7 @@ public:
         pThis = reinterpret_cast<CWindowImplBaseT<TBase, TWinTraits>*>(this);
         HWND hwndOld = pThis->m_hWnd;
         pThis->m_hWnd = NULL;
-        ::SetWindowLongPtrW(hwndOld, GWLP_WNDPROC, m_pfnSuperWindowProc);
+        ::SetWindowLongPtrW(hwndOld, GWLP_WNDPROC, (LONG_PTR)m_pfnSuperWindowProc);
         m_pfnSuperWindowProc = ::DefWindowProc;
         return hwndOld;
     }
@@ -1741,7 +1741,7 @@ public:
         pThis = reinterpret_cast<CContainedWindowT<TBase> *>(this);
         HWND hwndOld = pThis->m_hWnd;
         pThis->m_hWnd = NULL;
-        ::SetWindowLongPtrW(hwndOld, GWLP_WNDPROC, m_pfnSuperWindowProc);
+        ::SetWindowLongPtrW(hwndOld, GWLP_WNDPROC, (LONG_PTR)m_pfnSuperWindowProc);
         m_pfnSuperWindowProc = ::DefWindowProc;
         return hwndOld;
     }
