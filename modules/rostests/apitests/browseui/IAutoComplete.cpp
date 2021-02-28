@@ -27,8 +27,7 @@ struct CCoInit
 
 static HWND MyCreateWindow(INT x, INT y, INT cx, INT cy)
 {
-    return CreateWindowW(L"EDIT", NULL, WS_POPUPWINDOW,
-                         x, y, cx, cy,
+    return CreateWindowW(L"EDIT", NULL, WS_POPUPWINDOW, x, y, cx, cy,
                          NULL, NULL, GetModuleHandleW(NULL), NULL);
 }
 
@@ -133,8 +132,7 @@ public:
 
 protected:
     ULONG m_cRefs;
-    UINT m_nIndex;
-    UINT m_nCount;
+    UINT m_nIndex, m_nCount;
     LPWSTR *m_pList;
 };
 
@@ -245,10 +243,11 @@ static VOID DoTestCase(INT x, INT y, INT cx, INT cy, LPWSTR *pList, UINT nCount)
     hr = pAC->SetOptions(ACO_AUTOSUGGEST);
     ok_hr(hr, S_OK);
 
-    IUnknown *punk = static_cast<IUnknown *>(static_cast<IEnumString *>(pEnum));
+    IUnknown *punk = static_cast<IEnumString *>(pEnum);
     hr = pAC->Init(hwndEdit, punk, NULL, NULL); // IAutoComplete::Init
     ok_hr(hr, S_OK);
 
+    // "test\\"
     PostMessageW(hwndEdit, WM_CHAR, L't', 0);
     PostMessageW(hwndEdit, WM_CHAR, L'e', 0);
     PostMessageW(hwndEdit, WM_CHAR, L's', 0);
