@@ -226,6 +226,9 @@ static VOID DoTest1(VOID)
     ok(hwndEdit != NULL, "hwndEdit was NULL\n");
     ShowWindow(hwndEdit, SW_SHOWNORMAL);
 
+    EDITWORDBREAKPROC fn1 =
+        (EDITWORDBREAKPROC)SendMessageW(hwndEdit, EM_GETWORDBREAKPROC, 0, 0);
+
     UINT nCount = 2;
     LPWSTR *pList = (LPWSTR *)CoTaskMemAlloc(nCount * sizeof(LPWSTR));
     SHStrDupW(L"test\\AA", &pList[0]);
@@ -276,10 +279,11 @@ static VOID DoTest1(VOID)
     }
     ok(hwndDropDown != NULL, "hwndDropDown was NULL\n");
 
-    EDITWORDBREAKPROC fn =
+    EDITWORDBREAKPROC fn2 =
         (EDITWORDBREAKPROC)SendMessageW(hwndEdit, EM_GETWORDBREAKPROC, 0, 0);
-    ok(fn != NULL, "fn was NULL\n");
-    DoWordBreakProc(fn);
+    ok(fn1 != fn2, "fn1 == fn2\n");
+    ok(fn2 != NULL, "fn2 was NULL\n");
+    DoWordBreakProc(fn2);
 
     style = (LONG)GetWindowLongPtrW(hwndDropDown, GWL_STYLE);
     exstyle = (LONG)GetWindowLongPtrW(hwndDropDown, GWL_EXSTYLE);
