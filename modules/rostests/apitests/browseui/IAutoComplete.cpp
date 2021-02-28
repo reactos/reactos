@@ -228,6 +228,7 @@ static VOID DoTest1(VOID)
 
     EDITWORDBREAKPROC fn1 =
         (EDITWORDBREAKPROC)SendMessageW(hwndEdit, EM_GETWORDBREAKPROC, 0, 0);
+    ok(fn1 == NULL, "fn1 was %p\n", fn1);
 
     UINT nCount = 2;
     LPWSTR *pList = (LPWSTR *)CoTaskMemAlloc(nCount * sizeof(LPWSTR));
