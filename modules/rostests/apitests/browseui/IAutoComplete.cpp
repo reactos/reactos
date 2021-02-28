@@ -374,7 +374,7 @@ START_TEST(IAutoComplete)
     nCount = 2;
     pList = (LPWSTR *)CoTaskMemAlloc(nCount * sizeof(LPWSTR));
     SHStrDupW(L"test\\AA", &pList[0]);
-    SHStrDupW(L"test\\BBB", &pList[1]);
+    SHStrDupW(L"test\\CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC", &pList[1]);
     DoTestCase(cxScreen - 100, cyScreen - 30, 80, 18, pList, nCount);
 
     trace("Testcase #3\n");
