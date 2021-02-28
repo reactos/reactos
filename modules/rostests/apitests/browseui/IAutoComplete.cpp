@@ -35,7 +35,7 @@ static HWND MyCreateWindow(INT x, INT y, INT cx, INT cy)
 class CEnumString : public IEnumString, public IACList2
 {
 public:
-    CEnumString() : m_cRefs(1), m_nIndex(0), m_nCount(0), m_pList(NULL)
+    CEnumString() : m_cRefs(0), m_nIndex(0), m_nCount(0), m_pList(NULL)
     {
     }
 
@@ -234,7 +234,7 @@ static VOID DoTestCase(INT x, INT y, INT cx, INT cy, LPWSTR *pList, UINT nCount)
         (EDITWORDBREAKPROC)SendMessageW(hwndEdit, EM_GETWORDBREAKPROC, 0, 0);
     ok(fn1 == NULL, "fn1 was %p\n", fn1);
 
-    CComPtr<CEnumString> pEnum = new CEnumString();
+    CComPtr<CEnumString> pEnum(new CEnumString());
     pEnum->SetList(nCount, pList);
 
     CComPtr<IAutoComplete2> pAC;
