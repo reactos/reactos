@@ -7,12 +7,17 @@
 
 #ifdef HAVE_APITEST
     #include <apitest.h>
+    #define ATLASSUME(x) /*empty*/
+    #define ATLASSERT(x) /*empty*/
 #else
     #include "atltest.h"
+    #define ATLASSUME(x) do { \
+        trace("ATLASSUME(%s) %s.\n", #x, ((x) ? "success" : "failure")); \
+    } while (0)
+    #define ATLASSERT(x) do { \
+        trace("ATLASSERT(%s) %s.\n", #x, ((x) ? "success" : "failure")); \
+    } while (0)
 #endif
-
-#define ATLASSUME(x) /*empty*/
-#define ATLASSERT(x) /*empty*/
 
 #include <atlbase.h>
 #include <atlwin.h>
