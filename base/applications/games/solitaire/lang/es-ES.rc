@@ -73,6 +73,7 @@ BEGIN
     BEGIN
         MENUITEM "&Repartir\tF2", IDM_GAME_NEW
         MENUITEM SEPARATOR
+        MENUITEM "&Undo", IDM_GAME_UNDO, GRAYED
         MENUITEM "&Barajas...", IDM_GAME_DECK
         MENUITEM "&Opciones...", IDM_GAME_OPTIONS
         MENUITEM SEPARATOR

@@ -71,6 +71,7 @@ BEGIN
     BEGIN
         MENUITEM "&Karten geben\t F2", IDM_GAME_NEW
         MENUITEM SEPARATOR
+        MENUITEM "&Undo", IDM_GAME_UNDO, GRAYED
         MENUITEM "&Deckblatt...", IDM_GAME_DECK
         MENUITEM "&Optionen...", IDM_GAME_OPTIONS
         MENUITEM SEPARATOR
