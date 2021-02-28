@@ -1510,7 +1510,7 @@ public:
         pThis = reinterpret_cast<CWindowImplBaseT<TBase, TWinTraits>*>(this);
         HWND hwndOld = pThis->m_hWnd;
         pThis->m_hWnd = NULL;
-        ::SetWindowLongPtrW(hwndOld, GWLP_WNDPROC, (LONG_PTR)m_pfnSuperWindowProc);
+        ::SetWindowLongPtr(hwndOld, GWLP_WNDPROC, (LONG_PTR)m_pfnSuperWindowProc);
         m_pfnSuperWindowProc = ::DefWindowProc;
         return hwndOld;
     }
@@ -1620,7 +1620,7 @@ public:
             MenuOrID.m_hMenu = (HMENU)(UINT_PTR)this;
         if (rect.m_lpRect == NULL)
             rect.m_lpRect = &TBase::rcDefault;
-        hWnd = ::CreateWindowEx(dwExStyle, reinterpret_cast<LPCWSTR>(MAKEINTATOM(atom)), szWindowName, dwStyle, rect.m_lpRect->left,
+        hWnd = ::CreateWindowEx(dwExStyle, MAKEINTATOM(atom), szWindowName, dwStyle, rect.m_lpRect->left,
                     rect.m_lpRect->top, rect.m_lpRect->right - rect.m_lpRect->left, rect.m_lpRect->bottom - rect.m_lpRect->top,
                     hWndParent, MenuOrID.m_hMenu, _AtlBaseModule.GetModuleInstance(), lpCreateParam);
 
@@ -1692,7 +1692,7 @@ public:
         m_pCurrentMsg = NULL;
     }
 
-    CContainedWindowT(LPTSTR lpszClassName, CMessageMap *pObject, DWORD dwMsgMapID = 0)
+    CContainedWindowT(LPCTSTR lpszClassName, CMessageMap *pObject, DWORD dwMsgMapID = 0)
     {
         m_lpszClassName = lpszClassName;
         m_pfnSuperWindowProc = ::DefWindowProc;
@@ -1741,7 +1741,7 @@ public:
         pThis = reinterpret_cast<CContainedWindowT<TBase> *>(this);
         HWND hwndOld = pThis->m_hWnd;
         pThis->m_hWnd = NULL;
-        ::SetWindowLongPtrW(hwndOld, GWLP_WNDPROC, (LONG_PTR)m_pfnSuperWindowProc);
+        ::SetWindowLongPtr(hwndOld, GWLP_WNDPROC, (LONG_PTR)m_pfnSuperWindowProc);
         m_pfnSuperWindowProc = ::DefWindowProc;
         return hwndOld;
     }
@@ -1924,13 +1924,13 @@ static ATL::CWndClassInfo& GetWndClassInfo()                                    
 
 struct _ATL_WNDCLASSINFOW
 {
-    WNDCLASSEXW m_wc;
-    LPCWSTR m_lpszOrigName;
+    WNDCLASSEX m_wc;
+    LPCTSTR m_lpszOrigName;
     WNDPROC pWndProc;
-    LPCWSTR m_lpszCursorID;
+    LPCTSTR m_lpszCursorID;
     BOOL m_bSystemCursor;
     ATOM m_atom;
-    WCHAR m_szAutoName[sizeof("ATL:") + sizeof(void *) * 2]; // == 4 characters + NULL + number of hexadecimal digits describing a pointer.
+    TCHAR m_szAutoName[sizeof("ATL:") + sizeof(void *) * 2]; // == 4 characters + NULL + number of hexadecimal digits describing a pointer.
 
     ATOM Register(WNDPROC *p)
     {
