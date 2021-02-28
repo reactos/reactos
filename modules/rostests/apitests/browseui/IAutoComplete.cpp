@@ -13,6 +13,7 @@
 #include <tchar.h>      //
 #include <atlcom.h>     // These 3 includes only exist here to make gcc happy about (unused) templates..
 #include <atlwin.h>     //
+#include <shlwapi.h>
 
 #define ok_wstri(x, y) \
     ok(lstrcmpiW(x, y) == 0, "Wrong string. Expected '%S', got '%S'\n", y, x)
@@ -39,16 +40,6 @@ static void MyMessageLoop(void)
         TranslateMessage(&msg);
         DispatchMessageW(&msg);
     }
-}
-
-static LPWSTR MyCoStrDup(LPCWSTR psz)
-{
-    INT cch = lstrlenW(psz);
-    DWORD cb = (cch + 1) * sizeof(WCHAR);
-    LPWSTR ret = (LPWSTR)::CoTaskMemAlloc(cb);
-    if (ret)
-        CopyMemory(ret, psz, cb);
-    return ret;
 }
 
 class CEnumString : public IEnumString, public IACList2
@@ -117,7 +108,7 @@ public:
         if (m_nIndex >= m_nCount)
             return S_FALSE;
 
-        *rgelt = MyCoStrDup(m_pList[m_nIndex]);
+        SHStrDupW(m_pList[m_nIndex], rgelt);
         if (!*rgelt)
             return E_OUTOFMEMORY;
         *pceltFetched = 1;
@@ -170,8 +161,9 @@ static VOID DoTest1(VOID)
 
     UINT nCount = 2;
     LPWSTR *pList = (LPWSTR *)CoTaskMemAlloc(nCount * sizeof(LPWSTR));
-    pList[0] = MyCoStrDup(L"test\\AA");
-    pList[1] = MyCoStrDup(L"test\\BBB");
+    SHStrDupW(L"test\\AA", &pList[0]);
+    SHStrDupW(L"test\\BBB", &pList[1]);
+
     CComPtr<CEnumString> pEnum = new CEnumString();
     pEnum->SetList(nCount, pList);
 
