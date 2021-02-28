@@ -250,13 +250,6 @@ static VOID DoTest1(VOID)
     hr = pAC->Init(hwndEdit, punk, NULL, NULL); // IAutoComplete::Init 0x80004002
     ok_hr(hr, S_OK);
 
-    MSG msg;
-    while (PeekMessageW(&msg, NULL, 0, 0, PM_REMOVE))
-    {
-        TranslateMessage(&msg);
-        DispatchMessageW(&msg);
-    }
-
     PostMessageW(hwndEdit, WM_CHAR, L't', 0);
     PostMessageW(hwndEdit, WM_CHAR, L'e', 0);
     PostMessageW(hwndEdit, WM_CHAR, L's', 0);
@@ -268,6 +261,7 @@ static VOID DoTest1(VOID)
     LONG_PTR id;
     for (INT i = 0; i < 100; ++i)
     {
+        MSG msg;
         while (PeekMessageW(&msg, NULL, 0, 0, PM_REMOVE))
         {
             TranslateMessage(&msg);
@@ -318,7 +312,8 @@ static VOID DoTest1(VOID)
     style = (LONG)GetWindowLongPtrW(hwndChild, GWL_STYLE);
     exstyle = (LONG)GetWindowLongPtrW(hwndChild, GWL_EXSTYLE);
     id = GetWindowLongPtrW(hwndDropDown, GWLP_ID);
-    ok_long(style, 0x5000000c);
+    ok(style == 0x5000000c || style == 0x50000008,
+       "style was 0x%08lx\n", style);
     ok_long(exstyle, 0);
     ok_long((LONG)id, 0);
 
