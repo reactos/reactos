@@ -202,7 +202,7 @@ START_TEST(SubclassWindow)
         hwnd1 = MyCreateWindow(style);
         ok(hwnd1 != NULL, "hwnd1 was NULL\n");
         fn1 = Ctrl2.m_pfnSuperWindowProc;
-        ok(fn1 == NULL, "fn1 was %p\n", fn1);
+        ok(fn1 == DefWindowProc, "fn1 was %p\n", fn1);
         b = Ctrl2.SubclassWindow(hwnd1);
         ok_int(b, TRUE);
         ok(Ctrl2.m_hWnd == hwnd1, "Ctrl2.m_hWnd was %p\n", Ctrl2.m_hWnd);
@@ -223,7 +223,7 @@ START_TEST(SubclassWindow)
         hwnd1 = MyCreateWindow(style);
         ok(hwnd1 != NULL, "hwnd1 was NULL\n");
         fn1 = Ctrl2.m_pfnSuperWindowProc;
-        ok(fn1 == NULL, "fn1 was %p\n", fn1);
+        ok(fn1 == DefWindowProc, "fn1 was %p\n", fn1);
         b = Ctrl2.SubclassWindow(hwnd1);
         ok_int(b, TRUE);
         ok(Ctrl2.m_hWnd == hwnd1, "Ctrl2.m_hWnd was %p\n", Ctrl2.m_hWnd);
@@ -234,27 +234,7 @@ START_TEST(SubclassWindow)
         ok(hwnd2 == NULL, "hwnd2 was %p\n", hwnd2);
         fn2 = Ctrl2.m_pfnSuperWindowProc;
         ok(fn1 == fn2, "fn1 == fn2\n");
-        DestroyWindow(hwnd2);
-        ok(Ctrl2.m_hWnd == hwnd1, "Ctrl2.m_hWnd was %p\n", Ctrl2.m_hWnd);
-    }
-
-    {
-        CMyCtrl2 Ctrl2;
-        s_flag = FALSE; // "STATIC"
-        hwnd1 = MyCreateWindow(style);
-        ok(hwnd1 != NULL, "hwnd1 was NULL\n");
-        fn1 = Ctrl2.m_pfnSuperWindowProc;
-        ok(fn1 == NULL, "fn1 was %p\n", fn1);
-        b = Ctrl2.SubclassWindow(hwnd1);
-        ok_int(b, TRUE);
-        ok(Ctrl2.m_hWnd == hwnd1, "Ctrl2.m_hWnd was %p\n", Ctrl2.m_hWnd);
-        fn1 = Ctrl2.m_pfnSuperWindowProc;
-        ok(fn1 != DefWindowProc, "fn1 was %p\n", fn1);
-        hwnd2 = Ctrl2.UnsubclassWindow(FALSE);
-        ok(hwnd1 == hwnd2, "hwnd1 != hwnd2\n");
-        fn2 = Ctrl2.m_pfnSuperWindowProc;
-        ok(fn1 != fn2, "fn1 == fn2\n");
-        ok(fn2 == DefWindowProc, "fn2 was %p\n", fn2);
+        ok(Ctrl2.m_hWnd == NULL, "Ctrl2.m_hWnd was %p\n", Ctrl2.m_hWnd);
         DestroyWindow(hwnd2);
         ok(Ctrl2.m_hWnd == NULL, "Ctrl2.m_hWnd was %p\n", Ctrl2.m_hWnd);
     }
@@ -265,7 +245,29 @@ START_TEST(SubclassWindow)
         hwnd1 = MyCreateWindow(style);
         ok(hwnd1 != NULL, "hwnd1 was NULL\n");
         fn1 = Ctrl2.m_pfnSuperWindowProc;
-        ok(fn1 == NULL, "fn1 was %p\n", fn1);
+        ok(fn1 == DefWindowProc, "fn1 was %p\n", fn1);
+        b = Ctrl2.SubclassWindow(hwnd1);
+        ok_int(b, TRUE);
+        ok(Ctrl2.m_hWnd == hwnd1, "Ctrl2.m_hWnd was %p\n", Ctrl2.m_hWnd);
+        fn1 = Ctrl2.m_pfnSuperWindowProc;
+        ok(fn1 != DefWindowProc, "fn1 was %p\n", fn1);
+        hwnd2 = Ctrl2.UnsubclassWindow(FALSE);
+        ok(hwnd1 == hwnd2, "hwnd1 != hwnd2\n");
+        fn2 = Ctrl2.m_pfnSuperWindowProc;
+        ok(fn1 != fn2, "fn1 == fn2\n");
+        ok(fn2 == DefWindowProc, "fn2 was %p\n", fn2);
+        ok(Ctrl2.m_hWnd == NULL, "Ctrl2.m_hWnd was %p\n", Ctrl2.m_hWnd);
+        DestroyWindow(hwnd2);
+        ok(Ctrl2.m_hWnd == NULL, "Ctrl2.m_hWnd was %p\n", Ctrl2.m_hWnd);
+    }
+
+    {
+        CMyCtrl2 Ctrl2;
+        s_flag = FALSE; // "STATIC"
+        hwnd1 = MyCreateWindow(style);
+        ok(hwnd1 != NULL, "hwnd1 was NULL\n");
+        fn1 = Ctrl2.m_pfnSuperWindowProc;
+        ok(fn1 == DefWindowProc, "fn1 was %p\n", fn1);
         b = Ctrl2.SubclassWindow(hwnd1);
         ok_int(b, TRUE);
         ok(Ctrl2.m_hWnd == hwnd1, "Ctrl2.m_hWnd was %p\n", Ctrl2.m_hWnd);
@@ -276,8 +278,9 @@ START_TEST(SubclassWindow)
         ok(hwnd2 == NULL, "hwnd2 was %p\n", hwnd2);
         fn2 = Ctrl2.m_pfnSuperWindowProc;
         ok(fn2 != DefWindowProc, "fn2 was %p\n", fn2); // ntdll.dll!NtdllEditWndProc_W
+        ok(Ctrl2.m_hWnd == NULL, "Ctrl2.m_hWnd was %p\n", Ctrl2.m_hWnd);
         DestroyWindow(hwnd2);
-        ok(Ctrl2.m_hWnd == hwnd1, "Ctrl2.m_hWnd was %p\n", Ctrl2.m_hWnd);
+        ok(Ctrl2.m_hWnd == NULL, "Ctrl2.m_hWnd was %p\n", Ctrl2.m_hWnd);
     }
 
     {
@@ -286,7 +289,7 @@ START_TEST(SubclassWindow)
         hwnd1 = MyCreateWindow(style);
         ok(hwnd1 != NULL, "hwnd1 was NULL\n");
         fn1 = Ctrl2.m_pfnSuperWindowProc;
-        ok(fn1 == NULL, "fn1 was %p\n", fn1);
+        ok(fn1 == DefWindowProc, "fn1 was %p\n", fn1);
         b = Ctrl2.SubclassWindow(hwnd1);
         ok_int(b, TRUE);
         ok(Ctrl2.m_hWnd == hwnd1, "Ctrl2.m_hWnd was %p\n", Ctrl2.m_hWnd);
@@ -294,8 +297,8 @@ START_TEST(SubclassWindow)
         hwnd2 = Ctrl2.UnsubclassWindow(FALSE);
         ok(hwnd1 == hwnd2, "hwnd1 != hwnd2\n");
         fn2 = Ctrl2.m_pfnSuperWindowProc;
-        ok(fn1 != fn2, "fn1 == fn2\n");
         ok(fn2 == DefWindowProc, "fn2 was %p\n", fn2);
+        ok(Ctrl2.m_hWnd == NULL, "hwnd != NULL\n");
         DestroyWindow(hwnd2);
         ok(Ctrl2.m_hWnd == NULL, "hwnd != NULL\n");
     }
@@ -309,7 +312,7 @@ START_TEST(SubclassWindow)
         hwnd1 = MyCreateWindow(style);
         ok(hwnd1 != NULL, "hwnd1 was NULL\n");
         fn1 = Ctrl2.m_pfnSuperWindowProc;
-        ok(fn1 == NULL, "fn1 was %p\n", fn1);
+        ok(fn1 == DefWindowProc, "fn1 was %p\n", fn1);
         b = Ctrl2.SubclassWindow(hwnd1);
         ok_int(b, TRUE);
         ok(Ctrl2.m_hWnd == hwnd1, "Ctrl2.m_hWnd was %p\n", Ctrl2.m_hWnd);
@@ -320,6 +323,7 @@ START_TEST(SubclassWindow)
         fn2 = Ctrl2.m_pfnSuperWindowProc;
         ok(fn1 != fn2, "fn1 == fn2\n");
         ok(fn2 == DefWindowProc, "fn2 was %p\n", fn2);
+        ok(Ctrl2.m_hWnd == NULL, "Ctrl2.m_hWnd was %p\n", Ctrl2.m_hWnd);
         DestroyWindow(hwnd2);
         ok(Ctrl2.m_hWnd == NULL, "Ctrl2.m_hWnd was %p\n", Ctrl2.m_hWnd);
     }
@@ -330,7 +334,7 @@ START_TEST(SubclassWindow)
         hwnd1 = MyCreateWindow(style);
         ok(hwnd1 != NULL, "hwnd1 was NULL\n");
         fn1 = Ctrl2.m_pfnSuperWindowProc;
-        ok(fn1 == NULL, "fn1 was %p\n", fn1);
+        ok(fn1 == DefWindowProc, "fn1 was %p\n", fn1);
         b = Ctrl2.SubclassWindow(hwnd1);
         ok_int(b, TRUE);
         ok(Ctrl2.m_hWnd == hwnd1, "Ctrl2.m_hWnd was %p\n", Ctrl2.m_hWnd);
@@ -340,28 +344,8 @@ START_TEST(SubclassWindow)
         hwnd2 = Ctrl2.UnsubclassWindow(TRUE);
         ok(hwnd2 == NULL, "hwnd2 was %p\n", hwnd2);
         fn2 = Ctrl2.m_pfnSuperWindowProc;
-        ok(fn1 == fn2, "fn1 == fn2\n");
-        DestroyWindow(hwnd2);
-        ok(Ctrl2.m_hWnd == hwnd1, "Ctrl2.m_hWnd was %p\n", Ctrl2.m_hWnd);
-    }
-
-    {
-        CMyCtrl2 Ctrl2;
-        s_flag = FALSE; // "STATIC"
-        hwnd1 = MyCreateWindow(style);
-        ok(hwnd1 != NULL, "hwnd1 was NULL\n");
-        fn1 = Ctrl2.m_pfnSuperWindowProc;
-        ok(fn1 == NULL, "fn1 was %p\n", fn1);
-        b = Ctrl2.SubclassWindow(hwnd1);
-        ok_int(b, TRUE);
-        ok(Ctrl2.m_hWnd == hwnd1, "Ctrl2.m_hWnd was %p\n", Ctrl2.m_hWnd);
-        fn1 = Ctrl2.m_pfnSuperWindowProc;
-        ok(fn1 != DefWindowProc, "fn1 was %p\n", fn1);
-        hwnd2 = Ctrl2.UnsubclassWindow(TRUE);
-        ok(hwnd1 == hwnd2, "hwnd1 != hwnd2\n");
-        fn2 = Ctrl2.m_pfnSuperWindowProc;
-        ok(fn1 != fn2, "fn1 == fn2\n");
-        ok(fn2 == DefWindowProc, "fn2 was %p\n", fn2);
+        ok(fn2 == fn1, "fn2 was %p\n", fn2);
+        ok(Ctrl2.m_hWnd == NULL, "Ctrl2.m_hWnd was %p\n", Ctrl2.m_hWnd);
         DestroyWindow(hwnd2);
         ok(Ctrl2.m_hWnd == NULL, "Ctrl2.m_hWnd was %p\n", Ctrl2.m_hWnd);
     }
@@ -372,7 +356,29 @@ START_TEST(SubclassWindow)
         hwnd1 = MyCreateWindow(style);
         ok(hwnd1 != NULL, "hwnd1 was NULL\n");
         fn1 = Ctrl2.m_pfnSuperWindowProc;
-        ok(fn1 == NULL, "fn1 was %p\n", fn1);
+        ok(fn1 == DefWindowProc, "fn1 was %p\n", fn1);
+        b = Ctrl2.SubclassWindow(hwnd1);
+        ok_int(b, TRUE);
+        ok(Ctrl2.m_hWnd == hwnd1, "Ctrl2.m_hWnd was %p\n", Ctrl2.m_hWnd);
+        fn1 = Ctrl2.m_pfnSuperWindowProc;
+        ok(fn1 != DefWindowProc, "fn1 was %p\n", fn1);
+        hwnd2 = Ctrl2.UnsubclassWindow(TRUE);
+        ok(hwnd1 == hwnd2, "hwnd1 != hwnd2\n");
+        fn2 = Ctrl2.m_pfnSuperWindowProc;
+        ok(fn1 != fn2, "fn1 == fn2\n");
+        ok(fn2 == DefWindowProc, "fn2 was %p\n", fn2);
+        ok(Ctrl2.m_hWnd == NULL, "Ctrl2.m_hWnd was %p\n", Ctrl2.m_hWnd);
+        DestroyWindow(hwnd2);
+        ok(Ctrl2.m_hWnd == NULL, "Ctrl2.m_hWnd was %p\n", Ctrl2.m_hWnd);
+    }
+
+    {
+        CMyCtrl2 Ctrl2;
+        s_flag = FALSE; // "STATIC"
+        hwnd1 = MyCreateWindow(style);
+        ok(hwnd1 != NULL, "hwnd1 was NULL\n");
+        fn1 = Ctrl2.m_pfnSuperWindowProc;
+        ok(fn1 == DefWindowProc, "fn1 was %p\n", fn1);
         b = Ctrl2.SubclassWindow(hwnd1);
         ok_int(b, TRUE);
         ok(Ctrl2.m_hWnd == hwnd1, "Ctrl2.m_hWnd was %p\n", Ctrl2.m_hWnd);
@@ -383,8 +389,9 @@ START_TEST(SubclassWindow)
         ok(hwnd2 == NULL, "hwnd2 was %p\n", hwnd2);
         fn2 = Ctrl2.m_pfnSuperWindowProc;
         ok(fn2 != DefWindowProc, "fn2 was %p\n", fn2); // ntdll.dll!NtdllEditWndProc_W
+        ok(Ctrl2.m_hWnd == NULL, "Ctrl2.m_hWnd was %p\n", Ctrl2.m_hWnd);
         DestroyWindow(hwnd2);
-        ok(Ctrl2.m_hWnd == hwnd1, "Ctrl2.m_hWnd was %p\n", Ctrl2.m_hWnd);
+        ok(Ctrl2.m_hWnd == NULL, "Ctrl2.m_hWnd was %p\n", Ctrl2.m_hWnd);
     }
 
     {
@@ -393,7 +400,7 @@ START_TEST(SubclassWindow)
         hwnd1 = MyCreateWindow(style);
         ok(hwnd1 != NULL, "hwnd1 was NULL\n");
         fn1 = Ctrl2.m_pfnSuperWindowProc;
-        ok(fn1 == NULL, "fn1 was %p\n", fn1);
+        ok(fn1 == DefWindowProc, "fn1 was %p\n", fn1);
         b = Ctrl2.SubclassWindow(hwnd1);
         ok_int(b, TRUE);
         ok(Ctrl2.m_hWnd == hwnd1, "Ctrl2.m_hWnd was %p\n", Ctrl2.m_hWnd);
@@ -401,8 +408,8 @@ START_TEST(SubclassWindow)
         hwnd2 = Ctrl2.UnsubclassWindow(TRUE);
         ok(hwnd1 == hwnd2, "hwnd1 != hwnd2\n");
         fn2 = Ctrl2.m_pfnSuperWindowProc;
-        ok(fn1 != fn2, "fn1 == fn2\n");
         ok(fn2 == DefWindowProc, "fn2 was %p\n", fn2);
+        ok(Ctrl2.m_hWnd == NULL, "hwnd != NULL\n");
         DestroyWindow(hwnd2);
         ok(Ctrl2.m_hWnd == NULL, "hwnd != NULL\n");
     }
