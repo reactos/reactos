@@ -18,7 +18,6 @@
 #include <atlwin.h>
 
 #define INVALID_HWND ((HWND)(ULONG_PTR)0xFFFFFFFF)
-#define INVALID_PROC ((WNDPROC)(ULONG_PTR)0xFFFFFFFF)
 
 static BOOL s_flag = TRUE;
 
@@ -71,6 +70,12 @@ static HWND MyCreateWindow(DWORD style)
     return CreateWindowW(L"EDIT", NULL, style,
                          CW_USEDEFAULT, CW_USEDEFAULT, 100, 100,
                          NULL, NULL, GetModuleHandleW(NULL), NULL);
+}
+
+static LRESULT CALLBACK
+MyWindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    return 0;
 }
 
 START_TEST(SubclassWindow)
@@ -167,6 +172,26 @@ START_TEST(SubclassWindow)
         ok(Ctrl1.m_hWnd == NULL, "hwnd != NULL\n");
     }
 
+    {
+        CMyCtrl1 Ctrl1;
+        s_flag = TRUE; // "EDIT"
+        hwnd1 = MyCreateWindow(style);
+        ok(hwnd1 != NULL, "hwnd1 was NULL\n");
+        fn1 = Ctrl1.m_pfnSuperWindowProc;
+        ok(fn1 == DefWindowProc, "fn1 was %p\n", fn1);
+        b = Ctrl1.SubclassWindow(hwnd1);
+        ok_int(b, TRUE);
+        ok(Ctrl1.m_hWnd == hwnd1, "Ctrl1.m_hWnd was %p\n", Ctrl1.m_hWnd);
+        Ctrl1.m_pfnSuperWindowProc = MyWindowProc;
+        hwnd2 = Ctrl1.UnsubclassWindow();
+        ok(hwnd1 == hwnd2, "hwnd1 != hwnd2\n");
+        fn2 = Ctrl1.m_pfnSuperWindowProc;
+        ok(fn1 == fn2, "fn2 was %p\n", fn2);
+        ok(fn2 == DefWindowProc, "fn2 was %p\n", fn2);
+        DestroyWindow(hwnd2);
+        ok(Ctrl1.m_hWnd == NULL, "hwnd != NULL\n");
+    }
+
     //
     // Ctrl2 (Not Forced)
     //
@@ -254,6 +279,26 @@ START_TEST(SubclassWindow)
         ok(Ctrl2.m_hWnd == hwnd1, "Ctrl2.m_hWnd was %p\n", Ctrl2.m_hWnd);
     }
 
+    {
+        CMyCtrl2 Ctrl2;
+        s_flag = TRUE; // "EDIT"
+        hwnd1 = MyCreateWindow(style);
+        ok(hwnd1 != NULL, "hwnd1 was NULL\n");
+        fn1 = Ctrl2.m_pfnSuperWindowProc;
+        ok(fn1 == NULL, "fn1 was %p\n", fn1);
+        b = Ctrl2.SubclassWindow(hwnd1);
+        ok_int(b, TRUE);
+        ok(Ctrl2.m_hWnd == hwnd1, "Ctrl2.m_hWnd was %p\n", Ctrl2.m_hWnd);
+        Ctrl2.m_pfnSuperWindowProc = MyWindowProc;
+        hwnd2 = Ctrl2.UnsubclassWindow(FALSE);
+        ok(hwnd1 == hwnd2, "hwnd1 != hwnd2\n");
+        fn2 = Ctrl2.m_pfnSuperWindowProc;
+        ok(fn1 != fn2, "fn1 == fn2\n");
+        ok(fn2 == DefWindowProc, "fn2 was %p\n", fn2);
+        DestroyWindow(hwnd2);
+        ok(Ctrl2.m_hWnd == NULL, "hwnd != NULL\n");
+    }
+
     //
     // Ctrl2 (Forced)
     //
@@ -339,5 +384,25 @@ START_TEST(SubclassWindow)
         ok(fn2 != DefWindowProc, "fn2 was %p\n", fn2); // ntdll.dll!NtdllEditWndProc_W
         DestroyWindow(hwnd2);
         ok(Ctrl2.m_hWnd == hwnd1, "Ctrl2.m_hWnd was %p\n", Ctrl2.m_hWnd);
+    }
+
+    {
+        CMyCtrl2 Ctrl2;
+        s_flag = TRUE; // "EDIT"
+        hwnd1 = MyCreateWindow(style);
+        ok(hwnd1 != NULL, "hwnd1 was NULL\n");
+        fn1 = Ctrl2.m_pfnSuperWindowProc;
+        ok(fn1 == NULL, "fn1 was %p\n", fn1);
+        b = Ctrl2.SubclassWindow(hwnd1);
+        ok_int(b, TRUE);
+        ok(Ctrl2.m_hWnd == hwnd1, "Ctrl2.m_hWnd was %p\n", Ctrl2.m_hWnd);
+        Ctrl2.m_pfnSuperWindowProc = MyWindowProc;
+        hwnd2 = Ctrl2.UnsubclassWindow(TRUE);
+        ok(hwnd1 == hwnd2, "hwnd1 != hwnd2\n");
+        fn2 = Ctrl2.m_pfnSuperWindowProc;
+        ok(fn1 != fn2, "fn1 == fn2\n");
+        ok(fn2 == DefWindowProc, "fn2 was %p\n", fn2);
+        DestroyWindow(hwnd2);
+        ok(Ctrl2.m_hWnd == NULL, "hwnd != NULL\n");
     }
 }
