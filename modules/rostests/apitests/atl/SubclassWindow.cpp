@@ -22,7 +22,11 @@
 #include <atlbase.h>
 #include <atlwin.h>
 
-#define INVALID_HWND ((HWND)(ULONG_PTR)0xFFFFFFFF)
+#ifdef _WIN64
+    #define INVALID_HWND ((HWND)(ULONG_PTR)0xDEADBEEFDEADBEEFULL)
+#else
+    #define INVALID_HWND ((HWND)(ULONG_PTR)0xDEADBEEF)
+#endif
 
 static BOOL s_flag = TRUE;
 
