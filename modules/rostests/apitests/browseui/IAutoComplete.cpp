@@ -31,16 +31,6 @@ static HWND MyCreateWindow(VOID)
                          NULL, NULL, GetModuleHandleW(NULL), NULL);
 }
 
-static void MyMessageLoop(void)
-{
-    MSG msg;
-    while (GetMessageW(&msg, NULL, 0, 0))
-    {
-        TranslateMessage(&msg);
-        DispatchMessageW(&msg);
-    }
-}
-
 class CEnumString : public IEnumString, public IACList2
 {
 public:
@@ -165,22 +155,9 @@ static int __cdecl RangeCompare(const void *x, const void *y)
         return 1;
     return 0;
 }
-#endif
 
-static VOID DoWordBreakProc(EDITWORDBREAKPROC fn)
+static __inline BOOL IsWordBreak(WCHAR ch)
 {
-#ifdef OUTPUT_TABLE
-    WORD wType1, wType2, wType3;
-    for (DWORD i = 0; i <= 0xFFFF; ++i)
-    {
-        WCHAR ch = (WCHAR)i;
-        GetStringTypeW(CT_CTYPE1, &ch, 1, &wType1);
-        GetStringTypeW(CT_CTYPE2, &ch, 1, &wType2);
-        GetStringTypeW(CT_CTYPE3, &ch, 1, &wType3);
-        BOOL b = fn(&ch, 0, 1, WB_ISDELIMITER);
-        trace("%u\t0x%04x\t0x%04x\t0x%04x\t0x%04x\n", b, wType1, wType2, wType3, ch);
-    }
-#else
     static const RANGE s_ranges[] =
     {
         { 0x0009, 0x0009 }, { 0x0020, 0x002f }, { 0x003a, 0x0040 }, { 0x005b, 0x0060 },
@@ -202,19 +179,31 @@ static VOID DoWordBreakProc(EDITWORDBREAKPROC fn)
         { 0xff3d, 0xff3d }, { 0xff40, 0xff40 }, { 0xff5b, 0xff5e }, { 0xff61, 0xff64 },
         { 0xff67, 0xff70 }, { 0xff9e, 0xff9f }, { 0xffe9, 0xffe9 }, { 0xffeb, 0xffeb },
     };
+    RANGE range = { ch, ch };
+    return !!bsearch(&range, s_ranges, _countof(s_ranges), sizeof(RANGE), RangeCompare);
+}
+#endif
+
+static VOID DoWordBreakProc(EDITWORDBREAKPROC fn)
+{
+#ifdef OUTPUT_TABLE
+    WORD wType1, wType2, wType3;
     for (DWORD i = 0; i <= 0xFFFF; ++i)
     {
         WCHAR ch = (WCHAR)i;
-        RANGE range = { ch, ch };
+        GetStringTypeW(CT_CTYPE1, &ch, 1, &wType1);
+        GetStringTypeW(CT_CTYPE2, &ch, 1, &wType2);
+        GetStringTypeW(CT_CTYPE3, &ch, 1, &wType3);
         BOOL b = fn(&ch, 0, 1, WB_ISDELIMITER);
-        if (bsearch(&range, s_ranges, _countof(s_ranges), sizeof(RANGE), RangeCompare))
-        {
-            ok(b, "ch: %d, 0x%04x\n", b, ch);
-        }
-        else
-        {
-            ok(!b, "ch: %d, 0x%04x\n", b, ch);
-        }
+        trace("%u\t0x%04x\t0x%04x\t0x%04x\t0x%04x\n", b, wType1, wType2, wType3, ch);
+    }
+#else
+    for (DWORD i = 0; i <= 0xFFFF; ++i)
+    {
+        WCHAR ch = (WCHAR)i;
+        BOOL b1 = fn(&ch, 0, 1, WB_ISDELIMITER);
+        BOOL b2 = IsWordBreak(ch);
+        ok(b1 == b2, "ch:0x%04x, b1:%d, b2:%d\n", ch, b1, b2);
     }
 #endif
 }
@@ -332,7 +321,12 @@ static VOID DoTest1(VOID)
 
     PostQuitMessage(0);
 
-    MyMessageLoop();
+    MSG msg;
+    while (GetMessageW(&msg, NULL, 0, 0))
+    {
+        TranslateMessage(&msg);
+        DispatchMessageW(&msg);
+    }
 }
 
 START_TEST(IAutoComplete)
