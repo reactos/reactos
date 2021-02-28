@@ -13,6 +13,7 @@
 #include <atlcom.h>     // These 3 includes only exist here to make gcc happy about (unused) templates..
 #include <atlwin.h>     //
 #include <shlwapi.h>
+#include <strsafe.h>
 
 #define ok_wstri(x, y) \
     ok(lstrcmpiW(x, y) == 0, "Wrong string. Expected '%S', got '%S'\n", y, x)
@@ -24,10 +25,10 @@ struct CCoInit
     HRESULT hr;
 };
 
-static HWND MyCreateWindow(VOID)
+static HWND MyCreateWindow(INT x, INT y, INT cx, INT cy)
 {
     return CreateWindowW(L"EDIT", NULL, WS_POPUPWINDOW,
-                         CW_USEDEFAULT, CW_USEDEFAULT, 100, 100,
+                         x, y, cx, cy,
                          NULL, NULL, GetModuleHandleW(NULL), NULL);
 }
 
@@ -179,12 +180,27 @@ static __inline BOOL IsWordBreak(WCHAR ch)
         { 0xff3d, 0xff3d }, { 0xff40, 0xff40 }, { 0xff5b, 0xff5e }, { 0xff61, 0xff64 },
         { 0xff67, 0xff70 }, { 0xff9e, 0xff9f }, { 0xffe9, 0xffe9 }, { 0xffeb, 0xffeb },
     };
+#ifndef NDEBUG
+    static BOOL s_bFirstTime = TRUE;
+    if (s_bFirstTime)
+    {
+        s_bFirstTime = FALSE;
+        for (UINT i = 0; i < _countof(s_ranges); ++i)
+        {
+            ATLASSERT(s_ranges[i].from <= s_ranges[i].to);
+        }
+        for (UINT i = 0; i + 1 < _countof(s_ranges); ++i)
+        {
+            ATLASSERT(s_ranges[i].to < s_ranges[i + 1].from);
+        }
+    }
+#endif
     RANGE range = { ch, ch };
     return !!bsearch(&range, s_ranges, _countof(s_ranges), sizeof(RANGE), RangeCompare);
 }
 #endif
 
-static VOID DoWordBreakProc(EDITWORDBREAKPROC fn)
+static VOID DoTestWordBreakProc(EDITWORDBREAKPROC fn)
 {
 #ifdef OUTPUT_TABLE
     WORD wType1, wType2, wType3;
@@ -208,20 +224,15 @@ static VOID DoWordBreakProc(EDITWORDBREAKPROC fn)
 #endif
 }
 
-static VOID DoTest1(VOID)
+static VOID DoTestCase(INT x, INT y, INT cx, INT cy, LPWSTR *pList, UINT nCount)
 {
-    HWND hwndEdit = MyCreateWindow();
+    HWND hwndEdit = MyCreateWindow(x, y, cx, cy);
     ok(hwndEdit != NULL, "hwndEdit was NULL\n");
     ShowWindow(hwndEdit, SW_SHOWNORMAL);
 
     EDITWORDBREAKPROC fn1 =
         (EDITWORDBREAKPROC)SendMessageW(hwndEdit, EM_GETWORDBREAKPROC, 0, 0);
     ok(fn1 == NULL, "fn1 was %p\n", fn1);
-
-    UINT nCount = 2;
-    LPWSTR *pList = (LPWSTR *)CoTaskMemAlloc(nCount * sizeof(LPWSTR));
-    SHStrDupW(L"test\\AA", &pList[0]);
-    SHStrDupW(L"test\\BBB", &pList[1]);
 
     CComPtr<CEnumString> pEnum = new CEnumString();
     pEnum->SetList(nCount, pList);
@@ -262,11 +273,16 @@ static VOID DoTest1(VOID)
     }
     ok(hwndDropDown != NULL, "hwndDropDown was NULL\n");
 
-    EDITWORDBREAKPROC fn2 =
-        (EDITWORDBREAKPROC)SendMessageW(hwndEdit, EM_GETWORDBREAKPROC, 0, 0);
-    ok(fn1 != fn2, "fn1 == fn2\n");
-    ok(fn2 != NULL, "fn2 was NULL\n");
-    DoWordBreakProc(fn2);
+    static BOOL s_bFirstTime = TRUE;
+    if (s_bFirstTime)
+    {
+        s_bFirstTime = FALSE;
+        EDITWORDBREAKPROC fn2 =
+            (EDITWORDBREAKPROC)SendMessageW(hwndEdit, EM_GETWORDBREAKPROC, 0, 0);
+        ok(fn1 != fn2, "fn1 == fn2\n");
+        ok(fn2 != NULL, "fn2 was NULL\n");
+        DoTestWordBreakProc(fn2);
+    }
 
     style = (LONG)GetWindowLongPtrW(hwndDropDown, GWL_STYLE);
     exstyle = (LONG)GetWindowLongPtrW(hwndDropDown, GWL_EXSTYLE);
@@ -327,6 +343,8 @@ static VOID DoTest1(VOID)
         TranslateMessage(&msg);
         DispatchMessageW(&msg);
     }
+
+    DestroyWindow(hwndEdit);
 }
 
 START_TEST(IAutoComplete)
@@ -339,5 +357,39 @@ START_TEST(IAutoComplete)
         return;
     }
 
-    DoTest1();
+    UINT nCount;
+    LPWSTR *pList;
+    INT cxScreen = GetSystemMetrics(SM_CXSCREEN);
+    INT cyScreen = GetSystemMetrics(SM_CYSCREEN);
+    WCHAR szText[64];
+
+    nCount = 2;
+    pList = (LPWSTR *)CoTaskMemAlloc(nCount * sizeof(LPWSTR));
+    SHStrDupW(L"test\\AA", &pList[0]);
+    SHStrDupW(L"test\\BBB", &pList[1]);
+    DoTestCase(0, 0, 100, 16, pList, nCount);
+
+    nCount = 2;
+    pList = (LPWSTR *)CoTaskMemAlloc(nCount * sizeof(LPWSTR));
+    SHStrDupW(L"test\\AA", &pList[0]);
+    SHStrDupW(L"test\\BBB", &pList[1]);
+    DoTestCase(cxScreen - 100, cyScreen - 30, 80, 18, pList, nCount);
+
+    nCount = 100;
+    pList = (LPWSTR *)CoTaskMemAlloc(nCount * sizeof(LPWSTR));
+    for (UINT i = 0; i < nCount; ++i)
+    {
+        StringCbPrintfW(szText, sizeof(szText), L"test\\%u", i);
+        SHStrDupW(szText, &pList[i]);
+    }
+    DoTestCase(100, 100, 100, 16, pList, nCount);
+
+    nCount = 100;
+    pList = (LPWSTR *)CoTaskMemAlloc(nCount * sizeof(LPWSTR));
+    for (UINT i = 0; i < nCount; ++i)
+    {
+        StringCbPrintfW(szText, sizeof(szText), L"test\\%u", i);
+        SHStrDupW(szText, &pList[i]);
+    }
+    DoTestCase(0, cyScreen - 30, 80, 18, pList, nCount);
 }
