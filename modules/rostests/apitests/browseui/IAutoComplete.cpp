@@ -291,8 +291,8 @@ DoTestCase(INT x, INT y, INT cx, INT cy, LPCWSTR pszInput,
     ok_hr(hr, S_OK);
 
 #ifdef MANUAL_DEBUGGING
-    // NOTE: You can quit MANUAL_DEBUGGING by Alt+F4.
     trace("enter MANUAL_DEBUGGING...\n");
+    trace("NOTE: You can quit EDIT control by Alt+F4.\n");
     while (GetMessage(&msg, NULL, 0, 0))
     {
         TranslateMessage(&msg);
