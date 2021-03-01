@@ -381,7 +381,10 @@ DoTestCaseA(INT x, INT y, INT cx, INT cy, LPCWSTR pszInput,
 
     // check class style
     style = (LONG)GetClassLongPtrW(hwndDropDown, GCL_STYLE);
-    ok(style == 0x20800 /* Win10 */ || style == 0 /* Win2k3 */,
+#define DROPDOWN_CLASS_STYLE_1 (CS_DROPSHADOW | CS_SAVEBITS)
+#define DROPDOWN_CLASS_STYLE_2 0
+    ok(style == DROPDOWN_CLASS_STYLE_1 /* Win10 */ ||
+       style == DROPDOWN_CLASS_STYLE_2 /* WinXP/Win2k3 */,
        "style was 0x%08lx\n", style);
 
     // get client rectangle
@@ -422,8 +425,8 @@ DoTestCaseA(INT x, INT y, INT cx, INT cy, LPCWSTR pszInput,
     (WS_CHILD | WS_VISIBLE | SBS_SIZEBOX | SBS_SIZEBOXBOTTOMRIGHTALIGN) // 0x5000000c
 #define SIZEBOX_STYLE_2 \
     (WS_CHILD | WS_VISIBLE | SBS_SIZEBOX) // 0x50000008
-    ok(style == SIZEBOX_STYLE_1 /* win10 */ ||
-       style == SIZEBOX_STYLE_2 /* win2k3/winxp */, "style was 0x%08lx\n", style);
+    ok(style == SIZEBOX_STYLE_1 /* Win10 */ ||
+       style == SIZEBOX_STYLE_2 /* Win2k3/WinXP */, "style was 0x%08lx\n", style);
     ok_long(exstyle, 0);
     ok_long((LONG)id, 0);
 
