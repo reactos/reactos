@@ -303,6 +303,7 @@ DoTestCase(INT x, INT y, INT cx, INT cy, LPCWSTR pszInput,
     trace("leave MANUAL_DEBUGGING...\n");
     return;
 #endif
+
     // check expansion
     ok_int(s_bExpand, FALSE);
     // check reset
@@ -453,6 +454,13 @@ DoTestCase(INT x, INT y, INT cx, INT cy, LPCWSTR pszInput,
     ok_int(IsWindowVisible(hwndSizeGrip), TRUE);
     ok_int(IsWindowVisible(hwndList), TRUE);
 
+    // check item count
+    INT nListCount = ListView_GetItemCount(hwndList);
+    if (nListCount < 1000)
+        ok_int(nListCount, nCount);
+    else
+        ok_int(nListCount, 1000);
+
     // check the positions
     if (bDowner) // downer
     {
@@ -597,7 +605,7 @@ START_TEST(IAutoComplete)
 
     // Test case #6
     trace("Testcase #6 (upper) ------------------------------\n");
-    nCount = 300;
+    nCount = 2000;
     pList = (LPWSTR *)CoTaskMemAlloc(nCount * sizeof(LPWSTR));
     for (UINT i = 0; i < nCount; ++i)
     {
