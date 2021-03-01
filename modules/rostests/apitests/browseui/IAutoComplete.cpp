@@ -284,12 +284,16 @@ DoTestCase(INT x, INT y, INT cx, INT cy, LPCWSTR pszInput,
     hr = pAC->Init(hwndEdit, punk, NULL, NULL); // IAutoComplete::Init
     ok_hr(hr, S_OK);
 
+    // check expansion
+    ok_int(s_bExpand, FALSE);
+    // check reset
+    ok_int(s_bReset, FALSE);
+
     // input
     SetFocus(hwndEdit);
     WCHAR chLast = 0;
     for (UINT i = 0; pszInput[i]; ++i)
     {
-        ok_int(s_bExpand, FALSE);
         PostMessageW(hwndEdit, WM_CHAR, pszInput[i], 0);
         chLast = pszInput[i];
     }
@@ -332,8 +336,8 @@ DoTestCase(INT x, INT y, INT cx, INT cy, LPCWSTR pszInput,
         DispatchMessageW(&msg);
     }
 
-    // check the expansion
-    ok_int(chLast == L'\\', s_bExpand);
+    // check reset
+    ok_int(s_bReset, TRUE);
 
     // get sizes and positions
     RECT rcEdit, rcDropDown;
@@ -477,6 +481,7 @@ DoTestCase(INT x, INT y, INT cx, INT cy, LPCWSTR pszInput,
     {
         TranslateMessage(&msg);
         DispatchMessageW(&msg);
+        Sleep(30);
     }
 
     // destroy the EDIT control and drop-down window
@@ -489,6 +494,9 @@ DoTestCase(INT x, INT y, INT cx, INT cy, LPCWSTR pszInput,
         TranslateMessage(&msg);
         DispatchMessageW(&msg);
     }
+
+    // check the expansion
+    ok_int(s_bExpand, chLast == L'\\');
 }
 
 START_TEST(IAutoComplete)
@@ -565,7 +573,7 @@ START_TEST(IAutoComplete)
     DoTestCase(0, cyScreen - 30, 80, 18, L"testtest/", pList, nCount, FALSE);
 
     // Test case #6
-    trace("Testcase #5 (upper) ------------------------------\n");
+    trace("Testcase #6 (upper) ------------------------------\n");
     nCount = 300;
     pList = (LPWSTR *)CoTaskMemAlloc(nCount * sizeof(LPWSTR));
     for (UINT i = 0; i < nCount; ++i)
