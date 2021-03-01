@@ -15,6 +15,8 @@
 #include <shlwapi.h>
 #include <strsafe.h>
 
+//#define MANUAL_DEBUGGING
+
 // compare wide strings
 #define ok_wstri(x, y) \
     ok(lstrcmpiW(x, y) == 0, "Wrong string. Expected '%S', got '%S'\n", y, x)
@@ -29,8 +31,10 @@ struct CCoInit
 // create an EDIT control
 static HWND MyCreateEditCtrl(INT x, INT y, INT cx, INT cy)
 {
-    return CreateWindowW(L"EDIT", NULL, WS_POPUPWINDOW, x, y, cx, cy,
-                         NULL, NULL, GetModuleHandleW(NULL), NULL);
+    DWORD style = WS_POPUPWINDOW | WS_BORDER;
+    DWORD exstyle = WS_EX_CLIENTEDGE;
+    return CreateWindowExW(exstyle, L"EDIT", NULL, style, x, y, cx, cy,
+                           NULL, NULL, GetModuleHandleW(NULL), NULL);
 }
 
 static BOOL s_bReset = FALSE;
@@ -42,11 +46,12 @@ class CEnumString : public IEnumString, public IACList2
 public:
     CEnumString() : m_cRefs(0), m_nIndex(0), m_nCount(0), m_pList(NULL)
     {
+        trace("CEnumString::CEnumString(%p)\n", this);
     }
 
     virtual ~CEnumString()
     {
-        trace("CEnumString::~CEnumString\n");
+        trace("CEnumString::~CEnumString(%p)\n", this);
         for (UINT i = 0; i < m_nCount; ++i)
         {
             CoTaskMemFree(m_pList[i]);
@@ -109,6 +114,7 @@ public:
             return S_FALSE;
 
         SHStrDupW(m_pList[m_nIndex], rgelt);
+        ++m_nIndex;
         if (!*rgelt)
             return E_OUTOFMEMORY;
         *pceltFetched = 1;
@@ -284,6 +290,19 @@ DoTestCase(INT x, INT y, INT cx, INT cy, LPCWSTR pszInput,
     hr = pAC->Init(hwndEdit, punk, NULL, NULL); // IAutoComplete::Init
     ok_hr(hr, S_OK);
 
+#ifdef MANUAL_DEBUGGING
+    // NOTE: You can quit MANUAL_DEBUGGING by Alt+F4.
+    trace("enter MANUAL_DEBUGGING...\n");
+    while (GetMessage(&msg, NULL, 0, 0))
+    {
+        TranslateMessage(&msg);
+        DispatchMessageW(&msg);
+        if (!IsWindow(hwndEdit))
+            break;
+    }
+    trace("leave MANUAL_DEBUGGING...\n");
+    return;
+#endif
     // check expansion
     ok_int(s_bExpand, FALSE);
     // check reset
@@ -481,7 +500,7 @@ DoTestCase(INT x, INT y, INT cx, INT cy, LPCWSTR pszInput,
     {
         TranslateMessage(&msg);
         DispatchMessageW(&msg);
-        Sleep(30);
+        Sleep(30); // another thread is working...
     }
 
     // destroy the EDIT control and drop-down window
@@ -511,10 +530,12 @@ START_TEST(IAutoComplete)
     }
 
     // get screen size
-    // TODO: multimonitor
-    INT cxScreen = GetSystemMetrics(SM_CXSCREEN);
-    INT cyScreen = GetSystemMetrics(SM_CYSCREEN);
-    trace("SM_CXSCREEN: %d, SM_CYSCREEN: %d\n", cxScreen, cyScreen);
+    HMONITOR hMon = MonitorFromWindow(GetDesktopWindow(), MONITOR_DEFAULTTOPRIMARY);
+    MONITORINFO mi = { sizeof(mi) };
+    GetMonitorInfoW(hMon, &mi);
+    const RECT& rcWork = mi.rcWork;
+    trace("rcWork: (%ld, %ld, %ld, %ld)\n",
+          rcWork.left, rcWork.top, rcWork.right, rcWork.bottom);
     trace("SM_CXVSCROLL: %d, SM_CYHSCROLL: %d\n",
           GetSystemMetrics(SM_CXVSCROLL), GetSystemMetrics(SM_CYHSCROLL));
 
@@ -524,11 +545,12 @@ START_TEST(IAutoComplete)
 
     // Test case #1
     trace("Testcase #1 (downer) ------------------------------\n");
-    nCount = 2;
+    nCount = 3;
     pList = (LPWSTR *)CoTaskMemAlloc(nCount * sizeof(LPWSTR));
     SHStrDupW(L"test\\AA", &pList[0]);
     SHStrDupW(L"test\\BBB", &pList[1]);
-    DoTestCase(0, 0, 100, 16, L"test\\", pList, nCount, TRUE);
+    SHStrDupW(L"test\\CCC", &pList[2]);
+    DoTestCase(0, 0, 100, 30, L"test\\", pList, nCount, TRUE);
 
     // Test case #2
     trace("Testcase #2 (downer) ------------------------------\n");
@@ -539,7 +561,7 @@ START_TEST(IAutoComplete)
         StringCbPrintfW(szText, sizeof(szText), L"test\\%u", i);
         SHStrDupW(szText, &pList[i]);
     }
-    DoTestCase(100, 20, 100, 16, L"test\\", pList, nCount, TRUE);
+    DoTestCase(100, 20, 100, 30, L"test\\", pList, nCount, TRUE);
 
     // Test case #3
     trace("Testcase #3 (upper) ------------------------------\n");
@@ -548,7 +570,7 @@ START_TEST(IAutoComplete)
     SHStrDupW(L"test/AA", &pList[0]);
     SHStrDupW(L"test/BBB", &pList[0]);
     SHStrDupW(L"test/CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC", &pList[1]);
-    DoTestCase(cxScreen - 100, cyScreen - 30, 80, 18, L"test/",
+    DoTestCase(rcWork.right - 100, rcWork.bottom - 30, 80, 40, L"test/",
                pList, nCount, FALSE);
 
     // Test case #4
@@ -558,7 +580,7 @@ START_TEST(IAutoComplete)
     SHStrDupW(L"testtest\\AA", &pList[0]);
     SHStrDupW(L"testtest\\BBB", &pList[0]);
     SHStrDupW(L"testtest\\CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC", &pList[1]);
-    DoTestCase(cxScreen - 100, cyScreen - 30, 80, 18, L"testtest\\",
+    DoTestCase(rcWork.right - 100, rcWork.bottom - 30, 80, 40, L"testtest\\",
                pList, nCount, FALSE);
 
     // Test case #5
@@ -570,7 +592,7 @@ START_TEST(IAutoComplete)
         StringCbPrintfW(szText, sizeof(szText), L"testtest/%u", i);
         SHStrDupW(szText, &pList[i]);
     }
-    DoTestCase(0, cyScreen - 30, 80, 18, L"testtest/", pList, nCount, FALSE);
+    DoTestCase(0, rcWork.bottom - 30, 80, 30, L"testtest/", pList, nCount, FALSE);
 
     // Test case #6
     trace("Testcase #6 (upper) ------------------------------\n");
@@ -581,5 +603,5 @@ START_TEST(IAutoComplete)
         StringCbPrintfW(szText, sizeof(szText), L"testtest\\item-%u", i);
         SHStrDupW(szText, &pList[i]);
     }
-    DoTestCase(0, cyScreen - 30, 80, 18, L"testtest\\", pList, nCount, FALSE);
+    DoTestCase(0, rcWork.bottom - 30, 80, 40, L"testtest\\", pList, nCount, FALSE);
 }
