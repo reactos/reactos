@@ -376,7 +376,9 @@ DoTestCaseA(INT x, INT y, INT cx, INT cy, LPCWSTR pszInput,
 #define DROPDOWN_STYLE (WS_POPUP | WS_VISIBLE | WS_CLIPSIBLINGS | \
                         WS_CLIPCHILDREN | WS_BORDER) // 0x96800000
     ok(style == DROPDOWN_STYLE, "style was 0x%08lx\n", style);
-    ok_long(exstyle, 0x8c);
+#define DROPDOWN_EX_STYLE (WS_EX_TOOLWINDOW | WS_EX_TOPMOST | \
+                           WS_EX_NOPARENTNOTIFY) // 0x8c
+    ok_long(exstyle, DROPDOWN_EX_STYLE);
     ok_long((LONG)id, 0);
 
     // check class style
