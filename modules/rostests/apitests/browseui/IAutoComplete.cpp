@@ -253,10 +253,10 @@ static VOID DoWordBreakProc(EDITWORDBREAKPROC fn)
 #endif
 }
 
-// the testcase
+// the testcase A
 static VOID
-DoTestCase(INT x, INT y, INT cx, INT cy, LPCWSTR pszInput,
-           LPWSTR *pList, UINT nCount, BOOL bDowner)
+DoTestCaseA(INT x, INT y, INT cx, INT cy, LPCWSTR pszInput,
+            LPWSTR *pList, UINT nCount, BOOL bDowner)
 {
     MSG msg;
     s_bExpand = s_bReset = FALSE;
@@ -527,6 +527,108 @@ DoTestCase(INT x, INT y, INT cx, INT cy, LPCWSTR pszInput,
     ok_int(s_bExpand, chLast == L'\\');
 }
 
+// the testcase B
+static VOID
+DoTestCaseB(INT x, INT y, INT cx, INT cy, LPCWSTR pszInput,
+            LPWSTR *pList, UINT nCount, BOOL bDowner)
+{
+    MSG msg;
+    s_bExpand = s_bReset = FALSE;
+
+    // create EDIT control
+    HWND hwndEdit = MyCreateEditCtrl(x, y, cx, cy);
+    ok(hwndEdit != NULL, "hwndEdit was NULL\n");
+    ShowWindowAsync(hwndEdit, SW_SHOWNORMAL);
+
+    // set the list data
+    CComPtr<CEnumString> pEnum(new CEnumString());
+    pEnum->SetList(nCount, pList);
+
+    // create auto-completion object
+    CComPtr<IAutoComplete2> pAC;
+    HRESULT hr = CoCreateInstance(CLSID_AutoComplete, NULL, CLSCTX_INPROC_SERVER,
+                                  IID_IAutoComplete2, (VOID **)&pAC);
+    ok_hr(hr, S_OK);
+
+    // enable auto-suggest
+    hr = pAC->SetOptions(ACO_AUTOSUGGEST);
+    ok_hr(hr, S_OK);
+
+    // initialize
+    IUnknown *punk = static_cast<IEnumString *>(pEnum);
+    hr = pAC->Init(hwndEdit, punk, NULL, NULL); // IAutoComplete::Init
+    ok_hr(hr, S_OK);
+
+    // input
+    SetFocus(hwndEdit);
+    for (UINT i = 0; pszInput[i]; ++i)
+    {
+        PostMessageW(hwndEdit, WM_COMMAND, (0xFFFF0000 + i), 0xDEADFACE);
+        PostMessageW(hwndEdit, WM_CHAR, pszInput[i], 0);
+    }
+    PostMessageW(hwndEdit, WM_CHAR, L'!', 0);
+
+    // observe the message responses
+    BOOL bFlag = FALSE;
+    INT i = 0;
+    WCHAR ch = 0;
+    s_bExpand = s_bReset = FALSE;
+    while (PeekMessageW(&msg, NULL, 0, 0, PM_REMOVE))
+    {
+        TranslateMessage(&msg);
+        DispatchMessageW(&msg);
+        if (bFlag && msg.message == WM_CHAR)
+        {
+            bFlag = FALSE;
+            ch = (WCHAR)msg.wParam;
+            if (ch == L'!')
+                break;
+            //trace("i: %d, ch:%C, s_bReset:%d, s_bExpand:%d, ch:%C\n", i, ch, s_bReset, s_bExpand, ch);
+            Sleep(100);
+            if (i == 0)
+            {
+                ok_int(s_bReset, TRUE);
+                s_bReset = FALSE;
+                ok_int(s_bExpand, FALSE);
+            }
+            else if (ch != L'\\')
+            {
+                ok_int(s_bReset, FALSE);
+                ok_int(s_bExpand, FALSE);
+            }
+        }
+        if (msg.message == WM_COMMAND && (DWORD)msg.lParam == 0xDEADFACE)
+        {
+            i = (msg.wParam & 0x0000FFFF);
+            //trace("i: %d, ch:%C, s_bReset:%d, s_bExpand:%d, ch:%C\n", i, ch, s_bReset, s_bExpand, ch);
+            if (ch == L'\\')
+            {
+                ok_int(s_bReset, TRUE);
+                ok_int(s_bExpand, TRUE);
+                s_bReset = s_bExpand = FALSE;
+            }
+            else
+            {
+                ok_int(s_bReset, FALSE);
+                ok_int(s_bExpand, FALSE);
+            }
+            bFlag = TRUE;
+            Sleep(100);
+        }
+    }
+
+    // post quit
+    DestroyWindow(hwndEdit);
+    PostQuitMessage(0);
+
+    // take care of the message queue
+    while (GetMessageW(&msg, NULL, 0, 0))
+    {
+        TranslateMessage(&msg);
+        DispatchMessageW(&msg);
+    }
+}
+
 START_TEST(IAutoComplete)
 {
     // initialize COM
@@ -552,16 +654,16 @@ START_TEST(IAutoComplete)
     LPWSTR *pList;
     WCHAR szText[64];
 
-    // Test case #1
+    // Test case #1 (A)
     trace("Testcase #1 (downer) ------------------------------\n");
     nCount = 3;
     pList = (LPWSTR *)CoTaskMemAlloc(nCount * sizeof(LPWSTR));
     SHStrDupW(L"test\\AA", &pList[0]);
     SHStrDupW(L"test\\BBB", &pList[1]);
     SHStrDupW(L"test\\CCC", &pList[2]);
-    DoTestCase(0, 0, 100, 30, L"test\\", pList, nCount, TRUE);
+    DoTestCaseA(0, 0, 100, 30, L"test\\", pList, nCount, TRUE);
 
-    // Test case #2
+    // Test case #2 (A)
     trace("Testcase #2 (downer) ------------------------------\n");
     nCount = 300;
     pList = (LPWSTR *)CoTaskMemAlloc(nCount * sizeof(LPWSTR));
@@ -570,29 +672,29 @@ START_TEST(IAutoComplete)
         StringCbPrintfW(szText, sizeof(szText), L"test\\%u", i);
         SHStrDupW(szText, &pList[i]);
     }
-    DoTestCase(100, 20, 100, 30, L"test\\", pList, nCount, TRUE);
+    DoTestCaseA(100, 20, 100, 30, L"test\\", pList, nCount, TRUE);
 
-    // Test case #3
+    // Test case #3 (A)
     trace("Testcase #3 (upper) ------------------------------\n");
     nCount = 2;
     pList = (LPWSTR *)CoTaskMemAlloc(nCount * sizeof(LPWSTR));
     SHStrDupW(L"test/AA", &pList[0]);
     SHStrDupW(L"test/BBB", &pList[0]);
     SHStrDupW(L"test/CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC", &pList[1]);
-    DoTestCase(rcWork.right - 100, rcWork.bottom - 30, 80, 40, L"test/",
-               pList, nCount, FALSE);
+    DoTestCaseA(rcWork.right - 100, rcWork.bottom - 30, 80, 40, L"test/",
+                pList, nCount, FALSE);
 
-    // Test case #4
+    // Test case #4 (A)
     trace("Testcase #4 (upper) ------------------------------\n");
     nCount = 2;
     pList = (LPWSTR *)CoTaskMemAlloc(nCount * sizeof(LPWSTR));
     SHStrDupW(L"testtest\\AA", &pList[0]);
     SHStrDupW(L"testtest\\BBB", &pList[0]);
     SHStrDupW(L"testtest\\CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC", &pList[1]);
-    DoTestCase(rcWork.right - 100, rcWork.bottom - 30, 80, 40, L"testtest\\",
-               pList, nCount, FALSE);
+    DoTestCaseA(rcWork.right - 100, rcWork.bottom - 30, 80, 40, L"testtest\\",
+                pList, nCount, FALSE);
 
-    // Test case #5
+    // Test case #5 (A)
     trace("Testcase #5 (upper) ------------------------------\n");
     nCount = 300;
     pList = (LPWSTR *)CoTaskMemAlloc(nCount * sizeof(LPWSTR));
@@ -601,9 +703,9 @@ START_TEST(IAutoComplete)
         StringCbPrintfW(szText, sizeof(szText), L"testtest/%u", i);
         SHStrDupW(szText, &pList[i]);
     }
-    DoTestCase(0, rcWork.bottom - 30, 80, 30, L"testtest/", pList, nCount, FALSE);
+    DoTestCaseA(0, rcWork.bottom - 30, 80, 30, L"testtest/", pList, nCount, FALSE);
 
-    // Test case #6
+    // Test case #6 (A)
     trace("Testcase #6 (upper) ------------------------------\n");
     nCount = 2000;
     pList = (LPWSTR *)CoTaskMemAlloc(nCount * sizeof(LPWSTR));
@@ -612,5 +714,16 @@ START_TEST(IAutoComplete)
         StringCbPrintfW(szText, sizeof(szText), L"testtest\\item-%u", i);
         SHStrDupW(szText, &pList[i]);
     }
-    DoTestCase(0, rcWork.bottom - 30, 80, 40, L"testtest\\", pList, nCount, FALSE);
+    DoTestCaseA(0, rcWork.bottom - 30, 80, 40, L"testtest\\", pList, nCount, FALSE);
+
+    // Test case #7 (B)
+    trace("Testcase #7 (upper) ------------------------------\n");
+    nCount = 500;
+    pList = (LPWSTR *)CoTaskMemAlloc(nCount * sizeof(LPWSTR));
+    for (UINT i = 0; i < nCount; ++i)
+    {
+        StringCbPrintfW(szText, sizeof(szText), L"testtest\\item-%u", i);
+        SHStrDupW(szText, &pList[i]);
+    }
+    DoTestCaseB(0, 0, 100, 30, L"testtest\\iX", pList, nCount, TRUE);
 }
