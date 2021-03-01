@@ -222,8 +222,10 @@ static VOID DoTestWordBreakProc(EDITWORDBREAKPROC fn)
 #endif
 }
 
-static VOID DoTestCase(INT x, INT y, INT cx, INT cy, LPWSTR *pList, UINT nCount)
+static VOID
+DoTestCase(INT x, INT y, INT cx, INT cy, LPWSTR *pList, UINT nCount, BOOL bDowner)
 {
+    MSG msg;
     HWND hwndEdit = MyCreateWindow(x, y, cx, cy);
     ok(hwndEdit != NULL, "hwndEdit was NULL\n");
     ShowWindow(hwndEdit, SW_SHOWNORMAL);
@@ -248,18 +250,19 @@ static VOID DoTestCase(INT x, INT y, INT cx, INT cy, LPWSTR *pList, UINT nCount)
     ok_hr(hr, S_OK);
 
     // "test\\"
-    PostMessageW(hwndEdit, WM_CHAR, L't', 0);
-    PostMessageW(hwndEdit, WM_CHAR, L'e', 0);
-    PostMessageW(hwndEdit, WM_CHAR, L's', 0);
-    PostMessageW(hwndEdit, WM_CHAR, L't', 0);
-    PostMessageW(hwndEdit, WM_CHAR, L'\\', 0);
+    SetFocus(hwndEdit);
+    Sleep(100);
+    PostMessageW(hwndEdit, WM_CHAR, 't', 0);
+    PostMessageW(hwndEdit, WM_CHAR, 'e', 0);
+    PostMessageW(hwndEdit, WM_CHAR, 's', 0);
+    PostMessageW(hwndEdit, WM_CHAR, 't', 0);
+    PostMessageW(hwndEdit, WM_CHAR, '\\', 0);
 
     DWORD style, exstyle;
     HWND hwndDropDown;
     LONG_PTR id;
     for (INT i = 0; i < 100; ++i)
     {
-        MSG msg;
         while (PeekMessageW(&msg, NULL, 0, 0, PM_REMOVE))
         {
             TranslateMessage(&msg);
@@ -282,6 +285,26 @@ static VOID DoTestCase(INT x, INT y, INT cx, INT cy, LPWSTR *pList, UINT nCount)
         ok(fn2 != NULL, "fn2 was NULL\n");
         DoTestWordBreakProc(fn2);
     }
+
+    while (PeekMessageW(&msg, NULL, 0, 0, PM_REMOVE))
+    {
+        TranslateMessage(&msg);
+        DispatchMessageW(&msg);
+    }
+
+    while (PeekMessageW(&msg, NULL, 0, 0, PM_REMOVE))
+    {
+        TranslateMessage(&msg);
+        DispatchMessageW(&msg);
+    }
+
+    RECT rcEdit, rcDropDown;
+    GetWindowRect(hwndEdit, &rcEdit);
+    GetWindowRect(hwndDropDown, &rcDropDown);
+    trace("rcEdit: (%ld, %ld, %ld, %ld)\n", rcEdit.left, rcEdit.top, rcEdit.right, rcEdit.bottom);
+    trace("rcDropDown: (%ld, %ld, %ld, %ld)\n", rcDropDown.left, rcDropDown.top, rcDropDown.right, rcDropDown.bottom);
+    ok_int(IsWindowVisible(hwndDropDown), TRUE);
+    ok_int(bDowner, rcEdit.top < rcDropDown.top);
 
     style = (LONG)GetWindowLongPtrW(hwndDropDown, GWL_STYLE);
     exstyle = (LONG)GetWindowLongPtrW(hwndDropDown, GWL_EXSTYLE);
@@ -334,16 +357,13 @@ static VOID DoTestCase(INT x, INT y, INT cx, INT cy, LPWSTR *pList, UINT nCount)
     hwndChild = GetNextWindow(hwndChild, GW_HWNDNEXT);
     ok(hwndChild == NULL, "hwndChild was %p\n", hwndChild);
 
-    PostQuitMessage(0);
+    PostMessageW(hwndEdit, WM_CLOSE, 0, 0);
 
-    MSG msg;
-    while (GetMessageW(&msg, NULL, 0, 0))
+    while (PeekMessageW(&msg, NULL, 0, 0, PM_REMOVE))
     {
         TranslateMessage(&msg);
         DispatchMessageW(&msg);
     }
-
-    DestroyWindow(hwndEdit);
 }
 
 START_TEST(IAutoComplete)
@@ -367,14 +387,14 @@ START_TEST(IAutoComplete)
     pList = (LPWSTR *)CoTaskMemAlloc(nCount * sizeof(LPWSTR));
     SHStrDupW(L"test\\AA", &pList[0]);
     SHStrDupW(L"test\\BBB", &pList[1]);
-    DoTestCase(0, 0, 100, 16, pList, nCount);
+    DoTestCase(0, 0, 100, 16, pList, nCount, TRUE);
 
     trace("Testcase #2\n");
     nCount = 2;
     pList = (LPWSTR *)CoTaskMemAlloc(nCount * sizeof(LPWSTR));
     SHStrDupW(L"test\\AA", &pList[0]);
     SHStrDupW(L"test\\CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC", &pList[1]);
-    DoTestCase(cxScreen - 100, cyScreen - 30, 80, 18, pList, nCount);
+    DoTestCase(cxScreen - 100, cyScreen - 30, 80, 18, pList, nCount, FALSE);
 
     trace("Testcase #3\n");
     nCount = 100;
@@ -384,7 +404,7 @@ START_TEST(IAutoComplete)
         StringCbPrintfW(szText, sizeof(szText), L"test\\%u", i);
         SHStrDupW(szText, &pList[i]);
     }
-    DoTestCase(100, 100, 100, 16, pList, nCount);
+    DoTestCase(100, 20, 100, 16, pList, nCount, TRUE);
 
     trace("Testcase #4\n");
     nCount = 100;
@@ -394,5 +414,5 @@ START_TEST(IAutoComplete)
         StringCbPrintfW(szText, sizeof(szText), L"test\\%u", i);
         SHStrDupW(szText, &pList[i]);
     }
-    DoTestCase(0, cyScreen - 30, 80, 18, pList, nCount);
+    DoTestCase(0, cyScreen - 30, 80, 18, pList, nCount, FALSE);
 }
