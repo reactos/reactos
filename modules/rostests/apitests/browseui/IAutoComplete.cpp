@@ -223,7 +223,8 @@ static VOID DoTestWordBreakProc(EDITWORDBREAKPROC fn)
 }
 
 static VOID
-DoTestCase(INT x, INT y, INT cx, INT cy, LPWSTR *pList, UINT nCount, BOOL bDowner)
+DoTestCase(INT x, INT y, INT cx, INT cy, LPCWSTR pszInput,
+           LPWSTR *pList, UINT nCount, BOOL bDowner)
 {
     MSG msg;
     HWND hwndEdit = MyCreateWindow(x, y, cx, cy);
@@ -249,14 +250,12 @@ DoTestCase(INT x, INT y, INT cx, INT cy, LPWSTR *pList, UINT nCount, BOOL bDowne
     hr = pAC->Init(hwndEdit, punk, NULL, NULL); // IAutoComplete::Init
     ok_hr(hr, S_OK);
 
-    // "test\\"
     SetFocus(hwndEdit);
-    Sleep(100);
-    PostMessageW(hwndEdit, WM_CHAR, 't', 0);
-    PostMessageW(hwndEdit, WM_CHAR, 'e', 0);
-    PostMessageW(hwndEdit, WM_CHAR, 's', 0);
-    PostMessageW(hwndEdit, WM_CHAR, 't', 0);
-    PostMessageW(hwndEdit, WM_CHAR, '\\', 0);
+    Sleep(300);
+    for (UINT i = 0; pszInput[i]; ++i)
+    {
+        PostMessageW(hwndEdit, WM_CHAR, pszInput[i], 0);
+    }
 
     DWORD style, exstyle;
     HWND hwndDropDown;
@@ -292,12 +291,6 @@ DoTestCase(INT x, INT y, INT cx, INT cy, LPWSTR *pList, UINT nCount, BOOL bDowne
         DispatchMessageW(&msg);
     }
 
-    while (PeekMessageW(&msg, NULL, 0, 0, PM_REMOVE))
-    {
-        TranslateMessage(&msg);
-        DispatchMessageW(&msg);
-    }
-
     RECT rcEdit, rcDropDown;
     GetWindowRect(hwndEdit, &rcEdit);
     GetWindowRect(hwndDropDown, &rcDropDown);
@@ -317,45 +310,107 @@ DoTestCase(INT x, INT y, INT cx, INT cy, LPWSTR *pList, UINT nCount, BOOL bDowne
     ok(style == 0x20800 /* Win10 */ || style == 0 /* Win2k3 */,
        "style was 0x%08lx\n", style);
 
-    HWND hwndChild;
+    RECT rcClient;
+    GetClientRect(hwndDropDown, &rcClient);
+    trace("rcClient: (%ld, %ld, %ld, %ld)\n",
+          rcClient.left, rcClient.top, rcClient.right, rcClient.bottom);
+
+    HWND hwndScrollBar, hwndSizeGrip, hwndList, hwndNone;
     WCHAR szClass[64];
 
-    hwndChild = GetTopWindow(hwndDropDown);
-    ok(hwndChild != NULL, "hwndChild was NULL\n");
-    GetClassNameW(hwndChild, szClass, _countof(szClass));
+    hwndScrollBar = GetTopWindow(hwndDropDown);
+    ok(hwndScrollBar != NULL, "hwndScrollBar was NULL\n");
+    GetClassNameW(hwndScrollBar, szClass, _countof(szClass));
     ok_wstri(szClass, L"ScrollBar");
-    style = (LONG)GetWindowLongPtrW(hwndChild, GWL_STYLE);
-    exstyle = (LONG)GetWindowLongPtrW(hwndChild, GWL_EXSTYLE);
-    id = GetWindowLongPtrW(hwndDropDown, GWLP_ID);
+    style = (LONG)GetWindowLongPtrW(hwndScrollBar , GWL_STYLE);
+    exstyle = (LONG)GetWindowLongPtrW(hwndScrollBar , GWL_EXSTYLE);
+    id = GetWindowLongPtrW(hwndScrollBar , GWLP_ID);
     ok(style == 0x50000005 || style == 0x40000005, "style was 0x%08lx\n", style);
     ok_long(exstyle, 0);
     ok_long((LONG)id, 0);
 
-    hwndChild = GetNextWindow(hwndChild, GW_HWNDNEXT);
-    ok(hwndChild != NULL, "hwndChild was NULL\n");
-    GetClassNameW(hwndChild, szClass, _countof(szClass));
+    hwndSizeGrip = GetNextWindow(hwndScrollBar, GW_HWNDNEXT);
+    ok(hwndSizeGrip != NULL, "hwndSizeGrip was NULL\n");
+    GetClassNameW(hwndSizeGrip, szClass, _countof(szClass));
     ok_wstri(szClass, L"ScrollBar");
-    style = (LONG)GetWindowLongPtrW(hwndChild, GWL_STYLE);
-    exstyle = (LONG)GetWindowLongPtrW(hwndChild, GWL_EXSTYLE);
-    id = GetWindowLongPtrW(hwndDropDown, GWLP_ID);
+    style = (LONG)GetWindowLongPtrW(hwndSizeGrip, GWL_STYLE);
+    exstyle = (LONG)GetWindowLongPtrW(hwndSizeGrip, GWL_EXSTYLE);
+    id = GetWindowLongPtrW(hwndSizeGrip, GWLP_ID);
     ok(style == 0x5000000c || style == 0x50000008,
        "style was 0x%08lx\n", style);
     ok_long(exstyle, 0);
     ok_long((LONG)id, 0);
 
-    hwndChild = GetNextWindow(hwndChild, GW_HWNDNEXT);
-    ok(hwndChild != NULL, "hwndChild was NULL\n");
-    GetClassNameW(hwndChild, szClass, _countof(szClass));
+    hwndList = GetNextWindow(hwndSizeGrip, GW_HWNDNEXT);
+    ok(hwndList != NULL, "hwndList was NULL\n");
+    GetClassNameW(hwndList, szClass, _countof(szClass));
     ok_wstri(szClass, L"SysListView32");
-    style = (LONG)GetWindowLongPtrW(hwndChild, GWL_STYLE);
-    exstyle = (LONG)GetWindowLongPtrW(hwndChild, GWL_EXSTYLE);
-    id = GetWindowLongPtrW(hwndDropDown, GWLP_ID);
+    style = (LONG)GetWindowLongPtrW(hwndList, GWL_STYLE);
+    exstyle = (LONG)GetWindowLongPtrW(hwndList, GWL_EXSTYLE);
+    id = GetWindowLongPtrW(hwndList, GWLP_ID);
     ok_long(style, 0x54005405);
     ok_long(exstyle, 0);
     ok_long((LONG)id, 0);
 
-    hwndChild = GetNextWindow(hwndChild, GW_HWNDNEXT);
-    ok(hwndChild == NULL, "hwndChild was %p\n", hwndChild);
+    hwndNone = GetNextWindow(hwndList, GW_HWNDNEXT);
+    ok(hwndNone == NULL, "hwndNone was %p\n", hwndNone);
+
+    RECT rcScrollBar, rcSizeGrip, rcList;
+    GetWindowRect(hwndScrollBar, &rcScrollBar);
+    MapWindowPoints(NULL, hwndDropDown, (LPPOINT)&rcScrollBar, 2);
+    GetWindowRect(hwndSizeGrip, &rcSizeGrip);
+    MapWindowPoints(NULL, hwndDropDown, (LPPOINT)&rcSizeGrip, 2);
+    GetWindowRect(hwndList, &rcList);
+    MapWindowPoints(NULL, hwndDropDown, (LPPOINT)&rcList, 2);
+    trace("rcScrollBar: (%ld, %ld, %ld, %ld)\n", rcScrollBar.left, rcScrollBar.top,
+          rcScrollBar.right, rcScrollBar.bottom);
+    trace("rcSizeGrip: (%ld, %ld, %ld, %ld)\n", rcSizeGrip.left, rcSizeGrip.top,
+          rcSizeGrip.right, rcSizeGrip.bottom);
+    trace("rcList: (%ld, %ld, %ld, %ld)\n", rcList.left, rcList.top,
+          rcList.right, rcList.bottom);
+    ok_int(IsWindowVisible(hwndDropDown), TRUE);
+    ok_int(IsWindowVisible(hwndEdit), TRUE);
+    ok_int(IsWindowVisible(hwndSizeGrip), TRUE);
+    ok_int(IsWindowVisible(hwndList), TRUE);
+
+    if (bDowner) // downer
+    {
+        ok_int(rcDropDown.left, rcEdit.left);
+        ok_int(rcDropDown.top, rcEdit.bottom);
+        ok_int(rcDropDown.right, rcEdit.right);
+        //ok_int(rcDropDown.bottom, ???);
+        ok_int(rcSizeGrip.left, rcClient.right - GetSystemMetrics(SM_CXVSCROLL));
+        ok_int(rcSizeGrip.top, rcClient.bottom - GetSystemMetrics(SM_CYHSCROLL));
+        ok_int(rcSizeGrip.right, rcClient.right);
+        ok_int(rcSizeGrip.bottom, rcClient.bottom);
+        ok_int(rcScrollBar.left, rcClient.right - GetSystemMetrics(SM_CXVSCROLL));
+        ok_int(rcScrollBar.top, 0);
+        ok_int(rcScrollBar.right, rcClient.right);
+        ok_int(rcScrollBar.bottom, rcClient.bottom - GetSystemMetrics(SM_CYHSCROLL));
+        ok_int(rcList.left, 0);
+        ok_int(rcList.top, 0);
+        ok_int(rcList.right, 30170);
+        ok_int(rcList.bottom, rcClient.bottom);
+    }
+    else // upper
+    {
+        ok_int(rcDropDown.left, rcEdit.left);
+        //ok_int(rcDropDown.top, ???);
+        ok_int(rcDropDown.right, rcEdit.right);
+        ok_int(rcDropDown.bottom, rcEdit.top);
+        ok_int(rcSizeGrip.left, rcClient.right - GetSystemMetrics(SM_CXVSCROLL));
+        ok_int(rcSizeGrip.top, 0);
+        ok_int(rcSizeGrip.right, rcClient.right);
+        ok_int(rcSizeGrip.bottom, rcClient.top + GetSystemMetrics(SM_CYHSCROLL));
+        ok_int(rcScrollBar.left, rcClient.right - GetSystemMetrics(SM_CXVSCROLL));
+        ok_int(rcScrollBar.top, GetSystemMetrics(SM_CYHSCROLL));
+        ok_int(rcScrollBar.right, rcClient.right);
+        ok_int(rcScrollBar.bottom, rcClient.bottom);
+        ok_int(rcList.left, 0);
+        ok_int(rcList.top, 0);
+        ok_int(rcList.right, 30170);
+        ok_int(rcList.bottom, rcClient.bottom);
+    }
 
     PostMessageW(hwndEdit, WM_CLOSE, 0, 0);
 
@@ -376,43 +431,48 @@ START_TEST(IAutoComplete)
         return;
     }
 
-    UINT nCount;
-    LPWSTR *pList;
     INT cxScreen = GetSystemMetrics(SM_CXSCREEN);
     INT cyScreen = GetSystemMetrics(SM_CYSCREEN);
+    trace("SM_CXSCREEN: %d, SM_CYSCREEN: %d\n", cxScreen, cyScreen);
+    trace("SM_CXVSCROLL: %d, SM_CYHSCROLL: %d\n",
+          GetSystemMetrics(SM_CXVSCROLL), GetSystemMetrics(SM_CYHSCROLL));
+
+    UINT nCount;
+    LPWSTR *pList;
     WCHAR szText[64];
 
-    trace("Testcase #1\n");
+    trace("Testcase #1 (downer)\n");
     nCount = 2;
     pList = (LPWSTR *)CoTaskMemAlloc(nCount * sizeof(LPWSTR));
     SHStrDupW(L"test\\AA", &pList[0]);
     SHStrDupW(L"test\\BBB", &pList[1]);
-    DoTestCase(0, 0, 100, 16, pList, nCount, TRUE);
+    DoTestCase(0, 0, 100, 16, L"test\\", pList, nCount, TRUE);
 
-    trace("Testcase #2\n");
+    trace("Testcase #2 (downer)\n");
+    nCount = 300;
+    pList = (LPWSTR *)CoTaskMemAlloc(nCount * sizeof(LPWSTR));
+    for (UINT i = 0; i < nCount; ++i)
+    {
+        StringCbPrintfW(szText, sizeof(szText), L"test\\%u", i);
+        SHStrDupW(szText, &pList[i]);
+    }
+    DoTestCase(100, 20, 100, 16, L"test\\", pList, nCount, TRUE);
+
+    trace("Testcase #3 (upper)\n");
     nCount = 2;
     pList = (LPWSTR *)CoTaskMemAlloc(nCount * sizeof(LPWSTR));
-    SHStrDupW(L"test\\AA", &pList[0]);
-    SHStrDupW(L"test\\CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC", &pList[1]);
-    DoTestCase(cxScreen - 100, cyScreen - 30, 80, 18, pList, nCount, FALSE);
+    SHStrDupW(L"test/AA", &pList[0]);
+    SHStrDupW(L"test/CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC", &pList[1]);
+    DoTestCase(cxScreen - 100, cyScreen - 30, 80, 18, L"test/",
+               pList, nCount, FALSE);
 
-    trace("Testcase #3\n");
-    nCount = 100;
+    trace("Testcase #4 (upper)\n");
+    nCount = 300;
     pList = (LPWSTR *)CoTaskMemAlloc(nCount * sizeof(LPWSTR));
     for (UINT i = 0; i < nCount; ++i)
     {
-        StringCbPrintfW(szText, sizeof(szText), L"test\\%u", i);
+        StringCbPrintfW(szText, sizeof(szText), L"testtest/%u", i);
         SHStrDupW(szText, &pList[i]);
     }
-    DoTestCase(100, 20, 100, 16, pList, nCount, TRUE);
-
-    trace("Testcase #4\n");
-    nCount = 100;
-    pList = (LPWSTR *)CoTaskMemAlloc(nCount * sizeof(LPWSTR));
-    for (UINT i = 0; i < nCount; ++i)
-    {
-        StringCbPrintfW(szText, sizeof(szText), L"test\\%u", i);
-        SHStrDupW(szText, &pList[i]);
-    }
-    DoTestCase(0, cyScreen - 30, 80, 18, pList, nCount, FALSE);
+    DoTestCase(0, cyScreen - 30, 80, 18, L"testtest/", pList, nCount, FALSE);
 }
