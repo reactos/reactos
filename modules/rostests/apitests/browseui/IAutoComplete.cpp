@@ -423,7 +423,8 @@ DoTestCase(INT x, INT y, INT cx, INT cy, LPCWSTR pszInput,
     style = (LONG)GetWindowLongPtrW(hwndList, GWL_STYLE);
     exstyle = (LONG)GetWindowLongPtrW(hwndList, GWL_EXSTYLE);
     id = GetWindowLongPtrW(hwndList, GWLP_ID);
-    ok_long(style, 0x54005405);
+    ok(style == 0x54005405 || style == 0x54205405,
+       "style was 0x%08lx\n", style);
     ok_long(exstyle, 0);
     ok_long((LONG)id, 0);
 
