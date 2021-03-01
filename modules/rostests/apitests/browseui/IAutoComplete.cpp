@@ -256,7 +256,7 @@ static VOID DoWordBreakProc(EDITWORDBREAKPROC fn)
 // the testcase A
 static VOID
 DoTestCaseA(INT x, INT y, INT cx, INT cy, LPCWSTR pszInput,
-            LPWSTR *pList, UINT nCount, BOOL bDowner)
+            LPWSTR *pList, UINT nCount, BOOL bDowner, BOOL bLong)
 {
     MSG msg;
     s_bExpand = s_bReset = FALSE;
@@ -373,7 +373,9 @@ DoTestCaseA(INT x, INT y, INT cx, INT cy, LPCWSTR pszInput,
     style = (LONG)GetWindowLongPtrW(hwndDropDown, GWL_STYLE);
     exstyle = (LONG)GetWindowLongPtrW(hwndDropDown, GWL_EXSTYLE);
     id = GetWindowLongPtrW(hwndDropDown, GWLP_ID);
-    ok(style == 0x86800000 || style == 0x96800000, "style was 0x%08lx\n", style);
+#define DROPDOWN_STYLE (WS_POPUP | WS_VISIBLE | WS_CLIPSIBLINGS | \
+                        WS_CLIPCHILDREN | WS_BORDER) // 0x96800000
+    ok(style == DROPDOWN_STYLE, "style was 0x%08lx\n", style);
     ok_long(exstyle, 0x8c);
     ok_long((LONG)id, 0);
 
@@ -388,7 +390,7 @@ DoTestCaseA(INT x, INT y, INT cx, INT cy, LPCWSTR pszInput,
     trace("rcClient: (%ld, %ld, %ld, %ld)\n",
           rcClient.left, rcClient.top, rcClient.right, rcClient.bottom);
 
-    HWND hwndScrollBar, hwndSizeGrip, hwndList, hwndNone;
+    HWND hwndScrollBar, hwndSizeBox, hwndList, hwndNone;
     WCHAR szClass[64];
 
     // scroll bar
@@ -399,33 +401,51 @@ DoTestCaseA(INT x, INT y, INT cx, INT cy, LPCWSTR pszInput,
     style = (LONG)GetWindowLongPtrW(hwndScrollBar, GWL_STYLE);
     exstyle = (LONG)GetWindowLongPtrW(hwndScrollBar, GWL_EXSTYLE);
     id = GetWindowLongPtrW(hwndScrollBar, GWLP_ID);
-    ok(style == 0x50000005 || style == 0x40000005, "style was 0x%08lx\n", style);
+#define SCROLLBAR_STYLE_1 (WS_CHILD | WS_VISIBLE | SBS_BOTTOMALIGN | SBS_VERT) // 0x50000005
+#define SCROLLBAR_STYLE_2 (WS_CHILD | SBS_BOTTOMALIGN | SBS_VERT) // 0x40000005
+    if (bLong)
+        ok(style == SCROLLBAR_STYLE_1, "style was 0x%08lx\n", style);
+    else
+        ok(style == SCROLLBAR_STYLE_2, "style was 0x%08lx\n", style);
     ok_long(exstyle, 0);
     ok_long((LONG)id, 0);
 
-    // size-grip
-    hwndSizeGrip = GetNextWindow(hwndScrollBar, GW_HWNDNEXT);
-    ok(hwndSizeGrip != NULL, "hwndSizeGrip was NULL\n");
-    GetClassNameW(hwndSizeGrip, szClass, _countof(szClass));
+    // size-box
+    hwndSizeBox = GetNextWindow(hwndScrollBar, GW_HWNDNEXT);
+    ok(hwndSizeBox != NULL, "hwndSizeBox was NULL\n");
+    GetClassNameW(hwndSizeBox, szClass, _countof(szClass));
     ok_wstri(szClass, L"ScrollBar");
-    style = (LONG)GetWindowLongPtrW(hwndSizeGrip, GWL_STYLE);
-    exstyle = (LONG)GetWindowLongPtrW(hwndSizeGrip, GWL_EXSTYLE);
-    id = GetWindowLongPtrW(hwndSizeGrip, GWLP_ID);
-    ok(style == 0x5000000c || style == 0x50000008,
-       "style was 0x%08lx\n", style);
+    style = (LONG)GetWindowLongPtrW(hwndSizeBox, GWL_STYLE);
+    exstyle = (LONG)GetWindowLongPtrW(hwndSizeBox, GWL_EXSTYLE);
+    id = GetWindowLongPtrW(hwndSizeBox, GWLP_ID);
+#define SIZEBOX_STYLE_1 \
+    (WS_CHILD | WS_VISIBLE | SBS_SIZEBOX | SBS_SIZEBOXBOTTOMRIGHTALIGN) // 0x5000000c
+#define SIZEBOX_STYLE_2 \
+    (WS_CHILD | WS_VISIBLE | SBS_SIZEBOX) // 0x50000008
+    ok(style == SIZEBOX_STYLE_1 /* win10 */ ||
+       style == SIZEBOX_STYLE_2 /* win2k3/winxp */, "style was 0x%08lx\n", style);
     ok_long(exstyle, 0);
     ok_long((LONG)id, 0);
 
     // the list
-    hwndList = GetNextWindow(hwndSizeGrip, GW_HWNDNEXT);
+    hwndList = GetNextWindow(hwndSizeBox, GW_HWNDNEXT);
     ok(hwndList != NULL, "hwndList was NULL\n");
     GetClassNameW(hwndList, szClass, _countof(szClass));
-    ok_wstri(szClass, L"SysListView32");
+    ok_wstri(szClass, WC_LISTVIEWW); // L"SysListView32"
     style = (LONG)GetWindowLongPtrW(hwndList, GWL_STYLE);
     exstyle = (LONG)GetWindowLongPtrW(hwndList, GWL_EXSTYLE);
     id = GetWindowLongPtrW(hwndList, GWLP_ID);
-    ok(style == 0x54005405 || style == 0x54205405,
-       "style was 0x%08lx\n", style);
+#define LIST_STYLE_1 \
+    (WS_CHILD | WS_VISIBLE | WS_VSCROLL | WS_CLIPSIBLINGS | \
+     LVS_NOCOLUMNHEADER | LVS_OWNERDATA | LVS_OWNERDRAWFIXED | \
+     LVS_SINGLESEL | LVS_REPORT) // 0x54205405
+#define LIST_STYLE_2 \
+    (WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | LVS_NOCOLUMNHEADER | \
+     LVS_OWNERDATA | LVS_OWNERDRAWFIXED | LVS_SINGLESEL | LVS_REPORT) // 0x54005405
+    if (bLong)
+        ok(style == LIST_STYLE_1 || style == LIST_STYLE_2, "style was 0x%08lx\n", style);
+    else
+        ok(style == LIST_STYLE_2 || style == LIST_STYLE_2, "style was 0x%08lx\n", style);
     ok_long(exstyle, 0);
     ok_long((LONG)id, 0);
 
@@ -434,24 +454,24 @@ DoTestCaseA(INT x, INT y, INT cx, INT cy, LPCWSTR pszInput,
     ok(hwndNone == NULL, "hwndNone was %p\n", hwndNone);
 
     // get rectangles of controls
-    RECT rcScrollBar, rcSizeGrip, rcList;
+    RECT rcScrollBar, rcSizeBox, rcList;
     GetWindowRect(hwndScrollBar, &rcScrollBar);
     MapWindowPoints(NULL, hwndDropDown, (LPPOINT)&rcScrollBar, 2);
-    GetWindowRect(hwndSizeGrip, &rcSizeGrip);
-    MapWindowPoints(NULL, hwndDropDown, (LPPOINT)&rcSizeGrip, 2);
+    GetWindowRect(hwndSizeBox, &rcSizeBox);
+    MapWindowPoints(NULL, hwndDropDown, (LPPOINT)&rcSizeBox, 2);
     GetWindowRect(hwndList, &rcList);
     MapWindowPoints(NULL, hwndDropDown, (LPPOINT)&rcList, 2);
     trace("rcScrollBar: (%ld, %ld, %ld, %ld)\n", rcScrollBar.left, rcScrollBar.top,
           rcScrollBar.right, rcScrollBar.bottom);
-    trace("rcSizeGrip: (%ld, %ld, %ld, %ld)\n", rcSizeGrip.left, rcSizeGrip.top,
-          rcSizeGrip.right, rcSizeGrip.bottom);
+    trace("rcSizeBox: (%ld, %ld, %ld, %ld)\n", rcSizeBox.left, rcSizeBox.top,
+          rcSizeBox.right, rcSizeBox.bottom);
     trace("rcList: (%ld, %ld, %ld, %ld)\n", rcList.left, rcList.top,
           rcList.right, rcList.bottom);
 
     // are they visible?
     ok_int(IsWindowVisible(hwndDropDown), TRUE);
     ok_int(IsWindowVisible(hwndEdit), TRUE);
-    ok_int(IsWindowVisible(hwndSizeGrip), TRUE);
+    ok_int(IsWindowVisible(hwndSizeBox), TRUE);
     ok_int(IsWindowVisible(hwndList), TRUE);
 
     // check item count
@@ -468,10 +488,10 @@ DoTestCaseA(INT x, INT y, INT cx, INT cy, LPCWSTR pszInput,
         ok_int(rcDropDown.top, rcEdit.bottom);
         ok_int(rcDropDown.right, rcEdit.right);
         //ok_int(rcDropDown.bottom, ???);
-        ok_int(rcSizeGrip.left, rcClient.right - GetSystemMetrics(SM_CXVSCROLL));
-        ok_int(rcSizeGrip.top, rcClient.bottom - GetSystemMetrics(SM_CYHSCROLL));
-        ok_int(rcSizeGrip.right, rcClient.right);
-        ok_int(rcSizeGrip.bottom, rcClient.bottom);
+        ok_int(rcSizeBox.left, rcClient.right - GetSystemMetrics(SM_CXVSCROLL));
+        ok_int(rcSizeBox.top, rcClient.bottom - GetSystemMetrics(SM_CYHSCROLL));
+        ok_int(rcSizeBox.right, rcClient.right);
+        ok_int(rcSizeBox.bottom, rcClient.bottom);
         ok_int(rcScrollBar.left, rcClient.right - GetSystemMetrics(SM_CXVSCROLL));
         ok_int(rcScrollBar.top, 0);
         ok_int(rcScrollBar.right, rcClient.right);
@@ -487,10 +507,10 @@ DoTestCaseA(INT x, INT y, INT cx, INT cy, LPCWSTR pszInput,
         //ok_int(rcDropDown.top, ???);
         ok_int(rcDropDown.right, rcEdit.right);
         ok_int(rcDropDown.bottom, rcEdit.top);
-        ok_int(rcSizeGrip.left, rcClient.right - GetSystemMetrics(SM_CXVSCROLL));
-        ok_int(rcSizeGrip.top, 0);
-        ok_int(rcSizeGrip.right, rcClient.right);
-        ok_int(rcSizeGrip.bottom, rcClient.top + GetSystemMetrics(SM_CYHSCROLL));
+        ok_int(rcSizeBox.left, rcClient.right - GetSystemMetrics(SM_CXVSCROLL));
+        ok_int(rcSizeBox.top, 0);
+        ok_int(rcSizeBox.right, rcClient.right);
+        ok_int(rcSizeBox.bottom, rcClient.top + GetSystemMetrics(SM_CYHSCROLL));
         ok_int(rcScrollBar.left, rcClient.right - GetSystemMetrics(SM_CXVSCROLL));
         ok_int(rcScrollBar.top, GetSystemMetrics(SM_CYHSCROLL));
         ok_int(rcScrollBar.right, rcClient.right);
@@ -530,7 +550,7 @@ DoTestCaseA(INT x, INT y, INT cx, INT cy, LPCWSTR pszInput,
 // the testcase B
 static VOID
 DoTestCaseB(INT x, INT y, INT cx, INT cy, LPCWSTR pszInput,
-            LPWSTR *pList, UINT nCount, BOOL bDowner)
+            LPWSTR *pList, UINT nCount)
 {
     MSG msg;
     s_bExpand = s_bReset = FALSE;
@@ -655,16 +675,16 @@ START_TEST(IAutoComplete)
     WCHAR szText[64];
 
     // Test case #1 (A)
-    trace("Testcase #1 (downer) ------------------------------\n");
+    trace("Testcase #1 (downer, short) ------------------------------\n");
     nCount = 3;
     pList = (LPWSTR *)CoTaskMemAlloc(nCount * sizeof(LPWSTR));
     SHStrDupW(L"test\\AA", &pList[0]);
     SHStrDupW(L"test\\BBB", &pList[1]);
     SHStrDupW(L"test\\CCC", &pList[2]);
-    DoTestCaseA(0, 0, 100, 30, L"test\\", pList, nCount, TRUE);
+    DoTestCaseA(0, 0, 100, 30, L"test\\", pList, nCount, TRUE, FALSE);
 
     // Test case #2 (A)
-    trace("Testcase #2 (downer) ------------------------------\n");
+    trace("Testcase #2 (downer, long) ------------------------------\n");
     nCount = 300;
     pList = (LPWSTR *)CoTaskMemAlloc(nCount * sizeof(LPWSTR));
     for (UINT i = 0; i < nCount; ++i)
@@ -672,30 +692,30 @@ START_TEST(IAutoComplete)
         StringCbPrintfW(szText, sizeof(szText), L"test\\%u", i);
         SHStrDupW(szText, &pList[i]);
     }
-    DoTestCaseA(100, 20, 100, 30, L"test\\", pList, nCount, TRUE);
+    DoTestCaseA(100, 20, 100, 30, L"test\\", pList, nCount, TRUE, TRUE);
 
     // Test case #3 (A)
-    trace("Testcase #3 (upper) ------------------------------\n");
+    trace("Testcase #3 (upper, short) ------------------------------\n");
     nCount = 2;
     pList = (LPWSTR *)CoTaskMemAlloc(nCount * sizeof(LPWSTR));
     SHStrDupW(L"test/AA", &pList[0]);
     SHStrDupW(L"test/BBB", &pList[0]);
     SHStrDupW(L"test/CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC", &pList[1]);
     DoTestCaseA(rcWork.right - 100, rcWork.bottom - 30, 80, 40, L"test/",
-                pList, nCount, FALSE);
+                pList, nCount, FALSE, FALSE);
 
     // Test case #4 (A)
-    trace("Testcase #4 (upper) ------------------------------\n");
+    trace("Testcase #4 (upper, short) ------------------------------\n");
     nCount = 2;
     pList = (LPWSTR *)CoTaskMemAlloc(nCount * sizeof(LPWSTR));
     SHStrDupW(L"testtest\\AA", &pList[0]);
     SHStrDupW(L"testtest\\BBB", &pList[0]);
     SHStrDupW(L"testtest\\CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC", &pList[1]);
     DoTestCaseA(rcWork.right - 100, rcWork.bottom - 30, 80, 40, L"testtest\\",
-                pList, nCount, FALSE);
+                pList, nCount, FALSE, FALSE);
 
     // Test case #5 (A)
-    trace("Testcase #5 (upper) ------------------------------\n");
+    trace("Testcase #5 (upper, long) ------------------------------\n");
     nCount = 300;
     pList = (LPWSTR *)CoTaskMemAlloc(nCount * sizeof(LPWSTR));
     for (UINT i = 0; i < nCount; ++i)
@@ -703,10 +723,10 @@ START_TEST(IAutoComplete)
         StringCbPrintfW(szText, sizeof(szText), L"testtest/%u", i);
         SHStrDupW(szText, &pList[i]);
     }
-    DoTestCaseA(0, rcWork.bottom - 30, 80, 30, L"testtest/", pList, nCount, FALSE);
+    DoTestCaseA(0, rcWork.bottom - 30, 80, 30, L"testtest/", pList, nCount, FALSE, TRUE);
 
     // Test case #6 (A)
-    trace("Testcase #6 (upper) ------------------------------\n");
+    trace("Testcase #6 (upper, long) ------------------------------\n");
     nCount = 2000;
     pList = (LPWSTR *)CoTaskMemAlloc(nCount * sizeof(LPWSTR));
     for (UINT i = 0; i < nCount; ++i)
@@ -714,7 +734,7 @@ START_TEST(IAutoComplete)
         StringCbPrintfW(szText, sizeof(szText), L"testtest\\item-%u", i);
         SHStrDupW(szText, &pList[i]);
     }
-    DoTestCaseA(0, rcWork.bottom - 30, 80, 40, L"testtest\\", pList, nCount, FALSE);
+    DoTestCaseA(0, rcWork.bottom - 30, 80, 40, L"testtest\\", pList, nCount, FALSE, TRUE);
 
     // Test case #7 (B)
     trace("Testcase #7 ------------------------------\n");
@@ -725,5 +745,5 @@ START_TEST(IAutoComplete)
         StringCbPrintfW(szText, sizeof(szText), L"testtest\\item-%u", i);
         SHStrDupW(szText, &pList[i]);
     }
-    DoTestCaseB(0, 0, 100, 30, L"testtest\\iX", pList, nCount, TRUE);
+    DoTestCaseB(0, 0, 100, 30, L"testtest\\iX", pList, nCount);
 }
