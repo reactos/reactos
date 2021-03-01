@@ -267,11 +267,12 @@ DoTestCase(INT x, INT y, INT cx, INT cy, LPCWSTR pszInput,
             DispatchMessageW(&msg);
         }
         hwndDropDown = FindWindowW(L"Auto-Suggest Dropdown", L"");
-        if (hwndDropDown && IsWindowVisible(hwndDropDown))
+        if (IsWindowVisible(hwndDropDown))
             break;
         Sleep(100);
     }
     ok(hwndDropDown != NULL, "hwndDropDown was NULL\n");
+    ok_int(IsWindowVisible(hwndDropDown), TRUE);
 
     static BOOL s_bFirstTime = TRUE;
     if (s_bFirstTime)
@@ -295,7 +296,6 @@ DoTestCase(INT x, INT y, INT cx, INT cy, LPCWSTR pszInput,
     GetWindowRect(hwndDropDown, &rcDropDown);
     trace("rcEdit: (%ld, %ld, %ld, %ld)\n", rcEdit.left, rcEdit.top, rcEdit.right, rcEdit.bottom);
     trace("rcDropDown: (%ld, %ld, %ld, %ld)\n", rcDropDown.left, rcDropDown.top, rcDropDown.right, rcDropDown.bottom);
-    ok_int(IsWindowVisible(hwndDropDown), TRUE);
     ok_int(bDowner, rcEdit.top < rcDropDown.top);
 
     style = (LONG)GetWindowLongPtrW(hwndDropDown, GWL_STYLE);
