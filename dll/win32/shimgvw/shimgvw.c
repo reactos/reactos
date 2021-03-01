@@ -28,6 +28,7 @@
 #include <shlobj.h>
 #include <strsafe.h>
 #include <shlwapi.h>
+#include <shellapi.h>
 
 #define NDEBUG
 #include <debug.h>
@@ -241,9 +242,39 @@ BOOL Anime_Step(DWORD *pdwDelay)
     return FALSE;
 }
 
+static void UpdateZoom(UINT NewZoom)
+{
+    BOOL bEnableZoomIn, bEnableZoomOut;
+
+    /* If zoom has not been changed, ignore it */
+    if (ZoomPercents == NewZoom)
+        return;
+
+    ZoomPercents = NewZoom;
+
+    /* Check if a zoom button of the toolbar must be grayed */
+    bEnableZoomIn = bEnableZoomOut = TRUE;
+
+    if (NewZoom >= MAX_ZOOM)
+    {
+        bEnableZoomIn = FALSE;
+    }
+    else if (NewZoom <= MIN_ZOOM)
+    {
+        bEnableZoomOut = FALSE;
+    }
+
+    /* Update the state of the zoom buttons */
+    SendMessageW(hToolBar, TB_ENABLEBUTTON, IDC_ZOOM_OUT, bEnableZoomOut);
+    SendMessageW(hToolBar, TB_ENABLEBUTTON, IDC_ZOOM_IN,  bEnableZoomIn);
+
+    /* Redraw the display window */
+    InvalidateRect(hDispWnd, NULL, FALSE);
+}
+
 static void ZoomInOrOut(BOOL bZoomIn)
 {
-    UINT i;
+    UINT i, NewZoom;
 
     if (image == NULL)
         return;
@@ -257,16 +288,9 @@ static void ZoomInOrOut(BOOL bZoomIn)
                 break;
         }
         if (i == _countof(ZoomSteps))
-            ZoomPercents = MAX_ZOOM;
+            NewZoom = MAX_ZOOM;
         else
-            ZoomPercents = ZoomSteps[i];
-
-        /* update tool bar buttons */
-        SendMessageW(hToolBar, TB_ENABLEBUTTON, IDC_ZOOM_OUT, TRUE);
-        if (ZoomPercents >= MAX_ZOOM)
-            SendMessageW(hToolBar, TB_ENABLEBUTTON, IDC_ZOOM_IN, FALSE);
-        else
-            SendMessageW(hToolBar, TB_ENABLEBUTTON, IDC_ZOOM_IN, TRUE);
+            NewZoom = ZoomSteps[i];
     }
     else            /* zoom out */
     {
@@ -278,26 +302,19 @@ static void ZoomInOrOut(BOOL bZoomIn)
                 break;
         }
         if (i < 0)
-            ZoomPercents = MIN_ZOOM;
+            NewZoom = MIN_ZOOM;
         else
-            ZoomPercents = ZoomSteps[i];
-
-        /* update tool bar buttons */
-        SendMessageW(hToolBar, TB_ENABLEBUTTON, IDC_ZOOM_IN, TRUE);
-        if (ZoomPercents <= MIN_ZOOM)
-            SendMessageW(hToolBar, TB_ENABLEBUTTON, IDC_ZOOM_OUT, FALSE);
-        else
-            SendMessageW(hToolBar, TB_ENABLEBUTTON, IDC_ZOOM_OUT, TRUE);
+            NewZoom = ZoomSteps[i];
     }
 
-    /* redraw */
-    InvalidateRect(hDispWnd, NULL, TRUE);
+    /* Update toolbar and refresh screen */
+    UpdateZoom(NewZoom);
 }
 
 static void ResetZoom(void)
 {
     RECT Rect;
-    UINT ImageWidth, ImageHeight;
+    UINT ImageWidth, ImageHeight, NewZoom;
 
     if (image == NULL)
         return;
@@ -314,12 +331,12 @@ static void ResetZoom(void)
         if (Rect.right < ImageWidth)
         {
             /* it's large, shrink it */
-            ZoomPercents = (Rect.right * 100) / ImageWidth;
+            NewZoom = (Rect.right * 100) / ImageWidth;
         }
         else
         {
             /* it's small. show as original size */
-            ZoomPercents = 100;
+            NewZoom = 100;
         }
     }
     else
@@ -327,14 +344,16 @@ static void ResetZoom(void)
         if (Rect.bottom < ImageHeight)
         {
             /* it's large, shrink it */
-            ZoomPercents = (Rect.bottom * 100) / ImageHeight;
+            NewZoom = (Rect.bottom * 100) / ImageHeight;
         }
         else
         {
             /* it's small. show as original size */
-            ZoomPercents = 100;
+            NewZoom = 100;
         }
     }
+
+    UpdateZoom(NewZoom);
 }
 
 static void pLoadImage(LPCWSTR szOpenFileName)
@@ -358,11 +377,8 @@ static void pLoadImage(LPCWSTR szOpenFileName)
     if (szOpenFileName && szOpenFileName[0])
         SHAddToRecentDocs(SHARD_PATHW, szOpenFileName);
 
-    /* reset zoom */
+    /* Reset zoom and redraw display */
     ResetZoom();
-
-    /* redraw */
-    InvalidateRect(hDispWnd, NULL, TRUE);
 }
 
 static void pSaveImageAs(HWND hwnd)
@@ -921,9 +937,9 @@ ImageView_InitControls(HWND hwnd)
 
     if (shiSettings.Maximized) ShowWindow(hwnd, SW_MAXIMIZE);
 
-    hDispWnd = CreateWindowEx(WS_EX_CLIENTEDGE, WC_STATIC, _T(""),
-                              WS_CHILD | WS_VISIBLE,
-                              0, 0, 0, 0, hwnd, NULL, hInstance, NULL);
+    hDispWnd = CreateWindowExW(WS_EX_CLIENTEDGE, WC_STATIC, L"",
+                               WS_CHILD | WS_VISIBLE,
+                               0, 0, 0, 0, hwnd, NULL, hInstance, NULL);
 
     SetClassLongPtr(hDispWnd, GCL_STYLE, CS_HREDRAW | CS_VREDRAW);
     PrevProc = (WNDPROC) SetWindowLongPtr(hDispWnd, GWLP_WNDPROC, (LPARAM) ImageView_DispWndProc);
@@ -959,6 +975,55 @@ ImageView_OnSize(HWND hwnd, UINT state, INT cx, INT cy)
     }
 }
 
+static LRESULT
+ImageView_Delete(HWND hwnd)
+{
+    DPRINT1("ImageView_Delete: unimplemented.\n");
+    return 0;
+}
+
+static LRESULT
+ImageView_Modify(HWND hwnd)
+{
+    int nChars = GetFullPathNameW(currentFile->FileName, 0, NULL, NULL);
+    LPWSTR pszPathName;
+    SHELLEXECUTEINFOW sei;
+
+    if (!nChars)
+    {
+        DPRINT1("ImageView_Modify: failed to get full path name.\n");
+        return 1;
+    }
+
+    pszPathName = (LPWSTR)HeapAlloc(GetProcessHeap(), 0, nChars * sizeof(WCHAR));
+    if (pszPathName == NULL)
+    {
+        DPRINT1("HeapAlloc() failed in ImageView_Modify()\n");
+        return 1;
+    }
+
+    GetFullPathNameW(currentFile->FileName, nChars, pszPathName, NULL);
+
+    sei.cbSize = sizeof(sei);
+    sei.fMask = 0;
+    sei.hwnd = NULL;
+    sei.lpVerb = L"edit";
+    sei.lpFile = pszPathName;
+    sei.lpParameters = NULL;
+    sei.lpDirectory = NULL;
+    sei.nShow = SW_SHOWNORMAL;
+    sei.hInstApp = NULL;
+
+    if (!ShellExecuteExW(&sei))
+    {
+        DPRINT1("ImageView_Modify: ShellExecuteExW() failed with code %08X\n", (int)GetLastError());
+    }
+
+    HeapFree(GetProcessHeap(), 0, pszPathName);
+
+    return 0;
+}
+
 LRESULT CALLBACK
 ImageView_WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
 {
@@ -989,8 +1054,8 @@ ImageView_WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
                     break;
 
                 case IDC_REAL_SIZE:
-                    DPRINT1("IDC_REAL_SIZE unimplemented\n");
-                    break;
+                    UpdateZoom(100);
+                    return 0;
 
                 case IDC_SLIDE_SHOW:
                     DPRINT1("IDC_SLIDE_SHOW unimplemented\n");
@@ -1027,6 +1092,12 @@ ImageView_WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
                         ImageView_UpdateWindow(hwnd);
                     }
                     break;
+
+                case IDC_DELETE:
+                    return ImageView_Delete(hwnd);
+
+                case IDC_MODIFY:
+                    return ImageView_Modify(hwnd);
             }
         }
         break;
@@ -1051,7 +1122,7 @@ ImageView_WndProc(HWND hwnd, UINT Message, WPARAM wParam, LPARAM lParam)
                     lpttt->hinst = hInstance;
 
                     lpttt->lpszText = MAKEINTRESOURCEW(BtnConfig[lpttt->hdr.idFrom - IDC_TOOL_BASE].ids);
-                    return TRUE;
+                    return 0;
                 }
             }
             break;
@@ -1094,9 +1165,16 @@ ImageView_CreateWindow(HWND hwnd, LPCWSTR szFileName)
     HWND hMainWnd;
     MSG msg;
     HACCEL hKbdAccel;
+    HRESULT hComRes;
     INITCOMMONCONTROLSEX Icc = { .dwSize = sizeof(Icc), .dwICC = ICC_WIN95_CLASSES };
 
     InitCommonControlsEx(&Icc);
+
+    hComRes = CoInitializeEx(NULL, COINIT_APARTMENTTHREADED | COINIT_DISABLE_OLE1DDE);
+    if (hComRes != S_OK && hComRes != S_FALSE)
+    {
+        DPRINT1("Warning, CoInitializeEx failed with code=%08X\n", (int)hComRes);
+    }
 
     if (!ImageView_LoadSettings())
     {
@@ -1177,6 +1255,11 @@ ImageView_CreateWindow(HWND hwnd, LPCWSTR szFileName)
     Anime_FreeInfo();
 
     GdiplusShutdown(gdiplusToken);
+
+    /* Release COM resources */
+    if (SUCCEEDED(hComRes))
+        CoUninitialize();
+
     return -1;
 }
 
