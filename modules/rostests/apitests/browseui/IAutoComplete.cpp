@@ -717,7 +717,7 @@ START_TEST(IAutoComplete)
     DoTestCaseA(0, rcWork.bottom - 30, 80, 40, L"testtest\\", pList, nCount, FALSE);
 
     // Test case #7 (B)
-    trace("Testcase #7 (upper) ------------------------------\n");
+    trace("Testcase #7 ------------------------------\n");
     nCount = 500;
     pList = (LPWSTR *)CoTaskMemAlloc(nCount * sizeof(LPWSTR));
     for (UINT i = 0; i < nCount; ++i)
