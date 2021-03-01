@@ -9,12 +9,13 @@
 #include <apitest.h>
 #include <shlobj.h>
 #include <atlbase.h>
-#include <tchar.h>      //
-#include <atlcom.h>     // These 3 includes only exist here to make gcc happy about (unused) templates..
-#include <atlwin.h>     //
+#include <tchar.h>
+#include <atlcom.h>
+#include <atlwin.h>
 #include <shlwapi.h>
 #include <strsafe.h>
 
+// compare wide strings
 #define ok_wstri(x, y) \
     ok(lstrcmpiW(x, y) == 0, "Wrong string. Expected '%S', got '%S'\n", y, x)
 
@@ -25,12 +26,14 @@ struct CCoInit
     HRESULT hr;
 };
 
-static HWND MyCreateWindow(INT x, INT y, INT cx, INT cy)
+// create an EDIT control
+static HWND MyCreateEditCtrl(INT x, INT y, INT cx, INT cy)
 {
     return CreateWindowW(L"EDIT", NULL, WS_POPUPWINDOW, x, y, cx, cy,
                          NULL, NULL, GetModuleHandleW(NULL), NULL);
 }
 
+// CEnumString class for auto-completion test
 class CEnumString : public IEnumString, public IACList2
 {
 public:
@@ -136,14 +139,16 @@ protected:
     LPWSTR *m_pList;
 };
 
+// range of WCHAR (inclusive)
 struct RANGE
 {
     WCHAR from, to;
 };
 
-//#define OUTPUT_TABLE
+//#define OUTPUT_TABLE // generate the table to analyze
 
 #ifndef OUTPUT_TABLE
+// comparison of two ranges
 static int __cdecl RangeCompare(const void *x, const void *y)
 {
     const RANGE *a = (const RANGE *)x;
@@ -155,6 +160,7 @@ static int __cdecl RangeCompare(const void *x, const void *y)
     return 0;
 }
 
+// is the WCHAR a word break?
 static __inline BOOL IsWordBreak(WCHAR ch)
 {
     static const RANGE s_ranges[] =
@@ -179,6 +185,7 @@ static __inline BOOL IsWordBreak(WCHAR ch)
         { 0xff67, 0xff70 }, { 0xff9e, 0xff9f }, { 0xffe9, 0xffe9 }, { 0xffeb, 0xffeb },
     };
 #ifndef NDEBUG
+    // check the table if first time
     static BOOL s_bFirstTime = TRUE;
     if (s_bFirstTime)
     {
@@ -198,9 +205,10 @@ static __inline BOOL IsWordBreak(WCHAR ch)
 }
 #endif
 
-static VOID DoTestWordBreakProc(EDITWORDBREAKPROC fn)
+static VOID DoWordBreakProc(EDITWORDBREAKPROC fn)
 {
 #ifdef OUTPUT_TABLE
+    // generate the table text
     WORD wType1, wType2, wType3;
     for (DWORD i = 0; i <= 0xFFFF; ++i)
     {
@@ -212,6 +220,7 @@ static VOID DoTestWordBreakProc(EDITWORDBREAKPROC fn)
         trace("%u\t0x%04x\t0x%04x\t0x%04x\t0x%04x\n", b, wType1, wType2, wType3, ch);
     }
 #else
+    // check the word break procedure
     for (DWORD i = 0; i <= 0xFFFF; ++i)
     {
         WCHAR ch = (WCHAR)i;
@@ -222,40 +231,50 @@ static VOID DoTestWordBreakProc(EDITWORDBREAKPROC fn)
 #endif
 }
 
+// the testcase
 static VOID
 DoTestCase(INT x, INT y, INT cx, INT cy, LPCWSTR pszInput,
            LPWSTR *pList, UINT nCount, BOOL bDowner)
 {
     MSG msg;
-    HWND hwndEdit = MyCreateWindow(x, y, cx, cy);
+
+    // create EDIT control
+    HWND hwndEdit = MyCreateEditCtrl(x, y, cx, cy);
     ok(hwndEdit != NULL, "hwndEdit was NULL\n");
     ShowWindowAsync(hwndEdit, SW_SHOWNORMAL);
 
+    // get word break procedure
     EDITWORDBREAKPROC fn1 =
         (EDITWORDBREAKPROC)SendMessageW(hwndEdit, EM_GETWORDBREAKPROC, 0, 0);
     ok(fn1 == NULL, "fn1 was %p\n", fn1);
 
+    // set the list data
     CComPtr<CEnumString> pEnum(new CEnumString());
     pEnum->SetList(nCount, pList);
 
+    // create auto-completion object
     CComPtr<IAutoComplete2> pAC;
     HRESULT hr = CoCreateInstance(CLSID_AutoComplete, NULL, CLSCTX_INPROC_SERVER,
                                   IID_IAutoComplete2, (VOID **)&pAC);
     ok_hr(hr, S_OK);
 
+    // enable auto-suggest
     hr = pAC->SetOptions(ACO_AUTOSUGGEST);
     ok_hr(hr, S_OK);
 
+    // initialize
     IUnknown *punk = static_cast<IEnumString *>(pEnum);
     hr = pAC->Init(hwndEdit, punk, NULL, NULL); // IAutoComplete::Init
     ok_hr(hr, S_OK);
 
+    // input
     SetFocus(hwndEdit);
     for (UINT i = 0; pszInput[i]; ++i)
     {
         PostMessageW(hwndEdit, WM_CHAR, pszInput[i], 0);
     }
 
+    // wait for hwndDropDown
     DWORD style, exstyle;
     HWND hwndDropDown;
     LONG_PTR id;
@@ -274,6 +293,7 @@ DoTestCase(INT x, INT y, INT cx, INT cy, LPCWSTR pszInput,
     ok(hwndDropDown != NULL, "hwndDropDown was NULL\n");
     ok_int(IsWindowVisible(hwndDropDown), TRUE);
 
+    // check word break procedure
     static BOOL s_bFirstTime = TRUE;
     if (s_bFirstTime)
     {
@@ -282,22 +302,27 @@ DoTestCase(INT x, INT y, INT cx, INT cy, LPCWSTR pszInput,
             (EDITWORDBREAKPROC)SendMessageW(hwndEdit, EM_GETWORDBREAKPROC, 0, 0);
         ok(fn1 != fn2, "fn1 == fn2\n");
         ok(fn2 != NULL, "fn2 was NULL\n");
-        DoTestWordBreakProc(fn2);
+        DoWordBreakProc(fn2);
     }
 
+    // take care of the message queue
     while (PeekMessageW(&msg, NULL, 0, 0, PM_REMOVE))
     {
         TranslateMessage(&msg);
         DispatchMessageW(&msg);
     }
 
+    // get sizes and positions
     RECT rcEdit, rcDropDown;
     GetWindowRect(hwndEdit, &rcEdit);
     GetWindowRect(hwndDropDown, &rcDropDown);
     trace("rcEdit: (%ld, %ld, %ld, %ld)\n", rcEdit.left, rcEdit.top, rcEdit.right, rcEdit.bottom);
     trace("rcDropDown: (%ld, %ld, %ld, %ld)\n", rcDropDown.left, rcDropDown.top, rcDropDown.right, rcDropDown.bottom);
+
+    // is it "downer"?
     ok_int(bDowner, rcEdit.top < rcDropDown.top);
 
+    // check window style and id
     style = (LONG)GetWindowLongPtrW(hwndDropDown, GWL_STYLE);
     exstyle = (LONG)GetWindowLongPtrW(hwndDropDown, GWL_EXSTYLE);
     id = GetWindowLongPtrW(hwndDropDown, GWLP_ID);
@@ -305,10 +330,12 @@ DoTestCase(INT x, INT y, INT cx, INT cy, LPCWSTR pszInput,
     ok_long(exstyle, 0x8c);
     ok_long((LONG)id, 0);
 
+    // check class style
     style = (LONG)GetClassLongPtrW(hwndDropDown, GCL_STYLE);
     ok(style == 0x20800 /* Win10 */ || style == 0 /* Win2k3 */,
        "style was 0x%08lx\n", style);
 
+    // get client rectangle
     RECT rcClient;
     GetClientRect(hwndDropDown, &rcClient);
     trace("rcClient: (%ld, %ld, %ld, %ld)\n",
@@ -317,6 +344,7 @@ DoTestCase(INT x, INT y, INT cx, INT cy, LPCWSTR pszInput,
     HWND hwndScrollBar, hwndSizeGrip, hwndList, hwndNone;
     WCHAR szClass[64];
 
+    // scroll bar
     hwndScrollBar = GetTopWindow(hwndDropDown);
     ok(hwndScrollBar != NULL, "hwndScrollBar was NULL\n");
     GetClassNameW(hwndScrollBar, szClass, _countof(szClass));
@@ -328,6 +356,7 @@ DoTestCase(INT x, INT y, INT cx, INT cy, LPCWSTR pszInput,
     ok_long(exstyle, 0);
     ok_long((LONG)id, 0);
 
+    // size-grip
     hwndSizeGrip = GetNextWindow(hwndScrollBar, GW_HWNDNEXT);
     ok(hwndSizeGrip != NULL, "hwndSizeGrip was NULL\n");
     GetClassNameW(hwndSizeGrip, szClass, _countof(szClass));
@@ -340,6 +369,7 @@ DoTestCase(INT x, INT y, INT cx, INT cy, LPCWSTR pszInput,
     ok_long(exstyle, 0);
     ok_long((LONG)id, 0);
 
+    // the list
     hwndList = GetNextWindow(hwndSizeGrip, GW_HWNDNEXT);
     ok(hwndList != NULL, "hwndList was NULL\n");
     GetClassNameW(hwndList, szClass, _countof(szClass));
@@ -351,9 +381,11 @@ DoTestCase(INT x, INT y, INT cx, INT cy, LPCWSTR pszInput,
     ok_long(exstyle, 0);
     ok_long((LONG)id, 0);
 
+    // no more controls
     hwndNone = GetNextWindow(hwndList, GW_HWNDNEXT);
     ok(hwndNone == NULL, "hwndNone was %p\n", hwndNone);
 
+    // get rectangles of controls
     RECT rcScrollBar, rcSizeGrip, rcList;
     GetWindowRect(hwndScrollBar, &rcScrollBar);
     MapWindowPoints(NULL, hwndDropDown, (LPPOINT)&rcScrollBar, 2);
@@ -367,11 +399,14 @@ DoTestCase(INT x, INT y, INT cx, INT cy, LPCWSTR pszInput,
           rcSizeGrip.right, rcSizeGrip.bottom);
     trace("rcList: (%ld, %ld, %ld, %ld)\n", rcList.left, rcList.top,
           rcList.right, rcList.bottom);
+
+    // are they visible?
     ok_int(IsWindowVisible(hwndDropDown), TRUE);
     ok_int(IsWindowVisible(hwndEdit), TRUE);
     ok_int(IsWindowVisible(hwndSizeGrip), TRUE);
     ok_int(IsWindowVisible(hwndList), TRUE);
 
+    // check the positions
     if (bDowner) // downer
     {
         ok_int(rcDropDown.left, rcEdit.left);
@@ -411,17 +446,21 @@ DoTestCase(INT x, INT y, INT cx, INT cy, LPCWSTR pszInput,
         ok_int(rcList.bottom, rcClient.bottom);
     }
 
+    // append WM_QUIT message into message queue
     PostQuitMessage(0);
 
+    // do the messages
     while (PeekMessageW(&msg, NULL, 0, 0, PM_REMOVE))
     {
         TranslateMessage(&msg);
         DispatchMessageW(&msg);
     }
 
+    // destroy the EDIT control and drop-down window
     DestroyWindow(hwndEdit);
     DestroyWindow(hwndDropDown);
 
+    // do the messages
     while (PeekMessageW(&msg, NULL, 0, 0, PM_REMOVE))
     {
         TranslateMessage(&msg);
@@ -431,6 +470,7 @@ DoTestCase(INT x, INT y, INT cx, INT cy, LPCWSTR pszInput,
 
 START_TEST(IAutoComplete)
 {
+    // initialize COM
     CCoInit init;
     ok_hr(init.hr, S_OK);
     if (!SUCCEEDED(init.hr))
@@ -439,6 +479,8 @@ START_TEST(IAutoComplete)
         return;
     }
 
+    // get screen size
+    // TODO: multimonitor
     INT cxScreen = GetSystemMetrics(SM_CXSCREEN);
     INT cyScreen = GetSystemMetrics(SM_CYSCREEN);
     trace("SM_CXSCREEN: %d, SM_CYSCREEN: %d\n", cxScreen, cyScreen);
@@ -449,6 +491,7 @@ START_TEST(IAutoComplete)
     LPWSTR *pList;
     WCHAR szText[64];
 
+    // Test case #1
     trace("Testcase #1 (downer)\n");
     nCount = 2;
     pList = (LPWSTR *)CoTaskMemAlloc(nCount * sizeof(LPWSTR));
@@ -456,6 +499,7 @@ START_TEST(IAutoComplete)
     SHStrDupW(L"test\\BBB", &pList[1]);
     DoTestCase(0, 0, 100, 16, L"test\\", pList, nCount, TRUE);
 
+    // Test case #2
     trace("Testcase #2 (downer)\n");
     nCount = 300;
     pList = (LPWSTR *)CoTaskMemAlloc(nCount * sizeof(LPWSTR));
@@ -466,6 +510,7 @@ START_TEST(IAutoComplete)
     }
     DoTestCase(100, 20, 100, 16, L"test\\", pList, nCount, TRUE);
 
+    // Test case #3
     trace("Testcase #3 (upper)\n");
     nCount = 2;
     pList = (LPWSTR *)CoTaskMemAlloc(nCount * sizeof(LPWSTR));
@@ -474,6 +519,7 @@ START_TEST(IAutoComplete)
     DoTestCase(cxScreen - 100, cyScreen - 30, 80, 18, L"test/",
                pList, nCount, FALSE);
 
+    // Test case #4
     trace("Testcase #4 (upper)\n");
     nCount = 300;
     pList = (LPWSTR *)CoTaskMemAlloc(nCount * sizeof(LPWSTR));
