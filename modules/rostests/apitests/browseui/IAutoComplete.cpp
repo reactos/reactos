@@ -33,6 +33,9 @@ static HWND MyCreateEditCtrl(INT x, INT y, INT cx, INT cy)
                          NULL, NULL, GetModuleHandleW(NULL), NULL);
 }
 
+static BOOL s_bReset = FALSE;
+static BOOL s_bExpand = FALSE;
+
 // CEnumString class for auto-completion test
 class CEnumString : public IEnumString, public IACList2
 {
@@ -43,6 +46,7 @@ public:
 
     virtual ~CEnumString()
     {
+        trace("CEnumString::~CEnumString\n");
         for (UINT i = 0; i < m_nCount; ++i)
         {
             CoTaskMemFree(m_pList[i]);
@@ -61,12 +65,14 @@ public:
     {
         if (iid == IID_IUnknown || iid == IID_IEnumString)
         {
+            trace("IID_IEnumString\n");
             AddRef();
             *ppv = static_cast<IEnumString *>(this);
             return S_OK;
         }
         if (iid == IID_IACList || iid == IID_IACList2)
         {
+            trace("IID_IACList2\n");
             AddRef();
             *ppv = static_cast<IACList2 *>(this);
             return S_OK;
@@ -75,11 +81,13 @@ public:
     }
     STDMETHODIMP_(ULONG) AddRef() override
     {
+        //trace("CEnumString::AddRef\n");
         ++m_cRefs;
         return m_cRefs;
     }
     STDMETHODIMP_(ULONG) Release() override
     {
+        //trace("CEnumString::Release\n");
         --m_cRefs;
         if (m_cRefs == 0)
         {
@@ -108,28 +116,36 @@ public:
     }
     STDMETHODIMP Skip(ULONG celt) override
     {
+        trace("CEnumString::Skip(%lu)\n", celt);
         return E_NOTIMPL;
     }
     STDMETHODIMP Reset() override
     {
+        trace("CEnumString::Reset\n");
         m_nIndex = 0;
+        s_bReset = TRUE;
         return S_OK;
     }
     STDMETHODIMP Clone(IEnumString** ppenum) override
     {
+        trace("CEnumString::Clone()\n");
         return E_NOTIMPL;
     }
 
     STDMETHODIMP Expand(PCWSTR pszExpand) override
     {
+        trace("CEnumString::Expand(%S)\n", pszExpand);
+        s_bExpand = TRUE;
         return S_OK;
     }
     STDMETHODIMP GetOptions(DWORD *pdwFlag) override
     {
+        trace("CEnumString::GetOption(%p)\n", pdwFlag);
         return S_OK;
     }
     STDMETHODIMP SetOptions(DWORD dwFlag) override
     {
+        trace("CEnumString::SetOption(0x%lX)\n", dwFlag);
         return S_OK;
     }
 
@@ -237,6 +253,7 @@ DoTestCase(INT x, INT y, INT cx, INT cy, LPCWSTR pszInput,
            LPWSTR *pList, UINT nCount, BOOL bDowner)
 {
     MSG msg;
+    s_bExpand = s_bReset = FALSE;
 
     // create EDIT control
     HWND hwndEdit = MyCreateEditCtrl(x, y, cx, cy);
@@ -269,9 +286,12 @@ DoTestCase(INT x, INT y, INT cx, INT cy, LPCWSTR pszInput,
 
     // input
     SetFocus(hwndEdit);
+    WCHAR chLast = 0;
     for (UINT i = 0; pszInput[i]; ++i)
     {
+        ok_int(s_bExpand, FALSE);
         PostMessageW(hwndEdit, WM_CHAR, pszInput[i], 0);
+        chLast = pszInput[i];
     }
 
     // wait for hwndDropDown
@@ -311,6 +331,9 @@ DoTestCase(INT x, INT y, INT cx, INT cy, LPCWSTR pszInput,
         TranslateMessage(&msg);
         DispatchMessageW(&msg);
     }
+
+    // check the expansion
+    ok_int(chLast == L'\\', s_bExpand);
 
     // get sizes and positions
     RECT rcEdit, rcDropDown;
@@ -492,7 +515,7 @@ START_TEST(IAutoComplete)
     WCHAR szText[64];
 
     // Test case #1
-    trace("Testcase #1 (downer)\n");
+    trace("Testcase #1 (downer) ------------------------------\n");
     nCount = 2;
     pList = (LPWSTR *)CoTaskMemAlloc(nCount * sizeof(LPWSTR));
     SHStrDupW(L"test\\AA", &pList[0]);
@@ -500,7 +523,7 @@ START_TEST(IAutoComplete)
     DoTestCase(0, 0, 100, 16, L"test\\", pList, nCount, TRUE);
 
     // Test case #2
-    trace("Testcase #2 (downer)\n");
+    trace("Testcase #2 (downer) ------------------------------\n");
     nCount = 300;
     pList = (LPWSTR *)CoTaskMemAlloc(nCount * sizeof(LPWSTR));
     for (UINT i = 0; i < nCount; ++i)
@@ -511,16 +534,27 @@ START_TEST(IAutoComplete)
     DoTestCase(100, 20, 100, 16, L"test\\", pList, nCount, TRUE);
 
     // Test case #3
-    trace("Testcase #3 (upper)\n");
+    trace("Testcase #3 (upper) ------------------------------\n");
     nCount = 2;
     pList = (LPWSTR *)CoTaskMemAlloc(nCount * sizeof(LPWSTR));
     SHStrDupW(L"test/AA", &pList[0]);
+    SHStrDupW(L"test/BBB", &pList[0]);
     SHStrDupW(L"test/CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC", &pList[1]);
     DoTestCase(cxScreen - 100, cyScreen - 30, 80, 18, L"test/",
                pList, nCount, FALSE);
 
     // Test case #4
-    trace("Testcase #4 (upper)\n");
+    trace("Testcase #4 (upper) ------------------------------\n");
+    nCount = 2;
+    pList = (LPWSTR *)CoTaskMemAlloc(nCount * sizeof(LPWSTR));
+    SHStrDupW(L"testtest\\AA", &pList[0]);
+    SHStrDupW(L"testtest\\BBB", &pList[0]);
+    SHStrDupW(L"testtest\\CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC", &pList[1]);
+    DoTestCase(cxScreen - 100, cyScreen - 30, 80, 18, L"testtest\\",
+               pList, nCount, FALSE);
+
+    // Test case #5
+    trace("Testcase #5 (upper) ------------------------------\n");
     nCount = 300;
     pList = (LPWSTR *)CoTaskMemAlloc(nCount * sizeof(LPWSTR));
     for (UINT i = 0; i < nCount; ++i)
@@ -529,4 +563,15 @@ START_TEST(IAutoComplete)
         SHStrDupW(szText, &pList[i]);
     }
     DoTestCase(0, cyScreen - 30, 80, 18, L"testtest/", pList, nCount, FALSE);
+
+    // Test case #6
+    trace("Testcase #5 (upper) ------------------------------\n");
+    nCount = 300;
+    pList = (LPWSTR *)CoTaskMemAlloc(nCount * sizeof(LPWSTR));
+    for (UINT i = 0; i < nCount; ++i)
+    {
+        StringCbPrintfW(szText, sizeof(szText), L"testtest\\item-%u", i);
+        SHStrDupW(szText, &pList[i]);
+    }
+    DoTestCase(0, cyScreen - 30, 80, 18, L"testtest\\", pList, nCount, FALSE);
 }
