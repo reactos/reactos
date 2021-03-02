@@ -257,10 +257,10 @@ static VOID DoWordBreakProc(EDITWORDBREAKPROC fn)
 #endif
 }
 
-// the test A
+// the testcase A
 static VOID
-DoTestA(INT x, INT y, INT cx, INT cy, LPCWSTR pszInput,
-        LPWSTR *pList, UINT nCount, BOOL bDowner, BOOL bLong)
+DoTestCaseA(INT x, INT y, INT cx, INT cy, LPCWSTR pszInput,
+            LPWSTR *pList, UINT nCount, BOOL bDowner, BOOL bLong)
 {
     MSG msg;
     s_bExpand = s_bReset = FALSE;
@@ -578,10 +578,10 @@ struct TestB_Entry
     }
 };
 
-// the test B
+// the testcase B
 static VOID
-DoTestB(INT x, INT y, INT cx, INT cy, LPWSTR *pList, UINT nCount,
-        CSimpleArray<TestB_Entry>& entries)
+DoTestCaseB(INT x, INT y, INT cx, INT cy, LPWSTR *pList, UINT nCount,
+            CSimpleArray<TestB_Entry>& entries)
 {
     MSG msg;
     s_bExpand = s_bReset = FALSE;
@@ -733,17 +733,17 @@ START_TEST(IAutoComplete)
     LPWSTR *pList;
     WCHAR szText[64];
 
-    // Test #1 (A)
-    trace("Test #1 (downer, short) ------------------------------\n");
+    // Test case #1 (A)
+    trace("Testcase #1 (downer, short) ------------------------------\n");
     nCount = 3;
     pList = (LPWSTR *)CoTaskMemAlloc(nCount * sizeof(LPWSTR));
     SHStrDupW(L"test\\AA", &pList[0]);
     SHStrDupW(L"test\\BBB", &pList[1]);
     SHStrDupW(L"test\\CCC", &pList[2]);
-    DoTestA(0, 0, 100, 30, L"test\\", pList, nCount, TRUE, FALSE);
+    DoTestCaseA(0, 0, 100, 30, L"test\\", pList, nCount, TRUE, FALSE);
 
-    // Test #2 (A)
-    trace("Test #2 (downer, long) ------------------------------\n");
+    // Test case #2 (A)
+    trace("Testcase #2 (downer, long) ------------------------------\n");
     nCount = 300;
     pList = (LPWSTR *)CoTaskMemAlloc(nCount * sizeof(LPWSTR));
     for (UINT i = 0; i < nCount; ++i)
@@ -751,30 +751,30 @@ START_TEST(IAutoComplete)
         StringCbPrintfW(szText, sizeof(szText), L"test\\%u", i);
         SHStrDupW(szText, &pList[i]);
     }
-    DoTestA(100, 20, 100, 30, L"test\\", pList, nCount, TRUE, TRUE);
+    DoTestCaseA(100, 20, 100, 30, L"test\\", pList, nCount, TRUE, TRUE);
 
-    // Test #3 (A)
-    trace("Test #3 (upper, short) ------------------------------\n");
+    // Test case #3 (A)
+    trace("Testcase #3 (upper, short) ------------------------------\n");
     nCount = 2;
     pList = (LPWSTR *)CoTaskMemAlloc(nCount * sizeof(LPWSTR));
     SHStrDupW(L"test/AA", &pList[0]);
     SHStrDupW(L"test/BBB", &pList[0]);
     SHStrDupW(L"test/CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC", &pList[1]);
-    DoTestA(rcWork.right - 100, rcWork.bottom - 30, 80, 40, L"test/",
+    DoTestCaseA(rcWork.right - 100, rcWork.bottom - 30, 80, 40, L"test/",
                 pList, nCount, FALSE, FALSE);
 
-    // Test #4 (A)
-    trace("Test #4 (upper, short) ------------------------------\n");
+    // Test case #4 (A)
+    trace("Testcase #4 (upper, short) ------------------------------\n");
     nCount = 2;
     pList = (LPWSTR *)CoTaskMemAlloc(nCount * sizeof(LPWSTR));
     SHStrDupW(L"testtest\\AA", &pList[0]);
     SHStrDupW(L"testtest\\BBB", &pList[0]);
     SHStrDupW(L"testtest\\CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC", &pList[1]);
-    DoTestA(rcWork.right - 100, rcWork.bottom - 30, 80, 40, L"testtest\\",
+    DoTestCaseA(rcWork.right - 100, rcWork.bottom - 30, 80, 40, L"testtest\\",
                 pList, nCount, FALSE, FALSE);
 
-    // Test #5 (A)
-    trace("Test #5 (upper, long) ------------------------------\n");
+    // Test case #5 (A)
+    trace("Testcase #5 (upper, long) ------------------------------\n");
     nCount = 300;
     pList = (LPWSTR *)CoTaskMemAlloc(nCount * sizeof(LPWSTR));
     for (UINT i = 0; i < nCount; ++i)
@@ -782,10 +782,10 @@ START_TEST(IAutoComplete)
         StringCbPrintfW(szText, sizeof(szText), L"testtest/%u", i);
         SHStrDupW(szText, &pList[i]);
     }
-    DoTestA(0, rcWork.bottom - 30, 80, 30, L"testtest/", pList, nCount, FALSE, TRUE);
+    DoTestCaseA(0, rcWork.bottom - 30, 80, 30, L"testtest/", pList, nCount, FALSE, TRUE);
 
-    // Test #6 (A)
-    trace("Test #6 (upper, long) ------------------------------\n");
+    // Test case #6 (A)
+    trace("Testcase #6 (upper, long) ------------------------------\n");
     nCount = 2000;
     pList = (LPWSTR *)CoTaskMemAlloc(nCount * sizeof(LPWSTR));
     for (UINT i = 0; i < nCount; ++i)
@@ -793,12 +793,12 @@ START_TEST(IAutoComplete)
         StringCbPrintfW(szText, sizeof(szText), L"testtest\\item-%u", i);
         SHStrDupW(szText, &pList[i]);
     }
-    DoTestA(0, rcWork.bottom - 30, 80, 40, L"testtest\\", pList, nCount, FALSE, TRUE);
+    DoTestCaseA(0, rcWork.bottom - 30, 80, 40, L"testtest\\", pList, nCount, FALSE, TRUE);
 
     CSimpleArray<TestB_Entry> entries;
 
-    // Test #7 (B)
-    trace("Test #7 ------------------------------\n");
+    // Test case #7 (B)
+    trace("Testcase #7 ------------------------------\n");
     nCount = 16;
     pList = (LPWSTR *)CoTaskMemAlloc(nCount * sizeof(LPWSTR));
     for (UINT i = 0; i < nCount; ++i)
@@ -832,5 +832,5 @@ START_TEST(IAutoComplete)
     entries.Add(TestB_Entry(WM_CHAR, L't', 0, L"t", TRUE, 1, 1));
     entries.Add(TestB_Entry(WM_KEYDOWN, VK_LEFT, 0, L"t", TRUE, 0, 0));
     entries.Add(TestB_Entry(WM_KEYDOWN, VK_RIGHT, 0, L"t", TRUE, 1, 1));
-    DoTestB(0, 0, 100, 30, pList, nCount, entries);
+    DoTestCaseB(0, 0, 100, 30, pList, nCount, entries);
 }
