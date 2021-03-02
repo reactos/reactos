@@ -1119,7 +1119,6 @@ MiResolveProtoPteFault(IN BOOLEAN StoreInstruction,
     PMMPFN Pfn1;
     PFN_NUMBER PageFrameIndex;
     NTSTATUS Status;
-    PKEVENT* InPageBlock = NULL;
     ULONG Protection;
 
     /* Must be called with an invalid, prototype PTE, with the PFN lock held */
@@ -1279,7 +1278,10 @@ MiResolveProtoPteFault(IN BOOLEAN StoreInstruction,
     /* We might however have transition PTEs */
     if (TempPte.u.Soft.Transition == 1)
     {
-        /* Resolve the transition fault */
+        PKEVENT* InPageBlock = NULL;
+        PKEVENT PreviousEvent;
+        KEVENT Event;
+
         ASSERT(OldIrql != MM_NOIRQL);
         Status = MiResolveTransitionFault(StoreInstruction,
                                           Address,
@@ -1287,7 +1289,33 @@ MiResolveProtoPteFault(IN BOOLEAN StoreInstruction,
                                           WorkingSet,
                                           OldIrql,
                                           &InPageBlock);
-        ASSERT(NT_SUCCESS(Status));
+        if (!NT_SUCCESS(Status))
+        {
+            return Status;
+        }
+
+        if (InPageBlock)
+        {
+            PreviousEvent = *InPageBlock;
+            KeInitializeEvent(&Event, NotificationEvent, FALSE);
+
+            MiReleasePfnLock(OldIrql);
+            MiUnlockWorkingSet(PsGetCurrentThread(), WorkingSet);
+
+            KeWaitForSingleObject(&Event, WrPageIn, KernelMode, FALSE, NULL);
+
+            if (PreviousEvent)
+                KeSetEvent(PreviousEvent, IO_NO_INCREMENT, FALSE);
+
+            MiLockWorkingSet(PsGetCurrentThread(), WorkingSet);
+
+            /* Check if this was resolved while we waited for I/O to happen */
+            if (PointerPte->u.Hard.Valid)
+                return Status;
+
+            /* Acquire the PFN lock again */
+            OldIrql = MiAcquirePfnLock();
+        }
     }
     else if (TempPte.u.Soft.PageFileHigh != 0)
     {
@@ -1441,49 +1469,52 @@ MiDispatchFault(
                     /* This is a standby page, bring it back from the cache */
                     PageFrameIndex = TempPte.u.Trans.PageFrameNumber;
                     DPRINT("oooh, shiny, a soft fault! 0x%lx\n", PageFrameIndex);
-                    Pfn1 = MI_PFN_ELEMENT(PageFrameIndex);
-                    ASSERT(Pfn1->u3.e1.PageLocation != ActiveAndValid);
+                    PKEVENT* EventChain = NULL;
 
-                    /* Should not yet happen in ReactOS */
-                    ASSERT(Pfn1->u3.e1.ReadInProgress == 0);
-                    ASSERT(Pfn1->u4.InPageError == 0);
-
-                    /* Get the page */
-                    MiUnlinkPageFromList(Pfn1);
-
-                    /* Bump its reference count */
-                    ASSERT(Pfn1->u2.ShareCount == 0);
-                    InterlockedIncrement16((PSHORT)&Pfn1->u3.e2.ReferenceCount);
-                    Pfn1->u2.ShareCount++;
-
-                    /* Make it valid again */
-                    /* This looks like another macro.... */
-                    Pfn1->u3.e1.PageLocation = ActiveAndValid;
-                    ASSERT(PointerProtoPte->u.Hard.Valid == 0);
-                    ASSERT(PointerProtoPte->u.Trans.Prototype == 0);
-                    ASSERT(PointerProtoPte->u.Trans.Transition == 1);
-                    TempPte.u.Long = (PointerProtoPte->u.Long & ~0xFFF) |
-                                     MmProtectToPteMask[PointerProtoPte->u.Trans.Protection];
-                    TempPte.u.Hard.Valid = 1;
-                    MI_MAKE_ACCESSED_PAGE(&TempPte);
-
-                    /* Is the PTE writeable? */
-                    if ((Pfn1->u3.e1.Modified) &&
-                        MI_IS_PAGE_WRITEABLE(&TempPte) &&
-                        !MI_IS_PAGE_COPY_ON_WRITE(&TempPte))
+                    Status = MiResolveTransitionFault(MI_IS_WRITE_ACCESS(FaultCode),
+                                                      Address,
+                                                      PointerProtoPte,
+                                                      WorkingSet,
+                                                      LockIrql,
+                                                      &EventChain);
+                    if (!NT_SUCCESS(Status))
                     {
-                        /* Make it dirty */
-                        MI_MAKE_DIRTY_PAGE(&TempPte);
-                    }
-                    else
-                    {
-                        /* Make it clean */
-                        MI_MAKE_CLEAN_PAGE(&TempPte);
+                        /* Eh. Release our lock, and that's it :-( */
+                        MiReleasePfnLock(LockIrql);
+                        return Status;
                     }
 
-                    /* Write the valid PTE */
-                    MI_WRITE_VALID_PTE(PointerProtoPte, TempPte);
-                    ASSERT(PointerPte->u.Hard.Valid == 0);
+                    if (EventChain != NULL)
+                    {
+                        KEVENT Event;
+                        PKEVENT PreviousEvent = *EventChain;
+
+                        KeInitializeEvent(&Event, NotificationEvent, FALSE);
+                        *EventChain = &Event;
+
+                        /* Release all our lock, wait for the I/O to finish */
+                        MiReleasePfnLock(OldIrql);
+                        MiUnlockWorkingSet(PsGetCurrentThread(), WorkingSet);
+
+                        KeWaitForSingleObject(&Event, WrPageIn, KernelMode, FALSE, NULL);
+
+                        if( PreviousEvent)
+                            KeSetEvent(PreviousEvent, IO_NO_INCREMENT, FALSE);
+
+                        MiLockWorkingSet(PsGetCurrentThread(), WorkingSet);
+
+                        /* Maybe somone beat us while we were waiting */
+                        if (PointerPte->u.Hard.Valid)
+                        {
+                            /* Complete this as a transition fault */
+                            ASSERT(OldIrql == KeGetCurrentIrql());
+                            ASSERT(OldIrql <= APC_LEVEL);
+                            ASSERT(KeAreAllApcsDisabled() == TRUE);
+                            return STATUS_PAGE_FAULT_TRANSITION;
+                        }
+
+                        OldIrql = MiAcquirePfnLock();
+                    }
                 }
                 else
                 {
@@ -2228,6 +2259,8 @@ UserFault:
 
             if (InPageBlock != NULL)
             {
+                MiUnlockWorkingSet(PsGetCurrentThread(), WorkingSet);
+
                 KeWaitForSingleObject(&CurrentPageEvent, WrPageIn, KernelMode, FALSE, NULL);
 
                 /* Let's the chain go on */
@@ -2235,6 +2268,8 @@ UserFault:
                 {
                     KeSetEvent(PreviousPageEvent, IO_NO_INCREMENT, FALSE);
                 }
+
+                MiLockWorkingSet(PsGetCurrentThread(), WorkingSet);
             }
         }
         else
