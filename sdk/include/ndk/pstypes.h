@@ -973,6 +973,23 @@ typedef struct _JOB_SET_ARRAY
 } JOB_SET_ARRAY, *PJOB_SET_ARRAY;
 
 //
+// Process Quota Type
+//
+typedef enum _PS_QUOTA_TYPE
+{
+    PsNonPagedPool = 0,
+    PsPagedPool,
+    PsPageFile,
+#if (NTDDI_VERSION >= NTDDI_LONGHORN)
+    PsWorkingSet,
+#endif
+#if (NTDDI_VERSION == NTDDI_LONGHORN)
+    PsCpuRate,
+#endif
+    PsQuotaTypes
+} PS_QUOTA_TYPE;
+
+//
 // EPROCESS Quota Structures
 //
 typedef struct _EPROCESS_QUOTA_ENTRY
@@ -985,7 +1002,7 @@ typedef struct _EPROCESS_QUOTA_ENTRY
 
 typedef struct _EPROCESS_QUOTA_BLOCK
 {
-    EPROCESS_QUOTA_ENTRY QuotaEntry[3];
+    EPROCESS_QUOTA_ENTRY QuotaEntry[PsQuotaTypes];
     LIST_ENTRY QuotaList;
     ULONG ReferenceCount;
     ULONG ProcessCount;
@@ -1208,8 +1225,8 @@ typedef struct _EPROCESS
     EX_RUNDOWN_REF RundownProtect;
     HANDLE UniqueProcessId;
     LIST_ENTRY ActiveProcessLinks;
-    SIZE_T QuotaUsage[3]; /* 0=PagedPool, 1=NonPagedPool, 2=Pagefile */
-    SIZE_T QuotaPeak[3];  /* ditto */
+    SIZE_T QuotaUsage[PsQuotaTypes];
+    SIZE_T QuotaPeak[PsQuotaTypes];
     SIZE_T CommitCharge;
     SIZE_T PeakVirtualSize;
     SIZE_T VirtualSize;
