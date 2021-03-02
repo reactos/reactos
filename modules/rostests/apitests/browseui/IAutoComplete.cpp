@@ -12,6 +12,8 @@
 #include <tchar.h>
 #include <atlcom.h>
 #include <atlwin.h>
+#include <atlstr.h>
+#include <atlsimpcoll.h>
 #include <shlwapi.h>
 #include <strsafe.h>
 
@@ -39,6 +41,7 @@ static HWND MyCreateEditCtrl(INT x, INT y, INT cx, INT cy)
 
 static BOOL s_bReset = FALSE;
 static BOOL s_bExpand = FALSE;
+static CStringW s_strExpand;
 
 // CEnumString class for auto-completion test
 class CEnumString : public IEnumString, public IACList2
@@ -142,6 +145,7 @@ public:
     {
         trace("CEnumString::Expand(%S)\n", pszExpand);
         s_bExpand = TRUE;
+        s_strExpand = pszExpand;
         return S_OK;
     }
     STDMETHODIMP GetOptions(DWORD *pdwFlag) override
@@ -253,10 +257,10 @@ static VOID DoWordBreakProc(EDITWORDBREAKPROC fn)
 #endif
 }
 
-// the testcase A
+// the test A
 static VOID
-DoTestCaseA(INT x, INT y, INT cx, INT cy, LPCWSTR pszInput,
-            LPWSTR *pList, UINT nCount, BOOL bDowner, BOOL bLong)
+DoTestA(INT x, INT y, INT cx, INT cy, LPCWSTR pszInput,
+        LPWSTR *pList, UINT nCount, BOOL bDowner, BOOL bLong)
 {
     MSG msg;
     s_bExpand = s_bReset = FALSE;
@@ -552,10 +556,32 @@ DoTestCaseA(INT x, INT y, INT cx, INT cy, LPCWSTR pszInput,
     ok_int(s_bExpand, chLast == L'\\');
 }
 
-// the testcase B
+struct TestB_Entry
+{
+    UINT m_uMsg;
+    WPARAM m_wParam;
+    LPARAM m_lParam;
+    CStringW m_text;
+    BOOL m_bVisible;
+    INT m_ich0, m_ich1;
+
+    TestB_Entry(UINT uMsg, WPARAM wParam, LPARAM lParam,
+                CStringW text, BOOL bVisible, INT ich0, INT ich1)
+        : m_uMsg(uMsg)
+        , m_wParam(wParam)
+        , m_lParam(lParam)
+        , m_text(text)
+        , m_bVisible(bVisible)
+        , m_ich0(ich0)
+        , m_ich1(ich1)
+    {
+    }
+};
+
+// the test B
 static VOID
-DoTestCaseB(INT x, INT y, INT cx, INT cy, LPCWSTR pszInput,
-            LPWSTR *pList, UINT nCount)
+DoTestB(INT x, INT y, INT cx, INT cy, LPWSTR *pList, UINT nCount,
+        CSimpleArray<TestB_Entry>& entries)
 {
     MSG msg;
     s_bExpand = s_bReset = FALSE;
@@ -564,6 +590,15 @@ DoTestCaseB(INT x, INT y, INT cx, INT cy, LPCWSTR pszInput,
     HWND hwndEdit = MyCreateEditCtrl(x, y, cx, cy);
     ok(hwndEdit != NULL, "hwndEdit was NULL\n");
     ShowWindowAsync(hwndEdit, SW_SHOWNORMAL);
+
+    // do messages
+    while (PeekMessageW(&msg, NULL, 0, 0, PM_REMOVE))
+    {
+        TranslateMessage(&msg);
+        DispatchMessageW(&msg);
+    }
+
+    ok_int(IsWindowVisible(hwndEdit), TRUE);
 
     // set the list data
     CComPtr<CEnumString> pEnum(new CEnumString());
@@ -584,74 +619,93 @@ DoTestCaseB(INT x, INT y, INT cx, INT cy, LPCWSTR pszInput,
     hr = pAC->Init(hwndEdit, punk, NULL, NULL); // IAutoComplete::Init
     ok_hr(hr, S_OK);
 
+    HWND hwndDropDown = NULL, hwndScrollBar = NULL, hwndSizeBox = NULL, hwndList = NULL;
     // input
     SetFocus(hwndEdit);
-    for (UINT i = 0; pszInput[i]; ++i)
+    Sleep(100);
+    WCHAR chLast = 0;
+    CStringW strLast;
+    for (INT i = 0; i < entries.GetSize(); ++i)
     {
-        PostMessageW(hwndEdit, WM_COMMAND, (0xFFFF0000 + i), 0xDEADFACE);
-        PostMessageW(hwndEdit, WM_CHAR, pszInput[i], 0);
-    }
-    PostMessageW(hwndEdit, WM_CHAR, L'!', 0);
+        const TestB_Entry& entry = entries[i];
+        s_bReset = s_bExpand = FALSE;
+        s_strExpand.Empty();
 
-    // observe the message responses
-    BOOL bFlag = FALSE;
-    INT i = 0;
-    WCHAR ch = 0;
-    s_bExpand = s_bReset = FALSE;
-    while (PeekMessageW(&msg, NULL, 0, 0, PM_REMOVE))
-    {
-        TranslateMessage(&msg);
-        DispatchMessageW(&msg);
-        if (bFlag && msg.message == WM_CHAR)
+        UINT uMsg = entry.m_uMsg;
+        WPARAM wParam = entry.m_wParam;
+        LPARAM lParam = entry.m_lParam;
+        PostMessageW(hwndEdit, uMsg, wParam, lParam);
+
+        while (PeekMessageW(&msg, NULL, 0, 0, PM_REMOVE))
         {
-            bFlag = FALSE;
-            ch = (WCHAR)msg.wParam;
-            if (ch == L'!')
-                break;
-            //trace("i: %d, ch:%C, s_bReset:%d, s_bExpand:%d, ch:%C\n", i, ch, s_bReset, s_bExpand, ch);
-            Sleep(100);
-            if (i == 0)
-            {
-                ok_int(s_bReset, TRUE);
-                s_bReset = FALSE;
-                ok_int(s_bExpand, FALSE);
-            }
-            else if (ch != L'\\')
-            {
-                ok_int(s_bReset, FALSE);
-                ok_int(s_bExpand, FALSE);
-            }
+            TranslateMessage(&msg);
+            DispatchMessageW(&msg);
+            if (PeekMessageW(&msg, NULL, 0, 0, PM_NOREMOVE))
+                Sleep(100); // another thread is working
         }
-        if (msg.message == WM_COMMAND && (DWORD)msg.lParam == 0xDEADFACE)
+
+        if (!IsWindow(hwndDropDown))
         {
-            i = (msg.wParam & 0x0000FFFF);
-            //trace("i: %d, ch:%C, s_bReset:%d, s_bExpand:%d, ch:%C\n", i, ch, s_bReset, s_bExpand, ch);
-            if (ch == L'\\')
-            {
-                ok_int(s_bReset, TRUE);
-                ok_int(s_bExpand, TRUE);
-                s_bReset = s_bExpand = FALSE;
-            }
-            else
-            {
-                ok_int(s_bReset, FALSE);
-                ok_int(s_bExpand, FALSE);
-            }
-            bFlag = TRUE;
-            Sleep(100);
+            hwndDropDown = FindWindowW(L"Auto-Suggest Dropdown", L"");
+            hwndScrollBar = NULL;
+            hwndSizeBox = NULL;
+            hwndList = NULL;
         }
+        if (IsWindowVisible(hwndDropDown))
+        {
+            hwndScrollBar = GetTopWindow(hwndDropDown);
+            hwndSizeBox = GetNextWindow(hwndScrollBar, GW_HWNDNEXT);
+            hwndList = GetNextWindow(hwndSizeBox, GW_HWNDNEXT);
+        }
+
+        WCHAR szText[64];
+        GetWindowTextW(hwndEdit, szText, 64);
+        INT ich0, ich1;
+        SendMessageW(hwndEdit, EM_GETSEL, (WPARAM)&ich0, (LPARAM)&ich1);
+
+        BOOL bVisible = IsWindowVisible(hwndDropDown);
+        ok_int(bVisible, entry.m_bVisible);
+        INT iItem = -1;
+        if (IsWindowVisible(hwndList))
+        {
+            iItem = ListView_GetNextItem(hwndList, -1, LVNI_ALL | LVNI_SELECTED);
+        }
+        WCHAR ch = (WCHAR)entry.m_wParam;
+
+        trace("i:%d, ch:%C, bVisible:%d, iItem:%d, s_bReset:%d, szText:%S, s_strExpand:%S\n",
+              i, ch, bVisible, iItem, s_bReset, szText, (LPCWSTR)s_strExpand);
+
+        ok_wstri(szText, (LPCWSTR)entry.m_text);
+        ok_int(ich0, entry.m_ich0);
+        ok_int(ich1, entry.m_ich1);
+
+        if (uMsg == WM_CHAR && ch == L'\\')
+        {
+            ok_int(s_bReset, TRUE);
+            ok_int(s_bExpand, TRUE);
+            ok_wstri((LPCWSTR)s_strExpand, szText);
+        }
+        else if (strLast.IsEmpty() ||
+                 (uMsg == WM_KEYDOWN && wParam == VK_BACK && chLast == L'\\'))
+        {
+            ok_int(s_bReset, TRUE);
+            ok_int(s_bExpand, FALSE);
+            ok_wstri((LPCWSTR)s_strExpand, L"");
+        }
+        else
+        {
+            ok_int(s_bReset, FALSE);
+            ok_int(s_bExpand, FALSE);
+            ok_wstri((LPCWSTR)s_strExpand, L"");
+        }
+
+        INT cch = lstrlen(szText);
+        if (cch)
+            chLast = szText[cch - 1];
+        strLast = szText;
     }
 
-    // post quit
     DestroyWindow(hwndEdit);
-    PostQuitMessage(0);
-
-    // take care of the message queue
-    while (GetMessageW(&msg, NULL, 0, 0))
-    {
-        TranslateMessage(&msg);
-        DispatchMessageW(&msg);
-    }
 }
 
 START_TEST(IAutoComplete)
@@ -679,17 +733,17 @@ START_TEST(IAutoComplete)
     LPWSTR *pList;
     WCHAR szText[64];
 
-    // Test case #1 (A)
-    trace("Testcase #1 (downer, short) ------------------------------\n");
+    // Test #1 (A)
+    trace("Test #1 (downer, short) ------------------------------\n");
     nCount = 3;
     pList = (LPWSTR *)CoTaskMemAlloc(nCount * sizeof(LPWSTR));
     SHStrDupW(L"test\\AA", &pList[0]);
     SHStrDupW(L"test\\BBB", &pList[1]);
     SHStrDupW(L"test\\CCC", &pList[2]);
-    DoTestCaseA(0, 0, 100, 30, L"test\\", pList, nCount, TRUE, FALSE);
+    DoTestA(0, 0, 100, 30, L"test\\", pList, nCount, TRUE, FALSE);
 
-    // Test case #2 (A)
-    trace("Testcase #2 (downer, long) ------------------------------\n");
+    // Test #2 (A)
+    trace("Test #2 (downer, long) ------------------------------\n");
     nCount = 300;
     pList = (LPWSTR *)CoTaskMemAlloc(nCount * sizeof(LPWSTR));
     for (UINT i = 0; i < nCount; ++i)
@@ -697,30 +751,30 @@ START_TEST(IAutoComplete)
         StringCbPrintfW(szText, sizeof(szText), L"test\\%u", i);
         SHStrDupW(szText, &pList[i]);
     }
-    DoTestCaseA(100, 20, 100, 30, L"test\\", pList, nCount, TRUE, TRUE);
+    DoTestA(100, 20, 100, 30, L"test\\", pList, nCount, TRUE, TRUE);
 
-    // Test case #3 (A)
-    trace("Testcase #3 (upper, short) ------------------------------\n");
+    // Test #3 (A)
+    trace("Test #3 (upper, short) ------------------------------\n");
     nCount = 2;
     pList = (LPWSTR *)CoTaskMemAlloc(nCount * sizeof(LPWSTR));
     SHStrDupW(L"test/AA", &pList[0]);
     SHStrDupW(L"test/BBB", &pList[0]);
     SHStrDupW(L"test/CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC", &pList[1]);
-    DoTestCaseA(rcWork.right - 100, rcWork.bottom - 30, 80, 40, L"test/",
+    DoTestA(rcWork.right - 100, rcWork.bottom - 30, 80, 40, L"test/",
                 pList, nCount, FALSE, FALSE);
 
-    // Test case #4 (A)
-    trace("Testcase #4 (upper, short) ------------------------------\n");
+    // Test #4 (A)
+    trace("Test #4 (upper, short) ------------------------------\n");
     nCount = 2;
     pList = (LPWSTR *)CoTaskMemAlloc(nCount * sizeof(LPWSTR));
     SHStrDupW(L"testtest\\AA", &pList[0]);
     SHStrDupW(L"testtest\\BBB", &pList[0]);
     SHStrDupW(L"testtest\\CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC", &pList[1]);
-    DoTestCaseA(rcWork.right - 100, rcWork.bottom - 30, 80, 40, L"testtest\\",
+    DoTestA(rcWork.right - 100, rcWork.bottom - 30, 80, 40, L"testtest\\",
                 pList, nCount, FALSE, FALSE);
 
-    // Test case #5 (A)
-    trace("Testcase #5 (upper, long) ------------------------------\n");
+    // Test #5 (A)
+    trace("Test #5 (upper, long) ------------------------------\n");
     nCount = 300;
     pList = (LPWSTR *)CoTaskMemAlloc(nCount * sizeof(LPWSTR));
     for (UINT i = 0; i < nCount; ++i)
@@ -728,10 +782,10 @@ START_TEST(IAutoComplete)
         StringCbPrintfW(szText, sizeof(szText), L"testtest/%u", i);
         SHStrDupW(szText, &pList[i]);
     }
-    DoTestCaseA(0, rcWork.bottom - 30, 80, 30, L"testtest/", pList, nCount, FALSE, TRUE);
+    DoTestA(0, rcWork.bottom - 30, 80, 30, L"testtest/", pList, nCount, FALSE, TRUE);
 
-    // Test case #6 (A)
-    trace("Testcase #6 (upper, long) ------------------------------\n");
+    // Test #6 (A)
+    trace("Test #6 (upper, long) ------------------------------\n");
     nCount = 2000;
     pList = (LPWSTR *)CoTaskMemAlloc(nCount * sizeof(LPWSTR));
     for (UINT i = 0; i < nCount; ++i)
@@ -739,16 +793,44 @@ START_TEST(IAutoComplete)
         StringCbPrintfW(szText, sizeof(szText), L"testtest\\item-%u", i);
         SHStrDupW(szText, &pList[i]);
     }
-    DoTestCaseA(0, rcWork.bottom - 30, 80, 40, L"testtest\\", pList, nCount, FALSE, TRUE);
+    DoTestA(0, rcWork.bottom - 30, 80, 40, L"testtest\\", pList, nCount, FALSE, TRUE);
 
-    // Test case #7 (B)
-    trace("Testcase #7 ------------------------------\n");
-    nCount = 500;
+    CSimpleArray<TestB_Entry> entries;
+
+    // Test #7 (B)
+    trace("Test #7 ------------------------------\n");
+    nCount = 16;
     pList = (LPWSTR *)CoTaskMemAlloc(nCount * sizeof(LPWSTR));
     for (UINT i = 0; i < nCount; ++i)
     {
-        StringCbPrintfW(szText, sizeof(szText), L"testtest\\item-%u", i);
+        StringCbPrintfW(szText, sizeof(szText), L"test\\item-%u", i);
         SHStrDupW(szText, &pList[i]);
     }
-    DoTestCaseB(0, 0, 100, 30, L"testtest\\iX", pList, nCount);
+    entries.RemoveAll();
+    entries.Add(TestB_Entry(WM_CHAR, L't', 0, L"t", TRUE, 1, 1));
+    entries.Add(TestB_Entry(WM_CHAR, L'e', 0, L"te", TRUE, 2, 2));
+    entries.Add(TestB_Entry(WM_CHAR, L's', 0, L"tes", TRUE, 3, 3));
+    entries.Add(TestB_Entry(WM_CHAR, L't', 0, L"test", TRUE, 4, 4));
+    entries.Add(TestB_Entry(WM_CHAR, L'\\', 0, L"test\\", TRUE, 5, 5));
+    entries.Add(TestB_Entry(WM_CHAR, L't', 0, L"test\\t", FALSE, 6, 6));
+    entries.Add(TestB_Entry(WM_KEYDOWN, VK_BACK, 0, L"test\\", TRUE, 5, 5));
+    entries.Add(TestB_Entry(WM_CHAR, L't', 0, L"test\\t", FALSE, 6, 6));
+    entries.Add(TestB_Entry(WM_KEYDOWN, VK_BACK, 0, L"test\\", TRUE, 5, 5));
+    entries.Add(TestB_Entry(WM_CHAR, L'i', 0, L"test\\i", TRUE, 6, 6));
+    entries.Add(TestB_Entry(WM_KEYDOWN, VK_DOWN, 0, L"test\\item-0", TRUE, 11, 11));
+    entries.Add(TestB_Entry(WM_KEYDOWN, VK_DOWN, 0, L"test\\item-1", TRUE, 11, 11));
+    entries.Add(TestB_Entry(WM_KEYDOWN, VK_UP, 0, L"test\\item-0", TRUE, 11, 11));
+    entries.Add(TestB_Entry(WM_KEYDOWN, VK_UP, 0, L"test\\i", TRUE, 6, 6));
+    entries.Add(TestB_Entry(WM_KEYDOWN, VK_UP, 0, L"test\\item-9", TRUE, 11, 11));
+    entries.Add(TestB_Entry(WM_KEYDOWN, VK_DOWN, 0, L"test\\i", TRUE, 6, 6));
+    entries.Add(TestB_Entry(WM_KEYDOWN, VK_BACK, 0, L"test\\", TRUE, 5, 5));
+    entries.Add(TestB_Entry(WM_KEYDOWN, VK_BACK, 0, L"test", TRUE, 4, 4));
+    entries.Add(TestB_Entry(WM_KEYDOWN, VK_BACK, 0, L"tes", TRUE, 3, 3));
+    entries.Add(TestB_Entry(WM_KEYDOWN, VK_BACK, 0, L"te", TRUE, 2, 2));
+    entries.Add(TestB_Entry(WM_KEYDOWN, VK_BACK, 0, L"t", TRUE, 1, 1));
+    entries.Add(TestB_Entry(WM_KEYDOWN, VK_BACK, 0, L"", FALSE, 0, 0));
+    entries.Add(TestB_Entry(WM_CHAR, L't', 0, L"t", TRUE, 1, 1));
+    entries.Add(TestB_Entry(WM_KEYDOWN, VK_LEFT, 0, L"t", TRUE, 0, 0));
+    entries.Add(TestB_Entry(WM_KEYDOWN, VK_RIGHT, 0, L"t", TRUE, 1, 1));
+    DoTestB(0, 0, 100, 30, pList, nCount, entries);
 }
