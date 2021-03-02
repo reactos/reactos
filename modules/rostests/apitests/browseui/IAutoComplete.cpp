@@ -675,7 +675,7 @@ DoTestCaseB(INT x, INT y, INT cx, INT cy, LPWSTR *pList, UINT nCount,
         trace("i:%d, ch:%C, bVisible:%d, iItem:%d, s_bReset:%d, szText:%S, s_strExpand:%S\n",
               i, ch, bVisible, iItem, s_bReset, szText, (LPCWSTR)s_strExpand);
 
-        ok_wstri(szText, (LPCWSTR)entry.m_text);
+        ok_wstr(szText, (LPCWSTR)entry.m_text);
         ok_int(ich0, entry.m_ich0);
         ok_int(ich1, entry.m_ich1);
 
@@ -810,21 +810,21 @@ START_TEST(IAutoComplete)
     entries.Add(TestB_Entry(WM_CHAR, L't', 0, L"t", TRUE, 1, 1));
     entries.Add(TestB_Entry(WM_CHAR, L'e', 0, L"te", TRUE, 2, 2));
     entries.Add(TestB_Entry(WM_CHAR, L's', 0, L"tes", TRUE, 3, 3));
-    entries.Add(TestB_Entry(WM_CHAR, L't', 0, L"test", TRUE, 4, 4));
-    entries.Add(TestB_Entry(WM_CHAR, L'\\', 0, L"test\\", TRUE, 5, 5));
-    entries.Add(TestB_Entry(WM_CHAR, L't', 0, L"test\\t", FALSE, 6, 6));
-    entries.Add(TestB_Entry(WM_KEYDOWN, VK_BACK, 0, L"test\\", TRUE, 5, 5));
-    entries.Add(TestB_Entry(WM_CHAR, L't', 0, L"test\\t", FALSE, 6, 6));
-    entries.Add(TestB_Entry(WM_KEYDOWN, VK_BACK, 0, L"test\\", TRUE, 5, 5));
-    entries.Add(TestB_Entry(WM_CHAR, L'i', 0, L"test\\i", TRUE, 6, 6));
+    entries.Add(TestB_Entry(WM_CHAR, L'T', 0, L"tesT", TRUE, 4, 4));
+    entries.Add(TestB_Entry(WM_CHAR, L'\\', 0, L"tesT\\", TRUE, 5, 5));
+    entries.Add(TestB_Entry(WM_CHAR, L't', 0, L"tesT\\t", FALSE, 6, 6));
+    entries.Add(TestB_Entry(WM_KEYDOWN, VK_BACK, 0, L"tesT\\", TRUE, 5, 5));
+    entries.Add(TestB_Entry(WM_CHAR, L't', 0, L"tesT\\t", FALSE, 6, 6));
+    entries.Add(TestB_Entry(WM_KEYDOWN, VK_BACK, 0, L"tesT\\", TRUE, 5, 5));
+    entries.Add(TestB_Entry(WM_CHAR, L'i', 0, L"tesT\\i", TRUE, 6, 6));
     entries.Add(TestB_Entry(WM_KEYDOWN, VK_DOWN, 0, L"test\\item-0", TRUE, 11, 11));
     entries.Add(TestB_Entry(WM_KEYDOWN, VK_DOWN, 0, L"test\\item-1", TRUE, 11, 11));
     entries.Add(TestB_Entry(WM_KEYDOWN, VK_UP, 0, L"test\\item-0", TRUE, 11, 11));
-    entries.Add(TestB_Entry(WM_KEYDOWN, VK_UP, 0, L"test\\i", TRUE, 6, 6));
+    entries.Add(TestB_Entry(WM_KEYDOWN, VK_UP, 0, L"tesT\\i", TRUE, 6, 6));
     entries.Add(TestB_Entry(WM_KEYDOWN, VK_UP, 0, L"test\\item-9", TRUE, 11, 11));
-    entries.Add(TestB_Entry(WM_KEYDOWN, VK_DOWN, 0, L"test\\i", TRUE, 6, 6));
-    entries.Add(TestB_Entry(WM_KEYDOWN, VK_BACK, 0, L"test\\", TRUE, 5, 5));
-    entries.Add(TestB_Entry(WM_KEYDOWN, VK_BACK, 0, L"test", TRUE, 4, 4));
+    entries.Add(TestB_Entry(WM_KEYDOWN, VK_DOWN, 0, L"tesT\\i", TRUE, 6, 6));
+    entries.Add(TestB_Entry(WM_KEYDOWN, VK_BACK, 0, L"tesT\\", TRUE, 5, 5));
+    entries.Add(TestB_Entry(WM_KEYDOWN, VK_BACK, 0, L"tesT", TRUE, 4, 4));
     entries.Add(TestB_Entry(WM_KEYDOWN, VK_BACK, 0, L"tes", TRUE, 3, 3));
     entries.Add(TestB_Entry(WM_KEYDOWN, VK_BACK, 0, L"te", TRUE, 2, 2));
     entries.Add(TestB_Entry(WM_KEYDOWN, VK_BACK, 0, L"t", TRUE, 1, 1));
