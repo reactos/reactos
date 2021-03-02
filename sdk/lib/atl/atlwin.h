@@ -782,11 +782,14 @@ public:
     BOOL GetWindowText(BSTR& bstrText)
     {
         ATLASSERT(::IsWindow(m_hWnd));
-        int length = ::GetWindowTextLength(m_hWnd);
-        if (!SysReAllocStringLen(&bstrText, NULL, length))
+        INT length = ::GetWindowTextLengthW(m_hWnd);
+        if (!::SysReAllocStringLen(&bstrText, NULL, length))
             return FALSE;
-        ::GetWindowText(m_hWnd, (LPTSTR)&bstrText[2], length);
-        return TRUE;
+        if (::GetWindowTextW(m_hWnd, bstrText, length + 1))
+            return TRUE;
+        ::SysFreeString(bstrText);
+        bstrText = NULL;
+        return FALSE;
     }
 
     int GetWindowTextLength() const
