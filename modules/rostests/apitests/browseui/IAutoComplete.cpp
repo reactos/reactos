@@ -453,6 +453,11 @@ DoTestCaseA(INT x, INT y, INT cx, INT cy, LPCWSTR pszInput,
         ok(style == LIST_STYLE_2, "style was 0x%08lx\n", style);
     ok_long(exstyle, 0);
     ok_long((LONG)id, 0);
+#define LIST_EXTENDED_LV_STYLE_1 0x10068
+#define LIST_EXTENDED_LV_STYLE_2 0x68
+    exstyle = ListView_GetExtendedListViewStyle(hwndList);
+    ok(exstyle == LIST_EXTENDED_LV_STYLE_1 /* Win10 */ ||
+       exstyle == LIST_EXTENDED_LV_STYLE_2 /* WinXP */, "exstyle was 0x%08lx\n", exstyle);
 
     // no more controls
     hwndNone = GetNextWindow(hwndList, GW_HWNDNEXT);
