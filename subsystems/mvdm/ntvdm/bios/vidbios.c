@@ -2944,13 +2944,13 @@ static VOID VidBiosPrintCharacter(CHAR Character, BYTE Attribute, BOOLEAN UseAtt
 
 static VOID VidBiosSetPixel(WORD X, WORD Y, BYTE Page, BYTE Value)
 {
+    SHORT ScreenWidth = VgaGetDisplayResolution().X;
+
     if (IS_TEXT_MODE(Bda->VideoMode))
     {
         DPRINT1("Note, trying to modify pixel (%d,%d) @ page %d to %d in text mode %X - returning 0.\n", X, Y, Page, Value, Bda->VideoMode);
         return;
     }
-
-    SHORT ScreenWidth = VgaGetDisplayResolution().X;
 
     switch (Bda->VideoMode)
     {
@@ -2958,9 +2958,13 @@ static VOID VidBiosSetPixel(WORD X, WORD Y, BYTE Page, BYTE Value)
         case 0x05: /* CGA 320x200 4c */
         case 0x06: /* CGA 640x200 2c  */
         {
+            ULONG Address;
+            BYTE MemoryValue;
+            BOOL Xor;
             BYTE MaxColor;
             BYTE ValueShift;
             BYTE PixelsPerByte;
+
             if (Bda->VideoMode == 0x06)
             {
                 MaxColor = 1;
@@ -2974,22 +2978,16 @@ static VOID VidBiosSetPixel(WORD X, WORD Y, BYTE Page, BYTE Value)
                 PixelsPerByte = 4;
             }
 
-            /* Calculate the address of the pixel */
-            WORD VidSegment = (Y & 1) ? CGA_ODD_VIDEO_SEG : CGA_EVEN_VIDEO_SEG;
-            WORD Offset = ((Y / 2) * ScreenWidth + X) / PixelsPerByte;
-            ULONG Address = TO_LINEAR(
-                VidSegment,
-                Page * Bda->VideoPageSize + Offset
-            );
-
-            BOOL Xor = (Value & 0x80) != 0;
+            Xor = (Value & 0x80) != 0;
             Value &= MaxColor;
+            Address = TO_LINEAR((Y & 1) ? CGA_ODD_VIDEO_SEG : CGA_EVEN_VIDEO_SEG,
+                                Page * Bda->VideoPageSize + ((Y / 2) * ScreenWidth + X) / PixelsPerByte);
 
-            /* Update the pixel */
-            BYTE MemoryValue;
             EmulatorReadMemory(&EmulatorContext, Address, &MemoryValue, sizeof(BYTE));
             if (Xor)
+            {
                 MemoryValue ^= Value << ValueShift;
+            }
             else
             {
                 MemoryValue &= ~(MaxColor << ValueShift);
@@ -3004,34 +3002,45 @@ static VOID VidBiosSetPixel(WORD X, WORD Y, BYTE Page, BYTE Value)
         case 0x10: /* EGA 640x350 16c */
         case 0x12: /* VGA 640x480 16c */
         {
-            WORD Offset = (Y * ScreenWidth + X) / 8;
-            ULONG Address = TO_LINEAR(GRAPHICS_VIDEO_SEG, Page * Bda->VideoPageSize + Offset);
+            ULONG Address;
+            BOOL Xor;
+            BYTE OldMode;
+            BYTE OldRotation;
+            BYTE OldRead;
+            BYTE OldMask;
+            BYTE CurrentPlaneMask;
+            BYTE CurrentPlane;
+            BYTE Shift = 7 - X % 8;
 
-            BOOL Xor = (Value & 0x80) != 0;
+            Xor = (Value & 0x80) != 0;
             Value &= 15;
+            Address = TO_LINEAR(GRAPHICS_VIDEO_SEG,
+                                Page * Bda->VideoPageSize + (Y * ScreenWidth + X) / 8);
 
             /* Make sure we're in write mode 0 */
             IOWriteB(VGA_GC_INDEX, VGA_GC_MODE_REG);
-            BYTE OldMode = IOReadB(VGA_GC_DATA);
+            OldMode = IOReadB(VGA_GC_DATA);
             IOWriteB(VGA_GC_DATA, 0x00);
 
             /* Setup the rotation */
             IOWriteB(VGA_GC_INDEX, VGA_GC_ROTATE_REG);
-            BYTE OldRotation = IOReadB(VGA_GC_DATA);
+            OldRotation = IOReadB(VGA_GC_DATA);
             IOWriteB(VGA_GC_DATA, Xor ? 0x18 : 0x00);
 
             /* Save old read */
             IOWriteB(VGA_GC_INDEX, VGA_GC_READ_MAP_SEL_REG);
-            BYTE OldRead = IOReadB(VGA_GC_DATA);
+            OldRead = IOReadB(VGA_GC_DATA);
 
             /* Save old mask */
             IOWriteB(VGA_SEQ_INDEX, VGA_SEQ_MASK_REG);
-            BYTE OldMask = IOReadB(VGA_SEQ_DATA);
+            OldMask = IOReadB(VGA_SEQ_DATA);
 
-            BYTE CurrentPlaneMask = 1;
-            for (BYTE CurrentPlane = 0; CurrentPlane < 4; CurrentPlane++)
+            /* Loop and write over all four color bitplanes */
+            CurrentPlaneMask = 1;
+            for (CurrentPlane = 0; CurrentPlane < 4; CurrentPlane++)
             {
                 BYTE Dummy;
+                BYTE ActualValue;
 
                 IOWriteB(VGA_GC_INDEX, VGA_GC_READ_MAP_SEL_REG);
                 IOWriteB(VGA_GC_DATA, CurrentPlane);
@@ -3039,10 +3048,10 @@ static VOID VidBiosSetPixel(WORD X, WORD Y, BYTE Page, BYTE Value)
                 EmulatorReadMemory(&EmulatorContext, Address, &Dummy, sizeof(BYTE));
 
                 /* There's probably a way to handle this logic on write, but I'll just leave it at that */
-                BYTE Shift = 7 - X % 8;
-                BYTE ActualValue;
                 if (Xor)
+                {
                     ActualValue = (Value & 1) << Shift;
+                }
                 else
                 {
                     ActualValue = Dummy;
@@ -3070,23 +3079,25 @@ static VOID VidBiosSetPixel(WORD X, WORD Y, BYTE Page, BYTE Value)
 
         case 0x11: /* 640x480 2c */
         {
-            /* Calculate the pixel's address */
-            WORD Offset = (Y * ScreenWidth + X) / 8;
-            ULONG Address = TO_LINEAR(GRAPHICS_VIDEO_SEG, Page * Bda->VideoPageSize + Offset);
-
-            BYTE ValueShift = 7 - X % 8;
-            BOOL Xor = Value & 0x80;
-            Value &= 1;
-
-            /* Update the pixel */
+            ULONG Address;
             BYTE MemoryValue;
+            BOOL Xor;
+            BYTE Shift = 7 - X % 8;
+
+            Xor = Value & 0x80;
+            Value &= 1;
+            Address = TO_LINEAR(GRAPHICS_VIDEO_SEG,
+                                Page * Bda->VideoPageSize + (Y * ScreenWidth + X) / 8);
+
             EmulatorReadMemory(&EmulatorContext, Address, &MemoryValue, sizeof(BYTE));
             if (Xor)
-                MemoryValue ^= Value << ValueShift;
+            {
+                MemoryValue ^= Value << Shift;
+            }
             else
             {
-                MemoryValue &= ~(1 << ValueShift);
-                MemoryValue |= Value << ValueShift;
+                MemoryValue &= ~(1 << Shift);
+                MemoryValue |= Value << Shift;
             }
             EmulatorWriteMemory(&EmulatorContext, Address, &MemoryValue, sizeof(BYTE));
             break;
@@ -3105,7 +3116,7 @@ static VOID VidBiosSetPixel(WORD X, WORD Y, BYTE Page, BYTE Value)
 
         default:
         {
-            DPRINT1("VidBiosSetPixel - unsupported video mode %X\b", Bda->VideoMode);
+            DPRINT1("VidBiosSetPixel - unsupported video mode %X\n", Bda->VideoMode);
             break;
         }
     }
@@ -3113,13 +3124,13 @@ static VOID VidBiosSetPixel(WORD X, WORD Y, BYTE Page, BYTE Value)
 
 static BYTE VidBiosGetPixel(WORD X, WORD Y, BYTE Page)
 {
+    SHORT ScreenWidth = VgaGetDisplayResolution().X;
+
     if (IS_TEXT_MODE(Bda->VideoMode))
     {
         DPRINT1("Note, trying to access pixel (%d,%d) @ page %d in text mode %X - returning 0.\n", X, Y, Page, Bda->VideoMode);
         return 0;
     }
-
-    SHORT ScreenWidth = VgaGetDisplayResolution().X;
 
     switch (Bda->VideoMode)
     {
@@ -3127,9 +3138,12 @@ static BYTE VidBiosGetPixel(WORD X, WORD Y, BYTE Page)
         case 0x05: /* CGA 320x200 4c */
         case 0x06: /* CGA 640x200 2c */
         {
+            ULONG Address;
+            BYTE MemoryValue;
             BYTE MaxColor;
             BYTE ValueShift;
             BYTE PixelsPerByte;
+
             if (Bda->VideoMode == 0x06)
             {
                 MaxColor = 1;
@@ -3143,13 +3157,10 @@ static BYTE VidBiosGetPixel(WORD X, WORD Y, BYTE Page)
                 PixelsPerByte = 4;
             }
 
-            WORD VidSegment = (Y & 1) ? CGA_ODD_VIDEO_SEG : CGA_EVEN_VIDEO_SEG;
-            WORD Offset = ((Y / 2) * ScreenWidth + X) / PixelsPerByte;
-            ULONG Address = TO_LINEAR(VidSegment, Page * Bda->VideoPageSize + Offset);
+            Address = TO_LINEAR((Y & 1) ? CGA_ODD_VIDEO_SEG : CGA_EVEN_VIDEO_SEG,
+                                Page * Bda->VideoPageSize + ((Y / 2) * ScreenWidth + X) / PixelsPerByte);
 
-            BYTE MemoryValue;
             EmulatorReadMemory(&EmulatorContext, Address, &MemoryValue, sizeof(BYTE));
-
             return (MemoryValue >> ValueShift) & MaxColor;
         }
 
@@ -3158,24 +3169,29 @@ static BYTE VidBiosGetPixel(WORD X, WORD Y, BYTE Page)
         case 0x10: /* EGA 640x350 16c */
         case 0x12: /* VGA 640x480 16c */
         {
-            WORD Offset = (Y * ScreenWidth + X) / 8;
-            ULONG Address = TO_LINEAR(GRAPHICS_VIDEO_SEG, Page * Bda->VideoPageSize + Offset);
+            ULONG Address;
+            BYTE OldRead;
+            BYTE Shift = 7 - X % 8;
+            BYTE Value = 0;
+            BYTE CurrentPlane;
+
+            Address = TO_LINEAR(GRAPHICS_VIDEO_SEG,
+                                Page * Bda->VideoPageSize + (Y * ScreenWidth + X) / 8);
 
             /* Save old read register */
             IOWriteB(VGA_GC_INDEX, VGA_GC_READ_MAP_SEL_REG);
-            BYTE OldRead = IOReadB(VGA_GC_DATA);
+            OldRead = IOReadB(VGA_GC_DATA);
 
-            BYTE Shift = 7 - X % 8;
-            BYTE Value = 0;
-            for (BYTE CurrentPlane = 0; CurrentPlane < 4; CurrentPlane++)
+            /* Loop and read from all four color bitplanes */
+            for (CurrentPlane = 0; CurrentPlane < 4; CurrentPlane++)
             {
+                BYTE MemoryValue;
+
                 IOWriteB(VGA_GC_INDEX, VGA_GC_READ_MAP_SEL_REG);
                 IOWriteB(VGA_GC_DATA, CurrentPlane);
 
-                BYTE MemoryValue;
                 EmulatorReadMemory(&EmulatorContext, Address, &MemoryValue, sizeof(BYTE));
                 Value |= ((MemoryValue >> Shift) & 1) << CurrentPlane;
-                //DPRINT1("(%d,%d)\t plane %d, read %x (%d, so far %X)\n", X, Y, CurrentPlane, MemoryValue, ((MemoryValue >> Shift) & 1), Value);
             }
 
             /* Restore old read register */
@@ -3186,29 +3202,22 @@ static BYTE VidBiosGetPixel(WORD X, WORD Y, BYTE Page)
 
         case 0x11: /* 640x480 2c */
         {
-            WORD Offset = (Y * ScreenWidth + X) / 8;
-            ULONG Address = TO_LINEAR(
-                GRAPHICS_VIDEO_SEG,
-                Page * Bda->VideoPageSize + Offset);
-
-            BYTE ValueShift = 7 - X % 8;
-
             BYTE MemoryValue;
+            BYTE ValueShift = 7 - X % 8;
+            ULONG Address = TO_LINEAR(GRAPHICS_VIDEO_SEG,
+                                      Page * Bda->VideoPageSize + (Y * ScreenWidth + X) / 8);
             EmulatorReadMemory(&EmulatorContext, Address, &MemoryValue, sizeof(BYTE));
             return (MemoryValue >> ValueShift) & 1;
         }
 
         case 0x13: /* 320x200 256c */
         {
-            /* Just a simple byte access from [Y * ScreenWidth + X] */
-            WORD Offset = Page * Bda->VideoPageSize + Y * 320 + X;
             BYTE Value;
-            EmulatorReadMemory(
-                &EmulatorContext,
-                TO_LINEAR(GRAPHICS_VIDEO_SEG, Offset),
-                (PVOID)&Value,
-                sizeof(BYTE)
-            );
+            EmulatorReadMemory(&EmulatorContext,
+                               TO_LINEAR(GRAPHICS_VIDEO_SEG,
+                                         Page * Bda->VideoPageSize + Y * 320 + X),
+                               &Value,
+                               sizeof(BYTE));
             return Value;
         }
 
