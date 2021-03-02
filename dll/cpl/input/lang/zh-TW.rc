@@ -1,4 +1,5 @@
-/* Traditional Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com) */
+/* Traditional Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com)
+   Translation improved by Chan Chilung 2021 (eason066@gmail.com) */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
@@ -150,7 +151,7 @@ BEGIN
     IDS_CHINESE_TRADITIONAL_DAYI_LAYOUT "中文(繁體) - 大易"
     IDS_CHINESE_TRADITIONAL_NEWCHANGJIE_LAYOUT "中文(繁體) - 新倉頡"
     IDS_CHINESE_TRADITIONAL_NEWPHONETIC_LAYOUT "中文(繁體) - 新注音"
-    IDS_CHINESE_TRADITIONAL_PHONETIC_LAYOUT "中文(繁體) - 註音"
+    IDS_CHINESE_TRADITIONAL_PHONETIC_LAYOUT "中文(繁體) - 注音"
     IDS_CHINESE_TRADITIONAL_QUICK_LAYOUT "中文(繁體) - 速成"
     IDS_CHINESE_TRADITIONAL_UNICODE_LAYOUT "中文(繁體) - Unicode"
     IDS_CHINESE_TRADITIONAL_USKEYBOARD_LAYOUT "中文(繁體) - 美國鍵盤"
@@ -163,7 +164,7 @@ BEGIN
     IDS_DIVEHI_PHONETIC_LAYOUT "第維埃語拼音"
     IDS_DIVEHI_TYPEWRITER_LAYOUT "第維埃語印刷文字"
     IDS_DUTCH_LAYOUT "荷蘭"
-    IDS_ESPERANTO_LAYOUT "世界語"
+    IDS_ESPERANTO_LAYOUT "世界文"
     IDS_ESTONIAN_LAYOUT "愛沙尼亞文"
     IDS_FAEROESE_LAYOUT "法羅文"
     IDS_FARSI_LAYOUT "波斯文"
@@ -249,7 +250,7 @@ BEGIN
     IDS_UNITED_STATES_DVORAK_FOR_RIGHT_HAND_LAYOUT "美國英語-Dvorak (慣用右手)"
     IDS_UNITED_STATES_INTERNATIONAL_LAYOUT "美國英語-國際"
     IDS_URDU_LAYOUT "烏都文"
-    IDS_US_LAYOUT "美國英語"
+    IDS_US_LAYOUT "美國"
     IDS_USENG_TABLE_IBM_ARABIC238L_LAYOUT "IBM 阿拉伯文 238_L 美國英語表格"
     IDS_UZBEK_CYRILLIC_LAYOUT "烏茲別克西里爾文"
     IDS_VIETNAMESE_LAYOUT "越南文"

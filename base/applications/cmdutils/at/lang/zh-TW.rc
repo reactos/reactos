@@ -1,4 +1,4 @@
-// Chinese Traditional (zh-TW) resources by Chan CL <eason066@gmail.com> 2021
+// Chinese Traditional (zh-TW) resources by Chan Chilung <eason066@gmail.com> 2021
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
@@ -43,9 +43,9 @@ time                 指定命令執行的時間。\n\
     IDS_OK "確定"
 
     IDS_TASKID      "任務 ID:       %lu\n"
-    IDS_STATUS      "狀態:    %s\n"
-    IDS_SCHEDULE    "安排:    %s\n"
+    IDS_STATUS      "狀態:          %s\n"
+    IDS_SCHEDULE    "安排:          %s\n"
     IDS_TIME        "今日時間:      %s\n"
-    IDS_INTERACTIVE "互動:    %s\n"
-    IDS_COMMAND     "命令:    %s\n"
+    IDS_INTERACTIVE "互動:          %s\n"
+    IDS_COMMAND     "命令:          %s\n"
 END

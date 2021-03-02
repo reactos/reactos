@@ -36,7 +36,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "大圖示(&G)", ID_VIEW_LARGE
         MENUITEM "小圖示(&M)", ID_VIEW_SMALL
-        MENUITEM "詳細信息(&D)", ID_VIEW_DETAILS, CHECKED
+        MENUITEM "詳細資料(&D)", ID_VIEW_DETAILS, CHECKED
         MENUITEM "選擇欄位(&S)...", ID_VIEW_SELECTCOLUMNS
         POPUP "CPU 記錄(&C)"
         BEGIN
