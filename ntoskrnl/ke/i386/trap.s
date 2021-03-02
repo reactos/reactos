@@ -125,6 +125,7 @@ ALIGN 4
 EXTERN @KiInterruptTemplateHandler@8:PROC
 PUBLIC _KiInterruptTemplate
 _KiInterruptTemplate:
+    CFI_STARTPROC
     KiEnterTrap KI_PUSH_FAKE_ERROR_CODE
 PUBLIC _KiInterruptTemplate2ndDispatch
 _KiInterruptTemplate2ndDispatch:
@@ -135,6 +136,7 @@ _KiInterruptTemplateObject:
     jmp eax
 PUBLIC _KiInterruptTemplateDispatch
 _KiInterruptTemplateDispatch:
+    CFI_ENDPROC
 
 EXTERN @KiSystemServiceHandler@8:PROC
 PUBLIC _KiSystemService
