@@ -235,6 +235,9 @@ ENDM
 /* Force intel syntax */
 .intel_syntax noprefix
 
+/* Put dwarf debug info in the .dwarf_debug section, which will be properly stripped */
+.cfi_sections .debug_frame
+
 .altmacro
 
 /* Explicit radix in GAS syntax */
