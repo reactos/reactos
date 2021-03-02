@@ -59,6 +59,17 @@ WsTcOpen(IN PTCATALOG Catalog,
                                 &RegType,
                                 NULL,
                                 &RegSize);
+    if (ErrorCode != ERROR_SUCCESS)
+    {
+        DPRINT1("Failed to get protocol catalog name: %d.\n", ErrorCode);
+        return FALSE;
+    }
+
+    if (RegType != REG_SZ)
+    {
+        DPRINT1("Protocol catalog name is not a string (Type %d).\n", RegType);
+        return FALSE;
+    }
 
     CatalogKeyName = HeapAlloc(WsSockHeap, 0, RegSize);
 
