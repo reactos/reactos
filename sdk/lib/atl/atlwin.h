@@ -788,6 +788,7 @@ public:
         if (::GetWindowTextW(m_hWnd, bstrText, length + 1))
             return TRUE;
         ::SysFreeString(bstrText);
+        bstrText = NULL;
         return FALSE;
     }
 
