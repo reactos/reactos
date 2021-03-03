@@ -24,8 +24,6 @@
     ok(lstrcmpiW(x, y) == 0, "Wrong string. Expected '%S', got '%S'\n", y, x)
 #define ok_wstr_line(line, x, y) \
     ok(lstrcmpW(x, y) == 0, "Line %d: Wrong string. Expected '%S', got '%S'\n", line, y, x)
-#define ok_wstri_line(line, x, y) \
-    ok(lstrcmpiW(x, y) == 0, "Line %d: Wrong string. Expected '%S', got '%S'\n", line, y, x)
 
 struct CCoInit
 {
@@ -691,7 +689,7 @@ DoTestCaseB(INT x, INT y, INT cx, INT cy, LPWSTR *pList, UINT nCount,
             iItem = ListView_GetNextItem(hwndList, -1, LVNI_ALL | LVNI_SELECTED);
         }
 
-        ok_wstr_line(entry.m_line, szText, (LPCWSTR)entry.m_text);
+        ok(strText == entry.m_text, "Line %d: szText was %S\n", entry.m_line, (LPCWSTR)strText);
         ok(ich0 == entry.m_ich0, "Line %d: ich0 was %d\n", entry.m_line, ich0);
         ok(ich1 == entry.m_ich1, "Line %d: ich1 was %d\n", entry.m_line, ich1);
         ok(iItem == entry.m_iItem, "Line %d: iItem was %d\n", entry.m_line, iItem);
