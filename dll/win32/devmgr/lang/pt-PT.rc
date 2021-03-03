@@ -41,7 +41,7 @@ BEGIN
     IDS_DEV_NO_PROBLEM "Este dispositivo está a funcionar correctamente."
     IDS_DEV_NOT_CONFIGURED "Este dispositivo não está correctamente configurado."
     IDS_DEV_DEVLOADER_FAILED "O ReactOS não pôde carregar o controlador para este dispositivo porque o computador está a reportar dois tipos de barramento %1."
-    IDS_DEV_DEVLOADER_FAILED2 "O(s) carregadore(es) do dispositivo %1 não pôde/puderam carregar o controlador  para este dispositivo."
+    IDS_DEV_DEVLOADER_FAILED2 "O(s) carregadore(es) do dispositivo %1 não pôde/puderam carregar o controlador para este dispositivo."
     IDS_DEV_OUT_OF_MEMORY "O controlador para este dispositivo pode estar danificado, ou o sistema com pouca memória ou insuficiência de outros recursos."
     IDS_DEV_ENTRY_IS_WRONG_TYPE "Este dispositivo não está a funcionar correctamente porque um de seus controladores pode estar danificado, ou o registo pode estar danificado."
     IDS_DEV_LACKED_ARBITRATOR "O controlador para este dispositivo requisitou um recurso que o ReactOS não sabe como manusear."
