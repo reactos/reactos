@@ -2942,6 +2942,13 @@ static VOID VidBiosPrintCharacter(CHAR Character, BYTE Attribute, BOOLEAN UseAtt
     VidBiosSetCursorPosition(Row, Column, Page);
 }
 
+static BYTE VidBiosGetPageAmountForMode(BYTE VideoMode)
+{
+    if (VideoMode > BIOS_MAX_VIDEO_MODE)
+        return 0;
+    return 0x10000 / VideoModes[VideoMode].PageSize;
+}
+
 static VOID VidBiosSetPixel(WORD X, WORD Y, BYTE Page, BYTE Value)
 {
     SHORT ScreenWidth = VgaGetDisplayResolution().X;
@@ -2958,6 +2965,7 @@ static VOID VidBiosSetPixel(WORD X, WORD Y, BYTE Page, BYTE Value)
         case 0x05: /* CGA 320x200 4c */
         case 0x06: /* CGA 640x200 2c  */
         {
+            WORD CgaSegment[] = { CGA_EVEN_VIDEO_SEG, CGA_ODD_VIDEO_SEG };
             ULONG Address;
             BYTE MemoryValue;
             BOOL Xor;
@@ -2968,19 +2976,19 @@ static VOID VidBiosSetPixel(WORD X, WORD Y, BYTE Page, BYTE Value)
             if (Bda->VideoMode == 0x06)
             {
                 MaxColor = 1;
-                ValueShift = 7 - X % 8;
+                ValueShift = ~X & 7;
                 PixelsPerByte = 8;
             }
             else
             {
                 MaxColor = 3;
-                ValueShift = (3 - X % 4) * 2;
+                ValueShift = (~X & 3) * 2;
                 PixelsPerByte = 4;
             }
 
             Xor = (Value & 0x80) != 0;
             Value &= MaxColor;
-            Address = TO_LINEAR((Y & 1) ? CGA_ODD_VIDEO_SEG : CGA_EVEN_VIDEO_SEG,
+            Address = TO_LINEAR(CgaSegment[Y & 1],
                                 Page * Bda->VideoPageSize + ((Y / 2) * ScreenWidth + X) / PixelsPerByte);
 
             EmulatorReadMemory(&EmulatorContext, Address, &MemoryValue, sizeof(BYTE));
@@ -3010,7 +3018,7 @@ static VOID VidBiosSetPixel(WORD X, WORD Y, BYTE Page, BYTE Value)
             BYTE OldMask;
             BYTE CurrentPlaneMask;
             BYTE CurrentPlane;
-            BYTE Shift = 7 - X % 8;
+            BYTE Shift = ~X & 7;
 
             Xor = (Value & 0x80) != 0;
             Value &= 15;
@@ -3082,7 +3090,7 @@ static VOID VidBiosSetPixel(WORD X, WORD Y, BYTE Page, BYTE Value)
             ULONG Address;
             BYTE MemoryValue;
             BOOL Xor;
-            BYTE Shift = 7 - X % 8;
+            BYTE Shift = ~X & 7;
 
             Xor = Value & 0x80;
             Value &= 1;
@@ -3106,11 +3114,10 @@ static VOID VidBiosSetPixel(WORD X, WORD Y, BYTE Page, BYTE Value)
         case 0x13: /* 320x200 256c */
         {
             WORD Offset = Y * ScreenWidth + X;
-            EmulatorWriteMemory(
-                &EmulatorContext,
-                TO_LINEAR(GRAPHICS_VIDEO_SEG, Page * Bda->VideoPageSize + Offset),
-                (PVOID)&Value,
-                sizeof(BYTE));
+            EmulatorWriteMemory(&EmulatorContext,
+                                TO_LINEAR(GRAPHICS_VIDEO_SEG, Page * Bda->VideoPageSize + Offset),
+                                &Value,
+                                sizeof(BYTE));
             break;
         }
 
@@ -3138,6 +3145,7 @@ static BYTE VidBiosGetPixel(WORD X, WORD Y, BYTE Page)
         case 0x05: /* CGA 320x200 4c */
         case 0x06: /* CGA 640x200 2c */
         {
+            WORD CgaSegment[] = { CGA_EVEN_VIDEO_SEG, CGA_ODD_VIDEO_SEG };
             ULONG Address;
             BYTE MemoryValue;
             BYTE MaxColor;
@@ -3147,17 +3155,17 @@ static BYTE VidBiosGetPixel(WORD X, WORD Y, BYTE Page)
             if (Bda->VideoMode == 0x06)
             {
                 MaxColor = 1;
-                ValueShift = 7 - X % 8;
+                ValueShift = ~X & 7;
                 PixelsPerByte = 8;
             }
             else
             {
                 MaxColor = 3;
-                ValueShift = (3 - X % 4) * 2;
+                ValueShift = (~X & 3) * 2;
                 PixelsPerByte = 4;
             }
 
-            Address = TO_LINEAR((Y & 1) ? CGA_ODD_VIDEO_SEG : CGA_EVEN_VIDEO_SEG,
+            Address = TO_LINEAR(CgaSegment[Y & 1],
                                 Page * Bda->VideoPageSize + ((Y / 2) * ScreenWidth + X) / PixelsPerByte);
 
             EmulatorReadMemory(&EmulatorContext, Address, &MemoryValue, sizeof(BYTE));
@@ -3171,7 +3179,7 @@ static BYTE VidBiosGetPixel(WORD X, WORD Y, BYTE Page)
         {
             ULONG Address;
             BYTE OldRead;
-            BYTE Shift = 7 - X % 8;
+            BYTE Shift = ~X & 7;
             BYTE Value = 0;
             BYTE CurrentPlane;
 
@@ -3203,7 +3211,7 @@ static BYTE VidBiosGetPixel(WORD X, WORD Y, BYTE Page)
         case 0x11: /* 640x480 2c */
         {
             BYTE MemoryValue;
-            BYTE ValueShift = 7 - X % 8;
+            BYTE ValueShift = ~X & 7;
             ULONG Address = TO_LINEAR(GRAPHICS_VIDEO_SEG,
                                       Page * Bda->VideoPageSize + (Y * ScreenWidth + X) / 8);
             EmulatorReadMemory(&EmulatorContext, Address, &MemoryValue, sizeof(BYTE));
@@ -3470,13 +3478,23 @@ VOID WINAPI VidBiosVideoService(LPWORD Stack)
         /* Write Pixel At */
         case 0x0C:
         {
-            BYTE Page = getBH();
+            BYTE Page;
 
-            /* Validate page (0xFF = current video page) */
-            if (Page == 0xFF)
-                Page = Bda->VideoPage;
-            else if (Page >= BIOS_MAX_PAGES)
-                break;
+            /* If current video mode supports only one page, BH is ignored */
+            if (VidBiosGetPageAmountForMode(Bda->VideoMode) == 1)
+            {
+                Page = 0;
+            }
+            else
+            {
+                Page = getBH();
+
+                /* Validate page (0xFF = current video page) */
+                if (Page == 0xFF)
+                    Page = Bda->VideoPage;
+                else if (Page >= BIOS_MAX_PAGES)
+                    break;
+            }
 
             VidBiosSetPixel(getCX(), getDX(), Page, getAL());
             break;
@@ -3485,13 +3503,23 @@ VOID WINAPI VidBiosVideoService(LPWORD Stack)
         /* Read Pixel At */
         case 0x0D:
         {
-            BYTE Page = getBH();
+            BYTE Page;
 
-            /* Validate page (0xFF = current video page) */
-            if (Page == 0xFF)
-                Page = Bda->VideoPage;
-            else if (Page >= BIOS_MAX_PAGES)
-                break;
+            /* If current video mode supports only one page, BH is ignored */
+            if (VidBiosGetPageAmountForMode(Bda->VideoMode) == 1)
+            {
+                Page = 0;
+            }
+            else
+            {
+                Page = getBH();
+
+                /* Validate page (0xFF = current video page) */
+                if (Page == 0xFF)
+                    Page = Bda->VideoPage;
+                else if (Page >= BIOS_MAX_PAGES)
+                    break;
+            }
 
             setAL(VidBiosGetPixel(getCX(), getDX(), Page));
             break;
