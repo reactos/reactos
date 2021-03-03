@@ -22,6 +22,10 @@
 // compare wide strings
 #define ok_wstri(x, y) \
     ok(lstrcmpiW(x, y) == 0, "Wrong string. Expected '%S', got '%S'\n", y, x)
+#define ok_wstr_line(line, x, y) \
+    ok(lstrcmpW(x, y) == 0, "Line %d: Wrong string. Expected '%S', got '%S'\n", line, y, x)
+#define ok_wstri_line(line, x, y) \
+    ok(lstrcmpiW(x, y) == 0, "Line %d: Wrong string. Expected '%S', got '%S'\n", line, y, x)
 
 struct CCoInit
 {
@@ -556,24 +560,36 @@ DoTestCaseA(INT x, INT y, INT cx, INT cy, LPCWSTR pszInput,
     ok_int(s_bExpand, chLast == L'\\');
 }
 
-struct TestB_Entry
+struct TEST_B_ENTRY
 {
+    INT m_line;
     UINT m_uMsg;
     WPARAM m_wParam;
     LPARAM m_lParam;
     CStringW m_text;
     BOOL m_bVisible;
     INT m_ich0, m_ich1;
+    INT m_iItem;
+    BOOL m_bReset;
+    BOOL m_bExpand;
+    CStringW m_strExpand;
 
-    TestB_Entry(UINT uMsg, WPARAM wParam, LPARAM lParam,
-                CStringW text, BOOL bVisible, INT ich0, INT ich1)
-        : m_uMsg(uMsg)
+    TEST_B_ENTRY(INT line, UINT uMsg, WPARAM wParam, LPARAM lParam,
+                 CStringW text, BOOL bVisible, INT ich0, INT ich1,
+                 INT iItem = -1, BOOL bReset = FALSE, BOOL bExpand = FALSE,
+                 LPCWSTR pszExpand = L"")
+        : m_line(line)
+        , m_uMsg(uMsg)
         , m_wParam(wParam)
         , m_lParam(lParam)
         , m_text(text)
         , m_bVisible(bVisible)
         , m_ich0(ich0)
         , m_ich1(ich1)
+        , m_iItem(iItem)
+        , m_bReset(bReset)
+        , m_bExpand(bExpand)
+        , m_strExpand(pszExpand)
     {
     }
 };
@@ -581,7 +597,7 @@ struct TestB_Entry
 // the testcase B
 static VOID
 DoTestCaseB(INT x, INT y, INT cx, INT cy, LPWSTR *pList, UINT nCount,
-            CSimpleArray<TestB_Entry>& entries)
+            const CSimpleArray<TEST_B_ENTRY>& entries)
 {
     MSG msg;
     s_bExpand = s_bReset = FALSE;
@@ -623,11 +639,10 @@ DoTestCaseB(INT x, INT y, INT cx, INT cy, LPWSTR *pList, UINT nCount,
     // input
     SetFocus(hwndEdit);
     Sleep(100);
-    WCHAR chLast = 0;
-    CStringW strLast;
+
     for (INT i = 0; i < entries.GetSize(); ++i)
     {
-        const TestB_Entry& entry = entries[i];
+        const TEST_B_ENTRY& entry = entries[i];
         s_bReset = s_bExpand = FALSE;
         s_strExpand.Empty();
 
@@ -640,8 +655,8 @@ DoTestCaseB(INT x, INT y, INT cx, INT cy, LPWSTR *pList, UINT nCount,
         {
             TranslateMessage(&msg);
             DispatchMessageW(&msg);
-            if (PeekMessageW(&msg, NULL, 0, 0, PM_NOREMOVE))
-                Sleep(100); // another thread is working
+
+            Sleep(100); // another thread is working
         }
 
         if (!IsWindow(hwndDropDown))
@@ -658,51 +673,31 @@ DoTestCaseB(INT x, INT y, INT cx, INT cy, LPWSTR *pList, UINT nCount,
             hwndList = GetNextWindow(hwndSizeBox, GW_HWNDNEXT);
         }
 
+        DWORD dwThreadId1 = GetWindowThreadProcessId(hwndEdit, NULL);
+        DWORD dwThreadId2 = GetWindowThreadProcessId(hwndDropDown, NULL);
+        ok_long(dwThreadId1, dwThreadId2);
+
         WCHAR szText[64];
         GetWindowTextW(hwndEdit, szText, 64);
+        CStringW strText = szText;
         INT ich0, ich1;
         SendMessageW(hwndEdit, EM_GETSEL, (WPARAM)&ich0, (LPARAM)&ich1);
 
         BOOL bVisible = IsWindowVisible(hwndDropDown);
-        ok_int(bVisible, entry.m_bVisible);
+        ok(bVisible == entry.m_bVisible, "Line %d: bVisible was %d\n", entry.m_line, bVisible);
         INT iItem = -1;
         if (IsWindowVisible(hwndList))
         {
             iItem = ListView_GetNextItem(hwndList, -1, LVNI_ALL | LVNI_SELECTED);
         }
-        WCHAR ch = (WCHAR)entry.m_wParam;
 
-        trace("i:%d, ch:%C, bVisible:%d, iItem:%d, s_bReset:%d, szText:%S, s_strExpand:%S\n",
-              i, ch, bVisible, iItem, s_bReset, szText, (LPCWSTR)s_strExpand);
-
-        ok_wstr(szText, (LPCWSTR)entry.m_text);
-        ok_int(ich0, entry.m_ich0);
-        ok_int(ich1, entry.m_ich1);
-
-        if (uMsg == WM_CHAR && ch == L'\\')
-        {
-            ok_int(s_bReset, TRUE);
-            ok_int(s_bExpand, TRUE);
-            ok_wstri((LPCWSTR)s_strExpand, szText);
-        }
-        else if (strLast.IsEmpty() ||
-                 (uMsg == WM_KEYDOWN && wParam == VK_BACK && chLast == L'\\'))
-        {
-            ok_int(s_bReset, TRUE);
-            ok_int(s_bExpand, FALSE);
-            ok_wstri((LPCWSTR)s_strExpand, L"");
-        }
-        else
-        {
-            ok_int(s_bReset, FALSE);
-            ok_int(s_bExpand, FALSE);
-            ok_wstri((LPCWSTR)s_strExpand, L"");
-        }
-
-        INT cch = lstrlen(szText);
-        if (cch)
-            chLast = szText[cch - 1];
-        strLast = szText;
+        ok_wstr_line(entry.m_line, szText, (LPCWSTR)entry.m_text);
+        ok(ich0 == entry.m_ich0, "Line %d: ich0 was %d\n", entry.m_line, ich0);
+        ok(ich1 == entry.m_ich1, "Line %d: ich1 was %d\n", entry.m_line, ich1);
+        ok(iItem == entry.m_iItem, "Line %d: iItem was %d\n", entry.m_line, iItem);
+        ok(s_bReset == entry.m_bReset, "Line %d: s_bReset was %d\n", entry.m_line, s_bReset);
+        ok(s_bExpand == entry.m_bExpand, "Line %d: s_bExpand was %d\n", entry.m_line, s_bExpand);
+        ok(s_strExpand == entry.m_strExpand, "Line %d: s_strExpand was %S\n", entry.m_line, (LPCWSTR)s_strExpand);
     }
 
     DestroyWindow(hwndEdit);
@@ -773,6 +768,10 @@ START_TEST(IAutoComplete)
     DoTestCaseA(rcWork.right - 100, rcWork.bottom - 30, 80, 40, L"testtest\\",
                 pList, nCount, FALSE, FALSE);
 
+#ifdef MANUAL_DEBUGGING
+    return;
+#endif
+
     // Test case #5 (A)
     trace("Testcase #5 (upper, long) ------------------------------\n");
     nCount = 300;
@@ -795,7 +794,7 @@ START_TEST(IAutoComplete)
     }
     DoTestCaseA(0, rcWork.bottom - 30, 80, 40, L"testtest\\", pList, nCount, FALSE, TRUE);
 
-    CSimpleArray<TestB_Entry> entries;
+    CSimpleArray<TEST_B_ENTRY> entries;
 
     // Test case #7 (B)
     trace("Testcase #7 ------------------------------\n");
@@ -807,30 +806,63 @@ START_TEST(IAutoComplete)
         SHStrDupW(szText, &pList[i]);
     }
     entries.RemoveAll();
-    entries.Add(TestB_Entry(WM_CHAR, L't', 0, L"t", TRUE, 1, 1));
-    entries.Add(TestB_Entry(WM_CHAR, L'e', 0, L"te", TRUE, 2, 2));
-    entries.Add(TestB_Entry(WM_CHAR, L's', 0, L"tes", TRUE, 3, 3));
-    entries.Add(TestB_Entry(WM_CHAR, L'T', 0, L"tesT", TRUE, 4, 4));
-    entries.Add(TestB_Entry(WM_CHAR, L'\\', 0, L"tesT\\", TRUE, 5, 5));
-    entries.Add(TestB_Entry(WM_CHAR, L't', 0, L"tesT\\t", FALSE, 6, 6));
-    entries.Add(TestB_Entry(WM_KEYDOWN, VK_BACK, 0, L"tesT\\", TRUE, 5, 5));
-    entries.Add(TestB_Entry(WM_CHAR, L't', 0, L"tesT\\t", FALSE, 6, 6));
-    entries.Add(TestB_Entry(WM_KEYDOWN, VK_BACK, 0, L"tesT\\", TRUE, 5, 5));
-    entries.Add(TestB_Entry(WM_CHAR, L'i', 0, L"tesT\\i", TRUE, 6, 6));
-    entries.Add(TestB_Entry(WM_KEYDOWN, VK_DOWN, 0, L"test\\item-0", TRUE, 11, 11));
-    entries.Add(TestB_Entry(WM_KEYDOWN, VK_DOWN, 0, L"test\\item-1", TRUE, 11, 11));
-    entries.Add(TestB_Entry(WM_KEYDOWN, VK_UP, 0, L"test\\item-0", TRUE, 11, 11));
-    entries.Add(TestB_Entry(WM_KEYDOWN, VK_UP, 0, L"tesT\\i", TRUE, 6, 6));
-    entries.Add(TestB_Entry(WM_KEYDOWN, VK_UP, 0, L"test\\item-9", TRUE, 11, 11));
-    entries.Add(TestB_Entry(WM_KEYDOWN, VK_DOWN, 0, L"tesT\\i", TRUE, 6, 6));
-    entries.Add(TestB_Entry(WM_KEYDOWN, VK_BACK, 0, L"tesT\\", TRUE, 5, 5));
-    entries.Add(TestB_Entry(WM_KEYDOWN, VK_BACK, 0, L"tesT", TRUE, 4, 4));
-    entries.Add(TestB_Entry(WM_KEYDOWN, VK_BACK, 0, L"tes", TRUE, 3, 3));
-    entries.Add(TestB_Entry(WM_KEYDOWN, VK_BACK, 0, L"te", TRUE, 2, 2));
-    entries.Add(TestB_Entry(WM_KEYDOWN, VK_BACK, 0, L"t", TRUE, 1, 1));
-    entries.Add(TestB_Entry(WM_KEYDOWN, VK_BACK, 0, L"", FALSE, 0, 0));
-    entries.Add(TestB_Entry(WM_CHAR, L't', 0, L"t", TRUE, 1, 1));
-    entries.Add(TestB_Entry(WM_KEYDOWN, VK_LEFT, 0, L"t", TRUE, 0, 0));
-    entries.Add(TestB_Entry(WM_KEYDOWN, VK_RIGHT, 0, L"t", TRUE, 1, 1));
+    entries.Add(TEST_B_ENTRY(__LINE__, WM_CHAR, L't', 0, L"t", TRUE, 1, 1, -1, TRUE));
+    entries.Add(TEST_B_ENTRY(__LINE__, WM_CHAR, L'e', 0, L"te", TRUE, 2, 2));
+    entries.Add(TEST_B_ENTRY(__LINE__, WM_CHAR, L's', 0, L"tes", TRUE, 3, 3));
+    entries.Add(TEST_B_ENTRY(__LINE__, WM_CHAR, L'T', 0, L"tesT", TRUE, 4, 4));
+    entries.Add(TEST_B_ENTRY(__LINE__, WM_CHAR, L'\\', 0, L"tesT\\", TRUE, 5, 5, -1, TRUE, TRUE, L"tesT\\"));
+    entries.Add(TEST_B_ENTRY(__LINE__, WM_CHAR, L't', 0, L"tesT\\t", FALSE, 6, 6));
+    entries.Add(TEST_B_ENTRY(__LINE__, WM_KEYDOWN, VK_BACK, 0, L"tesT\\", TRUE, 5, 5));
+    entries.Add(TEST_B_ENTRY(__LINE__, WM_CHAR, L'i', 0, L"tesT\\i", TRUE, 6, 6));
+    entries.Add(TEST_B_ENTRY(__LINE__, WM_KEYDOWN, VK_DOWN, 0, L"test\\item-0", TRUE, 11, 11, 0));
+    entries.Add(TEST_B_ENTRY(__LINE__, WM_KEYDOWN, VK_DOWN, 0, L"test\\item-1", TRUE, 11, 11, 1));
+    entries.Add(TEST_B_ENTRY(__LINE__, WM_KEYDOWN, VK_UP, 0, L"test\\item-0", TRUE, 11, 11, 0));
+    entries.Add(TEST_B_ENTRY(__LINE__, WM_KEYDOWN, VK_UP, 0, L"tesT\\i", TRUE, 6, 6));
+    entries.Add(TEST_B_ENTRY(__LINE__, WM_KEYDOWN, VK_UP, 0, L"test\\item-9", TRUE, 11, 11, 15));
+    entries.Add(TEST_B_ENTRY(__LINE__, WM_KEYDOWN, VK_DOWN, 0, L"tesT\\i", TRUE, 6, 6));
+    entries.Add(TEST_B_ENTRY(__LINE__, WM_KEYDOWN, VK_BACK, 0, L"tesT\\", TRUE, 5, 5));
+    entries.Add(TEST_B_ENTRY(__LINE__, WM_KEYDOWN, VK_BACK, 0, L"tesT", TRUE, 4, 4, -1, TRUE));
+    entries.Add(TEST_B_ENTRY(__LINE__, WM_KEYDOWN, VK_BACK, 0, L"tes", TRUE, 3, 3));
+    entries.Add(TEST_B_ENTRY(__LINE__, WM_KEYDOWN, VK_BACK, 0, L"te", TRUE, 2, 2));
+    entries.Add(TEST_B_ENTRY(__LINE__, WM_KEYDOWN, VK_BACK, 0, L"t", TRUE, 1, 1));
+    entries.Add(TEST_B_ENTRY(__LINE__, WM_KEYDOWN, VK_BACK, 0, L"", FALSE, 0, 0));
+    entries.Add(TEST_B_ENTRY(__LINE__, WM_CHAR, L't', 0, L"t", TRUE, 1, 1, -1, TRUE));
+    entries.Add(TEST_B_ENTRY(__LINE__, WM_KEYDOWN, VK_LEFT, 0, L"t", TRUE, 0, 0));
+    entries.Add(TEST_B_ENTRY(__LINE__, WM_KEYDOWN, VK_RIGHT, 0, L"t", TRUE, 1, 1));
     DoTestCaseB(0, 0, 100, 30, pList, nCount, entries);
+
+    // Test case #8 (B)
+    trace("Testcase #8 ------------------------------\n");
+    nCount = 10;
+    pList = (LPWSTR *)CoTaskMemAlloc(nCount * sizeof(LPWSTR));
+    for (UINT i = 0; i < nCount; ++i)
+    {
+        StringCbPrintfW(szText, sizeof(szText), L"test\\item-%u", i);
+        SHStrDupW(szText, &pList[i]);
+    }
+    entries.RemoveAll();
+    entries.Add(TEST_B_ENTRY(__LINE__, WM_CHAR, L'a', 0, L"a", FALSE, 1, 1, -1, TRUE));
+    entries.Add(TEST_B_ENTRY(__LINE__, WM_CHAR, L'b', 0, L"ab", FALSE, 2, 2));
+    entries.Add(TEST_B_ENTRY(__LINE__, WM_KEYDOWN, VK_LEFT, 0, L"ab", FALSE, 1, 1));
+    entries.Add(TEST_B_ENTRY(__LINE__, WM_KEYDOWN, VK_LEFT, 0, L"ab", FALSE, 0, 0));
+    entries.Add(TEST_B_ENTRY(__LINE__, WM_KEYDOWN, VK_DELETE, 0, L"b", FALSE, 0, 0, -1, TRUE));
+    entries.Add(TEST_B_ENTRY(__LINE__, WM_CHAR, L't', 0, L"tb", FALSE, 1, 1, -1, TRUE));
+    entries.Add(TEST_B_ENTRY(__LINE__, WM_CHAR, L'e', 0, L"teb", FALSE, 2, 2));
+    entries.Add(TEST_B_ENTRY(__LINE__, WM_CHAR, L's', 0, L"tesb", FALSE, 3, 3));
+    entries.Add(TEST_B_ENTRY(__LINE__, WM_CHAR, L't', 0, L"testb", FALSE, 4, 4));
+    entries.Add(TEST_B_ENTRY(__LINE__, WM_KEYDOWN, VK_DELETE, 0, L"test", TRUE, 4, 4));
+    entries.Add(TEST_B_ENTRY(__LINE__, WM_CHAR, L'\\', 0, L"test\\", TRUE, 5, 5, -1, TRUE, TRUE, L"test\\"));
+    entries.Add(TEST_B_ENTRY(__LINE__, WM_CHAR, L'i', 0, L"test\\i", TRUE, 6, 6));
+    entries.Add(TEST_B_ENTRY(__LINE__, WM_KEYDOWN, VK_DELETE, 0, L"test\\i", TRUE, 6, 6));
+    entries.Add(TEST_B_ENTRY(__LINE__, WM_CHAR, L'z', 0, L"test\\iz", FALSE, 7, 7));
+    entries.Add(TEST_B_ENTRY(__LINE__, WM_KEYDOWN, VK_LEFT, 0, L"test\\iz", FALSE, 6, 6));
+    entries.Add(TEST_B_ENTRY(__LINE__, WM_KEYDOWN, VK_LEFT, 0, L"test\\iz", FALSE, 5, 5));
+    entries.Add(TEST_B_ENTRY(__LINE__, WM_KEYDOWN, VK_DELETE, 0, L"test\\z", FALSE, 5, 5));
+    entries.Add(TEST_B_ENTRY(__LINE__, WM_KEYDOWN, VK_DELETE, 0, L"test\\", TRUE, 5, 5));
+    entries.Add(TEST_B_ENTRY(__LINE__, WM_KEYDOWN, VK_LEFT, 0, L"test\\", TRUE, 4, 4));
+    entries.Add(TEST_B_ENTRY(__LINE__, WM_KEYDOWN, VK_LEFT, 0, L"test\\", TRUE, 3, 3));
+    entries.Add(TEST_B_ENTRY(__LINE__, WM_KEYDOWN, VK_BACK, 0, L"tet\\", FALSE, 2, 2, -1, TRUE, TRUE, L"tet\\"));
+    entries.Add(TEST_B_ENTRY(__LINE__, WM_KEYDOWN, VK_DELETE, 0, L"te\\", FALSE, 2, 2, -1, TRUE, TRUE, L"te\\"));
+    entries.Add(TEST_B_ENTRY(__LINE__, WM_KEYDOWN, VK_DELETE, 0, L"te", TRUE, 2, 2, -1, TRUE));
+    DoTestCaseB(rcWork.right - 100, rcWork.bottom - 30, 80, 40, pList, nCount, entries);
 }
