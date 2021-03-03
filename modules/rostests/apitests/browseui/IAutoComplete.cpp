@@ -22,8 +22,6 @@
 // compare wide strings
 #define ok_wstri(x, y) \
     ok(lstrcmpiW(x, y) == 0, "Wrong string. Expected '%S', got '%S'\n", y, x)
-#define ok_wstr_line(line, x, y) \
-    ok(lstrcmpW(x, y) == 0, "Line %d: Wrong string. Expected '%S', got '%S'\n", line, y, x)
 
 struct CCoInit
 {
