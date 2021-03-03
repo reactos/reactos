@@ -1437,7 +1437,8 @@ MmCompletePageWrite(
     /* The write is not in progress anymore */
     Pfn->u3.e1.WriteInProgress = 0;
 
-    if (Pfn->u1.Event != NULL)
+    /* If we're still in transition, someone might be waiting for us */
+    if ((Pfn->u3.e1.PageLocation == TransitionPage) && (Pfn->u1.Event != NULL))
     {
         KeSetEvent(Pfn->u1.Event, IO_NO_INCREMENT, FALSE);
         Pfn->u1.Event = NULL;
