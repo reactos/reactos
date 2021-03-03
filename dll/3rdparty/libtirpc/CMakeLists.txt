@@ -96,8 +96,10 @@ add_library(libtirpc MODULE
 if(MSVC)
     # error C4133: '=': incompatible types - from 'char *' to 'int32_t *'
     remove_target_compile_option(libtirpc "/we4133")
+    # Disable warning C4313 (format string conflicts)
+    remove_target_compile_option(libtirpc "/we4313")
     # Disable warning C4477 (printf format warnings)
-    target_compile_options(libtirpc PRIVATE /wd4313)
+    remove_target_compile_option(libtirpc "/we4477")
     if (NOT USE_CLANG_CL)
         remove_target_compile_option(libtirpc "/we4101")
         target_compile_options(libtirpc PRIVATE /wd4101 /wd4133 /wd4473 /wd4477)

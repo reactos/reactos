@@ -64,9 +64,9 @@ add_library(comctl32 MODULE
     rsrc.rc
     ${CMAKE_CURRENT_BINARY_DIR}/comctl32.def)
 
-if (MSVC)
+if(MSVC)
     # Disable warning C4477 (printf format warnings)
-    target_compile_options(comctl32 PRIVATE /wd4477)
+    remove_target_compile_option(comctl32 "/we4477")
 endif()
 
 set_module_type(comctl32 win32dll UNICODE)

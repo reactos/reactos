@@ -47,7 +47,7 @@ add_executable(kernel32_winetest
 
 if(MSVC)
     # Disable warning C4477 (printf format warnings)
-    target_compile_options(kernel32_winetest PRIVATE /wd4477)
+    remove_target_compile_option(kernel32_winetest "/we4477")
 endif()
 
 if(USE_CLANG_CL OR (NOT MSVC))

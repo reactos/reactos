@@ -20,5 +20,5 @@ add_cd_file(TARGET wordpad DESTINATION reactos/system32 FOR all)
 
 if(MSVC)
     # Disable warning C4477 (printf format warnings)
-    target_compile_options(wordpad PRIVATE /wd4477)
+    remove_target_compile_option(wordpad "/we4477")
 endif()

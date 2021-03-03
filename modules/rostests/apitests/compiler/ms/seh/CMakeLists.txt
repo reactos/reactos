@@ -1,15 +1,4 @@
 
-if(MSVC)
-    add_compile_options("/wd4189") # error C4189: 'Index2': local variable is initialized but not referenced
-    add_compile_options("/wd4197") # warning C4197: 'volatile LONG': top-level volatile in cast is ignored
-    add_compile_options("/wd4532") # warning C4532: 'break': jump out of __finally block has undefined behavior during termination handling
-else()
-    add_compile_options("-Wno-format")
-    add_compile_options("-Wno-implicit-function-declaration")
-    add_compile_options("-Wno-unused-label")
-    add_compile_options("-Wno-unused-variable")
-endif()
-
 foreach(num RANGE 1 9)
    list(APPEND SOURCE seh000${num}.c)
    set_source_files_properties(seh000${num}.c PROPERTIES COMPILE_DEFINITIONS
@@ -24,3 +13,14 @@ endforeach()
 
 add_library(ms_seh_test ${SOURCE})
 add_dependencies(ms_seh_test psdk)
+
+if(MSVC)
+    # error C4189: 'Index2': local variable is initialized but not referenced
+    # warning C4197: 'volatile LONG': top-level volatile in cast is ignored
+    # warning C4532: 'break': jump out of __finally block has undefined behavior during termination handling
+    remove_target_compile_option(ms_seh_test "/we4189")
+    target_compile_options(ms_seh_test PRIVATE /wd4189 /wd4197 /wd4532)
+else()
+    target_compile_options(ms_seh_test
+        PRIVATE -Wno-format -Wno-implicit-function-declaration -Wno-unused-label -Wno-unused-variable)
+endif()
