@@ -64,11 +64,17 @@ jobs:
           wget https://svn.reactos.org/storage/vperevertkin/rosbe-ci.tar.zst
           mkdir ${{github.workspace}}/rosbe
           tar -I zstd -xvf rosbe-ci.tar.zst --directory ${{github.workspace}}/rosbe
+      - name: Set LLVM version
+        run: |
+          echo "LLVM_VERSION=11" >> $GITHUB_ENV
+      - name: Install LLVM
+        run: |
+          wget https://apt.llvm.org/llvm.sh
+          chmod +x llvm.sh
+          sudo ./llvm.sh $LLVM_VERSION
       - name: Install other packages
         run: |
           sudo apt install ccache
-          sudo bash -c "$(wget -O - https://apt.llvm.org/llvm.sh)"
-          sudo apt install clang-11
       - uses: actions/checkout@v2
         with:
           path: src
@@ -88,7 +94,7 @@ jobs:
       - name: Configure
         run: |
           mkdir build
-          echo 'cd ${{github.workspace}}/build && cmake ${{github.workspace}}/src -G Ninja -DCMAKE_TOOLCHAIN_FILE:FILEPATH=toolchain-clang.cmake -DARCH:STRING=i386 -DENABLE_CCACHE=1 -DENABLE_ROSTESTS=1 -DENABLE_ROSAPPS=1 -DCLANG_VERSION=11' > commands
+          echo 'cd ${{github.workspace}}/build && cmake ${{github.workspace}}/src -G Ninja -DCMAKE_TOOLCHAIN_FILE:FILEPATH=toolchain-clang.cmake -DARCH:STRING=i386 -DENABLE_CCACHE=1 -DENABLE_ROSTESTS=1 -DENABLE_ROSAPPS=1 -DCLANG_VERSION=${{env.LLVM_VERSION}}' > commands
           ${{github.workspace}}/rosbe/RosBE.sh < commands
       - name: Build
         run: |
