@@ -1561,7 +1561,6 @@ MmWakeModifiedWriterThread(VOID)
     /* Do not do anything if there is no pagefile */
     if (!MmNumberOfPagingFiles)
     {
-        DPRINT1("Not waking up the MPW because there is no page file.\n");
         return;
     }
 
