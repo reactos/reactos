@@ -574,17 +574,9 @@ struct TEST_B_ENTRY
                  CStringW text, BOOL bVisible, INT ich0, INT ich1,
                  INT iItem = -1, BOOL bReset = FALSE, BOOL bExpand = FALSE,
                  LPCWSTR pszExpand = L"")
-        : m_line(line)
-        , m_uMsg(uMsg)
-        , m_wParam(wParam)
-        , m_lParam(lParam)
-        , m_text(text)
-        , m_bVisible(bVisible)
-        , m_ich0(ich0)
-        , m_ich1(ich1)
-        , m_iItem(iItem)
-        , m_bReset(bReset)
-        , m_bExpand(bExpand)
+        : m_line(line), m_uMsg(uMsg), m_wParam(wParam), m_lParam(lParam)
+        , m_text(text), m_bVisible(bVisible), m_ich0(ich0), m_ich1(ich1)
+        , m_iItem(iItem), m_bReset(bReset), m_bExpand(bExpand)
         , m_strExpand(pszExpand)
     {
     }
