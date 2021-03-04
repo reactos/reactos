@@ -681,7 +681,7 @@ DoTestCaseB(INT x, INT y, INT cx, INT cy, LPWSTR *pList, UINT nCount,
         ok_long(dwThreadId1, dwThreadId2);
 
         WCHAR szText[64];
-        GetWindowTextW(hwndEdit, szText, 64);
+        GetWindowTextW(hwndEdit, szText, _countof(szText));
         CStringW strText = szText;
         INT ich0, ich1;
         SendMessageW(hwndEdit, EM_GETSEL, (WPARAM)&ich0, (LPARAM)&ich1);
