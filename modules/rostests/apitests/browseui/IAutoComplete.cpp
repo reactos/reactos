@@ -582,6 +582,20 @@ struct TEST_B_ENTRY
     }
 };
 
+static BOOL
+DoesMatch(LPWSTR *pList, UINT nCount, LPCWSTR psz)
+{
+    INT cch = lstrlenW(psz);
+    if (cch == 0)
+        return FALSE;
+    for (UINT i = 0; i < nCount; ++i)
+    {
+        if (::StrCmpNIW(pList[i], psz, cch) == 0)
+            return TRUE;
+    }
+    return FALSE;
+}
+
 // the testcase B
 static VOID
 DoTestCaseB(INT x, INT y, INT cx, INT cy, LPWSTR *pList, UINT nCount,
@@ -644,7 +658,8 @@ DoTestCaseB(INT x, INT y, INT cx, INT cy, LPWSTR *pList, UINT nCount,
             TranslateMessage(&msg);
             DispatchMessageW(&msg);
 
-            Sleep(100); // another thread is working
+            if (msg.message == WM_CHAR || msg.message == WM_KEYDOWN)
+                Sleep(100); // another thread is working
         }
 
         if (!IsWindow(hwndDropDown))
@@ -678,6 +693,8 @@ DoTestCaseB(INT x, INT y, INT cx, INT cy, LPWSTR *pList, UINT nCount,
         {
             iItem = ListView_GetNextItem(hwndList, -1, LVNI_ALL | LVNI_SELECTED);
         }
+        BOOL bDidMatch = DoesMatch(pList, nCount, strText);
+        ok(bVisible == bDidMatch, "Line %d: bVisible != bDidMatch\n", entry.m_line);
 
         ok(strText == entry.m_text, "Line %d: szText was %S\n", entry.m_line, (LPCWSTR)strText);
         ok(ich0 == entry.m_ich0, "Line %d: ich0 was %d\n", entry.m_line, ich0);
