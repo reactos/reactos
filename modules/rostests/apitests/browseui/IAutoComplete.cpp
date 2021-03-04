@@ -661,10 +661,6 @@ DoTestCaseB(INT x, INT y, INT cx, INT cy, LPWSTR *pList, UINT nCount,
             hwndList = GetNextWindow(hwndSizeBox, GW_HWNDNEXT);
         }
 
-        DWORD dwThreadId1 = GetWindowThreadProcessId(hwndEdit, NULL);
-        DWORD dwThreadId2 = GetWindowThreadProcessId(hwndDropDown, NULL);
-        ok_long(dwThreadId1, dwThreadId2);
-
         WCHAR szText[64];
         GetWindowTextW(hwndEdit, szText, _countof(szText));
         CStringW strText = szText;
