@@ -241,7 +241,7 @@ IsaPnpCreateLogicalDeviceResources(
     for (i = 0; i < RTL_NUMBER_OF(LogDev->Io); i++)
     {
         if (!LogDev->Io[i].CurrentBase)
-            continue;
+            break;
 
         Descriptor = &ResourceList->List[0].PartialResourceList.PartialDescriptors[ResourceCount++];
         Descriptor->Type = CmResourceTypePort;
@@ -256,7 +256,7 @@ IsaPnpCreateLogicalDeviceResources(
     for (i = 0; i < RTL_NUMBER_OF(LogDev->Irq); i++)
     {
         if (!LogDev->Irq[i].CurrentNo)
-            continue;
+            break;
 
         Descriptor = &ResourceList->List[0].PartialResourceList.PartialDescriptors[ResourceCount++];
         Descriptor->Type = CmResourceTypeInterrupt;
@@ -272,7 +272,7 @@ IsaPnpCreateLogicalDeviceResources(
     for (i = 0; i < RTL_NUMBER_OF(LogDev->Dma); i++)
     {
         if (LogDev->Dma[i].CurrentChannel == 4)
-            continue;
+            break;
 
         Descriptor = &ResourceList->List[0].PartialResourceList.PartialDescriptors[ResourceCount++];
         Descriptor->Type = CmResourceTypeDma;
