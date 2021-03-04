@@ -683,6 +683,7 @@ IsaAddDevice(
     PDEVICE_OBJECT Fdo;
     PISAPNP_FDO_EXTENSION FdoExt;
     NTSTATUS Status;
+    static ULONG BusNumber = 0;
 
     PAGED_CODE();
 
@@ -708,6 +709,7 @@ IsaAddDevice(
     FdoExt->Common.IsFdo = TRUE;
     FdoExt->Common.State = dsStopped;
     FdoExt->DriverObject = DriverObject;
+    FdoExt->BusNumber = BusNumber++;
     FdoExt->Pdo = PhysicalDeviceObject;
     FdoExt->Ldo = IoAttachDeviceToDeviceStack(Fdo,
                                               PhysicalDeviceObject);

@@ -483,6 +483,31 @@ IsaPdoRepeatRequest(
     return STATUS_PENDING;
 }
 
+static
+CODE_SEG("PAGE")
+NTSTATUS
+IsaPdoQueryBusInformation(
+    _In_ PISAPNP_PDO_EXTENSION PdoExt,
+    _Inout_ PIRP Irp)
+{
+    PPNP_BUS_INFORMATION BusInformation;
+
+    PAGED_CODE();
+
+    BusInformation = ExAllocatePoolWithTag(PagedPool,
+                                           sizeof(PNP_BUS_INFORMATION),
+                                           TAG_ISAPNP);
+    if (!BusInformation)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    BusInformation->BusTypeGuid = GUID_BUS_TYPE_ISAPNP;
+    BusInformation->LegacyBusType = Isa;
+    BusInformation->BusNumber = PdoExt->FdoExt->BusNumber;
+
+    Irp->IoStatus.Information = (ULONG_PTR)BusInformation;
+    return STATUS_SUCCESS;
+}
+
 CODE_SEG("PAGE")
 NTSTATUS
 IsaPdoPnp(
@@ -544,6 +569,10 @@ IsaPdoPnp(
                 Status = IsaReadPortQueryId(Irp, IrpSp);
             break;
 
+        case IRP_MN_QUERY_BUS_INFORMATION:
+            Status = IsaPdoQueryBusInformation(PdoExt, Irp);
+            break;
+
         case IRP_MN_QUERY_REMOVE_DEVICE:
         case IRP_MN_REMOVE_DEVICE:
         case IRP_MN_CANCEL_REMOVE_DEVICE:
@@ -559,7 +588,6 @@ IsaPdoPnp(
         case IRP_MN_WRITE_CONFIG:
         case IRP_MN_EJECT:
         case IRP_MN_SET_LOCK:
-        case IRP_MN_QUERY_BUS_INFORMATION:
         case IRP_MN_DEVICE_USAGE_NOTIFICATION:
             return IsaPdoRepeatRequest(PdoExt, Irp, TRUE);
 
