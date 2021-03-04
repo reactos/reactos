@@ -11,6 +11,7 @@
 
 #include <wdm.h>
 #include <ntstrsafe.h>
+#include <section_attribs.h>
 #include "isapnphw.h"
 
 #ifdef __cplusplus
@@ -72,11 +73,11 @@ typedef struct _ISAPNP_FDO_EXTENSION
     PDEVICE_OBJECT Ldo;
     PDEVICE_OBJECT Pdo;
     PDEVICE_OBJECT ReadPortPdo;
+    KEVENT DeviceSyncEvent;
     LIST_ENTRY DeviceListHead;
     ULONG DeviceCount;
     PDRIVER_OBJECT DriverObject;
     PUCHAR ReadDataPort;
-    KSPIN_LOCK Lock;
 } ISAPNP_FDO_EXTENSION, *PISAPNP_FDO_EXTENSION;
 
 typedef struct _ISAPNP_PDO_EXTENSION
@@ -93,6 +94,25 @@ typedef struct _ISAPNP_PDO_EXTENSION
     ULONG ResourceListSize;
 } ISAPNP_PDO_EXTENSION, *PISAPNP_PDO_EXTENSION;
 
+_Requires_lock_not_held_(FdoExt->DeviceSyncEvent)
+_Acquires_lock_(FdoExt->DeviceSyncEvent)
+FORCEINLINE
+VOID
+IsaPnpAcquireDeviceDataLock(
+    _In_ PISAPNP_FDO_EXTENSION FdoExt)
+{
+    KeWaitForSingleObject(&FdoExt->DeviceSyncEvent, Executive, KernelMode, FALSE, NULL);
+}
+
+_Releases_lock_(FdoExt->DeviceSyncEvent)
+FORCEINLINE
+VOID
+IsaPnpReleaseDeviceDataLock(
+    _In_ PISAPNP_FDO_EXTENSION FdoExt)
+{
+    KeSetEvent(&FdoExt->DeviceSyncEvent, IO_NO_INCREMENT, FALSE);
+}
+
 /* isapnp.c */
 
 #define RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE         1
@@ -105,13 +125,14 @@ IsaPnpDuplicateUnicodeString(
     IN PCUNICODE_STRING SourceString,
     OUT PUNICODE_STRING DestinationString);
 
+CODE_SEG("PAGE")
 NTSTATUS
-NTAPI
 IsaPnpFillDeviceRelations(
     _In_ PISAPNP_FDO_EXTENSION FdoExt,
     _Inout_ PIRP Irp,
     _In_ BOOLEAN IncludeDataPort);
 
+CODE_SEG("INIT")
 DRIVER_INITIALIZE DriverEntry;
 
 NTSTATUS
@@ -121,39 +142,39 @@ IsaForwardIrpSynchronous(
     _Inout_ PIRP Irp);
 
 /* fdo.c */
+CODE_SEG("PAGE")
 NTSTATUS
-NTAPI
 IsaFdoPnp(
     _In_ PISAPNP_FDO_EXTENSION FdoExt,
     _Inout_ PIRP Irp,
     _In_ PIO_STACK_LOCATION IrpSp);
 
 /* pdo.c */
+CODE_SEG("PAGE")
 NTSTATUS
-NTAPI
 IsaPdoPnp(
     _In_ PISAPNP_PDO_EXTENSION PdoDeviceExtension,
     _Inout_ PIRP Irp,
     _In_ PIO_STACK_LOCATION IrpSp);
 
 /* hardware.c */
+CODE_SEG("PAGE")
 NTSTATUS
-NTAPI
 IsaHwTryReadDataPort(
     _In_ PUCHAR ReadDataPort);
 
+CODE_SEG("PAGE")
 NTSTATUS
-NTAPI
 IsaHwFillDeviceList(
     _In_ PISAPNP_FDO_EXTENSION FdoExt);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTSTATUS
-NTAPI
 IsaHwDeactivateDevice(
     _In_ PISAPNP_LOGICAL_DEVICE LogicalDevice);
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTSTATUS
-NTAPI
 IsaHwActivateDevice(
     _In_ PISAPNP_LOGICAL_DEVICE LogicalDevice);
 

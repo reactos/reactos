@@ -11,8 +11,9 @@
 #define NDEBUG
 #include <debug.h>
 
+static
+CODE_SEG("PAGE")
 NTSTATUS
-NTAPI
 IsaFdoStartDevice(
     _In_ PISAPNP_FDO_EXTENSION FdoExt,
     _Inout_ PIRP Irp,
@@ -21,32 +22,39 @@ IsaFdoStartDevice(
     UNREFERENCED_PARAMETER(Irp);
     UNREFERENCED_PARAMETER(IrpSp);
 
+    PAGED_CODE();
+
     FdoExt->Common.State = dsStarted;
 
     return STATUS_SUCCESS;
 }
 
+static
+CODE_SEG("PAGE")
 NTSTATUS
-NTAPI
 IsaFdoQueryDeviceRelations(
     _In_ PISAPNP_FDO_EXTENSION FdoExt,
     _Inout_ PIRP Irp,
     _In_ PIO_STACK_LOCATION IrpSp)
 {
+    PAGED_CODE();
+
     if (IrpSp->Parameters.QueryDeviceRelations.Type != BusRelations)
         return Irp->IoStatus.Status;
 
     return IsaPnpFillDeviceRelations(FdoExt, Irp, TRUE);
 }
 
+CODE_SEG("PAGE")
 NTSTATUS
-NTAPI
 IsaFdoPnp(
     _In_ PISAPNP_FDO_EXTENSION FdoExt,
     _Inout_ PIRP Irp,
     _In_ PIO_STACK_LOCATION IrpSp)
 {
     NTSTATUS Status = Irp->IoStatus.Status;
+
+    PAGED_CODE();
 
     switch (IrpSp->MinorFunction)
     {

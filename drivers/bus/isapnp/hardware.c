@@ -250,11 +250,14 @@ SendKey(VOID)
 }
 
 static
+CODE_SEG("PAGE")
 USHORT
 PeekByte(
     _In_ PUCHAR ReadDataPort)
 {
     USHORT i;
+
+    PAGED_CODE();
 
     for (i = 0; i < 20; i++)
     {
@@ -268,6 +271,7 @@ PeekByte(
 }
 
 static
+CODE_SEG("PAGE")
 VOID
 Peek(
     _In_ PUCHAR ReadDataPort,
@@ -275,6 +279,8 @@ Peek(
     _In_ ULONG Length)
 {
     USHORT i, Byte;
+
+    PAGED_CODE();
 
     for (i = 0; i < Length; i++)
     {
@@ -285,11 +291,14 @@ Peek(
 }
 
 static
+CODE_SEG("PAGE")
 USHORT
 IsaPnpChecksum(
     _In_ PISAPNP_IDENTIFIER Identifier)
 {
     UCHAR i, j, Lfsr;
+
+    PAGED_CODE();
 
     Lfsr = ISAPNP_LFSR_SEED;
     for (i = 0; i < FIELD_OFFSET(ISAPNP_IDENTIFIER, Checksum); i++)
@@ -307,6 +316,7 @@ IsaPnpChecksum(
 }
 
 static
+CODE_SEG("PAGE")
 BOOLEAN
 ReadTags(
     _In_ PUCHAR ReadDataPort,
@@ -317,6 +327,8 @@ ReadTags(
     PVOID Buffer;
     USHORT Tag, TagLen, MaxLen;
     ULONG NumberOfIo = 0, NumberOfIrq = 0, NumberOfDma = 0;
+
+    PAGED_CODE();
 
     LogDev += 1;
 
@@ -391,6 +403,7 @@ ReadTags(
 }
 
 static
+CODE_SEG("PAGE")
 INT
 TryIsolate(
     _In_ PUCHAR ReadDataPort)
@@ -400,6 +413,8 @@ TryIsolate(
     BOOLEAN Seen55aa, SeenLife;
     INT Csn = 0;
     USHORT Byte, Data;
+
+    PAGED_CODE();
 
     DPRINT("Setting read data port: 0x%p\n", ReadDataPort);
 
@@ -496,6 +511,7 @@ TryIsolate(
     return Csn;
 }
 
+static
 VOID
 DeviceActivation(
     _In_ PISAPNP_LOGICAL_DEVICE IsaDevice,
@@ -515,6 +531,8 @@ DeviceActivation(
     WaitForKey();
 }
 
+static
+CODE_SEG("PAGE")
 NTSTATUS
 ProbeIsaPnpBus(
     _In_ PISAPNP_FDO_EXTENSION FdoExt)
@@ -525,6 +543,7 @@ ProbeIsaPnpBus(
     USHORT LogDev;
     ULONG i;
 
+    PAGED_CODE();
     ASSERT(FdoExt->ReadDataPort);
 
     for (Csn = 1; Csn <= 0xFF; Csn++)
@@ -585,16 +604,18 @@ ProbeIsaPnpBus(
     return STATUS_SUCCESS;
 }
 
+CODE_SEG("PAGE")
 NTSTATUS
-NTAPI
 IsaHwTryReadDataPort(
     _In_ PUCHAR ReadDataPort)
 {
+    PAGED_CODE();
+
     return TryIsolate(ReadDataPort) > 0 ? STATUS_SUCCESS : STATUS_INSUFFICIENT_RESOURCES;
 }
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTSTATUS
-NTAPI
 IsaHwActivateDevice(
     _In_ PISAPNP_LOGICAL_DEVICE LogicalDevice)
 {
@@ -604,8 +625,8 @@ IsaHwActivateDevice(
     return STATUS_SUCCESS;
 }
 
+_IRQL_requires_max_(DISPATCH_LEVEL)
 NTSTATUS
-NTAPI
 IsaHwDeactivateDevice(
     _In_ PISAPNP_LOGICAL_DEVICE LogicalDevice)
 {
@@ -615,10 +636,12 @@ IsaHwDeactivateDevice(
     return STATUS_SUCCESS;
 }
 
+CODE_SEG("PAGE")
 NTSTATUS
-NTAPI
 IsaHwFillDeviceList(
     _In_ PISAPNP_FDO_EXTENSION FdoExt)
 {
+    PAGED_CODE();
+
     return ProbeIsaPnpBus(FdoExt);
 }

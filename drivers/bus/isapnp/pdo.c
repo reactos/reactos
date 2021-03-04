@@ -11,14 +11,17 @@
 #define NDEBUG
 #include <debug.h>
 
+static
+CODE_SEG("PAGE")
 NTSTATUS
-NTAPI
 IsaPdoQueryDeviceRelations(
     _In_ PISAPNP_PDO_EXTENSION PdoExt,
     _Inout_ PIRP Irp,
     _In_ PIO_STACK_LOCATION IrpSp)
 {
     PDEVICE_RELATIONS DeviceRelations;
+
+    PAGED_CODE();
 
     if (IrpSp->Parameters.QueryDeviceRelations.Type == RemovalRelations &&
         PdoExt->Common.Self == PdoExt->FdoExt->ReadPortPdo)
@@ -41,8 +44,9 @@ IsaPdoQueryDeviceRelations(
     return STATUS_SUCCESS;
 }
 
+static
+CODE_SEG("PAGE")
 NTSTATUS
-NTAPI
 IsaPdoQueryCapabilities(
     _In_ PISAPNP_PDO_EXTENSION PdoExt,
     _Inout_ PIRP Irp,
@@ -51,6 +55,8 @@ IsaPdoQueryCapabilities(
     PDEVICE_CAPABILITIES DeviceCapabilities;
     PISAPNP_LOGICAL_DEVICE LogDev = PdoExt->IsaPnpDevice;
     ULONG i;
+
+    PAGED_CODE();
 
     DeviceCapabilities = IrpSp->Parameters.DeviceCapabilities.Capabilities;
     if (DeviceCapabilities->Version != 1)
@@ -75,19 +81,23 @@ IsaPdoQueryCapabilities(
     return STATUS_SUCCESS;
 }
 
+static
+CODE_SEG("PAGE")
 NTSTATUS
-NTAPI
 IsaPdoQueryPnpDeviceState(
     _In_ PISAPNP_PDO_EXTENSION PdoExt,
     _Inout_ PIRP Irp,
     _In_ PIO_STACK_LOCATION IrpSp)
 {
+    PAGED_CODE();
+
     Irp->IoStatus.Information |= PNP_DEVICE_NOT_DISABLEABLE;
     return STATUS_SUCCESS;
 }
 
+static
+CODE_SEG("PAGE")
 NTSTATUS
-NTAPI
 IsaPdoQueryId(
     _In_ PISAPNP_PDO_EXTENSION PdoExt,
     _Inout_ PIRP Irp,
@@ -95,6 +105,8 @@ IsaPdoQueryId(
 {
     PUNICODE_STRING Source;
     PWCHAR Buffer;
+
+    PAGED_CODE();
 
     switch (IrpSp->Parameters.QueryId.IdType)
     {
@@ -136,8 +148,9 @@ IsaPdoQueryId(
     return STATUS_SUCCESS;
 }
 
+static
+CODE_SEG("PAGE")
 NTSTATUS
-NTAPI
 IsaPdoQueryResources(
     _In_ PISAPNP_PDO_EXTENSION PdoExt,
     _Inout_ PIRP Irp,
@@ -145,6 +158,8 @@ IsaPdoQueryResources(
 {
     ULONG ListSize;
     PCM_RESOURCE_LIST ResourceList;
+
+    PAGED_CODE();
 
     if (!PdoExt->ResourceList)
         return Irp->IoStatus.Status;
@@ -159,8 +174,9 @@ IsaPdoQueryResources(
     return STATUS_SUCCESS;
 }
 
+static
+CODE_SEG("PAGE")
 NTSTATUS
-NTAPI
 IsaPdoQueryResourceRequirements(
     _In_ PISAPNP_PDO_EXTENSION PdoExt,
     _Inout_ PIRP Irp,
@@ -168,6 +184,8 @@ IsaPdoQueryResourceRequirements(
 {
     ULONG ListSize;
     PIO_RESOURCE_REQUIREMENTS_LIST RequirementsList;
+
+    PAGED_CODE();
 
     if (!PdoExt->RequirementsList)
         return Irp->IoStatus.Status;
@@ -183,16 +201,17 @@ IsaPdoQueryResourceRequirements(
 }
 
 static
+CODE_SEG("PAGE")
 NTSTATUS
-NTAPI
 IsaPdoStartReadPort(
     _In_ PISAPNP_FDO_EXTENSION FdoExt,
     _In_ PIO_STACK_LOCATION IrpSp)
 {
     PCM_RESOURCE_LIST ResourceList = IrpSp->Parameters.StartDevice.AllocatedResources;
     NTSTATUS Status = STATUS_INSUFFICIENT_RESOURCES;
-    KIRQL OldIrql;
     ULONG i;
+
+    PAGED_CODE();
 
     if (!ResourceList || ResourceList->Count != 1)
     {
@@ -222,10 +241,13 @@ IsaPdoStartReadPort(
             if (NT_SUCCESS(IsaHwTryReadDataPort(ReadDataPort)))
             {
                 /* We detected some ISAPNP cards */
+
                 FdoExt->ReadDataPort = ReadDataPort;
-                KeAcquireSpinLock(&FdoExt->Lock, &OldIrql);
+
+                IsaPnpAcquireDeviceDataLock(FdoExt);
                 Status = IsaHwFillDeviceList(FdoExt);
-                KeReleaseSpinLock(&FdoExt->Lock, OldIrql);
+                IsaPnpReleaseDeviceDataLock(FdoExt);
+
                 if (FdoExt->DeviceCount > 0)
                 {
                     IoInvalidateDeviceRelations(FdoExt->Pdo, BusRelations);
@@ -301,14 +323,16 @@ IsaPdoRepeatRequest(
     return STATUS_PENDING;
 }
 
+CODE_SEG("PAGE")
 NTSTATUS
-NTAPI
 IsaPdoPnp(
     _In_ PISAPNP_PDO_EXTENSION PdoExt,
     _Inout_ PIRP Irp,
     _In_ PIO_STACK_LOCATION IrpSp)
 {
     NTSTATUS Status = Irp->IoStatus.Status;
+
+    PAGED_CODE();
 
     switch (IrpSp->MinorFunction)
     {
