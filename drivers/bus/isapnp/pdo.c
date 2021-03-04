@@ -103,47 +103,204 @@ IsaPdoQueryId(
     _Inout_ PIRP Irp,
     _In_ PIO_STACK_LOCATION IrpSp)
 {
-    PUNICODE_STRING Source;
-    PWCHAR Buffer;
+    PISAPNP_LOGICAL_DEVICE LogDev = PdoExt->IsaPnpDevice;
+    NTSTATUS Status;
+    PWCHAR Buffer, End, IdStart;
+    size_t CharCount, Remaining;
 
     PAGED_CODE();
 
     switch (IrpSp->Parameters.QueryId.IdType)
     {
         case BusQueryDeviceID:
-            DPRINT("IRP_MJ_PNP / IRP_MN_QUERY_ID / BusQueryDeviceID\n");
-            Source = &PdoExt->DeviceID;
+        {
+            CharCount = sizeof("ISAPNP\\XXXFFFF");
+
+            Buffer = ExAllocatePoolWithTag(PagedPool,
+                                           CharCount * sizeof(WCHAR),
+                                           TAG_ISAPNP);
+            if (!Buffer)
+                return STATUS_INSUFFICIENT_RESOURCES;
+
+            Status = RtlStringCchPrintfExW(Buffer,
+                                           CharCount,
+                                           &End,
+                                           &Remaining,
+                                           0,
+                                           L"ISAPNP\\%.3S%04x",
+                                           LogDev->VendorId,
+                                           LogDev->ProdId);
+            if (!NT_VERIFY(NT_SUCCESS(Status)))
+                goto Failure;
+
+            DPRINT("Device ID: '%S'\n", Buffer);
             break;
+        }
 
         case BusQueryHardwareIDs:
-            DPRINT("IRP_MJ_PNP / IRP_MN_QUERY_ID / BusQueryHardwareIDs\n");
-            Source = &PdoExt->HardwareIDs;
+        {
+            CharCount = sizeof("ISAPNP\\XXXFFFF") +
+                        sizeof("*PNPxxxx") +
+                        sizeof(ANSI_NULL); /* multi-string */
+
+            Buffer = ExAllocatePoolWithTag(PagedPool,
+                                           CharCount * sizeof(WCHAR),
+                                           TAG_ISAPNP);
+            if (!Buffer)
+                return STATUS_INSUFFICIENT_RESOURCES;
+
+            DPRINT("Hardware IDs:\n");
+
+            /* 1 */
+            Status = RtlStringCchPrintfExW(Buffer,
+                                           CharCount,
+                                           &End,
+                                           &Remaining,
+                                           0,
+                                           L"ISAPNP\\%.3S%04x",
+                                           LogDev->VendorId,
+                                           LogDev->ProdId);
+            if (!NT_VERIFY(NT_SUCCESS(Status)))
+                goto Failure;
+
+            DPRINT("  '%S'\n", Buffer);
+
+            ++End;
+            --Remaining;
+
+            /* 2 */
+            IdStart = End;
+            Status = RtlStringCchPrintfExW(End,
+                                           Remaining,
+                                           &End,
+                                           &Remaining,
+                                           0,
+                                           L"*%.3S%04x",
+                                           LogDev->VendorId,
+                                           LogDev->ProdId);
+            if (!NT_VERIFY(NT_SUCCESS(Status)))
+                goto Failure;
+
+            DPRINT("  '%S'\n", IdStart);
+
+            *++End = UNICODE_NULL;
+            --Remaining;
+
             break;
+        }
 
         case BusQueryCompatibleIDs:
-            DPRINT("IRP_MJ_PNP / IRP_MN_QUERY_ID / BusQueryCompatibleIDs\n");
-            Source = &PdoExt->CompatibleIDs;
-            break;
+            return STATUS_NOT_IMPLEMENTED;
 
         case BusQueryInstanceID:
-            DPRINT("IRP_MJ_PNP / IRP_MN_QUERY_ID / BusQueryInstanceID\n");
-            Source = &PdoExt->InstanceID;
+        {
+            CharCount = sizeof(LogDev->SerialNumber) * 2 + sizeof(ANSI_NULL);
+
+            Buffer = ExAllocatePoolWithTag(PagedPool,
+                                           CharCount * sizeof(WCHAR),
+                                           TAG_ISAPNP);
+            if (!Buffer)
+                return STATUS_INSUFFICIENT_RESOURCES;
+
+            Status = RtlStringCchPrintfExW(Buffer,
+                                           CharCount,
+                                           NULL,
+                                           NULL,
+                                           0,
+                                           L"%X",
+                                           LogDev->SerialNumber);
+            if (!NT_VERIFY(NT_SUCCESS(Status)))
+                goto Failure;
+
+            DPRINT("Instance ID: '%S'\n", Buffer);
             break;
+        }
 
         default:
-          DPRINT1("IRP_MJ_PNP / IRP_MN_QUERY_ID / unknown query id type 0x%lx\n",
-                  IrpSp->Parameters.QueryId.IdType);
-          return Irp->IoStatus.Status;
+            return Irp->IoStatus.Status;
     }
 
-    if (!Source->Buffer)
-        return Irp->IoStatus.Status;
+    Irp->IoStatus.Information = (ULONG_PTR)Buffer;
+    return STATUS_SUCCESS;
 
-    Buffer = ExAllocatePoolWithTag(PagedPool, Source->MaximumLength, TAG_ISAPNP);
-    if (!Buffer)
-        return STATUS_NO_MEMORY;
+Failure:
+    ExFreePoolWithTag(Buffer, TAG_ISAPNP);
 
-    RtlCopyMemory(Buffer, Source->Buffer, Source->MaximumLength);
+    return Status;
+}
+
+static
+CODE_SEG("PAGE")
+NTSTATUS
+IsaReadPortQueryId(
+    _Inout_ PIRP Irp,
+    _In_ PIO_STACK_LOCATION IrpSp)
+{
+    PWCHAR Buffer;
+    static const WCHAR ReadPortId[] = L"ISAPNP\\ReadDataPort";
+
+    PAGED_CODE();
+
+    switch (IrpSp->Parameters.QueryId.IdType)
+    {
+        case BusQueryDeviceID:
+        {
+            Buffer = ExAllocatePoolWithTag(PagedPool, sizeof(ReadPortId), TAG_ISAPNP);
+            if (!Buffer)
+                return STATUS_INSUFFICIENT_RESOURCES;
+
+            RtlCopyMemory(Buffer, ReadPortId, sizeof(ReadPortId));
+
+            DPRINT("Device ID: '%S'\n", Buffer);
+            break;
+        }
+
+        case BusQueryHardwareIDs:
+        {
+            Buffer = ExAllocatePoolWithTag(PagedPool,
+                                           sizeof(ReadPortId) + sizeof(UNICODE_NULL),
+                                           TAG_ISAPNP);
+            if (!Buffer)
+                return STATUS_INSUFFICIENT_RESOURCES;
+
+            RtlCopyMemory(Buffer, ReadPortId, sizeof(ReadPortId));
+
+            Buffer[sizeof(ReadPortId) / sizeof(WCHAR)] = UNICODE_NULL; /* multi-string */
+
+            DPRINT("Hardware ID: '%S'\n", Buffer);
+            break;
+        }
+
+        case BusQueryCompatibleIDs:
+        {
+            /* Empty multi-string */
+            Buffer = ExAllocatePoolZero(PagedPool, sizeof(UNICODE_NULL) * 2, TAG_ISAPNP);
+            if (!Buffer)
+                return STATUS_INSUFFICIENT_RESOURCES;
+
+            DPRINT("Compatible ID: '%S'\n", Buffer);
+            break;
+        }
+
+        case BusQueryInstanceID:
+        {
+            /* Even if there are multiple ISA buses, the driver has only one Read Port */
+            static const WCHAR InstanceId[] = L"0";
+
+            Buffer = ExAllocatePoolWithTag(PagedPool, sizeof(InstanceId), TAG_ISAPNP);
+            if (!Buffer)
+                return STATUS_INSUFFICIENT_RESOURCES;
+
+            RtlCopyMemory(Buffer, InstanceId, sizeof(InstanceId));
+
+            DPRINT("Instance ID: '%S'\n", Buffer);
+            break;
+        }
+
+        default:
+            return Irp->IoStatus.Status;
+    }
+
     Irp->IoStatus.Information = (ULONG_PTR)Buffer;
     return STATUS_SUCCESS;
 }
@@ -378,7 +535,10 @@ IsaPdoPnp(
             break;
 
         case IRP_MN_QUERY_ID:
-            Status = IsaPdoQueryId(PdoExt, Irp, IrpSp);
+            if (PdoExt->IsaPnpDevice)
+                Status = IsaPdoQueryId(PdoExt, Irp, IrpSp);
+            else
+                Status = IsaReadPortQueryId(Irp, IrpSp);
             break;
 
         case IRP_MN_QUERY_REMOVE_DEVICE:

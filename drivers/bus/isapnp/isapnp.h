@@ -85,10 +85,6 @@ typedef struct _ISAPNP_PDO_EXTENSION
     ISAPNP_COMMON_EXTENSION Common;
     PISAPNP_LOGICAL_DEVICE IsaPnpDevice;
     PISAPNP_FDO_EXTENSION FdoExt;
-    UNICODE_STRING DeviceID;
-    UNICODE_STRING HardwareIDs;
-    UNICODE_STRING CompatibleIDs;
-    UNICODE_STRING InstanceID;
     PIO_RESOURCE_REQUIREMENTS_LIST RequirementsList;
     PCM_RESOURCE_LIST ResourceList;
     ULONG ResourceListSize;
@@ -114,16 +110,6 @@ IsaPnpReleaseDeviceDataLock(
 }
 
 /* isapnp.c */
-
-#define RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE         1
-#define RTL_DUPLICATE_UNICODE_STRING_ALLOCATE_NULL_STRING   2
-
-NTSTATUS
-NTAPI
-IsaPnpDuplicateUnicodeString(
-    IN ULONG Flags,
-    IN PCUNICODE_STRING SourceString,
-    OUT PUNICODE_STRING DestinationString);
 
 CODE_SEG("PAGE")
 NTSTATUS

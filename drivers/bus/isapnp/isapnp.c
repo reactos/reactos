@@ -11,132 +11,6 @@
 #define NDEBUG
 #include <debug.h>
 
-NTSTATUS
-NTAPI
-IsaPnpDuplicateUnicodeString(
-    IN ULONG Flags,
-    IN PCUNICODE_STRING SourceString,
-    OUT PUNICODE_STRING DestinationString)
-{
-    if (SourceString == NULL ||
-        DestinationString == NULL ||
-        SourceString->Length > SourceString->MaximumLength ||
-        (SourceString->Length == 0 && SourceString->MaximumLength > 0 && SourceString->Buffer == NULL) ||
-        Flags == RTL_DUPLICATE_UNICODE_STRING_ALLOCATE_NULL_STRING ||
-        Flags >= 4)
-    {
-        return STATUS_INVALID_PARAMETER;
-    }
-
-    if ((SourceString->Length == 0) &&
-        (Flags != (RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE |
-                   RTL_DUPLICATE_UNICODE_STRING_ALLOCATE_NULL_STRING)))
-    {
-        DestinationString->Length = 0;
-        DestinationString->MaximumLength = 0;
-        DestinationString->Buffer = NULL;
-    }
-    else
-    {
-        USHORT DestMaxLength = SourceString->Length;
-
-        if (Flags & RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE)
-            DestMaxLength += sizeof(UNICODE_NULL);
-
-        DestinationString->Buffer = ExAllocatePool(PagedPool, DestMaxLength);
-        if (DestinationString->Buffer == NULL)
-            return STATUS_NO_MEMORY;
-
-        RtlCopyMemory(DestinationString->Buffer, SourceString->Buffer, SourceString->Length);
-        DestinationString->Length = SourceString->Length;
-        DestinationString->MaximumLength = DestMaxLength;
-
-        if (Flags & RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE)
-            DestinationString->Buffer[DestinationString->Length / sizeof(WCHAR)] = 0;
-    }
-
-    return STATUS_SUCCESS;
-}
-
-static
-NTSTATUS
-NTAPI
-IsaFdoCreateDeviceIDs(
-    IN PISAPNP_PDO_EXTENSION PdoExt)
-{
-    PISAPNP_LOGICAL_DEVICE LogDev = PdoExt->IsaPnpDevice;
-    UNICODE_STRING TempString;
-    WCHAR TempBuffer[256];
-    PWCHAR End;
-    NTSTATUS Status;
-    USHORT i;
-
-    TempString.Buffer = TempBuffer;
-    TempString.MaximumLength = sizeof(TempBuffer);
-    TempString.Length = 0;
-
-    /* Device ID */
-    Status = RtlStringCbPrintfExW(TempString.Buffer,
-                                  TempString.MaximumLength / sizeof(WCHAR),
-                                  &End,
-                                  NULL, 0,
-                                  L"ISAPNP\\%.3S%04x",
-                                  LogDev->VendorId,
-                                  LogDev->ProdId);
-    if (!NT_SUCCESS(Status))
-        return Status;
-    TempString.Length = (USHORT)((End - TempString.Buffer) * sizeof(WCHAR));
-    Status = IsaPnpDuplicateUnicodeString(
-        RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE,
-        &TempString,
-        &PdoExt->DeviceID);
-    if (!NT_SUCCESS(Status))
-        return Status;
-
-    /* HardwareIDs */
-    Status = RtlStringCbPrintfExW(TempString.Buffer,
-                                  TempString.MaximumLength / sizeof(WCHAR),
-                                  &End,
-                                  NULL, 0,
-                                  L"ISAPNP\\%.3S%04x@"
-                                  L"*%.3S%04x@",
-                                  LogDev->VendorId,
-                                  LogDev->ProdId,
-                                  LogDev->VendorId,
-                                  LogDev->ProdId);
-    if (!NT_SUCCESS(Status))
-        return Status;
-    TempString.Length = (USHORT)((End - TempString.Buffer) * sizeof(WCHAR));
-    Status = IsaPnpDuplicateUnicodeString(
-        RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE,
-        &TempString,
-        &PdoExt->HardwareIDs);
-    if (!NT_SUCCESS(Status))
-        return Status;
-    for (i = 0; i < PdoExt->HardwareIDs.Length / sizeof(WCHAR); i++)
-        if (PdoExt->HardwareIDs.Buffer[i] == '@')
-            PdoExt->HardwareIDs.Buffer[i] = UNICODE_NULL;
-
-    /* InstanceID */
-    Status = RtlStringCbPrintfExW(TempString.Buffer,
-                                  TempString.MaximumLength / sizeof(WCHAR),
-                                  &End,
-                                  NULL, 0,
-                                  L"%X",
-                                  LogDev->SerialNumber);
-    if (!NT_SUCCESS(Status))
-        return Status;
-    TempString.Length = (USHORT)((End - TempString.Buffer) * sizeof(WCHAR));
-    Status = IsaPnpDuplicateUnicodeString(
-        RTL_DUPLICATE_UNICODE_STRING_NULL_TERMINATE,
-        &TempString,
-        &PdoExt->InstanceID);
-    if (!NT_SUCCESS(Status))
-        return Status;
-
-    return STATUS_SUCCESS;
-}
-
 static
 CODE_SEG("PAGE")
 NTSTATUS
@@ -487,10 +361,7 @@ IsaPnpFillDeviceRelations(
             PdoExt->IsaPnpDevice = IsaDevice;
             PdoExt->FdoExt = FdoExt;
 
-            Status = IsaFdoCreateDeviceIDs(PdoExt);
-
-            if (NT_SUCCESS(Status))
-                Status = IsaPnpCreateLogicalDeviceRequirements(PdoExt);
+            Status = IsaPnpCreateLogicalDeviceRequirements(PdoExt);
 
             if (NT_SUCCESS(Status))
                 Status = IsaPnpCreateLogicalDeviceResources(PdoExt);
@@ -728,10 +599,6 @@ NTSTATUS
 IsaPnpCreateReadPortDO(
     _In_ PISAPNP_FDO_EXTENSION FdoExt)
 {
-    UNICODE_STRING DeviceID = RTL_CONSTANT_STRING(L"ISAPNP\\ReadDataPort\0");
-    UNICODE_STRING HardwareIDs = RTL_CONSTANT_STRING(L"ISAPNP\\ReadDataPort\0\0");
-    UNICODE_STRING CompatibleIDs = RTL_CONSTANT_STRING(L"\0\0");
-    UNICODE_STRING InstanceID = RTL_CONSTANT_STRING(L"0\0");
     PISAPNP_PDO_EXTENSION PdoExt;
     NTSTATUS Status;
 
@@ -753,30 +620,6 @@ IsaPnpCreateReadPortDO(
     PdoExt->Common.Self = FdoExt->ReadPortPdo;
     PdoExt->Common.State = dsStopped;
     PdoExt->FdoExt = FdoExt;
-
-    Status = IsaPnpDuplicateUnicodeString(0,
-                                          &DeviceID,
-                                          &PdoExt->DeviceID);
-    if (!NT_SUCCESS(Status))
-        return Status;
-
-    Status = IsaPnpDuplicateUnicodeString(0,
-                                          &HardwareIDs,
-                                          &PdoExt->HardwareIDs);
-    if (!NT_SUCCESS(Status))
-        return Status;
-
-    Status = IsaPnpDuplicateUnicodeString(0,
-                                          &CompatibleIDs,
-                                          &PdoExt->CompatibleIDs);
-    if (!NT_SUCCESS(Status))
-        return Status;
-
-    Status = IsaPnpDuplicateUnicodeString(0,
-                                          &InstanceID,
-                                          &PdoExt->InstanceID);
-    if (!NT_SUCCESS(Status))
-        return Status;
 
     Status = IsaPnpCreateReadPortDORequirements(PdoExt);
     if (!NT_SUCCESS(Status))
