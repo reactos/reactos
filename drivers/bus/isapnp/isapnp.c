@@ -4,14 +4,27 @@
  * PURPOSE:         Driver entry
  * COPYRIGHT:       Copyright 2010 Cameron Gutman <cameron.gutman@reactos.org>
  *                  Copyright 2020 Hervé Poussineau <hpoussin@reactos.org>
+ *                  Copyright 2021 Dmitry Borisov <di.sean@protonmail.com>
  */
+
+/* INCLUDES *******************************************************************/
 
 #include "isapnp.h"
 
 #define NDEBUG
 #include <debug.h>
 
+/* GLOBALS ********************************************************************/
+
+KEVENT BusSyncEvent;
+
+_Guarded_by_(BusSyncEvent)
 BOOLEAN ReadPortCreated = FALSE;
+
+_Guarded_by_(BusSyncEvent)
+LIST_ENTRY BusListHead;
+
+/* FUNCTIONS ******************************************************************/
 
 static
 CODE_SEG("PAGE")
@@ -301,49 +314,6 @@ IsaPnpCreateLogicalDeviceResources(
     return STATUS_SUCCESS;
 }
 
-static IO_COMPLETION_ROUTINE ForwardIrpCompletion;
-
-static
-NTSTATUS
-NTAPI
-ForwardIrpCompletion(
-    IN PDEVICE_OBJECT DeviceObject,
-    IN PIRP Irp,
-    IN PVOID Context)
-{
-    UNREFERENCED_PARAMETER(DeviceObject);
-
-    if (Irp->PendingReturned)
-        KeSetEvent((PKEVENT)Context, IO_NO_INCREMENT, FALSE);
-
-    return STATUS_MORE_PROCESSING_REQUIRED;
-}
-
-NTSTATUS
-NTAPI
-IsaForwardIrpSynchronous(
-    IN PISAPNP_FDO_EXTENSION FdoExt,
-    IN PIRP Irp)
-{
-    KEVENT Event;
-    NTSTATUS Status;
-
-    KeInitializeEvent(&Event, NotificationEvent, FALSE);
-    IoCopyCurrentIrpStackLocationToNext(Irp);
-
-    IoSetCompletionRoutine(Irp, ForwardIrpCompletion, &Event, TRUE, TRUE, TRUE);
-
-    Status = IoCallDriver(FdoExt->Ldo, Irp);
-    if (Status == STATUS_PENDING)
-    {
-        Status = KeWaitForSingleObject(&Event, Suspended, KernelMode, FALSE, NULL);
-        if (NT_SUCCESS(Status))
-            Status = Irp->IoStatus.Status;
-    }
-
-    return Status;
-}
-
 _Dispatch_type_(IRP_MJ_CREATE)
 _Dispatch_type_(IRP_MJ_CLOSE)
 static CODE_SEG("PAGE") DRIVER_DISPATCH_PAGED IsaCreateClose;
@@ -359,7 +329,6 @@ IsaCreateClose(
     PAGED_CODE();
 
     Irp->IoStatus.Status = STATUS_SUCCESS;
-    Irp->IoStatus.Information = FILE_OPENED;
 
     DPRINT("%s(%p, %p)\n", __FUNCTION__, DeviceObject, Irp);
 
@@ -368,51 +337,37 @@ IsaCreateClose(
     return STATUS_SUCCESS;
 }
 
-static DRIVER_DISPATCH IsaIoctl;
+_Dispatch_type_(IRP_MJ_DEVICE_CONTROL)
+_Dispatch_type_(IRP_MJ_SYSTEM_CONTROL)
+static CODE_SEG("PAGE") DRIVER_DISPATCH_PAGED IsaForwardOrIgnore;
 
 static
+CODE_SEG("PAGE")
 NTSTATUS
 NTAPI
-IsaIoctl(
-    IN PDEVICE_OBJECT DeviceObject,
-    IN PIRP Irp)
+IsaForwardOrIgnore(
+    _In_ PDEVICE_OBJECT DeviceObject,
+    _Inout_ PIRP Irp)
 {
-    PIO_STACK_LOCATION IrpSp = IoGetCurrentIrpStackLocation(Irp);
-    NTSTATUS Status;
+    PISAPNP_COMMON_EXTENSION CommonExt = DeviceObject->DeviceExtension;
 
-    DPRINT("%s(%p, %p)\n", __FUNCTION__, DeviceObject, Irp);
+    PAGED_CODE();
 
-    switch (IrpSp->Parameters.DeviceIoControl.IoControlCode)
+    DPRINT("%s(%p, %p) Minor - %X\n", __FUNCTION__, DeviceObject, Irp,
+           IoGetCurrentIrpStackLocation(Irp)->MinorFunction);
+
+    if (CommonExt->Signature == IsaPnpBus)
     {
-        default:
-            DPRINT1("Unknown ioctl code: %x\n", IrpSp->Parameters.DeviceIoControl.IoControlCode);
-            Status = STATUS_NOT_SUPPORTED;
-            break;
+        IoSkipCurrentIrpStackLocation(Irp);
+        return IoCallDriver(((PISAPNP_FDO_EXTENSION)CommonExt)->Ldo, Irp);
     }
+    else
+    {
+        NTSTATUS Status = Irp->IoStatus.Status;
 
-    Irp->IoStatus.Status = Status;
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
-
-    return Status;
-}
-
-static DRIVER_DISPATCH IsaReadWrite;
-
-static
-NTSTATUS
-NTAPI
-IsaReadWrite(
-    IN PDEVICE_OBJECT DeviceObject,
-    IN PIRP Irp)
-{
-    DPRINT("%s(%p, %p)\n", __FUNCTION__, DeviceObject, Irp);
-
-    Irp->IoStatus.Status = STATUS_NOT_SUPPORTED;
-    Irp->IoStatus.Information = 0;
-
-    IoCompleteRequest(Irp, IO_NO_INCREMENT);
-
-    return STATUS_NOT_SUPPORTED;
+        IoCompleteRequest(Irp, IO_NO_INCREMENT);
+        return Status;
+    }
 }
 
 static
@@ -533,7 +488,7 @@ IsaPnpCreateReadPortDO(
 
     PdoExt = FdoExt->ReadPortPdo->DeviceExtension;
     RtlZeroMemory(PdoExt, sizeof(ISAPNP_PDO_EXTENSION));
-    PdoExt->Common.IsFdo = FALSE;
+    PdoExt->Common.Signature = IsaPnpReadDataPort;
     PdoExt->Common.Self = FdoExt->ReadPortPdo;
     PdoExt->Common.State = dsStopped;
     PdoExt->FdoExt = FdoExt;
@@ -551,15 +506,31 @@ IsaPnpCreateReadPortDO(
     return Status;
 
 Failure:
-    if (PdoExt->RequirementsList)
-        ExFreePoolWithTag(PdoExt->RequirementsList, TAG_ISAPNP);
+    IsaPnpRemoveReadPortDO(FdoExt->ReadPortPdo);
 
-    if (PdoExt->ResourceList)
-        ExFreePoolWithTag(PdoExt->ResourceList, TAG_ISAPNP);
-
-    IoDeleteDevice(FdoExt->ReadPortPdo);
+    FdoExt->ReadPortPdo = NULL;
 
     return Status;
+}
+
+CODE_SEG("PAGE")
+VOID
+IsaPnpRemoveReadPortDO(
+    _In_ PDEVICE_OBJECT Pdo)
+{
+    PISAPNP_PDO_EXTENSION ReadPortExt = Pdo->DeviceExtension;
+
+    PAGED_CODE();
+
+    DPRINT("Removing Read Port\n");
+
+    if (ReadPortExt->RequirementsList)
+        ExFreePoolWithTag(ReadPortExt->RequirementsList, TAG_ISAPNP);
+
+    if (ReadPortExt->ResourceList)
+        ExFreePoolWithTag(ReadPortExt->ResourceList, TAG_ISAPNP);
+
+    IoDeleteDevice(Pdo);
 }
 
 CODE_SEG("PAGE")
@@ -577,6 +548,8 @@ IsaPnpFillDeviceRelations(
 
     PAGED_CODE();
 
+    IsaPnpAcquireBusDataLock();
+
     /* Try to claim the Read Port for our FDO */
     if (!ReadPortCreated)
     {
@@ -587,26 +560,68 @@ IsaPnpFillDeviceRelations(
         ReadPortCreated = TRUE;
     }
 
+    IsaPnpReleaseBusDataLock();
+
     /* Inactive ISA bus */
     if (!FdoExt->ReadPortPdo)
         IncludeDataPort = FALSE;
 
+    IsaPnpAcquireDeviceDataLock(FdoExt);
+
+    /* If called from the FDO dispatch routine && Active bus */
+    if (IncludeDataPort && FdoExt->ReadPortPdo)
+    {
+        PISAPNP_PDO_EXTENSION ReadPortExt = FdoExt->ReadPortPdo->DeviceExtension;
+
+        if ((ReadPortExt->Flags & ISAPNP_READ_PORT_ALLOW_FDO_SCAN) &&
+            !(ReadPortExt->Flags & ISAPNP_SCANNED_BY_READ_PORT))
+        {
+            DPRINT("Rescan ISA PnP bus\n");
+
+            /* Run the isolation protocol */
+            if (NT_SUCCESS(IsaHwTryReadDataPort(FdoExt->ReadDataPort)))
+            {
+                /* Card identification */
+                (VOID)IsaHwFillDeviceList(FdoExt);
+            }
+        }
+
+        ReadPortExt->Flags &= ~ISAPNP_SCANNED_BY_READ_PORT;
+    }
+
     PdoCount = FdoExt->DeviceCount;
     if (IncludeDataPort)
         ++PdoCount;
+
+    CurrentEntry = FdoExt->DeviceListHead.Flink;
+    while (CurrentEntry != &FdoExt->DeviceListHead)
+    {
+        IsaDevice = CONTAINING_RECORD(CurrentEntry, ISAPNP_LOGICAL_DEVICE, DeviceLink);
+
+        if (!(IsaDevice->Flags & ISAPNP_PRESENT))
+            --PdoCount;
+
+        CurrentEntry = CurrentEntry->Flink;
+    }
 
     DeviceRelations = ExAllocatePoolWithTag(PagedPool,
                                             FIELD_OFFSET(DEVICE_RELATIONS, Objects[PdoCount]),
                                             TAG_ISAPNP);
     if (!DeviceRelations)
     {
+        IsaPnpReleaseDeviceDataLock(FdoExt);
         return STATUS_NO_MEMORY;
     }
 
     if (IncludeDataPort)
     {
+        PISAPNP_PDO_EXTENSION ReadPortExt = FdoExt->ReadPortPdo->DeviceExtension;
+
         DeviceRelations->Objects[i++] = FdoExt->ReadPortPdo;
         ObReferenceObject(FdoExt->ReadPortPdo);
+
+        /* The Read Port PDO can only be removed by FDO */
+        ReadPortExt->Flags |= ISAPNP_ENUMERATED;
     }
 
     CurrentEntry = FdoExt->DeviceListHead.Flink;
@@ -615,6 +630,9 @@ IsaPnpFillDeviceRelations(
         PISAPNP_PDO_EXTENSION PdoExt;
 
         IsaDevice = CONTAINING_RECORD(CurrentEntry, ISAPNP_LOGICAL_DEVICE, DeviceLink);
+
+        if (!(IsaDevice->Flags & ISAPNP_PRESENT))
+            goto SkipPdo;
 
         if (!IsaDevice->Pdo)
         {
@@ -626,42 +644,65 @@ IsaPnpFillDeviceRelations(
                                     FALSE,
                                     &IsaDevice->Pdo);
             if (!NT_SUCCESS(Status))
-            {
-                break;
-            }
+                goto SkipPdo;
 
             IsaDevice->Pdo->Flags &= ~DO_DEVICE_INITIALIZING;
-
-            //Device->Pdo->Flags |= DO_POWER_PAGABLE;
+            /* The power pagable flag is always unset */
 
             PdoExt = IsaDevice->Pdo->DeviceExtension;
 
             RtlZeroMemory(PdoExt, sizeof(ISAPNP_PDO_EXTENSION));
-
-            PdoExt->Common.IsFdo = FALSE;
+            PdoExt->Common.Signature = IsaPnpLogicalDevice;
             PdoExt->Common.Self = IsaDevice->Pdo;
             PdoExt->Common.State = dsStopped;
             PdoExt->IsaPnpDevice = IsaDevice;
             PdoExt->FdoExt = FdoExt;
 
-            Status = IsaPnpCreateLogicalDeviceRequirements(PdoExt);
-
-            if (NT_SUCCESS(Status))
-                Status = IsaPnpCreateLogicalDeviceResources(PdoExt);
-
-            if (!NT_SUCCESS(Status))
+            if (!NT_SUCCESS(IsaPnpCreateLogicalDeviceRequirements(PdoExt)) ||
+                !NT_SUCCESS(IsaPnpCreateLogicalDeviceResources(PdoExt)))
             {
+                if (PdoExt->RequirementsList)
+                {
+                    ExFreePoolWithTag(PdoExt->RequirementsList, TAG_ISAPNP);
+                    PdoExt->RequirementsList = NULL;
+                }
+
+                if (PdoExt->ResourceList)
+                {
+                    ExFreePoolWithTag(PdoExt->ResourceList, TAG_ISAPNP);
+                    PdoExt->ResourceList = NULL;
+                }
+
                 IoDeleteDevice(IsaDevice->Pdo);
                 IsaDevice->Pdo = NULL;
-                break;
+                goto SkipPdo;
             }
         }
+        else
+        {
+            PdoExt = IsaDevice->Pdo->DeviceExtension;
+        }
         DeviceRelations->Objects[i++] = IsaDevice->Pdo;
-
         ObReferenceObject(IsaDevice->Pdo);
+
+        PdoExt->Flags |= ISAPNP_ENUMERATED;
+
+        CurrentEntry = CurrentEntry->Flink;
+        continue;
+
+SkipPdo:
+        if (IsaDevice->Pdo)
+        {
+            PdoExt = IsaDevice->Pdo->DeviceExtension;
+
+            if (PdoExt)
+                PdoExt->Flags &= ~ISAPNP_ENUMERATED;
+        }
 
         CurrentEntry = CurrentEntry->Flink;
     }
+
+    IsaPnpReleaseDeviceDataLock(FdoExt);
 
     DeviceRelations->Count = i;
 
@@ -694,7 +735,7 @@ IsaAddDevice(
                             NULL,
                             FILE_DEVICE_BUS_EXTENDER,
                             FILE_DEVICE_SECURE_OPEN,
-                            TRUE,
+                            FALSE,
                             &Fdo);
     if (!NT_SUCCESS(Status))
     {
@@ -706,16 +747,25 @@ IsaAddDevice(
     RtlZeroMemory(FdoExt, sizeof(*FdoExt));
 
     FdoExt->Common.Self = Fdo;
-    FdoExt->Common.IsFdo = TRUE;
+    FdoExt->Common.Signature = IsaPnpBus;
     FdoExt->Common.State = dsStopped;
     FdoExt->DriverObject = DriverObject;
     FdoExt->BusNumber = BusNumber++;
     FdoExt->Pdo = PhysicalDeviceObject;
     FdoExt->Ldo = IoAttachDeviceToDeviceStack(Fdo,
                                               PhysicalDeviceObject);
+    if (!FdoExt->Ldo)
+    {
+        IoDeleteDevice(Fdo);
+        return STATUS_DEVICE_REMOVED;
+    }
 
     InitializeListHead(&FdoExt->DeviceListHead);
     KeInitializeEvent(&FdoExt->DeviceSyncEvent, SynchronizationEvent, TRUE);
+
+    IsaPnpAcquireBusDataLock();
+    InsertTailList(&BusListHead, &FdoExt->BusLink);
+    IsaPnpReleaseBusDataLock();
 
     Fdo->Flags &= ~DO_DEVICE_INITIALIZING;
 
@@ -735,9 +785,22 @@ IsaPower(
     PISAPNP_COMMON_EXTENSION DevExt = DeviceObject->DeviceExtension;
     NTSTATUS Status;
 
-    if (!DevExt->IsFdo)
+    if (DevExt->Signature != IsaPnpBus)
     {
-        Status = Irp->IoStatus.Status;
+        switch (IoGetCurrentIrpStackLocation(Irp)->MinorFunction)
+        {
+            case IRP_MN_SET_POWER:
+            case IRP_MN_QUERY_POWER:
+                Status = STATUS_SUCCESS;
+                Irp->IoStatus.Status = Status;
+                break;
+
+            default:
+                Status = Irp->IoStatus.Status;
+                break;
+        }
+
+        PoStartNextPowerIrp(Irp);
         IoCompleteRequest(Irp, IO_NO_INCREMENT);
         return Status;
     }
@@ -763,9 +826,7 @@ IsaPnp(
 
     PAGED_CODE();
 
-    DPRINT("%s(%p, %p)\n", __FUNCTION__, DeviceObject, Irp);
-
-    if (DevExt->IsFdo)
+    if (DevExt->Signature == IsaPnpBus)
         return IsaFdoPnp((PISAPNP_FDO_EXTENSION)DevExt, Irp, IrpSp);
     else
         return IsaPdoPnp((PISAPNP_PDO_EXTENSION)DevExt, Irp, IrpSp);
@@ -782,12 +843,24 @@ DriverEntry(
 
     DriverObject->MajorFunction[IRP_MJ_CREATE] = IsaCreateClose;
     DriverObject->MajorFunction[IRP_MJ_CLOSE] = IsaCreateClose;
-    DriverObject->MajorFunction[IRP_MJ_READ] = IsaReadWrite;
-    DriverObject->MajorFunction[IRP_MJ_WRITE] = IsaReadWrite;
-    DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = IsaIoctl;
+    DriverObject->MajorFunction[IRP_MJ_DEVICE_CONTROL] = IsaForwardOrIgnore;
+    DriverObject->MajorFunction[IRP_MJ_SYSTEM_CONTROL] = IsaForwardOrIgnore;
     DriverObject->MajorFunction[IRP_MJ_PNP] = IsaPnp;
     DriverObject->MajorFunction[IRP_MJ_POWER] = IsaPower;
     DriverObject->DriverExtension->AddDevice = IsaAddDevice;
+
+    /* FIXME: Fix SDK headers */
+#if 0
+    _No_competing_thread_begin_
+#endif
+
+    KeInitializeEvent(&BusSyncEvent, SynchronizationEvent, TRUE);
+    InitializeListHead(&BusListHead);
+
+    /* FIXME: Fix SDK headers */
+#if 0
+    _No_competing_thread_end_
+#endif
 
     return STATUS_SUCCESS;
 }

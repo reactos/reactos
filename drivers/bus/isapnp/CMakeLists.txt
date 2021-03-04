@@ -4,6 +4,7 @@ list(APPEND SOURCE
     pdo.c
     fdo.c
     hardware.c
+    interface.c
     isapnp.h)
 
 add_library(isapnp MODULE ${SOURCE} isapnp.rc)

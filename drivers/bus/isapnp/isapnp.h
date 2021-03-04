@@ -9,7 +9,7 @@
 #ifndef _ISAPNP_PCH_
 #define _ISAPNP_PCH_
 
-#include <wdm.h>
+#include <ntddk.h>
 #include <ntstrsafe.h>
 #include <section_attribs.h>
 #include "isapnphw.h"
@@ -60,13 +60,24 @@ typedef struct _ISAPNP_LOGICAL_DEVICE
     ISAPNP_DMA Dma[2];
     UCHAR CSN;
     UCHAR LDN;
+
+    ULONG Flags;
+#define ISAPNP_PRESENT              0x00000001 /**< @brief Cleared when the device is physically removed. */
+
     LIST_ENTRY DeviceLink;
 } ISAPNP_LOGICAL_DEVICE, *PISAPNP_LOGICAL_DEVICE;
 
+typedef enum _ISAPNP_SIGNATURE
+{
+    IsaPnpBus = 'odFI',
+    IsaPnpLogicalDevice = 'veDI',
+    IsaPnpReadDataPort = 'pdRI'
+} ISAPNP_SIGNATURE;
+
 typedef struct _ISAPNP_COMMON_EXTENSION
 {
+    ISAPNP_SIGNATURE Signature;
     PDEVICE_OBJECT Self;
-    BOOLEAN IsFdo;
     ISAPNP_DEVICE_STATE State;
 } ISAPNP_COMMON_EXTENSION, *PISAPNP_COMMON_EXTENSION;
 
@@ -75,13 +86,19 @@ typedef struct _ISAPNP_FDO_EXTENSION
     ISAPNP_COMMON_EXTENSION Common;
     PDEVICE_OBJECT Ldo;
     PDEVICE_OBJECT Pdo;
-    PDEVICE_OBJECT ReadPortPdo;
+    PDEVICE_OBJECT ReadPortPdo; /**< @remarks The pointer is NULL for all inactive FDOs. */
     ULONG BusNumber;
     KEVENT DeviceSyncEvent;
+
+    _Guarded_by_(DeviceSyncEvent)
     LIST_ENTRY DeviceListHead;
+
+    _Guarded_by_(DeviceSyncEvent)
     ULONG DeviceCount;
+
     PDRIVER_OBJECT DriverObject;
     PUCHAR ReadDataPort;
+    LIST_ENTRY BusLink;
 } ISAPNP_FDO_EXTENSION, *PISAPNP_FDO_EXTENSION;
 
 typedef struct _ISAPNP_PDO_EXTENSION
@@ -90,9 +107,43 @@ typedef struct _ISAPNP_PDO_EXTENSION
     PISAPNP_LOGICAL_DEVICE IsaPnpDevice;
     PISAPNP_FDO_EXTENSION FdoExt;
     PIO_RESOURCE_REQUIREMENTS_LIST RequirementsList;
+
     PCM_RESOURCE_LIST ResourceList;
     ULONG ResourceListSize;
+
+    ULONG Flags;
+#define ISAPNP_ENUMERATED               0x00000001 /**< @brief Whether the device has been reported to the PnP manager. */
+#define ISAPNP_SCANNED_BY_READ_PORT     0x00000002 /**< @brief The bus has been scanned by Read Port PDO. */
+#define ISAPNP_READ_PORT_ALLOW_FDO_SCAN 0x00000004 /**< @brief Allows the active FDO to scan the bus. */
+
+    _Write_guarded_by_(_Global_interlock_)
+    volatile LONG SpecialFiles;
 } ISAPNP_PDO_EXTENSION, *PISAPNP_PDO_EXTENSION;
+
+extern KEVENT BusSyncEvent;
+
+_Guarded_by_(BusSyncEvent)
+extern BOOLEAN ReadPortCreated;
+
+_Guarded_by_(BusSyncEvent)
+extern LIST_ENTRY BusListHead;
+
+_Requires_lock_not_held_(BusSyncEvent)
+_Acquires_lock_(BusSyncEvent)
+FORCEINLINE
+VOID
+IsaPnpAcquireBusDataLock(VOID)
+{
+    KeWaitForSingleObject(&BusSyncEvent, Executive, KernelMode, FALSE, NULL);
+}
+
+_Releases_lock_(BusSyncEvent)
+FORCEINLINE
+VOID
+IsaPnpReleaseBusDataLock(VOID)
+{
+    KeSetEvent(&BusSyncEvent, IO_NO_INCREMENT, FALSE);
+}
 
 _Requires_lock_not_held_(FdoExt->DeviceSyncEvent)
 _Acquires_lock_(FdoExt->DeviceSyncEvent)
@@ -116,6 +167,11 @@ IsaPnpReleaseDeviceDataLock(
 /* isapnp.c */
 
 CODE_SEG("PAGE")
+VOID
+IsaPnpRemoveReadPortDO(
+    _In_ PDEVICE_OBJECT Pdo);
+
+CODE_SEG("PAGE")
 NTSTATUS
 IsaPnpFillDeviceRelations(
     _In_ PISAPNP_FDO_EXTENSION FdoExt,
@@ -125,18 +181,19 @@ IsaPnpFillDeviceRelations(
 CODE_SEG("INIT")
 DRIVER_INITIALIZE DriverEntry;
 
-NTSTATUS
-NTAPI
-IsaForwardIrpSynchronous(
-    _In_ PISAPNP_FDO_EXTENSION FdoExt,
-    _Inout_ PIRP Irp);
-
 /* fdo.c */
 CODE_SEG("PAGE")
 NTSTATUS
 IsaFdoPnp(
     _In_ PISAPNP_FDO_EXTENSION FdoExt,
     _Inout_ PIRP Irp,
+    _In_ PIO_STACK_LOCATION IrpSp);
+
+/* interface.c */
+CODE_SEG("PAGE")
+NTSTATUS
+IsaFdoQueryInterface(
+    _In_ PISAPNP_FDO_EXTENSION FdoExt,
     _In_ PIO_STACK_LOCATION IrpSp);
 
 /* pdo.c */
@@ -146,6 +203,11 @@ IsaPdoPnp(
     _In_ PISAPNP_PDO_EXTENSION PdoDeviceExtension,
     _Inout_ PIRP Irp,
     _In_ PIO_STACK_LOCATION IrpSp);
+
+CODE_SEG("PAGE")
+VOID
+IsaPnpRemoveLogicalDeviceDO(
+    _In_ PDEVICE_OBJECT Pdo);
 
 /* hardware.c */
 CODE_SEG("PAGE")
