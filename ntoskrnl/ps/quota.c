@@ -38,28 +38,32 @@ PspChargeProcessQuotaSpecifiedPool(IN PEPROCESS Process,
                                    IN PS_QUOTA_TYPE QuotaType,
                                    IN SIZE_T    Amount)
 {
+    KIRQL OldIrql;
     ASSERT(Process);
     ASSERT(Process != PsInitialSystemProcess);
     ASSERT(QuotaType < PsQuotaTypes);
     ASSERT(Process->QuotaBlock);
 
-    /* Note: Race warning. TODO: Needs to add/use lock for this */
+    /* Guard our quota in a spin lock */
+    KeAcquireSpinLock(&PspQuotaLock, &OldIrql);
+
     if (Process->QuotaUsage[QuotaType] + Amount >
         Process->QuotaBlock->QuotaEntry[QuotaType].Limit)
     {
         DPRINT1("Quota exceeded, but ROS will let it slide...\n");
+        KeReleaseSpinLock(&PspQuotaLock, OldIrql);
         return STATUS_SUCCESS;
         //return STATUS_QUOTA_EXCEEDED; /* caller raises the exception */
     }
 
     InterlockedExchangeAdd((LONG*)&Process->QuotaUsage[QuotaType], Amount);
 
-    /* Note: Race warning. TODO: Needs to add/use lock for this */
     if (Process->QuotaPeak[QuotaType] < Process->QuotaUsage[QuotaType])
     {
         Process->QuotaPeak[QuotaType] = Process->QuotaUsage[QuotaType];
     }
 
+    KeReleaseSpinLock(&PspQuotaLock, OldIrql);
     return STATUS_SUCCESS;
 }
 
@@ -73,10 +77,15 @@ PspReturnProcessQuotaSpecifiedPool(IN PEPROCESS Process,
                                    IN PS_QUOTA_TYPE QuotaType,
                                    IN SIZE_T    Amount)
 {
+    KIRQL OldIrql;
     ASSERT(Process);
     ASSERT(Process != PsInitialSystemProcess);
     ASSERT(QuotaType < PsQuotaTypes);
     ASSERT(!(Amount & 0x80000000)); /* we need to be able to negate it */
+
+    /* Guard our quota in a spin lock */
+    KeAcquireSpinLock(&PspQuotaLock, &OldIrql);
+
     if (Process->QuotaUsage[QuotaType] < Amount)
     {
         DPRINT1("WARNING: Process->QuotaUsage sanity check failed.\n");
@@ -86,6 +95,8 @@ PspReturnProcessQuotaSpecifiedPool(IN PEPROCESS Process,
         InterlockedExchangeAdd((LONG*)&Process->QuotaUsage[QuotaType],
                                -(LONG)Amount);
     }
+
+    KeReleaseSpinLock(&PspQuotaLock, OldIrql);
 }
 
 /* FUNCTIONS ***************************************************************/
