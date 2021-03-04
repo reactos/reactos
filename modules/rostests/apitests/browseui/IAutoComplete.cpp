@@ -566,8 +566,7 @@ struct TEST_B_ENTRY
     BOOL m_bVisible;
     INT m_ich0, m_ich1;
     INT m_iItem;
-    BOOL m_bReset;
-    BOOL m_bExpand;
+    BOOL m_bReset, m_bExpand;
     LPCWSTR m_expand;
 };
 
@@ -588,7 +587,7 @@ DoesMatch(LPWSTR *pList, UINT nCount, LPCWSTR psz)
 // the testcase B
 static VOID
 DoTestCaseB(INT x, INT y, INT cx, INT cy, LPWSTR *pList, UINT nCount,
-            const TEST_B_ENTRY *pEntries, SIZE_T cEntries)
+            const TEST_B_ENTRY *pEntries, UINT cEntries)
 {
     MSG msg;
     s_bExpand = s_bReset = FALSE;
@@ -604,7 +603,6 @@ DoTestCaseB(INT x, INT y, INT cx, INT cy, LPWSTR *pList, UINT nCount,
         TranslateMessage(&msg);
         DispatchMessageW(&msg);
     }
-
     ok_int(IsWindowVisible(hwndEdit), TRUE);
 
     // set the list data
