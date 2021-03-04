@@ -1,12 +1,12 @@
 /*
  * PROJECT:         ReactOS ISA PnP Bus driver
- * FILE:            hardware.c
+ * LICENSE:         GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:         Hardware support code
- * PROGRAMMERS:     Cameron Gutman (cameron.gutman@reactos.org)
- *                  Hervé Poussineau
+ * COPYRIGHT:       Copyright 2010 Cameron Gutman <cameron.gutman@reactos.org>
+ *                  Copyright 2020 Hervé Poussineau <hpoussin@reactos.org>
  */
 
-#include <isapnp.h>
+#include "isapnp.h"
 
 #define NDEBUG
 #include <debug.h>
@@ -15,7 +15,7 @@ static
 inline
 VOID
 WriteAddress(
-    IN USHORT Address)
+    _In_ USHORT Address)
 {
     WRITE_PORT_UCHAR((PUCHAR)ISAPNP_ADDRESS, Address);
 }
@@ -24,7 +24,7 @@ static
 inline
 VOID
 WriteData(
-    IN USHORT Data)
+    _In_ USHORT Data)
 {
     WRITE_PORT_UCHAR((PUCHAR)ISAPNP_WRITE_DATA, Data);
 }
@@ -33,7 +33,7 @@ static
 inline
 UCHAR
 ReadData(
-    IN PUCHAR ReadDataPort)
+    _In_ PUCHAR ReadDataPort)
 {
     return READ_PORT_UCHAR(ReadDataPort);
 }
@@ -42,8 +42,8 @@ static
 inline
 VOID
 WriteByte(
-    IN USHORT Address,
-    IN USHORT Value)
+    _In_ USHORT Address,
+    _In_ USHORT Value)
 {
     WriteAddress(Address);
     WriteData(Value);
@@ -53,8 +53,8 @@ static
 inline
 UCHAR
 ReadByte(
-    IN PUCHAR ReadDataPort,
-    IN USHORT Address)
+    _In_ PUCHAR ReadDataPort,
+    _In_ USHORT Address)
 {
     WriteAddress(Address);
     return ReadData(ReadDataPort);
@@ -64,8 +64,8 @@ static
 inline
 USHORT
 ReadWord(
-    IN PUCHAR ReadDataPort,
-    IN USHORT Address)
+    _In_ PUCHAR ReadDataPort,
+    _In_ USHORT Address)
 {
     return ((ReadByte(ReadDataPort, Address) << 8) |
             (ReadByte(ReadDataPort, Address + 1)));
@@ -75,7 +75,7 @@ static
 inline
 VOID
 SetReadDataPort(
-    IN PUCHAR ReadDataPort)
+    _In_ PUCHAR ReadDataPort)
 {
     WriteByte(ISAPNP_READPORT, ((ULONG_PTR)ReadDataPort >> 2));
 }
@@ -108,7 +108,7 @@ static
 inline
 VOID
 Wake(
-    IN USHORT Csn)
+    _In_ USHORT Csn)
 {
     WriteByte(ISAPNP_WAKE, Csn);
 }
@@ -117,7 +117,7 @@ static
 inline
 USHORT
 ReadResourceData(
-    IN PUCHAR ReadDataPort)
+    _In_ PUCHAR ReadDataPort)
 {
     return ReadByte(ReadDataPort, ISAPNP_RESOURCEDATA);
 }
@@ -126,7 +126,7 @@ static
 inline
 USHORT
 ReadStatus(
-    IN PUCHAR ReadDataPort)
+    _In_ PUCHAR ReadDataPort)
 {
     return ReadByte(ReadDataPort, ISAPNP_STATUS);
 }
@@ -135,7 +135,7 @@ static
 inline
 VOID
 WriteCsn(
-    IN USHORT Csn)
+    _In_ USHORT Csn)
 {
     WriteByte(ISAPNP_CARDSELECTNUMBER, Csn);
 }
@@ -144,7 +144,7 @@ static
 inline
 VOID
 WriteLogicalDeviceNumber(
-    IN USHORT LogDev)
+    _In_ USHORT LogDev)
 {
     WriteByte(ISAPNP_LOGICALDEVICENUMBER, LogDev);
 }
@@ -153,7 +153,7 @@ static
 inline
 VOID
 ActivateDevice(
-    IN USHORT LogDev)
+    _In_ USHORT LogDev)
 {
     WriteLogicalDeviceNumber(LogDev);
     WriteByte(ISAPNP_ACTIVATE, 1);
@@ -163,7 +163,7 @@ static
 inline
 VOID
 DeactivateDevice(
-    IN USHORT LogDev)
+    _In_ USHORT LogDev)
 {
     WriteLogicalDeviceNumber(LogDev);
     WriteByte(ISAPNP_ACTIVATE, 0);
@@ -173,8 +173,8 @@ static
 inline
 USHORT
 ReadIoBase(
-    IN PUCHAR ReadDataPort,
-    IN USHORT Index)
+    _In_ PUCHAR ReadDataPort,
+    _In_ USHORT Index)
 {
     return ReadWord(ReadDataPort, ISAPNP_IOBASE(Index));
 }
@@ -183,8 +183,8 @@ static
 inline
 USHORT
 ReadIrqNo(
-    IN PUCHAR ReadDataPort,
-    IN USHORT Index)
+    _In_ PUCHAR ReadDataPort,
+    _In_ USHORT Index)
 {
     return ReadByte(ReadDataPort, ISAPNP_IRQNO(Index));
 }
@@ -193,8 +193,8 @@ static
 inline
 USHORT
 ReadIrqType(
-    IN PUCHAR ReadDataPort,
-    IN USHORT Index)
+    _In_ PUCHAR ReadDataPort,
+    _In_ USHORT Index)
 {
     return ReadByte(ReadDataPort, ISAPNP_IRQTYPE(Index));
 }
@@ -203,8 +203,8 @@ static
 inline
 USHORT
 ReadDmaChannel(
-    IN PUCHAR ReadDataPort,
-    IN USHORT Index)
+    _In_ PUCHAR ReadDataPort,
+    _In_ USHORT Index)
 {
     return ReadByte(ReadDataPort, ISAPNP_DMACHANNEL(Index));
 }
@@ -221,8 +221,8 @@ static
 inline
 UCHAR
 NextLFSR(
-    IN UCHAR Lfsr,
-    IN UCHAR InputBit)
+    _In_ UCHAR Lfsr,
+    _In_ UCHAR InputBit)
 {
     UCHAR NextLfsr = Lfsr >> 1;
 
@@ -252,7 +252,7 @@ SendKey(VOID)
 static
 USHORT
 PeekByte(
-    IN PUCHAR ReadDataPort)
+    _In_ PUCHAR ReadDataPort)
 {
     USHORT i;
 
@@ -270,9 +270,9 @@ PeekByte(
 static
 VOID
 Peek(
-    IN PUCHAR ReadDataPort,
-    IN OUT PVOID Buffer,
-    IN ULONG Length)
+    _In_ PUCHAR ReadDataPort,
+    _Out_writes_bytes_all_opt_(Length) PVOID Buffer,
+    _In_ ULONG Length)
 {
     USHORT i, Byte;
 
@@ -280,22 +280,23 @@ Peek(
     {
         Byte = PeekByte(ReadDataPort);
         if (Buffer)
-            *((PUCHAR)Buffer + i) = Byte;
+            ((PUCHAR)Buffer)[i] = Byte;
     }
 }
 
 static
 USHORT
 IsaPnpChecksum(
-    IN PISAPNP_IDENTIFIER Identifier)
+    _In_ PISAPNP_IDENTIFIER Identifier)
 {
-    UCHAR i, j, Lfsr, Byte;
+    UCHAR i, j, Lfsr;
 
     Lfsr = ISAPNP_LFSR_SEED;
-    for (i = 0; i < 8; i++)
+    for (i = 0; i < FIELD_OFFSET(ISAPNP_IDENTIFIER, Checksum); i++)
     {
-        Byte = *(((PUCHAR)Identifier) + i);
-        for (j = 0; j < 8; j++)
+        UCHAR Byte = ((PUCHAR)Identifier)[i];
+
+        for (j = 0; j < RTL_BITS_OF(Byte); j++)
         {
             Lfsr = NextLFSR(Lfsr, Byte);
             Byte >>= 1;
@@ -308,9 +309,9 @@ IsaPnpChecksum(
 static
 BOOLEAN
 ReadTags(
-    IN PUCHAR ReadDataPort,
-    IN USHORT LogDev,
-    IN OUT PISAPNP_LOGICAL_DEVICE LogDevice)
+    _In_ PUCHAR ReadDataPort,
+    _In_ USHORT LogDev,
+    _Inout_ PISAPNP_LOGICAL_DEVICE LogDevice)
 {
     BOOLEAN res = FALSE;
     PVOID Buffer;
@@ -392,7 +393,7 @@ ReadTags(
 static
 INT
 TryIsolate(
-    IN PUCHAR ReadDataPort)
+    _In_ PUCHAR ReadDataPort)
 {
     ISAPNP_IDENTIFIER Identifier;
     USHORT i, j;
@@ -497,8 +498,8 @@ TryIsolate(
 
 VOID
 DeviceActivation(
-    IN PISAPNP_LOGICAL_DEVICE IsaDevice,
-    IN BOOLEAN Activate)
+    _In_ PISAPNP_LOGICAL_DEVICE IsaDevice,
+    _In_ BOOLEAN Activate)
 {
     WaitForKey();
     SendKey();
@@ -516,7 +517,7 @@ DeviceActivation(
 
 NTSTATUS
 ProbeIsaPnpBus(
-    IN PISAPNP_FDO_EXTENSION FdoExt)
+    _In_ PISAPNP_FDO_EXTENSION FdoExt)
 {
     PISAPNP_LOGICAL_DEVICE LogDevice;
     ISAPNP_IDENTIFIER Identifier;
@@ -578,7 +579,7 @@ ProbeIsaPnpBus(
 
             WaitForKey();
 
-            InsertTailList(&FdoExt->DeviceListHead, &LogDevice->ListEntry);
+            InsertTailList(&FdoExt->DeviceListHead, &LogDevice->DeviceLink);
             FdoExt->DeviceCount++;
         }
     }
@@ -589,7 +590,7 @@ ProbeIsaPnpBus(
 NTSTATUS
 NTAPI
 IsaHwTryReadDataPort(
-    IN PUCHAR ReadDataPort)
+    _In_ PUCHAR ReadDataPort)
 {
     return TryIsolate(ReadDataPort) > 0 ? STATUS_SUCCESS : STATUS_INSUFFICIENT_RESOURCES;
 }
@@ -597,7 +598,7 @@ IsaHwTryReadDataPort(
 NTSTATUS
 NTAPI
 IsaHwActivateDevice(
-    IN PISAPNP_LOGICAL_DEVICE LogicalDevice)
+    _In_ PISAPNP_LOGICAL_DEVICE LogicalDevice)
 {
     DeviceActivation(LogicalDevice,
                      TRUE);
@@ -608,7 +609,7 @@ IsaHwActivateDevice(
 NTSTATUS
 NTAPI
 IsaHwDeactivateDevice(
-    IN PISAPNP_LOGICAL_DEVICE LogicalDevice)
+    _In_ PISAPNP_LOGICAL_DEVICE LogicalDevice)
 {
     DeviceActivation(LogicalDevice,
                      FALSE);
@@ -619,7 +620,7 @@ IsaHwDeactivateDevice(
 NTSTATUS
 NTAPI
 IsaHwFillDeviceList(
-    IN PISAPNP_FDO_EXTENSION FdoExt)
+    _In_ PISAPNP_FDO_EXTENSION FdoExt)
 {
     return ProbeIsaPnpBus(FdoExt);
 }

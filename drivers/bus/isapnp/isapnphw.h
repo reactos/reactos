@@ -1,3 +1,11 @@
+/*
+ * PROJECT:     ReactOS ISA PnP Bus driver
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Hardware definitions
+ * COPYRIGHT:   Copyright 2010 Cameron Gutman <cameron.gutman@reactos.org>
+ *              Copyright 2020 Hervé Poussineau <hpoussin@reactos.org>
+ */
+
 #pragma once
 
 #ifdef __cplusplus
@@ -83,20 +91,23 @@ extern "C" {
 #define ISAPNP_TAG_RSVDLONGF 0xFF
 #define ISAPNP_TAG_PSEUDO_NEWBOARD 0x100
 
-typedef struct _ISAPNP_IDENTIFIER {
+typedef struct _ISAPNP_IDENTIFIER
+{
     USHORT VendorId;
     USHORT ProdId;
     ULONG Serial;
     UCHAR Checksum;
 } ISAPNP_IDENTIFIER, *PISAPNP_IDENTIFIER;
 
-typedef struct _ISAPNP_LOGDEVID {
+typedef struct _ISAPNP_LOGDEVID
+{
     USHORT VendorId;
     USHORT ProdId;
     USHORT Flags;
 } ISAPNP_LOGDEVID, *PISAPNP_LOGDEVID;
 
-typedef struct _ISAPNP_DEVICEID {
+typedef struct _ISAPNP_DEVICEID
+{
     CHAR* Name;
     USHORT VendorId;
     USHORT ProdId;
@@ -104,23 +115,26 @@ typedef struct _ISAPNP_DEVICEID {
 
 #include <pshpack1.h>
 
-typedef struct _ISAPNP_IO_DESCRIPTION {
+typedef struct _ISAPNP_IO_DESCRIPTION
+{
     UCHAR Information;
     USHORT Minimum;
     USHORT Maximum;
     UCHAR Alignment;
     UCHAR Length;
-} ISAPNP_IO_DESCRIPTION;
+} ISAPNP_IO_DESCRIPTION, *PISAPNP_IO_DESCRIPTION;
 
-typedef struct _ISAPNP_IRQ_DESCRIPTION {
+typedef struct _ISAPNP_IRQ_DESCRIPTION
+{
     USHORT Mask;
     UCHAR Information;
-} ISAPNP_IRQ_DESCRIPTION;
+} ISAPNP_IRQ_DESCRIPTION, *PISAPNP_IRQ_DESCRIPTION;
 
-typedef struct _ISAPNP_DMA_DESCRIPTION {
+typedef struct _ISAPNP_DMA_DESCRIPTION
+{
     UCHAR Mask;
     UCHAR Information;
-} ISAPNP_DMA_DESCRIPTION;
+} ISAPNP_DMA_DESCRIPTION, *PISAPNP_DMA_DESCRIPTION;
 
 #include <poppack.h>
 

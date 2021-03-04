@@ -1,12 +1,12 @@
 /*
  * PROJECT:         ReactOS ISA PnP Bus driver
- * FILE:            fdo.c
+ * LICENSE:         GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
  * PURPOSE:         FDO-specific code
- * PROGRAMMERS:     Cameron Gutman (cameron.gutman@reactos.org)
- *                  Hervé Poussineau
+ * COPYRIGHT:       Copyright 2010 Cameron Gutman <cameron.gutman@reactos.org>
+ *                  Copyright 2020 Hervé Poussineau <hpoussin@reactos.org>
  */
 
-#include <isapnp.h>
+#include "isapnp.h"
 
 #define NDEBUG
 #include <debug.h>
@@ -14,9 +14,9 @@
 NTSTATUS
 NTAPI
 IsaFdoStartDevice(
-    IN PISAPNP_FDO_EXTENSION FdoExt,
-    IN PIRP Irp,
-    IN PIO_STACK_LOCATION IrpSp)
+    _In_ PISAPNP_FDO_EXTENSION FdoExt,
+    _Inout_ PIRP Irp,
+    _In_ PIO_STACK_LOCATION IrpSp)
 {
     UNREFERENCED_PARAMETER(Irp);
     UNREFERENCED_PARAMETER(IrpSp);
@@ -29,9 +29,9 @@ IsaFdoStartDevice(
 NTSTATUS
 NTAPI
 IsaFdoQueryDeviceRelations(
-    IN PISAPNP_FDO_EXTENSION FdoExt,
-    IN PIRP Irp,
-    IN PIO_STACK_LOCATION IrpSp)
+    _In_ PISAPNP_FDO_EXTENSION FdoExt,
+    _Inout_ PIRP Irp,
+    _In_ PIO_STACK_LOCATION IrpSp)
 {
     if (IrpSp->Parameters.QueryDeviceRelations.Type != BusRelations)
         return Irp->IoStatus.Status;
@@ -42,9 +42,9 @@ IsaFdoQueryDeviceRelations(
 NTSTATUS
 NTAPI
 IsaFdoPnp(
-    IN PISAPNP_FDO_EXTENSION FdoExt,
-    IN PIRP Irp,
-    IN PIO_STACK_LOCATION IrpSp)
+    _In_ PISAPNP_FDO_EXTENSION FdoExt,
+    _Inout_ PIRP Irp,
+    _In_ PIO_STACK_LOCATION IrpSp)
 {
     NTSTATUS Status = Irp->IoStatus.Status;
 
