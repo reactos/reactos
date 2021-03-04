@@ -571,7 +571,7 @@ struct TEST_B_ENTRY
     CStringW m_strExpand;
 
     TEST_B_ENTRY(INT line, UINT uMsg, WPARAM wParam, LPARAM lParam,
-                 CStringW text, BOOL bVisible, INT ich0, INT ich1,
+                 LPCWSTR text, BOOL bVisible, INT ich0, INT ich1,
                  INT iItem = -1, BOOL bReset = FALSE, BOOL bExpand = FALSE,
                  LPCWSTR pszExpand = L"")
         : m_line(line), m_uMsg(uMsg), m_wParam(wParam), m_lParam(lParam)
