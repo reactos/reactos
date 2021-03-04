@@ -350,7 +350,10 @@ DoTestCaseA(INT x, INT y, INT cx, INT cy, LPCWSTR pszInput,
             (EDITWORDBREAKPROC)SendMessageW(hwndEdit, EM_GETWORDBREAKPROC, 0, 0);
         ok(fn1 != fn2, "fn1 == fn2\n");
         ok(fn2 != NULL, "fn2 was NULL\n");
-        DoWordBreakProc(fn2);
+        if (fn2)
+            DoWordBreakProc(fn2);
+        else
+            skip("fn2 == NULL\n");
     }
 
     // take care of the message queue
