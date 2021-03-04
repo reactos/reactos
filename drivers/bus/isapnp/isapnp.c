@@ -192,11 +192,10 @@ IsaPnpCreateLogicalDeviceRequirements(
     /* Allocate memory to store requirements */
     ListSize = sizeof(IO_RESOURCE_REQUIREMENTS_LIST)
                + ResourceCount * sizeof(IO_RESOURCE_DESCRIPTOR);
-    RequirementsList = ExAllocatePool(PagedPool, ListSize);
+    RequirementsList = ExAllocatePoolZero(PagedPool, ListSize, TAG_ISAPNP);
     if (!RequirementsList)
         return STATUS_NO_MEMORY;
 
-    RtlZeroMemory(RequirementsList, ListSize);
     RequirementsList->ListSize = ListSize;
     RequirementsList->InterfaceType = Isa;
     RequirementsList->AlternativeLists = 1;
@@ -347,11 +346,10 @@ IsaPnpCreateLogicalDeviceResources(
     /* Allocate memory to store resources */
     ListSize = sizeof(CM_RESOURCE_LIST)
                + (ResourceCount - 1) * sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR);
-    ResourceList = ExAllocatePool(PagedPool, ListSize);
+    ResourceList = ExAllocatePoolZero(PagedPool, ListSize, TAG_ISAPNP);
     if (!ResourceList)
         return STATUS_NO_MEMORY;
 
-    RtlZeroMemory(ResourceList, ListSize);
     ResourceList->Count = 1;
     ResourceList->List[0].InterfaceType = Isa;
     ResourceList->List[0].PartialResourceList.Version = 1;
@@ -637,11 +635,10 @@ IsaPnpCreateReadPortDORequirements(
 
     ListSize = sizeof(IO_RESOURCE_REQUIREMENTS_LIST)
                + 2 * RTL_NUMBER_OF(Ports) * sizeof(IO_RESOURCE_DESCRIPTOR);
-    RequirementsList = ExAllocatePool(PagedPool, ListSize);
+    RequirementsList = ExAllocatePoolZero(PagedPool, ListSize, TAG_ISAPNP);
     if (!RequirementsList)
         return STATUS_NO_MEMORY;
 
-    RtlZeroMemory(RequirementsList, ListSize);
     RequirementsList->ListSize = ListSize;
     RequirementsList->AlternativeLists = 1;
 
@@ -687,11 +684,10 @@ IsaPnpCreateReadPortDOResources(
 
     ListSize = sizeof(CM_RESOURCE_LIST) +
                sizeof(CM_PARTIAL_RESOURCE_DESCRIPTOR) * (RTL_NUMBER_OF(Ports) - 1);
-    ResourceList = ExAllocatePool(PagedPool, ListSize);
+    ResourceList = ExAllocatePoolZero(PagedPool, ListSize, TAG_ISAPNP);
     if (!ResourceList)
         return STATUS_NO_MEMORY;
 
-    RtlZeroMemory(ResourceList, ListSize);
     ResourceList->Count = 1;
     ResourceList->List[0].InterfaceType = Internal;
     ResourceList->List[0].PartialResourceList.Version = 1;

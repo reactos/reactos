@@ -29,7 +29,7 @@ IsaPdoQueryDeviceRelations(
     if (IrpSp->Parameters.QueryDeviceRelations.Type != TargetDeviceRelation)
         return Irp->IoStatus.Status;
 
-    DeviceRelations = ExAllocatePool(PagedPool, sizeof(*DeviceRelations));
+    DeviceRelations = ExAllocatePoolWithTag(PagedPool, sizeof(*DeviceRelations), TAG_ISAPNP);
     if (!DeviceRelations)
         return STATUS_NO_MEMORY;
 
@@ -127,7 +127,7 @@ IsaPdoQueryId(
     if (!Source->Buffer)
         return Irp->IoStatus.Status;
 
-    Buffer = ExAllocatePool(PagedPool, Source->MaximumLength);
+    Buffer = ExAllocatePoolWithTag(PagedPool, Source->MaximumLength, TAG_ISAPNP);
     if (!Buffer)
         return STATUS_NO_MEMORY;
 
@@ -150,7 +150,7 @@ IsaPdoQueryResources(
         return Irp->IoStatus.Status;
 
     ListSize = PdoExt->ResourceListSize;
-    ResourceList = ExAllocatePool(PagedPool, ListSize);
+    ResourceList = ExAllocatePoolWithTag(PagedPool, ListSize, TAG_ISAPNP);
     if (!ResourceList)
         return STATUS_NO_MEMORY;
 
@@ -173,7 +173,7 @@ IsaPdoQueryResourceRequirements(
         return Irp->IoStatus.Status;
 
     ListSize = PdoExt->RequirementsList->ListSize;
-    RequirementsList = ExAllocatePool(PagedPool, ListSize);
+    RequirementsList = ExAllocatePoolWithTag(PagedPool, ListSize, TAG_ISAPNP);
     if (!RequirementsList)
         return STATUS_NO_MEMORY;
 

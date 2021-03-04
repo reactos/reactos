@@ -17,7 +17,7 @@
 extern "C" {
 #endif
 
-#define TAG_ISAPNP 'PNPI'
+#define TAG_ISAPNP 'pasI'
 
 typedef enum
 {

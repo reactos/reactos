@@ -531,11 +531,9 @@ ProbeIsaPnpBus(
     {
         for (LogDev = 0; LogDev <= 0xFF; LogDev++)
         {
-            LogDevice = ExAllocatePool(NonPagedPool, sizeof(ISAPNP_LOGICAL_DEVICE));
+            LogDevice = ExAllocatePoolZero(NonPagedPool, sizeof(ISAPNP_LOGICAL_DEVICE), TAG_ISAPNP);
             if (!LogDevice)
                 return STATUS_NO_MEMORY;
-
-            RtlZeroMemory(LogDevice, sizeof(ISAPNP_LOGICAL_DEVICE));
 
             LogDevice->CSN = Csn;
             LogDevice->LDN = LogDev;
@@ -548,7 +546,7 @@ ProbeIsaPnpBus(
 
             if (Identifier.VendorId & 0x80)
             {
-                ExFreePool(LogDevice);
+                ExFreePoolWithTag(LogDevice, TAG_ISAPNP);
                 return STATUS_SUCCESS;
             }
 
