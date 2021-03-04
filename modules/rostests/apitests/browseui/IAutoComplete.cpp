@@ -652,9 +652,7 @@ DoTestCaseB(INT x, INT y, INT cx, INT cy, LPWSTR *pList, UINT nCount,
         if (!IsWindow(hwndDropDown))
         {
             hwndDropDown = FindWindowW(L"Auto-Suggest Dropdown", L"");
-            hwndScrollBar = NULL;
-            hwndSizeBox = NULL;
-            hwndList = NULL;
+            hwndScrollBar = hwndSizeBox = hwndList = NULL;
         }
         if (IsWindowVisible(hwndDropDown))
         {
