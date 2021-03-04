@@ -189,7 +189,7 @@ CsrApiHandleConnectionRequest(IN PCSR_API_MESSAGE ApiMessage)
     ConnectInfo->ServerProcessId = NtCurrentTeb()->ClientId.UniqueProcess;
 
     /* Accept the Connection */
-    ASSERT(!AllowConnection || (AllowConnection && CsrProcess));
+    ASSERT(!AllowConnection || CsrProcess);
     Status = NtAcceptConnectPort(&ServerPort,
                                  AllowConnection ? UlongToPtr(CsrProcess->SequenceNumber) : 0,
                                  &ApiMessage->Header,
