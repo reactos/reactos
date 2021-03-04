@@ -2232,7 +2232,7 @@ UserFault:
 
             if (InPageBlock != NULL)
             {
-                MiUnlockWorkingSet(PsGetCurrentThread(), WorkingSet);
+                MiUnlockProcessWorkingSet(CurrentProcess, PsGetCurrentThread());
 
                 KeWaitForSingleObject(&CurrentPageEvent, WrPageIn, KernelMode, FALSE, NULL);
 
@@ -2242,7 +2242,7 @@ UserFault:
                     KeSetEvent(PreviousPageEvent, IO_NO_INCREMENT, FALSE);
                 }
 
-                MiLockWorkingSet(PsGetCurrentThread(), WorkingSet);
+                MiLockProcessWorkingSet(CurrentProcess, PsGetCurrentThread());
             }
         }
         else
@@ -2299,7 +2299,7 @@ UserFault:
                 ASSERT(Pfn1->u3.e1.PrototypePte == 1);
                 ASSERT(!MI_IS_PFN_DELETED(Pfn1));
                 ProtoPte = Pfn1->PteAddress;
-                MiDeletePte(PointerPte, Address, WorkingSet, ProtoPte);
+                MiDeletePte(PointerPte, Address, &CurrentProcess->Vm, ProtoPte);
 
                 /* And make a new shiny one with our page */
                 MiInitializePfn(PageFrameIndex, PointerPte, TRUE);
