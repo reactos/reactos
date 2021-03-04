@@ -562,24 +562,13 @@ struct TEST_B_ENTRY
     UINT m_uMsg;
     WPARAM m_wParam;
     LPARAM m_lParam;
-    CStringW m_text;
+    LPCWSTR m_text;
     BOOL m_bVisible;
     INT m_ich0, m_ich1;
     INT m_iItem;
     BOOL m_bReset;
     BOOL m_bExpand;
-    CStringW m_strExpand;
-
-    TEST_B_ENTRY(INT line, UINT uMsg, WPARAM wParam, LPARAM lParam,
-                 LPCWSTR text, BOOL bVisible, INT ich0, INT ich1,
-                 INT iItem = -1, BOOL bReset = FALSE, BOOL bExpand = FALSE,
-                 LPCWSTR pszExpand = L"")
-        : m_line(line), m_uMsg(uMsg), m_wParam(wParam), m_lParam(lParam)
-        , m_text(text), m_bVisible(bVisible), m_ich0(ich0), m_ich1(ich1)
-        , m_iItem(iItem), m_bReset(bReset), m_bExpand(bExpand)
-        , m_strExpand(pszExpand)
-    {
-    }
+    LPCWSTR m_expand;
 };
 
 static BOOL
@@ -599,7 +588,7 @@ DoesMatch(LPWSTR *pList, UINT nCount, LPCWSTR psz)
 // the testcase B
 static VOID
 DoTestCaseB(INT x, INT y, INT cx, INT cy, LPWSTR *pList, UINT nCount,
-            const CSimpleArray<TEST_B_ENTRY>& entries)
+            const TEST_B_ENTRY *pEntries, SIZE_T cEntries)
 {
     MSG msg;
     s_bExpand = s_bReset = FALSE;
@@ -642,9 +631,9 @@ DoTestCaseB(INT x, INT y, INT cx, INT cy, LPWSTR *pList, UINT nCount,
     SetFocus(hwndEdit);
     Sleep(100);
 
-    for (INT i = 0; i < entries.GetSize(); ++i)
+    for (UINT i = 0; i < cEntries; ++i)
     {
-        const TEST_B_ENTRY& entry = entries[i];
+        const TEST_B_ENTRY& entry = pEntries[i];
         s_bReset = s_bExpand = FALSE;
         s_strExpand.Empty();
 
@@ -696,13 +685,19 @@ DoTestCaseB(INT x, INT y, INT cx, INT cy, LPWSTR *pList, UINT nCount,
         BOOL bDidMatch = DoesMatch(pList, nCount, strText);
         ok(bVisible == bDidMatch, "Line %d: bVisible != bDidMatch\n", entry.m_line);
 
-        ok(strText == entry.m_text, "Line %d: szText was %S\n", entry.m_line, (LPCWSTR)strText);
+        if (entry.m_text)
+            ok(strText == entry.m_text, "Line %d: szText was %S\n", entry.m_line, (LPCWSTR)strText);
+        else
+            ok(strText == L"", "Line %d: szText was %S\n", entry.m_line, (LPCWSTR)strText);
         ok(ich0 == entry.m_ich0, "Line %d: ich0 was %d\n", entry.m_line, ich0);
         ok(ich1 == entry.m_ich1, "Line %d: ich1 was %d\n", entry.m_line, ich1);
         ok(iItem == entry.m_iItem, "Line %d: iItem was %d\n", entry.m_line, iItem);
         ok(s_bReset == entry.m_bReset, "Line %d: s_bReset was %d\n", entry.m_line, s_bReset);
         ok(s_bExpand == entry.m_bExpand, "Line %d: s_bExpand was %d\n", entry.m_line, s_bExpand);
-        ok(s_strExpand == entry.m_strExpand, "Line %d: s_strExpand was %S\n", entry.m_line, (LPCWSTR)s_strExpand);
+        if (entry.m_expand)
+            ok(s_strExpand == entry.m_expand, "Line %d: s_strExpand was %S\n", entry.m_line, (LPCWSTR)s_strExpand);
+        else
+            ok(s_strExpand == L"", "Line %d: s_strExpand was %S\n", entry.m_line, (LPCWSTR)s_strExpand);
     }
 
     DestroyWindow(hwndEdit);
@@ -799,8 +794,6 @@ START_TEST(IAutoComplete)
     }
     DoTestCaseA(0, rcWork.bottom - 30, 80, 40, L"testtest\\", pList, nCount, FALSE, TRUE);
 
-    CSimpleArray<TEST_B_ENTRY> entries;
-
     // Test case #7 (B)
     trace("Testcase #7 ------------------------------\n");
     nCount = 16;
@@ -810,31 +803,33 @@ START_TEST(IAutoComplete)
         StringCbPrintfW(szText, sizeof(szText), L"test\\item-%u", i);
         SHStrDupW(szText, &pList[i]);
     }
-    entries.RemoveAll();
-    entries.Add(TEST_B_ENTRY(__LINE__, WM_CHAR, L't', 0, L"t", TRUE, 1, 1, -1, TRUE));
-    entries.Add(TEST_B_ENTRY(__LINE__, WM_CHAR, L'e', 0, L"te", TRUE, 2, 2));
-    entries.Add(TEST_B_ENTRY(__LINE__, WM_CHAR, L's', 0, L"tes", TRUE, 3, 3));
-    entries.Add(TEST_B_ENTRY(__LINE__, WM_CHAR, L'T', 0, L"tesT", TRUE, 4, 4));
-    entries.Add(TEST_B_ENTRY(__LINE__, WM_CHAR, L'\\', 0, L"tesT\\", TRUE, 5, 5, -1, TRUE, TRUE, L"tesT\\"));
-    entries.Add(TEST_B_ENTRY(__LINE__, WM_CHAR, L't', 0, L"tesT\\t", FALSE, 6, 6));
-    entries.Add(TEST_B_ENTRY(__LINE__, WM_KEYDOWN, VK_BACK, 0, L"tesT\\", TRUE, 5, 5));
-    entries.Add(TEST_B_ENTRY(__LINE__, WM_CHAR, L'i', 0, L"tesT\\i", TRUE, 6, 6));
-    entries.Add(TEST_B_ENTRY(__LINE__, WM_KEYDOWN, VK_DOWN, 0, L"test\\item-0", TRUE, 11, 11, 0));
-    entries.Add(TEST_B_ENTRY(__LINE__, WM_KEYDOWN, VK_DOWN, 0, L"test\\item-1", TRUE, 11, 11, 1));
-    entries.Add(TEST_B_ENTRY(__LINE__, WM_KEYDOWN, VK_UP, 0, L"test\\item-0", TRUE, 11, 11, 0));
-    entries.Add(TEST_B_ENTRY(__LINE__, WM_KEYDOWN, VK_UP, 0, L"tesT\\i", TRUE, 6, 6));
-    entries.Add(TEST_B_ENTRY(__LINE__, WM_KEYDOWN, VK_UP, 0, L"test\\item-9", TRUE, 11, 11, 15));
-    entries.Add(TEST_B_ENTRY(__LINE__, WM_KEYDOWN, VK_DOWN, 0, L"tesT\\i", TRUE, 6, 6));
-    entries.Add(TEST_B_ENTRY(__LINE__, WM_KEYDOWN, VK_BACK, 0, L"tesT\\", TRUE, 5, 5));
-    entries.Add(TEST_B_ENTRY(__LINE__, WM_KEYDOWN, VK_BACK, 0, L"tesT", TRUE, 4, 4, -1, TRUE));
-    entries.Add(TEST_B_ENTRY(__LINE__, WM_KEYDOWN, VK_BACK, 0, L"tes", TRUE, 3, 3));
-    entries.Add(TEST_B_ENTRY(__LINE__, WM_KEYDOWN, VK_BACK, 0, L"te", TRUE, 2, 2));
-    entries.Add(TEST_B_ENTRY(__LINE__, WM_KEYDOWN, VK_BACK, 0, L"t", TRUE, 1, 1));
-    entries.Add(TEST_B_ENTRY(__LINE__, WM_KEYDOWN, VK_BACK, 0, L"", FALSE, 0, 0));
-    entries.Add(TEST_B_ENTRY(__LINE__, WM_CHAR, L't', 0, L"t", TRUE, 1, 1, -1, TRUE));
-    entries.Add(TEST_B_ENTRY(__LINE__, WM_KEYDOWN, VK_LEFT, 0, L"t", TRUE, 0, 0));
-    entries.Add(TEST_B_ENTRY(__LINE__, WM_KEYDOWN, VK_RIGHT, 0, L"t", TRUE, 1, 1));
-    DoTestCaseB(0, 0, 100, 30, pList, nCount, entries);
+    static const TEST_B_ENTRY testcase7_entries[] =
+    {
+        { __LINE__, WM_CHAR, L't', 0, L"t", TRUE, 1, 1, -1, TRUE },
+        { __LINE__, WM_CHAR, L'e', 0, L"te", TRUE, 2, 2, -1 },
+        { __LINE__, WM_CHAR, L's', 0, L"tes", TRUE, 3, 3, -1 },
+        { __LINE__, WM_CHAR, L'T', 0, L"tesT", TRUE, 4, 4, -1 },
+        { __LINE__, WM_CHAR, L'\\', 0, L"tesT\\", TRUE, 5, 5, -1, TRUE, TRUE, L"tesT\\" },
+        { __LINE__, WM_CHAR, L't', 0, L"tesT\\t", FALSE, 6, 6, -1 },
+        { __LINE__, WM_KEYDOWN, VK_BACK, 0, L"tesT\\", TRUE, 5, 5, -1 },
+        { __LINE__, WM_CHAR, L'i', 0, L"tesT\\i", TRUE, 6, 6, -1 },
+        { __LINE__, WM_KEYDOWN, VK_DOWN, 0, L"test\\item-0", TRUE, 11, 11, 0 },
+        { __LINE__, WM_KEYDOWN, VK_DOWN, 0, L"test\\item-1", TRUE, 11, 11, 1 },
+        { __LINE__, WM_KEYDOWN, VK_UP, 0, L"test\\item-0", TRUE, 11, 11, 0 },
+        { __LINE__, WM_KEYDOWN, VK_UP, 0, L"tesT\\i", TRUE, 6, 6, -1 },
+        { __LINE__, WM_KEYDOWN, VK_UP, 0, L"test\\item-9", TRUE, 11, 11, 15 },
+        { __LINE__, WM_KEYDOWN, VK_DOWN, 0, L"tesT\\i", TRUE, 6, 6, -1 },
+        { __LINE__, WM_KEYDOWN, VK_BACK, 0, L"tesT\\", TRUE, 5, 5, -1 },
+        { __LINE__, WM_KEYDOWN, VK_BACK, 0, L"tesT", TRUE, 4, 4, -1, TRUE },
+        { __LINE__, WM_KEYDOWN, VK_BACK, 0, L"tes", TRUE, 3, 3, -1 },
+        { __LINE__, WM_KEYDOWN, VK_BACK, 0, L"te", TRUE, 2, 2, -1 },
+        { __LINE__, WM_KEYDOWN, VK_BACK, 0, L"t", TRUE, 1, 1, -1 },
+        { __LINE__, WM_KEYDOWN, VK_BACK, 0, L"", FALSE, 0, 0, -1 },
+        { __LINE__, WM_CHAR, L't', 0, L"t", TRUE, 1, 1, -1, TRUE },
+        { __LINE__, WM_KEYDOWN, VK_LEFT, 0, L"t", TRUE, 0, 0, -1 },
+        { __LINE__, WM_KEYDOWN, VK_RIGHT, 0, L"t", TRUE, 1, 1, -1 },
+    };
+    DoTestCaseB(0, 0, 100, 30, pList, nCount, testcase7_entries, _countof(testcase7_entries));
 
     // Test case #8 (B)
     trace("Testcase #8 ------------------------------\n");
@@ -845,29 +840,31 @@ START_TEST(IAutoComplete)
         StringCbPrintfW(szText, sizeof(szText), L"test\\item-%u", i);
         SHStrDupW(szText, &pList[i]);
     }
-    entries.RemoveAll();
-    entries.Add(TEST_B_ENTRY(__LINE__, WM_CHAR, L'a', 0, L"a", FALSE, 1, 1, -1, TRUE));
-    entries.Add(TEST_B_ENTRY(__LINE__, WM_CHAR, L'b', 0, L"ab", FALSE, 2, 2));
-    entries.Add(TEST_B_ENTRY(__LINE__, WM_KEYDOWN, VK_LEFT, 0, L"ab", FALSE, 1, 1));
-    entries.Add(TEST_B_ENTRY(__LINE__, WM_KEYDOWN, VK_LEFT, 0, L"ab", FALSE, 0, 0));
-    entries.Add(TEST_B_ENTRY(__LINE__, WM_KEYDOWN, VK_DELETE, 0, L"b", FALSE, 0, 0, -1, TRUE));
-    entries.Add(TEST_B_ENTRY(__LINE__, WM_CHAR, L't', 0, L"tb", FALSE, 1, 1, -1, TRUE));
-    entries.Add(TEST_B_ENTRY(__LINE__, WM_CHAR, L'e', 0, L"teb", FALSE, 2, 2));
-    entries.Add(TEST_B_ENTRY(__LINE__, WM_CHAR, L's', 0, L"tesb", FALSE, 3, 3));
-    entries.Add(TEST_B_ENTRY(__LINE__, WM_CHAR, L't', 0, L"testb", FALSE, 4, 4));
-    entries.Add(TEST_B_ENTRY(__LINE__, WM_KEYDOWN, VK_DELETE, 0, L"test", TRUE, 4, 4));
-    entries.Add(TEST_B_ENTRY(__LINE__, WM_CHAR, L'\\', 0, L"test\\", TRUE, 5, 5, -1, TRUE, TRUE, L"test\\"));
-    entries.Add(TEST_B_ENTRY(__LINE__, WM_CHAR, L'i', 0, L"test\\i", TRUE, 6, 6));
-    entries.Add(TEST_B_ENTRY(__LINE__, WM_KEYDOWN, VK_DELETE, 0, L"test\\i", TRUE, 6, 6));
-    entries.Add(TEST_B_ENTRY(__LINE__, WM_CHAR, L'z', 0, L"test\\iz", FALSE, 7, 7));
-    entries.Add(TEST_B_ENTRY(__LINE__, WM_KEYDOWN, VK_LEFT, 0, L"test\\iz", FALSE, 6, 6));
-    entries.Add(TEST_B_ENTRY(__LINE__, WM_KEYDOWN, VK_LEFT, 0, L"test\\iz", FALSE, 5, 5));
-    entries.Add(TEST_B_ENTRY(__LINE__, WM_KEYDOWN, VK_DELETE, 0, L"test\\z", FALSE, 5, 5));
-    entries.Add(TEST_B_ENTRY(__LINE__, WM_KEYDOWN, VK_DELETE, 0, L"test\\", TRUE, 5, 5));
-    entries.Add(TEST_B_ENTRY(__LINE__, WM_KEYDOWN, VK_LEFT, 0, L"test\\", TRUE, 4, 4));
-    entries.Add(TEST_B_ENTRY(__LINE__, WM_KEYDOWN, VK_LEFT, 0, L"test\\", TRUE, 3, 3));
-    entries.Add(TEST_B_ENTRY(__LINE__, WM_KEYDOWN, VK_BACK, 0, L"tet\\", FALSE, 2, 2, -1, TRUE, TRUE, L"tet\\"));
-    entries.Add(TEST_B_ENTRY(__LINE__, WM_KEYDOWN, VK_DELETE, 0, L"te\\", FALSE, 2, 2, -1, TRUE, TRUE, L"te\\"));
-    entries.Add(TEST_B_ENTRY(__LINE__, WM_KEYDOWN, VK_DELETE, 0, L"te", TRUE, 2, 2, -1, TRUE));
-    DoTestCaseB(rcWork.right - 100, rcWork.bottom - 30, 80, 40, pList, nCount, entries);
+    static const TEST_B_ENTRY testcase8_entries[] =
+    {
+        { __LINE__, WM_CHAR, L'a', 0, L"a", FALSE, 1, 1, -1, TRUE },
+        { __LINE__, WM_CHAR, L'b', 0, L"ab", FALSE, 2, 2, -1 },
+        { __LINE__, WM_KEYDOWN, VK_LEFT, 0, L"ab", FALSE, 1, 1, -1 },
+        { __LINE__, WM_KEYDOWN, VK_LEFT, 0, L"ab", FALSE, 0, 0, -1 },
+        { __LINE__, WM_KEYDOWN, VK_DELETE, 0, L"b", FALSE, 0, 0, -1, TRUE },
+        { __LINE__, WM_CHAR, L't', 0, L"tb", FALSE, 1, 1, -1, TRUE },
+        { __LINE__, WM_CHAR, L'e', 0, L"teb", FALSE, 2, 2, -1 },
+        { __LINE__, WM_CHAR, L's', 0, L"tesb", FALSE, 3, 3, -1 },
+        { __LINE__, WM_CHAR, L't', 0, L"testb", FALSE, 4, 4, -1 },
+        { __LINE__, WM_KEYDOWN, VK_DELETE, 0, L"test", TRUE, 4, 4, -1 },
+        { __LINE__, WM_CHAR, L'\\', 0, L"test\\", TRUE, 5, 5, -1, TRUE, TRUE, L"test\\" },
+        { __LINE__, WM_CHAR, L'i', 0, L"test\\i", TRUE, 6, 6, -1 },
+        { __LINE__, WM_KEYDOWN, VK_DELETE, 0, L"test\\i", TRUE, 6, 6, -1 },
+        { __LINE__, WM_CHAR, L'z', 0, L"test\\iz", FALSE, 7, 7, -1 },
+        { __LINE__, WM_KEYDOWN, VK_LEFT, 0, L"test\\iz", FALSE, 6, 6, -1 },
+        { __LINE__, WM_KEYDOWN, VK_LEFT, 0, L"test\\iz", FALSE, 5, 5, -1 },
+        { __LINE__, WM_KEYDOWN, VK_DELETE, 0, L"test\\z", FALSE, 5, 5, -1 },
+        { __LINE__, WM_KEYDOWN, VK_DELETE, 0, L"test\\", TRUE, 5, 5, -1 },
+        { __LINE__, WM_KEYDOWN, VK_LEFT, 0, L"test\\", TRUE, 4, 4, -1 },
+        { __LINE__, WM_KEYDOWN, VK_LEFT, 0, L"test\\", TRUE, 3, 3, -1 },
+        { __LINE__, WM_KEYDOWN, VK_BACK, 0, L"tet\\", FALSE, 2, 2, -1, TRUE, TRUE, L"tet\\" },
+        { __LINE__, WM_KEYDOWN, VK_DELETE, 0, L"te\\", FALSE, 2, 2, -1, TRUE, TRUE, L"te\\" },
+        { __LINE__, WM_KEYDOWN, VK_DELETE, 0, L"te", TRUE, 2, 2, -1, TRUE },
+    };
+    DoTestCaseB(rcWork.right - 100, rcWork.bottom - 30, 80, 40, pList, nCount, testcase8_entries, _countof(testcase8_entries));
 }
