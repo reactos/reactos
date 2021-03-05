@@ -19,6 +19,7 @@
  */
 
 #pragma once
+#include <stdio.h>
 
 #if defined(__GNUC__) || defined(__clang__)
 #define GCCU(x)    x __attribute__((unused))
@@ -74,7 +75,13 @@ struct _ATL_WNDCLASSINFOW
 
     VOID FormatWindowClassName(LPTSTR pszName, size_t cchNameMax)
     {
-        _sntprintf(pszName, cchNameMax, TEXT("ATL:%zX"), (LONG_PTR)this);
+        // FIXME: CORE-17503 insecure
+        // NOTE: "%p" may add "0x" in some environments.
+#ifdef _WIN64
+        _stprintf(pszName, TEXT("ATL:%016llX"), (LONG_PTR)this);
+#else
+        _stprintf(pszName, TEXT("ATL:%08lX"), (LONG_PTR)this);
+#endif
     }
 
     ATOM Register(WNDPROC *p)
