@@ -79,9 +79,9 @@ struct _ATL_WNDCLASSINFOW
     VOID FormatWindowClassName(LPTSTR pszName, size_t cchNameMax)
     {
 #ifdef _STRSAFE_H_INCLUDED_
-        StringCchPrintf(pszName, cchNameMax, TEXT("ATL:%p"), this);
+        StringCchPrintf(pszName, cchNameMax, TEXT("ATL:%zX"), (LONG_PTR)this);
 #else
-        ::wnsprintf(pszName, cchNameMax, TEXT("ATL:%p"), this);
+        ::wnsprintf(pszName, cchNameMax, TEXT("ATL:%zX"), (LONG_PTR)this);
 #endif
     }
 
