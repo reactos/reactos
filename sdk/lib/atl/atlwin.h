@@ -74,7 +74,7 @@ struct _ATL_WNDCLASSINFOW
 
     VOID FormatWindowClassName(LPTSTR pszName, size_t cchNameMax)
     {
-        _stprintf(pszName, cchNameMax, TEXT("ATL:%zX"), (LONG_PTR)this);
+        _sntprintf(pszName, cchNameMax, TEXT("ATL:%zX"), (LONG_PTR)this);
     }
 
     ATOM Register(WNDPROC *p)
