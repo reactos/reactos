@@ -28,6 +28,10 @@
 #define Unused(x)    (x);
 #endif // __GNUC__
 
+#ifndef _STRSAFE_H_INCLUDED_
+    #include <shlwapi.h>
+#endif
+
 #if !defined(_WIN64)
 #ifdef SetWindowLongPtr
 #undef SetWindowLongPtr
@@ -59,10 +63,76 @@ namespace ATL
 #define GET_Y_LPARAM(lp) ((int)(short)HIWORD(lp))
 #endif
 
-
-
 struct _ATL_WNDCLASSINFOW;
 typedef _ATL_WNDCLASSINFOW CWndClassInfo;
+
+struct _ATL_WNDCLASSINFOW
+{
+    WNDCLASSEX m_wc;
+    LPCTSTR m_lpszOrigName;
+    WNDPROC pWndProc;
+    LPCTSTR m_lpszCursorID;
+    BOOL m_bSystemCursor;
+    ATOM m_atom;
+    TCHAR m_szAutoName[sizeof("ATL:") + sizeof(void *) * 2]; // == 4 characters + NULL + number of hexadecimal digits describing a pointer.
+
+    VOID FormatWindowClassName(LPTSTR pszName, size_t cchNameMax)
+    {
+#ifdef _STRSAFE_H_INCLUDED_
+        StringCchPrintf(pszName, cchNameMax, TEXT("ATL:%p"), this);
+#else
+        ::wnsprintf(pszName, cchNameMax, TEXT("ATL:%p"), this);
+#endif
+    }
+
+    ATOM Register(WNDPROC *p)
+    {
+        if (m_wc.hInstance == NULL)
+            m_wc.hInstance = _AtlBaseModule.GetModuleInstance();
+        if (m_atom)
+            return m_atom;
+
+        if (m_wc.lpszClassName == NULL)
+            m_wc.lpszClassName = m_lpszOrigName;
+        if (m_wc.lpszClassName == NULL)
+        {
+            FormatWindowClassName(m_szAutoName, _countof(m_szAutoName));
+            m_wc.lpszClassName = m_szAutoName;
+        }
+
+        m_atom = (ATOM)::GetClassInfoEx(NULL, m_wc.lpszClassName, &m_wc);
+        if (m_atom)
+            return m_atom;
+        m_atom = (ATOM)::GetClassInfoEx(m_wc.hInstance, m_wc.lpszClassName, &m_wc);
+        if (m_atom)
+            return m_atom;
+
+        m_wc.style &= ~CS_GLOBALCLASS;
+
+        if (m_bSystemCursor)
+            m_wc.hCursor = ::LoadCursor(NULL, m_lpszCursorID);
+        else
+            m_wc.hCursor = ::LoadCursor(_AtlBaseModule.GetResourceInstance(), m_lpszCursorID);
+
+        m_atom = ::RegisterClassEx(&m_wc);
+        return m_atom;
+    }
+};
+
+#define DECLARE_WND_CLASS_EX(WndClassName, style, bkgnd)                                        \
+static ATL::CWndClassInfo& GetWndClassInfo()                                                    \
+{                                                                                               \
+    static ATL::CWndClassInfo wc =                                                              \
+    {                                                                                           \
+        { sizeof(WNDCLASSEX), style, StartWindowProc,                                           \
+          0, 0, NULL, NULL, NULL, (HBRUSH)(bkgnd + 1), NULL, WndClassName, NULL },              \
+        NULL, NULL, IDC_ARROW, TRUE, 0, _T("")                                                  \
+    };                                                                                          \
+    return wc;                                                                                  \
+}
+
+#define DECLARE_WND_CLASS(WndClassName) \
+    DECLARE_WND_CLASS_EX(WndClassName, CS_HREDRAW | CS_VREDRAW | CS_DBLCLKS, COLOR_3DFACE)
 
 template <DWORD t_dwStyle = 0, DWORD t_dwExStyle = 0>
 class CWinTraits
@@ -1343,6 +1413,11 @@ public:
         return DialogProc;
     }
 
+    static LPCTSTR GetWndClassName()
+    {
+        return TEXT("#32770"); // WC_DIALOG
+    }
+
     static INT_PTR CALLBACK StartDialogProc(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     {
         CDialogImplBaseT<TBase> *pThis;
@@ -1472,6 +1547,8 @@ public:
     // - Hacks for gcc
 
     WNDPROC m_pfnSuperWindowProc;
+
+    DECLARE_WND_CLASS(NULL)
 
 public:
     CWindowImplBaseT()
@@ -1652,7 +1729,6 @@ public:
     using CWindowImplRoot<TBase>::m_hWnd;
     // - Hacks for gcc
 
-
     static LPCTSTR GetWndCaption()
     {
         return NULL;
@@ -1669,6 +1745,8 @@ public:
 
         if (T::GetWndClassInfo().m_lpszOrigName == NULL)
             T::GetWndClassInfo().m_lpszOrigName = pThis->GetWndClassName();
+        if (T::GetWndClassInfo().m_lpszOrigName == NULL)
+            ::OutputDebugString(TEXT("WARNING: GetWndClassName() == NULL\n"));
         atom = T::GetWndClassInfo().Register(&pThis->m_pfnSuperWindowProc);
 
         if (szWindowName == NULL)
@@ -1926,46 +2004,6 @@ public:                                                                         
         if (theChainClass::ProcessWindowMessage(hWnd, uMsg, wParam, lParam, lResult)) \
             return TRUE; \
     }
-
-#define DECLARE_WND_CLASS_EX(WndClassName, style, bkgnd)                                        \
-static ATL::CWndClassInfo& GetWndClassInfo()                                                    \
-{                                                                                                \
-    static ATL::CWndClassInfo wc =                                                                \
-    {                                                                                            \
-        { sizeof(WNDCLASSEX), style, StartWindowProc,                                            \
-          0, 0, NULL, NULL, NULL, (HBRUSH)(bkgnd + 1), NULL, WndClassName, NULL },                \
-        NULL, NULL, IDC_ARROW, TRUE, 0, _T("")                                                    \
-    };                                                                                            \
-    return wc;                                                                                    \
-}
-
-struct _ATL_WNDCLASSINFOW
-{
-    WNDCLASSEX m_wc;
-    LPCTSTR m_lpszOrigName;
-    WNDPROC pWndProc;
-    LPCTSTR m_lpszCursorID;
-    BOOL m_bSystemCursor;
-    ATOM m_atom;
-    TCHAR m_szAutoName[sizeof("ATL:") + sizeof(void *) * 2]; // == 4 characters + NULL + number of hexadecimal digits describing a pointer.
-
-    ATOM Register(WNDPROC *p)
-    {
-        if (m_wc.hInstance == NULL)
-            m_wc.hInstance = _AtlBaseModule.GetModuleInstance();
-        if (m_atom == 0)
-        {
-            if (m_bSystemCursor)
-                m_wc.hCursor = ::LoadCursor(NULL, m_lpszCursorID);
-            else
-                m_wc.hCursor = ::LoadCursor(_AtlBaseModule.GetResourceInstance(), m_lpszCursorID);
-
-            m_atom = RegisterClassEx(&m_wc);
-        }
-
-        return m_atom;
-    }
-};
 
 }; // namespace ATL
 
