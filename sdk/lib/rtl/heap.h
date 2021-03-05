@@ -144,6 +144,7 @@ C_ASSERT(sizeof(HEAP_ENTRY) == 16);
 C_ASSERT(sizeof(HEAP_ENTRY) == 8);
 #endif
 C_ASSERT((1 << HEAP_ENTRY_SHIFT) == sizeof(HEAP_ENTRY));
+C_ASSERT((2 << HEAP_ENTRY_SHIFT) == sizeof(HEAP_FREE_ENTRY));
 
 typedef struct _HEAP_TAG_ENTRY
 {
@@ -217,8 +218,7 @@ typedef struct _HEAP_LIST_LOOKUP
     ULONG NumberOfUnCommittedRanges;        \
     USHORT SegmentAllocatorBackTraceIndex;  \
     USHORT Reserved;                        \
-    LIST_ENTRY UCRSegmentList;              \
-    PVOID LastEntryInSegment //FIXME: non-Vista
+    LIST_ENTRY UCRSegmentList
 
 typedef struct _HEAP
 {
