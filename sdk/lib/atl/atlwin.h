@@ -28,10 +28,6 @@
 #define Unused(x)    (x);
 #endif // __GNUC__
 
-#ifndef _STRSAFE_H_INCLUDED_
-    #include <shlwapi.h>
-#endif
-
 #if !defined(_WIN64)
 #ifdef SetWindowLongPtr
 #undef SetWindowLongPtr
@@ -78,11 +74,7 @@ struct _ATL_WNDCLASSINFOW
 
     VOID FormatWindowClassName(LPTSTR pszName, size_t cchNameMax)
     {
-#ifdef _STRSAFE_H_INCLUDED_
-        StringCchPrintf(pszName, cchNameMax, TEXT("ATL:%zX"), (LONG_PTR)this);
-#else
-        ::wnsprintf(pszName, cchNameMax, TEXT("ATL:%zX"), (LONG_PTR)this);
-#endif
+        ::swprintf(pszName, cchNameMax, TEXT("ATL:%zX"), (LONG_PTR)this);
     }
 
     ATOM Register(WNDPROC *p)
