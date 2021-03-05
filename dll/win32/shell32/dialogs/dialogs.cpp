@@ -1169,12 +1169,6 @@ BOOL DrawIconOnOwnerDrawnButtons(DRAWITEMSTRUCT* pdis, PLOGOFF_DLG_CONTEXT pCont
         }
     }
 
-    /* If the owner draw button has keyboard focus make it the default button */
-    if (pdis->itemState & ODS_FOCUS)
-    {
-        SendMessageW(GetParent(pdis->hwndItem), DM_SETDEFID, pdis->CtlID, 0);
-    }
-
     /* Draw it on the required button */
     bRet = BitBlt(pdis->hDC,
                   (rect.right - rect.left - CX_BITMAP) / 2,
@@ -1187,7 +1181,7 @@ BOOL DrawIconOnOwnerDrawnButtons(DRAWITEMSTRUCT* pdis, PLOGOFF_DLG_CONTEXT pCont
     return bRet;
 }
 
-INT_PTR CALLBACK HotButtonSubclass(HWND hButton, UINT uMsg, WPARAM wParam, LPARAM lParam)
+INT_PTR CALLBACK OwnerDrawButtonSubclass(HWND hButton, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     PLOGOFF_DLG_CONTEXT pContext;
     pContext = (PLOGOFF_DLG_CONTEXT)GetWindowLongPtrW(hButton, GWLP_USERDATA);
@@ -1231,6 +1225,20 @@ INT_PTR CALLBACK HotButtonSubclass(HWND hButton, UINT uMsg, WPARAM wParam, LPARA
                 }
             }
             InvalidateRect(hButton, NULL, FALSE);
+            break;
+        }
+
+        /* Whenever one of the buttons gets the keyboard focus, set it as default button */
+        case WM_SETFOCUS:
+        {
+            SendMessageW(GetParent(hButton), DM_SETDEFID, buttonID, 0);
+            break;
+        }
+
+        /* Otherwise, set IDCANCEL as default button */
+        case WM_KILLFOCUS:
+        {
+            SendMessageW(GetParent(hButton), DM_SETDEFID, IDCANCEL, 0);
             break;
         }
     }
@@ -1366,7 +1374,7 @@ static VOID FancyLogoffOnInit(HWND hwnd, PLOGOFF_DLG_CONTEXT pContext)
     {
         pContext->bIsButtonHot[i] = FALSE;
         SetWindowLongPtrW(GetDlgItem(hwnd, IDC_LOG_OFF_BUTTON + i), GWLP_USERDATA, (LONG_PTR)pContext);
-        SetWindowLongPtrW(GetDlgItem(hwnd, IDC_LOG_OFF_BUTTON + i), GWLP_WNDPROC, (LONG_PTR)HotButtonSubclass);
+        SetWindowLongPtrW(GetDlgItem(hwnd, IDC_LOG_OFF_BUTTON + i), GWLP_WNDPROC, (LONG_PTR)OwnerDrawButtonSubclass);
     }
 }
 

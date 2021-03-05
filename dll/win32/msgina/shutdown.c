@@ -396,12 +396,6 @@ DrawIconOnOwnerDrawnButtons(
         }
     }
 
-    /* If the owner draw button has keyboard focus make it the default button */
-    if (pdis->itemState & ODS_FOCUS)
-    {
-        SendMessageW(GetParent(pdis->hwndItem), DM_SETDEFID, pdis->CtlID, 0);
-    }
-
     /* Draw it on the required button */
     bRet = BitBlt(pdis->hDC,
                   (rect.right - rect.left - CX_BITMAP) / 2,
@@ -502,7 +496,7 @@ LoadShutdownSelState(VOID)
 
 static INT_PTR
 CALLBACK
-HotButtonSubclass(
+OwnerDrawButtonSubclass(
     HWND hButton,
     UINT uMsg,
     WPARAM wParam,
@@ -566,6 +560,20 @@ HotButtonSubclass(
                 }
             }
             InvalidateRect(hButton, NULL, FALSE);
+            break;
+        }
+
+        /* Whenever one of the buttons gets the keyboard focus, set it as default button */
+        case WM_SETFOCUS:
+        {
+            SendMessageW(GetParent(hButton), DM_SETDEFID, buttonID, 0);
+            break;
+        }
+
+        /* Otherwise, set IDCANCEL as default button */
+        case WM_KILLFOCUS:
+        {
+            SendMessageW(GetParent(hButton), DM_SETDEFID, IDCANCEL, 0);
             break;
         }
     }
@@ -968,7 +976,7 @@ ShutdownOnInit(
     for (int i = 0; i < NUMBER_OF_BUTTONS; i++)
     {
         SetWindowLongPtrW(GetDlgItem(hDlg, IDC_BUTTON_HIBERNATE + i), GWLP_USERDATA, (LONG_PTR)pContext);
-        SetWindowLongPtrW(GetDlgItem(hDlg, IDC_BUTTON_HIBERNATE + i), GWLP_WNDPROC, (LONG_PTR)HotButtonSubclass);
+        SetWindowLongPtrW(GetDlgItem(hDlg, IDC_BUTTON_HIBERNATE + i), GWLP_WNDPROC, (LONG_PTR)OwnerDrawButtonSubclass);
     }
     
     /* Update the choice description based on the current selection */
