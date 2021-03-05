@@ -100,6 +100,7 @@ struct _ATL_WNDCLASSINFOW
             m_wc.lpszClassName = m_szAutoName;
         }
 
+        // https://devblogs.microsoft.com/oldnewthing/20041011-00/?p=37603
         m_atom = (ATOM)::GetClassInfoEx(NULL, m_wc.lpszClassName, &m_wc);
         if (m_atom)
             return m_atom;
