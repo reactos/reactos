@@ -29,6 +29,10 @@
 #define Unused(x)    (x);
 #endif // __GNUC__
 
+#ifndef _STRSAFE_H_INCLUDED_
+    #include <strsafe.h>
+#endif
+
 #if !defined(_WIN64)
 #ifdef SetWindowLongPtr
 #undef SetWindowLongPtr
@@ -75,12 +79,11 @@ struct _ATL_WNDCLASSINFOW
 
     VOID FormatWindowClassName(LPTSTR pszName, size_t cchNameMax)
     {
-        // FIXME: CORE-17503 insecure
         // NOTE: "%p" may add "0x" in some environments.
 #ifdef _WIN64
-        _stprintf(pszName, TEXT("ATL:%016llX"), (LONG_PTR)this);
+        StringCchPrintf(pszName, cchNameMax, TEXT("ATL:%016llX"), (LONG_PTR)this);
 #else
-        _stprintf(pszName, TEXT("ATL:%08lX"), (LONG_PTR)this);
+        StringCchPrintf(pszName, cchNameMax, TEXT("ATL:%08lX"), (LONG_PTR)this);
 #endif
     }
 
