@@ -25,7 +25,6 @@
   - ACO_AUTOAPPEND style
   - ACO_AUTOSUGGEST style
   - ACO_UPDOWNKEYDROPSLIST style
-
   - Handle pwzsRegKeyPath and pwszQuickComplete in Init
 
   TODO:
@@ -33,13 +32,13 @@
   - implement ACO_FILTERPREFIXES style
   - implement ACO_USETAB style
   - implement ACO_RTLREADING style
-
+  - multithread
  */
 
 #include "precomp.h"
 
 #define CX_LIST 30160 // width of m_hwndList
-#define CY_LIST 288 // height of drop-down window
+#define CY_LIST 288 // maximum height of drop-down window
 #define CY_ITEM 18 // default height of listview item
 #define COMPLETION_TIMEOUT 250 // in milliseconds
 #define MAX_ITEM_COUNT 1000
@@ -274,10 +273,7 @@ LRESULT CACEditCtrl::OnSetText(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bH
     ATLASSERT(m_pDropDown);
 
     if (!m_pDropDown->m_bInSetText)
-    {
-        // it's mechanical WM_SETTEXT
-        m_pDropDown->HideDropDown();
-    }
+        m_pDropDown->HideDropDown(); // it's mechanical WM_SETTEXT
 
     return DefWindowProcW(uMsg, wParam, lParam); // do default
 }
@@ -293,10 +289,9 @@ HWND CACListView::Create(HWND hwndParent)
 {
     ATLASSERT(m_hWnd == NULL);
 
-    LPCWSTR text = L"Internet Explorer";
     DWORD dwStyle = WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | LVS_NOCOLUMNHEADER |
                     LVS_OWNERDATA | LVS_OWNERDRAWFIXED | LVS_SINGLESEL | LVS_REPORT;
-    m_hWnd = ::CreateWindowExW(0, GetWndClassName(), text, dwStyle,
+    m_hWnd = ::CreateWindowExW(0, GetWndClassName(), L"Internet Explorer", dwStyle,
                                0, 0, 0, 0, hwndParent, NULL,
                                _AtlBaseModule.GetModuleInstance(), NULL);
     return m_hWnd;
@@ -340,8 +335,7 @@ VOID CACListView::SetCurSel(INT iItem)
 
 VOID CACListView::SelectHere(INT x, INT y)
 {
-    INT iItem = ItemFromPoint(x, y);
-    SetCurSel(iItem);
+    SetCurSel(ItemFromPoint(x, y));
 }
 
 // WM_LBUTTONDBLCLK @implemented
@@ -381,7 +375,6 @@ CACScrollBar::CACScrollBar() : m_pDropDown(NULL)
 HWND CACScrollBar::Create(HWND hwndParent)
 {
     ATLASSERT(m_hWnd == NULL);
-
     DWORD dwStyle = WS_CHILD | WS_VISIBLE | SBS_BOTTOMALIGN | SBS_VERT;
     m_hWnd = ::CreateWindowExW(0, GetWndClassName(), NULL, dwStyle,
                                0, 0, 0, 0, hwndParent, NULL,
@@ -399,7 +392,6 @@ CACSizeBox::CACSizeBox() : m_pDropDown(NULL), m_bDowner(TRUE)
 HWND CACSizeBox::Create(HWND hwndParent)
 {
     ATLASSERT(m_hWnd == NULL);
-
     DWORD dwStyle = WS_CHILD | WS_VISIBLE | SBS_SIZEBOX;
     m_hWnd = ::CreateWindowExW(0, GetWndClassName(), NULL, dwStyle,
                                0, 0, 0, 0, hwndParent, NULL,
@@ -425,11 +417,9 @@ CAutoComplete::CAutoComplete()
 HWND CAutoComplete::CreateDropDown()
 {
     ATLASSERT(m_hWnd == NULL);
-
     DWORD dwStyle = WS_POPUP | /*WS_VISIBLE |*/ WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_BORDER;
     DWORD dwExStyle = WS_EX_TOOLWINDOW | WS_EX_TOPMOST | WS_EX_NOPARENTNOTIFY;
     RECT rc = { 0, 0, 100, 100 };
-
     return Create(NULL, &rc, NULL, dwStyle, dwExStyle);
 }
 
@@ -542,7 +532,7 @@ VOID CAutoComplete::DoAutoAppend()
     if (!CanAutoSuggest() || m_strText.IsEmpty())
         return;
 
-    INT cItems = m_innerList.GetSize();
+    INT cItems = m_innerList.GetSize(); // get the number of items
     if (cItems == 0)
         return; // don't append
 
@@ -550,8 +540,7 @@ VOID CAutoComplete::DoAutoAppend()
     CStringW strCommon;
     for (INT iItem = 0; iItem < cItems; ++iItem)
     {
-        // get the text of the item
-        const CString& strItem = m_innerList[iItem];
+        const CString& strItem = m_innerList[iItem]; // get the text of the item
 
         if (iItem == 0) // the first item
         {
@@ -579,6 +568,8 @@ VOID CAutoComplete::DoAutoAppend()
     CStringW strAppend = strCommon.Right(cchAppend);
     strText += strAppend;
     SetEditText(strText);
+
+    // select the last position
     INT ich0 = strText.GetLength();
     INT ich1 = ich0 + cchAppend;
     m_hwndEdit.SendMessageW(EM_SETSEL, ich0, ich1);
@@ -596,7 +587,6 @@ BOOL CAutoComplete::OnEditKeyDown(WPARAM wParam, LPARAM lParam)
         case VK_UP: case VK_DOWN: // [Arrow Up]/[Arrow Down] key
         case VK_PRIOR: case VK_NEXT: // [PageUp]/[PageDown] key
             return OnListUpDown(vk);
-
         case VK_ESCAPE: case VK_TAB: // [Esc]/[Tab] key
         {
             SetEditText(m_strText); // revert
@@ -605,8 +595,8 @@ BOOL CAutoComplete::OnEditKeyDown(WPARAM wParam, LPARAM lParam)
             HideDropDown(); // hide
             return TRUE; // non-default
         }
-
         case VK_RETURN: // [Enter] key
+        {
             if (::GetKeyState(VK_CONTROL) < 0) // [Ctrl] key
             {
                 // quick edit
@@ -620,17 +610,19 @@ BOOL CAutoComplete::OnEditKeyDown(WPARAM wParam, LPARAM lParam)
                 m_hwndEdit.SendMessageW(EM_SETSEL, 0, cch);
             }
             HideDropDown(); // hide
-            return FALSE; // default
-
+            break;
+        }
         case VK_DELETE: // [Del] key
+        {
             OnEditUpdate(FALSE);
-            return FALSE; // default
-
+            break;
+        }
         default:
         {
-            return FALSE; // default
+            break;
         }
     }
+    return FALSE; // default
 }
 
 BOOL CAutoComplete::OnEditChar(WPARAM wParam, LPARAM lParam)
@@ -646,7 +638,6 @@ BOOL CAutoComplete::OnEditChar(WPARAM wParam, LPARAM lParam)
 VOID CAutoComplete::OnEditUpdate(BOOL bAppendOK)
 {
     CString strText = GetEditText();
-
     if (::StrCmpIW(m_strText, strText) == 0)
     {
         // no change
@@ -660,16 +651,8 @@ VOID CAutoComplete::OnEditUpdate(BOOL bAppendOK)
 
 VOID CAutoComplete::OnListSelChange()
 {
-    CStringW text;
     INT iItem = m_hwndList.GetCurSel();
-    if (iItem != -1)
-    {
-        text = GetItemText(iItem);
-    }
-    else
-    {
-        text = m_strText;
-    }
+    CStringW text = ((iItem != -1) ? GetItemText(iItem) : m_strText);
     SetEditText(text);
 
     INT cch = text.GetLength();
@@ -890,25 +873,15 @@ STDMETHODIMP CAutoComplete::Next(ULONG celt, LPOLESTR *rgelt, ULONG *pceltFetche
         *rgelt = NULL;
     if (*pceltFetched)
         *pceltFetched = 0;
-    if (!m_pEnum || !rgelt || !pceltFetched || celt != 1)
+    if (celt != 1 || !rgelt || !pceltFetched || !m_pEnum)
         return E_INVALIDARG;
 
-    HRESULT hr;
-    LPWSTR pszText;
-    for (;;)
-    {
-        ULONG cGot;
-        hr = m_pEnum->Next(1, &pszText, &cGot);
-        if (hr != S_OK)
-            break;
-        ::CoTaskMemFree(pszText);
-    }
-
+    LPWSTR pszText = NULL;
+    HRESULT hr = m_pEnum->Next(1, &pszText, pceltFetched);
     if (hr == S_OK)
-    {
         *rgelt = pszText;
-        *pceltFetched = 1;
-    }
+    else
+        ::CoTaskMemFree(pszText);
     return hr;
 }
 
