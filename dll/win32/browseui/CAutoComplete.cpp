@@ -489,6 +489,14 @@ BOOL CAutoComplete::CanAutoAppend()
 }
 
 // @implemented
+BOOL CAutoComplete::GetComboBoxDroppedState()
+{
+    if (!::IsWindow(m_hwndCombo))
+        return FALSE;
+    return (BOOL)::SendMessageW(m_hwndCombo, CB_GETDROPPEDSTATE, 0, 0))
+}
+
+// @implemented
 INT CAutoComplete::GetItemCount()
 {
     return m_outerList.GetSize();
@@ -535,8 +543,7 @@ VOID CAutoComplete::ShowDropDown()
         return;
 
     INT cItems = GetItemCount();
-    if (cItems == 0 || ::GetFocus() != m_hwndEdit ||
-        (BOOL)::SendMessageW(m_hwndCombo, CB_GETDROPPEDSTATE, 0, 0))
+    if (cItems == 0 || ::GetFocus() != m_hwndEdit || GetComboBoxDroppedState())
     {
         // hide the drop-down if necessary
         HideDropDown();
@@ -1483,7 +1490,6 @@ LRESULT CAutoComplete::OnMeasureItem(UINT uMsg, WPARAM wParam, LPARAM lParam, BO
         return FALSE;
 
     ATLASSERT(m_hwndList.GetStyle() & LVS_OWNERDRAWFIXED);
-    pMeasure->itemWidth = CX_LIST;
     pMeasure->itemHeight = m_hwndList.m_cyItem;
     return TRUE;
 }
@@ -1505,7 +1511,7 @@ LRESULT CAutoComplete::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
 
     switch (pnmh->code)
     {
-        case NM_DBLCLK:
+        case NM_DBLCLK: // double-clicked
         {
             TRACE("NM_DBLCLK\n");
             HideDropDown();
@@ -1525,7 +1531,9 @@ LRESULT CAutoComplete::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
             LV_DISPINFOA *pDispInfo = reinterpret_cast<LV_DISPINFOA *>(pnmh);
             LV_ITEMA *pItem = &pDispInfo->item;
             if (pItem->mask & LVIF_TEXT)
+            {
                 SHUnicodeToAnsi(strText, pItem->pszText, pItem->cchTextMax);
+            }
             break;
         }
         case LVN_GETDISPINFOW:
