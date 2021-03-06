@@ -1378,6 +1378,7 @@ LRESULT CAutoComplete::OnDrawItem(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL 
     }
 
     // draw text
+    rcItem.left += ::GetSystemMetrics(SM_CXBORDER);
     HGDIOBJ hFontOld = ::SelectObject(hDC, m_hFont);
     const UINT uDT_ = DT_LEFT | DT_NOPREFIX | DT_SINGLELINE | DT_VCENTER;
     ::SetBkMode(hDC, TRANSPARENT);
