@@ -39,15 +39,10 @@ class CACEditCtrl
 {
 public:
     CAutoComplete* m_pDropDown;
-    EDITWORDBREAKPROCW m_fnOldWordBreakProc;
 
-    static LPCWSTR GetWndClassName()
-    {
-        return L"EDIT";
-    }
+    static LPCWSTR GetWndClassName() { return L"EDIT"; }
 
     CACEditCtrl();
-
     VOID HookWordBreakProc(BOOL bHook);
 
     // message map
@@ -65,6 +60,9 @@ public:
     END_MSG_MAP()
 
 protected:
+    // protected variables
+    EDITWORDBREAKPROCW m_fnOldWordBreakProc;
+
     // message handlers
     LRESULT OnChar(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnClear(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
@@ -87,10 +85,7 @@ public:
     CAutoComplete* m_pDropDown;
     INT m_cyItem;
 
-    static LPCWSTR GetWndClassName()
-    {
-        return WC_LISTVIEW;
-    }
+    static LPCWSTR GetWndClassName() { return WC_LISTVIEW; }
 
     CACListView();
     HWND Create(HWND hwndParent);
@@ -123,14 +118,12 @@ class CACScrollBar : public CWindowImpl<CACScrollBar>
 public:
     CAutoComplete* m_pDropDown;
 
-    static LPCWSTR GetWndClassName()
-    {
-        return L"SCROLLBAR";
-    }
+    static LPCWSTR GetWndClassName() { return L"SCROLLBAR"; }
 
     CACScrollBar();
     HWND Create(HWND hwndParent);
 
+protected:
     // message map
     BEGIN_MSG_MAP(CACScrollBar)
     END_MSG_MAP()
@@ -143,17 +136,15 @@ class CACSizeBox : public CWindowImpl<CACSizeBox>
 {
 public:
     CAutoComplete* m_pDropDown;
-    BOOL m_bDowner;
 
-    static LPCWSTR GetWndClassName()
-    {
-        return L"SCROLLBAR";
-    }
+    static LPCWSTR GetWndClassName() { return L"SCROLLBAR"; }
 
     CACSizeBox();
     HWND Create(HWND hwndParent);
-
     VOID SetDowner(BOOL bDowner);
+
+protected:
+    BOOL m_bDowner;
 
     // message map
     BEGIN_MSG_MAP(CACSizeBox)
@@ -173,11 +164,7 @@ class CAutoComplete
 {
 public:
     DECLARE_WND_CLASS_EX(L"Auto-Suggest Dropdown", CS_DROPSHADOW | CS_SAVEBITS, COLOR_3DFACE)
-
-    static LPCWSTR GetWndClassName()
-    {
-        return L"Auto-Suggest Dropdown";
-    }
+    static LPCWSTR GetWndClassName() { return L"Auto-Suggest Dropdown"; }
 
     // public members
     BOOL m_bInSetText;
@@ -185,14 +172,12 @@ public:
 
     // public methods
     CAutoComplete();
-    virtual ~CAutoComplete();
-
     HWND CreateDropDown();
+    virtual ~CAutoComplete();
 
     BOOL CanAutoSuggest();
     BOOL CanAutoAppend();
     BOOL IsComboBoxDropped();
-
     INT GetItemCount();
     CStringW GetItemText(INT iItem);
 
@@ -203,13 +188,7 @@ public:
     VOID ShowDropDown();
     VOID HideDropDown();
     VOID SelectItem(INT iItem);
-
     VOID DoAutoAppend();
-    VOID RemoveAppended();
-
-    INT UpdateInnerList();
-    INT UpdateOuterList();
-    VOID UpdateCompletion(BOOL bAppendOK);
 
     BOOL OnEditChar(WPARAM wParam, LPARAM lParam);
     BOOL OnEditKeyDown(WPARAM wParam, LPARAM lParam);
@@ -268,6 +247,9 @@ protected:
     CStringW GetQuickEdit(const CStringW& strText);
     VOID RepositionDropDown();
     INT ReLoadInnerList();
+    INT UpdateInnerList();
+    INT UpdateOuterList();
+    VOID UpdateCompletion(BOOL bAppendOK);
 
     // message map
     BEGIN_MSG_MAP(CAutoComplete)
@@ -297,7 +279,6 @@ protected:
 
     DECLARE_REGISTRY_RESOURCEID(IDR_AUTOCOMPLETE)
     DECLARE_NOT_AGGREGATABLE(CAutoComplete)
-
     DECLARE_PROTECT_FINAL_CONSTRUCT()
 
     BEGIN_COM_MAP(CAutoComplete)

@@ -437,16 +437,21 @@ VOID CACSizeBox::SetDowner(BOOL bDowner)
 
 // @implemented
 CAutoComplete::CAutoComplete()
-    : m_bInSetText(FALSE)
-    , m_bInSelectItem(FALSE)
-    , m_pLayout(NULL)
-    , m_bDowner(TRUE)
-    , m_dwOptions(ACO_AUTOAPPEND | ACO_AUTOSUGGEST)
-    , m_bEnabled(TRUE) // enabled by default
-    , m_hwndCombo(NULL)
-    , m_bShowScroll(FALSE)
-    , m_hFont(NULL)
+    : m_bInSetText(FALSE), m_bInSelectItem(FALSE), m_pLayout(NULL)
+    , m_bDowner(TRUE), m_dwOptions(ACO_AUTOAPPEND | ACO_AUTOSUGGEST)
+    , m_bEnabled(TRUE), m_hwndCombo(NULL), m_bShowScroll(FALSE), m_hFont(NULL)
 {
+}
+
+HWND CAutoComplete::CreateDropDown()
+{
+    ATLASSERT(m_hWnd == NULL);
+
+    DWORD dwStyle = WS_POPUP | /*WS_VISIBLE |*/ WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_BORDER;
+    DWORD dwExStyle = WS_EX_TOOLWINDOW | WS_EX_TOPMOST | WS_EX_NOPARENTNOTIFY;
+    CRect rc(0, 0, 100, 100);
+
+    return Create(NULL, &rc, NULL, dwStyle, dwExStyle);
 }
 
 // @implemented
@@ -462,17 +467,6 @@ CAutoComplete::~CAutoComplete()
         ::DeleteObject(m_hFont);
         m_hFont = NULL;
     }
-}
-
-HWND CAutoComplete::CreateDropDown()
-{
-    ATLASSERT(m_hWnd == NULL);
-
-    DWORD dwStyle = WS_POPUP | /*WS_VISIBLE |*/ WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_BORDER;
-    DWORD dwExStyle = WS_EX_TOOLWINDOW | WS_EX_TOPMOST | WS_EX_NOPARENTNOTIFY;
-    CRect rc(0, 0, 100, 100);
-
-    return Create(NULL, &rc, NULL, dwStyle, dwExStyle);
 }
 
 // @implemented
@@ -618,130 +612,6 @@ VOID CAutoComplete::DoAutoAppend()
     INT ich0 = strText.GetLength();
     INT ich1 = ich0 + cchAppend;
     m_hwndEdit.SendMessageW(EM_SETSEL, ich0, ich1);
-}
-
-INT CAutoComplete::UpdateInnerList()
-{
-    // get text
-    CStringW strText = GetEditText();
-
-    BOOL bReset = FALSE, bExpand = FALSE;
-
-    // if previous text was empty
-    if (m_strText.IsEmpty())
-    {
-        bReset = TRUE;
-    }
-    // save text
-    m_strText = strText;
-
-    // do expand the items if the stem is changed
-    CStringW strStemText = GetStemText();
-    if (m_strStemText != strStemText)
-    {
-        m_strStemText = strStemText;
-        bExpand = bReset = TRUE;
-    }
-
-    // reset if necessary
-    if (bReset)
-    {
-        HRESULT hr = m_pEnum->Reset(); // IEnumString::Reset
-        TRACE("m_pEnum->Reset(%p): 0x%08lx\n",
-              static_cast<IUnknown *>(m_pEnum), hr);
-    }
-
-    // update ac list if necessary
-    if (bExpand)
-    {
-        HRESULT hr = m_pACList->Expand(strStemText); // IACList::Expand
-        TRACE("m_pACList->Expand(%p, %S): 0x%08lx\n",
-              static_cast<IUnknown *>(m_pACList),
-              static_cast<LPCWSTR>(strStemText), hr);
-    }
-
-    if (bExpand || m_innerList.GetSize() == 0)
-    {
-        // reload the inner list
-        ReLoadInnerList();
-    }
-
-    return m_innerList.GetSize();
-}
-
-INT CAutoComplete::UpdateOuterList()
-{
-    // get the text info
-    CString strText = GetEditText();
-    INT cchText = strText.GetLength();
-
-    // update the outer list from the inner list
-    m_outerList.RemoveAll();
-    for (INT iItem = 0; iItem < m_innerList.GetSize(); ++iItem)
-    {
-        const CStringW& strTarget = m_innerList[iItem];
-        if (::StrCmpNI(strTarget, strText, cchText) == 0)
-        {
-            m_outerList.Add(strTarget);
-        }
-    }
-
-    // set the item count of the listview
-    INT cItems = m_outerList.GetSize();
-    m_hwndList.SendMessageW(LVM_SETITEMCOUNT, cItems, 0);
-
-    // delete listview items
-    m_hwndList.DeleteAllItems();
-
-    // insert listview items
-    if (cchText > 0 && m_outerList.GetSize() > 0)
-    {
-        // insert items
-        LV_ITEMW item = { LVIF_TEXT };
-        item.pszText = LPSTR_TEXTCALLBACK;
-        for (INT iItem = 0; iItem < cItems; ++iItem)
-        {
-            item.iItem = iItem;
-            m_hwndList.InsertItem(&item);
-        }
-
-        ATLASSERT(m_hwndList.GetItemCount() > 0);
-    }
-    else
-    {
-        cItems = 0;
-    }
-
-    return cItems;
-}
-
-VOID CAutoComplete::UpdateCompletion(BOOL bAppendOK)
-{
-    UINT cItems = UpdateInnerList();
-    if (cItems == 0) // no items
-    {
-        HideDropDown();
-        return;
-    }
-
-    if (CanAutoSuggest())
-    {
-        m_bInSelectItem = TRUE;
-        SelectItem(-1); // select none
-        m_bInSelectItem = FALSE;
-
-        if (!UpdateOuterList())
-            HideDropDown();
-        else
-            RepositionDropDown();
-        return;
-    }
-
-    if (CanAutoAppend() && bAppendOK)
-    {
-        DoAutoAppend();
-        return;
-    }
 }
 
 BOOL CAutoComplete::OnEditKeyDown(WPARAM wParam, LPARAM lParam)
@@ -1341,6 +1211,130 @@ INT CAutoComplete::ReLoadInnerList()
     }
 
     return m_innerList.GetSize();
+}
+
+INT CAutoComplete::UpdateInnerList()
+{
+    // get text
+    CStringW strText = GetEditText();
+
+    BOOL bReset = FALSE, bExpand = FALSE;
+
+    // if previous text was empty
+    if (m_strText.IsEmpty())
+    {
+        bReset = TRUE;
+    }
+    // save text
+    m_strText = strText;
+
+    // do expand the items if the stem is changed
+    CStringW strStemText = GetStemText();
+    if (m_strStemText != strStemText)
+    {
+        m_strStemText = strStemText;
+        bExpand = bReset = TRUE;
+    }
+
+    // reset if necessary
+    if (bReset)
+    {
+        HRESULT hr = m_pEnum->Reset(); // IEnumString::Reset
+        TRACE("m_pEnum->Reset(%p): 0x%08lx\n",
+              static_cast<IUnknown *>(m_pEnum), hr);
+    }
+
+    // update ac list if necessary
+    if (bExpand)
+    {
+        HRESULT hr = m_pACList->Expand(strStemText); // IACList::Expand
+        TRACE("m_pACList->Expand(%p, %S): 0x%08lx\n",
+              static_cast<IUnknown *>(m_pACList),
+              static_cast<LPCWSTR>(strStemText), hr);
+    }
+
+    if (bExpand || m_innerList.GetSize() == 0)
+    {
+        // reload the inner list
+        ReLoadInnerList();
+    }
+
+    return m_innerList.GetSize();
+}
+
+INT CAutoComplete::UpdateOuterList()
+{
+    // get the text info
+    CString strText = GetEditText();
+    INT cchText = strText.GetLength();
+
+    // update the outer list from the inner list
+    m_outerList.RemoveAll();
+    for (INT iItem = 0; iItem < m_innerList.GetSize(); ++iItem)
+    {
+        const CStringW& strTarget = m_innerList[iItem];
+        if (::StrCmpNI(strTarget, strText, cchText) == 0)
+        {
+            m_outerList.Add(strTarget);
+        }
+    }
+
+    // set the item count of the listview
+    INT cItems = m_outerList.GetSize();
+    m_hwndList.SendMessageW(LVM_SETITEMCOUNT, cItems, 0);
+
+    // delete listview items
+    m_hwndList.DeleteAllItems();
+
+    // insert listview items
+    if (cchText > 0 && m_outerList.GetSize() > 0)
+    {
+        // insert items
+        LV_ITEMW item = { LVIF_TEXT };
+        item.pszText = LPSTR_TEXTCALLBACK;
+        for (INT iItem = 0; iItem < cItems; ++iItem)
+        {
+            item.iItem = iItem;
+            m_hwndList.InsertItem(&item);
+        }
+
+        ATLASSERT(m_hwndList.GetItemCount() > 0);
+    }
+    else
+    {
+        cItems = 0;
+    }
+
+    return cItems;
+}
+
+VOID CAutoComplete::UpdateCompletion(BOOL bAppendOK)
+{
+    UINT cItems = UpdateInnerList();
+    if (cItems == 0) // no items
+    {
+        HideDropDown();
+        return;
+    }
+
+    if (CanAutoSuggest())
+    {
+        m_bInSelectItem = TRUE;
+        SelectItem(-1); // select none
+        m_bInSelectItem = FALSE;
+
+        if (!UpdateOuterList())
+            HideDropDown();
+        else
+            RepositionDropDown();
+        return;
+    }
+
+    if (CanAutoAppend() && bAppendOK)
+    {
+        DoAutoAppend();
+        return;
+    }
 }
 
 //////////////////////////////////////////////////////////////////////////////
