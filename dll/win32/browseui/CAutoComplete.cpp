@@ -223,14 +223,7 @@ LRESULT CACEditCtrl::OnKeyDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bH
     TRACE("CACEditCtrl::OnKeyDown(%p)\n", this);
     ATLASSERT(m_pDropDown);
 
-    // is suggestion available?
-    if (!m_pDropDown || !m_pDropDown->CanAutoSuggest() || !m_pDropDown->IsWindowVisible())
-    {
-        // if not so, then do default
-        return DefWindowProcW(uMsg, wParam, lParam);
-    }
-
-    if (m_pDropDown->OnEditKeyDown(wParam, lParam))
+    if (m_pDropDown && m_pDropDown->OnEditKeyDown(wParam, lParam))
         return 0; // eat
     return DefWindowProcW(uMsg, wParam, lParam); // do default
 }
@@ -593,8 +586,9 @@ VOID CAutoComplete::DoAutoAppend()
 
 BOOL CAutoComplete::OnEditKeyDown(WPARAM wParam, LPARAM lParam)
 {
-    if (!CanAutoSuggest())
-        return FALSE; // default
+    // is suggestion available?
+    if (!CanAutoSuggest() || !IsWindowVisible())
+        return FALSE; // if not so, then do default
 
     UINT vk = (UINT)wParam; // virtual key
     switch (vk)
