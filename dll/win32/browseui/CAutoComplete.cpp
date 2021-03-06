@@ -127,9 +127,7 @@ EditWordBreakProcW(LPWSTR lpch, INT index, INT count, INT code)
 }
 
 // @implemented
-CACEditCtrl::CACEditCtrl()
-    : m_pDropDown(NULL)
-    , m_fnOldWordBreakProc(NULL)
+CACEditCtrl::CACEditCtrl() : m_pDropDown(NULL), m_fnOldWordBreakProc(NULL)
 {
 }
 
@@ -312,11 +310,8 @@ HWND CACListView::Create(HWND hwndParent)
     LPCWSTR text = L"Internet Explorer";
     DWORD dwStyle = WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | LVS_NOCOLUMNHEADER |
                     LVS_OWNERDATA | LVS_OWNERDRAWFIXED | LVS_SINGLESEL | LVS_REPORT;
-    DWORD dwExStyle = 0;
-    UINT id = 0;
-
-    m_hWnd = ::CreateWindowExW(dwExStyle, GetWndClassName(), text, dwStyle,
-                               0, 0, 0, 0, hwndParent, (HMENU)(UINT_PTR)id,
+    m_hWnd = ::CreateWindowExW(0, GetWndClassName(), text, dwStyle,
+                               0, 0, 0, 0, hwndParent, NULL,
                                GetModuleHandleW(NULL), NULL);
     return m_hWnd;
 }
@@ -408,13 +403,9 @@ HWND CACScrollBar::Create(HWND hwndParent)
 {
     ATLASSERT(m_hWnd == NULL);
 
-    LPCWSTR text = NULL;
     DWORD dwStyle = WS_CHILD | WS_VISIBLE | SBS_BOTTOMALIGN | SBS_VERT;
-    DWORD dwExStyle = 0;
-    UINT id = 0;
-
-    m_hWnd = ::CreateWindowExW(dwExStyle, GetWndClassName(), text, dwStyle,
-                               0, 0, 0, 0, hwndParent, (HMENU)(UINT_PTR)id,
+    m_hWnd = ::CreateWindowExW(0, GetWndClassName(), NULL, dwStyle,
+                               0, 0, 0, 0, hwndParent, NULL,
                                GetModuleHandleW(NULL), NULL);
     return m_hWnd;
 }
@@ -430,13 +421,9 @@ HWND CACSizeBox::Create(HWND hwndParent)
 {
     ATLASSERT(m_hWnd == NULL);
 
-    LPCWSTR text = NULL;
     DWORD dwStyle = WS_CHILD | WS_VISIBLE | SBS_SIZEBOX;
-    DWORD dwExStyle = 0;
-    UINT id = 0;
-
-    m_hWnd = ::CreateWindowExW(dwExStyle, GetWndClassName(), text, dwStyle,
-                               0, 0, 0, 0, hwndParent, (HMENU)(UINT_PTR)id,
+    m_hWnd = ::CreateWindowExW(0, GetWndClassName(), NULL, dwStyle,
+                               0, 0, 0, 0, hwndParent, NULL,
                                GetModuleHandleW(NULL), NULL);
     return m_hWnd;
 }
@@ -482,12 +469,11 @@ HWND CAutoComplete::CreateDropDown()
 {
     ATLASSERT(m_hWnd == NULL);
 
-    LPCWSTR text = NULL;
     DWORD dwStyle = WS_POPUP | /*WS_VISIBLE |*/ WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_BORDER;
     DWORD dwExStyle = WS_EX_TOOLWINDOW | WS_EX_TOPMOST | WS_EX_NOPARENTNOTIFY;
     CRect rc(0, 0, 100, 100);
 
-    return Create(NULL, &rc, text, dwStyle, dwExStyle);
+    return Create(NULL, &rc, NULL, dwStyle, dwExStyle);
 }
 
 // @implemented
