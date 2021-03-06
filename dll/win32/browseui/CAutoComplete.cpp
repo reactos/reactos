@@ -1390,10 +1390,11 @@ LRESULT CAutoComplete::OnDrawItem(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL 
         ::FillRect(hDC, &rcItem, ::GetSysColorBrush(COLOR_WINDOW));
         ::SetTextColor(hDC, ::GetSysColor(COLOR_WINDOWTEXT));
     }
-    UINT uDT_ = DT_LEFT | DT_NOPREFIX | DT_SINGLELINE | DT_VCENTER;
     ::SetBkMode(hDC, TRANSPARENT);
+    HGDIOBJ hFont = ::SelectObject(hDC, m_hFont);
+    const UINT uDT_ = DT_LEFT | DT_NOPREFIX | DT_SINGLELINE | DT_VCENTER;
     ::DrawTextW(hDC, strItem, -1, &rcItem, uDT_);
-    ::DrawTextW(hDC, L"OK", -1, &rcItem, uDT_);
+    ::SelectObject(hDC, hFont);
 
     return TRUE;
 }
