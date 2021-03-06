@@ -53,11 +53,11 @@ struct RANGE
     WCHAR from, to;
 };
 
-// comparison of two ranges
+// a callback function for bsearch: comparison of two ranges
 static inline int RangeCompare(const void *x, const void *y)
 {
-    const RANGE *a = (const RANGE *)x;
-    const RANGE *b = (const RANGE *)y;
+    const RANGE *a = reinterpret_cast<const RANGE *>(x);
+    const RANGE *b = reinterpret_cast<const RANGE *>(y);
     if (a->to < b->from)
         return -1;
     if (b->to < a->from)
@@ -312,7 +312,7 @@ HWND CACListView::Create(HWND hwndParent)
                     LVS_OWNERDATA | LVS_OWNERDRAWFIXED | LVS_SINGLESEL | LVS_REPORT;
     m_hWnd = ::CreateWindowExW(0, GetWndClassName(), text, dwStyle,
                                0, 0, 0, 0, hwndParent, NULL,
-                               GetModuleHandleW(NULL), NULL);
+                               _AtlBaseModule.GetModuleInstance(), NULL);
     return m_hWnd;
 }
 
@@ -406,7 +406,7 @@ HWND CACScrollBar::Create(HWND hwndParent)
     DWORD dwStyle = WS_CHILD | WS_VISIBLE | SBS_BOTTOMALIGN | SBS_VERT;
     m_hWnd = ::CreateWindowExW(0, GetWndClassName(), NULL, dwStyle,
                                0, 0, 0, 0, hwndParent, NULL,
-                               GetModuleHandleW(NULL), NULL);
+                               _AtlBaseModule.GetModuleInstance(), NULL);
     return m_hWnd;
 }
 
@@ -424,7 +424,7 @@ HWND CACSizeBox::Create(HWND hwndParent)
     DWORD dwStyle = WS_CHILD | WS_VISIBLE | SBS_SIZEBOX;
     m_hWnd = ::CreateWindowExW(0, GetWndClassName(), NULL, dwStyle,
                                0, 0, 0, 0, hwndParent, NULL,
-                               GetModuleHandleW(NULL), NULL);
+                               _AtlBaseModule.GetModuleInstance(), NULL);
     return m_hWnd;
 }
 
