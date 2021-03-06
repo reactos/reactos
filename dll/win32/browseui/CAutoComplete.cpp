@@ -296,6 +296,11 @@ HWND CACListView::Create(HWND hwndParent)
     // set extended listview style
     DWORD exstyle = LVS_EX_ONECLICKACTIVATE | LVS_EX_FULLROWSELECT | LVS_EX_TRACKSELECT;
     SetExtendedListViewStyle(exstyle, exstyle);
+    // insert one column
+    LV_COLUMNW column = { LVCF_FMT | LVCF_WIDTH };
+    column.fmt = LVCFMT_LEFT;
+    column.cx = CX_LIST - ::GetSystemMetrics(SM_CXVSCROLL);
+    InsertColumn(0, &column);
     return m_hWnd;
 }
 
@@ -546,6 +551,8 @@ VOID CAutoComplete::HideDropDown()
 VOID CAutoComplete::SelectItem(INT iItem)
 {
     m_hwndList.SetCurSel(iItem);
+    if (iItem != -1)
+        m_hwndList.EnsureVisible(iItem, FALSE);
 }
 
 VOID CAutoComplete::DoAutoAppend()
@@ -675,6 +682,7 @@ VOID CAutoComplete::OnListSelChange()
     INT iItem = m_hwndList.GetCurSel();
     CStringW text = ((iItem != -1) ? GetItemText(iItem) : m_strText);
     SetEditText(text);
+    m_hwndList.EnsureVisible(iItem, FALSE);
 
     INT cch = text.GetLength();
     m_hwndEdit.SendMessageW(EM_SETSEL, cch, cch);
@@ -1107,7 +1115,7 @@ VOID CAutoComplete::RepositionDropDown()
     INT cx = rcEdit.right - rcEdit.left, cy = cItems * cyItem;
     if (cy > CY_LIST)
     {
-        cy = CY_LIST;
+        cy = INT((cy / float(CY_LIST)) * CY_LIST);
         m_bShowScroll = TRUE; // to show scroll bar
     }
     else
@@ -1220,16 +1228,13 @@ INT CAutoComplete::UpdateInnerList()
 
 INT CAutoComplete::UpdateOuterList()
 {
-    // get the text info
-    CString strText = GetEditText();
-    INT cchText = strText.GetLength();
-
     // update the outer list from the inner list
     m_outerList.RemoveAll();
     for (INT iItem = 0; iItem < m_innerList.GetSize(); ++iItem)
     {
         const CStringW& strTarget = m_innerList[iItem];
-        if (::StrCmpNI(strTarget, strText, cchText) == 0)
+        if (strTarget != m_strText &&
+            ::StrCmpNI(strTarget, m_strText, m_strText.GetLength()) == 0)
         {
             m_outerList.Add(strTarget);
         }
@@ -1237,29 +1242,9 @@ INT CAutoComplete::UpdateOuterList()
 
     // set the item count of the listview
     INT cItems = m_outerList.GetSize();
-    m_hwndList.SendMessageW(LVM_SETITEMCOUNT, cItems, 0);
-
-    // delete listview items
-    m_hwndList.DeleteAllItems();
-
-    // insert listview items
-    if (cchText > 0 && m_outerList.GetSize() > 0)
-    {
-        // insert items
-        LV_ITEMW item = { LVIF_TEXT };
-        item.pszText = LPSTR_TEXTCALLBACK;
-        for (INT iItem = 0; iItem < cItems; ++iItem)
-        {
-            item.iItem = iItem;
-            m_hwndList.InsertItem(&item);
-        }
-
-        ATLASSERT(m_hwndList.GetItemCount() > 0);
-    }
-    else
-    {
+    if (m_strText.IsEmpty())
         cItems = 0;
-    }
+    m_hwndList.SendMessageW(LVM_SETITEMCOUNT, cItems, 0);
 
     return cItems;
 }
@@ -1377,7 +1362,7 @@ LRESULT CAutoComplete::OnDrawItem(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL 
     UINT iItem = pDraw->itemID; // the index of item
     CStringW strItem = m_hwndList.GetItemText(iItem); // get text of item
 
-    // draw background and text
+    // draw background and set text color
     HDC hDC = pDraw->hDC;
     BOOL bSelected = (pDraw->itemState & ODS_SELECTED);
     if (bSelected)
@@ -1390,11 +1375,13 @@ LRESULT CAutoComplete::OnDrawItem(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL 
         ::FillRect(hDC, &rcItem, ::GetSysColorBrush(COLOR_WINDOW));
         ::SetTextColor(hDC, ::GetSysColor(COLOR_WINDOWTEXT));
     }
-    ::SetBkMode(hDC, TRANSPARENT);
-    HGDIOBJ hFont = ::SelectObject(hDC, m_hFont);
+
+    // draw text
+    HGDIOBJ hFontOld = ::SelectObject(hDC, m_hFont);
     const UINT uDT_ = DT_LEFT | DT_NOPREFIX | DT_SINGLELINE | DT_VCENTER;
+    ::SetBkMode(hDC, TRANSPARENT);
     ::DrawTextW(hDC, strItem, -1, &rcItem, uDT_);
-    ::SelectObject(hDC, hFont);
+    ::SelectObject(hDC, hFontOld);
 
     return TRUE;
 }
@@ -1453,17 +1440,15 @@ LRESULT CAutoComplete::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
             if (pnmh->hwndFrom != m_hwndList)
                 break;
 
-            INT iItem = m_hwndList.GetCurSel();
+            LV_DISPINFOA *pDispInfo = reinterpret_cast<LV_DISPINFOA *>(pnmh);
+            LV_ITEMA *pItem = &pDispInfo->item;
+            INT iItem = pItem->iItem;
             if (iItem == -1)
                 break;
 
             CStringW strText = GetItemText(iItem);
-            LV_DISPINFOA *pDispInfo = reinterpret_cast<LV_DISPINFOA *>(pnmh);
-            LV_ITEMA *pItem = &pDispInfo->item;
             if (pItem->mask & LVIF_TEXT)
-            {
                 SHUnicodeToAnsi(strText, pItem->pszText, pItem->cchTextMax);
-            }
             break;
         }
         case LVN_GETDISPINFOW:
@@ -1472,13 +1457,13 @@ LRESULT CAutoComplete::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
             if (pnmh->hwndFrom != m_hwndList)
                 break;
 
-            INT iItem = m_hwndList.GetCurSel();
+            LV_DISPINFOW *pDispInfo = reinterpret_cast<LV_DISPINFOW *>(pnmh);
+            LV_ITEMW *pItem = &pDispInfo->item;
+            INT iItem = pItem->iItem;
             if (iItem == -1)
                 break;
 
             CStringW strText = GetItemText(iItem);
-            LV_DISPINFOW *pDispInfo = reinterpret_cast<LV_DISPINFOW *>(pnmh);
-            LV_ITEMW *pItem = &pDispInfo->item;
             if (pItem->mask & LVIF_TEXT)
                 StringCbCopyW(pItem->pszText, pItem->cchTextMax, strText);
             break;
@@ -1510,13 +1495,10 @@ LRESULT CAutoComplete::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
             LPNMLISTVIEW pListView = reinterpret_cast<LPNMLISTVIEW>(pnmh);
             if (pListView->uChanged & LVIF_STATE)
             {
-                if (pListView->uNewState & LVIS_SELECTED)
+                if (!m_bInSelectItem)
                 {
-                    if (!m_bInSelectItem)
-                    {
-                        // listview selection changed
-                        OnListSelChange();
-                    }
+                    // listview selection changed
+                    OnListSelChange();
                 }
             }
             break;
