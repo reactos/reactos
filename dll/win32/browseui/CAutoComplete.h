@@ -97,11 +97,11 @@ public:
 
     INT GetItemCount();
     CStringW GetItemText(INT iItem);
-    INT ItemFromPoint(POINT pt);
+    INT ItemFromPoint(INT x, INT y);
 
     INT GetCurSel();
     VOID SetCurSel(INT iItem);
-    VOID SelectHere(POINT pt);
+    VOID SelectHere(INT x, INT y);
 
     // message map
     BEGIN_MSG_MAP(CACListView)

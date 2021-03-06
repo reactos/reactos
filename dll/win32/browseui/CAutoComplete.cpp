@@ -334,10 +334,11 @@ CStringW CACListView::GetItemText(INT iItem)
 }
 
 // @implemented
-INT CACListView::ItemFromPoint(POINT pt)
+INT CACListView::ItemFromPoint(INT x, INT y)
 {
     LV_HITTESTINFO hittest;
-    hittest.pt = pt;
+    hittest.pt.x = x;
+    hittest.pt.y = y;
     return HitTest(&hittest);
 }
 
@@ -357,9 +358,9 @@ VOID CACListView::SetCurSel(INT iItem)
 }
 
 // @implemented
-VOID CACListView::SelectHere(POINT pt)
+VOID CACListView::SelectHere(INT x, INT y)
 {
-    INT iItem = ItemFromPoint(pt);
+    INT iItem = ItemFromPoint(x, y);
     SetCurSel(iItem);
 }
 
@@ -370,8 +371,7 @@ LRESULT CACListView::OnLButtonDblClk(UINT uMsg, WPARAM wParam, LPARAM lParam, BO
     TRACE("CACListView::OnLButtonDblClk(%p)\n", this);
     // avoid the default processing that will set focus
     ATLASSERT(m_pDropDown);
-    POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
-    INT iItem = ItemFromPoint(pt);
+    INT iItem = ItemFromPoint(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
     if (iItem != -1)
     {
         m_pDropDown->SelectItem(iItem);
@@ -387,8 +387,7 @@ LRESULT CACListView::OnLButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL
     TRACE("CACListView::OnLButtonDown(%p)\n", this);
     // avoid the default processing that will set focus
     ATLASSERT(m_pDropDown);
-    POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
-    SelectHere(pt);
+    SelectHere(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
     return 0;
 }
 
@@ -493,7 +492,7 @@ BOOL CAutoComplete::IsComboBoxDropped()
 {
     if (!::IsWindow(m_hwndCombo))
         return FALSE;
-    return (BOOL)::SendMessageW(m_hwndCombo, CB_GETDROPPEDSTATE, 0, 0))
+    return (BOOL)::SendMessageW(m_hwndCombo, CB_GETDROPPEDSTATE, 0, 0);
 }
 
 // @implemented
