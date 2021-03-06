@@ -1611,7 +1611,7 @@ LRESULT CAutoComplete::OnNCHitTest(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL
 LRESULT CAutoComplete::OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
     TRACE("CAutoComplete::OnSize(%p)\n", this);
-    LayoutUpdate(m_hWnd, m_pLayout, NULL, 0); // see "layout.h"
+    ::LayoutUpdate(m_hWnd, m_pLayout, NULL, 0); // see "layout.h"
     UpdateScrollBar();
     m_hwndList.InvalidateRect(NULL, FALSE);
     return 0;
