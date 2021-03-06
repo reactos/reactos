@@ -288,13 +288,34 @@ CACListView::CACListView() : m_pDropDown(NULL), m_cyItem(CY_ITEM)
 HWND CACListView::Create(HWND hwndParent)
 {
     ATLASSERT(m_hWnd == NULL);
-
     DWORD dwStyle = WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | LVS_NOCOLUMNHEADER |
                     LVS_OWNERDATA | LVS_OWNERDRAWFIXED | LVS_SINGLESEL | LVS_REPORT;
     m_hWnd = ::CreateWindowExW(0, GetWndClassName(), L"Internet Explorer", dwStyle,
                                0, 0, 0, 0, hwndParent, NULL,
                                _AtlBaseModule.GetModuleInstance(), NULL);
+    // set extended listview style
+    DWORD exstyle = LVS_EX_ONECLICKACTIVATE | LVS_EX_FULLROWSELECT | LVS_EX_TRACKSELECT;
+    SetExtendedListViewStyle(exstyle, exstyle);
     return m_hWnd;
+}
+
+VOID CACListView::SetFont(HFONT hFont)
+{
+    SendMessageW(WM_SETFONT, (WPARAM)hFont, TRUE);
+
+    // get listview item height
+    HDC hDC = GetDC();
+    if (hDC)
+    {
+        HGDIOBJ hFontOld = ::SelectObject(hDC, hFont);
+        TEXTMETRICW tm;
+        if (::GetTextMetricsW(hDC, &tm))
+        {
+            m_cyItem = (tm.tmHeight * 3) / 2;
+        }
+        ::SelectObject(hDC, hFontOld);
+        ReleaseDC(hDC);
+    }
 }
 
 INT CACListView::GetItemCount()
@@ -838,7 +859,6 @@ STDMETHODIMP CAutoComplete::GetDropDownStatus(DWORD *pdwFlags, LPWSTR *ppwszStri
 
                 // store to *ppwszString
                 SHStrDupW(strText, ppwszString);
-
                 if (*ppwszString == NULL)
                     return E_OUTOFMEMORY;
             }
@@ -915,9 +935,6 @@ STDMETHODIMP CAutoComplete::Clone(IEnumString **ppOut)
 
 VOID CAutoComplete::UpdateScrollBar()
 {
-    if (!m_hwndScrollBar)
-        return;
-
     // copy scroll info from m_hwndList to m_hwndScrollBar
     SCROLLINFO si = { sizeof(si), SIF_ALL };
     m_hwndList.GetScrollInfo(SB_VERT, &si);
@@ -1291,21 +1308,6 @@ LRESULT CAutoComplete::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
     m_hwndScrollBar.m_pDropDown = this;
     m_hwndSizeBox.m_pDropDown = this;
 
-    // get listview item height
-    m_hwndList.m_cyItem = CY_ITEM;
-    HDC hDC = GetDC();
-    if (hDC)
-    {
-        HGDIOBJ hFontOld = ::SelectObject(hDC, m_hFont);
-        TEXTMETRICW tm;
-        if (::GetTextMetricsW(hDC, &tm))
-        {
-            m_hwndList.m_cyItem = (tm.tmHeight * 3) / 2;
-        }
-        ::SelectObject(hDC, hFontOld);
-        ReleaseDC(hDC);
-    }
-
     // create the children
     m_hwndList.Create(m_hWnd);
     if (!m_hwndList)
@@ -1319,12 +1321,7 @@ LRESULT CAutoComplete::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
 
     // set the list font
     m_hFont = reinterpret_cast<HFONT>(::GetStockObject(DEFAULT_GUI_FONT));
-    m_hwndList.SendMessageW(WM_SETFONT, (WPARAM)m_hFont, TRUE);
-
-    // set extended listview style
-    DWORD exstyle =
-        LVS_EX_ONECLICKACTIVATE | LVS_EX_FULLROWSELECT | LVS_EX_TRACKSELECT;
-    m_hwndList.SetExtendedListViewStyle(exstyle, exstyle);
+    m_hwndList.SetFont(m_hFont);
 
     return 0; // success
 }

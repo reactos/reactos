@@ -88,6 +88,7 @@ public:
 
     CACListView();
     HWND Create(HWND hwndParent);
+    VOID SetFont(HFONT hFont);
 
     INT GetItemCount();
     CStringW GetItemText(INT iItem);
