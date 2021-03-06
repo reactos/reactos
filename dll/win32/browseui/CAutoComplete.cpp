@@ -65,7 +65,6 @@ static inline int RangeCompare(const void *x, const void *y)
     return 0;
 }
 
-// @implemented
 // is the WCHAR a word break?
 static inline BOOL IsWordBreak(WCHAR ch)
 {
@@ -95,7 +94,6 @@ static inline BOOL IsWordBreak(WCHAR ch)
     return !!bsearch(&range, s_ranges, _countof(s_ranges), sizeof(RANGE), RangeCompare);
 }
 
-// @implemented
 // This function is an application-defined callback function.
 // https://docs.microsoft.com/en-us/windows/win32/api/winuser/nc-winuser-editwordbreakprocw
 static INT CALLBACK
@@ -126,12 +124,10 @@ EditWordBreakProcW(LPWSTR lpch, INT index, INT count, INT code)
     return 0;
 }
 
-// @implemented
 CACEditCtrl::CACEditCtrl() : m_pDropDown(NULL), m_fnOldWordBreakProc(NULL)
 {
 }
 
-// @implemented
 VOID CACEditCtrl::HookWordBreakProc(BOOL bHook)
 {
     if (bHook)
@@ -214,7 +210,6 @@ LRESULT CACEditCtrl::OnGetDlgCode(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL 
     ATLASSERT(m_pDropDown);
 
     LRESULT ret = DefWindowProcW(uMsg, wParam, lParam); // get default
-
     if (m_pDropDown->IsWindowVisible())
         ret |= DLGC_WANTALLKEYS; // we want all keys to manipulate the list
 
@@ -237,7 +232,6 @@ LRESULT CACEditCtrl::OnKeyDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bH
 
     if (m_pDropDown->OnEditKeyDown(wParam, lParam))
         return 0; // eat
-
     return DefWindowProcW(uMsg, wParam, lParam); // do default
 }
 
@@ -298,7 +292,6 @@ LRESULT CACEditCtrl::OnSetText(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bH
 //////////////////////////////////////////////////////////////////////////////
 // CACListView
 
-// @implemented
 CACListView::CACListView() : m_pDropDown(NULL), m_cyItem(CY_ITEM)
 {
 }
@@ -316,7 +309,6 @@ HWND CACListView::Create(HWND hwndParent)
     return m_hWnd;
 }
 
-// @implemented
 INT CACListView::GetItemCount()
 {
     ATLASSERT(m_pDropDown);
@@ -324,7 +316,6 @@ INT CACListView::GetItemCount()
     return CListView::GetItemCount();
 }
 
-// @implemented
 CStringW CACListView::GetItemText(INT iItem)
 {
     // NOTE: LVS_OWNERDATA doesn't support LVM_GETITEMTEXT.
@@ -333,7 +324,6 @@ CStringW CACListView::GetItemText(INT iItem)
     return m_pDropDown->GetItemText(iItem);
 }
 
-// @implemented
 INT CACListView::ItemFromPoint(INT x, INT y)
 {
     LV_HITTESTINFO hittest;
@@ -342,13 +332,11 @@ INT CACListView::ItemFromPoint(INT x, INT y)
     return HitTest(&hittest);
 }
 
-// @implemented
 INT CACListView::GetCurSel()
 {
     return GetNextItem(-1, LVNI_ALL | LVNI_SELECTED);
 }
 
-// @implemented
 VOID CACListView::SetCurSel(INT iItem)
 {
     if (iItem == -1)
@@ -357,7 +345,6 @@ VOID CACListView::SetCurSel(INT iItem)
         SetItemState(iItem, LVIS_SELECTED, LVIS_SELECTED);
 }
 
-// @implemented
 VOID CACListView::SelectHere(INT x, INT y)
 {
     INT iItem = ItemFromPoint(x, y);
@@ -435,7 +422,6 @@ VOID CACSizeBox::SetDowner(BOOL bDowner)
 //////////////////////////////////////////////////////////////////////////////
 // CAutoComplete public methods
 
-// @implemented
 CAutoComplete::CAutoComplete()
     : m_bInSetText(FALSE), m_bInSelectItem(FALSE), m_pLayout(NULL)
     , m_bDowner(TRUE), m_dwOptions(ACO_AUTOAPPEND | ACO_AUTOSUGGEST)
@@ -449,12 +435,11 @@ HWND CAutoComplete::CreateDropDown()
 
     DWORD dwStyle = WS_POPUP | /*WS_VISIBLE |*/ WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_BORDER;
     DWORD dwExStyle = WS_EX_TOOLWINDOW | WS_EX_TOPMOST | WS_EX_NOPARENTNOTIFY;
-    CRect rc(0, 0, 100, 100);
+    RECT rc = { 0, 0, 100, 100 };
 
     return Create(NULL, &rc, NULL, dwStyle, dwExStyle);
 }
 
-// @implemented
 CAutoComplete::~CAutoComplete()
 {
     if (m_pLayout)
@@ -469,19 +454,16 @@ CAutoComplete::~CAutoComplete()
     }
 }
 
-// @implemented
 BOOL CAutoComplete::CanAutoSuggest()
 {
     return !!(m_dwOptions & ACO_AUTOSUGGEST);
 }
 
-// @implemented
 BOOL CAutoComplete::CanAutoAppend()
 {
     return !!(m_dwOptions & ACO_AUTOAPPEND);
 }
 
-// @implemented
 BOOL CAutoComplete::IsComboBoxDropped()
 {
     if (!::IsWindow(m_hwndCombo))
@@ -489,13 +471,11 @@ BOOL CAutoComplete::IsComboBoxDropped()
     return (BOOL)::SendMessageW(m_hwndCombo, CB_GETDROPPEDSTATE, 0, 0);
 }
 
-// @implemented
 INT CAutoComplete::GetItemCount()
 {
     return m_outerList.GetSize();
 }
 
-// @implemented
 CStringW CAutoComplete::GetItemText(INT iItem)
 {
     return ((iItem < m_outerList.GetSize()) ? m_outerList[iItem] : L"");
@@ -529,7 +509,6 @@ CStringW CAutoComplete::GetStemText()
     return strText.Left(ich + 1);
 }
 
-// @implemented
 VOID CAutoComplete::ShowDropDown()
 {
     if (!m_hWnd || !CanAutoSuggest())
@@ -546,7 +525,6 @@ VOID CAutoComplete::ShowDropDown()
     RepositionDropDown();
 }
 
-// @implemented
 VOID CAutoComplete::HideDropDown()
 {
     if (m_hwndCombo)
@@ -561,7 +539,6 @@ VOID CAutoComplete::HideDropDown()
     m_outerList.RemoveAll();
 }
 
-// @implemented
 VOID CAutoComplete::SelectItem(INT iItem)
 {
     m_hwndList.SetCurSel(iItem);
@@ -1011,11 +988,10 @@ VOID CAutoComplete::UpdateDropDownState()
     }
 }
 
-// @implemented
 BOOL CAutoComplete::ReArrangeControls(BOOL bDowner)
 {
     // re-calculate the rectangles
-    CRect rcList, rcScrollBar, rcSizeBox;
+    RECT rcList, rcScrollBar, rcSizeBox;
     ReCalcRects(bDowner, rcList, rcScrollBar, rcSizeBox);
 
     // show or hide scroll bar
@@ -1030,11 +1006,10 @@ BOOL CAutoComplete::ReArrangeControls(BOOL bDowner)
     return UpdateLayout(bDowner);
 }
 
-// @implemented
-VOID CAutoComplete::ReCalcRects(BOOL bDowner, CRect& rcList, CRect& rcScrollBar, CRect& rcSizeBox)
+VOID CAutoComplete::ReCalcRects(BOOL bDowner, RECT& rcList, RECT& rcScrollBar, RECT& rcSizeBox)
 {
     // get the client rectangle
-    CRect rc;
+    RECT rc;
     GetClientRect(&rc);
 
     // copy rectangle rc
@@ -1057,7 +1032,6 @@ VOID CAutoComplete::ReCalcRects(BOOL bDowner, CRect& rcList, CRect& rcScrollBar,
         rcSizeBox.top = rcSizeBox.bottom - GetSystemMetrics(SM_CYHSCROLL);
 }
 
-// @implemented
 BOOL CAutoComplete::UpdateLayout(BOOL bDowner)
 {
     m_bDowner = bDowner;
@@ -1079,7 +1053,6 @@ BOOL CAutoComplete::UpdateLayout(BOOL bDowner)
     return m_pLayout != NULL;
 }
 
-// @implemented
 VOID CAutoComplete::LoadQuickComplete(LPCWSTR pwszRegKeyPath, LPCWSTR pwszQuickComplete)
 {
     m_strQuickComplete.Empty();
@@ -1109,7 +1082,6 @@ VOID CAutoComplete::LoadQuickComplete(LPCWSTR pwszRegKeyPath, LPCWSTR pwszQuickC
     }
 }
 
-// @implemented
 CStringW CAutoComplete::GetQuickEdit(const CStringW& strText)
 {
     if (strText.IsEmpty() || m_strQuickComplete.IsEmpty())

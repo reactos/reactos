@@ -62,7 +62,6 @@ public:
 protected:
     // protected variables
     EDITWORDBREAKPROCW m_fnOldWordBreakProc;
-
     // message handlers
     LRESULT OnChar(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnClear(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
@@ -98,13 +97,12 @@ public:
     VOID SetCurSel(INT iItem);
     VOID SelectHere(INT x, INT y);
 
+protected:
     // message map
     BEGIN_MSG_MAP(CACListView)
         MESSAGE_HANDLER(WM_LBUTTONDOWN, OnLButtonDown)
         MESSAGE_HANDLER(WM_LBUTTONDBLCLK, OnLButtonDblClk)
     END_MSG_MAP()
-
-protected:
     // message handlers
     LRESULT OnLButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnLButtonDblClk(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
@@ -144,8 +142,8 @@ public:
     VOID SetDowner(BOOL bDowner);
 
 protected:
+    // protected variables
     BOOL m_bDowner;
-
     // message map
     BEGIN_MSG_MAP(CACSizeBox)
     END_MSG_MAP()
@@ -200,15 +198,12 @@ public:
     STDMETHODIMP Enable(BOOL fEnable) override;
     STDMETHODIMP Init(HWND hwndEdit, IUnknown *punkACL, LPCOLESTR pwszRegKeyPath,
                       LPCOLESTR pwszQuickComplete) override;
-
     // IAutoComplete2 methods
     STDMETHODIMP GetOptions(DWORD *pdwFlag) override;
     STDMETHODIMP SetOptions(DWORD dwFlag) override;
-
     // IAutoCompleteDropDown methods
     STDMETHODIMP GetDropDownStatus(DWORD *pdwFlags, LPWSTR *ppwszString) override;
     STDMETHODIMP ResetEnumerator() override;
-
     // IEnumString methods
     STDMETHODIMP Next(ULONG celt, LPOLESTR *rgelt, ULONG *pceltFetched) override;
     STDMETHODIMP Skip(ULONG celt) override;
@@ -236,12 +231,11 @@ protected:
     CComPtr<IACList> m_pACList;
     CSimpleArray<CStringW> m_innerList;
     CSimpleArray<CStringW> m_outerList;
-
     // protected methods
     VOID UpdateScrollBar();
     VOID UpdateDropDownState();
     BOOL ReArrangeControls(BOOL bDowner);
-    VOID ReCalcRects(BOOL bDowner, CRect& rcListView, CRect& rcScrollBar, CRect& rcGrip);
+    VOID ReCalcRects(BOOL bDowner, RECT& rcListView, RECT& rcScrollBar, RECT& rcGrip);
     BOOL UpdateLayout(BOOL bDowner);
     VOID LoadQuickComplete(LPCWSTR pwszRegKeyPath, LPCWSTR pwszQuickComplete);
     CStringW GetQuickEdit(const CStringW& strText);
@@ -250,7 +244,6 @@ protected:
     INT UpdateInnerList();
     INT UpdateOuterList();
     VOID UpdateCompletion(BOOL bAppendOK);
-
     // message map
     BEGIN_MSG_MAP(CAutoComplete)
         MESSAGE_HANDLER(WM_CREATE, OnCreate)
@@ -264,7 +257,6 @@ protected:
         MESSAGE_HANDLER(WM_SIZE, OnSize)
         MESSAGE_HANDLER(WM_VSCROLL, OnVScroll)
     END_MSG_MAP()
-
     // message handlers
     LRESULT OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
