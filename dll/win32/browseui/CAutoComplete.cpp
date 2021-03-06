@@ -489,7 +489,7 @@ BOOL CAutoComplete::CanAutoAppend()
 }
 
 // @implemented
-BOOL CAutoComplete::GetComboBoxDroppedState()
+BOOL CAutoComplete::IsComboBoxDropped()
 {
     if (!::IsWindow(m_hwndCombo))
         return FALSE;
@@ -543,7 +543,7 @@ VOID CAutoComplete::ShowDropDown()
         return;
 
     INT cItems = GetItemCount();
-    if (cItems == 0 || ::GetFocus() != m_hwndEdit || GetComboBoxDroppedState())
+    if (cItems == 0 || ::GetFocus() != m_hwndEdit || IsComboBoxDropped())
     {
         // hide the drop-down if necessary
         HideDropDown();

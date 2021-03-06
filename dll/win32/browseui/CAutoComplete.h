@@ -191,7 +191,7 @@ public:
 
     BOOL CanAutoSuggest();
     BOOL CanAutoAppend();
-    BOOL GetComboBoxDroppedState();
+    BOOL IsComboBoxDropped();
 
     INT GetItemCount();
     CStringW GetItemText(INT iItem);
