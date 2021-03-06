@@ -1104,6 +1104,7 @@ VOID CAutoComplete::RepositionDropDown()
     // get count and item height
     INT cItems = GetItemCount();
     INT cyItem = m_hwndList.m_cyItem;
+    ATLASSERT(cyItem > 0);
 
     // get m_hwndEdit position
     RECT rcEdit;
@@ -1115,7 +1116,7 @@ VOID CAutoComplete::RepositionDropDown()
     INT cx = rcEdit.right - rcEdit.left, cy = cItems * cyItem;
     if (cy > CY_LIST)
     {
-        cy = INT((cy / float(CY_LIST)) * CY_LIST);
+        cy = INT(CY_LIST / cyItem) * cyItem;
         m_bShowScroll = TRUE; // to show scroll bar
     }
     else
