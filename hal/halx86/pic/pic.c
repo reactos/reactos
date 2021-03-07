@@ -215,28 +215,6 @@ LONG HalpEisaELCR;
 
 /* FUNCTIONS ******************************************************************/
 
-ULONG
-NTAPI
-HalpGetSystemInterruptVector(IN PBUS_HANDLER BusHandler,
-                             IN PBUS_HANDLER RootHandler,
-                             IN ULONG BusInterruptLevel,
-                             IN ULONG BusInterruptVector,
-                             OUT PKIRQL Irql,
-                             OUT PKAFFINITY Affinity)
-{
-    ULONG Vector;
-    
-    /* Get the root vector */
-    Vector = HalpGetRootInterruptVector(BusInterruptLevel,
-                                        BusInterruptVector,
-                                        Irql,
-                                        Affinity);
-    
-    /* Check if the vector is owned by the HAL and fail if it is */
-    if (HalpIDTUsageFlags[Vector].Flags & IDT_REGISTERED) DPRINT1("Vector %lx is ALREADY IN USE!\n", Vector);
-    return (HalpIDTUsageFlags[Vector].Flags & IDT_REGISTERED) ? 0 : Vector;
-}
-
 VOID
 NTAPI
 HaliAcpiSetUsePmClock(VOID)
@@ -1288,3 +1266,27 @@ KfRaiseIrql(
 }
 
 #endif /* !_MINIHAL_ */
+
+ULONG
+NTAPI
+HalpGetSystemInterruptVector(IN PBUS_HANDLER BusHandler,
+                             IN PBUS_HANDLER RootHandler,
+                             IN ULONG BusInterruptLevel,
+                             IN ULONG BusInterruptVector,
+                             OUT PKIRQL Irql,
+                             OUT PKAFFINITY Affinity)
+{
+    ULONG Vector;
+    
+    /* Get the root vector */
+    Vector = HalpGetRootInterruptVector(BusInterruptLevel,
+                                        BusInterruptVector,
+                                        Irql,
+                                        Affinity);
+    
+    /* Check if the vector is owned by the HAL and fail if it is */
+    if (HalpIDTUsageFlags[Vector].Flags & IDT_REGISTERED) DPRINT1("Vector %lx is ALREADY IN USE!\n", Vector);
+    return (HalpIDTUsageFlags[Vector].Flags & IDT_REGISTERED) ? 0 : Vector;
+}
+
+/* EOF */
