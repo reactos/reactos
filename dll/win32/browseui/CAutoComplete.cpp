@@ -575,7 +575,7 @@ LRESULT CACSizeBox::OnPaint(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHand
 CAutoComplete::CAutoComplete()
     : m_bInSetText(FALSE), m_bInSelectItem(FALSE)
     , m_bDowner(TRUE), m_dwOptions(ACO_AUTOAPPEND | ACO_AUTOSUGGEST)
-    , m_bEnabled(TRUE), m_hwndCombo(NULL), m_hFont(NULL)
+    , m_bEnabled(TRUE), m_hwndCombo(NULL), m_hFont(NULL), m_bResized(FALSE)
 {
 }
 
@@ -1291,17 +1291,28 @@ VOID CAutoComplete::RepositionDropDown()
     AdjustWindowRectEx(&rc, GetStyle(), FALSE, GetExStyle());
     cy = rc.bottom - rc.top;
 
-    // is the drop-down window a 'downer' or 'upper'?
-    // NOTE: 'downer' is below the EDIT control. 'upper' is above the EDIT control.
-    m_bDowner = (rcEdit.bottom + cy < rcMon.bottom);
+    if (!m_bResized)
+    {
+        // is the drop-down window a 'downer' or 'upper'?
+        // NOTE: 'downer' is below the EDIT control. 'upper' is above the EDIT control.
+        m_bDowner = (rcEdit.bottom + cy < rcMon.bottom);
+    }
     m_hwndSizeBox.SetStatus(m_bDowner, bLongList);
 
-    // adjust y if not downer
-    if (!m_bDowner)
-        y = rcEdit.top - cy;
+    if (m_bResized)
+    {
+        // re-layout
+        PostMessageW(WM_SIZE, 0, 0);
+    }
+    else
+    {
+        // adjust y if not downer
+        if (!m_bDowner)
+            y = rcEdit.top - cy;
 
-    // move
-    MoveWindow(x, y, cx, cy);
+        // move
+        MoveWindow(x, y, cx, cy);
+    }
 
     // show without activation
     ShowWindow(SW_SHOWNOACTIVATE);
@@ -1501,6 +1512,16 @@ LRESULT CAutoComplete::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &
     return 0;
 }
 
+// WM_EXITSIZEMOVE
+// This message is sent once to a window after it has exited the moving or sizing mode.
+LRESULT CAutoComplete::OnExitSizeMove(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+{
+    TRACE("CAutoComplete::OnExitSizeMove(%p)\n", this);
+    m_bResized = TRUE;
+    m_hwndEdit.SetFocus();
+    return 0;
+}
+
 // WM_DRAWITEM @implemented
 // This message is sent to the owner window to draw m_hwndList.
 LRESULT CAutoComplete::OnDrawItem(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
@@ -1583,6 +1604,21 @@ LRESULT CAutoComplete::OnMouseActivate(UINT uMsg, WPARAM wParam, LPARAM lParam, 
 // This message is sent to a window to indicate an active or inactive state.
 LRESULT CAutoComplete::OnNCActivate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
+    return DefWindowProcW(uMsg, wParam, lParam); // do default
+}
+
+// WM_NCLBUTTONDOWN
+LRESULT CAutoComplete::OnNCLButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+{
+    switch (wParam)
+    {
+        case HTBOTTOMRIGHT:
+        case HTTOPRIGHT:
+        {
+            ModifyStyle(0, WS_THICKFRAME); // add thick frame to resize
+            break;
+        }
+    }
     return DefWindowProcW(uMsg, wParam, lParam); // do default
 }
 
@@ -1697,16 +1733,12 @@ LRESULT CAutoComplete::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
 LRESULT CAutoComplete::OnNCHitTest(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
     TRACE("CAutoComplete::OnNCHitTest(%p)\n", this);
-    RECT rc;
-    if (m_hwndSizeBox.GetWindowRect(&rc))
+    POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
+    ScreenToClient(&pt);
+    if (ChildWindowFromPoint(pt) == m_hwndSizeBox)
     {
-        POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
-        ScreenToClient(&pt);
-        if (ChildWindowFromPoint(pt) == m_hwndSizeBox)
-        {
-            // resize if the point in the m_hwndSizeBox
-            return m_bDowner ? HTBOTTOMRIGHT : HTTOPRIGHT;
-        }
+        // resize if the point in the m_hwndSizeBox
+        return m_bDowner ? HTBOTTOMRIGHT : HTTOPRIGHT;
     }
     return DefWindowProcW(uMsg, wParam, lParam); // do default
 }

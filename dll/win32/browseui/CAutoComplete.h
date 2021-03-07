@@ -239,6 +239,7 @@ protected:
     DWORD m_bEnabled;
     HWND m_hwndCombo;
     HFONT m_hFont;
+    BOOL m_bResized;
     // The following variables are non-POD:
     CStringW m_strText;
     CStringW m_strStemText; // dirname + '\\'
@@ -266,10 +267,12 @@ protected:
         MESSAGE_HANDLER(WM_CREATE, OnCreate)
         MESSAGE_HANDLER(WM_DESTROY, OnDestroy)
         MESSAGE_HANDLER(WM_DRAWITEM, OnDrawItem)
+        MESSAGE_HANDLER(WM_EXITSIZEMOVE, OnExitSizeMove)
         MESSAGE_HANDLER(WM_GETMINMAXINFO, OnGetMinMaxInfo)
         MESSAGE_HANDLER(WM_MEASUREITEM, OnMeasureItem)
         MESSAGE_HANDLER(WM_MOUSEACTIVATE, OnMouseActivate)
         MESSAGE_HANDLER(WM_NCACTIVATE, OnNCActivate)
+        MESSAGE_HANDLER(WM_NCLBUTTONDOWN, OnNCLButtonDown)
         MESSAGE_HANDLER(WM_NOTIFY, OnNotify)
         MESSAGE_HANDLER(WM_NCHITTEST, OnNCHitTest)
         MESSAGE_HANDLER(WM_SIZE, OnSize)
@@ -279,10 +282,12 @@ protected:
     LRESULT OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnDrawItem(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
+    LRESULT OnExitSizeMove(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnGetMinMaxInfo(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnMeasureItem(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnMouseActivate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnNCActivate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
+    LRESULT OnNCLButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnNCHitTest(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
