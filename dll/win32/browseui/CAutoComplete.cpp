@@ -436,7 +436,7 @@ VOID CACSizeBox::SetDowner(BOOL bDowner)
 CAutoComplete::CAutoComplete()
     : m_bInSetText(FALSE), m_bInSelectItem(FALSE)
     , m_bDowner(TRUE), m_dwOptions(ACO_AUTOAPPEND | ACO_AUTOSUGGEST)
-    , m_bEnabled(TRUE), m_hwndCombo(NULL), m_bShowScroll(FALSE), m_hFont(NULL)
+    , m_bEnabled(TRUE), m_hwndCombo(NULL), m_hFont(NULL)
 {
 }
 
@@ -943,13 +943,14 @@ VOID CAutoComplete::UpdateScrollBar()
     m_hwndScrollBar.SetScrollInfo(SB_CTL, &si, FALSE);
 
     // show/hide scroll bar
-    BOOL bShowScroll = ((UINT)(si.nMax - si.nMin) > si.nPage);
-    if (m_bShowScroll != bShowScroll)
-    {
-        m_bShowScroll = bShowScroll;
-        m_hwndScrollBar.ShowWindow(m_bShowScroll ? SW_SHOWNOACTIVATE : SW_HIDE);
+    CRect rc;
+    m_hwndList.GetClientRect(&rc);
+    INT cVisibles = rc.Height() / m_hwndList.m_cyItem;
+    INT cItems = m_hwndList.GetItemCount();
+    BOOL bShowScroll = (cItems > cVisibles);
+    m_hwndScrollBar.ShowWindow(bShowScroll ? SW_SHOWNOACTIVATE : SW_HIDE);
+    if (bShowScroll)
         m_hwndScrollBar.InvalidateRect(NULL, TRUE);
-    }
 }
 
 VOID CAutoComplete::UpdateDropDownState()
@@ -1081,11 +1082,6 @@ VOID CAutoComplete::RepositionDropDown()
     if (cy > CY_LIST)
     {
         cy = INT(CY_LIST / cyItem) * cyItem;
-        m_bShowScroll = TRUE; // to show scroll bar
-    }
-    else
-    {
-        m_bShowScroll = FALSE; // to hide scroll bar
     }
 
     // convert rectangle for frame

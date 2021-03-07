@@ -216,7 +216,6 @@ protected:
     DWORD m_dwOptions; // for IAutoComplete2::SetOptions
     DWORD m_bEnabled;
     HWND m_hwndCombo;
-    BOOL m_bShowScroll;
     HFONT m_hFont;
     // The following variables are non-POD:
     CStringW m_strText;
