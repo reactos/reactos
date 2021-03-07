@@ -237,7 +237,7 @@ KiChainedDispatch(_In_ PKTRAP_FRAME TrapFrame,
     /* Increase interrupt count */
     KeGetCurrentPrcb()->InterruptCount++;
 
-    DPRINT1("KiChainedDispatch: Interrupt->Irql %X !!!\n", Interrupt->Irql);
+    //DPRINT1("KiChainedDispatch: Interrupt->Irql %X !!!\n", Interrupt->Irql);
 
     IntContext.Vector = Interrupt->Vector;
     IntContext.TrapFrame = TrapFrame;
