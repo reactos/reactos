@@ -106,6 +106,7 @@ protected:
         MESSAGE_HANDLER(WM_MBUTTONDOWN, OnMButtonDown)
         MESSAGE_HANDLER(WM_MBUTTONUP, OnMButtonUp)
         MESSAGE_HANDLER(WM_MOUSEWHEEL, OnMouseWheel)
+        MESSAGE_HANDLER(WM_NCHITTEST, OnNCHitTest)
         MESSAGE_HANDLER(WM_RBUTTONDOWN, OnRButtonDown)
         MESSAGE_HANDLER(WM_RBUTTONUP, OnRButtonUp)
     END_MSG_MAP()
@@ -115,6 +116,7 @@ protected:
     LRESULT OnMButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnMButtonUp(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnMouseWheel(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
+    LRESULT OnNCHitTest(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnRButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnRButtonUp(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
 };
@@ -159,10 +161,12 @@ protected:
     // message map
     BEGIN_MSG_MAP(CACSizeBox)
         MESSAGE_HANDLER(WM_ERASEBKGND, OnEraseBkGnd)
+        MESSAGE_HANDLER(WM_NCHITTEST, OnNCHitTest)
         MESSAGE_HANDLER(WM_PAINT, OnPaint)
     END_MSG_MAP()
     // message handlers
     LRESULT OnEraseBkGnd(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
+    LRESULT OnNCHitTest(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnPaint(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
 };
 

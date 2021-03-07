@@ -415,6 +415,19 @@ LRESULT CACListView::OnMouseWheel(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL 
     return ret;
 }
 
+// WM_NCHITTEST
+LRESULT CACListView::OnNCHitTest(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+{
+    TRACE("CACListView::OnNCHitTest(%p)\n", this);
+    ATLASSERT(m_pDropDown);
+    POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
+    ScreenToClient(&pt);
+    HWND hwndTarget = m_pDropDown->ChildWindowFromPoint(pt);
+    if (hwndTarget != m_hWnd)
+        return HTTRANSPARENT;
+    return DefWindowProcW(uMsg, wParam, lParam);
+}
+
 // WM_RBUTTONDOWN @implemented
 LRESULT CACListView::OnRButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
@@ -503,11 +516,19 @@ VOID CACSizeBox::SetStatus(BOOL bDowner, BOOL bLongList)
     }
 }
 
+// WM_ERASEBKGND
 LRESULT CACSizeBox::OnEraseBkGnd(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
     return TRUE; // do nothing
 }
 
+// WM_NCHITTEST
+LRESULT CACSizeBox::OnNCHitTest(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+{
+    return HTTRANSPARENT;
+}
+
+// WM_PAINT
 LRESULT CACSizeBox::OnPaint(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
     CRect rc;
@@ -1555,16 +1576,13 @@ LRESULT CAutoComplete::OnMeasureItem(UINT uMsg, WPARAM wParam, LPARAM lParam, BO
 LRESULT CAutoComplete::OnMouseActivate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
     // don't activate by mouse
-    return (LRESULT)MA_NOACTIVATE;
+    return MA_NOACTIVATE;
 }
 
 // WM_NCACTIVATE
 // This message is sent to a window to indicate an active or inactive state.
 LRESULT CAutoComplete::OnNCActivate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
-    BOOL bActive = (BOOL)wParam;
-    if (bActive)
-        return FALSE; // eat
     return DefWindowProcW(uMsg, wParam, lParam); // do default
 }
 
@@ -1683,7 +1701,8 @@ LRESULT CAutoComplete::OnNCHitTest(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL
     if (m_hwndSizeBox.GetWindowRect(&rc))
     {
         POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
-        if (::PtInRect(&rc, pt))
+        ScreenToClient(&pt);
+        if (ChildWindowFromPoint(pt) == m_hwndSizeBox)
         {
             // resize if the point in the m_hwndSizeBox
             return m_bDowner ? HTBOTTOMRIGHT : HTTOPRIGHT;
