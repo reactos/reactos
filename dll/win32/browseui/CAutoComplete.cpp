@@ -148,7 +148,6 @@ LRESULT CACEditCtrl::OnChar(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHand
 {
     TRACE("CACEditCtrl::OnChar(%p)\n", this);
     ATLASSERT(m_pDropDown);
-
     return m_pDropDown->OnEditChar(wParam, lParam);
 }
 
@@ -450,7 +449,7 @@ HWND CACScrollBar::Create(HWND hwndParent)
 //////////////////////////////////////////////////////////////////////////////
 // CACSizeBox
 
-CACSizeBox::CACSizeBox() : m_pDropDown(NULL), m_bDowner(TRUE)
+CACSizeBox::CACSizeBox() : m_pDropDown(NULL), m_bDowner(TRUE), m_bLongList(FALSE)
 {
 }
 
@@ -458,15 +457,95 @@ HWND CACSizeBox::Create(HWND hwndParent)
 {
     ATLASSERT(m_hWnd == NULL);
     DWORD dwStyle = WS_CHILD | WS_VISIBLE | SBS_SIZEBOX;
-    m_hWnd = ::CreateWindowExW(0, GetWndClassName(), NULL, dwStyle,
-                               0, 0, 0, 0, hwndParent, NULL,
-                               _AtlBaseModule.GetModuleInstance(), NULL);
+    HWND hWnd = ::CreateWindowExW(0, GetWndClassName(), NULL, dwStyle,
+                                  0, 0, 0, 0, hwndParent, NULL,
+                                  _AtlBaseModule.GetModuleInstance(), NULL);
+    SubclassWindow(hWnd);
     return m_hWnd;
 }
 
-VOID CACSizeBox::SetDowner(BOOL bDowner)
+VOID CACSizeBox::SetStatus(BOOL bDowner, BOOL bLongList)
 {
     m_bDowner = bDowner;
+    m_bLongList = bLongList;
+
+    RECT rc;
+    GetWindowRect(&rc);
+    ::OffsetRect(&rc, -rc.left, -rc.top);
+
+    if (bLongList)
+    {
+        HRGN hRgn = ::CreateRectRgnIndirect(&rc);
+        SetWindowRgn(hRgn, TRUE);
+    }
+    else
+    {
+        HDC hDC = ::CreateCompatibleDC(NULL);
+        ::BeginPath(hDC);
+        if (m_bDowner)
+        {
+            ::MoveToEx(hDC, rc.right, rc.top, NULL);
+            ::LineTo(hDC, rc.right, rc.bottom);
+            ::LineTo(hDC, rc.left, rc.bottom);
+            ::LineTo(hDC, rc.right, rc.top);
+        }
+        else
+        {
+            ::MoveToEx(hDC, rc.right, rc.bottom, NULL);
+            ::LineTo(hDC, rc.right, rc.top);
+            ::LineTo(hDC, rc.left, rc.top);
+            ::LineTo(hDC, rc.right, rc.bottom);
+        }
+        ::EndPath(hDC);
+        HRGN hRgn = ::PathToRegion(hDC);
+        ::DeleteDC(hDC);
+        SetWindowRgn(hRgn, TRUE);
+    }
+}
+
+LRESULT CACSizeBox::OnEraseBkGnd(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+{
+    return TRUE; // do nothing
+}
+
+LRESULT CACSizeBox::OnPaint(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+{
+    CRect rc;
+    GetClientRect(&rc);
+
+    PAINTSTRUCT ps;
+    HDC hDC = BeginPaint(&ps);
+    if (!hDC)
+        return 0;
+
+    // fill background
+    ::FillRect(hDC, &rc, ::GetSysColorBrush(COLOR_3DFACE));
+
+    // draw size-box
+    INT cxy = rc.Width();
+    for (INT i = 0; i < 2; ++i)
+    {
+        COLORREF color = ((i == 0) ? COLOR_HIGHLIGHTTEXT : COLOR_3DSHADOW);
+        HPEN hPen = ::CreatePen(PS_SOLID, 1, ::GetSysColor(color));
+        HGDIOBJ hPenOld = ::SelectObject(hDC, hPen);
+        for (INT delta = cxy / 4; delta < cxy; delta += cxy / 4)
+        {
+            if (m_bDowner)
+            {
+                ::MoveToEx(hDC, rc.right, rc.top + delta + i, NULL);
+                ::LineTo(hDC, rc.left + delta + i, rc.bottom);
+            }
+            else
+            {
+                ::MoveToEx(hDC, rc.left + delta + i, rc.top, NULL);
+                ::LineTo(hDC, rc.right, rc.bottom - delta - i);
+            }
+        }
+        ::SelectObject(hDC, hPenOld);
+        ::DeleteObject(hPen);
+    }
+    EndPaint(&ps);
+    return 0;
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -1179,9 +1258,11 @@ VOID CAutoComplete::RepositionDropDown()
     // get list extent
     RECT rcMon = mi.rcMonitor;
     INT cx = rcEdit.right - rcEdit.left, cy = cItems * cyItem;
+    BOOL bLongList = FALSE;
     if (cy > CY_LIST)
     {
         cy = INT(CY_LIST / cyItem) * cyItem;
+        bLongList = TRUE;
     }
 
     // convert rectangle for frame
@@ -1192,7 +1273,7 @@ VOID CAutoComplete::RepositionDropDown()
     // is the drop-down window a 'downer' or 'upper'?
     // NOTE: 'downer' is below the EDIT control. 'upper' is above the EDIT control.
     m_bDowner = (rcEdit.bottom + cy < rcMon.bottom);
-    m_hwndSizeBox.SetDowner(m_bDowner);
+    m_hwndSizeBox.SetStatus(m_bDowner, bLongList);
 
     // adjust y if not downer
     if (!m_bDowner)

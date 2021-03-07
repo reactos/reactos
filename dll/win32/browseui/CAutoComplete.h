@@ -150,14 +150,20 @@ public:
 
     CACSizeBox();
     HWND Create(HWND hwndParent);
-    VOID SetDowner(BOOL bDowner);
+    VOID SetStatus(BOOL bDowner, BOOL bLongList);
 
 protected:
     // protected variables
     BOOL m_bDowner;
+    BOOL m_bLongList;
     // message map
     BEGIN_MSG_MAP(CACSizeBox)
+        MESSAGE_HANDLER(WM_ERASEBKGND, OnEraseBkGnd)
+        MESSAGE_HANDLER(WM_PAINT, OnPaint)
     END_MSG_MAP()
+    // message handlers
+    LRESULT OnEraseBkGnd(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
+    LRESULT OnPaint(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
 };
 
 //////////////////////////////////////////////////////////////////////////////
