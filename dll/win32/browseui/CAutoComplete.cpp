@@ -1317,6 +1317,12 @@ VOID CAutoComplete::RepositionDropDown()
         cy = INT(CY_LIST / cyItem) * cyItem;
         bLongList = TRUE;
     }
+    INT cyMon = (rcMon.bottom - rcMon.top);
+    if (cy > cyMon / 2)
+    {
+        cy = INT((cyMon / 2) / cyItem) * cyItem;
+        bLongList = TRUE;
+    }
 
     // convert rectangle for frame
     RECT rc = { 0, 0, cx, cy };
