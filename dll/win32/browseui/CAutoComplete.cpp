@@ -434,7 +434,7 @@ VOID CACSizeBox::SetDowner(BOOL bDowner)
 // CAutoComplete public methods
 
 CAutoComplete::CAutoComplete()
-    : m_bInSetText(FALSE), m_bInSelectItem(FALSE), m_pLayout(NULL)
+    : m_bInSetText(FALSE), m_bInSelectItem(FALSE)
     , m_bDowner(TRUE), m_dwOptions(ACO_AUTOAPPEND | ACO_AUTOSUGGEST)
     , m_bEnabled(TRUE), m_hwndCombo(NULL), m_bShowScroll(FALSE), m_hFont(NULL)
 {
@@ -445,17 +445,11 @@ HWND CAutoComplete::CreateDropDown()
     ATLASSERT(m_hWnd == NULL);
     DWORD dwStyle = WS_POPUP | /*WS_VISIBLE |*/ WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_BORDER;
     DWORD dwExStyle = WS_EX_TOOLWINDOW | WS_EX_TOPMOST | WS_EX_NOPARENTNOTIFY;
-    RECT rc = { 0, 0, 100, 100 };
-    return Create(NULL, &rc, NULL, dwStyle, dwExStyle);
+    return Create(NULL, NULL, NULL, dwStyle, dwExStyle);
 }
 
 CAutoComplete::~CAutoComplete()
 {
-    if (m_pLayout)
-    {
-        ::LayoutDestroy(m_pLayout); // see "layout.h"
-        m_pLayout = NULL;
-    }
     if (m_hFont)
     {
         ::DeleteObject(m_hFont);
@@ -946,17 +940,15 @@ VOID CAutoComplete::UpdateScrollBar()
     // copy scroll info from m_hwndList to m_hwndScrollBar
     SCROLLINFO si = { sizeof(si), SIF_ALL };
     m_hwndList.GetScrollInfo(SB_VERT, &si);
-    m_hwndScrollBar.SetScrollInfo(SB_CTL, &si, TRUE);
+    m_hwndScrollBar.SetScrollInfo(SB_CTL, &si, FALSE);
 
     // show/hide scroll bar
-    BOOL bShowScroll = ((UINT)(si.nMax - si.nMin) >= si.nPage);
+    BOOL bShowScroll = ((UINT)(si.nMax - si.nMin) > si.nPage);
     if (m_bShowScroll != bShowScroll)
     {
         m_bShowScroll = bShowScroll;
-        m_hwndScrollBar.ShowScrollBar(SB_CTL, m_bShowScroll);
-
-        // do re-arrange
-        ReArrangeControls(m_bDowner);
+        m_hwndScrollBar.ShowWindow(m_bShowScroll ? SW_SHOWNOACTIVATE : SW_HIDE);
+        m_hwndScrollBar.InvalidateRect(NULL, TRUE);
     }
 }
 
@@ -980,69 +972,41 @@ VOID CAutoComplete::UpdateDropDownState()
     }
 }
 
-BOOL CAutoComplete::ReArrangeControls(BOOL bDowner)
-{
-    // re-calculate the rectangles
-    RECT rcList, rcScrollBar, rcSizeBox;
-    ReCalcRects(bDowner, rcList, rcScrollBar, rcSizeBox);
-
-    // show or hide scroll bar
-    m_hwndScrollBar.ShowWindow(m_bShowScroll ? SW_SHOWNOACTIVATE : SW_HIDE);
-
-    // move the controls
-    m_hwndList.MoveWindow(rcList.left, rcList.top, rcList.right, rcList.bottom);
-    m_hwndScrollBar.MoveWindow(rcScrollBar.left, rcScrollBar.top, rcScrollBar.right, rcScrollBar.bottom);
-    m_hwndSizeBox.MoveWindow(rcSizeBox.left, rcSizeBox.top, rcSizeBox.right, rcSizeBox.bottom);
-
-    // update layout
-    return UpdateLayout(bDowner);
-}
-
 VOID CAutoComplete::ReCalcRects(BOOL bDowner, RECT& rcList, RECT& rcScrollBar, RECT& rcSizeBox)
 {
     // get the client rectangle
-    RECT rc;
-    GetClientRect(&rc);
-
-    // copy rectangle rc
-    rcList = rcScrollBar = rcSizeBox = rc;
+    RECT rcClient;
+    GetClientRect(&rcClient);
 
     // the list
+    rcList = rcClient;
     rcList.right = rcList.left + CX_LIST;
 
     // the scroll bar
-    if (m_bShowScroll)
-        rcScrollBar.left = rcScrollBar.right - GetSystemMetrics(SM_CXVSCROLL);
+    rcScrollBar = rcClient;
+    rcScrollBar.left = rcClient.right - GetSystemMetrics(SM_CXVSCROLL);
+    if (bDowner)
+    {
+        rcScrollBar.top = 0;
+        rcScrollBar.bottom = rcClient.bottom - GetSystemMetrics(SM_CYHSCROLL);
+    }
     else
-        rcScrollBar.left = rcScrollBar.right;
+    {
+        rcScrollBar.top = GetSystemMetrics(SM_CYHSCROLL);
+    }
 
     // the size box
-    rcSizeBox.left = rcSizeBox.right - GetSystemMetrics(SM_CXVSCROLL);
-    if (!bDowner)
-        rcSizeBox.top = 0;
-    else
-        rcSizeBox.top = rcSizeBox.bottom - GetSystemMetrics(SM_CYHSCROLL);
-}
-
-BOOL CAutoComplete::UpdateLayout(BOOL bDowner)
-{
-    m_bDowner = bDowner;
-
-    // initialize the layout
-    LAYOUT_INFO info[] =
+    rcSizeBox = rcClient;
+    rcSizeBox.left = rcClient.right - GetSystemMetrics(SM_CXVSCROLL);
+    if (bDowner)
     {
-        { 0, BF_TOPLEFT | BF_BOTTOMLEFT, m_hwndList },
-        { 0, BF_RIGHT, m_hwndScrollBar },
-        { 0, (UINT)(bDowner ? BF_BOTTOMRIGHT : BF_TOPLEFT), m_hwndSizeBox },
-    };
-    LAYOUT_DATA *pOldLayout = m_pLayout;
-    m_pLayout = ::LayoutInit(m_hWnd, info, -(INT)_countof(info)); // see "layout.h"
-    ::LayoutDestroy(pOldLayout);
-
-    // re-arrange the controls
-    PostMessageW(WM_SIZE, 0, 0);
-
-    return m_pLayout != NULL;
+        rcSizeBox.top = rcClient.bottom - GetSystemMetrics(SM_CYHSCROLL);
+    }
+    else
+    {
+        rcSizeBox.top = 0;
+        rcSizeBox.bottom = rcClient.top + GetSystemMetrics(SM_CYHSCROLL);
+    }
 }
 
 VOID CAutoComplete::LoadQuickComplete(LPCWSTR pwszRegKeyPath, LPCWSTR pwszQuickComplete)
@@ -1127,7 +1091,6 @@ VOID CAutoComplete::RepositionDropDown()
     // convert rectangle for frame
     RECT rc = { 0, 0, cx, cy };
     AdjustWindowRectEx(&rc, GetStyle(), FALSE, GetExStyle());
-    cx = rc.right - rc.left;
     cy = rc.bottom - rc.top;
 
     // is the drop-down window a 'downer' or 'upper'?
@@ -1138,9 +1101,6 @@ VOID CAutoComplete::RepositionDropDown()
     // adjust y if not downer
     if (!m_bDowner)
         y = rcEdit.top - cy;
-
-    // do re-arrange controls
-    ReArrangeControls(m_bDowner);
 
     // move
     MoveWindow(x, y, cx, cy);
@@ -1195,7 +1155,7 @@ INT CAutoComplete::UpdateInnerList()
 
     // do expand the items if the stem is changed
     CStringW strStemText = GetStemText();
-    if (m_strStemText != strStemText)
+    if (m_strStemText.CompareNoCase(strStemText) != 0)
     {
         m_strStemText = strStemText;
         bExpand = bReset = TRUE;
@@ -1502,6 +1462,7 @@ LRESULT CAutoComplete::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
                     // listview selection changed
                     OnListSelChange();
                 }
+                UpdateScrollBar();
             }
             break;
         }
@@ -1533,9 +1494,25 @@ LRESULT CAutoComplete::OnNCHitTest(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL
 LRESULT CAutoComplete::OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
     TRACE("CAutoComplete::OnSize(%p)\n", this);
-    ::LayoutUpdate(m_hWnd, m_pLayout, NULL, 0); // see "layout.h"
+
+    CRect rcList, rcScrollBar, rcSizeBox;
+    ReCalcRects(m_bDowner, rcList, rcScrollBar, rcSizeBox);
+
+    // reposition the controls
+    UINT uSWP_ = SWP_NOACTIVATE | SWP_NOOWNERZORDER | SWP_NOCOPYBITS;
+    HDWP hDWP = ::BeginDeferWindowPos(3);
+    hDWP = ::DeferWindowPos(hDWP, m_hwndScrollBar, HWND_TOP,
+        rcScrollBar.left, rcScrollBar.top,
+        rcScrollBar.Width(), rcScrollBar.Height(), uSWP_);
+    hDWP = ::DeferWindowPos(hDWP, m_hwndList, m_hwndScrollBar,
+        rcList.left, rcList.top,
+        rcList.Width(), rcList.Height(), uSWP_);
+    hDWP = ::DeferWindowPos(hDWP, m_hwndSizeBox, m_hwndScrollBar,
+        rcSizeBox.left, rcSizeBox.top,
+        rcSizeBox.Width(), rcSizeBox.Height(), uSWP_);
+    ::EndDeferWindowPos(hDWP);
+
     UpdateScrollBar();
-    m_hwndList.InvalidateRect(NULL, FALSE);
     return 0;
 }
 
@@ -1545,5 +1522,6 @@ LRESULT CAutoComplete::OnVScroll(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &
 {
     TRACE("CAutoComplete::OnVScroll(%p)\n", this);
     m_hwndList.SendMessageW(WM_VSCROLL, wParam, lParam);
+    UpdateScrollBar();
     return 0;
 }

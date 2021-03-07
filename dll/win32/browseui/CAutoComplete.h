@@ -23,7 +23,6 @@
 
 #include "atltypes.h"
 #include "rosctrls.h"
-#include "layout.h"
 
 class CACEditCtrl;
 class CACListView;
@@ -213,7 +212,6 @@ public:
 
 protected:
     // The following variables are POD (plain old data):
-    LAYOUT_DATA *m_pLayout;
     BOOL m_bDowner;
     DWORD m_dwOptions; // for IAutoComplete2::SetOptions
     DWORD m_bEnabled;
@@ -235,9 +233,7 @@ protected:
     // protected methods
     VOID UpdateScrollBar();
     VOID UpdateDropDownState();
-    BOOL ReArrangeControls(BOOL bDowner);
-    VOID ReCalcRects(BOOL bDowner, RECT& rcListView, RECT& rcScrollBar, RECT& rcGrip);
-    BOOL UpdateLayout(BOOL bDowner);
+    VOID ReCalcRects(BOOL bDowner, RECT& rcListView, RECT& rcScrollBar, RECT& rcSizeBox);
     VOID LoadQuickComplete(LPCWSTR pwszRegKeyPath, LPCWSTR pwszQuickComplete);
     CStringW GetQuickEdit(const CStringW& strText);
     VOID RepositionDropDown();
