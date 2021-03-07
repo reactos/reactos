@@ -665,6 +665,7 @@ BOOL CAutoComplete::OnEditKeyDown(WPARAM wParam, LPARAM lParam)
     UINT vk = (UINT)wParam; // virtual key
     switch (vk)
     {
+        case VK_HOME: case VK_END: // [Home]/[End] key
         case VK_UP: case VK_DOWN: // [Arrow Up]/[Arrow Down] key
         case VK_PRIOR: case VK_NEXT: // [PageUp]/[PageDown] key
             if (IsWindowVisible())
@@ -787,6 +788,12 @@ BOOL CAutoComplete::OnListUpDown(UINT vk)
     INT cItems = m_hwndList.GetItemCount();
     switch (vk)
     {
+        case VK_HOME: // [Home] key
+            m_hwndList.SetCurSel(iItem);
+            break;
+        case VK_END: // [End] key
+            m_hwndList.SetCurSel(cItems - 1);
+            break;
         case VK_UP: // [Arrow Up]
             if (iItem == -1)
                 iItem = cItems - 1;
@@ -806,10 +813,38 @@ BOOL CAutoComplete::OnListUpDown(UINT vk)
             m_hwndList.SetCurSel(iItem);
             break;
         case VK_PRIOR: // [PageUp]
-            FIXME("VK_PRIOR\n");
+            if (iItem == -1)
+            {
+                iItem = cItems - 1;
+            }
+            else if (iItem == 0)
+            {
+                iItem = -1;
+            }
+            else
+            {
+                iItem -= m_hwndList.GetVisibleItemCount() - 1;
+                if (iItem < 0)
+                    iItem = 0;
+            }
+            m_hwndList.SetCurSel(iItem);
             break;
         case VK_NEXT: // [PageDown]
-            FIXME("VK_NEXT\n");
+            if (iItem == -1)
+            {
+                iItem = 0;
+            }
+            else if (iItem == cItems - 1)
+            {
+                iItem = -1;
+            }
+            else
+            {
+                iItem += m_hwndList.GetVisibleItemCount() - 1;
+                if (iItem > cItems)
+                    iItem = cItems - 1;
+            }
+            m_hwndList.SetCurSel(iItem);
             break;
         default:
         {
