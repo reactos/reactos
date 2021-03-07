@@ -209,7 +209,7 @@ LRESULT CACEditCtrl::OnGetDlgCode(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL 
     ATLASSERT(m_pDropDown);
 
     LRESULT ret = DefWindowProcW(uMsg, wParam, lParam); // get default
-    if (m_pDropDown->IsWindowVisible())
+    if (m_pDropDown->IsWindowVisible() || ::GetKeyState(VK_CONTROL) < 0)
         ret |= DLGC_WANTALLKEYS; // we want all keys to manipulate the list
 
     return ret;
@@ -659,7 +659,7 @@ VOID CAutoComplete::UpdateScrollBar()
 BOOL CAutoComplete::OnEditKeyDown(WPARAM wParam, LPARAM lParam)
 {
     // is suggestion available?
-    if (!CanAutoSuggest() || !IsWindowVisible())
+    if (!CanAutoSuggest())
         return FALSE; // if not so, then do default
 
     UINT vk = (UINT)wParam; // virtual key
@@ -667,35 +667,66 @@ BOOL CAutoComplete::OnEditKeyDown(WPARAM wParam, LPARAM lParam)
     {
         case VK_UP: case VK_DOWN: // [Arrow Up]/[Arrow Down] key
         case VK_PRIOR: case VK_NEXT: // [PageUp]/[PageDown] key
-            return OnListUpDown(vk);
+            if (IsWindowVisible())
+                return OnListUpDown(vk);
+            break;
         case VK_ESCAPE: case VK_TAB: // [Esc]/[Tab] key
         {
-            SetEditText(m_strText); // revert
-            INT cch = m_strText.GetLength();
-            m_hwndEdit.SendMessageW(EM_SETSEL, cch, cch);
-            HideDropDown(); // hide
-            return TRUE; // non-default
+            if (IsWindowVisible())
+            {
+                SetEditText(m_strText); // revert
+                INT cch = m_strText.GetLength();
+                m_hwndEdit.SendMessageW(EM_SETSEL, cch, cch);
+                HideDropDown(); // hide
+                return TRUE; // eat
+            }
+            break;
         }
         case VK_RETURN: // [Enter] key
         {
-            if (::GetKeyState(VK_CONTROL) < 0) // [Ctrl] key
+            if (IsWindowVisible())
             {
-                // quick edit
-                CStringW strText = GetEditText();
-                SetEditText(GetQuickEdit(strText));
+                if (::GetKeyState(VK_CONTROL) < 0) // [Ctrl] key
+                {
+                    // quick edit
+                    CStringW strText = GetEditText();
+                    SetEditText(GetQuickEdit(strText));
+                }
+                else
+                {
+                    // select all
+                    INT cch = m_hwndEdit.GetWindowTextLengthW();
+                    m_hwndEdit.SendMessageW(EM_SETSEL, 0, cch);
+                }
+                HideDropDown(); // hide
             }
-            else
-            {
-                // select all
-                INT cch = m_hwndEdit.GetWindowTextLengthW();
-                m_hwndEdit.SendMessageW(EM_SETSEL, 0, cch);
-            }
-            HideDropDown(); // hide
             break;
         }
         case VK_DELETE: // [Del] key
         {
-            OnEditUpdate(FALSE);
+            if (IsWindowVisible())
+            {
+                OnEditUpdate(FALSE);
+            }
+            break;
+        }
+        case VK_BACK: // [BackSpace] key
+        {
+            if (::GetKeyState(VK_CONTROL) < 0) // [Ctrl] key
+            {
+                INT ich0, ich1;
+                m_hwndEdit.SendMessageW(EM_GETSEL, (WPARAM)&ich0, (LPARAM)&ich1);
+                if (ich0 <= 0 || ich0 != ich1)
+                    return TRUE; // eat
+                CStringW str = GetEditText();
+                while (ich0 > 0 && IsWordBreak(str[ich0 - 1]))
+                    --ich0;
+                while (ich0 > 0 && !IsWordBreak(str[ich0 - 1]))
+                    --ich0;
+                m_hwndEdit.SendMessageW(EM_SETSEL, ich0, ich1);
+                m_hwndEdit.SendMessageW(EM_REPLACESEL, TRUE, (LPARAM)L"");
+                return TRUE; // eat
+            }
             break;
         }
         default:
@@ -713,7 +744,7 @@ BOOL CAutoComplete::OnEditChar(WPARAM wParam, LPARAM lParam)
 
     m_hwndEdit.DefWindowProcW(WM_CHAR, wParam, lParam);
     OnEditUpdate(wParam != VK_BACK && wParam != VK_DELETE);
-    return TRUE; // non-default
+    return TRUE; // eat
 }
 
 VOID CAutoComplete::OnEditUpdate(BOOL bAppendOK)
@@ -749,7 +780,7 @@ BOOL CAutoComplete::OnListUpDown(UINT vk)
     if ((m_dwOptions & ACO_UPDOWNKEYDROPSLIST) && !IsWindowVisible())
     {
         ShowDropDown();
-        return TRUE; // non-default
+        return TRUE; // eat
     }
     
     INT iItem = m_hwndList.GetCurSel();
@@ -787,7 +818,7 @@ BOOL CAutoComplete::OnListUpDown(UINT vk)
         }
     }
 
-    return TRUE; // non-default
+    return TRUE; // eat
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -1455,7 +1486,7 @@ LRESULT CAutoComplete::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
                 m_hwndList.SetCurSel(iItem);
                 m_bInSelectItem = FALSE;
             }
-            return TRUE; // non-default
+            return TRUE; // eat
         }
         case LVN_GETDISPINFOA:
         {
