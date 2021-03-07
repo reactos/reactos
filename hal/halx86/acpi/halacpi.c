@@ -1161,7 +1161,7 @@ HaliAcpiTimerInit(_In_ PULONG TimerPort,
            A one indicates TMR_VAL is implemented as a 32-bit value. 
         */
         IsTimerValExt32bit = ((HalpFixedAcpiDescTable.flags & ACPI_TMR_VAL_EXT) != 0);
-        DPRINT1("TimerPort %p, IsTimerValExt32bit %X\n", TimerPort, IsTimerValExt32bit);
+        DPRINT("TimerPort %p, IsTimerValExt32bit %X\n", TimerPort, IsTimerValExt32bit);
     }
 
     HaliAcpiSetUsePmClock();
@@ -1561,8 +1561,7 @@ HalpPowerStateCallback(_In_opt_ PVOID CallbackContext,
                        _In_opt_ PVOID Argument1,
                        _In_opt_ PVOID Argument2)
 {
-    DPRINT1("HalpPowerStateCallback: CallbackContext %p, Argument1 %p, Argument2 %p\n", CallbackContext, Argument1, Argument2);
-    DPRINT1("HalpPowerStateCallback: FIXME ...\n");
+    DPRINT1("HalpPowerStateCallback: FIXME! CallbackContext %p, Argument1 %p, Argument2 %p\n", CallbackContext, Argument1, Argument2);
 }
 
 NTSTATUS

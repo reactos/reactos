@@ -73,7 +73,7 @@ RosKeUpdateSystemTime(_In_ PKTRAP_FRAME TrapFrame,
     LONG OldTickOffset;
     HAL_INTERRUPT_CONTEXT IntContext = {0};
 
-    DPRINT1("RosKeUpdateSystemTime: TrapFrame %X, Increment %X, Vector %X, Irql %X\n", TrapFrame, Increment, Vector, Irql);
+    //DPRINT1("RosKeUpdateSystemTime: TrapFrame %X, Increment %X, Vector %X, Irql %X\n", TrapFrame, Increment, Vector, Irql);
 
     if (Vector == 0xFF)
     {

@@ -190,7 +190,7 @@ KiInterruptDispatch(_In_ PKTRAP_FRAME TrapFrame,
     HAL_INTERRUPT_CONTEXT IntContext = {0};
     KIRQL OldIrql;
 
-    DPRINT1("KiInterruptDispatch: Interrupt 0x%02lx !!!\n", Interrupt->Vector);
+    //DPRINT1("KiInterruptDispatch: Interrupt 0x%02lx !!!\n", Interrupt->Vector);
 
     /* Increase interrupt count */
     KeGetCurrentPrcb()->InterruptCount++;

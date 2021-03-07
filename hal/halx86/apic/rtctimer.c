@@ -308,7 +308,7 @@ HalpInitializeClock(VOID)
     RegisterC = HalpReadCmos(RTC_REGISTER_C);
     RegisterD = HalpReadCmos(RTC_REGISTER_D);
 
-    DPRINT1("HalpInitializeClock: A %X, B %X, C %X, D %X\n", HalpCurrentRTCRegisterA, RegisterB, RegisterC, RegisterD);
+    DPRINT("HalpInitializeClock: A %X, B %X, C %X, D %X\n", HalpCurrentRTCRegisterA, RegisterB, RegisterC, RegisterD);
 
     for (ix = 0; ix < 10; ix++)
     {

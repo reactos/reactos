@@ -9,7 +9,7 @@
 /* INCLUDES *******************************************************************/
 
 #include <hal.h>
-//#define NDEBUG
+#define NDEBUG
 #include <debug.h>
 
 #include "apic.h"
@@ -116,7 +116,7 @@ NTAPI
 HalpAcpiApplyFadtSettings(_In_ PFADT Fadt)
 {
     /* FADT Fixed Feature Flags */
-    DPRINT1("HalpAcpiApplyFadtSettings: flags %08X\n", Fadt, Fadt->flags);
+    DPRINT("HalpAcpiApplyFadtSettings: flags %08X\n", Fadt, Fadt->flags);
 
     if (Fadt->flags & FADT_FORCE_APIC_CLUSTER_MODEL) // FORCE_APIC_CLUSTER_MODEL
     {
@@ -713,7 +713,7 @@ Exit:
     if (EFlags & EFLAGS_INTERRUPT_MASK)
         _enable();
 
-    DPRINT1("HalpPmTimerScaleTimers: IsPmTimerCorrect %X\n", IsPmTimerCorrect);
+    DPRINT("HalpPmTimerScaleTimers: IsPmTimerCorrect %X\n", IsPmTimerCorrect);
     return IsPmTimerCorrect;
 }
 

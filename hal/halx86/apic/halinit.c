@@ -347,9 +347,6 @@ HalpGetApicInterruptDesc(
 
     DPRINT("HalpGetApicInterruptDesc: Irq %X, Count %X\n", DeviceIrq, HalpMpInfoTable.IoApicCount);
 
-    //HalpDumpAcpiMadtTable();
-    //HalpDumpMpInfoTable();
-
     for (IoApic = 0; IoApic < HalpMpInfoTable.IoApicCount; IoApic++)
     {
         IrqBase = HalpMpInfoTable.IoApicIrqBase[IoApic];
@@ -378,12 +375,14 @@ NTAPI
 HalpInitProcessor(_In_ ULONG ProcessorNumber,
                   _In_ PLOADER_PARAMETER_BLOCK LoaderBlock)
 {
+    PHALP_PCR_HAL_RESERVED HalReserved;
     PKPCR Pcr = KeGetPcr();
 
     /* Set default IDR */
     Pcr->IDR = 0xFFFFFFFF;
 
-    *(PUCHAR)(Pcr->HalReserved) = ProcessorNumber; // FIXME
+    HalReserved = (PHALP_PCR_HAL_RESERVED)Pcr->HalReserved;
+    HalReserved->ProcessorNumber = ProcessorNumber;
     HalpProcessorPCR[ProcessorNumber] = Pcr;
 
     // FIXME support '/INTAFFINITY' key in .ini
@@ -459,7 +458,7 @@ HalpInitPhase1(VOID)
 {
     PKPRCB Prcb = KeGetCurrentPrcb();
 
-    DPRINT1("HalpInitPhase1()\n");
+    DPRINT("HalpInitPhase1()\n");
 
     if (Prcb->Number == 0)
     {

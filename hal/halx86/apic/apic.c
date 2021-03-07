@@ -569,7 +569,7 @@ HalpInitializePICs(_In_ BOOLEAN EnableInterrupts)
 {
     ULONG_PTR EFlags;
 
-    DPRINT1("HalpInitializePICs: EnableInterrupts %X\n", EnableInterrupts);
+    DPRINT("HalpInitializePICs: EnableInterrupts %X\n", EnableInterrupts);
 
     /* Save EFlags and disable interrupts */
     EFlags = __readeflags();
@@ -701,8 +701,7 @@ HalpLocalApicErrorServiceHandler(_In_ PKTRAP_FRAME TrapFrame)
   #ifdef __REACTOS__
     KiEoiHelper(TrapFrame);
   #else
-    //Kei386EoiHelper()
-    #error FIXME
+    #error FIXME Kei386EoiHelper()
   #endif
 }
 #endif
@@ -868,7 +867,7 @@ HalpAddInterruptDest(_In_ ULONG InDestination,
 
     if (HalpForceApicPhysicalDestinationMode)
     {
-        DPRINT("HalpAddInterruptDest: FIXME! DbgBreakPoint()\n");
+        DPRINT1("HalpAddInterruptDest: FIXME! DbgBreakPoint()\n");
         DbgBreakPoint();Destination = 0;
         return Destination;
     }
@@ -887,7 +886,7 @@ HalpAddInterruptDest(_In_ ULONG InDestination,
         return Destination;
     }
 
-    DPRINT("HalpAddInterruptDest: FIXME! DbgBreakPoint()\n");
+    DPRINT1("HalpAddInterruptDest: FIXME! DbgBreakPoint()\n");
     DbgBreakPoint();
 
     DPRINT("HalpAddInterruptDest: return Destination %X\n", Destination);
@@ -1044,7 +1043,7 @@ HalEnableSystemInterrupt(_In_ ULONG SystemVector,
 
     HalpEnableRedirEntry(IntI, &IoApicReg, CpuNumber);
 
-    DPRINT1("HalEnableSystemInterrupt: HalpIntiInfo[IntI] %X\n", HalpIntiInfo[IntI].AsULONG);
+    DPRINT("HalEnableSystemInterrupt: HalpIntiInfo[IntI] %X\n", HalpIntiInfo[IntI].AsULONG);
     HalpReleaseHighLevelLock(&HalpAccountingLock, Lock);
 
     return TRUE;
@@ -1288,7 +1287,7 @@ NTAPI
 HalEndSystemInterrupt(_In_ KIRQL OldIrql,
                       _In_ PHAL_INTERRUPT_CONTEXT IntContext)
 {
-    DPRINT1("HalEndSystemInterrupt: OldIrql %X, IntContext %X\n", OldIrql,  IntContext);
+    //DPRINT1("HalEndSystemInterrupt: OldIrql %X, IntContext %X\n", OldIrql,  IntContext);
     HalpEndSystemInterrupt(IntContext, OldIrql);
 }
 #else
@@ -1303,7 +1302,6 @@ HalEndSystemInterrupt(_In_ KIRQL OldIrql,
     HAL_INTERRUPT_CONTEXT IntContext
 
     DPRINT1("HalEndSystemInterrupt: FIXME !!! OldIrql %X,  Vector %X\n", OldIrql, Vector);
-    //DPRINT1("HalEndSystemInterrupt: OldIrql %X,  Vector %X,  TrapFrame %X\n", OldIrql, Vector, TrapFrame);
     DbgBreakPoint();
 
     /* NT really use stack for pointer TrapFrame (us third parameter),
