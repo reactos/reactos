@@ -276,6 +276,7 @@ protected:
         MESSAGE_HANDLER(WM_NOTIFY, OnNotify)
         MESSAGE_HANDLER(WM_NCHITTEST, OnNCHitTest)
         MESSAGE_HANDLER(WM_SIZE, OnSize)
+        MESSAGE_HANDLER(WM_SHOWWINDOW, OnShowWindow)
         MESSAGE_HANDLER(WM_VSCROLL, OnVScroll)
     END_MSG_MAP()
     // message handlers
@@ -291,6 +292,7 @@ protected:
     LRESULT OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnNCHitTest(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
+    LRESULT OnShowWindow(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnVScroll(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
 
     DECLARE_REGISTRY_RESOURCEID(IDR_AUTOCOMPLETE)

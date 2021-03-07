@@ -43,6 +43,45 @@
 #define COMPLETION_TIMEOUT 250 // in milliseconds
 #define MAX_ITEM_COUNT 1000
 
+static HHOOK s_hMouseHook = NULL;
+static HWND s_hWnd = NULL;
+
+// mouse hook procedure
+static LRESULT CALLBACK MouseProc(INT nCode, WPARAM wParam, LPARAM lParam)
+{
+    if (s_hMouseHook == NULL)
+        return 0;
+
+    if (nCode == HC_ACTION && ::IsWindow(s_hWnd))
+    {
+        RECT rc;
+        MOUSEHOOKSTRUCT *pMouseHook = reinterpret_cast<MOUSEHOOKSTRUCT *>(lParam);
+        switch (wParam)
+        {
+        case WM_LBUTTONDOWN:
+        case WM_LBUTTONUP:
+        case WM_RBUTTONDOWN:
+        case WM_RBUTTONUP:
+        case WM_MBUTTONDOWN:
+        case WM_MBUTTONUP:
+        case WM_NCLBUTTONDOWN:
+        case WM_NCLBUTTONUP:
+        case WM_NCRBUTTONDOWN:
+        case WM_NCRBUTTONUP:
+        case WM_NCMBUTTONDOWN:
+        case WM_NCMBUTTONUP:
+            ::GetWindowRect(s_hWnd, &rc);
+            if (!::PtInRect(&rc, pMouseHook->pt))
+            {
+                ::ShowWindowAsync(s_hWnd, SW_HIDE);
+            }
+            break;
+        }
+    }
+
+    return ::CallNextHookEx(s_hMouseHook, nCode, wParam, lParam);
+}
+
 //////////////////////////////////////////////////////////////////////////////
 // CACEditCtrl
 
@@ -329,6 +368,8 @@ INT CACListView::GetItemCount()
 
 INT CACListView::GetVisibleItemCount()
 {
+    if (m_cyItem <= 0)
+        return 0;
     CRect rc;
     GetClientRect(&rc);
     return rc.Height() / m_cyItem;
@@ -379,7 +420,7 @@ LRESULT CACListView::OnLButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL
     {
         m_pDropDown->SelectItem(iItem);
         m_pDropDown->SetEditText(GetItemText(iItem));
-        m_pDropDown->OnEditKeyDown(VK_RETURN, 0);
+        m_pDropDown->HideDropDown();
     }
     return 0;
 }
@@ -669,16 +710,7 @@ VOID CAutoComplete::ShowDropDown()
 
 VOID CAutoComplete::HideDropDown()
 {
-    if (m_hwndCombo)
-    {
-        ::SendMessageW(m_hwndCombo, CB_SHOWDROPDOWN, FALSE, 0);
-        ::InvalidateRect(m_hwndCombo, NULL, TRUE);
-    }
-
     ShowWindow(SW_HIDE);
-
-    m_hwndList.DeleteAllItems();
-    m_outerList.RemoveAll();
     m_hwndEdit.SetFocus();
 }
 
@@ -782,22 +814,22 @@ BOOL CAutoComplete::OnEditKeyDown(WPARAM wParam, LPARAM lParam)
         }
         case VK_RETURN: // [Enter] key
         {
-            if (IsWindowVisible())
+            if (::GetKeyState(VK_CONTROL) < 0) // [Ctrl] key
             {
-                if (::GetKeyState(VK_CONTROL) < 0) // [Ctrl] key
-                {
-                    // quick edit
-                    CStringW strText = GetEditText();
-                    SetEditText(GetQuickEdit(strText));
-                }
-                else
-                {
-                    // select all
-                    INT cch = m_hwndEdit.GetWindowTextLengthW();
-                    m_hwndEdit.SendMessageW(EM_SETSEL, 0, cch);
-                }
-                HideDropDown(); // hide
+                // quick edit
+                CStringW strText = GetEditText();
+                SetEditText(GetQuickEdit(strText));
             }
+            else
+            {
+                // select all
+                INT cch = m_hwndEdit.GetWindowTextLengthW();
+                m_hwndEdit.SendMessageW(EM_SETSEL, 0, cch);
+            }
+            // hide
+            HideDropDown();
+            // post Enter key
+            m_hwndEdit.PostMessageW(WM_KEYDOWN, VK_RETURN, 0);
             break;
         }
         case VK_DELETE: // [Del] key
@@ -1487,6 +1519,10 @@ LRESULT CAutoComplete::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &
 {
     TRACE("CAutoComplete::OnDestroy(%p)\n", this);
 
+    // hide
+    if (IsWindowVisible())
+        HideDropDown();
+
     // unsubclass EDIT control
     if (m_hwndEdit)
     {
@@ -1768,6 +1804,44 @@ LRESULT CAutoComplete::OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHa
 
     UpdateScrollBar();
     return 0;
+}
+
+// WM_SHOWWINDOW
+LRESULT CAutoComplete::OnShowWindow(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+{
+    // hook mouse events
+    BOOL bShow = (BOOL)wParam;
+    if (bShow)
+    {
+        s_hWnd = m_hWnd;
+        if (s_hMouseHook)
+        {
+            HHOOK hHookOld = s_hMouseHook;
+            s_hMouseHook = NULL;
+            ::UnhookWindowsHookEx(hHookOld);
+        }
+        s_hMouseHook = ::SetWindowsHookEx(WH_MOUSE, MouseProc, NULL, ::GetCurrentThreadId());
+        ATLASSERT(s_hMouseHook != NULL);
+        return DefWindowProcW(uMsg, wParam, lParam); // do default
+    }
+    else
+    {
+        s_hWnd = NULL;
+        if (s_hMouseHook)
+        {
+            HHOOK hHookOld = s_hMouseHook;
+            s_hMouseHook = NULL;
+            ::UnhookWindowsHookEx(hHookOld);
+        }
+        LRESULT ret = DefWindowProcW(uMsg, wParam, lParam); // do default
+        if (m_hwndCombo)
+        {
+            ::SendMessageW(m_hwndCombo, CB_SHOWDROPDOWN, FALSE, 0);
+            ::InvalidateRect(m_hwndCombo, NULL, TRUE);
+        }
+        m_outerList.RemoveAll();
+        return ret;
+    }
 }
 
 // WM_VSCROLL
