@@ -782,16 +782,14 @@ BOOL CAutoComplete::OnListUpDown(UINT vk)
         ShowDropDown();
         return TRUE; // eat
     }
-    
+
     INT iItem = m_hwndList.GetCurSel();
     INT cItems = m_hwndList.GetItemCount();
     switch (vk)
     {
         case VK_HOME: // [Home] key
-            m_hwndList.SetCurSel(iItem);
-            break;
         case VK_END: // [End] key
-            m_hwndList.SetCurSel(cItems - 1);
+            m_hwndList.SendMessageW(WM_KEYDOWN, vk, 0);
             break;
         case VK_UP: // [Arrow Up]
             if (iItem == -1)
