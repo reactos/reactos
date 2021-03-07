@@ -102,11 +102,21 @@ protected:
     // message map
     BEGIN_MSG_MAP(CACListView)
         MESSAGE_HANDLER(WM_LBUTTONDOWN, OnLButtonDown)
-        MESSAGE_HANDLER(WM_LBUTTONDBLCLK, OnLButtonDblClk)
+        MESSAGE_HANDLER(WM_LBUTTONUP, OnLButtonUp)
+        MESSAGE_HANDLER(WM_MBUTTONDOWN, OnMButtonDown)
+        MESSAGE_HANDLER(WM_MBUTTONUP, OnMButtonUp)
+        MESSAGE_HANDLER(WM_MOUSEWHEEL, OnMouseWheel)
+        MESSAGE_HANDLER(WM_RBUTTONDOWN, OnRButtonDown)
+        MESSAGE_HANDLER(WM_RBUTTONUP, OnRButtonUp)
     END_MSG_MAP()
     // message handlers
     LRESULT OnLButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
-    LRESULT OnLButtonDblClk(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
+    LRESULT OnLButtonUp(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
+    LRESULT OnMButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
+    LRESULT OnMButtonUp(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
+    LRESULT OnMouseWheel(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
+    LRESULT OnRButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
+    LRESULT OnRButtonUp(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
 };
 
 //////////////////////////////////////////////////////////////////////////////
@@ -188,6 +198,7 @@ public:
     VOID HideDropDown();
     VOID SelectItem(INT iItem);
     VOID DoAutoAppend();
+    VOID UpdateScrollBar();
 
     BOOL OnEditChar(WPARAM wParam, LPARAM lParam);
     BOOL OnEditKeyDown(WPARAM wParam, LPARAM lParam);
@@ -231,7 +242,6 @@ protected:
     CSimpleArray<CStringW> m_innerList;
     CSimpleArray<CStringW> m_outerList;
     // protected methods
-    VOID UpdateScrollBar();
     VOID UpdateDropDownState();
     VOID ReCalcRects(BOOL bDowner, RECT& rcListView, RECT& rcScrollBar, RECT& rcSizeBox);
     VOID LoadQuickComplete(LPCWSTR pwszRegKeyPath, LPCWSTR pwszQuickComplete);
@@ -249,6 +259,7 @@ protected:
         MESSAGE_HANDLER(WM_GETMINMAXINFO, OnGetMinMaxInfo)
         MESSAGE_HANDLER(WM_MEASUREITEM, OnMeasureItem)
         MESSAGE_HANDLER(WM_MOUSEACTIVATE, OnMouseActivate)
+        MESSAGE_HANDLER(WM_NCACTIVATE, OnNCActivate)
         MESSAGE_HANDLER(WM_NOTIFY, OnNotify)
         MESSAGE_HANDLER(WM_NCHITTEST, OnNCHitTest)
         MESSAGE_HANDLER(WM_SIZE, OnSize)
@@ -261,6 +272,7 @@ protected:
     LRESULT OnGetMinMaxInfo(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnMeasureItem(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnMouseActivate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
+    LRESULT OnNCActivate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnNCHitTest(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);

@@ -290,9 +290,10 @@ HWND CACListView::Create(HWND hwndParent)
     ATLASSERT(m_hWnd == NULL);
     DWORD dwStyle = WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | LVS_NOCOLUMNHEADER |
                     LVS_OWNERDATA | LVS_OWNERDRAWFIXED | LVS_SINGLESEL | LVS_REPORT;
-    m_hWnd = ::CreateWindowExW(0, GetWndClassName(), L"Internet Explorer", dwStyle,
-                               0, 0, 0, 0, hwndParent, NULL,
-                               _AtlBaseModule.GetModuleInstance(), NULL);
+    HWND hWnd = ::CreateWindowExW(0, GetWndClassName(), L"Internet Explorer", dwStyle,
+                                  0, 0, 0, 0, hwndParent, NULL,
+                                  _AtlBaseModule.GetModuleInstance(), NULL);
+    SubclassWindow(hWnd);
     // set extended listview style
     DWORD exstyle = LVS_EX_ONECLICKACTIVATE | LVS_EX_FULLROWSELECT | LVS_EX_TRACKSELECT;
     SetExtendedListViewStyle(exstyle, exstyle);
@@ -371,12 +372,11 @@ VOID CACListView::SelectHere(INT x, INT y)
     SetCurSel(ItemFromPoint(x, y));
 }
 
-// WM_LBUTTONDBLCLK @implemented
-// This message is posted when the user double-clicks while the cursor is inside.
-LRESULT CACListView::OnLButtonDblClk(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+// WM_LBUTTONDOWN @implemented
+// This message is posted when the user pressed the left mouse button while the cursor is inside.
+LRESULT CACListView::OnLButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
-    TRACE("CACListView::OnLButtonDblClk(%p)\n", this);
-    // avoid the default processing that will set focus
+    TRACE("CACListView::OnLButtonDown(%p)\n", this);
     ATLASSERT(m_pDropDown);
     INT iItem = ItemFromPoint(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
     if (iItem != -1)
@@ -387,15 +387,49 @@ LRESULT CACListView::OnLButtonDblClk(UINT uMsg, WPARAM wParam, LPARAM lParam, BO
     return 0;
 }
 
-// WM_LBUTTONDOWN @implemented
-// This message is posted when the user pressed the left mouse button while the cursor is inside.
-LRESULT CACListView::OnLButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+// WM_LBUTTONUP @implemented
+LRESULT CACListView::OnLButtonUp(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
-    TRACE("CACListView::OnLButtonDown(%p)\n", this);
-    // avoid the default processing that will set focus
+    TRACE("CACListView::OnLButtonUp(%p)\n", this);
+    return 0; // eat
+}
+
+// WM_MBUTTONDOWN @implemented
+LRESULT CACListView::OnMButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+{
+    TRACE("CACListView::OnMButtonDown(%p)\n", this);
+    return 0; // eat
+}
+
+// WM_MBUTTONUP @implemented
+LRESULT CACListView::OnMButtonUp(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+{
+    TRACE("CACListView::OnMButtonUp(%p)\n", this);
+    return 0; // eat
+}
+
+// WM_MOUSEWHEEL @implemented
+LRESULT CACListView::OnMouseWheel(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+{
+    TRACE("CACListView::OnMouseWheel(%p)\n", this);
     ATLASSERT(m_pDropDown);
-    SelectHere(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
-    return 0;
+    LRESULT ret = DefWindowProcW(uMsg, wParam, lParam);
+    m_pDropDown->UpdateScrollBar();
+    return ret;
+}
+
+// WM_RBUTTONDOWN @implemented
+LRESULT CACListView::OnRButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+{
+    TRACE("CACListView::OnRButtonDown(%p)\n", this);
+    return 0; // eat
+}
+
+// WM_RBUTTONUP @implemented
+LRESULT CACListView::OnRButtonUp(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+{
+    TRACE("CACListView::OnRButtonUp(%p)\n", this);
+    return 0; // eat
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -602,6 +636,22 @@ VOID CAutoComplete::DoAutoAppend()
     INT ich0 = strText.GetLength();
     INT ich1 = ich0 + cchAppend;
     m_hwndEdit.SendMessageW(EM_SETSEL, ich0, ich1);
+}
+
+VOID CAutoComplete::UpdateScrollBar()
+{
+    // copy scroll info from m_hwndList to m_hwndScrollBar
+    SCROLLINFO si = { sizeof(si), SIF_ALL };
+    m_hwndList.GetScrollInfo(SB_VERT, &si);
+    m_hwndScrollBar.SetScrollInfo(SB_CTL, &si, FALSE);
+
+    // show/hide scroll bar
+    INT cVisibles = m_hwndList.GetVisibleItemCount();
+    INT cItems = m_hwndList.GetItemCount();
+    BOOL bShowScroll = (cItems > cVisibles);
+    m_hwndScrollBar.ShowWindow(bShowScroll ? SW_SHOWNOACTIVATE : SW_HIDE);
+    if (bShowScroll)
+        m_hwndScrollBar.InvalidateRect(NULL, FALSE);
 }
 
 BOOL CAutoComplete::OnEditKeyDown(WPARAM wParam, LPARAM lParam)
@@ -941,22 +991,6 @@ STDMETHODIMP CAutoComplete::Clone(IEnumString **ppOut)
 
 //////////////////////////////////////////////////////////////////////////////
 // CAutoComplete protected methods
-
-VOID CAutoComplete::UpdateScrollBar()
-{
-    // copy scroll info from m_hwndList to m_hwndScrollBar
-    SCROLLINFO si = { sizeof(si), SIF_ALL };
-    m_hwndList.GetScrollInfo(SB_VERT, &si);
-    m_hwndScrollBar.SetScrollInfo(SB_CTL, &si, FALSE);
-
-    // show/hide scroll bar
-    INT cVisibles = m_hwndList.GetVisibleItemCount();
-    INT cItems = m_hwndList.GetItemCount();
-    BOOL bShowScroll = (cItems > cVisibles);
-    m_hwndScrollBar.ShowWindow(bShowScroll ? SW_SHOWNOACTIVATE : SW_HIDE);
-    if (bShowScroll)
-        m_hwndScrollBar.InvalidateRect(NULL, TRUE);
-}
 
 VOID CAutoComplete::UpdateDropDownState()
 {
@@ -1382,6 +1416,16 @@ LRESULT CAutoComplete::OnMouseActivate(UINT uMsg, WPARAM wParam, LPARAM lParam, 
     return (LRESULT)MA_NOACTIVATE;
 }
 
+// WM_NCACTIVATE
+// This message is sent to a window to indicate an active or inactive state.
+LRESULT CAutoComplete::OnNCActivate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+{
+    BOOL bActive = (BOOL)wParam;
+    if (bActive)
+        return FALSE; // eat
+    return DefWindowProcW(uMsg, wParam, lParam); // do default
+}
+
 // WM_NOTIFY
 // This message informs the parent window of a control that an event has occurred.
 LRESULT CAutoComplete::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
@@ -1396,6 +1440,20 @@ LRESULT CAutoComplete::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
             TRACE("NM_DBLCLK\n");
             HideDropDown();
             break;
+        }
+        case NM_HOVER:
+        {
+            POINT pt;
+            ::GetCursorPos(&pt);
+            m_hwndList.ScreenToClient(&pt);
+            INT iItem = m_hwndList.ItemFromPoint(pt.x, pt.y);
+            if (iItem != -1)
+            {
+                m_bInSelectItem = TRUE;
+                m_hwndList.SetCurSel(iItem);
+                m_bInSelectItem = FALSE;
+            }
+            return TRUE; // non-default
         }
         case LVN_GETDISPINFOA:
         {
@@ -1438,7 +1496,8 @@ LRESULT CAutoComplete::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
             INT iItem = pListView->iItem;
             TRACE("LVN_HOTTRACK: iItem:%d\n", iItem);
             m_hwndList.SetCurSel(iItem);
-            break;
+            m_hwndList.EnsureVisible(iItem, FALSE);
+            return TRUE;
         }
         case LVN_ITEMACTIVATE: // enabled by LVS_EX_ONECLICKACTIVATE
         {
@@ -1448,7 +1507,12 @@ LRESULT CAutoComplete::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
             TRACE("LVN_ITEMACTIVATE: iItem:%d\n", iItem);
             if (pItemActivate->uChanged & LVIF_STATE)
             {
-                m_hwndList.SetCurSel(iItem);
+                if (iItem != -1)
+                {
+                    m_hwndList.SetCurSel(iItem);
+                    m_hwndList.EnsureVisible(iItem, FALSE);
+                    HideDropDown();
+                }
             }
             break;
         }
@@ -1541,14 +1605,17 @@ LRESULT CAutoComplete::OnVScroll(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &
                     iItem = cItems - 1;
             }
             m_hwndList.EnsureVisible(iItem, FALSE);
+            si.fMask = SIF_POS;
+            m_hwndList.GetScrollInfo(SB_VERT, &si);
+            m_hwndScrollBar.SetScrollInfo(SB_VERT, &si, FALSE);
             break;
         }
         default:
         {
             m_hwndList.SendMessageW(WM_VSCROLL, wParam, lParam);
+            UpdateScrollBar();
             break;
         }
     }
-    UpdateScrollBar();
     return 0;
 }
