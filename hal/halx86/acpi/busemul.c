@@ -15,6 +15,7 @@
 /* GLOBALS ********************************************************************/
 
 extern ULONG HalpShutdownContext;
+extern ULONG HalpPicVectorRedirect[HAL_PIC_VECTORS];
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
@@ -306,10 +307,41 @@ HalGetInterruptVector(_In_ INTERFACE_TYPE InterfaceType,
                       _Out_ PKIRQL OutIrql,
                       _Out_ PKAFFINITY OutAffinity)
 {
-    DPRINT1("HalGetInterruptVector: FIXME. DbgBreakPoint()\n");
-    DbgBreakPoint();
-    //call HalpGetSystemInterruptVector() -> different for PIC and APIC. FIXME!;
-    return 0;
+    BUS_HANDLER BusHandler;
+    ULONG SystemVector;
+    ULONG Vector;
+    ULONG Level;
+
+    if (InterfaceType == Isa)
+    {
+        if (BusInterruptVector >= HAL_PIC_VECTORS)
+        {
+            DPRINT1("HalGetInterruptVector: BusInterruptVector %X\n", BusInterruptVector);
+            DbgBreakPoint(); //ASSERT(BusInterruptVector < 16);
+        }
+
+        Vector = HalpPicVectorRedirect[BusInterruptVector];
+        Level = HalpPicVectorRedirect[BusInterruptLevel];
+    }
+    else
+    {
+        Vector = BusInterruptVector;
+        Level = BusInterruptLevel;
+    }
+
+    RtlCopyMemory(&BusHandler, &HalpFakePciBusHandler, sizeof(BusHandler));
+
+    BusHandler.BusNumber = BusNumber;
+    BusHandler.InterfaceType = InterfaceType;
+    BusHandler.ParentHandler = &BusHandler;
+
+    SystemVector = HalpGetSystemInterruptVector(&BusHandler,
+                                                &BusHandler,
+                                                Level,
+                                                Vector,
+                                                OutIrql,
+                                                OutAffinity);
+    return SystemVector;
 }
 #endif
 
