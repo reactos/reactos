@@ -157,6 +157,9 @@ BOOLEAN HalpUse8254 = FALSE;
 UCHAR HalpNodeInterruptCount[SUPPORTED_NODES] = {0};
 UCHAR HalpNodePriorityLevelUsage[SUPPORTED_NODES][PRIORITY_LEVEL_COUNT] = {{0}};
 
+typedef VOID (*PINTERRUPT_ENTRY)(VOID);
+extern PINTERRUPT_ENTRY HwInterruptTable[MAX_INT_VECTORS];
+
 extern KAFFINITY HalpNodeProcessorAffinity[MAX_CPUS];
 extern HALP_MP_INFO_TABLE HalpMpInfoTable;
 extern USHORT HalpMaxApicInti[MAX_IOAPICS];
@@ -1070,8 +1073,8 @@ VOID
 FASTCALL
 HalpGenerateInterrupt(_In_ UCHAR Vector)
 {
-    DPRINT1("HalpGenerateInterrupt: Vector %X\n", Vector);
-    DbgBreakPoint();
+    //DPRINT1("HalpGenerateInterrupt: Vector %X\n", Vector);
+    ((PINTERRUPT_ENTRY)&HwInterruptTable[Vector])();
 }
 
 VOID
