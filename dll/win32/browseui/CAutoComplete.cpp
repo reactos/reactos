@@ -1521,7 +1521,35 @@ LRESULT CAutoComplete::OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHa
 LRESULT CAutoComplete::OnVScroll(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
     TRACE("CAutoComplete::OnVScroll(%p)\n", this);
-    m_hwndList.SendMessageW(WM_VSCROLL, wParam, lParam);
+    WORD code = LOWORD(wParam);
+    switch (code)
+    {
+        case SB_THUMBPOSITION:
+        case SB_THUMBTRACK:
+        {
+            INT nPos = HIWORD(wParam);
+            SCROLLINFO si = { sizeof(si), SIF_ALL };
+            m_hwndList.GetScrollInfo(SB_VERT, &si);
+            INT cItems = m_hwndList.GetItemCount();
+            // iItem : cItems == (nPos - si.nMin) : (si.nMax - si.nMin).
+            INT iItem = cItems * (nPos - si.nMin) / (si.nMax - si.nMin);
+            if (nPos > si.nPos)
+            {
+                CRect rc;
+                m_hwndList.GetClientRect(&rc);
+                iItem += rc.Height() / m_hwndList.m_cyItem;
+                if (iItem >= cItems)
+                    iItem = cItems - 1;
+            }
+            m_hwndList.EnsureVisible(iItem, FALSE);
+            break;
+        }
+        default:
+        {
+            m_hwndList.SendMessageW(WM_VSCROLL, wParam, lParam);
+            break;
+        }
+    }
     UpdateScrollBar();
     return 0;
 }
