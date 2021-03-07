@@ -330,6 +330,13 @@ INT CACListView::GetItemCount()
     return CListView::GetItemCount();
 }
 
+INT CACListView::GetVisibleItemCount()
+{
+    CRect rc;
+    GetClientRect(&rc);
+    return rc.Height() / m_cyItem;
+}
+
 CStringW CACListView::GetItemText(INT iItem)
 {
     // NOTE: LVS_OWNERDATA doesn't support LVM_GETITEMTEXT.
@@ -943,9 +950,7 @@ VOID CAutoComplete::UpdateScrollBar()
     m_hwndScrollBar.SetScrollInfo(SB_CTL, &si, FALSE);
 
     // show/hide scroll bar
-    CRect rc;
-    m_hwndList.GetClientRect(&rc);
-    INT cVisibles = rc.Height() / m_hwndList.m_cyItem;
+    INT cVisibles = m_hwndList.GetVisibleItemCount();
     INT cItems = m_hwndList.GetItemCount();
     BOOL bShowScroll = (cItems > cVisibles);
     m_hwndScrollBar.ShowWindow(bShowScroll ? SW_SHOWNOACTIVATE : SW_HIDE);
@@ -1531,9 +1536,7 @@ LRESULT CAutoComplete::OnVScroll(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &
             INT iItem = cItems * (nPos - si.nMin) / (si.nMax - si.nMin);
             if (nPos > si.nPos)
             {
-                CRect rc;
-                m_hwndList.GetClientRect(&rc);
-                iItem += rc.Height() / m_hwndList.m_cyItem;
+                iItem += m_hwndList.GetVisibleItemCount();
                 if (iItem >= cItems)
                     iItem = cItems - 1;
             }

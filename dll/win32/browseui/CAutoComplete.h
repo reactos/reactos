@@ -90,6 +90,7 @@ public:
     VOID SetFont(HFONT hFont);
 
     INT GetItemCount();
+    INT GetVisibleItemCount();
     CStringW GetItemText(INT iItem);
     INT ItemFromPoint(INT x, INT y);
 
