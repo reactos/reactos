@@ -3,7 +3,7 @@
  * COPYRIGHT:       GPL-2.0+ (https://spdx.org/licenses/GPL-2.0+)
  * FILE:            hal/halx86/apic/apicacpi.c
  * PURPOSE:         ACPI part APIC HALs code
- * PROGRAMMERS:     Copyright 2020 Vadim Galyant <vgal@rambler.ru>
+ * PROGRAMMERS:     Copyright 2020-2021 Vadim Galyant <vgal@rambler.ru>
  */
 
 /* INCLUDES *******************************************************************/

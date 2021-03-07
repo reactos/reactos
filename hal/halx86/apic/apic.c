@@ -4,6 +4,7 @@
  * FILE:            hal/halx86/apic/apic.c
  * PURPOSE:         HAL APIC Management and Control Code
  * PROGRAMMERS:     Timo Kreuzer (timo.kreuzer@reactos.org)
+ *                  Vadim Galyant (vgal@rambler.ru)
  * REFERENCES:      http://www.joseflores.com/docs/ExploringIrql.html
  *                  http://www.codeproject.com/KB/system/soviet_kernel_hack.aspx
  *                  http://bbs.unixmap.net/thread-2022-1-1.html

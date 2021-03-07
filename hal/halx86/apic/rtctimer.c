@@ -4,6 +4,7 @@
  * FILE:            hal/halx86/apic/rtctimer.c
  * PURPOSE:         HAL APIC Management and Control Code
  * PROGRAMMERS:     Timo Kreuzer (timo.kreuzer@reactos.org)
+ *                  Vadim Galyant (vgal@rambler.ru)
  * REFERENCES:      https://wiki.osdev.org/RTC
  *                  https://forum.osdev.org/viewtopic.php?f=13&t=20825&start=0
  *                  http://www.bioscentral.com/misc/cmosmap.htm
