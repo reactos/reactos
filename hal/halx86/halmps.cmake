@@ -14,6 +14,6 @@ list(APPEND HALMPS_SOURCE
     generic/spinlock.c)
 
 add_asm_files(lib_hal_halmps_asm ${HALMPS_ASM_SOURCE})
-add_object_library(lib_hal_halmps ${HALMPS_SOURCE} ${lib_hal_halmps_asm})
+add_library(lib_hal_halmps OBJECT ${HALMPS_SOURCE} ${lib_hal_halmps_asm})
 add_dependencies(lib_hal_halmps asm bugcodes xdk)
 target_compile_definitions(lib_hal_halmps PRIVATE CONFIG_SMP)

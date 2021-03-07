@@ -16,5 +16,5 @@ list(APPEND HAL_SOURCE
     pic/processor.c)
 
 add_asm_files(lib_hal_hal_asm ${HAL_ASM_SOURCE})
-add_object_library(lib_hal_hal ${HAL_SOURCE} ${lib_hal_hal_asm})
+add_library(lib_hal_hal OBJECT ${HAL_SOURCE} ${lib_hal_hal_asm})
 add_dependencies(lib_hal_hal asm bugcodes xdk)

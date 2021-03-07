@@ -14,5 +14,5 @@ list(APPEND HALAPIC_SOURCE
     generic/spinlock.c)
 
 add_asm_files(lib_hal_halapic_asm ${HALAPIC_ASM_SOURCE})
-add_object_library(lib_hal_halapic ${HALAPIC_SOURCE} ${lib_hal_halapic_asm})
+add_library(lib_hal_halapic OBJECT ${HALAPIC_SOURCE} ${lib_hal_halapic_asm})
 add_dependencies(lib_hal_halapic asm bugcodes xdk)
