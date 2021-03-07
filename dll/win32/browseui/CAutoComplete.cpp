@@ -381,8 +381,7 @@ LRESULT CACListView::OnLButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL
     INT iItem = ItemFromPoint(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
     if (iItem != -1)
     {
-        CStringW strText = GetItemText(iItem);
-        m_pDropDown->SetEditText(strText);
+        m_pDropDown->SelectItem(iItem);
         m_pDropDown->OnEditKeyDown(VK_RETURN, 0);
     }
     return 0;
