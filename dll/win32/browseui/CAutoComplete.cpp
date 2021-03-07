@@ -670,7 +670,7 @@ INT CAutoComplete::GetItemCount()
 
 CStringW CAutoComplete::GetItemText(INT iItem)
 {
-    ASSERT(iItem != -1);
+    ATLASSERT(iItem != -1);
     return ((iItem < m_outerList.GetSize()) ? m_outerList[iItem] : L"");
 }
 
