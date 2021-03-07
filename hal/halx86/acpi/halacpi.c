@@ -40,9 +40,8 @@ PVOID HalpWakeVector = NULL;
 ULONG HalpInvalidAcpiTable;
 ULONG HalpShutdownContext = 0;
 
-//ULONG HalpPicVectorRedirect[] = {0, 1, 2, 3, 4, 5, 6, 7, 9, 10, 11, 12, 13, 14, 15};
-ULONG HalpPicVectorRedirect[16] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
-ULONG HalpPicVectorFlags[16] = {0};
+ULONG HalpPicVectorRedirect[HAL_PIC_VECTORS] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15};
+ULONG HalpPicVectorFlags[HAL_PIC_VECTORS] = {0};
 
 /* This determines the HAL type */
 BOOLEAN HalDisableFirmwareMapper = TRUE;
@@ -59,7 +58,8 @@ PHALP_QUERY_TIMER QueryTimer = HalpQueryPerformanceCounter;
 ULONG PMTimerFreq = 3579545;
 
 /* Stall execute */
-ULONG StallLoopValue = 42;
+#define HAL_STALL_LOOP  42
+ULONG StallLoopValue = HAL_STALL_LOOP;
 UCHAR StallExecCounter = 0;
 
 HALP_TIMER_INFO TimerInfo;
@@ -246,8 +246,6 @@ HalpPmTimerStallExecProc(_In_ ULONG MicroSeconds)
     ULONG StallCounter;
 
     //DPRINT1("HalpPmTimerStallExecProc: MicroSeconds %X\n", MicroSeconds);
-    //DPRINT1("HalpPmTimerStallExecProc: FIXME\n");
-    //DbgBreakPoint(); // ASSERT(FALSE);
 
     /* Serializing instruction execution */
     __cpuid(CpuInfo, 0);
@@ -291,7 +289,7 @@ HalpPmTimerStallExecProc(_In_ ULONG MicroSeconds)
                 break;
             }
 
-            StallLoopValue += 42;
+            StallLoopValue += HAL_STALL_LOOP;
             StallCounter = StallLoopValue;
         }
 
@@ -317,9 +315,9 @@ Exit:
     /* StallExecCounter 0-255 */
     StallExecCounter++;
 
-    if (!StallExecCounter && (StallLoopValue > 42))
+    if (!StallExecCounter && (StallLoopValue > HAL_STALL_LOOP))
     {
-        StallLoopValue -= 42;
+        StallLoopValue -= HAL_STALL_LOOP;
     }
 }
 
@@ -1639,6 +1637,35 @@ HalAcpiHaltSystem(VOID)
         YieldProcessor();
     }
 }
+
+#define HAL_PIC_MAX_LEVELS  0x1B
+
+ULONG
+NTAPI
+HalpGetRootInterruptVector(_In_ ULONG Level,
+                           _In_ ULONG Vector,
+                           _Out_ KIRQL * OutIrql,
+                           _Out_ KAFFINITY * OutAffinity)
+{
+    DPRINT("HalpGetRootInterruptVector: Level %X, Vector %X\n", Level, Vector);
+
+    if ((Level < 0) || (Level > HAL_PIC_MAX_LEVELS))
+    {
+        DPRINT("HalpGetRootInterruptVector: return 0\n");
+        return 0;
+    }
+
+    *OutIrql = (HAL_PIC_MAX_LEVELS - Level);
+    *OutAffinity = HalpDefaultInterruptAffinity;
+
+    DPRINT("HalpGetRootInterruptVector: *OutIrql %X, *OutAffinity %X\n", *OutIrql, *OutAffinity);
+    DPRINT("HalpGetRootInterruptVector: InterruptVector %X\n", (PRIMARY_VECTOR_BASE + Level));
+
+    ASSERT(HalpDefaultInterruptAffinity);
+
+    return (PRIMARY_VECTOR_BASE + Level);
+}
+
 #endif
 
 /* EOF */

@@ -59,6 +59,8 @@ VOID
 #define INT_BCD(int)            \
     (UCHAR)(((int / 10) << 4) + (int % 10))
 
+#define HAL_PIC_VECTORS  16
+
 typedef
 BOOLEAN
 (NTAPI *PHAL_DISMISS_INTERRUPT)(

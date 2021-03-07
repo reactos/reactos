@@ -46,8 +46,8 @@ extern USHORT HalpVectorToINTI[MAX_CPUS * MAX_INT_VECTORS];
 extern ULONGLONG HalpProc0TSCHz;
 
 /* ACPI */
-extern ULONG HalpPicVectorRedirect[16];
-extern ULONG HalpPicVectorFlags[16];
+extern ULONG HalpPicVectorRedirect[HAL_PIC_VECTORS];
+extern ULONG HalpPicVectorFlags[HAL_PIC_VECTORS];
 extern BOOLEAN LessThan16Mb;
 extern BOOLEAN HalpPhysicalMemoryMayAppearAbove4GB;
 
