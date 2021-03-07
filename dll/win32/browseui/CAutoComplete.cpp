@@ -711,7 +711,6 @@ VOID CAutoComplete::ShowDropDown()
 VOID CAutoComplete::HideDropDown()
 {
     ShowWindow(SW_HIDE);
-    m_hwndEdit.SetFocus();
 }
 
 VOID CAutoComplete::SelectItem(INT iItem)
