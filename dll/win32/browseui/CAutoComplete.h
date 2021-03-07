@@ -200,7 +200,7 @@ public:
     VOID DoAutoAppend();
     VOID UpdateScrollBar();
 
-    BOOL OnEditChar(WPARAM wParam, LPARAM lParam);
+    LRESULT OnEditChar(WPARAM wParam, LPARAM lParam);
     BOOL OnEditKeyDown(WPARAM wParam, LPARAM lParam);
     VOID OnEditUpdate(BOOL bAppendOK);
     VOID OnListSelChange();

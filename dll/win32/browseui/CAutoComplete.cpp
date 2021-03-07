@@ -149,10 +149,7 @@ LRESULT CACEditCtrl::OnChar(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHand
     TRACE("CACEditCtrl::OnChar(%p)\n", this);
     ATLASSERT(m_pDropDown);
 
-    if (m_pDropDown->OnEditChar(wParam, lParam))
-        return 0; // eat
-
-    return DefWindowProcW(uMsg, wParam, lParam); // do default
+    return m_pDropDown->OnEditChar(wParam, lParam);
 }
 
 // WM_CLEAR @implemented
@@ -382,6 +379,7 @@ LRESULT CACListView::OnLButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL
     if (iItem != -1)
     {
         m_pDropDown->SelectItem(iItem);
+        m_pDropDown->SetEditText(GetItemText(iItem));
         m_pDropDown->OnEditKeyDown(VK_RETURN, 0);
     }
     return 0;
@@ -737,20 +735,18 @@ BOOL CAutoComplete::OnEditKeyDown(WPARAM wParam, LPARAM lParam)
     return FALSE; // default
 }
 
-BOOL CAutoComplete::OnEditChar(WPARAM wParam, LPARAM lParam)
+LRESULT CAutoComplete::OnEditChar(WPARAM wParam, LPARAM lParam)
 {
-    if (!CanAutoSuggest() && !CanAutoAppend())
-        return FALSE; // default
-
-    m_hwndEdit.DefWindowProcW(WM_CHAR, wParam, lParam);
-    OnEditUpdate(wParam != VK_BACK && wParam != VK_DELETE);
-    return TRUE; // eat
+    LRESULT ret = m_hwndEdit.DefWindowProcW(WM_CHAR, wParam, lParam);
+    if (CanAutoSuggest() || CanAutoAppend())
+        OnEditUpdate(wParam != VK_BACK && wParam != VK_DELETE);
+    return ret;
 }
 
 VOID CAutoComplete::OnEditUpdate(BOOL bAppendOK)
 {
     CString strText = GetEditText();
-    if (::StrCmpIW(m_strText, strText) == 0)
+    if (m_strText.CompareNoCase(strText) == 0)
     {
         // no change
         if (CanAutoSuggest() && !IsWindowVisible())
