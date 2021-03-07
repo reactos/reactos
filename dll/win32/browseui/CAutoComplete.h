@@ -240,6 +240,7 @@ protected:
     HWND m_hwndCombo;
     HFONT m_hFont;
     BOOL m_bResized;
+    HWND m_hwndParent;
     // The following variables are non-POD:
     CStringW m_strText;
     CStringW m_strStemText; // dirname + '\\'

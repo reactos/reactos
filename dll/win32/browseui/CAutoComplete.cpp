@@ -185,7 +185,7 @@ VOID CACEditCtrl::HookWordBreakProc(BOOL bHook)
 // This message is posted to the window with the keyboard focus when WM_KEYDOWN is translated.
 LRESULT CACEditCtrl::OnChar(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
-    TRACE("CACEditCtrl::OnChar(%p)\n", this);
+    TRACE("CACEditCtrl::OnChar(%p, %p)\n", this, wParam);
     ATLASSERT(m_pDropDown);
     return m_pDropDown->OnEditChar(wParam, lParam);
 }
@@ -244,8 +244,19 @@ LRESULT CACEditCtrl::OnGetDlgCode(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL 
     ATLASSERT(m_pDropDown);
 
     LRESULT ret = DefWindowProcW(uMsg, wParam, lParam); // get default
-    if (m_pDropDown->IsWindowVisible() || ::GetKeyState(VK_CONTROL) < 0)
-        ret |= DLGC_WANTALLKEYS; // we want all keys to manipulate the list
+
+    if (m_pDropDown &&
+        (m_pDropDown->IsWindowVisible() || ::GetKeyState(VK_CONTROL) < 0))
+    {
+        if (wParam == VK_RETURN) // [Enter] key
+        {
+            m_pDropDown->OnEditKeyDown(VK_RETURN, 0);
+        }
+        else if (wParam != VK_TAB) // non-[Tab] key
+        {
+            ret |= DLGC_WANTALLKEYS; // we want all keys to manipulate the list
+        }
+    }
 
     return ret;
 }
@@ -254,12 +265,11 @@ LRESULT CACEditCtrl::OnGetDlgCode(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL 
 // This message is posted to the window with the keyboard focus when a non-system key is pressed.
 LRESULT CACEditCtrl::OnKeyDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
-    TRACE("CACEditCtrl::OnKeyDown(%p)\n", this);
+    TRACE("CACEditCtrl::OnKeyDown(%p, %p)\n", this, wParam);
     ATLASSERT(m_pDropDown);
-
-    if (m_pDropDown && m_pDropDown->OnEditKeyDown(wParam, lParam))
-        return 0; // eat
-    return DefWindowProcW(uMsg, wParam, lParam); // do default
+    if (!m_pDropDown->OnEditKeyDown(wParam, lParam))
+        return DefWindowProcW(uMsg, wParam, lParam); // do default
+    return 1;
 }
 
 // WM_KILLFOCUS @implemented
@@ -306,10 +316,8 @@ LRESULT CACEditCtrl::OnSetText(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bH
 {
     TRACE("CACEditCtrl::OnSetText(%p)\n", this);
     ATLASSERT(m_pDropDown);
-
     if (!m_pDropDown->m_bInSetText)
         m_pDropDown->HideDropDown(); // it's mechanical WM_SETTEXT
-
     return DefWindowProcW(uMsg, wParam, lParam); // do default
 }
 
@@ -617,6 +625,7 @@ CAutoComplete::CAutoComplete()
     : m_bInSetText(FALSE), m_bInSelectItem(FALSE)
     , m_bDowner(TRUE), m_dwOptions(ACO_AUTOAPPEND | ACO_AUTOSUGGEST)
     , m_bEnabled(TRUE), m_hwndCombo(NULL), m_hFont(NULL), m_bResized(FALSE)
+    , m_hwndParent(NULL)
 {
 }
 
@@ -661,6 +670,7 @@ INT CAutoComplete::GetItemCount()
 
 CStringW CAutoComplete::GetItemText(INT iItem)
 {
+    ASSERT(iItem != -1);
     return ((iItem < m_outerList.GetSize()) ? m_outerList[iItem] : L"");
 }
 
@@ -786,9 +796,7 @@ VOID CAutoComplete::UpdateScrollBar()
 
 BOOL CAutoComplete::OnEditKeyDown(WPARAM wParam, LPARAM lParam)
 {
-    // is suggestion available?
-    if (!CanAutoSuggest())
-        return FALSE; // if not so, then do default
+    TRACE("CAutoComplete::OnEditKeyDown(%p, %p)\n", this, wParam);
 
     UINT vk = (UINT)wParam; // virtual key
     switch (vk)
@@ -796,11 +804,17 @@ BOOL CAutoComplete::OnEditKeyDown(WPARAM wParam, LPARAM lParam)
         case VK_HOME: case VK_END: // [Home]/[End] key
         case VK_UP: case VK_DOWN: // [Arrow Up]/[Arrow Down] key
         case VK_PRIOR: case VK_NEXT: // [PageUp]/[PageDown] key
+            // is suggestion available?
+            if (!CanAutoSuggest())
+                return FALSE; // if not so, then do default
             if (IsWindowVisible())
                 return OnListUpDown(vk);
             break;
-        case VK_ESCAPE: case VK_TAB: // [Esc]/[Tab] key
+        case VK_ESCAPE: // [Esc] key
         {
+            // is suggestion available?
+            if (!CanAutoSuggest())
+                return FALSE; // if not so, then do default
             if (IsWindowVisible())
             {
                 SetEditText(m_strText); // revert
@@ -808,6 +822,11 @@ BOOL CAutoComplete::OnEditKeyDown(WPARAM wParam, LPARAM lParam)
                 m_hwndEdit.SendMessageW(EM_SETSEL, cch, cch);
                 HideDropDown(); // hide
                 return TRUE; // eat
+            }
+            else
+            {
+                ::PostMessageW(m_hwndParent, WM_KEYDOWN, VK_ESCAPE, 0);
+                return TRUE;
             }
             break;
         }
@@ -821,22 +840,35 @@ BOOL CAutoComplete::OnEditKeyDown(WPARAM wParam, LPARAM lParam)
             }
             else
             {
-                // select all
-                INT cch = m_hwndEdit.GetWindowTextLengthW();
-                m_hwndEdit.SendMessageW(EM_SETSEL, 0, cch);
+                INT iItem = m_hwndList.GetCurSel();
+                if (iItem != -1)
+                {
+                    CStringW strText = GetItemText(iItem);
+                    SetEditText(strText);
+                }
             }
+            // select all
+            INT cch = m_hwndEdit.GetWindowTextLengthW();
+            m_hwndEdit.SendMessageW(EM_SETSEL, 0, cch);
             // hide
             HideDropDown();
-            // post Enter key
-            m_hwndEdit.PostMessageW(WM_KEYDOWN, VK_RETURN, 0);
             break;
+        }
+        case VK_TAB: // [Tab] key
+        {
+            HWND hwndCtrl = m_hwndCombo ? m_hwndCombo : m_hwndEdit;
+            BOOL bShift = !!(::GetKeyState(VK_SHIFT) < 0);
+            hwndCtrl = ::GetNextDlgTabItem(m_hwndParent, hwndCtrl, bShift);
+            ::SetFocus(hwndCtrl);
+            return TRUE; // eat
         }
         case VK_DELETE: // [Del] key
         {
+            // is suggestion available?
+            if (!CanAutoSuggest())
+                return FALSE; // if not so, then do default
             if (IsWindowVisible())
-            {
                 OnEditUpdate(FALSE);
-            }
             break;
         }
         case VK_BACK: // [BackSpace] key
@@ -868,6 +900,9 @@ BOOL CAutoComplete::OnEditKeyDown(WPARAM wParam, LPARAM lParam)
 
 LRESULT CAutoComplete::OnEditChar(WPARAM wParam, LPARAM lParam)
 {
+    TRACE("CACEditCtrl::OnEditChar(%p, %p)\n", this, wParam);
+    if (wParam == L'\n' || wParam == L'\t')
+        return 0; // eat
     LRESULT ret = m_hwndEdit.DefWindowProcW(WM_CHAR, wParam, lParam);
     if (CanAutoSuggest() || CanAutoAppend())
         OnEditUpdate(wParam != VK_BACK && wParam != VK_DELETE);
@@ -1056,6 +1091,9 @@ CAutoComplete::Init(HWND hwndEdit, IUnknown *punkACL,
             m_hwndCombo = hwndParent; // get combobox
         }
     }
+
+    HWND hwndCtrl = m_hwndCombo ? m_hwndCombo : m_hwndEdit;
+    m_hwndParent = ::GetParent(hwndCtrl);
 
     return S_OK;
 }
