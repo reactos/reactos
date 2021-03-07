@@ -840,6 +840,10 @@ BEGIN
     IDS_FORMAT_WARNING "ACHTUNG: Das Formatieren löscht ALLE Daten auf dem Datenträger.\nKlicken Sie auf OK zum Formatieren. Klicken Sie auf ABBRECHEN zum Beenden."
     IDS_FORMAT_COMPLETE "Formatieren abgeschlossen."
 
+    /* Warning format system drive dialog strings */
+    IDS_NO_FORMAT_TITLE "Cannot format this volume"
+    IDS_NO_FORMAT "This volume cannot be formatted! It contains important system files in order for ReactOS to run."
+
     /* Run File dialog */
     IDS_RUNDLG_ERROR "Anzeigen der Datei Ausführen Dialogbox nicht möglich (interner Fehler)"
     IDS_RUNDLG_BROWSE_ERROR "Anzeigen der Durchsuchen Dialogbox nicht möglich (interner Fehler)"

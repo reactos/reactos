@@ -845,6 +845,10 @@ BEGIN
     IDS_FORMAT_WARNING "OSTRZEŻENIE: Formatowanie wymaże WSZYSTKIE dane na tym dysku.\nWybierz przycisk OK, aby sformatować dysk lub przycisk ANULUJ, aby zamknąć."
     IDS_FORMAT_COMPLETE "Formatowanie zakończone."
 
+    /* Warning format system drive dialog strings */
+    IDS_NO_FORMAT_TITLE "Cannot format this volume"
+    IDS_NO_FORMAT "This volume cannot be formatted! It contains important system files in order for ReactOS to run."
+
     /* Run File dialog */
     IDS_RUNDLG_ERROR "Nie można wyświetlić okna Uruchom (błąd wewnętrzny)"
     IDS_RUNDLG_BROWSE_ERROR "Nie można wyświetlić okna Przeglądaj (błąd wewnętrzny)"

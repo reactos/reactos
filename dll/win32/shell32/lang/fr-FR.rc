@@ -839,6 +839,10 @@ BEGIN
     IDS_FORMAT_WARNING "Attention: Le formatage effacera toutes les données présentes sur ce disque.\nPour formater ce disque, cliquez sur OK. Pour quitter, cliquez sur Annuler."
     IDS_FORMAT_COMPLETE "Formatage terminé."
 
+    /* Warning format system drive dialog strings */
+    IDS_NO_FORMAT_TITLE "Cannot format this volume"
+    IDS_NO_FORMAT "This volume cannot be formatted! It contains important system files in order for ReactOS to run."
+
     /* Run File dialog */
     IDS_RUNDLG_ERROR "Impossible d'afficher la boîte de dialogue pour l'exécution d'un fichier (erreur interne)"
     IDS_RUNDLG_BROWSE_ERROR "Impossible d'afficher la boîte de dialogue pour la recherche de fichier (erreur interne)"

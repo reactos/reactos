@@ -838,6 +838,10 @@ BEGIN
     IDS_FORMAT_WARNING "FIGYELEM: A formázás MINDEN adatot töröl a lemezről.\nA lemez formázásához kattintson az OK gombra. A kilépéshez kattintson a MÉGSE gombra."
     IDS_FORMAT_COMPLETE "A formázás kész."
 
+    /* Warning format system drive dialog strings */
+    IDS_NO_FORMAT_TITLE "Cannot format this volume"
+    IDS_NO_FORMAT "This volume cannot be formatted! It contains important system files in order for ReactOS to run."
+
     /* Run File dialog */
     IDS_RUNDLG_ERROR "A futtatás párbeszédpanelt nem sikerült megjeleníteni (belső hiba)"
     IDS_RUNDLG_BROWSE_ERROR "A tallózás párbeszédpanelt nem sikerült megjeleníteni (belső hiba)"

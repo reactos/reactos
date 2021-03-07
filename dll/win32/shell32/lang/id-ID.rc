@@ -836,6 +836,10 @@ BEGIN
     IDS_FORMAT_WARNING "PERINGATAN: Memformat akan menghapus SELURUH data dalam disk.\nUntuk memformat disk, klik OK. untuk keluar, klik BATAL."
     IDS_FORMAT_COMPLETE "Format Selesai."
 
+    /* Warning format system drive dialog strings */
+    IDS_NO_FORMAT_TITLE "Cannot format this volume"
+    IDS_NO_FORMAT "This volume cannot be formatted! It contains important system files in order for ReactOS to run."
+
     /* Run File dialog */
     IDS_RUNDLG_ERROR "Tidak bisa menampilkan kotak dialog Jalankan Berkas (kesalahan internal)"
     IDS_RUNDLG_BROWSE_ERROR "Tidak bisa menampilkan kotak dialog Jelajah (kesalahan internal)"

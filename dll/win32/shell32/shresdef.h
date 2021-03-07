@@ -197,6 +197,10 @@
 #define IDS_FORMAT_WARNING        185
 #define IDS_FORMAT_COMPLETE       186
 
+/* Warning format system drive dialog strings */
+#define IDS_NO_FORMAT_TITLE       188
+#define IDS_NO_FORMAT             189
+
 #define IDS_UNKNOWN_APP     190
 #define IDS_EXE_DESCRIPTION 191
 

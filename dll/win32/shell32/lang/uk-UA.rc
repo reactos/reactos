@@ -839,6 +839,10 @@ BEGIN
     IDS_FORMAT_WARNING "УВАГА: Форматування видалить ВСЮ інформацію на диску.\nЩоб розпочати форматування, натисніть OK. Щоб вийти, натисніть СКАСУВАТИ."
     IDS_FORMAT_COMPLETE "Форматування завершено."
 
+    /* Warning format system drive dialog strings */
+    IDS_NO_FORMAT_TITLE "Cannot format this volume"
+    IDS_NO_FORMAT "This volume cannot be formatted! It contains important system files in order for ReactOS to run."
+
     /* Run File dialog */
     IDS_RUNDLG_ERROR "Неможливо відобразити діалог запуску файлу (внутрішня помилка)"
     IDS_RUNDLG_BROWSE_ERROR "Неможливо відобразити діалог огляду (внутрішня помилка)"

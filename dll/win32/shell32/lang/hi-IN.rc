@@ -834,6 +834,10 @@ BEGIN
     IDS_SHUTDOWN_TITLE "शटडाउन"
     IDS_SHUTDOWN_PROMPT "क्या आप शटडाउन करना चाहते हैं?"
 
+    /* Warning format system drive dialog strings */
+    IDS_NO_FORMAT_TITLE "Cannot format this volume"
+    IDS_NO_FORMAT "This volume cannot be formatted! It contains important system files in order for ReactOS to run."
+
     /* Run File dialog */
     IDS_RUNDLG_ERROR "रन फ़ाइल डायलॉग बॉक्स डिस्प्ले करने में असमर्थ (आंतरिक त्रुटि)"
     IDS_RUNDLG_BROWSE_ERROR "ब्राउज़ डायलॉग बॉक्स डिस्प्ले करने में असमर्थ (आंतरिक त्रुटि)"

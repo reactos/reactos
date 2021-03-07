@@ -841,6 +841,10 @@ BEGIN
     IDS_FORMAT_WARNING "AVERTISMENT: Formatarea va șterge TOATE datele de pe acest disc.\nConfirmați pentru a formata, anulați pentru a ieși."
     IDS_FORMAT_COMPLETE "Formatare completă."
 
+    /* Warning format system drive dialog strings */
+    IDS_NO_FORMAT_TITLE "Cannot format this volume"
+    IDS_NO_FORMAT "This volume cannot be formatted! It contains important system files in order for ReactOS to run."
+
     /* Run File dialog */
     IDS_RUNDLG_ERROR "„Executare fișier” nu a putut fi deschis (eroare internă)"
     IDS_RUNDLG_BROWSE_ERROR "„Specificare fișiere” nu a putut fi deschisă (eroare internă)"

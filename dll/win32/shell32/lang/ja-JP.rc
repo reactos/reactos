@@ -836,6 +836,10 @@ BEGIN
     IDS_FORMAT_WARNING "警告: フォーマットはこのディスクの「すべての」データを消去します。\nフォーマットするならOKをクリック。終了するにはキャンセルをクリックして下さい。"
     IDS_FORMAT_COMPLETE "フォーマット完了。"
 
+    /* Warning format system drive dialog strings */
+    IDS_NO_FORMAT_TITLE "Cannot format this volume"
+    IDS_NO_FORMAT "This volume cannot be formatted! It contains important system files in order for ReactOS to run."
+
     /* Run File dialog */
     IDS_RUNDLG_ERROR "「ファイルの実行」ダイアログを表示できませんでした (内部エラー)"
     IDS_RUNDLG_BROWSE_ERROR "「閲覧」ダイアログを表示できませんでした (内部エラー)"
