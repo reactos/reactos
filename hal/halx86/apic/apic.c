@@ -108,6 +108,10 @@ KIRQL HalpVectorToIRQL[16] =
     0x1F, /* FF HIGH_LEVEL */
 };
 
+#define HALP_DEVICE_INT_PRIORITY_LEVEL_BASE  5
+#define HALP_DEVICE_INT_PRIORITY_LEVEL_COUNT 7
+#define HALP_MAX_PRIORITY_LEVEL              15
+
 #define HALP_DEV_INT_EDGE   0
 #define HALP_DEV_INT_LEVEL  1
 
@@ -139,6 +143,7 @@ UCHAR HalpDevPolarity[4][2] =
 ULONGLONG HalpProc0TSCHz;
 USHORT HalpVectorToINTI[MAX_CPUS * MAX_INT_VECTORS] = {0xFFFF};
 APIC_INTI_INFO HalpIntiInfo[MAX_INTI];
+ULONG HalpINTItoVector[MAX_INTI] = {0};
 ULONG HalpDefaultApicDestinationModeMask = 0x800;
 KSPIN_LOCK HalpAccountingLock;
 BOOLEAN HalpForceApicPhysicalDestinationMode = FALSE;
@@ -152,10 +157,12 @@ BOOLEAN HalpUse8254 = FALSE;
 UCHAR HalpNodeInterruptCount[SUPPORTED_NODES] = {0};
 UCHAR HalpNodePriorityLevelUsage[SUPPORTED_NODES][PRIORITY_LEVEL_COUNT] = {{0}};
 
+extern KAFFINITY HalpNodeProcessorAffinity[MAX_CPUS];
 extern HALP_MP_INFO_TABLE HalpMpInfoTable;
 extern USHORT HalpMaxApicInti[MAX_IOAPICS];
 extern UCHAR HalpIntDestMap[MAX_CPUS];
 extern UCHAR HalpMaxProcsPerCluster;
+extern UCHAR HalpMaxNode;
 #endif
 
 /* PRIVATE FUNCTIONS **********************************************************/
@@ -1460,5 +1467,168 @@ HalpReleaseHighLevelLock(_In_ volatile PKSPIN_LOCK SpinLock,
 
     __writeeflags(EFlags);
 }
+ULONG
+NTAPI 
+HalpAllocateSystemInterruptVector(_In_ USHORT IntI)
+{
+    KAFFINITY Affinity;
+    ULONG InterruptCount;
+    ULONG MaxPriorityLevel;
+    ULONG PriorityLevel;
+    ULONG SystemVector;
+    ULONG Vector;
+    ULONG IrqlIdx;
+    ULONG Node;   // (from 1 .. to 32)
+    ULONG ix;
+
+    DPRINT("HalpAllocateSystemInterruptVector: IntI %X\n", IntI);
+
+    if (!HalpMaxNode)
+    {
+        DPRINT1("HalpGetSystemInterruptVector: HalpMaxNode == 0\n");
+        KeBugCheckEx(HAL_INITIALIZATION_FAILED, 0x100, HalpDefaultInterruptAffinity, 0, 0);
+    }
+
+    InterruptCount = 0xFFFFFFFF;
+    Node = 0;
+
+    for (ix = HalpMaxNode; ix; ix--)
+    {
+       Affinity = HalpNodeProcessorAffinity[ix - 1];
+
+       if ((HalpDefaultInterruptAffinity & Affinity) &&
+           HalpNodeInterruptCount[ix - 1] < InterruptCount)
+        {
+            Node = ix;
+            InterruptCount = HalpNodeInterruptCount[ix - 1];
+        }
+    }
+
+    if (!Node)
+    {
+        DPRINT1("HalpGetSystemInterruptVector: Node == 0\n");
+        KeBugCheckEx(HAL_INITIALIZATION_FAILED, 0x100, HalpDefaultInterruptAffinity, 0, 0);
+    }
+
+    /* 0x5n, 0x6n, 0x7n, 0x8n, 0x9n, 0xAn, 0xBn - bank of free vectors for HW devices.
+       Vectors with n=0 not used.
+    */
+    MaxPriorityLevel = HalpNodePriorityLevelUsage[Node][HALP_DEVICE_INT_PRIORITY_LEVEL_COUNT-1];
+    IrqlIdx = (HALP_DEVICE_INT_PRIORITY_LEVEL_COUNT - 1); // maximal index [(0xB - 0x5) - 1]
+
+    for (ix = IrqlIdx; ix; ix--)
+    {
+        PriorityLevel = HalpNodePriorityLevelUsage[Node][ix - 1];
+        if (PriorityLevel < MaxPriorityLevel)
+        {
+            IrqlIdx = ix - 1;
+            MaxPriorityLevel = HalpNodePriorityLevelUsage[Node][ix - 1];
+        }
+    }
+
+    if (PriorityLevel >= HALP_MAX_PRIORITY_LEVEL)
+    {
+        DPRINT1("HalpAllocateSystemInterruptVector: PriorityLevel %X\n", PriorityLevel);
+        KeBugCheckEx(HAL_INITIALIZATION_FAILED, 0x101, HalpDefaultInterruptAffinity, 0, 0);
+    }
+
+    HalpNodeInterruptCount[Node - 1]++;
+    HalpNodePriorityLevelUsage[Node][IrqlIdx] = (UCHAR)(PriorityLevel + 1); // (0x1-0xF)
+
+    Vector = (UCHAR)(((HALP_DEVICE_INT_PRIORITY_LEVEL_BASE + IrqlIdx) << 4) + (UCHAR)(PriorityLevel + 1)); // (0x51-0x5F ... 0xB1-0xBF)
+    SystemVector = (Node << 8) | Vector; // (0x0151-0x015F ... 0x20B1-0x20BF)
+    ASSERT(SystemVector < (MAX_CPUS * MAX_INT_VECTORS));
+
+    HalpVectorToIRQL[Vector >> 4] = (4 + IrqlIdx); // 0-6 (Irql: 4-10)
+    HalpVectorToINTI[SystemVector] = IntI;
+    HalpINTItoVector[IntI] = SystemVector;
+
+    DPRINT("HalpAllocateSystemInterruptVector: SystemVector %X\n", SystemVector);
+
+    return SystemVector;
+}
+
+ULONG
+NTAPI
+HalpGetSystemInterruptVector(_In_ PBUS_HANDLER BusHandler,
+                             _In_ PBUS_HANDLER RootHandler,
+                             _In_ ULONG BusInterruptLevel,
+                             _In_ ULONG BusInterruptVector,
+                             _Out_ PKIRQL OutIrql,
+                             _Out_ PKAFFINITY OutAffinity)
+{
+    PVOID Handle;
+    KAFFINITY Affinity;
+    ULONG OLdLevel;
+    ULONG Vector;
+    ULONG SystemVector;
+    ULONG AlocVector;
+    USHORT IntI;
+
+    DPRINT("HalpGetSystemInterruptVector: Level %X, Vector %X\n", BusInterruptLevel, BusInterruptVector);
+
+    if (RootHandler != BusHandler)
+    {
+        DPRINT1("HalpGetSystemInterruptVector: DbgBreakPoint()\n");
+        DbgBreakPoint(); // ASSERT(FALSE);
+    }
+
+    if (!HalpGetApicInterruptDesc(BusInterruptLevel, &IntI))
+    {
+        DPRINT1("HalpGetSystemInterruptVector: return 0\n");
+        return 0;
+    }
+
+    DPRINT("HalpGetSystemInterruptVector: IntI %X\n", IntI);
+
+    if (!HalpINTItoVector[IntI])
+    {
+        Handle = MmLockPagableDataSection(HalpGetSystemInterruptVector);
+        OLdLevel = HalpAcquireHighLevelLock(&HalpAccountingLock);
+
+        AlocVector = HalpAllocateSystemInterruptVector(IntI);
+        if (!AlocVector)
+        {
+            HalpReleaseHighLevelLock(&HalpAccountingLock, OLdLevel);
+            MmUnlockPagableImageSection(Handle);
+            DPRINT1("HalpGetSystemInterruptVector: return 0\n");
+            return 0;
+        }
+
+        if (!RootHandler->BusNumber &&
+            BusInterruptLevel < HAL_PIC_VECTORS &&
+            RootHandler->InterfaceType == Eisa)
+        {
+            DPRINT1("HalpGetSystemInterruptVector: DbgBreakPoint()\n");
+            DbgBreakPoint(); // ASSERT(FALSE);
+            //HalpPICINTToVector[BusInterruptLevel] = HalVectorToIDTEntry(AlocVector);
+        }
+
+        HalpReleaseHighLevelLock(&HalpAccountingLock, OLdLevel);
+        MmUnlockPagableImageSection(Handle);
+    }
+
+    SystemVector = HalpINTItoVector[IntI];
+    ASSERT(SystemVector < (MAX_CPUS * MAX_INT_VECTORS));
+    ASSERT(HalpVectorToINTI[SystemVector] == IntI);
+
+    Vector = HalVectorToIDTEntry(SystemVector);
+    Affinity = HalpNodeProcessorAffinity[(SystemVector >> 8) - 1];
+
+    *OutIrql = HalpVectorToIRQL[(ULONG)Vector >> 4];
+    *OutAffinity = (Affinity & HalpDefaultInterruptAffinity);
+
+    DPRINT("HalpGetSystemInterruptVector: *OutIrql %X, *OutAffinity %X\n", *OutIrql, *OutAffinity);
+
+    if (*OutAffinity == 0)
+    {
+        DPRINT1("HalpGetSystemInterruptVector: *OutAffinity == 0\n");
+        KeBugCheckEx(HAL_INITIALIZATION_FAILED, 0x102, HalpDefaultInterruptAffinity, SystemVector >> 8, SystemVector);
+    }
+
+    DPRINT("HalpGetSystemInterruptVector: SystemVector %X\n", SystemVector);
+    return SystemVector;
+}
 #endif /* !_M_AMD64 */
 
+/* EOF */
