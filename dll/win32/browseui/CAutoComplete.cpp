@@ -381,8 +381,9 @@ LRESULT CACListView::OnLButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL
     INT iItem = ItemFromPoint(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
     if (iItem != -1)
     {
-        m_pDropDown->SelectItem(iItem);
-        m_pDropDown->HideDropDown();
+        CStringW strText = GetItemText(iItem);
+        m_pDropDown->SetEditText(strText);
+        m_pDropDown->OnEditKeyDown(VK_RETURN, 0);
     }
     return 0;
 }
@@ -581,6 +582,7 @@ VOID CAutoComplete::HideDropDown()
 
     m_hwndList.DeleteAllItems();
     m_outerList.RemoveAll();
+    m_hwndEdit.SetFocus();
 }
 
 VOID CAutoComplete::SelectItem(INT iItem)
@@ -1441,7 +1443,7 @@ LRESULT CAutoComplete::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
             HideDropDown();
             break;
         }
-        case NM_HOVER:
+        case NM_HOVER: // mouse is hovering
         {
             POINT pt;
             ::GetCursorPos(&pt);
@@ -1505,14 +1507,10 @@ LRESULT CAutoComplete::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
             LPNMITEMACTIVATE pItemActivate = reinterpret_cast<LPNMITEMACTIVATE>(pnmh);
             INT iItem = pItemActivate->iItem;
             TRACE("LVN_ITEMACTIVATE: iItem:%d\n", iItem);
-            if (pItemActivate->uChanged & LVIF_STATE)
+            if (iItem != -1)
             {
-                if (iItem != -1)
-                {
-                    m_hwndList.SetCurSel(iItem);
-                    m_hwndList.EnsureVisible(iItem, FALSE);
-                    HideDropDown();
-                }
+                SelectItem(iItem);
+                HideDropDown();
             }
             break;
         }
