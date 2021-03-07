@@ -1317,10 +1317,11 @@ VOID CAutoComplete::RepositionDropDown()
         cy = INT(CY_LIST / cyItem) * cyItem;
         bLongList = TRUE;
     }
-    INT cyMon = (rcMon.bottom - rcMon.top);
-    if (cy > cyMon / 2)
+    INT cyMon = (rcMon.bottom - rcMon.top); // monitor height
+    INT threshold = (cyMon * 4) / 7; // 4/7 of monitor height
+    if (cy > threshold)
     {
-        cy = INT((cyMon / 2) / cyItem) * cyItem;
+        cy = INT(threshold / cyItem) * cyItem;
         bLongList = TRUE;
     }
 
