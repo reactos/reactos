@@ -241,6 +241,7 @@ protected:
     HFONT m_hFont;
     BOOL m_bResized;
     HWND m_hwndParent;
+    RECT m_rcEdit;
     // The following variables are non-POD:
     CStringW m_strText;
     CStringW m_strStemText; // dirname + '\\'
@@ -278,6 +279,7 @@ protected:
         MESSAGE_HANDLER(WM_NCHITTEST, OnNCHitTest)
         MESSAGE_HANDLER(WM_SIZE, OnSize)
         MESSAGE_HANDLER(WM_SHOWWINDOW, OnShowWindow)
+        MESSAGE_HANDLER(WM_TIMER, OnTimer)
         MESSAGE_HANDLER(WM_VSCROLL, OnVScroll)
     END_MSG_MAP()
     // message handlers
@@ -294,6 +296,7 @@ protected:
     LRESULT OnNCHitTest(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnShowWindow(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
+    LRESULT OnTimer(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnVScroll(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
 
     DECLARE_REGISTRY_RESOURCEID(IDR_AUTOCOMPLETE)

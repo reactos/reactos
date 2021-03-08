@@ -42,6 +42,7 @@
 #define CY_ITEM 18 // default height of listview item
 #define COMPLETION_TIMEOUT 250 // in milliseconds
 #define MAX_ITEM_COUNT 1000
+#define TIMER_ID 0xFEEDBEEF
 
 static HHOOK s_hMouseHook = NULL;
 static HWND s_hWnd = NULL;
@@ -815,7 +816,11 @@ VOID CAutoComplete::SelectItem(INT iItem)
 
 VOID CAutoComplete::DoAutoAppend()
 {
-    if (!CanAutoSuggest() || m_strText.IsEmpty())
+    if (!CanAutoAppend())
+        return;
+
+    CStringW strText = GetEditText(); // get the text
+    if (strText.IsEmpty())
         return;
 
     INT cItems = m_innerList.GetSize(); // get the number of items
@@ -843,8 +848,6 @@ VOID CAutoComplete::DoAutoAppend()
             }
         }
     }
-
-    CStringW strText = GetEditText(); // get the text
 
     if (strCommon.IsEmpty() || strCommon.GetLength() <= strText.GetLength())
         return; // no suggestion
@@ -998,8 +1001,6 @@ VOID CAutoComplete::OnEditUpdate(BOOL bAppendOK)
     if (m_strText.CompareNoCase(strText) == 0)
     {
         // no change
-        if (CanAutoSuggest() && !IsWindowVisible())
-            ShowDropDown();
         return;
     }
 
@@ -1145,6 +1146,8 @@ CAutoComplete::Init(HWND hwndEdit, IUnknown *punkACL,
     m_hwndEdit.SubclassWindow(hwndEdit);
     // set word break procedure
     m_hwndEdit.HookWordBreakProc(TRUE);
+    // save position
+    m_hwndEdit.GetWindowRect(&m_rcEdit);
 
     // get an IEnumString
     ATLASSERT(!m_pEnum);
@@ -1506,6 +1509,7 @@ INT CAutoComplete::ReLoadInnerList()
     return m_innerList.GetSize();
 }
 
+// update inner list and m_strText and m_strStemText
 INT CAutoComplete::UpdateInnerList()
 {
     // get text
@@ -1946,26 +1950,41 @@ LRESULT CAutoComplete::OnShowWindow(UINT uMsg, WPARAM wParam, LPARAM lParam, BOO
     if (bShow)
     {
         s_hWnd = m_hWnd;
+
+        // unhook mouse if any
         if (s_hMouseHook)
         {
             HHOOK hHookOld = s_hMouseHook;
             s_hMouseHook = NULL;
             ::UnhookWindowsHookEx(hHookOld);
         }
+
+        // hook mouse
         s_hMouseHook = ::SetWindowsHookEx(WH_MOUSE, MouseProc, NULL, ::GetCurrentThreadId());
         ATLASSERT(s_hMouseHook != NULL);
+
+        // set timer
+        SetTimer(TIMER_ID, 500, NULL);
+
         return DefWindowProcW(uMsg, wParam, lParam); // do default
     }
     else
     {
+        // kill timer
+        KillTimer(TIMER_ID);
+
         s_hWnd = NULL;
+
+        // unhook mouse if any
         if (s_hMouseHook)
         {
             HHOOK hHookOld = s_hMouseHook;
             s_hMouseHook = NULL;
             ::UnhookWindowsHookEx(hHookOld);
         }
+
         LRESULT ret = DefWindowProcW(uMsg, wParam, lParam); // do default
+
         if (m_hwndCombo)
         {
             ::SendMessageW(m_hwndCombo, CB_SHOWDROPDOWN, FALSE, 0);
@@ -1974,6 +1993,31 @@ LRESULT CAutoComplete::OnShowWindow(UINT uMsg, WPARAM wParam, LPARAM lParam, BOO
         m_outerList.RemoveAll();
         return ret;
     }
+}
+
+// WM_TIMER
+LRESULT CAutoComplete::OnTimer(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+{
+    if (!::IsWindow(m_hwndEdit))
+    {
+        KillTimer(TIMER_ID);
+        return 0;
+    }
+
+    RECT rcEdit;
+    m_hwndEdit.GetWindowRect(&rcEdit);
+
+    // m_hwndEdit is moved?
+    if (!::EqualRect(&rcEdit, &m_rcEdit))
+    {
+        // if so, hide
+        HideDropDown();
+
+        m_rcEdit = rcEdit;
+        m_bResized = FALSE;
+    }
+
+    return 0;
 }
 
 // WM_VSCROLL
