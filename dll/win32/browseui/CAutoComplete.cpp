@@ -133,9 +133,9 @@ static void quicksort(list_t& a, INT i, INT j)
 
 static inline void DoSort(list_t& list)
 {
-    if (list.GetSize() <= 1)
+    if (list.GetSize() <= 1) // sanity check
         return;
-    quicksort(list, 0, list.GetSize() - 1);
+    quicksort(list, 0, list.GetSize() - 1); // quick sort
 }
 
 // std::unique
@@ -208,6 +208,7 @@ static inline BOOL IsWordBreak(WCHAR ch)
         { 0xff3d, 0xff3d }, { 0xff40, 0xff40 }, { 0xff5b, 0xff5e }, { 0xff61, 0xff64 },
         { 0xff67, 0xff70 }, { 0xff9e, 0xff9f }, { 0xffe9, 0xffe9 }, { 0xffeb, 0xffeb },
     };
+    // binary search
     RANGE range = { ch, ch };
     return !!bsearch(&range, s_ranges, _countof(s_ranges), sizeof(RANGE), RangeCompare);
 }
@@ -440,11 +441,13 @@ HWND CACListView::Create(HWND hwndParent)
     return m_hWnd;
 }
 
+// set font handle
 VOID CACListView::SetFont(HFONT hFont)
 {
     SendMessageW(WM_SETFONT, (WPARAM)hFont, TRUE);
 
     // get listview item height
+    m_cyItem = CY_ITEM;
     HDC hDC = GetDC();
     if (hDC)
     {
@@ -459,6 +462,7 @@ VOID CACListView::SetFont(HFONT hFont)
     }
 }
 
+// get the number of items
 INT CACListView::GetItemCount()
 {
     ATLASSERT(m_pDropDown);
@@ -466,15 +470,17 @@ INT CACListView::GetItemCount()
     return CListView::GetItemCount();
 }
 
-INT CACListView::GetVisibleItemCount()
+// get the number of visible items
+INT CACListView::GetVisibleCount()
 {
-    if (m_cyItem <= 0)
+    if (m_cyItem <= 0) // avoid "division by zero"
         return 0;
     CRect rc;
     GetClientRect(&rc);
     return rc.Height() / m_cyItem;
 }
 
+// get the text of an item
 CStringW CACListView::GetItemText(INT iItem)
 {
     // NOTE: LVS_OWNERDATA doesn't support LVM_GETITEMTEXT.
@@ -483,6 +489,7 @@ CStringW CACListView::GetItemText(INT iItem)
     return m_pDropDown->GetItemText(iItem);
 }
 
+// get the item index from position
 INT CACListView::ItemFromPoint(INT x, INT y)
 {
     LV_HITTESTINFO hittest;
@@ -491,11 +498,13 @@ INT CACListView::ItemFromPoint(INT x, INT y)
     return HitTest(&hittest);
 }
 
+// get current selection
 INT CACListView::GetCurSel()
 {
     return GetNextItem(-1, LVNI_ALL | LVNI_SELECTED);
 }
 
+// set current selection
 VOID CACListView::SetCurSel(INT iItem)
 {
     if (iItem == -1)
@@ -504,6 +513,7 @@ VOID CACListView::SetCurSel(INT iItem)
         SetItemState(iItem, LVIS_SELECTED, LVIS_SELECTED);
 }
 
+// select the specific position (in client coordinates)
 VOID CACListView::SelectHere(INT x, INT y)
 {
     SetCurSel(ItemFromPoint(x, y));
@@ -561,11 +571,11 @@ LRESULT CACListView::OnNCHitTest(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &
 {
     TRACE("CACListView::OnNCHitTest(%p)\n", this);
     ATLASSERT(m_pDropDown);
-    POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
-    ScreenToClient(&pt);
+    POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) }; // in screen coordinates
+    ScreenToClient(&pt); // into client coordinates
     HWND hwndTarget = m_pDropDown->ChildWindowFromPoint(pt);
     if (hwndTarget != m_hWnd)
-        return HTTRANSPARENT; // pass through
+        return HTTRANSPARENT; // pass through (for resizing the drop-down window)
     return DefWindowProcW(uMsg, wParam, lParam); // do default
 }
 
@@ -662,7 +672,7 @@ VOID CACSizeBox::SetStatus(BOOL bDowner, BOOL bLongList)
 // WM_ERASEBKGND
 LRESULT CACSizeBox::OnEraseBkGnd(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
-    return TRUE; // do nothing
+    return TRUE; // do nothing (for quick drawing)
 }
 
 // WM_NCHITTEST
@@ -752,7 +762,7 @@ BOOL CAutoComplete::CanAutoAppend()
 
 BOOL CAutoComplete::UseTab()
 {
-    return !!(m_dwOptions & ACO_USETAB);
+    return !!(m_dwOptions & ACO_USETAB) && m_bEnabled;
 }
 
 BOOL CAutoComplete::IsComboBoxDropped()
@@ -769,8 +779,9 @@ INT CAutoComplete::GetItemCount()
 
 CStringW CAutoComplete::GetItemText(INT iItem)
 {
-    ATLASSERT(iItem != -1);
-    return ((iItem < m_outerList.GetSize()) ? m_outerList[iItem] : L"");
+    if (iItem == -1 || iItem >= m_outerList.GetSize())
+        return L"";
+    return m_outerList[iItem];
 }
 
 CStringW CAutoComplete::GetEditText()
@@ -797,7 +808,7 @@ CStringW CAutoComplete::GetStemText()
     CStringW strText = GetEditText();
     INT ich = strText.ReverseFind(L'\\');
     if (ich == -1)
-        return L"";
+        return L""; // no stem
     return strText.Left(ich + 1);
 }
 
@@ -831,7 +842,7 @@ VOID CAutoComplete::SelectItem(INT iItem)
 
 VOID CAutoComplete::DoAutoAppend()
 {
-    if (!CanAutoAppend())
+    if (!CanAutoAppend()) // can we auto-append?
         return;
 
     CStringW strText = GetEditText(); // get the text
@@ -887,7 +898,7 @@ VOID CAutoComplete::UpdateScrollBar()
     m_hwndScrollBar.SetScrollInfo(SB_CTL, &si, FALSE);
 
     // show/hide scroll bar
-    INT cVisibles = m_hwndList.GetVisibleItemCount();
+    INT cVisibles = m_hwndList.GetVisibleCount();
     INT cItems = m_hwndList.GetItemCount();
     BOOL bShowScroll = (cItems > cVisibles);
     m_hwndScrollBar.ShowWindow(bShowScroll ? SW_SHOWNOACTIVATE : SW_HIDE);
@@ -1084,7 +1095,7 @@ BOOL CAutoComplete::OnListUpDown(UINT vk)
             }
             else
             {
-                iItem -= m_hwndList.GetVisibleItemCount() - 1;
+                iItem -= m_hwndList.GetVisibleCount() - 1;
                 if (iItem < 0)
                     iItem = 0;
             }
@@ -1101,7 +1112,7 @@ BOOL CAutoComplete::OnListUpDown(UINT vk)
             }
             else
             {
-                iItem += m_hwndList.GetVisibleItemCount() - 1;
+                iItem += m_hwndList.GetVisibleCount() - 1;
                 if (iItem > cItems)
                     iItem = cItems - 1;
             }
@@ -1618,6 +1629,8 @@ INT CAutoComplete::UpdateOuterList()
 VOID CAutoComplete::UpdateCompletion(BOOL bAppendOK)
 {
     TRACE("CAutoComplete::UpdateCompletion(%p, %d)\n", this, bAppendOK);
+
+    // update inner list
     UINT cItems = UpdateInnerList();
     if (cItems == 0) // no items
     {
@@ -1625,7 +1638,7 @@ VOID CAutoComplete::UpdateCompletion(BOOL bAppendOK)
         return;
     }
 
-    if (CanAutoSuggest())
+    if (CanAutoSuggest()) // can we auto-suggest?
     {
         m_bInSelectItem = TRUE; // don't respond
         SelectItem(-1); // select none
@@ -1638,7 +1651,7 @@ VOID CAutoComplete::UpdateCompletion(BOOL bAppendOK)
         return;
     }
 
-    if (CanAutoAppend() && bAppendOK)
+    if (CanAutoAppend() && bAppendOK) // can we auto-append?
     {
         DoAutoAppend();
         return;
@@ -1825,7 +1838,8 @@ LRESULT CAutoComplete::OnNCLButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam, 
         case HTBOTTOMRIGHT:
         case HTTOPRIGHT:
         {
-            ModifyStyle(0, WS_THICKFRAME); // add thick frame to resize
+            // add thick frame to resize.
+            ModifyStyle(0, WS_THICKFRAME);
             // frame changed
             UINT uSWP_ = SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED;
             SetWindowPos(NULL, 0, 0, 0, 0, uSWP_);
@@ -1921,7 +1935,7 @@ LRESULT CAutoComplete::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
             }
             break;
         }
-        case LVN_ITEMCHANGED:
+        case LVN_ITEMCHANGED: // item info is changed
         {
             TRACE("LVN_ITEMCHANGED\n");
             LPNMLISTVIEW pListView = reinterpret_cast<LPNMLISTVIEW>(pnmh);
@@ -1946,11 +1960,11 @@ LRESULT CAutoComplete::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
 LRESULT CAutoComplete::OnNCHitTest(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
     TRACE("CAutoComplete::OnNCHitTest(%p)\n", this);
-    POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
-    ScreenToClient(&pt);
-    if (ChildWindowFromPoint(pt) == m_hwndSizeBox)
+    POINT pt = { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) }; // in screen coordinates
+    ScreenToClient(&pt); // into client coordinates
+    if (ChildWindowFromPoint(pt) == m_hwndSizeBox) // hit?
     {
-        // resize if the point in the m_hwndSizeBox
+        // allow resizing (with cursor shape)
         return m_bDowner ? HTBOTTOMRIGHT : HTTOPRIGHT;
     }
     return DefWindowProcW(uMsg, wParam, lParam); // do default
@@ -2085,7 +2099,7 @@ LRESULT CAutoComplete::OnVScroll(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &
             INT iItem = cItems * (nPos - si.nMin) / (si.nMax - si.nMin);
             if (nPos > si.nPos)
             {
-                iItem += m_hwndList.GetVisibleItemCount();
+                iItem += m_hwndList.GetVisibleCount();
                 if (iItem >= cItems)
                     iItem = cItems - 1;
             }
