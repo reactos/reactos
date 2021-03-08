@@ -1,5 +1,9 @@
 //#pragma once
 
+#if !defined(_DEBUG) && !defined(NDEBUG)
+    #define _DEBUG
+#endif
+
 #ifndef __REACTOS__
 
 #define WIN32_LEAN_AND_MEAN

@@ -1,6 +1,10 @@
 #ifndef _RAPPS_H
 #define _RAPPS_H
 
+#if !defined(_DEBUG) && !defined(NDEBUG)
+    #define _DEBUG
+#endif
+
 #include "defines.h"
 
 #include "dialogs.h"

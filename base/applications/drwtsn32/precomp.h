@@ -8,6 +8,10 @@
 #ifndef _DRWTSN32_PRECOMP_H_
 #define _DRWTSN32_PRECOMP_H_
 
+#if !defined(_DEBUG) && !defined(NDEBUG)
+    #define _DEBUG
+#endif
+
 #include <ntstatus.h>
 #define WIN32_NO_STATUS
 

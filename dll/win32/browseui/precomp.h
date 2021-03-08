@@ -1,6 +1,10 @@
 #ifndef _BROWSEUI_PCH_
 #define _BROWSEUI_PCH_
 
+#if !defined(_DEBUG) && !defined(NDEBUG)
+    #define _DEBUG
+#endif
+
 #include <stdarg.h>
 
 #define WIN32_NO_STATUS

@@ -1,6 +1,10 @@
 #ifndef _MSCONFIG_PCH_
 #define _MSCONFIG_PCH_
 
+#if !defined(_DEBUG) && !defined(NDEBUG)
+    #define _DEBUG
+#endif
+
 #include <assert.h>
 
 #include <stdarg.h>

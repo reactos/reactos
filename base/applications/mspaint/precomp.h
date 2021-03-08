@@ -1,6 +1,10 @@
 #ifndef _MSPAINT_H
 #define _MSPAINT_H
 
+#if !defined(_DEBUG) && !defined(NDEBUG)
+    #define _DEBUG
+#endif
+
 #include <stdarg.h>
 
 #include <windef.h>

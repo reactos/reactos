@@ -1,6 +1,10 @@
 #ifndef _EXPLORER_PRECOMP__H_
 #define _EXPLORER_PRECOMP__H_
 
+#if !defined(_DEBUG) && !defined(NDEBUG)
+    #define _DEBUG
+#endif
+
 #define WIN7_COMPAT_MODE 0
 #define WIN7_DEBUG_MODE 0
 

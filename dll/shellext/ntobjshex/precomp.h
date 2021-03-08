@@ -1,6 +1,10 @@
 #ifndef _NTOBJSHEX_PRECOMP_H_
 #define _NTOBJSHEX_PRECOMP_H_
 
+#if !defined(_DEBUG) && !defined(NDEBUG)
+    #define _DEBUG
+#endif
+
 #include <stdarg.h>
 #include <tchar.h>
 

@@ -1,6 +1,10 @@
 #ifndef ACPPAGE_PRECOMP_H
 #define ACPPAGE_PRECOMP_H
 
+#if !defined(_DEBUG) && !defined(NDEBUG)
+    #define _DEBUG
+#endif
+
 #define COBJMACROS
 #define WIN32_NO_STATUS
 #define _INC_WINDOWS

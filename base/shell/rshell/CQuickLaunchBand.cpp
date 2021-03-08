@@ -6,6 +6,9 @@
  * PROGRAMMERS: Shriraj Sawant a.k.a SR13 <sr.official@hotmail.com>
  */
 
+#if !defined(_DEBUG) && !defined(NDEBUG)
+    #define _DEBUG
+#endif
 
 #define WIN32_NO_STATUS
 #define _INC_WINDOWS

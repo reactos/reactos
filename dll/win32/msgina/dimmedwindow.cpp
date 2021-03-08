@@ -6,6 +6,10 @@
  * PROGRAMMER:      Mark Jansen
  */
 
+#if !defined(_DEBUG) && !defined(NDEBUG)
+    #define _DEBUG
+#endif
+
 #define COM_NO_WINDOWS_H
 #include "msgina.h"
 #include <wingdi.h>

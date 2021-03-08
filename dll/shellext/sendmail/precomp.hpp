@@ -5,6 +5,10 @@
  * COPYRIGHT:   Copyright 2019 Katayama Hirofumi MZ (katayama.hirofumi.mz@gmail.com)
  */
 
+#if !defined(_DEBUG) && !defined(NDEBUG)
+    #define _DEBUG
+#endif
+
 #define COBJMACROS
 #define WIN32_NO_STATUS
 #include <windows.h>

@@ -1,6 +1,9 @@
 #ifndef FONTEXT_PRECOMP_H
 #define FONTEXT_PRECOMP_H
 
+#if !defined(_DEBUG) && !defined(NDEBUG)
+    #define _DEBUG
+#endif
 
 #define WIN32_NO_STATUS
 #define COM_NO_WINDOWS_H

@@ -1,6 +1,10 @@
 #ifndef ZIPFLDR_PRECOMP_H
 #define ZIPFLDR_PRECOMP_H
 
+#if !defined(_DEBUG) && !defined(NDEBUG)
+    #define _DEBUG
+#endif
+
 #define COBJMACROS
 #define COM_NO_WINDOWS_H
 #define NTOS_MODE_USER

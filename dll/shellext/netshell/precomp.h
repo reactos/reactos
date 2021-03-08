@@ -1,6 +1,10 @@
 #ifndef _PRECOMP_H__
 #define _PRECOMP_H__
 
+#if !defined(_DEBUG) && !defined(NDEBUG)
+    #define _DEBUG
+#endif
+
 #include <stdio.h>
 
 #define WIN32_NO_STATUS

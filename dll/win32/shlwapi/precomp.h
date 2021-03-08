@@ -2,6 +2,10 @@
 #ifndef _SHLWAPI_PCH_
 #define _SHLWAPI_PCH_
 
+#if !defined(_DEBUG) && !defined(NDEBUG)
+    #define _DEBUG
+#endif
+
 #include <wine/config.h>
 
 #include <stdarg.h>
