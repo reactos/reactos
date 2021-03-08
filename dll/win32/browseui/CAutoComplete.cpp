@@ -54,30 +54,26 @@ static LRESULT CALLBACK MouseProc(INT nCode, WPARAM wParam, LPARAM lParam)
     if (s_hMouseHook == NULL)
         return 0;
 
-    if (nCode == HC_ACTION && ::IsWindow(s_hDropDownWnd))
+    if (nCode == HC_ACTION && s_hDropDownWnd && ::IsWindow(s_hDropDownWnd))
     {
         RECT rc;
         MOUSEHOOKSTRUCT *pMouseHook = reinterpret_cast<MOUSEHOOKSTRUCT *>(lParam);
         switch (wParam)
         {
-        case WM_LBUTTONDOWN:
-        case WM_LBUTTONUP:
-        case WM_RBUTTONDOWN:
-        case WM_RBUTTONUP:
-        case WM_MBUTTONDOWN:
-        case WM_MBUTTONUP:
-        case WM_NCLBUTTONDOWN:
-        case WM_NCLBUTTONUP:
-        case WM_NCRBUTTONDOWN:
-        case WM_NCRBUTTONUP:
-        case WM_NCMBUTTONDOWN:
-        case WM_NCMBUTTONUP:
-            ::GetWindowRect(s_hDropDownWnd, &rc);
-            if (!::PtInRect(&rc, pMouseHook->pt))
+            case WM_LBUTTONDOWN: case WM_LBUTTONUP:
+            case WM_RBUTTONDOWN: case WM_RBUTTONUP:
+            case WM_MBUTTONDOWN: case WM_MBUTTONUP:
+            case WM_NCLBUTTONDOWN: case WM_NCLBUTTONUP:
+            case WM_NCRBUTTONDOWN: case WM_NCRBUTTONUP:
+            case WM_NCMBUTTONDOWN: case WM_NCMBUTTONUP:
             {
-                ::ShowWindowAsync(s_hDropDownWnd, SW_HIDE);
+                ::GetWindowRect(s_hDropDownWnd, &rc);
+                if (!::PtInRect(&rc, pMouseHook->pt))
+                {
+                    ::ShowWindowAsync(s_hDropDownWnd, SW_HIDE);
+                }
+                break;
             }
-            break;
         }
     }
 
