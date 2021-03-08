@@ -131,7 +131,7 @@ static void quicksort(list_t& a, INT i, INT j)
     quicksort(a, k, j);
 }
 
-static void DoSort(list_t& list)
+static inline void DoSort(list_t& list)
 {
     if (list.GetSize() <= 1)
         return;
@@ -153,7 +153,7 @@ static INT DoUnique(list_t& list)
     return ++result;
 }
 
-static void DoUniqueAndTrim(list_t& list)
+static inline void DoUniqueAndTrim(list_t& list)
 {
     INT last = DoUnique(list);
     while (list.GetSize() > last)
@@ -720,7 +720,6 @@ CAutoComplete::CAutoComplete()
     : m_bInSetText(FALSE), m_bInSelectItem(FALSE)
     , m_bDowner(TRUE), m_dwOptions(ACO_AUTOAPPEND | ACO_AUTOSUGGEST)
     , m_bEnabled(TRUE), m_hwndCombo(NULL), m_hFont(NULL), m_bResized(FALSE)
-    , m_hwndParent(NULL)
 {
 }
 
@@ -743,12 +742,12 @@ CAutoComplete::~CAutoComplete()
 
 BOOL CAutoComplete::CanAutoSuggest()
 {
-    return !!(m_dwOptions & ACO_AUTOSUGGEST);
+    return !!(m_dwOptions & ACO_AUTOSUGGEST) && m_bEnabled;
 }
 
 BOOL CAutoComplete::CanAutoAppend()
 {
-    return !!(m_dwOptions & ACO_AUTOAPPEND);
+    return !!(m_dwOptions & ACO_AUTOAPPEND) && m_bEnabled;
 }
 
 BOOL CAutoComplete::UseTab()
@@ -1197,9 +1196,6 @@ CAutoComplete::Init(HWND hwndEdit, IUnknown *punkACL,
         }
     }
 
-    HWND hwndCtrl = m_hwndCombo ? m_hwndCombo : m_hwndEdit;
-    m_hwndParent = ::GetParent(hwndCtrl);
-
     return S_OK;
 }
 
@@ -1621,6 +1617,7 @@ INT CAutoComplete::UpdateOuterList()
 
 VOID CAutoComplete::UpdateCompletion(BOOL bAppendOK)
 {
+    TRACE("CAutoComplete::UpdateCompletion(%p, %d)\n", this, bAppendOK);
     UINT cItems = UpdateInnerList();
     if (cItems == 0) // no items
     {
@@ -1634,10 +1631,10 @@ VOID CAutoComplete::UpdateCompletion(BOOL bAppendOK)
         SelectItem(-1); // select none
         m_bInSelectItem = FALSE;
 
-        if (!UpdateOuterList())
-            HideDropDown();
-        else
+        if (UpdateOuterList())
             RepositionDropDown();
+        else
+            HideDropDown();
         return;
     }
 
@@ -1802,7 +1799,7 @@ LRESULT CAutoComplete::OnMeasureItem(UINT uMsg, WPARAM wParam, LPARAM lParam, BO
         return FALSE;
 
     ATLASSERT(m_hwndList.GetStyle() & LVS_OWNERDRAWFIXED);
-    pMeasure->itemHeight = m_hwndList.m_cyItem;
+    pMeasure->itemHeight = m_hwndList.m_cyItem; // height of item
     return TRUE;
 }
 
@@ -1867,7 +1864,7 @@ LRESULT CAutoComplete::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
             }
             return TRUE; // eat
         }
-        case LVN_GETDISPINFOA:
+        case LVN_GETDISPINFOA: // for user's information only
         {
             TRACE("LVN_GETDISPINFOA\n");
             if (pnmh->hwndFrom != m_hwndList)
@@ -1884,7 +1881,7 @@ LRESULT CAutoComplete::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
                 SHUnicodeToAnsi(strText, pItem->pszText, pItem->cchTextMax);
             break;
         }
-        case LVN_GETDISPINFOW:
+        case LVN_GETDISPINFOW: // for user's information only
         {
             TRACE("LVN_GETDISPINFOW\n");
             if (pnmh->hwndFrom != m_hwndList)
@@ -1917,7 +1914,7 @@ LRESULT CAutoComplete::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
             LPNMITEMACTIVATE pItemActivate = reinterpret_cast<LPNMITEMACTIVATE>(pnmh);
             INT iItem = pItemActivate->iItem;
             TRACE("LVN_ITEMACTIVATE: iItem:%d\n", iItem);
-            if (iItem != -1)
+            if (iItem != -1) // the item is clicked
             {
                 SelectItem(iItem);
                 HideDropDown();
@@ -1930,9 +1927,9 @@ LRESULT CAutoComplete::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
             LPNMLISTVIEW pListView = reinterpret_cast<LPNMLISTVIEW>(pnmh);
             if (pListView->uChanged & LVIF_STATE) // selection changed
             {
+                // listview selection changed
                 if (!m_bInSelectItem)
                 {
-                    // listview selection changed
                     OnListSelChange();
                 }
                 UpdateScrollBar();
@@ -1969,7 +1966,7 @@ LRESULT CAutoComplete::OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHa
     CRect rcList, rcScrollBar, rcSizeBox;
     ReCalcRects(m_bDowner, rcList, rcScrollBar, rcSizeBox);
 
-    // reposition the controls
+    // reposition the controls in smartest way
     UINT uSWP_ = SWP_NOACTIVATE | SWP_NOCOPYBITS;
     HDWP hDWP = ::BeginDeferWindowPos(3);
     hDWP = ::DeferWindowPos(hDWP, m_hwndScrollBar, HWND_TOP,
@@ -2031,11 +2028,9 @@ LRESULT CAutoComplete::OnShowWindow(UINT uMsg, WPARAM wParam, LPARAM lParam, BOO
         LRESULT ret = DefWindowProcW(uMsg, wParam, lParam); // do default
 
         if (m_hwndCombo)
-        {
-            ::SendMessageW(m_hwndCombo, CB_SHOWDROPDOWN, FALSE, 0);
-            ::InvalidateRect(m_hwndCombo, NULL, TRUE);
-        }
-        m_outerList.RemoveAll();
+            ::InvalidateRect(m_hwndCombo, NULL, TRUE); // redraw
+
+        m_outerList.RemoveAll(); // no use
         return ret;
     }
 }
@@ -2046,7 +2041,7 @@ LRESULT CAutoComplete::OnTimer(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bH
     if (wParam != WATCH_TIMER_ID) // sanity check
         return 0;
 
-    // it the EDIT control is dead, then kill the timer
+    // if the textbox is dead, then kill the timer
     if (!::IsWindow(m_hwndEdit))
     {
         KillTimer(WATCH_TIMER_ID);
@@ -2061,8 +2056,8 @@ LRESULT CAutoComplete::OnTimer(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bH
         // if so, hide
         HideDropDown();
 
-        m_rcEdit = rcEdit;
-        m_bResized = FALSE;
+        m_rcEdit = rcEdit; // update rectangle
+        m_bResized = FALSE; // clear flag
     }
 
     return 0;
@@ -2084,7 +2079,7 @@ LRESULT CAutoComplete::OnVScroll(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &
             SCROLLINFO si = { sizeof(si), SIF_ALL };
             m_hwndList.GetScrollInfo(SB_VERT, &si);
 
-            // scroll the list-view by EnsureVisible
+            // scroll the list-view by CListView::EnsureVisible
             INT cItems = m_hwndList.GetItemCount();
             // iItem : cItems == (nPos - si.nMin) : (si.nMax - si.nMin).
             INT iItem = cItems * (nPos - si.nMin) / (si.nMax - si.nMin);
@@ -2096,7 +2091,7 @@ LRESULT CAutoComplete::OnVScroll(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &
             }
             m_hwndList.EnsureVisible(iItem, FALSE);
 
-            // update position
+            // update scrolling position of m_hwndScrollBar
             si.fMask = SIF_POS;
             m_hwndList.GetScrollInfo(SB_VERT, &si);
             m_hwndScrollBar.SetScrollInfo(SB_VERT, &si, FALSE);

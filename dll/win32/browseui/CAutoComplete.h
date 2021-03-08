@@ -235,26 +235,25 @@ public:
 
 protected:
     // The following variables are POD (plain old data):
-    BOOL m_bDowner;
+    BOOL m_bDowner; // downer or upper? (below textbox or above textbox)
     DWORD m_dwOptions; // for IAutoComplete2::SetOptions
-    DWORD m_bEnabled;
-    HWND m_hwndCombo;
-    HFONT m_hFont;
-    BOOL m_bResized;
-    HWND m_hwndParent;
-    RECT m_rcEdit;
+    DWORD m_bEnabled; // the auto-composition is enabled?
+    HWND m_hwndCombo; // the combobox if any
+    HFONT m_hFont; // the font
+    BOOL m_bResized; // re-sized by size-box?
+    RECT m_rcEdit; // in screen coordinates, to watch the position
     // The following variables are non-POD:
-    CStringW m_strText;
+    CStringW m_strText; // internal text (used in selecting item)
     CStringW m_strStemText; // dirname + '\\'
-    CStringW m_strQuickComplete;
-    CACEditCtrl m_hwndEdit;
-    CACListView m_hwndList;
-    CACScrollBar m_hwndScrollBar;
-    CACSizeBox m_hwndSizeBox;
-    CComPtr<IEnumString> m_pEnum;
-    CComPtr<IACList> m_pACList;
-    CSimpleArray<CStringW> m_innerList;
-    CSimpleArray<CStringW> m_outerList;
+    CStringW m_strQuickComplete; // used for [Ctrl]+[Enter]
+    CACEditCtrl m_hwndEdit; // subclassed to watch
+    CACListView m_hwndList; // this listview is virtual
+    CACScrollBar m_hwndScrollBar; // contol scroll bar
+    CACSizeBox m_hwndSizeBox; // the size grip
+    CComPtr<IEnumString> m_pEnum; // used for enumeration
+    CComPtr<IACList> m_pACList; // for IACList::Expand to update the list
+    CSimpleArray<CStringW> m_innerList; // internal list
+    CSimpleArray<CStringW> m_outerList; // owner data for virtual listview
     // protected methods
     VOID UpdateDropDownState();
     VOID ReCalcRects(BOOL bDowner, RECT& rcListView, RECT& rcScrollBar, RECT& rcSizeBox);
