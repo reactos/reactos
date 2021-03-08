@@ -444,7 +444,7 @@ HWND CACListView::Create(HWND hwndParent)
 // set font handle
 VOID CACListView::SetFont(HFONT hFont)
 {
-    SendMessageW(WM_SETFONT, (WPARAM)hFont, TRUE);
+    SendMessageW(WM_SETFONT, (WPARAM)hFont, TRUE); // set font
 
     // get listview item height
     m_cyItem = CY_ITEM;
@@ -455,7 +455,7 @@ VOID CACListView::SetFont(HFONT hFont)
         TEXTMETRICW tm;
         if (::GetTextMetricsW(hDC, &tm))
         {
-            m_cyItem = (tm.tmHeight * 3) / 2;
+            m_cyItem = (tm.tmHeight * 3) / 2; // 3/2 of text height
         }
         ::SelectObject(hDC, hFontOld);
         ReleaseDC(hDC);
@@ -930,6 +930,7 @@ BOOL CAutoComplete::OnEditKeyDown(WPARAM wParam, LPARAM lParam)
             if (IsWindowVisible())
             {
                 SetEditText(m_strText); // revert
+                // select the end
                 INT cch = m_strText.GetLength();
                 m_hwndEdit.SendMessageW(EM_SETSEL, cch, cch);
                 HideDropDown(); // hide
@@ -1543,7 +1544,7 @@ INT CAutoComplete::ReLoadInnerList()
             break; // too late
     }
 
-    return m_innerList.GetSize();
+    return m_innerList.GetSize(); // the number of items
 }
 
 // update inner list and m_strText and m_strStemText
@@ -1552,7 +1553,7 @@ INT CAutoComplete::UpdateInnerList()
     // get text
     CStringW strText = GetEditText();
 
-    BOOL bReset = FALSE, bExpand = FALSE;
+    BOOL bReset = FALSE, bExpand = FALSE; // flags
 
     // if previous text was empty
     if (m_strText.IsEmpty())
@@ -1617,13 +1618,13 @@ INT CAutoComplete::UpdateOuterList()
     // unique
     DoUniqueAndTrim(m_outerList);
 
-    // set the item count of the listview
+    // set the item count of the virtual listview
     INT cItems = m_outerList.GetSize();
     if (strText.IsEmpty())
         cItems = 0;
     m_hwndList.SendMessageW(LVM_SETITEMCOUNT, cItems, 0);
 
-    return cItems;
+    return cItems; // the number of items
 }
 
 VOID CAutoComplete::UpdateCompletion(BOOL bAppendOK)

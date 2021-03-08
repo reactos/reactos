@@ -31,7 +31,7 @@ class CACSizeBox;
 class CAutoComplete;
 
 //////////////////////////////////////////////////////////////////////////////
-// CACEditCtrl --- AutoComplete EDIT control
+// CACEditCtrl --- auto-completion textbox
 
 class CACEditCtrl
     : public CWindowImpl<CACEditCtrl, CWindow, CControlWinTraits>
@@ -74,7 +74,7 @@ protected:
 };
 
 //////////////////////////////////////////////////////////////////////////////
-// CACListView --- AutoComplete list control
+// CACListView --- auto-completion list control
 
 class CACListView : public CWindowImpl<CACListView, CListView>
 {
@@ -120,7 +120,7 @@ protected:
 };
 
 //////////////////////////////////////////////////////////////////////////////
-// CACScrollBar --- AutoComplete scrollbar control
+// CACScrollBar --- auto-completion scrollbar control
 
 class CACScrollBar : public CWindowImpl<CACScrollBar>
 {
@@ -138,7 +138,7 @@ protected:
 };
 
 //////////////////////////////////////////////////////////////////////////////
-// CACSizeBox --- AutoComplete size-box control
+// CACSizeBox --- auto-completion size-box control
 
 class CACSizeBox : public CWindowImpl<CACSizeBox>
 {
@@ -167,7 +167,7 @@ protected:
 };
 
 //////////////////////////////////////////////////////////////////////////////
-// CAutoComplete --- AutoComplete drop-down window
+// CAutoComplete --- auto-completion drop-down window
 
 class CAutoComplete
     : public CComCoClass<CAutoComplete, &CLSID_AutoComplete>
@@ -180,8 +180,8 @@ class CAutoComplete
 public:
     DECLARE_WND_CLASS_EX(L"Auto-Suggest Dropdown", CS_DROPSHADOW | CS_SAVEBITS, COLOR_3DFACE)
     static LPCWSTR GetWndClassName() { return L"Auto-Suggest Dropdown"; }
-    BOOL m_bInSetText;
-    BOOL m_bInSelectItem;
+    BOOL m_bInSetText; // this flag avoids subsequent action in WM_SETTEXT
+    BOOL m_bInSelectItem; // this flag avoids subsequent action in LVN_ITEMCHANGED
 
     // public methods
     CAutoComplete();
