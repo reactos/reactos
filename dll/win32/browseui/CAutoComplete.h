@@ -38,7 +38,6 @@ class CACEditCtrl
 {
 public:
     CAutoComplete* m_pDropDown;
-
     static LPCWSTR GetWndClassName() { return L"EDIT"; }
 
     CACEditCtrl();
@@ -82,7 +81,6 @@ class CACListView : public CWindowImpl<CACListView, CListView>
 public:
     CAutoComplete* m_pDropDown;
     INT m_cyItem;
-
     static LPCWSTR GetWndClassName() { return WC_LISTVIEW; }
 
     CACListView();
@@ -128,7 +126,6 @@ class CACScrollBar : public CWindowImpl<CACScrollBar>
 {
 public:
     CAutoComplete* m_pDropDown;
-
     static LPCWSTR GetWndClassName() { return L"SCROLLBAR"; }
 
     CACScrollBar();
@@ -147,7 +144,6 @@ class CACSizeBox : public CWindowImpl<CACSizeBox>
 {
 public:
     CAutoComplete* m_pDropDown;
-
     static LPCWSTR GetWndClassName() { return L"SCROLLBAR"; }
 
     CACSizeBox();
@@ -184,8 +180,6 @@ class CAutoComplete
 public:
     DECLARE_WND_CLASS_EX(L"Auto-Suggest Dropdown", CS_DROPSHADOW | CS_SAVEBITS, COLOR_3DFACE)
     static LPCWSTR GetWndClassName() { return L"Auto-Suggest Dropdown"; }
-
-    // public members
     BOOL m_bInSetText;
     BOOL m_bInSelectItem;
 

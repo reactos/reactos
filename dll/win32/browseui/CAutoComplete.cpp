@@ -48,7 +48,7 @@
 static HHOOK s_hMouseHook = NULL;
 static HWND s_hDropDownWnd = NULL;
 
-// mouse hook procedure
+// mouse hook procedure to watch the mouse click
 // https://docs.microsoft.com/en-us/previous-versions/windows/desktop/legacy/ms644988(v=vs.85)
 static LRESULT CALLBACK MouseProc(INT nCode, WPARAM wParam, LPARAM lParam)
 {
@@ -1752,7 +1752,6 @@ LRESULT CAutoComplete::OnDrawItem(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL 
 {
     LPDRAWITEMSTRUCT pDraw = reinterpret_cast<LPDRAWITEMSTRUCT>(lParam);
     ATLASSERT(pDraw != NULL);
-
     ATLASSERT(m_hwndList.GetStyle() & LVS_OWNERDRAWFIXED);
 
     // sanity check
@@ -1976,7 +1975,7 @@ LRESULT CAutoComplete::OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHa
 {
     TRACE("CAutoComplete::OnSize(%p)\n", this);
 
-    // re-calculate
+    // re-calculate the positions of the controls
     CRect rcList, rcScrollBar, rcSizeBox;
     ReCalcRects(m_bDowner, rcList, rcScrollBar, rcSizeBox);
 
