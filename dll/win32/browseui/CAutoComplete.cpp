@@ -968,9 +968,10 @@ BOOL CAutoComplete::OnEditKeyDown(WPARAM wParam, LPARAM lParam)
             // is suggestion available?
             if (!CanAutoSuggest())
                 return FALSE; // if not so, then do default
+            m_hwndEdit.DefWindowProcW(WM_KEYDOWN, VK_DELETE, 0); // do default
             if (IsWindowVisible())
                 OnEditUpdate(FALSE);
-            break;
+            return TRUE; // eat
         }
         case VK_BACK: // [BackSpace] key
         {
@@ -1594,13 +1595,15 @@ INT CAutoComplete::UpdateInnerList()
 
 INT CAutoComplete::UpdateOuterList()
 {
+    CStringW strText = GetEditText(); // get the text
+
     // update the outer list from the inner list
     m_outerList.RemoveAll();
     for (INT iItem = 0; iItem < m_innerList.GetSize(); ++iItem)
     {
         const CStringW& strTarget = m_innerList[iItem];
-        if (strTarget != m_strText &&
-            ::StrCmpNI(strTarget, m_strText, m_strText.GetLength()) == 0)
+        if (strTarget != strText &&
+            ::StrCmpNI(strTarget, m_strText, strText.GetLength()) == 0)
         {
             m_outerList.Add(strTarget);
         }
@@ -1613,7 +1616,7 @@ INT CAutoComplete::UpdateOuterList()
 
     // set the item count of the listview
     INT cItems = m_outerList.GetSize();
-    if (m_strText.IsEmpty())
+    if (strText.IsEmpty())
         cItems = 0;
     m_hwndList.SendMessageW(LVM_SETITEMCOUNT, cItems, 0);
 
