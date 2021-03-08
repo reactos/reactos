@@ -330,16 +330,27 @@ LRESULT CACEditCtrl::OnGetDlgCode(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL 
 
     LRESULT ret = DefWindowProcW(uMsg, wParam, lParam); // get default
 
-    if (m_pDropDown &&
-        (m_pDropDown->IsWindowVisible() || ::GetKeyState(VK_CONTROL) < 0))
+    if (m_pDropDown)
     {
-        if (wParam == VK_RETURN) // [Enter] key
+        switch (wParam)
         {
-            m_pDropDown->OnEditKeyDown(VK_RETURN, 0);
-        }
-        else if (wParam != VK_TAB) // non-[Tab] key
-        {
-            ret |= DLGC_WANTALLKEYS; // we want all keys to manipulate the list
+            case VK_RETURN: // [Enter] key
+                if (m_pDropDown->IsWindowVisible() || ::GetKeyState(VK_CONTROL) < 0)
+                    m_pDropDown->OnEditKeyDown(VK_RETURN, 0);
+                break;
+            case VK_TAB: // [Tab] key
+                if (m_pDropDown->IsWindowVisible() && m_pDropDown->UseTab())
+                    m_pDropDown->OnEditKeyDown(VK_TAB, 0);
+                break;
+            case VK_ESCAPE: // [Esc] key
+                if (m_pDropDown->IsWindowVisible())
+                    ret |= DLGC_WANTALLKEYS; // we want all keys to manipulate the list
+                break;
+            default:
+            {
+                ret |= DLGC_WANTALLKEYS; // we want all keys to manipulate the list
+                break;
+            }
         }
     }
 
@@ -741,6 +752,11 @@ BOOL CAutoComplete::CanAutoAppend()
     return !!(m_dwOptions & ACO_AUTOAPPEND);
 }
 
+BOOL CAutoComplete::UseTab()
+{
+    return !!(m_dwOptions & ACO_USETAB);
+}
+
 BOOL CAutoComplete::IsComboBoxDropped()
 {
     if (!::IsWindow(m_hwndCombo))
@@ -910,11 +926,6 @@ BOOL CAutoComplete::OnEditKeyDown(WPARAM wParam, LPARAM lParam)
                 HideDropDown(); // hide
                 return TRUE; // eat
             }
-            else
-            {
-                ::PostMessageW(m_hwndParent, WM_KEYDOWN, VK_ESCAPE, 0);
-                return TRUE;
-            }
             break;
         }
         case VK_RETURN: // [Enter] key
@@ -943,11 +954,11 @@ BOOL CAutoComplete::OnEditKeyDown(WPARAM wParam, LPARAM lParam)
         }
         case VK_TAB: // [Tab] key
         {
-            HWND hwndCtrl = m_hwndCombo ? m_hwndCombo : m_hwndEdit;
-            BOOL bShift = !!(::GetKeyState(VK_SHIFT) < 0);
-            hwndCtrl = ::GetNextDlgTabItem(m_hwndParent, hwndCtrl, bShift);
-            ::SetFocus(hwndCtrl);
-            return TRUE; // eat
+            if (IsWindowVisible() && UseTab())
+            {
+                FIXME("ACO_USETAB\n");
+            }
+            break;
         }
         case VK_DELETE: // [Del] key
         {
