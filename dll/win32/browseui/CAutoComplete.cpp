@@ -533,9 +533,11 @@ LRESULT CACListView::OnLButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL
     INT iItem = ItemFromPoint(GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
     if (iItem != -1)
     {
-        m_pDropDown->SelectItem(iItem);
-        m_pDropDown->SetEditText(GetItemText(iItem));
-        m_pDropDown->HideDropDown();
+        m_pDropDown->SelectItem(iItem); // select the item
+        CString strText = GetItemText(iItem); // get text of item
+        m_pDropDown->SetEditText(strText); // set text
+        m_pDropDown->SetEditSel(0, strText.GetLength()); // select all
+        m_pDropDown->HideDropDown(); // hide
     }
     return 0;
 }
@@ -818,6 +820,11 @@ CStringW CAutoComplete::GetStemText()
     return strText.Left(ich + 1);
 }
 
+VOID CAutoComplete::SetEditSel(INT ich0, INT ich1)
+{
+    m_hwndEdit.SendMessageW(EM_SETSEL, ich0, ich1);
+}
+
 VOID CAutoComplete::ShowDropDown()
 {
     if (!m_hWnd || !CanAutoSuggest())
@@ -893,7 +900,7 @@ VOID CAutoComplete::DoAutoAppend()
     // select the appended
     INT ich0 = strText.GetLength();
     INT ich1 = ich0 + cchAppend;
-    m_hwndEdit.SendMessageW(EM_SETSEL, ich0, ich1);
+    SetEditSel(ich0, ich1);
 }
 
 VOID CAutoComplete::UpdateScrollBar()
@@ -938,7 +945,7 @@ BOOL CAutoComplete::OnEditKeyDown(WPARAM wParam, LPARAM lParam)
                 SetEditText(m_strText); // revert
                 // select the end
                 INT cch = m_strText.GetLength();
-                m_hwndEdit.SendMessageW(EM_SETSEL, cch, cch);
+                SetEditSel(cch, cch);
                 HideDropDown(); // hide
                 return TRUE; // eat
             }
@@ -963,7 +970,7 @@ BOOL CAutoComplete::OnEditKeyDown(WPARAM wParam, LPARAM lParam)
             }
             // select all
             INT cch = m_hwndEdit.GetWindowTextLengthW();
-            m_hwndEdit.SendMessageW(EM_SETSEL, 0, cch);
+            SetEditSel(0, cch);
             // hide
             HideDropDown();
             break;
@@ -1003,7 +1010,7 @@ BOOL CAutoComplete::OnEditKeyDown(WPARAM wParam, LPARAM lParam)
                 while (ich0 > 0 && !IsWordBreak(str[ich0 - 1]))
                     --ich0;
                 // select range
-                m_hwndEdit.SendMessageW(EM_SETSEL, ich0, ich1);
+                SetEditSel(ich0, ich1);
                 // replace selection with empty text
                 m_hwndEdit.SendMessageW(EM_REPLACESEL, TRUE, (LPARAM)L"");
                 return TRUE; // eat
@@ -1051,7 +1058,7 @@ VOID CAutoComplete::OnListSelChange()
     m_hwndList.EnsureVisible(iItem, FALSE);
     // select the end
     INT cch = text.GetLength();
-    m_hwndEdit.SendMessageW(EM_SETSEL, cch, cch);
+    SetEditSel(cch, cch);
 }
 
 BOOL CAutoComplete::OnListUpDown(UINT vk)
