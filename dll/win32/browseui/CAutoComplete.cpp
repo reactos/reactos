@@ -42,7 +42,8 @@
 #define CY_ITEM 18 // default height of listview item
 #define COMPLETION_TIMEOUT 250 // in milliseconds
 #define MAX_ITEM_COUNT 1000
-#define TIMER_ID 0xFEEDBEEF
+#define WATCH_TIMER_ID 0xFEEDBEEF
+#define WATCH_INTERVAL 300 // in milliseconds
 
 static HHOOK s_hMouseHook = NULL;
 static HWND s_hDropDownWnd = NULL;
@@ -858,7 +859,7 @@ VOID CAutoComplete::DoAutoAppend()
     strText += strAppend;
     SetEditText(strText);
 
-    // select the last position
+    // select the appended
     INT ich0 = strText.GetLength();
     INT ich1 = ich0 + cchAppend;
     m_hwndEdit.SendMessageW(EM_SETSEL, ich0, ich1);
@@ -1432,7 +1433,7 @@ VOID CAutoComplete::RepositionDropDown()
     INT x = rcEdit.left, y = rcEdit.bottom;
 
     // get list extent
-    RECT rcMon = mi.rcMonitor;
+    RECT rcMon = mi.rcWork;
     INT cx = rcEdit.right - rcEdit.left, cy = cItems * cyItem;
     BOOL bLongList = FALSE;
     if (cy > CY_LIST)
@@ -1964,14 +1965,14 @@ LRESULT CAutoComplete::OnShowWindow(UINT uMsg, WPARAM wParam, LPARAM lParam, BOO
         ATLASSERT(s_hMouseHook != NULL);
 
         // set timer
-        SetTimer(TIMER_ID, 500, NULL);
+        SetTimer(WATCH_TIMER_ID, WATCH_INTERVAL, NULL);
 
         return DefWindowProcW(uMsg, wParam, lParam); // do default
     }
     else
     {
         // kill timer
-        KillTimer(TIMER_ID);
+        KillTimer(WATCH_TIMER_ID);
 
         s_hDropDownWnd = NULL;
 
@@ -1998,9 +1999,12 @@ LRESULT CAutoComplete::OnShowWindow(UINT uMsg, WPARAM wParam, LPARAM lParam, BOO
 // WM_TIMER
 LRESULT CAutoComplete::OnTimer(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
+    if (wParam != WATCH_TIMER_ID)
+        return 0;
+
     if (!::IsWindow(m_hwndEdit))
     {
-        KillTimer(TIMER_ID);
+        KillTimer(WATCH_TIMER_ID);
         return 0;
     }
 
