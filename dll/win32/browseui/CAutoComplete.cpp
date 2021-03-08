@@ -332,6 +332,7 @@ LRESULT CACEditCtrl::OnGetDlgCode(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL 
 
     if (m_pDropDown)
     {
+        // some special keys need default processing. we handle them here
         switch (wParam)
         {
             case VK_RETURN: // [Enter] key
@@ -693,8 +694,8 @@ LRESULT CACSizeBox::OnPaint(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHand
     INT cxy = rc.Width();
     for (INT i = 0; i < 2; ++i)
     {
-        COLORREF color = ((i == 0) ? COLOR_HIGHLIGHTTEXT : COLOR_3DSHADOW);
-        HPEN hPen = ::CreatePen(PS_SOLID, 1, ::GetSysColor(color));
+        INT iColor = ((i == 0) ? COLOR_HIGHLIGHTTEXT : COLOR_3DSHADOW);
+        HPEN hPen = ::CreatePen(PS_SOLID, 1, ::GetSysColor(iColor));
         HGDIOBJ hPenOld = ::SelectObject(hDC, hPen);
         for (INT delta = cxy / 4; delta < cxy; delta += cxy / 4)
         {
