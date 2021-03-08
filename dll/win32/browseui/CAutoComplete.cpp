@@ -427,7 +427,7 @@ CACListView::CACListView() : m_pDropDown(NULL), m_cyItem(CY_ITEM)
 HWND CACListView::Create(HWND hwndParent)
 {
     ATLASSERT(m_hWnd == NULL);
-    DWORD dwStyle = WS_CHILD | WS_VISIBLE | WS_CLIPSIBLINGS | LVS_NOCOLUMNHEADER |
+    DWORD dwStyle = WS_CHILD | /*WS_VISIBLE |*/ WS_CLIPSIBLINGS | LVS_NOCOLUMNHEADER |
                     LVS_OWNERDATA | LVS_OWNERDRAWFIXED | LVS_SINGLESEL | LVS_REPORT;
     HWND hWnd = ::CreateWindowExW(0, GetWndClassName(), L"Internet Explorer", dwStyle,
                                   0, 0, 0, 0, hwndParent, NULL,
@@ -597,7 +597,7 @@ CACScrollBar::CACScrollBar() : m_pDropDown(NULL)
 HWND CACScrollBar::Create(HWND hwndParent)
 {
     ATLASSERT(m_hWnd == NULL);
-    DWORD dwStyle = WS_CHILD | WS_VISIBLE | SBS_BOTTOMALIGN | SBS_VERT;
+    DWORD dwStyle = WS_CHILD | /*WS_VISIBLE |*/ SBS_BOTTOMALIGN | SBS_VERT;
     m_hWnd = ::CreateWindowExW(0, GetWndClassName(), NULL, dwStyle,
                                0, 0, 0, 0, hwndParent, NULL,
                                _AtlBaseModule.GetModuleInstance(), NULL);
@@ -614,7 +614,7 @@ CACSizeBox::CACSizeBox() : m_pDropDown(NULL), m_bDowner(TRUE), m_bLongList(FALSE
 HWND CACSizeBox::Create(HWND hwndParent)
 {
     ATLASSERT(m_hWnd == NULL);
-    DWORD dwStyle = WS_CHILD | WS_VISIBLE | SBS_SIZEBOX;
+    DWORD dwStyle = WS_CHILD | /*WS_VISIBLE |*/ SBS_SIZEBOX;
     HWND hWnd = ::CreateWindowExW(0, GetWndClassName(), NULL, dwStyle,
                                   0, 0, 0, 0, hwndParent, NULL,
                                   _AtlBaseModule.GetModuleInstance(), NULL);
@@ -1444,19 +1444,12 @@ VOID CAutoComplete::RepositionDropDown()
     INT x = rcEdit.left, y = rcEdit.bottom;
 
     // get list extent
-    RECT rcMon = mi.rcWork;
+    RECT rcMon = mi.rcMonitor;
     INT cx = rcEdit.right - rcEdit.left, cy = cItems * cyItem;
     BOOL bLongList = FALSE;
     if (cy > CY_LIST)
     {
         cy = INT(CY_LIST / cyItem) * cyItem;
-        bLongList = TRUE;
-    }
-    INT cyMon = (rcMon.bottom - rcMon.top); // monitor height
-    INT threshold = (cyMon * 4) / 7; // 4/7 of monitor height
-    if (cy > threshold)
-    {
-        cy = INT(threshold / cyItem) * cyItem;
         bLongList = TRUE;
     }
 
@@ -1471,6 +1464,27 @@ VOID CAutoComplete::RepositionDropDown()
         // NOTE: 'downer' is below the EDIT control. 'upper' is above the EDIT control.
         m_bDowner = (rcEdit.bottom + cy < rcMon.bottom);
     }
+
+    // adjust y and cy
+    if (m_bDowner)
+    {
+        if (rcMon.bottom < y + cy)
+        {
+            cy = ((rcMon.bottom - y) / cyItem) * cyItem;
+            bLongList = TRUE;
+        }
+    }
+    else
+    {
+        if (rcEdit.top < rcMon.top + cy)
+        {
+            cy = ((rcEdit.top - rcMon.top) / cyItem) * cyItem;
+            bLongList = TRUE;
+        }
+        y = rcEdit.top - cy;
+    }
+
+    // set status
     m_hwndSizeBox.SetStatus(m_bDowner, bLongList);
 
     if (m_bResized)
@@ -1480,9 +1494,6 @@ VOID CAutoComplete::RepositionDropDown()
     }
     else
     {
-        // adjust y if not downer
-        if (!m_bDowner)
-            y = rcEdit.top - cy;
 
         // move
         MoveWindow(x, y, cx, cy);
@@ -1647,12 +1658,17 @@ LRESULT CAutoComplete::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
     m_hwndList.Create(m_hWnd);
     if (!m_hwndList)
         return -1; // failure
-    m_hwndScrollBar.Create(m_hWnd);
-    if (!m_hwndScrollBar)
-        return -1; // failure
     m_hwndSizeBox.Create(m_hWnd);
     if (!m_hwndSizeBox)
         return -1; // failure
+    m_hwndScrollBar.Create(m_hWnd);
+    if (!m_hwndScrollBar)
+        return -1; // failure
+
+    // show the controls
+    m_hwndList.ShowWindow(SW_SHOWNOACTIVATE);
+    m_hwndSizeBox.ShowWindow(SW_SHOWNOACTIVATE);
+    m_hwndScrollBar.ShowWindow(SW_SHOWNOACTIVATE);
 
     // set the list font
     m_hFont = reinterpret_cast<HFONT>(::GetStockObject(DEFAULT_GUI_FONT));
@@ -1703,6 +1719,12 @@ LRESULT CAutoComplete::OnExitSizeMove(UINT uMsg, WPARAM wParam, LPARAM lParam, B
     TRACE("CAutoComplete::OnExitSizeMove(%p)\n", this);
     m_bResized = TRUE;
     m_hwndEdit.SetFocus();
+
+    ModifyStyle(WS_THICKFRAME, 0); // remove thick frame to resize
+
+    // frame changed
+    UINT uSWP_ = SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED;
+    SetWindowPos(NULL, 0, 0, 0, 0, uSWP_);
     return 0;
 }
 
@@ -1800,6 +1822,9 @@ LRESULT CAutoComplete::OnNCLButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam, 
         case HTTOPRIGHT:
         {
             ModifyStyle(0, WS_THICKFRAME); // add thick frame to resize
+            // frame changed
+            UINT uSWP_ = SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED;
+            SetWindowPos(NULL, 0, 0, 0, 0, uSWP_);
             break;
         }
     }
@@ -1937,17 +1962,17 @@ LRESULT CAutoComplete::OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHa
     ReCalcRects(m_bDowner, rcList, rcScrollBar, rcSizeBox);
 
     // reposition the controls
-    UINT uSWP_ = SWP_NOACTIVATE | SWP_NOOWNERZORDER | SWP_NOCOPYBITS;
+    UINT uSWP_ = SWP_NOACTIVATE | SWP_NOCOPYBITS;
     HDWP hDWP = ::BeginDeferWindowPos(3);
     hDWP = ::DeferWindowPos(hDWP, m_hwndScrollBar, HWND_TOP,
-        rcScrollBar.left, rcScrollBar.top,
-        rcScrollBar.Width(), rcScrollBar.Height(), uSWP_);
-    hDWP = ::DeferWindowPos(hDWP, m_hwndList, m_hwndScrollBar,
-        rcList.left, rcList.top,
-        rcList.Width(), rcList.Height(), uSWP_);
+                            rcScrollBar.left, rcScrollBar.top,
+                            rcScrollBar.Width(), rcScrollBar.Height(), uSWP_);
     hDWP = ::DeferWindowPos(hDWP, m_hwndSizeBox, m_hwndScrollBar,
-        rcSizeBox.left, rcSizeBox.top,
-        rcSizeBox.Width(), rcSizeBox.Height(), uSWP_);
+                            rcSizeBox.left, rcSizeBox.top,
+                            rcSizeBox.Width(), rcSizeBox.Height(), uSWP_);
+    hDWP = ::DeferWindowPos(hDWP, m_hwndList, m_hwndSizeBox,
+                            rcList.left, rcList.top,
+                            rcList.Width(), rcList.Height(), uSWP_);
     ::EndDeferWindowPos(hDWP);
 
     UpdateScrollBar();
