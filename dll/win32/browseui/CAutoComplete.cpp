@@ -54,7 +54,8 @@ static LRESULT CALLBACK MouseProc(INT nCode, WPARAM wParam, LPARAM lParam)
 {
     if (s_hMouseHook == NULL)
         return 0; // do default
-    if (nCode == HC_ACTION && s_hDropDownWnd && ::IsWindow(s_hDropDownWnd))
+    if (nCode == HC_ACTION && s_hDropDownWnd && ::IsWindow(s_hDropDownWnd) &&
+        ::GetCapture() == NULL)
     {
         RECT rc;
         MOUSEHOOKSTRUCT *pMouseHook = reinterpret_cast<MOUSEHOOKSTRUCT *>(lParam);
