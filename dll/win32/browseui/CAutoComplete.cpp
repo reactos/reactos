@@ -83,6 +83,94 @@ static LRESULT CALLBACK MouseProc(INT nCode, WPARAM wParam, LPARAM lParam)
 }
 
 //////////////////////////////////////////////////////////////////////////////
+// sorting algorithm
+// http://www.ics.kagoshima-u.ac.jp/~fuchida/edu/algorithm/sort-algorithm/
+
+typedef CSimpleArray<CStringW> list_t;
+
+static INT pivot(list_t& a, INT i, INT j)
+{
+    INT k = i + 1;
+    while (k <= j && a[i].CompareNoCase(a[k]) == 0)
+        k++;
+    if (k > j)
+        return -1;
+    if (a[i].CompareNoCase(a[k]) >= 0)
+        return i;
+    return k;
+ }
+
+static INT partition(list_t& a, INT i, INT j, const CStringW& x)
+{
+    INT left = i, right = j;
+
+    while (left <= right)
+    {
+        while (left <= j && a[left].CompareNoCase(x) < 0)
+            left++;
+        while (right >= i && a[right].CompareNoCase(x) >= 0)
+            right--;
+        if (left > right)
+            break;
+
+        CStringW tmp = a[left];
+        a[left] = a[right];
+        a[right] = tmp;
+
+        left++;
+        right--;
+    }
+    return left;
+}
+
+static void quicksort(list_t& a, INT i, INT j)
+{
+    if (i == j)
+        return;
+    INT p = pivot(a, i, j);
+    if (p == -1)
+        return;
+    INT k = partition(a, i, j, a[p]);
+    quicksort(a, i, k - 1);
+    quicksort(a, k, j);
+}
+
+static void DoSort(list_t& list)
+{
+    if (list.GetSize() <= 1)
+        return;
+    quicksort(list, 0, list.GetSize() - 1);
+}
+
+// std::unique
+static INT DoUnique(list_t& list)
+{
+    INT first = 0, last = list.GetSize();
+
+    if (first == last)
+        return last;
+
+    INT result = first;
+    while (++first != last)
+    {
+        if (list[result].CompareNoCase(list[first]) == 0)
+        {
+            list[++result] = list[first];
+        }
+    }
+    return ++result;
+}
+
+static void DoUniqueAndTrim(list_t& list)
+{
+    INT last = DoUnique(list);
+    while (list.GetSize() > last)
+    {
+        list.RemoveAt(last);
+    }
+}
+
+//////////////////////////////////////////////////////////////////////////////
 // CACEditCtrl
 
 // range of WCHAR (inclusive)
@@ -1485,6 +1573,11 @@ INT CAutoComplete::UpdateOuterList()
             m_outerList.Add(strTarget);
         }
     }
+
+    // sort the list
+    DoSort(m_outerList);
+    // unique
+    DoUniqueAndTrim(m_outerList);
 
     // set the item count of the listview
     INT cItems = m_outerList.GetSize();
