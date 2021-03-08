@@ -1660,6 +1660,13 @@ void WINAPI ExitWindowsDialog(HWND hWndOwner)
             }
             break;
         }
+        case 0x100: /* Reboot to NT Native Mode */
+        {
+            EnablePrivilege(L"SeShutdownPrivilege", TRUE);
+            ExitWindowsEx(EWX_REBOOT, 0);
+            EnablePrivilege(L"SeShutdownPrivilege", FALSE);
+            break;
+        }
         /* If the option is any other value */
         default:
             break;

@@ -23,6 +23,7 @@
 // 0x20
 #define WLX_SHUTDOWN_STATE_HIBERNATE    0x40
 // 0x80
+#define WLX_SHUTDOWN_STATE_NT_MODE      0x100
 
 /* Macros for fancy shut down dialog */
 #define FONT_POINT_SIZE                 13
@@ -475,6 +476,10 @@ LoadShutdownSelState(VOID)
                 dwValue = WLX_SAS_ACTION_SHUTDOWN_REBOOT;
                 break;
 
+            case WLX_SHUTDOWN_STATE_NT_MODE:
+                dwValue = WLX_SAS_ACTION_SHUTDOWN_NT_MODE;
+                break;
+
             // 0x08
 
             case WLX_SHUTDOWN_STATE_SLEEP:
@@ -743,6 +748,10 @@ SaveShutdownSelState(
             dwValue = WLX_SHUTDOWN_STATE_REBOOT;
             break;
 
+        case WLX_SAS_ACTION_SHUTDOWN_NT_MODE:
+            dwValue = WLX_SHUTDOWN_STATE_NT_MODE;
+            break;
+
         case WLX_SAS_ACTION_SHUTDOWN_SLEEP:
             dwValue = WLX_SHUTDOWN_STATE_SLEEP;
             break;
@@ -762,7 +771,7 @@ SaveShutdownSelState(
 DWORD
 GetDefaultShutdownOptions(VOID)
 {
-    return WLX_SHUTDOWN_STATE_POWER_OFF | WLX_SHUTDOWN_STATE_REBOOT;
+    return WLX_SHUTDOWN_STATE_POWER_OFF | WLX_SHUTDOWN_STATE_REBOOT | WLX_SHUTDOWN_STATE_NT_MODE;
 }
 
 DWORD
@@ -771,7 +780,7 @@ GetAllowedShutdownOptions(VOID)
     DWORD Options = 0;
 
     // FIXME: Compute those options accordings to current user's rights!
-    Options |= WLX_SHUTDOWN_STATE_LOGOFF | WLX_SHUTDOWN_STATE_POWER_OFF | WLX_SHUTDOWN_STATE_REBOOT;
+    Options |= WLX_SHUTDOWN_STATE_LOGOFF | WLX_SHUTDOWN_STATE_POWER_OFF | WLX_SHUTDOWN_STATE_REBOOT | WLX_SHUTDOWN_STATE_NT_MODE;
 
     if (IsPwrSuspendAllowed())
         Options |= WLX_SHUTDOWN_STATE_SLEEP;
@@ -818,6 +827,9 @@ UpdateShutdownDesc(
         case WLX_SAS_ACTION_SHUTDOWN_HIBERNATE:
             DescId = IDS_SHUTDOWN_HIBERNATE_DESC;
             break;
+
+        case WLX_SAS_ACTION_SHUTDOWN_NT_MODE:
+            DescId = IDS_SHUTDOWN_NT_MODE_DESC;
 
         default:
             break;
@@ -939,6 +951,17 @@ ShutdownOnInit(
     }
 
     // if (pContext->ShutdownOptions & 0x80) {}
+
+    /* Restart in NT Native Mode */
+    if (pContext->ShutdownOptions & WLX_SHUTDOWN_STATE_NT_MODE)
+    {
+        LoadStringW(pgContext->hDllInstance, IDS_SHUTDOWN_NT_MODE, szBuffer, _countof(szBuffer));
+        idx = SendMessageW(hwndList, CB_ADDSTRING, 0, (LPARAM)szBuffer);
+        if (idx != CB_ERR)
+        {
+            SendMessageW(hwndList, CB_SETITEMDATA, idx, WLX_SAS_ACTION_SHUTDOWN_NT_MODE);
+        }
+    }
 
     /* Set the default shut down selection */
     count = SendMessageW(hwndList, CB_GETCOUNT, 0, 0);
@@ -1296,6 +1319,114 @@ ShutdownDialog(
     return ret;
 }
 
+/*************************************************************************
+ * SetRegistryToBootInNTNativeMode
+ *
+ * NOTES
+ *     Used to append the NT Native shell start-up arguments to the
+ *     BootExecute registry value so that the system will boot into it.
+ */
+VOID SetRegistryToBootInNTNativeMode(VOID)
+{
+    /* FIXME: Add proper shell arguments once a native shell is included.
+          Until then, don't pollute the registry.
+     */
+
+    #if 0
+    LONG ReturnCode;
+    HKEY HiveKey;
+    DWORD RegValueType = 0;
+    DWORD InitialRegValueByteCount = 0;
+    DWORD FinalRegValueByteCount = 0;
+    WCHAR* InitialRegValue = NULL;
+    WCHAR* FinalRegValue = NULL;
+    WCHAR NativeShellArguments[] = L"native Hello World!\0";
+    const UINT ShellArgsCharCount = lstrlen(NativeShellArguments) + 2;
+
+    ReturnCode = RegCreateKeyExW(
+        HKEY_LOCAL_MACHINE, L"SYSTEM\\CurrentControlSet\\Control\\Session Manager", 0, NULL, REG_OPTION_NON_VOLATILE,
+        KEY_ALL_ACCESS, NULL, &HiveKey, NULL);
+
+    if (ReturnCode != ERROR_SUCCESS)
+    {
+        TRACE("Unable to open the Session Manager key, error %d", GetLastError());
+        return;
+    }
+
+    ReturnCode = RegQueryValueEx(HiveKey, L"BootExecute", NULL, &RegValueType, NULL, &InitialRegValueByteCount);
+
+    if (ReturnCode != ERROR_SUCCESS || RegValueType != REG_MULTI_SZ)
+    {
+        TRACE("Unable to grab BootExecute, error %d", GetLastError());
+        goto Cleanup;
+    }
+
+    const UINT InitialRegValueCharCount = InitialRegValueByteCount / sizeof(WCHAR);
+
+    /* BootExecute is empty (there should be at least autochk in there) - add our string and get out */
+    if (InitialRegValueByteCount == 0)
+    {
+        FinalRegValueByteCount = ShellArgsCharCount * sizeof(WCHAR) + sizeof(WCHAR);
+        FinalRegValue = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, FinalRegValueByteCount);
+        if (!FinalRegValue)
+        {
+            TRACE("HeapAlloc failed to allocate %d bytes\n", FinalRegValueByteCount);
+            goto Cleanup;
+        }
+
+        memcpy(FinalRegValue, NativeShellArguments, ShellArgsCharCount * sizeof(WCHAR));
+        RegSetValueExW(HiveKey, L"BootExecute", 0, REG_MULTI_SZ, (LPBYTE)FinalRegValue, FinalRegValueByteCount);
+
+        goto Cleanup;
+    }
+
+    InitialRegValue = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, InitialRegValueByteCount);
+    if (!InitialRegValue)
+    {
+        TRACE("HeapAlloc failed to allocate %d bytes", InitialRegValueByteCount);
+        return;
+    }
+
+    ReturnCode = RegQueryValueExW(HiveKey, L"BootExecute", NULL, &RegValueType, (LPBYTE)InitialRegValue, &InitialRegValueByteCount);
+
+    FinalRegValueByteCount = InitialRegValueByteCount - sizeof(WCHAR) + ShellArgsCharCount * sizeof(WCHAR);
+
+    /* check if we haven't set the key already */
+    WCHAR* StringIt = InitialRegValue;
+    UINT CharCount = 0;
+    while (CharCount < InitialRegValueCharCount)
+    {
+        if (wcsstr(StringIt, NativeShellArguments) != NULL)
+        {
+            goto Cleanup;
+        }
+
+        const UINT CurrentStringLength = wcslen(StringIt);
+        StringIt += (CurrentStringLength + 1);
+        CharCount += CurrentStringLength != 0 ? CurrentStringLength : 1;
+    }
+
+    FinalRegValue = HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, FinalRegValueByteCount);
+    if (!FinalRegValue)
+    {
+        TRACE("HeapAlloc failed to allocate %d bytes\n", FinalRegValueByteCount);
+        goto Cleanup;
+    }
+
+    memcpy(FinalRegValue, InitialRegValue, InitialRegValueByteCount);
+    memcpy((FinalRegValue + (InitialRegValueCharCount - 1)), NativeShellArguments, ShellArgsCharCount * sizeof(WCHAR));
+
+    RegSetValueExW(HiveKey, L"BootExecute", 0, REG_MULTI_SZ, (LPBYTE)FinalRegValue, FinalRegValueByteCount);
+
+Cleanup:
+    RegCloseKey(HiveKey);
+
+    if (InitialRegValue != NULL)
+        HeapFree(GetProcessHeap(), 0, InitialRegValue);
+    if (FinalRegValue != NULL)
+        HeapFree(GetProcessHeap(), 0, FinalRegValue);
+#endif
+}
 
 /*
  * NOTES:
@@ -1364,6 +1495,12 @@ ShellShutdownDialog(
 
             case WLX_SAS_ACTION_SHUTDOWN_REBOOT:
                 return WLX_SHUTDOWN_STATE_REBOOT;
+
+            case WLX_SAS_ACTION_SHUTDOWN_NT_MODE:
+            {
+                SetRegistryToBootInNTNativeMode();
+                return WLX_SHUTDOWN_STATE_NT_MODE;
+            }
 
             // 0x08
 
