@@ -88,7 +88,7 @@ static LRESULT CALLBACK MouseProc(INT nCode, WPARAM wParam, LPARAM lParam)
 
 typedef CSimpleArray<CStringW> list_t;
 
-static INT pivot(list_t& a, INT i, INT j)
+static inline INT pivot(list_t& a, INT i, INT j)
 {
     INT k = i + 1;
     while (k <= j && a[i].CompareNoCase(a[k]) == 0)
@@ -100,10 +100,9 @@ static INT pivot(list_t& a, INT i, INT j)
     return k;
  }
 
-static INT partition(list_t& a, INT i, INT j, const CStringW& x)
+static inline INT partition(list_t& a, INT i, INT j, const CStringW& x)
 {
     INT left = i, right = j;
-
     while (left <= right)
     {
         while (left <= j && a[left].CompareNoCase(x) < 0)
@@ -146,17 +145,13 @@ static void DoSort(list_t& list)
 static INT DoUnique(list_t& list)
 {
     INT first = 0, last = list.GetSize();
-
     if (first == last)
         return last;
-
     INT result = first;
     while (++first != last)
     {
-        if (list[result].CompareNoCase(list[first]) == 0)
-        {
+        if (list[result].CompareNoCase(list[first]) != 0)
             list[++result] = list[first];
-        }
     }
     return ++result;
 }
