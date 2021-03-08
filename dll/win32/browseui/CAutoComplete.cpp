@@ -555,7 +555,7 @@ LRESULT CACListView::OnMouseWheel(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL 
 {
     TRACE("CACListView::OnMouseWheel(%p)\n", this);
     ATLASSERT(m_pDropDown);
-    LRESULT ret = DefWindowProcW(uMsg, wParam, lParam);
+    LRESULT ret = DefWindowProcW(uMsg, wParam, lParam); // do default
     m_pDropDown->UpdateScrollBar();
     return ret;
 }
@@ -569,8 +569,8 @@ LRESULT CACListView::OnNCHitTest(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &
     ScreenToClient(&pt);
     HWND hwndTarget = m_pDropDown->ChildWindowFromPoint(pt);
     if (hwndTarget != m_hWnd)
-        return HTTRANSPARENT;
-    return DefWindowProcW(uMsg, wParam, lParam);
+        return HTTRANSPARENT; // pass through
+    return DefWindowProcW(uMsg, wParam, lParam); // do default
 }
 
 // WM_RBUTTONDOWN @implemented
@@ -633,11 +633,13 @@ VOID CACSizeBox::SetStatus(BOOL bDowner, BOOL bLongList)
 
     if (bLongList)
     {
+        // set rectanglar region
         HRGN hRgn = ::CreateRectRgnIndirect(&rc);
         SetWindowRgn(hRgn, TRUE);
     }
     else
     {
+        // set trianglar region
         HDC hDC = ::CreateCompatibleDC(NULL);
         ::BeginPath(hDC);
         if (m_bDowner)
@@ -670,7 +672,7 @@ LRESULT CACSizeBox::OnEraseBkGnd(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &
 // WM_NCHITTEST
 LRESULT CACSizeBox::OnNCHitTest(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
-    return HTTRANSPARENT;
+    return HTTRANSPARENT; // pass through
 }
 
 // WM_PAINT
@@ -710,6 +712,7 @@ LRESULT CACSizeBox::OnPaint(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHand
         ::SelectObject(hDC, hPenOld);
         ::DeleteObject(hPen);
     }
+
     EndPaint(&ps);
     return 0;
 }
@@ -789,7 +792,7 @@ CStringW CAutoComplete::GetEditText()
 
 VOID CAutoComplete::SetEditText(LPCWSTR pszText)
 {
-    m_bInSetText = TRUE;
+    m_bInSetText = TRUE; // don't hide drop-down
     m_hwndEdit.SetWindowTextW(pszText);
     m_bInSetText = FALSE;
 }
@@ -894,7 +897,7 @@ VOID CAutoComplete::UpdateScrollBar()
     BOOL bShowScroll = (cItems > cVisibles);
     m_hwndScrollBar.ShowWindow(bShowScroll ? SW_SHOWNOACTIVATE : SW_HIDE);
     if (bShowScroll)
-        m_hwndScrollBar.InvalidateRect(NULL, FALSE);
+        m_hwndScrollBar.InvalidateRect(NULL, FALSE); // redraw
 }
 
 BOOL CAutoComplete::OnEditKeyDown(WPARAM wParam, LPARAM lParam)
@@ -973,16 +976,21 @@ BOOL CAutoComplete::OnEditKeyDown(WPARAM wParam, LPARAM lParam)
         {
             if (::GetKeyState(VK_CONTROL) < 0) // [Ctrl] key
             {
+                // get current selection
                 INT ich0, ich1;
                 m_hwndEdit.SendMessageW(EM_GETSEL, (WPARAM)&ich0, (LPARAM)&ich1);
                 if (ich0 <= 0 || ich0 != ich1)
                     return TRUE; // eat
+                // get text
                 CStringW str = GetEditText();
+                // extend the range
                 while (ich0 > 0 && IsWordBreak(str[ich0 - 1]))
                     --ich0;
                 while (ich0 > 0 && !IsWordBreak(str[ich0 - 1]))
                     --ich0;
+                // select range
                 m_hwndEdit.SendMessageW(EM_SETSEL, ich0, ich1);
+                // replace selection with empty text
                 m_hwndEdit.SendMessageW(EM_REPLACESEL, TRUE, (LPARAM)L"");
                 return TRUE; // eat
             }
@@ -1001,9 +1009,9 @@ LRESULT CAutoComplete::OnEditChar(WPARAM wParam, LPARAM lParam)
     TRACE("CACEditCtrl::OnEditChar(%p, %p)\n", this, wParam);
     if (wParam == L'\n' || wParam == L'\t')
         return 0; // eat
-    LRESULT ret = m_hwndEdit.DefWindowProcW(WM_CHAR, wParam, lParam);
+    LRESULT ret = m_hwndEdit.DefWindowProcW(WM_CHAR, wParam, lParam); // do default
     if (CanAutoSuggest() || CanAutoAppend())
-        OnEditUpdate(wParam != VK_BACK && wParam != VK_DELETE);
+        OnEditUpdate(wParam != VK_BACK);
     return ret;
 }
 
@@ -1021,11 +1029,13 @@ VOID CAutoComplete::OnEditUpdate(BOOL bAppendOK)
 
 VOID CAutoComplete::OnListSelChange()
 {
+    // update EDIT text
     INT iItem = m_hwndList.GetCurSel();
     CStringW text = ((iItem != -1) ? GetItemText(iItem) : m_strText);
     SetEditText(text);
+    // ensure the item visible
     m_hwndList.EnsureVisible(iItem, FALSE);
-
+    // select the end
     INT cch = text.GetLength();
     m_hwndEdit.SendMessageW(EM_SETSEL, cch, cch);
 }
@@ -1621,7 +1631,7 @@ VOID CAutoComplete::UpdateCompletion(BOOL bAppendOK)
 
     if (CanAutoSuggest())
     {
-        m_bInSelectItem = TRUE;
+        m_bInSelectItem = TRUE; // don't respond
         SelectItem(-1); // select none
         m_bInSelectItem = FALSE;
 
@@ -1717,11 +1727,10 @@ LRESULT CAutoComplete::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &
 LRESULT CAutoComplete::OnExitSizeMove(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
     TRACE("CAutoComplete::OnExitSizeMove(%p)\n", this);
-    m_bResized = TRUE;
-    m_hwndEdit.SetFocus();
+    m_bResized = TRUE; // remember resized
+    m_hwndEdit.SetFocus(); // restore focus
 
     ModifyStyle(WS_THICKFRAME, 0); // remove thick frame to resize
-
     // frame changed
     UINT uSWP_ = SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED;
     SetWindowPos(NULL, 0, 0, 0, 0, uSWP_);
@@ -1802,8 +1811,7 @@ LRESULT CAutoComplete::OnMeasureItem(UINT uMsg, WPARAM wParam, LPARAM lParam, BO
 // The return value of this message specifies whether the window should be activated or not.
 LRESULT CAutoComplete::OnMouseActivate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
-    // don't activate by mouse
-    return MA_NOACTIVATE;
+    return MA_NOACTIVATE; // don't activate by mouse
 }
 
 // WM_NCACTIVATE
@@ -1854,7 +1862,7 @@ LRESULT CAutoComplete::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
             INT iItem = m_hwndList.ItemFromPoint(pt.x, pt.y);
             if (iItem != -1)
             {
-                m_bInSelectItem = TRUE;
+                m_bInSelectItem = TRUE; // don't respond
                 m_hwndList.SetCurSel(iItem);
                 m_bInSelectItem = FALSE;
             }
@@ -1921,7 +1929,7 @@ LRESULT CAutoComplete::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
         {
             TRACE("LVN_ITEMCHANGED\n");
             LPNMLISTVIEW pListView = reinterpret_cast<LPNMLISTVIEW>(pnmh);
-            if (pListView->uChanged & LVIF_STATE)
+            if (pListView->uChanged & LVIF_STATE) // selection changed
             {
                 if (!m_bInSelectItem)
                 {
@@ -1958,6 +1966,7 @@ LRESULT CAutoComplete::OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHa
 {
     TRACE("CAutoComplete::OnSize(%p)\n", this);
 
+    // re-calculate
     CRect rcList, rcScrollBar, rcSizeBox;
     ReCalcRects(m_bDowner, rcList, rcScrollBar, rcSizeBox);
 
@@ -1986,7 +1995,7 @@ LRESULT CAutoComplete::OnShowWindow(UINT uMsg, WPARAM wParam, LPARAM lParam, BOO
     BOOL bShow = (BOOL)wParam;
     if (bShow)
     {
-        s_hDropDownWnd = m_hWnd;
+        s_hDropDownWnd = m_hWnd; // watch this
 
         // unhook mouse if any
         if (s_hMouseHook)
@@ -2010,7 +2019,7 @@ LRESULT CAutoComplete::OnShowWindow(UINT uMsg, WPARAM wParam, LPARAM lParam, BOO
         // kill timer
         KillTimer(WATCH_TIMER_ID);
 
-        s_hDropDownWnd = NULL;
+        s_hDropDownWnd = NULL; // unwatch
 
         // unhook mouse if any
         if (s_hMouseHook)
@@ -2035,19 +2044,19 @@ LRESULT CAutoComplete::OnShowWindow(UINT uMsg, WPARAM wParam, LPARAM lParam, BOO
 // WM_TIMER
 LRESULT CAutoComplete::OnTimer(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
-    if (wParam != WATCH_TIMER_ID)
+    if (wParam != WATCH_TIMER_ID) // sanity check
         return 0;
 
+    // it the EDIT control is dead, then kill the timer
     if (!::IsWindow(m_hwndEdit))
     {
         KillTimer(WATCH_TIMER_ID);
         return 0;
     }
 
+    // m_hwndEdit is moved?
     RECT rcEdit;
     m_hwndEdit.GetWindowRect(&rcEdit);
-
-    // m_hwndEdit is moved?
     if (!::EqualRect(&rcEdit, &m_rcEdit))
     {
         // if so, hide
@@ -2071,9 +2080,12 @@ LRESULT CAutoComplete::OnVScroll(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &
         case SB_THUMBPOSITION:
         case SB_THUMBTRACK:
         {
+            // get the scrolling info
             INT nPos = HIWORD(wParam);
             SCROLLINFO si = { sizeof(si), SIF_ALL };
             m_hwndList.GetScrollInfo(SB_VERT, &si);
+
+            // scroll the list-view by EnsureVisible
             INT cItems = m_hwndList.GetItemCount();
             // iItem : cItems == (nPos - si.nMin) : (si.nMax - si.nMin).
             INT iItem = cItems * (nPos - si.nMin) / (si.nMax - si.nMin);
@@ -2084,6 +2096,8 @@ LRESULT CAutoComplete::OnVScroll(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &
                     iItem = cItems - 1;
             }
             m_hwndList.EnsureVisible(iItem, FALSE);
+
+            // update position
             si.fMask = SIF_POS;
             m_hwndList.GetScrollInfo(SB_VERT, &si);
             m_hwndScrollBar.SetScrollInfo(SB_VERT, &si, FALSE);
@@ -2091,6 +2105,7 @@ LRESULT CAutoComplete::OnVScroll(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &
         }
         default:
         {
+            // pass it to m_hwndList
             m_hwndList.SendMessageW(WM_VSCROLL, wParam, lParam);
             UpdateScrollBar();
             break;
