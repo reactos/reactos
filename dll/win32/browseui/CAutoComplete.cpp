@@ -49,11 +49,11 @@ static HHOOK s_hMouseHook = NULL;
 static HWND s_hDropDownWnd = NULL;
 
 // mouse hook procedure
+// https://docs.microsoft.com/en-us/previous-versions/windows/desktop/legacy/ms644988(v=vs.85)
 static LRESULT CALLBACK MouseProc(INT nCode, WPARAM wParam, LPARAM lParam)
 {
     if (s_hMouseHook == NULL)
-        return 0;
-
+        return 0; // do default
     if (nCode == HC_ACTION && s_hDropDownWnd && ::IsWindow(s_hDropDownWnd))
     {
         RECT rc;
@@ -68,16 +68,15 @@ static LRESULT CALLBACK MouseProc(INT nCode, WPARAM wParam, LPARAM lParam)
             case WM_NCMBUTTONDOWN: case WM_NCMBUTTONUP:
             {
                 ::GetWindowRect(s_hDropDownWnd, &rc);
-                if (!::PtInRect(&rc, pMouseHook->pt))
+                if (!::PtInRect(&rc, pMouseHook->pt)) // outside of s_hDropDownWnd?
                 {
-                    ::ShowWindowAsync(s_hDropDownWnd, SW_HIDE);
+                    ::ShowWindowAsync(s_hDropDownWnd, SW_HIDE); // hide it
                 }
                 break;
             }
         }
     }
-
-    return ::CallNextHookEx(s_hMouseHook, nCode, wParam, lParam);
+    return ::CallNextHookEx(s_hMouseHook, nCode, wParam, lParam); // go next hook
 }
 
 //////////////////////////////////////////////////////////////////////////////
