@@ -45,7 +45,7 @@
 #define TIMER_ID 0xFEEDBEEF
 
 static HHOOK s_hMouseHook = NULL;
-static HWND s_hWnd = NULL;
+static HWND s_hDropDownWnd = NULL;
 
 // mouse hook procedure
 static LRESULT CALLBACK MouseProc(INT nCode, WPARAM wParam, LPARAM lParam)
@@ -53,7 +53,7 @@ static LRESULT CALLBACK MouseProc(INT nCode, WPARAM wParam, LPARAM lParam)
     if (s_hMouseHook == NULL)
         return 0;
 
-    if (nCode == HC_ACTION && ::IsWindow(s_hWnd))
+    if (nCode == HC_ACTION && ::IsWindow(s_hDropDownWnd))
     {
         RECT rc;
         MOUSEHOOKSTRUCT *pMouseHook = reinterpret_cast<MOUSEHOOKSTRUCT *>(lParam);
@@ -71,10 +71,10 @@ static LRESULT CALLBACK MouseProc(INT nCode, WPARAM wParam, LPARAM lParam)
         case WM_NCRBUTTONUP:
         case WM_NCMBUTTONDOWN:
         case WM_NCMBUTTONUP:
-            ::GetWindowRect(s_hWnd, &rc);
+            ::GetWindowRect(s_hDropDownWnd, &rc);
             if (!::PtInRect(&rc, pMouseHook->pt))
             {
-                ::ShowWindowAsync(s_hWnd, SW_HIDE);
+                ::ShowWindowAsync(s_hDropDownWnd, SW_HIDE);
             }
             break;
         }
@@ -1949,7 +1949,7 @@ LRESULT CAutoComplete::OnShowWindow(UINT uMsg, WPARAM wParam, LPARAM lParam, BOO
     BOOL bShow = (BOOL)wParam;
     if (bShow)
     {
-        s_hWnd = m_hWnd;
+        s_hDropDownWnd = m_hWnd;
 
         // unhook mouse if any
         if (s_hMouseHook)
@@ -1973,7 +1973,7 @@ LRESULT CAutoComplete::OnShowWindow(UINT uMsg, WPARAM wParam, LPARAM lParam, BOO
         // kill timer
         KillTimer(TIMER_ID);
 
-        s_hWnd = NULL;
+        s_hDropDownWnd = NULL;
 
         // unhook mouse if any
         if (s_hMouseHook)
