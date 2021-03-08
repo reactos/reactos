@@ -360,9 +360,10 @@ LRESULT CACEditCtrl::OnKeyDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bH
 {
     TRACE("CACEditCtrl::OnKeyDown(%p, %p)\n", this, wParam);
     ATLASSERT(m_pDropDown);
-    if (!m_pDropDown->OnEditKeyDown(wParam, lParam))
-        return DefWindowProcW(uMsg, wParam, lParam); // do default
-    return 1;
+    if (m_pDropDown->OnEditKeyDown(wParam, lParam))
+        return 1;
+    bHandled = FALSE; // do default
+    return 0;
 }
 
 // WM_KILLFOCUS @implemented
@@ -379,7 +380,8 @@ LRESULT CACEditCtrl::OnKillFocus(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &
         m_pDropDown->HideDropDown();
     }
 
-    return DefWindowProcW(uMsg, wParam, lParam); // do default
+    bHandled = FALSE; // do default
+    return 0;
 }
 
 // WM_PASTE @implemented
@@ -400,7 +402,8 @@ LRESULT CACEditCtrl::OnSetFocus(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
 {
     TRACE("CACEditCtrl::OnSetFocus(%p)\n", this);
     ATLASSERT(m_pDropDown);
-    return DefWindowProcW(uMsg, wParam, lParam); // do default
+    bHandled = FALSE; // do default
+    return 0;
 }
 
 // WM_SETTEXT
@@ -411,7 +414,8 @@ LRESULT CACEditCtrl::OnSetText(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bH
     ATLASSERT(m_pDropDown);
     if (!m_pDropDown->m_bInSetText)
         m_pDropDown->HideDropDown(); // it's mechanical WM_SETTEXT
-    return DefWindowProcW(uMsg, wParam, lParam); // do default
+    bHandled = FALSE; // do default
+    return 0;
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -576,7 +580,8 @@ LRESULT CACListView::OnNCHitTest(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &
     HWND hwndTarget = m_pDropDown->ChildWindowFromPoint(pt);
     if (hwndTarget != m_hWnd)
         return HTTRANSPARENT; // pass through (for resizing the drop-down window)
-    return DefWindowProcW(uMsg, wParam, lParam); // do default
+    bHandled = FALSE; // do default
+    return 0;
 }
 
 // WM_RBUTTONDOWN @implemented
@@ -1827,7 +1832,8 @@ LRESULT CAutoComplete::OnMouseActivate(UINT uMsg, WPARAM wParam, LPARAM lParam, 
 // This message is sent to a window to indicate an active or inactive state.
 LRESULT CAutoComplete::OnNCActivate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
-    return DefWindowProcW(uMsg, wParam, lParam); // do default
+    bHandled = FALSE; // do default
+    return 0;
 }
 
 // WM_NCLBUTTONDOWN
@@ -1846,7 +1852,8 @@ LRESULT CAutoComplete::OnNCLButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam, 
             break;
         }
     }
-    return DefWindowProcW(uMsg, wParam, lParam); // do default
+    bHandled = FALSE; // do default
+    return 0;
 }
 
 // WM_NOTIFY
@@ -1967,7 +1974,8 @@ LRESULT CAutoComplete::OnNCHitTest(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL
         // allow resizing (with cursor shape)
         return m_bDowner ? HTBOTTOMRIGHT : HTTOPRIGHT;
     }
-    return DefWindowProcW(uMsg, wParam, lParam); // do default
+    bHandled = FALSE; // do default
+    return 0;
 }
 
 // WM_SIZE @implemented
@@ -2022,7 +2030,8 @@ LRESULT CAutoComplete::OnShowWindow(UINT uMsg, WPARAM wParam, LPARAM lParam, BOO
         // set timer
         SetTimer(WATCH_TIMER_ID, WATCH_INTERVAL, NULL);
 
-        return DefWindowProcW(uMsg, wParam, lParam); // do default
+        bHandled = FALSE; // do default
+        return 0;
     }
     else
     {
