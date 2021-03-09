@@ -20,21 +20,15 @@
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
 
-/*
-  Implemented:
-  - ACO_AUTOAPPEND style
-  - ACO_AUTOSUGGEST style
-  - ACO_UPDOWNKEYDROPSLIST style
-  - Handle pwzsRegKeyPath and pwszQuickComplete in Init
+#include "precomp.h"
 
+/*
   TODO:
   - implement ACO_SEARCH style
   - implement ACO_FILTERPREFIXES style
   - implement ACO_USETAB style
   - implement ACO_RTLREADING style
  */
-
-#include "precomp.h"
 
 #define CX_LIST 30160 // width of m_hwndList (very wide but alright)
 #define CY_LIST 288 // maximum height of drop-down window
@@ -415,7 +409,7 @@ HWND CACListView::Create(HWND hwndParent)
     // set extended listview style
     DWORD exstyle = LVS_EX_ONECLICKACTIVATE | LVS_EX_FULLROWSELECT | LVS_EX_TRACKSELECT;
     SetExtendedListViewStyle(exstyle, exstyle);
-    // insert one column
+    // insert one column (needed to insert items)
     LV_COLUMNW column = { LVCF_FMT | LVCF_WIDTH };
     column.fmt = LVCFMT_LEFT;
     column.cx = CX_LIST - ::GetSystemMetrics(SM_CXVSCROLL);
@@ -809,11 +803,11 @@ VOID CAutoComplete::SelectItem(INT iItem)
 VOID CAutoComplete::DoAutoAppend()
 {
     if (!CanAutoAppend()) // can we auto-append?
-        return;
+        return; // don't append
 
     CStringW strText = GetEditText(); // get the text
     if (strText.IsEmpty())
-        return;
+        return; // don't append
 
     INT cItems = m_innerList.GetSize(); // get the number of items
     if (cItems == 0)
@@ -859,11 +853,10 @@ VOID CAutoComplete::DoBackWord()
 {
     // get current selection
     INT ich0, ich1;
-    m_hwndEdit.SendMessageW(EM_GETSEL,
-                            reinterpret_cast<WPARAM>(&ich0),
-                            reinterpret_cast<LPARAM>(&ich1));
-    if (ich0 <= 0 || ich0 != ich1)
-        return;
+    m_hwndEdit.SendMessageW(EM_GETSEL, reinterpret_cast<WPARAM>(&ich0),
+                                       reinterpret_cast<LPARAM>(&ich1));
+    if (ich0 <= 0 || ich0 != ich1) // there is selection or left-side end
+        return; // don't do anything
     // get text
     CStringW str = GetEditText();
     // extend the range
@@ -905,7 +898,7 @@ BOOL CAutoComplete::OnEditKeyDown(WPARAM wParam, LPARAM lParam)
         case VK_PRIOR: case VK_NEXT:
             // is suggestion available?
             if (!CanAutoSuggest())
-                return FALSE; // if not so, then do default
+                return FALSE; // do default
             if (IsWindowVisible())
                 return OnListUpDown(vk);
             break;
@@ -913,7 +906,7 @@ BOOL CAutoComplete::OnEditKeyDown(WPARAM wParam, LPARAM lParam)
         {
             // is suggestion available?
             if (!CanAutoSuggest())
-                return FALSE; // if not so, then do default
+                return FALSE; // do default
             if (IsWindowVisible())
             {
                 SetEditText(m_strText); // revert the edit text
@@ -962,7 +955,7 @@ BOOL CAutoComplete::OnEditKeyDown(WPARAM wParam, LPARAM lParam)
         {
             // is suggestion available?
             if (!CanAutoSuggest())
-                return FALSE; // if not so, then do default
+                return FALSE; // do default
             m_hwndEdit.DefWindowProcW(WM_KEYDOWN, VK_DELETE, 0); // do default
             if (IsWindowVisible())
                 OnEditUpdate(FALSE);
@@ -1004,7 +997,6 @@ VOID CAutoComplete::OnEditUpdate(BOOL bAppendOK)
         // no change
         return;
     }
-
     UpdateCompletion(bAppendOK);
 }
 
@@ -1032,8 +1024,8 @@ BOOL CAutoComplete::OnListUpDown(UINT vk)
         return TRUE; // eat
     }
 
-    INT iItem = m_hwndList.GetCurSel();
-    INT cItems = m_hwndList.GetItemCount();
+    INT iItem = m_hwndList.GetCurSel(); // current selection
+    INT cItems = m_hwndList.GetItemCount(); // the number of items
     switch (vk)
     {
         case VK_HOME: case VK_END:
@@ -1161,11 +1153,9 @@ CAutoComplete::Init(HWND hwndEdit, IUnknown *punkACL,
     punkACL->QueryInterface(IID_IACList, (VOID **)&m_pACList);
     TRACE("m_pACList: %p\n", static_cast<void *>(m_pACList));
 
-    // add reference
-    AddRef();
+    AddRef(); // add reference
 
-    // create/destroy the drop-down window if necessary
-    UpdateDropDownState();
+    UpdateDropDownState(); // create/hide the drop-down window if necessary
 
     // load quick completion info
     LoadQuickComplete(pwszRegKeyPath, pwszQuickComplete);
@@ -1206,7 +1196,7 @@ STDMETHODIMP CAutoComplete::SetOptions(DWORD dwFlag)
 {
     TRACE("(%p) -> (0x%x)\n", this, dwFlag);
     m_dwOptions = dwFlag;
-    UpdateDropDownState();
+    UpdateDropDownState(); // create/hide the drop-down window if necessary
     return S_OK;
 }
 
@@ -1375,8 +1365,8 @@ VOID CAutoComplete::LoadQuickComplete(LPCWSTR pwszRegKeyPath, LPCWSTR pwszQuickC
     if (pwszRegKeyPath)
     {
         CStringW strPath = pwszRegKeyPath;
-        INT ichSep = strPath.ReverseFind(L'\\');
-        if (ichSep != -1)
+        INT ichSep = strPath.ReverseFind(L'\\'); // find separator
+        if (ichSep != -1) // found the last separator
         {
             // split by the separator
             CStringW strKey = strPath.Left(ichSep);
@@ -1482,7 +1472,7 @@ VOID CAutoComplete::RepositionDropDown()
     // set status
     m_hwndSizeBox.SetStatus(m_bDowner, bLongList);
 
-    if (m_bResized)
+    if (m_bResized) // already resized?
         PostMessageW(WM_SIZE, 0, 0); // re-layout
     else
         MoveWindow(x, y, cx, cy); // move
