@@ -1571,9 +1571,9 @@ INT CAutoComplete::UpdateOuterList()
     m_outerList.RemoveAll();
     for (INT iItem = 0; iItem < m_innerList.GetSize(); ++iItem)
     {
+        // is the beginning matched?
         const CStringW& strTarget = m_innerList[iItem];
-        if (strTarget != strText &&
-            ::StrCmpNIW(strTarget, m_strText, strText.GetLength()) == 0)
+        if (::StrCmpNIW(strTarget, strText, strText.GetLength()) == 0)
         {
             m_outerList.Add(strTarget);
         }
