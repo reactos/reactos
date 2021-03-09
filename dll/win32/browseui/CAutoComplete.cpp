@@ -844,14 +844,14 @@ VOID CAutoComplete::DoAutoAppend()
         return; // no suggestion
 
     // append suggestion
-    INT cchAppend = strCommon.GetLength() - strText.GetLength();
-    CStringW strAppend = strCommon.Right(cchAppend);
     INT cchOld = strText.GetLength();
+    INT cchAppend = strCommon.GetLength() - cchOld;
+    CStringW strAppend = strCommon.Right(cchAppend);
     strText += strAppend;
     SetEditText(strText);
 
     // select the appended suggestion
-    SetEditSel(cchOld, cchOld + cchAppend);
+    SetEditSel(cchOld, strText.GetLength());
 }
 
 // go back a word ([Ctrl]+[Backspace])
