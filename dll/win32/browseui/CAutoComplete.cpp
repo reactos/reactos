@@ -1378,13 +1378,17 @@ VOID CAutoComplete::LoadQuickComplete(LPCWSTR pwszRegKeyPath, LPCWSTR pwszQuickC
         INT ichSep = strPath.ReverseFind(L'\\');
         if (ichSep != -1)
         {
+            // split by the separator
             CStringW strKey = strPath.Left(ichSep);
             CStringW strName = strPath.Mid(ichSep + 1);
+
+            // load from registry
             WCHAR szValue[MAX_PATH] = L"";
-            DWORD cbValue = sizeof(szValue);
-            SHRegGetUSValueW(pwszRegKeyPath, strName, NULL,
+            DWORD cbValue = sizeof(szValue), dwType = REG_NONE;
+            SHRegGetUSValueW(pwszRegKeyPath, strName, &dwType,
                              szValue, &cbValue, FALSE, NULL, 0);
-            if (szValue[0] != 0 && cbValue != 0)
+            if (szValue[0] != 0 && cbValue != 0 &&
+                (dwType == REG_SZ || dwType == REG_EXPAND_SZ))
             {
                 m_strQuickComplete = szValue;
             }
