@@ -493,6 +493,13 @@ VOID CACListView::SelectHere(INT x, INT y)
     SetCurSel(ItemFromPoint(x, y));
 }
 
+// WM_LBUTTONUP / WM_MBUTTONUP / WM_RBUTTONUP @implemented
+LRESULT CACListView::OnButtonUp(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+{
+    TRACE("CACListView::OnButtonUp(%p)\n", this);
+    return 0; // eat
+}
+
 // WM_LBUTTONDOWN @implemented
 // This message is posted when the user pressed the left mouse button while the cursor is inside.
 LRESULT CACListView::OnLButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
@@ -511,24 +518,10 @@ LRESULT CACListView::OnLButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL
     return 0;
 }
 
-// WM_LBUTTONUP @implemented
-LRESULT CACListView::OnLButtonUp(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+// WM_MBUTTONDOWN / WM_RBUTTONDOWN @implemented
+LRESULT CACListView::OnMRButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
-    TRACE("CACListView::OnLButtonUp(%p)\n", this);
-    return 0; // eat
-}
-
-// WM_MBUTTONDOWN @implemented
-LRESULT CACListView::OnMButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
-{
-    TRACE("CACListView::OnMButtonDown(%p)\n", this);
-    return 0; // eat
-}
-
-// WM_MBUTTONUP @implemented
-LRESULT CACListView::OnMButtonUp(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
-{
-    TRACE("CACListView::OnMButtonUp(%p)\n", this);
+    TRACE("CACListView::OnMRButtonDown(%p)\n", this);
     return 0; // eat
 }
 
@@ -554,20 +547,6 @@ LRESULT CACListView::OnNCHitTest(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &
         return HTTRANSPARENT; // pass through (for resizing the drop-down window)
     bHandled = FALSE; // do default
     return 0;
-}
-
-// WM_RBUTTONDOWN @implemented
-LRESULT CACListView::OnRButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
-{
-    TRACE("CACListView::OnRButtonDown(%p)\n", this);
-    return 0; // eat
-}
-
-// WM_RBUTTONUP @implemented
-LRESULT CACListView::OnRButtonUp(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
-{
-    TRACE("CACListView::OnRButtonUp(%p)\n", this);
-    return 0; // eat
 }
 
 //////////////////////////////////////////////////////////////////////////////
