@@ -1180,7 +1180,7 @@ CAutoComplete::Init(HWND hwndEdit, IUnknown *punkACL,
     WCHAR szClass[16];
     if (::GetClassNameW(hwndParent, szClass, _countof(szClass)))
     {
-        if (::StrCmpIW(szClass, L"COMBOBOX") == 0 ||
+        if (::StrCmpIW(szClass, WC_COMBOBOXW) == 0 ||
             ::StrCmpIW(szClass, WC_COMBOBOXEXW) == 0)
         {
             m_hwndCombo = hwndParent; // get combobox
