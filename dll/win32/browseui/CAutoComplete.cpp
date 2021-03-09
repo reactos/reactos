@@ -591,44 +591,39 @@ VOID CACSizeBox::SetStatus(BOOL bDowner, BOOL bLongList)
     m_bDowner = bDowner;
     m_bLongList = bLongList;
 
-    RECT rc;
-    GetWindowRect(&rc); // get size-box size
-
-    // window regions use special coordinates
-    ::OffsetRect(&rc, -rc.left, -rc.top);
-
     if (bLongList)
     {
-        // set rectanglar region
-        HRGN hRgn = ::CreateRectRgnIndirect(&rc);
-        SetWindowRgn(hRgn, TRUE);
+        SetWindowRgn(NULL, TRUE); // reset window region
+        return;
+    }
+
+    RECT rc;
+    GetWindowRect(&rc); // get size-box size
+    ::OffsetRect(&rc, -rc.left, -rc.top); // window regions use special coordinates
+
+    // create a trianglar region
+    HDC hDC = ::CreateCompatibleDC(NULL);
+    ::BeginPath(hDC);
+    if (m_bDowner)
+    {
+        ::MoveToEx(hDC, rc.right, rc.top, NULL);
+        ::LineTo(hDC, rc.right, rc.bottom);
+        ::LineTo(hDC, rc.left, rc.bottom);
+        ::LineTo(hDC, rc.right, rc.top);
     }
     else
     {
-        // create a trianglar region
-        HDC hDC = ::CreateCompatibleDC(NULL);
-        ::BeginPath(hDC);
-        if (m_bDowner)
-        {
-            ::MoveToEx(hDC, rc.right, rc.top, NULL);
-            ::LineTo(hDC, rc.right, rc.bottom);
-            ::LineTo(hDC, rc.left, rc.bottom);
-            ::LineTo(hDC, rc.right, rc.top);
-        }
-        else
-        {
-            ::MoveToEx(hDC, rc.right, rc.bottom, NULL);
-            ::LineTo(hDC, rc.right, rc.top);
-            ::LineTo(hDC, rc.left, rc.top);
-            ::LineTo(hDC, rc.right, rc.bottom);
-        }
-        ::EndPath(hDC);
-        HRGN hRgn = ::PathToRegion(hDC);
-        ::DeleteDC(hDC);
-
-        // set the trianglar region
-        SetWindowRgn(hRgn, TRUE);
+        ::MoveToEx(hDC, rc.right, rc.bottom, NULL);
+        ::LineTo(hDC, rc.right, rc.top);
+        ::LineTo(hDC, rc.left, rc.top);
+        ::LineTo(hDC, rc.right, rc.bottom);
     }
+    ::EndPath(hDC);
+    HRGN hRgn = ::PathToRegion(hDC);
+    ::DeleteDC(hDC);
+
+    // set the trianglar region
+    SetWindowRgn(hRgn, TRUE);
 }
 
 // WM_ERASEBKGND
