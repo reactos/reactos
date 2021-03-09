@@ -654,10 +654,10 @@ LRESULT CACSizeBox::OnPaint(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHand
 
     // draw size-box
     INT cxy = rc.Width();
-    for (INT i = 0; i < 2; ++i)
+    for (INT shift = 0; shift < 2; ++shift)
     {
         // choose pen color
-        INT iColor = ((i == 0) ? COLOR_HIGHLIGHTTEXT : COLOR_3DSHADOW);
+        INT iColor = ((shift == 0) ? COLOR_HIGHLIGHTTEXT : COLOR_3DSHADOW);
         HPEN hPen = ::CreatePen(PS_SOLID, 1, ::GetSysColor(iColor));
         HGDIOBJ hPenOld = ::SelectObject(hDC, hPen);
         // do loop to draw the slanted lines
@@ -666,13 +666,13 @@ LRESULT CACSizeBox::OnPaint(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHand
             // draw a grip line
             if (m_bDowner)
             {
-                ::MoveToEx(hDC, rc.right, rc.top + delta + i, NULL);
-                ::LineTo(hDC, rc.left + delta + i, rc.bottom);
+                ::MoveToEx(hDC, rc.right, rc.top + delta + shift, NULL);
+                ::LineTo(hDC, rc.left + delta + shift, rc.bottom);
             }
             else
             {
-                ::MoveToEx(hDC, rc.left + delta + i, rc.top, NULL);
-                ::LineTo(hDC, rc.right, rc.bottom - delta - i);
+                ::MoveToEx(hDC, rc.left + delta + shift, rc.top, NULL);
+                ::LineTo(hDC, rc.right, rc.bottom - delta - shift);
             }
         }
         // delete pen
