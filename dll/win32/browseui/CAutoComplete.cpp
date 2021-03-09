@@ -45,7 +45,7 @@
 #define WATCH_INTERVAL 300 // in milliseconds
 
 static HHOOK s_hMouseHook = NULL;
-static HWND s_hDropDownWnd = NULL;
+static HWND s_hWatchWnd = NULL;
 
 // mouse hook procedure to watch the mouse click
 // https://docs.microsoft.com/en-us/previous-versions/windows/desktop/legacy/ms644988(v=vs.85)
@@ -53,9 +53,10 @@ static LRESULT CALLBACK MouseProc(INT nCode, WPARAM wParam, LPARAM lParam)
 {
     if (s_hMouseHook == NULL)
         return 0; // do default
-    // if the user clicked the outside of s_hDropDownWnd, then hide the drop-down window
-    if (nCode == HC_ACTION && s_hDropDownWnd && ::IsWindow(s_hDropDownWnd) &&
-        ::GetCapture() == NULL)
+    // if the user clicked the outside of s_hWatchWnd, then hide the drop-down window
+    if (nCode == HC_ACTION && // an action?
+        s_hWatchWnd && ::IsWindow(s_hWatchWnd) && // s_hWatchWnd is valid?
+        ::GetCapture() == NULL) // no capture? (dragging something?)
     {
         RECT rc;
         MOUSEHOOKSTRUCT *pMouseHook = reinterpret_cast<MOUSEHOOKSTRUCT *>(lParam);
@@ -68,10 +69,10 @@ static LRESULT CALLBACK MouseProc(INT nCode, WPARAM wParam, LPARAM lParam)
             case WM_NCRBUTTONDOWN: case WM_NCRBUTTONUP:
             case WM_NCMBUTTONDOWN: case WM_NCMBUTTONUP:
             {
-                ::GetWindowRect(s_hDropDownWnd, &rc);
-                if (!::PtInRect(&rc, pMouseHook->pt)) // outside of s_hDropDownWnd?
+                ::GetWindowRect(s_hWatchWnd, &rc);
+                if (!::PtInRect(&rc, pMouseHook->pt)) // outside of s_hWatchWnd?
                 {
-                    ::ShowWindowAsync(s_hDropDownWnd, SW_HIDE); // hide it
+                    ::ShowWindowAsync(s_hWatchWnd, SW_HIDE); // hide it
                 }
                 break;
             }
@@ -630,11 +631,14 @@ HWND CACSizeBox::Create(HWND hwndParent)
 
 VOID CACSizeBox::SetStatus(BOOL bDowner, BOOL bLongList)
 {
+    // set flags
     m_bDowner = bDowner;
     m_bLongList = bLongList;
 
     RECT rc;
-    GetWindowRect(&rc);
+    GetWindowRect(&rc); // get size-box size
+
+    // window regions use special coordinates
     ::OffsetRect(&rc, -rc.left, -rc.top);
 
     if (bLongList)
@@ -645,7 +649,7 @@ VOID CACSizeBox::SetStatus(BOOL bDowner, BOOL bLongList)
     }
     else
     {
-        // set trianglar region
+        // create a trianglar region
         HDC hDC = ::CreateCompatibleDC(NULL);
         ::BeginPath(hDC);
         if (m_bDowner)
@@ -665,6 +669,8 @@ VOID CACSizeBox::SetStatus(BOOL bDowner, BOOL bLongList)
         ::EndPath(hDC);
         HRGN hRgn = ::PathToRegion(hDC);
         ::DeleteDC(hDC);
+
+        // set the trianglar region
         SetWindowRgn(hRgn, TRUE);
     }
 }
@@ -704,6 +710,7 @@ LRESULT CACSizeBox::OnPaint(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHand
         HGDIOBJ hPenOld = ::SelectObject(hDC, hPen);
         for (INT delta = cxy / 4; delta < cxy; delta += cxy / 4)
         {
+            // draw a grip line
             if (m_bDowner)
             {
                 ::MoveToEx(hDC, rc.right, rc.top + delta + i, NULL);
@@ -895,7 +902,7 @@ VOID CAutoComplete::DoAutoAppend()
     SetEditSel(ich0, ich1);
 }
 
-// go back a word
+// go back a word ([Ctrl]+[Backspace])
 VOID CAutoComplete::DoBackWord()
 {
     // get current selection
@@ -957,7 +964,7 @@ BOOL CAutoComplete::OnEditKeyDown(WPARAM wParam, LPARAM lParam)
                 return FALSE; // if not so, then do default
             if (IsWindowVisible())
             {
-                SetEditText(m_strText); // revert
+                SetEditText(m_strText); // revert the edit text
                 // select the end
                 INT cch = m_strText.GetLength();
                 SetEditSel(cch, cch);
@@ -976,6 +983,7 @@ BOOL CAutoComplete::OnEditKeyDown(WPARAM wParam, LPARAM lParam)
             }
             else
             {
+                // if item is selected, then update the edit text
                 INT iItem = m_hwndList.GetCurSel();
                 if (iItem != -1)
                 {
@@ -1371,7 +1379,8 @@ VOID CAutoComplete::UpdateDropDownState()
     }
 }
 
-VOID CAutoComplete::ReCalcRects(BOOL bDowner, RECT& rcList, RECT& rcScrollBar, RECT& rcSizeBox)
+// calculate the positions of the controls
+VOID CAutoComplete::CalcRects(BOOL bDowner, RECT& rcList, RECT& rcScrollBar, RECT& rcSizeBox)
 {
     // get the client rectangle
     RECT rcClient;
@@ -1991,9 +2000,9 @@ LRESULT CAutoComplete::OnSize(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHa
 {
     TRACE("CAutoComplete::OnSize(%p)\n", this);
 
-    // re-calculate the positions of the controls
+    // calculate the positions of the controls
     CRect rcList, rcScrollBar, rcSizeBox;
-    ReCalcRects(m_bDowner, rcList, rcScrollBar, rcSizeBox);
+    CalcRects(m_bDowner, rcList, rcScrollBar, rcSizeBox);
 
     // reposition the controls in smartest way
     UINT uSWP_ = SWP_NOACTIVATE | SWP_NOCOPYBITS;
@@ -2020,7 +2029,7 @@ LRESULT CAutoComplete::OnShowWindow(UINT uMsg, WPARAM wParam, LPARAM lParam, BOO
     BOOL bShow = (BOOL)wParam;
     if (bShow)
     {
-        s_hDropDownWnd = m_hWnd; // watch this
+        s_hWatchWnd = m_hWnd; // watch this
 
         // unhook mouse if any
         if (s_hMouseHook)
@@ -2045,7 +2054,7 @@ LRESULT CAutoComplete::OnShowWindow(UINT uMsg, WPARAM wParam, LPARAM lParam, BOO
         // kill timer
         KillTimer(WATCH_TIMER_ID);
 
-        s_hDropDownWnd = NULL; // unwatch
+        s_hWatchWnd = NULL; // unwatch
 
         // unhook mouse if any
         if (s_hMouseHook)
@@ -2101,8 +2110,7 @@ LRESULT CAutoComplete::OnVScroll(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &
     WORD code = LOWORD(wParam);
     switch (code)
     {
-        case SB_THUMBPOSITION:
-        case SB_THUMBTRACK:
+        case SB_THUMBPOSITION: case SB_THUMBTRACK:
         {
             // get the scrolling info
             INT nPos = HIWORD(wParam);
