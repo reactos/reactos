@@ -321,15 +321,15 @@ LRESULT CACEditCtrl::OnGetDlgCode(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL 
         // some special keys need default processing. we handle them here
         switch (wParam)
         {
-            case VK_RETURN: // [Enter] key
+            case VK_RETURN:
                 if (m_pDropDown->IsWindowVisible() || ::GetKeyState(VK_CONTROL) < 0)
                     m_pDropDown->OnEditKeyDown(VK_RETURN, 0);
                 break;
-            case VK_TAB: // [Tab] key
+            case VK_TAB:
                 if (m_pDropDown->IsWindowVisible() && m_pDropDown->UseTab())
                     m_pDropDown->OnEditKeyDown(VK_TAB, 0);
                 break;
-            case VK_ESCAPE: // [Esc] key
+            case VK_ESCAPE:
                 if (m_pDropDown->IsWindowVisible())
                     ret |= DLGC_WANTALLKEYS; // we want all keys to manipulate the list
                 break;
@@ -925,16 +925,16 @@ BOOL CAutoComplete::OnEditKeyDown(WPARAM wParam, LPARAM lParam)
     UINT vk = (UINT)wParam; // virtual key
     switch (vk)
     {
-        case VK_HOME: case VK_END: // [Home]/[End] key
-        case VK_UP: case VK_DOWN: // [Arrow Up]/[Arrow Down] key
-        case VK_PRIOR: case VK_NEXT: // [PageUp]/[PageDown] key
+        case VK_HOME: case VK_END:
+        case VK_UP: case VK_DOWN:
+        case VK_PRIOR: case VK_NEXT:
             // is suggestion available?
             if (!CanAutoSuggest())
                 return FALSE; // if not so, then do default
             if (IsWindowVisible())
                 return OnListUpDown(vk);
             break;
-        case VK_ESCAPE: // [Esc] key
+        case VK_ESCAPE:
         {
             // is suggestion available?
             if (!CanAutoSuggest())
@@ -950,9 +950,9 @@ BOOL CAutoComplete::OnEditKeyDown(WPARAM wParam, LPARAM lParam)
             }
             break;
         }
-        case VK_RETURN: // [Enter] key
+        case VK_RETURN:
         {
-            if (::GetKeyState(VK_CONTROL) < 0) // [Ctrl] key
+            if (::GetKeyState(VK_CONTROL) < 0)
             {
                 // quick edit
                 CStringW strText = GetEditText();
@@ -975,7 +975,7 @@ BOOL CAutoComplete::OnEditKeyDown(WPARAM wParam, LPARAM lParam)
             HideDropDown();
             break;
         }
-        case VK_TAB: // [Tab] key
+        case VK_TAB:
         {
             if (IsWindowVisible() && UseTab())
             {
@@ -983,7 +983,7 @@ BOOL CAutoComplete::OnEditKeyDown(WPARAM wParam, LPARAM lParam)
             }
             break;
         }
-        case VK_DELETE: // [Del] key
+        case VK_DELETE:
         {
             // is suggestion available?
             if (!CanAutoSuggest())
@@ -993,9 +993,9 @@ BOOL CAutoComplete::OnEditKeyDown(WPARAM wParam, LPARAM lParam)
                 OnEditUpdate(FALSE);
             return TRUE; // eat
         }
-        case VK_BACK: // [BackSpace] key
+        case VK_BACK:
         {
-            if (::GetKeyState(VK_CONTROL) < 0) // [Ctrl] key
+            if (::GetKeyState(VK_CONTROL) < 0)
             {
                 DoBackWord();
                 return TRUE; // eat
@@ -1061,11 +1061,10 @@ BOOL CAutoComplete::OnListUpDown(UINT vk)
     INT cItems = m_hwndList.GetItemCount();
     switch (vk)
     {
-        case VK_HOME: // [Home] key
-        case VK_END: // [End] key
+        case VK_HOME: case VK_END:
             m_hwndList.SendMessageW(WM_KEYDOWN, vk, 0);
             break;
-        case VK_UP: // [Arrow Up]
+        case VK_UP:
             if (iItem == -1)
                 iItem = cItems - 1;
             else if (iItem == 0)
@@ -1074,7 +1073,7 @@ BOOL CAutoComplete::OnListUpDown(UINT vk)
                 --iItem;
             m_hwndList.SetCurSel(iItem);
             break;
-        case VK_DOWN: // [Arrow Down]
+        case VK_DOWN:
             if (iItem == -1)
                 iItem = 0;
             else if (iItem == cItems - 1)
@@ -1083,7 +1082,7 @@ BOOL CAutoComplete::OnListUpDown(UINT vk)
                 ++iItem;
             m_hwndList.SetCurSel(iItem);
             break;
-        case VK_PRIOR: // [PageUp]
+        case VK_PRIOR:
             if (iItem == -1)
             {
                 iItem = cItems - 1;
@@ -1100,7 +1099,7 @@ BOOL CAutoComplete::OnListUpDown(UINT vk)
             }
             m_hwndList.SetCurSel(iItem);
             break;
-        case VK_NEXT: // [PageDown]
+        case VK_NEXT:
             if (iItem == -1)
             {
                 iItem = 0;
