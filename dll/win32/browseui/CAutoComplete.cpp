@@ -622,8 +622,7 @@ VOID CACSizeBox::SetStatus(BOOL bDowner, BOOL bLongList)
     HRGN hRgn = ::PathToRegion(hDC);
     ::DeleteDC(hDC);
 
-    // set the trianglar region
-    SetWindowRgn(hRgn, TRUE);
+    SetWindowRgn(hRgn, TRUE); // set the trianglar region
 }
 
 // WM_ERASEBKGND
@@ -656,9 +655,11 @@ LRESULT CACSizeBox::OnPaint(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHand
     INT cxy = rc.Width();
     for (INT i = 0; i < 2; ++i)
     {
+        // choose pen color
         INT iColor = ((i == 0) ? COLOR_HIGHLIGHTTEXT : COLOR_3DSHADOW);
         HPEN hPen = ::CreatePen(PS_SOLID, 1, ::GetSysColor(iColor));
         HGDIOBJ hPenOld = ::SelectObject(hDC, hPen);
+        // do loop to draw the slanted lines
         for (INT delta = cxy / 4; delta < cxy; delta += cxy / 4)
         {
             // draw a grip line
@@ -673,6 +674,7 @@ LRESULT CACSizeBox::OnPaint(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHand
                 ::LineTo(hDC, rc.right, rc.bottom - delta - i);
             }
         }
+        // delete pen
         ::SelectObject(hDC, hPenOld);
         ::DeleteObject(hPen);
     }
