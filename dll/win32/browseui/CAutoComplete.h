@@ -38,7 +38,7 @@ class CACEditCtrl
 {
 public:
     CAutoComplete* m_pDropDown;
-    static LPCWSTR GetWndClassName() { return L"EDIT"; }
+    static LPCWSTR GetWndClassName() { return WC_EDITW; }
 
     CACEditCtrl();
     VOID HookWordBreakProc(BOOL bHook);
@@ -120,7 +120,7 @@ class CACScrollBar : public CWindowImpl<CACScrollBar>
 {
 public:
     CAutoComplete* m_pDropDown;
-    static LPCWSTR GetWndClassName() { return L"SCROLLBAR"; }
+    static LPCWSTR GetWndClassName() { return WC_SCROLLBARW; }
 
     CACScrollBar();
     HWND Create(HWND hwndParent);
@@ -138,7 +138,7 @@ class CACSizeBox : public CWindowImpl<CACSizeBox>
 {
 public:
     CAutoComplete* m_pDropDown;
-    static LPCWSTR GetWndClassName() { return L"SCROLLBAR"; }
+    static LPCWSTR GetWndClassName() { return WC_SCROLLBARW; }
 
     CACSizeBox();
     HWND Create(HWND hwndParent);
@@ -163,6 +163,8 @@ protected:
 //////////////////////////////////////////////////////////////////////////////
 // CAutoComplete --- auto-completion drop-down window
 
+#define WC_DROPDOWNW L"Auto-Suggest Dropdown" // the window class name
+
 class CAutoComplete
     : public CComCoClass<CAutoComplete, &CLSID_AutoComplete>
     , public CComObjectRootEx<CComMultiThreadModelNoCS>
@@ -172,8 +174,8 @@ class CAutoComplete
     , public IEnumString
 {
 public:
-    DECLARE_WND_CLASS_EX(L"Auto-Suggest Dropdown", CS_DROPSHADOW | CS_SAVEBITS, COLOR_3DFACE)
-    static LPCWSTR GetWndClassName() { return L"Auto-Suggest Dropdown"; }
+    DECLARE_WND_CLASS_EX(WC_DROPDOWNW, CS_DROPSHADOW | CS_SAVEBITS, COLOR_3DFACE)
+    static LPCWSTR GetWndClassName() { return WC_DROPDOWNW; }
     BOOL m_bInSetText; // this flag avoids subsequent action in WM_SETTEXT
     BOOL m_bInSelectItem; // this flag avoids subsequent action in LVN_ITEMCHANGED
 
