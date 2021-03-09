@@ -600,22 +600,23 @@ VOID CACSizeBox::SetStatus(BOOL bDowner, BOOL bLongList)
     RECT rc;
     GetWindowRect(&rc); // get size-box size
     ::OffsetRect(&rc, -rc.left, -rc.top); // window regions use special coordinates
+    ATLASSERT(rc.left == 0 && rc.top == 0);
 
     // create a trianglar region
     HDC hDC = ::CreateCompatibleDC(NULL);
     ::BeginPath(hDC);
     if (m_bDowner)
     {
-        ::MoveToEx(hDC, rc.right, rc.top, NULL);
+        ::MoveToEx(hDC, rc.right, 0, NULL);
         ::LineTo(hDC, rc.right, rc.bottom);
-        ::LineTo(hDC, rc.left, rc.bottom);
-        ::LineTo(hDC, rc.right, rc.top);
+        ::LineTo(hDC, 0, rc.bottom);
+        ::LineTo(hDC, rc.right, 0);
     }
     else
     {
         ::MoveToEx(hDC, rc.right, rc.bottom, NULL);
-        ::LineTo(hDC, rc.right, rc.top);
-        ::LineTo(hDC, rc.left, rc.top);
+        ::LineTo(hDC, rc.right, 0);
+        ::LineTo(hDC, 0, 0);
         ::LineTo(hDC, rc.right, rc.bottom);
     }
     ::EndPath(hDC);
@@ -739,7 +740,7 @@ INT CAutoComplete::GetItemCount()
 
 CStringW CAutoComplete::GetItemText(INT iItem)
 {
-    if (iItem == -1 || iItem >= m_outerList.GetSize())
+    if (iItem < 0 || m_outerList.GetSize() <= iItem)
         return L"";
     return m_outerList[iItem];
 }
