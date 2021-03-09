@@ -53,6 +53,7 @@ static LRESULT CALLBACK MouseProc(INT nCode, WPARAM wParam, LPARAM lParam)
 {
     if (s_hMouseHook == NULL)
         return 0; // do default
+    // if the user clicked the outside of s_hDropDownWnd, then hide the drop-down window
     if (nCode == HC_ACTION && s_hDropDownWnd && ::IsWindow(s_hDropDownWnd) &&
         ::GetCapture() == NULL)
     {
@@ -1192,10 +1193,12 @@ CAutoComplete::Init(HWND hwndEdit, IUnknown *punkACL,
     // get an IEnumString
     ATLASSERT(!m_pEnum);
     punkACL->QueryInterface(IID_IEnumString, (VOID **)&m_pEnum);
+    TRACE("m_pEnum: %p\n", static_cast<void *>(m_pEnum));
 
     // get an IACList
     ATLASSERT(!m_pACList);
     punkACL->QueryInterface(IID_IACList, (VOID **)&m_pACList);
+    TRACE("m_pACList: %p\n", static_cast<void *>(m_pACList));
 
     // add reference
     AddRef();
@@ -1526,6 +1529,9 @@ INT CAutoComplete::ReLoadInnerList()
 {
     m_innerList.RemoveAll(); // clear contents
 
+    if (!m_pEnum)
+        return 0;
+
     DWORD dwTick = ::GetTickCount(); // used for timeout
 
     // reload the items
@@ -1576,7 +1582,7 @@ INT CAutoComplete::UpdateInnerList()
     }
 
     // reset if necessary
-    if (bReset)
+    if (bReset && m_pEnum)
     {
         HRESULT hr = m_pEnum->Reset(); // IEnumString::Reset
         TRACE("m_pEnum->Reset(%p): 0x%08lx\n",
@@ -1584,7 +1590,7 @@ INT CAutoComplete::UpdateInnerList()
     }
 
     // update ac list if necessary
-    if (bExpand)
+    if (bExpand && m_pACList)
     {
         HRESULT hr = m_pACList->Expand(strStemText); // IACList::Expand
         TRACE("m_pACList->Expand(%p, %S): 0x%08lx\n",
