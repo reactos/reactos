@@ -895,6 +895,7 @@ VOID CAutoComplete::DoAutoAppend()
     SetEditSel(ich0, ich1);
 }
 
+// go back a word
 VOID CAutoComplete::DoBackWord()
 {
     // get current selection
@@ -913,7 +914,7 @@ VOID CAutoComplete::DoBackWord()
         --ich0;
     // select range
     SetEditSel(ich0, ich1);
-    // replace selection with empty text
+    // replace selection with empty text (this is actually deletion)
     m_hwndEdit.SendMessageW(EM_REPLACESEL, TRUE, (LPARAM)L"");
 }
 
