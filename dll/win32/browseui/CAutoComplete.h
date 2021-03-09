@@ -87,7 +87,6 @@ public:
     HWND Create(HWND hwndParent);
     VOID SetFont(HFONT hFont);
 
-    INT GetItemCount();
     INT GetVisibleCount();
     CStringW GetItemText(INT iItem);
     INT ItemFromPoint(INT x, INT y);
@@ -204,6 +203,7 @@ public:
     VOID HideDropDown();
     VOID SelectItem(INT iItem);
     VOID DoAutoAppend();
+    VOID DoBackWord();
     VOID UpdateScrollBar();
 
     LRESULT OnEditChar(WPARAM wParam, LPARAM lParam);
@@ -253,7 +253,7 @@ protected:
     VOID UpdateDropDownState();
     VOID ReCalcRects(BOOL bDowner, RECT& rcListView, RECT& rcScrollBar, RECT& rcSizeBox);
     VOID LoadQuickComplete(LPCWSTR pwszRegKeyPath, LPCWSTR pwszQuickComplete);
-    CStringW GetQuickEdit(const CStringW& strText);
+    CStringW GetQuickEdit(LPCWSTR pszText);
     VOID RepositionDropDown();
     INT ReLoadInnerList();
     INT UpdateInnerList();

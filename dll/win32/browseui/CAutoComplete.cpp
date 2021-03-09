@@ -32,7 +32,6 @@
   - implement ACO_FILTERPREFIXES style
   - implement ACO_USETAB style
   - implement ACO_RTLREADING style
-  - multithread
  */
 
 #include "precomp.h"
@@ -467,14 +466,6 @@ VOID CACListView::SetFont(HFONT hFont)
     }
 }
 
-// get the number of items
-INT CACListView::GetItemCount()
-{
-    ATLASSERT(m_pDropDown);
-    ATLASSERT(GetStyle() & LVS_OWNERDATA);
-    return CListView::GetItemCount();
-}
-
 // get the number of visible items
 INT CACListView::GetVisibleCount()
 {
@@ -903,6 +894,27 @@ VOID CAutoComplete::DoAutoAppend()
     SetEditSel(ich0, ich1);
 }
 
+VOID CAutoComplete::DoBackWord()
+{
+    // get current selection
+    INT ich0, ich1;
+    m_hwndEdit.SendMessageW(EM_GETSEL,
+        reinterpret_cast<WPARAM>(&ich0), reinterpret_cast<LPARAM>(&ich1));
+    if (ich0 <= 0 || ich0 != ich1)
+        return;
+    // get text
+    CStringW str = GetEditText();
+    // extend the range
+    while (ich0 > 0 && IsWordBreak(str[ich0 - 1]))
+        --ich0;
+    while (ich0 > 0 && !IsWordBreak(str[ich0 - 1]))
+        --ich0;
+    // select range
+    SetEditSel(ich0, ich1);
+    // replace selection with empty text
+    m_hwndEdit.SendMessageW(EM_REPLACESEL, TRUE, (LPARAM)L"");
+}
+
 VOID CAutoComplete::UpdateScrollBar()
 {
     // copy scroll info from m_hwndList to m_hwndScrollBar
@@ -997,22 +1009,7 @@ BOOL CAutoComplete::OnEditKeyDown(WPARAM wParam, LPARAM lParam)
         {
             if (::GetKeyState(VK_CONTROL) < 0) // [Ctrl] key
             {
-                // get current selection
-                INT ich0, ich1;
-                m_hwndEdit.SendMessageW(EM_GETSEL, (WPARAM)&ich0, (LPARAM)&ich1);
-                if (ich0 <= 0 || ich0 != ich1)
-                    return TRUE; // eat
-                // get text
-                CStringW str = GetEditText();
-                // extend the range
-                while (ich0 > 0 && IsWordBreak(str[ich0 - 1]))
-                    --ich0;
-                while (ich0 > 0 && !IsWordBreak(str[ich0 - 1]))
-                    --ich0;
-                // select range
-                SetEditSel(ich0, ich1);
-                // replace selection with empty text
-                m_hwndEdit.SendMessageW(EM_REPLACESEL, TRUE, (LPARAM)L"");
+                DoBackWord();
                 return TRUE; // eat
             }
             break;
@@ -1215,7 +1212,8 @@ CAutoComplete::Init(HWND hwndEdit, IUnknown *punkACL,
     WCHAR szClass[16];
     if (::GetClassNameW(hwndParent, szClass, _countof(szClass)))
     {
-        if (::StrCmpI(szClass, L"COMBOBOX") == 0 || ::StrCmpI(szClass, WC_COMBOBOXEXW) == 0)
+        if (::StrCmpIW(szClass, L"COMBOBOX") == 0 ||
+            ::StrCmpIW(szClass, WC_COMBOBOXEXW) == 0)
         {
             m_hwndCombo = hwndParent; // get combobox
         }
@@ -1434,14 +1432,14 @@ VOID CAutoComplete::LoadQuickComplete(LPCWSTR pwszRegKeyPath, LPCWSTR pwszQuickC
     }
 }
 
-CStringW CAutoComplete::GetQuickEdit(const CStringW& strText)
+CStringW CAutoComplete::GetQuickEdit(LPCWSTR pszText)
 {
-    if (strText.IsEmpty() || m_strQuickComplete.IsEmpty())
-        return strText;
+    if (pszText[0] == 0 || m_strQuickComplete.IsEmpty())
+        return pszText;
 
     // m_strQuickComplete will be "www.%s.com" etc.
     CStringW ret;
-    ret.Format(m_strQuickComplete, static_cast<LPCWSTR>(strText));
+    ret.Format(m_strQuickComplete, pszText);
     return ret;
 }
 
@@ -1516,16 +1514,9 @@ VOID CAutoComplete::RepositionDropDown()
     m_hwndSizeBox.SetStatus(m_bDowner, bLongList);
 
     if (m_bResized)
-    {
-        // re-layout
-        PostMessageW(WM_SIZE, 0, 0);
-    }
+        PostMessageW(WM_SIZE, 0, 0); // re-layout
     else
-    {
-
-        // move
-        MoveWindow(x, y, cx, cy);
-    }
+        MoveWindow(x, y, cx, cy); // move
 
     // show without activation
     ShowWindow(SW_SHOWNOACTIVATE);
@@ -1620,7 +1611,7 @@ INT CAutoComplete::UpdateOuterList()
     {
         const CStringW& strTarget = m_innerList[iItem];
         if (strTarget != strText &&
-            ::StrCmpNI(strTarget, m_strText, strText.GetLength()) == 0)
+            ::StrCmpNIW(strTarget, m_strText, strText.GetLength()) == 0)
         {
             m_outerList.Add(strTarget);
         }
