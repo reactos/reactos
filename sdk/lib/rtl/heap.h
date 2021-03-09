@@ -12,7 +12,6 @@
 #define RTL_HEAP_H
 
 /* Core heap definitions */
-#define HEAP_FREELISTS 128
 #define HEAP_SEGMENTS 64
 
 #define HEAP_ENTRY_SIZE ((ULONG)sizeof(HEAP_ENTRY))
@@ -257,13 +256,7 @@ typedef struct _HEAP
     PVOID BlocksIndex; // HEAP_LIST_LOOKUP
     PVOID UCRIndex;
     PHEAP_PSEUDO_TAG_ENTRY PseudoTagEntries;
-    LIST_ENTRY FreeLists[HEAP_FREELISTS]; //FIXME: non-Vista
-    //LIST_ENTRY FreeLists;
-    union
-    {
-        ULONG FreeListsInUseUlong[HEAP_FREELISTS / (sizeof(ULONG) * 8)]; //FIXME: non-Vista
-        UCHAR FreeListsInUseBytes[HEAP_FREELISTS / (sizeof(UCHAR) * 8)]; //FIXME: non-Vista
-    } u;
+    LIST_ENTRY FreeLists;
     PHEAP_LOCK LockVariable;
     PRTL_HEAP_COMMIT_ROUTINE CommitRoutine;
     PVOID FrontEndHeap;
@@ -271,6 +264,8 @@ typedef struct _HEAP
     UCHAR FrontEndHeapType;
     HEAP_COUNTERS Counters;
     HEAP_TUNING_PARAMETERS TuningParameters;
+    RTL_BITMAP FreeHintBitmap;  // FIXME: non-Vista
+    PLIST_ENTRY FreeHints[ANYSIZE_ARRAY]; // FIXME: non-Vista
 } HEAP, *PHEAP;
 
 typedef struct _HEAP_SEGMENT
