@@ -36,16 +36,16 @@
 
 #include "precomp.h"
 
-#define CX_LIST 30160 // width of m_hwndList
+#define CX_LIST 30160 // width of m_hwndList (very wide but alright)
 #define CY_LIST 288 // maximum height of drop-down window
 #define CY_ITEM 18 // default height of listview item
 #define COMPLETION_TIMEOUT 250 // in milliseconds
-#define MAX_ITEM_COUNT 1000
-#define WATCH_TIMER_ID 0xFEEDBEEF
+#define MAX_ITEM_COUNT 1000 // the maximum number of items
+#define WATCH_TIMER_ID 0xFEEDBEEF // timer ID to watch m_rcEdit
 #define WATCH_INTERVAL 300 // in milliseconds
 
-static HHOOK s_hMouseHook = NULL;
-static HWND s_hWatchWnd = NULL;
+static HHOOK s_hMouseHook = NULL; // hook handle
+static HWND s_hWatchWnd = NULL; // the window handle to watch
 
 // mouse hook procedure to watch the mouse click
 // https://docs.microsoft.com/en-us/previous-versions/windows/desktop/legacy/ms644988(v=vs.85)
@@ -306,7 +306,7 @@ LRESULT CACEditCtrl::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bH
     // unhook word break procedure
     HookWordBreakProc(FALSE);
 
-    // unsubclass
+    // unsubclass because we don't watch any more
     HWND hwndEdit = UnsubclassWindow();
 
     // close the drop-down window
@@ -363,7 +363,7 @@ LRESULT CACEditCtrl::OnKeyDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bH
     TRACE("CACEditCtrl::OnKeyDown(%p, %p)\n", this, wParam);
     ATLASSERT(m_pDropDown);
     if (m_pDropDown->OnEditKeyDown(wParam, lParam))
-        return 1;
+        return 1; // eat
     bHandled = FALSE; // do default
     return 0;
 }
@@ -435,7 +435,7 @@ HWND CACListView::Create(HWND hwndParent)
     HWND hWnd = ::CreateWindowExW(0, GetWndClassName(), L"Internet Explorer", dwStyle,
                                   0, 0, 0, 0, hwndParent, NULL,
                                   _AtlBaseModule.GetModuleInstance(), NULL);
-    SubclassWindow(hWnd);
+    SubclassWindow(hWnd); // do subclass to handle messages
     // set extended listview style
     DWORD exstyle = LVS_EX_ONECLICKACTIVATE | LVS_EX_FULLROWSELECT | LVS_EX_TRACKSELECT;
     SetExtendedListViewStyle(exstyle, exstyle);
@@ -608,6 +608,7 @@ HWND CACScrollBar::Create(HWND hwndParent)
     m_hWnd = ::CreateWindowExW(0, GetWndClassName(), NULL, dwStyle,
                                0, 0, 0, 0, hwndParent, NULL,
                                _AtlBaseModule.GetModuleInstance(), NULL);
+    // we don't subclass because no message handling is needed
     return m_hWnd;
 }
 
@@ -625,7 +626,7 @@ HWND CACSizeBox::Create(HWND hwndParent)
     HWND hWnd = ::CreateWindowExW(0, GetWndClassName(), NULL, dwStyle,
                                   0, 0, 0, 0, hwndParent, NULL,
                                   _AtlBaseModule.GetModuleInstance(), NULL);
-    SubclassWindow(hWnd);
+    SubclassWindow(hWnd); // do subclass to handle message
     return m_hWnd;
 }
 
@@ -1193,7 +1194,7 @@ CAutoComplete::Init(HWND hwndEdit, IUnknown *punkACL,
     // set this pointer to m_hwndEdit
     m_hwndEdit.m_pDropDown = this;
 
-    // subclass it
+    // do subclass textbox to watch messages
     m_hwndEdit.SubclassWindow(hwndEdit);
     // set word break procedure
     m_hwndEdit.HookWordBreakProc(TRUE);

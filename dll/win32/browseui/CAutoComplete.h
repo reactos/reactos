@@ -238,12 +238,12 @@ protected:
     BOOL m_bResized; // re-sized by size-box?
     RECT m_rcEdit; // in screen coordinates, to watch the position
     // The following variables are non-POD:
-    CStringW m_strText; // internal text (used in selecting item)
+    CStringW m_strText; // internal text (used in selecting item and reverting text)
     CStringW m_strStemText; // dirname + '\\'
     CStringW m_strQuickComplete; // used for [Ctrl]+[Enter]
     CACEditCtrl m_hwndEdit; // subclassed to watch
     CACListView m_hwndList; // this listview is virtual
-    CACScrollBar m_hwndScrollBar; // contol scroll bar
+    CACScrollBar m_hwndScrollBar; // scroll bar contol
     CACSizeBox m_hwndSizeBox; // the size grip
     CComPtr<IEnumString> m_pEnum; // used for enumeration
     CComPtr<IACList> m_pACList; // for IACList::Expand to update the list
