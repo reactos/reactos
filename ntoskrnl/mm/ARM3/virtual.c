@@ -5277,7 +5277,7 @@ NtFreeVirtualMemory(IN HANDLE ProcessHandle,
          (Vad->u.VadFlags.VadType != VadRotatePhysical)) ||
         (Vad->u.VadFlags.VadType == VadDevicePhysicalMemory))
     {
-        DPRINT1("Attempt to free section memory\n");
+        DPRINT("Attempt to free section memory\n");
         Status = STATUS_UNABLE_TO_DELETE_SECTION;
         goto FailPath;
     }
