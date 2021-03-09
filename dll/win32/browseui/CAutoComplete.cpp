@@ -900,7 +900,8 @@ VOID CAutoComplete::DoBackWord()
     // get current selection
     INT ich0, ich1;
     m_hwndEdit.SendMessageW(EM_GETSEL,
-        reinterpret_cast<WPARAM>(&ich0), reinterpret_cast<LPARAM>(&ich1));
+                            reinterpret_cast<WPARAM>(&ich0),
+                            reinterpret_cast<LPARAM>(&ich1));
     if (ich0 <= 0 || ich0 != ich1)
         return;
     // get text
