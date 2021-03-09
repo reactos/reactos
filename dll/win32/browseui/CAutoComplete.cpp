@@ -846,8 +846,7 @@ VOID CAutoComplete::DoAutoAppend()
     // append suggestion
     INT cchOld = strText.GetLength();
     INT cchAppend = strCommon.GetLength() - cchOld;
-    CStringW strAppend = strCommon.Right(cchAppend);
-    strText += strAppend;
+    strText += strCommon.Right(cchAppend);
     SetEditText(strText);
 
     // select the appended suggestion
