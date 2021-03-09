@@ -64,10 +64,10 @@ GenericMfg = "(Generic USB Hubs)"
 USB\COMPOSITE.DeviceDesc = "USB Composite Device"
 USB\CLASS_09.DeviceDesc = "Generic USB Hub"
 
-; Spanish
-[Strings.0C0A]
-GenericMfg = "(Concentrador raíz USB estándar)"
-USB\CLASS_09.DeviceDesc = "Concentrador raíz USB estándar"
+[Strings.0404]
+GenericMfg = "(標準 USB 集線器)"
+USB\COMPOSITE.DeviceDesc = "USB 複合裝置"
+USB\CLASS_09.DeviceDesc = "標準 USB 集線器"
 
 [Strings.0405]
 GenericMfg = "(Obecné USB rozbočovače)"
@@ -77,6 +77,11 @@ USB\CLASS_09.DeviceDesc = "Obecný USB rozbočovač"
 [Strings.0407]
 GenericMfg = "(Generischer USB-Hub)"
 USB\CLASS_09.DeviceDesc = "Generischer USB-Hub"
+
+; Spanish
+[Strings.0C0A]
+GenericMfg = "(Concentrador raíz USB estándar)"
+USB\CLASS_09.DeviceDesc = "Concentrador raíz USB estándar"
 
 [Strings.0a]
 GenericMfg = "(Concentrador raíz USB estándar)"

@@ -1,10 +1,8 @@
 /* 
  * Traditional Chinese resource for appwiz (dll/cpl/appwiz/lang/zh-TW.rc)
- * TRANSLATOR:  Henry Tang Ih (henrytang2 [at] hotmail [dot] com)
- *              Luo Yufan (njlyf2011 [at] hotmail [dot] com)
- *              Aobi Chan CL (eason066 [at] gmail [dot] com)
- * CREATED:     2016
- * MODIFIED:    2018, 2020
+ * TRANSLATOR:  2016 Henry Tang Ih (henrytang2 [at] hotmail [dot] com)
+ *              2018 Luo Yufan (njlyf2011 [at] hotmail [dot] com)
+ *              2020 - 2021 Chan Chilung (eason066 [at] gmail [dot] com)
  */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
@@ -86,7 +84,7 @@ STRINGTABLE
 BEGIN
     IDS_DOWNLOADING "下載中..."
     IDS_INSTALLING "安裝中..."
-    IDS_INVALID_SHA "下載的檔案總和檢查碼錯誤。正在中止安裝已損毀的檔案。"
+    IDS_INVALID_SHA "下載的檔案總和檢查碼錯誤。正在終止安裝已損毀的檔案。"
     IDS_NEW_INTERNET_SHORTCUT "新增網際網路捷徑"
     IDS_DWL_FAILED "無法下載 Gecko 套件。請確保在您有網際網路連線的情況下才能進行下載。安裝程式將在不安裝 Gecko 的情況下繼續。"
     IDS_CANTMAKEINETSHORTCUT "無法建立網際網路捷徑。"

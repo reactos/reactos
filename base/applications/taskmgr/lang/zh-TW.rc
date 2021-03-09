@@ -36,7 +36,7 @@ BEGIN
         MENUITEM SEPARATOR
         MENUITEM "大圖示(&G)", ID_VIEW_LARGE
         MENUITEM "小圖示(&M)", ID_VIEW_SMALL
-        MENUITEM "詳細信息(&D)", ID_VIEW_DETAILS, CHECKED
+        MENUITEM "詳細資料(&D)", ID_VIEW_DETAILS, CHECKED
         MENUITEM "選擇欄位(&S)...", ID_VIEW_SELECTCOLUMNS
         POPUP "CPU 記錄(&C)"
         BEGIN
@@ -331,7 +331,7 @@ STRINGTABLE
 BEGIN
     IDS_APP_TITLE "工作管理員"
     IDC_TASKMGR "工作管理員"
-    IDS_IDLE_PROCESS "系統空閒處理序"
+    IDS_IDLE_PROCESS "系統空閒處理程序"
 END
 
 STRINGTABLE

@@ -60,6 +60,17 @@ xbox.DeviceDesc = "Original Xbox (x86 based)"
 NecMfg = "NEC"
 pc98_up.DeviceDesc = "Uniprocessor NEC PC-98"
 
+[Strings.0404]
+ComputerClassName = "電腦"
+
+GenericMfg = "(標準電腦)"
+acpipic_up.DeviceDesc = "ACPI 單處理器 PC"
+e_isa_up.DeviceDesc = "標準單處理器 PC"
+
+xbox.DeviceDesc = "原版 Xbox (基於 x86)"
+
+pc98_up.DeviceDesc = "單處理器 NEC PC-98"
+
 [Strings.0405]
 ComputerClassName = "Počítač"
 GenericMfg = "(Obecné počítače)"
