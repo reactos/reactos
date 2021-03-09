@@ -273,22 +273,10 @@ LRESULT CACEditCtrl::OnChar(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHand
     return m_pDropDown->OnEditChar(wParam, lParam);
 }
 
-// WM_CLEAR @implemented
-// An application sends this message to an edit control to delete the current selection.
-LRESULT CACEditCtrl::OnClear(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+// WM_CUT / WM_PASTE / WM_CLEAR @implemented
+LRESULT CACEditCtrl::OnCutPasteClear(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
-    TRACE("CACEditCtrl::OnClear(%p)\n", this);
-    ATLASSERT(m_pDropDown);
-    LRESULT ret = DefWindowProcW(uMsg, wParam, lParam); // do default
-    m_pDropDown->OnEditUpdate(TRUE);
-    return ret;
-}
-
-// WM_CUT @implemented
-// An application sends this message to an edit control to cut the current selection.
-LRESULT CACEditCtrl::OnCut(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
-{
-    TRACE("CACEditCtrl::OnCut(%p)\n", this);
+    TRACE("CACEditCtrl::OnCutPasteClear(%p)\n", this);
     ATLASSERT(m_pDropDown);
     LRESULT ret = DefWindowProcW(uMsg, wParam, lParam); // do default
     m_pDropDown->OnEditUpdate(TRUE);
@@ -384,18 +372,6 @@ LRESULT CACEditCtrl::OnKillFocus(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &
 
     bHandled = FALSE; // do default
     return 0;
-}
-
-// WM_PASTE @implemented
-// An application sends this message to an edit control to paste at the current caret position.
-LRESULT CACEditCtrl::OnPaste(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
-{
-    TRACE("CACEditCtrl::OnPaste(%p)\n", this);
-    ATLASSERT(m_pDropDown);
-
-    LRESULT ret = DefWindowProcW(uMsg, wParam, lParam); // do default
-    m_pDropDown->OnEditUpdate(TRUE);
-    return ret;
 }
 
 // WM_SETFOCUS

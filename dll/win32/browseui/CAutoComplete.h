@@ -46,13 +46,13 @@ public:
     // message map
     BEGIN_MSG_MAP(CACEditCtrl)
         MESSAGE_HANDLER(WM_CHAR, OnChar)
-        MESSAGE_HANDLER(WM_CLEAR, OnClear)
-        MESSAGE_HANDLER(WM_CUT, OnCut)
+        MESSAGE_HANDLER(WM_CLEAR, OnCutPasteClear)
+        MESSAGE_HANDLER(WM_CUT, OnCutPasteClear)
         MESSAGE_HANDLER(WM_DESTROY, OnDestroy)
         MESSAGE_HANDLER(WM_GETDLGCODE, OnGetDlgCode)
         MESSAGE_HANDLER(WM_KEYDOWN, OnKeyDown)
         MESSAGE_HANDLER(WM_KILLFOCUS, OnKillFocus)
-        MESSAGE_HANDLER(WM_PASTE, OnPaste)
+        MESSAGE_HANDLER(WM_PASTE, OnCutPasteClear)
         MESSAGE_HANDLER(WM_SETFOCUS, OnSetFocus)
         MESSAGE_HANDLER(WM_SETTEXT, OnSetText)
     END_MSG_MAP()
@@ -62,13 +62,11 @@ protected:
     EDITWORDBREAKPROCW m_fnOldWordBreakProc;
     // message handlers
     LRESULT OnChar(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
-    LRESULT OnClear(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
-    LRESULT OnCut(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
+    LRESULT OnCutPasteClear(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnGetDlgCode(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnKeyDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnKillFocus(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
-    LRESULT OnPaste(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnSetFocus(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnSetText(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
 };
