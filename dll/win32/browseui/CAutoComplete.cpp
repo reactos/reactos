@@ -852,7 +852,7 @@ VOID CAutoComplete::DoAutoAppend()
     strText += strAppend;
     SetEditText(strText);
 
-    // select the appended
+    // select the appended suggestion
     INT ich0 = strText.GetLength();
     INT ich1 = ich0 + cchAppend;
     SetEditSel(ich0, ich1);
