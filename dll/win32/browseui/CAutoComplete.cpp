@@ -846,13 +846,12 @@ VOID CAutoComplete::DoAutoAppend()
     // append suggestion
     INT cchAppend = strCommon.GetLength() - strText.GetLength();
     CStringW strAppend = strCommon.Right(cchAppend);
+    INT cchOld = strText.GetLength();
     strText += strAppend;
     SetEditText(strText);
 
     // select the appended suggestion
-    INT ich0 = strText.GetLength();
-    INT ich1 = ich0 + cchAppend;
-    SetEditSel(ich0, ich1);
+    SetEditSel(cchOld, cchOld + cchAppend);
 }
 
 // go back a word ([Ctrl]+[Backspace])
