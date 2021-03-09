@@ -1711,12 +1711,13 @@ LRESULT CAutoComplete::OnExitSizeMove(UINT uMsg, WPARAM wParam, LPARAM lParam, B
 {
     TRACE("CAutoComplete::OnExitSizeMove(%p)\n", this);
     m_bResized = TRUE; // remember resized
-    m_hwndEdit.SetFocus(); // restore focus
 
     ModifyStyle(WS_THICKFRAME, 0); // remove thick frame to resize
     // frame changed
-    UINT uSWP_ = SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED;
+    UINT uSWP_ = SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED | SWP_NOACTIVATE;
     SetWindowPos(NULL, 0, 0, 0, 0, uSWP_);
+
+    m_hwndEdit.SetFocus(); // restore focus
     return 0;
 }
 
@@ -1815,7 +1816,7 @@ LRESULT CAutoComplete::OnNCLButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam, 
             // add thick frame to resize.
             ModifyStyle(0, WS_THICKFRAME);
             // frame changed
-            UINT uSWP_ = SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED;
+            UINT uSWP_ = SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED | SWP_NOACTIVATE;
             SetWindowPos(NULL, 0, 0, 0, 0, uSWP_);
             break;
         }
