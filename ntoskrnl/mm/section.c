@@ -4848,9 +4848,6 @@ MmCheckDirtySegment(
         Entry = WRITE_SSE(Entry);
         MmSetPageEntrySectionSegment(Segment, Offset, Entry);
 
-        /* Tell the other users that we are clean again */
-        MmSetCleanAllRmaps(Page);
-
         MmUnlockSectionSegment(Segment);
 
         if (FlagOn(*Segment->Flags, MM_DATAFILE_SEGMENT))
@@ -4915,7 +4912,7 @@ MmCheckDirtySegment(
         else
         {
             /* Check if someone dirtified this page while we were not looking */
-            DirtyAgain = IS_DIRTY_SSE(Entry) || MmIsDirtyPageRmap(Page);
+            DirtyAgain = IS_DIRTY_SSE(Entry);
         }
 
         /* Drop the reference we got, deleting the write altogether. */
