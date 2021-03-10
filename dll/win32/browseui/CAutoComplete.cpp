@@ -693,11 +693,14 @@ HWND CAutoComplete::CreateDropDown()
     ATLASSERT(m_hWnd == NULL);
     DWORD dwStyle = WS_POPUP | /*WS_VISIBLE |*/ WS_CLIPSIBLINGS | WS_CLIPCHILDREN | WS_BORDER;
     DWORD dwExStyle = WS_EX_TOOLWINDOW | WS_EX_TOPMOST | WS_EX_NOPARENTNOTIFY;
-    return Create(NULL, NULL, NULL, dwStyle, dwExStyle);
+    Create(NULL, NULL, NULL, dwStyle, dwExStyle);
+    TRACE("CAutoComplete::CreateDropDown(%p): m_hWnd == %p\n", this, m_hWnd);
+    return m_hWnd;
 }
 
 CAutoComplete::~CAutoComplete()
 {
+    TRACE("CAutoComplete::~CAutoComplete(%p)\n", this);
     if (m_hFont)
     {
         ::DeleteObject(m_hFont);
