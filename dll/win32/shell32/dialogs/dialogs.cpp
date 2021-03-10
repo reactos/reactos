@@ -233,7 +233,7 @@ INT_PTR CALLBACK PickIconProc(
                 SendMessageW(pIconContext->hDlgCtrl, LB_SETTOPINDEX, pIconContext->Index, 0);
             }
 
-            SHAutoComplete(GetDlgItem(hwndDlg, IDC_EDIT_PATH), 0);
+            SHAutoComplete(GetDlgItem(hwndDlg, IDC_EDIT_PATH), SHACF_DEFAULT);
             return TRUE;
         }
 
