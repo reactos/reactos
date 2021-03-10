@@ -1,5 +1,6 @@
 
 add_library(atl_classes INTERFACE)
+target_compile_definitions(atl_classes INTERFACE _DEBUG)
 
 target_include_directories(atl_classes INTERFACE
     $<$<COMPILE_LANGUAGE:CXX>:${CMAKE_CURRENT_SOURCE_DIR}>)
