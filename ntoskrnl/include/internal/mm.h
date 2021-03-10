@@ -1404,14 +1404,6 @@ MmMakePagesDirty(
 
 NTSTATUS
 NTAPI
-MmRosFlushVirtualMemory(
-    _In_ PEPROCESS Process,
-    _Inout_ PVOID* Address,
-    _Inout_ PSIZE_T Length,
-    _Out_ PIO_STATUS_BLOCK Iosb);
-
-NTSTATUS
-NTAPI
 MmFlushSegment(
     _In_ PSECTION_OBJECT_POINTERS SectionObjectPointer,
     _In_opt_ PLARGE_INTEGER Offset,
