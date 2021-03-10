@@ -1803,8 +1803,7 @@ LRESULT CAutoComplete::OnNCLButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam, 
 {
     switch (wParam)
     {
-        case HTBOTTOMRIGHT:
-        case HTTOPRIGHT:
+        case HTBOTTOMRIGHT: case HTTOPRIGHT:
         {
             // add thick frame to resize.
             ModifyStyle(0, WS_THICKFRAME);
@@ -1836,13 +1835,13 @@ LRESULT CAutoComplete::OnNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
         case NM_HOVER: // mouse is hovering
         {
             POINT pt;
-            ::GetCursorPos(&pt);
-            m_hwndList.ScreenToClient(&pt);
+            ::GetCursorPos(&pt); // get cursor position in screen coordinates
+            m_hwndList.ScreenToClient(&pt); // into client coordinates
             INT iItem = m_hwndList.ItemFromPoint(pt.x, pt.y);
             if (iItem != -1)
             {
                 m_bInSelectItem = TRUE; // don't respond
-                m_hwndList.SetCurSel(iItem);
+                m_hwndList.SetCurSel(iItem); // select
                 m_bInSelectItem = FALSE;
             }
             return TRUE; // eat
