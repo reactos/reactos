@@ -246,6 +246,7 @@ WelcomeDlgProc(HWND hwndDlg,
             pContext = (PCREATE_LINK_CONTEXT) ppsp->lParam;
             SetWindowLongPtr(hwndDlg, DWLP_USER, (LONG_PTR)pContext);
             PropSheet_SetWizButtons(GetParent(hwndDlg), 0);
+            SHAutoComplete(GetDlgItem(hwndDlg, IDC_SHORTCUT_LOCATION), SHACF_DEFAULT);
             break;
         case WM_COMMAND:
             switch(HIWORD(wParam))
