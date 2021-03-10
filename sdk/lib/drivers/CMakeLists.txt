@@ -1,5 +1,6 @@
 
 add_subdirectory(arbiter)
+add_subdirectory(aux_klib)
 add_subdirectory(chew)
 add_subdirectory(copysup)
 add_subdirectory(csq)
