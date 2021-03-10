@@ -398,7 +398,7 @@ HRESULT CMenuToolbarBase::CreateToolbar(HWND hwndParent, DWORD dwFlags)
         rc.bottom = 1;
     }
 
-    SubclassWindow(CToolbar::Create(hwndParent, tbStyles, tbExStyles));
+    CToolbar::Create(hwndParent, tbStyles, tbExStyles);
 
     SetWindowTheme(m_hWnd, L"", L"");
 
@@ -1163,7 +1163,8 @@ HRESULT  CMenuStaticToolbar::SetMenu(
     m_hwndMenu = hwnd;
     m_dwMenuFlags = dwFlags;
 
-    ClearToolbar();
+    if (IsWindow())
+        ClearToolbar();
 
     return S_OK;
 }
@@ -1408,7 +1409,8 @@ HRESULT CMenuSFToolbar::SetShellFolder(IShellFolder *psf, LPCITEMIDLIST pidlFold
     m_hKey = hKey;
     m_dwMenuFlags = dwFlags;
 
-    ClearToolbar();
+    if (IsWindow())
+        ClearToolbar();
 
     return S_OK;
 }

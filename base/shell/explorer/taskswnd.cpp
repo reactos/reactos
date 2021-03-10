@@ -287,6 +287,8 @@ public:
 
         HWND toolbar = CToolbar::Create(hWndParent, styles);
         SetDrawTextFlags(DT_NOPREFIX, DT_NOPREFIX);
+        //HACK: We have not created this toolbar properly, so we need to subclass it now!
+        m_hWnd = NULL;
         return SubclassWindow(toolbar);
     }
 };

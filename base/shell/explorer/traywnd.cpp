@@ -200,7 +200,11 @@ public:
 
     VOID Initialize()
     {
-        SubclassWindow(m_hWnd);
+        //HACK: We have not created this button properly, so we need to subclass it now!
+        HWND button = m_hWnd;
+        m_hWnd = NULL;
+        SubclassWindow(button);
+
         SetWindowTheme(m_hWnd, L"Start", NULL);
 
         m_ImageList = ImageList_LoadImageW(hExplorerInstance,
@@ -214,6 +218,8 @@ public:
         UpdateSize();
     }
 
+    // Hack:
+    // Use DECLARE_WND_SUPERCLASS instead!
     HWND Create(HWND hwndParent)
     {
         WCHAR szStartCaption[32];
