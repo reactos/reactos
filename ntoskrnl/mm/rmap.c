@@ -309,61 +309,6 @@ WriteSegment:
 
 VOID
 NTAPI
-MmSetCleanAllRmaps(PFN_NUMBER Page)
-{
-    PMM_RMAP_ENTRY current_entry;
-    KIRQL OldIrql;
-
-    OldIrql = MiAcquirePfnLock();
-    current_entry = MmGetRmapListHeadPage(Page);
-    if (current_entry == NULL)
-    {
-        DPRINT1("MmSetCleanAllRmaps: No rmaps.\n");
-        KeBugCheck(MEMORY_MANAGEMENT);
-    }
-    while (current_entry != NULL)
-    {
-        if (!RMAP_IS_SEGMENT(current_entry->Address))
-            MmSetCleanPage(current_entry->Process, current_entry->Address);
-        current_entry = current_entry->Next;
-    }
-    MiReleasePfnLock(OldIrql);
-}
-
-BOOLEAN
-NTAPI
-MmIsDirtyPageRmap(PFN_NUMBER Page)
-{
-    PMM_RMAP_ENTRY current_entry;
-    KIRQL OldIrql;
-    BOOLEAN Dirty = FALSE;
-
-    OldIrql = MiAcquirePfnLock();
-    current_entry = MmGetRmapListHeadPage(Page);
-    if (current_entry == NULL)
-    {
-        DPRINT1("MmIsDirtyPageRmap: No rmaps.\n");
-        KeBugCheck(MEMORY_MANAGEMENT);
-    }
-    while (current_entry != NULL)
-    {
-        if (!RMAP_IS_SEGMENT(current_entry->Address))
-        {
-            if (MmIsDirtyPage(current_entry->Process, current_entry->Address))
-            {
-                Dirty = TRUE;
-                break;
-            }
-        }
-        current_entry = current_entry->Next;
-    }
-    MiReleasePfnLock(OldIrql);
-
-    return Dirty;
-}
-
-VOID
-NTAPI
 MmInsertRmap(PFN_NUMBER Page, PEPROCESS Process,
              PVOID Address)
 {
