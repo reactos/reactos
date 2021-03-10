@@ -830,7 +830,8 @@ VOID CAutoComplete::DoAutoAppend()
 
         for (INT ich = 0; ich < strCommon.GetLength(); ++ich)
         {
-            if (ich < strItem.GetLength() && strCommon[ich] != strItem[ich])
+            if (ich < strItem.GetLength() &&
+                ::ChrCmpIW(strCommon[ich], strItem[ich]) != 0)
             {
                 strCommon = strCommon.Left(ich); // shrink the common string
                 break;
