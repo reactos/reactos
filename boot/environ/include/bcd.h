@@ -55,9 +55,9 @@ typedef enum BcdLibraryElementTypes
     BcdLibraryInteger_TruncatePhysicalMemory = 0x15000007,
     BcdLibraryObjectList_RecoverySequence = 0x14000008,
     BcdLibraryBoolean_AutoRecoveryEnabled = 0x16000009,
-    BcdLibraryIntegerList_BadMemoryList = 0x1700000a,
-    BcdLibraryBoolean_AllowBadMemoryAccess = 0x1600000b,
-    BcdLibraryInteger_FirstMegabytePolicy = 0x1500000c,
+    BcdLibraryIntegerList_BadMemoryList = 0x1700000A,
+    BcdLibraryBoolean_AllowBadMemoryAccess = 0x1600000B,
+    BcdLibraryInteger_FirstMegabytePolicy = 0x1500000C,
     BcdLibraryInteger_RelocatePhysicalMemory = 0x1500000D,
     BcdLibraryInteger_AvoidLowPhysicalMemory = 0x1500000E,
     BcdLibraryBoolean_DebuggerEnabled = 0x16000010,
@@ -145,8 +145,8 @@ typedef enum BcdOSLoaderElementTypes
     BcdOSLoaderBoolean_SafeBootAlternateShell = 0x26000081,
     BcdOSLoaderBoolean_BootLogInitialization = 0x26000090,
     BcdOSLoaderBoolean_VerboseObjectLoadMode = 0x26000091,
-    BcdOSLoaderBoolean_KernelDebuggerEnabled = 0x260000a0,
-    BcdOSLoaderBoolean_DebuggerHalBreakpoint = 0x260000a1,
+    BcdOSLoaderBoolean_KernelDebuggerEnabled = 0x260000A0,
+    BcdOSLoaderBoolean_DebuggerHalBreakpoint = 0x260000A1,
     BcdOSLoaderBoolean_UsePlatformClock = 0x260000A2,
     BcdOSLoaderBoolean_ForceLegacyPlatform = 0x260000A3,
     BcdOSLoaderInteger_TscSyncPolicy = 0x250000A6,
@@ -175,7 +175,7 @@ typedef enum BcdOSLoaderElementTypes
     BcdOSLoaderString_HypervisorDebuggerNetKey = 0x22000110,
     BcdOSLoaderBoolean_HypervisorDebuggerNetDhcp = 0x26000114,
     BcdOSLoaderInteger_HypervisorIommuPolicy = 0x25000115,
-    BcdOSLoaderInteger_XSaveDisable = 0x2500012b
+    BcdOSLoaderInteger_XSaveDisable = 0x2500012B
 } BcdOSLoaderElementTypes;
 
 typedef enum BcdBootMgrElementTypes
