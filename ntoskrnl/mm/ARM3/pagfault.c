@@ -1012,8 +1012,7 @@ MiResolveTransitionFault(IN BOOLEAN StoreInstruction,
     ASSERT(Pfn1->u4.InPageError == 0);
 
     /* See if we should wait before terminating the fault */
-    if ((Pfn1->u3.e1.ReadInProgress == 1)
-            || ((Pfn1->u3.e1.WriteInProgress == 1) && StoreInstruction))
+    if (Pfn1->u3.e1.ReadInProgress == 1)
     {
         DPRINT1("The page is currently in a page transition !\n");
         *InPageBlock = &Pfn1->u1.Event;
