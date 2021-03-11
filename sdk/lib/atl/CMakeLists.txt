@@ -1,7 +1,7 @@
 
 add_library(atl_classes INTERFACE)
 if(DBG)
-    #target_compile_definitions(atl_classes INTERFACE _DEBUG)
+    #target_compile_definitions(atl_classes INTERFACE _DEBUG) # HACK & FIXME: CORE-17505
 endif()
 
 target_include_directories(atl_classes INTERFACE
