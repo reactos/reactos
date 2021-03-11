@@ -135,8 +135,6 @@ private:
         MESSAGE_HANDLER(WM_COMMAND, OnWinEventWrap)
         MESSAGE_HANDLER(WM_NOTIFY, OnWinEventWrap)
         MESSAGE_HANDLER(WM_TIMER, OnPopupTimer)
-    ALT_MSG_MAP(1)
-        // No pager specific handlers yet
     END_MSG_MAP()
 };
 
