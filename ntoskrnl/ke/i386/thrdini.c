@@ -363,7 +363,7 @@ KiSwapContextExit(IN PKTHREAD OldThread,
     Ke386SetGs(0);
 
     /* Set the TEB */
-    KiSetTebBase((PKPCR)Pcr, NewThread->Teb);
+    KiSetTebBase((PKPCR)Pcr, &NewThread->Teb->NtTib);
 
     /* Set new TSS fields */
     Pcr->TSS->Esp0 = (ULONG_PTR)NewThread->InitialStack;

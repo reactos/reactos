@@ -315,7 +315,7 @@ Ke386SetGdtEntryBase(PKGDTENTRY GdtEntry, PVOID BaseAddress)
 
 FORCEINLINE
 VOID
-KiSetTebBase(PKPCR Pcr, PVOID TebAddress)
+KiSetTebBase(PKPCR Pcr, PNT_TIB TebAddress)
 {
     Pcr->NtTib.Self = TebAddress;
     Ke386SetGdtEntryBase(&Pcr->GDT[KGDT_R3_TEB / sizeof(KGDTENTRY)], TebAddress);
