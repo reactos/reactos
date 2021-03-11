@@ -14,14 +14,14 @@ STRINGTABLE
 
 STRINGTABLE
 {
-3000, "Regular Fonts"
+3000, "Normal"
 3001, "Large Fonts"
 3002, "Extra Large Fonts"
 }
 
 STRINGTABLE
 {
-4000, "Regular Fonts"
+4000, "Normal"
 4001, "Large Fonts"
 4002, "Extra Large Fonts"
 }

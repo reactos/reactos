@@ -5,7 +5,7 @@
  * PURPOSE:    Chinese (Traditional) Language Resources
  * TRANSLATOR: Elton Chung aka MfldElton <elton328@gmail.com>
  *             Luo Yufan <njlyf2011@hotmail.com>
- *             Aobi Chan CL <eason066@gmail.com>
+ *             Chan Chilung <eason066@gmail.com>
  */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
@@ -42,7 +42,7 @@ BEGIN
         BEGIN
             MENUITEM "", -1, MFT_SEPARATOR
             MENUITEM "自動排列(&A)", FCIDM_SHVIEW_AUTOARRANGE
-            MENUITEM "Align to &Grid", FCIDM_SHVIEW_ALIGNTOGRID
+            MENUITEM "貼齊格線(&G)", FCIDM_SHVIEW_ALIGNTOGRID
         END
         MENUITEM "重新整理", FCIDM_SHVIEW_REFRESH
         MENUITEM "", -1, MFT_SEPARATOR
@@ -509,11 +509,11 @@ FONT 9, "新細明體"
 BEGIN
     CONTROL IDB_DLG_BG, IDC_STATIC, "STATIC", SS_BITMAP | SS_REALSIZECONTROL, 0, 0, 208, 122
     CONTROL IDB_REACTOS_FLAG, IDC_STATIC, "STATIC", SS_BITMAP, 180, 2, 32, 26
-    PUSHBUTTON "&Switch User", IDC_SWITCH_USER_BUTTON, 57, 46, 19, 19, BS_OWNERDRAW | WS_DISABLED | WS_GROUP
+    PUSHBUTTON "切換使用者(&S)", IDC_SWITCH_USER_BUTTON, 57, 46, 19, 19, BS_OWNERDRAW | WS_DISABLED | WS_GROUP
     PUSHBUTTON "登出(&L)", IDC_LOG_OFF_BUTTON, 134, 46, 19, 19, BS_OWNERDRAW
     PUSHBUTTON "取消", IDCANCEL, 162, 103, 40, 12, WS_GROUP | BS_FLAT
     LTEXT "登出 ReactOS", IDC_LOG_OFF_TEXT_STATIC, 4, 9, 130, 20
-    CTEXT "Switch User", IDC_SWITCH_USER_STATIC, 41, 70, 51, 11
+    CTEXT "切換使用者", IDC_SWITCH_USER_STATIC, 41, 70, 51, 11
     CTEXT "登出", IDC_LOG_OFF_STATIC, 118, 70, 51, 11
 END
 
@@ -854,8 +854,8 @@ BEGIN
     IDS_RUNDLG_BROWSE_CAPTION "瀏覽"
     IDS_RUNDLG_BROWSE_FILTER "可執行檔 (*.exe)\0*.exe\0All Files (*.*)\0*.*\0"
 
-    /* ATTENTION: If there is no special situation, please DO NOT change 
-    English folder names into Chinese, or it may cause problems in the system. */
+    /* ATTENTION: DO NOT change English folder names into Chinese unless necessary,
+     * or it may cause problems in the system. */
     /* Shell folder path default values. See also: dll/win32/userenv/lang */
     IDS_PROGRAMS "「開始」功能表\\程式"
     IDS_PERSONAL "我的文件"
@@ -956,7 +956,7 @@ BEGIN
     IDS_EDIT_VERB "編輯"
     IDS_FIND_VERB "搜索"
     IDS_PRINT_VERB "列印"
-    IDS_CMD_VERB "Command Prompt here"
+    IDS_CMD_VERB "在此開啟命令提示字元"
 
     IDS_FILE_FOLDER "%u 個檔案, %u 個檔案夾"
     IDS_PRINTERS "印表機"
@@ -969,7 +969,7 @@ BEGIN
     IDS_SHLEXEC_NOASSOC "沒有為 ReactOS 設定關聯的程式以開啟這種類型的檔案。"
 
     IDS_FILE_DETAILS "有關副檔名 '%s' 的詳細資料"
-    IDS_FILE_DETAILSADV "副檔名為 '%s' 且類型為 '%s' 的檔案。如果要變更影響所有 '%s' 檔案的設定值，請按一下 [進階]。"
+    IDS_FILE_DETAILSADV "副檔名為 '%s' 的檔案屬於類型 '%s'。如果要變更影響所有 '%s' 檔案的設定值，請按一下 [進階]。"
     IDS_FILE_TYPES "檔案類型"
     IDS_COLUMN_EXTENSION "副檔名"
 
@@ -977,7 +977,7 @@ BEGIN
        used in the _File type_ tab of the _Folder Options_ dialog */
     IDS_FILE_EXT_TYPE "%s 檔案"
 
-    IDS_BYTES_FORMAT "bytes"
+    IDS_BYTES_FORMAT "位元組"
     IDS_UNKNOWN_APP "未知應用程式"
     IDS_EXE_DESCRIPTION "描述:"
 
@@ -985,25 +985,25 @@ BEGIN
     IDS_OBJECTS "%d 個物件"
     IDS_OBJECTS_SELECTED "已選擇 %d 個物件"
 
-    IDS_ADVANCED_FOLDER "Files and Folders"
-    IDS_ADVANCED_NET_CRAWLER "Automatically search for network folders and printers"
-    IDS_ADVANCED_FOLDER_SIZE_TIP "Display file size information in folder tips"
-    IDS_ADVANCED_FRIENDLY_TREE "Display simple folder view in Explorer's Folders list"
-    IDS_ADVANCED_WEB_VIEW_BARRICADE "Display the contents of system folders"
-    IDS_ADVANCED_SHOW_FULL_PATH_ADDRESS "Display the full path in address bar"
-    IDS_ADVANCED_SHOW_FULL_PATH "Display the full path in the title bar"
-    IDS_ADVANCED_DISABLE_THUMB_CACHE "Do not cache thumbnails"
-    IDS_ADVANCED_HIDDEN "Hidden files and folders"
-    IDS_ADVANCED_DONT_SHOW_HIDDEN "Do not show hidden files and folders"
-    IDS_ADVANCED_SHOW_HIDDEN "Show hidden files and folders"
-    IDS_ADVANCED_HIDE_FILE_EXT "Hide extensions for known file types"
-    IDS_ADVANCED_SUPER_HIDDEN "Hide protected operating system files (Recommended)"
-    IDS_ADVANCED_DESKTOP_PROCESS "Launch folder windows in a separate process"
-    IDS_ADVANCED_CLASSIC_VIEW_STATE "Remember each folder's view settings"
-    IDS_ADVANCED_PERSIST_BROWSERS "Restore previous folder windows at logon"
-    IDS_ADVANCED_CONTROL_PANEL_IN_MY_COMPUTER "Show Control Panel in My Computer"
-    IDS_ADVANCED_SHOW_COMP_COLOR "Show encrypted or compressed NTFS files in color"
-    IDS_ADVANCED_SHOW_INFO_TIP "Show pop-up description for folder and desktop items"
+    IDS_ADVANCED_FOLDER "檔案和資料夾"
+    IDS_ADVANCED_NET_CRAWLER "自動搜尋網路資料夾和印表機"
+    IDS_ADVANCED_FOLDER_SIZE_TIP "在資料夾提示中顯示檔案大小的資訊"
+    IDS_ADVANCED_FRIENDLY_TREE "在檔案總管的資料夾清單顯示簡易的資料夾檢視"
+    IDS_ADVANCED_WEB_VIEW_BARRICADE "顯示系統資料夾的內容"
+    IDS_ADVANCED_SHOW_FULL_PATH_ADDRESS "在位址列中顯示完整路徑"
+    IDS_ADVANCED_SHOW_FULL_PATH "在標題列中顯示完整路徑"
+    IDS_ADVANCED_DISABLE_THUMB_CACHE "停用快取縮圖"
+    IDS_ADVANCED_HIDDEN "隱藏的檔案和資料夾"
+    IDS_ADVANCED_DONT_SHOW_HIDDEN "不要顯示隱藏的檔案和資料夾"
+    IDS_ADVANCED_SHOW_HIDDEN "顯示隱藏的檔案和資料夾"
+    IDS_ADVANCED_HIDE_FILE_EXT "隱藏已知檔案類型的副檔名"
+    IDS_ADVANCED_SUPER_HIDDEN "隱藏受保護的作業系統檔案 (建議選項)"
+    IDS_ADVANCED_DESKTOP_PROCESS "在個別的處理程序中開啟資料夾視窗"
+    IDS_ADVANCED_CLASSIC_VIEW_STATE "記住每個資料夾的檢視設定"
+    IDS_ADVANCED_PERSIST_BROWSERS "在登入時還原先前的資料夾視窗"
+    IDS_ADVANCED_CONTROL_PANEL_IN_MY_COMPUTER "在我的電腦顯示控制台"
+    IDS_ADVANCED_SHOW_COMP_COLOR "使用色彩來顯示加密或壓縮的 NTFS 檔案"
+    IDS_ADVANCED_SHOW_INFO_TIP "顯示資料夾和桌面項目的快顯描述"
 
     IDS_NEWEXT_ADVANCED_LEFT "<< 進階(&V)"
     IDS_NEWEXT_ADVANCED_RIGHT "進階(&V) >>"
@@ -1012,16 +1012,16 @@ BEGIN
     IDS_NEWEXT_ALREADY_ASSOC "副檔名 %s 已經與檔案類型 %s 關聯。 是否要將 %s 與 %s 取消關聯並為其建立新的檔案類型？"
     IDS_NEWEXT_EXT_IN_USE "副檔名正在被使用"
 
-    IDS_REMOVE_EXT "If you remove a registered file name extension, you will not be able to open files with this extension by double-clicking their icons.\n\nAre you sure you want to remove this extension?"
+    IDS_REMOVE_EXT "如果您移除註冊的檔案類型，您將無法透過在檔案圖示上 按兩下 來開啟檔案。\n\n您要移除這個檔案類型嗎?"
     IDS_SPECIFY_ACTION "您必須指定執行動作。"
     IDS_INVALID_PROGRAM "找不到指定的程式。請確定指定的檔名及路徑正確。"
     IDS_REMOVE_ACTION "您確定要移除這個動作嗎？"
     IDS_ACTION_EXISTS "這個檔案類型的執行動作 '%s' 已被登錄過。請輸入不同的名稱後重試一次。"
     IDS_EXE_FILTER "Programs\0*.exe\0All Files\0*.*\0"
-    IDS_EDITING_ACTION "Editing action for type: "
-    IDS_NO_ICONS "The file '%s' contains no icons.\n\nChoose an icon from the list or specify a different file."
+    IDS_EDITING_ACTION "編輯這種類型的動作: "
+    IDS_NO_ICONS "檔案 '%s' 沒有圖示。\n\n請指定其他檔案或從清單中選擇一個圖示。"
     IDS_FILE_NOT_FOUND "找不到檔案 '%s'。"
-    IDS_LINK_INVALID "The item '%s' that this shortcut refers to has been changed or moved, so this shortcut will no longer work properly."
+    IDS_LINK_INVALID "這個捷徑所參照的項目 '%s' 已被刪除或移動，因此無法再正常執行。"
     IDS_COPYTOMENU "複製到資料夾(&F)..."
     IDS_COPYTOTITLE "選取想要複製 '%s' 的位置，然後按一下 [複製] 按鈕。"
     IDS_COPYITEMS "複製項目"
@@ -1031,11 +1031,11 @@ BEGIN
     IDS_MOVEITEMS "移動項目"
     IDS_MOVEBUTTON "移動"
 
-    IDS_SYSTEMFOLDER "System Folder"
+    IDS_SYSTEMFOLDER "系統資料夾"
 
     /* For IDD_LOG_OFF_FANCY */
-    IDS_LOG_OFF_DESC "Closes your programs and ends your ReactOS session."
-    IDS_SWITCH_USER_DESC "Lets another user log on while your programs and files remain open.\r\n\r\n(You can also switch users by pressing the Windows logo key + L.)"
+    IDS_LOG_OFF_DESC "關閉您的程式，並結束目前的工作階段。"
+    IDS_SWITCH_USER_DESC "允許其他使用者登入到系統上，同時保持您的程式和檔案開啟。\r\n\r\n(您亦可使用 Windows 鍵 + L 來切換使用者。)"
     IDS_LOG_OFF_TITLE "登出"
-    IDS_SWITCH_USER_TITLE "Switch User"
+    IDS_SWITCH_USER_TITLE "切換使用者"
 END

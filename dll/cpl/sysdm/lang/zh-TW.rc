@@ -1,5 +1,10 @@
-/* Traditional Chinese translation by Henry Tang Ih 2016 (henrytang2@hotmail.com) */
-/* Translation has been changed by Luo Yufan 2018 (njlyf2011@hotmail.com) */
+/*
+ * FILE:        dll/cpl/sysdm/lang/zh-TW.rc
+ * PURPOSE:     Chinese (Traditional) translations for sysdm
+ * TRANSLATORS: 2016 Henry Tang (henrytang2@hotmail.com)
+ *              2018 Luo Yufan (njlyf2011@hotmail.com)
+ *              2021 Chan Chilung (eason066@gmail.com)
+ */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
 
@@ -22,8 +27,8 @@ BEGIN
     LTEXT "", IDC_MACHINELINE4, 130, 155, 118, 9
     LTEXT "", IDC_MACHINELINE5, 130, 164, 118, 9
     LTEXT "", IDC_MACHINELINE6, 130, 173, 118, 9
-    CONTROL "請訪問<A HREF=""https://reactos.org/"">ReactOS 首頁</A>", IDC_ROSHOMEPAGE_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 10, 200, 140, 10
-    PUSHBUTTON "查看著作權信息(&L)...", IDC_LICENCE, 170, 198, 78, 15
+    CONTROL "請訪問 <A HREF=""https://reactos.org/"">ReactOS 首頁</A>", IDC_ROSHOMEPAGE_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 10, 200, 140, 10
+    PUSHBUTTON "查看著作權訊息(&L)...", IDC_LICENCE, 170, 198, 78, 15
 END
 
 IDD_PROPPAGEHARDWARE DIALOGEX 0, 0, 256, 218
@@ -33,15 +38,15 @@ FONT 9, "新細明體", 0, 0, 0x0
 BEGIN
     GROUPBOX "裝置管理員", IDC_STATIC, 6, 7, 244, 61
     ICON IDI_DEVMGR, IDC_STATIC, 12, 18, 23, 21, SS_ICON
-    LTEXT "裝置管理員列出所有安裝在電腦上的硬體裝置。請使用設備管理器來變更設備的屬性。", IDC_STATIC, 42, 18, 204, 24
+    LTEXT "裝置管理員列出所有安裝在電腦上的硬體裝置。請使用裝置管理員來更改裝置的屬性。", IDC_STATIC, 42, 18, 204, 24
     PUSHBUTTON "裝置管理員(&D)...", IDC_HARDWARE_DEVICE_MANAGER, 154, 48, 90, 15
     GROUPBOX "新增硬體精靈", IDC_STATIC, 6, 79, 244, 61
     ICON IDI_ADDHW, IDC_STATIC, 12, 90, 23, 21, SS_ICON
-    LTEXT "“新增硬體精靈”幫助您安裝新的硬件。", IDC_STATIC, 42, 90, 204, 24
+    LTEXT "新增硬體精靈會幫助您安裝、移除、修復、拔除、退出和設定您的硬件。", IDC_STATIC, 42, 90, 204, 24
     PUSHBUTTON "新增硬體精靈(&H)", IDC_HARDWARE_WIZARD, 154, 120, 90, 15
     GROUPBOX "硬體設定檔", IDC_STATIC, 6, 149, 244, 61
     ICON IDI_HARDPROF, IDC_STATIC, 12, 160, 23, 21, SS_ICON
-    LTEXT "硬體設定檔向您提供建立和保存不同硬件配置的方法。", IDC_STATIC, 42, 160, 204, 24
+    LTEXT "硬體設定檔向您提供建立和儲存不同硬件配置的方法。", IDC_STATIC, 42, 160, 204, 24
     PUSHBUTTON "硬體設定檔(&W)...", IDC_HARDWARE_PROFILE, 154, 190, 90, 15
 END
 
@@ -50,15 +55,15 @@ STYLE DS_SHELLFONT | WS_CHILD | WS_DISABLED | WS_CAPTION
 CAPTION "進階"
 FONT 9, "新細明體", 0, 0, 0x0
 BEGIN
-    LTEXT "要進行大多數改動，您必須作爲管理員身分登錄。", IDC_STATIC, 12, 5, 236, 8
+    LTEXT "要進行大多數改動，您必須以管理員身分登入。", IDC_STATIC, 12, 5, 236, 8
     GROUPBOX "性能", IDC_STATIC, 6, 18, 244, 50
     LTEXT "性能選項控制應用程式如何使用內存。這將會影響到電腦運行速度。", IDC_STATIC, 16, 29, 228, 17
     PUSHBUTTON "設定", IDC_PERFOR, 194, 48, 50, 15
     GROUPBOX "使用者設定檔", IDC_STATIC, 6, 75, 244, 48
     LTEXT "與您登入時相關的桌面設定", IDC_STATIC, 16, 88, 228, 20
     PUSHBUTTON "設定", IDC_USERPROFILE, 194, 103, 50, 15
-    GROUPBOX "啓動和故障恢復", IDC_STATIC, 6, 131, 244, 52
-    LTEXT "啓動和故障恢複選項指定電腦如何啓動並設定系統失敗時所需要採取的動作。", IDC_STATIC, 16, 144, 228, 19
+    GROUPBOX "啟動和故障恢復", IDC_STATIC, 6, 131, 244, 52
+    LTEXT "啟動和故障恢復選項指定電腦如何啟動並設定系統失敗時所需要採取的動作。", IDC_STATIC, 16, 144, 228, 19
     PUSHBUTTON "設定", IDC_STAREC, 194, 162, 50, 15
     PUSHBUTTON "系統設定", IDC_SYSSETTINGS, 6, 192, 80, 15
     PUSHBUTTON "環境變數", IDC_ENVVAR, 88, 192, 80, 15
@@ -71,8 +76,8 @@ CAPTION "系統設定"
 FONT 9, "新細明體", 0, 0, 0x1
 BEGIN
     GROUPBOX "版本資訊", IDC_STATIC, 6, 3, 210, 73
-    LTEXT "ReactOS 作為伺服器作業系統建立並這樣被報告。選中此框可變更(僅對應用程式有效)。", IDC_STATIC, 15, 15, 183, 41
-    CONTROL "作爲工作站報告", IDC_REPORTASWORKSTATION, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 16, 57, 190, 10
+    LTEXT "ReactOS 是以伺服器作業系統為基礎構建並以此報告。核取此方塊以變更 (僅對應用程式有效)。", IDC_STATIC, 15, 15, 183, 41
+    CONTROL "報告為工作站(&R)", IDC_REPORTASWORKSTATION, "Button", BS_AUTOCHECKBOX | WS_TABSTOP, 16, 57, 190, 10
     PUSHBUTTON "確定", IDOK, 166, 83, 50, 14
 END
 
@@ -82,7 +87,7 @@ CAPTION "硬件設定檔"
 FONT 9, "新細明體"
 BEGIN
     ICON IDI_HARDPROF, IDC_STATIC, 8, 11, 18, 20, SS_ICON
-    LTEXT "可以爲不同的硬件配置創建硬件設定檔。在啓動時，可以選擇希望使用的設定檔。", IDC_STATIC, 46, 11, 188, 25
+    LTEXT "可以為不同的硬件配置建立硬件設定檔。在啟動時，可以選擇希望使用的設定檔。", IDC_STATIC, 46, 11, 188, 25
     LTEXT "可用的硬件設定檔:", IDC_STATIC, 8, 41, 120, 8
     LISTBOX IDC_HRDPROFLSTBOX, 8, 52, 215, 54, LBS_NOTIFY
     PUSHBUTTON "", IDC_HRDPROFUP, 232, 59, 15, 14, BS_ICON | WS_DISABLED
@@ -92,8 +97,8 @@ BEGIN
     PUSHBUTTON "重新命名(&R)", IDC_HRDPROFRENAME, 118, 106, 50, 14, WS_DISABLED
     PUSHBUTTON "刪除(&D)", IDC_HRDPROFDEL, 173, 106, 50, 14, WS_DISABLED
     GROUPBOX "硬件設定檔選擇", IDC_STATIC, 7, 130, 240, 75
-    LTEXT "啓動 ReactOS 時:", IDC_STATIC, 14, 142, 210, 8
-    AUTORADIOBUTTON "等待用戶選定硬件設定檔(&W)", IDC_HRDPROFWAIT, 14, 158, 133, 8, WS_GROUP
+    LTEXT "啟動 ReactOS 時:", IDC_STATIC, 14, 142, 210, 8
+    AUTORADIOBUTTON "等待使用者選定硬件設定檔(&W)", IDC_HRDPROFWAIT, 14, 158, 133, 8, WS_GROUP
     AUTORADIOBUTTON "秒內還沒有選定設定檔，就請從列出的文件中選擇第一個(&S)", IDC_HRDPROFSELECT, 14, 173, 190, 8
     LTEXT "秒", IDC_STATIC, 65, 187, 35, 8
     EDITTEXT IDC_HRDPROFEDIT, 25, 185, 35, 12
@@ -120,7 +125,7 @@ BEGIN
     AUTORADIOBUTTON "電腦被插接(&D)", IDC_HWPPROP_DOCKED, 22, 97, 160, 10
     AUTORADIOBUTTON "電腦未插接(&U)", IDC_HWPPROP_UNDOCKED, 22, 109, 160, 10
     GROUPBOX "硬件設定檔選擇", IDC_STATIC, 10, 138, 192, 42
-    AUTOCHECKBOX "當電腦啓動時作爲一個選項始終包含此設定檔(&I)", IDC_HWPPROP_INCLUDE, 17, 150, 164, 20, WS_GROUP | WS_TABSTOP | BS_MULTILINE
+    AUTOCHECKBOX "當電腦啟動時作為一個選項始終包含此設定檔(&I)", IDC_HWPPROP_INCLUDE, 17, 150, 164, 20, WS_GROUP | WS_TABSTOP | BS_MULTILINE
 END
 
 IDD_COPYPROFILE DIALOGEX 12, 26, 256, 52
@@ -138,7 +143,7 @@ END
 
 IDD_RENAMEPROFILE DIALOGEX 12, 26, 256, 52
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "重命名設定檔"
+CAPTION "重新命名設定檔"
 FONT 9, "新細明體"
 BEGIN
     LTEXT "從:", IDC_STATIC, 5, 10, 20, 8
@@ -155,14 +160,14 @@ CAPTION "使用者設定"
 FONT 9, "新細明體"
 BEGIN
     ICON IDI_USERPROF, IDC_STATIC, 6, 11, 16, 16, SS_ICON
-    LTEXT "使用者設定檔保存桌面設定和其他與您的使用者帳戶有關的信息。可在您使用的每臺電腦上創建不同的設定檔，或選定一個漫遊設定檔用在您使用的每臺電腦上。", IDC_STATIC, 40, 11, 211, 35
+    LTEXT "使用者設定檔保存桌面設定和其他與您的使用者帳戶有關的訊息。可在您使用的每台電腦上建立不同的設定檔，或選擇一個漫遊設定檔用在您使用的電腦上。", IDC_STATIC, 40, 11, 211, 35
     LTEXT "儲存在本機上的設定檔:", IDC_STATIC, 16, 51, 204, 9
     CONTROL "", IDC_USERPROFILE_LIST, "SysListView32", LVS_REPORT | LVS_SINGLESEL |
             LVS_SHOWSELALWAYS | LVS_SORTASCENDING | WS_BORDER | WS_TABSTOP, 6, 66, 244, 85, WS_EX_CLIENTEDGE
     PUSHBUTTON "更改類型", IDC_USERPROFILE_CHANGE, 90, 155, 50, 15
     PUSHBUTTON "刪除", IDC_USERPROFILE_DELETE, 145, 155, 50, 15
     PUSHBUTTON "複製到", IDC_USERPROFILE_COPY, 200, 155, 50, 15
-    CONTROL "要創建一個新的使用者帳戶，在控制面板中開啟<A>使用者帳戶</A> 。",
+    CONTROL "要建立一個新的使用者帳戶，在控制面板中開啟<A>使用者帳戶</A> 。",
             IDC_USERACCOUNT_LINK, "SysLink", WS_CHILD | WS_VISIBLE | WS_TABSTOP, 7, 175, 245, 18
     DEFPUSHBUTTON "確定", IDOK, 134, 198, 54, 15
     PUSHBUTTON "取消", IDCANCEL, 196, 198, 54, 15
@@ -170,60 +175,60 @@ END
 
 IDD_USERPROFILE_TYPE DIALOGEX 6, 18, 225, 103
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Change Profile Type"
+CAPTION "更改設定檔類型"
 FONT 9, "新細明體"
 BEGIN
     LTEXT "", IDC_USERPROFILE_TYPE_TEXT, 7, 11, 206, 28
-    AUTORADIOBUTTON "&Roaming profile", IDC_USERPROFILE_TYPE_ROAMING, 60, 49, 145, 10
-    AUTORADIOBUTTON "&Local profile", IDC_USERPROFILE_TYPE_LOCAL, 60, 63, 145, 10
-    DEFPUSHBUTTON "OK", IDOK, 60, 82, 50, 14
-    PUSHBUTTON "Cancel", IDCANCEL, 122, 82, 50, 14
+    AUTORADIOBUTTON "漫遊設定檔(&R)", IDC_USERPROFILE_TYPE_ROAMING, 60, 49, 145, 10
+    AUTORADIOBUTTON "本機設定檔(&L)", IDC_USERPROFILE_TYPE_LOCAL, 60, 63, 145, 10
+    DEFPUSHBUTTON "確定", IDOK, 60, 82, 50, 14
+    PUSHBUTTON "取消", IDCANCEL, 122, 82, 50, 14
 END
 
 IDD_USERPROFILE_COPY DIALOGEX 6, 18, 261, 133
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "Copy To"
+CAPTION "複製到"
 FONT 9, "新細明體"
 BEGIN
-    GROUPBOX "Copy &profile to", -1, 8, 9, 185, 52
+    GROUPBOX "複製設定檔到(&P)", -1, 8, 9, 185, 52
     EDITTEXT IDC_USERPROFILE_COPY_PATH, 15, 23, 167, 12, ES_AUTOHSCROLL
-    PUSHBUTTON "&Browse", IDC_USERPROFILE_COPY_BROWSE, 15, 41, 50, 14
-    GROUPBOX "Permitted to use", -1, 8, 77, 185, 48
+    PUSHBUTTON "瀏覽(&B)", IDC_USERPROFILE_COPY_BROWSE, 15, 41, 50, 14
+    GROUPBOX "已允許使用", -1, 8, 77, 185, 48
     LTEXT "", IDC_USERPROFILE_COPY_USER, 15, 91, 167, 8
     PUSHBUTTON "&Change", IDC_USERPROFILE_COPY_CHANGE, 15, 105, 50, 14
-    DEFPUSHBUTTON "OK", IDOK, 204, 13, 50, 14
-    PUSHBUTTON "Cancel", IDCANCEL, 204, 30, 50, 14
+    DEFPUSHBUTTON "確定", IDOK, 204, 13, 50, 14
+    PUSHBUTTON "取消", IDCANCEL, 204, 30, 50, 14
 END
 
 IDD_STARTUPRECOVERY DIALOGEX 6, 18, 252, 280
 STYLE DS_SHELLFONT | DS_MODALFRAME | DS_CONTEXTHELP | WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-CAPTION "啓動和故障恢復"
+CAPTION "啟動和故障恢復"
 FONT 9, "新細明體"
 BEGIN
-    GROUPBOX "系統啓動", IDC_STATIC, 7, 12, 238, 95
-    LTEXT "默認操作系統(&S):", IDC_STATIC, 14, 26, 100, 8
+    GROUPBOX "系統啟動", IDC_STATIC, 7, 12, 238, 95
+    LTEXT "預設作業系統(&S):", IDC_STATIC, 14, 26, 100, 8
     COMBOBOX IDC_STRECOSCOMBO, 14, 37, 224, 46, CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
     AUTOCHECKBOX "顯示作業系統清單的時間(&T):", IDC_STRECLIST, 14, 56, 160, 8
     EDITTEXT IDC_STRRECLISTEDIT, 185, 54, 30, 12, ES_NUMBER
     CONTROL "", IDC_STRRECLISTUPDWN, "msctls_updown32", UDS_WRAP | UDS_SETBUDDYINT |
             UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | UDS_NOTHOUSANDS | WS_CHILD | WS_VISIBLE, 0, 0, 8, 13
     LTEXT "秒", IDC_STATIC, 223, 56, 18, 8
-    AUTOCHECKBOX "在需要時顯示恢複選項的時間(&D):", IDC_STRRECREC, 14, 70, 170, 8
+    AUTOCHECKBOX "在需要時顯示恢復選項的時間(&D):", IDC_STRRECREC, 14, 70, 170, 8
     EDITTEXT IDC_STRRECRECEDIT, 185, 68, 30, 12, ES_NUMBER
     CONTROL "", IDC_STRRECRECUPDWN, "msctls_updown32", UDS_WRAP | UDS_SETBUDDYINT |
             UDS_ALIGNRIGHT | UDS_AUTOBUDDY | UDS_ARROWKEYS | UDS_NOTHOUSANDS | WS_CHILD | WS_VISIBLE, 0, 0, 8, 13
     LTEXT "秒", IDC_STATIC, 223, 70, 18, 8
-    LTEXT "要手動編輯啓動選項，請選擇 [編輯]。", IDC_STATIC, 14, 89, 187, 8
+    LTEXT "要手動編輯啟動選項，請選擇 [編輯]。", IDC_STATIC, 14, 89, 187, 8
     PUSHBUTTON "秒", IDC_STRRECEDIT, 188, 87, 50, 14
     GROUPBOX "系統失敗", IDC_STATIC, 7, 111, 238, 140
     AUTOCHECKBOX "將事件寫入系統日誌(&W)", IDC_STRRECWRITEEVENT, 14, 124, 148, 10
     AUTOCHECKBOX "發送管理警報(&N)", IDC_STRRECSENDALERT, 14, 138, 148, 10
-    AUTOCHECKBOX "自動重新啓動(&R)", IDC_STRRECRESTART, 14, 152, 145, 10
-    GROUPBOX "寫入調試信息", IDC_STATIC, 12, 167, 227, 76
+    AUTOCHECKBOX "自動重新啟動(&R)", IDC_STRRECRESTART, 14, 152, 145, 10
+    GROUPBOX "寫入偵錯訊息", IDC_STATIC, 12, 167, 227, 76
     COMBOBOX IDC_STRRECDEBUGCOMBO, 17, 182, 151, 49, CBS_DROPDOWNLIST | WS_TABSTOP
-    LTEXT "轉儲文件(&F):", IDC_STATIC, 17, 202, 150, 8
+    LTEXT "傾印檔案(&F):", IDC_STATIC, 17, 202, 150, 8
     EDITTEXT IDC_STRRECDUMPFILE, 17, 210, 153, 12, ES_AUTOHSCROLL
-    AUTOCHECKBOX "覆寫任何現有文件(&O)", IDC_STRRECOVERWRITE, 17, 228, 125, 10
+    AUTOCHECKBOX "覆寫任何現有檔案(&O)", IDC_STRRECOVERWRITE, 17, 228, 125, 10
     DEFPUSHBUTTON "確定", IDOK, 141, 258, 50, 15
     PUSHBUTTON "取消", IDCANCEL, 195, 258, 50, 15
 END
@@ -254,7 +259,7 @@ BEGIN
     LTEXT "%s", IDC_MINIMUM, 88, 188, 100, 9
     LTEXT "推薦:", IDC_STATIC, 18, 199, 52, 9
     LTEXT "%s", IDC_RECOMMENDED, 88, 199, 100, 9
-    LTEXT "當前已分配:", IDC_STATIC, 18, 210, 66, 9
+    LTEXT "目前已分配:", IDC_STATIC, 18, 210, 66, 9
     LTEXT "%s", IDC_CURRENT, 88, 210, 100, 9
     DEFPUSHBUTTON "確定", IDOK, 114, 230, 48, 15
     PUSHBUTTON "取消", IDCANCEL, 168, 230, 48, 15
@@ -307,44 +312,44 @@ STRINGTABLE
 BEGIN
     IDS_CPLSYSTEMNAME "系統"
     IDS_CPLSYSTEMDESCRIPTION "查看您的電腦系統的信息並更改各種系統及硬體設定"
-    IDS_MEGABYTE "MB內存"
-    IDS_GIGABYTE "GB內存"
-    IDS_TERABYTE "TB內存"
-    IDS_PETABYTE "PB內存"
+    IDS_MEGABYTE "MB 記憶體"
+    IDS_GIGABYTE "GB 記憶體"
+    IDS_TERABYTE "TB 記憶體"
+    IDS_PETABYTE "PB 記憶體"
     IDS_MEGAHERTZ "MHz"
     IDS_GIGAHERTZ "GHz"
-    IDS_UPTIME_FORMAT "%u Days, %02u:%02u:%02u"
+    IDS_UPTIME_FORMAT "%u 天, %02u:%02u:%02u"
     IDS_VARIABLE "變量"
     IDS_VALUE "值"
     IDS_NO_DUMP "(無)"
-    IDS_MINI_DUMP "小內存轉儲 (64KB)"
-    IDS_KERNEL_DUMP "核心內存轉儲"
-    IDS_FULL_DUMP "完全內存轉儲"
+    IDS_MINI_DUMP "小記憶體傾印 (64KB)"
+    IDS_KERNEL_DUMP "核心記憶體傾印"
+    IDS_FULL_DUMP "完全記憶體傾印"
     IDS_USERPROFILE_NAME "名稱"
     IDS_USERPROFILE_SIZE "大小"
     IDS_USERPROFILE_TYPE "類型"
     IDS_USERPROFILE_STATUS "狀態"
     IDS_USERPROFILE_MODIFIED "修改"
-    IDS_USERPROFILE_LOCAL "Local"
-    IDS_USERPROFILE_ROAMING "Roaming"
-    IDS_USERPROFILE_MANDATORY "Mandatory"
-    IDS_USERPROFILE_CONFIRM_DELETE "Are you sure you want to delete %s's profile?"
-    IDS_USERPROFILE_CONFIRM_DELETE_TITLE "Confirm Delete"
-    IDS_USERPROFILE_ACCOUNT_UNKNOWN "Account Unknown"
-    IDS_USERPROFILE_ACCOUNT_DELETED "Account Deleted"
-    IDS_USERPROFILE_TYPE_TEXT "When %s logs onto this computer, should the operating system use the roaming profile or just the locally cached copy of the roaming profile."
+    IDS_USERPROFILE_LOCAL "本機"
+    IDS_USERPROFILE_ROAMING "漫遊"
+    IDS_USERPROFILE_MANDATORY "強制"
+    IDS_USERPROFILE_CONFIRM_DELETE "您是否確定要刪除 %s 的設定檔?"
+    IDS_USERPROFILE_CONFIRM_DELETE_TITLE "確認刪除"
+    IDS_USERPROFILE_ACCOUNT_UNKNOWN "不明的帳戶"
+    IDS_USERPROFILE_ACCOUNT_DELETED "帳戶已刪除"
+	IDS_USERPROFILE_TYPE_TEXT "當 %s 登入這台電腦時, 作業系統應使用漫遊設定檔，還是漫遊設定檔的本機快取複本。"
     IDS_MESSAGEBOXTITLE "系統控制面板小程序"
-    IDS_WARNINITIALSIZE "爲分頁文件的初始大小輸入一個數字值。"
-    IDS_WARNMAXIMUMSIZE "爲分頁文件的最大大小輸入一個數字值。"
+    IDS_WARNINITIALSIZE "為分頁文件的初始大小輸入一個數字值。"
+    IDS_WARNMAXIMUMSIZE "為分頁文件的最大大小輸入一個數字值。"
     IDS_WARNINITIALRANGE "分頁文件的初始大小不得小於 2 MB，並且不得超過所選磁碟上的可用空間。"
     IDS_WARNMAXIMUMRANGE "分頁文件的最大大小不能小於其初始大小和不能超過所選磁碟上的可用空間。"
     IDS_PAGEFILE_MB "%u MB"
     IDS_PAGEFILE_NONE "無"
     IDS_PAGEFILE_SYSTEM "系統已管理"
-    IDS_INFOREBOOT "您必須重新啓動電腦，才能套用更改。"
+    IDS_INFOREBOOT "您必須重新啟動電腦，才能套用更改。"
     IDS_HWPROFILE_CONFIRM_DELETE_TITLE "確認設定檔刪除"
-    IDS_HWPROFILE_CONFIRM_DELETE "你確定你想要刪除的硬件設定檔？ ""%s""?"
-    IDS_HWPROFILE_ALREADY_IN_USE "配置式名稱已在使用。"
+    IDS_HWPROFILE_CONFIRM_DELETE "你確定你想要刪除的硬件設定檔 ""%s""？"
+    IDS_HWPROFILE_ALREADY_IN_USE "設定檔名稱已在使用。"
     IDS_HWPROFILE_PROFILE "設定檔"
     IDS_HWPROFILE_WARNING "警告"
 END

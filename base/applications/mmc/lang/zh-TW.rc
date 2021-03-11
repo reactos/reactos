@@ -12,7 +12,7 @@ IDM_CONSOLE_SMALL MENU
 BEGIN
     POPUP "檔案(&F)"
     BEGIN
-        MENUITEM "新建(&N)\tCtrl+N", IDM_FILE_NEW
+        MENUITEM "新增(&N)\tCtrl+N", IDM_FILE_NEW
         MENUITEM "開啟(&O)\tCtrl+O", IDM_FILE_OPEN
         MENUITEM SEPARATOR
         MENUITEM "結束(&X)\tAlt+F4", IDM_FILE_EXIT
@@ -27,10 +27,10 @@ IDM_CONSOLE_LARGE MENU
 BEGIN
     POPUP "檔案(&F)"
     BEGIN
-        MENUITEM "新建(&N)\tCtrl+N", IDM_FILE_NEW
+        MENUITEM "新增(&N)\tCtrl+N", IDM_FILE_NEW
         MENUITEM "開啟(&O)\tCtrl+O", IDM_FILE_OPEN
-        MENUITEM "儲存", IDM_FILE_SAVE
-        MENUITEM "另存為...", IDM_FILE_SAVEAS
+        MENUITEM "儲存(&S)", IDM_FILE_SAVE
+        MENUITEM "另存新檔(&A)...", IDM_FILE_SAVEAS
         MENUITEM SEPARATOR
         MENUITEM "結束(&X)\tAlt+F4", IDM_FILE_EXIT
     END

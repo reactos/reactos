@@ -7,8 +7,8 @@ BEGIN
     IDS_GOLIVE "橄欖綠" //Spruce
     IDS_HCONTRAST_1 "高對比度 1"
     IDS_HCONTRAST_2 "高對比度 2"
-    IDS_HCONTRAST_BLACK "高對比度（黑）"
-    IDS_HCONTRAST_WHITE "高對比度（白）"
+    IDS_HCONTRAST_BLACK "高對比度 (黑)"
+    IDS_HCONTRAST_WHITE "高對比度 (白)"
     IDS_LILAC "丁香"
     IDS_MAPLE "楓樹"
     IDS_MARINE "海洋"

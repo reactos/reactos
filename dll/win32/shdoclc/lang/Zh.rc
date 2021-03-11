@@ -1,6 +1,4 @@
 /*
- * Copyright 2008 Hongbo Ni <hongbo.at.njstar.com>
- *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
@@ -15,8 +13,11 @@
  * License along with this library; if not, write to the Free Software
  * Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA 02110-1301, USA
  */
-
-/* Translation has been changed by Luo Yufan on 2018, 2019 (njlyf2011@hotmail.com) */
+/* Translator:
+ * 2008 Hongbo Ni <hongbo.at.njstar.com> 
+ * 2018, 2019 Luo Yufan <njlyf2011.at.hotmail.com>
+ * Sync with Wine: Traditional Chinese on 2021
+ */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
 
@@ -257,7 +258,7 @@ IDR_BROWSE_CONTEXT_MENU MENU
 {
     POPUP "" /* Default */
     {
-        MENUITEM "向後(&B)", IDM_GOBACKWARD
+        MENUITEM "返回(&B)", IDM_GOBACKWARD
         MENUITEM "向前(&O)", IDM_GOFORWARD
         MENUITEM SEPARATOR
         MENUITEM "將背景存為(&S)...", IDM_SAVEBACKGROUND
@@ -268,14 +269,14 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM "全選(&A)", IDM_SELECTALL
         MENUITEM "貼上(&P)", IDM_PASTE
         MENUITEM SEPARATOR
-        MENUITEM "創建捷徑(&T)", IDM_CREATESHORTCUT
-        MENUITEM "添加到我的最愛(&F)", IDM_ADDFAVORITES
+        MENUITEM "建立捷徑(&T)", IDM_CREATESHORTCUT
+        MENUITEM "新增至我的最愛(&F)", IDM_ADDFAVORITES
         MENUITEM "查看源代碼(&V)", IDM_VIEWSOURCE
         MENUITEM SEPARATOR
         MENUITEM "語言編碼(&E)", IDM_LANGUAGE
         MENUITEM SEPARATOR
         MENUITEM "列印(&I)", IDM_PRINT
-        MENUITEM "刷新(&R)", _IDM_REFRESH
+        MENUITEM "重新整理(&R)", _IDM_REFRESH
         MENUITEM SEPARATOR
         MENUITEM "屬性(&P)", IDM_PROPERTIES
     }
@@ -322,8 +323,8 @@ IDR_BROWSE_CONTEXT_MENU MENU
         POPUP "選擇(&S)"
         {
             MENUITEM "格(&C)", IDM_CELLSELECT
-            MENUITEM "行(&R)", IDM_ROWSELECT
-            MENUITEM "列(&O)", IDM_COLUMNSELECT
+            MENUITEM "列(&R)", IDM_ROWSELECT
+            MENUITEM "行(&O)", IDM_COLUMNSELECT
             MENUITEM "表格(&T)", IDM_TABLESELECT
         }
         MENUITEM SEPARATOR
@@ -344,8 +345,8 @@ IDR_BROWSE_CONTEXT_MENU MENU
     POPUP "" /* Anchor */
     {
         MENUITEM "開啟(&O)", IDM_FOLLOWLINKC
-        MENUITEM "開啟新窗口(&N)", IDM_FOLLOWLINKN
-        MENUITEM "將目標存為(&A)...", IDM_SAVETARGET
+        MENUITEM "開啟新視窗(&N)", IDM_FOLLOWLINKN
+        MENUITEM "另存目標(&A)...", IDM_SAVETARGET
         MENUITEM "列印目標(&P)", IDM_PRINTTARGET
         MENUITEM SEPARATOR
         MENUITEM "剪下", IDM_CUT
@@ -353,7 +354,7 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM "複製捷徑(&T)", IDM_COPYSHORTCUT
         MENUITEM "貼上(&P)", IDM_PASTE
         MENUITEM SEPARATOR
-        MENUITEM "添加到我的最愛(&F)", IDM_ADDFAVORITES
+        MENUITEM "新增至我的最愛(&F)", IDM_ADDFAVORITES
         MENUITEM SEPARATOR
         MENUITEM "屬性(&R)", IDM_PROPERTIES
     }
@@ -366,12 +367,12 @@ IDR_BROWSE_CONTEXT_MENU MENU
     POPUP "" /* DYNSRC Image */
     {
         MENUITEM "開啟連結(&O)", IDM_FOLLOWLINKC
-        MENUITEM "在新窗口開啟連結(&N)", IDM_FOLLOWLINKN
-        MENUITEM "將目標存為(&A)...", IDM_SAVETARGET
+        MENUITEM "在新視窗開啟連結(&N)", IDM_FOLLOWLINKN
+        MENUITEM "另存目標(&A)...", IDM_SAVETARGET
         MENUITEM "列印目標(&P)", IDM_PRINTTARGET
         MENUITEM SEPARATOR
         MENUITEM "顯示圖片(&S)", IDM_SHOWPICTURE
-        MENUITEM "將視頻存為(&V)...", IDM_SAVEPICTURE
+        MENUITEM "將視訊另存為(&V)...", IDM_SAVEPICTURE
         MENUITEM "設為背景(&G)", IDM_SETWALLPAPER
         MENUITEM "設為桌面項目(&D)...", IDM_SETDESKTOPITEM
         MENUITEM SEPARATOR
@@ -380,7 +381,7 @@ IDR_BROWSE_CONTEXT_MENU MENU
         MENUITEM "複製捷徑(&T)", IDM_COPYSHORTCUT
         MENUITEM "貼上(&P)", IDM_PASTE
         MENUITEM SEPARATOR
-        MENUITEM "添加到我的最愛(&F)", IDM_ADDFAVORITES
+        MENUITEM "新增至我的最愛(&F)", IDM_ADDFAVORITES
         MENUITEM SEPARATOR
         MENUITEM "播放", IDM_DYNSRCPLAY
         MENUITEM "停止", IDM_DYNSRCSTOP
@@ -391,11 +392,11 @@ IDR_BROWSE_CONTEXT_MENU MENU
     {
         MENUITEM "開啟連結(&O)", IDM_FOLLOWLINKC
         MENUITEM "在新窗口開啟連結(&N)", IDM_FOLLOWLINKN
-        MENUITEM "將目標存為(&A)", IDM_SAVETARGET
+        MENUITEM "另存目標(&A)", IDM_SAVETARGET
         MENUITEM "列印目標(&P)", IDM_PRINTTARGET
         MENUITEM SEPARATOR
         MENUITEM "顯示圖片(&S)", IDM_SHOWPICTURE
-        MENUITEM "將圖片存為(&A)", IDM_SAVEPICTURE
+        MENUITEM "另存圖片(&A)", IDM_SAVEPICTURE
         MENUITEM "設為背景(&G)", IDM_SETWALLPAPER
         MENUITEM "設為桌面項目(&D)...", IDM_SETDESKTOPITEM
         MENUITEM SEPARATOR
@@ -415,30 +416,30 @@ IDR_BROWSE_CONTEXT_MENU MENU
 
     POPUP "" /* Debug */
     {
-        MENUITEM "跟蹤標記", IDM_TRACETAGS
+        MENUITEM "追蹤標籤", IDM_TRACETAGS
         MENUITEM "資源失敗", IDM_RESOURCEFAILURES
-        MENUITEM "輸出跟蹤資訊", IDM_DUMPTRACKINGINFO
-        MENUITEM "調試停點", IDM_DEBUGBREAK
-        MENUITEM "調試檢視", IDM_DEBUGVIEW
-        MENUITEM "輸出 Tree", IDM_DUMPTREE
-        MENUITEM "輸出 Lines", IDM_DUMPLINES
-        MENUITEM "輸出 DisplayTree", IDM_DUMPDISPLAYTREE
-        MENUITEM "輸出 FormatCaches", IDM_DUMPFORMATCACHES
-        MENUITEM "輸出 LayoutRects", IDM_DUMPLAYOUTRECTS
-        MENUITEM "內存監視器", IDM_MEMORYMONITOR
-        MENUITEM "性能表", IDM_PERFORMANCEMETERS
+        MENUITEM "傾印追蹤資訊", IDM_DUMPTRACKINGINFO
+        MENUITEM "除錯中斷", IDM_DEBUGBREAK
+        MENUITEM "除錯檢視", IDM_DEBUGVIEW
+        MENUITEM "傾印 Tree", IDM_DUMPTREE
+        MENUITEM "傾印 Lines", IDM_DUMPLINES
+        MENUITEM "傾印 DisplayTree", IDM_DUMPDISPLAYTREE
+        MENUITEM "傾印 FormatCaches", IDM_DUMPFORMATCACHES
+        MENUITEM "傾印 LayoutRects", IDM_DUMPLAYOUTRECTS
+        MENUITEM "記憶體監控", IDM_MEMORYMONITOR
+        MENUITEM "效能量尺", IDM_PERFORMANCEMETERS
         MENUITEM "儲存 HTML", IDM_SAVEHTML
         MENUITEM SEPARATOR
-        MENUITEM "瀏覽(&B)", IDM_BROWSEMODE
-        MENUITEM "編輯(&E)", IDM_EDITMODE
+        MENUITEM "瀏覽檢視(&B)", IDM_BROWSEMODE
+        MENUITEM "編輯檢視(&E)", IDM_EDITMODE
     }
 
     POPUP "" /* Vertical Scrollbar */
     {
         MENUITEM "滾動這裡", IDM_SCROLL_HERE
         MENUITEM SEPARATOR
-        MENUITEM "頂", IDM_SCROLL_TOP
-        MENUITEM "低", IDM_SCROLL_BOTTOM
+        MENUITEM "頂端", IDM_SCROLL_TOP
+        MENUITEM "底端", IDM_SCROLL_BOTTOM
         MENUITEM SEPARATOR
         MENUITEM "向上翻頁", IDM_SCROLL_PAGEUP
         MENUITEM "向下翻頁", IDM_SCROLL_PAGEDOWN

@@ -1,0 +1,54 @@
+// Chinese Traditional (zh-TW) resources by Chan Chilung <eason066@gmail.com> 2021
+
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
+
+// Dialog
+
+DLG_SCRNSAVECONFIGURE DIALOGEX 0, 0, 292, 282
+STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION
+CAPTION "設定"
+FONT 9, "新細明體"
+BEGIN
+    GROUPBOX        "選項",IDC_STATIC,16,100,260,76
+    RTEXT           "恒星數目:",IDC_STATIC,24,116,68,12,
+                    SS_CENTERIMAGE
+    CONTROL         "Slider1",IDC_SLIDER_NUM_OF_STARS,"msctls_trackbar32",
+                    TBS_BOTH | TBS_NOTICKS | WS_TABSTOP,96,116,140,12
+    CTEXT           "Static",IDC_TEXT_NUM_OF_STARS,240,116,24,12,
+                    SS_CENTERIMAGE,WS_EX_STATICEDGE
+    RTEXT           "速度:",IDC_STATIC,24,137,68,12,SS_CENTERIMAGE
+    CONTROL         "Slider1",IDC_SLIDER_SPEED,"msctls_trackbar32",TBS_BOTH | 
+                    TBS_NOTICKS | WS_TABSTOP,96,137,140,12
+    CTEXT           "Static",IDC_TEXT_SPEED,240,137,24,12,SS_CENTERIMAGE,
+                    WS_EX_STATICEDGE
+    RTEXT           "旋轉:",IDC_STATIC,24,156,68,12,SS_CENTERIMAGE
+    COMBOBOX        IDC_COMBO_ROTATION,100,156,80,60,CBS_DROPDOWNLIST | 
+                    WS_TABSTOP
+    CONTROL         "",IDC_IMAGE_COSMOS,"Static",SS_BITMAP | SS_CENTERIMAGE,
+                    4,4,284,92
+    GROUPBOX        "進階",IDC_STATIC,16,180,260,72
+    CONTROL         "啟用背景混合",IDC_CHECK_DOBLENDING,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,24,196,160,10
+    CONTROL         "啟用準確的角度校正",
+                    IDC_CHECK_PERSPECTIVE,"Button",BS_AUTOCHECKBOX | 
+                    WS_TABSTOP,24,208,160,10
+    CONTROL         "啟用紋理過濾",IDC_CHECK_FILTERING,
+                    "Button",BS_AUTOCHECKBOX | WS_TABSTOP,24,220,160,10
+    CONTROL         "啟用光滑著色",IDC_CHECK_SHADING,"Button",
+                    BS_AUTOCHECKBOX | WS_TABSTOP,24,232,160,10
+    PUSHBUTTON      "確定",IDOK,60,260,52,16
+    PUSHBUTTON      "取消",IDCANCEL,120,260,52,16
+    PUSHBUTTON      "關於",IDC_BUTTON_ABOUT,179,260,52,16
+END
+
+// String Tables
+
+STRINGTABLE DISCARDABLE 
+BEGIN
+    IDS_DESCRIPTION         "恒星"
+    IDS_ROTATION_NONE       "無"
+    IDS_ROTATION_LINEAR     "線性"
+    IDS_ROTATION_PERIODIC   "循環"
+    IDS_LICENSE             "恒星是在 GNU GPL 許可證下發佈的免費軟件。"
+    IDS_AUTHOR              "開發者：Carlo Bramini"
+END

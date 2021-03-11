@@ -4,7 +4,7 @@
  * FILE:       base/applications/sndrec32/lang/zh-TW.rc
  * PURPOSE:    Chinese (Traditional) resource file
  * TRANSLATOR: Elton Chung aka MfldElton <elton328@gmail.com>
- *             Aobi Chan CL <eason066@gmail.com>
+ *             Chan Chilung <eason066@gmail.com>
  */
 
 LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_TRADITIONAL
@@ -20,10 +20,10 @@ BEGIN
     POPUP "檔案"
     BEGIN
         MENUITEM "新增(&N)", ID_FILE_NEW
-        MENUITEM "開啟...(&O)", ID_FILE_OPEN
+        MENUITEM "開啟(&O)...", ID_FILE_OPEN
         MENUITEM "儲存(&S)", ID_FILE_SAVE, GRAYED
-        MENUITEM "另存新檔...(&A)", ID_FILE_SAVEAS, GRAYED
-        MENUITEM "還原...(&R)", ID_FILE_RESTORE, GRAYED
+        MENUITEM "另存新檔(&A)...", ID_FILE_SAVEAS, GRAYED
+        MENUITEM "還原(&R)...", ID_FILE_RESTORE, GRAYED
         MENUITEM "內容(&P)", ID_FILE_PROPERTIES
         MENUITEM SEPARATOR
         MENUITEM "結束(&X)", ID_FILE_EXIT
@@ -34,11 +34,11 @@ BEGIN
         MENUITEM "貼上插入(&P)", ID_EDIT_PASTE, GRAYED
         MENUITEM "貼上混合(&X)", ID_EDIT_PASTEMIX, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "插入檔案...(&I)", ID_EDIT_INSERTFILE
-        MENUITEM "與檔案混合...(&M)", ID_EDIT_MIXFILE
+        MENUITEM "插入檔案(&I)...", ID_EDIT_INSERTFILE
+        MENUITEM "與檔案混合(&M)...", ID_EDIT_MIXFILE
         MENUITEM SEPARATOR
-        MENUITEM "刪除當前位置之前的內容(&B)",ID_EDIT_DELETEBEFORE, GRAYED
-        MENUITEM "刪除當前位置之後的內容(&A)",ID_EDIT_DELETEAFTER, GRAYED
+        MENUITEM "刪除目前位置之前的內容(&B)",ID_EDIT_DELETEBEFORE, GRAYED
+        MENUITEM "刪除目前位置之後的內容(&A)",ID_EDIT_DELETEAFTER, GRAYED
         MENUITEM SEPARATOR
         MENUITEM "音訊內容(&U)", ID_EDIT_AUDIOPROPS
     END
