@@ -251,7 +251,8 @@ STDMETHODIMP CACListISF::Next(ULONG celt, LPOLESTR *rgelt, ULONG *pceltFetched)
             if (m_dwOptions & (ACLO_FILESYSONLY | ACLO_FILESYSDIRS))
             {
                 DWORD attrs = SFGAO_FILESYSANCESTOR | SFGAO_FILESYSTEM;
-                hr = m_pShellFolder->GetAttributesOf(1, const_cast<LPCITEMIDLIST *>(&pidlChild), &attrs);
+                LPCITEMIDLIST pidlRef = pidlChild;
+                hr = m_pShellFolder->GetAttributesOf(1, &pidlRef, &attrs);
                 if (SUCCEEDED(hr))
                 {
                    if (!(attrs & (SFGAO_FILESYSTEM | SFGAO_FILESYSANCESTOR)))
