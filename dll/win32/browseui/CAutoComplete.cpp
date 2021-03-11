@@ -1781,7 +1781,8 @@ LRESULT CAutoComplete::OnMeasureItem(UINT uMsg, WPARAM wParam, LPARAM lParam, BO
     ATLASSERT(pMeasure != NULL);
     if (pMeasure->CtlType != ODT_LISTVIEW)
         return FALSE;
-
+    if (!m_hwndList)
+        return FALSE;
     ATLASSERT(m_hwndList.GetStyle() & LVS_OWNERDRAWFIXED);
     pMeasure->itemHeight = m_hwndList.m_cyItem; // height of item
     return TRUE;
