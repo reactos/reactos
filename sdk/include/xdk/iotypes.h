@@ -1216,6 +1216,9 @@ typedef enum {
   DevicePropertyAllocatedResources = 0x15,
   DevicePropertyContainerID = 0x16 | __string_type
 } DEVICE_REGISTRY_PROPERTY;
+#undef __string_type
+#undef __guid_type
+#undef __multiString_type
 
 typedef enum _IO_NOTIFICATION_EVENT_CATEGORY {
   EventCategoryReserved,
