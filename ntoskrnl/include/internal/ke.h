@@ -142,7 +142,6 @@ extern ULONG KeTimeIncrement;
 extern ULONG KeTimeAdjustment;
 extern BOOLEAN KiTimeAdjustmentEnabled;
 extern LONG KiTickOffset;
-extern ULONG_PTR KiBugCheckData[5];
 extern ULONG KiFreezeFlag;
 extern ULONG KiDPCTimeout;
 extern PGDI_BATCHFLUSH_ROUTINE KeGdiFlushUserBatch;
