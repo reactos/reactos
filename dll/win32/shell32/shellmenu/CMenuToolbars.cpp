@@ -398,7 +398,8 @@ HRESULT CMenuToolbarBase::CreateToolbar(HWND hwndParent, DWORD dwFlags)
         rc.bottom = 1;
     }
 
-    CToolbar::Create(hwndParent, tbStyles, tbExStyles);
+    // HACK & FIXME: CORE-17505
+    SubclassWindow(CToolbar::Create(hwndParent, tbStyles, tbExStyles));
 
     SetWindowTheme(m_hWnd, L"", L"");
 

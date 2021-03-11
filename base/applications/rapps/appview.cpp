@@ -989,6 +989,7 @@ VOID CAppInfoDisplay::ResizeChildren(int Width, int Height)
 #if DBG
     ATLASSERT(dwError == ERROR_SUCCESS);
 #endif
+    UNREFERENCED_PARAMETER(dwError);
 
     UpdateWindow();
 }

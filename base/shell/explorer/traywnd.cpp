@@ -200,10 +200,8 @@ public:
 
     VOID Initialize()
     {
-        //HACK: We have not created this button properly, so we need to subclass it now!
-        HWND button = m_hWnd;
-        m_hWnd = NULL;
-        SubclassWindow(button);
+        // HACK & FIXME: CORE-17505
+        SubclassWindow(m_hWnd);
 
         SetWindowTheme(m_hWnd, L"Start", NULL);
 
