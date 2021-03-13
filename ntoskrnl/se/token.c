@@ -1,10 +1,9 @@
 /*
- * COPYRIGHT:       See COPYING in the top level directory
- * PROJECT:         ReactOS kernel
- * FILE:            ntoskrnl/se/token.c
- * PURPOSE:         Security manager
- *
- * PROGRAMMERS:     David Welch <welch@cwcom.net>
+ * PROJECT:         ReactOS Kernel
+ * LICENSE:         GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:         Security token implementation support
+ * COPYRIGHT:       Copyright David Welch <welch@cwcom.net>
+ *                  Copyright 2021 George Bișoc <george.bisoc@reactos.org>
  */
 
 /* INCLUDES *******************************************************************/
@@ -1527,6 +1526,135 @@ SepCreateSystemProcessToken(VOID)
     ASSERT(Status == STATUS_SUCCESS);
 
     /* Return the token */
+    return Token;
+}
+
+/**
+ * @brief
+ * Creates the anonymous logon token for the system. The difference between this
+ * token and the other one is the inclusion of everyone SID group (being SeWorldSid).
+ * The other token lacks such group.
+ *
+ * @return
+ * Returns the system's anonymous logon token if the operations have
+ * completed successfully.
+ */
+CODE_SEG("INIT")
+PTOKEN
+SepCreateSystemAnonymousLogonToken(VOID)
+{
+    SID_AND_ATTRIBUTES Groups[32], UserSid;
+    PSID PrimaryGroup;
+    PTOKEN Token;
+    ULONG GroupsLength;
+    LARGE_INTEGER Expiration;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    NTSTATUS Status;
+
+    /* The token never expires */
+    Expiration.QuadPart = -1;
+
+    /* The user is the anonymous logon */
+    UserSid.Sid = SeAnonymousLogonSid;
+    UserSid.Attributes = 0;
+
+    /* The primary group is also the anonymous logon */
+    PrimaryGroup = SeAnonymousLogonSid;
+
+    /* The only group for the token is the World */
+    Groups[0].Sid = SeWorldSid;
+    Groups[0].Attributes = SE_GROUP_ENABLED | SE_GROUP_MANDATORY | SE_GROUP_ENABLED_BY_DEFAULT;
+    GroupsLength = sizeof(SID_AND_ATTRIBUTES) +
+                   SeLengthSid(Groups[0].Sid);
+    ASSERT(GroupsLength <= sizeof(Groups));
+
+    /* Initialise the object attributes for the token */
+    InitializeObjectAttributes(&ObjectAttributes, NULL, 0, NULL, NULL);
+    ASSERT(SeSystemAnonymousLogonDacl != NULL);
+
+    /* Create token */
+    Status = SepCreateToken((PHANDLE)&Token,
+                            KernelMode,
+                            0,
+                            &ObjectAttributes,
+                            TokenPrimary,
+                            SecurityAnonymous,
+                            &SeAnonymousAuthenticationId,
+                            &Expiration,
+                            &UserSid,
+                            1,
+                            Groups,
+                            GroupsLength,
+                            0,
+                            NULL,
+                            NULL,
+                            PrimaryGroup,
+                            SeSystemAnonymousLogonDacl,
+                            &SeSystemTokenSource,
+                            TRUE);
+    ASSERT(Status == STATUS_SUCCESS);
+
+    /* Return the anonymous logon token */
+    return Token;
+}
+
+/**
+ * @brief
+ * Creates the anonymous logon token for the system. This kind of token
+ * doesn't include the everyone SID group (being SeWorldSid).
+ *
+ * @return
+ * Returns the system's anonymous logon token if the operations have
+ * completed successfully.
+ */
+CODE_SEG("INIT")
+PTOKEN
+SepCreateSystemAnonymousLogonTokenNoEveryone(VOID)
+{
+    SID_AND_ATTRIBUTES UserSid;
+    PSID PrimaryGroup;
+    PTOKEN Token;
+    LARGE_INTEGER Expiration;
+    OBJECT_ATTRIBUTES ObjectAttributes;
+    NTSTATUS Status;
+
+    /* The token never expires */
+    Expiration.QuadPart = -1;
+
+    /* The user is the anonymous logon */
+    UserSid.Sid = SeAnonymousLogonSid;
+    UserSid.Attributes = 0;
+
+    /* The primary group is also the anonymous logon */
+    PrimaryGroup = SeAnonymousLogonSid;
+
+    /* Initialise the object attributes for the token */
+    InitializeObjectAttributes(&ObjectAttributes, NULL, 0, NULL, NULL);
+    ASSERT(SeSystemAnonymousLogonDacl != NULL);
+
+    /* Create token */
+    Status = SepCreateToken((PHANDLE)&Token,
+                            KernelMode,
+                            0,
+                            &ObjectAttributes,
+                            TokenPrimary,
+                            SecurityAnonymous,
+                            &SeAnonymousAuthenticationId,
+                            &Expiration,
+                            &UserSid,
+                            0,
+                            NULL,
+                            0,
+                            0,
+                            NULL,
+                            NULL,
+                            PrimaryGroup,
+                            SeSystemAnonymousLogonDacl,
+                            &SeSystemTokenSource,
+                            TRUE);
+    ASSERT(Status == STATUS_SUCCESS);
+
+    /* Return the anonymous (not including everyone) logon token */
     return Token;
 }
 
