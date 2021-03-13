@@ -198,6 +198,10 @@ extern PSECURITY_DESCRIPTOR SeSystemDefaultSd;
 extern PSECURITY_DESCRIPTOR SeUnrestrictedSd;
 extern PSECURITY_DESCRIPTOR SeSystemAnonymousLogonSd;
 
+/* Anonymous Logon Tokens */
+extern PTOKEN SeAnonymousLogonToken;
+extern PTOKEN SeAnonymousLogonTokenNoEveryone;
+
 
 #define SepAcquireTokenLockExclusive(Token)                                    \
 {                                                                              \
