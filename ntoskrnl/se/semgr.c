@@ -15,6 +15,8 @@
 
 /* GLOBALS ********************************************************************/
 
+PTOKEN SeAnonymousLogonToken = NULL;
+PTOKEN SeAnonymousLogonTokenNoEveryone = NULL;
 PSE_EXPORTS SeExports = NULL;
 SE_EXPORTS SepExports;
 ULONG SidInTokenCalls = 0;
@@ -122,6 +124,16 @@ SepInitializationPhase0(VOID)
     ObInitializeFastReference(&PsGetCurrentProcess()->Token, NULL);
     ObInitializeFastReference(&PsGetCurrentProcess()->Token,
                               SepCreateSystemProcessToken());
+
+    /* Initialise the anonymous logon tokens */
+    SeAnonymousLogonToken = SepCreateSystemAnonymousLogonToken();
+    if (!SeAnonymousLogonToken)
+        return FALSE;
+
+    SeAnonymousLogonTokenNoEveryone = SepCreateSystemAnonymousLogonTokenNoEveryone();
+    if (!SeAnonymousLogonTokenNoEveryone)
+        return FALSE;
+
     return TRUE;
 }
 
