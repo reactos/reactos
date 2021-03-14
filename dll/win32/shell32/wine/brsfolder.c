@@ -788,6 +788,22 @@ static BOOL BrsFolder_OnCreate( HWND hWnd, browse_info *info )
         RECT rcWnd;
 
 #ifdef __REACTOS__
+        /* Resize the treeview if there's not editbox */
+        if ((lpBrowseInfo->ulFlags & BIF_NEWDIALOGSTYLE)
+            && !(lpBrowseInfo->ulFlags & BIF_EDITBOX))
+        {
+            RECT rcEdit, rcTreeView;
+            INT cy;
+            GetWindowRect(GetDlgItem(hWnd, IDC_BROWSE_FOR_FOLDER_FOLDER_TEXT), &rcEdit);
+            GetWindowRect(GetDlgItem(hWnd, IDC_BROWSE_FOR_FOLDER_TREEVIEW), &rcTreeView);
+            cy = rcTreeView.top - rcEdit.top;
+            MapWindowPoints(NULL, hWnd, (LPPOINT)&rcTreeView, sizeof(RECT) / sizeof(POINT));
+            rcTreeView.top -= cy;
+            MoveWindow(GetDlgItem(hWnd, IDC_BROWSE_FOR_FOLDER_TREEVIEW),
+                       rcTreeView.left, rcTreeView.top,
+                       rcTreeView.right - rcTreeView.left,
+                       rcTreeView.bottom - rcTreeView.top, TRUE);
+        }
         if (lpBrowseInfo->ulFlags & BIF_NEWDIALOGSTYLE)
             info->layout = LayoutInit(hWnd, g_layout_info, LAYOUT_INFO_COUNT);
         else
