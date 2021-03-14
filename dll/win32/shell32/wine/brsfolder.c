@@ -863,11 +863,12 @@ static BOOL BrsFolder_OnCreate( HWND hWnd, browse_info *info )
     info->hNotify = SHChangeNotifyRegister(hWnd, SHCNRF_InterruptLevel, SHCNE_ALLEVENTS, SHV_CHANGE_NOTIFY, 1, &ntreg);
 
 #ifdef __REACTOS__
-    SetFocus(info->hwndTreeView);
+    SetFocus(info->hwndTreeView); /* for selection */
 #endif
     browsefolder_callback( info->lpBrowseInfo, hWnd, BFFM_INITIALIZED, 0 );
 
 #ifdef __REACTOS__
+    SendDlgItemMessage(hWnd, IDC_BROWSE_FOR_FOLDER_FOLDER_TEXT, EM_SETSEL, 0, -1);
     SetFocus(GetDlgItem(hWnd, IDOK));
     return FALSE;
 #else
