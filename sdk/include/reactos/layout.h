@@ -67,6 +67,16 @@ _layout_MoveGrip(LAYOUT_DATA *pData, HDWP hDwp OPTIONAL)
 static __inline void
 LayoutShowGrip(LAYOUT_DATA *pData, BOOL bShow)
 {
+    UINT uSWP = SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE |
+                SWP_NOZORDER | SWP_NOOWNERZORDER | SWP_FRAMECHANGED;
+    DWORD style = GetWindowLongPtrW(pData->m_hwndParent, GWL_STYLE);
+    DWORD new_style = (bShow ? (style | WS_SIZEBOX) : (style & ~WS_SIZEBOX));
+    if (style != new_style)
+    {
+        SetWindowLongPtrW(pData->m_hwndParent, GWL_STYLE, new_style); /* change style */
+        SetWindowPos(pData->m_hwndParent, NULL, 0, 0, 0, 0, uSWP); /* frame changed */
+    }
+
     if (!bShow)
     {
         ShowWindow(pData->m_hwndGrip, SW_HIDE);
