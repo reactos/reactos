@@ -810,11 +810,7 @@ static BOOL BrsFolder_OnCreate( HWND hWnd, browse_info *info )
 
     /* Hide "Make New Folder" Button? */
     if ((lpBrowseInfo->ulFlags & BIF_NONEWFOLDERBUTTON)
-#ifdef __REACTOS__
-        || !(lpBrowseInfo->ulFlags & BIF_USENEWUI))
-#else
         || !(lpBrowseInfo->ulFlags & BIF_NEWDIALOGSTYLE))
-#endif
         ShowWindow( GetDlgItem(hWnd, IDC_BROWSE_FOR_FOLDER_NEW_FOLDER), SW_HIDE );
 
     /* Hide the editbox? */
