@@ -231,7 +231,18 @@ LayoutInit(HWND hwndParent, const LAYOUT_INFO *pLayouts, INT cLayouts)
 
     pData->m_hwndGrip = NULL;
     if (bShowGrip)
+    {
+        UINT uSWP_ = SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE |
+                     SWP_NOZORDER | SWP_NOOWNERZORDER | SWP_FRAMECHANGED;
+        DWORD style = GetWindowLongPtrW(hwndParent, GWL_STYLE);
+        if (!(style & WS_SIZEBOX))
+        {
+            style |= WS_SIZEBOX;
+            SetWindowLongPtrW(hwndParent, GWL_STYLE, style);
+            SetWindowPos(hwndParent, NULL, 0, 0, 0, 0, uSWP_);
+        }
         LayoutShowGrip(pData, bShowGrip);
+    }
 
     _layout_InitLayouts(pData);
     return pData;

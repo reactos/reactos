@@ -783,7 +783,14 @@ static BOOL BrsFolder_OnCreate( HWND hWnd, browse_info *info )
     {
         RECT rcWnd;
 
+#ifdef __REACTOS__
+        if (lpBrowseInfo->ulFlags & BIF_NEWDIALOGSTYLE)
+            info->layout = LayoutInit(hWnd, g_layout_info, LAYOUT_INFO_COUNT);
+        else
+            info->layout = NULL;
+#else
         info->layout = LayoutInit(hWnd, g_layout_info, LAYOUT_INFO_COUNT);
+#endif
 
         /* TODO: Windows allows shrinking the windows a bit */
         GetWindowRect(hWnd, &rcWnd);
