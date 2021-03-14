@@ -1,9 +1,8 @@
 /*
- * PROJECT:         ReactOS HAL
- * LICENSE:         GPL - See COPYING in the top level directory
- * FILE:            hal/halx86/up/processor.c
- * PURPOSE:         HAL Processor Routines
- * PROGRAMMERS:     Alex Ionescu (alex.ionescu@reactos.org)
+ * PROJECT:     ReactOS Hardware Abstraction Layer
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     HAL Processor Routines
+ * COPYRIGHT:   Copyright 2010 Timo Kreuzer <timo.kreuzer@reactos.org>
  */
 
 /* INCLUDES ******************************************************************/
@@ -27,7 +26,6 @@ HaliHaltSystem(VOID)
 }
 
 /* FUNCTIONS *****************************************************************/
-
 
 /*
  * @implemented
@@ -71,7 +69,7 @@ VOID
 NTAPI
 HalRequestIpi(KAFFINITY TargetProcessors)
 {
-    /* Not implemented on UP */
+    UNIMPLEMENTED;
     __debugbreak();
 }
 

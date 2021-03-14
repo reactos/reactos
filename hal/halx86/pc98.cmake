@@ -27,12 +27,13 @@ list(APPEND HAL_PC98_ASM_SOURCE
 list(APPEND HAL_PC98_SOURCE
     pc98/irql.c
     generic/timer.c
-    up/halinit_up.c
-    up/pic.c)
+    pic/halinit.c
+    pic/pic.c
+    pic/processor.c)
 
 list(APPEND HAL_PC98_ASM_SOURCE
     generic/trap.S
-    up/pic.S)
+    pic/pic.S)
 
 # Legacy
 list(APPEND HAL_PC98_SOURCE

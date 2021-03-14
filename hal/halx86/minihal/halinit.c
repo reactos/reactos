@@ -1,11 +1,8 @@
 /*
- * COPYRIGHT:     See COPYING in the top level directory
- * PROJECT:       ReactOS kernel
- * FILE:          hal/halx86/up/halinit_mini.c
- * PURPOSE:       Initialize the x86 hal
- * PROGRAMMER:    David Welch (welch@cwcom.net)
- * UPDATE HISTORY:
- *              11/06/98: Created
+ * PROJECT:     ReactOS Mini-HAL
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Initialize the x86 HAL
+ * COPYRIGHT:   Copyright 1998 David Welch <welch@cwcom.net>
  */
 
 /* INCLUDES *****************************************************************/

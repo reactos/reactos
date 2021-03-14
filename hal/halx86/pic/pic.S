@@ -1,8 +1,8 @@
 /*
- * FILE:            hal/halx86/up/pic.S
- * COPYRIGHT:       See COPYING in the top level directory
- * PURPOSE:         HAL PIC Management and Control Code
- * PROGRAMMER:      Thomas Faber (thomas.faber@reactos.org)
+ * PROJECT:     ReactOS Hardware Abstraction Layer
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     HAL PIC Management and Control Code
+ * COPYRIGHT:   Copyright 2016-2018 Thomas Faber <thomas.faber@reactos.org>
  */
 
 /* INCLUDES ******************************************************************/

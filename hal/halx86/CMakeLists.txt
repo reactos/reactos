@@ -44,11 +44,11 @@ endfunction()
 include(generic.cmake)
 include(acpi.cmake)
 include(apic.cmake)
+include(up.cmake)
 
 if(ARCH STREQUAL "i386")
     include(pcidata.cmake)
     include(legacy.cmake)
-    include(up.cmake)
     include(pic.cmake)
     include(xbox.cmake)
     include(pc98.cmake)
@@ -58,7 +58,7 @@ if(ARCH STREQUAL "i386")
     remove_definitions(-DSARCH_PC98)
 
     # hal
-    add_hal(hal SOURCES up/halup.rc COMPONENTS generic legacy up pic)
+    add_hal(hal SOURCES pic/halpic.rc COMPONENTS generic legacy up pic)
     add_hal(halacpi SOURCES acpi/halacpi.rc COMPONENTS generic acpi up pic)
     add_hal(halapic SOURCES acpi/halacpi.rc COMPONENTS generic legacy up apic)
     add_hal(halaacpi SOURCES acpi/halacpi.rc COMPONENTS generic acpi up apic)
@@ -73,12 +73,10 @@ if(ARCH STREQUAL "i386")
 elseif(ARCH STREQUAL "amd64")
 
     list(APPEND HAL_SOURCE
-        generic/spinlock.c
         amd64/x86bios.c
-        amd64/halinit.c
-        amd64/processor.c)
+        amd64/halinit.c)
 
-    add_hal(hal SOURCES ${HAL_SOURCE} COMPONENTS generic acpi apic)
+    add_hal(hal SOURCES ${HAL_SOURCE} COMPONENTS generic acpi up apic)
     target_link_libraries(hal fast486)
 
 endif()

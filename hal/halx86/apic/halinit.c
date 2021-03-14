@@ -1,9 +1,8 @@
 /*
- * COPYRIGHT:     See COPYING in the top level directory
- * PROJECT:       ReactOS kernel
- * FILE:          hal/halx86/apic/halinit_apic.c
- * PURPOSE:       Initialize the x86 hal
- * PROGRAMMER:    Timo Kreuzer (timo.kreuzer@reactos.org)
+ * PROJECT:     ReactOS Hardware Abstraction Layer
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Initialize the x86 HAL
+ * COPYRIGHT:   Copyright 2011 Timo Kreuzer <timo.kreuzer@reactos.org>
  */
 
 /* INCLUDES *****************************************************************/
