@@ -66,9 +66,6 @@ typedef struct tagbrowse_info
     SIZE          szMin;
     ULONG         hNotify; /* change notification handle */
 } browse_info;
-#ifdef __REACTOS__
-static BOOL BrsFolder_OnSetSelectionW(browse_info *info, LPVOID selection, BOOL is_str);
-#endif
 
 typedef struct tagTV_ITEMDATA
 {
@@ -863,7 +860,7 @@ static BOOL BrsFolder_OnCreate( HWND hWnd, browse_info *info )
     info->hNotify = SHChangeNotifyRegister(hWnd, SHCNRF_InterruptLevel, SHCNE_ALLEVENTS, SHV_CHANGE_NOTIFY, 1, &ntreg);
 
 #ifdef __REACTOS__
-    SetFocus(info->hwndTreeView); /* for selection: FIXME */
+    SetFocus(info->hwndTreeView);
 #endif
     browsefolder_callback( info->lpBrowseInfo, hWnd, BFFM_INITIALIZED, 0 );
 
