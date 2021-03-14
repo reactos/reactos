@@ -91,10 +91,10 @@ static const LAYOUT_INFO g_layout_info[] =
     {IDC_BROWSE_FOR_FOLDER_FOLDER,        BF_TOP|BF_LEFT|BF_RIGHT},
 #endif
     {IDC_BROWSE_FOR_FOLDER_TREEVIEW,      BF_TOP|BF_BOTTOM|BF_LEFT|BF_RIGHT},
-    {IDC_BROWSE_FOR_FOLDER_FOLDER,        BF_BOTTOM|BF_LEFT},
 #ifdef __REACTOS__
     {IDC_BROWSE_FOR_FOLDER_FOLDER_TEXT,   BF_TOP|BF_LEFT|BF_RIGHT},
 #else
+    {IDC_BROWSE_FOR_FOLDER_FOLDER,        BF_BOTTOM|BF_LEFT},
     {IDC_BROWSE_FOR_FOLDER_FOLDER_TEXT,    BF_BOTTOM|BF_LEFT|BF_RIGHT},
 #endif
     {IDC_BROWSE_FOR_FOLDER_NEW_FOLDER, BF_BOTTOM|BF_LEFT},
@@ -836,6 +836,7 @@ static BOOL BrsFolder_OnCreate( HWND hWnd, browse_info *info )
     {
         InitializeTreeView( info );
 
+#ifndef __REACTOS__
         /* Resize the treeview if there's not editbox */
         if ((lpBrowseInfo->ulFlags & BIF_NEWDIALOGSTYLE)
             && !(lpBrowseInfo->ulFlags & BIF_EDITBOX))
@@ -845,6 +846,7 @@ static BOOL BrsFolder_OnCreate( HWND hWnd, browse_info *info )
             SetWindowPos(info->hwndTreeView, HWND_TOP, 0, 0,
                          rc.right, rc.bottom + 40, SWP_NOMOVE);
         }
+#endif
     }
     else
         ERR("treeview control missing!\n");
