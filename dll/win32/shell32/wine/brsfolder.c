@@ -676,7 +676,11 @@ static LRESULT BrsFolder_Treeview_Keydown(browse_info *info, LPNMTVKEYDOWN keydo
     HTREEITEM selected_item;
 
     /* Old dialog doesn't support those advanced features */
+#ifdef __REACTOS__
+    if (!(info->lpBrowseInfo->ulFlags & BIF_USENEWUI))
+#else
     if (!(info->lpBrowseInfo->ulFlags & BIF_NEWDIALOGSTYLE))
+#endif
         return 0;
 
     selected_item = (HTREEITEM)SendMessageW(info->hwndTreeView, TVM_GETNEXTITEM, TVGN_CARET, 0);
@@ -771,7 +775,11 @@ static BOOL BrsFolder_OnCreate( HWND hWnd, browse_info *info )
     if (lpBrowseInfo->ulFlags & ~SUPPORTEDFLAGS)
 	FIXME("flags %x not implemented\n", lpBrowseInfo->ulFlags & ~SUPPORTEDFLAGS);
 
+#ifdef __REACTOS__
+    if (lpBrowseInfo->ulFlags & BIF_USENEWUI)
+#else
     if (lpBrowseInfo->ulFlags & BIF_NEWDIALOGSTYLE)
+#endif
     {
         RECT rcWnd;
 
@@ -793,12 +801,20 @@ static BOOL BrsFolder_OnCreate( HWND hWnd, browse_info *info )
 	ShowWindow( GetDlgItem(hWnd, IDC_BROWSE_FOR_FOLDER_TITLE), SW_HIDE );
 
     if (!(lpBrowseInfo->ulFlags & BIF_STATUSTEXT)
+#ifdef __REACTOS__
+        || (lpBrowseInfo->ulFlags & BIF_USENEWUI))
+#else
         || (lpBrowseInfo->ulFlags & BIF_NEWDIALOGSTYLE))
+#endif
 	ShowWindow( GetDlgItem(hWnd, IDC_BROWSE_FOR_FOLDER_STATUS), SW_HIDE );
 
     /* Hide "Make New Folder" Button? */
     if ((lpBrowseInfo->ulFlags & BIF_NONEWFOLDERBUTTON)
+#ifdef __REACTOS__
+        || !(lpBrowseInfo->ulFlags & BIF_USENEWUI))
+#else
         || !(lpBrowseInfo->ulFlags & BIF_NEWDIALOGSTYLE))
+#endif
         ShowWindow( GetDlgItem(hWnd, IDC_BROWSE_FOR_FOLDER_NEW_FOLDER), SW_HIDE );
 
     /* Hide the editbox? */
@@ -1139,7 +1155,11 @@ static BOOL BrsFolder_OnSetSelectionA(browse_info *info, LPVOID selection, BOOL 
 #ifndef __REACTOS__ /* This is a buggy way (resize on title bar) */
 static LRESULT BrsFolder_OnWindowPosChanging(browse_info *info, WINDOWPOS *pos)
 {
+#ifdef __REACTOS__
+    if ((info->lpBrowseInfo->ulFlags & BIF_USENEWUI) && !(pos->flags & SWP_NOSIZE))
+#else
     if ((info->lpBrowseInfo->ulFlags & BIF_NEWDIALOGSTYLE) && !(pos->flags & SWP_NOSIZE))
+#endif
     {
         if (pos->cx < info->szMin.cx)
             pos->cx = info->szMin.cx;
@@ -1379,7 +1399,11 @@ LPITEMIDLIST WINAPI SHBrowseForFolderW (LPBROWSEINFOW lpbi)
 
     hr = OleInitialize(NULL);
 
+#ifdef __REACTOS__
+    if (lpbi->ulFlags & BIF_USENEWUI)
+#else
     if (lpbi->ulFlags & BIF_NEWDIALOGSTYLE)
+#endif
         wDlgId = IDD_BROWSE_FOR_FOLDER_NEW;
     else
         wDlgId = IDD_BROWSE_FOR_FOLDER;
