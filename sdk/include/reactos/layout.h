@@ -45,7 +45,7 @@ _layout_MoveGrip(LAYOUT_DATA *pData, HDWP hDwp OPTIONAL)
         return hDwp;
 
     SIZE size = { GetSystemMetrics(SM_CXVSCROLL), GetSystemMetrics(SM_CYHSCROLL) };
-    const UINT uFlags = SWP_NOACTIVATE | SWP_NOOWNERZORDER | SWP_NOZORDER;
+    const UINT uFlags = SWP_NOACTIVATE | SWP_NOOWNERZORDER | SWP_NOZORDER | SWP_NOCOPYBITS;
     RECT rcClient;
     GetClientRect(pData->m_hwndParent, &rcClient);
 
@@ -117,7 +117,7 @@ _layout_DoMoveItem(LAYOUT_DATA *pData, HDWP hDwp, const LAYOUT_INFO *pLayout,
     {
         hDwp = DeferWindowPos(hDwp, pLayout->m_hwndCtrl, NULL, NewRect.left, NewRect.top,
                               NewRect.right - NewRect.left, NewRect.bottom - NewRect.top,
-                              SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOREPOSITION);
+                              SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOREPOSITION | SWP_NOCOPYBITS);
     }
     return hDwp;
 }
@@ -138,18 +138,6 @@ _layout_ArrangeLayout(LAYOUT_DATA *pData)
 
     hDwp = _layout_MoveGrip(pData, hDwp);
     EndDeferWindowPos(hDwp);
-
-    /* STATIC controls need refreshing. */
-    for (iItem = 0; iItem < pData->m_cLayouts; ++iItem)
-    {
-        HWND hwndCtrl = pData->m_pLayouts[iItem].m_hwndCtrl;
-        WCHAR szClass[8];
-        GetClassNameW(hwndCtrl, szClass, _countof(szClass));
-        if (lstrcmpiW(szClass, L"STATIC") == 0)
-        {
-            InvalidateRect(hwndCtrl, NULL, TRUE);
-        }
-    }
 }
 
 static __inline void
