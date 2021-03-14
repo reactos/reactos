@@ -863,7 +863,7 @@ static BOOL BrsFolder_OnCreate( HWND hWnd, browse_info *info )
     info->hNotify = SHChangeNotifyRegister(hWnd, SHCNRF_InterruptLevel, SHCNE_ALLEVENTS, SHV_CHANGE_NOTIFY, 1, &ntreg);
 
 #ifdef __REACTOS__
-    SetFocus(info->hwndTreeView); /* for selection */
+    SetFocus(info->hwndTreeView); /* for selection: FIXME */
 #endif
     browsefolder_callback( info->lpBrowseInfo, hWnd, BFFM_INITIALIZED, 0 );
 
