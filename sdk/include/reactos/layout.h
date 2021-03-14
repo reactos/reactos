@@ -189,7 +189,7 @@ LayoutUpdate(HWND ignored1, LAYOUT_DATA *pData, LPCVOID ignored2, UINT ignored3)
     UNREFERENCED_PARAMETER(ignored1);
     UNREFERENCED_PARAMETER(ignored2);
     UNREFERENCED_PARAMETER(ignored3);
-    if (pData == NULL)
+    if (pData == NULL || !pData->m_hwndParent)
         return;
     assert(IsWindow(pData->m_hwndParent));
     _layout_ArrangeLayout(pData);
