@@ -241,9 +241,7 @@ LayoutInit(HWND hwndParent, const LAYOUT_INFO *pLayouts, INT cLayouts)
 
     pData->m_hwndGrip = NULL;
     if (bShowGrip)
-    {
         LayoutShowGrip(pData, bShowGrip);
-    }
 
     _layout_InitLayouts(pData);
     return pData;
