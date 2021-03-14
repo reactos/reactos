@@ -91,8 +91,12 @@ static const LAYOUT_INFO g_layout_info[] =
     {IDC_BROWSE_FOR_FOLDER_FOLDER,        BF_TOP|BF_LEFT|BF_RIGHT},
 #endif
     {IDC_BROWSE_FOR_FOLDER_TREEVIEW,      BF_TOP|BF_BOTTOM|BF_LEFT|BF_RIGHT},
+#ifdef __REACTOS__
+    {IDC_BROWSE_FOR_FOLDER_FOLDER_TEXT,   BF_TOP|BF_LEFT|BF_RIGHT},
+#else
     {IDC_BROWSE_FOR_FOLDER_FOLDER,        BF_BOTTOM|BF_LEFT},
     {IDC_BROWSE_FOR_FOLDER_FOLDER_TEXT,    BF_BOTTOM|BF_LEFT|BF_RIGHT},
+#endif
     {IDC_BROWSE_FOR_FOLDER_NEW_FOLDER, BF_BOTTOM|BF_LEFT},
     {IDOK,              BF_BOTTOM|BF_RIGHT},
     {IDCANCEL,          BF_BOTTOM|BF_RIGHT}
@@ -784,6 +788,22 @@ static BOOL BrsFolder_OnCreate( HWND hWnd, browse_info *info )
         RECT rcWnd;
 
 #ifdef __REACTOS__
+        /* Resize the treeview if there's not editbox */
+        if ((lpBrowseInfo->ulFlags & BIF_NEWDIALOGSTYLE)
+            && !(lpBrowseInfo->ulFlags & BIF_EDITBOX))
+        {
+            RECT rcEdit, rcTreeView;
+            INT cy;
+            GetWindowRect(GetDlgItem(hWnd, IDC_BROWSE_FOR_FOLDER_FOLDER_TEXT), &rcEdit);
+            GetWindowRect(GetDlgItem(hWnd, IDC_BROWSE_FOR_FOLDER_TREEVIEW), &rcTreeView);
+            cy = rcTreeView.top - rcEdit.top;
+            MapWindowPoints(NULL, hWnd, (LPPOINT)&rcTreeView, sizeof(RECT) / sizeof(POINT));
+            rcTreeView.top -= cy;
+            MoveWindow(GetDlgItem(hWnd, IDC_BROWSE_FOR_FOLDER_TREEVIEW),
+                       rcTreeView.left, rcTreeView.top,
+                       rcTreeView.right - rcTreeView.left,
+                       rcTreeView.bottom - rcTreeView.top, TRUE);
+        }
         if (lpBrowseInfo->ulFlags & BIF_NEWDIALOGSTYLE)
             info->layout = LayoutInit(hWnd, g_layout_info, LAYOUT_INFO_COUNT);
         else
@@ -832,6 +852,7 @@ static BOOL BrsFolder_OnCreate( HWND hWnd, browse_info *info )
     {
         InitializeTreeView( info );
 
+#ifndef __REACTOS__
         /* Resize the treeview if there's not editbox */
         if ((lpBrowseInfo->ulFlags & BIF_NEWDIALOGSTYLE)
             && !(lpBrowseInfo->ulFlags & BIF_EDITBOX))
@@ -841,6 +862,7 @@ static BOOL BrsFolder_OnCreate( HWND hWnd, browse_info *info )
             SetWindowPos(info->hwndTreeView, HWND_TOP, 0, 0,
                          rc.right, rc.bottom + 40, SWP_NOMOVE);
         }
+#endif
     }
     else
         ERR("treeview control missing!\n");
@@ -853,9 +875,18 @@ static BOOL BrsFolder_OnCreate( HWND hWnd, browse_info *info )
 
     info->hNotify = SHChangeNotifyRegister(hWnd, SHCNRF_InterruptLevel, SHCNE_ALLEVENTS, SHV_CHANGE_NOTIFY, 1, &ntreg);
 
+#ifdef __REACTOS__
+    SetFocus(info->hwndTreeView);
+#endif
     browsefolder_callback( info->lpBrowseInfo, hWnd, BFFM_INITIALIZED, 0 );
 
+#ifdef __REACTOS__
+    SendDlgItemMessage(hWnd, IDC_BROWSE_FOR_FOLDER_FOLDER_TEXT, EM_SETSEL, 0, -1);
+    SetFocus(GetDlgItem(hWnd, IDOK));
+    return FALSE;
+#else
     return TRUE;
+#endif
 }
 
 static HRESULT BrsFolder_NewFolder(browse_info *info)
