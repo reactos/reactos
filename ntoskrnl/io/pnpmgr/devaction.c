@@ -2482,6 +2482,8 @@ ActionToStr(
             return "PiActionResetDevice";
         case PiActionAddBootDevices:
             return "PiActionAddBootDevices";
+        case PiActionStartDevice:
+            return "PiActionStartDevice";
         default:
             return "(request unknown)";
     }
@@ -2538,6 +2540,22 @@ PipDeviceActionWorker(
                 // TODO: the operation is a no-op for everything except removed nodes
                 // for removed nodes, it returns them back to DeviceNodeUninitialized
                 status = STATUS_SUCCESS;
+                break;
+
+            case PiActionStartDevice:
+                // This action is triggered from usermode, when a driver is installed
+                // for a non-critical PDO
+                if (deviceNode->State == DeviceNodeInitialized && 
+                    !(deviceNode->Flags & DNF_HAS_PROBLEM))
+                {
+                    PiDevNodeStateMachine(deviceNode);
+                }
+                else
+                {
+                    DPRINT1("NOTE: attempt to start an already started/uninitialized device %wZ\n",
+                            &deviceNode->InstancePath);
+                    status = STATUS_UNSUCCESSFUL;
+                }
                 break;
 
             default:
