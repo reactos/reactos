@@ -2,9 +2,9 @@
  * PROJECT:         ReactOS HAL
  * LICENSE:         GNU GPL - See COPYING in the top level directory
  * FILE:            hal/halx86/apic/apic.c
- * PURPOSE:         HAL APIC Management and Control Code
+ * PURPOSE:         APIC HAL management and control code
  * PROGRAMMERS:     Timo Kreuzer (timo.kreuzer@reactos.org)
- *                  Vadim Galyant (vgal@rambler.ru)
+ *                  Vadim Galyant 2020-2021 (vgal@rambler.ru)
  * REFERENCES:      http://www.joseflores.com/docs/ExploringIrql.html
  *                  http://www.codeproject.com/KB/system/soviet_kernel_hack.aspx
  *                  http://bbs.unixmap.net/thread-2022-1-1.html

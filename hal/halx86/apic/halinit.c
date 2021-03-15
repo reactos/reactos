@@ -1,8 +1,9 @@
 /*
  * PROJECT:     ReactOS Hardware Abstraction Layer
  * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
- * PURPOSE:     Initialize the x86 HAL
- * COPYRIGHT:   Copyright 2011 Timo Kreuzer <timo.kreuzer@reactos.org>
+ * PURPOSE:     Initialize the x86 APIC HAL code
+ * COPYRIGHT:   Copyright 2020-2021 Timo Kreuzer <timo.kreuzer@reactos.org>
+ *              Vadim Galyant 2020-2021 (vgal@rambler.ru)
  */
 
 /* INCLUDES *****************************************************************/

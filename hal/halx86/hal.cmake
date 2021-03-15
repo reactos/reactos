@@ -7,7 +7,6 @@ list(APPEND HAL_ASM_SOURCE
 list(APPEND HAL_SOURCE
     generic/clock.c
     generic/profil.c
-    generic/spinlock.c
     generic/timer.c
     pic/halinit.c
     pic/irql.c

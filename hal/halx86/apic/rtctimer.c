@@ -2,9 +2,9 @@
  * PROJECT:         ReactOS HAL
  * LICENSE:         GNU GPL - See COPYING in the top level directory
  * FILE:            hal/halx86/apic/rtctimer.c
- * PURPOSE:         HAL APIC Management and Control Code
+ * PURPOSE:         APIC HAL RTC code
  * PROGRAMMERS:     Timo Kreuzer (timo.kreuzer@reactos.org)
- *                  Vadim Galyant (vgal@rambler.ru)
+ *                  Vadim Galyant 2020-2021 (vgal@rambler.ru)
  * REFERENCES:      https://wiki.osdev.org/RTC
  *                  https://forum.osdev.org/viewtopic.php?f=13&t=20825&start=0
  *                  http://www.bioscentral.com/misc/cmosmap.htm

@@ -7,7 +7,6 @@ list(APPEND HALACPI_ASM_SOURCE
 list(APPEND HALACPI_SOURCE
     generic/clock.c
     generic/profil.c
-    generic/spinlock.c
     generic/timer.c
     pic/acpi.c
     pic/halinit.c

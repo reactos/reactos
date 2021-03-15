@@ -32,13 +32,14 @@ list(APPEND HAL_XBOX_SOURCE
     legacy/halpcat.c
     generic/profil.c
     generic/timer.c
+    pic/irql.c
+    pic/legacy.c
+    pic/pic.c
+    pic/processor.c
     xbox/clock.c
     xbox/part_xbox.c
     xbox/halinit.c
-    xbox/reboot.c
-    pic/irql.c
-    pic/pic.c
-    pic/processor.c)
+    xbox/reboot.c)
 
 add_asm_files(lib_hal_xbox_asm ${HAL_XBOX_ASM_SOURCE})
 add_library(lib_hal_xbox OBJECT ${HAL_XBOX_SOURCE} ${lib_hal_xbox_asm})

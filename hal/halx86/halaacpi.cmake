@@ -8,8 +8,7 @@ list(APPEND HALAACPI_SOURCE
     apic/apictimer.c
     apic/halinit.c
     apic/processor.c
-    apic/rtctimer.c
-    generic/spinlock.c)
+    apic/rtctimer.c)
 
 add_asm_files(lib_hal_halaacpi_asm ${HALAACPI_ASM_SOURCE})
 add_library(lib_hal_halaacpi OBJECT ${HALAACPI_SOURCE} ${lib_hal_halaacpi_asm})
