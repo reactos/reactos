@@ -277,7 +277,7 @@ HRESULT CCopyToMenu::DoCopyToFolder(LPCMINVOKECOMMANDINFO lpici)
     BROWSEINFOW info = { lpici->hwnd };
     info.pidlRoot = NULL;
     info.lpszTitle = strTitle;
-    info.ulFlags = BIF_RETURNONLYFSDIRS | BIF_USENEWUI;
+    info.ulFlags = BIF_RETURNONLYFSDIRS | BIF_NEWDIALOGSTYLE;
     info.lpfn = BrowseCallbackProc;
     info.lParam = reinterpret_cast<LPARAM>(this);
     CComHeapPtr<ITEMIDLIST> pidl(SHBrowseForFolder(&info));
