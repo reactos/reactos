@@ -3081,17 +3081,14 @@ static CONFIGRET
 EnableDeviceInstance(
     _In_ LPWSTR pszDeviceInstance)
 {
-    PLUGPLAY_CONTROL_DEVICE_CONTROL_DATA ResetDeviceData;
+    PLUGPLAY_CONTROL_DEVICE_CONTROL_DATA ControlData;
     CONFIGRET ret = CR_SUCCESS;
     NTSTATUS Status;
 
     DPRINT("Enable device instance %S\n", pszDeviceInstance);
 
-    RtlInitUnicodeString(&ResetDeviceData.DeviceInstance,
-                         pszDeviceInstance);
-    Status = NtPlugPlayControl(PlugPlayControlResetDevice,
-                               &ResetDeviceData,
-                               sizeof(PLUGPLAY_CONTROL_DEVICE_CONTROL_DATA));
+    RtlInitUnicodeString(&ControlData.DeviceInstance, pszDeviceInstance);
+    Status = NtPlugPlayControl(PlugPlayControlStartDevice, &ControlData, sizeof(ControlData));
     if (!NT_SUCCESS(Status))
         ret = NtStatusToCrError(Status);
 
