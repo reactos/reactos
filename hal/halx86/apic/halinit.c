@@ -90,6 +90,10 @@ extern BOOLEAN HalpForceApicPhysicalDestinationMode;
 extern KSPIN_LOCK HalpAccountingLock;
 #endif
 
+#ifdef _M_AMD64
+BOOLEAN HalpPciLockSettings;
+#endif
+
 extern UCHAR HalpInitLevel;
 
 /* FUNCTIONS ****************************************************************/
@@ -488,6 +492,18 @@ HalpInitPhase1(VOID)
     //HalpEnableNMI();
 }
 #else
+CODE_SEG("INIT")
+VOID
+NTAPI
+HalpGetParameters(IN PCHAR CommandLine)
+{
+    /* Check if PCI is locked */
+    if (strstr(CommandLine, "PCILOCK")) HalpPciLockSettings = TRUE;
+
+    /* Check for initial breakpoint */
+    if (strstr(CommandLine, "BREAK")) DbgBreakPoint();
+}
+
 VOID
 NTAPI
 HalpInitProcessor(
