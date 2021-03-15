@@ -881,9 +881,9 @@ static BOOL BrsFolder_OnCreate( HWND hWnd, browse_info *info )
     browsefolder_callback( info->lpBrowseInfo, hWnd, BFFM_INITIALIZED, 0 );
 
 #ifdef __REACTOS__
-    SendDlgItemMessage(hWnd, IDC_BROWSE_FOR_FOLDER_FOLDER_TEXT, EM_SETSEL, 0, -1);
-    SetFocus(GetDlgItem(hWnd, IDOK));
-    return FALSE;
+    SHAutoComplete(GetDlgItem(hWnd, IDC_BROWSE_FOR_FOLDER_FOLDER_TEXT),
+                   (SHACF_FILESYS_ONLY | SHACF_URLHISTORY | SHACF_FILESYSTEM));
+    return TRUE;
 #else
     return TRUE;
 #endif
@@ -1425,7 +1425,9 @@ LPITEMIDLIST WINAPI SHBrowseForFolderW (LPBROWSEINFOW lpbi)
     info.lpBrowseInfo = lpbi;
     info.hwndTreeView = NULL;
 
-#ifndef __REACTOS__
+#ifdef __REACTOS__
+    info.layout = NULL;
+#else
     icex.dwSize = sizeof( icex );
     icex.dwICC = ICC_TREEVIEW_CLASSES;
     InitCommonControlsEx( &icex );
