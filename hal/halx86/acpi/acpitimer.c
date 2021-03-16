@@ -24,6 +24,10 @@ PHALP_QUERY_TIMER QueryTimer = HalpQueryPerformanceCounter;
 ULONG PMTimerFreq = 3579545;
 
 /* Stall execute */
+#define PmPause(OutTotalCount, Value) \
+    *OutTotalCount += Value; \
+    do { Value--; } while (Value);
+
 #define HAL_STALL_LOOP  42
 ULONG StallLoopValue = HAL_STALL_LOOP;
 UCHAR StallExecCounter = 0;
@@ -97,85 +101,86 @@ NTAPI
 HalpPmTimerStallExecProc(_In_ ULONG MicroSeconds)
 {
     INT CpuInfo[4];
-    ULONGLONG Start;
-    ULONG StallValue;
-    LARGE_INTEGER Current;
+    ULONGLONG StartTick;
+    ULONG StallTicks;
+    LARGE_INTEGER TickCount;
     LARGE_INTEGER Next;
     ULONG TotalStall;
     ULONG StallCounter;
 
     //DPRINT1("HalpPmTimerStallExecProc: MicroSeconds %X\n", MicroSeconds);
 
-    /* Serializing instruction execution */
-    __cpuid(CpuInfo, 0);
-
     if (!MicroSeconds)
     {
         goto Exit;
     }
 
-    //HalpStallExecCounter++; // Statistics
+    /* Serializing instruction execution */
+    __cpuid(CpuInfo, 0);
 
-    StallValue = (PMTimerFreq * (ULONGLONG)MicroSeconds) / 1000000 - 1; // ~2,579545 * MicroSeconds
-    Start = QueryTimer();
+    /* Calculate the number of ticks for a given delay */
+    StallTicks = (PMTimerFreq * (ULONGLONG)MicroSeconds) / 1000000 - 1;
+
+    /* Reading the starting value of ticks */
+    StartTick = QueryTimer();
 
     TotalStall = 0;
     StallCounter = StallLoopValue;
 
     while (TRUE)
     {
+        /* Do one microsecond stall */
         while (TRUE)
         {
-            TotalStall += StallCounter;
+           /* Do pause */
+           PmPause(&TotalStall, StallCounter);
 
-            _mm_pause();
+            /* How much time has passed? */
+            TickCount.QuadPart = (QueryTimer() - StartTick);
 
-            do
+            if (TickCount.HighPart)
             {
-                StallCounter--;
-            }
-            while (StallCounter);
-
-            Current.QuadPart = (QueryTimer() - Start);
-
-            if (Current.HighPart)
-            {
-                Current.LowPart = 0x7FFFFFFF;
+                /* If the time delay is too long (due the debugger) */
+                TickCount.LowPart = 0x7FFFFFFF;
             }
 
-            if (Current.LowPart >= 3)
+            if (TickCount.LowPart >= 3)
             {
+                /* 1 MicroSeconds == ~3,579545 ticks of timer */
                 break;
             }
 
+            /* Calculating the counter value for the next iteration */
             StallLoopValue += HAL_STALL_LOOP;
             StallCounter = StallLoopValue;
         }
 
-        if (!Current.LowPart)
+        if (!TickCount.LowPart)
         {
-            KeBugCheckEx(0xA5, 0x20000, Current.HighPart, 0, 0);
+            KeBugCheckEx(ACPI_BIOS_ERROR, 0x20000, TickCount.HighPart, 0, 0);
         }
 
-        if (Current.LowPart >= StallValue)
+        if (TickCount.LowPart >= StallTicks)
         {
             break;
         }
 
-        Next.LowPart = (StallValue - Current.LowPart) * TotalStall;
-        Next.HighPart = (((ULONGLONG)(StallValue - Current.LowPart) * TotalStall) >> 32);
+        /* Calculating the counter value for the next iteration */
+        Next.LowPart = (StallTicks - TickCount.LowPart) * TotalStall;
+        Next.HighPart = (((ULONGLONG)(StallTicks - TickCount.LowPart) * TotalStall) >> 32);
         Next.HighPart &= 3;
 
-        StallCounter = ((ULONGLONG)Next.QuadPart / Current.LowPart + 1);
+        StallCounter = ((ULONGLONG)Next.QuadPart / TickCount.LowPart + 1);
     }
 
 Exit:
 
-    /* StallExecCounter 0-255 */
     StallExecCounter++;
+    //HalpStallExecCounter++; // For statistics?
 
     if (!StallExecCounter && (StallLoopValue > HAL_STALL_LOOP))
     {
+        /* Every 256 calls this function, we decrease the value */
         StallLoopValue -= HAL_STALL_LOOP;
     }
 }
