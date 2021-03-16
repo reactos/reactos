@@ -1,5 +1,6 @@
 
 list(APPEND HAL_ACPI_SOURCE
+    acpi/acpitimer.c
     acpi/halacpi.c
     acpi/halpnpdd.c
     acpi/busemul.c

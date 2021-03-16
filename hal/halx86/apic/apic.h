@@ -416,7 +416,6 @@ HalpInitializeApicAddressing(
     VOID
 );
 
-CODE_SEG("INIT")
 VOID
 NTAPI
 HalpMarkProcessorStarted(

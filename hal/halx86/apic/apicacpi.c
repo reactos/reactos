@@ -193,45 +193,45 @@ HalpInitMpInfo(_In_ PACPI_TABLE_MADT ApicTable,
 
         HalpProcLocalApicTable = HalpStaticProcLocalApicTable;
 
-        if ((ULONG_PTR)Header < TableEnd)
+        while ((ULONG_PTR)Header < TableEnd)
         {
-            do
+            LocalApic = (PACPI_MADT_LOCAL_APIC)Header;
+
+            if (LocalApic->Header.Type == ACPI_MADT_TYPE_LOCAL_APIC &&
+                LocalApic->Header.Length == sizeof(ACPI_MADT_LOCAL_APIC) &&
+                LocalApic->LapicFlags & ACPI_MADT_ENABLED)
             {
-                LocalApic = (PACPI_MADT_LOCAL_APIC)Header;
-
-                if (LocalApic->Header.Type == ACPI_MADT_TYPE_LOCAL_APIC &&
-                    LocalApic->Header.Length == sizeof(ACPI_MADT_LOCAL_APIC) &&
-                    LocalApic->LapicFlags & ACPI_MADT_ENABLED)
-                {
-                    ix++;
-                }
-
-                Size = Header->Length;
-                Header = (PACPI_SUBTABLE_HEADER)((ULONG_PTR)Header + Header->Length);
+                ix++;
             }
-            while (Size != 0 && (ULONG_PTR)Header < TableEnd);
 
-            if (ix > MAX_CPUS)
+            if (!Header->Length)
             {
-                Size = ix * LOCAL_APIC_SIZE;
-                PageCount = BYTES_TO_PAGES(Size);
-
-                PhAddress.QuadPart = HalpAllocPhysicalMemory(LoaderBlock, 0xFFFFFFFF, PageCount, FALSE);
-                if (!PhAddress.QuadPart)
-                {
-                    ASSERT(PhAddress.QuadPart != 0);
-                    KeBugCheckEx(HAL_INITIALIZATION_FAILED, 0x105, 1, Size, PageCount);
-                }
-
-                HalpProcLocalApicTable = HalpMapPhysicalMemory64(PhAddress, PageCount);
-                if (!HalpProcLocalApicTable)
-                {
-                    ASSERT(HalpProcLocalApicTable != NULL);
-                    KeBugCheckEx(HAL_INITIALIZATION_FAILED, 0x105, 2, Size, PageCount);
-                }
-
-                RtlZeroMemory(HalpProcLocalApicTable, Size);
+                break;
             }
+
+            Header = (PACPI_SUBTABLE_HEADER)((ULONG_PTR)Header + Header->Length);
+        }
+
+        if (ix > MAX_CPUS)
+        {
+            Size = ix * LOCAL_APIC_SIZE;
+            PageCount = BYTES_TO_PAGES(Size);
+
+            PhAddress.QuadPart = HalpAllocPhysicalMemory(LoaderBlock, 0xFFFFFFFF, PageCount, FALSE);
+            if (!PhAddress.QuadPart)
+            {
+                ASSERT(PhAddress.QuadPart != 0);
+                KeBugCheckEx(HAL_INITIALIZATION_FAILED, 0x105, 1, Size, PageCount);
+            }
+
+            HalpProcLocalApicTable = HalpMapPhysicalMemory64(PhAddress, PageCount);
+            if (!HalpProcLocalApicTable)
+            {
+                ASSERT(HalpProcLocalApicTable != NULL);
+                KeBugCheckEx(HAL_INITIALIZATION_FAILED, 0x105, 2, Size, PageCount);
+            }
+
+            RtlZeroMemory(HalpProcLocalApicTable, Size);
         }
     }
 

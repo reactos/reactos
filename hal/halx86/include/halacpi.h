@@ -355,13 +355,6 @@ HalAcpiHaltSystem(
 
 VOID
 NTAPI
-HaliAcpiTimerInit(
-    _In_ PULONG TimerPort,
-    _In_ BOOLEAN TimerValExt
-);
-
-VOID
-NTAPI
 HaliAcpiMachineStateInit(
     _In_ ULONG Unknown1,
     _In_ PVOID State,
@@ -447,14 +440,12 @@ HaliAcpiSetUsePmClock(
     VOID
 );
 
-CODE_SEG("INIT")
 VOID
 NTAPI
 HalpAcpiApplyFadtSettings(
     _In_ PFADT Fadt
 );
 
-CODE_SEG("INIT")
 BOOLEAN
 NTAPI
 HalpPmTimerScaleTimers(
@@ -491,6 +482,34 @@ NTAPI
 HaliPmTimerQueryPerfCount(
     _Out_ LARGE_INTEGER * OutPerfCount,
     _Out_ LARGE_INTEGER * OutPerfFrequency
+);
+
+VOID
+NTAPI
+HalAcpiBrokenPiix4TimerCarry(
+    VOID
+);
+
+VOID
+NTAPI
+HalAcpiTimerCarry(
+    VOID
+);
+#endif
+
+#ifdef _M_AMD64
+VOID
+NTAPI
+HaliAcpiTimerInit(
+    _In_ ULONG TimerPort,
+    _In_ ULONG TimerValExt
+);
+#else
+VOID
+NTAPI
+HaliAcpiTimerInit(
+    _In_ PULONG TimerPort,
+    _In_ BOOLEAN TimerValExt
 );
 #endif
 

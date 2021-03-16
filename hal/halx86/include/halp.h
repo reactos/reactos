@@ -175,7 +175,6 @@ typedef struct
     UCHAR BusReleativeVector;
 } IDTUsage;
 
-#pragma pack(push, 1)
 typedef struct _HalAddressUsage
 {
     struct _HalAddressUsage *Next;
@@ -187,7 +186,6 @@ typedef struct _HalAddressUsage
         ULONG Length;
     } Element[];
 } ADDRESS_USAGE, *PADDRESS_USAGE;
-#pragma pack(pop)
 
 /* adapter.c */
 PADAPTER_OBJECT NTAPI HalpAllocateAdapterEx(ULONG NumberOfMapRegisters,BOOLEAN IsMaster, BOOLEAN Dma32BitAddresses);
@@ -210,7 +208,6 @@ HalpEnableInterruptHandler(IN UCHAR Flags,
                            IN KINTERRUPT_MODE Mode);
 
 /* pic.c */
-CODE_SEG("INIT")
 VOID
 NTAPI
 HalpInitializePICs(
@@ -542,7 +539,6 @@ HalpInitProcessor(
     IN PLOADER_PARAMETER_BLOCK LoaderBlock
 );
 
-CODE_SEG("INIT")
 VOID
 NTAPI
 HalpGetParameters(
