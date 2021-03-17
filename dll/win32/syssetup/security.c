@@ -766,7 +766,7 @@ ApplyPasswordSettings(
     _In_ PWSTR pszSectionName)
 {
     INFCONTEXT InfContext;
-    DOMAIN_PASSWORD_INFORMATION PasswordInfo;
+    PDOMAIN_PASSWORD_INFORMATION PasswordInfo = NULL;
     PPOLICY_ACCOUNT_DOMAIN_INFO OrigInfo = NULL;
     LSA_OBJECT_ATTRIBUTES ObjectAttributes;
     LSA_HANDLE PolicyHandle = NULL;
@@ -828,7 +828,7 @@ ApplyPasswordSettings(
         goto done;
     }
 
-    DPRINT("MaximumPasswordAge (OldValue) : 0x%I64x\n", PasswordInfo.MaxPasswordAge.QuadPart);
+    DPRINT("MaximumPasswordAge (OldValue) : 0x%I64x\n", PasswordInfo->MaxPasswordAge.QuadPart);
     if (SetupFindFirstLineW(hSecurityInf,
                             pszSectionName,
                             L"MaximumPasswordAge",
@@ -839,17 +839,17 @@ ApplyPasswordSettings(
             DPRINT("Value: %ld\n", nValue);
             if (nValue == -1)
             {
-                PasswordInfo.MaxPasswordAge.QuadPart = 0x8000000000000000;
+                PasswordInfo->MaxPasswordAge.QuadPart = 0x8000000000000000;
             }
             else if ((nValue >= 1) && (nValue < 1000))
             {
-                PasswordInfo.MaxPasswordAge.QuadPart = (LONGLONG)nValue * TICKS_PER_DAY;
+                PasswordInfo->MaxPasswordAge.QuadPart = (LONGLONG)nValue * TICKS_PER_DAY;
             }
-            DPRINT("MaximumPasswordAge (NewValue) : 0x%I64x\n", PasswordInfo.MaxPasswordAge.QuadPart);
+            DPRINT("MaximumPasswordAge (NewValue) : 0x%I64x\n", PasswordInfo->MaxPasswordAge.QuadPart);
         }
     }
 
-    DPRINT("MinimumPasswordAge (OldValue) : 0x%I64x\n", PasswordInfo.MinPasswordAge.QuadPart);
+    DPRINT("MinimumPasswordAge (OldValue) : 0x%I64x\n", PasswordInfo->MinPasswordAge.QuadPart);
     if (SetupFindFirstLineW(hSecurityInf,
                             pszSectionName,
                             L"MinimumPasswordAge",
@@ -860,14 +860,14 @@ ApplyPasswordSettings(
             DPRINT("Wert: %ld\n", nValue);
             if ((nValue >= 0) && (nValue < 1000))
             {
-                if (PasswordInfo.MaxPasswordAge.QuadPart < (LONGLONG)nValue * TICKS_PER_DAY)
-                    PasswordInfo.MinPasswordAge.QuadPart = (LONGLONG)nValue * TICKS_PER_DAY;
+                if (PasswordInfo->MaxPasswordAge.QuadPart < (LONGLONG)nValue * TICKS_PER_DAY)
+                    PasswordInfo->MinPasswordAge.QuadPart = (LONGLONG)nValue * TICKS_PER_DAY;
             }
-            DPRINT("MinimumPasswordAge (NewValue) : 0x%I64x\n", PasswordInfo.MinPasswordAge.QuadPart);
+            DPRINT("MinimumPasswordAge (NewValue) : 0x%I64x\n", PasswordInfo->MinPasswordAge.QuadPart);
         }
     }
 
-    DPRINT("MinimumPasswordLength (OldValue) : %lu\n", PasswordInfo.MinPasswordLength);
+    DPRINT("MinimumPasswordLength (OldValue) : %lu\n", PasswordInfo->MinPasswordLength);
     if (SetupFindFirstLineW(hSecurityInf,
                             pszSectionName,
                             L"MinimumPasswordLength",
@@ -878,13 +878,13 @@ ApplyPasswordSettings(
             DPRINT("Value: %ld\n", nValue);
             if ((nValue >= 0) && (nValue <= 65535))
             {
-                PasswordInfo.MinPasswordLength = nValue;
+                PasswordInfo->MinPasswordLength = nValue;
             }
-            DPRINT("MinimumPasswordLength (NewValue) : %lu\n", PasswordInfo.MinPasswordLength);
+            DPRINT("MinimumPasswordLength (NewValue) : %lu\n", PasswordInfo->MinPasswordLength);
         }
     }
 
-    DPRINT("PasswordHistoryLength (OldValue) : %lu\n", PasswordInfo.PasswordHistoryLength);
+    DPRINT("PasswordHistoryLength (OldValue) : %lu\n", PasswordInfo->PasswordHistoryLength);
     if (SetupFindFirstLineW(hSecurityInf,
                             pszSectionName,
                             L"PasswordHistorySize",
@@ -895,9 +895,9 @@ ApplyPasswordSettings(
             DPRINT("Value: %ld\n", nValue);
             if ((nValue >= 0) && (nValue <= 65535))
             {
-                PasswordInfo.PasswordHistoryLength = nValue;
+                PasswordInfo->PasswordHistoryLength = nValue;
             }
-            DPRINT("PasswordHistoryLength (NewValue) : %lu\n", PasswordInfo.PasswordHistoryLength);
+            DPRINT("PasswordHistoryLength (NewValue) : %lu\n", PasswordInfo->PasswordHistoryLength);
         }
     }
 
@@ -910,11 +910,11 @@ ApplyPasswordSettings(
         {
             if (nValue == 0)
             {
-                PasswordInfo.PasswordProperties &= ~DOMAIN_PASSWORD_COMPLEX;
+                PasswordInfo->PasswordProperties &= ~DOMAIN_PASSWORD_COMPLEX;
             }
             else
             {
-                PasswordInfo.PasswordProperties |= DOMAIN_PASSWORD_COMPLEX;
+                PasswordInfo->PasswordProperties |= DOMAIN_PASSWORD_COMPLEX;
             }
         }
     }
@@ -928,11 +928,11 @@ ApplyPasswordSettings(
         {
             if (nValue == 0)
             {
-                PasswordInfo.PasswordProperties &= ~DOMAIN_PASSWORD_STORE_CLEARTEXT;
+                PasswordInfo->PasswordProperties &= ~DOMAIN_PASSWORD_STORE_CLEARTEXT;
             }
             else
             {
-                PasswordInfo.PasswordProperties |= DOMAIN_PASSWORD_STORE_CLEARTEXT;
+                PasswordInfo->PasswordProperties |= DOMAIN_PASSWORD_STORE_CLEARTEXT;
             }
         }
     }
@@ -941,7 +941,7 @@ ApplyPasswordSettings(
 
     Status = SamSetInformationDomain(DomainHandle,
                                      DomainPasswordInformation,
-                                     (PVOID*)&PasswordInfo);
+                                     PasswordInfo);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("SamSetInformationDomain() failed (Status %08lx)\n", Status);
@@ -949,6 +949,9 @@ ApplyPasswordSettings(
     }
 
 done:
+    if (PasswordInfo != NULL)
+        SamFreeMemory(PasswordInfo);
+
     if (DomainHandle != NULL)
         SamCloseHandle(DomainHandle);
 
@@ -970,7 +973,7 @@ ApplyLockoutSettings(
     _In_ PWSTR pszSectionName)
 {
     INFCONTEXT InfContext;
-    DOMAIN_LOCKOUT_INFORMATION LockoutInfo;
+    PDOMAIN_LOCKOUT_INFORMATION LockoutInfo = NULL;
     PPOLICY_ACCOUNT_DOMAIN_INFO OrigInfo = NULL;
     LSA_OBJECT_ATTRIBUTES ObjectAttributes;
     LSA_HANDLE PolicyHandle = NULL;
@@ -1041,7 +1044,7 @@ ApplyLockoutSettings(
         {
             if (nValue >= 0)
             {
-                LockoutInfo.LockoutThreshold = nValue;
+                LockoutInfo->LockoutThreshold = nValue;
             }
         }
     }
@@ -1055,7 +1058,7 @@ ApplyLockoutSettings(
         {
             if (nValue >= 0)
             {
-                LockoutInfo.LockoutObservationWindow.QuadPart = (LONGLONG)nValue * TICKS_PER_MINUTE;
+                LockoutInfo->LockoutObservationWindow.QuadPart = (LONGLONG)nValue * TICKS_PER_MINUTE;
             }
         }
     }
@@ -1069,18 +1072,18 @@ ApplyLockoutSettings(
         {
             if (nValue == -1)
             {
-                LockoutInfo.LockoutDuration.QuadPart = 0x8000000000000000LL;
+                LockoutInfo->LockoutDuration.QuadPart = 0x8000000000000000LL;
             }
             else if ((nValue >= 0) && (nValue < 100000))
             {
-                LockoutInfo.LockoutDuration.QuadPart = (LONGLONG)nValue * TICKS_PER_MINUTE;
+                LockoutInfo->LockoutDuration.QuadPart = (LONGLONG)nValue * TICKS_PER_MINUTE;
             }
         }
     }
 
     Status = SamSetInformationDomain(DomainHandle,
                                      DomainLockoutInformation,
-                                     (PVOID*)&LockoutInfo);
+                                     LockoutInfo);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("SamSetInformationDomain() failed (Status %08lx)\n", Status);
@@ -1088,6 +1091,9 @@ ApplyLockoutSettings(
     }
 
 done:
+    if (LockoutInfo != NULL)
+        SamFreeMemory(LockoutInfo);
+
     if (DomainHandle != NULL)
         SamCloseHandle(DomainHandle);
 
