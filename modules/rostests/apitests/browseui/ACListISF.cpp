@@ -259,6 +259,31 @@ test_ACListISF_CURRENTDIR()
     // The first set of results are absolute paths, without hidden files?!
     test_ExpectFolders(EnumStr, pidlDiskRoot, Buffer2, IgnoreHidden);
     test_ExpectFolders(EnumStr, pidlDiskRoot, Buffer2, IgnoreHidden | IgnoreRoot | CheckLast);
+
+    GetWindowsDirectoryW(Buffer2, _ARRAYSIZE(Buffer2));
+    ok_hr(hr = CurrentWorkingDir->SetDirectory(Buffer2), S_OK);
+    PathAddBackslashW(Buffer2);
+    ok_hr(hr = ACList->Expand(Buffer2), S_OK);
+    PathAppendW(Buffer2, L"system32");
+    //trace("%ls\n", Buffer2);
+
+    ULONG cGot;
+    BOOL bFound1 = FALSE, bFound2 = FALSE, bFound3 = FALSE;
+    LPWSTR psz = NULL;
+    while (EnumStr->Next(1, &psz, &cGot) == S_OK)
+    {
+        //trace("%ls\n", psz);
+        if (lstrcmpiW(psz, Buffer2) == 0)
+            bFound1 = TRUE;
+        if (lstrcmpiW(psz, L"system32") == 0)
+            bFound2 = TRUE;
+        if (lstrcmpiW(psz, L"notepad.exe") == 0)
+            bFound3 = TRUE;
+        CoTaskMemFree(psz);
+    }
+    ok_int(bFound1, TRUE);
+    ok_int(bFound2, TRUE);
+    ok_int(bFound3, TRUE);
 }
 
 static void
