@@ -6,7 +6,7 @@
 
 #define IntLPtoDP(pdc, ppt, count) do { \
         DC_vUpdateWorldToDevice(pdc); \
-        DC_vXformWorldToDevice(pdc, count, (PPOINTL)(ppt), (PPOINTL)(ppt)); \
+        INTERNAL_LPTODP(pdc, ppt, count); \
     } while (0)
 #define CoordLPtoDP(pdc, ppt) \
         DC_vXformWorldToDevice(pdc, 1,  (PPOINTL)(ppt), (PPOINTL)(ppt));
