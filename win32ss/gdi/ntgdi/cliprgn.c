@@ -560,7 +560,7 @@ NtGdiOffsetClipRgn(
         apt[0].y = 0;
         apt[1].x = xOffset;
         apt[1].y = yOffset;
-        IntLPtoDP(pdc, &apt, 2);
+        IntLPtoDP(pdc, apt, 2);
 
         /* Offset the clip region */
         if (!REGION_bOffsetRgn(pdc->dclevel.prgnClip,
