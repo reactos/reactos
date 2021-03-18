@@ -1734,7 +1734,7 @@ ExpFindAndRemoveTagBigPages(IN PVOID Va,
     // Set the free bit, and decrement the number of allocations. Finally, release
     // the lock and return the tag that was located
     //
-    InterlockedIncrement((PLONG)&Entry->Va);
+    Entry->Va = (PVOID)((ULONG_PTR)Entry->Va | POOL_BIG_TABLE_ENTRY_FREE);
 
     ExpPoolBigEntriesInUse--;
 
