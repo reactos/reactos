@@ -254,17 +254,6 @@ MiReserveSystemPtes(IN ULONG NumberOfPtes,
     PointerPte = MiReserveAlignedSystemPtes(NumberOfPtes, SystemPtePoolType, 0);
 
     //
-    // Check if allocation failed
-    //
-    if (!PointerPte)
-    {
-        //
-        // Warn that we are out of memory
-        //
-        DPRINT1("MiReserveSystemPtes: Failed to reserve %lu PTE(s)!\n", NumberOfPtes);
-    }
-
-    //
     // Return the PTE Pointer
     //
     return PointerPte;
