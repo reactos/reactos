@@ -419,11 +419,15 @@ PiAttachFilterDriversCallback(
     SERVICE_LOAD_TYPE startType = DisableLoad;
 
     Status = IopGetRegistryValue(serviceHandle, L"Start", &kvInfo);
-    if (NT_SUCCESS(Status) && kvInfo->Type == REG_DWORD)
+    if (NT_SUCCESS(Status))
     {
-        RtlMoveMemory(&startType,
-                      (PVOID)((ULONG_PTR)kvInfo + kvInfo->DataOffset),
-                      sizeof(startType));
+        if (kvInfo->Type == REG_DWORD)
+        {
+            RtlMoveMemory(&startType,
+                          (PVOID)((ULONG_PTR)kvInfo + kvInfo->DataOffset),
+                          sizeof(startType));
+        }
+        
         ExFreePool(kvInfo);
     }
 
@@ -621,52 +625,56 @@ PiCallDriverAddDevice(
 
     // try to get the class GUID of an instance and its registry key
     Status = IopGetRegistryValue(SubKey, REGSTR_VAL_CLASSGUID, &kvInfo);
-    if (NT_SUCCESS(Status) && kvInfo->Type == REG_SZ && kvInfo->DataLength > sizeof(WCHAR))
+    if (NT_SUCCESS(Status))
     {
-        UNICODE_STRING classGUID = {
-            .MaximumLength = kvInfo->DataLength,
-            .Length = kvInfo->DataLength - sizeof(UNICODE_NULL),
-            .Buffer = (PVOID)((ULONG_PTR)kvInfo + kvInfo->DataOffset)
-        };
-        HANDLE ccsControlHandle;
+        if (kvInfo->Type == REG_SZ && kvInfo->DataLength > sizeof(WCHAR))
+        {
+            UNICODE_STRING classGUID = {
+                .MaximumLength = kvInfo->DataLength,
+                .Length = kvInfo->DataLength - sizeof(UNICODE_NULL),
+                .Buffer = (PVOID)((ULONG_PTR)kvInfo + kvInfo->DataOffset)
+            };
+            HANDLE ccsControlHandle;
 
-        Status = IopOpenRegistryKeyEx(&ccsControlHandle, NULL, &ccsControlClass, KEY_READ);
-        if (!NT_SUCCESS(Status))
-        {
-            DPRINT1("IopOpenRegistryKeyEx() failed for \"%wZ\" (status %x)\n",
-                    &ccsControlClass, Status);
-        }
-        else
-        {
-            // open the CCS\Control\Class\<ClassGUID> key
-            Status = IopOpenRegistryKeyEx(&ClassKey, ccsControlHandle, &classGUID, KEY_READ);
-            ZwClose(ccsControlHandle);
+            Status = IopOpenRegistryKeyEx(&ccsControlHandle, NULL, &ccsControlClass, KEY_READ);
             if (!NT_SUCCESS(Status))
             {
-                DPRINT1("Failed to open class key \"%wZ\" (status %x)\n", &classGUID, Status);
-            }
-        }
-
-        if (ClassKey)
-        {
-            // Check the Properties key of a class too
-            // Windows fills some device properties from this key (which is protected)
-            // TODO: add the device properties from this key
-
-            UNICODE_STRING properties = RTL_CONSTANT_STRING(REGSTR_KEY_DEVICE_PROPERTIES);
-            HANDLE propertiesHandle;
-
-            Status = IopOpenRegistryKeyEx(&propertiesHandle, ClassKey, &properties, KEY_READ);
-            if (!NT_SUCCESS(Status))
-            {
-                DPRINT("Properties key failed to open for \"%wZ\" (status %x)\n",
-                       &classGUID, Status);
+                DPRINT1("IopOpenRegistryKeyEx() failed for \"%wZ\" (status %x)\n",
+                        &ccsControlClass, Status);
             }
             else
             {
-                ZwClose(propertiesHandle);
+                // open the CCS\Control\Class\<ClassGUID> key
+                Status = IopOpenRegistryKeyEx(&ClassKey, ccsControlHandle, &classGUID, KEY_READ);
+                ZwClose(ccsControlHandle);
+                if (!NT_SUCCESS(Status))
+                {
+                    DPRINT1("Failed to open class key \"%wZ\" (status %x)\n", &classGUID, Status);
+                }
+            }
+
+            if (ClassKey)
+            {
+                // Check the Properties key of a class too
+                // Windows fills some device properties from this key (which is protected)
+                // TODO: add the device properties from this key
+
+                UNICODE_STRING properties = RTL_CONSTANT_STRING(REGSTR_KEY_DEVICE_PROPERTIES);
+                HANDLE propertiesHandle;
+
+                Status = IopOpenRegistryKeyEx(&propertiesHandle, ClassKey, &properties, KEY_READ);
+                if (!NT_SUCCESS(Status))
+                {
+                    DPRINT("Properties key failed to open for \"%wZ\" (status %x)\n",
+                           &classGUID, Status);
+                }
+                else
+                {
+                    ZwClose(propertiesHandle);
+                }
             }
         }
+        
         ExFreePool(kvInfo);
     }
 

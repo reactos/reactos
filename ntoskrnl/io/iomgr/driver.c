@@ -195,7 +195,12 @@ IopGetDriverNames(
     if (driverName.Buffer == NULL)
     {
         status = IopGetRegistryValue(ServiceHandle, L"Type", &kvInfo);
-        if (!NT_SUCCESS(status) || kvInfo->Type != REG_DWORD)
+        if (!NT_SUCCESS(status))
+        {
+            ExFreePoolWithTag(basicInfo, TAG_IO);
+            return status;
+        }
+        if (kvInfo->Type != REG_DWORD)
         {
             ExFreePool(kvInfo);
             ExFreePoolWithTag(basicInfo, TAG_IO); // container for serviceName
