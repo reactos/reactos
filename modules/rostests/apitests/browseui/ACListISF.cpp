@@ -1,8 +1,9 @@
 /*
- * PROJECT:         ReactOS api tests
- * LICENSE:         GPLv2+ - See COPYING in the top level directory
- * PURPOSE:         Test for ACListISF objects
- * PROGRAMMER:      Mark Jansen
+ * PROJECT:     ReactOS api tests
+ * LICENSE:     GPL-2.0-or-later (https://spdx.org/licenses/GPL-2.0-or-later)
+ * PURPOSE:     Test for ACListISF objects
+ * COPYRIGHT:   Copyright 2016 Mark Jansen <mark.jansen@reactos.org>
+ *              Copyright 2021 Katayama Hirofumi MZ <katayama.hirofumi.mz@gmail.com>
  */
 
 #define _UNICODE
@@ -259,6 +260,122 @@ test_ACListISF_CURRENTDIR()
     // The first set of results are absolute paths, without hidden files?!
     test_ExpectFolders(EnumStr, pidlDiskRoot, Buffer2, IgnoreHidden);
     test_ExpectFolders(EnumStr, pidlDiskRoot, Buffer2, IgnoreHidden | IgnoreRoot | CheckLast);
+
+    WCHAR szDir[MAX_PATH], szPath[MAX_PATH];
+    Buffer2[2] = 0;
+    StringCbCopyW(szDir, sizeof(szDir), Buffer2);
+
+    StringCbCopyW(szPath, sizeof(szPath), szDir);
+    StringCbCatW(szPath, sizeof(szPath), L"\\BROWSEUI-1");
+    CreateDirectoryW(szPath, NULL);
+
+    StringCbCopyW(szPath, sizeof(szPath), szDir);
+    StringCbCatW(szPath, sizeof(szPath), L"\\BROWSEUI-1\\TEST1");
+    CreateDirectoryW(szPath, NULL);
+
+    StringCbCopyW(szPath, sizeof(szPath), szDir);
+    StringCbCatW(szPath, sizeof(szPath), L"\\BROWSEUI-1\\TEST2");
+    CreateDirectoryW(szPath, NULL);
+
+    StringCbCopyW(szPath, sizeof(szPath), szDir);
+    StringCbCatW(szPath, sizeof(szPath), L"\\BROWSEUI-2");
+    CreateDirectoryW(szPath, NULL);
+
+    StringCbCopyW(szPath, sizeof(szPath), szDir);
+    StringCbCatW(szPath, sizeof(szPath), L"\\BROWSEUI-2\\tes1");
+    CreateDirectoryW(szPath, NULL);
+
+    StringCbCopyW(szPath, sizeof(szPath), szDir);
+    StringCbCatW(szPath, sizeof(szPath), L"\\BROWSEUI-2\\tes2");
+    CreateDirectoryW(szPath, NULL);
+
+    ULONG cGot;
+    LPWSTR psz = NULL;
+    EnumStr->Reset();
+
+    StringCbCopyW(szPath, sizeof(szPath), szDir);
+    StringCbCatW(szPath, sizeof(szPath), L"\\BROWSEUI-1\\");
+    ok_hr(hr = ACList->Expand(szPath), S_OK);
+
+    hr = EnumStr->Next(1, &psz, &cGot);
+    ok_hr(hr, S_OK);
+    StringCbCopyW(szPath, sizeof(szPath), szDir);
+    StringCbCatW(szPath, sizeof(szPath), L"\\BROWSEUI-1\\TEST1");
+    ok_wstr(szPath, psz);
+    CoTaskMemFree(psz);
+
+    hr = EnumStr->Next(1, &psz, &cGot);
+    ok_hr(hr, S_OK);
+    StringCbCopyW(szPath, sizeof(szPath), szDir);
+    StringCbCatW(szPath, sizeof(szPath), L"\\BROWSEUI-1\\TEST2");
+    ok_wstr(szPath, psz);
+    CoTaskMemFree(psz);
+
+    StringCbCopyW(szPath, sizeof(szPath), szDir);
+    StringCbCatW(szPath, sizeof(szPath), L"\\BROWSEUI-2\\");
+    ok_hr(hr = CurrentWorkingDir->SetDirectory(szPath), S_OK);
+
+    hr = EnumStr->Next(1, &psz, &cGot);
+    ok_hr(hr, S_OK);
+    ok_wstr(psz, L"tes1");
+    CoTaskMemFree(psz);
+
+    hr = EnumStr->Next(1, &psz, &cGot);
+    ok_hr(hr, S_OK);
+    ok_wstr(psz, L"tes2");
+    CoTaskMemFree(psz);
+
+    hr = EnumStr->Next(1, &psz, &cGot);
+    ok_hr(hr, S_FALSE);
+    CoTaskMemFree(psz);
+
+    StringCbCopyW(szPath, sizeof(szPath), szDir);
+    StringCbCatW(szPath, sizeof(szPath), L"\\BROWSEUI-2");
+    ok_hr(hr = CurrentWorkingDir->SetDirectory(szPath), S_OK);
+
+    hr = EnumStr->Next(1, &psz, &cGot);
+    ok_hr(hr, S_FALSE);
+    CoTaskMemFree(psz);
+
+    EnumStr->Reset();
+
+    hr = EnumStr->Next(1, &psz, &cGot);
+    ok_hr(hr, S_OK);
+    ok_wstr(psz, L"tes1");
+    CoTaskMemFree(psz);
+
+    hr = EnumStr->Next(1, &psz, &cGot);
+    ok_hr(hr, S_OK);
+    ok_wstr(psz, L"tes2");
+    CoTaskMemFree(psz);
+
+    hr = EnumStr->Next(1, &psz, &cGot);
+    ok_hr(hr, S_FALSE);
+    CoTaskMemFree(psz);
+
+    StringCbCopyW(szPath, sizeof(szPath), szDir);
+    StringCbCatW(szPath, sizeof(szPath), L"\\BROWSEUI-1\\TEST1");
+    RemoveDirectoryW(szPath);
+
+    StringCbCopyW(szPath, sizeof(szPath), szDir);
+    StringCbCatW(szPath, sizeof(szPath), L"\\BROWSEUI-1\\TEST2");
+    RemoveDirectoryW(szPath);
+
+    StringCbCopyW(szPath, sizeof(szPath), szDir);
+    StringCbCatW(szPath, sizeof(szPath), L"\\BROWSEUI-1");
+    RemoveDirectoryW(szPath);
+
+    StringCbCopyW(szPath, sizeof(szPath), szDir);
+    StringCbCatW(szPath, sizeof(szPath), L"\\BROWSEUI-2\\tes1");
+    RemoveDirectoryW(szPath);
+
+    StringCbCopyW(szPath, sizeof(szPath), szDir);
+    StringCbCatW(szPath, sizeof(szPath), L"\\BROWSEUI-2\\tes2");
+    RemoveDirectoryW(szPath);
+
+    StringCbCopyW(szPath, sizeof(szPath), szDir);
+    StringCbCatW(szPath, sizeof(szPath), L"\\BROWSEUI-2");
+    RemoveDirectoryW(szPath);
 }
 
 static void
