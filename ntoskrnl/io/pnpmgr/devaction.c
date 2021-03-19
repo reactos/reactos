@@ -1081,33 +1081,122 @@ IopQueryCompatibleIds(PDEVICE_NODE DeviceNode,
     return Status;
 }
 
+/**
+ * @brief      Sets the DeviceNode's DeviceDesc and LocationInformation registry values
+ */
+VOID
+PiSetDevNodeText(
+    _In_ PDEVICE_NODE DeviceNode,
+    _In_ HANDLE InstanceKey)
+{
+    PAGED_CODE();
+
+    LCID localeId;
+
+    // Get the Locale ID
+    NTSTATUS status = ZwQueryDefaultLocale(FALSE, &localeId);
+    if (!NT_SUCCESS(status))
+    {
+        DPRINT1("ZwQueryDefaultLocale() failed with status %x\n", status);
+        return;
+    }
+
+    // Step 1: write DeviceDesc key if not exists
+
+    UNICODE_STRING valDeviceDesc = RTL_CONSTANT_STRING(L"DeviceDesc");
+    ULONG len;
+
+    status = ZwQueryValueKey(InstanceKey, &valDeviceDesc, KeyValueBasicInformation, NULL, 0, &len);
+    if (!NT_SUCCESS(status))
+    {
+        PWSTR deviceDesc = NULL;
+        status = PiIrpQueryDeviceText(DeviceNode, localeId, DeviceTextDescription, &deviceDesc);
+
+        if (deviceDesc && deviceDesc[0] != UNICODE_NULL)
+        {
+            status = ZwSetValueKey(InstanceKey,
+                                   &valDeviceDesc,
+                                   0,
+                                   REG_SZ,
+                                   deviceDesc,
+                                   ((ULONG)wcslen(deviceDesc) + 1) * sizeof(WCHAR));
+
+            if (!NT_SUCCESS(status))
+            {
+                DPRINT1("ZwSetValueKey() failed (Status %x)\n", status);
+            }
+        }
+        else
+        {
+            // This key is mandatory, so even if the Irp fails, we still write it
+            UNICODE_STRING unknownDeviceDesc = RTL_CONSTANT_STRING(L"Unknown device");
+            DPRINT("Driver didn't return DeviceDesc (status %x)\n", status);
+
+            status = ZwSetValueKey(InstanceKey,
+                                   &valDeviceDesc,
+                                   0,
+                                   REG_SZ,
+                                   unknownDeviceDesc.Buffer,
+                                   unknownDeviceDesc.MaximumLength);
+            if (!NT_SUCCESS(status))
+            {
+                DPRINT1("ZwSetValueKey() failed (Status %x)\n", status);
+            }
+        }
+
+        if (deviceDesc)
+        {
+            ExFreePoolWithTag(deviceDesc, 0);
+        }
+    }
+
+    // Step 2: LocaltionInformation is overwritten unconditionally
+
+    PWSTR deviceLocationInfo = NULL;
+    status = PiIrpQueryDeviceText(DeviceNode,
+                                  localeId,
+                                  DeviceTextLocationInformation,
+                                  &deviceLocationInfo);
+
+    if (deviceLocationInfo && deviceLocationInfo[0] != UNICODE_NULL)
+    {
+        UNICODE_STRING valLocationInfo = RTL_CONSTANT_STRING(L"LocationInformation");
+
+        status = ZwSetValueKey(InstanceKey,
+                               &valLocationInfo,
+                               0,
+                               REG_SZ,
+                               deviceLocationInfo,
+                               ((ULONG)wcslen(deviceLocationInfo) + 1) * sizeof(WCHAR));
+        if (!NT_SUCCESS(status))
+        {
+            DPRINT1("ZwSetValueKey() failed (Status %x)\n", status);
+        }
+    }
+
+    if (deviceLocationInfo)
+    {
+        ExFreePoolWithTag(deviceLocationInfo, 0);
+    }
+    else
+    {
+        DPRINT("Driver didn't return LocationInformation (status %x)\n", status);
+    }
+}
+
 static
 NTSTATUS
 PiInitializeDevNode(
     _In_ PDEVICE_NODE DeviceNode)
 {
     IO_STATUS_BLOCK IoStatusBlock;
-    PWSTR DeviceDescription;
-    PWSTR LocationInformation;
-    IO_STACK_LOCATION Stack;
     NTSTATUS Status;
-    ULONG RequiredLength;
-    LCID LocaleId;
     HANDLE InstanceKey = NULL;
-    UNICODE_STRING ValueName;
     UNICODE_STRING InstancePathU;
     PDEVICE_OBJECT OldDeviceObject;
 
     DPRINT("PiProcessNewDevNode(%p)\n", DeviceNode);
     DPRINT("PDO 0x%p\n", DeviceNode->PhysicalDeviceObject);
-
-    /* Get Locale ID */
-    Status = ZwQueryDefaultLocale(FALSE, &LocaleId);
-    if (!NT_SUCCESS(Status))
-    {
-        DPRINT1("ZwQueryDefaultLocale() failed with status 0x%lx\n", Status);
-        return Status;
-    }
 
     /*
      * FIXME: For critical errors, cleanup and disable device, but always
@@ -1163,86 +1252,8 @@ PiInitializeDevNode(
 
     DeviceNode->Flags |= DNF_IDS_QUERIED;
 
-    DPRINT("Sending IRP_MN_QUERY_DEVICE_TEXT.DeviceTextDescription to device stack\n");
-
-    Stack.Parameters.QueryDeviceText.DeviceTextType = DeviceTextDescription;
-    Stack.Parameters.QueryDeviceText.LocaleId = LocaleId;
-    Status = IopInitiatePnpIrp(DeviceNode->PhysicalDeviceObject,
-                               &IoStatusBlock,
-                               IRP_MN_QUERY_DEVICE_TEXT,
-                               &Stack);
-    DeviceDescription = NT_SUCCESS(Status) ? (PWSTR)IoStatusBlock.Information
-                                           : NULL;
-    /* This key is mandatory, so even if the Irp fails, we still write it */
-    RtlInitUnicodeString(&ValueName, L"DeviceDesc");
-    if (ZwQueryValueKey(InstanceKey, &ValueName, KeyValueBasicInformation, NULL, 0, &RequiredLength) == STATUS_OBJECT_NAME_NOT_FOUND)
-    {
-        if (DeviceDescription &&
-            *DeviceDescription != UNICODE_NULL)
-        {
-            /* This key is overriden when a driver is installed. Don't write the
-             * new description if another one already exists */
-            Status = ZwSetValueKey(InstanceKey,
-                                   &ValueName,
-                                   0,
-                                   REG_SZ,
-                                   DeviceDescription,
-                                   ((ULONG)wcslen(DeviceDescription) + 1) * sizeof(WCHAR));
-        }
-        else
-        {
-            UNICODE_STRING DeviceDesc = RTL_CONSTANT_STRING(L"Unknown device");
-            DPRINT("Driver didn't return DeviceDesc (Status 0x%08lx), so place unknown device there\n", Status);
-
-            Status = ZwSetValueKey(InstanceKey,
-                                   &ValueName,
-                                   0,
-                                   REG_SZ,
-                                   DeviceDesc.Buffer,
-                                   DeviceDesc.MaximumLength);
-            if (!NT_SUCCESS(Status))
-            {
-                DPRINT1("ZwSetValueKey() failed (Status 0x%lx)\n", Status);
-            }
-
-        }
-    }
-
-    if (DeviceDescription)
-    {
-        ExFreePoolWithTag(DeviceDescription, 0);
-    }
-
-    DPRINT("Sending IRP_MN_QUERY_DEVICE_TEXT.DeviceTextLocation to device stack\n");
-
-    Stack.Parameters.QueryDeviceText.DeviceTextType = DeviceTextLocationInformation;
-    Stack.Parameters.QueryDeviceText.LocaleId = LocaleId;
-    Status = IopInitiatePnpIrp(DeviceNode->PhysicalDeviceObject,
-                               &IoStatusBlock,
-                               IRP_MN_QUERY_DEVICE_TEXT,
-                               &Stack);
-    if (NT_SUCCESS(Status) && IoStatusBlock.Information)
-    {
-        LocationInformation = (PWSTR)IoStatusBlock.Information;
-        DPRINT("LocationInformation: %S\n", LocationInformation);
-        RtlInitUnicodeString(&ValueName, L"LocationInformation");
-        Status = ZwSetValueKey(InstanceKey,
-                               &ValueName,
-                               0,
-                               REG_SZ,
-                               LocationInformation,
-                               ((ULONG)wcslen(LocationInformation) + 1) * sizeof(WCHAR));
-        if (!NT_SUCCESS(Status))
-        {
-            DPRINT1("ZwSetValueKey() failed (Status %lx)\n", Status);
-        }
-
-        ExFreePoolWithTag(LocationInformation, 0);
-    }
-    else
-    {
-        DPRINT("IopInitiatePnpIrp() failed (Status %x) or IoStatusBlock.Information=NULL\n", Status);
-    }
+    // Set the device's DeviceDesc and LocationInformation fields
+    PiSetDevNodeText(DeviceNode, InstanceKey);
 
     DPRINT("Sending IRP_MN_QUERY_BUS_INFORMATION to device stack\n");
 

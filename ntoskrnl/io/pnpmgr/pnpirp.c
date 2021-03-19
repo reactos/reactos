@@ -196,6 +196,37 @@ PiIrpQueryDeviceRelations(
     return status;
 }
 
+// IRP_MN_QUERY_DEVICE_TEXT (0x0C)
+NTSTATUS
+PiIrpQueryDeviceText(
+    _In_ PDEVICE_NODE DeviceNode,
+    _In_ LCID POINTER_ALIGNMENT LocaleId,
+    _In_ DEVICE_TEXT_TYPE Type,
+    _Out_ PWSTR *DeviceText)
+{
+    PAGED_CODE();
+
+    ASSERT(DeviceNode);
+    ASSERT(DeviceNode->State == DeviceNodeUninitialized);
+
+    ULONG_PTR longText;
+    IO_STACK_LOCATION stack = {
+        .MajorFunction = IRP_MJ_PNP,
+        .MinorFunction = IRP_MN_QUERY_DEVICE_TEXT,
+        .Parameters.QueryDeviceText.DeviceTextType = Type,
+        .Parameters.QueryDeviceText.LocaleId = LocaleId
+    };
+
+    NTSTATUS status;
+    status = IopSynchronousCall(DeviceNode->PhysicalDeviceObject, &stack, (PVOID)&longText);
+    if (NT_SUCCESS(status))
+    {
+        *DeviceText = (PVOID)longText;
+    }
+
+    return status;
+}
+
 // IRP_MN_QUERY_PNP_DEVICE_STATE (0x14)
 NTSTATUS
 PiIrpQueryPnPDeviceState(

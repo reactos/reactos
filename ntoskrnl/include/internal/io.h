@@ -753,6 +753,11 @@ PnpRegSzToString(
     OUT PUSHORT StringLength OPTIONAL
 );
 
+VOID
+PiSetDevNodeText(
+    _In_ PDEVICE_NODE DeviceNode,
+    _In_ HANDLE InstanceKey);
+
 //
 // Initialization Routines
 //
@@ -1380,6 +1385,13 @@ NTSTATUS
 PiIrpQueryDeviceRelations(
     _In_ PDEVICE_NODE DeviceNode,
     _In_ DEVICE_RELATION_TYPE Type);
+
+NTSTATUS
+PiIrpQueryDeviceText(
+    _In_ PDEVICE_NODE DeviceNode,
+    _In_ LCID POINTER_ALIGNMENT LocaleId,
+    _In_ DEVICE_TEXT_TYPE Type,
+    _Out_ PWSTR *DeviceText);
 
 NTSTATUS
 PiIrpQueryPnPDeviceState(
