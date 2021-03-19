@@ -1154,7 +1154,7 @@ EnableAccount(
 {
     INFCONTEXT InfContext;
     SAM_HANDLE UserHandle = NULL;
-    USER_CONTROL_INFORMATION ControlInfo;
+    PUSER_CONTROL_INFORMATION ControlInfo = NULL;
     INT nValue = 0;
     NTSTATUS Status;
 
@@ -1195,22 +1195,25 @@ EnableAccount(
 
     if (nValue == 0)
     {
-        ControlInfo.UserAccountControl |= USER_ACCOUNT_DISABLED;
+        ControlInfo->UserAccountControl |= USER_ACCOUNT_DISABLED;
     }
     else
     {
-        ControlInfo.UserAccountControl &= ~USER_ACCOUNT_DISABLED;
+        ControlInfo->UserAccountControl &= ~USER_ACCOUNT_DISABLED;
     }
 
     Status = SamSetInformationUser(UserHandle,
                                    UserControlInformation,
-                                   (PVOID)&ControlInfo);
+                                   ControlInfo);
     if (!NT_SUCCESS(Status))
     {
         DPRINT1("SamSetInformationUser() failed (Status: 0x%08lx)\n", Status);
     }
 
 done:
+    if (ControlInfo != NULL)
+        SamFreeMemory(ControlInfo);
+
     if (UserHandle != NULL)
         SamCloseHandle(UserHandle);
 }
