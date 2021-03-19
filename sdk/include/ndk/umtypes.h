@@ -108,12 +108,12 @@ Author:
 //
 // Limits
 //
-#define MINCHAR                         0x80
-#define MAXCHAR                         0x7f
-#define MINSHORT                        0x8000
-#define MAXSHORT                        0x7fff
-#define MINLONG                         0x80000000
-#define MAXLONG                         0x7fffffff
+#define MINCHAR                         (-128)
+#define MAXCHAR                         127
+#define MINSHORT                        (-32768)
+#define MAXSHORT                        32767
+#define MINLONG                         (-2147483648)
+#define MAXLONG                         2147483647
 #define MAXUCHAR                        0xff
 #define MAXUSHORT                       0xffff
 #define MAXULONG                        0xffffffff
