@@ -369,7 +369,7 @@ DeviceInstallThread(LPVOID lpParameter)
 
     while (TRUE)
     {
-        UINT32 devListSize;
+        ULONG devListSize;
         DWORD status = PNP_GetDeviceListSize(NULL, NULL, &devListSize, 0);
         if (status != CR_SUCCESS)
         {
