@@ -294,14 +294,6 @@ ReadMemoryLimit32(
 
 static
 inline
-VOID
-HwDelay(VOID)
-{
-    KeStallExecutionProcessor(1000);
-}
-
-static
-inline
 UCHAR
 NextLFSR(
     _In_ UCHAR Lfsr,
@@ -320,7 +312,6 @@ SendKey(VOID)
 {
     UCHAR i, Lfsr;
 
-    HwDelay();
     WriteAddress(0x00);
     WriteAddress(0x00);
 
@@ -347,7 +338,7 @@ PeekByte(
         if (ReadStatus(ReadDataPort) & 0x01)
             return ReadResourceData(ReadDataPort);
 
-        HwDelay();
+        KeStallExecutionProcessor(1000);
     }
 
     return 0xFF;
@@ -1196,20 +1187,19 @@ TryIsolate(
     SendKey();
 
     ResetCsn();
-    HwDelay();
-    HwDelay();
+    KeStallExecutionProcessor(2000);
 
     WaitForKey();
     SendKey();
     Wake(0x00);
+    KeStallExecutionProcessor(1000);
 
     SetReadDataPort(ReadDataPort);
-    HwDelay();
 
     while (TRUE)
     {
         EnterIsolationState();
-        HwDelay();
+        KeStallExecutionProcessor(1000);
 
         RtlZeroMemory(&Identifier, sizeof(Identifier));
 
@@ -1220,9 +1210,9 @@ TryIsolate(
             for (j = 0; j < 8; j++)
             {
                 Data = ReadData(ReadDataPort);
-                HwDelay();
+                KeStallExecutionProcessor(250);
                 Data = ((Data << 8) | ReadData(ReadDataPort));
-                HwDelay();
+                KeStallExecutionProcessor(250);
                 Byte >>= 1;
 
                 if (Data != 0xFFFF)
@@ -1269,10 +1259,9 @@ TryIsolate(
         Csn++;
 
         WriteCsn(Csn);
-        HwDelay();
+        KeStallExecutionProcessor(1000);
 
         Wake(0x00);
-        HwDelay();
     }
 
     WaitForKey();
@@ -1299,8 +1288,6 @@ DeviceActivation(
         ActivateDevice(IsaDevice->LDN);
     else
         DeactivateDevice(IsaDevice->LDN);
-
-    HwDelay();
 
     WaitForKey();
 }
