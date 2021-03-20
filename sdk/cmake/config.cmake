@@ -100,6 +100,9 @@ endif()
 cmake_dependent_option(BUILD_MP "Whether to build the multiprocessor versions of NTOSKRNL and HAL." ON
                        "ARCH STREQUAL i386" OFF)
 
+cmake_dependent_option(ISAPNP_ENABLE "Whether to enable the ISA PnP support." ON
+                       "ARCH STREQUAL i386 AND NOT SARCH STREQUAL xbox" OFF)
+
 set(GENERATE_DEPENDENCY_GRAPH FALSE CACHE BOOL
 "Whether to create a GraphML dependency graph of DLLs.")
 
