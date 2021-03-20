@@ -676,11 +676,11 @@ IsaPnpFillDeviceRelations(
             DPRINT("Rescan ISA PnP bus\n");
 
             /* Run the isolation protocol */
-            if (NT_SUCCESS(IsaHwTryReadDataPort(FdoExt->ReadDataPort)))
-            {
-                /* Card identification */
+            FdoExt->Cards = IsaHwTryReadDataPort(FdoExt->ReadDataPort);
+
+            /* Card identification */
+            if (FdoExt->Cards > 0)
                 (VOID)IsaHwFillDeviceList(FdoExt);
-            }
         }
 
         ReadPortExt->Flags &= ~ISAPNP_SCANNED_BY_READ_PORT;

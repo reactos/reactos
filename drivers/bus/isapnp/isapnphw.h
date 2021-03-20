@@ -4,6 +4,7 @@
  * PURPOSE:     Hardware definitions
  * COPYRIGHT:   Copyright 2010 Cameron Gutman <cameron.gutman@reactos.org>
  *              Copyright 2020 Hervé Poussineau <hpoussin@reactos.org>
+ *              Copyright 2021 Dmitry Borisov <di.sean@protonmail.com>
  */
 
 #pragma once
@@ -14,14 +15,6 @@ extern "C" {
 
 #define ISAPNP_ADDRESS 0x279
 #define ISAPNP_WRITE_DATA 0xA79
-
-#define ISAPNP_READ_PORT_MIN 0x203
-#define ISAPNP_READ_PORT_START 0x213
-#define ISAPNP_READ_PORT_MAX 0x3FF
-#define ISAPNP_READ_PORT_STEP 0x10
-
-#define ISAPNP_CSN_MIN 0x01
-#define ISAPNP_CSN_MAX 0x0F
 
 #define ISAPNP_READPORT 0x00
 #define ISAPNP_SERIALISOLATION 0x01
@@ -58,11 +51,6 @@ extern "C" {
 #define ISAPNP_TAG_ENDDEP 0x07
 #define ISAPNP_TAG_IOPORT 0x08
 #define ISAPNP_TAG_FIXEDIO 0x09
-#define ISAPNP_TAG_RSVDSHORTA 0x0A
-#define ISAPNP_TAG_RSVDSHORTB 0x0B
-#define ISAPNP_TAG_RSVDSHORTC 0x0C
-#define ISAPNP_TAG_RSVDSHORTD 0x0D
-#define ISAPNP_TAG_VENDORSHORT 0x0E
 #define ISAPNP_TAG_END 0x0F
 
 #define ISAPNP_IS_LARGE_TAG(t) (((t) & 0x80))
@@ -70,26 +58,10 @@ extern "C" {
 #define ISAPNP_TAG_MEMRANGE 0x81
 #define ISAPNP_TAG_ANSISTR 0x82
 #define ISAPNP_TAG_UNICODESTR 0x83
-#define ISAPNP_TAG_VENDORLONG 0x84
 #define ISAPNP_TAG_MEM32RANGE 0x85
 #define ISAPNP_TAG_FIXEDMEM32RANGE 0x86
-#define ISAPNP_TAG_RSVDLONG0 0xF0
-#define ISAPNP_TAG_RSVDLONG1 0xF1
-#define ISAPNP_TAG_RSVDLONG2 0xF2
-#define ISAPNP_TAG_RSVDLONG3 0xF3
-#define ISAPNP_TAG_RSVDLONG4 0xF4
-#define ISAPNP_TAG_RSVDLONG5 0xF5
-#define ISAPNP_TAG_RSVDLONG6 0xF6
-#define ISAPNP_TAG_RSVDLONG7 0xF7
-#define ISAPNP_TAG_RSVDLONG8 0xF8
-#define ISAPNP_TAG_RSVDLONG9 0xF9
-#define ISAPNP_TAG_RSVDLONGA 0xFA
-#define ISAPNP_TAG_RSVDLONGB 0xFB
-#define ISAPNP_TAG_RSVDLONGC 0xFC
-#define ISAPNP_TAG_RSVDLONGD 0xFD
-#define ISAPNP_TAG_RSVDLONGE 0xFE
-#define ISAPNP_TAG_RSVDLONGF 0xFF
-#define ISAPNP_TAG_PSEUDO_NEWBOARD 0x100
+
+#include <pshpack1.h>
 
 typedef struct _ISAPNP_IDENTIFIER
 {
@@ -106,14 +78,11 @@ typedef struct _ISAPNP_LOGDEVID
     USHORT Flags;
 } ISAPNP_LOGDEVID, *PISAPNP_LOGDEVID;
 
-typedef struct _ISAPNP_DEVICEID
+typedef struct _ISAPNP_COMPATID
 {
-    CHAR* Name;
     USHORT VendorId;
     USHORT ProdId;
-} ISAPNP_DEVICEID, *PISAPNP_DEVICEID;
-
-#include <pshpack1.h>
+} ISAPNP_COMPATID, *PISAPNP_COMPATID;
 
 typedef struct _ISAPNP_IO_DESCRIPTION
 {
@@ -123,6 +92,12 @@ typedef struct _ISAPNP_IO_DESCRIPTION
     UCHAR Alignment;
     UCHAR Length;
 } ISAPNP_IO_DESCRIPTION, *PISAPNP_IO_DESCRIPTION;
+
+typedef struct _ISAPNP_FIXED_IO_DESCRIPTION
+{
+    USHORT IoBase;
+    UCHAR Length;
+} ISAPNP_FIXED_IO_DESCRIPTION, *PISAPNP_FIXED_IO_DESCRIPTION;
 
 typedef struct _ISAPNP_IRQ_DESCRIPTION
 {
@@ -135,6 +110,31 @@ typedef struct _ISAPNP_DMA_DESCRIPTION
     UCHAR Mask;
     UCHAR Information;
 } ISAPNP_DMA_DESCRIPTION, *PISAPNP_DMA_DESCRIPTION;
+
+typedef struct _ISAPNP_MEMRANGE_DESCRIPTION
+{
+    UCHAR Information;
+    USHORT Minimum;
+    USHORT Maximum;
+    USHORT Alignment;
+    USHORT Length;
+} ISAPNP_MEMRANGE_DESCRIPTION, *PISAPNP_MEMRANGE_DESCRIPTION;
+
+typedef struct _ISAPNP_MEMRANGE32_DESCRIPTION
+{
+    UCHAR Information;
+    ULONG Minimum;
+    ULONG Maximum;
+    ULONG Alignment;
+    ULONG Length;
+} ISAPNP_MEMRANGE32_DESCRIPTION, *PISAPNP_MEMRANGE32_DESCRIPTION;
+
+typedef struct _ISAPNP_FIXEDMEMRANGE_DESCRIPTION
+{
+    UCHAR Information;
+    ULONG MemoryBase;
+    ULONG Length;
+} ISAPNP_FIXEDMEMRANGE_DESCRIPTION, *PISAPNP_FIXEDMEMRANGE_DESCRIPTION;
 
 #include <poppack.h>
 

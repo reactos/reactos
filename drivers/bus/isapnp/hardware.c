@@ -4,12 +4,24 @@
  * PURPOSE:         Hardware support code
  * COPYRIGHT:       Copyright 2010 Cameron Gutman <cameron.gutman@reactos.org>
  *                  Copyright 2020 Hervé Poussineau <hpoussin@reactos.org>
+ *                  Copyright 2021 Dmitry Borisov <di.sean@protonmail.com>
  */
 
 #include "isapnp.h"
 
 #define NDEBUG
 #include <debug.h>
+
+#ifdef _MSC_VER
+#pragma warning(disable:28138) /* ISA bus always uses hardcoded port addresses */
+#endif
+
+typedef enum
+{
+    dfNotStarted,
+    dfStarted,
+    dfDone
+} DEPEDENT_FUNCTION_STATE;
 
 static
 inline
@@ -293,6 +305,24 @@ Peek(
 
 static
 CODE_SEG("PAGE")
+VOID
+PeekCached(
+    _In_reads_bytes_(Length) PUCHAR ResourceData,
+    _Out_writes_bytes_all_(Length) PVOID Buffer,
+    _In_ USHORT Length)
+{
+    PUCHAR Dest = Buffer;
+
+    PAGED_CODE();
+
+    while (Length--)
+    {
+        *Dest++ = *ResourceData++;
+    }
+}
+
+static
+CODE_SEG("PAGE")
 UCHAR
 IsaPnpChecksum(
     _In_ PISAPNP_IDENTIFIER Identifier)
@@ -318,24 +348,48 @@ IsaPnpChecksum(
 
 static
 CODE_SEG("PAGE")
-BOOLEAN
-ReadTags(
-    _In_ PUCHAR ReadDataPort,
-    _In_ USHORT LogDev,
-    _Inout_ PISAPNP_LOGICAL_DEVICE LogDevice)
+VOID
+IsaPnpExtractAscii(
+    _Out_writes_all_(3) PUCHAR Buffer,
+    _In_ USHORT CompressedData)
 {
-    BOOLEAN res = FALSE;
-    PVOID Buffer;
-    USHORT Tag, TagLen, MaxLen;
-    ULONG NumberOfIo = 0, NumberOfIrq = 0, NumberOfDma = 0;
-
     PAGED_CODE();
 
-    LogDev += 1;
+    Buffer[0] = ((CompressedData >> 2) & 0x1F) + 'A' - 1;
+    Buffer[1] = (((CompressedData & 0x3) << 3) | ((CompressedData >> 13) & 0x7)) + 'A' - 1;
+    Buffer[2] = ((CompressedData >> 8) & 0x1F) + 'A' - 1;
+}
+
+static
+CODE_SEG("PAGE")
+NTSTATUS
+ReadTags(
+    _In_ PUCHAR ReadDataPort,
+    _Out_writes_(ISAPNP_MAX_RESOURCEDATA) PUCHAR Buffer,
+    _In_ ULONG MaxLength,
+    _Out_ PUSHORT MaxLogDev)
+{
+    PAGED_CODE();
+
+    *MaxLogDev = 0;
 
     while (TRUE)
     {
+        UCHAR Tag;
+        USHORT TagLen;
+
+        if (MaxLength < 1)
+            return STATUS_BUFFER_OVERFLOW;
+
         Tag = PeekByte(ReadDataPort);
+        if (Tag == 0)
+        {
+            DPRINT("Invalid tag\n");
+            return STATUS_INVALID_PARAMETER_1;
+        }
+        *Buffer++ = Tag;
+        --MaxLength;
+
         if (ISAPNP_IS_SMALL_TAG(Tag))
         {
             TagLen = ISAPNP_SMALL_TAG_LEN(Tag);
@@ -343,64 +397,623 @@ ReadTags(
         }
         else
         {
-            TagLen = PeekByte(ReadDataPort) + (PeekByte(ReadDataPort) << 8);
+            UCHAR Temp[2];
+
+            if (MaxLength < sizeof(Temp))
+                return STATUS_BUFFER_OVERFLOW;
+
+            Peek(ReadDataPort, &Temp, sizeof(Temp));
+            *Buffer++ = Temp[0];
+            *Buffer++ = Temp[1];
+            MaxLength -= sizeof(Temp);
+
+            TagLen = Temp[0] + (Temp[1] << 8);
             Tag = ISAPNP_LARGE_TAG_NAME(Tag);
         }
+
+        if (Tag == 0xFF && TagLen == 0xFFFF)
+        {
+            DPRINT("Invalid tag\n");
+            return STATUS_INVALID_PARAMETER_2;
+        }
+
+        if (TagLen > MaxLength)
+            return STATUS_BUFFER_OVERFLOW;
+
+        Peek(ReadDataPort, Buffer, TagLen);
+        MaxLength -= TagLen;
+        Buffer += TagLen;
+
+        if (Tag == ISAPNP_TAG_LOGDEVID)
+            (*MaxLogDev)++;
+
         if (Tag == ISAPNP_TAG_END)
             break;
+    }
 
-        Buffer = NULL;
-        if (Tag == ISAPNP_TAG_LOGDEVID)
-        {
-            MaxLen = sizeof(LogDevice->LogDevId);
-            Buffer = &LogDevice->LogDevId;
-            LogDev--;
-        }
-        else if (Tag == ISAPNP_TAG_IRQ && NumberOfIrq < ARRAYSIZE(LogDevice->Irq))
-        {
-            MaxLen = sizeof(LogDevice->Irq[NumberOfIrq].Description);
-            Buffer = &LogDevice->Irq[NumberOfIrq].Description;
-            NumberOfIrq++;
-        }
-        else if (Tag == ISAPNP_TAG_IOPORT && NumberOfIo < ARRAYSIZE(LogDevice->Io))
-        {
-            MaxLen = sizeof(LogDevice->Io[NumberOfIo].Description);
-            Buffer = &LogDevice->Io[NumberOfIo].Description;
-            NumberOfIo++;
-        }
-        else if (Tag == ISAPNP_TAG_DMA && NumberOfDma < ARRAYSIZE(LogDevice->Dma))
-        {
-            MaxLen = sizeof(LogDevice->Dma[NumberOfDma].Description);
-            Buffer = &LogDevice->Dma[NumberOfDma].Description;
-            NumberOfDma++;
-        }
-        else if (LogDev == 0)
-        {
-            DPRINT1("Found unknown tag 0x%x (len %d)\n", Tag, TagLen);
-        }
+    return STATUS_SUCCESS;
+}
 
-        if (Buffer && LogDev == 0)
+static
+CODE_SEG("PAGE")
+VOID
+FreeLogicalDevice(
+    _In_ __drv_freesMem(Mem) PISAPNP_LOGICAL_DEVICE LogDevice)
+{
+    PLIST_ENTRY Entry;
+
+    PAGED_CODE();
+
+    if (LogDevice->FriendlyName)
+        ExFreePoolWithTag(LogDevice->FriendlyName, TAG_ISAPNP);
+
+    if (LogDevice->Alternatives)
+        ExFreePoolWithTag(LogDevice->Alternatives, TAG_ISAPNP);
+
+    Entry = LogDevice->CompatibleIdList.Flink;
+    while (Entry != &LogDevice->CompatibleIdList)
+    {
+        PISAPNP_COMPATIBLE_ID_ENTRY CompatibleId =
+            CONTAINING_RECORD(Entry, ISAPNP_COMPATIBLE_ID_ENTRY, IdLink);
+
+        RemoveEntryList(&CompatibleId->IdLink);
+
+        Entry = Entry->Flink;
+
+        ExFreePoolWithTag(CompatibleId, TAG_ISAPNP);
+    }
+
+    ExFreePoolWithTag(LogDevice, TAG_ISAPNP);
+}
+
+static
+CODE_SEG("PAGE")
+NTSTATUS
+ParseTags(
+    _In_ PUCHAR ResourceData,
+    _In_ USHORT LogDevToParse,
+    _Inout_ PISAPNP_LOGICAL_DEVICE LogDevice)
+{
+    USHORT LogDev;
+    DEPEDENT_FUNCTION_STATE DfState = dfNotStarted;
+    PUCHAR IdStrPos = NULL;
+    USHORT IdStrLen = 0;
+    UCHAR NumberOfIo = 0,
+          NumberOfIrq = 0,
+          NumberOfDma = 0,
+          NumberOfMemRange = 0,
+          NumberOfMemRange32 = 0,
+          NumberOfDepedentSet = 0;
+
+    PAGED_CODE();
+
+    DPRINT("%s for CSN %u, LDN %u\n", __FUNCTION__, LogDevice->CSN, LogDevice->LDN);
+
+    LogDev = LogDevToParse + 1;
+
+    while (TRUE)
+    {
+        UCHAR Tag;
+        USHORT TagLen;
+
+        Tag = *ResourceData++;
+
+        if (ISAPNP_IS_SMALL_TAG(Tag))
         {
-            res = TRUE;
-            if (MaxLen > TagLen)
-            {
-                Peek(ReadDataPort, Buffer, TagLen);
-            }
-            else
-            {
-                Peek(ReadDataPort, Buffer, MaxLen);
-                Peek(ReadDataPort, NULL, TagLen - MaxLen);
-            }
+            TagLen = ISAPNP_SMALL_TAG_LEN(Tag);
+            Tag = ISAPNP_SMALL_TAG_NAME(Tag);
         }
         else
         {
-            /* We don't want to read informations on this
-             * logical device, or we don't know the tag. */
-            Peek(ReadDataPort, NULL, TagLen);
-        }
-    };
+            TagLen = *ResourceData++;
+            TagLen += *ResourceData++ << 8;
 
-    return res;
+            Tag = ISAPNP_LARGE_TAG_NAME(Tag);
+        }
+
+        switch (Tag)
+        {
+            case ISAPNP_TAG_LOGDEVID:
+            {
+                ISAPNP_LOGDEVID Temp;
+
+                --LogDev;
+
+                if (LogDev != 0 ||
+                    (TagLen > sizeof(ISAPNP_LOGDEVID) ||
+                     TagLen < (sizeof(ISAPNP_LOGDEVID) - 1)))
+                {
+                    goto SkipTag;
+                }
+
+                PeekCached(ResourceData, &Temp, TagLen);
+                ResourceData += TagLen;
+
+                DPRINT("Found tag 0x%X (len %u)\n"
+                       "  VendorId 0x%04X\n"
+                       "  ProdId   0x%04X\n",
+                       Tag, TagLen,
+                       Temp.VendorId,
+                       Temp.ProdId);
+
+                IsaPnpExtractAscii(LogDevice->LogVendorId, Temp.VendorId);
+                LogDevice->LogProdId = RtlUshortByteSwap(Temp.ProdId);
+
+                break;
+            }
+
+            case ISAPNP_TAG_COMPATDEVID:
+            {
+                ISAPNP_COMPATID Temp;
+                PISAPNP_COMPATIBLE_ID_ENTRY CompatibleId;
+
+                if (LogDev != 0 || TagLen != sizeof(ISAPNP_COMPATID))
+                    goto SkipTag;
+
+                CompatibleId = ExAllocatePoolWithTag(PagedPool,
+                                                     sizeof(ISAPNP_COMPATIBLE_ID_ENTRY),
+                                                     TAG_ISAPNP);
+                if (!CompatibleId)
+                    return STATUS_INSUFFICIENT_RESOURCES;
+
+                PeekCached(ResourceData, &Temp, TagLen);
+                ResourceData += TagLen;
+
+                DPRINT("Found tag 0x%X (len %u)\n"
+                       "  VendorId 0x%04X\n"
+                       "  ProdId   0x%04X\n",
+                       Tag, TagLen,
+                       Temp.VendorId,
+                       Temp.ProdId);
+
+                IsaPnpExtractAscii(CompatibleId->VendorId, Temp.VendorId);
+                CompatibleId->ProdId = RtlUshortByteSwap(Temp.ProdId);
+
+                InsertTailList(&LogDevice->CompatibleIdList, &CompatibleId->IdLink);
+
+                break;
+            }
+
+            case ISAPNP_TAG_IRQ:
+            {
+                PISAPNP_IRQ_DESCRIPTION Description;
+
+                if (LogDev != 0 ||
+                    (TagLen > sizeof(ISAPNP_IRQ_DESCRIPTION) ||
+                     TagLen < (sizeof(ISAPNP_IRQ_DESCRIPTION) - 1)) ||
+                    NumberOfIrq >= RTL_NUMBER_OF(LogDevice->Irq))
+                {
+                    goto SkipTag;
+                }
+
+                if (DfState == dfStarted)
+                {
+                    if (NumberOfDepedentSet >= ISAPNP_MAX_ALTERNATIVES)
+                        goto SkipTag;
+
+                    Description = &LogDevice->Alternatives->Irq[NumberOfDepedentSet];
+                }
+                else
+                {
+                    Description = &LogDevice->Irq[NumberOfIrq].Description;
+
+                    LogDevice->Irq[NumberOfIrq].Index = NumberOfIrq;
+                    ++NumberOfIrq;
+                }
+
+                PeekCached(ResourceData, Description, TagLen);
+                ResourceData += TagLen;
+
+                if (TagLen == (sizeof(ISAPNP_IRQ_DESCRIPTION) - 1))
+                    Description->Information = 0x01;
+
+                DPRINT("Found tag 0x%X (len %u)\n"
+                       "  Mask        0x%X\n"
+                       "  Information 0x%X\n",
+                       Tag, TagLen,
+                       Description->Mask,
+                       Description->Information);
+
+                break;
+            }
+
+            case ISAPNP_TAG_DMA:
+            {
+                PISAPNP_DMA_DESCRIPTION Description;
+
+                if (LogDev != 0 || TagLen != sizeof(ISAPNP_DMA_DESCRIPTION) ||
+                    NumberOfDma >= RTL_NUMBER_OF(LogDevice->Dma))
+                {
+                    goto SkipTag;
+                }
+
+                if (DfState == dfStarted)
+                {
+                    if (NumberOfDepedentSet >= ISAPNP_MAX_ALTERNATIVES)
+                        goto SkipTag;
+
+                    Description = &LogDevice->Alternatives->Dma[NumberOfDepedentSet];
+                }
+                else
+                {
+                    Description = &LogDevice->Dma[NumberOfDma].Description;
+
+                    LogDevice->Dma[NumberOfDma].Index = NumberOfDma;
+                    ++NumberOfDma;
+                }
+
+                PeekCached(ResourceData, Description, TagLen);
+                ResourceData += TagLen;
+
+                DPRINT("Found tag 0x%X (len %u)\n"
+                       "  Mask        0x%X\n"
+                       "  Information 0x%X\n",
+                       Tag, TagLen,
+                       Description->Mask,
+                       Description->Information);
+
+                break;
+            }
+
+            case ISAPNP_TAG_STARTDEP:
+            {
+                if (LogDev != 0 || TagLen > 1 ||
+                    NumberOfDepedentSet >= ISAPNP_MAX_ALTERNATIVES)
+                {
+                    goto SkipTag;
+                }
+
+                if (DfState == dfNotStarted)
+                {
+                    LogDevice->Alternatives = ExAllocatePoolZero(PagedPool,
+                                                                 sizeof(ISAPNP_ALTERNATIVES),
+                                                                 TAG_ISAPNP);
+                    if (!LogDevice->Alternatives)
+                        return STATUS_INSUFFICIENT_RESOURCES;
+
+                    DfState = dfStarted;
+                }
+                else if (DfState == dfStarted)
+                {
+                    ++NumberOfDepedentSet;
+                }
+                else
+                {
+                    goto SkipTag;
+                }
+
+                ++LogDevice->Alternatives->Count;
+
+                if (TagLen != 1)
+                {
+                    LogDevice->Alternatives->Priority[NumberOfDepedentSet] = 1;
+                }
+                else
+                {
+                    PeekCached(ResourceData,
+                               &LogDevice->Alternatives->Priority[NumberOfDepedentSet],
+                               TagLen);
+                    ResourceData += TagLen;
+                }
+
+                DPRINT("*** Start depedent set %u, priority %u ***\n",
+                       NumberOfDepedentSet,
+                       LogDevice->Alternatives->Priority[NumberOfDepedentSet]);
+
+                break;
+            }
+
+            case ISAPNP_TAG_ENDDEP:
+            {
+                if (LogDev != 0 || DfState != dfStarted)
+                    goto SkipTag;
+
+                DfState = dfDone;
+
+                ResourceData += TagLen;
+
+                if (HasIoAlternatives(LogDevice->Alternatives))
+                    LogDevice->Alternatives->IoIndex = NumberOfIo++;
+                if (HasIrqAlternatives(LogDevice->Alternatives))
+                    LogDevice->Alternatives->IrqIndex = NumberOfIrq++;
+                if (HasDmaAlternatives(LogDevice->Alternatives))
+                    LogDevice->Alternatives->DmaIndex = NumberOfDma++;
+                if (HasMemoryAlternatives(LogDevice->Alternatives))
+                    LogDevice->Alternatives->MemRangeIndex = NumberOfMemRange++;
+                if (HasMemory32Alternatives(LogDevice->Alternatives))
+                    LogDevice->Alternatives->MemRange32Index = NumberOfMemRange32++;
+
+                DPRINT("*** End of depedent set ***\n");
+
+                break;
+            }
+
+            case ISAPNP_TAG_IOPORT:
+            {
+                PISAPNP_IO_DESCRIPTION Description;
+
+                if (LogDev != 0 || TagLen != sizeof(ISAPNP_IO_DESCRIPTION) ||
+                    NumberOfIo >= RTL_NUMBER_OF(LogDevice->Io))
+                {
+                    goto SkipTag;
+                }
+
+                if (DfState == dfStarted)
+                {
+                    if (NumberOfDepedentSet >= ISAPNP_MAX_ALTERNATIVES)
+                        goto SkipTag;
+
+                    Description = &LogDevice->Alternatives->Io[NumberOfDepedentSet];
+                }
+                else
+                {
+                    Description = &LogDevice->Io[NumberOfIo].Description;
+
+                    LogDevice->Io[NumberOfIo].Index = NumberOfIo;
+                    ++NumberOfIo;
+                }
+
+                PeekCached(ResourceData, Description, TagLen);
+                ResourceData += TagLen;
+
+                DPRINT("Found tag 0x%X (len %u)\n"
+                       "  Information 0x%X\n"
+                       "  Minimum     0x%X\n"
+                       "  Maximum     0x%X\n"
+                       "  Alignment   0x%X\n"
+                       "  Length      0x%X\n",
+                       Tag, TagLen,
+                       Description->Information,
+                       Description->Minimum,
+                       Description->Maximum,
+                       Description->Alignment,
+                       Description->Length);
+
+                break;
+            }
+
+            case ISAPNP_TAG_FIXEDIO:
+            {
+                ISAPNP_FIXED_IO_DESCRIPTION Temp;
+                PISAPNP_IO_DESCRIPTION Description;
+
+                if (LogDev != 0 || TagLen != sizeof(ISAPNP_FIXED_IO_DESCRIPTION) ||
+                    NumberOfIo >= RTL_NUMBER_OF(LogDevice->Io))
+                {
+                    goto SkipTag;
+                }
+
+                if (DfState == dfStarted)
+                {
+                    if (NumberOfDepedentSet >= ISAPNP_MAX_ALTERNATIVES)
+                        goto SkipTag;
+
+                    Description = &LogDevice->Alternatives->Io[NumberOfDepedentSet];
+                }
+                else
+                {
+                    Description = &LogDevice->Io[NumberOfIo].Description;
+
+                    LogDevice->Io[NumberOfIo].Index = NumberOfIo;
+                    ++NumberOfIo;
+                }
+
+                PeekCached(ResourceData, &Temp, TagLen);
+                ResourceData += TagLen;
+
+                Description->Information = 0;
+                Description->Minimum =
+                Description->Maximum = Temp.IoBase;
+                Description->Alignment = 1;
+                Description->Length = Temp.Length;
+
+                DPRINT("Found tag 0x%X (len %u)\n"
+                       "  IoBase 0x%X\n"
+                       "  Length 0x%X\n",
+                       Tag, TagLen,
+                       Temp.IoBase,
+                       Temp.Length);
+
+                break;
+            }
+
+            case ISAPNP_TAG_END:
+            {
+                if (IdStrPos)
+                {
+                    PSTR End;
+
+                    LogDevice->FriendlyName = ExAllocatePoolWithTag(PagedPool,
+                                                                    IdStrLen + sizeof(ANSI_NULL),
+                                                                    TAG_ISAPNP);
+                    if (!LogDevice->FriendlyName)
+                        return STATUS_INSUFFICIENT_RESOURCES;
+
+                    PeekCached(IdStrPos, LogDevice->FriendlyName, IdStrLen);
+
+                    End = LogDevice->FriendlyName + IdStrLen - 1;
+                    while (End > LogDevice->FriendlyName && *End == ' ')
+                    {
+                        --End;
+                    }
+                    *++End = ANSI_NULL;
+                }
+
+                return STATUS_SUCCESS;
+            }
+
+            case ISAPNP_TAG_MEMRANGE:
+            {
+                PISAPNP_MEMRANGE_DESCRIPTION Description;
+
+                if (LogDev != 0 || TagLen != sizeof(ISAPNP_MEMRANGE_DESCRIPTION) ||
+                    NumberOfMemRange >= RTL_NUMBER_OF(LogDevice->MemRange))
+                {
+                    goto SkipTag;
+                }
+
+                if (DfState == dfStarted)
+                {
+                    if (NumberOfDepedentSet >= ISAPNP_MAX_ALTERNATIVES)
+                        goto SkipTag;
+
+                    Description = &LogDevice->Alternatives->MemRange[NumberOfDepedentSet];
+                }
+                else
+                {
+                    Description = &LogDevice->MemRange[NumberOfMemRange].Description;
+
+                    LogDevice->MemRange[NumberOfMemRange].Index = NumberOfMemRange;
+                    ++NumberOfMemRange;
+                }
+
+                PeekCached(ResourceData, Description, TagLen);
+                ResourceData += TagLen;
+
+                DPRINT("Found tag 0x%X (len %u)\n"
+                       "  Information 0x%X\n"
+                       "  Minimum     0x%X\n"
+                       "  Maximum     0x%X\n"
+                       "  Alignment   0x%X\n"
+                       "  Length      0x%X\n",
+                       Tag, TagLen,
+                       Description->Information,
+                       Description->Minimum,
+                       Description->Maximum,
+                       Description->Alignment,
+                       Description->Length);
+
+                break;
+            }
+
+            case ISAPNP_TAG_ANSISTR:
+            {
+                /* If logical device identifier is not supplied, use card identifier */
+                if (LogDev == LogDevToParse + 1 || LogDev == 0)
+                {
+                    IdStrPos = ResourceData;
+                    IdStrLen = TagLen;
+
+                    ResourceData += TagLen;
+
+                    DPRINT("Found tag 0x%X (len %u)\n"
+                           "  '%.*s'\n",
+                           Tag, TagLen,
+                           IdStrLen,
+                           IdStrPos);
+                }
+                else
+                {
+                    goto SkipTag;
+                }
+
+                break;
+            }
+
+            case ISAPNP_TAG_MEM32RANGE:
+            {
+                PISAPNP_MEMRANGE32_DESCRIPTION Description;
+
+                if (LogDev != 0 || TagLen != sizeof(ISAPNP_MEMRANGE32_DESCRIPTION) ||
+                    NumberOfMemRange32 >= RTL_NUMBER_OF(LogDevice->MemRange32))
+                {
+                    goto SkipTag;
+                }
+
+                if (DfState == dfStarted)
+                {
+                    if (NumberOfDepedentSet >= ISAPNP_MAX_ALTERNATIVES)
+                        goto SkipTag;
+
+                    Description = &LogDevice->Alternatives->MemRange32[NumberOfDepedentSet];
+                }
+                else
+                {
+                    Description = &LogDevice->MemRange32[NumberOfMemRange32].Description;
+
+                    LogDevice->MemRange32[NumberOfMemRange32].Index = NumberOfMemRange32;
+                    ++NumberOfMemRange32;
+                }
+
+                PeekCached(ResourceData, Description, TagLen);
+                ResourceData += TagLen;
+
+                DPRINT("Found tag 0x%X (len %u)\n"
+                       "  Information 0x%X\n"
+                       "  Minimum     0x%08lX\n"
+                       "  Maximum     0x%08lX\n"
+                       "  Alignment   0x%08lX\n"
+                       "  Length      0x%08lX\n",
+                       Tag, TagLen,
+                       Description->Information,
+                       Description->Minimum,
+                       Description->Maximum,
+                       Description->Alignment,
+                       Description->Length);
+
+                break;
+            }
+
+            case ISAPNP_TAG_FIXEDMEM32RANGE:
+            {
+                ISAPNP_FIXEDMEMRANGE_DESCRIPTION Temp;
+                PISAPNP_MEMRANGE32_DESCRIPTION Description;
+
+                if (LogDev != 0 || TagLen != sizeof(ISAPNP_FIXEDMEMRANGE_DESCRIPTION) ||
+                    NumberOfMemRange32 >= RTL_NUMBER_OF(LogDevice->MemRange32))
+                {
+                    goto SkipTag;
+                }
+
+                if (DfState == dfStarted)
+                {
+                    if (NumberOfDepedentSet >= ISAPNP_MAX_ALTERNATIVES)
+                        goto SkipTag;
+
+                    Description = &LogDevice->Alternatives->MemRange32[NumberOfDepedentSet];
+                }
+                else
+                {
+                    Description = &LogDevice->MemRange32[NumberOfMemRange32].Description;
+
+                    LogDevice->MemRange32[NumberOfMemRange32].Index = NumberOfMemRange32;
+                    ++NumberOfMemRange32;
+                }
+
+                PeekCached(ResourceData, &Temp, TagLen);
+                ResourceData += TagLen;
+
+                Description->Information = Temp.Information;
+                Description->Minimum =
+                Description->Maximum = Temp.MemoryBase;
+                Description->Alignment = 1;
+                Description->Length = Temp.Length;
+
+                DPRINT("Found tag 0x%X (len %u)\n"
+                       "  Information 0x%X\n"
+                       "  MemoryBase  0x%08lX\n"
+                       "  Length      0x%08lX\n",
+                       Tag, TagLen,
+                       Temp.Information,
+                       Temp.MemoryBase,
+                       Temp.Length);
+
+                break;
+            }
+
+SkipTag:
+            default:
+            {
+                if (LogDev == 0)
+                    DPRINT("Found unknown tag 0x%X (len %u)\n", Tag, TagLen);
+
+                /* We don't want to read informations on this
+                 * logical device, or we don't know the tag. */
+                ResourceData += TagLen;
+                break;
+            }
+        }
+    }
 }
 
 static
@@ -532,54 +1145,127 @@ DeviceActivation(
     WaitForKey();
 }
 
-static
+_Requires_lock_held_(FdoExt->DeviceSyncEvent)
 CODE_SEG("PAGE")
 NTSTATUS
-ProbeIsaPnpBus(
+IsaHwFillDeviceList(
     _In_ PISAPNP_FDO_EXTENSION FdoExt)
 {
     PISAPNP_LOGICAL_DEVICE LogDevice;
-    ISAPNP_IDENTIFIER Identifier;
-    USHORT Csn;
-    USHORT LogDev;
+    UCHAR Csn;
     ULONG i;
+    PLIST_ENTRY Entry;
+    PUCHAR ResourceData;
 
     PAGED_CODE();
     ASSERT(FdoExt->ReadDataPort);
 
-    for (Csn = 1; Csn <= 0xFF; Csn++)
+    DPRINT("%s for read port 0x%p\n", __FUNCTION__, FdoExt->ReadDataPort);
+
+    ResourceData = ExAllocatePoolWithTag(PagedPool, ISAPNP_MAX_RESOURCEDATA, TAG_ISAPNP);
+    if (!ResourceData)
     {
-        for (LogDev = 0; LogDev <= 0xFF; LogDev++)
+        DPRINT1("Failed to allocate memory for cache data\n");
+        return STATUS_INSUFFICIENT_RESOURCES;
+    }
+
+    for (Entry = FdoExt->DeviceListHead.Flink;
+         Entry != &FdoExt->DeviceListHead;
+         Entry = Entry->Flink)
+    {
+        LogDevice = CONTAINING_RECORD(Entry, ISAPNP_LOGICAL_DEVICE, DeviceLink);
+
+        LogDevice->Flags &= ~ISAPNP_PRESENT;
+    }
+
+    WaitForKey();
+    SendKey();
+
+    for (Csn = 1; Csn <= FdoExt->Cards; Csn++)
+    {
+        NTSTATUS Status;
+        UCHAR TempId[3], LogDev;
+        ISAPNP_IDENTIFIER Identifier;
+        USHORT MaxLogDev;
+
+        Wake(Csn);
+
+        Peek(FdoExt->ReadDataPort, &Identifier, sizeof(Identifier));
+
+        IsaPnpExtractAscii(TempId, Identifier.VendorId);
+        Identifier.ProdId = RtlUshortByteSwap(Identifier.ProdId);
+
+        Status = ReadTags(FdoExt->ReadDataPort, ResourceData, ISAPNP_MAX_RESOURCEDATA, &MaxLogDev);
+        if (!NT_SUCCESS(Status))
         {
+            DPRINT1("Failed to read tags with status 0x%08lx, CSN %u\n", Status, Csn);
+            continue;
+        }
+
+        DPRINT("Detected ISA PnP device - VID: '%.3s' PID: 0x%04x SN: 0x%08lX\n",
+               TempId, Identifier.ProdId, Identifier.Serial);
+
+        for (LogDev = 0; LogDev < MaxLogDev; LogDev++)
+        {
+            BOOLEAN IsAlreadyEnumerated = FALSE;
+
+            for (Entry = FdoExt->DeviceListHead.Flink;
+                 Entry != &FdoExt->DeviceListHead;
+                 Entry = Entry->Flink)
+            {
+                LogDevice = CONTAINING_RECORD(Entry, ISAPNP_LOGICAL_DEVICE, DeviceLink);
+
+                /* This logical device has already been enumerated */
+                if ((LogDevice->SerialNumber == Identifier.Serial) &&
+                    (RtlCompareMemory(LogDevice->VendorId, TempId, 3) == 3) &&
+                    (LogDevice->ProdId == Identifier.ProdId) &&
+                    (LogDevice->LDN == LogDev))
+                {
+                    LogDevice->Flags |= ISAPNP_PRESENT;
+
+                    /* Assign a new CSN */
+                    LogDevice->CSN = Csn;
+
+                    if (LogDevice->Pdo)
+                    {
+                        PISAPNP_PDO_EXTENSION PdoExt = LogDevice->Pdo->DeviceExtension;
+
+                        if (PdoExt->Common.State == dsStarted)
+                            ActivateDevice(LogDev);
+                    }
+
+                    DPRINT("Skip CSN %u, LDN %u\n", LogDevice->CSN, LogDevice->LDN);
+                    IsAlreadyEnumerated = TRUE;
+                    break;
+                }
+            }
+
+            if (IsAlreadyEnumerated)
+                continue;
+
             LogDevice = ExAllocatePoolZero(NonPagedPool, sizeof(ISAPNP_LOGICAL_DEVICE), TAG_ISAPNP);
             if (!LogDevice)
-                return STATUS_NO_MEMORY;
+            {
+                DPRINT1("Failed to allocate logical device!\n");
+                goto Deactivate;
+            }
+
+            InitializeListHead(&LogDevice->CompatibleIdList);
 
             LogDevice->CSN = Csn;
             LogDevice->LDN = LogDev;
 
-            WaitForKey();
-            SendKey();
-            Wake(Csn);
-
-            Peek(FdoExt->ReadDataPort, &Identifier, sizeof(Identifier));
-
-            if (Identifier.VendorId & 0x80)
+            Status = ParseTags(ResourceData, LogDev, LogDevice);
+            if (!NT_SUCCESS(Status))
             {
-                ExFreePoolWithTag(LogDevice, TAG_ISAPNP);
-                return STATUS_SUCCESS;
+                DPRINT1("Failed to parse tags with status 0x%08lx, CSN %u, LDN %u\n",
+                        Status, LogDevice->CSN, LogDevice->LDN);
+                FreeLogicalDevice(LogDevice);
+                goto Deactivate;
             }
-
-            if (!ReadTags(FdoExt->ReadDataPort, LogDev, LogDevice))
-                break;
 
             WriteLogicalDeviceNumber(LogDev);
 
-            LogDevice->VendorId[0] = ((LogDevice->LogDevId.VendorId >> 2) & 0x1f) + 'A' - 1,
-            LogDevice->VendorId[1] = (((LogDevice->LogDevId.VendorId & 0x3) << 3) | ((LogDevice->LogDevId.VendorId >> 13) & 0x7)) + 'A' - 1,
-            LogDevice->VendorId[2] = ((LogDevice->LogDevId.VendorId >> 8) & 0x1f) + 'A' - 1,
-            LogDevice->ProdId = RtlUshortByteSwap(LogDevice->LogDevId.ProdId);
-            LogDevice->SerialNumber = Identifier.Serial;
             for (i = 0; i < ARRAYSIZE(LogDevice->Io); i++)
                 LogDevice->Io[i].CurrentBase = ReadIoBase(FdoExt->ReadDataPort, i);
             for (i = 0; i < ARRAYSIZE(LogDevice->Irq); i++)
@@ -592,27 +1278,37 @@ ProbeIsaPnpBus(
                 LogDevice->Dma[i].CurrentChannel = ReadDmaChannel(FdoExt->ReadDataPort, i);
             }
 
-            DPRINT1("Detected ISA PnP device - VID: '%3s' PID: 0x%x SN: 0x%08x IoBase: 0x%x IRQ:0x%x\n",
-                    LogDevice->VendorId, LogDevice->ProdId, LogDevice->SerialNumber, LogDevice->Io[0].CurrentBase, LogDevice->Irq[0].CurrentNo);
+            IsaPnpExtractAscii(LogDevice->VendorId, Identifier.VendorId);
+            LogDevice->ProdId = Identifier.ProdId;
+            LogDevice->SerialNumber = Identifier.Serial;
 
-            WaitForKey();
+            if (MaxLogDev > 1)
+                LogDevice->Flags |= ISAPNP_HAS_MULTIPLE_LOGDEVS;
+
+            LogDevice->Flags |= ISAPNP_PRESENT;
 
             InsertTailList(&FdoExt->DeviceListHead, &LogDevice->DeviceLink);
             FdoExt->DeviceCount++;
+
+            /* Now we wait for the start device IRP */
+Deactivate:
+            DeactivateDevice(LogDev);
         }
     }
+
+    ExFreePoolWithTag(ResourceData, TAG_ISAPNP);
 
     return STATUS_SUCCESS;
 }
 
 CODE_SEG("PAGE")
-NTSTATUS
+ULONG
 IsaHwTryReadDataPort(
     _In_ PUCHAR ReadDataPort)
 {
     PAGED_CODE();
 
-    return TryIsolate(ReadDataPort) > 0 ? STATUS_SUCCESS : STATUS_INSUFFICIENT_RESOURCES;
+    return TryIsolate(ReadDataPort);
 }
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
@@ -635,14 +1331,4 @@ IsaHwDeactivateDevice(
                      FALSE);
 
     return STATUS_SUCCESS;
-}
-
-CODE_SEG("PAGE")
-NTSTATUS
-IsaHwFillDeviceList(
-    _In_ PISAPNP_FDO_EXTENSION FdoExt)
-{
-    PAGED_CODE();
-
-    return ProbeIsaPnpBus(FdoExt);
 }
