@@ -168,9 +168,14 @@ static
 inline
 VOID
 ActivateDevice(
+    _In_ PUCHAR ReadDataPort,
     _In_ UCHAR LogDev)
 {
     WriteLogicalDeviceNumber(LogDev);
+
+    WriteByte(ISAPNP_IORANGECHECK,
+              ReadByte(ReadDataPort, ISAPNP_IORANGECHECK) & ~2);
+
     WriteByte(ISAPNP_ACTIVATE, 1);
 }
 
@@ -1341,7 +1346,7 @@ IsaHwFillDeviceList(
                         PISAPNP_PDO_EXTENSION PdoExt = LogDevice->Pdo->DeviceExtension;
 
                         if (PdoExt->Common.State == dsStarted)
-                            ActivateDevice(LogDev);
+                            ActivateDevice(FdoExt->ReadDataPort, LogDev);
                     }
 
                     DPRINT("Skip CSN %u, LDN %u\n", LogDevice->CSN, LogDevice->LDN);
@@ -1412,9 +1417,10 @@ IsaHwWakeDevice(
 _IRQL_requires_max_(DISPATCH_LEVEL)
 VOID
 IsaHwActivateDevice(
+    _In_ PISAPNP_FDO_EXTENSION FdoExt,
     _In_ PISAPNP_LOGICAL_DEVICE LogicalDevice)
 {
-    ActivateDevice(LogicalDevice->LDN);
+    ActivateDevice(FdoExt->ReadDataPort, LogicalDevice->LDN);
 }
 
 _IRQL_requires_max_(DISPATCH_LEVEL)

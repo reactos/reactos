@@ -899,7 +899,7 @@ IsaPdoPnp(
 
                 Status = STATUS_SUCCESS;
 
-                IsaHwActivateDevice(PdoExt->IsaPnpDevice);
+                IsaHwActivateDevice(PdoExt->FdoExt, PdoExt->IsaPnpDevice);
                 IsaHwWaitForKey();
             }
             else

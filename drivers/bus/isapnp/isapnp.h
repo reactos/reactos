@@ -388,6 +388,7 @@ IsaHwDeactivateDevice(
 _IRQL_requires_max_(DISPATCH_LEVEL)
 VOID
 IsaHwActivateDevice(
+    _In_ PISAPNP_FDO_EXTENSION FdoExt,
     _In_ PISAPNP_LOGICAL_DEVICE LogicalDevice);
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
