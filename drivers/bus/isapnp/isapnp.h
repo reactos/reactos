@@ -280,6 +280,41 @@ HasMemory32Alternatives(
 /* isapnp.c */
 
 CODE_SEG("PAGE")
+BOOLEAN
+FindIoDescriptor(
+    _In_ PISAPNP_LOGICAL_DEVICE LogDevice,
+    _In_opt_ ULONG Base,
+    _In_ ULONG RangeStart,
+    _In_ ULONG RangeEnd,
+    _Out_opt_ PUCHAR Information,
+    _Out_opt_ PULONG Length,
+    _Out_opt_ PUCHAR WriteOrder);
+
+CODE_SEG("PAGE")
+BOOLEAN
+FindIrqDescriptor(
+    _In_ PISAPNP_LOGICAL_DEVICE LogDevice,
+    _In_ ULONG Vector,
+    _Out_opt_ PUCHAR WriteOrder);
+
+CODE_SEG("PAGE")
+BOOLEAN
+FindDmaDescriptor(
+    _In_ PISAPNP_LOGICAL_DEVICE LogDevice,
+    _In_ ULONG Channel,
+    _Out_opt_ PUCHAR WriteOrder);
+
+CODE_SEG("PAGE")
+BOOLEAN
+FindMemoryDescriptor(
+    _In_ PISAPNP_LOGICAL_DEVICE LogDevice,
+    _In_ ULONG RangeStart,
+    _In_ ULONG RangeEnd,
+    _Out_opt_ PBOOLEAN Memory32,
+    _Out_opt_ PUCHAR Information,
+    _Out_opt_ PUCHAR WriteOrder);
+
+CODE_SEG("PAGE")
 NTSTATUS
 IsaPnpCreateReadPortDORequirements(
     _In_ PISAPNP_PDO_EXTENSION PdoExt,
