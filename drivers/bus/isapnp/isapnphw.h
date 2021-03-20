@@ -31,10 +31,15 @@ extern "C" {
 #define ISAPNP_MEMBASE(n) (0x40 + ((n) * 8))
 #define ISAPNP_MEMCONTROL(n) (0x42 + ((n) * 8))
 #define    MEMORY_UPPER_LIMIT 0x01
+#define    MEMORY_USE_8_BIT_DECODER 0x00
+#define    MEMORY_USE_16_BIT_DECODER 0x02
+#define    MEMORY_USE_32_BIT_DECODER 0x06
 #define ISAPNP_MEMLIMIT(n) (0x43 + ((n) * 8))
 #define ISAPNP_IOBASE(n) (0x60 + ((n)*2))
 #define ISAPNP_IRQNO(n) (0x70 + ((n)*2))
 #define ISAPNP_IRQTYPE(n) (0x71 + ((n) * 2))
+#define    IRQTYPE_LOW_LEVEL 0x01
+#define    IRQTYPE_HIGH_EDGE 0x02
 #define ISAPNP_DMACHANNEL(n) (0x74 + (n))
 #define ISAPNP_MEMBASE32(n) ((n) == 0 ? 0x76 : (0x70 + (n) * 16))
 #define ISAPNP_MEMCONTROL32(n) ((n) == 0 ? 0x7A : (0x74 + (n) * 16))
@@ -63,6 +68,8 @@ extern "C" {
 #define ISAPNP_IS_LARGE_TAG(t) (((t) & 0x80))
 #define ISAPNP_LARGE_TAG_NAME(t) (t)
 #define ISAPNP_TAG_MEMRANGE 0x81
+#define    MEMRANGE_16_BIT_MEMORY_MASK (0x10 | 0x08)
+#define       MEMRANGE_32_BIT_MEMORY_ONLY 0x18
 #define ISAPNP_TAG_ANSISTR 0x82
 #define ISAPNP_TAG_UNICODESTR 0x83
 #define ISAPNP_TAG_MEM32RANGE 0x85

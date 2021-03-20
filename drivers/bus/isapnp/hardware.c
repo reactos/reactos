@@ -63,6 +63,30 @@ WriteByte(
 
 static
 inline
+VOID
+WriteWord(
+    _In_ UCHAR Address,
+    _In_ USHORT Value)
+{
+    WriteAddress(Address + 1);
+    WriteData((UCHAR)Value);
+    WriteAddress(Address);
+    WriteData(Value >> 8);
+}
+
+static
+inline
+VOID
+WriteDoubleWord(
+    _In_ UCHAR Address,
+    _In_ ULONG Value)
+{
+    WriteWord(Address + 2, (USHORT)Value);
+    WriteWord(Address, Value >> 16);
+}
+
+static
+inline
 UCHAR
 ReadByte(
     _In_ PUCHAR ReadDataPort,
@@ -1164,6 +1188,175 @@ ReadCurrentResources(
     return TRUE;
 }
 
+static
+CODE_SEG("PAGE")
+VOID
+WriteResources(
+    _In_ PUCHAR ReadDataPort,
+    _In_ PISAPNP_LOGICAL_DEVICE LogDevice,
+    _In_ PCM_PARTIAL_RESOURCE_LIST PartialResourceList)
+{
+    UCHAR i,
+          NumberOfIo = 0,
+          NumberOfIrq = 0,
+          NumberOfDma = 0,
+          NumberOfMemory = 0,
+          NumberOfMemory32 = 0;
+
+    PAGED_CODE();
+
+    WriteLogicalDeviceNumber(LogDevice->LDN);
+
+    for (i = 0; i < PartialResourceList->Count; i++)
+    {
+        PCM_PARTIAL_RESOURCE_DESCRIPTOR Descriptor = &PartialResourceList->PartialDescriptors[i];
+        UCHAR Index;
+
+        switch (Descriptor->Type)
+        {
+            case CmResourceTypePort:
+            {
+                (VOID)FindIoDescriptor(LogDevice,
+                                       0,
+                                       Descriptor->u.Port.Start.LowPart,
+                                       Descriptor->u.Port.Start.LowPart +
+                                       Descriptor->u.Port.Length - 1,
+                                       NULL,
+                                       NULL,
+                                       &Index);
+
+                WriteWord(ISAPNP_IOBASE(Index), (USHORT)Descriptor->u.Port.Start.LowPart);
+
+                ++NumberOfIo;
+                break;
+            }
+
+            case CmResourceTypeInterrupt:
+            {
+                (VOID)FindIrqDescriptor(LogDevice, Descriptor->u.Interrupt.Level, &Index);
+
+                WriteByte(ISAPNP_IRQNO(Index), (UCHAR)Descriptor->u.Interrupt.Level);
+                WriteByte(ISAPNP_IRQTYPE(Index),
+                          Descriptor->Flags & CM_RESOURCE_INTERRUPT_LATCHED
+                          ? IRQTYPE_HIGH_EDGE : IRQTYPE_LOW_LEVEL);
+
+                ++NumberOfIrq;
+                break;
+            }
+
+            case CmResourceTypeDma:
+            {
+                (VOID)FindDmaDescriptor(LogDevice, Descriptor->u.Dma.Channel, &Index);
+
+                WriteByte(ISAPNP_DMACHANNEL(Index), (UCHAR)Descriptor->u.Dma.Channel);
+
+                ++NumberOfDma;
+                break;
+            }
+
+            case CmResourceTypeMemory:
+            {
+                BOOLEAN Memory32;
+                UCHAR Information;
+                UCHAR MemoryControl = MEMORY_USE_8_BIT_DECODER;
+
+                (VOID)FindMemoryDescriptor(LogDevice,
+                                           Descriptor->u.Memory.Start.LowPart,
+                                           Descriptor->u.Memory.Start.LowPart +
+                                           Descriptor->u.Memory.Length - 1,
+                                           &Memory32,
+                                           &Information,
+                                           &Index);
+
+                if (!Memory32)
+                {
+                    if (Information & MEMRANGE_16_BIT_MEMORY_MASK)
+                        MemoryControl = MEMORY_USE_16_BIT_DECODER;
+
+                    WriteWord(ISAPNP_MEMBASE(Index),
+                              (USHORT)(Descriptor->u.Memory.Start.LowPart >> 8));
+
+                    if (ReadMemoryControl(ReadDataPort, Index) & MEMORY_UPPER_LIMIT)
+                    {
+                        WriteByte(ISAPNP_MEMCONTROL(Index),
+                                  MemoryControl | MEMORY_UPPER_LIMIT);
+                        WriteWord(ISAPNP_MEMLIMIT(Index),
+                                  (USHORT)((Descriptor->u.Memory.Start.LowPart +
+                                            Descriptor->u.Memory.Length) >> 8));
+                    }
+                    else
+                    {
+                        WriteByte(ISAPNP_MEMCONTROL(Index), MemoryControl);
+                        WriteWord(ISAPNP_MEMLIMIT(Index),
+                                  (USHORT)(LENGTH_TO_RANGE_LENGTH(Descriptor->
+                                                                  u.Memory.Length) >> 8));
+                    }
+
+                    ++NumberOfMemory;
+                }
+                else
+                {
+                    WriteDoubleWord(ISAPNP_MEMBASE32(Index),
+                                    Descriptor->u.Memory.Start.LowPart);
+
+                    if ((Information & MEMRANGE_16_BIT_MEMORY_MASK) == MEMRANGE_32_BIT_MEMORY_ONLY)
+                        MemoryControl = MEMORY_USE_32_BIT_DECODER;
+                    else if (Information & MEMRANGE_16_BIT_MEMORY_MASK)
+                        MemoryControl = MEMORY_USE_16_BIT_DECODER;
+
+                    if (ReadMemoryControl32(ReadDataPort, Index) & MEMORY_UPPER_LIMIT)
+                    {
+                        WriteByte(ISAPNP_MEMCONTROL32(Index),
+                                  MemoryControl | MEMORY_UPPER_LIMIT);
+                        WriteDoubleWord(ISAPNP_MEMLIMIT32(Index),
+                                        Descriptor->u.Memory.Start.LowPart +
+                                        Descriptor->u.Memory.Length);
+                    }
+                    else
+                    {
+                        WriteByte(ISAPNP_MEMCONTROL32(Index), MemoryControl);
+                        WriteDoubleWord(ISAPNP_MEMLIMIT32(Index),
+                                        LENGTH_TO_RANGE_LENGTH(Descriptor->u.Memory.Length));
+                    }
+
+                    ++NumberOfMemory32;
+                }
+
+                break;
+            }
+
+            default:
+                break;
+        }
+    }
+
+    for (i = NumberOfIo; i < RTL_NUMBER_OF(LogDevice->Io); i++)
+    {
+        WriteWord(ISAPNP_IOBASE(i), 0);
+    }
+    for (i = NumberOfIrq; i < RTL_NUMBER_OF(LogDevice->Irq); i++)
+    {
+        WriteByte(ISAPNP_IRQNO(i), 0);
+        WriteByte(ISAPNP_IRQTYPE(i), 0);
+    }
+    for (i = NumberOfDma; i < RTL_NUMBER_OF(LogDevice->Dma); i++)
+    {
+        WriteByte(ISAPNP_DMACHANNEL(i), 4);
+    }
+    for (i = NumberOfMemory; i < RTL_NUMBER_OF(LogDevice->MemRange); i++)
+    {
+        WriteWord(ISAPNP_MEMBASE(i), 0);
+        WriteByte(ISAPNP_MEMCONTROL(i), 0);
+        WriteWord(ISAPNP_MEMLIMIT(i), 0);
+    }
+    for (i = NumberOfMemory32; i < RTL_NUMBER_OF(LogDevice->MemRange32); i++)
+    {
+        WriteDoubleWord(ISAPNP_MEMBASE32(i), 0);
+        WriteByte(ISAPNP_MEMCONTROL32(i), 0);
+        WriteDoubleWord(ISAPNP_MEMLIMIT32(i), 0);
+    }
+}
+
 CODE_SEG("PAGE")
 UCHAR
 IsaHwTryReadDataPort(
@@ -1401,6 +1594,110 @@ Deactivate:
     }
 
     ExFreePoolWithTag(ResourceData, TAG_ISAPNP);
+
+    return STATUS_SUCCESS;
+}
+
+CODE_SEG("PAGE")
+NTSTATUS
+IsaHwConfigureDevice(
+    _In_ PISAPNP_FDO_EXTENSION FdoExt,
+    _In_ PISAPNP_LOGICAL_DEVICE LogicalDevice,
+    _In_ PCM_RESOURCE_LIST Resources)
+{
+    UCHAR i,
+          NumberOfIo = 0,
+          NumberOfIrq = 0,
+          NumberOfDma = 0,
+          NumberOfMemory = 0;
+
+    PAGED_CODE();
+
+    if (!Resources)
+        return STATUS_INSUFFICIENT_RESOURCES;
+
+    /* Validate the resource list */
+    for (i = 0; i < Resources->List[0].PartialResourceList.Count; i++)
+    {
+        PCM_PARTIAL_RESOURCE_DESCRIPTOR Descriptor =
+            &Resources->List[0].PartialResourceList.PartialDescriptors[i];
+
+        switch (Descriptor->Type)
+        {
+            case CmResourceTypePort:
+            {
+                if (++NumberOfIo > RTL_NUMBER_OF(LogicalDevice->Io))
+                    return STATUS_INVALID_PARAMETER_1;
+
+                if (!FindIoDescriptor(LogicalDevice,
+                                      0,
+                                      Descriptor->u.Port.Start.LowPart,
+                                      Descriptor->u.Port.Start.LowPart +
+                                      Descriptor->u.Port.Length - 1,
+                                      NULL,
+                                      NULL,
+                                      NULL))
+                {
+                    return STATUS_RESOURCE_DATA_NOT_FOUND;
+                }
+
+                break;
+            }
+
+            case CmResourceTypeInterrupt:
+            {
+                if (++NumberOfIrq > RTL_NUMBER_OF(LogicalDevice->Irq))
+                    return STATUS_INVALID_PARAMETER_2;
+
+                if (!FindIrqDescriptor(LogicalDevice, Descriptor->u.Interrupt.Level, NULL))
+                    return STATUS_RESOURCE_DATA_NOT_FOUND;
+
+                break;
+            }
+
+            case CmResourceTypeDma:
+            {
+                if (++NumberOfDma > RTL_NUMBER_OF(LogicalDevice->Dma))
+                    return STATUS_INVALID_PARAMETER_3;
+
+                if (!FindDmaDescriptor(LogicalDevice, Descriptor->u.Dma.Channel, NULL))
+                    return STATUS_RESOURCE_DATA_NOT_FOUND;
+
+                break;
+            }
+
+            case CmResourceTypeMemory:
+            {
+                BOOLEAN Memory32;
+
+                if (++NumberOfMemory > RTL_NUMBER_OF(LogicalDevice->MemRange))
+                    return STATUS_INVALID_PARAMETER_4;
+
+                if (!FindMemoryDescriptor(LogicalDevice,
+                                          Descriptor->u.Memory.Start.LowPart,
+                                          Descriptor->u.Memory.Start.LowPart +
+                                          Descriptor->u.Memory.Length - 1,
+                                          &Memory32,
+                                          NULL,
+                                          NULL))
+                {
+                    return STATUS_RESOURCE_DATA_NOT_FOUND;
+                }
+
+                if (!Memory32 && (Descriptor->u.Memory.Start.LowPart & 0xFF))
+                    return STATUS_INVALID_PARAMETER;
+
+                break;
+            }
+
+            default:
+                break;
+        }
+    }
+
+    WriteResources(FdoExt->ReadDataPort, LogicalDevice, &Resources->List[0].PartialResourceList);
+
+    KeStallExecutionProcessor(10000);
 
     return STATUS_SUCCESS;
 }

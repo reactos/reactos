@@ -897,9 +897,19 @@ IsaPdoPnp(
             {
                 IsaHwWakeDevice(PdoExt->IsaPnpDevice);
 
-                Status = STATUS_SUCCESS;
+                Status = IsaHwConfigureDevice(PdoExt->FdoExt,
+                                              PdoExt->IsaPnpDevice,
+                                              IrpSp->Parameters.StartDevice.AllocatedResources);
+                if (NT_SUCCESS(Status))
+                {
+                    IsaHwActivateDevice(PdoExt->FdoExt, PdoExt->IsaPnpDevice);
+                }
+                else
+                {
+                    DPRINT1("Failed to configure CSN %u, LDN %u with status 0x%08lx\n",
+                            PdoExt->IsaPnpDevice->CSN, PdoExt->IsaPnpDevice->LDN, Status);
+                }
 
-                IsaHwActivateDevice(PdoExt->FdoExt, PdoExt->IsaPnpDevice);
                 IsaHwWaitForKey();
             }
             else
