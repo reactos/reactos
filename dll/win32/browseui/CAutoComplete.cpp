@@ -961,8 +961,7 @@ BOOL CAutoComplete::OnEditKeyDown(WPARAM wParam, LPARAM lParam)
             if (!CanAutoSuggest())
                 return FALSE; // do default
             m_hwndEdit.DefWindowProcW(WM_KEYDOWN, VK_DELETE, 0); // do default
-            if (IsWindowVisible())
-                OnEditUpdate(FALSE);
+            OnEditUpdate(FALSE);
             return TRUE; // eat
         }
         case VK_BACK:
