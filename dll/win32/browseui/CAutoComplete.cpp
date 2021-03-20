@@ -1133,7 +1133,7 @@ CAutoComplete::Init(HWND hwndEdit, IUnknown *punkACL,
     if (m_hwndEdit || !punkACL)
     {
         ATLASSERT(0);
-        return E_INVALIDARG;
+        return E_FAIL;
     }
 
     // set this pointer to m_hwndEdit
