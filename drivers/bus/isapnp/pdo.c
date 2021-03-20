@@ -570,6 +570,7 @@ IsaPdoStartReadPort(
             if (IS_READ_PORT(PartialDescriptor))
             {
                 PUCHAR ReadDataPort = ULongToPtr(PartialDescriptor->u.Port.Start.u.LowPart + 3);
+                ULONG Cards;
 
                 /*
                  * Remember the first Read Port in the resource list.
@@ -578,8 +579,11 @@ IsaPdoStartReadPort(
                 if (!SelectedPort)
                     SelectedPort = PartialDescriptor->u.Port.Start.u.LowPart;
 
+                Cards = IsaHwTryReadDataPort(ReadDataPort);
+                IsaHwWaitForKey();
+
                 /* We detected some ISAPNP cards */
-                if (IsaHwTryReadDataPort(ReadDataPort) > 0)
+                if (Cards > 0)
                 {
                     SelectedPort = PartialDescriptor->u.Port.Start.u.LowPart;
                     break;
@@ -634,6 +638,7 @@ IsaPdoStartReadPort(
 
                     /* Card identification */
                     Status = IsaHwFillDeviceList(FdoExt);
+                    IsaHwWaitForKey();
 
                     IsaPnpReleaseDeviceDataLock(FdoExt);
 
@@ -647,7 +652,10 @@ IsaPdoStartReadPort(
                 }
                 else
                 {
+                    IsaHwWaitForKey();
+#if 0 /* See the 'if 0' above */
                     break;
+#endif
                 }
             }
         }
@@ -741,6 +749,17 @@ IsaPdoRemoveDevice(
     PISAPNP_FDO_EXTENSION FdoExt = PdoExt->FdoExt;
 
     PAGED_CODE();
+
+    /* Deactivate the device if previously activated */
+    if (PdoExt->Common.State == dsStarted)
+    {
+        IsaHwWakeDevice(PdoExt->IsaPnpDevice);
+        IsaHwDeactivateDevice(PdoExt->IsaPnpDevice);
+
+        IsaHwWaitForKey();
+
+        PdoExt->Common.State = dsStopped;
+    }
 
     if (FinalRemove && !(PdoExt->Flags & ISAPNP_ENUMERATED))
     {
@@ -873,8 +892,16 @@ IsaPdoPnp(
     switch (IrpSp->MinorFunction)
     {
         case IRP_MN_START_DEVICE:
+        {
             if (PdoExt->Common.Signature == IsaPnpLogicalDevice)
-                Status = IsaHwActivateDevice(PdoExt->IsaPnpDevice);
+            {
+                IsaHwWakeDevice(PdoExt->IsaPnpDevice);
+
+                Status = STATUS_SUCCESS;
+
+                IsaHwActivateDevice(PdoExt->IsaPnpDevice);
+                IsaHwWaitForKey();
+            }
             else
             {
                 Status = IsaPdoStartReadPort(PdoExt,
@@ -884,19 +911,28 @@ IsaPdoPnp(
             if (NT_SUCCESS(Status))
                 PdoExt->Common.State = dsStarted;
             break;
+        }
 
         case IRP_MN_STOP_DEVICE:
+        {
             if (PdoExt->Common.Signature == IsaPnpLogicalDevice)
-                Status = IsaHwDeactivateDevice(PdoExt->IsaPnpDevice);
+            {
+                IsaHwWakeDevice(PdoExt->IsaPnpDevice);
+                IsaHwDeactivateDevice(PdoExt->IsaPnpDevice);
+
+                IsaHwWaitForKey();
+            }
             else
             {
                 PdoExt->Flags &= ~ISAPNP_READ_PORT_ALLOW_FDO_SCAN;
-                Status = STATUS_SUCCESS;
             }
+
+            Status = STATUS_SUCCESS;
 
             if (NT_SUCCESS(Status))
                 PdoExt->Common.State = dsStopped;
             break;
+        }
 
         case IRP_MN_QUERY_STOP_DEVICE:
         {

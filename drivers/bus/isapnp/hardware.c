@@ -122,14 +122,6 @@ WaitForKey(VOID)
 static
 inline
 VOID
-ResetCsn(VOID)
-{
-    WriteByte(ISAPNP_CONFIGCONTROL, ISAPNP_CONFIG_RESET_CSN);
-}
-
-static
-inline
-VOID
 Wake(
     _In_ UCHAR Csn)
 {
@@ -1167,92 +1159,81 @@ ReadCurrentResources(
     return TRUE;
 }
 
-static
 CODE_SEG("PAGE")
-INT
-TryIsolate(
+UCHAR
+IsaHwTryReadDataPort(
     _In_ PUCHAR ReadDataPort)
 {
-    ISAPNP_IDENTIFIER Identifier;
-    USHORT i, j;
-    BOOLEAN Seen55aa, SeenLife;
-    INT Csn = 0;
-    USHORT Byte, Data;
+    ULONG NumberOfRead = 0;
+    UCHAR Csn = 0;
 
     PAGED_CODE();
 
     DPRINT("Setting read data port: 0x%p\n", ReadDataPort);
 
-    WaitForKey();
     SendKey();
 
-    ResetCsn();
+    WriteByte(ISAPNP_CONFIGCONTROL,
+              ISAPNP_CONFIG_RESET_CSN | ISAPNP_CONFIG_WAIT_FOR_KEY);
     KeStallExecutionProcessor(2000);
 
-    WaitForKey();
     SendKey();
+
     Wake(0x00);
     KeStallExecutionProcessor(1000);
 
     SetReadDataPort(ReadDataPort);
 
+    Wake(0x00);
+
     while (TRUE)
     {
+        ISAPNP_IDENTIFIER Identifier;
+        UCHAR i, j;
+        BOOLEAN Seen55aa = FALSE;
+
         EnterIsolationState();
         KeStallExecutionProcessor(1000);
 
         RtlZeroMemory(&Identifier, sizeof(Identifier));
 
-        Seen55aa = SeenLife = FALSE;
-        for (i = 0; i < 9; i++)
+        for (i = 0; i < sizeof(Identifier); i++)
         {
-            Byte = 0;
-            for (j = 0; j < 8; j++)
+            UCHAR Byte = 0;
+
+            for (j = 0; j < RTL_BITS_OF(Byte); j++)
             {
-                Data = ReadData(ReadDataPort);
+                USHORT Data;
+
+                Data = ReadData(ReadDataPort) << 8;
                 KeStallExecutionProcessor(250);
-                Data = ((Data << 8) | ReadData(ReadDataPort));
+                Data |= ReadData(ReadDataPort);
                 KeStallExecutionProcessor(250);
+
                 Byte >>= 1;
 
-                if (Data != 0xFFFF)
+                if (Data == 0x55AA)
                 {
-                    SeenLife = TRUE;
-                    if (Data == 0x55AA)
-                    {
-                        Byte |= 0x80;
-                        Seen55aa = TRUE;
-                    }
+                    Byte |= 0x80;
+                    Seen55aa = TRUE;
                 }
             }
-            *(((PUCHAR)&Identifier) + i) = Byte;
+
+            ((PUCHAR)&Identifier)[i] = Byte;
+        }
+
+        ++NumberOfRead;
+
+        if (Identifier.Checksum != 0x00 &&
+            Identifier.Checksum != IsaPnpChecksum(&Identifier))
+        {
+            DPRINT("Bad checksum\n");
+            break;
         }
 
         if (!Seen55aa)
         {
-            if (Csn)
-            {
-                DPRINT("Found no more cards\n");
-            }
-            else
-            {
-                if (SeenLife)
-                {
-                    DPRINT("Saw life but no cards, trying new read port\n");
-                    Csn = -1;
-                }
-                else
-                {
-                    DPRINT("Saw no sign of life, abandoning isolation\n");
-                }
-            }
-            break;
-        }
-
-        if (Identifier.Checksum != IsaPnpChecksum(&Identifier))
-        {
-            DPRINT("Bad checksum, trying next read data port\n");
-            Csn = -1;
+            DPRINT("Saw no sign of life\n");
             break;
         }
 
@@ -1264,32 +1245,18 @@ TryIsolate(
         Wake(0x00);
     }
 
-    WaitForKey();
+    Wake(0x00);
 
-    if (Csn > 0)
+    if (NumberOfRead == 1)
     {
-        DPRINT("Found %d cards at read port 0x%p\n", Csn, ReadDataPort);
+        DPRINT("Trying next read data port\n");
+        return 0;
     }
-
-    return Csn;
-}
-
-static
-VOID
-DeviceActivation(
-    _In_ PISAPNP_LOGICAL_DEVICE IsaDevice,
-    _In_ BOOLEAN Activate)
-{
-    WaitForKey();
-    SendKey();
-    Wake(IsaDevice->CSN);
-
-    if (Activate)
-        ActivateDevice(IsaDevice->LDN);
     else
-        DeactivateDevice(IsaDevice->LDN);
-
-    WaitForKey();
+    {
+        DPRINT("Found %u cards at read port 0x%p\n", Csn, ReadDataPort);
+        return Csn;
+    }
 }
 
 _Requires_lock_held_(FdoExt->DeviceSyncEvent)
@@ -1323,9 +1290,6 @@ IsaHwFillDeviceList(
 
         LogDevice->Flags &= ~ISAPNP_PRESENT;
     }
-
-    WaitForKey();
-    SendKey();
 
     for (Csn = 1; Csn <= FdoExt->Cards; Csn++)
     {
@@ -1436,34 +1400,34 @@ Deactivate:
     return STATUS_SUCCESS;
 }
 
-CODE_SEG("PAGE")
-ULONG
-IsaHwTryReadDataPort(
-    _In_ PUCHAR ReadDataPort)
+_IRQL_requires_max_(DISPATCH_LEVEL)
+VOID
+IsaHwWakeDevice(
+    _In_ PISAPNP_LOGICAL_DEVICE LogicalDevice)
 {
-    PAGED_CODE();
-
-    return TryIsolate(ReadDataPort);
+    SendKey();
+    Wake(LogicalDevice->CSN);
 }
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
-NTSTATUS
+VOID
 IsaHwActivateDevice(
     _In_ PISAPNP_LOGICAL_DEVICE LogicalDevice)
 {
-    DeviceActivation(LogicalDevice,
-                     TRUE);
-
-    return STATUS_SUCCESS;
+    ActivateDevice(LogicalDevice->LDN);
 }
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
-NTSTATUS
+VOID
 IsaHwDeactivateDevice(
     _In_ PISAPNP_LOGICAL_DEVICE LogicalDevice)
 {
-    DeviceActivation(LogicalDevice,
-                     FALSE);
+    DeactivateDevice(LogicalDevice->LDN);
+}
 
-    return STATUS_SUCCESS;
+_IRQL_requires_max_(DISPATCH_LEVEL)
+VOID
+IsaHwWaitForKey(VOID)
+{
+    WaitForKey();
 }

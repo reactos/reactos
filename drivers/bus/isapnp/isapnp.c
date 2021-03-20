@@ -1350,6 +1350,8 @@ IsaPnpFillDeviceRelations(
             /* Card identification */
             if (FdoExt->Cards > 0)
                 (VOID)IsaHwFillDeviceList(FdoExt);
+
+            IsaHwWaitForKey();
         }
 
         ReadPortExt->Flags &= ~ISAPNP_SCANNED_BY_READ_PORT;

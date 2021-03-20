@@ -365,7 +365,7 @@ IsaPnpRemoveLogicalDeviceDO(
 
 /* hardware.c */
 CODE_SEG("PAGE")
-ULONG
+UCHAR
 IsaHwTryReadDataPort(
     _In_ PUCHAR ReadDataPort);
 
@@ -376,14 +376,23 @@ IsaHwFillDeviceList(
     _In_ PISAPNP_FDO_EXTENSION FdoExt);
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
-NTSTATUS
+VOID
+IsaHwWakeDevice(
+    _In_ PISAPNP_LOGICAL_DEVICE LogicalDevice);
+
+_IRQL_requires_max_(DISPATCH_LEVEL)
+VOID
 IsaHwDeactivateDevice(
     _In_ PISAPNP_LOGICAL_DEVICE LogicalDevice);
 
 _IRQL_requires_max_(DISPATCH_LEVEL)
-NTSTATUS
+VOID
 IsaHwActivateDevice(
     _In_ PISAPNP_LOGICAL_DEVICE LogicalDevice);
+
+_IRQL_requires_max_(DISPATCH_LEVEL)
+VOID
+IsaHwWaitForKey(VOID);
 
 #ifdef __cplusplus
 }
