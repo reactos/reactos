@@ -28,10 +28,17 @@ extern "C" {
 #define ISAPNP_ACTIVATE 0x30
 #define ISAPNP_IORANGECHECK 0x31
 
+#define ISAPNP_MEMBASE(n) (0x40 + ((n) * 8))
+#define ISAPNP_MEMCONTROL(n) (0x42 + ((n) * 8))
+#define    MEMORY_UPPER_LIMIT 0x01
+#define ISAPNP_MEMLIMIT(n) (0x43 + ((n) * 8))
 #define ISAPNP_IOBASE(n) (0x60 + ((n)*2))
 #define ISAPNP_IRQNO(n) (0x70 + ((n)*2))
 #define ISAPNP_IRQTYPE(n) (0x71 + ((n) * 2))
 #define ISAPNP_DMACHANNEL(n) (0x74 + (n))
+#define ISAPNP_MEMBASE32(n) ((n) == 0 ? 0x76 : (0x70 + (n) * 16))
+#define ISAPNP_MEMCONTROL32(n) ((n) == 0 ? 0x7A : (0x74 + (n) * 16))
+#define ISAPNP_MEMLIMIT32(n) ((n) == 0 ? 0x7B : (0x75 + (n) * 16))
 
 #define ISAPNP_CONFIG_RESET (1 << 0)
 #define ISAPNP_CONFIG_WAIT_FOR_KEY (1 << 1)
@@ -60,6 +67,9 @@ extern "C" {
 #define ISAPNP_TAG_UNICODESTR 0x83
 #define ISAPNP_TAG_MEM32RANGE 0x85
 #define ISAPNP_TAG_FIXEDMEM32RANGE 0x86
+
+#define RANGE_LENGTH_TO_LENGTH(RangeLength) ((~(RangeLength) + 1) & 0xFFFFFF)
+#define LENGTH_TO_RANGE_LENGTH(Length) (~(Length) + 1)
 
 #include <pshpack1.h>
 

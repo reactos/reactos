@@ -85,6 +85,17 @@ ReadWord(
 
 static
 inline
+ULONG
+ReadDoubleWord(
+    _In_ PUCHAR ReadDataPort,
+    _In_ UCHAR Address)
+{
+    return ((ReadWord(ReadDataPort, Address) << 8) |
+            (ReadWord(ReadDataPort, Address + 2)));
+}
+
+static
+inline
 VOID
 SetReadDataPort(
     _In_ PUCHAR ReadDataPort)
@@ -198,7 +209,7 @@ ReadIrqNo(
     _In_ PUCHAR ReadDataPort,
     _In_ UCHAR Index)
 {
-    return ReadByte(ReadDataPort, ISAPNP_IRQNO(Index));
+    return ReadByte(ReadDataPort, ISAPNP_IRQNO(Index)) & 0x0F;
 }
 
 static
@@ -218,7 +229,67 @@ ReadDmaChannel(
     _In_ PUCHAR ReadDataPort,
     _In_ UCHAR Index)
 {
-    return ReadByte(ReadDataPort, ISAPNP_DMACHANNEL(Index));
+    return ReadByte(ReadDataPort, ISAPNP_DMACHANNEL(Index)) & 0x07;
+}
+
+static
+inline
+USHORT
+ReadMemoryBase(
+    _In_ PUCHAR ReadDataPort,
+    _In_ UCHAR Index)
+{
+    return ReadWord(ReadDataPort, ISAPNP_MEMBASE(Index));
+}
+
+static
+inline
+UCHAR
+ReadMemoryControl(
+    _In_ PUCHAR ReadDataPort,
+    _In_ UCHAR Index)
+{
+    return ReadByte(ReadDataPort, ISAPNP_MEMCONTROL(Index));
+}
+
+static
+inline
+USHORT
+ReadMemoryLimit(
+    _In_ PUCHAR ReadDataPort,
+    _In_ UCHAR Index)
+{
+    return ReadWord(ReadDataPort, ISAPNP_MEMLIMIT(Index));
+}
+
+static
+inline
+ULONG
+ReadMemoryBase32(
+    _In_ PUCHAR ReadDataPort,
+    _In_ UCHAR Index)
+{
+    return ReadDoubleWord(ReadDataPort, ISAPNP_MEMBASE32(Index));
+}
+
+static
+inline
+UCHAR
+ReadMemoryControl32(
+    _In_ PUCHAR ReadDataPort,
+    _In_ UCHAR Index)
+{
+    return ReadByte(ReadDataPort, ISAPNP_MEMCONTROL32(Index));
+}
+
+static
+inline
+ULONG
+ReadMemoryLimit32(
+    _In_ PUCHAR ReadDataPort,
+    _In_ UCHAR Index)
+{
+    return ReadDoubleWord(ReadDataPort, ISAPNP_MEMLIMIT32(Index));
 }
 
 static
@@ -1018,6 +1089,95 @@ SkipTag:
 
 static
 CODE_SEG("PAGE")
+BOOLEAN
+ReadCurrentResources(
+    _In_ PUCHAR ReadDataPort,
+    _Inout_ PISAPNP_LOGICAL_DEVICE LogDevice)
+{
+    UCHAR i;
+
+    PAGED_CODE();
+
+    DPRINT("%s for CSN %u, LDN %u\n", __FUNCTION__, LogDevice->CSN, LogDevice->LDN);
+
+    WriteLogicalDeviceNumber(LogDevice->LDN);
+
+    /* If the device is not activated by BIOS we just report a NULL resource list */
+    if (!(ReadByte(ReadDataPort, ISAPNP_ACTIVATE) & 1))
+    {
+        LogDevice->Flags &= ~ISAPNP_HAS_RESOURCES;
+        return FALSE;
+    }
+
+    for (i = 0; i < RTL_NUMBER_OF(LogDevice->Io); i++)
+    {
+        LogDevice->Io[i].CurrentBase = ReadIoBase(ReadDataPort, i);
+
+        /* Skip empty descriptors */
+        if (!LogDevice->Io[i].CurrentBase)
+            break;
+    }
+    for (i = 0; i < RTL_NUMBER_OF(LogDevice->Irq); i++)
+    {
+        LogDevice->Irq[i].CurrentNo = ReadIrqNo(ReadDataPort, i);
+
+        if (!LogDevice->Irq[i].CurrentNo)
+            break;
+
+        LogDevice->Irq[i].CurrentType = ReadIrqType(ReadDataPort, i);
+    }
+    for (i = 0; i < RTL_NUMBER_OF(LogDevice->Dma); i++)
+    {
+        LogDevice->Dma[i].CurrentChannel = ReadDmaChannel(ReadDataPort, i);
+
+        if (LogDevice->Dma[i].CurrentChannel == 4)
+            break;
+    }
+    for (i = 0; i < RTL_NUMBER_OF(LogDevice->MemRange); i++)
+    {
+        LogDevice->MemRange[i].CurrentBase = ReadMemoryBase(ReadDataPort, i) << 8;
+
+        if (!LogDevice->MemRange[i].CurrentBase)
+            break;
+
+        LogDevice->MemRange[i].CurrentLength = ReadMemoryLimit(ReadDataPort, i) << 8;
+
+        if (ReadMemoryControl(ReadDataPort, i) & MEMORY_UPPER_LIMIT)
+        {
+            LogDevice->MemRange[i].CurrentLength -= LogDevice->MemRange[i].CurrentBase;
+        }
+        else
+        {
+            LogDevice->MemRange[i].CurrentLength =
+                RANGE_LENGTH_TO_LENGTH(LogDevice->MemRange[i].CurrentLength);
+        }
+    }
+    for (i = 0; i < RTL_NUMBER_OF(LogDevice->MemRange32); i++)
+    {
+        LogDevice->MemRange32[i].CurrentBase = ReadMemoryBase32(ReadDataPort, i);
+
+        if (!LogDevice->MemRange32[i].CurrentBase)
+            break;
+
+        LogDevice->MemRange32[i].CurrentLength = ReadMemoryLimit32(ReadDataPort, i);
+
+        if (ReadMemoryControl32(ReadDataPort, i) & MEMORY_UPPER_LIMIT)
+        {
+            LogDevice->MemRange32[i].CurrentLength -= LogDevice->MemRange32[i].CurrentBase;
+        }
+        else
+        {
+            LogDevice->MemRange32[i].CurrentLength =
+                RANGE_LENGTH_TO_LENGTH(LogDevice->MemRange32[i].CurrentLength);
+        }
+    }
+
+    LogDevice->Flags |= ISAPNP_HAS_RESOURCES;
+    return TRUE;
+}
+
+static
+CODE_SEG("PAGE")
 INT
 TryIsolate(
     _In_ PUCHAR ReadDataPort)
@@ -1153,7 +1313,6 @@ IsaHwFillDeviceList(
 {
     PISAPNP_LOGICAL_DEVICE LogDevice;
     UCHAR Csn;
-    ULONG i;
     PLIST_ENTRY Entry;
     PUCHAR ResourceData;
 
@@ -1264,19 +1423,8 @@ IsaHwFillDeviceList(
                 goto Deactivate;
             }
 
-            WriteLogicalDeviceNumber(LogDev);
-
-            for (i = 0; i < ARRAYSIZE(LogDevice->Io); i++)
-                LogDevice->Io[i].CurrentBase = ReadIoBase(FdoExt->ReadDataPort, i);
-            for (i = 0; i < ARRAYSIZE(LogDevice->Irq); i++)
-            {
-                LogDevice->Irq[i].CurrentNo = ReadIrqNo(FdoExt->ReadDataPort, i);
-                LogDevice->Irq[i].CurrentType = ReadIrqType(FdoExt->ReadDataPort, i);
-            }
-            for (i = 0; i < ARRAYSIZE(LogDevice->Dma); i++)
-            {
-                LogDevice->Dma[i].CurrentChannel = ReadDmaChannel(FdoExt->ReadDataPort, i);
-            }
+            if (!ReadCurrentResources(FdoExt->ReadDataPort, LogDevice))
+                DPRINT("Unable to read boot resources\n");
 
             IsaPnpExtractAscii(LogDevice->VendorId, Identifier.VendorId);
             LogDevice->ProdId = Identifier.ProdId;

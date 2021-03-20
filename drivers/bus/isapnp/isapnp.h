@@ -133,6 +133,7 @@ typedef struct _ISAPNP_LOGICAL_DEVICE
     ULONG Flags;
 #define ISAPNP_PRESENT              0x00000001 /**< @brief Cleared when the device is physically removed. */
 #define ISAPNP_HAS_MULTIPLE_LOGDEVS 0x00000002 /**< @brief Indicates if the parent card has multiple logical devices. */
+#define ISAPNP_HAS_RESOURCES        0x00000004 /**< @brief Cleared when the device has no boot resources. */
 
     LIST_ENTRY DeviceLink;
 } ISAPNP_LOGICAL_DEVICE, *PISAPNP_LOGICAL_DEVICE;
