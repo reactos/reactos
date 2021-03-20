@@ -15,7 +15,7 @@ static
 inline
 VOID
 WriteAddress(
-    _In_ USHORT Address)
+    _In_ UCHAR Address)
 {
     WRITE_PORT_UCHAR((PUCHAR)ISAPNP_ADDRESS, Address);
 }
@@ -24,7 +24,7 @@ static
 inline
 VOID
 WriteData(
-    _In_ USHORT Data)
+    _In_ UCHAR Data)
 {
     WRITE_PORT_UCHAR((PUCHAR)ISAPNP_WRITE_DATA, Data);
 }
@@ -42,8 +42,8 @@ static
 inline
 VOID
 WriteByte(
-    _In_ USHORT Address,
-    _In_ USHORT Value)
+    _In_ UCHAR Address,
+    _In_ UCHAR Value)
 {
     WriteAddress(Address);
     WriteData(Value);
@@ -54,7 +54,7 @@ inline
 UCHAR
 ReadByte(
     _In_ PUCHAR ReadDataPort,
-    _In_ USHORT Address)
+    _In_ UCHAR Address)
 {
     WriteAddress(Address);
     return ReadData(ReadDataPort);
@@ -65,7 +65,7 @@ inline
 USHORT
 ReadWord(
     _In_ PUCHAR ReadDataPort,
-    _In_ USHORT Address)
+    _In_ UCHAR Address)
 {
     return ((ReadByte(ReadDataPort, Address) << 8) |
             (ReadByte(ReadDataPort, Address + 1)));
@@ -77,7 +77,7 @@ VOID
 SetReadDataPort(
     _In_ PUCHAR ReadDataPort)
 {
-    WriteByte(ISAPNP_READPORT, ((ULONG_PTR)ReadDataPort >> 2));
+    WriteByte(ISAPNP_READPORT, (UCHAR)((ULONG_PTR)ReadDataPort >> 2));
 }
 
 static
@@ -108,14 +108,14 @@ static
 inline
 VOID
 Wake(
-    _In_ USHORT Csn)
+    _In_ UCHAR Csn)
 {
     WriteByte(ISAPNP_WAKE, Csn);
 }
 
 static
 inline
-USHORT
+UCHAR
 ReadResourceData(
     _In_ PUCHAR ReadDataPort)
 {
@@ -124,7 +124,7 @@ ReadResourceData(
 
 static
 inline
-USHORT
+UCHAR
 ReadStatus(
     _In_ PUCHAR ReadDataPort)
 {
@@ -135,7 +135,7 @@ static
 inline
 VOID
 WriteCsn(
-    _In_ USHORT Csn)
+    _In_ UCHAR Csn)
 {
     WriteByte(ISAPNP_CARDSELECTNUMBER, Csn);
 }
@@ -144,7 +144,7 @@ static
 inline
 VOID
 WriteLogicalDeviceNumber(
-    _In_ USHORT LogDev)
+    _In_ UCHAR LogDev)
 {
     WriteByte(ISAPNP_LOGICALDEVICENUMBER, LogDev);
 }
@@ -153,7 +153,7 @@ static
 inline
 VOID
 ActivateDevice(
-    _In_ USHORT LogDev)
+    _In_ UCHAR LogDev)
 {
     WriteLogicalDeviceNumber(LogDev);
     WriteByte(ISAPNP_ACTIVATE, 1);
@@ -163,7 +163,7 @@ static
 inline
 VOID
 DeactivateDevice(
-    _In_ USHORT LogDev)
+    _In_ UCHAR LogDev)
 {
     WriteLogicalDeviceNumber(LogDev);
     WriteByte(ISAPNP_ACTIVATE, 0);
@@ -174,37 +174,37 @@ inline
 USHORT
 ReadIoBase(
     _In_ PUCHAR ReadDataPort,
-    _In_ USHORT Index)
+    _In_ UCHAR Index)
 {
     return ReadWord(ReadDataPort, ISAPNP_IOBASE(Index));
 }
 
 static
 inline
-USHORT
+UCHAR
 ReadIrqNo(
     _In_ PUCHAR ReadDataPort,
-    _In_ USHORT Index)
+    _In_ UCHAR Index)
 {
     return ReadByte(ReadDataPort, ISAPNP_IRQNO(Index));
 }
 
 static
 inline
-USHORT
+UCHAR
 ReadIrqType(
     _In_ PUCHAR ReadDataPort,
-    _In_ USHORT Index)
+    _In_ UCHAR Index)
 {
     return ReadByte(ReadDataPort, ISAPNP_IRQTYPE(Index));
 }
 
 static
 inline
-USHORT
+UCHAR
 ReadDmaChannel(
     _In_ PUCHAR ReadDataPort,
-    _In_ USHORT Index)
+    _In_ UCHAR Index)
 {
     return ReadByte(ReadDataPort, ISAPNP_DMACHANNEL(Index));
 }
@@ -251,11 +251,11 @@ SendKey(VOID)
 
 static
 CODE_SEG("PAGE")
-USHORT
+UCHAR
 PeekByte(
     _In_ PUCHAR ReadDataPort)
 {
-    USHORT i;
+    UCHAR i;
 
     PAGED_CODE();
 
@@ -276,15 +276,16 @@ VOID
 Peek(
     _In_ PUCHAR ReadDataPort,
     _Out_writes_bytes_all_opt_(Length) PVOID Buffer,
-    _In_ ULONG Length)
+    _In_ USHORT Length)
 {
-    USHORT i, Byte;
+    USHORT i;
 
     PAGED_CODE();
 
     for (i = 0; i < Length; i++)
     {
-        Byte = PeekByte(ReadDataPort);
+        UCHAR Byte = PeekByte(ReadDataPort);
+
         if (Buffer)
             ((PUCHAR)Buffer)[i] = Byte;
     }
@@ -292,7 +293,7 @@ Peek(
 
 static
 CODE_SEG("PAGE")
-USHORT
+UCHAR
 IsaPnpChecksum(
     _In_ PISAPNP_IDENTIFIER Identifier)
 {
