@@ -23,7 +23,7 @@ END
 STRINGTABLE
 BEGIN
     IDS_VOLUME_IN_USE "O volume está em uso e não pode ser bloqueado\n"
-    IDS_CHKDSK_FAIL "O chkdsk não consegui completar com sucesso.\n\n"
+    IDS_CHKDSK_FAIL "O chkdsk não consegui terminar com sucesso.\n\n"
     IDS_NO_ENTRY_POINT "O ponto de entrada FMIFS não foi encontrado.\n\n"
     IDS_BAD_ARGUMENT "Argumento desconhecido: %s\n"
     IDS_NO_CURRENT_DIR "Não foi possível obter o directório actual. Código de erro: "
