@@ -429,15 +429,6 @@ UINT CTrayClockWnd::CalculateDueTime()
     if (!g_TaskbarSettings.bShowSeconds)
         uiDueTime += (59 - (UINT) LocalTime.wSecond) * 1000;
 
-    if (uiDueTime < USER_TIMER_MINIMUM || uiDueTime > USER_TIMER_MAXIMUM)
-        uiDueTime = 1000;
-    else
-    {
-        /* Add an artificial delay of 0.05 seconds to make sure the timer
-            doesn't fire too early*/
-        uiDueTime += 50;
-    }
-
     return uiDueTime;
 }
 
