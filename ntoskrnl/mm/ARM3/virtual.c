@@ -401,6 +401,12 @@ MiDeletePte(IN PMMPTE PointerPte,
     /* PFN lock must be held */
     MI_ASSERT_PFN_LOCK_HELD();
 
+    /* WorkingSet must be exclusively locked */
+    ASSERT(MM_ANY_WS_LOCK_HELD_EXCLUSIVE(PsGetCurrentThread()));
+
+    /* This must be current process. */
+    ASSERT(CurrentProcess == PsGetCurrentProcess());
+
     /* Capture the PTE */
     TempPte = *PointerPte;
 
@@ -428,9 +434,16 @@ MiDeletePte(IN PMMPTE PointerPte,
             /* Drop the reference on the page table. */
             MiDecrementShareCount(MiGetPfnEntry(Pfn1->u4.PteFrame), Pfn1->u4.PteFrame);
 
+            /* In case of shared page, the prototype PTE must be in transition, not the process one */
             ASSERT(Pfn1->u3.e1.PrototypePte == 0);
 
-            /* Make the page free. For prototypes, it will be made free when deleting the section object */
+            /* Delete the PFN */
+            MI_SET_PFN_DELETED(Pfn1);
+
+            /* It must be either free (refcount == 0) or being written (refcount == 1) */
+            ASSERT(Pfn1->u3.e2.ReferenceCount == Pfn1->u3.e1.WriteInProgress);
+
+            /* See if we must free it ourselves, or if it will be freed once I/O is over */
             if (Pfn1->u3.e2.ReferenceCount == 0)
             {
                 /* And it should be in standby or modified list */
@@ -441,7 +454,6 @@ MiDeletePte(IN PMMPTE PointerPte,
                 Pfn1->u3.e2.ReferenceCount++;
 
                 /* This will put it back in free list and clean properly up */
-                MI_SET_PFN_DELETED(Pfn1);
                 MiDecrementReferenceCount(Pfn1, PageFrameIndex);
             }
             return;
