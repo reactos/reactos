@@ -390,15 +390,21 @@ _Requires_exclusive_lock_held_(WorkingSet->WorkingSetMutex)
 VOID
 NTAPI
 MiDeletePte(
-	_Inout_ PMMPTE PointerPte,
-	_In_ PVOID VirtualAddress,
-	_In_ PMMSUPPORT WorkingSet,
-	_In_ PMMPTE PrototypePte)
+    _Inout_ PMMPTE PointerPte,
+    _In_ PVOID VirtualAddress,
+    _In_ PMMSUPPORT WorkingSet,
+    _In_ PMMPTE PrototypePte)
 {
     PMMPFN Pfn1;
     MMPTE TempPte;
     PFN_NUMBER PageFrameIndex;
     PMMPDE PointerPde;
+
+    /* WorkingSet must be exclusively locked */
+    ASSERT(MM_ANY_WS_LOCK_HELD_EXCLUSIVE(PsGetCurrentThread()));
+
+    /* If this is a process working set, this must be current one. */
+    ASSERT((WorkingSet == &PsGetCurrentProcess()->Vm) || !MI_IS_PROCESS_WORKING_SET(WorkingSet));
 
     /* Capture the PTE */
     TempPte = *PointerPte;
@@ -424,15 +430,18 @@ MiDeletePte(
             MI_ERASE_PTE(PointerPte);
 
             KIRQL OldIrql = MiAcquirePfnLock();
-
-            /* Drop the reference on the page table. */
-            PointerPde = MiPteToPde(PointerPte);
-            MiDecrementShareCount(MiGetPfnEntry(PointerPde->u.Hard.PageFrameNumber),
-                PointerPde->u.Hard.PageFrameNumber);
-
             ASSERT(Pfn1->u3.e1.PrototypePte == 0);
 
-            /* Make the page free. For prototypes, it will be made free when deleting the section object */
+            /* Drop the reference on the page table. */
+            MiDecrementShareCount(MiGetPfnEntry(Pfn1->u4.PteFrame), Pfn1->u4.PteFrame);
+
+            /* Delete the PFN */
+            MI_SET_PFN_DELETED(Pfn1);
+
+            /* It must be either free (refcount == 0) or being written (refcount == 1) */
+            ASSERT(Pfn1->u3.e2.ReferenceCount == Pfn1->u3.e1.WriteInProgress);
+
+            /* See if we must free it ourselves, or if it will be freed once I/O is over */
             if (Pfn1->u3.e2.ReferenceCount == 0)
             {
                 /* And it should be in standby or modified list */
@@ -443,7 +452,6 @@ MiDeletePte(
                 Pfn1->u3.e2.ReferenceCount++;
 
                 /* This will put it back in free list and clean properly up */
-                MI_SET_PFN_DELETED(Pfn1);
                 MiDecrementReferenceCount(Pfn1, PageFrameIndex);
             }
 
