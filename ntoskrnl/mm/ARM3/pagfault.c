@@ -659,14 +659,8 @@ MiResolveDemandZeroFault(IN PVOID Address,
     /* Do we need a zero page? */
     if (Color != 0xFFFFFFFF)
     {
-        /* Try to get one, if we couldn't grab a free page and zero it */
-        PageFrameNumber = MiRemoveZeroPageSafe(Color);
-        if (!PageFrameNumber)
-        {
-            /* We'll need a free page and zero it manually */
-            PageFrameNumber = MiRemoveAnyPage(Color);
-            NeedZero = TRUE;
-        }
+        /* Get one */
+        PageFrameNumber = MiRemoveZeroPage(Color);
     }
     else
     {
@@ -681,8 +675,6 @@ MiResolveDemandZeroFault(IN PVOID Address,
         {
             /* System wants a zero page, obtain one */
             PageFrameNumber = MiRemoveZeroPage(Color);
-            /* The page is already zeroed */
-            NeedZero = FALSE;
         }
     }
 
@@ -691,9 +683,6 @@ MiResolveDemandZeroFault(IN PVOID Address,
 
     /* Increment demand zero faults */
     KeGetCurrentPrcb()->MmDemandZeroCount++;
-
-    /* Zero the page if need be */
-    if (NeedZero) MiZeroPfn(PageFrameNumber);
 
     /* Fault on user PDE, or fault on user PTE? */
     if (PointerPte <= MiHighestUserPte)
