@@ -65,207 +65,35 @@ DIB_1BPP_BitBltSrcCopy_From1BPP (
                                  BOOLEAN bTopToBottom,
                                  BOOLEAN bLeftToRight )
 {
+    LONG Height = RECTL_lGetHeight(DestRect);
+    BOOLEAN XorBit = !!XLATEOBJ_iXlate(pxlo, 0);
 
-  DPRINT("bLeftToRight is '%d' and bTopToBottom is '%d'.\n", bLeftToRight, bTopToBottom);
+    /* Make sure this is as expected */
+    ASSERT(DestRect->left >= 0);
+    ASSERT(DestRect->top >= 0);
+    ASSERT(Height > 0);
+    ASSERT(RECTL_lGetWidth(DestRect) > 0);
 
-  // The 'window' in this sense is the x-position that corresponds
-  // to the left-edge of the 8-pixel byte we are currently working with.
-  // dwx is current x-window, dwx2 is the 'last' window we need to process.
-  int dwx, dwx2;  // Destination window x-position
-  int swx;        // Source window x-position
-
-  // Left and right edges of source and dest rectangles
-  int dl = DestRect->left; // dest left
-  int dr = DestRect->right-1; // dest right (inclusive)
-  int sl = SourcePoint->x; // source left
-  int sr = sl + dr - dl; // source right (inclusive)
-
-  // Which direction are we going?
-  int xinc;
-  int yinc;
-  int ySrcDelta, yDstDelta;
-
-  // The following 4 variables are used for the y-sweep
-  int dy;  // dest y
-  int dy1; // dest y start
-  int dy2; // dest y end
-  int sy1; // src  y start
-
-  int shift;
-  BYTE srcmask, dstmask, xormask;
-
-  // 'd' and 's' are the dest & src buffer pointers that I use on my x-sweep
-  // 'pd' and 'ps' are the dest & src buffer pointers used on the inner y-sweep
-  PBYTE d, pd; // dest ptrs
-  PBYTE s, ps; // src ptrs
-
-  shift = (dl-sl)&7;
-
-  xormask = 0xFF * (BYTE)XLATEOBJ_iXlate(pxlo, 0);
-
-  if ( DestRect->top <= SourcePoint->y )
-  {
-    DPRINT("Moving up (scan top -> bottom).\n");
-    // Moving up (scan top -> bottom)
-    dy1 = DestRect->top;
-    dy2 = DestRect->bottom - 1;
-    if (bTopToBottom)
+    while (Height--)
     {
-      sy1 = SourcePoint->y + dy2 - dy1;
-      ySrcDelta = -SourceSurf->lDelta;
-    }
-    else
-    {
-      sy1 = SourcePoint->y;
-      ySrcDelta = SourceSurf->lDelta;
-    }
-    yinc = 1;
-    yDstDelta = DestSurf->lDelta;
-  }
-  else
-  {
-    DPRINT("Moving down (scan bottom -> top).\n");
-    // Moving down (scan bottom -> top)
-    dy1 = DestRect->bottom - 1;
-    dy2 = DestRect->top;
-    if (bTopToBottom)
-    {
-      sy1 = SourcePoint->y;
-      ySrcDelta = SourceSurf->lDelta;
-    }
-    else
-    {
-      sy1 = SourcePoint->y + dy1 - dy2;
-      ySrcDelta = -SourceSurf->lDelta;
-    }
-    yinc = -1;
-    yDstDelta = -DestSurf->lDelta;
-  }
-  if ( DestRect->left <= SourcePoint->x )
-  {
-    DPRINT("Moving left (scan left->right).\n");
-    // Moving left (scan left->right)
-    dwx = dl&~7;
-    dwx2 = dr&~7;
-    if (bLeftToRight)
-    {
-      swx = (sr - (dr & 7)) & ~7;
-      xinc = -1;
-    }
-    else
-    {
-      swx = (sl-(dl&7))&~7;
-      xinc = 1;
-    }
-  }
-  else
-  {
-    DPRINT("Moving right (scan right->left).\n");
-    // Moving right (scan right->left)
-    dwx = dr & ~7;
-    dwx2 = dl & ~7;
-    if (bLeftToRight)
-    {
-      swx = (sl-(dl&7))&~7;
-      xinc = 1;
-    }
-    else
-    {
-      swx = (sr - (dr & 7)) & ~7; // (sr - 7) & ~7; // We need the left edge of this block. Thus the -7
-      xinc = -1;
-    }
-  }
-  d = &(((PBYTE)DestSurf->pvScan0)[dy1*DestSurf->lDelta + (dwx>>3)]);
-  s = &(((PBYTE)SourceSurf->pvScan0)[sy1*SourceSurf->lDelta + (swx>>3)]);
-  for ( ;; )
-  {
-    dy = dy1;
-    pd = d;
-    ps = s;
-    srcmask = 0xff;
-    if ( dwx < dl )
-    {
-      int diff = dl-dwx;
-      srcmask &= (1<<(8-diff))-1;
-    }
-    if ( dwx+7 > dr )
-    {
-      int diff = dr-dwx+1;
-      srcmask &= ~((1<<(8-diff))-1);
-    }
-    dstmask = ~srcmask;
+        LONG yDst = DestRect->top + Height;
+        LONG ySrc = bTopToBottom ?
+            SourcePoint->y + RECTL_lGetHeight(DestRect) - Height
+            : SourcePoint->y + Height;
+        LONG Width = RECTL_lGetWidth(DestRect);
 
-    // We unfortunately *must* have 5 different versions of the inner
-    // loop to be certain we don't try to read from memory that is not
-    // needed and may in fact be invalid.
-    if ( !shift )
-    {
-      for ( ;; )
-      {
-        *pd = (BYTE)((*pd & dstmask) | ((ps[0]^xormask) & srcmask));
-
-        // This *must* be here, because we could be going up *or* down...
-        if ( dy == dy2 )
-          break;
-        dy += yinc;
-        pd += yDstDelta;
-        ps += ySrcDelta;
-      }
+        while (Width--)
+        {
+            LONG xDst = DestRect->left + Width;
+            LONG xSrc = bLeftToRight ?
+                SourcePoint->x + RECTL_lGetWidth(DestRect) - Width
+                : SourcePoint->x + Width;
+            ULONG PixelPut = DIB_1BPP_GetPixel(SourceSurf, xSrc, ySrc);
+            if (XorBit)
+                PixelPut = !PixelPut;
+            DIB_1BPP_PutPixel(DestSurf, xDst, yDst, PixelPut);
+        }
     }
-    else if ( !(0xFF00 & (srcmask<<shift) ) ) // Check if ps[0] not needed...
-    {
-      for ( ;; )
-      {
-        *pd = (BYTE)((*pd & dstmask)
-          | ( ( (ps[1]^xormask) >> shift ) & srcmask ));
-
-        // This *must* be here, because we could be going up *or* down...
-        if ( dy == dy2 )
-          break;
-        dy += yinc;
-        pd += yDstDelta;
-        ps += ySrcDelta;
-      }
-    }
-    else if ( !(0xFF & (srcmask<<shift) ) ) // Check if ps[1] not needed...
-    {
-      for ( ;; )
-      {
-        *pd = (*pd & dstmask)
-          | ( ( (ps[0]^xormask) << ( 8 - shift ) ) & srcmask );
-
-        // This *must* be here, because we could be going up *or* down...
-        if ( dy == dy2 )
-          break;
-        dy += yinc;
-        pd += yDstDelta;
-        ps += ySrcDelta;
-      }
-    }
-    else // Both ps[0] and ps[1] are needed
-    {
-      for ( ;; )
-      {
-        *pd = (*pd & dstmask)
-          | ( ( ( ((ps[1]^xormask))|((ps[0]^xormask)<<8) ) >> shift ) & srcmask );
-
-        // This *must* be here, because we could be going up *or* down...
-        if ( dy == dy2 )
-          break;
-        dy += yinc;
-        pd += yDstDelta;
-        ps += ySrcDelta;
-      }
-    }
-
-    // This *must* be here, because we could be going right *or* left...
-    if ( dwx == dwx2 )
-      break;
-    d += xinc;
-    s += xinc;
-    dwx += xinc<<3;
-    swx += xinc<<3;
-  }
 }
 
 BOOLEAN
@@ -338,11 +166,11 @@ DIB_1BPP_BitBltSrcCopy(PBLTINFO BltInfo)
     break;
 
   case BMF_8BPP:
-    DPRINT("8BPP-dstRect: (%d,%d)-(%d,%d) and Width of '%d'.\n", 
+    DPRINT("8BPP-dstRect: (%d,%d)-(%d,%d) and Width of '%d'.\n",
            BltInfo->DestRect.left, BltInfo->DestRect.top,
            BltInfo->DestRect.right, BltInfo->DestRect.bottom,
            BltInfo->DestRect.right - BltInfo->DestRect.left);
- 
+
     if (bTopToBottom)
     {
       // This sets sy to the bottom line
@@ -371,7 +199,7 @@ DIB_1BPP_BitBltSrcCopy(PBLTINFO BltInfo)
     break;
 
   case BMF_16BPP:
-    DPRINT("16BPP-dstRect: (%d,%d)-(%d,%d) and Width of '%d'.\n", 
+    DPRINT("16BPP-dstRect: (%d,%d)-(%d,%d) and Width of '%d'.\n",
            BltInfo->DestRect.left, BltInfo->DestRect.top,
            BltInfo->DestRect.right, BltInfo->DestRect.bottom,
            BltInfo->DestRect.right - BltInfo->DestRect.left);
@@ -404,7 +232,7 @@ DIB_1BPP_BitBltSrcCopy(PBLTINFO BltInfo)
 
   case BMF_24BPP:
 
-    DPRINT("24BPP-dstRect: (%d,%d)-(%d,%d) and Width of '%d'.\n", 
+    DPRINT("24BPP-dstRect: (%d,%d)-(%d,%d) and Width of '%d'.\n",
            BltInfo->DestRect.left, BltInfo->DestRect.top,
            BltInfo->DestRect.right, BltInfo->DestRect.bottom,
            BltInfo->DestRect.right - BltInfo->DestRect.left);
@@ -437,7 +265,7 @@ DIB_1BPP_BitBltSrcCopy(PBLTINFO BltInfo)
 
   case BMF_32BPP:
 
-    DPRINT("32BPP-dstRect: (%d,%d)-(%d,%d) and Width of '%d'.\n", 
+    DPRINT("32BPP-dstRect: (%d,%d)-(%d,%d) and Width of '%d'.\n",
            BltInfo->DestRect.left, BltInfo->DestRect.top,
            BltInfo->DestRect.right, BltInfo->DestRect.bottom,
            BltInfo->DestRect.right - BltInfo->DestRect.left);
