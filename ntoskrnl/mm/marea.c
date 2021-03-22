@@ -328,24 +328,6 @@ MmFreeMemoryArea(
                 FreePage(FreePageContext, MemoryArea, (PVOID)Address,
                          Page, SwapEntry, (BOOLEAN)Dirty);
             }
-#if (_MI_PAGING_LEVELS == 2)
-            /* Remove page table reference */
-            ASSERT(KeGetCurrentIrql() <= APC_LEVEL);
-            if ((SwapEntry || Page) && ((PVOID)Address < MmSystemRangeStart))
-            {
-                ASSERT(AddressSpace != MmGetKernelAddressSpace());
-                if (MiQueryPageTableReferences((PVOID)Address) == 0)
-                {
-                    /* No PTE relies on this PDE. Release it */
-                    KIRQL OldIrql = MiAcquirePfnLock();
-                    PMMPDE PointerPde = MiAddressToPde(Address);
-                    ASSERT(PointerPde->u.Hard.Valid == 1);
-                    MiDeletePte(PointerPde, MiPdeToPte(PointerPde), Process, NULL);
-                    ASSERT(PointerPde->u.Hard.Valid == 0);
-                    MiReleasePfnLock(OldIrql);
-                }
-            }
-#endif
         }
 
         if (Process != NULL &&
