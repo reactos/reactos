@@ -249,6 +249,9 @@ function(set_image_base MODULE IMAGE_BASE)
 endfunction()
 
 function(set_module_type_toolchain MODULE TYPE)
+    # Set the PE image version numbers from the NT OS version ReactOS is based on
+    target_link_options(${MODULE} PRIVATE "/VERSION:5.01")
+
     if((TYPE STREQUAL win32dll) OR (TYPE STREQUAL win32ocx) OR (TYPE STREQUAL cpl))
         target_link_options(${MODULE} PRIVATE /DLL)
     elseif(TYPE IN_LIST KERNEL_MODULE_TYPES)
@@ -261,7 +264,7 @@ function(set_module_type_toolchain MODULE TYPE)
             target_link_options(${MODULE} PRIVATE /DRIVER:WDM)
         elseif (TYPE STREQUAL kernel)
             # Mark .rsrc section as non-disposable non-pageable, as bugcheck code needs to access it
-            target_link_options(${MODULE} PRIVATE /SECTION:.rsrc,!DP )
+            target_link_options(${MODULE} PRIVATE /SECTION:.rsrc,!DP)
         endif()
     endif()
 
