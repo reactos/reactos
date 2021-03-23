@@ -280,13 +280,20 @@ function(set_image_base MODULE IMAGE_BASE)
 endfunction()
 
 function(set_module_type_toolchain MODULE TYPE)
-    if (TYPE IN_LIST KERNEL_MODULE_TYPES)
+    # Set the PE image version numbers from the NT OS version ReactOS is based on
+    target_link_options(${MODULE} PRIVATE
+        -Wl,--major-image-version,5 -Wl,--minor-image-version,01 -Wl,--major-os-version,5 -Wl,--minor-os-version,01)
+
+    if(TYPE IN_LIST KERNEL_MODULE_TYPES)
         target_link_options(${MODULE} PRIVATE -Wl,--exclude-all-symbols,-file-alignment=0x1000,-section-alignment=0x1000)
+
         if(${TYPE} STREQUAL "wdmdriver")
             target_link_options(${MODULE} PRIVATE "-Wl,--wdmdriver")
         endif()
+
         # Place INIT &.rsrc section at the tail of the module, before .reloc
         add_linker_script(${MODULE} ${REACTOS_SOURCE_DIR}/sdk/cmake/init-section.lds)
+
         # Fixup section characteristics
         #  - Remove flags that LD overzealously puts (alignment flag, Initialized flags for code sections)
         #  - INIT section is made discardable
@@ -294,6 +301,7 @@ function(set_module_type_toolchain MODULE TYPE)
         #  - PAGE & .edata sections are made pageable.
         add_custom_command(TARGET ${MODULE} POST_BUILD
             COMMAND native-pefixup --${TYPE} $<TARGET_FILE:${MODULE}>)
+
         # Believe it or not, cmake doesn't do that
         set_property(TARGET ${MODULE} APPEND PROPERTY LINK_DEPENDS $<TARGET_PROPERTY:native-pefixup,IMPORTED_LOCATION>)
     endif()
