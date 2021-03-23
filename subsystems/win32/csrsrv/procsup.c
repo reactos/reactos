@@ -168,7 +168,7 @@ CsrLockedDereferenceProcess(PCSR_PROCESS CsrProcess)
         /* Call the generic cleanup code */
         DPRINT1("Should kill process: %p\n", CsrProcess);
         CsrProcessRefcountZero(CsrProcess);
-        /* Acquire again, the lock it was released in CsrProcessRefcountZero */
+        /* Acquire the lock again, it was released in CsrProcessRefcountZero */
         CsrAcquireProcessLock();
     }
 }
