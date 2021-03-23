@@ -291,6 +291,10 @@ MmAllocateSpecialPool(SIZE_T NumberOfBytes, ULONG Tag, POOL_TYPE PoolType, ULONG
         return NULL;
     }
 
+    /* Lock system working set if this is paged pool */
+    if (PoolType == PagedPool)
+        MiLockWorkingSet(PsGetCurrentThread(), &MmSystemCacheWs);
+
     /* Lock PFN database */
     Irql = MiAcquirePfnLock();
 
@@ -299,6 +303,9 @@ MmAllocateSpecialPool(SIZE_T NumberOfBytes, ULONG Tag, POOL_TYPE PoolType, ULONG
     {
         /* Release the PFN database lock */
         MiReleasePfnLock(Irql);
+        if (PoolType == PagedPool)
+            MiUnlockWorkingSet(PsGetCurrentThread(), &MmSystemCacheWs);
+
         DPRINT1("Special pool: MmAvailablePages 0x%x is too small\n", MmAvailablePages);
         return NULL;
     }
@@ -312,6 +319,8 @@ MmAllocateSpecialPool(SIZE_T NumberOfBytes, ULONG Tag, POOL_TYPE PoolType, ULONG
             /* No reserves left, reject this allocation */
             static int once;
             MiReleasePfnLock(Irql);
+            if (PoolType == PagedPool)
+                MiUnlockWorkingSet(PsGetCurrentThread(), &MmSystemCacheWs);
             if (!once++) DPRINT1("Special pool: No PTEs left!\n");
             return NULL;
         }
@@ -343,8 +352,15 @@ MmAllocateSpecialPool(SIZE_T NumberOfBytes, ULONG Tag, POOL_TYPE PoolType, ULONG
     TempPte.u.Hard.PageFrameNumber = PageFrameNumber;
     MiInitializePfnAndMakePteValid(PageFrameNumber, PointerPte, TempPte);
 
+    /* Insert it into system WS list */
+    if (PoolType == PagedPool)
+        MiInsertInWorkingSetList(&MmSystemCacheWs, MiPteToAddress(PointerPte), MM_READWRITE);
+
     /* Release the PFN database lock */
     MiReleasePfnLock(Irql);
+
+    if (PoolType == PagedPool)
+        MiUnlockWorkingSet(PsGetCurrentThread(), &MmSystemCacheWs);
 
     /* Increase page counter */
     PagesInUse = InterlockedIncrementUL(&MmSpecialPagesInUse);
