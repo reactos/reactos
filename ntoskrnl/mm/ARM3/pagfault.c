@@ -1906,7 +1906,7 @@ _WARN("Session space stuff is not implemented yet!")
         }
         else
         {
-            /* Use the session process and working set */
+            /* Use the session working set */
             CurrentProcess = NULL;
             WorkingSet = &MmSessionSpace->GlobalVirtualAddress->Vm;
 
@@ -2025,9 +2025,6 @@ _WARN("Session space stuff is not implemented yet!")
         }
         else
         {
-            /* We don't implement transition PTEs */
-            ASSERT(TempPte.u.Soft.Transition == 0);
-
             /* Check for no-access PTE */
             if (TempPte.u.Soft.Protection == MM_NOACCESS)
             {
@@ -2058,7 +2055,6 @@ _WARN("Session space stuff is not implemented yet!")
             !(TempPte.u.Hard.Valid))
         {
             /* Get the protection code */
-            ASSERT(TempPte.u.Soft.Transition == 0);
             if (!(TempPte.u.Soft.Protection & MM_READWRITE))
             {
                 /* Bugcheck the system! */
