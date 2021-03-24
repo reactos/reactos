@@ -26,7 +26,6 @@
   TODO:
   - implement ACO_SEARCH style
   - implement ACO_FILTERPREFIXES style
-  - implement ACO_USETAB style
   - implement ACO_RTLREADING style
  */
 
@@ -321,7 +320,7 @@ LRESULT CACEditCtrl::OnGetDlgCode(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL 
                 break;
             case VK_TAB:
                 if (m_pDropDown->IsWindowVisible() && m_pDropDown->UseTab())
-                    m_pDropDown->OnEditKeyDown(VK_TAB, 0);
+                    ret |= DLGC_WANTALLKEYS; // we want all keys to manipulate the list
                 break;
             case VK_ESCAPE:
                 if (m_pDropDown->IsWindowVisible())
@@ -949,9 +948,13 @@ BOOL CAutoComplete::OnEditKeyDown(WPARAM wParam, LPARAM lParam)
         }
         case VK_TAB:
         {
+            // ACO_USETAB
             if (IsWindowVisible() && UseTab())
             {
-                FIXME("ACO_USETAB\n");
+                if (GetKeyState(VK_SHIFT) < 0)
+                    return OnListUpDown(VK_UP);
+                else
+                    return OnListUpDown(VK_DOWN);
             }
             break;
         }
@@ -1123,7 +1126,7 @@ CAutoComplete::Init(HWND hwndEdit, IUnknown *punkACL,
     if (m_dwOptions & ACO_FILTERPREFIXES)
         FIXME(" ACO_FILTERPREFIXES not supported\n");
     if (m_dwOptions & ACO_USETAB)
-        FIXME(" ACO_USETAB not supported\n");
+        TRACE(" ACO_USETAB\n");
     if (m_dwOptions & ACO_UPDOWNKEYDROPSLIST)
         TRACE(" ACO_UPDOWNKEYDROPSLIST\n");
     if (m_dwOptions & ACO_RTLREADING)
