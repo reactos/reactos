@@ -26,7 +26,6 @@
   TODO:
   - implement ACO_SEARCH style
   - implement ACO_FILTERPREFIXES style
-  - implement ACO_USETAB style
   - implement ACO_RTLREADING style
  */
 
@@ -321,7 +320,7 @@ LRESULT CACEditCtrl::OnGetDlgCode(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL 
                 break;
             case VK_TAB:
                 if (m_pDropDown->IsWindowVisible() && m_pDropDown->UseTab())
-                    m_pDropDown->OnEditKeyDown(VK_TAB, 0);
+                    ret |= DLGC_WANTALLKEYS; // we want all keys to manipulate the list
                 break;
             case VK_ESCAPE:
                 if (m_pDropDown->IsWindowVisible())
@@ -949,9 +948,13 @@ BOOL CAutoComplete::OnEditKeyDown(WPARAM wParam, LPARAM lParam)
         }
         case VK_TAB:
         {
+            // ACO_USETAB
             if (IsWindowVisible() && UseTab())
             {
-                FIXME("ACO_USETAB\n");
+                if (GetKeyState(VK_SHIFT) < 0)
+                    return OnListUpDown(VK_UP);
+                else
+                    return OnListUpDown(VK_DOWN);
             }
             break;
         }
@@ -1114,21 +1117,6 @@ CAutoComplete::Init(HWND hwndEdit, IUnknown *punkACL,
     TRACE("(%p)->(0x%08lx, %p, %s, %s)\n",
           this, hwndEdit, punkACL, debugstr_w(pwszRegKeyPath), debugstr_w(pwszQuickComplete));
 
-    if (m_dwOptions & ACO_AUTOSUGGEST)
-        TRACE(" ACO_AUTOSUGGEST\n");
-    if (m_dwOptions & ACO_AUTOAPPEND)
-        TRACE(" ACO_AUTOAPPEND\n");
-    if (m_dwOptions & ACO_SEARCH)
-        FIXME(" ACO_SEARCH not supported\n");
-    if (m_dwOptions & ACO_FILTERPREFIXES)
-        FIXME(" ACO_FILTERPREFIXES not supported\n");
-    if (m_dwOptions & ACO_USETAB)
-        FIXME(" ACO_USETAB not supported\n");
-    if (m_dwOptions & ACO_UPDOWNKEYDROPSLIST)
-        TRACE(" ACO_UPDOWNKEYDROPSLIST\n");
-    if (m_dwOptions & ACO_RTLREADING)
-        FIXME(" ACO_RTLREADING not supported\n");
-
     // sanity check
     if (m_hwndEdit || !punkACL)
     {
@@ -1199,6 +1187,14 @@ STDMETHODIMP CAutoComplete::SetOptions(DWORD dwFlag)
 {
     TRACE("(%p) -> (0x%x)\n", this, dwFlag);
     m_dwOptions = dwFlag;
+
+    if (m_dwOptions & ACO_SEARCH)
+        FIXME(" ACO_SEARCH not supported\n");
+    if (m_dwOptions & ACO_FILTERPREFIXES)
+        FIXME(" ACO_FILTERPREFIXES not supported\n");
+    if (m_dwOptions & ACO_RTLREADING)
+        FIXME(" ACO_RTLREADING not supported\n");
+
     UpdateDropDownState(); // create/hide the drop-down window if necessary
     return S_OK;
 }
