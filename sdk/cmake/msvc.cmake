@@ -262,9 +262,6 @@ function(set_module_type_toolchain MODULE TYPE)
             target_link_options(${MODULE} PRIVATE /DRIVER)
         elseif(TYPE STREQUAL wdmdriver)
             target_link_options(${MODULE} PRIVATE /DRIVER:WDM)
-        elseif (TYPE STREQUAL kernel)
-            # Mark .rsrc section as non-disposable non-pageable, as bugcheck code needs to access it
-            target_link_options(${MODULE} PRIVATE /SECTION:.rsrc,!DP)
         endif()
     endif()
 

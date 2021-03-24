@@ -148,11 +148,11 @@ static int driver_fixup(int mode, unsigned char *buffer, PIMAGE_NT_HEADERS nt_he
         if (strncasecmp((char*)Section->Name, ".rsrc", 5) == 0)
         {
             Section->Characteristics &= ~IMAGE_SCN_MEM_WRITE;
-            continue;
         }
 
         /* Known sections which can be discarded */
-        if (strncasecmp((char*)Section->Name, "INIT", 4) == 0)
+        if ((strncasecmp((char*)Section->Name, "INIT", 4) == 0)
+            || (strncasecmp((char*)Section->Name, ".rsrc", 5) == 0))
         {
             Section->Characteristics |= IMAGE_SCN_MEM_DISCARDABLE;
             continue;
