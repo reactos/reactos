@@ -1117,21 +1117,6 @@ CAutoComplete::Init(HWND hwndEdit, IUnknown *punkACL,
     TRACE("(%p)->(0x%08lx, %p, %s, %s)\n",
           this, hwndEdit, punkACL, debugstr_w(pwszRegKeyPath), debugstr_w(pwszQuickComplete));
 
-    if (m_dwOptions & ACO_AUTOSUGGEST)
-        TRACE(" ACO_AUTOSUGGEST\n");
-    if (m_dwOptions & ACO_AUTOAPPEND)
-        TRACE(" ACO_AUTOAPPEND\n");
-    if (m_dwOptions & ACO_SEARCH)
-        FIXME(" ACO_SEARCH not supported\n");
-    if (m_dwOptions & ACO_FILTERPREFIXES)
-        FIXME(" ACO_FILTERPREFIXES not supported\n");
-    if (m_dwOptions & ACO_USETAB)
-        TRACE(" ACO_USETAB\n");
-    if (m_dwOptions & ACO_UPDOWNKEYDROPSLIST)
-        TRACE(" ACO_UPDOWNKEYDROPSLIST\n");
-    if (m_dwOptions & ACO_RTLREADING)
-        FIXME(" ACO_RTLREADING not supported\n");
-
     // sanity check
     if (m_hwndEdit || !punkACL)
     {
@@ -1202,6 +1187,14 @@ STDMETHODIMP CAutoComplete::SetOptions(DWORD dwFlag)
 {
     TRACE("(%p) -> (0x%x)\n", this, dwFlag);
     m_dwOptions = dwFlag;
+
+    if (m_dwOptions & ACO_SEARCH)
+        FIXME(" ACO_SEARCH not supported\n");
+    if (m_dwOptions & ACO_FILTERPREFIXES)
+        FIXME(" ACO_FILTERPREFIXES not supported\n");
+    if (m_dwOptions & ACO_RTLREADING)
+        FIXME(" ACO_RTLREADING not supported\n");
+
     UpdateDropDownState(); // create/hide the drop-down window if necessary
     return S_OK;
 }
