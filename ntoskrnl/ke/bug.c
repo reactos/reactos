@@ -296,38 +296,8 @@ VOID
 NTAPI
 KiInitializeBugCheck(VOID)
 {
-    PMESSAGE_RESOURCE_DATA BugCheckData;
-    LDR_RESOURCE_INFO ResourceInfo;
-    PIMAGE_RESOURCE_DATA_ENTRY ResourceDataEntry;
-    NTSTATUS Status;
-    PLDR_DATA_TABLE_ENTRY LdrEntry;
-
-    /* Get the kernel entry */
-    LdrEntry = CONTAINING_RECORD(KeLoaderBlock->LoadOrderListHead.Flink,
-                                 LDR_DATA_TABLE_ENTRY,
-                                 InLoadOrderLinks);
-
-    /* Cache the Bugcheck Message Strings. Prepare the Lookup Data */
-    ResourceInfo.Type = 11;
-    ResourceInfo.Name = 1;
-    ResourceInfo.Language = 9;
-
-    /* Do the lookup. */
-    Status = LdrFindResource_U(LdrEntry->DllBase,
-                               &ResourceInfo,
-                               RESOURCE_DATA_LEVEL,
-                               &ResourceDataEntry);
-
-    /* Make sure it worked */
-    if (NT_SUCCESS(Status))
-    {
-        /* Now actually get a pointer to it */
-        Status = LdrAccessResource(LdrEntry->DllBase,
-                                   ResourceDataEntry,
-                                   (PVOID*)&BugCheckData,
-                                   NULL);
-        if (NT_SUCCESS(Status)) KiBugCodeMessages = BugCheckData;
-    }
+    /* Get the bugcheck message strings from ntoskrnl resources */
+    KiBugCodeMessages = MmCopyKernelResource(11, 1, 9, NULL);
 }
 
 BOOLEAN
@@ -351,13 +321,6 @@ KeGetBugMessageText(IN ULONG BugCheckCode,
      */
     _SEH2_TRY
     {
-
-    /*
-     * Make the kernel resource section writable, as we are going to manually
-     * trim the trailing newlines in the bugcheck resource message in place,
-     * when OutputString is NULL and before displaying it on screen.
-     */
-    MmMakeKernelResourceSectionWritable();
 
     /* Find the message. This code is based on RtlFindMesssage */
     for (i = 0; i < KiBugCodeMessages->NumberOfBlocks; i++)

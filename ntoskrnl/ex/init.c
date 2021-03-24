@@ -1078,9 +1078,6 @@ ExpInitializeExecutive(IN ULONG Cpu,
     Status = RtlAnsiStringToUnicodeString(&NtSystemRoot, &AnsiPath, FALSE);
     if (!NT_SUCCESS(Status)) KeBugCheck(SESSION3_INITIALIZATION_FAILED);
 
-    /* Setup bugcheck messages */
-    KiInitializeBugCheck();
-
     /* Setup initial system settings */
     CmGetSystemControlValues(LoaderBlock->RegistryBase, CmControlVector);
 
@@ -1099,6 +1096,9 @@ ExpInitializeExecutive(IN ULONG Cpu,
 
     /* Initialize the memory manager at phase 0 */
     if (!MmArmInitSystem(0, LoaderBlock)) KeBugCheck(PHASE0_INITIALIZATION_FAILED);
+
+    /* Setup bugcheck messages */
+    KiInitializeBugCheck();
 
     /* Load boot symbols */
     ExpLoadBootSymbols(LoaderBlock);

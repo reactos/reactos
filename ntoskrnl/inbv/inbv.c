@@ -348,64 +348,19 @@ BitBltAligned(
 /* FUNCTIONS *****************************************************************/
 
 CODE_SEG("INIT")
+static
 PVOID
 NTAPI
-FindBitmapResource(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
-                   IN ULONG ResourceId)
+FindBitmapResource(_In_ ULONG ResourceId)
 {
-    UNICODE_STRING UpString = RTL_CONSTANT_STRING(L"ntoskrnl.exe");
-    UNICODE_STRING MpString = RTL_CONSTANT_STRING(L"ntkrnlmp.exe");
-    PLIST_ENTRY NextEntry, ListHead;
-    PLDR_DATA_TABLE_ENTRY LdrEntry;
-    PIMAGE_RESOURCE_DATA_ENTRY ResourceDataEntry;
-    LDR_RESOURCE_INFO ResourceInfo;
-    NTSTATUS Status;
-    PVOID Data = NULL;
-
-    /* Loop the driver list */
-    ListHead = &LoaderBlock->LoadOrderListHead;
-    NextEntry = ListHead->Flink;
-    while (NextEntry != ListHead)
+    ULONG Size;
+    PVOID Data = MmCopyKernelResource(2 /* RT_BITMAP */,
+                                      ResourceId,
+                                      0,
+                                      &Size);
+    if (Data && (ResourceId < 3))
     {
-        /* Get the entry */
-        LdrEntry = CONTAINING_RECORD(NextEntry,
-                                     LDR_DATA_TABLE_ENTRY,
-                                     InLoadOrderLinks);
-
-        /* Check for a match */
-        if (RtlEqualUnicodeString(&LdrEntry->BaseDllName, &UpString, TRUE) ||
-            RtlEqualUnicodeString(&LdrEntry->BaseDllName, &MpString, TRUE))
-        {
-            /* Break out */
-            break;
-        }
-    }
-
-    /* Check if we found it */
-    if (NextEntry != ListHead)
-    {
-        /* Try to find the resource */
-        ResourceInfo.Type = 2; // RT_BITMAP;
-        ResourceInfo.Name = ResourceId;
-        ResourceInfo.Language = 0;
-        Status = LdrFindResource_U(LdrEntry->DllBase,
-                                   &ResourceInfo,
-                                   RESOURCE_DATA_LEVEL,
-                                   &ResourceDataEntry);
-        if (NT_SUCCESS(Status))
-        {
-            /* Access the resource */
-            ULONG Size = 0;
-            Status = LdrAccessResource(LdrEntry->DllBase,
-                                       ResourceDataEntry,
-                                       &Data,
-                                       &Size);
-            if ((Data) && (ResourceId < 3))
-            {
-                KiBugCheckData[4] ^= RtlComputeCrc32(0, Data, Size);
-            }
-            if (!NT_SUCCESS(Status)) Data = NULL;
-        }
+        KiBugCheckData[4] ^= RtlComputeCrc32(0, Data, Size);
     }
 
     /* Return the pointer */
@@ -443,7 +398,7 @@ InbvDriverInitialize(IN PLOADER_PARAMETER_BLOCK LoaderBlock,
         for (i = 1; i <= ResourceCount; i++)
         {
             /* Do the lookup */
-            ResourceList[i] = FindBitmapResource(LoaderBlock, i);
+            ResourceList[i] = FindBitmapResource(i);
         }
 
         /* Set the progress bar ranges */
@@ -1115,12 +1070,6 @@ DisplayBootBitmap(IN BOOLEAN TextMode)
     /* Check if this is text mode */
     if (TextMode)
     {
-        /*
-         * Make the kernel resource section temporarily writable,
-         * as we are going to change the bitmaps' palette in place.
-         */
-        MmChangeKernelResourceSectionProtection(MM_READWRITE);
-
         /* Check the type of the OS: workstation or server */
         if (SharedUserData->NtProductType == NtProductWinNt)
         {
@@ -1164,20 +1113,11 @@ DisplayBootBitmap(IN BOOLEAN TextMode)
                           AL_VERTICAL_TOP,
                           0, 0, 0, 0);
         }
-
-        /* Restore the kernel resource section protection to be read-only */
-        MmChangeKernelResourceSectionProtection(MM_READONLY);
     }
     else
     {
         /* Is the boot driver installed? */
         if (!InbvBootDriverInstalled) return;
-
-        /*
-         * Make the kernel resource section temporarily writable,
-         * as we are going to change the bitmaps' palette in place.
-         */
-        MmChangeKernelResourceSectionProtection(MM_READWRITE);
 
         /* Load boot screen logo */
         BootLogo = InbvGetResourceAddress(IDB_LOGO_DEFAULT);
@@ -1320,9 +1260,6 @@ DisplayBootBitmap(IN BOOLEAN TextMode)
             ShowProgressBar = FALSE;
         }
 #endif
-
-        /* Restore the kernel resource section protection to be read-only */
-        MmChangeKernelResourceSectionProtection(MM_READONLY);
 
         /* Display the boot logo and fade it in */
         BootLogoFadeIn();

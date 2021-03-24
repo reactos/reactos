@@ -1461,14 +1461,6 @@ MiInitializeLoadedModuleList(
     IN PLOADER_PARAMETER_BLOCK LoaderBlock
 );
 
-BOOLEAN
-NTAPI
-MmChangeKernelResourceSectionProtection(IN ULONG_PTR ProtectionMask);
-
-VOID
-NTAPI
-MmMakeKernelResourceSectionWritable(VOID);
-
 NTSTATUS
 NTAPI
 MmLoadSystemImage(
@@ -1504,6 +1496,13 @@ VOID
 NTAPI
 MmFreeDriverInitialization(
     IN PLDR_DATA_TABLE_ENTRY LdrEntry);
+
+PVOID
+MmCopyKernelResource(
+    _In_ ULONG_PTR Type,
+    _In_ ULONG_PTR Name,
+    _In_ ULONG_PTR Language,
+    _Out_opt_ PULONG Size);
 
 /* procsup.c *****************************************************************/
 

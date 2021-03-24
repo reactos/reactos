@@ -46,7 +46,6 @@ PVOID MmLastUnloadedDrivers;
 BOOLEAN MmMakeLowMemory;
 BOOLEAN MmEnforceWriteProtection = TRUE;
 
-PMMPTE MiKernelResourceStartPte, MiKernelResourceEndPte;
 ULONG_PTR ExPoolCodeStart, ExPoolCodeEnd, MmPoolCodeStart, MmPoolCodeEnd;
 ULONG_PTR MmPteCodeStart, MmPteCodeEnd;
 
@@ -2164,16 +2163,7 @@ MiLocateKernelSections(IN PLDR_DATA_TABLE_ENTRY LdrEntry)
         /* Grab the size of the section */
         Size = max(SectionHeader->SizeOfRawData, SectionHeader->Misc.VirtualSize);
 
-        /* Check for .RSRC section */
-        if (*(PULONG)SectionHeader->Name == 'rsr.')
-        {
-            /* Remember the PTEs so we can modify them later */
-            MiKernelResourceStartPte = MiAddressToPte(DllBase +
-                                                      SectionHeader->VirtualAddress);
-            MiKernelResourceEndPte = MiAddressToPte(ROUND_TO_PAGES(DllBase +
-                                                    SectionHeader->VirtualAddress + Size));
-        }
-        else if (*(PULONG)SectionHeader->Name == 'LOOP')
+        if (*(PULONG)SectionHeader->Name == 'LOOP')
         {
             /* POOLCODE vs. POOLMI */
             if (*(PULONG)&SectionHeader->Name[4] == 'EDOC')
@@ -2289,58 +2279,73 @@ MiInitializeLoadedModuleList(IN PLOADER_PARAMETER_BLOCK LoaderBlock)
     return TRUE;
 }
 
-BOOLEAN
-NTAPI
-MmChangeKernelResourceSectionProtection(IN ULONG_PTR ProtectionMask)
+/*
+ * Copies a resource from ntoskrnl into system space before the .rsrc section gets discarded
+ */
+CODE_SEG("INIT")
+PVOID
+MmCopyKernelResource(
+    _In_ ULONG_PTR Type,
+    _In_ ULONG_PTR Name,
+    _In_ ULONG_PTR Language,
+    _Out_opt_ PULONG Size
+)
 {
+    NTSTATUS Status;
+    LDR_RESOURCE_INFO ResourceInfo;
+    PIMAGE_RESOURCE_DATA_ENTRY ResourceDataEntry;
     PMMPTE PointerPte;
-    MMPTE TempPte;
+    PFN_NUMBER PageCount;
+    KIRQL OldIrql;
+    PVOID ResourceData, Data;
 
-    /* Don't do anything if the resource section is already writable */
-    if (MiKernelResourceStartPte == NULL || MiKernelResourceEndPte == NULL)
-        return FALSE;
+    ASSERT(PsNtosImageBase != 0);
 
-    /* If the resource section is physical, we cannot change its protection */
-    if (MI_IS_PHYSICAL_ADDRESS(MiPteToAddress(MiKernelResourceStartPte)))
-        return FALSE;
+    ResourceInfo.Type = Type;
+    ResourceInfo.Name = Name;
+    ResourceInfo.Language = Language;
 
-    /* Loop the PTEs */
-    for (PointerPte = MiKernelResourceStartPte; PointerPte < MiKernelResourceEndPte; ++PointerPte)
+    Status = LdrFindResource_U((PVOID)PsNtosImageBase,
+                               &ResourceInfo,
+                               RESOURCE_DATA_LEVEL,
+                               &ResourceDataEntry);
+    if (!NT_SUCCESS(Status))
+        return NULL;
+
+    Status = LdrAccessResource((PVOID)PsNtosImageBase,
+                               ResourceDataEntry,
+                               &ResourceData,
+                               Size);
+    if (!NT_SUCCESS(Status))
+        return NULL;
+
+    /* Reserve some space for the copy */
+    PageCount = BYTES_TO_PAGES(ResourceDataEntry->Size);
+    PointerPte = MiReserveSystemPtes(PageCount, SystemPteSpace);
+    if (!PointerPte)
+        return NULL;
+
+    OldIrql = MiAcquirePfnLock();
+    while (PageCount--)
     {
-        /* Read the PTE */
-        TempPte = *PointerPte;
+        PFN_NUMBER Page = MiRemoveAnyPage(MI_GET_NEXT_COLOR());
+        MMPTE TempPte = ValidKernelPte;
+        TempPte.u.Hard.PageFrameNumber = Page;
+        MI_WRITE_VALID_PTE(PointerPte + PageCount, TempPte);
+    }
+    MiReleasePfnLock(OldIrql);
 
-        /* Update the protection */
-        MI_MAKE_HARDWARE_PTE_KERNEL(&TempPte, PointerPte, ProtectionMask, TempPte.u.Hard.PageFrameNumber);
-        MI_UPDATE_VALID_PTE(PointerPte, TempPte);
+    Data = MiPteToAddress(PointerPte);
+
+    RtlCopyMemory(Data, ResourceData, ResourceDataEntry->Size);
+
+    if (ResourceDataEntry->Size < PAGE_ROUND_UP(ResourceDataEntry->Size))
+    {
+        RtlZeroMemory(Add2Ptr(Data, ResourceDataEntry->Size),
+                      PAGE_ROUND_UP(ResourceDataEntry->Size) - ResourceDataEntry->Size);
     }
 
-    /* Only flush the current processor's TLB */
-    KeFlushCurrentTb();
-    return TRUE;
-}
-
-VOID
-NTAPI
-MmMakeKernelResourceSectionWritable(VOID)
-{
-    /* Don't do anything if the resource section is already writable */
-    if (MiKernelResourceStartPte == NULL || MiKernelResourceEndPte == NULL)
-        return;
-
-    /* If the resource section is physical, we cannot change its protection */
-    if (MI_IS_PHYSICAL_ADDRESS(MiPteToAddress(MiKernelResourceStartPte)))
-        return;
-
-    if (MmChangeKernelResourceSectionProtection(MM_READWRITE))
-    {
-        /*
-         * Invalidate the cached resource section PTEs
-         * so as to not change its protection again later.
-         */
-        MiKernelResourceStartPte = NULL;
-        MiKernelResourceEndPte = NULL;
-    }
+    return Data;
 }
 
 LOGICAL
