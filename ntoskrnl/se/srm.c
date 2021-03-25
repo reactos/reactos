@@ -74,14 +74,38 @@ PSEP_LOGON_SESSION_TERMINATED_NOTIFICATION SepLogonNotifications = NULL;
 
 /* PRIVATE FUNCTIONS **********************************************************/
 
+/**
+ * @brief
+ * A private registry helper that returns the desired value
+ * data based on the specifics requested by the caller.
+ *
+ * @param[in] KeyName
+ * Name of the key.
+ *
+ * @param[in] ValueName
+ * Name of the registry value.
+ *
+ * @param[in] ValueType
+ * The type of the registry value.
+ *
+ * @param[in] DataLength
+ * The data length, in bytes, representing the size of the registry value.
+ *
+ * @param[out] ValueData
+ * The requested value data provided by the function.
+ *
+ * @return
+ * Returns STATUS_SUCCESS if the operations have completed successfully,
+ * otherwise a failure NTSTATUS code is returned.
+ */
 NTSTATUS
 NTAPI
 SepRegQueryHelper(
-    PCWSTR KeyName,
-    PCWSTR ValueName,
-    ULONG ValueType,
-    ULONG DataLength,
-    PVOID ValueData)
+    _In_ PCWSTR KeyName,
+    _In_ PCWSTR ValueName,
+    _In_ ULONG ValueType,
+    _In_ ULONG DataLength,
+    _Out_ PVOID ValueData)
 {
     UNICODE_STRING ValueNameString;
     UNICODE_STRING KeyNameString;
@@ -127,7 +151,6 @@ SepRegQueryHelper(
         Status = STATUS_OBJECT_TYPE_MISMATCH;
         goto Cleanup;
     }
-
 
     if (ValueType == REG_BINARY)
     {
