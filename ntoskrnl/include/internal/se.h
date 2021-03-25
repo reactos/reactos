@@ -573,6 +573,15 @@ SeCopyClientToken(
     OUT PACCESS_TOKEN* NewToken
 );
 
+NTSTATUS
+NTAPI
+SepRegQueryHelper(
+    _In_ PCWSTR KeyName,
+    _In_ PCWSTR ValueName,
+    _In_ ULONG ValueType,
+    _In_ ULONG DataLength,
+    _Out_ PVOID ValueData);
+
 VOID NTAPI
 SeQuerySecurityAccessMask(IN SECURITY_INFORMATION SecurityInformation,
                           OUT PACCESS_MASK DesiredAccess);
