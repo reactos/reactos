@@ -363,6 +363,119 @@ Quit:
     return STATUS_SUCCESS;
 }
 
+/**
+ * @brief
+ * Private function that impersonates the system's anonymous logon token.
+ * The major bulk of the impersonation procedure is done here.
+ *
+ * @param[in] Thread
+ * The executive thread object that is to impersonate the client.
+ *
+ * @param[in] PreviousMode
+ * The access processor mode, indicating if the call is executed
+ * in kernel or user mode.
+ *
+ * @return
+ * Returns STATUS_SUCCESS if the impersonation has succeeded.
+ * STATUS_UNSUCCESSFUL is returned if the primary token couldn't be
+ * obtained from the current process to perform additional tasks.
+ * STATUS_ACCESS_DENIED is returned if the process' primary token is
+ * restricted, which for this matter we cannot impersonate onto a
+ * restricted process. Otherwise a failure NTSTATUS code is returned.
+ */
+static
+NTSTATUS
+SepImpersonateAnonymousToken(
+    _In_ PETHREAD Thread,
+    _In_ KPROCESSOR_MODE PreviousMode)
+{
+    NTSTATUS Status;
+    PTOKEN TokenToImpersonate, ProcessToken;
+    ULONG IncludeEveryoneValueData;
+    PAGED_CODE();
+
+    /*
+     * We must check first which kind of token
+     * shall we assign for the thread to impersonate,
+     * the one with Everyone Group SID or the other
+     * without. Invoke the registry helper to
+     * return the data value for us.
+     */
+    Status = SepRegQueryHelper(L"\\Registry\\Machine\\SYSTEM\\CurrentControlSet\\Control\\Lsa",
+                               L"EveryoneIncludesAnonymous",
+                               REG_DWORD,
+                               sizeof(IncludeEveryoneValueData),
+                               &IncludeEveryoneValueData);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("SepRegQueryHelper(): Failed to query the registry value (Status 0x%lx)\n", Status);
+        return Status;
+    }
+
+    if (IncludeEveryoneValueData == 0)
+    {
+        DPRINT("SepImpersonateAnonymousToken(): Assigning the token not including the Everyone Group SID...\n");
+        TokenToImpersonate = SeAnonymousLogonTokenNoEveryone;
+    }
+    else
+    {
+        DPRINT("SepImpersonateAnonymousToken(): Assigning the token including the Everyone Group SID...\n");
+        TokenToImpersonate = SeAnonymousLogonToken;
+    }
+
+    /*
+     * Tell the object manager that we're going to use this token
+     * object now by incrementing the reference count.
+    */
+    Status = ObReferenceObjectByPointer(TokenToImpersonate,
+                                        TOKEN_IMPERSONATE,
+                                        SeTokenObjectType,
+                                        PreviousMode);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("SepImpersonateAnonymousToken(): Couldn't be able to use the token, bail out...\n");
+        return Status;
+    }
+
+    /*
+     * Reference the primary token of the current process that the anonymous
+     * logon token impersonation procedure is being performed. We'll be going
+     * to use the process' token to figure out if the process is actually
+     * restricted or not.
+     */
+    ProcessToken = PsReferencePrimaryToken(PsGetCurrentProcess());
+    if (!ProcessToken)
+    {
+        DPRINT1("SepImpersonateAnonymousToken(): Couldn't be able to get the process' primary token, bail out...\n");
+        ObDereferenceObject(TokenToImpersonate);
+        return STATUS_UNSUCCESSFUL;
+    }
+
+    /* Now, is the token from the current process restricted? */
+    if (SeTokenIsRestricted(ProcessToken))
+    {
+        DPRINT1("SepImpersonateAnonymousToken(): The process is restricted, can't do anything. Bail out...\n");
+        PsDereferencePrimaryToken(ProcessToken);
+        ObDereferenceObject(TokenToImpersonate);
+        return STATUS_ACCESS_DENIED;
+    }
+
+    /*
+     * Finally it's time to impersonate! But first, fast dereference the
+     * process' primary token as we no longer need it.
+     */
+    ObFastDereferenceObject(&PsGetCurrentProcess()->Token, ProcessToken);
+    Status = PsImpersonateClient(Thread, TokenToImpersonate, TRUE, FALSE, SecurityImpersonation);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("SepImpersonateAnonymousToken(): Failed to impersonate, bail out...\n");
+        ObDereferenceObject(TokenToImpersonate);
+        return Status;
+    }
+
+    return Status;
+}
+
 static
 VOID
 SepUpdateSinglePrivilegeFlagToken(
@@ -4304,15 +4417,64 @@ NtFilterToken(IN HANDLE ExistingTokenHandle,
     return STATUS_NOT_IMPLEMENTED;
 }
 
-/*
- * @unimplemented
+/**
+ * @brief
+ * Allows the calling thread to impersonate the system's anonymous
+ * logon token.
+ *
+ * @param[in] ThreadHandle
+ * A handle to the thread to start the procedure of logon token
+ * impersonation. The thread must have the THREAD_IMPERSONATE
+ * access right.
+ *
+ * @return
+ * Returns STATUS_SUCCESS if the thread has successfully impersonated the
+ * anonymous logon token, otherwise a failure NTSTATUS code is returned.
+ *
+ * @remarks
+ * By default the system gives the opportunity to the caller to impersonate
+ * the anonymous logon token without including the Everyone Group SID.
+ * In cases where the caller wants to impersonate the token including such
+ * group, the EveryoneIncludesAnonymous registry value setting has to be set
+ * to 1, from HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Lsa registry
+ * path. The calling thread must invoke PsRevertToSelf when impersonation
+ * is no longer needed or RevertToSelf if the calling execution is done
+ * in user mode.
  */
 NTSTATUS
 NTAPI
-NtImpersonateAnonymousToken(IN HANDLE Thread)
+NtImpersonateAnonymousToken(
+    _In_ HANDLE ThreadHandle)
 {
-    UNIMPLEMENTED;
-    return STATUS_NOT_IMPLEMENTED;
+    PETHREAD Thread;
+    KPROCESSOR_MODE PreviousMode;
+    NTSTATUS Status;
+    PAGED_CODE();
+
+    PreviousMode = ExGetPreviousMode();
+
+    /* Obtain the thread object from the handle */
+    Status = ObReferenceObjectByHandle(ThreadHandle,
+                                       THREAD_IMPERSONATE,
+                                       PsThreadType,
+                                       PreviousMode,
+                                       (PVOID*)&Thread,
+                                       NULL);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("NtImpersonateAnonymousToken(): Failed to reference the object (Status 0x%lx)\n", Status);
+        return Status;
+    }
+
+    /* Call the private routine to impersonate the token */
+    Status = SepImpersonateAnonymousToken(Thread, PreviousMode);
+    if (!NT_SUCCESS(Status))
+    {
+        DPRINT1("NtImpersonateAnonymousToken(): Failed to impersonate the token (Status 0x%lx)\n", Status);
+    }
+
+    ObDereferenceObject(Thread);
+    return Status;
 }
 
 /* EOF */
