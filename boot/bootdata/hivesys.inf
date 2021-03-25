@@ -894,6 +894,7 @@ HKLM,"SYSTEM\CurrentControlSet\Control\Keyboard Layout\DosKeybIDs","00020408",2,
 
 ; Lsa
 HKLM,"SYSTEM\CurrentControlSet\Control\Lsa","Authentication Packages",0x00010000,"msv1_0"
+HKLM,"SYSTEM\CurrentControlSet\Control\Lsa","EveryoneIncludesAnonymous",0x00010001,0
 HKLM,"SYSTEM\CurrentControlSet\Control\Lsa\FipsAlgorithmPolicy","Enabled",0x00010001,0
 
 ; Network
