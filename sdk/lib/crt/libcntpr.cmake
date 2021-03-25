@@ -12,7 +12,7 @@ list(APPEND LIBCNTPR_SOURCE
     misc/fltused.c
     printf/_snprintf.c
     printf/_snwprintf.c
-    printf/_vcprintf.c
+    printf/_vscprintf.c
     printf/_vscwprintf.c
     printf/_vsnprintf.c
     printf/_vsnwprintf.c
