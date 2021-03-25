@@ -1579,9 +1579,12 @@ public:
         LONG_PTR saveWindowProc;
 
         ATLASSERT(pThis != NULL);
-        ATLASSERT(pThis != NULL && (pThis->m_dwState & WINSTATE_DESTROYED) == 0);
-        ATLASSERT(pThis != NULL && pThis->m_hWnd != NULL);
-        if (pThis == NULL || (pThis->m_dwState & WINSTATE_DESTROYED) != 0 || pThis->m_hWnd == NULL)
+        if (pThis == NULL)
+            return 0;
+
+        ATLASSERT((pThis->m_dwState & WINSTATE_DESTROYED) == 0);
+        ATLASSERT(pThis->m_hWnd != NULL);
+        if ((pThis->m_dwState & WINSTATE_DESTROYED) != 0 || pThis->m_hWnd == NULL)
             return 0;
 
         hWnd = pThis->m_hWnd;
