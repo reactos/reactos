@@ -8,6 +8,10 @@
 
 #pragma once
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #define MI_LOWEST_VAD_ADDRESS                   (PVOID)MM_LOWEST_USER_ADDRESS
 
 /* Make the code cleaner with some definitions for size multiples */
@@ -575,7 +579,6 @@ extern PMEMORY_ALLOCATION_DESCRIPTOR MxFreeDescriptor;
 extern MEMORY_ALLOCATION_DESCRIPTOR MxOldFreeDescriptor;
 extern ULONG_PTR MxPfnAllocation;
 extern MM_PAGED_POOL_INFO MmPagedPoolInfo;
-extern RTL_BITMAP MiPfnBitMap;
 extern KGUARDED_MUTEX MmPagedPoolMutex;
 extern KGUARDED_MUTEX MmSectionCommitMutex;
 extern PVOID MmPagedPoolStart;
@@ -627,7 +630,6 @@ extern PFN_NUMBER MmMinimumFreePages;
 extern PFN_NUMBER MmPlentyFreePages;
 extern SIZE_T MmMinimumStackCommitInBytes;
 extern PFN_COUNT MiExpansionPoolPagesInitialCharge;
-extern PFN_NUMBER MmResidentAvailablePages;
 extern PFN_NUMBER MmResidentAvailableAtInit;
 extern ULONG MmTotalFreeSystemPtes[MaximumPtePoolTypes];
 extern PFN_NUMBER MmTotalSystemDriverPages;
@@ -1076,10 +1078,9 @@ MI_WS_OWNER(IN PEPROCESS Process)
 //
 FORCEINLINE
 BOOLEAN
-MiIsRosSectionObject(IN PVOID Section)
+MiIsRosSectionObject(IN PSECTION Section)
 {
-    PSECTION RosSection = Section;
-    return RosSection->u.Flags.filler;
+    return Section->u.Flags.filler;
 }
 
 #define MI_IS_ROS_PFN(x)     ((x)->u4.AweAllocation == TRUE)
@@ -1943,12 +1944,6 @@ MiCheckPdeForPagedPool(
 
 VOID
 NTAPI
-MiInitializeNonPagedPool(
-    VOID
-);
-
-VOID
-NTAPI
 MiInitializeNonPagedPoolThresholds(
     VOID
 );
@@ -2393,12 +2388,6 @@ MiRosUnmapViewInSystemSpace(
     IN PVOID MappedBase
 );
 
-POOL_TYPE
-NTAPI
-MmDeterminePoolType(
-    IN PVOID PoolAddress
-);
-
 VOID
 NTAPI
 MiMakePdeExistAndMakeValid(
@@ -2448,6 +2437,10 @@ MiSynchronizeSystemPde(PMMPDE PointerPde)
     /* Return, if we had success */
     return SystemPde.u.Hard.Valid != 0;
 }
+#endif
+
+#ifdef __cplusplus
+} // extern "C"
 #endif
 
 /* EOF */

@@ -1,5 +1,10 @@
 #pragma once
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 /* GLOBAL VARIABLES *********************************************************/
 
 extern RTL_TIME_ZONE_INFORMATION ExpTimeZoneInfo;
@@ -1513,3 +1518,7 @@ XIPInit(
 
 #define ExfInterlockedCompareExchange64UL(Destination, Exchange, Comperand) \
    (ULONGLONG)ExfInterlockedCompareExchange64((PLONGLONG)(Destination), (PLONGLONG)(Exchange), (PLONGLONG)(Comperand))
+
+#ifdef __cplusplus
+} // extern "C"
+#endif

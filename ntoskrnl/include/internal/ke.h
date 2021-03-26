@@ -4,6 +4,11 @@
 
 #include "arch/ke.h"
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 /* INTERNAL KERNEL TYPES ****************************************************/
 
 typedef struct _WOW64_PROCESS
@@ -1048,5 +1053,9 @@ KeBugCheckUnicodeToAnsi(
     OUT PCHAR Ansi,
     IN ULONG Length
 );
+
+#ifdef __cplusplus
+} // extern "C"
+#endif
 
 #include "ke_x.h"

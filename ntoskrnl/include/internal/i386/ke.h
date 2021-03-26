@@ -4,6 +4,11 @@
 
 #include "intrin_i.h"
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 //
 // Thread Dispatcher Header DebugActive Mask
 //
@@ -886,5 +891,9 @@ KiGetUserModeStackAddress(void)
 {
     return &(KeGetCurrentThread()->TrapFrame->HardwareEsp);
 }
+
+#ifdef __cplusplus
+} // extern "C"
+#endif
 
 #endif

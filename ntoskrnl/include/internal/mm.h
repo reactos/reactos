@@ -2,6 +2,10 @@
 
 #include <internal/arch/mm.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* TYPES *********************************************************************/
 
 struct _EPROCESS;
@@ -1641,3 +1645,6 @@ MmCopyVirtualMemory(IN PEPROCESS SourceProcess,
                     IN KPROCESSOR_MODE PreviousMode,
                     OUT PSIZE_T ReturnSize);
 
+#ifdef __cplusplus
+} // extern "C"
+#endif

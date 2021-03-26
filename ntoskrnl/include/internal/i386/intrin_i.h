@@ -1,12 +1,17 @@
 #pragma once
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 #if defined(__GNUC__)
 
 FORCEINLINE
 VOID
 __lgdt(_Out_ PVOID Descriptor)
 {
-    PVOID* desc = Descriptor;
+    PVOID* desc = (PVOID*)Descriptor;
     __asm__ __volatile__(
         "lgdt %0"
             : "=m" (*desc)
@@ -18,7 +23,7 @@ FORCEINLINE
 VOID
 __sgdt(_Out_ PVOID Descriptor)
 {
-    PVOID* desc = Descriptor;
+    PVOID* desc = (PVOID*)Descriptor;
     __asm__ __volatile__(
         "sgdt %0"
             : "=m" (*desc)
@@ -301,11 +306,11 @@ Ke386SaveFpuState(IN PVOID SaveArea)
 {
     if (KeI386FxsrPresent)
     {
-        __fxsave(SaveArea);
+        __fxsave((PFX_SAVE_AREA)SaveArea);
     }
     else
     {
-        __fnsave(SaveArea);
+        __fnsave((PFLOATING_SAVE_AREA)SaveArea);
     }
 }
 
@@ -319,8 +324,14 @@ Ke386SaveFpuState(IN PVOID SaveArea)
 #error Unknown compiler for inline assembler
 #endif
 
+
 #define Ke386GetGlobalDescriptorTable __sgdt
 #define Ke386SetGlobalDescriptorTable __lgdt
 #define Ke386GetLocalDescriptorTable __sldt
+
+#ifdef __cplusplus
+} // extern "C"
+#endif
+
 
 /* EOF */
