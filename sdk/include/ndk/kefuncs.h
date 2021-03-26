@@ -26,6 +26,11 @@ Author:
 #include <ketypes.h>
 #include <section_attribs.h>
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
 #ifndef NTOS_MODE_USER
 
 //
@@ -781,4 +786,8 @@ NTAPI
 ZwYieldExecution(
     VOID
 );
+#endif
+
+#ifdef __cplusplus
+} // extern "C"
 #endif
