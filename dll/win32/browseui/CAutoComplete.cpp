@@ -284,19 +284,14 @@ LRESULT CACEditCtrl::OnNCDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &
     ATLASSERT(m_pDropDown);
     CAutoComplete *pDropDown = m_pDropDown;
 
-    // unhook word break procedure
-    HookWordBreakProc(FALSE);
-
-    // unsubclass because we don't watch any more
-    HWND hwndEdit = UnsubclassWindow();
-
     // close the drop-down window
     if (pDropDown)
     {
         pDropDown->PostMessageW(WM_CLOSE, 0, 0);
     }
 
-    return ::DefWindowProcW(hwndEdit, uMsg, wParam, lParam); // do default
+    bHandled = FALSE; // do default
+    return 0;
 }
 
 // WM_GETDLGCODE
@@ -705,6 +700,10 @@ CAutoComplete::~CAutoComplete()
     {
         ::DeleteObject(m_hFont);
         m_hFont = NULL;
+    }
+    if (m_hWnd)
+    {
+        DestroyWindow();
     }
 }
 
@@ -1148,8 +1147,6 @@ CAutoComplete::Init(HWND hwndEdit, IUnknown *punkACL,
     punkACL->QueryInterface(IID_IACList, (VOID **)&m_pACList);
     TRACE("m_pACList: %p\n", static_cast<void *>(m_pACList));
 
-    AddRef(); // add reference
-
     UpdateDropDownState(); // create/hide the drop-down window if necessary
 
     // load quick completion info
@@ -1307,9 +1304,7 @@ VOID CAutoComplete::UpdateDropDownState()
         // create the drop-down window if not existed
         if (!m_hWnd)
         {
-            AddRef();
-            if (!CreateDropDown())
-                Release();
+            CreateDropDown();
         }
     }
     else
@@ -1692,7 +1687,6 @@ LRESULT CAutoComplete::OnNCDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL
 
     // clean up
     m_hwndCombo = NULL;
-    Release();
 
     return 0;
 }
