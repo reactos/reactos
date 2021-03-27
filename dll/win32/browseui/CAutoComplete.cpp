@@ -730,6 +730,11 @@ BOOL CAutoComplete::IsComboBoxDropped()
     return (BOOL)::SendMessageW(m_hwndCombo, CB_GETDROPPEDSTATE, 0, 0);
 }
 
+BOOL CAutoComplete::FilterPrefixes()
+{
+    return !!(m_dwOptions & ACO_FILTERPREFIXES) && m_bEnabled;
+}
+
 INT CAutoComplete::GetItemCount()
 {
     return m_outerList.GetSize();

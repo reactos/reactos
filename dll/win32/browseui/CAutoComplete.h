@@ -188,6 +188,7 @@ public:
     BOOL CanAutoAppend();
     BOOL UseTab();
     BOOL IsComboBoxDropped();
+    BOOL FilterPrefixes();
     INT GetItemCount();
     CStringW GetItemText(INT iItem);
 
