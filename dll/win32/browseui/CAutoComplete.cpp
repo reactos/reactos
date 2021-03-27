@@ -756,7 +756,7 @@ CStringW CAutoComplete::GetEditText()
 VOID CAutoComplete::SetEditText(LPCWSTR pszText)
 {
     m_bInSetText = TRUE; // don't hide drop-down
-    m_hwndEdit.SetWindowTextW(pszText);
+    m_hwndEdit.DefWindowProcW(WM_SETTEXT, 0, reinterpret_cast<LPARAM>(pszText));
     m_bInSetText = FALSE;
 }
 
@@ -771,7 +771,7 @@ CStringW CAutoComplete::GetStemText()
 
 VOID CAutoComplete::SetEditSel(INT ich0, INT ich1)
 {
-    m_hwndEdit.SendMessageW(EM_SETSEL, ich0, ich1);
+    m_hwndEdit.DefWindowProcW(EM_SETSEL, ich0, ich1);
 }
 
 VOID CAutoComplete::ShowDropDown()
