@@ -40,7 +40,7 @@ public:
     CAutoComplete* m_pDropDown;
     static LPCWSTR GetWndClassName() { return WC_EDITW; }
 
-    CACEditCtrl();
+    CACEditCtrl(CAutoComplete *pDropDown);
     VOID HookWordBreakProc(BOOL bHook);
 
     // message map
@@ -48,7 +48,7 @@ public:
         MESSAGE_HANDLER(WM_CHAR, OnChar)
         MESSAGE_HANDLER(WM_CLEAR, OnCutPasteClear)
         MESSAGE_HANDLER(WM_CUT, OnCutPasteClear)
-        MESSAGE_HANDLER(WM_DESTROY, OnDestroy)
+        MESSAGE_HANDLER(WM_NCDESTROY, OnNCDestroy)
         MESSAGE_HANDLER(WM_GETDLGCODE, OnGetDlgCode)
         MESSAGE_HANDLER(WM_KEYDOWN, OnKeyDown)
         MESSAGE_HANDLER(WM_KILLFOCUS, OnKillFocus)
@@ -63,7 +63,7 @@ protected:
     // message handlers
     LRESULT OnChar(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnCutPasteClear(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
-    LRESULT OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
+    LRESULT OnNCDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnGetDlgCode(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnKeyDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnKillFocus(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
@@ -233,12 +233,12 @@ protected:
     HWND m_hwndCombo; // the combobox if any
     HFONT m_hFont; // the font
     BOOL m_bResized; // re-sized by size-box?
+    CACEditCtrl *m_phwndEdit; // subclassed to watch
     RECT m_rcEdit; // in screen coordinates, to watch the position
     // The following variables are non-POD:
     CStringW m_strText; // internal text (used in selecting item and reverting text)
     CStringW m_strStemText; // dirname + '\\'
     CStringW m_strQuickComplete; // used for [Ctrl]+[Enter]
-    CACEditCtrl m_hwndEdit; // subclassed to watch
     CACListView m_hwndList; // this listview is virtual
     CACScrollBar m_hwndScrollBar; // scroll bar contol
     CACSizeBox m_hwndSizeBox; // the size grip
@@ -259,7 +259,7 @@ protected:
     // message map
     BEGIN_MSG_MAP(CAutoComplete)
         MESSAGE_HANDLER(WM_CREATE, OnCreate)
-        MESSAGE_HANDLER(WM_DESTROY, OnDestroy)
+        MESSAGE_HANDLER(WM_NCDESTROY, OnNCDestroy)
         MESSAGE_HANDLER(WM_DRAWITEM, OnDrawItem)
         MESSAGE_HANDLER(WM_EXITSIZEMOVE, OnExitSizeMove)
         MESSAGE_HANDLER(WM_GETMINMAXINFO, OnGetMinMaxInfo)
@@ -276,7 +276,7 @@ protected:
     END_MSG_MAP()
     // message handlers
     LRESULT OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
-    LRESULT OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
+    LRESULT OnNCDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnDrawItem(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnExitSizeMove(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnGetMinMaxInfo(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);

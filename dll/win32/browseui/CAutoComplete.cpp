@@ -238,7 +238,8 @@ EditWordBreakProcW(LPWSTR lpch, INT index, INT count, INT code)
     return 0;
 }
 
-CACEditCtrl::CACEditCtrl() : m_pDropDown(NULL), m_fnOldWordBreakProc(NULL)
+CACEditCtrl::CACEditCtrl(CAutoComplete *pDropDown)
+    : m_pDropDown(pDropDown), m_fnOldWordBreakProc(NULL)
 {
 }
 
@@ -276,11 +277,10 @@ LRESULT CACEditCtrl::OnCutPasteClear(UINT uMsg, WPARAM wParam, LPARAM lParam, BO
     return ret;
 }
 
-// WM_DESTROY
-// This message is sent when a window is being destroyed.
-LRESULT CACEditCtrl::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+// WM_NCDESTROY
+LRESULT CACEditCtrl::OnNCDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
-    TRACE("CACEditCtrl::OnDestroy(%p)\n", this);
+    TRACE("CACEditCtrl::OnNCDestroy(%p)\n", this);
     ATLASSERT(m_pDropDown);
     CAutoComplete *pDropDown = m_pDropDown;
 
@@ -684,6 +684,7 @@ CAutoComplete::CAutoComplete()
     : m_bInSetText(FALSE), m_bInSelectItem(FALSE)
     , m_bDowner(TRUE), m_dwOptions(ACO_AUTOAPPEND | ACO_AUTOSUGGEST)
     , m_bEnabled(TRUE), m_hwndCombo(NULL), m_hFont(NULL), m_bResized(FALSE)
+    , m_phwndEdit(NULL)
 {
 }
 
@@ -745,7 +746,7 @@ CStringW CAutoComplete::GetEditText()
 {
     BSTR bstrText = NULL;
     CStringW strText;
-    if (m_hwndEdit.GetWindowTextW(bstrText))
+    if (m_phwndEdit->GetWindowTextW(bstrText))
     {
         strText = bstrText;
         ::SysFreeString(bstrText);
@@ -756,7 +757,7 @@ CStringW CAutoComplete::GetEditText()
 VOID CAutoComplete::SetEditText(LPCWSTR pszText)
 {
     m_bInSetText = TRUE; // don't hide drop-down
-    m_hwndEdit.DefWindowProcW(WM_SETTEXT, 0, reinterpret_cast<LPARAM>(pszText));
+    m_phwndEdit->DefWindowProcW(WM_SETTEXT, 0, reinterpret_cast<LPARAM>(pszText));
     m_bInSetText = FALSE;
 }
 
@@ -771,7 +772,7 @@ CStringW CAutoComplete::GetStemText()
 
 VOID CAutoComplete::SetEditSel(INT ich0, INT ich1)
 {
-    m_hwndEdit.DefWindowProcW(EM_SETSEL, ich0, ich1);
+    m_phwndEdit->DefWindowProcW(EM_SETSEL, ich0, ich1);
 }
 
 VOID CAutoComplete::ShowDropDown()
@@ -780,7 +781,7 @@ VOID CAutoComplete::ShowDropDown()
         return;
 
     INT cItems = GetItemCount();
-    if (cItems == 0 || ::GetFocus() != m_hwndEdit || IsComboBoxDropped())
+    if (cItems == 0 || ::GetFocus() != *m_phwndEdit || IsComboBoxDropped())
     {
         // hide the drop-down if necessary
         HideDropDown();
@@ -856,8 +857,8 @@ VOID CAutoComplete::DoBackWord()
 {
     // get current selection
     INT ich0, ich1;
-    m_hwndEdit.SendMessageW(EM_GETSEL, reinterpret_cast<WPARAM>(&ich0),
-                                       reinterpret_cast<LPARAM>(&ich1));
+    m_phwndEdit->DefWindowProcW(EM_GETSEL, reinterpret_cast<WPARAM>(&ich0),
+                                           reinterpret_cast<LPARAM>(&ich1));
     if (ich0 <= 0 || ich0 != ich1) // there is selection or left-side end
         return; // don't do anything
     // get text
@@ -870,7 +871,7 @@ VOID CAutoComplete::DoBackWord()
     // select range
     SetEditSel(ich0, ich1);
     // replace selection with empty text (this is actually deletion)
-    m_hwndEdit.SendMessageW(EM_REPLACESEL, TRUE, (LPARAM)L"");
+    m_phwndEdit->DefWindowProcW(EM_REPLACESEL, TRUE, (LPARAM)L"");
 }
 
 VOID CAutoComplete::UpdateScrollBar()
@@ -940,7 +941,7 @@ BOOL CAutoComplete::OnEditKeyDown(WPARAM wParam, LPARAM lParam)
                 }
             }
             // select all
-            INT cch = m_hwndEdit.GetWindowTextLengthW();
+            INT cch = m_phwndEdit->SendMessageW(WM_GETTEXTLENGTH, 0, 0);
             SetEditSel(0, cch);
             // hide
             HideDropDown();
@@ -963,7 +964,7 @@ BOOL CAutoComplete::OnEditKeyDown(WPARAM wParam, LPARAM lParam)
             // is suggestion available?
             if (!CanAutoSuggest())
                 return FALSE; // do default
-            m_hwndEdit.DefWindowProcW(WM_KEYDOWN, VK_DELETE, 0); // do default
+            m_phwndEdit->DefWindowProcW(WM_KEYDOWN, VK_DELETE, 0); // do default
             OnEditUpdate(FALSE);
             return TRUE; // eat
         }
@@ -989,7 +990,7 @@ LRESULT CAutoComplete::OnEditChar(WPARAM wParam, LPARAM lParam)
     TRACE("CACEditCtrl::OnEditChar(%p, %p)\n", this, wParam);
     if (wParam == L'\n' || wParam == L'\t')
         return 0; // eat
-    LRESULT ret = m_hwndEdit.DefWindowProcW(WM_CHAR, wParam, lParam); // do default
+    LRESULT ret = m_phwndEdit->DefWindowProcW(WM_CHAR, wParam, lParam); // do default
     if (CanAutoSuggest() || CanAutoAppend())
         OnEditUpdate(wParam != VK_BACK);
     return ret;
@@ -1118,21 +1119,16 @@ CAutoComplete::Init(HWND hwndEdit, IUnknown *punkACL,
           this, hwndEdit, punkACL, debugstr_w(pwszRegKeyPath), debugstr_w(pwszQuickComplete));
 
     // sanity check
-    if (m_hwndEdit || !punkACL)
-    {
-        ATLASSERT(0);
+    if (m_phwndEdit || !punkACL)
         return E_FAIL;
-    }
 
-    // set this pointer to m_hwndEdit
-    m_hwndEdit.m_pDropDown = this;
-
+    m_phwndEdit = new CACEditCtrl(this);
     // do subclass textbox to watch messages
-    m_hwndEdit.SubclassWindow(hwndEdit);
+    m_phwndEdit->SubclassWindow(hwndEdit);
     // set word break procedure
-    m_hwndEdit.HookWordBreakProc(TRUE);
+    m_phwndEdit->HookWordBreakProc(TRUE);
     // save position
-    m_hwndEdit.GetWindowRect(&m_rcEdit);
+    m_phwndEdit->GetWindowRect(&m_rcEdit);
 
     // get an IEnumString
     ATLASSERT(!m_pEnum);
@@ -1151,9 +1147,9 @@ CAutoComplete::Init(HWND hwndEdit, IUnknown *punkACL,
     // load quick completion info
     LoadQuickComplete(pwszRegKeyPath, pwszQuickComplete);
 
-    // any combobox for m_hwndEdit?
+    // any combobox
     m_hwndCombo = NULL;
-    HWND hwndParent = ::GetParent(m_hwndEdit);
+    HWND hwndParent = ::GetParent(*m_phwndEdit);
     WCHAR szClass[16];
     if (::GetClassNameW(hwndParent, szClass, _countof(szClass)))
     {
@@ -1238,12 +1234,9 @@ STDMETHODIMP CAutoComplete::ResetEnumerator()
 {
     FIXME("(%p): stub\n", this);
 
-    HideDropDown();
-
+    Reset();
     if (IsWindowVisible())
-    {
         OnEditUpdate(FALSE);
-    }
 
     return S_OK;
 }
@@ -1403,8 +1396,8 @@ CStringW CAutoComplete::GetQuickEdit(LPCWSTR pszText)
 
 VOID CAutoComplete::RepositionDropDown()
 {
-    // get nearest monitor from m_hwndEdit
-    HMONITOR hMon = ::MonitorFromWindow(m_hwndEdit, MONITOR_DEFAULTTONEAREST);
+    // get nearest monitor
+    HMONITOR hMon = ::MonitorFromWindow(*m_phwndEdit, MONITOR_DEFAULTTONEAREST);
     ATLASSERT(hMon != NULL);
     if (hMon == NULL)
         return;
@@ -1422,9 +1415,9 @@ VOID CAutoComplete::RepositionDropDown()
     INT cyItem = m_hwndList.m_cyItem;
     ATLASSERT(cyItem > 0);
 
-    // get m_hwndEdit position
+    // get position
     RECT rcEdit;
-    m_hwndEdit.GetWindowRect(&rcEdit);
+    m_phwndEdit->GetWindowRect(&rcEdit);
     INT x = rcEdit.left, y = rcEdit.bottom;
 
     // get list extent
@@ -1662,25 +1655,26 @@ LRESULT CAutoComplete::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
     return 0; // success
 }
 
-// WM_DESTROY
-// This message is sent when a window is being destroyed.
-LRESULT CAutoComplete::OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
+// WM_NCDESTROY
+LRESULT CAutoComplete::OnNCDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled)
 {
-    TRACE("CAutoComplete::OnDestroy(%p)\n", this);
+    TRACE("CAutoComplete::OnNCDestroy(%p)\n", this);
 
     // hide
     if (IsWindowVisible())
         HideDropDown();
 
     // unsubclass EDIT control
-    if (m_hwndEdit)
+    if (m_phwndEdit)
     {
-        m_hwndEdit.HookWordBreakProc(FALSE);
-        m_hwndEdit.UnsubclassWindow();
+        m_phwndEdit->m_pDropDown = NULL;
+        m_phwndEdit->HookWordBreakProc(FALSE);
+        m_phwndEdit->UnsubclassWindow();
+        delete m_phwndEdit;
+        m_phwndEdit = NULL;
     }
 
     // clear CAutoComplete pointers
-    m_hwndEdit.m_pDropDown = NULL;
     m_hwndList.m_pDropDown = NULL;
     m_hwndScrollBar.m_pDropDown = NULL;
     m_hwndSizeBox.m_pDropDown = NULL;
@@ -1709,7 +1703,7 @@ LRESULT CAutoComplete::OnExitSizeMove(UINT uMsg, WPARAM wParam, LPARAM lParam, B
     UINT uSWP_ = SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED | SWP_NOACTIVATE;
     SetWindowPos(NULL, 0, 0, 0, 0, uSWP_);
 
-    m_hwndEdit.SetFocus(); // restore focus
+    m_phwndEdit->SetFocus(); // restore focus
     return 0;
 }
 
@@ -1974,6 +1968,10 @@ LRESULT CAutoComplete::OnShowWindow(UINT uMsg, WPARAM wParam, LPARAM lParam, BOO
     BOOL bShow = (BOOL)wParam;
     if (bShow)
     {
+        if (s_hWatchWnd != m_hWnd && ::IsWindowVisible(s_hWatchWnd))
+        {
+            ::ShowWindowAsync(s_hWatchWnd, SW_HIDE);
+        }
         s_hWatchWnd = m_hWnd; // watch this
 
         // unhook mouse if any
@@ -2026,15 +2024,15 @@ LRESULT CAutoComplete::OnTimer(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bH
         return 0;
 
     // if the textbox is dead, then kill the timer
-    if (!::IsWindow(m_hwndEdit))
+    if (!::IsWindow(*m_phwndEdit))
     {
         KillTimer(WATCH_TIMER_ID);
         return 0;
     }
 
-    // m_hwndEdit is moved?
+    // moved?
     RECT rcEdit;
-    m_hwndEdit.GetWindowRect(&rcEdit);
+    m_phwndEdit->GetWindowRect(&rcEdit);
     if (!::EqualRect(&rcEdit, &m_rcEdit))
     {
         // if so, hide
