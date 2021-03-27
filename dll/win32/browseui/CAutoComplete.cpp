@@ -818,23 +818,29 @@ VOID CAutoComplete::DoAutoAppend()
 
     // get the common string
     CStringW strCommon;
+    BOOL bFound = FALSE;
     for (INT iItem = 0; iItem < cItems; ++iItem)
     {
         const CString& strItem = m_innerList[iItem]; // get the text of the item
-
-        if (iItem == 0) // the first item
+ 
+        if (::StrCmpNIW(strItem, strText, strText.GetLength()) == 0)
         {
-            strCommon = strItem; // store the text
-            continue;
-        }
-
-        for (INT ich = 0; ich < strCommon.GetLength(); ++ich)
-        {
-            if (ich < strItem.GetLength() &&
-                ::ChrCmpIW(strCommon[ich], strItem[ich]) != 0)
+            if (!bFound)
             {
-                strCommon = strCommon.Left(ich); // shrink the common string
-                break;
+                bFound = TRUE;
+                strCommon = strItem;
+                continue;
+            }
+
+            for (INT ich = 0; ich < strItem.GetLength(); ++ich)
+            {
+                if (strCommon.GetLength() <= ich)
+                    break;
+                if (ChrCmpIW(strCommon[ich], strItem[ich]) != 0)
+                {
+                    strCommon = strCommon.Left(ich);
+                    break;
+                }
             }
         }
     }
@@ -843,13 +849,10 @@ VOID CAutoComplete::DoAutoAppend()
         return; // no suggestion
 
     // append suggestion
-    INT cchOld = strText.GetLength();
-    INT cchAppend = strCommon.GetLength() - cchOld;
-    strText += strCommon.Right(cchAppend);
-    SetEditText(strText);
+    SetEditText(strCommon);
 
     // select the appended suggestion
-    SetEditSel(cchOld, strText.GetLength());
+    SetEditSel(strText.GetLength(), strCommon.GetLength());
 }
 
 // go back a word ([Ctrl]+[Backspace])
@@ -1607,13 +1610,11 @@ VOID CAutoComplete::UpdateCompletion(BOOL bAppendOK)
             RepositionDropDown();
         else
             HideDropDown();
-        return;
     }
 
     if (CanAutoAppend() && bAppendOK) // can we auto-append?
     {
         DoAutoAppend();
-        return;
     }
 }
 
