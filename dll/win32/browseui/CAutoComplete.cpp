@@ -1142,7 +1142,7 @@ CAutoComplete::Init(HWND hwndEdit, IUnknown *punkACL,
     // load quick completion info
     LoadQuickComplete(pwszRegKeyPath, pwszQuickComplete);
 
-    // any combobox
+    // any combobox for m_hwndEdit?
     m_hwndCombo = NULL;
     HWND hwndParent = ::GetParent(m_hwndEdit);
     WCHAR szClass[16];
