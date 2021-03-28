@@ -809,7 +809,30 @@ VOID CAutoComplete::DoAutoAppend()
     for (INT iItem = 0; iItem < cItems; ++iItem)
     {
         const CStringW& strItem = m_innerList[iItem]; // get the text of the item
- 
+
+        CStringW strBody;
+        if (DropPrefix(strItem, strBody) &&
+            ::StrCmpNIW(strBody, strText, strText.GetLength()) == 0)
+        {
+            if (!bFound)
+            {
+                bFound = TRUE;
+                strCommon = strBody;
+                continue;
+            }
+            for (INT ich = 0; ich < strBody.GetLength(); ++ich)
+            {
+                if (strCommon.GetLength() <= ich)
+                    break;
+                if (ChrCmpIW(strCommon[ich], strBody[ich]) != 0)
+                {
+                    strCommon = strCommon.Left(ich);
+                    break;
+                }
+            }
+            continue;
+        }
+
         if (::StrCmpNIW(strItem, strText, strText.GetLength()) == 0)
         {
             if (!bFound)
