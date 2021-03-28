@@ -663,7 +663,7 @@ CAutoComplete::CAutoComplete()
     : m_bInSetText(FALSE), m_bInSelectItem(FALSE)
     , m_bDowner(TRUE), m_dwOptions(ACO_AUTOAPPEND | ACO_AUTOSUGGEST)
     , m_bEnabled(TRUE), m_hwndCombo(NULL), m_hFont(NULL), m_bResized(FALSE)
-    , m_hwndEdit(NULL), m_fnOldWordBreakProc(NULL)
+    , m_hwndEdit(NULL), m_fnOldEditProc(NULL), m_fnOldWordBreakProc(NULL)
 {
 }
 
@@ -745,7 +745,7 @@ CStringW CAutoComplete::GetEditText()
 VOID CAutoComplete::SetEditText(LPCWSTR pszText)
 {
     m_bInSetText = TRUE; // don't hide drop-down
-    ::DefSubclassProc(m_hwndEdit, WM_SETTEXT, 0, reinterpret_cast<LPARAM>(pszText));
+    ::CallWindowProcW(m_fnOldEditProc, m_hwndEdit, WM_SETTEXT, 0, reinterpret_cast<LPARAM>(pszText));
     m_bInSetText = FALSE;
 }
 
@@ -760,7 +760,7 @@ CStringW CAutoComplete::GetStemText()
 
 VOID CAutoComplete::SetEditSel(INT ich0, INT ich1)
 {
-    ::DefSubclassProc(m_hwndEdit, EM_SETSEL, ich0, ich1);
+    ::CallWindowProcW(m_fnOldEditProc, m_hwndEdit, EM_SETSEL, ich0, ich1);
 }
 
 VOID CAutoComplete::ShowDropDown()
@@ -848,8 +848,8 @@ VOID CAutoComplete::DoBackWord()
 {
     // get current selection
     INT ich0, ich1;
-    ::DefWindowProcW(m_hwndEdit, EM_GETSEL, reinterpret_cast<WPARAM>(&ich0),
-                                            reinterpret_cast<LPARAM>(&ich1));
+    ::SendMessageW(m_hwndEdit, EM_GETSEL, reinterpret_cast<WPARAM>(&ich0),
+                                          reinterpret_cast<LPARAM>(&ich1));
     if (ich0 <= 0 || ich0 != ich1) // there is selection or left-side end
         return; // don't do anything
     // get text
@@ -862,7 +862,7 @@ VOID CAutoComplete::DoBackWord()
     // select range
     SetEditSel(ich0, ich1);
     // replace selection with empty text (this is actually deletion)
-    ::DefWindowProcW(m_hwndEdit, EM_REPLACESEL, TRUE, (LPARAM)L"");
+    ::SendMessageW(m_hwndEdit, EM_REPLACESEL, TRUE, (LPARAM)L"");
 }
 
 VOID CAutoComplete::UpdateScrollBar()
@@ -1115,6 +1115,9 @@ CAutoComplete::Init(HWND hwndEdit, IUnknown *punkACL,
     if (!hwndEdit)
         return E_INVALIDARG;
     // do subclass textbox to watch messages
+    m_fnOldEditProc = reinterpret_cast<WNDPROC>(::GetWindowLongPtrW(hwndEdit, GWLP_WNDPROC));
+    if (!m_fnOldEditProc)
+        return E_FAIL;
     if (!::SetWindowSubclass(hwndEdit, EditSubclassProc, 0, reinterpret_cast<DWORD_PTR>(this)))
         return E_FAIL;
     m_hwndEdit = hwndEdit;

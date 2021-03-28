@@ -195,6 +195,7 @@ protected:
     BOOL m_bResized; // re-sized by size-box?
     RECT m_rcEdit; // in screen coordinates, to watch the position
     HWND m_hwndEdit; // the textbox
+    WNDPROC m_fnOldEditProc; // old textbox procedure
     EDITWORDBREAKPROCW m_fnOldWordBreakProc;
     // The following variables are non-POD:
     CStringW m_strText; // internal text (used in selecting item and reverting text)
