@@ -664,10 +664,8 @@ CAutoComplete::~CAutoComplete()
         ::DeleteObject(m_hFont);
         m_hFont = NULL;
     }
-    if (m_pEnum)
-        m_pEnum.Release();
-    if (m_pACList)
-        m_pACList.Release();
+    m_pEnum.Release();
+    m_pACList.Release();
 }
 
 BOOL CAutoComplete::CanAutoSuggest()
@@ -711,13 +709,12 @@ CStringW CAutoComplete::GetItemText(INT iItem)
 
 CStringW CAutoComplete::GetEditText()
 {
-    CStringW strText;
     WCHAR szText[L_MAX_URL_LENGTH];
     if (::GetWindowTextW(m_hwndEdit, szText, _countof(szText)))
     {
-        strText = szText;
+        return szText;
     }
-    return strText;
+    return L"";
 }
 
 VOID CAutoComplete::SetEditText(LPCWSTR pszText)
@@ -850,8 +847,7 @@ VOID CAutoComplete::DoBackWord()
     // get current selection
     INT ich0, ich1;
     ::CallWindowProcW(m_fnOldEditProc, m_hwndEdit, EM_GETSEL,
-                      reinterpret_cast<WPARAM>(&ich0),
-                      reinterpret_cast<LPARAM>(&ich1));
+                      reinterpret_cast<WPARAM>(&ich0), reinterpret_cast<LPARAM>(&ich1));
     if (ich0 <= 0 || ich0 != ich1) // there is selection or left-side end
         return; // don't do anything
     // get text
@@ -1235,7 +1231,6 @@ STDMETHODIMP CAutoComplete::ResetEnumerator()
 
     Reset();
     m_innerList.RemoveAll();
-
     return S_OK;
 }
 
@@ -1296,9 +1291,7 @@ VOID CAutoComplete::UpdateDropDownState()
     {
         // create the drop-down window if not existed
         if (!m_hWnd)
-        {
             CreateDropDown();
-        }
     }
     else
     {
@@ -1962,9 +1955,7 @@ LRESULT CAutoComplete::OnShowWindow(UINT uMsg, WPARAM wParam, LPARAM lParam, BOO
     if (bShow)
     {
         if (s_hWatchWnd != m_hWnd && ::IsWindowVisible(s_hWatchWnd))
-        {
             ::ShowWindowAsync(s_hWatchWnd, SW_HIDE);
-        }
         s_hWatchWnd = m_hWnd; // watch this
 
         // unhook mouse if any
