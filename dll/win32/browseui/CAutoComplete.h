@@ -79,8 +79,7 @@ class CACScrollBar : public CWindowImpl<CACScrollBar>
 public:
     CAutoComplete* m_pDropDown;
     static LPCWSTR GetWndClassName() { return WC_SCROLLBARW; }
-
-    CACScrollBar();
+    CACScrollBar() : m_pDropDown(NULL) { }
     HWND Create(HWND hwndParent);
 
 protected:
@@ -97,8 +96,7 @@ class CACSizeBox : public CWindowImpl<CACSizeBox>
 public:
     CAutoComplete* m_pDropDown;
     static LPCWSTR GetWndClassName() { return WC_SCROLLBARW; }
-
-    CACSizeBox();
+    CACSizeBox() : m_pDropDown(NULL), m_bDowner(TRUE), m_bLongList(FALSE) { }
     HWND Create(HWND hwndParent);
     VOID SetStatus(BOOL bDowner, BOOL bLongList);
 

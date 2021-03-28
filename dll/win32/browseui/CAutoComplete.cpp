@@ -320,7 +320,7 @@ LRESULT CAutoComplete::EditWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
             return ret;
         case WM_KEYDOWN:
             if (OnEditKeyDown(wParam, lParam))
-                return 1; // eat
+                return TRUE; // eat
             break;
         case WM_SETFOCUS:
             break;
@@ -511,10 +511,6 @@ LRESULT CACListView::OnNCHitTest(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &
 //////////////////////////////////////////////////////////////////////////////
 // CACScrollBar
 
-CACScrollBar::CACScrollBar() : m_pDropDown(NULL)
-{
-}
-
 HWND CACScrollBar::Create(HWND hwndParent)
 {
     ATLASSERT(m_hWnd == NULL);
@@ -528,10 +524,6 @@ HWND CACScrollBar::Create(HWND hwndParent)
 
 //////////////////////////////////////////////////////////////////////////////
 // CACSizeBox
-
-CACSizeBox::CACSizeBox() : m_pDropDown(NULL), m_bDowner(TRUE), m_bLongList(FALSE)
-{
-}
 
 HWND CACSizeBox::Create(HWND hwndParent)
 {
@@ -1104,7 +1096,7 @@ BOOL CAutoComplete::OnListUpDown(UINT vk)
 // @implemented
 STDMETHODIMP CAutoComplete::Enable(BOOL fEnable)
 {
-    TRACE("(%p)->(%d)\n", this, fEnable);
+    TRACE("(%p)->Enable(%d)\n", this, fEnable);
     m_bEnabled = fEnable;
     return S_OK;
 }
@@ -1115,7 +1107,6 @@ CAutoComplete::Init(HWND hwndEdit, IUnknown *punkACL,
 {
     TRACE("(%p)->Init(0x%08lx, %p, %s, %s)\n",
           this, hwndEdit, punkACL, debugstr_w(pwszRegKeyPath), debugstr_w(pwszQuickComplete));
-
     // sanity check
     if (m_hwndEdit || !punkACL)
         return E_FAIL;
