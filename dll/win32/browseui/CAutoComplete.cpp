@@ -852,8 +852,9 @@ VOID CAutoComplete::DoBackWord()
 {
     // get current selection
     INT ich0, ich1;
-    ::SendMessageW(m_hwndEdit, EM_GETSEL, reinterpret_cast<WPARAM>(&ich0),
-                                          reinterpret_cast<LPARAM>(&ich1));
+    ::CallWindowProcW(m_fnOldEditProc, m_hwndEdit, EM_GETSEL,
+                      reinterpret_cast<WPARAM>(&ich0),
+                      reinterpret_cast<LPARAM>(&ich1));
     if (ich0 <= 0 || ich0 != ich1) // there is selection or left-side end
         return; // don't do anything
     // get text
@@ -866,7 +867,7 @@ VOID CAutoComplete::DoBackWord()
     // select range
     SetEditSel(ich0, ich1);
     // replace selection with empty text (this is actually deletion)
-    ::SendMessageW(m_hwndEdit, EM_REPLACESEL, TRUE, (LPARAM)L"");
+    ::CallWindowProcW(m_fnOldEditProc, m_hwndEdit, EM_REPLACESEL, TRUE, (LPARAM)L"");
 }
 
 VOID CAutoComplete::UpdateScrollBar()
@@ -936,7 +937,7 @@ BOOL CAutoComplete::OnEditKeyDown(WPARAM wParam, LPARAM lParam)
                 }
             }
             // select all
-            INT cch = ::SendMessageW(m_hwndEdit, WM_GETTEXTLENGTH, 0, 0);
+            INT cch = ::CallWindowProcW(m_fnOldEditProc, m_hwndEdit, WM_GETTEXTLENGTH, 0, 0);
             SetEditSel(0, cch);
             // hide
             HideDropDown();
