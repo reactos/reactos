@@ -291,64 +291,65 @@ EditSubclassProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam,
 LRESULT CAutoComplete::EditWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     LRESULT ret;
+    HWND hwndGotFocus;
     switch (uMsg)
     {
-    case WM_CHAR:
-        return OnEditChar(wParam, lParam);
-    case WM_CUT: case WM_PASTE: case WM_CLEAR:
-        ret = ::DefSubclassProc(hwnd, uMsg, wParam, lParam); // do default
-        OnEditUpdate(TRUE);
-        return ret;
-    case WM_GETDLGCODE:
-        ret = ::DefSubclassProc(hwnd, uMsg, wParam, lParam); // do default
-        // some special keys need default processing. we handle them here
-        switch (wParam)
-        {
-            case VK_RETURN:
-                if (IsWindowVisible() || ::GetKeyState(VK_CONTROL) < 0)
-                    OnEditKeyDown(VK_RETURN, 0);
-                break;
-            case VK_TAB:
-                if (IsWindowVisible() && UseTab())
-                    ret |= DLGC_WANTALLKEYS; // we want all keys to manipulate the list
-                break;
-            case VK_ESCAPE:
-                if (IsWindowVisible())
-                    ret |= DLGC_WANTALLKEYS; // we want all keys to manipulate the list
-                break;
-            default:
+        case WM_CHAR:
+            return OnEditChar(wParam, lParam);
+        case WM_CUT: case WM_PASTE: case WM_CLEAR:
+            ret = ::DefSubclassProc(hwnd, uMsg, wParam, lParam); // do default
+            OnEditUpdate(TRUE);
+            return ret;
+        case WM_GETDLGCODE:
+            ret = ::DefSubclassProc(hwnd, uMsg, wParam, lParam); // do default
+            // some special keys need default processing. we handle them here
+            switch (wParam)
             {
-                ret |= DLGC_WANTALLKEYS; // we want all keys to manipulate the list
-                break;
+                case VK_RETURN:
+                    if (IsWindowVisible() || ::GetKeyState(VK_CONTROL) < 0)
+                        OnEditKeyDown(VK_RETURN, 0);
+                    break;
+                case VK_TAB:
+                    if (IsWindowVisible() && UseTab())
+                        ret |= DLGC_WANTALLKEYS; // we want all keys to manipulate the list
+                    break;
+                case VK_ESCAPE:
+                    if (IsWindowVisible())
+                        ret |= DLGC_WANTALLKEYS; // we want all keys to manipulate the list
+                    break;
+                default:
+                {
+                    ret |= DLGC_WANTALLKEYS; // we want all keys to manipulate the list
+                    break;
+                }
             }
-        }
-        return ret;
-    case WM_KEYDOWN:
-        if (OnEditKeyDown(wParam, lParam))
-            return 1; // eat
-        break;
-    case WM_SETFOCUS:
-        break;
-    case WM_KILLFOCUS:
-        {
+            return ret;
+        case WM_KEYDOWN:
+            if (OnEditKeyDown(wParam, lParam))
+                return 1; // eat
+            break;
+        case WM_SETFOCUS:
+            break;
+        case WM_KILLFOCUS:
             // hide the list if lost focus
-            HWND hwndGotFocus = (HWND)wParam;
+            hwndGotFocus = (HWND)wParam;
             if (hwndGotFocus != m_hWnd && hwndGotFocus != m_hWnd)
             {
                 HideDropDown();
             }
             break;
+        case WM_SETTEXT:
+            if (!m_bInSetText)
+                HideDropDown(); // it's mechanical WM_SETTEXT
+            break;
+        case WM_DESTROY:
+        {
+            ::RemoveWindowSubclass(hwnd, EditSubclassProc, 0);
+            if (::IsWindow(m_hWnd))
+                PostMessageW(WM_CLOSE, 0, 0);
+            Release();
+            break;
         }
-    case WM_SETTEXT:
-        if (!m_bInSetText)
-            HideDropDown(); // it's mechanical WM_SETTEXT
-        break;
-    case WM_DESTROY:
-        ::RemoveWindowSubclass(hwnd, EditSubclassProc, 0);
-        if (::IsWindow(m_hWnd))
-            PostMessageW(WM_CLOSE, 0, 0);
-        Release();
-        break;
     }
 
     return ::DefSubclassProc(hwnd, uMsg, wParam, lParam); // do default
