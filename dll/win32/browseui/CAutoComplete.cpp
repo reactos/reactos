@@ -111,40 +111,39 @@ typedef CSimpleArray<CStringW> list_t;
 
 static inline INT compare1(const CStringW& str1, const CStringW& str2)
 {
-    CStringW s1;
+    CStringW s1, s2;
     DropPrefix(str1, s1);
-    CStringW s2;
     DropPrefix(str2, s2);
     return s1.CompareNoCase(s2);
 }
 
-static inline INT pivot(list_t& a, INT i, INT j)
+static inline INT pivot(list_t& list, INT i, INT j)
 {
     INT k = i + 1;
-    while (k <= j && compare1(a[i], a[k]) == 0)
+    while (k <= j && compare1(list[i], list[k]) == 0)
         k++;
     if (k > j)
         return -1;
-    if (compare1(a[i], a[k]) >= 0)
+    if (compare1(list[i], list[k]) >= 0)
         return i;
     return k;
- }
+}
 
-static inline INT partition(list_t& a, INT i, INT j, const CStringW& x)
+static inline INT partition(list_t& list, INT i, INT j, const CStringW& x)
 {
     INT left = i, right = j;
     while (left <= right)
     {
-        while (left <= j && compare1(a[left], x) < 0)
+        while (left <= j && compare1(list[left], x) < 0)
             left++;
-        while (right >= i && compare1(a[right], x) >= 0)
+        while (right >= i && compare1(list[right], x) >= 0)
             right--;
         if (left > right)
             break;
 
-        CStringW tmp = a[left];
-        a[left] = a[right];
-        a[right] = tmp;
+        CStringW tmp = list[left];
+        list[left] = list[right];
+        list[right] = tmp;
 
         left++;
         right--;
@@ -152,16 +151,16 @@ static inline INT partition(list_t& a, INT i, INT j, const CStringW& x)
     return left;
 }
 
-static void quicksort(list_t& a, INT i, INT j)
+static void quicksort(list_t& list, INT i, INT j)
 {
     if (i == j)
         return;
-    INT p = pivot(a, i, j);
+    INT p = pivot(list, i, j);
     if (p == -1)
         return;
-    INT k = partition(a, i, j, a[p]);
-    quicksort(a, i, k - 1);
-    quicksort(a, k, j);
+    INT k = partition(list, i, j, list[p]);
+    quicksort(list, i, k - 1);
+    quicksort(list, k, j);
 }
 
 static inline void DoSort(list_t& list)
