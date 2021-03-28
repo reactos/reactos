@@ -327,9 +327,7 @@ LRESULT CAutoComplete::EditWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
             // hide the list if lost focus
             hwndGotFocus = (HWND)wParam;
             if (hwndGotFocus != m_hwndEdit && hwndGotFocus != m_hWnd)
-            {
                 HideDropDown();
-            }
             break;
         case WM_SETTEXT:
             if (!m_bInSetText)
