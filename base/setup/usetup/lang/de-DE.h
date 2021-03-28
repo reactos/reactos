@@ -1525,6 +1525,30 @@ static MUI_ENTRY deDEBootLoaderEntries[] =
     }
 };
 
+static MUI_ENTRY deDEBootLoaderInstallPageEntries[] =
+{
+    {
+        4,
+        3,
+        " ReactOS " KERNEL_VERSION_STR " Setup ",
+        TEXT_STYLE_UNDERLINE,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        "Installing the bootloader onto the media, please wait...",
+        TEXT_TYPE_STATUS | TEXT_PADDING_BIG,
+        TEXT_ID_STATIC
+    },
+    {
+        0,
+        0,
+        NULL,
+        0
+    }
+};
+
 static MUI_ENTRY deDEKeyboardSettingsEntries[] =
 {
     {
@@ -2175,6 +2199,10 @@ MUI_PAGE deDEPages[] =
     {
         SUCCESS_PAGE,
         deDESuccessPageEntries
+    },
+    {
+        BOOT_LOADER_INSTALLATION_PAGE,
+        deDEBootLoaderInstallPageEntries
     },
     {
         BOOT_LOADER_FLOPPY_PAGE,
