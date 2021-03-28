@@ -93,7 +93,14 @@ IsaPdoQueryPnpDeviceState(
 {
     PAGED_CODE();
 
-    if (PdoExt->SpecialFiles > 0)
+    if (PdoExt->Flags & ISAPNP_READ_PORT_NEED_REBALANCE)
+    {
+        Irp->IoStatus.Information |= PNP_DEVICE_NOT_DISABLEABLE |
+                                     PNP_DEVICE_RESOURCE_REQUIREMENTS_CHANGED |
+                                     PNP_DEVICE_FAILED;
+        return STATUS_SUCCESS;
+    }
+    else if (PdoExt->SpecialFiles > 0)
     {
         Irp->IoStatus.Information |= PNP_DEVICE_NOT_DISABLEABLE;
         return STATUS_SUCCESS;
@@ -368,24 +375,24 @@ IsaPdoQueryResourceRequirements(
     return STATUS_SUCCESS;
 }
 
+#define IS_READ_PORT(_d) ((_d)->Type == CmResourceTypePort && (_d)->u.Port.Length > 1)
+
 static
 CODE_SEG("PAGE")
 NTSTATUS
 IsaPdoStartReadPort(
-    _In_ PISAPNP_FDO_EXTENSION FdoExt,
-    _In_ PIO_STACK_LOCATION IrpSp)
+    _In_ PISAPNP_PDO_EXTENSION PdoExt,
+    _In_ PCM_RESOURCE_LIST ResourceList)
 {
-    PISAPNP_PDO_EXTENSION PdoExt = FdoExt->ReadPortPdo->DeviceExtension;
-    PCM_RESOURCE_LIST ResourceList = IrpSp->Parameters.StartDevice.AllocatedResources;
-    NTSTATUS Status = STATUS_INSUFFICIENT_RESOURCES;
+    PISAPNP_FDO_EXTENSION FdoExt = PdoExt->FdoExt;
+    NTSTATUS Status;
     ULONG i;
 
     PAGED_CODE();
 
-    if (!ResourceList || ResourceList->Count != 1)
+    if (!ResourceList)
     {
-        DPRINT1("No resource list (%p) or bad count (%d)\n",
-                ResourceList, ResourceList ? ResourceList->Count : 0);
+        DPRINT1("No resource list\n");
         return STATUS_INSUFFICIENT_RESOURCES;
     }
 
@@ -398,43 +405,110 @@ IsaPdoStartReadPort(
         return STATUS_REVISION_MISMATCH;
     }
 
-    for (i = 0; i < ResourceList->List[0].PartialResourceList.Count; i++)
+#if 0
+    /* Try various Read Ports from the list */
+    if (ResourceList->List[0].PartialResourceList.Count > 3)
     {
-        PCM_PARTIAL_RESOURCE_DESCRIPTOR PartialDescriptor =
-            &ResourceList->List[0].PartialResourceList.PartialDescriptors[i];
+        ULONG SelectedPort = 0;
 
-        if (PartialDescriptor->Type == CmResourceTypePort &&
-            PartialDescriptor->u.Port.Length > 1 && !FdoExt->ReadDataPort)
+        for (i = 0; i < ResourceList->List[0].PartialResourceList.Count; i++)
         {
-            PUCHAR ReadDataPort = ULongToPtr(PartialDescriptor->u.Port.Start.u.LowPart + 3);
-            if (NT_SUCCESS(IsaHwTryReadDataPort(ReadDataPort)))
+            PCM_PARTIAL_RESOURCE_DESCRIPTOR PartialDescriptor =
+                &ResourceList->List[0].PartialResourceList.PartialDescriptors[i];
+
+            if (IS_READ_PORT(PartialDescriptor))
             {
+                PUCHAR ReadDataPort = ULongToPtr(PartialDescriptor->u.Port.Start.u.LowPart + 3);
+
+                /*
+                 * Remember the first Read Port in the resource list.
+                 * It will be selected by default even if no card has been detected.
+                 */
+                if (!SelectedPort)
+                    SelectedPort = PartialDescriptor->u.Port.Start.u.LowPart;
+
                 /* We detected some ISAPNP cards */
-
-                FdoExt->ReadDataPort = ReadDataPort;
-
-                IsaPnpAcquireDeviceDataLock(FdoExt);
-                Status = IsaHwFillDeviceList(FdoExt);
-                IsaPnpReleaseDeviceDataLock(FdoExt);
-
-                if (FdoExt->DeviceCount > 0)
+                if (NT_SUCCESS(IsaHwTryReadDataPort(ReadDataPort)))
                 {
-                    PdoExt->Flags |= ISAPNP_READ_PORT_ALLOW_FDO_SCAN |
-                                     ISAPNP_SCANNED_BY_READ_PORT;
-
-                    IoInvalidateDeviceRelations(FdoExt->Pdo, BusRelations);
-                    IoInvalidateDeviceRelations(FdoExt->ReadPortPdo, RemovalRelations);
+                    SelectedPort = PartialDescriptor->u.Port.Start.u.LowPart;
+                    break;
                 }
             }
-            else
+        }
+
+        ASSERT(SelectedPort != 0);
+
+        if (PdoExt->RequirementsList)
+        {
+            ExFreePoolWithTag(PdoExt->RequirementsList, TAG_ISAPNP);
+            PdoExt->RequirementsList = NULL;
+        }
+
+        /* Discard the Read Ports at conflicting locations */
+        Status = IsaPnpCreateReadPortDORequirements(PdoExt, SelectedPort);
+        if (!NT_SUCCESS(Status))
+            return Status;
+
+        PdoExt->Flags |= ISAPNP_READ_PORT_NEED_REBALANCE;
+
+        IoInvalidateDeviceState(PdoExt->Common.Self);
+
+        return STATUS_SUCCESS;
+    }
+    /* Set the Read Port */
+    else if (ResourceList->List[0].PartialResourceList.Count == 3)
+#else
+    if (ResourceList->List[0].PartialResourceList.Count > 3) /* Temporary HACK */
+#endif
+    {
+        PdoExt->Flags &= ~ISAPNP_READ_PORT_NEED_REBALANCE;
+
+        for (i = 0; i < ResourceList->List[0].PartialResourceList.Count; i++)
+        {
+            PCM_PARTIAL_RESOURCE_DESCRIPTOR PartialDescriptor =
+                &ResourceList->List[0].PartialResourceList.PartialDescriptors[i];
+
+            if (IS_READ_PORT(PartialDescriptor))
             {
-                /* Mark read data port as started, even if no card has been detected */
-                Status = STATUS_SUCCESS;
+                PUCHAR ReadDataPort = ULongToPtr(PartialDescriptor->u.Port.Start.u.LowPart + 3);
+
+                /* Run the isolation protocol */
+                if (NT_SUCCESS(IsaHwTryReadDataPort(ReadDataPort)))
+                {
+                    FdoExt->ReadDataPort = ReadDataPort;
+
+                    IsaPnpAcquireDeviceDataLock(FdoExt);
+
+                    /* Card identification */
+                    Status = IsaHwFillDeviceList(FdoExt);
+
+                    if (FdoExt->DeviceCount > 0)
+                    {
+                        PdoExt->Flags |= ISAPNP_READ_PORT_ALLOW_FDO_SCAN |
+                                         ISAPNP_SCANNED_BY_READ_PORT;
+
+                        IoInvalidateDeviceRelations(FdoExt->Pdo, BusRelations);
+                        IoInvalidateDeviceRelations(FdoExt->ReadPortPdo, RemovalRelations);
+                    }
+
+                    IsaPnpReleaseDeviceDataLock(FdoExt);
+
+                    return Status;
+                }
+                else
+                {
+                    break;
+                }
             }
         }
     }
+    else
+    {
+        return STATUS_DEVICE_CONFIGURATION_ERROR;
+    }
 
-    return Status;
+    /* Mark Read Port as started, even if no card has been detected */
+    return STATUS_SUCCESS;
 }
 
 static
@@ -632,7 +706,10 @@ IsaPdoPnp(
             if (PdoExt->Common.Signature == IsaPnpLogicalDevice)
                 Status = IsaHwActivateDevice(PdoExt->IsaPnpDevice);
             else
-                Status = IsaPdoStartReadPort(PdoExt->FdoExt, IrpSp);
+            {
+                Status = IsaPdoStartReadPort(PdoExt,
+                                             IrpSp->Parameters.StartDevice.AllocatedResources);
+            }
 
             if (NT_SUCCESS(Status))
                 PdoExt->Common.State = dsStarted;
@@ -655,8 +732,11 @@ IsaPdoPnp(
         {
             if (PdoExt->SpecialFiles > 0)
                 Status = STATUS_DEVICE_BUSY;
+            else if (PdoExt->Flags & ISAPNP_READ_PORT_NEED_REBALANCE)
+                Status = STATUS_RESOURCE_REQUIREMENTS_CHANGED;
             else
                 Status = STATUS_SUCCESS;
+
             break;
         }
 

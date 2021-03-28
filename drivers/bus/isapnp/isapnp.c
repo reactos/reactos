@@ -370,22 +370,54 @@ IsaForwardOrIgnore(
     }
 }
 
-static
 CODE_SEG("PAGE")
 NTSTATUS
 IsaPnpCreateReadPortDORequirements(
-    _In_ PISAPNP_PDO_EXTENSION PdoExt)
+    _In_ PISAPNP_PDO_EXTENSION PdoExt,
+    _In_opt_ ULONG SelectedReadPort)
 {
-    ULONG ListSize, i;
+    ULONG ResourceCount, ListSize, i;
     PIO_RESOURCE_REQUIREMENTS_LIST RequirementsList;
     PIO_RESOURCE_DESCRIPTOR Descriptor;
-    const ULONG Ports[] = { ISAPNP_WRITE_DATA, ISAPNP_ADDRESS,
-                            0x274, 0x3E4, 0x204, 0x2E4, 0x354, 0x2F4 };
+    const ULONG Ports[] = { ISAPNP_WRITE_DATA, ISAPNP_ADDRESS };
+    const ULONG ReadPorts[] = { 0x274, 0x3E4, 0x204, 0x2E4, 0x354, 0x2F4 };
 
     PAGED_CODE();
 
-    ListSize = sizeof(IO_RESOURCE_REQUIREMENTS_LIST)
-               + 2 * RTL_NUMBER_OF(Ports) * sizeof(IO_RESOURCE_DESCRIPTOR);
+    if (SelectedReadPort)
+    {
+        /*
+         * [IO descriptor: ISAPNP_WRITE_DATA, required]
+         * [IO descriptor: ISAPNP_WRITE_DATA, optional]
+         * [IO descriptor: ISAPNP_ADDRESS, required]
+         * [IO descriptor: ISAPNP_ADDRESS, optional]
+         * [IO descriptor: Selected Read Port, required]
+         * [IO descriptor: Read Port 1, optional]
+         * [IO descriptor: Read Port 2, optional]
+         * [...]
+         * [IO descriptor: Read Port X - 1, optional]
+         */
+        ResourceCount = RTL_NUMBER_OF(Ports) * 2 + RTL_NUMBER_OF(ReadPorts);
+    }
+    else
+    {
+        /*
+         * [IO descriptor: ISAPNP_WRITE_DATA, required]
+         * [IO descriptor: ISAPNP_WRITE_DATA, optional]
+         * [IO descriptor: ISAPNP_ADDRESS, required]
+         * [IO descriptor: ISAPNP_ADDRESS, optional]
+         * [IO descriptor: Read Port 1, required]
+         * [IO descriptor: Read Port 1, optional]
+         * [IO descriptor: Read Port 2, required]
+         * [IO descriptor: Read Port 2, optional]
+         * [...]
+         * [IO descriptor: Read Port X, required]
+         * [IO descriptor: Read Port X, optional]
+         */
+        ResourceCount = (RTL_NUMBER_OF(Ports) + RTL_NUMBER_OF(ReadPorts)) * 2;
+    }
+    ListSize = sizeof(IO_RESOURCE_REQUIREMENTS_LIST) +
+               sizeof(IO_RESOURCE_DESCRIPTOR) * (ResourceCount - 1);
     RequirementsList = ExAllocatePoolZero(PagedPool, ListSize, TAG_ISAPNP);
     if (!RequirementsList)
         return STATUS_NO_MEMORY;
@@ -395,27 +427,92 @@ IsaPnpCreateReadPortDORequirements(
 
     RequirementsList->List[0].Version = 1;
     RequirementsList->List[0].Revision = 1;
-    RequirementsList->List[0].Count = 2 * RTL_NUMBER_OF(Ports);
+    RequirementsList->List[0].Count = ResourceCount;
 
-    for (i = 0; i < 2 * RTL_NUMBER_OF(Ports); i += 2)
+    Descriptor = &RequirementsList->List[0].Descriptors[0];
+
+    /* Store the Data port and the Address port */
+    for (i = 0; i < RTL_NUMBER_OF(Ports) * 2; i++)
     {
-        Descriptor = &RequirementsList->List[0].Descriptors[i];
+        if ((i % 2) == 0)
+        {
+            /* Expected port */
+            Descriptor->Type = CmResourceTypePort;
+            Descriptor->ShareDisposition = CmResourceShareDeviceExclusive;
+            Descriptor->Flags = CM_RESOURCE_PORT_16_BIT_DECODE;
+            Descriptor->u.Port.Length = 0x01;
+            Descriptor->u.Port.Alignment = 0x01;
+            Descriptor->u.Port.MinimumAddress.LowPart =
+            Descriptor->u.Port.MaximumAddress.LowPart = Ports[i / 2];
+        }
+        else
+        {
+            /* ... but mark it as optional */
+            Descriptor->Option = IO_RESOURCE_ALTERNATIVE;
+            Descriptor->Type = CmResourceTypePort;
+            Descriptor->ShareDisposition = CmResourceShareDeviceExclusive;
+            Descriptor->Flags = CM_RESOURCE_PORT_16_BIT_DECODE;
+            Descriptor->u.Port.Alignment = 0x01;
+        }
 
-        /* Expected port */
-        Descriptor[0].Type = CmResourceTypePort;
-        Descriptor[0].ShareDisposition = CmResourceShareDeviceExclusive;
-        Descriptor[0].Flags = CM_RESOURCE_PORT_16_BIT_DECODE;
-        Descriptor[0].u.Port.Length = Ports[i / 2] & 1 ? 0x01 : 0x04;
-        Descriptor[0].u.Port.Alignment = 0x01;
-        Descriptor[0].u.Port.MinimumAddress.LowPart = Ports[i / 2];
-        Descriptor[0].u.Port.MaximumAddress.LowPart = Ports[i / 2] + Descriptor[0].u.Port.Length - 1;
+        Descriptor++;
+    }
 
-        /* ... but mark it as optional */
-        Descriptor[1].Option = IO_RESOURCE_ALTERNATIVE;
-        Descriptor[1].Type = CmResourceTypePort;
-        Descriptor[1].ShareDisposition = CmResourceShareDeviceExclusive;
-        Descriptor[1].Flags = CM_RESOURCE_PORT_16_BIT_DECODE;
-        Descriptor[1].u.Port.Alignment = 0x01;
+    /* Store the Read Ports */
+    if (SelectedReadPort)
+    {
+        BOOLEAN Selected = FALSE;
+
+        DBG_UNREFERENCED_LOCAL_VARIABLE(Selected);
+
+        for (i = 0; i < RTL_NUMBER_OF(ReadPorts); i++)
+        {
+            if (ReadPorts[i] != SelectedReadPort)
+                Descriptor->Option = IO_RESOURCE_ALTERNATIVE;
+            else
+                Selected = TRUE;
+            Descriptor->Type = CmResourceTypePort;
+            Descriptor->ShareDisposition = CmResourceShareDeviceExclusive;
+            Descriptor->Flags = CM_RESOURCE_PORT_16_BIT_DECODE;
+            Descriptor->u.Port.Length = 0x04;
+            Descriptor->u.Port.Alignment = 0x01;
+            Descriptor->u.Port.MinimumAddress.LowPart = ReadPorts[i];
+            Descriptor->u.Port.MaximumAddress.LowPart = ReadPorts[i] +
+                                                        Descriptor->u.Port.Length - 1;
+
+            Descriptor++;
+        }
+
+        ASSERT(Selected == TRUE);
+    }
+    else
+    {
+        for (i = 0; i < RTL_NUMBER_OF(ReadPorts) * 2; i++)
+        {
+            if ((i % 2) == 0)
+            {
+                /* Expected port */
+                Descriptor->Type = CmResourceTypePort;
+                Descriptor->ShareDisposition = CmResourceShareDeviceExclusive;
+                Descriptor->Flags = CM_RESOURCE_PORT_16_BIT_DECODE;
+                Descriptor->u.Port.Length = 0x04;
+                Descriptor->u.Port.Alignment = 0x01;
+                Descriptor->u.Port.MinimumAddress.LowPart = ReadPorts[i / 2];
+                Descriptor->u.Port.MaximumAddress.LowPart = ReadPorts[i / 2] +
+                                                            Descriptor->u.Port.Length - 1;
+            }
+            else
+            {
+                /* ... but mark it as optional */
+                Descriptor->Option = IO_RESOURCE_ALTERNATIVE;
+                Descriptor->Type = CmResourceTypePort;
+                Descriptor->ShareDisposition = CmResourceShareDeviceExclusive;
+                Descriptor->Flags = CM_RESOURCE_PORT_16_BIT_DECODE;
+                Descriptor->u.Port.Alignment = 0x01;
+            }
+
+            Descriptor++;
+        }
     }
 
     PdoExt->RequirementsList = RequirementsList;
@@ -493,7 +590,7 @@ IsaPnpCreateReadPortDO(
     PdoExt->Common.State = dsStopped;
     PdoExt->FdoExt = FdoExt;
 
-    Status = IsaPnpCreateReadPortDORequirements(PdoExt);
+    Status = IsaPnpCreateReadPortDORequirements(PdoExt, 0);
     if (!NT_SUCCESS(Status))
         goto Failure;
 

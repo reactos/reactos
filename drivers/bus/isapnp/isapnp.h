@@ -115,6 +115,7 @@ typedef struct _ISAPNP_PDO_EXTENSION
 #define ISAPNP_ENUMERATED               0x00000001 /**< @brief Whether the device has been reported to the PnP manager. */
 #define ISAPNP_SCANNED_BY_READ_PORT     0x00000002 /**< @brief The bus has been scanned by Read Port PDO. */
 #define ISAPNP_READ_PORT_ALLOW_FDO_SCAN 0x00000004 /**< @brief Allows the active FDO to scan the bus. */
+#define ISAPNP_READ_PORT_NEED_REBALANCE 0x00000008 /**< @brief The I/O resource requirements have changed. */
 
     _Write_guarded_by_(_Global_interlock_)
     volatile LONG SpecialFiles;
@@ -165,6 +166,12 @@ IsaPnpReleaseDeviceDataLock(
 }
 
 /* isapnp.c */
+
+CODE_SEG("PAGE")
+NTSTATUS
+IsaPnpCreateReadPortDORequirements(
+    _In_ PISAPNP_PDO_EXTENSION PdoExt,
+    _In_opt_ ULONG SelectedReadPort);
 
 CODE_SEG("PAGE")
 VOID
