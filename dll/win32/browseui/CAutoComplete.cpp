@@ -1141,7 +1141,7 @@ CAutoComplete::Init(HWND hwndEdit, IUnknown *punkACL,
     if (!::SetWindowSubclass(hwndEdit, EditSubclassProc, 0, reinterpret_cast<DWORD_PTR>(this)))
         return E_FAIL;
     m_hwndEdit = hwndEdit;
-    // add reference to hwndEdit
+    // add reference to m_hwndEdit
     AddRef();
     // set word break procedure
     HookWordBreakProc(TRUE);
