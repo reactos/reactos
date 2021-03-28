@@ -341,6 +341,7 @@ LRESULT CAutoComplete::EditWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
             ::RemoveWindowSubclass(hwnd, EditSubclassProc, 0);
             if (::IsWindow(m_hWnd))
                 PostMessageW(WM_CLOSE, 0, 0);
+            // remove reference to m_hwndEdit
             Release();
             break;
         }
@@ -1140,7 +1141,7 @@ CAutoComplete::Init(HWND hwndEdit, IUnknown *punkACL,
     if (!::SetWindowSubclass(hwndEdit, EditSubclassProc, 0, reinterpret_cast<DWORD_PTR>(this)))
         return E_FAIL;
     m_hwndEdit = hwndEdit;
-    // add reference
+    // add reference to hwndEdit
     AddRef();
     // set word break procedure
     HookWordBreakProc(TRUE);
@@ -1317,9 +1318,7 @@ VOID CAutoComplete::UpdateDropDownState()
         // create the drop-down window if not existed
         if (!m_hWnd)
         {
-            AddRef();
-            if (!CreateDropDown())
-                Release();
+            CreateDropDown();
         }
     }
     else
@@ -1677,7 +1676,7 @@ LRESULT CAutoComplete::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
     m_hFont = reinterpret_cast<HFONT>(::GetStockObject(DEFAULT_GUI_FONT));
     m_hwndList.SetFont(m_hFont);
 
-    // add reference
+    // add reference to CAutoComplete::m_hWnd
     AddRef();
 
     return 0; // success
@@ -1711,6 +1710,7 @@ LRESULT CAutoComplete::OnNCDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL
 
     // clean up
     m_hwndCombo = NULL;
+    // remove reference to CAutoComplete::m_hWnd
     Release();
     return 0;
 }
