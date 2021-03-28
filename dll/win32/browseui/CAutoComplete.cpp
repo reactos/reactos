@@ -709,9 +709,7 @@ CStringW CAutoComplete::GetEditText()
 {
     WCHAR szText[L_MAX_URL_LENGTH];
     if (::GetWindowTextW(m_hwndEdit, szText, _countof(szText)))
-    {
         return szText;
-    }
     return L"";
 }
 
