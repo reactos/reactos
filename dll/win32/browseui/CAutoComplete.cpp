@@ -22,11 +22,6 @@
 
 #include "precomp.h"
 
-#undef TRACE
-#define TRACE ERR
-#undef ATLASSERT
-#define ATLASSERT(x) do { if (x) ERR(#x); } while(0)
-
 /*
   TODO:
   - implement ACO_SEARCH style
