@@ -24,52 +24,10 @@
 #include "atltypes.h"
 #include "rosctrls.h"
 
-class CACEditCtrl;
 class CACListView;
 class CACScrollBar;
 class CACSizeBox;
 class CAutoComplete;
-
-//////////////////////////////////////////////////////////////////////////////
-// CACEditCtrl --- auto-completion textbox
-
-class CACEditCtrl
-    : public CWindowImpl<CACEditCtrl, CWindow, CControlWinTraits>
-{
-public:
-    CAutoComplete* m_pDropDown;
-    static LPCWSTR GetWndClassName() { return WC_EDITW; }
-
-    CACEditCtrl(CAutoComplete *pDropDown);
-    VOID HookWordBreakProc(BOOL bHook);
-
-    // message map
-    BEGIN_MSG_MAP(CACEditCtrl)
-        MESSAGE_HANDLER(WM_CHAR, OnChar)
-        MESSAGE_HANDLER(WM_CLEAR, OnCutPasteClear)
-        MESSAGE_HANDLER(WM_CUT, OnCutPasteClear)
-        MESSAGE_HANDLER(WM_NCDESTROY, OnNCDestroy)
-        MESSAGE_HANDLER(WM_GETDLGCODE, OnGetDlgCode)
-        MESSAGE_HANDLER(WM_KEYDOWN, OnKeyDown)
-        MESSAGE_HANDLER(WM_KILLFOCUS, OnKillFocus)
-        MESSAGE_HANDLER(WM_PASTE, OnCutPasteClear)
-        MESSAGE_HANDLER(WM_SETFOCUS, OnSetFocus)
-        MESSAGE_HANDLER(WM_SETTEXT, OnSetText)
-    END_MSG_MAP()
-
-protected:
-    // protected variables
-    EDITWORDBREAKPROCW m_fnOldWordBreakProc;
-    // message handlers
-    LRESULT OnChar(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
-    LRESULT OnCutPasteClear(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
-    LRESULT OnNCDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
-    LRESULT OnGetDlgCode(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
-    LRESULT OnKeyDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
-    LRESULT OnKillFocus(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
-    LRESULT OnSetFocus(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
-    LRESULT OnSetText(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
-};
 
 //////////////////////////////////////////////////////////////////////////////
 // CACListView --- auto-completion list control
@@ -204,6 +162,7 @@ public:
     VOID DoBackWord();
     VOID UpdateScrollBar();
 
+    LRESULT EditWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
     LRESULT OnEditChar(WPARAM wParam, LPARAM lParam);
     BOOL OnEditKeyDown(WPARAM wParam, LPARAM lParam);
     VOID OnEditUpdate(BOOL bAppendOK);
@@ -234,8 +193,9 @@ protected:
     HWND m_hwndCombo; // the combobox if any
     HFONT m_hFont; // the font
     BOOL m_bResized; // re-sized by size-box?
-    CACEditCtrl *m_phwndEdit; // subclassed to watch
     RECT m_rcEdit; // in screen coordinates, to watch the position
+    HWND m_hwndEdit; // the textbox
+    EDITWORDBREAKPROCW m_fnOldWordBreakProc;
     // The following variables are non-POD:
     CStringW m_strText; // internal text (used in selecting item and reverting text)
     CStringW m_strStemText; // dirname + '\\'
@@ -257,6 +217,7 @@ protected:
     INT UpdateInnerList();
     INT UpdateOuterList();
     VOID UpdateCompletion(BOOL bAppendOK);
+    VOID HookWordBreakProc(BOOL bHook);
     // message map
     BEGIN_MSG_MAP(CAutoComplete)
         MESSAGE_HANDLER(WM_CREATE, OnCreate)
