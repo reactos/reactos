@@ -218,7 +218,6 @@ protected:
     INT UpdateInnerList();
     INT UpdateOuterList();
     VOID UpdateCompletion(BOOL bAppendOK);
-    VOID HookWordBreakProc(BOOL bHook);
     // message map
     BEGIN_MSG_MAP(CAutoComplete)
         MESSAGE_HANDLER(WM_CREATE, OnCreate)

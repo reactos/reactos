@@ -338,7 +338,11 @@ LRESULT CAutoComplete::EditWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
             break;
         case WM_DESTROY:
         {
-            HookWordBreakProc(FALSE);
+            if (m_fnOldWordBreakProc)
+            {
+                ::SendMessageW(hwnd, EM_SETWORDBREAKPROC, 0, reinterpret_cast<LPARAM>(m_fnOldWordBreakProc));
+                m_fnOldWordBreakProc = NULL;
+            }
             ::RemoveWindowSubclass(hwnd, EditSubclassProc, 0);
             if (::IsWindow(m_hWnd))
                 PostMessageW(WM_CLOSE, 0, 0);
@@ -349,24 +353,6 @@ LRESULT CAutoComplete::EditWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
     }
 
     return ::DefSubclassProc(hwnd, uMsg, wParam, lParam); // do default
-}
-
-VOID CAutoComplete::HookWordBreakProc(BOOL bHook)
-{
-    if (!::IsWindow(m_hwndEdit))
-        return;
-    if (bHook)
-    {
-        m_fnOldWordBreakProc = reinterpret_cast<EDITWORDBREAKPROCW>(
-            ::SendMessageW(m_hwndEdit, EM_SETWORDBREAKPROC, 0,
-                reinterpret_cast<LPARAM>(EditWordBreakProcW)));
-    }
-    else if (m_fnOldWordBreakProc)
-    {
-        ::SendMessageW(m_hwndEdit, EM_SETWORDBREAKPROC, 0,
-                       reinterpret_cast<LPARAM>(m_fnOldWordBreakProc));
-        m_fnOldWordBreakProc = NULL;
-    }
 }
 
 //////////////////////////////////////////////////////////////////////////////
@@ -1145,7 +1131,9 @@ CAutoComplete::Init(HWND hwndEdit, IUnknown *punkACL,
     // add reference to m_hwndEdit
     AddRef();
     // set word break procedure
-    HookWordBreakProc(TRUE);
+    m_fnOldWordBreakProc = reinterpret_cast<EDITWORDBREAKPROCW>(
+        ::SendMessageW(m_hwndEdit, EM_SETWORDBREAKPROC, 0,
+                       reinterpret_cast<LPARAM>(EditWordBreakProcW)));
     // save position
     ::GetWindowRect(m_hwndEdit, &m_rcEdit);
 
