@@ -254,23 +254,22 @@ EditWordBreakProcW(LPWSTR lpch, INT index, INT count, INT code)
     {
         case WB_ISDELIMITER:
             return IsWordBreak(lpch[index]);
-
         case WB_LEFT:
+        {
             if (index)
                 --index;
             while (index && !IsWordBreak(lpch[index]))
                 --index;
             return index;
-
+        }
         case WB_RIGHT:
+        {
             if (!count)
                 break;
             while (index < count && lpch[index] && !IsWordBreak(lpch[index]))
                 ++index;
             return index;
-
-        default:
-            break;
+        }
     }
     return 0;
 }
@@ -482,7 +481,7 @@ LRESULT CACListView::OnLButtonDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL
     if (iItem != -1)
     {
         m_pDropDown->SelectItem(iItem); // select the item
-        CString strText = GetItemText(iItem); // get text of item
+        CStringW strText = GetItemText(iItem); // get text of item
         m_pDropDown->SetEditText(strText); // set text
         m_pDropDown->SetEditSel(0, strText.GetLength()); // select all
         m_pDropDown->HideDropDown(); // hide
@@ -809,7 +808,7 @@ VOID CAutoComplete::DoAutoAppend()
     BOOL bFound = FALSE;
     for (INT iItem = 0; iItem < cItems; ++iItem)
     {
-        const CString& strItem = m_innerList[iItem]; // get the text of the item
+        const CStringW& strItem = m_innerList[iItem]; // get the text of the item
  
         if (::StrCmpNIW(strItem, strText, strText.GetLength()) == 0)
         {
@@ -969,10 +968,6 @@ BOOL CAutoComplete::OnEditKeyDown(WPARAM wParam, LPARAM lParam)
             }
             break;
         }
-        default:
-        {
-            break;
-        }
     }
     return FALSE; // default
 }
@@ -990,7 +985,7 @@ LRESULT CAutoComplete::OnEditChar(WPARAM wParam, LPARAM lParam)
 
 VOID CAutoComplete::OnEditUpdate(BOOL bAppendOK)
 {
-    CString strText = GetEditText();
+    CStringW strText = GetEditText();
     if (m_strText.CompareNoCase(strText) == 0)
     {
         // no change
