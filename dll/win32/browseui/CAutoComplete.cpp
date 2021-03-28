@@ -338,6 +338,7 @@ LRESULT CAutoComplete::EditWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM l
             break;
         case WM_DESTROY:
         {
+            HookWordBreakProc(FALSE);
             ::RemoveWindowSubclass(hwnd, EditSubclassProc, 0);
             if (::IsWindow(m_hWnd))
                 PostMessageW(WM_CLOSE, 0, 0);
@@ -1690,13 +1691,6 @@ LRESULT CAutoComplete::OnNCDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL
     // hide
     if (IsWindowVisible())
         HideDropDown();
-
-    // unsubclass EDIT control
-    if (m_hwndEdit)
-    {
-        HookWordBreakProc(FALSE);
-        ::RemoveWindowSubclass(m_hwndEdit, EditSubclassProc, 0);
-    }
 
     // clear CAutoComplete pointers
     m_hwndList.m_pDropDown = NULL;
