@@ -1392,7 +1392,7 @@ CStringW CAutoComplete::GetQuickEdit(LPCWSTR pszText)
 
 VOID CAutoComplete::RepositionDropDown()
 {
-    // get nearest monitor
+    // get nearest monitor from m_hwndEdit
     HMONITOR hMon = ::MonitorFromWindow(m_hwndEdit, MONITOR_DEFAULTTONEAREST);
     ATLASSERT(hMon != NULL);
     if (hMon == NULL)
@@ -1411,7 +1411,7 @@ VOID CAutoComplete::RepositionDropDown()
     INT cyItem = m_hwndList.m_cyItem;
     ATLASSERT(cyItem > 0);
 
-    // get position
+    // get m_hwndEdit position
     RECT rcEdit;
     ::GetWindowRect(m_hwndEdit, &rcEdit);
     INT x = rcEdit.left, y = rcEdit.bottom;
@@ -1657,7 +1657,6 @@ LRESULT CAutoComplete::OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &b
 
     // add reference to CAutoComplete::m_hWnd
     AddRef();
-
     return 0; // success
 }
 
@@ -2024,7 +2023,7 @@ LRESULT CAutoComplete::OnTimer(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bH
         return 0;
     }
 
-    // moved?
+    // m_hwndEdit is moved?
     RECT rcEdit;
     ::GetWindowRect(m_hwndEdit, &rcEdit);
     if (!::EqualRect(&rcEdit, &m_rcEdit))
