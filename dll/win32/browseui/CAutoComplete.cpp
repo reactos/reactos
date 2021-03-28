@@ -50,25 +50,21 @@ struct PREFIX_INFO
     LPCWSTR psz;
     INT cch;
 };
-
 static const PREFIX_INFO s_prefixes[] =
 {
     { L"https://", 8 },
     { L"http://www.", 11 },
     { L"http://", 7 },
-    { L"file://", 7 },
-    { L"ftp://", 6 },
     { L"www.", 4 },
 };
 
-#if 0
-static BOOL DoesMatchPrefix(const CStringW& str, CStringW& strBody)
+static inline BOOL DropPrefix(const CStringW& str, CStringW& strBody)
 {
     for (size_t iPrefix = 0; iPrefix < _countof(s_prefixes); ++iPrefix)
     {
         LPCWSTR psz = s_prefixes[iPrefix].psz;
         INT cch = s_prefixes[iPrefix].cch;
-        if (str.GetLength() <= cch && ::StrCmpNIW(psz, str, str.GetLength()) == 0)
+        if (::StrCmpNIW(str, psz, cch) == 0)
         {
             strBody = str.Mid(cch);
             return TRUE;
@@ -77,7 +73,6 @@ static BOOL DoesMatchPrefix(const CStringW& str, CStringW& strBody)
     strBody = str;
     return FALSE;
 }
-#endif
 
 // mouse hook procedure to watch the mouse click
 // https://docs.microsoft.com/en-us/previous-versions/windows/desktop/legacy/ms644988(v=vs.85)
@@ -119,14 +114,23 @@ static LRESULT CALLBACK MouseProc(INT nCode, WPARAM wParam, LPARAM lParam)
 
 typedef CSimpleArray<CStringW> list_t;
 
+static inline INT compare1(const CStringW& str1, const CStringW& str2)
+{
+    CStringW s1;
+    DropPrefix(str1, s1);
+    CStringW s2;
+    DropPrefix(str2, s2);
+    return s1.CompareNoCase(s2);
+}
+
 static inline INT pivot(list_t& a, INT i, INT j)
 {
     INT k = i + 1;
-    while (k <= j && a[i].CompareNoCase(a[k]) == 0)
+    while (k <= j && compare1(a[i], a[k]) == 0)
         k++;
     if (k > j)
         return -1;
-    if (a[i].CompareNoCase(a[k]) >= 0)
+    if (compare1(a[i], a[k]) >= 0)
         return i;
     return k;
  }
@@ -136,9 +140,9 @@ static inline INT partition(list_t& a, INT i, INT j, const CStringW& x)
     INT left = i, right = j;
     while (left <= right)
     {
-        while (left <= j && a[left].CompareNoCase(x) < 0)
+        while (left <= j && compare1(a[left], x) < 0)
             left++;
-        while (right >= i && a[right].CompareNoCase(x) >= 0)
+        while (right >= i && compare1(a[right], x) >= 0)
             right--;
         if (left > right)
             break;
@@ -181,7 +185,7 @@ static INT DoUnique(list_t& list)
     INT result = first;
     while (++first != last)
     {
-        if (list[result].CompareNoCase(list[first]) != 0)
+        if (compare1(list[result], list[first]) != 0)
             list[++result] = list[first];
     }
     return ++result;
@@ -1564,6 +1568,15 @@ INT CAutoComplete::UpdateOuterList()
     {
         // is the beginning matched?
         const CStringW& strTarget = m_innerList[iItem];
+        CStringW strBody;
+        if (DropPrefix(strTarget, strBody))
+        {
+            if (::StrCmpNIW(strBody, strText, strText.GetLength()) == 0)
+            {
+                m_outerList.Add(strTarget);
+                continue;
+            }
+        }
         if (::StrCmpNIW(strTarget, strText, strText.GetLength()) == 0)
         {
             m_outerList.Add(strTarget);
