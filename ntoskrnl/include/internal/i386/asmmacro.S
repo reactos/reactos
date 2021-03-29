@@ -284,9 +284,22 @@ MACRO(TASK_ENTRY, Trap, Flags)
     .PROC _&Trap
         /* Generate proper debugging symbols */
         FPO 0, 0, 0, 0, 0, FRAME_TSS
+#if !defined(_USE_ML) && DBG
+        mov ebp, fs:[KPCR_SELF]
+        mov ebp, [ebp + KPCR_TSS]
+
+        sub esp, 8
+        mov eax, [ebp + TssEbp]
+        mov [esp], eax
+        mov eax, [ebp + TssEip]
+        mov [esp + 4], eax
+
+        mov ebp, esp
+        CFI_DEF_CFA ebp, 4
+#endif
 
         /* Call the C handler */
-        call _&Trap&Handler
+        KiCallHandler _&Trap&Handler
 
         if (Flags AND KI_NMI)
             /* Return from NMI: return with iret and handle NMI recursion */
