@@ -24,52 +24,10 @@
 #include "atltypes.h"
 #include "rosctrls.h"
 
-class CACEditCtrl;
 class CACListView;
 class CACScrollBar;
 class CACSizeBox;
 class CAutoComplete;
-
-//////////////////////////////////////////////////////////////////////////////
-// CACEditCtrl --- auto-completion textbox
-
-class CACEditCtrl
-    : public CWindowImpl<CACEditCtrl, CWindow, CControlWinTraits>
-{
-public:
-    CAutoComplete* m_pDropDown;
-    static LPCWSTR GetWndClassName() { return WC_EDITW; }
-
-    CACEditCtrl();
-    VOID HookWordBreakProc(BOOL bHook);
-
-    // message map
-    BEGIN_MSG_MAP(CACEditCtrl)
-        MESSAGE_HANDLER(WM_CHAR, OnChar)
-        MESSAGE_HANDLER(WM_CLEAR, OnCutPasteClear)
-        MESSAGE_HANDLER(WM_CUT, OnCutPasteClear)
-        MESSAGE_HANDLER(WM_DESTROY, OnDestroy)
-        MESSAGE_HANDLER(WM_GETDLGCODE, OnGetDlgCode)
-        MESSAGE_HANDLER(WM_KEYDOWN, OnKeyDown)
-        MESSAGE_HANDLER(WM_KILLFOCUS, OnKillFocus)
-        MESSAGE_HANDLER(WM_PASTE, OnCutPasteClear)
-        MESSAGE_HANDLER(WM_SETFOCUS, OnSetFocus)
-        MESSAGE_HANDLER(WM_SETTEXT, OnSetText)
-    END_MSG_MAP()
-
-protected:
-    // protected variables
-    EDITWORDBREAKPROCW m_fnOldWordBreakProc;
-    // message handlers
-    LRESULT OnChar(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
-    LRESULT OnCutPasteClear(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
-    LRESULT OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
-    LRESULT OnGetDlgCode(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
-    LRESULT OnKeyDown(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
-    LRESULT OnKillFocus(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
-    LRESULT OnSetFocus(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
-    LRESULT OnSetText(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
-};
 
 //////////////////////////////////////////////////////////////////////////////
 // CACListView --- auto-completion list control
@@ -121,8 +79,7 @@ class CACScrollBar : public CWindowImpl<CACScrollBar>
 public:
     CAutoComplete* m_pDropDown;
     static LPCWSTR GetWndClassName() { return WC_SCROLLBARW; }
-
-    CACScrollBar();
+    CACScrollBar() : m_pDropDown(NULL) { }
     HWND Create(HWND hwndParent);
 
 protected:
@@ -139,8 +96,7 @@ class CACSizeBox : public CWindowImpl<CACSizeBox>
 public:
     CAutoComplete* m_pDropDown;
     static LPCWSTR GetWndClassName() { return WC_SCROLLBARW; }
-
-    CACSizeBox();
+    CACSizeBox() : m_pDropDown(NULL), m_bDowner(TRUE), m_bLongList(FALSE) { }
     HWND Create(HWND hwndParent);
     VOID SetStatus(BOOL bDowner, BOOL bLongList);
 
@@ -188,6 +144,7 @@ public:
     BOOL CanAutoAppend();
     BOOL UseTab();
     BOOL IsComboBoxDropped();
+    BOOL FilterPrefixes();
     INT GetItemCount();
     CStringW GetItemText(INT iItem);
 
@@ -203,6 +160,7 @@ public:
     VOID DoBackWord();
     VOID UpdateScrollBar();
 
+    LRESULT EditWndProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
     LRESULT OnEditChar(WPARAM wParam, LPARAM lParam);
     BOOL OnEditKeyDown(WPARAM wParam, LPARAM lParam);
     VOID OnEditUpdate(BOOL bAppendOK);
@@ -234,11 +192,13 @@ protected:
     HFONT m_hFont; // the font
     BOOL m_bResized; // re-sized by size-box?
     RECT m_rcEdit; // in screen coordinates, to watch the position
+    HWND m_hwndEdit; // the textbox
+    WNDPROC m_fnOldEditProc; // old textbox procedure
+    EDITWORDBREAKPROCW m_fnOldWordBreakProc;
     // The following variables are non-POD:
     CStringW m_strText; // internal text (used in selecting item and reverting text)
     CStringW m_strStemText; // dirname + '\\'
     CStringW m_strQuickComplete; // used for [Ctrl]+[Enter]
-    CACEditCtrl m_hwndEdit; // subclassed to watch
     CACListView m_hwndList; // this listview is virtual
     CACScrollBar m_hwndScrollBar; // scroll bar contol
     CACSizeBox m_hwndSizeBox; // the size grip
@@ -259,7 +219,7 @@ protected:
     // message map
     BEGIN_MSG_MAP(CAutoComplete)
         MESSAGE_HANDLER(WM_CREATE, OnCreate)
-        MESSAGE_HANDLER(WM_DESTROY, OnDestroy)
+        MESSAGE_HANDLER(WM_NCDESTROY, OnNCDestroy)
         MESSAGE_HANDLER(WM_DRAWITEM, OnDrawItem)
         MESSAGE_HANDLER(WM_EXITSIZEMOVE, OnExitSizeMove)
         MESSAGE_HANDLER(WM_GETMINMAXINFO, OnGetMinMaxInfo)
@@ -276,7 +236,7 @@ protected:
     END_MSG_MAP()
     // message handlers
     LRESULT OnCreate(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
-    LRESULT OnDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
+    LRESULT OnNCDestroy(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnDrawItem(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnExitSizeMove(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
     LRESULT OnGetMinMaxInfo(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL &bHandled);
