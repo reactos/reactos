@@ -1,4 +1,9 @@
-/* TRANSLATORS: 2005 un.real, 2013-2014 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net), 2018 Ercan Ersoy (ercanersoy) (ercanersoy [at] ercanersoy [dot] net) */
+/* TRANSLATORS: 
+    2005 un.real, 
+    2013-2014 Erdem Ersoy (eersoy93) (erdemersoy [at] erdemersoy [dot] net), 
+    2018 Ercan Ersoy (ercanersoy) (ercanersoy [at] ercanersoy [dot] net) ,
+    2021 Süleyman Poyraz (zaryob [dot] dev [at] gmail [dot] com)
+*/
 
 LANGUAGE LANG_TURKISH, SUBLANG_DEFAULT
 
@@ -8,14 +13,14 @@ BEGIN
     POPUP "&Dosya"
     BEGIN
         MENUITEM "&Bağlan", IDM_FILE_CONNECT
-        MENUITEM "B&ağlantıyı Kes", IDM_FILE_DISCONNECT, GRAYED
+        MENUITEM "&Bağlantıyı Kes", IDM_FILE_DISCONNECT, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "&Görüntüyü Sil", IDM_FILE_CLEARDISPLAY
+        MENUITEM "&Ekranı temizle", IDM_FILE_CLEARDISPLAY
         MENUITEM SEPARATOR
         MENUITEM "&Yakalamayı Başlat", IDM_FILE_STARTCAPTURE
-        MENUITEM "Ya&kalamayı Durdur", IDM_FILE_STOPCAPTURE, GRAYED
+        MENUITEM "&Yakalamayı Durdur", IDM_FILE_STOPCAPTURE, GRAYED
         MENUITEM SEPARATOR
-        MENUITEM "Yerel Yankı", IDM_FILE_LOCALECHO
+        MENUITEM "Yerel Yansı", IDM_FILE_LOCALECHO
         MENUITEM SEPARATOR
         MENUITEM "&Çıkış", IDM_EXIT
     END
@@ -36,10 +41,10 @@ END
 
 IDD_ABOUTBOX DIALOGEX 22, 17, 259, 210
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_CAPTION | WS_SYSMENU
-CAPTION "FreeLoader Hata Ayıklayıcı Hakkında"
+CAPTION "FreeLoader Hata Ayıklayıcısı Hakkında"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    CONTROL "FreeLoader Hata Ayıklayıcı - Sürüm 1.0\nTelif Hakkı: 2003\nBrian Palmer(brianp@reactos.org) ile.", IDC_STATIC, "Static", SS_LEFTNOWORDWRAP | WS_GROUP, 53, 28, 122, 26
+    CONTROL "FreeLoader Hata Ayıklayıcı - Sürüm 1.0\nTelif Hakkı: 2003\nBrian Palmer(brianp@reactos.org)", IDC_STATIC, "Static", SS_LEFTNOWORDWRAP | WS_GROUP, 53, 28, 122, 26
     DEFPUSHBUTTON "Tamam", IDOK, 183, 189, 44, 14, WS_GROUP
     ICON IDI_FDEBUG, IDC_STATIC, 19, 30, 20, 20
     EDITTEXT IDC_LICENSE_EDIT, 53, 63, 174, 107, ES_MULTILINE | ES_READONLY | WS_VSCROLL
@@ -50,7 +55,7 @@ STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Bağlantı Seçenekleri"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "COM girişini giriniz (Örnek: COM1): ", IDC_STATIC, 7, 7, 108, 8
+    LTEXT "COM bağlantı noktasını giriniz (Örneğin: COM1): ", IDC_STATIC, 7, 7, 108, 8
     EDITTEXT IDC_COMPORT, 7, 17, 182, 14, ES_AUTOHSCROLL
     LTEXT "Baud hızını giriniz (Örnek: 115200): ", IDC_STATIC, 7, 38, 114, 8
     EDITTEXT IDC_BAUTRATE, 7, 48, 182, 14, ES_AUTOHSCROLL
@@ -60,10 +65,10 @@ END
 
 IDD_CAPTURE DIALOGEX 0, 0, 251, 95
 STYLE DS_SHELLFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Yakalama Dosyası"
+CAPTION "Dosyayı Yakalama"
 FONT 8, "MS Shell Dlg"
 BEGIN
-    LTEXT "Yakalama Dosyası Adı:", IDC_STATIC, 7, 17, 62, 8
+    LTEXT "Yakalanan Dosyanın Adı:", IDC_STATIC, 7, 17, 62, 8
     EDITTEXT IDC_CAPTUREFILENAME, 7, 26, 181, 14, ES_AUTOHSCROLL
     PUSHBUTTON "&Göz At", IDC_BROWSE, 194, 26, 50, 14
     DEFPUSHBUTTON "Tamam", IDOK, 139, 74, 50, 14
@@ -81,5 +86,5 @@ END
 
 STRINGTABLE
 BEGIN
-    IDS_LICENSE "ÖNEMLİ: Aşağıdaki metin, özgün metnin resmî olmayan çevirisidir. Çeviri metniyle özgün metin arasında ayrım olabilir. Özgün metin, çeviri metninin altındadır.\r\n\r\n***\r\n\r\nBu program özgür yazılımdır; bunu, Özgür Yazılım Vakfı'nın yayımladığı GNU Genel Kamu Lisansı'nın, 2. sürümünün ya da daha sonraki bir sürümünün (Orası size bağlı.) şartları altında yeniden dağıtabilir veya değiştirebilirsiniz.\r\n\r\nBu program, kullanışlı olabileceği beklentisiyle dağıtılmıştır; ancak, bu izlencenin HİÇBİR GÜVENCESİ YOKTUR, SATILABİLİRLİĞİN ve BELİRLİ BİR AMACA UYGUNLUĞUN demek istenilen güvencesi bile. Daha çok bilgi için GNU Genel Kamu Lisansı'na bakınız.\r\n\r\nBu izlenceyle birlikte GNU Genel Kamu Lisansı'nın bir kopyasını almış olmalısınız, eğer yoksa Özgür Yazılım Vakfı AŞ'ye (51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 ABD) yazınız.\r\n\r\n***\r\n\r\nThis program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
+    IDS_LICENSE "ÖNEMLİ: Aşağıdaki metin, özgün metnin resmî olmayan çevirisidir. Çeviri metniyle özgün metin arasında farklar olabilir. Özgün metin, çeviri metninin altındadır.\r\n\r\n***\r\n\r\nBu program özgür yazılımdır; bunu, Özgür Yazılım Vakfı'nın yayımladığı GNU Genel Kamu Lisansı'nın, 2. sürümünün ya da daha sonraki bir sürümünün (seçiminize bağlı olarak.) şartları altında yeniden dağıtabilir veya değiştirebilirsiniz.\r\n\r\nBu program, kullanışlı olabileceği beklentisiyle dağıtılmıştır; ancak, bu izlence HİÇBİR GÜVENCE VEREMEZ, SATILABİLİRLİĞİN ve BELİRLİ BİR AMACA UYGUNLUĞUN güvencesi de verilemez. Daha çok bilgi için GNU Genel Kamu Lisansı'na bakınız.\r\n\r\nBu izlenceyle birlikte GNU Genel Kamu Lisansı'nın bir kopyasını almış olmalısınız, eğer yoksa Özgür Yazılım Vakfı AŞ'ye (51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 ABD) yazınız.\r\n\r\n***\r\n\r\nThis program is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or (at your option) any later version.\r\n\r\nThis program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.\r\n\r\nYou should have received a copy of the GNU General Public License along with this program; if not, write to the Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA."
 END
