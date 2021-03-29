@@ -2045,40 +2045,46 @@ static
 VOID
 MiInitializeSystemCache(VOID)
 {
-    PFN_NUMBER WsListPage;
+    PFN_NUMBER Page;
+    PMMPDE PointerPde;
+    MMPDE TempPde;
     PMMPTE PointerPte;
     MMPTE TempPte;
     KIRQL OldIrql;
-    SIZE_T WsListSize;
 
-    /* Calculate the space we will need for this WS */
-    WsListSize = sizeof(*MmSystemCacheWs.VmWorkingSetList);
-    /* One entry per page, plus the size needed for each extension of the WSLE array */
-    WsListSize += MmSizeOfPagedPoolInPages * sizeof(MMWSLE) + MmSizeOfPagedPoolInPages / (PAGE_SIZE/sizeof(MMWSLE));
-    WsListSize += MmSizeOfSystemCacheInPages * sizeof(MMWSLE) + MmSizeOfSystemCacheInPages / (PAGE_SIZE/sizeof(MMWSLE));
-
-    PointerPte = MiReserveSystemPtes(BYTES_TO_PAGES(WsListSize), SystemPteSpace);
-    if (!PointerPte)
-        KeBugCheck(MEMORY_MANAGEMENT);
 
     MiLockWorkingSet(PsGetCurrentThread(), &MmSystemCacheWs);
 
     OldIrql = MiAcquirePfnLock();
 
+    /* Setup a PDE for us */
+    PointerPde = MiAddressToPde(MmSystemCacheWorkingSetList);
+    MI_SET_USAGE(MI_USAGE_PAGE_TABLE);
+    MI_SET_PROCESS2("Kernel WS list");
+    Page = MiRemoveZeroPage(MI_GET_NEXT_COLOR());
+    MI_WRITE_INVALID_PDE(PointerPde, DemandZeroPde);
+
+    MiInitializePfn(Page, (PMMPTE)PointerPde, TRUE);
+    TempPde = ValidKernelPde;
+    TempPde.u.Hard.PageFrameNumber = Page;
+    MI_WRITE_VALID_PDE(PointerPde, TempPde);
+
+    /* Reserve one page for us now */
+    PointerPte = MiAddressToPte(MmSystemCacheWorkingSetList);
     MI_SET_PROCESS2("Kernel WS list");
     MI_SET_USAGE(MI_USAGE_WSLE);
 
     /* Reserve a page for the list */
-    WsListPage = MiRemoveZeroPage(MI_GET_NEXT_COLOR());
+    Page = MiRemoveZeroPage(MI_GET_NEXT_COLOR());
 
     MI_WRITE_INVALID_PTE(PointerPte, DemandZeroPte);
-    MiInitializePfn(WsListPage, PointerPte, TRUE);
+    MiInitializePfn(Page, PointerPte, TRUE);
 
     TempPte = ValidKernelPte;
-    TempPte.u.Hard.PageFrameNumber = WsListPage;
+    TempPte.u.Hard.PageFrameNumber = Page;
     MI_WRITE_VALID_PTE(PointerPte, TempPte);
 
-    MmSystemCacheWs.VmWorkingSetList = MiPteToAddress(PointerPte);
+    MmSystemCacheWs.VmWorkingSetList = MmSystemCacheWorkingSetList;
 
     MiInitializeWorkingSetList(&MmSystemCacheWs);
 
